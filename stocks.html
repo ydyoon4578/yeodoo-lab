@@ -122,6 +122,12 @@
   .timstate{font-family:var(--mono);font-size:16px;font-weight:700}
   .timsub{font-size:10.5px;color:var(--muted)}
   .tsum{font-size:11.5px;color:var(--ink-2);margin-bottom:12px;padding:8px 11px;background:var(--panel-2);border-radius:8px;line-height:1.5}
+  .tpbox{margin-bottom:12px;padding:9px 11px;background:var(--panel-2);border-radius:8px}
+  .tphd{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+  .pivrow{display:flex;flex-wrap:wrap;gap:5px 16px}
+  .pivchip{font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums} .pivchip b{font-family:var(--mono);font-size:10px;margin-right:5px} .pivchip .pm{color:var(--muted);font-size:10.5px}
+  .dvgbadge{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 7px;border-radius:4px;text-transform:none;letter-spacing:0}
+  .dvgbadge.bull{color:var(--good);background:var(--good-bg)} .dvgbadge.bear{color:var(--hot);background:var(--hot-bg)}
   .sigrow{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:start;margin-bottom:9px}
   .sigl{font-family:var(--mono);font-size:10px;font-weight:700;padding-top:3px}
   .sigl.buy{color:var(--good)}.sigl.sell{color:var(--hot)}
@@ -263,7 +269,19 @@
     if(buys)block+='<div class="sigrow"><span class="sigl buy">매수</span><div class="sigcol">'+buys+'</div></div>';
     if(sells)block+='<div class="sigrow"><span class="sigl sell">매도</span><div class="sigcol">'+sells+'</div></div>';
     if(!buys&&!sells)block='<div class="signone">최근 5거래일 발동 신호 없음</div>';
-    return '<div class="timing"><div class="timhd"><span class="timstate" style="color:var('+col+')">타이밍 · '+t+'</span><span class="timsub">최근 5거래일 발동 신호</span></div>'+summary+block+'</div>';
+    // ③ 스윙 전환점 구조(지그재그) + 다이버전스 — 고점/저점 포착
+    var tpHtml='';
+    if(s.tp&&s.tp.zz&&s.tp.zz.length>=2){
+      var pxa=s.pxd||[], dts=DATA.pxd_dates||[], cur=null, ci;
+      for(ci=pxa.length-1;ci>=0;ci--){if(pxa[ci]!=null){cur=pxa[ci];break;}}
+      var lastH=null, lastL=null, zi;
+      for(zi=s.tp.zz.length-1;zi>=0;zi--){var z=s.tp.zz[zi];if(!lastH&&z[1]==='H')lastH=z;if(!lastL&&z[1]==='L')lastL=z;}
+      var fmtPiv=function(z,lab,cv){if(!z||pxa[z[0]]==null)return '';var lv=pxa[z[0]],dd=dts[z[0]]||'',pc=cur?((cur/lv-1)*100):0;
+        return '<span class="pivchip"><b style="color:'+cv+'">'+lab+'</b> '+lv.toLocaleString()+' <span class="pm">'+(dd?dd.slice(5):'')+' · 현재 '+(pc>=0?'+':'')+pc.toFixed(1)+'%</span></span>';};
+      var dvgHtml=s.tp.dvg==='bull'?'<span class="dvgbadge bull">강세 다이버전스</span>':s.tp.dvg==='bear'?'<span class="dvgbadge bear">약세 다이버전스</span>':'';
+      tpHtml='<div class="tpbox"><div class="tphd"><span>스윙 전환점 구조</span>'+dvgHtml+'</div><div class="pivrow">'+fmtPiv(lastH,'최근 고점','var(--hot)')+fmtPiv(lastL,'최근 저점','var(--good)')+'</div></div>';
+    }
+    return '<div class="timing"><div class="timhd"><span class="timstate" style="color:var('+col+')">타이밍 · '+t+'</span><span class="timsub">최근 5거래일 발동 신호</span></div>'+summary+tpHtml+block+'</div>';
   }
   function chip(txt,cnt,onclick){var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');b.innerHTML=txt+(cnt!=null?' <span style="opacity:.65">'+cnt+'</span>':'');b.addEventListener('click',onclick);return b;}
   function curP(){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i][0]===state.preset)return PRESETS[i];return SHOWN[0];}
@@ -328,7 +346,7 @@
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
         '<canvas id="pxc" width="600" height="150"></canvas></div>'+
       '<div class="comps">'+comps+'</div>'+fundHtml+
-      '<div class="dbody">'+timing(s)+body+'<div class="note">매매 타이밍 = 교과서 매수/매도 신호 중 최근 5거래일 발동분. 차트 <b style="color:var(--good)">▲</b>/<b style="color:var(--hot)">▼</b> = 시그널 기준 과거 매수/매도 타점(순매수·순매도 강신호일). <b>백테스트(2016~26·무비용): 역추세형(오버솔드)이 돌파형보다는 나았으나, 그 엣지의 대부분이 시장 반등 베타 — 종목선택 알파는 약하고(심화검증서 배포후보 실패) 신호는 타이밍 참고용</b>입니다. 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위(100=최상). 전 지표 기준일 '+DATA.as_of+' · 출처 yfinance. 투자자문·매매권유 아님.</div></div>';
+      '<div class="dbody">'+timing(s)+body+'<div class="note">매매 타이밍 = 교과서 매수/매도 신호 중 최근 5거래일 발동분. 차트 <b style="color:var(--good)">●</b>저점/<b style="color:var(--hot)">●</b>고점 = 확정 <b>스윙 전환점</b>(지그재그, 변동성 적응 임계) — 실제 고점/저점 구조를 표시. <b style="color:var(--good)">▲</b>/<b style="color:var(--hot)">▼</b> = 교과서 매수/매도 타점. <b>정직 고지: 과거 시계열 검증상 전환점·다이버전스의 종목선택 예측력은 통계적으로 미미(시장통제 후 t≈1, 2021년 이후 소멸) — 구조 파악·참고용이지 예측 신호가 아닙니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량은 FINRA 격주(종목별 표기) · 출처 yfinance·FINRA. 투자자문·매매권유 아님.</div></div>';
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}
@@ -348,10 +366,11 @@
     var nb=mk.bms.length+mk.bmw.length, ns=mk.sms.length+mk.smw.length;
     var ma20=sma(pxd,20).slice(off), ma60=sma(pxd,60).slice(off);
     var vsl=(s.vd||[]).slice(off);
-    var ml=el('marklg');if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수 '+nb+'</span> <span style="color:var(--hot)">▼매도 '+ns+'</span> <span style="color:var(--muted)">(속=강·빈=약)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
-    drawChart(slice, sdates, mk, ma20, ma60, vsl);
+    var zz=((s.tp&&s.tp.zz)||[]).filter(function(p){return p[0]>=off;}).map(function(p){return [p[0]-off,p[1]];});
+    var ml=el('marklg');if(ml)ml.innerHTML='<span style="color:var(--good)">●저점</span><span style="color:var(--hot)">●고점</span><span style="color:var(--muted)">스윙</span> <span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
+    drawChart(slice, sdates, mk, ma20, ma60, vsl, zz);
   }
-  function drawChart(arr, dates, mk, ma20, ma60, vd){
+  function drawChart(arr, dates, mk, ma20, ma60, vd, zz){
     var cv=el('pxc');if(!cv)return;var ctx=cv.getContext('2d');
     var pts=[];for(var i=0;i<arr.length;i++)if(arr[i]!=null)pts.push([i,arr[i]]);
     var dpr=window.devicePixelRatio||1,W=cv.clientWidth||560,H=150;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
@@ -385,6 +404,16 @@
     // 이동평균선
     function drawMA(m,color){if(!m)return;ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();var st=false;for(var i=0;i<m.length;i++){if(m[i]==null){st=false;continue;}var x=X(i),y=Y(m[i]);if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);}ctx.stroke();}
     drawMA(ma20,css('--cold'));drawMA(ma60,css('--watch'));
+    // 스윙 전환점(지그재그) — 확정 고점/저점 구조: 얇은 스켈레톤 + 저점(초록)·고점(빨강) 원
+    if(zz&&zz.length>=2){
+      var zpts=zz.filter(function(p){return arr[p[0]]!=null;});
+      ctx.strokeStyle=css('--muted');ctx.globalAlpha=.4;ctx.lineWidth=1;ctx.beginPath();
+      zpts.forEach(function(p,k){var x=X(p[0]),y=Y(arr[p[0]]);if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.stroke();ctx.globalAlpha=1;
+      zpts.forEach(function(p){var x=X(p[0]),y=Y(arr[p[0]]),lo=p[1]==='L';
+        ctx.beginPath();ctx.arc(x,y,2.6,0,7);ctx.fillStyle=css('--panel');ctx.fill();
+        ctx.strokeStyle=lo?css('--good'):css('--hot');ctx.lineWidth=1.5;ctx.stroke();});
+    }
     var lp=pts[pts.length-1];ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(lp[0]),Y(lp[1]),3,0,7);ctx.fill();
     // 강/약 매수(▲)/매도(▼) 타점 — 속=강, 빈=약
     function tri(i,up,strong,color){if(i>=arr.length||arr[i]==null)return;var x=X(i),y=Y(arr[i]);ctx.beginPath();
