@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<title>여의도 전략 탐색기 — 62개 전략 성과 브라우저</title>
+<style>
+  :root{
+    --ground:#ECEFEE;--panel:#FBFCFC;--panel-2:#F2F5F4;--line:#D4DCDA;--line-soft:#E1E7E5;
+    --ink:#141C1A;--ink-2:#35423F;--muted:#5C6B67;--accent:#1E6F6A;--accent-2:#14504C;
+    --deploy:#0E8A54;--deploy-bg:#dff0e6;--marg:#A76A12;--marg-bg:#f6ebd6;--rej:#A64B3B;--rej-bg:#f3e0db;
+    --champ:#2C6E8F;--rp:#7A5AA6;
+    --shadow:0 1px 2px rgba(20,28,26,.05),0 8px 24px -12px rgba(20,28,26,.18);
+    --sel:color-mix(in srgb,var(--accent) 12%,var(--panel));
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0C110F;--panel:#141B19;--panel-2:#19221F;--line:#263130;--line-soft:#1e2725;
+    --ink:#E7EDEA;--ink-2:#C0CBC7;--muted:#8A9591;--accent:#52B8AE;--accent-2:#7bd0c7;
+    --deploy:#38D083;--deploy-bg:#12291f;--marg:#E4A63F;--marg-bg:#2a2113;--rej:#E5806A;--rej-bg:#2c1815;
+    --champ:#6BB0D6;--rp:#B79AE0;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
+    --sel:color-mix(in srgb,var(--accent) 16%,var(--panel));
+  }}
+  :root[data-theme="light"]{--ground:#ECEFEE;--panel:#FBFCFC;--panel-2:#F2F5F4;--line:#D4DCDA;--line-soft:#E1E7E5;--ink:#141C1A;--ink-2:#35423F;--muted:#5C6B67;--accent:#1E6F6A;--accent-2:#14504C;--deploy:#0E8A54;--deploy-bg:#dff0e6;--marg:#A76A12;--marg-bg:#f6ebd6;--rej:#A64B3B;--rej-bg:#f3e0db;--champ:#2C6E8F;--rp:#7A5AA6;--shadow:0 1px 2px rgba(20,28,26,.05),0 8px 24px -12px rgba(20,28,26,.18);--sel:color-mix(in srgb,var(--accent) 12%,var(--panel));}
+  :root[data-theme="dark"]{--ground:#0C110F;--panel:#141B19;--panel-2:#19221F;--line:#263130;--line-soft:#1e2725;--ink:#E7EDEA;--ink-2:#C0CBC7;--muted:#8A9591;--accent:#52B8AE;--accent-2:#7bd0c7;--deploy:#38D083;--deploy-bg:#12291f;--marg:#E4A63F;--marg-bg:#2a2113;--rej:#E5806A;--rej-bg:#2c1815;--champ:#6BB0D6;--rp:#B79AE0;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);--sel:color-mix(in srgb,var(--accent) 16%,var(--panel));}
+  *,*::before,*::after{box-sizing:border-box}
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Helvetica Neue",Arial,sans-serif}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px 70px}
+
+  header.mast{padding:64px 0 18px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,34px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0;text-wrap:balance}
+  .lede{margin:12px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
+  .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
+  .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted)}
+  .stat b{color:var(--ink);font-size:14px;font-weight:600}
+  .stat.deploy b{color:var(--deploy)} .stat.marg b{color:var(--marg)} .stat.rej b{color:var(--rej)}
+
+  /* controls */
+  .controls{position:sticky;top:56px;z-index:5;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:16px 0 12px;margin-top:8px;border-bottom:1px solid var(--line-soft)}
+  .searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow)}
+  .search input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
+  .search svg{flex-shrink:0;color:var(--muted)}
+  .sortbtn{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow)}
+  .sortbtn:hover{border-color:var(--accent)}
+  .chiprow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;user-select:none;transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+  .fchip:hover{border-color:var(--accent);color:var(--ink-2)}
+  .fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .fchip .cnt{font-size:10px;opacity:.7}
+  .fchip .d{width:8px;height:8px;border-radius:50%}
+  .fchip.v-deploy[aria-pressed="true"]{background:var(--deploy);border-color:var(--deploy)}
+  .fchip.v-marginal[aria-pressed="true"]{background:var(--marg);border-color:var(--marg)}
+  .fchip.v-reject[aria-pressed="true"]{background:var(--rej);border-color:var(--rej)}
+
+  /* master-detail */
+  .board{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(0,1.15fr);gap:18px;margin-top:20px;align-items:start}
+  .listwrap{display:flex;flex-direction:column;gap:7px;max-height:76vh;overflow-y:auto;padding-right:4px}
+  .listwrap::-webkit-scrollbar{width:8px}.listwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 2px 3px;text-transform:uppercase;letter-spacing:.08em}
+  .item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:11px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
+  .item:hover{border-color:var(--accent)}
+  .item[aria-selected="true"]{background:var(--sel);border-color:var(--accent);border-left-color:var(--vc,var(--accent))}
+  .item .vdot{width:9px;height:9px;border-radius:50%;background:var(--vc);flex-shrink:0}
+  .item .body{min-width:0}
+  .item .nm{font-size:14px;font-weight:600;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px;display:flex;gap:8px}
+  .item .metric{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink-2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .item .metric small{display:block;font-size:9px;font-weight:400;color:var(--muted);letter-spacing:.03em}
+  .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:30px 6px;text-align:center}
+
+  /* detail */
+  .detail{position:sticky;top:152px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:0;box-shadow:var(--shadow);overflow:hidden}
+  .dtop{padding:22px 24px 18px;border-bottom:1px solid var(--line-soft);border-top:4px solid var(--vc,var(--accent))}
+  .dbadges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
+  .vbadge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 11px;border-radius:999px;text-transform:uppercase}
+  .vbadge.deploy{color:var(--deploy);background:var(--deploy-bg)} .vbadge.marginal{color:var(--marg);background:var(--marg-bg)} .vbadge.reject{color:var(--rej);background:var(--rej-bg)}
+  .rbadge{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:999px;padding:4px 11px}
+  .dtop h2{font-family:var(--mono);font-size:clamp(18px,2.6vw,23px);font-weight:600;margin:0;line-height:1.22;letter-spacing:-.01em;text-wrap:balance}
+  .dcat{font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:8px;font-weight:600}
+  .dmetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--line-soft)}
+  .dm{padding:16px 18px;border-right:1px solid var(--line-soft)}
+  .dm:last-child{border-right:0}
+  .dm .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .dm .val{font-family:var(--mono);font-size:clamp(17px,2.4vw,21px);font-weight:600;margin-top:5px;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums}
+  .dm .val.deploy{color:var(--deploy)} .dm .val.marginal{color:var(--marg)} .dm .val.reject{color:var(--ink-2)}
+  .dbody{padding:19px 24px 24px}
+  .dbody .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 7px}
+  .dbody p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.68}
+  .dbody .verdict-line{margin-top:16px;padding:13px 16px;border-radius:11px;font-size:13.5px;line-height:1.6;background:var(--vbg);color:var(--ink-2);border:1px solid var(--line-soft)}
+  .dbody .verdict-line b{color:var(--ink)}
+
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
+  footer a{color:var(--accent);text-decoration:none}
+
+  @media(max-width:820px){
+    .board{grid-template-columns:1fr;gap:0}
+    .listwrap{max-height:none;order:2}
+    .detail{position:static;order:1;margin-bottom:18px}
+    .rowcount{order:2;margin-top:16px}
+  }
+</style>
+
+</head>
+<body>
+<a href="index.html" aria-label="여의도 전략 랩 홈" title="홈" style="position:fixed;top:14px;left:14px;z-index:50;display:flex;align-items:center;gap:6px;height:38px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;font-family:var(--mono);font-size:12px;font-weight:600;text-decoration:none;box-shadow:var(--shadow)">← 랩</a>
+<button id="themebtn" aria-label="테마 전환" title="라이트/다크 전환" style="position:fixed;top:14px;right:14px;z-index:50;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:16px;box-shadow:var(--shadow)">◐</button>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">여의도 전략 랩 · 리서치 아카이브</div>
+    <h1 class="title">전략 탐색기</h1>
+    <p class="lede">10시간 자율 리서치가 적대적으로 검증한 <b>모든 전략</b>을 클릭해서 둘러봅니다. 왼쪽에서 전략을 고르면 오른쪽에 성과·상관·판정과 그렇게 판정한 이유가 뜹니다.
+      대부분은 <b>기각</b>됐고(비용·중복·단일에피소드·과최적화), 살아남은 소수의 결합이 배포 전략입니다.</p>
+    <div class="statline" id="statline"></div>
+  </header>
+
+  <div class="controls">
+    <div class="searchrow">
+      <label class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="전략 이름·설명 검색 (예: 상품, RP, 채권, 오버나이트)" aria-label="전략 검색">
+      </label>
+      <button class="sortbtn" id="sort" aria-label="정렬 전환">정렬 ↓ 라운드</button>
+    </div>
+    <div class="chiprow" id="vfilters" role="group" aria-label="판정 필터"></div>
+    <div class="chiprow" id="rfilters" role="group" aria-label="라운드 필터"></div>
+  </div>
+
+  <div class="board">
+    <div>
+      <div class="rowcount" id="rowcount"></div>
+      <div class="listwrap" id="list" role="listbox" aria-label="전략 목록"></div>
+    </div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+  </div>
+
+  <footer>
+    여의도 전략 랩 · github.com/ydyoon4578/Yeouido · 10라운드·47개 조사 + 배포·이전 탐색 = 62개 전략 · 전부 구현→적대검증<br>
+    수치는 백테스트(2016~2026, 명시 없으면 무비용·월말 gross) 기준 · 배포 통합 전략 상세는 <a href="dashboard.html">배포 대시보드</a> 참조.
+  </footer>
+</div>
+
+<script>
+(function(){
+  // ── 데이터: 라운드·판정·성과 (v: deploy/marginal/reject) ──
+  var D=[
+    // 배포 코어
+    {n:"통합 포트폴리오 (챔피언 + 크로스에셋 RP)",r:"배포",c:"배포 코어",v:"deploy",m:"1.42",ml:"gross Sharpe",corr:null,t:"두 검증 슬리브를 슬리브간 리스크패리티(역변동성)로 결합 + 변동성타겟 13%. 저상관 분산효과로 각 단독을 넘어선다.",vt:"<b>배포 확정.</b> 진성알파 CAPM t=3.31(신용·스타일 8팩터 통제 후에도 t=3.88 생존). 정직한 눈금: gross 1.42 → 조달후 net 1.26 → 현실적 forward ~0.95. 위험감축형."},
+    {n:"챔피언 — EPS 리비전 드리프트 (PEAD)",r:"배포",c:"배포 코어",v:"deploy",m:"1.12",ml:"Sharpe",corr:null,t:"애널리스트가 향후 실적 추정치를 상향하는 나스닥100 종목 매수. 실적기대 개선이 그 방향으로 표류하는 PEAD 포착.",vt:"<b>배포 (슬리브 A·공격).</b> 이 랩이 수백 전략 중 유일하게 검증한 대형주 진성알파. 단독 CAPM α t=1.8(비유의)이나 결합서 RP와 분산효과로 유의."},
+    {n:"크로스에셋 리스크패리티 + vol타겟",r:"배포",c:"배포 코어",v:"deploy",m:"1.15",ml:"Sharpe",corr:null,t:"12개 자산군을 변동성 역가중 + 추세 꺾인 위험자산 제외 + 목표변동성 10% 레버 조절. 올웨더.",vt:"<b>배포 (슬리브 B·방어·분산).</b> 저회전·비용robust. MDD −19%. 추세게이트의 '존재'가 좌측꼬리 방어에 결정적(R5)."},
+
+    // R1 3슬리브①
+    {n:"상품 커브 캐리 (GLD/DBC)",r:"R1",c:"3슬리브 후보",v:"reject",m:"corr 0.26",ml:"vs 통합",corr:"0.26",t:"원자재 롤수익률 캐리. 통합과 저상관으로 유력했다 — 결합 Sharpe 1.42→1.51(w0.2).",vt:"<b>기각(초기 유력→하향).</b> 95%CI가 0 교차·유니버스 얕음, R2 재검서 서브기간 일관성 실패(2021-22 집중)로 weak 확정."},
+    {n:"CTA 멀티에셋 트렌드 (TSMOM)",r:"R1",c:"3슬리브 후보",v:"reject",m:"corr 0.43",ml:"vs 통합",corr:"0.43",t:"시계열 모멘텀. 여러 자산군의 추세를 롱숏.",vt:"<b>기각.</b> 통합의 RP 추세게이트와 정보 중복(corr 0.43)."},
+    {n:"테일 헤지 (long-vol)",r:"R1",c:"3슬리브 후보",v:"reject",m:"실패",ml:"위기방어",corr:null,t:"꼬리위험 대비 상시 롱볼 포지션.",vt:"<b>기각.</b> 상시 비용부담이 크고, 정작 위기에서도 기대만큼 방어 못함."},
+    {n:"변동성 캐리 (숏볼·put-write)",r:"R1",c:"3슬리브 후보",v:"reject",m:"corr 0.74",ml:"vs 통합",corr:"0.74",t:"변동성 위험프리미엄(VRP) 하베스트.",vt:"<b>기각.</b> 통합과 고상관(0.74)·좌측꼬리 동반. 초과수익은 레버리지 효과."},
+    {n:"통화 트렌드 (G10 FX)",r:"R1",c:"3슬리브 후보",v:"reject",m:"무프리미엄",ml:"—",corr:null,t:"G10 통화 모멘텀 롱숏.",vt:"<b>기각.</b> 프리미엄 미약, 달러강세기 무엣지."},
+    {n:"방어형 퀄리티 롱숏",r:"R1",c:"3슬리브 후보",v:"reject",m:"무프리미엄",ml:"—",corr:null,t:"저변동·고퀄리티 롱, 반대 숏.",vt:"<b>기각.</b> 순 프리미엄 없음."},
+
+    // R2 3슬리브②
+    {n:"관리형선물 (듀얼모멘텀 확장)",r:"R2",c:"3슬리브 후보",v:"reject",m:"corr 0.62",ml:"vs 통합",corr:"0.62",t:"절대+상대 모멘텀 확장 배분.",vt:"<b>기각.</b> 통합과 중복(0.62)."},
+    {n:"채권/금 레짐 스위칭",r:"R2",c:"3슬리브 후보",v:"reject",m:"개선無",ml:"—",corr:null,t:"레짐에 따라 채권↔금 전환.",vt:"<b>기각.</b> 무증분."},
+    {n:"저베타 방어",r:"R2",c:"3슬리브 후보",v:"reject",m:"corr 0.65",ml:"vs 통합",corr:"0.65",t:"저베타 종목 틸트.",vt:"<b>기각.</b> 중복(0.65)."},
+    {n:"인플레 헤지 바스켓",r:"R2",c:"3슬리브 후보",v:"reject",m:"무증분",ml:"—",corr:null,t:"TIPS·원자재·금 바스켓.",vt:"<b>기각.</b> 통합에 무증분."},
+    {n:"HRP 배분",r:"R2",c:"3슬리브 후보",v:"reject",m:"corr 0.56",ml:"vs 통합",corr:"0.56",t:"계층적 리스크패리티.",vt:"<b>기각.</b> 중복(0.56)."},
+    {n:"상품 광의 바스켓",r:"R2",c:"3슬리브 후보",v:"reject",m:"희석",ml:"—",corr:null,t:"넓은 원자재 바스켓.",vt:"<b>기각.</b> 분산이 오히려 희석."},
+
+    // R3 결합최적화
+    {n:"HRP 결합",r:"R3",c:"결합 최적화",v:"reject",m:"개선불가",ml:"수학적",corr:null,t:"계층 리스크패리티로 두 슬리브 결합.",vt:"<b>기각(수학적).</b> 2슬리브 ERC=역변동성이라 현 가중과 동일."},
+    {n:"min-CVaR",r:"R3",c:"결합 최적화",v:"reject",m:"개선無",ml:"—",corr:null,t:"조건부 꼬리위험 최소화 가중.",vt:"<b>기각.</b> 개선 없음."},
+    {n:"리스크 버짓",r:"R3",c:"결합 최적화",v:"reject",m:"개선無",ml:"—",corr:null,t:"위험예산 기반 배분.",vt:"<b>기각.</b> 현 가중이 이미 강건 교차점."},
+    {n:"레짐 조건부 (챔피언↔RP)",r:"R3",c:"결합 최적화",v:"reject",m:"반대틸트",ml:"—",corr:null,t:"레짐별로 슬리브 비중 스위칭.",vt:"<b>기각.</b> 서브기간이 반대로 틸트돼 상쇄."},
+    {n:"동적 vol타겟",r:"R3",c:"결합 최적화",v:"marginal",m:"MDD↓",ml:"리스크만",corr:null,t:"실현변동성에 적응하는 목표변동성.",vt:"<b>marginal.</b> MDD를 낮추나 수익증대는 없음 — 리스크 관리 목적."},
+    {n:"Kelly 스케일",r:"R3",c:"결합 최적화",v:"reject",m:"개선無",ml:"—",corr:null,t:"Kelly 기준 레버리지 스케일.",vt:"<b>기각.</b> 개선 없음."},
+
+    // R4 챔피언강건
+    {n:"SPX 챔피언",r:"R4",c:"챔피언 강건성",v:"reject",m:"t 0.73",ml:"증분 유의도",corr:null,t:"S&P500 유니버스로 챔피언 확장.",vt:"<b>기각.</b> SPX 증분이 통계적으로 비유의(paired-t 0.73)."},
+    {n:"NDX+SPX 결합 챔피언",r:"R4",c:"챔피언 강건성",v:"marginal",m:"semi 91→55%",ml:"탈집중",corr:null,t:"NDX∪SPX 유니버스로 종목 breadth 확대.",vt:"<b>marginal(유용).</b> 반도체 집중 91→55%·breadth 8→28종 탈집중, Sharpe는 parity. 집중 우려 시 옵션."},
+    {n:"리비전 구성 변형",r:"R4",c:"챔피언 강건성",v:"reject",m:"개선無",ml:"—",corr:null,t:"EPS 리비전 산식·랭킹 변형.",vt:"<b>기각.</b> 개선 없음."},
+    {n:"buy10/hold40 (밴드·보유기간)",r:"R4",c:"챔피언 강건성",v:"marginal",m:"회전 −52%",ml:"921→444%",corr:null,t:"진입 상위10·보유 상위40 밴드로 회전↓.",vt:"<b>marginal(유용).</b> 회전 절반으로 캐패시티↑, Sharpe parity. 대규모 운용 시 옵션."},
+    {n:"퀄리티·신선도 게이트",r:"R4",c:"챔피언 강건성",v:"reject",m:"≈0",ml:"기여",corr:null,t:"리비전 신선도·퀄리티 필터.",vt:"<b>기각.</b> 기여 ≈0."},
+    {n:"섹터 중립화",r:"R4",c:"챔피언 강건성",v:"reject",m:"−0.064",ml:"저베타틸트",corr:null,t:"섹터 노출 중립.",vt:"<b>기각.</b> 저베타 틸트가 −0.064 손해."},
+
+    // R5 RP강건
+    {n:"자산군 확장 RP (TIP·EMB·SLV)",r:"R5",c:"RP 강건성",v:"reject",m:"Δ −0.007",ml:"vs 1.42",corr:null,t:"CORE12에 물가채·신흥채·은 추가.",vt:"<b>기각.</b> 넓은 분산이 희석(Δ−0.007) — R2 글로벌RP 교훈 재확인."},
+    {n:"vol 추정창 (90/60)",r:"R5",c:"RP 강건성",v:"marginal",m:"회전 −24%",ml:"2.21→1.68/yr",corr:null,t:"역변동성·vol타겟 추정창 확대.",vt:"<b>marginal.</b> Sharpe 이득(+0.04)은 부트스트랩상 무의미(CI 0교차)이나, 회전↓·전 비용레벨 우위 = 저회전·캐패시티 실운영 개선."},
+    {n:"추세게이트 정의 (6M/멀티)",r:"R5",c:"RP 강건성",v:"marginal",m:"Δ +0.02",ml:"vs 1.42",corr:null,t:"12M 추세게이트를 6M·3M·멀티·이중으로 변형.",vt:"<b>marginal.</b> 게이트 '존재'가 결정적(제거시 붕괴), 호라이즌(6M/12M)은 노이즈 → 12M 최적근방."},
+    {n:"다운사이드 RP (하방편차)",r:"R5",c:"RP 강건성",v:"reject",m:"Δ −0.033",ml:"vs 1.42",corr:null,t:"변동성 대신 하방편차 역가중.",vt:"<b>기각.</b> 하방편차와 변동성이 corr 0.995로 사실상 동일, 회전만↑."},
+    {n:"리밸 주기 (주간/격주/분기)",r:"R5",c:"RP 강건성",v:"marginal",m:"Δ −0.002",ml:"vs 1.42",corr:null,t:"월말 리밸을 다른 주기로 변형.",vt:"<b>marginal.</b> 격주가 회귀-내 동률, 월 캐던스가 사실상 최적."},
+    {n:"vol타겟 레벨·게이트 격자",r:"R5",c:"RP 강건성",v:"marginal",m:"격자 최대",ml:"vol10%",corr:null,t:"내부 vol타겟 8~15%×게이트 on/off 격자.",vt:"<b>marginal.</b> 현 vol10%/gate-ON이 격자 최대, gate-ON은 강건 필수."},
+
+    // R7 직교신호
+    {n:"캘린더 / 턴오브먼스",r:"R7",c:"직교 신호",v:"reject",m:"p > 0.49",ml:"유의도",corr:null,t:"월말강세·연말랠리·sell-in-May 등 계절성.",vt:"<b>기각.</b> 2000년대 이후 차익거래로 완전 소멸(모든 p>0.49)."},
+    {n:"신용레짐 게이트",r:"R7",c:"직교 신호",v:"reject",m:"Δ −0.12",ml:"오버레이",corr:null,t:"회사채vs국채 상대강도로 리스크온/오프.",vt:"<b>기각.</b> 추세게이트와 직교하나 '틀린' 정보 — 통합에 이미 추세방어 내장."},
+    {n:"VIX 기간구조",r:"R7",c:"직교 신호",v:"reject",m:"corr 0.988",ml:"vs 통합",corr:"0.988",t:"^VIX vs ^VIX3M 콘탱고/백워데이션 스위치.",vt:"<b>기각.</b> 실현-vol타겟과 중복(0.988), 2022 grind 약세장엔 콘탱고라 무개입."},
+    {n:"횡단면 분산·브레드스 오버레이",r:"R7",c:"직교 신호",v:"marginal",m:"MDD −21→−16%",ml:"낙폭축소",corr:null,t:"저분산=추세지속·고분산=붕괴전조를 익스포저 타이밍으로.",vt:"<b>marginal(유일 생존).</b> 월별·무비용호환, MDD 23%↓. 단 수익증대 아닌 낙폭축소·2021-26 집중·통계 무의미 → 선택적 리스크 오버레이."},
+    {n:"오버나이트 드리프트",r:"R7",c:"직교 신호",v:"reject",m:"corr 0.45",ml:"vs 통합",corr:"0.45",t:"종가→익일시가 지수 오버나이트 프리미엄.",vt:"<b>기각.</b> gross 저상관이나 종가매수/시가매도 일별 왕복이 신호의 본질 → 월말 컨벤션과 원천적 비양립(breakeven 2bp)."},
+
+    // R9 종결
+    {n:"머저 아비트리지 (MNA)",r:"R9",c:"이벤트 드리븐",v:"reject",m:"corr 0.32",ml:"vs 통합",corr:"0.32",t:"딜 성사 보험프리미엄. 마지막 미검 modality — '찾던 3번째 슬리브' 후보.",vt:"<b>기각(측정으로).</b> 단독 Sharpe 0.39·무조건 corr 0.32이나 위기 tail dependence 폭발(2020-03 −16.2%>통합) → 진짜 헤지 아님. 결합 Δ−0.003."},
+    {n:"컨버터블 아비트리지 (CWB)",r:"R9",c:"이벤트 드리븐",v:"reject",m:"고상관",ml:"—",corr:null,t:"전환사채 차익.",vt:"<b>기각.</b> 주식+신용+롱볼 = 주식베타 높아 분산 효익 낮음."},
+
+    // R10 채권게이팅
+    {n:"채권 추세게이트",r:"R10",c:"채권 게이팅",v:"marginal",m:"2022 +5.1%p",ml:"방어",corr:null,t:"상시보유 채권(TLT/IEF/LQD/HYG)에 12M 추세게이트 확장.",vt:"<b>marginal.</b> 2022 −17.2→−12.1% 방어 실재하나 정상기(2016-20) 희석 −0.172로 전기간 Sharpe 소폭 악화."},
+    {n:"듀레이션 스케일",r:"R10",c:"채권 게이팅",v:"marginal",m:"2022 +2.5%p",ml:"방어",corr:null,t:"금리추세로 듀레이션 익스포저 연속 스케일(0~1x).",vt:"<b>marginal.</b> no free lunch — 2022 방어와 정상기 희석최소를 동시 달성 불가. 선택적 리스크 오버레이."},
+    {n:"신용 게이트",r:"R10",c:"채권 게이팅",v:"reject",m:"2022 −0.2%p",ml:"무방어",corr:null,t:"HYG 추세·HY-IG 스프레드로 크레딧 축소.",vt:"<b>기각.</b> 2022 통증은 신용 아닌 듀레이션(TLT −29%) — 국채 분리한 신용게이트는 무방어, 축소분이 renormalize로 하락국채에 되돌아감."},
+    {n:"AGG 채권레짐 오버레이",r:"R10",c:"채권 게이팅",v:"marginal",m:"2022 +6.1%p",ml:"MDD −19→−16%",corr:null,t:"채권 애그리게이트 12M 추세로 전채권 on/off 단일신호.",vt:"<b>marginal(최선 채권방어).</b> 2022 −17→−11%·MDD −19→−16% 실질방어, 개별 4게이트보다 단순하고 대등. 단 정상기 희석 −0.118로 전기간 Sharpe −0.026 → 위험감축형 선택적 오버레이."},
+
+    // 이전 탐색 (하이라이트)
+    {n:"대형 모멘텀·200MA 추세",r:"이전",c:"이전 탐색",v:"reject",m:"1.2~1.27",ml:"gross",corr:null,t:"대형주 모멘텀·이동평균 추세추종.",vt:"<b>기각.</b> PIT 엄격 적용시 챔피언에 열위(0.83) — 증분 없음."},
+    {n:"소형 주간 반전 롱숏",r:"이전",c:"이전 탐색",v:"reject",m:"1.97",ml:"gross",corr:null,t:"소형주 주간 과매도 반전.",vt:"<b>기각(비용 신기루).</b> gross 1.97이나 50bp에서 −1.87 — 고회전 본질."},
+    {n:"소형 월간 반전/과매도 LS",r:"이전",c:"이전 탐색",v:"reject",m:"0.51@20bp",ml:"net",corr:null,t:"월간 과매도 종목 매수.",vt:"<b>기각.</b> 경비용에서만 생존."},
+    {n:"오버나잇 보유 (NDX)",r:"이전",c:"이전 탐색",v:"reject",m:"1.80",ml:"gross",corr:null,t:"장중 청산·야간만 보유.",vt:"<b>기각.</b> 수익은 오버나잇에 발생하나 일일회전으로 비용 소멸."},
+    {n:"섹터 모멘텀 top4",r:"이전",c:"이전 탐색",v:"marginal",m:"0.63",ml:"@10bp",corr:null,t:"상위 모멘텀 섹터 4개 로테이션.",vt:"<b>marginal.</b> 약하나 비용robust."},
+    {n:"지수 200MA 타이밍",r:"이전",c:"이전 탐색",v:"marginal",m:"리스크만",ml:"—",corr:null,t:"200일선 상/하로 지수 롱/플랫.",vt:"<b>marginal.</b> 알파 아닌 리스크 관리 오버레이."},
+    {n:"고변동 틸트",r:"이전",c:"이전 탐색",v:"reject",m:"MDD −53%",ml:"—",corr:null,t:"고변동성 종목 틸트.",vt:"<b>기각.</b> 알파 아닌 순수 베타(낙폭 폭)."},
+    {n:"SUE PEAD (실측 서프라이즈)",r:"이전",c:"이전 탐색",v:"reject",m:"음성",ml:"—",corr:null,t:"실적 서프라이즈(SUE) 후 드리프트.",vt:"<b>기각.</b> 대·중·소형 전 유니버스 음성 — 소형효과는 어닝 아닌 가격반전."},
+    {n:"팩터 타이밍/로테이션",r:"이전",c:"이전 탐색",v:"reject",m:"0.75",ml:"@10bp",corr:null,t:"팩터 간 로테이션 타이밍.",vt:"<b>기각.</b> 팩터EW(0.78)·SPY(0.81)보다 못함."},
+    {n:"크로스에셋 캐리",r:"이전",c:"이전 탐색",v:"reject",m:"0.76",ml:"@10bp",corr:null,t:"자산군 캐리 하베스트.",vt:"<b>기각.</b> 60/40 '동률'은 GFC 08-11 산물, 이후 지배당함."},
+    {n:"VRP 숏볼",r:"이전",c:"이전 탐색",v:"reject",m:"0.84",ml:"@10bp",corr:null,t:"변동성 위험프리미엄.",vt:"<b>기각.</b> 초과수익=레버리지(위험조정 개선 0)."},
+    {n:"ETF 페어 트레이딩",r:"이전",c:"이전 탐색",v:"reject",m:"−0.11",ml:"@10bp",corr:null,t:"ETF 쌍 평균회귀.",vt:"<b>기각.</b> 비코인티그레이션·구조적 트렌딩 → 역베팅 손실."},
+    {n:"ML 지수 타이밍",r:"이전",c:"이전 탐색",v:"reject",m:"0.80",ml:"@10bp",corr:null,t:"머신러닝 지수 방향 예측.",vt:"<b>기각.</b> 적중 62%=base rate, B&H(0.90) 열위."},
+    {n:"듀얼모멘텀 (GEM)",r:"이전",c:"이전 탐색",v:"reject",m:"0.50",ml:"@10bp",corr:null,t:"글로벌 주식 모멘텀 스위칭.",vt:"<b>기각.</b> SPY·60/40 Sharpe 열위(낮은 MDD만 강점)."},
+    {n:"최소분산 (Ledoit-Wolf)",r:"이전",c:"이전 탐색",v:"reject",m:"착시",ml:"—",corr:null,t:"수축추정 공분산 최소분산.",vt:"<b>기각.</b> 무위험금리 착시 — excess Sharpe 0.62<60/40 0.67, 채권불장 의존."},
+    {n:"계절성 자산 배분",r:"이전",c:"이전 탐색",v:"reject",m:"오버핏",ml:"—",corr:null,t:"월별 계절성 자산 로테이션.",vt:"<b>기각.</b> IS 1.17→OOS 0.84<base 1.03 오버핏."},
+    {n:"돈치안 브레이크아웃",r:"이전",c:"이전 탐색",v:"reject",m:"비용사망",ml:"—",corr:null,t:"채널 돌파 추세추종.",vt:"<b>기각.</b> 빠른채널 비용사망, 느린채널 CAGR 1.8%뿐."},
+    {n:"변동성 텀구조 (VIXY/VXZ)",r:"이전",c:"이전 탐색",v:"reject",m:"COVID의존",ml:"—",corr:null,t:"변동성 ETP 텀구조.",vt:"<b>기각.</b> 엣지 전부 COVID 2020 단일, ex-2020 SPY 동률."}
+  ];
+
+  var VMETA={deploy:{lab:"배포",col:"--deploy"},marginal:{lab:"marginal",col:"--marg"},reject:{lab:"기각",col:"--rej"}};
+  var VORDER={deploy:0,marginal:1,reject:2};
+  var RORDER=["배포","R1","R2","R3","R4","R5","R7","R9","R10","이전"];
+  D.forEach(function(d,i){d._i=i;});
+
+  var state={q:"",vf:new Set(),rf:new Set(),sort:"round",sel:0};
+
+  var el=function(id){return document.getElementById(id);};
+  var listEl=el('list'), detailEl=el('detail');
+
+  // stat line
+  (function(){
+    var c={deploy:0,marginal:0,reject:0};
+    D.forEach(function(d){c[d.v]++;});
+    el('statline').innerHTML=
+      '<span class="stat"><b>'+D.length+'</b> 전략</span>'+
+      '<span class="stat deploy"><b>'+c.deploy+'</b> 배포</span>'+
+      '<span class="stat marg"><b>'+c.marginal+'</b> marginal</span>'+
+      '<span class="stat rej"><b>'+c.reject+'</b> 기각</span>'+
+      '<span class="stat"><b>10</b> 라운드</span>';
+  })();
+
+  // build filter chips
+  function chip(cls,label,cnt,pressed,onclick){
+    var b=document.createElement('button');
+    b.className='fchip '+cls; b.setAttribute('aria-pressed',pressed?'true':'false');
+    b.innerHTML=label+(cnt!=null?' <span class="cnt">'+cnt+'</span>':'');
+    b.addEventListener('click',onclick); return b;
+  }
+  (function(){
+    var vf=el('vfilters');
+    ['deploy','marginal','reject'].forEach(function(v){
+      var cnt=D.filter(function(d){return d.v===v;}).length;
+      vf.appendChild(chip('v-'+v,VMETA[v].lab,cnt,false,function(){toggle(state.vf,v);render();syncPressed();}));
+    });
+    var rf=el('rfilters');
+    RORDER.forEach(function(r){
+      var cnt=D.filter(function(d){return d.r===r;}).length;
+      if(!cnt)return;
+      rf.appendChild(chip('r-'+r,r,cnt,false,function(){toggle(state.rf,r);render();syncPressed();}));
+    });
+  })();
+  function toggle(set,k){set.has(k)?set.delete(k):set.add(k);}
+  function syncPressed(){
+    document.querySelectorAll('#vfilters .fchip').forEach(function(b){
+      var v=b.className.match(/v-(\w+)/)[1]; b.setAttribute('aria-pressed',state.vf.has(v));});
+    document.querySelectorAll('#rfilters .fchip').forEach(function(b){
+      var r=b.textContent.replace(/\s+\d+$/,'').trim();
+      b.setAttribute('aria-pressed',state.rf.has(r));});
+  }
+
+  el('q').addEventListener('input',function(e){state.q=e.target.value.toLowerCase().trim();render();});
+  el('sort').addEventListener('click',function(){
+    state.sort=state.sort==="round"?"verdict":"round";
+    this.textContent="정렬 ↓ "+(state.sort==="round"?"라운드":"판정");
+    render();
+  });
+
+  function filtered(){
+    var rows=D.filter(function(d){
+      if(state.vf.size && !state.vf.has(d.v))return false;
+      if(state.rf.size && !state.rf.has(d.r))return false;
+      if(state.q){var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
+      return true;
+    });
+    rows.sort(function(a,b){
+      if(state.sort==="verdict"){var vd=VORDER[a.v]-VORDER[b.v];if(vd)return vd;}
+      var rd=RORDER.indexOf(a.r)-RORDER.indexOf(b.r); if(rd)return rd;
+      return VORDER[a.v]-VORDER[b.v];
+    });
+    return rows;
+  }
+
+  function select(d){
+    state.sel=d._i;
+    var items=listEl.querySelectorAll('.item');
+    for(var i=0;i<items.length;i++) items[i].setAttribute('aria-selected', String(+items[i].dataset.i===d._i));
+    drawDetail(d);
+    var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+    detailEl.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
+  }
+  function render(){
+    var rows=filtered();
+    el('rowcount').textContent=rows.length+"개 표시"+(rows.length<D.length?" / 전체 "+D.length:"");
+    listEl.innerHTML="";
+    if(!rows.length){listEl.innerHTML='<div class="empty">조건에 맞는 전략이 없습니다.</div>';drawDetail(null);return;}
+    if(rows.indexOf(D[state.sel])<0)state.sel=rows[0]._i;
+    rows.forEach(function(d){
+      var b=document.createElement('button');
+      b.className='item'; b.setAttribute('role','option'); b.dataset.i=d._i;
+      b.setAttribute('aria-selected',d._i===state.sel);
+      b.style.setProperty('--vc','var('+VMETA[d.v].col+')');
+      b.innerHTML='<span class="vdot"></span>'+
+        '<span class="body"><span class="nm">'+d.n+'</span>'+
+        '<span class="sub"><span>'+d.r+'</span><span>'+d.c+'</span></span></span>'+
+        '<span class="metric">'+d.m+'<small>'+(d.ml||'')+'</small></span>';
+      b.addEventListener('click',function(){select(d);});
+      listEl.appendChild(b);
+    });
+    drawDetail(D[state.sel]);
+  }
+
+  function drawDetail(d){
+    if(!d){detailEl.innerHTML="";return;}
+    var vc='var('+VMETA[d.v].col+')';
+    detailEl.style.setProperty('--vc',vc);
+    var vbg="var("+(d.v==="deploy"?"--deploy-bg":d.v==="marginal"?"--marg-bg":"--rej-bg")+")";
+    var m2=d.corr?('<div class="dm"><div class="k">상관 (vs 통합)</div><div class="val">'+d.corr+'</div></div>'):
+      ('<div class="dm"><div class="k">카테고리</div><div class="val" style="font-size:14px">'+d.c+'</div></div>');
+    detailEl.innerHTML=
+      '<div class="dtop">'+
+        '<div class="dbadges"><span class="vbadge '+d.v+'">'+VMETA[d.v].lab+'</span>'+
+          '<span class="rbadge">'+d.r+'</span><span class="rbadge">'+d.c+'</span></div>'+
+        '<h2>'+d.n+'</h2>'+
+        '<div class="dcat">'+d.ml+' · '+d.m+'</div>'+
+      '</div>'+
+      '<div class="dmetrics">'+
+        '<div class="dm"><div class="k">'+(d.ml||'헤드라인')+'</div><div class="val '+d.v+'">'+d.m+'</div></div>'+
+        m2+
+        '<div class="dm"><div class="k">판정</div><div class="val '+d.v+'" style="font-size:15px">'+VMETA[d.v].lab+'</div></div>'+
+      '</div>'+
+      '<div class="dbody">'+
+        '<p class="lbl">전략 개요</p><p>'+d.t+'</p>'+
+        '<div class="verdict-line" style="--vbg:'+vbg+'"><b>판정 근거 —</b> '+d.vt+'</div>'+
+      '</div>';
+  }
+
+  render();
+})();
+</script>
+<script>(function(){var r=document.documentElement,b=document.getElementById('themebtn');function c(){return r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');}b.addEventListener('click',function(){var n=c()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('yeouido-theme',n);}catch(e){}});try{var s=localStorage.getItem('yeouido-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}})();</script>
+</body>
+</html>
