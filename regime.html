@@ -90,7 +90,7 @@
     <div class="eyebrow">여의도 전략 랩 · 시장 국면</div>
     <h1 class="title">시장 국면 — 매크로 레짐</h1>
     <p class="lede"><b>FRED 무료 매크로</b>로 현재 시장이 어떤 국면인지 판별합니다 — <b>성장 × 물가 × 금융</b> 3축 분류.
-      수익률곡선·신용스프레드·실질금리·금융여건·고용·Sahm 침체룰을 종합해 <b>7개 명명 레짐</b>(Goldilocks·Recovery·Overheating·SoftLanding·LateCycle·Stagflation·Recession)으로 라벨링하고, 레짐별 자산 조건부 성과를 보여줍니다.</p>
+      수익률곡선·신용스프레드·실질금리·금융여건·고용·Sahm 침체룰을 종합해 <b>7개 명명 레짐</b>(Goldilocks·Recovery·Overheating·SoftLanding·LateCycle·Stagflation·Recession)으로 라벨링하고, <b>레짐별 자산·섹터·팩터 조건부 성과(로테이션 보드)</b>로 지금 국면에서 무엇이 유리했는지 보여줍니다.</p>
     <div style="margin-top:12px;font-family:var(--mono);font-size:11.5px;color:var(--muted)">기준일 <b id="asof" style="color:var(--ink)">—</b> · 출처 FRED + yfinance</div>
   </header>
 
@@ -138,20 +138,26 @@
           (st[0]?'<span class="stbadge '+st[1]+'">'+st[0]+'</span>':'')+'<div class="icd">'+x.d+'</div></div>';
       }).join('')+'</div></div>';
     });
-    // asset perf table
-    var perf=d.asset_perf||{}, assets=Object.keys(perf), cur=rg.label;
-    var ANM={SPY:"S&P500",QQQ:"나스닥100",TLT:"장기국채",GLD:"금",DBC:"원자재"};
-    var tbl='';
-    if(assets.length){
+    // 조건부 성과 테이블 (자산·섹터·팩터 공통)
+    var cur=rg.label;
+    var NM={SPY:"S&P500",QQQ:"나스닥100",TLT:"장기국채",GLD:"금",DBC:"원자재",
+      XLK:"기술",XLF:"금융",XLE:"에너지",XLV:"헬스케어",XLI:"산업재",XLY:"경기소비",XLP:"필수소비",XLU:"유틸리티",XLB:"소재",XLRE:"부동산",XLC:"커뮤니케이션",
+      MTUM:"모멘텀",QUAL:"퀄리티",USMV:"저변동",VLUE:"가치",SIZE:"중소형"};
+    function perfTable(title, hint, col0, perf){
+      var assets=Object.keys(perf||{}); if(!assets.length)return '';
       var cols=RORDER.filter(function(r){return assets.some(function(a){return perf[a][r]!=null;});});
-      tbl='<div class="lbl">레짐별 자산 조건부 성과 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 월평균 수익률(%), 2009~ · 현재 레짐 열 강조</span></div>'+
-        '<div class="tblwrap"><table><thead><tr><th>자산</th>'+cols.map(function(r){return '<th class="'+(r===cur?'cur':'')+'" title="'+(RKO[r]||r)+'">'+r+'</th>';}).join('')+'</tr></thead><tbody>'+
-        assets.map(function(a){return '<tr><td>'+(ANM[a]||a)+'</td>'+cols.map(function(r){
+      assets.sort(function(a,b){return (perf[b][cur]==null?-99:perf[b][cur])-(perf[a][cur]==null?-99:perf[a][cur]);}); // 현재 레짐 성과순
+      return '<div class="lbl">'+title+' <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· '+hint+'</span></div>'+
+        '<div class="tblwrap"><table><thead><tr><th>'+col0+'</th>'+cols.map(function(r){return '<th class="'+(r===cur?'cur':'')+'" title="'+(RKO[r]||r)+'">'+r+'</th>';}).join('')+'</tr></thead><tbody>'+
+        assets.map(function(a){return '<tr><td>'+(NM[a]||a)+'</td>'+cols.map(function(r){
           var v=perf[a][r]; if(v==null)return '<td class="'+(r===cur?'cur':'')+'">—</td>';
           var mag=Math.min(1,Math.abs(v)/2.5), c=v>=0?'14,138,84':'166,75,59';
           return '<td class="pv '+(r===cur?'cur':'')+'" style="background:rgba('+c+','+(mag*0.28)+');color:'+(v>=0?'var(--good)':'var(--hot)')+'">'+(v>0?'+':'')+v+'</td>';
         }).join('')+'</tr>';}).join('')+'</tbody></table></div>';
     }
+    var tbl=perfTable('레짐별 자산 조건부 성과','월평균 %, 2009~ · 현재 레짐('+cur+') 열 강조','자산',d.asset_perf)+
+      perfTable('레짐별 섹터 로테이션','11개 섹터 SPDR 월평균 % · 현재 레짐서 유리한 순','섹터',d.sector_perf)+
+      perfTable('레짐별 팩터','모멘텀·퀄리티·저변동·가치·중소형 월평균 %','팩터',d.factor_perf);
     el('main').innerHTML=hero+
       '<div class="lbl">매크로 지표 현황</div>'+ig+
       '<div class="lbl">레짐 히스토리 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 2009~ 월별</span></div>'+
