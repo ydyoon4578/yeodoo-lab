@@ -29,11 +29,14 @@ FACTORS = {
   "atrp": ("ATR%(변동성)", "변동성", "고변동"), "vol": ("실현변동성(연율)", "변동성", "고변동"),
   "bbw": ("볼린저 밴드폭", "변동성", "확장"),
   "rvol": ("상대거래량(5일/60일)", "거래량", "급증"),
+  "dtc": ("숏 커버일수(Days-to-Cover)", "포지셔닝", "과밀숏"),
+  "sipct": ("공매도잔량 %(유동주식)", "포지셔닝", "과밀숏"),
 }
 COMPOSITES = {
   "overheat": ["+rsi", "+stoch", "+mfi", "+willr", "+pctb", "+pos52"],
   "trend": ["+adx", "+d50", "+d200", "+macdh", "+aroon"],
   "momentum": ["+roc1m", "+roc3m", "+roc6m", "+rs3m"], "volatility": ["+atrp", "+vol"],
+  "positioning": ["+dtc"],
 }
 
 
@@ -128,17 +131,66 @@ def flags(s):
     if up and s.get("rsi", 50) < 45 and s.get("pctb", 1) < .3: f.append("눌림목")
     if s.get("pos52", 0) >= 92 and s.get("macdh", -1) > 0: f.append("52주돌파")
     if s.get("d200", 1) < 0: f.append("200일이탈")
+    if s.get("dtc", 0) >= 7 or s.get("sipct", 0) >= 15: f.append("과밀숏")
     return f
 
 
 def fetch_fund(t):
-    """yfinance .info에서 trailing/forward EPS·PE (무료). 실패시 None."""
+    """yfinance .info에서 trailing/forward EPS·PE·유동주식수 (무료). 실패시 None."""
     try:
         info = yf.Ticker(t).info
         return t, {"teps": info.get("trailingEps"), "feps": info.get("forwardEps"),
-                   "tpe": info.get("trailingPE"), "fpe": info.get("forwardPE")}
+                   "tpe": info.get("trailingPE"), "fpe": info.get("forwardPE"),
+                   "float": info.get("floatShares") or info.get("sharesOutstanding")}
     except Exception:
         return t, None
+
+
+def fetch_short_interest():
+    """FINRA 최신 공매도잔량(무료·격주). 반환 {ticker:{dtc,sish,chg}} + _asof."""
+    import urllib.request, datetime as _dt
+    URL = "https://api.finra.org/data/group/otcMarket/name/consolidatedShortInterest"
+    def q(date):
+        # 페이지네이션(API는 요청당 5000행 상한) — 전 종목 수집
+        rows = []; offset = 0
+        while True:
+            body = {"limit": 5000, "offset": offset,
+                    "compareFilters": [{"fieldName": "settlementDate", "fieldValue": date, "compareType": "equal"}]}
+            req = urllib.request.Request(URL, data=json.dumps(body).encode(), headers={"Content-Type": "application/json", "Accept": "application/json"})
+            page = json.loads(urllib.request.urlopen(req, timeout=45).read())
+            if not page: break
+            rows.extend(page)
+            if len(page) < 5000: break
+            offset += 5000
+        return rows
+    # 후보 settlement date: 최근 3개월 15일·말일(주말→직전 영업일), 발표지연 10일+
+    today = _dt.date.today(); cands = set()
+    for mo in range(4):
+        y, m = today.year, today.month - mo
+        while m <= 0: m += 12; y -= 1
+        d15 = _dt.date(y, m, 15)
+        nm = _dt.date(y + 1, 1, 1) if m == 12 else _dt.date(y, m + 1, 1)
+        dlast = nm - _dt.timedelta(days=1)
+        for d in (d15, dlast):
+            while d.weekday() >= 5: d -= _dt.timedelta(days=1)
+            if (today - d).days >= 10: cands.add(d)
+    out = {}
+    for d in sorted(cands, reverse=True):
+        try:
+            rows = q(d.isoformat())
+            if not rows: continue
+            for x in rows:
+                sym = x.get("symbolCode"); dtc = x.get("daysToCoverQuantity"); sish = x.get("currentShortPositionQuantity")
+                if not sym: continue
+                prev = x.get("previousShortPositionQuantity") or 0
+                chg = ((sish - prev) / prev * 100) if prev else None
+                out[sym] = {"dtc": dtc, "sish": sish, "chg": chg}
+            out["_asof"] = d.isoformat()
+            print(f"공매도잔량(FINRA) {len(out)-1}종목 · settlement {d.isoformat()}")
+            return out
+        except Exception as e:
+            print(f"  SI {d} 실패 {str(e)[:40]}"); continue
+    return out
 
 
 def main():
@@ -176,6 +228,14 @@ def main():
         for t, f in ex.map(fetch_fund, list(raw.keys())):
             if f: fund[t] = f
     print(f"펀더멘털 {len(fund)}종목")
+    # 공매도 포지셔닝(FINRA) → 지표에 주입(dtc·sipct)
+    short = fetch_short_interest(); si_asof = short.get("_asof")
+    for t in raw:
+        s = short.get(t)
+        if not s: continue
+        if s.get("dtc") is not None: raw[t]["sig"]["dtc"] = float(s["dtc"])
+        fl = (fund.get(t) or {}).get("float")
+        if s.get("sish") and fl: raw[t]["sig"]["sipct"] = float(s["sish"]) / float(fl) * 100
     vdf = pd.DataFrame({t: raw[t]["sig"] for t in raw}).T; pct = vdf.rank(pct=True)*100
     # 일별 종가 패널 (최근 252거래일 ≈ 1년) — 기간선택(1주~1년) 슬라이스용
     daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index().tail(252)
@@ -186,7 +246,7 @@ def main():
     stocks = []
     for t in raw:
         sg, rp = raw[t]["sig"], pct.loc[t]
-        sig = {k: {"v": round(float(sg[k]), 2), "pct": round(float(rp[k]), 0), "dt": as_of} for k in FACTORS if k in sg and pd.notna(sg[k])}
+        sig = {k: {"v": round(float(sg[k]), 2), "pct": round(float(rp[k]), 0), "dt": (si_asof if k in ("dtc", "sipct") else as_of)} for k in FACTORS if k in sg and pd.notna(sg[k])}
         comps = {c2: comp(spec, rp) for c2, spec in COMPOSITES.items()}
         dser = daily[t] if t in daily.columns else None
         pxd = [None if dser is None or pd.isna(x) else round(float(x), 2) for x in (dser if dser is not None else [None]*len(pxd_dates))]
@@ -215,13 +275,15 @@ def main():
                        "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd})
     stocks.sort(key=lambda s: -(s["comp"].get("momentum") or 0))
     out = {"as_of": as_of, "source": "yfinance + 표준 테크니컬 (cloud)", "n_stocks": len(stocks), "pxd_dates": pxd_dates,
-           "factor_defs": {k: {"label": FACTORS[k][0], "group": FACTORS[k][1], "hi": FACTORS[k][2], "as_of": as_of} for k in FACTORS},
+           "factor_defs": {k: {"label": FACTORS[k][0], "group": FACTORS[k][1], "hi": FACTORS[k][2], "as_of": (si_asof if k in ("dtc", "sipct") else as_of)} for k in FACTORS},
            "fund_defs": {"teps": "주당순이익 TTM (최근 12개월 실적)", "feps": "선행 EPS (향후 12개월 애널리스트 추정)",
                          "gr": "선행 EPS 성장률 (forward/trailing−1, %)", "tpe": "P/E (TTM)", "fpe": "선행 P/E (forward)"},
            "composite_defs": {"overheat": "과열도 — RSI·스토캐스틱·MFI·Williams·%b·52주", "trend": "추세강도 — ADX·이동평균·MACD·Aroon",
-                              "momentum": "모멘텀 — 1/3/6M 수익률·상대강도", "volatility": "변동성 — ATR%·실현변동성"},
+                              "momentum": "모멘텀 — 1/3/6M 수익률·상대강도", "volatility": "변동성 — ATR%·실현변동성",
+                              "positioning": "포지셔닝 — 공매도 커버일수(격주 FINRA)"},
            "flag_defs": {"과매수": "RSI≥70 또는 %b≥0.95", "과매도": "RSI≤30 또는 %b≤0.05", "상승추세": "종가>50일선>200일선 & ADX≥20",
-                         "눌림목": "상승추세 중 RSI<45 & %b<0.3", "52주돌파": "52주고점 92%↑ & MACD 상승", "200일이탈": "종가<200일선"},
+                         "눌림목": "상승추세 중 RSI<45 & %b<0.3", "52주돌파": "52주고점 92%↑ & MACD 상승", "200일이탈": "종가<200일선",
+                         "과밀숏": "숏 커버일수≥7 또는 공매도잔량≥유동주식 15%"},
            "stocks": stocks}
     json.dump(out, open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} ({len(stocks)}종목 · {os.path.getsize(OUT)//1024}KB · 기준일 {as_of})")

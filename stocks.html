@@ -60,6 +60,7 @@
   .flag{font-family:var(--mono);font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px}
   .flag.과매수,.flag.b200이탈{color:var(--hot);background:var(--hot-bg)} .flag.과매도{color:var(--cold);background:var(--cold-bg)}
   .flag.상승추세,.flag.b52돌파{color:var(--good);background:var(--good-bg)} .flag.눌림목{color:var(--watch);background:var(--watch-bg)}
+  .flag.gmilshort{color:var(--cold);background:var(--cold-bg)}
   .item .metric{text-align:right}
   .item .mbar{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden;margin-top:4px}
   .item .mbar>i{display:block;height:100%;border-radius:3px}
@@ -155,8 +156,8 @@
   <header class="mast">
     <div class="eyebrow">여의도 전략 랩 · 종목 테크니컬</div>
     <h1 class="title">NDX · SPX 종목 시그널</h1>
-    <p class="lede">나스닥100·S&amp;P500 구성종목의 <b>과매수/과매도·추세·모멘텀·변동성</b>을 종목별로 — 전부 <b>가격에서 직접 계산한 테크니컬 지표</b>(RSI·스토캐스틱·MFI·MACD·볼린저·ADX·Aroon…).
-      프리셋으로 <b>과매수·과매도·눌림목·52주돌파</b>를 즉시 스크리닝하고, 종목 클릭 시 가격 차트와 19개 지표의 <b>값·현재 상태(과매수/과매도·강세/약세)·한 줄 설명</b>이 뜹니다.</p>
+    <p class="lede">나스닥100·S&amp;P500 구성종목의 <b>과매수/과매도·추세·모멘텀·변동성·거래량·공매도 포지셔닝</b>을 종목별로 — 가격 기반 <b>테크니컬</b>(RSI·MACD·볼린저·ADX…) + <b>EPS 펀더멘털</b>(yfinance) + <b>공매도잔량</b>(FINRA).
+      프리셋으로 <b>과매수·과매도·눌림목·52주돌파·과밀숏</b>을 즉시 스크리닝하고, 종목 클릭 시 가격·거래량 차트와 지표별 <b>값·현재 상태(과매수/과매도·강세/약세)·한 줄 설명</b>이 뜹니다.</p>
     <div class="statline" id="statline"></div>
   </header>
 
@@ -178,7 +179,7 @@
 
   <footer>
     여의도 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 탐색기</a><br>
-    가격·지표: yfinance + 자체 테크니컬 라이브러리(ta_lab) · 전 지표 동일 기준일 · <span id="asof"></span> · 투자자문·매매권유 아님
+    가격·테크니컬·EPS: yfinance · 공매도잔량: FINRA(격주) · 테크니컬은 전 지표 동일 기준일 · <span id="asof"></span> · 투자자문·매매권유 아님
   </footer>
 </div>
 <script>
@@ -186,7 +187,7 @@
   var el=function(i){return document.getElementById(i);};
   var listEl=el('list'), detailEl=el('detail');
   var DATA=null,F=null;
-  var GROUPS=[["과매수·과매도","hot"],["추세","good"],["모멘텀","accent"],["변동성","watch"],["거래량","cold"]];
+  var GROUPS=[["과매수·과매도","hot"],["추세","good"],["모멘텀","accent"],["변동성","watch"],["거래량","cold"],["포지셔닝","accent"]];
   var COMPS=[["overheat","과열도","hot"],["trend","추세","good"],["momentum","모멘텀","accent"],["volatility","변동성","watch"]];
   // 지표별 상태 분류(과매수/과매도·강세/약세 등) + 한 줄 설명. v=원값, p=퍼센타일. tone: hot/cold/good/watch/neut
   var META={
@@ -209,7 +210,9 @@
     atrp:{d:"일중 변동폭(ATR)의 가격 대비 비율(%). 클수록 변동성 큼.",s:function(v,p){return p>=70?["고변동","watch"]:p<=30?["저변동","neut"]:["보통","neut"];}},
     vol:{d:"최근 1년 실현변동성(연율화, %).",s:function(v,p){return p>=70?["고변동","watch"]:p<=30?["저변동","neut"]:["보통","neut"];}},
     bbw:{d:"볼린저 밴드폭 — 변동성 확장/수축. 클수록 확장.",s:function(v,p){return p>=70?["밴드 확장","watch"]:p<=30?["밴드 수축","neut"]:["보통","neut"];}},
-    rvol:{d:"최근 5일 평균 거래량 ÷ 60일 평균. 1.3↑ 급증·0.7↓ 위축.",s:function(v){return v>=1.3?["거래량 급증","cold"]:v<=0.7?["거래량 위축","neut"]:["보통","neut"];}}
+    rvol:{d:"최근 5일 평균 거래량 ÷ 60일 평균. 1.3↑ 급증·0.7↓ 위축.",s:function(v){return v>=1.3?["거래량 급증","cold"]:v<=0.7?["거래량 위축","neut"]:["보통","neut"];}},
+    dtc:{d:"공매도잔량 ÷ 하루 평균거래량 = 전량 청산에 걸리는 일수. 높을수록 과밀숏(스퀴즈 소지). 격주 갱신(FINRA).",s:function(v){return v>=7?["과밀숏","hot"]:v>=4?["숏 부담","watch"]:["보통","neut"];}},
+    sipct:{d:"공매도잔량이 유동주식에서 차지하는 비율(%). 높을수록 하락 베팅 집중. 격주 갱신(FINRA).",s:function(v){return v>=15?["과밀숏","hot"]:v>=8?["숏 다수","watch"]:["보통","neut"];}}
   };
   function grpSummary(g,items){var c={hot:0,cold:0,good:0,watch:0,neut:0};
     items.forEach(function(x){var k=x[0];if(g[0]==="추세"&&k==="adx")return;var tn=META[k]?META[k].s(x[2].v,x[2].pct)[1]:"neut";c[tn]++;});
@@ -218,6 +221,7 @@
     if(g[0]==="모멘텀")return "강세 "+c.good+" · 약세 "+c.watch;
     if(g[0]==="변동성")return c.watch?("고변동 "+c.watch):"변동성 보통";
     if(g[0]==="거래량")return c.cold?("급증 "+c.cold):"거래량 보통";
+    if(g[0]==="포지셔닝")return c.hot?("과밀숏 "+c.hot):(c.watch?("숏 부담 "+c.watch):"포지셔닝 보통");
     return "";}
   // preset: [key,label,comp,asc,flag,timingSet]
   var PRESETS=[
@@ -225,11 +229,12 @@
     ["sell","🔴 매도 신호","overheat",false,null,["매도","매도우세"]],
     ["oh","과매수","overheat",false,"과매수",null],["os","과매도","overheat",true,"과매도",null],
     ["dip","눌림목","trend",false,"눌림목",null],["brk","52주 돌파","momentum",false,"52주돌파",null],
+    ["squeeze","🩳 과밀숏","positioning",false,"과밀숏",null],
     ["up","상승추세","trend",false,"상승추세",null],["dn","200일 이탈","trend",true,"200일이탈",null],
     ["mom","고모멘텀","momentum",false,null,null],["lomom","약세","momentum",true,null,null],
     ["hivol","고변동성","volatility",false,null,null],["lovol","저변동성","volatility",true,null,null]];
   var SHOWN=PRESETS;  // 데이터로딩 후 빈 프리셋 제거
-  var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","52주돌파":"b52돌파","200일이탈":"b200이탈"};
+  var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","52주돌파":"b52돌파","200일이탈":"b200이탈","과밀숏":"gmilshort"};
   var PERIODS=[["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252]];
   var state={q:"",preset:"buy",idx:new Set(),sel:null,period:252};
   function cc(k){return 'var('+({overheat:'--hot',trend:'--good',momentum:'--accent',volatility:'--watch'}[k]||'--accent')+')';}
