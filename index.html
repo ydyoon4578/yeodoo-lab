@@ -37,6 +37,11 @@
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(28px,5.4vw,46px);line-height:1.1;letter-spacing:-.015em;margin:18px 0 0;text-wrap:balance}
   .lede{margin:16px 0 0;max-width:64ch;font-size:16px;color:var(--ink-2)}
+  .asofbar{margin:18px 0 0;display:inline-flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 15px;box-shadow:var(--shadow);font-family:var(--mono);font-size:12px}
+  .asofbar .asoftag{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;font-weight:600}
+  .asofbar b{color:var(--ink);font-size:14px;font-weight:700}
+  .asofbar .asofnote{color:var(--muted);font-size:10.5px;border-left:1px solid var(--line);padding-left:9px}
+  @media(max-width:560px){.asofbar .asofnote{border-left:0;padding-left:0;flex-basis:100%}}
   .lede b{color:var(--ink)}
 
   .kstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px}
@@ -102,6 +107,10 @@
     <h1 class="title">여의도 전략 랩</h1>
     <p class="lede"><b>실전 배포 가능한 진성 알파</b>를 찾는 퀀트 전략 리서치. 수백 개 아이디어를 비용·PIT·다에피소드·적대검증으로 걸러냅니다.
       이 사이트는 <b>세 가지 도구</b>를 공개합니다 — <b>전략 탐색기</b>(검증 전략 아카이브·장단점·활용방안), <b>종목 시그널</b>(NDX·SPX 테크니컬·매매 타이밍), <b>시장 국면</b>(FRED 매크로 레짐).</p>
+    <div class="asofbar" id="asofbar">
+      <span class="asoftag">데이터 기준일</span><b id="mainasof">불러오는 중…</b>
+      <span class="asofnote">가격·테크니컬·EPS·시장국면 통일 · 공매도잔량만 격주(FINRA)</span>
+    </div>
   </header>
 
   <p class="lbl">도구</p>
@@ -155,6 +164,12 @@
   fetch('data/stocks.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
     if(!d)return;
     var as=document.getElementById('stkasof'); if(as)as.textContent='기준일 '+(d.as_of||'');
+    var ma=document.getElementById('mainasof'); if(ma)ma.textContent=(d.as_of||'—');
+    // 시장국면 기준일 교차확인 — 통일 여부 표기
+    fetch('data/regime.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(rg){
+      if(!rg||!ma)return; var note=document.querySelector('.asofnote');
+      if(rg.as_of && rg.as_of!==d.as_of && note){note.textContent='종목시그널 '+d.as_of+' · 시장국면 '+rg.as_of+' · 공매도잔량 격주(FINRA)';}
+    }).catch(function(){});
     var st=d.stocks||[];
     var buyAll=st.filter(function(s){return s.timing==='매수'||s.timing==='매수우세';});
     var sellAll=st.filter(function(s){return s.timing==='매도'||s.timing==='매도우세';});

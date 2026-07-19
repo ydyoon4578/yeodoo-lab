@@ -122,6 +122,31 @@ def signals_fired(o):
     return buy, sell, b_day, s_day
 
 
+def zigzag(a, rsi_a, theta):
+    """퍼센트 임계 지그재그 → 확정 스윙 전환점 [[idx,'H'/'L'],...] + 다이버전스('bull'/'bear'/None).
+    theta = 반전 임계(소수). a=윈도 종가배열, rsi_a=동일길이 RSI."""
+    a = np.asarray(a, float); n = len(a)
+    if n < 20 or np.isnan(a).any(): return [], None
+    piv = []; direction = 0; hi = lo = a[0]; hii = loi = 0
+    for i in range(1, n):
+        if direction >= 0:
+            if a[i] > hi: hi, hii = a[i], i
+            elif a[i] <= hi * (1 - theta):
+                piv.append([hii, "H"]); direction = -1; lo, loi = a[i], i; continue
+        if direction <= 0:
+            if a[i] < lo: lo, loi = a[i], i
+            elif a[i] >= lo * (1 + theta):
+                piv.append([loi, "L"]); direction = 1; hi, hii = a[i], i
+    tail = [hii, "H"] if direction >= 0 else [loi, "L"]   # 미확정 최근 극점
+    if not piv or piv[-1][0] != tail[0]: piv.append(tail)
+    dvg = None
+    lows = [i for i, t in piv if t == "L"]; highs = [i for i, t in piv if t == "H"]
+    if len(lows) >= 2 and a[lows[-1]] < a[lows[-2]] and rsi_a[lows[-1]] > rsi_a[lows[-2]] + 2: dvg = "bull"
+    if len(highs) >= 2 and a[highs[-1]] > a[highs[-2]] and rsi_a[highs[-1]] < rsi_a[highs[-2]] - 2:
+        dvg = "bear" if dvg is None else dvg
+    return piv, dvg
+
+
 def flags(s):
     f = []
     if s.get("rsi", 50) >= 70 or s.get("pctb", .5) >= .95: f.append("과매수")
@@ -252,6 +277,13 @@ def main():
         pxd = [None if dser is None or pd.isna(x) else round(float(x), 2) for x in (dser if dser is not None else [None]*len(pxd_dates))]
         vser = px[t]["Volume"].reindex(daily.index) if t in px else None
         vd = [None if vser is None or pd.isna(x) else int(round(float(x)/1e6)) for x in (vser if vser is not None else [None]*len(pxd_dates))]  # 백만주 단위
+        # 스윙 전환점(지그재그) — 확정 고점/저점 구조 + 다이버전스
+        tp = None
+        if dser is not None and not dser.isna().any() and len(dser) >= 40:
+            wr = rsi(raw[t]["close"]).reindex(daily.index).values
+            theta = min(0.12, max(0.045, 2.5 * (sg.get("atrp") or 5) / 100))
+            piv, dvg = zigzag(dser.values, wr, theta)
+            if len(piv) >= 2: tp = {"zz": piv, "dvg": dvg}
         # 매수/매도 타점(마커) — 일별 순매수/순매도 강신호(≥2, 우세)일을 표시
         bd = raw[t]["b_day"].reindex(daily.index).fillna(0); sd = raw[t]["s_day"].reindex(daily.index).fillna(0)
         bd = bd.to_numpy(); sd = sd.to_numpy()
@@ -272,7 +304,8 @@ def main():
                        "comp": {k: v for k, v in comps.items() if v is not None}, "flags": flags(sg),
                        "timing": raw[t]["timing"], "buy": raw[t]["buy"], "sell": raw[t]["sell"],
                        "bms": bms, "bmw": bmw, "sms": sms, "smw": smw, "sig": sig,
-                       "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd})
+                       "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd,
+                       **({"tp": tp} if tp else {})})
     stocks.sort(key=lambda s: -(s["comp"].get("momentum") or 0))
     out = {"as_of": as_of, "source": "yfinance + 표준 테크니컬 (cloud)", "n_stocks": len(stocks), "pxd_dates": pxd_dates,
            "factor_defs": {k: {"label": FACTORS[k][0], "group": FACTORS[k][1], "hi": FACTORS[k][2], "as_of": (si_asof if k in ("dtc", "sipct") else as_of)} for k in FACTORS},
