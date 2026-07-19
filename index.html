@@ -48,10 +48,10 @@
 
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:40px 0 14px;display:flex;align-items:center;gap:10px}
 
-  .tools{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .tools{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
   a.tool{display:flex;flex-direction:column;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 24px 22px;box-shadow:var(--shadow);border-top:4px solid var(--edge,var(--accent));transition:transform .14s,border-color .14s,box-shadow .14s}
   a.tool:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 1px 2px rgba(20,28,26,.05),0 18px 40px -16px rgba(20,28,26,.32)}
-  a.tool.dash{--edge:var(--champ)} a.tool.expl{--edge:var(--rp)}
+  a.tool.dash{--edge:var(--champ)} a.tool.expl{--edge:var(--rp)} a.tool.stk{--edge:var(--deploy)}
   .tool .ico{font-size:30px;line-height:1}
   .tool h2{font-family:var(--mono);font-size:19px;font-weight:600;margin:14px 0 0;color:var(--ink);letter-spacing:-.01em}
   .tool p{margin:8px 0 0;font-size:14px;color:var(--ink-2);flex:1}
@@ -109,6 +109,12 @@
       <h2>전략 탐색기</h2>
       <p>10라운드에서 검증한 62개 전략을 클릭해서 성과·상관·판정과 그 근거를 둘러보기. 판정별·라운드별 필터와 검색.</p>
       <span class="go">전략 둘러보기</span>
+    </a>
+    <a class="tool stk" href="stocks.html">
+      <span class="ico">📈</span>
+      <h2>종목 시그널</h2>
+      <p>NDX·SPX 구성종목의 과매수/과매도·EPS 리비전(챔피언)·모멘텀·밸류·퀄리티를 종목별로. 프리셋으로 즉시 스크리닝.</p>
+      <span class="go">종목 분석 열기</span>
     </a>
   </div>
 
