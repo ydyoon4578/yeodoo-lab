@@ -97,13 +97,14 @@ def main():
       {"k":"SAHMREALTIME","label":"Sahm 침체룰 (실시간)","group":"성장","v":round(sahm,2) if sahm is not None else None,"u":"%p","st":stat_sahm(sahm),"d":"실업률 3M평균이 12M저점 +0.5%p면 침체 개시 신호."},
     ]
 
-    # ── 히스토리(월별 레짐 라벨, ~15년) + 자산 조건부 성과 ──
-    hist, asset_perf = build_history(S, cpi_yoy)
+    # ── 히스토리(월별 레짐 라벨, ~15년) + 자산·섹터·팩터 조건부 성과 ──
+    hist, perf = build_history(S, cpi_yoy)
 
     out = {"as_of": asof, "source": "FRED (무료) + yfinance",
            "regime": {"label": lab, "emoji": emoji, "growth": growth, "inflation": inflation,
                       "financial": financial, "desc": desc, "strategy": strat},
-           "indicators": indicators, "history": hist, "asset_perf": asset_perf}
+           "indicators": indicators, "history": hist,
+           "asset_perf": perf["macro"], "sector_perf": perf["sector"], "factor_perf": perf["factor"]}
     json.dump(out, open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} · 레짐 {emoji}{lab} (성장 {growth}·물가 {inflation}·금융 {financial}) · 기준일 {asof}")
 
@@ -135,16 +136,25 @@ def build_history(S, cpi_yoy):
         labels[d] = classify_month(g, inf, None)
     hist = [{"dt": d.date().isoformat(), "r": labels[d]} for d in idx]
 
-    # 자산 조건부 성과: 각 자산 월수익을 레짐별 평균
-    perf = {}
+    # 레짐 조건부 성과: 자산·섹터·팩터 월수익을 레짐별 평균
+    lab_s = pd.Series(labels)
+    GROUPS = {
+        "macro":  ["SPY","QQQ","TLT","GLD","DBC"],
+        "sector": ["XLK","XLF","XLE","XLV","XLI","XLY","XLP","XLU","XLB","XLRE","XLC"],
+        "factor": ["MTUM","QUAL","USMV","VLUE","SIZE"],
+    }
+    perf = {"macro": {}, "sector": {}, "factor": {}}
     try:
-        px = yf.download(["SPY","QQQ","TLT","GLD","DBC"], start="2008-12-01", auto_adjust=True, progress=False)["Close"]
+        allt = sorted(set(t for v in GROUPS.values() for t in v))
+        px = yf.download(allt, start="2008-12-01", auto_adjust=True, progress=False)["Close"]
         mret = px.resample("ME").last().pct_change()*100
-        lab_s = pd.Series(labels)
-        for a in ["SPY","QQQ","TLT","GLD","DBC"]:
-            if a not in mret: continue
-            r = mret[a].reindex(lab_s.index)
-            perf[a] = {rg: round(float(r[lab_s==rg].mean()), 2) for rg in set(labels.values()) if (lab_s==rg).sum()>=3 and pd.notna(r[lab_s==rg].mean())}
+        for grp, tks in GROUPS.items():
+            for a in tks:
+                if a not in mret: continue
+                r = mret[a].reindex(lab_s.index)
+                dd = {rg: round(float(r[lab_s==rg].mean()), 2) for rg in set(labels.values())
+                      if (lab_s==rg).sum() >= 3 and pd.notna(r[lab_s==rg].mean())}
+                if dd: perf[grp][a] = dd
     except Exception as e:
         print("  자산성과 실패", e)
     return hist, perf
