@@ -233,6 +233,8 @@
   var PRESETS=[
     ["buy","🟢 매수 신호","momentum",false,null,["매수","매수우세"]],
     ["sell","🔴 매도 신호","momentum",true,null,["매도","매도우세"]],
+    ["swingbuy","🔺 스윙 저점매수","momentum",false,null,null],
+    ["swingsell","🔻 스윙 고점매도","trend",true,null,null],
     ["oh","과매수","overheat",false,"과매수",null],["os","과매도","overheat",true,"과매도",null],
     ["dip","눌림목","trend",false,"눌림목",null],["brk","52주 돌파","momentum",false,"52주돌파",null],
     ["squeeze","과밀숏","positioning",false,"과밀숏",null],
@@ -290,17 +292,25 @@
   function chip(txt,cnt,onclick){var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');b.innerHTML=txt+(cnt!=null?' <span style="opacity:.65">'+cnt+'</span>':'');b.addEventListener('click',onclick);return b;}
   function curP(){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i][0]===state.preset)return PRESETS[i];return SHOWN[0];}
 
+  // 최근 스윙 마커 인덱스(bms/bmw=매수, sms/smw=매도). 없으면 -1.
+  var SW_WIN=10;   // 스윙 탭: 최근 N거래일(≈2주) 내 발동만 표시
+  function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
+  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}
+  function swFresh(s,sk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
   function filtered(){
     var p=curP(),comp=p[2],asc=p[3],flag=p[4],tim=p[5];
+    var sk=swKeys(p[0]),sc=p[0]==='swingbuy'?'bscore':'sscore';
     var rows=DATA.stocks.filter(function(s){
       if(flag && (s.flags||[]).indexOf(flag)<0)return false;
       if(tim && tim.indexOf(s.timing)<0)return false;
       if(state.idx.size){var ok=false;s.idx.forEach(function(x){if(state.idx.has(x))ok=true;});if(!ok)return false;}
       if(state.q){var hay=(s.t+' '+(s.name||'')+' '+(s.sector||'')).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
+      if(sk)return swFresh(s,sk);                 // 스윙: 최근 SW_WIN일 내 마커 보유만
       return s.comp[comp]!=null;
     });
-    // 매수/약세주의 프리셋은 추세정렬 스코어(bscore/sscore)로 랭킹 — 나머지는 컴포짓 정렬
-    if(p[0]==='buy')rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
+    // 스윙=최근 마커순(동점은 신호강도) / 매수·약세주의=추세정렬 스코어 / 나머지=컴포짓 정렬
+    if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||((b[sc]||0)-(a[sc]||0));});
+    else if(p[0]==='buy')rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
     else if(p[0]==='sell')rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
     return {rows:rows,comp:comp};
@@ -311,12 +321,16 @@
     listEl.innerHTML="";
     if(!rows.length){listEl.innerHTML='<div class="empty">해당 종목 없음</div>';drawDetail(null);return;}
     if(!state.sel||rows.indexOf(state.sel)<0)state.sel=rows[0];
+    var sk=swKeys(state.preset), dts=DATA.pxd_dates||[], NN=dts.length;
     rows.forEach(function(s){
       var b=document.createElement('button');b.className='item';b.setAttribute('role','option');b.setAttribute('aria-selected',s===state.sel);
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join('');
+      var metric;
+      if(sk){var mi=lastMk(s,sk),dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
+        metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+'</div></span>';
+      }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       b.innerHTML='<span><span class="tkline"><span class="tk">'+s.t+'</span>'+s.idx.map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
-        '<div class="nm">'+(s.name||'')+(s.sector?' · '+s.sector:'')+'</div></span>'+
-        '<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';
+        '<div class="nm">'+(s.name||'')+(s.sector?' · '+s.sector:'')+'</div></span>'+metric;
       b.addEventListener('click',function(){select(s);});
       listEl.appendChild(b);
     });
@@ -440,8 +454,9 @@
     el('asof').textContent='기준일 '+(d.as_of||'—')+' (전 지표 동일, yfinance 최신 거래일)';
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
     var pf=el('presets');SHOWN=[];PRESETS.forEach(function(p){
-      var cnt=null;
-      if(p[4])cnt=d.stocks.filter(function(s){return (s.flags||[]).indexOf(p[4])>=0;}).length;
+      var cnt=null,sk=swKeys(p[0]);
+      if(sk)cnt=d.stocks.filter(function(s){return swFresh(s,sk);}).length;
+      else if(p[4])cnt=d.stocks.filter(function(s){return (s.flags||[]).indexOf(p[4])>=0;}).length;
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
