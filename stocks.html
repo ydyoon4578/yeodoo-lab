@@ -235,7 +235,7 @@
     ["sell","🟠 약세 주의","momentum",true,null,["매도","매도우세"]],
     ["oh","과매수","overheat",false,"과매수",null],["os","과매도","overheat",true,"과매도",null],
     ["dip","눌림목","trend",false,"눌림목",null],["brk","52주 돌파","momentum",false,"52주돌파",null],
-    ["squeeze","🩳 과밀숏","positioning",false,"과밀숏",null],
+    ["squeeze","과밀숏","positioning",false,"과밀숏",null],
     ["up","상승추세","trend",false,"상승추세",null],["dn","200일 이탈","trend",true,"200일이탈",null],
     ["mom","고모멘텀","momentum",false,null,null],["lomom","약세","momentum",true,null,null],
     ["hivol","고변동성","volatility",false,null,null],["lovol","저변동성","volatility",true,null,null]];
@@ -353,7 +353,7 @@
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
         '<canvas id="pxc" width="600" height="150"></canvas></div>'+
       '<div class="comps">'+comps+'</div>'+fundHtml+
-      '<div class="dbody">'+timing(s)+body+'<div class="note">매매 타이밍 = <b>추세정렬 신호</b>(2026-07 재설계). <b>상승추세(종가&gt;200MA)에서만 매수</b>(눌림저점·200MA 회복·골든크로스·MACD 상향), <b>하락추세(종가&lt;200MA)에서만 매도(약세 주의)</b>(반등고점·200MA 이탈·데드크로스) — 하락추세 과매도를 함부로 매수(떨어지는 칼)하거나 상승추세 과열을 매도하지 않습니다. 차트 <b style="color:var(--good)">●</b>저점/<b style="color:var(--hot)">●</b>고점 = 확정 <b>스윙 전환점</b>(지그재그). <b style="color:var(--good)">▲</b>매수/<b style="color:var(--hot)">▼</b>매도 타점. <b>백테스트(512종목·5년·주간 리밸): 추세정렬 매수 top이 구 \'과매도순\'보다 fwd20 초과수익 +1.2%→+3.3%, 하락장 꼬리손실 −24%→−15%로 떨어지는 칼을 회피. 다만 종목선택 예측력은 여전히 제한적 — 매도는 \'확실한 하락\'이 아니라 약세·비중축소 주의이며, 참고용이지 매매권유가 아닙니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA. 투자자문·매매권유 아님.</div></div>';
+      '<div class="dbody">'+timing(s)+body+'<div class="note">매매 타이밍 = <b>추세정렬 신호</b>(2026-07 재설계). <b>상승추세(종가&gt;200MA)에서만 매수</b>(눌림저점·200MA 회복·골든크로스·MACD 상향), <b>하락추세(종가&lt;200MA)에서만 매도(약세 주의)</b>(반등고점·200MA 이탈·데드크로스) — 하락추세 과매도를 함부로 매수(떨어지는 칼)하거나 상승추세 과열을 매도하지 않습니다. 차트 <b style="color:var(--good)">●</b>저점/<b style="color:var(--hot)">●</b>고점 = 확정 <b>스윙 전환점</b>(지그재그). <b style="color:var(--good)">▲</b>매수/<b style="color:var(--hot)">▼</b>매도 타점. <b>백테스트(512종목·5년·주간 리밸): 추세정렬 매수 top이 구 \'과매도순\'보다 fwd20 초과수익 +1.2%→+2.1%, 하락장 꼬리손실 −24%→−14%로 떨어지는 칼을 회피. 순수 모멘텀(급등 추격) 대신 전환 신선도를 우선(바스켓 중앙 3M수익 46%→14%). 다만 종목선택 예측력은 여전히 제한적 — 매도는 \'확실한 하락\'이 아니라 약세·비중축소 주의이며, 참고용이지 매매권유가 아닙니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA. 투자자문·매매권유 아님.</div></div>';
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}

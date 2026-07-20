@@ -303,15 +303,18 @@ def main():
         if col not in vdf: return pd.Series(0.0, index=vdf.index)
         x = vdf[col]; sd = x.std(ddof=0)
         return ((x - x.mean())/sd).fillna(0.0) if sd and sd == sd else pd.Series(0.0, index=vdf.index)
-    zr3, zr6, zrs, zp52, zr1 = zc("roc3m"), zc("roc6m"), zc("rs3m"), zc("pos52"), zc("roc1m")
+    zr3, zr6, zrs, zp52, zr1, zd2 = zc("roc3m"), zc("roc6m"), zc("rs3m"), zc("pos52"), zc("roc1m"), zc("d200")
     bdf = pd.DataFrame({t: raw[t]["tb"] for t in raw}).T
     def bcol(name):
         return bdf[name].astype(float).fillna(0.0) if name in bdf.columns else pd.Series(0.0, index=bdf.index)
+    def rk(s): return s.rank(pct=True)
     ohcols = [c2 for c2 in ("rsi", "stoch", "mfi", "willr", "pctb", "pos52") if c2 in pct.columns]
     oh = pct[ohcols].mean(axis=1).reindex(vdf.index).fillna(50.0)   # 과열도(0~100)
-    mom_z = (zr3 + zr6 + zrs + zp52)                                                  # 모멘텀(강세매수)
-    rev_z = (zrs + zr1) + 1.5*bcol("reclaim") + 1.0*bcol("golden") + 0.8*(bcol("macd_bull")*bcol("up")) + 0.5*bcol("adx_up")  # 하락→상승 전환
-    buy_score = (mom_z.rank(pct=True) + rev_z.rank(pct=True))                          # 상승측 랭킹(↑=강한 매수후보)
+    # 매수 랭킹 = 전환 신선도 + 상대강도 − 과열 추격.  (순수 모멘텀은 이미 급등주 추격 → 억제)
+    #   백테스트: 바스켓 중앙 roc3m +46%→+14%(추격 완화)·초과수익 +2.1%·하락장 꼬리 −14%(칼회피 유지)
+    turn = 1.5*bcol("reclaim") + 1.2*bcol("golden") + 1.0*bcol("macd_bull") + 0.6*bcol("adx_up")  # 하락→상승 전환 신선도
+    ext = zd2 + zp52 + zr3                                                             # 과열도(200MA 이격·52주위치·3M수익)
+    buy_score = rk(turn) + rk(zrs + zr1) - 0.5*rk(ext)                                 # 상승측 랭킹(↑=건강한 전환 매수후보)
     sell_score = oh/50.0 + 1.5*bcol("lose") + 1.0*bcol("death") + 0.8*bcol("macd_bear") - zrs  # 하락측 랭킹(↑=강한 약세주의)
     # 일별 종가 패널 (최근 252거래일 ≈ 1년) — 기간선택(1주~1년) 슬라이스용
     daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index().tail(252)
@@ -348,7 +351,9 @@ def main():
         fnd = {"teps": r2(fd.get("teps")), "feps": r2(fd.get("feps")), "tpe": r2(fd.get("tpe")), "fpe": r2(fd.get("fpe"))}
         if fnd["teps"] and fnd["feps"] and fnd["teps"] != 0:
             fnd["gr"] = round((fnd["feps"]/fnd["teps"] - 1)*100, 1)   # 12M 선행 EPS 성장률(%)
-        trig = [k for k in ("reclaim", "golden", "macd_bull", "lose", "death", "macd_bear") if raw[t]["tb"].get(k)]
+        _tb = raw[t]["tb"]   # 트리거는 추세 방향에 맞는 것만 노출(상승=매수트리거·하락=매도트리거)
+        trig = ([k for k in ("reclaim", "golden", "macd_bull") if _tb.get(k)] if _tb.get("up")
+                else [k for k in ("lose", "death", "macd_bear") if _tb.get(k)])
         stocks.append({"t": t, "name": info.get("name"), "sector": info.get("sector"), "idx": info.get("idx", []),
                        "comp": {k: v for k, v in comps.items() if v is not None}, "flags": flags(sg),
                        "timing": raw[t]["timing"], "buy": raw[t]["buy"], "sell": raw[t]["sell"],
