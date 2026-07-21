@@ -63,7 +63,7 @@ decodeURIComponent encodeURIComponent decodeURI encodeURI escape unescape matchM
 console document window localStorage sessionStorage location history navigator
 RegExp Set Map WeakMap WeakSet Promise Proxy Reflect Intl Blob URL URLSearchParams
 MutationObserver IntersectionObserver ResizeObserver Image Event CustomEvent DOMParser AbortController
-getComputedStyle structuredClone queueMicrotask""".split())
+getComputedStyle structuredClone queueMicrotask requestIdleCallback cancelIdleCallback""".split())
 DEFPAT = [r"function\s+([A-Za-z_$][\w$]*)\s*\(", r"(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=",
           r"([A-Za-z_$][\w$]*)\s*=\s*function", r"([A-Za-z_$][\w$]*)\s*:\s*function",
           r"function\s*\(([^)]*)\)", r"catch\s*\(\s*([A-Za-z_$][\w$]*)\s*\)"]
