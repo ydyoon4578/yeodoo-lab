@@ -427,6 +427,14 @@
   }
 
   render();   // 인라인 D로 즉시 렌더(빈 화면 방지) — json 도착 시 det/bt 병합 후 재렌더
+  // #s-슬러그 딥링크 — 로테이션 카드의 '랩 검증(배포·marginal)' 링크가 해당 전략을 바로 선택하도록
+  function _slug(n){return String(n).toLowerCase().replace(/[^0-9a-z가-힣]+/g,'-').replace(/^-+|-+$/g,'');}
+  function _fromHash(){
+    var h=(location.hash||'').replace(/^#s-/,''); if(!h||location.hash.indexOf('#s-')!==0)return;
+    try{h=decodeURIComponent(h);}catch(e){}   // 한글 슬러그는 퍼센트 인코딩돼 들어온다
+    for(var i=0;i<D.length;i++){ if(_slug(D[i].n)===h){ select(D[i]); return; } }
+  }
+  _fromHash(); window.addEventListener('hashchange',_fromHash);
   // 플레이북(strategy_detail.json) + 백테스트 차트데이터(strategy_backtests.json) 병합
   function _get(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
   Promise.all([_get('data/strategy_detail.json'),_get('data/strategy_backtests.json')]).then(function(res){
