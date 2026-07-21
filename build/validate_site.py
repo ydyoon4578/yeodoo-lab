@@ -172,6 +172,22 @@ try:
     if _stale: errors.append(f"data/sd 기준일 불일치 {len(_stale)}종목 (예: {_stale[:5]}) — 슬림과 상세가 다른 날짜")
 except Exception as e:
     errors.append(f"기준일 교차검증 실패: {e}")
+
+# 보유 구성(strategy_holdings.json): 키가 explorer D 배열 이름과 다르면 화면에 조용히 안 뜬다 + 비중합 검사
+try:
+    _hp = os.path.join(ROOT, "data", "strategy_holdings.json")
+    if os.path.exists(_hp):
+        _hd = json.load(io.open(_hp, encoding="utf-8"))
+        for nm, st in (_hd.get("strategies") or {}).items():
+            if nm not in enames:
+                errors.append(f"strategy_holdings \"{nm}\": explorer.html D 배열에 없는 이름(화면 미표시)")
+            _ws = sum(p.get("w", 0) for p in st.get("positions", []))
+            if abs(_ws - 1.0) > 0.01:
+                errors.append(f"strategy_holdings \"{nm}\": 비중합 {_ws:.4f} ≠ 1")
+            if not st.get("as_of") or not st.get("note"):
+                errors.append(f"strategy_holdings \"{nm}\": as_of/note 누락")
+except Exception as e:
+    errors.append(f"strategy_holdings 검증 실패: {e}")
 if qj is None or qp is None: errors.append("선별 상수(QUOTA)를 찾지 못함")
 elif qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
 if cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")
