@@ -26,6 +26,20 @@ def series(code):
 def zscore(s, win):
     return (s - s.rolling(win).mean()) / s.rolling(win).std()
 
+def surprise(s):
+    """직전·추세 대비 서프라이즈(⚠컨센서스 아님) — 최신값이 직전 6관측 평균(=no-news 기대) 대비
+    얼마나 벗어났는지 z화. dir: up=추세상회·down=추세하회·flat=부합. chg=직전 발표 대비 변화."""
+    if s is None: return None
+    s = s.dropna()
+    if len(s) < 8: return None
+    latest, prev = float(s.iloc[-1]), float(s.iloc[-2])
+    exp = float(s.iloc[-7:-1].mean())                       # 직전 6관측 평균 = 기대
+    ch = s.diff().dropna(); sd = float(ch.tail(24).std())
+    if not sd or sd != sd: sd = float(ch.std()) or 1.0
+    z = (latest - exp) / (sd if sd else 1.0)
+    return {"prev": round(prev, 2), "chg": round(latest - prev, 3), "z": round(z, 2),
+            "dir": "up" if z > 0.4 else ("down" if z < -0.4 else "flat")}
+
 def main():
     print("FRED 매크로 로드…")
     S = {c: series(c) for c in ["PAYEMS","UNRATE","CFNAIMA3","SAHMREALTIME","CPIAUCSL",
@@ -170,6 +184,24 @@ def main():
       {"k":"PERMIT","label":"건축허가","group":"주택","v":rnd(permit,0),"u":"천호","st":mk(permit,lambda v:["견조","good"] if v>1400 else(["둔화","watch"] if v<1200 else["보통","neut"])),"d":"건축허가(연율). 착공보다 앞선 주택경기 선행신호."},
       {"k":"CSUSHPINSA","label":"주택가격 (Case-Shiller YoY)","group":"주택","v":rnd(cs_yoy,1),"u":"%","st":mk(cs_yoy,lambda v:["과열","watch"] if v>6 else(["하락","hot"] if v<0 else["보통","neut"])),"d":"전국 주택가격 전년比. 자산효과·가계 순자산에 직결."},
     ]
+
+    # ── 각 지표 '직전·추세 대비 서프라이즈'(⚠컨센서스 아님) 부착 ──
+    yoy = lambda c: (S[c]/S[c].shift(12)-1)*100
+    DS = {
+      "T10Y2Y":S["T10Y2Y"],"BAMLH0A0HYM2":S["BAMLH0A0HYM2"],"NFCI":S["NFCI"],"VIXCLS":S["VIXCLS"],"DFII10":S["DFII10"],
+      "CPIYOY":cpi_yoy,"T10YIE":S["T10YIE"],
+      "PAYEMS":nfp_3m,"UNRATE":unrate_chg,"CFNAIMA3":S["CFNAIMA3"],"SAHMREALTIME":S["SAHMREALTIME"],
+      "INDPRO":yoy("INDPRO"),"RSAFS":yoy("RSAFS"),"ICSA":S["ICSA"].rolling(4).mean()/1000,"UMCSENT":S["UMCSENT"],
+      "CPILFESL":yoy("CPILFESL"),"PCEPILFE":yoy("PCEPILFE"),"T5YIFR":S["T5YIFR"],"DCOILWTICO":S["DCOILWTICO"],
+      "BAMLC0A0CM":S["BAMLC0A0CM"],"DTWEXBGS":S["DTWEXBGS"],"M2SL":yoy("M2SL"),
+      "DFF":S["DFF"],"DGS2":S["DGS2"],"DGS3MO":S["DGS3MO"],"DGS30":S["DGS30"],"DGS10":S["DGS10"],
+      "MORTGAGE30US":S["MORTGAGE30US"],"T10Y3M":S["T10Y3M"],
+      "TCU":S["TCU"],"JTSJOL":S["JTSJOL"]/1000,"CCSA":S["CCSA"].rolling(4).mean()/1e6,"CES0500000003":yoy("CES0500000003"),
+      "PCEPI":yoy("PCEPI"),"PPIACO":yoy("PPIACO"),"GASREGW":S["GASREGW"],
+      "HOUST":S["HOUST"],"PERMIT":S["PERMIT"],"CSUSHPINSA":yoy("CSUSHPINSA"),
+    }
+    for it in indicators:
+        it["sp"] = surprise(DS.get(it["k"]))
 
     # ── 히스토리(월별 레짐 라벨, ~15년) + 자산·섹터·팩터 조건부 성과 ──
     hist, perf = build_history(S, cpi_yoy)
