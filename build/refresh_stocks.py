@@ -398,7 +398,14 @@ def main():
                          "눌림목": "상승추세 중 RSI<45 & %b<0.3", "52주돌파": "52주고점 92%↑ & MACD 상승", "200일이탈": "종가<200일선",
                          "과밀숏": "숏 커버일수≥7 또는 공매도잔량≥유동주식 15%"},
            "stocks": stocks}
-    json.dump(out, open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
+    # 완전성 게이트: yfinance 부분 장애로 커버 종목이 급감한 결과를 조용히 덮어쓰지 않는다(이전본 유지 + 워크플로 실패로 알림).
+    try:
+        _prev = int(json.load(open(OUT, encoding="utf-8")).get("n_stocks") or 0)
+    except Exception:
+        _prev = 0
+    if _prev and len(stocks) < _prev * 0.9:
+        raise SystemExit(f"커버 종목 급감 {_prev}→{len(stocks)} (yfinance 부분 장애 의심) — 갱신 중단, 이전본 유지")
+    json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} ({len(stocks)}종목 · {os.path.getsize(OUT)//1024}KB · 기준일 {as_of})")
     # ── 홈 전용 초소형 요약(주목종목) — 홈이 대형 stocks.json 대신 이것만 fetch(LCP 개선) ──
     try:
@@ -417,7 +424,7 @@ def main():
         _bl, _nb = _reco(["bms", "bmw"]); _sl, _ns = _reco(["sms", "smw"])
         HOME = os.path.join(HERE, "..", "data", "home_reco.json")
         json.dump({"as_of": as_of, "buy": _bl, "sell": _sl, "nbuy": _nb, "nsell": _ns},
-                  open(HOME, "w"), ensure_ascii=False, separators=(",", ":"))
+                  open(HOME, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         print(f"→ {HOME} (홈 요약 · 매수 {_nb}·매도 {_ns})")
     except Exception as e:
         print("  home_reco 생성 실패(무시):", e)
