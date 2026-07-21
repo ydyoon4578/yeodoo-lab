@@ -7,7 +7,7 @@
 <meta name="description" content="여두 전략 랩 — FRED 무료 매크로로 판별하는 현재 시장 국면(레짐). 성장×물가×금융 3축 분류, 레짐별 자산 조건부 성과.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <title>여두 시장 국면 — 매크로 지표</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141C1A'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%2352B8AE' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%2352B8AE'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/regime.html">
 <meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/regime.html">
 <meta property="og:type" content="website">
@@ -19,19 +19,19 @@
 <meta name="twitter:description" content="FRED 무료 매크로 39지표(성장·노동·물가·금융·금리·주택)로 판별하는 시장 국면 + 직전·추세 대비 서프라이즈.">
 <style>
   :root{
-    --ground:#ECEFEE;--panel:#FBFCFC;--panel-2:#F2F5F4;--line:#D4DCDA;--line-soft:#E1E7E5;
-    --ink:#141C1A;--ink-2:#35423F;--muted:#5C6B67;--accent:#1E6F6A;
-    --hot:#A64B3B;--hot-bg:#f3e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dff0e6;--watch:#A76A12;--watch-bg:#f6ebd6;
-    --shadow:0 1px 2px rgba(20,28,26,.05),0 8px 24px -12px rgba(20,28,26,.18);
+    --ground:#F4F1EA;--panel:#FFFFFF;--panel-2:#F8F6F1;--line:#E2DDD1;--line-soft:#EDE9E0;
+    --ink:#2A2621;--ink-2:#4B453B;--muted:#786F61;--accent:#8A6B00;
+    --hot:#A64B3B;--hot-bg:#f3e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dff0e6;--watch:#B25E12;--watch-bg:#f7e6d5;
+    --shadow:0 1px 2px rgba(42,38,33,.05),0 8px 24px -12px rgba(42,38,33,.18);
   }
   @media (prefers-color-scheme:dark){:root{
-    --ground:#0C110F;--panel:#141B19;--panel-2:#19221F;--line:#263130;--line-soft:#1e2725;
-    --ink:#E7EDEA;--ink-2:#C0CBC7;--muted:#8A9591;--accent:#52B8AE;
-    --hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#E4A63F;--watch-bg:#2a2113;
+    --ground:#15130F;--panel:#201D18;--panel-2:#2A2620;--line:#3A342B;--line-soft:#2F2A23;
+    --ink:#F1EDE4;--ink-2:#D0C9BB;--muted:#968C7C;--accent:#FFBC00;
+    --hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#F0863C;--watch-bg:#2b1c12;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#ECEFEE;--panel:#FBFCFC;--panel-2:#F2F5F4;--line:#D4DCDA;--line-soft:#E1E7E5;--ink:#141C1A;--ink-2:#35423F;--muted:#5C6B67;--accent:#1E6F6A;--hot:#A64B3B;--hot-bg:#f3e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dff0e6;--watch:#A76A12;--watch-bg:#f6ebd6;--shadow:0 1px 2px rgba(20,28,26,.05),0 8px 24px -12px rgba(20,28,26,.18);}
-  :root[data-theme="dark"]{--ground:#0C110F;--panel:#141B19;--panel-2:#19221F;--line:#263130;--line-soft:#1e2725;--ink:#E7EDEA;--ink-2:#C0CBC7;--muted:#8A9591;--accent:#52B8AE;--hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#E4A63F;--watch-bg:#2a2113;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
+  :root[data-theme="light"]{--ground:#F4F1EA;--panel:#FFFFFF;--panel-2:#F8F6F1;--line:#E2DDD1;--line-soft:#EDE9E0;--ink:#2A2621;--ink-2:#4B453B;--muted:#786F61;--accent:#8A6B00;--hot:#A64B3B;--hot-bg:#f3e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dff0e6;--watch:#B25E12;--watch-bg:#f7e6d5;--shadow:0 1px 2px rgba(42,38,33,.05),0 8px 24px -12px rgba(42,38,33,.18);}
+  :root[data-theme="dark"]{--ground:#15130F;--panel:#201D18;--panel-2:#2A2620;--line:#3A342B;--line-soft:#2F2A23;--ink:#F1EDE4;--ink-2:#D0C9BB;--muted:#968C7C;--accent:#FFBC00;--hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#F0863C;--watch-bg:#2b1c12;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
   *,*::before,*::after{box-sizing:border-box}
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Helvetica Neue",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
@@ -158,7 +158,7 @@
   var el=function(i){return document.getElementById(i);};
   var css=function(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();};
   // 레짐 색상(라이트/다크 공통 계열, 실제 렌더는 hex)
-  var RC={Goldilocks:"#0E8A54",Recovery:"#1E8A80",SoftLanding:"#A76A12",LateCycle:"#C0722A",Overheating:"#B0483C",Stagflation:"#9A2F28",Recession:"#7A2620"};
+  var RC={Goldilocks:"#0E8A54",Recovery:"#1E8A80",SoftLanding:"#B25E12",LateCycle:"#C0722A",Overheating:"#B0483C",Stagflation:"#9A2F28",Recession:"#7A2620"};
   var RORDER=["Goldilocks","Recovery","SoftLanding","LateCycle","Overheating","Stagflation","Recession"];
   var RKO={Goldilocks:"골디락스",Recovery:"회복",SoftLanding:"연착륙",LateCycle:"후기사이클",Overheating:"과열",Stagflation:"스태그플레이션",Recession:"침체"};
   var GKO={EXPANSION:"확장",SLOWING:"둔화",CONTRACTION:"수축",LOW:"저물가",MODERATE:"중간물가",HIGH:"고물가",EASY:"완화",NEUTRAL:"중립",ELEVATED:"경계",STRESSED:"스트레스"};
@@ -406,7 +406,7 @@
     ctx.fillStyle=css('--cold-bg')||'#dbe9f0'; ctx.fillRect(padL,y(20),iw,y(0)-y(20));
     ctx.fillStyle=css('--hot-bg')||'#f3e0db';  ctx.fillRect(padL,y(100),iw,y(80)-y(100));
     // 눈금
-    ctx.strokeStyle=css('--line-soft')||'#e1e7e5'; ctx.lineWidth=1;
+    ctx.strokeStyle=css('--line-soft')||'#EDE9E0'; ctx.lineWidth=1;
     ctx.font='9px ui-monospace,monospace'; ctx.fillStyle=css('--muted')||'#888'; ctx.textAlign='right';
     [0,20,50,80,100].forEach(function(v){
       var yy=Math.round(y(v))+0.5;
@@ -420,19 +420,19 @@
       var yr=String(h[i].dt||'').slice(0,4);
       if(lastY!==null&&yr!==lastY){
         var xx=Math.round(x(i))+0.5;
-        ctx.strokeStyle=css('--line')||'#d4dcda';
+        ctx.strokeStyle=css('--line')||'#E2DDD1';
         ctx.beginPath();ctx.moveTo(xx,padT);ctx.lineTo(xx,padT+ih);ctx.stroke();
         ctx.fillStyle=css('--muted')||'#888'; ctx.fillText(yr,Math.min(W-padR-12,xx+16),H-4);
       }
       lastY=yr;
     }
     // 라인
-    ctx.strokeStyle=css('--accent')||'#1E6F6A'; ctx.lineWidth=1.6; ctx.lineJoin='round'; ctx.beginPath();
+    ctx.strokeStyle=css('--accent')||'#8A6B00'; ctx.lineWidth=1.6; ctx.lineJoin='round'; ctx.beginPath();
     for(var j=0;j<h.length;j++){var px=x(j),py=y(h[j].score); if(j===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
     ctx.stroke();
     // 마지막 점
     var lx=x(h.length-1), ly=y(h[h.length-1].score);
-    ctx.fillStyle=css('--ink')||'#141C1A'; ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=css('--ink')||'#2A2621'; ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fill();
     // 범례
     var vals=h.map(function(r){return r.score;}), mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
     var lg=el('sentleg');
