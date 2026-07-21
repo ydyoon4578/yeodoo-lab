@@ -82,7 +82,7 @@
     <h1 class="title">기각 전략 아카이브</h1>
     <p class="lede">구현 → PIT·무비용·다에피소드·<b>적대검증</b>을 거쳐 <b>배포에 부적합</b>으로 판정된 전략들입니다. 지우지 않고 남겨두는 이유 —
       <b>같은 공간을 다시 파지 않기 위해서</b>. 여기 있는 건 대부분 gross(무비용)에서도 통합 포트폴리오 대비 증분이 없거나, 비용·룩어헤드·단일에피소드 의존이 드러난 것들입니다.
-      쓸 만한 <b>20개(배포·marginal)</b>는 <a href="explorer.html" style="color:var(--accent)">전략 탐색기</a>에 있습니다.</p>
+      쓸 만한 <b>20개(배포·제한적 유효)</b>는 <a href="explorer.html" style="color:var(--accent)">전략 탐색기</a>에 있습니다.</p>
     <div class="statline" id="statline"></div>
   </header>
   <label class="search">
@@ -102,7 +102,7 @@
   // 로테이션 카드의 '랩 검증' 링크가 해당 기각 항목으로 바로 오도록 앵커 부여(rotation_pool의 lab.href와 동일 규칙).
   function slug(n){return String(n).toLowerCase().replace(/[^0-9a-z가-힣]+/g,'-').replace(/^-+|-+$/g,'');}
   var CATS=[]; D.forEach(function(d){if(CATS.indexOf(d.c)<0)CATS.push(d.c);});
-  el('statline').innerHTML='<span class="stat"><b>'+D.length+'</b> 기각 전략</span><span class="stat"><b>'+CATS.length+'</b> 카테고리</span><span class="stat">배포·marginal 20개는 탐색기</span>';
+  el('statline').innerHTML='<span class="stat"><b>'+D.length+'</b> 기각 전략</span><span class="stat"><b>'+CATS.length+'</b> 카테고리</span><span class="stat">배포·제한적 유효 20개는 탐색기</span>';
   function render(q){
     q=(q||'').toLowerCase().trim();
     var list=el('list'); list.innerHTML='';
