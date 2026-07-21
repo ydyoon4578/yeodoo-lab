@@ -56,6 +56,7 @@
   .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff}
   .stop h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
   .stop .stag{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+  .todaybadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)}
   .srow{display:grid;grid-template-columns:88px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-soft)}
   .srow:first-of-type{border-top:none}
   .srow .sk{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;padding-top:2px}
@@ -131,12 +132,13 @@
     for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
     return a.slice(0,Math.min(n,a.length));
   }
-  function card(s){
+  function card(s,isToday){
     var col=CATCOL[s.cat]||'var(--muted)';
+    var tb=isToday?'<span class="todaybadge">오늘의 9선</span>':'';
     function row(k,v,cls){return v?'<div class="srow '+(cls||'')+'"><span class="sk">'+k+'</span><p>'+esc(v)+'</p></div>':'';}
     var src=(s.sources||[]).map(function(x){return esc(x);}).join(' · ');
     return '<div class="scard"><div class="stop"><span class="cid" style="background:'+col+'">'+esc(s.id||s.cat)+'</span>'+
-      '<h3>'+esc(s.name)+'</h3><span class="stag">'+esc(s.type||'')+(s.target?' · 타겟: '+esc(s.target):'')+'</span></div>'+
+      '<h3>'+esc(s.name)+'</h3>'+tb+'<span class="stag">'+esc(s.type||'')+(s.target?' · 타겟: '+esc(s.target):'')+'</span></div>'+
       row('목적·타겟',s.purpose,'purpose')+row('핵심 원리',s.principle)+row('진입 기준',s.entry)+
       row('성과',s.performance)+
       row('최근 동향'+(s.recent_at?'<span style="display:block;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:9.5px;margin-top:2px">'+esc(s.recent_at)+' 갱신</span>':''),s.recent)+
@@ -159,13 +161,15 @@
   }
   function render(){
     var sel=selection(), br=browsing();
+    // 전체 탐색 중일 때 '오늘의 9선'에 해당하는 전략을 배지로 구분
+    var t9=br?(function(){var m={};pick(DATA.strategies,9,today()).forEach(function(s){m[s.id]=1;});return m;})():null;
     el('rowcount').textContent = br ? (sel.length+'개 표시 / 전체 '+DATA.strategies.length) : ('오늘의 9선 · '+today()+' (검색·필터로 전체 '+DATA.strategies.length+'종 탐색)');
     var html='';
     CATORD.forEach(function(c){
       var items=sel.filter(function(s){return s.cat===c;});
       if(!items.length)return;
       html+='<div class="catsec"><div class="cathead"><span class="dot" style="background:'+(CATCOL[c])+'"></span>'+(CATNM[c]||c)+' <span style="color:var(--muted);font-weight:400;font-size:11px">· '+items.length+(br?'개':'선')+'</span></div>'+
-        items.map(card).join('')+'</div>';
+        items.map(function(s){return card(s, t9?!!t9[s.id]:false);}).join('')+'</div>';
     });
     el('content').innerHTML=html||'<div class="empty">'+(br?'조건에 맞는 전략이 없습니다.':'오늘의 전략이 없습니다.')+'</div>';
   }
