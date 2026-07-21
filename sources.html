@@ -87,9 +87,10 @@
     <div class="eyebrow">Yeouido Quant Strategy Lab — Data Sources</div>
     <h1 class="title">데이터 출처 · 기준일</h1>
     <p class="lede">이 사이트의 모든 데이터가 <b>어디서 오고, 언제 기준이며, 언제 갱신되는지</b>를 고지합니다.</p>
-    <div class="policy"><b>공개 정책</b> — 공개 저장소에 올리는 데이터는 <b>무료 공개 소스(yfinance·FRED·FINRA·공개 문헌)</b>를 원칙으로 합니다.
-      사내 리서치 DB(FactSet 라이선스 데이터)에서 파생된 결과는 <b>집계 성과(월간 수익률·지표)만</b> 공개하고,
-      원천 수치(가격·추정치·팩터값)와 종목 선정 결과는 공개하지 않습니다.</div>
+    <div class="policy"><b>데이터 정책</b> —
+      <b>1)</b> 웹 공개 데이터(yfinance·FRED·FINRA·공개 문헌)를 우선 사용.
+      <b>2)</b> 사내 리서치 DB는 보조로 사용하며, 사용한 부분은 <span class="dbtag">사내 DB</span> 태그로 구분 명시 — 집계 성과만 공개, 원천 수치·종목 선정은 비공개.
+      <b>3)</b> 기준일 정합을 CI로 검증 — 데이터셋 간 날짜 꼬임(미래 날짜·기준일 불일치)이 배포되지 않도록 차단.</div>
   </header>
 
   <p class="lbl">한눈에 보기</p>

@@ -194,6 +194,42 @@ try:
                 errors.append(f"{_fn} \"{nm}\": as_of/note 누락")
 except Exception as e:
     errors.append(f"strategy_holdings 검증 실패: {e}")
+
+# ── 일자 정합(데이터 정책 3): 알려진 날짜 필드가 전부 파싱되고 미래가 아니어야 한다 ──
+# (실사고: members.json에 미래 날짜 07-23이 들어가 있었음. TZ 여유로 +1일 허용.)
+import datetime as _dt
+_tomorrow = (_dt.date.today() + _dt.timedelta(days=1)).isoformat()
+def _dates_of(fn, j):
+    if fn == "stocks.json": return [("as_of", j.get("as_of"))]
+    if fn == "home_reco.json": return [("as_of", j.get("as_of"))]
+    if fn == "regime.json": return [("as_of", j.get("as_of"))]
+    if fn == "members.json": return [("as_of_members", j.get("as_of_members"))]
+    if fn == "rotation_pool.json": return [("generated", j.get("generated"))]
+    if fn in ("strategy_holdings.json", "strategy_holdings_db.json"):
+        return [("generated", j.get("generated"))] + [(f"{nm}.as_of", st.get("as_of")) for nm, st in (j.get("strategies") or {}).items()]
+    if fn == "strategy_backtests.json":
+        out = [("generated", j.get("generated"))]
+        for nm, b in (j.get("strategies") or {}).items():
+            out += [(f"{nm}.start", b.get("start")), (f"{nm}.end", b.get("end"))]
+        return out
+    return []
+for _fn in ("stocks.json", "home_reco.json", "regime.json", "members.json", "rotation_pool.json",
+            "strategy_holdings.json", "strategy_holdings_db.json", "strategy_backtests.json"):
+    _p = os.path.join(ROOT, "data", _fn)
+    if not os.path.exists(_p): continue
+    try:
+        _j = json.load(io.open(_p, encoding="utf-8"))
+    except Exception:
+        continue   # 파싱 오류는 위의 JSON 검사가 이미 보고
+    for k, v in _dates_of(_fn, _j):
+        if not v:
+            errors.append(f"{_fn}: 날짜 필드 {k} 비어 있음"); continue
+        try:
+            _dt.date.fromisoformat(str(v)[:10])
+        except Exception:
+            errors.append(f"{_fn}: {k}={v} 날짜 파싱 불가"); continue
+        if str(v)[:10] > _tomorrow:
+            errors.append(f"{_fn}: {k}={v} 미래 날짜 — 일자 꼬임")
 if qj is None or qp is None: errors.append("선별 상수(QUOTA)를 찾지 못함")
 elif qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
 if cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")
