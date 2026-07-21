@@ -431,12 +431,16 @@ def main():
                         if typ == "L":
                             knife = (s2 == s2 and pxp == pxp and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
                             if (not knife) and oh <= 65:
-                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + " · 아직 확정 전 — 더 하락하면 날짜가 이동"
+                                _age = min(len(pxd_dates) - 1 - pos, 8)
+                                _pmv = {0: 82, 1: 66, 2: 57, 3: 51, 4: 48, 5: 46, 6: 44, 7: 43, 8: 43}[_age]  # 과거 5y·512종목 실측
+                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {len(pxd_dates)-1-pos}일 유지 중 — 과거 통계상 이 시점 잠정저점의 ~{_pmv}%는 더 낮은 저점으로 이동(5y·512종목)"
                         else:
                             rising = (_f(mhb.iloc[pos]) >= _f(mhb.iloc[pos-3])) if pos >= 3 else True
                             strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
                             if (not strength) and oh >= 35:
-                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + " · 아직 확정 전 — 더 상승하면 날짜가 이동"
+                                _age = min(len(pxd_dates) - 1 - pos, 8)
+                                _pmv = {0: 90, 1: 78, 2: 71, 3: 66, 4: 63, 5: 60, 6: 58, 7: 57, 8: 52}[_age]  # 과거 5y·512종목 실측
+                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {len(pxd_dates)-1-pos}일 유지 중 — 과거 통계상 이 시점 잠정고점의 ~{_pmv}%는 더 높은 고점으로 이동(5y·512종목)"
 
             # (b) 추세 내 눌림목·반등 타점 — 지그재그가 놓치는 '추세 유지 중 되돌림'을 잡는다.
             #     확정 중심 피봇(K=3, 3봉 뒤에야 확정되므로 미래참조 아님) + 추세·과열·낙폭 조건 + 간격 8봉.
