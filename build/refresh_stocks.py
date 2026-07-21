@@ -546,12 +546,7 @@ def main():
     for s in stocks:
         _pxa = [x for x in (s.get("pxd") or []) if x is not None]
         _pxnow = _pxa[-1] if _pxa else None
-        _lows = (s.get("bms") or []) + (s.get("bmw") or [])
-        _lowpx = None
-        if _lows and s.get("pxd"):
-            _li = max(_lows)
-            _lowpx = s["pxd"][_li] if s["pxd"][_li] is not None else None
-        if _lowpx is None and len(_pxa) >= 20: _lowpx = min(_pxa[-20:])
+        _lowpx = min(_pxa[-20:]) if len(_pxa) >= 20 else None   # 최근 20일 저점 — 오래된 스윙저점 대비는 +100%대로 무의미해 최근 저점 기준
         _d2 = ((s.get("sig") or {}).get("d200") or {}).get("v")
         _snap[s["t"]] = {"px": _pxnow, "lowpx": _lowpx, "d2": _d2}
     _keep = set()
