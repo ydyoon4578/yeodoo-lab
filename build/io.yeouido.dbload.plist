@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  yeouido-lab Postgres 일일 적재 (macOS launchd)
+  설치: cp build/io.yeouido.dbload.plist ~/Library/LaunchAgents/
+        launchctl load ~/Library/LaunchAgents/io.yeouido.dbload.plist
+  해제: launchctl unload ~/Library/LaunchAgents/io.yeouido.dbload.plist
+
+  08:40 KST — GitHub Actions 푸시(07:35 / 백업 08:10) 이후.
+  RunAtLoad=true 로 두어 맥이 꺼져 있어 놓친 날은 부팅 직후 --backfill 이 복구한다.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>              <string>io.yeouido.dbload</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/yeodoo/Project/yeouido-lab/build/db_daily.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>   <integer>8</integer>
+    <key>Minute</key> <integer>40</integer>
+  </dict>
+  <key>RunAtLoad</key>          <true/>
+  <key>WorkingDirectory</key>   <string>/Users/yeodoo/Project/yeouido-lab</string>
+  <key>StandardOutPath</key>    <string>/Users/yeodoo/Project/yeouido-lab/.dbload.launchd.log</string>
+  <key>StandardErrorPath</key>  <string>/Users/yeodoo/Project/yeouido-lab/.dbload.launchd.log</string>
+</dict>
+</plist>

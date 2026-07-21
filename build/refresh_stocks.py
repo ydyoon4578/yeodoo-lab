@@ -224,8 +224,178 @@ def flags(s):
     return f
 
 
+# ── 펀더멘털 확충(2026-07) ─────────────────────────────────────────────────
+# 512종목 전수 실측 기반 설계(scratchpad/fund_design.md). **추가 API 호출 0** — fetch_fund()가
+# 이미 받는 .info 응답에서 키만 더 꺼낸다.
+# ⚠⚠ 이 20개 지표는 **표시 전용**이다. 랩은 펀더멘털 팩터의 초과수익을 한 번도 검증한 적이 없고,
+#     여기 어느 지표도 백테스트로 엣지가 확인되지 않았다. bscore·sscore·flags·timing·home_reco·
+#     기본 정렬 어디에도 반영하지 않는다(목표주가와 동일 취급). 종합 점수(단일 스칼라)도 만들지 않는다.
+FUND_META = {
+  # key: (label, group, unit, dir, 소수자리, 저배지, 고배지, 저톤, 고톤, desc)
+  "tpe":  ("PER (TTM)", "밸류에이션", "배", "low_cheap", 2, "저PER", "고PER", "cold", "watch",
+           "주가 ÷ 최근 12개월 주당순이익. 낮을수록 이익 대비 저렴. 적자 기업은 산출 불가(결측=적자)."),
+  "fpe":  ("선행 PER", "밸류에이션", "배", "low_cheap", 2, "선행 저평가권", "선행 고평가권", "cold", "watch",
+           "주가 ÷ 향후 12개월 추정 EPS. 애널리스트 추정치에 의존한다. 음수(적자예상)는 퍼센타일에서 제외."),
+  "pb":   ("PBR", "밸류에이션", "배", "low_cheap", 2, "저PBR", "고PBR", "cold", "watch",
+           "주가 ÷ 주당순자산. 자기자본이 음수면 값이 음수가 되며 퍼센타일에서 제외한다."),
+  "ps":   ("PSR", "밸류에이션", "배", "low_cheap", 2, "저PSR", "고PSR", "cold", "watch",
+           "시가총액 ÷ 매출. 적자기업도 산출돼 PER 결측을 보완한다."),
+  "eveb": ("EV/EBITDA", "밸류에이션", "배", "low_cheap", 1, "저EV/EBITDA", "고EV/EBITDA", "cold", "watch",
+           "기업가치(시총+순부채) ÷ EBITDA. 부채까지 반영한 밸류. 은행·보험은 개념이 성립하지 않아 산출되지 않는다."),
+  "peg":  ("PEG", "밸류에이션", "배", "low_cheap", 2, "성장대비 저렴", "성장대비 비쌈", "cold", "watch",
+           "PER ÷ 이익성장률. 정보원(yfinance) 자체 계산값이며 성장률 기간 정의가 공개되지 않는다 — 참고 지표."),
+  "fcfy": ("FCF 수익률", "밸류에이션", "%", "high_cheap", 1, "현금창출 약", "현금창출 강", "watch", "good",
+           "잉여현금흐름 ÷ 시가총액. 회계이익이 아닌 현금 기준 밸류로, PER과 상관 −0.44로 독립적이다."),
+  "pm":   ("순이익률", "수익성", "%", "high_good", 1, "저순이익률", "고순이익률", "watch", "good",
+           "순이익 ÷ 매출. 일회성·세율·금융손익이 섞여 영업이익률과 함께 봐야 한다(상관 0.83)."),
+  "om":   ("영업이익률", "수익성", "%", "high_good", 1, "저영업이익률", "고영업이익률", "watch", "good",
+           "영업이익 ÷ 매출. 본업 수익성."),
+  "gm":   ("매출총이익률", "수익성", "%", "high_good", 1, "저매출총이익률", "고매출총이익률", "watch", "good",
+           "가격결정력·원가구조 지표. 업종별 회계 정의가 달라 업종 간 직접 비교는 부적절하다 — 섹터 퍼센타일을 볼 것."),
+  "roe":  ("ROE", "수익성", "%", "high_good", 1, "저ROE", "고ROE", "watch", "good",
+           "순이익 ÷ 자기자본. 자기자본이 작으면 과대해진다 — PBR과 함께 볼 것."),
+  "roa":  ("ROA", "수익성", "%", "high_good", 1, "저ROA", "고ROA", "watch", "good",
+           "순이익 ÷ 총자산. 레버리지 영향을 뺀 수익성으로, 금융·고부채 기업 비교에 적합."),
+  "rg":   ("매출 성장률", "성장", "%", "high_neutral", 1, "저성장(매출)", "고성장(매출)", "neut", "neut",
+           "직전 분기 매출의 전년동기 대비 증가율. 높다고 좋은 투자라는 뜻은 아니다."),
+  "eg":   ("이익 성장률", "성장", "%", "high_neutral", 1, "저성장(이익)", "고성장(이익)", "neut", "neut",
+           "직전 분기 순이익의 전년동기 대비 증가율. 약 24%가 음수이며 기저효과로 수백 %가 흔하다."),
+  "gr":   ("선행 EPS 성장률", "성장", "%", "high_neutral", 1, None, None, "neut", "neut",
+           "forward EPS ÷ trailing EPS − 1. 애널리스트 추정 기반. EPS 리비전 드리프트(검증된 코어 전략)의 입력이다."),
+  "cr":   ("유동비율", "재무건전성", "배", "high_good", 2, "유동성 낮음", "유동성 여유", "watch", "good",
+           "유동자산 ÷ 유동부채. 은행·보험은 개념이 성립하지 않아 산출되지 않는다."),
+  "de":   ("부채비율(D/E)", "재무건전성", "%", "low_good", 1, "저부채", "고부채", "good", "watch",
+           "총부채 ÷ 자기자본 ×100. 자기자본이 음수면 산출되지 않는다."),
+  "nde":  ("순부채/EBITDA", "재무건전성", "배", "low_good", 1, "차입 여유", "차입 부담", "good", "watch",
+           "(총부채−현금) ÷ EBITDA = 이익으로 부채를 갚는 데 걸리는 햇수. 음수는 순현금."),
+  "dy":   ("배당수익률", "배당·규모·리스크", "%", "high_neutral", 2, "저배당", "고배당", "neut", "neut",
+           "연 배당 ÷ 주가. 결측은 데이터 누락이 아니라 무배당이다."),
+  "po":   ("배당성향", "배당·규모·리스크", "%", "high_neutral", 1, "저배당성향", "고배당성향", "neut", "neut",
+           "배당 ÷ 순이익. 100%를 넘으면 이익을 초과해 배당하는 상태."),
+  "mc":   ("시가총액", "배당·규모·리스크", "억$", "none", 0, "중형주", "초대형주", "neut", "neut",
+           "억 달러 단위. 섹터 상대 퍼센타일은 제공하지 않는다(섹터 간 차이가 1%로 의미 없음)."),
+  "beta": ("베타", "배당·규모·리스크", "배", "none", 2, "저베타", "고베타", "neut", "neut",
+           "시장 대비 변동 민감도. 1보다 크면 시장보다 크게 움직인다. 좋고 나쁨의 방향이 없다."),
+}
+FUND_SLIM = ("ps", "pb", "pm", "roe", "rg", "de", "dy", "mc", "fcfy", "beta")  # 슬림 stocks.json에 넣는 코어 10지표
+FUND_PCT_DROP_NEG = ("fpe", "pb", "eveb")   # 음수가 '가장 싼 종목'으로 둔갑하는 부호 오독만 차단(값은 표시·삭제 안 함)
+FUND_NO_SECTOR = ("mc",)                    # 섹터 퍼센타일 미제공(섹터 간 차이 1%)
+FUND_SECT_MIN = 15                          # (섹터,지표) 유효 표본이 이 미만이면 섹터 퍼센타일 생략
+FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")  # 필드 단위 완전성 게이트 대상(정상 커버 99~100%)
+FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이 %p 이상 급락하면 중단
+
+
+def _numf(x):
+    """None/NaN/inf/문자열 → float 또는 None."""
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return v if (v == v and abs(v) != float("inf")) else None
+
+
+def _x100(x):
+    v = _numf(x)
+    return None if v is None else v*100
+
+
+def fund_metrics(fund, sect):
+    """원시 .info 값 → 20지표 정규화 + 전체/섹터 퍼센타일 + 실측 33/67 임계 + 배지.
+    반환 (vals, pcts, thr, badges, na, cov). 값은 삭제하지 않으며, 퍼센타일에서만 부호 오독분을 제외한다."""
+    rows = {}
+    for t, fd in fund.items():
+        g = fd.get
+        mc = _numf(g("mc")); fcf = _numf(g("fcf")); eb = _numf(g("ebitda"))
+        td = _numf(g("td")); tc = _numf(g("tc"))
+        teps, feps = _numf(g("teps")), _numf(g("feps"))
+        rows[t] = {
+            "tpe": _numf(g("tpe")), "fpe": _numf(g("fpe")), "pb": _numf(g("pb")), "ps": _numf(g("ps")),
+            "eveb": _numf(g("eveb")), "peg": _numf(g("peg")),
+            "fcfy": (fcf/mc*100 if (fcf is not None and mc and mc > 0) else None),
+            "pm": _x100(g("pm")), "om": _x100(g("om")), "gm": _x100(g("gm")),
+            "roe": _x100(g("roe")), "roa": _x100(g("roa")),
+            "rg": _x100(g("rg")), "eg": _x100(g("eg")),
+            "gr": ((feps/teps - 1)*100 if (teps and feps is not None and teps != 0) else None),
+            "cr": _numf(g("cr")), "de": _numf(g("de")),
+            # 분모 가드: EBITDA가 0/음수면 부호가 뒤집혀 '순현금'으로 오독된다 → 산출 안 함
+            "nde": ((td - tc)/eb if (td is not None and tc is not None and eb and eb > 0) else None),
+            "dy": _numf(g("dy")), "po": _x100(g("po")),
+            "mc": (mc/1e8 if (mc and mc > 0) else None), "beta": _numf(g("beta")),
+        }
+    df = pd.DataFrame(rows).T.reindex(columns=list(FUND_META))
+    df = df.apply(pd.to_numeric, errors="coerce")
+    # 단위 가드: yfinance가 과거 dividendYield 단위를 바꾼 전력이 있다(현재는 이미 %).
+    _dym = df["dy"].dropna().median()
+    if _dym == _dym and _dym < 0.5:
+        print(f"  ⚠ dividendYield 중앙값 {_dym:.4f} — 소수 단위로 판정, ×100 보정")
+        df["dy"] = df["dy"]*100
+    # 사후 sanity check: 보정 판정이 이분법이라 중앙값이 임계 근처면 100배 틀린 값이 조용히 게시된다.
+    # 배당주 유니버스의 중앙 배당수익률은 상식적으로 0.3~8% 범위 — 벗어나면 게시하지 않고 통째로 결측 처리.
+    _dyc = df["dy"].dropna().median()
+    if _dyc == _dyc and not (0.3 <= _dyc <= 8.0):
+        print(f"  ⚠ 보정 후 dividendYield 중앙값 {_dyc:.3f}%가 상식 범위(0.3~8) 밖 — dy 전량 결측 처리(오단위 게시 방지)")
+        df["dy"] = np.nan
+    # 퍼센타일용 마스킹(표시값은 그대로 둔다)
+    mdf = df.copy()
+    for k in FUND_PCT_DROP_NEG:
+        mdf.loc[mdf[k] < 0, k] = np.nan
+    p = mdf.rank(pct=True)*100
+    sser = pd.Series({t: (sect.get(t) or "?") for t in df.index}, index=df.index)
+    sp = mdf.groupby(sser).rank(pct=True)*100
+    sp = sp.where(mdf.groupby(sser).transform("count") >= FUND_SECT_MIN)
+    for k in FUND_NO_SECTOR:
+        sp[k] = np.nan
+    thr = {k: (mdf[k].quantile(.33), mdf[k].quantile(.67)) for k in FUND_META}
+    nd = {k: FUND_META[k][4] for k in FUND_META}
+    vals, pcts, badges, na = {}, {}, {}, {}
+    for t in df.index:
+        r = df.loc[t]
+        v = {}
+        for k in FUND_META:
+            x = r[k]
+            if x != x: continue
+            v[k] = round(float(x), nd[k]) if nd[k] else int(round(float(x)))
+        vals[t] = v
+        pcts[t] = {k: (None if p.at[t, k] != p.at[t, k] else int(round(p.at[t, k])),
+                       None if sp.at[t, k] != sp.at[t, k] else int(round(sp.at[t, k]))) for k in FUND_META}
+        # ── 배지: 전 지표 실측 33/67 백분위(=커버 종목 안에서의 상대 위치)+ 회계적 분기점 몇 개 ──
+        b = []
+        for k, (lo, hi) in thr.items():
+            m = FUND_META[k]
+            if m[5] is None or k not in v: continue
+            x = float(r[k])
+            if k in FUND_PCT_DROP_NEG and x < 0: continue   # 부호 오독분은 배지도 달지 않음
+            if lo == lo and x < lo: b.append(m[5])
+            elif hi == hi and x > hi: b.append(m[6])
+        tpe_v, teps_v = v.get("tpe"), _numf((fund.get(t) or {}).get("teps"))
+        if tpe_v is None and teps_v is not None and teps_v <= 0: b.append("적자 — PER 산출 불가")
+        if v.get("fpe") is not None and v["fpe"] < 0: b.append("적자예상")
+        if v.get("pb") is not None and v["pb"] < 0: b.append("자본잠식")
+        if tpe_v is not None and tpe_v > 200: b.append("초고PER")
+        if v.get("eveb") is not None and v["eveb"] < 0: b.append("EBITDA 적자")
+        if v.get("peg") is not None and v["peg"] > 10: b.append("성장률 미미")
+        if v.get("de") is not None and v["de"] > 500: b.append("고레버리지")
+        if v.get("roe") is not None and v["roe"] > 300: b.append("자본 극소")
+        if v.get("eg") is not None and v["eg"] < 0: b.append("이익 감소")
+        if v.get("gr") is not None and v["gr"] < 0: b.append("감익 전망")
+        if v.get("nde") is not None and v["nde"] < 0: b.append("순현금")
+        if v.get("po") is not None and v["po"] > 100: b.append("이익초과 배당")
+        if v.get("dy") is None and v.get("po") is not None and v["po"] <= 0: b.append("무배당")
+        badges[t] = b
+        # ── 결측 사유(UI가 "—" 대신 정직한 문구를 쓸 수 있게) ──
+        nn = {}
+        if tpe_v is None and teps_v is not None and teps_v <= 0: nn["tpe"] = "적자"
+        if v.get("dy") is None: nn["dy"] = "무배당" if (v.get("po") is not None and v["po"] <= 0) else "미확인"
+        _fin = (sect.get(t) or "") in ("Financials", "Real Estate")
+        for k in ("cr", "eveb", "nde", "fcfy"):
+            if k not in v and k not in nn: nn[k] = "업종 특성상 미산출" if _fin else "미확인"
+        na[t] = nn
+    cov = {k: round(float(df[k].notna().mean())*100, 1) for k in FUND_META}
+    return vals, pcts, thr, badges, na, cov
+
+
 def fetch_fund(t):
-    """yfinance .info에서 trailing/forward EPS·PE·유동주식수 + 애널리스트 목표주가 (무료). 실패시 None.
+    """yfinance .info에서 trailing/forward EPS·PE·유동주식수 + 애널리스트 목표주가 + 재무 20지표 원시값 (무료). 실패시 None.
     ⚠ 목표주가는 **같은 .info 응답에서 꺼내므로 추가 API 호출 0**. 새로 Ticker를 만들지 말 것.
     ⚠⚠ 목표주가/상승여력은 **표기 전용**이다. bscore·sscore·flags·timing 어디에도 넣지 않는다.
         검증(512종목 전수 + 애널리스트 이벤트 168,523건): 상승여력 단면분산의 64%가 최근 주가경로만으로 설명되고
@@ -239,7 +409,18 @@ def fetch_fund(t):
                    # ── 애널리스트 목표주가(참고 표기용, 신호 아님) ──
                    "tpm": info.get("targetMeanPrice"), "tph": info.get("targetHighPrice"),
                    "tpl": info.get("targetLowPrice"), "nan": info.get("numberOfAnalystOpinions"),
-                   "rk": info.get("recommendationKey")}
+                   "rk": info.get("recommendationKey"),
+                   # ── 재무 지표 원시값(표시 전용, 신호 아님) — 위 info 딕셔너리에서 키만 더 꺼낸다. 추가 호출 0 ──
+                   "pb": info.get("priceToBook"),
+                   "ps": info.get("priceToSalesTrailing12Months") or info.get("priceToSales"),
+                   "eveb": info.get("enterpriseToEbitda"), "peg": info.get("pegRatio") or info.get("trailingPegRatio"),
+                   "pm": info.get("profitMargins"), "om": info.get("operatingMargins"), "gm": info.get("grossMargins"),
+                   "roe": info.get("returnOnEquity"), "roa": info.get("returnOnAssets"),
+                   "rg": info.get("revenueGrowth"), "eg": info.get("earningsGrowth"),
+                   "cr": info.get("currentRatio"), "de": info.get("debtToEquity"),
+                   "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
+                   "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
+                   "td": info.get("totalDebt"), "tc": info.get("totalCash")}
     except Exception:
         return t, None
 
@@ -425,6 +606,27 @@ def main():
     mo_c = cser(["roc1m", "roc3m", "roc6m", "rs3m"])                 # 모멘텀
     vo_c = cser(["atrp", "vol"])                                     # 변동성
     sect = pd.Series({t: (mem.get(t, {}) or {}).get("sector") or "?" for t in vdf.index}, index=vdf.index)
+    # ── 펀더멘털 20지표 정규화·퍼센타일·임계 (표시 전용) ──
+    fx_v, fx_p, fx_thr, fx_b, fx_na, fx_cov = fund_metrics(fund, {t: (mem.get(t, {}) or {}).get("sector") for t in fund})
+    print("펀더멘털 커버: " + " ".join(f"{k}{fx_cov[k]:.0f}" for k in FUND_META))
+    # 필드 단위 완전성 게이트 — 종목 수는 멀쩡한데 yfinance 스키마 변경으로 **특정 필드만** 통째로
+    # 사라지는 사고를 잡는다(실례: fiftyTwoWeekChange가 조용히 0%가 됨). 종목 단위 게이트로는 안 걸린다.
+    # 판단: 상시 커버 99~100%인 4개 핵심 필드(ps·pm·roe·mc)만 **중단(SystemExit)**.
+    #   근거 — 이 4개가 20%p 급락하는 건 정보원 스키마 파손 외 설명이 없고, 슬림 페이로드의 필터·정렬
+    #   축이라 조용히 비면 화면이 망가진다. 반면 나머지 16개는 구조적 결측(금융의 cr/eveb/fcf,
+    #   무배당의 dy, 사이클 업종의 eg)이 커서 유니버스 구성만 바뀌어도 20%p가 흔들린다 → **경고 로그만**.
+    #   펀더멘털은 매매 신호가 아니라 표시이므로, 표시 결손 때문에 테크니컬 갱신까지 멈추는 건 과하다.
+    try:
+        _pcov = (json.load(open(OUT, encoding="utf-8")).get("fund_cov") or {})
+    except Exception:
+        _pcov = {}
+    _drop = [(k, _pcov[k], fx_cov[k]) for k in FUND_META
+             if k in _pcov and _pcov[k] - fx_cov[k] >= FUND_GATE_DROP]
+    if _drop:
+        _msg = ", ".join(f"{k} {a:.0f}%→{b:.0f}%" for k, a, b in _drop)
+        if any(k in FUND_GATE_KEYS for k, _, _ in _drop):
+            raise SystemExit(f"펀더멘털 핵심 필드 커버 급락({_msg}) — 정보원 스키마 변경 의심, 갱신 중단(이전본 유지)")
+        print(f"  ⚠ 펀더멘털 커버 하락(비핵심, 계속 진행): {_msg}")
     oh_rel = (oh_c - oh_c.groupby(sect).transform("median") + 50.0).clip(0, 100)   # 섹터 상대 과열도(피어 대비)
     # 매수 점수 = 추세+모멘텀 (저과열은 점수 아닌 '필터'로만 — 저과열 가중이 수익을 깎는 것을 실측으로 확인).
     #   그리드 검증(5y 주간): 상승추세∩과열≤60 + tr+mo top8 → ex-SPY20 +2.72%p·hit 56.2%·중앙 roc3m 25%(추격 아님)
@@ -615,6 +817,11 @@ def main():
         fnd = {"teps": r2(fd.get("teps")), "feps": r2(fd.get("feps")), "tpe": r2(fd.get("tpe")), "fpe": r2(fd.get("fpe"))}
         if fnd["teps"] and fnd["feps"] and fnd["teps"] != 0:
             fnd["gr"] = round((fnd["feps"]/fnd["teps"] - 1)*100, 1)   # 12M 선행 EPS 성장률(%)
+        # 코어 10지표만 슬림에 싣는다(값만 — 퍼센타일·나머지 지표·배지는 전부 sd/ 상세로).
+        # 실측: 20지표+퍼센타일 전부 넣으면 stocks.json이 +96%로 2배가 된다.
+        _fv = fx_v.get(t) or {}
+        for _k in FUND_SLIM:
+            if _k in _fv: fnd[_k] = _fv[_k]
         # 애널리스트 목표주가 — 참고 표기 전용(신호·랭킹·정렬 금지). 결측이면 키 자체를 넣지 않는다.
         _tpm, _tph, _tpl = r2(fd.get("tpm")), r2(fd.get("tph")), r2(fd.get("tpl"))
         if _tpm and _tpm > 0:
@@ -632,6 +839,13 @@ def main():
             _rk = fd.get("rk")
             if _rk and _rk != "none": fnd["rk"] = str(_rk)
             tp_hist[t] = _tpm
+        # 상세용 fundx = {키: [값, 전체pct, 섹터pct]} — 뒤쪽 null은 잘라 길이 1~3 (바이트 절약)
+        _fp = fx_p.get(t) or {}
+        _fundx = {}
+        for _k, _vv in _fv.items():
+            _a = [_vv] + list(_fp.get(_k) or (None, None))
+            while len(_a) > 1 and _a[-1] is None: _a.pop()
+            _fundx[_k] = _a
         _tb = raw[t]["tb"]   # 트리거는 추세 방향에 맞는 것만 노출(상승=매수트리거·하락=매도트리거)
         trig = ([k for k in ("reclaim", "golden", "macd_bull") if _tb.get(k)] if _tb.get("up")
                 else [k for k in ("lose", "death", "macd_bear") if _tb.get(k)])
@@ -642,8 +856,13 @@ def main():
                        "trig": trig, "bms": bms, "bmw": bmw, "sms": sms, "smw": smw, "sig": sig,
                        **({"why": whyb} if whyb else {}),
                        "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd,
+                       # 상세(sd/) 전용 — 20지표 값+전체/섹터 퍼센타일 [v,p,sp], 배지, 결측 사유
+                       **({"fundx": _fundx} if _fundx else {}),
+                       **({"fundx_flags": fx_b[t]} if fx_b.get(t) else {}),
+                       **({"fundx_na": fx_na[t]} if fx_na.get(t) else {}),
                        **({"tp": tp} if tp else {})})
     stocks.sort(key=lambda s: -(s["comp"].get("momentum") or 0))
+    def _rnd(x, nd): return round(float(x), nd) if nd else int(round(float(x)))
     out = {"as_of": as_of, "source": "yfinance + 표준 테크니컬 (cloud)", "n_stocks": len(stocks), "pxd_dates": pxd_dates,
            "factor_defs": {k: {"label": FACTORS[k][0], "group": FACTORS[k][1], "hi": FACTORS[k][2], "as_of": (si_asof if k in ("dtc", "sipct") else as_of)} for k in FACTORS},
            "fund_defs": {"teps": "주당순이익 TTM (최근 12개월 실적)", "feps": "선행 EPS (향후 12개월 애널리스트 추정)",
@@ -654,7 +873,44 @@ def main():
                                "우리 매수점수와 상관 −0.71·6개월 모멘텀과 −0.60(55개월 중 100% 음수)이다. "
                                "상승여력 상위 20종목의 90%가 200일선 아래(하락추세)이고, 20/60일 예측력은 통계적으로 없다(Q5−Q1 t=0.89).",
                          "nan": "목표주가를 제시한 애널리스트 수",
-                         "rk": "애널리스트 종합 추천등급. ⚠ 512종목 중 sell·strong_sell 0건 — 등급 체계 자체가 매수 편향(buy 349·hold 89·strong_buy 61)."},
+                         "rk": "애널리스트 종합 추천등급. ⚠ 512종목 중 sell·strong_sell 0건 — 등급 체계 자체가 매수 편향(buy 349·hold 89·strong_buy 61).",
+                         # 슬림에 실린 재무 코어 10지표(상세 정의·임계·퍼센타일은 fundx_defs 참조) — ⚠ 표시 전용, 신호 아님
+                         **{k: f"{FUND_META[k][0]} ({FUND_META[k][2]}) — 표시 전용, 검증된 신호 아님. 상세는 fundx_defs" for k in FUND_SLIM}},
+           # ── 신규 재무 20지표 정의(UI 하드코딩 방지). 기존 fund_defs(문자열 맵)는 하위호환 위해 그대로 둔다 ──
+           #    lo/hi는 고정 상수가 아니라 **매 빌드 커버 종목 실측 33/67 백분위**로 재계산된다.
+           "fundx_defs": {k: {"label": FUND_META[k][0], "group": FUND_META[k][1], "unit": FUND_META[k][2],
+                              "dir": FUND_META[k][3], "nd": FUND_META[k][4], "desc": FUND_META[k][9],
+                              "slim": (k in FUND_SLIM), "sector_pct": (k not in FUND_NO_SECTOR),
+                              # dn = 음수를 퍼센타일·배지에서 뺀 지표(부호 오독 차단 대상). 규칙을 프런트가
+                              # 재구현하면 서버와 어긋난다 — 실제로 UI가 low_cheap 전체로 넓게 잡아 FCF 수익률
+                              # 음수(진짜 '가장 나쁨')의 배지까지 지우던 불일치가 있었다. 서버 판정을 그대로 싣는다.
+                              "dn": (k in FUND_PCT_DROP_NEG),
+                              **({"badge_lo": FUND_META[k][5], "badge_hi": FUND_META[k][6],
+                                  "tone_lo": FUND_META[k][7], "tone_hi": FUND_META[k][8]} if FUND_META[k][5] else {}),
+                              **({"lo": _rnd(fx_thr[k][0], FUND_META[k][4]), "hi": _rnd(fx_thr[k][1], FUND_META[k][4])}
+                                 if fx_thr[k][0] == fx_thr[k][0] else {})} for k in FUND_META},
+           "fundx_groups": ["밸류에이션", "수익성", "성장", "재무건전성", "배당·규모·리스크"],
+           "fundx_dir_defs": {"low_cheap": "낮을수록 저평가(‘좋다’는 뜻 아님 — 중립색)",
+                              "high_cheap": "높을수록 저평가(현금수익률)",
+                              "high_good": "높을수록 양호", "low_good": "낮을수록 양호",
+                              "high_neutral": "방향만 있고 우열은 없음", "none": "방향 없음"},
+           "fund_cov": fx_cov,
+           "fund_pct_basis": {"n": len(fx_v), "as_of": as_of,
+                              "note": "lo/hi 임계 = 커버 종목 실측 33/67 백분위. 관행수치(‘PER 15 미만은 싸다’ 등)를 쓰지 않으며 "
+                                      "갱신 때마다 재계산된다. 상세(sd/)의 fundx는 [값, 전체퍼센타일, 섹터퍼센타일]이며 "
+                                      "뒤 원소가 없으면 해당 퍼센타일 미산출(부호 오독 제외분·섹터 표본 15 미만·시총은 섹터 미제공)."},
+           "fundx_note": "이 재무 지표들은 ‘표시’이지 검증된 신호가 아닙니다. 여두 전략 랩은 펀더멘털 팩터"
+                         "(밸류에이션·수익성·성장·재무건전성·배당)의 초과수익을 한 번도 검증한 적이 없고, 여기 있는 "
+                         "20개 지표 중 백테스트로 매매 엣지가 확인된 것은 하나도 없습니다. 저PER이 고PER보다 나았는지, "
+                         "고ROE가 저ROE를 이겼는지 우리는 모릅니다. 이 값들은 종목을 이해하기 위한 재무 상태 표시이며, "
+                         "매수/매도 점수(bscore·sscore)·플래그·타이밍·홈 추천·기본 정렬 어디에도 일절 반영되지 않습니다. "
+                         "배지(‘저PER’·‘고순이익률’ 등)는 커버 종목 안에서의 상대 위치(33/67 백분위)를 뜻할 뿐 "
+                         "‘싸다=사라’·‘비싸다=팔아라’가 아닙니다. 출처는 yfinance이며 각 사의 최근 분기 보고서 기준이라 "
+                         "종목마다 결산일이 다릅니다(가격 기준일과 as-of가 다름). 참고용이며 매매 권유가 아닙니다.",
+           "fundx_note_eps": "⚠ 위 EPS 블록과 아래 재무 상태 표시는 다른 것입니다. EPS 리비전 드리프트(선행 EPS 추정치의 "
+                             "상향/하향을 추종하는 전략)는 랩이 백테스트로 검증해 배포한 코어 전략입니다. 반면 PER·PBR·ROE·"
+                             "부채비율 등은 검증 이력이 없는 참고 표시입니다. 같은 ‘펀더멘털’이라는 말을 쓴다고 해서 같은 지위가 "
+                             "아닙니다 — 하나는 검증된 전략이고, 나머지는 상태 표시입니다. UI는 두 블록을 시각적으로 분리할 것.",
            "fund_note": "목표주가·추천등급은 표기만 하고 신호로 쓰지 않는다(매수/매도 점수·플래그·타이밍에 일절 반영하지 않음). 참고용이며 매매권유가 아니다.",
            "composite_defs": {"overheat": "과열도 — RSI·스토캐스틱·MFI·Williams·%b·52주", "trend": "추세강도 — ADX·이동평균·MACD·Aroon",
                               "momentum": "모멘텀 — 1/3/6M 수익률·상대강도", "volatility": "변동성 — ATR%·실현변동성",
@@ -684,7 +940,7 @@ def main():
     _keep = set()
     for s in stocks:
         det = {"as_of": as_of, "t": s["t"]}
-        for k in ("sig", "pxd", "vd", "tp", "why"):
+        for k in ("sig", "pxd", "vd", "tp", "why", "fundx", "fundx_flags", "fundx_na"):
             v = s.pop(k, None)
             if v is not None: det[k] = v
         fn = s["t"] + ".json"; _keep.add(fn)
