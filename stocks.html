@@ -299,8 +299,8 @@
   var TIPS={
     swingbuy:"차트 스윙 저점 매수 타점(확정 ▲ + 잠정 △)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
     swingsell:"차트 스윙 고점 매도 타점(확정 ▼ + 잠정 ▽)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
-    buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 상위 50 — 매수 후보 1차 기준",
-    sell:"하락추세(200일선 아래) 종목 중 약세 종합점수 상위 50 — 비중축소 주의 (공매도 근거 아님)",
+    buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 내림차순 — 매수 후보 1차 기준",
+    sell:"하락추세(200일선 아래) 종목 중 약세 종합점수 내림차순 — 비중축소 주의 (공매도 근거 아님)",
     oh:"과열도 상위 — RSI·스토캐스틱·MFI 등 과매수권",
     os:"과열도 하위 — 과매도권 (하락추세면 떨어지는 칼 주의)",
     dip:"상승추세 중 RSI<45·밴드 하단 눌림 — 조정 매수 관찰 대상",
@@ -384,8 +384,8 @@
     // 스윙=최근 마커순(동점은 신호강도) / 매수·매도 신호=종합점수 내림차순 + 상위 50 캡(종목수 과다 방지) / 나머지=컴포짓 정렬
     var total=rows.length;
     if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||((b[sc]||0)-(a[sc]||0));});
-    else if(p[0]==='buy'){rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});rows=rows.slice(0,50);}
-    else if(p[0]==='sell'){rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});rows=rows.slice(0,50);}
+    else if(p[0]==='buy')rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
+    else if(p[0]==='sell')rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
     return {rows:rows,comp:comp,total:total};
   }
@@ -600,8 +600,7 @@
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      var badge=(p[0]==='buy'||p[0]==='sell')&&cnt!=null?Math.min(cnt,50):cnt;   // 신호 탭은 상위 50 캡과 일치
-      pf.appendChild(chip(p[1],badge,function(){state.preset=p[0];state.sel=null;syncP();render();},TIPS[p[0]]));
+      pf.appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();},TIPS[p[0]]));
     });
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
     var ixf=el('idxf');['NDX','SPX'].forEach(function(x){var cnt=d.stocks.filter(function(s){return (s.idx||[]).indexOf(x)>=0;}).length;ixf.appendChild(chip(x,cnt,function(){state.idx.has(x)?state.idx.delete(x):state.idx.add(x);syncP();render();},x==='NDX'?'나스닥100 구성종목만':'S&P500 구성종목만'));});
