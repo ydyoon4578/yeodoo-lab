@@ -554,5 +554,26 @@
 })();
 </script>
 <script>(function(){var r=document.documentElement,b=document.getElementById('themebtn');function c(){return r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');}b.addEventListener('click',function(){var n=c()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('yeouido-theme',n);}catch(e){}});try{var s=localStorage.getItem('yeouido-theme');if(s)r.setAttribute('data-theme',s);}catch(e){}})();</script>
+
+<script>
+/* 이 페이지 콘텐츠가 마지막으로 갱신된 시점 배지 — data/updates.json 공용(홈 '최근 업데이트'와 같은 소스) */
+(function(){
+  var TGT='explorer';
+  fetch('data/updates.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+    if(!u||!u.events)return;
+    var e=u.events.filter(function(x){return x.target===TGT;})[0]; if(!e)return;
+    var t=new Date(e.dt+'T00:00:00+09:00'), now=new Date(Date.now()+9*3600e3);
+    var days=Math.floor((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()))/864e5);
+    var ago=days<=0?'오늘':days===1?'어제':days+'일 전';
+    var h=document.querySelector('header.mast'); if(!h)return;
+    var d=document.createElement('div');
+    d.style.cssText='margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap';
+    d.innerHTML='<span style="font-weight:700;color:var(--accent)">최근 업데이트</span>'+
+      '<span>'+e.dt+' ('+ago+')</span><span style="color:var(--ink-2)">'+e.title+'</span>'+
+      (days<=3?'<span style="font-weight:700;color:var(--deploy);border:1px solid color-mix(in srgb,var(--deploy) 40%,transparent);border-radius:5px;padding:1px 6px">NEW</span>':'');
+    h.appendChild(d);
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>

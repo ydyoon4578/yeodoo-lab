@@ -61,6 +61,17 @@
   a.rgchip{text-decoration:none;border-bottom:0}
   a.rgchip:hover{background:color-mix(in srgb,var(--rgc,var(--muted)) 20%,var(--panel))}
 
+  /* 최근 업데이트 피드 — data/updates.json */
+  .updwrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:4px 20px}
+  .upd{display:grid;grid-template-columns:86px 92px 1fr;gap:12px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+  .upd:last-child{border-bottom:none}
+  .upd .ud{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .upd .ut{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;text-align:center;border-radius:5px;padding:2px 0;white-space:nowrap;
+           color:var(--utc,var(--muted));background:color-mix(in srgb,var(--utc,var(--muted)) 13%,transparent);border:1px solid color-mix(in srgb,var(--utc,var(--muted)) 38%,transparent)}
+  .upd .uv{color:var(--ink-2)}
+  .upd a{color:inherit;text-decoration:none} .upd a:hover .uv{color:var(--accent)}
+  .updempty{padding:16px 0;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  @media(max-width:560px){.upd{grid-template-columns:74px 84px;row-gap:4px}.upd .uv{grid-column:1/-1}}
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:40px 0 14px;display:flex;align-items:center;gap:10px}
 
   .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
@@ -169,6 +180,9 @@
     <a class="rs" href="explorer.html" style="--edge:var(--rp)"><div><span class="rt">크로스에셋 RP</span><span class="rr">배포코어</span></div><div class="rd">12자산 역변동성 + 추세게이트 + vol타겟. 올웨더 방어 슬리브.</div></a>
   </div>
 
+  <p class="lbl">최근 업데이트 <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· 전략 리스트·기각 아카이브·전략 탐색 갱신 내역</span></p>
+  <div class="updwrap" id="updwrap"><div class="updempty">불러오는 중…</div></div>
+
   <footer>
     <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처·기준일</a><br>
     리서치 백테스트는 무비용·월말(gross) 기준.
@@ -267,6 +281,26 @@
       renderReco({as_of:d.as_of,buy:b.list,sell:s.list,nbuy:b.n,nsell:s.n});
     }).catch(stkFail);
   }
+  // 최근 업데이트 — 무엇이 언제 바뀌었는지(전략 리스트·기각 아카이브·전략 탐색 등)
+  var UPD={rotation:['전략 탐색','rotation.html','var(--marg)'],explorer:['전략 리스트','explorer.html','var(--rp)'],
+           archive:['기각 아카이브','archive.html','var(--hot)'],stocks:['종목 시그널','stocks.html','var(--deploy)'],
+           regime:['시장 국면','regime.html','var(--champ)'],sentiment:['시장 심리','regime.html','var(--champ)'],
+           holdings:['포트폴리오','explorer.html','var(--rp)']};
+  function agoTxt(d){
+    var t=new Date(d+'T00:00:00+09:00'), now=new Date(Date.now()+9*3600e3);
+    var days=Math.floor((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate()))/864e5);
+    return days<=0?'오늘':days===1?'어제':days+'일 전';
+  }
+  fetch('data/updates.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+    var w=document.getElementById('updwrap'); if(!w)return;
+    var ev=(u&&u.events||[]).slice(0,6);
+    if(!ev.length){w.innerHTML='<div class="updempty">표시할 갱신 내역이 없습니다.</div>';return;}
+    w.innerHTML=ev.map(function(e){
+      var m=UPD[e.target]||['기타','index.html','var(--muted)'];
+      return '<a class="upd" href="'+m[1]+'"><span class="ud">'+e.dt+' · '+agoTxt(e.dt)+'</span>'+
+        '<span class="ut" style="--utc:'+m[2]+'">'+m[0]+'</span><span class="uv">'+e.title+'</span></a>';
+    }).join('');
+  }).catch(function(){var w=document.getElementById('updwrap');if(w)w.innerHTML='<div class="updempty">갱신 내역을 불러오지 못했습니다.</div>';});
   fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){
     if(h&&h.buy){renderReco(h);}else{loadFull();}
   }).catch(loadFull);
