@@ -33,8 +33,11 @@ def main():
                                  # ── 추가 매크로 지표 ──
                                  "INDPRO","RSAFS","ICSA","UMCSENT",                 # 성장·활동·노동·소비
                                  "CPILFESL","PCEPILFE","T5YIFR","DCOILWTICO",       # 물가(근원CPI·근원PCE·5Y5Y·유가)
-                                 "BAMLC0A0CM","DTWEXBGS",                            # 금융(IG스프레드·달러)
-                                 "DFF","DGS2","MORTGAGE30US"]}                       # 금리(연방기금·2년·모기지)
+                                 "BAMLC0A0CM","DTWEXBGS","M2SL",                     # 금융(IG스프레드·달러·M2)
+                                 "DFF","DGS2","DGS3MO","DGS30","MORTGAGE30US",       # 금리(연방기금·2년·3M·30년·모기지)
+                                 "TCU","JTSJOL","CCSA","CES0500000003",              # 노동·활동(설비가동·JOLTS·계속청구·임금)
+                                 "PCEPI","PPIACO","GASREGW",                          # 물가(헤드라인PCE·PPI·휘발유)
+                                 "HOUST","PERMIT","CSUSHPINSA"]}                      # 주택(착공·허가·Case-Shiller)
     asof = max(s.index.max() for s in S.values() if len(s)).date().isoformat()
 
     # ── 파생 시계열 ──
@@ -58,6 +61,19 @@ def main():
     dgs10, dgs2 = last(S["DGS10"]), last(S["DGS2"])                      # 국채 10Y·2Y(%)
     t10y3m     = last(S["T10Y3M"])                                       # 10Y−3M 커브(%p)
     mort       = last(S["MORTGAGE30US"])                                 # 30년 모기지(%)
+    # ── 2차 확충 지표 ──
+    tcu     = last(S["TCU"])                                             # 설비가동률(%)
+    jolts   = last(S["JTSJOL"])/1000 if last(S["JTSJOL"]) is not None else None   # 구인건수(백만)
+    ccsa    = last(S["CCSA"].rolling(4).mean())                          # 계속 실업청구 4주평균(건)
+    ccsa    = ccsa/1e6 if ccsa is not None else None                     # → 백만
+    ahe_yoy = last((S["CES0500000003"]/S["CES0500000003"].shift(12)-1)*100)  # 시간당임금 YoY(%)
+    pce_hd  = last((S["PCEPI"]/S["PCEPI"].shift(12)-1)*100)              # 헤드라인 PCE YoY(%)
+    ppi_yoy = last((S["PPIACO"]/S["PPIACO"].shift(12)-1)*100)            # PPI YoY(%)
+    gas     = last(S["GASREGW"])                                         # 휘발유($/갤런)
+    m2_yoy  = last((S["M2SL"]/S["M2SL"].shift(12)-1)*100)               # M2 YoY(%)
+    dgs3mo, dgs30 = last(S["DGS3MO"]), last(S["DGS30"])                  # 3M·30Y 국채(%)
+    houst, permit = last(S["HOUST"]), last(S["PERMIT"])                  # 주택착공·건축허가(천호)
+    cs_yoy  = last((S["CSUSHPINSA"]/S["CSUSHPINSA"].shift(12)-1)*100)    # Case-Shiller YoY(%)
     rnd = lambda v, n=2: round(v, n) if v is not None else None
 
     # ── 축1: 성장 ──
@@ -116,14 +132,14 @@ def main():
       {"k":"DFII10","label":"10년 실질금리 (TIPS)","group":"금융","v":round(last(S['DFII10']),2) if last(S['DFII10']) is not None else None,"u":"%","st":stat_real(last(S['DFII10'])),"d":"물가연동국채 실질수익률. 그로스주 할인율의 핵심."},
       {"k":"CPIYOY","label":"소비자물가 CPI (YoY)","group":"물가","v":round(infl_v,1) if infl_v is not None else None,"u":"%","st":stat_cpi(infl_v),"d":"전년比 물가상승률. 2%↓ 저물가·4%↑ 고물가."},
       {"k":"T10YIE","label":"기대인플레 (10Y BEI)","group":"물가","v":round(last(S['T10YIE']),2) if last(S['T10YIE']) is not None else None,"u":"%","st":("높음","watch") if (last(S['T10YIE']) or 0)>2.5 else ("안정","good"),"d":"시장 반영 10년 기대인플레(브레이크이븐)."},
-      {"k":"PAYEMS","label":"고용증감 (3M평균)","group":"성장","v":round(nfp) if nfp is not None else None,"u":"천명","st":stat_nfp(nfp),"d":"비농업 신규고용 3개월 평균. 노동시장 모멘텀."},
-      {"k":"UNRATE","label":"실업률 저점대비","group":"성장","v":round(dU,2) if dU is not None else None,"u":"%p","st":("상승(둔화)","hot") if (dU or 0)>=0.5 else ("안정","good"),"d":"12개월 저점 대비 실업률 상승폭(Sahm 룰 유사)."},
+      {"k":"PAYEMS","label":"고용증감 (3M평균)","group":"노동","v":round(nfp) if nfp is not None else None,"u":"천명","st":stat_nfp(nfp),"d":"비농업 신규고용 3개월 평균. 노동시장 모멘텀."},
+      {"k":"UNRATE","label":"실업률 저점대비","group":"노동","v":round(dU,2) if dU is not None else None,"u":"%p","st":("상승(둔화)","hot") if (dU or 0)>=0.5 else ("안정","good"),"d":"12개월 저점 대비 실업률 상승폭(Sahm 룰 유사)."},
       {"k":"CFNAIMA3","label":"시카고 활동지수 (MA3)","group":"성장","v":round(cfnai,2) if cfnai is not None else None,"u":"","st":("위축","hot") if (cfnai or 0)<-0.7 else (("둔화","watch") if (cfnai or 0)<-0.35 else ("확장","good")),"d":"85개 지표 종합 실물활동. 0=추세성장·음(−)이면 둔화."},
-      {"k":"SAHMREALTIME","label":"Sahm 침체룰 (실시간)","group":"성장","v":round(sahm,2) if sahm is not None else None,"u":"%p","st":stat_sahm(sahm),"d":"실업률 3M평균이 12M저점 +0.5%p면 침체 개시 신호."},
+      {"k":"SAHMREALTIME","label":"Sahm 침체룰 (실시간)","group":"노동","v":round(sahm,2) if sahm is not None else None,"u":"%p","st":stat_sahm(sahm),"d":"실업률 3M평균이 12M저점 +0.5%p면 침체 개시 신호."},
       # ── 추가: 성장·활동·소비 ──
       {"k":"INDPRO","label":"산업생산 (YoY)","group":"성장","v":rnd(indpro_yoy,1),"u":"%","st":mk(indpro_yoy,lambda v:["확장","good"] if v>2 else(["위축","hot"] if v<0 else["둔화","watch"])),"d":"산업생산지수 전년比. 제조·광공업 실물 모멘텀."},
       {"k":"RSAFS","label":"소매판매 (YoY)","group":"성장","v":rnd(rsafs_yoy,1),"u":"%","st":mk(rsafs_yoy,lambda v:["견조","good"] if v>3 else(["위축","hot"] if v<0 else["둔화","watch"])),"d":"소매판매 전년比(명목). 소비 수요 강도."},
-      {"k":"ICSA","label":"신규 실업수당청구 (4주평균)","group":"성장","v":rnd(claims,0),"u":"천건","st":mk(claims,lambda v:["낮음(견조)","good"] if v<250 else(["상승(악화)","hot"] if v>300 else["보통","neut"])),"d":"주간 신규 실업수당 청구 4주평균. 노동시장 실시간 악화 신호."},
+      {"k":"ICSA","label":"신규 실업수당청구 (4주평균)","group":"노동","v":rnd(claims,0),"u":"천건","st":mk(claims,lambda v:["낮음(견조)","good"] if v<250 else(["상승(악화)","hot"] if v>300 else["보통","neut"])),"d":"주간 신규 실업수당 청구 4주평균. 노동시장 실시간 악화 신호."},
       {"k":"UMCSENT","label":"소비심리 (미시간)","group":"성장","v":rnd(umcsent,1),"u":"","st":mk(umcsent,lambda v:["양호","good"] if v>90 else(["위축","hot"] if v<70 else["보통","watch"])),"d":"미시간대 소비자심리지수. 낮을수록 소비 위축 우려."},
       # ── 추가: 물가 ──
       {"k":"CPILFESL","label":"근원 CPI (YoY)","group":"물가","v":rnd(cpi_core,1),"u":"%","st":mk(cpi_core,lambda v:["고물가","hot"] if v>=4 else(["안정","good"] if v<2.5 else["중간","watch"])),"d":"식품·에너지 제외 근원 소비자물가 전년比. 기조적 인플레."},
@@ -139,6 +155,20 @@ def main():
       {"k":"DGS2","label":"국채 2년","group":"금리","v":rnd(dgs2,2),"u":"%","st":mk(dgs2,lambda v:["높음","watch"] if v>4.5 else(["낮음","good"] if v<3 else["중립","neut"])),"d":"2년물 국채금리. 향후 정책금리 경로 기대를 반영."},
       {"k":"T10Y3M","label":"수익률곡선 (10Y−3M)","group":"금리","v":rnd(t10y3m,2),"u":"%p","st":mk(t10y3m,lambda v:["역전(침체선행)","hot"] if v<0 else["정상","good"]),"d":"연준이 중시하는 침체 예측 커브(10Y−3M)."},
       {"k":"MORTGAGE30US","label":"30년 모기지","group":"금리","v":rnd(mort,2),"u":"%","st":mk(mort,lambda v:["높음","hot"] if v>=7 else(["낮음","good"] if v<5 else["보통","watch"])),"d":"30년 고정 모기지금리. 주택·소비 금융여건의 체감 지표."},
+      # ── 2차 확충 ──
+      {"k":"TCU","label":"설비가동률","group":"성장","v":rnd(tcu,1),"u":"%","st":mk(tcu,lambda v:["견조","good"] if v>80 else(["여유(둔화)","watch"] if v<76 else["보통","neut"])),"d":"산업 설비가동률. 높으면 수요 견조(과열 시 인플레 압력)."},
+      {"k":"JTSJOL","label":"구인건수 (JOLTS)","group":"노동","v":rnd(jolts,2),"u":"백만","st":mk(jolts,lambda v:["견조","good"] if v>8 else(["둔화","watch"] if v<6 else["보통","neut"])),"d":"전체 구인건수. 노동 수요 강도 — 감소는 고용시장 냉각."},
+      {"k":"CCSA","label":"계속 실업청구 (4주평균)","group":"노동","v":rnd(ccsa,2),"u":"백만","st":mk(ccsa,lambda v:["낮음(견조)","good"] if v<1.8 else(["상승(악화)","hot"] if v>2.0 else["보통","neut"])),"d":"실업수당 계속 수급자. 재취업 난이도 — 상승은 노동시장 약화."},
+      {"k":"CES0500000003","label":"시간당임금 (YoY)","group":"노동","v":rnd(ahe_yoy,1),"u":"%","st":mk(ahe_yoy,lambda v:["높음(임금인플레)","watch"] if v>4 else(["안정","good"] if v<3 else["보통","neut"])),"d":"민간 평균 시간당임금 전년比. 임금발 인플레 압력."},
+      {"k":"PCEPI","label":"헤드라인 PCE (YoY)","group":"물가","v":rnd(pce_hd,1),"u":"%","st":mk(pce_hd,lambda v:["높음","hot"] if v>=3 else(["안정","good"] if v<2.5 else["중간","watch"])),"d":"개인소비지출 물가(전체). 근원과 함께 연준 판단 근거."},
+      {"k":"PPIACO","label":"생산자물가 PPI (YoY)","group":"물가","v":rnd(ppi_yoy,1),"u":"%","st":mk(ppi_yoy,lambda v:["높음","hot"] if v>4 else(["안정","good"] if v<2 else["중간","watch"])),"d":"생산자물가(전 품목) 전년比. 소비자물가 선행 파이프라인."},
+      {"k":"GASREGW","label":"휘발유 가격","group":"물가","v":rnd(gas,2),"u":"$","st":mk(gas,lambda v:["고가","watch"] if v>4 else(["저가","good"] if v<3 else["보통","neut"])),"d":"전국 평균 휘발유($/갤런). 체감물가·소비여력에 직접 영향."},
+      {"k":"M2SL","label":"통화량 M2 (YoY)","group":"금융","v":rnd(m2_yoy,1),"u":"%","st":mk(m2_yoy,lambda v:["위축(긴축)","watch"] if v<0 else(["확장","neut"] if v>6 else["보통","neut"])),"d":"광의 통화량 전년比. 유동성 여건 — 음(−)이면 통화 긴축."},
+      {"k":"DGS3MO","label":"국채 3개월","group":"금리","v":rnd(dgs3mo,2),"u":"%","st":mk(dgs3mo,lambda v:["높음","watch"] if v>4.5 else(["낮음","good"] if v<2 else["중립","neut"])),"d":"3개월 T-bill. 사실상 정책금리 수준을 반영하는 단기금리."},
+      {"k":"DGS30","label":"국채 30년","group":"금리","v":rnd(dgs30,2),"u":"%","st":mk(dgs30,lambda v:["높음","watch"] if v>4.5 else(["낮음","good"] if v<3.5 else["중립","neut"])),"d":"30년물 국채금리. 초장기 자금비용·재정 지속가능성 신호."},
+      {"k":"HOUST","label":"주택착공","group":"주택","v":rnd(houst,0),"u":"천호","st":mk(houst,lambda v:["견조","good"] if v>1400 else(["둔화","watch"] if v<1200 else["보통","neut"])),"d":"신규 주택착공(연율). 건설·경기순환의 대표 선행지표."},
+      {"k":"PERMIT","label":"건축허가","group":"주택","v":rnd(permit,0),"u":"천호","st":mk(permit,lambda v:["견조","good"] if v>1400 else(["둔화","watch"] if v<1200 else["보통","neut"])),"d":"건축허가(연율). 착공보다 앞선 주택경기 선행신호."},
+      {"k":"CSUSHPINSA","label":"주택가격 (Case-Shiller YoY)","group":"주택","v":rnd(cs_yoy,1),"u":"%","st":mk(cs_yoy,lambda v:["과열","watch"] if v>6 else(["하락","hot"] if v<0 else["보통","neut"])),"d":"전국 주택가격 전년比. 자산효과·가계 순자산에 직결."},
     ]
 
     # ── 히스토리(월별 레짐 라벨, ~15년) + 자산·섹터·팩터 조건부 성과 ──

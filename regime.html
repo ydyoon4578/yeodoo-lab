@@ -128,7 +128,7 @@
       '<div class="haxes"><span class="ax"><b>성장</b>'+(GKO[rg.growth]||rg.growth)+'</span><span class="ax"><b>물가</b>'+(GKO[rg.inflation]||rg.inflation)+'</span><span class="ax"><b>금융</b>'+(GKO[rg.financial]||rg.financial)+'</span></div></div></div>'+
       '<div class="hstrat"><b>참고 전략</b>'+rg.strategy+'</div></div>';
     // indicator groups
-    var groups=["성장","물가","금융","금리"], ig='';
+    var groups=["성장","노동","물가","금융","금리","주택"], ig='';
     groups.forEach(function(g){
       var items=d.indicators.filter(function(x){return x.group===g;});
       if(!items.length)return;
