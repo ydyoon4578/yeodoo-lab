@@ -350,7 +350,7 @@
   // 최근 스윙 마커 인덱스(bms/bmw=매수, sms/smw=매도). 없으면 -1.
   var SW_WIN=10;   // 스윙 탭: 최근 N거래일(≈2주) 내 발동만 표시
   function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
-  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}
+  function swKeys(pk){return pk==='swingbuy'?['bms']:pk==='swingsell'?['sms']:null;}   // 탭·정렬은 확정 타점만(잠정 bmw/smw 제외 — 리페인팅 방지)
   function swFresh(s,sk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
   function filtered(){
     var p=curP(),comp=p[2],asc=p[3],flag=p[4],tim=p[5];
@@ -420,6 +420,8 @@
     var rows='';
     if(w.buy)rows+='<div class="whyrow buy"><span class="wl">▲ 최근 매수 타점</span><div><b>'+esc(w.buy.dt)+'</b> — '+esc(w.buy.why||'')+'</div></div>';
     if(w.sell)rows+='<div class="whyrow sell"><span class="wl">▼ 최근 매도 타점</span><div><b>'+esc(w.sell.dt)+'</b> — '+esc(w.sell.why||'')+'</div></div>';
+    if(w.pbuy)rows+='<div class="whyrow buy"><span class="wl">△ 잠정 저점 (미확정)</span><div><b>'+esc(w.pbuy.dt)+'</b> — '+esc(w.pbuy.why||'')+'</div></div>';
+    if(w.psell)rows+='<div class="whyrow sell"><span class="wl">▽ 잠정 고점 (미확정)</span><div><b>'+esc(w.psell.dt)+'</b> — '+esc(w.psell.why||'')+'</div></div>';
     var now=(w.now||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
     return '<div class="whybox"><h4>왜 이 신호인가</h4>'+rows+
       (now?'<div class="whyrow now"><span class="wl">현재 상태</span><ul>'+now+'</ul></div>':'')+
@@ -464,7 +466,7 @@
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
         '<canvas id="pxc" width="600" height="150" role="img" aria-label="주가 차트"></canvas></div>'+
       '<div class="comps">'+comps+'</div>'+fundHtml+
-      '<div class="dbody" tabindex="0" aria-label="지표 상세">'+whyBlock(s)+timing(s)+body+'<div class="note">차트 <b style="color:var(--good)">▲</b>매수 = <b>스윙 저점 근처</b>, <b style="color:var(--hot)">▼</b>매도 = <b>스윙 고점 근처</b>(지그재그 전환점 <b style="color:var(--good)">●</b>/<b style="color:var(--hot)">●</b>). 타점은 ①스윙 전환점 확정 ②상승추세 눌림목 저점 ③깊은 과매도 뒤 반등 확인(고위험) 세 종류이며, 각 타점의 근거는 위 <b>왜 이 신호인가</b>에 표시됩니다. 여기에 <b>과열도·추세·모멘텀·변동성</b>을 결합해 걸러냅니다 — 저점이라도 <b>깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외</b>(떨어지는 칼 회피), 고점이라도 <b>추세·모멘텀 강한 상승 지속이면 매도 제외</b>(강세종목 조기매도 회피). 임계는 <b>시장국면</b>(SPY 200MA 위=관대한 눌림매수)에 따라 조정. 상단 리스트 랭킹은 과열도(<b>섹터 상대</b>)·추세·모멘텀·변동성 종합. <b>참고용 — 스윙 전환점은 확정까지 보통 수 주 지연되는 사후 구조 표시이고(고점 표식은 하락 예측력 없음), 행동 기준은 매수/매도 신호(추세 상태)가 1차입니다. 종목선택 예측력은 제한적이며, 매도는 \'확실한 하락\'이 아니라 비중축소 주의입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA.</div></div>';
+      '<div class="dbody" tabindex="0" aria-label="지표 상세">'+whyBlock(s)+timing(s)+body+'<div class="note">차트 <b style="color:var(--good)">▲</b>매수 = <b>스윙 저점 근처</b>, <b style="color:var(--hot)">▼</b>매도 = <b>스윙 고점 근처</b>(지그재그 전환점 <b style="color:var(--good)">●</b>/<b style="color:var(--hot)">●</b>). 타점은 ①스윙 전환점 확정 ②상승추세 눌림목 저점 ③깊은 과매도 뒤 반등 확인(고위험) 세 종류이며, 각 타점의 근거는 위 <b>왜 이 신호인가</b>에 표시됩니다. <b>채운 도형(▲▼●)=확정 — 한번 찍히면 날짜 불변. 빈 도형(△▽○)=잠정 — 진행 중 극점(미확정)이라 가격 진행에 따라 날짜가 이동할 수 있습니다.</b> 여기에 <b>과열도·추세·모멘텀·변동성</b>을 결합해 걸러냅니다 — 저점이라도 <b>깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외</b>(떨어지는 칼 회피), 고점이라도 <b>추세·모멘텀 강한 상승 지속이면 매도 제외</b>(강세종목 조기매도 회피). 임계는 <b>시장국면</b>(SPY 200MA 위=관대한 눌림매수)에 따라 조정. 상단 리스트 랭킹은 과열도(<b>섹터 상대</b>)·추세·모멘텀·변동성 종합. <b>참고용 — 스윙 전환점은 확정까지 보통 수 주 지연되는 사후 구조 표시이고(고점 표식은 하락 예측력 없음), 행동 기준은 매수/매도 신호(추세 상태)가 1차입니다. 종목선택 예측력은 제한적이며, 매도는 \'확실한 하락\'이 아니라 비중축소 주의입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA.</div></div>';
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}
@@ -484,8 +486,9 @@
     var nb=mk.bms.length+mk.bmw.length, ns=mk.sms.length+mk.smw.length;
     var ma20=sma(pxd,20).slice(off), ma60=sma(pxd,60).slice(off);
     var vsl=(s.vd||[]).slice(off);
-    var zz=((s.tp&&s.tp.zz)||[]).filter(function(p){return p[0]>=off;}).map(function(p){return [p[0]-off,p[1]];});
-    var ml=el('marklg');if(ml)ml.innerHTML='<span style="color:var(--good)">●저점</span><span style="color:var(--hot)">●고점</span><span style="color:var(--muted)">스윙</span> <span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
+    var zzf=((s.tp&&s.tp.zz)||[]);   // 마지막 원소 = 미확정 진행 중 극점 → prov 플래그로 빈 원 표시
+    var zz=zzf.map(function(p,k){return [p[0],p[1],k===zzf.length-1];}).filter(function(p){return p[0]>=off;}).map(function(p){return [p[0]-off,p[1],p[2]];});
+    var ml=el('marklg');if(ml)ml.innerHTML='<span style="color:var(--good)">●저점</span><span style="color:var(--hot)">●고점</span><span style="color:var(--muted)">스윙</span> <span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
     drawChart(slice, sdates, mk, ma20, ma60, vsl, zz);
     var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점');
   }
@@ -529,18 +532,24 @@
       ctx.strokeStyle=css('--muted');ctx.globalAlpha=.4;ctx.lineWidth=1;ctx.beginPath();
       zpts.forEach(function(p,k){var x=X(p[0]),y=Y(arr[p[0]]);if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
       ctx.stroke();ctx.globalAlpha=1;
-      zpts.forEach(function(p){var x=X(p[0]),y=Y(arr[p[0]]),lo=p[1]==='L';
-        ctx.beginPath();ctx.arc(x,y,2.6,0,7);ctx.fillStyle=css('--panel');ctx.fill();
-        ctx.strokeStyle=lo?css('--good'):css('--hot');ctx.lineWidth=1.5;ctx.stroke();});
+      // 확정 전환점 = 채운 원 · 미확정(진행 중 극점, 마지막 하나) = 속 빈 원 — 날짜 이동 가능함을 시각 구분
+      zpts.forEach(function(p){var x=X(p[0]),y=Y(arr[p[0]]),lo=p[1]==='L',prov=!!p[2],c2=lo?css('--good'):css('--hot');
+        ctx.beginPath();ctx.arc(x,y,prov?3:2.6,0,7);
+        if(prov){ctx.fillStyle=css('--panel');ctx.fill();ctx.strokeStyle=c2;ctx.lineWidth=1.5;ctx.stroke();}
+        else{ctx.fillStyle=c2;ctx.fill();}});
     }
     var lp=pts[pts.length-1];ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(lp[0]),Y(lp[1]),3,0,7);ctx.fill();
-    // 매수(▲)/매도(▼) 타점 — 강/약 구분 없이 전부 채운 삼각형으로 통일
-    function tri(i,up,color){if(i>=arr.length||arr[i]==null)return;var x=X(i),y=Y(arr[i]);ctx.beginPath();
+    // 매수(▲)/매도(▼) 타점 — 채움=확정(날짜 불변) · 빈 도형=잠정(미확정 꼬리, 날짜 이동 가능)
+    function tri(i,up,color,hollow){if(i>=arr.length||arr[i]==null)return;var x=X(i),y=Y(arr[i]);ctx.beginPath();
       if(up){ctx.moveTo(x,y+5);ctx.lineTo(x-4,y+12);ctx.lineTo(x+4,y+12);}else{ctx.moveTo(x,y-5);ctx.lineTo(x-4,y-12);ctx.lineTo(x+4,y-12);}
-      ctx.closePath();ctx.fillStyle=color;ctx.fill();}
+      ctx.closePath();
+      if(hollow){ctx.fillStyle=css('--panel');ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();}
+      else{ctx.fillStyle=color;ctx.fill();}}
     if(mk){var g=css('--good'),h=css('--hot');
-      mk.bms.concat(mk.bmw).forEach(function(i){tri(i,true,g);});
-      mk.sms.concat(mk.smw).forEach(function(i){tri(i,false,h);});}
+      mk.bms.forEach(function(i){tri(i,true,g);});
+      mk.sms.forEach(function(i){tri(i,false,h);});
+      mk.bmw.forEach(function(i){tri(i,true,g,true);});
+      mk.smw.forEach(function(i){tri(i,false,h,true);});}
   }
 
   // 자동갱신(GitHub cron) 조용한 실패 대비 — 기준일 이후 흐른 영업일이 3일 이상이면 명시 경고(휴장·1회 결측은 허용)

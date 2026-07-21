@@ -362,6 +362,7 @@ def main():
         #   저점 매수: 깊은 붕괴(200MA −KNIFE 아래 & 6M<−15%)·아직 과매수(oh>65)면 제외 → 떨어지는 칼 회피.
         #   고점 매도: 강세 지속(상승추세 & 모멘텀↑ & oh<70)·아직 과매도(oh<35)면 제외 → 강세종목 조기매도 회피.
         bms, sms = [], []
+        bmw, smw = [], []      # 잠정(미확정 꼬리) 타점 — 진행 중 극점, 날짜 이동 가능. 차트에 '빈 도형'으로 표시
         bmr, smr = {}, {}      # 타점별 근거 문자열 {인덱스: "사유"}
         whyb = None
         if dser is not None and t in px:
@@ -419,6 +420,23 @@ def main():
                     strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
                     if (not strength) and oh >= 35:
                         sms.append(pos); smr[pos] = _reason(pos, "H", "zz")
+            # (a') 미확정 꼬리 극점 = '잠정' 타점(bmw/smw) — 같은 필터 통과 시에만. 확정 전이라 날짜 이동 가능,
+            #      차트에 빈 도형으로 구분 표시. 홈 리스트·스윙 탭(확정 전용)에는 포함하지 않는다.
+            if len(_zz) >= 2:
+                pos, typ = _zz[-1]
+                if 0 <= pos < len(pxd_dates):
+                    oh = _f(ohb.iloc[pos])
+                    if oh == oh:
+                        s2 = _f(s2b.iloc[pos]); r6 = _f(r6b.iloc[pos]); pxp = _f(dv[pos])
+                        if typ == "L":
+                            knife = (s2 == s2 and pxp == pxp and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
+                            if (not knife) and oh <= 65:
+                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + " · 아직 확정 전 — 더 하락하면 날짜가 이동"
+                        else:
+                            rising = (_f(mhb.iloc[pos]) >= _f(mhb.iloc[pos-3])) if pos >= 3 else True
+                            strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
+                            if (not strength) and oh >= 35:
+                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + " · 아직 확정 전 — 더 상승하면 날짜가 이동"
 
             # (b) 추세 내 눌림목·반등 타점 — 지그재그가 놓치는 '추세 유지 중 되돌림'을 잡는다.
             #     확정 중심 피봇(K=3, 3봉 뒤에야 확정되므로 미래참조 아님) + 추세·과열·낙폭 조건 + 간격 8봉.
@@ -471,7 +489,9 @@ def main():
             whyb = {"now": bullets}
             if bms: whyb["buy"] = {"dt": pxd_dates[bms[-1]], "why": bmr.get(bms[-1], "")}
             if sms: whyb["sell"] = {"dt": pxd_dates[sms[-1]], "why": smr.get(sms[-1], "")}
-        bmw = []; smw = []   # timing(라벨·리스트)은 trend_signals의 추세기반 유지 · 스윙 마커는 차트 전용
+            if bmw: whyb["pbuy"] = {"dt": pxd_dates[bmw[-1]], "why": bmr.get(bmw[-1], "")}
+            if smw: whyb["psell"] = {"dt": pxd_dates[smw[-1]], "why": smr.get(smw[-1], "")}
+        # timing(라벨·리스트)은 trend_signals의 추세기반 유지 · 스윙 마커는 차트 전용 (bmw/smw = 잠정 타점, 위에서 채움)
         info = mem.get(t, {})
         fd = fund.get(t) or {}
         def r2(x): return round(float(x), 2) if x is not None and x == x else None
@@ -539,7 +559,7 @@ def main():
             c = [(m, s) for m, s in c if m >= 0 and (_N - 1 - m) <= _WIN]
             c.sort(key=lambda x: -x[0])
             return ([{"t": s["t"], "name": (s.get("name") or "")[:16], "dt": _dts[m][5:], "ago": _N - 1 - m} for m, s in c[:6]], len(c))
-        _bl, _nb = _reco(["bms", "bmw"]); _sl, _ns = _reco(["sms", "smw"])
+        _bl, _nb = _reco(["bms"]); _sl, _ns = _reco(["sms"])   # 홈 리스트는 확정 타점만(잠정 bmw/smw 제외 — 리페인팅 방지)
         HOME = os.path.join(HERE, "..", "data", "home_reco.json")
         json.dump({"as_of": as_of, "buy": _bl, "sell": _sl, "nbuy": _nb, "nsell": _ns},
                   open(HOME, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
