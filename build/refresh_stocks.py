@@ -422,27 +422,30 @@ def main():
                     strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
                     if (not strength) and oh >= 35:
                         sms.append(pos); smr[pos] = _reason(pos, "H", "zz")
-            # (a') 미확정 꼬리 극점 = '잠정' 타점(bmw/smw) — 같은 필터 통과 시에만. 확정 전이라 날짜 이동 가능,
-            #      차트에 빈 도형으로 구분 표시. 홈 리스트·스윙 탭(확정 전용)에는 포함하지 않는다.
+            # (a') 미확정 꼬리 극점 = '잠정' 타점(bmw/smw) — 확정 확률 60% 이상일 때만 표시(사용자 기준).
+            #     실측(5y·512종목): 반전 진행률(theta 대비)이 지배 변수 — 60~80%면 저점 70%·고점 61% 확정, 80%+면 89%/85%.
+            #     진행률 <60%는 표시하지 않음(확정 확률 20~58%로 신뢰 불가).
             if len(_zz) >= 2:
                 pos, typ = _zz[-1]
-                if 0 <= pos < len(pxd_dates):
+                _th = min(0.16, max(0.05, 3.0 * (sg.get("atrp") or 5) / 100))
+                _pxl = _f(dv[-1])
+                if 0 <= pos < len(pxd_dates) and _pxl == _pxl:
                     oh = _f(ohb.iloc[pos])
                     if oh == oh:
                         s2 = _f(s2b.iloc[pos]); r6 = _f(r6b.iloc[pos]); pxp = _f(dv[pos])
-                        if typ == "L":
-                            knife = (s2 == s2 and pxp == pxp and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
-                            if (not knife) and oh <= 65:
-                                _age = min(len(pxd_dates) - 1 - pos, 8)
-                                _pmv = {0: 82, 1: 66, 2: 57, 3: 51, 4: 48, 5: 46, 6: 44, 7: 43, 8: 43}[_age]  # 과거 5y·512종목 실측
-                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {len(pxd_dates)-1-pos}일 유지 중 — 과거 통계상 이 시점 잠정저점의 ~{_pmv}%는 더 낮은 저점으로 이동(5y·512종목)"
-                        else:
+                        if typ == "L" and pxp == pxp and pxp > 0:
+                            prog = (_pxl/pxp - 1) / _th
+                            knife = (s2 == s2 and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
+                            if (not knife) and oh <= 65 and prog >= 0.6:
+                                _pc = 89 if prog >= 0.8 else 70
+                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · 반전 진행률 {min(int(prog*100),99)}%(확정 임계 {int(_th*100)}%) — 과거 통계상 확정 확률 ~{_pc}% (5y·512종목)"
+                        elif typ == "H" and pxp == pxp and pxp > 0:
+                            prog = (1 - _pxl/pxp) / _th
                             rising = (_f(mhb.iloc[pos]) >= _f(mhb.iloc[pos-3])) if pos >= 3 else True
-                            strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
-                            if (not strength) and oh >= 35:
-                                _age = min(len(pxd_dates) - 1 - pos, 8)
-                                _pmv = {0: 90, 1: 78, 2: 71, 3: 66, 4: 63, 5: 60, 6: 58, 7: 57, 8: 52}[_age]  # 과거 5y·512종목 실측
-                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {len(pxd_dates)-1-pos}일 유지 중 — 과거 통계상 이 시점 잠정고점의 ~{_pmv}%는 더 높은 고점으로 이동(5y·512종목)"
+                            strength = (s2 == s2 and pxp > s2) and rising and oh < 70
+                            if (not strength) and oh >= 35 and prog >= 0.6:
+                                _pc = 85 if prog >= 0.8 else 61
+                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · 반전 진행률 {min(int(prog*100),99)}%(확정 임계 {int(_th*100)}%) — 과거 통계상 확정 확률 ~{_pc}% (5y·512종목)"
 
             # (b) 추세 내 눌림목·반등 타점 — 지그재그가 놓치는 '추세 유지 중 되돌림'을 잡는다.
             #     확정 중심 피봇(K=5, 5봉 뒤에야 확정 — 미래참조 아님) + 추세·과열·낙폭 조건 + 간격 8봉.
@@ -464,21 +467,29 @@ def main():
                     high = (cc["up20"] is not None and cc["up20"] >= 4.0)
                     if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
                         sms.append(pos); smr[pos] = _reason(pos, "H", "bounce")
-            # (c) 하락추세 과매도 반등 — 추세 필터(떨어지는 칼 회피)에 막히는 바닥을 '확인 후'에만 별도 등급으로.
-            #     조건: 200MA 아래 · RSI<35 · 과열도<25 · 저점 후 7봉 내 +5% 회복(확인). 확인 시점은 저점보다 늦다(사후 표시).
-            for pos in range(K, len(pxd_dates) - 7):
-                if not bool(piv_lo.iloc[pos]) or not _spaced(bms, pos, 10): continue
-                cc = _ctx(pos)
-                if cc["d200"] is None or cc["d200"] >= 0: continue
-                if cc["rsi"] != cc["rsi"] or cc["rsi"] >= 35: continue
-                if cc["oh"] == cc["oh"] and cc["oh"] >= 25: continue
-                base = _f(dv[pos]); fwd = dv[pos+1:pos+8]
-                if base != base or not len(fwd): continue
-                gain = (max(fwd)/base - 1)*100
-                if gain < 5.0: continue
-                nconf = int(next((k for k, x in enumerate(fwd, 1) if x/base - 1 >= 0.05), 7))
-                bms.append(pos)
-                bmr[pos] = _reason(pos, "L", "rev") + f" · 저점 후 {nconf}거래일 만에 +5% 회복해 반등 확인"
+            # (b') 눌림목/반등 '잠정' 후보 — 확정(5봉 유지) 전 예고. 2일 이상 유지 시에만 표시(확정 확률 60%↑ 실측:
+            #     저점 2일 68%·3일 80%·4일 91% / 고점 2일 63%·3일 77%·4일 90%) → '잠정 없이 확정 등장' 방지.
+            _lastp = len(pxd_dates) - 1
+            _PL = {2: 68, 3: 80, 4: 91}; _PH = {2: 63, 3: 77, 4: 90}
+            for m in range(_lastp - 4, _lastp - 1):   # age = _lastp-m ∈ {4,3,2}
+                if m < K: continue
+                age = _lastp - m
+                base = _f(dv[m])
+                if base != base: continue
+                prev = dv[m-K:m]; fut = dv[m+1:_lastp+1]
+                if np.isnan(prev.astype(float)).any() or np.isnan(fut.astype(float)).any(): continue
+                cc = _ctx(m)
+                if cc["d200"] is None or cc["rsi"] != cc["rsi"]: continue
+                if base < prev.min() and (fut > base).all() and cc["d200"] > 0 and _spaced(bms, m) and m not in bmw:
+                    deep = (cc["dd20"] is not None and cc["dd20"] <= -4.0)
+                    if (cc["rsi"] < 48 or deep) and (cc["oh"] != cc["oh"] or cc["oh"] <= 55):
+                        bmw.append(m); bmr[m] = "잠정 눌림목 저점(미확정) — " + _reason(m, "L", "pull").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {age}일 유지 — 5거래일 채우면 확정, 과거 통계상 확정 확률 ~{_PL[age]}% (5y·512종목)"
+                if base > prev.max() and (fut < base).all() and cc["d200"] < 0 and _spaced(sms, m) and m not in smw:
+                    high = (cc["up20"] is not None and cc["up20"] >= 4.0)
+                    if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
+                        smw.append(m); smr[m] = "잠정 반등 고점(미확정) — " + _reason(m, "H", "bounce").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {age}일 유지 — 5거래일 채우면 확정, 과거 통계상 확정 확률 ~{_PH[age]}% (5y·512종목)"
+            # (c) 하락추세 과매도 반등확인 타점은 제거(2026-07) — 잠정 예고가 불가능한 유형(+5% 회복 순간이 곧 확정)이라
+            #     '잠정 없이 확정 등장 금지' 원칙과 상충하고, '추세 전환 완전 확인 후 진입' 전략과도 안 맞음.
             # 같은 위치가 확정(bms/sms)과 잠정(bmw/smw)에 중복되면 확정 우선 — 차트에서 빈 도형이 확정 위를 덮는 문제 방지
             bmw = [p for p in bmw if p not in bms]; smw = [p for p in smw if p not in sms]
             bms.sort(); sms.sort()
