@@ -180,34 +180,41 @@
     try{localStorage.setItem('yeouido-theme',next);}catch(e){}
   });
   try{var s=localStorage.getItem('yeouido-theme'); if(s)root.setAttribute('data-theme',s);}catch(e){}
-  // 주목 종목 — 종목 시그널에서
+  // 주목 종목 — 홈 전용 요약(data/home_reco.json ~1KB) 우선, 실패 시 대형 stocks.json 폴백
   function stkFail(){var ma=document.getElementById('mainasof');if(ma)ma.textContent='—';
     var rc=document.getElementById('recostocks');if(rc)rc.innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';}
-  fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    if(!d){stkFail();return;}
-    var as=document.getElementById('stkasof'); if(as)as.textContent='기준일 '+(d.as_of||'');
-    var ma=document.getElementById('mainasof'); if(ma)ma.textContent=(d.as_of||'—');
-    // 시장국면 기준일 교차확인 — 통일 여부 표기
+  function regimeCheck(asof){
     fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(rg){
-      if(!rg||!ma)return; var note=document.querySelector('.asofnote');
-      if(rg.as_of && rg.as_of!==d.as_of && note){note.textContent='종목시그널 '+d.as_of+' · 시장국면 '+rg.as_of+' · 공매도잔량 격주(FINRA)';}
+      var note=document.querySelector('.asofnote');
+      if(rg&&rg.as_of&&rg.as_of!==asof&&note){note.textContent='종목시그널 '+asof+' · 시장국면 '+rg.as_of+' · 공매도잔량 격주(FINRA)';}
     }).catch(function(){});
-    var st=d.stocks||[];
-    var dts=d.pxd_dates||[], N=dts.length, WIN=10;   // 최근 10거래일 내 스윙 마커
-    function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
-    function within(s,keys){var mi=lastMk(s,keys);return mi>=0&&(N-1-mi)<=WIN;}
-    // 스윙 저점매수(bms/bmw)·고점매도(sms/smw) — 가장 최근 마커순
-    var buyAll=st.filter(function(s){return within(s,['bms','bmw']);});
-    var sellAll=st.filter(function(s){return within(s,['sms','smw']);});
-    var buy=buyAll.slice().sort(function(a,b){return lastMk(b,['bms','bmw'])-lastMk(a,['bms','bmw']);}).slice(0,6);
-    var sell=sellAll.slice().sort(function(a,b){return lastMk(b,['sms','smw'])-lastMk(a,['sms','smw']);}).slice(0,6);
-    function col(title,cnt,arr,keys,tri,tricol){return '<div class="rcol"><h4><span>'+title+'</span><span>'+cnt+'종</span></h4>'+
-      (arr.length?arr.map(function(s){var mi=lastMk(s,keys),dt=(dts[mi]||'').slice(5),ago=N-1-mi;
-        return '<a class="rstk" href="stocks.html"><span><span style="color:'+tricol+';margin-right:5px;font-size:11px">'+tri+'</span><span class="rk">'+s.t+'</span><span class="rn2">'+(s.name||'').slice(0,16)+'</span></span><span class="rv">'+dt+' · '+(ago<=0?'당일':ago+'일전')+'</span></a>';}).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">해당 없음</div>')+'</div>';}
+  }
+  function recoCol(title,cnt,arr,tri,tricol){return '<div class="rcol"><h4><span>'+title+'</span><span>'+cnt+'종</span></h4>'+
+    (arr.length?arr.map(function(x){return '<a class="rstk" href="stocks.html"><span><span aria-hidden="true" style="color:'+tricol+';margin-right:5px;font-size:11px">'+tri+'</span><span class="rk">'+x.t+'</span><span class="rn2">'+(x.name||'')+'</span></span><span class="rv">'+x.dt+' · '+(x.ago<=0?'당일':x.ago+'일전')+'</span></a>';}).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">해당 없음</div>')+'</div>';}
+  function renderReco(h){
+    var as=document.getElementById('stkasof'); if(as)as.textContent='기준일 '+(h.as_of||'');
+    var ma=document.getElementById('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     document.getElementById('recostocks').innerHTML=
-      col('스윙 저점매수', buyAll.length, buy, ['bms','bmw'], '▲', 'var(--deploy)')+
-      col('스윙 고점매도', sellAll.length, sell, ['sms','smw'], '▼', 'var(--hot)');
-  }).catch(stkFail);
+      recoCol('스윙 저점매수', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy||[], '▲', 'var(--deploy)')+
+      recoCol('스윙 고점매도', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell||[], '▼', 'var(--hot)');
+    regimeCheck(h.as_of);
+  }
+  function loadFull(){   // 폴백: 대형 stocks.json에서 직접 계산
+    fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(!d){stkFail();return;}
+      var st=d.stocks||[], dts=d.pxd_dates||[], N=dts.length, WIN=10;
+      function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
+      function mkList(keys){var all=st.filter(function(s){var mi=lastMk(s,keys);return mi>=0&&(N-1-mi)<=WIN;});
+        var top=all.slice().sort(function(a,b){return lastMk(b,keys)-lastMk(a,keys);}).slice(0,6)
+          .map(function(s){var mi=lastMk(s,keys);return {t:s.t,name:(s.name||'').slice(0,16),dt:(dts[mi]||'').slice(5),ago:N-1-mi};});
+        return {list:top,n:all.length};}
+      var b=mkList(['bms','bmw']), s=mkList(['sms','smw']);
+      renderReco({as_of:d.as_of,buy:b.list,sell:s.list,nbuy:b.n,nsell:s.n});
+    }).catch(stkFail);
+  }
+  fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){
+    if(h&&h.buy){renderReco(h);}else{loadFull();}
+  }).catch(loadFull);
 })();
 </script>
 </body>

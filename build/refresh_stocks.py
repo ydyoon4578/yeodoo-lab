@@ -400,6 +400,27 @@ def main():
            "stocks": stocks}
     json.dump(out, open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} ({len(stocks)}종목 · {os.path.getsize(OUT)//1024}KB · 기준일 {as_of})")
+    # ── 홈 전용 초소형 요약(주목종목) — 홈이 대형 stocks.json 대신 이것만 fetch(LCP 개선) ──
+    try:
+        _dts = out["pxd_dates"]; _N = len(_dts); _WIN = 10
+        def _lastmk(s, keys):
+            m = -1
+            for k in keys:
+                for i in (s.get(k) or []):
+                    if i > m: m = i
+            return m
+        def _reco(keys):
+            c = [(_lastmk(s, keys), s) for s in stocks]
+            c = [(m, s) for m, s in c if m >= 0 and (_N - 1 - m) <= _WIN]
+            c.sort(key=lambda x: -x[0])
+            return ([{"t": s["t"], "name": (s.get("name") or "")[:16], "dt": _dts[m][5:], "ago": _N - 1 - m} for m, s in c[:6]], len(c))
+        _bl, _nb = _reco(["bms", "bmw"]); _sl, _ns = _reco(["sms", "smw"])
+        HOME = os.path.join(HERE, "..", "data", "home_reco.json")
+        json.dump({"as_of": as_of, "buy": _bl, "sell": _sl, "nbuy": _nb, "nsell": _ns},
+                  open(HOME, "w"), ensure_ascii=False, separators=(",", ":"))
+        print(f"→ {HOME} (홈 요약 · 매수 {_nb}·매도 {_ns})")
+    except Exception as e:
+        print("  home_reco 생성 실패(무시):", e)
 
 
 if __name__ == "__main__":
