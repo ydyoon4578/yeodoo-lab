@@ -15,7 +15,7 @@ import re, io, os, sys, json
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGES = ["index.html", "stocks.html", "regime.html", "rotation.html", "explorer.html", "archive.html"]
+PAGES = ["index.html", "stocks.html", "regime.html", "rotation.html", "explorer.html", "archive.html", "sources.html"]
 errors = []
 
 
