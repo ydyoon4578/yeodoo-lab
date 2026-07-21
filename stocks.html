@@ -295,6 +295,23 @@
     ["mom","고모멘텀","momentum",false,null,null],["lomom","약세","momentum",true,null,null],
     ["hivol","고변동성","volatility",false,null,null],["lovol","저변동성","volatility",true,null,null]];
   var SHOWN=PRESETS;  // 데이터로딩 후 빈 프리셋 제거
+  // 시그널 칩 호버 설명(툴팁)
+  var TIPS={
+    swingbuy:"차트 스윙 저점 매수 타점(확정 ▲ + 잠정 △)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
+    swingsell:"차트 스윙 고점 매도 타점(확정 ▼ + 잠정 ▽)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
+    buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 상위 50 — 매수 후보 1차 기준",
+    sell:"하락추세(200일선 아래) 종목 중 약세 종합점수 상위 50 — 비중축소 주의 (공매도 근거 아님)",
+    oh:"과열도 상위 — RSI·스토캐스틱·MFI 등 과매수권",
+    os:"과열도 하위 — 과매도권 (하락추세면 떨어지는 칼 주의)",
+    dip:"상승추세 중 RSI<45·밴드 하단 눌림 — 조정 매수 관찰 대상",
+    brk:"52주 고점 92% 이상 + MACD 상승 — 신고가 돌파 흐름",
+    squeeze:"공매도 잔량 과밀(커버일수 7일↑ 또는 유동주식 15%↑) — 숏스퀴즈 소지",
+    up:"종가>50일선>200일선 & ADX≥20 — 정배열 상승추세",
+    dn:"종가<200일선 — 장기 추세 이탈",
+    mom:"1·3·6개월 수익률·상대강도 상위",
+    lomom:"모멘텀 하위 — 약세 지속",
+    hivol:"변동성 상위(ATR%·실현변동성) — 급등락 큼",
+    lovol:"변동성 하위 — 안정적 흐름"};
   var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","52주돌파":"b52돌파","200일이탈":"b200이탈","과밀숏":"gmilshort"};
   var PERIODS=[["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252]];
   var state={q:"",preset:"swingbuy",idx:new Set(),sel:null,period:252};
@@ -344,13 +361,14 @@
     var side=t.indexOf('매수')>=0?'상승추세 정렬':t.indexOf('매도')>=0?'하락추세 이탈':'추세 불명확';
     return '<div class="timing"><div class="timhd"><span class="timstate" style="color:var('+col+')">타이밍 · '+t+'</span><span class="timsub">'+side+'</span></div>'+summary+trigHtml+tpHtml+block+'</div>';
   }
-  function chip(txt,cnt,onclick){var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');b.innerHTML=txt+(cnt!=null?' <span style="opacity:.65">'+cnt+'</span>':'');b.addEventListener('click',onclick);return b;}
+  function chip(txt,cnt,onclick,tip){var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');b.innerHTML=txt+(cnt!=null?' <span style="opacity:.65">'+cnt+'</span>':'');if(tip)b.title=tip;b.addEventListener('click',onclick);return b;}
   function curP(){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i][0]===state.preset)return PRESETS[i];return SHOWN[0];}
 
   // 최근 스윙 마커 인덱스(bms/bmw=매수, sms/smw=매도). 없으면 -1.
   var SW_WIN=10;   // 스윙 탭: 최근 N거래일(≈2주) 내 발동만 표시
   function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
-  function swKeys(pk){return pk==='swingbuy'?['bms']:pk==='swingsell'?['sms']:null;}   // 탭·정렬은 확정 타점만(잠정 bmw/smw 제외 — 리페인팅 방지)
+  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
+  function lastMkP(s,pk){var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
   function swFresh(s,sk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
   function filtered(){
     var p=curP(),comp=p[2],asc=p[3],flag=p[4],tim=p[5];
@@ -363,17 +381,18 @@
       if(sk)return swFresh(s,sk);                 // 스윙: 최근 SW_WIN일 내 마커 보유만
       return s.comp[comp]!=null;
     });
-    // 스윙=최근 마커순(동점은 신호강도) / 매수·약세주의=추세정렬 스코어 / 나머지=컴포짓 정렬
+    // 스윙=최근 마커순(동점은 신호강도) / 매수·매도 신호=종합점수 내림차순 + 상위 50 캡(종목수 과다 방지) / 나머지=컴포짓 정렬
+    var total=rows.length;
     if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||((b[sc]||0)-(a[sc]||0));});
-    else if(p[0]==='buy')rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
-    else if(p[0]==='sell')rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});
+    else if(p[0]==='buy'){rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});rows=rows.slice(0,50);}
+    else if(p[0]==='sell'){rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});rows=rows.slice(0,50);}
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
-    return {rows:rows,comp:comp};
+    return {rows:rows,comp:comp,total:total};
   }
   function render(){
     var f=filtered(),rows=f.rows,comp=f.comp;
     // 프리셋 라벨은 색상 마크업(▲/▼)을 품고 있으므로 textContent로 쓰면 태그가 그대로 노출된다 — 개수만 이스케이프하고 라벨은 HTML로
-    el('rowcount').innerHTML=esc(rows.length+"종목 · ")+curP()[1];
+    el('rowcount').innerHTML=esc(rows.length+"종목")+(f.total>rows.length?esc(" / 전체 "+f.total+" · 종합점수 상위"):"")+esc(" · ")+curP()[1];
     listEl.innerHTML="";
     if(!rows.length){listEl.innerHTML='<div class="empty">해당 종목 없음</div>';drawDetail(null);return;}
     if(!state.sel||rows.indexOf(state.sel)<0)state.sel=rows[0];
@@ -381,8 +400,10 @@
     // 문자열 1회 빌드(리플로우 1회) + 이벤트 위임(리스너 1개) — 512행 성능
     listEl.innerHTML=rows.map(function(s){
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
-      if(sk){var mi=lastMk(s,sk),dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
-        metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+'</div></span>';
+      if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
+        metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mp.prov?' <span style="color:var(--watch);font-size:9px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
+      }else if(state.preset==='buy'||state.preset==='sell'){var sp=state.preset==='buy'?(s._bp||0):(s._sp||0);
+        metric='<span class="metric"><div class="mv" title="종합점수 백분위(과열도·추세·모멘텀·변동성)">'+sp+'</div><div class="mbar"><i style="width:'+sp+'%;background:var(--accent)"></i></div></span>';
       }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       return '<button class="item" role="option" data-t="'+s.t+'" aria-selected="'+(s===state.sel)+'">'+
         '<span><span class="tkline"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
@@ -563,6 +584,8 @@
   fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
     if(!d){detailEl.innerHTML='<div class="empty">데이터를 불러오지 못했습니다.</div>';return;}
     DATA=d;F=d.factor_defs;
+    // 종합점수(bscore/sscore) → 0~100 백분위(_bp/_sp) — 매수/매도 신호 탭 표시·정렬용
+    (function(){function pctl(key,dst){var a=d.stocks.slice().sort(function(x,y){return (x[key]||0)-(y[key]||0);});var n=Math.max(1,a.length-1);a.forEach(function(s,i){s[dst]=Math.round(i/n*100);});}pctl('bscore','_bp');pctl('sscore','_sp');})();
     // 공매도잔량(FINRA) 기준일 — 가격·테크니컬 기준일보다 오래됨(격주). 정직 고지용으로 데이터에서 추출.
     // 슬림 파일엔 종목별 sig가 없다 — FINRA 기준일은 factor_defs.dtc.as_of가 정본(생성기가 동일 값 기록)
     SI_ASOF=(d.factor_defs&&d.factor_defs.dtc&&d.factor_defs.dtc.as_of)||null;
@@ -577,10 +600,11 @@
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      pf.appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();}));
+      var badge=(p[0]==='buy'||p[0]==='sell')&&cnt!=null?Math.min(cnt,50):cnt;   // 신호 탭은 상위 50 캡과 일치
+      pf.appendChild(chip(p[1],badge,function(){state.preset=p[0];state.sel=null;syncP();render();},TIPS[p[0]]));
     });
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
-    var ixf=el('idxf');['NDX','SPX'].forEach(function(x){var cnt=d.stocks.filter(function(s){return (s.idx||[]).indexOf(x)>=0;}).length;ixf.appendChild(chip(x,cnt,function(){state.idx.has(x)?state.idx.delete(x):state.idx.add(x);syncP();render();}));});
+    var ixf=el('idxf');['NDX','SPX'].forEach(function(x){var cnt=d.stocks.filter(function(s){return (s.idx||[]).indexOf(x)>=0;}).length;ixf.appendChild(chip(x,cnt,function(){state.idx.has(x)?state.idx.delete(x):state.idx.add(x);syncP();render();},x==='NDX'?'나스닥100 구성종목만':'S&P500 구성종목만'));});
     syncP();render();
     var _rz;window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(function(){if(state.sel)renderChart(state.sel);},150);});
     new MutationObserver(function(){_cssC={};if(state.sel)renderChart(state.sel);}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
