@@ -208,8 +208,8 @@
   </div>
 
   <footer>
-    여두 전략 랩 · github.com/globalkbam/yeodoo-lab · <b>배포·marginal + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
-    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · <b>과거 성과는 미래 수익을 보장하지 않으며, 투자자문·매매권유가 아닙니다</b> · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처</a>.
+    여두 전략 랩 · <b>배포·marginal + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
+    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처</a>.
   </footer>
 </div>
 
@@ -451,7 +451,7 @@
       (ex?'<div class="hxrow">'+ex+'</div>':'')+
       '<div class="htblwrap"><table class="htbl"><caption class="vh">현재 보유 구성</caption><tbody>'+rows+'</tbody></table></div>'+
       (h.note?'<div class="btnote">'+esc(h.note)+'</div>':'')+
-      '<div class="btnote"><b>주의</b> 리서치 재현 기준의 구성으로, 실제 운용 계좌·실시간 비중이 아닙니다. 리밸런스 시점 이후 가격 변동은 반영되지 않으며 투자자문·매매권유가 아닙니다.</div></div>';
+      '<div class="btnote"><b>주의</b> 리서치 재현 기준의 구성으로, 실제 운용 계좌·실시간 비중이 아닙니다. 리밸런스 시점 이후의 가격 변동은 반영되지 않습니다.</div></div>';
   }
   function drawDetail(d){
     if(!d){detailEl.innerHTML="";return;}

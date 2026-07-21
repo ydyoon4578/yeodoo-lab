@@ -108,7 +108,7 @@
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌)</td>
           <td class="dt" id="src-rot">—</td><td>매일 08:20 KST</td></tr>
         <tr><th scope="row"><a href="explorer.html">현재 포트폴리오 구성</a></th>
-          <td><span class="freetag">무료</span>yfinance(ETF·지수 가격)</td>
+          <td>yfinance(ETF·지수 가격) + <span class="dbtag">사내 DB</span>(종목선택 전략 신호)</td>
           <td class="dt" id="src-hold">—</td><td>매월 1일 08:25 KST</td></tr>
         <tr class="dbrow"><th scope="row"><a href="explorer.html">전략 백테스트·판정</a></th>
           <td><span class="dbtag">사내 DB</span>사내 리서치 DB(FactSet)</td>
@@ -144,8 +144,8 @@
 
   <div class="card">
     <h3><span class="freetag">무료</span><a href="explorer.html">현재 포트폴리오 구성</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/strategy_holdings.json</span></h3>
-    <p><b>yfinance 무료 가격만으로 재현 가능한 전략만</b> 보유 구성을 공개합니다(크로스에셋 RP·섹터 RP·변동성 관리).
-      라이선스 데이터에서 파생되는 전략(챔피언·단일팩터 top10·팩터 모멘텀)의 보유는 공개하지 않습니다.
+    <p>전략별 <b>현재 보유 종목·자산과 비중</b>을 공개합니다. 자산배분 전략(크로스에셋 RP·섹터 RP·변동성 관리)은
+      yfinance 가격으로, 종목선택 전략(EPS 리비전·단일팩터 top10·팩터 모멘텀)은 사내 DB 신호로 산출합니다.
       리서치 재현 기준의 구성이며 실제 운용 계좌·실시간 비중이 아닙니다.</p>
     <div class="meta"><span><b>리밸 기준일</b><span id="d-hold">—</span></span><span><b>생성일</b><span id="d-holdgen">—</span></span><span><b>갱신</b>매월 1일 08:25 KST (GitHub Actions)</span></div>
   </div>
@@ -161,7 +161,7 @@
 
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 탐색기</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a><br>
-    투자자문·매매권유 아님 · 과거 성과는 미래 수익을 보장하지 않습니다.
+    과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
 <script>
