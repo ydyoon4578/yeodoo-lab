@@ -131,7 +131,8 @@
   <div id="content"><div class="empty">불러오는 중…</div></div>
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 탐색기</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처</a><br>
-    매일 웹 리서치로 최근동향 갱신 — 갱신 대상은 그날의 10선 + 가장 오래 방치된 3종(하루 12종) · 풀에서 날짜(KST) 시드 기반 10선 · 외부 출처 · 미검증.
+    매일 웹 리서치로 최근동향 갱신 — 갱신 대상은 그날의 10선 + 가장 오래 방치된 3종(하루 12종) · 풀에서 날짜(KST) 시드 기반 10선 · 외부 출처 · 미검증.<br>
+    투자 자문·매매 권유 아님 · 성과 수치는 원 출처 인용(랩 재현·검증 없음) · 과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
 <script>
@@ -141,9 +142,12 @@
   var CATORD=['A','B','C','D','E'];
   function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
   // esc된 텍스트의 URL을 클릭 가능한 링크로(출처 논문·리포트 바로가기)
-  function linkify(t){return t.replace(/(https?:\/\/[^\s)<]+)/g,function(u){
+  function linkify(t){return t.replace(/(https?:\/\/[^\s<]+)/g,function(u){
     var tail='',m=u.match(/[.,;:]+$/);   // 출처 문장의 마침표·쉼표가 href에 흡수돼 죽은 링크가 되던 문제
     if(m){tail=m[0];u=u.slice(0,u.length-tail.length);}
+    // 닫는 괄호는 URL 내 여는 괄호와 균형 맞을 때만 유지 — "(JFQA).pdf" 같은 괄호 포함 URL은 보존, 감싸는 괄호는 제외
+    while(u.charAt(u.length-1)===')' && (u.split('(').length-1)<(u.split(')').length-1)){u=u.slice(0,-1);tail=')'+tail;}
+    m=u.match(/[.,;:]+$/); if(m){tail=m[0]+tail;u=u.slice(0,u.length-m[0].length);}
     var lbl=u.replace(/^https?:\/\/(www\.)?/,''); if(lbl.length>44)lbl=lbl.slice(0,44)+'…';
     return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+lbl+'</a>'+tail;});}
   // 날짜 시드 결정론적 10선 — 카테고리 균형(A2·B2·C2·D2·E2). build/rotation_select.py와 동일 알고리즘 유지 필수.
