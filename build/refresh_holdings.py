@@ -83,8 +83,8 @@ def main():
                 for t in CORE if t in RISKY and w[t] == 0}
     S["크로스에셋 리스크패리티 + vol타겟"] = {
         "as_of": str(d0.date()), "kind": "assets",
-        "note": "12개 자산 ETF를 60일 역변동성 가중(월말리밸). 위험자산은 12M 추세>0일 때만 편입, "
-                "목표변동성 10%로 익스포저 레버 조절(0.3~2.5x, 익일 적용). 가격 소스=yfinance(무료).",
+        "note": "주식·채권·금·원자재 등 12개 자산을 '많이 흔들리는 자산은 적게, 덜 흔들리는 자산은 많이' 담습니다. "
+                "최근 1년간 내리막인 위험자산은 제외하고, 전체 변동성이 연 10%가 되도록 투자 비율을 조절합니다. 매월 말 재계산.",
         "positions": sorted([{"t": t, "name": ETF_NAMES[t], "w": round(float(w[t]), 4)} for t in CORE],
                             key=lambda x: -x["w"]),
         "extra": {"vol타겟_레버리지": round(float(lev.dropna().iloc[-1]), 2), "목표변동성": "10%",
@@ -99,7 +99,7 @@ def main():
     md = complete_months(mw.index, spx_.index[-1])[-1]
     S["섹터 리스크패리티 (역변동성)"] = {
         "as_of": str(md.date()), "kind": "assets",
-        "note": "11개 SPDR 섹터 ETF를 최근 60일 역변동성으로 가중(합=1), 월말리밸. 가격 소스=yfinance(무료).",
+        "note": "미국 11개 업종 ETF를 '최근 3개월간 덜 흔들린 업종일수록 더 많이' 담는 방식으로 배분합니다. 매월 말 재계산.",
         "positions": sorted([{"t": t, "name": ETF_NAMES[t], "w": round(float(mw.loc[md, t]), 4)} for t in SECT],
                             key=lambda x: -x["w"]),
         "extra": {"룩백": "60거래일 실현변동성"},
@@ -116,8 +116,7 @@ def main():
     ex = min(0.15 / rv_at, 1.0) if rv_at > 0 else 0.0
     S["변동성 관리 (σ타겟 익스포저)"] = {
         "as_of": str(d1.date()), "kind": "assets",
-        "note": "NDX 익스포저 = min(목표σ15% / 21일 실현σ, 100%), 나머지는 현금. 월말 산출·익일 적용(무레버). "
-                "가격 소스=yfinance(무료).",
+        "note": "나스닥100 지수가 최근 한 달간 많이 흔들리면 주식 비중을 줄이고 현금을 늘립니다. 목표는 연 15% 변동성, 레버리지는 쓰지 않습니다. 매월 말 재계산.",
         "positions": [{"t": "NDX", "name": "나스닥100 지수", "w": round(ex, 4)},
                       {"t": "CASH", "name": "현금", "w": round(1 - ex, 4)}],
         "extra": {"실현변동성_21일": f"{rv_at*100:.1f}%", "목표변동성": "15%"},

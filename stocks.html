@@ -207,7 +207,7 @@
 
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 탐색기</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="sources.html">데이터 출처</a> · <a href="archive.html">기각 아카이브</a><br>
-    가격·테크니컬·EPS: yfinance · 공매도잔량: FINRA(격주, <span id="siasof">기준일 별도</span>) · 테크니컬은 전 지표 동일 기준일 · <span id="asof"></span> · 투자자문·매매권유 아님
+    가격·테크니컬·EPS: yfinance · 공매도잔량: FINRA(격주, <span id="siasof">기준일 별도</span>) · 테크니컬은 전 지표 동일 기준일 · <span id="asof"></span>
   </footer>
 </div>
 <script>
@@ -420,7 +420,7 @@
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
         '<canvas id="pxc" width="600" height="150" role="img" aria-label="주가 차트"></canvas></div>'+
       '<div class="comps">'+comps+'</div>'+fundHtml+
-      '<div class="dbody" tabindex="0" aria-label="지표 상세">'+timing(s)+body+'<div class="note">차트 <b style="color:var(--good)">▲</b>매수 = <b>스윙 저점 근처</b>, <b style="color:var(--hot)">▼</b>매도 = <b>스윙 고점 근처</b>(지그재그 전환점 <b style="color:var(--good)">●</b>/<b style="color:var(--hot)">●</b>). 여기에 <b>과열도·추세·모멘텀·변동성</b>을 결합해 걸러냅니다 — 저점이라도 <b>깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외</b>(떨어지는 칼 회피), 고점이라도 <b>추세·모멘텀 강한 상승 지속이면 매도 제외</b>(강세종목 조기매도 회피). 임계는 <b>시장국면</b>(SPY 200MA 위=관대한 눌림매수)에 따라 조정. 상단 리스트 랭킹은 과열도(<b>섹터 상대</b>)·추세·모멘텀·변동성 종합. <b>참고용 — 종목선택 예측력은 제한적이며, 매도는 \'확실한 하락\'이 아니라 비중축소 주의입니다. 매매권유 아님.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA. 투자자문·매매권유 아님.</div></div>';
+      '<div class="dbody" tabindex="0" aria-label="지표 상세">'+timing(s)+body+'<div class="note">차트 <b style="color:var(--good)">▲</b>매수 = <b>스윙 저점 근처</b>, <b style="color:var(--hot)">▼</b>매도 = <b>스윙 고점 근처</b>(지그재그 전환점 <b style="color:var(--good)">●</b>/<b style="color:var(--hot)">●</b>). 여기에 <b>과열도·추세·모멘텀·변동성</b>을 결합해 걸러냅니다 — 저점이라도 <b>깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외</b>(떨어지는 칼 회피), 고점이라도 <b>추세·모멘텀 강한 상승 지속이면 매도 제외</b>(강세종목 조기매도 회피). 임계는 <b>시장국면</b>(SPY 200MA 위=관대한 눌림매수)에 따라 조정. 상단 리스트 랭킹은 과열도(<b>섹터 상대</b>)·추세·모멘텀·변동성 종합. <b>참고용 — 종목선택 예측력은 제한적이며, 매도는 \'확실한 하락\'이 아니라 비중축소 주의입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위. <b>기준일 '+DATA.as_of+'</b>(가격·테크니컬·EPS) · 공매도잔량(공매도일수·SI%)만 <b>기준일 '+(SI_ASOF||'—')+'</b>(FINRA 격주, 가격 기준일보다 오래됨) · 출처 yfinance·FINRA.</div></div>';
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}
