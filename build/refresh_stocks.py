@@ -341,6 +341,23 @@ def main():
                 sub = (df[t] if len(ch) > 1 else df).dropna(how="all")
                 if len(sub) > 200: px[t] = sub
             except Exception: pass
+    # ★ 미확정 당일 봉 제거 — 랩 최우선 규칙 '기준일 통일'. 장중 실행 시 yfinance 마지막 봉이 실시간이라
+    #   종가·지표·목표주가 상승여력이 확정 전 값으로 계산되고, 사이트 다른 데이터(regime·sentiment)와 기준일이 갈린다.
+    #   미 동부 16:15 이전이면 당일 봉은 미확정으로 보고 전 종목에서 버린다(크론은 마감 후라 영향 없음).
+    try:
+        from zoneinfo import ZoneInfo
+        _et = pd.Timestamp.now(tz=ZoneInfo("America/New_York"))
+        if _et.hour*60 + _et.minute < 16*60 + 15:
+            _today = pd.Timestamp(_et.date())
+            _cut = 0
+            for _t in list(px):
+                _df = px[_t]
+                if len(_df) and _df.index[-1].normalize() == _today:
+                    px[_t] = _df.iloc[:-1]; _cut += 1
+            if _cut: print(f"  미확정 당일 봉({_today.date()}) 제외 {_cut}종목 — 기준일 통일(미 동부 {_et:%H:%M} 장중)")
+    except Exception as e:
+        print("  당일 봉 판정 생략:", e)
+
     spy = px.get("SPY", {}).get("Close") if "SPY" in px else None
     # ⚠ SPY가 없으면 rs3m이 'vs SPY'가 아니라 절대수익률이 되고 국면도 무조건 리스크온으로 고정된다.
     #   라벨은 그대로라 화면상 구분이 불가능하므로, 조용히 넘어가지 말고 중단한다(이전본 유지).
