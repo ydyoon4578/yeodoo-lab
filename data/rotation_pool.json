@@ -148,6 +148,54 @@
    "id": "A7"
   },
   {
+   "id": "A8",
+   "cat": "A",
+   "cat_label": "S&P 500 초과성과",
+   "name": "인플레이션 국면 멀티에셋 배분 (Inflation-Regime Multi-Asset Allocation)",
+   "type": "매크로 국면 조건부 멀티에셋 배분 · 롱온리 + 선물 오버레이",
+   "target": "글로벌 멀티에셋(주식·명목국채·물가연동채·원자재·금·관리선물/추세추종)",
+   "purpose": "인플레이션이 예상을 넘어 가속되는 국면을 판별해 주식·명목채권 비중을 줄이고 원자재·금·추세추종으로 무게중심을 옮겨, 인플레 충격기의 실질 자산가치 훼손을 방어한다.",
+   "principle": "Neville·Draaisma·Funnell·Harvey·van Hemert(2021, Journal of Portfolio Management 47(8), 8-37)는 미국·영국·일본 95년 데이터에서 예상치 못한 인플레이션이 주식·채권 모두에 악재이며, 미국 주식의 인플레 국면 실질수익이 연율 약 -7%였다고 보고했다. 반면 원자재는 인플레 급등기에 양(+)의 수익을 냈고, 능동전략 중에서는 추세추종이 인플레 충격기에 가장 신뢰할 만한 보호를 제공했다. 여기에 Boons·Duarte·de Roon·Szymanowska(2020, JFE 136(2), 444-470)는 인플레이션 리스크 프리미엄의 가격과 수량이 시간에 따라 변하고 2000년대 초에는 부호까지 뒤집혔음을 보였다. 즉 인플레 헤지는 '항상 켜두는 정적 배분'이 아니라 '국면 조건부 배분'이어야 한다는 것이 이 카드의 핵심 논지다.",
+   "entry": "매월 말 미국 CPI 전년동월비 수준과 그 방향(예: 전년비가 상승 중이고 임계치를 상회)으로 인플레 국면 여부를 판정한다. 국면 판정 시 기준배분(예: 주식 60 / 채권 40)에서 주식·명목국채를 줄이고 원자재·금·물가연동채·추세추종(관리선물)으로 정해진 비중만큼 이동하며, 국면 이탈이 확인되면 기준배분으로 복귀한다. CPI 공표 지연을 반영해 신호에 최소 1개월 래그를 부여하고, 오판 방지를 위해 2개월 연속 확인 후 전환하는 히스테리시스를 둔다. 리밸런싱은 월 1회, 전환은 국면 변화 시에만 실행한다.",
+   "performance": "95년이라는 긴 표본에도 불구하고 실제로 식별되는 인플레 '에피소드' 수는 소수에 불과해 통계적 자유도가 근본적으로 낮고, 각 에피소드의 원인(전쟁·오일쇼크·통화·공급망)이 서로 달라 외삽 위험이 크다. 원자재는 인플레 국면 밖에서 수년간 무수익·마이너스 구간이 길다는 점이 저자들도 지적하는 약점이며, 추세추종은 국면 밖에서도 플러스라는 장점이 있으나 실전에서는 국면 판정 지연과 급반전(whipsaw) 비용이 성과를 크게 갉아먹는다. 실제로 2025년에는 CTA가 주요 헤지펀드 전략 중 최부진 그룹으로 보고됐는데, 관세·채권 변동성발 V자 반전이 원인으로 지목됐다. 사후적으로 라벨링한 국면 성과와 실시간 판정 성과의 괴리를 반드시 별도로 검증해야 한다.",
+   "recent": "2025~2026년은 이 전략의 취약점이 그대로 노출된 구간이다. 관세·매크로 충격에 따른 급반전 장세에서 추세추종 CTA가 부진했다는 보고가 이어졌고, 동시에 2026년 전망에서는 물리적 원자재가 분산 수단으로 재부각된다는 견해도 나온다. 인플레 헤지 자산의 상대 매력에 대한 시각이 갈려 있는 상태로, 국면 판정 규칙(임계치·래그·히스테리시스) 선택에 결과가 크게 좌우된다는 점을 감안해야 한다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "The Best Strategies for Inflationary Times (Neville, Draaisma, Funnell, Harvey & van Hemert, 2021, JPM 47(8), 8-37) — SSRN — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3813202",
+    "The Best Strategies for Inflationary Times — The Journal of Portfolio Management — https://jpm.pm-research.com/content/47/8/8/tab-article-info",
+    "The Best Strategies for Inflationary Times — Man Group Insights — https://www.man.com/insights/best-strategies-for-inflationary-times",
+    "Time-Varying Inflation Risk and Stock Returns (Boons, Duarte, de Roon & Szymanowska, 2020, JFE 136(2), 444-470) — SSRN — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2273666",
+    "Time-varying inflation risk and stock returns — Journal of Financial Economics — https://www.sciencedirect.com/science/article/abs/pii/S0304405X19302429",
+    "Inflation and Asset Returns — Annual Review of Financial Economics — https://www.annualreviews.org/content/journals/10.1146/annurev-financial-110921-104726",
+    "Mixed CTA Performance as Traditional Trend-Followers Lead — HedgeNordic (2025-02) — https://hedgenordic.com/2025/02/mixed-cta-performance-as-traditional-trend-followers-lead/",
+    "Hedge Fund Outlook 2026 — With Intelligence — https://www.withintelligence.com/insights/hedge-fund-outlook-2026/"
+   ]
+  },
+  {
+   "id": "A9",
+   "cat": "A",
+   "cat_label": "S&P 500 초과성과",
+   "name": "초과 CAPE 수익률 동적배분 (Excess CAPE Yield Dynamic Allocation)",
+   "type": "밸류에이션 기반 자산배분 · 주식/채권 비중 동적 조절",
+   "target": "미국 주식(S&P 500)과 미국 10년 국채·현금의 2자산 배분. 국가별 CAPE로 글로벌 확장 가능",
+   "purpose": "CAPE의 역수(경기조정 이익수익률)에서 10년 실질금리를 뺀 '초과 CAPE 수익률(ECY)'로 주식과 채권의 상대 매력도를 측정해, 주식 비중을 기계적으로 늘리고 줄인다.",
+   "principle": "Shiller·Black·Jivraj(2020)는 금리 수준이 크게 달라진 환경에서 CAPE를 절대 수준만으로 평가할 수 없다고 보고, 주식-채권 상대 밸류에이션을 담는 지표로 ECY = (1/CAPE) − 10년 실질금리를 제시했다. ECY가 높을수록 채권 대비 주식의 기대 초과보상이 크다는 해석이며, 저자들은 이 지표를 이용해 주식 비중을 동적으로 조절하는 배분 규칙을 제안했다. 경제적 근거는 장기 평균회귀 — 경기조정 이익 대비 가격이 높고 실질금리가 높을수록 이후 장기 실질수익 기대가 낮아진다는, CAPE 계열 연구가 반복 확인해 온 관계다.",
+   "entry": "매월 말 S&P 500 CAPE와 10년 국채 실질금리로 ECY를 계산하고, 자체 역사 분포 기준 z-score 또는 백분위로 변환한다. 이를 주식 비중에 선형 매핑하되(예: 하한 20% ~ 상한 80%) 나머지는 10년 국채로 채운다. 극단 포지션과 과도한 회전을 막기 위해 월별 비중 변화폭을 ±10%p 이내로 제한하고, 실무적으로는 분기 리밸런싱으로 회전율을 더 낮출 수 있다. 신호는 발표 시차를 반영해 래그를 준다.",
+   "performance": "저자들은 이 규칙을 따를 경우 고정 주식/채권 배분 대비 연 약 1.5%p 수준의 복리 초과수익이 가능하다는 근거를 제시했다. 그러나 밸류에이션 타이밍의 실효성은 논쟁의 한복판에 있다. Asness(2012, AQR)는 시작 시점 Shiller P/E가 이후 10년 실질수익과 거의 단조적으로 역관계를 갖는다는 점은 인정하면서도, 같은 밸류에이션 구간 내 결과 분산이 매우 넓어 타이밍 도구로 쓰기에는 위험하다고 지적한다. AQR 계열의 가치 기반 타이밍 연구들도 '전략적 분산은 이기기 어려운 벤치마크'라는 결론을 반복해 왔다. 실제로 고평가 구간이 수년간 지속되면 조기 축소로 인한 기회손실이 누적되며, ECY는 실질금리 추정 방식(기대 인플레 대리변수)에 따라 값이 흔들리는 정의 민감성도 갖는다.",
+   "recent": "2026년 7월 기준 S&P 500 Shiller CAPE는 약 41.1로 장기 평균(약 32.4)을 27% 상회하며, 140년 역사에서 1999년 12월(44.19) 다음으로 높은 영역이다. ECY는 2026년 6월 1.35로 장기 평균 2.57 대비 약 -48% 수준까지 낮아졌다. 규칙대로라면 주식 비중을 하한 근처까지 낮춰야 하지만, 지수는 2026년 들어서도 신고가를 경신 중이어서 '고평가에서 더 오르는' 밸류에이션 타이밍의 고전적 딜레마가 그대로 재현되고 있다. 단독 매매신호보다 위험예산의 완만한 기울기로 쓰는 편이 현실적이다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "CAPE and the COVID-19 Pandemic Effect (Shiller, Black & Jivraj, 2020) — SSRN, 초과 CAPE 수익률(ECY) 제시 — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3714737",
+    "An Old Friend: The Stock Market's Shiller P/E (Asness, AQR, 2012) — https://www.aqr.com/-/media/AQR/Documents/Insights/White-Papers/An-Old-Friend-The-Stock-Markets-Shiller-PE.pdf",
+    "Shiller Excess CAPE Yield for the S&P 500: 1.35 (Jun 2026) — GuruFocus — https://www.gurufocus.com/economic_indicators/4530/shiller-excess-cape-yield-for-the-sp-500",
+    "S&P 500 Shiller CAPE Ratio: 41.12 (Jul 2026) — GuruFocus — https://www.gurufocus.com/economic_indicators/56/sp-500-shiller-cape-ratio",
+    "Shiller PE Ratio — Multpl (역사 시계열) — https://www.multpl.com/shiller-pe",
+    "The Shiller CAPE 10: how to use it, not abuse it — The Evidence-Based Investor — https://www.evidenceinvestor.com/post/the-shiller-cape-10-how-to-use-it-not-abuse-it",
+    "CAPE & Excess CAPE Yield as Tools to Compare Financial Markets (Olivero, 2025) — https://www.giottocellinosim.it/wp-content/uploads/2025/05/Cape_Ecy_2025.pdf",
+    "P-CAPE: A Better Way for Investors to Estimate Future Returns — Morningstar — https://www.morningstar.com/markets/improving-cape-10"
+   ]
+  },
+  {
    "id": "B1",
    "cat": "B",
    "cat_label": "NASDAQ 100 초과성과",
@@ -165,9 +213,9 @@
    ],
    "lab": {
     "v": "배포",
-    "t": "EPS 리비전 드리프트",
+    "t": "EPS 리비전 드리프트 (PEAD)",
     "why": "랩의 챔피언 전략. 유일하게 강건하게 살아남은 알파(벤치 +10.46%p).",
-    "href": "explorer.html"
+    "href": "explorer.html#s-eps-리비전-드리프트-pead"
    }
   },
   {
@@ -271,6 +319,53 @@
    }
   },
   {
+   "id": "B7",
+   "cat": "B",
+   "cat_label": "NASDAQ 100 초과성과",
+   "name": "공급망 고객사 모멘텀 (Customer-Supplier Economic-Links Momentum)",
+   "type": "정보확산 지연(lead-lag) 기반 크로스섹션 · 롱온리 또는 롱숏",
+   "target": "주요 고객사 매출 의존이 공시된 미국 상장 공급업체(10-K 주요고객 공시 기준). 실무적으로 SPX/NDX 대형 고객사와 연결된 협력사 유니버스",
+   "purpose": "주요 고객사 주가에 발생한 충격이 공급업체 주가에 뒤늦게 반영되는 lead-lag 구조를 이용해, 고객사 수익률이 좋았던 공급업체를 미리 편입한다.",
+   "principle": "Cohen & Frazzini(2008, Journal of Finance)는 기업 간 고객-공급 관계가 공개 정보임에도 투자자 주의의 한계 때문에 가격에 즉시 반영되지 않는다는 것을 보였다. 표본에서 해당 고객사는 공급업체 매출의 평균 약 20%를 차지할 만큼 실질적 연결이었고, 고객사 뉴스가 공급업체 가격으로 옮겨가는 데 시간이 걸렸다. Menzly & Ozbas(2010, Journal of Finance)는 같은 현상을 '시장 분할과 투자자 전문화'로 설명하며, 정보투자자가 많은 종목일수록 교차예측력이 약해지고 기관 보유 변화가 정보거래 행태를 반영한다는 것을 보였다. 즉 알파의 원천은 새로운 정보가 아니라 이미 공개된 정보가 연결 고리를 타고 확산되는 속도의 마찰이다.",
+   "entry": "매월 말 각 공급업체의 공시된 주요 고객사를 매핑한 뒤(고객사 매출비중 임계치, 예: 10% 이상), 직전 1개월 고객사 수익률로 공급업체를 랭킹한다. 상위 20%를 동일가중 롱(롱숏이면 하위 20% 숏)하고 1개월 보유 후 재랭킹한다. 고객사가 복수인 경우 매출비중 가중 평균 수익률을 쓰고, 공급업체 자체 모멘텀·산업 모멘텀과의 중복을 통제한다. 유동성 하한과 종목당 비중 상한을 두어 소형주 쏠림과 시장충격을 제한한다.",
+   "performance": "원논문의 상위20% 롱·하위20% 숏 포트폴리오는 Fama-French 3팩터 기준 월 1.45%(연 약 18.4%)의 비정상 수익을 냈고, 자체 가격모멘텀·산업모멘텀·산업내 lead-lag·유동성을 통제해도 크기와 유의성이 크게 훼손되지 않았다. 반론도 분명하다 — Journal of Accounting Research(2017)의 'Anticipated Earnings Announcements and the Customer-Supplier Anomaly' 연구는 이 아노말리 수익이 예정된 실적발표일 부근에 집중된다고 보고해, 순수한 '연결 지연' 해석을 약화시킨다. 또한 고객사 매핑이 연 1회 10-K 공시에 의존해 시점 정확도가 낮고, 효과가 소형 공급업체에 편중돼 거래비용·용량 제약이 크다. Menzly-Ozbas의 결과 자체가 '정보투자자가 늘면 예측력이 약해진다'는 것이므로, 발견 이후 감쇠는 이론적으로도 예상되는 경로다.",
+   "recent": "2026년 AI 인프라 사이클로 소수의 하이퍼스케일러·GPU 설계사에 매출이 집중된 공급업체(파운드리·HBM·ABF 기판·전력·네트워킹)가 크게 늘어, 경제적 연결의 '강도' 자체는 역사적으로 높은 수준이다. 다만 같은 이유로 이 연결이 시장의 최대 관심사가 되어 뉴스·추정치가 실시간으로 공유되고 있어, 원논문이 전제한 '주의 부족에 따른 지연 반영' 여지는 오히려 축소됐을 가능성이 크다. 최근 특이사항으로 이 전략의 표본외 유효성을 뒷받침하는 독립적 검증은 확인되지 않았다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "Economic Links and Predictable Returns (Cohen & Frazzini, 2008, Journal of Finance) — AQR — https://www.aqr.com/Insights/Research/Journal-Article/Economic-Links-and-Predictable-Returns",
+    "Economic Links and Predictable Returns — 논문 전문 PDF (Frazzini, NYU Stern) — https://pages.stern.nyu.edu/~afrazzin/pdf/Economic%20Links%20and%20Predictable%20Returns%20-%20Cohen%20and%20Frazzini.pdf",
+    "Economic Links and Predictable Returns — 워킹페이퍼 PDF (Yale) — http://www.econ.yale.edu/~shiller/behfin/2006-04/cohen-frazzini.pdf",
+    "Market Segmentation and Cross-predictability of Returns (Menzly & Ozbas, 2010, Journal of Finance 65(4), 1555-1580) — https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1540-6261.2010.01578.x",
+    "Market Segmentation and Cross-Predictability of Returns — SSRN (Menzly & Ozbas) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=989080",
+    "Anticipated Earnings Announcements and the Customer-Supplier Anomaly (Journal of Accounting Research 55(3), 2017, 709-741) — https://ideas.repec.org/a/bla/joares/v55y2017i3p709-741.html",
+    "Supply Chain Links Predictability of Returns (Timmermans, 2013, Erasmus University 학위논문 — 재현 시도) — https://thesis.eur.nl/pub/13875/Timmermans.pdf"
+   ]
+  },
+  {
+   "id": "B8",
+   "cat": "B",
+   "cat_label": "NASDAQ 100 초과성과",
+   "name": "옵션 내재 변동성 스큐 신호 (Option-Implied Volatility Skew Signal)",
+   "type": "옵션시장 파생 정보 기반 크로스섹션 종목 선별 · 주식으로만 실행",
+   "target": "옵션이 활발히 거래되는 미국 대형주(S&P 500 / NASDAQ 100 구성종목 중 옵션 유동성 상위)",
+   "purpose": "개별종목 옵션의 외가격 풋과 등가격 콜 사이 내재변동성 격차(스큐)에서 정보거래자의 부정적 사견을 추출해, 스큐가 완만한 종목을 롱하고 가파른 종목을 회피한다.",
+   "principle": "Xing·Zhang·Zhao(2010, JFQA 45(3), 641-662)는 개별종목 옵션의 변동성 스머크(스큐) 형태가 주식 수익률에 대한 횡단면 예측력을 갖는다는 것을 보였다. 부정적 정보를 가진 거래자는 공매도 제약과 레버리지 이점 때문에 외가격 풋을 선호하는데, 주식시장은 이 정보를 느리게 반영한다는 것이 저자들의 해석이다. 실제로 스큐가 가장 가파른 기업이 다음 분기 최악의 어닝 쇼크를 경험했다. 같은 계열로 Cremers & Weinbaum(2010, JFQA)은 풋-콜 패리티 이탈이 미래 수익을 예측함을, An·Ang·Bali·Cakici(2014, Journal of Finance)는 콜 내재변동성이 크게 오른 종목이 이후 높은 수익을 낸다는 것을 보였다.",
+   "entry": "매월 말 각 종목에 대해 잔존만기 30일 내외, 델타 -0.2 부근의 외가격 풋 내재변동성에서 등가격 콜 내재변동성을 뺀 값을 스큐로 정의한다. 옵션 미결제약정·호가스프레드 기준 유동성 필터를 통과한 종목만 대상으로 스큐 하위(완만) 분위를 동일가중 롱하고 상위(급) 분위는 편입 배제(롱숏이면 숏)한다. 보유기간 1개월, 월간 리밸런싱이며 매매는 기초주식으로만 하므로 옵션 포지션은 필요 없다. 지수 전체의 헤지 수급 변동에 오염되지 않도록 지수 스큐를 통제변수로 차감하는 것이 바람직하다.",
+   "performance": "원논문은 스큐 최급 분위가 최완만 분위 대비 연 10.9% 위험조정 언더퍼폼하며 예측력이 최소 6개월 지속된다고 보고했다. 다만 이는 롱숏 스프레드 기준이라 롱온리로 구현할 때 기여분은 그보다 작다. 감쇠 근거도 명확하다 — Cremers & Weinbaum은 표본기간 후반으로 갈수록 예측력이 감소한다고 명시하며 초기의 미스프라이싱이 점진적으로 해소된 결과로 해석했다. 효과가 옵션 유동성은 높고 주식 유동성은 낮은 종목에 집중된다는 점 역시 용량·거래비용 제약을 뜻한다. 여기에 OptionMetrics 등 옵션 데이터 비용, 스큐 정의(만기·델타 구간·보간 방식)에 따른 결과 민감성이 재현의 실질적 장벽이다.",
+   "recent": "2026년 지수 옵션 스큐는 급변동을 반복했다. Bloomberg(2026-06-10)는 1개월 스큐가 1년 최저 수준에서 관측치 72번째 백분위까지 급등했다고 보도했으며, 그 직전 구간에는 하방보호 수요 자체가 크게 위축돼 있었다. 개별종목 스큐 신호가 이런 지수 차원의 헤지 수급 스윙에 쉽게 오염될 수 있음을 보여주는 구간으로, 지수 스큐 통제 없이 원시 스큐만 쓰면 시장 타이밍 노이즈를 종목 알파로 오인할 위험이 있다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "What Does the Individual Option Volatility Smirk Tell Us About Future Equity Returns? (Xing, Zhang & Zhao, 2010, JFQA 45(3), 641-662) — https://www.cambridge.org/core/journals/journal-of-financial-and-quantitative-analysis/article/abs/what-does-the-individual-option-volatility-smirk-tell-us-about-future-equity-returns/ECFD16BA9ACBDC8D577D1BD866FBEA72",
+    "What Does Individual Option Volatility Smirk Tell Us About Future Equity Returns? — SSRN — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1107464",
+    "Deviations from Put-Call Parity and Stock Return Predictability (Cremers & Weinbaum, 2010, JFQA 45(2), 335-367) — https://www.cambridge.org/core/journals/journal-of-financial-and-quantitative-analysis/article/abs/deviations-from-putcall-parity-and-stock-return-predictability/D9BA8F97580328AAFD7988B092FE5D50",
+    "The Joint Cross Section of Stocks and Options (An, Ang, Bali & Cakici, 2014, Journal of Finance 69(5), 2279-2337) — NBER WP 19590 — https://www.nber.org/papers/w19590",
+    "The Joint Cross Section of Stocks and Options — Journal of Finance (Wiley) — https://onlinelibrary.wiley.com/doi/abs/10.1111/jofi.12181",
+    "Deviations from Put-Call Parity and Stock Return Predictability — OptionMetrics 리서치 요약 — https://optionmetrics.com/deviations-from-put-call-parity-and-stock-return-predictability/",
+    "Costs to Hedge the $9 Trillion S&P 500 Rally Jump Ahead of Fed — Bloomberg (2026-06-10) — https://www.bloomberg.com/news/articles/2026-06-10/costs-to-hedge-the-9-trillion-s-p-500-rally-jump-ahead-of-fed",
+    "Cboe Global Indices: SKEW Index Dashboard — https://www.cboe.com/us/indices/dashboard/skew/"
+   ]
+  },
+  {
    "id": "C1",
    "cat": "C",
    "cat_label": "단기 마켓타이밍",
@@ -371,6 +466,101 @@
    }
   },
   {
+   "id": "C6",
+   "cat": "C",
+   "cat_label": "단기 마켓타이밍",
+   "name": "옵션 만기 주간 효과 (Option-Expiration Week Effect)",
+   "type": "캘린더 아노말리 · 딜러 헤지수급 · 롱온리 단기 타이밍",
+   "target": "옵션 거래가 활발한 미국 대형주(S&P 100 계열) 및 SPY·QQQ 지수 ETF",
+   "purpose": "매월 세 번째 금요일이 포함된 '옵션 만기 주간'에만 지수·대형주 익스포저를 켜서, 옵션 마켓메이커의 헤지 되돌림이 만드는 주간 단위 계절적 상승분을 수취한다.",
+   "principle": "Stivers & Sun(2013, Journal of Banking & Finance)은 S&P 100 종목의 만기주간(셋째 금요일 주) 수익률이 ① 옵션 활동이 적은 종목의 같은 주 수익률, ② 자기 자신의 다른 주 수익률, ③ 자산가격모형 알파 기준 위험 대비 모두 높게 나타난다고 보고했다. 저자들이 제시한 경로는 (a) 옵션 마켓메이커의 델타헤지 리밸런싱 — 만기가 다가오며 숏-스탁 헤지 포지션이 축소되어 매수 압력이 발생하고, (b) 만기주간 중 내재변동성 하락으로 위험 인식이 낮아지는 것이다. 같은 종목의 넷째 금요일 주간은 반대로 소폭 부진해, 되돌림 구조와 정합적이다. Ni·Pearson·Poteshman(2005, JFE)은 만기일 종가가 행사가 근처로 클러스터링되는 '핀 리스크'를 문서화해 옵션 수급이 실제로 기초주식 가격을 움직인다는 미시적 근거를 제공한다.",
+   "entry": "매월 셋째 금요일이 포함된 주의 직전 거래일 종가(또는 만기주 월요일 시가)에 SPY/QQQ 또는 옵션 미결제약정 상위 대형주 바스켓을 동일가중 매수하고, 셋째 금요일(만기일) 종가에 전량 청산한다. 나머지 기간은 현금·초단기채로 대기하며, 원논문에서 부진이 보고된 넷째 금요일 주간은 진입하지 않는다. 실행 시 종목 선별은 옵션 거래량·미결제약정 상위 분위로 제한하고, 왕복 거래비용(최소 5bp)과 슬리피지를 반드시 차감해 평가한다.",
+   "performance": "원논문은 만기주간 초과분이 통계적으로 신뢰할 만하다고 보고하지만, 크기는 주 단위의 소폭이라 왕복 거래비용·슬리피지에 매우 취약하다. Ni·Pearson·Poteshman(2005)이 보고한 만기일 수익률 왜곡은 옵션 상장 종목 평균 최소 16.5bp 수준으로, 절대 크기가 작다는 점이 그대로 드러난다. 표본은 대체로 2000년대 중반까지이며 발표 이후 표본외 감쇠 여부에 대한 독립적 재검증은 부족하다. 특히 2020년대 들어 0DTE(당일만기) 옵션이 확산되면서 감마가 매일 소멸되어 셋째 금요일에 집중되던 헤지 물량이 희석됐다는 실무 지적이 있어, 메커니즘 자체가 약화됐을 가능성을 전제로 다뤄야 한다.",
+   "recent": "Cboe는 SPX 0DTE 옵션의 시장 영향을 별도로 분석해 왔고, 2023~2026년 사이 일간 만기 상품이 SPX 옵션 거래의 큰 축으로 자리 잡으면서 '월 1회 셋째 금요일'에 감마가 몰리던 과거 구조가 상당 부분 분산됐다는 것이 업계의 공통된 서술이다. 즉 이 카드의 원 메커니즘(만기주간 헤지 되돌림 집중)은 시장구조 변화로 약화 방향의 압력을 받고 있으며, 최근 데이터로 재검증하지 않은 채 과거 계수를 그대로 쓰는 것은 위험하다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "Returns and Option Activity over the Option-Expiration Week for S&P 100 Stocks (Stivers & Sun, 2013, Journal of Banking & Finance 37, 4226-4240) — https://www.sciencedirect.com/science/article/abs/pii/S0378426613003051",
+    "Returns and Option Activity over the Option-Expiration Week for S&P 100 Stocks — SSRN 워킹페이퍼 (Stivers & Sun) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1571786",
+    "Stock Price Clustering on Option Expiration Dates (Ni, Pearson & Poteshman, 2005, JFE 78(1), 49-87) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X05000577",
+    "Stock Price Clustering on Option Expiration Dates — SSRN (Ni, Pearson & Poteshman) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=519044",
+    "Does Option Trading Have a Pervasive Impact on Underlying Stock Prices? (Pearson, Poteshman & White) — https://www.ou.edu/dam/price/Finance/CFS/paper/pdf/pearsonPoteshmanWhite.pdf",
+    "Evaluating the Market Impact of SPX 0DTE Options — Cboe Volatility Insights — https://www.cboe.com/insights/posts/volatility-insights-evaluating-the-market-impact-of-spx-0-dte-options/",
+    "Option Expiration Week Effect — QuantConnect Research — https://www.quantconnect.com/research/15295/option-expiration-week-effect/"
+   ]
+  },
+  {
+   "id": "C7",
+   "cat": "C",
+   "cat_label": "단기 마켓타이밍",
+   "name": "세금손실매도 반등 (Tax-Loss Selling Rebound / Turn-of-the-Year)",
+   "type": "캘린더 아노말리 · 세제 유인 수급 · 롱온리 단기",
+   "target": "미국 상장주 중 연중 낙폭 과대 종목(러셀 2000·중소형 중심, 유동성 필터 적용)",
+   "purpose": "12월 세금손실 실현 매도로 과매도된 '올해의 패자' 종목을 연말에 매수해, 매도 압력이 소멸하고 재매수가 들어오는 1월 초 반등을 수취한다.",
+   "principle": "미국 과세 투자자는 연말에 손실 종목을 팔아 자본손실을 실현할 유인이 있어 12월 패자 종목에 인위적 매도 압력이 집중되고, 이 압력이 소멸하는 1월 초에 가격이 되돌려진다는 것이 세금손실매도 가설이다. Grinblatt & Moskowitz(2004, JFE)는 패자 종목의 모멘텀 효과가 12월에 다른 달 대비 5배 이상 크고 장기 반전이 1월에 집중된다는 것을 보였고, Grinblatt & Keloharju 계열의 'Tax-loss trading and wash sales' 연구는 실제 거래 데이터에서 세금 동기 매매를 확인했다. Sikes(2014, Journal of Accounting and Economics)는 개인뿐 아니라 세금 유인이 강한 기관투자자도 같은 행동을 보여 연말효과에 기여한다고 보고했다. 즉 이 카드는 '정보'가 아니라 '제도가 만든 일시적 수급 왜곡'을 노린다.",
+   "entry": "11월 말 기준 연초대비 수익률 하위 분위(예: -20% 이하)이면서 시가총액·일평균거래대금 하한을 통과하는 종목을 후보로 잡는다. 12월 중순(세금매도 압력이 정점에 이르는 구간)에 동일가중 매수해 1월 중순~말에 청산하는 단일 시즌 트레이드로 운용한다. 미국 과세계좌에서는 워시세일(30일) 규정 저촉을 피하도록 매매 일정을 관리하고, 소형·저유동성 종목의 시장충격을 감안해 종목당 비중과 총 회전율을 제한한다.",
+   "performance": "세금매도 압력이 큰 종목군일수록 1월 초 며칠에 비정상 수익이 집중된다는 결과가 반복 보고돼 과거 근거 자체는 강했다. 그러나 감쇠 논쟁이 뚜렷하다 — 'The Declining January Effect'(Journal of Economics and Business)를 비롯한 연구들이 미국 시장에서 1월효과의 축소를 보고했고, 2000년 이후 단순 '1월에 사라' 규칙은 크게 약화된 것으로 평가된다. 효과가 소형·저유동·저가주에 집중돼 스프레드와 시장충격 차감 시 순알파가 대부분 소진될 수 있고, 사이즈 프리미엄 자체가 1월에 몰려 있다는 통설도 퀄리티 통제 시 상당 부분 사라진다는 반론이 제기돼 있다. 연 1회 트레이드라 표본 수가 근본적으로 적다는 통계적 한계도 크다.",
+   "recent": "2026년 1월 2일부터 22일까지 러셀 2000이 S&P 500을 14거래일 연속 상회했는데, 이는 1996년 이후 처음이자 기록상 두 번째로 긴 연속 우위였다. 2월 초 기준 러셀 2000은 연초 대비 5% 이상, S&P 500은 약 1.5% 상승했다. 다만 시장 해설은 이 강세를 세금매도 반등·연초 리밸런싱 같은 계절 요인과, 2025년 말 연준 금리인하로 차입비용이 낮아진 소형주 수혜라는 펀더멘털 요인이 뒤섞인 결과로 설명한다. 계절효과 단독 귀속은 불가능하며, 단독 매매신호보다 다른 신호의 타이밍 보조로 쓰는 편이 합리적이다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "Predicting stock price movements from past returns: the role of consistency and tax-loss selling (Grinblatt & Moskowitz, 2004, JFE 71(3), 541-579) — https://ideas.repec.org/a/eee/jfinec/v71y2004i3p541-579.html",
+    "Tax-loss trading and wash sales (NBER Working Paper 8745) — https://www.nber.org/system/files/working_papers/w8745/w8745.pdf",
+    "Tax-loss trading and wash sales — Journal of Financial Economics — https://www.sciencedirect.com/science/article/abs/pii/S0304405X03001806",
+    "The turn-of-the-year effect and tax-loss-selling by institutional investors (Sikes, 2014, Journal of Accounting and Economics 57(1), 22-42) — https://ideas.repec.org/a/eee/jaecon/v57y2014i1p22-42.html",
+    "The declining January effect: evidences from the U.S. equity markets — Journal of Economics and Business — https://www.sciencedirect.com/science/article/abs/pii/S1062976902001606",
+    "The January Effect Before Tax-Loss Selling and Window-Dressing — EFMA 2025 Annual Meeting paper — http://www.efmaefm.org/0EFMAMEETINGS/EFMA%20ANNUAL%20MEETINGS/2025-Greece/papers/JanEffectsEFMAFULL.pdf",
+    "Will the Russell 2000 Continue to Outperform the S&P 500? — Schaeffer's Investment Research (2026-01-28) — https://www.schaeffersresearch.com/content/analysis/2026/01/28/will-the-russell-2000-continue-to-outperform-the-s-p-500",
+    "The Market Just Did This For the 1st Time in 30 Years — The Motley Fool (2026-01-29) — https://www.fool.com/investing/2026/01/29/the-market-just-did-this-for-1st-time-in-30-years/"
+   ]
+  },
+  {
+   "id": "C8",
+   "cat": "C",
+   "cat_label": "단기 마켓타이밍",
+   "name": "실적발표 프리미엄 (Earnings Announcement Premium)",
+   "type": "이벤트 캘린더 아노말리 · 발표 예정월 사전 편입 · 롱온리",
+   "target": "S&P 500 / NASDAQ 100 등 미국 대형주(발표 일정이 사전에 예측 가능한 종목)",
+   "purpose": "실적 발표가 예정된 '달'에 해당 종목을 미리 편입해, 발표 전후로 몰리는 투자자 주의와 거래량이 만드는 이벤트 프리미엄을 수취한다. 발표 이후의 표류(PEAD)와 달리 발표 이전·당일 구간을 노린다.",
+   "principle": "Frazzini & Lamont(2007, NBER WP 13090)는 실적발표가 예정된 달에 해당 종목이 체계적으로 높은 수익을 낸다는 것을 보이고, 이 프리미엄이 발표일 전후 거래량 급증과 강하게 연결돼 있음을 밝혔다. 저자들은 소액투자자가 발표라는 이벤트에 주의를 뺏겨 매수에 나서는 것을 주된 경로로 지목한다 — 프리미엄이 높은 종목일수록 추정된 소액투자자 순매수가 컸다. Barber, De George, Lehavy & Trueman(2013, JFE)은 46개국 데이터에서 발표월 수익률이 비발표월 대비 연 11% 이상 높다는 것을 확인해 미국 특유 현상이 아님을 보였다. 발표 전 불확실성 해소 대가(리스크 보상) 해석도 병존한다.",
+   "entry": "과거 발표일 패턴과 기업 공시 캘린더로 다음 달 실적발표가 예상되는 종목을 사전에 식별한다. 발표 예정 월의 시작일에 동일가중 편입하고 발표 직후(또는 해당 월말) 청산해, 매월 발표 예정 종목 바스켓만 보유한다. 원논문의 핵심 강화 필터인 '과거 발표기간 거래량 급증(비발표기간 대비 거래량 비율)' 상위 종목으로 집중하고, 월간 리밸런싱한다. 회전율이 매우 높으므로 거래비용을 명시적으로 차감해 평가해야 한다.",
+   "performance": "원논문은 월간 전략 기준 연 7~18%의 초과수익과 여타 아노말리보다 높은 샤프비율을 보고했고, 국제 표본에서도 연 11%p 이상이 확인됐다. 그러나 소멸 논쟁이 가장 강한 이벤트 아노말리 중 하나다 — Heitz, Narayanamoorthy & Zekhnini의 'The Disappearing Earnings Announcement Premium'은 미국에서 이 프리미엄이 최근 사라졌으며, 2004년 8-K 수시공시 규제 강화로 정보 비대칭이 발표일에 집중되지 않고 8-K 시점으로 분산됐다는 설명을 제시한다. 2004년 이후 개별 변동성 하락도 원인으로 지목된다. 여기에 월 100%를 넘나드는 회전율과 소형주 편중을 감안하면 순알파 여지는 더 좁아진다.",
+   "recent": "FactSet(2026-07-17)에 따르면 2026년 2분기 실적을 발표한 S&P 500 기업 중 88%가 EPS 컨센서스를 상회했고 블렌디드 이익증가율은 24.7%로 5년 평균(15.2%)·10년 평균(11.2%)을 크게 웃돈다. 발표 이벤트 자체의 정보 밀도는 여전히 높지만, 그것이 곧 '발표월 프리미엄'의 부활을 뜻하지는 않는다 — 소멸 논거(공시 분산·변동성 축소)와 병존한다는 점을 전제로 접근해야 한다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "The Earnings Announcement Premium and Trading Volume (Frazzini & Lamont, 2007, NBER Working Paper 13090) — https://www.nber.org/papers/w13090",
+    "The Earnings Announcement Premium and Trading Volume — SSRN (Frazzini & Lamont) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=986940",
+    "The Earnings Announcement Premium and Trading Volume — AQR Working Paper Library — https://www.aqr.com/library/working-papers/the-earnings-announcement-premium-and-trading-volume",
+    "The earnings announcement premium around the globe (Barber, De George, Lehavy & Trueman, 2013, JFE) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X12002188",
+    "The Earnings Announcement Premium Around the Globe — SSRN — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1872183",
+    "The Disappearing Earnings Announcement Premium (Heitz, Narayanamoorthy & Zekhnini) — SSRN — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3296537",
+    "The Disappearing Earnings Announcement Premium — 워킹페이퍼 전문 (Rotman 세미나) — https://www-2.rotman.utoronto.ca/userfiles/seminars/files/G_%20Narayanamoorthy%20paper.pdf",
+    "S&P 500 Earnings Season Update: July 17, 2026 — FactSet Insight — https://insight.factset.com/sp-500-earnings-season-update-july-17-2026"
+   ]
+  },
+  {
+   "id": "C9",
+   "cat": "C",
+   "cat_label": "단기 마켓타이밍",
+   "name": "배당월 프리미엄 (Dividend Month Premium)",
+   "type": "캘린더·수급 아노말리 · 예상 배당월 사전 편입 · 롱온리",
+   "target": "정기 배당(분기·반기·연 1회) 이력이 안정적인 미국 상장 배당주. 확장 시 독일·북유럽 등 해외 배당주",
+   "purpose": "각 기업이 배당을 지급할 것으로 '예측되는 달'에만 그 종목을 보유해, 배당을 좇는 투자자의 가격 압력이 만드는 비정상 수익을 수취한다.",
+   "principle": "Hartzmark & Solomon(2013, JFE 109(3), 640-660)은 배당 지급이 예측되는 달에 해당 기업 주가가 비정상적으로 높은 수익을 낸다는 것을 문서화했다. 이 초과분은 같은 달 다른 기업 대비로도, 같은 기업의 배당 없는 달 대비로도 나타나 위험 기반 설명이 어렵다. 저자들은 배당을 선호하는 투자자(인컴 수요)의 매수 압력을 원인으로 지목하며, 유동성과 배당 수요의 대리지표가 클수록 배당락 전 상승폭과 그 이후 되돌림이 모두 커진다는 점을 근거로 든다. 배당 발표일과 배당락일 사이 구간이 수익의 주된 원천이며, 뉴스가 없는 구간에서 가격이 오른다는 점이 가격압력 해석을 뒷받침한다.",
+   "entry": "각 종목의 과거 배당 지급 이력(주기·월)으로 다음 배당이 예상되는 달을 사전에 지정한다. 해당 월 초에 동일가중 편입해 배당락일 이후(또는 월말) 청산하고, 배당이 예상되지 않는 달에는 보유하지 않는다. 월간 리밸런싱이며, 시장 베타 노출을 줄이려면 지수 선물/ETF로 베타 중립화한 형태로 운용할 수 있다. 예상 배당월이 어긋난 기업(감배·주기 변경)은 즉시 제외한다.",
+   "performance": "원논문 기준 효과 크기는 가치 프리미엄에 필적하면서 변동성은 더 낮고, 표본 83년 중 73년에서 양(+)의 초과수익이 났으며 최악 연간 수익도 -4.6%에 그쳤다. 롱온리 배당월 포트폴리오의 연 샤프는 약 0.42, 기업 내 비교 포트폴리오는 약 0.20으로 SMB·HML·UMD보다 높게 보고됐다. 독일 표본 재현 연구는 추적오차·거래비용을 반영해도 유의한 비정상 수익이 남고 손익분기 거래비용이 0.30~1.76% 범위라고 보고했다. 다만 이 전략은 본질적으로 회전율이 극도로 높고, 발견 이후 표본에서의 독립적 재검증은 제한적이다. 또한 Hartzmark & Solomon(2019) 'The Dividend Disconnect'는 투자자가 배당과 자본이득을 분리해 인식하는 행태 편의를 보여, 이 프리미엄이 정상적 위험보상이 아니라 편의에서 나온다는 해석을 강화하는 동시에 편의가 교정되면 소멸할 수 있음을 시사한다.",
+   "recent": "미국 배당 수급의 절대 규모 자체가 옅어지고 있다는 점이 이 카드의 최대 역풍이다. S&P 500 배당수익률은 2026년 7월 기준 1.07%로 장기 평균 1.63%를 크게 밑돌고 최근 1년간 추가로 하락했다. 반면 자사주매입은 기록적 수준으로 확대돼(2025년 1분기 약 2,935억 달러) 주주환원의 무게중심이 배당에서 매입으로 이동 중이다. 배당 수요 압력을 원천으로 삼는 전략인 만큼, 과거 계수를 그대로 적용하기보다 효과 축소를 기본 시나리오로 두는 것이 타당하다.",
+   "recent_at": "2026-07-21",
+   "sources": [
+    "The dividend month premium (Hartzmark & Solomon, 2013, JFE 109(3), 640-660) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X13000585",
+    "The Dividend Month Premium — SSRN (Hartzmark & Solomon) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1930620",
+    "The dividend month premium — RePEc/IDEAS 서지 및 초록 — https://ideas.repec.org/a/eee/jfinec/v109y2013i3p640-660.html",
+    "Exploiting the dividend month premium: evidence from Germany (Journal of Asset Management 22(4), 2021) — https://link.springer.com/article/10.1057/s41260-021-00215-3",
+    "The dividend month premium, liquidity and foreign ownership: Evidence from the Nordics (Aalto University) — https://aaltodoc.aalto.fi/handle/123456789/41312",
+    "The Dividend Disconnect (Hartzmark & Solomon, 2019, Journal of Finance 74(5), 2153-2199) — https://ideas.repec.org/a/bla/jfinan/v74y2019i5p2153-2199.html",
+    "S&P 500 Dividend Yield: 1.07% (Jul 2026) — GuruFocus — https://www.gurufocus.com/economic_indicators/150/sp-500-dividend-yield",
+    "S&P 500 Index Buybacks Hit Record — HORAN Wealth — https://horanwealth.com/insights/sp-500-index-buybacks-hit-record"
+   ]
+  },
+  {
    "id": "D1",
    "cat": "D",
    "cat_label": "자산배분·리스크관리",
@@ -388,9 +578,9 @@
    ],
    "lab": {
     "v": "marginal",
-    "t": "변동성 관리 (vol-managed)",
+    "t": "변동성 관리 (σ타겟 익스포저)",
     "why": "단일 팩터로 검증 통과했으나 증분은 제한적(marginal).",
-    "href": "explorer.html"
+    "href": "explorer.html#s-변동성-관리-타겟-익스포저"
    }
   },
   {
@@ -413,9 +603,9 @@
    "id": "D2",
    "lab": {
     "v": "배포",
-    "t": "크로스에셋 리스크 패리티",
+    "t": "크로스에셋 리스크패리티 + vol타겟",
     "why": "배포 코어 3슬리브 중 하나. 추세 게이트와 결합해 운용.",
-    "href": "explorer.html"
+    "href": "explorer.html#s-크로스에셋-리스크패리티-vol타겟"
    }
   },
   {
@@ -620,9 +810,9 @@
    "id": "E3",
    "lab": {
     "v": "기각",
-    "t": "Book-to-Price 단일 팩터",
+    "t": "Book-to-Price 밸류 (SPX top10)",
     "why": "검증 단일팩터 중 열위로 기각.",
-    "href": "explorer.html"
+    "href": "explorer.html#s-book-to-price-밸류-spx-top10"
    }
   },
   {
