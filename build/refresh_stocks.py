@@ -402,8 +402,10 @@ def main():
                 tail = "" if kind == "rev" else " · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준"
                 return head + " — " + " · ".join(parts) + tail
 
-            # (a) 지그재그 확정 전환점
-            for pos, typ in ((tp or {}).get("zz") or []):
+            # (a) 지그재그 확정 전환점 — 마지막 원소는 '미확정 꼬리 극점'(진행 중 최저/최고, 다음날 더 내리면
+            #     날짜가 옮겨가는 리페인팅)이므로 매매 마커(▲▼)에서 제외. 차트 스윙 구조(●, tp.zz)에는 그대로 표시.
+            _zz = (tp or {}).get("zz") or []
+            for pos, typ in (_zz[:-1] if len(_zz) >= 2 else []):
                 if pos < 0 or pos >= len(pxd_dates): continue
                 oh = _f(ohb.iloc[pos])
                 if oh != oh: continue
