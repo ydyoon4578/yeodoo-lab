@@ -273,6 +273,18 @@ def build_history(S, cpi_yoy):
                 if dd: perf[grp][a] = dd
     except Exception as e:
         print("  자산성과 실패", e)
+    # yfinance가 통째로 실패하면 조건부 성과 섹션이 빈 dict로 덮어써져 페이지에서 조용히 사라진다.
+    # FRED 본체는 살아 있으므로 갱신은 진행하되, **직전 regime.json의 성과 블록을 승계**하고 경고한다(없으면 중단).
+    if not any(perf.values()):
+        try:
+            prev = json.load(open(OUT, encoding="utf-8"))
+            perf = {"macro": prev.get("asset_perf") or {}, "sector": prev.get("sector_perf") or {},
+                    "factor": prev.get("factor_perf") or {}}
+            if not any(perf.values()):
+                raise ValueError("직전 파일에도 성과 블록 없음")
+            print("  ⚠ 조건부 성과 수집 실패 → 직전 값 승계(자산성과는 갱신되지 않음)")
+        except Exception as e:
+            raise SystemExit(f"조건부 성과 수집 실패 & 승계 불가({e}) — 갱신 중단(이전본 유지)")
     return hist, perf
 
 

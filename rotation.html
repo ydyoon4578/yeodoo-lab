@@ -142,7 +142,8 @@
   // 날짜 시드 결정론적 9선 — 카테고리 균형(A2·B2·C2·D1·E2). build/rotation_select.py와 동일 알고리즘 유지 필수.
   var QUOTA={A:2,B:2,C:2,D:1,E:2};
   function pick(arr,n,seedStr){
-    var seed=2166136261;for(var i=0;i<seedStr.length;i++){seed^=seedStr.charCodeAt(i);seed=(seed*16777619)>>>0;}
+    // ⚠ Math.imul 필수: 일반 곱셈은 2^53을 넘겨 float64 정밀도를 잃고 파이썬(정확한 32비트)과 다른 시드가 된다
+    var seed=2166136261;for(var i=0;i<seedStr.length;i++){seed^=seedStr.charCodeAt(i);seed=Math.imul(seed,16777619)>>>0;}
     function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
     function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
     var by={};arr.forEach(function(s){(by[s.cat]=by[s.cat]||[]).push(s);});

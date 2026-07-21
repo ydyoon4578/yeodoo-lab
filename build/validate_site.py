@@ -106,12 +106,23 @@ if pool:
     # lab 앵커가 실제 항목을 가리키는지
     anames = {d["n"] for d in json.loads(re.search(r"var D=(\[.*?\]);", rd("archive.html"), re.S).group(1))}
     enames = set(re.findall(r'\{n:"([^"]+)"', rd("explorer.html")))
+    def _slug(n):   # archive.html / explorer.html의 slug()와 동일 규칙이어야 딥링크가 맞는다
+        return re.sub(r"^-+|-+$", "", re.sub(r"[^0-9a-z가-힣]+", "-", str(n).lower()))
     for s in pool.get("strategies", []):
         L = s.get("lab")
         if not L: continue
-        page = L.get("href", "").split("#")[0]
+        href = L.get("href", "")
+        page, _, frag = href.partition("#")
+        if page not in ("archive.html", "explorer.html"):
+            errors.append(f"rotation_pool {s['id']}: lab.href 대상 페이지가 이상함 ({href})"); continue
+        if not os.path.exists(os.path.join(ROOT, page)):
+            errors.append(f"rotation_pool {s['id']}: lab.href 대상 파일 없음 ({page})"); continue
         if L["t"] not in (anames if page == "archive.html" else enames):
-            errors.append(f"rotation_pool {s['id']}: lab.t \"{L['t']}\"가 {page}에 없음(링크 깨짐)")
+            errors.append(f"rotation_pool {s['id']}: lab.t \"{L['t']}\"가 {page}에 없음(링크 깨짐)"); continue
+        # 프래그먼트도 실제 앵커 규칙과 일치하는지(형식만 맞고 대상이 없는 딥링크 방지)
+        want = ("a-" if page == "archive.html" else "s-") + _slug(L["t"])
+        if frag and frag != want:
+            errors.append(f"rotation_pool {s['id']}: lab.href 앵커 불일치 (#{frag} ≠ #{want})")
 
 # ── 선별 알고리즘 상수 일치(프론트 ↔ 일일잡) ──────────────────
 rot, sel = rd("rotation.html"), rd(os.path.join("build", "rotation_select.py"))
@@ -121,6 +132,21 @@ def consts(txt):   # JS는 {A:2,…}·["A",…], 파이썬은 {"A": 2,…}·["A"
             re.findall(r"[A-Z]", c.group(1)) if c else None)
 qj, cj = consts(rot)
 qp, cp = consts(sel)
+# 상수가 같아도 **산술**이 다르면 9선이 갈린다(실제 사고): JS의 seed*16777619는 2^53을 넘겨 float64 정밀도를
+# 잃으므로 파이썬의 정확한 32비트 연산과 다른 시드가 됐다. Math.imul 사용을 강제한다.
+if not re.search(r"Math\.imul\s*\(\s*seed\s*,\s*16777619\s*\)", rot):
+    errors.append("rotation.html FNV 해시가 Math.imul을 쓰지 않음 — float64 정밀도 손실로 rotation_select.py와 9선이 달라진다")
+if re.search(r"seed\s*\*\s*16777619", rot):
+    errors.append("rotation.html에 `seed*16777619` 잔존 — Math.imul로 교체할 것")
+
+# 홈은 home_reco.json만 fetch하므로 stocks.json과 기준일이 어긋나면 홈이 낡은 채 고착된다(워크플로가 한쪽만 커밋한 사고)
+try:
+    _s = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8")).get("as_of")
+    _h = json.load(io.open(os.path.join(ROOT, "data", "home_reco.json"), encoding="utf-8")).get("as_of")
+    if _s and _h and _s != _h:
+        errors.append(f"기준일 불일치: stocks.json {_s} vs home_reco.json {_h} — 워크플로가 두 파일을 함께 커밋하는지 확인")
+except Exception as e:
+    errors.append(f"기준일 교차검증 실패: {e}")
 if qj is None or qp is None: errors.append("선별 상수(QUOTA)를 찾지 못함")
 elif qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
 if cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")

@@ -34,7 +34,8 @@ jobs:
           if [ -n "$(git status --porcelain data/regime.json)" ]; then
             git add data/regime.json
             git commit -m "chore(data): 시장 국면(레짐) 자동 갱신"
-            git push
+            # stocks 워크플로와 같은 main에 push → 경합 시 리베이스 후 1회 재시도
+            git push || (git pull --rebase origin main && git push)
             echo "갱신·푸시 완료 → GitHub Pages 자동 재빌드"
           else
             echo "변경 없음 — 스킵"
