@@ -128,7 +128,7 @@
     <a class="tool stk" href="stocks.html">
       <span class="ico" aria-hidden="true">📈</span>
       <h2>종목 시그널</h2>
-      <p>NDX·SPX 512종목 테크니컬 + <b>스윙 매매 타이밍</b>(저점 매수·고점 매도, 국면·섹터 반영). 매 거래일 갱신, 종목별 차트.</p>
+      <p>NDX·SPX 512종목 테크니컬 + <b>확정 스윙 타점</b>(추세 전환 확인 후 저점매수·고점매도, 국면·섹터 반영). 매 거래일 갱신, 종목별 차트.</p>
       <span class="go">종목 분석 열기</span>
     </a>
     <a class="tool reg" href="regime.html">
@@ -139,7 +139,7 @@
     </a>
   </div>
 
-  <p class="lbl"><span style="white-space:nowrap">매수·매도 추천</span> <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· ①상승추세 ②저점 근처·과열 낮음 ③200일선 이탈＝비중축소 · 참고용 · <span id="stkasof"></span></span></p>
+  <p class="lbl"><span style="white-space:nowrap">스윙 타점</span> <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">· 추세 전환이 <b>완전히 확정된</b> 저점매수·고점매도만(잠정 제외·날짜 불변) · 클릭 시 근거 확인 · 참고용 · <span id="stkasof"></span></span></p>
   <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
 
   <p class="lbl">전략 리서치</p>
@@ -210,35 +210,34 @@
       }
     }).catch(function(){});
   }
-  // 루틴 기반 추천: ①매수신호(상승추세) ②저점 근처·과열도 낮음 ③매도신호(200MA 이탈)=비중축소
-  function recoVal(x,buy){
-    var parts=[];
-    if(buy&&x.ld!=null)parts.push('저점 '+(x.ld>=0?'+':'')+x.ld+'%');
-    if(!buy&&x.d2!=null)parts.push('200MA '+(x.d2>=0?'+':'')+x.d2+'%');
+  // 전략(2026-07): 추세 전환 '완전 확정' 후 진입 — 홈은 최신 확정 스윙 타점(잠정 제외·날짜 불변)
+  function recoVal(x){
+    var parts=[x.dt+' · '+(x.ago<=0?'당일':x.ago+'일 전')];
     if(x.oh!=null)parts.push('과열 '+Math.round(x.oh));
-    return parts.join(' · ')||'—';
+    return parts.join(' · ');
   }
-  function recoCol(title,sub,cnt,arr,cls,buy){return '<div class="rcol"><h4><span>'+title+' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span></span><span style="white-space:nowrap">후보 '+cnt+'</span></h4>'+
-    (arr.length?arr.map(function(x){return '<a class="rstk '+cls+'" href="stocks.html#t='+x.t+'&p='+(buy?'recobuy':'recosell')+'"><span><span class="rk">'+x.t+'</span><span class="rn2">'+(x.name||'')+'</span></span><span class="rv">'+recoVal(x,buy)+'</span></a>';}).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">해당 없음</div>')+'</div>';}
+  function recoCol(title,sub,cnt,arr,cls,buy){return '<div class="rcol"><h4><span>'+title+' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span></span><span style="white-space:nowrap">최근 '+cnt+'</span></h4>'+
+    (arr.length?arr.map(function(x){return '<a class="rstk '+cls+'" href="stocks.html#t='+x.t+'&p='+(buy?'swingbuy':'swingsell')+'"><span><span class="rk">'+x.t+'</span><span class="rn2">'+(x.name||'')+'</span></span><span class="rv">'+recoVal(x)+'</span></a>';}).join(''):'<div style="color:var(--muted);font-size:12px;padding:6px 0">최근 확정 타점 없음</div>')+'</div>';}
   function renderReco(h){
     var as=document.getElementById('stkasof'); if(as)as.textContent='기준일 '+(h.as_of||'');
     var ma=document.getElementById('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     document.getElementById('recostocks').innerHTML=
-      recoCol('🟢 매수 추천','상승추세 · 과열 낮음 · 종합점수순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy||[], 'brec', true)+
-      recoCol('🔴 매도 추천','200일선 이탈 — 비중축소 주의', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell||[], 'srec', false);
+      recoCol('🟢 스윙 저점매수','추세 전환 확정 타점 · 최신순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy||[], 'brec', true)+
+      recoCol('🔴 스윙 고점매도','확정 고점 — 이익실현·비중축소 참고', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell||[], 'srec', false);
     staleCheck(h.as_of);
     regimeCheck(h.as_of);
   }
-  function loadFull(){   // 폴백: 대형 stocks.json에서 직접 계산(슬림 스키마 — ld/d2 없이 과열도만)
+  function loadFull(){   // 폴백: 대형 stocks.json에서 직접 계산(확정 bms/sms만)
     fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
       if(!d){stkFail();return;}
-      var st=d.stocks||[];
-      function row(s){return {t:s.t,name:(s.name||'').slice(0,16),oh:(s.comp||{}).overheat};}
-      var cand=st.filter(function(s){return (s.timing==='매수'||s.timing==='매수우세')&&((s.comp||{}).overheat||100)<=45;})
-        .sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
-      var sside=st.filter(function(s){return s.timing==='매도'||s.timing==='매도우세';})
-        .sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});
-      renderReco({as_of:d.as_of,buy:cand.slice(0,8).map(row),sell:sside.slice(0,8).map(row),nbuy:cand.length,nsell:sside.length});
+      var st=d.stocks||[], dts=d.pxd_dates||[], N=dts.length, WIN=10;
+      function lastMk(s,k){var a=s[k]||[];return a.length?a[a.length-1]:-1;}
+      function mkList(k){var all=st.filter(function(s){var mi=lastMk(s,k);return mi>=0&&(N-1-mi)<=WIN;});
+        var top=all.slice().sort(function(a,b){return lastMk(b,k)-lastMk(a,k);}).slice(0,8)
+          .map(function(s){var mi=lastMk(s,k);return {t:s.t,name:(s.name||'').slice(0,16),dt:(dts[mi]||'').slice(5),ago:N-1-mi,oh:(s.comp||{}).overheat};});
+        return {list:top,n:all.length};}
+      var b=mkList('bms'), s=mkList('sms');
+      renderReco({as_of:d.as_of,buy:b.list,sell:s.list,nbuy:b.n,nsell:s.n});
     }).catch(stkFail);
   }
   fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){
