@@ -12,7 +12,7 @@ except Exception: pass
 from fredapi import Fred
 import yfinance as yf
 
-FRED_KEY = os.getenv("FRED_API_KEY", "64c41debf1ed074a809f5871e571c1fc")
+FRED_KEY = os.getenv("FRED_API_KEY") or "64c41debf1ed074a809f5871e571c1fc"   # 빈 문자열(시크릿 미설정)도 폴백 (GitHub Actions 크래시 수정)
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "data", "regime.json")
 f = Fred(api_key=FRED_KEY)
@@ -52,7 +52,10 @@ def main():
                                  "TCU","JTSJOL","CCSA","CES0500000003",              # 노동·활동(설비가동·JOLTS·계속청구·임금)
                                  "PCEPI","PPIACO","GASREGW",                          # 물가(헤드라인PCE·PPI·휘발유)
                                  "HOUST","PERMIT","CSUSHPINSA"]}                      # 주택(착공·허가·Case-Shiller)
-    asof = max(s.index.max() for s in S.values() if len(s)).date().isoformat()
+    _dates = [s.index.max() for s in S.values() if len(s)]
+    if not _dates:
+        raise SystemExit("FRED 전 시리즈 로드 실패 — API 키/네트워크 확인 (regime.json 미갱신, 이전본 유지)")
+    asof = max(_dates).date().isoformat()
 
     # ── 파생 시계열 ──
     cpi_yoy = (S["CPIAUCSL"]/S["CPIAUCSL"].shift(12) - 1)*100          # CPI YoY(%)
