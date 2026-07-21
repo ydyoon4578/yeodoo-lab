@@ -467,11 +467,11 @@ def main():
                     high = (cc["up20"] is not None and cc["up20"] >= 4.0)
                     if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
                         sms.append(pos); smr[pos] = _reason(pos, "H", "bounce")
-            # (b') 눌림목/반등 '잠정' 후보 — 확정(5봉 유지) 전 예고. 2일 이상 유지 시에만 표시(확정 확률 60%↑ 실측:
-            #     저점 2일 68%·3일 80%·4일 91% / 고점 2일 63%·3일 77%·4일 90%) → '잠정 없이 확정 등장' 방지.
+            # (b') 눌림목/반등 '잠정' 후보 — 확정(5봉 유지) 전 예고. 3일 이상 유지 시 표시(임계 최적화 실측:
+            #     순선행 기대값 = 리드×(2·확정확률−1)이 3일에서 최대(1.21). 저점 3일 80%·4일 91% / 고점 3일 77%·4일 90%).
             _lastp = len(pxd_dates) - 1
-            _PL = {2: 68, 3: 80, 4: 91}; _PH = {2: 63, 3: 77, 4: 90}
-            for m in range(_lastp - 4, _lastp - 1):   # age = _lastp-m ∈ {4,3,2}
+            _PL = {3: 80, 4: 91}; _PH = {3: 77, 4: 90}
+            for m in range(_lastp - 4, _lastp - 2):   # age = _lastp-m ∈ {4,3}
                 if m < K: continue
                 age = _lastp - m
                 base = _f(dv[m])
@@ -480,6 +480,7 @@ def main():
                 if np.isnan(prev.astype(float)).any() or np.isnan(fut.astype(float)).any(): continue
                 cc = _ctx(m)
                 if cc["d200"] is None or cc["rsi"] != cc["rsi"]: continue
+                if age not in _PL: continue
                 if base < prev.min() and (fut > base).all() and cc["d200"] > 0 and _spaced(bms, m) and m not in bmw:
                     deep = (cc["dd20"] is not None and cc["dd20"] <= -4.0)
                     if (cc["rsi"] < 48 or deep) and (cc["oh"] != cc["oh"] or cc["oh"] <= 55):
