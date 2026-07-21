@@ -8,6 +8,8 @@
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <title>여의도 — 오늘의 로테이션 전략</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141C1A'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%2352B8AE' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%2352B8AE'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://globalkbam.github.io/yeouido-lab/rotation.html">
+<meta property="og:url" content="https://globalkbam.github.io/yeouido-lab/rotation.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여의도 전략 랩">
 <meta property="og:title" content="여의도 — 오늘의 로테이션 전략">
@@ -49,11 +51,13 @@
   .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted)}
   .stat b{color:var(--ink);font-size:14px;font-weight:600}
   .catsec{margin-top:26px}
+  h2.cathead{font-size:13px}
   .cathead{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:9px;margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line-soft)}
   .cathead .dot{width:9px;height:9px;border-radius:50%}
   .scard{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px}
   .stop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
-  .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:#fff}
+  /* 브랜드색 배경 위 흰 글씨는 다크에서 대비 2.0:1 → 배경을 옅게 깔고 글씨를 그 색으로(AA 충족) */
+  .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--cidc,var(--ink));background:color-mix(in srgb,var(--cidc,var(--muted)) 16%,var(--panel))!important;border:1px solid color-mix(in srgb,var(--cidc,var(--muted)) 45%,transparent)}
   .stop h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
   .stop .stag{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
   .todaybadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)}
@@ -167,7 +171,7 @@
       lrow='<div class="srow labrow"><span class="sk">우리 랩 검증</span><p><b class="'+cls+'" style="background:none;border:0;padding:0">'+esc(L.v)+'</b> — 랩에서 <a href="'+esc(L.href||'archive.html')+'">'+esc(L.t)+'</a> 형태로 구현·적대검증한 결과: '+esc(L.why)+
         ' <span style="color:var(--muted);font-size:12px">검증한 것은 랩의 특정 구현이므로 이 카드의 규칙과 완전히 같지는 않습니다.</span></p></div>';
     }
-    return '<div class="scard" id="s-'+esc(s.id||'')+'"><div class="stop"><span class="cid" style="background:'+col+'">'+esc(s.id||s.cat)+'</span>'+
+    return '<div class="scard" id="s-'+esc(s.id||'')+'"><div class="stop"><span class="cid" style="--cidc:'+col+'">'+esc(s.id||s.cat)+'</span>'+
       '<h3>'+esc(s.name)+'</h3>'+tb+lb+'<span class="stag">'+esc(s.type||'')+(s.target?' · 타겟: '+esc(s.target):'')+'</span></div>'+
       row('목적·타겟',s.purpose,'purpose')+row('핵심 원리',s.principle)+row('진입 기준',s.entry)+
       row('성과',s.performance)+lrow+
@@ -207,12 +211,13 @@
     CATORD.forEach(function(c){
       var items=sel.filter(function(s){return s.cat===c;});
       if(!items.length)return;
-      html+='<div class="catsec"><div class="cathead"><span class="dot" style="background:'+(CATCOL[c])+'"></span>'+(CATNM[c]||c)+' <span style="color:var(--muted);font-weight:400;font-size:11px">· '+items.length+(br?'개':'선')+'</span></div>'+
+      html+='<div class="catsec"><h2 class="cathead"><span class="dot" style="background:'+(CATCOL[c])+'"></span>'+(CATNM[c]||c)+' <span style="color:var(--muted);font-weight:400;font-size:11px">· '+items.length+(br?'개':'선')+'</span></h2>'+
         items.map(function(s){return card(s, t9?!!t9[s.id]:false);}).join('')+'</div>';
     });
     el('content').innerHTML=html||'<div class="empty">'+(br?'조건에 맞는 전략이 없습니다.':'오늘의 전략이 없습니다.')+'</div>';
   }
-  function syncMode(){var b=el('modebtn');b.setAttribute('aria-pressed',state.mode==='all');b.textContent=state.mode==='all'?'오늘의 9선':'전체 풀 보기';}
+  function syncMode(){var b=el('modebtn');b.setAttribute('aria-pressed',state.mode==='all');
+    b.textContent='전체 풀 보기';b.title=state.mode==='all'?'누르면 오늘의 9선으로':'누르면 전체 풀로';}
   // 일일 자동갱신(최근동향 웹리서치 잡)이 멈추면 조용히 오래된 동향이 남으므로 명시 경고
   function staleStat(gen){
     var p=String(gen||'').split('-'); if(p.length!==3)return '';

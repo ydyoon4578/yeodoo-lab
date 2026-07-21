@@ -8,6 +8,8 @@
 <title>여의도 종목 시그널 — NDX·SPX 테크니컬</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141C1A'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%2352B8AE' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%2352B8AE'/%3E%3C/svg%3E">
 <meta name="description" content="나스닥100·S&P500 구성종목 테크니컬 매매 타이밍 — 스윙 저점매수/고점매도·과매수/과매도·눌림목·52주돌파.">
+<link rel="canonical" href="https://globalkbam.github.io/yeouido-lab/stocks.html">
+<meta property="og:url" content="https://globalkbam.github.io/yeouido-lab/stocks.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여의도 전략 랩">
 <meta property="og:title" content="여의도 종목 시그널">
@@ -59,7 +61,7 @@
   .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 2px 6px;text-transform:uppercase;letter-spacing:.08em}
   .listwrap{display:flex;flex-direction:column;gap:6px;max-height:78vh;overflow-y:auto;padding-right:4px}
   .listwrap::-webkit-scrollbar{width:8px}.listwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
-  .item{display:grid;grid-template-columns:1fr 82px;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;width:100%;text-align:left;font-family:inherit;box-shadow:var(--shadow);transition:border-color .12s,background .12s}
+  .item{display:grid;grid-template-columns:minmax(0,1fr) 82px;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;width:100%;text-align:left;font-family:inherit;box-shadow:var(--shadow);transition:border-color .12s,background .12s}
   .item:hover{border-color:var(--accent)}
   .item[aria-selected="true"]{background:var(--sel);border-color:var(--accent)}
   .item .tkline{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -500,7 +502,7 @@
   }).catch(function(){detailEl.innerHTML='<div class="empty">데이터 로드 오류</div>';});
   function syncP(){var pb=el('presets').querySelectorAll('.fchip');SHOWN.forEach(function(p,i){if(pb[i])pb[i].setAttribute('aria-pressed',state.preset===p[0]);});
     var ib=el('idxf').querySelectorAll('.fchip');['NDX','SPX'].forEach(function(x,j){if(ib[j])ib[j].setAttribute('aria-pressed',state.idx.has(x));});}
-  var _qt;el('q').addEventListener('input',function(e){var val=e.target.value.toLowerCase().trim();clearTimeout(_qt);_qt=setTimeout(function(){state.q=val;state.sel=null;render();},160);});
+  var _qt;el('q').addEventListener('input',function(e){var val=e.target.value.toLowerCase().trim();clearTimeout(_qt);_qt=setTimeout(function(){if(val===state.q)return;state.q=val;state.sel=null;render();},160);});
   el('q').addEventListener('keydown',function(e){   // ↑↓로 종목 선택 이동(키보드 접근성)
     if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return; e.preventDefault();
     var rows=filtered().rows;if(!rows.length)return;

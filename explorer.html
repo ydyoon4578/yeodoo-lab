@@ -8,6 +8,8 @@
 <title>여의도 전략 탐색기 — 전략 성과 브라우저</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141C1A'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%2352B8AE' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%2352B8AE'/%3E%3C/svg%3E">
 <meta name="description" content="적대검증을 통과한 배포·연구 전략 아카이브 — 실제 백테스트 차트(누적수익·낙폭·연도별)·장단점·활용방안.">
+<link rel="canonical" href="https://globalkbam.github.io/yeouido-lab/explorer.html">
+<meta property="og:url" content="https://globalkbam.github.io/yeouido-lab/explorer.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여의도 전략 랩">
 <meta property="og:title" content="여의도 전략 탐색기">
@@ -176,7 +178,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="q" type="search" placeholder="전략 이름·설명 검색 (예: 상품, RP, 채권, 오버나이트)" aria-label="전략 검색">
       </label>
-      <button class="sortbtn" id="sort" aria-label="정렬 전환">정렬 ↓ 판정</button>
+      <button class="sortbtn" id="sort">정렬 ↓ 판정</button>
     </div>
     <div class="chiprow" id="vfilters" role="group" aria-label="판정 필터"></div>
     <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"></div>
@@ -187,12 +189,12 @@
       <div class="rowcount" id="rowcount"></div>
       <div class="listwrap" id="list" role="listbox" aria-label="전략 목록"></div>
     </div>
-    <div class="detail" id="detail" aria-live="polite"></div>
+    <div class="detail" id="detail"></div>
   </div>
 
   <footer>
     여의도 전략 랩 · github.com/globalkbam/yeouido-lab · <b>배포·marginal + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
-    수치는 백테스트(2016~2026, 명시 없으면 무비용·월말 gross) 기준 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a>.
+    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · <b>과거 성과는 미래 수익을 보장하지 않으며, 투자자문·매매권유가 아닙니다</b> · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a>.
   </footer>
 </div>
 
