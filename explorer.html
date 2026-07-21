@@ -133,6 +133,20 @@
   .hx{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px}
   .hx b{color:var(--muted);font-weight:600;margin-right:5px}
   .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .sitwrap{margin-top:14px;padding:13px 16px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:12px}
+  .sitwrap h4{margin:0 0 9px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+  .sitcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.sitcols{grid-template-columns:1fr}}
+  .sitcol h5{margin:0 0 5px;font-size:11.5px;font-weight:700}
+  .sitcol.g h5{color:var(--deploy)} .sitcol.b h5{color:var(--rej)}
+  .sitcol ul{margin:0;padding-left:17px} .sitcol li{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-bottom:4px}
+  .pptblwrap{overflow-x:auto;margin:2px 0 8px}
+  .pptbl{border-collapse:collapse;width:100%;font-size:12px}
+  .pptbl th,.pptbl td{padding:5px 9px;border-bottom:1px solid var(--line-soft);text-align:right;font-variant-numeric:tabular-nums}
+  .pptbl th{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+  .pptbl tr th[scope="row"]{text-align:left;font-size:11.5px;text-transform:none;color:var(--ink-2)}
+  .pptbl .pp{font-family:var(--mono);font-weight:600}
+  .pptbl .pp.st{font-weight:700}
   .btnote{margin:8px 0 2px;font-size:10.5px;line-height:1.6;color:var(--muted)}
   .btnote b{color:var(--ink-2)}
   .btm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:6px}
@@ -182,7 +196,7 @@
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
     <h1 class="title">전략 탐색기</h1>
     <p class="lede">10시간 자율 리서치가 적대적으로 검증해 <b>통과시킨 전략</b>을 클릭해서 둘러봅니다. 왼쪽에서 전략을 고르면 오른쪽에 성과·판정과 함께
-      <b>장점·단점·활용방안(언제 쓰나)</b>이 뜹니다. 여기 담긴 건 <b>배포·marginal</b> 판정 20종과, 대조용으로 함께 두는 <b>기각 2종</b>(단일팩터 검증에서 열위) — 나머지 <b>기각 40개</b>는 사유와 함께 <a href="archive.html" style="color:var(--accent)">기각 아카이브</a>에서 볼 수 있습니다.
+      <b>장점·단점·활용방안(언제 쓰나)</b>이 뜹니다. 여기 담긴 건 <b>배포·제한적 유효</b> 판정 20종과 대조용 <b>기각 2종</b> — 나머지 기각 40개는 <a href="archive.html" style="color:var(--accent)">아카이브</a>에.<br><b>판정 뜻</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증된 전략 · <b style="color:var(--marg)">제한적 유효</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각</b>: 비용·검증을 거치면 실익 없음.
       아래 <b>활용 아키타입</b> 칩으로 목적별(배포코어·위기방어·레짐 오버레이·실행타이밍 등)로도 걸러 볼 수 있습니다.</p>
     <div class="statline" id="statline"></div>
   </header>
@@ -208,7 +222,7 @@
   </div>
 
   <footer>
-    여두 전략 랩 · <b>배포·marginal + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
+    여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
     수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 로테이션</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처</a>.
   </footer>
 </div>
@@ -223,35 +237,35 @@
   {n:"크로스에셋 리스크패리티 + vol타겟",c:"배포 코어",v:"deploy",m:"1.15",ml:"Sharpe",corr:null,t:"12개 자산군을 변동성 역가중 + 추세 꺾인 위험자산 제외 + 목표변동성 10% 레버 조절. 올웨더.",vt:"<b>배포 (슬리브 B·방어·분산).</b> 저회전·비용robust. MDD −19%. 추세게이트의 '존재'가 좌측꼬리 방어에 결정적."},
 
   // 신방향 검증 (2026-07)
-  {n:"매니지드퓨처스 위성 (DBMF·KMLM)",c:"신방향·위성",v:"marginal",m:"MDD 21→13%",ml:"crisis alpha",corr:"−0.07",t:"멀티에셋 추세추종 리플리케이션 ETF(DBMF·KMLM)를 배포북에 소량(10~20%) 위성 편입. 주식과 음상관이며 급락장에서 양(+)수익 — 랩 미착수 modality(주식 아닌 rates·FX·상품 추세).",vt:"<b>marginal (하방 보험).</b> corr(배포북) −0.07·주식 급락달 +1.6%/월(vs 평시 +0.6%). base+DBMF 15% Sharpe +0.10(p0.06)·MDD 21%→13%(웨이트 단조). 단 drop-2022 반사실서 ΔSharpe +0.025로 붕괴 — Sharpe 이득 대부분이 2022 금리쇼크 한 해·정상장엔 드래그. 'Sharpe 엔진' 아닌 크라이시스 보험 슬리브로만 정직."},
+  {n:"매니지드퓨처스 위성 (DBMF·KMLM)",c:"신방향·위성",v:"marginal",m:"MDD 21→13%",ml:"crisis alpha",corr:"−0.07",t:"멀티에셋 추세추종 리플리케이션 ETF(DBMF·KMLM)를 배포북에 소량(10~20%) 위성 편입. 주식과 음상관이며 급락장에서 양(+)수익 — 랩 미착수 modality(주식 아닌 rates·FX·상품 추세).",vt:"<b>제한적 유효 (하방 보험).</b> corr(배포북) −0.07·주식 급락달 +1.6%/월(vs 평시 +0.6%). base+DBMF 15% Sharpe +0.10(p0.06)·MDD 21%→13%(웨이트 단조). 단 drop-2022 반사실서 ΔSharpe +0.025로 붕괴 — Sharpe 이득 대부분이 2022 금리쇼크 한 해·정상장엔 드래그. 'Sharpe 엔진' 아닌 크라이시스 보험 슬리브로만 정직."},
   // 결합 최적화
-  {n:"동적 vol타겟",c:"결합 최적화",v:"marginal",m:"MDD↓",ml:"리스크만",corr:null,t:"실현변동성에 적응하는 목표변동성.",vt:"<b>marginal.</b> MDD를 낮추나 수익증대는 없음 — 리스크 관리 목적."},
+  {n:"동적 vol타겟",c:"결합 최적화",v:"marginal",m:"MDD↓",ml:"리스크만",corr:null,t:"실현변동성에 적응하는 목표변동성.",vt:"<b>제한적 유효.</b> MDD를 낮추나 수익증대는 없음 — 리스크 관리 목적."},
   // EPS 리비전 강건성
-  {n:"NDX+SPX 결합 (EPS 리비전)",c:"EPS 리비전 강건성",v:"marginal",m:"semi 91→55%",ml:"탈집중",corr:null,t:"NDX∪SPX 유니버스로 종목 breadth 확대.",vt:"<b>marginal(유용).</b> 반도체 집중 91→55%·breadth 8→28종 탈집중, Sharpe는 parity. 집중 우려 시 옵션."},
-  {n:"buy10/hold40 (밴드·보유기간)",c:"EPS 리비전 강건성",v:"marginal",m:"회전 −52%",ml:"921→444%",corr:null,t:"진입 상위10·보유 상위40 밴드로 회전↓.",vt:"<b>marginal(유용).</b> 회전 절반으로 캐패시티↑, Sharpe parity. 대규모 운용 시 옵션."},
+  {n:"NDX+SPX 결합 (EPS 리비전)",c:"EPS 리비전 강건성",v:"marginal",m:"semi 91→55%",ml:"탈집중",corr:null,t:"NDX∪SPX 유니버스로 종목 breadth 확대.",vt:"<b>제한적 유효(유용).</b> 반도체 집중 91→55%·breadth 8→28종 탈집중, Sharpe는 parity. 집중 우려 시 옵션."},
+  {n:"buy10/hold40 (밴드·보유기간)",c:"EPS 리비전 강건성",v:"marginal",m:"회전 −52%",ml:"921→444%",corr:null,t:"진입 상위10·보유 상위40 밴드로 회전↓.",vt:"<b>제한적 유효(유용).</b> 회전 절반으로 캐패시티↑, Sharpe parity. 대규모 운용 시 옵션."},
   // RP 강건성
-  {n:"vol 추정창 (90/60)",c:"RP 강건성",v:"marginal",m:"회전 −24%",ml:"2.21→1.68/yr",corr:null,t:"역변동성·vol타겟 추정창 확대.",vt:"<b>marginal.</b> Sharpe 이득(+0.04)은 부트스트랩상 무의미(CI 0교차)이나, 회전↓·전 비용레벨 우위 = 저회전·캐패시티 실운영 개선."},
-  {n:"추세게이트 정의 (6M/멀티)",c:"RP 강건성",v:"marginal",m:"Δ +0.02",ml:"vs 1.42",corr:null,t:"12M 추세게이트를 6M·3M·멀티·이중으로 변형.",vt:"<b>marginal.</b> 게이트 '존재'가 결정적(제거시 붕괴), 호라이즌(6M/12M)은 노이즈 → 12M 최적근방."},
-  {n:"리밸 주기 (주간/격주/분기)",c:"RP 강건성",v:"marginal",m:"Δ −0.002",ml:"vs 1.42",corr:null,t:"월말 리밸을 다른 주기로 변형.",vt:"<b>marginal.</b> 격주가 회귀-내 동률, 월 캐던스가 사실상 최적."},
-  {n:"vol타겟 레벨·게이트 격자",c:"RP 강건성",v:"marginal",m:"격자 최대",ml:"vol10%",corr:null,t:"내부 vol타겟 8~15%×게이트 on/off 격자.",vt:"<b>marginal.</b> 현 vol10%/gate-ON이 격자 최대, gate-ON은 강건 필수."},
+  {n:"vol 추정창 (90/60)",c:"RP 강건성",v:"marginal",m:"회전 −24%",ml:"2.21→1.68/yr",corr:null,t:"역변동성·vol타겟 추정창 확대.",vt:"<b>제한적 유효.</b> Sharpe 이득(+0.04)은 부트스트랩상 무의미(CI 0교차)이나, 회전↓·전 비용레벨 우위 = 저회전·캐패시티 실운영 개선."},
+  {n:"추세게이트 정의 (6M/멀티)",c:"RP 강건성",v:"marginal",m:"Δ +0.02",ml:"vs 1.42",corr:null,t:"12M 추세게이트를 6M·3M·멀티·이중으로 변형.",vt:"<b>제한적 유효.</b> 게이트 '존재'가 결정적(제거시 붕괴), 호라이즌(6M/12M)은 노이즈 → 12M 최적근방."},
+  {n:"리밸 주기 (주간/격주/분기)",c:"RP 강건성",v:"marginal",m:"Δ −0.002",ml:"vs 1.42",corr:null,t:"월말 리밸을 다른 주기로 변형.",vt:"<b>제한적 유효.</b> 격주가 회귀-내 동률, 월 캐던스가 사실상 최적."},
+  {n:"vol타겟 레벨·게이트 격자",c:"RP 강건성",v:"marginal",m:"격자 최대",ml:"vol10%",corr:null,t:"내부 vol타겟 8~15%×게이트 on/off 격자.",vt:"<b>제한적 유효.</b> 현 vol10%/gate-ON이 격자 최대, gate-ON은 강건 필수."},
   // 직교 신호
-  {n:"횡단면 분산·브레드스 오버레이",c:"직교 신호",v:"marginal",m:"MDD −21→−16%",ml:"낙폭축소",corr:null,t:"저분산=추세지속·고분산=붕괴전조를 익스포저 타이밍으로.",vt:"<b>marginal(유일 생존).</b> 월별·무비용호환, MDD 23%↓. 단 수익증대 아닌 낙폭축소·2021-26 집중·통계 무의미 → 선택적 리스크 오버레이."},
+  {n:"횡단면 분산·브레드스 오버레이",c:"직교 신호",v:"marginal",m:"MDD −21→−16%",ml:"낙폭축소",corr:null,t:"저분산=추세지속·고분산=붕괴전조를 익스포저 타이밍으로.",vt:"<b>제한적 유효(유일 생존).</b> 월별·무비용호환, MDD 23%↓. 단 수익증대 아닌 낙폭축소·2021-26 집중·통계 무의미 → 선택적 리스크 오버레이."},
   // 채권 게이팅
-  {n:"채권 추세게이트",c:"채권 게이팅",v:"marginal",m:"2022 +5.1%p",ml:"방어",corr:null,t:"상시보유 채권(TLT/IEF/LQD/HYG)에 12M 추세게이트 확장.",vt:"<b>marginal.</b> 2022 −17.2→−12.1% 방어 실재하나 정상기(2016-20) 희석 −0.172로 전기간 Sharpe 소폭 악화."},
-  {n:"듀레이션 스케일",c:"채권 게이팅",v:"marginal",m:"2022 +2.5%p",ml:"방어",corr:null,t:"금리추세로 듀레이션 익스포저 연속 스케일(0~1x).",vt:"<b>marginal.</b> no free lunch — 2022 방어와 정상기 희석최소를 동시 달성 불가. 선택적 리스크 오버레이."},
-  {n:"AGG 채권레짐 오버레이",c:"채권 게이팅",v:"marginal",m:"2022 +6.1%p",ml:"MDD −19→−16%",corr:null,t:"채권 애그리게이트 12M 추세로 전채권 on/off 단일신호.",vt:"<b>marginal(최선 채권방어).</b> 2022 −17→−11%·MDD −19→−16% 실질방어, 개별 4게이트보다 단순하고 대등. 단 정상기 희석 −0.118로 전기간 Sharpe −0.026 → 위험감축형 선택적 오버레이."},
+  {n:"채권 추세게이트",c:"채권 게이팅",v:"marginal",m:"2022 +5.1%p",ml:"방어",corr:null,t:"상시보유 채권(TLT/IEF/LQD/HYG)에 12M 추세게이트 확장.",vt:"<b>제한적 유효.</b> 2022 −17.2→−12.1% 방어 실재하나 정상기(2016-20) 희석 −0.172로 전기간 Sharpe 소폭 악화."},
+  {n:"듀레이션 스케일",c:"채권 게이팅",v:"marginal",m:"2022 +2.5%p",ml:"방어",corr:null,t:"금리추세로 듀레이션 익스포저 연속 스케일(0~1x).",vt:"<b>제한적 유효.</b> no free lunch — 2022 방어와 정상기 희석최소를 동시 달성 불가. 선택적 리스크 오버레이."},
+  {n:"AGG 채권레짐 오버레이",c:"채권 게이팅",v:"marginal",m:"2022 +6.1%p",ml:"MDD −19→−16%",corr:null,t:"채권 애그리게이트 12M 추세로 전채권 on/off 단일신호.",vt:"<b>제한적 유효(최선 채권방어).</b> 2022 −17→−11%·MDD −19→−16% 실질방어, 개별 4게이트보다 단순하고 대등. 단 정상기 희석 −0.118로 전기간 Sharpe −0.026 → 위험감축형 선택적 오버레이."},
   // 이전 탐색
-  {n:"섹터 모멘텀 top4",c:"이전 탐색",v:"marginal",m:"0.63",ml:"@10bp",corr:null,t:"상위 모멘텀 섹터 4개 로테이션.",vt:"<b>marginal.</b> 약하나 비용robust."},
-  {n:"지수 200MA 타이밍",c:"이전 탐색",v:"marginal",m:"리스크만",ml:"—",corr:null,t:"200일선 상/하로 지수 롱/플랫.",vt:"<b>marginal.</b> 알파 아닌 리스크 관리 오버레이."},
+  {n:"섹터 모멘텀 top4",c:"이전 탐색",v:"marginal",m:"0.63",ml:"@10bp",corr:null,t:"상위 모멘텀 섹터 4개 로테이션.",vt:"<b>제한적 유효.</b> 약하나 비용robust."},
+  {n:"지수 200MA 타이밍",c:"이전 탐색",v:"marginal",m:"리스크만",ml:"—",corr:null,t:"200일선 상/하로 지수 롱/플랫.",vt:"<b>제한적 유효.</b> 알파 아닌 리스크 관리 오버레이."},
   // 단일팩터·검증(strategy_good) — 실제 백테스트 차트 있음
-  {n:"FCF 개선 (SPX top10)",c:"단일팩터·검증",v:"marginal",m:"0.98",ml:"Sharpe",corr:null,t:"전년 대비 잉여현금흐름/가격 개선 상위 10종 롱온리(SPX·월말리밸). 현금흐름 질(質)의 단일팩터.",vt:"<b>marginal(완만한 초과).</b> Sharpe 0.98 vs SPX B&H 0.96·CAGR 17.3% vs 15.3%로 소폭 우위. 단일팩터로는 드물게 벤치 대등이상이나 MDD −32%로 깊어 코어 아닌 틸트 후보."},
-  {n:"섹터 리스크패리티 (역변동성)",c:"단일팩터·검증",v:"marginal",m:"MDD −20%",ml:"방어",corr:null,t:"11개 SPDR 섹터 ETF를 60일 역변동성 가중(월말리밸). 집중 없는 방어형 배분.",vt:"<b>marginal(방어).</b> Sharpe 0.77 vs SPX 0.86로 위험조정 소폭 열위이나 MDD −20%로 지수보다 얕음. 초과수익원 아닌 저변동·분산 슬리브."},
-  {n:"변동성 관리 (σ타겟 익스포저)",c:"단일팩터·검증",v:"marginal",m:"MDD −25%",ml:"리스크감축",corr:null,t:"NDX 익스포저를 clip(목표σ15%/실현σ, 0~1)로 조절(무레버·월말). 변동성 급등 시 자동 축소.",vt:"<b>marginal(리스크감축).</b> Sharpe 0.79 vs NDX 1.00·CAGR 11% vs 18%로 강세장엔 드래그이나 MDD −25%로 지수(−35%)보다 방어. Sharpe 엔진 아닌 낙폭 관리용."},
+  {n:"FCF 개선 (SPX top10)",c:"단일팩터·검증",v:"marginal",m:"0.98",ml:"Sharpe",corr:null,t:"전년 대비 잉여현금흐름/가격 개선 상위 10종 롱온리(SPX·월말리밸). 현금흐름 질(質)의 단일팩터.",vt:"<b>제한적 유효(완만한 초과).</b> Sharpe 0.98 vs SPX B&H 0.96·CAGR 17.3% vs 15.3%로 소폭 우위. 단일팩터로는 드물게 벤치 대등이상이나 MDD −32%로 깊어 코어 아닌 틸트 후보."},
+  {n:"섹터 리스크패리티 (역변동성)",c:"단일팩터·검증",v:"marginal",m:"MDD −20%",ml:"방어",corr:null,t:"11개 SPDR 섹터 ETF를 60일 역변동성 가중(월말리밸). 집중 없는 방어형 배분.",vt:"<b>제한적 유효(방어).</b> Sharpe 0.77 vs SPX 0.86로 위험조정 소폭 열위이나 MDD −20%로 지수보다 얕음. 초과수익원 아닌 저변동·분산 슬리브."},
+  {n:"변동성 관리 (σ타겟 익스포저)",c:"단일팩터·검증",v:"marginal",m:"MDD −25%",ml:"리스크감축",corr:null,t:"NDX 익스포저를 clip(목표σ15%/실현σ, 0~1)로 조절(무레버·월말). 변동성 급등 시 자동 축소.",vt:"<b>제한적 유효(리스크감축).</b> Sharpe 0.79 vs NDX 1.00·CAGR 11% vs 18%로 강세장엔 드래그이나 MDD −25%로 지수(−35%)보다 방어. Sharpe 엔진 아닌 낙폭 관리용."},
   {n:"Book-to-Price 밸류 (SPX top10)",c:"단일팩터·검증",v:"reject",m:"0.67",ml:"Sharpe",corr:null,t:"장부가/시가(HML 프록시) 상위 10종 롱온리(SPX·월말). Fama-French 밸류의 단변량.",vt:"<b>기각(위험조정 미달).</b> Sharpe 0.67 vs SPX 0.96·CAGR 10.9% vs 15.3%로 명목·위험조정 모두 B&H 열위. 2018+ 성장주도 국면서 밸류 단일팩터의 구조적 약세 확인 — 참고용."},
   {n:"팩터 모멘텀 (12M 상위2)",c:"단일팩터·검증",v:"reject",m:"0.75",ml:"Sharpe",corr:null,t:"5개 팩터(모멘텀·밸류·퀄·저변동·사이즈) 슬리브의 12M 수익 상위 2개 균등(팩터 타이밍).",vt:"<b>기각(벤치 열위).</b> Sharpe 0.75 vs SPX 0.96. 팩터 로테이션 타이밍은 단순 지수 대비 초과 실패(랩 감사서도 팩터모멘텀 t−2.4 열위 확인) — 참고용."},
  ];
 
-  var VMETA={deploy:{lab:"배포",col:"--deploy"},marginal:{lab:"marginal",col:"--marg"},reject:{lab:"기각",col:"--rej"}};
+  var VMETA={deploy:{lab:"배포",col:"--deploy"},marginal:{lab:"제한적 유효",col:"--marg"},reject:{lab:"기각",col:"--rej"}};
   var VORDER={deploy:0,marginal:1,reject:2};
   D.forEach(function(d,i){d._i=i;});
 
@@ -271,7 +285,7 @@
     el('statline').innerHTML=
       '<span class="stat"><b>'+D.length+'</b> 전략</span>'+
       '<span class="stat deploy"><b>'+c.deploy+'</b> 배포</span>'+
-      '<span class="stat marg"><b>'+c.marginal+'</b> marginal</span>'+
+      '<span class="stat marg"><b>'+c.marginal+'</b> 제한적 유효</span>'+
       // 기각 2종을 숨기면 배지 합(3+17)이 전체(22)와 안 맞고, '검증 통과만 담았다'는 리드문과도 모순된다
       (c.reject?'<span class="stat rej"><b>'+c.reject+'</b> 기각(비교용)</span>':'');
   })();
@@ -402,8 +416,30 @@
     var _ya='연도별 수익 막대차트 · 전략 vs 벤치마크 · '+(ys.length?ys[0].y+'~'+ys[ys.length-1].y:'')+' ('+ys.map(function(y){return y.y+'년 전략 '+(y.r==null?'—':y.r+'%');}).join(', ')+')';
     return '<svg class="btsvg" role="img" aria-label="'+_ya+'" viewBox="0 0 '+W+' '+H+'"><line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+y0.toFixed(1)+'" y2="'+y0.toFixed(1)+'" stroke="var(--line)"/>'+bars+'</svg>';
   }
+  // 최근 기간별 성과 — 월간 nav에서 직접 계산(전략 vs 두 벤치마크). 데이터가 짧으면 해당 기간은 표시 안 함.
+  function periodPerf(bt,vc){
+    var d=bt.dates,n=d.length; if(n<2)return '';
+    function trail(a,k){var i=n-1-k;if(!a||i<0||a[i]==null||a[n-1]==null)return null;return (a[n-1]/a[i]-1)*100;}
+    function ytd(a){if(!a)return null;var yr=d[n-1].slice(0,4),i=-1;
+      for(var j=n-1;j>=0;j--){if(d[j].slice(0,4)!==yr){i=j;break;}}
+      if(i<0||a[i]==null)return null;return (a[n-1]/a[i]-1)*100;}
+    var defs=[['3개월',function(a){return trail(a,3);}],['6개월',function(a){return trail(a,6);}],
+              ['연초 이후',ytd],['1년',function(a){return trail(a,12);}],['3년',function(a){return trail(a,36);}]];
+    function fmt(v,strong){if(v==null)return '<td class="pp">—</td>';
+      var c=v>=0?'var(--deploy)':'var(--rej)';
+      return '<td class="pp'+(strong?' st':'')+'" style="color:'+c+'">'+(v>=0?'+':'')+v.toFixed(1)+'%</td>';}
+    var head='<tr><th scope="col">기간</th><th scope="col" style="color:'+vc+'">전략</th><th scope="col">'+(bt.bench_label||'벤치')+'</th>'+(bt.bench2?'<th scope="col">'+(bt.bench2_label||'')+'</th>':'')+'</tr>';
+    var rows=defs.map(function(df){
+      var sv=df[1](bt.nav); if(sv==null)return '';
+      return '<tr><th scope="row">'+df[0]+'</th>'+fmt(sv,true)+fmt(df[1](bt.bench))+(bt.bench2?fmt(df[1](bt.bench2)):'')+'</tr>';
+    }).join('');
+    if(!rows)return '';
+    return '<div class="chartttl">기간별 성과 <span class="lg" style="text-transform:none;letter-spacing:0">'+d[n-1]+' 월말 기준</span></div>'+
+      '<div class="pptblwrap"><table class="pptbl"><caption class="vh">최근 기간별 성과</caption>'+head+rows+'</table></div>';
+  }
   function btSection(bt,vc){
     var m=bt.metrics,sg=function(x){return (x>=0?'+':'')+x;},bl=bt.bench_label||'NDX';
+    var pp=periodPerf(bt,vc);
     var mg='<div class="btm-grid">'+
       '<div class="btm"><div class="k">CAGR</div><div class="v" style="color:'+vc+'">'+sg(m.cagr)+'%</div></div>'+
       '<div class="btm"><div class="k">Sharpe</div><div class="v">'+m.sharpe+'</div></div>'+
@@ -463,8 +499,16 @@
     var det=d.det, play='';
     if(det){
       var sec=function(cls,title,arr){return (arr&&arr.length)?'<div class="play '+cls+'"><h4>'+title+'</h4><ul>'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>':'';};
+      var st_=det.situations, sitHtml='';
+      if(st_){
+        var sli=function(a_){return (a_||[]).map(function(x){return '<li>'+x+'</li>';}).join('');};
+        sitHtml='<div class="sitwrap"><h4>어떤 상황에서 쓰나</h4><div class="sitcols">'+
+          '<div class="sitcol g"><h5>유리한 상황</h5><ul>'+sli(st_.good)+'</ul></div>'+
+          '<div class="sitcol b"><h5>피해야 할 상황</h5><ul>'+sli(st_.bad)+'</ul></div></div>'+
+          (st_.combo?'<div class="whenrow"><b>결합 팁</b>'+st_.combo+'</div>':'')+'</div>';
+      }
       play=sec('pros','장점',det.pros)+sec('cons','단점',det.cons)+sec('apps','활용방안',det.applications)+
-        (det.when_to_use?'<div class="whenrow"><b>언제 쓰나</b>'+det.when_to_use+'</div>':'');
+        (det.when_to_use?'<div class="whenrow"><b>언제 쓰나</b>'+det.when_to_use+'</div>':'')+sitHtml;
     }
     var arche=(det&&det.archetype)?'<span class="arche">'+det.archetype+'</span>':'';
     detailEl.innerHTML=
@@ -489,7 +533,7 @@
   }
 
   render();   // 인라인 D로 즉시 렌더(빈 화면 방지) — json 도착 시 det/bt 병합 후 재렌더
-  // #s-슬러그 딥링크 — 로테이션 카드의 '랩 검증(배포·marginal)' 링크가 해당 전략을 바로 선택하도록
+  // #s-슬러그 딥링크 — 로테이션 카드의 '랩 검증(배포·제한적 유효)' 링크가 해당 전략을 바로 선택하도록
   function _slug(n){return String(n).toLowerCase().replace(/[^0-9a-z가-힣]+/g,'-').replace(/^-+|-+$/g,'');}
   function _fromHash(){
     var h=(location.hash||'').replace(/^#s-/,''); if(!h||location.hash.indexOf('#s-')!==0)return;
