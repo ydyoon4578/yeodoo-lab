@@ -214,7 +214,7 @@ def main():
         it["sp"] = surprise(DS.get(it["k"]))
 
     # ── 히스토리(월별 레짐 라벨, ~15년) + 자산·섹터·팩터 조건부 성과 ──
-    hist, perf = build_history(S, cpi_yoy)
+    hist, perf = build_history(S, cpi_yoy, asof)
 
     out = {"as_of": asof, "source": "FRED (무료) + yfinance",
            "regime": {"label": lab, "emoji": emoji, "growth": growth, "inflation": inflation,
@@ -232,9 +232,12 @@ def classify_month(g, i, fin):
     return M[(g,i)]
 
 
-def build_history(S, cpi_yoy):
+def build_history(S, cpi_yoy, asof=None):
     """월말 리샘플로 과거 레짐 라벨 시퀀스 + 레짐별 다음달 자산수익 평균."""
-    idx = pd.date_range("2009-01-31", cpi_yoy.dropna().index.max(), freq="ME")
+    # FRED 월간 시리즈는 '월초'로 인덱싱된다(2026-06-01) → freq="ME"로 자르면 그 달이 통째로 빠져
+    # 히스토리 마지막 막대가 히어로의 '현재 국면'과 다른 달을 가리켰다. 기준일이 속한 달까지 포함한다.
+    _end = pd.Timestamp(asof) if asof else cpi_yoy.dropna().index.max()
+    idx = pd.date_range("2009-01-31", _end + pd.offsets.MonthEnd(0), freq="ME")
     nfp3 = S["PAYEMS"].diff().rolling(3).mean()
     dU = S["UNRATE"] - S["UNRATE"].rolling(12).min()
     def asof(s, d):

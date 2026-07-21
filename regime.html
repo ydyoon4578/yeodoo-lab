@@ -129,6 +129,10 @@
   var RORDER=["Goldilocks","Recovery","SoftLanding","LateCycle","Overheating","Stagflation","Recession"];
   var RKO={Goldilocks:"골디락스",Recovery:"회복",SoftLanding:"연착륙",LateCycle:"후기사이클",Overheating:"과열",Stagflation:"스태그플레이션",Recession:"침체"};
   var GKO={EXPANSION:"확장",SLOWING:"둔화",CONTRACTION:"수축",LOW:"저물가",MODERATE:"중간물가",HIGH:"고물가",EASY:"완화",NEUTRAL:"중립",ELEVATED:"경계",STRESSED:"스트레스"};
+  // 서프라이즈 화살표의 색 의미 — 오르는 게 좋은 지표 / 나쁜 지표만 색을 준다(나머지는 중립).
+  var GOOD_UP={PAYEMS:1,INDPRO:1,RSAFS:1,UMCSENT:1,CFNAIMA3:1,TCU:1,JTSJOL:1,HOUST:1,PERMIT:1};
+  var BAD_UP={CPIAUCSL:1,CPILFESL:1,PCEPILFE:1,PCEPI:1,PPIACO:1,GASREGW:1,T10YIE:1,T5YIFR:1,
+              UNRATE:1,ICSA:1,CCSA:1,SAHMREALTIME:1,NFCI:1,BAMLH0A0HYM2:1,BAMLC0A0CM:1,VIXCLS:1,MORTGAGE30US:1};
   var DATA=null;
 
   fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
@@ -162,7 +166,10 @@
         var st=x.st||["",""], sp=x.sp, sph='';
         if(sp){var ar=sp.dir==='up'?'▲':(sp.dir==='down'?'▼':'≈'),
           lb=sp.dir==='up'?'추세 상회':(sp.dir==='down'?'추세 하회':'추세 부합'),
-          col=sp.dir==='up'?'var(--good)':(sp.dir==='down'?'var(--hot)':'var(--muted)');
+          // ⚠ '상회=초록'으로 일괄 칠하면 물가·실업·스프레드·변동성에서 의미가 정반대가 된다.
+          //   방향의 좋고 나쁨이 명확한 지표만 색을 주고, 해석이 갈리는 지표(금리·달러·M2 등)는 중립색.
+          pol=(sp.dir==='flat')?0:(GOOD_UP[x.k]?1:(BAD_UP[x.k]?-1:0))*(sp.dir==='up'?1:-1),
+          col=pol>0?'var(--good)':(pol<0?'var(--hot)':'var(--ink-2)');
           sph='<div class="spline"><span style="color:'+col+'">'+ar+' '+lb+'</span><span class="spd">직전대비 '+(sp.chg>=0?'+':'')+sp.chg+(x.u||'')+'</span></div>';}
         return '<div class="ic"><div class="ictop"><span class="icl">'+x.label+'</span><span class="icv">'+(x.v!=null?x.v:'—')+'<span class="icu">'+(x.u||'')+'</span></span></div>'+
           (st[0]?'<span class="stbadge '+st[1]+'">'+st[0]+'</span>':'')+sph+'<div class="icd">'+x.d+'</div></div>';
