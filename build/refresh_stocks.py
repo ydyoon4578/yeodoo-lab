@@ -111,7 +111,7 @@ def signals_fired(o):
     """최근 5거래일 발동한 교과서 매수/매도 이벤트 신호."""
     h, l, c, v = o["High"].dropna(), o["Low"].dropna(), o["Close"].dropna(), o["Volume"].dropna()
     idx = c.index; h = h.reindex(idx); l = l.reindex(idx); v = v.reindex(idx)
-    if len(c) < 210: return [], []
+    if len(c) < 210: return [], [], None, None   # 호출부가 4개로 언패킹 — 상장 1년 미만 종목 편입 시 잡 전체가 죽던 버그
     ml, ms, mh = macd(c); _, bu, bl, pb, _ = boll(c); k = stoch_k(h, l, c); kd = k.rolling(3).mean()
     s50, s200 = sma(c, 50), sma(c, 200); au, ad = aroon(h, l)
     dcu = h.rolling(20).max(); dcl = l.rolling(20).min(); z = pd.Series(0.0, index=idx)
