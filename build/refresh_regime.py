@@ -55,6 +55,13 @@ def main():
     _dates = [s.index.max() for s in S.values() if len(s)]
     if not _dates:
         raise SystemExit("FRED 전 시리즈 로드 실패 — API 키/네트워크 확인 (regime.json 미갱신, 이전본 유지)")
+    # 부분 실패 게이트: 일부만 로드돼도 스크립트는 돌아 '지표 누락된 regime.json'을 조용히 덮어쓴다.
+    # 80% 미만이면 갱신하지 않고 실패시켜 이전본을 유지(워크플로가 빨간불로 알림).
+    _miss = [c for c, s in S.items() if not len(s)]
+    if len(_miss) > len(S) * 0.2:
+        raise SystemExit(f"FRED 시리즈 {len(_miss)}/{len(S)} 로드 실패 — 갱신 중단(이전본 유지). 실패: {', '.join(_miss)}")
+    if _miss:
+        print(f"  ⚠ 일부 시리즈 결측({len(_miss)}): {', '.join(_miss)}")
     asof = max(_dates).date().isoformat()
 
     # ── 파생 시계열 ──
