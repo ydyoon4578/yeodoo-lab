@@ -541,14 +541,6 @@ def main():
     # ⚠ 워크플로 커밋 대상에 data/sd 포함 필수(home_reco 누락 사고와 동일 함정) · stocks.html이 선택 시 fetch.
     SD_DIR = os.path.join(HERE, "..", "data", "sd")
     os.makedirs(SD_DIR, exist_ok=True)
-    # 홈 추천용 스냅샷(strip 전에 캡처): 현재가·최근 스윙저점가(확정+잠정)·200MA 이격
-    _snap = {}
-    for s in stocks:
-        _pxa = [x for x in (s.get("pxd") or []) if x is not None]
-        _pxnow = _pxa[-1] if _pxa else None
-        _lowpx = min(_pxa[-20:]) if len(_pxa) >= 20 else None   # 최근 20일 저점 — 오래된 스윙저점 대비는 +100%대로 무의미해 최근 저점 기준
-        _d2 = ((s.get("sig") or {}).get("d200") or {}).get("v")
-        _snap[s["t"]] = {"px": _pxnow, "lowpx": _lowpx, "d2": _d2}
     _keep = set()
     for s in stocks:
         det = {"as_of": as_of, "t": s["t"]}
@@ -564,23 +556,22 @@ def main():
     print(f"→ {OUT} ({len(stocks)}종목 · 슬림 {os.path.getsize(OUT)//1024}KB · 상세 {len(_keep)}파일 · 기준일 {as_of})")
     # ── 홈 전용 초소형 요약(주목종목) — 홈이 대형 stocks.json 대신 이것만 fetch(LCP 개선) ──
     try:
-        # 루틴 기반 추천(사용자 3단계): ①매수신호(상승추세) ②저점 근처·과열도 낮음=진입 유리 ③매도신호(200MA 이탈)=비중축소
-        def _row(s, buy):
-            sn = _snap.get(s["t"]) or {}
-            r = {"t": s["t"], "name": (s.get("name") or "")[:16], "oh": s["comp"].get("overheat")}
-            if sn.get("d2") is not None: r["d2"] = round(sn["d2"], 1)
-            if buy and sn.get("px") and sn.get("lowpx"): r["ld"] = round((sn["px"]/sn["lowpx"] - 1)*100, 1)  # 최근 스윙저점 대비 %
-            return r
-        _buyside = [s for s in stocks if s["timing"] in ("매수", "매수우세")]
-        _cand = [s for s in _buyside if (s["comp"].get("overheat") or 100) <= 60]   # ② 과열 아님(≤60 — 45는 수익 저해 실측)
-        _cand.sort(key=lambda s: -(s.get("bscore") or 0))
-        _sellside = [s for s in stocks if s["timing"] in ("매도", "매도우세")]
-        _sellside.sort(key=lambda s: -(s.get("sscore") or 0))
+        # 전략 재편(2026-07): 추세 전환 '완전 확정' 후 진입 — 홈은 최신 확정 스윙 타점(잠정 제외, 리페인팅 없음)
+        _dts = out["pxd_dates"]; _N = len(_dts); _WIN = 10
+        def _lastmk(s, key):
+            a = s.get(key) or []
+            return a[-1] if a else -1
+        def _reco(key):
+            c = [(_lastmk(s, key), s) for s in stocks]
+            c = [(m, s) for m, s in c if m >= 0 and (_N - 1 - m) <= _WIN]
+            c.sort(key=lambda x: -x[0])
+            return ([{"t": s["t"], "name": (s.get("name") or "")[:16], "dt": _dts[m][5:], "ago": _N - 1 - m,
+                      "oh": s["comp"].get("overheat")} for m, s in c[:8]], len(c))
+        _bl, _nb = _reco("bms"); _sl, _ns = _reco("sms")
         HOME = os.path.join(HERE, "..", "data", "home_reco.json")
-        json.dump({"as_of": as_of, "buy": [_row(s, True) for s in _cand[:8]], "sell": [_row(s, False) for s in _sellside[:8]],
-                   "nbuy": len(_cand), "nsell": len(_sellside)},
+        json.dump({"as_of": as_of, "buy": _bl, "sell": _sl, "nbuy": _nb, "nsell": _ns},
                   open(HOME, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-        print(f"→ {HOME} (홈 추천 · 매수후보 {len(_cand)}·매도 {len(_sellside)})")
+        print(f"→ {HOME} (홈 확정 스윙 · 매수 {_nb}·매도 {_ns})")
     except Exception as e:
         print("  home_reco 생성 실패(무시):", e)
 

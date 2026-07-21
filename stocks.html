@@ -208,14 +208,14 @@
     <div class="eyebrow">여두 전략 랩 · 종목 테크니컬</div>
     <h1 class="title">NDX · SPX 종목 시그널</h1>
     <p class="lede">나스닥100·S&amp;P500 구성종목의 <b>과매수/과매도·추세·모멘텀·변동성·거래량·공매도 포지셔닝</b>을 종목별로 — 가격 기반 <b>테크니컬</b>(RSI·MACD·볼린저·ADX…) + <b>EPS 펀더멘털</b>(yfinance) + <b>공매도잔량</b>(FINRA).
-      프리셋으로 <b>매수 신호·매도 신호·과매수·과매도·눌림목·52주돌파·과밀숏</b>을 즉시 스크리닝하고, 종목 클릭 시 가격·거래량 차트와 지표별 <b>값·상태·한 줄 설명</b>이 뜹니다. 차트 타점은 <b>스윙 저점 근처 매수·고점 근처 매도</b> 표식 — 과열도·추세·모멘텀·변동성으로 걸러 <b>떨어지는 칼(깊은 붕괴)·강세종목 조기매도를 피하고</b>, 시장국면·섹터를 반영합니다.</p>
+      핵심은 <b>확정 스윙 타점</b> — 추세 전환이 <b>완전히 확인된 뒤에만</b> 저점매수(▲)·고점매도(▼)를 표시합니다(잠정은 빈 도형으로 구분). 과열도·추세·모멘텀·변동성으로 걸러 <b>떨어지는 칼(깊은 붕괴)·강세종목 조기매도를 피하고</b>, 시장국면·섹터를 반영. 보조로 <b>과매수·과매도·눌림목·52주돌파·과밀숏</b> 스크리닝 제공.</p>
     <div class="statline" id="statline"></div>
     <details class="howto">
-      <summary>두 신호, 뭘 보고 판단하나 — 30초 가이드</summary>
+      <summary>스윙 타점 전략 — 30초 가이드</summary>
       <div class="hbody">
-        <div class="hrow"><b class="hb g">🟢🔴 매수·매도 추천</b><b>1차 기준.</b> 매수 추천 = 상승추세(200일선 위) ∩ 과열 아님, 추세+모멘텀 점수순. <b>백테스트(512종목·5년): top8 20일 수익 +3.6%(시장 +1.4%)·60일 초과 +6.6%p·상승확률 56%(시장 55%)</b> — 상승 '확률'은 시장과 비슷하고 우위는 <b>상승 폭</b>에서 나옵니다. 매도 추천 = 200일선 이탈 — 하락 예측이 아니라 비중축소 주의.</div>
-        <div class="hrow"><b class="hb a">▲▼ 스윙 저점·고점</b><b>차트의 위치 표식.</b> 지그재그 전환점은 확정까지 <b>보통 수 주 지연</b>되는 사후 표시 — 단독 매매신호가 아니라 "지금 가격이 최근 저점/고점 대비 어디쯤인지" 구조 파악용. 특히 <b>고점 표식은 이후 하락을 예측하지 못합니다</b>(자체 검증 — 고점 확정 후 20일 수익 +2.1%로 유니버스 평균 이상).</div>
-        <div class="hrow"><b class="hb m">권장 루틴</b>① <b>매수 추천</b> 탭에서 후보 선별 → ② 차트에서 현재가의 <b>스윙 저점 대비 위치</b>·타점 근거 확인 후 분할 매수 → ③ 보유 종목이 <b>매도 추천</b>(200일선 이탈)에 뜨면 비중축소. 매도 추천은 공매도 근거가 아닙니다.</div>
+        <div class="hrow"><b class="hb g">▲▼ 확정 타점(채운 도형)</b><b>추세 전환이 완전히 확인된 뒤에만</b> 표시 — 눌림목 저점은 5거래일간 저점 미갱신, 지그재그 전환점은 변동성 비례(5~16%) 반전으로 확정. 한번 찍히면 <b>날짜 불변</b>. 실측(5y·512종목): 확정 저점의 <b>50%는 이후 20일간 저점 유지</b>(K=5), 확정일 매수 20일 수익 +1.6%(시장 +1.4%) — <b>수익 예측 도구가 아니라 진입 규율·구조 도구</b>입니다.</div>
+        <div class="hrow"><b class="hb a">△▽ 잠정(빈 도형)</b><b>진행 중 극점 — 아직 미확정.</b> 갓 생긴 잠정 저점의 <b>82%는 더 낮은 저점으로 이동</b>(3일 유지 시 51%, 8일+ 43% — 실측). 잠정은 관찰만, 진입은 확정 후에.</div>
+        <div class="hrow"><b class="hb m">권장 루틴</b>① <b>스윙 저점매수</b> 탭에서 최신 <b>확정</b> 타점(잠정 태그 없는 것) 확인 → ② 종목 열어 <b>왜 이 신호인가</b>(추세·과열도·거래량 근거)와 깊은 붕괴 여부 확인 후 분할 진입 → ③ <b>스윙 고점매도 확정 또는 200일선 이탈</b> 시 정리. 고점 표식은 하락 예측이 아니라 이익실현 레벨 참고입니다.</div>
       </div>
     </details>
   </header>
@@ -227,7 +227,7 @@
         <input id="q" type="search" placeholder="티커·회사명·섹터 검색 (예: NVDA, Apple, Energy)" aria-label="검색">
       </label>
     </div>
-    <div class="chiprow"><span class="fchip lbl">추천·타점</span><span id="presets" style="display:contents"></span></div>
+    <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
     <div class="chiprow"><span class="fchip lbl">스크리닝</span><span id="presets2" style="display:contents"></span></div>
     <div class="chiprow"><span class="fchip lbl">지수</span><span id="idxf" style="display:contents"></span></div>
   </div>
@@ -284,14 +284,11 @@
     if(g[0]==="포지셔닝")return c.hot?("과밀숏 "+c.hot):(c.watch?("숏 부담 "+c.watch):"포지셔닝 보통");
     return "";}
   // preset: [key,label,comp,asc,flag,timingSet]
-  // [key,label,comp,asc,flag,timingSet,group('r'=추천·타점 / 's'=스크리닝)] — 난잡 정리: 중복 프리셋 제거(고모멘텀≈추천정렬·약세≈매도신호·변동성은 상세지표)
+  // [key,label,comp,asc,flag,timingSet,group('r'=스윙 타점 / 's'=스크리닝)] — 전략 재편(2026-07): 추세 전환 '완전 확정' 후 진입.
+  // 추천·신호 탭 제거 — 확정 스윙 타점(저점매수/고점매도)에 집중, 스크리닝은 보조.
   var PRESETS=[
-    ["recobuy","🟢 매수 추천","momentum",false,null,["매수","매수우세"],"r"],
-    ["recosell","🔴 매도 추천","momentum",true,null,["매도","매도우세"],"r"],
     ["swingbuy",'<span style="color:var(--good)">▲</span> 스윙 저점매수',"momentum",false,null,null,"r"],
     ["swingsell",'<span style="color:var(--hot)">▼</span> 스윙 고점매도',"trend",true,null,null,"r"],
-    ["buy","매수 신호 전체","momentum",false,null,["매수","매수우세"],"s"],
-    ["sell","매도 신호 전체","momentum",true,null,["매도","매도우세"],"s"],
     ["oh","과매수","overheat",false,"과매수",null,"s"],["os","과매도","overheat",true,"과매도",null,"s"],
     ["dip","눌림목","trend",false,"눌림목",null,"s"],["brk","52주 돌파","momentum",false,"52주돌파",null,"s"],
     ["squeeze","과밀숏","positioning",false,"과밀숏",null,"s"],
@@ -299,8 +296,6 @@
   var SHOWN=PRESETS;  // 데이터로딩 후 빈 프리셋 제거
   // 시그널 칩 호버 설명(툴팁)
   var TIPS={
-    recobuy:"홈 매수 추천과 동일 — 상승추세 ∩ 과열 아님(≤60), 추세+모멘텀 점수순. 백테스트: top8 20일 초과수익 +2.7%p·상승확률 56%(시장 55%)",
-    recosell:"홈 매도 추천과 동일 — 200일선 이탈(매도신호), 약세 종합점수순 — 비중축소 주의(공매도 근거 아님·하락 예측력은 미미)",
     swingbuy:"차트 스윙 저점 매수 타점(확정 ▲ + 잠정 △)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
     swingsell:"차트 스윙 고점 매도 타점(확정 ▼ + 잠정 ▽)이 최근 발생한 종목 — 최신 타점순. 잠정=미확정이라 날짜 이동 가능",
     buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 내림차순 — 매수 후보 1차 기준",
@@ -314,7 +309,7 @@
     dn:"종가<200일선 — 장기 추세 이탈"};
   var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","52주돌파":"b52돌파","200일이탈":"b200이탈","과밀숏":"gmilshort"};
   var PERIODS=[["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252]];
-  var state={q:"",preset:"recobuy",idx:new Set(),sel:null,period:252};
+  var state={q:"",preset:"swingbuy",idx:new Set(),sel:null,period:252};
   function cc(k){return 'var('+({overheat:'--hot',trend:'--good',momentum:'--accent',volatility:'--watch'}[k]||'--accent')+')';}
   function gc(g){return 'var('+({hot:'--hot',good:'--good',accent:'--accent',watch:'--watch',cold:'--cold',muted:'--muted'}[g]||'--accent')+')';}
   var _cssC={};   // 테마별 CSS변수 캐시 — getComputedStyle 반복호출/리플로우 축소
@@ -376,7 +371,6 @@
     var rows=DATA.stocks.filter(function(s){
       if(flag && (s.flags||[]).indexOf(flag)<0)return false;
       if(tim && tim.indexOf(s.timing)<0)return false;
-      if(p[0]==='recobuy' && ((s.comp||{}).overheat||100)>60)return false;   // 매수 추천 = 과열 아님(≤60, 홈과 동일 — 45는 수익 저해 실측)
       if(state.idx.size){var ok=false;(s.idx||[]).forEach(function(x){if(state.idx.has(x))ok=true;});if(!ok)return false;}
       if(state.q){var hay=(s.t+' '+(s.name||'')+' '+(s.sector||'')).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
       if(sk)return swFresh(s,sk);                 // 스윙: 최근 SW_WIN일 내 마커 보유만
@@ -385,8 +379,6 @@
     // 스윙=최근 마커순(동점은 신호강도) / 매수·매도 신호=종합점수 내림차순 + 상위 50 캡(종목수 과다 방지) / 나머지=컴포짓 정렬
     var total=rows.length;
     if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||((b[sc]||0)-(a[sc]||0));});
-    else if(p[0]==='buy'||p[0]==='recobuy')rows.sort(function(a,b){return (b.bscore||0)-(a.bscore||0);});
-    else if(p[0]==='sell'||p[0]==='recosell')rows.sort(function(a,b){return (b.sscore||0)-(a.sscore||0);});
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
     return {rows:rows,comp:comp,total:total};
   }
@@ -403,9 +395,7 @@
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
       if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
         metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mp.prov?' <span style="color:var(--watch);font-size:9px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
-      }else if(['buy','sell','recobuy','recosell'].indexOf(state.preset)>=0){var sp=(state.preset==='buy'||state.preset==='recobuy')?(s._bp||0):(s._sp||0);
-        metric='<span class="metric"><div class="mv" title="종합점수 백분위(과열도·추세·모멘텀·변동성)">'+sp+'</div><div class="mbar"><i style="width:'+sp+'%;background:var(--accent)"></i></div></span>';
-      }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
+            }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       return '<button class="item" role="option" data-t="'+s.t+'" aria-selected="'+(s===state.sel)+'">'+
         '<span><span class="tkline"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
         '<div class="nm">'+esc(s.name||'')+(s.sector?' · '+esc(s.sector):'')+'</div></span>'+metric+'</button>';
@@ -598,7 +588,7 @@
       var cnt=null,sk=swKeys(p[0]);
       if(sk)cnt=d.stocks.filter(function(s){return swFresh(s,sk);}).length;
       else if(p[4])cnt=d.stocks.filter(function(s){return (s.flags||[]).indexOf(p[4])>=0;}).length;
-      else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0&&(p[0]!=='recobuy'||((s.comp||{}).overheat||100)<=60);}).length;
+      else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
       (p[6]==='s'?pf2:pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();},TIPS[p[0]]));
