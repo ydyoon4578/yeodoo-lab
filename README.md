@@ -11,7 +11,7 @@
 | `explorer.html` | **전략 탐색기** — 구현·적대검증한 22개 전략(배포 3·marginal 17·비교용 기각 2) + 실제 백테스트 차트 |
 | `stocks.html` | **종목 시그널** — NDX/SPX 512종목 테크니컬(22지표)·매매 타이밍·252봉 차트 |
 | `regime.html` | **시장 국면** — FRED 매크로 39지표(성장·노동·물가·금융·금리·주택) + 추세 대비 서프라이즈 |
-| `rotation.html` | **오늘의 로테이션** — 웹 리서치 전략 풀 63종에서 날짜(KST) 시드 9선 · 미검증·외부 출처 |
+| `rotation.html` | **오늘의 로테이션** — 웹 리서치 전략 풀 63종에서 날짜(KST) 시드 10선 · 미검증·외부 출처 |
 | `archive.html` | **기각 아카이브** — 배포 부적합 판정 40개 전략과 사유 |
 
 ## 데이터·자동화
@@ -19,7 +19,7 @@
 |---|---|---|
 | `data/stocks.json`(슬림) + `data/sd/<티커>.json`(상세, 지연 로드) + `data/home_reco.json` | `build/refresh_stocks.py` | 매일 08:05 KST + 08:40 백업 |
 | `data/regime.json` | `build/refresh_regime.py` | 매일 08:15 KST + 08:50 백업 |
-| `data/rotation_pool.json` | 헤드리스 리서치 잡(로컬) | 매일 08:20 KST (9선 + 방치 3종) |
+| `data/rotation_pool.json` | 헤드리스 리서치 잡(로컬) | 매일 08:20 KST (10선 + 방치 3종) |
 | `data/strategy_backtests.json`·`strategy_detail.json` | 비공개 repo에서 정적 생성 | 수시 |
 
 `build/validate_site.py`가 푸시마다 CI에서 JS 괄호·미정의 호출·JSON 스키마·딥링크 앵커·선별 상수(프론트↔잡)·
