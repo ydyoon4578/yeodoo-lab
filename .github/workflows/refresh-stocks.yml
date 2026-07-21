@@ -32,8 +32,18 @@ jobs:
           # ⚠ 생성기 산출물 전부 커밋: stocks.json(슬림)·home_reco.json·data/sd/(종목별 상세, 삭제 포함)
           #   + target_history.json(목표주가 이력 누적 — 커밋 안 하면 매 실행 fresh checkout이라 영구 유실)
           #   하나라도 빠지면 해당 화면이 낡은 채 고착된다(home_reco 누락 사고의 교훈)
-          if [ -n "$(git status --porcelain data/stocks.json data/home_reco.json data/sd data/target_history.json)" ]; then
+          # 변경 감지는 data/ 전체로 본다. 위 4개 경로만 보면, 정확히 과거 사고 유형(새 산출물 파일만
+          # 생기고 기존 경로는 무변경)에서 else로 빠져 아래 누락 검증이 아예 돌지 않는다.
+          if [ -n "$(git status --porcelain data/)" ]; then
             git add data/stocks.json data/home_reco.json data/sd data/target_history.json
+            # 누락 방지 자동 검증: 이 잡이 data/ 아래에 만든 변경 중 **스테이징되지 않은 것**이 남아 있으면 실패시킨다.
+            # (git status 1열=index·2열=worktree → 스테이징된 항목은 1열이 A/M/D/R. 1열이 공백이거나 '??'면 누락)
+            LEFT="$(git status --porcelain data/ | grep -E '^([ ?])' || true)"
+            if [ -n "$LEFT" ]; then
+              echo "::error::data/ 산출물이 커밋 목록에서 빠졌습니다(과거 home_reco·target_history 유실 사고와 동일 유형):"
+              echo "$LEFT"
+              exit 1
+            fi
             git commit -m "chore(data): 종목 테크니컬 시그널 자동 갱신"
             # regime 워크플로와 같은 main에 push → 경합 시 리베이스 후 1회 재시도(강제 push 금지)
             git push || (git pull --rebase origin main && git push)

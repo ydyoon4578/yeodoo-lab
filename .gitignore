@@ -1,1 +1,5 @@
 __pycache__/
+
+# DB 적재 로컬 로그(커밋 금지)
+.dbload.log
+.dbload.launchd.log
