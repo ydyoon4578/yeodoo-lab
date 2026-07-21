@@ -182,7 +182,7 @@
   j('data/strategy_backtests.json').then(function(bt){
     if(!bt)return; put(['src-bt','d-btgen'],'생성 '+(bt.generated||'—'));
     var st=[],en=[];Object.keys(bt.strategies||{}).forEach(function(k){var b_=bt.strategies[k];if(b_.start)st.push(b_.start);if(b_.end)en.push(b_.end);});
-    if(st.length)put(['d-btspan'],st.sort()[0].slice(0,7)+' ~ '+en.sort().pop().slice(0,7)+' (전략별 상이 — 각 패널 표기)');
+    if(st.length&&en.length)put(['d-btspan'],st.sort()[0].slice(0,7)+' ~ '+en.sort().pop().slice(0,7)+' (전략별 상이 — 각 패널 표기)');
   });
   j('data/stocks.json').then(function(d){   // 225KB 슬림 — FINRA 공매도 기준일(factor_defs)만 사용
     if(d&&d.factor_defs&&d.factor_defs.dtc)put(['d-si'],d.factor_defs.dtc.as_of);
