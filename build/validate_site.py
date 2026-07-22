@@ -207,10 +207,10 @@ try:
         for _k, _v in _scr.items():
             for _f in ("name", "keys", "qualify", "note"):
                 if not _v.get(_f): errors.append(f"screens.json[{_k}]: {_f} 누락")
-            for _m in list(_v.get("keys") or []) + list((_v.get("qualify") or {}).keys()):
+            for _m in list(_v.get("keys") or []) + list((_v.get("qualify") or {}).keys()) + list((_v.get("qualify_max") or {}).keys()):
                 if _m not in _dir:
                     errors.append(f"screens.json[{_k}]: 지표 '{_m}'의 방향(dir) 정의 없음")
-            for _m, _th in (_v.get("qualify") or {}).items():
+            for _m, _th in list((_v.get("qualify") or {}).items()) + list((_v.get("qualify_max") or {}).items()):
                 if not isinstance(_th, (int, float)) or not (0 <= _th <= 100):
                     errors.append(f"screens.json[{_k}]: 임계 {_m}={_th} 는 0~100 백분위여야 함")
         _sh = rd("stocks.html")
