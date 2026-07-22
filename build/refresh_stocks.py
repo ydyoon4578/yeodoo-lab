@@ -960,38 +960,12 @@ def main():
         print(f"목표주가 이력 {'기록' if _wrote else '생략'}({_why}) · 스냅샷 {_ns2}개 · {_sz}KB · 이번 커버 {len(tp_hist)}/{len(stocks)}종목")
     except Exception as e:
         print("  목표주가 이력 갱신 실패(무시):", e)
-    # ── 홈 전용 초소형 요약(주목종목) — 홈이 대형 stocks.json 대신 이것만 fetch(LCP 개선) ──
-    try:
-        # 전략 재편(2026-07): 추세 전환 '완전 확정' 후 진입 — 홈은 최신 확정 스윙 타점(잠정 제외, 리페인팅 없음)
-        _dts = out["pxd_dates"]; _N = len(_dts); _WIN = 10
-        def _lastmk(s, key):
-            a = s.get(key) or []
-            return a[-1] if a else -1
-        # GICS 영문 섹터는 홈의 좁은 행에서 길어 잘린다 — 짧은 한글로 매핑
-        SECKO = {"Information Technology": "IT", "Health Care": "헬스케어", "Financials": "금융",
-                 "Consumer Discretionary": "경기소비", "Consumer Staples": "필수소비", "Industrials": "산업재",
-                 "Communication Services": "커뮤니케이션", "Energy": "에너지", "Utilities": "유틸리티",
-                 "Real Estate": "부동산", "Materials": "소재"}
-
-        def _reco(conf_key, prov_key):
-            """확정(conf) + 잠정(prov) 타점을 함께 보고 최신 것을 취한다. prov=True면 아직 이동 가능."""
-            c = []
-            for s in stocks:
-                mc, mp = _lastmk(s, conf_key), _lastmk(s, prov_key)
-                m = max(mc, mp)
-                if m < 0 or (_N - 1 - m) > _WIN: continue
-                c.append((m, mp > mc, s))
-            c.sort(key=lambda x: -x[0])
-            return ([{"t": s["t"], "name": (s.get("name") or "")[:16], "dt": _dts[m][5:], "ago": _N - 1 - m,
-                      "sec": SECKO.get(s.get("sector") or "", (s.get("sector") or "")[:6]),
-                      **({"prov": 1} if pv else {})} for m, pv, s in c[:8]], len(c))
-        _bl, _nb = _reco("bms", "bmw"); _sl, _ns = _reco("sms", "smw")
-        HOME = os.path.join(HERE, "..", "data", "home_reco.json")
-        json.dump({"as_of": as_of, "buy": _bl, "sell": _sl, "nbuy": _nb, "nsell": _ns},
-                  open(HOME, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-        print(f"→ {HOME} (홈 확정 스윙 · 매수 {_nb}·매도 {_ns})")
-    except Exception as e:
-        print("  home_reco 생성 실패(무시):", e)
+    # ── 홈 전용 초소형 요약 — 계산은 build/home_summary.py 한 곳(화면·DB가 다시 계산하지 않는다) ──
+    # 실패를 삼키지 않는다: 홈의 신호 목록·성과 카드가 전부 여기서 나오므로 조용히 빈 채로 배포되면 안 된다.
+    import home_summary
+    _p, _h = home_summary.write(stocks, out["pxd_dates"], as_of, os.path.join(HERE, ".."))
+    print(f"→ {os.path.basename(_p)} (매수 {_h['nbuy']}·확정 {_h['buy_conf']}/잠정 {_h['buy_prov']} · "
+          f"매도 {_h['nsell']}·확정 {_h['sell_conf']}/잠정 {_h['sell_prov']} · 배포 {len(_h['deploy'])}종)")
 
 
 if __name__ == "__main__":

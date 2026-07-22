@@ -1,0 +1,27 @@
+{
+ "note": "explorer.html·archive.html의 전략 배열에서 파싱한 집계. 홈은 이 파일만 읽고 숫자를 적지 않는다.",
+ "deploy": [
+  {
+   "n": "통합 포트폴리오 — 실적 상향주 + 자산배분",
+   "slug": "통합-포트폴리오-실적-상향주-자산배분",
+   "alias": "EPS 리비전 + 크로스에셋 RP"
+  },
+  {
+   "n": "실적 전망 상향주 매수 (나스닥100)",
+   "slug": "실적-전망-상향주-매수-나스닥100",
+   "alias": "EPS 리비전 드리프트 · PEAD"
+  },
+  {
+   "n": "12개 자산 분산 배분 — 변동성 균등",
+   "slug": "12개-자산-분산-배분-변동성-균등",
+   "alias": "크로스에셋 리스크패리티 + vol타겟"
+  }
+ ],
+ "marginal_n": 17,
+ "deploy_n": 3,
+ "reject_compare_n": 2,
+ "explorer_n": 22,
+ "archive_n": 41,
+ "archive_cats": 10,
+ "reject_total": 43
+}
