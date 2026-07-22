@@ -118,12 +118,9 @@
   .rbadge{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:999px;padding:4px 11px}
   .dtop h2{font-family:var(--mono);font-size:clamp(18px,2.6vw,23px);font-weight:600;margin:0;line-height:1.22;letter-spacing:-.01em;text-wrap:balance}
   .dcat{font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:8px;font-weight:600}
-  .dmetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--line-soft)}
-  .dm{padding:16px 18px;border-right:1px solid var(--line-soft)}
-  .dm:last-child{border-right:0}
-  .dm .k{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-  .dm .val{font-family:var(--mono);font-size:clamp(17px,2.4vw,21px);font-weight:600;margin-top:5px;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums}
-  .dm .val.deploy{color:var(--deploy)} .dm .val.marginal{color:var(--marg)} .dm .val.reject{color:var(--ink-2)}
+  /* 옛 .dmetrics(CAGR|카테고리|판정 3타일)는 제거됐다. 첫 타일 값에 판정 클래스가 붙어
+     「제한적 유효」전략의 연수익률이 숫자의 좋고 나쁨과 무관하게 늘 주황 경고색으로 칠해졌다.
+     대체: .selfperf(전략 자신의 성적, 잉크색 단일) + .kindtiles(성격별 1차 지표). 되살리지 말 것. */
   .dbody{padding:19px 24px 24px}
   .dbody .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 7px}
   .dbody p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.68}
@@ -222,6 +219,89 @@
     .detail{position:static;order:1;margin-bottom:18px}
     .rowcount{order:2;margin-top:16px}
   }
+  /* ── 성격(kind) 축 ── 판정이 아니라 '무엇으로 판단하는 전략인가'를 먼저 보여주기 위한 것 */
+  .kchip{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:4px 10px;border-radius:999px;
+         background:color-mix(in srgb,var(--kc,var(--muted)) 15%,var(--panel-2));
+         border:1px solid color-mix(in srgb,var(--kc,var(--muted)) 48%,transparent);color:var(--ink-2);white-space:nowrap}
+  .pxbadge{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:999px;
+           background:var(--marg-bg);color:var(--marg);border:1px solid color-mix(in srgb,var(--marg) 40%,transparent)}
+  .grouphdr{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:14px 2px 3px;padding-top:4px;border-top:1px solid var(--line-soft)}
+  .grouphdr:first-child{margin-top:2px;border-top:0;padding-top:0}
+  /* 9~11px 글씨에 하드코딩 hex를 쓰면 다크에서 대비가 무너진다 — 색은 점(dot)으로만 쓰고 글씨는 테마 잉크색 */
+  .grouphdr .gn{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);letter-spacing:.02em;display:inline-flex;align-items:center;gap:6px}
+  .grouphdr .gn i{width:8px;height:8px;border-radius:50%;background:var(--kc,var(--muted));flex:none}
+  .grouphdr .gc{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .grouphdr .gd{font-size:11px;color:var(--muted);flex:1;min-width:150px}
+  .fltlab{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+          align-self:center;margin-right:2px;min-width:34px}
+  /* ③ 이 전략 자신의 성적 — 비교 열도, 판정색도 없다. 숫자는 잉크색 단일. */
+  .selfperf{padding:15px 18px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+  .selfperf .sph{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;
+                 display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+  .selfperf .spg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:560px){.selfperf .spg{grid-template-columns:repeat(2,1fr)}}
+  .selfperf .spi .k{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.03em}
+  .selfperf .spi .v{font-family:var(--mono);font-size:clamp(15px,2.1vw,19px);font-weight:700;color:var(--ink);
+                    margin-top:3px;line-height:1;font-variant-numeric:tabular-nums}
+  /* ④ 성격별 '먼저 볼 지표' 3타일 */
+  .kindtiles{padding:14px 18px 15px;border-bottom:1px solid var(--line-soft)}
+  .kindtiles .kh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .kindtiles .kg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  @media(max-width:560px){.kindtiles .kg{grid-template-columns:1fr}}
+  .ktile{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--kc,var(--accent));border-radius:9px;padding:9px 11px}
+  .ktile .k{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.02em}
+  .ktile .v{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.05;font-variant-numeric:tabular-nums}
+  .ktile .s{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+  .kindtiles .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
+  /* ⑥ 위기 구간 표 — 대조군 열에는 승패 라벨을 붙이지 않는다. 숫자를 나란히 놓는 것으로 충분하다. */
+  .crwrap{overflow-x:auto;margin:4px 0 2px;-webkit-overflow-scrolling:touch}
+  .crtbl{border-collapse:collapse;width:100%;font-size:12px;min-width:430px}
+  .crtbl th,.crtbl td{padding:5px 9px;border-bottom:1px solid var(--line-soft);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .crtbl thead th{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line)}
+  .crtbl tbody th[scope="row"]{text-align:left;font-size:11.5px;color:var(--ink-2);font-weight:600}
+  .crtbl tbody th small{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);font-weight:400}
+  .crtbl td.cs{font-family:var(--mono);font-weight:700}
+  .crtbl td.cb{font-family:var(--mono);font-weight:400;color:var(--ink-2)}
+  .crtbl td.out{color:var(--muted);font-weight:400;font-family:var(--sans)}
+  /* ⑦ 대조군 근거 */
+  .bmwrap{margin:16px 0 4px;padding:13px 15px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:12px}
+  .bmwrap h4{margin:0 0 9px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+  .bmrow{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px;font-size:12.5px;color:var(--ink-2)}
+  .brole{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .bmwrap p{margin:8px 0 0;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
+  /* 벤치 부정합 고지 — 숨기면 안 되는 내용이라 눈에 띄되, 성과 강조로 오인되지 않게 무채색 경고톤 */
+  .bmmis{border-left:3px solid var(--watch,var(--muted));padding-left:10px;color:var(--ink-2)!important}
+  /* ⑧ 판정과 통계 — 카드에서 여기 처음 나온다 */
+  .vblock{margin:18px 0 4px;padding:14px 16px;border-radius:12px;border:1px solid var(--line-soft);background:var(--vbg)}
+  .vblock .vbh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .vblock .vbr{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .vblock .vmean{font-size:12px;color:var(--ink-2)}
+  .vblock .vt{margin:11px 0 0;font-size:13px;line-height:1.65;color:var(--ink-2)}
+  .vblock .vt b{color:var(--ink)}
+  .powerbox{margin-top:12px;padding:11px 13px;border-radius:10px;background:var(--panel);border:1px solid var(--line-soft)}
+  .powerbox h5{margin:0 0 7px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-2)}
+  .powerbox svg{width:100%;height:auto;display:block;max-width:420px;overflow:visible}
+  .powerbox .pw{font-size:11px;line-height:1.65;color:var(--muted);margin-top:7px}
+  .powerbox .pw b{color:var(--ink-2)}
+  /* ⑨ 전체 지표표 — 우위/열위 라벨은 이 안에서만 산다 */
+  .mdet{margin:16px 0 2px;border:1px solid var(--line-soft);border-radius:12px;background:var(--panel-2);padding:0 13px}
+  .mdet>summary{cursor:pointer;list-style:none;padding:11px 2px;font-family:var(--mono);font-size:11px;font-weight:700;
+                letter-spacing:.04em;color:var(--ink-2);display:flex;gap:8px;align-items:center}
+  .mdet>summary::-webkit-details-marker{display:none}
+  .mdet>summary::before{content:"▸";font-size:10px;color:var(--muted)}
+  .mdet[open]>summary::before{content:"▾"}
+  .mdet>summary:hover{color:var(--accent)}
+  .mdet .mbody{padding-bottom:12px}
+  .mtbl tr.pri th[scope="row"]{color:var(--ink)}
+  .mtbl tr.pri{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  .mtbl tr.pri th[scope="row"]::after{content:"1차";font-family:var(--mono);font-size:8.5px;font-weight:700;margin-left:6px;
+    padding:1px 5px;border-radius:4px;background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent)}
+  .limbox{margin:18px 0 2px;padding:13px 15px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line-soft)}
+  .limbox h4{margin:0 0 8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+  .limbox p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-2);white-space:pre-line}
+  .pgnote{font-size:11.5px;color:var(--ink-2);line-height:1.65;margin:0 2px 8px;padding:8px 11px;border-radius:8px;
+          background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+  .pgnote b{color:var(--accent)}
   /*a11y-fixes*/
   @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--ground)}}
   :root[data-theme="dark"] .fchip[aria-pressed="true"]{color:var(--ground)}
@@ -241,9 +321,12 @@
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
     <h1 class="title">전략 리스트</h1>
-    <p class="lede">10시간 자율 리서치가 적대적으로 검증해 <b>통과시킨 전략</b>을 클릭해서 둘러봅니다. 왼쪽에서 전략을 고르면 오른쪽에 성과·판정과 함께
-      <b>장점·단점·활용방안(언제 쓰나)</b>이 뜹니다. 여기 담긴 건 <b>배포·제한적 유효</b> 판정 <b><span id="okn">—</span>종</b>과 대조용 <b>기각 <span id="rcn">—</span>종</b> — 나머지 기각 <span id="arcn">—</span>개는 <a href="archive.html" style="color:var(--accent)">아카이브</a>에.<br><b>판정 뜻</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증된 전략 · <b style="color:var(--marg)">제한적 유효</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각</b>: 비용·검증을 거치면 실익 없음.
-      아래 <b>활용 아키타입</b> 칩으로 목적별(배포코어·위기방어·레짐 오버레이·실행타이밍 등)로도 걸러 볼 수 있습니다.</p>
+    <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적과 성격</b>이 먼저 나오고, 대조군·판정은 그 뒤에 맥락으로 붙습니다.
+      전략마다 <b>무엇으로 판단해야 하는지가 다릅니다</b> — 종목을 고르는 전략은 수익으로, 비중을 정하는 배분기는 샤프로,
+      노출 크기를 줄이는 오버레이는 낙폭과 위기 구간으로 봅니다. 그래서 아래 <b>성격</b> 칩을 첫 필터로 두었습니다.
+      여기 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각) — 나머지 기각 <span id="arcn">—</span>개는 <a href="archive.html" style="color:var(--accent)">아카이브</a>에.<br>
+      <b>운용 등급(배포 여부)</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b style="color:var(--marg)">제한적 유효 → 카드 표기 「조건부 · 목적이 맞을 때」</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각 → 카드 표기 「미채택(대조용)」</b>: 비용·검증을 거치면 배포 실익 없음.
+      이 등급은 <b>“이 전략이 좋은가”가 아니라 “배포북에 넣을 것인가”</b>에 대한 답입니다.</p>
     <div class="statline" id="statline"></div>
   </header>
 
@@ -253,20 +336,26 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="q" type="search" placeholder="전략 이름·설명 검색 (예: 상품, RP, 채권, 오버나이트)" aria-label="전략 검색">
       </label>
-      <button class="sortbtn" id="sort">정렬 ↓ 판정</button>
+      <button class="sortbtn" id="sort">정렬 ↓ 성격</button>
       <button class="fltbtn" id="fltbtn" aria-expanded="true" aria-controls="chipwrap">
         <span class="fcar" aria-hidden="true">▾</span><span id="fltnow">필터</span>
       </button>
     </div>
     <div class="chipwrap" id="chipwrap">
-      <div class="chiprow" id="vfilters" role="group" aria-label="판정 필터"></div>
-      <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"></div>
+      <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
+      <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"><span class="fltlab">용도</span></div>
+      <div class="chiprow" id="vfilters" role="group" aria-label="운용 등급 필터"><span class="fltlab">등급</span></div>
     </div>
   </div>
 
   <div class="board">
     <div>
-      <div class="basisnote">백테스트 수치는 <b>무비용·월말(gross)</b> 기준 — 거래비용·세금 미반영, 월말 리밸런싱. 구간은 전략별로 달라 각 패널에 적었습니다.</div>
+      <div class="basisnote">백테스트 수치는 <b>무비용·월말(gross)</b> 기준 — 거래비용·세금 미반영, 월말 리밸런싱. 지표 <b>기준월은 14종 전부 2026-06으로 통일</b>돼 있고 시작월만 전략별로 다릅니다(각 패널에 표기).</div>
+      <div class="pgnote"><b>먼저 알아두실 것</b> — 게시된 전략 중 <b>샤프 차이가 통계적으로 유의한 것은 현재 0건</b>입니다.
+        이는 전략들이 나쁘다는 뜻이 아니라, 10~20년 표본으로 샤프 차이를 판정하는 것이 <b>원리적으로 어렵다</b>는 뜻입니다
+        (필요 표본이 대개 수백 년입니다 — 각 카드의 「이 표본이 판정할 수 있는 범위」에 실제 필요량을 적었습니다).
+        그래서 <b>성격별 1차 지표·낙폭·위기 구간</b>을 함께 싣습니다 — 다만 이것들은 <b>유의성을 대신하지 않습니다.</b>
+        검정이 답하지 못하는 영역을 서술한 것일 뿐이며, 「구별 불가」는 더 좋을 수도 더 나쁠 수도 있다는 <b>양방향</b> 진술입니다.</div>
       <div class="rowcount" id="rowcount"></div>
       <div class="listwrap" id="list" role="listbox" aria-label="전략 목록"></div>
     </div>
@@ -274,7 +363,7 @@
   </div>
 
   <footer>
-    여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증<br>
+    여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증 · 전략마다 <b>성격에 맞는 1차 지표</b>로 판단합니다<br>
     수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="archive.html">기각 아카이브</a> · <a href="sources.html">데이터 출처</a>.
   </footer>
 </div>
@@ -306,11 +395,50 @@
   {"n": "팩터 모멘텀 로테이션 (Factor Momentum · 12M Top 2)", "sid": "factor-momentum-top2", "aka": ["최근-잘나간-투자스타일-2개-추종"], "alias": "팩터 ETF 5종의 12-1 상대모멘텀 상위 2개 균등", "c": "단일팩터·검증", "v": "reject", "m": "0.92", "ml": "Sharpe", "corr": null, "t": "쉽게 말해 — 모멘텀·밸류·퀄리티·저변동성·소형주 5개 투자스타일 중 최근 12개월 성적이 좋은 2개를 골라 균등하게 담고 매달 교체한다(팩터 타이밍).", "vt": "<b>기각(자기 유니버스 대조군과 구별 불가).</b> ※ 아래 지표표·차트는 사이트 게시본(SPX 종목단위 5팩터 슬리브판, 2020-10~2026-06, N=68 · 벤치 SPX TR)이고, 이 판정문의 수치는 팩터 ETF 5종(MTUM·VLUE·QUAL·USMV·SIZE) 구현을 <b>자기 유니버스 동일가중</b>과 겨룬 재검(2014-09~2026-06, N=142)의 결과다. 두 구현 모두 결론은 같다. 종전 사유는 '지수(SPX) 대비 초과 실패'라는 <b>벤치 부정합</b> 판정이었다. 로테이터의 정당한 귀무가설인 <b>팩터 5종 동일가중(고르지 않고 다 들고 있기)</b>으로 렌즈를 바꿔 재검하니 사유가 오히려 나빠진다 — ΔSharpe <b>−0.004</b>(p=0.964, 최소 판정치 ±0.186), CAPM 알파 +0.54%/yr(t=0.37). 낙폭·얼서·회복기간·Calmar·Martin·승률까지 EW와 SPY 양쪽에 전부 진다(이기는 칸이 없다). 무작위로 2/5를 고르는 귀무분포 3000회에서 67.8%tile(p=0.322)로 제비뽑기와 구별되지 않고, MTUM 단순보유(Sharpe 0.875)가 로테이터를 압도한다 — 로테이션이 최고 자산의 비중을 깎아 성과를 훼손했다. EW 대비 초과 전량이 2026 상반기 6개월에서 나오며 그 6개월을 빼면 부호가 반전한다. 단방향 연회전 361%.  〔기각 아카이브 재검(m=20, 2026-07)에서 스탠드얼론 렌즈로 재검증 — 통계 문턱 미통과〕"}
  ];
 
-  var VMETA={deploy:{lab:"배포",col:"--deploy"},marginal:{lab:"제한적 유효",col:"--marg"},reject:{lab:"기각",col:"--rej"}};
+  // 판정값(v) 자체는 불변이다. 바꾼 것은 **표시 문구**뿐 — '판정'이 "이 전략이 좋은가"로 읽히던 것을
+  // 실제 답하는 질문("배포북에 넣을 것인가")으로 고쳐 적는다. 목록·칩은 short, 카드는 lab을 쓴다.
+  // short/orig 는 다른 페이지(홈·로테이션·아카이브)와 같은 낱말을 유지한다 — 페이지마다 말이 갈리면
+  // 같은 판정이 다른 판정으로 읽힌다. 카드에서만 '무엇을 답하는 등급인지'를 풀어 쓴다.
+  var VMETA={
+    deploy:{lab:"배포",short:"배포",orig:"배포",col:"--deploy",mean:"단독 운용 가능한 수준으로 검증됨"},
+    marginal:{lab:"조건부 · 목적이 맞을 때",short:"제한적 유효",orig:"제한적 유효",col:"--marg",
+              mean:"효과는 확인됐으나 단독으론 약함 — 보조·결합용"},
+    reject:{lab:"미채택 (대조용)",short:"기각(대조용)",orig:"기각",col:"--rej",
+            mean:"비용·검증을 거치면 배포 실익이 없음 · 비교 기준으로만 게시"}};
   var VORDER={deploy:0,marginal:1,reject:2};
   D.forEach(function(d,i){d._i=i;});
 
-  var state={q:"",vf:new Set(),af:new Set(),sort:"verdict",sel:0};
+  // ── 성격(kind) 축 — data/strategy_kinds.json 이 단일 출처. 도착 전에는 '미분류'로 렌더된다. ──
+  var KINDS=null;
+  var KIND_ORDER=['수익엔진','배분기','위험감축','방어보험','타이밍오버레이','미분류'];
+  var KIND_COLOR={'수익엔진':'#0E8A54','배분기':'#2C6E8F','위험감축':'#8256B8','방어보험':'#C0392B','타이밍오버레이':'#B9770E','미분류':'#9A9A9A'};
+  function kindOf(d){return (d.det&&d.det.kind)||'미분류';}
+  function kmeta(k){return (KINDS&&KINDS.kinds&&KINDS.kinds[k])||null;}
+  function kcol(k){return KIND_COLOR[k]||'#9A9A9A';}
+  function kchip(k){return '<span class="kchip" style="--kc:'+kcol(k)+'">'+esc(k)+'</span>';}
+  // 성격별 1차 지표 조회 — metrics.s(단일계열) → metrics.vs(관계) → metrics.profile(보조) 순.
+  // ⚠ 못 찾으면 null을 돌려 화면이 '—(미산출)'을 찍는다. 추정치를 만들지 않는 것이 이 사이트의 계약이다.
+  function mget(m,k){
+    if(!m)return null;
+    if(m.s&&m.s[k]!=null)return m.s[k];
+    if(m.vs&&m.vs[k]!=null)return m.vs[k];
+    if(m.profile&&m.profile[k]!=null)return m.profile[k];
+    return null;
+  }
+  var MUNIT={cagr:'%',alpha:'%',worst12:'%',best12:'%',mdd:'%',down_capture:'%',up_capture:'%',crisis_worst:'%',
+             exposure_pct:'%',carry_cost:'%',d_cagr_vs_bm:'%p',d_cagr_vs_bm2:'%p',d_mdd_vs_bm:'%p',recovery_m:'개월',
+             sharpe:'',ulcer:'',corr:'',sortino:'',calmar:'',martin:'',hit:'%'};
+  var MSIGN={cagr:1,alpha:1,worst12:1,best12:1,crisis_worst:1,d_cagr_vs_bm:1,d_cagr_vs_bm2:1,d_mdd_vs_bm:1};
+  var MND={sharpe:2,ulcer:1,corr:2,sortino:2,calmar:2,martin:2,recovery_m:0,hit:0};
+  function mfmt(k,v){
+    if(v==null)return '—';
+    var nd=(MND[k]!=null?MND[k]:1), u=MUNIT[k]!=null?MUNIT[k]:'';
+    return (MSIGN[k]&&v>=0?'+':'')+Number(v).toFixed(nd)+u;
+  }
+  function mlabel(k){return (KINDS&&KINDS.metric_labels&&KINDS.metric_labels[k])||k;}
+  function roleLab(r){return (KINDS&&KINDS.bench_roles&&KINDS.bench_roles[r])||null;}
+
+  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),sort:"kind",sel:0};
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
   // 9px 글씨에 하드코딩 hex를 쓰면 다크에서 대비 2.9:1 → 색은 테두리·배경 힌트로만 쓰고 글씨는 테마 잉크색
@@ -327,8 +455,8 @@
       '<span class="stat"><b>'+D.length+'</b> 전략</span>'+
       '<span class="stat deploy"><b>'+c.deploy+'</b> 배포</span>'+
       '<span class="stat marg"><b>'+c.marginal+'</b> 제한적 유효</span>'+
-      // 기각 2종을 숨기면 배지 합(3+17)이 전체(22)와 안 맞고, '검증 통과만 담았다'는 리드문과도 모순된다
-      (c.reject?'<span class="stat rej"><b>'+c.reject+'</b> 기각(비교용)</span>':'');
+      // 기각 2종을 숨기면 배지 합이 전체와 안 맞고, '검증 통과만 담았다'는 리드문과도 모순된다
+      (c.reject?'<span class="stat rej"><b>'+c.reject+'</b> 기각(대조용)</span>':'');
     // 리드문 숫자도 배열에서 채운다 — 하드코딩하면 전략 이관 때 조용히 틀린다(실제로 20/41로 틀어져 있었다)
     var _o=el('okn'); if(_o)_o.textContent=c.deploy+c.marginal;
     var _r=el('rcn'); if(_r)_r.textContent=c.reject;
@@ -349,7 +477,7 @@
     ['deploy','marginal','reject'].forEach(function(v){
       var cnt=D.filter(function(d){return d.v===v;}).length;
       if(!cnt)return; // 개수 0인 판정(기각 등)은 칩 생성 안 함 — 죽은 필터 방지
-      vf.appendChild(chip('v-'+v,VMETA[v].lab,cnt,false,function(){toggle(state.vf,v);render();syncPressed();fltLabel();}));
+      vf.appendChild(chip('v-'+v,VMETA[v].short,cnt,false,function(){toggle(state.vf,v);render();syncPressed();fltLabel();}));
     });
   })();
   function toggle(set,k){set.has(k)?set.delete(k):set.add(k);}
@@ -359,14 +487,30 @@
     document.querySelectorAll('#afilters .fchip').forEach(function(b){
       var a=b.textContent.replace(/\s+\d+$/,'').trim();
       b.setAttribute('aria-pressed',state.af.has(a));});
+    document.querySelectorAll('#kfilters .fchip').forEach(function(b){
+      var k=b.textContent.replace(/\s+\d+$/,'').trim();
+      b.setAttribute('aria-pressed',state.kf.has(k));});
   }
   function buildArchetypeFilter(){
-    var af=el('afilters'); if(!af)return; af.innerHTML='';
+    var af=el('afilters'); if(!af)return;
+    af.innerHTML='<span class="fltlab">용도</span>';
     // 플레이북(det)이 없는 전략도 '미분류'로 세어 노출한다 — 안 그러면 칩 합계가 전체와 안 맞고 해당 전략이 사라진다
     var counts={}; D.forEach(function(d){var a=(d.det&&d.det.archetype)||'미분류'; counts[a]=(counts[a]||0)+1;});
     ARCHE_ORDER.concat(['미분류']).forEach(function(a){
       if(!counts[a])return;
       af.appendChild(chip('a',a,counts[a],false,function(){toggle(state.af,a);render();syncPressed();fltLabel();}));
+    });
+  }
+  function buildKindFilter(){
+    var kf=el('kfilters'); if(!kf)return;
+    kf.innerHTML='<span class="fltlab">성격</span>';
+    var counts={}; D.forEach(function(d){var k=kindOf(d); counts[k]=(counts[k]||0)+1;});
+    KIND_ORDER.forEach(function(k){
+      if(!counts[k])return;
+      var b=chip('k',k,counts[k],false,function(){toggle(state.kf,k);render();syncPressed();fltLabel();});
+      b.style.borderColor='color-mix(in srgb,'+kcol(k)+' 45%,transparent)';
+      var km=kmeta(k); if(km&&km.one_liner)b.title=km.one_liner;
+      kf.appendChild(b);
     });
   }
 
@@ -377,22 +521,33 @@
     var i=rows.indexOf(D[state.sel]);i=e.key==='ArrowDown'?Math.min(rows.length-1,i+1):Math.max(0,i<0?0:i-1);
     select(rows[i]);var it=listEl.querySelector('.item[aria-selected="true"]');if(it)it.scrollIntoView({block:'nearest'});
   });
+  // 기본 정렬은 '성격' — 목록 단계에서 이미 "성격마다 보는 눈이 다르다"를 가르친다.
+  // '관측개월' 정렬은 "표본이 짧아 판정 못 한 것"과 "길게 봐도 안 되는 것"을 구분해 준다.
+  var SORTS=[['kind','성격'],['verdict','등급'],['n','관측개월']];
   el('sort').addEventListener('click',function(){
-    state.sort=state.sort==="verdict"?"arche":"verdict";
-    this.textContent="정렬 ↓ "+(state.sort==="verdict"?"판정":"특성");
+    var i=0; SORTS.forEach(function(s,j){if(s[0]===state.sort)i=j;});
+    var nx=SORTS[(i+1)%SORTS.length];
+    state.sort=nx[0]; this.textContent="정렬 ↓ "+nx[1];
     render();
   });
+  function nMonths(d){return (d.bt&&d.bt.metrics&&d.bt.metrics.basis&&d.bt.metrics.basis.n_months)||0;}
 
   function filtered(){
     var rows=D.filter(function(d){
       if(state.vf.size && !state.vf.has(d.v))return false;
       if(state.af.size && !state.af.has((d.det&&d.det.archetype)||'미분류'))return false;
-      if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")):"";
+      if(state.kf.size && !state.kf.has(kindOf(d)))return false;
+      if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")+" "+(d.det.kind||"")+" "+(d.det.identity||"")):"";
         var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt+extra).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
       return true;
     });
     rows.sort(function(a,b){
-      if(state.sort==="arche"){var aa=a.det?ARCHE_ORDER.indexOf(a.det.archetype):99,ba=b.det?ARCHE_ORDER.indexOf(b.det.archetype):99;var adf=(aa<0?99:aa)-(ba<0?99:ba);if(adf)return adf;}
+      if(state.sort==="kind"){
+        var ka=KIND_ORDER.indexOf(kindOf(a)),kb=KIND_ORDER.indexOf(kindOf(b));
+        var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
+      }else if(state.sort==="n"){
+        var nd=nMonths(b)-nMonths(a); if(nd)return nd;
+      }
       return VORDER[a.v]-VORDER[b.v];
     });
     return rows;
@@ -408,17 +563,23 @@
   }
   // 헤드라인 = 오른쪽 백테스트와 **같은 소스**(bt.metrics). 예전엔 내부 리서치 약어(gross Sharpe 등)를
   // 따로 적어 차트 수치와 어긋났다. 백테스트가 없는 연구 변형은 숫자 대신 '역할'을 적는다.
+  // ⚠ 예전에는 곡선이 붙는 순간 무조건 CAGR로 분기했다. 그러면 채권 듀레이션 오버레이(연 +3.3%)와
+  //   NDX 종목선택(연 +25.9%)이 같은 눈금으로 세로로 줄 서서, 방어형은 전부 낙제생으로 읽힌다.
+  //   성격별로 헤드라인 지표를 바꿔 "같은 숫자를 세로로 비교하라"는 신호 자체를 없앤다.
   function headM(d){
-    if(d.bt&&d.bt.metrics&&d.bt.metrics.cagr!=null){
-      var m=d.bt.metrics;
-      return '<div class="mv">연 '+(m.cagr>=0?'+':'')+m.cagr+'%</div><small>낙폭 '+m.mdd+'%</small>';
-    }
-    return '<div class="mv sm">'+(d.m||'')+'</div><small>'+(d.ml||'')+'</small>';
+    var m=d.bt&&d.bt.metrics;
+    if(!(m&&m.s))return '<div class="mv sm">'+esc(d.m||'')+'</div><small>'+esc(d.ml||'')+'</small>';
+    var k=kindOf(d), km=kmeta(k);
+    var key=(km&&km.list_metric)||'cagr', lab=(km&&km.list_label)||'CAGR';
+    var v=mget(m,key);
+    if(v==null){key='cagr';lab='CAGR';v=mget(m,'cagr');}
+    if(v==null)return '<div class="mv sm">'+esc(d.m||'')+'</div><small>'+esc(d.ml||'')+'</small>';
+    return '<div class="mv">'+mfmt(key,v)+'</div><small>'+esc(lab)+'</small>';
   }
   var NARROW='(max-width:760px)';
   function fltLabel(){
     var b=el('fltnow'); if(!b)return;
-    var n=state.vf.size+state.af.size, w=el('chipwrap');
+    var n=state.vf.size+state.af.size+state.kf.size, w=el('chipwrap');
     b.textContent=(w&&w.hidden)?('필터'+(n?' · '+n+'개 적용':'')):'필터 접기';
   }
   function setFlt(open){
@@ -436,14 +597,31 @@
     listEl.innerHTML="";
     if(!rows.length){listEl.innerHTML='<div class="empty">조건에 맞는 전략이 없습니다.</div>';drawDetail(null);return;}
     if(rows.indexOf(D[state.sel])<0)state.sel=rows[0]._i;
+    var lastK=null;
     rows.forEach(function(d){
+      if(state.sort==='kind'){                    // 성격 그룹 헤더 — 한 줄 설명이 렌즈를 미리 가르친다
+        var k=kindOf(d);
+        if(k!==lastK){
+          lastK=k;
+          var km=kmeta(k), cnt=rows.filter(function(x){return kindOf(x)===k;}).length;
+          var g=document.createElement('div');
+          g.className='grouphdr';
+          g.innerHTML='<span class="gn" style="--kc:'+kcol(k)+'"><i></i>'+esc(k)+'</span>'+
+            '<span class="gc">'+cnt+'건</span>'+
+            '<span class="gd">'+esc(km&&km.one_liner?km.one_liner:'')+
+            (km&&km.list_label?' · <b>'+esc(km.list_label)+'</b>로 봅니다':'')+'</span>';
+          listEl.appendChild(g);
+        }
+      }
       var b=document.createElement('button');
       b.className='item'; b.setAttribute('role','option'); b.dataset.i=d._i;
       b.setAttribute('aria-selected',d._i===state.sel);
       b.style.setProperty('--vc','var('+VMETA[d.v].col+')');
       b.innerHTML='<span class="vdot"></span>'+
-        '<span class="body"><span class="nm">'+d.n+(d.bt?'<span class="btcue" title="백테스트 차트 있음">📊</span>':'')+'</span>'+
-        '<span class="sub">'+(d.det&&d.det.archetype?atag(d.det.archetype):'')+'<span>'+d.c+'</span></span></span>'+
+        '<span class="body"><span class="nm">'+esc(d.n)+(d.bt?'<span class="btcue" title="백테스트 차트 있음">📊</span>':'')+'</span>'+
+        '<span class="sub">'+(state.sort==='kind'?'':'<span class="atag" style="border-color:color-mix(in srgb,'+kcol(kindOf(d))+' 45%,transparent)">'+esc(kindOf(d))+'</span>')+
+        (d.det&&d.det.archetype?atag(d.det.archetype):'')+'<span>'+esc(d.c)+'</span>'+
+        (nMonths(d)?'<span>'+nMonths(d)+'개월</span>':'')+'</span></span>'+
         '<span class="metric">'+headM(d)+'</span>';
       b.addEventListener('click',function(){select(d);});
       listEl.appendChild(b);
@@ -504,7 +682,7 @@
     function fmt(v,strong){if(v==null)return '<td class="pp">—</td>';
       var c=v>=0?'var(--deploy)':'var(--rej)';
       return '<td class="pp'+(strong?' st':'')+'" style="color:'+c+'">'+(v>=0?'+':'')+v.toFixed(1)+'%</td>';}
-    var head='<tr><th scope="col">기간</th><th scope="col" style="color:'+vc+'">전략</th><th scope="col">'+(bt.bench_label||'벤치')+'</th>'+(bt.bench2?'<th scope="col">'+(bt.bench2_label||'')+'</th>':'')+'</tr>';
+    var head='<tr><th scope="col">기간</th><th scope="col" style="color:'+vc+'">전략</th><th scope="col">'+esc(bt.bench_label||'대조군')+'</th>'+(bt.bench2?'<th scope="col">'+(bt.bench2_label||'')+'</th>':'')+'</tr>';
     var rows=defs.map(function(df){
       var sv=df[1](bt.nav); if(sv==null)return '';
       return '<tr><th scope="row">'+df[0]+'</th>'+fmt(sv,true)+fmt(df[1](bt.bench))+(bt.bench2?fmt(df[1](bt.bench2)):'')+'</tr>';
@@ -555,33 +733,38 @@
       if(vs&&vs.d_sharpe_p!=null)sub='<span class="sub2">p='+Number(vs.d_sharpe_p).toFixed(3)+
         (vs.min_detectable_d_sharpe_95!=null?' · 최소판정 ±'+Number(vs.min_detectable_d_sharpe_95).toFixed(2):'')+'</span>';
     }else{
-      lab=flat?'동일':(good?'전략 우위':'벤치 우위');
-      col=flat?'var(--muted)':(good?'var(--deploy)':'var(--rej)');
+      // 예전에는 12개 점추정 전부에 초록/빨강 '전략 우위/벤치 우위'가 붙어, 통계검정을 거친 샤프 한 줄과
+      // 같은 시각 무게를 가졌다(기각된 전략이 12칸 중 9칸에서 '우위'로 뜨는 일까지 있었다).
+      // 정보는 남기되 무게를 낮춘다 — 기호 + 회색. 초록/빨강은 검정을 거친 샤프 행에만 남긴다.
+      lab=flat?'동일':(good?'＋ 전략 쪽':'－ 대조군 쪽');
+      col='var(--muted)';
     }
     return '<td class="md" style="color:'+col+'">'+(d>=0?'+':'')+Number(d).toFixed(nd)+
       (u==='%'?'%p':(u==='개월'?'개월':''))+'<span class="mlab">'+lab+'</span>'+sub+'</td>';
   }
   function omitWhy(vs,key){
-    if(!vs)return '벤치마크 계열 없음';
+    if(!vs)return '대조군 계열 없음';
     var o=vs.omitted||{};   // 세부 사유 → 회귀 일괄 사유 → 전체 사유 순으로 내려간다
     return o.all||(key?o[key]:null)||o.regression||null;
   }
-  function metricTable(m,vc){
+  function metricTable(m,vc,pri){
     var S=m.s,B=m.b,B2=m.b2,two=!!B2;
+    var P={}; (pri||[]).forEach(function(k){P[k]=1;});
     var head='<thead><tr><th scope="col">지표</th><th scope="col" style="color:'+vc+'">전략</th>'+
-      '<th scope="col">'+esc(m.bm_label||'벤치')+'</th>'+(two?'<th scope="col">'+esc(m.bm2_label||'보조 벤치')+'</th>':'')+
-      '<th scope="col">차이 (전략 − '+esc(m.bm_label||'벤치')+')</th></tr></thead>';
+      '<th scope="col">'+esc(m.bm_label||'대조군')+'</th>'+(two?'<th scope="col">'+esc(m.bm2_label||'대조군2')+'</th>':'')+
+      '<th scope="col">차이 (전략 − '+esc(m.bm_label||'대조군')+')</th></tr></thead>';
     var body=MROWS.map(function(r){
       var k=r[0],u=r[2],nd=r[3];
-      return '<tr'+(r[4]===0&&k!=='n_months'?' class="disp"':'')+'><th scope="row">'+r[1]+'</th>'+
+      var cls=(r[4]===0&&k!=='n_months'?'disp':'')+(P[k]?' pri':'');   // 이 성격에서 먼저 볼 행에 표식
+      return '<tr'+(cls.trim()?' class="'+cls.trim()+'"':'')+'><th scope="row">'+r[1]+'</th>'+
         mcell(S,k,nd,u,'')+mcell(B,k,nd,u,'bm')+(two?mcell(B2,k,nd,u,'bm'):'')+mdiff(S,B,r,m.vs)+'</tr>';
     }).join('');
-    return '<div class="mtblwrap"><table class="mtbl"><caption>성과지표 — 전략 vs 벤치마크 (같은 구간·같은 기준)</caption>'+
+    return '<div class="mtblwrap"><table class="mtbl"><caption>성과지표 — 전략 vs 대조군 (같은 구간·같은 기준)</caption>'+
       head+'<tbody>'+body+'</tbody></table></div>';
   }
   function relTable(m){
     var vs=m.vs,vs2=m.vs2,two=!!vs2;
-    var head='<thead><tr><th scope="col">관계지표</th><th scope="col">vs '+esc(m.bm_label||'벤치')+'</th>'+
+    var head='<thead><tr><th scope="col">관계지표</th><th scope="col">vs '+esc(m.bm_label||'대조군')+'</th>'+
       (two?'<th scope="col">vs '+esc(m.bm2_label||'')+'</th>':'')+'</tr></thead>';
     function cell(v,r){
       var k=r[0];
@@ -601,7 +784,7 @@
     var body=RROWS.map(function(r){
       return '<tr><th scope="row">'+r[1]+'</th>'+cell(vs,r)+(two?cell(vs2,r):'')+'</tr>';
     }).join('');
-    return '<div class="mtblwrap"><table class="mtbl"><caption>관계지표 — 정의상 값 자체가 「전략 vs 벤치」인 항목</caption>'+
+    return '<div class="mtblwrap"><table class="mtbl"><caption>관계지표 — 정의상 값 자체가 「전략 vs 대조군」인 항목</caption>'+
       head+'<tbody>'+body+'</tbody></table></div>';
   }
   function basisLine(m){
@@ -616,32 +799,201 @@
     var q=m.multiplicity; if(!q)return '';
     return '<div class="btnote"><b>다중검정 —</b> 이 사이트의 전략 '+q.n_tests+'개를 한 번에 비교하면 문턱이 올라갑니다. '+
       'BH-FDR(q='+q.bh_q+') 순위 '+q.bh_rank+'위 문턱 p≤'+q.bh_threshold+' · Bonferroni p≤'+q.bonferroni_threshold+
-      ' 대비 이 전략의 p='+q.p_raw+' → <b>'+(q.passed?'통과':'미통과')+'</b>. '+
+      ' 대비 이 전략의 p='+q.p_raw+' → '+(q.passed?'<b>통과</b>':
+      '<b>이 문턱은 넘지 못했습니다</b>. 문턱이 이만큼 낮은 것은 전략 '+q.n_tests+'개를 한 번에 비교하기 때문이며, '+
+      '개별 전략의 실패를 뜻하지 않습니다')+'. '+
       '진짜 Sharpe가 0인 전략을 '+q.n_tests+'번 시도해 최고치를 고르면 기대 Sharpe가 '+q.dsr_chance_sharpe+
-      ' 입니다 — 이 값보다 낮은 Sharpe는 우연의 기댓값에도 못 미칩니다.</div>';
+      ' 입니다 — 이 값보다 낮은 Sharpe는 우연의 기댓값에도 못 미칩니다.'+
+      (q.source?'<br><span style="opacity:.85">기준: '+esc(q.source)+'</span>':'')+'</div>';
   }
-  function btSection(bt,vc){
-    var m=bt.metrics,bl=bt.bench_label||'NDX';
+
+  // ── ③ 이 전략 자신의 성적 — 비교 열 없음, 판정색 없음 ─────────────────
+  function selfPerf(bt){
+    var m=bt.metrics; if(!(m&&m.s))return '';
+    var S=m.s,b=m.basis||{};
+    var eff=(m.overlap&&m.overlap.effective_n_months);
+    var cells=[['연평균 수익',mfmt('cagr',S.cagr)],['최대낙폭',mfmt('mdd',S.mdd)],
+      ['낙폭 회복',S.recovery_m!=null?S.recovery_m+'개월':(S.underwater_m!=null?'미회복':'—')],
+      ['월간 승률',S.hit!=null?Number(S.hit).toFixed(0)+'%':'—']];
+    return '<div class="selfperf"><div class="sph"><span>이 전략 자신의 성적 <span style="text-transform:none;letter-spacing:0">(대조군 없이)</span></span>'+
+      '<span class="nbadge'+(b.sample_warning?' warn':'')+'">'+esc(b.start_month||'')+' ~ '+esc(b.end_month||'')+' · '+b.n_months+'개월'+
+      (eff?' (유효 '+eff+')':'')+'</span></div><div class="spg">'+
+      cells.map(function(c){return '<div class="spi"><div class="k">'+esc(c[0])+'</div><div class="v">'+esc(c[1])+'</div></div>';}).join('')+
+      '</div></div>';
+  }
+
+  // ── ④ 이 성격에서 먼저 볼 지표 3타일 ────────────────────────────────
+  function kindTiles(d,bt){
+    var m=bt&&bt.metrics; var k=kindOf(d), km=kmeta(k);
+    if(!(m&&m.s)||!km||!km.primary)return '';
+    var kc=kcol(k);
+    var tiles=km.primary.map(function(key){
+      var v=mget(m,key), lab=mlabel(key), sub='';
+      if(key==='d_cagr_vs_bm2'){
+        lab=(bt.bench2_role==='volmatched')?'변동성매칭 대비 ΔCAGR':'대조군2 대비 ΔCAGR';
+        sub=esc(bt.bench2_label||'');
+      }
+      if(key==='d_cagr_vs_bm')sub=esc(bt.bench_label||'');
+      if(key==='crisis_worst'&&m.profile){
+        sub=esc(m.profile.crisis_worst_label||'');
+        if(m.profile.crisis_worst_bm!=null)sub+=' · 대조군 '+mfmt('crisis_worst',m.profile.crisis_worst_bm);
+      }
+      // 알파를 1차 지표 타일로 올리면 카드 최상단에 t값이 크게 뜬다. 다중검정 고지가
+      // 접힌 지표표 안에만 있으면 "덜 기각처럼 보이게" 하는 쪽으로 기운다 — 여기서 같이 말한다.
+      if(key==='alpha'&&m.vs&&m.vs.alpha_t!=null){
+        sub='t='+Number(m.vs.alpha_t).toFixed(2);
+        if(m.vs.alpha_p!=null){
+          var bth=(m.multiplicity||{}).bonferroni_threshold;
+          sub+=' · 미보정 p='+Number(m.vs.alpha_p).toFixed(3);
+          if(bth!=null)sub+=(m.vs.alpha_p>bth?' (다중검정 문턱 '+bth+' 미달)':' (문턱 '+bth+')');
+        }
+        sub+=' · 대조군 '+esc(m.bm_label||'');
+      }
+      if(key==='down_capture')sub='대조군이 내린 달에 이 전략이 따라 내린 비율';
+      if(key==='exposure_pct'&&m.profile&&m.profile.exposure_note)sub=esc(m.profile.exposure_note);
+      if(key==='recovery_m'&&v==null&&m.s.underwater_m!=null)sub=m.s.underwater_m+'개월 경과';
+      var txt=(v==null)?'—':mfmt(key,v);
+      if(key==='recovery_m'&&v==null)txt='미회복';
+      return '<div class="ktile" style="--kc:'+kc+'"><div class="k">'+esc(lab)+(v==null&&key!=='recovery_m'?' <span title="이 계열에서는 산출되지 않는 값입니다 — 추정치를 만들지 않습니다">(미산출)</span>':'')+'</div>'+
+        '<div class="v">'+txt+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div>';
+    }).join('');
+    return '<div class="kindtiles"><div class="kh">이 성격에서 먼저 볼 지표 — '+esc(k)+'</div>'+
+      '<div class="kg">'+tiles+'</div>'+
+      (km.read_note?'<div class="knote">※ '+esc(km.read_note)+'</div>':'')+'</div>';
+  }
+
+  // ── ⑥ 위기 구간 성과표 — 성격에 맞는 증거. 대조군 열에는 승패 라벨을 붙이지 않는다. ──
+  function crisisTable(bt,vc){
+    var m=bt.metrics, cr=m&&m.crisis; if(!cr||!cr.length)return '';
+    if(!cr.some(function(c){return c.covered;}))return '';
+    var two=!!bt.bench2;
+    var head='<thead><tr><th scope="col">위기 구간</th><th scope="col" style="color:'+vc+'">전략</th>'+
+      '<th scope="col">'+esc(bt.bench_label||'대조군')+'</th>'+(two?'<th scope="col">'+esc(bt.bench2_label||'')+'</th>':'')+
+      '<th scope="col">구간내 낙폭</th></tr></thead>';
+    function cell(v,cls){
+      if(v==null)return '<td class="'+cls+'">—</td>';
+      var col=(cls==='cs')?(v>=0?'var(--deploy)':'var(--rej)'):'';
+      return '<td class="'+cls+'"'+(col?' style="color:'+col+'"':'')+'>'+(v>=0?'+':'')+Number(v).toFixed(1)+'%</td>';
+    }
+    var body=cr.map(function(c){
+      var th='<th scope="row">'+esc(c.label)+'<small>'+esc(c.from)+' → '+esc(c.to)+'</small></th>';
+      if(!c.covered)return '<tr>'+th+'<td class="out" colspan="'+(two?4:3)+'" title="'+esc(c.reason||'')+'">구간 밖 — 이 전략의 계열이 이 구간을 포함하지 않습니다</td></tr>';
+      return '<tr>'+th+cell(c.s,'cs')+cell(c.b,'cb')+(two?cell(c.b2,'cb'):'')+cell(c.s_mdd,'cb')+'</tr>';
+    }).join('');
+    return '<div class="chartttl">위기 구간 성과 <span class="lg" style="text-transform:none;letter-spacing:0">월말 NAV 기준 · 구간 전체 수익</span></div>'+
+      '<div class="crwrap"><table class="crtbl"><caption class="vh">위기 구간별 전략·대조군 수익</caption>'+head+'<tbody>'+body+'</tbody></table></div>'+
+      '<div class="btnote">구간은 전 전략 공통 고정이며 수익은 시계열에서 계산합니다(손으로 적지 않습니다). '+
+      '부분만 걸치는 구간은 <b>계산하지 않고</b> 「구간 밖」으로 둡니다 — 잘라 낸 위기 수익률은 거짓말이 되기 때문입니다. '+
+      '대조군 열에는 승패 라벨을 붙이지 않았습니다. 숫자를 나란히 놓는 것으로 충분합니다.</div>';
+  }
+
+  // ── ⑧ 이 표본이 판정할 수 있는 범위 ──────────────────────────────
+  function powerBox(m){
+    var vs=m.vs||{}, md=vs.min_detectable_d_sharpe_95, d=vs.d_sharpe, N=(m.basis||{}).n_months;
+    if(md==null||d==null)return '';
+    var W=420,H=54,pL=8,pR=8,pw=W-pL-pR,y=24;
+    var lim=Math.max(md*1.3,Math.abs(d)*1.2,1e-6);
+    function X(v){return pL+pw*(v+lim)/(2*lim);}
+    var x0=X(-md),x1=X(md),xd=X(d);
+    var sig=!!vs.d_sharpe_sig;
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="ΔSharpe '+Number(d).toFixed(3)+
+      ' 가 이 표본의 판정 불가 영역 ±'+Number(md).toFixed(2)+' 안에 있는지 보여주는 막대">'+
+      '<line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-width="1"/>'+
+      '<rect x="'+x0.toFixed(1)+'" y="'+(y-7)+'" width="'+(x1-x0).toFixed(1)+'" height="14" rx="3" fill="var(--muted)" opacity=".22"/>'+
+      '<line x1="'+X(0).toFixed(1)+'" x2="'+X(0).toFixed(1)+'" y1="'+(y-10)+'" y2="'+(y+10)+'" stroke="var(--line)"/>'+
+      '<circle cx="'+xd.toFixed(1)+'" cy="'+y+'" r="4.5" fill="'+(sig?'var(--deploy)':'var(--ink-2)')+'"/>'+
+      '<text x="'+x0.toFixed(1)+'" y="'+(y+22)+'" text-anchor="middle" class="axl" style="font-size:9px;fill:var(--muted)">−'+Number(md).toFixed(2)+'</text>'+
+      '<text x="'+x1.toFixed(1)+'" y="'+(y+22)+'" text-anchor="middle" class="axl" style="font-size:9px;fill:var(--muted)">+'+Number(md).toFixed(2)+'</text>'+
+      '<text x="'+xd.toFixed(1)+'" y="'+(y-12)+'" text-anchor="middle" class="axl" style="font-size:9.5px;fill:var(--ink)">'+(d>=0?'+':'')+Number(d).toFixed(3)+'</text>'+
+      '<text x="'+((x0+x1)/2).toFixed(1)+'" y="'+(y+4)+'" text-anchor="middle" class="axl" style="font-size:9px;fill:var(--muted)">판정 불가 영역</text>'+
+      '</svg>';
+    var need='';
+    if(!sig){
+      if(vs.n_required_capped)need='이 크기의 차이를 통계적으로 판정하려면 <b>100년 넘는 자료</b>가 필요합니다 — 실질적으로 판정 불가입니다.';
+      else if(vs.n_required_months)need='이 크기의 차이를 통계적으로 판정하려면 약 <b>'+vs.n_required_months+'개월('+Math.round(vs.n_required_months/12)+'년)</b>의 자료가 필요합니다.';
+    }
+    return '<div class="powerbox"><h5>이 표본이 판정할 수 있는 범위</h5>'+svg+
+      '<div class="pw">관측 <b>'+N+'개월</b>. 실제 ΔSharpe <b>'+(d>=0?'+':'')+Number(d).toFixed(3)+'</b>는 '+
+      (sig?'이 표본이 구별할 수 있는 최소 차이 ±'+Number(md).toFixed(2)+'를 넘습니다 → <b>우위/열위를 말할 수 있음</b>.'
+          :'이 표본이 구별할 수 있는 최소 차이 <b>±'+Number(md).toFixed(2)+'</b> 안에 있습니다 → <b>구별 불가</b>.')+
+      (sig?'':'<br>⚠ 이것은 “전략이 대조군보다 나쁘다”는 뜻이 아니라 <b>“이 표본으로는 어느 쪽인지 판정할 수 없다”</b>는 뜻입니다. '+need+
+        ' <b>구별 불가는 양방향입니다</b> — 이 전략이 대조군보다 더 좋을 수도, 더 나쁠 수도 있다는 뜻이지 좋은 쪽으로 추정하라는 뜻이 아닙니다. '+
+        '아래 성격별 1차 지표·낙폭·위기 구간은 <b>검정을 통과한 근거가 아니라 검정이 답하지 못하는 영역을 서술한 것</b>이므로, 그것들이 유의성을 대신하지는 않습니다.')+
+      '</div></div>';
+  }
+
+  // ── ⑦ 대조군은 왜 이것인가 ──────────────────────────────────────
+  function bmBlock(d,bt){
+    var rows='';
+    function row(lab,role){
+      if(!lab)return '';
+      var rl=roleLab(role);
+      return '<div class="bmrow">'+(rl?'<span class="brole">'+esc(rl)+'</span>':'')+'<b>'+esc(lab)+'</b></div>';
+    }
+    rows+=row(bt.bench_label,bt.bench_role)+row(bt.bench2_label,bt.bench2_role);
+    var why=(d.det&&d.det.bm_rationale)?'<p>'+esc(d.det.bm_rationale)+'</p>':'';
+    // 1번 대조군이 지수인데 라벨만 '판정 잣대 아님'이라고 달면 자기모순이다 —
+    // ΔSharpe·p값·판정력·다중검정 순위가 전부 이 대조군으로 계산되기 때문이다.
+    // 사용자가 지적한 '벤치 부정합'이 여기 그대로 남아 있으므로 숨기지 말고 명시한다.
+    var mis='';
+    if(bt.bench_role==='index'){
+      var kn=(d.det&&d.det.kind)||'', nul=(KINDS&&KINDS.kinds&&KINDS.kinds[kn]&&KINDS.kinds[kn].null)||'';
+      mis='<p class="bmmis">⚠ <b>이 전략의 판정(ΔSharpe·p값·다중검정)은 위 시장 지수 대비로 계산됩니다.</b>'+
+          (nul?' '+esc(kn)+'의 정당한 귀무가설은 <b>'+esc(nul)+'</b>이며, 그 대조군으로는 아직 검정하지 않았습니다.':'')+
+          ' 성격에 맞지 않는 잣대일 수 있다는 점을 감안해 읽으십시오.</p>';
+    }
+    if(!rows&&!why&&!mis)return '';
+    return '<div class="bmwrap"><h4>대조군은 왜 이것인가</h4>'+rows+why+mis+'</div>';
+  }
+
+  // ── 재현 경로 · 프록시 고지 ─────────────────────────────────────
+  function provBlock(bt){
+    if(!bt.proxy_note&&!bt.source_script)return '';
+    return '<details class="mdet"><summary>'+(bt.is_proxy?'⚠ 프록시 구현 — 무엇을 무엇으로 대체했나':'재현 경로 · 데이터 출처')+'</summary>'+
+      '<div class="mbody"><div class="btnote" style="font-size:11.5px">'+
+      (bt.source_script?'<b>원 스크립트</b> '+esc(bt.source_script)+'<br>':'')+
+      esc(bt.proxy_note||'')+'</div></div></details>';
+  }
+
+  function btSection(bt,vc,d){
+    var m=bt.metrics,bl=bt.bench_label||'대조군';
+    var km=kmeta(kindOf(d));
+    var pri=(km&&km.primary)||[];
     var pp=periodPerf(bt,vc);
-    var mg=(m&&m.s)?(basisLine(m)+metricTable(m,vc)+relTable(m)+
-      '<div class="btnote">차이 칸에서 <b>다중검정 보정을 거친 것은 샤프 한 줄뿐</b>입니다(Jobson-Korkie·Memmel 검정). '+
-      'CAPM 알파의 p는 <b>보정하지 않은 원(raw) 값</b>이며 정규근사 기준이라 표본이 작을수록 낙관 쪽으로 치우칩니다 — '+
-      '아래 BH-FDR·Bonferroni 문턱은 알파에 적용되지 않습니다. '+
-      '나머지 「전략 우위/벤치 우위」는 점추정 비교일 뿐 유의성 주장이 아닙니다. '+
-      '샤프는 표준오차(±)를 병기하며, 차이가 이 표본의 <b>최소 판정치</b>보다 작으면 「구별 불가」로 표기합니다. '+
-      '관측 개월(N)이 전략마다 다르므로 같은 눈금으로 비교하지 마십시오 — N이 작을수록 같은 차이도 우연일 확률이 큽니다.</div>'+
-      multNote(m)+
-      '<div class="btnote">전략과 벤치는 <b>첫 월말을 100</b>으로 공통 리베이스하며, 편입 전 무포지션 구간은 제외합니다. '+
-      'MDD·얼서·회복기간도 <b>월말 NAV 기준</b>으로 통일했습니다(과거에는 MDD만 일별 기준이라 낙폭 곡선과 숫자가 어긋났습니다). '+
-      '참고용이며 매매 권유가 아닙니다.</div>'):
-      ('<div class="btnote">이 전략은 지표 v2가 아직 산출되지 않았습니다 — <b>python build/strategy_metrics.py</b> 로 다시 구우십시오.</div>');
-    return '<div class="btsec"><h4><span>백테스트 성과</span><small>'+bt.start+' ~ '+bt.end+' · gross(무비용)</small></h4>'+mg+pp+
-      '<div class="chartttl">누적수익 (로그축) <span class="lg"><i style="border-color:'+vc+'"></i>전략</span><span class="lg"><i style="border-color:var(--muted);border-top-style:dashed"></i>'+bl+'</span>'+(bt.bench2?'<span class="lg"><i style="border-color:var(--champ);border-top-style:dashed"></i>'+(bt.bench2_label||'보조')+'</span>':'')+'</div>'+svgEquity(bt,vc)+
+    // 배지에 원자료 최종일(bt.end)을 쓰면 지표 배지(기준월 2026-06)와 두 값이 공존해
+    // 어느 쪽이 기준인지 알 수 없다. 지표와 같은 기준월을 쓰고, 곡선이 한 달 더 그려지는
+    // 경우만 '진행 중' 꼬리표를 따로 붙인다(기준일 통일 원칙).
+    var _bs=(m&&m.basis)||{}, _endm=_bs.end_month||bt.end;
+    var nb='<span class="nbadge'+(_bs.sample_warning?' warn':'')+'">관측 '+
+      (_bs.n_months||'—')+'개월 · '+esc((bt.start||'').slice(0,7))+' ~ '+esc(_endm)+'</span>'+
+      (_bs.dropped_incomplete_month?'<span class="nbadge">곡선은 '+esc(_bs.dropped_incomplete_month)+
+        '까지 그려짐 — 진행 중인 달이라 지표에서는 제외</span>':'');
+    var effnote=(bt.effective_from&&m&&m.overlap)?
+      '<div class="btnote"><b>주의 — '+esc(m.overlap.identical_until||'')+'까지 '+m.overlap.identical_with_bm_months+
+      '개월은 대조군과 곡선이 완전히 겹칩니다.</b> '+esc(bt.effective_note||'')+
+      ' 유효 표본은 '+m.overlap.effective_n_months+'개월입니다.</div>':'';
+    var charts=
+      '<div class="chartttl">누적수익 (로그축) <span class="lg"><i style="border-color:'+vc+'"></i>전략</span><span class="lg"><i style="border-color:var(--muted);border-top-style:dashed"></i>'+esc(bl)+'</span>'+(bt.bench2?'<span class="lg"><i style="border-color:var(--champ);border-top-style:dashed"></i>'+esc(bt.bench2_label||'대조군2')+'</span>':'')+'</div>'+svgEquity(bt,vc)+effnote+
       '<div class="chartttl">낙폭 (drawdown) <span class="lg"><i style="border-color:'+vc+'"></i>전략</span>'+
-        (bt.dd_b?'<span class="lg"><i style="border-color:var(--muted);border-top-style:dashed"></i>'+bl+'</span>':'')+
-        (bt.dd_b2?'<span class="lg"><i style="border-color:var(--rp);border-top-style:dashed"></i>'+(bt.bench2_label||'')+'</span>':'')+'</div>'+svgDD(bt)+
-      '<div class="chartttl">연도별 수익 <span class="lg"><i style="border-color:'+vc+'"></i>전략</span><span class="lg"><i style="border-color:var(--muted)"></i>'+bl+'</span>'+
-        (bt.yearly&&bt.yearly.some(function(y){return y.b2!=null;})?'<span class="lg"><i style="border-color:var(--rp)"></i>'+(bt.bench2_label||'')+'</span>':'')+'</div>'+svgYearly(bt,vc)+'</div>';
+        (bt.dd_b?'<span class="lg"><i style="border-color:var(--muted);border-top-style:dashed"></i>'+esc(bl)+'</span>':'')+
+        (bt.dd_b2?'<span class="lg"><i style="border-color:var(--rp);border-top-style:dashed"></i>'+esc(bt.bench2_label||'')+'</span>':'')+'</div>'+svgDD(bt)+
+      '<div class="chartttl">연도별 수익 <span class="lg"><i style="border-color:'+vc+'"></i>전략</span><span class="lg"><i style="border-color:var(--muted)"></i>'+esc(bl)+'</span>'+
+        (bt.yearly&&bt.yearly.some(function(y){return y.b2!=null;})?'<span class="lg"><i style="border-color:var(--rp)"></i>'+esc(bt.bench2_label||'')+'</span>':'')+'</div>'+svgYearly(bt,vc);
+    // ⑨ 전체 지표표는 접어 둔다 — 우위/열위 라벨은 이 안에서만 산다
+    var mg=(m&&m.s)?('<details class="mdet"><summary>전체 지표표 (전략 vs 대조군 · 15행 + 관계지표 9행)</summary><div class="mbody">'+
+      '<div class="btnote">아래 점추정 비교(＋/－)는 <b>유의성 판정이 아닙니다</b>. 통계검정을 거친 행은 <b>샤프 한 줄뿐</b>입니다. '+
+      '「1차」 표식이 붙은 행이 이 성격에서 먼저 볼 지표입니다.</div>'+
+      basisLine(m)+metricTable(m,vc,pri)+relTable(m)+
+      '<div class="btnote">CAPM 알파의 p는 <b>보정하지 않은 원(raw) 값</b>이며 정규근사 기준이라 표본이 작을수록 낙관 쪽으로 치우칩니다 — '+
+      'BH-FDR·Bonferroni 문턱은 알파에 적용되지 않습니다. '+
+      '샤프는 표준오차(±)를 병기하며, 차이가 이 표본의 <b>최소 판정치</b>보다 작으면 「구별 불가」로 표기합니다. '+
+      '관측 개월(N)이 전략마다 다르므로 같은 눈금으로 비교하지 마십시오.</div>'+
+      '<div class="btnote">전략과 대조군은 <b>첫 월말을 100</b>으로 공통 리베이스하며, 편입 전 무포지션 구간은 제외합니다. '+
+      'MDD·얼서·회복기간도 <b>월말 NAV 기준</b>으로 통일했습니다. 참고용이며 매매 권유가 아닙니다.</div>'+
+      '</div></details>'):
+      ('<div class="btnote">이 전략은 지표 v2가 아직 산출되지 않았습니다 — <b>python build/strategy_metrics.py</b> 로 다시 구우십시오.</div>');
+    return {charts:'<div class="btsec"><h4><span>이 전략의 곡선</span>'+nb+'</h4>'+charts+crisisTable(bt,vc)+pp+'</div>',
+            table:mg};
   }
 
   function esc(x){return (x==null?'':String(x)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -689,14 +1041,17 @@
       (h.note?'<div class="btnote">'+esc(h.note)+'</div>':'')+
       '<div class="btnote"><b>주의</b> 리서치 재현 기준의 구성으로, 실제 운용 계좌·실시간 비중이 아닙니다. 리밸런스 시점 이후의 가격 변동은 반영되지 않습니다.</div></div>';
   }
+  // 카드 순서 = 이 페이지 개편의 핵심. 정체성 → 절대 성과 → 성격별 지표 → 곡선 → 위기구간 →
+  // 대조군 근거 → 판정 → (접힌) 전체 지표표 → 한계·장단점 → 보유구성.
+  // 예전에는 판정 배지가 전략명보다 위에 있고 '전략 개요'가 지표표 24행 뒤에 있어, 카드 전체가
+  // 판결문처럼 읽혔다. 판정값은 하나도 바꾸지 않았고 순서와 렌즈만 바꿨다.
   function drawDetail(d){
     if(!d){detailEl.innerHTML="";return;}
     var vc='var('+VMETA[d.v].col+')';
     detailEl.style.setProperty('--vc',vc);
     var vbg="var("+(d.v==="deploy"?"--deploy-bg":d.v==="marginal"?"--marg-bg":"--rej-bg")+")";
-    var m2=d.corr?('<div class="dm"><div class="k">상관 (vs 통합)</div><div class="val">'+d.corr+'</div></div>'):
-      ('<div class="dm"><div class="k">카테고리</div><div class="val" style="font-size:14px">'+d.c+'</div></div>');
-    var det=d.det, play='';
+    var det=d.det||null, k=kindOf(d), km=kmeta(k);
+    var play='';
     if(det){
       var sec=function(cls,title,arr){return (arr&&arr.length)?'<div class="play '+cls+'"><h4>'+title+'</h4><ul>'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>':'';};
       var st_=det.situations, sitHtml='';
@@ -707,29 +1062,51 @@
           '<div class="sitcol b"><h5>피해야 할 상황</h5><ul>'+sli(st_.bad)+'</ul></div></div>'+
           (st_.combo?'<div class="whenrow"><b>결합 팁</b>'+st_.combo+'</div>':'')+'</div>';
       }
-      play=sec('pros','장점',det.pros)+sec('cons','단점',det.cons)+sec('apps','활용방안',det.applications)+
+      // honest_limits(평문 한계 서술)가 있으면 그것을 먼저 놓고, 검증 요약인 cons는 접어 둔다
+      var consHtml=(det.honest_limits&&det.cons&&det.cons.length)?
+        '<details class="mdet"><summary>검증 요약 단점 ('+det.cons.length+'항목)</summary><div class="mbody">'+
+        sec('cons','',det.cons)+'</div></details>':sec('cons','단점',det.cons);
+      play=(det.honest_limits?'<div class="limbox"><h4>한계 — 이 전략이 하지 못하는 것</h4><p>'+esc(det.honest_limits)+'</p></div>':'')+
+        sec('pros','장점',det.pros)+consHtml+sec('apps','활용방안',det.applications)+
         (det.when_to_use?'<div class="whenrow"><b>언제 쓰나</b>'+det.when_to_use+'</div>':'')+sitHtml;
     }
-    var arche=(det&&det.archetype)?'<span class="arche">'+det.archetype+'</span>':'';
+    var bts=d.bt?btSection(d.bt,vc,d):null;
+    var identity=(det&&det.identity)||d.t||'';
+    var arche=(det&&det.archetype)?'<span class="arche">'+esc(det.archetype)+'</span>':'';
     detailEl.innerHTML=
+      // ① 정체성 헤더 — 판정 배지는 여기 없다(⑧로 이동)
       '<div class="dtop">'+
-        '<div class="dbadges"><span class="vbadge '+d.v+'">'+VMETA[d.v].lab+'</span>'+
-          '<span class="rbadge">'+d.c+'</span>'+arche+'</div>'+
-        '<h2>'+d.n+'</h2>'+
+        '<div class="dbadges">'+kchip(k)+'<span class="rbadge">'+esc(d.c)+'</span>'+arche+
+          ((d.bt&&d.bt.is_proxy)?'<span class="pxbadge" title="원자료를 구할 수 없어 근사 구현으로 대체한 계열입니다">프록시 구현</span>':'')+'</div>'+
+        '<h2>'+esc(d.n)+'</h2>'+
         '<div class="dcat">'+esc(d.c)+(d.alias?' · <span class="dalias">'+esc(d.alias)+'</span>':'')+'</div>'+
       '</div>'+
-      '<div class="dmetrics">'+
-        '<div class="dm"><div class="k">'+(d.bt&&d.bt.metrics?'연 수익률(백테스트)':(d.ml||'요약'))+'</div>'+
-          '<div class="val '+d.v+'">'+(d.bt&&d.bt.metrics&&d.bt.metrics.cagr!=null?(d.bt.metrics.cagr>=0?'+':'')+d.bt.metrics.cagr+'%':d.m)+'</div></div>'+
-        m2+
-        '<div class="dm"><div class="k">판정</div><div class="val '+d.v+'" style="font-size:15px">'+VMETA[d.v].lab+'</div></div>'+
-      '</div>'+
+      // ② 이 전략은 무엇을 하는가 — 카드에서 가장 먼저 읽히는 본문
+      '<div style="padding:17px 24px 15px;border-bottom:1px solid var(--line-soft)">'+
+        '<p class="lbl">이 전략은 무엇을 하는가</p><p style="font-size:14px;color:var(--ink-2);line-height:1.72">'+esc(identity)+'</p></div>'+
+      // ③ 이 전략 자신의 성적 · ④ 성격별 1차 지표
+      (d.bt?selfPerf(d.bt):'')+
+      (d.bt?kindTiles(d,d.bt):'')+
       '<div class="dbody">'+
-        (d.bt?btSection(d.bt,vc):'')+
-        (d.hold?holdSection(d.hold,vc):'')+
-        '<p class="lbl">전략 개요</p><p>'+d.t+'</p>'+
-        '<div class="verdict-line" style="--vbg:'+vbg+'"><b>판정 근거 —</b> '+d.vt+'</div>'+
+        // ⑤ 곡선 · ⑥ 위기 구간
+        (bts?bts.charts:'')+
+        // ⑦ 대조군 근거
+        (d.bt?bmBlock(d,d.bt):'')+
+        (d.bt?provBlock(d.bt):'')+
+        // ⑧ 판정과 통계 — 카드에서 여기 처음 등장한다
+        '<div class="vblock" style="--vbg:'+vbg+'">'+
+          '<div class="vbh">운용 등급 (배포 여부)</div>'+
+          '<div class="vbr"><span class="vbadge '+d.v+'">'+esc(VMETA[d.v].lab)+'</span>'+
+            '<span class="vmean">'+esc(VMETA[d.v].mean)+
+            (VMETA[d.v].orig!==VMETA[d.v].lab?' <span style="opacity:.75">(원 판정 표기: '+esc(VMETA[d.v].orig)+')</span>':'')+
+            '</span></div>'+
+          '<p class="vt"><b>판정 근거 —</b> '+d.vt+'</p>'+
+          ((d.bt&&d.bt.metrics)?powerBox(d.bt.metrics)+multNote(d.bt.metrics):'')+
+        '</div>'+
+        // ⑨ 전체 지표표(접힘) → ⑩ 한계·장단점 → ⑪ 보유구성
+        (bts?bts.table:'')+
         play+
+        (d.hold?holdSection(d.hold,vc):'')+
       '</div>';
   }
 
@@ -747,10 +1124,16 @@
   _fromHash(); window.addEventListener('hashchange',_fromHash);
   // 플레이북(strategy_detail.json) + 백테스트 차트데이터(strategy_backtests.json) 병합
   function _get(u){return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
-  Promise.all([_get('data/strategy_detail.json'),_get('data/strategy_backtests.json'),_get('data/strategy_holdings.json'),_get('data/strategy_holdings_db.json')]).then(function(res){
+  Promise.all([_get('data/strategy_detail.json'),_get('data/strategy_backtests.json'),_get('data/strategy_holdings.json'),_get('data/strategy_holdings_db.json'),_get('data/strategy_kinds.json')]).then(function(res){
     var map=res[0],bt=res[1],hd=res[2],hdb=res[3];
+    KINDS=res[4]||null;      // 성격 축 정의(라벨·1차지표·대조군 역할 문구)의 단일 출처
     if(map){ D.forEach(function(d){ if(map[d.n]) d.det=map[d.n]; }); buildArchetypeFilter(); }
-    if(bt&&bt.strategies){ D.forEach(function(d){ if(bt.strategies[d.n]) d.bt=bt.strategies[d.n]; }); }
+    buildKindFilter();
+    // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
+    if(bt&&bt.strategies){ D.forEach(function(d){
+      if(bt.strategies[d.n]){ d.bt=bt.strategies[d.n]; return; }
+      for(var kk in bt.strategies){ if(bt.strategies[kk].sid&&bt.strategies[kk].sid===d.sid){ d.bt=bt.strategies[kk]; return; } }
+    }); }
     // 무료 데이터 상세(우선) + 사내 DB 파생 공개요약(종목 비공개) 병합
     [hd,hdb].forEach(function(src){ if(src&&src.strategies)D.forEach(function(d){ if(!d.hold&&src.strategies[d.n]) d.hold=src.strategies[d.n]; }); });
     render();
