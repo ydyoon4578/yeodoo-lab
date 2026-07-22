@@ -449,45 +449,20 @@ def load_members(cur, doc, sha, force=False):
     return len(rows)
 
 
-def load_screens(cur, stocks_doc, screens_doc, sha, force=False):
-    """펀더멘털 스크리닝 통과 종목 — **정의는 data/screens.json 단일 소스**(화면과 동일 파일).
-    화면은 JS로, 여기서는 파이썬으로 같은 규칙을 적용한다. 정의를 코드에 복제하지 않는 게 핵심."""
+def load_screens(cur, stocks_doc, sha, force=False):
+    """펀더멘털 스크린 통과 종목 — **계산하지 않는다.** build/screens_apply.py가 stocks.json에 구워둔
+    결과를 그대로 적재한다(화면이 보는 것과 같은 값). 로더가 다시 계산하면 미묘하게 어긋난다."""
     from psycopg2.extras import execute_values
     asof = (stocks_doc or {}).get("as_of")
-    ST = (stocks_doc or {}).get("stocks") or []
-    SC = (screens_doc or {}).get("screens") or {}
-    DIR = (screens_doc or {}).get("dir") or {}
-    if not asof or not ST or not SC:
+    SCR = (stocks_doc or {}).get("screens") or {}
+    if not asof or not SCR:
         return 0
     if not force:
         cur.execute("select 1 from yeodoo.screen_daily where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
-    # 지표별 백분위(0=최저 … 100=최고)
-    pct = {}
-    for k in DIR:
-        vals = sorted(((num((s.get("fund") or {}).get(k)), s["t"]) for s in ST
-                       if num((s.get("fund") or {}).get(k)) is not None))
-        n = len(vals)
-        pct[k] = {t: (i / (n - 1) * 100 if n > 1 else 50.0) for i, (_, t) in enumerate(vals)}
-
-    def good(t, k):
-        v = pct.get(k, {}).get(t)
-        if v is None:
-            return None
-        return 100 - v if DIR.get(k) == "low" else v
-
-    rows = []
-    for key, sc in SC.items():
-        cand = []
-        for s in ST:
-            t = s["t"]
-            if any((good(t, k) is None or good(t, k) < th) for k, th in (sc.get("qualify") or {}).items()):
-                continue
-            gs = [good(t, k) for k in (sc.get("keys") or []) if good(t, k) is not None]
-            cand.append((sum(gs) / len(gs) if gs else 0.0, t))
-        cand.sort(reverse=True)
-        rows += [(asof, key, t, sc_, i + 1) for i, (sc_, t) in enumerate(cand)]
+    rows = [(asof, key, r["t"], num(r.get("s")), i + 1)
+            for key, lst in SCR.items() for i, r in enumerate(lst or [])]
     if not rows:
         return 0
     execute_values(cur, "insert into yeodoo.screen_daily(asof,screen,ticker,score,rnk) values %s"
@@ -495,7 +470,6 @@ def load_screens(cur, stocks_doc, screens_doc, sha, force=False):
                         " rnk=excluded.rnk,loaded_at=now()", rows)
     _log(cur, "screens", asof, sha, len(rows), "ok")
     return len(rows)
-
 
 def load_snapshot(cur, sha, force=False):
     """한 커밋(또는 워킹트리)의 모든 산출물을 적재. 반환: 종목 행 수."""
@@ -508,7 +482,7 @@ def load_snapshot(cur, sha, force=False):
     load_holdings(cur, read_at(sha, "data/strategy_holdings.json"), sha, "free")
     load_holdings(cur, read_at(sha, "data/strategy_holdings_db.json"), sha, "db")
     load_members(cur, read_at(sha, "data/members.json"), sha, force)
-    load_screens(cur, read_at(sha, "data/stocks.json") or {}, read_at(sha, "data/screens.json"), sha, force)
+    load_screens(cur, read_at(sha, "data/stocks.json") or {}, sha, force)
     return n
 
 
