@@ -32,7 +32,8 @@ def fingerprint(screens_doc) -> str:
     """결과를 바꾸는 정의만 담은 지문 — 이름·설명 변경으로는 흔들리지 않는다."""
     core = {
         "dir": screens_doc.get("dir") or {},
-        "screens": {k: {"keys": v.get("keys") or [], "qualify": v.get("qualify") or {}}
+        "screens": {k: {"keys": v.get("keys") or [], "qualify": v.get("qualify") or {},
+                        "qualify_max": v.get("qualify_max") or {}}
                     for k, v in (screens_doc.get("screens") or {}).items()},
     }
     blob = json.dumps(core, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -85,6 +86,13 @@ def compute(stocks, screens_doc):
                 if g is None or g < th:           # 결측은 실격 — 모르면 넣지 않는다
                     ok = False
                     break
+            # 상한 — '이 지표는 오히려 낮아야 한다'(예: 마진 주도 성장은 매출 증가가 하위권)
+            if ok:
+                for qk, th in (sc.get("qualify_max") or {}).items():
+                    g = good(t, qk)
+                    if g is None or g > th:
+                        ok = False
+                        break
             if not ok:
                 continue
             gs = [good(t, k) for k in keys if good(t, k) is not None]

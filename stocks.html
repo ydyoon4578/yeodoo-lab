@@ -279,7 +279,9 @@
     </div>
     <div class="chipwrap" id="chipwrap">
       <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
-      <div class="chiprow"><span class="fchip lbl">스크리닝</span><span id="presets2" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl" title="지금 어디로 가고 있나">추세</span><span id="presets2" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl" title="얼마나 밀렸나 / 올랐나">되돌림</span><span id="presets2b" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl" title="누가 사고파나 · 참고 표기">수급·기타</span><span id="presets2c" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl">펀더멘털</span><span id="presets3" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl">지수</span><span id="idxf" style="display:contents"></span></div>
     </div>
@@ -348,20 +350,20 @@
     ["all","전체",null,false,null,null,"a"],
     ["swingbuy",'<span style="color:var(--good)">▲</span> 스윙 저점매수',"momentum",false,null,null,"r"],
     ["swingsell",'<span style="color:var(--hot)">▼</span> 스윙 고점매도',"trend",true,null,null,"r"],
-    ["oh","과매수","overheat",false,"과매수",null,"s"],["os","과매도","overheat",true,"과매도",null,"s"],
-    ["dip","눌림목","trend",false,"눌림목",null,"s"],["brk","52주 돌파","momentum",false,"52주돌파",null,"s"],
-    ["squeeze","과밀숏","positioning",false,"과밀숏",null,"s"],
-    ["up","상승추세","trend",false,"상승추세",null,"s"],["dn","200일 이탈","trend",true,"200일이탈",null,"s"],
-    ["deep","깊은 눌림","overheat",true,"깊은눌림",null,"s"],
-    ["bear","약세 반등","overheat",false,"약세반등",null,"s"],
-    ["gold","골든 임박","trend",false,"골든임박",null,"s"],
-    ["vsg","거래량 급증","momentum",false,"거래급증",null,"s"],
-    ["sqz","변동성 수축","volatility",true,"변동수축",null,"s"],
-    ["rss","시장 대비 강세","momentum",false,"시장강세",null,"s"],
-    ["tgt","목표주가","momentum",false,null,null,"s"],
+    ["oh","과매수","overheat",false,"과매수",null,"s2"],["os","과매도","overheat",true,"과매도",null,"s2"],
+    ["dip","눌림목","trend",false,"눌림목",null,"s2"],["brk","52주 돌파","momentum",false,"52주돌파",null,"s1"],
+    ["squeeze","과밀숏","positioning",false,"과밀숏",null,"s3"],
+    ["up","상승추세","trend",false,"상승추세",null,"s1"],["dn","200일 이탈","trend",true,"200일이탈",null,"s1"],
+    ["deep","깊은 눌림","overheat",true,"깊은눌림",null,"s2"],
+    ["bear","약세 반등","overheat",false,"약세반등",null,"s2"],
+    ["gold","골든 임박","trend",false,"골든임박",null,"s1"],
+    ["vsg","거래량 급증","momentum",false,"거래급증",null,"s3"],
+    ["sqz","변동성 수축","volatility",true,"변동수축",null,"s3"],
+    ["rss","시장 대비 강세","momentum",false,"시장강세",null,"s1"],
+    ["tgt","목표주가","momentum",false,null,null,"s3"],
     ["qval","저평가 우량주",null,false,null,null,"f"],["growth","꾸준한 성장주",null,false,null,null,"f"],
     ["income","배당 인컴",null,false,null,null,"f"],["cash","현금창출력",null,false,null,null,"f"],
-    ["garp","합리적 가격 성장주",null,false,null,null,"f"],["lowvol","저변동 방어주",null,false,null,null,"f"]];
+    ["garp","합리적 가격 성장주",null,false,null,null,"f"],["lowvol","저변동 방어주",null,false,null,null,"f"],["growth_margin","마진이 끄는 성장",null,false,null,null,"f"]];
   var SHOWN=PRESETS;  // 데이터로딩 후 빈 프리셋 제거
   // 시그널 칩 호버 설명(툴팁)
   var TIPS={
@@ -978,7 +980,7 @@
     el('statline').innerHTML='<span class="stat"><b>'+d.n_stocks+'</b> 종목</span><span class="stat">NDX+SPX</span><span class="stat">테크니컬 <b>'+Object.keys(F).length+'</b>개</span><span class="stat">기준일 <b>'+(d.as_of||'—')+'</b></span>'+staleStat(d.as_of);
     el('asof').textContent='기준일 '+(d.as_of||'—')+' (전 지표 동일, yfinance 최신 거래일)';
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
-    var pf=el('presets'),pf2=el('presets2'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
+    var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
       var cnt=null,sk=swKeys(p[0]);
       if(p[6]==='a')cnt=d.stocks.length;   // 전체 — 필터를 걸지 않은 커버 종목 전부
       if(p[6]==='f')cnt=screenRows(p[0]).length;   // 펀더멘털 스크리닝 — 자격 통과 종목 수
@@ -987,8 +989,11 @@
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      (p[6]==='a'?pfa:p[6]==='f'?pf3:p[6]==='s'?pf2:pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
+      ({a:pfa,f:pf3,s1:pf2,s2:pf2b,s3:pf2c}[p[6]]||pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
     });
+    // 데이터가 없어 칩이 전부 사라진 축은 라벨만 남아 빈 줄이 된다 — 줄째 감춘다
+    [['presets2'],['presets2b'],['presets2c'],['presets3']].forEach(function(x){
+      var c=el(x[0]); if(c&&!c.querySelector('.fchip'))c.parentNode.hidden=true;});
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
     // 딥링크: 홈 추천 종목 클릭 → #t=티커&p=탭 으로 진입, 해당 탭·종목 자동 선택
     try{
