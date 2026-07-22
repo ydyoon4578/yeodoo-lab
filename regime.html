@@ -200,9 +200,6 @@
   var RKO={Goldilocks:"골디락스",Recovery:"회복",SoftLanding:"연착륙",LateCycle:"후기사이클",Overheating:"과열",Stagflation:"스태그플레이션",Recession:"침체"};
   var GKO={EXPANSION:"확장",SLOWING:"둔화",CONTRACTION:"수축",LOW:"저물가",MODERATE:"중간물가",HIGH:"고물가",EASY:"완화",NEUTRAL:"중립",ELEVATED:"경계",STRESSED:"스트레스"};
   // 서프라이즈 화살표의 색 의미 — 오르는 게 좋은 지표 / 나쁜 지표만 색을 준다(나머지는 중립).
-  var GOOD_UP={PAYEMS:1,INDPRO:1,RSAFS:1,UMCSENT:1,CFNAIMA3:1,TCU:1,JTSJOL:1,HOUST:1,PERMIT:1};
-  var BAD_UP={CPIYOY:1,CPILFESL:1,PCEPILFE:1,PCEPI:1,PPIACO:1,GASREGW:1,T10YIE:1,T5YIFR:1,
-              UNRATE:1,ICSA:1,CCSA:1,SAHMREALTIME:1,NFCI:1,BAMLH0A0HYM2:1,BAMLC0A0CM:1,VIXCLS:1,MORTGAGE30US:1};
   var DATA=null;
 
   fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
@@ -282,10 +279,10 @@
         var st=x.st||["",""], sp=x.sp, sph='';
         if(sp){var ar=sp.dir==='up'?'▲':(sp.dir==='down'?'▼':'≈'),
           lb=sp.dir==='up'?'추세 상회':(sp.dir==='down'?'추세 하회':'추세 부합'),
-          // ⚠ '상회=초록'으로 일괄 칠하면 물가·실업·스프레드·변동성에서 의미가 정반대가 된다.
-          //   방향의 좋고 나쁨이 명확한 지표만 색을 주고, 해석이 갈리는 지표(금리·달러·M2 등)는 중립색.
-          pol=(sp.dir==='flat')?0:(GOOD_UP[x.k]?1:(BAD_UP[x.k]?-1:0))*(sp.dir==='up'?1:-1),
-          col=pol>0?'var(--good)':(pol<0?'var(--hot)':'var(--ink-2)');
+          // 방향에 색을 주지 않는다(2026-07-22). 초록 ▲만 스캔하면 '좋아지는 중'으로 읽히는데,
+          //   추세 상회는 '직전 6관측 평균보다 위'일 뿐 직전 대비로는 급락일 수 있다(고용증감 163.67→111이
+          //   초록 ▲로 뜨던 사례). 색은 레벨 상태 배지(.stbadge) 하나만 쓰게 해 팔레트 충돌도 없앤다.
+          col='var(--ink-2)';
           // ⚠ 화살표는 '추세(직전 관측 평균) 대비 z', 옆 숫자는 '직전 관측 대비 변화'로 서로 다른 것을 잰다.
           //   둘의 부호는 실제로 39개 중 8개에서 어긋난다(예: 고용증감 z +1.2인데 직전대비 −52천명).
           //   라벨 없이 붙여두면 '오르는 중'으로 읽히므로 각각 무엇 대비인지 밝힌다.
