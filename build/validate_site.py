@@ -219,6 +219,30 @@ try:
             errors.append("stocks.html이 screens.json을 읽지 않음 — 정의가 코드에 복제되면 로더와 어긋난다")
         if "var SCREENS={qval" in _sh or "qualify:function(s){return good(s,'fpe')" in _sh:
             errors.append("stocks.html에 스크린 정의가 인라인으로 남아 있음 — screens.json 단일 소스 위반")
+        # 판정 계산은 build/screens_apply.py 한 곳뿐이어야 한다. 화면이 다시 계산하면 동점 처리 같은
+        # 미세한 차이로 목록이 갈린다(실측: CMCSA가 화면 69종 / 로더 70종으로 어긋났다).
+        if re.search(r"function\s+(fpct|scoreOf)\s*\(", _sh):
+            errors.append("stocks.html이 스크린 판정을 자체 계산함 — 구현이 둘이면 DB·화면이 어긋난다")
+        sys.path.insert(0, os.path.join(ROOT, "build"))
+        import screens_apply
+        _st = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+        _res = _st.get("screens")
+        if not _res:
+            errors.append("stocks.json에 스크린 판정 결과(screens) 없음 — build/screens_apply.py 실행 필요")
+        else:
+            if set(_res) != set(_scr):
+                errors.append(f"스크린 목록 불일치 — 정의 {sorted(_scr)} vs 결과 {sorted(_res)}")
+            _fp = screens_apply.fingerprint(_sj)
+            if _st.get("screens_fp") != _fp:
+                errors.append(f"스크린 정의 지문 불일치({_st.get('screens_fp')}≠{_fp}) — 정의를 고친 뒤 stocks.json을 다시 굽지 않았다")
+            _tk = {x["t"] for x in _st.get("stocks") or []}
+            for _k, _lst in _res.items():
+                _bad = [r["t"] for r in _lst if r["t"] not in _tk]
+                if _bad:
+                    errors.append(f"스크린 결과[{_k}]에 커버 밖 종목: {_bad[:3]}")
+                _sc = [r.get("s") for r in _lst]
+                if _sc != sorted(_sc, reverse=True):
+                    errors.append(f"스크린 결과[{_k}]가 적합도 내림차순이 아님 — 화면은 이 순서를 그대로 그린다")
 except Exception as e:
     errors.append(f"screens.json 검증 실패: {e}")
 

@@ -58,6 +58,9 @@
   .fchip.lbl{background:transparent;border:none;color:var(--muted);cursor:default;padding-left:2px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
 
   .board{display:grid;grid-template-columns:minmax(0,0.92fr) minmax(0,1.12fr);gap:18px;margin-top:18px;align-items:start}
+  /* 스크린 목록의 순위 번호 — '무엇이 상위인가'를 눈으로 바로 잡게 한다 */
+  .rk{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);
+      border-radius:5px;padding:1px 5px;margin-right:5px;min-width:20px;text-align:center;display:inline-block}
   .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 2px 6px;text-transform:uppercase;letter-spacing:.08em}
   .listwrap{display:flex;flex-direction:column;gap:6px;max-height:78vh;overflow-y:auto;padding-right:4px}
   .listwrap::-webkit-scrollbar{width:8px}.listwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
@@ -446,38 +449,26 @@
   //   dir: low=낮을수록 좋음(백분위를 뒤집어 점수화), high=높을수록 좋음.
   // 스크리닝 정의는 **data/screens.json 단일 소스** — 로더(build/db_load.py)도 같은 파일을 읽는다.
   // 정의를 코드 양쪽에 복제하면 조용히 어긋난다(로테이션 9선 FNV 사고와 같은 유형).
-  var FDIR={}, SCREENS={}, FPCT=null;
+  // 스크린 **정의**(이름·설명·지표)는 data/screens.json, **판정 결과**는 data/stocks.json의 screens에서 온다.
+  // 계산 구현은 build/screens_apply.py 한 곳뿐 — 화면이 같은 규칙을 다시 계산하면 동점 처리 같은
+  // 사소한 차이로 목록이 갈린다(실제로 CMCSA 1종이 화면 69종·DB 70종으로 어긋났다).
+  // 결과가 없으면(구버전 데이터) 스크린 칩 자체가 사라진다 — 조용히 틀린 목록을 보여주지 않는다.
+  var SCREENS={};
   function applyScreens(doc){
-    FDIR=doc.dir||{}; SCREENS={}; FPCT=null;
-    Object.keys(doc.screens||{}).forEach(function(k){
-      var d=doc.screens[k];
-      SCREENS[k]={name:d.name,keys:d.keys||[],note:d.note||'',
-        qualify:(function(q){return function(s){
-          for(var kk in q){var g=good(s,kk); if(g==null||g<q[kk])return false;} return true;};})(d.qualify||{})};
-    });
+    SCREENS={};
+    Object.keys(doc.screens||{}).forEach(function(k){var d=doc.screens[k];
+      SCREENS[k]={name:d.name,keys:d.keys||[],note:d.note||''};});
   }
-  function fpct(){
-    if(FPCT)return FPCT;
-    FPCT={};
-    Object.keys(FDIR).forEach(function(k){
-      var arr=[];
-      DATA.stocks.forEach(function(s){var v=(s.fund||{})[k];if(v!=null&&!isNaN(v))arr.push([v,s.t]);});
-      arr.sort(function(a,b){return a[0]-b[0];});
-      var m={},n=arr.length;
-      arr.forEach(function(x,i){m[x[1]]=n>1?(i/(n-1))*100:50;});   // 0=최저값 … 100=최고값
-      FPCT[k]=m;
-    });
-    return FPCT;
+  function fkLabel(k){var f=(DATA&&DATA.fundx_defs&&DATA.fundx_defs[k])||null;return (f&&f.label)||k;}
+  function byT(){
+    if(DATA._byT)return DATA._byT;
+    var m={};DATA.stocks.forEach(function(s){m[s.t]=s;});return DATA._byT=m;
   }
-  function pc(s,k){var m=fpct()[k];return m&&m[s.t]!=null?m[s.t]:null;}
-  function good(s,k){   // '좋은 쪽' 백분위(낮을수록 좋은 지표는 뒤집음). 값 없으면 null
-    var v=pc(s,k); if(v==null)return null; return FDIR[k]==='low'?100-v:v;
-  }
-  function scoreOf(s,ks){var t=0,n=0;ks.forEach(function(k){var g=good(s,k);if(g!=null){t+=g;n++;}});return n?t/n:0;}
   function screenRows(key){
-    var sc=SCREENS[key]; if(!sc)return [];
-    return DATA.stocks.filter(sc.qualify).map(function(s){return {s:s,v:scoreOf(s,sc.keys)};})
-      .sort(function(a,b){return b.v-a.v;}).map(function(x){return x.s;});
+    var res=(DATA&&DATA.screens&&DATA.screens[key])||null; if(!res)return [];
+    var m=byT(),out=[];
+    res.forEach(function(r){var s=m[r.t]; if(s){s._fs=r.s; out.push(s);}});   // 적합도 순서 그대로(빌드가 정렬)
+    return out;
   }
 
   // 프리셋 설명 — 툴팁(hover)만으로는 '골든 임박·과밀숏'이 뭔지 알 수 없다는 피드백 → 목록 위에 상시 노출.
@@ -507,7 +498,7 @@
         if(state.idx.size){var ok=false;(s.idx||[]).forEach(function(x){if(state.idx.has(x))ok=true;});if(!ok)return false;}
         if(state.q){var h=(s.t+' '+(s.name||'')+' '+(s.sector||'')+' '+secKo(s.sector)).toLowerCase();if(h.indexOf(state.q)<0)return false;}
         return true;});
-      return {rows:fr,comp:'overheat',total:fr.length,screen:p[0]};
+      return {rows:fr,comp:'screen',total:fr.length,screen:p[0]};
     }
     var sk=swKeys(p[0]),sc=p[0]==='swingbuy'?'bscore':'sscore';
     var rows=DATA.stocks.filter(function(s){
@@ -535,11 +526,14 @@
     if(_sn){
       var _k=curP()[0], _sc=SCREENS[_k], _pd=PDESC[_k], _h='';
       if(_sc)_h='<b>'+esc(_sc.name)+'</b> '+esc(_sc.note)+
+        '<span class="sccrit"><b>정렬</b> 적합도 높은 순 — 적합도는 이 스크린이 보는 지표('+
+          esc((_sc.keys||[]).map(fkLabel).join(' · '))+
+          ')의 <b>좋은 쪽 백분위 평균</b>(0~100, 커버 종목 전체 기준)입니다. 자격 조건을 모두 통과한 종목만 담습니다.</span>'+
         '<span class="scwarn">단면 스크리닝 · 예측력 미검증 — 랩은 펀더멘털 팩터의 초과수익을 검증한 적이 없습니다. 조건 충족 종목을 찾아줄 뿐 매수 신호가 아닙니다.</span>';
       else if(_pd)_h='<b>'+esc(_pd[0])+'</b> '+esc(_pd[1])+'<span class="sccrit"><b>판정 기준</b> '+esc(_pd[2])+'</span>';
       _sn.innerHTML=_h; _sn.hidden=!_h;
     }
-    el('rowcount').innerHTML=esc(rows.length+"종목")+(f.total>rows.length?esc(" / 전체 "+f.total+" · 종합점수 상위"):"")+esc(" · ")+curP()[1]+
+    el('rowcount').innerHTML=esc(rows.length+"종목")+(f.screen?esc(" · 적합도순"):"")+(f.total>rows.length?esc(" / 전체 "+f.total+" · 종합점수 상위"):"")+esc(" · ")+curP()[1]+
       // 상승여력 내림차순은 구조적으로 '최근 급락 종목' 목록이 된다 — 실측 근거를 리스트 상단에 상시 노출
       (state.preset==='tgt'?'<div style="margin-top:5px;font-size:10.5px;line-height:1.5;color:var(--watch);text-transform:none;letter-spacing:0;font-weight:400">'+
         '⚠ 상승여력 높은 순 — 상승여력의 <b>64%는 최근 하락의 기계적 반영</b>(목표가는 1~3개월 시차로 주가를 따라옴)이라 이 정렬은 사실상 <b>급락 종목 순</b>입니다. '+
@@ -547,7 +541,7 @@
     listEl.innerHTML="";
     if(!rows.length){listEl.innerHTML='<div class="empty">해당 종목 없음</div>';drawDetail(null);return;}
     if(!state.sel||rows.indexOf(state.sel)<0)state.sel=rows[0];
-    var sk=swKeys(state.preset), dts=DATA.pxd_dates||[], NN=dts.length;
+    var sk=swKeys(state.preset), dts=DATA.pxd_dates||[], NN=dts.length, scr=f.screen, rk=0;
     // 문자열 1회 빌드(리플로우 1회) + 이벤트 위임(리스너 1개) — 512행 성능
     listEl.innerHTML=rows.map(function(s){
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
@@ -561,9 +555,13 @@
           '<div class="nm" style="text-align:right;margin-top:2px">'+
           (upv!=null?'<b style="color:var(--muted)">'+(upv>=0?'+':'')+Math.round(upv)+'%</b>':'—')+
           (fu.nan?' · 애널 '+fu.nan:'')+'</div></span>';
+      }else if(scr){
+        // 적합도 = 이 스크린이 보는 지표들의 '좋은 쪽' 백분위 평균(0~100). 목록 정렬 키와 동일한 값.
+        var fv=s._fs||0;
+        metric='<span class="metric"><div class="mv">'+Math.round(fv)+'</div><div class="mbar"><i style="width:'+fv+'%;background:var(--accent)"></i></div></span>';
       }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       return '<button class="item'+(state.preset==='tgt'?' wide':'')+'" role="option" data-t="'+s.t+'" aria-selected="'+(s===state.sel)+'">'+
-        '<span><span class="tkline"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
+        '<span><span class="tkline">'+(scr?'<span class="rk">'+(++rk)+'</span>':'')+'<span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
         '<div class="nm">'+esc(s.name||'')+(s.sector?'<span class="secchip">'+esc(secKo(s.sector))+'</span>':'')+'</div></span>'+metric+'</button>';
     }).join('');
     if(!listEl._deleg){listEl._deleg=1;listEl.addEventListener('click',function(e){var it=e.target.closest('.item');if(!it)return;

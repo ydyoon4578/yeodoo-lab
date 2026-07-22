@@ -3,3 +3,6 @@ __pycache__/
 # DB 적재 로컬 로그(커밋 금지)
 .dbload.log
 .dbload.launchd.log
+
+# 로컬 미리보기 설정(배포와 무관)
+.claude/

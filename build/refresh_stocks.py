@@ -943,6 +943,14 @@ def main():
     for fn in os.listdir(SD_DIR):   # 유니버스에서 빠진 종목의 잔존 상세 파일 제거(스테일 방지)
         if fn.endswith(".json") and fn not in _keep:
             os.remove(os.path.join(SD_DIR, fn))
+    # 펀더멘털 스크린 판정을 여기서 구워 넣는다 — 화면·DB 로더는 읽기만 한다(구현이 둘이면 어긋난다).
+    try:
+        import screens_apply
+        _sd = json.load(open(os.path.join(HERE, "..", "data", "screens.json"), encoding="utf-8"))
+        screens_apply.apply(out, _sd)
+        print("스크린:", " · ".join(f"{k} {len(v)}종" for k, v in out["screens"].items()))
+    except Exception as e:
+        raise SystemExit(f"스크린 판정 실패 — 갱신 중단(빈 결과를 배포하면 칩이 조용히 사라진다): {e}")
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} ({len(stocks)}종목 · 슬림 {os.path.getsize(OUT)//1024}KB · 상세 {len(_keep)}파일 · 기준일 {as_of})")
     # ── 목표주가 스냅샷 누적(실패해도 빌드는 계속 — 부가 자산이지 배포물이 아니다) ──
