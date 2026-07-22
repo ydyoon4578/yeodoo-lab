@@ -410,7 +410,9 @@
     var n=(p[2]==="w"?(s.wx||[]):(s.pxd||[])).length;
     return n>=Math.min(p[1],20);   // 생성기가 아직 안 구운 구간은 칩을 내지 않는다(빈 차트·오표기 방지)
   }
-  var state={q:"",preset:"swingbuy",idx:new Set(),sel:null,period:252,psrc:""};
+  // 기본은 '전체' — 들어오자마자 특정 신호로 좁혀 놓으면 그 신호가 이 화면의 결론처럼 읽힌다.
+  // 스윙 타점은 랩 검증에서 수익 예측력이 확인되지 않았으므로 첫 화면을 차지할 이유가 더더욱 없다.
+  var state={q:"",preset:"all",idx:new Set(),sel:null,period:252,psrc:""};
   function cc(k){return 'var('+({overheat:'--hot',trend:'--good',momentum:'--accent',volatility:'--watch'}[k]||'--accent')+')';}
   function gc(g){return 'var('+({hot:'--hot',good:'--good',accent:'--accent',watch:'--watch',cold:'--cold',muted:'--muted'}[g]||'--accent')+')';}
   var _cssC={};   // 테마별 CSS변수 캐시 — getComputedStyle 반복호출/리플로우 축소
