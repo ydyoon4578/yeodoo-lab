@@ -302,6 +302,20 @@ try:
 except Exception as e:
     errors.append(f"폭 토큰 검증 실패: {e}")
 
+# ── 모바일 가로스크롤 방지 ──
+#    body에 word-break:keep-all(한글 단어 보전)만 걸면 끊을 곳 없는 라틴 문자열이 통째로 붙들려
+#    페이지를 가로로 밀어낸다(실측: regime.html의 "(Goldilocks·…·Recession)" 527px → 문서폭 547).
+#    overflow-wrap:break-word는 넘칠 때만 끊으므로 한글 보전과 양립한다.
+try:
+    for _p in PAGES:
+        _s = rd(_p)
+        # ⚠ 주석에 문자열이 있는 것만으로 통과하면 안 된다(스크린 검사에서 이미 겪은 함정) —
+        #    두 속성이 **한 선언 안에 붙어 있는지**를 본다.
+        if "word-break:keep-all" in _s and not re.search(r"word-break:\s*keep-all\s*;\s*overflow-wrap:\s*break-word", _s):
+            errors.append(f"{_p}: word-break:keep-all에 overflow-wrap:break-word 안전망이 없음 — 모바일 가로스크롤 위험")
+except Exception as _e3:
+    errors.append(f"줄바꿈 안전망 검증 실패: {_e3}")
+
 # ── 갱신 피드(updates.json): 홈 '최근 업데이트'·각 페이지 배지의 소스 ──
 #    시각(hm)은 선택 필드지만, 있으면 HH:MM이어야 한다 — 형식이 깨지면 화면에 그대로 노출된다.
 try:

@@ -40,7 +40,10 @@
      유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
+     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
+     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
   header.mast{padding:64px 0 18px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
@@ -49,6 +52,14 @@
   .lede{margin:12px 0 0;max-width:80ch;font-size:15px;color:var(--ink-2)} .lede b{color:var(--ink)}
   .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:34px 0 12px}
 
+  /* 히어로 2열 — 현재 국면(좌) · 시장 심리(우). 둘 다 '지금 상태' 요약이라 나란히 두는 게 맞다.
+     상세(39지표·구성요소·백테스트)는 아래에 그대로 이어진다. */
+  .herowrap{display:grid}
+  .herorow{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;margin-top:22px}
+  .herorow > div{min-width:0;display:flex;flex-direction:column}
+  .herorow > div > *{flex:1}
+  .herorow .hero,.herorow .sgauge{margin-top:0;height:100%}
+  @media(max-width:900px){.herorow{grid-template-columns:1fr}}
   .hero{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;border-left:5px solid var(--rc,var(--accent))}
   .hrow{display:grid;grid-template-columns:auto 1fr;gap:20px;padding:24px 26px;align-items:center}
   .hemoji{font-size:52px;line-height:1}
@@ -168,7 +179,11 @@
     <div style="margin-top:12px;font-family:var(--mono);font-size:11.5px;color:var(--muted)">기준일 <b id="asof" style="color:var(--ink)">—</b> · 출처 FRED + yfinance</div>
   </header>
 
-  <div id="main"><div class="empty">불러오는 중…</div></div>
+  <div class="herorow">
+    <div id="regimehero"><div class="empty">불러오는 중…</div></div>
+    <div id="senthero"><div class="empty">불러오는 중…</div></div>
+  </div>
+  <div id="main"></div>
 
   <section id="sent" aria-labelledby="sent-h"><h2 class="lbl" id="sent-h" style="font-size:11px;margin-top:40px">시장 심리 (0~100)</h2><div class="empty">불러오는 중…</div></section>
 
@@ -305,7 +320,8 @@
     var tbl=perfTable('레짐별 자산 조건부 성과','월평균 %, 2009~ · 현재 레짐('+cur+') 열 강조','자산',d.asset_perf)+
       perfTable('레짐별 섹터 로테이션','11개 섹터 SPDR 월평균 % · 현재 레짐서 유리한 순','섹터',d.sector_perf)+
       perfTable('레짐별 팩터','모멘텀·퀄리티·저변동·가치·중소형 월평균 %','팩터',d.factor_perf);
-    el('main').innerHTML=hero+
+    el('regimehero').innerHTML=hero;
+    el('main').innerHTML=
       '<div class="lbl">매크로 지표 현황</div>'+ig+
       '<div class="lbl">레짐 히스토리 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 2009~ 월별 · 현재 '+(RKO[rg.label]||rg.label)+' '+runLen(d)+'개월째</span></div>'+
       '<div class="histwrap"><canvas id="histc" height="54" role="img" aria-label="시장 국면(레짐) 히스토리 — 2009년 이후 월별 성장×물가 분류 타임라인"></canvas><div class="leg" id="leg"></div></div>'+
@@ -355,11 +371,11 @@
   function sgn(v){return v==null||isNaN(v)?'—':(v>0?'+':'')+(Math.round(v*100)/100);}
 
   fetch('data/sentiment.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    if(!d||!d.components){host.innerHTML=head()+'<div class="empty">시장 심리 데이터가 아직 준비되지 않았습니다.</div>';return;}
+    if(!d||!d.components){var _g=el('senthero');if(_g)_g.innerHTML='<div class="empty">시장 심리 데이터가 아직 준비되지 않았습니다.</div>';host.innerHTML=head();return;}
     SD=d; render();
     var _rz;window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(drawSpark,150);});
     new MutationObserver(drawSpark).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-  }).catch(function(){host.innerHTML=head()+'<div class="empty">시장 심리 데이터를 불러오지 못했습니다.</div>';});
+  }).catch(function(){var _g=el('senthero');if(_g)_g.innerHTML='<div class="empty">시장 심리 데이터를 불러오지 못했습니다.</div>';host.innerHTML=head();});
 
   function head(){return '<h2 class="lbl" id="sent-h" style="font-size:11px;margin-top:40px">시장 심리 (0~100)</h2>';}
 
@@ -464,7 +480,9 @@
       '</ul><span class="fine">'+esc(d.disclaimer||'참고용 리서치입니다. 투자 권유·매매 신호가 아닙니다.')+
       ' 출처는 <a href="sources.html">데이터 출처</a>에.</span></div></details></div>';
 
-    host.innerHTML=head()+g+comp+hist+tb+note;
+    // 게이지는 히어로 2열의 우측으로, 상세(구성요소·히스토리·백테스트·고지)는 아래 섹션에 그대로.
+    var gh=el('senthero'); if(gh)gh.innerHTML=g;
+    host.innerHTML=head()+comp+hist+tb+note;
     drawSpark();
   }
 
