@@ -1,0 +1,132 @@
+{
+ "cat": "E",
+ "cat_label": "추가 알파·팩터·이벤트",
+ "name": "밸류 (HML, 북투마켓 프리미엄)",
+ "type": "팩터",
+ "target": "S&P 500 / 전체 시장 (횡단면 주식 롱숏 또는 롱온리 틸트)",
+ "purpose": "장부가/시장가가 높은 저평가주를 롱, 고평가 성장주를 숏하여 연 수%p의 스타일 프리미엄을 확보",
+ "principle": "Fama & French(1992, 1993)는 북투마켓(B/M) 스프레드가 CAPM 베타로 설명되지 않는 횡단면 초과수익을 낳음을 입증하고 이를 3팩터 모델의 HML 팩터로 정식화했다. 위험보상 해석(재무곤경·경기민감 위험 프리미엄)과 행동재무 해석(성장주 과도한 기대·과잉확대)이 병존한다. 프리미엄은 실재하나 노이즈가 크고 에피소딕하며 구현 민감도가 높다(회전율·거래비용). 최근 연구는 순수 장부가치가 무형자산 시대에 자본을 과소반영한다는 비판과 함께, 펀더멘털/시장가(F/M) 등 개량 지표가 B/M 프리미엄을 상당 부분 흡수한다고 지적한다.",
+ "entry": "PIT 유니버스를 B/M(또는 무형자산 조정 밸류·EV/EBIT 등 복합 밸류)으로 정렬, 상위 30% 롱·하위 30% 숏(롱온리는 상위 분위 틸트). 시가총액·섹터 중립화 권장. 월말~연 1회 리밸런싱, 회전율 관리를 위해 히스테리시스 밴드 적용.",
+ "performance": "13개 주요시장 글로벌 B/M 스프레드는 1975-1995 연 약 7.6%. 다만 2010년대 성장주(테크) 우위 국면에서 장기 부진('가치의 잃어버린 10년')을 겪었고, 프리미엄의 실현이 불규칙하고 구현비용에 취약하다는 것이 반복 확인된 한계다.",
+ "recent": "2025년 강한 회귀: MSCI World ex-USA 밸류가 성장 대비 +21%(2025), 2026 연초까지 +8% 추가. J.P.Morgan Q2 2026은 밸류의 지속적 우위를, Russell은 '2026 Q1 밸류 리더십 지속'을 보고. AI 캡엑스의 산업재 확산·재정확대·소수 하이퍼스케일러 이익집중 완화 기대가 로테이션을 지지.",
+ "sources": [
+  "The Cross-Section of Expected Stock Returns, Fama & French, Journal of Finance (1992)",
+  "Common Risk Factors in the Returns on Stocks and Bonds, Fama & French, JFE (1993)",
+  "Equity Factor Report 2026 Q1: Value Leadership Continues, Russell Investments (2026)",
+  "Factor Views 2Q 2026, J.P. Morgan Asset Management (2026)"
+ ],
+ "id": "E3",
+ "lab": {
+  "v": "기각",
+  "t": "저평가주 10종 — 장부가 대비 (S&P500)",
+  "why": "검증 단일팩터 중 열위로 기각.",
+  "href": "explorer.html#s-저평가주-10종-장부가-대비-s-p500"
+ }
+}
+================================================================================
+{
+ "cat": "E",
+ "cat_label": "추가 알파·팩터·이벤트",
+ "name": "발생액 아노말리 (Accruals Anomaly)",
+ "type": "회계기반 이익질(earnings quality) 크로스섹션 팩터 · Long-only(저발생액) 또는 Long-Short 헤지",
+ "target": "미국 전종목(NYSE/AMEX/NASDAQ) 또는 글로벌 대형주. 재무제표(대차대조표·현금흐름표) 확보 가능한 유니버스. 회전율 낮음(연 1회 리밸런싱).",
+ "purpose": "이익의 '질(質)'로 알파 발굴. 보고이익(net income)을 현금이익과 발생액(accrual)으로 분해했을 때, 발생액 비중이 높은 이익은 지속성이 낮아 미래에 실망을 준다는 시장의 체계적 오가격(mispricing)을 수확한다. 발생액이 낮은(현금창출력이 실제 이익을 뒷받침하는) 기업을 롱, 발생액이 높은(이익이 회계적 발생분으로 부풀려진) 기업을 숏/회피.",
+ "principle": "Sloan(1996, The Accounting Review): 이익의 발생액 성분은 현금 성분보다 지속성이 낮으나, 투자자는 이 차이를 무시하고 발생액을 과대평가한다(earnings fixation / functional fixation 가설). 그 결과 고발생액 기업은 다음 해 실적 실망으로 언더퍼폼, 저발생액 기업은 서프라이즈로 아웃퍼폼. 발생액 측정: 대차대조표법 BS_ACC=(ΔCA−ΔCash)−(ΔCL−ΔSTD−ΔITP)−Dep. 이후 개선: Hafzalla·Lundholm·Van Winkle(2011) '퍼센트 발생액'(발생액을 총자산 대신 이익 절대값으로 스케일)이 헤지수익을 키우고 손실기업·특별항목에 강건. 리스크 기반 해석(Khan 2008)과 미스프라이싱 해석이 공존. 최근 Penman·Zhu(2026)는 발생액·PEAD를 다기간 리스크 프라이싱으로 재해석.",
+ "entry": "연 1회(회계연도 종료 후 재무제표 확정 시점, 통상 4~6월 lag) 발생액 지표 계산 → 전 종목 데실(10분위) 정렬 → 최저 발생액 데실 롱(현금이익 질 상위), 최고 발생액 데실 숏(또는 Long-only는 롱만). 동일가중이 표준(소형주 효과 포함). 보유 1년. Sloan 원 논문 기준 상·하위 스프레드 포지션. 실전 이식 시 소형·저유동성 종목 필터, per_f12m류 밸류에이션과 결합 권장. 리밸 저빈도라 회전율·비용 낮음.",
+ "performance": "강점: (1) 원 논문(1962~1991) 롱숏 연 ~10.4%p 헤지수익, 데실간 뚜렷한 단조성(발생액↑→미래수익↓). (2) 저회전(연 1회)으로 거래비용 부담 낮음. (3) 회계 펀더멘털 기반이라 가격·모멘텀 팩터와 상관 낮아 분산효과. (4) 퍼센트 발생액 개선판은 저발생액 롱 사이드에서 수익 대부분 발생 → long-only 친화적. 약점: (1) Green·Hand·Soliman(2011) \"Going, Going, Gone\"—2003년 전후 헤지펀드 차익거래 자본 유입·시그널 축소로 미국 초과수익 사실상 소멸 진단. (2) 수익 상당부분이 소형·저유동성·고특이위험(idiosyncratic risk) 종목에 집중되어 차익거래 한계·실현가능성 낮음(Mashruwala 2006). (3) 데이터 마이닝 논쟁—out-of-sample 재검증에서 유의하게 음(-)의 성과 보고 사례. (4) 숏 사이드 실행난도·차입비용. 반론: Lev·Nissim(2006)은 크기가 줄지 않고 지속된다 주장하여 학계 결론 미합의.",
+ "recent": "2020년대 들어 '사망 vs 지속' 논쟁이 이어짐. 미국 대형주에서는 헤지펀드 아비트리지·유동성 개선으로 약화되었으나, 유동성이 낮은 세그먼트·글로벌(UK 등) 시장에서는 잔존 증거(Papanastasopoulos 2020, UK 퍼센트 발생액). 2024~2025 anomaly-decay 문헌은 발생액을 '차익거래로 감쇠된 대표 아노말리'로 분류. 2026년 6월 Penman·Zhu는 발생액·PEAD를 단일기간 모형이 못 잡는 다기간 리스크로 재해석하는 프레임 제시(미스프라이싱이 아닐 수 있다는 리스크 기반 반론 강화). 실무 시사점: 단독 알파보다는 퀄리티/이익질 팩터 스택(현금기반 영업수익성 Ball et al. 2016 등)의 한 구성요소로, 저유동성·소형 틸트를 통제하며 사용하는 것이 현실적.",
+ "sources": [
+  "Sloan (1996), 'Do Stock Prices Fully Reflect Information in Accruals and Cash Flows about Future Earnings?', The Accounting Review",
+  "Quantpedia — Accrual Anomaly (https://quantpedia.com/strategies/accrual-anomaly)",
+  "Green, Hand & Soliman (2011), 'Going, Going, Gone? The Apparent Demise of the Accruals Anomaly', Management Science (https://pubsonline.informs.org/doi/10.1287/mnsc.1110.1320)",
+  "Hafzalla, Lundholm & Van Winkle (2011), 'Percent Accruals', The Accounting Review / SSRN (https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1558464)",
+  "Lev & Nissim (2006), 'The Persistence of the Accruals Anomaly', Contemporary Accounting Research (http://www.columbia.edu/~dn75/The%20Persistence%20of%20the%20Accruals%20Anomaly%20-%20publication.pdf)",
+  "Dechow, Khimich & Sloan (2011), 'The Accrual Anomaly', SSRN (https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1793364)",
+  "Mashruwala, Rajgopal & Shevlin (2006), 'Why is the accrual anomaly not arbitraged away?', Journal of Accounting and Economics",
+  "Papanastasopoulos (2020), 'Percent accruals and the accrual anomaly: evidence from the UK', Accounting Forum (https://www.tandfonline.com/doi/full/10.1080/01559982.2020.1736758)",
+  "Penman & Zhu (2026), 'Explaining Two Prominent Accounting Pricing Anomalies: The Accrual Anomaly and PEAD'",
+  "AlphaArchitect — 'Two Accounting Anomalies: One May Be Risk, the Other Is Mispricing' (https://alphaarchitect.com/accounting-anomalies/)"
+ ],
+ "id": "E7"
+}
+================================================================================
+{
+ "cat": "E",
+ "cat_label": "추가 알파·팩터·이벤트",
+ "name": "자산성장 아노말리 (Asset Growth Effect)",
+ "type": "횡단면 팩터 (기업 투자·대차대조표 성장 기반, 롱온리 또는 롱숏)",
+ "target": "미국 대형주 유니버스(NDX/SPX)에 이식 가능한 롱온리 스크린. 원논문은 미국 전종목·국제 24개국 대상. 연 1회 회계데이터 기반 리밸.",
+ "purpose": "기업의 총자산 증가율(과잉투자 대리변수)이 미래 수익률과 음(-)의 관계라는 아노말리를 이용해, 자산을 적게 늘린(보수적 투자) 기업을 롱하여 추가 알파를 확보. 팩터모델의 투자팩터(CMA / I/A)에 대응하는 독립 알파원으로, 기존 풀의 퀄리티·밸류·모멘텀과 상관이 낮은 팩터 다변화 목적.",
+ "principle": "Cooper, Gulen, Schill(2008, Journal of Finance 63(4):1609-1651)는 총자산 성장률(TAG = (총자산_t − 총자산_t-1)/총자산_t-1)이 이후 1년 횡단면 수익률의 강한 음의 예측변수임을 발견. 최저 자산성장 십분위가 최고 십분위를 미국에서 연 약 7~8%p(동일가중 스프레드는 약 20%) 초과. 대형주에서도 예측력이 유지된다는 점이 핵심 기여. 해석은 두 갈래: (1) 행태적 과대추정 — 투자자가 과거 성장을 미래로 과도 외삽하여 고성장·과잉투자 기업을 고평가(저자산성장주는 저평가), (2) 합리적 q이론/투자CAPM — 할인율이 낮은 기업일수록 투자를 늘리므로 저투자 기업의 기대수익이 높음. 이 팩터는 Fama-French 5팩터의 CMA(Conservative Minus Aggressive)와 Hou-Xue-Zhang q팩터의 투자팩터(I/A)로 제도권 편입됨. 국제 증거는 Watanabe, Xu, Yao, Yu(2013, JFE) \"The asset growth effect: Insights from international equity markets\"가 24개국서 확인.",
+ "entry": "시그널: 직전 회계연도 총자산 YoY 성장률(TAG). 낮을수록(자산 축소·저투자) 매력. 랭크 후 하위 십분위(또는 하위 20~30%) 롱. 원논문은 십분위 롱숏(저자산성장 롱 − 고자산성장 숏), 동일가중과 가치가중 모두 검증(동일가중 스프레드가 훨씬 큼 — 소형주 편중 신호). 리밸런싱: 연 1회, 회계연도 종료 후 재무제표 공시 지연을 고려해 t년 6월 시점 포트폴리오 구성(Fama-French 컨벤션). 롱온리 대형주 이식 시: NDX/SPX 멤버 중 TAG 최저 N종목 동일가중, 연 1회 리밸, PIT 멤버십·5bp 비용 적용. 극단적 자산급증(대형 M&A·유상증자)·급감(자산매각·감손) 특이치 필터 권장.",
+ "performance": "강점: 학술적으로 매우 강건한 앵커 팩터(FF5·q팩터에 정식 편입), 40여 년·다국가서 재현, 대형주에서도 작동해 유동성·집행 부담이 낮음, 저PB·저투자 특성상 밸류/퀄리티와 부분 중첩되지만 독립 알파를 남김. 약점: (1) 수익 감쇠 — Cooper·Gulen·Ion(2023, JFE) \"The use of asset growth in empirical asset pricing models\"는 표본구성·기간에 따라 프리미엄이 약화됨을 보고, 투자팩터(CMA) 파워는 대략 2004년 이후 상당히 소진. (2) 효과가 소형주·차익거래 제약(고변동·낮은 애널리스트 커버리지) 기업에 집중 → 대형주 롱온리로 좁히면 스프레드가 축소. (3) 동일가중>>가치가중 격차가 커서 소형주 프리미엄 오염 위험 → 대형 유니버스 이식 시 기대 알파 하향 조정 필수. (4) 순수 저자산성장 롱은 성장주 랠리(2020~2021, 2023~2024 대형 성장주 주도장)에서 지속 열위 가능 → 국면 의존.",
+ "recent": "2024~2025: (1) Guo et al.(2024, Economics Letters) \"New findings on the asset growth anomaly: the joint effect of profitability and financing constraints\" — 저자산성장 롱숏의 위험조정 초과는 고수익성·고재무제약 기업에서 특히 유의, 무조건적 스프레드보다 조건부 정제가 필요함을 시사(어닝/퀄리티와의 상호작용). (2) 팩터 로테이션(2025): 2025년 연중은 모멘텀·성장 주도, 퀄리티·밸류·배당은 부진 → 저투자/CMA 계열 순풍 약함. 다만 2025년 4분기에는 밸류·퀄리티·배당이 반등하며 성장·모멘텀 둔화(팩터 리더십 반전 신호). (3) 학계 컨센서스는 \"아노말리 소멸론\"과 \"구성·조건부 존속론\"이 병존 — 단순 무조건 롱숏의 알파는 감쇠, 수익성·재무제약·밸류와 상호작용시킨 정제형은 여전히 유의. KB 이식 시 무조건 저자산성장보다 퀄리티·수익성 게이트를 얹은 조건부 버전을 백테스트 우선순위로 검토 권장(단, 게이트 집중은 ex-2026·국면 붕괴 리스크 — 기존 리서치 교훈대로 부트스트랩·적대검증 필수).",
+ "sources": [
+  "Cooper, M. J., Gulen, H., & Schill, M. J. (2008), 'Asset Growth and the Cross-Section of Stock Returns', Journal of Finance 63(4):1609-1651 — https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1540-6261.2008.01370.x",
+  "Cooper, M. J., Gulen, H., & Ion, M. (2023), 'The use of asset growth in empirical asset pricing models', Journal of Financial Economics — https://www.sciencedirect.com/science/article/abs/pii/S0304405X23001861 (초고 PDF: https://finance.unibocconi.eu/sites/default/files/files/media/attachments/Cooper_Gulen_Ion_Manuscript20190507084119.pdf)",
+  "Watanabe, Xu, Yao, Yu (2013), 'The asset growth effect: Insights from international equity markets', Journal of Financial Economics — https://www.sciencedirect.com/science/article/abs/pii/S0304405X12002486",
+  "Fama, E. & French, K. (2015), 'A five-factor asset pricing model' (CMA 투자팩터) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X14002323",
+  "Hou, Xue, Zhang / Lu Zhang (2019 NBER w26538), 'q-Factors and Investment CAPM' (I/A 투자팩터) — https://www.nber.org/system/files/working_papers/w26538/w26538.pdf",
+  "Guo et al. (2024), 'New findings on the asset growth anomaly: the joint effect of profitability and financing constraints', Economics Letters 244 — https://ideas.repec.org/a/eee/ecolet/v244y2024ics0165176524005007.html",
+  "Quantpedia, 'Asset Growth Effect' — https://quantpedia.com/strategies/asset-growth-effect",
+  "Certuity, 'Q1 2026 Risk Factor Performance Review' (2025 팩터 로테이션) — https://certuity.com/research/q1-2026-risk-factor-review/"
+ ],
+ "id": "E8"
+}
+================================================================================
+{
+ "cat": "E",
+ "cat_label": "추가 알파·팩터·이벤트",
+ "name": "Piotroski F-Score (재무건전성 9점 스코어)",
+ "type": "주식 롱온리 팩터 스크린 (가치 내 퀄리티 선별) / 옵션: 롱숏",
+ "target": "미국·글로벌 주식 (원전은 고B/M 소형·마이크로캡 중심, 확장 시 SPX·NDX·글로벌 지수 구성종목)",
+ "purpose": "저PBR(고 book-to-market) 바스켓은 평균적으로 프리미엄이 있으나 내부 분산이 극단적이다 — 진짜 저평가된 기업과 구조적으로 망가지는 '가치 함정(value trap)'이 섞여 있다. F-Score의 목적은 밸류에이션이 아니라 '재무 펀더멘털의 방향성(개선/악화)'을 회계 데이터만으로 이진 채점해, 저PBR 유니버스 안에서 승자를 선별하고 하위 꼬리(부실·희석·현금흐름 악화 기업)를 제거하는 것. 기존 풀의 밸류HML(밸류에이션 랭킹), 퀄리티QMJ(수익성·성장·안전성 수준 랭킹), 발생액(accruals 단일 시그널)과 달리, F-Score는 '수준'이 아닌 전년 대비 변화(delta) 중심의 회계 체크리스트라는 점에서 축이 다르다. 실무적으로는 가치·리비전 전략의 부실기업 필터 또는 오버레이로 쓰기 좋다.",
+ "principle": "Joseph D. Piotroski, \"Value Investing: The Use of Historical Financial Statement Information to Separate Winners from Losers,\" Journal of Accounting Research 38(Supplement), 2000, pp.1-41. 논리: 고B/M 기업은 애널리스트 커버리지가 얇고 정보환경이 열악해 재무제표가 거의 유일한 정보원이며, 시장이 회계상 펀더멘털 개선을 늦게 반영한다(정보처리 지연 + 차익거래 한계). 9개 이진 신호를 합산(0~9):\n[수익성 4개] ROA>0, 영업현금흐름(CFO)>0, ΔROA>0, CFO>순이익(발생액 품질, accrual)\n[레버리지·유동성·자금조달 3개] Δ장기부채/자산 하락, Δ유동비율 상승, 당해 신주발행 없음\n[영업효율 2개] Δ매출총이익률 상승, Δ자산회전율 상승\n원전 결과(1976~1996, NYSE/AMEX/NASDAQ): 고B/M 상위 20% 내에서 High F(8~9) 매수·Low F(0~1) 매도 시 연 약 23%p 스프레드, 고B/M 바스켓 대비 평균 수익률 약 +7.5%p 개선. 효과는 소형·저거래량·저애널리스트 커버리지 종목에 집중되며, 저점수 기업의 파산·상장폐지 회피 효과가 성과의 상당 부분을 설명한다는 점(꼬리 제거형 알파)이 중요.",
+ "entry": "- 유니버스: 지수 구성종목 PIT 멤버십 기준(생존편향 금지). 금융·보험·리츠는 회계 정의 왜곡으로 제외가 관행.\n- 밸류 게이트: B/M 상위 20~30%(또는 하우스 밸류 스코어 상위 3분위). 순수 퀄리티 오버레이로 쓸 땐 게이트 없이 F만 사용.\n- 스코어: 위 9개 신호 각 1점, 직전 회계연도 vs 그 전년 비교. 롱 = F>=8(완화 시 7), 숏/제외 = F<=2(원전은 0~1).\n- 포트폴리오: 동일가중 상위 N(20~50), 종목당 캡 5%, 섹터 캡 25~30%. 유동성 필터 필수(ADV 하위 배제 — 원전 성과는 시총 중앙값 1,500만 달러대 마이크로캡에 크게 의존).\n- 리밸런싱: 연 1회(회계연도 종료 +4개월 시점 진입, 원전 규약)가 정석. 분기 데이터로 롤링 12M F-Score를 쓰면 리밸 빈도 상향 가능하나 원전과 다른 전략이 됨을 명시할 것.\n- 하우스 규약: 시그널 lag 2영업일, 왕복 5bp 비용, 월말 리밸(분기판 사용 시), 부분월 제거(drop_incomplete_month) + ex-최근연도 + 부트스트랩 필수.\n- 데이터 함정: 9개 중 6개가 전년 대비 변화라 재무제표 리스테이트먼트·PIT 미보정 시 look-ahead가 그대로 들어간다. 신주발행 신호는 M&A 대가 주식발행과 구분 필요.",
+ "performance": "강점: (1) 원전 표본에서 스프레드가 크고 경제적 해석이 명확(무데이터마이닝적 체크리스트, 파라미터 없음). (2) 하위 꼬리 제거 효과가 견고해 '알파'가 아니어도 부실기업 필터로서 실무 가치가 있음. (3) 회계 데이터만 필요해 구현 비용이 낮고 글로벌 이식성이 높음. Podgórski(2026, Silesian Univ. Organization and Management Series) 국제 문헌 리뷰는 23개 선진·12개 신흥 등 35개 시장에서 High-minus-Low F 포트폴리오의 위험조정 프리미엄이 신흥국 약 12%, 선진국 약 10% 수준으로 보고된다고 정리. 2016년 유럽 대상 out-of-sample 테스트에서는 Mohanram G-Score와 F-Score만이 유의한 알파를 유지했다는 보고도 있음.\n약점/감쇠논쟁(균형): (1) 강력한 반증 — Yuval Taylor(Portfolio123, 2021)는 원전 규약을 그대로 복제(B/M 상위 20%, 21년·12,883개사)했을 때 최근 10년 연평균 -9.53%, 최근 20년 -11.75%로 **부호가 반전**(저점수가 고점수를 압도)했으며, 9개 신호 중 일관되게 작동한 것은 발생액(CFO>NI) 하나뿐이라고 보고. 즉 F-Score 알파의 상당 부분이 이미 accruals 팩터(기존 풀에 존재)에 흡수될 수 있다는 중복 리스크. (2) 원전 성과가 사실상 투자 불가능한 마이크로캡·저유동성 구간에 집중 — 대형주에서는 효과가 희박. (3) 산업 무보정 이진화(에너지·유틸리티·리테일 동일 잣대)와 B/M을 미스프라이싱 대리변수로 쓰는 가정이 취약. (4) 광범위한 알파 감쇠 연구(post-publication 수익 58% 감소 유형)의 전형적 사례로 인용됨. 종합: '신규 알파 후보'로 배포하기보다, accruals와의 직교성 검증 + 대형주 유니버스에서의 ex-post 재검증을 통과해야만 의미가 있으며, 통과 못해도 리스크 필터로는 유지 가치가 있음.",
+ "recent": "2025~2026 동향: (1) Anderson·Chowdhury·Uddin, \"Piotroski's F-score under varying economic conditions,\" Review of Quantitative Finance and Accounting (2025) — 1973~2009 금융위기 국면을 포함해 F-Score의 국면 의존성을 최초로 체계 분석. 경기 수축기에는 통화·거시 요인이 기업 고유 요인을 압도해 F-Score 구성 변수의 의미가 바뀌므로, 확장기와 동일하게 적용하지 말라고 경고(국면 조건부 사용 시사 — 다만 기존 풀의 레짐동적배분·국면팩터로테이션과 결합할 땐 중복 주의). (2) Podgórski(2026) 국제 문헌 리뷰 — 신흥국 프리미엄이 선진국보다 높다는 패턴 정리와 함께, 최근 연구가 ML 결합·ESG 등 비재무 변수 확장으로 이동 중임을 지적. (3) Chuan Shi, \"Piotroski's F-Score in the Chinese Stock Market\"(SSRN 5144971, 2025) 등 비미국 시장 재검증이 계속됨. (4) 실무 측면에서는 AAII High F-Score 스크린, Validea, 각종 데이터 벤더가 F-Score를 상시 퀄리티 필터로 제공 — 이미 완전히 상품화·대중화되어 단독 알파로서의 기대는 낮춰야 함. (5) 신경망으로 F-Score를 재구성하려는 시도(Finance Research Letters 계열)도 있으나, 기존 풀의 'ML 유행 전략은 단순 베이스라인에 패배' 결론과 일관되게 회의적으로 볼 것.",
+ "sources": [
+  "https://www.semanticscholar.org/paper/Value-Investing:-The-Use-of-Historical-Financial-to-Piotroski/0559e92e06dae21e77ea79d79417b8a1d40be772",
+  "https://www.anderson.ucla.edu/documents/areas/prg/asam/2019/F-Score.pdf",
+  "https://link.springer.com/article/10.1007/s11156-024-01331-y",
+  "https://eprints.whiterose.ac.uk/id/eprint/214946/3/s11156-024-01331-y.pdf",
+  "https://managementpapers.polsl.pl/wp-content/uploads/2026/05/245-Podgorski.pdf",
+  "https://blog.portfolio123.com/why-piotroskis-f-score-no-longer-works/",
+  "https://seekingalpha.com/article/4407684-why-piotroskis-f-score-no-longer-works",
+  "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5144971",
+  "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2274516",
+  "https://www.econstor.eu/handle/10419/121238",
+  "https://arxiv.org/pdf/2105.01380",
+  "https://www.aaii.com/stocks/screens/62",
+  "https://en.wikipedia.org/wiki/Piotroski_F-score"
+ ],
+ "id": "E16"
+}
+================================================================================
+{
+ "id": "E29",
+ "cat": "E",
+ "cat_label": "추가 알파·팩터·이벤트",
+ "name": "종목별 캘린더월 계절성 (Cross-Sectional Return Seasonality)",
+ "type": "횡단면 계절성 팩터",
+ "target": "미국·선진국 주식 횡단면 (S&P 500 / 러셀1000 등 유동성 상위 종목)",
+ "purpose": "지수 전체의 계절성(1월효과·할로윈효과)이 아니라, 개별 종목이 매년 같은 달에 상대적으로 높거나 낮은 수익을 반복한다는 횡단면 패턴을 롱숏 또는 롱온리 틸트로 수확한다. 기존 풀의 모멘텀·평균회귀·지수레벨 계절성과 상관이 낮은 독립 알파 원천을 추가하는 것이 목적.",
+ "principle": "Heston·Sadka(2008, JFE 87:418-445)는 미국 주식 수익률이 12개월·24개월 등 연간 배수 시차에서 자기상관을 보이며 이 패턴이 최대 20개 연간 시차까지 지속됨을 보였다. 즉 과거 여러 해 동안 3월에 유독 강했던 종목은 올해 3월에도 강한 경향이 있고, 이는 규모·산업·실적발표·배당 시점과 독립적이다. Keloharju·Linnainmaa·Nyberg(2016, JF 71(4):1557-1590)는 이 패턴이 개별 종목을 넘어 팩터 포트폴리오·원자재·국가지수·일간 빈도에서도 나타나는 공통 요인의 계절성임을 보였다. 원인 가설은 두 갈래다. ①미스프라이싱: 같은 저자들(2021, JFE 139(1):138-161)은 계절성이 계절적 반전(seasonal reversal)과 짝을 이뤄 1년 단위로 상쇄되며 이는 리스크 프리미엄이 아닌 일시적 오가격과 일치한다고 결론지었다. ②투자자 기분: Hirshleifer·Jiang·DiGiovanni(2020, JFE 137(1):272-295)는 종목별 무드 베타가 달라 낙관/비관이 반복되는 달마다 상대성과가 재현되고 무드가 반대인 국면에서는 반전된다고 설명했다. 실무적으로는 계절성 자체를 믿기보다 여러 해에 걸쳐 안정적으로 반복되는 종목 고유의 사업·수요 사이클(계절 매출, 산업 발주 주기, 연간 예산 집행)이 서서히 반영되는 구조로 이해하는 편이 안전하다.",
+ "entry": "①유니버스: S&P 500 또는 러셀1000 등 유동성 상위 종목(마이크로캡 배제 — 등가중 성과가 초소형주에 왜곡되는 것을 방지). ②시그널: 매월 말, 다음 달과 같은 캘린더월의 과거 20년 수익률(t+1월이 3월이면 과거 20개의 3월 수익률)의 평균 또는 중앙값을 계산. 관측치 10개 미만이면 제외. ③표준화: 같은 달의 시장 평균을 차감해 시장중립 계절성 점수를 만들고, 12개월 모멘텀·직전 1개월 반전·규모·업종에 대해 횡단면 회귀로 직교화한 잔차를 최종 스코어로 사용. ④포트폴리오: 스코어 상위 10%(롱온리는 상위 30~50종목) 동일가중, 보유 1개월, 월말 리밸런싱. 롱숏은 하위 10% 숏. ⑤리스크 통제: 업종 비중 벤치마크 대비 ±5%p 제한, 종목당 상한 3%. ⑥거래비용: 월 회전율이 100%에 육박하므로 왕복비용을 반드시 반영하고, 진입 상위 10%/이탈 상위 30%의 버퍼로 교체를 줄인다.",
+ "performance": "Keloharju 외(2016)는 과거 같은 캘린더월 수익률로 종목을 선택하는 전략이 연평균 13%의 수익을 낸다고 보고했고, 이 연구는 AQR Insight Award 우수상(Honourable Mention)을 받았다. 다만 감쇠·반론이 뚜렷하다. ①거래비용 장벽: Heston·Sadka는 이 전략이 사실상 매월 100%에 가까운 회전율을 요구하며 왕복 거래비용이 약 70bp를 넘으면 수익성이 사라진다고 지적했다 — 총수익(gross) 기준 수치를 실현 가능한 알파로 읽으면 안 된다. ②등가중·소형주 의존: 등가중 포트폴리오는 초소형주에 크게 좌우되며 마이크로캡을 제외하면 스프레드가 축소된다. ③해석 논쟁: 리스크 프리미엄이냐 미스프라이싱이냐가 미해결이며, 저자들 스스로 2021년 논문에서 계절적 반전을 근거로 미스프라이싱 해석에 손을 들었다 — 미스프라이싱이라면 차익거래 자본 유입에 따른 소멸 위험이 크다. ④국가별 불균질: Li·Zhang·Zheng은 42개 시장 분석에서 선진 21개국에서는 유의하나 신흥 21개국에서는 유의하지 않다고 보고했다. ⑤사후 감쇠: Chen·Zimmermann의 오픈소스 횡단면 데이터셋은 이례현상의 게재 후 수익 감쇠를 광범위하게 확인하며 계절성 계열도 예외로 보기 어렵다. ⑥데이터마이닝 우려: 20개 연간 시차를 탐색하는 구조 자체가 다중검정 문제에 노출돼 있어 out-of-sample·비용차감·직교화 검증이 필수다. 결론적으로 단독 주력 전략보다는 기존 모멘텀·밸류 스코어에 얹는 저상관 보조 틸트가 현실적이다.",
+ "recent": "2016년 JF 게재 이후 논쟁의 축은 존재 여부에서 원인과 실현 가능성으로 이동했다. 2020년 Hirshleifer 외의 무드 베타(JFE), 2021년 Keloharju 외의 계절적 반전(JFE)이 각각 행동재무·미스프라이싱 해석을 강화했고 이후 중국 등 개별 시장으로의 확장 연구가 이어졌다. 실무 쪽에서는 Quantpedia 등이 재현 방법을 공개해 진입장벽이 낮아진 반면, Alpha Architect 등은 캘린더 이례현상이 10년 단위로 일관되지 않아 액티브 전략으로 옮기기 어렵다는 회의론을 제시한다. Chen·Zimmermann의 공개 데이터로 다수 특성이 재현 가능해지면서 계절성 시그널도 독자 알파가 아니라 다른 특성과의 직교성으로 평가받는 단계에 들어섰다.",
+ "recent_at": "2026-07-22",
+ "sources": [
+  "Seasonality in the cross-section of stock returns (Heston & Sadka, 2008, Journal of Financial Economics 87:418-445) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X0700195X",
+  "Seasonality in the Cross-Section of Expected Stock Returns (Heston & Sadka, 2005, SSRN) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=687022",
+  "Return Seasonalities (Keloharju, Linnainmaa & Nyberg, 2016, Journal of Finance 71(4):1557-1590) — https://onlinelibrary.wiley.com/doi/abs/10.1111/jofi.12398",
+  "Return Seasonalities (Keloharju, Linnainmaa & Nyberg, SSRN 워킹페이퍼) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2224246",
+  "Are return seasonalities due to risk or mispricing? (Keloharju, Linnainmaa & Nyberg, 2021, Journal of Financial Economics 139(1):138-161) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X20301951",
+  "Mood beta and seasonalities in stock returns (Hirshleifer, Jiang & DiGiovanni, 2020, Journal of Financial Economics 137(1):272-295) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X20300362",
+  "Mood Betas and Seasonalities in Stock Returns (Hirshleifer, Jiang & DiGiovanni, NBER Working Paper 24676) — https://www.nber.org/papers/w24676",
+  "Seasonality in the cross section of stock returns: Advanced markets versus emerging markets (Li, Zhang & Zheng) — https://www.sciencedirect.com/science/article/abs/pii/S092753981830077X",
+  "Open Source Cross-Sectional Asset Pricing (Chen & Zimmermann, Federal Reserve FEDS 2021-037) — https://www.federalreserve.gov/econres/feds/files/2021-037pap.pdf",
+  "Calendar Anomalies - do they matter in the long run? (Alpha Architect) — https://alphaarchitect.com/calendar-anomalies/"
+ ]
+}
+================================================================================
