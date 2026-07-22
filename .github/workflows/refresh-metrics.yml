@@ -11,6 +11,7 @@ on:
   push:
     paths:
       - 'data/strategy_backtests.json'   # 시계열이 새로 커밋되면 지표를 즉시 다시 굽는다
+      - 'data/archive_backtests.json'    # 기각 재검 부기도 같은 엔진으로 재계산된다
       - 'build/strategy_metrics.py'
       - '.github/workflows/refresh-metrics.yml'
     # 이 잡 자신의 커밋은 GITHUB_TOKEN 푸시라 워크플로를 재트리거하지 않는다(무한 루프 없음)
@@ -41,12 +42,13 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           # ⚠ 생성기 산출물 전부 커밋: strategy_backtests.json(지표 v2·월말 낙폭 재계산)
+          #   + archive_backtests.json(기각 재검 부기 — 같은 엔진이 매번 다시 굽는다)
           #   + rf_monthly.json(무위험금리 캐시 — 커밋 안 하면 FRED 장애 시 폴백할 대상이 사라진다)
           #   과거 home_reco.json·target_history.json 을 git add에서 빠뜨려 영구 유실시킨 사고가 3번 있었다.
           # 변경 감지는 data/ 전체로 본다 — 특정 경로만 보면 '새 산출물 파일만 생긴' 사고 유형에서
           # else로 빠져 아래 누락 검증이 아예 돌지 않는다(refresh-stocks.yml과 같은 가드).
           if [ -n "$(git status --porcelain data/)" ]; then
-            git add data/strategy_backtests.json data/rf_monthly.json
+            git add data/strategy_backtests.json data/archive_backtests.json data/rf_monthly.json
             LEFT="$(git status --porcelain data/ | grep -E '^([ ?])' || true)"
             if [ -n "$LEFT" ]; then
               echo "::error::data/ 산출물이 커밋 목록에서 빠졌습니다(과거 home_reco·target_history 유실 사고와 동일 유형):"

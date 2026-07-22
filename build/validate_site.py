@@ -391,6 +391,39 @@ try:
 except Exception as e:
     errors.append(f"성과지표 v2 검증 실패: {e}")
 
+# ── 기각 재검 부기 — 전건 '기각 유지'다. 이게 전략처럼 보이면 랩의 신뢰가 무너진다 ──
+try:
+    _ap = os.path.join(ROOT, "data", "archive_backtests.json")
+    if os.path.exists(_ap):
+        _ab = json.load(io.open(_ap, encoding="utf-8"))
+        _asrc = rd("archive.html")
+        if _ab.get("metrics_schema") != "v2":
+            errors.append("archive_backtests.json: metrics_schema가 v2가 아님 — strategy_metrics.py 실행 필요")
+        # 분모를 게시 건수로 잡으면 보정이 실제보다 관대해진다(고른 뒤에 세는 것 = selection 무시)
+        _nt = _ab.get("n_tests_total")
+        if not _nt or _nt < len(_ab.get("strategies") or {}):
+            errors.append("archive_backtests.json: n_tests_total 결측/과소 — 다중검정 분모는 게시 건수가 아니라 재검 총 건수")
+        # archive.html의 sid와 조인되지 않으면 부기가 통째로 사라진다(개명 사고 유형)
+        _asids = set(re.findall(r'"sid":\s*"([^"]+)"', _asrc))
+        for _sid, _b in (_ab.get("strategies") or {}).items():
+            if _sid not in _asids:
+                errors.append(f"archive_backtests.json \"{_sid}\": archive.html D 배열에 없는 sid — 부기가 렌더되지 않는다")
+            _m = _b.get("metrics") or {}
+            if not (_m.get("s") and _m.get("b") and _m.get("basis")):
+                errors.append(f"{_sid}: 부기 지표 v2 블록 없음"); continue
+            if not _m["basis"].get("excess"):
+                errors.append(f"{_sid}: 부기가 초과수익 기준이 아님 — rf=0 게시 금지")
+            _mu = _m.get("multiplicity") or {}
+            if _mu.get("n_tests") != _nt:
+                errors.append(f"{_sid}: 다중검정 n_tests({_mu.get('n_tests')})가 n_tests_total({_nt})과 다름")
+            if _mu.get("passed"):
+                errors.append(f"{_sid}: 부기가 다중검정을 통과한 것으로 표시됨 — 재검 판정은 전건 '기각 유지'다. "
+                              "실제로 통과했다면 아카이브가 아니라 탐색기로 승격 검토가 먼저다")
+        if "기각 유지" not in _asrc:
+            errors.append("archive.html 부기에 '기각 유지' 문구가 없음 — 표만 보면 부활한 것으로 읽힌다")
+except Exception as e:
+    errors.append(f"기각 재검 부기 검증 실패: {e}")
+
 # ── 폭 토큰: 페이지 이동 시 콘텐츠 폭이 튀지 않게 세 가지로만 ──
 try:
     _want = {"stocks.html": "--w-wide", "index.html": "--w-base", "explorer.html": "--w-base",
