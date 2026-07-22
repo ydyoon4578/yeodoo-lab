@@ -51,6 +51,15 @@
   .search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow)}
   .search input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
   .search svg{flex-shrink:0;color:var(--muted)}
+  /* 필터 접기 — sticky 컨트롤이 모바일 화면을 다 먹어 목록이 안 보였다.
+     접힌 상태에서도 현재 보고 있는 프리셋과 종목 수는 버튼에 남긴다(접기≠정보 삭제). */
+  .fltbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;font-weight:600;
+          color:var(--ink-2);background:var(--panel);border:1px solid var(--line);border-radius:999px;
+          padding:7px 14px;cursor:pointer;white-space:nowrap;flex:none}
+  .fltbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .fltbtn .fcar{font-size:9px;transition:transform .15s}
+  .fltbtn[aria-expanded="false"] .fcar{transform:rotate(-90deg)}
+  .chipwrap[hidden]{display:none}
   .chiprow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
   .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;user-select:none;transition:all .12s}
   .fchip:hover{border-color:var(--accent);color:var(--ink-2)}
@@ -263,11 +272,16 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="q" type="search" placeholder="티커·회사명·섹터 검색 (예: NVDA, Apple, Energy)" aria-label="검색">
       </label>
+      <button class="fltbtn" id="fltbtn" aria-expanded="true" aria-controls="chipwrap">
+        <span class="fcar" aria-hidden="true">▾</span><span id="fltnow">필터</span>
+      </button>
     </div>
-    <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
-    <div class="chiprow"><span class="fchip lbl">스크리닝</span><span id="presets2" style="display:contents"></span></div>
-    <div class="chiprow"><span class="fchip lbl">펀더멘털</span><span id="presets3" style="display:contents"></span></div>
-    <div class="chiprow"><span class="fchip lbl">지수</span><span id="idxf" style="display:contents"></span></div>
+    <div class="chipwrap" id="chipwrap">
+      <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl">스크리닝</span><span id="presets2" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl">펀더멘털</span><span id="presets3" style="display:contents"></span></div>
+      <div class="chiprow"><span class="fchip lbl">지수</span><span id="idxf" style="display:contents"></span></div>
+    </div>
   </div>
 
   <div class="board">
@@ -374,7 +388,7 @@
     rss:"3개월 초과수익(vs SPY) +20%p 이상 — 상대강도 상위. 랩 검증상 추세추종 계열이 역추세보다 우위였다.",
     tgt:"애널리스트 목표주가를 한 화면에서 비교 — 상승여력의 64%는 최근 하락의 기계적 반영이라 기본 정렬은 상승여력이 아니다. 컨센서스 정보일 뿐 랩의 신호가 아님."};
   var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","깊은눌림":"deepdip","약세반등":"bearrally","골든임박":"goldnear","거래급증":"volsurge","변동수축":"squeeze2","시장강세":"rsstrong","52주돌파":"b52돌파","200일이탈":"b200이탈","과밀숏":"gmilshort"};
-  var PERIODS=[["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252]];
+  var PERIODS=[["1일",2],["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252]];
   var state={q:"",preset:"swingbuy",idx:new Set(),sel:null,period:252};
   function cc(k){return 'var('+({overheat:'--hot',trend:'--good',momentum:'--accent',volatility:'--watch'}[k]||'--accent')+')';}
   function gc(g){return 'var('+({hot:'--hot',good:'--good',accent:'--accent',watch:'--watch',cold:'--cold',muted:'--muted'}[g]||'--accent')+')';}
@@ -516,6 +530,24 @@
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
     return {rows:rows,comp:comp,total:total};
   }
+  // 필터 접기 — 좁은 화면에서는 접힌 채로 시작한다(sticky 컨트롤이 목록을 덮는 문제)
+  var NARROW='(max-width:760px)';
+  function fltLabel(){
+    var b=el('fltnow'); if(!b)return;
+    var p=curP(), n=(listEl&&listEl.querySelectorAll('.item').length)||0;
+    // 프리셋 라벨의 선두 ▲/▼는 버튼의 접기 캐럿(▾)과 붙어 읽히므로 뗀다
+    var name=String(p[1]).replace(/<[^>]*>/g,'').replace(/^[▲▼]\s*/,'').trim();
+    b.textContent=el('chipwrap').hidden?(name+' '+n+'종'):'필터 접기';
+  }
+  function setFlt(open){
+    var w=el('chipwrap'), b=el('fltbtn'); if(!w||!b)return;
+    w.hidden=!open; b.setAttribute('aria-expanded',open?'true':'false'); fltLabel();
+  }
+  (function(){
+    var b=el('fltbtn'); if(!b)return;
+    b.addEventListener('click',function(){setFlt(el('chipwrap').hidden);});
+    setFlt(!matchMedia(NARROW).matches);
+  })();
   function render(){
     var f=filtered(),rows=f.rows,comp=f.comp;
     // 프리셋 라벨은 색상 마크업(▲/▼)을 품고 있으므로 textContent로 쓰면 태그가 그대로 노출된다 — 개수만 이스케이프하고 라벨은 HTML로
@@ -565,6 +597,7 @@
     if(!listEl._deleg){listEl._deleg=1;listEl.addEventListener('click',function(e){var it=e.target.closest('.item');if(!it)return;
       var t=it.getAttribute('data-t');for(var i=0;i<DATA.stocks.length;i++)if(DATA.stocks[i].t===t){select(DATA.stocks[i]);break;}});}
     drawDetail(state.sel);
+    fltLabel();
   }
   function select(s){state.sel=s;var items=listEl.querySelectorAll('.item'),f=filtered(),ix=f.rows.indexOf(s);
     for(var i=0;i<items.length;i++)items[i].setAttribute('aria-selected',i===ix);drawDetail(s);
@@ -935,7 +968,7 @@
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      (p[6]==='f'?pf3:p[6]==='s'?pf2:pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();},TIPS[p[0]]));
+      (p[6]==='f'?pf3:p[6]==='s'?pf2:pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]]));
     });
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
     // 딥링크: 홈 추천 종목 클릭 → #t=티커&p=탭 으로 진입, 해당 탭·종목 자동 선택
