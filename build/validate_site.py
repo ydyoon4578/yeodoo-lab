@@ -391,6 +391,82 @@ try:
 except Exception as e:
     errors.append(f"성과지표 v2 검증 실패: {e}")
 
+# ── 성격(kind) 축 · 대조군 역할 · 프록시 고지 · 기준월 통일 ─────
+# 전략마다 '무엇으로 판단하는가'가 다르다는 것이 explorer의 발표 축이다. 그 축이 비면
+# 화면은 도로 CAGR 한 줄로 모든 전략을 재단한다 — 그 상태를 배포하지 않도록 여기서 잡는다.
+try:
+    _kp = os.path.join(ROOT, "data", "strategy_kinds.json")
+    if not os.path.exists(_kp):
+        errors.append("data/strategy_kinds.json 없음 — 성격 축 정의가 커밋되지 않았다")
+    else:
+        _kj = json.load(io.open(_kp, encoding="utf-8"))
+        _kinds = set((_kj.get("kinds") or {}).keys())
+        _roles = set((_kj.get("bench_roles") or {}).keys())
+        _mlab = _kj.get("metric_labels") or {}
+        if not _kinds: errors.append("strategy_kinds.json: kinds가 비어 있음")
+        for _k, _v in (_kj.get("kinds") or {}).items():
+            for _need in ("one_liner", "primary", "list_metric", "list_label", "read_note"):
+                if not _v.get(_need):
+                    errors.append(f"strategy_kinds.json {_k}: {_need} 결측 — 화면이 빈칸으로 렌더된다")
+            for _pk in (_v.get("primary") or []):
+                if _pk not in _mlab:
+                    errors.append(f"strategy_kinds.json {_k}: primary '{_pk}'의 metric_labels 라벨이 없음")
+        _det = json.load(io.open(os.path.join(ROOT, "data", "strategy_detail.json"), encoding="utf-8"))
+        _bt2 = json.load(io.open(os.path.join(ROOT, "data", "strategy_backtests.json"), encoding="utf-8"))
+        _bs2 = (_bt2 or {}).get("strategies") or {}
+        _endmonths = set()
+        for _d in EREC:
+            _nm = _d["n"]
+            _dd = _det.get(_nm) or {}
+            # (a)(b) 성격 축
+            if not _dd.get("kind"):
+                errors.append(f"strategy_detail.json \"{_nm}\": kind 없음 — 목록·카드가 '미분류'로 떨어진다")
+            elif _dd["kind"] not in _kinds:
+                errors.append(f"strategy_detail.json \"{_nm}\": kind '{_dd['kind']}'가 strategy_kinds.json에 없음")
+            # (e) 용도 축 미분류 0건
+            if not _dd.get("archetype"):
+                errors.append(f"strategy_detail.json \"{_nm}\": archetype 없음 — 용도 필터에 '미분류' 칩이 생긴다")
+            _b = _bs2.get(_nm)
+            if not _b: continue
+            # 조인 키 이중화 — 표시명 하나로만 묶여 있으면 개명하는 순간 차트가 통째로 사라진다
+            if not _b.get("sid"):
+                errors.append(f"strategy_backtests.json \"{_nm}\": sid 병기 없음 — 개명 시 조인이 끊긴다")
+            elif _b["sid"] != _d.get("sid"):
+                errors.append(f"strategy_backtests.json \"{_nm}\": sid '{_b['sid']}'가 explorer의 '{_d.get('sid')}'와 다름")
+            # (c) 대조군 역할
+            for _rk, _lk in (("bench_role", "bench_label"), ("bench2_role", "bench2_label")):
+                if _b.get(_lk) and not _b.get(_rk):
+                    errors.append(f"strategy_backtests.json \"{_nm}\": {_rk} 없음 — 화면이 대조군 성격을 설명하지 못한다")
+                elif _b.get(_rk) and _b[_rk] not in _roles:
+                    errors.append(f"strategy_backtests.json \"{_nm}\": {_rk}='{_b[_rk]}'가 허용값 {sorted(_roles)}에 없음")
+            # (d) 프록시 고지 — 원본인 척하면 안 된다
+            if _b.get("is_proxy") and not _b.get("proxy_note"):
+                errors.append(f"strategy_backtests.json \"{_nm}\": is_proxy=true인데 proxy_note가 없음 — 프록시를 원본인 척 게시할 수 없다")
+            # 위기 구간·성격 보조 수치는 엔진 산출물이다(손으로 적은 값이 섞이면 조용히 틀린다)
+            _m = _b.get("metrics") or {}
+            if not _m.get("crisis"):
+                errors.append(f"{_nm}: metrics.crisis 없음 — build/strategy_metrics.py 로 다시 구울 것")
+            if _m.get("profile") is None:
+                errors.append(f"{_nm}: metrics.profile 없음 — build/strategy_metrics.py 로 다시 구울 것")
+            if _b.get("effective_from") and not _b.get("effective_note"):
+                errors.append(f"{_nm}: effective_from만 있고 effective_note가 없음 — 겹친 구간이 차트 버그로 읽힌다")
+            _ba2 = _m.get("basis") or {}
+            if _ba2.get("end_month"): _endmonths.add(_ba2["end_month"])
+        # (f) 기준일 통일 = 사용자 1순위 원칙
+        if len(_endmonths) > 1:
+            errors.append(f"지표 기준월이 전략마다 다름: {sorted(_endmonths)} — 기준일 통일이 이 랩의 1순위 원칙이다")
+        # explorer가 성격 축을 실제로 읽는지(문안만 남고 로직이 빠지는 사고 방지)
+        _ex = rd("explorer.html")
+        for _needs, _msg in ((("strategy_kinds.json",), "성격 축 정의를 읽지 않음"),
+                             (("metrics.crisis", "m.crisis"), "위기 구간을 화면에 쓰지 않음"),
+                             (("crisisTable",), "위기 구간 표 컴포넌트가 없음"),
+                             (("min_detectable_d_sharpe_95",), "'구별 불가'의 판정 범위를 설명하지 않음"),
+                             (("kindOf", "kmeta"), "성격별 1차 지표 분기가 없음")):
+            if not any(_n in _ex for _n in _needs):
+                errors.append(f"explorer.html이 {' / '.join(_needs)} 를 참조하지 않음 — {_msg}")
+except Exception as e:
+    errors.append(f"성격 축·대조군 역할 검증 실패: {e}")
+
 # ── 기각 재검 부기 — 전건 '기각 유지'다. 이게 전략처럼 보이면 랩의 신뢰가 무너진다 ──
 try:
     _ap = os.path.join(ROOT, "data", "archive_backtests.json")
