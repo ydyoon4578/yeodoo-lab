@@ -246,6 +246,51 @@ try:
 except Exception as e:
     errors.append(f"screens.json 검증 실패: {e}")
 
+# ── 판정 원장(verdicts.json): 홈이 숫자를 손으로 적지 않는지 ──
+#    '기각 41'처럼 HTML에 박아두면 전략 등재일에 조용히 틀린다 — 정직성 페이지가 틀린 숫자를 자랑하는 게 최악이다.
+try:
+    sys.path.insert(0, os.path.join(ROOT, "build"))
+    import verdicts_gen
+    _vp = os.path.join(ROOT, "data", "verdicts.json")
+    if not os.path.exists(_vp):
+        errors.append("data/verdicts.json 없음 — python build/verdicts_gen.py 실행 필요")
+    else:
+        _cur = json.load(io.open(_vp, encoding="utf-8"))
+        _fresh = verdicts_gen.build(ROOT)
+        if _cur != _fresh:
+            errors.append("판정 원장이 전략 배열과 어긋남 — python build/verdicts_gen.py 로 다시 구울 것")
+        _ih = rd("index.html")
+        # 홈 본문(스크립트 제외)에 판정 수치가 하드코딩돼 있으면 드리프트한다
+        _body = re.sub(r"(?s)<script.*?</script>", "", _ih)
+        for _n, _lab in ((_fresh["archive_n"], "기각 아카이브 건수"), (_fresh["explorer_n"], "전략 총수"),
+                         (_fresh["marginal_n"], "제한적 유효 건수")):
+            if re.search(r"(?<![0-9])%d\s*(개|종|건)" % _n, _body):
+                errors.append(f"index.html에 {_lab}({_n})가 하드코딩됨 — verdicts.json에서 읽을 것")
+        if "data/verdicts.json" not in _ih:
+            errors.append("index.html이 verdicts.json을 읽지 않음 — 판정 수치를 손으로 적고 있다")
+        # 배포 딥링크 슬러그가 explorer에서 실제로 선택되는지(규칙 동일성)
+        _eh = rd("explorer.html")
+        for _d in _fresh["deploy"]:
+            if _d["n"] not in _eh:
+                errors.append(f"배포 전략명이 explorer.html에 없음: {_d['n']}")
+except Exception as e:
+    errors.append(f"판정 원장 검증 실패: {e}")
+
+# ── 폭 토큰: 페이지 이동 시 콘텐츠 폭이 튀지 않게 세 가지로만 ──
+try:
+    _want = {"stocks.html": "--w-wide", "index.html": "--w-base", "explorer.html": "--w-base",
+             "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
+             "sources.html": "--w-read"}
+    for _f, _tok in _want.items():
+        _s = rd(_f)
+        _m = re.search(r"\.wrap\{[^}]*?max-width:\s*([^;]+);", _s)
+        if not _m:
+            errors.append(f"{_f}: .wrap max-width 없음")
+        elif _m.group(1).strip() != f"var({_tok})":
+            errors.append(f"{_f}: 폭이 var({_tok})가 아님({_m.group(1).strip()}) — 폭 토큰 밖으로 나갔다")
+except Exception as e:
+    errors.append(f"폭 토큰 검증 실패: {e}")
+
 # ── 갱신 피드(updates.json): 홈 '최근 업데이트'·각 페이지 배지의 소스 ──
 try:
     _up = os.path.join(ROOT, "data", "updates.json")

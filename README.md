@@ -42,6 +42,34 @@ GitHub Pages(branch source: `main` / root). `main`에 푸시하면 자동 재빌
 python3 -m http.server 8080   # → http://localhost:8080
 ```
 
+## 빌드 산출물 — 화면이 계산하지 않는다
+
+정의를 공유해도 **구현이 둘이면 어긋난다**(실측: 백분위 동점 처리 차이로 스크린 1종목이 화면·DB 간에 갈렸다).
+계산은 아래 스크립트 한 곳에서만 하고, 화면과 DB 로더는 결과를 **읽기만** 한다.
+
+| 스크립트 | 굽는 것 | 소비처 |
+|---|---|---|
+| `build/screens_apply.py` | `stocks.json.screens` — 펀더멘털 스크리닝 통과 종목·적합도 | stocks.html · db_load |
+| `build/home_summary.py` | `home_reco.json` — 스윙 타점 상위 8+8, 확정/잠정 카운트, 배포 3종 성과·구간·축약 NAV | index.html |
+| `build/verdicts_gen.py` | `verdicts.json` — 배포/제한적 유효/기각 집계(explorer·archive의 전략 배열에서 파싱) | index.html |
+
+홈은 대형 파일(`stocks.json` 354KB · `rotation_pool.json` 364KB · `strategy_backtests.json` 85KB)을
+**절대 fetch하지 않는다.** 필요한 값은 위 산출물에 구워 넣는다.
+
+정의·배열을 고쳤으면 다시 구워야 CI를 통과한다:
+
+```bash
+python build/screens_apply.py && python build/verdicts_gen.py && python build/validate_site.py
+```
+
+CI가 막는 것 — ①인라인 정의 복제 ②화면의 자체 계산 ③정의 지문(`screens_fp`) 불일치 ④결과 정렬 역전
+⑤판정 원장과 전략 배열 불일치 ⑥홈에 판정 수치 하드코딩 ⑦폭 토큰 이탈. 전부 위반 주입으로 탐지 확인.
+
+### 폭 토큰
+
+페이지마다 `max-width`가 제각각(1440/1120/1080/1040/980)이라 이동할 때 폭이 튀었다. 세 가지로 통일한다 —
+`--w-wide` 1440(종목 시그널) · `--w-base` 1200(홈·전략·국면·탐색·아카이브) · `--w-read` 980(데이터 출처).
+
 ## 누적 스토어 (Postgres `yeodoo` 스키마)
 
 원본은 git의 `data/*.json`이고, DB는 **조회용 누적 미러**다(GitHub Actions 러너는 tailnet 밖이라 DB에
