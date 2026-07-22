@@ -174,7 +174,7 @@
 
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="sources.html">데이터 출처</a> · <a href="archive.html">기각 아카이브</a><br>
-    레짐 분류는 랩의 regime 3축(성장·물가·금융) 방법론을 FRED 공개데이터로 재현 · <b>서프라이즈(▲추세상회/▼추세하회)는 직전 6개월 추세(직전 관측 평균) 대비이며, 애널리스트 컨센서스가 아닙니다</b> · 지표 참고용.
+    레짐 분류는 랩의 regime 3축(성장·물가·금융) 방법론을 FRED 공개데이터로 재현 · <b>서프라이즈(▲추세상회/▼추세하회)는 각 지표의 <u>직전 6개 관측</u> 평균 대비 편차(z)이며 애널리스트 컨센서스가 아닙니다</b> — 발표 주기가 달라 6관측이 일간 지표는 6영업일, 주간은 6주, 월간은 6개월을 뜻합니다. 지표 간 σ 크기를 서로 비교하지 마세요(분모가 각자 다릅니다) · 지표 참고용.
   </footer>
 </div>
 <script>
@@ -188,7 +188,7 @@
   var GKO={EXPANSION:"확장",SLOWING:"둔화",CONTRACTION:"수축",LOW:"저물가",MODERATE:"중간물가",HIGH:"고물가",EASY:"완화",NEUTRAL:"중립",ELEVATED:"경계",STRESSED:"스트레스"};
   // 서프라이즈 화살표의 색 의미 — 오르는 게 좋은 지표 / 나쁜 지표만 색을 준다(나머지는 중립).
   var GOOD_UP={PAYEMS:1,INDPRO:1,RSAFS:1,UMCSENT:1,CFNAIMA3:1,TCU:1,JTSJOL:1,HOUST:1,PERMIT:1};
-  var BAD_UP={CPIAUCSL:1,CPILFESL:1,PCEPILFE:1,PCEPI:1,PPIACO:1,GASREGW:1,T10YIE:1,T5YIFR:1,
+  var BAD_UP={CPIYOY:1,CPILFESL:1,PCEPILFE:1,PCEPI:1,PPIACO:1,GASREGW:1,T10YIE:1,T5YIFR:1,
               UNRATE:1,ICSA:1,CCSA:1,SAHMREALTIME:1,NFCI:1,BAMLH0A0HYM2:1,BAMLC0A0CM:1,VIXCLS:1,MORTGAGE30US:1};
   var DATA=null;
 
@@ -217,25 +217,6 @@
         '<line x1="50" y1="0" x2="50" y2="13" stroke="var(--line)" stroke-width="0.6" vector-effect="non-scaling-stroke"/>'+
         '<rect x="'+x.toFixed(2)+'" y="2.5" width="'+w.toFixed(2)+'" height="8" rx="1.2" fill="'+color+'"/>'+
       '</svg><span class="bt">'+txt+'</span></div>';
-  }
-  // ① 추세 서프라이즈 — 추세 대비 z가 큰 순. 색은 지표 카드와 같은 정책(의미가 갈리는 지표는 중립).
-  function surpriseChart(d){
-    var xs=(d.indicators||[]).filter(function(x){return x.sp&&x.sp.z!=null&&!isNaN(x.sp.z);});
-    if(xs.length<4)return '';
-    xs.sort(function(a,b){return b.sp.z-a.sp.z;});
-    var N=8, pick=xs.length<=N*2?xs:xs.slice(0,N).concat(xs.slice(-N));
-    var mx=Math.max.apply(null,pick.map(function(x){return Math.abs(x.sp.z);}))||1;
-    var rows=pick.map(function(x){
-      var pol=(GOOD_UP[x.k]?1:(BAD_UP[x.k]?-1:0))*(x.sp.z>=0?1:-1);
-      var col=pol>0?'var(--good)':(pol<0?'var(--hot)':'var(--muted)');
-      return barRow(x.label, x.sp.z, mx, col, (x.sp.z>=0?'+':'')+x.sp.z.toFixed(1)+'σ');
-    }).join('');
-    return '<div class="lbl">추세 서프라이즈 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 최근값이 자기 추세에서 얼마나 벗어났나(z)</span></div>'+
-      '<div class="chartbox">'+rows+
-      '<div class="chartnote">39개 지표 중 위·아래 '+Math.min(N,Math.floor(xs.length/2))+'개씩. '+
-      '<b style="color:var(--good)">초록</b>=경기에 우호적 방향, <b style="color:var(--hot)">빨강</b>=비우호적, '+
-      '<b>회색</b>=방향의 좋고 나쁨이 갈리는 지표(금리·달러·통화량 등)라 색을 주지 않습니다. '+
-      '추세 대비 편차일 뿐 수익 예측이 아닙니다.</div></div>';
   }
   // ② 현재 국면 성과 — 표의 '현재 레짐' 열만 뽑아 정렬. 표는 다른 국면 비교용으로 그대로 둔다.
   var CPERF={i:0};
@@ -289,7 +270,11 @@
           //   방향의 좋고 나쁨이 명확한 지표만 색을 주고, 해석이 갈리는 지표(금리·달러·M2 등)는 중립색.
           pol=(sp.dir==='flat')?0:(GOOD_UP[x.k]?1:(BAD_UP[x.k]?-1:0))*(sp.dir==='up'?1:-1),
           col=pol>0?'var(--good)':(pol<0?'var(--hot)':'var(--ink-2)');
-          sph='<div class="spline"><span style="color:'+col+'">'+ar+' '+lb+'</span><span class="spd">직전대비 '+(sp.chg>=0?'+':'')+sp.chg+(x.u||'')+'</span></div>';}
+          // ⚠ 화살표는 '추세(직전 관측 평균) 대비 z', 옆 숫자는 '직전 관측 대비 변화'로 서로 다른 것을 잰다.
+          //   둘의 부호는 실제로 39개 중 8개에서 어긋난다(예: 고용증감 z +1.2인데 직전대비 −52천명).
+          //   라벨 없이 붙여두면 '오르는 중'으로 읽히므로 각각 무엇 대비인지 밝힌다.
+          sph='<div class="spline"><span style="color:'+col+'">'+ar+' 추세대비 '+(sp.z>=0?'+':'')+sp.z+'σ</span>'+
+              '<span class="spd">직전관측대비 '+(sp.chg>=0?'+':'')+sp.chg+(x.u||'')+'</span></div>';}
         return '<div class="ic"><div class="ictop"><span class="icl">'+x.label+'</span><span class="icv">'+(x.v!=null?x.v:'—')+'<span class="icu">'+(x.u||'')+'</span></span></div>'+
           (st[0]?'<span class="stbadge '+st[1]+'">'+st[0]+'</span>':'')+sph+'<div class="icd">'+x.d+'</div></div>';
       }).join('')+'</div></div>';
@@ -314,7 +299,7 @@
     var tbl=perfTable('레짐별 자산 조건부 성과','월평균 %, 2009~ · 현재 레짐('+cur+') 열 강조','자산',d.asset_perf)+
       perfTable('레짐별 섹터 로테이션','11개 섹터 SPDR 월평균 % · 현재 레짐서 유리한 순','섹터',d.sector_perf)+
       perfTable('레짐별 팩터','모멘텀·퀄리티·저변동·가치·중소형 월평균 %','팩터',d.factor_perf);
-    el('main').innerHTML=hero+surpriseChart(d)+
+    el('main').innerHTML=hero+
       '<div class="lbl">매크로 지표 현황</div>'+ig+
       '<div class="lbl">레짐 히스토리 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 2009~ 월별 · 현재 '+(RKO[rg.label]||rg.label)+' '+runLen(d)+'개월째</span></div>'+
       '<div class="histwrap"><canvas id="histc" height="54" role="img" aria-label="시장 국면(레짐) 히스토리 — 2009년 이후 월별 성장×물가 분류 타임라인"></canvas><div class="leg" id="leg"></div></div>'+
