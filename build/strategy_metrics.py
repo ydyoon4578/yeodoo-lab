@@ -35,6 +35,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 RF_CACHE = os.path.join(DATA, "rf_monthly.json")
 BT_PATH = os.path.join(DATA, "strategy_backtests.json")
+AB_PATH = os.path.join(DATA, "archive_backtests.json")   # 기각 재검 부기(전건 기각 유지)
 
 # 무위험금리: FRED 3개월 국채(월평균 → 월복리). 사내 DB에는 단기금리 계열이 없다(10년물뿐).
 FRED_IDS = ["DGS3MO", "DTB3", "TB3MS"]
@@ -362,16 +363,21 @@ def dsr_chance_sharpe(M, N):
     return _r(v * ((1 - g) * _nppf(1 - 1.0 / M) + g * _nppf(1 - 1.0 / (M * e))) * math.sqrt(12), 3)
 
 
-def apply_multiplicity(entries, q=0.10):
-    """entries: [(key, p_raw, N)]. BH-FDR(q) + Bonferroni 문턱을 각 전략에 되돌려준다."""
+def apply_multiplicity(entries, q=0.10, m_override=None, source=None):
+    """entries: [(key, p_raw, N)]. BH-FDR(q) + Bonferroni 문턱을 각 전략에 되돌려준다.
+
+    m_override — 실제로 수행한 검정 횟수가 여기 넘긴 항목 수보다 많을 때 쓴다.
+      기각 재검은 20건을 돌리고 그중 5건만 게시하는데, 분모를 게시 건수(5)로 잡으면
+      보정이 실제보다 관대해진다(BH 1순위 문턱 0.02 vs 참값 0.005). 고른 뒤에 세는 것은
+      selection 자체를 무시하는 것이라 다중검정 보정의 취지에 정면으로 반한다."""
     valid = [(k, p, n) for k, p, n in entries if p is not None]
-    m = len(valid)
+    m = m_override or len(valid)
     out = {}
-    if not m: return out
+    if not valid: return out
     ranked = sorted(valid, key=lambda t: t[1])
     for rank, (k, p, n) in enumerate(ranked, start=1):
         thr = q * rank / m
-        out[k] = {"source": "사이트 게시 전략 일괄 비교 (벤치1 대비 ΔSharpe)",
+        out[k] = {"source": source or "사이트 게시 전략 일괄 비교 (벤치1 대비 ΔSharpe)",
                   "n_tests": m, "p_raw": p, "bh_rank": rank, "bh_q": q,
                   "bh_threshold": _r(thr, 4), "passed": bool(p <= thr),
                   "bonferroni_threshold": _r(0.05 / m, 4),
@@ -469,12 +475,51 @@ def main():
                        ensure_ascii=False, sort_keys=True)
     bt["generated"] = _prev_gen if (_body == _prev_body and _prev_gen) else dt.date.today().isoformat()
 
+    # ── 기각 아카이브 재검 부기 — 같은 엔진·같은 rf·같은 규약으로 계산 ──────────
+    #    전건 '기각 유지'다. 전략으로 게시하는 것이 아니라 기각 사유의 근거로 붙는다.
+    #    다중검정은 배포 전략과 **분리해서** 적용한다(모집단이 다르다 — 이쪽은 m=20 재검).
+    ab = None
+    if os.path.exists(AB_PATH):
+        ab = json.load(io.open(AB_PATH, encoding="utf-8"))
+        _ab_prev_gen = ab.get("generated")
+        _ab_prev = json.dumps({k: v for k, v in ab.items() if k != "generated"},
+                              ensure_ascii=False, sort_keys=True)
+        arows, apend = [], []
+        for sid, b in (ab.get("strategies") or {}).items():
+            m, cut, dropped = compute_strategy(b, rf_m)
+            b["metrics"] = m
+            b["dd"] = [round(x * 100, 1) for x in dd_series(b["nav"])]
+            b["dd_b"] = [round(x * 100, 1) for x in dd_series(b["bench"])]
+            b["mdd_b"] = m["b"]["mdd"]
+            if b.get("bench2"):
+                b["dd_b2"] = [round(x * 100, 1) for x in dd_series(b["bench2"])]
+                b["mdd_b2"] = m["b2"]["mdd"]
+            b["dd_basis"] = "monthly_nav"
+            b["partial_month"] = dropped
+            arows.append((sid, m))
+            apend.append((sid, (m["vs"] or {}).get("d_sharpe_p"), m["basis"]["n_months"]))
+        # 분모는 게시한 5건이 아니라 재검에서 실제로 돌린 20건이다(1라운드 13 + 2라운드 7).
+        amult = apply_multiplicity(
+            apend, m_override=int(ab.get("n_tests_total") or 20),
+            source="기각 아카이브 재검 일괄 비교 (m=%s, 2026-07)" % (ab.get("n_tests_total") or 20))
+        for sid, m in arows:
+            m["multiplicity"] = amult.get(sid)
+        ab["metrics_schema"] = "v2"
+        _ab_body = json.dumps({k: v for k, v in ab.items() if k != "generated"},
+                              ensure_ascii=False, sort_keys=True)
+        ab["generated"] = (_ab_prev_gen if (_ab_body == _ab_prev and _ab_prev_gen)
+                           else dt.date.today().isoformat())
+
     if a.dry_run:
         print("[dry-run] 파일 미기록")
     else:
         with io.open(BT_PATH, "w", encoding="utf-8") as f:
             json.dump(bt, f, ensure_ascii=False, separators=(",", ":"))
             f.write("\n")
+        if ab is not None:
+            with io.open(AB_PATH, "w", encoding="utf-8") as f:
+                json.dump(ab, f, ensure_ascii=False, separators=(",", ":"))
+                f.write("\n")
         with io.open(RF_CACHE, "w", encoding="utf-8") as f:
             json.dump(rf_doc, f, ensure_ascii=False, separators=(",", ":"))
             f.write("\n")
