@@ -38,8 +38,26 @@ def _field(rec: str, key: str):
 
 
 def _array(path: str, var: str = "D") -> str:
-    """`var D=[ … ];` 블록만 떼어낸다. 대괄호 균형으로 끝을 찾는다(문자열 안 괄호 무시)."""
+    """`var D=[ … ];` 블록만 떼어낸다. 대괄호 균형으로 끝을 찾는다(문자열 안 괄호 무시).
+
+    2026-07-23 잠금 대응: 페이지가 AES 게이트(암호문)면 평문은 저장소 밖 _build/pages/에 있다.
+    게이트를 파싱할 수는 없으므로 평문 사본으로 대체하고, 없으면 명확히 중단한다."""
     src = io.open(path, encoding="utf-8").read()
+    # 잠금 게이트 감지 — validate_site.is_locked와 동일 규칙 유지(어긋나면 한쪽만 게이트를 평문 취급)
+    if "crypto.subtle.decrypt" in src and re.search(r"var (?:P|PAYLOAD)=\{salt:", src):
+        pp = os.path.join(os.path.dirname(os.path.abspath(path)), "_build", "pages", os.path.basename(path))
+        if not os.path.exists(pp):
+            raise SystemExit(f"{os.path.basename(path)}: 잠금 페이지인데 평문(_build/pages/)이 없음 — "
+                             "평문 사본을 두거나 잠금 PC에서 실행할 것")
+        plain_txt = io.open(pp, encoding="utf-8", newline="").read()   # 바이트 정확(지문 계약)
+        # 지문(ph) 대조 — 낡은 사본으로 verdicts.json을 굽는 사고 방지
+        m_ph = re.search(r'ph:"([0-9a-f]{64})"', src)
+        if m_ph:
+            import hashlib
+            if hashlib.sha256(plain_txt.encode("utf-8")).hexdigest() != m_ph.group(1):
+                raise SystemExit(f"{os.path.basename(path)}: 평문 사본이 배포 암호문과 불일치(지문 상이) — "
+                                 "_build/pages 갱신 후 다시 실행할 것")
+        src = plain_txt
     m = re.search(r"var\s+%s\s*=\s*\[" % var, src)
     if not m:
         raise SystemExit(f"{os.path.basename(path)}: var {var}=[ 를 찾지 못함")
