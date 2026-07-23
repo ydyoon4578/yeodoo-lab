@@ -7,7 +7,7 @@ yfinance 가격으로 표준 테크니컬 지표·교과서 매수/매도 신호
 로컬 정본 빌더(strategy/stock_signals/build_snapshot.py, ta_lab 사용)와 출력 스키마 동일.
 """
 from __future__ import annotations
-import os, json, warnings
+import os, json, time, warnings
 import numpy as np, pandas as pd
 warnings.filterwarnings("ignore")
 import yfinance as yf
@@ -407,16 +407,23 @@ def fund_metrics(fund, sect):
     return vals, pcts, thr, badges, na, cov
 
 
-def fetch_fund(t):
+def fetch_fund(t, retries=3):
     """yfinance .info에서 trailing/forward EPS·PE·유동주식수 + 애널리스트 목표주가 + 재무 20지표 원시값 (무료). 실패시 None.
     ⚠ 목표주가는 **같은 .info 응답에서 꺼내므로 추가 API 호출 0**. 새로 Ticker를 만들지 말 것.
     ⚠⚠ 목표주가/상승여력은 **표기 전용**이다. bscore·sscore·flags·timing 어디에도 넣지 않는다.
         검증(512종목 전수 + 애널리스트 이벤트 168,523건): 상승여력 단면분산의 64%가 최근 주가경로만으로 설명되고
         (목표가 갱신 시차 ≈1~3개월), 우리 매수점수와 스피어만 −0.71, 6M 모멘텀과 −0.60(55개월 100% 음수).
-        20/60일 예측력 없음(Q5−Q1 60일 +0.83%, t=0.89). 상승여력 상위20은 90%가 200일선 아래 = 떨어지는 칼."""
-    try:
-        info = yf.Ticker(t).info
-        return t, {"teps": info.get("trailingEps"), "feps": info.get("forwardEps"),
+        20/60일 예측력 없음(Q5−Q1 60일 +0.83%, t=0.89). 상승여력 상위20은 90%가 200일선 아래 = 떨어지는 칼.
+
+    재시도(2026-07-23): Yahoo가 500/503을 뿜는 동안 .info가 성공해도 특정 필드가 빠진 **부분 응답**이
+        섞여 나온다(실측: mc는 100%인데 ps만 99%→72%로 떨어져 완전성 게이트가 '스키마 변경'으로 오인·중단).
+        mc·ps는 정상 응답이면 99~100% 존재하므로 둘 다 있으면 정상으로 보고 곧바로 반환하고, 하나라도
+        없으면 부분 응답으로 보고 재시도한다. healthy 런은 첫 시도에 반환(재시도 0회)."""
+    rec = None
+    for attempt in range(retries):
+        try:
+            info = yf.Ticker(t).info
+            rec = {"teps": info.get("trailingEps"), "feps": info.get("forwardEps"),
                    "tpe": info.get("trailingPE"), "fpe": info.get("forwardPE"),
                    "float": info.get("floatShares") or info.get("sharesOutstanding"),
                    # ── 애널리스트 목표주가(참고 표기용, 신호 아님) ──
@@ -434,8 +441,15 @@ def fetch_fund(t):
                    "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
                    "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
                    "td": info.get("totalDebt"), "tc": info.get("totalCash")}
-    except Exception:
-        return t, None
+            # 정상 응답이면 mc·ps가 둘 다 있다(각 99~100% 필드). 둘 다 있으면 곧바로 반환(healthy 런 재시도 0회).
+            #   실측 사고: mc는 100%인데 ps만 72%로 빠진 부분 응답 → mc만 보면 재시도가 안 걸린다.
+            if rec.get("mc") is not None and rec.get("ps") is not None:
+                return t, rec
+        except Exception:
+            rec = None
+        if attempt < retries - 1:
+            time.sleep(0.6 * (attempt + 1))   # 백오프 — 일시적 5xx가 가라앉을 시간
+    return t, rec   # 재시도 소진: 부분 응답이라도(또는 None) 최선값 반환
 
 
 # ── 목표주가 이력 누적 ──────────────────────────────────────────────────────
