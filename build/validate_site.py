@@ -22,6 +22,39 @@ errors = []
 def rd(p): return io.open(os.path.join(ROOT, p), encoding="utf-8").read()
 
 
+# ── 잠금 페이지 평문 해석(2026-07-23 cd2373b AES 잠금 대응) ────────────────
+# explorer/rotation/archive/sources는 배포본이 '게이트+암호문'이고 평문 원본은 저장소 밖
+# _build/pages/ 에서만 관리된다(.gitignore). 평문 의존 검사는 그 사본으로 수행하고,
+# 사본이 없으면(CI 러너 등) 해당 검사를 맨 끝에 **SKIP으로 크게 표시**한다 — 조용한 통과 금지.
+# 잠금 여부는 내용으로 판정하므로, 페이지를 평문으로 되돌리면 자동으로 원래 검사로 복귀한다.
+# ⚠ 한계: 평문 사본과 배포 암호문의 일치는 여기서 확인할 수 없다(복호 키 없음) —
+#   평문을 고치면 반드시 재암호화·재배포까지 한 세트로 할 것.
+PLAINDIR = os.path.join(ROOT, "_build", "pages")
+skips, _skipseen = [], set()
+
+
+def is_locked(txt):
+    """게이트 감지 — 표기 변형에 흔들리지 않게 2마커. kb.html식(PAYLOAD·innerHTML 주입)도 포함.
+    verdicts_gen.py의 감지 규칙과 반드시 동일하게 유지할 것(어긋나면 한쪽만 게이트를 평문 취급)."""
+    return "crypto.subtle.decrypt" in txt and re.search(r"var (?:P|PAYLOAD)=\{salt:", txt) is not None
+
+
+def src(p):
+    """검증에 쓸 평문 소스. 잠금 페이지는 _build/pages/ 사본, 없으면 None."""
+    served = rd(p)
+    if not is_locked(served): return served
+    pp = os.path.join(PLAINDIR, p)
+    if os.path.exists(pp): return io.open(pp, encoding="utf-8").read()
+    return None
+
+
+def plain(p, what):   # ⚠ 이름 주의: 아래 rotation_pool 검사에 `need`(필수 필드 set)가 이미 있다
+    s = src(p)
+    if s is None and (p, what) not in _skipseen:
+        _skipseen.add((p, what)); skips.append(f"{p}: {what}")
+    return s
+
+
 # ── JS 리터럴 제거 ─────────────────────────────────────────────
 def strip_js(js):
     out, i, n, prev = [], 0, len(js), ""
@@ -63,18 +96,19 @@ decodeURIComponent encodeURIComponent decodeURI encodeURI escape unescape matchM
 console document window localStorage sessionStorage location history navigator
 RegExp Set Map WeakMap WeakSet Promise Proxy Reflect Intl Blob URL URLSearchParams
 MutationObserver IntersectionObserver ResizeObserver Image Event CustomEvent DOMParser AbortController
-getComputedStyle structuredClone queueMicrotask requestIdleCallback cancelIdleCallback""".split())
+getComputedStyle structuredClone queueMicrotask requestIdleCallback cancelIdleCallback
+atob btoa crypto TextEncoder TextDecoder Uint8Array Uint16Array Uint32Array ArrayBuffer DataView async await""".split())
 DEFPAT = [r"function\s+([A-Za-z_$][\w$]*)\s*\(", r"(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=",
           r"([A-Za-z_$][\w$]*)\s*=\s*function", r"([A-Za-z_$][\w$]*)\s*:\s*function",
           r"function\s*\(([^)]*)\)", r"catch\s*\(\s*([A-Za-z_$][\w$]*)\s*\)"]
 
-for p in PAGES:
-    scripts = [strip_js(s) for s in re.findall(r"<script>([\s\S]*?)</script>", rd(p))]
+def js_checks(label, html):
+    scripts = [strip_js(s) for s in re.findall(r"<script>([\s\S]*?)</script>", html)]
     js = "\n".join(scripts)
     for k, s in enumerate(scripts):
         for a, b in [("(", ")"), ("{", "}"), ("[", "]")]:
             d = s.count(a) - s.count(b)
-            if d: errors.append(f"{p} script#{k}: 괄호 불균형 {a}{b}={d:+d}")
+            if d: errors.append(f"{label} script#{k}: 괄호 불균형 {a}{b}={d:+d}")
     known = set(BUILTIN)
     for pat in DEFPAT:
         for m in re.finditer(pat, js):
@@ -82,7 +116,53 @@ for p in PAGES:
                 q = part.strip()
                 if re.fullmatch(r"[A-Za-z_$][\w$]*", q or ""): known.add(q)
     unknown = sorted({m.group(1) for m in re.finditer(r"(?<![\w$.])([A-Za-z_$][\w$]*)\s*\(", js)} - known)
-    if unknown: errors.append(f"{p}: 정의되지 않은 호출 {', '.join(unknown)}")
+    if unknown: errors.append(f"{label}: 정의되지 않은 호출 {', '.join(unknown)}")
+
+
+for p in PAGES:
+    js_checks(p, rd(p))                        # 배포본(잠금 페이지면 게이트 자체를 검사)
+    if is_locked(rd(p)):
+        _pt = plain(p, "인라인 JS 괄호·미정의 호출(평문)")  # 잠금 해제 후 실제 렌더되는 본문
+        if _pt is not None: js_checks(p + "(평문)", _pt)
+
+# ── 잠금 게이트 무결성: 암호문 sanity + 평문 지문(ph) 대조 ──────────────────
+#   ct 손상은 괄호 균형 검사로는 안 잡히고(실증: ct 400자 치환 → 통과), 페이지가 영구 복호불가가 된다.
+#   ph = sha256(평문 utf-8 바이트). 잠금(재암호화) 도구가 반드시 함께 기록해야 하는 계약 —
+#   validate가 로컬 평문 사본과 대조해 '낡은 사본으로 초록불'(타 PC 재잠금 후 드리프트)을 기계적으로 잡는다.
+GATE_PLAIN = {"kb.html": "kb_content.html"}   # 게이트 → 평문 파일명(기본은 같은 이름; kb는 content 조각만 암호화)
+import base64 as _b64
+import hashlib as _hl
+for _gp in PAGES + ["kb.html"]:
+    _sv = rd(_gp)
+    if not is_locked(_sv): continue
+    if _gp not in PAGES: js_checks(_gp + "(셸)", _sv)   # kb.html은 PAGES 밖 — 게이트 셸 JS 검사 여기서
+    _pm = re.search(r"var (?:P|PAYLOAD)=\{([^}]*)\}", _sv)
+    if not _pm:
+        errors.append(f"{_gp}: 게이트 파라미터 블록 파싱 실패"); continue
+    _pd = dict(re.findall(r'(\w+):"([^"]*)"', _pm.group(1)))
+    _pi = re.search(r"iter:(\d+)", _pm.group(1))
+    try:
+        _salt = _b64.b64decode(_pd.get("salt", ""), validate=True)
+        _iv = _b64.b64decode(_pd.get("iv", ""), validate=True)
+        _ct = _b64.b64decode(_pd.get("ct", ""), validate=True)
+        if len(_salt) != 16: errors.append(f"{_gp}: salt {len(_salt)}B ≠ 16B — 게이트 손상")
+        if len(_iv) != 12: errors.append(f"{_gp}: iv {len(_iv)}B ≠ 12B — 게이트 손상")
+        if len(_ct) < 1024: errors.append(f"{_gp}: ct {len(_ct)}B — 절단 의심(정상 수만B)")
+    except Exception as _ge:
+        errors.append(f"{_gp}: 게이트 base64 손상 — {_ge}")
+    if not _pi or int(_pi.group(1)) < 100000:
+        errors.append(f"{_gp}: PBKDF2 iterations 비정상/누락")
+    _ph = _pd.get("ph")
+    _pp2 = os.path.join(PLAINDIR, GATE_PLAIN.get(_gp, _gp))
+    if not _ph:
+        errors.append(f"{_gp}: 게이트에 평문 지문(ph=sha256)이 없음 — 잠금 시 ph를 함께 기록할 것(스테일 사본 검출용)")
+    elif os.path.exists(_pp2):
+        # newline="" = 바이트 정확 읽기 — 유니버설 개행 번역이 끼면 같은 파일도 해시가 어긋난다
+        _lh = _hl.sha256(io.open(_pp2, encoding="utf-8", newline="").read().encode("utf-8")).hexdigest()
+        if _lh != _ph:
+            errors.append(f"{_gp}: 평문 사본이 배포 암호문과 불일치(지문 상이) — 다른 PC에서 재잠금됐거나 사본 손상. _build/pages 갱신 필요")
+    elif (_gp, "지문 대조") not in _skipseen:
+        _skipseen.add((_gp, "지문 대조")); skips.append(f"{_gp}: 평문 지문(ph) 대조 — 사본 없음")
 
 # ── 데이터 JSON ────────────────────────────────────────────────
 pool = None
@@ -109,8 +189,10 @@ if pool:
         return re.sub(r"^-+|-+$", "", re.sub(r"[^0-9a-z가-힣]+", "-", str(n).lower()))
 
     def _recs(page, var="D"):
-        """`var D=[ … ];` 를 대괄호 균형으로 잘라 JSON으로 읽는다(주석 허용)."""
-        src = rd(page)
+        """`var D=[ … ];` 를 대괄호 균형으로 잘라 JSON으로 읽는다(주석 허용). 잠금 평문 없으면 None."""
+        src_txt = plain(page, f"전략 배열(var {var}) 스키마·sid·앵커 검사")
+        if src_txt is None: return None
+        src = src_txt
         m = re.search(r"var\s+%s\s*=\s*\[" % var, src)
         if not m: raise SystemExit(f"{page}: var {var}=[ 를 찾지 못함")
         i, depth, j, instr, esc = m.end() - 1, 0, m.end() - 1, False, False
@@ -131,13 +213,14 @@ if pool:
 
     try:
         AREC, EREC = _recs("archive.html"), _recs("explorer.html")
-    except Exception as e:
+    except (Exception, SystemExit) as e:   # SystemExit도 흡수 — 리포트 절단 방지(fail-closed 유지)
         errors.append(f"전략 배열 파싱 실패: {e}"); AREC = EREC = []
-    anames = {d["n"] for d in AREC}
-    enames = {d["n"] for d in EREC}
+    anames = {d["n"] for d in AREC} if AREC is not None else None
+    enames = {d["n"] for d in EREC} if EREC is not None else None
 
     # sid 불변식: 전 항목에 있어야 하고, 페이지 안에서 유일해야 하며, 앵커로 쓸 수 있어야 한다
     for page, recs in (("archive.html", AREC), ("explorer.html", EREC)):
+        if recs is None: continue   # 잠금 평문 없음 — plain()이 SKIP 기록
         seen = {}
         for d in recs:
             sid = d.get("sid")
@@ -157,7 +240,8 @@ if pool:
             for k in [sid, _slug(d["n"])] + list(d.get("aka") or []):
                 m[k] = d
         return m
-    ARES, ERES = _resolve(AREC), _resolve(EREC)
+    ARES = _resolve(AREC) if AREC is not None else None
+    ERES = _resolve(EREC) if EREC is not None else None
 
     for s in pool.get("strategies", []):
         L = s.get("lab")
@@ -168,6 +252,7 @@ if pool:
             errors.append(f"rotation_pool {s['id']}: lab.href 대상 페이지가 이상함 ({href})"); continue
         if not os.path.exists(os.path.join(ROOT, page)):
             errors.append(f"rotation_pool {s['id']}: lab.href 대상 파일 없음 ({page})"); continue
+        if (anames if page == "archive.html" else enames) is None: continue   # 잠금 평문 없음(SKIP 기록됨)
         if L["t"] not in (anames if page == "archive.html" else enames):
             errors.append(f"rotation_pool {s['id']}: lab.t \"{L['t']}\"가 {page}에 없음(링크 깨짐)"); continue
         pre, res = ("a-", ARES) if page == "archive.html" else ("s-", ERES)
@@ -184,28 +269,32 @@ if pool:
             errors.append(f"rotation_pool {s['id']}: 앵커가 구 슬러그(#{frag}) — sid 기준 #{pre}{tgt.get('sid')}로 갱신할 것")
 
     # 구 슬러그 하위호환: 각 페이지의 해시 해석 코드가 aka를 실제로 참조하는지(문안만 남고 로직이 빠지는 사고 방지)
-    if "aka" not in rd("archive.html") or "ALIAS" not in rd("archive.html"):
+    _ak = plain("archive.html", "구 슬러그(aka) 해석 로직 검사")
+    if _ak is not None and ("aka" not in _ak or "ALIAS" not in _ak):
         errors.append("archive.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
-    if "aka" not in rd("explorer.html") or "_keys" not in rd("explorer.html"):
+    _ek = plain("explorer.html", "구 슬러그(aka) 해석 로직 검사")
+    if _ek is not None and ("aka" not in _ek or "_keys" not in _ek):
         errors.append("explorer.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
 
 # ── 선별 알고리즘 상수 일치(프론트 ↔ 일일잡) ──────────────────
-rot, sel = rd("rotation.html"), rd(os.path.join("build", "rotation_select.py"))
+rot = plain("rotation.html", "선별 상수(QUOTA/CATORD)·Math.imul·KST 검사")
+sel = rd(os.path.join("build", "rotation_select.py"))
 def consts(txt):   # JS는 {A:2,…}·["A",…], 파이썬은 {"A": 2,…}·["A",…] → 따옴표 무시하고 정규화
     q = re.search(r"QUOTA\s*=\s*\{([^}]*)\}", txt); c = re.search(r"CATORD\s*=\s*\[([^\]]*)\]", txt)
     return (dict(re.findall(r'["\']?([A-Z])["\']?\s*:\s*(\d+)', q.group(1))) if q else None,
             re.findall(r"[A-Z]", c.group(1)) if c else None)
-qj, cj = consts(rot)
+qj, cj = consts(rot) if rot is not None else (None, None)
 qp, cp = consts(sel)
 # 상수가 같아도 **산술**이 다르면 9선이 갈린다(실제 사고): JS의 seed*16777619는 2^53을 넘겨 float64 정밀도를
 # 잃으므로 파이썬의 정확한 32비트 연산과 다른 시드가 됐다. Math.imul 사용을 강제한다.
-if not re.search(r"Math\.imul\s*\(\s*seed\s*,\s*16777619\s*\)", rot):
-    errors.append("rotation.html FNV 해시가 Math.imul을 쓰지 않음 — float64 정밀도 손실로 rotation_select.py와 9선이 달라진다")
-if re.search(r"seed\s*\*\s*16777619", rot):
-    errors.append("rotation.html에 `seed*16777619` 잔존 — Math.imul로 교체할 것")
-# 날짜 기준(KST)도 양쪽이 같아야 한다 — UTC였을 때 갱신 대상과 표시 대상이 오전 9시에 어긋났다
-if "9*3600e3" not in rot:
-    errors.append("rotation.html today()가 KST 보정(9*3600e3)을 하지 않음 — 일일잡과 날짜가 어긋난다")
+if rot is not None:
+    if not re.search(r"Math\.imul\s*\(\s*seed\s*,\s*16777619\s*\)", rot):
+        errors.append("rotation.html FNV 해시가 Math.imul을 쓰지 않음 — float64 정밀도 손실로 rotation_select.py와 9선이 달라진다")
+    if re.search(r"seed\s*\*\s*16777619", rot):
+        errors.append("rotation.html에 `seed*16777619` 잔존 — Math.imul로 교체할 것")
+    # 날짜 기준(KST)도 양쪽이 같아야 한다 — UTC였을 때 갱신 대상과 표시 대상이 오전 9시에 어긋났다
+    if "9*3600e3" not in rot:
+        errors.append("rotation.html today()가 KST 보정(9*3600e3)을 하지 않음 — 일일잡과 날짜가 어긋난다")
 if "hours=9" not in sel:
     errors.append("rotation_select.py가 KST(hours=9)를 쓰지 않음 — rotation.html과 날짜가 어긋난다")
 
@@ -240,12 +329,14 @@ except Exception as e:
 
 # 보유 구성(무료 + DB요약): 키가 explorer D 배열 이름과 다르면 화면에 조용히 안 뜬다 + 비중합·비공개 정책 검사
 try:
+    if enames is None:
+        plain("explorer.html", "strategy_holdings 이름 조인 검사")   # SKIP 명시 기록(무기록 증발 방지)
     for _fn in ("strategy_holdings.json", "strategy_holdings_db.json"):
         _hp = os.path.join(ROOT, "data", _fn)
         if not os.path.exists(_hp): continue
         _hd = json.load(io.open(_hp, encoding="utf-8"))
         for nm, st in (_hd.get("strategies") or {}).items():
-            if nm not in enames:
+            if enames is not None and nm not in enames:
                 errors.append(f"{_fn} \"{nm}\": explorer.html D 배열에 없는 이름(화면 미표시)")
             if st.get("private"):
                 # 종목 비공개 항목 — positions가 비어 있어야 정상(티커 유출 방지)
@@ -321,47 +412,52 @@ try:
         errors.append("data/verdicts.json 없음 — python build/verdicts_gen.py 실행 필요")
     else:
         _cur = json.load(io.open(_vp, encoding="utf-8"))
-        _fresh = verdicts_gen.build(ROOT)
-        if _cur != _fresh:
-            errors.append("판정 원장이 전략 배열과 어긋남 — python build/verdicts_gen.py 로 다시 구울 것")
+        # (1) 잠금과 무관한 검사 — 커밋본(_cur) 기준으로 항상 수행(CI에서도 죽지 않게 평문 게이트 밖에 둔다)
         _ih = rd("index.html")
-        # 홈 본문(스크립트 제외)에 판정 수치가 하드코딩돼 있으면 드리프트한다
-        _body = re.sub(r"(?s)<script.*?</script>", "", _ih)
-        # 아카이브 statline도 전에 '제한적 유효 20개'를 손으로 적어두고 이관 때 틀렸다 — 스크립트까지 검사
-        _ah = rd("archive.html")
-        for _n, _lab in ((_fresh["deploy_n"] + _fresh["marginal_n"], "배포+제한적 유효 합계"),):
-            if re.search(r"제한적 유효 \d+개", _ah) and not re.search(r"제한적 유효 <b>", _ah):
-                errors.append("archive.html이 배포·제한적 유효 개수를 하드코딩함 — verdicts.json에서 읽을 것")
-        for _n, _lab in ((_fresh["archive_n"], "기각 아카이브 건수"), (_fresh["explorer_n"], "전략 총수"),
-                         (_fresh["marginal_n"], "제한적 유효 건수")):
-            if re.search(r"(?<![0-9])%d\s*(개|종|건)" % _n, _body):
-                errors.append(f"index.html에 {_lab}({_n})가 하드코딩됨 — verdicts.json에서 읽을 것")
         if "data/verdicts.json" not in _ih:
             errors.append("index.html이 verdicts.json을 읽지 않음 — 판정 수치를 손으로 적고 있다")
-        # 배포 딥링크 슬러그가 explorer에서 실제로 선택되는지(규칙 동일성)
-        _eh = rd("explorer.html")
-        for _d in _fresh["deploy"]:
-            if _d["n"] not in _eh:
-                errors.append(f"배포 전략명이 explorer.html에 없음: {_d['n']}")
+        # 홈 본문(스크립트 제외)에 판정 수치가 하드코딩돼 있으면 드리프트한다
+        _body = re.sub(r"(?s)<script.*?</script>", "", _ih)
+        for _n, _lab in ((_cur.get("archive_n"), "기각 아카이브 건수"), (_cur.get("explorer_n"), "전략 총수"),
+                         (_cur.get("marginal_n"), "제한적 유효 건수")):
+            if _n and re.search(r"(?<![0-9])%d\s*(개|종|건)" % _n, _body):
+                errors.append(f"index.html에 {_lab}({_n})가 하드코딩됨 — verdicts.json에서 읽을 것")
         # 배포 전략에 백테스트가 있는지 — 이름을 고치면 explorer와 backtests가 조용히 어긋난다
         _bt = json.load(io.open(os.path.join(ROOT, "data", "strategy_backtests.json"), encoding="utf-8"))
         _bs = (_bt or {}).get("strategies") or {}
-        for _d in _fresh["deploy"]:
+        for _d in _cur.get("deploy") or []:
             if _d["n"] not in _bs:
                 errors.append(f"배포 전략에 백테스트가 없음: {_d['n']} — 이름 불일치 의심")
-except Exception as e:
+        # (2) 평문 의존 검사 — 원장 재계산 비교(위조 불가능한 데이터 계약)
+        #     ⚠ or 단락평가로 한쪽 SKIP이 묻히지 않게 둘 다 먼저 평가한다
+        _pe = plain("explorer.html", "판정 원장(verdicts) 재계산 비교")
+        _pa = plain("archive.html", "판정 원장(verdicts) 재계산 비교")
+        if _pe is not None and _pa is not None:
+            _fresh = verdicts_gen.build(ROOT)
+            if _cur != _fresh:
+                errors.append("판정 원장이 전략 배열과 어긋남 — python build/verdicts_gen.py 로 다시 구울 것")
+            # 아카이브 statline도 전에 '제한적 유효 20개'를 손으로 적어두고 이관 때 틀렸다 — 스크립트까지 검사
+            if re.search(r"제한적 유효 \d+개", _pa) and not re.search(r"제한적 유효 <b>", _pa):
+                errors.append("archive.html이 배포·제한적 유효 개수를 하드코딩함 — verdicts.json에서 읽을 것")
+            # 배포 딥링크 슬러그가 explorer에서 실제로 선택되는지(규칙 동일성)
+            for _d in _fresh["deploy"]:
+                if _d["n"] not in _pe:
+                    errors.append(f"배포 전략명이 explorer.html에 없음: {_d['n']}")
+except (Exception, SystemExit) as e:   # verdicts_gen.build의 SystemExit도 흡수 — 리포트 절단 방지
     errors.append(f"판정 원장 검증 실패: {e}")
 
 # ── 성과지표 v2 스키마(build/strategy_metrics.py 산출) ─────────
 # explorer의 지표표는 metrics.s/.b/.basis 를 읽는다. 시계열만 다시 굽고 지표를 안 구우면
 # 화면이 조용히 폴백 문구로 바뀐다 — 그 상태를 배포하지 않도록 여기서 잡는다.
 try:
+    if enames is None:
+        plain("explorer.html", "strategy_backtests 이름 조인 검사")   # SKIP 명시 기록
     _bt = json.load(io.open(os.path.join(ROOT, "data", "strategy_backtests.json"), encoding="utf-8"))
     if _bt.get("metrics_schema") != "v2":
         errors.append("strategy_backtests.json: metrics_schema가 v2가 아님 — python build/strategy_metrics.py 실행 필요")
     for _nm, _b in (_bt.get("strategies") or {}).items():
         # 키는 explorer D 배열의 표시명과 **글자 단위로** 같아야 조인된다(개명 사고 방지)
-        if _nm not in enames:
+        if enames is not None and _nm not in enames:
             errors.append(f"strategy_backtests.json \"{_nm}\": explorer.html D 배열에 없는 이름 — 차트·지표가 통째로 사라진다")
         _m = _b.get("metrics") or {}
         if not (_m.get("s") and _m.get("b") and _m.get("basis")):
@@ -386,7 +482,8 @@ try:
         _rfj = json.load(io.open(_rf, encoding="utf-8"))
         if len(_rfj.get("monthly") or {}) < 100:
             errors.append("data/rf_monthly.json: 월간 관측이 100개 미만 — 비정상")
-    if "metrics.s" not in rd("explorer.html") and "m.s" not in rd("explorer.html"):
+    _e2h = plain("explorer.html", "지표 v2(metrics.s) 참조 검사")
+    if _e2h is not None and "metrics.s" not in _e2h and "m.s" not in _e2h:
         errors.append("explorer.html이 지표 v2(metrics.s)를 읽지 않음")
 except Exception as e:
     errors.append(f"성과지표 v2 검증 실패: {e}")
@@ -414,8 +511,17 @@ try:
         _det = json.load(io.open(os.path.join(ROOT, "data", "strategy_detail.json"), encoding="utf-8"))
         _bt2 = json.load(io.open(os.path.join(ROOT, "data", "strategy_backtests.json"), encoding="utf-8"))
         _bs2 = (_bt2 or {}).get("strategies") or {}
+        # (f) 기준월 통일 = 사용자 1순위 원칙 — end_month는 strategy_backtests.json에서 나오므로
+        #     잠금 평문 없이도 검사해야 한다(EREC에 묶으면 CI에서 이 핵심 검사가 통째로 죽는다)
         _endmonths = set()
-        for _d in EREC:
+        for _b2 in _bs2.values():
+            _em = ((_b2.get("metrics") or {}).get("basis") or {}).get("end_month")
+            if _em: _endmonths.add(_em)
+        if len(_endmonths) > 1:
+            errors.append(f"지표 기준월이 전략마다 다름: {sorted(_endmonths)} — 기준일 통일이 이 랩의 1순위 원칙이다")
+        if EREC is None:
+            plain("explorer.html", "strategy_detail/backtests 조인(kind·archetype·sid·bench_role·crisis) 검사")
+        for _d in (EREC or []):   # EREC=None(잠금 평문 없음)이면 건너뜀 — 위에서 SKIP 기록
             _nm = _d["n"]
             _dd = _det.get(_nm) or {}
             # (a)(b) 성격 축
@@ -450,20 +556,16 @@ try:
                 errors.append(f"{_nm}: metrics.profile 없음 — build/strategy_metrics.py 로 다시 구울 것")
             if _b.get("effective_from") and not _b.get("effective_note"):
                 errors.append(f"{_nm}: effective_from만 있고 effective_note가 없음 — 겹친 구간이 차트 버그로 읽힌다")
-            _ba2 = _m.get("basis") or {}
-            if _ba2.get("end_month"): _endmonths.add(_ba2["end_month"])
-        # (f) 기준일 통일 = 사용자 1순위 원칙
-        if len(_endmonths) > 1:
-            errors.append(f"지표 기준월이 전략마다 다름: {sorted(_endmonths)} — 기준일 통일이 이 랩의 1순위 원칙이다")
         # explorer가 성격 축을 실제로 읽는지(문안만 남고 로직이 빠지는 사고 방지)
-        _ex = rd("explorer.html")
-        for _needs, _msg in ((("strategy_kinds.json",), "성격 축 정의를 읽지 않음"),
-                             (("metrics.crisis", "m.crisis"), "위기 구간을 화면에 쓰지 않음"),
-                             (("crisisTable",), "위기 구간 표 컴포넌트가 없음"),
-                             (("min_detectable_d_sharpe_95",), "'구별 불가'의 판정 범위를 설명하지 않음"),
-                             (("kindOf", "kmeta"), "성격별 1차 지표 분기가 없음")):
-            if not any(_n in _ex for _n in _needs):
-                errors.append(f"explorer.html이 {' / '.join(_needs)} 를 참조하지 않음 — {_msg}")
+        _ex = plain("explorer.html", "성격 축·위기표 참조 검사")
+        if _ex is not None:
+            for _needs, _msg in ((("strategy_kinds.json",), "성격 축 정의를 읽지 않음"),
+                                 (("metrics.crisis", "m.crisis"), "위기 구간을 화면에 쓰지 않음"),
+                                 (("crisisTable",), "위기 구간 표 컴포넌트가 없음"),
+                                 (("min_detectable_d_sharpe_95",), "'구별 불가'의 판정 범위를 설명하지 않음"),
+                                 (("kindOf", "kmeta"), "성격별 1차 지표 분기가 없음")):
+                if not any(_n in _ex for _n in _needs):
+                    errors.append(f"explorer.html이 {' / '.join(_needs)} 를 참조하지 않음 — {_msg}")
 except Exception as e:
     errors.append(f"성격 축·대조군 역할 검증 실패: {e}")
 
@@ -472,7 +574,7 @@ try:
     _ap = os.path.join(ROOT, "data", "archive_backtests.json")
     if os.path.exists(_ap):
         _ab = json.load(io.open(_ap, encoding="utf-8"))
-        _asrc = rd("archive.html")
+        _asrc = plain("archive.html", "기각 재검 부기(sid 조인·'기각 유지') 검사")
         if _ab.get("metrics_schema") != "v2":
             errors.append("archive_backtests.json: metrics_schema가 v2가 아님 — strategy_metrics.py 실행 필요")
         # 분모를 게시 건수로 잡으면 보정이 실제보다 관대해진다(고른 뒤에 세는 것 = selection 무시)
@@ -480,9 +582,9 @@ try:
         if not _nt or _nt < len(_ab.get("strategies") or {}):
             errors.append("archive_backtests.json: n_tests_total 결측/과소 — 다중검정 분모는 게시 건수가 아니라 재검 총 건수")
         # archive.html의 sid와 조인되지 않으면 부기가 통째로 사라진다(개명 사고 유형)
-        _asids = set(re.findall(r'"sid":\s*"([^"]+)"', _asrc))
+        _asids = set(re.findall(r'"sid":\s*"([^"]+)"', _asrc)) if _asrc is not None else None
         for _sid, _b in (_ab.get("strategies") or {}).items():
-            if _sid not in _asids:
+            if _asids is not None and _sid not in _asids:
                 errors.append(f"archive_backtests.json \"{_sid}\": archive.html D 배열에 없는 sid — 부기가 렌더되지 않는다")
             _m = _b.get("metrics") or {}
             if not (_m.get("s") and _m.get("b") and _m.get("basis")):
@@ -495,7 +597,7 @@ try:
             if _mu.get("passed"):
                 errors.append(f"{_sid}: 부기가 다중검정을 통과한 것으로 표시됨 — 재검 판정은 전건 '기각 유지'다. "
                               "실제로 통과했다면 아카이브가 아니라 탐색기로 승격 검토가 먼저다")
-        if "기각 유지" not in _asrc:
+        if _asrc is not None and "기각 유지" not in _asrc:
             errors.append("archive.html 부기에 '기각 유지' 문구가 없음 — 표만 보면 부활한 것으로 읽힌다")
 except Exception as e:
     errors.append(f"기각 재검 부기 검증 실패: {e}")
@@ -506,7 +608,8 @@ try:
              "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
              "sources.html": "--w-read"}
     for _f, _tok in _want.items():
-        _s = rd(_f)
+        _s = plain(_f, "폭 토큰 검사")   # 잠금 페이지는 평문 기준(게이트는 자체 폭을 가짐)
+        if _s is None: continue
         _m = re.search(r"\.wrap\{[^}]*?max-width:\s*([^;]+);", _s)
         if not _m:
             errors.append(f"{_f}: .wrap max-width 없음")
@@ -521,11 +624,16 @@ except Exception as e:
 #    overflow-wrap:break-word는 넘칠 때만 끊으므로 한글 보전과 양립한다.
 try:
     for _p in PAGES:
-        _s = rd(_p)
+        _srv = rd(_p)
+        _cands = [(_p, _srv)]                 # 배포본(잠금이면 게이트 화면도 모바일에서 렌더된다)
+        if is_locked(_srv):
+            _pt2 = plain(_p, "모바일 word-break 안전망 검사(평문)")
+            if _pt2 is not None: _cands.append((_p + "(평문)", _pt2))
         # ⚠ 주석에 문자열이 있는 것만으로 통과하면 안 된다(스크린 검사에서 이미 겪은 함정) —
         #    두 속성이 **한 선언 안에 붙어 있는지**를 본다.
-        if "word-break:keep-all" in _s and not re.search(r"word-break:\s*keep-all\s*;\s*overflow-wrap:\s*break-word", _s):
-            errors.append(f"{_p}: word-break:keep-all에 overflow-wrap:break-word 안전망이 없음 — 모바일 가로스크롤 위험")
+        for _lab2, _s in _cands:
+            if "word-break:keep-all" in _s and not re.search(r"word-break:\s*keep-all\s*;\s*overflow-wrap:\s*break-word", _s):
+                errors.append(f"{_lab2}: word-break:keep-all에 overflow-wrap:break-word 안전망이 없음 — 모바일 가로스크롤 위험")
 except Exception as _e3:
     errors.append(f"줄바꿈 안전망 검증 실패: {_e3}")
 
@@ -598,9 +706,14 @@ for _fn in ("stocks.json", "home_reco.json", "regime.json", "members.json", "rot
             errors.append(f"{_fn}: {k}={v} 날짜 파싱 불가"); continue
         if str(v)[:10] > _tomorrow:
             errors.append(f"{_fn}: {k}={v} 미래 날짜 — 일자 꼬임")
-if qj is None or qp is None: errors.append("선별 상수(QUOTA)를 찾지 못함")
-elif qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
-if cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")
+# rotation_select.py 쪽 상수는 잠금과 무관 — 평문 유무와 무관하게 항상 검증(CI 포함)
+if qp is None: errors.append("선별 상수(QUOTA)를 rotation_select.py에서 찾지 못함")
+if cp is None: errors.append("선별 상수(CATORD)를 rotation_select.py에서 찾지 못함")
+if rot is not None:
+    if qj is None: errors.append("선별 상수(QUOTA)를 rotation.html에서 찾지 못함")
+    elif qp is not None and qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
+    if cj is None: errors.append("선별 상수(CATORD)를 rotation.html에서 찾지 못함")
+    elif cp is not None and cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")
 
 # ── 시장 국면: 종합 요약(summary)·블록 슬롯 ──────────────────────────────
 #   요약 문장은 build/regime_summary.py 한 곳에서만 만든다(verdicts_gen과 같은 재계산 비교).
@@ -647,6 +760,12 @@ try:
 except Exception as e:
     errors.append(f"슬롯 렌더 검증 실패: {e}")
 
+# 평문 필수 모드: 일일잡이 도는 운영 PC에서는 SKIP=실패로 승격(사본 소실이 무경보 강등으로 이어지지 않게)
+if skips and os.environ.get("VALIDATE_REQUIRE_PLAINTEXT") == "1":
+    errors.append(f"평문 필수 모드인데 {len(skips)}개 검사가 SKIP됨 — 이 머신에서는 _build/pages 전체 검증이 계약이다")
+if skips:
+    print(f"⚠ 잠금 페이지 평문 부재(_build/pages/) — {len(skips)}개 검사 건너뜀(통과가 아니라 미검증이다. 평문 있는 곳에서 검증할 것):")
+    for s in sorted(skips): print("  ~", s)
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
