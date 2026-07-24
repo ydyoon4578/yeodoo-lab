@@ -10,19 +10,19 @@
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <style>
   :root{
-    --ground:#F4F1EA;--panel:#FFFFFF;--panel-2:#F8F6F1;--line:#E2DDD1;--line-soft:#EDE9E0;
-    --ink:#2A2621;--ink-2:#4B453B;--muted:#786F61;--accent:#8A6B00;--accent-2:#5E4900;
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--accent-2:#5E4900;
     --deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
-    --shadow:0 1px 2px rgba(42,38,33,.05),0 10px 30px -14px rgba(42,38,33,.2);
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -14px rgba(23,39,51,.2);
   }
   @media (prefers-color-scheme:dark){:root{
-    --ground:#15130F;--panel:#201D18;--panel-2:#2A2620;--line:#3A342B;--line-soft:#2F2A23;
-    --ink:#F1EDE4;--ink-2:#D0C9BB;--muted:#968C7C;--accent:#FFBC00;--accent-2:#FFD766;
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--accent-2:#FFD766;
     --deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.65);
   }}
-  :root[data-theme="light"]{--ground:#F4F1EA;--panel:#FFFFFF;--panel-2:#F8F6F1;--line:#E2DDD1;--line-soft:#EDE9E0;--ink:#2A2621;--ink-2:#4B453B;--muted:#786F61;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(42,38,33,.05),0 10px 30px -14px rgba(42,38,33,.2);}
-  :root[data-theme="dark"]{--ground:#15130F;--panel:#201D18;--panel-2:#2A2620;--line:#3A342B;--line-soft:#2F2A23;--ink:#F1EDE4;--ink-2:#D0C9BB;--muted:#968C7C;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.65);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--accent-2:#5E4900;--deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -14px rgba(23,39,51,.2);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--accent-2:#FFD766;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.65);}
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Malgun Gothic",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   *,*::before,*::after{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
@@ -107,17 +107,48 @@
   @media(max-width:640px){body{font-size:15px}.wrap{padding:0 14px 50px}}
   @media print{.gate,.tabbar,.themebtn{display:none!important}.tabpane{display:block!important}
     body{background:#fff;color:#000}.tw,table,.fitem,.verdict{page-break-inside:avoid}}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:1200px;margin:0 auto;padding:0 22px;height:52px;display:flex;align-items:center;gap:16px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navlinks{display:flex;align-items:center;gap:2px;margin-left:4px;overflow-x:auto;scrollbar-width:none}
+  .navlinks::-webkit-scrollbar{display:none}
+  .navlinks a{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:7px 11px;border-radius:8px;white-space:nowrap}
+  .navlinks a:hover{background:var(--panel-2);color:var(--accent)}
+  .navlinks a[aria-current="page"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
+  .navlinks a .lk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
+  .navsp{flex:1}
+  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
+  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
+  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 </style>
 </head>
 <body>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg>
+      여두 랩
+    </a>
+    <div class="navlinks">
+      <a href="stocks.html">종목 시그널</a>
+      <a href="regime.html">시장 국면</a>
+      <a href="explorer.html" rel="nofollow">전략 리스트<span class="lk">🔒</span></a>
+      <a href="rotation.html" rel="nofollow">전략 탐색<span class="lk">🔒</span></a>
+      <a href="archive.html" rel="nofollow">기각</a>
+      <a href="sources.html" rel="nofollow">출처</a>
+      <a href="kb.html" rel="nofollow" aria-current="page">BK<span class="lk">🔒</span></a>
+    </div>
+    <span class="navsp"></span>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
 <div class="wrap">
   <header class="mast">
-    <div class="utilbar">
-      <div class="eyebrow">Yeodoo Quant Strategy Lab</div>
-      <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
-    </div>
+    <div class="eyebrow">Yeodoo Quant Strategy Lab</div>
     <h1 class="title">K · B <span class="gx">전략 비교</span></h1>
-    <p style="margin:10px 0 0"><a class="back" href="index.html">← 전략 랩 홈</a></p>
   </header>
 
   <div class="gate" id="gate">
