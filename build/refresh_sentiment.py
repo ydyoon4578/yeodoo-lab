@@ -193,8 +193,11 @@ def backtest(score, score_pctl, comp_vix, spy, ws=None):
     # (레벨 그대로 비교하면 비정상성 때문에 두 값이 함께 축소되어 공정 비교가 안 된다).
     vix_pctl = pctl_exp(comp_vix.dropna(), 756).reindex(score.index)
     ic = pd.DataFrame({"c": score_pctl, "v": vix_pctl, "f60": f60}).dropna()
-    ic60_c = float(ic.c.corr(ic.f60, method="spearman"))
-    ic60_v = float(ic.v.corr(ic.f60, method="spearman"))
+    # ⚠ pandas 의 method="spearman" 은 내부적으로 scipy 를 import 한다(CI 러너엔 scipy 미설치).
+    # ic 는 바로 위에서 dropna 됐으므로 '순위 후 pearson' 이 Spearman 과 수학적으로 동일하고
+    # scipy 가 필요 없다. (t검정은 이미 scipy 없을 때 graceful skip.)
+    ic60_c = float(ic.c.rank().corr(ic.f60.rank()))
+    ic60_v = float(ic.v.rank().corr(ic.f60.rank()))
     verdict = ("합성 지수가 VIX 단독을 이기지 못함. 개선 주장 없음."
                if ic60_c >= ic60_v else
                "합성이 VIX 단독보다 근소 우위이나 노이즈 범위 — 개선 주장 없음.")
