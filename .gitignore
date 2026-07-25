@@ -10,3 +10,7 @@ __pycache__/
 # 잠금 페이지 평문 원본(커밋 절대 금지 — 커밋하면 암호화가 무의미해진다)
 # validate_site.py가 평문 의존 검사에 사용. 일일잡의 dirty-tree 가드에도 걸리면 안 된다.
 _build/
+
+# 내비 생성 중간 산출물(build/sync_nav.py가 매번 다시 만든다 — 커밋하면 디프 노이즈만 는다)
+build/nav_head.html
+build/nav_body.html

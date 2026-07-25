@@ -1,0 +1,593 @@
+{
+ "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
+ "generated_from": "dc8b23c9bccc554a",
+ "categories": [
+  {
+   "name": "금융시장 현황",
+   "slug": "market",
+   "short": "시장",
+   "tools": [
+    {
+     "name": "시장 폭·동향",
+     "file": "market.html",
+     "status": "new-now",
+     "desc": "518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "섹터 히트맵",
+     "file": "sector.html",
+     "status": "new-now",
+     "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "기술지표 탐색",
+     "file": "stocks.html#p=up",
+     "status": "existing",
+     "desc": "22개 테크니컬 백분위로 518종목 필터",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "S",
+     "anchor": "route",
+     "live": true
+    }
+   ]
+  },
+  {
+   "name": "공시룸 (뉴스룸)",
+   "slug": "newsroom",
+   "short": "공시",
+   "tools": [
+    {
+     "name": "8-K 공시 피드",
+     "file": "filings.html",
+     "status": "needs-source",
+     "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "blocked_by": "SEC EDGAR submissions API",
+     "blocked_why": "실측 28KB gz·0.07s/콜 → 518종목 36초. 무인증.",
+     "pipeline": 2,
+     "live": false
+    },
+    {
+     "name": "실시간 내러티브",
+     "file": "roadmap.html#narrative",
+     "status": "wont-build",
+     "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
+     "verdict": "na",
+     "src": "none",
+     "effort": "S",
+     "anchor": "runtime",
+     "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
+     "blocked_why": "LLM 요약으로 채우면 \"해설을 붙이지 않는다\" 원칙과 충돌한다. 대체는 8-K 원문 직행.",
+     "pipeline": 0,
+     "live": true
+    },
+    {
+     "name": "프리미엄 뉴스",
+     "file": "roadmap.html#news",
+     "status": "wont-build",
+     "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
+     "verdict": "na",
+     "src": "none",
+     "effort": "S",
+     "anchor": "runtime",
+     "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
+     "blocked_why": "위와 동일. 대체는 co.html#ir의 EDGAR 원문 링크.",
+     "pipeline": 0,
+     "live": true
+    }
+   ]
+  },
+  {
+   "name": "거시경제 분석",
+   "slug": "macro",
+   "short": "거시",
+   "tools": [
+    {
+     "name": "국가경제 분석",
+     "file": "regime.html",
+     "status": "existing",
+     "desc": "FRED 39지표 국면 판정 — 미국 단일",
+     "verdict": "unverified",
+     "src": "model",
+     "effort": "S",
+     "live": true
+    },
+    {
+     "name": "하위 요인 분석",
+     "file": "regime.html#axes",
+     "status": "new-now",
+     "desc": "7축이 어떤 지표로 만들어졌고 무엇을 뺐는지",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "S",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "경제지표 열람",
+     "file": "macro.html",
+     "status": "new-now",
+     "desc": "FRED 39지표 현재값·전기대비·z 한 표",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "사이클 분석",
+     "file": "macro.html#cycle",
+     "status": "new-now",
+     "desc": "레짐별 표본수를 성과보다 먼저 보여준다",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "자산군",
+     "file": "macro.html#assets",
+     "status": "new-now",
+     "desc": "자산·팩터 레짐별 월평균 + RP 12자산 실비중",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "S",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "밸류에이션(지수)",
+     "file": "macro.html#val",
+     "status": "new-now",
+     "desc": "밸류 중앙값 vs 실질금리 — 오늘 한 점뿐",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "S",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "경제지표 일정",
+     "file": "calendar.html#macro",
+     "status": "needs-source",
+     "desc": "다음 발표일만 — 예상치는 싣지 않는다",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "FRED releases/dates API",
+     "blocked_why": "키는 이미 있다(refresh_regime.py가 사용 중). 하루 1콜. 예상치·컨센서스는 싣지 않는다.",
+     "pipeline": 7,
+     "live": false
+    }
+   ]
+  },
+  {
+   "name": "퀀트 탐색",
+   "slug": "quant",
+   "short": "퀀트",
+   "tools": [
+    {
+     "name": "스크리너",
+     "file": "screener.html",
+     "status": "new-now",
+     "desc": "자유조합 스크린 — 초과수익 확인된 스크린 0종",
+     "verdict": "rejected",
+     "src": "model",
+     "effort": "L",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "백테스트 원장",
+     "file": "explorer.html",
+     "status": "existing",
+     "desc": "랩이 돌린 결과와 유의성까지 전부",
+     "verdict": "pass",
+     "src": "model",
+     "effort": "S",
+     "locked": true,
+     "live": true
+    }
+   ]
+  },
+  {
+   "name": "투자거장 분석",
+   "slug": "gurus",
+   "short": "거장",
+   "tools": [
+    {
+     "name": "거장 포트폴리오·매매",
+     "file": "guru.html",
+     "status": "needs-source",
+     "desc": "지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함",
+     "verdict": "unverified",
+     "src": "raw",
+     "effort": "L",
+     "blocked_by": "SEC 13F-HR + FTD CUSIP 매핑",
+     "blocked_why": "가장 취약한 경로 — CUSIP→티커가 FTD 부산물 의존이고 항상 4개월 묵은 롱온리 스냅샷이다. 제작 여부 미결.",
+     "pipeline": 6,
+     "live": false
+    },
+    {
+     "name": "공통 보유종목",
+     "file": "guru.html#overlap",
+     "status": "needs-source",
+     "desc": "여러 명이 들었다는 사실뿐 — 근거가 아니다",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC 13F-HR + FTD CUSIP 매핑",
+     "blocked_why": "위와 동일 파이프라인.",
+     "pipeline": 6,
+     "live": false
+    }
+   ]
+  },
+  {
+   "name": "종목 재무분석",
+   "slug": "financials",
+   "short": "종목",
+   "tools": [
+    {
+     "name": "종목 개요·내러티브",
+     "file": "stocks.html",
+     "status": "existing",
+     "desc": "신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "S",
+     "live": true
+    },
+    {
+     "name": "재무제표",
+     "file": "co.html#fs",
+     "status": "needs-source",
+     "desc": "SEC 원문 — 숫자마다 기간말·제출일 병기",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "L",
+     "anchor": "static",
+     "blocked_by": "SEC EDGAR companyfacts XBRL",
+     "blocked_why": "20태그·실측 16.5KB/사 → 518 = 8.6MB. 주 1회면 충분(실적발표 때만 바뀐다).",
+     "pipeline": 3,
+     "live": false
+    },
+    {
+     "name": "IR자료실",
+     "file": "co.html#ir",
+     "status": "needs-source",
+     "desc": "EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC EDGAR submissions API",
+     "blocked_why": "같은 수집분에서 원문 링크만 뽑는다. 회사 IR 주소는 SEC가 주지 않는다.",
+     "pipeline": 2,
+     "live": false
+    },
+    {
+     "name": "실적 및 전망",
+     "file": "co.html#est",
+     "status": "new-now",
+     "desc": "목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중",
+     "verdict": "unverified",
+     "src": "est",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "내부자 거래",
+     "file": "co.html#ins",
+     "status": "needs-source",
+     "desc": "약 25일 지연 — 실시간이 아니다",
+     "verdict": "unverified",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC Form 3/4/5 분기 ZIP",
+     "blocked_why": "ISSUERTRADINGSYMBOL로 직접 조인돼 CUSIP 매핑이 필요 없다. 약 25일 지연이 구조적 한계.",
+     "pipeline": 8,
+     "live": false
+    },
+    {
+     "name": "실적 발표 일정",
+     "file": "calendar.html#earnings",
+     "status": "needs-source",
+     "desc": "다음 발표일과 과거 서프라이즈 — 비공식 API 의존",
+     "verdict": "unverified",
+     "src": "est",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "yfinance earnings_dates",
+     "blocked_why": "비공식 API — 끊기면 이 칸이 같이 죽는다. 채택 여부 미결.",
+     "pipeline": 4,
+     "live": false
+    }
+   ]
+  },
+  {
+   "name": "종목 가치평가",
+   "slug": "valuation",
+   "short": "가치",
+   "tools": [
+    {
+     "name": "상대가치평가",
+     "file": "rel-value.html",
+     "status": "new-now",
+     "desc": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "Reverse DCF",
+     "file": "valuation.html#reverse",
+     "status": "new-now",
+     "desc": "주가에 내재된 성장 가정을 역산 — 예측이 아니다",
+     "verdict": "unverified",
+     "src": "model",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "Simplified DCF",
+     "file": "valuation.html#simple",
+     "status": "new-now",
+     "desc": "적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐",
+     "verdict": "unverified",
+     "src": "model",
+     "effort": "S",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "DDM",
+     "file": "valuation.html#ddm",
+     "status": "needs-source",
+     "desc": "배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC EDGAR companyfacts XBRL",
+     "blocked_why": "배당 시계열(CommonStockDividendsPerShareDeclared)이 있어야 성립. 지금은 단면 배당수익률뿐.",
+     "pipeline": 3,
+     "live": false
+    },
+    {
+     "name": "RIM",
+     "file": "valuation.html#rim",
+     "status": "needs-source",
+     "desc": "잔여이익 모델 — 자기자본 시계열이 있어야 성립",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC EDGAR companyfacts XBRL",
+     "blocked_why": "자기자본(StockholdersEquity) 시계열 필요. 지금은 단면 PBR뿐.",
+     "pipeline": 3,
+     "live": false
+    },
+    {
+     "name": "Index DCF",
+     "file": "valuation.html#index",
+     "status": "needs-source",
+     "desc": "지수 단위 FCF 시계열 — frames 한 콜로 5,589사",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "SEC EDGAR frames API",
+     "blocked_why": "태그당 1콜로 5,589사 횡단(실측 159KB·0.45s). 518콜을 돌 필요가 없다.",
+     "pipeline": 5,
+     "live": false
+    }
+   ]
+  },
+  {
+   "name": "포트폴리오 관리",
+   "slug": "portfolio",
+   "short": "포트",
+   "tools": [
+    {
+     "name": "대시보드",
+     "file": "portfolio.html",
+     "status": "new-now",
+     "desc": "브라우저에만 저장 — 전송할 서버가 아예 없다",
+     "verdict": "na",
+     "src": "agg",
+     "effort": "L",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    },
+    {
+     "name": "포트폴리오 분석",
+     "file": "portfolio.html#analysis",
+     "status": "new-now",
+     "desc": "3년 753거래일 실측 상관 — 그 이전은 데이터가 없다",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 — 구현 대기",
+     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
+     "pipeline": 1,
+     "live": false
+    }
+   ]
+  },
+  {
+   "name": "산업 분석",
+   "slug": "industry",
+   "short": "산업",
+   "tools": [
+    {
+     "name": "산업 탐색",
+     "file": "industry.html",
+     "status": "needs-source",
+     "desc": "조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포",
+     "verdict": "unverified",
+     "src": "raw",
+     "effort": "M",
+     "blocked_by": "SEC EDGAR submissions API",
+     "blocked_why": "최상위 sic·sicDescription. 조회수를 추적하지 않아 \"인기\" 대신 산업 분포를 쓴다.",
+     "pipeline": 2,
+     "live": false
+    },
+    {
+     "name": "관전 포인트",
+     "file": "industry.html#watch",
+     "status": "new-later",
+     "desc": "해석이 아니라 어긋난 자리만 짚는다",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "anchor": "static",
+     "blocked_by": "보유 데이터로 가능 · 후순위",
+     "blocked_why": "섹터·팩터 어긋남 탐지. 산업 탐색이 선 필요.",
+     "pipeline": 99,
+     "live": false
+    },
+    {
+     "name": "밸류체인",
+     "file": "roadmap.html#value-chain",
+     "status": "wont-build",
+     "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
+     "verdict": "na",
+     "src": "none",
+     "effort": "S",
+     "anchor": "runtime",
+     "blocked_by": "만들지 않는다 — 공급망 데이터 없음",
+     "blocked_why": "SIC 산업분류로는 밸류체인을 만들 수 없다. 없는 걸 지어내지 않는다.",
+     "pipeline": 0,
+     "live": true
+    }
+   ]
+  },
+  {
+   "name": "랩 원장",
+   "slug": "ledger",
+   "short": "원장",
+   "tools": [
+    {
+     "name": "기각 아카이브",
+     "file": "archive.html",
+     "status": "existing",
+     "desc": "기각 51건 · 부활 0건 — 사유까지",
+     "verdict": "rejected",
+     "src": "model",
+     "effort": "S",
+     "locked": true,
+     "live": true
+    },
+    {
+     "name": "데이터 출처·기준일",
+     "file": "sources.html",
+     "status": "existing",
+     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
+     "locked": true,
+     "live": true
+    },
+    {
+     "name": "전략 탐색 풀",
+     "file": "rotation.html",
+     "status": "existing",
+     "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
+     "verdict": "unverified",
+     "src": "ext",
+     "effort": "S",
+     "locked": true,
+     "live": true
+    },
+    {
+     "name": "BK",
+     "file": "kb.html",
+     "status": "existing",
+     "desc": "별도 열람 잠금",
+     "verdict": "na",
+     "src": "none",
+     "effort": "S",
+     "locked": true,
+     "live": true
+    },
+    {
+     "name": "등급·판정 규약",
+     "file": "method.html",
+     "status": "new-now",
+     "desc": "A~F 등급은 섹터 백분위 서술이지 예측이 아니다",
+     "verdict": "na",
+     "src": "none",
+     "effort": "M",
+     "live": true
+    },
+    {
+     "name": "미구현 로드맵",
+     "file": "roadmap.html",
+     "status": "new-now",
+     "desc": "무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기",
+     "verdict": "na",
+     "src": "none",
+     "effort": "M",
+     "live": true
+    }
+   ]
+  }
+ ]
+}

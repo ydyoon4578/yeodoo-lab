@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 나스닥100·S&P500 512종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
+<meta name="description" content="여두 전략 랩 — 나스닥100·S&P500 518종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
 <title>여두 전략 랩</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/index.html">
@@ -27,6 +27,11 @@
     --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;
     --deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
     --gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    /* 국면·심리 색은 .card .cv의 글자색(20px bold)으로 쓰인다 — 다크 패널 위 대비 3:1을
+       못 지키면 침체·스태그플레이션 전환 시 카드 대표값이 묻힌다. 그래서 다른 색과 똑같이
+       라이트/다크 이원 토큰으로 둔다(예전엔 JS에 라이트 hex를 박아 다크에서 1.70:1까지 떨어졌다). */
+    --rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;
+    --sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;
     --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);
   }
   @media (prefers-color-scheme:dark){:root{
@@ -34,10 +39,13 @@
     --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;
     --deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
     --gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;
+    /* 다크에선 '나쁠수록 어둡게'가 불가능하다(대비가 죽는다) — 명도는 올리고 색상으로 악화를 표현한다. 전부 5.2:1 이상 */
+    --rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;
+    --sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
-  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
   :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
   *,*::before,*::after{box-sizing:border-box}
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
@@ -47,21 +55,8 @@
   a{color:inherit}
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
 
-  /* ── 상단 내비게이션(SA풍 지속 바) ───────────────────────────── */
-  .topnav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
-  .topnav .nvin{max-width:var(--w-base);margin:0 auto;padding:0 22px;height:52px;display:flex;align-items:center;gap:18px}
-  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
-  .topnav .brand svg{width:22px;height:22px;flex:none}
-  .navlinks{display:flex;align-items:center;gap:2px;margin-left:6px;overflow-x:auto;scrollbar-width:none}
-  .navlinks::-webkit-scrollbar{display:none}
-  .navlinks a{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:7px 11px;border-radius:8px;white-space:nowrap}
-  .navlinks a:hover{background:var(--panel-2);color:var(--accent)}
-  .navlinks a[aria-current="page"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
-  .navlinks a .lk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
-  .navsp{flex:1}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;flex:none}
-  .themebtn:hover{border-color:var(--accent)}
-  @media(max-width:640px){.topnav .nvin{gap:10px;padding:0 14px}.wrap{padding:0 14px 60px}}
+  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
+  @media(max-width:640px){.wrap{padding:0 14px 60px}}
 
   /* ── 히어로 ─────────────────────────────────────────────────── */
   header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
@@ -129,6 +124,68 @@
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
   .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
+  /* ── 기준일 표 — 축이 여럿이라는 사실을 주장 대신 표로 보인다 ── */
+  .asoftbl{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+           background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .asoftbl:empty{display:none}
+  .asoftbl div{background:var(--panel);padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+  .asoftbl .ak{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .asoftbl .av{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
+  .asoftbl .ac{font-size:10.5px;color:var(--muted);line-height:1.4}
+  .asoftbl .lag{color:var(--marg);font-weight:700}
+
+  /* ── 도구 디렉터리(HOMEDIR 블록이 쓰는 클래스) ───────────────── */
+  .ldtally{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+           padding:13px 22px;margin:-20px 0 0}
+  .ldtally .ltn{margin:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .ldtally .ltn b{color:var(--ink);font-size:15px;font-weight:800;margin-left:5px}
+  .ldtally .ltw{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .ldtally .ltw em{font-style:normal;opacity:.8}
+  /* align-items:start가 없으면 행 높이가 가장 긴 카드(거시 7슬롯)에 맞춰 늘어나 3슬롯 카드에 빈 공간이 생긴다 */
+  .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
+  .dcard{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));
+         border-radius:12px;box-shadow:var(--shadow);padding:13px 16px 14px}
+  .dcard h3{margin:0;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);
+            display:flex;align-items:baseline;gap:9px}
+  .dcard h3 .dc{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap}
+  /* 판정 분포 막대 — 거시는 원문·집계가 대부분이고 퀀트는 기각이 눈에 띈다는 게 한눈에 보인다 */
+  .dbar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin:10px 0 11px;background:var(--panel-2)}
+  .dbar i{width:var(--w);display:block}
+  .dbar i.vpass{background:var(--nv-pass)} .dbar i.vmarg{background:var(--nv-marg)}
+  .dbar i.vunv{background:var(--nv-unv)}   .dbar i.vrej{background:var(--nv-rej)}
+  .dbar i.soon{background:color-mix(in srgb,var(--nv-soon) 45%,transparent)}
+  .dbar i.wont{background:repeating-linear-gradient(45deg,var(--nv-unv) 0 2px,transparent 2px 4px)}
+  .dtools{display:flex;flex-direction:column;gap:1px}
+  .dtools a,.dtools span{display:flex;align-items:baseline;gap:7px;padding:5px 0;font-size:12.5px;
+                         text-decoration:none;color:var(--ink-2);border-top:1px solid var(--line-soft)}
+  .dtools a:first-child,.dtools span:first-child{border-top:0}
+  .dtools a{color:var(--ink)} .dtools a:hover{color:var(--accent)}
+  .dtools span{color:var(--muted)}
+  .dtools b{margin-left:auto;font-family:var(--mono);font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;
+            white-space:nowrap;border:1px solid color-mix(in srgb,var(--bc,var(--muted)) 38%,transparent);
+            background:color-mix(in srgb,var(--bc,var(--muted)) 11%,transparent);color:var(--bc,var(--muted))}
+  .dtools b.vpass{--bc:var(--nv-pass)} .dtools b.vmarg{--bc:var(--nv-marg)}
+  .dtools b.vunv{--bc:var(--nv-unv)}   .dtools b.vrej{--bc:var(--nv-rej)}
+  .dtools b.soon{--bc:var(--nv-soon)}  .dtools b.wont{--bc:var(--nv-unv)}
+
+  /* ── 아직 못 만든 것 — 두 덩어리를 다르게 칠한다(섞으면 "언젠가 다 만든다"로 읽힌다) ── */
+  .gapbox{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:11px;padding:13px 17px;margin-bottom:11px}
+  .gapbox.implbox{border-left:3px solid var(--champ)}
+  .gapbox.soonbox{border-left:3px solid var(--marg)}
+  .gapbox.wontbox{border-left:3px solid var(--hot)}
+  .chips{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+  .chips span{font-family:var(--mono);font-size:11px;color:var(--ink-2);background:var(--panel);
+              border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+  .gaph{margin:0 0 9px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--ink)}
+  .gaprow{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:4px 14px;padding:5px 0;
+          border-top:1px solid var(--line-soft);font-size:12px}
+  .gaprow .gn{font-family:var(--mono);font-weight:700;color:var(--ink-2)}
+  .gaprow .gw{color:var(--muted);line-height:1.5}
+  .gapf{margin:10px 0 0;font-size:11.5px}
+  .gapf a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-weight:600}
+  .gapf a:hover{text-decoration:underline}
+  @media(max-width:560px){.gaprow{grid-template-columns:1fr;gap:2px}}
+
   /* ── 최근 업데이트 ──────────────────────────────────────────── */
   .updwrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:4px 22px}
   .upd{display:grid;grid-template-columns:158px 108px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px;text-decoration:none}
@@ -161,39 +218,307 @@
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
 </style>
-</head>
-<body>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:8px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
+       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="index.html">
+
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
   <div class="nvin">
-    <a class="brand" href="index.html" aria-current="page">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg>
-      여두 랩
-    </a>
-    <div class="navlinks">
-      <a href="stocks.html">종목 시그널</a>
-      <a href="regime.html">시장 국면</a>
-      <a href="explorer.html" rel="nofollow">전략 리스트<span class="lk">🔒</span></a>
-      <a href="rotation.html" rel="nofollow">전략 탐색<span class="lk">🔒</span></a>
-      <a href="archive.html" rel="nofollow">기각</a>
-      <a href="sources.html" rel="nofollow">출처</a>
-      <a href="kb.html" rel="nofollow">BK<span class="lk">🔒</span></a>
-    </div>
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
+          <span class="mmi"><span class="mmn">시장 폭·동향</span><span class="mmb soon">준비중</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></span>
+          <span class="mmi"><span class="mmn">섹터 히트맵</span><span class="mmb soon">준비중</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></span>
+          <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="newsroom">
+        <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
+          <span class="mmi"><span class="mmn">8-K 공시 피드</span><span class="mmb soon">준비중</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></span>
+          <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
+          <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="macro">
+        <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
+          <span class="mmi"><span class="mmn">하위 요인 분석</span><span class="mmb soon">준비중</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></span>
+          <span class="mmi"><span class="mmn">경제지표 열람</span><span class="mmb soon">준비중</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></span>
+          <span class="mmi"><span class="mmn">사이클 분석</span><span class="mmb soon">준비중</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></span>
+          <span class="mmi"><span class="mmn">자산군</span><span class="mmb soon">준비중</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></span>
+          <span class="mmi"><span class="mmn">밸류에이션(지수)</span><span class="mmb soon">준비중</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></span>
+          <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="quant">
+        <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
+          <span class="mmi"><span class="mmn">스크리너</span><span class="mmb soon">준비중</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></span>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장<span class="mmlk">🔒</span></span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="gurus">
+        <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
+          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
+          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="financials">
+        <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
+          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
+          <span class="mmi"><span class="mmn">실적 및 전망</span><span class="mmb soon">준비중</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></span>
+          <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
+          <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="valuation">
+        <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
+          <span class="mmi"><span class="mmn">상대가치평가</span><span class="mmb soon">준비중</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></span>
+          <span class="mmi"><span class="mmn">Reverse DCF</span><span class="mmb soon">준비중</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></span>
+          <span class="mmi"><span class="mmn">Simplified DCF</span><span class="mmb soon">준비중</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></span>
+          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
+          <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="portfolio">
+        <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
+          <span class="mmi"><span class="mmn">대시보드</span><span class="mmb soon">준비중</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></span>
+          <span class="mmi"><span class="mmn">포트폴리오 분석</span><span class="mmb soon">준비중</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="industry">
+        <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
+          <span class="mmi"><span class="mmn">산업 탐색</span><span class="mmb soon">준비중</span><span class="mmd">조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포</span></span>
+          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브<span class="mmlk">🔒</span></span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀<span class="mmlk">🔒</span></span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
+          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
+        </div>
+      </li>
+    </ul>
     <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
     <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
   </div>
 </nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
 
-<div class="wrap">
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<div class="wrap" id="main">
   <header class="mast">
     <div class="eyebrow">Yeodoo Quant Strategy Lab</div>
     <h1 class="title">여두 <span class="gx">전략 랩</span></h1>
     <p class="herolede">나스닥100·S&amp;P500 <b>518종목</b>과 FRED 매크로로 퀀트 전략을 구현하고 <b>적대적으로 검증</b>한 뒤, 통과·기각 판정을 전부 공개합니다.</p>
     <div class="asofbar" id="asofbar">
       <span class="asoftag">데이터 기준일</span><b id="mainasof">불러오는 중…</b>
-      <span class="asofnote">가격·테크니컬·EPS·시장국면 통일 · 공매도잔량만 격주(FINRA)</span>
+      <!-- 예전엔 여기에 '가격·테크니컬·EPS·시장국면 통일'이라고 정적으로 적어뒀다. 축이 하나라도
+           밀리는 날 그 문장이 거짓이 되므로, 주장 대신 아래 표로 축별 날짜를 그대로 보여준다. -->
+      <span class="asofnote">축이 여럿이다 — 아래 표가 정본</span>
       <span class="stalewarn" id="stalewarn" hidden></span>
     </div>
+    <div class="asoftbl" id="asoftbl" aria-label="축별 데이터 기준일"></div>
   </header>
 
   <div class="home">
@@ -203,31 +528,164 @@
       <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
     </section>
 
-    <!-- ② 도구 — 화면형 진입로(종목·국면)만. 전략 진입로는 아래 '전략' 섹션으로 옮겼다. -->
-    <section id="s-tools" aria-labelledby="tl-h">
-      <p class="lbl" id="tl-h">도구</p>
-      <div class="tiles">
-        <a class="tile" href="stocks.html" style="--edge:var(--deploy)"><span class="tn">종목 시그널</span><span class="td">NDX·SPX 테크니컬과 스윙 타점</span><span class="tb" id="tb-stk">매일 갱신</span></a>
-        <a class="tile" href="regime.html" style="--edge:var(--champ)"><span class="tn">시장 국면</span><span class="td">FRED 매크로로 레짐 판별</span><span class="tb" id="tb-reg">매일 갱신</span></a>
-      </div>
+    <!-- ② 판정 원장 — 도구 목록보다 위에 둔다.
+         카테고리 카드를 먼저 늘어놓으면 홈이 '도구 40개짜리 사이트'로 읽히고
+         실제 메시지(통과 3 · 기각 51)가 묻힌다. 도구 수와 판정 수를 같은 화면에서 충돌시킨다. -->
+    <section id="s-ledger" aria-labelledby="ld-h">
+      <p class="lbl" id="ld-h">전략 <span class="sub">· 구현 → 적대검증 → 판정</span></p>
+      <div class="ledger" id="ledger"><div class="ldskel">불러오는 중…</div></div>
     </section>
 
-    <!-- ③ 신호 -->
+    <!-- ③ 도구 디렉터리 + 아직 못 만든 것 — build/sync_nav.py가 nav_items.json에서 굽는다.
+         내비와 같은 정본에서 나오므로 두 곳이 어긋날 수 없다(CI가 해시로 대조). -->
+    <!-- HOMEDIR:BEGIN -->
+<section id="s-dir" aria-labelledby="dir-h">
+  <div class="ldtally">
+    <p class="ltn"><span>화면 <b>40</b></span><span>동작 <b>10</b></span><span>구현 대기 <b>15</b></span><span>소스 대기 <b>12</b></span><span>만들지 않기로 한 것 <b>3</b></span><span>파일 <b>21</b>장</span></p>
+    <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
+  </div>
+  <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
+  <div class="dgrid">
+    <div class="dcard" style="--edge:var(--deploy)">
+      <h3>금융시장 현황<span class="dc">구현 1 · 대기 2</span></h3>
+      <div class="dbar" role="img" aria-label="금융시장 현황 판정 분포"><i class="vunv" style="--w:33.3333%" title="미검증 1"></i><i class="soon" style="--w:66.6667%" title="준비중 2"></i></div>
+      <div class="dtools">
+        <span>시장 폭·동향<b class="soon">준비중</b></span>
+        <span>섹터 히트맵<b class="soon">준비중</b></span>
+        <a href="stocks.html#p=up">기술지표 탐색<b class="vunv">미검증</b></a>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--muted)">
+      <h3>공시룸 (뉴스룸)<span class="dc">구현 0 · 대기 1 · 미제작 2</span></h3>
+      <div class="dbar" role="img" aria-label="공시룸 (뉴스룸) 판정 분포"><i class="soon" style="--w:33.3333%" title="준비중 1"></i><i class="wont" style="--w:66.6667%" title="미제작 2"></i></div>
+      <div class="dtools">
+        <span>8-K 공시 피드<b class="soon">준비중</b></span>
+        <a href="roadmap.html#narrative">실시간 내러티브<b class="wont">미제작</b></a>
+        <a href="roadmap.html#news">프리미엄 뉴스<b class="wont">미제작</b></a>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--champ)">
+      <h3>거시경제 분석<span class="dc">구현 1 · 대기 6</span></h3>
+      <div class="dbar" role="img" aria-label="거시경제 분석 판정 분포"><i class="vunv" style="--w:14.2857%" title="미검증 1"></i><i class="soon" style="--w:85.7143%" title="준비중 6"></i></div>
+      <div class="dtools">
+        <a href="regime.html">국가경제 분석<b class="vunv">미검증</b></a>
+        <span>하위 요인 분석<b class="soon">준비중</b></span>
+        <span>경제지표 열람<b class="soon">준비중</b></span>
+        <span>사이클 분석<b class="soon">준비중</b></span>
+        <span>자산군<b class="soon">준비중</b></span>
+        <span>밸류에이션(지수)<b class="soon">준비중</b></span>
+        <span>경제지표 일정<b class="soon">준비중</b></span>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--rp)">
+      <h3>퀀트 탐색<span class="dc">구현 1 · 대기 1</span></h3>
+      <div class="dbar" role="img" aria-label="퀀트 탐색 판정 분포"><i class="vpass" style="--w:50.0000%" title="통과 1"></i><i class="soon" style="--w:50.0000%" title="준비중 1"></i></div>
+      <div class="dtools">
+        <span>스크리너<b class="soon">준비중</b></span>
+        <a href="explorer.html">백테스트 원장<span class="mmlk">🔒</span><b class="vpass">통과</b></a>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--muted)">
+      <h3>투자거장 분석<span class="dc">구현 0 · 대기 2</span></h3>
+      <div class="dbar" role="img" aria-label="투자거장 분석 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 2"></i></div>
+      <div class="dtools">
+        <span>거장 포트폴리오·매매<b class="soon">준비중</b></span>
+        <span>공통 보유종목<b class="soon">준비중</b></span>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--deploy)">
+      <h3>종목 재무분석<span class="dc">구현 1 · 대기 5</span></h3>
+      <div class="dbar" role="img" aria-label="종목 재무분석 판정 분포"><i class="vunv" style="--w:16.6667%" title="미검증 1"></i><i class="soon" style="--w:83.3333%" title="준비중 5"></i></div>
+      <div class="dtools">
+        <a href="stocks.html">종목 개요·내러티브<b class="vunv">미검증</b></a>
+        <span>재무제표<b class="soon">준비중</b></span>
+        <span>IR자료실<b class="soon">준비중</b></span>
+        <span>실적 및 전망<b class="soon">준비중</b></span>
+        <span>내부자 거래<b class="soon">준비중</b></span>
+        <span>실적 발표 일정<b class="soon">준비중</b></span>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--marg)">
+      <h3>종목 가치평가<span class="dc">구현 0 · 대기 6</span></h3>
+      <div class="dbar" role="img" aria-label="종목 가치평가 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 6"></i></div>
+      <div class="dtools">
+        <span>상대가치평가<b class="soon">준비중</b></span>
+        <span>Reverse DCF<b class="soon">준비중</b></span>
+        <span>Simplified DCF<b class="soon">준비중</b></span>
+        <span>DDM<b class="soon">준비중</b></span>
+        <span>RIM<b class="soon">준비중</b></span>
+        <span>Index DCF<b class="soon">준비중</b></span>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--rp)">
+      <h3>포트폴리오 관리<span class="dc">구현 0 · 대기 2</span></h3>
+      <div class="dbar" role="img" aria-label="포트폴리오 관리 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 2"></i></div>
+      <div class="dtools">
+        <span>대시보드<b class="soon">준비중</b></span>
+        <span>포트폴리오 분석<b class="soon">준비중</b></span>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--champ)">
+      <h3>산업 분석<span class="dc">구현 0 · 대기 2 · 미제작 1</span></h3>
+      <div class="dbar" role="img" aria-label="산업 분석 판정 분포"><i class="soon" style="--w:66.6667%" title="준비중 2"></i><i class="wont" style="--w:33.3333%" title="미제작 1"></i></div>
+      <div class="dtools">
+        <span>산업 탐색<b class="soon">준비중</b></span>
+        <span>관전 포인트<b class="soon">준비중</b></span>
+        <a href="roadmap.html#value-chain">밸류체인<b class="wont">미제작</b></a>
+      </div>
+    </div>
+    <div class="dcard" style="--edge:var(--hot)">
+      <h3>랩 원장<span class="dc">구현 6</span></h3>
+      <div class="dbar" role="img" aria-label="랩 원장 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 1"></i><i class="vrej" style="--w:50.0000%" title="기각 1"></i></div>
+      <div class="dtools">
+        <a href="archive.html">기각 아카이브<span class="mmlk">🔒</span><b class="vrej">기각</b></a>
+        <a href="sources.html">데이터 출처·기준일<span class="mmlk">🔒</span></a>
+        <a href="rotation.html">전략 탐색 풀<span class="mmlk">🔒</span><b class="vunv">미검증</b></a>
+        <a href="kb.html">BK<span class="mmlk">🔒</span></a>
+        <a href="method.html">등급·판정 규약</a>
+        <a href="roadmap.html">미구현 로드맵</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="s-gap" aria-labelledby="gap-h">
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 15 · 소스 대기 12 · 만들지 않기로 한 것 3</span></p>
+  <div class="gapbox implbox">
+    <p class="gaph">구현 대기 — 데이터는 있다. 아직 화면을 안 만들었을 뿐이다</p>
+    <p class="chips"><span>Reverse DCF</span><span>Simplified DCF</span><span>경제지표 열람</span><span>대시보드</span><span>밸류에이션(지수)</span><span>사이클 분석</span><span>상대가치평가</span><span>섹터 히트맵</span><span>스크리너</span><span>시장 폭·동향</span><span>실적 및 전망</span><span>자산군</span><span>포트폴리오 분석</span><span>하위 요인 분석</span><span>관전 포인트</span></p>
+  </div>
+  <div class="gapbox soonbox">
+    <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
+    <div class="gaprow"><span class="gn">8-K 공시 피드</span><span class="gw">SEC EDGAR submissions API</span></div>
+    <div class="gaprow"><span class="gn">IR자료실</span><span class="gw">SEC EDGAR submissions API</span></div>
+    <div class="gaprow"><span class="gn">산업 탐색</span><span class="gw">SEC EDGAR submissions API</span></div>
+    <div class="gaprow"><span class="gn">DDM</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
+    <div class="gaprow"><span class="gn">RIM</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
+    <div class="gaprow"><span class="gn">재무제표</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
+    <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">yfinance earnings_dates</span></div>
+    <div class="gaprow"><span class="gn">Index DCF</span><span class="gw">SEC EDGAR frames API</span></div>
+    <div class="gaprow"><span class="gn">거장 포트폴리오·매매</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
+    <div class="gaprow"><span class="gn">공통 보유종목</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
+    <div class="gaprow"><span class="gn">경제지표 일정</span><span class="gw">FRED releases/dates API</span></div>
+    <div class="gaprow"><span class="gn">내부자 거래</span><span class="gw">SEC Form 3/4/5 분기 ZIP</span></div>
+    <p class="gapf"><a href="roadmap.html">전체 사유와 붙이는 순서 →</a></p>
+  </div>
+  <div class="gapbox wontbox">
+    <p class="gaph">만들지 않기로 한 것 — "언젠가"라고 적어두고 방치하지 않는다</p>
+    <div class="gaprow"><span class="gn">실시간 내러티브</span><span class="gw">만들지 않는다 — 뉴스 라이선스 없음</span></div>
+    <div class="gaprow"><span class="gn">프리미엄 뉴스</span><span class="gw">만들지 않는다 — 뉴스 라이선스 없음</span></div>
+    <div class="gaprow"><span class="gn">밸류체인</span><span class="gw">만들지 않는다 — 공급망 데이터 없음</span></div>
+    <p class="gapf"><a href="roadmap.html">사유 전문 →</a></p>
+  </div>
+</section>
+<!-- HOMEDIR:END -->
+
+    <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
+         시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
     <section id="s-today" aria-labelledby="td-h">
       <p class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span></p>
       <div class="signote" id="signote">불러오는 중…</div>
       <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
-    </section>
-
-    <!-- ④ 전략 — 판정 원장 → 배포 판정 → 검증하지 않은 것.
-         '검증하지 않은 것'을 배포 바로 아래 두는 배치는 유지한다(자랑 다음 칸이 자기부정). -->
-    <section id="s-ledger" aria-labelledby="ld-h">
-      <p class="lbl" id="ld-h">전략 <span class="sub">· 구현 → 적대검증 → 판정</span></p>
-      <div class="ledger" id="ledger"><div class="ldskel">불러오는 중…</div></div>
-      <div class="tiles" style="margin-top:14px">
-        <a class="tile" href="explorer.html" rel="nofollow" style="--edge:var(--rp)"><span class="tn">전략 리스트 🔒</span><span class="td">백테스트·판정·활용방안</span><span class="tb" id="tb-exp">수시 갱신</span></a>
-        <a class="tile" href="rotation.html" rel="nofollow" style="--edge:var(--marg)"><span class="tn">전략 탐색 🔒</span><span class="td">웹 리서치 풀에서 날짜별 선정</span><span class="tb">매일 갱신 · 미검증</span></a>
-      </div>
     </section>
 
     <!-- ⑤ 기타 — 최하단 -->
@@ -238,19 +696,14 @@
   </div>
 
   <footer>
-    <a href="archive.html" rel="nofollow">기각 아카이브</a><span id="ft-arc"></span> · <a href="sources.html" rel="nofollow">데이터 출처·기준일</a> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
+    <a href="archive.html" rel="nofollow">기각 아카이브</a><span id="ft-arc"></span><span class="lockmark" title="열람 암호 필요">🔒</span> · <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span class="lockmark" title="열람 암호 필요">🔒</span> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
   </footer>
 </div>
 
 <script>
 (function(){
-  var root=document.documentElement, btn=document.getElementById('themebtn');
-  function cur(){return root.getAttribute('data-theme')|| (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');}
-  btn.addEventListener('click',function(){
-    var next=cur()==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
-    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
-  });
-  // (테마 초기 적용은 <head> 인라인 스크립트가 이미 한다 — 여기서 다시 하면 이중 실행)
+  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 리스너가 둘이 되어
+  // 한 번 클릭에 두 번 토글되고, 결과적으로 테마가 바뀌지 않는다.
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
@@ -262,10 +715,16 @@
     while(d.getTime()<end&&n<40){d.setUTCDate(d.getUTCDate()+1);var w=d.getUTCDay();if(w!==0&&w!==6)n++;}
     return n;
   }
-  function staleCheck(asof){
+  // 종목 기준일 하나만 보면 국면·심리가 고착돼도 홈은 침묵하고 하위 페이지만 경고하는 역전이 생긴다.
+  // 도착한 소스 전부를 보고 가장 뒤처진 것을 알린다(종목 파이프라인이 죽어도 나머지는 감시된다).
+  function staleCheck(){
     var e=el('stalewarn'); if(!e)return;
-    var n=bdGap(asof);
-    if(n>=3){e.textContent='⚠ 데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';e.hidden=false;}
+    var src=[['',MK.main],['시장국면 ',MK.rg&&MK.rg.as_of],['시장심리 ',MK.sn&&MK.sn.as_of]], worst=null;
+    src.forEach(function(x){
+      if(!x[1])return;
+      var n=bdGap(x[1]); if(!worst||n>worst[1])worst=[x[0],n];
+    });
+    if(worst&&worst[1]>=3){e.textContent='⚠ '+worst[0]+'데이터가 '+worst[1]+'영업일 지연 — 자동갱신 확인 필요';e.hidden=false;}
     else{e.hidden=true;}
   }
 
@@ -273,7 +732,9 @@
   fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
     var w=el('ledger'); if(!w)return;
     if(!v){w.innerHTML='<div class="ldskel">판정 원장을 불러오지 못했습니다.</div>';return;}
-    function n(href,val,lab,c){return '<a class="ldn" href="'+href+'" style="--c:'+c+'"><b class="tnum">'+val+'</b><span>'+lab+'</span></a>';}
+    // 세 링크 모두 암호 잠금 페이지로 간다 — 내비·푸터와 같은 자물쇠 규약을 여기서도 지킨다
+    var LK='<span class="lockmark" title="열람 암호 필요">🔒</span>';
+    function n(href,val,lab,c){return '<a class="ldn" href="'+href+'" style="--c:'+c+'"><b class="tnum">'+val+'</b><span>'+lab+LK+'</span></a>';}
     w.innerHTML='<div class="ldrow">'+
       n('explorer.html',v.deploy_n,'배포','var(--deploy)')+
       n('explorer.html',v.marginal_n,'제한적 유효','var(--marg)')+
@@ -301,6 +762,8 @@
   function renderReco(h){
     var as=el('stkasof'); if(as)as.textContent='· 기준일 '+(h.as_of||'');
     var ma=el('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
+    MK.main=h.as_of||null;
+    if(h.breadth){MK.bd=h.breadth; renderMarket();}   // 폭 카드는 국면·심리와 같은 그리드에 붙는다
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
@@ -310,12 +773,14 @@
     el('recostocks').innerHTML=
       recoCol('🟢 스윙 저점매수','최근 '+(h.win||10)+'거래일 · 최신순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
       recoCol('🔴 스윙 고점매도','이익실현·비중축소 참고', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
-    staleCheck(h.as_of);
+    syncAsof(); staleCheck();
   }
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
+    // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
+    staleCheck();
   }
   function loadFull(){   // 폴백: 대형 stocks.json에서 목록만 재계산(성과 카드는 뜨지 않는다)
     fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
@@ -330,25 +795,49 @@
           .map(function(s){var mc=lastMk(s,ck),mp=lastMk(s,pk),mi=Math.max(mc,mp);
             return {t:s.t,name:(s.name||'').slice(0,16),dt:(dts[mi]||'').slice(5),ago:N-1-mi,sec:SECKO[s.sector]||(s.sector||'').slice(0,6),prov:mp>mc?1:0};});
         return {list:top,n:all.length,conf:all.length-prov,prov:prov};}
+      // 폭 카드는 정상 경로에서 home_reco.breadth로 오지만, 여기선 원본이 있으니 같이 세어준다
+      var fl={}; st.forEach(function(s){(s.flags||[]).forEach(function(f){fl[f]=(fl[f]||0)+1;});});
+      var bd={n:st.length,above200:st.length-(fl['200일이탈']||0),flags:fl};
       var b=mkList('bms','bmw'), s=mkList('sms','smw');
       renderReco({as_of:d.as_of,win:WIN,buy:b.list,sell:s.list,nbuy:b.n,nsell:s.n,
-                  buy_conf:b.conf,buy_prov:b.prov,sell_conf:s.conf,sell_prov:s.prov});
+                  buy_conf:b.conf,buy_prov:b.prov,sell_conf:s.conf,sell_prov:s.prov,breadth:bd});
     }).catch(stkFail);
   }
 
   // ── ④ 지금 시장(국면·심리) ───────────────────────────────────
-  var RGC={Goldilocks:'#0E8A54',Recovery:'#1E8A80',SoftLanding:'#B25E12',LateCycle:'#C0722A',Overheating:'#B0483C',Stagflation:'#9A2F28',Recession:'#7A2620'};
+  // 색은 토큰만 가리킨다 — hex를 여기 박으면 다크 팔레트를 못 따라간다(--edge에 var() 참조를 넣어도 정상 해석된다)
+  var RGC={Goldilocks:'var(--rg-gold)',Recovery:'var(--rg-recov)',SoftLanding:'var(--rg-soft)',LateCycle:'var(--rg-late)',Overheating:'var(--rg-over)',Stagflation:'var(--rg-stag)',Recession:'var(--rg-rec)'};
   var RGKO={Goldilocks:'골디락스',Recovery:'회복',SoftLanding:'연착륙',LateCycle:'후기 사이클',Overheating:'과열',Stagflation:'스태그플레이션',Recession:'침체'};
   // 색은 냉(공포)↔온(탐욕) 축만 — 탐욕을 초록으로 칠하면 '탐욕=좋음'으로 읽히는데 검증은 반대다.
   // 3축 값(refresh_regime.py의 어휘 전부) — 새 값이 오면 원문을 그대로 보여준다(조용히 빈칸이 되지 않게)
   var AXKO={EXPANSION:'확장',SLOWING:'둔화',CONTRACTION:'수축',LOW:'낮음',MODERATE:'보통',HIGH:'높음',
             EASY:'완화',NEUTRAL:'중립',ELEVATED:'경계',STRESSED:'경색'};
-  var SNTC={'극단공포':'#2C6E8F','공포':'#4E90AE','중립':'#786F61','탐욕':'#B25E12','극단탐욕':'#A64B3B'};
+  var SNTC={'극단공포':'var(--sn-xfear)','공포':'var(--sn-fear)','중립':'var(--sn-neut)','탐욕':'var(--sn-greed)','극단탐욕':'var(--sn-xgreed)'};
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
-  var MK={rg:null,sn:null};
+  var MK={rg:null,sn:null,main:null,bd:null};
+
+  // ── 기준일 표 — 내비 칩·홈·sources.html이 같은 정본(data/asof.json) 하나를 읽는다 ──
+  // 페이지마다 날짜를 따로 적으면 어긋나는 날 어느 쪽이 맞는지 아무도 모른다(그 사고가 있었다).
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    var w=el('asoftbl'); if(!w||!j||!(j.axes||[]).length)return;
+    w.innerHTML=j.axes.map(function(a){
+      var lag=a.lag_days?'<span class="lag">−'+a.lag_days+'영업일</span> · ':'';
+      return '<div><span class="ak">'+esc(a.label)+'</span><span class="av">'+esc(a.as_of)+'</span>'+
+             '<span class="ac">'+lag+esc(a.cadence||'')+'</span></div>';
+    }).join('');
+  }).catch(function(){});
   function noteAdd(txt){
     var n=document.querySelector('.asofnote'); if(!n||n.textContent.indexOf(txt)>=0)return;
     n.textContent=n.textContent+' · '+txt;
+  }
+  // 기준일 불일치 고지는 fetch 도착 순서에 좌우되면 안 된다 — DOM 텍스트가 아니라 MK 상태로 판정하고,
+  // 어느 소스가 먼저 도착하든 도착할 때마다 다시 맞춰본다(noteAdd는 중복 삽입을 스스로 막는다).
+  // 특히 폴백 경로(loadFull → stocks.json 401KB 2차 fetch)에서는 국면·심리가 반드시 먼저 끝나므로
+  // 예전의 '한 번만 비교' 방식은 확정적으로 고지를 놓쳤다.
+  function syncAsof(){
+    if(!MK.main)return;   // 기준일 미확정(로딩 중·종목 실패) → 비교 자체를 하지 않는다
+    if(MK.rg&&MK.rg.as_of&&MK.rg.as_of!==MK.main)noteAdd('시장국면 '+MK.rg.as_of);
+    if(MK.sn&&MK.sn.as_of&&MK.sn.as_of!==MK.main)noteAdd('시장심리 '+MK.sn.as_of);
   }
   function renderMarket(){
     var w=el('marketcards'); if(!w)return;
@@ -374,20 +863,31 @@
         (sn.weight_available!=null&&sn.weight_available<0.999?'<div class="cd" style="color:var(--marg)">일부 지표 결측 — 가중 가용 '+Math.round(sn.weight_available*100)+'%</div>':'')+
         '<div class="cbadge">상태 요약 · 수익 예측 신호 아님</div></a>';
     }
+    // ③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'. home_reco.json의 정수 몇 개로 만든다
+    //    (이것 때문에 홈이 stocks.json 392KB를 받게 하지 않는다).
+    var b=MK.bd;
+    if(b&&b.n){
+      var pct=Math.round(1000*b.above200/b.n)/10, f=b.flags||{};
+      var wide=pct>=50;
+      h+='<a class="card" href="#s-today" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
+        '<div class="ch"><span>시장 폭</span><span>'+b.n+'종목</span></div>'+
+        '<div class="cv"><span class="tnum">'+pct.toFixed(1)+'%</span> 200일선 위</div>'+
+        '<div class="cd">'+b.above200+'/'+b.n+'종목. 지수가 아니라 폭 — 소수 대형주가 끌어올린 장세인지 여기서 갈린다.</div>'+
+        '<div class="cx">'+[['상승추세','상승추세'],['52주돌파','52주돌파'],['변동수축','변동수축'],['과밀숏','과밀숏']]
+          .map(function(k){return f[k[0]]==null?'':'<span class="axis">'+k[1]+' '+f[k[0]]+'</span>';}).join('')+'</div>'+
+        '<div class="cbadge">오늘의 신호로 ↓</div></a>';
+    }
     w.innerHTML=h||'<div class="card"><div class="ch"><span>시장 상태를 불러오지 못했습니다</span></div></div>';
   }
   // 국면·심리 렌더는 종목 파이프라인과 독립이다 — 하나가 죽어도 나머지는 뜬다
   fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(rg){
-    MK.rg=rg; renderMarket();
+    MK.rg=rg; renderMarket(); syncAsof(); staleCheck();
     if(rg&&rg.as_of){
-      var ma=el('mainasof'); if(ma&&ma.textContent&&ma.textContent.trim()!=='불러오는 중…'&&rg.as_of!==ma.textContent.trim())noteAdd('시장국면 '+rg.as_of);
       var n=(rg.indicators||[]).length, tb=el('tb-reg'); if(n&&tb)tb.textContent='매크로 '+n+'지표';
     }
   }).catch(renderMarket);
   fetch('data/sentiment.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(sn){
-    MK.sn=sn; renderMarket();
-    var ma=el('mainasof');
-    if(sn&&sn.as_of&&ma&&ma.textContent&&ma.textContent.trim()!=='불러오는 중…'&&sn.as_of!==ma.textContent.trim())noteAdd('시장심리 '+sn.as_of);
+    MK.sn=sn; renderMarket(); syncAsof(); staleCheck();
   }).catch(renderMarket);
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────

@@ -44,6 +44,29 @@ def _reco(stocks, dates, conf_key, prov_key):
     return rows, len(c), len(c) - n_prov, n_prov      # 목록 · 전체 · 확정 · 잠정
 
 
+def _breadth(stocks):
+    """③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'.
+
+    홈에 폭 카드를 세우려면 flags/timing 분포가 필요한데, 그것 때문에 홈이 stocks.json
+    392KB를 받게 하면 이 파일의 존재 이유가 사라진다. 정수 몇 개만 여기서 세어 싣는다(+0.3KB).
+    """
+    fl, tm = {}, {}
+    for s in stocks:
+        for f in (s.get("flags") or []):
+            fl[f] = fl.get(f, 0) + 1
+        t = s.get("timing")
+        if t:
+            tm[t] = tm.get(t, 0) + 1
+    n = len(stocks)
+    return {
+        "n": n,
+        # 200일선 위 종목 수는 '이탈'의 여집합이다 — 화면에서 다시 빼게 하지 않고 여기서 낸다
+        "above200": n - fl.get("200일이탈", 0),
+        "flags": dict(sorted(fl.items(), key=lambda kv: -kv[1])),
+        "timing": tm,
+    }
+
+
 def build(stocks, dates, as_of, root):
     buy, nb, nb_c, nb_p = _reco(stocks, dates, "bms", "bmw")
     sell, ns, ns_c, ns_p = _reco(stocks, dates, "sms", "smw")
@@ -51,6 +74,7 @@ def build(stocks, dates, as_of, root):
         "as_of": as_of, "win": WIN,
         "buy": buy, "sell": sell, "nbuy": nb, "nsell": ns,
         "buy_conf": nb_c, "buy_prov": nb_p, "sell_conf": ns_c, "sell_prov": ns_p,
+        "breadth": _breadth(stocks),
     }
 
 
