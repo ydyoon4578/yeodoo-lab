@@ -105,6 +105,15 @@
      "effort": "S"
     },
     {
+     "name": "지표별 타이밍",
+     "file": "signals.html",
+     "status": "existing",
+     "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
+     "src": "model",
+     "verdict": "rejected",
+     "effort": "M"
+    },
+    {
      "name": "실적 및 전망",
      "file": "co.html#est",
      "status": "existing",

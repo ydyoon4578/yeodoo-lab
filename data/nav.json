@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "8a1d648a3dccdfa2",
+ "generated_from": "c61eb0b592b1a2de",
  "categories": [
   {
    "name": "시장",
@@ -111,6 +111,16 @@
      "verdict": "unverified",
      "src": "agg",
      "effort": "S",
+     "live": true
+    },
+    {
+     "name": "지표별 타이밍",
+     "file": "signals.html",
+     "status": "existing",
+     "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
+     "verdict": "rejected",
+     "src": "model",
+     "effort": "M",
      "live": true
     },
     {

@@ -718,6 +718,13 @@ def main():
         pxd = [None if dser is None or pd.isna(x) else round(float(x), 2) for x in (dser if dser is not None else [None]*len(pxd_dates))]
         vser = px[t]["Volume"].reindex(daily.index) if t in px else None
         vd = [None if vser is None or pd.isna(x) else int(round(float(x)/1e6)) for x in (vser if vser is not None else [None]*len(pxd_dates))]  # 백만주 단위
+        # 고가·저가 — 22개 테크니컬 이벤트 중 절반 이상(스토캐스틱·CCI·Williams·MFI·돈치안·Aroon)이
+        # 고저가를 쓴다. 종가만 저장하면 **게시한 신호를 과거로 되돌려 검증할 수 없다**.
+        # 신호를 보여주면서 성적을 못 재는 상태를 없애려고 함께 싣는다(종목당 +약 9KB).
+        _hs = px[t]["High"].reindex(daily.index) if t in px else None
+        _ls = px[t]["Low"].reindex(daily.index) if t in px else None
+        hd = [None if _hs is None or pd.isna(x) else round(float(x), 2) for x in (_hs if _hs is not None else [None]*len(pxd_dates))]
+        ld = [None if _ls is None or pd.isna(x) else round(float(x), 2) for x in (_ls if _ls is not None else [None]*len(pxd_dates))]
         # 스윙 전환점(지그재그) — 확정 고점/저점 구조 + 다이버전스
         tp = None
         # ⚠ 패널을 3년으로 늘리자 상장 3년 미만 종목은 IPO 이전이 결측이 된다. 예전 조건
@@ -976,7 +983,7 @@ def main():
                        "bscore": round(float(buy_score.get(t, 0.0)), 3), "sscore": round(float(sell_score.get(t, 0.0)), 3),
                        "trig": trig, "bms": bms, "bmw": bmw, "sms": sms, "smw": smw, "sig": sig,
                        **({"why": whyb} if whyb else {}),
-                       "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd,
+                       "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd, "hd": hd, "ld": ld,
                        **({"part": partial[t]} if t in partial else {}),
                        # 상세(sd/) 전용 — 20지표 값+전체/섹터 퍼센타일 [v,p,sp], 배지, 결측 사유
                        **({"fundx": _fundx} if _fundx else {}),
@@ -1064,7 +1071,7 @@ def main():
     _keep = set()
     for s in stocks:
         det = {"as_of": as_of, "t": s["t"]}
-        for k in ("sig", "pxd", "vd", "why", "fundx", "fundx_flags", "fundx_na"):
+        for k in ("sig", "pxd", "vd", "hd", "ld", "why", "fundx", "fundx_flags", "fundx_na"):
             v = s.pop(k, None)
             if v is not None: det[k] = v
         fn = s["t"] + ".json"; _keep.add(fn)

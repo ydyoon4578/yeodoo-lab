@@ -334,6 +334,33 @@ if pool:
     except FileNotFoundError:
         pass
 
+    # sd/ 의 고가·저가 — 지표별 타이밍 신호(build/signal_lab.py)의 절반 이상이 여기에 의존한다.
+    # 리팩터링 중에 조용히 빠지면 그 신호들이 통째로 '표본 부족'이 되고, 화면은 아무 말도 안 한다.
+    try:
+        _sdd = os.path.join(ROOT, "data", "sd")
+        _fs = sorted(f for f in os.listdir(_sdd) if f.endswith(".json"))[:40]
+        _nohl = [f for f in _fs
+                 if not (json.load(io.open(os.path.join(_sdd, f), encoding="utf-8")).get("hd"))]
+        if len(_nohl) > len(_fs) * 0.2:
+            errors.append(f"data/sd: 고가·저가(hd/ld)가 없는 파일이 표본 {len(_fs)}개 중 {len(_nohl)}개 "
+                          f"— build/refresh_stocks.py가 hd/ld를 안 쓰고 있다(지표 신호 검증이 죽는다)")
+    except FileNotFoundError:
+        pass
+
+    # signal_lab의 화면 문구도 esc() 경로를 탄다 — 태그·마크다운 금지(archive와 같은 사고 방지)
+    try:
+        _sl = json.load(io.open(os.path.join(ROOT, "data", "signal_lab.json"), encoding="utf-8"))
+        _tx = [(r.get("name", "?"), k, r.get(k, "")) for r in (_sl.get("signals") or [])
+               for k in ("name", "rule", "why", "use")]
+        _tx += [("protocol", "p", t) for t in (_sl.get("protocol") or [])]
+        _tx += [("limits", "l", t) for t in (_sl.get("limits") or [])]
+        for _n1, _k1, _v1 in _tx:
+            if isinstance(_v1, str) and (re.search(r"</?[a-zA-Z][^>]*>", _v1)
+                                         or re.search(r"\*\*[^*]+\*\*", _v1)):
+                errors.append(f"signal_lab '{_n1}'.{_k1}: 태그/마크다운 표기 — 화면에 기호가 그대로 찍힌다")
+    except FileNotFoundError:
+        pass
+
     # arch 참조 무결성 — 규칙 카드의 '이전 판정' 줄은 A[r.arch]로 붙는다. 없는 sid를 가리키면
     # 그 줄이 조용히 사라진다(오류도 안 난다). 링크가 끊긴 걸 화면에서 알아챌 방법이 없으므로 여기서 막는다.
     try:

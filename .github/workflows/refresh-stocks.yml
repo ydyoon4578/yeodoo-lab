@@ -25,6 +25,10 @@ jobs:
         run: pip install --quiet pandas numpy yfinance
       - name: Compute technical signals
         run: python build/refresh_stocks.py
+      # 지표별 타이밍 신호 — 성적표는 3년 표본이라 천천히 바뀌지만 '오늘 발동 종목'은 매일 바뀐다.
+      # 그래서 별도 주간 잡이 아니라 여기 붙인다(sd/ 가 방금 갱신된 직후여야 같은 기준일이 된다).
+      - name: Measure indicator timing signals
+        run: python build/signal_lab.py
       - name: Rebuild as-of index
         # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
         # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
@@ -37,7 +41,8 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
-            data/stocks.json data/home_reco.json data/sd data/target_history.json data/asof.json
+            data/stocks.json data/home_reco.json data/sd data/target_history.json \
+            data/signal_lab.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
