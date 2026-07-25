@@ -201,6 +201,8 @@
       border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 42%,transparent);
       background:color-mix(in srgb,var(--vc,var(--muted)) 12%,transparent);color:var(--vc,var(--muted))}
   .vb.ok{--vc:var(--gA)} .vb.inv{--vc:var(--accent)} .vb.few{--vc:var(--gD)} .vb.no{--vc:var(--muted)}
+  .sigt th .thb{display:block;font-size:9px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;margin-top:2px}
+  .sigt td .vb2{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:1px}
   .dirb{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted)}
   .dirb.b{color:var(--gA)} .dirb.s{color:var(--rej)}
   tr.det td{background:var(--panel-2);white-space:normal;text-align:left;font-family:var(--sans);
@@ -517,11 +519,15 @@
   <section aria-labelledby="tbl-h">
     <h2 id="tbl-h" class="sech">신호별 성적 <span id="tblsub"></span></h2>
     <p class="sechn">초과수익은 <b>신호 발동 다음 거래일에 사서 20거래일 뒤</b>의 β조정 초과수익 평균입니다.
-      귀무(아무 날 아무 종목)는 −0.02%로 사실상 0입니다. 행을 누르면 규칙·해석과 <b>오늘 발동 종목</b>이 펼쳐집니다.</p>
+      귀무(아무 날 아무 종목)는 −0.02%로 사실상 0입니다.
+      <b>「상위5% 제외」 열은 반드시 옆의 귀무 값과 비교해서 보십시오</b> — 주식 수익은 오른쪽으로 길어
+      위 꼬리를 자르면 귀무마저 크게 음수가 됩니다. 절대 부호로 읽으면 모든 신호가 엉망으로 보이는데,
+      그건 신호가 아니라 자르기의 성질입니다. 작은 글씨가 귀무 대비 차이입니다.
+      행을 누르면 규칙·해석과 <b>오늘 발동 종목</b>이 펼쳐집니다.</p>
     <div class="frow" id="fchips"></div>
     <div class="tblwrap"><table class="sigt" id="sigt"><thead><tr>
       <th class="l">신호</th><th>지표</th><th>방향</th><th>건수</th>
-      <th>초과%</th><th>적중%</th><th>t</th><th>상위5%<br>제외</th><th>전반</th><th>후반</th><th>오늘</th><th class="l">판정</th>
+      <th>초과%</th><th>적중%</th><th>t</th><th>상위5% 제외<br><span class="thb" id="thbase"></span></th><th>전반</th><th>후반</th><th>오늘</th><th class="l">판정</th>
     </tr></thead><tbody id="sigb"></tbody></table></div>
   </section>
 
@@ -610,7 +616,7 @@
       '<td class="big '+cls(m.mean)+'">'+sgn(m.mean,3)+'</td>'+
       '<td>'+nf(m.hit,1)+'</td>'+
       '<td class="'+cls(m.t)+'">'+nf(m.t,2)+'</td>'+
-      '<td>'+sgn(m.ex_top5,3)+'</td>'+
+      '<td>'+sgn(m.ex_top5,3)+'<em class="vb2">'+(m.vs_base==null?'':sgn(m.vs_base,2))+'</em></td>'+
       '<td>'+(h1?sgn(h1.mean,2):'—')+'</td>'+
       '<td>'+(h2?sgn(h2.mean,2):'—')+'</td>'+
       '<td>'+r.n_today+'</td>'+
@@ -668,6 +674,8 @@
     }
     D=d;
     el('ns').textContent=d.signals.length;
+    var B=d.baseline||{};
+    var tb=el('thbase'); if(tb&&B.ex_top5!=null) tb.textContent='귀무 '+sgn(B.ex_top5,2);
     var c={}; d.signals.forEach(function(r){c[r.verdict]=(c[r.verdict]||0)+1;});
     var ok=c['관례대로 유효']||0, inv=c['관례와 반대로 유의']||0;
     el('statline').innerHTML=
