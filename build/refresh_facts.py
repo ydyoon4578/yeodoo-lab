@@ -53,14 +53,24 @@ KEEP_I = 20      # 시점(재무상태표) 관측 보관 수
 FORMS_OK = ("10-K", "10-Q", "20-F", "40-F", "10-K/A", "10-Q/A")
 
 # 항목별 후보 태그 — 회사마다 쓰는 태그가 달라 우선순위로 훑는다.
-# (키, 후보 태그들, 단위, 스케일)  스케일 m=백만 단위로 환산, r=원값 유지
+# (키, 후보 태그들, 단위, 스케일[, 동점규칙])  스케일 m=백만 단위로 환산, r=원값 유지
+#
+# 동점규칙 'max' — 최신 관측일이 같을 때 **값이 큰 태그**를 고른다.
+#   매출·매출원가·현금흐름은 후보들이 '총액 대 그 일부' 관계다. 예: 리츠의 매출은 대부분
+#   리스 수익(ASC 842)이라 RevenueFromContractWithCustomer(ASC 606)는 극히 일부만 잡는다.
+#   실측(2026-07-25): AVB는 계약 매출 7백만$ vs Revenues 3,041백만$ — 434배 차이였고,
+#   같은 함정에 리츠·은행·보험 23사가 걸려 있었다(은행은 이자수익, 보험은 보험료가 본체).
+#   기본값(관측 수 비교)은 그대로 둔다 — 자기자본처럼 '지배주주 대 전체'는 큰 쪽이 답이 아니다.
 TAGS = (
     # RevenuesNetOfInterestExpense는 은행·증권의 '총수익'이다. 없으면 JPM 같은 회사는
     # 분기 매출이 2014년에서 멈춘 Revenues밖에 안 남는다(실측).
+    # OperatingLeaseLeaseIncome은 리츠의 본체다. 리츠 매출은 대부분 리스 수익(ASC 842)이라
+    # Revenues 태그조차 없는 회사가 있다 — CPT는 계약 매출 13백만$만 잡히고 실제 리스 수익은
+    # 1,574백만$였다(실측 2026-07-25). 동점규칙 'max'가 있어서 일반 기업에는 영향이 없다.
     ("rev",   ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues",
-               "RevenuesNetOfInterestExpense",
-               "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"), "USD", "m"),
-    ("cogs",  ("CostOfGoodsAndServicesSold", "CostOfRevenue"), "USD", "m"),
+               "RevenuesNetOfInterestExpense", "OperatingLeaseLeaseIncome",
+               "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"), "USD", "m", "max"),
+    ("cogs",  ("CostOfGoodsAndServicesSold", "CostOfRevenue"), "USD", "m", "max"),
     ("gp",    ("GrossProfit",), "USD", "m"),
     ("opinc", ("OperatingIncomeLoss",), "USD", "m"),
     ("ni",    ("NetIncomeLoss", "ProfitLoss"), "USD", "m"),
@@ -96,7 +106,7 @@ TAGS = (
 # 같은 표에 담되, 어느 태그에서 왔는지는 화면에 그대로 표기하므로 섞였다는 사실은 감춰지지 않는다.
 # (주식수는 IFRS 필수 공시가 아니라 CCEP에 없다 — 없는 항목은 만들지 않는다.)
 TAGS_IFRS = (
-    ("rev",   ("Revenue", "RevenueFromContractsWithCustomers"), "USD", "m"),
+    ("rev",   ("Revenue", "RevenueFromContractsWithCustomers"), "USD", "m", "max"),
     ("cogs",  ("CostOfSales",), "USD", "m"),
     ("gp",    ("GrossProfit",), "USD", "m"),
     ("opinc", ("ProfitLossFromOperatingActivities",), "USD", "m"),
@@ -213,7 +223,9 @@ def extract(facts: dict):
     if not gaap and allf.get("ifrs-full"):
         gaap, tagset = allf["ifrs-full"], TAGS_IFRS
     out = {}
-    for key, cands, unit, scale in tagset:
+    for spec in tagset:
+        key, cands, unit, scale = spec[0], spec[1], spec[2], spec[3]
+        tie = spec[4] if len(spec) > 4 else "count"
         best = None
         for tag in cands:
             node = gaap.get(tag)
@@ -225,9 +237,15 @@ def extract(facts: dict):
             q, a, i = pick(vals, scale)
             if not (q or a or i):
                 continue
-            # 최신 관측일이 늦은 태그가 이긴다. 같으면 관측이 많은 쪽(시계열이 긴 쪽).
+            # 최신 관측일이 늦은 태그가 이긴다. 같으면 항목별 동점규칙을 쓴다 —
+            # 'max'는 값이 큰 쪽(총액), 기본은 관측이 많은 쪽(시계열이 긴 쪽).
             latest = max(s[0][0] for s in (q, a, i) if s)
-            score = (latest, len(q) + len(a) + len(i))
+            if tie == "max":
+                newest = [s[0][1] for s in (a, q, i) if s and s[0][0] == latest]
+                tiebreak = abs(newest[0]) if newest else 0.0
+            else:
+                tiebreak = len(q) + len(a) + len(i)
+            score = (latest, tiebreak)
             if best is None or score > best[0]:
                 best = (score, tag, q, a, i)
         if not best:
@@ -251,6 +269,22 @@ def extract(facts: dict):
         if not any(k in rec for k in ("q", "a", "i")):
             continue
         out[key] = rec
+
+    # ── 항목 단위 최신성 가드 ────────────────────────────────────────────
+    # 위 450일 규칙은 '한 항목 안에서' 뒤처진 구간만 잘라낸다. 그런데 어떤 항목은
+    # 통째로 죽어 있다 — 회사가 그 줄을 우리가 읽을 수 있는 형태로 더 이상 안 내는 경우다.
+    # 실측(2026-07-25): 은행은 '매출'이라는 항목 자체가 없다(순이자이익+비이자이익이 본체).
+    #   RF·FITB는 후보 중 유일하게 잡히는 게 수수료수익(ASC 606)인데 2021·2023년에서 멈춘다.
+    #   그걸 '매출'로 내보내면 4년 묵은 부분값이 총매출인 척한다.
+    # 회사 전체의 최신 관측보다 450일 넘게 뒤처진 항목은 없는 것으로 둔다 — 없으면 없다고 적는다.
+    if out:
+        newest_all = max(rec[k][0][0] for rec in out.values()
+                         for k in ("q", "a", "i") if rec.get(k))
+        dead = [key for key, rec in out.items()
+                if _days(max(rec[k][0][0] for k in ("q", "a", "i") if rec.get(k)),
+                         newest_all) > 450]
+        for key in dead:
+            out.pop(key)
     return out
 
 
@@ -301,6 +335,49 @@ def index_fcf_stat(tickers, mc_by_t):
             "window_months": 18,
             "note": "지수의 FCF가 아니다. 영업현금흐름과 설비투자가 모두 잡히고 최근 18개월 안에 "
                     "끝난 회계연도가 있는 회사들의 합계다. 커버 종목 수와 시총 비중을 함께 봐야 한다."}
+
+
+def crosscheck_stat(tickers, mc_by_t, fund_by_t):
+    """yfinance 단면 지표 vs SEC 원본 — 이 사이트의 펀더멘털 화면이 무엇 위에 서 있는지 재는 값.
+
+    화면(스크리너·상대가치·종목)이 쓰는 재무는 yfinance .info의 단면이다. 오늘 SEC 원본이
+    붙었으니 **같은 회사·같은 지표를 두 소스로 계산해 얼마나 맞는지** 잰다.
+    안 재면 "우리 숫자가 맞나"에 답할 근거가 없다.
+
+      PSR = 시가총액 / 최근 연간 매출        PBR = 시가총액 / 자기자본(지배주주)
+
+    회계기준이 다른 IFRS 보고 회사는 뺀다. ROE는 넣지 않는다 — yfinance는 TTM 순이익을
+    **평균** 자기자본으로 나누고 여기 값은 기말 시점이라, 차이가 나는 게 정상이라 비교가 무의미하다.
+    """
+    out = {}
+    for key, num, den_key, den_kind in (("ps", "mc", "rev", "a"), ("pb", "mc", "eq", "i")):
+        diffs = []
+        for t in tickers:
+            try:
+                d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
+            except Exception:
+                continue
+            if d.get("std") == "IFRS":
+                continue
+            ser = ((d.get("tags") or {}).get(den_key) or {}).get(den_kind) or []
+            mc = mc_by_t.get(t)
+            yf = (fund_by_t.get(t) or {}).get(key)
+            if not ser or not mc or not yf or yf == 0 or ser[0][1] <= 0:
+                continue
+            sec = (mc * 100) / ser[0][1]            # fund.mc는 억$ → 백만$
+            diffs.append(abs(sec - yf) / abs(yf) * 100)
+        if not diffs:
+            continue
+        diffs.sort()
+        n = len(diffs)
+        out[key] = {"n": n,
+                    "median": round(diffs[n // 2] if n % 2 else (diffs[n // 2 - 1] + diffs[n // 2]) / 2, 2),
+                    "w5": round(sum(1 for x in diffs if x <= 5) / n * 100, 1),
+                    "w20": round(sum(1 for x in diffs if x <= 20) / n * 100, 1),
+                    "gross": sum(1 for x in diffs if x > 100)}
+    out["note"] = ("yfinance 단면 지표와 SEC 원본으로 계산한 값의 차이(%). 화면이 쓰는 재무가 "
+                   "원본과 얼마나 맞는지 재는 값이다. IFRS 보고 회사는 제외.")
+    return out
 
 
 def clean_surplus_stat(tickers):
@@ -365,6 +442,13 @@ def load_mc():
     return {s["t"]: (s.get("fund") or {}).get("mc") for s in d["stocks"]}
 
 
+def load_fund():
+    """티커 → yfinance 재무 단면. SEC 원본과 대조하는 데 쓴다."""
+    with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as f:
+        d = json.load(f)
+    return {s["t"]: (s.get("fund") or {}) for s in d["stocks"]}
+
+
 def load_cik_map():
     """공시 파이프라인이 이미 확정한 티커→CIK를 재사용한다(전신 법인 보정 포함).
     없으면 SEC 매핑을 직접 읽는다."""
@@ -383,12 +467,13 @@ def load_cik_map():
 def main() -> int:
     uni = load_universe()
     mc_by_t = load_mc()
+    fund_by_t = load_fund()
     cmap, src = load_cik_map()
     print("티커→CIK 출처: %s (%d개)" % (src, len(cmap)))
 
     os.makedirs(DIR_FX, exist_ok=True)
     n_new = n_upd = n_same = n_pred = n_ifrs = 0
-    cov = {k: 0 for k, _c, _u, _s in TAGS}
+    cov = {spec[0]: 0 for spec in TAGS}
     got, miss, empty = [], [], []
 
     for n, (t, name) in enumerate(uni, 1):
@@ -484,6 +569,7 @@ def main() -> int:
     # 내부적으로 모순된 값을 RIM이라고 부르게 된다.
     cs = clean_surplus_stat(got)
     idx = index_fcf_stat(got, mc_by_t)
+    xc = crosscheck_stat(got, mc_by_t, fund_by_t)
     # DDM이 쓸 수 있는 범위 — 연간 주당배당금이 몇 년치나 있는가
     dy = {"n1": 0, "n2": 0, "n4": 0}
     for t in got:
@@ -512,6 +598,7 @@ def main() -> int:
         "miss": miss,
         "clean_surplus": cs,
         "index_fcf": idx,
+        "xcheck": xc,
         "dps_years": dy,
         "limits": [
             "숫자는 회사가 XBRL로 태깅해 제출한 값 그대로다 — 랩이 조정하거나 재분류하지 않는다.",
@@ -529,6 +616,12 @@ def main() -> int:
           % (len(got), len(uni), sz / 1024, sz / max(1, len(got)), n_new, n_upd, n_same, n_del))
     print("기준일(최근 관측 기간말): %s" % (last or "—"))
     print("택소노미: us-gaap %d사 · IFRS %d사" % (len(got) - n_ifrs, n_ifrs))
+    if xc:
+        for k, lab in (("ps", "PSR"), ("pb", "PBR")):
+            v = xc.get(k)
+            if v:
+                print("대조 %s: n=%d · 중앙값 %.2f%% · 20%%이내 %.0f%% · 2배초과 %d건"
+                      % (lab, v["n"], v["median"], v["w20"], v["gross"]))
     print("항목 커버: " + " ".join("%s%.0f" % (k, summary["cov"][k]) for k in summary["cov"]))
     if n_pred:
         print("전신 법인에서 재무를 가져온 종목: %d개" % n_pred)

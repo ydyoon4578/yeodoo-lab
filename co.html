@@ -866,11 +866,16 @@
   }
 
   // ── 재무제표: 회사별 XBRL 시계열(SEC EDGAR companyfacts 수집분) ─────────
+  var XC=null;   // yfinance ↔ SEC 대조 통계(data/facts.json). 이 표 아래에 그대로 싣는다.
   var FS_FLOW=['rev','cogs','gp','opinc','ni','eps','dps','cfo','capex','sh'];  // 기간 항목
   var FS_INST=['asset','liab','eq','cash'];                                      // 시점 항목
   var fsPeriod='q';
 
   function ensureFacts(s){
+    if(!XC&&!ensureFacts._x){
+      ensureFacts._x=1;
+      getj('data/facts.json').then(function(x){XC=(x&&x.xcheck)||null;if(state.sel)renderFS(state.sel);});
+    }
     if(s._fx||s._fxFail||s._fxLoading)return;
     s._fxLoading=1;
     getj('data/fx/'+encodeURIComponent(s.t)+'.json').then(function(x){
@@ -975,6 +980,14 @@
         '자기자본은 <b>지배주주지분</b>입니다 — 비지배지분(소수주주)이 큰 회사는 '+
         '<b>자산 ≠ 부채 + 자기자본</b>이 되고, 그 차이가 곧 비지배지분입니다. '+
         '실측: 검사 가능한 375사 중 298사가 오차 1% 이내(중앙값 0.000%)이고, 25사가 5%를 넘습니다.');
+    }
+    if(XC&&XC.ps&&XC.pb){
+      h+='<div class="note"><b>이 원본과 다른 화면의 숫자는 얼마나 맞나</b> — 스크리너·상대가치 화면이 쓰는 재무는 '+
+         'yfinance 단면입니다. 같은 회사를 두 소스로 계산해 대조했습니다(IFRS 보고 회사 제외):<br>'+
+         '· <b>PBR</b> '+nf(XC.pb.n,0)+'사 · 차이 중앙값 <b>'+nf(XC.pb.median,2)+'%</b> · 20% 이내 '+nf(XC.pb.w20,0)+'% — 거의 일치합니다.<br>'+
+         '· <b>PSR</b> '+nf(XC.ps.n,0)+'사 · 차이 중앙값 <b>'+nf(XC.ps.median,2)+'%</b> · 20% 이내 '+nf(XC.ps.w20,0)+'%. '+
+         '2배 넘게 벌어지는 '+nf(XC.ps.gross,0)+'사는 유틸리티·은행·외국기업처럼 <b>매출의 정의가 다른</b> 업종입니다.<br>'+
+         '· ROE는 대조하지 않습니다 — yfinance는 <b>평균</b> 자기자본으로 나누고 이 표는 기말 시점이라 차이가 나는 게 정상입니다.</div>';
     }
     h+='<div class="note"><b>이 표를 읽을 때</b><br>'+
        '· 숫자는 회사가 XBRL로 태깅해 제출한 값 그대로입니다 — 랩이 조정하거나 재분류하지 않습니다.<br>'+
