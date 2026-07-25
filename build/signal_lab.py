@@ -306,6 +306,26 @@ def run():
             if b.any():
                 ev[S["sid"]][t] = b
 
+    EXC = pd.DataFrame({t: (fwd_s[PRIMARY][t] - BETA[t] * fwd_b[PRIMARY]) * 100 for t in tick})
+    EXC.iloc[:MIN_HIST] = np.nan
+
+    # ── 귀무 기준선 ────────────────────────────────────────────────────
+    # '아무 날 아무 종목'의 같은 초과수익. 평균은 0 근처지만 **상위 5%를 뺀 평균은 그렇지 않다** —
+    # 주식 수익 분포가 오른쪽으로 길어서, 위쪽 꼬리를 자르면 무엇이든 크게 음수가 된다.
+    # 그래서 '상위 5% 제외' 값은 이 기준선과 비교해야 뜻이 생긴다. 안 그러면 모든 신호가
+    # 엉망으로 보이는데, 그건 신호의 성질이 아니라 자르기의 성질이다.
+    _flat = EXC.to_numpy().ravel()
+    _flat = _flat[~np.isnan(_flat)]
+    _cut0 = np.sort(_flat)[:max(1, int(len(_flat) * 0.95))]
+    BASE = {"n": int(len(_flat)),
+            "mean": round(float(_flat.mean()), 3),
+            "med": round(float(np.median(_flat)), 3),
+            "hit": round(100 * float((_flat > 0).mean()), 1),
+            "ex_top5": round(float(_cut0.mean()), 3)}
+    print("귀무 기준선 — 평균 %+.3f%% · 적중 %.1f%% · 상위5%%제외 %+.3f%% (n=%d)"
+          % (BASE["mean"], BASE["hit"], BASE["ex_top5"], BASE["n"]))
+
+
     out = []
     firing = {}
     for S in SIGNALS:
@@ -384,8 +404,14 @@ def run():
         want = 1 if r["dir"] == "buy" else -1
         big = m["t"] is not None and abs(m["t"]) >= tcrit
         agree = m["t"] is not None and (m["t"] * want) > 0
-        # 상위 5%를 빼도 부호가 유지되는가 — 소수 대박이 만든 평균인지 가른다
-        robust = (m["ex_top5"] * m["mean"]) > 0
+        # 상위 5%를 빼도 **귀무보다 나은 쪽**에 남는가.
+        # ⚠ 절대 부호로 보면 안 된다 — 주식 수익은 오른쪽으로 길어서 위 꼬리를 자르면
+        #   무엇이든 크게 음수가 된다(귀무 자체가 그렇다). 자르기의 성질을 신호의 결함으로
+        #   읽으면 전부 탈락한다. 그래서 귀무의 같은 처리값과 비교한다.
+        edge_raw = m["mean"] - BASE["mean"]
+        edge_cut = m["ex_top5"] - BASE["ex_top5"]
+        m["vs_base"] = round(edge_cut, 3)
+        robust = (edge_cut * edge_raw) > 0
         # 서브기간 두 곳에서 같은 부호가 나오는가
         h1, h2 = r.get("h1"), r.get("h2")
         consist = bool(h1 and h2 and (h1["mean"] * h2["mean"]) > 0)
@@ -395,7 +421,8 @@ def run():
             r["use"] = "관례가 말하는 방향으로 통계 문턱을 넘었다. 그대로 쓴다."
         elif big and agree and not robust:
             r["verdict"] = "소수 사건 의존"
-            r["use"] = "평균은 좋지만 상위 5% 사건을 빼면 부호가 뒤집힌다 — 그 몇 건을 못 잡으면 없는 엣지다."
+            r["use"] = ("평균은 문턱을 넘지만, 상위 5% 사건을 빼면 귀무보다 나은 쪽에 남지 못한다 "
+                        "— 그 몇 건을 못 잡으면 없는 엣지다.")
         elif big and not agree:
             # 관례와 반대로 유의 — 이 랩에서 가장 쓸모 있는 칸이자 가장 위험한 칸이다.
             r["verdict"] = "관례와 반대로 유의"
@@ -477,9 +504,6 @@ def run():
         netmat[t] = nb - ns
     NET = pd.DataFrame(netmat)
     NB = pd.DataFrame(nbuymat)
-
-    EXC = pd.DataFrame({t: (fwd_s[PRIMARY][t] - BETA[t] * fwd_b[PRIMARY]) * 100 for t in tick})
-    EXC.iloc[:MIN_HIST] = np.nan
 
     def bucket_table(M, edges, labels):
         rows = []
@@ -611,8 +635,11 @@ def run():
         "signals": out,
         "consensus": cons,
         "portfolios": ports,
-        "baseline": {"mean": None, "note": "귀무 = 아무 날 아무 종목의 β조정 20일 초과수익. "
-                                           "실측 평균 −0.02%로 0에 붙어 있어 부호 판정이 성립한다."},
+        "baseline": dict(BASE, note=(
+            "귀무 = 아무 날 아무 종목을 샀을 때의 같은 초과수익(%d건). 평균은 0에 붙어 있어 "
+            "부호 판정이 성립한다. 다만 '상위 5%% 제외' 값은 귀무도 %+.3f%%다 — 주식 수익이 "
+            "오른쪽으로 길어서 위 꼬리를 자르면 무엇이든 크게 음수가 되기 때문이다. "
+            "그 열은 반드시 이 기준선과 비교해서 읽어야 한다." % (BASE["n"], BASE["ex_top5"]))),
         "dup": {"note": "같은 (종목, 날짜)에 함께 뜨는 정도(자카드). 같은 방향 신호끼리만 비교한다. "
                         "0.5를 넘으면 사실상 같은 신호다 — 둘을 같이 봐도 확인이 되지 않는다.",
                 "top": pairs[:14], "n_pairs": len(pairs),
