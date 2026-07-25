@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "285e8906f54ea9ef",
+ "generated_from": "96b85d598e629018",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -469,6 +469,16 @@
      "verdict": "na",
      "src": "none",
      "effort": "M",
+     "live": true
+    },
+    {
+     "name": "갱신 기록",
+     "file": "updates.html",
+     "status": "existing",
+     "desc": "언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에",
+     "verdict": "na",
+     "src": "agg",
+     "effort": "S",
      "live": true
     },
     {

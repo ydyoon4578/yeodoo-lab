@@ -861,17 +861,18 @@ try:
     _lu = rd("build/log_update.py")
     _m = re.search(r"TARGETS\s*=\s*\{(.*?)\}", _lu, re.S)
     _lt = set(re.findall(r'"([a-z]+)"', _m.group(1))) if _m else set()
-    _ix2 = rd("index.html")
+    # UPD 정본은 2026-07-25부터 updates.html에 있다(홈에서 갱신 피드를 뺐다).
+    _ix2 = rd("updates.html")
     _m2 = re.search(r"var UPD=\{(.*?)\};", _ix2, re.S)
     _ut = set(re.findall(r"(?:^|[,{\s])([a-z]+):\[", _m2.group(1))) if _m2 else set()
     if not _lt or not _ut:
-        errors.append("갱신 피드 대상 집합을 파싱하지 못함(log_update.py TARGETS / index.html UPD)")
+        errors.append("갱신 피드 대상 집합을 파싱하지 못함(log_update.py TARGETS / updates.html UPD)")
     else:
         _only_lu, _only_ix = sorted(_lt - _ut), sorted(_ut - _lt)
         if _only_lu:
-            errors.append(f"갱신 피드: log_update.py에만 있는 target {_only_lu} — 홈에서 '기타'로 떨어진다")
+            errors.append(f"갱신 피드: log_update.py에만 있는 target {_only_lu} — 갱신 기록에서 '기타'로 떨어진다")
         if _only_ix:
-            errors.append(f"갱신 피드: index.html UPD에만 있는 target {_only_ix} — 기록할 수단이 없다")
+            errors.append(f"갱신 피드: updates.html UPD에만 있는 target {_only_ix} — 기록할 수단이 없다")
     # 실제로 쓰인 target이 둘 중 어디에도 없으면 그 이벤트는 영영 '기타'다
     _uj = json.load(io.open(os.path.join(ROOT, "data", "updates.json"), encoding="utf-8"))
     _used = {e.get("target") for e in (_uj.get("events") or [])}
