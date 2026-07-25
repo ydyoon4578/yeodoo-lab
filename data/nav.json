@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "cbaa247bf656eede",
+ "generated_from": "919f05eebe22889e",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -399,16 +399,13 @@
     {
      "name": "관전 포인트",
      "file": "industry.html#watch",
-     "status": "new-later",
-     "desc": "해석이 아니라 어긋난 자리만 짚는다",
+     "status": "existing",
+     "desc": "산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다",
      "verdict": "unverified",
      "src": "agg",
      "effort": "M",
-     "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 · 후순위",
-     "blocked_why": "섹터·팩터 어긋남 탐지. 산업 탐색이 선 필요.",
-     "pipeline": 99,
-     "live": false
+     "anchor": "route",
+     "live": true
     }
    ]
   },

@@ -78,6 +78,33 @@
   :root[data-theme="light"] .chip[aria-pressed=true]{color:#FFFFFF}
   :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
 
+  /* 보기 전환 탭 */
+  .views{display:flex;gap:4px;margin:26px 0 0;border-bottom:1px solid var(--line)}
+  .vtab{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 15px;text-decoration:none;
+        color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .vtab:hover{color:var(--ink)}
+  .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
+
+  /* 관전 포인트 카드 */
+  .wcard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--wc,var(--line));
+         border-radius:14px;box-shadow:var(--shadow);padding:15px 19px;margin-bottom:12px}
+  .wcard h3{margin:0;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px}
+  .wcard h3 .wn{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .wsub{margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.65}
+  .wsub b{color:var(--ink-2)}
+  .wrows{margin:11px 0 0;display:flex;flex-direction:column;gap:1px}
+  .wrow{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:2px 14px;align-items:baseline;
+        padding:8px 0;border-top:1px solid var(--line-soft);font-size:12px}
+  .wrow .wl{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+  .wrow .wl b{color:var(--champ)}
+  .wrow .wr{color:var(--ink-2);line-height:1.6}
+  .wrow .wr em{font-style:normal;font-weight:700;color:var(--ink)}
+  .wrow .wr a{font-family:var(--mono);font-size:11.5px;font-weight:700;text-decoration:none;color:var(--ink-2)}
+  .wrow .wr a:hover{color:var(--accent)}
+  .wfoot{margin:11px 0 0;font-size:11.5px;color:var(--muted)}
+  .wfoot a{color:var(--accent);text-decoration:none}
+  @media(max-width:640px){.wrow{grid-template-columns:1fr}}
+
   .ind{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 18px;margin-bottom:11px}
   .ind.split{border-left:3px solid var(--rp)}
   .ind h3{margin:0;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
@@ -272,7 +299,7 @@
         <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
           <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
-          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="ledger">
@@ -400,7 +427,27 @@
     그래서 이 화면은 SIC를 <b>탐색용 렌즈</b>로만 쓰고, 어떤 신호·점수도 여기서 만들지 않습니다.
   </div>
 
-  <section aria-labelledby="ind-h">
+  <nav class="views" id="views" aria-label="보기 전환">
+    <a class="vtab" href="#browse" data-v="browse">산업 분류</a>
+    <a class="vtab" href="#watch" data-v="watch">관전 포인트</a>
+  </nav>
+
+  <section id="watch" aria-labelledby="w-h" hidden>
+    <p class="lbl" id="w-h">관전 포인트 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 산업 단위로 눈에 띄는 것</span></p>
+    <p class="lblnote">SIC 산업을 축으로, 이 랩이 이미 들고 있는 데이터(종목 시그널 · 8-K 공시 · 내부자 거래)에서
+      <b>눈에 띄는 어긋남</b>만 골라 서술합니다. 새로 받아오는 데이터는 없습니다.</p>
+
+    <div class="note hard">
+      <b>이건 관찰이지 예측이 아닙니다</b> — 아래 항목들이 수익으로 이어지는지 이 랩은 <b>검증한 적이 없습니다</b>.
+      점수도 순위도 매수·매도 시사점도 만들지 않습니다. "같은 산업인데 이 종목만 다르다"는 사실을 적을 뿐이고,
+      그게 기회인지 함정인지는 이 화면이 말할 수 없습니다. 표본이 작은 산업일수록 우연히 그렇게 보이기 쉽다는 점도
+      같이 적어 둡니다 — 그래서 회사 수를 항상 함께 표시합니다.
+    </div>
+
+    <div id="wbody"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section id="browse" aria-labelledby="ind-h">
     <p class="lbl" id="ind-h">산업 분류</p>
     <p class="lblnote">회사 수가 많은 순. 티커를 누르면 종목 화면으로 갑니다.
       <span style="color:var(--rp)">보라색 테두리</span>는 한 SIC 안에 <b>섹터가 둘 이상 섞인</b> 분류입니다 —
@@ -518,6 +565,7 @@
       return;
     }
     if(st&&st.stocks) st.stocks.forEach(function(s){SEC[s.t]=s.sector||'';});
+    window.__STOCKS=(st&&st.stocks)||[];   // 관전 포인트가 타이밍·플래그를 읽는다
     D=j;
     D.groups.forEach(function(g){g._secs=secsOf(g);g._split=Object.keys(g._secs).length>1;});
     var nsplit=D.groups.filter(function(g){return g._split;}).length;
@@ -534,10 +582,165 @@
       '· '+solo+'개 분류는 회사가 1곳뿐입니다. 그런 칸의 "산업 평균"은 그 회사 자신이라 의미가 없어, 통계를 내지 않습니다.<br>'+
       '· <code>7389 Services-Business Services, NEC</code>처럼 NEC(따로 분류되지 않은 것)로 끝나는 코드는 잔여 범주라 내용이 섞여 있습니다.<br>'+
       '· 기준일 '+esc(j.as_of)+' · 대상 '+j.n_co+'사 · SIC 없음 '+(j.no_sic?j.no_sic.length:0)+'사';
-    buildSecChips(); render();
+    buildSecChips(); render(); onHash();
   })['catch'](function(){
     el('list').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
   });
+
+  // ── 보기 전환 ──────────────────────────────────────────────────────────
+  // #watch는 8-K 피드(226KB)와 내부자 요약을 더 읽어야 한다. 기본 화면에서 미리 받으면
+  // 산업 분류만 보러 온 사람에게 쓸데없는 다운로드를 물린다 — 탭에 들어올 때만 받는다.
+  var VIEWS=['browse','watch'], watchLoaded=false;
+  function showView(v){
+    v=(VIEWS.indexOf(v)>=0?v:'browse');
+    for(var i=0;i<VIEWS.length;i++){
+      var sec=el(VIEWS[i]); if(sec)sec.hidden=(VIEWS[i]!==v);
+      var a=document.querySelector('.vtab[data-v="'+VIEWS[i]+'"]');
+      if(a){if(VIEWS[i]===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
+    }
+    if(v==='watch')loadWatch();
+  }
+  function onHash(){showView((location.hash||'').replace(/^#/,''));}
+  window.addEventListener('hashchange',onHash);
+
+  // ── 관전 포인트 ────────────────────────────────────────────────────────
+  var MINCO=4;   // 이보다 작은 산업은 '산업'이라고 부르기 어렵다 — 관찰 대상에서 뺀다
+  var BUYISH={'매수':1,'매수우세':1}, SELLISH={'매도':1,'매도우세':1};
+
+  function loadWatch(){
+    if(watchLoaded)return; watchLoaded=true;
+    Promise.all([
+      fetch('data/filings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;}),
+      fetch('data/insider.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;})
+    ]).then(function(a){renderWatch(a[0],a[1]);});
+  }
+
+  function card(title,sub,rows,color,foot){
+    if(!rows.length)return '';
+    return '<div class="wcard" style="--wc:'+color+'"><h3>'+esc(title)+'<span class="wn">'+rows.length+'건</span></h3>'+
+      '<p class="wsub">'+sub+'</p><div class="wrows">'+rows.join('')+'</div>'+
+      (foot?'<p class="wfoot">'+foot+'</p>':'')+'</div>';
+  }
+  function tk(t){return '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a>';}
+  function sicLabel(g){return '<b>'+esc(g.sic)+'</b> '+esc(g.sd);}
+
+  function renderWatch(FIL,INS){
+    if(!D||!D.groups){el('wbody').innerHTML='<div class="note hard">산업 데이터를 불러오지 못했습니다.</div>';return;}
+    var ST={}, FLG={};
+    (window.__STOCKS||[]).forEach(function(s){ST[s.t]=s.timing||'';FLG[s.t]=s.flags||[];});
+
+    var big=D.groups.filter(function(g){return g.ts.length>=MINCO;});
+    var h='';
+
+    // ① 산업 안에서 혼자 반대 방향
+    var lone=[];
+    big.forEach(function(g){
+      var b=[],s=[];
+      g.ts.forEach(function(t){var x=ST[t];if(BUYISH[x])b.push(t);else if(SELLISH[x])s.push(t);});
+      if(b.length+s.length<MINCO)return;
+      var odd=null,side='';
+      if(s.length===1&&b.length>=3){odd=s[0];side='매도';}
+      else if(b.length===1&&s.length>=3){odd=b[0];side='매수';}
+      if(!odd)return;
+      lone.push({g:g,t:odd,side:side,n:b.length+s.length});
+    });
+    lone.sort(function(a,b){return b.n-a.n;});
+    h+=card('산업 안에서 혼자 반대 방향','같은 SIC 안에서 타이밍 판정이 나머지와 갈린 종목입니다. '+
+      '<b>같은 업을 하는데 신호만 다르다</b>는 뜻이지, 그 종목이 옳다는 뜻이 아닙니다.',
+      lone.slice(0,12).map(function(x){
+        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+               '<span class="wr">'+tk(x.t)+' <em>혼자 '+esc(x.side)+'</em> · 판정 있는 '+x.n+'사 중</span></div>';
+      }),'var(--rp)');
+
+    // ② 산업 전체가 한 방향
+    var uni_=[];
+    big.forEach(function(g){
+      var b=0,s=0,n=0;
+      g.ts.forEach(function(t){var x=ST[t];if(BUYISH[x]){b++;n++;}else if(SELLISH[x]){s++;n++;}});
+      if(n<MINCO)return;
+      if(b===n)uni_.push({g:g,side:'매수',n:n});
+      else if(s===n)uni_.push({g:g,side:'매도',n:n});
+    });
+    uni_.sort(function(a,b){return b.n-a.n;});
+    h+=card('산업 전체가 한 방향','판정이 있는 회사가 전부 같은 쪽인 산업입니다. '+
+      '업종 공통 요인일 수도, 우연일 수도 있습니다 — 회사 수가 적을수록 우연이기 쉽습니다.',
+      uni_.slice(0,10).map(function(x){
+        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+               '<span class="wr"><em>'+x.n+'사 전부 '+esc(x.side)+'</em> · '+
+               x.g.ts.slice(0,8).map(tk).join(' ')+(x.g.ts.length>8?' …':'')+'</span></div>';
+      }),'var(--marg)');
+
+    // ③ 200일선 이탈이 몰린 산업
+    var brk=[];
+    big.forEach(function(g){
+      var n=0;
+      g.ts.forEach(function(t){if((FLG[t]||[]).indexOf('200일이탈')>=0)n++;});
+      if(n>=3&&n/g.ts.length>=0.6)brk.push({g:g,n:n,p:n/g.ts.length});
+    });
+    brk.sort(function(a,b){return b.p-a.p||b.n-a.n;});
+    h+=card('200일선 아래가 몰린 산업','회사의 60% 이상이 200일 이동평균 아래인 산업입니다. '+
+      '<b>추세 상태의 서술일 뿐</b>이고, 랩이 검증한 전략이 아닙니다.',
+      brk.slice(0,10).map(function(x){
+        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+               '<span class="wr"><em>'+x.n+'/'+x.g.ts.length+'사</em> ('+Math.round(x.p*100)+'%)</span></div>';
+      }),'var(--hot)');
+
+    // ④ 8-K 중요 항목이 몰린 산업
+    if(FIL&&FIL.feed){
+      var sicOf={}; D.groups.forEach(function(g){g.ts.forEach(function(t){sicOf[t]=g;});});
+      var maj={};
+      FIL.feed.forEach(function(f){
+        var isMaj=false;
+        for(var i=0;i<f.it.length;i++)if(FIL.major.indexOf(f.it[i])>=0){isMaj=true;break;}
+        if(!isMaj)return;
+        var g=sicOf[f.t]; if(!g||g.ts.length<MINCO)return;
+        var k=g.sic; (maj[k]=maj[k]||{g:g,n:0,ts:{}}); maj[k].n++; maj[k].ts[f.t]=1;
+      });
+      var mj=Object.keys(maj).map(function(k){return maj[k];}).filter(function(x){return x.n>=3;});
+      mj.sort(function(a,b){return b.n-a.n;});
+      h+=card('중요 8-K가 몰린 산업','최근 '+FIL.window_days+'일간 랩이 \'중요\'로 묶은 Item(지배구조·회계 신뢰성·상장 지위 등)이 '+
+        '많이 제출된 산업입니다. <b>중요 묶음은 랩의 편집 판단</b>이고, 주가 영향을 예측하는 분류가 아닙니다.',
+        mj.slice(0,10).map(function(x){
+          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+                 '<span class="wr"><em>'+x.n+'건</em> · '+Object.keys(x.ts).length+'사 · '+
+                 Object.keys(x.ts).slice(0,8).map(tk).join(' ')+'</span></div>';
+        }),'var(--champ)','원문은 <a href="filings.html">8-K 공시 피드</a>에서 Item별로 볼 수 있습니다.');
+    }
+
+    // ⑤ 내부자 재량 거래가 몰린 산업
+    if(INS&&INS.by_t){
+      var ins={};
+      D.groups.forEach(function(g){
+        if(g.ts.length<MINCO)return;
+        var b=0,s=0,co=0;
+        g.ts.forEach(function(t){var v=INS.by_t[t];if(!v)return;b+=v[0];s+=v[1];if(v[0]||v[1])co++;});
+        if(b+s>=8)ins[g.sic]={g:g,b:b,s:s,co:co};
+      });
+      var arr=Object.keys(ins).map(function(k){return ins[k];});
+      var sells=arr.filter(function(x){return x.s>=x.b*3&&x.s>=8;}).sort(function(a,b){return b.s-a.s;});
+      var buys=arr.filter(function(x){return x.b>=x.s&&x.b>=4;}).sort(function(a,b){return b.b-a.b;});
+      h+=card('내부자 장내매도가 몰린 산업','수집 구간('+(INS.quarters||[]).map(function(q){return q.q;}).join('·')+
+        ')에 <b>재량 거래(P·S)만</b> 세었습니다 — 주식보상·세금 반납은 뺐습니다. '+
+        '매도는 분산·세금 등 개인 사정으로도 일어나므로 <b>그 자체로 부정적 신호가 아닙니다</b>.',
+        sells.slice(0,8).map(function(x){
+          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+                 '<span class="wr"><em>매도 '+x.s+'건</em> vs 매수 '+x.b+'건 · '+x.co+'사</span></div>';
+        }),'var(--hot)');
+      h+=card('내부자 장내매수가 있는 산업','같은 구간에서 매수(P)가 매도(S) 이상인 산업입니다. '+
+        '내부자 매수가 초과수익으로 이어지는지 이 랩은 <b>검증한 적이 없습니다</b>.',
+        buys.slice(0,8).map(function(x){
+          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+                 '<span class="wr"><em>매수 '+x.b+'건</em> vs 매도 '+x.s+'건 · '+x.co+'사</span></div>';
+        }),'var(--deploy)','종목별 원문은 <a href="co.html#ins">종목 재무 → 내부자 거래</a>에서 볼 수 있습니다.');
+    }
+
+    if(!h)h='<div class="note">지금 데이터에서는 눈에 띄는 항목이 없습니다 — <b>없으면 없다고 적습니다.</b></div>';
+    h+='<div class="note"><b>어떻게 골랐는가</b><br>'+
+       '· 회사가 '+MINCO+'곳 미만인 SIC는 전부 제외했습니다. 1~3사짜리 "산업 평균"은 그 회사 자신입니다.<br>'+
+       '· 순위를 매기지 않았습니다. 각 묶음은 조건을 만족한 것을 건수·비중 순으로 늘어놓은 것뿐입니다.<br>'+
+       '· 임계값(60%·3건·8건 등)은 화면이 읽히게 하려고 고른 값이고, 검증으로 얻은 값이 아닙니다.</div>';
+    el('wbody').innerHTML=h;
+  }
 
   el('q').addEventListener('input',function(){q=this.value.trim().toLowerCase();render();});
   el('splitonly').addEventListener('click',function(){
