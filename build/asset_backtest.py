@@ -734,6 +734,41 @@ def build():
                            "얻는 것이 있는지 — 반반과 직접 겨룬다.")
     add("regime-switch", "regime-conditional-switch", s_regimeswitch)
 
+    # ── 크로스에셋 캐리 ───────────────────────────────────────────────
+    # 캐리 = 가격이 안 움직여도 들어오는 몫. ETF에서는 직전 12개월 분배금 / 현재가다.
+    # ⚠ 원자재의 롤 수익은 여기 안 들어간다 — 무료 선물 커브가 없다. DBC의 분배는 담보로 든
+    #   단기국채 이자이지 롤이 아니다. 그래서 이건 '캐리 전체'가 아니라 '분배 캐리'다.
+    def s_carry():
+        ts = ["SPY", "EFA", "EEM", "TLT", "IEF", "LQD", "HYG", "EMB", "TIP", "VNQ"]
+        st = first_common(ts)
+        DIV = A.get("div") or {}
+        def yld(t, i):
+            s_ = ser(t)
+            if s_ is None or s_[i] is None or not s_[i]:
+                return None
+            d = DIV.get(t)
+            if d is None:
+                return None
+            hi_ = DTS[i]
+            lo_ = DTS[max(0, i - 252)]
+            tot = sum(v for k, v in d.items() if lo_ < k <= hi_)
+            return tot / s_[i] * 100
+        def w(i):
+            ys = [(t, yld(t, i)) for t in ts]
+            ys = [(t, y) for t, y in ys if y is not None]
+            if len(ys) < 6:
+                return {t: 1.0 for t in ts}
+            ys.sort(key=lambda z: -z[1])
+            return {t: 1.0 for t, _y in ys[:4]}        # 캐리 상위 4개 동일가중
+        return run_weights(w, st, "크로스에셋 캐리 (분배수익률 상위 4)",
+                           lambda i: {t: 1.0 for t in ts},
+                           "월말에 직전 12개월 분배금/현재가가 가장 높은 4자산을 동일가중.",
+                           "아카이브 사유는 '60/40 동률은 GFC 산물'이었다. 대조군을 같은 10자산 "
+                           "동일가중으로 두어 '캐리로 고르는 것'이 '다 들고 있기'를 이기는지만 본다.",
+                           note="원자재 롤 수익은 빠졌다(무료 선물 커브 없음) — 분배 캐리만이다. "
+                                "같은 이름의 좁은 규칙임을 명시한다.")
+    add("carry", "cross-asset-carry", s_carry)
+
     # 20) 최소 CVaR — 4자산
     def s_cvar():
         ts = ["SPY", "TLT", "GLD", "DBC"]
@@ -793,6 +828,16 @@ def main() -> int:
         r["arch"] = arch
         rows.append(r)
 
+    # 머신러닝·13F 복제는 별도 스크립트(build/ml_backtest.py)가 낸다 — 규약이 다르기 때문이다
+    # (사전등록·워크포워드). 표는 여기 하나로 합친다. 두 곳에 두면 갈린다.
+    mlp = os.path.join(DATA, "ml_strategies.json")
+    if os.path.exists(mlp):
+        for r in (json.load(io.open(mlp, encoding="utf-8")).get("strategies") or []):
+            r.setdefault("turnover", None)
+            rows.append(r)
+    else:
+        print("  ⚠ ml_strategies.json 없음 — python build/ml_backtest.py 를 먼저 돌릴 것")
+
     # 판정 — 다중검정 보정 후 대조군 대비
     n = len(rows)
     lo, hi = 0.0, 12.0
@@ -805,6 +850,8 @@ def main() -> int:
     tcrit = round((lo + hi) / 2, 2)
     for r in rows:
         t = r.get("t")
+        if r.get("verdict") == "표본 부족 · 판정 불가":
+            continue                      # 검정 구간이 짧아 이미 판정을 막아둔 건 그대로 둔다
         if t is None:
             r["verdict"] = "판정 불가"
         elif r.get("bench_unstable"):
@@ -831,18 +878,7 @@ def main() -> int:
             "주식 이익수익률·채권 기간스프레드·원자재 롤·FX 금리차를 한 축으로 묶어야 한다. "
             "네 축 모두 이미 받은 데이터(FRED·ETF)로 만들 수 있으나 캐리 정의가 자산군마다 "
             "달라 규칙을 먼저 정해야 한다 — 데이터 문제가 아니라 설계 문제다."),
-        "ml-market-timing": ("가능 · 미구현",
-            "입력(가격·거시)은 전부 있다. 학습·검증 분할과 하이퍼파라미터를 정하는 순간 "
-            "그 자체가 다중검정이 되므로, 사전등록 없이 돌리면 결과를 믿을 수 없다. "
-            "규약을 먼저 정하고 돌릴 항목이다."),
-        "ml-stock-selection": ("가능 · 미구현",
-            "종목 패널(data/sd 518종목·고저가 포함)로 만들 수 있다. 위와 같은 이유로 "
-            "검증 규약이 먼저다."),
-        "13f-best-ideas-clone": ("가능 · 무거움",
-            "SEC가 분기별 13F 데이터셋을 전부 공개한다(이 저장소도 최신 분기는 이미 받는다). "
-            "과거 복제를 하려면 수십 분기 × 수백MB를 훑어야 해 실행 비용이 문제이지, "
-            "데이터가 없는 것은 아니다."),
-        "eps-revision-drift-spx": ("불가 · 유료 데이터",
+                                "eps-revision-drift-spx": ("불가 · 유료 데이터",
             "애널리스트 이익추정치의 시점별 개정 이력이 필요하다(I/B/E/S·FactSet 등). "
             "무료 소스는 현재 컨센서스만 주고 과거 개정 스냅샷을 주지 않는다 — "
             "오늘 값으로 과거를 채우면 그 순간 선견편향이 된다."),
