@@ -861,6 +861,25 @@ try:
 except Exception as e:
     errors.append(f"기준일 정본 검증 실패: {e}")
 
+# ── 평문 필드에 마크다운이 섞이는 걸 막는다 ─────────────────────────────────
+# rotation.html은 카드 본문을 esc()로 감싸 넣는다 — HTML도 마크다운도 렌더되지 않는다.
+# 그런데 갱신은 사람(혹은 헤드리스 작업)이 텍스트로 쓰므로 **볼드**가 섞이기 쉽고,
+# 그러면 화면에 별표가 그대로 찍힌다(2026-07-25에 12장이 그렇게 나갔다).
+try:
+    _rp = json.load(io.open(os.path.join(ROOT, "data", "rotation_pool.json"), encoding="utf-8"))
+    _plain = ("purpose", "principle", "entry", "performance", "recent")
+    _md = []
+    for _s in (_rp.get("strategies") or []):
+        for _f in _plain:
+            _v = _s.get(_f)
+            if isinstance(_v, str) and ("**" in _v or "<b>" in _v):
+                _md.append("%s.%s" % (_s.get("id", "?"), _f))
+    if _md:
+        errors.append("rotation_pool: 평문 필드에 마크다운/HTML이 있습니다 — esc()로 감싸 렌더되므로 "
+                      "화면에 기호가 그대로 찍힙니다: " + ", ".join(_md[:8]))
+except Exception as e:
+    errors.append(f"rotation_pool 평문 검사 실패: {e}")
+
 # ── 자격증명이 소스로 새어 들어가는 걸 막는다 ────────────────────────────────
 # 실사고: FRED API 키가 "시크릿 미설정 시 크래시 방지" 폴백으로 build/refresh_regime.py에
 # 박힌 채 공개 저장소에 올라가 있었다(2026-07-25 발견·정리). 조용한 폴백은 편해 보이지만,
