@@ -118,14 +118,11 @@
     {
      "name": "경제지표 일정",
      "file": "calendar.html#macro",
-     "status": "needs-source",
-     "desc": "다음 발표일만 — 예상치는 싣지 않는다",
+     "status": "existing",
+     "desc": "국면 판정이 쓰는 FRED 39지표가 언제 나오는지 — 예상치 없음",
      "src": "raw",
      "verdict": "na",
      "effort": "M",
-     "blocked_by": "FRED releases/dates API",
-     "blocked_why": "키는 이미 있다(refresh_regime.py가 사용 중). 하루 1콜. 예상치·컨센서스는 싣지 않는다.",
-     "pipeline": 7,
      "anchor": "static"
     }
    ],
@@ -246,10 +243,11 @@
      "src": "est",
      "verdict": "unverified",
      "effort": "M",
-     "blocked_by": "yfinance earnings_dates",
-     "blocked_why": "비공식 API — 끊기면 이 칸이 같이 죽는다. 채택 여부 미결.",
+     "blocked_by": "실적 발표 예정일 소스 (yfinance 비공식 / Finnhub 무료키)",
+     "blocked_why": "SEC는 이미 일어난 발표만 안다(8-K Item 2.02 — 공시 피드에 이미 있다). 예정일은 SEC 제출 대상이 아니다. yfinance는 비공식이라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 Actions 러너가 Yahoo에 401로 막힌 전례가 있다. Finnhub 무료키가 대안.",
      "pipeline": 4,
-     "anchor": "static"
+     "anchor": "static",
+     "placeholder": true
     }
    ],
    "short": "종목"

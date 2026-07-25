@@ -1,0 +1,46 @@
+name: Refresh release calendar (FRED)
+
+# 국면 판정이 쓰는 FRED 39개 시리즈의 발표 일정을 수집한다.
+#
+# 주기 — 주 1회. 발표 예정일은 기관이 미리 공지하고 자주 바뀌지 않는다.
+#   다만 창이 앞으로 120일이라, 주 1회면 끝이 계속 밀려 캘린더가 마르지 않는다.
+#
+# 소요 — 실측 약 1분(시리즈 39 + 릴리스 23 = 62콜, 0.55초 간격). FRED 상한은 분당 120회.
+
+on:
+  schedule:
+    - cron: '45 2 * * 6'    # 매주 토 11:45 KST (02:45 UTC) — 다른 SEC 잡과 30분 간격
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-calendar
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 설치 단계 없음 — urllib·json만 쓴다(fredapi를 쓰지 않는다)
+      - name: Collect release calendar
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python build/refresh_calendar.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 경제지표 발표 일정 자동 갱신" \
+            data/calendar.json data/asof.json
+      # as_of는 '수집한 날'이다(다른 축과 달리 발표일이 아니다) — 주 1회 도니 10영업일이면 넉넉하다
+      - name: Verify freshness
+        run: python build/check_freshness.py data/calendar.json "발표 일정" 10

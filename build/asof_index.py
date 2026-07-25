@@ -118,6 +118,10 @@ def main() -> int:
         {"key": "facts", "label": "SEC 재무(XBRL)", "as_of": (load("facts.json") or {}).get("as_of"),
          "cadence": "분기(실적 발표 시)", "note": "회사의 최근 보고 기간말 — 구조적으로 분기마다 한 번 움직인다"},
         # 내부자 거래는 SEC가 분기 단위로 묶어 내놓는다. 뒤처지는 게 아니라 원래 그런 축이다.
+        # 발표 일정만은 as_of가 '수집한 날'이다 — 다른 축처럼 '데이터의 기준일'이 아니라
+        # 앞으로의 예정표라, 언제 받아온 표인지가 그 표의 신선도다.
+        {"key": "calendar", "label": "발표 일정(FRED)", "as_of": (load("calendar.json") or {}).get("as_of"),
+         "cadence": "주 1회 수집", "note": "앞으로의 예정표 — as_of는 데이터 기준일이 아니라 수집일이다"},
         {"key": "insider", "label": "내부자 거래(Form 4)", "as_of": (load("insider.json") or {}).get("as_of"),
          "cadence": "분기 데이터셋", "note": "SEC가 분기로 묶어 내놓아 수십 일 지연이 구조적이다 — 실시간이 아니다"},
     ]
