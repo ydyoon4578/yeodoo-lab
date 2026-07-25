@@ -418,7 +418,12 @@ def fetch_fund(t, retries=3):
     재시도(2026-07-23): Yahoo가 500/503을 뿜는 동안 .info가 성공해도 특정 필드가 빠진 **부분 응답**이
         섞여 나온다(실측: mc는 100%인데 ps만 99%→72%로 떨어져 완전성 게이트가 '스키마 변경'으로 오인·중단).
         mc·ps는 정상 응답이면 99~100% 존재하므로 둘 다 있으면 정상으로 보고 곧바로 반환하고, 하나라도
-        없으면 부분 응답으로 보고 재시도한다. healthy 런은 첫 시도에 반환(재시도 0회)."""
+        없으면 부분 응답으로 보고 재시도한다. healthy 런은 첫 시도에 반환(재시도 0회).
+
+    폴백(2026-07-25): 위 재시도로도 못 넘는 경우가 나왔다 — ps 75%가 재실행에서 그대로 재현됐다.
+        3회를 다 써도 같은 필드가 계속 비면 재시도는 답이 아니다. ps는 정의가 mc/rev로 닫혀 있으므로
+        아래에서 되계산해 메운다. 그 결과 이 게이트도 되계산된 ps를 보게 되어, 폴백으로 메워진 종목은
+        재시도를 낭비하지 않는다."""
     rec = None
     for attempt in range(retries):
         try:
@@ -440,7 +445,20 @@ def fetch_fund(t, retries=3):
                    "cr": info.get("currentRatio"), "de": info.get("debtToEquity"),
                    "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
                    "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
-                   "td": info.get("totalDebt"), "tc": info.get("totalCash")}
+                   "td": info.get("totalDebt"), "tc": info.get("totalCash"),
+                   "rev": info.get("totalRevenue")}
+            # ps 폴백 — 정의 그대로 다시 계산한다. PSR = 시가총액 / 최근 12개월 매출.
+            #   왜 필요한가(2026-07-25): 러너에서 mc는 100%인데 ps만 75%로 빠지는 일이 재실행에도
+            #   똑같이 재현됐다. 로컬(주거용 IP)에서는 15/15 정상 → 스키마 변경이 아니라 Yahoo가
+            #   Actions IP에 거는 쓰로틀링이고(401 Invalid Crumb), 응답에서 모듈이 통째로 빠진다.
+            #   ps가 사는 summaryDetail은 깎이는데 totalRevenue가 사는 financialData는 99% 살아 있어
+            #   이 폴백이 실제로 메워진다.
+            #   같은 값인지 실측 확인: 15종목 전수에서 mc/rev와 Yahoo ps의 오차 0.00%.
+            if rec.get("ps") is None and rec.get("mc") and rec.get("rev"):
+                try:
+                    rec["ps"] = rec["mc"] / rec["rev"]
+                except (TypeError, ZeroDivisionError):
+                    pass
             # 정상 응답이면 mc·ps가 둘 다 있다(각 99~100% 필드). 둘 다 있으면 곧바로 반환(healthy 런 재시도 0회).
             #   실측 사고: mc는 100%인데 ps만 72%로 빠진 부분 응답 → mc만 보면 재시도가 안 걸린다.
             if rec.get("mc") is not None and rec.get("ps") is not None:
