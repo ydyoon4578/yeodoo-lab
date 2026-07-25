@@ -12,7 +12,15 @@ except Exception: pass
 from fredapi import Fred
 import yfinance as yf
 
-FRED_KEY = os.getenv("FRED_API_KEY") or "64c41debf1ed074a809f5871e571c1fc"   # 빈 문자열(시크릿 미설정)도 폴백 (GitHub Actions 크래시 수정)
+# ⚠ 키를 소스에 적지 않는다. 예전에 "시크릿 미설정 시 크래시"를 막으려고 실제 키를 폴백으로
+#   박아 뒀는데, 공개 저장소라 그 순간부터 키가 공개된 것이었다(2026-07-25 정리).
+#   시크릿이 없으면 조용히 다른 키로 도는 대신 **명확히 실패**한다 — 조용한 폴백이 사고의 원인이었다.
+FRED_KEY = (os.getenv("FRED_API_KEY") or "").strip()
+if not FRED_KEY:
+    raise SystemExit(
+        "❌ FRED_API_KEY가 없습니다. 저장소 시크릿에 등록하세요:\n"
+        "     gh secret set FRED_API_KEY --repo <owner>/<repo>\n"
+        "   로컬 실행은  FRED_API_KEY=... python3 build/refresh_regime.py")
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "data", "regime.json")
 f = Fred(api_key=FRED_KEY)

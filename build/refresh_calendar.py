@@ -37,8 +37,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "calendar.json")
 
-# refresh_regime.py와 같은 폴백을 쓴다(시크릿 미설정 시 크래시 방지).
-KEY = os.getenv("FRED_API_KEY") or "64c41debf1ed074a809f5871e571c1fc"
+# ⚠ 키를 소스에 적지 않는다(2026-07-25 정리 — 공개 저장소에 폴백으로 박혀 있었다).
+KEY = (os.getenv("FRED_API_KEY") or "").strip()
 BASE = "https://api.stlouisfed.org/fred/"
 
 BACK_DAYS = 21      # 지난 발표도 이만큼은 보여준다(방금 나온 게 뭔지가 캘린더의 절반이다)
@@ -68,6 +68,11 @@ def load_series():
 
 
 def main() -> int:
+    if not KEY:
+        print("❌ FRED_API_KEY가 없습니다. 저장소 시크릿에 등록하세요:")
+        print("     gh secret set FRED_API_KEY --repo <owner>/<repo>")
+        print("   로컬 실행은  FRED_API_KEY=... python3 build/refresh_calendar.py")
+        return 1
     series = load_series()
     if not series:
         print("❌ regime.json에서 시리즈를 읽지 못했다 — 갱신 중단(이전본 유지)")

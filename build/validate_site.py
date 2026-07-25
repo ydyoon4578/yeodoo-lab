@@ -853,6 +853,34 @@ try:
 except Exception as e:
     errors.append(f"기준일 정본 검증 실패: {e}")
 
+# ── 자격증명이 소스로 새어 들어가는 걸 막는다 ────────────────────────────────
+# 실사고: FRED API 키가 "시크릿 미설정 시 크래시 방지" 폴백으로 build/refresh_regime.py에
+# 박힌 채 공개 저장소에 올라가 있었다(2026-07-25 발견·정리). 조용한 폴백은 편해 보이지만,
+# 그 편함의 대가가 '키가 공개돼도 아무도 모른다'였다. 다시 들어오면 여기서 막는다.
+#
+# 검사 대상은 build/*.py의 32자리 hex 리터럴(FRED 키 형식)과 흔한 API 키 접두사다.
+# 해시·지문은 이 사이트에서 12~16자리를 쓰므로 32자리와 겹치지 않는다(도입 시점 실측 0건).
+try:
+    _SECRET_PATS = [
+        (re.compile(r"""["'`]([0-9a-f]{32})["'`]"""), "32자리 hex(FRED API 키 형식)"),
+        (re.compile(r"""["'`](sk-[A-Za-z0-9_\-]{20,})["'`]"""), "sk- 접두 키"),
+        (re.compile(r"""["'`](gh[pousr]_[A-Za-z0-9]{20,})["'`]"""), "GitHub 토큰"),
+        (re.compile(r"""["'`](AKIA[0-9A-Z]{16})["'`]"""), "AWS 액세스 키"),
+    ]
+    _bdir = os.path.join(ROOT, "build")
+    for _fn in sorted(os.listdir(_bdir)):
+        if not _fn.endswith((".py", ".sh")):
+            continue
+        _src = io.open(os.path.join(_bdir, _fn), encoding="utf-8").read()
+        for _pat, _what in _SECRET_PATS:
+            _m = _pat.search(_src)
+            if _m:
+                errors.append(
+                    f"자격증명 유출 의심: build/{_fn}에 {_what} 리터럴이 있습니다 "
+                    f"({_m.group(1)[:6]}…) — 시크릿(os.getenv)으로 옮기고 키를 폐기·재발급하세요")
+except Exception as e:
+    errors.append(f"자격증명 검사 실패: {e}")
+
 # ── 갱신 피드: 기록할 수단이 없어서 조용히 비는 일을 막는다 ──────────────────
 # 실사고: 도구를 여럿 새로 만든 사흘(2026-07-23~25) 동안 updates.json이 한 줄도 늘지 않았다.
 # 원인은 log_update.py의 TARGETS가 옛 7개로 고정돼 새 화면은 기록 자체가 거부됐기 때문이다.
