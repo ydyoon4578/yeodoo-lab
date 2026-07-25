@@ -361,6 +361,30 @@ if pool:
     except FileNotFoundError:
         pass
 
+    # asset_strategies의 화면 문구 + arch 참조 무결성(아카이브에 없는 sid를 가리키면 카드가 빈다)
+    try:
+        _as = json.load(io.open(os.path.join(ROOT, "data", "asset_strategies.json"), encoding="utf-8"))
+        for _r in (_as.get("strategies") or []):
+            if _r.get("arch") and _r["arch"] not in _sids:
+                errors.append(f"asset_strategies '{_r['name']}': arch='{_r['arch']}'가 archive_index에 없음")
+            for _k2 in ("name", "rule", "why", "note"):
+                _v2 = _r.get(_k2) or ""
+                if isinstance(_v2, str) and (re.search(r"</?[a-zA-Z][^>]*>", _v2)
+                                             or re.search(r"\*\*[^*]+\*\*", _v2)):
+                    errors.append(f"asset_strategies '{_r['name']}'.{_k2}: 태그/마크다운 표기 "
+                                  f"— 화면에 기호가 그대로 찍힌다")
+        _au = _as.get("audit") or {}
+        # 재점검표는 아카이브 38건을 빠짐없이 덮어야 한다 — 빠지면 그 항목이 화면에서 사라진다
+        _covered = {a["sid"] for a in (_au.get("items") or [])}
+        _tsids = {r["arch"] for r in (json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"),
+                  encoding="utf-8")).get("strategies") or []) if r.get("arch")}
+        _missing = _sids - _covered - _tsids
+        if _missing:
+            errors.append(f"asset_strategies.audit: 아카이브 {len(_missing)}건이 재점검표에서 누락 "
+                          f"({sorted(_missing)[:3]}…) — 화면에서 조용히 사라진다")
+    except FileNotFoundError:
+        pass
+
     # arch 참조 무결성 — 규칙 카드의 '이전 판정' 줄은 A[r.arch]로 붙는다. 없는 sid를 가리키면
     # 그 줄이 조용히 사라진다(오류도 안 난다). 링크가 끊긴 걸 화면에서 알아챌 방법이 없으므로 여기서 막는다.
     try:
