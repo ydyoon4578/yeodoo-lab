@@ -346,8 +346,8 @@
       <li class="navcat" data-cat="gurus">
         <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
-          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
-          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
+          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="financials">
@@ -527,7 +527,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>37</b></span><span>동작 <b>34</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>3</b></span><span>메뉴에서 뺌 <b>4</b></span><span>파일 <b>22</b>장</span></p>
+    <p class="ltn"><span>화면 <b>37</b></span><span>동작 <b>36</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>1</b></span><span>메뉴에서 뺌 <b>4</b></span><span>파일 <b>22</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -570,11 +570,11 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--muted)">
-      <h3>투자거장 분석<span class="dc">구현 0 · 대기 2</span></h3>
-      <div class="dbar" role="img" aria-label="투자거장 분석 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 2"></i></div>
+      <h3>투자거장 분석<span class="dc">구현 2</span></h3>
+      <div class="dbar" role="img" aria-label="투자거장 분석 판정 분포"><i class="vunv" style="--w:100.0000%" title="미검증 1"></i></div>
       <div class="dtools">
-        <span>거장 포트폴리오·매매<b class="soon">준비중</b></span>
-        <span>공통 보유종목<b class="soon">준비중</b></span>
+        <a href="guru.html">거장 포트폴리오·매매</a>
+        <a href="guru.html#overlap">공통 보유종목<b class="vunv">미검증</b></a>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--deploy)">
@@ -632,12 +632,10 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 3 · 메뉴에서 뺌 4</span></p>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 1 · 메뉴에서 뺌 4</span></p>
   <div class="gapbox soonbox">
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
     <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">실적 발표 예정일 소스 (yfinance 비공식 / Finnhub 무료키)</span></div>
-    <div class="gaprow"><span class="gn">거장 포트폴리오·매매</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
-    <div class="gaprow"><span class="gn">공통 보유종목</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
     <p class="gapf"><a href="roadmap.html">전체 사유와 붙이는 순서 →</a></p>
   </div>
   <div class="gapbox wontbox">
