@@ -29,14 +29,8 @@ jobs:
         run: python build/refresh_holdings.py
       - name: Validate
         run: python build/validate_site.py
+      # 이 잡은 asof 축을 건드리지 않아 asof.json을 넘기지 않는다(넘긴 잡만 리베이스 뒤 다시 굽는다).
       - name: Commit if changed
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain data/strategy_holdings.json)" ]; then
-            git add data/strategy_holdings.json
-            git commit -m "chore(data): 현재 포트폴리오 구성 자동 갱신 (무료 데이터 3전략)"
-            git push || (git pull --rebase origin main && git push)
-          else
-            echo "변경 없음 — 스킵"
-          fi
+          bash build/ci_push.sh "chore(data): 현재 포트폴리오 구성 자동 갱신 (무료 데이터 3전략)" \
+            data/strategy_holdings.json
