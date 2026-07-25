@@ -116,6 +116,8 @@
   .statline .stat b{display:block;font-family:var(--mono);font-size:21px;font-weight:800;line-height:1.1}
   .statline .stat em{display:block;margin-top:4px;font-style:normal;font-size:10.5px;color:var(--muted)}
   .statline .stat{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  /* 값은 대문자화에서 뺀다 — |t|(t통계량)가 |T|로 바뀌면 다른 기호가 된다 */
+  .statline .stat b{text-transform:none}
   .statline .stat.ok{border-top-color:var(--good,#0E8A54)}
   .statline .stat.zero{border-top-color:var(--hot)}
   .dupbox{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;
@@ -156,6 +158,7 @@
     background:var(--line-soft);border:1px solid var(--line-soft);border-radius:9px;overflow:hidden}
   .rc{background:var(--panel);padding:7px 10px}
   .rc span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .rc.tstat span{text-transform:none}   /* 위와 같은 이유 — t통계량 라벨은 소문자여야 한다 */
   .rc b{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:800}
   .rc.up b{color:var(--good,#0E8A54)} .rc.dn b{color:var(--hot)}
   .spark{display:block;width:100%;height:44px;margin:11px 0 0}
@@ -515,7 +518,7 @@
       '<div class="rgrid">'+
         cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
         cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
-        cell('t',nf(r.t,2),Math.abs(r.t||0)>=(T.t_crit||3)?'up':'')+
+        cell('t',nf(r.t,2),'tstat'+(Math.abs(r.t||0)>=(T.t_crit||3)?' up':''))+
         cell('연 회전',nf(r.turnover,1)+'회')+
       '</div>'+
       spark(r.nav,r.bnav,320,44)+
