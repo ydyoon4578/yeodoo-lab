@@ -162,6 +162,14 @@
 
   /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
   @media(max-width:1100px){
+    /* ⚠ backdrop-filter를 반드시 끈다 — 장식이 아니라 **레이아웃 버그의 원인**이다.
+       filter·backdrop-filter·transform이 걸린 요소는 자손 position:fixed의 컨테이닝 블록이
+       된다(뷰포트가 아니라). 아래 .navcats는 fixed 드로어인데 .topnav(높이 52px)가 기준이 되면
+       top:52px·bottom:0이 52px짜리 상자 안에서 계산돼 **드로어 높이가 0이 된다**.
+       실측(2026-07-25): 필터 있음 0px · 제거 859px. 화면에는 첫 카테고리만 삐져나와
+       "모바일에서 시장밖에 안 보인다"로 나타났다.
+       블러를 끄는 대신 배경을 불투명하게 만들어 스티키 바 가독성을 지킨다. */
+    .topnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel)}
     .topnav .nvin{gap:8px;padding:0 14px}
     .navtoggle{display:inline-flex}
     .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
