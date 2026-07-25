@@ -55,7 +55,10 @@ FORMS_OK = ("10-K", "10-Q", "20-F", "40-F", "10-K/A", "10-Q/A")
 # 항목별 후보 태그 — 회사마다 쓰는 태그가 달라 우선순위로 훑는다.
 # (키, 후보 태그들, 단위, 스케일)  스케일 m=백만 단위로 환산, r=원값 유지
 TAGS = (
+    # RevenuesNetOfInterestExpense는 은행·증권의 '총수익'이다. 없으면 JPM 같은 회사는
+    # 분기 매출이 2014년에서 멈춘 Revenues밖에 안 남는다(실측).
     ("rev",   ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues",
+               "RevenuesNetOfInterestExpense",
                "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"), "USD", "m"),
     ("cogs",  ("CostOfGoodsAndServicesSold", "CostOfRevenue"), "USD", "m"),
     ("gp",    ("GrossProfit",), "USD", "m"),
@@ -67,6 +70,8 @@ TAGS = (
                "CommonStockDividendsPerShareCashPaid"), "USD/shares", "r"),
     ("asset", ("Assets",), "USD", "m"),
     ("liab",  ("Liabilities",), "USD", "m"),
+    # 지배주주지분을 먼저 쓴다 — BVPS·RIM이 쓰는 값이 이것이기 때문이다. 대신 비지배지분이
+    # 큰 회사(BX·FCX·ARES 등)는 자산 ≠ 부채 + 이 값이 되므로, 화면에 그 사유를 적는다.
     ("eq",    ("StockholdersEquity",
                "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"), "USD", "m"),
     ("cash",  ("CashAndCashEquivalentsAtCarryingValue",), "USD", "m"),
@@ -77,11 +82,33 @@ TAGS = (
     ("sh",    ("WeightedAverageNumberOfDilutedSharesOutstanding",
                "WeightedAverageNumberOfSharesOutstandingBasic"), "shares", "m"),
 )
+# ── IFRS 택소노미 ───────────────────────────────────────────────────────
+# 외국 사기업(foreign private issuer)은 20-F/40-F를 IFRS로 낸다. companyfacts에
+# us-gaap이 아예 없고 ifrs-full만 있다 — 실측(2026-07-25): CCEP 351태그·TRI 398·FER 156.
+# us-gaap만 보면 이 회사들은 '재무 없음'으로 떨어진다. 같은 항목 키에 IFRS 태그를 붙여
+# 같은 표에 담되, 어느 태그에서 왔는지는 화면에 그대로 표기하므로 섞였다는 사실은 감춰지지 않는다.
+# (주식수는 IFRS 필수 공시가 아니라 CCEP에 없다 — 없는 항목은 만들지 않는다.)
+TAGS_IFRS = (
+    ("rev",   ("Revenue", "RevenueFromContractsWithCustomers"), "USD", "m"),
+    ("cogs",  ("CostOfSales",), "USD", "m"),
+    ("gp",    ("GrossProfit",), "USD", "m"),
+    ("opinc", ("ProfitLossFromOperatingActivities",), "USD", "m"),
+    ("ni",    ("ProfitLoss",), "USD", "m"),
+    ("eps",   ("DilutedEarningsLossPerShare", "BasicEarningsLossPerShare"), "USD/shares", "r"),
+    ("dps",   ("DividendsPaidOrdinarySharesPerShare",), "USD/shares", "r"),
+    ("asset", ("Assets",), "USD", "m"),
+    ("liab",  ("Liabilities",), "USD", "m"),
+    ("eq",    ("Equity",), "USD", "m"),
+    ("cash",  ("CashAndCashEquivalents",), "USD", "m"),
+    ("cfo",   ("CashFlowsFromUsedInOperatingActivities",), "USD", "m"),
+    ("capex", ("PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",), "USD", "m"),
+)
+
 # 화면에 그대로 쓰는 항목 이름. 여기 없는 키는 만들지 않는다.
 LABEL = {
     "rev": "매출", "cogs": "매출원가", "gp": "매출총이익", "opinc": "영업이익",
     "ni": "순이익", "eps": "주당순이익(희석)", "dps": "주당배당금(선언)",
-    "asset": "자산총계", "liab": "부채총계", "eq": "자기자본",
+    "asset": "자산총계", "liab": "부채총계", "eq": "자기자본(지배주주지분)",
     "cash": "현금및현금성자산", "cfo": "영업활동현금흐름", "capex": "설비투자(CAPEX)",
     "sh": "희석주식수",
 }
@@ -136,30 +163,87 @@ def pick(unitvals, scale):
     return out(q, KEEP_Q), out(a, KEEP_A), out(i, KEEP_I)
 
 
+def resolve_unit(units: dict, want: str):
+    """실제 존재하는 단위 키를 고른다 → (단위, 관측리스트).
+
+    보고 통화가 달러가 아닌 회사가 있다 — 실측(2026-07-25): CCEP·FER은 EUR로 보고한다.
+    USD로 못 박아 두면 이 회사들이 통째로 '재무 없음'이 되고, 그렇다고 EUR 값을 달러로
+    표시하면 그냥 틀린 숫자가 된다. 그래서 실제 단위를 골라 그대로 들고 다니고,
+    화면은 이 단위를 읽어 통화를 표기한다. **환산하지 않는다** — 어느 시점 환율로
+    바꿨는지 밝히지 못하는 환산은 정확도를 가장한 왜곡이다.
+    """
+    if want in units:
+        return want, units[want]
+    if want == "shares":
+        return want, None
+    if want.endswith("/shares"):
+        for k in sorted(units):
+            if k.endswith("/shares") and len(k) == len("XXX/shares"):
+                return k, units[k]
+        return want, None
+    for k in sorted(units):                      # 통화 3자리(EUR·GBP·CAD…)
+        if len(k) == 3 and k.isalpha() and k.isupper():
+            return k, units[k]
+    return want, None
+
+
 def extract(facts: dict):
-    """companyfacts → {키: {src, u, s, q/a/i}}. 값이 하나도 없는 항목은 담지 않는다."""
-    gaap = ((facts or {}).get("facts") or {}).get("us-gaap") or {}
+    """companyfacts → {키: {src, u, s, q/a/i}}. 값이 하나도 없는 항목은 담지 않는다.
+
+    ⚠ 후보 태그는 '먼저 있는 것'이 아니라 **가장 최근까지 보고된 것**을 고른다.
+    회사가 도중에 태그를 갈아타면 옛 태그도 값을 그대로 갖고 있어서, 우선순위대로
+    집으면 죽은 시계열을 집는다. 실측(2026-07-25): JPM은 Revenues로 고르면 분기가
+    2014년에서 멈추고, NVDA도 2020년에서 멈춘다 — 연간은 최신인데 분기만 낡아
+    화면에서 알아채기 어려운 형태로 틀린다.
+
+    한 항목 안에서 태그를 섞지는 않는다. 섞으면 정의가 다른 숫자가 한 줄에 들어간다.
+    """
+    allf = (facts or {}).get("facts") or {}
+    gaap = allf.get("us-gaap") or {}
+    # us-gaap이 없으면 IFRS로 넘어간다(외국 사기업). 둘을 섞지는 않는다 — 한 회사의
+    # 재무제표는 한 회계기준으로 작성된 것이고, 반씩 가져오면 합이 맞지 않는다.
+    tagset = TAGS
+    if not gaap and allf.get("ifrs-full"):
+        gaap, tagset = allf["ifrs-full"], TAGS_IFRS
     out = {}
-    for key, cands, unit, scale in TAGS:
+    for key, cands, unit, scale in tagset:
+        best = None
         for tag in cands:
             node = gaap.get(tag)
             if not node:
                 continue
-            vals = (node.get("units") or {}).get(unit)
+            unit, vals = resolve_unit(node.get("units") or {}, unit)
             if not vals:
                 continue
             q, a, i = pick(vals, scale)
             if not (q or a or i):
                 continue
-            rec = {"src": tag, "u": unit, "s": scale}
-            if q:
-                rec["q"] = q
-            if a:
-                rec["a"] = a
-            if i:
-                rec["i"] = i
-            out[key] = rec
-            break      # 첫 성공 태그만 쓴다 — 섞으면 정의가 다른 숫자가 한 줄에 들어간다
+            # 최신 관측일이 늦은 태그가 이긴다. 같으면 관측이 많은 쪽(시계열이 긴 쪽).
+            latest = max(s[0][0] for s in (q, a, i) if s)
+            score = (latest, len(q) + len(a) + len(i))
+            if best is None or score > best[0]:
+                best = (score, tag, q, a, i)
+        if not best:
+            continue
+        _s, tag, q, a, i = best
+        # 고른 태그 안에서도 한쪽 구간만 옛날에 멈춰 있을 수 있다(회사가 그 단위 보고를
+        # 그만둔 경우). 최신 구간보다 450일 넘게 뒤처진 구간은 버린다 — 없는 것보다
+        # 12년 전 숫자를 최신인 양 늘어놓는 쪽이 나쁘다. 450일이면 연간 보고 시차는 넉넉히 통과한다.
+        newest = max(s[0][0] for s in (q, a, i) if s)
+        rec = {"src": tag, "u": unit, "s": scale}
+        dropped = []
+        for name, ser in (("q", q), ("a", a), ("i", i)):
+            if not ser:
+                continue
+            if _days(ser[0][0], newest) > 450:
+                dropped.append(name)
+                continue
+            rec[name] = ser
+        if dropped:
+            rec["stale"] = dropped     # 화면이 '이 구간은 회사가 더 이상 보고하지 않는다'를 적을 수 있게
+        if not any(k in rec for k in ("q", "a", "i")):
+            continue
+        out[key] = rec
     return out
 
 
@@ -190,7 +274,7 @@ def main() -> int:
     print("티커→CIK 출처: %s (%d개)" % (src, len(cmap)))
 
     os.makedirs(DIR_FX, exist_ok=True)
-    n_new = n_upd = n_same = 0
+    n_new = n_upd = n_same = n_pred = n_ifrs = 0
     cov = {k: 0 for k, _c, _u, _s in TAGS}
     got, miss, empty = [], [], []
 
@@ -200,22 +284,42 @@ def main() -> int:
             miss.append(t)
             continue
         j = edgar.get_json(FACTS_URL % int(cik))
+        tags = extract(j) if j else {}
+        # 지주회사 전환 직후의 새 법인은 us-gaap 사실이 0개다(XOM 실측). 재무는 전신 법인
+        # 아래에 그대로 있으므로 공시 파이프라인과 같은 표를 보고 그쪽에서 가져온다.
+        used_pred = 0
+        if not tags:
+            for pcik in edgar.PREDECESSOR.get(t.upper(), []):
+                pj = edgar.get_json(FACTS_URL % int(pcik))
+                ptags = extract(pj) if pj else {}
+                if ptags:
+                    j, tags, cik, used_pred = pj, ptags, pcik, 1
+                    n_pred += 1
+                    break
         if not j:
             miss.append(t)
             continue
-        tags = extract(j)
         if not tags:
-            # us-gaap 사실이 아예 없는 회사가 실제로 있다 — 지주회사 전환 직후의 새 법인 등.
+            # 재무 사실이 아예 없는 회사가 실제로 있다. 실측 두 유형(2026-07-25):
+            #   (1) 아직 재무를 낸 적 없는 신규 등록 법인 — FDXF·HONA(분사)·SPCX. ffd(수수료)만 있다.
+            #   (2) 지주회사 전환 직후의 새 법인 — 전신 CIK에서 가져오므로 위에서 이미 처리된다.
             # 빈 파일을 만들지 않고 목록에만 남긴다(화면은 '없음'을 사유와 함께 적는다).
             empty.append((t, j.get("entityName") or name))
             continue
         for k in tags:
             cov[k] += 1
+        std = "IFRS" if not (((j.get("facts") or {}).get("us-gaap"))) else "us-gaap"
+        if std == "IFRS":
+            n_ifrs += 1
         doc = {
             "t": t, "cik": int(cik), "nm": j.get("entityName") or name,
             "labels": {k: LABEL[k] for k in tags if k in LABEL},
+            "std": std,          # 화면이 '이 표는 IFRS 기준'을 적을 수 있게
             "tags": tags,
         }
+        if used_pred:
+            # 현행 법인이 아니라 전신 법인의 재무다 — 화면이 그 사실을 적을 수 있게 남긴다
+            doc["pred"] = 1
         body = json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n"
         fn = os.path.join(DIR_FX, "%s.json" % t.replace("/", "_"))
         old = None
@@ -276,7 +380,8 @@ def main() -> int:
             "숫자는 회사가 XBRL로 태깅해 제출한 값 그대로다 — 랩이 조정하거나 재분류하지 않는다.",
             "회사마다 쓰는 태그가 달라 같은 줄이라도 출처 태그가 다를 수 있다(각 항목에 태그명을 표기한다).",
             "6·9개월 누적 구간은 분기에서 제외한다. 그래서 분기 항목이 비는 회사가 있다.",
-            "us-gaap 사실이 없는 회사가 있다(지주회사 전환 직후의 새 등록 법인 등) — 그 종목은 빈 채로 둔다.",
+            "외국 사기업은 IFRS(ifrs-full)로 보고한다 — 같은 항목 키에 담되 출처 태그를 표기해 섞였다는 사실을 드러낸다.",
+            "재무를 아직 낸 적 없는 신규 등록 법인(분사 직후 등)은 빈 채로 둔다 — 추정치로 채우지 않는다.",
         ],
     }
     io.open(OUT_SUM, "w", encoding="utf-8").write(
@@ -286,7 +391,10 @@ def main() -> int:
     print("재무 시계열: %d/%d사 · %.1fMB (평균 %.1fKB) — 신규 %d · 변경 %d · 동일 %d · 삭제 %d"
           % (len(got), len(uni), sz / 1024, sz / max(1, len(got)), n_new, n_upd, n_same, n_del))
     print("기준일(최근 관측 기간말): %s" % (last or "—"))
+    print("택소노미: us-gaap %d사 · IFRS %d사" % (len(got) - n_ifrs, n_ifrs))
     print("항목 커버: " + " ".join("%s%.0f" % (k, summary["cov"][k]) for k in summary["cov"]))
+    if n_pred:
+        print("전신 법인에서 재무를 가져온 종목: %d개" % n_pred)
     if empty:
         print("⚠ us-gaap 사실 없음 %d사: %s" % (len(empty), ", ".join(t for t, _ in empty[:10])))
     if miss:

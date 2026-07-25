@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "bb0eee7f07ed93b2",
+ "generated_from": "02174cff71566d19",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -249,15 +249,12 @@
     {
      "name": "재무제표",
      "file": "co.html#fs",
-     "status": "needs-source",
-     "desc": "SEC 원문 — 숫자마다 기간말·제출일 병기",
+     "status": "existing",
+     "desc": "SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로",
      "verdict": "na",
      "src": "raw",
      "effort": "L",
-     "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "20태그·실측 16.5KB/사 × 518 = 8.6MB. 주 1회면 충분(실적발표 때만 바뀐다).",
-     "pipeline": 3,
-     "live": false
+     "live": true
     },
     {
      "name": "IR자료실",

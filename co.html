@@ -187,6 +187,25 @@
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
   .empty{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:26px 0;text-align:center}
 
+  /* 재무제표 — XBRL 시계열 */
+  .fsctl{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+  .fstab{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-2);cursor:pointer}
+  .fstab:hover{border-color:var(--accent);color:var(--ink)}
+  .fstab[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
+  @media (prefers-color-scheme:dark){.fstab[aria-pressed=true]{color:#131820}}
+  :root[data-theme="light"] .fstab[aria-pressed=true]{color:#FFFFFF}
+  :root[data-theme="dark"] .fstab[aria-pressed=true]{color:#131820}
+  .fsnote{font-size:11.5px;color:var(--muted)}
+  .fsn{margin:0 0 9px;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .fswrap{overflow-x:auto}
+  .fstbl{border-collapse:collapse;width:100%;font-size:12px}
+  .fstbl th,.fstbl td{padding:6px 9px;border-top:1px solid var(--line-soft);text-align:right;white-space:nowrap}
+  .fstbl thead th{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:700;border-top:0}
+  .fstbl tbody th{text-align:left;font-weight:700;font-size:12px;position:sticky;left:0;background:var(--panel)}
+  .fstbl .fsu{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:500;margin-left:6px}
+  .fstbl .fstag{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
+  .fstbl .na{color:var(--muted)}
+
   /* IR자료실 — 제출 원문 목록 */
   .irlist{display:flex;flex-direction:column;gap:1px;margin-top:8px}
   .irrow{display:grid;grid-template-columns:190px 96px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
@@ -369,7 +388,7 @@
         <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
-          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
@@ -521,7 +540,7 @@
 
   <nav class="tabs" id="tabs" aria-label="종목 정보 탭">
     <a class="tab" href="#est" data-tab="est">실적 및 전망</a>
-    <a class="tab" href="#fs"  data-tab="fs">재무제표 <span class="tg">빈 탭</span></a>
+    <a class="tab" href="#fs"  data-tab="fs">재무제표</a>
     <a class="tab" href="#ir"  data-tab="ir">IR자료실</a>
     <a class="tab" href="#ins" data-tab="ins">내부자 거래 <span class="tg">빈 탭</span></a>
   </nav>
@@ -553,20 +572,17 @@
   <!-- hidden을 마크업에 두지 않는다: JS가 안 돌면 결핍 사유가 통째로 사라져 '감추지 않고 사유를 적습니다'와
        정반대가 된다. 탭 전환은 body 끝 스크립트의 showTab()이 동기로 잡는다(hidden은 런타임에만 건다). -->
   <section id="fs" class="panel" aria-labelledby="fs-h">
-    <p class="lbl" id="fs-h">재무제표 <span class="sub">비어 있음 — 감추지 않고 사유를 적습니다</span></p>
-    <p class="lblnote">이 탭에는 아직 아무 데이터도 없습니다. "준비중"이라고만 적고 넘어가면 무엇이 없어서 못 만들었는지 알 수 없으므로, 막힌 지점을 그대로 적습니다.</p>
-    <div class="gap" id="gap-fs">
-      <h3>손익계산서·재무상태표·현금흐름표 — 없음</h3>
-      <p class="why">이 사이트가 지금 들고 있는 재무 수치는 전부 yfinance <code style="font-family:var(--mono)">.info</code>의 <b>단면 스냅샷</b>입니다.
-        분기별 시계열도, 기간말·제출일 표기도 없습니다. 재무제표는 숫자마다 <b>어느 기간의 것이고 언제 제출됐는지</b>가 붙어야
-        의미가 있는데, 그 정보를 주는 소스를 아직 붙이지 않았습니다.</p>
-      <dl>
-        <dt>필요한 소스</dt><dd>SEC EDGAR companyfacts XBRL</dd>
-        <dt>규모 실측</dt><dd>20태그 기준 회사당 약 16.5KB → 커버 전 종목이면 약 8.6MB. 갱신은 주 1회로 충분합니다(실적 발표 때만 바뀝니다).</dd>
-        <dt>지금 상태</dt><dd>수집 파이프라인 미구현. 데이터가 없으므로 <b>추정치로 채우지 않습니다</b>.</dd>
-      </dl>
-      <p class="go">→ <a href="roadmap.html#pipe-h">미구현 로드맵에서 이 칸이 몇 순위인지 보기</a></p>
+    <p class="lbl" id="fs-h">재무제표 <span class="sub">출처 SEC EDGAR companyfacts (XBRL) · 회사가 태깅한 값 그대로</span></p>
+    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/fx/&lt;티커&gt;.json</code>에서 읽습니다.
+      랩이 조정·재분류하지 않습니다. 항목마다 <b>어느 XBRL 태그에서 왔는지</b>를 함께 적는 이유는,
+      회사마다 쓰는 태그가 달라 같은 줄이라도 정의가 다를 수 있기 때문입니다.
+      단위는 백만 달러(주당 금액·주식수 제외)입니다.</p>
+    <div class="fsctl" id="fsctl" hidden>
+      <button class="fstab" type="button" data-p="q" aria-pressed="true">분기</button>
+      <button class="fstab" type="button" data-p="a" aria-pressed="false">연간</button>
+      <span class="fsnote">기간 항목만 전환됩니다 — 재무상태표는 시점 값이라 따로 표시합니다.</span>
     </div>
+    <div id="fsbox"><div class="empty">위에서 종목을 고르면 분기·연간 재무 시계열이 여기에 표시됩니다.</div></div>
   </section>
 
   <!-- ══ #ir — SEC EDGAR submissions 수집분 ═══════════════════════════════ -->
@@ -660,6 +676,7 @@
     // #ir로 들어올 때 이미 고른 종목이 있으면 그 자리에서 채운다. 안 하면 종목을 먼저
     // 고르고 탭을 옮긴 사용자에게 빈 안내문이 남는다(선택 시점엔 #ir이 숨어 있었으므로).
     if(state.tab==='ir'&&state.sel){ensureFilings(state.sel);renderIR(state.sel);}
+    if(state.tab==='fs'&&state.sel){ensureFacts(state.sel);renderFS(state.sel);}
   }
   function onHash(){
     var p=parseHash();
@@ -798,6 +815,127 @@
     renderDetail(s);
     ensureFilings(s);
     renderIR(s);
+    ensureFacts(s);
+    renderFS(s);
+  }
+
+  // ── 재무제표: 회사별 XBRL 시계열(SEC EDGAR companyfacts 수집분) ─────────
+  var FS_FLOW=['rev','cogs','gp','opinc','ni','eps','dps','cfo','capex','sh'];  // 기간 항목
+  var FS_INST=['asset','liab','eq','cash'];                                      // 시점 항목
+  var fsPeriod='q';
+
+  function ensureFacts(s){
+    if(s._fx||s._fxFail||s._fxLoading)return;
+    s._fxLoading=1;
+    getj('data/fx/'+encodeURIComponent(s.t)+'.json').then(function(x){
+      s._fxLoading=0;
+      if(x&&x.tags)s._fx=x; else s._fxFail=1;
+      if(state.sel===s)renderFS(s);
+    });
+  }
+
+  // 보고 통화가 달러가 아닌 회사가 있다(CCEP·FER은 EUR). 수집기가 실제 단위를 그대로
+  // 들고 오므로 여기서도 그대로 표기한다 — 환산하지 않는다. 어느 시점 환율로 바꿨는지
+  // 밝히지 못하는 환산은 정확도를 가장한 왜곡이다.
+  var CURSYM={USD:'$',EUR:'€',GBP:'£',JPY:'¥',CAD:'C$',CHF:'CHF',AUD:'A$'};
+  function fsUnit(r){
+    var u=String(r.u||'');
+    if(u==='shares')return '백만주';
+    if(u.indexOf('/shares')>0){
+      var c=u.split('/')[0];
+      return (CURSYM[c]||c)+'/주';
+    }
+    return '백만'+(CURSYM[u]||u);
+  }
+
+  function fsNum(v,scale){
+    if(v==null)return '—';
+    if(scale==='r')return (Math.abs(v)<10?v.toFixed(2):v.toFixed(1));
+    var a=Math.abs(v);
+    return v.toLocaleString('en-US',{maximumFractionDigits:a>=100?0:1});
+  }
+
+  // 한 표에 들어갈 열(기간)을 정한다. 행마다 보고 기간이 조금씩 달라, 등장한 날짜의
+  // 합집합에서 최신 N개를 쓰고 없는 칸은 '—'로 둔다. 없는 값을 옆칸에서 끌어오지 않는다.
+  function fsCols(tags,keys,band,n){
+    var set={};
+    keys.forEach(function(k){
+      var r=tags[k]; if(!r||!r[band])return;
+      r[band].forEach(function(p){set[p[0]]=1;});
+    });
+    return Object.keys(set).sort().reverse().slice(0,n);
+  }
+
+  function fsTable(d,keys,band,cols,title,note){
+    var tags=d.tags, rows='';
+    for(var i=0;i<keys.length;i++){
+      var k=keys[i], r=tags[k]; if(!r||!r[band])continue;
+      var map={}; r[band].forEach(function(p){map[p[0]]=p[1];});
+      var tds='';
+      for(var c=0;c<cols.length;c++){
+        var v=map[cols[c]];
+        tds+='<td class="tnum">'+(v==null?'<span class="na">—</span>':esc(fsNum(v,r.s)))+'</td>';
+      }
+      var unit=fsUnit(r);
+      rows+='<tr><th scope="row">'+esc((d.labels||{})[k]||k)+
+            '<span class="fsu">'+esc(unit)+'</span>'+
+            '<span class="fstag" title="이 줄의 출처 XBRL 태그">'+esc(r.src)+'</span></th>'+tds+'</tr>';
+    }
+    if(!rows)return '';
+    var ths='';
+    for(var j=0;j<cols.length;j++)ths+='<th scope="col" class="tnum">'+esc(cols[j])+'</th>';
+    return '<div class="card"><h3>'+esc(title)+'<span class="hn">'+cols.length+'개 기간</span></h3>'+
+           (note?'<p class="fsn">'+note+'</p>':'')+
+           '<div class="fswrap"><table class="fstbl"><thead><tr><th scope="col">항목</th>'+ths+'</tr></thead>'+
+           '<tbody>'+rows+'</tbody></table></div></div>';
+  }
+
+  function renderFS(s){
+    var box=el('fsbox'), ctl=el('fsctl'); if(!box)return;
+    if(ctl)ctl.hidden=true;
+    if(!s){box.innerHTML='<div class="empty">위에서 종목을 고르면 분기·연간 재무 시계열이 여기에 표시됩니다.</div>';return;}
+    if(s._fxLoading){box.innerHTML='<div class="skel">재무 시계열(data/fx/'+esc(s.t)+'.json)을 불러오는 중…</div>';return;}
+    if(s._fxFail||!s._fx){
+      // 파일이 없는 경우가 정상적으로 존재한다 — 지주회사 전환 직후의 새 등록 법인 등.
+      box.innerHTML='<div class="note"><b>이 종목의 XBRL 재무가 없습니다.</b> '+
+        '<code>data/fx/'+esc(s.t)+'.json</code>을 불러오지 못했습니다. SEC에 us-gaap 사실이 없는 회사이거나'+
+        '(지주회사 전환 직후의 새 등록 법인 등) 아직 수집되지 않은 종목입니다. <b>추정치로 채우지 않습니다.</b></div>';
+      return;
+    }
+    var d=s._fx;
+    if(ctl)ctl.hidden=false;
+    var h='';
+    if(d.pred)h+='<div class="note">이 재무는 <b>전신 등록 법인</b>(CIK '+esc(String(d.cik))+
+      ')이 제출한 것입니다 — 현재 티커의 등록 법인은 최근에 만들어져 아직 XBRL 재무가 없습니다.</div>';
+    if(d.std==='IFRS')h+='<div class="note">이 회사는 외국 사기업이라 <b>IFRS</b>로 보고합니다(us-gaap 아님). '+
+      '항목 이름은 같아도 <b>정의가 미국 기준과 다를 수 있어</b>, 다른 종목과 한 줄씩 맞대어 비교하지 마세요. '+
+      '보고 통화가 달러가 아니면 그 통화 그대로 표시합니다 — 랩이 환산하지 않습니다.</div>';
+
+    var fcols=fsCols(d.tags,FS_FLOW,fsPeriod,8);
+    if(fcols.length){
+      h+=fsTable(d,FS_FLOW,fsPeriod,fcols,
+        fsPeriod==='q'?'손익·현금흐름 (분기)':'손익·현금흐름 (연간)',
+        fsPeriod==='q'
+          ? '3개월 구간만 담습니다. 10-Q에는 6·9개월 <b>누적</b> 구간이 섞여 오는데, 그걸 분기로 세면 매출이 갑자기 몇 배로 뛴 것처럼 보입니다.'
+          : '12개월 구간만 담습니다. 회계연도 기준이라 12월 결산이 아닌 회사는 기간말이 12-31이 아닙니다.');
+    }else{
+      h+='<div class="note">이 회사는 '+(fsPeriod==='q'?'<b>분기</b>':'<b>연간</b>')+
+         ' 구간으로 보고한 손익 항목이 없습니다. 위 전환 버튼으로 다른 구간을 보세요.</div>';
+    }
+    var icols=fsCols(d.tags,FS_INST,'i',8);
+    if(icols.length){
+      h+=fsTable(d,FS_INST,'i',icols,'재무상태 (시점)',
+        '기간이 아니라 <b>그 날짜 현재</b>의 잔액입니다. 그래서 분기/연간 전환의 영향을 받지 않습니다.<br>'+
+        '자기자본은 <b>지배주주지분</b>입니다 — 비지배지분(소수주주)이 큰 회사는 '+
+        '<b>자산 ≠ 부채 + 자기자본</b>이 되고, 그 차이가 곧 비지배지분입니다. '+
+        '실측: 검사 가능한 375사 중 298사가 오차 1% 이내(중앙값 0.000%)이고, 25사가 5%를 넘습니다.');
+    }
+    h+='<div class="note"><b>이 표를 읽을 때</b><br>'+
+       '· 숫자는 회사가 XBRL로 태깅해 제출한 값 그대로입니다 — 랩이 조정하거나 재분류하지 않습니다.<br>'+
+       '· 같은 기간이 여러 번 보고되면(재작성·정정) <b>제출일이 가장 늦은 값</b>을 씁니다.<br>'+
+       '· 빈 칸은 그 기간에 그 항목을 보고하지 않았다는 뜻입니다 — 옆 기간 값으로 메우지 않습니다.<br>'+
+       '· 항목 옆 회색 글씨가 출처 태그입니다. 회사마다 달라서, 다른 회사와 같은 줄이라도 정의가 다를 수 있습니다.</div>';
+    box.innerHTML=h;
   }
 
   // ── IR자료실: 회사별 제출 이력(SEC EDGAR submissions 수집분) ─────────────
@@ -1165,7 +1303,7 @@
         if(f.indexOf('co.html#')===0)map[f.split('#')[1]]=tools[j];
       }
     }
-    var keys=['fs','ins'];   // ir은 SEC submissions 수집분이 붙어 더 이상 빈 탭이 아니다
+    var keys=['ins'];   // fs·ir은 SEC 수집분이 붙어 더 이상 빈 탭이 아니다
     for(i=0;i<keys.length;i++){
       var t=map[keys[i]],box=el('gap-'+keys[i]);
       if(!t||!box)continue;
@@ -1178,6 +1316,18 @@
       box.appendChild(p);
     }
   }
+
+  // 분기/연간 전환 — 표만 다시 그린다(데이터는 이미 받아 뒀다)
+  (function(){
+    var c=el('fsctl'); if(!c)return;
+    c.addEventListener('click',function(e){
+      var b=e.target.closest('.fstab'); if(!b)return;
+      fsPeriod=b.getAttribute('data-p');
+      Array.prototype.forEach.call(c.querySelectorAll('.fstab'),function(x){
+        x.setAttribute('aria-pressed', x===b?'true':'false');});
+      if(state.sel)renderFS(state.sel);
+    });
+  })();
 
   onHash();
   // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다

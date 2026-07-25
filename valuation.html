@@ -374,7 +374,7 @@
         <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
-          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
@@ -649,18 +649,21 @@
     <p class="lbl" id="ddm-h">03 · DDM (배당할인모형) <span class="sub">· 비어 있음</span></p>
     <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
     <div class="empty">
-      <h3>DDM <span class="st">데이터 없음</span></h3>
-      <p>DDM은 미래 배당의 현재가치로 주식 값을 냅니다. 배당 성장률을 추정하려면
-        <b>최소 몇 년치 주당배당금(DPS) 시계열</b>이 필요한데, 지금 이 사이트가 가진 배당 데이터는
-        <b>오늘 한 점짜리 단면</b>뿐입니다. 한 점으로는 성장률이 정의되지 않습니다 —
-        기울기를 재려면 점이 최소 둘은 있어야 합니다.</p>
+      <h3>DDM <span class="st">데이터는 붙었음 · 모형 미구현</span></h3>
+      <p><b>막고 있던 데이터는 2026-07-25에 들어왔습니다.</b> SEC XBRL 수집분(<code>data/fx/&lt;티커&gt;.json</code>)에
+        분기별 주당배당금(DPS) 시계열이 담겨 있고, 유니버스 <b>518종목 중 80%</b>에 값이 있습니다.
+        이제 "한 점뿐이라 기울기를 못 잰다"는 말은 사실이 아닙니다 — 그래서 이 문단을 고쳐 적습니다.</p>
       <div class="egrid" id="ddmnums"></div>
-      <p>또 하나: <b>무배당 종목에는 모형이 성립하지 않습니다.</b> 오늘 배당수익률이 아예 잡히지 않는 종목이
-        <b id="ddmnodiv">—</b>개(대부분 무배당)이므로,
-        DDM은 유니버스 전체에 적용할 수 있는 도구가 아니라, 배당을 오래 지급해 온 일부 종목에만 쓸 수 있는 도구입니다.
-        그 사실 자체를 화면에 적을 수 있게 되기 전에는 켜지 않습니다.</p>
-      <p class="muted">필요한 소스: 분기별 DPS 이력(현금배당 지급일·주당금액). 진행 상황은
-        <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
+      <p>남은 것은 데이터가 아니라 <b>가정</b>입니다. DDM의 값은 할인율(자기자본비용)에 가장 크게 좌우되는데,
+        그 숫자는 관측되는 값이 아니라 <b>고르는 값</b>입니다. 이 랩은 시장위험프리미엄 같은 가정을
+        슬쩍 박아 넣고 결과만 "적정주가"라고 내놓지 않습니다 —
+        <a href="#reverse" style="color:var(--accent)">Reverse DCF</a>·<a href="#simple" style="color:var(--accent)">민감도 격자</a>가
+        한 숫자를 주지 않는 것과 같은 이유입니다. 가정을 화면에서 직접 움직이게 만들고,
+        그 가정에 따라 값이 얼마나 흔들리는지를 함께 보여줄 수 있을 때 켭니다.</p>
+      <p>또 하나 그대로인 한계: <b>무배당 종목에는 모형이 성립하지 않습니다.</b> 오늘 배당수익률이 아예 잡히지 않는 종목이
+        <b id="ddmnodiv">—</b>개이므로, DDM은 유니버스 전체에 쓰는 도구가 아니라 배당을 오래 지급해 온 일부 종목에만 쓰는 도구입니다.</p>
+      <p class="muted">데이터: SEC EDGAR companyfacts(XBRL) — <a href="co.html#fs" style="color:var(--accent)">종목 재무 탭</a>에서 원본 시계열을 볼 수 있습니다.
+        진행 상황은 <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
     </div>
   </section>
 
@@ -668,14 +671,20 @@
     <p class="lbl" id="rim-h">04 · RIM (잔여이익모형) <span class="sub">· 비어 있음</span></p>
     <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
     <div class="empty">
-      <h3>RIM <span class="st">데이터 없음</span></h3>
+      <h3>RIM <span class="st">데이터는 붙었음 · 모형 미구현</span></h3>
       <p>RIM은 <b>자기자본 장부가 + 앞으로 벌어들일 초과이익(잔여이익)의 현재가치</b>로 값을 냅니다.
         구조상 <b>기초 자기자본(BVPS) 시계열</b>과 <b>EPS 시계열</b>이 있어야 하고, 그 둘이
-        클린 서플러스(장부가 증분 = 이익 − 배당)로 맞물려야 합니다. 지금 파일에는
-        PBR·ROE의 <b>오늘 단면</b>만 있고 장부가의 시계열이 없습니다. 단면 ROE 하나를 영구히 연장하면
-        그건 RIM이 아니라 ROE를 상수로 놓은 다른 모형이며, 그렇게 만든 값을 RIM이라고 부르는 것은 거짓말입니다.</p>
+        클린 서플러스(장부가 증분 = 이익 − 배당)로 맞물려야 합니다.</p>
+      <p><b>그 세 시계열이 2026-07-25에 들어왔습니다.</b> SEC XBRL 수집분에 자기자본 <b>100%</b>·
+        순이익 <b>100%</b>·주당순이익 <b>99%</b>·주당배당금 <b>80%</b> 커버로 담겨 있습니다
+        (<code>data/fx/&lt;티커&gt;.json</code>). "장부가의 시계열이 없다"는 더 이상 사실이 아니라서 고쳐 적습니다.</p>
       <div class="egrid" id="rimnums"></div>
-      <p class="muted">필요한 소스: 분기별 자기자본·순이익·배당 시계열(SEC XBRL companyfacts 수준).
+      <p>남은 것은 두 가지입니다. 하나는 DDM과 같은 <b>할인율 가정</b> 문제이고, 다른 하나는
+        <b>클린 서플러스가 실제로 성립하는지 종목별로 확인</b>하는 일입니다 — 미국 회계에서는
+        기타포괄손익(OCI)이 이익을 거치지 않고 장부가를 바꾸기 때문에 등식이 정확히는 안 맞습니다.
+        얼마나 안 맞는지를 재서 화면에 적을 수 있게 되기 전에는 켜지 않습니다.
+        단면 ROE 하나를 영구히 연장해 놓고 RIM이라고 부르는 것은 여전히 거짓말입니다.</p>
+      <p class="muted">데이터: SEC EDGAR companyfacts(XBRL) — <a href="co.html#fs" style="color:var(--accent)">종목 재무 탭</a>에서 원본 시계열을 볼 수 있습니다.
         진행 상황은 <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
     </div>
   </section>
