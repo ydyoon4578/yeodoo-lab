@@ -113,6 +113,10 @@ def main() -> int:
         # 우리가 매일 돌아도 축은 안 움직인다 — 그 사실을 감추지 않으려고 접수일을 쓴다.
         {"key": "filings", "label": "SEC 공시(8-K)", "as_of": (load("filings.json") or {}).get("as_of"),
          "cadence": "주 1회 수집", "note": "제출 접수일 기준 — 회사가 안 내면 이 날짜는 안 움직인다"},
+        # 재무는 '분기 결산 기간말'이라 분기에 한 번 움직인다. 가격과 나란히 놓고 '뒤처졌다'고
+        # 읽으면 안 되는 축이라, cadence에 그 성격을 적는다.
+        {"key": "facts", "label": "SEC 재무(XBRL)", "as_of": (load("facts.json") or {}).get("as_of"),
+         "cadence": "분기(실적 발표 시)", "note": "회사의 최근 보고 기간말 — 구조적으로 분기마다 한 번 움직인다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
     for a in axes:

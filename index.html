@@ -367,7 +367,7 @@
         <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
-          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
@@ -541,7 +541,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>40</b></span><span>동작 <b>27</b></span><span>구현 대기 <b>1</b></span><span>소스 대기 <b>9</b></span><span>만들지 않기로 한 것 <b>3</b></span><span>파일 <b>21</b>장</span></p>
+    <p class="ltn"><span>화면 <b>40</b></span><span>동작 <b>28</b></span><span>구현 대기 <b>1</b></span><span>소스 대기 <b>8</b></span><span>만들지 않기로 한 것 <b>3</b></span><span>파일 <b>21</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -594,11 +594,11 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--deploy)">
-      <h3>종목 재무분석<span class="dc">구현 3 · 대기 3</span></h3>
-      <div class="dbar" role="img" aria-label="종목 재무분석 판정 분포"><i class="vunv" style="--w:40.0000%" title="미검증 2"></i><i class="soon" style="--w:60.0000%" title="준비중 3"></i></div>
+      <h3>종목 재무분석<span class="dc">구현 4 · 대기 2</span></h3>
+      <div class="dbar" role="img" aria-label="종목 재무분석 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 2"></i><i class="soon" style="--w:50.0000%" title="준비중 2"></i></div>
       <div class="dtools">
         <a href="stocks.html">종목 개요·내러티브<b class="vunv">미검증</b></a>
-        <span>재무제표<b class="soon">준비중</b></span>
+        <a href="co.html#fs">재무제표</a>
         <a href="co.html#ir">IR자료실</a>
         <a href="co.html#est">실적 및 전망<b class="vunv">미검증</b></a>
         <span>내부자 거래<b class="soon">준비중</b></span>
@@ -649,7 +649,7 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 1 · 소스 대기 9 · 만들지 않기로 한 것 3</span></p>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 1 · 소스 대기 8 · 만들지 않기로 한 것 3</span></p>
   <div class="gapbox implbox">
     <p class="gaph">구현 대기 — 데이터는 있다. 아직 화면을 안 만들었을 뿐이다</p>
     <p class="chips"><span>관전 포인트</span></p>
@@ -658,7 +658,6 @@
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
     <div class="gaprow"><span class="gn">DDM</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
     <div class="gaprow"><span class="gn">RIM</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
-    <div class="gaprow"><span class="gn">재무제표</span><span class="gw">SEC EDGAR companyfacts XBRL</span></div>
     <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">yfinance earnings_dates</span></div>
     <div class="gaprow"><span class="gn">Index DCF</span><span class="gw">SEC EDGAR frames API</span></div>
     <div class="gaprow"><span class="gn">거장 포트폴리오·매매</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
