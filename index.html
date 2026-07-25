@@ -383,7 +383,7 @@
         <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
           <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
-          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="ledger">
@@ -528,7 +528,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>38</b></span><span>동작 <b>30</b></span><span>구현 대기 <b>1</b></span><span>소스 대기 <b>7</b></span><span>메뉴에서 뺌 <b>3</b></span><span>파일 <b>22</b>장</span></p>
+    <p class="ltn"><span>화면 <b>38</b></span><span>동작 <b>31</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>7</b></span><span>메뉴에서 뺌 <b>3</b></span><span>파일 <b>22</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -611,11 +611,11 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--champ)">
-      <h3>산업 분석<span class="dc">구현 1 · 대기 1</span></h3>
-      <div class="dbar" role="img" aria-label="산업 분석 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 1"></i><i class="soon" style="--w:50.0000%" title="준비중 1"></i></div>
+      <h3>산업 분석<span class="dc">구현 2</span></h3>
+      <div class="dbar" role="img" aria-label="산업 분석 판정 분포"><i class="vunv" style="--w:100.0000%" title="미검증 2"></i></div>
       <div class="dtools">
         <a href="industry.html">산업 탐색<b class="vunv">미검증</b></a>
-        <span>관전 포인트<b class="soon">준비중</b></span>
+        <a href="industry.html#watch">관전 포인트<b class="vunv">미검증</b></a>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--hot)">
@@ -634,11 +634,7 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 1 · 소스 대기 7 · 메뉴에서 뺌 3</span></p>
-  <div class="gapbox implbox">
-    <p class="gaph">구현 대기 — 데이터는 있다. 아직 화면을 안 만들었을 뿐이다</p>
-    <p class="chips"><span>관전 포인트</span></p>
-  </div>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 7 · 메뉴에서 뺌 3</span></p>
   <div class="gapbox soonbox">
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
     <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">yfinance earnings_dates</span></div>

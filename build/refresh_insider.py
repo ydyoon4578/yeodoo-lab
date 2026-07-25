@@ -233,6 +233,19 @@ def main() -> int:
             os.remove(os.path.join(DIR_INS, fn))
             n_del += 1
 
+    # 티커별 재량 거래 집계 — 산업 단위 관전 포인트가 이걸 읽는다.
+    # 회사별 파일 507개를 화면에서 다 받을 수는 없어, 요약에 압축해 싣는다(≈10KB).
+    by_t = {}
+    for t, rows in by_co.items():
+        nb = ns = 0
+        for r in rows:
+            if r["c"] == "P":
+                nb += 1
+            elif r["c"] == "S":
+                ns += 1
+        if nb or ns:
+            by_t[t] = [nb, ns]
+
     # 지연 실측 — '오늘'과 '가장 최근 거래일'의 거리. 화면에 그대로 적는다.
     lag = (dt.date.today() - dt.date.fromisoformat(latest)).days if latest else None
     summary = {
@@ -247,6 +260,8 @@ def main() -> int:
         "n_disc": disc_tot,
         # 버린 오타 건수를 감추지 않는다 — 0이 아니면 화면이 그 사실을 적는다
         "n_bad_date": len(bad_date),
+        # [장내매수 건수, 장내매도 건수] — 보상·세금 처리는 빼고 본인이 고른 거래만 센다
+        "by_t": by_t,
         "codes": CODE,
         "disc": list(DISCRETIONARY),
         "limits": [
