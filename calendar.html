@@ -414,6 +414,7 @@
       <div class="frow">
         <span class="fl">주기</span>
         <div id="kchips" class="frow" style="gap:6px;flex:1"></div>
+        <button class="chip" id="pastbtn" type="button" aria-pressed="false">지난 발표도 보기</button>
         <span id="hits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
       </div>
     </div>
@@ -451,7 +452,7 @@
 (function(){
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  var D=null, sel={}, TODAY=null;
+  var D=null, sel={}, showPast=false;
 
   var VIEWS=['macro','earnings'];
   function showView(v){
@@ -479,6 +480,8 @@
   var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)'};
 
   function match(r){
+    // 캘린더는 앞을 보는 표다 — 지난 발표는 기본으로 접는다(안 접으면 오늘까지 스크롤해야 한다)
+    if(!showPast&&daysFrom(r.d)<0)return false;
     var ks=Object.keys(sel);
     if(!ks.length)return true;
     var rel=D.releases[String(r.rid)];
@@ -487,7 +490,7 @@
 
   function render(){
     var rows=D.dates.filter(match);
-    el('hits').textContent=rows.length+'건';
+    el('hits').textContent=rows.length+'건'+(showPast?'':' (앞으로)');
     if(!rows.length){el('feed').innerHTML='<div class="skel">조건에 맞는 일정이 없습니다.</div>';return;}
     var h='', cur=null, buf=[];
     function flush(){
@@ -539,6 +542,12 @@
       render();
     });
   }
+
+  el('pastbtn').addEventListener('click',function(){
+    showPast=!showPast; this.setAttribute('aria-pressed',showPast?'true':'false');
+    this.textContent=showPast?'앞으로만 보기':'지난 발표도 보기';
+    render();
+  });
 
   fetch('data/calendar.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     if(!j||!j.dates){
