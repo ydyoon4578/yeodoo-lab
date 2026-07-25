@@ -32,6 +32,17 @@ jobs:
         run: pip install --quiet pandas numpy yfinance
       - name: Fetch asset panel
         run: python build/refresh_assets.py
+      # 13F 이력은 SEC 요청 제한 때문에 오래 걸린다(운용사 18 × 분기 56 × 3요청). 분기에 한 번만
+      # 바뀌는 데이터라 매주 다시 받을 이유가 없다 — 파일이 없거나 분기가 바뀌었을 때만 받는다.
+      - name: Fetch 13F history (quarterly)
+        run: |
+          if [ ! -f data/guru_history.json ] || [ "$(date +%d)" -le 7 ]; then
+            python build/refresh_13f_history.py
+          else
+            echo "13F 이력 재사용(분기 데이터라 매주 받지 않는다)"
+          fi
+      - name: Run ML & clone (pre-registered protocol)
+        run: python build/ml_backtest.py
       - name: Re-run archived strategies
         run: python build/asset_backtest.py
       - name: Rebuild as-of index
@@ -41,6 +52,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 자산 패널·아카이브 재검 자동 갱신" \
-            data/assets.json data/asset_strategies.json data/asof.json
+            data/assets.json data/asset_strategies.json data/ml_strategies.json \
+            data/guru_history.json data/asof.json
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10

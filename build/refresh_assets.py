@@ -56,6 +56,9 @@ TICK = {
 }
 # 시가가 필요한 것만 따로 — 오버나이트 드리프트 계열(종가매수·시가매도)에 쓴다.
 NEED_OPEN = ("SPY", "QQQ", "^GSPC", "^NDX", "IWM")
+# 캐리를 잴 대상 — 분배금이 곧 캐리인 자산들. 금(GLD)은 분배가 없어 캐리 0이 정답이다.
+CARRY_TICK = ("SPY", "EFA", "EEM", "IWM", "TLT", "IEF", "SHY", "LQD", "HYG", "EMB",
+              "TIP", "AGG", "VNQ", "GLD", "DBC", "SLV")
 
 FRED = {
     "DFII10": "10년 실질금리(TIPS)", "T10YIE": "10년 기대인플레",
@@ -137,6 +140,22 @@ def main() -> int:
     except Exception as e:
         print("  ❌ EBP %s" % e)
 
+    # ── 분배금 ── 크로스에셋 캐리의 재료. ETF를 그냥 들고 있을 때 가격 변동과 무관하게
+    # 들어오는 현금이 캐리다. 조정 종가만으로는 이걸 분리할 수 없어 따로 받는다.
+    print("분배금 내려받는 중…")
+    div = {}
+    for t in CARRY_TICK:
+        try:
+            d = yf.Ticker(t).dividends
+        except Exception as e:
+            print("  ❌ %s %s" % (t, e)); continue
+        if d is None or len(d) == 0:
+            div[t] = {}          # 분배 없음(예: GLD) — '못 받았다'와 구분해 빈 dict로 남긴다
+            continue
+        div[t] = {str(k.date()): round(float(v), 6) for k, v in d.items()
+                  if str(k.date()) >= "2005-01-01"}
+    print("  %d종목 (분배 있는 것 %d)" % (len(div), sum(1 for v in div.values() if v)))
+
     print("거시 %d계열 내려받는 중…" % len(FRED))
     mac, mmeta = {}, {}
     for k, (d, label) in EXTRA.items():
@@ -159,7 +178,7 @@ def main() -> int:
         "note": "멀티에셋 패널. 가격은 yfinance(배당·분할 조정 종가), 거시는 FRED 공개 CSV(키 불필요). "
                 "아카이브의 '못 돌린 것'을 실제로 돌려보기 위한 입력이다.",
         "as_of": dates[-1], "start": dates[0], "n_days": len(dates),
-        "dates": dates, "px": px, "open": op, "meta": meta,
+        "dates": dates, "px": px, "open": op, "meta": meta, "div": div,
         "macro": mac, "macro_meta": mmeta,
         "limits": [
             "ICE BofA 신용스프레드(BAMLH0A0HYM2·BAMLC0A0CM)는 공개 CSV가 최근 3년만 준다(라이선스). "
@@ -176,7 +195,7 @@ def main() -> int:
         return json.dumps(o_, ensure_ascii=False, separators=(",", ":"))
     parts = []
     for k, v in doc.items():
-        if k in ("px", "open", "macro"):
+        if k in ("px", "open", "macro", "div"):
             inner = ",\n".join(' %s:%s' % (dump(kk), dump(vv)) for kk, vv in v.items())
             parts.append('%s:{\n%s\n}' % (dump(k), inner))
         else:

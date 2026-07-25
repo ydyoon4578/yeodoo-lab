@@ -468,7 +468,9 @@
       ETF 가격(yfinance)과 거시(FRED 공개 CSV, 키 불필요), 연준 EBP까지 전부 무료·무인증으로 열립니다.
       자산 패널을 만들어 <b>돌릴 수 있는 것은 실제로 돌렸습니다</b>. 아직 못 도는 것은
       <b>가능하나 아직 안 만든 것</b>과 <b>유료 데이터라 불가한 것</b>을 구분해 적습니다 —
-      섞어두면 영원히 안 하게 되기 때문입니다.</p>
+      섞어두면 영원히 안 하게 되기 때문입니다. 미실행으로 남겨뒀던 4건(크로스에셋 캐리·머신러닝 2종·13F 복제)도
+      전부 돌렸습니다. 머신러닝은 <b>규약을 코드에 먼저 박고 한 번만</b> 돌렸고, 검정 구간이 2년에 못 미치는 건은
+      숫자를 싣되 <b>판정하지 않습니다</b>.</p>
     <div class="statline" id="auditstat"></div>
     <div class="frow" id="achips"></div>
     <div id="noruns"><div class="skel">불러오는 중…</div></div>
@@ -683,6 +685,8 @@
     paintAudit(au,byres);
   }
   var SC={'돌림':'ok','가능 · 미구현':'soon','가능 · 무거움':'soon','불가 · 유료 데이터':'no'};
+  // 검정 구간이 짧아 판정을 막은 건은 '돌렸다'와 '못 돌린다' 어느 쪽도 아니다 — 눈에 띄게 둔다.
+  var VW={'표본 부족 · 판정 불가':'soon'};
   function paintAudit(au,byres){
     var ks=Object.keys(ASEL);
     var items=au.items.filter(function(a){return !ks.length||ASEL[a.status];});
@@ -704,7 +708,8 @@
         spark(r.nav,r.bnav,320,40)+
         '<p class="abench">대조군 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%'+
         (r.bench_unstable?' <b>· 대조군이 현금성이라 Δ샤프는 허수 — t만 볼 것</b>':'')+
-        ' · 판정 <b>'+esc(r.verdict)+'</b></p>'+
+        ' · 판정 <b class="ab '+(VW[r.verdict]||'')+'">'+esc(r.verdict)+'</b></p>'+
+        (r.beta?'<p class="abench">실측 베타 '+nf(r.beta,2)+'</p>':'')+
         '</div>';
     }).join('');
   }
