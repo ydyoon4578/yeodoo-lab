@@ -247,6 +247,65 @@ def build_strats():
            "최근 20일 실현변동성이 과거 1년 중앙값보다 낮으면 편입, 높으면 현금.",
            None, "변동성 자체를 국면 신호로 쓴다. 변동성 군집이 실제로 수익과 이어지는지 본다.")
 
+    # ── 타이밍 2차 묶음 ────────────────────────────────────────────────
+    # 앞의 8개는 전부 '지수 가격 하나'를 본다. 그래서 서로 비슷하게 움직이고,
+    # 하나가 지면 대체로 같이 진다. 아래는 일부러 **다른 축**을 건드린다 —
+    # 파라미터 위험(합의), 시장 내부(폭), 경로(드로다운·추격 손절), 외부 게이지(심리).
+    timing("t-mavote", "이동평균 합의 (20·50·100·200)",
+           "네 이동평균 중 현재가가 위에 있는 개수 비율만큼 편입(0·25·50·75·100%).",
+           None, "'200일'이라는 숫자 하나에 결과가 걸리는 것이 단일 이동평균 규칙의 약점이다. "
+                 "파라미터를 하나 고르는 대신 평균을 내면 그 위험이 줄어드는지 본다.")
+    timing("t-tsmom6", "절대 모멘텀 (6개월)",
+           "최근 6개월 수익이 양수면 편입, 아니면 현금.",
+           lambda ix, i, R, V: 1.0 if ((ret(ix, i, 126) or -1) > 0) else 0.0,
+           "12-1과 규칙은 같고 되돌아보는 길이만 다르다. 같은 아이디어가 파라미터에 얼마나 "
+           "민감한지 재는 대조군이다 — 둘의 결과가 크게 갈리면 그건 발견이 아니라 과최적화 신호다.")
+    timing("t-tsmomc", "연속 시계열 모멘텀",
+           "12-1 모멘텀을 0~20% 구간에 대응시켜 노출을 0~1로 비례 배분(문턱 없음).",
+           None, "0/1 스위치는 문턱 근처에서 결과가 요동친다. 같은 신호를 연속으로 쓰면 "
+                 "그 요동이 줄어드는지, 아니면 스위치가 주던 상승분까지 깎이는지 본다.")
+    timing("t-mhvote", "다기간 모멘텀 합의 (1·3·6·12개월)",
+           "네 구간 수익 중 양수인 개수 비율만큼 편입.",
+           None, "되돌아보는 길이를 하나 고르지 않고 넷에 투표시킨다. 이동평균 합의와 같은 발상을 "
+                 "가격이 아니라 수익률에 적용한 것 — 둘이 같은 결과면 축이 하나라는 뜻이다.")
+    timing("t-breadth", "시장 폭 게이트 (200일선 위 비율)",
+           "유니버스에서 자기 200일선 위에 있는 종목 비율이 50%를 넘으면 편입, 아니면 현금.",
+           None, "여기서 처음으로 **지수 가격이 아닌 것**을 본다. 지수는 대형주 몇 개로 버틸 수 있어서 "
+                 "속으로 무너지는 국면을 못 잡는다. 시장 내부가 그걸 먼저 알려주는지 확인한다.")
+    timing("t-breadthc", "시장 폭 비례 노출",
+           "200일선 위 종목 비율을 그대로 노출로 쓴다(30% 미만은 0으로 절사).",
+           None, "같은 폭 지표를 문턱 없이 쓴다. 게이트판과 비교해 문턱이 값을 더하는지 빼는지 가른다.")
+    timing("t-ddgate", "드로다운 게이트 (−10%)",
+           "직전 고점 대비 −10%를 밑돌면 현금, 고점 대비 −3% 안으로 회복하면 다시 편입.",
+           None, "가격 수준이 아니라 **경로**를 보는 규칙. 손실 통제를 규칙으로 못 박으면 "
+                 "MDD가 실제로 줄어드는지, 그 대가로 수익을 얼마나 내주는지 본다.")
+    timing("t-chand", "변동성 추격 손절 (샹들리에)",
+           "진입 후 고점에서 20일 변동성의 3배만큼 떨어지면 현금, 50일선을 되찾으면 재진입.",
+           None, "손절 폭을 고정 %가 아니라 그때의 변동성으로 잡는다. 조용한 장에선 좁게, "
+                 "거친 장에선 넓게 — 고정 −10%보다 덜 털리는지 본다.")
+    timing("t-chan", "52주 채널 위치 비례",
+           "현재가가 52주 최저~최고 구간에서 차지하는 위치를 그대로 노출로 쓴다.",
+           None, "돈치안 돌파를 연속으로 편 것. 신고가에서 100%, 신저가에서 0%가 되므로 "
+                 "'돌파'라는 이벤트 없이도 같은 정보를 쓸 수 있는지 본다.")
+    timing("t-kama", "적응형 이동평균 (효율성 비율)",
+           "10일 효율성 비율로 이동평균 속도를 조절(2~30일)하고, 현재가가 그 위면 편입.",
+           None, "추세가 곧을 때는 빠르게, 톱니처럼 오갈 때는 느리게 따라간다. "
+                 "이동평균의 고질병인 '횡보장 잦은 전환'을 규칙 안에서 고칠 수 있는지 본다.")
+    timing("t-semivol", "하방 변동성 타깃 (연 9%)",
+           "최근 60일 **하락일만의** 변동성으로 목표 연 9%에 맞춰 노출을 0~1로 조절.",
+           None, "일반 변동성 타깃은 급등도 위험으로 세어 상승장에서 노출을 깎는다. "
+                 "하락만 세면 그 손해가 사라지는지 본다.")
+    timing("t-gapcap", "과열 차단 (200일선 이격 상한)",
+           "200일선 위이면 편입하되, 이격도가 과거 1년 상위 10%를 넘으면 절반만 편입.",
+           None, "추세는 따르되 과열 구간에서만 발을 뺀다. 추세추종의 약점인 "
+                 "'고점에서 최대 노출'을 규칙으로 눌러도 성과가 남는지 본다.")
+    timing("t-sentgate", "시장 심리 게이트 (공포 매수)",
+           "이 사이트의 심리 지수(VIX·기간구조·MOVE 합성)가 1년 중앙값보다 낮으면(공포) 편입.",
+           None, "유일하게 가격 밖에서 오는 입력이다. 이 랩은 종목 단위 역추세를 이미 폐기했는데, "
+                 "시장 단위에서 외부 공포 게이지로는 다른 답이 나오는지 확인한다. "
+                 "아카이브의 'VIX 기간구조'와는 다른 규칙이다 — 그쪽은 기간구조 단독, 이쪽은 "
+                 "VIX 수준·기간구조·MOVE 합성이라 이전 판정을 그대로 가져다 붙이지 않는다.")
+
     # ── 횡단면: 상위 TOPN 동일가중, 월말 리밸런스 ──
     xsec("x-mom12", "12-1 모멘텀 상위 50",
          "최근 12개월 수익 − 최근 1개월 수익 상위 50종목 동일가중, 월말 리밸런스.",
@@ -347,6 +406,53 @@ def run():
         if len(rs) > 50:
             m = sum(rs) / len(rs)
             disp[i] = math.sqrt(sum((x - m) ** 2 for x in rs) / (len(rs) - 1))
+    # 시장 폭 — 그날 '자기 200일선 위'인 종목의 비율. 지수 가격에는 안 보이는 내부 상태다.
+    # 종목마다 200일 이동평균을 매일 다시 더하면 O(종목×일×200)이라 느리다 → 누적합으로 O(1).
+    brd = [None] * n
+    above = [0] * n
+    cnt = [0] * n
+    for t in tickers:
+        a = px[t]
+        # 결측일(거래정지·상장 전)이 섞여 있다. 이동평균은 직전 유효가를 끌어와 계산하되,
+        # **그날 값이 없는 종목은 그날의 분모에서 뺀다** — 없는 종목을 '200일선 아래'로
+        # 세면 폭이 실제보다 나빠 보인다.
+        f = [None] * n
+        last = None
+        for i in range(n):
+            if a[i] is not None:
+                last = a[i]
+            f[i] = last
+        st_ = next((i for i in range(n) if f[i] is not None), None)
+        if st_ is None:
+            continue
+        c = [0.0] * (n + 1)          # c[k] = f[0..k-1] 합(결측 채운 값)
+        for i in range(n):
+            c[i + 1] = c[i] + (f[i] if f[i] is not None else 0.0)
+        for i in range(max(200, st_ + 200), n):
+            if a[i] is None:
+                continue
+            m200 = (c[i] - c[i - 200]) / 200.0     # 당일 제외 200일 평균(선견 없음)
+            cnt[i] += 1
+            if a[i] > m200:
+                above[i] += 1
+    for i in range(n):
+        if cnt[i] > 50:
+            brd[i] = above[i] / cnt[i]
+
+    # 심리 지수 — 이 사이트가 따로 굽는 유일한 '가격 밖' 입력(VIX·기간구조·MOVE 합성).
+    # 날짜로 맞춰 붙이고, 없는 날은 직전 값을 끌고 간다(발표 지연을 앞당겨 쓰지 않는다).
+    sent = [None] * n
+    try:
+        _sh = json.load(io.open(os.path.join(DATA, "sentiment.json"), encoding="utf-8")).get("history") or []
+        _sm = {r["dt"]: r["score"] for r in _sh if r.get("score") is not None}
+        _last = None
+        for i, d_ in enumerate(dates):
+            if d_ in _sm:
+                _last = _sm[d_]
+            sent[i] = _last
+    except Exception:
+        pass
+
     rfd = (sum(rf.values()) / len(rf) / 21) if rf else 0.0
 
     build_strats()
@@ -357,6 +463,8 @@ def run():
         w = [0.0] * n
         if S["kind"] == "timing":
             state = 0.0
+            peak = 0.0          # 샹들리에: 진입 후 고점
+            kama_prev = None    # 적응형 이동평균: 직전 값(재귀식이라 이어져야 한다)
             for i in range(n):
                 if i < MIN_HIST:
                     continue
@@ -403,6 +511,79 @@ def run():
                         m = sum(win) / len(win)
                         v2 = sum((x - m) ** 2 for x in win) / max(1, len(win) - 1)
                         w[i] = max(0.0, min(1.0, m / v2)) if v2 > 0 else 0.0
+                elif sid == "t-mavote":
+                    ms = [sma(ix, i, k) for k in (20, 50, 100, 200)]
+                    ok = [m for m in ms if m is not None]
+                    w[i] = (sum(1 for m in ok if ix[i] > m) / len(ok)) if ok else 0.0
+                elif sid == "t-tsmomc":
+                    m = (ret(ix, i, 252) or -1) - (ret(ix, i, 21) or 0)
+                    w[i] = max(0.0, min(1.0, m / 0.20))     # 0~20% 구간을 0~1로
+                elif sid == "t-mhvote":
+                    rs = [ret(ix, i, k) for k in (21, 63, 126, 252)]
+                    ok = [x for x in rs if x is not None]
+                    w[i] = (sum(1 for x in ok if x > 0) / len(ok)) if ok else 0.0
+                elif sid == "t-breadth":
+                    b = brd[i]
+                    w[i] = 1.0 if (b is not None and b > 0.5) else 0.0
+                elif sid == "t-breadthc":
+                    b = brd[i]
+                    w[i] = (b if (b is not None and b >= 0.30) else 0.0)
+                elif sid == "t-ddgate":
+                    pk = max(ix[MIN_HIST:i + 1])
+                    dd = ix[i] / pk - 1
+                    if dd < -0.10:
+                        state = 0.0
+                    elif dd > -0.03:
+                        state = 1.0
+                    w[i] = state
+                elif sid == "t-chand":
+                    # 진입 뒤 고점을 따라다니는 손절선. 폭은 그때의 변동성(20일)으로 잡는다.
+                    v = ixvol[i]
+                    if state > 0:
+                        peak = max(peak, ix[i])
+                        if v and ix[i] < peak * (1 - 3 * v * math.sqrt(20)):
+                            state = 0.0
+                    else:
+                        m50 = sma(ix, i, 50)
+                        if m50 is not None and ix[i] > m50:
+                            state = 1.0
+                            peak = ix[i]
+                    w[i] = state
+                elif sid == "t-chan":
+                    win = ix[max(0, i - 252):i + 1]
+                    hi, lo = max(win), min(win)
+                    w[i] = ((ix[i] - lo) / (hi - lo)) if hi > lo else 0.0
+                elif sid == "t-kama":
+                    if i >= 30:
+                        chg = abs(ix[i] - ix[i - 10])
+                        vol_ = sum(abs(ix[j] - ix[j - 1]) for j in range(i - 9, i + 1))
+                        er = (chg / vol_) if vol_ > 0 else 0.0
+                        sc = (er * (2 / 3 - 2 / 31) + 2 / 31) ** 2      # 효율성 → 평활상수
+                        kama = kama_prev if kama_prev is not None else ix[i - 1]
+                        kama = kama + sc * (ix[i] - kama)
+                        kama_prev = kama
+                        w[i] = 1.0 if ix[i] > kama else 0.0
+                elif sid == "t-semivol":
+                    win = [x for x in ixr[max(0, i - 60):i + 1] if x is not None and x < 0]
+                    if len(win) > 5:
+                        dv = math.sqrt(sum(x * x for x in win) / len(win))
+                        w[i] = min(1.0, 0.09 / (dv * math.sqrt(252))) if dv > 0 else 0.0
+                elif sid == "t-gapcap":
+                    m200 = sma(ix, i, 200)
+                    if m200:
+                        gap = ix[i] / m200 - 1
+                        hist = sorted(g for g in
+                                      ((ix[j] / sma(ix, j, 200) - 1) if sma(ix, j, 200) else None
+                                       for j in range(max(MIN_HIST, i - 252), i))
+                                      if g is not None)
+                        cap = hist[int(len(hist) * 0.9)] if hist else None
+                        w[i] = 0.0 if gap <= 0 else (0.5 if (cap is not None and gap > cap) else 1.0)
+                elif sid == "t-sentgate":
+                    hist = [x for x in sent[max(0, i - 252):i] if x is not None]
+                    cur = sent[i]
+                    if cur is not None and hist:
+                        med = sorted(hist)[len(hist) // 2]
+                        w[i] = 1.0 if cur < med else 0.0
                 elif sid == "t-volreg":
                     hist = [v for v in ixvol[max(0, i - 252):i] if v]
                     cur = ixvol[i]
@@ -542,6 +723,45 @@ def run():
             r["verdict"] = "구별 불가"
 
     out.sort(key=lambda x: -(x["d_sharpe"] or -9))
+
+    # ── 중복도 ──────────────────────────────────────────────────────────
+    # 규칙을 늘리면 '더 많이 검증했다'는 착각이 생긴다. 하지만 24개 타이밍 규칙이 전부
+    # 같은 지수 가격에서 나오면 서로 다른 베팅이 아니라 같은 베팅 24개다. 실제로 얼마나
+    # 겹치는지 재서 그대로 싣는다 — 본페로니는 검정이 독립일 때의 보정이라, 겹칠수록
+    # 필요 이상으로 보수적이 된다(임계를 낮추지는 않는다. 재량이 들어가는 순간 검정이 아니게 된다).
+    def _rets(r):
+        v = r.get("nav") or []
+        return [v[i] / v[i - 1] - 1 for i in range(1, len(v))] if len(v) > 2 else []
+
+    def _corr(a, b):
+        if len(a) != len(b) or not a:
+            return None
+        m1, m2 = sum(a) / len(a), sum(b) / len(b)
+        s1 = math.sqrt(sum((x - m1) ** 2 for x in a))
+        s2 = math.sqrt(sum((y - m2) ** 2 for y in b))
+        if not s1 or not s2:
+            return None
+        return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
+
+    _tm = [r for r in out if r["kind"] == "timing"]
+    _rr = {r["sid"]: _rets(r) for r in _tm}
+    _pairs = []
+    for _i in range(len(_tm)):
+        for _j in range(_i + 1, len(_tm)):
+            c = _corr(_rr[_tm[_i]["sid"]], _rr[_tm[_j]["sid"]])
+            if c is not None:
+                _pairs.append({"a": _tm[_i]["name"], "b": _tm[_j]["name"], "c": round(c, 3)})
+    _pairs.sort(key=lambda x: -x["c"])
+    _cs = sorted(x["c"] for x in _pairs)
+    dup = {
+        "n_timing": len(_tm),
+        "median": round(_cs[len(_cs) // 2], 3) if _cs else None,
+        "n_over_95": sum(1 for c in _cs if c >= 0.95),
+        "top": _pairs[:6],
+        "note": "타이밍 규칙끼리의 일간 수익률 상관. 0.95를 넘으면 이름만 다른 같은 베팅에 가깝다. "
+                "규칙 수가 늘어도 실제로 검증한 '서로 다른 아이디어' 수는 그만큼 늘지 않는다.",
+    }
+
     doc = {
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -561,7 +781,10 @@ def run():
             "다중검정 — 규칙 %d개를 같은 표본에서 돌렸다. 그중 최고는 우연히도 좋아 보인다. "
             "그래서 하나도 빼지 않고 전부 싣는다." % len(STRATS),
             "신호는 당일 종가로 계산해 다음 거래일부터 적용한다(선견 없음). 횡단면은 월말 리밸런스.",
+            "규칙끼리 많이 겹친다 — 타이밍 규칙 쌍의 상관 중앙값이 %s이고 %d쌍은 0.95를 넘는다. "
+            "규칙 수가 곧 검증한 아이디어 수는 아니다." % (dup["median"], dup["n_over_95"]),
         ],
+        "dup": dup,
         "strategies": out,
     }
     io.open(OUT, "w", encoding="utf-8").write(
