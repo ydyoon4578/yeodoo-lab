@@ -105,6 +105,10 @@ def main() -> int:
          "cadence": "격주", "note": "FINRA 공시 주기상 구조적으로 뒤처진다"},
         {"key": "members", "label": "지수 편입(PIT 멤버십)", "as_of": members.get("as_of_members"),
          "cadence": "리밸런스 시", "note": "생존편향 보정에 쓰는 시점별 구성"},
+        # 로테이션 풀은 '오늘 10선을 고른 날'과 '풀을 마지막으로 채운 날'이 다르다.
+        # 화면에 보이는 선정일은 매일 오늘이라 축이 아니고, 축은 풀의 generated다.
+        {"key": "rotation", "label": "전략 탐색 풀", "as_of": (load("rotation_pool.json") or {}).get("generated"),
+         "cadence": "수시", "note": "외부 출처 수집분 — 랩이 검증한 것이 아니다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
     for a in axes:

@@ -7,7 +7,8 @@
   python build/log_update.py <target> "<제목>"        # 지금 시각(KST)으로 기록
   python build/log_update.py <target> "<제목>" 14:35  # 시각 지정
 
-target: rotation|explorer|archive|stocks|regime|sentiment|holdings
+target: 아래 TARGETS 참조. **홈의 UPD 맵(index.html)과 반드시 같은 집합**이어야 한다 —
+어긋나면 그 이벤트가 홈에서 '기타'로 떨어지고, validate_site.py가 실패시킨다.
 """
 from __future__ import annotations
 import io, json, os, re, sys
@@ -16,7 +17,13 @@ from datetime import datetime, timedelta, timezone
 KST = timezone(timedelta(hours=9))
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 P = os.path.join(ROOT, "data", "updates.json")
-TARGETS = {"rotation", "explorer", "archive", "stocks", "regime", "sentiment", "holdings"}
+# 도구가 늘면 여기에 먼저 넣어야 기록할 수 있다. 안 넣으면 log_update가 거부하고,
+# 그러면 그 화면의 변경은 갱신 피드에 영원히 안 남는다(실제로 2026-07-23~25 사흘이 그렇게 비었다).
+TARGETS = {
+    "rotation", "explorer", "archive", "stocks", "regime", "sentiment", "holdings",
+    "market", "sector", "macro", "screener", "relvalue", "valuation", "portfolio",
+    "company", "method", "roadmap", "sources", "site",
+}
 
 
 def add(target: str, title: str, hm: str | None = None) -> dict:
