@@ -467,8 +467,10 @@
   }
   // 원문 링크는 저장하지 않고 규칙으로 되짓는다(피드 파일이 두 배가 되는 걸 피하려고 조각만 담았다).
   // p가 비면 SEC가 주 문서를 안 준 제출이라 제출 인덱스로 보낸다.
+  // f.c는 '이 제출은 전신 법인 CIK 아래에 있다'는 표시다(지주회사 전환 등으로 티커가
+  // 새 등록 법인으로 넘어간 경우). 없으면 대표 CIK를 쓴다.
   function docUrl(f){
-    var cik=D.cik[f.t]; if(!cik||!f.a)return '';
+    var cik=f.c||D.cik[f.t]; if(!cik||!f.a)return '';
     return D.doc_base+cik+'/'+f.a+'/'+(f.p||'');
   }
   function isMaj(f){

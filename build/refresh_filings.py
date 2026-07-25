@@ -48,6 +48,24 @@ CO_FORMS_MAX = 30        # 회사별로 남길 제출 건수 상한
 CO_FORMS = ("10-K", "10-Q", "8-K", "DEF 14A", "DEFA14A", "20-F", "40-F", "6-K",
             "11-K", "S-1", "S-3", "S-4", "S-8", "ARS", "SD", "25", "15-12B")
 # 서식 한국어 이름. 없는 서식은 원문 코드를 그대로 쓴다(모르는 걸 아는 척하지 않는다).
+MIN_IR_FORMS = 6        # 이보다 적으면 '등록 법인이 바뀐 것 아닌가'를 의심한다(아래 참조)
+
+# ── 티커가 새 등록 법인으로 넘어간 경우의 전신 CIK ──────────────────────
+# 회사가 지주회사로 전환하면 SEC상 **새 CIK**가 만들어지고, company_tickers.json은
+# 그 새 법인만 가리킨다. 옛 법인의 10-K·10-Q·DEF 14A는 그대로 남아 있지만 티커로는
+# 더 이상 닿지 않는다 — SEC가 둘을 잇는 포인터를 주지 않기 때문이다.
+#
+# 실측(2026-07-25): XOM → CIK 2115436 'ExxonMobil Holdings Corp'. 최초 제출 2026-07-01,
+#   전체 26건, IR 서식은 8-K 한 건뿐. 전신 CIK 34088 'EXXON MOBIL CORP'에 10-Q(05-04)·
+#   DEF 14A(04-08)를 포함해 1,001건이 있다. 둘 다 자기 메타데이터에 티커 XOM을 적지만
+#   company_tickers.json에는 중복 항목이 없어(10,429개 전수 확인) 자동으로는 못 찾는다.
+#
+# 그래서 손으로 적는다. 대신 **빠뜨리면 조용히 넘어가지 않게** 아래 MIN_IR_FORMS 검사가
+# 이력이 빈약한 종목을 잡아 경고한다 — 다음에 같은 일이 생기면 잡 로그에 뜬다.
+PREDECESSOR = {
+    "XOM": [34088],
+}
+
 FORM_KO = {
     "10-K": "연차보고서", "10-Q": "분기보고서", "8-K": "수시공시",
     "DEF 14A": "주주총회 위임장", "DEFA14A": "위임장 추가자료",
@@ -75,18 +93,37 @@ def main() -> int:
     cutoff = (today - dt.timedelta(days=FEED_DAYS)).isoformat()
 
     feed, ind_rows, co_docs = [], [], {}
-    miss_cik, miss_sub = [], []
+    miss_cik, miss_sub, thin = [], [], []
+    n_pred = 0
 
     for i, (t, name, sector) in enumerate(uni, 1):
         cik = cmap.get(t.upper())
         if not cik:
             miss_cik.append(t)
             continue
+        # 현행 법인 + (있으면) 전신 법인. 제출은 각자의 CIK 아래에 있으므로 행마다
+        # 출처 CIK를 달고 다녀야 원문 링크를 되짓을 수 있다.
         sub = edgar.submissions(cik)
         if not sub:
             miss_sub.append(t)
             continue
-        rs = edgar.rows(sub)
+        rs = [dict(r, _cik=cik) for r in edgar.rows(sub)]
+        for pcik in PREDECESSOR.get(t.upper(), []):
+            psub = edgar.submissions(pcik)
+            if not psub:
+                print("⚠ %s 전신 CIK %d 조회 실패 — 현행 법인분만 쓴다" % (t, pcik))
+                continue
+            rs += [dict(r, _cik=pcik) for r in edgar.rows(psub)]
+            n_pred += 1
+        # 같은 제출이 양쪽에 잡히는 일은 없어야 하지만, 겹치면 최신 것 하나만 남긴다
+        seen_acc, ded = set(), []
+        for r in rs:
+            acc = str(r.get("accessionNumber") or "")
+            if acc and acc in seen_acc:
+                continue
+            seen_acc.add(acc)
+            ded.append(r)
+        rs = sorted(ded, key=lambda r: str(r.get("filingDate") or ""), reverse=True)
         sic = str(sub.get("sic") or "").strip()
         sic_desc = str(sub.get("sicDescription") or "").strip()
         ind_rows.append({"t": t, "sic": sic, "sd": sic_desc, "sec": sector,
@@ -101,13 +138,16 @@ def main() -> int:
             fdate = str(r.get("filingDate") or "")
             acc = str(r.get("accessionNumber") or "").replace("-", "")
             pdoc = str(r.get("primaryDocument") or "")
+            # 출처 CIK가 대표와 다를 때만 행에 적는다(전신 법인분). 같으면 생략해 파일을 줄인다.
+            rcik = r.get("_cik")
+            extra = {} if rcik == cik else {"c": rcik}
             if form == "8-K" and fdate >= cutoff:
-                feed.append({"t": t, "d": fdate, "rd": str(r.get("reportDate") or ""),
-                             "it": edgar.parse_items(r.get("items")), "a": acc, "p": pdoc})
+                feed.append(dict({"t": t, "d": fdate, "rd": str(r.get("reportDate") or ""),
+                                  "it": edgar.parse_items(r.get("items")), "a": acc, "p": pdoc}, **extra))
             if form in CO_FORMS and len(keep) < CO_FORMS_MAX:
-                keep.append({"f": form, "d": fdate, "rd": str(r.get("reportDate") or ""),
-                             "a": acc, "p": pdoc,
-                             "it": edgar.parse_items(r.get("items")) if form == "8-K" else []})
+                keep.append(dict({"f": form, "d": fdate, "rd": str(r.get("reportDate") or ""),
+                                  "a": acc, "p": pdoc,
+                                  "it": edgar.parse_items(r.get("items")) if form == "8-K" else []}, **extra))
         co_docs[t] = {
             "t": t, "cik": cik, "nm": sub.get("name") or name,
             "sic": sic, "sd": sic_desc,
@@ -117,6 +157,11 @@ def main() -> int:
             "n_recent": len(rs),
             "filings": keep,
         }
+        # S&P 대형주가 IR 서식 몇 건뿐일 리 없다 — 그런 종목은 등록 법인이 바뀐 것이고
+        # PREDECESSOR에 전신 CIK가 빠져 있다는 뜻이다. 화면에도 그 사실을 적는다.
+        if len(keep) < MIN_IR_FORMS:
+            co_docs[t]["thin"] = 1
+            thin.append((t, len(keep), sub.get("name") or ""))
         if i % 100 == 0:
             print("  … %d/%d" % (i, len(uni)))
 
@@ -214,10 +259,19 @@ def main() -> int:
     print("산업(SIC): %d개 분류 · %.0fKB · SIC 없음 %d사" % (ind["n_sic"], sz_ind, len(ind["no_sic"])))
     print("회사별 제출: %d파일 · %.0fKB (평균 %.1fKB) — 신규 %d · 변경 %d · 삭제 %d"
           % (len(co_docs), sz_co, sz_co / max(1, len(co_docs)), n_new, n_upd, n_del))
+    if n_pred:
+        print("전신 법인 병합: %d종목 (%s)" % (n_pred, ", ".join(sorted(PREDECESSOR))))
     if miss_cik:
         print("⚠ CIK 미매칭 %d종목: %s" % (len(miss_cik), ", ".join(miss_cik[:10])))
     if miss_sub:
         print("⚠ submissions 실패 %d종목: %s" % (len(miss_sub), ", ".join(miss_sub[:10])))
+    if thin:
+        # 실패시키지는 않는다 — 데이터는 맞고(그 법인의 전부다) 화면도 사유를 적는다.
+        # 다만 로그에 남겨서, 다음에 같은 일이 생기면 PREDECESSOR에 추가하게 만든다.
+        print("⚠ 제출 이력이 빈약한 %d종목 — 등록 법인이 바뀌었는지 확인하고 PREDECESSOR에 전신 CIK를 추가할 것:"
+              % len(thin))
+        for t, n, nm in thin:
+            print("    %-6s IR서식 %d건 · %s" % (t, n, nm))
 
     # 유니버스의 큰 몫이 빠지면 배포하지 않는다 — 반쪽 피드는 '조용히 틀린' 화면이 된다.
     cover = len(ind_rows) / max(1, len(uni))
