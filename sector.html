@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — 11개 GICS 섹터의 오늘 상태(200일선 위·상승추세·펀더멘털 중앙값)와 현재 레짐의 과거 월평균. 표본 수를 성과보다 먼저 적고, 표본이 모자라면 숫자를 주지 않습니다.">
+<title>여두 · 섹터 히트맵</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/sector.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/sector.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · 섹터 히트맵">
+<meta property="og:description" content="11섹터의 오늘 상태 + 현재 레짐에서의 과거 월평균 — 표본 수를 성과보다 먼저.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · 섹터 히트맵">
+<meta name="twitter:description" content="11섹터의 오늘 상태 + 현재 레짐에서의 과거 월평균 — 표본 수를 성과보다 먼저.">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;
+    --deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;
+    --deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+
+  /* ── 히트맵 램프: 단일 색상(--champ 계열) 순차 스케일 ─────────────────────
+     색은 '높다/낮다'(크기)만 나타낸다. 좋다/나쁘다를 뜻하지 않으므로 초록/빨강 2색을
+     쓰지 않는다. 라이트/다크에서 각각 최대 농도를 따로 잡아 본문 잉크 대비 ≈6:1 유지. */
+  :root{--hmrgb:44,110,143;--hma:.58}
+  @media (prefers-color-scheme:dark){:root{--hmrgb:107,176,214;--hma:.42}}
+  :root[data-theme="light"]{--hmrgb:44,110,143;--hma:.58}
+  :root[data-theme="dark"]{--hmrgb:107,176,214;--hma:.42}
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit}
+  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
+  @media(max-width:640px){.wrap{padding:0 14px 60px}}
+
+  header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(25px,4.4vw,36px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
+  .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
+  .lede b{color:var(--ink)}
+  .asofline{margin:12px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+  .asofline b{color:var(--ink-2);font-weight:700}
+  .asofline .bad{color:var(--hot)}
+
+  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:40px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
+  .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11.5px}
+  .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65;max-width:88ch}
+  .lblnote.cov{margin:9px 0 0;font-family:var(--mono);font-size:10.5px;max-width:none;letter-spacing:.01em}
+  .lblnote.cov b{color:var(--ink-2);font-weight:700}
+  .lblnote.cov i{font-style:normal;color:var(--line);margin:0 5px}
+  .lbl2{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink);margin:22px 0 5px}
+  .lbl2 span{font-weight:400;color:var(--muted)}
+
+  /* ── 표본 먼저 ─────────────────────────────────────────────────────── */
+  .tally{margin:18px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:9px}
+  .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:11px;padding:11px 13px;box-shadow:var(--shadow)}
+  .ty b{display:block;font-family:var(--mono);font-size:23px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
+  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--muted);font-weight:700}
+  .ty em{display:block;margin-top:5px;font-style:normal;font-size:11px;color:var(--ink-2);line-height:1.45}
+  .ty.thin b{color:var(--muted)} .ty.thin{border-top-color:var(--marg)}
+  .ty.cur{outline:2px solid var(--accent);outline-offset:-1px}
+
+  .sampfirst{margin:16px 0 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+             background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+             border-radius:12px;box-shadow:var(--shadow);padding:16px 20px}
+  /* display:flex는 UA의 [hidden]{display:none}을 이긴다 — 명시하지 않으면 데이터 오기 전/실패 시 빈 상자가 남는다 */
+  .sampfirst[hidden]{display:none}
+  .sampfirst .sfn{font-family:var(--mono);font-size:clamp(38px,7vw,58px);font-weight:800;line-height:.95;color:var(--accent);flex:none}
+  .sampfirst .sfn i{font-style:normal;font-size:.34em;font-weight:700;margin-left:3px;color:var(--ink-2)}
+  .sampfirst .sft{flex:1 1 300px;min-width:0}
+  /* 자식 선택자여야 한다 — 아래 설명문 안의 <b>까지 block이 되면 문장이 세 줄로 쪼개진다 */
+  .sampfirst .sft>b{display:block;font-family:var(--mono);font-size:13.5px;color:var(--ink)}
+  .sampfirst .sft>span{display:block;margin-top:6px;font-size:12.5px;color:var(--ink-2);line-height:1.65}
+  .sampfirst .sft>span b{color:var(--ink)}
+
+  /* ── 표/히트맵 ─────────────────────────────────────────────────────── */
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  table.hm{border-collapse:separate;border-spacing:0;width:100%;font-family:var(--mono);font-size:12px}
+  table.hm th,table.hm td{padding:6px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.hm tbody tr:last-child th,table.hm tbody tr:last-child td{border-bottom:0}
+  table.hm thead th{background:var(--panel);font-size:10px;color:var(--ink-2);font-weight:700;border-bottom:1px solid var(--line);vertical-align:bottom;padding:9px}
+  table.hm thead th button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:right;line-height:1.3}
+  table.hm thead th button:hover{color:var(--accent)}
+  table.hm thead th .ar{opacity:.45;font-size:8px;margin-left:2px}
+  table.hm thead th[aria-sort] button{color:var(--accent)}
+  table.hm thead th .u{display:block;font-weight:400;color:var(--muted);font-size:9px}
+  table.hm tbody th{position:sticky;left:0;background:var(--panel);text-align:left;font-weight:700;color:var(--ink);z-index:1;border-right:1px solid var(--line-soft)}
+  table.hm tbody th .etf{display:block;font-weight:400;color:var(--muted);font-size:9px;letter-spacing:.04em}
+  table.hm tbody tr:hover td{box-shadow:inset 0 0 0 9999px rgba(128,128,128,.05)}
+  td.hc{font-variant-numeric:tabular-nums;font-weight:700;
+        background:rgba(var(--hmrgb),calc(var(--hma) * var(--t,0)));
+        box-shadow:inset 0 0 0 1px var(--panel)}   /* 2px 서페이스 간격 대신 1px 링 — 셀이 서로 붙어 보이지 않게 */
+  /* 짙은 셀(t=1) 배경 위에서도 AA를 지켜야 한다 — 결측 분모(.dn)는 규칙상 반드시 읽혀야 하는 글자다.
+     --ink-2 + opacity .85는 라이트 t=1 배경(≈rgb(133,171,190)) 위에서 2.7:1까지 떨어졌다. --ink는 6.2:1. */
+  td.hc .cu{font-weight:400;font-size:9.5px;color:var(--ink);margin-left:1px}
+  td.hc .dn{display:block;font-weight:400;font-size:10px;color:var(--ink);letter-spacing:.02em}
+  td.plain{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink-2)}
+  td.na{color:var(--muted);font-weight:400;font-style:normal;font-size:10.5px}
+  /* '표본 부족' 칸의 분모도 규칙 3이 보이라고 요구하는 글자다 — opacity로 3.2:1까지 떨어뜨리지 않는다 */
+  td.na .dn{display:block;font-size:9.5px}
+  /* 표본 부족(레짐 20개월 미만) — 아예 칠하지 않고 해칭 + 테두리만.
+     예전에는 칠하면서 정규화 범위에서만 뺐는데, 범위를 넘는 값이 t=1로 클램프돼 표본 7·13개월 열이
+     표 전체에서 가장 진한 칸이 됐다("색 비교 대상에서 뺍니다"와 정확히 반대 신호였다). */
+  table.hm thead th.thin{color:var(--muted)}
+  /* 흐리게 하되 읽을 수는 있게 둔다 — 판독 불가로 만드는 건 정직이 아니라 은폐다.
+     타일(.ty.thin b)과 같은 --muted로 맞춰 '비교 대상 아님'을 페이지 전체에서 같은 톤으로 알린다. */
+  table.hm td.thin{color:var(--muted);font-weight:400}
+  /* background 단축 속성 — 히트 램프의 background-color까지 함께 지운다(background-image만 얹으면 칠이 남는다) */
+  td.thin.hc{background:repeating-linear-gradient(45deg,transparent 0 3px,var(--line) 3px 4px);
+             box-shadow:inset 0 0 0 1px var(--panel),inset 0 0 0 2px var(--line)}
+  td.thin.hc .cu,td.thin.hc .dn{color:var(--muted)}
+  th.thin .warn{display:block;font-weight:700;color:var(--marg);font-size:8.5px;letter-spacing:0;white-space:normal;max-width:11ch;margin-left:auto}
+  /* 현재 레짐 열 강조 — 색 농도가 아니라 테두리로 표시한다(농도는 크기 전용) */
+  th.curcol,td.curcol{border-left:2px solid var(--accent);border-right:2px solid var(--accent)}
+  th.curcol{border-top:2px solid var(--accent)}
+  table.hm tbody tr:last-child td.curcol{border-bottom:2px solid var(--accent)}
+  table.hm th.curcol{color:var(--accent)}
+
+  /* 좁은 화면에서는 고정 첫 열이 표를 다 먹는다 — 영문 GICS 원명을 접고 ETF 티커만 남긴다 */
+  @media(max-width:640px){ table.hm tbody th .gics{display:none} table.hm th,table.hm td{padding:6px 7px} }
+
+  .legend{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .ramp{display:flex;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+  .ramp i{display:block;width:22px;height:11px;background:rgba(var(--hmrgb),calc(var(--hma) * var(--t)))}
+  .legend .hatchbox{display:inline-block;width:22px;height:11px;border:1px solid var(--line);border-radius:3px;
+                    background:repeating-linear-gradient(45deg,transparent 0 3px,var(--line) 3px 4px);vertical-align:-1px}
+
+  /* ── 현재 레짐 막대 ─────────────────────────────────────────────────── */
+  .bars{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:16px 18px}
+  .brow{display:grid;grid-template-columns:132px 1fr 62px;gap:9px;align-items:center;padding:3px 0}
+  .brow .bl{font-family:var(--mono);font-size:11.5px;color:var(--ink);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brow .bl i{font-style:normal;color:var(--muted);font-weight:400;font-size:10px;margin-left:4px}
+  .brow .bt{font-family:var(--mono);font-size:11.5px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .btrack{position:relative;height:13px;background:var(--panel-2);border-radius:3px}
+  .btrack .zero{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+  .btrack .bfill{position:absolute;top:2.5px;height:8px;background:var(--champ);border-radius:4px}
+  @media(max-width:560px){.brow{grid-template-columns:104px 1fr 54px}}
+
+  /* ── 대응표 ────────────────────────────────────────────────────────── */
+  .maptbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+  .maptbl th,.maptbl td{padding:6px 9px;border-bottom:1px solid var(--line-soft);text-align:left;white-space:nowrap}
+  .maptbl thead th{font-size:10px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
+  .maptbl thead th .u{display:block;font-weight:400;font-size:9px}
+  .maptbl td.tk{font-weight:800;color:var(--champ)}
+  .maptbl td.tk span{display:block;font-weight:400;font-size:9.5px;color:var(--marg);letter-spacing:.02em}
+  .maptbl td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:16px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note b{color:var(--ink)}
+  .note.cool{border-left-color:var(--champ)}
+  .note ul{margin:8px 0 0;padding-left:18px} .note li{margin:4px 0}
+  .note code{font-family:var(--mono);font-size:11.5px;background:var(--panel);border:1px solid var(--line-soft);border-radius:4px;padding:1px 5px}
+  .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:8px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
+       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="sector.html">
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
+          <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
+          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
+          <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="newsroom">
+        <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
+          <span class="mmi"><span class="mmn">8-K 공시 피드</span><span class="mmb soon">준비중</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></span>
+          <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
+          <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="macro">
+        <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html#axes" data-nav="regime.html#axes"><span class="mmn">하위 요인 분석</span><span class="mmb vunv">미검증</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></a>
+          <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
+          <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
+          <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
+          <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="quant">
+        <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
+          <span class="mmi"><span class="mmn">스크리너</span><span class="mmb soon">준비중</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></span>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장<span class="mmlk">🔒</span></span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="gurus">
+        <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
+          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
+          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="financials">
+        <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
+          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
+          <span class="mmi"><span class="mmn">실적 및 전망</span><span class="mmb soon">준비중</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></span>
+          <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
+          <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="valuation">
+        <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
+          <span class="mmi"><span class="mmn">상대가치평가</span><span class="mmb soon">준비중</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></span>
+          <span class="mmi"><span class="mmn">Reverse DCF</span><span class="mmb soon">준비중</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></span>
+          <span class="mmi"><span class="mmn">Simplified DCF</span><span class="mmb soon">준비중</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></span>
+          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
+          <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="portfolio">
+        <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
+          <span class="mmi"><span class="mmn">대시보드</span><span class="mmb soon">준비중</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></span>
+          <span class="mmi"><span class="mmn">포트폴리오 분석</span><span class="mmb soon">준비중</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="industry">
+        <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
+          <span class="mmi"><span class="mmn">산업 탐색</span><span class="mmb soon">준비중</span><span class="mmd">조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포</span></span>
+          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브<span class="mmlk">🔒</span></span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀<span class="mmlk">🔒</span></span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
+          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<div class="wrap" id="main">
+  <header class="mast">
+    <div class="eyebrow">Sectors · 11 GICS</div>
+    <h1 class="title">11섹터의 오늘 상태와<br>과거의 조건부 평균</h1>
+    <p class="lede">왼쪽은 <b>오늘</b>입니다 — 커버 <b id="ldn">—</b>종목을 GICS 11섹터로 묶어 200일선 위 비율·상승추세 비율·펀더멘털 중앙값을 집계했습니다.
+      오른쪽은 <b>과거</b>입니다 — 같은 국면이었던 달의 섹터 ETF 월평균입니다.
+      두 블록은 <b>서로 다른 모집단</b>이고, 둘 다 <b>집계일 뿐 예측이 아닙니다</b>.</p>
+    <div class="asofline" id="asofline"><span>기준일 불러오는 중…</span></div>
+  </header>
+
+  <!-- ① 표본 먼저 ─────────────────────────────────────────────────── -->
+  <section aria-labelledby="samp-h">
+    <p class="lbl" id="samp-h">표본 먼저 <span class="sub">· 성과보다 앞에 둔다</span></p>
+    <p class="lblnote">이 페이지 아래쪽 숫자는 전부 "같은 국면이었던 달의 단순 평균"입니다.
+      그 달이 몇 개였는지를 먼저 보지 않으면 <b id="nmin">—</b>개월 평균과 <b id="nmax">—</b>개월 평균이 같은 무게로 읽힙니다.
+      아래에서 <b>표본 20개월 미만</b>인 레짐은 이 페이지 전체에서 흐리게·해칭 처리하고, 매트릭스에서는 <b>아예 칠하지 않습니다</b>.</p>
+    <div class="tally" id="rtally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
+    <div class="sampfirst" id="sampfirst" hidden></div>
+  </section>
+
+  <!-- ② 오늘의 히트맵 ─────────────────────────────────────────────── -->
+  <section aria-labelledby="heat-h">
+    <p class="lbl" id="heat-h">오늘의 섹터 상태 <span class="sub">· 열 제목을 누르면 정렬</span></p>
+    <p class="lblnote">각 셀은 <b>값 + 분모</b>입니다. 분모를 적는 이유는 결측이 섹터마다 다르기 때문입니다 —
+      예를 들어 배당수익률은 커버 전체에서 <span id="dycov">—</span>%만 값이 있고, 나머지는 대부분 무배당입니다
+      (파이프라인은 결측 배당을 <b>무배당</b>과 <b>미확인</b>으로 나누지만, 이 페이지가 읽는 슬림 <code>stocks.json</code>에는 그 구분이 실려 있지 않아 여기서는 합쳐 셉니다).
+      색은 <b>그 열 안에서 값이 높은지 낮은지</b>만 나타냅니다.</p>
+
+    <div class="legend">
+      <span>색 = 열 안에서의 상대 크기</span>
+      <span>낮음</span>
+      <span class="ramp" aria-hidden="true"><i style="--t:.06"></i><i style="--t:.24"></i><i style="--t:.42"></i><i style="--t:.6"></i><i style="--t:.78"></i><i style="--t:1"></i></span>
+      <span>높음</span>
+      <span style="color:var(--marg)">— 색은 <b>높다/낮다</b>이지 <b>좋다/나쁘다</b>가 아닙니다. 저PER이 짙게 칠해지지 않고 고PER이 짙게 칠해집니다.</span>
+    </div>
+
+    <p class="lbl2">가. 추세 상태 <span>— 플래그·타이밍·컴포지트 백분위 집계</span></p>
+    <div class="tblwrap"><div id="heatA"><div class="skel">불러오는 중…</div></div></div>
+    <p class="lblnote cov" id="covA"></p>
+    <p class="lblnote" style="margin-top:9px">200일선 위·상승추세의 분모에서 <b id="partn">—</b>종목을 뺐습니다 —
+      상장 200거래일이 안 돼 200일선 자체가 산출되지 않는 종목이라, 빈 값을 "200일선 위"로 세지 않기 위해서입니다.
+      평균 추세·모멘텀·과열도는 0~100 <b>백분위</b>(전체 커버 기준)의 단순 평균이며 수익률이 아닙니다.</p>
+
+    <p class="lbl2">나. 펀더멘털 중앙값 <span>— 섹터 내 중앙값, 결측 제외</span></p>
+    <div class="tblwrap"><div id="heatB"><div class="skel">불러오는 중…</div></div></div>
+    <p class="lblnote cov" id="covB"></p>
+    <p class="lblnote" style="margin-top:9px">산출 종목이 <b>15개 미만</b>인 칸은 중앙값을 주지 않고 <code>표본 부족</code>으로 둡니다 —
+      한두 종목만 바뀌어도 값이 통째로 흔들리는 구간에 정밀도를 지어내지 않기 위해서입니다.
+      선행 PER·PBR은 음수(적자 예상·자본잠식)를 제외하고 계산하며, 그만큼 분모가 줄어든 것이 셀에 그대로 적힙니다.
+      이 재무 지표들은 랩이 초과수익을 검증한 적이 없습니다.</p>
+
+    <div class="note cool" id="linknote"></div>
+  </section>
+
+  <!-- ③ 현재 레짐 조건부 성과 ─────────────────────────────────────── -->
+  <section aria-labelledby="cur-h">
+    <p class="lbl" id="cur-h">현재 레짐의 과거 월평균 <span class="sub" id="cursub"></span></p>
+    <p class="lblnote">아래는 <b>지금 사야 할 섹터</b>가 아닙니다. <b id="histyA">—</b>년 이후 같은 국면으로 판정된 달들의 SPDR 섹터 ETF 월평균 수익률을
+      큰 순서로 세운 것입니다. 국면 판정 자체가 사후적이고, 판정 규칙이 바뀌면 이 표도 바뀝니다.
+      <b>11개 ETF의 시작 시점은 서로 다릅니다</b> — XLRE는 2015-10, XLC는 2018-06 상장이라 이 두 줄만 상장 이후 달로 평균했고,
+      옆에 적힌 레짐 개월수보다 <b>적은 표본</b>입니다.</p>
+    <div id="curbars"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <!-- ④ 전 레짐 × 섹터 매트릭스 ───────────────────────────────────── -->
+  <section aria-labelledby="mx-h">
+    <p class="lbl" id="mx-h">전 레짐 × 섹터 매트릭스 <span class="sub">· 월평균 %, <span id="histyB">—</span>~</span></p>
+    <p class="lblnote">숨기지 않고 전부 폅니다. 다만 <b>표본 20개월 미만</b>인 열은 <b>색을 칠하지 않고</b> 해칭만 남겼습니다 —
+      색이 없는 칸은 값이 없다는 뜻이 아니라 <b>색으로 비교할 표본이 아니라는 뜻</b>입니다. 색은 여기서도 <b>높다/낮다</b>이며, 음수는 숫자 앞의 부호로 읽습니다.</p>
+    <p class="lblnote">열 머리의 <b>"레짐 N개월"</b>은 <b>그 국면으로 판정된 달의 수</b>이지 각 ETF가 실제로 관측된 달의 수가 아닙니다 —
+      XLRE(2015-10 상장)·XLC(2018-06 상장) 두 줄은 상장 이후 구간만 평균했으므로 실제 표본이 그보다 적습니다.
+      셀에 ETF별 실제 관측 개월수를 적으려면 산출 파이프라인이 그 수를 함께 내보내야 하는데, 지금 데이터에는 없습니다 — 그래서 짐작해 적지 않았습니다.</p>
+    <div class="legend" style="margin-bottom:10px">
+      <span class="hatchbox" aria-hidden="true"></span>
+      <span>= 표본 20개월 미만 — 칠하지 않음 · 평균으로 읽지 말 것</span>
+    </div>
+    <div class="tblwrap"><div id="mx"><div class="skel">불러오는 중…</div></div></div>
+  </section>
+
+  <!-- ⑤ 대응표 ───────────────────────────────────────────────────── -->
+  <section aria-labelledby="map-h">
+    <p class="lbl" id="map-h">XL* ETF ↔ GICS 섹터 대응</p>
+    <p class="lblnote">위 두 블록은 <b>같은 섹터 이름을 쓰지만 같은 바구니가 아닙니다.</b>
+      히트맵은 이 랩이 커버하는 종목을 GICS 분류로 묶은 것이고, 조건부 성과는 SPDR 섹터 ETF의 실제 수익률입니다.
+      구성 종목·가중치·시작 시점이 다르므로 "히트맵에서 짙은 섹터가 저 표에서도 위"일 이유는 없습니다.
+      시작 시점 차이는 ETF 사이에도 있습니다 — 9개는 분석 창 전체를 덮지만 <b>XLRE는 2015-10, XLC는 2018-06</b> 상장이라
+      그 이후 달만 월평균에 들어갑니다. 아래 표에서 해당 줄에 상장월을 적었습니다.</p>
+    <div class="tblwrap" style="padding:4px 6px"><div id="maptbl"><div class="skel">불러오는 중…</div></div></div>
+  </section>
+
+  <div class="note">
+    <b>이 페이지가 하지 않는 것</b>
+    <ul>
+      <li>섹터를 추천하지 않습니다. 조건부 평균은 과거의 기록이고, 이 랩은 섹터 로테이션이 초과수익을 냈는지 검증한 적이 없습니다.</li>
+      <li>색으로 우열을 말하지 않습니다. 한 가지 색의 농도만 쓰며, 그것은 크기입니다.</li>
+      <li>없는 값을 0으로 채우지 않습니다. 분모가 줄면 줄어든 분모를 그대로 적고, 15종목 미만이면 아예 값을 주지 않습니다.</li>
+      <li>레짐 판정은 미국 단일 경제(FRED)에 대한 것이며, 여기 섹터는 미국 상장 종목·미국 섹터 ETF입니다.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <a href="index.html">← 전략 랩 홈</a> · <a href="roadmap.html">미구현 로드맵</a> ·
+    <a href="method.html">등급·판정 규약</a> ·
+    <a href="regime.html">국가경제 분석</a> ·
+    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
+    <br>집계 원본: <code>data/stocks.json</code>(섹터·플래그·타이밍·컴포지트·재무) · <code>data/regime.json</code>(레짐 판정·섹터 ETF 조건부 성과). 이 페이지는 두 파일을 브라우저에서 읽어 그 자리에서 계산합니다 — 사전 계산된 요약본을 두지 않습니다.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function nf(v,nd){ if(v==null||typeof v!=='number'||!isFinite(v))return '—';
+    var p=Math.pow(10,nd); return (Math.round(v*p)/p).toFixed(nd); }
+  function pctf(v){ return nf(v,1); }
+
+  // ── 고정 매핑 ──────────────────────────────────────────────────────
+  // 섹터 한글 축약은 index.html·stocks.html의 SECKO와 동일하게 맞춘다(같은 섹터가 페이지마다 달라 보이면 안 된다).
+  var KO={'Information Technology':'IT','Health Care':'헬스케어','Financials':'금융','Consumer Discretionary':'경기소비',
+          'Consumer Staples':'필수소비','Industrials':'산업재','Communication Services':'커뮤니케이션','Energy':'에너지',
+          'Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
+  var ETF={'Information Technology':'XLK','Financials':'XLF','Energy':'XLE','Health Care':'XLV','Industrials':'XLI',
+           'Consumer Discretionary':'XLY','Consumer Staples':'XLP','Utilities':'XLU','Materials':'XLB',
+           'Real Estate':'XLRE','Communication Services':'XLC'};
+  var ETFKO={XLK:'기술',XLF:'금융',XLE:'에너지',XLV:'헬스케어',XLI:'산업재',XLY:'경기소비',XLP:'필수소비',
+             XLU:'유틸리티',XLB:'소재',XLRE:'부동산',XLC:'커뮤니케이션'};
+  var G2E=[]; for(var _k in ETF){ if(ETF.hasOwnProperty(_k)) G2E.push([_k,ETF[_k]]); }
+  var E2G={}; for(var _i=0;_i<G2E.length;_i++) E2G[G2E[_i][1]]=G2E[_i][0];
+
+  var RORDER=['Goldilocks','Recovery','SoftLanding','LateCycle','Overheating','Stagflation','Recession'];
+  var RKO={Goldilocks:'골디락스',Recovery:'회복',SoftLanding:'연착륙',LateCycle:'후기사이클',
+           Overheating:'과열',Stagflation:'스태그플레이션',Recession:'침체'};
+
+  // 상장이 분석 창(history 시작)보다 늦은 ETF — 레짐 개월수와 실제 관측 개월수가 다르다.
+  // 파이프라인(refresh_regime.py)은 pandas mean(=NaN 스킵)으로 평균하므로 상장 이후 달만 들어간다.
+  // 여기서는 '상장월'이라는 사실만 적는다. 실제 관측 개월수는 데이터에 없으므로 계산해서 적지 않는다.
+  var LATE={XLRE:'2015-10', XLC:'2018-06'};
+  function lateNote(e){ return LATE[e] ? '('+e+' '+LATE[e]+' 상장 — 이 ETF의 실제 표본은 이보다 적습니다)' : ''; }
+
+  var MIN_STOCK=15;   // 섹터 내 산출 종목이 이보다 적으면 중앙값을 주지 않는다(method.html 규약과 동일)
+  var MIN_MON=20;     // 레짐 표본이 이보다 적으면 흐리게 + 해칭
+
+  // ── 계산 ───────────────────────────────────────────────────────────
+  function median(arr){
+    if(!arr.length)return null;
+    var a=arr.slice().sort(function(x,y){return x-y;}), m=a.length>>1;
+    return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
+  }
+  function mean(arr){ if(!arr.length)return null; var s=0; for(var i=0;i<arr.length;i++)s+=arr[i]; return s/arr.length; }
+
+  // 비율 셀. 중앙값과 같은 하한(MIN_STOCK)을 건다 — 규칙 4는 '중앙값·백분위'를 함께 묶어 금지하므로
+  // 3~4종목짜리 비율이 80종목짜리 비율과 같은 농도로 칠해지면 안 된다. (오늘 최소 섹터는 21종목이라 발동하지 않는다.)
+  function ratio(num,den,tip,none){
+    if(!den) return {v:null,num:0,den:0,cov:0,tip:none||'산출 불가'};
+    if(den<MIN_STOCK) return {v:null,num:num,den:den,cov:den,short:true,
+      tip:tip+' — 분모가 '+den+'종목으로 '+MIN_STOCK+'종목 미만이라 비율을 내지 않습니다'};
+    return {v:100*num/den, num:num, den:den, cov:den, tip:tip};
+  }
+
+  // 추세 상태 열: v=값, num/den=분모 표기, tip=hover 상세
+  var COLA=[
+    {k:'n',    lab:'종목수',      u:'개', nd:0, plain:true},
+    {k:'ab',   lab:'200일선 위',  u:'%', nd:1},
+    {k:'up',   lab:'상승추세',    u:'%', nd:1},
+    {k:'by',   lab:'매수계열',    u:'%', nd:1},
+    {k:'trend',lab:'평균 추세',   u:'pct',nd:1},
+    {k:'momentum',lab:'평균 모멘텀',u:'pct',nd:1},
+    {k:'overheat',lab:'평균 과열도',u:'pct',nd:1}
+  ];
+  // 펀더멘털 열: 라벨·단위·소수자리·음수제외(dn) 규칙을 stocks.json의 fundx_defs에서 그대로 가져온다
+  var FKEYS=['fpe','pb','roe','rg','fcfy','dy','beta'];
+
+  function buildRows(S){
+    var rows=[], i, j;
+    for(i=0;i<G2E.length;i++){
+      var sec=G2E[i][0], g=[];
+      for(j=0;j<S.stocks.length;j++) if(S.stocks[j].sector===sec) g.push(S.stocks[j]);
+      if(!g.length) continue;
+      var full=[], np=0;
+      for(j=0;j<g.length;j++){ if(g[j].part) np++; else full.push(g[j]); }
+      var ab=0, up=0, by=0;
+      for(j=0;j<full.length;j++){
+        var fl=full[j].flags||[];
+        if(fl.indexOf('200일이탈')<0) ab++;      // 200일이탈 = 종가<200일선 → 없으면 200일선 위
+        if(fl.indexOf('상승추세')>=0) up++;
+      }
+      for(j=0;j<g.length;j++){ var t=g[j].timing; if(t==='매수'||t==='매수우세') by++; }
+
+      // cov = 그 지표가 실제로 산출된 종목 수(분자가 아니라 '값이 있는 종목 수'). 커버 한 줄에 쓴다.
+      var o={sec:sec, ko:KO[sec]||sec, etf:ETF[sec]||'', n:g.length, nt:full.length, part:np, c:{}};
+      o.c.n={v:g.length, num:g.length, den:g.length, cov:g.length,
+             tip:o.ko+' 커버 종목 '+g.length+'개'+(np?' (그중 상장 200거래일 미만 '+np+'개)':'')};
+      o.c.ab = ratio(ab, full.length,
+             o.ko+' · 종가가 200일선 위 '+ab+'/'+full.length+'종목'+(np?' — 상장 200거래일 미만 '+np+'개는 200일선이 없어 분모에서 제외':''),
+             '200일선 산출 가능 종목 없음');
+      o.c.up = ratio(up, full.length,
+             o.ko+' · 상승추세(종가>50일선>200일선 & ADX≥20) '+up+'/'+full.length+'종목');
+      o.c.by = ratio(by, g.length,
+             o.ko+' · 타이밍이 매수 또는 매수우세 '+by+'/'+g.length+'종목 — 랩의 규칙 기반 분류이며 검증된 신호가 아님');
+      var CK=[['trend','추세강도'],['momentum','모멘텀'],['overheat','과열도']];
+      for(j=0;j<CK.length;j++){
+        var ck=CK[j][0], vals=[], q;
+        for(q=0;q<g.length;q++){ var cv=(g[q].comp||{})[ck]; if(typeof cv==='number') vals.push(cv); }
+        // 백분위 평균에도 중앙값과 같은 하한을 건다(규칙 4: 중앙값·백분위 묶음)
+        o.c[ck]= (vals.length>=MIN_STOCK)
+                ? {v:mean(vals), num:vals.length, den:g.length, cov:vals.length,
+                   tip:o.ko+' · '+CK[j][1]+' 백분위 평균 '+nf(mean(vals),1)+' (산출 '+vals.length+'/'+g.length+'종목, 0~100 백분위)'}
+                : {v:null, num:vals.length, den:g.length, cov:vals.length, short:vals.length>0,
+                   tip:o.ko+' · '+CK[j][1]+' 백분위 산출 '+vals.length+'/'+g.length+'종목 — '+MIN_STOCK+'종목 미만이라 평균을 내지 않습니다'};
+      }
+      // 펀더멘털 중앙값
+      var FX=S.fundx_defs||{};
+      for(j=0;j<FKEYS.length;j++){
+        var fk=FKEYS[j], def=FX[fk]||{}, dropNeg=!!def.dn, vals2=[], dropped=0, miss=0;
+        for(q=0;q<g.length;q++){
+          var fv=(g[q].fund||{})[fk];
+          if(typeof fv!=='number'||!isFinite(fv)){ miss++; continue; }
+          if(dropNeg && fv<=0){ dropped++; continue; }
+          vals2.push(fv);
+        }
+        var lab=def.label||fk, un=def.unit||'', nd=(typeof def.nd==='number')?def.nd:2;
+        if(vals2.length<MIN_STOCK){
+          o.c[fk]={v:null, num:vals2.length, den:g.length, cov:vals2.length, short:true, nd:nd, unit:un,
+            tip:o.ko+' · '+lab+' 산출 '+vals2.length+'/'+g.length+'종목 — '+MIN_STOCK+'종목 미만이라 중앙값을 내지 않습니다'};
+        }else{
+          o.c[fk]={v:median(vals2), num:vals2.length, den:g.length, cov:vals2.length, nd:nd, unit:un,
+            tip:o.ko+' · '+lab+' 중앙값 '+nf(median(vals2),nd)+un+' · 산출 '+vals2.length+'/'+g.length+'종목'+
+                (miss?' (결측 '+miss+')':'')+(dropped?' (음수 제외 '+dropped+')':'')};
+        }
+      }
+      rows.push(o);
+    }
+    return rows;
+  }
+
+  // ── 히트맵 렌더 ────────────────────────────────────────────────────
+  function heatTable(rows, cols, state, tid){
+    var i,j;
+    // 열별 최소·최대(색 정규화는 열 안에서만 한다 — 단위가 다른 열끼리 섞으면 색이 거짓말을 한다)
+    var mn={}, mx={};
+    for(j=0;j<cols.length;j++){
+      var c=cols[j]; if(c.plain) continue;
+      var lo=null, hi=null;
+      for(i=0;i<rows.length;i++){
+        var v=rows[i].c[c.k]; if(!v||v.v==null) continue;
+        if(lo===null||v.v<lo)lo=v.v; if(hi===null||v.v>hi)hi=v.v;
+      }
+      mn[c.k]=lo; mx[c.k]=hi;
+    }
+    var srt=rows.slice();
+    if(state.key){
+      srt.sort(function(a,b){
+        var av=a.c[state.key]?a.c[state.key].v:null, bv=b.c[state.key]?b.c[state.key].v:null;
+        if(av==null&&bv==null)return 0; if(av==null)return 1; if(bv==null)return -1;
+        return state.dir==='asc' ? av-bv : bv-av;
+      });
+    }
+    var h='<table class="hm"><thead><tr><th scope="col" style="text-align:left">섹터<span class="u">GICS · ETF</span></th>';
+    for(j=0;j<cols.length;j++){
+      var col=cols[j], on=state.key===col.k;
+      h+='<th scope="col"'+(on?' aria-sort="'+(state.dir==='asc'?'ascending':'descending')+'"':'')+'>'+
+         '<button type="button" data-t="'+tid+'" data-k="'+esc(col.k)+'">'+esc(col.lab)+
+         '<span class="ar" aria-hidden="true">'+(on?(state.dir==='asc'?'▲':'▼'):'⇅')+'</span>'+
+         '<span class="u">'+esc(col.u==='pct'?'0~100':(col.u||''))+'</span></button></th>';
+    }
+    h+='</tr></thead><tbody>';
+    for(i=0;i<srt.length;i++){
+      var r=srt[i];
+      h+='<tr><th scope="row">'+esc(r.ko)+'<span class="etf"><span class="gics">'+esc(r.sec)+' · </span>'+esc(r.etf)+'</span></th>';
+      for(j=0;j<cols.length;j++){
+        var cd=cols[j], cell=r.c[cd.k]||{v:null,tip:''};
+        if(cd.plain){
+          h+='<td class="plain" title="'+esc(cell.tip||'')+'">'+nf(cell.v,cd.nd)+'</td>'; continue;
+        }
+        if(cell.v==null){
+          h+='<td class="na" title="'+esc(cell.tip||'')+'">'+(cell.short?'표본 부족':'—')+
+             '<span class="dn">'+(cell.den?cell.num+'/'+cell.den:'')+'</span></td>';
+          continue;
+        }
+        var lo2=mn[cd.k], hi2=mx[cd.k];
+        var t = (hi2!=null&&lo2!=null&&hi2>lo2) ? (cell.v-lo2)/(hi2-lo2) : 0;
+        t = 0.06 + 0.94*t;   // 최저값도 셀 경계가 보이도록 바닥을 조금 띄운다
+        var nd2 = (typeof cell.nd==='number')?cell.nd:cd.nd;
+        var un2 = cell.unit!=null?cell.unit:(cd.u==='pct'?'':cd.u);
+        h+='<td class="hc" style="--t:'+t.toFixed(3)+'" title="'+esc(cell.tip||'')+'">'+
+           nf(cell.v,nd2)+(un2?'<span class="cu">'+esc(un2)+'</span>':'')+
+           '<span class="dn">'+cell.num+'/'+cell.den+'</span></td>';
+      }
+      h+='</tr>';
+    }
+    return h+'</tbody></table>';
+  }
+
+  // ── 레짐 매트릭스 ──────────────────────────────────────────────────
+  function matrix(R, RN, cur){
+    var perf=R.sector_perf||{}, etfs=[], k;
+    for(k in perf){ if(perf.hasOwnProperty(k)) etfs.push(k); }
+    if(!etfs.length) return '<div class="skel">섹터 성과 데이터가 없습니다.</div>';
+    var cols=[], i, j;
+    for(i=0;i<RORDER.length;i++){
+      var rr=RORDER[i], any=false;
+      for(j=0;j<etfs.length;j++) if(perf[etfs[j]][rr]!=null) any=true;
+      if(any) cols.push(rr);
+    }
+    // 현재 레짐 성과 내림차순 — 표본이 충분한 열을 기준으로 세운다
+    etfs.sort(function(a,b){
+      var av=perf[a][cur], bv=perf[b][cur];
+      if(av==null)av=-999; if(bv==null)bv=-999; return bv-av;
+    });
+    // 색 정규화는 표본 20개월 이상인 열의 값만으로 잡고, 표본 미달 열은 **칠하지도 않는다**.
+    // (범위에서만 빼고 칠하면 범위를 넘는 값이 t=1로 클램프돼 7·13개월 열이 표에서 가장 진해진다.)
+    var lo=null, hi=null;
+    for(i=0;i<etfs.length;i++) for(j=0;j<cols.length;j++){
+      if((RN[cols[j]]||0)<MIN_MON) continue;
+      var v=perf[etfs[i]][cols[j]]; if(v==null) continue;
+      if(lo===null||v<lo)lo=v; if(hi===null||v>hi)hi=v;
+    }
+    var h='<table class="hm"><thead><tr><th scope="col" style="text-align:left">섹터 ETF<span class="u">GICS 대응</span></th>';
+    for(j=0;j<cols.length;j++){
+      var c=cols[j], thin=(RN[c]||0)<MIN_MON;
+      // n은 '이 국면으로 판정된 달의 수'다. ETF별 실제 관측 개월수(상장 이후)는 이보다 적을 수 있으므로 그렇게 적는다.
+      h+='<th scope="col" class="'+(thin?'thin ':'')+(c===cur?'curcol':'')+'" title="'+
+         esc((RKO[c]||c)+' · 이 국면으로 판정된 달 '+(RN[c]||0)+'개월 — ETF별 실제 관측 개월수는 상장 시점에 따라 이보다 적을 수 있습니다')+'">'+
+         esc(c)+'<span class="u">'+esc(RKO[c]||'')+' · 레짐 '+(RN[c]||0)+'개월</span>'+
+         (thin?'<span class="warn">표본 '+(RN[c]||0)+'개월 — 평균으로 읽지 말 것</span>':'')+'</th>';
+    }
+    h+='</tr></thead><tbody>';
+    for(i=0;i<etfs.length;i++){
+      var e=etfs[i], gi=E2G[e];
+      h+='<tr><th scope="row">'+esc(e)+'<span class="etf">'+esc(gi?(KO[gi]||gi):(ETFKO[e]||''))+'</span></th>';
+      for(j=0;j<cols.length;j++){
+        var cc=cols[j], vv=perf[e][cc], th2=(RN[cc]||0)<MIN_MON;
+        if(vv==null){ h+='<td class="na'+(th2?' thin':'')+'">—</td>'; continue; }
+        var tip2=e+'('+(gi?KO[gi]:'')+') · '+(RKO[cc]||cc)+' 국면 월평균 '+(vv>0?'+':'')+nf(vv,2)+'%'+
+                 ' · 이 국면 '+(RN[cc]||0)+'개월'+lateNote(e)+
+                 (th2?' · '+MIN_MON+'개월 미만이라 색을 칠하지 않았습니다 — 평균으로 읽지 마십시오':'');
+        if(th2){   // 표본 미달 열: --t를 아예 주지 않는다 → td.hc의 var(--t,0)이 0이 돼 칠이 없고 해칭만 남는다
+          h+='<td class="hc thin'+(cc===cur?' curcol':'')+'" title="'+esc(tip2)+'">'+(vv>0?'+':'')+nf(vv,2)+'</td>';
+          continue;
+        }
+        var t2 = (hi!=null&&lo!=null&&hi>lo) ? (vv-lo)/(hi-lo) : 0;
+        if(t2<0)t2=0; if(t2>1)t2=1;
+        t2 = 0.06 + 0.94*t2;
+        h+='<td class="hc'+(cc===cur?' curcol':'')+'" style="--t:'+t2.toFixed(3)+'" title="'+esc(tip2)+'">'+
+           (vv>0?'+':'')+nf(vv,2)+'</td>';
+      }
+      h+='</tr>';
+    }
+    return h+'</tbody></table>';
+  }
+
+  // ── 현재 레짐 막대 ─────────────────────────────────────────────────
+  function curBars(R, RN, cur){
+    var perf=R.sector_perf||{}, arr=[], k;
+    for(k in perf){ if(perf.hasOwnProperty(k) && perf[k][cur]!=null) arr.push([k,perf[k][cur]]); }
+    if(!arr.length) return '<div class="skel">현재 레짐의 섹터 성과가 없습니다.</div>';
+    arr.sort(function(a,b){return b[1]-a[1];});
+    var lo=0, hi=0, i;
+    for(i=0;i<arr.length;i++){ if(arr[i][1]<lo)lo=arr[i][1]; if(arr[i][1]>hi)hi=arr[i][1]; }
+    if(hi===lo)hi=lo+1;
+    var span=hi-lo, z=(0-lo)/span*100;
+    var thin=(RN[cur]||0)<MIN_MON;
+    var h='<div class="bars">';
+    for(i=0;i<arr.length;i++){
+      var e=arr[i][0], v=arr[i][1], gi=E2G[e];
+      var x1=(Math.min(v,0)-lo)/span*100, x2=(Math.max(v,0)-lo)/span*100;
+      h+='<div class="brow"><span class="bl">'+esc(e)+'<i>'+esc(gi?(KO[gi]||gi):(ETFKO[e]||''))+'</i></span>'+
+         '<span class="btrack" title="'+esc(e+' · '+(RKO[cur]||cur)+' 국면 월평균 '+(v>0?'+':'')+nf(v,2)+'%'+
+            ' · 이 국면 '+(RN[cur]||0)+'개월'+lateNote(e))+'">'+
+         '<span class="zero" style="left:'+z.toFixed(2)+'%"></span>'+
+         '<span class="bfill" style="left:'+x1.toFixed(2)+'%;width:'+Math.max(0.4,x2-x1).toFixed(2)+'%'+(thin?';opacity:.45':'')+'"></span></span>'+
+         '<span class="bt">'+(v>0?'+':'')+nf(v,2)+'%</span></div>';
+    }
+    h+='<div class="legend" style="margin-top:12px">'+
+       '<span>월평균 수익률(%) · 막대 하나가 한 섹터 ETF · 단일 계열이라 범례 색 구분 없음</span></div>';
+    return h+'</div>';
+  }
+
+  // ── 로드 ───────────────────────────────────────────────────────────
+  var stA={key:null,dir:'desc'}, stB={key:null,dir:'desc'}, ROWS=null;
+  function drawA(){ el('heatA').innerHTML=heatTable(ROWS,COLA,stA,'A'); }
+  function drawB(S){ el('heatB').innerHTML=heatTable(ROWS,COLB,stB,'B'); }
+  var COLB=[];
+
+  function fail(msg){
+    var ids=['heatA','heatB','mx','curbars','maptbl'];
+    for(var i=0;i<ids.length;i++){ var n=el(ids[i]); if(n)n.innerHTML='<div class="skel">'+esc(msg)+'</div>'; }
+    el('rtally').innerHTML='<div class="ty"><b>—</b><span>불러오지 못함</span></div>';
+    el('asofline').innerHTML='<span class="bad">데이터를 불러오지 못했습니다.</span>';
+    // 배너는 다시 숨긴다 — 안 그러면 빈 상자만 영구히 남는다
+    var sfn=el('sampfirst'); if(sfn){ sfn.innerHTML=''; sfn.hidden=true; }
+  }
+
+  function jget(u){ return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}); }
+
+  Promise.all([jget('data/stocks.json'), jget('data/regime.json')]).then(function(res){
+    var S=res[0], R=res[1];
+    if(!S||!S.stocks||!R||!R.regime){ fail('데이터를 불러오지 못했습니다.'); return; }
+
+    // 기준일 — 페이지에 적지 않고 로드한 JSON의 as_of를 쓴다. 두 파일이 어긋나면 그 사실을 표시한다.
+    var a1=S.as_of||'—', a2=R.as_of||'—', same=(a1===a2);
+    el('asofline').innerHTML=
+      '<span>종목·재무 기준일 <b>'+esc(a1)+'</b> <span style="opacity:.7">(data/stocks.json)</span></span>'+
+      '<span>레짐·조건부 성과 기준일 <b>'+esc(a2)+'</b> <span style="opacity:.7">(data/regime.json)</span></span>'+
+      (same?'':'<span class="bad">⚠ 두 파일의 기준일이 다릅니다 — 좌우 블록을 같은 날로 읽지 마십시오.</span>');
+    el('ldn').textContent = (S.n_stocks!=null?S.n_stocks:S.stocks.length);
+    var dycov=(S.fund_cov||{}).dy;
+    el('dycov').textContent = (dycov!=null?dycov:'—');
+
+    // 레짐별 표본 개월수 — history에서 직접 센다
+    var RN={}, hist=R.history||[], i;
+    for(i=0;i<hist.length;i++){ if(hist[i]&&hist[i].r) RN[hist[i].r]=(RN[hist[i].r]||0)+1; }
+    var cur=R.regime.label, curN=RN[cur]||0, total=hist.length;
+    var span0=hist.length?hist[0].dt:'—', span1=hist.length?hist[hist.length-1].dt:'—';
+    // 본문의 시작 연도도 history에서 뽑는다 — 박아 두면 history 시작이 바뀔 때 조용히 거짓이 된다
+    var hy=(span0&&span0.length>=4)?span0.slice(0,4):'—';
+    el('histyA').textContent=hy; el('histyB').textContent=hy;
+
+    // ① 표본 타일 — 개월수 내림차순, 20개월 미만은 흐리게
+    var keys=[]; for(var kk in RN){ if(RN.hasOwnProperty(kk)) keys.push(kk); }
+    keys.sort(function(a,b){return RN[b]-RN[a];});
+    // 안내문의 "N개월 평균과 M개월 평균" — 최소·최대 표본을 데이터에서 뽑는다(값을 본문에 박으면 갱신 때 거짓말이 된다)
+    if(keys.length){ el('nmax').textContent=RN[keys[0]]; el('nmin').textContent=RN[keys[keys.length-1]]; }
+    var th='';
+    for(i=0;i<keys.length;i++){
+      var kx=keys[i], nx=RN[kx], thin=nx<MIN_MON;
+      th+='<div class="ty'+(thin?' thin':'')+(kx===cur?' cur':'')+'" style="--edge:'+(thin?'var(--marg)':(kx===cur?'var(--accent)':'var(--champ)'))+'">'+
+          '<b class="tnum">'+nx+'</b><span>'+esc(kx)+(kx===cur?' · 현재':'')+'</span>'+
+          '<em>'+esc(RKO[kx]||'')+(thin?' — 평균으로 읽지 말 것':'')+'</em></div>';
+    }
+    th+='<div class="ty" style="--edge:var(--ink)"><b class="tnum">'+total+'</b><span>전체 개월</span>'+
+        '<em>'+esc(span0)+' ~ '+esc(span1)+' 월말</em></div>';
+    el('rtally').innerHTML=th;
+
+    var sf=el('sampfirst'); sf.hidden=false;
+    sf.innerHTML='<div class="sfn tnum">'+curN+'<i>개월</i></div>'+
+      '<div class="sft"><b>현재 레짐 '+esc(cur)+'('+esc(RKO[cur]||'')+') · 표본 '+curN+'개월 / 전체 '+total+'개월</b>'+
+      '<span>아래 "현재 레짐의 과거 월평균"은 '+esc(span0)+' 이후 '+esc(cur)+' 국면으로 판정된 <b>'+curN+'개 달</b>의 단순 평균입니다. '+
+      curN+'개월은 통계적 확신을 주기엔 적은 표본이고, 그 안에서도 몇 달의 큰 값이 평균을 끕니다. '+
+      '이번에도 그러리라는 근거가 아닙니다. XLRE(2015-10 상장)·XLC(2018-06 상장)는 그보다 적은 달로 평균됩니다.</span></div>';
+
+    // ② 히트맵
+    ROWS=buildRows(S);
+    var FX=S.fundx_defs||{};
+    COLB=[];
+    for(i=0;i<FKEYS.length;i++){
+      var fkk=FKEYS[i], dd=FX[fkk]||{};
+      COLB.push({k:fkk, lab:(dd.label||fkk), u:(dd.unit||''), nd:(typeof dd.nd==='number'?dd.nd:2)});
+    }
+    var np=0; for(i=0;i<ROWS.length;i++) np+=ROWS[i].part;
+    el('partn').textContent=np;
+    stA.key='n'; stA.dir='desc'; stB.key='n'; stB.dir='desc';
+    // 'n'은 COLB에 없으므로 B는 종목수 정렬 대신 첫 재무 열 기준으로 시작한다
+    stB.key=COLB.length?COLB[0].k:null;
+    drawA(); drawB(S);
+
+    // 커버 분모 한 줄 — "ROE 471/518종목"처럼 결측을 숨기지 않고 사이트 전체 기준으로 적는다
+    var NTOT=(S.n_stocks!=null?S.n_stocks:S.stocks.length);
+    function covLine(cols){
+      var out=[], q, w;
+      for(q=0;q<cols.length;q++){
+        var ck=cols[q]; if(ck.plain) continue;
+        var sum=0;
+        for(w=0;w<ROWS.length;w++){ var cx=ROWS[w].c[ck.k]; if(cx&&typeof cx.cov==='number') sum+=cx.cov; }
+        out.push(esc(ck.lab)+' <b>'+sum+'/'+NTOT+'</b>');
+      }
+      return out.join('<i>·</i>');
+    }
+    el('covA').innerHTML='산출 종목 수 — '+covLine(COLA)+
+      '<i>·</i>200일선 위·상승추세는 상장 200거래일 이상 종목만 분모';
+    el('covB').innerHTML='산출 종목 수 — '+covLine(COLB)+
+      '<i>·</i>결측 + (선행 PER·PBR의) 음수 제외 후 실제로 중앙값에 들어간 종목 수';
+
+    // 정렬(위임) — 표를 다시 그리므로 버튼 참조를 들고 있지 않는다
+    document.addEventListener('click',function(ev){
+      var b=ev.target; while(b&&b!==document&&!(b.tagName==='BUTTON'&&b.getAttribute('data-k'))) b=b.parentNode;
+      if(!b||b===document)return;
+      var t=b.getAttribute('data-t'), k=b.getAttribute('data-k'), st=(t==='A'?stA:stB);
+      if(st.key===k) st.dir=(st.dir==='desc'?'asc':'desc'); else { st.key=k; st.dir='desc'; }
+      if(t==='A')drawA(); else drawB(S);
+    });
+
+    // 탐색기 링크 — stocks.html의 딥링크 규약을 실제로 확인한 결과만 적는다
+    el('linknote').innerHTML=
+      '<b>섹터를 눌러 종목 목록으로 넘어가지 않는 이유</b> — 종목 탐색기(<code>stocks.html</code>)가 받는 해시 파라미터는 '+
+      '<code>#p=</code>(프리셋)와 <code>#t=</code>(티커) 두 가지뿐이고 섹터 파라미터가 없습니다. '+
+      '없는 규약으로 링크를 걸면 눌러도 필터가 걸리지 않은 채 전체 목록이 열립니다 — 그래서 걸지 않았습니다. '+
+      '<a href="stocks.html" style="color:var(--accent)">탐색기</a>를 연 뒤 검색창에 섹터명(예: <code>금융</code>, <code>Financials</code>)을 입력하면 같은 묶음이 나옵니다. '+
+      '섹터 딥링크는 탐색기에 <code>#s=</code>를 추가한 뒤에 붙입니다.';
+
+    // ③ 현재 레짐 막대
+    el('cursub').textContent='· '+cur+'('+(RKO[cur]||'')+') · 이 국면 '+curN+'개월(레짐 기준) · SPDR 섹터 ETF 월평균 %';
+    el('curbars').innerHTML=curBars(R,RN,cur);
+
+    // ④ 전 레짐 매트릭스
+    el('mx').innerHTML=matrix(R,RN,cur);
+
+    // ⑤ 대응표 — 커버 종목수까지 붙여 두 모집단이 다르다는 걸 숫자로 보인다
+    var bySec={}; for(i=0;i<ROWS.length;i++) bySec[ROWS[i].sec]=ROWS[i];
+    var mh='<table class="maptbl"><thead><tr><th scope="col">ETF</th><th scope="col">GICS 섹터(영문)</th>'+
+           '<th scope="col">이 사이트 표기</th><th scope="col" style="text-align:right">랩 커버 종목수</th>'+
+           '<th scope="col" style="text-align:right">'+esc(cur)+' 월평균<span class="u">이 국면 '+curN+'개월</span></th></tr></thead><tbody>';
+    for(i=0;i<G2E.length;i++){
+      var gs=G2E[i][0], es=G2E[i][1], row=bySec[gs];
+      var pv=((R.sector_perf||{})[es]||{})[cur];
+      mh+='<tr><td class="tk">'+esc(es)+(LATE[es]?'<span>'+esc(LATE[es])+' 상장</span>':'')+'</td><td>'+esc(gs)+'</td><td>'+esc(KO[gs]||'')+'</td>'+
+          '<td class="num">'+(row?row.n:'—')+'</td>'+
+          '<td class="num" title="'+esc(es+' · '+(RKO[cur]||cur)+' 국면 '+curN+'개월'+(lateNote(es)?' '+lateNote(es):''))+'">'+
+          (pv==null?'—':((pv>0?'+':'')+nf(pv,2)+'%'))+'</td></tr>';
+    }
+    mh+='</tbody></table>';
+    el('maptbl').innerHTML=mh;
+  }).catch(function(){ fail('데이터를 불러오지 못했습니다.'); });
+})();
+</script>
+</body>
+</html>

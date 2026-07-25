@@ -58,10 +58,18 @@ def _breadth(stocks):
         if t:
             tm[t] = tm.get(t, 0) + 1
     n = len(stocks)
+
+    # 200일선 위 비율의 분모는 **200일선이 산출되는 종목**이어야 한다.
+    # part(부분 편입 — 상장 200거래일 미만, refresh_stocks.py:579)는 200일선이 없어서
+    # '200일이탈' 플래그가 붙지 않을 뿐인데, 여집합으로 세면 그대로 '위'로 잡혀 비율이 부푼다.
+    # 오늘 기준 4종목(Q·FDXF·HONA·SPCX) 차이지만 신규 상장이 몰리면 커진다.
+    full = [s for s in stocks if not s.get("part")]
+    below_full = sum(1 for s in full if "200일이탈" in (s.get("flags") or []))
     return {
         "n": n,
-        # 200일선 위 종목 수는 '이탈'의 여집합이다 — 화면에서 다시 빼게 하지 않고 여기서 낸다
-        "above200": n - fl.get("200일이탈", 0),
+        "n_ma200": len(full),                     # 200일선이 산출되는 종목 수(비율의 분모)
+        "n_partial": n - len(full),               # 이력이 짧아 판정 불가
+        "above200": len(full) - below_full,
         "flags": dict(sorted(fl.items(), key=lambda kv: -kv[1])),
         "timing": tm,
     }
