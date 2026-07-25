@@ -307,6 +307,18 @@ if pool:
                 errors.append(f"archive_index: 구 슬러그 '{_k}'를 {_seen_aka[_k]}·{_x.get('sid')}가 함께 씀")
             _seen_aka[_k] = _x.get("sid")
 
+    # archive_index의 본문은 페이지에서 esc()로 감싸 넣는다. 그래서 데이터에 태그나 마크다운을
+    # 섞으면 **굵게 보이는 대신 <b>가 글자 그대로 찍힌다**(실측으로 21개 필드가 그랬다).
+    # 강조가 필요하면 데이터가 아니라 렌더 쪽에서 할 일이다.
+    for _x in AREC:
+        for _k, _v in _x.items():
+            if isinstance(_v, str) and re.search(r"</?[a-zA-Z][^>]*>", _v):
+                errors.append(f"archive_index {_x.get('sid')}.{_k}: HTML 태그가 들어 있음 "
+                              f"— esc() 대상이라 화면에 태그가 그대로 찍힌다")
+            if isinstance(_v, str) and re.search(r"\*\*[^*]+\*\*", _v):
+                errors.append(f"archive_index {_x.get('sid')}.{_k}: 마크다운 굵게(**) 표기 "
+                              f"— esc() 대상이라 별표가 그대로 보인다")
+
     # arch 참조 무결성 — 규칙 카드의 '이전 판정' 줄은 A[r.arch]로 붙는다. 없는 sid를 가리키면
     # 그 줄이 조용히 사라진다(오류도 안 난다). 링크가 끊긴 걸 화면에서 알아챌 방법이 없으므로 여기서 막는다.
     try:
