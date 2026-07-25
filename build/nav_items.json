@@ -49,32 +49,6 @@
      "src": "raw",
      "verdict": "na",
      "effort": "M"
-    },
-    {
-     "name": "실시간 내러티브",
-     "file": "roadmap.html#narrative",
-     "status": "wont-build",
-     "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
-     "src": "none",
-     "verdict": "na",
-     "effort": "S",
-     "anchor": "runtime",
-     "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
-     "blocked_why": "LLM 요약으로 채우면 \"해설을 붙이지 않는다\" 원칙과 충돌한다. 대체는 8-K 원문 직행.",
-     "pipeline": 0
-    },
-    {
-     "name": "프리미엄 뉴스",
-     "file": "roadmap.html#news",
-     "status": "wont-build",
-     "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
-     "src": "none",
-     "verdict": "na",
-     "effort": "S",
-     "anchor": "runtime",
-     "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
-     "blocked_why": "위와 동일. 대체는 co.html#ir의 EDGAR 원문 링크.",
-     "pipeline": 0
     }
    ],
    "short": "공시"
@@ -326,9 +300,9 @@
      "verdict": "na",
      "effort": "M",
      "placeholder": true,
-     "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "배당 시계열이 있어야 성립. 지금은 단면 배당수익률(커버 78.8%)뿐.",
-     "pipeline": 3
+     "blocked_by": "할인율(자기자본비용) 가정 설계",
+     "blocked_why": "데이터는 확보(SEC XBRL DPS 커버 80%). 남은 건 가정을 화면에서 움직이게 만드는 설계다.",
+     "pipeline": 9
     },
     {
      "name": "RIM",
@@ -339,9 +313,9 @@
      "verdict": "na",
      "effort": "M",
      "placeholder": true,
-     "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "자기자본 시계열 필요. 지금은 단면 PBR뿐.",
-     "pipeline": 3
+     "blocked_by": "할인율 가정 + 클린서플러스 오차 실측",
+     "blocked_why": "데이터는 확보(자기자본 100%·순이익 100%·EPS 99%). OCI 때문에 등식이 정확히는 안 맞아, 그 오차를 재서 적을 수 있어야 켠다.",
+     "pipeline": 9
     },
     {
      "name": "Index DCF",
@@ -410,19 +384,6 @@
      "blocked_why": "섹터·팩터 어긋남 탐지. 산업 탐색이 선 필요.",
      "pipeline": 99,
      "anchor": "static"
-    },
-    {
-     "name": "밸류체인",
-     "file": "roadmap.html#value-chain",
-     "status": "wont-build",
-     "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
-     "src": "none",
-     "verdict": "na",
-     "effort": "S",
-     "anchor": "runtime",
-     "blocked_by": "만들지 않는다 — 공급망 데이터 없음",
-     "blocked_why": "SIC 산업분류로는 밸류체인을 만들 수 없다. 없는 걸 지어내지 않는다.",
-     "pipeline": 0
     }
    ],
    "short": "산업"
@@ -495,5 +456,41 @@
  "locked_note": "locked=true면 메뉴 이름 옆에 🔒를 붙인다. 잠금 여부는 페이지의 AES 게이트 유무로 판정하며 build/validate_site.py가 대조한다.",
  "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
  "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
- "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다."
+ "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
+ "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 40슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
+ "retired": [
+  {
+   "name": "실시간 내러티브",
+   "cat": "공시룸 (뉴스룸)",
+   "was_file": "roadmap.html#narrative",
+   "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
+   "retired_on": "2026-07-25",
+   "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
+   "principle": "LLM으로 요약해 채우는 길은 있지만, 이 랩의 \"해설을 붙이지 않는다\" 원칙과 정면으로 충돌한다. 원칙을 꺾느니 칸을 뺀다.",
+   "paid_path": "유료 라이선스 피드(Dow Jones·Benzinga·Refinitiv) 계약. 연 단위 비용이 든다.",
+   "replaced_by": "filings.html — 8-K 원문 피드. 회사가 스스로 단 Item 코드로 분류하고 해설을 붙이지 않는다."
+  },
+  {
+   "name": "프리미엄 뉴스",
+   "cat": "공시룸 (뉴스룸)",
+   "was_file": "roadmap.html#news",
+   "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
+   "retired_on": "2026-07-25",
+   "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
+   "principle": "유료 뉴스를 사더라도 요약 없이 링크만 나열하면 EDGAR 원문 링크와 다를 바가 없다.",
+   "paid_path": "위와 동일.",
+   "replaced_by": "co.html#ir — 회사별 EDGAR 제출 원문 링크."
+  },
+  {
+   "name": "밸류체인",
+   "cat": "산업 분석",
+   "was_file": "roadmap.html#value-chain",
+   "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
+   "retired_on": "2026-07-25",
+   "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
+   "principle": "유일한 구조화 실마리였던 고객집중도 공시(ASC 280, 매출 10% 이상 고객)는 XBRL 차원(dimension)에 실려 있어 companyfacts API로는 나오지 않는다 — AAPL·NVDA·AVGO·WDC 실측에서 집중도 태그 0개(2026-07-25). 10-K 본문을 NLP로 파싱하는 길은 남지만 그건 랩이 읽고 해석한 결과다.",
+   "paid_path": "유료 공급망 데이터셋(FactSet Revere·Bloomberg SPLC).",
+   "replaced_by": null
+  }
+ ]
 }

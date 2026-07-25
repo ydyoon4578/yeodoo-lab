@@ -380,9 +380,11 @@ def build_home(items: dict) -> str:
     """
     out = []
     tools = [t for c in items["categories"] for t in c["tools"]]
-    n_live = sum(1 for t in tools if tool_live(t) and t["status"] != "wont-build")
-    n_wont = sum(1 for t in tools if t["status"] == "wont-build")
-    n_soon = len(tools) - n_live - n_wont
+    n_live = sum(1 for t in tools if tool_live(t))
+    # 2026-07-25부터 '만들지 않는 칸'은 슬롯 안에 두지 않고 items["retired"]로 뺐다.
+    # 여기서 tools를 훑으면 항상 0이 나온다(실제로 그렇게 0이 찍혔다).
+    n_wont = len(items.get("retired") or [])
+    n_soon = len(tools) - n_live
     n_file = len({t["file"].split("#")[0] for t in tools})
 
     # ── 판정 원장 바로 아래에 붙는 계수 줄 ──
@@ -395,7 +397,7 @@ def build_home(items: dict) -> str:
                  if not tool_live(t) and t["status"] != "wont-build" and t.get("pipeline") in (1, 99))
     out.append('    <p class="ltn"><span>화면 <b>%d</b></span><span>동작 <b>%d</b></span>'
                '<span>구현 대기 <b>%d</b></span><span>소스 대기 <b>%d</b></span>'
-               '<span>만들지 않기로 한 것 <b>%d</b></span><span>파일 <b>%d</b>장</span></p>'
+               '<span>메뉴에서 뺌 <b>%d</b></span><span>파일 <b>%d</b>장</span></p>'
                % (len(tools), n_live, n_impl, n_soon - n_impl, n_wont, n_file))
     out.append('    <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. '
                '<em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>')
@@ -448,11 +450,11 @@ def build_home(items: dict) -> str:
     # pipeline 1 = 지금 만든다, 99 = 보유 데이터로 가능하나 후순위. 둘 다 '데이터는 있다' 쪽이다
     impl = [t for t in pend if t.get("pipeline") in (1, 99)]
     soon = [t for t in pend if t not in impl]
-    wont = [t for t in tools if t["status"] == "wont-build"]
+    wont = list(items.get("retired") or [])   # 슬롯 밖 — 사유만 게시한다
 
     out.append('<section id="s-gap" aria-labelledby="gap-h">')
     out.append('  <p class="lbl" id="gap-h">아직 못 만든 것 '
-               '<span class="sub">· 구현 대기 %d · 소스 대기 %d · 만들지 않기로 한 것 %d</span></p>'
+               '<span class="sub">· 구현 대기 %d · 소스 대기 %d · 메뉴에서 뺌 %d</span></p>'
                % (len(impl), len(soon), n_wont))
     if impl:
         out.append('  <div class="gapbox implbox">')
@@ -471,11 +473,11 @@ def build_home(items: dict) -> str:
         out.append('  </div>')
     if wont:
         out.append('  <div class="gapbox wontbox">')
-        out.append('    <p class="gaph">만들지 않기로 한 것 — "언젠가"라고 적어두고 방치하지 않는다</p>')
+        out.append('    <p class="gaph">메뉴에서 뺌 — 무료 데이터로는 길이 없어 슬롯에서 제외했다</p>')
         for t in wont:
             out.append('    <div class="gaprow"><span class="gn">%s</span>'
                        '<span class="gw">%s</span></div>'
-                       % (esc(t["name"]), esc(t.get("blocked_by") or "")))
+                       % (esc(t["name"]), esc(t.get("why") or "")))
         out.append('    <p class="gapf"><a href="roadmap.html">사유 전문 →</a></p>')
         out.append('  </div>')
     out.append('</section>')
@@ -539,6 +541,10 @@ def main() -> int:
                                if t.get(k) is not None} | {"live": tool_live(t)}
                               for t in c["tools"]]}
                    for c in items["categories"]],
+               # 메뉴에서 뺀 칸 — 슬롯 수에는 안 들어가지만 로드맵이 사유를 그대로 게시한다.
+               # 지운 기록을 지우면 '무엇을 못 하는지'가 같이 사라진다.
+               "retired_note": items.get("retired_note", ""),
+               "retired": items.get("retired", []),
                }
         io.open(os.path.join(ROOT, "data", "nav.json"), "w", encoding="utf-8").write(
             json.dumps(pub, ensure_ascii=False, indent=1) + "\n")
