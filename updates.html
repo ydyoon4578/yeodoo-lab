@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 아직 만들지 못한 도구와 그 이유. 어떤 데이터가 없어서 비어 있는지, 어떤 칸은 아예 만들지 않기로 했는지 전부 공개합니다.">
-<title>여두 · 미구현 로드맵</title>
+<meta name="description" content="여두 전략 랩 — 이 사이트가 언제 무엇을 고쳤는지의 전체 기록. 데이터 자동 갱신과 사람이 한 작업을 같은 줄에 남깁니다.">
+<title>여두 · 갱신 기록</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
-<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/roadmap.html">
-<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/roadmap.html">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/updates.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/updates.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 · 미구현 로드맵">
-<meta property="og:description" content="무엇이 없어서 못 만들었는지 — 준비중과 미제작을 사유와 함께 공개.">
+<meta property="og:title" content="여두 · 갱신 기록">
+<meta property="og:description" content="언제 무엇을 고쳤는지 — 자동 갱신과 사람 작업을 같은 줄에 남깁니다.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 · 미구현 로드맵">
-<meta name="twitter:description" content="무엇이 없어서 못 만들었는지 — 준비중과 미제작을 사유와 함께 공개.">
+<meta name="twitter:title" content="여두 · 갱신 기록">
+<meta name="twitter:description" content="언제 무엇을 고쳤는지의 전체 기록.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <style>
   :root{
@@ -49,7 +49,6 @@
   .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
 
-  /* 네 숫자를 나란히 둔다 — '도구 41종' 같은 부풀린 수를 걸지 않기 위해서다 */
   .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
   .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
   .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
@@ -60,25 +59,45 @@
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
 
-  .pipe{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;margin-bottom:13px}
-  .pipe h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-  .pipe h3 .pn{font-size:10px;font-weight:800;color:var(--panel);background:var(--champ);border-radius:5px;padding:2px 7px;flex:none}
-  .pipe h3 .cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:auto}
-  .pipe .why{margin:9px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.65}
-  .slots{margin:12px 0 0;display:flex;flex-direction:column;gap:1px}
-  .slot{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
-  .slot .sn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
-  .slot .sc{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
-  .slot .sd{grid-column:1/-1;font-size:11.5px;color:var(--muted);line-height:1.5}
-
-  .wont{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--hot);border-radius:12px;box-shadow:var(--shadow);padding:15px 19px;margin-bottom:11px}
-  .wont h3{margin:0;font-family:var(--mono);font-size:13.5px;font-weight:700}
-  .wont p{margin:8px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.65}
-  .wont .alt{margin-top:9px;font-size:11.5px;color:var(--muted)}
-
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:16px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
+  .note.hard{border-left-color:var(--hot)}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+
+  .filters{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
+  .frow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .frow>.fl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:52px}
+  .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-2);cursor:pointer;line-height:1.4}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
+  @media (prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#131820}}
+  :root[data-theme="light"] .chip[aria-pressed=true]{color:#FFFFFF}
+  :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
+  .chip .cn{font-weight:500;opacity:.75;margin-left:4px}
+
+  /* 날짜별 묶음 */
+  .day{margin-bottom:4px}
+  .dayh{position:sticky;top:0;z-index:2;background:var(--ground);padding:12px 0 7px;
+        font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:-.01em;
+        display:flex;align-items:baseline;gap:9px;border-bottom:1px solid var(--line)}
+  .dayh .ago{font-size:10.5px;font-weight:600;color:var(--muted)}
+  .dayh .nw{color:var(--deploy)}
+  .dayh .cnt{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .upd{display:grid;grid-template-columns:52px 104px 1fr;gap:3px 12px;align-items:baseline;
+       padding:9px 2px;border-bottom:1px solid var(--line-soft);text-decoration:none}
+  .upd:hover{background:var(--panel-2)}
+  .upd .uh{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .upd .ut{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));
+           border:1px solid var(--utc,var(--line));border-radius:6px;padding:1px 7px;text-align:center;white-space:nowrap;
+           overflow:hidden;text-overflow:ellipsis}
+  .upd .uv{font-size:13px;color:var(--ink);line-height:1.55}
+  @media(max-width:640px){
+    .upd{grid-template-columns:52px 1fr}
+    .upd .uv{grid-column:1/-1}
+  }
+
+  .more{display:block;width:100%;margin:18px 0 0;padding:11px;font-family:var(--mono);font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink-2);cursor:pointer}
+  .more:hover{border-color:var(--accent);color:var(--ink)}
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
@@ -179,8 +198,7 @@
 </style>
 <!-- NAVCSS:END -->
 </head>
-<body data-tool="roadmap.html">
-
+<body data-tool="updates.html">
 <!-- NAV:BEGIN -->
 <a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
@@ -373,39 +391,44 @@
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Roadmap · 미구현 목록</div>
-    <h1 class="title">무엇이 없어서<br>못 만들었는가</h1>
-    <p class="lede">메뉴에 <b>준비중</b>으로 뜨는 칸이 왜 비어 있는지, 그리고 어떤 칸은 <b>아예 만들지 않기로</b> 했는지 전부 적습니다.
-      이 랩은 통과한 전략만이 아니라 기각한 전략도 사유와 함께 남깁니다 — 도구도 같은 규칙으로 다룹니다.</p>
+    <div class="eyebrow">Updates · 갱신 기록</div>
+    <h1 class="title">언제 무엇을<br>고쳤는가</h1>
+    <p class="lede">데이터 자동 갱신과 사람이 한 작업을 <b>같은 줄에 섞어</b> 남깁니다. 나누면 "데이터는 매일 도는데
+      사이트는 몇 달째 그대로"인 상태가 가려지기 때문입니다. 하루에 여러 번 갱신될 때 순서가 보이도록 <b>시각(KST)</b>도 붙입니다 —
+      다만 커밋 이력으로 복원할 수 없는 옛 항목은 날짜만 있습니다. 없는 걸 지어내지 않습니다.</p>
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
-  <section aria-labelledby="pipe-h">
-    <p class="lbl" id="pipe-h">데이터 소스별 대기 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 하나가 여러 칸을 켠다</span></p>
-    <p class="lblnote">붙일 순서는 "이 소스 하나가 몇 개의 칸을 여는가"로 정했습니다. 크기·소요시간은 실제로 호출해 측정한 값입니다.</p>
-    <div id="pipes"><div class="skel">불러오는 중…</div></div>
+  <section aria-labelledby="feed-h">
+    <p class="lbl" id="feed-h">기록</p>
+    <p class="lblnote">최신순 · 날짜별로 묶었습니다. 줄을 누르면 그 화면으로 갑니다.</p>
+
+    <div class="filters">
+      <div class="frow">
+        <span class="fl">대상</span>
+        <div id="tchips" class="frow" style="gap:6px;flex:1"></div>
+      </div>
+    </div>
+
+    <div id="feed"><div class="skel">불러오는 중…</div></div>
+    <button class="more" id="more" hidden type="button">더 보기</button>
   </section>
 
-  <section aria-labelledby="wont-h">
-    <p class="lbl" id="wont-h">메뉴에서 뺀 칸 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 슬롯 수에서 제외</span></p>
-    <p class="lblnote">무료 공개 데이터로는 만들 수 없다고 확정해 <b>40슬롯에서 뺀</b> 칸입니다. 메뉴에는 더 이상 없습니다.
-      다만 <b>지웠다고 없던 일로 하지는 않습니다</b> — 왜 못 만드는지, 돈을 쓰면 되는지, 무엇이 대신 그 자리를 맡았는지를 여기 남깁니다.</p>
-    <div id="wonts"><div class="skel">불러오는 중…</div></div>
-  </section>
+  <div class="note" id="stale" hidden></div>
 
-  <div class="note" id="tallynote">
-    <b>준비중은 남기고, 못 만드는 칸은 뺍니다</b> — 둘은 다릅니다.
-    <b>준비중</b>은 붙일 소스가 실재하고 순서만 남은 칸이라, 지우면 이 사이트가 무엇을 다루려 하는지가 같이 사라집니다.
-    그래서 준비중이라고 적힌 채로 둡니다.
-    <b>못 만드는 칸</b>은 무료 공개 데이터에 길이 없다고 확정한 것이라, 메뉴에 세워 두면 "언젠가 되겠지"라는
-    빈 약속이 됩니다. 2026-07-25에 3칸을 슬롯에서 뺐습니다 — 대신 <b>왜 못 만드는지와 무엇이 대신하는지를
-    위에 그대로 남깁니다</b>. 사유를 지우는 것과 칸을 지우는 것은 다릅니다.
+  <div class="note">
+    <b>이 기록의 한계</b> — 기록은 <b>사람이 남겨야 남습니다</b>. 자동 갱신 잡은 스스로 적지만, 화면을 고치고
+    <code>build/log_update.py</code>를 부르지 않으면 그 작업은 여기 영원히 안 남습니다.
+    실제로 도구를 여럿 새로 만든 사흘(2026-07-23~25) 동안 이 피드가 한 줄도 늘지 않은 적이 있습니다 —
+    기록 가능한 대상 목록이 옛날 7개로 굳어 있어 새 화면은 기록 자체가 거부됐기 때문입니다.
+    지금은 CI가 <b>기록 가능한 대상 · 이 페이지가 이름을 아는 대상 · 실제로 쓰인 대상</b> 세 집합을 대조해 막고,
+    마지막 기록이 7일을 넘으면 위에 경고가 뜹니다.
   </div>
 
   <footer>
-    <a href="index.html">← 전략 랩 홈</a> · <a href="method.html">등급·판정 규약</a> ·
-    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
-    <br>이 목록은 메뉴 정본(<code>build/nav_items.json</code>)에서 자동 생성됩니다 — 도구가 켜지면 여기서 저절로 빠집니다.
+    <a href="index.html">← 전략 랩 홈</a> · <a href="sources.html">데이터 출처·기준일</a> ·
+    <a href="roadmap.html">미구현 로드맵</a> · <a href="method.html">등급·판정 규약</a>
+    <br>기록 정본 <code>data/updates.json</code> · 기록 도구 <code>build/log_update.py</code>
   </footer>
 </div>
 
@@ -414,66 +437,108 @@
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
-  fetch('data/nav.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
-    if(!j||!j.categories){fail();return;}
-    var tools=[];
-    j.categories.forEach(function(c){(c.tools||[]).forEach(function(t){t._cat=c.name;tools.push(t);});});
+  // 대상 → [표시이름, 링크, 색]. build/log_update.py의 TARGETS와 **같은 집합**이어야 한다 —
+  // 어긋나면 그 이벤트가 '기타'로 떨어지고, validate_site.py가 CI에서 실패시킨다.
+  var UPD={rotation:['전략 탐색','rotation.html','var(--marg)'],explorer:['전략 리스트','explorer.html','var(--rp)'],
+           archive:['기각 아카이브','archive.html','var(--hot)'],stocks:['종목 시그널','stocks.html','var(--deploy)'],
+           regime:['시장 국면','regime.html','var(--champ)'],sentiment:['시장 심리','regime.html#sent','var(--champ)'],
+           holdings:['포트폴리오','explorer.html','var(--rp)'],
+           market:['시장 폭','market.html','var(--deploy)'],sector:['섹터 히트맵','sector.html','var(--deploy)'],
+           macro:['거시 지표','macro.html','var(--champ)'],screener:['스크리너','screener.html','var(--rp)'],
+           relvalue:['상대가치','rel-value.html','var(--marg)'],valuation:['가치평가','valuation.html','var(--marg)'],
+           portfolio:['포트폴리오 관리','portfolio.html','var(--rp)'],company:['종목 재무','co.html','var(--deploy)'],
+           method:['등급·판정 규약','method.html','var(--muted)'],roadmap:['로드맵','roadmap.html','var(--muted)'],
+           sources:['데이터 출처','sources.html','var(--muted)'],site:['사이트 전반','index.html','var(--accent)'],
+           filings:['공시 피드','filings.html','var(--champ)'],industry:['산업 탐색','industry.html','var(--champ)']};
 
-    // ── 네 숫자 ──
-    // 앞의 셋(전체=동작+준비중)만 합이 맞는다. '뺀 칸'은 2026-07-25에 슬롯에서 아예 제외했으므로
-    // 전체 슬롯 수에 들어 있지 않다 — 여기서 빼면 준비중이 그만큼 모자라게 나온다(실제로 그렇게 틀렸었다).
-    var live   = tools.filter(function(t){return t.live;}).length;
-    var soon   = tools.length-live;
-    var wont   = (j.retired||[]).length;      // 슬롯 밖 — 아래 '뺀 칸' 섹션이 사유를 싣는다
-    el('tally').innerHTML=
-      ty(tools.length,'전체 슬롯','메뉴에 세운 칸','var(--ink)')+
-      ty(live,'동작 중','지금 열리는 화면','var(--deploy)')+
-      ty(soon,'준비중','소스·구현 대기','var(--champ)')+
-      ty(wont,'메뉴에서 뺌','슬롯 밖 · 사유는 아래','var(--hot)');
+  var PAGE=20, shown=PAGE, EV=[], sel={};
 
-    // ── 소스별 묶음(pipeline 0=영구 미제작은 제외, 99=후순위는 맨 뒤) ──
-    var byPipe={};
-    tools.filter(function(t){return !t.live;}).forEach(function(t){
-      var k=(t.pipeline==null?98:t.pipeline)+'|'+(t.blocked_by||'미분류');
-      (byPipe[k]=byPipe[k]||[]).push(t);
+  function ty(v,lab,note,edge){
+    return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';
+  }
+  function daysAgo(d){
+    var t=new Date(d+'T00:00:00Z'), now=new Date(Date.now()+9*3600e3);
+    return Math.round((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-t.getTime())/864e5);
+  }
+  function agoTxt(d){var n=daysAgo(d);return n<=0?'오늘':n===1?'어제':n+'일 전';}
+
+  function match(e){
+    var k=Object.keys(sel);
+    return !k.length || sel[e.target];
+  }
+
+  function render(){
+    var rows=EV.filter(match), slice=rows.slice(0,shown), h='', curDay=null, buf=[];
+    if(!rows.length){el('feed').innerHTML='<div class="skel">조건에 맞는 기록이 없습니다.</div>';el('more').hidden=true;return;}
+    // 날짜별로 묶는다 — 하루에 여러 건이 쏟아지는 날이 흔해서, 안 묶으면 날짜가 반복돼 읽기 어렵다
+    function flush(){
+      if(!curDay)return;
+      var n=daysAgo(curDay), nw=n<=1;
+      h+='<div class="day"><div class="dayh"><span>'+esc(curDay)+'</span>'+
+         '<span class="ago'+(nw?' nw':'')+'">'+esc(agoTxt(curDay))+'</span>'+
+         '<span class="cnt">'+buf.length+'건</span></div>'+buf.join('')+'</div>';
+      buf=[];
+    }
+    for(var i=0;i<slice.length;i++){
+      var e=slice[i];
+      if(e.dt!==curDay){flush();curDay=e.dt;}
+      var m=UPD[e.target]||['기타','index.html','var(--muted)'];
+      buf.push('<a class="upd" href="'+m[1]+'">'+
+        '<span class="uh tnum">'+esc(e.hm||'—')+'</span>'+
+        '<span class="ut" style="--utc:'+m[2]+'">'+esc(m[0])+'</span>'+
+        '<span class="uv">'+esc(e.title)+'</span></a>');
+    }
+    flush();
+    el('feed').innerHTML=h;
+    el('more').hidden=rows.length<=shown;
+    el('more').textContent='더 보기 ('+(rows.length-shown)+'건 남음)';
+  }
+
+  function buildChips(){
+    var c={};
+    EV.forEach(function(e){c[e.target]=(c[e.target]||0)+1;});
+    var ks=Object.keys(c).sort(function(a,b){return c[b]-c[a];}), h='';
+    ks.forEach(function(k){
+      var m=UPD[k]||['기타'];
+      h+='<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(m[0])+'<span class="cn">'+c[k]+'</span></button>';
     });
-    var keys=Object.keys(byPipe).sort(function(a,b){return (+a.split('|')[0])-(+b.split('|')[0]);});
-    el('pipes').innerHTML = keys.length ? keys.map(function(k,i){
-      var arr=byPipe[k], src=k.split('|').slice(1).join('|'), pri=+k.split('|')[0];
-      var order = pri>=98 ? '후순위' : (i+1)+'순위';
-      return '<div class="pipe"><h3><span class="pn">'+esc(order)+'</span>'+esc(src)+
-        '<span class="cnt">'+arr.length+'칸</span></h3>'+
-        (arr[0].blocked_why?'<p class="why">'+esc(arr[0].blocked_why)+'</p>':'')+
-        '<div class="slots">'+arr.map(function(t){
-          return '<div class="slot"><span class="sn">'+esc(t.name)+'</span>'+
-                 '<span class="sc">'+esc(t._cat)+' · 공수 '+esc(t.effort||'—')+'</span>'+
-                 '<span class="sd">'+esc(t.desc)+'</span></div>';
-        }).join('')+'</div></div>';
-    }).join('') : '<div class="skel">대기 중인 칸이 없습니다.</div>';
-
-    // ── 메뉴에서 뺀 칸 ── 슬롯에는 없지만 사유는 계속 게시한다
-    var w=j.retired||[];
-    el('wonts').innerHTML = w.length ? w.map(function(t){
-      return '<div class="wont" id="'+esc(((t.was_file||'').split('#')[1]||''))+'"><h3>'+esc(t.name)+
-        ' <span style="font-weight:400;color:var(--muted);font-size:11.5px">· '+esc(t.cat)+
-        ' · '+esc(t.retired_on||'')+' 제외</span></h3>'+
-        '<p>'+esc(t.why||'')+'</p>'+
-        (t.principle?'<p class="alt">'+esc(t.principle)+'</p>':'')+
-        (t.paid_path?'<p class="alt"><b style="color:var(--marg)">돈으로 푸는 길</b> — '+esc(t.paid_path)+'</p>':'')+
-        (t.replaced_by?'<p class="alt"><b style="color:var(--deploy)">대신 만든 것</b> — '+esc(t.replaced_by)+'</p>':
-                       '<p class="alt"><b style="color:var(--hot)">대체 없음</b> — 이 자리는 비워 둡니다.</p>')+
-        '</div>';
-    }).join('') : '<div class="skel">해당 없음.</div>';
-  }).catch(fail);
-
-  function ty(n,lab,sub,c){
-    return '<div class="ty" style="--edge:'+c+'"><b class="tnum">'+n+'</b><span>'+lab+'</span><em>'+sub+'</em></div>';
+    el('tchips').innerHTML=h;
+    el('tchips').addEventListener('click',function(ev){
+      var b=ev.target.closest('.chip'); if(!b)return;
+      var k=b.getAttribute('data-k');
+      if(sel[k]){delete sel[k];b.setAttribute('aria-pressed','false');}
+      else{sel[k]=1;b.setAttribute('aria-pressed','true');}
+      shown=PAGE; render();
+    });
   }
-  function fail(){
-    el('tally').innerHTML='<div class="ty"><b>—</b><span>불러오지 못함</span></div>';
-    el('pipes').innerHTML='<div class="skel">메뉴 정본(data/nav.json)을 불러오지 못했습니다.</div>';
-    el('wonts').innerHTML='';
-  }
+
+  fetch('data/updates.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+    EV=(u&&u.events)||[];
+    if(!EV.length){
+      el('feed').innerHTML='<div class="note hard"><b>표시할 갱신 내역이 없습니다.</b> <code>data/updates.json</code>이 비었거나 읽히지 않습니다.</div>';
+      el('tally').innerHTML=ty('—','불러오기 실패','data/updates.json','var(--hot)');
+      return;
+    }
+    var days={}; EV.forEach(function(e){days[e.dt]=1;});
+    var d7=EV.filter(function(e){return daysAgo(e.dt)<=7;}).length;
+    var gap=daysAgo(EV[0].dt);
+    el('tally').innerHTML=
+      ty(EV.length,'전체 기록','남아 있는 이벤트','var(--ink)')+
+      ty(Object.keys(days).length,'기록된 날','하루 여러 건도 있다','var(--champ)')+
+      ty(d7,'최근 7일','이번 주에 손댄 것','var(--deploy)')+
+      ty(EV[0].dt,'마지막 기록',gap<=1?'오늘·어제':gap+'일 전','var(--marg)');
+    // 기록이 멈춘 걸 사이트가 스스로 드러낸다 — CI는 '고쳐놓고 안 적었다'를 알 수 없다.
+    if(gap>=7){
+      var s=el('stale'); s.hidden=false; s.className='note hard';
+      s.innerHTML='<b>⚠ 마지막 기록이 '+gap+'일 전입니다</b> — 그 사이 바뀐 게 없거나, 바뀌었는데 적지 않았거나 둘 중 하나입니다.';
+    }
+    buildChips(); render();
+  })['catch'](function(){
+    el('feed').innerHTML='<div class="note hard"><b>갱신 내역을 불러오지 못했습니다.</b></div>';
+  });
+
+  el('more').addEventListener('click',function(){shown+=PAGE;render();});
+  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
 })();
 </script>
 </body>

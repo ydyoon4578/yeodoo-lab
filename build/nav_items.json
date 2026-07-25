@@ -439,6 +439,15 @@
      "effort": "M"
     },
     {
+     "name": "갱신 기록",
+     "file": "updates.html",
+     "status": "existing",
+     "desc": "언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에",
+     "src": "agg",
+     "verdict": "na",
+     "effort": "S"
+    },
+    {
      "name": "미구현 로드맵",
      "file": "roadmap.html",
      "status": "existing",
