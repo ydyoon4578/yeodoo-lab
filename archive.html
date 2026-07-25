@@ -51,13 +51,6 @@
   .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
   .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted)}
   .stat b{color:var(--ink);font-size:14px;font-weight:600}
-  .search{margin:20px 0 6px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow);max-width:420px}
-  .search input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
-  .search svg{flex-shrink:0;color:var(--muted)}
-  .grp{margin-top:26px}
-  .grp h3{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;font-weight:700;color:var(--ink);margin:0 0 12px;display:flex;align-items:center;gap:10px}
-  .grp h3 .gc{font-weight:400;color:var(--muted);font-size:11px}
-  .grp h3::after{content:"";height:1px;flex:1;background:var(--line-soft)}
   .rej.hl{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent)}
   .rej{scroll-margin-top:24px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--rej);border-radius:9px;padding:11px 15px;margin-bottom:8px;box-shadow:var(--shadow)}
   .rej .rn{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -71,26 +64,7 @@
   .ab summary::before{content:"▸ ";color:var(--muted)}
   .ab[open] summary::before{content:"▾ "}
   .ab summary b{color:var(--rej)}
-  .abin{margin-top:7px;background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:9px 11px}
-  .abv{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);line-height:1.6;margin-bottom:7px}
-  .abv .abx{color:var(--rej)}
-  .abtw{overflow-x:auto}
-  .abt{border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:340px;width:100%}
-  .abt th,.abt td{border-bottom:1px solid var(--line-soft);padding:3px 8px;text-align:right;white-space:nowrap}
-  .abt th{color:var(--muted);font-weight:600;font-size:10.5px;text-align:right}
-  .abt th:first-child,.abt td.k{text-align:left;color:var(--muted)}
-  .abn{margin-top:7px;font-size:11px;color:var(--muted);line-height:1.6}
-  .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:30px;text-align:center}
-  /* 재검 고지 — '기각이 살아났다'로 읽히면 안 되므로 결론(부활 0건)을 맨 앞에 둔다 */
-  .notice{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:11px;padding:14px 18px;margin:0 0 16px;box-shadow:var(--shadow)}
-  .notice h2{margin:0 0 8px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.01em}
-  .notice h2 .zero{font-size:11px;font-weight:700;color:var(--rej);background:var(--rej-bg);border-radius:4px;padding:2px 7px;margin-left:8px;vertical-align:1px}
-  .notice p{margin:0 0 7px;font-size:12.5px;line-height:1.65;color:var(--ink-2)}
-  .notice p:last-child{margin-bottom:0}
-  .notice b{color:var(--ink)}
-  .notice .fine{font-size:11.5px;color:var(--muted);border-top:1px dashed var(--line-soft);padding-top:7px;margin-top:9px}
   a.home,button.theme{position:fixed;top:14px;z-index:50;height:38px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);box-shadow:var(--shadow);border-radius:10px;cursor:pointer}
-  a.home{left:14px;display:flex;align-items:center;gap:6px;padding:0 13px;font-family:var(--mono);font-size:12px;font-weight:600;text-decoration:none}
   button.theme{right:14px;width:38px;font-size:16px}
   a.home:hover,button.theme:hover{border-color:var(--accent)}
   footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
@@ -98,16 +72,11 @@
   /*a11y-fixes*/
   @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--ground)}}
   :root[data-theme="dark"] .fchip[aria-pressed="true"]{color:var(--ground)}
-  .search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
   a:focus-visible,button:focus-visible,input:focus-visible,[role="option"]:focus-visible,.fchip:focus-visible,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   /*touch-targets*/
   @media(pointer:coarse){.fchip,.cbtn,.sortbtn,.item,.cbtn,.pill{min-height:40px}.fchip{padding-top:8px;padding-bottom:8px}}
   /*reduced-motion*/
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
-  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
-  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
-  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
   /* ── 전략 실험실(2026-07-25 재구성) ─────────────────────────────── */
   .statline{margin:20px 0 0;display:flex;gap:9px;flex-wrap:wrap}
@@ -120,6 +89,8 @@
   .statline .stat b{text-transform:none}
   .statline .stat.ok{border-top-color:var(--good,#0E8A54)}
   .statline .stat.zero{border-top-color:var(--hot)}
+  /* 상단 내비·테마 토글 CSS는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다.
+     여기서 중복 정의하면 23장이 서로 어긋난다 — 이 페이지에서는 건드리지 않는다. */
   .dupbox{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;
           padding:13px 15px;margin:0 0 18px;font-size:13px;line-height:1.6;color:var(--ink-2)}
   .dupbox b{color:var(--ink)}
