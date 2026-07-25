@@ -81,7 +81,10 @@ def _array(path: str, var: str = "D") -> str:
 
 def build(root: str = ROOT) -> dict:
     ex = list(_records(_array(os.path.join(root, "explorer.html"))))
-    ar = list(_records(_array(os.path.join(root, "archive.html"))))
+    # 2026-07-25: archive.html이 '규칙+성과' 페이지로 바뀌며 배열을 data/archive_index.json으로
+    # 뺐다. 원장은 페이지가 아니라 그 정본에서 읽는다(집계 규칙은 그대로).
+    _ai = json.load(io.open(os.path.join(root, "data", "archive_index.json"), encoding="utf-8"))
+    ar = _ai.get("items") or []
 
     def grp(v):
         # slug은 **이름이 아니라 불변 id(sid)** 에서 온다 — 이름을 고쳐도 딥링크가 살아 있어야 한다.
@@ -92,7 +95,7 @@ def build(root: str = ROOT) -> dict:
     deploy, marginal, rej_cmp = grp("deploy"), grp("marginal"), grp("reject")
     cats = []
     for r in ar:
-        c = _field(r, "c")
+        c = r.get("c") or ""
         if c and c not in cats:
             cats.append(c)
     if not deploy or not ar:

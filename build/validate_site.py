@@ -220,10 +220,19 @@ if pool:
         body = re.sub(r"(?m)^\s*//.*$", "", src[i:j + 1])
         return json.loads(body)
 
+    # 2026-07-25: archive.html이 '기각 사유 목록'에서 '규칙+성과'로 바뀌며 D 배열을
+    # data/archive_index.json으로 뺐다. 그래서 아카이브는 페이지가 아니라 정본에서 읽는다.
+    # ⚠ 예전엔 둘을 한 try에 묶어, 아카이브 파싱이 깨지면 explorer까지 빈 배열이 되어
+    #   무관한 오류가 4건 쏟아졌다(실제로 그렇게 났다). 이제 따로 잡는다.
     try:
-        AREC, EREC = _recs("archive.html"), _recs("explorer.html")
+        AREC = (json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"),
+                                  encoding="utf-8")).get("items") or [])
+    except Exception as e:
+        errors.append(f"archive_index.json 파싱 실패: {e}"); AREC = []
+    try:
+        EREC = _recs("explorer.html")
     except (Exception, SystemExit) as e:   # SystemExit도 흡수 — 리포트 절단 방지(fail-closed 유지)
-        errors.append(f"전략 배열 파싱 실패: {e}"); AREC = EREC = []
+        errors.append(f"explorer 전략 배열 파싱 실패: {e}"); EREC = []
     anames = {d["n"] for d in AREC} if AREC is not None else None
     enames = {d["n"] for d in EREC} if EREC is not None else None
 
@@ -281,6 +290,23 @@ if pool:
     _ak = plain("archive.html", "구 슬러그(aka) 해석 로직 검사")
     if _ak is not None and ("aka" not in _ak or "ALIAS" not in _ak):
         errors.append("archive.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
+    # 딥링크 도착지 유일성 — 아카이브는 카드를 세 섹션(돌린 규칙·재검 부기·못 돌린 것)에
+    # 나눠 그리는데 같은 sid가 두 섹션에 동시에 나온다(실측 5건). 그래서 재검 카드는 rc-
+    # 네임스페이스를 쓴다. 여기로 되돌아가면 #s-<sid>가 문서 순서상 앞 카드로 끌려가
+    # "링크는 열리는데 다른 규칙이 보인다"는 조용한 오작동이 된다.
+    if _ak is not None and 'id="rc-' not in _ak:
+        errors.append("archive.html: 재검 카드가 rc- 앵커를 쓰지 않음 — sid가 겹쳐 딥링크 도착지가 어긋난다")
+    # aka는 sid 공간과 섞이면 안 된다(구 슬러그가 남의 sid와 같으면 해석이 갈린다)
+    _sids = {x.get("sid") for x in AREC}
+    _seen_aka = {}
+    for _x in AREC:
+        for _k in (_x.get("aka") or []):
+            if _k in _sids and _k != _x.get("sid"):
+                errors.append(f"archive_index {_x.get('sid')}: 구 슬러그 '{_k}'가 다른 항목의 sid와 충돌")
+            if _k in _seen_aka:
+                errors.append(f"archive_index: 구 슬러그 '{_k}'를 {_seen_aka[_k]}·{_x.get('sid')}가 함께 씀")
+            _seen_aka[_k] = _x.get("sid")
+
     _ek = plain("explorer.html", "구 슬러그(aka) 해석 로직 검사")
     if _ek is not None and ("aka" not in _ek or "_keys" not in _ek):
         errors.append("explorer.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
@@ -607,7 +633,14 @@ try:
     _ap = os.path.join(ROOT, "data", "archive_backtests.json")
     if os.path.exists(_ap):
         _ab = json.load(io.open(_ap, encoding="utf-8"))
-        _asrc = plain("archive.html", "기각 재검 부기(sid 조인·'기각 유지') 검사")
+        # 2026-07-25: archive.html의 D 배열을 data/archive_index.json으로 뺐다(페이지가 '규칙+성과'로 바뀜).
+        # sid 조인 검사는 그 데이터 파일을 본다 — 페이지가 아니라 정본을 보는 게 맞다.
+        _asrc = plain("archive.html", "기각 재검 부기('기각 유지' 문구) 검사")
+        try:
+            _aidx = json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"), encoding="utf-8"))
+            _idx_sids = {x.get("sid") for x in (_aidx.get("items") or [])}
+        except Exception:
+            _idx_sids = None
         if _ab.get("metrics_schema") != "v2":
             errors.append("archive_backtests.json: metrics_schema가 v2가 아님 — strategy_metrics.py 실행 필요")
         # 분모를 게시 건수로 잡으면 보정이 실제보다 관대해진다(고른 뒤에 세는 것 = selection 무시)
@@ -615,10 +648,10 @@ try:
         if not _nt or _nt < len(_ab.get("strategies") or {}):
             errors.append("archive_backtests.json: n_tests_total 결측/과소 — 다중검정 분모는 게시 건수가 아니라 재검 총 건수")
         # archive.html의 sid와 조인되지 않으면 부기가 통째로 사라진다(개명 사고 유형)
-        _asids = set(re.findall(r'"sid":\s*"([^"]+)"', _asrc)) if _asrc is not None else None
+        _asids = _idx_sids
         for _sid, _b in (_ab.get("strategies") or {}).items():
             if _asids is not None and _sid not in _asids:
-                errors.append(f"archive_backtests.json \"{_sid}\": archive.html D 배열에 없는 sid — 부기가 렌더되지 않는다")
+                errors.append(f"archive_backtests.json \"{_sid}\": data/archive_index.json에 없는 sid — 부기가 렌더되지 않는다")
             _m = _b.get("metrics") or {}
             if not (_m.get("s") and _m.get("b") and _m.get("basis")):
                 errors.append(f"{_sid}: 부기 지표 v2 블록 없음"); continue

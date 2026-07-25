@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "08e60502a3f77ed2",
+ "generated_from": "f6659532348d7839",
  "categories": [
   {
    "name": "시장",
@@ -209,10 +209,10 @@
      "live": true
     },
     {
-     "name": "기각 아카이브",
+     "name": "전략 랩",
      "file": "archive.html",
      "status": "existing",
-     "desc": "기각 51건 · 부활 0건 — 사유까지",
+     "desc": "돌린 규칙 23개 전부 — 성과·판정·사유",
      "verdict": "rejected",
      "src": "model",
      "effort": "S",

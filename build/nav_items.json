@@ -192,10 +192,10 @@
      "effort": "S"
     },
     {
-     "name": "기각 아카이브",
+     "name": "전략 랩",
      "file": "archive.html",
      "status": "existing",
-     "desc": "기각 51건 · 부활 0건 — 사유까지",
+     "desc": "돌린 규칙 23개 전부 — 성과·판정·사유",
      "src": "model",
      "verdict": "rejected",
      "effort": "S"

@@ -127,6 +127,8 @@ def main() -> int:
          "cadence": "분기 데이터셋", "note": "분기말 잔고를 45일 뒤 제출 — 최대 4.5개월 묵는다"},
         {"key": "insider", "label": "내부자 거래(Form 4)", "as_of": (load("insider.json") or {}).get("as_of"),
          "cadence": "분기 데이터셋", "note": "SEC가 분기로 묶어 내놓아 수십 일 지연이 구조적이다 — 실시간이 아니다"},
+        {"key": "tech", "label": "전략 랩 백테스트", "as_of": (load("tech_strategies.json") or {}).get("as_of"),
+         "cadence": "주 1회", "note": "일봉 입력이라 하루 단위로는 판정이 바뀌지 않는다 — 주말에만 다시 돌린다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
     for a in axes:
