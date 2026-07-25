@@ -743,6 +743,45 @@ def run():
             return None
         return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
 
+    # ── 표본 구간의 성격 ────────────────────────────────────────────────
+    # 결과가 '타이밍은 안 통한다'로 읽히기 쉽다. 하지만 이 표본에서 벤치마크 자체가
+    # 연 22%·샤프 1.08이면, 어느 날이든 현금을 쥔 규칙은 구조적으로 진다. 그건 규칙의
+    # 실력이 아니라 구간의 성질이다 — 수치로 적어 독자가 과대해석하지 않게 한다.
+    _up = _dn = 0
+    for i in range(MIN_HIST, n):
+        m200 = sma(ix, i, 200)
+        if m200 is None:
+            continue
+        if ix[i] > m200:
+            _up += 1
+        else:
+            _dn += 1
+    _pk = ix[MIN_HIST]
+    _dds = []
+    _cur = 0.0
+    for i in range(MIN_HIST, n):
+        _pk = max(_pk, ix[i])
+        _cur = min(_cur, ix[i] / _pk - 1)
+        _dds.append(ix[i] / _pk - 1)
+    _big = 0
+    _inside = False
+    for x in _dds:                       # -10%를 밑돈 국면이 몇 번 있었나(고점 회복으로 리셋)
+        if x < -0.10 and not _inside:
+            _big += 1
+            _inside = True
+        elif x > -0.02:
+            _inside = False
+    regime = {
+        "up_days": _up, "down_days": _dn,
+        "up_share": round(_up / max(1, _up + _dn), 3),
+        "n_dd10": _big,
+        "note": "표본 구간에서 지수가 200일선 위에 있던 날이 %.0f%%(%d일 중 %d일)이고, "
+                "고점 대비 -10%%를 밑돈 국면은 %d번뿐이었다. 현금을 쥐는 규칙은 이런 구간에서 "
+                "구조적으로 진다 — 여기 '열위'가 많은 것은 규칙의 실력만이 아니라 구간의 성질이기도 하다. "
+                "반대로 이 표본은 하락 방어 능력을 사실상 검증하지 못한다."
+                % (100 * _up / max(1, _up + _dn), _up + _dn, _up, _big),
+    }
+
     _tm = [r for r in out if r["kind"] == "timing"]
     _rr = {r["sid"]: _rets(r) for r in _tm}
     _pairs = []
@@ -781,10 +820,11 @@ def run():
             "다중검정 — 규칙 %d개를 같은 표본에서 돌렸다. 그중 최고는 우연히도 좋아 보인다. "
             "그래서 하나도 빼지 않고 전부 싣는다." % len(STRATS),
             "신호는 당일 종가로 계산해 다음 거래일부터 적용한다(선견 없음). 횡단면은 월말 리밸런스.",
+            regime["note"],
             "규칙끼리 많이 겹친다 — 타이밍 규칙 쌍의 상관 중앙값이 %s이고 %d쌍은 0.95를 넘는다. "
             "규칙 수가 곧 검증한 아이디어 수는 아니다." % (dup["median"], dup["n_over_95"]),
         ],
-        "dup": dup,
+        "dup": dup, "regime": regime,
         "strategies": out,
     }
     io.open(OUT, "w", encoding="utf-8").write(
