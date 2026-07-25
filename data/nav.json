@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "09ed5d96209ebed5",
+ "generated_from": "6a59de35fb0b0fe0",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -181,15 +181,12 @@
     {
      "name": "스크리너",
      "file": "screener.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "자유조합 스크린 — 초과수익 확인된 스크린 0종",
      "verdict": "rejected",
      "src": "model",
      "effort": "L",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "백테스트 원장",
@@ -199,7 +196,6 @@
      "verdict": "pass",
      "src": "model",
      "effort": "S",
-     "locked": true,
      "live": true
     }
    ]
@@ -261,9 +257,8 @@
      "verdict": "na",
      "src": "raw",
      "effort": "L",
-     "anchor": "static",
      "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "20태그·실측 16.5KB/사 → 518 = 8.6MB. 주 1회면 충분(실적발표 때만 바뀐다).",
+     "blocked_why": "20태그·실측 16.5KB/사 × 518 = 8.6MB. 주 1회면 충분(실적발표 때만 바뀐다).",
      "pipeline": 3,
      "live": false
     },
@@ -275,7 +270,6 @@
      "verdict": "na",
      "src": "raw",
      "effort": "M",
-     "anchor": "static",
      "blocked_by": "SEC EDGAR submissions API",
      "blocked_why": "같은 수집분에서 원문 링크만 뽑는다. 회사 IR 주소는 SEC가 주지 않는다.",
      "pipeline": 2,
@@ -284,16 +278,13 @@
     {
      "name": "실적 및 전망",
      "file": "co.html#est",
-     "status": "new-now",
+     "status": "existing",
      "desc": "목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중",
      "verdict": "unverified",
      "src": "est",
      "effort": "M",
      "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "내부자 거래",
@@ -303,9 +294,8 @@
      "verdict": "unverified",
      "src": "raw",
      "effort": "M",
-     "anchor": "static",
      "blocked_by": "SEC Form 3/4/5 분기 ZIP",
-     "blocked_why": "ISSUERTRADINGSYMBOL로 직접 조인돼 CUSIP 매핑이 필요 없다. 약 25일 지연이 구조적 한계.",
+     "blocked_why": "ISSUERTRADINGSYMBOL로 직접 조인돼 CUSIP 매핑이 불필요. 약 25일 지연이 구조적 한계.",
      "pipeline": 8,
      "live": false
     },
@@ -333,43 +323,34 @@
     {
      "name": "상대가치평가",
      "file": "rel-value.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다",
      "verdict": "unverified",
      "src": "agg",
      "effort": "M",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "Reverse DCF",
      "file": "valuation.html#reverse",
-     "status": "new-now",
+     "status": "existing",
      "desc": "주가에 내재된 성장 가정을 역산 — 예측이 아니다",
      "verdict": "unverified",
      "src": "model",
      "effort": "M",
      "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "Simplified DCF",
      "file": "valuation.html#simple",
-     "status": "new-now",
+     "status": "existing",
      "desc": "적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐",
      "verdict": "unverified",
      "src": "model",
      "effort": "S",
      "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "DDM",
@@ -379,9 +360,8 @@
      "verdict": "na",
      "src": "raw",
      "effort": "M",
-     "anchor": "static",
      "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "배당 시계열(CommonStockDividendsPerShareDeclared)이 있어야 성립. 지금은 단면 배당수익률뿐.",
+     "blocked_why": "배당 시계열이 있어야 성립. 지금은 단면 배당수익률(커버 78.8%)뿐.",
      "pipeline": 3,
      "live": false
     },
@@ -393,9 +373,8 @@
      "verdict": "na",
      "src": "raw",
      "effort": "M",
-     "anchor": "static",
      "blocked_by": "SEC EDGAR companyfacts XBRL",
-     "blocked_why": "자기자본(StockholdersEquity) 시계열 필요. 지금은 단면 PBR뿐.",
+     "blocked_why": "자기자본 시계열 필요. 지금은 단면 PBR뿐.",
      "pipeline": 3,
      "live": false
     },
@@ -407,9 +386,8 @@
      "verdict": "na",
      "src": "raw",
      "effort": "M",
-     "anchor": "static",
      "blocked_by": "SEC EDGAR frames API",
-     "blocked_why": "태그당 1콜로 5,589사 횡단(실측 159KB·0.45s). 518콜을 돌 필요가 없다.",
+     "blocked_why": "태그당 1콜로 5,589사 횡단. 지수 단위 FCF 시계열이 필요하다.",
      "pipeline": 5,
      "live": false
     }
@@ -423,29 +401,23 @@
     {
      "name": "대시보드",
      "file": "portfolio.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "브라우저에만 저장 — 전송할 서버가 아예 없다",
      "verdict": "na",
      "src": "agg",
      "effort": "L",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     },
     {
      "name": "포트폴리오 분석",
      "file": "portfolio.html#analysis",
-     "status": "new-now",
+     "status": "existing",
      "desc": "3년 753거래일 실측 상관 — 그 이전은 데이터가 없다",
      "verdict": "unverified",
      "src": "agg",
      "effort": "M",
      "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1,
-     "live": false
+     "live": true
     }
    ]
   },
@@ -510,7 +482,6 @@
      "verdict": "rejected",
      "src": "model",
      "effort": "S",
-     "locked": true,
      "live": true
     },
     {
@@ -521,7 +492,6 @@
      "verdict": "na",
      "src": "raw",
      "effort": "M",
-     "locked": true,
      "live": true
     },
     {
@@ -532,7 +502,6 @@
      "verdict": "unverified",
      "src": "ext",
      "effort": "S",
-     "locked": true,
      "live": true
     },
     {

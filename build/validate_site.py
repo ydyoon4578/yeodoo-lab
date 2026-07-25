@@ -676,7 +676,12 @@ try:
     _up = os.path.join(ROOT, "data", "updates.json")
     if os.path.exists(_up):
         _u = json.load(io.open(_up, encoding="utf-8"))
-        _ok_t = {"rotation", "explorer", "archive", "stocks", "regime", "sentiment", "holdings"}
+        # 목록을 여기 또 적지 않는다 — log_update.py의 TARGETS가 정본이다.
+        # (구현이 둘이면 어긋난다: 실제로 이 줄이 옛 7개로 굳어 새 화면 기록을 전부 오류로 잡았다.)
+        _m0 = re.search(r"TARGETS\s*=\s*\{(.*?)\}", rd("build/log_update.py"), re.S)
+        _ok_t = set(re.findall(r'"([a-z]+)"', _m0.group(1))) if _m0 else set()
+        if not _ok_t:
+            errors.append("log_update.py의 TARGETS를 파싱하지 못함 — updates.json target 검사를 할 수 없다")
         _evs = _u.get("events")
         if not isinstance(_evs, list) or not _evs:
             errors.append("updates.json: events 비어 있음")
@@ -847,6 +852,34 @@ try:
         errors.append("asof.json에 축이 비어 있음")
 except Exception as e:
     errors.append(f"기준일 정본 검증 실패: {e}")
+
+# ── 갱신 피드: 기록할 수단이 없어서 조용히 비는 일을 막는다 ──────────────────
+# 실사고: 도구를 여럿 새로 만든 사흘(2026-07-23~25) 동안 updates.json이 한 줄도 늘지 않았다.
+# 원인은 log_update.py의 TARGETS가 옛 7개로 고정돼 새 화면은 기록 자체가 거부됐기 때문이다.
+# 두 집합(기록 가능한 target · 홈이 이름을 아는 target)이 어긋나면 여기서 막는다.
+try:
+    _lu = rd("build/log_update.py")
+    _m = re.search(r"TARGETS\s*=\s*\{(.*?)\}", _lu, re.S)
+    _lt = set(re.findall(r'"([a-z]+)"', _m.group(1))) if _m else set()
+    _ix2 = rd("index.html")
+    _m2 = re.search(r"var UPD=\{(.*?)\};", _ix2, re.S)
+    _ut = set(re.findall(r"(?:^|[,{\s])([a-z]+):\[", _m2.group(1))) if _m2 else set()
+    if not _lt or not _ut:
+        errors.append("갱신 피드 대상 집합을 파싱하지 못함(log_update.py TARGETS / index.html UPD)")
+    else:
+        _only_lu, _only_ix = sorted(_lt - _ut), sorted(_ut - _lt)
+        if _only_lu:
+            errors.append(f"갱신 피드: log_update.py에만 있는 target {_only_lu} — 홈에서 '기타'로 떨어진다")
+        if _only_ix:
+            errors.append(f"갱신 피드: index.html UPD에만 있는 target {_only_ix} — 기록할 수단이 없다")
+    # 실제로 쓰인 target이 둘 중 어디에도 없으면 그 이벤트는 영영 '기타'다
+    _uj = json.load(io.open(os.path.join(ROOT, "data", "updates.json"), encoding="utf-8"))
+    _used = {e.get("target") for e in (_uj.get("events") or [])}
+    _unknown = sorted(_used - _lt - {None})
+    if _unknown:
+        errors.append(f"updates.json에 정의되지 않은 target {_unknown} — TARGETS/UPD에 추가할 것")
+except Exception as e:
+    errors.append(f"갱신 피드 검증 실패: {e}")
 
 # ── 홈 하드코딩 문구가 데이터와 따로 썩지 않게 ────────────────────────────────
 # (실사고: meta description은 512종목, 본문 히어로는 518종목 — 검색 스니펫·공유 카드에만 옛 유니버스가 나갔다)

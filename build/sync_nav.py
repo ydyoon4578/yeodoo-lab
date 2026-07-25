@@ -98,6 +98,14 @@ def page_exists(href: str, anchor_kind: str | None = None) -> bool:
 
 
 def tool_live(t: dict) -> bool:
+    """열리는 도구인가.
+
+    placeholder=true 는 탭·앵커는 있지만 내용이 '어떤 데이터가 없어서 비었는지'뿐인 칸이다.
+    앵커가 존재한다는 이유로 동작에 넣으면 홈의 계수 줄('동작 N')이 거짓이 된다 —
+    빈 탭 6칸(co #fs/#ir/#ins · valuation #ddm/#rim/#index)이 실제로 그렇게 잡혔었다.
+    """
+    if t.get("placeholder"):
+        return False
     return page_exists(t["file"], t.get("anchor"))
 
 
@@ -242,7 +250,8 @@ def build_body(items: dict) -> str:
 
     out.append('    </ul>')
     out.append('    <span class="navsp"></span>')
-    out.append('    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow">'
+    # sources.html은 공개 페이지다(2026-07-25 잠금 해제) — nofollow를 걸지 않는다
+    out.append('    <a class="asofchip" id="navasof" href="sources.html">'
                '<span class="ac1">기준일</span><b id="navasofv">—</b></a>')
     out.append('    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>')
     out.append('  </div>')

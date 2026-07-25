@@ -352,8 +352,8 @@
       <li class="navcat" data-cat="quant">
         <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
-          <span class="mmi"><span class="mmn">스크리너</span><span class="mmb soon">준비중</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></span>
-          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장<span class="mmlk">🔒</span></span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="gurus">
@@ -369,7 +369,7 @@
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
           <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
           <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
-          <span class="mmi"><span class="mmn">실적 및 전망</span><span class="mmb soon">준비중</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></span>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
           <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
         </div>
@@ -377,9 +377,9 @@
       <li class="navcat" data-cat="valuation">
         <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
-          <span class="mmi"><span class="mmn">상대가치평가</span><span class="mmb soon">준비중</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></span>
-          <span class="mmi"><span class="mmn">Reverse DCF</span><span class="mmb soon">준비중</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></span>
-          <span class="mmi"><span class="mmn">Simplified DCF</span><span class="mmb soon">준비중</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></span>
+          <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
+          <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
+          <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
           <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
           <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
           <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
@@ -388,8 +388,8 @@
       <li class="navcat" data-cat="portfolio">
         <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
-          <span class="mmi"><span class="mmn">대시보드</span><span class="mmb soon">준비중</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></span>
-          <span class="mmi"><span class="mmn">포트폴리오 분석</span><span class="mmb soon">준비중</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></span>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">대시보드</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></a>
+          <a class="mmi" href="portfolio.html#analysis" data-nav="portfolio.html#analysis"><span class="mmn">포트폴리오 분석</span><span class="mmb vunv">미검증</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="industry">
@@ -403,9 +403,9 @@
       <li class="navcat" data-cat="ledger">
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
-          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브<span class="mmlk">🔒</span></span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
-          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
-          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀<span class="mmlk">🔒</span></span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브</span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일</span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
           <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
           <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
           <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
@@ -413,7 +413,7 @@
       </li>
     </ul>
     <span class="navsp"></span>
-    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
     <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
   </div>
 </nav>
@@ -541,7 +541,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>40</b></span><span>동작 <b>17</b></span><span>구현 대기 <b>8</b></span><span>소스 대기 <b>12</b></span><span>만들지 않기로 한 것 <b>3</b></span><span>파일 <b>21</b>장</span></p>
+    <p class="ltn"><span>화면 <b>40</b></span><span>동작 <b>24</b></span><span>구현 대기 <b>1</b></span><span>소스 대기 <b>12</b></span><span>만들지 않기로 한 것 <b>3</b></span><span>파일 <b>21</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -578,11 +578,11 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--rp)">
-      <h3>퀀트 탐색<span class="dc">구현 1 · 대기 1</span></h3>
-      <div class="dbar" role="img" aria-label="퀀트 탐색 판정 분포"><i class="vpass" style="--w:50.0000%" title="통과 1"></i><i class="soon" style="--w:50.0000%" title="준비중 1"></i></div>
+      <h3>퀀트 탐색<span class="dc">구현 2</span></h3>
+      <div class="dbar" role="img" aria-label="퀀트 탐색 판정 분포"><i class="vpass" style="--w:50.0000%" title="통과 1"></i><i class="vrej" style="--w:50.0000%" title="기각 1"></i></div>
       <div class="dtools">
-        <span>스크리너<b class="soon">준비중</b></span>
-        <a href="explorer.html">백테스트 원장<span class="mmlk">🔒</span><b class="vpass">통과</b></a>
+        <a href="screener.html">스크리너<b class="vrej">기각</b></a>
+        <a href="explorer.html">백테스트 원장<b class="vpass">통과</b></a>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--muted)">
@@ -594,35 +594,35 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--deploy)">
-      <h3>종목 재무분석<span class="dc">구현 1 · 대기 5</span></h3>
-      <div class="dbar" role="img" aria-label="종목 재무분석 판정 분포"><i class="vunv" style="--w:16.6667%" title="미검증 1"></i><i class="soon" style="--w:83.3333%" title="준비중 5"></i></div>
+      <h3>종목 재무분석<span class="dc">구현 2 · 대기 4</span></h3>
+      <div class="dbar" role="img" aria-label="종목 재무분석 판정 분포"><i class="vunv" style="--w:33.3333%" title="미검증 2"></i><i class="soon" style="--w:66.6667%" title="준비중 4"></i></div>
       <div class="dtools">
         <a href="stocks.html">종목 개요·내러티브<b class="vunv">미검증</b></a>
         <span>재무제표<b class="soon">준비중</b></span>
         <span>IR자료실<b class="soon">준비중</b></span>
-        <span>실적 및 전망<b class="soon">준비중</b></span>
+        <a href="co.html#est">실적 및 전망<b class="vunv">미검증</b></a>
         <span>내부자 거래<b class="soon">준비중</b></span>
         <span>실적 발표 일정<b class="soon">준비중</b></span>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--marg)">
-      <h3>종목 가치평가<span class="dc">구현 0 · 대기 6</span></h3>
-      <div class="dbar" role="img" aria-label="종목 가치평가 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 6"></i></div>
+      <h3>종목 가치평가<span class="dc">구현 3 · 대기 3</span></h3>
+      <div class="dbar" role="img" aria-label="종목 가치평가 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 3"></i><i class="soon" style="--w:50.0000%" title="준비중 3"></i></div>
       <div class="dtools">
-        <span>상대가치평가<b class="soon">준비중</b></span>
-        <span>Reverse DCF<b class="soon">준비중</b></span>
-        <span>Simplified DCF<b class="soon">준비중</b></span>
+        <a href="rel-value.html">상대가치평가<b class="vunv">미검증</b></a>
+        <a href="valuation.html#reverse">Reverse DCF<b class="vunv">미검증</b></a>
+        <a href="valuation.html#simple">Simplified DCF<b class="vunv">미검증</b></a>
         <span>DDM<b class="soon">준비중</b></span>
         <span>RIM<b class="soon">준비중</b></span>
         <span>Index DCF<b class="soon">준비중</b></span>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--rp)">
-      <h3>포트폴리오 관리<span class="dc">구현 0 · 대기 2</span></h3>
-      <div class="dbar" role="img" aria-label="포트폴리오 관리 판정 분포"><i class="soon" style="--w:100.0000%" title="준비중 2"></i></div>
+      <h3>포트폴리오 관리<span class="dc">구현 2</span></h3>
+      <div class="dbar" role="img" aria-label="포트폴리오 관리 판정 분포"><i class="vunv" style="--w:100.0000%" title="미검증 1"></i></div>
       <div class="dtools">
-        <span>대시보드<b class="soon">준비중</b></span>
-        <span>포트폴리오 분석<b class="soon">준비중</b></span>
+        <a href="portfolio.html">대시보드</a>
+        <a href="portfolio.html#analysis">포트폴리오 분석<b class="vunv">미검증</b></a>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--champ)">
@@ -638,9 +638,9 @@
       <h3>랩 원장<span class="dc">구현 6</span></h3>
       <div class="dbar" role="img" aria-label="랩 원장 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 1"></i><i class="vrej" style="--w:50.0000%" title="기각 1"></i></div>
       <div class="dtools">
-        <a href="archive.html">기각 아카이브<span class="mmlk">🔒</span><b class="vrej">기각</b></a>
-        <a href="sources.html">데이터 출처·기준일<span class="mmlk">🔒</span></a>
-        <a href="rotation.html">전략 탐색 풀<span class="mmlk">🔒</span><b class="vunv">미검증</b></a>
+        <a href="archive.html">기각 아카이브<b class="vrej">기각</b></a>
+        <a href="sources.html">데이터 출처·기준일</a>
+        <a href="rotation.html">전략 탐색 풀<b class="vunv">미검증</b></a>
         <a href="kb.html">BK<span class="mmlk">🔒</span></a>
         <a href="method.html">등급·판정 규약</a>
         <a href="roadmap.html">미구현 로드맵</a>
@@ -649,10 +649,10 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 8 · 소스 대기 12 · 만들지 않기로 한 것 3</span></p>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 1 · 소스 대기 12 · 만들지 않기로 한 것 3</span></p>
   <div class="gapbox implbox">
     <p class="gaph">구현 대기 — 데이터는 있다. 아직 화면을 안 만들었을 뿐이다</p>
-    <p class="chips"><span>Reverse DCF</span><span>Simplified DCF</span><span>대시보드</span><span>상대가치평가</span><span>스크리너</span><span>실적 및 전망</span><span>포트폴리오 분석</span><span>관전 포인트</span></p>
+    <p class="chips"><span>관전 포인트</span></p>
   </div>
   <div class="gapbox soonbox">
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
@@ -696,7 +696,7 @@
   </div>
 
   <footer>
-    <a href="archive.html" rel="nofollow">기각 아카이브</a><span id="ft-arc"></span><span class="lockmark" title="열람 암호 필요">🔒</span> · <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span class="lockmark" title="열람 암호 필요">🔒</span> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
+    <a href="archive.html">기각 아카이브</a><span id="ft-arc"></span> · <a href="sources.html">데이터 출처·기준일</a> · <a href="method.html">등급·판정 규약</a> · <a href="roadmap.html">미구현 로드맵</a> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
   </footer>
 </div>
 
@@ -732,9 +732,8 @@
   fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
     var w=el('ledger'); if(!w)return;
     if(!v){w.innerHTML='<div class="ldskel">판정 원장을 불러오지 못했습니다.</div>';return;}
-    // 세 링크 모두 암호 잠금 페이지로 간다 — 내비·푸터와 같은 자물쇠 규약을 여기서도 지킨다
-    var LK='<span class="lockmark" title="열람 암호 필요">🔒</span>';
-    function n(href,val,lab,c){return '<a class="ldn" href="'+href+'" style="--c:'+c+'"><b class="tnum">'+val+'</b><span>'+lab+LK+'</span></a>';}
+    // 세 링크 모두 공개다(2026-07-25 잠금 해제 — BK만 잠금으로 남았다)
+    function n(href,val,lab,c){return '<a class="ldn" href="'+href+'" style="--c:'+c+'"><b class="tnum">'+val+'</b><span>'+lab+'</span></a>';}
     w.innerHTML='<div class="ldrow">'+
       n('explorer.html',v.deploy_n,'배포','var(--deploy)')+
       n('explorer.html',v.marginal_n,'제한적 유효','var(--marg)')+
@@ -898,10 +897,18 @@
   }).catch(renderMarket);
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
+  // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
+  //   여기 없는 target은 '기타'로 떨어져 어느 화면 얘기인지 알 수 없게 된다.
   var UPD={rotation:['전략 탐색','rotation.html','var(--marg)'],explorer:['전략 리스트','explorer.html','var(--rp)'],
            archive:['기각 아카이브','archive.html','var(--hot)'],stocks:['종목 시그널','stocks.html','var(--deploy)'],
            regime:['시장 국면','regime.html','var(--champ)'],sentiment:['시장 심리','regime.html#sent','var(--champ)'],
-           holdings:['포트폴리오','explorer.html','var(--rp)']};
+           holdings:['포트폴리오','explorer.html','var(--rp)'],
+           market:['시장 폭','market.html','var(--deploy)'],sector:['섹터 히트맵','sector.html','var(--deploy)'],
+           macro:['거시 지표','macro.html','var(--champ)'],screener:['스크리너','screener.html','var(--rp)'],
+           relvalue:['상대가치','rel-value.html','var(--marg)'],valuation:['가치평가','valuation.html','var(--marg)'],
+           portfolio:['포트폴리오 관리','portfolio.html','var(--rp)'],company:['종목 재무','co.html','var(--deploy)'],
+           method:['등급·판정 규약','method.html','var(--muted)'],roadmap:['로드맵','roadmap.html','var(--muted)'],
+           sources:['데이터 출처','sources.html','var(--muted)'],site:['사이트 전반','index.html','var(--accent)']};
   function agoTxt(d){
     // dt를 UTC 자정으로 파싱(+09:00이면 UTC상 전날이 되어 '오늘'이 '어제'로 밀린다)
     var t=new Date(d+'T00:00:00Z'), now=new Date(Date.now()+9*3600e3);
@@ -918,6 +925,14 @@
       return '<a class="upd" href="'+m[1]+'"><span class="ud">'+esc(e.dt)+(e.hm?' '+esc(e.hm):'')+' · '+(nw?'<span class="nw">'+ag+'</span>':ag)+'</span>'+
         '<span class="ut" style="--utc:'+m[2]+'">'+m[0]+'</span><span class="uv">'+esc(e.title)+'</span></a>';
     }).join('');
+    // 기록이 멈춘 걸 사이트가 스스로 드러낸다 — CI는 '고쳐놓고 안 적었다'를 알 수 없다.
+    // (실제로 도구를 여럿 새로 만든 사흘 동안 이 피드가 한 줄도 안 늘었다.)
+    var t=new Date(ev[0].dt+'T00:00:00Z'), now=new Date(Date.now()+9*3600e3);
+    var gap=Math.round((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-t.getTime())/864e5);
+    if(gap>=7){
+      w.insertAdjacentHTML('beforeend','<div class="updempty" style="color:var(--marg);border-top:1px solid var(--line-soft)">'+
+        '⚠ 마지막 기록이 '+gap+'일 전입니다 — 그 사이 바뀐 게 없거나, 바뀌었는데 적지 않았거나 둘 중 하나입니다.</div>');
+    }
   }).catch(function(){var w=el('updwrap');if(w)w.innerHTML='<div class="updempty">갱신 내역을 불러오지 못했습니다.</div>';});
 
   fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){

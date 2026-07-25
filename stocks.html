@@ -408,8 +408,8 @@
       <li class="navcat" data-cat="quant">
         <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
-          <span class="mmi"><span class="mmn">스크리너</span><span class="mmb soon">준비중</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></span>
-          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장<span class="mmlk">🔒</span></span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="gurus">
@@ -425,7 +425,7 @@
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
           <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
           <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
-          <span class="mmi"><span class="mmn">실적 및 전망</span><span class="mmb soon">준비중</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></span>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
           <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
         </div>
@@ -433,9 +433,9 @@
       <li class="navcat" data-cat="valuation">
         <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
-          <span class="mmi"><span class="mmn">상대가치평가</span><span class="mmb soon">준비중</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></span>
-          <span class="mmi"><span class="mmn">Reverse DCF</span><span class="mmb soon">준비중</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></span>
-          <span class="mmi"><span class="mmn">Simplified DCF</span><span class="mmb soon">준비중</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></span>
+          <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
+          <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
+          <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
           <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
           <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
           <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
@@ -444,8 +444,8 @@
       <li class="navcat" data-cat="portfolio">
         <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
-          <span class="mmi"><span class="mmn">대시보드</span><span class="mmb soon">준비중</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></span>
-          <span class="mmi"><span class="mmn">포트폴리오 분석</span><span class="mmb soon">준비중</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></span>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">대시보드</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></a>
+          <a class="mmi" href="portfolio.html#analysis" data-nav="portfolio.html#analysis"><span class="mmn">포트폴리오 분석</span><span class="mmb vunv">미검증</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="industry">
@@ -459,9 +459,9 @@
       <li class="navcat" data-cat="ledger">
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
-          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브<span class="mmlk">🔒</span></span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
-          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
-          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀<span class="mmlk">🔒</span></span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브</span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일</span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
           <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
           <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
           <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
@@ -469,7 +469,7 @@
       </li>
     </ul>
     <span class="navsp"></span>
-    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
     <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
   </div>
 </nav>
