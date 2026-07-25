@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "c6cf3b30633fe546",
+ "generated_from": "b48c71d3746be78e",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -325,15 +325,12 @@
     {
      "name": "Index DCF",
      "file": "valuation.html#index",
-     "status": "needs-source",
-     "desc": "지수 단위 FCF 시계열 — frames 한 콜로 5,589사",
-     "verdict": "na",
+     "status": "existing",
+     "desc": "유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음",
+     "verdict": "unverified",
      "src": "raw",
      "effort": "M",
-     "blocked_by": "SEC EDGAR frames API",
-     "blocked_why": "태그당 1콜로 5,589사 횡단. 지수 단위 FCF 시계열이 필요하다.",
-     "pipeline": 5,
-     "live": false
+     "live": true
     }
    ]
   },

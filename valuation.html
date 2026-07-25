@@ -388,7 +388,7 @@
           <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
           <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
           <a class="mmi" href="valuation.html#ddm" data-nav="valuation.html#ddm"><span class="mmn">DDM</span><span class="mmb vunv">미검증</span><span class="mmd">고든 성장모형 — 적정주가 한 숫자 없음, 성장률 × 할인율 격자</span></a>
-          <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
+          <a class="mmi" href="valuation.html#index" data-nav="valuation.html#index"><span class="mmn">Index DCF</span><span class="mmb vunv">미검증</span><span class="mmd">유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="portfolio">
@@ -693,21 +693,26 @@
   </section>
 
   <section id="index" aria-labelledby="idx-h">
-    <p class="lbl" id="idx-h">05 · Index DCF (지수 단위) <span class="sub">· 비어 있음</span></p>
-    <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
-    <div class="empty">
-      <h3>Index DCF <span class="st">데이터 없음</span></h3>
-      <p>지수 전체에 DCF를 걸려면 <b>지수 단위의 FCF 시계열</b>이 필요합니다. 종목별 오늘 FCF를 합산하는 것으로는
-        안 됩니다 — 편입·편출과 회계기간이 어긋나 시계열이 만들어지지 않고,
-        무엇보다 <b>커버 종목의 오늘 FCF가 곧 지수의 FCF도 아닙니다</b>.
-        그리고 위(01)에서 보듯 개별 종목 단면에서도 FCF는 결측·음수가 적지 않아, 합산하면 그 구멍이 그대로 들어갑니다.</p>
-      <div class="egrid" id="idxnums"></div>
-      <p>가져올 방법은 정해져 있습니다: SEC XBRL <code>frames</code> API는 한 번의 호출로 한 회계기간의
-        한 항목을 <b>보고한 전체 기업</b>(약 5,589사)에 대해 돌려줍니다. 분기·항목별로 긁어 쌓으면
-        지수 단위 시계열이 만들어집니다. 아직 그 적재를 하지 않았으므로 이 칸은 비어 있습니다.</p>
-      <p class="muted">필요한 소스: SEC XBRL frames(분기별 FCF 구성항목).
-        진행 상황은 <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
+    <p class="lbl" id="idx-h">05 · Index DCF (지수 단위) <span class="sub">· 지수가 아니라 커버 묶음 — 그 사실을 먼저 적습니다</span></p>
+    <p class="lblnote">개별 종목이 아니라 <b>유니버스를 통째로</b> 역산합니다. 지금 시가총액을 정당화하려면
+      앞으로 몇 %씩 성장해야 하는가 — <a href="#reverse">01 Reverse DCF</a>와 같은 질문을 한 덩어리에 던집니다.</p>
+
+    <div class="note" style="border-left-color:var(--hot)">
+      <b>이건 "지수의 FCF"가 아닙니다</b> — 영업현금흐름과 설비투자가 <b>둘 다</b> 잡히고,
+      최근 18개월 안에 끝난 회계연도가 있는 회사만 더한 값입니다.
+      <b id="idxn">—</b>사 · 유니버스 시가총액의 <b id="idxmc">—</b>를 덮습니다. 나머지는 빠져 있습니다.
+      <br><br>왜 이렇게까지 적는가 — <b>집합을 안 맞추면 숫자가 통째로 틀립니다.</b>
+      SEC frames API로 곧이곧대로 합치면 영업현금흐름은 488사, 설비투자는 329사가 잡히는데,
+      그대로 빼면 FCF가 <b>+80% 부풀려집니다</b>(실측 2026-07-25). 교집합만 쓰면 시총 커버가 60%로 떨어집니다.
+      이 화면은 회사별 수집분에서 두 다리가 모두 있는 회사만 골라 커버를 87%까지 올린 것이고,
+      그래도 <b>지수는 아닙니다</b>.
+      <br><br>또 하나: 편입·편출 이력이 없어 <b>오늘 구성으로만</b> 계산합니다. 과거 시계열을 그리지 않는 이유입니다
+      (오늘 구성을 과거에 적용하면 살아남은 회사만 세는 생존편향이 됩니다).
+      FCF가 음수인 회사도 <b id="idxneg">—</b>사 그대로 들어가 있습니다 — 빼면 합계가 좋아 보이므로 빼지 않습니다.
     </div>
+
+    <div id="idxout"><p class="capn muted">불러오는 중…</p></div>
+    <div id="idxgrid"></div>
   </section>
 
   <div class="note">
@@ -783,7 +788,7 @@
   function failAll(msg){
     fail(msg);
     var m=esc(msg);
-    ['rimnums','idxnums'].forEach(function(id){
+    ['rimnums'].forEach(function(id){
       var n=el(id); if(n)n.innerHTML='<div><b>실측 숫자</b><span><em>—</em><br>'+m+'</span></div>';
     });
     var a=el('asofrow'); if(a)a.innerHTML='<span>'+m+'</span>';
@@ -989,7 +994,7 @@
     renderReverse();
     renderSens();
     renderDist();
-    ensureFx(ST.t);renderDDM();
+    ensureFx(ST.t);renderDDM();renderIndex();
     renderGrid();
   }
 
@@ -1285,6 +1290,67 @@
     gh.innerHTML=gh2;
   }
 
+
+  // ── Index DCF ──────────────────────────────────────────────────────────
+  // 개별 종목과 같은 역산을 유니버스 합계에 건다. 다른 점은 하나 — 이 합계가 '지수'가 아니라
+  // '두 다리가 모두 잡히는 회사들의 묶음'이라는 것이고, 그래서 커버를 항상 같이 적는다.
+  var IDX=null;
+  function renderIndex(){
+    var host=el('idxout'), gh=el('idxgrid');
+    if(!host||!gh)return;
+    if(!IDX){host.innerHTML='<p class="capn">지수 합계를 불러오지 못했습니다(<code>data/facts.json</code>의 index_fcf).</p>';gh.innerHTML='';return;}
+    var n=el('idxn'), m=el('idxmc'), g0=el('idxneg');
+    if(n)n.textContent=nf(IDX.n,0)+'/'+nf(IDX.n_uni,0);
+    if(m)m.textContent=pf(IDX.mc_cover,1);
+    if(g0)g0.textContent=nf(IDX.n_neg,0);
+
+    var fcfy=IDX.fcfy, rf=rfVal();
+    host.innerHTML='<p class="capn">커버 묶음의 합계 FCF <b>$'+nf(IDX.fcf_musd/1e6,2)+'조</b> · '+
+      'FCF 수익률 <b>'+pf(fcfy,2)+'</b>(합계 FCF ÷ 같은 묶음의 시가총액) · '+
+      '최근 '+nf(IDX.window_months,0)+'개월 안에 끝난 회계연도 기준. '+
+      '<b>여기부터는 개별 종목 역산과 같은 계산</b>입니다 — 이 수익률로 지금 시총을 정당화하려면 '+
+      '앞으로 몇 %씩 성장해야 하는가.</p>';
+
+    // 격자: 할인율(=rf + β·MRP, 지수 β는 1로 둔다) × 예측기간
+    var mrps=[3.5,4.5,5.5,6.5], nps=[5,10,15,20], gt=ST.gt/100;
+    if(rf==null){gh.innerHTML='<p class="capn">무위험이자율을 읽지 못해 할인율을 만들 수 없습니다.</p>';return;}
+    var h='<p class="lbl" style="margin-top:28px">가정별 역산 성장률</p>'+
+      '<p class="lblnote">지수의 베타는 정의상 <b>1</b>이므로 할인율은 rf + MRP입니다(개별 종목처럼 베타를 곱하지 않습니다). '+
+      '영구성장률은 위에서 고른 <b>'+pf(ST.gt,1)+'</b>를 씁니다.</p>'+
+      '<div class="tblwrap"><table><thead><tr><th scope="col">MRP \\ 예측기간</th>';
+    nps.forEach(function(x){h+='<th scope="col">'+nf(x,0)+'년</th>';});
+    h+='<th scope="col">할인율</th></tr></thead><tbody>';
+    var lo=null,hi=null,k=0,bad=0,tot=mrps.length*nps.length;
+    mrps.forEach(function(mm){
+      var r=(rf+mm)/100;
+      h+='<tr><th scope="row">'+nf(mm,1)+'%</th>';
+      nps.forEach(function(N){
+        var im=implied(fcfy,r,N,gt);
+        var cur=(Math.abs(mm-ST.mrp)<0.001&&N===Math.round(ST.np));
+        if(!im||im.cap){bad++;h+='<td class="muted"'+(cur?' style="color:var(--accent)"':'')+'>'+(im?'범위 밖':'성립 안 함')+(cur?' ◂지금':'')+'</td>';}
+        else{k++;if(lo==null||im.g<lo)lo=im.g;if(hi==null||im.g>hi)hi=im.g;
+          h+='<td'+(cur?' style="color:var(--accent);font-weight:800"':'')+'>'+pf(im.g*100,1)+(cur?' ◂지금':'')+'</td>';}
+      });
+      h+='<td class="muted">'+pf(r*100,2)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    if(k>0){
+      h+='<p class="capn">이 '+tot+'칸 중 <b>값이 나온 '+k+'칸</b>에서 역산 성장률은 <b>'+pf(lo*100,1)+' ~ '+pf(hi*100,1)+
+         '</b>, 폭 <b>'+nf((hi-lo)*100,1)+'%p</b>입니다.'+
+         (bad?' 나머지 '+bad+'칸은 값이 나오지 않았습니다.':'')+
+         ' 데이터는 하나도 바뀌지 않았고 아무도 정답을 모르는 가정 두 개만 움직였습니다. '+
+         '<b>이 폭이 "지수 적정가"를 말하지 않는 이유입니다.</b></p>';
+    }else{
+      h+='<p class="capn">이 격자 전체에서 값이 나오지 않습니다.</p>';
+    }
+    h+='<div class="note"><b>이 숫자를 읽을 때</b><br>'+
+       '· 커버 '+pf(IDX.mc_cover,1)+'짜리 묶음입니다 — 빠진 13%가 어느 쪽으로 기울었는지 이 화면은 모릅니다.<br>'+
+       '· 회계연도 종료월이 회사마다 달라, 합계는 <b>같은 달로 정렬된 값이 아닙니다</b>.<br>'+
+       '· FCF 음수 '+nf(IDX.n_neg,0)+'사를 빼지 않았습니다. 빼면 합계가 좋아 보입니다.<br>'+
+       '· 역산 성장률이 높다·낮다가 <b>비싸다·싸다를 뜻하지 않습니다</b>. 이 랩은 그 관계를 검증한 적이 없습니다.</div>';
+    gh.innerHTML=h;
+  }
+
   // ── 분포 ────────────────────────────────────────────────────────────────
   // 음수 구간을 한 칸(−∞~0)으로 두면 가정을 조금만 바꿔도 표본 대부분이 막대 하나에 뭉쳐
   // 분포가 정보를 잃는다(예: rf=DFII10·MRP 3.0·g∞ 3.5%에서 341종목 중 224종목). 세 칸으로 쪼갠다.
@@ -1417,14 +1483,8 @@
       var vn=el('csverdict');
       if(vn)vn.innerHTML='실측 '+nf(cs.n,0)+'종목 · 단순 중앙값 <b>'+pf(cs.naive.median,2)+
         '</b> · 자사주·증자 반영 후에도 <b>'+pf(cs.full.median,2)+'</b>(10% 이내 '+pf(cs.full.w10,0)+')';
+      IDX=fj&&fj.index_fcf||null; renderIndex();
     });
-    el('idxnums').innerHTML=
-      box('지금 있는 것','FCF 단면 '+nf(fy,0)+'종목',
-          '그중 FCF가 양수인 것은 '+nf(fyp,0)+'종목입니다. 커버율 '+pf(cov.fcfy,1)+'.')+
-      box('없는 것','지수 FCF 시계열 0분기',
-          '지수 편입·편출과 회계기간을 맞춘 합산 시계열이 없습니다.')+
-      box('없으면 왜 못 하나','합산해도 지수가 아니다',
-          '오늘 커버 종목의 FCF 합계는 지수의 FCF가 아니며, 결측·음수 구멍이 그대로 딸려 들어갑니다.');
   }
 })();
 </script>

@@ -299,15 +299,11 @@
     {
      "name": "Index DCF",
      "file": "valuation.html#index",
-     "status": "needs-source",
-     "desc": "지수 단위 FCF 시계열 — frames 한 콜로 5,589사",
+     "status": "existing",
+     "desc": "유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음",
      "src": "raw",
-     "verdict": "na",
-     "effort": "M",
-     "placeholder": true,
-     "blocked_by": "SEC EDGAR frames API",
-     "blocked_why": "태그당 1콜로 5,589사 횡단. 지수 단위 FCF 시계열이 필요하다.",
-     "pipeline": 5
+     "verdict": "unverified",
+     "effort": "M"
     }
    ],
    "short": "가치"
