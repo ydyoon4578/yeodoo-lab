@@ -333,7 +333,7 @@
           <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
           <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
           <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
-          <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">경제지표 일정</span><span class="mmd">국면 판정이 쓰는 FRED 39지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="quant">
@@ -527,7 +527,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>37</b></span><span>동작 <b>33</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>4</b></span><span>메뉴에서 뺌 <b>4</b></span><span>파일 <b>22</b>장</span></p>
+    <p class="ltn"><span>화면 <b>37</b></span><span>동작 <b>34</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>3</b></span><span>메뉴에서 뺌 <b>4</b></span><span>파일 <b>22</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -549,8 +549,8 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--champ)">
-      <h3>거시경제 분석<span class="dc">구현 6 · 대기 1</span></h3>
-      <div class="dbar" role="img" aria-label="거시경제 분석 판정 분포"><i class="vunv" style="--w:83.3333%" title="미검증 5"></i><i class="soon" style="--w:16.6667%" title="준비중 1"></i></div>
+      <h3>거시경제 분석<span class="dc">구현 7</span></h3>
+      <div class="dbar" role="img" aria-label="거시경제 분석 판정 분포"><i class="vunv" style="--w:100.0000%" title="미검증 5"></i></div>
       <div class="dtools">
         <a href="regime.html">국가경제 분석<b class="vunv">미검증</b></a>
         <a href="regime.html#axes">하위 요인 분석<b class="vunv">미검증</b></a>
@@ -558,7 +558,7 @@
         <a href="macro.html#cycle">사이클 분석<b class="vunv">미검증</b></a>
         <a href="macro.html#assets">자산군<b class="vunv">미검증</b></a>
         <a href="macro.html#val">밸류에이션(지수)<b class="vunv">미검증</b></a>
-        <span>경제지표 일정<b class="soon">준비중</b></span>
+        <a href="calendar.html#macro">경제지표 일정</a>
       </div>
     </div>
     <div class="dcard" style="--edge:var(--rp)">
@@ -632,13 +632,12 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 4 · 메뉴에서 뺌 4</span></p>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 3 · 메뉴에서 뺌 4</span></p>
   <div class="gapbox soonbox">
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
-    <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">yfinance earnings_dates</span></div>
+    <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">실적 발표 예정일 소스 (yfinance 비공식 / Finnhub 무료키)</span></div>
     <div class="gaprow"><span class="gn">거장 포트폴리오·매매</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
     <div class="gaprow"><span class="gn">공통 보유종목</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
-    <div class="gaprow"><span class="gn">경제지표 일정</span><span class="gw">FRED releases/dates API</span></div>
     <p class="gapf"><a href="roadmap.html">전체 사유와 붙이는 순서 →</a></p>
   </div>
   <div class="gapbox wontbox">

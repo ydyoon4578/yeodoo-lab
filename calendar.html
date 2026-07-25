@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 아직 만들지 못한 도구와 그 이유. 어떤 데이터가 없어서 비어 있는지, 어떤 칸은 아예 만들지 않기로 했는지 전부 공개합니다.">
-<title>여두 · 미구현 로드맵</title>
+<meta name="description" content="여두 전략 랩 — 이 랩의 국면 판정이 실제로 쓰는 FRED 지표가 언제 발표되는지. 예상치·컨센서스는 싣지 않습니다.">
+<title>여두 · 발표 일정</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
-<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/roadmap.html">
-<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/roadmap.html">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/calendar.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/calendar.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 · 미구현 로드맵">
-<meta property="og:description" content="무엇이 없어서 못 만들었는지 — 준비중과 미제작을 사유와 함께 공개.">
+<meta property="og:title" content="여두 · 발표 일정">
+<meta property="og:description" content="이 랩이 실제로 쓰는 지표가 언제 나오는지 — 예상치·컨센서스 없음.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 · 미구현 로드맵">
-<meta name="twitter:description" content="무엇이 없어서 못 만들었는지 — 준비중과 미제작을 사유와 함께 공개.">
+<meta name="twitter:title" content="여두 · 발표 일정">
+<meta name="twitter:description" content="이 랩이 실제로 쓰는 지표의 발표 일정.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <style>
   :root{
@@ -49,36 +49,51 @@
   .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
 
-  /* 네 숫자를 나란히 둔다 — '도구 41종' 같은 부풀린 수를 걸지 않기 위해서다 */
   .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
   .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
   .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
   .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .ty em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--ink-2);line-height:1.5}
 
-  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:40px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .views{display:flex;gap:4px;margin:26px 0 0;border-bottom:1px solid var(--line)}
+  .vtab{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 15px;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .vtab:hover{color:var(--ink)}
+  .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
+
+  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:34px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
 
-  .pipe{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;margin-bottom:13px}
-  .pipe h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-  .pipe h3 .pn{font-size:10px;font-weight:800;color:var(--panel);background:var(--champ);border-radius:5px;padding:2px 7px;flex:none}
-  .pipe h3 .cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:auto}
-  .pipe .why{margin:9px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.65}
-  .slots{margin:12px 0 0;display:flex;flex-direction:column;gap:1px}
-  .slot{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
-  .slot .sn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
-  .slot .sc{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
-  .slot .sd{grid-column:1/-1;font-size:11.5px;color:var(--muted);line-height:1.5}
-
-  .wont{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--hot);border-radius:12px;box-shadow:var(--shadow);padding:15px 19px;margin-bottom:11px}
-  .wont h3{margin:0;font-family:var(--mono);font-size:13.5px;font-weight:700}
-  .wont p{margin:8px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.65}
-  .wont .alt{margin-top:9px;font-size:11.5px;color:var(--muted)}
-
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:16px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
+  .note.hard{border-left-color:var(--hot)}
+  .note code{font-family:var(--mono);font-size:11.5px}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+
+  .filters{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
+  .frow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .frow>.fl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:52px}
+  .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-2);cursor:pointer;line-height:1.4}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
+  @media (prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#131820}}
+  :root[data-theme="light"] .chip[aria-pressed=true]{color:#FFFFFF}
+  :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
+  .chip .cn{font-weight:500;opacity:.75;margin-left:4px}
+
+  .day{margin-bottom:2px}
+  .dayh{position:sticky;top:0;z-index:2;background:var(--ground);padding:13px 0 7px;font-family:var(--mono);font-size:12px;font-weight:800;display:flex;align-items:baseline;gap:9px;border-bottom:1px solid var(--line)}
+  .dayh .ago{font-size:10.5px;font-weight:600;color:var(--muted)}
+  .dayh.today .ago,.dayh.today{color:var(--deploy)}
+  .dayh.past{opacity:.62}
+  .dayh .cnt{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .ev{display:grid;grid-template-columns:74px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
+  .ev .ek{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:6px;padding:1px 0;text-align:center}
+  .ev .en{font-size:13px;color:var(--ink)}
+  .ev .es{grid-column:2;display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+  .ev .es a{font-family:var(--mono);font-size:10.5px;text-decoration:none;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+  .ev .es a:hover{border-color:var(--accent);color:var(--accent)}
+  .ev.past{opacity:.62}
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
@@ -179,8 +194,7 @@
 </style>
 <!-- NAVCSS:END -->
 </head>
-<body data-tool="roadmap.html">
-
+<body data-tool="calendar.html">
 <!-- NAV:BEGIN -->
 <a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
@@ -372,39 +386,64 @@
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Roadmap · 미구현 목록</div>
-    <h1 class="title">무엇이 없어서<br>못 만들었는가</h1>
-    <p class="lede">메뉴에 <b>준비중</b>으로 뜨는 칸이 왜 비어 있는지, 그리고 어떤 칸은 <b>아예 만들지 않기로</b> 했는지 전부 적습니다.
-      이 랩은 통과한 전략만이 아니라 기각한 전략도 사유와 함께 남깁니다 — 도구도 같은 규칙으로 다룹니다.</p>
+    <div class="eyebrow">Calendar · 발표 일정</div>
+    <h1 class="title">이 랩이 쓰는 지표가<br>언제 나오는가</h1>
+    <p class="lede">'주요 경제지표'를 임의로 고른 목록이 아닙니다. <a href="regime.html">국면 판정</a>이 실제로 쓰는
+      <b id="cn-series">—</b>개 FRED 시리즈가 <b>각각 어느 릴리스에 실려 언제 나오는지</b>를 그대로 옮긴 것입니다.
+      둘을 같은 정본에서 뽑으므로 어긋날 수 없습니다.</p>
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
-  <section aria-labelledby="pipe-h">
-    <p class="lbl" id="pipe-h">데이터 소스별 대기 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 하나가 여러 칸을 켠다</span></p>
-    <p class="lblnote">붙일 순서는 "이 소스 하나가 몇 개의 칸을 여는가"로 정했습니다. 크기·소요시간은 실제로 호출해 측정한 값입니다.</p>
-    <div id="pipes"><div class="skel">불러오는 중…</div></div>
+  <nav class="views" id="views" aria-label="보기 전환">
+    <a class="vtab" href="#macro" data-v="macro">경제지표 일정</a>
+    <a class="vtab" href="#earnings" data-v="earnings">실적 발표 일정</a>
+  </nav>
+
+  <section id="macro" aria-labelledby="m-h">
+    <p class="lbl" id="m-h">경제지표 일정</p>
+    <p class="lblnote">지난 <b id="cn-back">—</b>일 + 앞으로 <b id="cn-fwd">—</b>일. 날짜별로 묶었습니다.
+      시리즈 칩을 누르면 <a href="macro.html">경제지표 열람</a>으로 갑니다.</p>
+
+    <div class="note hard">
+      <b>예상치·컨센서스를 싣지 않습니다</b> — FRED가 주지 않고, 다른 데서 가져오면 라이선스 문제이며,
+      무엇보다 <b>컨센서스 대비 서프라이즈가 수익으로 이어지는지 이 랩은 검증한 적이 없습니다</b>.
+      이 화면은 "언제 나오는가"까지만 말합니다. 발표 시각(한국시간 몇 시)도 없습니다 — FRED는 날짜만 줍니다.
+    </div>
+
+    <div class="filters">
+      <div class="frow">
+        <span class="fl">주기</span>
+        <div id="kchips" class="frow" style="gap:6px;flex:1"></div>
+        <span id="hits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div id="feed"><div class="skel">불러오는 중…</div></div>
+    <div class="note" id="limits"></div>
   </section>
 
-  <section aria-labelledby="wont-h">
-    <p class="lbl" id="wont-h">메뉴에서 뺀 칸 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 슬롯 수에서 제외</span></p>
-    <p class="lblnote">무료 공개 데이터로는 만들 수 없다고 확정해 <b>40슬롯에서 뺀</b> 칸입니다. 메뉴에는 더 이상 없습니다.
-      다만 <b>지웠다고 없던 일로 하지는 않습니다</b> — 왜 못 만드는지, 돈을 쓰면 되는지, 무엇이 대신 그 자리를 맡았는지를 여기 남깁니다.</p>
-    <div id="wonts"><div class="skel">불러오는 중…</div></div>
+  <section id="earnings" aria-labelledby="e-h" hidden>
+    <p class="lbl" id="e-h">실적 발표 일정 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 비어 있음</span></p>
+    <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
+    <div class="note hard">
+      <b>실적 발표 <u>예정일</u>은 무료 공개 데이터에 없습니다.</b>
+      SEC는 <b>이미 일어난</b> 발표만 압니다 — 8-K Item 2.02(실적 발표)로 제출된 뒤에야 기록이 생기고,
+      그건 <a href="filings.html">공시 피드</a>에 이미 있습니다. <b>앞으로의</b> 일정은 회사가 IR 페이지에
+      공지하거나 데이터 벤더가 모아 파는 것이고, SEC 제출 대상이 아닙니다.
+      <br><br>남은 길은 yfinance의 <code>earnings_dates</code>인데, 비공식 API라 끊기면 이 칸이 같이 죽습니다.
+      실제로 <b>2026-07-25에 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀</b> 종목 갱신이
+      사흘 멈춘 적이 있습니다. 그 위험을 안고 붙일지는 아직 정하지 않았습니다.
+      <br><br>대안은 Finnhub 무료 키(공식 API·무료 등급 존재)입니다. 키를 받으면 붙일 수 있습니다.
+    </div>
+    <p class="lblnote" style="margin-top:14px">→ <a href="filings.html">이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있습니다</a> ·
+      <a href="roadmap.html">미구현 로드맵</a></p>
   </section>
-
-  <div class="note" id="tallynote">
-    <b>준비중은 남기고, 못 만드는 칸은 뺍니다</b> — 둘은 다릅니다.
-    <b>준비중</b>은 붙일 소스가 실재하고 순서만 남은 칸이라, 지우면 이 사이트가 무엇을 다루려 하는지가 같이 사라집니다.
-    그래서 준비중이라고 적힌 채로 둡니다.
-    <b>못 만드는 칸</b>은 무료 공개 데이터에 길이 없다고 확정한 것이라, 메뉴에 세워 두면 "언젠가 되겠지"라는
-    빈 약속이 됩니다. 2026-07-25에 3칸을 슬롯에서 뺐습니다 — 대신 <b>왜 못 만드는지와 무엇이 대신하는지를
-    위에 그대로 남깁니다</b>. 사유를 지우는 것과 칸을 지우는 것은 다릅니다.
-  </div>
 
   <footer>
-    <a href="index.html">← 전략 랩 홈</a> · <a href="method.html">등급·판정 규약</a> ·
-    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
-    <br>이 목록은 메뉴 정본(<code>build/nav_items.json</code>)에서 자동 생성됩니다 — 도구가 켜지면 여기서 저절로 빠집니다.
+    <a href="index.html">← 전략 랩 홈</a> · <a href="regime.html">국가경제 분석</a> ·
+    <a href="macro.html">경제지표 열람</a> · <a href="filings.html">8-K 공시 피드</a> ·
+    <a href="sources.html">데이터 출처·기준일</a>
+    <br>출처 FRED releases/dates API · 생성 <code>build/refresh_calendar.py</code>
   </footer>
 </div>
 
@@ -412,67 +451,122 @@
 (function(){
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var D=null, sel={}, TODAY=null;
 
-  fetch('data/nav.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
-    if(!j||!j.categories){fail();return;}
-    var tools=[];
-    j.categories.forEach(function(c){(c.tools||[]).forEach(function(t){t._cat=c.name;tools.push(t);});});
+  var VIEWS=['macro','earnings'];
+  function showView(v){
+    v=(VIEWS.indexOf(v)>=0?v:'macro');
+    for(var i=0;i<VIEWS.length;i++){
+      var sec=el(VIEWS[i]); if(sec)sec.hidden=(VIEWS[i]!==v);
+      var a=document.querySelector('.vtab[data-v="'+VIEWS[i]+'"]');
+      if(a){if(VIEWS[i]===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
+    }
+  }
+  function onHash(){showView((location.hash||'').replace(/^#/,''));}
+  window.addEventListener('hashchange',onHash);
 
-    // ── 네 숫자 ──
-    // 앞의 셋(전체=동작+준비중)만 합이 맞는다. '뺀 칸'은 2026-07-25에 슬롯에서 아예 제외했으므로
-    // 전체 슬롯 수에 들어 있지 않다 — 여기서 빼면 준비중이 그만큼 모자라게 나온다(실제로 그렇게 틀렸었다).
-    var live   = tools.filter(function(t){return t.live;}).length;
-    var soon   = tools.length-live;
-    var wont   = (j.retired||[]).length;      // 슬롯 밖 — 아래 '뺀 칸' 섹션이 사유를 싣는다
-    el('tally').innerHTML=
-      ty(tools.length,'전체 슬롯','메뉴에 세운 칸','var(--ink)')+
-      ty(live,'동작 중','지금 열리는 화면','var(--deploy)')+
-      ty(soon,'준비중','소스·구현 대기','var(--champ)')+
-      ty(wont,'메뉴에서 뺌','슬롯 밖 · 사유는 아래','var(--hot)');
+  function ty(v,lab,note,edge){
+    return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';
+  }
+  function daysFrom(d){
+    var t=new Date(d+'T00:00:00Z'), now=new Date(Date.now()+9*3600e3);
+    return Math.round((t.getTime()-Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()))/864e5);
+  }
+  function agoTxt(d){
+    var n=daysFrom(d);
+    return n===0?'오늘':n===1?'내일':n===-1?'어제':(n>0?n+'일 뒤':(-n)+'일 전');
+  }
+  var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)'};
 
-    // ── 소스별 묶음(pipeline 0=영구 미제작은 제외, 99=후순위는 맨 뒤) ──
-    var byPipe={};
-    tools.filter(function(t){return !t.live;}).forEach(function(t){
-      var k=(t.pipeline==null?98:t.pipeline)+'|'+(t.blocked_by||'미분류');
-      (byPipe[k]=byPipe[k]||[]).push(t);
+  function match(r){
+    var ks=Object.keys(sel);
+    if(!ks.length)return true;
+    var rel=D.releases[String(r.rid)];
+    return !!(rel&&sel[rel.kind]);
+  }
+
+  function render(){
+    var rows=D.dates.filter(match);
+    el('hits').textContent=rows.length+'건';
+    if(!rows.length){el('feed').innerHTML='<div class="skel">조건에 맞는 일정이 없습니다.</div>';return;}
+    var h='', cur=null, buf=[];
+    function flush(){
+      if(!cur)return;
+      var n=daysFrom(cur);
+      h+='<div class="day"><div class="dayh'+(n===0?' today':(n<0?' past':''))+'">'+
+         '<span>'+esc(cur)+'</span><span class="ago">'+esc(agoTxt(cur))+'</span>'+
+         '<span class="cnt">'+buf.length+'건</span></div>'+buf.join('')+'</div>';
+      buf=[];
+    }
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], rel=D.releases[String(r.rid)]||{};
+      if(r.d!==cur){flush();cur=r.d;}
+      var past=daysFrom(r.d)<0;
+      var chips=(rel.series||[]).map(function(s){
+        return '<a href="macro.html" title="'+esc(s.label||'')+'">'+esc(s.k)+'</a>';
+      }).join('');
+      buf.push('<div class="ev'+(past?' past':'')+'">'+
+        '<span class="ek" style="--utc:'+(KCOLOR[rel.kind]||'var(--muted)')+'">'+esc(rel.kind||'—')+'</span>'+
+        '<span class="en">'+esc(rel.name||('릴리스 '+r.rid))+'</span>'+
+        (chips?'<span class="es">'+chips+'</span>':'')+
+        '</div>');
+    }
+    flush();
+    el('feed').innerHTML=h;
+  }
+
+  function buildChips(){
+    var c={};
+    D.dates.forEach(function(r){
+      var rel=D.releases[String(r.rid)]; if(!rel)return;
+      c[rel.kind]=(c[rel.kind]||0)+1;
     });
-    var keys=Object.keys(byPipe).sort(function(a,b){return (+a.split('|')[0])-(+b.split('|')[0]);});
-    el('pipes').innerHTML = keys.length ? keys.map(function(k,i){
-      var arr=byPipe[k], src=k.split('|').slice(1).join('|'), pri=+k.split('|')[0];
-      var order = pri>=98 ? '후순위' : (i+1)+'순위';
-      return '<div class="pipe"><h3><span class="pn">'+esc(order)+'</span>'+esc(src)+
-        '<span class="cnt">'+arr.length+'칸</span></h3>'+
-        (arr[0].blocked_why?'<p class="why">'+esc(arr[0].blocked_why)+'</p>':'')+
-        '<div class="slots">'+arr.map(function(t){
-          return '<div class="slot"><span class="sn">'+esc(t.name)+'</span>'+
-                 '<span class="sc">'+esc(t._cat)+' · 공수 '+esc(t.effort||'—')+'</span>'+
-                 '<span class="sd">'+esc(t.desc)+'</span></div>';
-        }).join('')+'</div></div>';
-    }).join('') : '<div class="skel">대기 중인 칸이 없습니다.</div>';
-
-    // ── 메뉴에서 뺀 칸 ── 슬롯에는 없지만 사유는 계속 게시한다
-    var w=j.retired||[];
-    el('wonts').innerHTML = w.length ? w.map(function(t){
-      return '<div class="wont" id="'+esc(((t.was_file||'').split('#')[1]||''))+'"><h3>'+esc(t.name)+
-        ' <span style="font-weight:400;color:var(--muted);font-size:11.5px">· '+esc(t.cat)+
-        ' · '+esc(t.retired_on||'')+' 제외</span></h3>'+
-        '<p>'+esc(t.why||'')+'</p>'+
-        (t.principle?'<p class="alt">'+esc(t.principle)+'</p>':'')+
-        (t.paid_path?'<p class="alt"><b style="color:var(--marg)">돈으로 푸는 길</b> — '+esc(t.paid_path)+'</p>':'')+
-        (t.replaced_by?'<p class="alt"><b style="color:var(--deploy)">대신 만든 것</b> — '+esc(t.replaced_by)+'</p>':
-                       '<p class="alt"><b style="color:var(--hot)">대체 없음</b> — 이 자리는 비워 둡니다.</p>')+
-        '</div>';
-    }).join('') : '<div class="skel">해당 없음.</div>';
-  }).catch(fail);
-
-  function ty(n,lab,sub,c){
-    return '<div class="ty" style="--edge:'+c+'"><b class="tnum">'+n+'</b><span>'+lab+'</span><em>'+sub+'</em></div>';
+    var order=['월간','분기','격주','주간','매일','부정기'];
+    var ks=order.filter(function(k){return c[k];}), h='';
+    ks.forEach(function(k){
+      // 기본값: 매일 나오는 릴리스는 꺼 둔다. 금리·VIX가 캘린더를 뒤덮으면 '이벤트'가 안 보인다.
+      var on=(k!=='매일');
+      if(on)sel[k]=1;
+      h+='<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="'+(on?'true':'false')+'">'+
+         esc(k)+'<span class="cn">'+c[k]+'</span></button>';
+    });
+    el('kchips').innerHTML=h;
+    el('kchips').addEventListener('click',function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      var k=b.getAttribute('data-k');
+      if(sel[k]){delete sel[k];b.setAttribute('aria-pressed','false');}
+      else{sel[k]=1;b.setAttribute('aria-pressed','true');}
+      render();
+    });
   }
-  function fail(){
-    el('tally').innerHTML='<div class="ty"><b>—</b><span>불러오지 못함</span></div>';
-    el('pipes').innerHTML='<div class="skel">메뉴 정본(data/nav.json)을 불러오지 못했습니다.</div>';
-    el('wonts').innerHTML='';
-  }
+
+  fetch('data/calendar.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.dates){
+      el('feed').innerHTML='<div class="note hard"><b>일정을 불러오지 못했습니다</b> — <code>data/calendar.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
+      el('tally').innerHTML=ty('—','불러오기 실패','data/calendar.json','var(--hot)');
+      return;
+    }
+    D=j;
+    var nrel=Object.keys(j.releases||{}).length;
+    var nxt=j.dates.filter(function(r){return daysFrom(r.d)>=0;});
+    var nxtEvent=nxt.filter(function(r){var rl=j.releases[String(r.rid)];return rl&&rl.kind!=='매일';})[0];
+    el('cn-series').textContent=j.n_series;
+    el('cn-back').textContent=(j.window&&j.window.back_days)||'—';
+    el('cn-fwd').textContent=(j.window&&j.window.fwd_days)||'—';
+    el('tally').innerHTML=
+      ty(j.n_future,'앞으로 예정','FRED 공지 기준','var(--deploy)')+
+      ty(nrel,'릴리스','39개 시리즈가 묶인 수','var(--champ)')+
+      ty(nxtEvent?nxtEvent.d:'—','다음 지표 발표',
+         nxtEvent?((j.releases[String(nxtEvent.rid)]||{}).name||''):'매일 갱신 제외','var(--accent)')+
+      ty(j.as_of,'수집 기준일','주 1회 갱신','var(--marg)');
+    el('limits').innerHTML='<b>이 일정의 한계</b><br>· '+(j.limits||[]).map(esc).join('<br>· ')+
+      ((j.miss_series&&j.miss_series.length)?'<br>· 릴리스를 찾지 못한 시리즈: <code>'+j.miss_series.map(esc).join('</code> <code>')+
+        '</code> — 랩이 직접 계산해 만든 파생 시리즈라 FRED 릴리스가 없습니다.':'');
+    buildChips(); render(); onHash();
+  })['catch'](function(){
+    el('feed').innerHTML='<div class="note hard"><b>일정을 불러오지 못했습니다.</b></div>';
+  });
+  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
 })();
 </script>
 </body>
