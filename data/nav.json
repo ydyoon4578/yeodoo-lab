@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "f6659532348d7839",
+ "generated_from": "8a1d648a3dccdfa2",
  "categories": [
   {
    "name": "시장",
@@ -212,7 +212,7 @@
      "name": "전략 랩",
      "file": "archive.html",
      "status": "existing",
-     "desc": "돌린 규칙 23개 전부 — 성과·판정·사유",
+     "desc": "돌린 규칙을 전부 게시 — 성과·판정·사유",
      "verdict": "rejected",
      "src": "model",
      "effort": "S",

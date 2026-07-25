@@ -307,6 +307,17 @@ if pool:
                 errors.append(f"archive_index: 구 슬러그 '{_k}'를 {_seen_aka[_k]}·{_x.get('sid')}가 함께 씀")
             _seen_aka[_k] = _x.get("sid")
 
+    # arch 참조 무결성 — 규칙 카드의 '이전 판정' 줄은 A[r.arch]로 붙는다. 없는 sid를 가리키면
+    # 그 줄이 조용히 사라진다(오류도 안 난다). 링크가 끊긴 걸 화면에서 알아챌 방법이 없으므로 여기서 막는다.
+    try:
+        _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+        for _r in _ts.get("strategies") or []:
+            if _r.get("arch") and _r["arch"] not in _sids:
+                errors.append(f"tech_strategies '{_r['name']}': arch='{_r['arch']}'가 archive_index에 없음 "
+                              f"— '이전 판정' 줄이 조용히 사라진다")
+    except FileNotFoundError:
+        pass
+
     _ek = plain("explorer.html", "구 슬러그(aka) 해석 로직 검사")
     if _ek is not None and ("aka" not in _ek or "_keys" not in _ek):
         errors.append("explorer.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
