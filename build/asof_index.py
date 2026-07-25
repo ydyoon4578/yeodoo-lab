@@ -117,6 +117,9 @@ def main() -> int:
         # 읽으면 안 되는 축이라, cadence에 그 성격을 적는다.
         {"key": "facts", "label": "SEC 재무(XBRL)", "as_of": (load("facts.json") or {}).get("as_of"),
          "cadence": "분기(실적 발표 시)", "note": "회사의 최근 보고 기간말 — 구조적으로 분기마다 한 번 움직인다"},
+        # 내부자 거래는 SEC가 분기 단위로 묶어 내놓는다. 뒤처지는 게 아니라 원래 그런 축이다.
+        {"key": "insider", "label": "내부자 거래(Form 4)", "as_of": (load("insider.json") or {}).get("as_of"),
+         "cadence": "분기 데이터셋", "note": "SEC가 분기로 묶어 내놓아 수십 일 지연이 구조적이다 — 실시간이 아니다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
     for a in axes:

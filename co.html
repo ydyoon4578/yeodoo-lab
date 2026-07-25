@@ -206,6 +206,14 @@
   .fstbl .fstag{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
   .fstbl .na{color:var(--muted)}
 
+  /* 내부자 거래 */
+  .instbl td.ileft,.instbl th{text-align:left}
+  .instbl .icode{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;
+    border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-right:5px;color:var(--muted)}
+  .instbl .icode.idisc{border-color:var(--accent);color:var(--accent)}
+  .instbl .iw{display:block;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
+  .instbl a{color:var(--accent);text-decoration:none} .instbl a:hover{text-decoration:underline}
+
   /* IR자료실 — 제출 원문 목록 */
   .irlist{display:flex;flex-direction:column;gap:1px;margin-top:8px}
   .irrow{display:grid;grid-template-columns:190px 96px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
@@ -222,17 +230,6 @@
     .irrow .iri{grid-column:1/-1}
   }
 
-  /* ── 빈 탭 ── */
-  .gap{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px}
-  .gap h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:700}
-  .gap .why{margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.7}
-  .gap dl{margin:14px 0 0;display:grid;grid-template-columns:minmax(96px,132px) 1fr;gap:8px 14px;font-size:12.5px}
-  .gap dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
-  .gap dd{margin:0;color:var(--ink-2);line-height:1.6}
-  @media(max-width:560px){.gap dl{grid-template-columns:1fr;gap:2px 0} .gap dd{margin-bottom:8px}}
-  .gap .go{margin:16px 0 0;font-family:var(--mono);font-size:12px}
-  .gap .go a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
-  .gap .go a:hover{border-bottom-color:var(--accent)}
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
@@ -389,7 +386,7 @@
           <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
-          <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
+          <a class="mmi" href="co.html#ins" data-nav="co.html#ins"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span><span class="mmd">임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님</span></a>
           <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
         </div>
       </li>
@@ -540,7 +537,7 @@
     <a class="tab" href="#est" data-tab="est">실적 및 전망</a>
     <a class="tab" href="#fs"  data-tab="fs">재무제표</a>
     <a class="tab" href="#ir"  data-tab="ir">IR자료실</a>
-    <a class="tab" href="#ins" data-tab="ins">내부자 거래 <span class="tg">빈 탭</span></a>
+    <a class="tab" href="#ins" data-tab="ins">내부자 거래</a>
   </nav>
 
   <!-- ══ #est — 유일하게 살아있는 탭 ══════════════════════════════════════ -->
@@ -566,7 +563,7 @@
     <div id="detail"><div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div></div>
   </section>
 
-  <!-- ══ #fs — 빈 탭 ══════════════════════════════════════════════════════ -->
+  <!-- ══ #fs — SEC EDGAR companyfacts(XBRL) 수집분 ═══════════════════════ -->
   <!-- hidden을 마크업에 두지 않는다: JS가 안 돌면 결핍 사유가 통째로 사라져 '감추지 않고 사유를 적습니다'와
        정반대가 된다. 탭 전환은 body 끝 스크립트의 showTab()이 동기로 잡는다(hidden은 런타임에만 건다). -->
   <section id="fs" class="panel" aria-labelledby="fs-h">
@@ -593,22 +590,17 @@
     <div id="irbox"><div class="empty">위에서 종목을 고르면 그 회사의 제출 원문 목록이 여기에 표시됩니다.</div></div>
   </section>
 
-  <!-- ══ #ins — 빈 탭 ═════════════════════════════════════════════════════ -->
+  <!-- ══ #ins — SEC Form 4/5 분기 데이터셋 수집분 ════════════════════════ -->
   <section id="ins" class="panel" aria-labelledby="ins-h">
-    <p class="lbl" id="ins-h">내부자 거래 <span class="sub">비어 있음 — 감추지 않고 사유를 적습니다</span></p>
-    <p class="lblnote">만들 수는 있지만 아직 안 만들었습니다. 그리고 만들어도 <b>실시간이 될 수 없습니다</b> — 그 이유가 구조적이라 미리 적습니다.</p>
-    <div class="gap" id="gap-ins">
-      <h3>임원·주요주주 매매(Form 3/4/5) — 없음</h3>
-      <p class="why">SEC가 Form 3/4/5를 <b>분기 단위 ZIP</b>으로 묶어 내놓기 때문에, 이 경로로 만든 화면은 약 <b>25일 지연</b>이 구조적으로 따라붙습니다.
-        지연을 줄일 방법이 이 소스에는 없습니다. 그래서 만들더라도 "실시간 내부자 매매"라고 부르지 않을 것입니다.</p>
-      <dl>
-        <dt>필요한 소스</dt><dd>SEC Form 3/4/5 분기 ZIP</dd>
-        <dt>수월한 점</dt><dd>ISSUERTRADINGSYMBOL로 티커에 직접 조인돼 CUSIP 매핑이 필요 없습니다.</dd>
-        <dt>구조적 한계</dt><dd>약 25일 지연. 실시간이 아닙니다.</dd>
-        <dt>지금 상태</dt><dd>수집 파이프라인 미구현.</dd>
-      </dl>
-      <p class="go">→ <a href="roadmap.html#pipe-h">미구현 로드맵에서 이 칸이 몇 순위인지 보기</a></p>
+    <p class="lbl" id="ins-h">내부자 거래 <span class="sub">출처 SEC Form 4/5 분기 데이터셋 · 실시간 아님</span></p>
+    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/ins/&lt;티커&gt;.json</code>에서 읽습니다.
+      임원·이사·10% 이상 주주가 보통주를 사고판 기록입니다(Table I). 파생상품 거래는 담지 않습니다.</p>
+    <div class="fsctl" id="insctl" hidden>
+      <button class="fstab" type="button" id="insall" aria-pressed="true">전체</button>
+      <button class="fstab" type="button" id="insdisc" aria-pressed="false">재량 거래만 (P·S)</button>
+      <span class="fsnote" id="insn"></span>
     </div>
+    <div id="insbox"><div class="empty">위에서 종목을 고르면 내부자 거래 기록이 여기에 표시됩니다.</div></div>
   </section>
 
   <footer>
@@ -648,7 +640,7 @@
   var DROPNEG={fpe:1,pb:1,eveb:1};
   var SECT_MIN=15;   // 섹터 표본이 이 미만이면 등급 대신 '표본 부족'(method.html 규약)
 
-  var DATA=null,HIST=null,NAV=null,RATE=null;
+  var DATA=null,HIST=null,RATE=null;
   var state={tab:'est',sel:null,q:''};
 
   function getj(u){
@@ -675,6 +667,7 @@
     // 고르고 탭을 옮긴 사용자에게 빈 안내문이 남는다(선택 시점엔 #ir이 숨어 있었으므로).
     if(state.tab==='ir'&&state.sel){ensureFilings(state.sel);renderIR(state.sel);}
     if(state.tab==='fs'&&state.sel){ensureFacts(state.sel);renderFS(state.sel);}
+    if(state.tab==='ins'&&state.sel){ensureIns(state.sel);renderIns(state.sel);}
   }
   function onHash(){
     var p=parseHash();
@@ -685,9 +678,10 @@
 
   // ── 로드 ──────────────────────────────────────────────────────────────
   showTab(parseHash().tab||'est');
+  // nav.json은 빈 탭에 결핍 사유를 덧대던 용도였다. 빈 탭이 없어져 더 안 읽는다.
   Promise.all([getj('data/stocks.json'),getj('data/target_history.json'),
-               getj('data/nav.json'),getj('data/regime.json')]).then(function(a){
-    DATA=a[0];HIST=a[1];NAV=a[2];RATE=a[3];
+               getj('data/regime.json')]).then(function(a){
+    DATA=a[0];HIST=a[1];RATE=a[2];
     if(!DATA||!DATA.stocks){
       el('statline').innerHTML='<span class="stat">data/stocks.json을 불러오지 못했습니다</span>';
       el('hlup').innerHTML='<b>경고 원문을 불러오지 못해 숫자도 표시하지 않습니다.</b> 이 페이지의 수치는 검증 결론과 반드시 함께 나가야 하므로, 원문이 없으면 수치도 내보내지 않습니다.';
@@ -695,7 +689,7 @@
       el('plist').innerHTML='<div class="empty">불러오지 못했습니다.</div>';
       return;
     }
-    renderStat();renderHeadline();renderCov();renderList();renderGaps();
+    renderStat();renderHeadline();renderCov();renderList();
     var p=parseHash(); if(p.t)selectByTicker(p.t);
   });
 
@@ -815,6 +809,90 @@
     renderIR(s);
     ensureFacts(s);
     renderFS(s);
+    ensureIns(s);
+    renderIns(s);
+  }
+
+  // ── 내부자 거래: SEC Form 4/5 분기 데이터셋 수집분 ───────────────────────
+  var INS=null, insDisc=false;
+  function ensureIns(s){
+    if(!INS&&!ensureIns._l){        // 요약(지연일·코드표)은 회사와 무관하게 한 번만
+      ensureIns._l=1;
+      getj('data/insider.json').then(function(x){INS=x||{};if(state.sel)renderIns(state.sel);});
+    }
+    if(s._ins||s._insFail||s._insLoading)return;
+    s._insLoading=1;
+    getj('data/ins/'+encodeURIComponent(s.t)+'.json').then(function(x){
+      s._insLoading=0;
+      if(x&&x.tr)s._ins=x; else s._insFail=1;
+      if(state.sel===s)renderIns(s);
+    });
+  }
+  function insNum(v,dec){
+    if(v==null)return '—';
+    return v.toLocaleString('en-US',{maximumFractionDigits:dec==null?0:dec});
+  }
+  function renderIns(s){
+    var box=el('insbox'), ctl=el('insctl'); if(!box)return;
+    if(ctl)ctl.hidden=true;
+    if(!s){box.innerHTML='<div class="empty">위에서 종목을 고르면 내부자 거래 기록이 여기에 표시됩니다.</div>';return;}
+    if(s._insLoading){box.innerHTML='<div class="skel">내부자 거래(data/ins/'+esc(s.t)+'.json)를 불러오는 중…</div>';return;}
+
+    // 지연 안내는 종목에 데이터가 없어도 먼저 띄운다 — '왜 최근 거래가 안 보이나'의 답이기 때문이다
+    var lag=(INS&&INS.lag_days!=null)?INS.lag_days:null;
+    var h='<div class="note"><b>이 화면은 실시간이 아닙니다</b> — SEC가 Form 4를 <b>분기 단위 데이터셋</b>으로 묶어 '+
+      '내놓기 때문입니다. 개별 제출은 거래 후 이틀 안에 올라오지만, 정형화된 표로 묶이는 건 분기가 끝난 뒤입니다.'+
+      (lag!=null?' 실측 지연: <b>'+esc(String(lag))+'일</b>(수집한 가장 최근 거래일 '+esc(INS.as_of||'—')+' 기준).':'')+
+      ' 지연을 줄일 방법이 이 소스에는 없어, 줄이는 대신 <b>얼마나 지연됐는지를 적습니다</b>.</div>';
+
+    if(s._insFail||!s._ins){
+      h+='<div class="note">이 종목은 수집 구간('+(INS&&INS.quarters?INS.quarters.map(function(q){return q.q;}).join(' · '):'최근 2분기')+
+         ')에 보고된 보통주 내부자 거래가 없습니다. <b>없는 것을 지어내지 않습니다.</b></div>';
+      box.innerHTML=h; return;
+    }
+    if(ctl)ctl.hidden=false;
+    var d=s._ins, rows=d.tr.filter(function(r){return !insDisc||d.disc.indexOf(r.c)>=0;});
+    var nd=d.tr.filter(function(r){return d.disc.indexOf(r.c)>=0;}).length;
+    el('insn').textContent='전체 '+d.tr.length+'건 중 재량 거래 '+nd+'건';
+
+    h+='<div class="note hard"><b>거래코드를 합쳐 읽지 마세요</b> — 성격이 전혀 다릅니다. '+
+       '<b>P(장내매수)·S(장내매도)</b>는 본인이 고른 거래지만, <b>A(주식보상 수령)·M(파생 행사)·F(세금 대납분 반납)</b>은 '+
+       '보상 제도가 굴러간 결과입니다. 합쳐서 "내부자가 샀다/팔았다"로 읽으면 틀린 말이 됩니다. '+
+       '이 랩은 내부자 매수가 초과수익으로 이어지는지 <b>검증한 적이 없어</b> 점수도 신호도 만들지 않습니다.</div>';
+
+    if(!rows.length){
+      h+='<div class="note">재량 거래(P·S)가 없습니다 — 이 종목의 기록은 전부 보상·세금 처리 등입니다.</div>';
+      box.innerHTML=h; return;
+    }
+    h+='<div class="card"><h3>거래 기록<span class="hn">'+rows.length+'건 · 최신순</span></h3><div class="fswrap">'+
+       '<table class="fstbl instbl"><thead><tr>'+
+       '<th scope="col">거래일</th><th scope="col">구분</th><th scope="col">주식수</th>'+
+       '<th scope="col">단가</th><th scope="col">거래 후 보유</th><th scope="col">보고자</th><th scope="col">원문</th>'+
+       '</tr></thead><tbody>';
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i], nm=(d.codes||{})[r.c]||r.c, isD=d.disc.indexOf(r.c)>=0;
+      var dir=r.ad==='A'?'취득':(r.ad==='D'?'처분':'');
+      var u=r.k&&r.a?'https://www.sec.gov/Archives/edgar/data/'+r.k+'/'+r.a+'/':'';
+      var who=esc(r.nm||'—')+(r.ti?'<span class="iw">'+esc(r.ti)+'</span>':(r.rel?'<span class="iw">'+esc(r.rel)+'</span>':''));
+      h+='<tr>'+
+         '<td class="tnum ileft">'+esc(r.d)+(r.fd&&r.fd!==r.d?'<span class="iw">제출 '+esc(r.fd)+'</span>':'')+'</td>'+
+         '<td class="ileft"><span class="icode'+(isD?' idisc':'')+'">'+esc(r.c)+'</span> '+esc(nm)+
+           (dir?'<span class="iw">'+dir+'</span>':'')+'</td>'+
+         '<td class="tnum">'+esc(insNum(r.sh))+'</td>'+
+         '<td class="tnum">'+(r.px!=null?'$'+esc(insNum(r.px,2)):'<span class="na">—</span>')+'</td>'+
+         '<td class="tnum">'+esc(insNum(r.own))+'</td>'+
+         '<td class="ileft">'+who+'</td>'+
+         '<td class="ileft">'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener nofollow">원문 ↗</a>':'—')+'</td>'+
+         '</tr>';
+    }
+    h+='</tbody></table></div></div>';
+    h+='<div class="note"><b>읽을 때</b><br>'+
+       '· 단가가 비는 건은 시장가 거래가 아니라는 뜻입니다(보상 수령·증여 등).<br>'+
+       '· "거래 후 보유"는 그 보고자가 <b>직접 보유</b>로 신고한 수량입니다 — 간접보유(신탁·가족)는 별도 줄로 잡힙니다.<br>'+
+       '· 수집 구간은 최근 2개 분기입니다. 그 전 거래는 담지 않습니다.'+
+       ((INS&&INS.n_bad_date)?'<br>· 거래일이 제출일보다 뒤인 제출자 오타 <b>'+esc(String(INS.n_bad_date))+'건</b>을 버렸습니다.':'')+
+       '</div>';
+    box.innerHTML=h;
   }
 
   // ── 재무제표: 회사별 XBRL 시계열(SEC EDGAR companyfacts 수집분) ─────────
@@ -1290,30 +1368,6 @@
     el('detail').innerHTML=h;
   }
 
-  // ── 빈 탭: 결핍 사유를 메뉴 정본(data/nav.json)에서 덧대 준다 ─────────────
-  function renderGaps(){
-    if(!NAV||!NAV.categories)return;
-    var map={},i,j;
-    for(i=0;i<NAV.categories.length;i++){
-      var tools=NAV.categories[i].tools||[];
-      for(j=0;j<tools.length;j++){
-        var f=String(tools[j].file||'');
-        if(f.indexOf('co.html#')===0)map[f.split('#')[1]]=tools[j];
-      }
-    }
-    var keys=['ins'];   // fs·ir은 SEC 수집분이 붙어 더 이상 빈 탭이 아니다
-    for(i=0;i<keys.length;i++){
-      var t=map[keys[i]],box=el('gap-'+keys[i]);
-      if(!t||!box)continue;
-      var p=document.createElement('p');
-      p.className='go';
-      p.style.color='var(--muted)';
-      p.style.fontSize='11px';
-      p.textContent='메뉴 정본(data/nav.json) 기록 — 막힌 소스: '+(t.blocked_by||'미분류')+
-                    ' · 상태: '+(t.status||'—')+' · 공수: '+(t.effort||'—');
-      box.appendChild(p);
-    }
-  }
 
   // 분기/연간 전환 — 표만 다시 그린다(데이터는 이미 받아 뒀다)
   (function(){
@@ -1325,6 +1379,15 @@
         x.setAttribute('aria-pressed', x===b?'true':'false');});
       if(state.sel)renderFS(state.sel);
     });
+  })();
+
+  (function(){
+    var a=el('insall'), b=el('insdisc');
+    if(!a||!b)return;
+    function set(v){insDisc=v;a.setAttribute('aria-pressed',v?'false':'true');
+      b.setAttribute('aria-pressed',v?'true':'false');if(state.sel)renderIns(state.sel);}
+    a.addEventListener('click',function(){set(false);});
+    b.addEventListener('click',function(){set(true);});
   })();
 
   onHash();
