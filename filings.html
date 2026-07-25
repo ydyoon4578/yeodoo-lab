@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — S&P 518사의 8-K 수시공시 원문 피드. 회사가 스스로 단 Item 코드로만 분류하고, 해설이나 전망은 붙이지 않습니다.">
+<title>여두 · 8-K 공시 피드</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/filings.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/filings.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · 8-K 공시 피드">
+<meta property="og:description" content="기사가 아니라 8-K 원문 — 회사가 스스로 단 Item 코드로 분류하고 해설은 붙이지 않습니다.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · 8-K 공시 피드">
+<meta name="twitter:description" content="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음.">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;
+    --deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;
+    --deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit}
+  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
+  @media(max-width:640px){.wrap{padding:0 14px 60px}}
+
+  header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(25px,4.4vw,36px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
+  .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
+  .lede b{color:var(--ink)}
+
+  .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
+  .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+  .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
+  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .ty em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+
+  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:40px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
+  .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:16px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note b{color:var(--ink)}
+  .note.hard{border-left-color:var(--hot)}
+  .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+
+  /* ── 필터 ── */
+  .filters{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
+  .frow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .frow+.frow{margin-top:11px;padding-top:11px;border-top:1px solid var(--line-soft)}
+  .frow>.fl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:64px}
+  input[type=search]{font-family:var(--mono);font-size:12.5px;padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:var(--ground);color:var(--ink);min-width:190px}
+  input[type=search]:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-2);cursor:pointer;line-height:1.4}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  /* 선택 칩은 accent 배경 위에 글자를 올린다. 다크에서 --panel은 밝지 않아 대비가 죽으므로
+     양쪽 테마 모두에서 어두운 글자로 고정한다(accent가 라이트=황토, 다크=노랑이라 둘 다 밝은 편). */
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
+  @media (prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#131820}}
+  :root[data-theme="light"] .chip[aria-pressed=true]{color:#FFFFFF}
+  :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
+  .chip .cn{font-weight:500;opacity:.75;margin-left:4px}
+
+  /* ── 피드 ── */
+  .feed{display:flex;flex-direction:column;gap:1px}
+  .fil{display:grid;grid-template-columns:96px 92px 1fr auto;gap:3px 13px;align-items:baseline;padding:11px 2px;border-top:1px solid var(--line-soft)}
+  .fil:first-child{border-top:0}
+  .fil .fd{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .fil .ft{font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:-.01em}
+  .fil .ft a{text-decoration:none} .fil .ft a:hover{color:var(--accent)}
+  .fil .fi{display:flex;gap:6px;flex-wrap:wrap}
+  .fil .fo{font-family:var(--mono);font-size:11px;white-space:nowrap}
+  .fil .fo a{color:var(--accent);text-decoration:none} .fil .fo a:hover{text-decoration:underline}
+  .fil .fn{grid-column:2/-1;font-size:11.5px;color:var(--muted);line-height:1.5}
+  .it{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line-soft);color:var(--ink-2);white-space:nowrap}
+  .it.maj{border-color:var(--hot);color:var(--hot);background:transparent}
+  .it .ic{opacity:.65;font-weight:500;margin-right:5px}
+  @media(max-width:720px){
+    .fil{grid-template-columns:1fr auto}
+    .fil .fd{grid-column:1} .fil .ft{grid-column:1} .fil .fi{grid-column:1/-1} .fil .fn{grid-column:1/-1}
+  }
+
+  .more{display:block;width:100%;margin:16px 0 0;padding:11px;font-family:var(--mono);font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--ink-2);cursor:pointer}
+  .more:hover{border-color:var(--accent);color:var(--ink)}
+
+  .leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:1px 18px}
+  .leg div{font-size:12px;padding:5px 0;border-top:1px solid var(--line-soft);color:var(--ink-2)}
+  .leg code{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:700;margin-right:7px}
+  .leg .mj code{color:var(--hot)}
+
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:8px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
+       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="filings.html">
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
+          <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
+          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
+          <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="newsroom">
+        <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
+          <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
+          <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
+          <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="macro">
+        <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html#axes" data-nav="regime.html#axes"><span class="mmn">하위 요인 분석</span><span class="mmb vunv">미검증</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></a>
+          <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
+          <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
+          <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
+          <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="quant">
+        <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
+          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="gurus">
+        <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
+          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
+          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="financials">
+        <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
+          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
+          <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
+          <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="valuation">
+        <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
+          <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
+          <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
+          <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
+          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
+          <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="portfolio">
+        <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">대시보드</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></a>
+          <a class="mmi" href="portfolio.html#analysis" data-nav="portfolio.html#analysis"><span class="mmn">포트폴리오 분석</span><span class="mmb vunv">미검증</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="industry">
+        <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
+          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브</span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일</span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
+          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<div class="wrap" id="main">
+  <header class="mast">
+    <div class="eyebrow">Filings · 8-K 원문 피드</div>
+    <h1 class="title">기사가 아니라<br>회사가 낸 원문</h1>
+    <p class="lede">미국 상장사는 보고 의무가 생긴 사건을 <b>8-K</b>로 제출하면서, 그게 무슨 사건인지를
+      <b>Item 번호로 스스로 분류</b>합니다. 이 피드가 분류를 붙일 수 있는 이유가 그것입니다 —
+      랩이 원문을 읽고 판단한 게 아니라, 회사가 단 번호에 한국어 이름만 붙였습니다.</p>
+    <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
+  </header>
+
+  <div class="note hard">
+    <b>이 화면이 하지 않는 것</b> — 해설·요약·전망을 붙이지 않습니다. 어떤 Item이 주가에 어떻게 작용하는지
+    이 랩은 <b>검증한 적이 없고</b>, 그래서 중요도 점수나 매매 시사점을 만들지 않습니다.
+    피드는 "무엇이 언제 제출됐는가"까지만 말하고, 그다음은 원문 링크로 넘깁니다.
+  </div>
+
+  <section aria-labelledby="feed-h">
+    <p class="lbl" id="feed-h">공시 피드</p>
+    <p class="lblnote">최신순. 티커를 누르면 종목 화면으로, <b>원문</b>을 누르면 SEC EDGAR의 제출 문서로 갑니다.</p>
+
+    <div class="filters">
+      <div class="frow">
+        <span class="fl">검색</span>
+        <input type="search" id="q" placeholder="티커 (예: AAPL)" autocomplete="off" aria-label="티커 검색">
+        <button class="chip" id="majonly" aria-pressed="false" type="button">중요 항목만</button>
+        <button class="chip" id="reset" type="button">초기화</button>
+        <span id="hits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
+      </div>
+      <div class="frow">
+        <span class="fl">Item</span>
+        <div id="itemchips" class="frow" style="gap:6px;flex:1"></div>
+      </div>
+    </div>
+
+    <div id="feed"><div class="skel">불러오는 중…</div></div>
+    <button class="more" id="more" hidden type="button">더 보기</button>
+  </section>
+
+  <section aria-labelledby="leg-h">
+    <p class="lbl" id="leg-h">Item 코드 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 출처 SEC Form 8-K 서식</span></p>
+    <p class="lblnote"><span style="color:var(--hot)">붉은 코드</span>는 랩이 '중요'로 따로 묶은 항목입니다 —
+      회사의 존립·회계 신뢰성·지배구조에 걸리는 것들입니다. <b>주가 영향을 예측하는 분류가 아니라 편집 판단</b>이고,
+      그래서 원문 Item 코드를 항상 함께 보여줍니다.</p>
+    <div class="leg" id="leg"></div>
+  </section>
+
+  <div class="note" id="limits"></div>
+
+  <footer>
+    <a href="index.html">← 전략 랩 홈</a> · <a href="industry.html">산업 탐색</a> ·
+    <a href="stocks.html">종목 신호</a> · <a href="sources.html">데이터 출처·기준일</a> ·
+    <a href="roadmap.html">미구현 로드맵</a>
+    <br>출처 SEC EDGAR submissions API · 무인증 공개 데이터 · 생성 <code>build/refresh_filings.py</code>
+  </footer>
+</div>
+
+<script>
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var PAGE=150, shown=PAGE, D=null, sel={}, majOnly=false, q='';
+
+  function ty(v,lab,note,edge){
+    return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';
+  }
+  // 원문 링크는 저장하지 않고 규칙으로 되짓는다(피드 파일이 두 배가 되는 걸 피하려고 조각만 담았다).
+  // p가 비면 SEC가 주 문서를 안 준 제출이라 제출 인덱스로 보낸다.
+  function docUrl(f){
+    var cik=D.cik[f.t]; if(!cik||!f.a)return '';
+    return D.doc_base+cik+'/'+f.a+'/'+(f.p||'');
+  }
+  function isMaj(f){
+    for(var i=0;i<f.it.length;i++) if(D.major.indexOf(f.it[i])>=0) return true;
+    return false;
+  }
+  function match(f){
+    if(majOnly&&!isMaj(f))return false;
+    if(q&&f.t.toLowerCase().indexOf(q)<0)return false;
+    var keys=Object.keys(sel);
+    if(keys.length){
+      var hit=false;
+      for(var i=0;i<f.it.length;i++) if(sel[f.it[i]]){hit=true;break;}
+      if(!hit)return false;
+    }
+    return true;
+  }
+
+  function render(){
+    var rows=D.feed.filter(match);
+    el('hits').textContent=rows.length.toLocaleString()+'건'+(rows.length!==D.feed.length?(' / '+D.feed.length.toLocaleString()):'');
+    if(!rows.length){
+      el('feed').innerHTML='<div class="skel">조건에 맞는 제출이 없습니다 — 필터를 넓혀 보세요.</div>';
+      el('more').hidden=true; return;
+    }
+    var slice=rows.slice(0,shown), h='<div class="feed">';
+    for(var i=0;i<slice.length;i++){
+      var f=slice[i], u=docUrl(f);
+      var its='';
+      for(var j=0;j<f.it.length;j++){
+        var c=f.it[j], nm=D.items[c], mj=D.major.indexOf(c)>=0;
+        its+='<span class="it'+(mj?' maj':'')+'"><span class="ic">'+esc(c)+'</span>'+esc(nm||'분류 미상')+'</span>';
+      }
+      if(!f.it.length) its='<span class="it">Item 표기 없음</span>';
+      h+='<div class="fil">'+
+           '<div class="fd tnum">'+esc(f.d)+'</div>'+
+           '<div class="ft"><a href="stocks.html#t='+encodeURIComponent(f.t)+'">'+esc(f.t)+'</a></div>'+
+           '<div class="fi">'+its+'</div>'+
+           '<div class="fo">'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener nofollow">원문 ↗</a>':'—')+'</div>'+
+           (f.rd&&f.rd!==f.d?'<div class="fn">사건일 '+esc(f.rd)+' · 제출일 '+esc(f.d)+'</div>':'')+
+         '</div>';
+    }
+    h+='</div>';
+    el('feed').innerHTML=h;
+    el('more').hidden=rows.length<=shown;
+    el('more').textContent='더 보기 ('+(rows.length-shown).toLocaleString()+'건 남음)';
+  }
+
+  function buildChips(){
+    // 실제로 피드에 등장한 Item만 칩으로 세운다 — 안 쓰이는 코드까지 늘어놓으면 고르기가 어려워진다.
+    var cnt={};
+    D.feed.forEach(function(f){f.it.forEach(function(c){cnt[c]=(cnt[c]||0)+1;});});
+    var codes=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];});
+    var h='';
+    codes.forEach(function(c){
+      h+='<button class="chip" type="button" data-c="'+esc(c)+'" aria-pressed="false" title="'+esc(D.items[c]||'')+'">'+
+         esc(c)+' '+esc(D.items[c]||'분류 미상')+'<span class="cn">'+cnt[c]+'</span></button>';
+    });
+    el('itemchips').innerHTML=h;
+    el('itemchips').addEventListener('click',function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      var c=b.getAttribute('data-c');
+      if(sel[c]){delete sel[c];b.setAttribute('aria-pressed','false');}
+      else{sel[c]=1;b.setAttribute('aria-pressed','true');}
+      shown=PAGE; render();
+    });
+  }
+
+  function buildLegend(){
+    var codes=Object.keys(D.items).sort(), h='';
+    codes.forEach(function(c){
+      var mj=D.major.indexOf(c)>=0;
+      h+='<div'+(mj?' class="mj"':'')+'><code>'+esc(c)+'</code>'+esc(D.items[c])+'</div>';
+    });
+    el('leg').innerHTML=h;
+  }
+
+  fetch('data/filings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.feed){
+      el('feed').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다</b> — <code>data/filings.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
+      el('tally').innerHTML=ty('—','불러오기 실패','data/filings.json','var(--hot)');
+      return;
+    }
+    D=j;
+    var majN=j.feed.filter(isMaj).length;
+    el('tally').innerHTML=
+      ty(j.n.toLocaleString(),'8-K 제출','최근 '+j.window_days+'일 누적','var(--ink)')+
+      ty(j.n_co,'대상 회사','유니버스 전수','var(--champ)')+
+      ty(majN.toLocaleString(),'중요 항목','랩 편집 판단 · 아래 범례','var(--hot)')+
+      ty(j.as_of,'최근 제출일','가장 최근 8-K 접수일','var(--deploy)');
+    el('limits').innerHTML='<b>이 데이터의 한계</b><br>· '+j.limits.map(esc).join('<br>· ');
+    buildChips(); buildLegend(); render();
+  })['catch'](function(){
+    el('feed').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
+  });
+
+  el('q').addEventListener('input',function(){q=this.value.trim().toLowerCase();shown=PAGE;render();});
+  el('majonly').addEventListener('click',function(){
+    majOnly=!majOnly; this.setAttribute('aria-pressed',majOnly?'true':'false'); shown=PAGE; render();
+  });
+  el('reset').addEventListener('click',function(){
+    sel={}; majOnly=false; q=''; shown=PAGE;
+    el('q').value=''; el('majonly').setAttribute('aria-pressed','false');
+    Array.prototype.forEach.call(el('itemchips').querySelectorAll('.chip'),function(b){b.setAttribute('aria-pressed','false');});
+    render();
+  });
+  el('more').addEventListener('click',function(){shown+=PAGE;render();});
+  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
+})();
+</script>
+</body>
+</html>

@@ -206,7 +206,7 @@
       <li class="navcat" data-cat="newsroom">
         <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
-          <span class="mmi"><span class="mmn">8-K 공시 피드</span><span class="mmb soon">준비중</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></span>
+          <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
           <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
           <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
         </div>
@@ -242,7 +242,7 @@
         <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
           <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
-          <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
+          <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
           <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
@@ -269,7 +269,7 @@
       <li class="navcat" data-cat="industry">
         <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
-          <span class="mmi"><span class="mmn">산업 탐색</span><span class="mmb soon">준비중</span><span class="mmd">조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포</span></span>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
           <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
           <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
         </div>
@@ -404,6 +404,9 @@
         <tr><th scope="row"><a href="regime.html#sent">시장 심리</a></th>
           <td><span class="freetag">무료</span>yfinance(VIX·VIX3M·MOVE) · FRED(VIXCLS·NFCI)</td>
           <td class="dt" id="src-snt">—</td><td>매일 09:00 KST</td></tr>
+        <tr><th scope="row"><a href="filings.html">SEC 공시·산업분류</a></th>
+          <td><span class="freetag">무료</span>SEC EDGAR submissions API(무인증) — 8-K Item 코드·SIC 4자리·회사별 제출 이력</td>
+          <td class="dt" id="src-fil">—</td><td>매주 토 10:15 KST</td></tr>
         <tr><th scope="row"><a href="rotation.html">오늘의 전략 탐색</a></th>
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌)</td>
           <td class="dt" id="src-rot">—</td><td>매일 08:50 KST</td></tr>
@@ -508,6 +511,13 @@
     if(ks.length)put(['src-hold','d-hold'],hd.strategies[ks[0]].as_of);
   });
   j('data/members.json').then(function(m){if(m)put(['d-memb'],m.as_of_members);});
+  // 공시 기준일은 filings.json(226KB) 대신 기준일 정본(2KB)의 축에서 읽는다 — 날짜 하나 때문에
+  // 피드 전체를 내려받을 이유가 없다. 지연 허용치 10영업일은 갱신 잡과 같은 값이다
+  // (축이 '수집한 날'이 아니라 '회사가 마지막으로 낸 날'이라 연휴엔 며칠씩 안 움직이는 게 정상).
+  j('data/asof.json').then(function(a){
+    if(!a||!a.axes)return;
+    for(var i=0;i<a.axes.length;i++) if(a.axes[i].key==='filings'){putFresh('src-fil',a.axes[i].as_of,10);break;}
+  });
   j('data/rotation_pool.json').then(function(rp){if(rp){put(['d-rot'],rp.generated);putFresh('src-rot',rp.generated,2);}});
   j('data/strategy_backtests.json').then(function(bt){
     if(!bt)return; put(['src-bt','d-btgen'],'생성 '+(bt.generated||'—'));

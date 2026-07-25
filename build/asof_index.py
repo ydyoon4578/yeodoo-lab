@@ -109,6 +109,10 @@ def main() -> int:
         # 화면에 보이는 선정일은 매일 오늘이라 축이 아니고, 축은 풀의 generated다.
         {"key": "rotation", "label": "전략 탐색 풀", "as_of": (load("rotation_pool.json") or {}).get("generated"),
          "cadence": "수시", "note": "외부 출처 수집분 — 랩이 검증한 것이 아니다"},
+        # 공시는 '수집한 날'이 아니라 '가장 최근에 접수된 제출일'이 기준이다. 회사가 안 내면
+        # 우리가 매일 돌아도 축은 안 움직인다 — 그 사실을 감추지 않으려고 접수일을 쓴다.
+        {"key": "filings", "label": "SEC 공시(8-K)", "as_of": (load("filings.json") or {}).get("as_of"),
+         "cadence": "주 1회 수집", "note": "제출 접수일 기준 — 회사가 안 내면 이 날짜는 안 움직인다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
     for a in axes:
