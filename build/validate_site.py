@@ -319,6 +319,21 @@ if pool:
                 errors.append(f"archive_index {_x.get('sid')}.{_k}: 마크다운 굵게(**) 표기 "
                               f"— esc() 대상이라 별표가 그대로 보인다")
 
+    # tech_strategies의 rule/why/limits도 같은 esc() 경로를 탄다. 백테스트 스크립트의
+    # 주석 습관(**강조**)이 그대로 새어나온 적이 있어 같이 막는다.
+    try:
+        _ts0 = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+        _txts = [(r.get("name", "?"), k, r.get(k, "")) for r in (_ts0.get("strategies") or [])
+                 for k in ("rule", "why", "name")]
+        _txts += [("limits", "limits", t) for t in (_ts0.get("limits") or [])]
+        _txts += [("t_crit_note", "note", _ts0.get("t_crit_note") or "")]
+        for _nm0, _k0, _v0 in _txts:
+            if re.search(r"</?[a-zA-Z][^>]*>", _v0) or re.search(r"\*\*[^*]+\*\*", _v0):
+                errors.append(f"tech_strategies '{_nm0}'.{_k0}: 태그/마크다운 표기 "
+                              f"— esc() 대상이라 화면에 기호가 그대로 찍힌다")
+    except FileNotFoundError:
+        pass
+
     # arch 참조 무결성 — 규칙 카드의 '이전 판정' 줄은 A[r.arch]로 붙는다. 없는 sid를 가리키면
     # 그 줄이 조용히 사라진다(오류도 안 난다). 링크가 끊긴 걸 화면에서 알아챌 방법이 없으므로 여기서 막는다.
     try:
