@@ -15,8 +15,13 @@ import re, io, os, sys, json
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PAGES = ["index.html", "stocks.html", "regime.html", "rotation.html", "explorer.html", "archive.html", "sources.html",
-         "macro.html", "market.html", "sector.html"]
+# ⚠ 예전엔 이 목록이 손으로 적힌 10장이었다. 그 사이 페이지가 23장으로 늘었는데 목록은
+# 그대로여서, **새로 만든 페이지는 JS 검사를 한 번도 안 받고 있었다**.
+# 실사고(2026-07-25): co.html에 이 페이지에 없는 포매터 nf()를 쓴 코드가 그대로 배포됐다.
+# 값이 도착해 재렌더할 때 예외가 나고 화면이 옛 렌더에 멈춰 있었는데, 검사 대상이 아니라
+# CI가 통과시켰다. 목록을 손으로 적지 않고 디스크에서 읽는다 — 페이지가 늘면 저절로 포함된다.
+PAGES = sorted(f for f in os.listdir(ROOT)
+               if f.endswith(".html") and not f.startswith("_"))
 errors = []
 
 
@@ -101,7 +106,10 @@ getComputedStyle structuredClone queueMicrotask requestIdleCallback cancelIdleCa
 atob btoa crypto TextEncoder TextDecoder Uint8Array Uint16Array Uint32Array ArrayBuffer DataView async await""".split())
 DEFPAT = [r"function\s+([A-Za-z_$][\w$]*)\s*\(", r"(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=",
           r"([A-Za-z_$][\w$]*)\s*=\s*function", r"([A-Za-z_$][\w$]*)\s*:\s*function",
-          r"function\s*\(([^)]*)\)", r"catch\s*\(\s*([A-Za-z_$][\w$]*)\s*\)"]
+          r"function\s*\(([^)]*)\)", r"catch\s*\(\s*([A-Za-z_$][\w$]*)\s*\)",
+          # 이름 있는 함수의 **매개변수**도 정의로 친다. 이게 빠져 있어서
+          # slider(id,outId,key,fmt)의 fmt·wireChart(...,extra)의 extra가 '미정의 호출'로 잡혔다.
+          r"function\s+[A-Za-z_$][\w$]*\s*\(([^)]*)\)"]
 
 def js_checks(label, html):
     scripts = [strip_js(s) for s in re.findall(r"<script>([\s\S]*?)</script>", html)]
