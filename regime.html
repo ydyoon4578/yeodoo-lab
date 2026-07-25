@@ -176,6 +176,58 @@
   @media(pointer:coarse){.fchip,.cbtn,.sortbtn,.item,.cbtn,.pill{min-height:40px}.fchip{padding-top:8px;padding-bottom:8px}}
   /*reduced-motion*/
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+
+  /* ── 7축 하위 요인(#axes) ── 새 색을 만들지 않는다. 기존 토큰(panel/line/muted/stbadge)만 조합한다.
+       판정 문구·밴드에는 색을 주지 않는다 — 금리 축의 밴드 0('낮은 수준')은 '좋다'가 아니라
+       톤 점수 방향일 뿐이라, 초록/빨강을 얹으면 그 자체가 거짓말이 된다. */
+  #axes{scroll-margin-top:60px}
+  /* 트랙 최소폭을 min(320px,100%)로 — .wrap 좌우 패딩 20px에는 모바일 축소 미디어쿼리가 없어
+     뷰포트 359px 이하에서 콘텐츠 폭이 320px 미만이 되고, 고정 320px 트랙이 넘쳐 페이지가
+     가로로 스크롤됐다(320px 기기에서 약 40px 초과). 같은 파일의 .icards는 230px라 무사했다. */
+  .xagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:10px}
+  .xac{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;box-shadow:var(--shadow)}
+  /* 구성 지표 3개 미만 — '숫자'만 흐리게 한다. 예전에는 카드 전체에 opacity:.62를 걸었는데,
+     그러면 그 muting을 설명하는 경고문이 페이지에서 가장 안 읽히는 텍스트가 됐다
+     (.xanote는 --muted 10.5px → 라이트 테마 대비 4.76:1이 .62 합성으로 약 2.3:1, .xalb도 약 3.1:1로
+     WCAG AA 4.5:1 미달). 규칙은 '얇은 표본의 수치를 흐리게'이지 '경고를 흐리게'가 아니다.
+     대신 카드 경계를 파선으로 바꿔 색·대비를 건드리지 않고 얇은 축임을 표시한다. */
+  .xac.xathin{border-style:dashed}
+  .xac.xathin .xamv,.xac.xathin .xaeq{color:var(--muted)}
+  .xac.xathin .xanote,.xac.xathin .xak,.xac.xathin .xalb{opacity:1}
+  /* '표본 얇음'은 다른 .xak 칩(라벨)과 달리 경고다 — muted 9px는 --panel-2 위에서 4.23:1로
+     AA(4.5:1)에 못 미친다. 경고만 --ink-2로 올린다(새 색 없음). */
+  .xak.xakwarn{color:var(--ink-2)}
+  .xah{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .xah .xan{font-family:var(--mono);font-size:14.5px;font-weight:700;color:var(--ink)}
+  .xah .xaw{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2)}
+  .xak{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;
+       background:var(--panel-2);border:1px solid var(--line-soft);color:var(--muted);white-space:nowrap}
+  .xali{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
+        padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .xali.xaex{opacity:.55}
+  .xalb{font-size:12.5px;color:var(--ink-2)}
+  .xamv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2);
+        font-variant-numeric:tabular-nums;white-space:nowrap}
+  .xamv .xau{font-size:9.5px;font-weight:400;color:var(--muted);margin-left:2px}
+  .xameta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:3px}
+  .xameta .stbadge{margin-top:0}
+  .xaflag{font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;
+          background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+  .xanote{font-size:10.5px;color:var(--muted);line-height:1.65;padding-top:9px}
+  .xanote b{color:var(--ink-2)}
+  .xamut{color:var(--muted)}
+  .xaband{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--ink-2)}
+  /* 사다리에서 현재 칸만 진하게 — 단, 표본 얇은 행은 흐린 채로 둔다(강조가 muting을 이기면 안 된다) */
+  .xacurw{color:var(--ink);font-weight:700}
+  tr.xalow .xacurw{color:var(--muted)}
+  .xadag{font-family:var(--mono);color:var(--muted)}
+  .xaeq{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  tr.xalow th,tr.xalow td{color:var(--muted)}
+  tr.xacur th,tr.xacur td{background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+  .xawarn{margin-top:12px;font-family:var(--mono);font-size:11.5px;line-height:1.7;
+          color:var(--hot);background:var(--hot-bg);border-radius:8px;padding:9px 12px}
+  .xaok{margin-top:11px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .xamx td.z{color:var(--line);font-weight:400}
 </style>
 <!-- NAVCSS:BEGIN -->
 <style>
@@ -282,8 +334,8 @@
       <li class="navcat" data-cat="market">
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
-          <span class="mmi"><span class="mmn">시장 폭·동향</span><span class="mmb soon">준비중</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></span>
-          <span class="mmi"><span class="mmn">섹터 히트맵</span><span class="mmb soon">준비중</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></span>
+          <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
+          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
           <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
         </div>
       </li>
@@ -299,11 +351,11 @@
         <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
           <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
-          <span class="mmi"><span class="mmn">하위 요인 분석</span><span class="mmb soon">준비중</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></span>
-          <span class="mmi"><span class="mmn">경제지표 열람</span><span class="mmb soon">준비중</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></span>
-          <span class="mmi"><span class="mmn">사이클 분석</span><span class="mmb soon">준비중</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></span>
-          <span class="mmi"><span class="mmn">자산군</span><span class="mmb soon">준비중</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></span>
-          <span class="mmi"><span class="mmn">밸류에이션(지수)</span><span class="mmb soon">준비중</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></span>
+          <a class="mmi" href="regime.html#axes" data-nav="regime.html#axes"><span class="mmn">하위 요인 분석</span><span class="mmb vunv">미검증</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></a>
+          <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
+          <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
+          <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
           <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
         </div>
       </li>
@@ -463,7 +515,11 @@
 })();
 </script>
 <!-- NAV:END -->
-<div class="wrap">
+<!-- id="main" — 내비 블록의 skiplink href="#main" 대상(그동안 대상이 없어 빈 앵커였다).
+     index.html·method.html의 div.wrap#main과 같은 자리다. validate_site.py가 금지하는 것은
+     JS에서 #main 슬롯을 직접 잡아 쓰던 잔재이지 이 앵커 id가 아니다 — 렌더는 지금도
+     summary·regimeperf·macro 세 슬롯에만 쓰고, 여기는 그 바깥 컨테이너일 뿐이다. -->
+<div class="wrap" id="main">
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 시장 국면</div>
     <h1 class="title">시장 국면 — 매크로 지표</h1>
@@ -477,6 +533,13 @@
   <!-- 순서: 종합 요약 → 분석(레짐 히스토리·현재국면성과·조건부 표) → 심리(버킷 표) → 경기지표 값(매크로 카드).
        #summary·#regimeperf·#macro는 국면 IIFE가, #sent는 심리 IIFE가 각자 채운다. -->
   <div id="summary"><div class="empty">불러오는 중…</div></div>
+  <!-- 7축 하위 요인 — 위 '지표 종합' 칩이 어떻게 만들어졌는지의 내역. 국면 IIFE의 renderAxes()가 채운다.
+       기본 hidden: 로드 실패 시 '불러오는 중…'이 영구히 남는 조용한 빈칸을 만들지 않으려는 것(fail()은
+       summary·regimeperf·macro 세 슬롯만 채운다 — 그 함수는 건드리지 않는다). -->
+  <section id="axes" aria-labelledby="axes-h" hidden>
+    <h2 class="lbl" id="axes-h">7축 하위 요인 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 어떤 지표로 만들어졌고 무엇을 뺐는지</span></h2>
+    <div id="axesbody"></div>
+  </section>
   <div id="regimeperf"><div class="empty">불러오는 중…</div></div>
 
   <section id="sent" aria-labelledby="sent-h"><h2 class="lbl" id="sent-h" style="font-size:11px;margin-top:40px">시장 심리 (0~100)</h2><div class="empty">불러오는 중…</div></section>
@@ -598,6 +661,11 @@
     });
     // 조건부 성과 테이블 (자산·섹터·팩터 공통)
     var cur=rg.label, RN=regimeN(d);
+    // 표본 20개월 미만 레짐은 셀 음영을 빼고 글자를 흐리게 — 음영 강도가 |월평균|/2.5에만 좌우돼
+    //   후기사이클(n=7)의 +1.8과 골디락스(n=99)의 +1.8이 같은 색으로 보이던 문제. #axes의 얇은 축
+    //   처리(숫자만 muted)와 같은 방식으로 맞춘다. 열 강조(.cur)는 인라인 배경을 아예 안 내보내
+    //   CSS 클래스가 살아 있게 둔다.
+    var THIN_N=20;
     var NM={SPY:"S&P500",QQQ:"나스닥100",TLT:"장기국채",GLD:"금",DBC:"원자재",
       XLK:"기술",XLF:"금융",XLE:"에너지",XLV:"헬스케어",XLI:"산업재",XLY:"경기소비",XLP:"필수소비",XLU:"유틸리티",XLB:"소재",XLRE:"부동산",XLC:"커뮤니케이션",
       MTUM:"모멘텀",QUAL:"퀄리티",USMV:"저변동",VLUE:"가치",SIZE:"중소형"};
@@ -606,17 +674,30 @@
       var cols=RORDER.filter(function(r){return assets.some(function(a){return perf[a][r]!=null;});});
       assets.sort(function(a,b){return (perf[b][cur]==null?-99:perf[b][cur])-(perf[a][cur]==null?-99:perf[a][cur]);}); // 현재 레짐 성과순
       return '<div class="lbl">'+title+' <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· '+hint+'</span></div>'+
-        '<div class="tblwrap"><table><thead><tr><th scope="col">'+col0+'</th>'+cols.map(function(r){return '<th scope="col" class="'+(r===cur?'cur':'')+'" title="'+(RKO[r]||r)+' · 표본 '+(RN[r]||0)+'개월">'+r+
-          '<span style="display:block;font-weight:400;color:var(--muted);font-size:9px">n='+(RN[r]||0)+'</span></th>';}).join('')+'</tr></thead><tbody>'+
+        '<div class="tblwrap"><table><thead><tr><th scope="col">'+col0+'</th>'+cols.map(function(r){
+          var tn=(RN[r]||0)<THIN_N;
+          return '<th scope="col" class="'+(r===cur?'cur':'')+'" title="'+(RKO[r]||r)+' · 표본 '+(RN[r]||0)+'개월'+(tn?' — 표본 부족(20개월 미만)':'')+'">'+r+
+          '<span style="display:block;font-weight:400;color:var(--muted);font-size:9px">n='+(RN[r]||0)+
+          (tn?'<span style="display:block">표본 부족</span>':'')+'</span></th>';}).join('')+'</tr></thead><tbody>'+
         assets.map(function(a){return '<tr><th scope="row">'+(NM[a]||a)+'</th>'+cols.map(function(r){
           var v=perf[a][r]; if(v==null)return '<td class="'+(r===cur?'cur':'')+'">—</td>';
+          if((RN[r]||0)<THIN_N)   // 표본 부족 — 음영 없이 muted 숫자만(색 강도로 우열을 단정하지 않는다)
+            return '<td class="pv '+(r===cur?'cur':'')+'" style="color:var(--muted)">'+(v>0?'+':'')+v+'</td>';
           var mag=Math.min(1,Math.abs(v)/2.5), c=v>=0?'14,138,84':'166,75,59';
           return '<td class="pv '+(r===cur?'cur':'')+'" style="background:rgba('+c+','+(mag*0.28)+');color:'+(v>=0?'var(--good)':'var(--hot)')+'">'+(v>0?'+':'')+v+'</td>';
         }).join('')+'</tr>';}).join('')+'</tbody></table></div>';
     }
+    var thinCols=RORDER.filter(function(r){return RN[r]&&RN[r]<THIN_N;}), minN=0, maxN=0;
+    RORDER.forEach(function(r){var v=RN[r]||0; if(!v)return;
+      if(!minN||v<minN)minN=v; if(v>maxN)maxN=v;});
+    var thinNote=thinCols.length?'<div class="chartnote"><b>표본 '+THIN_N+'개월 미만</b>인 '+
+      thinCols.map(function(r){return esc(r)+'('+(RKO[r]||'')+') n='+RN[r];}).join(' · ')+
+      ' 열은 위 표들에서 셀 음영을 빼고 글자를 흐리게 뒀습니다 — <b>평균으로 읽지 마십시오.</b> '+
+      '음영 강도는 |월평균|÷2.5에만 비례하고 표본 수를 반영하지 않아, 그대로 두면 '+
+      'n='+minN+'개월 평균이 n='+maxN+'개월 평균과 같은 색·같은 무게로 보입니다.</div>':'';
     var tbl=perfTable('레짐별 자산 조건부 성과','월평균 %, 2009~ · 현재 레짐('+cur+') 열 강조','자산',d.asset_perf)+
       perfTable('레짐별 섹터 로테이션','11개 섹터 SPDR 월평균 % · 현재 레짐서 유리한 순','섹터',d.sector_perf)+
-      perfTable('레짐별 팩터','모멘텀·퀄리티·저변동·가치·중소형 월평균 %','팩터',d.factor_perf);
+      perfTable('레짐별 팩터','모멘텀·퀄리티·저변동·가치·중소형 월평균 %','팩터',d.factor_perf)+thinNote;
     el('regimehero').innerHTML=hero;
     el('summary').innerHTML=summaryBlock(d);
     // 분석 슬롯: 레짐 히스토리(캔버스+범례) → 현재 국면 성과 → 조건부 3표.
@@ -632,6 +713,16 @@
     // 경기지표 값(매크로 카드)은 최하단 — 분석 블록을 위로 올리고 원자료는 아래로.
     el('macro').innerHTML='<div class="lbl">매크로 지표 현황</div>'+ig;
     drawHist();
+    // 7축 하위 요인(#axes) — 같은 d를 재사용한다(fetch 추가 없음).
+    //   ⚠ 반드시 다른 슬롯을 다 채운 **뒤에** 부른다. render()에는 try/catch가 없고 fail()은
+    //   summary·regimeperf·macro 세 슬롯만 덮으므로, 앞에서 부르다 예외가 나면 #regimeperf·#macro가
+    //   '불러오는 중…'에 영구히 멈춘다(위 주석이 경고하는 조용한 빈칸). 예외는 삼키지 않고 적는다.
+    try{ renderAxes(d); }
+    catch(e){
+      var ab=el('axesbody'), as=el('axes');
+      if(ab&&as){ab.innerHTML='<div class="tbintro">7축 내역을 그리는 중 오류가 발생해 이 절은 비워 둡니다 — '+
+        '지어내지 않습니다. (오류: '+esc(e&&e.message?e.message:e)+')</div>'; as.hidden=false;}
+    }
   }
 
   // 종합 요약 — 문장은 regime.json.summary.text를 그대로 출력만 한다(재조립 금지, 단일 소스는 빌더).
@@ -646,6 +737,363 @@
       '<div class="rsum"><div class="rsumt">'+esc(s.text)+'</div>'+
       (chips?'<div class="rchips">'+chips+'</div>':'')+
       '<div class="rsumn">지표 상태 집계입니다 — 방향 예측이 아닙니다.</div></div>';
+  }
+
+  /* ══ 7축 하위 요인 — #axes ══════════════════════════════════════════════════
+     【'옮겨 적은 것'과 '읽어 온 것'의 경계 — 이 구분이 이 블록의 전부다】
+      · 옮겨 적음: 축→지표 코드 목록 · lead · 밴드 어휘 사다리 · 톤 점수/경계 상수.
+        regime.json에는 축 구성이 실리지 않는다(summary.axes는 name·kind·n·m·band·word·mixed·skip뿐).
+        그래서 build/regime_summary.py의 AXES·SCORE·CUT·MIX_* 선언을 전사했다 — 추론이 아니라 전사다.
+      · 읽어 옴: n·m·band·word·mixed(summary.axes), 제외 사유(summary.excluded),
+        지표 라벨·그룹·값·상태 톤(indicators). 이 화면은 이 값들을 계산하지 않고 그대로 쓴다.
+     전사본이 데이터와 어긋나면 조용히 넘어가지 않는다 — 축별 n·평균·혼조·요약모드 4종을 재집계해
+     대조하고, 하나라도 어긋나면 화면 하단에 경고를 띄운다(빌드가 바뀌면 여기도 고쳐야 한다는 신호). */
+  var AX_SRC=[
+    {n:'소비',     lead:1, codes:['RSAFS','UMCSENT']},
+    {n:'고용',     lead:1, codes:['PAYEMS','UNRATE','SAHMREALTIME','ICSA','JTSJOL','CCSA']},
+    {n:'생산',     lead:1, codes:['CFNAIMA3','INDPRO','TCU']},
+    {n:'주택',     lead:0, codes:['HOUST','PERMIT','CSUSHPINSA']},
+    {n:'물가',     lead:1, codes:['CPIYOY','CPILFESL','PCEPILFE','PCEPI','PPIACO','T10YIE','T5YIFR',
+                                  'DCOILWTICO','GASREGW','CES0500000003']},
+    {n:'금융여건', lead:1, codes:['NFCI','BAMLH0A0HYM2','BAMLC0A0CM','T10Y2Y','T10Y3M','VIXCLS',
+                                  'DFII10','DTWEXBGS']},
+    {n:'금리',     lead:0, codes:['DFF','DGS2','DGS3MO','DGS10','DGS30','MORTGAGE30US']}
+  ];
+  var AX_WORDS={real:['견조','완만','보통','둔화','부진'],
+    '물가':['안정','대체로 안정','혼조','상방 압력','높은 수준'],
+    '금융여건':['완화적','다소 완화','중립','다소 긴축','긴축적'],
+    '금리':['낮은 수준','다소 낮음','중립','다소 높음','높은 수준']};
+  var AX_SC={good:1.0,neut:0.0,watch:-0.5,hot:-1.0};   // regime_summary.SCORE
+  var AX_CUT=[0.50,0.15,-0.15,-0.55];                  // regime_summary.CUT — 5밴드 경계
+  var AX_MINN=2, AX_MIXS=0.30, AX_MIXR=1.5, AX_DEAD=0.08;
+  var AX_LAD=['●○○○○','○●○○○','○○●○○','○○○●○','○○○○●'];
+  var AX_MODE=[
+    ['CONTRAST','좋은 쪽 실물 축과 나쁜 쪽 실물 축이 함께 있다 → 두 방향을 대비해 서술'],
+    ['UNIFORM_POS','실물 축 밴드가 전부 같고, 모든 실물 축이 신뢰 조건을 채우면서 좋은 쪽 → 하나로 묶어 서술'],
+    ['UNIFORM_NEG','실물 축 밴드가 전부 같고, 모든 실물 축이 신뢰 조건을 채우면서 나쁜 쪽 → 하나로 묶어 서술'],
+    ['PARTIAL','CONTRAST·UNIFORM 조건을 못 채우면서 신뢰 조건을 채운 축이 한쪽 방향에는 있다 → 실물 축을 점수순으로 나열(최대 3절). 밴드가 균일해도 신뢰 조건을 못 채운 실물 축이 하나라도 있으면 여기로 떨어진다'],
+    ['FLAT','신뢰 조건을 채우면서 한쪽으로 치우친 실물 축이 하나도 없다 → 중립 구간이라고만 서술'],
+    ['INSUFFICIENT','쓸 수 있는 실물 축이 3개 미만 → 종합 문장을 아예 내지 않는다']
+  ];
+  function axSg(v,nd){                    // 부호 붙인 고정소수 (음수는 유니코드 −)
+    if(v==null||isNaN(v))return '—';
+    var t=Math.abs(v).toFixed(nd==null?3:nd);
+    return (v>0?'+':(v<0?'−':''))+t;
+  }
+  function axPc(v){return v==null||isNaN(v)?'—':(Math.round(v*1000)/10)+'%';}
+  // 요약 모드 재현 — regime_summary._sentence()의 분기만 옮긴 것(문장은 만들지 않는다).
+  function axDeriveMode(AX){
+    var real=[],z,a;
+    for(z=0;z<AX.length;z++){a=AX[z];if(a.kind==='real'&&!a.skip)real.push(a);}
+    if(real.length<3)return 'INSUFFICIENT';
+    var pos=0,neg=0,bands={},nb=0;
+    for(z=0;z<real.length;z++){
+      a=real[z];
+      var cf=(a.n>=3)||(Math.abs(a.m||0)>=0.75);
+      if(cf&&a.band<=1)pos++;
+      if(cf&&a.band>=3)neg++;
+      if(bands[a.band]!==1){bands[a.band]=1;nb++;}
+    }
+    var uni=(nb===1);
+    if(pos&&neg)return 'CONTRAST';
+    if(uni&&pos&&pos===real.length)return 'UNIFORM_POS';
+    if(uni&&neg&&neg===real.length)return 'UNIFORM_NEG';
+    if(pos||neg)return 'PARTIAL';
+    return 'FLAT';
+  }
+
+  function renderAxes(d){
+    var host=el('axes'), body=el('axesbody');
+    if(!host||!body)return;
+    var s=d.summary||{}, AX=s.axes||[], EXK=s.excluded||{}, IL=d.indicators||[];
+    var warn=[], i, q, k;
+    if(!AX.length){
+      body.innerHTML='<div class="tbintro">이번 회차 regime.json에 <b>summary.axes</b>가 실리지 않아 '+
+        '축 내역을 표시할 수 없습니다 — 지어내지 않고 비워 둡니다.</div>';
+      host.hidden=false; return;
+    }
+    var IND={};
+    for(i=0;i<IL.length;i++)IND[IL[i].k]=IL[i];
+    function has(o,x){return Object.prototype.hasOwnProperty.call(o,x);}
+    function axOf(nm){for(var z=0;z<AX.length;z++)if(AX[z].name===nm)return AX[z];return null;}
+    function srcOf(nm){for(var z=0;z<AX_SRC.length;z++)if(AX_SRC[z].n===nm)return AX_SRC[z];return null;}
+    function ladOf(nm){return AX_WORDS[nm]||AX_WORDS.real;}
+
+    // ── 전사한 코드 목록으로 축을 다시 집계(대조용) ──────────────────────────
+    var ST={};
+    for(i=0;i<AX_SRC.length;i++){
+      var src=AX_SRC[i], ms=[], pos=0, neg=0, sum=0, n=0, lo=null, hi=null;
+      for(q=0;q<src.codes.length;q++){
+        var c=src.codes[q], it=IND[c], ex=has(EXK,c);
+        var tone=it?((it.st||['',''])[1]):'';
+        var use=(!!it)&&(it.v!=null)&&(!ex)&&has(AX_SC,tone);
+        var sv=use?AX_SC[tone]:null;
+        ms.push({k:c,it:it,ex:ex,tone:tone,use:use,s:sv});
+        if(use){n++;sum+=sv;if(sv>0)pos++;if(sv<0)neg++;
+          if(lo===null||sv<lo)lo=sv; if(hi===null||sv>hi)hi=sv;}
+      }
+      var rng=(n?(hi-lo):0), ps=(n?pos/n:0), ng=(n?neg/n:0), gc={}, gmain=null;
+      for(q=0;q<ms.length;q++){
+        if(!ms[q].use)continue;
+        var gg=ms[q].it.group||'';
+        gc[gg]=(gc[gg]||0)+1;
+        if(gmain===null||gc[gg]>gc[gmain])gmain=gg;
+      }
+      ST[src.n]={ms:ms,n:n,sum:sum,mean:(n?sum/n:null),pos:ps,neg:ng,rng:rng,gmain:gmain,
+                 mixed:(n?(Math.min(ps,ng)>=AX_MIXS&&rng>=AX_MIXR):false)};
+    }
+    // ── 대조: 어긋나면 숨기지 않고 경고 ──────────────────────────────────────
+    for(i=0;i<AX_SRC.length;i++){
+      var aa=axOf(AX_SRC[i].n), tt=ST[AX_SRC[i].n];
+      if(!aa){warn.push('축 «'+AX_SRC[i].n+'»이 summary.axes에 없습니다 — 빌드 축 목록이 바뀌었습니다.');continue;}
+      if(aa.n!==tt.n)warn.push('«'+aa.name+'» 구성 지표 수 불일치 — 게시 '+aa.n+' vs 재집계 '+tt.n);
+      if(!aa.skip&&aa.m!=null&&tt.mean!=null&&Math.abs(aa.m-tt.mean)>0.002)
+        warn.push('«'+aa.name+'» 평균 점수 불일치 — 게시 '+aa.m+' vs 재집계 '+(Math.round(tt.mean*1000)/1000));
+      if(!aa.skip&&(!!aa.mixed)!==tt.mixed)
+        warn.push('«'+aa.name+'» 혼조 판정 불일치 — 게시 '+(!!aa.mixed)+' vs 재집계 '+tt.mixed);
+    }
+    for(i=0;i<AX.length;i++)
+      if(!srcOf(AX[i].name))warn.push('«'+AX[i].name+'» 축의 구성 지표 목록이 이 화면에 없습니다 — 매핑 미상.');
+    var dmode=axDeriveMode(AX);
+    if(s.mode&&dmode!==s.mode)warn.push('요약 모드 불일치 — 게시 '+s.mode+' vs 재현 '+dmode);
+
+    // ── 지표 → 축 배정(제외가 축 배정을 덮어쓴다: 주택의 CSUSHPINSA) ─────────
+    var ASSIGN={};
+    for(i=0;i<AX_SRC.length;i++)for(q=0;q<AX_SRC[i].codes.length;q++)ASSIGN[AX_SRC[i].codes[q]]=AX_SRC[i].n;
+    for(k in EXK)if(has(EXK,k))ASSIGN[k]='제외';
+    var unass=[];
+    for(i=0;i<IL.length;i++)if(!ASSIGN[IL[i].k])unass.push(IL[i]);
+    if(unass.length)warn.push('어느 축에도 배정되지 않은 지표 '+unass.length+'개 — 전사 목록이 낡았습니다.');
+
+    var nUse=0, thin=[], thinLoud=[];
+    // thinLoud — 얇은데(n<3) |m|도 0.75에 못 미쳐 conf 람다를 통과하지 못하는 **실물** 축.
+    //   conf는 pos/neg 집합만 거르므로 이 축들도 PARTIAL·UNIFORM 문장에는 그대로 나열된다.
+    for(i=0;i<AX.length;i++){
+      nUse+=(AX[i].n||0);
+      if(!AX[i].skip&&(AX[i].n||0)<3){thin.push(AX[i].name);
+        if(AX[i].kind==='real'&&Math.abs(AX[i].m||0)<0.75)thinLoud.push(AX[i].name);}
+    }
+    var listAll=(s.mode==='PARTIAL'||s.mode==='UNIFORM_POS'||s.mode==='UNIFORM_NEG');
+    var nEx=0; for(k in EXK)if(has(EXK,k))nEx++;
+
+    // ── ① 무엇을 보고 있는지 ────────────────────────────────────────────────
+    var out='<div class="tbintro"><b>위 「지표 종합」의 7개 칩이 무엇으로 만들어졌는지</b>의 내역입니다. '+
+      '매크로 지표 <b>'+IL.length+'개</b> 중 <b>'+nUse+'개</b>가 7축에 들어가고 <b>'+nEx+'개</b>는 점수에서 빠집니다'+
+      (unass.length?' · 배정 미상 '+unass.length+'개':'')+'. '+
+      '축 점수와 판정 문구는 빌드 시점에 한 번 계산돼 regime.json에 구워지고 이 화면은 그것을 그대로 출력합니다 — '+
+      '<b>과거·현재 상태의 집계이지 방향 예측이 아닙니다.</b>'+
+      '<details class="more"><summary>점수를 매기는 규칙 (빌드 상수 전사)</summary><div class="mbody">'+
+      '<div><b>상태 톤 → 점수</b> — good +1.0 · neut 0 · watch −0.5 · hot −1.0. '+
+        '축 점수 m은 구성 지표 점수의 <b>단순 평균</b>입니다(가중치 없음).</div>'+
+      '<div><b>밴드 경계</b> — m ≥ +'+AX_CUT[0].toFixed(2)+' → 0 · ≥ +'+AX_CUT[1].toFixed(2)+' → 1 · &gt; −'+
+        Math.abs(AX_CUT[2]).toFixed(2)+' → 2 · &gt; −'+Math.abs(AX_CUT[3]).toFixed(2)+' → 3 · 그 이하 → 4. '+
+        '음수 끝이 −0.55인 이유는 watch만 모인 축이 가장 센 부정 어휘에 닿지 않게 하려는 것입니다(hot이 섞여야 도달).</div>'+
+      '<div><b>최소 표본</b> — 쓸 수 있는 지표가 '+AX_MINN+'개 미만이면 그 축은 집계하지 않습니다(skip).</div>'+
+      '<div><b>혼조</b> — 상향 톤과 하향 톤이 각각 '+Math.round(AX_MIXS*100)+'% 이상이고 점수 폭이 '+
+        AX_MIXR.toFixed(1)+' 이상일 때만 붙습니다.</div>'+
+      '<div><b>히스테리시스</b> — 직전 회차 밴드에서 넘어가려면 경계를 '+AX_DEAD.toFixed(2)+
+        '만큼 더 넘겨야 합니다. 그래서 표기 밴드가 위 경계식과 다를 수 있습니다(지표 하나로 문구가 흔들리는 것을 막는 장치).</div>'+
+      '<div><b>방향은 쓰지 않습니다</b> — 서프라이즈 z와 직전 대비 변화는 부호가 서로 어긋나는 지표가 있어 '+
+        '점수에 넣지 않고 레벨 톤만 씁니다.</div>'+
+      '<div style="margin-top:6px;color:var(--muted)">이 상수들은 build/regime_summary.py에서 옮겨 적은 설명이며, '+
+        '화면의 n·m·밴드·문구는 계산하지 않고 regime.json 값을 그대로 씁니다.</div>'+
+      '</div></details></div>';
+
+    // ── ② 7축 개요 ──────────────────────────────────────────────────────────
+    var rows='';
+    for(i=0;i<AX.length;i++){
+      var a=AX[i], sc=srcOf(a.name), st2=ST[a.name]||{}, sk=!!a.skip, low=(!sk&&(a.n||0)<3);
+      var lad=ladOf(a.name), lh='';
+      for(q=0;q<lad.length;q++)
+        lh+=(q?' · ':'')+((!sk&&a.band===q)?'<b class="xacurw">'+esc(lad[q])+'</b>':
+                          '<span class="xamut">'+esc(lad[q])+'</span>');
+      rows+='<tr'+((low||sk)?' class="xalow"':'')+'>'+
+        '<th scope="row">'+esc(a.name)+'</th>'+
+        '<td>'+(a.kind==='real'?'실물':'여건')+'</td>'+
+        '<td class="pv">'+(a.n==null?'—':esc(a.n))+(low?'<span class="xadag"> †</span>':'')+'</td>'+
+        '<td class="pv"><span class="xaeq">'+(st2.n?axSg(st2.sum,1)+' ÷ '+st2.n+' = ':'')+
+          (sk||a.m==null?'—':axSg(a.m,3))+'</span></td>'+
+        '<td><span class="xaband">'+(sk||a.band==null?'—':AX_LAD[a.band])+'</span>'+
+          (sk||a.band==null?'':' <span class="xamut">'+esc(a.band)+'</span>')+'</td>'+
+        '<td style="text-align:left">'+(sk?'<span class="xamut">집계 안 함</span>':lh)+'</td>'+
+        '<td>'+(a.mixed?'<span class="xaflag">혼조</span>':'<span class="xamut">—</span>')+'</td>'+
+        '<td>'+(sc?sc.lead:'—')+(sc&&!sc.lead&&a.kind==='cond'?'<span style="display:block;font-size:9.5px;color:var(--muted)">문장 제외</span>':'')+'</td>'+
+      '</tr>';
+    }
+    out+='<h3 class="lbl">7축 개요 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+        '· 성과가 아니라 표본(구성 지표 수)을 먼저 봅니다</span></h3>'+
+      '<div class="tblwrap"><table><thead><tr>'+
+        '<th scope="col">축</th><th scope="col">종류</th><th scope="col">지표 수 n</th>'+
+        '<th scope="col">점수 합 ÷ n = m</th><th scope="col">밴드</th>'+
+        '<th scope="col" style="text-align:left">판정 문구 (5단계 사다리)</th>'+
+        '<th scope="col">혼조</th><th scope="col">lead</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div class="chartnote">'+
+      (thin.length?'<b>† '+esc(thin.join('·'))+'</b> 축은 구성 지표가 3개 미만이라 행 전체를 흐리게 뒀습니다 — '+
+        '<b>평균으로 읽지 마십시오.</b> 지표 하나의 상태가 바뀌면 축 문구가 통째로 뒤집힙니다. '+
+        '빌드의 보호 장치는 여기까지입니다 — n&lt;3이면서 |m| &lt; 0.75인 축은 <b>모드를 정하는 '+
+        'pos/neg 집합</b>에 들어가지 않아 대비 문장(CONTRAST)에서 호명되지 않습니다. 다만 '+
+        'PARTIAL·UNIFORM 문장에서는 실물 축이 모두 나열되므로 얇은 축도 문장에 그대로 실립니다'+
+        ((listAll&&thinLoud.length)?' — 이번 회차 해당 축: <b>'+esc(thinLoud.join('·'))+
+          '</b> (위 「지표 종합」 문장에 들어 있습니다)':'')+'. ':'')+
+      '<b>밴드 0</b>은 톤 점수가 가장 높은 쪽일 뿐 “좋다”는 뜻이 아닙니다 — 금리 축의 밴드 0은 '+
+      '「낮은 수준」인데, 금리가 낮아 보이는 국면은 대개 침체입니다. 그래서 밴드와 문구에는 색을 주지 않았습니다. '+
+      '<b>lead</b>는 종합 문장에 실리는지를 정합니다: 여건 축은 lead 0이면 문장에서 빠지고 칩으로만 남으며'+
+      '(금리 축이 그 경우), 실물 축의 lead는 대비 문장에서 먼저 호명되는 우선순위입니다.</div>';
+
+    // ── ③ 역매핑: 축별 구성 지표 ────────────────────────────────────────────
+    var cards='';
+    for(i=0;i<AX_SRC.length;i++){
+      var s3=AX_SRC[i], a3=axOf(s3.n), t3=ST[s3.n], thinC=(t3.n<3);
+      var li='';
+      for(q=0;q<t3.ms.length;q++){
+        var m3=t3.ms[q], it3=m3.it;
+        if(!it3){
+          li+='<div class="xali xaex"><span class="xalb xamut">'+esc(m3.k)+' — 지표에 없음</span>'+
+              '<span class="xamv">—</span></div>';
+          continue;
+        }
+        var st3=it3.st||['',''];
+        li+='<div class="xali'+(m3.ex?' xaex':'')+'">'+
+          '<span class="xalb">'+esc(it3.label)+'</span>'+
+          '<span class="xamv">'+esc(it3.v==null?'—':it3.v)+'<span class="xau">'+esc(it3.u||'')+'</span></span>'+
+          '<span class="xameta"><span class="xak">'+esc(it3.group)+'</span>'+
+          (m3.ex?'<span class="xaflag">점수 제외</span>':
+            ((it3.group!==t3.gmain?'<span class="xaflag">'+esc(t3.gmain)+' 그룹 아님 — 렌즈가 달라 편입</span>':'')+
+             (st3[0]?'<span class="stbadge '+esc(st3[1])+'">'+esc(st3[0])+'</span>':'')+
+             '<span class="xaeq">'+(m3.use?axSg(m3.s,1):'점수 없음')+'</span>'))+
+          '</span></div>';
+      }
+      var mixLine='';
+      if(t3.n){
+        mixLine='상향 '+axPc(t3.pos)+' · 하향 '+axPc(t3.neg)+' · 점수 폭 '+t3.rng.toFixed(1)+
+          ' → '+((a3&&a3.mixed)?'<b>혼조</b>':'혼조 아님')+
+          ' <span class="xamut">(기준: 양쪽 '+Math.round(AX_MIXS*100)+'% 이상 &amp; 폭 '+AX_MIXR.toFixed(1)+' 이상)</span>';
+      }
+      var chk=(a3&&a3.n===t3.n&&(a3.skip||a3.m==null||t3.mean==null||Math.abs(a3.m-t3.mean)<=0.002));
+      cards+='<div class="xac'+(thinC?' xathin':'')+'">'+
+        '<div class="xah"><span class="xan">'+esc(s3.n)+'</span>'+
+        '<span class="xak">'+((a3&&a3.kind==='real')?'실물':'여건')+'</span>'+
+        '<span class="xak">지표 '+t3.n+'개</span>'+
+        (thinC?'<span class="xak xakwarn">표본 얇음</span>':'')+
+        '<span class="xaw">'+esc((a3&&!a3.skip&&a3.word)?a3.word:'집계 안 함')+'</span></div>'+
+        li+
+        '<div class="xanote">'+
+          '<b>점수 합 '+axSg(t3.sum,1)+' ÷ '+t3.n+'개 = '+axSg(t3.mean,3)+'</b> · 게시값 '+
+          ((a3&&a3.m!=null)?axSg(a3.m,3):'—')+' '+(chk?'✓ 일치':'<b style="color:var(--hot)">⚠ 불일치</b>')+
+          (mixLine?'<br>'+mixLine:'')+
+          (thinC?'<br>구성 지표 '+t3.n+'개 — 평균으로 읽지 말 것.':'')+
+        '</div></div>';
+    }
+    out+='<h3 class="lbl">역매핑 — 축별 구성 지표 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+        '· 목록은 빌드 소스 전사, 값·상태는 로드한 regime.json</span></h3>'+
+      '<div class="xagrid">'+cards+'</div>';
+
+    // ── ④ 그룹 × 축 대응 행렬 ───────────────────────────────────────────────
+    var GORD=['성장','노동','물가','금융','금리','주택'], GSEEN={}, GROWS=[];
+    for(i=0;i<GORD.length;i++)GSEEN[GORD[i]]=1;
+    for(i=0;i<IL.length;i++){var g4=IL[i].group||'기타'; if(!GSEEN[g4]){GSEEN[g4]=1;GORD.push(g4);}}
+    var COLS=[];
+    for(i=0;i<AX_SRC.length;i++)COLS.push(AX_SRC[i].n);
+    COLS.push('제외'); if(unass.length)COLS.push('미배정');
+    var MX={}, GT={}, CT={};
+    for(i=0;i<IL.length;i++){
+      var gk=IL[i].group||'기타', ck=ASSIGN[IL[i].k]||'미배정';
+      if(!MX[gk])MX[gk]={};
+      MX[gk][ck]=(MX[gk][ck]||0)+1; GT[gk]=(GT[gk]||0)+1; CT[ck]=(CT[ck]||0)+1;
+    }
+    var mrows='';
+    for(i=0;i<GORD.length;i++){
+      var gr=GORD[i]; if(!GT[gr])continue;
+      mrows+='<tr><th scope="row">'+esc(gr)+'</th>';
+      for(q=0;q<COLS.length;q++){
+        var cv=(MX[gr]||{})[COLS[q]]||0;
+        mrows+='<td class="'+(cv?'pv':'z')+'">'+(cv?cv:'·')+'</td>';
+      }
+      mrows+='<td class="pv">'+GT[gr]+'</td></tr>';
+    }
+    var mfoot='<tr><th scope="row">합계</th>';
+    for(q=0;q<COLS.length;q++)mfoot+='<td class="pv">'+(CT[COLS[q]]||0)+'</td>';
+    mfoot+='<td class="pv">'+IL.length+'</td></tr>';
+    out+='<h3 class="lbl">그룹 × 축 대응 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+        '· 카드가 묶인 그룹 6종과 집계 축 7종은 같은 것이 아닙니다</span></h3>'+
+      '<div class="tblwrap"><table class="xamx"><thead><tr><th scope="col">지표 그룹</th>'+
+        COLS.map(function(c){return '<th scope="col">'+esc(c)+'</th>';}).join('')+
+        '<th scope="col">그룹 계</th></tr></thead><tbody>'+mrows+mfoot+'</tbody></table></div>'+
+      '<div class="chartnote">화면 아래 「매크로 지표 현황」 카드는 <b>그룹</b>으로 묶여 있고, 종합 요약은 <b>축</b>으로 '+
+      '집계합니다. 둘이 어긋나는 자리가 이 표에서 보입니다 — 성장 그룹은 소비와 생산 두 축으로 갈라지고, '+
+      '시간당임금은 노동 카드지만 임금인플레 렌즈라 물가 축으로, 10Y−3M 곡선은 금리 카드지만 금융여건 축으로 갑니다. '+
+      '축 이름과 그룹 이름이 같아 보여도 분모가 다릅니다.</div>';
+
+    // ── ⑤ 제외된 지표와 사유 ────────────────────────────────────────────────
+    var exc='';
+    for(k in EXK){
+      if(!has(EXK,k))continue;
+      var ei=IND[k], est=ei?(ei.st||['','']):['',''];
+      var owner=null;
+      for(i=0;i<AX_SRC.length;i++)for(q=0;q<AX_SRC[i].codes.length;q++)
+        if(AX_SRC[i].codes[q]===k)owner=AX_SRC[i].n;
+      exc+='<div class="xac"><div class="xah"><span class="xan">'+esc(ei?ei.label:k)+'</span>'+
+        '<span class="xak">'+esc(k)+'</span>'+(ei?'<span class="xak">'+esc(ei.group)+'</span>':'')+
+        '<span class="xaw">'+esc(ei&&ei.v!=null?ei.v:'—')+'<span class="xau"> '+esc(ei?(ei.u||''):'')+'</span></span></div>'+
+        '<div class="xali"><span class="xalb">제외 사유</span>'+
+        '<span class="xameta">'+(est[0]?'<span class="stbadge '+esc(est[1])+'">'+esc(est[0])+'</span>':'')+
+        '<span class="xaflag">점수 제외</span></span></div>'+
+        '<div class="xanote"><b>'+esc(EXK[k])+'</b><br>'+
+        (owner?'축 «'+esc(owner)+'» 목록에는 들어 있지만 집계 직전에 빠집니다 — 그래서 이 축의 분모가 목록 길이보다 1 작습니다.':
+                '어느 축 목록에도 들어 있지 않고, 제외 사유만 선언돼 있습니다.')+
+        ' 카드로는 아래 「매크로 지표 현황」에 그대로 표시됩니다 — 값을 감추는 것이 아니라 점수에만 넣지 않습니다.'+
+        '</div></div>';
+    }
+    out+='<h3 class="lbl">제외된 지표와 사유 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+        '· '+nEx+'개 · regime.json summary.excluded 원문</span></h3>'+
+      (exc?'<div class="xagrid">'+exc+'</div>':'<div class="tbintro">제외된 지표가 없습니다.</div>')+
+      '<div class="chartnote">두 지표는 <b>스케일이 비대칭</b>이라 판정 람다가 good을 낼 수 없는 구조입니다 — '+
+      '아무리 좋아져도 최대 neut(0점)이라 평균에 넣으면 그 축을 영구히 끌어내립니다. 빼는 편이 정직해서 뺐고, '+
+      '뺐다는 사실과 사유를 여기 적습니다.</div>';
+
+    // ── ⑥ 요약 모드 ─────────────────────────────────────────────────────────
+    var realA=[], bandsTxt=[], confP=[], confN=[], bset={}, nbset=0;
+    for(i=0;i<AX.length;i++){
+      var ra=AX[i]; if(ra.kind!=='real'||ra.skip)continue;
+      realA.push(ra.name);
+      bandsTxt.push(esc(ra.name)+' '+esc(ra.band));
+      if(bset[ra.band]!==1){bset[ra.band]=1;nbset++;}
+      var cfx=(ra.n>=3)||(Math.abs(ra.m||0)>=0.75);
+      if(cfx&&ra.band<=1)confP.push(esc(ra.name)+'(n='+esc(ra.n)+')');
+      if(cfx&&ra.band>=3)confN.push(esc(ra.name)+'(n='+esc(ra.n)+')');
+    }
+    var mrows2='';
+    for(i=0;i<AX_MODE.length;i++)
+      mrows2+='<tr'+(AX_MODE[i][0]===s.mode?' class="xacur"':'')+'>'+
+        '<th scope="row">'+AX_MODE[i][0]+(AX_MODE[i][0]===s.mode?' ◀ 이번 회차':'')+'</th>'+
+        '<td style="text-align:left">'+AX_MODE[i][1]+'</td></tr>';
+    out+='<h3 class="lbl">요약 문장 모드 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+        '· summary.mode = '+esc(s.mode||'—')+'</span></h3>'+
+      '<div class="tblwrap"><table><thead><tr><th scope="col">모드</th>'+
+        '<th scope="col" style="text-align:left">뜻</th></tr></thead><tbody>'+mrows2+'</tbody></table></div>'+
+      '<div class="chartnote"><b>이번 회차가 '+esc(s.mode||'—')+'인 이유</b> — '+
+      '실물 축 '+realA.length+'개('+esc(realA.join('·'))+')의 밴드는 '+bandsTxt.join(' · ')+'입니다. '+
+      '이 중 신뢰 조건(n ≥ 3 또는 |m| ≥ 0.75)을 채운 축은 좋은 쪽(밴드 0~1) '+
+      (confP.length?confP.join('·'):'없음')+', 나쁜 쪽(밴드 3~4) '+(confN.length?confN.join('·'):'없음')+'입니다. '+
+      '양쪽이 다 있어야 대비 문장(CONTRAST)이 되고, 균일 문장(UNIFORM)은 실물 축 밴드가 한 값으로 모이는 데 더해 '+
+      '<b>실물 축이 하나도 빠짐없이 신뢰 조건을 채워야</b> 성립하는데 '+
+      '지금 밴드는 '+nbset+'가지로 갈립니다. 그래서 남는 것은 <b>'+esc(dmode)+'</b> — '+
+      '실물 축을 점수순으로 늘어놓는 부분 서술입니다. '+
+      '모드는 <b>문장의 형식</b>을 고르는 규칙일 뿐 확신의 세기가 아닙니다.</div>';
+
+    // ── ⑦ 자기 대조 결과 ────────────────────────────────────────────────────
+    if(warn.length){
+      out+='<div class="xawarn">⚠ 화면에 전사한 축 구성이 regime.json과 어긋납니다 — 아래를 그대로 적습니다.<br>· '+
+        warn.map(function(w){return esc(w);}).join('<br>· ')+
+        '<br>build/regime_summary.py가 바뀌었다면 이 페이지의 전사본도 함께 고쳐야 합니다.</div>';
+    }else{
+      out+='<div class="xaok">자기 대조 — 전사한 축 구성으로 다시 센 지표 수·평균 점수·혼조 판정, '+
+        '그리고 재현한 요약 모드가 regime.json의 게시값과 모두 일치합니다 ('+AX_SRC.length+'축 · 지표 '+
+        IL.length+'개 전수 배정 확인).</div>';
+    }
+    body.innerHTML=out;
+    host.hidden=false;
   }
 
   function drawHist(){

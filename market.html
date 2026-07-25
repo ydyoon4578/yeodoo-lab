@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — 커버 518종목 중 몇 %가 어느 상태인가. 200일선 위 비율·플래그 13종·타이밍 5구간·컴포짓 분포·섹터별 폭을 집계로만 보여줍니다. 지수가 아니라 폭.">
+<title>여두 · 시장 폭·동향</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/market.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/market.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · 시장 폭·동향">
+<meta property="og:description" content="518종목 중 몇 %가 어느 상태인가 — 지수가 아니라 폭. 전부 집계이며 예측이 아닙니다.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · 시장 폭·동향">
+<meta name="twitter:description" content="518종목 중 몇 %가 어느 상태인가 — 지수가 아니라 폭. 전부 집계이며 예측이 아닙니다.">
+<!-- 유니버스(커버 종목 수·구성 지수)가 하드코딩된 곳은 위 description·og:description·twitter:description
+     세 줄뿐이다. 본문 숫자는 전부 data/stocks.json에서 채우므로, 유니버스가 바뀌면 이 세 줄을 같이 고칠 것. -->
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;
+    --deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;
+    --deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--deploy:#0E8A54;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+
+  /* ── 차트 램프 ─────────────────────────────────────────────────────────
+     한 색상(청색) 5단 **순서형** 램프. 순서(매수↔매도, 위↔아래)만 인코딩하고
+     좋고 나쁨은 인코딩하지 않는다 — 이 사이트는 색으로 우열을 단정하지 않는다.
+     OKLCH 명도 단조: 라이트 .415/.512/.607/.698/.772 · 다크 .832/.759/.663/.572/.484.
+     각 단계 표면 대비 ≥2:1(라이트 8.5~2.0 / 다크 10.1~2.7)로 잡았다. */
+  :root{--r1:#17526E;--r2:#2A6E92;--r3:#3F8CB0;--r4:#68A7C6;--r5:#8FBCD5;--bar:#2A6E92}
+  @media (prefers-color-scheme:dark){:root{--r1:#9AD1EC;--r2:#79BADF;--r3:#5A9CC1;--r4:#43809F;--r5:#35657F;--bar:#5A9CC1}}
+  :root[data-theme="light"]{--r1:#17526E;--r2:#2A6E92;--r3:#3F8CB0;--r4:#68A7C6;--r5:#8FBCD5;--bar:#2A6E92}
+  :root[data-theme="dark"]{--r1:#9AD1EC;--r2:#79BADF;--r3:#5A9CC1;--r4:#43809F;--r5:#35657F;--bar:#5A9CC1}
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  a{color:inherit}
+  .tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:var(--w-read);margin:0 auto;padding:0 22px 80px}
+  @media(max-width:640px){.wrap{padding:0 14px 60px}}
+
+  header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(25px,4.4vw,36px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
+  .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
+  .lede b{color:var(--ink)}
+  .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
+  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 9px;white-space:nowrap}
+  .stat b{color:var(--ink);font-weight:700}
+
+  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:40px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
+  .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11.5px}
+  .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
+  @media(max-width:640px){.card{padding:15px 14px}}
+
+  /* ── 히어로: 200일선 위 비율 ── */
+  .hero{display:grid;grid-template-columns:auto 1fr;gap:6px 26px;align-items:end}
+  @media(max-width:640px){.hero{grid-template-columns:1fr;gap:10px}}
+  .hero .big{font-family:var(--mono);font-size:clamp(46px,11vw,76px);font-weight:800;line-height:.92;letter-spacing:-.03em;color:var(--ink)}
+  .hero .big small{font-size:.34em;font-weight:700;color:var(--muted);margin-left:4px}
+  .hero .den{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);margin-top:8px}
+  .hero .den b{color:var(--ink)}
+  .hero .cap{font-size:12.5px;color:var(--ink-2);line-height:1.65;padding-bottom:4px}
+
+  .split{margin:18px 0 0;display:flex;gap:2px;height:26px}
+  .split i{display:block;height:100%;border-radius:2px}
+  .split i:first-child{border-radius:5px 2px 2px 5px}
+  .split i:last-child{border-radius:2px 5px 5px 2px}
+  .splitleg{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:6px 20px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+  .splitleg span{display:inline-flex;align-items:center;gap:7px}
+  .splitleg i{width:11px;height:11px;border-radius:3px;flex:none}
+  .splitleg b{color:var(--ink)}
+
+  /* ── 가로 막대 목록(플래그·섹터) ── */
+  .rows{display:flex;flex-direction:column;gap:2px}
+  .row{display:grid;grid-template-columns:minmax(96px,132px) 1fr minmax(104px,auto);gap:2px 12px;align-items:center;padding:7px 0;border-top:1px solid var(--line-soft)}
+  .row:first-child{border-top:0}
+  .row .rn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:none}
+  a.rn{text-decoration:underline dotted;text-underline-offset:3px;text-decoration-color:var(--line)}
+  a.rn:hover{color:var(--accent);text-decoration:underline solid;text-decoration-color:var(--accent)}
+  .row .rt{position:relative;height:16px;background:var(--panel-2);border-radius:4px;overflow:hidden}
+  .row .rt i{display:block;height:100%;background:var(--bar);border-radius:0 4px 4px 0}
+  .row .rv{font-family:var(--mono);font-size:12px;color:var(--ink);text-align:right;white-space:nowrap}
+  .row .rv em{font-style:normal;color:var(--muted);font-size:11px;margin-left:5px}
+  .row .rd{grid-column:1/-1;font-size:11.5px;color:var(--muted);line-height:1.5;padding-left:1px}
+  .row.thin .rt i{background:var(--muted);opacity:.55}
+  .row.thin .rv{color:var(--muted)}
+  @media(max-width:640px){
+    .row{grid-template-columns:1fr auto;gap:3px 10px}
+    .row .rt{grid-column:1/-1;order:3}
+    .row .rd{order:4}
+  }
+
+  /* ── 스택 바(타이밍) ── */
+  .stack{display:flex;gap:2px;height:34px;margin:4px 0 0}
+  .stack i{display:block;height:100%;border-radius:2px;min-width:2px}
+  .stack i:first-child{border-radius:6px 2px 2px 6px}
+  .stack i:last-child{border-radius:2px 6px 6px 2px}
+  .tlist{margin:14px 0 0;display:flex;flex-direction:column;gap:1px}
+  .titem{display:grid;grid-template-columns:16px minmax(74px,auto) 1fr;gap:2px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
+  .titem>i{width:11px;height:11px;border-radius:3px;align-self:center}
+  .titem .tn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
+  .titem .tv{font-family:var(--mono);font-size:12px;color:var(--ink-2);text-align:right;white-space:nowrap}
+  .titem .td{grid-column:2/-1;font-size:11.5px;color:var(--muted);line-height:1.55}
+
+  /* ── 컴포짓 히스토그램 ── */
+  .hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .hcard{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:14px 16px}
+  .hcard h3{margin:0;font-family:var(--mono);font-size:12.5px;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .hcard h3 .hn{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:auto}
+  .hcard .hd{margin:6px 0 0;font-size:11.5px;color:var(--muted);line-height:1.5}
+  .hbars{margin:12px 0 0;display:flex;align-items:flex-end;gap:2px;height:78px}
+  .hbars i{flex:1;background:var(--bar);border-radius:4px 4px 0 0;min-height:1px}
+  .haxis{margin:5px 0 0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+  .hq{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--mono);font-size:11px;color:var(--ink-2);border-top:1px solid var(--line-soft);padding-top:8px}
+  .hq b{color:var(--ink)}
+  .hmiss{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--marg)}
+
+  /* ── 심리 게이지 ── */
+  .gauge{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .gauge .gn{font-family:var(--mono);font-size:40px;font-weight:800;line-height:1;color:var(--ink)}
+  .gauge .gn small{font-size:.4em;color:var(--muted);font-weight:700}
+  .gauge .gl{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink-2)}
+  .gauge .gp{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;text-align:right}
+  .track{position:relative;margin:16px 0 0;height:12px;border-radius:6px;background:var(--panel-2);border:1px solid var(--line-soft)}
+  .track b{position:absolute;top:-5px;width:3px;height:20px;border-radius:2px;background:var(--accent);transform:translateX(-1.5px)}
+  .track u{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+  .ticks{margin:7px 0 0;display:grid;grid-template-columns:repeat(5,1fr);font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;gap:2px}
+  .ticks span.on{color:var(--ink);font-weight:700}
+  .prevs{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+  .prevs b{color:var(--ink)}
+  .sparkbox{margin:16px 0 0}
+  .sparkbox svg{display:block;width:100%;height:150px}
+  .sparkleg{margin:7px 0 0;display:flex;flex-wrap:wrap;gap:4px 18px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .sparkleg b{color:var(--ink-2)}
+
+  /* ── 표·주석 ── */
+  details.tv{margin:14px 0 0;border-top:1px solid var(--line-soft);padding-top:10px}
+  details.tv>summary{cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--muted);list-style:none}
+  details.tv>summary::-webkit-details-marker{display:none}
+  details.tv>summary::before{content:"▸ ";font-size:9px}
+  details.tv[open]>summary::before{content:"▾ "}
+  details.tv>summary:hover{color:var(--accent)}
+  .tblwrap{margin:10px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{border-collapse:collapse;width:100%;min-width:340px;font-family:var(--mono);font-size:11.5px}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note b{color:var(--ink)}
+  .note.plain{border-left-color:var(--champ)}
+  .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+</style>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:8px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
+       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="market.html">
+
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
+          <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
+          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
+          <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="newsroom">
+        <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
+          <span class="mmi"><span class="mmn">8-K 공시 피드</span><span class="mmb soon">준비중</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></span>
+          <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
+          <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="macro">
+        <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html#axes" data-nav="regime.html#axes"><span class="mmn">하위 요인 분석</span><span class="mmb vunv">미검증</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></a>
+          <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
+          <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
+          <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
+          <span class="mmi"><span class="mmn">경제지표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일만 — 예상치는 싣지 않는다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="quant">
+        <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
+          <span class="mmi"><span class="mmn">스크리너</span><span class="mmb soon">준비중</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></span>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장<span class="mmlk">🔒</span></span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="gurus">
+        <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
+          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
+          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="financials">
+        <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
+          <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
+          <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
+          <span class="mmi"><span class="mmn">실적 및 전망</span><span class="mmb soon">준비중</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></span>
+          <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
+          <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="valuation">
+        <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
+          <span class="mmi"><span class="mmn">상대가치평가</span><span class="mmb soon">준비중</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></span>
+          <span class="mmi"><span class="mmn">Reverse DCF</span><span class="mmb soon">준비중</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></span>
+          <span class="mmi"><span class="mmn">Simplified DCF</span><span class="mmb soon">준비중</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></span>
+          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
+          <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="portfolio">
+        <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
+          <span class="mmi"><span class="mmn">대시보드</span><span class="mmb soon">준비중</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></span>
+          <span class="mmi"><span class="mmn">포트폴리오 분석</span><span class="mmb soon">준비중</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></span>
+        </div>
+      </li>
+      <li class="navcat" data-cat="industry">
+        <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
+          <span class="mmi"><span class="mmn">산업 탐색</span><span class="mmb soon">준비중</span><span class="mmd">조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포</span></span>
+          <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
+          <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브<span class="mmlk">🔒</span></span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀<span class="mmlk">🔒</span></span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
+          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html" rel="nofollow"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<div class="wrap" id="main">
+  <header class="mast">
+    <div class="eyebrow">Breadth · 시장 폭</div>
+    <h1 class="title">지수가 아니라 폭</h1>
+    <p class="lede">지수는 시가총액이 큰 몇 종목이 끌면 올라갑니다. 이 화면은 지수를 보지 않고
+      <b>커버 종목 중 몇 %가 어느 상태인가</b>만 셉니다. 200일선 위 비율, 플래그 전수 분포, 타이밍 구간,
+      컴포짓 백분위 분포, 섹터별 폭 — 전부 오늘 하루의 <b>집계</b>이며 예측이 아닙니다.</p>
+    <div class="statline" id="statline"><span class="stat">불러오는 중…</span></div>
+  </header>
+
+  <section aria-labelledby="b200-h">
+    <p class="lbl" id="b200-h">① 200일선 위 비율 <span class="sub">· 폭의 기본 눈금</span></p>
+    <p class="lblnote">200일 이동평균 위에 있는 종목의 비율입니다. 지수가 오르는데 이 비율이 낮으면
+      소수 대형주가 끌어올린 장세이고, 지수와 이 비율이 같이 움직이면 폭이 넓은 장세입니다 —
+      어느 쪽인지 여기서 갈립니다. <b>어느 쪽이 좋은지는 이 화면이 말하지 않습니다.</b></p>
+    <div id="b200"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section aria-labelledby="flag-h">
+    <p class="lbl" id="flag-h">② 플래그 <span id="nflag">—</span>종 전수 분포 <span class="sub">· 정의를 같이 읽을 것</span></p>
+    <p class="lblnote">플래그는 <b>조건식의 결과</b>이지 판단이 아닙니다. 아래 정의는 데이터 파일의
+      <code>flag_defs</code>를 그대로 옮긴 것이고, 이름을 누르면 종목 탐색기가 그 플래그로 필터된 채 열립니다.</p>
+    <div class="card" id="flags"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section aria-labelledby="tim-h">
+    <p class="lbl" id="tim-h">③ 타이밍 <span id="ntim">—</span>구간 분포 <span class="sub">· 200일선 위치 + 최근 7거래일 트리거</span></p>
+    <p class="lblnote">이 구간들은 순서(매수↔매도)를 가진 척도라 <b>한 색상의 명도 단계</b>로만 칠했습니다.
+      색은 순서만 나타내며 좋고 나쁨을 뜻하지 않습니다.</p>
+    <div class="card" id="timing"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section aria-labelledby="comp-h">
+    <p class="lbl" id="comp-h">④ 컴포짓 <span id="ncomp">—</span>종 백분위 분포 <span class="sub">· 10구간 히스토그램 + 사분위</span></p>
+    <p class="lblnote">컴포짓은 하위 지표들의 <b>횡단면 백분위를 평균낸 값</b>입니다(0~100).
+      평균을 내면 분포가 가운데로 모이는 것이 수학적 성질이므로, 봉우리가 가운데 있다고 해서
+      시장이 중립이라는 뜻이 아닙니다. 입력이 하나뿐인 컴포짓은 분포가 균등한 것이 당연합니다.</p>
+    <div id="comps"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section aria-labelledby="sec-h">
+    <p class="lbl" id="sec-h">⑤ 섹터별 폭 <span class="sub">· 분모를 항상 적는다</span></p>
+    <p class="lblnote">섹터마다 200일선 위 비율입니다. 표본이 작은 섹터는 종목 한둘로 비율이 크게 흔들리므로
+      분모를 함께 적고, 표본 15종목 미만이면 비율을 아예 내지 않습니다.</p>
+    <div class="card" id="sectors"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <section aria-labelledby="sent-h">
+    <p class="lbl" id="sent-h">⑥ 시장 심리 지수 <span class="sub">· 상태 요약 · 수익 예측 신호 아님</span></p>
+    <p class="lblnote">VIX 수준·VIX 기간구조·MOVE를 합성한 0~100 상태 지표입니다.
+      <b>상태 요약일 뿐 수익 예측 신호가 아닙니다</b> — 랩 자체 검증에서 이 지수는 VIX 단독보다 낫지 않았고,
+      극단탐욕='매도'에는 통계적 근거가 없었습니다. 구성요소·백테스트 전문은 국면 페이지에 있습니다.</p>
+    <div class="card" id="sent"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+  <div class="note" id="closing">
+    <b>이 화면이 하지 않는 것</b> — 여기 있는 숫자는 전부 오늘 하루의 집계입니다.
+    폭이 넓다/좁다에 대응하는 행동을 제안하지 않고, 과거에 이 상태 다음에 무슨 일이 있었는지도 붙이지 않습니다.
+    붙이려면 조건부 표본 수와 유의성부터 공개해야 하는데, 이 페이지의 데이터로는 그 검증을 하지 않았습니다.
+    검증을 마친 것과 기각한 것은 <a href="archive.html" style="color:var(--accent)">기각 아카이브</a>에 따로 있습니다.
+  </div>
+
+  <footer>
+    <a href="index.html">← 전략 랩 홈</a> · <a href="roadmap.html">미구현 로드맵</a> ·
+    <a href="method.html">등급·판정 규약</a> ·
+    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
+    <br>집계 대상: <code>data/stocks.json</code>(플래그·타이밍·컴포짓·섹터) · <code>data/sentiment.json</code>(심리).
+    기준일은 각 파일의 <code>as_of</code>를 그대로 표시합니다.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function n1(v){return (v==null||isNaN(v))?'—':(Math.round(v*10)/10).toFixed(1);}
+  function pc(a,b){return b?(Math.round(a/b*1000)/10):null;}
+  function pad(v){return Math.max(0,Math.min(100,v));}
+  // 제목의 개수는 데이터에서 채운다 — 파일의 항목 수가 바뀌어도 제목이 거짓말하지 않게.
+  function setTxt(id,v){var n=el(id);if(n)n.textContent=v;}
+
+  // 섹터 한글 축약 — 홈·종목 화면과 같은 표기를 쓴다(페이지마다 다르면 같은 섹터가 달라 보인다)
+  var SECKO={'Information Technology':'IT','Health Care':'헬스케어','Financials':'금융','Consumer Discretionary':'경기소비',
+             'Consumer Staples':'필수소비','Industrials':'산업재','Communication Services':'커뮤니케이션','Energy':'에너지',
+             'Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
+  function secKo(x){return x?(SECKO[x]||x):'(미분류)';}
+
+  // 플래그 → 종목 탐색기 프리셋 키. stocks.html의 PRESETS 배열에서 확인한 값이며,
+  // 라우팅은 stocks.html이 location.hash에서 /p=(\w+)/ 를 읽는 방식이다.
+  // 대응이 확인되지 않은 플래그는 링크를 걸지 않고 텍스트로만 둔다.
+  var FLAG2P={'과매수':'oh','과매도':'os','상승추세':'up','눌림목':'dip','깊은눌림':'deep','약세반등':'bear',
+              '52주돌파':'brk','200일이탈':'dn','과밀숏':'squeeze','골든임박':'gold','거래급증':'vsg',
+              '변동수축':'sqz','시장강세':'rss'};
+
+  // 타이밍 정의 — 데이터 파일에 정의문이 없어 생성 코드(build/refresh_stocks.py trend_signals)의
+  // 판정식을 그대로 옮겼다. 순서형 5구간(매수 → 매도).
+  // 판정 순서가 중요하다: 코드는 중립을 **먼저** 걸러내고 그 다음에야 종가와 200일선의 위아래로 가른다.
+  // 그래서 매수 트리거가 있어도 중립 조건에 걸리면 중립이다 — 아래 TPRE 한 줄로 그 전제를 밝힌다.
+  var TORDER=['매수','매수우세','중립','매도우세','매도'];
+  var TPRE='구간은 <b>중립 → 상승/하락</b> 순으로 배타 판정합니다 — 200일선 이격이 ±2% 이내이면서 '+
+           'ADX가 18 미만이거나 산출되지 않으면, 아래 매수·매도 트리거가 있어도 <b>중립</b>으로 분류됩니다. '+
+           '나머지 네 구간의 정의는 이 중립 조건에 해당하지 않는 종목에만 적용됩니다.';
+  var TDEF={
+    '매수':'(중립 아님) 종가 > 200일선 · 최근 7거래일 안에 매수 트리거(200일선 회복 · 골든크로스 · MACD 상향 · 상승추세 눌림저점 · RSI 45 미만에서 반등)가 있었음',
+    '매수우세':'(중립 아님) 종가 > 200일선 · 위 트리거는 최근 7거래일 안에 없었음',
+    '중립':'200일선 이격 ±2% 이내이면서 ADX 18 미만이거나 ADX가 산출되지 않음 — 방향성이 잡히지 않는 구간. 상장 이력이 260거래일에 못 미쳐 200일선·ADX가 성립하지 않는 종목도 여기로 들어간다',
+    '매도우세':'(중립 아님) 종가 < 200일선 · 아래 트리거는 최근 7거래일 안에 없었음',
+    '매도':'(중립 아님) 종가 < 200일선 · 최근 7거래일 안에 매도 트리거(200일선 이탈 · 데드크로스 · MACD 하향 · RSI 60 초과)가 있었음 — 네 트리거 모두 그날 종가가 200일선 아래일 때만 인정된다'
+  };
+  var RAMP=['var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)'];
+
+  function tbl(head,rows){
+    return '<div class="tblwrap"><table><thead><tr>'+
+      head.map(function(h,i){return '<th scope="col">'+esc(h)+'</th>';}).join('')+
+      '</tr></thead><tbody>'+rows.map(function(r){
+        return '<tr>'+r.map(function(c){return '<td>'+(c==null?'—':c)+'</td>';}).join('')+'</tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+  function tv(label,head,rows){
+    return '<details class="tv"><summary>'+esc(label)+'</summary>'+tbl(head,rows)+'</details>';
+  }
+  function quant(sorted,p){
+    if(!sorted.length)return null;
+    var i=(sorted.length-1)*p, lo=Math.floor(i), hi=Math.min(lo+1,sorted.length-1);
+    return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo);
+  }
+
+  // ①의 교차확인 블록: 심리 파일의 참고 패널 b200을 ① 카드 안에 덧붙인다.
+  // 두 fetch는 순서가 보장되지 않으므로(심리가 먼저 끝날 수 있다) 양쪽에서 호출하고,
+  // 자리(#b200x)와 값(PX)이 모두 준비됐을 때만 그린다.
+  var PX=null;
+  function renderB200X(){
+    var host=el('b200x');
+    if(!host||!PX||host.getAttribute('data-done'))return;
+    host.setAttribute('data-done','1');
+    host.innerHTML='<div class="note plain"><b>다른 분모로 계산한 같은 지표</b> — '+
+      '심리 데이터에도 200일선 위 비율이 참고 패널로 들어 있습니다: <b>'+esc(PX.raw_fmt!=null?PX.raw_fmt:PX.raw)+'</b> '+
+      '(기준일 '+esc(PX.as_of||'—')+'). 그쪽 설명은 이렇습니다 — “'+esc(PX.desc||'')+'” '+
+      '분모가 되는 종목 집합이 이 페이지와 다르므로 두 숫자는 정확히 같을 필요가 없습니다. 맞춰 적지 않고 그대로 둡니다.</div>';
+  }
+
+  // ══ stocks.json ══════════════════════════════════════════════════════
+  fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d||!d.stocks||!d.stocks.length){failStocks();return;}
+    var S=d.stocks, N=S.length;
+
+    // 유니버스 칩도 데이터에서 만든다 — 편입 지수가 바뀌면 칩이 조용히 틀리지 않게.
+    var idxSeen={}, idxL=[];
+    for(var q=0;q<N;q++){
+      var ixs=S[q].idx||[];
+      for(var qq=0;qq<ixs.length;qq++)if(!idxSeen[ixs[qq]]){idxSeen[ixs[qq]]=1;idxL.push(ixs[qq]);}
+    }
+    idxL.sort();
+
+    el('statline').innerHTML=
+      '<span class="stat">커버 <b class="tnum">'+N+'</b>종목</span>'+
+      '<span class="stat">'+esc(idxL.join(' + ')||'—')+'</span>'+
+      '<span class="stat">기준일 <b>'+esc(d.as_of||'—')+'</b></span>'+
+      '<span class="stat">출처 '+esc(d.source||'—')+'</span>';
+
+    // ── ① 200일선 위 비율 ────────────────────────────────────────────
+    // '200일이탈' 플래그는 종가 < 200일선이 확인된 종목에만 붙는다. 상장 이력이 짧아
+    // 200일선 자체가 산출되지 않는 종목은 플래그가 붙을 수 없어, 그대로 두면 '위'로 세어진다.
+    // stocks.json은 그런 종목에 part(확보된 거래일 수)를 실어 준다 — build/refresh_stocks.py가
+    // 상장 이력 20~200거래일일 때만 part를 넣으므로 part = '200일선 산출 불가'와 같은 뜻이다.
+    // 그래서 part 종목은 분모에서 뺀다. sector.html도 같은 처리를 한다(두 페이지 숫자가 같아야 한다).
+    var full=[], partL=[];
+    for(var i=0;i<N;i++){ if(S[i].part) partL.push(S[i]); else full.push(S[i]); }
+    var NT=full.length, NP=partL.length;
+    var partTk=partL.slice(0,8).map(function(s){return esc(s.t);}).join(' · ')+(NP>8?(' 외 '+(NP-8)+'종목'):'');
+    var below=0;
+    for(i=0;i<NT;i++){if((full[i].flags||[]).indexOf('200일이탈')>=0)below++;}
+    var above=NT-below, aPct=pc(above,NT), bPct=pc(below,NT);
+    el('b200').innerHTML=
+      '<div class="card">'+
+        '<div class="hero">'+
+          '<div><div class="big tnum">'+n1(aPct)+'<small>%</small></div>'+
+            '<div class="den">200일선 <b>위</b> <b class="tnum">'+above+'</b> / 판정 가능 <b class="tnum">'+NT+'</b>종목'+
+              (NP?' <span style="color:var(--muted)">(커버 '+N+' − 산출 불가 '+NP+')</span>':'')+'</div></div>'+
+          '<p class="cap">나머지 <b class="tnum">'+below+'</b>종목('+n1(bPct)+'%)은 종가가 200일 이동평균 아래입니다. '+
+            '한 종목이 한 칸씩만 들어가므로 두 숫자의 합은 정확히 '+NT+'입니다'+
+            (NP?(' — 커버 '+N+'종목에서 200일선이 산출되지 않는 '+NP+'종목을 뺀 수입니다.'):'.')+'</p>'+
+        '</div>'+
+        '<div class="split" role="img" aria-label="200일선 위 '+above+'종목, 아래 '+below+'종목">'+
+          '<i style="background:var(--r2);width:'+pad(aPct)+'%" title="200일선 위 '+above+'종목 · '+n1(aPct)+'%"></i>'+
+          '<i style="background:var(--r4);width:'+pad(bPct)+'%" title="200일선 아래 '+below+'종목 · '+n1(bPct)+'%"></i>'+
+        '</div>'+
+        '<div class="splitleg">'+
+          '<span><i style="background:var(--r2)"></i>200일선 위 <b class="tnum">'+above+'</b> · '+n1(aPct)+'%</span>'+
+          '<span><i style="background:var(--r4)"></i>200일선 아래 <b class="tnum">'+below+'</b> · '+n1(bPct)+'%</span>'+
+        '</div>'+
+        '<div class="note"><b>분모에서 뺀 종목</b> — 아래로 세는 기준은 <code>200일이탈</code> 플래그(종가 &lt; 200일선)입니다. '+
+          '최근 상장해 200거래일 이력이 없는 종목은 200일선이 산출되지 않아 이 플래그가 붙을 수 없고, 그대로 두면 <b>위</b>로 세어집니다. '+
+          (NP?('stocks.json이 그런 종목에 <code>part</code>(확보된 거래일 수)를 실어 주므로, 해당 <b class="tnum">'+NP+'</b>종목('+partTk+')은 분모에서 뺐습니다 — '+
+               '커버 <b class="tnum">'+N+'</b>종목 중 판정 가능 <b class="tnum">'+NT+'</b>종목 기준입니다.')
+              :('오늘은 <code>part</code>(200일선 산출 불가) 표시가 붙은 종목이 없어 커버 <b class="tnum">'+N+'</b>종목이 그대로 분모입니다.'))+
+          ' 섹터 페이지도 같은 분모를 씁니다.</div>'+
+        '<div id="b200x"></div>'+
+      '</div>';
+    renderB200X();
+
+    // ── ② 플래그 13종 ────────────────────────────────────────────────
+    var defs=d.flag_defs||{}, fcnt={}, k;
+    for(k in defs)if(defs.hasOwnProperty(k))fcnt[k]=0;
+    var noflag=0, assigns=0;
+    for(i=0;i<N;i++){
+      var fl=S[i].flags||[];
+      if(!fl.length)noflag++;
+      for(var j=0;j<fl.length;j++){assigns++;fcnt[fl[j]]=(fcnt[fl[j]]||0)+1;}
+    }
+    var fkeys=[];for(k in fcnt)if(fcnt.hasOwnProperty(k))fkeys.push(k);
+    fkeys.sort(function(a,b){return fcnt[b]-fcnt[a];});
+    var fmax=fkeys.length?fcnt[fkeys[0]]:1;
+    setTxt('nflag',fkeys.length);
+    el('flags').innerHTML=
+      '<div class="rows">'+fkeys.map(function(f){
+        var c=fcnt[f], p=pc(c,N), key=FLAG2P[f];
+        var nm=key?('<a class="rn" href="stocks.html#p='+esc(key)+'" title="종목 탐색기에서 '+esc(f)+' 필터로 열기">'+esc(f)+'</a>')
+                  :('<span class="rn">'+esc(f)+'</span>');
+        return '<div class="row"><span>'+nm+'</span>'+
+          '<span class="rt" title="'+esc(f)+' '+c+'종목 · 커버의 '+n1(p)+'%"><i style="width:'+pad(c/fmax*100)+'%"></i></span>'+
+          '<span class="rv tnum">'+c+'<em>'+n1(p)+'%</em></span>'+
+          '<span class="rd">'+esc(defs[f]||'')+'</span></div>';
+      }).join('')+'</div>'+
+      '<div class="note plain">한 종목이 플래그를 <b>여러 개 동시에</b> 가질 수 있고 하나도 없을 수도 있습니다 — '+
+        '이 화면의 부여 건수 합계는 <b class="tnum">'+assigns+'</b>건이고, 플래그가 하나도 없는 종목이 '+
+        '<b class="tnum">'+noflag+'</b>종목입니다. 막대 길이는 최다 플래그('+esc(fkeys[0]||'')+' '+fmax+'종목) 기준 상대값이고, '+
+        '오른쪽 %는 커버 '+N+'종목 대비입니다. 막대끼리 더하지 마십시오.</div>'+
+      tv('표로 보기 — 플래그 '+fkeys.length+'종',['플래그','종목수','커버 대비'],fkeys.map(function(f){
+        return [esc(f),'<span class="tnum">'+fcnt[f]+'</span>','<span class="tnum">'+n1(pc(fcnt[f],N))+'%</span>'];
+      }));
+
+    // ── ③ 타이밍 5구간 ───────────────────────────────────────────────
+    var tc={},tot=0;
+    for(i=0;i<N;i++){var t=S[i].timing||'(미표기)';tc[t]=(tc[t]||0)+1;tot++;}
+    // 중립에 섞인 '판정 자체가 성립하지 않는 종목'의 하한 — part(200일선 산출 불가)이면서 중립인 종목 수.
+    // 정확한 수는 낼 수 없다: 200~259거래일 종목은 part가 붙지 않아 이 화면에서 구분되지 않는다.
+    var partNeu=0;
+    for(i=0;i<NP;i++)if(partL[i].timing==='중립')partNeu++;
+    var tkeys=TORDER.slice();
+    for(k in tc)if(tc.hasOwnProperty(k)&&tkeys.indexOf(k)<0)tkeys.push(k);
+    tkeys=tkeys.filter(function(x){return tc[x];});
+    setTxt('ntim',tkeys.length);
+    el('timing').innerHTML=
+      '<p class="lblnote" style="margin:0 0 10px">'+TPRE+'</p>'+
+      '<div class="stack" role="img" aria-label="타이밍 '+tkeys.length+'구간 분포 — '+tkeys.map(function(x,ix){return x+' '+tc[x]+'종목';}).join(', ')+'">'+
+        tkeys.map(function(x,ix){
+          return '<i style="background:'+(RAMP[ix]||'var(--muted)')+';width:'+pad(tc[x]/tot*100)+'%" title="'+esc(x)+' '+tc[x]+'종목 · '+n1(pc(tc[x],tot))+'%"></i>';
+        }).join('')+
+      '</div>'+
+      '<div class="tlist">'+tkeys.map(function(x,ix){
+        return '<div class="titem"><i style="background:'+(RAMP[ix]||'var(--muted)')+'"></i>'+
+          '<span class="tn">'+esc(x)+'</span>'+
+          '<span class="tv tnum">'+tc[x]+'종목 · '+n1(pc(tc[x],tot))+'%</span>'+
+          '<span class="td">'+esc(TDEF[x]||'정의 미제공')+'</span></div>';
+      }).join('')+'</div>'+
+      '<div class="note">'+tkeys.length+'개 구간은 서로 배타적이라 합계가 커버 <b class="tnum">'+tot+'</b>종목과 정확히 같습니다. '+
+        '이름이 <b>매수·매도</b>일 뿐 매매 권유가 아니며, 랩은 이 라벨의 수익 예측력을 검증한 바 없습니다. '+
+        '특히 <b>중립</b>에는 방향성이 없는 종목과 <b>이력이 짧아 판정 자체가 성립하지 않는 종목</b>이 섞여 있습니다 — '+
+        '중립 <b class="tnum">'+(tc['중립']||0)+'</b>종목 가운데 <b class="tnum">최소 '+partNeu+'종목</b>은 200일선 자체가 산출되지 않는 종목입니다'+
+        '(<code>part</code>로 확인. 상장 200~259거래일 구간은 <code>part</code> 표시가 없어 이 화면에서 더 세분하지 못하므로 하한만 적습니다).</div>'+
+      tv('표로 보기 — 타이밍 '+tkeys.length+'구간',['구간','종목수','비율'],tkeys.map(function(x){
+        return [esc(x),'<span class="tnum">'+tc[x]+'</span>','<span class="tnum">'+n1(pc(tc[x],tot))+'%</span>'];
+      }));
+
+    // ── ④ 컴포짓 5종 분포 ────────────────────────────────────────────
+    var cdefs=d.composite_defs||{}, ckeys=[];
+    for(k in cdefs)if(cdefs.hasOwnProperty(k))ckeys.push(k);
+    if(!ckeys.length)ckeys=['overheat','trend','momentum','volatility','positioning'];
+    setTxt('ncomp',ckeys.length);
+    var cardsHtml='', tblRows=[];
+    for(var ci=0;ci<ckeys.length;ci++){
+      var ck=ckeys[ci], vals=[];
+      for(i=0;i<N;i++){
+        var cv=S[i].comp?S[i].comp[ck]:null;
+        if(cv!=null&&!isNaN(cv))vals.push(+cv);
+      }
+      var miss=N-vals.length;
+      if(!vals.length){
+        cardsHtml+='<div class="hcard"><h3>'+esc(ck)+'</h3><div class="hd">산출된 값이 없습니다 (결측 '+N+'/'+N+').</div></div>';
+        continue;
+      }
+      vals.sort(function(a,b){return a-b;});
+      var hist=[0,0,0,0,0,0,0,0,0,0];
+      for(i=0;i<vals.length;i++){var bi=Math.floor(vals[i]/10);if(bi>9)bi=9;if(bi<0)bi=0;hist[bi]++;}
+      var hmax=1;for(i=0;i<10;i++)if(hist[i]>hmax)hmax=hist[i];
+      var q1=quant(vals,.25), md=quant(vals,.5), q3=quant(vals,.75);
+      cardsHtml+='<div class="hcard">'+
+        '<h3>'+esc(ck)+'<span class="hn tnum">n='+vals.length+' / '+N+'</span></h3>'+
+        '<div class="hd">'+esc(cdefs[ck]||'')+'</div>'+
+        '<div class="hbars" role="img" aria-label="'+esc(ck)+' 백분위 10구간 분포. '+
+          hist.map(function(v,bi){return (bi*10)+'~'+(bi*10+10)+' '+v+'종목';}).join(', ')+'">'+
+          hist.map(function(v,bi){
+            return '<i style="height:'+Math.max(1,v/hmax*100)+'%" title="백분위 '+(bi*10)+'–'+(bi*10+10)+' · '+v+'종목"></i>';
+          }).join('')+
+        '</div>'+
+        '<div class="haxis"><span>0</span><span>50</span><span>100</span></div>'+
+        '<div class="hq"><span>Q1 <b class="tnum">'+n1(q1)+'</b></span><span>중앙 <b class="tnum">'+n1(md)+'</b></span>'+
+          '<span>Q3 <b class="tnum">'+n1(q3)+'</b></span><span>최저 <b class="tnum">'+n1(vals[0])+'</b></span>'+
+          '<span>최고 <b class="tnum">'+n1(vals[vals.length-1])+'</b></span></div>'+
+        (miss?'<div class="hmiss">결측 '+miss+'종목 — 입력 지표가 부족해 산출하지 않음(분모에서 제외)</div>':'')+
+      '</div>';
+      tblRows.push([esc(ck),'<span class="tnum">'+vals.length+'</span>','<span class="tnum">'+miss+'</span>',
+        '<span class="tnum">'+n1(q1)+'</span>','<span class="tnum">'+n1(md)+'</span>','<span class="tnum">'+n1(q3)+'</span>',
+        '<span class="tnum">'+hist.join(' / ')+'</span>']);
+    }
+    el('comps').innerHTML='<div class="hgrid">'+cardsHtml+'</div>'+
+      '<div class="note">막대 높이는 각 컴포짓 <b>자기 최대구간</b> 기준 상대값이라 카드끼리 높이를 비교하면 안 됩니다. '+
+        '가로축은 0~100 백분위, 구간은 10칸입니다. 결측은 분모에서 빼고 카드마다 n을 적었습니다. '+
+        '<b>분포 모양은 계산 방식의 성질이지 시장의 메시지가 아닙니다</b> — 여러 지표의 백분위를 평균한 컴포짓은 '+
+        '가운데로 모이고, 입력이 하나뿐인 컴포짓은 백분위 정의상 균등해집니다.</div>'+
+      (tblRows.length?tv('표로 보기 — 컴포짓 분위수와 10구간 도수',
+        ['컴포짓','n','결측','Q1','중앙','Q3','10구간 도수(0→100)'],tblRows):'');
+
+    // ── ⑤ 섹터별 폭 ──────────────────────────────────────────────────
+    // ①과 같은 규칙을 섹터에도 적용한다 — part(200일선 산출 불가) 종목은 비율의 분모에서 뺀다.
+    // 커버 n과 판정 가능 nt를 따로 들고 다니고, 표본 판정(MINN/THINN)도 nt 위에서 한다.
+    // 이렇게 해야 sector.html의 같은 표와 값이 일치한다(같은 파일·같은 기준일이므로 일치해야 한다).
+    var sec={}, order=[];
+    for(i=0;i<N;i++){
+      var sk=S[i].sector||'(미분류)';
+      if(!sec[sk]){sec[sk]={n:0,nt:0,up:0,part:0};order.push(sk);}
+      sec[sk].n++;
+      if(S[i].part){sec[sk].part++;continue;}
+      sec[sk].nt++;
+      if((S[i].flags||[]).indexOf('200일이탈')<0)sec[sk].up++;
+    }
+    var MINN=15, THINN=25;   // 15 미만 = 비율 제공 안 함 · 25 미만 = 흐리게 + 경고 (둘 다 판정 가능 종목 수 기준)
+    order.sort(function(a,b){
+      var ra=sec[a].nt>=MINN?sec[a].up/sec[a].nt:-1, rb=sec[b].nt>=MINN?sec[b].up/sec[b].nt:-1;
+      if(rb!==ra)return rb-ra;
+      return sec[b].nt-sec[a].nt;
+    });
+    var thinList=[], partList=[];
+    el('sectors').innerHTML=
+      '<div class="rows">'+order.map(function(s){
+        var o=sec[s], ok=o.nt>=MINN, thin=ok&&o.nt<THINN, r=ok?pc(o.up,o.nt):null;
+        if(thin)thinList.push(secKo(s)+' '+o.nt+'종목');
+        if(o.part)partList.push(secKo(s)+' '+o.part+'종목');
+        var rd=[];
+        if(thin)rd.push('표본 '+o.nt+'종목 — 한 종목이 '+n1(100/o.nt)+'%p를 움직인다. 다른 섹터와 같은 정밀도로 읽지 말 것');
+        if(o.part)rd.push('커버 '+o.n+'종목 중 '+o.part+'종목은 200일선이 산출되지 않아 분모에서 뺐다');
+        return '<div class="row'+(thin?' thin':'')+'">'+
+          '<span class="rn">'+esc(secKo(s))+'</span>'+
+          '<span class="rt"'+(ok?' title="'+esc(secKo(s))+' 200일선 위 '+o.up+'/'+o.nt+'종목 · '+n1(r)+'% · 커버 '+o.n+'종목"':'')+'>'+
+            (ok?'<i style="width:'+pad(r)+'%"></i>':'')+'</span>'+
+          '<span class="rv tnum">'+(ok?(n1(r)+'%<em>'+o.up+'/'+o.nt+'</em>'):('<em>표본 부족 · '+o.nt+'종목</em>'))+'</span>'+
+          (rd.length?'<span class="rd">'+esc(rd.join(' · '))+'</span>':'')+
+          '</div>';
+      }).join('')+'</div>'+
+      '<div class="note">막대는 0~100% 절대 눈금이라 섹터끼리 직접 비교할 수 있습니다. '+
+        (thinList.length?'판정 가능 종목이 '+THINN+'종목 미만인 '+esc(thinList.join(' · '))+'은 흐리게 처리했고, ':'')+
+        MINN+'종목 미만이면 비율을 내지 않습니다. 섹터 분류는 GICS이며, ①과 같이 200일선이 산출되지 않는 종목은 분모에서 뺐습니다'+
+        (partList.length?('(제외: '+esc(partList.join(' · '))+')'):'(오늘은 해당 종목 없음)')+'. '+
+        '분자/분모는 <b>판정 가능</b> 종목 기준이고 커버 종목 수는 표에 따로 적었습니다 — '+
+        '같은 파일·같은 기준일을 쓰는 <a href="sector.html" style="color:var(--accent)">섹터 페이지</a>와 같은 분모입니다.</div>'+
+      tv('표로 보기 — 섹터별 200일선 위 비율',['섹터','200일선 위','판정 가능','커버','산출 불가','비율'],order.map(function(s){
+        var o=sec[s], ok=o.nt>=MINN;
+        return [esc(secKo(s)),'<span class="tnum">'+o.up+'</span>','<span class="tnum">'+o.nt+'</span>',
+                '<span class="tnum">'+o.n+'</span>','<span class="tnum">'+o.part+'</span>',
+                ok?('<span class="tnum">'+n1(pc(o.up,o.nt))+'%</span>'):'<span style="color:var(--muted)">표본 부족</span>'];
+      }));
+
+  }).catch(failStocks);
+
+  function failStocks(){
+    el('statline').innerHTML='<span class="stat">데이터를 불러오지 못했습니다</span>';
+    ['b200','flags','timing','comps','sectors'].forEach(function(id){
+      var n=el(id); if(n)n.innerHTML='<div class="skel">data/stocks.json 을 불러오지 못했습니다.</div>';
+    });
+  }
+
+  // ══ sentiment.json ═══════════════════════════════════════════════════
+  // 심리 블록은 종목 블록과 독립된 fetch다 — 하나가 죽어도 나머지는 뜬다.
+  var BANDS=[[0,20,'극단공포'],[20,40,'공포'],[40,60,'중립'],[60,80,'탐욕'],[80,100,'극단탐욕']];
+  fetch('data/sentiment.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d||d.score==null){failSent();return;}
+    var s=+d.score, bi=0;
+    for(var i=0;i<BANDS.length;i++){if(s<BANDS[i][1]||i===BANDS.length-1){bi=i;break;}}
+
+    var pv=d.prev||{}, pl=[['1일 전',pv.d1],['1주 전',pv.w1],['1개월 전',pv.m1]].filter(function(x){return x[1]!=null;});
+    var prevs=pl.length?('<div class="prevs">'+pl.map(function(x){
+      var dv=s-x[1];
+      return '<span>'+esc(x[0])+' <b class="tnum">'+n1(x[1])+'</b> ('+(dv>=0?'+':'')+n1(dv)+')</span>';
+    }).join('')+'</div>'):'';
+
+    var warn='';
+    if(d.weight_available!=null&&d.weight_available<0.999)
+      warn='<div class="note">구성요소 일부 결측 — 가용 가중치 '+Math.round(d.weight_available*100)+'%만으로 재정규화한 값입니다.</div>';
+
+    // 백분위는 창(window)을 밝히지 않으면 읽을 수 없다.
+    // 파일의 score_pctl은 원본 시계열 전체의 확장 백분위인데 그 표본 수·시작일이 파일에 없다.
+    // 반면 아래 차트는 history(3년 절단)만 그린다 — 창이 다르면 값도 다르다.
+    // 그래서 화면이 실제로 보여주는 창 안에서 직접 세어 표본 수와 함께 적고, 파일 값은 창을 밝혀 병기한다.
+    var hs=[], hd=(d.history||[]);
+    for(i=0;i<hd.length;i++)if(hd[i]&&hd[i].score!=null)hs.push(hd[i]);
+    var lower=0;
+    for(i=0;i<hs.length;i++)if(+hs[i].score<s)lower++;
+    var winPct=hs.length?pc(lower,hs.length):null;
+    var winTxt=hs.length?('<div class="note plain"><b>백분위 두 개는 창이 다릅니다</b> — 위에 적은 '+
+      '<b>하위 '+n1(winPct)+'%</b>는 아래 차트가 그리는 '+hs.length+'거래일('+esc(hs[0].dt)+' ~ '+esc(hs[hs.length-1].dt)+') 안에서 '+
+      '현재 점수보다 낮았던 날 <b class="tnum">'+lower+'</b>일을 직접 센 값입니다. '+
+      (d.score_pctl!=null?('데이터 파일의 <code>score_pctl</code> '+n1(d.score_pctl*100)+'%는 이보다 긴 원본 시계열의 <b>확장 백분위</b>인데, '+
+        '그 표본 수와 시작일이 파일에 실려 있지 않아 여기서는 창을 특정하지 않습니다. '):'')+
+      '두 값이 다른 것은 오류가 아니라 창이 다르기 때문입니다.</div>'):'';
+
+    el('sent').innerHTML=
+      '<div class="gauge">'+
+        '<span class="gn tnum">'+n1(s)+'<small>/100</small></span>'+
+        '<span class="gl">'+esc(d.label||BANDS[bi][2])+'</span>'+
+        '<span class="gp">기준일 '+esc(d.as_of||'—')+
+          (winPct!=null?'<br>표시 구간 '+hs.length+'거래일 기준 하위 '+n1(winPct)+'%':'')+
+          (d.score_pctl!=null?'<br>확장 백분위(원본 시계열 · 표본 창 미표기) 하위 '+n1(d.score_pctl*100)+'%':'')+'</span>'+
+      '</div>'+
+      '<div class="track" role="img" aria-label="시장 심리 '+n1(s)+'점, 0은 극단공포 100은 극단탐욕, 현재 구간 '+esc(d.label||BANDS[bi][2])+'">'+
+        '<u style="left:20%"></u><u style="left:40%"></u><u style="left:60%"></u><u style="left:80%"></u>'+
+        '<b style="left:'+pad(s)+'%"></b></div>'+
+      '<div class="ticks">'+BANDS.map(function(x,ix){
+        return '<span class="'+(ix===bi?'on':'')+'">'+x[2]+'<br>'+x[0]+'–'+x[1]+'</span>';
+      }).join('')+'</div>'+
+      prevs+warn+
+      spark(d.history||[])+
+      winTxt+
+      '<div class="note"><b>상태 요약 · 수익 예측 신호가 아님</b> — '+esc(d.note||d.disclaimer||'')+
+        ' 구성요소별 가중치·기여도와 구간별 백테스트(표본 수·t·p 포함)는 '+
+        '<a href="regime.html#sent" style="color:var(--accent)">국면 페이지의 시장 심리 절</a>에 있습니다.</div>';
+
+    // ①의 교차확인: 심리 패널의 b200은 이 페이지와 분모가 다른 별도 계산이다 — 둘 다 적는다.
+    var pnl=d.panel||[];
+    for(i=0;i<pnl.length;i++)if(pnl[i]&&pnl[i].key==='b200'&&pnl[i].raw!=null){
+      PX=pnl[i]; if(!PX.as_of)PX.as_of=d.as_of; break;
+    }
+    renderB200X();
+  }).catch(failSent);
+
+  function failSent(){
+    var n=el('sent'); if(n)n.innerHTML='<div class="skel">data/sentiment.json 을 불러오지 못했습니다.</div>';
+  }
+
+  // 스파크라인: 0~100 고정 스케일. 자동 스케일로 진폭을 부풀리지 않는다.
+  // SVG는 preserveAspectRatio="none"으로 늘리므로 안에 글자·원을 두지 않고(찌그러진다)
+  // 선은 vector-effect로 두께를 고정한다. 값은 아래 범례가 글자로 전달한다.
+  function spark(hist){
+    var h=[];
+    for(var i=0;i<hist.length;i++)if(hist[i]&&hist[i].score!=null)h.push(hist[i]);
+    if(h.length<2)return '';
+    var W=760,H=170,P=6, lo=h[0], hi=h[0];
+    for(i=0;i<h.length;i++){if(h[i].score<lo.score)lo=h[i];if(h[i].score>hi.score)hi=h[i];}
+    function X(ix){return P+(W-2*P)*ix/(h.length-1);}
+    function Y(v){return P+(H-2*P)*(1-Math.max(0,Math.min(100,v))/100);}
+    var pth='';
+    for(i=0;i<h.length;i++)pth+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(h[i].score).toFixed(1)+' ';
+    var grid='';
+    [20,40,60,80].forEach(function(g){
+      grid+='<line x1="0" y1="'+Y(g).toFixed(1)+'" x2="'+W+'" y2="'+Y(g).toFixed(1)+
+            '" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>';
+    });
+    return '<div class="sparkbox">'+
+      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="시장 심리 지수 일별 추이 '+
+        esc(h[0].dt)+'부터 '+esc(h[h.length-1].dt)+'까지 '+h.length+'거래일. 최저 '+n1(lo.score)+'점('+esc(lo.dt)+
+        '), 최고 '+n1(hi.score)+'점('+esc(hi.dt)+'), 최근 '+n1(h[h.length-1].score)+'점. 세로축은 0~100 고정.">'+
+        grid+
+        '<path d="'+pth+'" fill="none" stroke="var(--bar)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'+
+      '</svg>'+
+      '<div class="sparkleg">'+
+        '<span>구간 <b>'+esc(h[0].dt)+' ~ '+esc(h[h.length-1].dt)+'</b> · '+h.length+'거래일</span>'+
+        '<span>최저 <b>'+n1(lo.score)+'</b> ('+esc(lo.dt)+')</span>'+
+        '<span>최고 <b>'+n1(hi.score)+'</b> ('+esc(hi.dt)+')</span>'+
+        '<span>세로축 0–100 고정(자동 확대 없음) · 가로선은 20/40/60/80 구간 경계</span>'+
+      '</div></div>';
+  }
+})();
+</script>
+</body>
+</html>

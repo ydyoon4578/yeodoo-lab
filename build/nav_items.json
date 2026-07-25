@@ -9,26 +9,20 @@
     {
      "name": "시장 폭·동향",
      "file": "market.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭",
      "src": "agg",
      "verdict": "unverified",
-     "effort": "M",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "effort": "M"
     },
     {
      "name": "섹터 히트맵",
      "file": "sector.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
      "src": "agg",
      "verdict": "unverified",
-     "effort": "M",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "effort": "M"
     },
     {
      "name": "기술지표 탐색",
@@ -67,10 +61,10 @@
      "src": "none",
      "verdict": "na",
      "effort": "S",
+     "anchor": "runtime",
      "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
      "blocked_why": "LLM 요약으로 채우면 \"해설을 붙이지 않는다\" 원칙과 충돌한다. 대체는 8-K 원문 직행.",
-     "pipeline": 0,
-     "anchor": "runtime"
+     "pipeline": 0
     },
     {
      "name": "프리미엄 뉴스",
@@ -80,10 +74,10 @@
      "src": "none",
      "verdict": "na",
      "effort": "S",
+     "anchor": "runtime",
      "blocked_by": "만들지 않는다 — 뉴스 라이선스 없음",
      "blocked_why": "위와 동일. 대체는 co.html#ir의 EDGAR 원문 링크.",
-     "pipeline": 0,
-     "anchor": "runtime"
+     "pipeline": 0
     }
    ],
    "short": "공시"
@@ -104,66 +98,51 @@
     {
      "name": "하위 요인 분석",
      "file": "regime.html#axes",
-     "status": "new-now",
+     "status": "existing",
      "desc": "7축이 어떤 지표로 만들어졌고 무엇을 뺐는지",
      "src": "agg",
      "verdict": "unverified",
      "effort": "S",
-     "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "anchor": "static"
     },
     {
      "name": "경제지표 열람",
      "file": "macro.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "FRED 39지표 현재값·전기대비·z 한 표",
      "src": "raw",
      "verdict": "na",
-     "effort": "M",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "effort": "M"
     },
     {
      "name": "사이클 분석",
      "file": "macro.html#cycle",
-     "status": "new-now",
+     "status": "existing",
      "desc": "레짐별 표본수를 성과보다 먼저 보여준다",
      "src": "agg",
      "verdict": "unverified",
      "effort": "M",
-     "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "anchor": "static"
     },
     {
      "name": "자산군",
      "file": "macro.html#assets",
-     "status": "new-now",
+     "status": "existing",
      "desc": "자산·팩터 레짐별 월평균 + RP 12자산 실비중",
      "src": "agg",
      "verdict": "unverified",
      "effort": "S",
-     "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "anchor": "static"
     },
     {
      "name": "밸류에이션(지수)",
      "file": "macro.html#val",
-     "status": "new-now",
+     "status": "existing",
      "desc": "밸류 중앙값 vs 실질금리 — 오늘 한 점뿐",
      "src": "agg",
      "verdict": "unverified",
      "effort": "S",
-     "anchor": "static",
-     "blocked_by": "보유 데이터로 가능 — 구현 대기",
-     "blocked_why": "새 데이터 소스가 필요 없다. stocks.json·regime.json에 이미 있는 값으로 만든다.",
-     "pipeline": 1
+     "anchor": "static"
     },
     {
      "name": "경제지표 일정",
@@ -476,10 +455,10 @@
      "src": "none",
      "verdict": "na",
      "effort": "S",
+     "anchor": "runtime",
      "blocked_by": "만들지 않는다 — 공급망 데이터 없음",
      "blocked_why": "SIC 산업분류로는 밸류체인을 만들 수 없다. 없는 걸 지어내지 않는다.",
-     "pipeline": 0,
-     "anchor": "runtime"
+     "pipeline": 0
     }
    ],
    "short": "산업"
@@ -531,7 +510,7 @@
     {
      "name": "등급·판정 규약",
      "file": "method.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "A~F 등급은 섹터 백분위 서술이지 예측이 아니다",
      "src": "none",
      "verdict": "na",
@@ -540,7 +519,7 @@
     {
      "name": "미구현 로드맵",
      "file": "roadmap.html",
-     "status": "new-now",
+     "status": "existing",
      "desc": "무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기",
      "src": "none",
      "verdict": "na",
