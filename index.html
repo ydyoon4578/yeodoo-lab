@@ -576,9 +576,24 @@
       n('explorer.html',v.marginal_n,'제한적 유효','var(--marg)')+
       n('archive.html',v.reject_total,'기각','var(--hot)')+
       '<span class="ldskel">아카이브 '+v.archive_n+' + 대조용 '+v.reject_compare_n+' · '+v.archive_cats+'개 카테고리</span>'+
-      '</div><p class="ldnote">전 종목 PIT 멤버십·생존편향 보정·부분월 제외·블록 부트스트랩으로 재검증하고, 통과하지 못한 것은 <b>사유와 함께</b> 아카이브에 남깁니다.</p>';
+      '</div><p class="ldnote" id="ldnote">전 종목 PIT 멤버십·생존편향 보정·부분월 제외·블록 부트스트랩으로 재검증하고, 통과하지 못한 것은 <b>사유와 함께</b> 전략 랩에 남깁니다.</p>';
     var tb=el('tb-exp'); if(tb)tb.textContent='전략 '+v.explorer_n+'종';
     var ta=el('ft-arc'); if(ta)ta.textContent=' '+v.archive_n+'건';
+
+    // 전략 랩 한 줄 — 숫자는 손으로 적지 않고 data/tech_strategies.json에서 읽는다.
+    // 못 읽으면 줄을 아예 안 붙인다(추정치로 채우지 않는다).
+    fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(t){
+        if(!t||!t.strategies)return;
+        var c={}; t.strategies.forEach(function(x){c[x.verdict]=(c[x.verdict]||0)+1;});
+        var nd=el('ldnote'); if(!nd)return;
+        nd.insertAdjacentHTML('afterend',
+          '<p class="ldnote">테크니컬 규칙은 <b>' + t.strategies.length + '개를 직접 돌려</b> 성과를 전부 싣습니다 — ' +
+          '통과 후보 <b>' + (c['통과 후보']||0) + '</b> · 구별 불가 ' + (c['구별 불가']||0) + ' · 열위 ' + (c['열위']||0) +
+          ' (본페로니 |t|≥' + Number(t.t_crit).toFixed(2) + '). 다만 표본 구간은 지수가 200일선 위에 있던 날이 ' +
+          Math.round(100*(t.regime&&t.regime.up_share||0)) + '%인 강세장이라, 현금을 쥐는 규칙에 불리합니다. ' +
+          '<a href="archive.html">전략 랩에서 규칙별로 보기 →</a></p>');
+      }).catch(function(){});
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
