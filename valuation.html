@@ -153,6 +153,8 @@
   .kv .kd{display:block;margin-top:4px;font-size:10.5px;color:var(--muted);line-height:1.45}
 
   /* ── 표 ── */
+  .dpsrow{margin:0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .dpsrow b{color:var(--ink)}
   .tblwrap{margin:12px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--panel-2);
            border:1px solid var(--line-soft);border-radius:11px}
   table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:11.5px;min-width:420px}
@@ -385,7 +387,7 @@
           <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
           <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
           <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
-          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <a class="mmi" href="valuation.html#ddm" data-nav="valuation.html#ddm"><span class="mmn">DDM</span><span class="mmb vunv">미검증</span><span class="mmd">고든 성장모형 — 적정주가 한 숫자 없음, 성장률 × 할인율 격자</span></a>
           <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
           <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
         </div>
@@ -644,46 +646,50 @@
   </section>
 
   <section id="ddm" aria-labelledby="ddm-h">
-    <p class="lbl" id="ddm-h">03 · DDM (배당할인모형) <span class="sub">· 비어 있음</span></p>
-    <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
-    <div class="empty">
-      <h3>DDM <span class="st">데이터는 붙었음 · 모형 미구현</span></h3>
-      <p><b>막고 있던 데이터는 2026-07-25에 들어왔습니다.</b> SEC XBRL 수집분(<code>data/fx/&lt;티커&gt;.json</code>)에
-        분기별 주당배당금(DPS) 시계열이 담겨 있고, 유니버스 <b>518종목 중 80%</b>에 값이 있습니다.
-        이제 "한 점뿐이라 기울기를 못 잰다"는 말은 사실이 아닙니다 — 그래서 이 문단을 고쳐 적습니다.</p>
-      <div class="egrid" id="ddmnums"></div>
-      <p>남은 것은 데이터가 아니라 <b>가정</b>입니다. DDM의 값은 할인율(자기자본비용)에 가장 크게 좌우되는데,
-        그 숫자는 관측되는 값이 아니라 <b>고르는 값</b>입니다. 이 랩은 시장위험프리미엄 같은 가정을
-        슬쩍 박아 넣고 결과만 "적정주가"라고 내놓지 않습니다 —
-        <a href="#reverse" style="color:var(--accent)">Reverse DCF</a>·<a href="#simple" style="color:var(--accent)">민감도 격자</a>가
-        한 숫자를 주지 않는 것과 같은 이유입니다. 가정을 화면에서 직접 움직이게 만들고,
-        그 가정에 따라 값이 얼마나 흔들리는지를 함께 보여줄 수 있을 때 켭니다.</p>
-      <p>또 하나 그대로인 한계: <b>무배당 종목에는 모형이 성립하지 않습니다.</b> 오늘 배당수익률이 아예 잡히지 않는 종목이
-        <b id="ddmnodiv">—</b>개이므로, DDM은 유니버스 전체에 쓰는 도구가 아니라 배당을 오래 지급해 온 일부 종목에만 쓰는 도구입니다.</p>
-      <p class="muted">데이터: SEC EDGAR companyfacts(XBRL) — <a href="co.html#fs" style="color:var(--accent)">종목 재무 탭</a>에서 원본 시계열을 볼 수 있습니다.
-        진행 상황은 <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
+    <p class="lbl" id="ddm-h">03 · DDM (배당할인모형) <span class="sub">· 적정주가 한 숫자 없음 — 성장률 × 할인율 격자</span></p>
+    <p class="lblnote">고든 성장모형입니다. <b>V = 내년 배당 ÷ (자기자본비용 − 배당성장률)</b> —
+      분모가 두 가정의 <b>차이</b>라, 둘을 조금만 건드려도 값이 몇 배로 흔들립니다.
+      그래서 여기서도 값을 하나 내지 않고 격자로 폅니다. 배당 이력은
+      <a href="co.html#fs">SEC XBRL 수집분</a>에서 읽습니다.</p>
+
+    <div class="note" style="border-left-color:var(--hot)">
+      <b>이 모형이 안 되는 곳</b> — 배당을 안 하거나 이력이 짧으면 성장률이 정의되지 않습니다.
+      유니버스 518종목 중 연간 주당배당금이 <b id="ddmn2">—</b>종목에만 있고, 4년치 이상은 <b id="ddmn4">—</b>종목입니다.
+      <b>DDM은 유니버스 전체에 쓰는 도구가 아니라 배당을 오래 지급해 온 일부 종목에만 쓰는 도구입니다.</b>
+      그리고 여기 쓰는 성장률은 <b>과거 배당의 외삽</b>이지 회사가 약속한 값이 아닙니다.
+      <br><br><b>더 근본적인 한계 — DDM은 자사주 매입을 못 봅니다.</b> 미국 대형주는 주주 환원을 배당보다
+      자사주로 더 많이 합니다(같은 XBRL 수집분 실측: AAPL은 한 해 배당 15,305 대 자사주 90,711백만$).
+      배당만 세는 DDM은 그런 회사를 <b>구조적으로 낮게</b> 평가합니다 — AAPL을 골라 보면 모델값이 현재가의
+      10분의 1 수준으로 나오는데, 그건 회사가 싸다는 뜻이 아니라 <b>이 모형이 그 회사에 맞지 않는다는 뜻</b>입니다.
     </div>
+
+    <div id="ddmout"><p class="capn muted">종목을 고르면 표시됩니다.</p></div>
+    <div id="ddmgrid"></div>
   </section>
 
   <section id="rim" aria-labelledby="rim-h">
-    <p class="lbl" id="rim-h">04 · RIM (잔여이익모형) <span class="sub">· 비어 있음</span></p>
-    <p class="lblnote">감추지 않고, 무엇이 없어서 비었는지 적습니다.</p>
+    <p class="lbl" id="rim-h">04 · RIM (잔여이익모형) <span class="sub">· 전제를 실측했고, 그래서 켜지 않습니다</span></p>
+    <p class="lblnote">데이터가 없어서가 아닙니다. 데이터를 붙인 뒤 <b>모형의 전제를 실제로 재봤고, 그 전제가 성립하지 않았습니다.</b></p>
     <div class="empty">
-      <h3>RIM <span class="st">데이터는 붙었음 · 모형 미구현</span></h3>
-      <p>RIM은 <b>자기자본 장부가 + 앞으로 벌어들일 초과이익(잔여이익)의 현재가치</b>로 값을 냅니다.
-        구조상 <b>기초 자기자본(BVPS) 시계열</b>과 <b>EPS 시계열</b>이 있어야 하고, 그 둘이
-        클린 서플러스(장부가 증분 = 이익 − 배당)로 맞물려야 합니다.</p>
-      <p><b>그 세 시계열이 2026-07-25에 들어왔습니다.</b> SEC XBRL 수집분에 자기자본 <b>100%</b>·
-        순이익 <b>100%</b>·주당순이익 <b>99%</b>·주당배당금 <b>80%</b> 커버로 담겨 있습니다
-        (<code>data/fx/&lt;티커&gt;.json</code>). "장부가의 시계열이 없다"는 더 이상 사실이 아니라서 고쳐 적습니다.</p>
+      <h3>RIM <span class="st">전제 불성립 — 실측 결과</span></h3>
+      <p>RIM은 <b>자기자본 장부가 + 앞으로의 초과이익(잔여이익)의 현재가치</b>로 값을 냅니다.
+        이 식이 내부적으로 맞물리려면 <b>클린 서플러스</b> — 장부가 증분 = 이익 − 배당 — 가 성립해야 합니다.
+        장부가와 이익이 따로 놀면 "이익을 다 반영한 장부가"라는 전제가 깨지고, 같은 회사를 두 번 세거나 빠뜨리게 됩니다.</p>
+      <p>필요한 시계열은 <b>2026-07-25에 전부 확보했습니다</b>(자기자본 100% · 순이익 100% · EPS 99% · DPS 80%).
+        그래서 전제를 <b>515종목 전수로 쟀습니다</b>:</p>
       <div class="egrid" id="rimnums"></div>
-      <p>남은 것은 두 가지입니다. 하나는 DDM과 같은 <b>할인율 가정</b> 문제이고, 다른 하나는
-        <b>클린 서플러스가 실제로 성립하는지 종목별로 확인</b>하는 일입니다 — 미국 회계에서는
-        기타포괄손익(OCI)이 이익을 거치지 않고 장부가를 바꾸기 때문에 등식이 정확히는 안 맞습니다.
-        얼마나 안 맞는지를 재서 화면에 적을 수 있게 되기 전에는 켜지 않습니다.
-        단면 ROE 하나를 영구히 연장해 놓고 RIM이라고 부르는 것은 여전히 거짓말입니다.</p>
-      <p class="muted">데이터: SEC EDGAR companyfacts(XBRL) — <a href="co.html#fs" style="color:var(--accent)">종목 재무 탭</a>에서 원본 시계열을 볼 수 있습니다.
-        진행 상황은 <a href="roadmap.html#pipes" style="color:var(--accent)">미구현 로드맵</a>에 있습니다.</p>
+      <p class="capn" id="csverdict" style="margin-top:10px">불러오는 중…</p>
+      <p><b>결론 — 미국 회계에서 클린 서플러스는 성립하지 않습니다.</b> 가장 큰 누락 항목은 OCI가 아니라
+        <b>자사주 매입</b>이었습니다(예: AAPL의 잔차가 −79,922 → +10,789백만$로, MTD는 −766 → +34로 줄어듭니다).
+        자사주와 신주 발행을 모두 반영해도 <b>4곳 중 1곳</b>은 기초 자기자본의 10%를 넘게 어긋납니다.
+        이 상태에서 잔여이익을 미래로 늘리면, 나오는 값은 RIM이 아니라 <b>맞물리지 않는 두 시계열을 억지로 이은 다른 무엇</b>입니다.
+        그걸 RIM이라고 부르는 것은 여전히 거짓말입니다.</p>
+      <p>켜려면 필요한 것: 자기자본 변동표(주식보상·OCI·자사주를 항목별로 분해한 것)를 종목별로 확보하거나,
+        클린 서플러스를 가정하지 않는 형태로 모형을 다시 짜야 합니다. 둘 다 지금 데이터로는 안 됩니다 —
+        자기자본 변동표는 XBRL 차원(dimension)에 실려 companyfacts API로 나오지 않습니다.</p>
+      <p class="muted">측정 코드: <code>build/refresh_facts.py</code>의 <code>clean_surplus_stat()</code> ·
+        결과: <code>data/facts.json</code>의 <code>clean_surplus</code> ·
+        원본 시계열: <a href="co.html#fs" style="color:var(--accent)">종목 재무 탭</a></p>
     </div>
   </section>
 
@@ -778,14 +784,13 @@
   function failAll(msg){
     fail(msg);
     var m=esc(msg);
-    ['ddmnums','rimnums','idxnums'].forEach(function(id){
+    ['rimnums','idxnums'].forEach(function(id){
       var n=el(id); if(n)n.innerHTML='<div><b>실측 숫자</b><span><em>—</em><br>'+m+'</span></div>';
     });
     var a=el('asofrow'); if(a)a.innerHTML='<span>'+m+'</span>';
     var t=el('tkd'); if(t)t.innerHTML=m;
     var r=el('rfopts'); if(r)r.innerHTML='<span class="ctld" style="color:var(--marg)">'+m+
       ' 종목 데이터가 없으면 금리를 읽었더라도 계산할 것이 없습니다.</span>';
-    var d=el('ddmnodiv'); if(d)d.textContent='읽지 못함';
     var b=el('beiref'); if(b)b.textContent=(BEI==null?'읽지 못함':nf(BEI,2)+'%');
   }
 
@@ -985,6 +990,7 @@
     renderReverse();
     renderSens();
     renderDist();
+    ensureFx(ST.t);renderDDM();
     renderGrid();
   }
 
@@ -1147,6 +1153,133 @@
     host.innerHTML=h;
   }
 
+
+  // ── DDM (고든 성장모형) ────────────────────────────────────────────────
+  // 배당 이력은 종목별 SEC XBRL 파일에서 지연 로드한다. 515사 전체를 한 파일로 받으면
+  // 한 종목을 보려고 4MB를 내려받게 된다.
+  var FX={}, FXQ={};
+  function ensureFx(t){
+    if(!t||FX[t]!==undefined||FXQ[t])return;
+    FXQ[t]=1;
+    fetch('data/fx/'+encodeURIComponent(t)+'.json',{cache:'no-cache'})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(x){FX[t]=x||null;FXQ[t]=0;if(ST.t===t)renderDDM();})
+      ['catch'](function(){FX[t]=null;FXQ[t]=0;if(ST.t===t)renderDDM();});
+  }
+  // 연간 주당배당금. 회사가 연간으로 태깅하지 않았으면 분기 4개를 더해 만들지 않는다 —
+  // 분기 배당은 선언 시점이 들쭉날쭉해 합이 '한 해치'라는 보장이 없다.
+  function dpsAnnual(t){
+    var f=FX[t]; if(!f||!f.tags||!f.tags.dps)return [];
+    return (f.tags.dps.a||[]).slice();      // [[기간말, 값], …] 최신순
+  }
+  function shAnnual(t){
+    var f=FX[t]; if(!f||!f.tags||!f.tags.sh)return {};
+    var m={}; (f.tags.sh.a||[]).forEach(function(p){m[p[0]]=p[1];}); return m;
+  }
+  // 배당성장률 = 가장 오래된 값 → 최신 값의 연평균(CAGR). 음수·0 배당이 끼면 정의되지 않는다.
+  function dpsCagr(rows){
+    if(rows.length<2)return null;
+    var newest=rows[0], oldest=rows[rows.length-1], n=rows.length-1;
+    if(!(oldest[1]>0)||!(newest[1]>0))return null;
+    return Math.pow(newest[1]/oldest[1],1/n)-1;
+  }
+  var THIN=0.01;   // 분모(ke − g)가 1%p 미만이면 값이 폭발한다 — 숫자로 내보내되 그렇게 표시한다
+  function gordon(d0,g,ke){
+    if(!(d0>0)||ke==null||!(ke>g))return null;   // ke ≤ g면 모형이 성립하지 않는다
+    return d0*(1+g)/(ke-g);
+  }
+  function thin(g,ke){return ke!=null&&(ke-g)<THIN;}
+  // 주가 = 시가총액 ÷ 주식수. fund.mc는 억$, sh는 백만주다(단위를 맞춘다).
+  function pxOf(t){
+    var s=BYT[t]; if(!s||!s.fund||!(s.fund.mc>0))return null;
+    var sh=shAnnual(t), ks=Object.keys(sh).sort().reverse();
+    if(!ks.length||!(sh[ks[0]]>0))return null;
+    return (s.fund.mc*1e8)/(sh[ks[0]]*1e6);
+  }
+
+  function renderDDM(){
+    var host=el('ddmout'), gh=el('ddmgrid');
+    if(!host||!gh)return;
+    var t=ST.t;
+    if(!t){host.innerHTML='<p class="capn muted">종목을 고르면 표시됩니다.</p>';gh.innerHTML='';return;}
+    if(FXQ[t]){host.innerHTML='<p class="capn muted">배당 이력(data/fx/'+esc(t)+'.json)을 불러오는 중…</p>';gh.innerHTML='';return;}
+    if(FX[t]===undefined){gh.innerHTML='';return;}
+    var rows=dpsAnnual(t), s=BYT[t], beta=s&&s.fund?s.fund.beta:null;
+    if(!rows.length){
+      host.innerHTML='<p class="capn"><b>'+esc(t)+'</b>는 SEC 제출서에 <b>연간 주당배당금이 없습니다</b> — '+
+        '무배당이거나 연간으로 태깅하지 않은 회사입니다. DDM은 이 종목에 성립하지 않습니다. '+
+        '<b>대신 다른 값을 지어내지 않습니다.</b></p>';
+      gh.innerHTML=''; return;
+    }
+    var g=dpsCagr(rows), ke=discOf(beta), d0=rows[0][1], px=pxOf(t);
+    var hist=rows.slice(0,6).map(function(p){return '<span>'+esc(p[0])+' <b>$'+nf(p[1],2)+'</b></span>';}).join('');
+    var h='<div class="tblwrap" style="padding:14px 16px"><p class="capn" style="margin:0 0 8px">'+
+      '<b>'+esc(t)+'</b> 연간 주당배당금 — 최근 '+rows.length+'년치(SEC XBRL, 태그 <code>'+esc(FX[t].tags.dps.src)+'</code>)</p>'+
+      '<p class="dpsrow">'+hist+(rows.length>6?'<span class="muted">…</span>':'')+'</p></div>';
+
+    if(g==null){
+      h+='<p class="capn">이 이력으로는 <b>성장률이 정의되지 않습니다</b>(0 또는 음수 배당이 끼어 있거나 관측이 1개뿐). '+
+         '값을 내지 않습니다.</p>';
+      host.innerHTML=h; gh.innerHTML=''; return;
+    }
+    var v=gordon(d0,g,ke);
+    h+='<p class="capn">과거 '+(rows.length-1)+'년 배당성장률(CAGR) <b>'+pf(g*100,2)+'</b> · '+
+       'CAPM 자기자본비용 <b>'+(ke==null?'—':pf(ke*100,2))+'</b>'+(beta!=null?' (베타 '+nf(beta,2)+')':'')+
+       ' · 최근 배당 <b>$'+nf(d0,2)+'</b>'+(px!=null?' · 현재가 <b>$'+nf(px,2)+'</b>':'')+'</p>';
+    if(v==null){
+      h+='<p class="capn" style="color:var(--marg)"><b>이 가정에서는 모형이 성립하지 않습니다</b> — '+
+         '자기자본비용이 배당성장률보다 크지 않으면(ke ≤ g) 고든 식의 분모가 0 이하가 되어 값이 무한대가 됩니다. '+
+         '아래 격자에서 성립하는 조합을 확인하세요.</p>';
+    }else{
+      h+='<p class="capn">이 조합에서의 모델값은 <b>$'+nf(v,2)+'</b>'+
+         (px!=null&&px>0?' (현재가 대비 <b>'+pf((v/px-1)*100,0)+'</b>)':'')+
+         '입니다 — <b>적정주가가 아니라 이 가정에서의 값</b>입니다. 아래를 보세요.</p>';
+      if(thin(g,ke)){
+        h+='<p class="capn" style="color:var(--hot)"><b>⚠ 이 값은 믿을 수 없습니다</b> — 분모(ke − g)가 '+
+           '<b>'+pf((ke-g)*100,2)+'</b>p밖에 안 됩니다. 고든 식은 분모가 0에 가까워지면 값이 무한대로 발산하므로, '+
+           '성장률을 0.1%p만 건드려도 값이 몇 배로 바뀝니다. 숫자 자체보다 <b>아래 격자의 폭</b>을 보세요.</p>';
+      }
+    }
+    host.innerHTML=h;
+
+    // ── 민감도 격자: 배당성장률 × 시장위험프리미엄(→ 할인율) ──
+    var gs=[g-0.02,g-0.01,g,g+0.01,g+0.02], mrps=[3.5,4.5,5.5,6.5], rf=rfVal();
+    var gh2='<p class="lbl" style="margin-top:28px">가정을 움직이면 값이 얼마나 흔들리는가</p>'+
+      '<p class="lblnote">가로는 배당성장률(과거 CAGR 기준 ±2%p), 세로는 시장위험프리미엄입니다. '+
+      '<b>데이터는 하나도 바뀌지 않고 아무도 정답을 모르는 가정 두 개만 움직입니다.</b></p>'+
+      '<div class="tblwrap"><table><thead><tr><th scope="col">MRP \\ 배당성장률</th>';
+    gs.forEach(function(x){gh2+='<th scope="col">'+pf(x*100,1)+'</th>';});
+    gh2+='<th scope="col">할인율</th></tr></thead><tbody>';
+    var lo=null,hi=null,k=0,bad=0,thinN=0,tot=gs.length*mrps.length;
+    mrps.forEach(function(m){
+      var r=(beta==null||rf==null)?null:(rf+beta*m)/100;
+      gh2+='<tr><th scope="row">'+nf(m,1)+'%</th>';
+      gs.forEach(function(x){
+        var val=gordon(d0,x,r);
+        var cur=(Math.abs(m-ST.mrp)<0.001&&Math.abs(x-g)<1e-9);
+        if(val==null){bad++;gh2+='<td'+(cur?' style="color:var(--accent)"':'')+' class="muted">성립 안 함'+(cur?' ◂지금':'')+'</td>';}
+        else{k++;if(lo==null||val<lo)lo=val;if(hi==null||val>hi)hi=val;
+          var th=thin(x,r); if(th)thinN++;
+          gh2+='<td'+(cur?' style="color:var(--accent);font-weight:800"':(th?' style="color:var(--hot)"':''))+
+               '>'+(th?'~':'')+'$'+nf(val,2)+(cur?' ◂지금':'')+'</td>';}
+      });
+      gh2+='<td class="muted">'+(r==null?'—':pf(r*100,2))+'</td></tr>';
+    });
+    gh2+='</tbody></table></div>';
+    if(k>0){
+      gh2+='<p class="capn">이 '+tot+'칸 중 <b>값이 나온 '+k+'칸</b>의 범위는 <b>$'+nf(lo,2)+' ~ $'+nf(hi,2)+'</b>'+
+        (lo>0?', 최대÷최소 <b>'+nf(hi/lo,1)+'배</b>':'')+'입니다.'+
+        (bad?' 나머지 '+bad+'칸은 ke ≤ g라 모형이 성립하지 않습니다 — <b>빠진 칸이 많을수록 이 범위는 민감도를 실제보다 작게 보입니다</b>.':'')+
+        (thinN?' <span style="color:var(--hot)">물결표(~)가 붙은 '+thinN+'칸은 분모가 1%p 미만이라 값이 사실상 발산한 것입니다 — 그 숫자를 값으로 읽지 마세요.</span>':'')+
+        (px!=null&&px>0?' 참고로 현재가는 <b>$'+nf(px,2)+'</b>입니다.':'')+
+        ' 이 폭이 DDM으로 "적정주가"를 말하지 않는 이유입니다.</p>';
+    }else{
+      gh2+='<p class="capn">이 격자 <b>전체에서 값이 나오지 않습니다</b>(모든 칸에서 ke ≤ g). '+
+        '배당성장률이 자기자본비용보다 높다는 뜻이고, 고든 모형은 그런 회사에 쓸 수 없습니다.</p>';
+    }
+    gh.innerHTML=gh2;
+  }
+
   // ── 분포 ────────────────────────────────────────────────────────────────
   // 음수 구간을 한 칸(−∞~0)으로 두면 가정을 조금만 바꿔도 표본 대부분이 막대 하나에 뭉쳐
   // 분포가 정보를 잃는다(예: rf=DFII10·MRP 3.0·g∞ 3.5%에서 341종목 중 224종목). 세 칸으로 쪼갠다.
@@ -1260,21 +1393,26 @@
       if(f.fcfy!=null){fy++;if(f.fcfy>0)fyp++;}
     });
     function box(t,v,d){return '<div><b>'+esc(t)+'</b><span><em>'+v+'</em><br>'+d+'</span></div>';}
-    el('ddmnums').innerHTML=
-      box('지금 있는 것',nf(dy,0)+' / '+nf(n,0)+'종목',
-          '오늘의 배당수익률 단면 하나. 커버율 '+pf(cov.dy,1)+'. 결측은 데이터 누락이 아니라 대부분 <b>무배당</b>입니다.')+
-      box('없는 것','DPS 시계열 0개',
-          '주당배당금의 과거 이력이 이 사이트에 한 건도 없습니다.')+
-      box('없으면 왜 못 하나','성장률 미정의',
-          '점 하나로는 기울기를 잴 수 없습니다. 배당 성장률을 임의로 넣으면 그건 데이터가 아니라 가정입니다.');
-    el('ddmnodiv').textContent=nf(n-dy,0);
-    el('rimnums').innerHTML=
-      box('지금 있는 것','PBR '+nf(pb,0)+' · ROE '+nf(roe,0)+'종목',
-          '커버율 PBR '+pf(cov.pb,1)+' · ROE '+pf(cov.roe,1)+'. 둘 다 <b>오늘 한 점</b>입니다.')+
-      box('없는 것','자기자본·EPS 시계열 0개',
-          '기초 장부가를 알 수 없어 잔여이익(순이익 − 자기자본비용×기초자본)을 만들 수 없습니다.')+
-      box('없으면 왜 못 하나','클린 서플러스 검증 불가',
-          '장부가 증분 = 이익 − 배당이 성립하는지 확인할 방법이 없으면 모형의 전제가 깨집니다.');
+    // RIM 실측 박스는 data/facts.json의 clean_surplus(수집기가 전 종목에서 잰 값)로 채운다.
+    // 그 측정이 이 칸을 켜지 않는 이유 자체다 — 화면에 숫자로 적는다.
+    fetch('data/facts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(fj){
+      var cs=fj&&fj.clean_surplus, rn=el('rimnums');
+      if(!rn)return;
+      if(!cs){rn.innerHTML=box('실측','읽지 못함','data/facts.json의 clean_surplus를 불러오지 못했습니다.');return;}
+      rn.innerHTML=
+        box('전제 검사 표본',nf(cs.n,0)+'종목','자기자본 시점 2개와 연간 순이익이 모두 있는 회사.')+
+        box('이익 − 배당만으로','중앙값 '+pf(cs.naive.median,2),
+            '장부가 증분과의 차이(기초 자기자본 대비). 5% 이내는 '+pf(cs.naive.w5,0)+'뿐입니다.')+
+        box('자사주·증자까지 반영','중앙값 '+pf(cs.full.median,2),
+            '가장 큰 누락 항목은 <b>자사주 매입</b>이었습니다. 그래도 10% 이내는 '+pf(cs.full.w10,0)+
+            ' — <b>4곳 중 1곳은 전제가 깨집니다</b>.');
+      var d2=el('ddmn2'), d4=el('ddmn4'), dyy=fj&&fj.dps_years;
+      if(d2&&dyy)d2.textContent=nf(dyy.n2,0);
+      if(d4&&dyy)d4.textContent=nf(dyy.n4,0);
+      var vn=el('csverdict');
+      if(vn)vn.innerHTML='실측 '+nf(cs.n,0)+'종목 · 단순 중앙값 <b>'+pf(cs.naive.median,2)+
+        '</b> · 자사주·증자 반영 후에도 <b>'+pf(cs.full.median,2)+'</b>(10% 이내 '+pf(cs.full.w10,0)+')';
+    });
     el('idxnums').innerHTML=
       box('지금 있는 것','FCF 단면 '+nf(fy,0)+'종목',
           '그중 FCF가 양수인 것은 '+nf(fyp,0)+'종목입니다. 커버율 '+pf(cov.fcfy,1)+'.')+

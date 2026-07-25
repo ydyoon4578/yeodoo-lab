@@ -367,7 +367,7 @@
           <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
           <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
           <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
-          <span class="mmi"><span class="mmn">DDM</span><span class="mmb soon">준비중</span><span class="mmd">배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다</span></span>
+          <a class="mmi" href="valuation.html#ddm" data-nav="valuation.html#ddm"><span class="mmn">DDM</span><span class="mmb vunv">미검증</span><span class="mmd">고든 성장모형 — 적정주가 한 숫자 없음, 성장률 × 할인율 격자</span></a>
           <span class="mmi"><span class="mmn">RIM</span><span class="mmb soon">준비중</span><span class="mmd">잔여이익 모델 — 자기자본 시계열이 있어야 성립</span></span>
           <span class="mmi"><span class="mmn">Index DCF</span><span class="mmb soon">준비중</span><span class="mmd">지수 단위 FCF 시계열 — frames 한 콜로 5,589사</span></span>
         </div>
@@ -528,7 +528,7 @@
     <!-- HOMEDIR:BEGIN -->
 <section id="s-dir" aria-labelledby="dir-h">
   <div class="ldtally">
-    <p class="ltn"><span>화면 <b>38</b></span><span>동작 <b>31</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>7</b></span><span>메뉴에서 뺌 <b>3</b></span><span>파일 <b>22</b>장</span></p>
+    <p class="ltn"><span>화면 <b>38</b></span><span>동작 <b>32</b></span><span>구현 대기 <b>0</b></span><span>소스 대기 <b>6</b></span><span>메뉴에서 뺌 <b>3</b></span><span>파일 <b>22</b>장</span></p>
     <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. <em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>
   </div>
   <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 10개</span></p>
@@ -591,13 +591,13 @@
       </div>
     </div>
     <div class="dcard" style="--edge:var(--marg)">
-      <h3>종목 가치평가<span class="dc">구현 3 · 대기 3</span></h3>
-      <div class="dbar" role="img" aria-label="종목 가치평가 판정 분포"><i class="vunv" style="--w:50.0000%" title="미검증 3"></i><i class="soon" style="--w:50.0000%" title="준비중 3"></i></div>
+      <h3>종목 가치평가<span class="dc">구현 4 · 대기 2</span></h3>
+      <div class="dbar" role="img" aria-label="종목 가치평가 판정 분포"><i class="vunv" style="--w:66.6667%" title="미검증 4"></i><i class="soon" style="--w:33.3333%" title="준비중 2"></i></div>
       <div class="dtools">
         <a href="rel-value.html">상대가치평가<b class="vunv">미검증</b></a>
         <a href="valuation.html#reverse">Reverse DCF<b class="vunv">미검증</b></a>
         <a href="valuation.html#simple">Simplified DCF<b class="vunv">미검증</b></a>
-        <span>DDM<b class="soon">준비중</b></span>
+        <a href="valuation.html#ddm">DDM<b class="vunv">미검증</b></a>
         <span>RIM<b class="soon">준비중</b></span>
         <span>Index DCF<b class="soon">준비중</b></span>
       </div>
@@ -634,16 +634,15 @@
   </div>
 </section>
 <section id="s-gap" aria-labelledby="gap-h">
-  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 7 · 메뉴에서 뺌 3</span></p>
+  <p class="lbl" id="gap-h">아직 못 만든 것 <span class="sub">· 구현 대기 0 · 소스 대기 6 · 메뉴에서 뺌 3</span></p>
   <div class="gapbox soonbox">
     <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>
+    <div class="gaprow"><span class="gn">RIM</span><span class="gw">클린서플러스 전제 불성립(실측)</span></div>
     <div class="gaprow"><span class="gn">실적 발표 일정</span><span class="gw">yfinance earnings_dates</span></div>
     <div class="gaprow"><span class="gn">Index DCF</span><span class="gw">SEC EDGAR frames API</span></div>
     <div class="gaprow"><span class="gn">거장 포트폴리오·매매</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
     <div class="gaprow"><span class="gn">공통 보유종목</span><span class="gw">SEC 13F-HR + FTD CUSIP 매핑</span></div>
     <div class="gaprow"><span class="gn">경제지표 일정</span><span class="gw">FRED releases/dates API</span></div>
-    <div class="gaprow"><span class="gn">DDM</span><span class="gw">할인율(자기자본비용) 가정 설계</span></div>
-    <div class="gaprow"><span class="gn">RIM</span><span class="gw">할인율 가정 + 클린서플러스 오차 실측</span></div>
     <p class="gapf"><a href="roadmap.html">전체 사유와 붙이는 순서 →</a></p>
   </div>
   <div class="gapbox wontbox">

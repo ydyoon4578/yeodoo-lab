@@ -290,15 +290,11 @@
     {
      "name": "DDM",
      "file": "valuation.html#ddm",
-     "status": "needs-source",
-     "desc": "배당 시계열 확보 후 — 지금은 단면뿐이라 못 만든다",
+     "status": "existing",
+     "desc": "고든 성장모형 — 적정주가 한 숫자 없음, 성장률 × 할인율 격자",
      "src": "raw",
-     "verdict": "na",
-     "effort": "M",
-     "placeholder": true,
-     "blocked_by": "할인율(자기자본비용) 가정 설계",
-     "blocked_why": "데이터는 확보(SEC XBRL DPS 커버 80%). 남은 건 가정을 화면에서 움직이게 만드는 설계다.",
-     "pipeline": 9
+     "verdict": "unverified",
+     "effort": "M"
     },
     {
      "name": "RIM",
@@ -309,9 +305,9 @@
      "verdict": "na",
      "effort": "M",
      "placeholder": true,
-     "blocked_by": "할인율 가정 + 클린서플러스 오차 실측",
-     "blocked_why": "데이터는 확보(자기자본 100%·순이익 100%·EPS 99%). OCI 때문에 등식이 정확히는 안 맞아, 그 오차를 재서 적을 수 있어야 켠다.",
-     "pipeline": 9
+     "blocked_by": "클린서플러스 전제 불성립(실측)",
+     "blocked_why": "데이터는 확보했고 515종목 전수로 전제를 쟀다. 장부가 증분이 이익−배당과 중앙값 7.9% 어긋나고, 자사주·증자를 반영해도 4곳 중 1곳이 10%를 넘는다. 전제가 깨진 채 만든 값을 RIM이라 부를 수 없다.",
+     "pipeline": 0
     },
     {
      "name": "Index DCF",
