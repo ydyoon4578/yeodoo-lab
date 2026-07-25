@@ -138,8 +138,30 @@
   .rarch b{color:var(--ink-2)}
   .ncard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--muted);
     border-radius:11px;padding:12px 16px;margin-bottom:9px}
+  .ncard.ok{border-left-color:var(--gA)} .ncard.soon{border-left-color:var(--gC)} .ncard.no{border-left-color:var(--rej)}
+  .ncard h4 .ab{margin-left:auto;font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:5px;
+                padding:2px 7px;white-space:nowrap;border:1px solid color-mix(in srgb,var(--ac,var(--muted)) 42%,transparent);
+                background:color-mix(in srgb,var(--ac,var(--muted)) 12%,transparent);color:var(--ac,var(--muted))}
+  .ncard h4 .ab.ok{--ac:var(--gA)} .ncard h4 .ab.soon{--ac:var(--gC)} .ncard h4 .ab.no{--ac:var(--rej)}
+  .ncard .arule{margin:6px 0 0;font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.55}
+  .ncard .anote{display:block;margin-top:5px;font-style:normal;color:var(--muted);font-size:11.5px}
+  .ncard .agrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:1px;
+                background:var(--line-soft);border:1px solid var(--line-soft);border-radius:9px;overflow:hidden}
+  .ncard .agrid .rc{background:var(--panel);padding:6px 8px}
+  .ncard .abench{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
   .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
   .ncard h4{margin:0;font-size:13px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .ncard.ok{border-left-color:var(--gA)} .ncard.soon{border-left-color:var(--gC)} .ncard.no{border-left-color:var(--rej)}
+  .ncard h4 .ab{margin-left:auto;font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:5px;
+                padding:2px 7px;white-space:nowrap;border:1px solid color-mix(in srgb,var(--ac,var(--muted)) 42%,transparent);
+                background:color-mix(in srgb,var(--ac,var(--muted)) 12%,transparent);color:var(--ac,var(--muted))}
+  .ncard h4 .ab.ok{--ac:var(--gA)} .ncard h4 .ab.soon{--ac:var(--gC)} .ncard h4 .ab.no{--ac:var(--rej)}
+  .ncard .arule{margin:6px 0 0;font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.55}
+  .ncard .anote{display:block;margin-top:5px;font-style:normal;color:var(--muted);font-size:11.5px}
+  .ncard .agrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:1px;
+                background:var(--line-soft);border:1px solid var(--line-soft);border-radius:9px;overflow:hidden}
+  .ncard .agrid .rc{background:var(--panel);padding:6px 8px}
+  .ncard .abench{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.6}
   .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
   .ncard h4 span{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted);margin-left:auto}
   .ncard p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.65}
@@ -440,9 +462,15 @@
   </section>
 
   <section aria-labelledby="norun-h">
-    <h2 id="norun-h" class="sech">못 돌린 것 <span id="norunsub"></span></h2>
-    <p class="sechn">규칙은 적혀 있지만 이 저장소의 데이터로는 재현할 수 없는 것들입니다.
-      감추지 않고 <b>무엇이 없어서 못 도는지</b>를 적습니다.</p>
+    <h2 id="norun-h" class="sech">재현 가능성 재점검 <span id="norunsub"></span></h2>
+    <p class="sechn">여기 있던 38건은 <b>이 저장소 데이터로는 재현할 수 없다</b>고 적혀 있었습니다.
+      다시 점검하니 대부분은 <b>데이터가 세상에 없어서가 아니라 이 저장소가 안 갖고 있었을 뿐</b>이었습니다 —
+      ETF 가격(yfinance)과 거시(FRED 공개 CSV, 키 불필요), 연준 EBP까지 전부 무료·무인증으로 열립니다.
+      자산 패널을 만들어 <b>돌릴 수 있는 것은 실제로 돌렸습니다</b>. 아직 못 도는 것은
+      <b>가능하나 아직 안 만든 것</b>과 <b>유료 데이터라 불가한 것</b>을 구분해 적습니다 —
+      섞어두면 영원히 안 하게 되기 때문입니다.</p>
+    <div class="statline" id="auditstat"></div>
+    <div class="frow" id="achips"></div>
     <div id="noruns"><div class="skel">불러오는 중…</div></div>
   </section>
 
@@ -597,9 +625,11 @@
 
     var no=arch.filter(function(x){return !linked[x.sid];});
     el('norunsub').textContent=no.length+'개';
-    el('noruns').innerHTML=no.map(function(x){
-      return '<div class="ncard" id="s-'+esc(x.sid)+'"><h4>'+esc(x.n)+'<span>'+esc(x.c)+'</span></h4><p>'+esc(x.r)+'</p></div>';
-    }).join('');
+    // 재점검 결과(data/asset_strategies.json)가 있으면 그것으로 그리고, 없으면 예전처럼 사유만 나열한다.
+    fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(AS){
+        renderAudit(AS, no);
+      })['catch'](function(){ renderAudit(null, no); });
 
     chips(); render(); jump();
   })['catch'](function(){
@@ -621,6 +651,63 @@
     t.classList.add('hit'); setTimeout(function(){ t.classList.remove('hit'); },2400);
   }
   window.addEventListener('hashchange',jump);
+
+  var ASEL={};
+  function renderAudit(AS,no){
+    if(!AS||!AS.audit){
+      el('noruns').innerHTML=no.map(function(x){
+        return '<div class="ncard" id="s-'+esc(x.sid)+'"><h4>'+esc(x.n)+'<span>'+esc(x.c)+'</span></h4><p>'+esc(x.r)+'</p></div>';
+      }).join('');
+      return;
+    }
+    var au=AS.audit, byres={};
+    (AS.strategies||[]).forEach(function(r){byres[r.sid]=r;});
+    el('norunsub').textContent=au.n_total+'건';
+    el('auditstat').innerHTML=
+      st(au.n_done,'돌렸다','공개 데이터로 재현',au.n_done?'ok':'')+
+      st(au.n_pending,'가능하나 미실행','데이터는 있다')+
+      st(au.n_blocked,'불가','유료 데이터라 막힘',au.n_blocked?'zero':'')+
+      st(AS.n,'대조 검정','자기 대조군과 겨룸');
+    var order=['돌림','가능 · 미구현','가능 · 무거움','불가 · 유료 데이터'];
+    var cnt={}; au.items.forEach(function(a){cnt[a.status]=(cnt[a.status]||0)+1;});
+    el('achips').innerHTML=order.filter(function(k){return cnt[k];}).map(function(k){
+      return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+cnt[k]+'</span></button>';
+    }).join('');
+    el('achips').onclick=function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      var k=b.getAttribute('data-k');
+      if(ASEL[k]){delete ASEL[k];b.setAttribute('aria-pressed','false');}
+      else{ASEL[k]=1;b.setAttribute('aria-pressed','true');}
+      paintAudit(au,byres);
+    };
+    paintAudit(au,byres);
+  }
+  var SC={'돌림':'ok','가능 · 미구현':'soon','가능 · 무거움':'soon','불가 · 유료 데이터':'no'};
+  function paintAudit(au,byres){
+    var ks=Object.keys(ASEL);
+    var items=au.items.filter(function(a){return !ks.length||ASEL[a.status];});
+    el('noruns').innerHTML=items.map(function(a){
+      var r=a.res?byres[a.res]:null;
+      var head='<div class="ncard '+(SC[a.status]||'')+'" id="s-'+esc(a.sid)+'">'+
+        '<h4>'+esc(a.n)+'<span>'+esc(a.c)+'</span><b class="ab '+(SC[a.status]||'')+'">'+esc(a.status)+'</b></h4>';
+      if(!r) return head+'<p>'+esc(a.why)+'</p></div>';
+      var m=r.metrics||{}, b=r.bench||{};
+      return head+
+        '<p class="arule">'+esc(r.rule)+'</p>'+
+        '<p>'+esc(r.why)+(a.why&&a.why!==r.why?' <em class="anote">'+esc(a.why)+'</em>':'')+'</p>'+
+        '<div class="agrid">'+
+          cell('구간',esc(r.start.slice(0,7))+'~'+esc(r.end.slice(0,7)))+
+          cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
+          cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
+          cell('t',nf(r.t,2))+
+        '</div>'+
+        spark(r.nav,r.bnav,320,40)+
+        '<p class="abench">대조군 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%'+
+        (r.bench_unstable?' <b>· 대조군이 현금성이라 Δ샤프는 허수 — t만 볼 것</b>':'')+
+        ' · 판정 <b>'+esc(r.verdict)+'</b></p>'+
+        '</div>';
+    }).join('');
+  }
 
   function st(v,k,d,cls){return '<span class="stat'+(cls?' '+cls:'')+'"><b>'+esc(v)+'</b>'+esc(k)+'<em>'+esc(d)+'</em></span>';}
   // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다

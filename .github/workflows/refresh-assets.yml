@@ -1,0 +1,46 @@
+name: Refresh asset panel & archive re-check
+
+# 멀티에셋 패널(ETF·FRED·연준 EBP)을 받아, 아카이브가 '재현 불가'로 두었던 전략들을 실제로 돌린다.
+#
+# 왜 주 1회인가 — 입력이 일봉이고 표본이 15~19년이라 하루로는 판정이 안 바뀐다.
+#   결과가 같으면 커밋도 안 생긴다.
+#
+# 무게 — yfinance 50종목 20년 + FRED 15계열. 실측 약 2분.
+
+on:
+  schedule:
+    - cron: '45 4 * * 6'    # 매주 토 13:45 KST — 13F(03:15)·전략랩(03:45)과 겹치지 않게
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-assets
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install --quiet pandas numpy yfinance
+      - name: Fetch asset panel
+        run: python build/refresh_assets.py
+      - name: Re-run archived strategies
+        run: python build/asset_backtest.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 자산 패널·아카이브 재검 자동 갱신" \
+            data/assets.json data/asset_strategies.json data/asof.json
+      - name: Verify freshness
+        run: python build/check_freshness.py data/assets.json "자산 패널" 10

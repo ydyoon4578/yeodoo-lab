@@ -87,6 +87,16 @@
   .dayh.today .ago,.dayh.today{color:var(--deploy)}
   .dayh.past{opacity:.62}
   .dayh .cnt{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .eev{display:grid;grid-template-columns:64px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line-soft)}
+  .eev .et{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);text-decoration:none}
+  .eev .et:hover{color:var(--accent)}
+  .eev .en{font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .eev .em{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;text-align:right}
+  .eev .em b{color:var(--ink)}
+  .eev .eh{display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:5px;
+           padding:1px 5px;margin-right:5px;border:1px solid var(--line);color:var(--muted)}
+  .eev .eh.bmo{color:var(--marg,var(--accent));border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+  .eev .es2{grid-column:2/-1;font-size:11px;color:var(--muted);margin-top:1px}
   .ev{display:grid;grid-template-columns:74px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
   .ev .ek{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:6px;padding:1px 0;text-align:center}
   .ev .en{font-size:13px;color:var(--ink)}
@@ -376,7 +386,7 @@
 
   <nav class="views" id="views" aria-label="보기 전환">
     <a class="vtab" href="#macro" data-v="macro">경제지표 일정</a>
-    <a class="vtab" href="#earnings" data-v="earnings">실적 발표 일정 <span style="font-weight:400;color:var(--muted)">· 미제작</span></a>
+    <a class="vtab" href="#earnings" data-v="earnings">실적 발표 일정 <span style="font-weight:400;color:var(--muted)" id="etab">—</span></a>
   </nav>
 
   <section id="macro" aria-labelledby="m-h">
@@ -404,20 +414,28 @@
   </section>
 
   <section id="earnings" aria-labelledby="e-h" hidden>
-    <p class="lbl" id="e-h">실적 발표 일정 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 메뉴에서 뺌 — 사유는 아래</span></p>
-    <p class="lblnote">만들 수 없다고 확정해 <b>메뉴 슬롯에서 뺐습니다</b>. 칸은 지웠지만 사유는 지우지 않습니다.</p>
-    <div class="note hard">
-      <b>실적 발표 <u>예정일</u>은 무료 공개 데이터에 없습니다.</b>
-      SEC는 <b>이미 일어난</b> 발표만 압니다 — 8-K Item 2.02(실적 발표)로 제출된 뒤에야 기록이 생기고,
-      그건 <a href="filings.html">공시 피드</a>에 이미 있습니다. <b>앞으로의</b> 일정은 회사가 IR 페이지에
-      공지하거나 데이터 벤더가 모아 파는 것이고, SEC 제출 대상이 아닙니다.
-      <br><br>남은 길은 yfinance의 <code>earnings_dates</code>인데, 비공식 API라 끊기면 이 칸이 같이 죽습니다.
-      실제로 <b>2026-07-25에 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀</b> 종목 갱신이
-      사흘 멈춘 적이 있습니다. 그 위험을 안고 붙일지는 아직 정하지 않았습니다.
-      <br><br>대안은 Finnhub 무료 키(공식 API·무료 등급 존재)입니다. 키를 받으면 붙일 수 있습니다.
+    <p class="lbl" id="e-h">실적 발표 일정 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)" id="ecov"></span></p>
+    <p class="lblnote">앞으로 <b id="e-fwd">—</b>일치. 유니버스 <b id="e-uni">—</b>종목 중 <b id="e-hit">—</b>종목의 예정일이 잡힙니다.
+      날짜별로 묶었고, <b>장전·장후</b>와 <b>컨센서스 EPS</b>를 함께 싣습니다. 티커를 누르면 종목 화면으로 갑니다.</p>
+
+    <div class="note">
+      <b>이 칸은 오래 비어 있었습니다.</b> 실적 <u>예정일</u>은 SEC에 없기 때문입니다 — SEC는 8-K Item 2.02로
+      <b>이미 일어난</b> 발표만 압니다(그건 <a href="filings.html">공시 피드</a>에 있습니다). 앞으로의 일정은
+      회사 IR 공지이거나 벤더가 모아 파는 것입니다. 남은 길이던 yfinance <code>earnings_dates</code>는 비공식이라
+      끊기면 이 칸이 같이 죽습니다(2026-07-25에 실제로 Actions 러너가 Yahoo에 401로 막혀 종목 갱신이 사흘 멈췄습니다).
+      <b>Finnhub 무료 키를 받아 공식 API로 채웠습니다.</b>
     </div>
-    <p class="lblnote" style="margin-top:14px">→ <a href="filings.html">이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있습니다</a> ·
-      <a href="roadmap.html">만들지 않은 것</a></p>
+
+    <div class="filters">
+      <div class="frow">
+        <span class="fl">기간</span>
+        <div id="ewchips" class="frow" style="gap:6px;flex:1"></div>
+        <span id="ehits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div id="efeed"><div class="skel">불러오는 중…</div></div>
+    <div class="note" id="elimits"></div>
   </section>
 
   <footer>
@@ -445,6 +463,76 @@
   }
   function onHash(){showView((location.hash||'').replace(/^#/,''));}
   window.addEventListener('hashchange',onHash);
+
+  // ── 실적 발표 일정 ─────────────────────────────────────────────────
+  // 경제지표 피드와 같은 날짜 묶음 구조를 쓴다. 컨센서스 EPS는 '발표 전 추정치'이며
+  // 서프라이즈가 수익으로 이어지는지는 이 랩이 검증한 적 없다 — 그 사실을 한계에 적는다.
+  var EDATA=null, EWIN=0;   // 0=전체 · 7=이번 주 · 14=2주 · 30=한 달
+  function edays(d){
+    var t=new Date(); t.setHours(0,0,0,0);
+    var x=new Date(d+'T00:00:00');
+    return Math.round((x-t)/86400000);
+  }
+  function erender(){
+    if(!EDATA)return;
+    var rows=(EDATA.upcoming||[]).filter(function(z){
+      if(!EWIN)return true;
+      var n=edays(z.dt); return n>=0&&n<=EWIN;
+    });
+    el('ehits').textContent=rows.length+'건'+(rows.length!==(EDATA.upcoming||[]).length?' / '+EDATA.upcoming.length:'');
+    if(!rows.length){el('efeed').innerHTML='<div class="skel">해당 기간에 예정된 발표가 없습니다.</div>';return;}
+    var by={}, order=[];
+    rows.forEach(function(z){ if(!by[z.dt]){by[z.dt]=[];order.push(z.dt);} by[z.dt].push(z); });
+    var h='';
+    order.forEach(function(d){
+      var n=edays(d);
+      var ago=(n===0?'오늘':(n===1?'내일':'D-'+n));
+      h+='<div class="day"><div class="dayh'+(n===0?' today':'')+'">'+esc(d)+
+         '<span class="ago">'+esc(ago)+'</span><span class="cnt">'+by[d].length+'종목</span></div>';
+      by[d].forEach(function(z){
+        var est=(z.est==null)?'':'컨센 EPS <b>'+esc(Number(z.est).toFixed(2))+'</b>';
+        h+='<div class="eev">'+
+           '<a class="et" href="co.html?t='+encodeURIComponent(z.t)+'">'+esc(z.t)+'</a>'+
+           '<div class="en">'+(z.hour?'<span class="eh'+(z.hour==='장전'?' bmo':'')+'">'+esc(z.hour)+'</span>':'')+esc(z.n)+'</div>'+
+           '<div class="em">'+est+'</div>'+
+           (z.s?'<div class="es2">'+esc(z.s)+(z.q?' · '+esc(String(z.y))+'년 '+esc(String(z.q))+'분기':'')+'</div>':'')+
+           '</div>';
+      });
+      h+='</div>';
+    });
+    el('efeed').innerHTML=h;
+  }
+  fetch('data/earnings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d||!d.upcoming){
+      el('efeed').innerHTML='<div class="note hard"><b>실적 일정을 불러오지 못했습니다</b> — <code>data/earnings.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
+      return;
+    }
+    EDATA=d;
+    var et=el('etab'); if(et)et.textContent='· '+d.n_upcoming+'건';
+    el('ecov').textContent='· '+d.as_of+' 기준';
+    el('e-fwd').textContent=90;
+    el('e-uni').textContent=518;
+    el('e-hit').textContent=Object.keys(d.next||{}).length;
+    var W=[[0,'전체'],[7,'1주'],[14,'2주'],[30,'1개월']];
+    el('ewchips').innerHTML=W.map(function(w){
+      return '<button class="chip" type="button" data-w="'+w[0]+'" aria-pressed="'+(w[0]===0?'true':'false')+'">'+w[1]+'</button>';
+    }).join('');
+    el('ewchips').addEventListener('click',function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      EWIN=parseInt(b.getAttribute('data-w'),10)||0;
+      Array.prototype.forEach.call(el('ewchips').querySelectorAll('.chip'),function(x){
+        x.setAttribute('aria-pressed', x===b?'true':'false');
+      });
+      erender();
+    });
+    el('elimits').innerHTML='<b>이 화면의 한계</b><br>· '+(d.limits||[]).map(esc).join('<br>· ')+
+      '<br>· 컨센서스 대비 서프라이즈가 수익으로 이어지는지 <b>이 랩은 검증한 적이 없습니다</b> — '+
+      '과거 서프라이즈 표본을 만들 수 없어서입니다(무료 API가 과거를 약 30일까지만 줍니다). '+
+      '지나간 발표는 오늘부터 누적하고 있으므로, 표본이 쌓이면 그때 검증합니다.';
+    erender();
+  })['catch'](function(){
+    el('efeed').innerHTML='<div class="note hard"><b>실적 일정을 불러오지 못했습니다.</b></div>';
+  });
 
   function ty(v,lab,note,edge){
     return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';

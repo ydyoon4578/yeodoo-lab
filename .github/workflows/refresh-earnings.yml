@@ -1,0 +1,48 @@
+name: Refresh earnings calendar (Finnhub)
+
+# 실적 발표 예정일·컨센서스 EPS를 유니버스에 맞춰 받는다.
+#
+# 왜 매일인가 — 회사가 예정일을 자주 바꾸고, '오늘/내일 발표' 표시가 하루만 지나도 틀린다.
+#
+# 키 — 저장소 시크릿 FINNHUB_API_KEY. 이 저장소는 공개이므로 키를 파일·로그에 남기지 않는다.
+#   (과거 FRED 키가 커밋에 남은 사고가 있었다.)
+#
+# 무게 — 7일씩 끊어 약 17회 호출. 무료 티어 분당 제한을 피하려 호출 사이 1.1초 쉰다. 실측 약 40초.
+
+on:
+  schedule:
+    - cron: '20 22 * * 1-5'   # 평일 07:20 KST — 미국장 마감 후, 종목 갱신(08:35)보다 앞
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-earnings
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch earnings calendar
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python build/refresh_earnings.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      # earnings_history.json은 **누적 파일**이다 — 커밋 대상에서 빠지면 매 실행이 fresh checkout이라
+      # 그동안 쌓은 발표 이력이 영구 유실된다(target_history.json과 같은 함정).
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 실적 발표 일정 자동 갱신" \
+            data/earnings.json data/earnings_history.json data/asof.json
+      - name: Verify freshness
+        run: python build/check_freshness.py data/earnings.json "실적 일정" 4
