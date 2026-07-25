@@ -305,6 +305,30 @@ try:
     _h = json.load(io.open(os.path.join(ROOT, "data", "home_reco.json"), encoding="utf-8")).get("as_of")
     if _s and _h and _s != _h:
         errors.append(f"기준일 불일치: stocks.json {_s} vs home_reco.json {_h} — 워크플로가 두 파일을 함께 커밋하는지 확인")
+    # 홈 상단 기준일 바는 '가격·테크니컬·EPS·시장국면 통일'을 정적 문구로 주장한다. 국면·심리가 고착되면
+    # 그 주장이 거짓이 되므로 여기서도 막는다. 다만 FRED 릴리스가 하루 늦는 건 정상이라 2영업일부터 실패시킨다
+    # (실사고: FRED 시크릿 미설정으로 전 시리즈가 조용히 멈춘 적이 있다 — 그건 곧 2영업일을 넘긴다).
+    import datetime as _d0
+    def _bdgap(a, b):
+        try:
+            _x, _y = _d0.date.fromisoformat(str(a)[:10]), _d0.date.fromisoformat(str(b)[:10])
+        except Exception:
+            return 0
+        if _y >= _x: return 0
+        n = 0
+        while _y < _x:
+            _y += _d0.timedelta(days=1)
+            if _y.weekday() < 5: n += 1
+        return n
+    for _fn in ("regime.json", "sentiment.json"):
+        try:
+            _v = json.load(io.open(os.path.join(ROOT, "data", _fn), encoding="utf-8")).get("as_of")
+        except Exception:
+            continue
+        if _s and _v:
+            _g = _bdgap(_s, _v)
+            if _g >= 2:
+                errors.append(f"기준일 고착: {_fn} {_v} 가 stocks.json {_s} 보다 {_g}영업일 뒤처짐 — 자동갱신 중단 의심")
     # 상세 분리 불변식: ①슬림 본체에 상세 필드가 재유입되면 페이로드가 도로 1.9MB로 부푼다
     #                 ②종목별 상세 파일이 없거나 기준일이 어긋나면 상세 패널이 낡거나 빈다
     _sd = os.path.join(ROOT, "data", "sd")
@@ -676,6 +700,7 @@ def _dates_of(fn, j):
     if fn == "stocks.json": return [("as_of", j.get("as_of"))]
     if fn == "home_reco.json": return [("as_of", j.get("as_of"))]
     if fn == "regime.json": return [("as_of", j.get("as_of"))]
+    if fn == "sentiment.json": return [("as_of", j.get("as_of")), ("generated_at", (j.get("generated_at") or "")[:10])]
     if fn == "members.json": return [("as_of_members", j.get("as_of_members"))]
     if fn == "updates.json":
         return [("updated", j.get("updated"))] + [(f"events[{i}].dt", e.get("dt")) for i, e in enumerate(j.get("events") or [])]
@@ -689,7 +714,7 @@ def _dates_of(fn, j):
             out += [(f"{nm}.start", b.get("start")), (f"{nm}.end", b.get("end"))]
         return out
     return []
-for _fn in ("stocks.json", "home_reco.json", "regime.json", "members.json", "rotation_pool.json", "updates.json",
+for _fn in ("stocks.json", "home_reco.json", "regime.json", "sentiment.json", "members.json", "rotation_pool.json", "updates.json",
             "strategy_holdings.json", "strategy_holdings_db.json", "strategy_backtests.json", "rf_monthly.json"):
     _p = os.path.join(ROOT, "data", _fn)
     if not os.path.exists(_p): continue
@@ -759,6 +784,104 @@ try:
         errors.append("regime.html: 실패 경로 헬퍼 fail()가 없음 — 로드 실패 시 일부 슬롯이 조용히 빈다")
 except Exception as e:
     errors.append(f"슬롯 렌더 검증 실패: {e}")
+
+# ── 내비 정본: 22장이 같은 메뉴를 갖는가 ──────────────────────────────────────
+# 빌드 스텝이 없으니 "한 곳에서 만들어 전부에 밀어넣고 어긋나면 막는다"가 유일한 보증이다.
+try:
+    import subprocess as _sp
+    _r = _sp.run([sys.executable, os.path.join(ROOT, "build", "sync_nav.py"), "--check"],
+                 capture_output=True, text=True)
+    if _r.returncode != 0:
+        for _l in (_r.stdout or "").strip().split("\n"):
+            if "어긋남" in _l:
+                errors.append("내비 드리프트: " + _l.strip())
+        if not any("내비 드리프트" in e for e in errors):
+            errors.append("내비 정본 검사 실패: " + ((_r.stdout or "") + (_r.stderr or ""))[:300])
+except Exception as e:
+    errors.append(f"내비 정본 검사 실행 실패: {e}")
+
+try:
+    _ni = json.load(io.open(os.path.join(ROOT, "build", "nav_items.json"), encoding="utf-8"))
+    _tools = [t for c in _ni.get("categories") or [] for t in c.get("tools") or []]
+
+    # ① 실제로 열리는 슬롯이 메뉴에서 '준비중'으로 죽어 있으면 안 된다.
+    #    liveness 판정은 sync_nav와 반드시 같은 함수를 써야 한다 — 규칙이 둘이면 한쪽만 맞는다
+    #    (앵커 종류 static/route/runtime을 여기서 다시 구현하면 regime.html#axes류가 어긋난다).
+    sys.path.insert(0, os.path.join(ROOT, "build"))
+    import sync_nav as _sn
+    _ix = rd("index.html")
+    for _t in _tools:
+        if _sn.tool_live(_t) and ('data-nav="%s"' % _t["file"]) not in _ix:
+            errors.append(f"내비: {_t['file']}는 열리는데 메뉴가 '준비중'이다 — build/sync_nav.py를 다시 돌릴 것")
+
+    # ② 판정 배지는 원장(verdicts.json)에서 자동 산출된 숫자와 모순되면 안 된다.
+    #    '통과'로 표시한 슬롯이 있는데 배포 전략이 0건이면 메뉴가 거짓말을 하는 것이다.
+    _vd = json.load(io.open(os.path.join(ROOT, "data", "verdicts.json"), encoding="utf-8"))
+    if any(t.get("verdict") == "pass" for t in _tools) and not _vd.get("deploy_n"):
+        errors.append("내비: '통과' 배지가 있는데 verdicts.json deploy_n=0 — 원장과 메뉴가 어긋남")
+    if any(t.get("verdict") == "rejected" for t in _tools) and not _vd.get("reject_total"):
+        errors.append("내비: '기각' 배지가 있는데 verdicts.json reject_total=0 — 원장과 메뉴가 어긋남")
+
+    # ③ 모든 배포 HTML은 자기가 어느 슬롯인지 밝혀야 한다(현재위치 강조의 유일한 입력).
+    # 홈은 도구가 아니라 도구들의 관문이라 슬롯 목록에 없다 — 유효한 data-tool로 인정한다
+    _known = {t["file"].split("#")[0] for t in _tools} | {"index.html"}
+    for _fn in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+        _s = rd(_fn)
+        _m = re.search(r'<body[^>]*\sdata-tool="([^"]*)"', _s)
+        if not _m:
+            errors.append(f"{_fn}: <body data-tool> 없음 — 내비가 현재 위치를 표시할 수 없다")
+        elif _m.group(1) not in _known:
+            errors.append(f"{_fn}: data-tool='{_m.group(1)}'가 nav_items.json에 없는 슬롯")
+except Exception as e:
+    errors.append(f"내비 정합 검증 실패: {e}")
+
+# ── 기준일 정본: data/asof.json이 stocks.json과 어긋나면 전 페이지 칩이 거짓이 된다 ──
+try:
+    _ao = json.load(io.open(os.path.join(ROOT, "data", "asof.json"), encoding="utf-8"))
+    _stk2 = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    if _ao.get("primary") != _stk2.get("as_of"):
+        errors.append(f"기준일 정본 불일치: asof.json primary {_ao.get('primary')} vs "
+                      f"stocks.json as_of {_stk2.get('as_of')} — build/asof_index.py를 다시 돌릴 것")
+    if not (_ao.get("axes") or []):
+        errors.append("asof.json에 축이 비어 있음")
+except Exception as e:
+    errors.append(f"기준일 정본 검증 실패: {e}")
+
+# ── 홈 하드코딩 문구가 데이터와 따로 썩지 않게 ────────────────────────────────
+# (실사고: meta description은 512종목, 본문 히어로는 518종목 — 검색 스니펫·공유 카드에만 옛 유니버스가 나갔다)
+try:
+    _ix = rd("index.html")
+    # _sj는 383행에서 screens.json으로 재사용된다 — 여기서 stocks.json을 다시 읽는다
+    _stk = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _n = _stk.get("n_stocks") or len(_stk.get("stocks") or [])
+    for _m in sorted(set(re.findall(r"(\d{3})종목", _ix))):
+        if int(_m) != _n:
+            errors.append(f"index.html '{_m}종목' ≠ stocks.json n_stocks {_n} — 유니버스 표기 갱신 누락")
+except Exception as e:
+    errors.append(f"유니버스 표기 검증 실패: {e}")
+
+# ── 자물쇠 표기 규약: 암호 게이트가 있는 페이지는 홈 내비에서 🔒로 예고돼야 한다 ──
+# 히어로가 '판정을 전부 공개합니다'라고 적어둔 터라, 예고 없는 암호창은 잠금 자체보다 신뢰를 깎는다.
+try:
+    _ix = rd("index.html")
+    _tools = _tools if "_tools" in dir() else []
+    for _pg in sorted(f for f in os.listdir(ROOT) if f.endswith(".html") and f != "index.html"):
+        try:
+            _src = rd(_pg)
+        except Exception:
+            continue
+        if "crypto.subtle" not in _src:
+            continue
+        _a = re.search(r'<a[^>]*href="%s(?:#[^"]*)?"[^>]*>(.*?)</a>' % re.escape(_pg), _ix, re.S)
+        if not _a:
+            continue          # 홈이 링크하지 않는 잠금 페이지는 이 규약의 대상이 아니다
+        if "🔒" not in _a.group(1):
+            errors.append(f"index.html 내비: {_pg}는 암호 잠금인데 링크에 🔒 표기가 없음 — 예고 없는 암호창")
+        # 메뉴 정본에도 같은 사실이 적혀 있어야 한다(정본이 틀리면 다음 sync에서 🔒가 사라진다)
+        if not any(t.get("locked") for t in _tools if t["file"].split("#")[0] == _pg):
+            errors.append(f"nav_items.json: {_pg}는 암호 잠금인데 locked 표시가 없음")
+except Exception as e:
+    errors.append(f"자물쇠 표기 검증 실패: {e}")
 
 # 평문 필수 모드: 일일잡이 도는 운영 PC에서는 SKIP=실패로 승격(사본 소실이 무경보 강등으로 이어지지 않게)
 if skips and os.environ.get("VALIDATE_REQUIRE_PLAINTEXT") == "1":
