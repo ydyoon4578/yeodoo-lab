@@ -25,6 +25,11 @@ jobs:
         run: pip install --quiet pandas numpy yfinance
       - name: Compute technical signals
         run: python build/refresh_stocks.py
+      - name: Rebuild as-of index
+        # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
+        # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
+        # '기준일 정본 불일치' 검사가 다음 실행에서 잡을 실패시킨다.
+        run: python build/asof_index.py
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
@@ -35,7 +40,7 @@ jobs:
           # 변경 감지는 data/ 전체로 본다. 위 4개 경로만 보면, 정확히 과거 사고 유형(새 산출물 파일만
           # 생기고 기존 경로는 무변경)에서 else로 빠져 아래 누락 검증이 아예 돌지 않는다.
           if [ -n "$(git status --porcelain data/)" ]; then
-            git add data/stocks.json data/home_reco.json data/sd data/target_history.json
+            git add data/stocks.json data/home_reco.json data/sd data/target_history.json data/asof.json
             # 누락 방지 자동 검증: 이 잡이 data/ 아래에 만든 변경 중 **스테이징되지 않은 것**이 남아 있으면 실패시킨다.
             # (git status 1열=index·2열=worktree → 스테이징된 항목은 1열이 A/M/D/R. 1열이 공백이거나 '??'면 누락)
             LEFT="$(git status --porcelain data/ | grep -E '^([ ?])' || true)"

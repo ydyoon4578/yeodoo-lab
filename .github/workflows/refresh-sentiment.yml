@@ -27,12 +27,17 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python build/refresh_sentiment.py
+      - name: Rebuild as-of index
+        # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
+        # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
+        # '기준일 정본 불일치' 검사가 다음 실행에서 잡을 실패시킨다.
+        run: python build/asof_index.py
       - name: Commit if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           if [ -n "$(git status --porcelain data/sentiment.json)" ]; then
-            git add data/sentiment.json
+            git add data/sentiment.json data/asof.json
             git commit -m "chore(data): 시장 심리 지수 자동 갱신"
             # stocks/regime 워크플로와 같은 main에 push → 경합 시 리베이스 후 1회 재시도
             git push || (git pull --rebase origin main && git push)
