@@ -232,15 +232,11 @@
     {
      "name": "내부자 거래",
      "file": "co.html#ins",
-     "status": "needs-source",
-     "desc": "약 25일 지연 — 실시간이 아니다",
+     "status": "existing",
+     "desc": "임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님",
      "src": "raw",
      "verdict": "unverified",
-     "effort": "M",
-     "placeholder": true,
-     "blocked_by": "SEC Form 3/4/5 분기 ZIP",
-     "blocked_why": "ISSUERTRADINGSYMBOL로 직접 조인돼 CUSIP 매핑이 불필요. 약 25일 지연이 구조적 한계.",
-     "pipeline": 8
+     "effort": "M"
     },
     {
      "name": "실적 발표 일정",
