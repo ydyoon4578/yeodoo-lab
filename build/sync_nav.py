@@ -373,117 +373,6 @@ CAT_EDGE = {"market": "var(--deploy)", "newsroom": "var(--muted)", "macro": "var
             "ledger": "var(--hot)"}
 
 
-def build_home(items: dict) -> str:
-    """홈의 도구 디렉터리 + 미구현 목록. 내비와 같은 정본에서 나오므로 두 곳이 어긋날 수 없다.
-
-    40개 항목은 정적이고 거의 안 바뀌므로 fetch하지 않고 HTML로 굽는다.
-    """
-    out = []
-    tools = [t for c in items["categories"] for t in c["tools"]]
-    n_live = sum(1 for t in tools if tool_live(t))
-    # 2026-07-25부터 '만들지 않는 칸'은 슬롯 안에 두지 않고 items["retired"]로 뺐다.
-    # 여기서 tools를 훑으면 항상 0이 나온다(실제로 그렇게 0이 찍혔다).
-    n_wont = len(items.get("retired") or [])
-    n_soon = len(tools) - n_live
-    n_file = len({t["file"].split("#")[0] for t in tools})
-
-    # ── 판정 원장 바로 아래에 붙는 계수 줄 ──
-    # 이 줄이 과장 방지 장치다. "도구 40종"이라는 단일 숫자를 걸지 않고, 그 40이 무엇으로
-    # 이루어졌는지와 계수 규칙을 같이 적는다. 판정 원장(통과 3·기각 51) 바로 밑이라
-    # 도구 수와 판정 수가 같은 화면에서 부딪친다.
-    out.append('<section id="s-dir" aria-labelledby="dir-h">')
-    out.append('  <div class="ldtally">')
-    n_impl = sum(1 for t in tools
-                 if not tool_live(t) and t["status"] != "wont-build" and t.get("pipeline") in (1, 99))
-    out.append('    <p class="ltn"><span>화면 <b>%d</b></span><span>동작 <b>%d</b></span>'
-               '<span>구현 대기 <b>%d</b></span><span>소스 대기 <b>%d</b></span>'
-               '<span>메뉴에서 뺌 <b>%d</b></span><span>파일 <b>%d</b>장</span></p>'
-               % (len(tools), n_live, n_impl, n_soon - n_impl, n_wont, n_file))
-    out.append('    <p class="ltw">도구가 많다는 건 볼거리가 많다는 뜻이지, 이긴다는 뜻이 아닙니다. '
-               '<em>화면 수는 고유 URL(앵커 포함) 기준이며, 파일 수와 나란히 적습니다.</em></p>')
-    out.append('  </div>')
-    out.append('  <p class="lbl" id="dir-h">도구 <span class="sub">· 카테고리 %d개</span></p>'
-               % len(items["categories"]))
-    out.append('  <div class="dgrid">')
-    for c in items["categories"]:
-        cnt = {}
-        for t in c["tools"]:
-            _, cls = badge_of(t)
-            if cls:
-                cnt[cls] = cnt.get(cls, 0) + 1
-        tot = sum(cnt.values()) or 1
-        bar = "".join(
-            '<i class="%s" style="--w:%.4f%%" title="%s %d"></i>' % (cls, 100.0 * cnt[cls] / tot, lab, cnt[cls])
-            for cls, lab in BAR_ORDER if cnt.get(cls))
-        live_n = sum(1 for t in c["tools"] if tool_live(t) and t["status"] != "wont-build")
-        wont_n = sum(1 for t in c["tools"] if t["status"] == "wont-build")
-        soon_n = len(c["tools"]) - live_n - wont_n
-        meta = "구현 %d" % live_n
-        if soon_n:
-            meta += " · 대기 %d" % soon_n
-        if wont_n:
-            meta += " · 미제작 %d" % wont_n
-
-        out.append('    <div class="dcard" style="--edge:%s">' % CAT_EDGE.get(c["slug"], "var(--line)"))
-        out.append('      <h3>%s<span class="dc">%s</span></h3>' % (esc(c["name"]), esc(meta)))
-        out.append('      <div class="dbar" role="img" aria-label="%s 판정 분포">%s</div>'
-                   % (esc(c["name"]), bar))
-        out.append('      <div class="dtools">')
-        for t in c["tools"]:
-            lab, cls = badge_of(t)
-            lk = '<span class="mmlk">🔒</span>' if t.get("locked") else ""
-            chip = '<b class="%s">%s</b>' % (cls, esc(lab)) if lab else ""
-            if tool_live(t):
-                out.append('        <a href="%s">%s%s%s</a>' % (esc(t["file"]), esc(t["name"]), lk, chip))
-            else:
-                out.append('        <span>%s%s</span>' % (esc(t["name"]), chip))
-        out.append('      </div>')
-        out.append('    </div>')
-    out.append('  </div>')
-    out.append('</section>')
-
-    # ── 아직 못 만든 것: 두 덩어리로 분리한다(섞으면 "언젠가 다 만든다"로 읽힌다) ──
-    pend = [t for t in tools if not tool_live(t) and t["status"] != "wont-build"]
-    pend.sort(key=lambda t: (t.get("pipeline") if t.get("pipeline") is not None else 98, t["name"]))
-    # '데이터는 있는데 아직 안 만든 것'과 '데이터가 없어서 못 만드는 것'은 성격이 다르다.
-    # 한 목록에 섞으면 앞의 것은 변명처럼, 뒤의 것은 게으름처럼 읽힌다.
-    # pipeline 1 = 지금 만든다, 99 = 보유 데이터로 가능하나 후순위. 둘 다 '데이터는 있다' 쪽이다
-    impl = [t for t in pend if t.get("pipeline") in (1, 99)]
-    soon = [t for t in pend if t not in impl]
-    wont = list(items.get("retired") or [])   # 슬롯 밖 — 사유만 게시한다
-
-    out.append('<section id="s-gap" aria-labelledby="gap-h">')
-    out.append('  <p class="lbl" id="gap-h">아직 못 만든 것 '
-               '<span class="sub">· 구현 대기 %d · 소스 대기 %d · 메뉴에서 뺌 %d</span></p>'
-               % (len(impl), len(soon), n_wont))
-    if impl:
-        out.append('  <div class="gapbox implbox">')
-        out.append('    <p class="gaph">구현 대기 — 데이터는 있다. 아직 화면을 안 만들었을 뿐이다</p>')
-        out.append('    <p class="chips">%s</p>'
-                   % "".join('<span>%s</span>' % esc(t["name"]) for t in impl))
-        out.append('  </div>')
-    if soon:
-        out.append('  <div class="gapbox soonbox">')
-        out.append('    <p class="gaph">소스 대기 — 어떤 데이터가 없어서 비어 있는가</p>')
-        for t in soon:
-            out.append('    <div class="gaprow"><span class="gn">%s</span>'
-                       '<span class="gw">%s</span></div>'
-                       % (esc(t["name"]), esc(t["blocked_by"] or "")))
-        out.append('    <p class="gapf"><a href="roadmap.html">전체 사유와 붙이는 순서 →</a></p>')
-        out.append('  </div>')
-    if wont:
-        out.append('  <div class="gapbox wontbox">')
-        out.append('    <p class="gaph">메뉴에서 뺌 — 무료 데이터로는 길이 없어 슬롯에서 제외했다</p>')
-        for t in wont:
-            out.append('    <div class="gaprow"><span class="gn">%s</span>'
-                       '<span class="gw">%s</span></div>'
-                       % (esc(t["name"]), esc(t.get("why") or "")))
-        out.append('    <p class="gapf"><a href="roadmap.html">사유 전문 →</a></p>')
-        out.append('  </div>')
-    out.append('</section>')
-    return "\n".join(out)
-
-
 def region(src: str, begin: str, end: str):
     i = src.find(begin)
     j = src.find(end)
@@ -524,7 +413,10 @@ def main() -> int:
     items = load_items()
     head_block = NAV_CSS
     body_block = build_body(items)
-    home_block = build_home(items)
+    # 홈의 도구 디렉터리는 2026-07-25에 뺐다 — 메가메뉴와 같은 목록을 두 번 그리고 있었고,
+    # 홈이 '동료에게 보여주는 화면'이 아니라 '이 사이트를 어떻게 만들고 있나'로 읽혔다.
+    # HOMEDIR은 선택 구간이라 마커가 없는 index.html은 그냥 건너뛴다.
+    home_block = ""
 
     if not args.check:
         io.open(OUT_HEAD, "w", encoding="utf-8").write(head_block + "\n")

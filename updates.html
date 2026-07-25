@@ -208,89 +208,60 @@
     <ul class="navcats" id="navcats">
       <li class="navcat" data-cat="market">
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="금융시장 현황">
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
-          <a class="mmi" href="stocks.html#p=up" data-nav="stocks.html#p=up"><span class="mmn">기술지표 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">22개 테크니컬 백분위로 518종목 필터</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
       </li>
-      <li class="navcat" data-cat="newsroom">
-        <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
+      <li class="navcat" data-cat="filings">
+        <button aria-expanded="false" aria-controls="mm-filings">공시<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-filings" hidden role="group" aria-label="공시·산업">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
+          <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
-      <li class="navcat" data-cat="macro">
-        <button aria-expanded="false" aria-controls="mm-macro">거시<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-macro" hidden role="group" aria-label="거시경제 분석">
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표 국면 판정 — 미국 단일</span></a>
-          <a class="mmi" href="regime.html#axes" data-nav="regime.html#axes"><span class="mmn">하위 요인 분석</span><span class="mmb vunv">미검증</span><span class="mmd">7축이 어떤 지표로 만들어졌고 무엇을 뺐는지</span></a>
-          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z 한 표</span></a>
-          <a class="mmi" href="macro.html#cycle" data-nav="macro.html#cycle"><span class="mmn">사이클 분석</span><span class="mmb vunv">미검증</span><span class="mmd">레짐별 표본수를 성과보다 먼저 보여준다</span></a>
-          <a class="mmi" href="macro.html#assets" data-nav="macro.html#assets"><span class="mmn">자산군</span><span class="mmb vunv">미검증</span><span class="mmd">자산·팩터 레짐별 월평균 + RP 12자산 실비중</span></a>
-          <a class="mmi" href="macro.html#val" data-nav="macro.html#val"><span class="mmn">밸류에이션(지수)</span><span class="mmb vunv">미검증</span><span class="mmd">밸류 중앙값 vs 실질금리 — 오늘 한 점뿐</span></a>
-          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">경제지표 일정</span><span class="mmd">국면 판정이 쓰는 FRED 39지표가 언제 나오는지 — 예상치 없음</span></a>
-        </div>
-      </li>
-      <li class="navcat" data-cat="quant">
-        <button aria-expanded="false" aria-controls="mm-quant">퀀트<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-quant" hidden role="group" aria-label="퀀트 탐색">
-          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
-          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
-        </div>
-      </li>
-      <li class="navcat" data-cat="gurus">
-        <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
-          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
-          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
-        </div>
-      </li>
-      <li class="navcat" data-cat="financials">
-        <button aria-expanded="false" aria-controls="mm-financials">종목<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
-          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
+      <li class="navcat" data-cat="stocks">
+        <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 신호</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 테크니컬 22지표·컴포짓·타이밍</span></a>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
-          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <a class="mmi" href="co.html#ins" data-nav="co.html#ins"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span><span class="mmd">임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님</span></a>
-          <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
         </div>
       </li>
       <li class="navcat" data-cat="valuation">
         <button aria-expanded="false" aria-controls="mm-valuation">가치<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="종목 가치평가">
+        <div class="mmpanel" id="mm-valuation" hidden role="group" aria-label="가치평가">
           <a class="mmi" href="rel-value.html" data-nav="rel-value.html"><span class="mmn">상대가치평가</span><span class="mmb vunv">미검증</span><span class="mmd">섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다</span></a>
-          <a class="mmi" href="valuation.html#reverse" data-nav="valuation.html#reverse"><span class="mmn">Reverse DCF</span><span class="mmb vunv">미검증</span><span class="mmd">주가에 내재된 성장 가정을 역산 — 예측이 아니다</span></a>
-          <a class="mmi" href="valuation.html#simple" data-nav="valuation.html#simple"><span class="mmn">Simplified DCF</span><span class="mmb vunv">미검증</span><span class="mmd">적정주가 한 숫자를 주지 않는다 — 민감도 격자뿐</span></a>
-          <a class="mmi" href="valuation.html#ddm" data-nav="valuation.html#ddm"><span class="mmn">DDM</span><span class="mmb vunv">미검증</span><span class="mmd">고든 성장모형 — 적정주가 한 숫자 없음, 성장률 × 할인율 격자</span></a>
-          <a class="mmi" href="valuation.html#index" data-nav="valuation.html#index"><span class="mmn">Index DCF</span><span class="mmb vunv">미검증</span><span class="mmd">유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음</span></a>
+          <a class="mmi" href="valuation.html" data-nav="valuation.html"><span class="mmn">밸류에이션 모델</span><span class="mmb vunv">미검증</span><span class="mmd">역산 DCF·민감도 격자·DDM — 적정주가 한 숫자를 주지 않는다</span></a>
+          <a class="mmi" href="valuation.html#index" data-nav="valuation.html#index"><span class="mmn">지수 역산</span><span class="mmb vunv">미검증</span><span class="mmd">유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음</span></a>
         </div>
       </li>
-      <li class="navcat" data-cat="portfolio">
-        <button aria-expanded="false" aria-controls="mm-portfolio">포트<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-portfolio" hidden role="group" aria-label="포트폴리오 관리">
-          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">대시보드</span><span class="mmd">브라우저에만 저장 — 전송할 서버가 아예 없다</span></a>
-          <a class="mmi" href="portfolio.html#analysis" data-nav="portfolio.html#analysis"><span class="mmn">포트폴리오 분석</span><span class="mmb vunv">미검증</span><span class="mmd">3년 753거래일 실측 상관 — 그 이전은 데이터가 없다</span></a>
-        </div>
-      </li>
-      <li class="navcat" data-cat="industry">
-        <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
-        <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
-          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
-          <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
+      <li class="navcat" data-cat="strategy">
+        <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
+          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브</span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
+          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
+          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
+          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">내 포트폴리오</span><span class="mmd">localStorage 보유 + 753거래일 실측 상관·변동성·MDD</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="ledger">
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
-          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">기각 아카이브</span><span class="mmb vrej">기각</span><span class="mmd">기각 51건 · 부활 0건 — 사유까지</span></a>
           <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일</span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
-          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
-          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
           <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span><span class="mmd">언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에</span></a>
-          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">미구현 로드맵</span><span class="mmd">무엇이 없어서 못 만들었는지 — 12칸 대기 · 3칸 포기</span></a>
+          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">만들지 않은 것</span><span class="mmd">메뉴에서 뺀 칸과 그 사유 — 칸은 지우되 사유는 지우지 않는다</span></a>
+          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
         </div>
       </li>
     </ul>
