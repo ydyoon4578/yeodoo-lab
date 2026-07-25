@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "07e5a60f78f9fafc",
+ "generated_from": "00bc38964b07ff83",
  "categories": [
   {
    "name": "금융시장 현황",
@@ -174,29 +174,23 @@
     {
      "name": "거장 포트폴리오·매매",
      "file": "guru.html",
-     "status": "needs-source",
-     "desc": "지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함",
-     "verdict": "unverified",
+     "status": "existing",
+     "desc": "13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다",
+     "verdict": "na",
      "src": "raw",
      "effort": "L",
-     "blocked_by": "SEC 13F-HR + FTD CUSIP 매핑",
-     "blocked_why": "가장 취약한 경로 — CUSIP→티커가 FTD 부산물 의존이고 항상 4개월 묵은 롱온리 스냅샷이다. 제작 여부 미결.",
-     "pipeline": 6,
-     "live": false
+     "live": true
     },
     {
      "name": "공통 보유종목",
      "file": "guru.html#overlap",
-     "status": "needs-source",
-     "desc": "여러 명이 들었다는 사실뿐 — 근거가 아니다",
+     "status": "existing",
+     "desc": "명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다",
      "verdict": "unverified",
      "src": "agg",
      "effort": "M",
-     "anchor": "static",
-     "blocked_by": "SEC 13F-HR + FTD CUSIP 매핑",
-     "blocked_why": "위와 동일 파이프라인.",
-     "pipeline": 6,
-     "live": false
+     "anchor": "route",
+     "live": true
     }
    ]
   },

@@ -1,0 +1,46 @@
+name: Refresh 13F holdings (SEC)
+
+# 유명 운용사의 분기말 미국 상장주식 보유를 SEC Form 13F 데이터셋에서 수집한다.
+# 무인증·무료. 표준 라이브러리만 쓴다.
+#
+# 주기 — 주 1회. 소스가 분기 단위라 실제로는 분기에 한 번만 바뀐다. 그래도 주 1회 도는 이유는
+#   새 창 파일이 언제 올라오는지 SEC가 예고하지 않기 때문이다(내용이 같으면 커밋도 안 생긴다).
+#
+# 무게 — 13F ZIP 두 개(약 95MB + 86MB)에 FTD 파일 두 개. INFOTABLE은 압축 해제 350MB가 넘지만
+#   리스트로 읽지 않고 흘려보내며 거르므로 메모리는 문제되지 않는다. 실측 약 6분.
+
+on:
+  schedule:
+    - cron: '15 3 * * 6'    # 매주 토 12:15 KST (03:15 UTC) — 다른 주말 잡과 30분 간격
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-13f
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Collect 13F holdings
+        run: python build/refresh_13f.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 13F 보유 자동 갱신" \
+            data/guru.json data/asof.json
+      # 이 축은 분기에 한 번 움직이고 45일 지연이 구조적이다. 한 분기를 통째로 건너뛴
+      # 경우(≈150일)에만 실패하도록 창을 넉넉히 잡는다.
+      - name: Verify freshness
+        run: python build/check_freshness.py data/guru.json "13F 보유" 150

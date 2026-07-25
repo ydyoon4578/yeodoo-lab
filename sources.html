@@ -231,8 +231,8 @@
       <li class="navcat" data-cat="gurus">
         <button aria-expanded="false" aria-controls="mm-gurus">거장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-gurus" hidden role="group" aria-label="투자거장 분석">
-          <span class="mmi"><span class="mmn">거장 포트폴리오·매매</span><span class="mmb soon">준비중</span><span class="mmd">지금 보이는 건 3월 31일 포트폴리오다 — 롱온리·파생 미포함</span></span>
-          <span class="mmi"><span class="mmn">공통 보유종목</span><span class="mmb soon">준비중</span><span class="mmd">여러 명이 들었다는 사실뿐 — 근거가 아니다</span></span>
+          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
+          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="financials">
@@ -404,6 +404,9 @@
         <tr><th scope="row"><a href="co.html#fs">SEC 재무제표(XBRL)</a></th>
           <td><span class="freetag">무료</span>SEC EDGAR companyfacts(무인증) — 회사가 태깅한 값 그대로, 랩이 조정·재분류하지 않음. 외국 사기업은 IFRS·보고통화 그대로</td>
           <td class="dt" id="src-fx">—</td><td>매주 토 10:45 KST</td></tr>
+        <tr><th scope="row"><a href="guru.html">13F 거장 보유</a></th>
+          <td><span class="freetag">무료</span>SEC Form 13F 분기 데이터셋 + CUSIP↔티커는 SEC 공매도 미결제(FTD). <b>롱온리·분기말·45일 지연</b>이 구조적</td>
+          <td class="dt" id="src-guru">—</td><td>매주 토 12:15 KST</td></tr>
         <tr><th scope="row"><a href="calendar.html">경제지표 발표 일정</a></th>
           <td><span class="freetag">무료</span>FRED releases/dates API — 국면 판정이 쓰는 39개 시리즈의 릴리스 일정만. <b>예상치·컨센서스 없음</b></td>
           <td class="dt" id="src-cal">—</td><td>매주 토 11:45 KST</td></tr>
@@ -524,7 +527,7 @@
     if(!a||!a.axes)return;
     // 재무 축은 '분기 결산 기간말'이라 분기에 한 번만 움직인다 — 90영업일을 넘겨야 이상하다.
     // 가격 축(2영업일)과 같은 잣대를 쓰면 정상 상태가 늘 빨갛게 뜬다.
-    var want={filings:['src-fil',10],facts:['src-fx',90],insider:['src-ins',120],calendar:['src-cal',10]};
+    var want={filings:['src-fil',10],facts:['src-fx',90],insider:['src-ins',120],calendar:['src-cal',10],guru:['src-guru',150]};
     for(var i=0;i<a.axes.length;i++){
       var w=want[a.axes[i].key];
       if(w)putFresh(w[0],a.axes[i].as_of,w[1]);
