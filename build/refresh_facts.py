@@ -254,6 +254,55 @@ def extract(facts: dict):
     return out
 
 
+def index_fcf_stat(tickers, mc_by_t):
+    """지수 단위 FCF 합계 — valuation.html#index가 읽는다.
+
+    ⚠ 이건 '지수의 FCF'가 아니라 **두 다리가 모두 잡히고 최근 회계연도인 회사들의 합계**다.
+    그 사실을 숫자로 같이 내보낸다(커버 종목 수·시총 비중). 실측(2026-07-25):
+
+      · SEC frames API로 직접 합치면 영업현금흐름 488사 대 설비투자 329사로 집합이 어긋난다.
+        무시하고 빼면 FCF가 **+80% 부풀려진다**. 교집합만 쓰면 시총 커버가 60%로 떨어진다.
+      · 반면 이 수집분은 회사별로 후보 태그 중 살아 있는 것을 골라 뒀기 때문에 두 다리가
+        모두 있는 회사가 457사다. 거기서 최근 18개월 안에 끝난 회계연도만 남기면
+        **427사 · 시총 87%**가 된다(2018년에 멈춘 회사가 섞이면 합산이 성립하지 않는다).
+    """
+    cut = (dt.date.today() - dt.timedelta(days=548)).isoformat()   # 약 18개월
+    fcf = 0.0
+    mc = 0.0
+    used, neg = 0, 0
+    for t in tickers:
+        try:
+            d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
+        except Exception:
+            continue
+        tg = d.get("tags") or {}
+        cm = {x: y for x, y in ((tg.get("cfo") or {}).get("a") or [])}
+        pm = {x: y for x, y in ((tg.get("capex") or {}).get("a") or [])}
+        common = sorted(set(cm) & set(pm), reverse=True)
+        if not common or common[0] < cut:
+            continue
+        v = cm[common[0]] - pm[common[0]]
+        m = mc_by_t.get(t)
+        if not m:
+            continue
+        fcf += v
+        mc += m
+        used += 1
+        if v < 0:
+            neg += 1
+    tot_mc = sum(v for v in mc_by_t.values() if v)
+    if not used or not mc:
+        return None
+    return {"n": used, "n_uni": len(mc_by_t), "n_neg": neg,
+            "fcf_musd": round(fcf, 0),                    # 백만 달러
+            "mc_cover": round(mc / tot_mc * 100, 1) if tot_mc else None,
+            # fund.mc는 억$ 단위다 — 백만$로 맞춰 수익률을 낸다
+            "fcfy": round(fcf / (mc * 100) * 100, 3),
+            "window_months": 18,
+            "note": "지수의 FCF가 아니다. 영업현금흐름과 설비투자가 모두 잡히고 최근 18개월 안에 "
+                    "끝난 회계연도가 있는 회사들의 합계다. 커버 종목 수와 시총 비중을 함께 봐야 한다."}
+
+
 def clean_surplus_stat(tickers):
     """장부가 증분이 '이익 − 배당'과 얼마나 어긋나는지 — RIM 전제의 실측.
 
@@ -309,6 +358,13 @@ def load_universe():
     return [(s["t"], s.get("name") or "") for s in d["stocks"]]
 
 
+def load_mc():
+    """티커 → 시가총액(억$). 지수 FCF의 시총 커버를 재는 데만 쓴다."""
+    with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as f:
+        d = json.load(f)
+    return {s["t"]: (s.get("fund") or {}).get("mc") for s in d["stocks"]}
+
+
 def load_cik_map():
     """공시 파이프라인이 이미 확정한 티커→CIK를 재사용한다(전신 법인 보정 포함).
     없으면 SEC 매핑을 직접 읽는다."""
@@ -326,6 +382,7 @@ def load_cik_map():
 
 def main() -> int:
     uni = load_universe()
+    mc_by_t = load_mc()
     cmap, src = load_cik_map()
     print("티커→CIK 출처: %s (%d개)" % (src, len(cmap)))
 
@@ -426,6 +483,7 @@ def main() -> int:
     # 미국 회계에서 이게 실제로 얼마나 맞는지 재서 남긴다 — 안 재고 모형을 켜면
     # 내부적으로 모순된 값을 RIM이라고 부르게 된다.
     cs = clean_surplus_stat(got)
+    idx = index_fcf_stat(got, mc_by_t)
     # DDM이 쓸 수 있는 범위 — 연간 주당배당금이 몇 년치나 있는가
     dy = {"n1": 0, "n2": 0, "n4": 0}
     for t in got:
@@ -453,6 +511,7 @@ def main() -> int:
         "no_facts": [t for t, _n in empty],
         "miss": miss,
         "clean_surplus": cs,
+        "index_fcf": idx,
         "dps_years": dy,
         "limits": [
             "숫자는 회사가 XBRL로 태깅해 제출한 값 그대로다 — 랩이 조정하거나 재분류하지 않는다.",
