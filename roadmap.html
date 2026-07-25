@@ -200,8 +200,6 @@
         <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
-          <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="macro">
@@ -264,7 +262,6 @@
         <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
           <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
           <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
-          <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="ledger">
@@ -389,14 +386,19 @@
   </section>
 
   <section aria-labelledby="wont-h">
-    <p class="lbl" id="wont-h">만들지 않기로 확정</p>
-    <p class="lblnote">"언젠가"라고 적어두고 방치하지 않기 위해, 만들 계획이 없는 칸은 그렇게 못박습니다.</p>
+    <p class="lbl" id="wont-h">메뉴에서 뺀 칸 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 슬롯 수에서 제외</span></p>
+    <p class="lblnote">무료 공개 데이터로는 만들 수 없다고 확정해 <b>40슬롯에서 뺀</b> 칸입니다. 메뉴에는 더 이상 없습니다.
+      다만 <b>지웠다고 없던 일로 하지는 않습니다</b> — 왜 못 만드는지, 돈을 쓰면 되는지, 무엇이 대신 그 자리를 맡았는지를 여기 남깁니다.</p>
     <div id="wonts"><div class="skel">불러오는 중…</div></div>
   </section>
 
   <div class="note" id="tallynote">
-    <b>왜 빈 칸을 메뉴에서 지우지 않는가</b> — 지우면 이 사이트가 무엇을 다루려 하는지, 그리고 무엇을 아직 못 하는지가 같이 사라집니다.
-    준비중은 준비중이라고 적힌 채로 두는 편이, 있는 것만 보여주고 없는 것은 말하지 않는 것보다 정직합니다.
+    <b>준비중은 남기고, 못 만드는 칸은 뺍니다</b> — 둘은 다릅니다.
+    <b>준비중</b>은 붙일 소스가 실재하고 순서만 남은 칸이라, 지우면 이 사이트가 무엇을 다루려 하는지가 같이 사라집니다.
+    그래서 준비중이라고 적힌 채로 둡니다.
+    <b>못 만드는 칸</b>은 무료 공개 데이터에 길이 없다고 확정한 것이라, 메뉴에 세워 두면 "언젠가 되겠지"라는
+    빈 약속이 됩니다. 2026-07-25에 3칸을 슬롯에서 뺐습니다 — 대신 <b>왜 못 만드는지와 무엇이 대신하는지를
+    위에 그대로 남깁니다</b>. 사유를 지우는 것과 칸을 지우는 것은 다릅니다.
   </div>
 
   <footer>
@@ -417,20 +419,20 @@
     j.categories.forEach(function(c){(c.tools||[]).forEach(function(t){t._cat=c.name;tools.push(t);});});
 
     // ── 네 숫자 ──
-    // 미제작 3칸은 사유를 적은 이 페이지를 가리키므로 링크는 살아 있다 — 그렇다고 '동작 중'은 아니다.
-    // 세 숫자를 합치면 반드시 전체와 같아야 한다(그러라고 네 숫자를 나란히 두는 것이다).
-    var wont   = tools.filter(function(t){return t.status==='wont-build';}).length;
-    var live   = tools.filter(function(t){return t.live&&t.status!=='wont-build';}).length;
-    var soon   = tools.length-live-wont;
+    // 앞의 셋(전체=동작+준비중)만 합이 맞는다. '뺀 칸'은 2026-07-25에 슬롯에서 아예 제외했으므로
+    // 전체 슬롯 수에 들어 있지 않다 — 여기서 빼면 준비중이 그만큼 모자라게 나온다(실제로 그렇게 틀렸었다).
+    var live   = tools.filter(function(t){return t.live;}).length;
+    var soon   = tools.length-live;
+    var wont   = (j.retired||[]).length;      // 슬롯 밖 — 아래 '뺀 칸' 섹션이 사유를 싣는다
     el('tally').innerHTML=
       ty(tools.length,'전체 슬롯','메뉴에 세운 칸','var(--ink)')+
       ty(live,'동작 중','지금 열리는 화면','var(--deploy)')+
       ty(soon,'준비중','소스·구현 대기','var(--champ)')+
-      ty(wont,'만들지 않음','사유는 아래','var(--hot)');
+      ty(wont,'메뉴에서 뺌','슬롯 밖 · 사유는 아래','var(--hot)');
 
     // ── 소스별 묶음(pipeline 0=영구 미제작은 제외, 99=후순위는 맨 뒤) ──
     var byPipe={};
-    tools.filter(function(t){return !t.live&&t.status!=='wont-build';}).forEach(function(t){
+    tools.filter(function(t){return !t.live;}).forEach(function(t){
       var k=(t.pipeline==null?98:t.pipeline)+'|'+(t.blocked_by||'미분류');
       (byPipe[k]=byPipe[k]||[]).push(t);
     });
@@ -448,13 +450,18 @@
         }).join('')+'</div></div>';
     }).join('') : '<div class="skel">대기 중인 칸이 없습니다.</div>';
 
-    // ── 만들지 않음 ──
-    var w=tools.filter(function(t){return t.status==='wont-build';});
+    // ── 메뉴에서 뺀 칸 ── 슬롯에는 없지만 사유는 계속 게시한다
+    var w=j.retired||[];
     el('wonts').innerHTML = w.length ? w.map(function(t){
-      return '<div class="wont" id="'+esc((t.file.split('#')[1]||''))+'"><h3>'+esc(t.name)+
-        ' <span style="font-weight:400;color:var(--muted);font-size:11.5px">· '+esc(t._cat)+'</span></h3>'+
-        '<p>'+esc(t.blocked_by||'')+'</p>'+
-        (t.blocked_why?'<p class="alt">'+esc(t.blocked_why)+'</p>':'')+'</div>';
+      return '<div class="wont" id="'+esc(((t.was_file||'').split('#')[1]||''))+'"><h3>'+esc(t.name)+
+        ' <span style="font-weight:400;color:var(--muted);font-size:11.5px">· '+esc(t.cat)+
+        ' · '+esc(t.retired_on||'')+' 제외</span></h3>'+
+        '<p>'+esc(t.why||'')+'</p>'+
+        (t.principle?'<p class="alt">'+esc(t.principle)+'</p>':'')+
+        (t.paid_path?'<p class="alt"><b style="color:var(--marg)">돈으로 푸는 길</b> — '+esc(t.paid_path)+'</p>':'')+
+        (t.replaced_by?'<p class="alt"><b style="color:var(--deploy)">대신 만든 것</b> — '+esc(t.replaced_by)+'</p>':
+                       '<p class="alt"><b style="color:var(--hot)">대체 없음</b> — 이 자리는 비워 둡니다.</p>')+
+        '</div>';
     }).join('') : '<div class="skel">해당 없음.</div>';
   }).catch(fail);
 
