@@ -44,14 +44,11 @@
     {
      "name": "8-K 공시 피드",
      "file": "filings.html",
-     "status": "needs-source",
+     "status": "existing",
      "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
      "src": "raw",
      "verdict": "na",
-     "effort": "M",
-     "blocked_by": "SEC EDGAR submissions API",
-     "blocked_why": "실측 28KB gz·0.07s/콜 → 518종목 36초. 무인증.",
-     "pipeline": 2
+     "effort": "M"
     },
     {
      "name": "실시간 내러티브",
@@ -246,15 +243,11 @@
     {
      "name": "IR자료실",
      "file": "co.html#ir",
-     "status": "needs-source",
+     "status": "existing",
      "desc": "EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다",
      "src": "raw",
      "verdict": "na",
-     "effort": "M",
-     "placeholder": true,
-     "blocked_by": "SEC EDGAR submissions API",
-     "blocked_why": "같은 수집분에서 원문 링크만 뽑는다. 회사 IR 주소는 SEC가 주지 않는다.",
-     "pipeline": 2
+     "effort": "M"
     },
     {
      "name": "실적 및 전망",
@@ -403,14 +396,11 @@
     {
      "name": "산업 탐색",
      "file": "industry.html",
-     "status": "needs-source",
-     "desc": "조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포",
+     "status": "existing",
+     "desc": "SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다",
      "src": "raw",
      "verdict": "unverified",
-     "effort": "M",
-     "blocked_by": "SEC EDGAR submissions API",
-     "blocked_why": "최상위 sic·sicDescription. 조회수를 추적하지 않아 \"인기\" 대신 산업 분포를 쓴다.",
-     "pipeline": 2
+     "effort": "M"
     },
     {
      "name": "관전 포인트",

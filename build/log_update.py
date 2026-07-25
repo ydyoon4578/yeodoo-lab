@@ -23,6 +23,7 @@ TARGETS = {
     "rotation", "explorer", "archive", "stocks", "regime", "sentiment", "holdings",
     "market", "sector", "macro", "screener", "relvalue", "valuation", "portfolio",
     "company", "method", "roadmap", "sources", "site",
+    "filings", "industry",
 }
 
 

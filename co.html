@@ -187,6 +187,22 @@
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
   .empty{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:26px 0;text-align:center}
 
+  /* IR자료실 — 제출 원문 목록 */
+  .irlist{display:flex;flex-direction:column;gap:1px;margin-top:8px}
+  .irrow{display:grid;grid-template-columns:190px 96px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
+  .irrow .irf b{font-family:var(--mono);font-size:12.5px;font-weight:800}
+  .irrow .irf span{font-size:11.5px;color:var(--muted);margin-left:7px}
+  .irrow .ird{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .irrow .iri{display:flex;gap:5px;flex-wrap:wrap}
+  .irrow .irit{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+  .irrow .iru{font-family:var(--mono);font-size:11px;white-space:nowrap}
+  .irrow .iru a{color:var(--accent);text-decoration:none}
+  .irrow .iru a:hover{text-decoration:underline}
+  @media(max-width:720px){
+    .irrow{grid-template-columns:1fr auto}
+    .irrow .iri{grid-column:1/-1}
+  }
+
   /* ── 빈 탭 ── */
   .gap{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px}
   .gap h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:700}
@@ -318,7 +334,7 @@
       <li class="navcat" data-cat="newsroom">
         <button aria-expanded="false" aria-controls="mm-newsroom">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-newsroom" hidden role="group" aria-label="공시룸 (뉴스룸)">
-          <span class="mmi"><span class="mmn">8-K 공시 피드</span><span class="mmb soon">준비중</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></span>
+          <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
           <a class="mmi" href="roadmap.html#narrative" data-nav="roadmap.html#narrative"><span class="mmn">실시간 내러티브</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 라이선스 없음, 사유만 게시</span></a>
           <a class="mmi" href="roadmap.html#news" data-nav="roadmap.html#news"><span class="mmn">프리미엄 뉴스</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 대체는 EDGAR 원문 직행</span></a>
         </div>
@@ -354,7 +370,7 @@
         <div class="mmpanel" id="mm-financials" hidden role="group" aria-label="종목 재무분석">
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 개요·내러티브</span><span class="mmb vunv">미검증</span><span class="mmd">신호·펀더멘털·차트 한 화면 · 문장은 LLM 아닌 규칙</span></a>
           <span class="mmi"><span class="mmn">재무제표</span><span class="mmb soon">준비중</span><span class="mmd">SEC 원문 — 숫자마다 기간말·제출일 병기</span></span>
-          <span class="mmi"><span class="mmn">IR자료실</span><span class="mmb soon">준비중</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></span>
+          <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
           <span class="mmi"><span class="mmn">내부자 거래</span><span class="mmb soon">준비중</span><span class="mmd">약 25일 지연 — 실시간이 아니다</span></span>
           <span class="mmi"><span class="mmn">실적 발표 일정</span><span class="mmb soon">준비중</span><span class="mmd">다음 발표일과 과거 서프라이즈 — 비공식 API 의존</span></span>
@@ -381,7 +397,7 @@
       <li class="navcat" data-cat="industry">
         <button aria-expanded="false" aria-controls="mm-industry">산업<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-industry" hidden role="group" aria-label="산업 분석">
-          <span class="mmi"><span class="mmn">산업 탐색</span><span class="mmb soon">준비중</span><span class="mmd">조회수를 추적하지 않아 '인기' 대신 SIC 산업 분포</span></span>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
           <span class="mmi"><span class="mmn">관전 포인트</span><span class="mmb soon">준비중</span><span class="mmd">해석이 아니라 어긋난 자리만 짚는다</span></span>
           <a class="mmi" href="roadmap.html#value-chain" data-nav="roadmap.html#value-chain"><span class="mmn">밸류체인</span><span class="mmb wont">미제작</span><span class="mmd">만들지 않는다 — 공급망 데이터가 없다, 사유만 게시</span></a>
         </div>
@@ -506,7 +522,7 @@
   <nav class="tabs" id="tabs" aria-label="종목 정보 탭">
     <a class="tab" href="#est" data-tab="est">실적 및 전망</a>
     <a class="tab" href="#fs"  data-tab="fs">재무제표 <span class="tg">빈 탭</span></a>
-    <a class="tab" href="#ir"  data-tab="ir">IR자료실 <span class="tg">빈 탭</span></a>
+    <a class="tab" href="#ir"  data-tab="ir">IR자료실</a>
     <a class="tab" href="#ins" data-tab="ins">내부자 거래 <span class="tg">빈 탭</span></a>
   </nav>
 
@@ -553,21 +569,14 @@
     </div>
   </section>
 
-  <!-- ══ #ir — 빈 탭 ══════════════════════════════════════════════════════ -->
+  <!-- ══ #ir — SEC EDGAR submissions 수집분 ═══════════════════════════════ -->
   <section id="ir" class="panel" aria-labelledby="ir-h">
-    <p class="lbl" id="ir-h">IR자료실 <span class="sub">비어 있음 — 감추지 않고 사유를 적습니다</span></p>
-    <p class="lblnote">공시 원문 링크 목록을 만들려면 회사별 제출 이력이 필요합니다. 아직 그 수집분이 없습니다.</p>
-    <div class="gap" id="gap-ir">
-      <h3>공시·IR 원문 링크 — 없음</h3>
-      <p class="why">만들더라도 이 탭은 <b>EDGAR 원문 링크만</b> 싣게 됩니다. 회사 자체 IR 페이지 주소는 SEC가 제공하지 않기 때문에,
-        "IR자료실"이라는 이름과 달리 회사 IR 사이트로 가는 링크는 없을 예정입니다 — 미리 적어 둡니다.</p>
-      <dl>
-        <dt>필요한 소스</dt><dd>SEC EDGAR submissions API</dd>
-        <dt>범위 한계</dt><dd>제출 원문 링크만. 회사 IR 주소·프레젠테이션·실적 콜 녹취는 SEC가 주지 않으므로 이 경로로는 못 만듭니다.</dd>
-        <dt>지금 상태</dt><dd>수집 파이프라인 미구현.</dd>
-      </dl>
-      <p class="go">→ <a href="roadmap.html#pipe-h">미구현 로드맵에서 이 칸이 몇 순위인지 보기</a></p>
-    </div>
+    <p class="lbl" id="ir-h">IR자료실 <span class="sub">출처 SEC EDGAR · 회사가 제출한 원문 링크</span></p>
+    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/fil/&lt;티커&gt;.json</code>에서 읽습니다.
+      <b>EDGAR 원문 링크만</b> 싣습니다 — 회사 자체 IR 사이트 주소는 SEC가 주지 않기 때문입니다
+      (submissions 응답에 <code style="font-family:var(--mono)">investorWebsite</code> 필드가 있긴 하지만 실측 12/12 전부 비어 있었습니다).
+      프레젠테이션·실적 콜 녹취도 같은 이유로 여기에 없습니다.</p>
+    <div id="irbox"><div class="empty">위에서 종목을 고르면 그 회사의 제출 원문 목록이 여기에 표시됩니다.</div></div>
   </section>
 
   <!-- ══ #ins — 빈 탭 ═════════════════════════════════════════════════════ -->
@@ -648,6 +657,9 @@
       var a=document.querySelector('.tab[data-tab="'+TABS[i]+'"]');
       if(a){if(TABS[i]===state.tab)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
     }
+    // #ir로 들어올 때 이미 고른 종목이 있으면 그 자리에서 채운다. 안 하면 종목을 먼저
+    // 고르고 탭을 옮긴 사용자에게 빈 안내문이 남는다(선택 시점엔 #ir이 숨어 있었으므로).
+    if(state.tab==='ir'&&state.sel){ensureFilings(state.sel);renderIR(state.sel);}
   }
   function onHash(){
     var p=parseHash();
@@ -784,6 +796,68 @@
     state.sel=s;renderList();
     ensureDetail(s);
     renderDetail(s);
+    ensureFilings(s);
+    renderIR(s);
+  }
+
+  // ── IR자료실: 회사별 제출 이력(SEC EDGAR submissions 수집분) ─────────────
+  // 상세(data/sd/)와 같은 지연 로드 규약을 쓴다 — 518사 전체를 한 파일로 받으면
+  // 한 회사를 보려고 1.9MB를 내려받게 된다.
+  function ensureFilings(s){
+    if(s._fil||s._filFail||s._filLoading)return;
+    s._filLoading=1;
+    getj('data/fil/'+encodeURIComponent(s.t)+'.json').then(function(x){
+      s._filLoading=0;
+      if(x&&x.filings)s._fil=x; else s._filFail=1;
+      if(state.sel===s)renderIR(s);
+    });
+  }
+
+  // 원문 링크는 파일에 통째로 담지 않고 조각(accession·주 문서명)만 담았다 — 규칙으로 되짓는다.
+  // 주 문서명이 비면 SEC가 그 제출의 주 문서를 지정하지 않은 것이라 제출 인덱스로 보낸다.
+  function filUrl(f,cik){
+    if(!cik||!f.a)return '';
+    return 'https://www.sec.gov/Archives/edgar/data/'+cik+'/'+f.a+'/'+(f.p||'');
+  }
+
+  function renderIR(s){
+    var box=el('irbox'); if(!box)return;
+    if(!s){box.innerHTML='<div class="empty">위에서 종목을 고르면 그 회사의 제출 원문 목록이 여기에 표시됩니다.</div>';return;}
+    if(s._filLoading){box.innerHTML='<div class="skel">제출 이력(data/fil/'+esc(s.t)+'.json)을 불러오는 중…</div>';return;}
+    if(s._filFail||!s._fil){
+      box.innerHTML='<div class="note">제출 이력 파일(<code>data/fil/'+esc(s.t)+'.json</code>)을 불러오지 못했습니다 — 추정치로 채우지 않습니다.</div>';
+      return;
+    }
+    var d=s._fil, fl=d.filings||[];
+    var h='<div class="card"><div class="selhd">'+
+          '<span class="tk">'+esc(d.t)+'</span><span class="nm">'+esc(d.nm||'')+'</span>'+
+          (d.sic?'<span class="chip" title="SEC 부여 산업분류">SIC '+esc(d.sic)+' · '+esc(d.sd||'')+'</span>':'')+
+          (d.st?'<span class="chip">설립 '+esc(d.st)+'</span>':'')+
+          (d.fy?'<span class="chip" title="회계연도 종료 월일(MMDD)">FY말 '+esc(d.fy)+'</span>':'')+
+          '<span class="px">CIK '+esc(String(d.cik))+'<br>최근 제출 '+esc(String(d.n_recent||0))+'건</span></div></div>';
+
+    if(!fl.length){
+      h+='<div class="note">이 회사의 최근 제출분에서 IR 관련 서식(연차·분기·수시공시·위임장 등)을 찾지 못했습니다.</div>';
+      box.innerHTML=h; return;
+    }
+    h+='<div class="card"><h3>제출 원문<span class="hn">'+fl.length+'건 · 최신순</span></h3><div class="irlist">';
+    for(var i=0;i<fl.length;i++){
+      var f=fl[i], u=filUrl(f,d.cik), ko=(d.forms_ko||{})[f.f]||'';
+      var its='';
+      for(var j=0;j<(f.it||[]).length;j++) its+='<span class="irit">'+esc(f.it[j])+'</span>';
+      h+='<div class="irrow">'+
+           '<div class="irf"><b>'+esc(f.f)+'</b>'+(ko?'<span>'+esc(ko)+'</span>':'')+'</div>'+
+           '<div class="ird tnum">'+esc(f.d)+'</div>'+
+           '<div class="iri">'+its+'</div>'+
+           '<div class="iru">'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener nofollow">원문 ↗</a>':'—')+'</div>'+
+         '</div>';
+    }
+    h+='</div></div>';
+    h+='<div class="note"><b>이 목록의 범위</b> — SEC submissions의 <b>최근분</b>(최근 1,000건 또는 1년치)에서 '+
+       'IR 관련 서식만 최대 30건 남긴 것입니다. Form 3/4/5·144처럼 건수가 압도적인 서식은 IR 자료가 아니라 뺐습니다'+
+       '(임원 매매는 <a href="#ins">내부자 거래</a> 탭의 몫이고 소스도 다릅니다). '+
+       '더 오래된 제출은 <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK='+esc(String(d.cik))+'&type=&dateb=&owner=include&count=40" target="_blank" rel="noopener nofollow">EDGAR에서 직접</a> 볼 수 있습니다.</div>';
+    box.innerHTML=h;
   }
 
   // 상세(fundx 퍼센타일·종가 시계열)는 종목별 파일에서 지연 로드
@@ -1081,7 +1155,7 @@
         if(f.indexOf('co.html#')===0)map[f.split('#')[1]]=tools[j];
       }
     }
-    var keys=['fs','ir','ins'];
+    var keys=['fs','ins'];   // ir은 SEC submissions 수집분이 붙어 더 이상 빈 탭이 아니다
     for(i=0;i<keys.length;i++){
       var t=map[keys[i]],box=el('gap-'+keys[i]);
       if(!t||!box)continue;
