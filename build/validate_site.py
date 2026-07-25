@@ -322,6 +322,13 @@ if pool:
     if _ek is not None and ("aka" not in _ek or "_keys" not in _ek):
         errors.append("explorer.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
 
+    # 구 슬러그가 한글이면 location.hash에 퍼센트 인코딩돼 들어온다(실측: '#s-vix-기간구조' →
+    # '#s-vix-%EA%B8%B0...'). 디코드를 빠뜨리면 조회가 조용히 빗나가 "링크는 열리는데 아무 데도
+    # 안 간다"가 된다 — 2026-07-25 아카이브 재작성 때 실제로 이렇게 회귀했다.
+    for _pg, _txt in (("archive.html", _ak), ("explorer.html", _ek)):
+        if _txt is not None and "decodeURIComponent" not in _txt:
+            errors.append(f"{_pg}: 해시 해석에 decodeURIComponent가 없음 — 한글 구 슬러그 딥링크가 빗나간다")
+
 # ── 선별 알고리즘 상수 일치(프론트 ↔ 일일잡) ──────────────────
 rot = plain("rotation.html", "선별 상수(QUOTA/CATORD)·Math.imul·KST 검사")
 sel = rd(os.path.join("build", "rotation_select.py"))

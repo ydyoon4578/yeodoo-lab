@@ -641,6 +641,7 @@
   function alias(items){ (items||[]).forEach(function(x){ (x.aka||[]).forEach(function(k){ ALIAS[k]=x.sid; }); }); }
   function jump(){
     var h=(location.hash||'').replace(/^#/,''); if(!h) return;
+    try{ h=decodeURIComponent(h); }catch(e){}   // 한글 슬러그는 퍼센트 인코딩돼 들어온다 (aka가 한글이다)
     var id=h.indexOf('s-')===0?h.slice(2):h;
     var t=document.getElementById('s-'+(ALIAS[id]||id)); if(!t) return;
     t.scrollIntoView({block:'center'});
