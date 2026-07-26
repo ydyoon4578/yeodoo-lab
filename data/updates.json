@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-07-26",
+   "hm": "11:24",
+   "target": "site",
+   "title": "공매도잔량 축에 실제 주기 명시 — 고정 요일이 없고 15일·말일 기준 + FINRA 공표 약 8영업일 뒤(실측 기준일 7/15 수·6/30 화·6/15 월)"
+  },
+  {
+   "dt": "2026-07-26",
    "hm": "11:15",
    "target": "site",
    "title": "지수 편입 축의 잘못된 갱신 일정 표기 제거 — refresh-holdings는 strategy_holdings.json만 만들고 members.json은 안 건드린다(자동 갱신 없음을 명시)"
