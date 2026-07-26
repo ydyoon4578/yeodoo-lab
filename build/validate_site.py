@@ -1038,6 +1038,22 @@ try:
         _msg = ((_r.stdout or "") + (_r.stderr or "")).strip()
         errors.append("공통 셸 드리프트 — build/sync_shell.py를 다시 돌릴 것: "
                       + " / ".join(l.strip() for l in _msg.split("\n") if "셸 " not in l)[:300])
+    # 스타일 요소가 엉뚱한 데서 끊기지 않았는가.
+    # HTML 파서는 style 안에서 종료 태그를 만나면 **주석 안이든 아니든** 거기서 끊는다.
+    # 그러면 뒤의 CSS가 통째로 본문 글자로 쏟아지는데, 화면은 '스타일이 조금 안 먹네' 정도로만
+    # 보여서 늦게 발견된다(실제로 셸 도입 때 밟았다). 중괄호·주석 균형으로 잡는다.
+    for _f in PAGES:
+        _t = plain(_f, "스타일 블록 균형 검사")
+        if _t is None:
+            continue
+        for _n, _m in enumerate(re.finditer(r"<style[^>]*>(.*?)</style>", _t, re.S), 1):
+            _css = _m.group(1)
+            if _css.count("{") != _css.count("}"):
+                errors.append(f"{_f}: {_n}번째 스타일 블록의 중괄호가 안 맞는다({_css.count('{')}/"
+                              f"{_css.count('}')}) — 블록 안에 스타일 종료 태그가 섞였을 가능성이 크다")
+            if _css.count("/*") != _css.count("*/"):
+                errors.append(f"{_f}: {_n}번째 스타일 블록의 주석이 안 닫혔다 — 뒤 CSS가 통째로 죽는다")
+
     for _f in PAGES:
         _t = plain(_f, "공통 셸 위치 검사")
         if _t is None:

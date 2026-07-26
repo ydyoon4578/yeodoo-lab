@@ -117,14 +117,27 @@ def _decl(d: dict) -> str:
 
 def build_shell() -> str:
     # % 서식 대신 치환을 쓴다 — CSS에 color-mix(… 7%) 처럼 %가 그대로 들어간다.
-    return (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(LIGHT)).replace("@DARK@", _decl(DARK))
-            + SHELL_END)
+    css = (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(LIGHT)).replace("@DARK@", _decl(DARK))
+           + SHELL_END)
+    # ⚠ style 종료 태그가 한 글자라도 섞이면 HTML 파서가 **주석 안이든 아니든** 거기서
+    #   style 요소를 끝낸다. 그러면 뒤의 CSS 전체가 본문 글자로 쏟아진다. 실제로 밟았고
+    #   (설명 주석에 태그를 그대로 적었다), 검증기보다 여기서 막는 게 빠르다.
+    if "</" + "style" in css:
+        raise SystemExit("셸 CSS에 style 종료 태그가 들어 있다 — 파서가 거기서 스타일을 끊는다")
+    # 주석 짝도 본다. 설명에 --rg-*/--sn-* 처럼 별표+빗금이 붙은 토큰명을 쓰면 그 자리에서
+    # 주석이 닫히고, 뒤의 설명 문장이 CSS로 해석되면서 이어지는 규칙까지 함께 죽는다.
+    if css.count("/*") != css.count("*/"):
+        raise SystemExit("셸 CSS의 주석 짝이 안 맞는다(%d 열기 / %d 닫기) — 주석 안에 */가 섞였다"
+                         % (css.count("/*"), css.count("*/")))
+    return css
 
 
 _CSS = """
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
-   23장이 각자 <style>을 들고 있어 공통 양식을 넣을 자리가 여기(첫 </style> 앞)밖에 없다.
-   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다. */
+   23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
+   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다.
+   ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰면 안 된다 — HTML 파서는 주석 안이든
+      아니든 그 지점에서 style 요소를 끝내버린다(실제로 한 번 밟았다). */
 
 /* ① 글꼴 — Pretendard.
    기존 스택 첫 후보는 "Malgun Gothic"이었다. 윈도 기본 한글 글꼴이라 굵기가 사실상 400/700
@@ -137,8 +150,9 @@ _CSS = """
   --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
 }
 
-/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(--accent/--deploy/--rg-*/--sn-* …)은
-   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다. */
+/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
+   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
+   ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
 :root{@LIGHT@}
 @media(prefers-color-scheme:dark){:root{@DARK@}}
 :root[data-theme="light"]{@LIGHT@}
