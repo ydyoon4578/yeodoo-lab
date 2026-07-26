@@ -1,5 +1,27 @@
 {
- "as_of_members": "2026-07-21",
+ "as_of_members": "2026-07-26",
+ "note": "지수 편입 명단. 출처 — S&P500: 위키백과 목록 + SSGA SPY 보유내역 교차 확인, NASDAQ-100: 위키백과 목록. 오늘 스냅샷이며 과거 편입 이력이 아니다(백테스트의 생존편향은 각 결과 화면에 별도 명시).",
+ "gates": {
+  "spx_n": 503,
+  "ndx_n": 103,
+  "added": [],
+  "removed": [],
+  "cross_check": "SPY 보유내역 대조",
+  "sector_changed": [
+   {
+    "t": "HONA",
+    "from": "Communication Services",
+    "to": "Industrials"
+   },
+   {
+    "t": "VEEV",
+    "from": "Information Technology",
+    "to": "Health Care"
+   }
+  ],
+  "name_style_kept": 518,
+  "ndx_caveat": "NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존한다"
+ },
  "members": {
   "A": {
    "name": "AGILENT TECHNOLOGIES INC",
@@ -1686,7 +1708,7 @@
   },
   "HONA": {
    "name": "HONEYWELL AEROSPACE INC",
-   "sector": "Communication Services",
+   "sector": "Industrials",
    "idx": [
     "NDX",
     "SPX"
@@ -3445,7 +3467,7 @@
   },
   "VEEV": {
    "name": "Veeva Systems Inc A",
-   "sector": "Information Technology",
+   "sector": "Health Care",
    "idx": [
     "SPX"
    ]
