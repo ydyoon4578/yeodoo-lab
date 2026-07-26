@@ -84,6 +84,7 @@
   .card .meta{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:10.5px}
   .card .meta span{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px;color:var(--ink-2)}
   .card .meta b{color:var(--muted);font-weight:600;margin-right:5px}
+  .card .meta i{font-style:normal}
 
   footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
   footer a{color:var(--accent);text-decoration:none}
@@ -438,37 +439,37 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <tbody>
         <tr><th scope="row"><a href="stocks.html">종목 시그널</a></th>
           <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 사내 DB(index_constituents) 스냅샷</td>
-          <td class="dt" id="src-stk">—</td><td>매일 08:35 KST</td></tr>
+          <td class="dt" id="src-stk">—</td><td id="up-src-stk">—</td></tr>
         <tr><th scope="row"><a href="regime.html">시장 국면</a></th>
           <td><span class="freetag">무료</span>FRED · yfinance</td>
-          <td class="dt" id="src-rg">—</td><td>매일 08:45 KST</td></tr>
+          <td class="dt" id="src-rg">—</td><td id="up-src-rg">—</td></tr>
         <tr><th scope="row"><a href="regime.html#sent">시장 심리</a></th>
           <td><span class="freetag">무료</span>yfinance(VIX·VIX3M·MOVE) · FRED(VIXCLS·NFCI)</td>
-          <td class="dt" id="src-snt">—</td><td>매일 09:00 KST</td></tr>
+          <td class="dt" id="src-snt">—</td><td id="up-src-snt">—</td></tr>
         <tr><th scope="row"><a href="co.html#fs">SEC 재무제표(XBRL)</a></th>
           <td><span class="freetag">무료</span>SEC EDGAR companyfacts(무인증) — 회사가 태깅한 값 그대로, 랩이 조정·재분류하지 않음. 외국 사기업은 IFRS·보고통화 그대로</td>
-          <td class="dt" id="src-fx">—</td><td>매주 토 10:45 KST</td></tr>
+          <td class="dt" id="src-fx">—</td><td id="up-src-fx">—</td></tr>
         <tr><th scope="row"><a href="guru.html">13F 거장 보유</a></th>
           <td><span class="freetag">무료</span>SEC Form 13F 분기 데이터셋 + CUSIP↔티커는 SEC 공매도 미결제(FTD). <b>롱온리·분기말·45일 지연</b>이 구조적</td>
-          <td class="dt" id="src-guru">—</td><td>매주 토 12:15 KST</td></tr>
+          <td class="dt" id="src-guru">—</td><td id="up-src-guru">—</td></tr>
         <tr><th scope="row"><a href="calendar.html">경제지표 발표 일정</a></th>
           <td><span class="freetag">무료</span>FRED releases/dates API — 국면 판정이 쓰는 39개 시리즈의 릴리스 일정만. <b>예상치·컨센서스 없음</b></td>
-          <td class="dt" id="src-cal">—</td><td>매주 토 11:45 KST</td></tr>
+          <td class="dt" id="src-cal">—</td><td id="up-src-cal">—</td></tr>
         <tr><th scope="row"><a href="co.html#ins">내부자 거래(Form 4/5)</a></th>
           <td><span class="freetag">무료</span>SEC Form 3/4/5 분기 데이터셋(무인증) — 보통주 거래만. <b>실시간 아님</b>: 소스가 분기 단위라 수십 일 지연이 구조적</td>
-          <td class="dt" id="src-ins">—</td><td>매주 토 11:15 KST</td></tr>
+          <td class="dt" id="src-ins">—</td><td id="up-src-ins">—</td></tr>
         <tr><th scope="row"><a href="filings.html">SEC 공시·산업분류</a></th>
           <td><span class="freetag">무료</span>SEC EDGAR submissions API(무인증) — 8-K Item 코드·SIC 4자리·회사별 제출 이력</td>
-          <td class="dt" id="src-fil">—</td><td>매주 토 10:15 KST</td></tr>
+          <td class="dt" id="src-fil">—</td><td id="up-src-fil">—</td></tr>
         <tr><th scope="row"><a href="rotation.html">오늘의 전략 탐색</a></th>
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌) — <b>GitHub Actions가 아니라 사람이 돌리는 갱신</b>입니다. 그래서 며칠 비는 날이 있고, 옆 기준일이 그 사실을 그대로 드러냅니다</td>
-          <td class="dt" id="src-rot">—</td><td>수시 (자동 잡 아님)</td></tr>
+          <td class="dt" id="src-rot">—</td><td id="up-src-rot">—</td></tr>
         <tr><th scope="row"><a href="explorer.html">현재 포트폴리오 구성</a></th>
           <td>yfinance(ETF·지수 가격) + <span class="dbtag">사내 DB</span>(종목선택 전략 신호)</td>
-          <td class="dt" id="src-hold">—</td><td>매월 1일 08:55 KST</td></tr>
+          <td class="dt" id="src-hold">—</td><td id="up-src-hold">—</td></tr>
         <tr class="dbrow"><th scope="row"><a href="explorer.html">전략 백테스트·판정</a></th>
           <td><span class="dbtag">사내 DB</span>사내 리서치 DB(FactSet) · 벤치마크는 배당 재투자(총수익) 기준 SPY·QQQ</td>
-          <td class="dt" id="src-bt">—</td><td>수시(정적)</td></tr>
+          <td class="dt" id="src-bt">—</td><td id="up-src-bt">—</td></tr>
       </tbody>
     </table>
   </div>
@@ -480,14 +481,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p>Nasdaq100·S&amp;P500 512종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
       구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 사내 DB <b>index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
       갱신 잡에는 완전성 게이트가 있어 데이터 소스 부분 장애 시 갱신을 중단하고 이전본을 유지합니다.</p>
-    <div class="meta"><span><b>기준일</b><span id="d-stk">—</span></span><span><b>공매도 기준일</b><span id="d-si">—</span></span><span><b>구성종목 스냅샷</b><span id="d-memb">—</span></span><span><b>갱신</b>매일 08:35 + 09:10 KST (GitHub Actions)</span></div>
+    <div class="meta"><span><b>기준일</b><span id="d-stk">—</span></span><span><b>공매도 기준일</b><span id="d-si">—</span></span><span><b>구성종목 스냅샷</b><span id="d-memb">—</span></span><span><b>갱신</b><i class="v" id="up2-src-stk">—</i> (GitHub Actions)</span></div>
   </div>
 
   <div class="card">
     <h3><span class="freetag">무료</span><a href="regime.html">시장 국면</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/regime.json</span></h3>
     <p>매크로 39지표(성장·노동·물가·금융·금리·주택)는 <b>FRED</b>(세인트루이스 연준 공개 API), 레짐별 자산·섹터·팩터 조건부 성과는 <b>yfinance</b>.
       각 지표의 '서프라이즈'는 자체 6개월 추세 대비 이탈이며 <b>애널리스트 컨센서스가 아닙니다</b>.</p>
-    <div class="meta"><span><b>기준일</b><span id="d-rg">—</span></span><span><b>갱신</b>매일 08:45 + 09:20 KST (GitHub Actions)</span></div>
+    <div class="meta"><span><b>기준일</b><span id="d-rg">—</span></span><span><b>갱신</b><i class="v" id="up2-src-rg">—</i> (GitHub Actions)</span></div>
   </div>
 
   <div class="card">
@@ -495,7 +496,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p>전략 풀은 <b>공개 논문·기관 리서치 웹 리서치</b>로 수집·검증한 카드이며, 카드마다 원 출처 링크를 표기합니다.
       성과 수치는 원 출처 인용(미검증)이고, 랩이 자체 검증한 전략에는 별도 판정 배지가 붙습니다.
       기준일·갱신일은 로테이션 페이지 상단에 표기됩니다.</p>
-    <div class="meta"><span><b>풀 갱신일</b><span id="d-rot">—</span></span><span><b>갱신</b>매일 08:50 KST — 그날의 10선 + 방치 3종 최근동향</span></div>
+    <div class="meta"><span><b>풀 갱신일</b><span id="d-rot">—</span></span><span><b>갱신</b><i class="v" id="up2-src-rot">—</i> — 그날의 10선 + 방치 3종 최근동향</span></div>
   </div>
 
   <div class="card">
@@ -503,7 +504,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p>전략별 <b>현재 보유 종목·자산과 비중</b>을 공개합니다. 자산배분 전략(12개 자산 분산·업종 분산·변동성 타깃)은
       yfinance 가격으로, 종목선택 전략(실적 상향주·저평가주·잉여현금 개선주·투자스타일 추종)은 사내 DB 신호로 산출합니다.
       리서치 재현 기준의 구성이며 실제 운용 계좌·실시간 비중이 아닙니다.</p>
-    <div class="meta"><span><b>리밸 기준일</b><span id="d-hold">—</span></span><span><b>생성일</b><span id="d-holdgen">—</span></span><span><b>갱신</b>매월 1일 08:55 KST (GitHub Actions)</span></div>
+    <div class="meta"><span><b>리밸 기준일</b><span id="d-hold">—</span></span><span><b>생성일</b><span id="d-holdgen">—</span></span><span><b>갱신</b><i class="v" id="up2-src-hold">—</i> (GitHub Actions)</span></div>
   </div>
 
   <div class="card" style="background:color-mix(in srgb,var(--marg) 6%,var(--panel))">
@@ -528,7 +529,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       따라서 <b>업종을 처리변수로 쓰는 검증(업종 중립화·업종 로테이션의 시점정합판 등)은 이 컬럼으로 수행할 수 없으며</b>,
       해당 항목들은 성과가 나빠서가 아니라 <b>판정 불가</b>로 아카이브에 남아 있습니다.
       개편 이력이 반영된 히스토리컬 GICS 패널을 확보하기 전까지 이 제약은 유지됩니다.</p>
-    <div class="meta"><span><b>생성일</b><span id="d-btgen">—</span></span><span><b>백테스트 구간</b><span id="d-btspan">전략별 상이 — 각 패널 표기</span></span><span><b>무위험금리</b><span id="d-rf">—</span></span><span><b>갱신</b>지표 매주 월 09:20 KST + 백테스트 시계열 수시(정적 재생성)</span></div>
+    <div class="meta"><span><b>생성일</b><span id="d-btgen">—</span></span><span><b>백테스트 구간</b><span id="d-btspan">전략별 상이 — 각 패널 표기</span></span><span><b>무위험금리</b><span id="d-rf">—</span></span><span><b>갱신</b>지표 <i class="v" id="up-metrics">—</i> + 백테스트 시계열 수시(정적 재생성)</span></div>
   </div>
 
   <footer>
@@ -555,6 +556,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     e.innerHTML=(asof||'—')+(warn?' <span class="stale" title="자동 갱신이 '+n+'영업일 지연됐습니다 — GitHub Actions에서 해당 워크플로를 재실행하세요">⚠ '+n+'일 지연</span>':'');
   }
   // 기준일은 실데이터에서 — 초소형 파일만 fetch(home_reco 1KB·regime 20KB·holdings 3KB·members 40KB)
+  // 갱신 주기 라벨은 워크플로 cron에서 파생된 data/schedule.json이 단일 출처다(build/schedule_index.py).
+  //   손으로 적던 시절 cron을 바꿔도 라벨이 안 따라와 전면적으로 어긋나 있었다(2026-07-25 발견:
+  //   SEC 공시 10:15↔실제 08:45, 13F 12:15↔09:25, 이미 없어진 백업 크론 표기 등). 여기서 하드코딩 금지.
+  j('data/schedule.json').then(function(sc){
+    if(!sc||!sc.rows)return;
+    Object.keys(sc.rows).forEach(function(rid){
+      var a=el('up-'+rid);  if(a)a.textContent=sc.rows[rid];   // 한눈에 보기 표
+      var b=el('up2-'+rid); if(b)b.textContent=sc.rows[rid];   // 아래 상세 카드(같은 값을 두 곳에)
+    });
+    // 표에 행이 없는 잡은 jobs에서 직접 — 지표 재계산은 '백테스트' 카드에만 적힌다
+    var mj=sc.jobs&&sc.jobs['refresh-metrics.yml'], me=el('up-metrics');
+    if(mj&&mj.label&&me)me.textContent=mj.label.join(' + ');
+  });
   j('data/home_reco.json').then(function(h){if(h){put(['d-stk'],h.as_of);putFresh('src-stk',h.as_of,2);}});
   j('data/regime.json').then(function(r){if(r){put(['d-rg'],r.as_of);putFresh('src-rg',r.as_of,2);}});
   j('data/sentiment.json').then(function(r){if(r)putFresh('src-snt',r.as_of,2);});
