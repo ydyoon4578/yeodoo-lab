@@ -88,7 +88,11 @@ def finra_asof(stocks: dict) -> str | None:
 WF = {
     "price": "refresh-stocks.yml", "signals": "refresh-stocks.yml",
     "regime": "refresh-regime.yml", "sentiment": "refresh-sentiment.yml",
-    "members": "refresh-holdings.yml", "rotation": "refresh-metrics.yml",
+    # ⚠ members(지수 편입)는 매핑하지 않는다. refresh-holdings.yml은 strategy_holdings.json을
+    #   만들 뿐 data/members.json은 건드리지 않는다 — 그걸 걸어두면 **없는 일정**을 화면이
+    #   말하게 된다(실제로 '매월 2일 08:40 KST'라고 잘못 적혀 있었다).
+    #   이 파일은 사내 DB index_constituents에서 사람이 직접 다시 만들어 커밋한다.
+    "rotation": "refresh-metrics.yml",
     "filings": "refresh-filings.yml", "facts": "refresh-facts.yml",
     "calendar": "refresh-calendar.yml", "guru": "refresh-13f.yml",
     "insider": "refresh-insider.yml", "earnings": "refresh-earnings.yml",
@@ -181,7 +185,7 @@ def main() -> int:
         {"key": "short", "label": "공매도잔량(FINRA)", "as_of": finra_asof(stocks),
          "cadence": "격주", "note": "FINRA 공시 주기상 구조적으로 뒤처진다"},
         {"key": "members", "label": "지수 편입(PIT 멤버십)", "as_of": members.get("as_of_members"),
-         "cadence": "리밸런스 시", "note": "생존편향 보정에 쓰는 시점별 구성"},
+         "cadence": "리밸런스 시", "note": "생존편향 보정에 쓰는 시점별 구성", "manual": "자동 갱신 없음 — 사내 DB에서 직접 재생성해 커밋한다"},
         # 로테이션 풀은 '오늘 10선을 고른 날'과 '풀을 마지막으로 채운 날'이 다르다.
         # 화면에 보이는 선정일은 매일 오늘이라 축이 아니고, 축은 풀의 generated다.
         {"key": "rotation", "label": "전략 탐색 풀", "as_of": (load("rotation_pool.json") or {}).get("generated"),

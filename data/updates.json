@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-07-26",
+   "hm": "11:15",
+   "target": "site",
+   "title": "지수 편입 축의 잘못된 갱신 일정 표기 제거 — refresh-holdings는 strategy_holdings.json만 만들고 members.json은 안 건드린다(자동 갱신 없음을 명시)"
+  },
+  {
+   "dt": "2026-07-26",
    "hm": "11:01",
    "target": "site",
    "title": "수집일과 데이터 기준일 분리 — 실적 일정·FRED 일정·전략 탐색 풀이 받은 날짜를 기준일로 적어 대표(마지막 거래일)보다 앞서 보이던 것 수정"
