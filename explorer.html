@@ -52,7 +52,7 @@
   .tnum{font-variant-numeric:tabular-nums}
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
 
-  header.mast{padding:64px 0 18px;border-bottom:1px solid var(--line)}
+  header.mast{padding:30px 0 14px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,34px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0;text-wrap:balance}
@@ -343,10 +343,6 @@
   .labtbl td{padding:5px 0;border-top:1px solid var(--line-soft);color:var(--muted)}
   .labtbl td:last-child{text-align:right;color:var(--ink);font-weight:700}
   .labnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .uni{margin:18px 0 0;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;
-       padding:11px 14px;font-size:12.5px;color:var(--ink-2);line-height:1.6}
-  .uni b{color:var(--ink)}
-  .uni .unin{display:block;margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--muted)}
   .views{display:flex;gap:4px;margin:22px 0 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .vtab{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 14px;text-decoration:none;
         color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;
@@ -357,8 +353,14 @@
   /* 지수 기준표 — 전략 숫자를 볼 때 옆에 두고 읽는다 */
   .idxref{margin:16px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;
           padding:13px 15px;box-shadow:var(--shadow)}
-  .idxref h3{margin:0;font-size:13px;font-weight:800}
-  .idxref h3 em{font-style:normal;font-weight:600;color:var(--muted);font-size:11.5px;margin-left:7px}
+  /* 접힌 줄에서도 무엇에 견주는지 읽히게 — 여는 이유가 거기서 생긴다 */
+  .idxref>summary{margin:0;font-size:13px;font-weight:800;cursor:pointer;list-style:none;
+                  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .idxref>summary::-webkit-details-marker{display:none}
+  .idxref>summary::before{content:"\25B8";font-size:10px;color:var(--muted);transition:transform .12s}
+  .idxref[open]>summary::before{transform:rotate(90deg)}
+  .idxref>summary em{font-style:normal;font-weight:600;color:var(--muted);font-size:11.5px;
+                     font-variant-numeric:tabular-nums}
   .idxwrap{overflow-x:auto;margin-top:9px}
   .idxt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:560px}
   .idxt th{color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
@@ -736,13 +738,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
     <h1 class="title">전략 랩</h1>
-    <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적</b>이 먼저 나오고, 대조군·판정은 뒤에 붙습니다. <b>성격</b> 칩이 첫 필터입니다 — 무엇으로 판단해야 하는지가 전략마다 다르기 때문입니다.<details class="more"><summary>등급·성격이 무슨 뜻인가</summary><div class="mbody"><p><b>성격</b> — 종목을 고르는 전략은 <b>수익</b>으로, 비중을 정하는 배분기는 <b>샤프</b>로, 노출을 줄이는 오버레이는 <b>낙폭과 위기 구간</b>으로 봅니다. 같은 숫자를 세로로 비교하면 안 되는 이유입니다.</p><p><b>운용 등급</b>은 “이 전략이 좋은가”가 아니라 <b>“배포북에 넣을 것인가”</b>에 대한 답입니다. <b>배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b>제한적 유효</b>(카드 표기 「조건부 · 목적이 맞을 때」): 효과는 확인됐지만 단독으론 약해 보조·결합용 · <b>기각</b>(「미채택(대조용)」): 비용·검증을 거치면 배포 실익 없음.</p></div></details></p>
+    <p class="lede"><b>성격</b>(무엇을 하는 전략인가)으로 묶은 한 목록입니다. 같은 성격끼리만 숫자를 나란히 볼 수 있기 때문입니다.<details class="more"><summary>등급·성격이 무슨 뜻인가</summary><div class="mbody"><p><b>성격</b> — 종목을 고르는 전략은 <b>수익</b>으로, 비중을 정하는 배분기는 <b>샤프</b>로, 노출을 줄이는 오버레이는 <b>낙폭과 위기 구간</b>으로 봅니다. 같은 숫자를 세로로 비교하면 안 되는 이유입니다.</p><p><b>운용 등급</b>은 “이 전략이 좋은가”가 아니라 <b>“배포북에 넣을 것인가”</b>에 대한 답입니다. <b>배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b>제한적 유효</b>(카드 표기 「조건부 · 목적이 맞을 때」): 효과는 확인됐지만 단독으론 약해 보조·결합용 · <b>기각</b>(「미채택(대조용)」): 비용·검증을 거치면 배포 실익 없음.</p></div></details></p>
     <div class="statline" id="statline"></div>
   </header>
 
-  <div class="uni" id="unibar"></div>
-
-  <div class="idxref" id="idxref" hidden></div>
+  <details class="idxref" id="idxref" hidden></details>
 
   <div class="controls">
     <div class="searchrow">
@@ -1108,7 +1108,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   (function(){
     var b=el('fltbtn'); if(!b)return;
     b.addEventListener('click',function(){setFlt(el('chipwrap').hidden);});
-    setFlt(!matchMedia(NARROW).matches);   // 좁은 화면은 접힌 채 시작
+    // 넓은 화면에서도 접은 채 시작한다. 칩 줄 4개(벤치마크·성격·용도·등급)가 펼쳐져 있으면
+    // 그것만 200px을 먹어 목록 첫 줄이 화면 밖으로 밀린다 — 이 페이지에서 먼저 보여야 하는 건
+    // 필터가 아니라 전략이다. 적용 중인 개수는 버튼에 붙어 있으므로 접혀도 상태는 보인다.
+    setFlt(false);
   })();
   function render(){
     var rows=filtered();
@@ -2109,7 +2112,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           return v?('<td class="'+(v.ret>0?'up':'dn')+'">'+sg(v.ret)+'%<span style="color:var(--muted)"> · MDD '+n2(v.mdd)+'%</span></td>'):'<td>—</td>';
         }).join('')+'</tr>';
       }).join('');
-      box.innerHTML='<h3>지수 기준<em>'+esc(R.as_of)+' 기준 · 전략 숫자를 이 표와 나란히 보십시오</em></h3>'+
+      // 접어 두더라도 '무엇에 견주는지'는 접힌 줄에서 보여야 한다 — 그래야 여는 이유가 생긴다.
+      var peek=R.rows.map(function(r){return esc(r.label.split(' (')[0])+' '+sg((r.all||{}).ret)+'%';}).join(' · ');
+      box.innerHTML='<summary>지수 기준<em>'+peek+' · 연환산, '+esc(R.as_of)+' 기준</em></summary>'+
         '<div class="idxwrap"><table class="idxt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'+
         '<details class="more"><summary>연도별로 보기 (어느 국면에 무엇이 먹혔나)</summary><div class="mbody">'+
         '<div class="idxwrap"><table class="idxt"><thead>'+yhead+'</thead><tbody>'+ybody+'</tbody></table></div></div></details>'+
