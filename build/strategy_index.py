@@ -35,9 +35,46 @@ GRADE = {
     "표본 부족 · 판정 불가": "판정 불가", "판정 불가": "판정 불가",
     "관례와 반대로 유의": "역방향 유의", "소수 사건 의존": "소수 사건 의존",
 }
+_PRW = None      # 같은 구간 지수(PR) 기준선을 계산하는 함수. main()에서 한 번 만든다.
+
 GRADE_ORDER = ["배포", "제한적 유효", "통과 후보", "역방향 유의", "구별 불가",
                "소수 사건 의존", "열위", "미채택", "판정 불가"]
 ROLE_ORDER = ["수익엔진", "배분기", "위험감축", "방어보험", "타이밍오버레이", "미분류"]
+
+
+# ── 대조군을 나란히 볼 수 있는가 ──────────────────────────────────────────
+# 같은 표에 있다고 같은 잣대로 볼 수 있는 건 아니다. 대조군이 전략과 **같은 것을 목표로 할 때만**
+# Δ샤프·초과수익을 우열로 읽을 수 있다.
+#   수익엔진·배분기·타이밍오버레이 → 대조군과 목표가 같다(더 벌거나, 같은 위험에서 더 벌거나)
+#   위험감축·방어보험             → 목표가 낙폭·보험이다. 상시보유와 CAGR·샤프로 겨루면 지는 게 정상이고,
+#                                 그 패배는 전략이 나쁘다는 뜻이 아니다 — 그래서 따로 뺀다.
+# 여기에 표본 부족·대조군 현금(샤프 분모가 0에 가까워 Δ가 허수)을 더한다.
+CMP_OFF_ROLE = {"위험감축", "방어보험"}
+
+
+def comparability(role, grade, unstable, n_days=None):
+    if unstable:
+        return False, "대조군이 현금성이라 샤프 분모가 0에 가깝다 — Δ샤프가 허수가 된다(t만 본다)."
+    if grade == "판정 불가":
+        return False, "검정 구간이 짧아 어떤 수치가 나와도 실력과 운을 가를 수 없다."
+    if role in CMP_OFF_ROLE:
+        return False, ("목표가 수익이 아니라 낙폭·보험이다. 상시보유와 CAGR·샤프로 겨루면 지는 것이 "
+                       "정상이고, 그 패배는 전략이 나쁘다는 뜻이 아니다 — 낙폭과 위기 구간으로 본다.")
+    return True, None
+
+
+def holds_kind(h):
+    """지금 무엇을 들고 있는지 **종목 단위로** 보여줄 수 있는가."""
+    if not h:
+        return "없음"
+    k = h.get("kind")
+    if k == "xsec" and h.get("tickers"):
+        return "종목"
+    if k in ("asset", "sleeve") and h.get("weights"):
+        return "비중"
+    if k == "timing":
+        return "노출"
+    return "없음"
 
 
 def load(fn):
@@ -61,17 +98,89 @@ def thin(a, k=60):
     return out
 
 
+# ── 같은 구간 지수(PR) 기준선 ─────────────────────────────────────────────
+# 전략마다 대조군이 다르다(동일가중 유니버스·SPY·60/40·현금…). 그래서 "그래서 좋은 건가"를
+# 물으면 답이 전략마다 다른 잣대로 나온다. 누구나 아는 눈금 하나를 같이 얹는다 —
+# **같은 구간의 S&P 500·나스닥100 가격지수(PR)**다.
+#
+# ⚠ 이 줄은 판정용이 아니다. 전략 수익은 배당을 재투자한 총수익(TR) 기준인데 지수는 PR이라
+#   배당이 빠져 있다. 2006년 이후 그 격차가 연 2.0%p다 — PR과 겨루면 전략이 그만큼 유리해
+#   보인다. 판정은 각 전략의 대조군(TR 대 TR)으로 하고, 이 줄은 '세상의 눈금'으로만 읽는다.
+def pr_baseline():
+    A = load("assets.json") or {}
+    dts, px = A.get("dates") or [], A.get("px") or {}
+    if not dts:
+        return None
+    rf = (load("rf_monthly.json") or {}).get("monthly") or {}
+    import sys as _s
+    _s.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from tech_backtest import ann_stats            # noqa: E402  같은 계산을 두 번 쓰지 않는다
+    idx = {d: i for i, d in enumerate(dts)}
+
+    def window(start, end):
+        """[start, end] 구간의 SPX·NDX 가격지수 성과. 구간이 자료 밖이면 None."""
+        if not (start and end):
+            return None
+        ks = next((i for i, d in enumerate(dts) if d >= start), None)
+        ke = next((i for i in range(len(dts) - 1, -1, -1) if dts[i] <= end), None)
+        if ks is None or ke is None or ke - ks < 120:      # 반년도 안 되면 눈금이 못 된다
+            return None
+        out = {}
+        for tk, lab in (("^GSPC", "spx"), ("^NDX", "ndx")):
+            a = px.get(tk)
+            if not a:
+                continue
+            nv = [x for x in a[ks:ke + 1] if x]
+            if len(nv) < 120:
+                continue
+            base = nv[0]
+            out[lab] = ann_stats([100.0 * x / base for x in nv], dts[ks:ke + 1], rf)
+        return out or None
+    return window
+
+
 def rec(**kw):
     for key in ("nav", "bnav"):
         if kw.get(key):
             kw[key] = thin(kw[key])
     kw.setdefault("role", "미분류")
     kw.setdefault("grade", "판정 불가")
+    # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
+    # 다른 칸에 들어가는 일이 생긴다.
+    kw["holds"] = holds_kind(kw.get("holdings"))
+    ok, why = comparability(kw["role"], kw["grade"], kw.get("bench_unstable"))
+    kw["cmp_ok"] = ok
+    if why:
+        kw["cmp_why"] = why
+    if _PRW:
+        pr = _PRW(kw.get("start"), kw.get("end"))
+        if pr:
+            kw["pr"] = pr
     return kw
 
 
 def main() -> int:
+    global _PRW
+    _PRW = pr_baseline()
     rows = []
+
+    # 배포 원장의 현재 보유 — 두 파일에 나뉘어 있다(무료 재현본 / 사내 DB 산출본).
+    # 통합 목록이 '구성종목을 볼 수 있는 전략인가'로 나누려면 이걸 같이 봐야 한다.
+    # 안 그러면 실제로는 보여줄 수 있는 6건이 '없음' 칸으로 떨어진다.
+    HOLD_DEP = {}
+    for _f in ("strategy_holdings.json", "strategy_holdings_db.json"):
+        for _k, _v in ((load(_f) or {}).get("strategies") or {}).items():
+            pos = _v.get("positions") or []
+            if not pos:
+                continue
+            HOLD_DEP[_k] = {
+                "kind": {"stocks": "xsec"}.get(_v.get("kind"), "asset"),
+                "as_of": _v.get("as_of"), "n": len(pos), "note": _v.get("note"),
+                "tickers": sorted(x.get("t") for x in pos if x.get("t")),
+                "names": {x["t"]: (x.get("n") or x["t"]) for x in pos if x.get("t")},
+                "weights": [(x.get("t") or x.get("n"), x.get("w")) for x in pos
+                            if x.get("w") is not None],
+            }
 
     # ── ① 배포 원장 ── 성격은 strategy_detail.json이 들고 있다(화면이 쓰던 축 그대로).
     dep = load("deploy_index.json") or {}
@@ -92,6 +201,8 @@ def main() -> int:
             metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
             bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"), "sharpe": bm.get("sharpe")},
             nav=b.get("nav"), bnav=b.get("bench"),
+            bench_label=b.get("bench_label"),
+            holdings=HOLD_DEP.get(n),
             has_detail=True,
         ))
 
@@ -166,6 +277,18 @@ def main() -> int:
         "as_of": (t.get("as_of") or a.get("as_of")),
         "n": len(rows),
         "role_order": ROLE_ORDER, "grade_order": GRADE_ORDER,
+        "by_holds": dict(Counter(r["holds"] for r in rows)),
+        "by_cmp": {"가능": sum(1 for r in rows if r["cmp_ok"]),
+                   "애매": sum(1 for r in rows if not r["cmp_ok"])},
+        "holds_order": ["종목", "비중", "노출", "없음"],
+        "pr_note": "‘같은 구간 지수(PR)’는 판정용이 아니라 세상의 눈금이다. 전략 수익은 배당을 "
+                   "재투자한 총수익(TR)인데 지수는 가격지수(PR)라 배당이 빠져 있고, 2006년 이후 "
+                   "그 격차가 연 2.0%p다 — PR과 겨루면 전략이 그만큼 유리해 보인다. "
+                   "판정은 각 전략의 대조군(TR 대 TR)으로 한다.",
+        "cmp_note": "대조군이 전략과 같은 것을 목표로 할 때만 Δ샤프를 우열로 읽을 수 있다. "
+                    "위험감축·방어보험은 목표가 낙폭·보험이라 상시보유와 CAGR·샤프로 겨루면 "
+                    "지는 것이 정상이고, 대조군이 현금성이면 샤프 분모가 0에 가까워 Δ가 허수가 된다. "
+                    "그런 전략은 따로 묶어 낙폭·위기 구간으로 본다.",
         "by_role": dict(Counter(r["role"] for r in rows)),
         "by_grade": dict(Counter(r["grade"] for r in rows)),
         "by_src": dict(Counter(r["src"] for r in rows)),
@@ -174,6 +297,7 @@ def main() -> int:
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
     print("전략 통합 %d개 · %.0fKB" % (len(rows), os.path.getsize(OUT) / 1024))
+    print("  구성:", doc["by_holds"], "· 대조군 비교", doc["by_cmp"])
     print("  성격:", doc["by_role"])
     print("  등급:", doc["by_grade"])
     print("  출처:", doc["by_src"])

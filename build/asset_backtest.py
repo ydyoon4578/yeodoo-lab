@@ -110,6 +110,27 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         return nav, rets, turn
     nav, rets, turn = walk(wfn, ends)
     bnav, brets, _ = walk(bench_w, bends)
+
+    # 대조군이 무엇인지 화면에 적으려면 이름이 있어야 한다. 35개 호출부에 인자를 하나씩
+    # 더 붙이는 대신 가중치에서 뽑는다 — 대조군은 결국 '무엇을 얼마나 들고 있나'가 전부다.
+    # 시작과 끝의 구성이 다르면 정적 라벨이 거짓이 되므로 '동적'이라고 적는다.
+    def _blabel(fn):
+        try:
+            w0, w1 = fn(start) or {}, fn(n - 1) or {}
+        except Exception:
+            return None
+        if not w0:
+            return None
+        if set(w0) != set(w1) or any(abs(w0[k] - w1.get(k, 0)) > 1e-9 for k in w0):
+            return "동적 배분(%d자산)" % len(set(w0) | set(w1))
+        tot = sum(w0.values()) or 1.0
+        parts = sorted(((k, 100 * v / tot) for k, v in w0.items()), key=lambda z: -z[1])
+        if len(parts) == 1:
+            return "%s 상시보유" % parts[0][0]
+        if len(parts) <= 4:
+            return " · ".join("%s %d%%" % (k, round(p)) for k, p in parts)
+        return "%d자산 동일가중" % len(parts)
+    bench_label = _blabel(bench_w)
     # 지금 뭘 들고 있나 — 이게 안 보이면 규칙을 읽어도 실제로 쓸 수가 없다.
     try:
         _w = wfn(n - 1) or {}
@@ -129,7 +150,8 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     unstable = (mb.get("vol") or 0) < 2.0
     return {"name": label, "rule": rule, "why": why, "note": note,
             "start": DTS[start], "end": DTS[-1], "n_days": n - start,
-            "metrics": ms, "bench": mb, "bench_unstable": unstable, "holdings": hold_now,
+            "metrics": ms, "bench": mb, "bench_label": bench_label,
+            "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
             "t": tstat(rets, brets), "turnover": round(turn / 2 / yrs, 1),
             "nav": [round(x, 2) for x in nav[::step]],
@@ -483,7 +505,7 @@ def build():
                 "note": "일 왕복 252회/년이라 무비용 결과를 그대로 읽으면 안 된다 — "
                         "왕복 2bp만 붙어도 연 5%p가 사라진다.",
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
-                "metrics": ms, "bench": mb,
+                "metrics": ms, "bench": mb, "bench_label": "SPY 상시보유(종가→종가)",
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
                 "t": tstat(rets, brs), "turnover": 252.0,
                 "nav": [round(x, 2) for x in nav[::step]],
@@ -597,6 +619,7 @@ def build():
                 "note": "연 252회 왕복이라 무비용 수치를 그대로 읽으면 안 된다.",
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
                 "metrics": ms, "bench": mb, "bench_unstable": False,
+                "bench_label": "QQQ 상시보유(종가→종가)",
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
                 "t": tstat(rets, brs), "turnover": 252.0,
                 "nav": [round(x, 2) for x in nav[::step]],
@@ -733,6 +756,7 @@ def build():
                              "note": "배포 슬리브 둘의 현재 배분이다."},
                 "start": months[0], "end": months[-1], "n_days": len(months),
                 "metrics": ms, "bench": mb, "bench_unstable": False,
+                "bench_label": "배포 슬리브 둘 50:50 고정",
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
                 "t": round(mu / (sd / math.sqrt(len(d))), 2) if sd > 0 else None,
                 "turnover": None, "monthly": True,
