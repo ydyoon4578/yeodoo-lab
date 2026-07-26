@@ -467,8 +467,7 @@
       <li class="navcat" data-cat="strategy">
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
-          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">백테스트 원장</span><span class="mmb vpass">통과</span><span class="mmd">랩이 돌린 결과와 유의성까지 전부</span></a>
-          <a class="mmi" href="archive.html" data-nav="archive.html"><span class="mmn">전략 랩</span><span class="mmb vrej">기각</span><span class="mmd">돌린 규칙을 전부 게시 — 성과·판정·사유</span></a>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -587,12 +586,20 @@
     <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적과 성격</b>이 먼저 나오고, 대조군·판정은 그 뒤에 맥락으로 붙습니다.
       전략마다 <b>무엇으로 판단해야 하는지가 다릅니다</b> — 종목을 고르는 전략은 수익으로, 비중을 정하는 배분기는 샤프로,
       노출 크기를 줄이는 오버레이는 낙폭과 위기 구간으로 봅니다. 그래서 아래 <b>성격</b> 칩을 첫 필터로 두었습니다.
-      여기 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각) — 나머지 기각 <span id="arcn">—</span>개는 <a href="archive.html" style="color:var(--accent)">아카이브</a>에.<br>
+      여기 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각) — 나머지 기각 <span id="arcn">—</span>개는 <a href="explorer.html#view=runs" style="color:var(--accent)">아카이브</a>에.<br>
       <b>운용 등급(배포 여부)</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b style="color:var(--marg)">제한적 유효 → 카드 표기 「조건부 · 목적이 맞을 때」</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각 → 카드 표기 「미채택(대조용)」</b>: 비용·검증을 거치면 배포 실익 없음.
       이 등급은 <b>“이 전략이 좋은가”가 아니라 “배포북에 넣을 것인가”</b>에 대한 답입니다.</p>
     <div class="statline" id="statline"></div>
   </header>
 
+  <nav class="views" id="views" aria-label="보기 전환">
+    <button class="vtab" type="button" data-v="ledger">전략 원장<span class="vn" id="vn-ledger"></span></button>
+    <button class="vtab" type="button" data-v="runs">돌린 규칙<span class="vn" id="vn-runs"></span></button>
+    <button class="vtab" type="button" data-v="audit">재현 재점검<span class="vn" id="vn-audit"></span></button>
+    <button class="vtab" type="button" data-v="rechk">스탠드얼론 재검<span class="vn" id="vn-rechk"></span></button>
+  </nav>
+
+  <div id="v-ledger">
   <div class="controls">
     <div class="searchrow">
       <label class="search">
@@ -624,11 +631,56 @@
       <div class="listwrap" id="list" role="listbox" aria-label="전략 목록"></div>
     </div>
     <div class="detail" id="detail"></div>
+  </div><!-- /v-ledger -->
+
+  <div id="lab">
+    <div id="v-runs" hidden>
+  <div class="hardnote" id="limits"></div>
+
+  <div class="dupbox" id="dupbox" hidden></div>
+
+  <section aria-labelledby="run-h">
+    <h2 id="run-h" class="sech">돌린 규칙 <span id="runsub"></span></h2>
+    <p class="sechn">벤치마크는 <b>동일가중 유니버스 매수후보유</b>입니다. Δ샤프는 그 대비 차이,
+      t는 일간 초과수익의 대응표본 t값입니다. 정렬은 Δ샤프 순 — <b>순위가 곧 추천이 아닙니다.</b></p>
+    <div class="frow" id="kchips"></div>
+    <div id="runs"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+    </div>
+    <div id="v-audit" hidden>
+  <section aria-labelledby="norun-h">
+    <h2 id="norun-h" class="sech">재현 가능성 재점검 <span id="norunsub"></span></h2>
+    <p class="sechn">여기 있던 38건은 <b>이 저장소 데이터로는 재현할 수 없다</b>고 적혀 있었습니다.
+      다시 점검하니 대부분은 <b>데이터가 세상에 없어서가 아니라 이 저장소가 안 갖고 있었을 뿐</b>이었습니다 —
+      ETF 가격(yfinance)과 거시(FRED 공개 CSV, 키 불필요), 연준 EBP까지 전부 무료·무인증으로 열립니다.
+      자산 패널을 만들어 <b>돌릴 수 있는 것은 실제로 돌렸습니다</b>. 아직 못 도는 것은
+      <b>가능하나 아직 안 만든 것</b>과 <b>유료 데이터라 불가한 것</b>을 구분해 적습니다 —
+      섞어두면 영원히 안 하게 되기 때문입니다. 미실행으로 남겨뒀던 4건(크로스에셋 캐리·머신러닝 2종·13F 복제)도
+      전부 돌렸습니다. 머신러닝은 <b>규약을 코드에 먼저 박고 한 번만</b> 돌렸고, 검정 구간이 2년에 못 미치는 건은
+      숫자를 싣되 <b>판정하지 않습니다</b>.</p>
+    <div class="statline" id="auditstat"></div>
+    <div class="frow" id="achips"></div>
+    <div id="noruns"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+    </div>
+    <div id="v-rechk" hidden>
+  <section aria-labelledby="rechk-h">
+    <h2 id="rechk-h" class="sech">스탠드얼론 재검 <span id="rechksub"></span></h2>
+    <p class="sechn">여기 있던 기각 사유의 상당수는 <b>"배포 포트폴리오에 얹었을 때 개선이 없다"</b>는
+      <b>상대적</b> 판정이었습니다. 그래서 각 전략을 <b>단독</b>으로, 자기 유니버스 대조군(동일 실현변동성으로 맞춘 계열)과
+      다시 검정했습니다. <b id="rechkv">—</b> — 시계열을 남긴 것만 싣습니다.</p>
+    <div id="rechks"><div class="skel">불러오는 중…</div></div>
+  </section>
+
+    </div>
+  </div>
   </div>
 
   <footer>
     여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증 · 전략마다 <b>성격에 맞는 1차 지표</b>로 판단합니다<br>
-    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="archive.html">전략 랩</a> · <a href="sources.html">데이터 출처</a>.
+    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html#view=runs">전략 랩</a> · <a href="sources.html">데이터 출처</a>.
   </footer>
 </div>
 
@@ -1444,6 +1496,378 @@
       (days<=3?'<span style="font-weight:700;color:var(--deploy);border:1px solid color-mix(in srgb,var(--deploy) 40%,transparent);border-radius:5px;padding:1px 6px">NEW</span>':'');
     h.appendChild(d);
   }).catch(function(){});
+})();
+</script>
+<script>
+
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+
+
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  function esc(x){return (x==null?'':String(x)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function nf(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);}
+  var T=null, A=null, sel={};
+
+  // 미니 성과선 — 전략(진하게) vs 벤치마크(옅게). 축·격자를 그리지 않는다: 모양만 보라는 뜻이다.
+  function spark(nav,bnav,w,h){
+    if(!nav||nav.length<3)return '';
+    var all=nav.concat(bnav||[]), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
+    if(!(hi>lo))return '';
+    function path(a){
+      return a.map(function(v,i){
+        var x=(i/(a.length-1))*w, y=h-((v-lo)/(hi-lo))*h;
+        return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+      }).join(' ');
+    }
+    return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-hidden="true">'+
+      (bnav?'<path d="'+path(bnav)+'" fill="none" stroke="var(--muted)" stroke-width="1" opacity=".55"/>':'')+
+      '<path d="'+path(nav)+'" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg>';
+  }
+
+  var VC={'통과 후보':'vpass','구별 불가':'vunv','열위':'vrej','판정 불가':'vunv'};
+
+  function card(r){
+    var m=r.metrics||{}, b=r.bench||{};
+    var arch=r.arch&&A?A[r.arch]:null;
+    return '<div class="rcard"'+(r.arch?' id="s-'+esc(r.arch)+'"':'')+'><div class="rtop">'+
+      '<span class="rkind">'+(r.kind==='timing'?'타이밍':'횡단면')+'</span>'+
+      '<h3>'+esc(r.name)+'</h3>'+
+      '<span class="rv '+(VC[r.verdict]||'vunv')+'">'+esc(r.verdict)+'</span></div>'+
+      '<p class="rrule">'+esc(r.rule)+'</p>'+
+      '<p class="rwhy">'+esc(r.why)+'</p>'+
+      '<div class="rgrid">'+
+        cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
+        cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
+        cell('t',nf(r.t,2),'tstat'+(Math.abs(r.t||0)>=(T.t_crit||3)?' up':''))+
+        cell('연 회전',nf(r.turnover,1)+'회')+
+      '</div>'+
+      spark(r.nav,r.bnav,320,44)+
+      '<p class="rbench">벤치마크 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%</p>'+
+      (arch?'<p class="rarch"><b>이전 판정</b> · '+esc(arch.c)+' — '+esc(arch.r)+'</p>':'')+
+      '</div>';
+  }
+  function cell(k,v,cls){return '<div class="rc'+(cls?' '+cls:'')+'"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>';}
+
+  function render(){
+    var rows=T.strategies.filter(function(r){
+      var ks=Object.keys(sel); return !ks.length||sel[r.verdict];
+    });
+    el('runs').innerHTML=rows.length?rows.map(card).join(''):'<div class="skel">조건에 맞는 규칙이 없습니다.</div>';
+    el('runsub').textContent=rows.length+'개'+(rows.length!==T.strategies.length?' / '+T.strategies.length:'');
+  }
+
+  function chips(){
+    var c={}; T.strategies.forEach(function(r){c[r.verdict]=(c[r.verdict]||0)+1;});
+    var order=['통과 후보','구별 불가','열위','판정 불가'];
+    el('kchips').innerHTML=order.filter(function(k){return c[k];}).map(function(k){
+      return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+c[k]+'</span></button>';
+    }).join('');
+    el('kchips').addEventListener('click',function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      var k=b.getAttribute('data-k');
+      if(sel[k]){delete sel[k];b.setAttribute('aria-pressed','false');}
+      else{sel[k]=1;b.setAttribute('aria-pressed','true');}
+      render();
+    });
+  }
+
+  Promise.all([
+    fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
+    fetch('data/archive_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  ]).then(function(a){
+    T=a[0];
+    if(!T||!T.strategies){
+      el('runs').innerHTML='<div class="hardnote"><b>백테스트 결과를 불러오지 못했습니다</b> — <code>data/tech_strategies.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
+      return;
+    }
+    A={}; var arch=(a[1]&&a[1].items)||[];
+    arch.forEach(function(x){A[x.sid]=x;});
+    alias(arch);
+    var linked={}; T.strategies.forEach(function(r){if(r.arch)linked[r.arch]=1;});
+
+    var pass=T.strategies.filter(function(r){return r.verdict==='통과 후보';}).length;
+    el('statline').innerHTML=
+      st(T.strategies.length,'돌린 규칙','전부 싣는다')+
+      st(pass,'통과 후보','다중검정까지 넘은 것',pass?'ok':'zero')+
+      st(T.strategies.filter(function(r){return r.verdict==='구별 불가';}).length,'구별 불가','벤치마크와 못 가른다')+
+      st(T.strategies.filter(function(r){return r.verdict==='열위';}).length,'열위','벤치마크보다 나쁘다')+
+      st('|t|≥'+nf(T.t_crit,2),'판정 임계','본페로니 보정');
+    var D_=T.dup;
+    if(D_&&D_.top&&D_.top.length){
+      // 규칙 수를 늘렸으니 '얼마나 겹치는지'도 같이 보여야 한다. 안 보이면 24개를 돌린 것이
+      // 24개의 독립된 검증처럼 읽힌다.
+      var box=el('dupbox'); box.hidden=false;
+      box.innerHTML='<b>규칙 '+esc(String(D_.n_timing))+'개를 돌렸지만, 서로 다른 베팅은 그보다 적습니다</b><br>'+
+        '타이밍 규칙 쌍의 일간 수익률 상관 중앙값 <b>'+nf(D_.median,3)+'</b> · '+
+        '<b>'+esc(String(D_.n_over_95))+'쌍</b>이 0.95를 넘습니다. 거의 같은 곡선을 그린 쌍 상위 몇 개:'+
+        '<table><tbody>'+D_.top.map(function(x){
+          return '<tr><td class="c">'+nf(x.c,3)+'</td><td>'+esc(x.a)+'<br>'+esc(x.b)+'</td></tr>';
+        }).join('')+'</tbody></table>'+
+        '<div class="dn">'+esc(D_.note||'')+' 다중검정 임계(본페로니)는 검정이 서로 독립일 때의 보정이라, '+
+        '이렇게 겹칠수록 필요 이상으로 엄격해집니다. 그래도 임계를 손으로 낮추지 않았습니다 — '+
+        '결과를 보고 기준을 고치는 순간 그건 검정이 아니게 됩니다.</div>';
+    }
+
+    el('limits').innerHTML='<b>결과보다 먼저 읽어야 하는 것</b><br>· '+(T.limits||[]).map(esc).join('<br>· ')+
+      '<br>· '+esc(T.t_crit_note||'');
+
+    // ── 스탠드얼론 재검 부기 ── 이 랩의 정식 백테스트(월말·무비용·초과수익 기준) 결과다.
+    fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(ab){
+      var box=el('rechks'); if(!box)return;
+      if(!ab||!ab.strategies){box.innerHTML='<div class="skel">재검 부기를 불러오지 못했습니다.</div>';return;}
+      var ks=Object.keys(ab.strategies);
+      el('rechksub').textContent=ks.length+'건 / 재검 '+(ab.n_tests_total||'—')+'건';
+      el('rechkv').textContent=ab.verdict||'';
+      box.innerHTML=ks.map(function(k){
+        var b=ab.strategies[k], m=b.metrics||{}, S=m.s||{}, B=m.b||{}, mu=m.multiplicity||{};
+        var a=A[k];
+        // ⚠ 앵커는 rc- 네임스페이스다. 같은 sid가 위 '돌린 규칙'이나 아래 '못 돌린 것'에도
+        //    카드로 존재하기 때문에(실측 5건) s-를 쓰면 id가 겹쳐 딥링크가 엉뚱한 카드로 간다.
+        //    #s-<sid>의 정본 도착지는 본 카드이고, 재검은 그 옆 부기다.
+        return '<div class="rcard" id="rc-'+esc(k)+'"><div class="rtop">'+
+          '<span class="rkind">재검</span><h3>'+esc(a?a.n:k)+'</h3>'+
+          '<span class="rv vrej">기각 유지</span></div>'+
+          '<p class="rrule">'+esc(b.start)+' ~ '+esc(b.end)+' · 월말 기준 '+esc(String(S.n_months||''))+'개월 · '+
+          '대조군 '+esc(B.label||b.bench_label||'')+'</p>'+
+          '<div class="rgrid">'+
+            cell('CAGR',nf(S.cagr)+'%')+cell('샤프',nf(S.sharpe,3))+cell('MDD',nf(S.mdd)+'%')+
+            cell('대조 샤프',nf(B.sharpe,3))+
+            cell('Δ샤프',((S.sharpe-B.sharpe)>0?'+':'')+nf(S.sharpe-B.sharpe,3),(S.sharpe-B.sharpe)>0?'up':'dn')+
+            cell('적중',nf(S.hit,1)+'%')+
+          '</div>'+
+          spark(b.nav,b.bench,320,44)+
+          (mu.n_tests?'<p class="rbench">다중검정 분모 '+esc(String(mu.n_tests))+'건 — 게시 건수가 아니라 재검 총 건수다. 통과 여부: '+(mu.passed?'통과':'미통과')+'</p>':'')+
+          (a?'<p class="rarch"><b>기각 사유</b> · '+esc(a.r)+'</p>':'')+
+          '</div>';
+      }).join('');
+    });
+
+    var no=arch.filter(function(x){return !linked[x.sid];});
+    el('norunsub').textContent=no.length+'개';
+    // 재점검 결과(data/asset_strategies.json)가 있으면 그것으로 그리고, 없으면 예전처럼 사유만 나열한다.
+    fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(AS){
+        renderAudit(AS, no);
+      })['catch'](function(){ renderAudit(null, no); });
+
+    chips(); render(); jump();
+  })['catch'](function(){
+    el('runs').innerHTML='<div class="hardnote"><b>불러오지 못했습니다.</b></div>';
+  });
+  // ── 구 슬러그 딥링크 하위호환 ────────────────────────────────────────
+  // 예전 아카이브는 **이름에서 만든 슬러그**를 앵커로 썼다. 이름을 고칠 때마다 앵커가
+  // 바뀌어 외부 링크가 죽었기 때문에 불변 id(sid)로 옮겼고, 옛 슬러그는 aka에 남겼다.
+  // 그래서 여기서 aka → sid로 해석해 준다. 문안만 남고 이 로직이 빠지면 기존 북마크가
+  // 조용히 페이지 맨 위로 떨어진다(검증기가 그 상태를 막는다).
+  var ALIAS={};
+  function alias(items){ (items||[]).forEach(function(x){ (x.aka||[]).forEach(function(k){ ALIAS[k]=x.sid; }); }); }
+  function jump(){
+    var h=(location.hash||'').replace(/^#/,''); if(!h) return;
+    try{ h=decodeURIComponent(h); }catch(e){}   // 한글 슬러그는 퍼센트 인코딩돼 들어온다 (aka가 한글이다)
+    var id=h.indexOf('s-')===0?h.slice(2):h;
+    var t=document.getElementById('s-'+(ALIAS[id]||id)); if(!t) return;
+    t.scrollIntoView({block:'center'});
+    t.classList.add('hit'); setTimeout(function(){ t.classList.remove('hit'); },2400);
+  }
+  window.addEventListener('hashchange',jump);
+
+  var ASEL={};
+  function renderAudit(AS,no){
+    if(!AS||!AS.audit){
+      el('noruns').innerHTML=no.map(function(x){
+        return '<div class="ncard" id="s-'+esc(x.sid)+'"><h4>'+esc(x.n)+'<span>'+esc(x.c)+'</span></h4><p>'+esc(x.r)+'</p></div>';
+      }).join('');
+      return;
+    }
+    var au=AS.audit, byres={};
+    (AS.strategies||[]).forEach(function(r){byres[r.sid]=r;});
+    el('norunsub').textContent=au.n_total+'건';
+    el('auditstat').innerHTML=
+      st(au.n_done,'돌렸다','공개 데이터로 재현',au.n_done?'ok':'')+
+      st(au.n_pending,'가능하나 미실행','데이터는 있다')+
+      st(au.n_blocked,'불가','유료 데이터라 막힘',au.n_blocked?'zero':'')+
+      st(AS.n,'대조 검정','자기 대조군과 겨룸');
+    var order=['돌림','가능 · 미구현','가능 · 무거움','불가 · 유료 데이터'];
+    var cnt={}; au.items.forEach(function(a){cnt[a.status]=(cnt[a.status]||0)+1;});
+    el('achips').innerHTML=order.filter(function(k){return cnt[k];}).map(function(k){
+      return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+cnt[k]+'</span></button>';
+    }).join('');
+    el('achips').onclick=function(e){
+      var b=e.target.closest('.chip'); if(!b)return;
+      var k=b.getAttribute('data-k');
+      if(ASEL[k]){delete ASEL[k];b.setAttribute('aria-pressed','false');}
+      else{ASEL[k]=1;b.setAttribute('aria-pressed','true');}
+      paintAudit(au,byres);
+    };
+    paintAudit(au,byres);
+  }
+  var SC={'돌림':'ok','가능 · 미구현':'soon','가능 · 무거움':'soon','불가 · 유료 데이터':'no'};
+  // 검정 구간이 짧아 판정을 막은 건은 '돌렸다'와 '못 돌린다' 어느 쪽도 아니다 — 눈에 띄게 둔다.
+  var VW={'표본 부족 · 판정 불가':'soon'};
+  function paintAudit(au,byres){
+    var ks=Object.keys(ASEL);
+    var items=au.items.filter(function(a){return !ks.length||ASEL[a.status];});
+    el('noruns').innerHTML=items.map(function(a){
+      var r=a.res?byres[a.res]:null;
+      var head='<div class="ncard '+(SC[a.status]||'')+'" id="s-'+esc(a.sid)+'">'+
+        '<h4>'+esc(a.n)+'<span>'+esc(a.c)+'</span><b class="ab '+(SC[a.status]||'')+'">'+esc(a.status)+'</b></h4>';
+      if(!r) return head+'<p>'+esc(a.why)+'</p></div>';
+      var m=r.metrics||{}, b=r.bench||{};
+      return head+
+        '<p class="arule">'+esc(r.rule)+'</p>'+
+        '<p>'+esc(r.why)+(a.why&&a.why!==r.why?' <em class="anote">'+esc(a.why)+'</em>':'')+'</p>'+
+        '<div class="agrid">'+
+          cell('구간',esc(r.start.slice(0,7))+'~'+esc(r.end.slice(0,7)))+
+          cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
+          cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
+          cell('t',nf(r.t,2))+
+        '</div>'+
+        spark(r.nav,r.bnav,320,40)+
+        '<p class="abench">대조군 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%'+
+        (r.bench_unstable?' <b>· 대조군이 현금성이라 Δ샤프는 허수 — t만 볼 것</b>':'')+
+        ' · 판정 <b class="ab '+(VW[r.verdict]||'')+'">'+esc(r.verdict)+'</b></p>'+
+        (r.beta?'<p class="abench">실측 베타 '+nf(r.beta,2)+'</p>':'')+
+        '</div>';
+    }).join('');
+  }
+
+  function st(v,k,d,cls){return '<span class="stat'+(cls?' '+cls:'')+'"><b>'+esc(v)+'</b>'+esc(k)+'<em>'+esc(d)+'</em></span>';}
+  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다
+})();
+
+</script>
+
+<script>
+/* ── 뷰 전환 ── 원장(전략 리스트)과 랩(돌린 규칙·재점검·재검)을 한 페이지에서 가른다.
+   해시로 직접 들어올 수 있어야 한다 — 기존 archive.html 딥링크가 여기로 넘어오기 때문이다. */
+(function(){
+  var V=['ledger','runs','audit','rechk'];
+  function el(id){return document.getElementById(id);}
+  function show(v){
+    v=(V.indexOf(v)>=0?v:'ledger');
+    for(var i=0;i<V.length;i++){
+      var sec=el(V[i]==='ledger'?'v-ledger':'v-'+V[i]);
+      if(sec)sec.hidden=(V[i]!==v);
+      var b=document.querySelector('.vtab[data-v="'+V[i]+'"]');
+      if(b){if(V[i]===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
+    }
+    try{history.replaceState(null,'',v==='ledger'?location.pathname:'#view='+v);}catch(e){}
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.vtab'),function(b){
+    b.addEventListener('click',function(){show(b.getAttribute('data-v'));});
+  });
+  // 진입 규칙: #view=xxx 우선 → 랩 앵커(#s-…, #rc-…)면 해당 뷰 → 그 외 원장
+  function boot(){
+    var h=(location.hash||'').replace(/^#/,'');
+    try{h=decodeURIComponent(h);}catch(e){}
+    if(h.indexOf('view=')===0){show(h.slice(5));return;}
+    if(h.indexOf('rc-')===0){show('rechk');return;}
+    if(h.indexOf('s-')===0){
+      // sid가 재점검표에 있으면 재점검 뷰, 아니면 돌린 규칙 뷰로 보낸다
+      fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+        .then(function(d){
+          var ids=((d&&d.audit&&d.audit.items)||[]).map(function(x){return x.sid;});
+          show(ids.indexOf(h.slice(2))>=0?'audit':'runs');
+        })['catch'](function(){show('runs');});
+      return;
+    }
+    show('ledger');
+  }
+  boot();
+  window.addEventListener('hashchange',boot);
+  // 탭 옆 개수 — 데이터가 붙은 뒤 채운다(손으로 적지 않는다)
+  function num(id,v){var e=el(id); if(e&&v!=null)e.textContent=v;}
+  fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){num('vn-runs',d&&d.strategies?d.strategies.length:null);})['catch'](function(){});
+  fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){num('vn-audit',d&&d.audit?d.audit.n_total:null);})['catch'](function(){});
+  fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){num('vn-rechk',d&&d.strategies?Object.keys(d.strategies).length:null);})['catch'](function(){});
 })();
 </script>
 </body>

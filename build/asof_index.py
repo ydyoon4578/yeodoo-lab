@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import datetime as dt
 import io
-import json
+import json, re
 import os
 import sys
 
@@ -83,6 +83,83 @@ def finra_asof(stocks: dict) -> str | None:
     return None
 
 
+# 축 → 그 축을 굽는 워크플로. 예정 시각은 **크론에서 직접 읽는다** — 손으로 적으면
+# 워크플로를 고칠 때 화면만 옛 시각을 말하게 된다(그 사고를 이미 한 번 냈다).
+WF = {
+    "price": "refresh-stocks.yml", "signals": "refresh-stocks.yml",
+    "regime": "refresh-regime.yml", "sentiment": "refresh-sentiment.yml",
+    "members": "refresh-holdings.yml", "rotation": "refresh-metrics.yml",
+    "filings": "refresh-filings.yml", "facts": "refresh-facts.yml",
+    "calendar": "refresh-calendar.yml", "guru": "refresh-13f.yml",
+    "insider": "refresh-insider.yml", "earnings": "refresh-earnings.yml",
+    "assets": "refresh-assets.yml", "tech": "refresh-tech.yml",
+}
+DOW = ["월", "화", "수", "목", "금", "토", "일"]
+
+
+def sched_of(wf: str) -> str | None:
+    """워크플로의 첫 크론(UTC) → 한국시간 문구. 백업 슬롯은 무시하고 본 슬롯만 쓴다."""
+    if not wf:
+        return None          # 워크플로가 매핑 안 된 축(수시·외부 갱신) — 예정 시각이 없는 게 맞다
+    p = os.path.join(ROOT, ".github", "workflows", wf)
+    if not os.path.isfile(p):
+        return None
+    m = re.search(r"cron:\s*'([^']+)'", io.open(p, encoding="utf-8").read())
+    if not m:
+        return None
+    f = m.group(1).split()
+    if len(f) != 5:
+        return None
+    mi, hh, dom, mon, dow = f
+    try:
+        mi_i, hh_i = int(mi), int(hh)
+    except ValueError:
+        return None
+    kh = (hh_i + 9) % 24
+    rolled = (hh_i + 9) >= 24          # UTC→KST에서 날짜가 넘어가는가
+    hm = "%02d:%02d" % (kh, mi_i)
+    if dom != "*":
+        # 매월 N일. 날짜가 넘어가면 하루 뒤가 된다.
+        try:
+            d0 = int(dom.split(",")[0]) + (1 if rolled else 0)
+        except ValueError:
+            return "매월 " + hm
+        return "매월 %d일 %s" % (d0, hm)
+    if dow == "*":
+        return "매일 " + hm
+    # 요일 집합을 펼친 뒤 KST 이월을 반영한다. 'UTC 월~금'은 KST로 **화~토**가 된다 —
+    # 여기서 '평일'이라 적으면 토요일 갱신을 화면이 숨기는 셈이다.
+    days = set()
+    for part in dow.split(","):
+        if "-" in part:
+            try:
+                a0, b0 = (int(x) for x in part.split("-"))
+            except ValueError:
+                continue
+            k = a0
+            while True:
+                days.add(k % 7)
+                if k % 7 == b0 % 7:
+                    break
+                k += 1
+        else:
+            try:
+                days.add(int(part) % 7)
+            except ValueError:
+                pass
+    if not days:
+        return hm
+    idxs = sorted(((d - 1) % 7 + (1 if rolled else 0)) % 7 for d in days)
+    if len(idxs) == 1:
+        return "매주 %s %s" % (DOW[idxs[0]], hm)
+    if idxs == [0, 1, 2, 3, 4]:
+        return "평일 " + hm
+    # 연속 구간이면 'A~B'로 줄인다(화~토처럼)
+    if all(idxs[i] + 1 == idxs[i + 1] for i in range(len(idxs) - 1)):
+        return "%s~%s %s" % (DOW[idxs[0]], DOW[idxs[-1]], hm)
+    return "%s %s" % ("·".join(DOW[i] for i in idxs), hm)
+
+
 def main() -> int:
     stocks = load("stocks.json") or {}
     regime = load("regime.json") or {}
@@ -137,6 +214,10 @@ def main() -> int:
          "cadence": "주 1회", "note": "일봉 입력이라 하루 단위로는 판정이 바뀌지 않는다 — 주말에만 다시 돌린다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
+    for a in axes:
+        sc = sched_of(WF.get(a["key"], ""))
+        if sc:
+            a["sched"] = sc + " KST"
     for a in axes:
         a["lag_days"] = bdays(a["as_of"], primary)
 

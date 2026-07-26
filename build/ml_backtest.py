@@ -157,6 +157,11 @@ def market_timing(A, RF):
     step = max(1, len(nav) // 220)
     return {
         "sid": "ml-timing", "arch": "ml-market-timing",
+        "holdings": {"kind": "asset", "as_of": DTS[-1],
+                     "weights": [("SPY" if (np.isfinite(pred[-1]) and pred[-1] > 0) else "현금(SHY)", 100.0)],
+                     "note": "모델의 마지막 예측이 %s이라 %s를 든다."
+                             % (("양수" if (np.isfinite(pred[-1]) and pred[-1] > 0) else "음수/결측"),
+                                ("SPY" if (np.isfinite(pred[-1]) and pred[-1] > 0) else "현금"))},
         "name": "머신러닝 지수 타이밍 (릿지·워크포워드)",
         "rule": "특징 9개로 향후 21거래일 SPY 수익을 릿지 회귀로 예측하고, 예측이 양수면 "
                 "SPY 100%·아니면 현금. 월 1회 재학습하며 학습은 그 시점까지의 데이터만 쓴다.",
@@ -292,6 +297,9 @@ def stock_selection(RF, TOPN=50):
     yrs = max(1e-9, (n - st2) / 252)
     return {
         "sid": "ml-xsec", "arch": "ml-stock-selection",
+        "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
+                     "tickers": sorted(hold),
+                     "note": "마지막 월말 재학습·리밸런스에서 고른 %d종목이다." % len(hold)},
         "name": "머신러닝 횡단면 종목선택 (릿지·워크포워드)",
         "rule": "특징 7개로 종목별 향후 21거래일 초과수익을 릿지로 예측해 상위 %d종목을 "
                 "동일가중 보유. 월말 재학습·리밸런스, 학습은 그 시점까지의 데이터만." % TOPN,
@@ -403,6 +411,10 @@ def guru_clone(RF, TOPN=30, MIN_MGR=8):
                 "'고르기'의 값어치만 남는다. 13F는 롱 미국주식만 담아 실제 포트폴리오가 아니다. "
                 "베타 %s (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치)."
                 % ("%.2f" % beta if beta else "—"),
+        "holdings": {"kind": "xsec", "as_of": months[-1], "n": len(hold),
+                     "tickers": sorted(hold),
+                     "note": "가장 최근 분기 13F(제출 마감 45일 지연 반영)로 고른 %d종목을 "
+                             "동일가중 보유 중이다." % len(hold)},
         "start": months[st], "end": months[-1], "n_days": (len(months) - st) * 21,
         "n_months": len(months) - st,
         "metrics": ms, "bench": mb, "bench_unstable": False, "beta": round(beta, 2) if beta else None,
