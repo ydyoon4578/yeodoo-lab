@@ -1150,6 +1150,18 @@
         if(window.__rebuildChips)window.__rebuildChips();
         render();
         var u=el('unibar');
+        // 상단 통계줄도 통합 수치로 다시 쓴다 — 14개 기준으로 남아 있으면 화면과 어긋난다
+        var sl=el('statline');
+        if(sl){
+          var cnt={}; D.forEach(function(x){cnt[x.v]=(cnt[x.v]||0)+1;});
+          var st=function(v,k,d2,cls){return '<span class="stat'+(cls?' '+cls:'')+'"><b>'+v+'</b>'+k+
+            (d2?'<em>'+d2+'</em>':'')+'</span>';};
+          sl.innerHTML=st(D.length,'전략','성격으로 묶어 한 목록')+
+            st(cnt.deploy||0,'배포','배포북에 들어 있는 것')+
+            st(cnt.marginal||0,'제한적 유효','보조·결합용')+
+            st((cnt.tie||0),'구별 불가','대조군과 못 가른다')+
+            st((cnt.worse||0)+(cnt.reject||0),'열위·미채택','대조군보다 나쁘거나 미채택');
+        }
         if(u)u.innerHTML='<b>'+D.length+'개 전략</b>을 <b>성격</b>으로 묶어 한 목록에 놓았습니다 — '+
           '무엇을 하는 전략인지가 같아야 숫자를 나란히 볼 수 있기 때문입니다. '+
           '<span class="unin">배포 원장 '+(D.length-add.length)+' · 종목 '+
@@ -1857,7 +1869,15 @@
   Promise.all([_get('data/strategy_detail.json'),_get('data/strategy_backtests.json'),_get('data/strategy_holdings.json'),_get('data/strategy_holdings_db.json'),_get('data/strategy_kinds.json')]).then(function(res){
     var map=res[0],bt=res[1],hd=res[2],hdb=res[3];
     KINDS=res[4]||null;      // 성격 축 정의(라벨·1차지표·대조군 역할 문구)의 단일 출처
-    if(map){ D.forEach(function(d){ if(map[d.n]) d.det=map[d.n]; }); buildArchetypeFilter(); }
+    if(map){ D.forEach(function(d){
+      if(!map[d.n])return;
+      // ⚠ strategy_detail.json에는 kind가 비어 있는 항목이 있다(기각 재검 5건). 통째로 덮어쓰면
+      //   통합 인덱스가 정한 성격이 지워져 '미분류'로 떨어진다 — 실제로 그렇게 났다.
+      //   플레이북은 받되 성격은 인덱스 값을 우선한다.
+      var keep=(d.det&&d.det.kind)||null;
+      d.det=map[d.n];
+      if(keep&&!d.det.kind)d.det=Object.assign({},d.det,{kind:keep});
+    }); buildArchetypeFilter(); if(window.__rebuildChips)window.__rebuildChips(); render(); }
     buildKindFilter();
     // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
     if(bt&&bt.strategies){ D.forEach(function(d){
