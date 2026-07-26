@@ -1309,6 +1309,37 @@ except SystemExit as e:
 except Exception as e:
     errors.append(f"갱신 주기 라벨 검증 실패: {e}")
 
+# ── 기각 아카이브 분류(k) 무결성 ─────────────────────────────────────────
+#   45종을 한 칸에 세면 '좋은 전략 45개가 기각됐다'로 읽힌다. k로 갈라 세되,
+#   ① 모든 항목에 유효한 k가 있고 ② kinds에 뜻이 적혀 있고 ③ 합이 총계와 맞아야 한다.
+#   (분류를 붙이다 만 상태로 배포되면 건수가 조용히 틀린다)
+try:
+    _aj = json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"), encoding="utf-8"))
+    _ai2, _kinds = _aj.get("items") or [], _aj.get("kinds") or {}
+    _OK = {"reject", "variant", "undecidable"}
+    if set(_kinds) != _OK:
+        errors.append(f"archive_index.kinds 누락/과잉: {sorted(set(_kinds) ^ _OK)}")
+    _bad = [x.get("sid") for x in _ai2 if (x.get("k") or "reject") not in _OK]
+    if _bad:
+        errors.append(f"archive_index: 알 수 없는 k 값 {_bad[:5]}")
+    # variant/undecidable 은 왜 그렇게 분류했는지(kw)를 반드시 남긴다 — 근거 없는 재분류 방지
+    _nokw = [x.get("sid") for x in _ai2 if x.get("k") in ("variant", "undecidable") and not x.get("kw")]
+    if _nokw:
+        errors.append(f"archive_index: k가 reject가 아닌데 사유(kw) 없음 {_nokw[:5]}")
+    # 분류 기준은 '스탠드얼론 렌즈가 정의되는가'다. 스탠드얼론 재검 백테스트를 가진 항목을
+    #   '전략이 아니다'로 분류하면 자기모순 — 실제로 low-beta-weight-tilt에서 한 번 틀렸다.
+    _abk = set((json.load(io.open(os.path.join(ROOT, "data", "archive_backtests.json"),
+                                  encoding="utf-8")).get("strategies") or {}))
+    _contra = sorted(_abk & {x.get("sid") for x in _ai2 if x.get("k") in ("variant", "undecidable")})
+    if _contra:
+        errors.append(f"archive_index: 스탠드얼론 재검이 있는데 전략이 아니라고 분류함 {_contra}")
+    _v = json.load(io.open(os.path.join(ROOT, "data", "verdicts.json"), encoding="utf-8"))
+    _sum = _v.get("archive_reject_n", 0) + _v.get("archive_variant_n", 0) + _v.get("archive_undecidable_n", 0)
+    if _sum != _v.get("archive_n"):
+        errors.append(f"verdicts: 아카이브 분류 합 {_sum} ≠ 총계 {_v.get('archive_n')} — verdicts_gen 재실행 필요")
+except Exception as e:
+    errors.append(f"아카이브 분류 검증 실패: {e}")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
