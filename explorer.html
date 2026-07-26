@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
-<title>여두 · 전략 리스트</title>
+<title>여두 · 전략 랩</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <meta name="description" content="적대검증을 통과한 배포·연구 전략 아카이브 — 실제 백테스트 차트(누적수익·낙폭·연도별)·장단점·활용방안.">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/explorer.html">
@@ -582,11 +582,12 @@
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
-    <h1 class="title">전략 리스트</h1>
+    <h1 class="title">전략 랩</h1>
     <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적과 성격</b>이 먼저 나오고, 대조군·판정은 그 뒤에 맥락으로 붙습니다.
       전략마다 <b>무엇으로 판단해야 하는지가 다릅니다</b> — 종목을 고르는 전략은 수익으로, 비중을 정하는 배분기는 샤프로,
       노출 크기를 줄이는 오버레이는 낙폭과 위기 구간으로 봅니다. 그래서 아래 <b>성격</b> 칩을 첫 필터로 두었습니다.
-      여기 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각) — 나머지 기각 <span id="arcn">—</span>개는 <a href="explorer.html#view=runs" style="color:var(--accent)">아카이브</a>에.<br>
+      아래 <b>전략 원장</b> 탭에 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각)입니다.
+      나머지 기각 <span id="arcn">—</span>개와 직접 돌린 규칙·재현 재점검은 <b>옆 탭</b>에 있습니다.<br>
       <b>운용 등급(배포 여부)</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b style="color:var(--marg)">제한적 유효 → 카드 표기 「조건부 · 목적이 맞을 때」</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각 → 카드 표기 「미채택(대조용)」</b>: 비용·검증을 거치면 배포 실익 없음.
       이 등급은 <b>“이 전략이 좋은가”가 아니라 “배포북에 넣을 것인가”</b>에 대한 답입니다.</p>
     <div class="statline" id="statline"></div>
@@ -635,6 +636,7 @@
 
   <div id="lab">
     <div id="v-runs" hidden>
+  <div class="statline" id="lab-statline"></div>
   <div class="hardnote" id="limits"></div>
 
   <div class="dupbox" id="dupbox" hidden></div>
@@ -1671,7 +1673,7 @@
     var linked={}; T.strategies.forEach(function(r){if(r.arch)linked[r.arch]=1;});
 
     var pass=T.strategies.filter(function(r){return r.verdict==='통과 후보';}).length;
-    el('statline').innerHTML=
+    el('lab-statline').innerHTML=
       st(T.strategies.length,'돌린 규칙','전부 싣는다')+
       st(pass,'통과 후보','다중검정까지 넘은 것',pass?'ok':'zero')+
       st(T.strategies.filter(function(r){return r.verdict==='구별 불가';}).length,'구별 불가','벤치마크와 못 가른다')+
