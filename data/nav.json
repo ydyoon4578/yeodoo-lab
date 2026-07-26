@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "c61eb0b592b1a2de",
+ "generated_from": "94794f439bff63aa",
  "categories": [
   {
    "name": "시장",
@@ -209,21 +209,11 @@
    "short": "전략",
    "tools": [
     {
-     "name": "백테스트 원장",
+     "name": "전략 랩",
      "file": "explorer.html",
      "status": "existing",
-     "desc": "랩이 돌린 결과와 유의성까지 전부",
+     "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
      "verdict": "pass",
-     "src": "model",
-     "effort": "S",
-     "live": true
-    },
-    {
-     "name": "전략 랩",
-     "file": "archive.html",
-     "status": "existing",
-     "desc": "돌린 규칙을 전부 게시 — 성과·판정·사유",
-     "verdict": "rejected",
      "src": "model",
      "effort": "S",
      "live": true

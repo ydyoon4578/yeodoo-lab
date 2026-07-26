@@ -20,8 +20,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 실사고(2026-07-25): co.html에 이 페이지에 없는 포매터 nf()를 쓴 코드가 그대로 배포됐다.
 # 값이 도착해 재렌더할 때 예외가 나고 화면이 옛 렌더에 멈춰 있었는데, 검사 대상이 아니라
 # CI가 통과시켰다. 목록을 손으로 적지 않고 디스크에서 읽는다 — 페이지가 늘면 저절로 포함된다.
+# 리다이렉트 전용 페이지 — 내비·폭 토큰·본문이 없는 게 정상이다(통합으로 남은 껍데기).
+# 목록에 두면 '내비 없음'으로 매번 실패한다. 대신 리다이렉트가 살아 있는지는 아래에서 따로 본다.
+REDIRECTS = {"archive.html"}
 PAGES = sorted(f for f in os.listdir(ROOT)
-               if f.endswith(".html") and not f.startswith("_"))
+               if f.endswith(".html") and not f.startswith("_") and f not in REDIRECTS)
 errors = []
 
 
@@ -264,6 +267,13 @@ if pool:
     for s in pool.get("strategies", []):
         L = s.get("lab")
         if not L: continue
+        # 링크 없는 lab — 아카이브 레코드를 지웠지만 '이미 검증하고 기각했다'는 지식은 남긴 경우다.
+        # 이걸 허용하지 않으면 레코드를 지울 때마다 풀에서 판정까지 사라져, 같은 걸 다시 제안하게 된다.
+        # 대신 판정(v)과 사유(why)는 반드시 있어야 한다 — 둘 다 없으면 그냥 빈 껍데기다.
+        if not L.get("href"):
+            if not (L.get("v") and L.get("why")):
+                errors.append(f"rotation_pool {s['id']}: lab에 링크가 없으면 판정(v)과 사유(why)는 있어야 한다")
+            continue
         href = L.get("href", "")
         page, _, frag = href.partition("#")
         if page not in ("archive.html", "explorer.html"):
@@ -287,15 +297,24 @@ if pool:
             errors.append(f"rotation_pool {s['id']}: 앵커가 구 슬러그(#{frag}) — sid 기준 #{pre}{tgt.get('sid')}로 갱신할 것")
 
     # 구 슬러그 하위호환: 각 페이지의 해시 해석 코드가 aka를 실제로 참조하는지(문안만 남고 로직이 빠지는 사고 방지)
-    _ak = plain("archive.html", "구 슬러그(aka) 해석 로직 검사")
+    # 2026-07-26 통합: 랩 콘텐츠(돌린 규칙·재점검·재검)가 explorer.html로 들어갔다.
+    # archive.html은 기존 딥링크를 넘기는 리다이렉트만 남았으므로 아래 검사들은 explorer를 본다.
+    for _rp in sorted(REDIRECTS):
+        _rt = io.open(os.path.join(ROOT, _rp), encoding="utf-8").read()
+        if "location.replace" not in _rt or "explorer.html" not in _rt:
+            errors.append(f"{_rp}: 리다이렉트가 없다 — 기존 딥링크가 빈 페이지에 떨어진다")
+        if "location.hash" not in _rt:
+            errors.append(f"{_rp}: 해시를 넘기지 않는다 — #s-… 딥링크가 목적지를 잃는다")
+
+    _ak = plain("explorer.html", "구 슬러그(aka) 해석 로직 검사(랩)")
     if _ak is not None and ("aka" not in _ak or "ALIAS" not in _ak):
-        errors.append("archive.html: 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
+        errors.append("explorer.html(랩): 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
     # 딥링크 도착지 유일성 — 아카이브는 카드를 세 섹션(돌린 규칙·재검 부기·못 돌린 것)에
     # 나눠 그리는데 같은 sid가 두 섹션에 동시에 나온다(실측 5건). 그래서 재검 카드는 rc-
     # 네임스페이스를 쓴다. 여기로 되돌아가면 #s-<sid>가 문서 순서상 앞 카드로 끌려가
     # "링크는 열리는데 다른 규칙이 보인다"는 조용한 오작동이 된다.
     if _ak is not None and 'id="rc-' not in _ak:
-        errors.append("archive.html: 재검 카드가 rc- 앵커를 쓰지 않음 — sid가 겹쳐 딥링크 도착지가 어긋난다")
+        errors.append("explorer.html(랩): 재검 카드가 rc- 앵커를 쓰지 않음 — sid가 겹쳐 딥링크 도착지가 어긋난다")
     # aka는 sid 공간과 섞이면 안 된다(구 슬러그가 남의 sid와 같으면 해석이 갈린다)
     _sids = {x.get("sid") for x in AREC}
     _seen_aka = {}
@@ -403,7 +422,7 @@ if pool:
     # 구 슬러그가 한글이면 location.hash에 퍼센트 인코딩돼 들어온다(실측: '#s-vix-기간구조' →
     # '#s-vix-%EA%B8%B0...'). 디코드를 빠뜨리면 조회가 조용히 빗나가 "링크는 열리는데 아무 데도
     # 안 간다"가 된다 — 2026-07-25 아카이브 재작성 때 실제로 이렇게 회귀했다.
-    for _pg, _txt in (("archive.html", _ak), ("explorer.html", _ek)):
+    for _pg, _txt in (("explorer.html(랩)", _ak), ("explorer.html", _ek)):
         if _txt is not None and "decodeURIComponent" not in _txt:
             errors.append(f"{_pg}: 해시 해석에 decodeURIComponent가 없음 — 한글 구 슬러그 딥링크가 빗나간다")
 
@@ -586,14 +605,14 @@ try:
         # (2) 평문 의존 검사 — 원장 재계산 비교(위조 불가능한 데이터 계약)
         #     ⚠ or 단락평가로 한쪽 SKIP이 묻히지 않게 둘 다 먼저 평가한다
         _pe = plain("explorer.html", "판정 원장(verdicts) 재계산 비교")
-        _pa = plain("archive.html", "판정 원장(verdicts) 재계산 비교")
+        _pa = plain("explorer.html", "판정 원장(verdicts) 재계산 비교")
         if _pe is not None and _pa is not None:
             _fresh = verdicts_gen.build(ROOT)
             if _cur != _fresh:
                 errors.append("판정 원장이 전략 배열과 어긋남 — python build/verdicts_gen.py 로 다시 구울 것")
             # 아카이브 statline도 전에 '제한적 유효 20개'를 손으로 적어두고 이관 때 틀렸다 — 스크립트까지 검사
             if re.search(r"제한적 유효 \d+개", _pa) and not re.search(r"제한적 유효 <b>", _pa):
-                errors.append("archive.html이 배포·제한적 유효 개수를 하드코딩함 — verdicts.json에서 읽을 것")
+                errors.append("explorer.html이 배포·제한적 유효 개수를 하드코딩함 — verdicts.json에서 읽을 것")
             # 배포 딥링크 슬러그가 explorer에서 실제로 선택되는지(규칙 동일성)
             for _d in _fresh["deploy"]:
                 if _d["n"] not in _pe:
@@ -731,7 +750,7 @@ try:
         _ab = json.load(io.open(_ap, encoding="utf-8"))
         # 2026-07-25: archive.html의 D 배열을 data/archive_index.json으로 뺐다(페이지가 '규칙+성과'로 바뀜).
         # sid 조인 검사는 그 데이터 파일을 본다 — 페이지가 아니라 정본을 보는 게 맞다.
-        _asrc = plain("archive.html", "기각 재검 부기('기각 유지' 문구) 검사")
+        _asrc = plain("explorer.html", "기각 재검 부기('기각 유지' 문구) 검사")
         try:
             _aidx = json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"), encoding="utf-8"))
             _idx_sids = {x.get("sid") for x in (_aidx.get("items") or [])}
@@ -760,7 +779,7 @@ try:
                 errors.append(f"{_sid}: 부기가 다중검정을 통과한 것으로 표시됨 — 재검 판정은 전건 '기각 유지'다. "
                               "실제로 통과했다면 아카이브가 아니라 탐색기로 승격 검토가 먼저다")
         if _asrc is not None and "기각 유지" not in _asrc:
-            errors.append("archive.html 부기에 '기각 유지' 문구가 없음 — 표만 보면 부활한 것으로 읽힌다")
+            errors.append("explorer.html 부기에 '기각 유지' 문구가 없음 — 표만 보면 부활한 것으로 읽힌다")
 except Exception as e:
     errors.append(f"기각 재검 부기 검증 실패: {e}")
 
@@ -769,6 +788,7 @@ try:
     _want = {"stocks.html": "--w-wide", "index.html": "--w-base", "explorer.html": "--w-base",
              "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
              "sources.html": "--w-read"}
+    _want = {k: v for k, v in _want.items() if k not in REDIRECTS}   # 리다이렉트는 본문이 없다
     for _f, _tok in _want.items():
         _s = plain(_f, "폭 토큰 검사")   # 잠금 페이지는 평문 기준(게이트는 자체 폭을 가짐)
         if _s is None: continue
@@ -968,7 +988,8 @@ try:
     # ③ 모든 배포 HTML은 자기가 어느 슬롯인지 밝혀야 한다(현재위치 강조의 유일한 입력).
     # 홈은 도구가 아니라 도구들의 관문이라 슬롯 목록에 없다 — 유효한 data-tool로 인정한다
     _known = {t["file"].split("#")[0] for t in _tools} | {"index.html"}
-    for _fn in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+    for _fn in sorted(f for f in os.listdir(ROOT)
+                      if f.endswith(".html") and f not in REDIRECTS):
         _s = rd(_fn)
         _m = re.search(r'<body[^>]*\sdata-tool="([^"]*)"', _s)
         if not _m:

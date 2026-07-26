@@ -110,6 +110,15 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         return nav, rets, turn
     nav, rets, turn = walk(wfn, ends)
     bnav, brets, _ = walk(bench_w, bends)
+    # 지금 뭘 들고 있나 — 이게 안 보이면 규칙을 읽어도 실제로 쓸 수가 없다.
+    try:
+        _w = wfn(n - 1) or {}
+        _tot = sum(_w.values())
+        hold_now = {"kind": "asset", "as_of": DTS[-1],
+                    "weights": sorted(((k, round(100 * v / _tot, 1)) for k, v in _w.items() if v > 0),
+                                      key=lambda z: -z[1])} if _tot > 0 else None
+    except Exception:
+        hold_now = None
     dd = DTS[start:]
     ms, mb = ann_stats(nav, dd, RF), ann_stats(bnav, dd, RF)
     yrs = max(1e-9, (n - start) / 252)
@@ -120,7 +129,7 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     unstable = (mb.get("vol") or 0) < 2.0
     return {"name": label, "rule": rule, "why": why, "note": note,
             "start": DTS[start], "end": DTS[-1], "n_days": n - start,
-            "metrics": ms, "bench": mb, "bench_unstable": unstable,
+            "metrics": ms, "bench": mb, "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
             "t": tstat(rets, brets), "turnover": round(turn / 2 / yrs, 1),
             "nav": [round(x, 2) for x in nav[::step]],
@@ -445,6 +454,9 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
+                "holdings": {"kind": "asset", "as_of": DTS[-1],
+                             "weights": [("SPY(밤에만)", 100.0)],
+                             "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
                 "rule": "매 거래일 종가에 SPY를 사서 다음 날 시가에 판다(밤사이만 보유).",
                 "why": "아카이브 사유는 '일별 왕복이라 월말 컨벤션과 비양립·BE 2bp'였다. "
                        "규약과 안 맞는 것과 성과가 없는 것은 다른 말이므로, 성과 자체를 잰다.",
@@ -556,6 +568,9 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 보유 (QQQ 종가→시가)",
+                "holdings": {"kind": "asset", "as_of": DTS[-1],
+                             "weights": [("QQQ(밤에만)", 100.0)],
+                             "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
                 "rule": "매 거래일 종가에 QQQ를 사서 다음 날 시가에 판다.",
                 "why": "나스닥100에서 밤사이 수익이 낮에 앉아 있는 것보다 나은지. "
                        "대조군은 QQQ 상시보유(종가→종가).",
@@ -690,7 +705,12 @@ def build():
         mu = sum(d) / len(d)
         sd = math.sqrt(sum((v - mu) ** 2 for v in d) / max(1, len(d) - 1))
         step = max(1, len(nav) // 220)
+        we_, wr_ = wfn(len(months) - 1, months, rs)
         return {"name": name, "rule": rule, "why": why, "note": note,
+                "holdings": {"kind": "sleeve", "as_of": months[-1],
+                             "weights": [("EPS 리비전 드리프트", round(we_ * 100, 1)),
+                                         ("크로스에셋 리스크패리티", round(wr_ * 100, 1))],
+                             "note": "배포 슬리브 둘의 현재 배분이다."},
                 "start": months[0], "end": months[-1], "n_days": len(months),
                 "metrics": ms, "bench": mb, "bench_unstable": False,
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
@@ -873,23 +893,14 @@ def main() -> int:
     done = {r["arch"] for r in rows}
     # 돌리지 못한 것 — 사유를 사실대로 나눈다. '데이터가 세상에 없다'와
     # '있는데 아직 안 만들었다'는 다른 말이고, 섞으면 영원히 안 하게 된다.
+    # 유료 데이터라 영원히 못 도는 항목들은 2026-07-26에 아카이브에서 **삭제**했다.
+    # 남겨둬 봐야 매번 '불가'만 찍히고 재검 대상도 아니었다. 사유는 커밋 메시지에 남는다.
     PENDING = {
         "cross-asset-carry": ("가능 · 미구현",
             "주식 이익수익률·채권 기간스프레드·원자재 롤·FX 금리차를 한 축으로 묶어야 한다. "
             "네 축 모두 이미 받은 데이터(FRED·ETF)로 만들 수 있으나 캐리 정의가 자산군마다 "
             "달라 규칙을 먼저 정해야 한다 — 데이터 문제가 아니라 설계 문제다."),
-                                "eps-revision-drift-spx": ("불가 · 유료 데이터",
-            "애널리스트 이익추정치의 시점별 개정 이력이 필요하다(I/B/E/S·FactSet 등). "
-            "무료 소스는 현재 컨센서스만 주고 과거 개정 스냅샷을 주지 않는다 — "
-            "오늘 값으로 과거를 채우면 그 순간 선견편향이 된다."),
-        "eps-revision-signal-variants": ("불가 · 유료 데이터",
-            "위와 같은 개정 이력이 있어야 신호 구성을 바꿔가며 비교할 수 있다."),
-        "eps-revision-quality-gate": ("불가 · 유료 데이터",
-            "위와 같은 개정 이력 + 추정치 신선도(마지막 개정 시점)가 필요하다."),
-        "sue-pead": ("불가 · 유료 데이터",
-            "표준화 서프라이즈(SUE)는 발표 실적과 발표 직전 컨센서스의 차이다. "
-            "무료 소스는 최근 몇 분기만 주어 장기 표본을 만들 수 없다."),
-    }
+                                                            }
     try:
         _ai = json.load(io.open(os.path.join(DATA, "archive_index.json"), encoding="utf-8"))
         _idx = {x["sid"]: x for x in (_ai.get("items") or [])}

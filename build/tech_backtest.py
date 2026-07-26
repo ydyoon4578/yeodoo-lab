@@ -602,6 +602,11 @@ def run():
                 nav.append(nav[-1] * (1 + r))
             turn = sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, n)) / max(1, (n - MIN_HIST) / 252)
             expo = sum(w[MIN_HIST:]) / max(1, n - MIN_HIST)
+            # 지금 이 규칙이 어떤 상태인지 — 타이밍은 '얼마나 들고 있나'가 곧 구성이다
+            hold_now = {"kind": "timing", "as_of": dates[-1],
+                        "exposure_now": round(w[n - 1] * 100, 1),
+                        "note": "노출 %d%%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. "
+                                "나머지는 무위험(현금)." % round(w[n - 1] * 100)}
         else:
             # 횡단면 — 월말에만 순위를 다시 매기고 그 사이는 보유
             hold = []
@@ -672,6 +677,10 @@ def run():
                 nav.append(nav[-1] * (1 + r))
             turn = turns / max(1, (n - MIN_HIST) / 252)
             expo = 1.0
+            hold_now = {"kind": "xsec", "as_of": dates[-1], "n": len(hold),
+                        "tickers": sorted(hold),
+                        "note": "마지막 월말 리밸런스에서 고른 %d종목을 동일가중으로 보유 중이다. "
+                                "다음 월말에 다시 뽑는다." % len(hold)}
 
         bnav = [100.0]
         for i in range(MIN_HIST + 1, n):
@@ -687,6 +696,7 @@ def run():
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
             "t": tstat(srets, ixr[MIN_HIST + 1:]),
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
+            "holdings": hold_now,
             "nav": [round(x, 2) for x in nav[::5]],
             "bnav": [round(x, 2) for x in bnav[::5]],
             "dates": d2[::5],
