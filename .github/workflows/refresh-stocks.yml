@@ -32,6 +32,10 @@ jobs:
       # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
       - name: Rebuild home slim bundle
         run: python build/home_flow.py
+      # 전 전략 통합 목록 — 원본(tech·asset·archive·deploy)이 바뀌면 같이 다시 굽는다.
+      # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
+      - name: Rebuild unified strategy index
+        run: python build/strategy_index.py
       - name: Rebuild as-of index
         # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
         # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
@@ -45,7 +49,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/sd data/target_history.json \
-            data/signal_lab.json data/home_flow.json data/asof.json
+            data/signal_lab.json data/home_flow.json data/strategy_index.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
