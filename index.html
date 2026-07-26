@@ -154,6 +154,8 @@
        border:1px solid var(--line);border-radius:5px;padding:2px 6px;text-decoration:none}
   a.wkt:hover{border-color:var(--accent);color:var(--accent)}
   .wkt.bmo{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+  .wkt.amc{border-color:color-mix(in srgb,var(--champ) 45%,transparent);color:var(--champ)}
+  .wkt.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .wkday .wn{font-size:11.5px;color:var(--ink-2);line-height:1.5}
   .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
   .flrow{display:grid;grid-template-columns:58px 1fr auto;gap:8px;align-items:baseline;
@@ -191,7 +193,13 @@
        background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
        text-decoration:none;display:inline-block}
   a.tk2:hover,a.tk2:focus{border-color:var(--accent);color:var(--accent);outline:none}
+  /* 발표 시각 3상태 — 장전/장후/미공개. 전에는 장전만 금색이고 나머지는 구분이 없어서,
+     장 끝나고 나오는 실적과 시각 자체가 안 알려진 것이 한 덩어리로 보였다.
+     장후는 팔레트에 이미 있는 파랑(--champ)을 쓴다(라이트·다크 둘 다 대비를 맞춰 둔 값).
+     미공개는 색을 주지 않고 점선으로 둔다 — 모른다는 것을 색으로 단정하지 않으려는 것이다. */
   .tk2.bmo{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+  .tk2.amc{border-color:color-mix(in srgb,var(--champ) 45%,transparent);color:var(--champ)}
+  .tk2.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .tip{position:relative}
   .tk2[data-nm]::after,.tip[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);
        transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:var(--ground);
@@ -478,7 +486,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
   <div class="nvin">
-    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 랩</a>
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 전략 랩</a>
     <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
     <ul class="navcats" id="navcats">
       <li class="navcat" data-cat="market">
@@ -663,7 +671,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
-        <span><span class="tk2 lgc">AAPL</span> 장후 또는 시간 미공개</span>
+        <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
+        <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
         <span class="lgn">같은 날은 시가총액 큰 순 · 티커에 커서를 올리거나 누르면 회사 이름</span>
       </div>
@@ -994,7 +1003,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (n===0?'<em>오늘</em>':(n>0&&n<=7?'<em>D-'+n+'</em>':''))+'</div>'+
           (ev.length?'<div class="caltk">'+ev.slice(0,9).map(function(x){
             var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
-            return '<a class="tk2'+(x.hour==='장전'?' bmo':'')+'" href="co.html?t='+encodeURIComponent(x.t)+
+            var hc=x.hour==='장전'?' bmo':(x.hour==='장후'?' amc':' tba');
+            return '<a class="tk2'+hc+'" href="co.html?t='+encodeURIComponent(x.t)+
                    '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):'')+esc(mc)+'">'+esc(x.t)+'</a>';
           }).join('')+(ev.length>9?'<span class="cnt">+'+(ev.length-9)+'</span>':'')+'</div>':'')+
           (mc.length?'<div class="calmac"><b>'+esc(mc.join(' · '))+'</b></div>':'')+
