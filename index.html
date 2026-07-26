@@ -169,8 +169,10 @@
   /* 캘린더 — 실적·지표를 한 판에. 월~금만 둔다(미장 기준 주말은 빈 칸이라 자리만 먹는다) */
   /* 날짜 칸의 지수 등락률 — 일정과 그날 시장 반응을 나란히 읽게 한다.
      칸이 좁아 글자를 키울 수 없으므로 색으로 방향을 먼저 읽힌다. */
-  .calix{display:inline-flex;gap:5px;margin-left:6px;font-family:var(--mono);font-size:9px;
-         font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .calix{display:flex;flex-wrap:wrap;gap:2px 8px;margin:2px 0 5px;font-family:var(--mono);
+         font-size:8.5px;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.35}
+  .calix span{display:inline-flex;gap:3px;white-space:nowrap}
+  .calix b{color:var(--muted);font-weight:600}
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
   @media(max-width:900px){.calix{display:none}}
@@ -680,7 +682,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
         <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
-        <span><i class="lg m"></i>날짜 옆 두 숫자 = 그날 S&amp;P 500 · 나스닥100 등락률</span>
+        <span><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
         <span class="lgn">하루 안에서는 장전 → 장후 → 미공개 순, 같은 시각끼리는 시가총액 큰 순 · 티커에 커서를 올리거나 누르면 회사 이름</span>
       </div>
     </section>
@@ -1022,10 +1024,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var cls='calcell'+(n<0?' off':'')+(n===0?' today':'');
         h+='<div class="'+cls+'">'+
           '<div class="caldate"><span>'+(day.getMonth()+1)+'/'+day.getDate()+'</span>'+
-          (function(){var q=(CAL.i||{})[k]; if(!q)return '';
-            var f=function(v){return v==null?'':'<i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i>';};
-            return '<span class="calix">'+f(q.s)+f(q.n)+'</span>';})()+
           (n===0?'<em>오늘</em>':(n>0&&n<=7?'<em>D-'+n+'</em>':''))+'</div>'+
+          (function(){var q=(CAL.i||{})[k]; if(!q)return '';
+            var f=function(lab,v){return v==null?'':'<span><b>'+lab+'</b><i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i></span>';};
+            return '<div class="calix">'+f('S&amp;P500',q.s)+f('Nasdaq100',q.n)+'</div>';})()+
           // 발표 시각별로 줄을 나눈다 — 색만 다르고 한 줄에 섞여 있으면 '장 끝나고 나오는
           // 것'과 '시각을 모르는 것'이 눈으로 안 갈린다. 남는 개수도 줄마다 따로 적는다
           // (한 덩어리로 '+37'만 적으면 어느 시각이 잘렸는지 알 수 없다).
