@@ -317,6 +317,19 @@ if pool:
                 errors.append(f"{_f}: NAVCSS 블록이 정본과 다름 — 페이지 고유 CSS를 여기 넣으면 "
                               f"다음 sync_nav 실행에서 통째로 지워진다")
 
+    # 기준일이 대표(마지막 거래일)를 앞서는 축은 없어야 한다. '받은 날'을 기준일로 찍는 축을
+    # 새로 붙일 때마다 이 실수가 되풀이된다(실제로 members 자동화에서 한 번 더 냈다).
+    # 수집일이 다르면 asof_index가 collected로 분리해 두므로, 여기서 걸리면 그 처리를 빠뜨린 것이다.
+    try:
+        _aj = json.load(io.open(os.path.join(ROOT, "data", "asof.json"), encoding="utf-8"))
+        _pri = _aj.get("primary")
+        for _ax in (_aj.get("axes") or []):
+            if _pri and _ax.get("as_of", "") > _pri:
+                errors.append(f"asof '{_ax.get('label')}': 기준일 {_ax['as_of']}이 대표 {_pri}보다 "
+                              f"앞선다 — 수집일을 기준일로 찍고 있다(asof_index.py의 COLLECTED에 넣을 것)")
+    except FileNotFoundError:
+        pass
+
     for _rp in sorted(REDIRECTS):
         _rt = io.open(os.path.join(ROOT, _rp), encoding="utf-8").read()
         if "location.replace" not in _rt or "explorer.html" not in _rt:

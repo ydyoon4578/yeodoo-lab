@@ -228,7 +228,9 @@ def main() -> int:
     # 일요일에 받으면 일요일이 대표 기준일(마지막 거래일)보다 **앞서** 표시된다 —
     # 표를 보는 사람은 "대표보다 최신 데이터가 있다"로 읽지만 시장은 그날 열리지도 않았다.
     # 기준일은 그 데이터가 반영하는 **시장 날짜**로 맞추고, 실제 수집일은 따로 남긴다.
-    COLLECTED = {"earnings", "calendar", "rotation"}
+    # members도 여기 든다 — 자동 갱신으로 바꾸면서 '받은 날'을 기준일로 찍게 됐고,
+    # 그 순간 대표(마지막 거래일)를 다시 앞질렀다. 수집일 축은 예외 없이 이 규칙을 탄다.
+    COLLECTED = {"earnings", "calendar", "rotation", "members"}
     for a in axes:
         if a["key"] in COLLECTED and a["as_of"] > primary:
             a["collected"] = a["as_of"]
