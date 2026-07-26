@@ -1,0 +1,42 @@
+name: Refresh index membership
+
+# 유니버스 명단(data/members.json)을 공개 소스에서 자동 갱신한다.
+#
+# ⚠ 이 파일은 사이트 전체의 출발점이다. 잘못 갱신되면 모든 화면이 함께 틀어지는데
+#   아무도 알려주지 않는다. 그래서 스크립트가 관문 4개(두 소스 합의·개수 범위·변동 상한·
+#   섹터 완전성)를 통과할 때만 쓰고, 하나라도 걸리면 **파일을 건드리지 않고 실패**한다.
+#   잡이 빨갛게 뜨는 게 잘못된 명단이 조용히 배포되는 것보다 낫다.
+#
+# 순서 — 토요일 08:00, 종목 갱신(08:15)보다 먼저다. 새 유니버스로 그날 스냅샷을 굽기 위해서다.
+
+on:
+  schedule:
+    - cron: '0 23 * * 5'    # 매주 토 08:00 KST — 종목 갱신(08:15)보다 앞
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-members
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refresh membership (gated)
+        run: python build/refresh_members.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 지수 편입 명단 자동 갱신" \
+            data/members.json data/asof.json

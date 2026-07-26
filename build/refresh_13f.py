@@ -160,6 +160,64 @@ def _f(x):
         return 0.0
 
 
+def edgar_quarters(cmap: dict):
+    """운용사별 EDGAR 제출에서 최근 두 분기를 읽는다. 반환 계약은 read_quarter와 같다
+    — (기준분기, {cik: {name, total_val, total_n, holds:{ticker:{v,sh}}}}).
+
+    벌크 데이터셋과 다른 점 두 가지를 알고 써야 한다.
+      · 수정보고 처리: 같은 보고분기에 여러 제출이 있으면 **가장 나중 것**을 쓴다.
+        벌크 경로의 RESTATEMENT/NEW HOLDINGS 구분보다 단순하지만, 최신 제출이 완전한
+        보고인 경우가 대부분이라 실무상 같은 결과가 된다.
+      · total_val/total_n은 표지(primary_doc) 대신 정보표 합으로 낸다.
+    """
+    import refresh_13f_history as H13
+    per_cik = {}
+    periods = set()
+    for cik in GURUS:
+        try:
+            fl = H13.filings(cik)
+        except Exception:
+            continue
+        best = {}
+        for rd, acc, _form in sorted(fl):
+            best[rd] = acc          # 같은 분기면 나중 제출이 덮는다
+        if best:
+            per_cik[cik] = best
+            periods.update(best)
+    if not periods:
+        return None, None
+    want = sorted(periods)[-2:][::-1]      # 최신, 그다음
+    out = []
+    for per in want:
+        got = {}
+        for cik, best in per_cik.items():
+            if per not in best:
+                continue
+            try:
+                rows = H13.holdings(cik, best[per])
+            except Exception:
+                rows = []
+            if not rows:
+                continue
+            holds, tot_v, tot_n = {}, 0.0, 0
+            for cu, val, sh in rows:
+                tot_v += val; tot_n += 1
+                t = cmap.get(cu)
+                if not t:
+                    continue
+                h = holds.setdefault(t, {"v": 0.0, "sh": 0.0})
+                h["v"] += val; h["sh"] += sh
+            if holds:
+                got[cik] = {"name": GURUS[cik], "total_val": tot_v,
+                            "total_n": tot_n, "holds": holds}
+        out.append((per, got))
+    while len(out) < 2:
+        out.append((None, {}))
+    print("EDGAR 직접 수집 — %s %d곳 · %s %d곳"
+          % (out[0][0], len(out[0][1]), out[1][0], len(out[1][1])))
+    return out[0], out[1]
+
+
 def read_quarter(url: str, cmap: dict):
     """한 창의 ZIP → (기준분기, {cik: {name, total_val, total_n, holds:{ticker:{v,sh}}}}).
 
@@ -254,6 +312,17 @@ def main() -> int:
         print("❌ CUSIP 매핑 커버가 90%% 미만 — 갱신 중단(이전본 유지)")
         return 1
 
+    # ── 공급원 선택 ────────────────────────────────────────────────────
+    # SEC 벌크 데이터셋은 '제출일 3개월 창' 단위로, 창이 닫히고도 약 8주 뒤에 공개된다.
+    # 그래서 6월말 보유(8/14 제출 마감)는 10월 말에야 들어온다.
+    # 운용사별 EDGAR 제출을 직접 읽으면 제출 당일부터 보인다 — 같은 자료를 2개월 반 먼저 본다.
+    # 벌크가 더 최신이거나 EDGAR가 실패하면 자동으로 벌크로 내려간다(그쪽이 검증된 경로다).
+    edgar_cur = edgar_prev = None
+    try:
+        edgar_cur, edgar_prev = edgar_quarters(cmap)
+    except Exception as e:
+        print("⚠ EDGAR 직접 수집 실패(%s) — 벌크 데이터셋으로 진행" % e)
+
     zips = latest_13f(2)
     if not zips:
         print("❌ 13F ZIP 링크를 찾지 못했다 — 인덱스 페이지 구조가 바뀌었을 수 있다. 갱신 중단")
@@ -261,11 +330,37 @@ def main() -> int:
     print("대상 창: " + " · ".join(e for e, _ in zips))
 
     cur_per, cur = read_quarter(zips[0][1], cmap)
-    print("이번 분기 %s — 명단 중 보고한 곳 %d/%d" % (cur_per, len(cur), len(GURUS)))
+    print("벌크 이번 분기 %s — 명단 중 보고한 곳 %d/%d" % (cur_per, len(cur), len(GURUS)))
     prev_per, prev = (None, {})
     if len(zips) > 1:
         prev_per, prev = read_quarter(zips[1][1], cmap)
-        print("직전 분기 %s — %d곳" % (prev_per, len(prev)))
+        print("벌크 직전 분기 %s — %d곳" % (prev_per, len(prev)))
+
+    # ⚠ 두 경로의 분기 표기가 다르다 — EDGAR는 '2026-03-31', 벌크는 '31-MAR-2026'.
+    #   문자열로 비교하면 '2026-06-30' < '31-MAR-2026'이 되어 **Q2가 와도 벌크를 계속 쓴다**
+    #   (지금은 우연히 맞는 답이 나오지만, 새 분기가 뜨는 순간 조용히 틀린다).
+    _MON = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
+            "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
+
+    def _iso(p_):
+        if not p_:
+            return ""
+        p_ = str(p_).strip()
+        m = re.fullmatch(r"(\d{1,2})-([A-Za-z]{3})-(\d{4})", p_)
+        if m:
+            return "%s-%02d-%02d" % (m.group(3), _MON[m.group(2).upper()], int(m.group(1)))
+        return p_          # 이미 ISO
+
+    # EDGAR가 더 최신 분기를 갖고 있으면 그쪽으로 간다. 같은 분기면 검증된 벌크를 쓴다.
+    if edgar_cur and edgar_cur[0] and (not cur_per or _iso(edgar_cur[0]) > _iso(cur_per)):
+        print("→ EDGAR 직접 수집이 더 최신(%s > %s) — 그쪽을 쓴다" % (edgar_cur[0], cur_per))
+        cur_per, cur = edgar_cur
+        if edgar_prev and edgar_prev[0]:
+            prev_per, prev = edgar_prev
+    else:
+        print("→ 벌크 데이터셋 사용(EDGAR %s · 벌크 %s → ISO %s vs %s)"
+              % (edgar_cur[0] if edgar_cur else "없음", cur_per,
+                 _iso(edgar_cur[0]) if edgar_cur else "—", _iso(cur_per)))
 
     if not cur:
         print("❌ 이번 분기 수집 0곳 — 갱신 중단(이전본 유지)")
