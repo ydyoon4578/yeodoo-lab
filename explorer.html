@@ -325,6 +325,23 @@
   .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
   .vtab .vn{font-weight:600;color:var(--muted);margin-left:5px;font-size:11px}
   #lab .sech:first-of-type{margin-top:26px}
+  /* 지수 기준표 — 전략 숫자를 볼 때 옆에 두고 읽는다 */
+  .idxref{margin:16px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+          padding:13px 15px;box-shadow:var(--shadow)}
+  .idxref h3{margin:0;font-size:13px;font-weight:800}
+  .idxref h3 em{font-style:normal;font-weight:600;color:var(--muted);font-size:11.5px;margin-left:7px}
+  .idxwrap{overflow-x:auto;margin-top:9px}
+  .idxt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:560px}
+  .idxt th{color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+           padding:5px 7px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  .idxt th.l,.idxt td.l{text-align:left}
+  .idxt td{padding:5px 7px;text-align:right;white-space:nowrap;border-top:1px solid var(--line-soft);color:var(--ink-2)}
+  .idxt td.nm{font-family:var(--sans);font-size:12px;color:var(--ink);font-weight:700}
+  .idxt .kd{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:5px;
+            border:1px solid color-mix(in srgb,var(--muted) 40%,transparent);color:var(--muted)}
+  .idxt .kd.tr{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
+  .idxt td.up{color:var(--gA)} .idxt td.dn{color:var(--rej)}
+  .idxnote{margin:8px 0 0;font-size:11px;color:var(--muted);line-height:1.55}
   #lab .viewlede{margin:9px 0 0;max-width:var(--w-read);font-size:13px;color:var(--ink-2);line-height:1.65}
   #lab .viewlede b{color:var(--ink)}
   /* 구성종목 — 규칙만 읽고는 못 쓴다. '지금 무엇을 들고 있나'를 카드에 붙인다. */
@@ -601,7 +618,16 @@
 @media(pointer:coarse){#lab .fchip,#lab .cbtn,#lab .sortbtn,#lab .item,#lab .cbtn,#lab .pill{min-height:40px}
 #lab .fchip{padding-top:8px;padding-bottom:8px}}
 @media(prefers-reduced-motion:reduce){#lab *,#lab *::before,#lab *::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
-@media(prefers-color-scheme:dark){#lab .chip[aria-pressed=true]{color:#131820}}</style>
+@media(prefers-color-scheme:dark){#lab .chip[aria-pressed=true]{color:#131820}}  /* 설명·한계는 기본으로 숨기고 눌러서 본다(전 페이지 공통 패턴) */
+  details.more{margin-top:7px}
+  details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:12.5px}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more[open]>summary::before{content:'\25BE'}
+  details.more>summary:hover{color:var(--accent)}
+  details.more .mbody{margin-top:7px}
+  details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
+</style>
 
 <!-- NAVCSS:BEGIN -->
 <style>
@@ -885,6 +911,8 @@
     <button class="vtab" type="button" data-v="audit">자산배분 전략<span class="vn" id="vn-audit"></span></button>
     <button class="vtab" type="button" data-v="rechk">기각 재검<span class="vn" id="vn-rechk"></span></button>
   </nav>
+
+  <div class="idxref" id="idxref" hidden></div>
 
   <div id="v-ledger">
   <div class="controls">
@@ -1992,7 +2020,7 @@
       // 규칙 수를 늘렸으니 '얼마나 겹치는지'도 같이 보여야 한다. 안 보이면 24개를 돌린 것이
       // 24개의 독립된 검증처럼 읽힌다.
       var box=el('dupbox'); box.hidden=false;
-      box.innerHTML='<b>규칙 '+esc(String(D_.n_timing))+'개를 돌렸지만, 서로 다른 베팅은 그보다 적습니다</b><br>'+
+      box.innerHTML='<details class="more"><summary>규칙 '+esc(String(D_.n_timing))+'개를 돌렸지만, 서로 다른 베팅은 그보다 적습니다</summary><div class="mbody">'+
         '타이밍 규칙 쌍의 일간 수익률 상관 중앙값 <b>'+nf(D_.median,3)+'</b> · '+
         '<b>'+esc(String(D_.n_over_95))+'쌍</b>이 0.95를 넘습니다. 거의 같은 곡선을 그린 쌍 상위 몇 개:'+
         '<table><tbody>'+D_.top.map(function(x){
@@ -2000,11 +2028,13 @@
         }).join('')+'</tbody></table>'+
         '<div class="dn">'+esc(D_.note||'')+' 다중검정 임계(본페로니)는 검정이 서로 독립일 때의 보정이라, '+
         '이렇게 겹칠수록 필요 이상으로 엄격해집니다. 그래도 임계를 손으로 낮추지 않았습니다 — '+
-        '결과를 보고 기준을 고치는 순간 그건 검정이 아니게 됩니다.</div>';
+        '결과를 보고 기준을 고치는 순간 그건 검정이 아니게 됩니다.</div></div></details>';
     }
 
-    el('limits').innerHTML='<b>결과보다 먼저 읽어야 하는 것</b><br>· '+(T.limits||[]).map(esc).join('<br>· ')+
-      '<br>· '+esc(T.t_crit_note||'');
+    // 한계는 지우지 않되 펼쳐두지 않는다 — 눌러야 보인다(2026-07-26 요청).
+    el('limits').innerHTML='<details class="more"><summary>결과보다 먼저 읽어야 하는 것 '+
+      '('+((T.limits||[]).length+1)+'가지)</summary><div class="mbody"><p>· '+
+      (T.limits||[]).map(esc).join('</p><p>· ')+'</p><p>· '+esc(T.t_crit_note||'')+'</p></div></details>';
 
     // ── 스탠드얼론 재검 부기 ── 이 랩의 정식 백테스트(월말·무비용·초과수익 기준) 결과다.
     fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(ab){
@@ -2181,6 +2211,45 @@
     .then(function(d){num('vn-audit',d&&d.audit?d.audit.n_total:null);})['catch'](function(){});
   fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     .then(function(d){num('vn-rechk',d&&d.strategies?Object.keys(d.strategies).length:null);})['catch'](function(){});
+})();
+</script>
+
+<script>
+/* ── 지수 기준표 ── 전략 카드의 숫자만 보면 '좋은지'를 알 수 없다. 같은 구간 지수가
+   얼마를 냈는지가 옆에 있어야 판단이 된다. 연도별은 접어 둔다(설명·표는 기본 숨김 규칙). */
+(function(){
+  function el(id){return document.getElementById(id);}
+  function esc(x){return (x==null?'':String(x)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function n2(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);}
+  function sg(v,d){return (v==null||v!==v)?'—':((v>0?'+':'')+Number(v).toFixed(d==null?2:d));}
+  fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      var R=d&&d.index_ref; if(!R||!R.rows||!R.rows.length)return;
+      var box=el('idxref'); if(!box)return;
+      box.hidden=false;
+      var head='<tr><th class="l">지수</th><th>연환산</th><th>변동성</th><th>MDD</th><th>샤프</th><th>기간</th></tr>';
+      var body=R.rows.map(function(r){
+        var a=r.all||{};
+        return '<tr><td class="l nm">'+esc(r.label)+'<span class="kd'+(r.kind==='TR'?' tr':'')+'">'+esc(r.kind)+'</span></td>'+
+          '<td class="'+(a.ret>0?'up':'dn')+'">'+sg(a.ret)+'%</td><td>'+n2(a.vol)+'%</td>'+
+          '<td class="dn">'+n2(a.mdd)+'%</td><td>'+n2(a.sharpe,3)+'</td>'+
+          '<td>'+Math.round((a.n_days||0)/252)+'년</td></tr>';
+      }).join('');
+      // 연도별 — 어떤 국면에 어떤 전략이 먹히는지는 전 구간 평균이 아니라 해마다 갈린다
+      var ys=R.years||[];
+      var yhead='<tr><th class="l">연도</th>'+R.rows.map(function(r){return '<th>'+esc(r.label.split(' (')[0])+'</th>';}).join('')+'</tr>';
+      var ybody=ys.slice().reverse().map(function(y){
+        return '<tr><td class="l nm">'+esc(y)+'</td>'+R.rows.map(function(r){
+          var v=(r.by_year||{})[y];
+          return v?('<td class="'+(v.ret>0?'up':'dn')+'">'+sg(v.ret)+'%<span style="color:var(--muted)"> · MDD '+n2(v.mdd)+'%</span></td>'):'<td>—</td>';
+        }).join('')+'</tr>';
+      }).join('');
+      box.innerHTML='<h3>지수 기준<em>'+esc(R.as_of)+' 기준 · 전략 숫자를 이 표와 나란히 보십시오</em></h3>'+
+        '<div class="idxwrap"><table class="idxt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'+
+        '<details class="more"><summary>연도별로 보기 (어느 국면에 무엇이 먹혔나)</summary><div class="mbody">'+
+        '<div class="idxwrap"><table class="idxt"><thead>'+yhead+'</thead><tbody>'+ybody+'</tbody></table></div></div></details>'+
+        '<p class="idxnote">'+esc(R.note||'')+'</p>';
+    })['catch'](function(){});
 })();
 </script>
 </body>

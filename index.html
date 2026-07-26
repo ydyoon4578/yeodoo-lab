@@ -218,6 +218,15 @@
   @media(pointer:coarse){a.rstk,a.upd,a.tile{min-height:40px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
+  /* 설명·한계는 기본으로 숨기고 눌러서 본다(전 페이지 공통 패턴 — stocks.html에서 가져옴) */
+  details.more{margin-top:7px}
+  details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more[open]>summary::before{content:'\25BE'}
+  details.more>summary:hover{color:var(--accent)}
+  details.more .mbody{margin-top:7px}
+  details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
 </style>
 <!-- NAVCSS:BEGIN -->
 <style>
@@ -581,7 +590,12 @@
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
     el('signote').innerHTML='<b>확정</b>(▲▼)=날짜 불변 · <b>잠정</b>(△▽)=아직 이동 가능'+
       (shown&&allProv?' — <b style="color:var(--marg)">오늘 표시된 '+shown+'건은 전부 잠정입니다.</b>':'')+
-      '<br><b>진입 규율·구조 도구이며 수익 예측력은 확인되지 않았습니다</b> — 확정 저점의 약 50%만 이후 20일간 저점을 유지하고, 확정일 매수 수익은 시장 수준(+1.6% vs +1.4%)이었습니다. 고점 표식은 하락 예측력이 없습니다.';
+      // 한계는 지우지 않되 기본으로 펼쳐두지 않는다 — 눌러서 보게 한다(2026-07-26).
+      // stocks.html이 이미 쓰는 details.more 패턴을 그대로 쓴다.
+      '<details class="more"><summary>이 표식으로 무엇을 알 수 있고, 무엇을 못 하는가</summary>'+
+      '<div class="mbody"><p><b>진입 규율·구조 도구이며 수익 예측력은 확인되지 않았습니다</b> — '+
+      '확정 저점의 약 50%만 이후 20일간 저점을 유지하고, 확정일 매수 수익은 시장 수준'+
+      '(+1.6% vs +1.4%)이었습니다. 고점 표식은 하락 예측력이 없습니다.</p></div></details>';
     el('recostocks').innerHTML=
       recoCol('🟢 스윙 저점매수','최근 '+(h.win||10)+'거래일 · 최신순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
       recoCol('🔴 스윙 고점매도','이익실현·비중축소 참고', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
