@@ -85,6 +85,10 @@
   .card .meta span{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px;color:var(--ink-2)}
   .card .meta b{color:var(--muted);font-weight:600;margin-right:5px}
   .card .meta i{font-style:normal}
+  /* .card .meta span 은 칩 스타일인데 자손 선택자라 **칩 안의 값 span까지** 잡아
+     배경·테두리·패딩이 이중으로 걸렸다(값이 상자 안 상자로 보이고 칩이 불필요하게 넓어진다).
+     값은 평평하게 — 갱신 시각을 넣은 <i>와 생김새를 맞춘다. */
+  .card .meta span span{background:none;border:0;padding:0}
 
   footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
   footer a{color:var(--accent);text-decoration:none}
