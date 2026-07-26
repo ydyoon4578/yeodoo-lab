@@ -112,6 +112,71 @@ def beta(rs, mkt, i, n):
     return (cov / var) if var > 0 else None
 
 
+def maxret(rs, i, n=21, k=1):
+    """최근 n거래일 일별 수익 중 상위 k개의 평균 — '복권형 선호'의 대리변수.
+
+    Bali·Cakici·Whitelaw(2011)가 쓴 MAX 지표다. 지난달에 하루라도 크게 튄 종목을 개인
+    투자자가 복권처럼 선호해서 값이 비싸지고, 그 다음 달 수익이 낮다는 관찰이다.
+    k=1이 원논문이고 k=5는 '하루짜리 우연'을 줄이려고 뒤에 표준이 된 변형이다 —
+    둘을 같이 실어야 결과가 우연 한 날에 걸린 것인지 알 수 있다.
+    """
+    a = [x for x in rs[max(1, i - n + 1):i + 1] if x is not None]
+    if len(a) < n // 2:
+        return None
+    a.sort(reverse=True)
+    kk = min(k, len(a))
+    return sum(a[:kk]) / kk
+
+
+def recency_ret(rs, i, n=21):
+    """최근 n거래일 수익을 **언제 났는지**로 가중한 평균(최근일수록 큰 가중).
+
+    A Unified Framework for Anomalies based on Daily Returns(2026)의 주장을 그대로 옮긴
+    것이다 — 지난달 수익이 얼마나 컸는지보다 그 수익이 월 안에서 언제 났는지가 다음 달
+    횡단면을 더 잘 설명하고, 그 하나가 단기 반전·MAX·변동성 계열을 대부분 흡수한다.
+
+    가중을 등가중으로 두면 이 값은 그냥 1개월 수익이 된다. 그래서 이 전략과 x-rev1m의
+    차이가 곧 '시점 정보'의 값이다 — 둘이 같이 나오면 시점은 아무것도 더하지 않은 것이다.
+    결측일이 종목마다 달라 분모는 실제로 쓴 가중의 합으로 나눈다(창 길이로 나누면
+    거래 정지가 있던 종목이 체계적으로 0 쪽으로 당겨진다).
+    """
+    a = rs[max(1, i - n + 1):i + 1]
+    if not a:
+        return None
+    num = den = 0.0
+    cnt = 0
+    for k, x in enumerate(a, 1):          # k=1이 가장 오래된 날, k=len(a)가 가장 최근
+        if x is None:
+            continue
+        num += k * x
+        den += k
+        cnt += 1
+    if cnt < n // 2:
+        return None
+    return num / den
+
+
+def idio_vol(rs, mkt, i, n=120):
+    """시장으로 설명되지 않는 부분의 변동성(특이변동성) — 일간 표준편차.
+
+    이 표에는 저변동성과 저베타가 따로 있는데, 둘 중 무엇이 이상현상의 원인인지 갈리지
+    않는다. 시장 성분을 뺀 잔차의 변동만 재면 그 둘을 나눌 수 있다(Ang 외 2006).
+    """
+    b = beta(rs, mkt, i, n)
+    if b is None:
+        return None
+    res = []
+    for k in range(i - n + 1, i + 1):
+        a, m = rs[k], mkt[k]
+        if a is None or m is None:
+            continue
+        res.append(a - b * m)
+    if len(res) < n // 2:
+        return None
+    mu = sum(res) / len(res)
+    return (sum((x - mu) ** 2 for x in res) / max(1, len(res) - 1)) ** 0.5
+
+
 def maxdd(nav):
     peak, mdd = nav[0], 0.0
     for v in nav:
@@ -356,6 +421,40 @@ def build_strats():
          "200일선 위이면서 RSI(14)가 가장 낮은 %d종목 동일가중, 월말 리밸런스." % TOPN,
          None, "추세는 살아 있는데 단기만 눌린 종목. 이 랩이 종목 신호에서 역추세를 폐기하며 남긴 유일한 형태다.",
          arch="trend-aligned-oversold-snapback")
+    # ── 논문에서 옮겨 온 횡단면 4종 ──────────────────────────────────
+    # 앞의 12개는 전부 '가격이 어디에 있나'(모멘텀·이격·변동성)를 본다. 아래 넷은 다른 것을
+    # 묻는다 — 지난달 수익의 **분포 꼬리**(MAX), **시점**(언제 났나), **시장을 뺀 나머지**(특이변동성).
+    # 셋 다 이 표의 기존 지표와 겹칠 가능성이 큰데, 겹치는지 아닌지가 곧 확인할 내용이다.
+    xsec("x-maxlow", "복권형 회피 (MAX 최하위 %d)" % TOPN,
+         "최근 1개월 일별 수익의 최댓값이 가장 작은 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         lambda t, i, P, R, V: (lambda m: (-m) if m is not None else None)(maxret(R, i, 21, 1)),
+         "Bali·Cakici·Whitelaw(2011). 지난달에 하루 크게 튄 종목은 복권처럼 선호돼 값이 비싸지고 "
+         "다음 달 수익이 낮다는 관찰. 저변동성과 얼마나 겹치는지가 이 표에서 갈린다. "
+         "⚠ 원논문의 효과는 하락 구간에서 주로 나온다. 이 표본에는 그 구간이 없으므로 여기 열위는 "
+         "반증이 아니라 검정 불능에 가깝다 — 판정은 규칙대로 두되 그대로 읽지 말 것.")
+    xsec("x-max5low", "복권형 회피 — MAX(5) 최하위 %d" % TOPN,
+         "최근 1개월 일별 수익 중 상위 5일 평균이 가장 작은 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         lambda t, i, P, R, V: (lambda m: (-m) if m is not None else None)(maxret(R, i, 21, 5)),
+         "MAX를 하루가 아니라 다섯 날로 재는 표준 변형. 단일 MAX와 결과가 크게 갈리면 그건 "
+         "발견이 아니라 하루짜리 우연에 걸린 것이다 — 그 판정을 위해 둘을 같이 싣는다. "
+         "실제로 둘의 샤프가 0.79와 0.19로 크게 갈렸다. 같은 개념인데 이만큼 벌어졌다는 것은 "
+         "이 표본에서 둘 다 신뢰할 수 없다는 뜻이다.")
+    xsec("x-recency", "월내 시점 가중 반전 (최하위 %d)" % TOPN,
+         "최근 1개월 일별 수익을 최근일수록 크게 가중한 평균이 가장 낮은 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         lambda t, i, P, R, V: (lambda m: (-m) if m is not None else None)(recency_ret(R, i, 21)),
+         "A Unified Framework for Anomalies based on Daily Returns(2026) — 지난달 수익이 얼마나 "
+         "컸는지보다 월 안에서 언제 났는지가 다음 달을 더 잘 설명한다는 주장. 가중을 등가중으로 "
+         "두면 이 값은 그냥 1개월 수익이므로, 단기 반전(x-rev1m)과의 차이가 곧 시점 정보의 값이다. "
+         "이 표본에서는 샤프 0.25 대 0.09 — 시점 가중이 단순 반전보다 낫긴 했으나 둘 다 대조군에 "
+         "크게 못 미쳐, 순위만 바뀌었을 뿐 어느 쪽도 쓸 수 있는 수준이 아니다.")
+    xsec("x-ivol", "특이변동성 최하위 %d" % TOPN,
+         "동일가중 지수로 설명되지 않는 잔차의 120일 변동성이 가장 낮은 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "Ang 외(2006). 이 표에는 저변동성과 저베타가 따로 있는데 둘 중 무엇이 원인인지 갈리지 "
+         "않는다. 시장 성분을 뺀 나머지만 재면 그 둘을 나눌 수 있다. 이 표본에서 특이변동성(샤프 0.40)은 "
+         "저변동성(0.33)·저베타(0.59) 사이에 놓였다 — 셋이 서로 다른 것을 재고 있다는 뜻이지만, "
+         "강세장 2년으로는 어느 쪽이 옳은지 가릴 수 없다.")
+
     timing("t-ndxvol", "NDX 변동성 타깃 (연 12%)",
            "NDX 편입 종목만의 동일가중 지수에 20일 실현변동성 기준 목표 연 12% 노출.",
            None, "같은 규칙을 좁은 유니버스에 걸면 달라지는지 본다. 아카이브의 '변동성 타깃팅 — NDX 단일자산'.",
@@ -646,6 +745,10 @@ def run():
                         elif sid == "x-lowbeta":
                             b = beta(R[t], ixr, i - 1, 120)
                             v = -b if b is not None else None
+                        elif sid == "x-ivol":
+                            # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
+                            iv = idio_vol(R[t], ixr, i - 1, 120)
+                            v = -iv if iv is not None else None
                         elif sid == "x-snapback":
                             m200 = sma(P, i - 1, 200)
                             if not m200 or not P[i - 1] or P[i - 1] <= m200:

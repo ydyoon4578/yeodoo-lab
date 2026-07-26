@@ -52,6 +52,38 @@ def ridge(X, y, lam):
         return None
 
 
+def logit(X, y, lam, iters=25):
+    """L2 벌점 로지스틱을 IRLS로 푼다. 절편은 벌점에서 뺀다(릿지와 같은 규약).
+
+    왜 로지스틱을 따로 두나. 블로그가 인용한 두 논문(A Comparison of Direction and Value
+    Prediction, 2025 / How To Bet On Winners, 2025)의 주장이 "수익의 **크기**를 맞히는 것보다
+    **방향**을 맞히는 편이 낫다"는 것이다. 이 주장은 같은 특징·같은 워크포워드에서 목표와
+    모델만 바꿔야 검정된다 — 그래서 릿지 쪽 코드를 그대로 두고 이 함수만 더한다.
+
+    수렴은 25회로 끊는다. 완전 분리(perfectly separable)면 계수가 발산하는데, 벌점이 있어
+    실제로는 발산하지 않지만 반복만 늘어난다. 결과를 보고 늘리지 않는다.
+    """
+    n, p = X.shape
+    Xc = np.hstack([np.ones((n, 1)), X])
+    P = np.eye(p + 1) * lam
+    P[0, 0] = 0.0
+    b = np.zeros(p + 1)
+    for _ in range(iters):
+        z = Xc @ b
+        pr = 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
+        w = np.clip(pr * (1 - pr), 1e-6, None)
+        g = Xc.T @ (y - pr) - P @ b
+        H = (Xc * w[:, None]).T @ Xc + P
+        try:
+            step = np.linalg.solve(H, g)
+        except np.linalg.LinAlgError:
+            return None
+        b = b + step
+        if np.max(np.abs(step)) < 1e-7:
+            break
+    return b
+
+
 def zfit(X):
     mu = X.mean(axis=0)
     sd = X.std(axis=0)
@@ -184,7 +216,18 @@ FEATS_XS = ["12-1 모멘텀", "1개월 반전", "60일 변동성", "200일선 �
             "50일선 이격도", "거래량 추세", "베타"]
 
 
-def stock_selection(RF, TOPN=10):
+# 사전등록 — 방향 예측판의 문턱. 결과를 보고 고치지 않는다.
+CONF = 0.55         # '고신뢰'의 정의: 초과수익이 양(+)일 예측확률 55% 이상
+
+
+def stock_selection(RF, TOPN=10, mode="value"):
+    """mode='value' 릿지로 초과수익 **크기**를 예측(원래 것) ·
+       mode='dir'   로지스틱으로 초과수익 **방향**을 예측해 확률 상위 TOPN ·
+       mode='conf'  같은 확률에서 CONF 이상만 산다(없으면 현금).
+
+    셋은 특징 7개·워크포워드·표준화·재학습 주기가 **완전히 같다**. 다른 것은 목표(y)와
+    모델뿐이다. 그래야 '방향이 크기보다 낫다'는 주장이 이 데이터에서 참인지 갈린다 —
+    조건을 하나라도 더 바꾸면 무엇 때문에 갈렸는지 말할 수 없다."""
     st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     NMX = {x["t"]: (x.get("name") or x["t"]) for x in st_["stocks"]}
     DTS = st_["pxd_dates"]
@@ -257,6 +300,9 @@ def stock_selection(RF, TOPN=10):
         return None
     month_end = [i for i in range(st2, n - 1) if DTS[i][:7] != DTS[i + 1][:7]]
 
+    # 문턱이 실제로 물었는지 세어 둔다. 한 번도 안 물면 이 규칙은 방향 예측판과 같은
+    # 포트폴리오이고, 그 사실 자체가 보고할 결과다.
+    diag = {"n_rebal": 0, "n_bind": 0, "n_dropped": 0, "p_min": 1.0, "p_max": 0.0}
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
     turn = 0
     beta_w, mu, sd = None, None, None
@@ -274,15 +320,33 @@ def stock_selection(RF, TOPN=10):
             if Xs:
                 Xtr = np.vstack(Xs); ytr = np.concatenate(ys)
                 mu, sd = zfit(Xtr)
-                beta_w = ridge((Xtr - mu) / sd, ytr, L2)
+                if mode == "value":
+                    beta_w = ridge((Xtr - mu) / sd, ytr, L2)
+                else:
+                    # 목표를 '초과수익이 양이었나'로 바꾼다. 특징·창·표준화는 그대로다.
+                    beta_w = logit((Xtr - mu) / sd, (ytr > 0).astype(float), L2)
             if beta_w is not None:
                 row = np.column_stack([f[i - 1] for f in F])
                 ok = np.isfinite(row).all(axis=1)
                 if ok.sum() >= TOPN:
                     z = (row[ok] - mu) / sd
                     sc = beta_w[0] + z @ beta_w[1:]
-                    idx = np.array(tick)[ok][np.argsort(-sc)][:TOPN]
-                    new = list(idx)
+                    names_ok = np.array(tick)[ok]
+                    if mode == "conf":
+                        # 확률로 바꿔 문턱을 넘는 것만 산다. 없으면 아무것도 사지 않는다 —
+                        # '고신뢰만 베팅한다'는 규칙의 값은 안 살 때 안 잃는 데서 나온다.
+                        pr = 1.0 / (1.0 + np.exp(-np.clip(sc, -30, 30)))
+                        top = np.argsort(-pr)[:TOPN]
+                        kept = [k for k in top if pr[k] >= CONF]
+                        diag["n_rebal"] += 1
+                        if len(kept) < len(top):
+                            diag["n_bind"] += 1
+                        diag["n_dropped"] += len(top) - len(kept)
+                        diag["p_min"] = min(diag["p_min"], float(pr[top].min()))
+                        diag["p_max"] = max(diag["p_max"], float(pr[top].max()))
+                        new = list(names_ok[kept]) if kept else []
+                    else:
+                        new = list(names_ok[np.argsort(-sc)][:TOPN])
                     turn += len(set(new) - set(hold))
                     hold = new
         col = {t: j for j, t in enumerate(tick)}
@@ -296,20 +360,50 @@ def stock_selection(RF, TOPN=10):
     ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
     step = max(1, len(nav) // 220)
     yrs = max(1e-9, (n - st2) / 252)
+    SPEC = {
+        "value": ("ml-xsec", "머신러닝 횡단면 종목선택 (릿지·워크포워드)",
+                  "특징 7개로 종목별 향후 21거래일 초과수익을 릿지로 예측해 상위 %d종목을 "
+                  "동일가중 보유. 월말 재학습·리밸런스, 학습은 그 시점까지의 데이터만." % TOPN,
+                  "지수 타이밍과 같은 이유로 미뤄둔 항목이다. 같은 규약(모델·L2·특징·워크포워드)을 "
+                  "코드에 먼저 박고 한 번만 돌렸다.",
+                  "목표는 초과수익의 크기(값)다."),
+        "dir": ("ml-xsec-dir", "머신러닝 방향 예측 종목선택 (로지스틱·워크포워드)",
+                "같은 특징 7개로 '향후 21거래일 초과수익이 양(+)일 확률'을 로지스틱으로 예측해 "
+                "확률 상위 %d종목을 동일가중 보유. 나머지 규약은 크기 예측판과 완전히 같다." % TOPN,
+                "A Comparison of Direction and Value Prediction of Stock Excess Returns(2025)가 "
+                "‘크기보다 방향을 맞히는 편이 낫다’고 보고했다. 그 주장은 특징·창·표준화를 고정하고 "
+                "목표와 모델만 바꿔야 검정된다 — 그래서 크기 예측판을 남겨 둔 채 이것을 나란히 둔다.",
+                "목표는 초과수익의 방향이다 — 양이면 1, 아니면 0."),
+        "conf": ("ml-xsec-conf", "머신러닝 고신뢰 베팅 (확률 %d%% 이상만)" % round(CONF * 100),
+                 "방향 예측판과 같은 확률에서 %d%% 이상인 종목만 최대 %d개까지 산다. 문턱을 넘는 "
+                 "종목이 없으면 아무것도 사지 않는다(현금)." % (round(CONF * 100), TOPN),
+                 "How To Bet On Winners (and Losers)(2025) — 기대수익 대신 승자·패자 확률로 "
+                 "고르고, 확신이 없으면 베팅하지 않는 규칙이 거래비용 뒤에도 샤프를 올렸다는 보고다. "
+                 "이 규칙의 값은 살 때가 아니라 안 살 때 나오므로, 방향 예측판과의 차이가 곧 "
+                 "'참는 것'의 값이다.",
+                 "문턱 %d%%는 사전등록 값이고 결과를 보고 고치지 않았다." % round(CONF * 100)),
+    }
+    sid, nm, rule, why, tgt = SPEC[mode]
+    if mode == "conf":
+        # 문턱이 한 번도 물지 않았다면 이건 방향 예측판과 같은 전략이다. 같은 숫자를 두 줄로
+        # 싣는 것은 목록을 부풀리는 짓이므로 행을 만들지 않고, 그 사실을 진단으로 돌려준다.
+        if diag["n_bind"] == 0:
+            return {"__collapsed__": True, "diag": diag}
+        tgt += (" 문턱은 리밸런스 %d회 중 %d회 물었고(총 %d종목 제외), 상위 %d종목의 예측확률은 "
+                "%.3f~%.3f 범위였다." % (diag["n_rebal"], diag["n_bind"], diag["n_dropped"],
+                                       TOPN, diag["p_min"], diag["p_max"]))
     return {
-        "sid": "ml-xsec", "arch": "ml-stock-selection",
+        "sid": sid, "arch": "ml-stock-selection" if mode == "value" else None,
         "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
                      "tickers": sorted(hold),
                      "names": {t: (NMX.get(t) or t) for t in sorted(hold)},
-                     "note": "마지막 월말 재학습·리밸런스에서 고른 %d종목이다." % len(hold)},
-        "name": "머신러닝 횡단면 종목선택 (릿지·워크포워드)",
-        "rule": "특징 7개로 종목별 향후 21거래일 초과수익을 릿지로 예측해 상위 %d종목을 "
-                "동일가중 보유. 월말 재학습·리밸런스, 학습은 그 시점까지의 데이터만." % TOPN,
-        "why": "지수 타이밍과 같은 이유로 미뤄둔 항목이다. 같은 규약(모델·L2·특징·워크포워드)을 "
-               "코드에 먼저 박고 한 번만 돌렸다.",
-        "note": "특징: " + " · ".join(FEATS_XS) + ". 목표는 초과수익이다(시장 방향을 맞혀도 "
-                "횡단면 선택에는 소용이 없다). ⚠ 종목 패널이 3년뿐이라 학습창이 1년이다 — "
-                "머신러닝을 논하기에는 매우 짧은 표본이다.",
+                     "note": ("마지막 월말 재학습·리밸런스에서 고른 %d종목이다." % len(hold))
+                             if hold else
+                             "마지막 재학습에서 문턱을 넘은 종목이 없어 현재 보유가 없다(현금)."},
+        "name": nm, "rule": rule, "why": why,
+        "note": "특징: " + " · ".join(FEATS_XS) + ". " + tgt + " 시장 방향을 맞혀도 횡단면 "
+                "선택에는 소용이 없으므로 목표는 언제나 초과수익 기준이다. ⚠ 종목 패널이 "
+                "3년뿐이라 학습창이 1년이다 — 머신러닝을 논하기에는 매우 짧은 표본이다.",
         "start": DTS[st2], "end": DTS[-1], "n_days": n - st2,
         "metrics": ms, "bench": mb, "bench_unstable": False,
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
@@ -443,12 +537,31 @@ def main() -> int:
                            encoding="utf-8")).get("monthly") or {}
     rows = []
     for fn, label in ((lambda: market_timing(A, RF), "지수 타이밍"),
-                      (lambda: stock_selection(RF), "횡단면 종목선택"),
+                      (lambda: stock_selection(RF, mode="value"), "횡단면 종목선택(크기)"),
+                      # 같은 특징·창·표준화에서 목표와 모델만 바꾼 두 판. 셋을 나란히 둬야
+                      # '방향이 크기보다 낫다'·'참는 것이 값을 한다'가 이 데이터에서 갈린다.
+                      (lambda: stock_selection(RF, mode="dir"), "횡단면 종목선택(방향)"),
+                      (lambda: stock_selection(RF, mode="conf"), "횡단면 종목선택(고신뢰)"),
                       (lambda: guru_clone(RF), "13F 컨빅션 복제")):
         try:
             r = fn()
         except Exception as e:
             print("  ❌ %s %s: %s" % (label, type(e).__name__, e)); continue
+        if r and r.get("__collapsed__"):
+            # 문턱이 한 번도 물지 않은 판 — 방향 예측판과 같은 포트폴리오라 행을 만들지 않고,
+            # 방향 예측판의 설명에 그 사실을 적는다. 결과가 없어서가 아니라 결과가 '차이 없음'이다.
+            d = r["diag"]
+            for x in rows:
+                if x.get("sid") == "ml-xsec-dir":
+                    x["note"] += (" ⚠ 고신뢰 베팅(확률 %d%% 이상만 매수)도 같이 돌렸는데, "
+                                  "리밸런스 %d회 내내 상위 %d종목의 확률이 문턱을 넘어(%.3f~%.3f) "
+                                  "한 번도 걸러지지 않았다 — 이 표본에서 두 규칙은 같은 포트폴리오다. "
+                                  "문턱을 결과 보고 올리면 사전등록이 무의미해지므로 값을 고치지 않고 "
+                                  "이 사실만 남긴다."
+                                  % (round(CONF * 100), d["n_rebal"], x["holdings"]["n"],
+                                     d["p_min"], d["p_max"]))
+            print("  · 고신뢰 베팅: 문턱 미작동 — 방향 예측판과 동일, 행 생성 안 함")
+            continue
         if r:
             rows.append(r)
         else:
