@@ -83,6 +83,14 @@ def main() -> int:
     # ── 캘린더용 실적 ── 3주 창만. 원본은 90일치라 홈이 다 받을 이유가 없다.
     e = load("earnings.json") or {}
     base = e.get("as_of")
+    # 시가총액 — 캘린더를 큰 회사부터 보여주려면 필요하다. stocks.json의 fund.mc(억 달러).
+    # 없는 종목은 0으로 두고 뒤로 보낸다(작다고 단정하지 않고, 순서만 뒤로).
+    MC = {}
+    _st = load("stocks.json") or {}
+    for _x in (_st.get("stocks") or []):
+        _v = (_x.get("fund") or {}).get("mc")
+        if isinstance(_v, (int, float)):
+            MC[_x["t"]] = float(_v)
     up = []
     if base:
         d0 = dt.date.fromisoformat(base) - dt.timedelta(days=7)   # 지난 주도 그린다
@@ -94,8 +102,10 @@ def main() -> int:
                 continue
             if d0 <= dd <= d1:
                 up.append({"t": x["t"], "n": x.get("n") or x["t"], "dt": x["dt"],
-                           "hour": x.get("hour") or ""})
-    up.sort(key=lambda z: (z["dt"], z["t"]))
+                           "hour": x.get("hour") or "", "mc": round(MC.get(x["t"], 0.0))})
+    # 날짜별로 묶되 그 안에서는 **시가총액 큰 순**. 하루에 수십 종목이 뜨는 날이 있어
+    # 알파벳 순으로 두면 큰 회사가 '+37' 뒤에 숨는다.
+    up.sort(key=lambda z: (z["dt"], -z["mc"], z["t"]))
     doc["earnings"] = {"as_of": base, "n_all": len(e.get("upcoming") or []), "rows": up}
 
     io.open(OUT, "w", encoding="utf-8").write(
@@ -103,6 +113,9 @@ def main() -> int:
     src = sum(os.path.getsize(os.path.join(DATA, x)) for x in
               ("filings.json", "insider.json", "guru.json", "signal_lab.json", "earnings.json")
               if os.path.exists(os.path.join(DATA, x)))
+    _nomc = sum(1 for z in up if not z["mc"])
+    if _nomc:
+        print("  ⚠ 시총 없는 종목 %d건 — 그날 목록 뒤로 밀린다(유니버스 밖이거나 fund 결측)" % _nomc)
     print("홈 슬림 묶음 — 공시 %d · 내부자 %d · 거장 %d · 신호 %d · 실적 %d줄 · %.0fKB (원본 %.0fKB)"
           % (len(doc["filings"]["rows"]), len(doc["insider"]["rows"]), len(doc["guru"]["rows"]),
              len(doc["signal"]["top"]) + len(doc["signal"]["bot"]), len(up),
