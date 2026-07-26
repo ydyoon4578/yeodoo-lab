@@ -522,7 +522,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (src?'<div class="ssrc"><b>출처</b> · '+src+'</div>':'')+'</div>';
   }
   var CATNM={A:'A. S&P 500 초과성과',B:'B. NASDAQ 100 초과성과',C:'C. 단기 마켓타이밍',D:'D. 자산배분·리스크관리',E:'E. 추가 알파·팩터·이벤트'};
-  var CATSHORT={A:'S&P500 초과',B:'NDX 초과',C:'단기 타이밍',D:'자산배분',E:'알파·팩터'};
+  var CATSHORT={A:'S&P500 초과',B:'Nasdaq100 초과',C:'단기 타이밍',D:'자산배분',E:'알파·팩터'};
   var DATA=null, state={q:'', cats:new Set(), mode:'today', labonly:false};
   // KST 고정: UTC였을 때 한국 사용자에게 00~09시에 '어제 날짜'가 뜨고 10선이 오전 9시에 바뀌었다.
   // 갱신 잡(08:50 KST)이 뽑는 날짜와도 어긋났다 — rotation_select.py도 동일하게 KST를 쓴다.

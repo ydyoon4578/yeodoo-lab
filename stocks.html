@@ -605,7 +605,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 종목 테크니컬</div>
-    <h1 class="title">NDX · SPX 종목 시그널</h1>
+    <h1 class="title">Nasdaq100 · S&amp;P500 종목 시그널</h1>
     <div class="statline" id="statline"></div>
     <div class="exnote" id="exnote" hidden></div>
   </header>
@@ -750,6 +750,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function cc(k){return 'var('+({overheat:'--hot',trend:'--good',momentum:'--accent',volatility:'--watch'}[k]||'--accent')+')';}
   function gc(g){return 'var('+({hot:'--hot',good:'--good',accent:'--accent',watch:'--watch',cold:'--cold',muted:'--muted'}[g]||'--accent')+')';}
   var _cssC={};   // 테마별 CSS변수 캐시 — getComputedStyle 반복호출/리플로우 축소
+  // 지수 표기 정본 — 값은 데이터 키(NDX·SPX)라 그대로 두고 화면 글자만 바꾼다.
+  // 약어보다 이름이 읽기 쉽다는 요청. 종목 줄 배지는 자리가 좁아 짧은 쪽, 상세는 긴 쪽을 쓴다.
+  var IXN={NDX:'Nasdaq100',SPX:'S&P500'}, IXS={NDX:'NDQ100',SPX:'S&P500'};
+  function ixn(x){return IXN[x]||x;}
+  function ixs(x){return IXS[x]||x;}
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function css(v){if(v in _cssC)return _cssC[v];return _cssC[v]=getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
   function flagHtml(f){return '<span class="flag '+(FLAGCLS[f]||'')+'">'+f+'</span>';}
@@ -842,7 +847,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     vsg:['거래량 급증','평소보다 거래가 크게 늘어난 종목. 관심·수급이 들어왔다는 신호지만 방향은 알려주지 않는다.','최근 5일 평균 거래량이 60일 평균의 1.5배 이상'],
     sqz:['변동성 수축','가격 움직임 폭이 좁아진 상태. 방향이 정해지기 전 응축 구간으로 보지만 어느 쪽으로 터질지는 알 수 없다.','볼린저 밴드 폭 8% 이하'],
     rss:['시장 대비 강세','최근 3개월 수익률이 시장(S&P500)을 크게 앞선 종목.','3개월 초과수익 +20%p 이상'],
-    all:['전체','필터를 걸지 않은 커버 종목 전부. 신호로 좁히기 전에 무엇이 있는지 훑어볼 때 쓴다.','시가총액 내림차순 · NDX∪SPX 커버 종목'],
+    all:['전체','필터를 걸지 않은 커버 종목 전부. 신호로 좁히기 전에 무엇이 있는지 훑어볼 때 쓴다.','시가총액 내림차순 · Nasdaq100 ∪ S&P500 커버 종목'],
     tgt:['목표주가','애널리스트 목표주가와 현재가의 차이(상승여력) 순 나열. 랩의 신호가 아닌 참고 표기이며 자체 검증에서 예측력이 확인되지 않았다.','yfinance 컨센서스 · 상승여력 내림차순']
   };
   function mcOf(s){var v=(s.fund||{}).mc;return (v==null||isNaN(v))?null:v;}
@@ -954,7 +959,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         metric='<span class="metric"><div class="mv">'+Math.round(fv)+'</div><div class="mbar"><i style="width:'+fv+'%;background:var(--accent)"></i></div></span>';
       }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       return '<button class="item'+(state.preset==='tgt'?' wide':'')+'" role="option" data-t="'+s.t+'" aria-selected="'+(s===state.sel)+'">'+
-        '<span><span class="tkline">'+(scr?'<span class="rk">'+(++rk)+'</span>':'')+'<span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+fl+'</span>'+
+        '<span><span class="tkline">'+(scr?'<span class="rk">'+(++rk)+'</span>':'')+'<span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib" title="'+esc(ixn(x))+'">'+esc(ixs(x))+'</span>';}).join('')+fl+'</span>'+
         '<div class="nm">'+esc(s.name||'')+(s.sector?'<span class="secchip">'+esc(secKo(s.sector))+'</span>':'')+
         (s.part?'<span class="partchip" title="상장 '+s.part+'거래일 — 창이 확보된 단기 지표만 산출됩니다(200일선·52주·중장기 모멘텀 없음)">부분 '+s.part+'일</span>':'')+'</div></span>'+metric+'</button>';
     }).join('');
@@ -1205,7 +1210,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var fundHtml=(fu.teps!=null||fu.feps!=null)?'<div class="fund"><div class="fhd"><span>펀더멘털 · EPS·밸류에이션 <b>검증된 코어 입력</b></span><span>yfinance</span></div><div class="fgrid">'+
       fitems.map(function(x){if(x[2]==null)return '';var val=x[0]==="gr"?((x[2]>0?"+":"")+x[2]+"%"):x[2];var col=x[0]==="gr"?(x[2]>0?"var(--good)":"var(--hot)"):"var(--ink)";
         return '<div class="fcell"><div class="fcl">'+x[1]+(x[3]?' <span>'+x[3]+'</span>':'')+'</div><div class="fcv" style="color:'+col+'">'+val+'</div></div>';}).join('')+'</div></div>':'';
-    detailEl.innerHTML='<div class="dtop"><div class="tkrow"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+x+'</span>';}).join('')+'</div>'+
+    detailEl.innerHTML='<div class="dtop"><div class="tkrow"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+esc(ixn(x))+'</span>';}).join('')+'</div>'+
       '<div class="nm">'+esc(s.name||'')+'</div>'+(s.sector?'<div class="sec"><span class="secchip lg">'+esc(secKo(s.sector))+'</span></div>':'')+(fl?'<div class="flags">'+fl+'</div>':'')+'</div>'+
       '<div class="chartcard"><div class="charthd"><span class="cl">주가 · <span id="chgd"></span></span><span class="chartbtns" id="chartbtns"></span></div>'+
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
@@ -1344,7 +1349,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '</div></details>';
       }
     }
-    el('statline').innerHTML='<span class="stat"><b>'+d.n_stocks+'</b> 종목</span><span class="stat">NDX+SPX</span><span class="stat">테크니컬 <b>'+Object.keys(F).length+'</b>개</span><span class="stat">기준일 <b>'+(d.as_of||'—')+'</b></span>'+staleStat(d.as_of);
+    el('statline').innerHTML='<span class="stat"><b>'+d.n_stocks+'</b> 종목</span><span class="stat">Nasdaq100+S&amp;P500</span><span class="stat">테크니컬 <b>'+Object.keys(F).length+'</b>개</span><span class="stat">기준일 <b>'+(d.as_of||'—')+'</b></span>'+staleStat(d.as_of);
     el('asof').textContent='기준일 '+(d.as_of||'—')+' (전 지표 동일, yfinance 최신 거래일)';
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
     var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
@@ -1370,7 +1375,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         for(var di=0;di<d.stocks.length;di++)if(d.stocks[di].t===tk){tgt=d.stocks[di];break;}
         if(tgt){if(filtered().rows.indexOf(tgt)<0){state.q=tk.toLowerCase();var qi=el('q');if(qi)qi.value=tk;}state.sel=tgt;}}
     }catch(e){}
-    var ixf=el('idxf');['NDX','SPX'].forEach(function(x){var cnt=d.stocks.filter(function(s){return (s.idx||[]).indexOf(x)>=0;}).length;ixf.appendChild(chip(x,cnt,function(){state.idx.has(x)?state.idx.delete(x):state.idx.add(x);syncP();render();},x==='NDX'?'나스닥100 구성종목만':'S&P500 구성종목만'));});
+    var ixf=el('idxf');['NDX','SPX'].forEach(function(x){var cnt=d.stocks.filter(function(s){return (s.idx||[]).indexOf(x)>=0;}).length;ixf.appendChild(chip(ixn(x),cnt,function(){state.idx.has(x)?state.idx.delete(x):state.idx.add(x);syncP();render();},x==='NDX'?'나스닥100 구성종목만':'S&P500 구성종목만'));});
     syncP();render();
     var _rz;window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(function(){if(state.sel)renderChart(state.sel);},150);});
     new MutationObserver(function(){_cssC={};if(state.sel)renderChart(state.sel);}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
