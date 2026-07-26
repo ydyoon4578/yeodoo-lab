@@ -353,7 +353,16 @@
   #lab .hw{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);background:var(--panel);
            border:1px solid var(--line);border-radius:5px;padding:2px 6px;text-decoration:none}
   #lab .hw b{margin-left:4px;color:var(--accent);font-weight:700}
-  #lab a.hw:hover{border-color:var(--accent);color:var(--accent)}
+  #lab a.hw:hover,#lab a.hw:focus{border-color:var(--accent);color:var(--accent);outline:none}
+  /* 티커에 커서를 올리거나 누르면 회사명 — 모바일엔 hover가 없어 focus도 받는다 */
+  #lab .hw[data-nm]{position:relative}
+  #lab .hw[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);
+      transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:var(--ground);
+      font-family:var(--sans);font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;
+      opacity:0;pointer-events:none;transition:opacity .1s;z-index:30;box-shadow:var(--shadow);
+      max-width:240px;overflow:hidden;text-overflow:ellipsis}
+  #lab .hw[data-nm]:hover::after,#lab .hw[data-nm]:focus::after{opacity:1}
+  @media(max-width:700px){ #lab .hw[data-nm]::after{left:0;transform:none} }
 
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
@@ -1964,9 +1973,11 @@
         return '<span class="hw">'+esc(x[0])+'<b>'+nf(x[1],1)+'%</b></span>';}).join('');
       return head+'<div class="hws">'+w+'</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
     }
-    var ts=(h.tickers||[]);
+    var ts=(h.tickers||[]), nm=h.names||{};
     return head+'<b>'+ts.length+'종목</b><div class="hws">'+
-      ts.map(function(t){return '<a class="hw" href="co.html?t='+encodeURIComponent(t)+'">'+esc(t)+'</a>';}).join('')+
+      ts.map(function(t){
+        return '<a class="hw" href="co.html?t='+encodeURIComponent(t)+'"'+
+               (nm[t]?' data-nm="'+esc(nm[t])+'"':'')+'>'+esc(t)+'</a>';}).join('')+
       '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
   }
   function cell(k,v,cls){return '<div class="rc'+(cls?' '+cls:'')+'"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>';}

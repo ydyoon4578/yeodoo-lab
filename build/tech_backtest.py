@@ -679,6 +679,8 @@ def run():
             expo = 1.0
             hold_now = {"kind": "xsec", "as_of": dates[-1], "n": len(hold),
                         "tickers": sorted(hold),
+                        # 이름을 같이 실어야 화면에서 티커에 커서를 올렸을 때 회사명이 뜬다
+                        "names": {t: (meta.get(t) or {}).get("name") or t for t in sorted(hold)},
                         "note": "마지막 월말 리밸런스에서 고른 %d종목을 동일가중으로 보유 중이다. "
                                 "다음 월말에 다시 뽑는다." % len(hold)}
 

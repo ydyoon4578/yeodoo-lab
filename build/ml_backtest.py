@@ -186,6 +186,7 @@ FEATS_XS = ["12-1 모멘텀", "1개월 반전", "60일 변동성", "200일선 �
 
 def stock_selection(RF, TOPN=10):
     st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    NMX = {x["t"]: (x.get("name") or x["t"]) for x in st_["stocks"]}
     DTS = st_["pxd_dates"]
     n = len(DTS)
     P = {}
@@ -299,6 +300,7 @@ def stock_selection(RF, TOPN=10):
         "sid": "ml-xsec", "arch": "ml-stock-selection",
         "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
                      "tickers": sorted(hold),
+                     "names": {t: (NMX.get(t) or t) for t in sorted(hold)},
                      "note": "마지막 월말 재학습·리밸런스에서 고른 %d종목이다." % len(hold)},
         "name": "머신러닝 횡단면 종목선택 (릿지·워크포워드)",
         "rule": "특징 7개로 종목별 향후 21거래일 초과수익을 릿지로 예측해 상위 %d종목을 "
@@ -324,6 +326,12 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     if not os.path.exists(p):
         return None
     G = json.load(io.open(p, encoding="utf-8"))
+    # 회사명 — 툴팁용. 유니버스 정본에서 가져온다(13F 원문 이름은 표기가 제각각이다).
+    try:
+        NM = {x["t"]: (x.get("name") or x["t"]) for x in
+              json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))["stocks"]}
+    except Exception:
+        NM = {}
     months, mpx = G.get("months") or [], G.get("mpx") or {}
     if not months or not mpx:
         return None
@@ -412,7 +420,7 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
                 "베타 %s (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치)."
                 % ("%.2f" % beta if beta else "—"),
         "holdings": {"kind": "xsec", "as_of": months[-1], "n": len(hold),
-                     "tickers": sorted(hold),
+                     "tickers": sorted(hold), "names": {t: NM.get(t, t) for t in sorted(hold)},
                      "note": "가장 최근 분기 13F(제출 마감 45일 지연 반영)로 고른 %d종목을 "
                              "동일가중 보유 중이다." % len(hold)},
         "start": months[st], "end": months[-1], "n_days": (len(months) - st) * 21,
