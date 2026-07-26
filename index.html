@@ -87,13 +87,6 @@
 
   /* ── 판정 원장 ──────────────────────────────────────────────── */
   .ledger{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 22px}
-  .ldrow{display:flex;align-items:baseline;gap:26px;flex-wrap:wrap}
-  .ldn{font-family:var(--mono);text-decoration:none;display:inline-flex;align-items:baseline;gap:8px}
-  .ldn b{font-size:25px;font-weight:800;color:var(--c,var(--ink));line-height:1}
-  .ldn span{font-size:12px;color:var(--muted)}
-  a.ldn:hover b{color:var(--accent)}
-  .ldnote{margin:11px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .ldskel{font-family:var(--mono);font-size:12px;color:var(--muted)}
 
   /* ── 오늘의 신호 ────────────────────────────────────────────── */
   .signote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:9px;padding:9px 13px;margin:0 0 13px;font-size:11.5px;color:var(--ink-2);line-height:1.65}
@@ -512,14 +505,6 @@
       <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
     </section>
 
-    <!-- ② 판정 원장 — 도구 목록보다 위에 둔다.
-         카테고리 카드를 먼저 늘어놓으면 홈이 '도구 40개짜리 사이트'로 읽히고
-         실제 메시지(통과 3 · 기각 51)가 묻힌다. 도구 수와 판정 수를 같은 화면에서 충돌시킨다. -->
-    <section id="s-ledger" aria-labelledby="ld-h">
-      <p class="lbl" id="ld-h">전략 <span class="sub">· 구현 → 적대검증 → 판정</span></p>
-      <div class="ledger" id="ledger"><div class="ldskel">불러오는 중…</div></div>
-    </section>
-
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
          시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
@@ -564,35 +549,12 @@
     else{e.hidden=true;}
   }
 
-  // ── ① 판정 원장 ──────────────────────────────────────────────
+  // ── 판정 원장 ────────────────────────────────────────────────
+  // 홈의 '전략' 블록은 2026-07-26에 뺐다(요청). 다만 verdicts.json은 계속 읽는다 —
+  // 푸터의 아카이브 건수를 여기서 채우기 때문이다. 숫자를 손으로 적지 않는 규약도 그대로다.
   fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
-    var w=el('ledger'); if(!w)return;
-    if(!v){w.innerHTML='<div class="ldskel">판정 원장을 불러오지 못했습니다.</div>';return;}
-    // 세 링크 모두 공개다(2026-07-25 잠금 해제 — BK만 잠금으로 남았다)
-    function n(href,val,lab,c){return '<a class="ldn" href="'+href+'" style="--c:'+c+'"><b class="tnum">'+val+'</b><span>'+lab+'</span></a>';}
-    w.innerHTML='<div class="ldrow">'+
-      n('explorer.html',v.deploy_n,'배포','var(--deploy)')+
-      n('explorer.html',v.marginal_n,'제한적 유효','var(--marg)')+
-      n('archive.html',v.reject_total,'기각','var(--hot)')+
-      '<span class="ldskel">아카이브 '+v.archive_n+' + 대조용 '+v.reject_compare_n+' · '+v.archive_cats+'개 카테고리</span>'+
-      '</div><p class="ldnote" id="ldnote">전 종목 PIT 멤버십·생존편향 보정·부분월 제외·블록 부트스트랩으로 재검증하고, 통과하지 못한 것은 <b>사유와 함께</b> 전략 랩에 남깁니다.</p>';
-    var tb=el('tb-exp'); if(tb)tb.textContent='전략 '+v.explorer_n+'종';
+    if(!v)return;
     var ta=el('ft-arc'); if(ta)ta.textContent=' '+v.archive_n+'건';
-
-    // 전략 랩 한 줄 — 숫자는 손으로 적지 않고 data/tech_strategies.json에서 읽는다.
-    // 못 읽으면 줄을 아예 안 붙인다(추정치로 채우지 않는다).
-    fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-      .then(function(t){
-        if(!t||!t.strategies)return;
-        var c={}; t.strategies.forEach(function(x){c[x.verdict]=(c[x.verdict]||0)+1;});
-        var nd=el('ldnote'); if(!nd)return;
-        nd.insertAdjacentHTML('afterend',
-          '<p class="ldnote">테크니컬 규칙은 <b>' + t.strategies.length + '개를 직접 돌려</b> 성과를 전부 싣습니다 — ' +
-          '통과 후보 <b>' + (c['통과 후보']||0) + '</b> · 구별 불가 ' + (c['구별 불가']||0) + ' · 열위 ' + (c['열위']||0) +
-          ' (본페로니 |t|≥' + Number(t.t_crit).toFixed(2) + '). 다만 표본 구간은 지수가 200일선 위에 있던 날이 ' +
-          Math.round(100*(t.regime&&t.regime.up_share||0)) + '%인 강세장이라, 현금을 쥐는 규칙에 불리합니다. ' +
-          '<a href="explorer.html#view=runs">전략 랩에서 규칙별로 보기 →</a></p>');
-      }).catch(function(){});
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
