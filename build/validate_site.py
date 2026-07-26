@@ -299,6 +299,24 @@ if pool:
     # 구 슬러그 하위호환: 각 페이지의 해시 해석 코드가 aka를 실제로 참조하는지(문안만 남고 로직이 빠지는 사고 방지)
     # 2026-07-26 통합: 랩 콘텐츠(돌린 규칙·재점검·재검)가 explorer.html로 들어갔다.
     # archive.html은 기존 딥링크를 넘기는 리다이렉트만 남았으므로 아래 검사들은 explorer를 본다.
+    # NAVCSS 블록은 sync_nav.py가 매번 통째로 다시 쓴다. 거기에 페이지 고유 규칙을 넣으면
+    # 다음 sync에서 소리 없이 사라진다(실측: 랩 CSS 14KB를 그렇게 한 번 날렸다).
+    # 블록 안에 정본이 만들지 않는 셀렉터가 있으면 잡는다.
+    try:
+        import sync_nav as _sn
+        _navcss = _sn.NAV_CSS if hasattr(_sn, "NAV_CSS") else None
+    except Exception:
+        _navcss = None
+    if _navcss:
+        for _f in PAGES:
+            _t = plain(_f, "NAVCSS 블록 오염 검사")
+            if _t is None:
+                continue
+            _m = re.search(r"<!-- NAVCSS:BEGIN -->(.*?)<!-- NAVCSS:END -->", _t, re.S)
+            if _m and _m.group(1).strip() != _navcss.strip():
+                errors.append(f"{_f}: NAVCSS 블록이 정본과 다름 — 페이지 고유 CSS를 여기 넣으면 "
+                              f"다음 sync_nav 실행에서 통째로 지워진다")
+
     for _rp in sorted(REDIRECTS):
         _rt = io.open(os.path.join(ROOT, _rp), encoding="utf-8").read()
         if "location.replace" not in _rt or "explorer.html" not in _rt:
