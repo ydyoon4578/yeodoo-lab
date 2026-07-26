@@ -120,6 +120,12 @@
   .pickbar{margin:16px 0 0}
   .pickbar .pick{background:var(--panel);border:1px solid var(--line);border-radius:12px;
                  padding:11px 14px;box-shadow:var(--shadow)}
+  .qsvg{width:100%;height:auto;display:block;margin:8px 0 0}
+  .qsvg .qx{font-size:8px;fill:var(--muted);font-family:var(--mono)}
+  .qn{margin:6px 0 0;font-size:10.5px;color:var(--muted);line-height:1.55}
+  .qn2{font-size:9.5px;color:var(--muted);font-weight:400}
+  #fxout h4{margin:12px 0 0;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  #fxout h4:first-child{margin-top:0}
   .pit[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 12%,transparent)}
   .pit .tk{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
   .pit .nm{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1413,6 +1419,101 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '가격·EPS와 금리는 기준일이 다를 수 있어 각 파일의 as-of를 함께 적어 둡니다.</div></div>';
   }
 
+
+  // ── 분기 실적 추이 ──────────────────────────────────────────────────────
+  // SEC XBRL(data/fx/<티커>.json)의 분기 EPS·매출을 그대로 막대로 그린다. 컨센서스가 아니라
+  // **회사가 보고한 값**이다 — 전망(위 블록)과 실적(이 블록)을 한 화면에서 갈라 보려는 것이다.
+  var FXC={};
+  function fxLoad(t,cb){
+    if(FXC[t]!==undefined)return cb(FXC[t]);
+    getj('data/fx/'+encodeURIComponent(t)+'.json').then(function(j){FXC[t]=j||null;cb(FXC[t]);});
+  }
+  function qbars(series,unit,dec){
+    var a=(series||[]).slice(0,12).reverse();
+    if(a.length<2)return '';
+    var vals=a.map(function(x){return x[1];});
+    var mx=Math.max.apply(null,vals.concat(0)), mn=Math.min.apply(null,vals.concat(0));
+    var W=560,H=110,pT=8,pB=20,ph=H-pT-pB,gw=W/a.length;
+    function Y(v){return pT+ph*(mx-v)/((mx-mn)||1);}
+    var y0=Y(0),out='';
+    a.forEach(function(x,i){
+      var cx=gw*i+gw/2, bw=Math.min(26,gw*0.6), yy=Y(x[1]);
+      out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+Math.min(yy,y0).toFixed(1)+'" width="'+bw.toFixed(1)+
+           '" height="'+Math.max(0.5,Math.abs(yy-y0)).toFixed(1)+'" rx="1" fill="'+(x[1]>=0?'var(--accent)':'var(--hot)')+'"/>'+
+           '<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" class="qx">'+esc(String(x[0]).slice(2,7))+'</text>';
+    });
+    return '<svg class="qsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="분기 추이">'+
+           '<line x1="0" x2="'+W+'" y1="'+y0.toFixed(1)+'" y2="'+y0.toFixed(1)+'" stroke="var(--line)"/>'+out+'</svg>'+
+           '<p class="qn">최근 '+a.length+'개 분기 · 단위 '+esc(unit)+' · 회사가 SEC에 보고한 값(컨센서스 아님)</p>';
+  }
+  function fxBlock(t){
+    var host=el('fxout'); if(!host)return;
+    host.innerHTML='<div class="skel">분기 실적(SEC XBRL)을 불러오는 중…</div>';
+    fxLoad(t,function(j){
+      if(el('fxout')!==host)return;
+      var tg=(j&&j.tags)||null;
+      if(!tg){host.innerHTML='<div class="note">이 종목의 SEC XBRL 수집분이 없습니다 — 분기 실적을 표시하지 않습니다.</div>';return;}
+      var eps=(tg.eps&&(tg.eps.q||[]))||[], rev=(tg.rev&&(tg.rev.q||[]))||[];
+      var h='';
+      if(eps.length>1)h+='<h4>주당순이익(EPS)</h4>'+qbars(eps,'달러',2);
+      if(rev.length>1)h+='<h4>매출</h4>'+qbars(rev,'백만 달러',0);
+      host.innerHTML=h||'<div class="note">분기 계열이 짧아 추이를 그리지 않습니다.</div>';
+    });
+  }
+
+  // ── 실적 발표 이후 주가 ─────────────────────────────────────────────────
+  // 발표일 종가를 100으로 두고 전후 흐름을 본다. 발표일은 data/earnings.json의 지난 발표
+  // 목록에서 오고(수집 창이 90일이라 대개 직전 분기 한 건), 가격은 종목 상세(sd)에서 온다.
+  // ⚠ 한두 건으로 '발표 후에 오른다/내린다'를 말할 수 없다 — 그래서 건수를 같이 적는다.
+  var EARN=null;
+  function earnLoad(cb){
+    if(EARN!==null)return cb(EARN);
+    getj('data/earnings.json').then(function(j){EARN=j||{};cb(EARN);});
+  }
+  function padBlock(s){
+    var host=el('padout'); if(!host)return;
+    host.innerHTML='<div class="skel">발표 이후 주가를 계산하는 중…</div>';
+    earnLoad(function(E){
+      if(el('padout')!==host)return;
+      var dates=(DATA&&DATA.pxd_dates)||[], px=(s&&s.pxd)||[];
+      if(!dates.length||!px.length){host.innerHTML='<div class="note">종가 계열이 없어 표시하지 않습니다.</div>';return;}
+      var evs=((E&&E.recent)||[]).filter(function(x){return x.t===s.t;});
+      if(!evs.length){host.innerHTML='<div class="note">수집 창(최근 90일) 안에 이 종목의 지난 발표가 없습니다 — 발표 이력이 쌓이면 여기에 표시됩니다.</div>';return;}
+      var W=560,H=130,pL=34,pR=8,pT=10,pB=18,pw=W-pL-pR,ph=H-pT-pB,BEF=5,AFT=10;
+      var lines=[],all=[];
+      evs.forEach(function(ev){
+        var k=dates.indexOf(ev.dt); if(k<0)return;
+        var base=px[k]; if(!base)return;
+        var pts=[];
+        for(var i=-BEF;i<=AFT;i++){var j=k+i; if(j<0||j>=px.length||!px[j])continue; var v=px[j]/base*100; pts.push([i,v]); all.push(v);}
+        if(pts.length>3)lines.push({dt:ev.dt,hour:ev.hour,pts:pts,est:ev.est,act:ev.act});
+      });
+      if(!lines.length){host.innerHTML='<div class="note">발표일이 종가 계열 범위 밖이라 표시하지 않습니다.</div>';return;}
+      var lo=Math.min.apply(null,all.concat(100)), hi=Math.max.apply(null,all.concat(100));
+      if(hi-lo<1){lo-=1;hi+=1;}
+      function X(i){return pL+pw*(i+BEF)/(BEF+AFT);} function Y(v){return pT+ph*(hi-v)/((hi-lo)||1);}
+      var g='<line x1="'+X(0).toFixed(1)+'" x2="'+X(0).toFixed(1)+'" y1="'+pT+'" y2="'+(H-pB)+'" stroke="var(--accent)" stroke-dasharray="3 3"/>'+
+            '<line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+Y(100).toFixed(1)+'" y2="'+Y(100).toFixed(1)+'" stroke="var(--line)"/>'+
+            '<text x="'+(pL-4)+'" y="'+(Y(100)+3).toFixed(1)+'" text-anchor="end" class="qx">100</text>'+
+            '<text x="'+X(0).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" class="qx">발표일</text>';
+      lines.forEach(function(L){
+        g+='<path d="'+L.pts.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join('')+
+           '" fill="none" stroke="var(--champ)" stroke-width="1.8"/>';
+      });
+      var rows=lines.map(function(L){
+        var last=L.pts[L.pts.length-1];
+        var sur=(L.est!=null&&L.act!=null)?((L.act-L.est)/Math.abs(L.est)*100):null;
+        return '<tr><th scope="row">'+esc(L.dt)+(L.hour?' <span class="qn2">'+esc(L.hour)+'</span>':'')+'</th>'+
+               '<td class="tnum">'+(sur==null?'—':(sur>0?'+':'')+sur.toFixed(1)+'%')+'</td>'+
+               '<td class="tnum">'+((last[1]-100)>0?'+':'')+(last[1]-100).toFixed(1)+'%</td></tr>';
+      }).join('');
+      host.innerHTML='<svg class="qsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="발표 전후 주가">'+g+'</svg>'+
+        '<table class="tbl"><thead><tr><th scope="col">발표일</th><th scope="col">서프라이즈</th><th scope="col">+10거래일</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<p class="qn">발표일 종가를 100으로 둔 전후 '+BEF+'/'+AFT+'거래일 흐름입니다. 표본 '+lines.length+
+        '건 — 이 개수로 방향을 말할 수 없습니다. 발표 이력(data/earnings_history.json)은 매일 쌓는 중입니다.</p>';
+    });
+  }
+
   function renderDetail(s){
     if(!s){el('detail').innerHTML='<div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div>';return;}
     var cur=lastPx(s),h='';
@@ -1427,8 +1528,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(s._sdLoading)h+='<div class="skel">섹터 백분위(data/sd/'+esc(s.t)+'.json)를 불러오는 중…</div>';
     else if(s._sdFail)h+='<div class="note">상세 파일(data/sd/'+esc(s.t)+'.json)을 불러오지 못했습니다 — 백분위·등급·종가는 표시하지 않습니다.</div>';
     h+='</div>';
-    h+=epsBlock(s)+tpBlock(s)+histBlock(s)+rateBlock(s);
+    h+=epsBlock(s)+tpBlock(s)+
+       '<div class="card"><h3>분기 실적 추이<span class="hn">SEC XBRL · 회사 보고값</span></h3><div id="fxout"><div class="skel">불러오는 중…</div></div></div>'+
+       '<div class="card"><h3>실적 발표 이후 주가<span class="hn">발표일 = 100</span></h3><div id="padout"><div class="skel">불러오는 중…</div></div></div>'+
+       histBlock(s)+rateBlock(s);
     el('detail').innerHTML=h;
+    fxBlock(s.t); padBlock(s);
   }
 
 
