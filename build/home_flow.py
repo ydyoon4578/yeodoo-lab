@@ -161,6 +161,36 @@ def main() -> int:
     mac.sort(key=lambda z: (z["d"], z["n"]))
     doc["macro"] = {"as_of": c.get("as_of"), "n_all": len(c.get("dates") or []), "rows": mac}
 
+    # ── 캘린더 날짜 옆 지수 등락률 ──
+    # 달력 칸에 '그날 시장이 어땠나'가 같이 있어야 일정과 반응을 나란히 읽을 수 있다.
+    # assets.json의 ^GSPC·^NDX는 가격지수(PR)다 — 하루 등락률에는 배당이 거의 영향이 없어
+    # 여기서는 PR/TR 구분이 문제가 되지 않는다.
+    ix = {}
+    _A = load("assets.json") or {}
+    _dts, _px = _A.get("dates") or [], _A.get("px") or {}
+    if base and _dts:
+        d0 = dt.date.fromisoformat(base) - dt.timedelta(days=14)
+        d1 = dt.date.fromisoformat(base) + dt.timedelta(days=CAL_DAYS)
+        pos = {d: i for i, d in enumerate(_dts)}
+        for d, i in pos.items():
+            if i == 0:
+                continue
+            try:
+                dd = dt.date.fromisoformat(d)
+            except Exception:
+                continue
+            if not (d0 <= dd <= d1):
+                continue
+            row = {}
+            for tk, lab in (("^GSPC", "s"), ("^NDX", "n")):
+                a_ = _px.get(tk) or []
+                if i < len(a_) and a_[i] and a_[i - 1]:
+                    row[lab] = round((a_[i] / a_[i - 1] - 1) * 100, 2)
+            if row:
+                ix[d] = row
+    doc["index"] = {"note": "달력 칸의 그날 지수 등락률(%). S&P 500·나스닥100 가격지수 종가 기준.",
+                    "rows": ix}
+
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
     src = sum(os.path.getsize(os.path.join(DATA, x)) for x in
