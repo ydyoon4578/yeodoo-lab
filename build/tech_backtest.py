@@ -217,6 +217,69 @@ def tstat(a, b):
     return round(m / (sd / math.sqrt(len(d))), 2) if sd > 0 else None
 
 
+# ── 펀더멘털(XBRL) ───────────────────────────────────────────────────────
+# data/fx/<티커>.json 에 SEC EDGAR companyfacts에서 뽑은 분기 시계열이 있다.
+# 여기서 쓰는 것: eq(자본총계·시점) · sh(희석주식수) · cfo·capex(현금흐름).
+#
+# ⚠ 시점 정합(point-in-time). 이 파일이 들고 있는 것은 **회계기간 종료일**이지 공시일이
+#   아니다. 4월 말로 끝난 분기는 6월쯤에야 공개되므로, 종료일을 그대로 쓰면 아직 세상에
+#   없던 숫자로 종목을 고르게 된다(전형적인 미래참조). 그래서 리밸런스 시점 t에서는
+#   **t-LAG일 이전에 끝난 기간**만 쓴다. LAG=90일은 10-Q 제출 기한(대형가속제출자 40일)에
+#   여유를 크게 둔 값이다 — 짧게 잡아 성과를 좋게 만들 이유가 없다.
+#
+# ⚠ 재작성(restatement) 편향은 남는다. refresh_facts.py가 '제출일이 가장 늦은 값'을 저장하므로
+#   당시 처음 보고된 값이 아니라 나중에 고쳐진 값이다. 이건 데이터로는 못 없앤다 — 적어 둔다.
+FUND_LAG_DAYS = 90
+
+
+def _shift(d, days):
+    y, m, dd = int(d[:4]), int(d[5:7]), int(d[8:10])
+    import datetime as _dt
+    return (_dt.date(y, m, dd) - _dt.timedelta(days=days)).isoformat()
+
+
+def load_fund():
+    """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순."""
+    out = {}
+    d = os.path.join(DATA, "fx")
+    if not os.path.isdir(d):
+        return out
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".json"):
+            continue
+        try:
+            j = json.load(io.open(os.path.join(d, fn), encoding="utf-8"))
+        except Exception:
+            continue
+        tg = j.get("tags") or {}
+
+        def series(key):
+            v = tg.get(key) or {}
+            a = v.get("i") or v.get("q") or []
+            return [(x[0], x[1]) for x in a if isinstance(x, list) and len(x) == 2
+                    and isinstance(x[1], (int, float))]
+
+        eq, sh = series("eq"), series("sh")
+        cfo, capex = dict(series("cfo")), dict(series("capex"))
+        # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
+        # cfo만으로 채우면 자본지출이 큰 업종이 통째로 좋아 보인다.
+        fcf = sorted(((k, cfo[k] - capex[k]) for k in cfo if k in capex), reverse=True)
+        if eq or sh or fcf:
+            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf}
+    return out
+
+
+def asof_fund(series, date, lag=FUND_LAG_DAYS):
+    """date 시점에 **이미 공개돼 있었을** 가장 최근 값. 없으면 None."""
+    if not series:
+        return None
+    cut = _shift(date, lag)
+    for d, v in series:          # 날짜 내림차순
+        if d <= cut:
+            return v
+    return None
+
+
 # ── 데이터 ──────────────────────────────────────────────────────────────
 def load():
     with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as f:
@@ -455,10 +518,29 @@ def build_strats():
          "저변동성(0.33)·저베타(0.59) 사이에 놓였다 — 셋이 서로 다른 것을 재고 있다는 뜻이지만, "
          "강세장 2년으로는 어느 쪽이 옳은지 가릴 수 없다.")
 
-    timing("t-ndxvol", "NDX 변동성 타깃 (연 12%)",
-           "NDX 편입 종목만의 동일가중 지수에 20일 실현변동성 기준 목표 연 12% 노출.",
-           None, "같은 규칙을 좁은 유니버스에 걸면 달라지는지 본다. 아카이브의 '변동성 타깃팅 — NDX 단일자산'.",
-           arch="vol-targeting-ndx")
+    # ── 펀더멘털 2종 ────────────────────────────────────────────────
+    # 배포 원장에는 같은 팩터가 'SPX Top 10'으로 올라 있다. 그 숫자는 사내 리서치 DB에서
+    # 나온 것이라 여기서 다시 돌릴 수 없다. 대신 **같은 팩터를 무료 공개 데이터로,
+    # 지수 구분 없이 전체 유니버스에** 얹은 판을 따로 싣는다 — 지수를 나눌 이유가 팩터에
+    # 있는 게 아니라 원본 백테스트가 그 유니버스로 돌았을 뿐이기 때문이다.
+    xsec("x-btp", "장부가 대비 저평가 (Book-to-Price 상위 %d)" % TOPN,
+         "주당순자산(SEC XBRL 자본총계 ÷ 희석주식수)을 주가로 나눈 값이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
+         None,
+         "Fama-French 밸류(HML)의 단변량판. 배포 원장의 'Book-to-Price · SPX Top 10'과 같은 "
+         "팩터를 나스닥100까지 합친 유니버스에 얹은 것이다. 회계 숫자는 기간 종료일로부터 "
+         "90일이 지난 뒤에만 쓴다(공시 전 숫자로 고르지 않기 위해). 다만 저장된 값은 재작성 "
+         "이후의 값이라 그 편향은 남는다.")
+    xsec("x-fcfy", "잉여현금흐름 수익률 상위 %d" % TOPN,
+         "주당 잉여현금흐름(영업현금흐름 − 자본지출)을 주가로 나눈 값이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
+         None,
+         "배포 원장에는 이 팩터가 '개선분(ΔFCF Yield)'으로 올라 있는데, 무료 데이터로는 "
+         "그 변화량을 같은 품질로 못 만든다 — 자본지출 태그가 515종목 중 433종목에만 있고 "
+         "현금흐름이 분기가 아니라 연 단위로만 들어오는 종목이 많아, 차분을 내면 1년 간격이 된다. "
+         "그래서 변화가 아니라 수준(레벨)으로 싣고 이름도 그렇게 붙였다. 원장의 개선분판과 같은 "
+         "전략이 아니다.")
+
     timing("t-disp", "횡단면 분산도 게이트",
            "종목 간 수익률 분산(횡단면 표준편차)이 과거 1년 중앙값보다 낮으면 편입, 높으면 현금.",
            None, "분산도가 높을 때가 위험 국면이라는 가설. 아카이브의 '횡단면 분산도 리스크 게이트'.",
@@ -472,6 +554,7 @@ def build_strats():
 # ── 실행 ────────────────────────────────────────────────────────────────
 def run():
     dates, px, vlm, meta, rf = load()
+    FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
     n = len(dates)
     tickers = sorted(px)
     R = daily_rets(px)
@@ -487,16 +570,6 @@ def run():
         ix.append(ix[-1] * (1 + r))
 
     ixvol = [vol(ixr, i, 20) for i in range(n)]
-
-    # NDX 편입분만의 동일가중 지수 — 같은 규칙을 좁은 유니버스에 걸어보기 위해
-    with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as _f:
-        _st = json.load(_f)
-    ndx = [s["t"] for s in _st["stocks"] if "NDX" in (s.get("idx") or []) and s["t"] in px]
-    ndxr = [None]
-    for i in range(1, n):
-        rs = [R[t][i] for t in ndx if R[t][i] is not None]
-        ndxr.append(sum(rs) / len(rs) if rs else 0.0)
-    ndxvol = [vol(ndxr, i, 20) for i in range(n)]
 
     # 횡단면 분산도 — 그날 종목 수익률의 표준편차(국면 대리변수)
     disp = [None] * n
@@ -595,9 +668,6 @@ def run():
                     prev = ema(ix, i - 1, 12) - ema(ix, i - 1, 26) if i > 0 else m
                     sig = m * 0.2 + prev * 0.8
                     w[i] = 1.0 if m > sig else 0.0
-                elif sid == "t-ndxvol":
-                    v = ndxvol[i]
-                    w[i] = min(1.0, 0.12 / (v * math.sqrt(252))) if (v and v > 0) else 0.0
                 elif sid == "t-disp":
                     hist = [x for x in disp[max(0, i - 252):i] if x]
                     cur = disp[i]
@@ -745,6 +815,20 @@ def run():
                         elif sid == "x-lowbeta":
                             b = beta(R[t], ixr, i - 1, 120)
                             v = -b if b is not None else None
+                        elif sid in ("x-btp", "x-fcfy"):
+                            # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜와 주식수가 필요하다.
+                            f = FU.get(t) or {}
+                            sn = asof_fund(f.get("sh"), dates[i - 1])
+                            p0 = P[i - 1]
+                            if not (sn and sn > 0 and p0 and p0 > 0):
+                                v = None
+                            elif sid == "x-btp":
+                                e = asof_fund(f.get("eq"), dates[i - 1])
+                                # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
+                                v = (e / sn / p0) if e is not None else None
+                            else:
+                                fc = asof_fund(f.get("fcf"), dates[i - 1])
+                                v = (fc / sn / p0) if fc is not None else None
                         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
                             iv = idio_vol(R[t], ixr, i - 1, 120)

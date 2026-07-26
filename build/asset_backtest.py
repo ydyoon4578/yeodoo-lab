@@ -965,6 +965,16 @@ def main() -> int:
     # 아카이브가 '재현 불가'로 두었던 38건 전부에 대해, 무엇이 있으면 되는지와
     # 실제로 구해지는지를 적는다. 못 도는 것은 **무엇이 없어서인지**를 남긴다.
     done = {r["arch"] for r in rows}
+    # 단독 재검(archive_backtests.json)으로 돌린 것도 '돌림'이다. 재검 경로가 둘인데
+    # 한쪽만 세면, 다른 쪽으로 돌린 항목이 재점검표에서 조용히 사라진다 —
+    # 실제로 t-ndxvol(종목 쪽 NDX 전용판)을 없앴을 때 vol-targeting-ndx가 그렇게 빠졌다.
+    _sa = {}
+    try:
+        _sa = (json.load(io.open(os.path.join(DATA, "archive_backtests.json"),
+                                 encoding="utf-8")).get("strategies") or {})
+    except Exception:
+        pass
+    STANDALONE = set(_sa)
     # 돌리지 못한 것 — 사유를 사실대로 나눈다. '데이터가 세상에 없다'와
     # '있는데 아직 안 만들었다'는 다른 말이고, 섞으면 영원히 안 하게 된다.
     # 유료 데이터라 영원히 못 도는 항목들은 2026-07-26에 아카이브에서 **삭제**했다.
@@ -987,6 +997,11 @@ def main() -> int:
             audit.append({"sid": sid, "n": x["n"], "c": x.get("c", ""),
                           "status": "돌림", "why": (r.get("note") or
                           "공개 데이터(yfinance·FRED)로 재현했다."), "res": r["sid"]})
+        elif sid in STANDALONE:
+            audit.append({"sid": sid, "n": x["n"], "c": x.get("c", ""), "status": "돌림",
+                          "why": "기각 재검(단독 검정)으로 돌렸다 — 원 기각 사유가 "
+                                 "'배포 포트폴리오에 얹으면 개선이 없다'는 상대 판정이었기 때문이다.",
+                          "res": "r-" + sid})
         elif sid in PENDING:
             st, why = PENDING[sid]
             audit.append({"sid": sid, "n": x["n"], "c": x.get("c", ""),
