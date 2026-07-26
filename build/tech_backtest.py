@@ -306,6 +306,33 @@ def eps_accel(series, date, lag=FUND_LAG_DAYS):
     return ys[k][1] - ys[k + 1][1]
 
 
+def ttm(series, date, lag=FUND_LAG_DAYS):
+    """최근 12개월치 — date 시점에 공개돼 있던 것만. 매출·순이익·배당 같은 **기간 누적값**용.
+
+    한 분기만 보면 계절성에 휘둘리므로 1년을 봐야 한다. 그런데 이 자료는 종목마다 주기가
+    다르다 — 4분기가 연간 보고에 흡수돼 사라진 종목이 많고, 현금흐름은 아예 연 단위로만
+    들어오는 종목이 있다. 그래서 **관측 간격으로 주기를 판정**한다.
+      · 간격이 300일 이상이면 연 단위 보고다 → 가장 최근 하나가 곧 1년치다.
+      · 아니면 분기 보고다 → 최근 4개를 더하되, 그 4개가 400일 안에 들어올 때만 인정한다.
+    못 채우면 None을 돌려주고 그 종목은 그 달 순위에서 빠진다. 분기 보고 종목과 연간 보고
+    종목을 같은 잣대 없이 섞으면 연간 쪽 값이 4배로 커져 순위가 통째로 뒤집힌다.
+
+    ⚠ 잔고 항목(자본·자산·부채·주식수)에는 쓰면 안 된다 — 그건 시점 값이라 더하면 4배가 된다.
+      그쪽은 asof_fund를 쓴다.
+    """
+    if not series:
+        return None
+    cut = _shift(date, lag)
+    got = [(d, v) for d, v in series if d <= cut]
+    if not got:
+        return None
+    if len(got) >= 2 and _days_between(got[0][0], got[1][0]) >= 300:
+        return got[0][1]
+    if len(got) < 4 or _days_between(got[0][0], got[3][0]) > 400:
+        return None
+    return sum(v for _d, v in got[:4])
+
+
 def load_fund():
     """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순."""
     out = {}
@@ -328,12 +355,16 @@ def load_fund():
                     and isinstance(x[1], (int, float))]
 
         eq, sh, ep = series("eq"), series("sh"), series("eps")
+        rev, ni, dps = series("rev"), series("ni"), series("dps")
+        asset, liab = series("asset"), series("liab")
         cfo, capex = dict(series("cfo")), dict(series("capex"))
         # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
         # cfo만으로 채우면 자본지출이 큰 업종이 통째로 좋아 보인다.
         fcf = sorted(((k, cfo[k] - capex[k]) for k in cfo if k in capex), reverse=True)
         if eq or sh or fcf or ep:
-            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf, "eps": ep}
+            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf, "eps": ep,
+                                          "rev": rev, "ni": ni, "dps": dps,
+                                          "asset": asset, "liab": liab}
     return out
 
 
@@ -408,6 +439,11 @@ def timing(sid, name, rule, fn, why, arch=None):
 
 def xsec(sid, name, rule, fn, why, arch=None):
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why, "fn": fn, "arch": arch})
+
+
+# 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
+FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
+             "x-rgrow", "x-lowde", "x-dy", "x-small"}
 
 
 def build_strats():
@@ -614,6 +650,51 @@ def build_strats():
          "회사)가 위로 몰리는 성질이 있다. 이건 나누지 않으므로, 둘이 같은 결과면 표준화가 "
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
+
+    # ── 팩터 상위 10 목록 8종 ────────────────────────────────────────
+    # "이 지표로 뽑으면 어떤 종목이 나오나"를 지표마다 보고 싶다는 요청. 목록만 만들면 그
+    # 목록이 좋은지 알 수 없으므로, **목록 자체를 월말 리밸런스 전략으로 돌린다** — 그러면
+    # 카드의 '지금 보유'가 곧 그 지표의 상위 10 목록이고, 옆에 성적이 붙는다.
+    # 회계 숫자는 전부 기간 종료 90일 뒤에만 쓰고(공시 전 숫자로 고르지 않는다), 잔고는
+    # 시점 값, 매출·이익·배당은 12개월 누적을 쓴다.
+    xsec("x-ep", "저PER (이익수익률 상위 %d)" % TOPN,
+         "12개월 주당순이익 ÷ 주가가 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "PER의 역수로 줄을 세운다. 역수를 쓰는 이유는 적자 기업의 PER이 음수가 되면서 "
+               "'가장 싼 종목'으로 둔갑하는 것을 막기 위해서다 — 이익수익률은 적자면 그냥 음수라 "
+               "자연히 꼴찌로 간다.")
+    xsec("x-sp", "저PSR (매출수익률 상위 %d)" % TOPN,
+         "12개월 매출 ÷ 시가총액이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "이익이 아직 안 나는 회사도 줄을 세울 수 있는 밸류 지표. 이익률이 낮은 업종이 "
+               "구조적으로 위로 몰리므로 섹터 편중을 보고 읽어야 한다.")
+    xsec("x-roe", "고ROE 상위 %d" % TOPN,
+         "12개월 순이익 ÷ 자본총계가 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "퀄리티 팩터의 대표. 자본이 적은 회사(자사주를 많이 산 회사)가 위로 오는 성질이 "
+               "있어, 부채를 많이 쓴 회사와 진짜 고수익 회사가 섞인다 — 저부채 목록과 겹쳐 보면 갈린다.")
+    xsec("x-npm", "고순이익률 상위 %d" % TOPN,
+         "12개월 순이익 ÷ 12개월 매출이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "ROE와 달리 자본 구조에 안 휘둘리는 수익성 지표. 둘을 같이 두면 'ROE가 높은 이유가 "
+               "장사를 잘해서인지 빚을 써서인지'가 갈린다.")
+    xsec("x-rgrow", "고매출성장 상위 %d" % TOPN,
+         "12개월 매출이 1년 전 12개월 매출보다 많이 늘어난 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "성장 팩터. 이익이 아니라 매출로 재는 이유는 이익이 회계 처리에 더 많이 휘둘리기 "
+               "때문이다. 인수합병으로 늘어난 매출도 그대로 잡힌다 — 이 표는 그것을 구분하지 못한다.")
+    xsec("x-lowde", "저부채 상위 %d" % TOPN,
+         "부채 ÷ 자본총계가 가장 낮은 %d종목 동일가중, 월말 리밸런스(자본잠식 종목 제외)." % TOPN,
+         None, "재무 안정성 팩터. 부채 태그가 없는 종목은 자산 − 자본으로 메운다(태그 보유 365종목 "
+               "→ 507종목). 금리가 오르는 국면에서만 값을 한다는 비판이 있어 구간을 봐야 한다.")
+    xsec("x-dy", "고배당수익률 상위 %d" % TOPN,
+         "12개월 주당배당 ÷ 주가가 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "배당 팩터. 배당을 선언하지 않는 종목(유니버스의 약 30%)은 애초에 순위에 없다. "
+               "감액 직전에 수익률이 가장 높아 보이는 함정이 있다 — 이 표는 그것을 걸러내지 않는다.")
+    xsec("x-small", "소형주 상위 %d" % TOPN,
+         "시가총액(주가 × 희석주식수)이 가장 작은 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None, "규모 팩터(SMB). 다만 이 유니버스는 S&P500 ∪ 나스닥100이라 '소형'이라 해도 대형주 "
+               "안에서 작은 쪽일 뿐이다 — 원논문의 소형주 효과와 같은 것을 재고 있지 않다. "
+               "⚠ 이 표에서 유일하게 다중검정 문턱을 넘었지만(t 4.09), 그 숫자를 그대로 믿으면 안 된다. "
+               "이 랩의 생존편향이 정확히 이 전략에 가장 세게 걸린다 — 유니버스가 '오늘의 518종목'이라 "
+               "그 사이 지수에서 빠진 회사가 하나도 없다. 지수에서 빠지는 것은 대개 작아진 회사이므로, "
+               "'가장 작은 10종목'은 사실상 '작아졌다가 살아남아 되돌아온 10종목'만 고른 것이 된다. "
+               "편출 이력이 이 저장소에 없어 보정할 수 없다. 판정은 규칙대로 두되 근거로 쓰지 말 것.")
 
     xsec("x-btp", "장부가 대비 저평가 (Book-to-Price 상위 %d)" % TOPN,
          "주당순자산(SEC XBRL 자본총계 ÷ 희석주식수)을 주가로 나눈 값이 가장 큰 %d종목 "
@@ -913,20 +994,50 @@ def run():
                             e = eps_accel((FU.get(t) or {}).get("eps") or [], dates[i - 1])
                             p0 = P[i - 1]
                             v = (e / p0) if (e is not None and p0 and p0 > 0) else None
-                        elif sid in ("x-btp", "x-fcfy"):
-                            # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜와 주식수가 필요하다.
+                        elif sid in FUND_SIDS:
+                            # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜·주식수·주가가 필요하다.
+                            # 잔고 항목은 asof_fund(시점 값), 기간 누적값은 ttm(12개월)을 쓴다.
                             f = FU.get(t) or {}
-                            sn = asof_fund(f.get("sh"), dates[i - 1])
+                            dt_ = dates[i - 1]
+                            sn = asof_fund(f.get("sh"), dt_)
                             p0 = P[i - 1]
-                            if not (sn and sn > 0 and p0 and p0 > 0):
-                                v = None
-                            elif sid == "x-btp":
-                                e = asof_fund(f.get("eq"), dates[i - 1])
+                            mcap = (sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
+                            v = None
+                            if sid == "x-btp":
+                                e = asof_fund(f.get("eq"), dt_)
                                 # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
-                                v = (e / sn / p0) if e is not None else None
-                            else:
-                                fc = asof_fund(f.get("fcf"), dates[i - 1])
-                                v = (fc / sn / p0) if fc is not None else None
+                                v = (e / sn / p0) if (e is not None and mcap) else None
+                            elif sid == "x-fcfy":
+                                fc = ttm(f.get("fcf"), dt_)
+                                v = (fc / mcap) if (fc is not None and mcap) else None
+                            elif sid == "x-ep":
+                                ep_ = ttm(f.get("eps"), dt_)
+                                v = (ep_ / p0) if (ep_ is not None and p0 and p0 > 0) else None
+                            elif sid == "x-sp":
+                                rv = ttm(f.get("rev"), dt_)
+                                v = (rv / mcap) if (rv is not None and mcap) else None
+                            elif sid == "x-roe":
+                                nn, e = ttm(f.get("ni"), dt_), asof_fund(f.get("eq"), dt_)
+                                v = (nn / e) if (nn is not None and e and e > 0) else None
+                            elif sid == "x-npm":
+                                nn, rv = ttm(f.get("ni"), dt_), ttm(f.get("rev"), dt_)
+                                v = (nn / rv) if (nn is not None and rv and rv > 0) else None
+                            elif sid == "x-rgrow":
+                                a1, a0 = ttm(f.get("rev"), dt_), ttm(f.get("rev"), _shift(dt_, 365))
+                                v = (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
+                            elif sid == "x-lowde":
+                                e = asof_fund(f.get("eq"), dt_)
+                                lb = asof_fund(f.get("liab"), dt_)
+                                if lb is None:
+                                    at = asof_fund(f.get("asset"), dt_)
+                                    lb = (at - e) if (at is not None and e is not None) else None
+                                # 부채가 적을수록 위. 자본잠식(e<=0)은 비율이 무의미해 뺀다.
+                                v = -(lb / e) if (lb is not None and e and e > 0) else None
+                            elif sid == "x-dy":
+                                dp = ttm(f.get("dps"), dt_)
+                                v = (dp / p0) if (dp is not None and p0 and p0 > 0) else None
+                            elif sid == "x-small":
+                                v = -mcap if mcap else None
                         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
                             iv = idio_vol(R[t], ixr, i - 1, 120)
