@@ -114,13 +114,42 @@ DEFPAT = [r"function\s+([A-Za-z_$][\w$]*)\s*\(", r"(?:var|let|const)\s+([A-Za-z_
           # slider(id,outId,key,fmt)의 fmt·wireChart(...,extra)의 extra가 '미정의 호출'로 잡혔다.
           r"function\s+[A-Za-z_$][\w$]*\s*\(([^)]*)\)"]
 
+import subprocess as _sp0
+import shutil as _sh0
+# node가 있으면 인라인 스크립트를 진짜 파서로 검사한다. 없으면 그 검사만 건너뛴다.
+NODE = _sh0.which("node")
+
+
 def js_checks(label, html):
-    scripts = [strip_js(s) for s in re.findall(r"<script>([\s\S]*?)</script>", html)]
+    raw = re.findall(r"<script>([\s\S]*?)</script>", html)
+    scripts = [strip_js(s) for s in raw]
     js = "\n".join(scripts)
     for k, s in enumerate(scripts):
         for a, b in [("(", ")"), ("{", "}"), ("[", "]")]:
             d = s.count(a) - s.count(b)
             if d: errors.append(f"{label} script#{k}: 괄호 불균형 {a}{b}={d:+d}")
+    # 진짜 문법 검사 — node가 있으면 파서에게 맡긴다.
+    # 손으로 만든 검사는 정규식 리터럴 안의 따옴표(/[&<>"\']/g)를 문자열 시작으로 오해한다.
+    # 실제로 그렇게 오탐이 났다. JS 문법은 JS 파서가 판정하게 두는 편이 짧고 정확하다.
+    # node가 없는 환경에서는 검사를 건너뛴다 — 못 잡는 것보다 거짓 통과를 만드는 게 나쁘다.
+    if NODE:
+        for k, s in enumerate(raw):
+            r = _sp0.run([NODE, "--check", "-"], input=s, capture_output=True, text=True)
+            if r.returncode != 0:
+                first = next((l.strip() for l in (r.stderr or "").split("\n")
+                              if l.strip() and "SyntaxError" in l), (r.stderr or "")[:120])
+                errors.append(f"{label} script#{k}: JS 문법 오류 — 이 스크립트 전체가 실행되지 않는다. "
+                              f"{first}")
+    elif os.getenv("CI"):
+        # CI에서 조용히 건너뛰면 '검사가 있다'는 착각만 남는다 — 그건 검사가 없는 것보다 나쁘다.
+        _e = "인라인 JS 문법 검사를 돌릴 node가 없다 — CI에서는 건너뛰지 않는다"
+        if _e not in errors:
+            errors.append(_e)
+    else:
+        _noskip = f"{label}: 인라인 JS 문법 검사(node 없음)"
+        if _noskip not in skips:
+            skips.append(_noskip)
+
     known = set(BUILTIN)
     for pat in DEFPAT:
         for m in re.finditer(pat, js):
