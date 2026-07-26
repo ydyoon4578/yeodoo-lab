@@ -130,14 +130,14 @@ NAV_CSS = """<style>
           border-bottom:1px solid var(--line)}
   .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
                 display:flex;align-items:center;gap:10px}
-  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-weight:700;
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:800;
                  font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
   .topnav .brand svg{width:22px;height:22px;flex:none}
   .navsp{flex:1}
 
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
-  .navcat>button{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-2);
+  .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
                  background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
@@ -156,13 +156,13 @@ NAV_CSS = """<style>
        padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
-  .mmi .mmn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
   .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
   .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
