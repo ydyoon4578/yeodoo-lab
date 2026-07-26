@@ -691,6 +691,7 @@
         // 수집일이 기준일과 다르면 함께 적는다 — 기준일을 시장 날짜로 맞추면서 생긴 차이라
         // 숨기면 '왜 어제 것이지'가 된다.
         if(a.collected) cad += ' · 수집 '+a.collected;
+        if(a.manual) cad += ' · '+a.manual;
         return '<span class="axc">'+esc(a.label)+
                (cad?'<em>'+esc(cad)+'</em>':'')+'</span>';
       }).join('');
