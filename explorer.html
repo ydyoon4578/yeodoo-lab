@@ -897,6 +897,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var BENCH_ORDER=['지수 대비','독립형'];
   function benchGroup(d){return (d.bt&&d.bt.bench_role==='index')?'지수 대비':'독립형';}
   var KIND_COLOR={'수익엔진':'#0E8A54','배분기':'#2C6E8F','위험감축':'#8256B8','방어보험':'#C0392B','타이밍오버레이':'#B9770E','미분류':'#9A9A9A'};
+  // 지수 표기 — 약어보다 이름이 읽기 쉽다는 요청. 전략 이름·설명은 사내 원장 키이기도 해서
+  // 데이터의 값은 그대로 두고 **화면에 나가는 문자열만** 바꾼다(sid·arch는 소문자라 안 걸린다).
+  // NDX100을 먼저 처리한다 — 나중에 하면 'Nasdaq100100'이 된다.
+  function ixL(x){
+    return (x==null?'':String(x)).replace(/NDX100/g,'Nasdaq100')
+      .replace(/\bNDX\b/g,'Nasdaq100').replace(/\bSPX\b/g,'S&P500');
+  }
+  (function(){
+    // D는 인라인 배열이라 여기서 한 번만 훑는다. 나중에 합쳐지는 랩 전략은 병합 지점에서 바꾼다.
+    D.forEach(function(d){
+      ['n','c','alias','t','vt','m','ml'].forEach(function(k){ if(typeof d[k]==='string')d[k]=ixL(d[k]); });
+      if(Array.isArray(d.aka))d.aka=d.aka.map(ixL);
+    });
+  })();
+
   function kindOf(d){return (d.det&&d.det.kind)||'미분류';}
 
   // ── 큰 칸 3개 ────────────────────────────────────────────────────────────
@@ -1027,6 +1042,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           var hv=m[hk[0]];
           d.m=(hv==null)?'—':(Number(hv).toFixed(hk[0]==='sharpe'?3:2)+hk[2]);
           d.ml=hk[1];
+          ['n','c','alias','t','vt'].forEach(function(k){ if(typeof d[k]==='string')d[k]=ixL(d[k]); });
           d._i=D.length; D.push(d);
         });
         // 새 분류 축(구성·대조군 비교·같은 구간 지수)을 **전 레코드**에 붙인다.
@@ -1036,7 +1052,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         D.forEach(function(d){
           var x=MX[d.n]; if(!x)return;
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
-          d._pr=x.pr||null; d._bl=x.bench_label||null;
+          d._pr=x.pr||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           if(!d._hold&&x.holdings)d._hold=x.holdings;
         });
         window.__PRNOTE=ix.pr_note||''; window.__CMPNOTE=ix.cmp_note||'';
@@ -1092,7 +1108,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var bf=el('bfilters'); if(!bf)return;
     bf.innerHTML='<span class="fltlab">벤치마크</span>';
     var counts={}; D.forEach(function(d){var g=benchGroup(d); counts[g]=(counts[g]||0)+1;});
-    var TIP={'지수 대비':'판정 기준이 시장 지수(SPX·NDX)인 전략 — 지수를 이겼는지로 봅니다',
+    var TIP={'지수 대비':'판정 기준이 시장 지수(S&P500·Nasdaq100)인 전략 — 지수를 이겼는지로 봅니다',
              '독립형':'지수가 아니라 모전략·기초자산·같은 풀 1/N으로 판정하는 전략(배분·오버레이 등)'};
     BENCH_ORDER.forEach(function(g){
       if(!counts[g])return;

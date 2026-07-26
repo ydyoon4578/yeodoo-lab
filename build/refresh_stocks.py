@@ -1064,6 +1064,31 @@ def main():
         _prev = 0
     if _prev and len(stocks) < _prev * 0.9:
         raise SystemExit(f"커버 종목 급감 {_prev}→{len(stocks)} (yfinance 부분 장애 의심) — 갱신 중단, 이전본 유지")
+
+    # 신호 완전성 게이트 — 종목 수는 그대로인데 **신호만** 사라지는 장애가 따로 있다.
+    #
+    # 2026-07-26 실제 사고: 종목 518개·기준일 2026-07-24로 전과 똑같은데 확정 스윙 타점이
+    # 7447/5651 → 5708/3083으로 23% 줄고 잠정 타점은 74/34 → 0/0으로 통째로 사라졌다.
+    # 같은 코드·같은 기준일에 같은 종목 수였으므로 원인은 가격 이력의 부분 결측이다
+    # (Yahoo가 러너 IP에 거는 쓰로틀링 — .info에서 이미 겪은 것과 같은 유형인데 가격 쪽에는
+    # 가드가 없었다). 화면에서는 '오늘은 잠정 타점이 없구나'로 보여 아무도 알아채지 못했다.
+    #
+    # 확정 타점(bms·sms)은 3년 이력에서 나오므로 하루 사이에 크게 변할 수 없다 — 이 값이
+    # 급감했다면 시장이 아니라 입력이 상한 것이다. 잠정은 원래 요동치므로 경고만 한다.
+    def _cnt(arr, keys):
+        return sum(len(x.get(k) or []) for x in arr for k in keys)
+    _now_c, _now_w = _cnt(stocks, ("bms", "sms")), _cnt(stocks, ("bmw", "smw"))
+    try:
+        _pv = json.load(open(OUT, encoding="utf-8")).get("stocks") or []
+        _old_c, _old_w = _cnt(_pv, ("bms", "sms")), _cnt(_pv, ("bmw", "smw"))
+    except Exception:
+        _old_c = _old_w = 0
+    if _old_c and _now_c < _old_c * 0.75:
+        raise SystemExit(f"확정 스윙 타점 급감 {_old_c}→{_now_c} — 3년 이력에서 나오는 값이라 "
+                         f"하루 사이 이만큼 줄 수 없다(가격 이력 부분 결측 의심). 갱신 중단, 이전본 유지")
+    print(f"스윙 타점: 확정 {_now_c}(직전 {_old_c}) · 잠정 {_now_w}(직전 {_old_w})")
+    if _old_w and _now_w == 0:
+        print("⚠ 잠정 타점이 0이다 — 시장 상황일 수도 있으나 직전에 %d개였다면 입력을 의심할 것" % _old_w)
     # ── 상세 분리(지연 로드): sig·pxd·vd·why 등(페이로드의 대부분)은 종목별 data/sd/<티커>.json으로, 본체는 슬림하게 ──
     # ⚠ 워크플로 커밋 대상에 data/sd 포함 필수(home_reco 누락 사고와 동일 함정) · stocks.html이 선택 시 fetch.
     SD_DIR = os.path.join(HERE, "..", "data", "sd")
