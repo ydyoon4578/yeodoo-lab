@@ -60,7 +60,12 @@ TAG = re.compile(r"<(?:\w+:)?(nameOfIssuer|cusip|value|sshPrnamt)>([^<]*)</", re
 
 
 def holdings(cik, acc):
-    """정보표 XML → [(cusip, 가치, 주식수)]. 파일명이 제출마다 달라 index.json으로 찾는다."""
+    """정보표 XML → [(cusip, 가치, 주식수, 발행사명)]. 파일명이 제출마다 달라 index.json으로 찾는다.
+
+    발행사명을 같이 돌려주는 이유. 우리 유니버스(518종목) 밖 종목은 CUSIP→티커 매핑이
+    없어 티커를 못 붙이는데, 13F 원문에는 nameOfIssuer가 들어 있다. 이름만 있어도
+    '이 운용사가 무엇을 들고 있나'는 보여줄 수 있다 — 버리면 포트폴리오의 절반이 사라진다.
+    """
     a = acc.replace("-", "")
     base = "https://www.sec.gov/Archives/edgar/data/%d/%s/" % (cik, a)
     try:
@@ -94,7 +99,8 @@ def holdings(cik, acc):
     for r in rows:
         try:
             out.append((r["cusip"].strip().upper()[:9],
-                        float(r.get("value") or 0), float(r.get("sshprnamt") or 0)))
+                        float(r.get("value") or 0), float(r.get("sshprnamt") or 0),
+                        (r.get("nameofissuer") or "").strip()))
         except (KeyError, ValueError):
             pass
     return out
@@ -136,7 +142,7 @@ def main() -> int:
             if not hs:
                 continue
             m = {}
-            for cu, val, _sh in hs:
+            for cu, val, _sh, _nm in hs:
                 t = cmap.get(cu)
                 if t:
                     m[t] = m.get(t, 0.0) + val
