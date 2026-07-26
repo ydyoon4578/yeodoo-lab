@@ -106,6 +106,13 @@ def build(root: str = ROOT) -> dict:
         "reject_compare_n": len(rej_cmp), "explorer_n": len(ex),
         "archive_n": len(ar), "archive_cats": len(cats),
         "reject_total": len(ar) + len(rej_cmp),
+        # 아카이브를 '무엇으로 뺐는가'로 가른 수(2026-07-27). 45종을 한 칸에 세면
+        #   "좋은 전략 45개가 기각됐다"로 읽히는데, 그 안에는 배포 전략의 파라미터를 흔들어 본
+        #   실험(variant)과 규약상 판정 자체가 불가능한 것(undecidable)이 섞여 있다.
+        #   숨기는 게 아니라 이름을 붙여 따로 센다 — 총계(archive_n)는 그대로 둔다.
+        "archive_reject_n": sum(1 for r in ar if (r.get("k") or "reject") == "reject"),
+        "archive_variant_n": sum(1 for r in ar if r.get("k") == "variant"),
+        "archive_undecidable_n": sum(1 for r in ar if r.get("k") == "undecidable"),
         # 탭 개수 — 전략 랩이 탭을 지연 로딩하면서 필요해졌다. 개수만 보려고 100KB짜리
         # 산출물을 미리 받을 이유가 없다. 여기서 세어 두면 작은 파일 하나로 끝난다.
         **_lab_counts(root),
