@@ -148,6 +148,26 @@ def first_common(ts, pad=260):
 OUT_ROWS = []
 
 
+# 성격(role) — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
+# 파일 출처가 아니라 역할로 나눠야 읽는 사람이 비교할 수 있다. 자산 전략은 규칙마다 하는 일이
+# 달라 하나로 못 묶는다 — 비중을 정하면 배분기, 들어갈지 말지만 정하면 타이밍오버레이,
+# 위기에만 값을 하면 방어보험, 초과수익 자체가 목적이면 수익엔진.
+ROLE = {
+    "curve-carry": "타이밍오버레이", "tsmom-multi": "타이밍오버레이", "tail-hedge": "방어보험",
+    "macro-rot": "타이밍오버레이", "infl-real": "타이밍오버레이", "hrp-alloc": "배분기",
+    "commod-tsmom": "타이밍오버레이", "rp-extended": "배분기", "vix-ts": "타이밍오버레이",
+    "gem": "타이밍오버레이", "vol-roll": "방어보험", "real-yield": "타이밍오버레이",
+    "crypto-sat": "배분기", "sector-rp": "배분기", "bond-trend": "타이밍오버레이",
+    "mf-satellite": "배분기", "credit-gate": "타이밍오버레이", "overnight": "수익엔진",
+    "merger-arb": "수익엔진", "min-cvar": "배분기", "rp-voltarget": "위험감축",
+    "rp-cadence": "배분기", "rp-horizon": "타이밍오버레이", "overnight-ndx": "수익엔진",
+    "vrp-shortvol": "수익엔진", "credit-bond-gate": "타이밍오버레이", "ebp-gate": "타이밍오버레이",
+    "quality-tilt": "수익엔진", "carry": "수익엔진", "hrp-sleeve": "배분기",
+    "regime-switch": "타이밍오버레이", "ml-timing": "타이밍오버레이",
+    "ml-xsec": "수익엔진", "guru-clone": "수익엔진",
+}
+
+
 def add(sid, arch, fn):
     OUT_ROWS.append((sid, arch, fn))
 
@@ -846,6 +866,7 @@ def main() -> int:
             print("  ❌ %-16s 산출 없음" % sid); continue
         r["sid"] = sid
         r["arch"] = arch
+        r["role"] = ROLE.get(sid, "배분기")
         rows.append(r)
 
     # 머신러닝·13F 복제는 별도 스크립트(build/ml_backtest.py)가 낸다 — 규약이 다르기 때문이다
@@ -854,6 +875,7 @@ def main() -> int:
     if os.path.exists(mlp):
         for r in (json.load(io.open(mlp, encoding="utf-8")).get("strategies") or []):
             r.setdefault("turnover", None)
+            r["role"] = ROLE.get(r.get("sid"), "수익엔진")
             rows.append(r)
     else:
         print("  ⚠ ml_strategies.json 없음 — python build/ml_backtest.py 를 먼저 돌릴 것")

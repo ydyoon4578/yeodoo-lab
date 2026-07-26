@@ -108,6 +108,56 @@ def main() -> int:
     up.sort(key=lambda z: (z["dt"], -z["mc"], z["t"]))
     doc["earnings"] = {"as_of": base, "n_all": len(e.get("upcoming") or []), "rows": up}
 
+    # ── 캘린더용 경제지표 ── **주요 지표만**.
+    # FRED 릴리스에는 'H.15 Selected Interest Rates'·'ICE BofA Indices'·'CBOE Market Statistics'처럼
+    # 매 영업일 갱신되는 **시장 데이터 피드**가 섞여 있다. 그런 건 '발표 일정'이 아니라 상시 수치이고,
+    # 개수로만 보면 상위 4개가 전체의 80%를 먹어 정작 CPI·고용보고서를 가린다.
+    # 그래서 '정해진 날 나오고 시장이 반응하는 거시 지표'만 남긴다. 전체 목록은 calendar.html에 그대로 있다.
+    MAJOR = {
+        "Employment Situation": "고용보고서",
+        "Consumer Price Index": "소비자물가(CPI)",
+        "Producer Price Index": "생산자물가(PPI)",
+        "Personal Income and Outlays": "개인소득·지출(PCE)",
+        "Advance Monthly Sales for Retail and Food Services": "소매판매",
+        "Gross Domestic Product": "GDP",
+        "Job Openings and Labor Turnover Survey": "구인·이직(JOLTS)",
+        "Unemployment Insurance Weekly Claims Report": "주간 실업수당 청구",
+        "New Residential Construction": "주택착공·허가",
+        "G.17 Industrial Production and Capacity Utilization": "산업생산",
+        "S&P Cotality Case-Shiller Home Price Indices": "주택가격(케이스실러)",
+        "Surveys of Consumers": "소비자심리(미시간대)",
+        "Chicago Fed National Activity Index": "시카고연준 경기지수",
+        "Sahm Rule Recession Indicator": "삼의 법칙(침체 신호)",
+        "Existing Home Sales": "기존주택 판매",
+        "New Home Sales": "신규주택 판매",
+        "Advance Economic Indicators": "선행 경제지표",
+    }
+    c = load("calendar.json") or {}
+    rels = c.get("releases") or {}
+    mac = []
+    if base:
+        d0 = dt.date.fromisoformat(base) - dt.timedelta(days=7)
+        d1 = dt.date.fromisoformat(base) + dt.timedelta(days=CAL_DAYS)
+        seen_k = set()
+        for x in (c.get("dates") or []):
+            try:
+                dd = dt.date.fromisoformat(x["d"])
+            except Exception:
+                continue
+            if not (d0 <= dd <= d1):
+                continue
+            nm = (rels.get(str(x.get("rid"))) or {}).get("name") or ""
+            ko = MAJOR.get(nm)
+            if not ko:
+                continue
+            k = (x["d"], ko)
+            if k in seen_k:
+                continue
+            seen_k.add(k)
+            mac.append({"d": x["d"], "n": ko})
+    mac.sort(key=lambda z: (z["d"], z["n"]))
+    doc["macro"] = {"as_of": c.get("as_of"), "n_all": len(c.get("dates") or []), "rows": mac}
+
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
     src = sum(os.path.getsize(os.path.join(DATA, x)) for x in
@@ -116,6 +166,8 @@ def main() -> int:
     _nomc = sum(1 for z in up if not z["mc"])
     if _nomc:
         print("  ⚠ 시총 없는 종목 %d건 — 그날 목록 뒤로 밀린다(유니버스 밖이거나 fund 결측)" % _nomc)
+    print("  주요 경제지표 %d건(전체 %d건에서 추림 — 나머지는 상시 시장 데이터 피드)"
+          % (len(mac), len(c.get("dates") or [])))
     print("홈 슬림 묶음 — 공시 %d · 내부자 %d · 거장 %d · 신호 %d · 실적 %d줄 · %.0fKB (원본 %.0fKB)"
           % (len(doc["filings"]["rows"]), len(doc["insider"]["rows"]), len(doc["guru"]["rows"]),
              len(doc["signal"]["top"]) + len(doc["signal"]["bot"]), len(up),

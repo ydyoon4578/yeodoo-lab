@@ -904,13 +904,7 @@
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
     <h1 class="title">전략 랩</h1>
-    <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적과 성격</b>이 먼저 나오고, 대조군·판정은 그 뒤에 맥락으로 붙습니다.
-      전략마다 <b>무엇으로 판단해야 하는지가 다릅니다</b> — 종목을 고르는 전략은 수익으로, 비중을 정하는 배분기는 샤프로,
-      노출 크기를 줄이는 오버레이는 낙폭과 위기 구간으로 봅니다. 그래서 아래 <b>성격</b> 칩을 첫 필터로 두었습니다.
-      아래 <b>전략 원장</b> 탭에 담긴 건 <b><span id="okn">—</span>종</b>(배포·제한적 유효)과 대조용 <b><span id="rcn">—</span>종</b>(기각)입니다.
-      나머지 기각 <span id="arcn">—</span>개와 직접 돌린 규칙·재현 재점검은 <b>옆 탭</b>에 있습니다.<br>
-      <b>운용 등급(배포 여부)</b> — <b style="color:var(--deploy)">배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b style="color:var(--marg)">제한적 유효 → 카드 표기 「조건부 · 목적이 맞을 때」</b>: 효과는 확인됐지만 단독으론 약해 <b>보조·결합용</b> · <b style="color:var(--rej)">기각 → 카드 표기 「미채택(대조용)」</b>: 비용·검증을 거치면 배포 실익 없음.
-      이 등급은 <b>“이 전략이 좋은가”가 아니라 “배포북에 넣을 것인가”</b>에 대한 답입니다.</p>
+    <p class="lede">전략을 클릭하면 <b>그 전략 자신의 성적</b>이 먼저 나오고, 대조군·판정은 뒤에 붙습니다. <b>성격</b> 칩이 첫 필터입니다 — 무엇으로 판단해야 하는지가 전략마다 다르기 때문입니다.<details class="more"><summary>등급·성격이 무슨 뜻인가</summary><div class="mbody"><p><b>성격</b> — 종목을 고르는 전략은 <b>수익</b>으로, 비중을 정하는 배분기는 <b>샤프</b>로, 노출을 줄이는 오버레이는 <b>낙폭과 위기 구간</b>으로 봅니다. 같은 숫자를 세로로 비교하면 안 되는 이유입니다.</p><p><b>운용 등급</b>은 “이 전략이 좋은가”가 아니라 <b>“배포북에 넣을 것인가”</b>에 대한 답입니다. <b>배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b>제한적 유효</b>(카드 표기 「조건부 · 목적이 맞을 때」): 효과는 확인됐지만 단독으론 약해 보조·결합용 · <b>기각</b>(「미채택(대조용)」): 비용·검증을 거치면 배포 실익 없음.</p></div></details></p>
     <div class="statline" id="statline"></div>
   </header>
 
@@ -1828,92 +1822,12 @@
 })();
 </script>
 <script>
+  /* ⚠ 여기 있던 내비 스크립트를 지웠다(2026-07-26). archive.html을 병합할 때
+     '데이터를 fetch하는 블록'만 골라 옮겼는데, 내비 블록도 asof.json을 fetch해서
+     함께 딸려왔다. 그 결과 카테고리 버튼에 클릭 핸들러가 **두 번** 붙어
+     첫 핸들러가 열고 둘째가 곧바로 닫아 메뉴가 안 열렸다.
+     내비는 sync_nav.py가 넣는 블록 하나만 있어야 한다. */
 
-(function(){
-  var root=document.documentElement;
-  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
-  var tb=document.getElementById('themebtn');
-  if(tb)tb.addEventListener('click',function(){
-    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
-    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
-    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
-  });
-
-  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
-  var cur=(document.body.getAttribute('data-tool')||'').trim();
-  if(cur){
-    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
-    if(a){a.setAttribute('aria-current','page');
-      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
-  }
-
-  // ── 카테고리 패널 ──
-  var cats=[].slice.call(document.querySelectorAll('.navcat'));
-  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
-  function mobile(){return matchMedia('(max-width:1100px)').matches;}
-  function closeAll(except){
-    cats.forEach(function(li){
-      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
-      if(li===except||!b||!p)return;
-      b.setAttribute('aria-expanded','false'); p.hidden=true;
-    });
-  }
-  cats.forEach(function(li){
-    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
-    if(!b||!p)return;
-    b.addEventListener('click',function(e){
-      e.stopPropagation();
-      var open=b.getAttribute('aria-expanded')==='true';
-      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
-      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
-    });
-  });
-  // 드로어(모바일)
-  if(toggle&&drawer){
-    drawer.hidden=mobile();
-    toggle.addEventListener('click',function(e){
-      e.stopPropagation();
-      var open=toggle.getAttribute('aria-expanded')==='true';
-      toggle.setAttribute('aria-expanded',open?'false':'true');
-      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
-      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
-    });
-    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
-    var mq=matchMedia('(max-width:1100px)');
-    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
-      drawer.hidden=mobile();
-      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
-      closeAll(null);
-    });
-  }
-  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
-  document.addEventListener('keydown',function(e){
-    if(e.key!=='Escape')return;
-    closeAll(null);
-    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
-      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
-      if(drawer)drawer.hidden=true; toggle.focus();
-    }
-  });
-
-  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
-  function bdGap(d){
-    var p=String(d||'').split('-'); if(p.length!==3)return 0;
-    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
-    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
-    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
-    return n;
-  }
-  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
-    if(!j||!j.primary)return;
-    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
-    if(!el||!v)return;
-    v.textContent=j.primary; el.classList.add('ready');
-    var n=bdGap(j.primary);
-    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
-    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
-  }).catch(function(){});
-})();
 
 
 (function(){
