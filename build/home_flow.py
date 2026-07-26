@@ -21,7 +21,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "home_flow.json")
 N_ROW = 8          # 각 칸에 보일 줄 수
-CAL_DAYS = 25      # 캘린더가 그리는 3주 + 여유
+CAL_DAYS = 33      # 캘린더가 그리는 4주 + 여유.
+# 홈이 그리는 창은 '기준일이 낀 주의 월요일부터 4주'다. 기준일이 금요일이면 그 월요일이
+# 기준일-4일이므로 마지막 칸은 기준일+23일까지 간다. 여기에 주말·공휴일 이월을 더해 33일을
+# 잡는다 — 창보다 짧게 잡으면 마지막 주가 통째로 비는데, 화면에는 '그날 일정이 없다'로 보인다.
 
 
 def load(fn):
