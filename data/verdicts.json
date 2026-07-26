@@ -23,5 +23,8 @@
  "explorer_n": 14,
  "archive_n": 45,
  "archive_cats": 10,
- "reject_total": 47
+ "reject_total": 47,
+ "n_tech": 36,
+ "n_asset": 34,
+ "n_rechk": 5
 }
