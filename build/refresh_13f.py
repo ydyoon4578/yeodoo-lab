@@ -52,7 +52,8 @@ OUT = os.path.join(DATA, "guru.json")
 IDX_13F = "https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets"
 IDX_FTD = "https://www.sec.gov/data/foiadocsfailsdatahtm"
 FTD_FILES = 2        # CUSIP↔티커 커버를 올리려고 최근 몇 개를 합칠지
-KEEP_HOLD = 60       # 운용사별로 남길 보유 종목 수(유니버스 교집합 기준, 평가액순)
+KEEP_HOLD = 90       # 운용사별로 남길 보유 종목 수(평가액순).
+# 유니버스 밖 종목까지 담게 되면서 60칸으로는 큰 운용사가 상위만 남고 잘린다.
 
 # ── 명단(CIK 고정) ────────────────────────────────────────────────────
 # 이름 부분일치로 찾으면 엉뚱한 법인이 걸린다(실측: 'ARK INVEST'가 GREATMARK를 물어왔다).
@@ -129,6 +130,7 @@ def cusip_map(universe):
         for v in (t, t.replace(".", "-"), t.replace("-", ".")):
             alias[v.upper()] = t
     out = {}
+    full = {}          # 유니버스 밖까지 포함한 CUSIP→심볼. 거장 포트폴리오에서 쓴다.
     for h in hrefs:
         try:
             z = zipfile.ZipFile(io.BytesIO(fetch(_abs(h), timeout=180)))
@@ -141,9 +143,13 @@ def cusip_map(universe):
                 if len(p) < 4:
                     continue
                 c, s = p[1].strip(), p[2].strip().upper()
+                if not c or not s:
+                    continue
+                full.setdefault(c, s)
                 t = alias.get(s)
-                if c and t:
+                if t:
                     out.setdefault(c, t)
+    cusip_map.full = full          # 부수 산출물 — 반환 계약은 그대로 둔다(호출부가 셋이다)
     return out
 
 
@@ -200,13 +206,21 @@ def edgar_quarters(cmap: dict):
             if not rows:
                 continue
             holds, tot_v, tot_n = {}, 0.0, 0
-            for cu, val, sh in rows:
+            full = getattr(cusip_map, "full", {})
+            for cu, val, sh, nm in rows:
                 tot_v += val; tot_n += 1
                 t = cmap.get(cu)
+                off = False
                 if not t:
-                    continue
-                h = holds.setdefault(t, {"v": 0.0, "sh": 0.0})
+                    # 유니버스 밖. 버리지 않고 담되 표시한다 — 버리면 그 운용사 포트폴리오의
+                    # 절반이 화면에서 사라지고, 남은 절반의 비중이 실제보다 커 보인다.
+                    # 티커는 FTD 전체 지도에서 찾고(없으면 CUSIP), 이름은 13F 원문에서 온다.
+                    t = full.get(cu) or ("#" + cu)
+                    off = True
+                h = holds.setdefault(t, {"v": 0.0, "sh": 0.0, "off": off, "nm": nm})
                 h["v"] += val; h["sh"] += sh
+                if nm and not h.get("nm"):
+                    h["nm"] = nm
             if holds:
                 got[cik] = {"name": GURUS[cik], "total_val": tot_v,
                             "total_n": tot_n, "holds": holds}
@@ -278,13 +292,18 @@ def read_quarter(url: str, cmap: dict):
             cik = want.get(row.get("ACCESSION_NUMBER"))
             if cik is None:
                 continue
-            t = cmap.get((row.get("CUSIP") or "").strip())
-            if not t:
-                continue
             # 콜/풋은 보통주 보유가 아니다 — 섞으면 '몇 주 들고 있나'가 틀린다
             if (row.get("PUTCALL") or "").strip():
                 continue
-            h = out[cik]["holds"].setdefault(t, {"v": 0.0, "sh": 0.0})
+            cu = (row.get("CUSIP") or "").strip()
+            t = cmap.get(cu)
+            off = False
+            if not t:
+                t = getattr(cusip_map, "full", {}).get(cu) or ("#" + cu)
+                off = True
+            h = out[cik]["holds"].setdefault(
+                t, {"v": 0.0, "sh": 0.0, "off": off,
+                    "nm": (row.get("NAMEOFISSUER") or "").strip()})
             h["v"] += _f(row.get("VALUE"))
             h["sh"] += _f(row.get("SSHPRNAMT"))
     return per, out
@@ -380,31 +399,42 @@ def main() -> int:
                 base_sh = before["sh"] or 1
                 chg = ("증가" if d_sh / base_sh > 0.02 else
                        "감소" if d_sh / base_sh < -0.02 else "유지")
-            rows.append({"t": t, "nm": names.get(t, ""), "v": round(h["v"], 0),
+            rows.append({"t": t, "nm": names.get(t) or h.get("nm") or "",
+                         "v": round(h["v"], 0),
                          "sh": round(h["sh"], 0), "chg": chg,
+                         "off": 1 if h.get("off") else 0,
                          "psh": round(before["sh"], 0) if before else None})
         # 전량 매도 — 직전에 있었는데 이번에 없는 것
         if prev.get(cik):
             for t, h in p.items():
                 if t not in d["holds"]:
-                    rows.append({"t": t, "nm": names.get(t, ""), "v": 0, "sh": 0,
-                                 "chg": "전량매도", "psh": round(h["sh"], 0)})
+                    rows.append({"t": t, "nm": names.get(t) or h.get("nm") or "", "v": 0, "sh": 0,
+                                 "chg": "전량매도", "off": 1 if h.get("off") else 0,
+                                 "psh": round(h["sh"], 0)})
         rows.sort(key=lambda r: -r["v"])
         rows = rows[:KEEP_HOLD]
-        uni_val = sum(r["v"] for r in rows)
+        # '유니버스 비중'은 유니버스 안 종목만으로 센다 — 밖까지 더하면 그 지표의 뜻이 사라진다.
+        uni_val = sum(r["v"] for r in rows if not r.get("off"))
+        off_n = sum(1 for r in rows if r.get("off"))
         managers.append({
             "cik": cik, "label": GURUS[cik], "filer": d["name"],
             "total_val": round(d["total_val"], 0), "total_n": d["total_n"],
             "uni_val": round(uni_val, 0),
             "uni_pct": round(uni_val / d["total_val"] * 100, 1) if d["total_val"] else None,
-            "n": len(rows), "holds": rows,
+            "n": len(rows), "n_off": off_n, "holds": rows,
         })
         for r in rows:
             if r["chg"] == "전량매도":
                 continue
             overlap.setdefault(r["t"], []).append(cik)
 
-    ov = [{"t": t, "n": len(v), "ciks": sorted(v), "nm": names.get(t, "")}
+    OFFNM = {}
+    for m in managers:
+        for r in m["holds"]:
+            if r.get("off") and r.get("nm"):
+                OFFNM.setdefault(r["t"], r["nm"])
+    ov = [{"t": t, "n": len(v), "ciks": sorted(v),
+           "nm": names.get(t) or OFFNM.get(t, ""), "off": 1 if t in OFFNM else 0}
           for t, v in overlap.items()]
     ov.sort(key=lambda x: (-x["n"], x["t"]))
 
@@ -417,6 +447,11 @@ def main() -> int:
         "n_managers": len(managers),
         "n_listed": len(GURUS),
         "cusip_cover": round(covered / len(uni) * 100, 1),
+        "n_off": sum(m.get("n_off") or 0 for m in managers),
+        "off_note": "‘밖’ 표시는 이 랩의 유니버스(S&P500 ∪ 나스닥100, 518종목) 밖 종목이다. "
+                    "이름은 13F 원문(nameOfIssuer)에서, 티커는 SEC 공매도 미결제 파일에서 "
+                    "찾은 것이라 티커가 없으면 CUSIP을 그대로 적는다. 이 사이트에는 그 종목의 "
+                    "가격·재무 화면이 없다 — 무엇을 들고 있는지만 보여준다.",
         "managers": managers,
         "overlap": ov,
         "limits": [

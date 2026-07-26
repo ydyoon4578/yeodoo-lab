@@ -92,6 +92,14 @@
   .chg.감소{border-color:var(--marg);color:var(--marg)}
   .chg.전량매도{border-color:var(--hot);color:var(--hot)}
   .chg.유지{color:var(--muted)}
+  /* 유니버스 밖 — 지우지 않고 표시한다. 버리면 그 운용사 포트폴리오의 절반이 사라지고
+     남은 절반의 비중이 실제보다 커 보인다. 대신 이 사이트에 종목 화면이 없어 링크는 뺀다. */
+  .tkoff{color:var(--ink-2)}
+  .offb{font-family:var(--mono);font-size:8.5px;font-weight:700;margin-left:5px;padding:1px 4px;
+        border-radius:4px;border:1px dashed color-mix(in srgb,var(--muted) 60%,transparent);
+        color:var(--muted);vertical-align:1px}
+  tr.offrow th,tr.offrow td{background:color-mix(in srgb,var(--muted) 5%,transparent)}
+  .ovrow.offrow{background:color-mix(in srgb,var(--muted) 5%,transparent)}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px 18px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
@@ -537,12 +545,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<span class="hn">'+m.n+'종목 · 기준 '+esc(D.as_of)+'</span></h3>'+
       '<p class="lblnote" style="margin:6px 0 10px">13F 보고총액 <b>'+usd(m.total_val)+'</b>('+nf(m.total_n)+'종목) 중 '+
       '이 랩 유니버스와 겹치는 것이 <b>'+usd(m.uni_val)+'</b>('+(m.uni_pct==null?'—':nf(m.uni_pct,1)+'%')+')입니다. '+
-      '나머지는 이 화면에 안 보입니다.</p>'+
+      '평가액 상위 '+m.n+'종목을 싣고, 그중 <b>'+(m.n_off||0)+'종목</b>은 유니버스 밖이라 '+
+      '<span class="offb">밖</span>으로 표시합니다 — 이름은 13F 원문에서, 티커는 SEC 공매도 미결제 '+
+      '파일에서 찾은 것이라 티커를 못 찾으면 CUSIP을 그대로 적습니다. 이 사이트에는 그 종목의 '+
+      '가격·재무 화면이 없어 링크를 걸지 않습니다.</p>'+
       '<div class="fswrap"><table class="tbl"><thead><tr>'+
       '<th scope="col">종목</th><th scope="col">평가액</th><th scope="col">주식 수</th>'+
       '<th scope="col">직전 분기</th><th scope="col" class="l">변동</th></tr></thead><tbody>';
     m.holds.forEach(function(r){
-      h+='<tr><th scope="row"><a href="stocks.html#t='+encodeURIComponent(r.t)+'">'+esc(r.t)+'</a>'+
+      // 유니버스 밖은 이 사이트에 종목 화면이 없다 — 링크를 걸면 빈 화면으로 보낸다.
+      var tk=r.off?('<span class="tkoff">'+esc(r.t)+'</span><span class="offb" title="이 랩의 유니버스(S&P500 ∪ 나스닥100) 밖 종목입니다. 무엇을 들고 있는지만 보여줍니다.">밖</span>')
+                  :('<a href="stocks.html#t='+encodeURIComponent(r.t)+'">'+esc(r.t)+'</a>');
+      h+='<tr'+(r.off?' class="offrow"':'')+'><th scope="row">'+tk+
          '<span class="sub">'+esc((r.nm||'').slice(0,26))+'</span></th>'+
          '<td class="tnum">'+(r.v?usd(r.v):'—')+'</td>'+
          '<td class="tnum">'+(r.sh?nf(r.sh):'—')+'</td>'+
@@ -561,7 +575,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var rows=D.overlap.filter(function(x){return x.n>=2;});
     var h='<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>';
     rows.slice(0,80).forEach(function(x){
-      h+='<div class="ovrow"><span class="ot"><a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>'+
+      var ot=x.off?('<span class="tkoff">'+esc(x.t)+'</span><span class="offb">밖</span>')
+                  :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
+      h+='<div class="ovrow'+(x.off?' offrow':'')+'"><span class="ot">'+ot+
          '<small>'+esc((x.nm||'').slice(0,22))+'</small></span>'+
          '<span class="on">'+x.n+'곳</span>'+
          '<span class="om">'+x.ciks.map(function(c){return '<span>'+esc(byCik[c]||c)+'</span>';}).join('')+'</span></div>';
