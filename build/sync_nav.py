@@ -218,7 +218,7 @@ def build_body(items: dict) -> str:
     out.append('<a class="skiplink" href="#main">본문 바로가기</a>')
     out.append('<nav class="topnav" aria-label="주 메뉴">')
     out.append('  <div class="nvin">')
-    out.append('    <a class="brand" href="index.html">%s 여두 랩</a>' % BRAND_SVG)
+    out.append('    <a class="brand" href="index.html">%s 여두 전략 랩</a>' % BRAND_SVG)
     out.append('    <button class="navtoggle" id="navtoggle" aria-expanded="false" '
                'aria-controls="navcats" aria-label="메뉴 열기">☰</button>')
     out.append('    <ul class="navcats" id="navcats">')
