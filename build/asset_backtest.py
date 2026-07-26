@@ -887,6 +887,58 @@ def main() -> int:
     # 정렬은 t 우선 — Δ샤프로 줄 세우면 현금성 대조군을 쓴 전략이 허수로 맨 위에 온다
     rows.sort(key=lambda x: -(x.get("t") if x.get("t") is not None else -9))
 
+    # ── 지수 기준표 ────────────────────────────────────────────────────
+    # 전략 하나하나의 숫자만 보면 '좋은지'를 알 수 없다. 같은 구간에 지수가 얼마를 냈는지가
+    # 옆에 있어야 판단이 된다. 연도별로도 낸다 — 어떤 국면에 어떤 전략이 먹히는지는
+    # 전 구간 평균이 아니라 해마다 갈리기 때문이다.
+    #
+    # ⚠ 지수는 **가격지수(PR)** 다. ^GSPC·^NDX는 배당을 안 담는다. 배당까지 담은 총수익(TR)은
+    #   SPY·QQQ 쪽이고, 실측 격차가 연 2.0%p다(SPY 10.99% vs ^GSPC 8.98%, 2006~).
+    #   PR을 대조군으로 쓰면 전략이 그만큼 유리해 보인다 — 그 사실을 표에 함께 적는다.
+    IDX = [("^GSPC", "S&P 500 (SPX)", "PR"), ("^NDX", "나스닥100 (NDX)", "PR"),
+           ("SPY", "SPY (배당 재투자)", "TR"), ("QQQ", "QQQ (배당 재투자)", "TR")]
+
+    def stats_range(a, lo, hi):
+        v = [(i, a[i]) for i in range(lo, hi + 1) if a[i] is not None]
+        if len(v) < 30:
+            return None
+        px_ = [x for _i, x in v]
+        rs = [px_[k] / px_[k - 1] - 1 for k in range(1, len(px_)) if px_[k - 1]]
+        if not rs:
+            return None
+        m = sum(rs) / len(rs)
+        sd = math.sqrt(sum((x - m) ** 2 for x in rs) / max(1, len(rs) - 1))
+        yrs = len(px_) / 252
+        peak, mdd = px_[0], 0.0
+        for x in px_:
+            peak = max(peak, x)
+            mdd = min(mdd, x / peak - 1)
+        return {"ret": round(((px_[-1] / px_[0]) ** (1 / yrs) - 1) * 100, 2),
+                "vol": round(sd * math.sqrt(252) * 100, 2),
+                "mdd": round(mdd * 100, 2),
+                "sharpe": round(m / sd * math.sqrt(252), 3) if sd > 0 else None,
+                "n_days": len(px_)}
+
+    years = sorted({d[:4] for d in DTS})
+    idx_ref = {"note": "전략을 볼 때 옆에 두고 읽는 지수 기준표. 지수는 가격지수(PR)이고 "
+                       "배당이 빠져 있다 — 배당까지 담은 총수익(TR)은 SPY·QQQ 줄이며 "
+                       "2006년 이후 격차가 연 2.0%p다. PR을 대조군으로 쓰면 전략이 그만큼 "
+                       "유리해 보이므로 둘을 같이 싣는다.",
+               "as_of": DTS[-1], "rows": [], "years": years[1:]}
+    for tk, label, kind in IDX:
+        a = ser(tk)
+        if not a:
+            continue
+        row = {"t": tk, "label": label, "kind": kind,
+               "all": stats_range(a, 0, len(DTS) - 1), "by_year": {}}
+        for y in years:
+            ii = [i for i, d in enumerate(DTS) if d[:4] == y]
+            if len(ii) > 100:
+                st_ = stats_range(a, ii[0], ii[-1])
+                if st_:
+                    row["by_year"][y] = {"ret": st_["ret"], "vol": st_["vol"], "mdd": st_["mdd"]}
+        idx_ref["rows"].append(row)
+
     # ── 재현 가능성 판정표 ─────────────────────────────────────────────
     # 아카이브가 '재현 불가'로 두었던 38건 전부에 대해, 무엇이 있으면 되는지와
     # 실제로 구해지는지를 적는다. 못 도는 것은 **무엇이 없어서인지**를 남긴다.
@@ -952,6 +1004,7 @@ def main() -> int:
         ],
         "strategies": rows,
         "audit": doc_audit,
+        "index_ref": idx_ref,
     }
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
