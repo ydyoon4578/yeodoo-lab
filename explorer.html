@@ -317,6 +317,28 @@
   .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
   /* ── 뷰 전환 ── 원장·랩을 한 페이지에 두고 탭으로 가른다(2026-07-26 통합) */
+  .labhold{margin:14px 0 0;padding:11px 13px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px}
+  .labhold .lh{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .labhold>b{font-family:var(--mono);font-size:14px;color:var(--ink);display:inline-block;margin-top:4px}
+  .labhold em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--muted);line-height:1.55}
+  .lhs{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .lhw{position:relative;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);
+       background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:2px 7px;text-decoration:none}
+  .lhw b{margin-left:4px;color:var(--accent)}
+  a.lhw:hover,a.lhw:focus{border-color:var(--accent);color:var(--accent);outline:none}
+  .lhw[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);
+       white-space:nowrap;background:var(--ink);color:var(--ground);font-family:var(--sans);font-size:11px;font-weight:600;
+       padding:4px 8px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .1s;z-index:30;box-shadow:var(--shadow)}
+  .lhw[data-nm]:hover::after,.lhw[data-nm]:focus::after{opacity:1}
+  .labtbl{margin:12px 0 0}
+  .labtbl table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+  .labtbl td{padding:5px 0;border-top:1px solid var(--line-soft);color:var(--muted)}
+  .labtbl td:last-child{text-align:right;color:var(--ink);font-weight:700}
+  .labnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
+  .uni{margin:18px 0 0;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;
+       padding:11px 14px;font-size:12.5px;color:var(--ink-2);line-height:1.6}
+  .uni b{color:var(--ink)}
+  .uni .unin{display:block;margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--muted)}
   .views{display:flex;gap:4px;margin:22px 0 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .vtab{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 14px;text-decoration:none;
         color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;
@@ -908,16 +930,10 @@
     <div class="statline" id="statline"></div>
   </header>
 
-  <nav class="views" id="views" aria-label="보기 전환">
-    <button class="vtab" type="button" data-v="ledger">배포 전략<span class="vn" id="vn-ledger"></span></button>
-    <button class="vtab" type="button" data-v="runs">종목 전략<span class="vn" id="vn-runs"></span></button>
-    <button class="vtab" type="button" data-v="audit">자산배분 전략<span class="vn" id="vn-audit"></span></button>
-    <button class="vtab" type="button" data-v="rechk">기각 재검<span class="vn" id="vn-rechk"></span></button>
-  </nav>
+  <div class="uni" id="unibar"></div>
 
   <div class="idxref" id="idxref" hidden></div>
 
-  <div id="v-ledger">
   <div class="controls">
     <div class="searchrow">
       <label class="search">
@@ -950,56 +966,6 @@
     </div>
     <div class="detail" id="detail"></div>
     </div>
-  </div><!-- /v-ledger -->
-
-  <div id="lab">
-    <div id="v-runs" hidden>
-  <div class="statline" id="lab-statline"></div>
-  <div class="hardnote" id="limits"></div>
-
-  <div class="dupbox" id="dupbox" hidden></div>
-
-  <section aria-labelledby="run-h">
-    <h2 id="run-h" class="sech">종목 전략 <span id="runsub"></span></h2>
-    <p class="viewlede">나스닥100·S&amp;P500 <b>518종목 중에서 고르는</b> 규칙입니다. 월말에 조건에 맞는 <b>상위 10종목</b>을 동일가중으로 담고 다음 월말에 다시 뽑습니다. 타이밍 규칙은 종목을 고르는 대신 <b>시장 전체 노출</b>을 켜고 끕니다.</p>
-    <p class="sechn">벤치마크는 <b>동일가중 유니버스 매수후보유</b>입니다. Δ샤프는 그 대비 차이,
-      t는 일간 초과수익의 대응표본 t값입니다. 정렬은 Δ샤프 순 — <b>순위가 곧 추천이 아닙니다.</b></p>
-    <div class="frow" id="kchips"></div>
-    <div id="runs"><div class="skel">불러오는 중…</div></div>
-  </section>
-
-    </div>
-    <div id="v-audit" hidden>
-  <section aria-labelledby="norun-h">
-    <h2 id="norun-h" class="sech">자산배분 전략 <span id="norunsub"></span></h2>
-    <p class="viewlede">개별 종목이 아니라 <b>ETF·지수 같은 자산</b>을 굴리는 규칙입니다. 주식·채권·금·원자재를 어떤 비중으로 들지, 언제 현금으로 빠질지를 정합니다. 구간이 전략마다 다른 건 쓰는 ETF의 상장일에 묶이기 때문입니다.</p>
-    <p class="sechn">여기 있던 38건은 <b>이 저장소 데이터로는 재현할 수 없다</b>고 적혀 있었습니다.
-      다시 점검하니 대부분은 <b>데이터가 세상에 없어서가 아니라 이 저장소가 안 갖고 있었을 뿐</b>이었습니다 —
-      ETF 가격(yfinance)과 거시(FRED 공개 CSV, 키 불필요), 연준 EBP까지 전부 무료·무인증으로 열립니다.
-      자산 패널을 만들어 <b>돌릴 수 있는 것은 실제로 돌렸습니다</b>. 아직 못 도는 것은
-      <b>가능하나 아직 안 만든 것</b>과 <b>유료 데이터라 불가한 것</b>을 구분해 적습니다 —
-      섞어두면 영원히 안 하게 되기 때문입니다. 미실행으로 남겨뒀던 4건(크로스에셋 캐리·머신러닝 2종·13F 복제)도
-      전부 돌렸습니다. 머신러닝은 <b>규약을 코드에 먼저 박고 한 번만</b> 돌렸고, 검정 구간이 2년에 못 미치는 건은
-      숫자를 싣되 <b>판정하지 않습니다</b>.</p>
-    <div class="statline" id="auditstat"></div>
-    <div class="frow" id="achips"></div>
-    <div id="noruns"><div class="skel">불러오는 중…</div></div>
-  </section>
-
-    </div>
-    <div id="v-rechk" hidden>
-  <section aria-labelledby="rechk-h">
-    <h2 id="rechk-h" class="sech">기각 재검 <span id="rechksub"></span></h2>
-    <p class="viewlede">한 번 기각한 전략을 <b>단독으로 다시</b> 검정한 결과입니다. 원래 기각 사유가 "배포 포트폴리오에 얹으면 개선이 없다"는 <b>상대 판정</b>이었기 때문에, 전략 자체가 나쁜 것인지 따로 확인한 것입니다.</p>
-    <p class="sechn">여기 있던 기각 사유의 상당수는 <b>"배포 포트폴리오에 얹었을 때 개선이 없다"</b>는
-      <b>상대적</b> 판정이었습니다. 그래서 각 전략을 <b>단독</b>으로, 자기 유니버스 대조군(동일 실현변동성으로 맞춘 계열)과
-      다시 검정했습니다. <b id="rechkv">—</b> — 시계열을 남긴 것만 싣습니다.</p>
-    <div id="rechks"><div class="skel">불러오는 중…</div></div>
-  </section>
-
-    </div>
-  </div>
-  </div>
 
   <footer>
     여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증 · 전략마다 <b>성격에 맞는 1차 지표</b>로 판단합니다<br>
@@ -1043,8 +1009,25 @@
     marginal:{lab:"조건부 · 목적이 맞을 때",short:"제한적 유효",orig:"제한적 유효",col:"--marg",
               mean:"효과는 확인됐으나 단독으론 약함 — 보조·결합용"},
     reject:{lab:"미채택 (대조용)",short:"기각(대조용)",orig:"기각",col:"--rej",
-            mean:"비용·검증을 거치면 배포 실익이 없음 · 비교 기준으로만 게시"}};
-  var VORDER={deploy:0,marginal:1,reject:2};
+            mean:"비용·검증을 거치면 배포 실익이 없음 · 비교 기준으로만 게시"},
+    // ── 랩에서 온 판정 ── 같은 배지 체계로 받는다. 다른 말로 적으면 같은 판정이 달라 보인다.
+    pass:{lab:"통과 후보",short:"통과 후보",orig:"통과 후보",col:"--deploy",
+          mean:"다중검정 보정까지 넘었다 — 다만 배포 결정과는 별개다"},
+    inverse:{lab:"역방향으로 유의",short:"역방향 유의",orig:"역방향 유의",col:"--marg",
+             mean:"관례와 반대 방향으로 문턱을 넘었다 — 방향을 결과 보고 정했으므로 가설이다"},
+    tie:{lab:"구별 불가",short:"구별 불가",orig:"구별 불가",col:"--muted",
+         mean:"대조군과 통계적으로 갈리지 않는다"},
+    few:{lab:"소수 사건 의존",short:"소수 사건 의존",orig:"소수 사건 의존",col:"--marg",
+         mean:"상위 몇 건을 빼면 엣지가 사라진다"},
+    worse:{lab:"대조군 열위",short:"열위",orig:"열위",col:"--rej",
+           mean:"자기 대조군보다 나쁘다"},
+    nojudge:{lab:"판정 불가",short:"판정 불가",orig:"판정 불가",col:"--muted",
+             mean:"표본이 짧아 실력과 운을 가를 수 없다"}};
+  var VORDER={deploy:0,marginal:1,pass:2,inverse:3,tie:4,few:5,worse:6,reject:7,nojudge:8};
+  // 통합 인덱스의 등급 문자열 → 위 키
+  var GKEY={"배포":"deploy","제한적 유효":"marginal","통과 후보":"pass","역방향 유의":"inverse",
+            "구별 불가":"tie","소수 사건 의존":"few","열위":"worse","미채택":"reject",
+            "판정 불가":"nojudge"};
   D.forEach(function(d,i){d._i=i;});
 
   // ── 성격(kind) 축 — data/strategy_kinds.json 이 단일 출처. 도착 전에는 '미분류'로 렌더된다. ──
@@ -1115,14 +1098,67 @@
     b.innerHTML=label+(cnt!=null?' <span class="cnt">'+cnt+'</span>':'');
     b.addEventListener('click',onclick); return b;
   }
-  (function(){
-    var vf=el('vfilters');
-    ['deploy','marginal','reject'].forEach(function(v){
+  function buildVChips(){
+    var vf=el('vfilters'); if(!vf)return;
+    // 랩 전략이 나중에 붙으면 개수가 달라진다 — 통째로 다시 만든다(칩이 옛 개수를 말하면 안 된다)
+    [].slice.call(vf.querySelectorAll('.fchip')).forEach(function(x){x.remove();});
+    Object.keys(VORDER).sort(function(a,b){return VORDER[a]-VORDER[b];}).forEach(function(v){
       var cnt=D.filter(function(d){return d.v===v;}).length;
-      if(!cnt)return; // 개수 0인 판정(기각 등)은 칩 생성 안 함 — 죽은 필터 방지
-      vf.appendChild(chip('v-'+v,VMETA[v].short,cnt,false,function(){toggle(state.vf,v);render();syncPressed();fltLabel();}));
+      if(!cnt)return; // 개수 0인 판정은 칩 생성 안 함 — 죽은 필터 방지
+      vf.appendChild(chip('v-'+v,VMETA[v].short,cnt,state.vf.has(v),function(){toggle(state.vf,v);render();syncPressed();fltLabel();}));
     });
+  }
+  window.__rebuildChips=function(){
+    buildVChips();
+    // 성격·용도·벤치 칩도 개수가 달라지므로 다시 만든다
+    try{ if(typeof buildKindFilter==='function')buildKindFilter(); }catch(e){}
+    try{ if(typeof buildArchetypeFilter==='function')buildArchetypeFilter(); }catch(e){}
+    try{ if(typeof buildBenchFilter==='function')buildBenchFilter(); }catch(e){}
+    try{ syncPressed(); }catch(e){}
+  };
+  buildVChips();
+
+  // ── 통합 ── 배포 원장 14건 옆에 랩 전략 75건을 같은 목록으로 붙인다(2026-07-26).
+  // 예전엔 탭 4개로 나눠져 있었는데, 그 나눔은 '전략이 무엇을 하는가'가 아니라
+  // '어느 파일에서 나왔는가'를 따른 것이었다 — 보는 사람에겐 같은 것을 네 번 보여주는 셈이다.
+  // 성격(수익엔진·배분기·위험감축·방어보험·타이밍오버레이)을 첫 축으로 삼아 한 목록에 넣는다.
+  (function(){
+    fetch('data/strategy_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(ix){
+        if(!ix||!ix.items)return;
+        var add=ix.items.filter(function(x){return x.src!=='배포 원장';});
+        add.forEach(function(x){
+          var m=x.metrics||{}, b=x.bench||{};
+          // 기존 렌더러가 기대하는 모양으로 맞춘다 — det.kind(성격) · bt(성적·곡선).
+          // 수치는 인덱스에서 그대로 옮기고 여기서 만들지 않는다.
+          var d={
+            n:x.name, sid:x.sid, aka:x.aka||[], alias:x.rule||'', c:x.cat||x.src,
+            v:(GKEY[x.grade]||'nojudge'), m:null, ml:null, corr:null,
+            t:x.rule||'', vt:(x.why||'')+(x.note?' <em>'+x.note+'</em>':''),
+            _lab:true, _src:x.src, _hold:x.holdings||null,
+            det:{kind:x.role||'미분류'},
+            bt:{ start:x.start, end:x.end, bench_label:b.label||'대조군',
+                 nav:x.nav||null, bench:x.bnav||null,
+                 metrics:{ s:{cagr:m.cagr,sharpe:m.sharpe,mdd:m.mdd,vol:m.vol},
+                           b:{cagr:b.cagr,sharpe:b.sharpe,mdd:b.mdd,label:b.label},
+                           basis:{} } },
+            _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable
+          };
+          d._i=D.length; D.push(d);
+        });
+        // 필터 칩은 D를 세어 만들었으므로 다시 만든다
+        if(window.__rebuildChips)window.__rebuildChips();
+        render();
+        var u=el('unibar');
+        if(u)u.innerHTML='<b>'+D.length+'개 전략</b>을 <b>성격</b>으로 묶어 한 목록에 놓았습니다 — '+
+          '무엇을 하는 전략인지가 같아야 숫자를 나란히 볼 수 있기 때문입니다. '+
+          '<span class="unin">배포 원장 '+(D.length-add.length)+' · 종목 '+
+          add.filter(function(x){return x.src==='종목 전략';}).length+' · 자산배분 '+
+          add.filter(function(x){return x.src==='자산배분';}).length+' · 기각 재검 '+
+          add.filter(function(x){return x.src==='기각 재검';}).length+'</span>';
+      })['catch'](function(){});
   })();
+
   function toggle(set,k){set.has(k)?set.delete(k):set.add(k);}
   function syncPressed(){
     document.querySelectorAll('#vfilters .fchip').forEach(function(b){
@@ -1710,7 +1746,43 @@
     var vbg="var("+(d.v==="deploy"?"--deploy-bg":d.v==="marginal"?"--marg-bg":"--rej-bg")+")";
     var det=d.det||null, k=kindOf(d), km=kmeta(k);
     var play='';
-    if(det){
+    // ── 랩 전략 전용 블록 ── 배포 원장은 플레이북(det)이 있지만 랩 전략은 없다.
+    // 대신 이쪽에만 있는 것을 보인다 — 대조군 대비 차이·t값·회전율·지금 보유.
+    if(d._lab){
+      var labRows=[];
+      if(d._d!=null)labRows.push(['Δ샤프 (대조군 대비)',(d._d>0?'+':'')+Number(d._d).toFixed(3)]);
+      if(d._t!=null)labRows.push(['t값',Number(d._t).toFixed(2)]);
+      if(d._beta!=null)labRows.push(['실측 베타',Number(d._beta).toFixed(2)]);
+      if(d._turn!=null)labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회']);
+      var h=d._hold, holdHtml='';
+      if(h){
+        if(h.kind==='timing'){
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+            '</span><b>노출 '+Number(h.exposure_now||0).toFixed(1)+'%</b>'+
+            (h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
+        }else if(h.weights){
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+            '</span><div class="lhs">'+h.weights.map(function(w){
+              return '<span class="lhw">'+esc(w[0])+'<b>'+Number(w[1]).toFixed(1)+'%</b></span>';}).join('')+
+            '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
+        }else if(h.tickers){
+          var nm=h.names||{};
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+            '</span><b>'+h.tickers.length+'종목</b><div class="lhs">'+h.tickers.map(function(t){
+              return '<a class="lhw" href="co.html?t='+encodeURIComponent(t)+'"'+
+                     (nm[t]?' data-nm="'+esc(nm[t])+'"':'')+'>'+esc(t)+'</a>';}).join('')+
+            '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
+        }
+      }
+      play = holdHtml +
+        (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
+          return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
+          '</tbody></table>'+(d._unst?'<p class="labnote">대조군이 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+
+          '</div>':'') +
+        '<p class="labnote">출처: '+esc(d._src||'')+' · 이 전략은 배포북에 들어 있지 않습니다. '+
+        '숫자는 자기 대조군과의 비교이며, 구간이 전략마다 달라 세로로 비교하면 안 됩니다.</p>';
+    }
+    if(det && !d._lab){
       var sec=function(cls,title,arr){return (arr&&arr.length)?'<div class="play '+cls+'"><h4>'+title+'</h4><ul>'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>':'';};
       var st_=det.situations, sitHtml='';
       if(st_){

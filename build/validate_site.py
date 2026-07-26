@@ -347,6 +347,22 @@ if pool:
     except FileNotFoundError:
         pass
 
+    # 통합 전략 목록이 원본보다 낡았는지 — 워크플로에서 재생성을 빠뜨리면 랩만 옛 목록을 보여준다.
+    try:
+        _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
+        _want = 0
+        for _f, _k in (("tech_strategies.json", "strategies"), ("asset_strategies.json", "strategies"),
+                       ("deploy_index.json", "items"), ("archive_backtests.json", "strategies")):
+            _p = os.path.join(ROOT, "data", _f)
+            if os.path.exists(_p):
+                _v = json.load(io.open(_p, encoding="utf-8")).get(_k) or []
+                _want += len(_v)
+        if _want and _si.get("n") != _want:
+            errors.append(f"strategy_index: {_si.get('n')}개인데 원본 합계는 {_want}개 "
+                          f"— python build/strategy_index.py 를 다시 돌릴 것")
+    except FileNotFoundError:
+        pass
+
     for _rp in sorted(REDIRECTS):
         _rt = io.open(os.path.join(ROOT, _rp), encoding="utf-8").read()
         if "location.replace" not in _rt or "explorer.html" not in _rt:
