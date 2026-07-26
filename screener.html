@@ -1573,7 +1573,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
      if(!D||!D.rows){host.innerHTML='<div class="skel">선행 지표를 불러오지 못했습니다.</div>';return;}
      var NM=D.names||{}, R=D.rows;
      var sub=el('fwd-sub');
-     if(sub)sub.textContent='· '+D.n+'/'+D.n_uni+'종목 · 기준 '+D.as_of+' · 스냅 '+((D.snaps||[]).length)+'일 누적';
+     // '기준'이 아니라 '수집'이다 — 애널리스트 추정은 시장 날짜가 아니라 받아온 날짜로만
+     // 의미가 있고, 기준일로 적으면 대표 기준일(마지막 거래일)보다 앞서 보인다.
+     if(sub)sub.textContent='· '+D.n+'/'+D.n_uni+'종목 · 수집 '+D.as_of+' · 스냅 '+((D.snaps||[]).length)+'일 누적';
      var h='<div class="fwdgrid">';
      BOARDS.forEach(function(b){
        var arr=[];
