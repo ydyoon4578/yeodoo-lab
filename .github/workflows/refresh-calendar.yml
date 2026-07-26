@@ -9,7 +9,7 @@ name: Refresh release calendar (FRED)
 
 on:
   schedule:
-    - cron: '15 0 * * 6'    # 매주 토 09:15 KST
+    - cron: '45 0 * * 6'    # 매주 토 09:45 KST
   workflow_dispatch:
 
 permissions:

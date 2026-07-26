@@ -10,7 +10,7 @@ name: Refresh technical strategy lab
 
 on:
   schedule:
-    - cron: '45 0 * * 6'    # 매주 토 09:45 KST
+    - cron: '15 1 * * 6'    # 매주 토 10:15 KST
   workflow_dispatch:
 
 permissions:

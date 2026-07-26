@@ -11,7 +11,7 @@ name: Refresh 13F holdings (SEC)
 
 on:
   schedule:
-    - cron: '25 0 * * 6'    # 매주 토 09:25 KST
+    - cron: '55 0 * * 6'    # 매주 토 09:55 KST
   workflow_dispatch:
 
 permissions:

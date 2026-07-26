@@ -1,0 +1,138 @@
+{
+ "note": "갱신 주기 라벨의 단일 출처 — .github/workflows/*.yml의 cron에서 파생. 손으로 고치지 말 것(python build/schedule_index.py로 재생성).",
+ "rows": {
+  "src-rot": "수시 (자동 잡 아님)",
+  "src-bt": "수시(정적)",
+  "src-guru": "매주 토 09:55 KST",
+  "src-cal": "매주 토 09:45 KST",
+  "src-fx": "매주 토 09:25 KST",
+  "src-fil": "매주 토 09:15 KST",
+  "src-hold": "매월 2일 09:10 KST",
+  "src-ins": "매주 토 09:35 KST",
+  "src-rg": "매일(월~토) 08:55 KST",
+  "src-snt": "매일(월~토) 09:05 KST",
+  "src-stk": "매일(월~토) 08:45 KST"
+ },
+ "jobs": {
+  "refresh-13f.yml": {
+   "cron": [
+    "55 0 * * 6"
+   ],
+   "label": [
+    "매주 토 09:55 KST"
+   ]
+  },
+  "refresh-assets.yml": {
+   "cron": [
+    "25 1 * * 6"
+   ],
+   "label": [
+    "매주 토 10:25 KST"
+   ]
+  },
+  "refresh-calendar.yml": {
+   "cron": [
+    "45 0 * * 6"
+   ],
+   "label": [
+    "매주 토 09:45 KST"
+   ]
+  },
+  "refresh-earnings.yml": {
+   "cron": [
+    "35 23 * * 0-5"
+   ],
+   "label": [
+    "매일(월~토) 08:35 KST"
+   ]
+  },
+  "refresh-estimates.yml": {
+   "cron": [
+    "10 0 * * 1-6"
+   ],
+   "label": [
+    "매일(월~토) 09:10 KST"
+   ]
+  },
+  "refresh-facts.yml": {
+   "cron": [
+    "25 0 * * 6"
+   ],
+   "label": [
+    "매주 토 09:25 KST"
+   ]
+  },
+  "refresh-filings.yml": {
+   "cron": [
+    "15 0 * * 6"
+   ],
+   "label": [
+    "매주 토 09:15 KST"
+   ]
+  },
+  "refresh-holdings.yml": {
+   "cron": [
+    "10 0 2 * *"
+   ],
+   "label": [
+    "매월 2일 09:10 KST"
+   ]
+  },
+  "refresh-insider.yml": {
+   "cron": [
+    "35 0 * * 6"
+   ],
+   "label": [
+    "매주 토 09:35 KST"
+   ]
+  },
+  "refresh-members.yml": {
+   "cron": [
+    "30 23 * * 5"
+   ],
+   "label": [
+    "매주 토 08:30 KST"
+   ]
+  },
+  "refresh-metrics.yml": {
+   "cron": [
+    "5 1 * * 6"
+   ],
+   "label": [
+    "매주 토 10:05 KST"
+   ]
+  },
+  "refresh-regime.yml": {
+   "cron": [
+    "55 23 * * 0-5"
+   ],
+   "label": [
+    "매일(월~토) 08:55 KST"
+   ]
+  },
+  "refresh-sentiment.yml": {
+   "cron": [
+    "5 0 * * 1-6"
+   ],
+   "label": [
+    "매일(월~토) 09:05 KST"
+   ]
+  },
+  "refresh-stocks.yml": {
+   "cron": [
+    "45 23 * * 0-5"
+   ],
+   "label": [
+    "매일(월~토) 08:45 KST"
+   ]
+  },
+  "refresh-tech.yml": {
+   "cron": [
+    "15 1 * * 6"
+   ],
+   "label": [
+    "매주 토 10:15 KST"
+   ]
+  }
+ }
+}

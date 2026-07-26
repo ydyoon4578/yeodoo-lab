@@ -1,10 +1,10 @@
 name: Refresh strategy holdings (free data)
 
-# 월말 리밸런스 구성이라 월 1회면 충분 — 매월 1일 08:25 KST(+2일 백업 슬롯, cron 신뢰성).
+# 월말 리밸런스 구성이라 월 1회면 충분 — 매월 2일 09:10 KST(월말 종가 확정 후 여유).
 # ⚠ 데이터 정책: build/refresh_holdings.py는 yfinance(무료)만 사용 — 라이선스 데이터 파생 보유는 공개 금지.
 on:
   schedule:
-    - cron: '40 23 1 * *'    # 매월 2일 08:40 KST
+    - cron: '10 0 2 * *'    # 매월 2일 09:10 KST (UTC 자정 넘어 1일→2일)
   workflow_dispatch:
 
 permissions:

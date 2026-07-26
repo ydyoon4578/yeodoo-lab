@@ -1283,6 +1283,32 @@ if skips and os.environ.get("VALIDATE_REQUIRE_PLAINTEXT") == "1":
 if skips:
     print(f"⚠ 잠금 페이지 평문 부재(_build/pages/) — {len(skips)}개 검사 건너뜀(통과가 아니라 미검증이다. 평문 있는 곳에서 검증할 것):")
     for s in sorted(skips): print("  ~", s)
+# ── 갱신 주기 라벨: 워크플로 cron이 단일 출처인가 ──────────────────────────
+#   손으로 적던 시절 cron을 바꿔도 라벨이 안 따라와 전면적으로 어긋나 있었다(2026-07-25 실측:
+#   SEC 공시 10:15↔실제 08:45, 13F 12:15↔09:25, 없어진 백업 크론 '08:35 + 09:10' 표기 등).
+#   ① schedule.json이 현재 cron과 일치하는가 ② sources.html이 시각을 하드코딩하지 않는가.
+try:
+    sys.path.insert(0, os.path.join(ROOT, "build"))
+    import schedule_index
+    _fresh = schedule_index.build()
+    _cur = json.load(io.open(os.path.join(ROOT, "data", "schedule.json"), encoding="utf-8"))
+    if _cur != _fresh:
+        errors.append("갱신 주기 라벨이 워크플로 cron과 어긋남 — python build/schedule_index.py 로 다시 구울 것")
+    # 표·상세 카드에 시각을 다시 적어 넣으면 드리프트가 재발한다.
+    #   ⚠ strip_js()에 HTML 전체를 넘기면 안 된다 — 속성 따옴표를 JS 문자열로 오인해 본문을
+    #     통째로 지워, 검사가 아무것도 못 잡는다(음성 테스트로 확인). 주석만 걷어내고 본문은 남긴다.
+    #     JS 문자열도 남겨야 화면에서 하드코딩하는 우회까지 잡힌다.
+    _sh = re.sub(r"(?s)<!--.*?-->", "", rd("sources.html"))     # HTML 주석
+    _sh = re.sub(r"(?m)^\s*//.*$", "", _sh)                      # 줄머리 JS 주석(URL의 // 는 보존)
+    _sh = re.sub(r"(?s)/\*.*?\*/", "", _sh)                      # JS 블록 주석
+    _hard = re.findall(r"(?:매일|매주|매월)[^<>\n]{0,14}\d{2}:\d{2}\s*KST", _sh)
+    if _hard:
+        errors.append(f"sources.html에 갱신 시각 하드코딩 {_hard[:3]} — data/schedule.json에서 읽을 것")
+except SystemExit as e:
+    errors.append(f"갱신 주기 라벨 생성 실패(워크플로 매핑 누락 등): {e}")
+except Exception as e:
+    errors.append(f"갱신 주기 라벨 검증 실패: {e}")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
