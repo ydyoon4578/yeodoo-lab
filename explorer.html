@@ -94,8 +94,21 @@
   .listwrap{display:flex;flex-direction:column;gap:7px;max-height:76vh;overflow-y:auto;padding-right:4px}
   .listwrap::-webkit-scrollbar{width:8px}.listwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
   /* 백테스트 컨벤션은 숫자를 보는 자리에 — 홈에 적어두면 정작 성과를 볼 때 안 보인다 */
-  .basisnote{font-size:11px;color:var(--muted);line-height:1.6;margin:0 2px 8px;padding:7px 10px;background:var(--panel-2,var(--panel));border:1px solid var(--line-soft,var(--line));border-radius:8px}
-  .basisnote b{color:var(--ink-2)}
+  /* 전제·한계 — 지우지 않고 접는다. 접힌 줄에 결론(무비용 기준 · 유의 0건)이 남으므로
+     열지 않아도 오해할 수 없고, 목록 위 8줄이 1줄이 된다. */
+  .prenote{font-size:11.5px;margin:0 2px 8px;padding:7px 11px;border-radius:8px;
+           background:var(--panel-2,var(--panel));border:1px solid var(--line-soft,var(--line))}
+  .prenote>summary{cursor:pointer;color:var(--ink-2);line-height:1.55;list-style:none;
+                   display:flex;gap:7px;align-items:baseline}
+  .prenote>summary::-webkit-details-marker{display:none}
+  .prenote>summary::before{content:"\25B8";font-size:9px;color:var(--muted);transition:transform .12s;flex:none}
+  .prenote[open]>summary::before{transform:rotate(90deg)}
+  .prenote>summary b{color:var(--accent)}
+  .prenote .prebody{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft,var(--line));
+                    font-size:11.5px;color:var(--ink-2);line-height:1.65}
+  .prenote .prebody p{margin:0 0 7px}
+  .prenote .prebody p:last-child{margin-bottom:0}
+  .prenote .prebody b{color:var(--ink)}
   .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 2px 3px;text-transform:uppercase;letter-spacing:.08em}
   .item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:11px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
   .item:hover{border-color:var(--accent)}
@@ -300,9 +313,6 @@
   .limbox{margin:18px 0 2px;padding:13px 15px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line-soft)}
   .limbox h4{margin:0 0 8px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
   .limbox p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-2);white-space:pre-line}
-  .pgnote{font-size:11.5px;color:var(--ink-2);line-height:1.65;margin:0 2px 8px;padding:8px 11px;border-radius:8px;
-          background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
-  .pgnote b{color:var(--accent)}
   /*a11y-fixes*/
   @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--ground)}}
   :root[data-theme="dark"] .fchip[aria-pressed="true"]{color:var(--ground)}
@@ -449,6 +459,12 @@
 body{font-family:var(--sans);letter-spacing:-.003em}
 h1,h2,h3,h4{letter-spacing:-.02em}
 h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-height:1.14}
+/* 큰 제목은 본문 글꼴로. 고정폭 스택에서 한글은 Pretendard로, 라틴·숫자는 SF Mono로 떨어져
+   한 제목 안에 두 글꼴이 섞인다("… RP 통합 (Multi-Sleeve Core)"가 그렇게 보였다).
+   작은 머리글(h4 등)은 라틴 약어가 대부분이라 그대로 둔다.
+   :not(._)은 특이도를 페이지 규칙(.dtop h2 같은 것)과 맞추려고 붙였다 — 요소 선택자만으로는
+   페이지 쪽이 이긴다. !important를 쓰지 않으려는 최소 장치다. */
+:is(h1,h2):not(._){font-family:var(--sans);letter-spacing:-.025em}
 .eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em}
 .lbl{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.012em;text-transform:none;color:var(--ink)}
 .lbl::before{height:16px}
@@ -765,12 +781,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <div class="board">
     <div>
-      <div class="basisnote">백테스트 수치는 <b>무비용·월말(gross)</b> 기준 — 거래비용·세금 미반영, 월말 리밸런싱. 지표 <b>기준월은 14종 전부 2026-06으로 통일</b>돼 있고 시작월만 전략별로 다릅니다(각 패널에 표기).</div>
-      <div class="pgnote"><b>먼저 알아두실 것</b> — 게시된 전략 중 <b>샤프 차이가 통계적으로 유의한 것은 현재 0건</b>입니다.
-        이는 전략들이 나쁘다는 뜻이 아니라, 10~20년 표본으로 샤프 차이를 판정하는 것이 <b>원리적으로 어렵다</b>는 뜻입니다
-        (필요 표본이 대개 수백 년입니다 — 각 카드의 「이 표본이 판정할 수 있는 범위」에 실제 필요량을 적었습니다).
-        그래서 <b>성격별 1차 지표·낙폭·위기 구간</b>을 함께 싣습니다 — 다만 이것들은 <b>유의성을 대신하지 않습니다.</b>
-        검정이 답하지 못하는 영역을 서술한 것일 뿐이며, 「구별 불가」는 더 좋을 수도 더 나쁠 수도 있다는 <b>양방향</b> 진술입니다.</div>
+      <details class="prenote">
+        <summary><b>무비용·월말(gross) 기준</b> · 게시 전략 중 <b>샤프 차이가 통계적으로 유의한 것은 현재 0건</b></summary>
+        <div class="prebody">
+          <p>거래비용·세금 미반영, 월말 리밸런싱. 지표 <b>기준월은 14종 전부 2026-06으로 통일</b>돼 있고 시작월만 전략별로 다릅니다(각 패널에 표기).</p>
+          <p>유의 0건은 전략들이 나쁘다는 뜻이 아니라, 10~20년 표본으로 샤프 차이를 판정하는 것이 <b>원리적으로 어렵다</b>는 뜻입니다
+          (필요 표본이 대개 수백 년입니다 — 각 카드의 「이 표본이 판정할 수 있는 범위」에 실제 필요량을 적었습니다).
+          그래서 <b>성격별 1차 지표·낙폭·위기 구간</b>을 함께 싣습니다 — 다만 이것들은 <b>유의성을 대신하지 않습니다.</b>
+          검정이 답하지 못하는 영역을 서술한 것일 뿐이며, 「구별 불가」는 더 좋을 수도 더 나쁠 수도 있다는 <b>양방향</b> 진술입니다.</p>
+        </div>
+      </details>
       <div class="rowcount" id="rowcount"></div>
       <div class="listwrap" id="list" role="listbox" aria-label="전략 목록"></div>
     </div>
