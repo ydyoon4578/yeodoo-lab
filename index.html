@@ -186,7 +186,13 @@
            font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2)}
   .caldate em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--accent)}
   .calcell .cnt{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
-  .caltk{display:flex;flex-wrap:wrap;gap:3px}
+  .caltk{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .caltk+.caltk{margin-top:4px;padding-top:4px;border-top:1px dotted var(--line-soft)}
+  /* 줄머리 라벨 — 색만으로는 '장후'와 '시각 미공개'가 안 갈린다는 지적. 글자로도 적는다.
+     칸이 좁으므로 라벨은 최소 폭으로 두고 줄바꿈되지 않게 고정한다. */
+  .calhl{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:-.02em;
+         flex:none;white-space:nowrap;opacity:.85}
+  .calhl.bmo{color:var(--accent)} .calhl.amc{color:var(--champ)} .calhl.tba{color:var(--muted)}
   .calmac{font-size:10.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line-soft);padding-top:5px;margin-top:auto}
   .calmac b{color:var(--ink-2);font-weight:600}
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
@@ -1020,12 +1026,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var f=function(v){return v==null?'':'<i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i>';};
             return '<span class="calix">'+f(q.s)+f(q.n)+'</span>';})()+
           (n===0?'<em>오늘</em>':(n>0&&n<=7?'<em>D-'+n+'</em>':''))+'</div>'+
-          (ev.length?'<div class="caltk">'+ev.slice(0,9).map(function(x){
-            var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
-            var hc=x.hour==='장전'?' bmo':(x.hour==='장후'?' amc':' tba');
-            return '<a class="tk2'+hc+'" href="co.html?t='+encodeURIComponent(x.t)+
-                   '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):'')+esc(mc)+'">'+esc(x.t)+'</a>';
-          }).join('')+(ev.length>9?'<span class="cnt">+'+(ev.length-9)+'</span>':'')+'</div>':'')+
+          // 발표 시각별로 줄을 나눈다 — 색만 다르고 한 줄에 섞여 있으면 '장 끝나고 나오는
+          // 것'과 '시각을 모르는 것'이 눈으로 안 갈린다. 남는 개수도 줄마다 따로 적는다
+          // (한 덩어리로 '+37'만 적으면 어느 시각이 잘렸는지 알 수 없다).
+          (function(){
+            if(!ev.length)return '';
+            var G=[['장전','bmo'],['장후','amc'],['미공개','tba']], PER=4, out='';
+            G.forEach(function(g){
+              var list=ev.filter(function(x){
+                return g[0]==='미공개'?!(x.hour==='장전'||x.hour==='장후'):x.hour===g[0];});
+              if(!list.length)return;
+              out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
+                list.slice(0,PER).map(function(x){
+                  var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
+                  return '<a class="tk2 '+g[1]+'" href="co.html?t='+encodeURIComponent(x.t)+
+                         '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):' · 시각 미공개')+esc(mc)+'">'+esc(x.t)+'</a>';
+                }).join('')+
+                (list.length>PER?'<span class="cnt">+'+(list.length-PER)+'</span>':'')+'</div>';
+            });
+            return out;
+          })()+
           (mc.length?'<div class="calmac"><b>'+esc(mc.join(' · '))+'</b></div>':'')+
           '</div>';
       }
