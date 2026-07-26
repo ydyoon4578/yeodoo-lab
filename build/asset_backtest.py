@@ -20,7 +20,7 @@ import datetime as dt
 import io, json, math, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tech_backtest import ann_stats, tstat, maxdd  # noqa: E402  정의를 복제하지 않는다
+from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402  정의를 복제하지 않는다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -148,7 +148,8 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     #   작은 수익 차이가 샤프 몇 단위로 증폭된다(실측: MNA vs SHY에서 Δ샤프 +1.67).
     #   그 경우 Δ샤프를 판정에 쓰지 않고 t만 본다. 화면에도 그 사실을 표시한다.
     unstable = (mb.get("vol") or 0) < 2.0
-    return {"name": label, "rule": rule, "why": why, "note": note,
+    chart = curve_pack(dd, nav, bnav)
+    return {"name": label, "rule": rule, "why": why, "note": note, "chart": chart,
             "start": DTS[start], "end": DTS[-1], "n_days": n - start,
             "metrics": ms, "bench": mb, "bench_label": bench_label,
             "bench_unstable": unstable, "holdings": hold_now,
@@ -496,6 +497,7 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
+                "chart": curve_pack(dd, nav, bn),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("SPY(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
@@ -610,6 +612,7 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 보유 (QQQ 종가→시가)",
+                "chart": curve_pack(dd, nav, bn),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("QQQ(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
@@ -750,6 +753,7 @@ def build():
         step = max(1, len(nav) // 220)
         we_, wr_ = wfn(len(months) - 1, months, rs)
         return {"name": name, "rule": rule, "why": why, "note": note,
+                "chart": curve_pack(months, nav, bn),
                 "holdings": {"kind": "sleeve", "as_of": months[-1],
                              "weights": [("EPS 리비전 드리프트", round(we_ * 100, 1)),
                                          ("크로스에셋 리스크패리티", round(wr_ * 100, 1))],

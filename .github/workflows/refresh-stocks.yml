@@ -36,6 +36,10 @@ jobs:
       # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
       - name: Rebuild unified strategy index
         run: python build/strategy_index.py
+      # 랩 상세 차트는 목록과 분리된 지연 로딩 파일이다 — 목록만 다시 굽고 이걸 빠뜨리면
+      # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
+      - name: Rebuild lab charts
+        run: python build/strategy_charts.py
       - name: Rebuild as-of index
         # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
         # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
@@ -49,7 +53,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/sd data/target_history.json \
-            data/signal_lab.json data/home_flow.json data/strategy_index.json data/asof.json
+            data/signal_lab.json data/home_flow.json data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.

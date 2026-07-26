@@ -177,6 +177,57 @@ def idio_vol(rs, mkt, i, n=120):
     return (sum((x - mu) ** 2 for x in res) / max(1, len(res) - 1)) ** 0.5
 
 
+def curve_pack(dates, nav, bnav, k=110):
+    """카드에 그릴 곡선 묶음 — 날짜·전략·대조군·낙폭·연도별.
+
+    ⚠ 낙폭은 **전체 계열에서 먼저 계산하고** 그 다음에 줄인다. 줄인 곡선에서 낙폭을 다시 재면
+      골짜기가 표본에서 빠져 얕아지고, 그러면 그림이 카드에 적힌 MDD와 어긋난다. 줄일 때도
+      구간 최소값을 고르므로 최악의 골은 반드시 살아남는다.
+    """
+    n = min(len(dates), len(nav), len(bnav))
+    if n < 3:
+        return None
+    dates, nav, bnav = dates[:n], nav[:n], bnav[:n]
+
+    def ddser(a):
+        out, pk = [], a[0]
+        for v in a:
+            if v > pk:
+                pk = v
+            out.append(round((v / pk - 1) * 100, 1) if pk else 0.0)
+        return out
+    dd, ddb = ddser(nav), ddser(bnav)
+
+    step = max(1, n // k)
+    idx = list(range(0, n, step))
+    if idx[-1] != n - 1:
+        idx.append(n - 1)
+    def pick(a, worst=False):
+        out = []
+        for j, i in enumerate(idx):
+            hi = idx[j + 1] if j + 1 < len(idx) else i + 1
+            seg = a[i:max(hi, i + 1)]
+            out.append(min(seg) if (worst and seg) else a[i])
+        return out
+
+    # 연도별 — 그해 첫 관측 대비 마지막 관측. 첫해·마지막해는 부분 연도라 그렇게 표시한다.
+    yr = {}
+    for d, s_, b_ in zip(dates, nav, bnav):
+        y = d[:4]
+        if y not in yr:
+            yr[y] = [s_, b_, s_, b_]
+        yr[y][2], yr[y][3] = s_, b_
+    # 키 이름은 배포 원장의 yearly 스키마(r=전략 · b=대조군)에 맞춘다 — 화면의 막대차트가
+    # 그 이름을 그대로 읽으므로, 여기서 다른 이름을 쓰면 랩 전용 렌더러를 또 만들어야 한다.
+    yearly = [{"y": y, "r": round((v[2] / v[0] - 1) * 100, 2) if v[0] else None,
+               "b": round((v[3] / v[1] - 1) * 100, 2) if v[1] else None}
+              for y, v in sorted(yr.items())]
+    return {"dates": [dates[i] for i in idx], "nav": [round(nav[i], 1) for i in idx],
+            "bench": [round(bnav[i], 1) for i in idx],
+            "dd": pick(dd, True), "dd_b": pick(ddb, True), "yearly": yearly,
+            "partial": [yearly[0]["y"], yearly[-1]["y"]] if yearly else []}
+
+
 def maxdd(nav):
     peak, mdd = nav[0], 0.0
     for v in nav:
@@ -1101,6 +1152,9 @@ def run():
             "nav": [round(x, 2) for x in nav[::5]],
             "bnav": [round(x, 2) for x in bnav[::5]],
             "dates": d2[::5],
+            # 카드에 그릴 곡선 묶음 — 낙폭·연도별을 전체 계열에서 계산해 둔다.
+            # 화면이 줄인 곡선에서 다시 재면 카드에 적힌 MDD와 그림이 어긋난다.
+            "chart": curve_pack(d2, nav, bnav),
         })
 
     # ── 다중검정 임계 ────────────────────────────────────────────────
