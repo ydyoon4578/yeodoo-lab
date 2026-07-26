@@ -1027,6 +1027,30 @@ try:
 except Exception as e:
     errors.append(f"내비 정본 검사 실행 실패: {e}")
 
+# ── 공통 셸 정본: 23장이 같은 글꼴·중립색·타이포를 갖는가 ─────────────────────
+# 내비와 같은 이유다. 다만 셸은 **페이지 CSS 뒤에 붙어야만** 이기므로, 마커가 첫 </style>
+# 안에 있는지까지 본다 — 마지막 </style>(NAVCSS)에 들어가면 다음 sync_nav가 지운다.
+try:
+    import subprocess as _sp
+    _r = _sp.run([sys.executable, os.path.join(ROOT, "build", "sync_shell.py"), "--check"],
+                 capture_output=True, text=True)
+    if _r.returncode != 0:
+        _msg = ((_r.stdout or "") + (_r.stderr or "")).strip()
+        errors.append("공통 셸 드리프트 — build/sync_shell.py를 다시 돌릴 것: "
+                      + " / ".join(l.strip() for l in _msg.split("\n") if "셸 " not in l)[:300])
+    for _f in PAGES:
+        _t = plain(_f, "공통 셸 위치 검사")
+        if _t is None:
+            continue
+        _i, _c = _t.find("/* SHELL:BEGIN */"), _t.find("</style>")
+        if _i < 0:
+            errors.append(f"{_f}: 공통 셸 블록이 없다 — build/sync_shell.py를 돌릴 것")
+        elif _i > _c:
+            errors.append(f"{_f}: 공통 셸이 첫 </style> 뒤에 있다 — 페이지 CSS를 못 덮거나 "
+                          f"NAVCSS 구간에 들어가 다음 sync_nav 실행에서 지워진다")
+except Exception as e:
+    errors.append(f"공통 셸 검사 실행 실패: {e}")
+
 try:
     _ni = json.load(io.open(os.path.join(ROOT, "build", "nav_items.json"), encoding="utf-8"))
     _tools = [t for c in _ni.get("categories") or [] for t in c.get("tools") or []]
