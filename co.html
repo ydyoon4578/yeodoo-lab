@@ -709,7 +709,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function parseHash(){
     var h=(location.hash||'').replace(/^#/,'');
     var tab=h.split('&')[0].split('=')[0];
-    var m=h.match(/t=([A-Za-z0-9.\-]+)/);
+    // 티커는 해시에도, **쿼리에도** 올 수 있다. 이 사이트의 인바운드 링크(홈 캘린더·거장
+    // 포트폴리오 등 6곳)는 전부 co.html?t=XXX 형태인데 해시만 읽고 있어서 그 링크로 들어오면
+    // 종목이 하나도 선택되지 않았다 — 링크는 살아 있는데 화면은 빈 채로 열렸다.
+    var m=h.match(/t=([A-Za-z0-9.\-]+)/) || (location.search||'').match(/[?&]t=([A-Za-z0-9.\-]+)/);
     return {tab:(TABS.indexOf(tab)>=0?tab:null),t:(m?m[1].toUpperCase():null)};
   }
   function showTab(tab){
