@@ -32,6 +32,10 @@ jobs:
           python-version: '3.12'
       - name: Collect insider transactions
         run: python build/refresh_insider.py
+      # 홈은 원본 대신 슬림 묶음(build/home_flow.py)을 읽는다 — 원본이 바뀌면 같이 다시 굽는다.
+      # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
+      - name: Rebuild home slim bundle
+        run: python build/home_flow.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -39,7 +43,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 내부자 거래 자동 갱신" \
-            data/insider.json data/ins data/asof.json
+            data/insider.json data/ins data/home_flow.json data/asof.json
       # 이 축은 분기에 한 번 움직인다. 실측 지연이 25일이었으므로, 한 분기를 통째로
       # 건너뛴 경우(≈120일)에만 실패하도록 창을 넉넉히 잡는다.
       - name: Verify freshness
