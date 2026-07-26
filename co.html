@@ -1506,12 +1506,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var rows=lines.map(function(L){
         var last=L.pts[L.pts.length-1];
         var sur=(L.est!=null&&L.act!=null)?((L.act-L.est)/Math.abs(L.est)*100):null;
+        // 발표 직후라 아직 며칠 안 지났으면 '+10거래일 0.0%'로 적으면 안 된다 — 안 오른 것이
+        // 아니라 시간이 안 지난 것이다. 실제로 지난 거래일 수를 그대로 적는다.
+        var el_=last[0];
+        var cell=(el_<=0)?'<span class="qn2">아직</span>'
+                 :((last[1]-100>0?'+':'')+(last[1]-100).toFixed(1)+'% <span class="qn2">+'+el_+'일</span>');
         return '<tr><th scope="row">'+esc(L.dt)+(L.hour?' <span class="qn2">'+esc(L.hour)+'</span>':'')+'</th>'+
                '<td class="tnum">'+(sur==null?'—':(sur>0?'+':'')+sur.toFixed(1)+'%')+'</td>'+
-               '<td class="tnum">'+((last[1]-100)>0?'+':'')+(last[1]-100).toFixed(1)+'%</td></tr>';
+               '<td class="tnum">'+cell+'</td></tr>';
       }).join('');
       host.innerHTML='<svg class="qsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="발표 전후 주가">'+g+'</svg>'+
-        '<table class="tbl"><thead><tr><th scope="col">발표일</th><th scope="col">서프라이즈</th><th scope="col">+10거래일</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+        '<table class="tbl"><thead><tr><th scope="col">발표일</th><th scope="col">서프라이즈</th><th scope="col">발표 후</th></tr></thead><tbody>'+rows+'</tbody></table>'+
         '<p class="qn">발표일 종가를 100으로 둔 전후 '+BEF+'/'+AFT+'거래일 흐름입니다. 표본 '+lines.length+
         '건 — 이 개수로 방향을 말할 수 없습니다. 발표 이력(data/earnings_history.json)은 매일 쌓는 중입니다.</p>';
     });
