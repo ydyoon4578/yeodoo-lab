@@ -161,6 +161,15 @@
   a.wkt:hover{border-color:var(--accent);color:var(--accent)}
   .wkt.bmo{border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
   .wkday .wn{font-size:11.5px;color:var(--ink-2);line-height:1.5}
+  .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+  .flrow{display:grid;grid-template-columns:58px 1fr auto;gap:8px;align-items:baseline;
+         padding:6px 0;border-top:1px solid var(--line-soft);font-size:11.5px}
+  .flrow:first-child{border-top:0}
+  .flrow .ft{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);text-decoration:none}
+  .flrow a.ft:hover{color:var(--accent)}
+  .flrow .fd{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .flrow .fv{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .flrow .fv.up{color:var(--gA)} .flrow .fv.dn{color:var(--hot)}
   /* ── 등급 배지 · 레이팅 필(SA 시그니처, 도구 페이지로 확장 예정) ── */
   .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
@@ -575,6 +584,18 @@
       </div>
     </section>
 
+    <!-- 공시·수급·신호 — 2026-07-26 추가. 전부 이미 굽던 데이터를 표로 끌어올린 것.
+         새로 받는 것은 없다(filings·insider·guru·signal_lab). -->
+    <section id="s-flow" aria-labelledby="fl-h">
+      <p class="lbl" id="fl-h">공시 · 수급 · 신호</p>
+      <div class="flgrid">
+        <div class="wkcol"><h3>주요 8-K 공시 <span id="fl-fn"></span></h3><div id="fl-filings"><div class="skel2">불러오는 중…</div></div></div>
+        <div class="wkcol"><h3>내부자 장내매수 우위 <span id="fl-in"></span></h3><div id="fl-insider"><div class="skel2">불러오는 중…</div></div></div>
+        <div class="wkcol"><h3>거장 공통 보유 <span id="fl-gn"></span></h3><div id="fl-guru"><div class="skel2">불러오는 중…</div></div></div>
+        <div class="wkcol"><h3>오늘 지표 신호 <span id="fl-sn"></span></h3><div id="fl-signal"><div class="skel2">불러오는 중…</div></div></div>
+      </div>
+    </section>
+
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
          시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
     <section id="s-today" aria-labelledby="td-h">
@@ -938,6 +959,76 @@
         '<span class="wn">'+esc(names.slice(0,4).join(' · '))+(names.length>4?' 외 '+(names.length-4)+'건':'')+'</span></div>';
     }).join('');
   }).catch(function(){});
+
+
+  // ── 공시·수급·신호 ── 네 칸 모두 이미 굽던 데이터다. 홈에서 안 보여주던 것을 끌어올린다.
+  function flrows(box,rows,empty){
+    var b=el(box); if(!b)return;
+    b.innerHTML=rows.length?rows.join(''):'<div class="skel2">'+esc(empty)+'</div>';
+  }
+  // 주요 8-K — 전부가 아니라 major 항목(경영진 교체·감사 변경·구조조정 등)만
+  fetch('data/filings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(f){
+    if(!f||!f.feed){flrows('fl-filings',[],'공시를 불러오지 못했습니다.');return;}
+    var maj={}; (f.major||[]).forEach(function(c){maj[c]=1;});
+    var rows=f.feed.filter(function(x){return (x.it||[]).some(function(c){return maj[c];});})
+      .sort(function(a,b){return a.d<b.d?1:-1;}).slice(0,8).map(function(x){
+        var lab=(x.it||[]).map(function(c){return (f.items||{})[c]||c;})[0]||'';
+        var cik=(f.cik||{})[x.t];
+        var url=cik&&x.a&&x.p?((f.doc_base||'')+cik+'/'+x.a+'/'+x.p):null;
+        return '<div class="flrow"><a class="ft" href="co.html?t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>'+
+          '<span class="fd">'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(lab)+'</a>':esc(lab))+'</span>'+
+          '<span class="fv">'+esc((x.d||'').slice(5))+'</span></div>';
+      });
+    el('fl-fn').textContent=rows.length?'최근 '+rows.length+'건':'';
+    flrows('fl-filings',rows,'최근 주요 공시가 없습니다.');
+  }).catch(function(){flrows('fl-filings',[],'공시를 불러오지 못했습니다.');});
+
+  // 내부자 — 장내매수(P)가 장내매도(S)보다 많은 종목. 보상 제도 결과(A·M·F)는 애초에 안 센다.
+  fetch('data/insider.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
+    if(!v||!v.by_t){flrows('fl-insider',[],'내부자 거래를 불러오지 못했습니다.');return;}
+    var rows=Object.keys(v.by_t).map(function(t){var a=v.by_t[t];return [t,a[0]||0,a[1]||0];})
+      .filter(function(x){return x[1]>x[2];})
+      .sort(function(a,b){return (b[1]-b[2])-(a[1]-a[2]);}).slice(0,8).map(function(x){
+        return '<div class="flrow"><a class="ft" href="co.html?t='+encodeURIComponent(x[0])+'">'+esc(x[0])+'</a>'+
+          '<span class="fd">매수 '+x[1]+' · 매도 '+x[2]+'</span>'+
+          '<span class="fv up">+'+(x[1]-x[2])+'</span></div>';
+      });
+    el('fl-in').textContent=(v.as_of||'')+' 기준';
+    flrows('fl-insider',rows,'장내매수가 우위인 종목이 없습니다.');
+  }).catch(function(){flrows('fl-insider',[],'내부자 거래를 불러오지 못했습니다.');});
+
+  // 거장 공통 보유 — 몇 곳이 겹쳐 들고 있나
+  fetch('data/guru.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(g){
+    if(!g||!g.overlap){flrows('fl-guru',[],'13F 보유를 불러오지 못했습니다.');return;}
+    var rows=g.overlap.slice(0,8).map(function(x){
+      return '<div class="flrow"><a class="ft" href="co.html?t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>'+
+        '<span class="fd">'+esc(x.nm||'')+'</span>'+
+        '<span class="fv">'+x.n+'곳</span></div>';
+    });
+    el('fl-gn').textContent=(g.as_of||'')+' 기준';
+    flrows('fl-guru',rows,'공통 보유가 없습니다.');
+  }).catch(function(){flrows('fl-guru',[],'13F 보유를 불러오지 못했습니다.');});
+
+  // 오늘 지표 신호 — 순합의(매수신호 − 매도신호)가 치우친 종목
+  fetch('data/signal_lab.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(sl){
+    var td=sl&&sl.consensus&&sl.consensus.today;
+    if(!td){flrows('fl-signal',[],'지표 신호를 불러오지 못했습니다.');return;}
+    var top=(td.top||[]).slice(0,4), bot=(td.bot||[]).slice(0,4);
+    var rows=top.map(function(x){
+      return '<div class="flrow"><a class="ft" href="co.html?t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>'+
+        '<span class="fd">매수 신호 우위</span><span class="fv up">+'+x.v+'</span></div>';
+    }).concat(bot.map(function(x){
+      return '<div class="flrow"><a class="ft" href="co.html?t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>'+
+        '<span class="fd">매도 신호 우위</span><span class="fv dn">'+x.v+'</span></div>';
+    }));
+    el('fl-sn').textContent=(td.dt||'')+' 기준';
+    rows.push('<details class="more"><summary>이 숫자를 어떻게 쓰나</summary><div class="mbody">'+
+      '<p>그날 그 종목에서 발동한 <b>매수 신호 수 − 매도 신호 수</b>입니다. '+
+      '이 랩이 신호 32개를 재본 결과 <b>교과서대로 따르면 벤치마크에 크게 졌습니다</b> — '+
+      '숫자가 크다고 좋은 게 아닙니다. 무엇이 몰렸는지 보는 용도입니다.</p>'+
+      '<p><a href="signals.html">지표별 성적표 →</a></p></div></details>');
+    flrows('fl-signal',rows,'오늘 치우친 종목이 없습니다.');
+  }).catch(function(){flrows('fl-signal',[],'지표 신호를 불러오지 못했습니다.');});
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
