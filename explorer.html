@@ -2005,7 +2005,12 @@
     });
   }
 
-  Promise.all([
+  // ── 지연 로딩 ── 랩 3개 탭의 산출물은 합쳐 340KB다. 원장만 보는 사람에게까지 받게 할
+  // 이유가 없다. 탭을 **처음 열 때** 받는다(window.__labLoad를 뷰 전환기가 부른다).
+  var LAB_STARTED=false;
+  window.__labLoad=function(){
+    if(LAB_STARTED)return; LAB_STARTED=true;
+    Promise.all([
     fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
     fetch('data/archive_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
   ]).then(function(a){
@@ -2092,6 +2097,7 @@
   })['catch'](function(){
     el('runs').innerHTML='<div class="hardnote"><b>불러오지 못했습니다.</b></div>';
   });
+  };
   // ── 구 슬러그 딥링크 하위호환 ────────────────────────────────────────
   // 예전 아카이브는 **이름에서 만든 슬러그**를 앵커로 썼다. 이름을 고칠 때마다 앵커가
   // 바뀌어 외부 링크가 죽었기 때문에 불변 id(sid)로 옮겼고, 옛 슬러그는 aka에 남겼다.
@@ -2184,6 +2190,8 @@
   function el(id){return document.getElementById(id);}
   function show(v){
     v=(V.indexOf(v)>=0?v:'ledger');
+    // 랩 탭을 처음 열 때 그 데이터를 받는다(원장만 보는 사람은 안 받는다)
+    if(v!=='ledger'&&window.__labLoad)window.__labLoad();
     for(var i=0;i<V.length;i++){
       var sec=el(V[i]==='ledger'?'v-ledger':'v-'+V[i]);
       if(sec)sec.hidden=(V[i]!==v);
@@ -2214,14 +2222,12 @@
   }
   boot();
   window.addEventListener('hashchange',boot);
-  // 탭 옆 개수 — 데이터가 붙은 뒤 채운다(손으로 적지 않는다)
+  // 탭 옆 개수 — 판정 원장(1KB)에서 읽는다. 개수만 보려고 산출물 340KB를 미리 받지 않는다.
   function num(id,v){var e=el(id); if(e&&v!=null)e.textContent=v;}
-  fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(d){num('vn-runs',d&&d.strategies?d.strategies.length:null);})['catch'](function(){});
-  fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(d){num('vn-audit',d&&d.audit?d.audit.n_total:null);})['catch'](function(){});
-  fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(d){num('vn-rechk',d&&d.strategies?Object.keys(d.strategies).length:null);})['catch'](function(){});
+  fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(d){ if(!d)return;
+      num('vn-runs',d.n_tech); num('vn-audit',d.n_asset); num('vn-rechk',d.n_rechk);
+    })['catch'](function(){});
 })();
 </script>
 
@@ -2233,7 +2239,9 @@
   function esc(x){return (x==null?'':String(x)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function n2(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);}
   function sg(v,d){return (v==null||v!==v)?'—':((v>0?'+':'')+Number(v).toFixed(d==null?2:d));}
-  fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  window.__idxLoad=function(){
+   if(window.__idxDone)return; window.__idxDone=true;
+   fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     .then(function(d){
       var R=d&&d.index_ref; if(!R||!R.rows||!R.rows.length)return;
       var box=el('idxref'); if(!box)return;
@@ -2261,6 +2269,9 @@
         '<div class="idxwrap"><table class="idxt"><thead>'+yhead+'</thead><tbody>'+ybody+'</tbody></table></div></div></details>'+
         '<p class="idxnote">'+esc(R.note||'')+'</p>';
     })['catch'](function(){});
+  };
+  // 지수 기준표는 어느 탭에서든 보이므로 바로 받는다(144KB지만 이 표가 이 페이지의 기준선이다)
+  window.__idxLoad();
 })();
 </script>
 </body>

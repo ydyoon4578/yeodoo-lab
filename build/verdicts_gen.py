@@ -106,7 +106,29 @@ def build(root: str = ROOT) -> dict:
         "reject_compare_n": len(rej_cmp), "explorer_n": len(ex),
         "archive_n": len(ar), "archive_cats": len(cats),
         "reject_total": len(ar) + len(rej_cmp),
+        # 탭 개수 — 전략 랩이 탭을 지연 로딩하면서 필요해졌다. 개수만 보려고 100KB짜리
+        # 산출물을 미리 받을 이유가 없다. 여기서 세어 두면 작은 파일 하나로 끝난다.
+        **_lab_counts(root),
     }
+
+
+def _lab_counts(root: str) -> dict:
+    """랩 각 탭의 항목 수. 없는 파일은 조용히 건너뛴다(아직 안 구웠을 수 있다)."""
+    out = {}
+    for key, fn, path in (("n_tech", "tech_strategies.json", "strategies"),
+                          ("n_asset", "asset_strategies.json", "audit.n_total"),
+                          ("n_rechk", "archive_backtests.json", "strategies")):
+        p2 = os.path.join(root, "data", fn)
+        if not os.path.exists(p2):
+            continue
+        try:
+            d = json.load(io.open(p2, encoding="utf-8"))
+            for step in path.split("."):
+                d = d.get(step) if isinstance(d, dict) else None
+            out[key] = d if isinstance(d, int) else (len(d) if d is not None else None)
+        except Exception:
+            pass
+    return {k: v for k, v in out.items() if v}
 
 
 if __name__ == "__main__":
