@@ -27,7 +27,7 @@ import io, json, math, os, sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tech_backtest import ann_stats, tstat, maxdd  # noqa: E402
+from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -189,6 +189,7 @@ def market_timing(A, RF):
     step = max(1, len(nav) // 220)
     return {
         "sid": "ml-timing", "arch": "ml-market-timing",
+        "chart": curve_pack(dd, nav, bn),
         "bench_label": "SPY 상시보유",
         "holdings": {"kind": "asset", "as_of": DTS[-1],
                      "weights": [("SPY" if (np.isfinite(pred[-1]) and pred[-1] > 0) else "현금(SHY)", 100.0)],
@@ -395,6 +396,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
                                        TOPN, diag["p_min"], diag["p_max"]))
     return {
         "sid": sid, "arch": "ml-stock-selection" if mode == "value" else None,
+        "chart": curve_pack(dd, nav, bn),
         "bench_label": "동일가중 유니버스 매수후보유",
         "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
                      "tickers": sorted(hold),
@@ -506,6 +508,8 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     step = max(1, len(nav) // 220)
     return {
         "sid": "guru-clone", "arch": "13f-best-ideas-clone",
+        # 이 판은 월 단위라 날짜 계열이 months다(다른 판은 일별 DTS를 dd에 담는다)
+        "chart": curve_pack(months[st:], nav, bn),
         "bench_label": "동일가중 유니버스 매수후보유",
         "name": "13F 컨빅션 복제 (상위 %d종목)" % TOPN,
         "rule": "분기말 13F에서 (운용사 포트폴리오 내 비중 합) × (보유 운용사 수)가 높은 %d종목을 "

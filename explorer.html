@@ -1661,6 +1661,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 대조군 근거 → 판정 → (접힌) 전체 지표표 → 한계·장단점 → 보유구성.
   // 예전에는 판정 배지가 전략명보다 위에 있고 '전략 개요'가 지표표 24행 뒤에 있어, 카드 전체가
   // 판결문처럼 읽혔다. 판정값은 하나도 바꾸지 않았고 순서와 렌즈만 바꿨다.
+  // ── 랩 전략 차트 지연 로딩 ────────────────────────────────────────────
+  // 곡선·낙폭·연도별 자료는 417KB다. 목록만 보는 사람에게 받게 할 이유가 없으므로
+  // **전략을 처음 눌렀을 때** 한 번 받는다(홈이 슬림 묶음을 읽는 것과 같은 규약).
+  var LABC=null, LABC_ST=0;      // 0=안 받음 1=받는 중 2=받음 3=실패
+  function labCharts(cb){
+    if(LABC_ST===2||LABC_ST===3)return cb&&cb();
+    if(LABC_ST===1)return;
+    LABC_ST=1;
+    fetch('data/strategy_charts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(j){LABC=(j&&j.charts)||{};LABC_ST=2;cb&&cb();})
+      ['catch'](function(){LABC_ST=3;cb&&cb();});
+  }
+
   function drawDetail(d){
     if(!d){detailEl.innerHTML="";return;}
     var vc='var('+VMETA[d.v].col+')';
@@ -1730,6 +1743,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<div><span>대조군 CAGR</span><b>'+f(bb.cagr)+'%</b></div>'+
         '</div>'+
         (function(){
+          // 곡선 자료가 오면 배포 카드와 같은 그림 세 장을 그린다(누적수익 로그축·낙폭·연도별).
+          // 아직 안 왔으면 작은 스파크라인으로 자리를 지키고, 오는 대로 이 카드를 다시 그린다.
+          var C=LABC&&LABC[d.sid];
+          if(C&&C.dates&&C.dates.length>2){
+            var bt={dates:C.dates,nav:C.nav,bench:C.bench,dd:C.dd,dd_b:C.dd_b,yearly:C.yearly};
+            var bl=d._bl||(bb.label||'대조군');
+            var lg=function(col,dash,txt){return '<span class="lg"><i style="border-color:'+col+(dash?';border-top-style:dashed':'')+'"></i>'+esc(txt)+'</span>';};
+            return '<div class="chartttl">누적수익 (로그축)'+lg('var(--accent)',0,'전략')+lg('var(--muted)',1,bl)+'</div>'+
+                   svgEquity(bt,'var(--accent)')+
+                   '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(C.dd_b&&C.dd_b.length?lg('var(--muted)',1,bl):'')+'</div>'+
+                   svgDD(bt)+
+                   ((C.yearly&&C.yearly.length)?'<div class="chartttl">연도별 수익'+lg('var(--accent)',0,'전략')+lg('var(--muted)',0,bl)+'</div>'+svgYearly(bt,'var(--accent)')+
+                     '<p class="labnote">첫해와 마지막 해는 부분 연도입니다(구간이 연초·연말에 걸치지 않습니다).</p>':'');
+          }
+          labCharts(function(){ if(D[state.sel]===d)drawDetail(d); });
           var a=d._nav||[], b2=d._bnav||[];
           if(a.length<3)return '';
           var all=a.concat(b2), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
@@ -1740,7 +1768,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           return '<svg class="labspark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
             (b2.length?'<path d="'+pth(b2)+'" fill="none" stroke="var(--muted)" stroke-width="1" opacity=".6"/>':'')+
             '<path d="'+pth(a)+'" fill="none" stroke="var(--accent)" stroke-width="1.8"/></svg>'+
-            '<p class="labnote">굵은 선이 이 전략, 흐린 선이 대조군('+esc(bb.label||'—')+')입니다.</p>';
+            '<p class="labnote">굵은 선이 이 전략, 흐린 선이 대조군('+esc(bb.label||'—')+')입니다. 자세한 곡선을 불러오는 중…</p>';
         })()+
       '</div>';
       play = perf + cmpBlock(d) + holdHtml +

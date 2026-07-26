@@ -37,6 +37,10 @@ jobs:
       # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
       - name: Rebuild unified strategy index
         run: python build/strategy_index.py
+      # 랩 상세 차트는 목록과 분리된 지연 로딩 파일이다 — 목록만 다시 굽고 이걸 빠뜨리면
+      # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
+      - name: Rebuild lab charts
+        run: python build/strategy_charts.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -44,4 +48,4 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 기술적 전략 백테스트 자동 갱신" \
-            data/tech_strategies.json data/verdicts.json data/strategy_index.json data/asof.json
+            data/tech_strategies.json data/verdicts.json data/strategy_index.json data/strategy_charts.json data/asof.json
