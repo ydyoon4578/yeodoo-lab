@@ -432,11 +432,12 @@
    "principle": "Lucca & Moench(2011)는 예정된 FOMC 발표 직전 미국 주식에 큰 평균 초과수익이 존재함을 문서화했다. S&P 500은 발표 전 24시간 동안 평균 49bp 상승하며 이 수익은 이후 거래일에 되돌려지지 않는다. 지난 17년간 주식 위험프리미엄의 80% 이상이 이 24시간 구간에 집중되었다. 다른 거시지표 발표엔 유사 효과가 없고 국채·단기금리선물에도 나타나지 않아 FOMC 고유 현상으로 판단된다.",
    "entry": "예정된 FOMC 발표 전일 오후 2시(ET) 매수 후 발표 직전 또는 발표 당일 종가 매도. 연 8회. 수익률곡선 기울기가 낮고 VIX가 높은 국면에서 포지션 확대.",
    "performance": "이벤트당 평균 +49bp, 연 8회 적용 시 이론적으로 연 약 4%p 기여. 노출 시간이 극히 짧아 위험조정 효율이 높다.",
-   "recent": "후속 연구(Applied Economics, 2024)가 드리프트의 지속성을 재검증. 효과 감쇠 논쟁이 있으나 수익률곡선 평탄·고VIX 국면에서는 여전히 강하게 발현되는 것으로 보고된다.",
+   "recent": "QuantSeeker의 재검증(SPY 1993~2024)은 Pre-FOMC 드리프트가 발표 10여 년 후에도 지속되며, 3배 레버리지 ETF 적용 시 거래시간 비중 약 5%로 비용 차감 후 CAGR 8~9%·샤프 약 0.6을 기록하고 고변동 국면에서 특히 강했다고 보고한다. Pan·Peng의 장기 국채 연구도 1989~2025년 누적 Pre-FOMC 금리 하락 효과(-3.09%)를 금리 장기 하락의 최대 일간 기여 요인으로 지목한다. 다만 Applied Economics(2024) 등 일부 학술 연구는 드리프트가 단명하거나 상당 부분 소멸했다는 상반된 증거를 제시해 지속성 논쟁이 남아 있다.",
    "sources": [
     "The Pre-FOMC Announcement Drift, Lucca & Moench, FRBNY Staff Report 512 (2011)",
     "The pre-FOMC announcement drift: short-lived or long-lasting?, Applied Economics (2024-03)"
-   ]
+   ],
+   "recent_at": "2026-07-25"
   },
   {
    "cat": "C",
@@ -2126,6 +2127,30 @@
     "Organization capital and analyst coverage (ResearchGate, 2022) — https://www.researchgate.net/publication/363061572_Organization_capital_and_analyst_coverage",
     "Intangible Capital — 데이터·복제코드 (Andrea L. Eisfeldt) — https://sites.google.com/site/andrealeisfeldt/home/intangible-capital",
     "Intangible value (Eisfeldt, Kim & Papanikolaou) — CEPR VoxEU column — https://cepr.org/voxeu/columns/intangible-value"
+   ]
+  },
+  {
+   "id": "E37",
+   "cat": "E",
+   "cat_label": "추가 알파·팩터·이벤트",
+   "name": "팩터 모멘텀 (Factor Momentum)",
+   "type": "팩터 자체의 과거 수익률로 팩터를 타이밍하는 롱숏 팩터-오브-팩터 전략",
+   "target": "미국(및 글로벌) 주식 특성 팩터 65~200여 개의 롱숏 포트폴리오 집합(밸류·모멘텀·퀄리티·저변동·수익성·투자 등)",
+   "purpose": "개별 종목이 아니라 '팩터 수익률' 자체가 시계열 양의 자기상관을 갖는다는 점을 이용해, 최근 성과가 좋았던 팩터를 오버웨이트하고 나빴던 팩터를 언더웨이트한다. 기존 카드의 종목 단위 모멘텀(횡단면·잔차·타임시리즈 MOP)이나 거시 레짐 연동 팩터 로테이션(A2)과 달리, 신호원이 각 팩터 자신의 과거 수익률이라는 점에서 개념적으로 구분된다.",
+   "principle": "Gupta & Kelly(2019, Journal of Portfolio Management)는 전 세계 65개 특성 팩터에서 개별 팩터가 자기 과거 성과로 신뢰성 있게 타이밍될 수 있음을 문서화하고, 모든 팩터의 타이밍을 결합한 시계열 팩터 모멘텀 포트폴리오가 연 샤프 0.84를 기록함을 보였다. Ehsani & Linnainmaa(2022, Journal of Finance)는 대부분의 팩터가 양의 자기상관을 가지며(평균 팩터가 직전 1년 손실 뒤 월 6bp, 이익 뒤 월 51bp), 개별 종목 모멘텀 자체가 '팩터 모멘텀'에서 파생된다고 주장한다 — 즉 모멘텀은 독립 리스크 팩터가 아니라 다른 팩터들을 타이밍하는 현상이라는 것이다. Arnott 등(SSRN 3116974)도 팩터 모멘텀의 존재를 확인하되 그 원천과 지속성을 논쟁한다. 핵심 메커니즘은 공통 수익률 팩터의 지속성(persistence)이다.",
+   "entry": "① 매월 말 각 롱숏 팩터의 과거 수익률(전통형: 최근 12개월, 단기형: 최근 1개월) 산출. ② 시계열 방식: 각 팩터를 자기 과거 수익 부호/크기에 따라 롱 또는 숏(또는 비중 스케일)으로 취함. 횡단면 방식: 팩터들을 과거 수익 기준 랭킹해 상위 분위 롱·하위 분위 숏. ③ 팩터들을 동일 위험 또는 동일 비중으로 결합, 월 1회 리밸런싱. ④ 회전율이 매우 높으므로(월 37~66% 팩터 교체) 거래비용을 보수적으로(팩터당 왕복 수준) 반영하고 순알파 기준으로 평가. 재현 시 팩터 라이브러리는 공개 소스(예: Kenneth French, 학술 팩터 셋)로 구성.",
+   "performance": "원논문: Gupta & Kelly(2019) 결합 시계열 팩터 모멘텀 연 샤프 0.84; Ehsani & Linnainmaa(2022) 1개월 포메이션 로테이션이 월 약 32bp 알파. 반론·감쇠 논쟁 병기: Leippold & Yang의 'The Anatomy of Factor Momentum'(SSRN 3517888)은 210개 미국 팩터 분석에서 팩터 프리미엄(정적 틸트)이 팩터 모멘텀 수익의 지배적 부분을 설명하며 예측가능성이 경험적으로 너무 약해 단순 바이앤홀드가 팩터 모멘텀을 능가한다고 지적한다. Fan(2022, Financial Review, 'A reexamination of factor momentum: how strong is it?')도 그 강도가 포메이션 윈도우·명세에 크게 의존함을 보여, 효과의 상당 부분이 '양의 평균 수익 팩터로의 정적 틸트'일 수 있다는 비판이 존재한다.",
+   "recent": "2025년 The Journal of Portfolio Management의 'Picking Winners in Factorland' 연구는 242개 팩터 특성에 머신러닝을 적용했을 때 팩터 모멘텀이 횡단면 팩터 수익 예측의 주된 동인이며, 팩터 모멘텀을 통제하면 어떤 롱숏 ML 포트폴리오도 유의한 알파를 내지 못했다고 보고했다(단 월 37~66%의 높은 팩터 회전 필요). 2025년 Applied Economics Letters의 'Cross-sectional factor momentum: evidence from multiple formation periods'는 여러 포메이션 기간에서 최근·중기 과거 기반 횡단면 팩터 모멘텀이 통계·경제적으로 유의하고 논문 발표 이후(post-publication)에도 프리미엄이 지속돼 데이터 마이닝 산물일 가능성이 낮다고 주장했다. 다만 1개월 vs 1년 포메이션 윈도우 논쟁과 정적 틸트 비판은 2025년에도 미결로 남아 있다.",
+   "recent_at": "2026-07-25",
+   "sources": [
+    "Factor Momentum Everywhere (Gupta & Kelly, 2019, Journal of Portfolio Management) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3300728",
+    "Factor Momentum and the Momentum Factor (Ehsani & Linnainmaa, 2022, Journal of Finance) — https://onlinelibrary.wiley.com/doi/abs/10.1111/jofi.13131",
+    "Factor Momentum and the Momentum Factor (Ehsani & Linnainmaa, 2019, NBER WP 25551) — https://www.nber.org/papers/w25551",
+    "Factor Momentum (Arnott, Clements, Kalesnik & Linnainmaa, 2019) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3116974",
+    "The Anatomy of Factor Momentum (Leippold & Yang) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3517888",
+    "A reexamination of factor momentum: how strong is it? (Fan, 2022, Financial Review) — https://onlinelibrary.wiley.com/doi/abs/10.1111/fire.12300",
+    "Cross-sectional factor momentum: evidence from multiple formation periods (2025, Applied Economics Letters) — https://www.tandfonline.com/doi/full/10.1080/13504851.2025.2472032",
+    "Picking Winners in Factorland: A Machine Learning Approach to Predicting Factor Returns (2025, Journal of Portfolio Management; summary) — https://alphaarchitect.com/predict-factor-returns/"
    ]
   }
  ],
