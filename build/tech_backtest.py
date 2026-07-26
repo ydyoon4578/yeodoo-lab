@@ -692,6 +692,9 @@ def run():
         bs = ann_stats(bnav, d2, rf)
         out.append({
             "sid": S["sid"], "name": S["name"], "kind": S["kind"], "arch": S.get("arch"),
+            # 성격 — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
+            # 파일 출처가 아니라 역할로 나눠야 읽는 사람이 비교할 수 있다.
+            "role": ("수익엔진" if S["kind"] == "xsec" else "타이밍오버레이"),
             "rule": S["rule"], "why": S["why"],
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),

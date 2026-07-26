@@ -619,20 +619,8 @@
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
         <span><span class="tk2 lgc">AAPL</span> 장후 또는 시간 미공개</span>
-        <span><i class="lg m"></i>아래 회색 줄 = 경제지표</span>
+        <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
         <span class="lgn">같은 날은 시가총액 큰 순 · 티커에 커서를 올리거나 누르면 회사 이름</span>
-      </div>
-    </section>
-
-    <!-- 공시·수급·신호 — 2026-07-26 추가. 전부 이미 굽던 데이터를 표로 끌어올린 것.
-         새로 받는 것은 없다(filings·insider·guru·signal_lab). -->
-    <section id="s-flow" aria-labelledby="fl-h">
-      <p class="lbl" id="fl-h">공시 · 수급 · 신호</p>
-      <div class="flgrid">
-        <div class="wkcol"><h3>주요 8-K 공시 <span id="fl-fn"></span></h3><div id="fl-filings"><div class="skel2">불러오는 중…</div></div></div>
-        <div class="wkcol"><h3>내부자 장내매수 우위 <span id="fl-in"></span></h3><div id="fl-insider"><div class="skel2">불러오는 중…</div></div></div>
-        <div class="wkcol"><h3>거장 공통 보유 <span id="fl-gn"></span></h3><div id="fl-guru"><div class="skel2">불러오는 중…</div></div></div>
-        <div class="wkcol"><h3>오늘 지표 신호 <span id="fl-sn"></span></h3><div id="fl-signal"><div class="skel2">불러오는 중…</div></div></div>
       </div>
     </section>
 
@@ -979,12 +967,7 @@
     // 실적: 날짜 → 종목 · 지표: 날짜 → 릴리스명
     var E={}, M={};
     ((e&&e.upcoming)||[]).forEach(function(x){(E[x.dt]=E[x.dt]||[]).push(x);});
-    if(c&&c.dates&&c.releases){
-      c.dates.forEach(function(x){
-        var r=c.releases[String(x.rid)]||{};
-        (M[x.d]=M[x.d]||[]).push(r.name||('릴리스 '+x.rid));
-      });
-    }
+    ((c&&c.rows)||[]).forEach(function(x){(M[x.d]=M[x.d]||[]).push(x.n);});
     // 기준일이 낀 주의 월요일부터 3주
     var start=new Date(t0); start.setDate(start.getDate()-((start.getDay()+6)%7));
     var h='';
@@ -1003,8 +986,7 @@
             return '<a class="tk2'+(x.hour==='장전'?' bmo':'')+'" href="co.html?t='+encodeURIComponent(x.t)+
                    '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):'')+esc(mc)+'">'+esc(x.t)+'</a>';
           }).join('')+(ev.length>9?'<span class="cnt">+'+(ev.length-9)+'</span>':'')+'</div>':'')+
-          (mc.length?'<div class="calmac"><b>'+esc(mc.slice(0,2).join(' · '))+'</b>'+
-             (mc.length>2?' 외 '+(mc.length-2)+'건':'')+'</div>':'')+
+          (mc.length?'<div class="calmac"><b>'+esc(mc.join(' · '))+'</b></div>':'')+
           '</div>';
       }
     }
@@ -1015,68 +997,17 @@
       var dd=new Date(start); dd.setDate(start.getDate()+w2*7+i2);
       var kk=ymd(dd); shownE+=(E[kk]||[]).length; shownM+=(M[kk]||[]).length;
     }
-    el('wk-sub').textContent='· 이 3주 실적 '+shownE+'건 · 지표 '+shownM+'건 · 기준 '+base;
+    el('wk-sub').textContent='· 이 3주 실적 '+shownE+'건 · 주요 지표 '+shownM+'건 · 기준 '+base;
   }
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
   fetch('data/home_flow.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     .then(function(hf){
-      HF=hf||{};
+      var HF=hf||{};
       if(hf&&hf.earnings){CAL.e={as_of:hf.earnings.as_of,upcoming:hf.earnings.rows||[]};}
-      renderCal(); renderFlow();
-    }).catch(function(){renderCal(); renderFlow();});
-  fetch('data/calendar.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(c){CAL.c=c; renderCal();}).catch(renderCal);
+      if(hf&&hf.macro){CAL.c=hf.macro;}   // 주요 지표만(상시 시장 데이터 피드는 제외)
+      renderCal();
+    }).catch(function(){renderCal();});
 
-  // ── 공시·수급·신호 ── 원본 대신 home_flow.json 한 개만 읽는다.
-  var HF=null;
-  function flrows(box,rows,empty){
-    var b=el(box); if(!b)return;
-    b.innerHTML=rows.length?rows.join(''):'<div class="skel2">'+esc(empty)+'</div>';
-  }
-  function tkA(t,nm,cls){
-    return '<a class="ft tip'+(cls?' '+cls:'')+'" href="co.html?t='+encodeURIComponent(t)+'"'+
-           (nm?' data-nm="'+esc(nm)+'"':'')+'>'+esc(t)+'</a>';
-  }
-  function renderFlow(){
-    if(!HF){['fl-filings','fl-insider','fl-guru','fl-signal'].forEach(function(k){
-      flrows(k,[],'불러오지 못했습니다.');}); return;}
-    var f=HF.filings||{}, i=HF.insider||{}, g=HF.guru||{}, sg=HF.signal||{};
-
-    el('fl-fn').textContent=(f.rows||[]).length?'최근 '+f.rows.length+'건':'';
-    flrows('fl-filings',(f.rows||[]).map(function(x){
-      return '<div class="flrow">'+tkA(x.t,x.t)+
-        '<span class="fd">'+(x.u?'<a href="'+esc(x.u)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(x.lab)+'</a>':esc(x.lab))+'</span>'+
-        '<span class="fv">'+esc((x.d||'').slice(5))+'</span></div>';
-    }),'최근 주요 공시가 없습니다.');
-
-    el('fl-in').textContent=(i.as_of||'')+' 기준';
-    flrows('fl-insider',(i.rows||[]).map(function(x){
-      return '<div class="flrow">'+tkA(x.t,x.t)+
-        '<span class="fd">매수 '+x.b+' · 매도 '+x.s+'</span>'+
-        '<span class="fv up">+'+(x.b-x.s)+'</span></div>';
-    }),'장내매수가 우위인 종목이 없습니다.');
-
-    el('fl-gn').textContent=(g.as_of||'')+' 기준';
-    flrows('fl-guru',(g.rows||[]).map(function(x){
-      return '<div class="flrow">'+tkA(x.t,x.nm)+
-        '<span class="fd">'+esc(x.nm||'')+'</span><span class="fv">'+x.n+'곳</span></div>';
-    }),'공통 보유가 없습니다.');
-
-    el('fl-sn').textContent=(sg.dt||'')+' 기준';
-    var rows=(sg.top||[]).map(function(x){
-      return '<div class="flrow">'+tkA(x.t,x.n)+'<span class="fd">매수 신호 우위</span>'+
-        '<span class="fv up">+'+x.v+'</span></div>';
-    }).concat((sg.bot||[]).map(function(x){
-      return '<div class="flrow">'+tkA(x.t,x.n)+'<span class="fd">매도 신호 우위</span>'+
-        '<span class="fv dn">'+x.v+'</span></div>';
-    }));
-    rows.push('<details class="more"><summary>이 숫자를 어떻게 쓰나</summary><div class="mbody">'+
-      '<p>그날 그 종목에서 발동한 <b>매수 신호 수 − 매도 신호 수</b>입니다. '+
-      '이 랩이 신호 32개를 재본 결과 <b>교과서대로 따르면 벤치마크에 크게 졌습니다</b> — '+
-      '숫자가 크다고 좋은 게 아닙니다. 무엇이 몰렸는지 보는 용도입니다.</p>'+
-      '<p><a href="signals.html">지표별 성적표 →</a></p></div></details>');
-    flrows('fl-signal',rows,'오늘 치우친 종목이 없습니다.');
-  }
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
