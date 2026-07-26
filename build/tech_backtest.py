@@ -238,6 +238,74 @@ def _shift(d, days):
     return (_dt.date(y, m, dd) - _dt.timedelta(days=days)).isoformat()
 
 
+def _days_between(a, b):
+    import datetime as _dt
+    return abs((_dt.date(int(a[:4]), int(a[5:7]), int(a[8:10]))
+                - _dt.date(int(b[:4]), int(b[5:7]), int(b[8:10]))).days)
+
+
+def yoy_eps(series):
+    """[(기간종료일, 전년 동기 대비 EPS 변화)] — 날짜 내림차순.
+
+    왜 '전년 동기'인가. 이익에는 계절성이 있어서 직전 분기와 비교하면 계절성만 재게 된다.
+    표준 SUE(Foster·Olsen·Shevlin 1984)가 전년 동기를 기준으로 잡는 이유다.
+
+    전년 동기는 **인덱스로 4칸 뒤**가 아니라 날짜로 찾는다. 이유가 둘이다 —
+      ① 이 데이터에는 4분기(연간 보고에 흡수되는 분기)가 빠진 종목이 많아 칸 수가 안 맞는다.
+      ② 52/53주 회계연도를 쓰는 회사는 분기말이 해마다 며칠씩 움직인다.
+    그래서 1년 전에 가장 가까운 관측을 ±45일 안에서 찾는다. 못 찾으면 그 분기는 버린다.
+    """
+    out = []
+    for i, (d, v) in enumerate(series):
+        best = None
+        for d2, v2 in series[i + 1:]:
+            gap = _days_between(d, d2)
+            if gap > 410:
+                break                       # 내림차순이므로 더 보면 더 멀어진다
+            if 320 <= gap <= 410 and (best is None or gap < best[0]):
+                best = (gap, v2)
+        if best is not None:
+            out.append((d, v - best[1]))
+    return out
+
+
+def sue(series, date, lag=FUND_LAG_DAYS, win=8):
+    """표준화 이익 서프라이즈 — date 시점에 공개돼 있던 가장 최근 분기 기준.
+
+    (이번 분기 EPS − 전년 동기 EPS) ÷ 그 종목의 최근 변화 표준편차.
+    분모로 나누는 이유는 EPS 절대 단위가 종목마다 달라 그대로 두면 주당이익이 큰 회사가
+    무조건 위로 오기 때문이다. '이 회사 기준으로 얼마나 놀라운가'를 재는 것이다.
+    """
+    ys = yoy_eps(series)
+    if len(ys) < win + 1:
+        return None
+    cut = _shift(date, lag)
+    k = next((i for i, (d, _v) in enumerate(ys) if d <= cut), None)
+    if k is None or len(ys) < k + win + 1:
+        return None
+    cur = ys[k][1]
+    hist = [v for _d, v in ys[k + 1:k + 1 + win]]
+    m = sum(hist) / len(hist)
+    sd = (sum((x - m) ** 2 for x in hist) / max(1, len(hist) - 1)) ** 0.5
+    return (cur / sd) if sd > 1e-9 else None
+
+
+def eps_accel(series, date, lag=FUND_LAG_DAYS):
+    """이익 개선의 **가속** — 이번 분기 전년비 변화 − 직전 분기 전년비 변화. 주당 금액.
+
+    SUE의 짝으로 둔다. SUE는 종목별 표준편차로 나누는데, 그 분모가 작은 회사(이익이 매우
+    안정적인 회사)가 위로 몰리는 성질이 있다. 이건 나누지 않으므로, 둘이 같은 결과를 내면
+    표준화가 결과를 만든 게 아니라는 뜻이고 갈리면 그 반대다 — MAX와 MAX(5)를 같이 실은 것과
+    같은 이유다. 절대 금액이므로 쓰는 쪽에서 주가로 나눈다(그래야 종목 간 비교가 된다).
+    """
+    ys = yoy_eps(series)
+    cut = _shift(date, lag)
+    k = next((i for i, (d, _v) in enumerate(ys) if d <= cut), None)
+    if k is None or len(ys) < k + 2:
+        return None
+    return ys[k][1] - ys[k + 1][1]
+
+
 def load_fund():
     """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순."""
     out = {}
@@ -259,13 +327,13 @@ def load_fund():
             return [(x[0], x[1]) for x in a if isinstance(x, list) and len(x) == 2
                     and isinstance(x[1], (int, float))]
 
-        eq, sh = series("eq"), series("sh")
+        eq, sh, ep = series("eq"), series("sh"), series("eps")
         cfo, capex = dict(series("cfo")), dict(series("capex"))
         # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
         # cfo만으로 채우면 자본지출이 큰 업종이 통째로 좋아 보인다.
         fcf = sorted(((k, cfo[k] - capex[k]) for k in cfo if k in capex), reverse=True)
-        if eq or sh or fcf:
-            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf}
+        if eq or sh or fcf or ep:
+            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf, "eps": ep}
     return out
 
 
@@ -523,6 +591,30 @@ def build_strats():
     # 나온 것이라 여기서 다시 돌릴 수 없다. 대신 **같은 팩터를 무료 공개 데이터로,
     # 지수 구분 없이 전체 유니버스에** 얹은 판을 따로 싣는다 — 지수를 나눌 이유가 팩터에
     # 있는 게 아니라 원본 백테스트가 그 유니버스로 돌았을 뿐이기 때문이다.
+    # ── 이익 서프라이즈 2종 ─────────────────────────────────────────
+    # 배포 원장의 '이익추정 리비전 드리프트'는 애널리스트가 전망을 올린 종목을 산다. 그 전망은
+    # 유료 데이터라 무료로는 과거를 못 구한다(저장소가 지금 직접 쌓는 중인데 25일치뿐이다).
+    # 대신 **같은 현상을 애널리스트 없이** 잰다 — 실제 보고된 이익이 순진한 기준선을 얼마나
+    # 넘었나(서프라이즈)와 그 개선이 가속하고 있나. 리비전 드리프트와 PEAD는 '이익 소식이
+    # 한 번에 반영되지 않고 몇 달에 걸쳐 스며든다'는 같은 현상의 두 측정이다.
+    # ⚠ 같은 전략이 아니다. 이쪽은 발표된 숫자를, 저쪽은 앞으로의 전망을 본다.
+    xsec("x-sue", "이익 서프라이즈 (SUE 상위 %d)" % TOPN,
+         "직전 공개 분기의 전년 동기 대비 EPS 변화를 그 종목의 변화 표준편차로 나눈 값이 "
+         "가장 큰 %d종목 동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
+         None,
+         "Foster·Olsen·Shevlin(1984)의 표준화 이익 서프라이즈. 배포 원장의 '이익추정 리비전 "
+         "드리프트'가 노리는 것과 같은 현상(이익 소식이 몇 달에 걸쳐 주가에 스며든다)을 "
+         "애널리스트 전망 없이 재는 방법이다. 전망 데이터는 유료라 과거를 못 구한다 — "
+         "저장소가 지금 직접 쌓고 있으나 아직 25일치뿐이다. 회계 숫자는 기간 종료 90일 뒤에만 쓴다.")
+    xsec("x-epsacc", "이익 개선 가속 상위 %d" % TOPN,
+         "전년 동기 대비 EPS 변화가 직전 분기보다 얼마나 더 커졌는지를 주가로 나눈 값이 "
+         "가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "SUE의 짝. SUE는 종목별 표준편차로 나누는데 그 분모가 작은 회사(이익이 매우 안정적인 "
+         "회사)가 위로 몰리는 성질이 있다. 이건 나누지 않으므로, 둘이 같은 결과면 표준화가 "
+         "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
+         "더 가까운 측정이기도 하다.")
+
     xsec("x-btp", "장부가 대비 저평가 (Book-to-Price 상위 %d)" % TOPN,
          "주당순자산(SEC XBRL 자본총계 ÷ 희석주식수)을 주가로 나눈 값이 가장 큰 %d종목 "
          "동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
@@ -815,6 +907,12 @@ def run():
                         elif sid == "x-lowbeta":
                             b = beta(R[t], ixr, i - 1, 120)
                             v = -b if b is not None else None
+                        elif sid == "x-sue":
+                            v = sue((FU.get(t) or {}).get("eps") or [], dates[i - 1])
+                        elif sid == "x-epsacc":
+                            e = eps_accel((FU.get(t) or {}).get("eps") or [], dates[i - 1])
+                            p0 = P[i - 1]
+                            v = (e / p0) if (e is not None and p0 and p0 > 0) else None
                         elif sid in ("x-btp", "x-fcfy"):
                             # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜와 주식수가 필요하다.
                             f = FU.get(t) or {}
