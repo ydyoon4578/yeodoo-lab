@@ -214,6 +214,17 @@ def main() -> int:
          "cadence": "주 1회", "note": "일봉 입력이라 하루 단위로는 판정이 바뀌지 않는다 — 주말에만 다시 돌린다"},
     ]
     axes = [a for a in axes if a.get("as_of")]
+
+    # ── 수집일 vs 데이터 기준일 ────────────────────────────────────────
+    # 아래 축들은 '언제 받았나'를 기준일로 적고 있었다. 그래서 토요일에 받으면 토요일이,
+    # 일요일에 받으면 일요일이 대표 기준일(마지막 거래일)보다 **앞서** 표시된다 —
+    # 표를 보는 사람은 "대표보다 최신 데이터가 있다"로 읽지만 시장은 그날 열리지도 않았다.
+    # 기준일은 그 데이터가 반영하는 **시장 날짜**로 맞추고, 실제 수집일은 따로 남긴다.
+    COLLECTED = {"earnings", "calendar", "rotation"}
+    for a in axes:
+        if a["key"] in COLLECTED and a["as_of"] > primary:
+            a["collected"] = a["as_of"]
+            a["as_of"] = primary
     for a in axes:
         sc = sched_of(WF.get(a["key"], ""))
         if sc:

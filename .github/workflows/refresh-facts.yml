@@ -11,7 +11,7 @@ name: Refresh SEC financials (XBRL)
 
 on:
   schedule:
-    - cron: '45 1 * * 6'    # 매주 토 10:45 KST (01:45 UTC)
+    - cron: '55 23 * * 5'    # 매주 토 08:55 KST
   workflow_dispatch:
 
 permissions:

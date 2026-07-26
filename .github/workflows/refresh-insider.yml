@@ -11,7 +11,7 @@ name: Refresh insider transactions (Form 4/5)
 
 on:
   schedule:
-    - cron: '15 2 * * 6'    # 매주 토 11:15 KST (02:15 UTC)
+    - cron: '5 0 * * 6'    # 매주 토 09:05 KST
   workflow_dispatch:
 
 permissions:

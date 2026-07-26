@@ -688,6 +688,9 @@
         // 갱신 주기만 적으면 '매일'이 몇 시인지 알 수 없다. 예정 시각은 워크플로 크론에서
         // 뽑아 오므로(build/asof_index.py) 화면과 실제 스케줄이 어긋날 수 없다.
         var cad=[a.cadence,a.sched].filter(Boolean).join(' · ');
+        // 수집일이 기준일과 다르면 함께 적는다 — 기준일을 시장 날짜로 맞추면서 생긴 차이라
+        // 숨기면 '왜 어제 것이지'가 된다.
+        if(a.collected) cad += ' · 수집 '+a.collected;
         return '<span class="axc">'+esc(a.label)+
                (cad?'<em>'+esc(cad)+'</em>':'')+'</span>';
       }).join('');

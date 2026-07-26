@@ -11,7 +11,7 @@ name: Refresh SEC filings (EDGAR)
 
 on:
   schedule:
-    - cron: '15 1 * * 6'    # 매주 토 10:15 KST (01:15 UTC) — 다른 잡(23:35~00:35 UTC)과 겹치지 않는 시간대
+    - cron: '45 23 * * 5'    # 매주 토 08:45 KST
   workflow_dispatch:
 
 permissions:
