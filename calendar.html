@@ -104,6 +104,9 @@
   .ev .ek{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:6px;padding:1px 0;text-align:center}
   .ev .en{font-size:13px;color:var(--ink)}
   .ev .es{grid-column:2;display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+  /* 주목도 별 — 이름 뒤에 붙는다. ★★★★(FOMC·고용·CPI)만 강조색. */
+  .ev .est{margin-left:7px;font-size:11px;letter-spacing:-1px;color:var(--marg);white-space:nowrap}
+  .ev .est.big{color:var(--hot);font-weight:700}
   .ev .es a{font-family:var(--mono);font-size:10.5px;text-decoration:none;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
   .ev .es a:hover{border-color:var(--accent);color:var(--accent)}
   .ev.past{opacity:.62}
@@ -620,7 +623,35 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var n=daysFrom(d);
     return n===0?'오늘':n===1?'내일':n===-1?'어제':(n>0?n+'일 뒤':(-n)+'일 전');
   }
-  var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)'};
+  var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)','이벤트':'var(--hot)'};
+
+  // ── 중요도(★)와 FOMC — FRED가 주지 않는 두 가지를 여기서 채운다 ──────────────
+  // ★는 FRED에 없다. 시장이 어느 발표에 더 크게 반응하는지는 이 랩이 매긴 주관적 눈금이며
+  //   검증된 신호가 아니다(주간회의에서 무엇부터 볼지 고르는 용도).
+  var STAR={'50':4,'10':4,'54':3,'46':3,'9':3,'192':2,'91':2,'27':2,'199':2,'13':2,
+            '180':1,'219':1,'21':1,'456':1};
+  // FOMC 일정도 FRED에 없다(FRED는 '데이터 릴리스'만 준다). 연준이 몇 년 치를 미리 공표하므로
+  //   결정일(회의 2일차)을 적어 둔다. 출처: federalreserve.gov FOMC calendars · 2027은 잠정.
+  var FOMC=['2026-01-28','2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16',
+            '2026-10-28','2026-12-09','2027-01-27','2027-03-17','2027-04-28','2027-06-09',
+            '2027-07-28','2027-09-15','2027-10-27','2027-12-08'];
+  var FOMC_SEP={'2026-03-18':1,'2026-06-17':1,'2026-09-16':1,'2026-12-09':1,
+                '2027-03-17':1,'2027-06-09':1,'2027-09-15':1,'2027-12-08':1};
+  function starOf(r){
+    if(r.rid==='FOMC'||r.rid==='FOMC_SEP')return 4;
+    return STAR[String(r.rid)]||0;
+  }
+  // calendar.json(=FRED 정본)은 건드리지 않고, 표시 단계에서만 FOMC를 얹는다.
+  function injectFomc(){
+    D.releases['FOMC']={name:'FOMC 금리결정',kind:'이벤트',series:[]};
+    D.releases['FOMC_SEP']={name:'FOMC 금리결정 · 점도표(SEP)',kind:'이벤트',series:[]};
+    var lo=(D.window&&D.window.from)||'', hi=(D.window&&D.window.to)||'';
+    FOMC.forEach(function(d){
+      if(lo&&d<lo)return; if(hi&&d>hi)return;          // 캘린더 창 밖은 싣지 않는다
+      D.dates.push({d:d,rid:(FOMC_SEP[d]?'FOMC_SEP':'FOMC')});
+    });
+    D.dates.sort(function(a,b){return a.d<b.d?-1:(a.d>b.d?1:starOf(b)-starOf(a));});
+  }
 
   function match(r){
     // 캘린더는 앞을 보는 표다 — 지난 발표는 기본으로 접는다(안 접으면 오늘까지 스크롤해야 한다)
@@ -651,9 +682,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var chips=(rel.series||[]).map(function(s){
         return '<a href="macro.html" title="'+esc(s.label||'')+'">'+esc(s.k)+'</a>';
       }).join('');
+      var st=starOf(r);
+      var stars=st?('<span class="est'+(st>=4?' big':'')+'" title="이 랩이 매긴 주목도(검증 신호 아님)">'+
+                    new Array(st+1).join('★')+'</span>'):'';
       buf.push('<div class="ev'+(past?' past':'')+'">'+
         '<span class="ek" style="--utc:'+(KCOLOR[rel.kind]||'var(--muted)')+'">'+esc(rel.kind||'—')+'</span>'+
-        '<span class="en">'+esc(rel.name||('릴리스 '+r.rid))+'</span>'+
+        '<span class="en">'+esc(rel.name||('릴리스 '+r.rid))+stars+'</span>'+
         (chips?'<span class="es">'+chips+'</span>':'')+
         '</div>');
     }
@@ -667,7 +701,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var rel=D.releases[String(r.rid)]; if(!rel)return;
       c[rel.kind]=(c[rel.kind]||0)+1;
     });
-    var order=['월간','분기','격주','주간','매일','부정기'];
+    var order=['이벤트','월간','분기','격주','주간','매일','부정기'];
     var ks=order.filter(function(k){return c[k];}), h='';
     ks.forEach(function(k){
       // 기본값: 매일 나오는 릴리스는 꺼 둔다. 금리·VIX가 캘린더를 뒤덮으면 '이벤트'가 안 보인다.
@@ -699,9 +733,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return;
     }
     D=j;
+    injectFomc();                       // FRED에 없는 FOMC를 표시 단계에서 얹는다
     var nrel=Object.keys(j.releases||{}).length;
     var nxt=j.dates.filter(function(r){return daysFrom(r.d)>=0;});
-    var nxtEvent=nxt.filter(function(r){var rl=j.releases[String(r.rid)];return rl&&rl.kind!=='매일';})[0];
+    // '다음 지표 발표'는 말 그대로 지표 — FOMC(이벤트)는 세지 않는다
+    var nxtEvent=nxt.filter(function(r){var rl=j.releases[String(r.rid)];
+      return rl&&rl.kind!=='매일'&&rl.kind!=='이벤트';})[0];
     el('cn-series').textContent=j.n_series;
     el('cn-back').textContent=(j.window&&j.window.back_days)||'—';
     el('cn-fwd').textContent=(j.window&&j.window.fwd_days)||'—';
