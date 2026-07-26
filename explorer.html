@@ -2133,7 +2133,9 @@
       st(AS.n,'대조 검정','자기 대조군과 겨룸');
     var order=['돌림','가능 · 미구현','가능 · 무거움','불가 · 유료 데이터'];
     var cnt={}; au.items.forEach(function(a){cnt[a.status]=(cnt[a.status]||0)+1;});
-    el('achips').innerHTML=order.filter(function(k){return cnt[k];}).map(function(k){
+    var kinds=order.filter(function(k){return cnt[k];});
+    el('achips').hidden=(kinds.length<2);   // 한 종류뿐이면 필터가 아니라 장식이다
+    el('achips').innerHTML=kinds.map(function(k){
       return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+cnt[k]+'</span></button>';
     }).join('');
     el('achips').onclick=function(e){
