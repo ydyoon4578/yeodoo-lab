@@ -69,6 +69,13 @@ DARK = {
     "--ink": "#E6EAEF", "--ink-2": "#BAC3CC", "--muted": "#8B95A1",
     "--shadow": "0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65)",
 }
+# 공용 부품이 기대는 의미색 2종. 색을 '바꾸는' 것이 아니라 **있게 보장하는** 것이다 —
+# 값은 21장이 이미 쓰던 정본 그대로다. 내비(sync_nav.py 생성)의 .asofchip.stale이 var(--hot)을
+# 쓰는데 explorer·signals에는 그 정의가 없어, 기준일이 낡았다는 표시가 아무 색도 없이 나왔다.
+# 공용 블록이 쓰는 토큰은 페이지마다 챙길 것이 아니라 셸이 책임진다.
+SHARED = {"light": {"--hot": "#A64B3B", "--marg": "#B25E12"},
+          "dark": {"--hot": "#E5806A", "--marg": "#F0863C"}}
+
 # 이전 값 — 대비가 나빠지지 않았는지 비교하는 기준선이다.
 OLD_LIGHT = {"--panel": "#FFFFFF", "--ink": "#1B2733", "--ink-2": "#42505E", "--muted": "#66757F"}
 OLD_DARK = {"--panel": "#181E26", "--ink": "#EAEEF2", "--ink-2": "#C4CDD6", "--muted": "#8A97A3"}
@@ -117,7 +124,8 @@ def _decl(d: dict) -> str:
 
 def build_shell() -> str:
     # % 서식 대신 치환을 쓴다 — CSS에 color-mix(… 7%) 처럼 %가 그대로 들어간다.
-    css = (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(LIGHT)).replace("@DARK@", _decl(DARK))
+    css = (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(LIGHT) + _decl(SHARED["light"]))
+           .replace("@DARK@", _decl(DARK) + _decl(SHARED["dark"]))
            + SHELL_END)
     # ⚠ style 종료 태그가 한 글자라도 섞이면 HTML 파서가 **주석 안이든 아니든** 거기서
     #   style 요소를 끝낸다. 그러면 뒤의 CSS 전체가 본문 글자로 쏟아진다. 실제로 밟았고
@@ -148,6 +156,10 @@ _CSS = """
 :root{
   --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
+  /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
+     stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다. */
+  --w-wide:1440px;--w-base:1200px;--w-read:980px;
 }
 
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은

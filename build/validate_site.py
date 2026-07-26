@@ -1056,6 +1056,27 @@ try:
 except Exception as e:
     errors.append(f"내비 정본 검사 실행 실패: {e}")
 
+# ── 정의 없이 쓰이는 CSS 변수 ────────────────────────────────────────────────
+# 24장이 각자 CSS를 들고 있어, 공용 부품이 쓰는 토큰을 어떤 페이지가 안 갖고 있어도
+# 아무도 알려주지 않는다. 값이 없으면 그 선언은 무효가 되고 색/폭이 조용히 사라진다 —
+# stocks.html이 max-width:var(--w-wide)를 정의 없이 써서 폭 제한이 풀려 있었고,
+# 내비의 .asofchip.stale이 쓰는 var(--hot)이 두 장에 없어 '낡음' 표시가 무색이었다.
+# 대체값이 있는 var(--x, y)는 없어도 동작하므로 세지 않는다.
+for _f in PAGES:
+    _t = plain(_f, "미정의 CSS 변수 검사")
+    if _t is None:
+        continue
+    _css = "\n".join(re.findall(r"<style[^>]*>(.*?)</style>", _t, re.S))
+    _used = {m.group(1) for m in re.finditer(r"var\(\s*(--[\w-]+)\s*\)", _css)}
+    _def = set(re.findall(r"(--[\w-]+)\s*:", _css))
+    # 인라인 style·JS setProperty로 요소에 직접 꽂는 것도 정의로 친다
+    _inl = set(re.findall(r'style="[^"]*?(--[\w-]+)\s*:', _t)) | \
+        set(re.findall(r"setProperty\(\s*['\"](--[\w-]+)", _t))
+    _miss = sorted(_used - _def - _inl)
+    if _miss:
+        errors.append(f"{_f}: 정의 없는 CSS 변수 {', '.join(_miss)} — 그 선언이 통째로 무효가 된다"
+                      f"(색·폭이 조용히 사라진다). 셸에 넣거나 페이지에 정의할 것")
+
 # ── 공통 셸 정본: 23장이 같은 글꼴·중립색·타이포를 갖는가 ─────────────────────
 # 내비와 같은 이유다. 다만 셸은 **페이지 CSS 뒤에 붙어야만** 이기므로, 마커가 첫 </style>
 # 안에 있는지까지 본다 — 마지막 </style>(NAVCSS)에 들어가면 다음 sync_nav가 지운다.
