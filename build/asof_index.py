@@ -96,6 +96,7 @@ WF = {
     "filings": "refresh-filings.yml", "facts": "refresh-facts.yml",
     "calendar": "refresh-calendar.yml", "guru": "refresh-13f.yml",
     "insider": "refresh-insider.yml", "earnings": "refresh-earnings.yml",
+    "estimates": "refresh-estimates.yml",
     "assets": "refresh-assets.yml", "tech": "refresh-tech.yml",
 }
 DOW = ["월", "화", "수", "목", "금", "토", "일"]
@@ -214,6 +215,8 @@ def main() -> int:
          "cadence": "분기 데이터셋", "note": "SEC가 분기로 묶어 내놓아 수십 일 지연이 구조적이다 — 실시간이 아니다"},
         {"key": "earnings", "label": "실적 발표 일정", "as_of": (load("earnings.json") or {}).get("as_of"),
          "cadence": "매일", "note": "예정일은 회사가 바꾼다 — 조회 시점의 예정일이며 확정이 아니다"},
+        {"key": "estimates", "label": "선행 컨센서스 지표", "as_of": (load("estimates.json") or {}).get("as_of"),
+         "cadence": "매일", "note": "애널리스트 추정 스냅샷 — 과거 시점 값이 없어 백테스트에 못 쓴다. 매일 쌓는 중"},
         {"key": "assets", "label": "자산 패널·아카이브 재검", "as_of": (load("assets.json") or {}).get("as_of"),
          "cadence": "주 1회", "note": "ETF·FRED·연준 EBP. 표본이 15~19년이라 하루로는 판정이 바뀌지 않는다"},
         {"key": "signals", "label": "지표별 타이밍 신호", "as_of": (load("signal_lab.json") or {}).get("as_of"),
@@ -230,7 +233,7 @@ def main() -> int:
     # 기준일은 그 데이터가 반영하는 **시장 날짜**로 맞추고, 실제 수집일은 따로 남긴다.
     # members도 여기 든다 — 자동 갱신으로 바꾸면서 '받은 날'을 기준일로 찍게 됐고,
     # 그 순간 대표(마지막 거래일)를 다시 앞질렀다. 수집일 축은 예외 없이 이 규칙을 탄다.
-    COLLECTED = {"earnings", "calendar", "rotation", "members"}
+    COLLECTED = {"earnings", "calendar", "rotation", "members", "estimates"}
     for a in axes:
         if a["key"] in COLLECTED and a["as_of"] > primary:
             a["collected"] = a["as_of"]

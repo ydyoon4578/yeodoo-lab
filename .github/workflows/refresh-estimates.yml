@@ -1,0 +1,53 @@
+name: Refresh forward estimates
+
+# 애널리스트 컨센서스(선행 EPS·매출·리비전)를 유니버스에 맞춰 받는다.
+#
+# 왜 필요한가 — 이 저장소는 "애널리스트 전망은 유료라 못 구한다"고 적어 두고 EPS 리비전
+#   계열을 재현 불가로 분류해 왔다. 그건 절반만 맞았다: yfinance가 quoteSummary의 분석
+#   모듈(eps_trend·eps_revisions·earnings_estimate·revenue_estimate)을 그대로 준다.
+#   못 하는 건 **과거**다 — 오늘 시점 스냅샷이라 백테스트를 못 돌린다.
+#
+# 그래서 매일 돌린다. 목록을 최신으로 유지하면서 **스냅샷을 쌓는 것**이 목적이다.
+#   data/estimates.json의 snaps가 두꺼워져야 리비전을 시계열로 검정할 수 있다.
+#
+# 무게 — 종목당 요청 1회(네 모듈이 한 응답에 온다). 518종목 실측 약 4.7분.
+#   종목 갱신(08:15)과 겹치지 않게 뒤로 뺀다 — 같은 Yahoo 엔드포인트를 두 잡이 동시에
+#   때리면 쓰로틀링에 걸려 둘 다 부분 응답을 받는다(실제로 겪은 유형).
+
+on:
+  schedule:
+    - cron: '40 23 * * 0-5'    # 매일(월~토) 08:40 KST — 종목 갱신 뒤
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-estimates
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install --quiet yfinance pandas
+      - name: Fetch forward estimates
+        run: python build/refresh_estimates.py
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_site.py
+      # estimates.json은 **누적 파일**이다(snaps). 커밋에서 빠지면 매 실행이 fresh checkout이라
+      # 그동안 쌓은 스냅샷이 영구 유실된다 — target_history·earnings_history와 같은 함정이다.
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 선행 컨센서스 지표 자동 갱신" \
+            data/estimates.json data/asof.json
+      - name: Verify freshness
+        run: python build/check_freshness.py data/estimates.json "선행 지표" 3
