@@ -330,6 +330,23 @@ if pool:
     except FileNotFoundError:
         pass
 
+    # 홈 슬림 묶음(home_flow.json)이 원본보다 낡았는지 — 워크플로에서 재생성을 빠뜨리면
+    # 홈만 옛 공시·수급을 말하고 다른 화면은 최신이라 아무도 알아채지 못한다.
+    try:
+        _hf = json.load(io.open(os.path.join(ROOT, "data", "home_flow.json"), encoding="utf-8"))
+        for _src, _key in (("filings.json", "filings"), ("insider.json", "insider"),
+                           ("guru.json", "guru"), ("earnings.json", "earnings")):
+            _p = os.path.join(ROOT, "data", _src)
+            if not os.path.exists(_p):
+                continue
+            _o = json.load(io.open(_p, encoding="utf-8")).get("as_of")
+            _n = (_hf.get(_key) or {}).get("as_of")
+            if _o and _n and _n < _o:
+                errors.append(f"home_flow.{_key}: 기준일 {_n}이 원본({_src}) {_o}보다 낡음 "
+                              f"— 워크플로에 build/home_flow.py 재생성이 빠졌다")
+    except FileNotFoundError:
+        pass
+
     for _rp in sorted(REDIRECTS):
         _rt = io.open(os.path.join(ROOT, _rp), encoding="utf-8").read()
         if "location.replace" not in _rt or "explorer.html" not in _rt:

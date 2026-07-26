@@ -33,6 +33,10 @@ jobs:
       # 설치 단계 없음 — build/edgar.py는 urllib·gzip·json만 쓴다
       - name: Collect SEC filings
         run: python build/refresh_filings.py
+      # 홈은 원본 대신 슬림 묶음(build/home_flow.py)을 읽는다 — 원본이 바뀌면 같이 다시 굽는다.
+      # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
+      - name: Rebuild home slim bundle
+        run: python build/home_flow.py
       - name: Rebuild as-of index
         # 기준일 정본(data/asof.json)에 filings 축이 있다 — 원본이 바뀌면 다시 구워야 한다.
         run: python build/asof_index.py
@@ -43,7 +47,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): SEC 공시·산업분류 자동 갱신" \
-            data/filings.json data/industry.json data/fil data/asof.json
+            data/filings.json data/industry.json data/fil data/home_flow.json data/asof.json
       # '돌았는데 낡은 데이터'면 잡 실패 → GitHub 기본 실패 알림 메일.
       # 창이 넉넉한 이유: as_of는 우리가 수집한 날이 아니라 회사가 마지막으로 제출한 날이다.
       # 연휴가 길면 며칠씩 안 움직이는 게 정상이라, 가격 잡(2일)과 같은 잣대를 쓰면 오탐이 된다.
