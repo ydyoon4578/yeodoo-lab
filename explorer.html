@@ -325,6 +325,8 @@
   .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
   .vtab .vn{font-weight:600;color:var(--muted);margin-left:5px;font-size:11px}
   #lab .sech:first-of-type{margin-top:26px}
+  #lab .viewlede{margin:9px 0 0;max-width:var(--w-read);font-size:13px;color:var(--ink-2);line-height:1.65}
+  #lab .viewlede b{color:var(--ink)}
   /* 구성종목 — 규칙만 읽고는 못 쓴다. '지금 무엇을 들고 있나'를 카드에 붙인다. */
   #lab .hold{margin:10px 0 0;padding:9px 11px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:9px}
   #lab .hold .hl{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -878,10 +880,10 @@
   </header>
 
   <nav class="views" id="views" aria-label="보기 전환">
-    <button class="vtab" type="button" data-v="ledger">전략 원장<span class="vn" id="vn-ledger"></span></button>
-    <button class="vtab" type="button" data-v="runs">돌린 규칙<span class="vn" id="vn-runs"></span></button>
-    <button class="vtab" type="button" data-v="audit">재현 재점검<span class="vn" id="vn-audit"></span></button>
-    <button class="vtab" type="button" data-v="rechk">스탠드얼론 재검<span class="vn" id="vn-rechk"></span></button>
+    <button class="vtab" type="button" data-v="ledger">배포 전략<span class="vn" id="vn-ledger"></span></button>
+    <button class="vtab" type="button" data-v="runs">종목 전략<span class="vn" id="vn-runs"></span></button>
+    <button class="vtab" type="button" data-v="audit">자산배분 전략<span class="vn" id="vn-audit"></span></button>
+    <button class="vtab" type="button" data-v="rechk">기각 재검<span class="vn" id="vn-rechk"></span></button>
   </nav>
 
   <div id="v-ledger">
@@ -927,7 +929,8 @@
   <div class="dupbox" id="dupbox" hidden></div>
 
   <section aria-labelledby="run-h">
-    <h2 id="run-h" class="sech">돌린 규칙 <span id="runsub"></span></h2>
+    <h2 id="run-h" class="sech">종목 전략 <span id="runsub"></span></h2>
+    <p class="viewlede">나스닥100·S&amp;P500 <b>518종목 중에서 고르는</b> 규칙입니다. 월말에 조건에 맞는 <b>상위 10종목</b>을 동일가중으로 담고 다음 월말에 다시 뽑습니다. 타이밍 규칙은 종목을 고르는 대신 <b>시장 전체 노출</b>을 켜고 끕니다.</p>
     <p class="sechn">벤치마크는 <b>동일가중 유니버스 매수후보유</b>입니다. Δ샤프는 그 대비 차이,
       t는 일간 초과수익의 대응표본 t값입니다. 정렬은 Δ샤프 순 — <b>순위가 곧 추천이 아닙니다.</b></p>
     <div class="frow" id="kchips"></div>
@@ -937,7 +940,8 @@
     </div>
     <div id="v-audit" hidden>
   <section aria-labelledby="norun-h">
-    <h2 id="norun-h" class="sech">재현 가능성 재점검 <span id="norunsub"></span></h2>
+    <h2 id="norun-h" class="sech">자산배분 전략 <span id="norunsub"></span></h2>
+    <p class="viewlede">개별 종목이 아니라 <b>ETF·지수 같은 자산</b>을 굴리는 규칙입니다. 주식·채권·금·원자재를 어떤 비중으로 들지, 언제 현금으로 빠질지를 정합니다. 구간이 전략마다 다른 건 쓰는 ETF의 상장일에 묶이기 때문입니다.</p>
     <p class="sechn">여기 있던 38건은 <b>이 저장소 데이터로는 재현할 수 없다</b>고 적혀 있었습니다.
       다시 점검하니 대부분은 <b>데이터가 세상에 없어서가 아니라 이 저장소가 안 갖고 있었을 뿐</b>이었습니다 —
       ETF 가격(yfinance)과 거시(FRED 공개 CSV, 키 불필요), 연준 EBP까지 전부 무료·무인증으로 열립니다.
@@ -954,7 +958,8 @@
     </div>
     <div id="v-rechk" hidden>
   <section aria-labelledby="rechk-h">
-    <h2 id="rechk-h" class="sech">스탠드얼론 재검 <span id="rechksub"></span></h2>
+    <h2 id="rechk-h" class="sech">기각 재검 <span id="rechksub"></span></h2>
+    <p class="viewlede">한 번 기각한 전략을 <b>단독으로 다시</b> 검정한 결과입니다. 원래 기각 사유가 "배포 포트폴리오에 얹으면 개선이 없다"는 <b>상대 판정</b>이었기 때문에, 전략 자체가 나쁜 것인지 따로 확인한 것입니다.</p>
     <p class="sechn">여기 있던 기각 사유의 상당수는 <b>"배포 포트폴리오에 얹었을 때 개선이 없다"</b>는
       <b>상대적</b> 판정이었습니다. 그래서 각 전략을 <b>단독</b>으로, 자기 유니버스 대조군(동일 실현변동성으로 맞춘 계열)과
       다시 검정했습니다. <b id="rechkv">—</b> — 시계열을 남긴 것만 싣습니다.</p>
@@ -1907,6 +1912,7 @@
       '<span class="rv '+(VC[r.verdict]||'vunv')+'">'+esc(r.verdict)+'</span></div>'+
       '<p class="rrule">'+esc(r.rule)+'</p>'+
       '<p class="rwhy">'+esc(r.why)+'</p>'+
+      holdBlock(r.holdings)+
       '<div class="rgrid">'+
         cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
         cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
@@ -1915,7 +1921,6 @@
       '</div>'+
       spark(r.nav,r.bnav,320,44)+
       '<p class="rbench">벤치마크 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%</p>'+
-      holdBlock(r.holdings)+
       (arch?'<p class="rarch"><b>이전 판정</b> · '+esc(arch.c)+' — '+esc(arch.r)+'</p>':'')+
       '</div>';
   }
@@ -1923,7 +1928,7 @@
   // ── 구성종목 ── 규칙만 읽고는 실제로 쓸 수가 없다. '지금 무엇을 들고 있나'를 붙인다.
   function holdBlock(h){
     if(!h) return '';
-    var head='<div class="hold"><span class="hl">지금 구성</span>';
+    var head='<div class="hold"><span class="hl">지금 보유'+(h.as_of?' · '+esc(h.as_of)+' 기준':'')+'</span>';
     if(h.kind==='timing')
       return head+'<b>노출 '+nf(h.exposure_now,1)+'%</b><em>'+esc(h.note||'')+'</em></div>';
     if(h.kind==='asset'||h.kind==='sleeve'){
@@ -2025,6 +2030,8 @@
             cell('Δ샤프',((S.sharpe-B.sharpe)>0?'+':'')+nf(S.sharpe-B.sharpe,3),(S.sharpe-B.sharpe)>0?'up':'dn')+
             cell('적중',nf(S.hit,1)+'%')+
           '</div>'+
+          '<div class="hold"><span class="hl">지금 보유</span><em>재검은 과거 성과만 다시 잰 것이라 '
+          + '현재 보유를 만들지 않습니다. 이 전략은 배포하지 않습니다.</em></div>'+
           spark(b.nav,b.bench,320,44)+
           (mu.n_tests?'<p class="rbench">다중검정 분모 '+esc(String(mu.n_tests))+'건 — 게시 건수가 아니라 재검 총 건수다. 통과 여부: '+(mu.passed?'통과':'미통과')+'</p>':'')+
           (a?'<p class="rarch"><b>기각 사유</b> · '+esc(a.r)+'</p>':'')+
@@ -2106,6 +2113,7 @@
       return head+
         '<p class="arule">'+esc(r.rule)+'</p>'+
         '<p>'+esc(r.why)+(a.why&&a.why!==r.why?' <em class="anote">'+esc(a.why)+'</em>':'')+'</p>'+
+        holdBlock(r.holdings)+
         '<div class="agrid">'+
           cell('구간',esc(r.start.slice(0,7))+'~'+esc(r.end.slice(0,7)))+
           cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
@@ -2113,7 +2121,6 @@
           cell('t',nf(r.t,2))+
         '</div>'+
         spark(r.nav,r.bnav,320,40)+
-        holdBlock(r.holdings)+
         '<p class="abench">대조군 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%'+
         (r.bench_unstable?' <b>· 대조군이 현금성이라 Δ샤프는 허수 — t만 볼 것</b>':'')+
         ' · 판정 <b class="ab '+(VW[r.verdict]||'')+'">'+esc(r.verdict)+'</b></p>'+

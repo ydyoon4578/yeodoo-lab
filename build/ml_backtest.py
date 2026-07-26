@@ -184,7 +184,7 @@ FEATS_XS = ["12-1 모멘텀", "1개월 반전", "60일 변동성", "200일선 �
             "50일선 이격도", "거래량 추세", "베타"]
 
 
-def stock_selection(RF, TOPN=50):
+def stock_selection(RF, TOPN=10):
     st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     DTS = st_["pxd_dates"]
     n = len(DTS)
@@ -318,7 +318,7 @@ def stock_selection(RF, TOPN=50):
 
 
 # ── ③ 13F 컨빅션 복제 ───────────────────────────────────────────────────
-def guru_clone(RF, TOPN=30, MIN_MGR=8):
+def guru_clone(RF, TOPN=10, MIN_MGR=8):
     """분기말 보유를 45일 뒤(제출 마감)부터 쓴다. 이 지연을 안 넣으면 있지도 않은 정보를 쓴다."""
     p = os.path.join(DATA, "guru_history.json")
     if not os.path.exists(p):
