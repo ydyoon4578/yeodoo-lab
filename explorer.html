@@ -317,6 +317,13 @@
   .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
   /* ── 뷰 전환 ── 원장·랩을 한 페이지에 두고 탭으로 가른다(2026-07-26 통합) */
+  .labperf{margin:16px 0 0}
+  .lpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:1px;background:var(--line-soft);
+       border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+  .lpg>div{background:var(--panel);padding:8px 10px}
+  .lpg span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .lpg b{font-family:var(--mono);font-size:14px;color:var(--ink)}
+  .labspark{display:block;width:100%;height:64px;margin:12px 0 0}
   .labhold{margin:14px 0 0;padding:11px 13px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px}
   .labhold .lh{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .labhold>b{font-family:var(--mono);font-size:14px;color:var(--ink);display:inline-block;margin-top:4px}
@@ -1137,13 +1144,16 @@
             t:x.rule||'', vt:(x.why||'')+(x.note?' <em>'+x.note+'</em>':''),
             _lab:true, _src:x.src, _hold:x.holdings||null,
             det:{kind:x.role||'미분류'},
-            bt:{ start:x.start, end:x.end, bench_label:b.label||'대조군',
-                 nav:x.nav||null, bench:x.bnav||null,
-                 metrics:{ s:{cagr:m.cagr,sharpe:m.sharpe,mdd:m.mdd,vol:m.vol},
-                           b:{cagr:b.cagr,sharpe:b.sharpe,mdd:b.mdd,label:b.label},
-                           basis:{} } },
+            _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
+            _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable
           };
+          // 목록 헤드라인 — 성격에 맞는 지표를 고른다(수익엔진=CAGR · 배분기=샤프 · 그 외=MDD)
+          var hk=(x.role==='수익엔진')?['cagr','CAGR','%']:
+                 (x.role==='배분기')?['sharpe','샤프','']:['mdd','최대낙폭','%'];
+          var hv=m[hk[0]];
+          d.m=(hv==null)?'—':(Number(hv).toFixed(hk[0]==='sharpe'?3:2)+hk[2]);
+          d.ml=hk[1];
           d._i=D.length; D.push(d);
         });
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
@@ -1786,7 +1796,32 @@
             '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }
       }
-      play = holdHtml +
+      var mm=d._m||{}, bb=d._b||{};
+      var f=function(v,k){return (v==null||v!==v)?'—':Number(v).toFixed(k==null?2:k);};
+      var perf='<div class="labperf">'+
+        '<div class="lpg">'+
+          '<div><span>구간</span><b>'+esc((d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7))+'</b></div>'+
+          '<div><span>CAGR</span><b>'+f(mm.cagr)+'%</b></div>'+
+          '<div><span>샤프</span><b>'+f(mm.sharpe,3)+'</b></div>'+
+          '<div><span>MDD</span><b>'+f(mm.mdd)+'%</b></div>'+
+          '<div><span>대조군 샤프</span><b>'+f(bb.sharpe,3)+'</b></div>'+
+          '<div><span>대조군 CAGR</span><b>'+f(bb.cagr)+'%</b></div>'+
+        '</div>'+
+        (function(){
+          var a=d._nav||[], b2=d._bnav||[];
+          if(a.length<3)return '';
+          var all=a.concat(b2), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
+          if(!(hi>lo))return '';
+          var W=440,H=64;
+          var pth=function(arr){return arr.map(function(v,i){
+            return (i?'L':'M')+((i/(arr.length-1))*W).toFixed(1)+' '+(H-((v-lo)/(hi-lo))*H).toFixed(1);}).join(' ');};
+          return '<svg class="labspark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+
+            (b2.length?'<path d="'+pth(b2)+'" fill="none" stroke="var(--muted)" stroke-width="1" opacity=".6"/>':'')+
+            '<path d="'+pth(a)+'" fill="none" stroke="var(--accent)" stroke-width="1.8"/></svg>'+
+            '<p class="labnote">굵은 선이 이 전략, 흐린 선이 대조군('+esc(bb.label||'—')+')입니다.</p>';
+        })()+
+      '</div>';
+      play = perf + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
           return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">대조군이 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+
