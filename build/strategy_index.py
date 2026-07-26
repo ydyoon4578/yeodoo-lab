@@ -213,6 +213,9 @@ def main() -> int:
             sid="t-" + r["sid"], name=r["name"], role=r.get("role") or "미분류",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="종목 전략", rule=r.get("rule"), why=r.get("why"),
+            # 대조군 이름은 파일 머리에 하나로 있다(종목 전략은 전부 같은 대조군을 쓴다).
+            # 레코드로 안 옮기면 화면이 '무엇과 겨뤘나'를 못 적는다.
+            bench_label=t.get("bench_label"),
             start=t.get("start"), end=t.get("as_of"),
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
@@ -252,6 +255,7 @@ def main() -> int:
         rows.append(rec(
             sid="r-" + sid, name=x.get("n") or sid, role=RECHK_ROLE.get(sid, "미분류"),
             grade="미채택", src="기각 재검", cat=x.get("c"),
+            bench_label=b.get("bench_label") or ((b.get("metrics") or {}).get("b") or {}).get("label"),
             rule="기각한 전략을 단독으로 다시 검정한 결과다. 원 기각 사유가 "
                  "'배포 포트폴리오에 얹으면 개선이 없다'는 상대 판정이었기 때문이다.",
             why=x.get("r"),
