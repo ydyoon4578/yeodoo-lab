@@ -231,6 +231,7 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            bench_label=r.get("bench_label"),
             start=r.get("start"), end=r.get("end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
