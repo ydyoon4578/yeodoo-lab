@@ -400,14 +400,32 @@ if pool:
             errors.append(f"{_rp}: 해시를 넘기지 않는다 — #s-… 딥링크가 목적지를 잃는다")
 
     _ak = plain("explorer.html", "구 슬러그(aka) 해석 로직 검사(랩)")
-    if _ak is not None and ("aka" not in _ak or "ALIAS" not in _ak):
-        errors.append("explorer.html(랩): 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
-    # 딥링크 도착지 유일성 — 아카이브는 카드를 세 섹션(돌린 규칙·재검 부기·못 돌린 것)에
-    # 나눠 그리는데 같은 sid가 두 섹션에 동시에 나온다(실측 5건). 그래서 재검 카드는 rc-
-    # 네임스페이스를 쓴다. 여기로 되돌아가면 #s-<sid>가 문서 순서상 앞 카드로 끌려가
-    # "링크는 열리는데 다른 규칙이 보인다"는 조용한 오작동이 된다.
-    if _ak is not None and 'id="rc-' not in _ak:
-        errors.append("explorer.html(랩): 재검 카드가 rc- 앵커를 쓰지 않음 — sid가 겹쳐 딥링크 도착지가 어긋난다")
+    # ⚠ 이 검사는 원래 "'aka'와 'ALIAS'라는 글자가 페이지 어딘가에 있는가"만 봤다. 그러면
+    #   ① 표를 만들기만 하고 해석에 안 써도 ② 다른 블록(전략 목록)의 aka 로직이 대신 걸려도
+    #   통과한다 — 실제로 기각 원장의 aka 해석을 통째로 없애도 안 잡혔다(음성 테스트로 확인).
+    #   그래서 **기각 원장 블록만 떼어내** 그 안에서 표를 만드는 곳과 읽는 곳을 둘 다 요구한다.
+    #   (옛 archive.html 딥링크 #s-<옛슬러그>가 도착할 곳은 목록이 아니라 이 원장이다)
+    _led = ""
+    if _ak is not None:
+        _lm = re.search(r"(?s)<script>((?:(?!</script>).)*?al-body(?:(?!</script>).)*?)</script>", _ak)
+        _led = _lm.group(1) if _lm else ""
+        if not _led:
+            errors.append("explorer.html(랩): 기각 원장 블록(al-body)을 찾지 못함 — 목록이 사라졌는지 확인")
+    #   ALIAS는 **만들기(ALIAS[k]=…)와 읽기(ALIAS[slug])를 구분**해서 본다. 표만 만들고
+    #   해석에 안 쓰면 딥링크는 그대로 깨지는데 'ALIAS'라는 글자는 남아 통과해 버린다.
+    _alias_reads = [g for g in re.findall(r"ALIAS\s*\[[^\]]*\]\s*(=?)", _led) if g != "="]
+    if _led and not (re.search(r"\.aka\s*\|\|", _led) and _alias_reads):
+        errors.append("explorer.html(랩): 기각 원장에 구 슬러그(aka) 해석 로직이 없음 — 기존 딥링크가 깨진다")
+    # 딥링크 도착지 유일성 — 같은 sid가 두 곳에 앵커를 만들면 #s-<sid>가 문서 순서상 앞
+    # 카드로 끌려가 "링크는 열리는데 다른 규칙이 보인다"는 조용한 오작동이 된다.
+    #   2026-07-27: 랩 탭이 폐지되며(2554b44) 재검 카드 섹션이 사라져 rc- 앵커도 없어졌다.
+    #   지금 sid로 앵커를 만드는 곳은 목록('s-')과 기각 원장('a-') 둘이므로, 검사도 그
+    #   **네임스페이스 분리**를 본다(요구는 그대로다 — 대상만 현재 구현으로 옮겼다).
+    #   앵커를 **만드는 자리**(id="a-…)를 본다 — 조회 코드에 'a-'가 남아 있는 것만으로는
+    #   통과하면 안 된다(음성 테스트로 확인).
+    if _ak is not None and 'id="a-' not in _ak:
+        errors.append("explorer.html(랩): 기각 원장이 'a-' 앵커 네임스페이스를 쓰지 않음 "
+                      "— 목록의 's-'와 겹치면 딥링크 도착지가 어긋난다")
     # aka는 sid 공간과 섞이면 안 된다(구 슬러그가 남의 sid와 같으면 해석이 갈린다)
     _sids = {x.get("sid") for x in AREC}
     _seen_aka = {}
