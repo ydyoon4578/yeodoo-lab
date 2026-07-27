@@ -105,7 +105,7 @@ def thin(a, k=60):
 # ── 같은 구간 지수(PR) 기준선 ─────────────────────────────────────────────
 # 전략마다 대조군이 다르다(동일가중 유니버스·SPY·60/40·현금…). 그래서 "그래서 좋은 건가"를
 # 물으면 답이 전략마다 다른 잣대로 나온다. 누구나 아는 눈금 하나를 같이 얹는다 —
-# **같은 구간의 S&P 500·나스닥100 가격지수(PR)**다.
+# **같은 구간의 S&P 500·NASDAQ 100 가격지수(PR)**다.
 #
 # ⚠ 이 줄은 판정용이 아니다. 전략 수익은 배당을 재투자한 총수익(TR) 기준인데 지수는 PR이라
 #   배당이 빠져 있다. 2006년 이후 그 격차가 연 2.0%p다 — PR과 겨루면 전략이 그만큼 유리해
@@ -188,7 +188,7 @@ def pr_split(kw):
         return None                      # 판정 자체가 성립 안 하면 엇갈림도 말하지 않는다
     win_bench = sc > bc
     out = []
-    for k, lab in (("spx", "S&P 500"), ("ndx", "나스닥 100")):
+    for k, lab in (("spx", "S&P 500"), ("ndx", "NASDAQ 100")):
         ic = (pr.get(k) or {}).get("cagr")
         if ic is None:
             continue
@@ -339,8 +339,8 @@ def main() -> int:
             nav=b.get("nav"), bnav=b.get("bench"),
         ))
 
-    # ── 낙폭 방어 계열 제외 ──────────────────────────────────────────────────
-    # 사용자 결정(2026-07-27). 위험감축 5종·방어보험 3종을 목록에서 뺀다.
+    # ── 목록 제외(운용 결정) ────────────────────────────────────────────────
+    # 사용자 결정(2026-07-27). 위험감축 5종·방어보험 3종 + 합병차익 1종을 목록에서 뺀다.
     #
     # ⚠ 위와 같은 원칙이다 — **화면 목록에서만 빼고 측정 기록은 그대로 둔다.**
     #   asset_strategies.json·archive_backtests.json·deploy_index.json 은 손대지 않는다.
@@ -359,6 +359,11 @@ def main() -> int:
         "dynamic-vol-target", "duration-scaling", "bond-regime-overlay-agg",   # 배포 원장
         "a-rp-voltarget", "a-vol-roll", "a-tail-hedge",                        # 자산배분
         "r-low-beta-weight-tilt", "r-tail-risk-hedge",                         # 기각 재검
+        # 합병차익거래(2026-07-27 추가, 사용자 결정). 같은 원칙 — 목록에서만 빼고 기록은 둔다.
+        #   실측: CAGR 2.66% · Sharpe −0.109 (대조군 SHY 1.33% · −1.778). Δ샤프 +1.669 는
+        #   대조군의 변동성이 1.34%로 극단적으로 작아 생긴 증폭이지 초과수익의 크기가 아니다
+        #   (asset_backtest.py 150행에 같은 함정을 적어 뒀다). 절대수익형인데 Sharpe 가 음수다.
+        "a-merger-arb",                                                        # 자산배분
     }
     _found = {r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
     _hid2 = [(r["name"], r["role"]) for r in rows if r["sid"] in HIDE_SIDS]
@@ -369,7 +374,7 @@ def main() -> int:
         raise SystemExit("제외 대상 sid 를 원본에서 못 찾았다: %s — sid 가 바뀌었는지 확인할 것"
                          % sorted(HIDE_SIDS - _found))
     if _hid2:
-        print("  낙폭 방어 계열 %d종을 목록에서 제외(사용자 결정) — 측정 기록에는 남는다:" % len(_hid2))
+        print("  목록 제외 %d종(사용자 결정) — 측정 기록에는 남는다:" % len(_hid2))
         for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0])):
             print("    · [%s] %s" % (_r, _n[:48]))
 
@@ -391,10 +396,12 @@ def main() -> int:
         "hidden": ([{"name": _n, "sharpe": _s} for _n, _s in sorted(_hidden, key=lambda x: -x[1])]
                    + [{"name": _n, "role": _r} for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0]))]),
         "hidden_note_defensive": (
-            "위험감축·방어보험 %d종을 목록에서 뺐다(사용자 결정 2026-07-27). "
+            "위험감축·방어보험·합병차익 %d종을 목록에서 뺐다(사용자 결정 2026-07-27). "
             "이 계열을 이 랩에서 다루지 않기로 한 **운용 결정**이지 성과 판정이 아니다 — "
             "이들의 headline 은 최대낙폭이고 그 축에서는 낮을수록 좋아서, 빠지는 8종 중 "
             "−11.19%%·−12.33%%·−15.30%% 는 전 목록에서 가장 좋은 낙폭이다. "
+            "합병차익(a-merger-arb)은 낙폭 계열이 아니라 별건이며, 단독 Sharpe −0.109 로 "
+            "절대수익형의 목적을 못 채운 쪽이다. "
             "여기서도 **측정 기록은 지우지 않는다** — asset_strategies.json·"
             "archive_backtests.json·deploy_index.json 은 그대로 둔다."
             % len(_hid2)) if _hid2 else None,
