@@ -678,7 +678,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </header>
 
   <div class="home">
-    <!-- ① 일정 캘린더 — 4주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
+    <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
     <section id="s-week" aria-labelledby="wk-h">
       <p class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub">· 실적 발표와 지표 일정</span></p>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
@@ -1034,8 +1034,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     Object.keys(M).forEach(function(k){
       M[k].sort(function(a,b){return starOfName(b)-starOfName(a);});
     });
-    // 기준일이 낀 주의 월요일부터 4주
-    var start=new Date(t0); start.setDate(start.getDate()-((start.getDay()+6)%7));
+    // 창 = 지난 1주 + 앞으로 3주(기준주 포함). 기준주의 월요일에서 **한 주 더 뒤로** 잡는다.
+    //   기준일이 낀 주의 월요일부터 4주로 두면, 기준일이 월요일인 날(주간 갱신 직후)에
+    //   지난주가 통째로 사라져 '앞으로만 보이는 달력'이 된다 — 실제로 그렇게 보였다.
+    //   무엇이 지나갔는지 옆에 있어야 이번 주 일정이 읽힌다.
+    var start=new Date(t0); start.setDate(start.getDate()-((start.getDay()+6)%7)-7);
     var h='';
     DOW.forEach(function(d){h+='<div class="caldow">'+d+'</div>';});
     for(var w=0;w<4;w++){
@@ -1079,13 +1082,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
     }
     box.innerHTML='<div class="calgrid">'+h+'</div>';
-    // 화면에 보이는 4주 창 안의 건수만 센다(전체를 적으면 표와 안 맞는다)
+    // 화면에 보이는 창(지난 1주+앞으로 3주) 안의 건수만 센다(전체를 적으면 표와 안 맞는다)
     var shownE=0, shownM=0;
     for(var w2=0;w2<4;w2++)for(var i2=0;i2<5;i2++){
       var dd=new Date(start); dd.setDate(start.getDate()+w2*7+i2);
       var kk=ymd(dd); shownE+=(E[kk]||[]).length; shownM+=(M[kk]||[]).length;
     }
-    el('wk-sub').textContent='· 이 4주 실적 '+shownE+'건 · 주요 지표·이벤트 '+shownM+'건 · 기준 '+base;
+    el('wk-sub').textContent='· 지난 1주+앞으로 3주 · 실적 '+shownE+'건 · 주요 지표·이벤트 '+shownM+'건 · 기준 '+base;
   }
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
   // 캘린더 이벤트·주목도 정본을 먼저 읽고(없어도 진행) 홈 묶음을 읽는다.
