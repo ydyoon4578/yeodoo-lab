@@ -559,6 +559,78 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="note cool" id="linknote"></div>
   </section>
 
+  <!-- ②-2 섹터 ETF 실제 성과 ────────────────────────────────────────
+       위(브레드스)는 '몇 %가 200일선 위인가', 아래(레짐 평균)는 '과거 같은 국면의 평균'이다.
+       정작 **그 섹터가 최근에 얼마나 갔는가**는 어디에도 없었다. 그 칸을 여기서 메운다. -->
+  <section aria-labelledby="perf-h">
+    <p class="lbl" id="perf-h">섹터 ETF 실제 성과 <span class="sub">· 기간별 수익률 · 열 제목을 누르면 정렬</span></p>
+    <p class="lblnote">위 표가 <b>종목 집계</b>(200일선 위 비율 등)라면, 이 표는 <b>SPDR 섹터 ETF 자체의 수익률</b>입니다.
+      둘은 다른 것을 잽니다 — 종목 절반이 200일선 위여도 큰 종목이 빠지면 ETF는 내릴 수 있습니다.
+      <b>52H</b>는 최근 1년 고점 대비, <b>RSI</b>는 Wilder(14)입니다.
+      <b>최근 많이 오른 섹터를 사라는 뜻이 아닙니다</b> — 이 랩은 그런 추종(팩터 모멘텀)을 검정해
+      <a href="explorer.html">자기 대조군과 구별되지 않는다</a>고 판정했습니다. 상태 표시로만 읽으십시오.</p>
+    <div class="tblwrap"><div id="secperf"><div class="skel">불러오는 중…</div></div></div>
+    <p class="lblnote cov" id="secperfnote"></p>
+  </section>
+<script>
+/* 섹터 ETF 다기간 성과 — data/market_board.json(생성기 build/market_board.py)만 읽는다.
+   위쪽 렌더 함수와 **독립**으로 둔다: 저 함수는 stocks+regime 두 파일에 묶여 있어
+   한쪽이 늦으면 통째로 실패한다. 이 표는 파일 하나만 있으면 그려진다. */
+(function(){
+  var box=document.getElementById('secperf'); if(!box)return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var COLS=[['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],['12M','12개월'],['YTD','YTD']];
+  var st={key:'1W',dir:-1};
+  function cell(v){
+    if(v==null)return '<td>—</td>';
+    // 색은 부호와 크기만 나타낸다. 짙다=좋다가 아니라 짙다=많이 움직였다.
+    var mag=Math.min(1,Math.abs(v)/15), c=v>=0?'14,138,84':'166,75,59';
+    return '<td style="background:rgba('+c+','+(mag*0.30).toFixed(3)+');color:'+
+      (v>=0?'var(--good)':'var(--hot)')+'">'+(v>0?'+':'')+v.toFixed(1)+'</td>';
+  }
+  function draw(rows){
+    rows=rows.slice().sort(function(a,b){
+      var x,y;
+      if(st.key==='rsi'){x=a.rsi;y=b.rsi;}
+      else if(st.key==='off52'){x=a.off52;y=b.off52;}
+      else {x=a.r[st.key];y=b.r[st.key];}
+      if(x==null)return 1; if(y==null)return -1;
+      return (x-y)*st.dir;
+    });
+    var head='<tr><th scope="col">섹터<span class="u">ETF</span></th>'+
+      COLS.map(function(c){return '<th scope="col"'+(st.key===c[0]?' aria-sort="'+(st.dir<0?'descending':'ascending')+'"':'')+
+        '><button data-k="'+c[0]+'">'+c[1]+'<span class="ar">'+(st.key===c[0]?(st.dir<0?'▼':'▲'):'⇅')+'</span><span class="u">%</span></button></th>';}).join('')+
+      '<th scope="col"><button data-k="off52">52H<span class="ar">'+(st.key==='off52'?(st.dir<0?'▼':'▲'):'⇅')+'</span><span class="u">고점대비 %</span></button></th>'+
+      '<th scope="col"><button data-k="rsi">RSI<span class="ar">'+(st.key==='rsi'?(st.dir<0?'▼':'▲'):'⇅')+'</span><span class="u">Wilder 14</span></button></th></tr>';
+    var body=rows.map(function(x){
+      return '<tr><th scope="row">'+esc(x.n)+'<span class="etf">'+esc(x.t)+'</span></th>'+
+        COLS.map(function(c){return cell(x.r[c[0]]);}).join('')+
+        '<td>'+(x.off52==null?'—':x.off52.toFixed(0))+'</td>'+
+        '<td>'+(x.rsi==null?'—':x.rsi.toFixed(0))+'</td></tr>';
+    }).join('');
+    box.innerHTML='<table class="hm"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+    Array.prototype.forEach.call(box.querySelectorAll('thead button'),function(b){
+      b.addEventListener('click',function(){
+        var k=b.getAttribute('data-k');
+        if(st.key===k)st.dir=-st.dir; else {st.key=k;st.dir=-1;}
+        draw(rows);
+      });
+    });
+  }
+  fetch('data/market_board.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    if(!d||!d.sector||!d.sector.length){
+      box.innerHTML='<div class="skel">성과 보드를 불러오지 못했습니다.</div>';return;}
+    draw(d.sector);
+    var n=document.getElementById('secperfnote');
+    // 기준일을 적는 이유 — 이 파일은 주 1회(토) 갱신이라 위쪽 종목 표와 날짜가 다를 수 있다.
+    if(n)n.textContent='기준일 '+(d.as_of||'—')+' · 배당 재투자 반영 종가(yfinance) · 주 1회 갱신이라 '+
+      '위 종목 집계와 기준일이 다를 수 있습니다.';
+  })['catch'](function(){box.innerHTML='<div class="skel">성과 보드를 불러오지 못했습니다.</div>';});
+})();
+</script>
+
   <!-- ③ 현재 레짐 조건부 성과 ─────────────────────────────────────── -->
   <section aria-labelledby="cur-h">
     <p class="lbl" id="cur-h">현재 레짐의 과거 월평균 <span class="sub" id="cursub"></span></p>
