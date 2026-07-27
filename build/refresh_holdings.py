@@ -5,13 +5,20 @@
   (FactSet 추정치·SPG 팩터) 파생 보유(챔피언·단일팩터 top10·팩터모멘텀)는 공개하지 않는다 —
   라이선스 파생 데이터 재배포 + 배포 전략 IP 노출. 여기에 전략을 추가할 때 이 정책을 지킬 것.
 
-무료 가격만으로 재현 가능한 3전략의 최신 리밸런스 구성:
+무료 가격만으로 재현 가능한 전략의 최신 리밸런스 구성:
   · 크로스에셋 RP: 12 ETF 60일 역변동성 + 위험자산 12M 추세게이트 + vol타겟 10%(0.3~2.5x)
-  · 섹터 RP: 11 SPDR 섹터 ETF 60일 역변동성
-  · 변동성 관리: NDX 익스포저 = min(15%/21일 실현σ, 100%)
 규칙은 랩 정본(combined_portfolio_deploy.rp_sleeve · strategy_backtests_gen)과 동일.
 가격 소스만 yfinance라 사내 정본과 비중이 소수점에서 다를 수 있다(방법론 동일).
 출력: data/strategy_holdings.json — explorer.html이 '현재 포트폴리오 구성' 표로 렌더.
+
+⚠ 전략 키는 explorer.html D 배열의 "n"과 **완전히 같아야** 한다. validate_site.py가
+  이 조인을 검사하고, 어긋나면 화면에 조용히 안 뜨므로 실패로 막는다. 전략을 추가할 때는
+  explorer.html에 먼저 항목이 있는지 확인할 것.
+  · 섹터 RP(11 SPDR 역변동성)는 explorer에 대응 항목이 없어 뺐다. 있는 것은 '섹터 모멘텀
+    로테이션(Top 4)'으로 규칙이 다른 전략이다 — 이름만 맞춰 붙이면 안 된다.
+  · 변동성 관리(NDX σ타겟 15%)도 뺐다. '동적 변동성 타깃팅'이 이름은 비슷하나 목표변동성
+    수치가 명시돼 있지 않아 같은 전략이라 단정할 수 없다.
+  둘 다 백테스트·판정 기록을 갖춘 뒤 explorer에 올리고 여기에 되살릴 것.
 """
 from __future__ import annotations
 import os, json
@@ -27,7 +34,6 @@ ANN = 252
 
 CORE = ["SPY", "QQQ", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "UUP", "HYG", "LQD", "VNQ"]
 RISKY = {"SPY", "QQQ", "EFA", "EEM", "DBC", "VNQ"}
-SECT = ["XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY"]
 ETF_NAMES = {
     "SPY": "SPDR S&P 500 (미국 대형주)", "QQQ": "Invesco QQQ (나스닥100)",
     "EFA": "iShares MSCI EAFE (선진국 ex-US)", "EEM": "iShares MSCI EM (신흥국)",
@@ -35,11 +41,6 @@ ETF_NAMES = {
     "GLD": "SPDR Gold (금)", "DBC": "Invesco DB Commodity (원자재)",
     "UUP": "Invesco 달러인덱스", "HYG": "iShares 하이일드 회사채",
     "LQD": "iShares 투자등급 회사채", "VNQ": "Vanguard 미국 리츠",
-    "XLB": "Materials (소재)", "XLC": "Communication Services (커뮤니케이션)",
-    "XLE": "Energy (에너지)", "XLF": "Financials (금융)", "XLI": "Industrials (산업재)",
-    "XLK": "Technology (기술)", "XLP": "Consumer Staples (필수소비)",
-    "XLRE": "Real Estate (부동산)", "XLU": "Utilities (유틸리티)",
-    "XLV": "Health Care (헬스케어)", "XLY": "Consumer Discretionary (경기소비)",
 }
 
 
@@ -84,7 +85,8 @@ def main():
     lev = (0.10 / (port.rolling(30).std() * np.sqrt(ANN))).clip(0.3, 2.5)
     excluded = {t: f"12M 추세 {tr.loc[d0, t]*100:+.1f}% ≤ 0 → 추세게이트 제외(위험자산)"
                 for t in CORE if t in RISKY and w[t] == 0}
-    S["크로스에셋 리스크패리티 + vol타겟"] = {
+    # 키 = explorer.html D 배열의 "n" 그대로(조인 검사 대상 — 한 글자도 다르면 화면에서 사라진다)
+    S["크로스에셋 리스크패리티 (Cross-Asset Risk Parity · 12자산)"] = {
         "as_of": str(d0.date()), "kind": "assets",
         "note": "주식·채권·금·원자재 등 12개 자산을 '많이 흔들리는 자산은 적게, 덜 흔들리는 자산은 많이' 담습니다. "
                 "최근 1년간 내리막인 위험자산은 제외하고, 전체 변동성이 연 10%가 되도록 투자 비율을 조절합니다. 매월 말 재계산.",
@@ -92,37 +94,6 @@ def main():
                             key=lambda x: -x["w"]),
         "extra": {"vol타겟_레버리지": round(float(lev.dropna().iloc[-1]), 2), "목표변동성": "10%",
                   "추세게이트_제외": excluded if excluded else "없음(전 위험자산 추세 양호)"},
-    }
-
-    # ── 섹터 RP ──
-    print("섹터 RP…", flush=True)
-    spx_ = fetch_close(SECT)[SECT]
-    rs = spx_.pct_change(); ivs = 1.0 / rs.rolling(60).std()
-    mw = ivs.resample("ME").last(); mw = mw.div(mw.sum(axis=1), axis=0).fillna(0)
-    md = complete_months(mw.index, spx_.index[-1])[-1]
-    S["섹터 리스크패리티 (역변동성)"] = {
-        "as_of": str(md.date()), "kind": "assets",
-        "note": "미국 11개 업종 ETF를 '최근 3개월간 덜 흔들린 업종일수록 더 많이' 담는 방식으로 배분합니다. 매월 말 재계산.",
-        "positions": sorted([{"t": t, "name": ETF_NAMES[t], "w": round(float(mw.loc[md, t]), 4)} for t in SECT],
-                            key=lambda x: -x["w"]),
-        "extra": {"룩백": "60거래일 실현변동성"},
-    }
-
-    # ── 변동성 관리 (NDX) ──
-    print("변동성 관리…", flush=True)
-    ndx = fetch_close(["^NDX"])["^NDX"].dropna()
-    rv = ndx.pct_change().fillna(0)
-    realized = rv.rolling(21).std() * np.sqrt(ANN)
-    me_idx = rv.resample("ME").last().index
-    d1 = complete_months(me_idx, ndx.index[-1])[-1]
-    rv_at = float(realized[realized.index <= d1].iloc[-1])
-    ex = min(0.15 / rv_at, 1.0) if rv_at > 0 else 0.0
-    S["변동성 관리 (σ타겟 익스포저)"] = {
-        "as_of": str(d1.date()), "kind": "assets",
-        "note": "나스닥100 지수가 최근 한 달간 많이 흔들리면 주식 비중을 줄이고 현금을 늘립니다. 목표는 연 15% 변동성, 레버리지는 쓰지 않습니다. 매월 말 재계산.",
-        "positions": [{"t": "NDX", "name": "나스닥100 지수", "w": round(ex, 4)},
-                      {"t": "CASH", "name": "현금", "w": round(1 - ex, 4)}],
-        "extra": {"실현변동성_21일": f"{rv_at*100:.1f}%", "목표변동성": "15%"},
     }
 
     out = {"generated": pd.Timestamp.utcnow().strftime("%Y-%m-%d"),
@@ -140,7 +111,7 @@ def main():
             if k not in st: errs.append(f"{nm}: {k} 누락")
         ws = sum(p["w"] for p in st["positions"])
         if abs(ws - 1.0) > 0.01: errs.append(f"{nm}: 비중합 {ws:.4f}")
-    if len(chk["strategies"]) != 3: errs.append(f"전략 수 {len(chk['strategies'])} ≠ 3")
+    if len(chk["strategies"]) != 1: errs.append(f"전략 수 {len(chk['strategies'])} ≠ 1")
     if errs:
         raise SystemExit("자기검증 실패: " + "; ".join(errs))
     print("자기검증 통과 ✓")

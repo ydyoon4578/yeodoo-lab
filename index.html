@@ -1030,12 +1030,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var off=etOffset(y,mo,da);
     return new Date(Date.UTC(y,mo-1,da,hh,mm)-off*3600000+9*3600000);
   }
-  // 장전 → "한국 7/28 22:30 이전" · 장후 → "한국 7/29 05:00 이후"
+  // 장전 → "22:30 이전" · 장후 → "05:00 이후" (한국시간, 시:분만)
+  //   날짜는 적지 않는다 — 어느 나라 시간인지는 범례가 한 번만 말한다.
+  //   장후가 다음날 새벽이라는 것도 범례에 있다("한국 다음날 새벽").
   function kstNote(dtStr,hour){
     var k=(hour==='장전')?etToKst(dtStr,9,30):(hour==='장후'?etToKst(dtStr,16,0):null);
     if(!k)return '';
-    var hm=('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2);
-    return '한국 '+(k.getUTCMonth()+1)+'/'+k.getUTCDate()+' '+hm+(hour==='장전'?' 이전':' 이후');
+    return ('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2)+
+           (hour==='장전'?' 이전':' 이후');
   }
   // ── 캘린더 주목도(★)와 FOMC — 정본은 data/events.json ────────────────────
   //   FRED는 FOMC 일정도 주목도도 주지 않는다. 그 둘만 build/refresh_events.py가 한 곳에서
