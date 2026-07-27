@@ -1334,20 +1334,62 @@ try:
 except Exception as e:
     errors.append(f"가격 패널 길이 검사 실패: {e}")
 
-# ── 게시 문구에 기간 리터럴이 박혀 있지 않은가 ─────────────────────────────
-#   "표본이 3년(2254거래일)뿐이다" 같은 자기모순을 실제로 출력한 적이 있다.
-#   거래일 수는 데이터에서 파생하면서 연수는 손으로 적어 둔 탓이다.
-try:
-    _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
-    _yrs = (_ts.get("n_days") or 0) / 252.0
-    for _lim in (_ts.get("limits") or []):
-        _m = re.search(r"(\d+(?:\.\d+)?)\s*년", str(_lim))
-        if _m and abs(float(_m.group(1)) - _yrs) > 1.0:
-            errors.append("tech_strategies.limits 의 기간 표기(%s년)가 실제 표본(%.1f년)과 다르다 "
-                          "— 문구에 연수를 손으로 적지 말고 n_days 에서 파생할 것" % (_m.group(1), _yrs))
-            break
-except Exception:
-    pass
+# ── 게시 문구의 기간 표기가 실제 표본과 맞는가 ─────────────────────────────
+#   "표본이 3년(2254거래일)뿐이다"(tech), "표본이 3년뿐이고 그중 대부분이 강세장"(signals) —
+#   둘 다 실제로 게시됐던 문장이다. 거래일 수는 데이터에서 파생하면서 연수만 손으로 적어 둔 탓.
+#
+#   ⚠ 연수 리터럴을 전부 잡으면 안 된다. 정당한 용법이 섞여 있다:
+#     · assets.limits "공개 CSV가 최근 3년만 준다"  → 정보원 라이선스 한계
+#     · ml.protocol   "검정 구간이 2년(504거래일) 미만이면"  → 판정 문턱
+#   그래서 두 갈래로 나눠 본다.
+#     ① 자기정합 — 한 문장 안에 '연'과 '거래일'이 같이 나오면 서로 맞아야 한다.
+#        문서의 n_days 가 없어도 성립하고, 문턱 서술("2년(504거래일)")은 자연히 통과한다.
+#     ② 표본 주장 — "표본이/표본은/과거 N년"처럼 표본 길이를 단언하는 꼴만 골라
+#        그 문서의 n_days 와 대조한다.
+_PER_FILES = ("tech_strategies.json", "signal_lab.json", "ml_strategies.json",
+              "assets.json", "strategy_backtests.json", "archive_backtests.json")
+_PER_KEYS = ("limits", "protocol", "note", "notes", "caveats")
+#   '최근 N년'은 넣지 않는다 — assets.limits 의 "공개 CSV가 최근 3년만 준다"(정보원 라이선스
+#   한계)를 표본 주장으로 오탐했다. 표본을 단언하는 꼴만 남긴다.
+_CLAIM = re.compile(r"(?:표본(?:이|은|을)?|구간(?:이|은)?|과거)\s*(\d+(?:\.\d+)?)\s*년")
+_PAIR = re.compile(r"(\d+(?:\.\d+)?)\s*년\s*\(?\s*([\d,]+)\s*거래일")
+for _fn in _PER_FILES:
+    _p = os.path.join(ROOT, "data", _fn)
+    if not os.path.exists(_p):
+        continue
+    try:
+        _d = json.load(io.open(_p, encoding="utf-8"))
+    except Exception as e:
+        errors.append(f"{_fn}: 기간 표기 검사용 로드 실패 — {e}")
+        continue
+    if not isinstance(_d, dict):
+        continue
+    _nd = _d.get("n_days")
+    _sents = []
+    for _k in _PER_KEYS:
+        _v = _d.get(_k)
+        if not _v:
+            continue
+        for _s in (_v if isinstance(_v, list) else [_v]):
+            _sents.append((_k, str(_s)))
+    for _k, _s in _sents:
+        # ① 같은 문장 안의 연 ↔ 거래일 자기정합
+        for _m in _PAIR.finditer(_s):
+            _y, _td = float(_m.group(1)), int(_m.group(2).replace(",", ""))
+            if abs(_y - _td / 252.0) > 1.0:
+                errors.append("%s.%s: '%s년(%s거래일)' 이 서로 안 맞는다(%.1f년) — "
+                              "연수를 손으로 적지 말고 거래일에서 파생할 것"
+                              % (_fn, _k, _m.group(1), _m.group(2), _td / 252.0))
+        # ② 표본 길이를 단언하는 문장은 그 문서의 n_days 와 대조
+        if not _nd:
+            continue
+        _yrs = _nd / 252.0
+        for _m in _CLAIM.finditer(_s):
+            if abs(float(_m.group(1)) - _yrs) > 1.0:
+                errors.append("%s.%s: 표본 기간을 %s년이라 적었는데 실제는 %.1f년(n_days %d)이다 "
+                              "— 문구에 연수를 박지 말고 n_days 에서 파생할 것"
+                              % (_fn, _k, _m.group(1), _yrs, _nd))
+                break
 
 # ── 갱신 주기 라벨: 워크플로 cron이 단일 출처인가 ──────────────────────────
 #   손으로 적던 시절 cron을 바꿔도 라벨이 안 따라와 전면적으로 어긋나 있었다(2026-07-25 실측:
