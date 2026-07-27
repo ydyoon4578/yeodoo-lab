@@ -345,26 +345,38 @@ def _fix_pb(t, g):
       그냥 `0`이 된다. 값이 비는 게 아니라 **'전 지수에서 가장 싼 주식'으로 둔갑**하는 게 위험하다
       — 저PBR 스크린·밸류 퍼센타일·'저PBR' 배지가 전부 버크셔를 1위로 올린다(조용한 오염).
 
-    어떻게 고치나: PBR = ROE × PER 은 항등식이다((P/E)·(E/B) = P/B). ROE·PER 모두 같은 .info에서
-      이미 받고 있으므로 **추가 API 호출 0**. 다만 정밀도는 믿지 않는다 — 실측 443종목에서 오차
-      중위 6.4%·p90 29%다(ROE는 기말자본, PER은 희석EPS라 분모 기준이 어긋난다). 그래서 이 항등식은
-      **'0.001이냐 1.5냐'는 자릿수 판정에만** 쓰고, 정상 범위의 PBR은 절대 건드리지 않는다.
+    붕괴 양상이 하나가 아니다(2026-07-27 FDXF 실측): FDXF 는 bookValue 자리에 95,720 이 들어와
+      주가 158 을 나눠 0.00165 가 됐다. 클래스 비율이 아니라 그냥 단위가 깨진 것이라 비율 보정이
+      통하지 않고, 신규 분사라 ROE 가 아예 없어 항등식도 못 쓴다. 그래서 폴백을 두 단으로 둔다.
+
+    ① 정의 폴백(1순위) — PBR = 시가총액 / 자기자본. 재무상태표에서 자기자본을 직접 받아 계산한다.
+       P/B 의 정의 그 자체라 가장 정확하다. 정상 종목 대조: KO 10.52 vs 10.52 · AAPL 45.93 vs 45.87 ·
+       JPM 2.58 vs 2.66. 별도 API 호출이 필요하므로 **가드가 걸린 종목에만** 부른다(518종 중 1~2종).
+    ② 항등식 폴백(2순위) — PBR = ROE × PER ((P/E)·(E/B) = P/B). 추가 호출 0이지만 정밀도는 낮다:
+       443종목 실측 오차 중위 6.4%·p90 29%(ROE는 기말자본, PER은 희석EPS라 분모 기준이 어긋난다).
+       ①이 실패했을 때만 쓰고, '0.001이냐 1.5냐'는 자릿수 판정 용도로만 신뢰한다.
 
     건드리지 않는 것:
-      · 음수 PBR — 실제 자본잠식이다(실측 CLX·MAS·DVA). 되계산하면 실재하는 위험 신호를 지운다.
-      · PB_FLOOR 이상의 값 — 오차 30%짜리 추정치로 벤더 실값을 덮는 건 개악이다.
-      · 항등식이 없거나(ROE·PER 결측/음수) 배수 조건을 못 넘는 경우 — 이때는 보정 대신 **결측 처리**한다.
-        구멍은 눈에 보이지만, `0`은 '가장 싸다'로 읽힌다. 확실하지 않으면 게시하지 않는다.
+      · 음수 PBR — 실제 자본잠식이다(실측 33종, MCD·SBUX·AZO 등 자사주 매입 기업). 되계산하면
+        실재하는 위험 신호를 지운다.
+      · PB_FLOOR 이상의 값 — 추정치로 벤더 실값을 덮는 건 개악이다.
+      · 두 폴백이 모두 실패하면 보정 대신 **결측 처리**한다. 구멍은 눈에 보이지만 `0`은
+        '가장 싸다'로 읽힌다. 확실하지 않으면 게시하지 않는다.
     """
     pb = _numf(g("pb"))
     if pb is None or pb <= 0 or pb >= PB_FLOOR:
         return pb, None                      # 정상값·음수(자본잠식)·결측은 그대로 통과
+    # ① 정의 폴백 — 시가총액 / 자기자본
+    v = pb_from_balance(_yf_sym(t), _numf(g("mc")))
+    if v is not None and PB_FLOOR <= v <= PB_CEIL:
+        return v, f"{t}: PBR {pb:.5f} → {v:.2f} (시가총액÷자기자본, 정의 되계산)"
+    # ② 항등식 폴백 — ROE × PER
     roe, tpe = _numf(g("roe")), _numf(g("tpe"))
     if roe and tpe and roe > 0 and tpe > 0:
         v = roe * tpe                        # roe는 원시 .info라 소수(0.105), tpe는 배수 → 곱이 곧 PBR
         if PB_FLOOR <= v <= PB_CEIL and v >= pb * PB_CORRUPT_MULT:
-            return v, f"{t}: PBR {pb:.5f} → {v:.2f} (ROE×PER 되계산, 클래스주 단위 붕괴)"
-    return None, f"{t}: PBR {pb:.5f} 이상치이나 항등식 검증 불가 → 결측 처리"
+            return v, f"{t}: PBR {pb:.5f} → {v:.2f} (ROE×PER 되계산)"
+    return None, f"{t}: PBR {pb:.5f} 이상치이나 되계산 불가 → 결측 처리"
 
 
 def fund_metrics(fund, sect):
@@ -465,6 +477,41 @@ def fund_metrics(fund, sect):
         na[t] = nn
     cov = {k: round(float(df[k].notna().mean())*100, 1) for k in FUND_META}
     return vals, pcts, thr, badges, na, cov
+
+
+def pb_from_balance(sym, mc):
+    """재무상태표의 자기자본으로 PBR을 정의대로 되계산한다. PBR = 시가총액 / 자기자본. 실패시 None.
+
+    왜 필요한가(2026-07-27 FDXF 실측): yfinance 의 bookValue 는 '주당'순자산이어야 하는데 FDXF 는
+      95,720 이 들어온다. 주가 158 을 이걸로 나눠 priceToBook 이 0.00165 로 온다. BRK.B 는 원인이
+      클래스 비율(A주 BVPS ÷ B주 주가)이었지만 FDXF 는 그냥 단위가 깨진 값이라 비율 보정이 통하지 않고,
+      ROE 가 아예 없어(신규 분사) ROE×PER 항등식도 못 쓴다.
+
+    왜 이게 더 나은가: mc/자기자본은 P/B 의 **정의 그 자체**다. 정상 종목으로 대조한 결과 야후 보고값과
+      거의 일치했다 — KO 10.52 vs 10.52 · AAPL 45.93 vs 45.87 · JPM 2.58 vs 2.66(분기말 자본과 현재
+      주가의 시점차). 항등식(오차 중위 6.4%·p90 29%)보다 한 자릿수 정확하므로 폴백 1순위로 둔다.
+
+    비용: 재무상태표는 .info 와 별개 호출이라 **가드가 걸린 종목에만** 부른다(현재 518종 중 1~2종).
+      정상 경로의 '추가 호출 0' 원칙은 그대로다.
+    """
+    if not mc or mc <= 0:
+        return None
+    try:
+        tk = yf.Ticker(sym)
+        for attr in ("quarterly_balance_sheet", "balance_sheet"):   # 최신 분기 우선, 없으면 연간
+            bs = getattr(tk, attr, None)
+            if bs is None or getattr(bs, "empty", True):
+                continue
+            for key in ("Stockholders Equity", "Common Stock Equity", "Total Equity Gross Minority Interest"):
+                if key not in bs.index:
+                    continue
+                for c in bs.columns:                    # 열은 최신순 — 값이 있는 첫 기간을 쓴다
+                    e = bs.loc[key, c]
+                    if e == e and e and float(e) > 0:   # 자본잠식(음수)은 여기서 다루지 않는다
+                        return mc / float(e)
+    except Exception:
+        pass
+    return None
 
 
 def fetch_fund(t, retries=3):
