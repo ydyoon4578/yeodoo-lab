@@ -335,6 +335,7 @@ def _x100(x):
 PB_FLOOR = 0.05        # 이 미만의 **양수** PBR은 실물이 아니다(최악의 부실은행도 0.2~0.3이 바닥)
 PB_CORRUPT_MULT = 50.0 # 항등식 대비 이 배수 이상 벌어져야 '단위 붕괴'로 판정(경계 근처 값은 건드리지 않는다)
 PB_CEIL = 100.0        # 되계산 값이 이보다 크면 항등식 쪽을 못 믿는다 → 채택하지 않음
+PB_FILL_MAX = 15       # 결측 보충(재무제표 호출)을 시도할 최대 종목 수. 초과하면 접고 로그를 남긴다
 
 
 def _fix_pb(t, g):
@@ -384,9 +385,27 @@ def fund_metrics(fund, sect):
     반환 (vals, pcts, thr, badges, na, cov). 값은 삭제하지 않으며, 퍼센타일에서만 부호 오독분을 제외한다."""
     rows = {}
     pb_logs = []
+    # PBR 결측분 보충 대상. 값이 아예 없는 종목은 _fix_pb 가 손대지 않으므로(가드는 '0에 붙은 양수'만
+    #   본다) 여기서 따로 센다. 실측: HONA(Honeywell Aerospace, 2026 분사)는 priceToBook 자체가 None
+    #   인데 재무상태표로는 7.70이 나온다 — 못 채울 이유가 없다.
+    # ⚠ 상한을 두는 이유: 재무상태표는 종목당 별도 호출이다. 평소 결측은 1~2종이지만, 야후가 Actions
+    #   IP에 쓰로틀링을 걸면 필드가 통째로 빠진다(실측 전례: ps 커버 99%→72%). 그때 결측 150종을
+    #   전부 부르면 쓰로틀링에 기름을 붓는다. 상한을 넘으면 보충을 접고 **그 사실을 반드시 찍는다**
+    #   — 조용히 잘라내면 '원래 그만큼만 있었다'로 읽힌다.
+    _pb_missing = [t for t, fd in fund.items()
+                   if _numf(fd.get("pb")) is None and _numf(fd.get("mc"))]
+    _pb_fill = set(_pb_missing) if len(_pb_missing) <= PB_FILL_MAX else set()
+    if len(_pb_missing) > PB_FILL_MAX:
+        pb_logs.append(f"PBR 결측 {len(_pb_missing)}종 — 상한 {PB_FILL_MAX} 초과라 재무제표 보충을 건너뛴다"
+                       " (야후 쓰로틀링 의심: 결측이 이만큼 나오는 건 정상이 아니다)")
     for t, fd in fund.items():
         g = fd.get
         pb_fixed, pb_log = _fix_pb(t, g)
+        if pb_fixed is None and t in _pb_fill:          # 붕괴가 아니라 '원래 없음'을 채운다
+            _v = pb_from_balance(_yf_sym(t), _numf(g("mc")))
+            if _v is not None and PB_FLOOR <= _v <= PB_CEIL:
+                pb_fixed = _v
+                pb_log = f"{t}: PBR 결측 → {_v:.2f} (시가총액÷자기자본, 정의 산출)"
         if pb_log: pb_logs.append(pb_log)
         mc = _numf(g("mc")); fcf = _numf(g("fcf")); eb = _numf(g("ebitda"))
         td = _numf(g("td")); tc = _numf(g("tc"))
