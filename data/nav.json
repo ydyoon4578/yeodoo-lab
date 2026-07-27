@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "1d0db115315da744",
+ "generated_from": "6e81663918449543",
  "categories": [
   {
    "name": "시장",
@@ -263,7 +263,7 @@
      "name": "내 포트폴리오",
      "file": "portfolio.html",
      "status": "existing",
-     "desc": "localStorage 보유 + 753거래일 실측 상관·변동성·MDD",
+     "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
      "verdict": "na",
      "src": "agg",
      "effort": "L",

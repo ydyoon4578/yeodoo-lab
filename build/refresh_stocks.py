@@ -16,7 +16,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MEMBERS = os.path.join(HERE, "..", "data", "members.json")
 OUT = os.path.join(HERE, "..", "data", "stocks.json")
 TPHIST = os.path.join(HERE, "..", "data", "target_history.json")   # 애널리스트 목표주가 스냅샷 이력(직접 누적)
-PX_MONTHS = 37
+# 일별 종가 패널 길이. **다운로드 기간과 저장 창을 한 상수에서 파생**한다 —
+# 예전엔 period="3y"(내려받기)와 .tail(756)(저장)이 따로 박혀 있었고, 3y가 마침 753봉이라
+# tail이 no-op이어서 캡이 있다는 사실 자체가 보이지 않았다. period만 늘리면 패널은 756에서
+# 잘려 아무것도 안 늘어난다. 둘을 묶어 그 함정을 없앤다.
+PX_DAYS = 2514            # 약 10년(252×10). 저장 패널이자 타점 산출 구간.
+PX_PERIOD = "10y"         # yfinance 다운로드 기간 — PX_DAYS를 채울 만큼 넉넉해야 한다.
 
 FACTORS = {
   "rsi": ("RSI(14)", "과매수·과매도", "과매수"), "stoch": ("스토캐스틱 %K", "과매수·과매도", "과매수"),
@@ -592,7 +597,23 @@ def main():
     # 배치 재시도 — Yahoo가 러너 IP에 401(Invalid Crumb)/429/5xx를 던지면 그 배치가 통째로,
     # 또는 일부 종목만 짧게 돌아온다. 한 번 실패하면 그대로 진행하던 것이 2026-07-27 사고의
     # 앞단이었다(확정 스윙 타점 15231→8791). 실패·빈 응답이면 쉬었다 다시 받는다.
-    def _dl(chy_, tries=3, period="3y"):
+    def _unwrap(d, t):
+        """yfinance 응답에서 종목 하나를 꺼낸다.
+
+        group_by="ticker" 면 종목이 하나여도 (티커, 필드) 2레벨 컬럼이 올 수 있다.
+        예전엔 배치 경로가 `len(chy) > 1` 로 대신 판정했는데, 마지막 청크가 1종목이면
+        (519 = 120×4 + 39 라 지금은 안 걸리지만) 그대로 깨진다. 재수집 경로에는 그
+        판정조차 없어, **재수집이 성공하는 순간에만** KeyError 로 잡 전체가 죽었다 —
+        가드가 필요한 바로 그때 터지는 구조였다. 컬럼 모양을 직접 보고 푼다.
+        """
+        if getattr(d.columns, "nlevels", 1) > 1:
+            sym = _yf(t)
+            if sym in d.columns.get_level_values(0):
+                return d[sym]
+            return d.xs(d.columns.get_level_values(0)[0], axis=1)
+        return d
+
+    def _dl(chy_, tries=3, period=PX_PERIOD):
         for k in range(tries):
             try:
                 d = yf.download(chy_, period=period, auto_adjust=True, progress=False,
@@ -617,7 +638,7 @@ def main():
             continue
         for t in ch:
             try:
-                sub = (df[_yf(t)] if len(chy) > 1 else df).dropna(how="all")
+                sub = _unwrap(df, t).dropna(how="all")
             except Exception:
                 sub = None
             if sub is None or not len(sub):
@@ -635,24 +656,43 @@ def main():
     # 확정 스윙 타점(3년 이력에서 나온다)만 급감한다. 2026-07-27 사고가 정확히 이 경로였다
     # (15231→8791, 완전성 게이트가 뒤에서 잡아 갱신을 막았다).
     # 중앙값 대비 크게 짧은 종목만 골라 개별로 다시 받는다. 정상 런에서는 short 가 비어 비용 0.
-    _lens = sorted(len(v) for v in px.values())
-    _med = _lens[len(_lens) // 2] if _lens else 0
-    _short = [t for t, v in px.items() if _med and len(v) < _med * 0.6 and t not in partial]
+    # ⚠ 기준을 '중앙값 대비'로 잡으면 안 된다. 패널이 10년이 되면 임계가 중앙값 2514의 60%
+    #   = 1508거래일(≈6년)로 뛰어, 상장 6년 미만의 **완전히 정상인** 종목(PLTR·COIN·ARM·CEG…)이
+    #   전부 '잘림 의심'으로 걸린다. 매 실행 개별 재수집이 붙고, 재수집해도 이력이 없으니
+    #   그대로 partial 강등 → 화면엔 "200일선·52주 없음" 거짓 배지가 뜨고 breadth 분모가 준다.
+    #   잘림은 '어제보다 짧아졌다'는 사건이다. 신규 상장이 아니라 그 사건에만 반응해야 한다.
+    _prev_n = {}
+    try:
+        for _s in (json.load(open(OUT, encoding="utf-8")).get("stocks") or []):
+            _sd = os.path.join(HERE, "..", "data", "sd", _s["t"] + ".json")
+            if os.path.exists(_sd):
+                _p = (json.load(open(_sd, encoding="utf-8")).get("pxd")) or []
+                # 패딩된 None 은 관측이 아니다 — 칸 수가 아니라 실제 값 개수를 센다.
+                _prev_n[_s["t"]] = sum(1 for x in _p if x is not None)
+    except Exception as _e:
+        print("  [잘림검사] 직전 이력 못 읽음 — 이번엔 건너뜀:", str(_e)[:60])
+    _short = [t for t, v in px.items()
+              if _prev_n.get(t) and len(v) < _prev_n[t] * 0.7 and t not in partial]
     if _short:
-        print(f"  이력 잘림 의심 {len(_short)}종 재수집(중앙값 {_med}일의 60% 미만)")
+        print(f"  이력 잘림 의심 {len(_short)}종 재수집(직전 실행 대비 70% 미만)")
         _fixed = 0
         for t in _short:
             d = _dl([_yf(t)], tries=2)
             if d is None:
                 continue
-            sub = d.dropna(how="all")
+            sub = _unwrap(d, t).dropna(how="all")
             if len(sub) > len(px[t]):
                 px[t] = sub; _fixed += 1
         print(f"  재수집으로 복구 {_fixed}/{len(_short)}종")
-        # 재수집 후에도 여전히 짧으면 정직하게 부분 편입으로 내린다(장기 지표에서 제외된다).
-        for t in _short:
-            if _med and len(px.get(t, [])) < _med * 0.6:
-                partial[t] = int(len(px[t]))
+        # 복구 후에도 직전보다 크게 짧으면 입력이 상한 것이다. 조용히 짧은 채로 쓰지 않는다
+        #   — 저장소 규약대로 fail-closed(뒤의 완전성 게이트와 같은 취급).
+        _still = [t for t in _short if len(px.get(t, [])) < _prev_n[t] * 0.7]
+        if len(_still) > 10:
+            raise SystemExit(
+                f"이력 잘림 {len(_still)}종이 재수집으로도 복구되지 않음 "
+                f"({', '.join(sorted(_still)[:8])}…) — 광범위한 입력 이상이다. 갱신 중단, 이전본 유지")
+        for t in _still:
+            partial[t] = int(len(px[t]))
 
     # ★ 미확정 당일 봉 제거 — 랩 최우선 규칙 '기준일 통일'. 장중 실행 시 yfinance 마지막 봉이 실시간이라
     #   종가·지표·목표주가 상승여력이 확정 전 값으로 계산되고, 사이트 다른 데이터(regime·sentiment)와 기준일이 갈린다.
@@ -752,11 +792,11 @@ def main():
     #   vs 구식(저과열 가중+과열≤45) +1.62%p — 상승추세 평균(+1.84)보다도 낮았음.
     buy_score = tr_c + mo_c
     sell_score = oh_rel + 0.6*(100 - tr_c) + 0.6*(100 - mo_c) + 0.3*vo_c
-    # 일별 종가 패널 (최근 756거래일 ≈ 3년) — 기간선택(1일~3년) 슬라이스 + **타점 산출 구간**.
-    #   252였을 때 타점이 최근 1년치만 나와 3년 차트 앞 2년이 '신호 없음'처럼 보였다.
+    # 일별 종가 패널 (PX_DAYS 거래일) — 기간선택 슬라이스 + **타점 산출 구간**.
+    #   252였을 때 타점이 최근 1년치만 나와 차트 앞부분이 '신호 없음'처럼 보였다.
     #   컨텍스트 계열(200MA·RSI·과열도)은 전체 이력으로 계산한 뒤 이 index로 reindex하므로
     #   구간을 늘려도 워밍업 결손이 없다.
-    daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index().tail(756)
+    daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index().tail(PX_DAYS)
     pxd_dates = [d.strftime("%Y-%m-%d") for d in daily.index]
     # 장기(3년) 패널은 **주봉**으로 — 일봉 3년은 상세 파일이 3배가 되고 매일 512개가 통째로 재커밋된다.
     # 3년 구간을 일 단위로 볼 이유도 없다(화면에서 구분 불가).
@@ -1140,9 +1180,22 @@ def main():
         _old_c, _old_w = _cnt(_pv, ("bms", "sms")), _cnt(_pv, ("bmw", "smw"))
     except Exception:
         _old_c = _old_w = 0
-    if _old_c and _now_c < _old_c * 0.75:
-        raise SystemExit(f"확정 스윙 타점 급감 {_old_c}→{_now_c} — 3년 이력에서 나오는 값이라 "
-                         f"하루 사이 이만큼 줄 수 없다(가격 이력 부분 결측 의심). 갱신 중단, 이전본 유지")
+    # 이 게이트는 '창 길이가 어제와 같다'는 전제 위에서만 뜻이 있다. 패널 길이를 바꾸면
+    # 타점 수는 당연히 그만큼 변하는데, 이 비교는 단방향이라 줄어드는 쪽 전환(예: 10y→3y 롤백)에서
+    # 매번 SystemExit → stocks.json 이 안 써지고 다음날도 같은 이전본과 비교해 **자기영속**한다
+    # (KB_RotationDaily exit 8 과 같은 유형). 길이가 달라진 실행에서는 비교를 건너뛰고 경고만 남긴다.
+    try:
+        _old_len = len(json.load(open(OUT, encoding="utf-8")).get("pxd_dates") or [])
+    except Exception:
+        _old_len = 0
+    _len_changed = bool(_old_len) and _old_len != len(pxd_dates)
+    if _len_changed:
+        print(f"⚠ 패널 길이 변경 {_old_len}→{len(pxd_dates)} — 타점 급감 게이트는 이번 실행만 건너뛴다"
+              f"(길이가 바뀌면 타점 수 변화는 정상이다). 다음 실행부터 다시 적용된다.")
+    elif _old_c and _now_c < _old_c * 0.75:
+        raise SystemExit(f"확정 스윙 타점 급감 {_old_c}→{_now_c} — {len(pxd_dates)}거래일 이력에서 "
+                         f"나오는 값이라 하루 사이 이만큼 줄 수 없다(가격 이력 부분 결측 의심). "
+                         f"갱신 중단, 이전본 유지")
     print(f"스윙 타점: 확정 {_now_c}(직전 {_old_c}) · 잠정 {_now_w}(직전 {_old_w})")
     if _old_w and _now_w == 0:
         print("⚠ 잠정 타점이 0이다 — 시장 상황일 수도 있으나 직전에 %d개였다면 입력을 의심할 것" % _old_w)
