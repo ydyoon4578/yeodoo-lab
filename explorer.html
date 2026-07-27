@@ -842,8 +842,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <section class="alwrap" id="archledger" aria-labelledby="al-h">
     <h2 class="lbl" id="al-h">검토했지만 배포하지 않은 것 <span class="sub" id="al-n"></span></h2>
     <p class="lede" style="font-size:13px;margin-bottom:2px">한 칸에 몰아 세지 않습니다 — 이 안에는 <b>기각된 전략</b>과,
-      배포 전략의 설정을 흔들어 본 <b>실험</b>과, 이 랩의 규약으로는 <b>판정 자체가 안 되는 것</b>이 섞여 있습니다.
-      셋을 같이 세면 “좋은 전략 N개가 기각됐다”로 읽히므로 나눠서 적습니다. 제목을 누르면 판정 사유가 펼쳐집니다.<br>
+      대조군과 <b>구별되지 않은 것</b>과, 배포 전략의 설정을 흔들어 본 <b>실험</b>과, 이 랩의 규약으로는
+      <b>판정 자체가 안 되는 것</b>이 섞여 있습니다. 넷을 같이 세면 “좋은 전략 N개가 기각됐다”로 읽히므로 나눠서 적습니다.
+      제목을 누르면 판정 사유가 펼쳐집니다.<br>
       <b>이 중 5종은 배포북에 얹지 않고 단독으로 다시 검정했습니다</b>(원 기각 사유가 “통합에 증분이 없다”는 상대 판정이었기 때문입니다).
       재검 결과는 <b>전건 기각 유지</b> — 부활 0건입니다. 재검 수치는 위 목록에 「미채택」으로 함께 실려 있습니다.</p>
     <div id="al-body"><div class="empty">불러오는 중…</div></div>
@@ -1944,8 +1945,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var box=document.getElementById('al-body'); if(!box)return;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  var ORDER=['reject','variant','undecidable'];
-  var COL={reject:'var(--hot)',variant:'var(--muted)',undecidable:'var(--champ)'};
+  var ORDER=['reject','undetermined','variant','undecidable'];
+  var COL={reject:'var(--hot)',undetermined:'var(--marg)',variant:'var(--muted)',undecidable:'var(--champ)'};
   fetch('data/archive_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
   .then(function(d){
     var items=(d&&d.items)||[], kinds=(d&&d.kinds)||{};

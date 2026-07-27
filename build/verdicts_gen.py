@@ -112,6 +112,7 @@ def build(root: str = ROOT) -> dict:
         #   숨기는 게 아니라 이름을 붙여 따로 센다 — 총계(archive_n)는 그대로 둔다.
         "archive_reject_n": sum(1 for r in ar if (r.get("k") or "reject") == "reject"),
         "archive_variant_n": sum(1 for r in ar if r.get("k") == "variant"),
+        "archive_undetermined_n": sum(1 for r in ar if r.get("k") == "undetermined"),
         "archive_undecidable_n": sum(1 for r in ar if r.get("k") == "undecidable"),
         # 탭 개수 — 전략 랩이 탭을 지연 로딩하면서 필요해졌다. 개수만 보려고 100KB짜리
         # 산출물을 미리 받을 이유가 없다. 여기서 세어 두면 작은 파일 하나로 끝난다.
