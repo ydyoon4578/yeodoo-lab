@@ -329,17 +329,55 @@ def _x100(x):
     return None if v is None else v*100
 
 
+PB_FLOOR = 0.05        # 이 미만의 **양수** PBR은 실물이 아니다(최악의 부실은행도 0.2~0.3이 바닥)
+PB_CORRUPT_MULT = 50.0 # 항등식 대비 이 배수 이상 벌어져야 '단위 붕괴'로 판정(경계 근처 값은 건드리지 않는다)
+PB_CEIL = 100.0        # 되계산 값이 이보다 크면 항등식 쪽을 못 믿는다 → 채택하지 않음
+
+
+def _fix_pb(t, g):
+    """클래스주 단위 붕괴로 0에 붙은 PBR을 되살린다. 반환 (보정값 또는 None, 로그 문자열 또는 None).
+
+    무엇이 깨지나(2026-07-27 BRK.B 실측): yfinance의 priceToBook이 **B주 주가 ÷ A주 주당순자산**으로
+      온다. BRK.A:BRK.B = 1500:1 이라 PBR이 1.55가 아니라 0.00098로 찍히고, 소수 2자리 반올림 뒤엔
+      그냥 `0`이 된다. 값이 비는 게 아니라 **'전 지수에서 가장 싼 주식'으로 둔갑**하는 게 위험하다
+      — 저PBR 스크린·밸류 퍼센타일·'저PBR' 배지가 전부 버크셔를 1위로 올린다(조용한 오염).
+
+    어떻게 고치나: PBR = ROE × PER 은 항등식이다((P/E)·(E/B) = P/B). ROE·PER 모두 같은 .info에서
+      이미 받고 있으므로 **추가 API 호출 0**. 다만 정밀도는 믿지 않는다 — 실측 443종목에서 오차
+      중위 6.4%·p90 29%다(ROE는 기말자본, PER은 희석EPS라 분모 기준이 어긋난다). 그래서 이 항등식은
+      **'0.001이냐 1.5냐'는 자릿수 판정에만** 쓰고, 정상 범위의 PBR은 절대 건드리지 않는다.
+
+    건드리지 않는 것:
+      · 음수 PBR — 실제 자본잠식이다(실측 CLX·MAS·DVA). 되계산하면 실재하는 위험 신호를 지운다.
+      · PB_FLOOR 이상의 값 — 오차 30%짜리 추정치로 벤더 실값을 덮는 건 개악이다.
+      · 항등식이 없거나(ROE·PER 결측/음수) 배수 조건을 못 넘는 경우 — 이때는 보정 대신 **결측 처리**한다.
+        구멍은 눈에 보이지만, `0`은 '가장 싸다'로 읽힌다. 확실하지 않으면 게시하지 않는다.
+    """
+    pb = _numf(g("pb"))
+    if pb is None or pb <= 0 or pb >= PB_FLOOR:
+        return pb, None                      # 정상값·음수(자본잠식)·결측은 그대로 통과
+    roe, tpe = _numf(g("roe")), _numf(g("tpe"))
+    if roe and tpe and roe > 0 and tpe > 0:
+        v = roe * tpe                        # roe는 원시 .info라 소수(0.105), tpe는 배수 → 곱이 곧 PBR
+        if PB_FLOOR <= v <= PB_CEIL and v >= pb * PB_CORRUPT_MULT:
+            return v, f"{t}: PBR {pb:.5f} → {v:.2f} (ROE×PER 되계산, 클래스주 단위 붕괴)"
+    return None, f"{t}: PBR {pb:.5f} 이상치이나 항등식 검증 불가 → 결측 처리"
+
+
 def fund_metrics(fund, sect):
     """원시 .info 값 → 20지표 정규화 + 전체/섹터 퍼센타일 + 실측 33/67 임계 + 배지.
     반환 (vals, pcts, thr, badges, na, cov). 값은 삭제하지 않으며, 퍼센타일에서만 부호 오독분을 제외한다."""
     rows = {}
+    pb_logs = []
     for t, fd in fund.items():
         g = fd.get
+        pb_fixed, pb_log = _fix_pb(t, g)
+        if pb_log: pb_logs.append(pb_log)
         mc = _numf(g("mc")); fcf = _numf(g("fcf")); eb = _numf(g("ebitda"))
         td = _numf(g("td")); tc = _numf(g("tc"))
         teps, feps = _numf(g("teps")), _numf(g("feps"))
         rows[t] = {
-            "tpe": _numf(g("tpe")), "fpe": _numf(g("fpe")), "pb": _numf(g("pb")), "ps": _numf(g("ps")),
+            "tpe": _numf(g("tpe")), "fpe": _numf(g("fpe")), "pb": pb_fixed, "ps": _numf(g("ps")),
             "eveb": _numf(g("eveb")), "peg": _numf(g("peg")),
             "fcfy": (fcf/mc*100 if (fcf is not None and mc and mc > 0) else None),
             "pm": _x100(g("pm")), "om": _x100(g("om")), "gm": _x100(g("gm")),
@@ -352,6 +390,8 @@ def fund_metrics(fund, sect):
             "dy": _numf(g("dy")), "po": _x100(g("po")),
             "mc": (mc/1e8 if (mc and mc > 0) else None), "beta": _numf(g("beta")),
         }
+    for _m in pb_logs:
+        print(f"  ⚠ PBR 가드 — {_m}")
     df = pd.DataFrame(rows).T.reindex(columns=list(FUND_META))
     df = df.apply(pd.to_numeric, errors="coerce")
     # 단위 가드: yfinance가 과거 dividendYield 단위를 바꾼 전력이 있다(현재는 이미 %).

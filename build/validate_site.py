@@ -596,6 +596,16 @@ try:
             _g = _bdgap(_s, _v)
             if _g >= 2:
                 errors.append(f"기준일 고착: {_fn} {_v} 가 stocks.json {_s} 보다 {_g}영업일 뒤처짐 — 자동갱신 중단 의심")
+    # PBR 단위 붕괴 재발 방지(2026-07-27 BRK.B): yfinance가 클래스주 PBR을 'B주 주가 ÷ A주 주당순자산'으로
+    #   준다(BRK.A:B=1500:1 → 1.55가 0.00098로). 반올림 뒤엔 `0`이 되어 값이 비는 게 아니라 **전 지수에서
+    #   가장 싼 주식으로 둔갑**한다(저PBR 스크린·밸류 퍼센타일·배지가 전부 오염). refresh_stocks._fix_pb 가
+    #   막지만, 가드가 무력화되거나 다른 클래스주가 편입되면 조용히 재발하므로 산출물에서 직접 확인한다.
+    #   음수(자본잠식)는 실재하는 값이라 대상이 아니다 — 양수만 본다.
+    _pbz = [(s["t"], (s.get("fund") or {}).get("pb")) for s in _sj.get("stocks", [])
+            if isinstance((s.get("fund") or {}).get("pb"), (int, float)) and 0 <= (s["fund"]["pb"]) < 0.05]
+    if _pbz:
+        errors.append(f"PBR 이상치 게시: {len(_pbz)}종목이 0≤PBR<0.05 (예: {_pbz[:3]}) — "
+                      "클래스주 단위 붕괴 의심. build/refresh_stocks.py의 _fix_pb 가드 확인")
     # 상세 분리 불변식: ①슬림 본체에 상세 필드가 재유입되면 페이로드가 도로 1.9MB로 부푼다
     #                 ②종목별 상세 파일이 없거나 기준일이 어긋나면 상세 패널이 낡거나 빈다
     _sd = os.path.join(ROOT, "data", "sd")
