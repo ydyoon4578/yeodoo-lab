@@ -656,7 +656,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="chartnote">같은 국면이었던 과거 <b>'+(RN[cur]||0)+'개월</b>의 평균일 뿐 이번에도 그러리라는 근거가 아닙니다. '+
       '표 헤더의 n이 표본 개월수입니다 — 후기 사이클(n='+(RN['LateCycle']||0)+')처럼 표본이 적은 국면은 몇 달 값에 좌우됩니다.</div></div>';
   }
-  var PNM={SPY:"S&P500",QQQ:"나스닥100",TLT:"장기국채",GLD:"금",DBC:"원자재",
+  var PNM={SPY:"S&P 500",QQQ:"NASDAQ 100",TLT:"장기국채",GLD:"금",DBC:"원자재",
     XLK:"기술",XLF:"금융",XLE:"에너지",XLV:"헬스케어",XLI:"산업재",XLY:"경기소비",XLP:"필수소비",
     XLU:"유틸리티",XLB:"소재",XLRE:"부동산",XLC:"커뮤니케이션",
     MTUM:"모멘텀",QUAL:"퀄리티",USMV:"저변동",VLUE:"가치",SIZE:"중소형"};
@@ -707,7 +707,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   처리(숫자만 muted)와 같은 방식으로 맞춘다. 열 강조(.cur)는 인라인 배경을 아예 안 내보내
     //   CSS 클래스가 살아 있게 둔다.
     var THIN_N=20;
-    var NM={SPY:"S&P500",QQQ:"나스닥100",TLT:"장기국채",GLD:"금",DBC:"원자재",
+    var NM={SPY:"S&P 500",QQQ:"NASDAQ 100",TLT:"장기국채",GLD:"금",DBC:"원자재",
       XLK:"기술",XLF:"금융",XLE:"에너지",XLV:"헬스케어",XLI:"산업재",XLY:"경기소비",XLP:"필수소비",XLU:"유틸리티",XLB:"소재",XLRE:"부동산",XLC:"커뮤니케이션",
       MTUM:"모멘텀",QUAL:"퀄리티",USMV:"저변동",VLUE:"가치",SIZE:"중소형"};
     function perfTable(title, hint, col0, perf){
@@ -1267,7 +1267,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var p=d.score_pctl, curPct=(p==null)?-1:(p<0.10?0:p<0.25?1:p<0.75?2:p<0.90?3:4);
     // 두 표가 뭘 묻는지·열이 뭘 뜻하는지 먼저 말한다 — '분위 버킷'만 보고는 알 수 없다는 피드백.
     var tbintro='<div class="tbintro"><b>두 표가 답하는 질문은 같습니다</b> — “심리 지수가 이 구간일 때, '+
-      '그 뒤 20일·60일 동안 S&amp;P500이 얼마나 올랐나?” 다른 것은 <b>구간을 나누는 기준</b>입니다. '+
+      '그 뒤 20일·60일 동안 S&amp;P 500이 얼마나 올랐나?” 다른 것은 <b>구간을 나누는 기준</b>입니다. '+
       '위 표는 점수 <b>절대값</b>(0~100), 아래 표는 그날까지의 역사와 비교한 <b>상대 위치</b>(확장 백분위)로 나눕니다. '+
       '지수 수준이 시대에 따라 표류하면 절대값 기준이 왜곡되므로 아래가 더 보수적인 읽기입니다.'+
       '<details class="more"><summary>열 읽는 법</summary><div class="mbody">'+

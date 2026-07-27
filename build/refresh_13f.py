@@ -455,7 +455,7 @@ def main() -> int:
         "n_listed": len(GURUS),
         "cusip_cover": round(covered / len(uni) * 100, 1),
         "n_off": sum(m.get("n_off") or 0 for m in managers),
-        "off_note": "‘밖’ 표시는 이 랩의 유니버스(S&P500 ∪ 나스닥100, 518종목) 밖 종목이다. "
+        "off_note": "‘밖’ 표시는 이 랩의 유니버스(S&P 500 ∪ NASDAQ 100, 518종목) 밖 종목이다. "
                     "이름은 13F 원문(nameOfIssuer)에서, 티커는 SEC 공매도 미결제 파일에서 "
                     "찾은 것이라 티커가 없으면 CUSIP을 그대로 적는다. 이 사이트에는 그 종목의 "
                     "가격·재무 화면이 없다 — 무엇을 들고 있는지만 보여준다.",

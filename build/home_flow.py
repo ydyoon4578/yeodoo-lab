@@ -191,7 +191,7 @@ def main() -> int:
                     row[lab] = round((a_[i] / a_[i - 1] - 1) * 100, 2)
             if row:
                 ix[d] = row
-    doc["index"] = {"note": "달력 칸의 그날 지수 등락률(%). S&P 500·나스닥100 가격지수 종가 기준.",
+    doc["index"] = {"note": "달력 칸의 그날 지수 등락률(%). S&P 500·NASDAQ 100 가격지수 종가 기준.",
                     "rows": ix}
 
     io.open(OUT, "w", encoding="utf-8").write(

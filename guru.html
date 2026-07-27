@@ -554,7 +554,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<th scope="col">직전 분기</th><th scope="col" class="l">변동</th></tr></thead><tbody>';
     m.holds.forEach(function(r){
       // 유니버스 밖은 이 사이트에 종목 화면이 없다 — 링크를 걸면 빈 화면으로 보낸다.
-      var tk=r.off?('<span class="tkoff">'+esc(r.t)+'</span><span class="offb" title="이 랩의 유니버스(S&P500 ∪ 나스닥100) 밖 종목입니다. 무엇을 들고 있는지만 보여줍니다.">밖</span>')
+      var tk=r.off?('<span class="tkoff">'+esc(r.t)+'</span><span class="offb" title="이 랩의 유니버스(S&P 500 ∪ NASDAQ 100) 밖 종목입니다. 무엇을 들고 있는지만 보여줍니다.">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(r.t)+'">'+esc(r.t)+'</a>');
       h+='<tr'+(r.off?' class="offrow"':'')+'><th scope="row">'+tk+
          '<span class="sub">'+esc((r.nm||'').slice(0,26))+'</span></th>'+

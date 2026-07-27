@@ -619,7 +619,7 @@ def build():
                              "weights": [("QQQ(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
                 "rule": "매 거래일 종가에 QQQ를 사서 다음 날 시가에 판다.",
-                "why": "나스닥100에서 밤사이 수익이 낮에 앉아 있는 것보다 나은지. "
+                "why": "NASDAQ 100에서 밤사이 수익이 낮에 앉아 있는 것보다 나은지. "
                        "대조군은 QQQ 상시보유(종가→종가).",
                 "note": "연 252회 왕복이라 무비용 수치를 그대로 읽으면 안 된다.",
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
@@ -712,7 +712,7 @@ def build():
         S = json.load(io.open(p2, encoding="utf-8")).get("strategies") or {}
         want = {}
         for k, v in S.items():
-            if "EPS Revision Drift · NDX100" in k:
+            if "EPS Revision Drift · NDX 100" in k:
                 want["eps"] = v
             elif "Cross-Asset Risk Parity" in k:
                 want["rp"] = v
@@ -947,7 +947,7 @@ def main() -> int:
     # ⚠ 지수는 **가격지수(PR)** 다. ^GSPC·^NDX는 배당을 안 담는다. 배당까지 담은 총수익(TR)은
     #   SPY·QQQ 쪽이고, 실측 격차가 연 2.0%p다(SPY 10.99% vs ^GSPC 8.98%, 2006~).
     #   PR을 대조군으로 쓰면 전략이 그만큼 유리해 보인다 — 그 사실을 표에 함께 적는다.
-    IDX = [("^GSPC", "S&P 500 (SPX)", "PR"), ("^NDX", "나스닥100 (NDX)", "PR"),
+    IDX = [("^GSPC", "S&P 500 (SPX)", "PR"), ("^NDX", "NASDAQ 100 (NDX)", "PR"),
            ("SPY", "SPY (배당 재투자)", "TR"), ("QQQ", "QQQ (배당 재투자)", "TR")]
 
     def stats_range(a, lo, hi):

@@ -160,7 +160,7 @@ def main():
       {"k":"T10Y2Y","label":"수익률곡선 (10Y−2Y)","group":"금융","v":round(curve,2) if curve is not None else None,"u":"%p","st":stat_curve(curve),"d":"장단기 금리차. 음(역전)이면 역사적으로 침체 선행."},
       {"k":"BAMLH0A0HYM2","label":"하이일드 스프레드","group":"금융","v":round(hy,2) if hy is not None else None,"u":"%","st":stat_hy(hy_z),"d":"하이일드 회사채 가산금리. 확대는 위험회피·신용경색 신호."},
       {"k":"NFCI","label":"시카고 금융여건 (NFCI)","group":"금융","v":round(nfci,2) if nfci is not None else None,"u":"z","st":stat_nfci(nfci),"d":"종합 금융여건. +면 긴축·−면 완화(0=평균)."},
-      {"k":"VIXCLS","label":"VIX (변동성)","group":"금융","v":round(vix,1) if vix is not None else None,"u":"","st":stat_vix(vix),"d":"S&P500 내재변동성. 공포지수 — 25↑ 스트레스."},
+      {"k":"VIXCLS","label":"VIX (변동성)","group":"금융","v":round(vix,1) if vix is not None else None,"u":"","st":stat_vix(vix),"d":"S&P 500 내재변동성. 공포지수 — 25↑ 스트레스."},
       {"k":"DFII10","label":"10년 실질금리 (TIPS)","group":"금융","v":round(last(S['DFII10']),2) if last(S['DFII10']) is not None else None,"u":"%","st":stat_real(last(S['DFII10'])),"d":"물가연동국채 실질수익률. 그로스주 할인율의 핵심."},
       {"k":"CPIYOY","label":"소비자물가 CPI (YoY)","group":"물가","v":round(infl_v,1) if infl_v is not None else None,"u":"%","st":stat_cpi(infl_v),"d":"전년比 물가상승률. 2%↓ 저물가·4%↑ 고물가."},
       {"k":"T10YIE","label":"기대인플레 (10Y BEI)","group":"물가","v":round(last(S['T10YIE']),2) if last(S['T10YIE']) is not None else None,"u":"%","st":("높음","watch") if (last(S['T10YIE']) or 0)>2.5 else ("안정","good"),"d":"시장 반영 10년 기대인플레(브레이크이븐)."},
