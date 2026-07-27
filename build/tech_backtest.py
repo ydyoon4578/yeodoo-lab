@@ -358,10 +358,19 @@ def _shift(d, days):
     return (_dt.date(y, m, dd) - _dt.timedelta(days=days)).isoformat()
 
 
+_ORD = {}
+
+
+def _ord(d):
+    """'YYYY-MM-DD' → 서수. 950만 번 호출되던 자리라 사전으로 받는다(날짜 종류는 수천 개뿐)."""
+    o = _ORD.get(d)
+    if o is None:
+        o = _ORD[d] = dt.date(int(d[:4]), int(d[5:7]), int(d[8:10])).toordinal()
+    return o
+
+
 def _days_between(a, b):
-    import datetime as _dt
-    return abs((_dt.date(int(a[:4]), int(a[5:7]), int(a[8:10]))
-                - _dt.date(int(b[:4]), int(b[5:7]), int(b[8:10]))).days)
+    return abs(_ord(a) - _ord(b))
 
 
 def yoy_eps(series):
@@ -863,6 +872,10 @@ def run():
         ix.append(ix[-1] * (1 + r))
 
     ixvol = [vol(ixr, i, 20) for i in range(n)]
+    # 지수의 200일선 이격 — t-gapcap 이 매 시점 직전 252일치를 다시 만드느라
+    # sma(ix, j, 200) 를 i마다 252번(각 200회 덧셈) 돌렸다. 규칙과 무관하게 ix 에만
+    # 의존하므로 한 번만 만들어 둔다: 252×200×n → n×200.
+    ixgap = [((ix[i] / _m - 1) if (_m := sma(ix, i, 200)) else None) for i in range(n)]
 
     # 횡단면 분산도 — 그날 종목 수익률의 표준편차(국면 대리변수)
     disp = [None] * n
@@ -939,6 +952,7 @@ def run():
             state = 0.0
             peak = 0.0          # 샹들리에: 진입 후 고점
             kama_prev = None    # 적응형 이동평균: 직전 값(재귀식이라 이어져야 한다)
+            ddpk = None         # t-ddgate: MIN_HIST 이후 지수 고점(러닝 맥스 — 아래 설명)
             for i in range(n):
                 if i < MIN_HIST:
                     continue
@@ -1000,8 +1014,11 @@ def run():
                     b = brd[i]
                     w[i] = (b if (b is not None and b >= 0.30) else 0.0)
                 elif sid == "t-ddgate":
-                    pk = max(ix[MIN_HIST:i + 1])
-                    dd = ix[i] / pk - 1
+                    # i 는 단조 증가하고 고점은 줄지 않는다 → 매번 구간 전체를 훑을 이유가 없다.
+                    # 이 랩에서 유일한 진짜 O(n²)였다(3년에선 안 보였고 10년에서 드러났다).
+                    # 러닝 맥스는 max(ix[MIN_HIST:i+1]) 과 값이 정확히 같다.
+                    ddpk = ix[i] if ddpk is None else max(ddpk, ix[i])
+                    dd = ix[i] / ddpk - 1
                     if dd < -0.10:
                         state = 0.0
                     elif dd > -0.03:
@@ -1040,13 +1057,9 @@ def run():
                         dv = math.sqrt(sum(x * x for x in win) / len(win))
                         w[i] = min(1.0, 0.09 / (dv * math.sqrt(252))) if dv > 0 else 0.0
                 elif sid == "t-gapcap":
-                    m200 = sma(ix, i, 200)
-                    if m200:
-                        gap = ix[i] / m200 - 1
-                        hist = sorted(g for g in
-                                      ((ix[j] / sma(ix, j, 200) - 1) if sma(ix, j, 200) else None
-                                       for j in range(max(MIN_HIST, i - 252), i))
-                                      if g is not None)
+                    gap = ixgap[i]
+                    if gap is not None:
+                        hist = sorted(g for g in ixgap[max(MIN_HIST, i - 252):i] if g is not None)
                         cap = hist[int(len(hist) * 0.9)] if hist else None
                         w[i] = 0.0 if gap <= 0 else (0.5 if (cap is not None and gap > cap) else 1.0)
                 elif sid == "t-sentgate":
@@ -1085,7 +1098,12 @@ def run():
             srets = []
             turns = 0
             for i in range(MIN_HIST + 1, n):
-                if (i - 1) in me or not hold:
+                # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 월말까지 기다리지 않고
+                # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 '월말 리밸런스'를 어기는
+                # 데다, 펀더멘털이 늦게 채워지는 전략(x-roe 등)은 초기 수년간 매일 재채점해
+                # 10년 구간에서 899회(월말이면 106회) 돌았다. 규약대로 월말에만 다시 뽑는다.
+                # 결과: 첫 월말 전까지는 후보가 없으므로 현금이다(선견 없이 정직한 상태다).
+                if (i - 1) in me:
                     sc = []
                     for t in tickers:
                         P = px[t]

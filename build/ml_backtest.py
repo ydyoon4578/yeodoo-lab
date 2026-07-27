@@ -299,7 +299,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
     fwd_b[:-HOLD - 1] = bc[HOLD + 1:] / bc[1:-HOLD] - 1
 
     start = 260
-    st2 = start + 252          # 종목 패널은 3년뿐이라 학습창을 1년으로 잡는다
+    st2 = start + 252          # 첫 학습에 최소 1년은 쌓고 시작한다(이후 창은 확장형)
     if st2 >= n - 40:
         return None
     month_end = [i for i in range(st2, n - 1) if DTS[i][:7] != DTS[i + 1][:7]]
@@ -310,17 +310,22 @@ def stock_selection(RF, TOPN=10, mode="value"):
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
     turn = 0
     beta_w, mu, sd = None, None, None
+    # 학습창은 확장형(start 고정, hi 만 늘어난다)이라 매 리밸런스에 처음부터 다시 만들 이유가
+    # 없다. 예전엔 리밸런스마다 range(start, hi) 를 전부 다시 훑어 column_stack·isfinite 를
+    # 재계산했다 — 리밸런스 수 × 창 길이라 이력을 늘리면 제곱으로 튄다(10년에서 드러났다).
+    # 지난번에 만든 데까지 기억해 두고 **새로 늘어난 날만** 덧붙인다. 결과는 완전히 같다.
+    Xs, ys, built_to = [], [], start
     for i in range(st2 + 1, n):
         if (i - 1) in month_end:
             hi = i - HOLD - 2
-            Xs, ys = [], []
-            for k in range(start, hi):
+            for k in range(built_to, hi):
                 row = np.column_stack([f[k] for f in F])
                 yk = fwd[k] - fwd_b[k]         # 초과수익을 맞힌다(시장 방향은 맞혀도 소용없다)
                 ok = np.isfinite(row).all(axis=1) & np.isfinite(yk)
                 if ok.sum() < 50:
                     continue
                 Xs.append(row[ok]); ys.append(yk[ok])
+            built_to = max(built_to, hi)
             if Xs:
                 Xtr = np.vstack(Xs); ytr = np.concatenate(ys)
                 mu, sd = zfit(Xtr)
