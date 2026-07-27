@@ -1234,13 +1234,24 @@ try:
         except UnicodeEncodeError:
             return False
 
+    # ⚠ '프렐류드가 있다'로 끝내면 안 된다. sys 가 **모듈 최상위**에 임포트돼 있지 않으면
+    #   sys.stdout.reconfigure 가 NameError 를 내고 `except Exception: pass` 가 그걸 삼켜
+    #   프렐류드가 조용히 무력해진다(실측: 함수 안에만 import sys 가 있던 4개 파일).
+    #   그래서 프렐류드 유무가 아니라 **실제로 동작하는가**를 본다.
     _rc_bad = []
     for _p in sorted(_glob.glob(os.path.join(ROOT, "build", "*.py"))):
         _s = io.open(_p, encoding="utf-8").read()
-        if "reconfigure" in _s:
+        if not any(not _cp949_ok(_c) for _c in set(_s)):
+            continue                      # cp949 로 다 쓸 수 있으면 프렐류드가 필요 없다
+        if "reconfigure" not in _s:
+            _rc_bad.append(os.path.basename(_p) + " (프렐류드 없음)"); continue
+        try:
+            _t = _ast.parse(_s)
+        except SyntaxError:
             continue
-        if any(not _cp949_ok(_c) for _c in set(_s)):
-            _rc_bad.append(os.path.basename(_p))
+        if not any(isinstance(_n, _ast.Import) and any(_a.name == "sys" for _a in _n.names)
+                   for _n in _t.body):
+            _rc_bad.append(os.path.basename(_p) + " (import sys 가 최상위에 없어 프렐류드가 무력)")
     if _rc_bad:
         errors.append(f"stdout UTF-8 재설정 누락 {len(_rc_bad)}개 ({', '.join(_rc_bad[:5])}) — "
                       "cp949 콘솔에서 print 시 UnicodeEncodeError로 죽는다. "
