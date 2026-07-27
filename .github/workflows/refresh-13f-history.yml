@@ -1,0 +1,52 @@
+name: Refresh 13F history (SEC, quarterly)
+
+# 운용사별 13F 보유 **이력**(data/guru_history.json)만 받는다.
+#
+# 왜 따로인가 — 2026-07-27 에 이 작업이 주간 자산 패널 잡에 얹혀 있다가 **네 번 연속 폐기**됐다.
+#   그 잡은 마지막에 한 번만 커밋하는데, 뒤쪽 어느 단계가 죽어도 Commit if changed 가 스킵되어
+#   앞서 받아둔 것이 통째로 버려진다. 실제 사유는 매번 달랐다:
+#     ① 날짜 조건으로 13F 단계 자체를 건너뜀   ② market_board 의 IWM 결손
+#     ③ assets.json 푸시 충돌                ④ asof 가 시장일 앞섬을 오기입으로 오판
+#   전부 13F 와 무관한 실패다. 18운용사 × 약 50분기를 다시 읽는 데 몇 분이 드는데,
+#   남의 실패에 휘말려 버려질 이유가 없다. 여기서는 이 작업만 하고 바로 커밋한다.
+#
+# 주기 — 13F 는 분기말 잔고를 45일 뒤에 낸다(마감 2/14 · 5/15 · 8/14 · 11/14).
+#   매월 16일에 돌면 네 마감을 모두 이틀 여유로 지나고, 나머지 달에는 늦게 낸 곳을 줍는다.
+#   분기에 한 번만 바뀌는 데이터라 이보다 자주 받을 이유가 없다.
+#
+# 하류 — guru_history.json 을 읽는 것은 build/ml_backtest.py(13F 복제) 하나뿐이고, 그것은
+#   주간 자산 패널 잡이 다시 굽는다. 그래서 여기서는 다시 굽지 않는다. 13F 는 분기 데이터라
+#   복제 성과가 최대 한 주 늦게 반영되는 것은 무해하고, 그 대신 이 잡의 실패면을 좁게 유지한다.
+
+on:
+  schedule:
+    - cron: '0 2 16 * *'    # 매월 16일 11:00 KST (제출 마감 2/14·5/15·8/14·11/14 직후)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-13f-history
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # yfinance 는 복제용 월봉(mpx)을 받는 데 쓴다. pandas·numpy 는 그 의존이다.
+      - name: Install deps
+        run: pip install --quiet pandas numpy yfinance
+      - name: Fetch 13F history
+        run: python build/refresh_13f_history.py
+      - name: Validate
+        run: python build/validate_site.py
+      # 이 잡은 asof 축을 건드리지 않는다(guru 축은 guru.json 이 대표다) — asof.json 을 넘기지 않는다.
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 13F 보유 이력 자동 갱신" \
+            data/guru_history.json

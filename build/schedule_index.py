@@ -54,6 +54,9 @@ NO_ROW = {
     "refresh-estimates.yml": "컨센서스 원자료 — 종목 시그널 행이 대표",
     "refresh-members.yml":   "유니버스 스냅샷 — 종목 시그널 행이 대표",
     "refresh-metrics.yml":   "전략 지표 재계산 — 백테스트 행이 대표(수시·정적)",
+    # 13F 이력은 화면에 '13F 보유' 행 하나로 나오고 그 대표는 guru.json(refresh-13f.yml)이다.
+    #   이력(guru_history.json)은 복제 백테스트 입력이라 표에 따로 실을 축이 아니다.
+    "refresh-13f-history.yml": "13F 보유 **이력** — 화면 대표는 refresh-13f.yml(guru.json)이다",
     "refresh-tech.yml":      "종목 전략 재계산 — 백테스트 행이 대표",
     "refresh-assets.yml":    "자산배분 전략 재계산 — 백테스트 행이 대표",
     "validate.yml":          "검증 전용(데이터 산출 없음)",
