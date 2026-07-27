@@ -178,14 +178,11 @@
   .fcell.flag{background:color-mix(in srgb,var(--hot) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 30%,transparent) inset}
 
   /* 경고는 숫자 바로 옆(아래) — 접지 않는다 */
-  .warn{margin:2px 0 0;background:color-mix(in srgb,var(--hot) 7%,transparent);
-        border:1px solid color-mix(in srgb,var(--hot) 28%,transparent);border-left:3px solid var(--hot);
-        border-radius:10px;padding:12px 15px;font-size:12.5px;color:var(--ink-2);line-height:1.7}
-  .warn b{color:var(--hot)}
-  .warn .wsrc{display:block;margin-top:7px;font-family:var(--mono);font-size:10px;color:var(--muted)}
-  .warn .wlive{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed color-mix(in srgb,var(--hot) 26%,transparent);
-               font-family:var(--mono);font-size:11px;color:var(--ink-2)}
-  .warn .wlive b{color:var(--ink)}
+  /* 경고 한 줄 — 전에는 원문 2문단짜리 상자 둘이 종목마다 화면 절반을 먹었다.
+     경고를 지운 게 아니라 한 줄로 줄이고 원문은 접었다. */
+  .tpwarn{margin:14px 0 0;font-size:12px;line-height:1.7;color:var(--ink-2);
+          border-left:3px solid var(--hot);padding:2px 0 2px 11px}
+  .tpwarn b{color:var(--hot)}
 
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
@@ -681,13 +678,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function secKo(x){return x?(SECKO[x]||x):'';}
 
   var RKLAB={strong_buy:'적극매수',buy:'매수',hold:'중립',underperform:'시장하회',sell:'매도',strong_sell:'적극매도',none:'등급없음'};
+  // 지수 표기 정본 — 값은 데이터 키(SPX·NDX)라 그대로 두고 화면 글자만 바꾼다(stocks.html과 같은 규약)
+  var IXN={SPX:'S&P 500',NDX:'NASDAQ 100'};
 
   // 퍼센타일에서 음수를 제외하는 지표(생성기 refresh_stocks.py의 FUND_PCT_DROP_NEG와 동일).
   // 여기서는 '섹터 표본 n'을 화면에 적기 위해서만 쓴다 — 퍼센타일 자체는 생성기 값을 그대로 받는다.
   var DROPNEG={fpe:1,pb:1,eveb:1};
   var SECT_MIN=15;   // 섹터 표본이 이 미만이면 등급 대신 '표본 부족'(method.html 규약)
 
-  var DATA=null,HIST=null,RATE=null;
+  var DATA=null,HIST=null;
   var state={tab:'est',sel:null,q:''};
 
   function getj(u){
@@ -729,9 +728,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ── 로드 ──────────────────────────────────────────────────────────────
   showTab(parseHash().tab||'est');
   // nav.json은 빈 탭에 결핍 사유를 덧대던 용도였다. 빈 탭이 없어져 더 안 읽는다.
-  Promise.all([getj('data/stocks.json'),getj('data/target_history.json'),
-               getj('data/regime.json')]).then(function(a){
-    DATA=a[0];HIST=a[1];RATE=a[2];
+  // regime.json은 할인율 맥락 카드 전용이었다 — 그 카드를 뺐으므로 더 받지 않는다.
+  Promise.all([getj('data/stocks.json'),getj('data/target_history.json')]).then(function(a){
+    DATA=a[0];HIST=a[1];
     if(!DATA||!DATA.stocks){
       el('statline').innerHTML='<span class="stat">data/stocks.json을 불러오지 못했습니다</span>';
       // 실패 사유는 접어 두지 않는다 — 목록은 평소 접혀 있으므로 여기서만 펼친다
@@ -1315,78 +1314,61 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       grid+='<div class="fcell'+(cells[i][2]?' flag':'')+'"><div class="fcl">'+esc(cells[i][0])+'</div><div class="fcv">'+esc(cells[i][1])+'</div></div>';
     grid='<div class="fgrid">'+grid+'</div>';
 
-    // ⚠ 경고는 숫자 바로 아래. 접지 않고, 각주로 내리지 않는다.
-    var upw='<div class="warn"><b>⚠ 상승여력 — 매수 근거로 쓰지 말 것.</b><br>'+esc(fd.up||'(fund_defs.up 원문 없음)')+
-      '<span class="wsrc">원문: data/stocks.json → fund_defs.up</span></div>';
-
+    // 상승여력·추천등급 경고 원문 상자(2문단)는 뺐다 — 종목마다 똑같은 글이 화면 절반을 먹었다.
+    // 경고 자체를 없애지는 않는다: 상승여력 칸에 flag 표시를 유지하고 한 줄로 요약해 붙인다.
     var rkv=fu.rk?(RKLAB[fu.rk]||fu.rk):null;
-    var rkw='<div class="warn"><b>⚠ 추천등급 — 척도 자체가 매수 쪽으로 눌려 있습니다.</b><br>'+esc(fd.rk||'(fund_defs.rk 원문 없음)')+
-      '<span class="wsrc">원문: data/stocks.json → fund_defs.rk</span>'+
-      '<span class="wlive">이 종목의 등급 <b>'+esc(rkv||'없음')+'</b> · '+rkLiveText()+'</span></div>';
+    var warn='<p class="tpwarn">⚠ <b>상승여력·추천등급은 매수 근거가 아닙니다</b> — 전수검증에서 상승여력은 '+
+      '주가 하락의 기계적 산물이고(우리 매수점수와 상관 −0.71), 등급은 512종목 중 매도 0건인 편향 척도입니다.'+
+      (rkv?' 이 종목 등급 <b>'+esc(rkv)+'</b>.':'')+
+      '<details class="more"><summary>검증 원문(data/stocks.json → fund_defs)</summary><div class="mbody">'+
+      esc(fd.up||'(fund_defs.up 원문 없음)')+'<br><br>'+esc(fd.rk||'(fund_defs.rk 원문 없음)')+
+      '<br><br>'+rkLiveText()+'</div></details></p>';
 
-    return head+bar+grid+upw+rkw+'</div>';
+    return head+bar+grid+warn+histRow(s)+'</div>';
   }
 
-  function histBlock(s){
-    var head='<div class="card"><h3>목표주가 이력<span class="hn">data/target_history.json</span></h3>';
-    if(!HIST||!HIST.snaps||!HIST.snaps.length)
-      return head+'<div class="empty">목표주가 스냅샷 파일을 불러오지 못했습니다.</div></div>';
-    var sn=HIST.snaps,rows=[],i;
+  // ── 목표주가 이력 ──────────────────────────────────────────────────────
+  // 전에는 별도 카드에 스냅샷 표를 그렸다. 스냅샷이 2회뿐이라 표가 두 줄이었고, 두 줄짜리
+  // 표에서 읽을 것은 없었다. 이제 목표주가 카드 안에 한 줄로 넣고, 점이 쌓이면(4회 이상)
+  // **목표 평균과 실제 주가를 같은 축에 겹쳐** 그린다 — 목표가가 주가를 뒤따라가는지가
+  // 이 이력을 쌓는 이유이고, 그건 두 선을 겹쳐야만 보인다.
+  var HIST_MIN_PLOT=4;
+  function histRow(s){
+    if(!HIST||!HIST.snaps||!HIST.snaps.length)return '';
+    var sn=HIST.snaps,rows=[],i,dates=(DATA&&DATA.pxd_dates)||[],px=s.pxd||[];
     for(i=0;i<sn.length;i++){
-      var v=(sn[i].tp||{})[s.t];
-      if(v!=null)rows.push({d:sn[i].d,n:sn[i].n,v:v});
+      var v=(sn[i].tp||{})[s.t]; if(v==null)continue;
+      var k=dates.indexOf(sn[i].d);
+      rows.push({d:sn[i].d,v:v,p:(k>=0?px[k]:null)});
     }
-    var note=HIST.note?'<div class="note">'+esc(HIST.note)+'</div>':'';
-    // 표본을 성과보다 먼저 — 스냅샷이 몇 회인지부터 적는다
-    var span=sn.length?(sn[0].d+' ~ '+sn[sn.length-1].d):'—';
-    var meta='<p class="hd">스냅샷 <b style="color:var(--ink)">'+sn.length+'회</b> ('+esc(span)+') · 이 종목 기록 <b style="color:var(--ink)">'+rows.length+'회</b>'+
-      (sn.length<3?' · 점이 '+sn.length+'개뿐이라 <b style="color:var(--ink)">추세를 말할 수 없습니다</b>':'')+'</p>';
     if(!rows.length)
-      return head+meta+'<div class="empty">이 종목은 스냅샷에 목표주가가 기록된 적이 없습니다.</div>'+note+'</div>';
-    var body='';
-    for(i=0;i<rows.length;i++){
-      var d=(i>0)?rows[i].v-rows[i-1].v:null;
-      var dp=(i>0&&rows[i-1].v)?(rows[i].v/rows[i-1].v-1)*100:null;
-      body+='<tr><td>'+esc(rows[i].d)+'</td><td class="tnum">$'+esc(fmt(rows[i].v,2))+'</td>'+
-            '<td class="tnum">'+(d==null?'—':esc(sgn(d,2)))+'</td>'+
-            '<td class="tnum">'+(dp==null?'—':esc(pctf(dp,2)))+'</td>'+
-            '<td class="tnum">'+rows[i].n+'</td></tr>';
-    }
-    // 전체 스냅샷 사이에서 목표가가 바뀐 종목 비율(이 페이지가 아니라 파일에서 세는 값)
-    var agg='';
-    if(sn.length>=2){
-      var a=sn[sn.length-2].tp||{},b=sn[sn.length-1].tp||{},com=0,chg=0;
-      for(var k in b)if(Object.prototype.hasOwnProperty.call(b,k)&&a[k]!=null){com++;if(Math.abs(b[k]-a[k])>1e-9)chg++;}
-      agg='<div class="note plain">마지막 두 스냅샷('+esc(sn[sn.length-2].d)+' → '+esc(sn[sn.length-1].d)+') 사이에 '+
-          '양쪽 모두에 있는 <b>'+com+'종목</b> 중 <b>'+chg+'종목</b>('+(com?(chg/com*100).toFixed(1):'0.0')+'%)의 목표 평균이 바뀌었습니다. '+
-          '이 숫자가 무엇을 예고하는지 이 랩은 검증한 적이 없습니다 — 모릅니다.</div>';
-    }
-    return head+meta+'<div class="tblwrap"><table><thead><tr><th>스냅샷 일자</th><th>목표 평균</th><th>전 스냅 대비</th><th>변화율</th><th>그 스냅 전체 종목</th></tr></thead><tbody>'+
-      body+'</tbody></table></div>'+agg+note+'</div>';
+      return '<p class="qn">목표주가 이력: 이 종목은 스냅샷 '+sn.length+'회 중 기록된 적이 없습니다.</p>';
+    var last=rows[rows.length-1],first=rows[0];
+    var chg=(rows.length>1&&first.v)?((last.v/first.v-1)*100):null;
+    var line='<p class="qn">목표주가 이력 <b>'+rows.length+'회</b> ('+esc(first.d)+' ~ '+esc(last.d)+')'+
+      (chg!=null?' · 목표 평균 '+esc(pctf(chg,1)):'')+
+      (rows.length<HIST_MIN_PLOT?' — 점이 '+rows.length+'개뿐이라 추세를 말할 수 없습니다. 매일 쌓는 중입니다(data/target_history.json).':'')+'</p>';
+    if(rows.length<HIST_MIN_PLOT)return line;
+    // 두 선을 각자의 첫 값=100으로 정규화해 겹친다(달러 축이 달라 그대로는 못 겹친다)
+    var pts=rows.filter(function(r){return r.p!=null;});
+    if(pts.length<HIST_MIN_PLOT)return line;
+    var W=560,H=120,pL=30,pR=8,pT=10,pB=18,pw=W-pL-pR,ph=H-pT-pB;
+    var v0=pts[0].v,p0=pts[0].p,all=[];
+    pts.forEach(function(r){all.push(r.v/v0*100);all.push(r.p/p0*100);});
+    var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all); if(hi-lo<1){lo-=1;hi+=1;}
+    function X(i){return pL+pw*i/((pts.length-1)||1);} function Y(v){return pT+ph*(hi-v)/((hi-lo)||1);}
+    function path(f){return pts.map(function(r,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(f(r)).toFixed(1);}).join('');}
+    var g='<line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+Y(100).toFixed(1)+'" y2="'+Y(100).toFixed(1)+'" stroke="var(--line)"/>'+
+          '<text x="'+(pL-4)+'" y="'+(Y(100)+3).toFixed(1)+'" text-anchor="end" class="qx">100</text>'+
+          '<path d="'+path(function(r){return r.p/p0*100;})+'" fill="none" stroke="var(--ink-2)" stroke-width="1.6"/>'+
+          '<path d="'+path(function(r){return r.v/v0*100;})+'" fill="none" stroke="var(--champ)" stroke-width="1.8"/>'+
+          '<text x="'+pL+'" y="'+(H-5)+'" class="qx">'+esc(pts[0].d)+'</text>'+
+          '<text x="'+(W-pR)+'" y="'+(H-5)+'" text-anchor="end" class="qx">'+esc(pts[pts.length-1].d)+'</text>';
+    return line+'<svg class="qsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="목표 평균과 주가">'+g+'</svg>'+
+      '<p class="qn"><b style="color:var(--champ)">━</b> 목표 평균 · <b style="color:var(--ink-2)">━</b> 주가 '+
+      '(각자 첫 스냅샷 = 100). 목표선이 주가선을 뒤따라 움직이는지 보는 그림입니다 — '+
+      '이 랩은 그 시차가 무엇을 예고하는지 검증한 적이 없습니다.</p>';
   }
-
-  // 할인율 맥락 — 단순 산술 비교. 예측력 주장 없음.
-  function rateBlock(s){
-    if(!RATE||!RATE.indicators)return '';
-    var fu=s.fund||{};
-    if(!(typeof fu.fpe==='number'&&fu.fpe>0))return '';
-    var ind={},i;
-    for(i=0;i<RATE.indicators.length;i++)ind[RATE.indicators[i].k]=RATE.indicators[i];
-    var y10=ind.DGS10,r10=ind.DFII10;
-    if(!y10&&!r10)return '';
-    var ey=100/fu.fpe;
-    var cells='<div class="fcell"><div class="fcl">선행 이익수익률</div><div class="fcv">'+esc(fmt(ey,2))+'%</div></div>';
-    if(y10)cells+='<div class="fcell"><div class="fcl">'+esc(y10.label)+'</div><div class="fcv">'+esc(fmt(y10.v,2))+'%</div></div>';
-    if(r10)cells+='<div class="fcell"><div class="fcl">'+esc(r10.label)+'</div><div class="fcv">'+esc(fmt(r10.v,2))+'%</div></div>';
-    if(r10)cells+='<div class="fcell"><div class="fcl">이익수익률 − 실질금리</div><div class="fcv">'+esc(sgn(ey-r10.v,2))+'%p</div></div>';
-    return '<div class="card"><h3>할인율 맥락<span class="hn">data/regime.json · 기준일 '+esc(RATE.as_of||'—')+'</span></h3>'+
-      '<p class="hd">선행 이익수익률 = 1 ÷ 선행 PER. 금리와 나란히 놓은 <b>산술 비교</b>일 뿐입니다.</p>'+
-      '<div class="fgrid">'+cells+'</div>'+
-      '<div class="note">이 스프레드가 향후 수익률을 설명하는지 <b>이 랩은 검증한 적이 없습니다 — 모릅니다.</b> '+
-      '선행 이익수익률은 애널리스트 추정 EPS에 의존하므로, 추정이 바뀌면 이 숫자도 바뀝니다. '+
-      '가격·EPS와 금리는 기준일이 다를 수 있어 각 파일의 as-of를 함께 적어 둡니다.</div></div>';
-  }
-
 
   // ── 분기 실적 추이 ──────────────────────────────────────────────────────
   // SEC XBRL(data/fx/<티커>.json)의 분기 EPS·매출을 그대로 막대로 그린다. 컨센서스가 아니라
@@ -1438,16 +1420,42 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(EARN!==null)return cb(EARN);
     getj('data/earnings.json').then(function(j){EARN=j||{};cb(EARN);});
   }
+  // 발표일을 어디서 얻나 — 두 소스를 합친다.
+  //   ① data/earnings.json 의 recent : 컨센서스·실제가 붙어 서프라이즈를 낼 수 있다. 다만
+  //      수집 창이 90일이라 대개 직전 1건뿐이었고, 그래서 이 그림이 한 선짜리였다.
+  //   ② data/fil/<티커>.json 의 8-K 항목 2.02(Results of Operations) : **그게 실적 발표 그 자체**다.
+  //      서프라이즈는 없지만 날짜는 정확하고 2년치가 들어 있어 대개 8건이 나온다.
+  // 둘을 날짜로 합치고 ①의 est·act 를 얹는다. 가격 패널이 10년이라 전 구간을 그릴 수 있다.
+  var PAD_MIN=4;      // 최소 이 만큼은 보여준다 — 한두 건으로는 발표 후 흐름을 볼 수 없다
+  var PAD_MAX=8;
+  function padEvents(s,E){
+    var by={},i,ev;
+    var rec=((E&&E.recent)||[]).filter(function(x){return x.t===s.t;});
+    for(i=0;i<rec.length;i++)by[rec[i].dt]={dt:rec[i].dt,hour:rec[i].hour,est:rec[i].est,act:rec[i].act};
+    var fl=(s._fil&&s._fil.filings)||[];
+    for(i=0;i<fl.length;i++){
+      var f=fl[i];
+      if(f.f!=='8-K'||(f.it||[]).indexOf('2.02')<0)continue;
+      if(!by[f.d])by[f.d]={dt:f.d};
+    }
+    var out=[];
+    for(var k in by)if(Object.prototype.hasOwnProperty.call(by,k))out.push(by[k]);
+    out.sort(function(a,b){return a.dt<b.dt?1:(a.dt>b.dt?-1:0);});   // 최신순
+    return out.slice(0,PAD_MAX);
+  }
   function padBlock(s){
     var host=el('padout'); if(!host)return;
     host.innerHTML='<div class="skel">발표 이후 주가를 계산하는 중…</div>';
+    // 제출 이력은 IR 탭과 같은 파일이다 — 이미 받아 뒀으면 다시 받지 않는다
+    ensureFilings(s);
     earnLoad(function(E){
       if(el('padout')!==host)return;
+      if(s._filLoading){setTimeout(function(){if(el('padout')===host)padBlock(s);},300);return;}
       var dates=(DATA&&DATA.pxd_dates)||[], px=(s&&s.pxd)||[];
       if(!dates.length||!px.length){host.innerHTML='<div class="note">종가 계열이 없어 표시하지 않습니다.</div>';return;}
-      var evs=((E&&E.recent)||[]).filter(function(x){return x.t===s.t;});
-      if(!evs.length){host.innerHTML='<div class="note">수집 창(최근 90일) 안에 이 종목의 지난 발표가 없습니다 — 발표 이력이 쌓이면 여기에 표시됩니다.</div>';return;}
-      var W=560,H=130,pL=34,pR=8,pT=10,pB=18,pw=W-pL-pR,ph=H-pT-pB,BEF=5,AFT=10;
+      var evs=padEvents(s,E);
+      if(!evs.length){host.innerHTML='<div class="note">발표일을 특정할 수 없습니다 — 수집 창(90일) 안에 발표가 없고, 제출 이력에도 실적 8-K(항목 2.02)가 없습니다.</div>';return;}
+      var W=560,H=150,pL=34,pR=8,pT=10,pB=18,pw=W-pL-pR,ph=H-pT-pB,BEF=5,AFT=20;
       var lines=[],all=[];
       evs.forEach(function(ev){
         var k=dates.indexOf(ev.dt); if(k<0)return;
@@ -1463,50 +1471,70 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var g='<line x1="'+X(0).toFixed(1)+'" x2="'+X(0).toFixed(1)+'" y1="'+pT+'" y2="'+(H-pB)+'" stroke="var(--accent)" stroke-dasharray="3 3"/>'+
             '<line x1="'+pL+'" x2="'+(W-pR)+'" y1="'+Y(100).toFixed(1)+'" y2="'+Y(100).toFixed(1)+'" stroke="var(--line)"/>'+
             '<text x="'+(pL-4)+'" y="'+(Y(100)+3).toFixed(1)+'" text-anchor="end" class="qx">100</text>'+
-            '<text x="'+X(0).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" class="qx">발표일</text>';
-      lines.forEach(function(L){
-        g+='<path d="'+L.pts.map(function(p,i){return (i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join('')+
-           '" fill="none" stroke="var(--champ)" stroke-width="1.8"/>';
+            '<text x="'+X(0).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle" class="qx">발표일</text>'+
+            '<text x="'+(W-pR)+'" y="'+(H-5)+'" text-anchor="end" class="qx">+'+AFT+'일</text>';
+      // 최신 발표만 진하게 — 선이 8개면 어느 것이 최근인지 구분이 안 된다
+      lines.forEach(function(L,i){
+        g+='<path d="'+L.pts.map(function(p,j){return (j?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}).join('')+
+           '" fill="none" stroke="'+(i?'var(--line)':'var(--champ)')+'" stroke-width="'+(i?1.1:2)+'"/>';
       });
-      var rows=lines.map(function(L){
+      var rows=lines.map(function(L,i){
         var last=L.pts[L.pts.length-1];
         var sur=(L.est!=null&&L.act!=null)?((L.act-L.est)/Math.abs(L.est)*100):null;
-        // 발표 직후라 아직 며칠 안 지났으면 '+10거래일 0.0%'로 적으면 안 된다 — 안 오른 것이
+        // 발표 직후라 아직 며칠 안 지났으면 '+20거래일 0.0%'로 적으면 안 된다 — 안 오른 것이
         // 아니라 시간이 안 지난 것이다. 실제로 지난 거래일 수를 그대로 적는다.
         var el_=last[0];
         var cell=(el_<=0)?'<span class="qn2">아직</span>'
                  :((last[1]-100>0?'+':'')+(last[1]-100).toFixed(1)+'% <span class="qn2">+'+el_+'일</span>');
-        return '<tr><th scope="row">'+esc(L.dt)+(L.hour?' <span class="qn2">'+esc(L.hour)+'</span>':'')+'</th>'+
+        return '<tr><th scope="row">'+(i?'':'<b>')+esc(L.dt)+(i?'':'</b>')+
+               (L.hour?' <span class="qn2">'+esc(L.hour)+'</span>':'')+'</th>'+
                '<td class="tnum">'+(sur==null?'—':(sur>0?'+':'')+sur.toFixed(1)+'%')+'</td>'+
                '<td class="tnum">'+cell+'</td></tr>';
       }).join('');
+      var nsur=lines.filter(function(L){return L.est!=null&&L.act!=null;}).length;
       host.innerHTML='<svg class="qsvg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="발표 전후 주가">'+g+'</svg>'+
         '<table class="tbl"><thead><tr><th scope="col">발표일</th><th scope="col">서프라이즈</th><th scope="col">발표 후</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-        '<p class="qn">발표일 종가를 100으로 둔 전후 '+BEF+'/'+AFT+'거래일 흐름입니다. 표본 '+lines.length+
-        '건 — 이 개수로 방향을 말할 수 없습니다. 발표 이력(data/earnings_history.json)은 매일 쌓는 중입니다.</p>';
+        '<p class="qn">발표일 종가를 100으로 둔 전후 '+BEF+'/'+AFT+'거래일 흐름. 굵은 선·굵은 날짜가 <b>최근 발표</b>입니다. '+
+        '표본 <b>'+lines.length+'건</b>'+(lines.length<PAD_MIN?' — 발표일을 특정할 수 있는 건수가 이것뿐입니다.':'')+
+        ' · 서프라이즈가 붙은 건 '+nsur+'건(나머지는 8-K 항목 2.02로 날짜만 특정). '+
+        '이 개수로 방향을 말할 수 없습니다.</p>';
     });
   }
 
-  // ── 한눈에 ────────────────────────────────────────────────────────────
-  // 회사 소개 문장은 어느 소스에도 없다. 지어내는 대신 파일에 있는 값으로만 표를 세운다.
+  // ── 종목 카드(헤더 + 소개 + 한눈에를 한 칸에) ──────────────────────────
+  // 전에는 헤더·소개·지표가 각각 다른 카드였다. 한 종목을 보는데 칸이 셋으로 갈려
+  // 스크롤만 늘었다 — 같은 종목의 같은 신원 정보이므로 한 칸에 둔다.
   // 라벨·단위·소수 자릿수는 stocks.json의 fundx_defs를 그대로 따른다(프런트에 베끼지 않는다).
   var SNAPKEYS=['mc','beta','dy','roe','pm','rg','de','fcfy','pb','ps'];
-  // 회사 소개는 data/sd/<티커>.json의 prof — yfinance longBusinessSummary 원문(영문)이다.
-  // 번역·요약하지 않는다: 둘 다 원문에 없는 뜻을 만들어 넣는 일이고, 어긋나도 알 방법이 없다.
+
+  // 회사 소개 — 한국어는 data/prof_ko.json, 영문 원문은 data/sd/<티커>.json의 prof.sum.
+  // 원문은 정보원(yfinance longBusinessSummary)이 쓴 것이고, 한국어는 그 원문을 옮긴 것이다.
+  // 원문을 지우지 않는다 — 옮기며 어긋난 곳을 확인할 수 있어야 한다.
+  var PKO=null;
+  function pkoLoad(cb){
+    if(PKO!==null)return cb(PKO);
+    getj('data/prof_ko.json').then(function(j){PKO=(j&&j.ko)||{};cb(PKO);});
+  }
   function profBlock(s){
-    var p=s.prof;
-    if(!p)return s._sdLoading?'':'';
-    var chips='',emp;
+    var p=s.prof||{},ko=(PKO&&PKO[s.t])||null,chips='',emp;
     if(p.ind)chips+='<span class="chip">'+esc(p.ind)+'</span>';
     if(p.emp!=null){emp=Number(p.emp);if(emp===emp)chips+='<span class="chip">임직원 '+emp.toLocaleString('en-US')+'명</span>';}
     if(p.cty)chips+='<span class="chip">'+esc(p.cty)+'</span>';
     if(p.web)chips+='<a class="chip" href="'+esc(p.web)+'" target="_blank" rel="noopener nofollow">홈페이지 ↗</a>';
-    return (chips?'<div class="snapchips">'+chips+'</div>':'')+
-           (p.sum?'<p class="profsum">'+esc(p.sum)+'<span class="wsrc">출처 yfinance longBusinessSummary 원문 · 번역하지 않습니다</span></p>':'');
+    var body='';
+    if(ko){
+      // <p> 안에 <details>를 넣으면 파서가 <p>를 강제로 닫아 형제로 튕겨낸다 — div로 감싼다
+      body='<div class="profsum">'+esc(ko)+
+           (p.sum?'<details class="more"><summary>영문 원문</summary><div class="mbody">'+esc(p.sum)+'</div></details>':'')+
+           '</div>';
+    }else if(p.sum){
+      body='<div class="profsum">'+esc(p.sum)+'<span class="wsrc">한국어 대역이 아직 없습니다 — 원문 그대로입니다</span></div>';
+    }
+    return (chips?'<div class="snapchips">'+chips+'</div>':'')+body;
   }
 
   function snapBlock(s){
-    var fu=s.fund||{},fx=DATA.fundx_defs||{},cells='',i;
+    var fu=s.fund||{},fx=DATA.fundx_defs||{},cells='',i,cur=lastPx(s);
     for(i=0;i<SNAPKEYS.length;i++){
       var k=SNAPKEYS[i],D=fx[k]||{},v=num(fu[k]);
       var vs=(v==null)?'—':(fmt(v,D.nd==null?1:D.nd)+(D.unit?(D.unit==='%'?'%':' '+D.unit):''));
@@ -1517,32 +1545,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(s.timing)chips+='<span class="chip">타이밍 '+esc(s.timing)+'</span>';
     if(s.flags)for(i=0;i<s.flags.length;i++)chips+='<span class="chip">'+esc(s.flags[i])+'</span>';
     if(fu.rk)chips+='<span class="chip">등급 '+esc(RKLAB[fu.rk]||fu.rk)+'</span>';
-    return '<div class="card"><h3>한눈에<span class="hn">기준일 '+esc(DATA.as_of||'—')+' · 출처 '+esc(DATA.source||'—')+'</span></h3>'+
-           profBlock(s)+
+    var idx='';
+    if(s.idx)for(i=0;i<s.idx.length;i++)idx+='<span class="chip">'+esc(IXN[s.idx[i]]||s.idx[i])+'</span>';
+    var head='<div class="selhd">'+
+       '<span class="tk">'+esc(s.t)+'</span><span class="nm">'+esc(s.name||'')+'</span>'+
+       '<span class="chip">'+esc(secKo(s.sector))+'</span>'+idx+
+       (s.part?'<span class="chip" title="상장 '+esc(String(s.part))+'거래일 — 장기 창이 필요한 지표는 산출되지 않습니다">부분 '+esc(String(s.part))+'일</span>':'')+
+       '<span class="px">'+(cur!=null?'<b>$'+esc(fmt(cur,2))+'</b><br>':'')+
+       '종가 기준일 '+esc(lastPxDate()||'—')+'</span></div>';
+    var warn='';
+    if(s._sdLoading)warn='<div class="skel">상세(data/sd/'+esc(s.t)+'.json)를 불러오는 중…</div>';
+    else if(s._sdFail)warn='<div class="note">상세 파일(data/sd/'+esc(s.t)+'.json)을 불러오지 못했습니다 — 백분위·등급·종가는 표시하지 않습니다.</div>';
+    return '<div class="card">'+head+warn+profBlock(s)+
            '<div class="fgrid">'+cells+'</div>'+
            (chips?'<div class="snapchips">'+chips+'</div>':'')+'</div>';
   }
 
   function renderDetail(s){
     if(!s){el('detail').innerHTML='<div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div>';return;}
-    var cur=lastPx(s),h='';
-    var idx='';
-    if(s.idx)for(var i=0;i<s.idx.length;i++)idx+='<span class="chip">'+esc(s.idx[i])+'</span>';
-    h+='<div class="card"><div class="selhd">'+
-       '<span class="tk">'+esc(s.t)+'</span><span class="nm">'+esc(s.name||'')+'</span>'+
-       '<span class="chip">'+esc(secKo(s.sector))+'</span>'+idx+
-       (s.part?'<span class="chip" title="상장 '+esc(String(s.part))+'거래일 — 장기 창이 필요한 지표는 산출되지 않습니다">부분 '+esc(String(s.part))+'일</span>':'')+
-       '<span class="px">'+(cur!=null?'<b>$'+esc(fmt(cur,2))+'</b><br>':'')+
-       '종가 기준일 '+esc(lastPxDate()||'—')+'</span></div>';
-    if(s._sdLoading)h+='<div class="skel">섹터 백분위(data/sd/'+esc(s.t)+'.json)를 불러오는 중…</div>';
-    else if(s._sdFail)h+='<div class="note">상세 파일(data/sd/'+esc(s.t)+'.json)을 불러오지 못했습니다 — 백분위·등급·종가는 표시하지 않습니다.</div>';
-    h+='</div>';
-    h+=snapBlock(s)+epsBlock(s)+tpBlock(s)+
+    // 할인율 맥락(선행 이익수익률 vs 금리)은 뺐다 — 종목별로 달라지는 건 이익수익률 하나뿐이고
+    // 금리 쪽은 전 종목 공통이라, 종목 화면에서 매번 같은 표를 다시 읽게 하는 값이 없었다.
+    var h=snapBlock(s)+epsBlock(s)+tpBlock(s)+
        '<div class="card"><h3>분기 실적 추이<span class="hn">SEC XBRL · 회사 보고값</span></h3><div id="fxout"><div class="skel">불러오는 중…</div></div></div>'+
-       '<div class="card"><h3>실적 발표 이후 주가<span class="hn">발표일 = 100</span></h3><div id="padout"><div class="skel">불러오는 중…</div></div></div>'+
-       histBlock(s)+rateBlock(s);
+       '<div class="card"><h3>실적 발표 이후 주가<span class="hn">발표일 = 100</span></h3><div id="padout"><div class="skel">불러오는 중…</div></div></div>';
     el('detail').innerHTML=h;
     fxBlock(s.t); padBlock(s);
+    // 한국어 소개는 별도 파일이라 늦게 온다 — 도착하면 카드만 다시 그린다
+    if(PKO===null)pkoLoad(function(){if(state.sel===s)renderDetail(s);});  // 도착 후엔 PKO가 차서 재귀하지 않는다
   }
 
 
