@@ -384,6 +384,50 @@ def ttm(series, date, lag=FUND_LAG_DAYS):
     return sum(v for _d, v in got[:4])
 
 
+def load_index_rets(dates):
+    """실제로 살 수 있는 지수(^GSPC·^NDX)의 일간수익 — dates 격자에 맞춰 반환.
+
+    왜 필요한가. 이 랩의 횡단면 전략은 유니버스 518종에서 Top-N을 **동일가중**으로 담고,
+    대조군도 **동일가중 유니버스**였다. 그건 '종목을 고른 실력'만 남기는 엄격한 시험이지만
+    (동일가중=소형 틸트 효과가 양쪽에서 상쇄된다), 정작 운용에서 묻는 질문에는 답하지 않는다 —
+    "내가 실제로 살 수 있는 대안(S&P500·나스닥100)보다 나았나". 동일가중 유니버스는 살 수
+    없는 가상 포트폴리오다. 그래서 **둘 다** 싣는다.
+      · 지수를 이겼는데 동일가중 유니버스는 못 이겼다 → 초과분은 종목선택이 아니라 사이즈 틸트다.
+      · 동일가중은 이겼는데 지수는 못 이겼다 → 고르기는 됐지만 살 수 있는 대안을 못 넘었다.
+    어느 하나만 보면 이 구분이 사라진다.
+
+    ※ 가격지수(배당 제외)다. 전략 쪽도 배당을 빼고 계산하므로(가격 수익률) 같은 기준이다.
+    """
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception as e:
+        print("  [지수벤치] assets.json 없음 — 지수 대비는 생략:", str(e)[:60])
+        return {}
+    adates = A.get("dates") or []
+    pos = {d: i for i, d in enumerate(adates)}
+    out = {}
+    for tk, label in (("^GSPC", "S&P 500"), ("^NDX", "나스닥 100")):
+        raw = (A.get("px") or {}).get(tk)
+        if not raw:
+            print("  [지수벤치] %s 없음 — 건너뜀" % tk); continue
+        # dates 격자에 맞춘 종가(그 날이 없으면 직전 값 — 휴장일 정렬용)
+        px_al, last = [], None
+        for d in dates:
+            i = pos.get(d)
+            if i is not None and raw[i] is not None:
+                last = float(raw[i])
+            px_al.append(last)
+        r = [None] * len(dates)
+        for i in range(1, len(dates)):
+            a, b = px_al[i - 1], px_al[i]
+            r[i] = (b / a - 1) if (a and b) else 0.0
+        cov = sum(1 for x in px_al if x is not None)
+        if cov < len(dates) * 0.9:
+            print("  [지수벤치] %s 커버 %d/%d — 부족해 제외" % (tk, cov, len(dates))); continue
+        out[tk] = {"label": label, "r": r}
+    return out
+
+
 def load_fund():
     """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순."""
     out = {}
@@ -854,6 +898,7 @@ def run():
     build_strats()
     out = []
     bench_r = ixr[MIN_HIST:]
+    IDX = load_index_rets(dates)      # 실제 매수 가능한 지수 대조군(동일가중과 '함께' 본다)
 
     for S in STRATS:
         w = [0.0] * n
@@ -1137,6 +1182,24 @@ def run():
         d2 = dates[MIN_HIST:]
         st = ann_stats(nav, d2, rf)
         bs = ann_stats(bnav, d2, rf)
+        # ── 지수 대조군(동일가중과 병기) ──────────────────────────────
+        #   전략을 대체하는 게 아니라 '살 수 있는 대안'을 나란히 둔다. 판정은 둘 다 넘어야 한다.
+        idx_bench = []
+        for tk, info in IDX.items():
+            ir = info["r"]
+            inav = [100.0]
+            for i in range(MIN_HIST + 1, n):
+                inav.append(inav[-1] * (1 + (ir[i] or 0.0)))
+            ist = ann_stats(inav, d2, rf)
+            idx_bench.append({
+                "tk": tk, "label": info["label"], "metrics": ist,
+                "excess_cagr": round((st.get("cagr", 0) - ist.get("cagr", 0)), 2),
+                "d_sharpe": round((st.get("sharpe") or 0) - (ist.get("sharpe") or 0), 3),
+                "t": tstat(srets, [(ir[i] or 0.0) for i in range(MIN_HIST + 1, n)]),
+            })
+        # 두 대조군의 판정이 엇갈리는가 — 엇갈리면 초과분의 정체가 다르다(사이즈 틸트 vs 선택).
+        _ew_win = (st.get("cagr", 0) - bs.get("cagr", 0)) > 0
+        _ix_win = all(b["excess_cagr"] > 0 for b in idx_bench) if idx_bench else None
         out.append({
             "sid": S["sid"], "name": S["name"], "kind": S["kind"], "arch": S.get("arch"),
             # 성격 — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
@@ -1147,6 +1210,9 @@ def run():
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
             "t": tstat(srets, ixr[MIN_HIST + 1:]),
+            # 지수 대조군 — 동일가중과 병기. bench_split=True 면 두 판정이 엇갈린 전략이다.
+            "bench_idx": idx_bench,
+            "bench_split": (None if _ix_win is None else (_ew_win != _ix_win)),
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
             "holdings": hold_now,
             "nav": [round(x, 2) for x in nav[::5]],
