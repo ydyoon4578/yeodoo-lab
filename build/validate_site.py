@@ -1359,6 +1359,32 @@ try:
 except Exception as e:
     errors.append(f"아카이브 분류 검증 실패: {e}")
 
+# ── 캘린더 이벤트 정본(data/events.json) ───────────────────────────────────
+#   FOMC 일정은 손으로 적는 유일한 캘린더 재료다(FRED가 주지 않는다). 연준이 다음 해를
+#   공표하면 build/refresh_events.py에 덧붙여야 하는데, 안 하면 어느 날 조용히 바닥난다 —
+#   화면엔 '이벤트 없음'으로만 보여서 눈치채기 어렵다. 그래서 기계가 대신 세어 준다.
+try:
+    _ev = json.load(io.open(os.path.join(ROOT, "data", "events.json"), encoding="utf-8"))
+    _fo = [x.get("d") for x in (_ev.get("fomc") or []) if x.get("d")]
+    _st = (_ev.get("stars") or {})
+    if not _fo:
+        errors.append("events.json: fomc 비어 있음 — build/refresh_events.py 실행 필요")
+    if not _st.get("by_rid") or not _st.get("by_name"):
+        errors.append("events.json: stars.by_rid/by_name 누락 — 세 화면의 ★가 사라진다")
+    if _fo:
+        _today = _dt.date.today().isoformat()
+        _fut = [d for d in _fo if d >= _today]
+        if not _fut:
+            errors.append(f"events.json: 남은 FOMC 일정 0건(마지막 {max(_fo)}) — "
+                          f"연준 공표 일정을 build/refresh_events.py에 추가할 것")
+        elif max(_fo) < (_dt.date.today() + _dt.timedelta(days=182)).isoformat():
+            print(f"  ~ events.json: FOMC 일정이 {max(_fo)}까지밖에 없다(6개월 미만) — "
+                  f"다음 해 공표분을 refresh_events.py에 미리 추가할 것")
+except FileNotFoundError:
+    errors.append("data/events.json 없음 — build/refresh_events.py 를 실행해 생성할 것")
+except Exception as e:
+    errors.append(f"events.json 검증 실패: {e}")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

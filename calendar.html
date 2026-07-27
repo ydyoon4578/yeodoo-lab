@@ -625,30 +625,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)','이벤트':'var(--hot)'};
 
-  // ── 중요도(★)와 FOMC — FRED가 주지 않는 두 가지를 여기서 채운다 ──────────────
-  // ★는 FRED에 없다. 시장이 어느 발표에 더 크게 반응하는지는 이 랩이 매긴 주관적 눈금이며
-  //   검증된 신호가 아니다(주간회의에서 무엇부터 볼지 고르는 용도).
-  var STAR={'50':4,'10':4,'54':3,'46':3,'9':3,'192':2,'91':2,'27':2,'199':2,'13':2,
-            '180':1,'219':1,'21':1,'456':1};
-  // FOMC 일정도 FRED에 없다(FRED는 '데이터 릴리스'만 준다). 연준이 몇 년 치를 미리 공표하므로
-  //   결정일(회의 2일차)을 적어 둔다. 출처: federalreserve.gov FOMC calendars · 2027은 잠정.
-  var FOMC=['2026-01-28','2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16',
-            '2026-10-28','2026-12-09','2027-01-27','2027-03-17','2027-04-28','2027-06-09',
-            '2027-07-28','2027-09-15','2027-10-27','2027-12-08'];
-  var FOMC_SEP={'2026-03-18':1,'2026-06-17':1,'2026-09-16':1,'2026-12-09':1,
-                '2027-03-17':1,'2027-06-09':1,'2027-09-15':1,'2027-12-08':1};
+  // ── 중요도(★)와 FOMC — 정본은 data/events.json ─────────────────────────────
+  //   FRED는 FOMC 일정도 주목도도 주지 않는다. 그 둘만 build/refresh_events.py가 한 곳에서
+  //   관리하고 여기선 읽기만 한다(예전엔 PDF·홈·이 화면 세 곳에 날짜가 복제돼 있었다).
+  //   ★는 이 랩이 매긴 주관적 주목도이며 검증된 신호가 아니다.
+  //   못 읽으면 별·FOMC 없이 FRED 일정만 그린다 — 화면 본체는 영향받지 않는다.
+  var EV=null, STAR={};
   function starOf(r){
-    if(r.rid==='FOMC'||r.rid==='FOMC_SEP')return 4;
-    return STAR[String(r.rid)]||0;
+    var rid=String(r.rid);
+    if(rid.indexOf('FOMC')===0)return 4;
+    return STAR[rid]||0;
   }
   // calendar.json(=FRED 정본)은 건드리지 않고, 표시 단계에서만 FOMC를 얹는다.
   function injectFomc(){
-    D.releases['FOMC']={name:'FOMC 금리결정',kind:'이벤트',series:[]};
-    D.releases['FOMC_SEP']={name:'FOMC 금리결정 · 점도표(SEP)',kind:'이벤트',series:[]};
+    if(!EV||!EV.fomc||!EV.fomc.length)return;
     var lo=(D.window&&D.window.from)||'', hi=(D.window&&D.window.to)||'';
-    FOMC.forEach(function(d){
-      if(lo&&d<lo)return; if(hi&&d>hi)return;          // 캘린더 창 밖은 싣지 않는다
-      D.dates.push({d:d,rid:(FOMC_SEP[d]?'FOMC_SEP':'FOMC')});
+    EV.fomc.forEach(function(f){
+      if(!f||!f.d)return;
+      if(lo&&f.d<lo)return; if(hi&&f.d>hi)return;      // 캘린더 창 밖은 싣지 않는다
+      var rid='FOMC_'+f.d;
+      D.releases[rid]={name:f.name||'FOMC 금리결정',kind:'이벤트',series:[]};
+      D.dates.push({d:f.d,rid:rid});
     });
     D.dates.sort(function(a,b){return a.d<b.d?-1:(a.d>b.d?1:starOf(b)-starOf(a));});
   }
@@ -726,7 +723,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     render();
   });
 
-  fetch('data/calendar.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+  // 이벤트·주목도 정본을 먼저 읽고(없어도 진행) FRED 일정을 읽는다.
+  fetch('data/events.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;})
+    .then(function(ev){
+      EV=ev;
+      var br=(ev&&ev.stars&&ev.stars.by_rid)||{};
+      Object.keys(br).forEach(function(k){STAR[k]=br[k];});
+      return fetch('data/calendar.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;});
+    }).then(function(j){
     if(!j||!j.dates){
       el('feed').innerHTML='<div class="note hard"><b>일정을 불러오지 못했습니다</b> — <code>data/calendar.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
       el('tally').innerHTML=ty('—','불러오기 실패','data/calendar.json','var(--hot)');
