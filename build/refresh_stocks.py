@@ -579,10 +579,32 @@ def main():
     # yfinance는 클래스 구분에 하이픈을 쓴다(BRK.B → BRK-B). 점 표기를 그대로 넘기면 조용히 0행이 와서
     # 버크셔·브라운포먼처럼 큰 종목이 통째로 빠진다 — 실제로 빠져 있었다.
     def _yf(t): return t.replace(".", "-")
+    # 배치 재시도 — Yahoo가 러너 IP에 401(Invalid Crumb)/429/5xx를 던지면 그 배치가 통째로,
+    # 또는 일부 종목만 짧게 돌아온다. 한 번 실패하면 그대로 진행하던 것이 2026-07-27 사고의
+    # 앞단이었다(확정 스윙 타점 15231→8791). 실패·빈 응답이면 쉬었다 다시 받는다.
+    def _dl(chy_, tries=3, period="3y"):
+        for k in range(tries):
+            try:
+                d = yf.download(chy_, period=period, auto_adjust=True, progress=False,
+                                group_by="ticker", threads=True)
+                if d is not None and len(d):
+                    return d
+                print(f"  [yf] 빈 응답({k+1}/{tries}) {len(chy_)}종")
+            except Exception as e:
+                print(f"  [yf] 배치 실패({k+1}/{tries}) {str(e)[:70]}")
+            if k < tries - 1:
+                time.sleep(5 * (k + 1))
+        return None
+
     for i in range(0, len(allt), 120):
         ch = allt[i:i+120]
         chy = [_yf(t) for t in ch]
-        df = yf.download(chy, period="3y", auto_adjust=True, progress=False, group_by="ticker", threads=True)
+        df = _dl(chy)
+        if df is None:
+            for t in ch:
+                if t != "SPY":
+                    dropped[t] = ("yfinance 배치 실패", 0)
+            continue
         for t in ch:
             try:
                 sub = (df[_yf(t)] if len(chy) > 1 else df).dropna(how="all")
@@ -597,6 +619,31 @@ def main():
                 partial[t] = int(len(sub))
             elif t != "SPY":
                 dropped[t] = ("상장 이력 부족", int(len(sub)))
+    # ── 잘린 이력 복구 ────────────────────────────────────────────────────────
+    # 위 분기는 len>200 이면 '정상'으로 통과시킨다. 그래서 3년(약 750일)짜리가 250일로 **잘려
+    # 와도** 부분 편입으로도 잡히지 않고 그대로 들어간다 — 종목 수도 기준일도 멀쩡해 보이는데
+    # 확정 스윙 타점(3년 이력에서 나온다)만 급감한다. 2026-07-27 사고가 정확히 이 경로였다
+    # (15231→8791, 완전성 게이트가 뒤에서 잡아 갱신을 막았다).
+    # 중앙값 대비 크게 짧은 종목만 골라 개별로 다시 받는다. 정상 런에서는 short 가 비어 비용 0.
+    _lens = sorted(len(v) for v in px.values())
+    _med = _lens[len(_lens) // 2] if _lens else 0
+    _short = [t for t, v in px.items() if _med and len(v) < _med * 0.6 and t not in partial]
+    if _short:
+        print(f"  이력 잘림 의심 {len(_short)}종 재수집(중앙값 {_med}일의 60% 미만)")
+        _fixed = 0
+        for t in _short:
+            d = _dl([_yf(t)], tries=2)
+            if d is None:
+                continue
+            sub = d.dropna(how="all")
+            if len(sub) > len(px[t]):
+                px[t] = sub; _fixed += 1
+        print(f"  재수집으로 복구 {_fixed}/{len(_short)}종")
+        # 재수집 후에도 여전히 짧으면 정직하게 부분 편입으로 내린다(장기 지표에서 제외된다).
+        for t in _short:
+            if _med and len(px.get(t, [])) < _med * 0.6:
+                partial[t] = int(len(px[t]))
+
     # ★ 미확정 당일 봉 제거 — 랩 최우선 규칙 '기준일 통일'. 장중 실행 시 yfinance 마지막 봉이 실시간이라
     #   종가·지표·목표주가 상승여력이 확정 전 값으로 계산되고, 사이트 다른 데이터(regime·sentiment)와 기준일이 갈린다.
     #   미 동부 16:15 이전이면 당일 봉은 미확정으로 보고 전 종목에서 버린다(크론은 마감 후라 영향 없음).
