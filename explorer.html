@@ -385,6 +385,34 @@
   .vtab:hover{color:var(--ink)}
   .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
   .vtab .vn{font-weight:600;color:var(--muted);margin-left:5px;font-size:11px}
+
+  /* ── 검토했지만 배포하지 않은 것(기각 원장) ──────────────────────────────
+     archive.html을 이 페이지로 합치면서 45종이 데이터에만 남고 목록이 사라졌었다.
+     되살리되 한 칸에 몰아 세지 않는다 — 그 안에는 '기각된 전략'과 '배포 전략의 설정을
+     흔들어 본 실험'과 '규약상 판정 자체가 안 되는 것'이 섞여 있다(data/archive_index.json의 k). */
+  .alwrap{margin-top:40px}
+  .algrp{margin-top:20px}
+  .algrp:first-of-type{margin-top:12px}
+  .alhd{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding-bottom:7px;
+        border-bottom:1px solid var(--line-soft)}
+  .alhd .an{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);
+            display:inline-flex;align-items:center;gap:7px}
+  .alhd .an i{width:8px;height:8px;border-radius:50%;background:var(--ac,var(--muted));flex:none}
+  .alhd .ac{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .alhd .ad{font-size:11.5px;color:var(--muted);flex:1;min-width:200px;line-height:1.6}
+  .alitem{border-bottom:1px solid var(--line-soft)}
+  .alitem>summary{list-style:none;cursor:pointer;padding:9px 2px;display:flex;gap:10px;
+                  align-items:baseline;flex-wrap:wrap}
+  .alitem>summary::-webkit-details-marker{display:none}
+  .alitem>summary:hover .aln{color:var(--accent)}
+  .alitem .aln{font-size:13px;color:var(--ink);flex:1;min-width:180px}
+  .alitem .alc{font-family:var(--mono);font-size:9.5px;color:var(--muted);
+               border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .alitem[open]>summary .aln{font-weight:600}
+  .albody{padding:2px 2px 13px;font-size:12.5px;color:var(--ink-2);line-height:1.75}
+  .albody .alwhy{margin-top:8px;padding:8px 11px;background:var(--panel-2);
+                 border-left:2px solid var(--ac,var(--muted));border-radius:0 7px 7px 0;
+                 font-size:11.5px;color:var(--muted)}
   /* 지수 기준표 — 전략 숫자를 볼 때 옆에 두고 읽는다 */
   .idxref{margin:16px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;
           padding:13px 15px;box-shadow:var(--shadow)}
@@ -825,6 +853,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     </div>
     <div class="detail" id="detail"></div>
     </div>
+
+  <section class="alwrap" id="archledger" aria-labelledby="al-h">
+    <h2 class="lbl" id="al-h">검토했지만 배포하지 않은 것 <span class="sub" id="al-n"></span></h2>
+    <p class="lede" style="font-size:13px;margin-bottom:2px">한 칸에 몰아 세지 않습니다 — 이 안에는 <b>기각된 전략</b>과,
+      배포 전략의 설정을 흔들어 본 <b>실험</b>과, 이 랩의 규약으로는 <b>판정 자체가 안 되는 것</b>이 섞여 있습니다.
+      셋을 같이 세면 “좋은 전략 N개가 기각됐다”로 읽히므로 나눠서 적습니다. 제목을 누르면 판정 사유가 펼쳐집니다.</p>
+    <div id="al-body"><div class="empty">불러오는 중…</div></div>
+  </section>
 
   <footer>
     여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증 · 전략마다 <b>성격에 맞는 1차 지표</b>로 판단합니다<br>
@@ -2192,6 +2228,55 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다
 })();
 
+</script>
+
+<script>
+/* ── 검토했지만 배포하지 않은 것(기각 원장) ────────────────────────────────
+   archive.html을 이 페이지로 합치면서 45종이 data/archive_index.json에만 남고 목록이
+   사라져 있었다(화면에 나오던 건 재검 백테스트가 있는 5종뿐). 여기서 되살린다.
+
+   ⚠ 이 블록은 위쪽 랩 로더(__labLoad)와 **독립**이다. 그 뷰 전환기가 참조하는 v-*·runs·
+     lab-statline 요소가 지금 문서에 없어서(리팩터 진행 중) 거기에 얹으면 같이 죽는다.
+     45종은 이름과 사유뿐이라 파일도 작다 — 따로 받아 따로 그린다.
+   ⚠ 개수는 여기서 세지 않고 data/verdicts.json이 센 값을 쓴다(홈·푸터와 같은 원장). */
+(function(){
+  var box=document.getElementById('al-body'); if(!box)return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var ORDER=['reject','variant','undecidable'];
+  var COL={reject:'var(--hot)',variant:'var(--muted)',undecidable:'var(--champ)'};
+  fetch('data/archive_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    var items=(d&&d.items)||[], kinds=(d&&d.kinds)||{};
+    if(!items.length){box.innerHTML='<div class="empty">원장을 불러오지 못했습니다.</div>';return;}
+    var g={}; items.forEach(function(x){var k=x.k||'reject';(g[k]=g[k]||[]).push(x);});
+    var n=document.getElementById('al-n');
+    if(n)n.textContent='· 총 '+items.length+'종';
+    box.innerHTML=ORDER.filter(function(k){return (g[k]||[]).length;}).map(function(k){
+      var meta=kinds[k]||{}, arr=g[k].slice().sort(function(a,b){
+        return (a.c||'').localeCompare(b.c||'')||(a.n||'').localeCompare(b.n||'');});
+      return '<div class="algrp" style="--ac:'+COL[k]+'">'+
+        '<div class="alhd"><span class="an"><i></i>'+esc(meta.label||k)+'</span>'+
+        '<span class="ac">'+arr.length+'종</span>'+
+        '<span class="ad">'+esc(meta.desc||'')+'</span></div>'+
+        arr.map(function(x){
+          return '<details class="alitem" id="a-'+esc(x.sid)+'">'+
+            '<summary><span class="aln">'+esc(x.n)+'</span>'+
+            (x.c?'<span class="alc">'+esc(x.c)+'</span>':'')+'</summary>'+
+            '<div class="albody">'+esc(x.r||'')+
+            (x.kw?'<div class="alwhy"><b>이 묶음에 둔 이유</b> — '+esc(x.kw)+'</div>':'')+
+            '</div></details>';
+        }).join('')+'</div>';
+    }).join('');
+    // 딥링크 — 옛 archive.html의 #s-<sid> 로 들어오면 그 항목을 열고 보여준다
+    var h=(location.hash||'').replace(/^#/,'');
+    try{h=decodeURIComponent(h);}catch(e){}
+    if(h.indexOf('s-')===0){
+      var t=document.getElementById('a-'+h.slice(2));
+      if(t){t.open=true;t.scrollIntoView({block:'center'});}
+    }
+  })['catch'](function(){box.innerHTML='<div class="empty">원장을 불러오지 못했습니다.</div>';});
+})();
 </script>
 
 <script>
