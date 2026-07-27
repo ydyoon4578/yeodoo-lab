@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 나스닥100·S&P500 518종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
+<meta name="description" content="여두 전략 랩 — NASDAQ 100·S&P 500 518종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
 <title>여두 전략 랩</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/index.html">
@@ -1056,7 +1056,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (n===0?'<em>오늘</em>':(n>0&&n<=7?'<em>D-'+n+'</em>':''))+'</div>'+
           (function(){var q=(CAL.i||{})[k]; if(!q)return '';
             var f=function(lab,v){return v==null?'':'<span><b>'+lab+'</b><i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i></span>';};
-            return '<div class="calix">'+f('S&amp;P500',q.s)+f('Nasdaq100',q.n)+'</div>';})()+
+            return '<div class="calix">'+f('S&amp;P 500',q.s)+f('NASDAQ 100',q.n)+'</div>';})()+
           // 발표 시각별로 줄을 나눈다 — 색만 다르고 한 줄에 섞여 있으면 '장 끝나고 나오는
           // 것'과 '시각을 모르는 것'이 눈으로 안 갈린다. 남는 개수도 줄마다 따로 적는다
           // (한 덩어리로 '+37'만 적으면 어느 시각이 잘렸는지 알 수 없다).

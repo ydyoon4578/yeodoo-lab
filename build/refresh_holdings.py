@@ -35,7 +35,7 @@ ANN = 252
 CORE = ["SPY", "QQQ", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "UUP", "HYG", "LQD", "VNQ"]
 RISKY = {"SPY", "QQQ", "EFA", "EEM", "DBC", "VNQ"}
 ETF_NAMES = {
-    "SPY": "SPDR S&P 500 (미국 대형주)", "QQQ": "Invesco QQQ (나스닥100)",
+    "SPY": "SPDR S&P 500 (미국 대형주)", "QQQ": "Invesco QQQ (NASDAQ 100)",
     "EFA": "iShares MSCI EAFE (선진국 ex-US)", "EEM": "iShares MSCI EM (신흥국)",
     "TLT": "iShares 20+Y 미국 장기국채", "IEF": "iShares 7-10Y 미국 중기국채",
     "GLD": "SPDR Gold (금)", "DBC": "Invesco DB Commodity (원자재)",
