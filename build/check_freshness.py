@@ -23,6 +23,8 @@ import io
 import json
 import sys
 from datetime import datetime, timedelta, timezone
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 KST = timezone(timedelta(hours=9))
 

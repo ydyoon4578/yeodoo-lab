@@ -13,6 +13,8 @@ target: 아래 TARGETS 참조. **홈의 UPD 맵(index.html)과 반드시 같은 
 from __future__ import annotations
 import io, json, os, re, sys
 from datetime import datetime, timedelta, timezone
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 KST = timezone(timedelta(hours=9))
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")

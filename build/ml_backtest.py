@@ -25,6 +25,8 @@ from __future__ import annotations
 import io, json, math, os, sys
 
 import numpy as np
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402

@@ -18,6 +18,8 @@
 """
 from __future__ import annotations
 import hashlib, json
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 
 def _num(v):

@@ -29,6 +29,8 @@ from __future__ import annotations
 import html as H
 import io, json, os, re, sys, urllib.request, zipfile
 import datetime as dt
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")

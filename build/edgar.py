@@ -29,6 +29,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 # SEC 정책상 연락 가능한 주소를 넣어야 한다. 이 저장소의 커밋 작성자 주소와 같고,
 # 공개 저장소 이력에 이미 들어 있다. 다른 값을 쓰려면 SEC_UA 환경변수로 덮어쓴다.

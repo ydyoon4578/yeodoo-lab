@@ -11,6 +11,9 @@
 """
 from __future__ import annotations
 import io, json, os
+import sys
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 # GICS 영문 섹터는 홈의 좁은 행에서 잘린다 — 짧은 한글로(stocks.html의 SECKO와 같은 표기)
 SECKO = {"Information Technology": "IT", "Health Care": "헬스케어", "Financials": "금융",

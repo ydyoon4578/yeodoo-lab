@@ -14,6 +14,8 @@ CUSIP→티커는 refresh_13f.py의 FTD 방식을 그대로 재사용한다(13F�
 """
 from __future__ import annotations
 import io, json, os, re, sys, time, urllib.request
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from refresh_13f import GURUS, cusip_map  # noqa: E402  명단·매핑을 복제하지 않는다

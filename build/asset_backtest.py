@@ -18,6 +18,8 @@
 from __future__ import annotations
 import datetime as dt
 import io, json, math, os, sys
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402  정의를 복제하지 않는다
