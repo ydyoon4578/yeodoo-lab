@@ -317,8 +317,12 @@ def main():
         sc = cval(key)
         c = None if (sc is None or wav <= 0 or weight == 0) else rnd(sc * weight / wav, 1)
         if weight == 0: c = 0.0
+        # 값이 없는 성분에까지 기준일을 찍지 않는다. 예전엔 raw=None(예: NFCI 결측)인데도
+        # as_of 가 축 기준일로 찍혀, 화면이 '그 날짜에 관측된 값'이라고 잘못 말했다.
+        # ffill 로 채운 값도 실제 관측일보다 앞선 날짜를 달 수 있어, 그 사실은 축 note 에 적는다.
         return {"key": key, "label": label, "raw": rawv, "raw_fmt": rawfmt, "pctl": pctl,
-                "score": rnd(sc, 1), "weight": weight, "contrib": c, "desc": desc, "as_of": asof}
+                "score": rnd(sc, 1), "weight": weight, "contrib": c, "desc": desc,
+                "as_of": (None if rawv is None and sc is None else asof)}
 
     v_vix, v_ts, v_mv = rval("vix"), rval("vix_ts"), rval("move")
     s_vix, s_mv = cval("vix"), cval("move")
