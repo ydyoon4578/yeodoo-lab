@@ -392,9 +392,12 @@ if pool:
             if os.path.exists(_p):
                 _v = json.load(io.open(_p, encoding="utf-8")).get(_k) or []
                 _want += len(_v)
-        if _want and _si.get("n") != _want:
-            errors.append(f"strategy_index: {_si.get('n')}개인데 원본 합계는 {_want}개 "
-                          f"— python build/strategy_index.py 를 다시 돌릴 것")
+        # 의도적으로 목록에서 뺀 것(n_hidden)은 더해서 센다 — 그래야 '낡은 목록' 검출이
+        # 살아 있으면서 의도적 제외를 오탐하지 않는다. 제외를 숨은 채로 두면 이 가드가 죽는다.
+        _got = (_si.get("n") or 0) + (_si.get("n_hidden") or 0)
+        if _want and _got != _want:
+            errors.append(f"strategy_index: {_si.get('n')}개(+제외 {_si.get('n_hidden') or 0})인데 "
+                          f"원본 합계는 {_want}개 — python build/strategy_index.py 를 다시 돌릴 것")
     except FileNotFoundError:
         pass
 

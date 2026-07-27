@@ -1395,6 +1395,21 @@ def run():
     #   이 구간 기술주 강세를 더 받는다(랩이 유리)  ③ RSP 보수 0.20%(RSP가 불리).
     #   따라서 이 값은 '생존편향의 상한'이자 '생존편향+틸트 합의 추정치'다.
     #   그래도 눈금이 없는 것보다 낫다 — 지금까지는 비교 대상 자체가 없었다.
+    # 지수 자체의 Sharpe — 전략과 **같은 잣대**(같은 구간·같은 rf·ann_stats)로 잰다.
+    # 화면·리포트가 '지수보다 나은가'를 물을 때 이 값을 단일 출처로 쓴다(각자 계산하면 갈라진다).
+    idx_sh = {}
+    for _lab, _rr in (IDXR or {}).items():
+        _nv2 = [100.0]
+        for i in range(MIN_HIST + 1, n):
+            _nv2.append(_nv2[-1] * (1 + _rr[i]))
+        _st2 = ann_stats(_nv2, dates[MIN_HIST:], rf)
+        idx_sh[_lab] = {"cagr": _st2.get("cagr"), "sharpe": _st2.get("sharpe"),
+                        "mdd": _st2.get("mdd")}
+    if idx_sh:
+        print("  [지수 잣대] " + " · ".join(
+            "%s CAGR %.2f%% Sharpe %.3f" % (k, v["cagr"], v["sharpe"])
+            for k, v in idx_sh.items() if v.get("sharpe") is not None))
+
     surv = None
     _rsp = (IDXR or {}).get("EW-SPX(TR)")
     if _rsp:
@@ -1425,6 +1440,7 @@ def run():
         "bench_label": "동일가중 유니버스 매수후보유",
         "span_years": round((n - MIN_HIST) / 252.0, 1),
         "surv_proxy": surv,
+        "idx_stats": idx_sh,
         "t_crit": tcrit,
         "t_crit_note": "규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
                        "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다." % (N, N),
