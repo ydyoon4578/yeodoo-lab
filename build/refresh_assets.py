@@ -19,7 +19,7 @@
   python build/refresh_assets.py
 """
 from __future__ import annotations
-import csv, io, json, os, sys, urllib.request
+import csv, io, json, os, sys, time, urllib.request
 
 import pandas as pd
 import yfinance as yf
@@ -95,11 +95,41 @@ def fred(sid: str):
 EXTRA = {}     # FRED 밖 공개 계열(연준 EBP 등)
 
 
+def prev_tickers():
+    """직전 빌드의 assets.json 에 있던 티커. '있다가 사라진 것'을 가려내는 기준선이다."""
+    try:
+        return set((json.load(io.open(OUT, encoding="utf-8")).get("px") or {}).keys())
+    except Exception:
+        return set()
+
+
 def main() -> int:
     print("가격 %d종목 내려받는 중…" % len(TICK))
     df = yf.download(list(TICK), start=START, end=None, auto_adjust=True,
                      progress=False, threads=True)
     close = df["Close"]
+    # ── 배치에서 흘린 티커를 개별로 다시 받는다 ────────────────────────────
+    # yfinance 의 다중 티커 다운로드는 응답 일부를 무작위로 흘린다(실측 2026-07-27: IWM 1종).
+    # 예전에는 그걸 "❌ 응답 없음" 한 줄 찍고 조용히 빼고 진행했다. 그 결과 하류의
+    # market_board.py 완전성 게이트가 죽었고, 같은 잡의 **13F 재수집 결과까지 통째로
+    # 폐기**됐다(커밋 단계가 스킵되므로). 값비싼 단계 앞에서 개별 재시도로 메운다.
+    _want = [t for t in TICK if t not in close.columns or close[t].notna().sum() < 100]
+    for t in _want:
+        for _k in range(2):
+            try:
+                _d = yf.download(t, start=START, auto_adjust=True, progress=False, threads=False)
+                _s = _d["Close"]
+                if hasattr(_s, "columns"):
+                    _s = _s[_s.columns[0]]
+                if _s.notna().sum() >= 100:
+                    close[t] = _s
+                    print("  ↻ %s 개별 재시도 성공(%d일)" % (t, int(_s.notna().sum())))
+                    break
+            except Exception:
+                pass
+            time.sleep(1.0 * (_k + 1))
+        else:
+            print("  ❌ %s 재시도 2회 실패" % t)
     opens = df["Open"]
     # ⚠ 격자는 **미국 거래일(SPY가 거래된 날)** 로 맞춘다. BTC-USD가 주말에도 거래되는 탓에
     #   그냥 두면 비거래일 1,350행이 섞여 들어와, 주식 규칙의 '20일'이 실제로는 14영업일이 된다.
@@ -126,6 +156,22 @@ def main() -> int:
                    "n": int(len(v))}
         if t in NEED_OPEN and t in opens.columns:
             op[t] = [None if x != x else round(float(x), 4) for x in opens[t].tolist()]
+
+    # ── 있다가 사라진 티커는 여기서 멈춘다 ──────────────────────────────────
+    # 왜 여기인가. 이 잡은 뒤에 13F 재수집·백테스트 재실행 같은 값비싼 단계를 줄줄이 달고 있고,
+    # 마지막에 한 번만 커밋한다. 결손을 하류(market_board 완전성 게이트)에서 잡으면 그때는
+    # 이미 앞 단계 산출물이 다 만들어진 뒤인데 커밋 단계가 스킵돼 **전부 폐기**된다
+    # (실측 2026-07-27: IWM 1종이 빠져 같은 잡의 13F 재수집 결과가 통째로 버려졌다).
+    # 그러니 값이 사라진 것을 안 순간, 아직 아무것도 낭비하지 않았을 때 멈춘다.
+    #
+    # '처음부터 없던 것'과 '있다가 사라진 것'은 다르다. 신규 상장·상장폐지로 원래 못 받는
+    # 티커까지 막으면 패널을 늘릴 수 없으므로, 직전 빌드에 있었던 것만 대상으로 한다.
+    _gone = sorted(prev_tickers() - set(px))
+    if _gone:
+        print("❌ 직전 빌드에 있던 티커가 사라졌다: %s" % ", ".join(_gone))
+        print("   개별 재시도까지 실패했다. 부분 패널을 쓰면 하류 지표가 조용히 달라지므로 중단한다.")
+        print("   (일시적 응답 실패면 다시 돌리면 된다. 정말 뺄 티커면 TICK에서 지울 것.)")
+        return 1
 
     # 초과채권프리미엄(EBP) — Gilchrist-Zakrajšek. 연준이 공개 CSV로 낸다(월간, 무인증).
     # FRED에는 없어서 '구할 수 없는 데이터'로 분류돼 있었는데, 실제로는 열린다.
