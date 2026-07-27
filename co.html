@@ -169,6 +169,10 @@
   .fcell .fcv{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);margin-top:3px}
   .fcell .fcv.na{color:var(--muted);font-weight:400}
   .snapchips{margin:12px 0 0;display:flex;flex-wrap:wrap;gap:5px}
+  .snapchips a.chip{text-decoration:none}
+  .snapchips a.chip:hover{color:var(--accent);border-color:var(--accent)}
+  .profsum{margin:10px 0 0;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  .profsum .wsrc{display:block;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--muted)}
   .snapchips .chip{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--ink-2);
                    background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px}
   .fcell.flag{background:color-mix(in srgb,var(--hot) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 30%,transparent) inset}
@@ -1487,6 +1491,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 회사 소개 문장은 어느 소스에도 없다. 지어내는 대신 파일에 있는 값으로만 표를 세운다.
   // 라벨·단위·소수 자릿수는 stocks.json의 fundx_defs를 그대로 따른다(프런트에 베끼지 않는다).
   var SNAPKEYS=['mc','beta','dy','roe','pm','rg','de','fcfy','pb','ps'];
+  // 회사 소개는 data/sd/<티커>.json의 prof — yfinance longBusinessSummary 원문(영문)이다.
+  // 번역·요약하지 않는다: 둘 다 원문에 없는 뜻을 만들어 넣는 일이고, 어긋나도 알 방법이 없다.
+  function profBlock(s){
+    var p=s.prof;
+    if(!p)return s._sdLoading?'':'';
+    var chips='',emp;
+    if(p.ind)chips+='<span class="chip">'+esc(p.ind)+'</span>';
+    if(p.emp!=null){emp=Number(p.emp);if(emp===emp)chips+='<span class="chip">임직원 '+emp.toLocaleString('en-US')+'명</span>';}
+    if(p.cty)chips+='<span class="chip">'+esc(p.cty)+'</span>';
+    if(p.web)chips+='<a class="chip" href="'+esc(p.web)+'" target="_blank" rel="noopener nofollow">홈페이지 ↗</a>';
+    return (chips?'<div class="snapchips">'+chips+'</div>':'')+
+           (p.sum?'<p class="profsum">'+esc(p.sum)+'<span class="wsrc">출처 yfinance longBusinessSummary 원문 · 번역하지 않습니다</span></p>':'');
+  }
+
   function snapBlock(s){
     var fu=s.fund||{},fx=DATA.fundx_defs||{},cells='',i;
     for(i=0;i<SNAPKEYS.length;i++){
@@ -1500,6 +1518,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(s.flags)for(i=0;i<s.flags.length;i++)chips+='<span class="chip">'+esc(s.flags[i])+'</span>';
     if(fu.rk)chips+='<span class="chip">등급 '+esc(RKLAB[fu.rk]||fu.rk)+'</span>';
     return '<div class="card"><h3>한눈에<span class="hn">기준일 '+esc(DATA.as_of||'—')+' · 출처 '+esc(DATA.source||'—')+'</span></h3>'+
+           profBlock(s)+
            '<div class="fgrid">'+cells+'</div>'+
            (chips?'<div class="snapchips">'+chips+'</div>':'')+'</div>';
   }

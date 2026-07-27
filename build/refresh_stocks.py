@@ -572,7 +572,16 @@ def fetch_fund(t, retries=3):
                    "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
                    "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
                    "td": info.get("totalDebt"), "tc": info.get("totalCash"),
-                   "rev": info.get("totalRevenue")}
+                   "rev": info.get("totalRevenue"),
+                   # ── 회사 소개(표시 전용, 신호 아님) — 같은 info 응답에서 키만 더 꺼낸다. 추가 호출 0 ──
+                   # 원문은 정보원이 쓴 영문 그대로다. 번역·요약하지 않는다(둘 다 없는 뜻을 만들어 넣는 일이다).
+                   "prof": {k: v for k, v in (
+                       ("sum", info.get("longBusinessSummary")),
+                       ("ind", info.get("industry")),
+                       ("web", info.get("website")),
+                       ("emp", info.get("fullTimeEmployees")),
+                       ("cty", info.get("country")),
+                   ) if v not in (None, "")} or None}
             # ps 폴백 — 정의 그대로 다시 계산한다. PSR = 시가총액 / 최근 12개월 매출.
             #   왜 필요한가(2026-07-25): 러너에서 mc는 100%인데 ps만 75%로 빠지는 일이 재실행에도
             #   똑같이 재현됐다. 로컬(주거용 IP)에서는 15/15 정상 → 스키마 변경이 아니라 Yahoo가
@@ -1198,6 +1207,8 @@ def main():
                        **({"fundx": _fundx} if _fundx else {}),
                        **({"fundx_flags": fx_b[t]} if fx_b.get(t) else {}),
                        **({"fundx_na": fx_na[t]} if fx_na.get(t) else {}),
+                       # 회사 소개도 상세(sd/) 전용 — 518종목 × 1KB 남짓이라 슬림 본체에 넣으면 배가 된다
+                       **({"prof": fd["prof"]} if fd.get("prof") else {}),
                        # 스윙 저점/고점 원시 구조(tp.zz)는 화면에서 제거(2026-07-24) — 타점(bms/smw)과 겹쳐 이중 표시됐음.
                        #   지그재그는 타점 산출의 내부 입력으로만 쓰고 JSON에는 싣지 않는다. 강한 타점 인덱스만 노출.
                        **({"strong": strong_idx} if strong_idx else {})})
@@ -1318,7 +1329,7 @@ def main():
     _keep = set()
     for s in stocks:
         det = {"as_of": as_of, "t": s["t"]}
-        for k in ("sig", "pxd", "vd", "hd", "ld", "why", "fundx", "fundx_flags", "fundx_na"):
+        for k in ("sig", "pxd", "vd", "hd", "ld", "why", "fundx", "fundx_flags", "fundx_na", "prof"):
             v = s.pop(k, None)
             if v is not None: det[k] = v
         fn = s["t"] + ".json"; _keep.add(fn)
