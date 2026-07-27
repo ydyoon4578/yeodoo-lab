@@ -20,6 +20,7 @@ validate_site.py가 이 build()를 재실행해 regime.json.summary와 비교한
 from __future__ import annotations
 
 import re
+import sys
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
 except Exception: pass
 
