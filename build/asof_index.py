@@ -254,6 +254,23 @@ def main() -> int:
         if a["key"] in COLLECTED and a["as_of"] > primary:
             a["collected"] = a["as_of"]
             a["as_of"] = primary
+
+    # ── 시장일 축이 대표보다 앞설 수 있다 ──────────────────────────────────
+    # 위 COLLECTED 처리는 '받은 날을 기준일로 찍은' 오기입을 되돌리는 것이다. 그런데 아래 축들은
+    # as_of 가 **실제 거래일**에서 나온다(예: assets 는 거래일 격자의 마지막 날 dates[-1]).
+    # 이들이 대표보다 앞서는 것은 오기입이 아니라 **그 축이 먼저 돌았다**는 뜻이다.
+    #
+    # 언제 생기나(실측 2026-07-27): 자산 패널 잡을 평일에 수동 실행하면 미국장 마감 뒤라
+    # 그날 종가가 잡히는데, 대표(종목 패널)는 아직 그날 것을 안 받아 하루 뒤처져 있다.
+    # 정기 실행(토 10:25 KST)에서는 둘 다 직전 금요일이라 이 일이 안 생겨 오래 안 보였다.
+    #
+    # 예전엔 이걸 구분하지 않아 validate 가 '수집일을 기준일로 찍고 있다'로 막았다. 그 바람에
+    # 같은 잡의 13F 재수집 결과까지 커밋 단계 전에 폐기됐다. 날짜를 대표로 끌어내리는 것은
+    # 거짓이므로(그 데이터는 정말 그날 것이다) 사실대로 두고 '앞섬'을 표시만 한다.
+    MARKET = {"price", "assets", "signals", "tech", "regime", "sentiment"}
+    for a in axes:
+        if a["key"] in MARKET and (a["as_of"] or "") > primary:
+            a["ahead"] = True
     for a in axes:
         sc = sched_of(WF.get(a["key"], ""))
         if sc:

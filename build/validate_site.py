@@ -359,7 +359,10 @@ if pool:
         _aj = json.load(io.open(os.path.join(ROOT, "data", "asof.json"), encoding="utf-8"))
         _pri = _aj.get("primary")
         for _ax in (_aj.get("axes") or []):
-            if _pri and _ax.get("as_of", "") > _pri:
+            # ahead=True 는 asof_index 가 '이건 실제 거래일이고 그 축이 먼저 돈 것'이라고 판정한
+            # 경우다(시장일 축). 그건 오기입이 아니므로 막지 않는다 — 막으면 자산 패널을 평일에
+            # 수동 실행할 때마다 잡이 죽고, 같은 잡의 다른 산출물까지 폐기된다(실측 2026-07-27).
+            if _pri and _ax.get("as_of", "") > _pri and not _ax.get("ahead"):
                 errors.append(f"asof '{_ax.get('label')}': 기준일 {_ax['as_of']}이 대표 {_pri}보다 "
                               f"앞선다 — 수집일을 기준일로 찍고 있다(asof_index.py의 COLLECTED에 넣을 것)")
     except FileNotFoundError:
