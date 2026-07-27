@@ -177,7 +177,45 @@ def idio_vol(rs, mkt, i, n=120):
     return (sum((x - mu) ** 2 for x in res) / max(1, len(res) - 1)) ** 0.5
 
 
-def curve_pack(dates, nav, bnav, k=110):
+def load_index_tr(dates):
+    """같은 구간의 SPX·NDX **총수익(TR)** 일간수익 — dates 격자에 맞춰 반환.
+
+    왜 TR인가. 랩 전략 수익은 배당 재투자 기준인데 `^GSPC`·`^NDX`는 **가격지수(PR)**라
+    배당이 빠져 있다. 2006년 이후 그 격차가 연 2.0%p — PR로 그리면 전략이 그만큼 유리해
+    보인다. assets.json 은 yfinance auto_adjust=True(배당·분할 조정)로 받으므로
+    **SPY·QQQ가 곧 SPX·NDX의 TR 프록시**다. 배포 원장 카드가 'SPX(TR)'로 적는 것과 같은 기준.
+
+    못 읽으면 빈 dict — 지수 곡선만 빠지고 카드는 그대로 그려진다.
+    """
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception as e:
+        print("  [지수곡선] assets.json 없음 — 지수 곡선 생략:", str(e)[:60])
+        return {}
+    adates = A.get("dates") or []
+    pos = {d: i for i, d in enumerate(adates)}
+    out = {}
+    for tk, label in (("SPY", "SPX(TR)"), ("QQQ", "NDX(TR)")):
+        raw = (A.get("px") or {}).get(tk)
+        if not raw:
+            print("  [지수곡선] %s 없음 — 건너뜀" % tk); continue
+        px_al, last = [], None
+        for d in dates:
+            i = pos.get(d)
+            if i is not None and raw[i] is not None:
+                last = float(raw[i])
+            px_al.append(last)
+        if sum(1 for x in px_al if x is not None) < len(dates) * 0.9:
+            print("  [지수곡선] %s 커버 부족 — 제외" % tk); continue
+        r = [0.0] * len(dates)
+        for i in range(1, len(dates)):
+            a, b = px_al[i - 1], px_al[i]
+            r[i] = (b / a - 1) if (a and b) else 0.0
+        out[label] = r
+    return out
+
+
+def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
     """카드에 그릴 곡선 묶음 — 날짜·전략·대조군·낙폭·연도별.
 
     ⚠ 낙폭은 **전체 계열에서 먼저 계산하고** 그 다음에 줄인다. 줄인 곡선에서 낙폭을 다시 재면
@@ -222,10 +260,39 @@ def curve_pack(dates, nav, bnav, k=110):
     yearly = [{"y": y, "r": round((v[2] / v[0] - 1) * 100, 2) if v[0] else None,
                "b": round((v[3] / v[1] - 1) * 100, 2) if v[1] else None}
               for y, v in sorted(yr.items())]
-    return {"dates": [dates[i] for i in idx], "nav": [round(nav[i], 1) for i in idx],
+    pack = {"dates": [dates[i] for i in idx], "nav": [round(nav[i], 1) for i in idx],
             "bench": [round(bnav[i], 1) for i in idx],
             "dd": pick(dd, True), "dd_b": pick(ddb, True), "yearly": yearly,
             "partial": [yearly[0]["y"], yearly[-1]["y"]] if yearly else []}
+
+    # ── 같은 구간 지수 곡선(TR) ──────────────────────────────────────────
+    # 배포 원장 카드처럼 SPX(TR)·NDX(TR)를 같이 그린다. 대조군(동일가중)을 대체하지 않는다 —
+    # 판정은 대조군으로 하고, 지수는 '살 수 있는 대안'으로 나란히 둘 뿐이다.
+    # 전략 NAV와 같은 시작점(100)·같은 날짜에서 출발시켜야 그림이 비교 가능하다.
+    if idx_rets:
+        ic, idd, iyr = {}, {}, {}
+        for lab, rr in idx_rets.items():
+            seq = [100.0]
+            for i in range(i0 + 1, i0 + n):
+                seq.append(seq[-1] * (1 + (rr[i] if i < len(rr) else 0.0)))
+            if len(seq) < n:
+                continue
+            ic[lab] = [round(seq[i], 1) for i in idx]
+            idd[lab] = pick(ddser(seq), True)
+            g = {}
+            for d, v in zip(dates, seq):
+                y = d[:4]
+                if y not in g:
+                    g[y] = [v, v]
+                g[y][1] = v
+            iyr[lab] = {y: (round((v[1] / v[0] - 1) * 100, 2) if v[0] else None)
+                        for y, v in g.items()}
+        if ic:
+            pack["idx"] = ic          # {'SPX(TR)': [...], 'NDX(TR)': [...]}
+            pack["idx_dd"] = idd
+            for row in yearly:        # 연도별 막대에도 같은 이름으로 얹는다
+                row["i"] = {lab: iyr[lab].get(row["y"]) for lab in iyr}
+    return pack
 
 
 def maxdd(nav):
@@ -854,6 +921,7 @@ def run():
     build_strats()
     out = []
     bench_r = ixr[MIN_HIST:]
+    IDXR = load_index_tr(dates)      # 같은 구간 SPX·NDX 총수익(TR) — 카드에 나란히 그린다
 
     for S in STRATS:
         w = [0.0] * n
@@ -1154,7 +1222,7 @@ def run():
             "dates": d2[::5],
             # 카드에 그릴 곡선 묶음 — 낙폭·연도별을 전체 계열에서 계산해 둔다.
             # 화면이 줄인 곡선에서 다시 재면 카드에 적힌 MDD와 그림이 어긋난다.
-            "chart": curve_pack(d2, nav, bnav),
+            "chart": curve_pack(d2, nav, bnav, idx_rets=IDXR, i0=MIN_HIST),
         })
 
     # ── 다중검정 임계 ────────────────────────────────────────────────

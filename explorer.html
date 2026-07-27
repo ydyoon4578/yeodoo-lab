@@ -1791,13 +1791,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           var C=LABC&&LABC[d.sid];
           if(C&&C.dates&&C.dates.length>2){
             var bt={dates:C.dates,nav:C.nav,bench:C.bench,dd:C.dd,dd_b:C.dd_b,yearly:C.yearly};
+            // 같은 구간 지수(TR)를 세 번째 계열로 얹는다 — 배포 카드와 같은 3선 구성.
+            //   대조군(동일가중)을 대체하지 않는다: 판정은 대조군, 지수는 '살 수 있는 대안'.
+            //   TR 이므로(SPY·QQQ 조정종가) 배당 빠진 PR과 달리 전략과 같은 기준이다.
+            var _ik=C.idx?(C.idx['SPX(TR)']?'SPX(TR)':Object.keys(C.idx)[0]):null;
+            if(_ik&&C.idx[_ik]&&C.idx[_ik].length===C.nav.length){
+              bt.bench2=C.idx[_ik]; bt.bench2_label=_ik;
+              if(C.idx_dd&&C.idx_dd[_ik])bt.dd_b2=C.idx_dd[_ik];
+              bt.yearly=(C.yearly||[]).map(function(y){
+                var o={y:y.y,r:y.r,b:y.b}; if(y.i&&y.i[_ik]!=null)o.b2=y.i[_ik]; return o;});
+            }
             var bl=d._bl||(bb.label||'대조군');
             var lg=function(col,dash,txt){return '<span class="lg"><i style="border-color:'+col+(dash?';border-top-style:dashed':'')+'"></i>'+esc(txt)+'</span>';};
-            return '<div class="chartttl">누적수익 (로그축)'+lg('var(--accent)',0,'전략')+lg('var(--muted)',1,bl)+'</div>'+
+            var _il=bt.bench2_label?lg('var(--rp)',1,bt.bench2_label):'';
+            return '<div class="chartttl">누적수익 (로그축)'+lg('var(--accent)',0,'전략')+lg('var(--muted)',1,bl)+_il+'</div>'+
                    svgEquity(bt,'var(--accent)')+
-                   '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(C.dd_b&&C.dd_b.length?lg('var(--muted)',1,bl):'')+'</div>'+
+                   '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(C.dd_b&&C.dd_b.length?lg('var(--muted)',1,bl):'')+(bt.dd_b2?_il:'')+'</div>'+
                    svgDD(bt)+
-                   ((C.yearly&&C.yearly.length)?'<div class="chartttl">연도별 수익'+lg('var(--accent)',0,'전략')+lg('var(--muted)',0,bl)+'</div>'+svgYearly(bt,'var(--accent)')+
+                   ((C.yearly&&C.yearly.length)?'<div class="chartttl">연도별 수익'+lg('var(--accent)',0,'전략')+lg('var(--muted)',0,bl)+_il+'</div>'+svgYearly(bt,'var(--accent)')+
                      '<p class="labnote">첫해와 마지막 해는 부분 연도입니다(구간이 연초·연말에 걸치지 않습니다).</p>':'');
           }
           labCharts(function(){ if(D[state.sel]===d)drawDetail(d); });
