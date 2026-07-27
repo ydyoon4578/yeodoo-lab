@@ -6,16 +6,15 @@ name: Refresh asset panel & archive re-check
 #   결과가 같으면 커밋도 안 생긴다.
 #
 # 무게 — yfinance 50종목 20년 + FRED 18계열. 실측 약 2분.
+#
+# ⚠ 13F 이력 수집은 refresh-13f-history.yml 로 **분리**했다. 여기 얹혀 있던 동안 이 잡의 뒤쪽
+#   단계가 죽을 때마다(커밋이 마지막에 한 번뿐이라) 몇 분짜리 SEC 수집이 통째로 버려졌다 —
+#   네 번 연속, 매번 13F 와 무관한 사유로. 이 잡의 ml_backtest 는 그 산출물을 읽기만 한다.
 
 on:
   schedule:
     - cron: '25 1 * * 6'    # 매주 토 10:25 KST
   workflow_dispatch:
-    inputs:
-      force_13f:
-        description: '13F 이력을 강제로 다시 받는다(파서·선택규약을 고쳤을 때)'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -37,20 +36,6 @@ jobs:
         run: pip install --quiet pandas numpy yfinance
       - name: Fetch asset panel
         run: python build/refresh_assets.py
-      # 13F 이력은 SEC 요청 제한 때문에 오래 걸린다(운용사 18 × 분기 56 × 3요청). 분기에 한 번만
-      # 바뀌는 데이터라 매주 다시 받을 이유가 없다 — 파일이 없거나 분기가 바뀌었을 때만 받는다.
-      #
-      # ⚠ 이 건너뜀은 **조용하다**. 수동 실행해도 8일 이후면 아무 일 없이 지나가고 잡은 성공으로
-      #   끝난다(실측 2026-07-27: 파서를 고치고 수동 실행했는데 옛 데이터가 그대로 남았다).
-      #   파서나 제출 선택 규약을 고쳤을 때는 날짜와 무관하게 다시 받아야 하므로 force_13f 를 켠다.
-      #   건너뛸 때 그 사실을 잡 요약(Summary)에도 남겨 '돌았는데 왜 안 바뀌지'를 없앤다.
-      - name: Fetch 13F history (quarterly)
-        run: |
-          if [ "${{ inputs.force_13f }}" = "true" ] || [ ! -f data/guru_history.json ] || [ "$(date +%d)" -le 7 ]; then
-            python build/refresh_13f_history.py
-          else
-            echo "13F 이력 재사용(분기 데이터라 매주 받지 않는다). 강제하려면 force_13f 를 켤 것." | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
       - name: Run ML & clone (pre-registered protocol)
         run: python build/ml_backtest.py
       - name: Re-run archived strategies
@@ -75,7 +60,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 자산 패널·아카이브 재검 자동 갱신" \
             data/assets.json data/asset_strategies.json data/ml_strategies.json \
-            data/guru_history.json data/strategy_index.json data/strategy_charts.json \
+            data/strategy_index.json data/strategy_charts.json \
             data/market_board.json data/asof.json
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10
