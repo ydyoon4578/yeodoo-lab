@@ -138,8 +138,6 @@
   .dbody{padding:19px 24px 24px}
   .dbody .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 7px}
   .dbody p{margin:0;font-size:14.5px;color:var(--ink-2);line-height:1.68}
-  .dbody .verdict-line{margin-top:16px;padding:13px 16px;border-radius:11px;font-size:13.5px;line-height:1.6;background:var(--vbg);color:var(--ink-2);border:1px solid var(--line-soft)}
-  .dbody .verdict-line b{color:var(--ink)}
   .arche{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:4px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);color:var(--accent)}
   .play{margin-top:18px}
   .play h4{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin:0 0 9px;color:var(--ink-2)}
@@ -177,7 +175,6 @@
   .holdstale b{color:var(--marg)}
   .item .metric .mv.sm{font-size:12px;font-weight:600;letter-spacing:-.01em}
   .dcat .dalias{color:var(--muted);font-weight:400}
-  .btm .bsub{margin-top:3px;font-family:var(--mono);font-size:9px;line-height:1.35;color:var(--muted);white-space:nowrap}
   .pptblwrap{overflow-x:auto;margin:2px 0 8px}
   .pptbl{border-collapse:collapse;width:100%;font-size:12px}
   .pptbl th,.pptbl td{padding:5px 9px;border-bottom:1px solid var(--line-soft);text-align:right;font-variant-numeric:tabular-nums}
@@ -187,11 +184,7 @@
   .pptbl .pp.st{font-weight:700}
   .btnote{margin:8px 0 2px;font-size:10.5px;line-height:1.6;color:var(--muted)}
   .btnote b{color:var(--ink-2)}
-  .btm-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:6px}
   @media(max-width:560px){.btm-grid{grid-template-columns:repeat(3,1fr)}}
-  .btm{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 5px;text-align:center}
-  .btm .k{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-family:var(--mono)}
-  .btm .v{font-family:var(--mono);font-size:15.5px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;color:var(--ink)}
   /* 지표표 v2 — 전략과 벤치마크를 같은 기준으로 나란히. 색은 보조이고 수치·라벨을 항상 병기한다. */
   .btbasis{font-size:10.5px;line-height:1.6;color:var(--muted);margin:0 0 9px;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}
   .btbasis b{color:var(--ink-2)}
@@ -324,8 +317,7 @@
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
   /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
   .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
-  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
 
   /* ── 뷰 전환 ── 원장·랩을 한 페이지에 두고 탭으로 가른다(2026-07-26 통합) */
   /* 큰 칸 헤더 — 성격 헤더(.grouphdr)보다 한 단계 위. 목록을 스크롤하다 지금 어느
@@ -378,13 +370,6 @@
   .labtbl td{padding:5px 0;border-top:1px solid var(--line-soft);color:var(--muted)}
   .labtbl td:last-child{text-align:right;color:var(--ink);font-weight:700}
   .labnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .views{display:flex;gap:4px;margin:22px 0 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .vtab{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:9px 14px;text-decoration:none;
-        color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;
-        background:none;border-top:0;border-left:0;border-right:0}
-  .vtab:hover{color:var(--ink)}
-  .vtab[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
-  .vtab .vn{font-weight:600;color:var(--muted);margin-left:5px;font-size:11px}
 
   /* ── 검토했지만 배포하지 않은 것(기각 원장) ──────────────────────────────
      archive.html을 이 페이지로 합치면서 45종이 데이터에만 남고 목록이 사라졌었다.
@@ -858,7 +843,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <h2 class="lbl" id="al-h">검토했지만 배포하지 않은 것 <span class="sub" id="al-n"></span></h2>
     <p class="lede" style="font-size:13px;margin-bottom:2px">한 칸에 몰아 세지 않습니다 — 이 안에는 <b>기각된 전략</b>과,
       배포 전략의 설정을 흔들어 본 <b>실험</b>과, 이 랩의 규약으로는 <b>판정 자체가 안 되는 것</b>이 섞여 있습니다.
-      셋을 같이 세면 “좋은 전략 N개가 기각됐다”로 읽히므로 나눠서 적습니다. 제목을 누르면 판정 사유가 펼쳐집니다.</p>
+      셋을 같이 세면 “좋은 전략 N개가 기각됐다”로 읽히므로 나눠서 적습니다. 제목을 누르면 판정 사유가 펼쳐집니다.<br>
+      <b>이 중 5종은 배포북에 얹지 않고 단독으로 다시 검정했습니다</b>(원 기각 사유가 “통합에 증분이 없다”는 상대 판정이었기 때문입니다).
+      재검 결과는 <b>전건 기각 유지</b> — 부활 0건입니다. 재검 수치는 위 목록에 「미채택」으로 함께 실려 있습니다.</p>
     <div id="al-body"><div class="empty">불러오는 중…</div></div>
   </section>
 
@@ -1015,11 +1002,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 기각 2종을 숨기면 배지 합이 전체와 안 맞고, '검증 통과만 담았다'는 리드문과도 모순된다
       (c.reject?'<span class="stat rej"><b>'+c.reject+'</b> 기각(대조용)</span>':'');
     // 리드문 숫자도 배열에서 채운다 — 하드코딩하면 전략 이관 때 조용히 틀린다(실제로 20/41로 틀어져 있었다)
-    var _o=el('okn'); if(_o)_o.textContent=c.deploy+c.marginal;
-    var _r=el('rcn'); if(_r)_r.textContent=c.reject;
-    fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
-      var _a=el('arcn'); if(_a&&v)_a.textContent=v.archive_n;
-    }).catch(function(){});
   })();
 
   // build filter chips
@@ -1095,7 +1077,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
         if(window.__rebuildChips)window.__rebuildChips();
         render();
-        var u=el('unibar');
         // 상단 통계줄도 통합 수치로 다시 쓴다 — 14개 기준으로 남아 있으면 화면과 어긋난다
         var sl=el('statline');
         if(sl){
@@ -1108,12 +1089,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             st((cnt.tie||0),'구별 불가','대조군과 못 가른다')+
             st((cnt.worse||0)+(cnt.reject||0),'열위·미채택','대조군보다 나쁘거나 미채택');
         }
-        if(u)u.innerHTML='<b>'+D.length+'개 전략</b>을 <b>성격</b>으로 묶어 한 목록에 놓았습니다 — '+
-          '무엇을 하는 전략인지가 같아야 숫자를 나란히 볼 수 있기 때문입니다. '+
-          '<span class="unin">배포 원장 '+(D.length-add.length)+' · 종목 '+
-          add.filter(function(x){return x.src==='종목 전략';}).length+' · 자산배분 '+
-          add.filter(function(x){return x.src==='자산배분';}).length+' · 기각 재검 '+
-          add.filter(function(x){return x.src==='기각 재검';}).length+'</span>';
       })['catch'](function(){});
   })();
 
@@ -1953,291 +1928,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }).catch(function(){});
 })();
 </script>
-<script>
-  /* ⚠ 여기 있던 내비 스크립트를 지웠다(2026-07-26). archive.html을 병합할 때
-     '데이터를 fetch하는 블록'만 골라 옮겼는데, 내비 블록도 asof.json을 fetch해서
-     함께 딸려왔다. 그 결과 카테고리 버튼에 클릭 핸들러가 **두 번** 붙어
-     첫 핸들러가 열고 둘째가 곧바로 닫아 메뉴가 안 열렸다.
-     내비는 sync_nav.py가 넣는 블록 하나만 있어야 한다. */
 
-
-
-(function(){
-  var el=function(i){return document.getElementById(i);};
-  function esc(x){return (x==null?'':String(x)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function nf(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);}
-  var T=null, A=null, sel={};
-
-  // 미니 성과선 — 전략(진하게) vs 벤치마크(옅게). 축·격자를 그리지 않는다: 모양만 보라는 뜻이다.
-  function spark(nav,bnav,w,h){
-    if(!nav||nav.length<3)return '';
-    var all=nav.concat(bnav||[]), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
-    if(!(hi>lo))return '';
-    function path(a){
-      return a.map(function(v,i){
-        var x=(i/(a.length-1))*w, y=h-((v-lo)/(hi-lo))*h;
-        return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
-      }).join(' ');
-    }
-    return '<svg class="spark" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" aria-hidden="true">'+
-      (bnav?'<path d="'+path(bnav)+'" fill="none" stroke="var(--muted)" stroke-width="1" opacity=".55"/>':'')+
-      '<path d="'+path(nav)+'" fill="none" stroke="var(--accent)" stroke-width="1.6"/></svg>';
-  }
-
-  var VC={'통과 후보':'vpass','구별 불가':'vunv','열위':'vrej','판정 불가':'vunv'};
-
-  function card(r){
-    var m=r.metrics||{}, b=r.bench||{};
-    var arch=r.arch&&A?A[r.arch]:null;
-    return '<div class="rcard"'+(r.arch?' id="s-'+esc(r.arch)+'"':'')+'><div class="rtop">'+
-      '<span class="rkind">'+(r.kind==='timing'?'타이밍':'횡단면')+'</span>'+
-      '<h3>'+esc(r.name)+'</h3>'+
-      '<span class="rv '+(VC[r.verdict]||'vunv')+'">'+esc(r.verdict)+'</span></div>'+
-      '<p class="rrule">'+esc(r.rule)+'</p>'+
-      '<p class="rwhy">'+esc(r.why)+'</p>'+
-      holdBlock(r.holdings)+
-      '<div class="rgrid">'+
-        cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
-        cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
-        cell('t',nf(r.t,2),'tstat'+(Math.abs(r.t||0)>=(T.t_crit||3)?' up':''))+
-        cell('연 회전',nf(r.turnover,1)+'회')+
-      '</div>'+
-      spark(r.nav,r.bnav,320,44)+
-      '<p class="rbench">벤치마크 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%</p>'+
-      (arch?'<p class="rarch"><b>이전 판정</b> · '+esc(arch.c)+' — '+esc(arch.r)+'</p>':'')+
-      '</div>';
-  }
-
-  // ── 구성종목 ── 규칙만 읽고는 실제로 쓸 수가 없다. '지금 무엇을 들고 있나'를 붙인다.
-  function holdBlock(h){
-    if(!h) return '';
-    var head='<div class="hold"><span class="hl">지금 보유'+(h.as_of?' · '+esc(h.as_of)+' 기준':'')+'</span>';
-    if(h.kind==='timing')
-      return head+'<b>노출 '+nf(h.exposure_now,1)+'%</b><em>'+esc(h.note||'')+'</em></div>';
-    if(h.kind==='asset'||h.kind==='sleeve'){
-      var w=(h.weights||[]).map(function(x){
-        return '<span class="hw">'+esc(x[0])+'<b>'+nf(x[1],1)+'%</b></span>';}).join('');
-      return head+'<div class="hws">'+w+'</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
-    }
-    var ts=(h.tickers||[]), nm=h.names||{};
-    return head+'<b>'+ts.length+'종목</b><div class="hws">'+
-      ts.map(function(t){
-        return '<a class="hw" href="co.html?t='+encodeURIComponent(t)+'"'+
-               (nm[t]?' data-nm="'+esc(nm[t])+'"':'')+'>'+esc(t)+'</a>';}).join('')+
-      '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
-  }
-  function cell(k,v,cls){return '<div class="rc'+(cls?' '+cls:'')+'"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>';}
-
-  function render(){
-    var rows=T.strategies.filter(function(r){
-      var ks=Object.keys(sel); return !ks.length||sel[r.verdict];
-    });
-    el('runs').innerHTML=rows.length?rows.map(card).join(''):'<div class="skel">조건에 맞는 규칙이 없습니다.</div>';
-    el('runsub').textContent=rows.length+'개'+(rows.length!==T.strategies.length?' / '+T.strategies.length:'');
-  }
-
-  function chips(){
-    var c={}; T.strategies.forEach(function(r){c[r.verdict]=(c[r.verdict]||0)+1;});
-    var order=['통과 후보','구별 불가','열위','판정 불가'];
-    el('kchips').innerHTML=order.filter(function(k){return c[k];}).map(function(k){
-      return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+c[k]+'</span></button>';
-    }).join('');
-    el('kchips').addEventListener('click',function(e){
-      var b=e.target.closest('.chip'); if(!b)return;
-      var k=b.getAttribute('data-k');
-      if(sel[k]){delete sel[k];b.setAttribute('aria-pressed','false');}
-      else{sel[k]=1;b.setAttribute('aria-pressed','true');}
-      render();
-    });
-  }
-
-  // ── 지연 로딩 ── 랩 3개 탭의 산출물은 합쳐 340KB다. 원장만 보는 사람에게까지 받게 할
-  // 이유가 없다. 탭을 **처음 열 때** 받는다(window.__labLoad를 뷰 전환기가 부른다).
-  var LAB_STARTED=false;
-  window.__labLoad=function(){
-    if(LAB_STARTED)return; LAB_STARTED=true;
-    Promise.all([
-    fetch('data/tech_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
-    fetch('data/archive_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-  ]).then(function(a){
-    T=a[0];
-    if(!T||!T.strategies){
-      el('runs').innerHTML='<div class="hardnote"><b>백테스트 결과를 불러오지 못했습니다</b> — <code>data/tech_strategies.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
-      return;
-    }
-    A={}; var arch=(a[1]&&a[1].items)||[];
-    arch.forEach(function(x){A[x.sid]=x;});
-    alias(arch);
-    var linked={}; T.strategies.forEach(function(r){if(r.arch)linked[r.arch]=1;});
-
-    var pass=T.strategies.filter(function(r){return r.verdict==='통과 후보';}).length;
-    el('lab-statline').innerHTML=
-      st(T.strategies.length,'돌린 규칙','전부 싣는다')+
-      st(pass,'통과 후보','다중검정까지 넘은 것',pass?'ok':'zero')+
-      st(T.strategies.filter(function(r){return r.verdict==='구별 불가';}).length,'구별 불가','벤치마크와 못 가른다')+
-      st(T.strategies.filter(function(r){return r.verdict==='열위';}).length,'열위','벤치마크보다 나쁘다')+
-      st('|t|≥'+nf(T.t_crit,2),'판정 임계','본페로니 보정');
-    var D_=T.dup;
-    if(D_&&D_.top&&D_.top.length){
-      // 규칙 수를 늘렸으니 '얼마나 겹치는지'도 같이 보여야 한다. 안 보이면 24개를 돌린 것이
-      // 24개의 독립된 검증처럼 읽힌다.
-      var box=el('dupbox'); box.hidden=false;
-      box.innerHTML='<details class="more"><summary>규칙 '+esc(String(D_.n_timing))+'개를 돌렸지만, 서로 다른 베팅은 그보다 적습니다</summary><div class="mbody">'+
-        '타이밍 규칙 쌍의 일간 수익률 상관 중앙값 <b>'+nf(D_.median,3)+'</b> · '+
-        '<b>'+esc(String(D_.n_over_95))+'쌍</b>이 0.95를 넘습니다. 거의 같은 곡선을 그린 쌍 상위 몇 개:'+
-        '<table><tbody>'+D_.top.map(function(x){
-          return '<tr><td class="c">'+nf(x.c,3)+'</td><td>'+esc(x.a)+'<br>'+esc(x.b)+'</td></tr>';
-        }).join('')+'</tbody></table>'+
-        '<div class="dn">'+esc(D_.note||'')+' 다중검정 임계(본페로니)는 검정이 서로 독립일 때의 보정이라, '+
-        '이렇게 겹칠수록 필요 이상으로 엄격해집니다. 그래도 임계를 손으로 낮추지 않았습니다 — '+
-        '결과를 보고 기준을 고치는 순간 그건 검정이 아니게 됩니다.</div></div></details>';
-    }
-
-    // 한계는 지우지 않되 펼쳐두지 않는다 — 눌러야 보인다(2026-07-26 요청).
-    el('limits').innerHTML='<details class="more"><summary>결과보다 먼저 읽어야 하는 것 '+
-      '('+((T.limits||[]).length+1)+'가지)</summary><div class="mbody"><p>· '+
-      (T.limits||[]).map(esc).join('</p><p>· ')+'</p><p>· '+esc(T.t_crit_note||'')+'</p></div></details>';
-
-    // ── 스탠드얼론 재검 부기 ── 이 랩의 정식 백테스트(월말·무비용·초과수익 기준) 결과다.
-    fetch('data/archive_backtests.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(ab){
-      var box=el('rechks'); if(!box)return;
-      if(!ab||!ab.strategies){box.innerHTML='<div class="skel">재검 부기를 불러오지 못했습니다.</div>';return;}
-      var ks=Object.keys(ab.strategies);
-      el('rechksub').textContent=ks.length+'건 / 재검 '+(ab.n_tests_total||'—')+'건';
-      el('rechkv').textContent=ab.verdict||'';
-      box.innerHTML=ks.map(function(k){
-        var b=ab.strategies[k], m=b.metrics||{}, S=m.s||{}, B=m.b||{}, mu=m.multiplicity||{};
-        var a=A[k];
-        // ⚠ 앵커는 rc- 네임스페이스다. 같은 sid가 위 '돌린 규칙'이나 아래 '못 돌린 것'에도
-        //    카드로 존재하기 때문에(실측 5건) s-를 쓰면 id가 겹쳐 딥링크가 엉뚱한 카드로 간다.
-        //    #s-<sid>의 정본 도착지는 본 카드이고, 재검은 그 옆 부기다.
-        return '<div class="rcard" id="rc-'+esc(k)+'"><div class="rtop">'+
-          '<span class="rkind">재검</span><h3>'+esc(a?a.n:k)+'</h3>'+
-          '<span class="rv vrej">기각 유지</span></div>'+
-          '<p class="rrule">'+esc(b.start)+' ~ '+esc(b.end)+' · 월말 기준 '+esc(String(S.n_months||''))+'개월 · '+
-          '대조군 '+esc(B.label||b.bench_label||'')+'</p>'+
-          '<div class="rgrid">'+
-            cell('CAGR',nf(S.cagr)+'%')+cell('샤프',nf(S.sharpe,3))+cell('MDD',nf(S.mdd)+'%')+
-            cell('대조 샤프',nf(B.sharpe,3))+
-            cell('Δ샤프',((S.sharpe-B.sharpe)>0?'+':'')+nf(S.sharpe-B.sharpe,3),(S.sharpe-B.sharpe)>0?'up':'dn')+
-            cell('적중',nf(S.hit,1)+'%')+
-          '</div>'+
-          '<div class="hold"><span class="hl">지금 보유</span><em>재검은 과거 성과만 다시 잰 것이라 '
-          + '현재 보유를 만들지 않습니다. 이 전략은 배포하지 않습니다.</em></div>'+
-          spark(b.nav,b.bench,320,44)+
-          (mu.n_tests?'<p class="rbench">다중검정 분모 '+esc(String(mu.n_tests))+'건 — 게시 건수가 아니라 재검 총 건수다. 통과 여부: '+(mu.passed?'통과':'미통과')+'</p>':'')+
-          (a?'<p class="rarch"><b>기각 사유</b> · '+esc(a.r)+'</p>':'')+
-          '</div>';
-      }).join('');
-    });
-
-    var no=arch.filter(function(x){return !linked[x.sid];});
-    el('norunsub').textContent=no.length+'개';
-    // 재점검 결과(data/asset_strategies.json)가 있으면 그것으로 그리고, 없으면 예전처럼 사유만 나열한다.
-    fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-      .then(function(AS){
-        renderAudit(AS, no);
-      })['catch'](function(){ renderAudit(null, no); });
-
-    chips(); render(); jump();
-  })['catch'](function(){
-    el('runs').innerHTML='<div class="hardnote"><b>불러오지 못했습니다.</b></div>';
-  });
-  };
-  // ── 구 슬러그 딥링크 하위호환 ────────────────────────────────────────
-  // 예전 아카이브는 **이름에서 만든 슬러그**를 앵커로 썼다. 이름을 고칠 때마다 앵커가
-  // 바뀌어 외부 링크가 죽었기 때문에 불변 id(sid)로 옮겼고, 옛 슬러그는 aka에 남겼다.
-  // 그래서 여기서 aka → sid로 해석해 준다. 문안만 남고 이 로직이 빠지면 기존 북마크가
-  // 조용히 페이지 맨 위로 떨어진다(검증기가 그 상태를 막는다).
-  var ALIAS={};
-  function alias(items){ (items||[]).forEach(function(x){ (x.aka||[]).forEach(function(k){ ALIAS[k]=x.sid; }); }); }
-  function jump(){
-    var h=(location.hash||'').replace(/^#/,''); if(!h) return;
-    try{ h=decodeURIComponent(h); }catch(e){}   // 한글 슬러그는 퍼센트 인코딩돼 들어온다 (aka가 한글이다)
-    var id=h.indexOf('s-')===0?h.slice(2):h;
-    var t=document.getElementById('s-'+(ALIAS[id]||id)); if(!t) return;
-    t.scrollIntoView({block:'center'});
-    t.classList.add('hit'); setTimeout(function(){ t.classList.remove('hit'); },2400);
-  }
-  window.addEventListener('hashchange',jump);
-
-  var ASEL={};
-  function renderAudit(AS,no){
-    if(!AS||!AS.audit){
-      el('noruns').innerHTML=no.map(function(x){
-        return '<div class="ncard" id="s-'+esc(x.sid)+'"><h4>'+esc(x.n)+'<span>'+esc(x.c)+'</span></h4><p>'+esc(x.r)+'</p></div>';
-      }).join('');
-      return;
-    }
-    var au=AS.audit, byres={};
-    (AS.strategies||[]).forEach(function(r){byres[r.sid]=r;});
-    el('norunsub').textContent=au.n_total+'건';
-    el('auditstat').innerHTML=
-      st(au.n_done,'돌렸다','공개 데이터로 재현',au.n_done?'ok':'')+
-      st(au.n_pending,'가능하나 미실행','데이터는 있다')+
-      st(au.n_blocked,'불가','유료 데이터라 막힘',au.n_blocked?'zero':'')+
-      st(AS.n,'대조 검정','자기 대조군과 겨룸');
-    var order=['돌림','가능 · 미구현','가능 · 무거움','불가 · 유료 데이터'];
-    var cnt={}; au.items.forEach(function(a){cnt[a.status]=(cnt[a.status]||0)+1;});
-    var kinds=order.filter(function(k){return cnt[k];});
-    el('achips').hidden=(kinds.length<2);   // 한 종류뿐이면 필터가 아니라 장식이다
-    el('achips').innerHTML=kinds.map(function(k){
-      return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+cnt[k]+'</span></button>';
-    }).join('');
-    el('achips').onclick=function(e){
-      var b=e.target.closest('.chip'); if(!b)return;
-      var k=b.getAttribute('data-k');
-      if(ASEL[k]){delete ASEL[k];b.setAttribute('aria-pressed','false');}
-      else{ASEL[k]=1;b.setAttribute('aria-pressed','true');}
-      paintAudit(au,byres);
-    };
-    paintAudit(au,byres);
-  }
-  var SC={'돌림':'ok','가능 · 미구현':'soon','가능 · 무거움':'soon','불가 · 유료 데이터':'no'};
-  // 검정 구간이 짧아 판정을 막은 건은 '돌렸다'와 '못 돌린다' 어느 쪽도 아니다 — 눈에 띄게 둔다.
-  var VW={'표본 부족 · 판정 불가':'soon'};
-  function paintAudit(au,byres){
-    var ks=Object.keys(ASEL);
-    var items=au.items.filter(function(a){return !ks.length||ASEL[a.status];});
-    el('noruns').innerHTML=items.map(function(a){
-      var r=a.res?byres[a.res]:null;
-      var head='<div class="ncard '+(SC[a.status]||'')+'" id="s-'+esc(a.sid)+'">'+
-        '<h4>'+esc(a.n)+'<span>'+esc(a.c)+'</span><b class="ab '+(SC[a.status]||'')+'">'+esc(a.status)+'</b></h4>';
-      if(!r) return head+'<p>'+esc(a.why)+'</p></div>';
-      var m=r.metrics||{}, b=r.bench||{};
-      return head+
-        '<p class="arule">'+esc(r.rule)+'</p>'+
-        '<p>'+esc(r.why)+(a.why&&a.why!==r.why?' <em class="anote">'+esc(a.why)+'</em>':'')+'</p>'+
-        holdBlock(r.holdings)+
-        '<div class="agrid">'+
-          cell('구간',esc(r.start.slice(0,7))+'~'+esc(r.end.slice(0,7)))+
-          cell('CAGR',nf(m.cagr)+'%')+cell('샤프',nf(m.sharpe,3))+cell('MDD',nf(m.mdd)+'%')+
-          cell('Δ샤프',(r.d_sharpe>0?'+':'')+nf(r.d_sharpe,3),r.d_sharpe>0?'up':'dn')+
-          cell('t',nf(r.t,2))+
-        '</div>'+
-        spark(r.nav,r.bnav,320,40)+
-        '<p class="abench">대조군 동기간 CAGR '+nf(b.cagr)+'% · 샤프 '+nf(b.sharpe,3)+' · MDD '+nf(b.mdd)+'%'+
-        (r.bench_unstable?' <b>· 대조군이 현금성이라 Δ샤프는 허수 — t만 볼 것</b>':'')+
-        ' · 판정 <b class="ab '+(VW[r.verdict]||'')+'">'+esc(r.verdict)+'</b></p>'+
-        (r.beta?'<p class="abench">실측 베타 '+nf(r.beta,2)+'</p>':'')+
-        '</div>';
-    }).join('');
-  }
-
-  function st(v,k,d,cls){return '<span class="stat'+(cls?' '+cls:'')+'"><b>'+esc(v)+'</b>'+esc(k)+'<em>'+esc(d)+'</em></span>';}
-  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다
-})();
-
-</script>
 
 <script>
 /* ── 검토했지만 배포하지 않은 것(기각 원장) ────────────────────────────────
    archive.html을 이 페이지로 합치면서 45종이 data/archive_index.json에만 남고 목록이
    사라져 있었다(화면에 나오던 건 재검 백테스트가 있는 5종뿐). 여기서 되살린다.
 
-   ⚠ 이 블록은 위쪽 랩 로더(__labLoad)와 **독립**이다. 그 뷰 전환기가 참조하는 v-*·runs·
-     lab-statline 요소가 지금 문서에 없어서(리팩터 진행 중) 거기에 얹으면 같이 죽는다.
-     45종은 이름과 사유뿐이라 파일도 작다 — 따로 받아 따로 그린다.
+   이 블록은 archive_index.json을 직접 받아 직접 그린다. 처음엔 랩 로더에 얹지 않으려고
+   그랬는데(그 로더는 없는 요소를 잡고 있었다), 그 죽은 코드를 걷어낸 지금도 그대로 둔다 —
+   45종은 이름과 사유뿐이라 파일이 작고, 목록 하나가 남의 로더에 얹혀 죽는 구조를 다시
+   만들 이유가 없다.
    ⚠ 개수는 여기서 세지 않고 data/verdicts.json이 센 값을 쓴다(홈·푸터와 같은 원장). */
 (function(){
   var box=document.getElementById('al-body'); if(!box)return;
@@ -2268,65 +1969,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '</div></details>';
         }).join('')+'</div>';
     }).join('');
-    // 딥링크 — 옛 archive.html의 #s-<sid> 로 들어오면 그 항목을 열고 보여준다
-    var h=(location.hash||'').replace(/^#/,'');
-    try{h=decodeURIComponent(h);}catch(e){}
-    if(h.indexOf('s-')===0){
-      var t=document.getElementById('a-'+h.slice(2));
-      if(t){t.open=true;t.scrollIntoView({block:'center'});}
+    // 딥링크 — 옛 archive.html의 #s-<슬러그>로 들어오면 그 항목을 열고 보여준다.
+    //   슬러그는 sid일 수도 있고 **옛 이름 기반 슬러그(aka)**일 수도 있다. 이름을 고쳐도
+    //   링크가 살아 있어야 하므로 aka→sid 표(ALIAS)를 만들어 두 경로를 다 받는다.
+    //   ⚠ 앵커 네임스페이스는 'a-'다. 목록 카드가 쓰는 's-'와 겹치면 같은 sid가 두 곳에
+    //     생겨 #s-<sid>가 문서 순서상 앞 카드로 끌려간다("링크는 열리는데 다른 게 보인다").
+    var ALIAS={};
+    items.forEach(function(x){(x.aka||[]).forEach(function(k){ALIAS[k]=x.sid;});});
+    function openBy(slug){
+      var t=document.getElementById('a-'+slug)||
+            (ALIAS[slug]?document.getElementById('a-'+ALIAS[slug]):null);
+      if(t){t.open=true;t.scrollIntoView({block:'center'});return true;}
+      return false;
     }
+    function fromHash(){
+      var h=(location.hash||'').replace(/^#/,'');
+      try{h=decodeURIComponent(h);}catch(e){}
+      if(h.indexOf('s-')===0)openBy(h.slice(2));
+    }
+    fromHash(); window.addEventListener('hashchange',fromHash);
   })['catch'](function(){box.innerHTML='<div class="empty">원장을 불러오지 못했습니다.</div>';});
 })();
 </script>
 
-<script>
-/* ── 뷰 전환 ── 원장(전략 리스트)과 랩(돌린 규칙·재점검·재검)을 한 페이지에서 가른다.
-   해시로 직접 들어올 수 있어야 한다 — 기존 archive.html 딥링크가 여기로 넘어오기 때문이다. */
-(function(){
-  var V=['ledger','runs','audit','rechk'];
-  function el(id){return document.getElementById(id);}
-  function show(v){
-    v=(V.indexOf(v)>=0?v:'ledger');
-    // 랩 탭을 처음 열 때 그 데이터를 받는다(원장만 보는 사람은 안 받는다)
-    if(v!=='ledger'&&window.__labLoad)window.__labLoad();
-    for(var i=0;i<V.length;i++){
-      var sec=el(V[i]==='ledger'?'v-ledger':'v-'+V[i]);
-      if(sec)sec.hidden=(V[i]!==v);
-      var b=document.querySelector('.vtab[data-v="'+V[i]+'"]');
-      if(b){if(V[i]===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
-    }
-    try{history.replaceState(null,'',v==='ledger'?location.pathname:'#view='+v);}catch(e){}
-  }
-  Array.prototype.forEach.call(document.querySelectorAll('.vtab'),function(b){
-    b.addEventListener('click',function(){show(b.getAttribute('data-v'));});
-  });
-  // 진입 규칙: #view=xxx 우선 → 랩 앵커(#s-…, #rc-…)면 해당 뷰 → 그 외 원장
-  function boot(){
-    var h=(location.hash||'').replace(/^#/,'');
-    try{h=decodeURIComponent(h);}catch(e){}
-    if(h.indexOf('view=')===0){show(h.slice(5));return;}
-    if(h.indexOf('rc-')===0){show('rechk');return;}
-    if(h.indexOf('s-')===0){
-      // sid가 재점검표에 있으면 재점검 뷰, 아니면 돌린 규칙 뷰로 보낸다
-      fetch('data/asset_strategies.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-        .then(function(d){
-          var ids=((d&&d.audit&&d.audit.items)||[]).map(function(x){return x.sid;});
-          show(ids.indexOf(h.slice(2))>=0?'audit':'runs');
-        })['catch'](function(){show('runs');});
-      return;
-    }
-    show('ledger');
-  }
-  boot();
-  window.addEventListener('hashchange',boot);
-  // 탭 옆 개수 — 판정 원장(1KB)에서 읽는다. 개수만 보려고 산출물 340KB를 미리 받지 않는다.
-  function num(id,v){var e=el(id); if(e&&v!=null)e.textContent=v;}
-  fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(d){ if(!d)return;
-      num('vn-runs',d.n_tech); num('vn-audit',d.n_asset); num('vn-rechk',d.n_rechk);
-    })['catch'](function(){});
-})();
-</script>
+<!-- 랩 탭(원장/돌린 규칙/재점검/재검)은 2554b44에서 폐지됐다. 그때 마크업만 지우고
+     남아 있던 뷰 전환기와 랩 로더(__labLoad)를 2026-07-27에 제거했다 — 존재하지 않는
+     요소 13개를 참조하며 프라미스 안에서 조용히 죽어 있었다. 목록은 아래 한 곳뿐이고,
+     기각 원장은 #archledger가 data/archive_index.json에서 직접 그린다. -->
 
 <script>
 /* ── 지수 기준표 ── 전략 카드의 숫자만 보면 '좋은지'를 알 수 없다. 같은 구간 지수가
