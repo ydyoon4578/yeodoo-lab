@@ -550,14 +550,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return Math.round((Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute)-inst.getTime())/3600000);
     }catch(e){ return -4; }
   }
+  // 시:분만 적는다 — 어느 나라 시간인지는 위 설명문이 한 번만 말한다(줄마다 '한국'을
+  // 반복하면 정작 시각이 안 읽힌다). 장후가 다음날 새벽인 것도 설명문에 있다.
   function kstNote(dtStr,hour){
     var p=String(dtStr).split('-'); if(p.length!==3) return '';
     var hh=(hour==='장전')?9:(hour==='장후'?16:-1), mm=(hour==='장전')?30:0;
     if(hh<0) return '';
     var y=+p[0],mo=+p[1],da=+p[2];
     var k=new Date(Date.UTC(y,mo-1,da,hh,mm)-etOffset(y,mo,da)*3600000+9*3600000);
-    return '한국 '+(k.getUTCMonth()+1)+'/'+k.getUTCDate()+' '+
-           ('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2)+
+    return ('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2)+
            (hour==='장전'?' 이전':' 이후');
   }
   var D=null, sel={}, showPast=false;
