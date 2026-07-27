@@ -92,7 +92,11 @@ WF = {
     #   그걸 걸어두면 없는 일정을 화면이 말한다(실제로 '매월 2일'이라고 잘못 적혀 있었다).
     #   2026-07-26부터 전용 잡(refresh-members.yml)이 공개 소스에서 갱신한다.
     "members": "refresh-members.yml",
-    "rotation": "refresh-metrics.yml",
+    # ⚠ rotation 은 워크플로가 없다. refresh-metrics.yml 은 strategy_backtests/rf 만 다시 계산할 뿐
+    #   rotation_pool.json 을 만들지 않는다(생산자는 로컬 작업 스케줄러 KB_RotationDaily + 헤드리스
+    #   Claude). 그걸 걸어두니 화면이 '매주 토 10:05'라는 없는 일정을 말했고, 같은 축을 cron 에서
+    #   파생하는 data/schedule.json 은 '수시 (자동 잡 아님)'이라 두 화면이 서로 다른 말을 했다.
+    #   members 사례(위 주석)와 같은 실수 — 매핑하지 않고 manual 문구로 둔다.
     "filings": "refresh-filings.yml", "facts": "refresh-facts.yml",
     "calendar": "refresh-calendar.yml", "guru": "refresh-13f.yml",
     "insider": "refresh-insider.yml", "earnings": "refresh-earnings.yml",
@@ -194,7 +198,8 @@ def main() -> int:
         # 로테이션 풀은 '오늘 10선을 고른 날'과 '풀을 마지막으로 채운 날'이 다르다.
         # 화면에 보이는 선정일은 매일 오늘이라 축이 아니고, 축은 풀의 generated다.
         {"key": "rotation", "label": "전략 탐색 풀", "as_of": (load("rotation_pool.json") or {}).get("generated"),
-         "cadence": "수시", "note": "외부 출처 수집분 — 랩이 검증한 것이 아니다"},
+         "cadence": "수시", "note": "외부 출처 수집분 — 랩이 검증한 것이 아니다",
+         "manual": "자동 잡 아님 — 로컬 작업 스케줄러(KB_RotationDaily)가 웹리서치로 갱신해 푸시한다"},
         # 공시는 '수집한 날'이 아니라 '가장 최근에 접수된 제출일'이 기준이다. 회사가 안 내면
         # 우리가 매일 돌아도 축은 안 움직인다 — 그 사실을 감추지 않으려고 접수일을 쓴다.
         {"key": "filings", "label": "SEC 공시(8-K)", "as_of": (load("filings.json") or {}).get("as_of"),
