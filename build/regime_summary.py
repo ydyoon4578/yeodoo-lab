@@ -20,6 +20,8 @@ validate_site.py가 이 build()를 재실행해 regime.json.summary와 비교한
 from __future__ import annotations
 
 import re
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 
 # ── 점수·밴드 ────────────────────────────────────────────────────────────
 EXCLUDE = {"M2SL": "확장(>6%)조차 중립 — good 도달 불가", "CSUSHPINSA": "good 도달 불가 + 렌즈 모순"}

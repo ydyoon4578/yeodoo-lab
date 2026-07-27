@@ -1187,6 +1187,65 @@ try:
 except Exception as e:
     errors.append(f"내비 정합 검증 실패: {e}")
 
+# ── 텍스트 open()에 encoding 명시 강제 ────────────────────────────────────────
+# encoding 을 빼면 파이썬이 **OS 기본 코덱**을 쓴다. CI 러너는 Linux(UTF-8)라 항상 통과하지만
+# 한국어 Windows 는 cp949 → 한글이 든 JSON 을 읽는 순간 UnicodeDecodeError 로 죽는다.
+# 즉 **CI가 구조적으로 못 잡는 부류**다(2026-07-27 refresh_stocks.py:630 실측 — 사내 PC에서 생성기를
+# 직접 돌릴 때만 터졌다). 그래서 실행이 아니라 정적 검사로 잡는다.
+# 정밀도: 내장 open() 만 본다. ZipFile.open 등 `x.open(...)` 은 애초에 encoding 인자가 없고
+#   바이너리를 주므로 대상이 아니다(전수 확인: 4곳 모두 io.TextIOWrapper(..., "utf-8") 로 감싸고 있다).
+#   바이너리 모드('b')도 제외 — encoding 을 주면 오히려 예외가 난다.
+try:
+    import ast as _ast, glob as _glob
+    _enc_bad = []
+    for _p in sorted(_glob.glob(os.path.join(ROOT, "build", "*.py"))):
+        _s = io.open(_p, encoding="utf-8").read()
+        try:
+            _tree = _ast.parse(_s)
+        except SyntaxError:
+            continue          # 문법 오류는 별도 검사의 몫이다
+        for _nd in _ast.walk(_tree):
+            if not (isinstance(_nd, _ast.Call) and isinstance(_nd.func, _ast.Name) and _nd.func.id == "open"):
+                continue
+            if any(_k.arg == "encoding" for _k in _nd.keywords):
+                continue
+            _mode = ""
+            if len(_nd.args) > 1 and isinstance(_nd.args[1], _ast.Constant):
+                _mode = str(_nd.args[1].value)
+            for _k in _nd.keywords:
+                if _k.arg == "mode" and isinstance(_k.value, _ast.Constant):
+                    _mode = str(_k.value.value)
+            if "b" in _mode:
+                continue
+            _enc_bad.append(f"{os.path.basename(_p)}:{_nd.lineno}")
+    if _enc_bad:
+        errors.append(f"open() encoding 미지정 {len(_enc_bad)}곳 ({', '.join(_enc_bad[:5])}) — "
+                      "한국어 Windows(cp949)에서 UnicodeDecodeError로 죽는다. encoding='utf-8'을 명시할 것")
+    # 짝이 되는 출력 쪽 문제: 읽기를 고쳐도 stdout 이 cp949 면 ⚠·— 를 print 하는 순간 죽는다.
+    #   (실측: ⚠ U+26A0 · — U+2014 · ❌ · 🔴 모두 cp949 에 없다. 40개 파일 전부 해당됐다.)
+    #   집안 관례: 임포트 직후 `try: sys.stdout.reconfigure(encoding="utf-8") / except Exception: pass`.
+    def _cp949_ok(ch):
+        try:
+            ch.encode("cp949")
+            return True
+        except UnicodeEncodeError:
+            return False
+
+    _rc_bad = []
+    for _p in sorted(_glob.glob(os.path.join(ROOT, "build", "*.py"))):
+        _s = io.open(_p, encoding="utf-8").read()
+        if "reconfigure" in _s:
+            continue
+        if any(not _cp949_ok(_c) for _c in set(_s)):
+            _rc_bad.append(os.path.basename(_p))
+    if _rc_bad:
+        errors.append(f"stdout UTF-8 재설정 누락 {len(_rc_bad)}개 ({', '.join(_rc_bad[:5])}) — "
+                      "cp949 콘솔에서 print 시 UnicodeEncodeError로 죽는다. "
+                      'try: sys.stdout.reconfigure(encoding="utf-8") 프렐류드를 추가할 것')
+except Exception as _e:
+    errors.append(f"open() encoding 검사 실패: {_e}")
+
+
 # ── 기준일 정본: data/asof.json이 stocks.json과 어긋나면 전 페이지 칩이 거짓이 된다 ──
 try:
     _ao = json.load(io.open(os.path.join(ROOT, "data", "asof.json"), encoding="utf-8"))

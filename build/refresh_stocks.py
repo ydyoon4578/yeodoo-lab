@@ -9,6 +9,9 @@ yfinance 가격으로 표준 테크니컬 지표·교과서 매수/매도 신호
 from __future__ import annotations
 import os, json, time, warnings
 import numpy as np, pandas as pd
+import sys
+try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
+except Exception: pass
 warnings.filterwarnings("ignore")
 import yfinance as yf
 
@@ -627,7 +630,10 @@ def fetch_short_interest():
 
 
 def main():
-    M = json.load(open(MEMBERS)); mem = M["members"]; tickers = sorted(mem.keys())
+    # ⚠ encoding 을 반드시 명시할 것. 빼면 파이썬이 **OS 기본 코덱**을 쓴다 — 러너(Linux)는 UTF-8 이라
+    #   멀쩡하지만 한국어 Windows 는 cp949 라 members.json 의 한글 종목명에서 UnicodeDecodeError 로 죽는다.
+    #   CI 가 Linux 전용이라 이 부류는 영영 안 잡힌다: 사내 PC 에서 생성기를 직접 돌릴 때만 터진다.
+    M = json.load(open(MEMBERS, encoding="utf-8")); mem = M["members"]; tickers = sorted(mem.keys())
     print(f"멤버 {len(tickers)}종목 · yfinance…")
     px = {}
     partial = {}          # {티커: 관측일수} — 부분 편입(단기 지표만)
