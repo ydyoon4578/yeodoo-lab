@@ -156,7 +156,50 @@ def rec(**kw):
         pr = _PRW(kw.get("start"), kw.get("end"))
         if pr:
             kw["pr"] = pr
+            _s = pr_split(kw)
+            if _s:
+                kw["pr_split"] = _s
     return kw
+
+
+# ── 대조군 판정 ↔ 지수 눈금이 엇갈리는가 ──────────────────────────────────
+# 왜 필요한가. 전략은 자기 대조군(동일가중 유니버스·모전략·같은 풀 1/N …)으로 판정한다.
+# 그런데 그 판정과 '세상의 눈금(지수)'이 반대로 나오는 전략이 있다 — 그때 초과수익의 정체가
+# 갈린다. 동일가중은 못 이겼는데 지수는 이겼다면 그 초과분은 종목선택이 아니라 **동일가중이
+# 만든 사이즈 틸트**일 수 있다. 반대면 고르기는 됐지만 살 수 있는 대안을 못 넘은 것이다.
+# 어느 한쪽만 보면 이 구분이 사라지므로, 엇갈릴 때만 표시한다.
+#
+# ⚠ TR/PR 보정. 전략 수익은 배당 재투자(TR)인데 지수는 가격지수(PR)라 배당이 빠져 있다.
+#   보정 없이 비교하면 전략이 연 2%p 유리해 보여 '지수를 이겼다'가 과다 발생한다.
+#   pr_baseline()의 주석과 같은 값(연 2.0%p)을 지수 쪽에 더해 TR 근사로 맞춘 뒤 비교한다.
+PR_TR_GAP = 2.0        # 지수 PR→TR 근사 보정(%p/년). 2006년 이후 실측 격차.
+
+
+def pr_split(kw):
+    m = kw.get("metrics") or {}
+    b = kw.get("bench") or {}
+    pr = kw.get("pr") or {}
+    sc, bc = m.get("cagr"), b.get("cagr")
+    if sc is None or bc is None or not kw.get("cmp_ok"):
+        return None                      # 판정 자체가 성립 안 하면 엇갈림도 말하지 않는다
+    win_bench = sc > bc
+    out = []
+    for k, lab in (("spx", "S&P 500"), ("ndx", "나스닥 100")):
+        ic = (pr.get(k) or {}).get("cagr")
+        if ic is None:
+            continue
+        win_idx = sc > (ic + PR_TR_GAP)
+        if win_idx != win_bench:
+            out.append({"k": k, "label": lab,
+                        "d_bench": round(sc - bc, 2),
+                        "d_idx": round(sc - (ic + PR_TR_GAP), 2)})
+    if not out:
+        return None
+    return {"win_bench": win_bench, "vs": out,
+            "why": ("대조군 판정과 지수 눈금이 반대다 — "
+                    + ("초과분이 대조군 대비로는 없는데 지수는 넘었다(대조군 성격에서 오는 이득일 수 있다)."
+                       if not win_bench else
+                       "대조군은 넘었지만 살 수 있는 지수는 못 넘었다."))}
 
 
 def main() -> int:

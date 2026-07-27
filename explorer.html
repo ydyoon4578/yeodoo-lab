@@ -335,6 +335,12 @@
   .benchline{display:flex;align-items:baseline;gap:8px;margin:10px 0 0;font-size:12px}
   .benchline span{color:var(--muted);font-size:10.5px;font-weight:700}
   .benchline b{color:var(--ink);font-weight:700}
+  /* 대조군 판정과 지수 눈금이 반대인 전략 — 초과분의 정체가 갈리는 지점이라 눈에 띄게. */
+  .prsplit{margin:8px 0 0;padding:8px 11px;border:1px solid var(--hot);border-radius:8px;
+    background:color-mix(in srgb,var(--hot) 6%,var(--panel));font-size:12px;line-height:1.5}
+  .prsplit b{color:var(--hot);margin-right:8px}
+  .prsplit span{font-family:var(--mono);color:var(--ink-2)}
+  .prsplit em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:var(--muted)}
   .prline{margin:8px 0 0;padding:8px 11px;border:1px solid var(--line-soft);border-radius:8px;
           background:var(--panel-2);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
   .prline .pl{font-size:10.5px;font-weight:700;color:var(--muted)}
@@ -1071,7 +1077,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         D.forEach(function(d){
           var x=MX[d.n]; if(!x)return;
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
-          d._pr=x.pr||null; d._bl=x.bench_label?ixL(x.bench_label):null;
+          d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           if(!d._hold&&x.holdings)d._hold=x.holdings;
         });
         window.__PRNOTE=ix.pr_note||''; window.__CMPNOTE=ix.cmp_note||'';
@@ -1726,6 +1732,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (pr.spx?'<span class="pv">S&amp;P 500 <b>'+f2(pr.spx.cagr)+'</b></span>':'')+
           (pr.ndx?'<span class="pv">나스닥100 <b>'+f2(pr.ndx.cagr)+'</b></span>':'')+
           '<em>연환산 · 배당 제외. 전략 수익은 배당을 담은 총수익이라 이 줄과 겨루면 연 2.0%p만큼 전략이 유리해 보입니다 — 판정은 위의 대조군으로 합니다.</em></div>';
+      }
+      // 대조군 판정과 지수 눈금이 반대로 나온 전략 — 초과분의 정체가 갈리는 지점이라 표시한다.
+      //   (지수는 PR이라 연 2.0%p 보정한 뒤 비교한다 · 생성 build/strategy_index.py:pr_split)
+      var prs=d._prs;
+      if(prs&&prs.vs&&prs.vs.length){
+        var vtxt=prs.vs.map(function(v){return esc(v.label)+' '+((v.d_idx>0?'+':'')+Number(v.d_idx).toFixed(2))+'%p';}).join(' · ');
+        out+='<div class="prsplit"><b>대조군↔지수 판정 엇갈림</b>'+
+          '<span>대조군 '+((prs.vs[0].d_bench>0?'+':'')+Number(prs.vs[0].d_bench).toFixed(2))+'%p'+
+          ' vs '+vtxt+'</span><em>'+esc(prs.why||'')+'</em></div>';
       }
       return out;
     }
