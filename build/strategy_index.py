@@ -22,6 +22,7 @@
 """
 from __future__ import annotations
 import io, json, os
+import sys
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
 except Exception: pass
 
@@ -337,6 +338,40 @@ def main() -> int:
             nav=b.get("nav"), bnav=b.get("bench"),
         ))
 
+    # ── 낙폭 방어 계열 제외 ──────────────────────────────────────────────────
+    # 사용자 결정(2026-07-27). 위험감축 5종·방어보험 3종을 목록에서 뺀다.
+    #
+    # ⚠ 위와 같은 원칙이다 — **화면 목록에서만 빼고 측정 기록은 그대로 둔다.**
+    #   asset_strategies.json·archive_backtests.json·deploy_index.json 은 손대지 않는다.
+    #   진 것을 원본에서 지우면 다중검정 N이 줄어 남은 것이 쉽게 통과한다(자기에게 유리한 보정).
+    #
+    # ⚠⚠ 이 제외는 **성과 판정이 아니다.** 이 전략들의 headline 은 최대낙폭이고, 그 축에서는
+    #    낮을수록 좋다 — 빠지는 8종 중 −11.19%·−12.33%·−15.30% 는 전 목록에서 가장 좋은 낙폭이다.
+    #    자기 목적(모전략 낙폭 감축) 기준으로는 대체로 성공한 축에 든다:
+    #      채권 레짐 오버레이 Sharpe 0.977→0.994 · 듀레이션 스케일링 0.177→0.213 ·
+    #      동적 변동성 타깃팅 낙폭 −18.53%→−15.30%(Sharpe −0.021)
+    #    벤치 대비 명확히 열위인 것은 3종뿐이다(목표변동성 8% 0.435→0.224 ·
+    #    테일 헤지 SPY+VIXY 0.629→0.581 · 테일 헤지 Long-Vol 0.659→0.422).
+    #    그럼에도 목록에서 빼는 것은 "이 랩에서 이 계열을 다루지 않는다"는 운용 결정이지
+    #    "성과가 나쁘다"는 측정 결과가 아니다. 되살리려면 이 집합에서 sid 를 빼면 된다.
+    HIDE_SIDS = {
+        "dynamic-vol-target", "duration-scaling", "bond-regime-overlay-agg",   # 배포 원장
+        "a-rp-voltarget", "a-vol-roll", "a-tail-hedge",                        # 자산배분
+        "r-low-beta-weight-tilt", "r-tail-risk-hedge",                         # 기각 재검
+    }
+    _found = {r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
+    _hid2 = [(r["name"], r["role"]) for r in rows if r["sid"] in HIDE_SIDS]
+    rows = [r for r in rows if r["sid"] not in HIDE_SIDS]
+    if _found != HIDE_SIDS:
+        # 원본에서 sid 가 바뀌면 제외가 조용히 풀려 목록에 도로 나타난다. 오타로 처음부터
+        # 아무것도 안 지워지는 경우도 같은 방식으로 잡힌다.
+        raise SystemExit("제외 대상 sid 를 원본에서 못 찾았다: %s — sid 가 바뀌었는지 확인할 것"
+                         % sorted(HIDE_SIDS - _found))
+    if _hid2:
+        print("  낙폭 방어 계열 %d종을 목록에서 제외(사용자 결정) — 측정 기록에는 남는다:" % len(_hid2))
+        for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0])):
+            print("    · [%s] %s" % (_r, _n[:48]))
+
     # 정렬 — 성격 → 등급 → 이름. 파일 출처가 아니라 역할로 줄 세운다.
     rows.sort(key=lambda r: (ROLE_ORDER.index(r["role"]) if r["role"] in ROLE_ORDER else 99,
                              GRADE_ORDER.index(r["grade"]) if r["grade"] in GRADE_ORDER else 99,
@@ -351,8 +386,17 @@ def main() -> int:
         "n": len(rows),
         # 의도적으로 목록에서 뺀 것들. validate 의 '원본 합계와 맞나' 가드가 이 수를 더해
         # 검사하므로, 여기 기록하지 않으면 낡은 목록 검출이 무력해진다.
-        "n_hidden": len(_hidden),
-        "hidden": [{"name": _n, "sharpe": _s} for _n, _s in sorted(_hidden, key=lambda x: -x[1])],
+        "n_hidden": len(_hidden) + len(_hid2),
+        "hidden": ([{"name": _n, "sharpe": _s} for _n, _s in sorted(_hidden, key=lambda x: -x[1])]
+                   + [{"name": _n, "role": _r} for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0]))]),
+        "hidden_note_defensive": (
+            "위험감축·방어보험 %d종을 목록에서 뺐다(사용자 결정 2026-07-27). "
+            "이 계열을 이 랩에서 다루지 않기로 한 **운용 결정**이지 성과 판정이 아니다 — "
+            "이들의 headline 은 최대낙폭이고 그 축에서는 낮을수록 좋아서, 빠지는 8종 중 "
+            "−11.19%%·−12.33%%·−15.30%% 는 전 목록에서 가장 좋은 낙폭이다. "
+            "여기서도 **측정 기록은 지우지 않는다** — asset_strategies.json·"
+            "archive_backtests.json·deploy_index.json 은 그대로 둔다."
+            % len(_hid2)) if _hid2 else None,
         "hidden_note": ("종목선택 전략 중 같은 구간 SPX(TR) Sharpe %.3f 에 못 미친 %d종은 목록에서 뺐다"
                         "(사용자 결정 2026-07-27). 지수를 그냥 사는 것보다 위험조정 성과가 나쁜 "
                         "종목선택은 볼 이유가 없다. 다만 **측정 기록에서 지운 것은 아니다** — "
