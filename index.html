@@ -26,7 +26,10 @@
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
     --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;
-    --deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#B02F3C;
+    --deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    /* 발표 시각 — 장전 파랑·장후 초록. 둘 다 이미 대비를 맞춰 둔 팔레트 값을 그대로 쓴다
+       (--bmo는 --champ 계열 파랑, --amc는 --deploy 계열 초록). */
+    --bmo:#2C6E8F;--amc:#0E8A54;
     --gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
     /* 국면·심리 색은 .card .cv의 글자색(20px bold)으로 쓰인다 — 다크 패널 위 대비 3:1을
        못 지키면 침체·스태그플레이션 전환 시 카드 대표값이 묻힌다. 그래서 다른 색과 똑같이
@@ -38,15 +41,16 @@
   @media (prefers-color-scheme:dark){:root{
     --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
     --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;
-    --deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#F07A88;
+    --deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
+    --bmo:#6BB0D6;--amc:#38D083;
     --gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;
     /* 다크에선 '나쁠수록 어둡게'가 불가능하다(대비가 죽는다) — 명도는 올리고 색상으로 악화를 표현한다. 전부 5.2:1 이상 */
     --rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;
     --sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#B02F3C;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
-  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#F07A88;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0E8A54;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#6BB0D6;--amc:#38D083;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
   :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
   *,*::before,*::after{box-sizing:border-box}
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
@@ -154,7 +158,7 @@
        border:1px solid var(--line);border-radius:5px;padding:2px 6px;text-decoration:none}
   a.wkt:hover{border-color:var(--accent);color:var(--accent)}
   .wkt.bmo{border-color:color-mix(in srgb,var(--bmo) 45%,transparent);color:var(--bmo)}
-  .wkt.amc{border-color:color-mix(in srgb,var(--champ) 45%,transparent);color:var(--champ)}
+  .wkt.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .wkt.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .wkday .wn{font-size:11.5px;color:var(--ink-2);line-height:1.5}
   .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
@@ -194,7 +198,7 @@
      칸이 좁으므로 라벨은 최소 폭으로 두고 줄바꿈되지 않게 고정한다. */
   .calhl{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:-.02em;
          flex:none;white-space:nowrap;opacity:.85}
-  .calhl.bmo{color:var(--bmo)} .calhl.amc{color:var(--champ)} .calhl.tba{color:var(--muted)}
+  .calhl.bmo{color:var(--bmo)} .calhl.amc{color:var(--amc)} .calhl.tba{color:var(--muted)}
   .calmac{font-size:10.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line-soft);padding-top:5px;margin-top:auto}
   .calmac b{color:var(--ink-2);font-weight:600}
   /* 주목도 별 — ★★★★(FOMC·고용·CPI)만 강조색. 이 랩이 매긴 눈금이지 검증 신호가 아니다. */
@@ -215,10 +219,10 @@
   a.tk2:hover,a.tk2:focus{border-color:var(--accent);color:var(--accent);outline:none}
   /* 발표 시각 3상태 — 장전/장후/미공개. 전에는 장전만 색이 있고 나머지는 구분이 없어서,
      장 끝나고 나오는 실적과 시각 자체가 안 알려진 것이 한 덩어리로 보였다.
-     장전은 빨강(--hot), 장후는 파랑(--champ) — 둘 다 라이트·다크 대비를 맞춰 둔 팔레트 값이다.
+     장전은 파랑(--bmo), 장후는 초록(--amc) — 둘 다 라이트·다크 대비를 맞춰 둔 팔레트 값이다.
      미공개는 색을 주지 않고 점선으로 둔다 — 모른다는 것을 색으로 단정하지 않으려는 것이다. */
   .tk2.bmo{border-color:color-mix(in srgb,var(--bmo) 45%,transparent);color:var(--bmo)}
-  .tk2.amc{border-color:color-mix(in srgb,var(--champ) 45%,transparent);color:var(--champ)}
+  .tk2.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .tk2.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .tip{position:relative}
   .tk2[data-nm]::after,.tip[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);
