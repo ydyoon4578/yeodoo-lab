@@ -812,6 +812,18 @@ try:
             for _pk in (_v.get("primary") or []):
                 if _pk not in _mlab:
                     errors.append(f"strategy_kinds.json {_k}: primary '{_pk}'의 metric_labels 라벨이 없음")
+        # 목록에 뜨는 전략의 성격은 전부 kinds 에 정의가 있어야 한다.
+        #   없으면 headM 이 조용히 CAGR 로 넘어간다(예외도 빈칸도 아니고 **틀린 지표**가 뜬다).
+        #   2026-07-27 방어보험 정의를 걷어내면서 넣는다 — 그 계열을 다시 목록에 올리면
+        #   정의가 없다는 사실이 여기서 잡혀야 한다. 제외된(hidden) 것은 화면에 안 뜨므로 대상이 아니다.
+        try:
+            _sidx = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
+            _orphan = sorted({(_r.get("role") or "") for _r in (_sidx.get("items") or [])} - _kinds - {""})
+            if _orphan:
+                errors.append(f"strategy_index: 성격 {_orphan} 이 strategy_kinds.json 에 없다 — "
+                              "목록 헤드라인이 조용히 CAGR로 대체된다. 정의를 넣거나 성격을 바꿀 것")
+        except FileNotFoundError:
+            pass
         _det = json.load(io.open(os.path.join(ROOT, "data", "strategy_detail.json"), encoding="utf-8"))
         _bt2 = json.load(io.open(os.path.join(ROOT, "data", "strategy_backtests.json"), encoding="utf-8"))
         _bs2 = (_bt2 or {}).get("strategies") or {}
