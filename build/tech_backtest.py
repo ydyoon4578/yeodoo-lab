@@ -917,6 +917,14 @@ def run():
         pass
 
     rfd = (sum(rf.values()) / len(rf) / 21) if rf else 0.0
+    # 현금 수익은 **그 시점의** 금리로 준다. 상수 하나로 뭉개면 구간이 길수록 거짓말이 커진다 —
+    # 10년 구간의 실제 3M 금리는 0.02~5.60% 라 연도별 오차가 -2.86%p(2023)~+2.37%p(2021)다.
+    # 그러면 현금을 쥐는 방어형 규칙이 2016~2021 에 가공의 이자를 받아, 하필 '하락 방어를
+    # 처음 검증한다'는 확장의 목적을 정면으로 오염시킨다. rf_monthly.json 은 1981-09 부터 있다.
+    rfd_d = [((rf.get(d[:7]) / 21) if rf.get(d[:7]) is not None else rfd) for d in dates]
+    _rf_miss = sum(1 for d in dates if rf.get(d[:7]) is None)
+    if _rf_miss:
+        print("  [무위험] %d/%d일이 rf_monthly 에 없어 구간평균으로 대체" % (_rf_miss, len(dates)))
 
     build_strats()
     out = []
@@ -1058,7 +1066,7 @@ def run():
             srets = []
             for i in range(MIN_HIST + 1, n):
                 e = w[i - 1]
-                r = e * ixr[i] + (1 - e) * rfd
+                r = e * ixr[i] + (1 - e) * rfd_d[i]
                 srets.append(r)
                 nav.append(nav[-1] * (1 + r))
             turn = sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, n)) / max(1, (n - MIN_HIST) / 252)
@@ -1224,6 +1232,17 @@ def run():
             # 화면이 줄인 곡선에서 다시 재면 카드에 적힌 MDD와 그림이 어긋난다.
             "chart": curve_pack(d2, nav, bnav, idx_rets=IDXR, i0=MIN_HIST),
         })
+        # 입력이 격자를 못 덮으면 그 규칙은 '못한' 게 아니라 '못 잰' 것이다.
+        # 심리 게이트가 정확히 그랬다 — sentiment.json 이 3년뿐이라 10년 격자 앞부분에서
+        # 신호가 없어 계속 현금이 됐고, 노출이 반토막 나 판정이 뒤집혔다. 결손을 실력으로
+        # 읽지 않도록 커버리지를 재서 모자라면 판정을 보류한다(뒤 verdict 루프가 존중한다).
+        if S["sid"] == "t-sentgate":
+            _cov = sum(1 for i in range(MIN_HIST, n) if sent[i] is not None) / max(1, n - MIN_HIST)
+            out[-1]["input_cov"] = round(_cov * 100, 1)
+            if _cov < 0.90:
+                out[-1]["cov_short"] = True
+                print("  [심리게이트] 입력 커버리지 %.1f%% — 판정 보류(규칙이 아니라 데이터가 없다)"
+                      % (_cov * 100))
 
     # ── 다중검정 임계 ────────────────────────────────────────────────
     # 규칙 N개를 같은 표본에서 돌렸다. |t|>2 라는 관례는 검정이 하나일 때 이야기다.
@@ -1246,7 +1265,13 @@ def run():
     tcrit = z_of(alpha)
     for r in out:
         t = r["t"]
-        if t is None:
+        if r.get("cov_short"):
+            # 입력이 구간을 못 덮은 규칙 — 성과 숫자는 싣되 판정은 하지 않는다.
+            r["verdict"] = "판정 불가"
+            r["why"] = (r["why"] + " ⚠ 이 구간에서 입력(심리지수)이 %.1f%%만 존재해 "
+                        "나머지 기간이 자동으로 현금 처리됐다. 여기 성과는 규칙의 실력이 아니다."
+                        % (r.get("input_cov") or 0))
+        elif t is None:
             r["verdict"] = "판정 불가"
         elif r["d_sharpe"] <= 0:
             r["verdict"] = "열위"
@@ -1334,21 +1359,29 @@ def run():
                 "규칙 수가 늘어도 실제로 검증한 '서로 다른 아이디어' 수는 그만큼 늘지 않는다.",
     }
 
+    # 표본 길이를 사람이 읽는 말로 — 문장에 '3년'을 박아 두면 구간을 바꿀 때마다 거짓말이 된다.
+    _yrs = (n - MIN_HIST) / 252.0
+    _span_txt = ("%.1f년" % _yrs) if _yrs < 10 else ("%d년" % round(_yrs))
+
     doc = {
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": n - MIN_HIST,
         "n_stocks": len(tickers), "topn": TOPN,
         "bench_label": "동일가중 유니버스 매수후보유",
+        "span_years": round((n - MIN_HIST) / 252.0, 1),
         "t_crit": tcrit,
         "t_crit_note": "규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
                        "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다." % (N, N),
         "rf_note": "샤프는 FRED DGS3MO 월평균을 일할로 환산해 차감",
         "limits": [
-            "생존편향 — 오늘의 %d종목을 과거 3년에 그대로 적용한다. 그 사이 편출된 종목이 없어 "
-            "모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다." % len(tickers),
-            "표본이 3년(%d거래일)뿐이다. 국면 전환을 몇 번 못 겪은 구간이라, 좋은 샤프가 실력인지 "
-            "구간인지 가를 수 없다." % (n - MIN_HIST),
+            # ⚠ 기간을 숫자로 박지 말 것. 예전엔 '3년'이 문장에 박혀 있어 구간을 늘린 뒤에도
+            #   "표본이 3년(2254거래일)뿐이다"라는 자기모순을 그대로 출력했다. 표본에서 파생한다.
+            "생존편향 — 오늘의 %d종목을 과거 %s에 그대로 적용한다. 그 사이 편출된 종목이 없어 "
+            "모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다. "
+            "구간이 길수록 누락된 편출 종목이 쌓여 이 왜곡은 더 커진다." % (len(tickers), _span_txt),
+            "표본이 %s(%d거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 "
+            "실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다." % (_span_txt, n - MIN_HIST),
             "비용 0(gross). 회전율이 높은 규칙일수록 실제와 벌어지므로 연 회전율을 함께 싣는다.",
             "다중검정 — 규칙 %d개를 같은 표본에서 돌렸다. 그중 최고는 우연히도 좋아 보인다. "
             "그래서 하나도 빼지 않고 전부 싣는다." % len(STRATS),

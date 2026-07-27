@@ -1312,6 +1312,43 @@ if skips:
 if tool_skips:
     print(f"⚠ 검사 도구 부재 — {len(tool_skips)}개 검사 건너뜀(미검증이다. node 를 설치하면 되살아난다. CI 에서는 이미 오류로 잡는다):")
     for s in sorted(tool_skips): print("  ~", s)
+# ── 가격 패널 길이: 본체와 상세가 같은 좌표계인가 ──────────────────────────
+#   stocks.json 의 bms/sms 는 pxd_dates 에 대한 **위치 인덱스**다. 본체와 data/sd 가
+#   다른 커밋에서 오면 타점이 엉뚱한 날짜를 가리키는데, 길이만 재면 기계적으로 잡힌다.
+#   (2026-07-27 패널 753→2514 전환 때 이 검사가 없어 부분 배포 위험을 눈으로 확인해야 했다)
+try:
+    _sj = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _pn = len(_sj.get("pxd_dates") or [])
+    _bad = []
+    for _s in (_sj.get("stocks") or [])[:40]:      # 40종 표본이면 부분 배포는 반드시 걸린다
+        _f = os.path.join(ROOT, "data", "sd", _s["t"] + ".json")
+        if not os.path.exists(_f):
+            continue
+        _n = len(json.load(io.open(_f, encoding="utf-8")).get("pxd") or [])
+        if _pn and _n != _pn:
+            _bad.append("%s(%d)" % (_s["t"], _n))
+    if _bad:
+        errors.append("가격 패널 길이 불일치 — pxd_dates %d vs %s. stocks.json 과 data/sd 가 "
+                      "다른 커밋에서 왔다(bms/sms 는 위치 인덱스라 타점이 어긋난다)"
+                      % (_pn, ", ".join(_bad[:6])))
+except Exception as e:
+    errors.append(f"가격 패널 길이 검사 실패: {e}")
+
+# ── 게시 문구에 기간 리터럴이 박혀 있지 않은가 ─────────────────────────────
+#   "표본이 3년(2254거래일)뿐이다" 같은 자기모순을 실제로 출력한 적이 있다.
+#   거래일 수는 데이터에서 파생하면서 연수는 손으로 적어 둔 탓이다.
+try:
+    _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+    _yrs = (_ts.get("n_days") or 0) / 252.0
+    for _lim in (_ts.get("limits") or []):
+        _m = re.search(r"(\d+(?:\.\d+)?)\s*년", str(_lim))
+        if _m and abs(float(_m.group(1)) - _yrs) > 1.0:
+            errors.append("tech_strategies.limits 의 기간 표기(%s년)가 실제 표본(%.1f년)과 다르다 "
+                          "— 문구에 연수를 손으로 적지 말고 n_days 에서 파생할 것" % (_m.group(1), _yrs))
+            break
+except Exception:
+    pass
+
 # ── 갱신 주기 라벨: 워크플로 cron이 단일 출처인가 ──────────────────────────
 #   손으로 적던 시절 cron을 바꿔도 라벨이 안 따라와 전면적으로 어긋나 있었다(2026-07-25 실측:
 #   SEC 공시 10:15↔실제 08:45, 13F 12:15↔09:25, 없어진 백업 크론 '08:35 + 09:10' 표기 등).

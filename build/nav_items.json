@@ -241,7 +241,7 @@
      "name": "내 포트폴리오",
      "file": "portfolio.html",
      "status": "existing",
-     "desc": "localStorage 보유 + 753거래일 실측 상관·변동성·MDD",
+     "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
      "src": "agg",
      "verdict": "na",
      "effort": "L"
