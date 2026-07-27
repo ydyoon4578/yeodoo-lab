@@ -197,7 +197,7 @@ def load_index_tr(dates):
     adates = A.get("dates") or []
     pos = {d: i for i, d in enumerate(adates)}
     out = {}
-    for tk, label in (("SPY", "SPX(TR)"), ("QQQ", "NDX(TR)")):
+    for tk, label in (("SPY", "SPX(TR)"), ("QQQ", "NDX(TR)"), ("RSP", "EW-SPX(TR)")):
         raw = (A.get("px") or {}).get(tk)
         if not raw:
             print("  [지수곡선] %s 없음 — 건너뜀" % tk); continue
@@ -946,6 +946,7 @@ def run():
     bench_r = ixr[MIN_HIST:]
     IDXR = load_index_tr(dates)      # 같은 구간 SPX·NDX 총수익(TR) — 카드에 나란히 그린다
 
+    bnav_ref = None          # 생존편향 눈금용 대조군 NAV(전략 루프에서 채운다)
     for S in STRATS:
         w = [0.0] * n
         if S["kind"] == "timing":
@@ -1230,6 +1231,7 @@ def run():
         bnav = [100.0]
         for i in range(MIN_HIST + 1, n):
             bnav.append(bnav[-1] * (1 + ixr[i]))
+        bnav_ref = bnav          # 대조군은 전 전략 공통 — 생존편향 눈금에서 다시 쓴다
         d2 = dates[MIN_HIST:]
         st = ann_stats(nav, d2, rf)
         bs = ann_stats(bnav, d2, rf)
@@ -1383,6 +1385,38 @@ def run():
     _yrs = (n - MIN_HIST) / 252.0
     _span_txt = ("%.1f년" % _yrs) if _yrs < 10 else ("%d년" % round(_yrs))
 
+    # ── 생존편향 눈금: 랩 대조군 vs 현실의 동일가중 지수(RSP) ──────────────
+    # 랩 대조군은 '오늘의 518종목'을 과거에 소급한 동일가중이라 그 사이 지수에서 빠진
+    # 회사가 하나도 없다. RSP 는 같은 기간을 실제로 굴린 동일가중 S&P500 ETF다 —
+    # 편출·편입이 실제로 일어났고 보수도 뺀 값이다. 둘의 격차를 상시로 싣는다.
+    #
+    # ⚠ 이 격차를 생존편향 하나로 읽으면 안 된다. 세 가지가 같은 방향으로 섞여 있다.
+    #   ① 생존편향(랩이 유리)  ② 유니버스 차이 — 랩은 나스닥100 전용 종목까지 포함해
+    #   이 구간 기술주 강세를 더 받는다(랩이 유리)  ③ RSP 보수 0.20%(RSP가 불리).
+    #   따라서 이 값은 '생존편향의 상한'이자 '생존편향+틸트 합의 추정치'다.
+    #   그래도 눈금이 없는 것보다 낫다 — 지금까지는 비교 대상 자체가 없었다.
+    surv = None
+    _rsp = (IDXR or {}).get("EW-SPX(TR)")
+    if _rsp:
+        _nv = [100.0]
+        for i in range(MIN_HIST + 1, n):
+            _nv.append(_nv[-1] * (1 + _rsp[i]))
+        _rs = ann_stats(_nv, dates[MIN_HIST:], rf)
+        _bs = ann_stats(bnav_ref, dates[MIN_HIST:], rf) if bnav_ref else {}
+        if _rs.get("cagr") is not None and _bs.get("cagr") is not None:
+            surv = {
+                "lab_bench_cagr": _bs["cagr"], "rsp_cagr": _rs["cagr"],
+                "gap_cagr": round(_bs["cagr"] - _rs["cagr"], 2),
+                "lab_bench_sharpe": _bs.get("sharpe"), "rsp_sharpe": _rs.get("sharpe"),
+                "note": "랩 대조군(오늘의 %d종목 동일가중을 과거로 소급)이 같은 기간 실제 "
+                        "동일가중 S&P500(RSP·보수 후)보다 연 %+.2f%%p 앞선다. 생존편향과 "
+                        "유니버스 틸트(나스닥100 전용 종목 포함)가 함께 만든 격차이며, "
+                        "생존편향 단독의 상한으로 읽어야 한다."
+                        % (len(tickers), _bs["cagr"] - _rs["cagr"]),
+            }
+            print("  [생존편향 눈금] 랩 대조군 %.2f%% vs RSP %.2f%% → 격차 %+.2f%%p"
+                  % (_bs["cagr"], _rs["cagr"], _bs["cagr"] - _rs["cagr"]))
+
     doc = {
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -1390,6 +1424,7 @@ def run():
         "n_stocks": len(tickers), "topn": TOPN,
         "bench_label": "동일가중 유니버스 매수후보유",
         "span_years": round((n - MIN_HIST) / 252.0, 1),
+        "surv_proxy": surv,
         "t_crit": tcrit,
         "t_crit_note": "규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
                        "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다." % (N, N),
@@ -1400,6 +1435,11 @@ def run():
             "생존편향 — 오늘의 %d종목을 과거 %s에 그대로 적용한다. 그 사이 편출된 종목이 없어 "
             "모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다. "
             "구간이 길수록 누락된 편출 종목이 쌓여 이 왜곡은 더 커진다." % (len(tickers), _span_txt),
+        ] + ([
+            # 보정은 못 해도 크기는 잴 수 있다. 눈금이 없으면 독자가 스스로 할인할 방법이 없다.
+            surv["note"] + " 즉 이 표의 초과수익이 연 %.2f%%p 안쪽이면 규칙의 실력이 아니라 "
+            "표본 구성만으로도 설명될 수 있다." % surv["gap_cagr"],
+        ] if surv else []) + [
             "표본이 %s(%d거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 "
             "실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다." % (_span_txt, n - MIN_HIST),
             "비용 0(gross). 회전율이 높은 규칙일수록 실제와 벌어지므로 연 회전율을 함께 싣는다.",
