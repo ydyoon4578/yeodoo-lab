@@ -40,14 +40,21 @@ def get(u, timeout=60):
 
 
 def filings(cik):
-    """이 운용사의 13F-HR 전부 — (보고분기, accession). 'recent' 밖의 오래된 것도 합친다."""
+    """이 운용사의 13F-HR 전부 — (보고분기, 공시일, accession, 서식). 'recent' 밖의 오래된 것도 합친다.
+
+    ⚠ 공시일(filingDate)을 반드시 들고 온다. 이게 없으면 '리밸런스 시점에 이 정보가 공개돼
+      있었는가'를 판정할 방법이 저장소 안에 아예 없어진다 — 백테스트의 룩어헤드를 확인할 수단이
+      사라진다는 뜻이다. 예전엔 form·reportDate·accession만 담고 filingDate를 버렸다.
+    """
     j = json.loads(get("https://data.sec.gov/submissions/CIK%010d.json" % cik).decode())
     out = []
 
     def take(rec):
+        fd = rec.get("filingDate") or []
         for i, f in enumerate(rec.get("form") or []):
             if f in ("13F-HR", "13F-HR/A"):
-                out.append((rec["reportDate"][i], rec["accessionNumber"][i], f))
+                out.append((rec["reportDate"][i], (fd[i] if i < len(fd) else ""),
+                            rec["accessionNumber"][i], f))
     take(j["filings"]["recent"])
     for extra in (j["filings"].get("files") or []):
         try:
@@ -58,7 +65,7 @@ def filings(cik):
     return out
 
 
-TAG = re.compile(r"<(?:\w+:)?(nameOfIssuer|cusip|value|sshPrnamt)>([^<]*)</", re.I)
+TAG = re.compile(r"<(?:\w+:)?(nameOfIssuer|cusip|value|sshPrnamt|putCall)>([^<]*)</", re.I)
 
 
 def holdings(cik, acc):
@@ -86,6 +93,9 @@ def holdings(cik, acc):
         if "<nameOfIssuer" not in body and "nameOfIssuer" not in body:
             continue
         cur = {}
+        # ⚠ 행을 끊는 지점은 **nameOfIssuer 하나뿐**이다. 예전엔 sshPrnamt 에서도 끊었는데,
+        #   13F 정보표의 태그 순서가 … value → sshPrnamt → putCall … 이라서 그렇게 끊으면
+        #   putCall 이 **다음 종목의 dict** 로 들어간다. 옵션 필터가 엉뚱한 행을 지우게 된다.
         for m in TAG.finditer(body):
             k, v = m.group(1).lower(), m.group(2).strip()
             if k == "nameofissuer":
@@ -93,12 +103,18 @@ def holdings(cik, acc):
                     rows.append(cur)
                 cur = {}
             cur[k] = v
-            if k == "sshprnamt" and cur.get("cusip"):
-                rows.append(cur); cur = {}
+        if cur.get("cusip"):
+            rows.append(cur)          # 마지막 종목 — 뒤에 nameOfIssuer 가 없어 flush 가 안 된다
         if rows:
             break
     out = []
     for r in rows:
+        # 콜/풋은 보통주 보유가 아니다 — 벌크 경로(refresh_13f.py)는 예전부터 버리는데
+        # 이력 경로만 putCall 태그를 읽지도 않아 옵션 노셔널이 보통주 가치에 합산돼 있었다.
+        # 실측(2026-03-31, 같은 분기 벌크 대비): 듀케인 AMZN 5.37배 · 소로스 CRWV 7.46배.
+        # 풋이면 방향이 반대이므로, 이 값으로 복제를 만들면 숏을 롱으로 뒤집어 산다.
+        if (r.get("putcall") or "").strip():
+            continue
         try:
             out.append((r["cusip"].strip().upper()[:9],
                         float(r.get("value") or 0), float(r.get("sshprnamt") or 0),
@@ -120,6 +136,7 @@ def main() -> int:
     print("  CUSIP %d개" % len(cmap))
 
     hist = {}          # {분기: {cik: {티커: 가치}}}
+    fdates = {}        # {분기: {cik: 공시일}} — 리밸런스 시점에 공개돼 있었는지 판정용
     names = {}
     # 운용사별 커버리지를 남긴다 — 명단에 이름이 있는데 데이터가 0인 것을 조용히 넘기면,
     # '18명을 봤다'고 적고 실제로는 17명만 본 상태가 된다(현행 guru.json이 그랬다).
@@ -129,10 +146,25 @@ def main() -> int:
             fl = filings(cik)
         except Exception as e:
             print("  ❌ %-28s %s" % (label, e)); continue
-        # 분기마다 최신 제출 하나(수정보고가 있으면 그쪽)
-        best = {}
-        for rd, acc, form in sorted(fl):
-            best[rd] = acc
+        # 분기마다 **원본 13F-HR 하나**. 같은 분기에 원본이 여럿이면 공시일이 늦은 것.
+        #
+        # ⚠⚠ 수정보고(13F-HR/A)는 쓰지 않는다. 예전 코드는 `for rd, acc, form in sorted(fl): best[rd]=acc`
+        #   로 **accession 문자열 사전순 마지막**을 골랐다(시간순 보장도 아니다). 그래서 기밀취급
+        #   해제용 /A — 원본 전체가 아니라 '이제 공개하는 몇 종목만' 담은 제출 — 이 포트폴리오 전체를
+        #   덮어썼다. 실측 오염 18셀, 버크셔는 2023Q3·Q4 **두 분기 연속 CB 100%**였다.
+        #   복제 성과에 미친 크기: 버크셔 CAGR 15.19% → 11.15%(4.04%p).
+        #   더 나쁜 것은 방향이다 — /A 로 늦게 공개된 포지션은 리밸런스 시점에 시장이 몰랐던 것이라
+        #   그걸 100% 비중으로 잡으면 확정적 룩어헤드다(실측 리밸 후 3개월 +3.42%p, 18셀 중 13셀 양수).
+        #   원본만 쓰면 '그때 공개돼 있던 것'이 되어 이 문제가 정의상 사라진다.
+        #   ※ 벌크 경로(refresh_13f.py)는 RESTATEMENT 를 교체 적용하는데, 그쪽은 '지금 시점의 정확한
+        #     잔고'를 만드는 화면용이라 규약이 다른 것이 맞다. 여기는 백테스트 입력이다.
+        best, filed, n_amend = {}, {}, 0
+        for rd, fdate, acc, form in sorted(fl):
+            if form != "13F-HR":
+                n_amend += 1
+                continue
+            if rd not in best or fdate >= filed.get(rd, ""):
+                best[rd], filed[rd] = acc, fdate
         qs = sorted(best)[-nq:] if nq else sorted(best)
         got = 0
         for rd in qs:
@@ -150,9 +182,11 @@ def main() -> int:
                     m[t] = m.get(t, 0.0) + val
             if m:
                 hist.setdefault(rd, {})[str(cik)] = m
+                fdates.setdefault(rd, {})[str(cik)] = filed.get(rd) or ""
                 got += 1
         names[str(cik)] = label
         cover[str(cik)] = {"name": label, "n_q": got, "n_filings": len(best),
+                           "n_amend_skipped": n_amend,
                            "last": (sorted(best)[-1] if best else None)}
         print("  %-28s 분기 %d/%d%s"
               % (label, got, len(qs),
@@ -194,6 +228,9 @@ def main() -> int:
         "as_of": qs[-1] if qs else None,
         "n_quarters": len(qs), "n_managers": len(names),
         "quarters": qs, "names": names, "holdings": hist, "coverage": cover,
+        # 공시일 — {분기: {cik: "YYYY-MM-DD"}}. 백테스트는 이 날짜가 리밸런스일보다
+        # 앞서는지 반드시 확인해야 한다. 없으면 룩어헤드 여부를 물을 수조차 없다.
+        "filed": fdates,
         "months": months, "mpx": mpx,
         "empty_managers": [v["name"] for v in cover.values() if v["n_q"] == 0],
         "limits": [
@@ -203,7 +240,15 @@ def main() -> int:
             "이 데이터로 만든 '복제'는 운용사의 실제 포트폴리오가 아니다.",
             "분기말 잔고를 45일 뒤에 제출한다. 복제는 그 지연을 반드시 반영해야 한다 — "
             "안 하면 있지도 않은 정보를 쓰는 것이 된다.",
-            "우리 유니버스(518종목) 안의 보유만 남긴다. 유니버스 밖 종목은 가격이 없어 못 돌린다.",
+            "우리 유니버스(518종목) 안의 보유만 남긴다. 유니버스 밖 종목은 가격이 없어 못 돌린다. "
+            "그래서 이 파일로는 '유니버스 밖에 얼마가 있었나'라는 분모를 알 수 없고, 겹침 비율의 "
+            "시계열도 산출할 수 없다.",
+            "**원본 13F-HR만 쓰고 수정보고(13F-HR/A)는 버린다.** 기밀취급 해제형 수정보고가 "
+            "포트폴리오 전체를 덮어써 오염되던 것을 막기 위해서다. 대신 나중에 정정된 내용은 "
+            "반영되지 않는다 — 백테스트에는 이쪽이 맞고(그때 공개된 것), 현재 잔고를 보려면 "
+            "벌크 경로(refresh_13f.py)의 guru.json 을 볼 것.",
+            "콜/풋은 제외한다(putCall 태그). 옵션 노셔널을 보통주 비중으로 섞으면 방향이 "
+            "반대인 포지션을 롱으로 복제하게 된다.",
         ],
     }
     def _d(o_):
