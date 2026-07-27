@@ -40,6 +40,12 @@ def rd(p): return io.open(os.path.join(ROOT, p), encoding="utf-8").read()
 #   평문을 고치면 반드시 재암호화·재배포까지 한 세트로 할 것.
 PLAINDIR = os.path.join(ROOT, "_build", "pages")
 skips, _skipseen = [], set()
+# 건너뜀은 사유가 두 갈래다. 섞어 세면 안 된다 —
+#   skips      : 평문 사본(_build/pages) 부재. 이 PC에서 사본을 채우면 사라진다 → 평문 필수 모드의 대상.
+#   tool_skips : 검사 도구(node 등) 부재. 사본과 무관하고 사본을 채워도 사라지지 않는다.
+# 예전엔 한 통에 담아 평문 필수 모드가 'node 없음' 23건까지 평문 부재로 승격시켰다.
+# 그 결과 이 PC(node 미설치)에서는 일일잡이 매일 exit 7 로 죽었다(2026-07-22~27 실측).
+tool_skips = []
 
 
 def is_locked(txt):
@@ -147,8 +153,8 @@ def js_checks(label, html):
             errors.append(_e)
     else:
         _noskip = f"{label}: 인라인 JS 문법 검사(node 없음)"
-        if _noskip not in skips:
-            skips.append(_noskip)
+        if _noskip not in tool_skips:
+            tool_skips.append(_noskip)
 
     known = set(BUILTIN)
     for pat in DEFPAT:
@@ -1295,12 +1301,17 @@ try:
 except Exception as e:
     errors.append(f"자물쇠 표기 검증 실패: {e}")
 
-# 평문 필수 모드: 일일잡이 도는 운영 PC에서는 SKIP=실패로 승격(사본 소실이 무경보 강등으로 이어지지 않게)
+# 평문 필수 모드: 일일잡이 도는 운영 PC에서는 SKIP=실패로 승격(사본 소실이 무경보 강등으로 이어지지 않게).
+# 단, 승격 대상은 **평문 부재(skips)만**이다. 도구 부재(tool_skips)는 사본을 채워도 안 사라지므로
+# 여기서 죽이면 잡이 영구히 실패한다 — 대신 아래에서 계속 눈에 띄게 경고한다.
 if skips and os.environ.get("VALIDATE_REQUIRE_PLAINTEXT") == "1":
-    errors.append(f"평문 필수 모드인데 {len(skips)}개 검사가 SKIP됨 — 이 머신에서는 _build/pages 전체 검증이 계약이다")
+    errors.append(f"평문 필수 모드인데 평문 부재로 {len(skips)}개 검사가 SKIP됨 — 이 머신에서는 _build/pages 전체 검증이 계약이다")
 if skips:
     print(f"⚠ 잠금 페이지 평문 부재(_build/pages/) — {len(skips)}개 검사 건너뜀(통과가 아니라 미검증이다. 평문 있는 곳에서 검증할 것):")
     for s in sorted(skips): print("  ~", s)
+if tool_skips:
+    print(f"⚠ 검사 도구 부재 — {len(tool_skips)}개 검사 건너뜀(미검증이다. node 를 설치하면 되살아난다. CI 에서는 이미 오류로 잡는다):")
+    for s in sorted(tool_skips): print("  ~", s)
 # ── 갱신 주기 라벨: 워크플로 cron이 단일 출처인가 ──────────────────────────
 #   손으로 적던 시절 cron을 바꿔도 라벨이 안 따라와 전면적으로 어긋나 있었다(2026-07-25 실측:
 #   SEC 공시 10:15↔실제 08:45, 13F 12:15↔09:25, 없어진 백업 크론 '08:35 + 09:10' 표기 등).
