@@ -997,18 +997,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var CAL={e:null,c:null,i:null};
   var DOW=['월','화','수','목','금'];
   function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
-  // ── 캘린더 주목도(★)와 FOMC — FRED가 주지 않는 두 가지 ─────────────────────
-  //   ★는 시장이 어느 발표에 더 크게 반응하는지 이 랩이 매긴 주관적 눈금이며 검증된 신호가 아니다
-  //   (칸이 좁아 무엇부터 볼지 고르는 용도). 이름은 home_flow.json 의 표기와 정확히 맞출 것.
-  var MSTAR={'FOMC 금리결정':4,'고용보고서':4,'소비자물가(CPI)':4,
-             '개인소득·지출(PCE)':3,'생산자물가(PPI)':3,'소매판매':3,
-             '구인·이직(JOLTS)':2,'소비자심리(미시간대)':2,'주택착공·허가':2,
-             '주택가격(케이스실러)':2,'산업생산':2,
-             '주간 실업수당 청구':1,'시카고연준 경기지수':1,'통화량 M2':1,'삼의 법칙(침체 신호)':1};
-  //   FOMC 일정은 FRED에 없다('데이터 릴리스'만 준다). 연준 공표 결정일(회의 2일차).
-  var CALFOMC=['2026-01-28','2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16',
-               '2026-10-28','2026-12-09','2027-01-27','2027-03-17','2027-04-28','2027-06-09',
-               '2027-07-28','2027-09-15','2027-10-27','2027-12-08'];
+  // ── 캘린더 주목도(★)와 FOMC — 정본은 data/events.json ────────────────────
+  //   FRED는 FOMC 일정도 주목도도 주지 않는다. 그 둘만 build/refresh_events.py가 한 곳에서
+  //   관리하고 여기선 읽기만 한다(예전엔 PDF·calendar.html·홈 세 곳에 날짜가 복제돼 있었다).
+  //   못 읽으면 별·FOMC 없이 그대로 그린다 — 캘린더 본체는 영향받지 않는다.
+  var MSTAR={}, CALFOMC=[], FOMCNM={};
+  function nk(s){return String(s||'').replace(/\s+/g,'');}   // 공백 표기 차이 흡수
+  function starOfName(n){return MSTAR[nk(n)]||0;}
 
   function renderCal(){
     var box=el('wk-cal-grid'); if(!box)return;
@@ -1030,14 +1025,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         .map(function(z){return z[0];});
     });
     ((c&&c.rows)||[]).forEach(function(x){(M[x.d]=M[x.d]||[]).push(x.n);});
-    // FRED에 없는 FOMC를 표시 단계에서 얹는다(데이터 정본 home_flow.json은 건드리지 않는다).
-    //   연준이 미리 공표한 결정일(회의 2일차). 출처 federalreserve.gov · 2027은 잠정.
+    // FRED에 없는 FOMC를 표시 단계에서 얹는다(정본 data/events.json, home_flow.json은 불변).
     CALFOMC.forEach(function(d){
-      if((M[d]||[]).indexOf('FOMC 금리결정')<0)(M[d]=M[d]||[]).push('FOMC 금리결정');
+      var nm=FOMCNM[d]||'FOMC 금리결정';
+      if((M[d]||[]).indexOf(nm)<0)(M[d]=M[d]||[]).push(nm);
     });
     // 칸이 좁다 — 주목도 높은 것부터 보이게 정렬한다
     Object.keys(M).forEach(function(k){
-      M[k].sort(function(a,b){return (MSTAR[b]||0)-(MSTAR[a]||0);});
+      M[k].sort(function(a,b){return starOfName(b)-starOfName(a);});
     });
     // 기준일이 낀 주의 월요일부터 4주
     var start=new Date(t0); start.setDate(start.getDate()-((start.getDay()+6)%7));
@@ -1076,7 +1071,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             return out;
           })()+
           (mc.length?'<div class="calmac">'+mc.map(function(n){
-              var s=MSTAR[n]||0;
+              var s=starOfName(n);
               return '<b'+(s>=4?' class="hi"':'')+'>'+esc(n)+
                      (s?'<i class="st'+(s>=4?' hi':'')+'">'+new Array(s+1).join('★')+'</i>':'')+'</b>';
             }).join('<span class="sep"> · </span>')+'</div>':'')+
@@ -1093,7 +1088,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('wk-sub').textContent='· 이 4주 실적 '+shownE+'건 · 주요 지표·이벤트 '+shownM+'건 · 기준 '+base;
   }
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
-  fetch('data/home_flow.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  // 캘린더 이벤트·주목도 정본을 먼저 읽고(없어도 진행) 홈 묶음을 읽는다.
+  fetch('data/events.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;})
+    .then(function(ev){
+      if(ev){
+        var bn=(ev.stars&&ev.stars.by_name)||{};
+        Object.keys(bn).forEach(function(k){MSTAR[nk(k)]=bn[k];});
+        (ev.fomc||[]).forEach(function(f){
+          if(!f||!f.d)return; CALFOMC.push(f.d); FOMCNM[f.d]=f.name||'FOMC 금리결정';
+        });
+      }
+      return fetch('data/home_flow.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;});
+    })
     .then(function(hf){
       var HF=hf||{};
       if(hf&&hf.earnings){CAL.e={as_of:hf.earnings.as_of,upcoming:hf.earnings.rows||[]};}
