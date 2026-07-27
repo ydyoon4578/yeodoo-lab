@@ -294,6 +294,18 @@ FUND_SLIM = ("ps", "pb", "pm", "roe", "rg", "de", "dy", "mc", "fcfy", "beta")  #
 FUND_PCT_DROP_NEG = ("fpe", "pb", "eveb")   # 음수가 '가장 싼 종목'으로 둔갑하는 부호 오독만 차단(값은 표시·삭제 안 함)
 FUND_NO_SECTOR = ("mc",)                    # 섹터 퍼센타일 미제공(섹터 간 차이 1%)
 FUND_SECT_MIN = 15                          # (섹터,지표) 유효 표본이 이 미만이면 섹터 퍼센타일 생략
+def _yf_sym(t: str) -> str:
+    """지수 표기 → yfinance 표기. 클래스주는 점이 아니라 하이픈이다(BRK.B → BRK-B).
+
+    ⚠ **가격·펀더멘털 어느 쪽이든 yfinance에 넘기기 전에 반드시 통과시킬 것.**
+      전에는 가격 다운로드 안에만 같은 변환이 있었고 fetch_fund는 원본 티커를 그대로 넘겼다.
+      그래서 BRK.B·BF.B가 가격은 정상인데 시가총액·PSR 등 재무가 통째로 비어 있었다
+      (yf.Ticker("BRK.B").info는 예외도 안 내고 빈 dict를 준다 — 조용히 실패한다).
+      같은 변환을 두 벌 두면 한쪽만 고쳐지므로 여기 한 곳에만 둔다.
+    """
+    return t.replace(".", "-")
+
+
 FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")  # 필드 단위 완전성 게이트 대상(정상 커버 99~100%)
 FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이 %p 이상 급락하면 중단
 
@@ -427,7 +439,7 @@ def fetch_fund(t, retries=3):
     rec = None
     for attempt in range(retries):
         try:
-            info = yf.Ticker(t).info
+            info = yf.Ticker(_yf_sym(t)).info   # ⚠ 점 표기를 그대로 넘기면 빈 dict가 온다(BRK.B 사고)
             rec = {"teps": info.get("trailingEps"), "feps": info.get("forwardEps"),
                    "tpe": info.get("trailingPE"), "fpe": info.get("forwardPE"),
                    "float": info.get("floatShares") or info.get("sharesOutstanding"),
@@ -576,9 +588,7 @@ def main():
     partial = {}          # {티커: 관측일수} — 부분 편입(단기 지표만)
     dropped = {}          # {티커: (사유, 관측일수)} — 조용히 빠지면 아무도 모른다(실측: 6종목 실종)
     allt = tickers + ["SPY"]
-    # yfinance는 클래스 구분에 하이픈을 쓴다(BRK.B → BRK-B). 점 표기를 그대로 넘기면 조용히 0행이 와서
-    # 버크셔·브라운포먼처럼 큰 종목이 통째로 빠진다 — 실제로 빠져 있었다.
-    def _yf(t): return t.replace(".", "-")
+    _yf = _yf_sym    # 모듈 상단 정의를 쓴다(같은 변환이 두 벌이면 한쪽만 고쳐지는 사고가 난다)
     # 배치 재시도 — Yahoo가 러너 IP에 401(Invalid Crumb)/429/5xx를 던지면 그 배치가 통째로,
     # 또는 일부 종목만 짧게 돌아온다. 한 번 실패하면 그대로 진행하던 것이 2026-07-27 사고의
     # 앞단이었다(확정 스윙 타점 15231→8791). 실패·빈 응답이면 쉬었다 다시 받는다.

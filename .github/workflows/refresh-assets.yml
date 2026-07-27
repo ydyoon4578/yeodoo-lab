@@ -5,7 +5,7 @@ name: Refresh asset panel & archive re-check
 # 왜 주 1회인가 — 입력이 일봉이고 표본이 15~19년이라 하루로는 판정이 안 바뀐다.
 #   결과가 같으면 커밋도 안 생긴다.
 #
-# 무게 — yfinance 50종목 20년 + FRED 15계열. 실측 약 2분.
+# 무게 — yfinance 50종목 20년 + FRED 18계열. 실측 약 2분.
 
 on:
   schedule:
@@ -53,6 +53,10 @@ jobs:
       # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
       - name: Rebuild lab charts
         run: python build/strategy_charts.py
+      # 다기간 성과 보드(섹터·스타일·금리·크레딧) — 자산 패널에서 계산한다.
+      # 패널이 갱신됐는데 이걸 빠뜨리면 보드만 지난주 숫자를 말하고 아무도 알려주지 않는다.
+      - name: Rebuild market board
+        run: python build/market_board.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -61,6 +65,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 자산 패널·아카이브 재검 자동 갱신" \
             data/assets.json data/asset_strategies.json data/ml_strategies.json \
-            data/guru_history.json data/strategy_index.json data/strategy_charts.json data/asof.json
+            data/guru_history.json data/strategy_index.json data/strategy_charts.json \
+            data/market_board.json data/asof.json
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10

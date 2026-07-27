@@ -102,6 +102,15 @@
   table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:620px}
   /* 표 설명은 <caption>이 아니라 표 밖에 둔다 — caption은 표 최소폭을 따라가 모바일에서 가로로 밀린다 */
   .capn{margin:0 0 8px;font-size:11.5px;color:var(--muted);line-height:1.6;max-width:88ch}
+  /* 다기간 성과 보드 — 이 페이지 기존 표(레짐 조건부)와 구분되게 고정폭·우측정렬로 둔다 */
+  .lbl2{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);margin:14px 0 7px}
+  table.mb{font-family:var(--mono);font-size:12px;min-width:660px;font-variant-numeric:tabular-nums}
+  table.mb th,table.mb td{padding:6px 9px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line-soft)}
+  table.mb thead th{font-size:10px;color:var(--ink-2);font-weight:700;border-bottom:1px solid var(--line);vertical-align:bottom}
+  table.mb tbody th{text-align:left;font-weight:700;color:var(--ink)}
+  table.mb tbody th .u,table.mb thead th .u{display:block;font-weight:400;color:var(--muted);font-size:9px;letter-spacing:.04em}
+  table.mb tbody tr:last-child th,table.mb tbody tr:last-child td{border-bottom:0}
+  table.mb tbody tr:hover td{box-shadow:inset 0 0 0 9999px rgba(128,128,128,.05)}
   th,td{padding:8px 11px;border-bottom:1px solid var(--line-soft);text-align:right;vertical-align:top}
   thead th{position:sticky;top:0;background:var(--panel);font-family:var(--mono);font-size:10px;font-weight:700;
            letter-spacing:.05em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line);z-index:1}
@@ -577,7 +586,83 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       "이 레짐에서는 무엇을 사라"로 읽지 마세요.</p>
     <div id="astwrap"><div class="skel">불러오는 중…</div></div>
     <div id="holdwrap"></div>
+
+    <!-- 위는 '과거 같은 국면의 평균', 아래는 '지금 실제로 얼마나 갔나'. 둘을 나란히 둔다 —
+         조건부 평균만 있으면 "그래서 지금은?"에 답할 수 없고, 현재 성과만 있으면 추종으로 읽힌다. -->
+    <h3 class="lbl" id="nowperf-h" style="margin-top:34px">지금까지의 성과 <span class="sub">· 스타일·금리·크레딧 · 기간별</span></h3>
+    <p class="lblnote">위 표가 <b>과거 조건부 평균</b>이라면 이 표는 <b>실제 최근 성과</b>입니다.
+      스타일은 팩터 ETF 수익률(%), 금리는 만기별 <b>변화폭(bp)</b>입니다 — 금리는 수익률이 아니라서 칸을 나눴습니다.
+      <b>최근 잘 나간 스타일을 따라 사라는 뜻이 아닙니다</b> — 이 랩은 그 추종(팩터 모멘텀)을 검정해
+      <a href="explorer.html">자기 대조군과 구별되지 않는다</a>고 판정했습니다.</p>
+    <div id="nowperf"><div class="skel">불러오는 중…</div></div>
   </section>
+<script>
+/* 스타일·금리·크레딧 다기간 보드 — data/market_board.json(build/market_board.py)만 읽는다.
+   이 페이지의 다른 블록(regime.json 기반)과 **독립**이다: 한쪽이 늦어도 다른 쪽은 그려진다. */
+(function(){
+  var box=document.getElementById('nowperf'); if(!box)return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var C=[['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],['12M','12개월'],['YTD','YTD']];
+  function pct(v){
+    if(v==null)return '<td>—</td>';
+    var m=Math.min(1,Math.abs(v)/15), c=v>=0?'14,138,84':'166,75,59';
+    return '<td style="background:rgba('+c+','+(m*0.30).toFixed(3)+');color:'+
+      (v>=0?'var(--good)':'var(--hot)')+'">'+(v>0?'+':'')+v.toFixed(1)+'</td>';
+  }
+  function bpc(v){
+    if(v==null)return '<td>—</td>';
+    // 금리는 오르는 게 좋다/나쁘다가 아니다 — 색을 주지 않고 부호만 읽힌다.
+    return '<td>'+(v>0?'+':'')+v+'</td>';
+  }
+  function tbl(title, head3, rows, render, tail){
+    return '<p class="lbl2" style="margin-top:16px">'+title+'</p><div class="tblwrap"><table class="mb">'+
+      '<thead><tr><th scope="col">'+head3+'</th>'+
+      C.map(function(c){return '<th scope="col">'+c[1]+'</th>';}).join('')+tail+'</tr></thead><tbody>'+
+      rows.map(render).join('')+'</tbody></table></div>';
+  }
+  fetch('data/market_board.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+    if(!d){box.innerHTML='<div class="skel">성과 보드를 불러오지 못했습니다.</div>';return;}
+    var h='';
+    if(d.style&&d.style.length)
+      h+=tbl('가. 투자 스타일 <span style="font-weight:400;color:var(--muted)">— 수익률 %, 52H=1년 고점 대비, RSI=Wilder(14)</span>',
+        '스타일<span class="u">ETF</span>', d.style, function(x){
+        return '<tr><th scope="row">'+esc(x.n)+'<span class="u">'+esc(x.t)+'</span></th>'+
+          C.map(function(c){return pct(x.r[c[0]]);}).join('')+
+          '<td>'+(x.off52==null?'—':x.off52.toFixed(0))+'</td><td>'+(x.rsi==null?'—':x.rsi.toFixed(0))+'</td></tr>';
+      }, '<th scope="col">52H</th><th scope="col">RSI</th>');
+    var T=(d.rates||{}).tenor||[];
+    if(T.length)
+      h+=tbl('나. 국채 수익률곡선 <span style="font-weight:400;color:var(--muted)">— 레벨 %, 변화 bp(+는 금리 상승=채권 가격 하락)</span>',
+        '만기<span class="u">FRED</span>', T, function(x){
+        return '<tr><th scope="row">'+esc(x.n)+'<span class="u">'+esc(x.t)+'</span></th>'+
+          C.map(function(c){return bpc(x.bp[c[0]]);}).join('')+
+          '<td style="font-weight:700;color:var(--ink)">'+x.lv.toFixed(2)+'</td></tr>';
+      }, '<th scope="col">현재 %</th>');
+    if(d.credit&&d.credit.length)
+      h+=tbl('다. 크레딧·물가연동 <span style="font-weight:400;color:var(--muted)">— 수익률 %</span>',
+        '자산<span class="u">ETF</span>', d.credit, function(x){
+        return '<tr><th scope="row">'+esc(x.n)+'<span class="u">'+esc(x.t)+'</span></th>'+
+          C.map(function(c){return pct(x.r[c[0]]);}).join('')+
+          '<td>'+(x.off52==null?'—':x.off52.toFixed(0))+'</td><td>'+(x.rsi==null?'—':x.rsi.toFixed(0))+'</td></tr>';
+      }, '<th scope="col">52H</th><th scope="col">RSI</th>');
+    var cv=(d.rates||{}).curve||{}, ra=(d.rates||{}).as_of;
+    var sp=[];
+    if(cv.s10_2!=null)sp.push('10년−2년 <b>'+(cv.s10_2>0?'+':'')+cv.s10_2+'bp</b>');
+    if(cv.s10_3m!=null)sp.push('10년−3개월 <b>'+(cv.s10_3m>0?'+':'')+cv.s10_3m+'bp</b>');
+    h+='<p class="lblnote" style="margin-top:10px">기준일 <b>'+esc(d.as_of||'—')+'</b> · 주 1회 갱신'+
+       // 금리는 FRED가 T-1로 게시해 가격보다 하루 늦다. 같은 날인 척하지 않는다.
+       (ra&&ra!==d.as_of?' · <b>금리는 '+esc(ra)+'</b>(FRED 국채는 하루 늦게 게시됩니다)':'')+
+       (sp.length?' · 커브 '+sp.join(' · '):'')+'</p>'+
+       '<p class="lblnote">가격은 yfinance 배당 재투자 종가, 금리는 FRED 만기수익률입니다. '+
+       '기간은 <b>달력일 기준</b>(1주=7일 전 이하 마지막 거래일)이라, 거래일로 세는 종목 화면의 수치와 조금 다릅니다. '+
+       '<b>52H는 종가 기준</b> 1년 고점 대비입니다(장중 고가를 쓰지 않습니다). '+
+       'ETF마다 상장 시점이 달라 12개월·YTD가 없을 수 있고, 1년치가 안 되면 52H를 비웁니다.</p>';
+    box.innerHTML=h;
+  })['catch'](function(){box.innerHTML='<div class="skel">성과 보드를 불러오지 못했습니다.</div>';});
+})();
+</script>
 
   <!-- ── 04 밸류에이션(지수) ────────────────────────────────────────── -->
   <section id="val" aria-labelledby="val-h">
