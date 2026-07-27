@@ -198,6 +198,9 @@
      칸이 좁으므로 라벨은 최소 폭으로 두고 줄바꿈되지 않게 고정한다. */
   .calhl{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:-.02em;
          flex:none;white-space:nowrap;opacity:.85}
+  /* 한국시간 툴팁이 붙는 라벨 — ::after를 이 span 기준으로 띄우려면 relative가 필요하다.
+     점선 밑줄로 '올려볼 것이 있다'를 알린다(색만으로는 눌러야 하는지 알 수 없다). */
+  .calhl.tip{position:relative;cursor:help;text-decoration:underline dotted;text-underline-offset:2px}
   .calhl.bmo{color:var(--bmo)} .calhl.amc{color:var(--amc)} .calhl.tba{color:var(--muted)}
   .calmac{font-size:10.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line-soft);padding-top:5px;margin-top:auto}
   .calmac b{color:var(--ink-2);font-weight:600}
@@ -210,6 +213,9 @@
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
   .callegend .lgc{margin-right:4px;pointer-events:none}
+  /* 범례의 한국시간 꼬리표 — 날짜마다 서머타임이 갈리므로 여기선 시각을 적지 않고
+     '언제쯤인지'만 적는다. 정확한 시각은 각 라벨 툴팁에서 날짜별로 계산한다. */
+  .callegend b.lgk{font-weight:600;color:var(--ink-2)}
   .callegend .lgn{margin-left:auto}
 
   /* 티커 툴팁 — hover와 focus 둘 다에 뜬다. 모바일엔 hover가 없어 탭(focus)으로도 열려야 한다. */
@@ -687,12 +693,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <p class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub">· 실적 발표와 지표 일정</span></p>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
-        <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
-        <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
+        <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표 <b class="lgk">한국 그날 밤</b></span>
+        <span><span class="tk2 amc lgc">AAPL</span> 장후 발표 <b class="lgk">한국 다음날 새벽</b></span>
         <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
         <span><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
-        <span class="lgn">하루 안에서는 장전 → 장후 → 미공개 순, 같은 시각끼리는 시가총액 큰 순 · 티커에 커서를 올리거나 누르면 회사 이름</span>
+        <span class="lgn">하루 안에서는 장전 → 장후 → 미공개 순, 같은 시각끼리는 시가총액 큰 순 · 티커나 장전·장후 라벨에 커서를 올리면 회사 이름과 한국시간</span>
       </div>
     </section>
 
@@ -1001,6 +1007,36 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var CAL={e:null,c:null,i:null};
   var DOW=['월','화','수','목','금'];
   function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  // ── 장전·장후를 한국시간으로 옮긴다 ────────────────────────────────────────
+  //   출처(Finnhub)는 정확한 시각을 주지 않는다 — 장전/장후 범주뿐이다. 그래서 시각을
+  //   지어내지 않고, 그 범주가 뜻하는 '개장 전/폐장 후'의 경계만 한국시간으로 환산한다.
+  //   장후가 한국에선 **다음날 새벽**이라는 게 화면에서 안 보였다. 그것만 알려주면 된다.
+  //   서머타임 때문에 경계가 한 시간 밀리므로(11월 첫 일요일) 날짜마다 실제 오프셋을
+  //   묻는다 — 상수로 박으면 겨울 일정이 한 시간씩 틀어진다.
+  function etOffset(y,m,d){
+    try{
+      var inst=new Date(Date.UTC(y,m-1,d,17,0,0));   // 그날 정오 무렵의 ET
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,
+        year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      var p={}; f.formatToParts(inst).forEach(function(x){p[x.type]=x.value;});
+      var asUTC=Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute);
+      return Math.round((asUTC-inst.getTime())/3600000);   // EDT -4 · EST -5
+    }catch(e){ return -4; }
+  }
+  // ET 벽시계(hh:mm) → KST 벽시계. 반환값은 getUTC*로 읽는다.
+  function etToKst(dtStr,hh,mm){
+    var p=String(dtStr).split('-'); if(p.length!==3) return null;
+    var y=+p[0],mo=+p[1],da=+p[2];
+    var off=etOffset(y,mo,da);
+    return new Date(Date.UTC(y,mo-1,da,hh,mm)-off*3600000+9*3600000);
+  }
+  // 장전 → "한국 7/28 22:30 이전" · 장후 → "한국 7/29 05:00 이후"
+  function kstNote(dtStr,hour){
+    var k=(hour==='장전')?etToKst(dtStr,9,30):(hour==='장후'?etToKst(dtStr,16,0):null);
+    if(!k)return '';
+    var hm=('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2);
+    return '한국 '+(k.getUTCMonth()+1)+'/'+k.getUTCDate()+' '+hm+(hour==='장전'?' 이전':' 이후');
+  }
   // ── 캘린더 주목도(★)와 FOMC — 정본은 data/events.json ────────────────────
   //   FRED는 FOMC 일정도 주목도도 주지 않는다. 그 둘만 build/refresh_events.py가 한 곳에서
   //   관리하고 여기선 읽기만 한다(예전엔 PDF·calendar.html·홈 세 곳에 날짜가 복제돼 있었다).
@@ -1067,11 +1103,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var list=ev.filter(function(x){
                 return g[0]==='미공개'?!(x.hour==='장전'||x.hour==='장후'):x.hour===g[0];});
               if(!list.length)return;
-              out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
+              var kn=kstNote(k,g[0]);   // 미공개는 빈 문자열 — 툴팁을 달지 않는다
+              out+='<div class="caltk"><span class="calhl '+g[1]+(kn?' tip':'')+'"'+
+                   (kn?' data-nm="'+esc(kn)+'"':'')+'>'+g[0]+'</span>'+
                 list.slice(0,PER).map(function(x){
                   var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
                   return '<a class="tk2 '+g[1]+'" href="co.html?t='+encodeURIComponent(x.t)+'#est'+
-                         '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):' · 시각 미공개')+esc(mc)+'">'+esc(x.t)+'</a>';
+                         '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):' · 시각 미공개')+
+                         (function(){var z=kstNote(k,x.hour);return z?' ('+esc(z)+')':'';})()+
+                         esc(mc)+'">'+esc(x.t)+'</a>';
                 }).join('')+
                 (list.length>PER?'<span class="cnt">+'+(list.length-PER)+'</span>':'')+'</div>';
             });

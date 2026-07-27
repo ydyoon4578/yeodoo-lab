@@ -105,6 +105,9 @@
   .eev .eh.bmo{color:var(--bmo);border-color:color-mix(in srgb,var(--bmo) 40%,transparent)}
   .eev .eh.amc{color:var(--amc);border-color:color-mix(in srgb,var(--amc) 40%,transparent)}
   .eev .es2{grid-column:2/-1;font-size:11px;color:var(--muted);margin-top:1px}
+  /* 한국시간 환산 — 미국 동부 기준을 옮긴 값이라 섹터·분기보다 눈에 띄어야 한다.
+     장후가 한국에선 다음날 새벽이라는 게 이 줄의 핵심이다. */
+  .eev .es2 b.ekst{font-weight:600;color:var(--ink-2)}
   .ev{display:grid;grid-template-columns:74px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
   .ev .ek{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:6px;padding:1px 0;text-align:center}
   .ev .en{font-size:13px;color:var(--ink)}
@@ -499,7 +502,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <section id="earnings" aria-labelledby="e-h" hidden>
     <p class="lbl" id="e-h">실적 발표 일정 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)" id="ecov"></span></p>
     <p class="lblnote">앞으로 <b id="e-fwd">—</b>일치. 유니버스 <b id="e-uni">—</b>종목 중 <b id="e-hit">—</b>종목의 예정일이 잡힙니다.
-      날짜별로 묶었고, <b>장전·장후</b>와 <b>컨센서스 EPS</b>를 함께 싣습니다. 티커를 누르면 종목 화면으로 갑니다.</p>
+      날짜별로 묶었고, <b>장전·장후</b>와 <b>컨센서스 EPS</b>를 함께 싣습니다. 티커를 누르면 종목 화면으로 갑니다.
+      날짜는 미국 동부 기준이라, 각 줄에 <b>한국시간</b>을 함께 적었습니다 — 장후 발표는 한국에서 <b>다음날 새벽</b>입니다.
+      출처가 주는 것은 장전·장후 구분까지이고 분 단위 발표 시각은 제공되지 않아, 개장 전·폐장 후의 경계를 옮긴 값입니다.</p>
 
     <div class="note">
       <b>이 칸은 오래 비어 있었습니다.</b> 실적 <u>예정일</u>은 SEC에 없기 때문입니다 — SEC는 8-K Item 2.02로
@@ -533,6 +538,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 (function(){
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // ── 장전·장후 → 한국시간 (홈 index.html과 같은 규칙) ──────────────────────
+  //   출처(Finnhub)는 정확한 시각을 주지 않는다 — 범주뿐이다. 시각을 지어내지 않고
+  //   '개장 전/폐장 후' 경계만 옮긴다. 서머타임에 경계가 한 시간 밀리므로 날짜마다 묻는다.
+  function etOffset(y,m,d){
+    try{
+      var inst=new Date(Date.UTC(y,m-1,d,17,0,0));
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour12:false,
+        year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+      var p={}; f.formatToParts(inst).forEach(function(x){p[x.type]=x.value;});
+      return Math.round((Date.UTC(+p.year,+p.month-1,+p.day,(+p.hour)%24,+p.minute)-inst.getTime())/3600000);
+    }catch(e){ return -4; }
+  }
+  function kstNote(dtStr,hour){
+    var p=String(dtStr).split('-'); if(p.length!==3) return '';
+    var hh=(hour==='장전')?9:(hour==='장후'?16:-1), mm=(hour==='장전')?30:0;
+    if(hh<0) return '';
+    var y=+p[0],mo=+p[1],da=+p[2];
+    var k=new Date(Date.UTC(y,mo-1,da,hh,mm)-etOffset(y,mo,da)*3600000+9*3600000);
+    return '한국 '+(k.getUTCMonth()+1)+'/'+k.getUTCDate()+' '+
+           ('0'+k.getUTCHours()).slice(-2)+':'+('0'+k.getUTCMinutes()).slice(-2)+
+           (hour==='장전'?' 이전':' 이후');
+  }
   var D=null, sel={}, showPast=false;
 
   var VIEWS=['macro','earnings'];
@@ -578,7 +605,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            '<a class="et" href="co.html?t='+encodeURIComponent(z.t)+'">'+esc(z.t)+'</a>'+
            '<div class="en">'+(z.hour?'<span class="eh'+(z.hour==='장전'?' bmo':(z.hour==='장후'?' amc':''))+'">'+esc(z.hour)+'</span>':'')+esc(z.n)+'</div>'+
            '<div class="em">'+est+'</div>'+
-           (z.s?'<div class="es2">'+esc(z.s)+(z.q?' · '+esc(String(z.y))+'년 '+esc(String(z.q))+'분기':'')+'</div>':'')+
+           // 아랫줄 — 섹터·분기에 한국시간 환산을 잇는다. 셋 중 하나만 있어도 줄을 낸다
+           // (예전엔 섹터가 없으면 줄 자체가 사라져 한국시간도 같이 묻혔다).
+           (function(){
+             var bits=[];
+             if(z.s) bits.push(esc(z.s));
+             if(z.q) bits.push(esc(String(z.y))+'년 '+esc(String(z.q))+'분기');
+             var kn=kstNote(d,z.hour);
+             if(kn) bits.push('<b class="ekst">'+esc(kn)+'</b>');
+             return bits.length?'<div class="es2">'+bits.join(' · ')+'</div>':'';
+           })()+
            '</div>';
       });
       h+='</div>';
