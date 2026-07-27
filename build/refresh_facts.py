@@ -552,8 +552,11 @@ def main() -> int:
             n_del += 1
 
     # 가장 최근 관측일을 기준일로 삼는다(회사가 안 내면 안 움직인다 — 공시 축과 같은 성격)
+    # ⚠ 예전엔 got[:80]만 훑었다. got 은 stocks.json 순서라 표본 밖 종목이 더 최근 기간을
+    #    보고하면 기준일이 조용히 과거로 찍힌다 — 실제로 SNA(순번 227)가 2026-07-04 을
+    #    보고했는데 화면은 2026-06-30 으로 4일 이르게 나왔다. 전수로 훑는다(515종·수 초).
     last = ""
-    for t in got[:80]:
+    for t in got:
         try:
             d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
         except Exception:
