@@ -167,6 +167,10 @@
   .fcell{padding:10px 12px;background:var(--panel-2);border-radius:9px}
   .fcell .fcl{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
   .fcell .fcv{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);margin-top:3px}
+  .fcell .fcv.na{color:var(--muted);font-weight:400}
+  .snapchips{margin:12px 0 0;display:flex;flex-wrap:wrap;gap:5px}
+  .snapchips .chip{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--ink-2);
+                   background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px}
   .fcell.flag{background:color-mix(in srgb,var(--hot) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 30%,transparent) inset}
 
   /* 경고는 숫자 바로 옆(아래) — 접지 않는다 */
@@ -607,10 +611,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        정반대가 된다. 탭 전환은 body 끝 스크립트의 showTab()이 동기로 잡는다(hidden은 런타임에만 건다). -->
   <section id="fs" class="panel" aria-labelledby="fs-h">
     <p class="lbl" id="fs-h">재무제표 <span class="sub">출처 SEC EDGAR companyfacts (XBRL) · 회사가 태깅한 값 그대로</span></p>
-    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/fx/&lt;티커&gt;.json</code>에서 읽습니다.
+    <details class="more"><summary>읽는 법 · 단위</summary><div class="mbody">종목별 <code>data/fx/&lt;티커&gt;.json</code>에서 읽습니다.
       랩이 조정·재분류하지 않습니다. 항목마다 <b>어느 XBRL 태그에서 왔는지</b>를 함께 적는 이유는,
       회사마다 쓰는 태그가 달라 같은 줄이라도 정의가 다를 수 있기 때문입니다.
-      단위는 백만 달러(주당 금액·주식수 제외)입니다.</p>
+      단위는 백만 달러(주당 금액·주식수 제외)입니다.</div></details>
     <div class="fsctl" id="fsctl" hidden>
       <button class="fstab" type="button" data-p="q" aria-pressed="true">분기</button>
       <button class="fstab" type="button" data-p="a" aria-pressed="false">연간</button>
@@ -622,18 +626,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <!-- ══ #ir — SEC EDGAR submissions 수집분 ═══════════════════════════════ -->
   <section id="ir" class="panel" aria-labelledby="ir-h">
     <p class="lbl" id="ir-h">IR자료실 <span class="sub">출처 SEC EDGAR · 회사가 제출한 원문 링크</span></p>
-    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/fil/&lt;티커&gt;.json</code>에서 읽습니다.
-      <b>EDGAR 원문 링크만</b> 싣습니다 — 회사 자체 IR 사이트 주소는 SEC가 주지 않기 때문입니다
-      (submissions 응답에 <code style="font-family:var(--mono)">investorWebsite</code> 필드가 있긴 하지만 실측 12/12 전부 비어 있었습니다).
-      프레젠테이션·실적 콜 녹취도 같은 이유로 여기에 없습니다.</p>
+    <details class="more"><summary>EDGAR 원문 링크만 싣는 이유</summary><div class="mbody">종목별 <code>data/fil/&lt;티커&gt;.json</code>에서 읽습니다.
+      회사 자체 IR 사이트 주소는 SEC가 주지 않습니다
+      (submissions 응답에 <code>investorWebsite</code> 필드가 있긴 하지만 실측 12/12 전부 비어 있었습니다).
+      프레젠테이션·실적 콜 녹취도 같은 이유로 여기에 없습니다.</div></details>
     <div id="irbox"><div class="empty">위에서 종목을 고르면 그 회사의 제출 원문 목록이 여기에 표시됩니다.</div></div>
   </section>
 
   <!-- ══ #ins — SEC Form 4/5 분기 데이터셋 수집분 ════════════════════════ -->
   <section id="ins" class="panel" aria-labelledby="ins-h">
     <p class="lbl" id="ins-h">내부자 거래 <span class="sub">출처 SEC Form 4/5 분기 데이터셋 · 실시간 아님</span></p>
-    <p class="lblnote">종목별 <code style="font-family:var(--mono)">data/ins/&lt;티커&gt;.json</code>에서 읽습니다.
-      임원·이사·10% 이상 주주가 보통주를 사고판 기록입니다(Table I). 파생상품 거래는 담지 않습니다.</p>
+    <details class="more"><summary>무엇이 담기나</summary><div class="mbody">종목별 <code>data/ins/&lt;티커&gt;.json</code>에서 읽습니다.
+      임원·이사·10% 이상 주주가 보통주를 사고판 기록입니다(Table I). 파생상품 거래는 담지 않습니다.</div></details>
     <div class="fsctl" id="insctl" hidden>
       <button class="fstab" type="button" id="insall" aria-pressed="true">전체</button>
       <button class="fstab" type="button" id="insdisc" aria-pressed="false">재량 거래만 (P·S)</button>
@@ -788,7 +792,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(rows.length>CAP)h+='<div class="pmore">…외 '+(rows.length-CAP)+'종목 — 검색어를 좁히세요</div>';
     el('plist').innerHTML=h;
   }
-  function openList(){el('plist').hidden=false;renderList();}
   function closeList(){el('plist').hidden=true;}
   el('plist').addEventListener('click',function(e){
     var b=e.target.closest?e.target.closest('.pit'):null;
@@ -796,12 +799,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     selectByTicker(b.getAttribute('data-t'));
     closeList();
   });
-  el('q').addEventListener('focus',openList);
   // blur 즉시 닫으면 목록 클릭이 먹지 않는다 — 클릭이 처리될 틈을 준다
   el('q').addEventListener('blur',function(){setTimeout(closeList,180);});
   var _qt;
+  // 클릭만으로는 열지 않는다 — 글자를 넣어야 후보가 뜬다(빈 검색어에 518종목을 펼치지 않는다)
   el('q').addEventListener('input',function(e){
     var v=String(e.target.value||'').toLowerCase().trim();
+    if(!v){state.q='';closeList();clearTimeout(_qt);return;}
     el('plist').hidden=false;
     clearTimeout(_qt);_qt=setTimeout(function(){if(v===state.q)return;state.q=v;renderList();},150);
   });
@@ -856,10 +860,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // 지연 안내는 종목에 데이터가 없어도 먼저 띄운다 — '왜 최근 거래가 안 보이나'의 답이기 때문이다
     var lag=(INS&&INS.lag_days!=null)?INS.lag_days:null;
-    var h='<div class="note"><b>이 화면은 실시간이 아닙니다</b> — SEC가 Form 4를 <b>분기 단위 데이터셋</b>으로 묶어 '+
-      '내놓기 때문입니다. 개별 제출은 거래 후 이틀 안에 올라오지만, 정형화된 표로 묶이는 건 분기가 끝난 뒤입니다.'+
-      (lag!=null?' 실측 지연: <b>'+esc(String(lag))+'일</b>(수집한 가장 최근 거래일 '+esc(INS.as_of||'—')+' 기준).':'')+
-      ' 지연을 줄일 방법이 이 소스에는 없어, 줄이는 대신 <b>얼마나 지연됐는지를 적습니다</b>.</div>';
+    var h='<div class="note"><b>실시간 아님</b>'+
+      (lag!=null?' · 실측 지연 <b>'+esc(String(lag))+'일</b>(수집한 가장 최근 거래일 '+esc(INS.as_of||'—')+')':'')+
+      '<details class="more"><summary>왜 지연되나</summary><div class="mbody">SEC가 Form 4를 <b>분기 단위 데이터셋</b>으로 묶어 '+
+      '내놓기 때문입니다. 개별 제출은 거래 후 이틀 안에 올라오지만, 정형화된 표로 묶이는 건 분기가 끝난 뒤입니다. '+
+      '지연을 줄일 방법이 이 소스에는 없어, 줄이는 대신 얼마나 지연됐는지를 적습니다.</div></details></div>';
 
     if(s._insFail||!s._ins){
       h+='<div class="note">이 종목은 수집 구간('+(INS&&INS.quarters?INS.quarters.map(function(q){return q.q;}).join(' · '):'최근 2분기')+
@@ -1264,13 +1269,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<span class="md">'+esc(fd[k]||'')+(na?' <b style="color:var(--marg)">· '+esc(na)+'</b>':'')+
          (note1?' <b style="color:var(--marg)">'+esc(note1)+'</b>':'')+'</span></div>';
     }
-    var note='';
-    if(DATA.fundx_note)note+='<div class="note">'+esc(DATA.fundx_note)+'</div>';
-    note+='<div class="note plain"><b>등급은 섹터 내 백분위의 서술이지 수익 예측이 아닙니다.</b> '+
+    // 규약 설명은 접는다 — 표를 읽는 데 매번 필요한 글이 아니다. 지우지는 않는다(등급의 뜻은 여기가 정본).
+    var note='<details class="more"><summary>등급·백분위를 읽는 법</summary><div class="mbody">'+
+      '<b>등급은 섹터 내 백분위의 서술이지 수익 예측이 아닙니다.</b> '+
       'A=좋은 쪽 상위 20% · B=20~40% · C=40~60% · D=60~80% · F=하위 20%이며, 색은 백분위 위치를 나타낼 뿐 우열을 단정하지 않습니다. '+
       '‘좋은 쪽’의 방향은 지표마다 다릅니다 — PER·선행 PER은 <code>low_cheap</code>(낮을수록 저평가, ‘좋다’는 뜻이 아님)이라 낮은 쪽이 A입니다. '+
-      '생성기(<code>build/refresh_stocks.py</code>)가 넣는 백분위는 <b>원값 오름차순</b>이며 방향 보정이 없어, 화면에서 <code>fundx_defs[k].dir</code>로 뒤집어 매깁니다. '+
-      '규약 전문은 <a href="method.html" style="color:var(--accent);text-decoration:none">등급·판정 규약</a>에 있습니다.</div>';
+      '규약 전문은 <a href="method.html" style="color:var(--accent);text-decoration:none">등급·판정 규약</a>에 있습니다.'+
+      (DATA.fundx_note?'<br><br>'+esc(DATA.fundx_note):'')+'</div></details>';
     return '<div class="card"><h3>EPS와 PER<span class="hn">값 · 정의 · 섹터 내 위치</span></h3>'+h+note+'</div>';
   }
 
@@ -1315,8 +1320,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<span class="wsrc">원문: data/stocks.json → fund_defs.rk</span>'+
       '<span class="wlive">이 종목의 등급 <b>'+esc(rkv||'없음')+'</b> · '+rkLiveText()+'</span></div>';
 
-    var fn=DATA.fund_note?'<div class="note">'+esc(DATA.fund_note)+'</div>':'';
-    return head+bar+grid+upw+rkw+fn+'</div>';
+    return head+bar+grid+upw+rkw+'</div>';
   }
 
   function histBlock(s){
@@ -1331,8 +1335,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var note=HIST.note?'<div class="note">'+esc(HIST.note)+'</div>':'';
     // 표본을 성과보다 먼저 — 스냅샷이 몇 회인지부터 적는다
     var span=sn.length?(sn[0].d+' ~ '+sn[sn.length-1].d):'—';
-    var meta='<p class="hd">스냅샷 <b style="color:var(--ink)">'+sn.length+'회</b> ('+esc(span)+') · 이 종목이 기록된 스냅샷 <b style="color:var(--ink)">'+rows.length+'회</b>. '+
-      (sn.length<3?'점이 '+sn.length+'개뿐이라 <b style="color:var(--ink)">추세를 말할 수 없습니다</b> — 변화가 있었다는 사실만 보여줍니다.':'')+'</p>';
+    var meta='<p class="hd">스냅샷 <b style="color:var(--ink)">'+sn.length+'회</b> ('+esc(span)+') · 이 종목 기록 <b style="color:var(--ink)">'+rows.length+'회</b>'+
+      (sn.length<3?' · 점이 '+sn.length+'개뿐이라 <b style="color:var(--ink)">추세를 말할 수 없습니다</b>':'')+'</p>';
     if(!rows.length)
       return head+meta+'<div class="empty">이 종목은 스냅샷에 목표주가가 기록된 적이 없습니다.</div>'+note+'</div>';
     var body='';
@@ -1479,6 +1483,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     });
   }
 
+  // ── 한눈에 ────────────────────────────────────────────────────────────
+  // 회사 소개 문장은 어느 소스에도 없다. 지어내는 대신 파일에 있는 값으로만 표를 세운다.
+  // 라벨·단위·소수 자릿수는 stocks.json의 fundx_defs를 그대로 따른다(프런트에 베끼지 않는다).
+  var SNAPKEYS=['mc','beta','dy','roe','pm','rg','de','fcfy','pb','ps'];
+  function snapBlock(s){
+    var fu=s.fund||{},fx=DATA.fundx_defs||{},cells='',i;
+    for(i=0;i<SNAPKEYS.length;i++){
+      var k=SNAPKEYS[i],D=fx[k]||{},v=num(fu[k]);
+      var vs=(v==null)?'—':(fmt(v,D.nd==null?1:D.nd)+(D.unit?(D.unit==='%'?'%':' '+D.unit):''));
+      cells+='<div class="fcell"><div class="fcl">'+esc(D.label||k)+'</div>'+
+             '<div class="fcv'+(v==null?' na':'')+'">'+esc(vs)+'</div></div>';
+    }
+    var chips='';
+    if(s.timing)chips+='<span class="chip">타이밍 '+esc(s.timing)+'</span>';
+    if(s.flags)for(i=0;i<s.flags.length;i++)chips+='<span class="chip">'+esc(s.flags[i])+'</span>';
+    if(fu.rk)chips+='<span class="chip">등급 '+esc(RKLAB[fu.rk]||fu.rk)+'</span>';
+    return '<div class="card"><h3>한눈에<span class="hn">기준일 '+esc(DATA.as_of||'—')+' · 출처 '+esc(DATA.source||'—')+'</span></h3>'+
+           '<div class="fgrid">'+cells+'</div>'+
+           (chips?'<div class="snapchips">'+chips+'</div>':'')+'</div>';
+  }
+
   function renderDetail(s){
     if(!s){el('detail').innerHTML='<div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div>';return;}
     var cur=lastPx(s),h='';
@@ -1493,7 +1518,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(s._sdLoading)h+='<div class="skel">섹터 백분위(data/sd/'+esc(s.t)+'.json)를 불러오는 중…</div>';
     else if(s._sdFail)h+='<div class="note">상세 파일(data/sd/'+esc(s.t)+'.json)을 불러오지 못했습니다 — 백분위·등급·종가는 표시하지 않습니다.</div>';
     h+='</div>';
-    h+=epsBlock(s)+tpBlock(s)+
+    h+=snapBlock(s)+epsBlock(s)+tpBlock(s)+
        '<div class="card"><h3>분기 실적 추이<span class="hn">SEC XBRL · 회사 보고값</span></h3><div id="fxout"><div class="skel">불러오는 중…</div></div></div>'+
        '<div class="card"><h3>실적 발표 이후 주가<span class="hn">발표일 = 100</span></h3><div id="padout"><div class="skel">불러오는 중…</div></div></div>'+
        histBlock(s)+rateBlock(s);
