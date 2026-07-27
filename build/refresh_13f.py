@@ -414,10 +414,15 @@ def main() -> int:
                                  "chg": "전량매도", "off": 1 if h.get("off") else 0,
                                  "psh": round(h["sh"], 0)})
         rows.sort(key=lambda r: -r["v"])
-        rows = rows[:KEEP_HOLD]
-        # '유니버스 비중'은 유니버스 안 종목만으로 센다 — 밖까지 더하면 그 지표의 뜻이 사라진다.
+        # ⚠ 겹침은 **자르기 전 전체**로 센다. 예전엔 rows[:KEEP_HOLD] 뒤에 합산했는데,
+        #   분자(유니버스 안 보유)만 상위 90개로 잘리고 분모(total_val)는 전체라서
+        #   보유 종목이 90개를 넘는 운용사의 겹침이 조용히 과소 표기됐다.
+        #   실측 오차: 브리지워터 43.0%→52.4%(+9.4%p) · 소로스 25.6%→32.9% · 마클 67.8%→69.5% ·
+        #   듀케인 10.7%→11.9% · 오크트리 10.3%→11.1% · 아크 46.2%→46.7%.
+        #   90개 이하인 나머지 11사는 차이 0.0%p라 아무도 눈치채지 못했다.
         uni_val = sum(r["v"] for r in rows if not r.get("off"))
         off_n = sum(1 for r in rows if r.get("off"))
+        rows = rows[:KEEP_HOLD]      # 화면에 싣는 목록만 자른다(집계는 위에서 끝냈다)
         managers.append({
             "cik": cik, "label": GURUS[cik], "filer": d["name"],
             "total_val": round(d["total_val"], 0), "total_n": d["total_n"],
