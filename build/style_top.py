@@ -32,6 +32,8 @@
 from __future__ import annotations
 import io, json, os, sys
 
+import re
+
 import numpy as np
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
@@ -44,6 +46,9 @@ OUT = os.path.join(DATA, "style_top.json")
 TOPN = 10
 MIN_DAYS = 252 * 3      # 모멘텀 변동성에 3년이 필요하다
 WIN = 3.0               # z 윈저화 한계(MSCI 규약)
+SP_WP = 10.0            # S&P U.S. Style 은 원시값을 90퍼센타일로 자른다(정본 p6)
+BASKET = 0.33           # 성장·가치 바스켓은 각각 시가총액 33%까지(정본 p6)
+PURE_MIN = 0.25         # '순수'는 점수가 전체 평균 + 0.25 를 넘어야 한다(정본 p9)
 WINSOR_P = 2.5          # 원시값 윈저화 백분위(양쪽). 표준화 **전에** 자른다 — zs() 주석 참조
 
 
@@ -52,7 +57,23 @@ def load(fn):
     return json.load(io.open(p, encoding="utf-8")) if os.path.exists(p) else None
 
 
-def zs(d):
+def issuer_map(uni):
+    """티커 → 발행사 키. 이름에서 클래스 꼬리를 떼어 같은 회사를 묶는다.
+
+    ⚠ S&P 정본은 복수 클래스를 **둘 다** 편입한다(정본 p4). 여기서 하나로 줄이는 것은
+      10칸짜리 목록에서 한 회사가 두 칸을 먹지 않게 하려는 **표시 목적의 의도적 이탈**이다.
+      유니버스 518종목에서 걸리는 것은 알파벳·폭스·뉴스코프 셋뿐이다.
+    """
+    out = {}
+    for t, s in uni.items():
+        n = (s.get("name") or "").upper().strip()
+        n = re.sub(r"\s*-\s*(CL|CLASS|SER|SERIES)\s+[A-Z0-9]+$", "", n)
+        n = re.sub(r"\s*-\s*[A-Z]$", "", n)
+        out[t] = re.sub(r"[^A-Z0-9]", "", n) or t
+    return out
+
+
+def zs(d, wp=None):
     """{티커: 값} → {티커: z}.
 
     ⚠ **원시값을 먼저 윈저화하고 표준화한다.** MSCI 방법론이 그렇게 적고 있고(outlier
@@ -65,7 +86,8 @@ def zs(d):
     if len(ks) < 20:
         return {}
     a = np.array([d[k] for k in ks], float)
-    lo, hi = np.percentile(a, WINSOR_P), np.percentile(a, 100 - WINSOR_P)
+    wp = WINSOR_P if wp is None else wp
+    lo, hi = np.percentile(a, wp), np.percentile(a, 100 - wp)
     a = np.clip(a, lo, hi)
     mu, sd = float(a.mean()), float(a.std(ddof=1))
     if sd <= 0:
@@ -130,6 +152,8 @@ def main() -> int:
     spec = importlib.util.spec_from_file_location("_tb", os.path.join(HERE, "tech_backtest.py"))
     tb = importlib.util.module_from_spec(spec); spec.loader.exec_module(tb)
     FX = tb.load_fund()
+
+    ISS = issuer_map(uni)
 
     def fund(t, k):
         v = (uni[t].get("fund") or {}).get(k)
@@ -208,21 +232,80 @@ def main() -> int:
             eveb[t] = 1.0 / fxr[0]
     VAL = zavg([zs(inv("fpe")), zs(inv("pb")), zs(eveb)])
 
-    # ── 성장 ── 3년 주당매출 성장 · 3년 주당이익 변화/주가 · 12개월 모멘텀
+    # ── 성장(S&P U.S. Style) ── 3요소 + 문서의 폴백 규칙
+    #   · 3년 전 값이 없으면 2년 → 1년 순으로 내려가고, 1년도 없으면 0으로 둔다(문서 p6).
+    #   · 주당매출 성장은 **시작값이 음수면 부호를 뒤집는다**(문서 p6).
+    #   · 이익 변화는 '현재 주가'로 나눈다 — 분모가 과거 주가가 아니다.
+    SP_BACK = [12, 8, 4]          # 분기 수 = 3년 · 2년 · 1년
     sps, epc = {}, {}
     for t, f in FX.items():
         rev, sh, eps = f.get("rev") or [], f.get("sh") or [], f.get("eps") or []
-        r0, r3 = series_at(rev, 0), series_at(rev, 12)
-        s0, s3 = series_at(sh, 0), series_at(sh, 12)
-        if r0 and r3 and s0 and s3 and r3 > 0 and s0 > 0 and s3 > 0:
-            a, b = r0 / s0, r3 / s3
-            if b > 0:
-                sps[t] = (a / b) ** (1 / 3) - 1.0
-        e0, e3 = series_at(eps, 0), series_at(eps, 12)
+        s0 = series_at(sh, 0)
+        for b in SP_BACK:                       # 주당매출 성장률
+            r0, rb, sb = series_at(rev, 0), series_at(rev, b), series_at(sh, b)
+            if r0 is None or rb is None or not s0 or not sb or s0 <= 0 or sb <= 0:
+                continue
+            a_, b_ = r0 / s0, rb / sb
+            if b_ == 0:
+                continue
+            g = (a_ / abs(b_)) ** (4.0 / b) - 1.0 if b_ > 0 else None
+            if g is None:                       # 시작값이 음수면 부호를 뒤집는다
+                g = -(((a_ / abs(b_)) ** (4.0 / b)) - 1.0)
+            sps[t] = g
+            break
+        else:
+            sps[t] = 0.0
         px = PX.get(t)
-        if e0 is not None and e3 is not None and px is not None and not np.isnan(px[-1]) and px[-1] > 0:
-            epc[t] = (e0 - e3) * 4 / px[-1]          # 분기 EPS라 연으로 환산해 주가와 맞춘다
-    GROW = zavg([zs(sps), zs(epc), zs(mom12r)])
+        if px is None or np.isnan(px[-1]) or px[-1] <= 0:
+            continue
+        for b in SP_BACK:                       # 주당이익 변화 ÷ 현재 주가
+            e0, eb = series_at(eps, 0), series_at(eps, b)
+            if e0 is None or eb is None:
+                continue
+            epc[t] = (e0 - eb) * 4 / px[-1]     # 분기 EPS라 연으로 환산해 주가와 맞춘다
+            break
+        else:
+            epc[t] = 0.0
+    # S&P 는 원시값을 **90퍼센타일로** 윈저화한다(문서 p6) — MSCI 계열과 지점이 다르다.
+    GROWz = [zs(sps, SP_WP), zs(epc, SP_WP), zs(mom12r, SP_WP)]
+    GROW = zavg(GROWz)
+
+    # ── 가치(S&P U.S. Style) ── B/P · E/P · S/P. MSCI Enhanced Value(선행 E/P·B/P·EBITDA/EV)와
+    #    **다른 지수다** — 그래서 따로 싣는다. 여기 E/P 는 후행(tpe)이다.
+    SPVAL = zavg([zs(inv("pb"), SP_WP), zs(inv("tpe"), SP_WP), zs(inv("ps"), SP_WP)])
+
+    # ── 순수성장 · 순수가치 ── 문서 p6~p9의 바스켓 규칙
+    #   ① 성장점수 높은 순 = 성장랭크 1위 · 가치점수 높은 순 = 가치랭크 1위
+    #   ② 성장랭크/가치랭크 를 오름차순 — 위쪽이 순수성장, 아래쪽이 순수가치
+    #   ③ 시가총액 누적 33%까지가 각 바스켓
+    #   ④ 그중 점수가 (전체 평균 + 0.25) 를 넘는 것만 '순수'로 남긴다
+    common = sorted(set(GROW) & set(SPVAL))
+    PURE_G, PURE_V, ratio, GRK, VRK = [], [], {}, {}, {}
+    if len(common) >= 50:
+        gr = {t: i + 1 for i, t in enumerate(sorted(common, key=lambda x: -GROW[x][0]))}
+        vr = {t: i + 1 for i, t in enumerate(sorted(common, key=lambda x: -SPVAL[x][0]))}
+        GRK, VRK = gr, vr
+        for t in common:
+            ratio[t] = gr[t] / vr[t]
+        order = sorted(common, key=lambda t: ratio[t])
+        mcv = {t: (fund(t, "mc") or 0.0) for t in common}
+        tot = sum(mcv.values()) or 1.0
+        gmean = float(np.mean([GROW[t][0] for t in common]))
+        vmean = float(np.mean([SPVAL[t][0] for t in common]))
+        acc = 0.0
+        for t in order:                          # 위에서부터 시총 33% = 성장 바스켓
+            if acc / tot >= BASKET:
+                break
+            acc += mcv[t]
+            if GROW[t][0] > gmean + PURE_MIN:
+                PURE_G.append(t)
+        acc = 0.0
+        for t in reversed(order):                # 아래에서부터 시총 33% = 가치 바스켓
+            if acc / tot >= BASKET:
+                break
+            acc += mcv[t]
+            if SPVAL[t][0] > vmean + PURE_MIN:
+                PURE_V.append(t)
 
     # ── 배당성장 ── **산출하지 않는다.** 두 겹으로 막힌다.
     #   ① 원지수(S&P High Yield Dividend Aristocrats)는 20년 연속 증배가 조건인데 랩의 재무
@@ -239,11 +322,20 @@ def main() -> int:
     def pack(key, label, ref, url, rule, sub, score, detail, rev_=False, n_=TOPN, slab="합성 z"):
         # 점수가 (자른 z, 안 자른 z) 쌍이면 둘로 정렬한다 — 앞이 같을 때만 뒤가 순서를 가른다.
         pair = any(isinstance(v, tuple) for v in score.values())
-        rows = sorted(score.items(), key=lambda kv: kv[1], reverse=not rev_)[:n_]
+        ranked = sorted(score.items(), key=lambda kv: kv[1], reverse=not rev_)
+        rows, seen, dropped = [], set(), []
+        for t, v in ranked:
+            k = ISS.get(t, t)
+            if k in seen:
+                dropped.append(t); continue      # 같은 회사의 다른 클래스 — 다음 순위가 채운다
+            seen.add(k); rows.append((t, v))
+            if len(rows) >= n_:
+                break
         return {"key": key, "label": label, "index_ref": ref, "url": url, "rule": rule,
                 "substitution": sub, "n_scored": len(score), "score_label": slab,
                 "tie_break": ("z 를 ±3 으로 자른 뒤 같아지면, 자르기 전 값으로 순서를 가른다"
                               if pair else None),
+                "dedup_dropped": dropped or None,
                 "top": [{"t": t, "n": uni[t].get("name"), "s": uni[t].get("sector"),
                          "score": round(v[0] if pair else v, 3),
                          "score_unclipped": (round(v[1], 3) if pair else None),
@@ -274,12 +366,38 @@ def main() -> int:
              "최근 252거래일 일간수익률의 표준편차가 가장 작은 순", None, vol,
              lambda t: {"연율 변동성 %": R2(vol.get(t)), "베타": R2(beta.get(t))},
              rev_=True, slab="연율 변동성 %"),
-        pack("grow", "성장", "S&P 500 Pure Growth",
-             "https://www.spglobal.com/spdji/en/indices/equity/sp-500-pure-growth/",
-             "3년 주당매출 성장 · 3년 주당이익 변화÷주가 · 12개월 모멘텀의 z 평균", None, GROW,
-             lambda t: {"주당매출 3Y CAGR %": R2((sps.get(t) or 0) * 100) if t in sps else None,
-                        "EPS변화/주가 %": R2((epc.get(t) or 0) * 100) if t in epc else None,
+        pack("grow", "성장", "S&P 500 Growth (S&P U.S. Style)",
+             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+             "3년 주당이익 변화÷현재주가 · 3년 주당매출 성장률 · 12개월 모멘텀의 z 평균"
+             "(원시값 90퍼센타일 윈저화 · 3년이 없으면 2년→1년 폴백)", None, GROW,
+             lambda t: {"주당매출 3Y CAGR %": R2((sps.get(t) or 0) * 100),
+                        "EPS변화/주가 %": R2((epc.get(t) or 0) * 100),
                         "12M 수익률 %": R2((mom12r.get(t) or 0) * 100) if t in mom12r else None}),
+        pack("spval", "가치(S&P)", "S&P 500 Value (S&P U.S. Style)",
+             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+             "주당순자산÷주가 · 주당이익÷주가 · 주당매출÷주가 의 z 평균(원시값 90퍼센타일 윈저화)",
+             "위의 '가치'는 MSCI Enhanced Value(선행 E/P·B/P·EBITDA/EV)로 **다른 지수**다. "
+             "이쪽 E/P 는 후행이다", SPVAL,
+             lambda t: {"PBR": R2(fund(t, "pb")), "PER(후행)": R2(fund(t, "tpe")),
+                        "PSR": R2(fund(t, "ps"))}),
+        pack("puregrow", "순수성장", "S&P 500 Pure Growth",
+             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+             "성장랭크÷가치랭크가 가장 작은 쪽(성장은 높고 가치는 낮은 종목) · 시총 33% 바스켓 안에서 "
+             "성장점수가 평균+0.25 를 넘는 것만",
+             "정본은 S&P Total Market 에서 표준화하고 모기업 지수에서 랭크한다 — 여기서는 둘 다 "
+             "유니버스 518종목이다", {t: -ratio[t] for t in PURE_G},
+             lambda t: {"성장점수": R2(GROW[t][0]), "가치점수": R2(SPVAL[t][0]),
+                        "성장랭크": GRK.get(t), "가치랭크": VRK.get(t)},
+             slab="−(성장랭크÷가치랭크)"),
+        pack("pureval", "순수가치", "S&P 500 Pure Value",
+             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+             "성장랭크÷가치랭크가 가장 큰 쪽(가치는 높고 성장은 낮은 종목) · 시총 33% 바스켓 안에서 "
+             "가치점수가 평균+0.25 를 넘는 것만",
+             "정본은 S&P Total Market 에서 표준화하고 모기업 지수에서 랭크한다 — 여기서는 둘 다 "
+             "유니버스 518종목이다", {t: ratio[t] for t in PURE_V},
+             lambda t: {"가치점수": R2(SPVAL[t][0]), "성장점수": R2(GROW[t][0]),
+                        "가치랭크": VRK.get(t), "성장랭크": GRK.get(t)},
+             slab="성장랭크÷가치랭크"),
         {"key": "divg", "label": "배당성장",
          "index_ref": "S&P High Yield Dividend Aristocrats",
          "url": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-high-yield-dividend-aristocrats/",
