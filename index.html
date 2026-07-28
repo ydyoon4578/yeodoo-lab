@@ -1284,7 +1284,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
-  var ST_KEY={MTUM:'mom',QUAL:'qual',VLUE:'val',USMV:'lowvol',RPG:'grow',
+  // 가치는 IVE(S&P 500 Value)→spval 이다. 전에는 VLUE(MSCI Enhanced Value)→val 이었는데
+  // 옆줄 성장이 S&P 계열이라 계보가 어긋나 있었다(사용자 결정 2026-07-28).
+  var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',USMV:'lowvol',RPG:'grow',
               SDY:'divg',SPHB:'hbeta',SIZE:'size'};
   var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
@@ -1330,13 +1332,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     drawStMore();
   }
   // 대응 ETF가 없는 스타일(S&P 정본에만 있는 것) — 표 밖에 접어 둔다.
-  var ST_EXTRA=['spval','puregrow','pureval'];
+  // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
+  var ST_EXTRA=['puregrow','pureval'];
   function drawStMore(){
     var box=el('stmore'); if(!box||!STOP)return;
     var have=ST_EXTRA.filter(function(k){return STOP[k]&&(STOP[k].top||[]).length;});
     if(!have.length){box.innerHTML='';return;}
     box.innerHTML='<p class="stnote" style="margin:12px 0 6px">대응 ETF가 없어 위 표에는 없는 것 — '+
-      '<b>S&amp;P U.S. Style 정본</b>에만 있는 셋입니다. 이름을 누르면 펼쳐집니다.</p>'+
+      '<b>S&amp;P U.S. Style 정본</b>의 순수 계열 둘입니다. 이름을 누르면 펼쳐집니다.</p>'+
       have.map(function(k){
         return '<button type="button" class="stbtn" data-k="'+esc(k)+'" aria-expanded="false">'+
                esc(STOP[k].label)+'</button>';}).join('')+
