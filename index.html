@@ -340,15 +340,20 @@
 
   /* ── 진단 배너 ── 매일 보는 것이 아니라 한 번 답해 둔 질문으로 가는 줄.
        세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다. */
-  .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
     padding:13px 16px;border:1px solid var(--line);border-left:3px solid var(--hot);
     border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
   .dbanner:hover{background:var(--panel-2);border-color:var(--accent)}
-  .dbanner .dq{font-weight:700;font-size:14.5px}
-  .dbanner .da{font-size:13px;color:var(--muted);flex:1 1 260px}
+  .dbanner .dq{font-weight:700;font-size:14.5px;white-space:nowrap;flex:none}
+  /* 한 줄 유지: 설명은 늘어나되 접히지 않는다. 폭이 모자라면 말줄임으로 흘린다
+     — 배너가 두 줄이 되면 '한 줄짜리 안내'라는 역할이 흐려진다. */
+  .dbanner .da{font-size:13px;color:var(--muted);flex:1 1 auto;min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dbanner .da b{color:var(--hot)}
   .dbanner .dgo{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
-  @media(max-width:640px){.dbanner{gap:6px}.dbanner .dgo{display:none}}
+  @media(max-width:640px){.dbanner{gap:8px}.dbanner .dgo{display:none}
+    .dbanner .dq{font-size:13.5px;white-space:normal}
+    .dbanner .da{flex:none;white-space:nowrap}}
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
@@ -727,7 +732,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <!-- ⑤ 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다. -->
     <a class="dbanner" href="guru17.html">
       <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
-      <span class="da"><b>아니오</b> — 유명 운용사들의 13F를 복제해 재봤습니다. 결합검정·지속성·사전규칙이 모두 같은 답입니다.</span>
+      <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
       <span class="dgo">진단 보기 →</span>
     </a>
 
