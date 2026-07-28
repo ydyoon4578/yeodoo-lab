@@ -51,7 +51,11 @@ SECTOR = [("XLK", "IT"), ("XLF", "금융"), ("XLV", "헬스케어"), ("XLY", "�
 # 하나 더 생겨 '스타일 11종'이라던 그 화면의 셈이 조용히 달라진다. 축이 다르면 목록도 나눈다.
 INDEX = [("SPY", "S&P 500"), ("QQQ", "NASDAQ 100")]
 # 스타일 — assets 패널에 있는 팩터 ETF. SPY는 '기준선'으로 같이 낸다(초과를 눈으로 재게).
-STYLE = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("VLUE", "가치"), ("USMV", "저변동"),
+#   가치는 IVE(iShares S&P 500 Value)다. 전에는 VLUE(MSCI USA Enhanced Value)였는데 옆줄
+#   성장이 S&P 계열(RPG)이라 두 줄의 계보가 어긋나 있었다 — 가치를 S&P 로 맞췄다
+#   (사용자 결정 2026-07-28). 이 표의 '가치' 행을 펼치면 나오는 구성종목도 index.html 의
+#   ST_KEY 에서 val(MSCI) → spval(S&P U.S. Style) 로 함께 옮겼다.
+STYLE = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("IVE", "가치"), ("USMV", "저변동"),
          ("RPG", "성장"), ("SDY", "배당성장"), ("SPHB", "고베타"),
          ("SIZE", "중소형"), ("IWM", "소형(러셀2000)"), ("RSP", "동일가중"),
          ("SPY", "S&P 500 (기준선)")]
