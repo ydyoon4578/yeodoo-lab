@@ -248,6 +248,18 @@
   .stchips .stk b{font-size:9px;color:var(--muted)}
   .stwarn{margin-top:8px;font-size:10.5px;color:var(--marg);line-height:1.6}
   .stwarn b{color:var(--hot)}
+  /* 대응 ETF가 없는 스타일 — 표 밖 접이식 */
+  .stmore{margin-top:2px}
+  .stbtn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2);
+       background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 10px;
+       margin:0 6px 6px 0;cursor:pointer}
+  .stbtn:hover,.stbtn:focus{border-color:var(--accent);color:var(--accent);outline:none}
+  .stbtn::after{content:'▾';margin-left:5px;font-size:9px;color:var(--muted)}
+  .stbtn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+  .stbtn[aria-expanded="true"]::after{content:'▴';color:var(--accent)}
+  .stdet2{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+       padding:11px 13px;margin:2px 0 8px}
+  .stdet2[hidden]{display:none}
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
@@ -772,6 +784,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <section id="s-style" aria-labelledby="st-h">
       <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
+      <!-- 위 표는 ETF 수익률이라 대응 ETF가 없는 스타일은 행이 없다. S&P 정본에만 있는 세 가지를
+           여기 따로 둔다 — 표를 수익률 없는 행으로 오염시키지 않으려는 것이다. -->
+      <div class="stmore" id="stmore"></div>
       <p class="stnote">지수를 위에 두고 스타일을 아래에 놓았습니다(개수는 위 부제에 적힙니다).
         숫자는 <b>기간 수익률(%)</b>입니다. <b>스타일 이름을 누르면</b> 그 스타일 지수의 산식을
         유니버스 518종목에 적용해 뽑은 상위 10종목이 펼쳐집니다 — 이 랩이 계산한 것이지
@@ -1312,6 +1327,32 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     box.innerHTML=h+'</tbody>';
     var s=el('st-sub');
     if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
+    drawStMore();
+  }
+  // 대응 ETF가 없는 스타일(S&P 정본에만 있는 것) — 표 밖에 접어 둔다.
+  var ST_EXTRA=['spval','puregrow','pureval'];
+  function drawStMore(){
+    var box=el('stmore'); if(!box||!STOP)return;
+    var have=ST_EXTRA.filter(function(k){return STOP[k]&&(STOP[k].top||[]).length;});
+    if(!have.length){box.innerHTML='';return;}
+    box.innerHTML='<p class="stnote" style="margin:12px 0 6px">대응 ETF가 없어 위 표에는 없는 것 — '+
+      '<b>S&amp;P U.S. Style 정본</b>에만 있는 셋입니다. 이름을 누르면 펼쳐집니다.</p>'+
+      have.map(function(k){
+        return '<button type="button" class="stbtn" data-k="'+esc(k)+'" aria-expanded="false">'+
+               esc(STOP[k].label)+'</button>';}).join('')+
+      have.map(function(k){
+        return '<div class="stdet2" data-for="'+esc(k)+'" hidden>'+stDetail(STOP[k])+'</div>';}).join('');
+    // 리스너는 한 번만 건다 — drawStMore 가 다시 불리면 토글이 두 번 일어나 제자리로 돌아온다.
+    if(box.getAttribute('data-wired')==='1')return;
+    box.setAttribute('data-wired','1');
+    box.addEventListener('click',function(e){
+      var b=e.target&&e.target.closest?e.target.closest('button.stbtn'):null;
+      if(!b||!box.contains(b))return;
+      var d=box.querySelector('.stdet2[data-for="'+b.getAttribute('data-k')+'"]'); if(!d)return;
+      var open=b.getAttribute('aria-expanded')!=='true';
+      if(open)d.removeAttribute('hidden'); else d.setAttribute('hidden','');
+      b.setAttribute('aria-expanded',open?'true':'false');
+    });
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
