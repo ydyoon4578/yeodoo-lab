@@ -266,7 +266,7 @@ def main() -> int:
     #   실측으로 N 51→45 면 t_crit 3.30→3.26, 통과 후보는 4종 그대로라 영향은 없지만,
     #   규칙을 지우기 시작하면 그 다음부터는 영향이 생긴다.
     _tsh = ((t.get("idx_stats") or {}).get("SPX(TR)") or {}).get("sharpe")
-    _hidden = []
+    _hidden, _hidden_bond, _hidden_sids = [], [], set()
     for r in (t.get("strategies") or []):
         if (_tsh is not None
                 and (r.get("holdings") or {}).get("kind") == "xsec"
@@ -298,9 +298,26 @@ def main() -> int:
         for _n, _sh in sorted(_hidden, key=lambda x: -x[1]):
             print("    · %-30s Sharpe %.2f" % (_n[:30], _sh))
 
+    if _hidden_bond:
+        print("  대조군에 채권 ETF 가 섞인 %d종을 목록에서 제외:" % len(_hidden_bond))
+        for _n, _b in _hidden_bond:
+            print("    · %-34s %s" % (_n[:34], ", ".join(_b)))
+
     # ── ③ 자산배분 · 머신러닝 · 복제 ──
+    # 대조군에 채권 ETF 가 섞인 전략은 목록에서 뺀다(사용자 결정 2026-07-28).
+    # ⚠ 라벨로 판정하면 안 된다 — 5자산 이상은 "N자산 동일가중"으로 접혀 티커가 안 보이고,
+    #   "동적 배분(4자산)" 뒤에도 TLT 가 숨어 있다. asset_backtest 가 싣는 bench_tickers 로 본다.
+    #   (라벨만 봤다면 15종 중 7종을 놓쳤다.)
+    BOND_ETF = {"TLT", "IEF", "SHY", "AGG", "BND", "LQD", "HYG", "TIP", "EMB"}
     a = load("asset_strategies.json") or {}
     for r in (a.get("strategies") or []):
+        _bt = set(r.get("bench_tickers") or [])
+        _hit = _bt & BOND_ETF
+        if _hit:
+            _hidden.append((r["name"], -1.0))
+            _hidden_bond.append((r["name"], sorted(_hit)))
+            _hidden_sids.add("a-" + r["sid"])
+            continue
         rows.append(rec(
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
@@ -369,7 +386,11 @@ def main() -> int:
         #   (asset_backtest.py 150행에 같은 함정을 적어 뒀다). 절대수익형인데 Sharpe 가 음수다.
         "a-merger-arb",                                                        # 자산배분
     }
-    _found = {r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
+    # ⚠ 이 가드는 'sid 가 바뀌어 제외가 조용히 풀렸나'를 보는 것이다. 그런데 앞의 채권 대조군
+    #   필터가 먼저 지운 전략은 rows 에 없어 '못 찾음'으로 오인된다 — 두 제외는 공존해야 한다.
+    #   그래서 이미 다른 사유로 빠진 sid 도 찾은 것으로 센다.
+    _found = ({r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
+              | {sid for sid in HIDE_SIDS if sid in _hidden_sids})
     _hid2 = [(r["name"], r["role"]) for r in rows if r["sid"] in HIDE_SIDS]
     rows = [r for r in rows if r["sid"] not in HIDE_SIDS]
     if _found != HIDE_SIDS:
