@@ -218,26 +218,24 @@
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
   .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
   .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
-  .sttbl th,.sttbl td{padding:7px 11px;text-align:right;font-size:12px;white-space:nowrap;
+  .sttbl th,.sttbl td{padding:4px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
   .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
        font-weight:700;border-top:0;background:var(--panel-2)}
-  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:normal;min-width:118px}
+  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:nowrap;min-width:150px}
   .sttbl tbody th{font-weight:700;font-size:12.5px;color:var(--ink-2)}
-  .sttbl tbody th small{display:block;font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--muted)}
+  /* 티커는 이름 **오른쪽**에 붙인다. 아래 줄로 내리면 행이 두 줄이 되어 표가 두 배로
+     길어졌다(사용자 결정 2026-07-29). 같은 줄에 두면 세로가 절반으로 준다. */
+  .sttbl tbody th small{font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--muted);
+       margin-left:5px}
   .sttbl tr.ix th,.sttbl tr.ix td{background:var(--panel-2);font-weight:700}
   .sttbl tr.gap th,.sttbl tr.gap td{border-top:2px solid var(--line)}
   .sttbl td.up{color:var(--deploy)} .sttbl td.dn{color:var(--hot)} .sttbl td.z{color:var(--muted)}
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
-  /* 스타일 행을 누르면 그 스타일의 상위 10종목이 펼쳐진다 */
-  .sttbl tr.clk{cursor:pointer}
-  .sttbl tr.clk th:first-child::after{content:'▾';margin-left:5px;font-size:9px;color:var(--muted)}
-  .sttbl tr.clk[aria-expanded="true"] th:first-child::after{content:'▴';color:var(--accent)}
-  .sttbl tr.clk:focus{outline:2px solid var(--accent);outline-offset:-2px}
-  .sttbl tr.stdet[hidden]{display:none}
-  .sttbl tr.stdet td{background:var(--panel-2);text-align:left;white-space:normal;padding:11px 12px}
+  /* 상위 10종목은 항상 펼쳐 둔다 — 누르는 행이 아니므로 ▾ 표시도 포커스 링도 없다 */
+  .sttbl tr.stdet td{background:var(--panel-2);text-align:left;white-space:normal;padding:7px 12px}
   .stdin{font-size:11.5px;color:var(--ink-2);line-height:1.6}
   .stdin .stsub{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
   .stchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
@@ -248,18 +246,10 @@
   .stchips .stk b{font-size:9px;color:var(--muted)}
   .stwarn{margin-top:8px;font-size:10.5px;color:var(--marg);line-height:1.6}
   .stwarn b{color:var(--hot)}
-  /* 대응 ETF가 없는 스타일 — 표 밖 접이식 */
+  /* 대응 ETF가 없는 스타일 — 표 밖에 그대로 편다(접이식 버튼은 걷어냈다) */
   .stmore{margin-top:2px}
-  .stbtn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2);
-       background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 10px;
-       margin:0 6px 6px 0;cursor:pointer}
-  .stbtn:hover,.stbtn:focus{border-color:var(--accent);color:var(--accent);outline:none}
-  .stbtn::after{content:'▾';margin-left:5px;font-size:9px;color:var(--muted)}
-  .stbtn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
-  .stbtn[aria-expanded="true"]::after{content:'▴';color:var(--accent)}
   .stdet2{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
        padding:11px 13px;margin:2px 0 8px}
-  .stdet2[hidden]{display:none}
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
@@ -280,10 +270,9 @@
   .tk2.bmo{border-color:color-mix(in srgb,var(--bmo) 45%,transparent);color:var(--bmo)}
   .tk2.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .tk2.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
-  /* 두 소스의 날짜가 어긋난 건. 시각 3상태(색·점선)를 이미 쓰고 있어 색을 하나 더 쓰면
-     '장전/장후/미공개'와 섞인다 — 겹치지 않는 축으로 물음표 첨자를 얹는다. */
-  .tk2.dq::before{content:'?';font-size:8px;font-weight:800;vertical-align:super;
-       margin-right:1px;color:var(--marg)}
+  /* 두 소스의 날짜가 어긋난 건에는 물음표 첨자를 얹었는데, 좁은 칸에서 티커와 붙어 읽기만
+     방해했다 — 표시는 뺀다(사용자 결정 2026-07-29). 종목은 그대로 두고, 불일치 사실은
+     툴팁(data-nm)의 '⚠ 날짜 불일치' 문구에 남아 있다. */
   .tip{position:relative}
   .tk2[data-nm]::after,.tip[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);
        transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:var(--ground);
@@ -766,13 +755,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="home">
     <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
     <section id="s-week" aria-labelledby="wk-h">
-      <p class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub">· 실적 발표와 지표 일정</span></p>
+      <p class="lbl" id="wk-h">일정 캘린더</p>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
         <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
         <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
-        <span><span class="tk2 dq lgc">AAPL</span> 두 소스의 날짜가 다름 — 늦은 쪽에 놓았다</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
         <span><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
       </div>
@@ -787,13 +775,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <!-- 위 표는 ETF 수익률이라 대응 ETF가 없는 스타일은 행이 없다. S&P 정본에만 있는 세 가지를
            여기 따로 둔다 — 표를 수익률 없는 행으로 오염시키지 않으려는 것이다. -->
       <div class="stmore" id="stmore"></div>
-      <p class="stnote">지수를 위에 두고 스타일을 아래에 놓았습니다(개수는 위 부제에 적힙니다).
-        숫자는 <b>기간 수익률(%)</b>입니다. <b>스타일 이름을 누르면</b> 그 스타일 지수의 산식을
-        유니버스 518종목에 적용해 뽑은 상위 10종목이 펼쳐집니다 — 이 랩이 계산한 것이지
-        <b>그 지수의 실제 편입 종목이 아닙니다</b>.
-        <b>최근 잘 간 스타일을 따라 사라는 뜻이 아닙니다</b> —
-        이 랩은 그 추종(팩터 모멘텀)을 검정해 자기 유니버스 대비 구별 불가로 기각했습니다.
-        전체 표(러셀2000·금리·크레딧 포함)는 <a href="macro.html#nowperf-h">거시</a>에 있습니다.</p>
     </section>
 
     <!-- ② 시장 -->
@@ -1204,7 +1185,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   // 늦은 쪽에 놓았을 뿐 어느 쪽이 옳은지는 모른다 — 그 사실을 숨기면 안 된다.
                   var q=x.alt?(' · ⚠ 날짜 불일치 — 다른 소스는 '+esc(x.alt)):'';
                   // 툴팁에 장전/장후를 적지 않는다 — 줄머리 라벨이 이미 그 말을 하고 있다.
-                  return '<a class="tk2 '+g[1]+(x.alt?' dq':'')+(i>=PER?' tkx" hidden':'"')+' href="co.html?t='+encodeURIComponent(x.t)+'#est'+
+                  return '<a class="tk2 '+g[1]+(i>=PER?' tkx" hidden':'"')+' href="co.html?t='+encodeURIComponent(x.t)+'#est'+
                          '" data-nm="'+esc(x.n||x.t)+esc(mc)+q+'">'+esc(x.t)+'</a>';
                 }).join('')+
                 (extra>0?'<button type="button" class="cnt" aria-expanded="false" data-n="+'+extra+'"'+
@@ -1221,13 +1202,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
     }
     box.innerHTML='<div class="calgrid">'+h+'</div>';
-    // 화면에 보이는 창(지난 1주+앞으로 3주) 안의 건수만 센다(전체를 적으면 표와 안 맞는다)
-    var shownE=0, shownM=0;
-    for(var w2=0;w2<4;w2++)for(var i2=0;i2<5;i2++){
-      var dd=new Date(start); dd.setDate(start.getDate()+w2*7+i2);
-      var kk=ymd(dd); shownE+=(E[kk]||[]).length; shownM+=(M[kk]||[]).length;
-    }
-    el('wk-sub').textContent='· 지난 1주+앞으로 3주 · 실적 '+shownE+'건 · 주요 지표·이벤트 '+shownM+'건 · 데이터 기준 '+base;
+    // 제목 옆 부제(구간·건수·기준일)는 뺐다 — 격자가 그 구간을 이미 보이고 있다
+    // (사용자 결정 2026-07-29). 세던 shownE·shownM 도 쓰는 데가 없어져 같이 걷어냈다.
   }
   // '+21'을 눌러 그 줄의 나머지를 펼친다. 줄(=발표 시각)마다 따로 접힌다 —
   // 장전만 보고 싶은데 장후까지 같이 펼쳐지면 좁은 칸이 더 읽기 어려워진다.
@@ -1286,17 +1262,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
   // 가치는 IVE(S&P 500 Value)→spval 이다. 전에는 VLUE(MSCI Enhanced Value)→val 이었는데
   // 옆줄 성장이 S&P 계열이라 계보가 어긋나 있었다(사용자 결정 2026-07-28).
-  var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',USMV:'lowvol',RPG:'grow',
+  //   VLUE 도 같은 spval 로 받아 둔다 — market_board.json 이 아직 VLUE 행을 들고 있어서다.
+  //   그 매핑이 없으면 가치 행만 구성종목이 안 열린다. 자산 패널이 IVE 로 갱신되면 지워도 된다.
+  var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',VLUE:'spval',USMV:'lowvol',RPG:'grow',
               SDY:'divg',SPHB:'hbeta',SIZE:'size'};
   var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
+  // 상위 10종목은 **접지 않고 바로 편다**(사용자 결정 2026-07-29). 눌러야 나오면 그 표에
+  // 무엇이 들어 있는지 여덟 번 눌러 봐야 알았다. 대신 행 자체를 한 줄로 좁혀 길이를 벌충한다.
   function stRow(x,cls){
     var k=ST_KEY[x.t], has=!!(STOP&&STOP[k]);
-    return '<tr'+(cls||has?' class="'+((cls||'')+(has?' clk':'')).trim()+'"':'')+
-      (has?' data-k="'+esc(k)+'" tabindex="0" role="button" aria-expanded="false"':'')+
+    return '<tr'+(cls?' class="'+cls+'"':'')+
       '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>'+
-      (has?'<tr class="stdet" hidden data-for="'+esc(k)+'"><td colspan="'+(1+ST_HZ.length)+'">'+
+      (has?'<tr class="stdet" data-for="'+esc(k)+'"><td colspan="'+(1+ST_HZ.length)+'">'+
            stDetail(STOP[k])+'</td></tr>':'');
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
@@ -1331,31 +1310,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
     drawStMore();
   }
-  // 대응 ETF가 없는 스타일(S&P 정본에만 있는 것) — 표 밖에 접어 둔다.
+  // 대응 ETF가 없는 스타일(S&P 정본에만 있는 것) — 표 밖에 이어 붙인다.
   // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
+  // 여기도 접지 않는다(사용자 결정 2026-07-29) — 버튼과 토글 리스너를 걷어냈다.
   var ST_EXTRA=['puregrow','pureval'];
   function drawStMore(){
     var box=el('stmore'); if(!box||!STOP)return;
     var have=ST_EXTRA.filter(function(k){return STOP[k]&&(STOP[k].top||[]).length;});
     if(!have.length){box.innerHTML='';return;}
     box.innerHTML='<p class="stnote" style="margin:12px 0 6px">대응 ETF가 없어 위 표에는 없는 것 — '+
-      '<b>S&amp;P U.S. Style 정본</b>의 순수 계열 둘입니다. 이름을 누르면 펼쳐집니다.</p>'+
+      '<b>S&amp;P U.S. Style 정본</b>의 순수 계열 둘입니다.</p>'+
       have.map(function(k){
-        return '<button type="button" class="stbtn" data-k="'+esc(k)+'" aria-expanded="false">'+
-               esc(STOP[k].label)+'</button>';}).join('')+
-      have.map(function(k){
-        return '<div class="stdet2" data-for="'+esc(k)+'" hidden>'+stDetail(STOP[k])+'</div>';}).join('');
-    // 리스너는 한 번만 건다 — drawStMore 가 다시 불리면 토글이 두 번 일어나 제자리로 돌아온다.
-    if(box.getAttribute('data-wired')==='1')return;
-    box.setAttribute('data-wired','1');
-    box.addEventListener('click',function(e){
-      var b=e.target&&e.target.closest?e.target.closest('button.stbtn'):null;
-      if(!b||!box.contains(b))return;
-      var d=box.querySelector('.stdet2[data-for="'+b.getAttribute('data-k')+'"]'); if(!d)return;
-      var open=b.getAttribute('aria-expanded')!=='true';
-      if(open)d.removeAttribute('hidden'); else d.setAttribute('hidden','');
-      b.setAttribute('aria-expanded',open?'true':'false');
-    });
+        return '<div class="stdet2" data-for="'+esc(k)+'">'+stDetail(STOP[k])+'</div>';}).join('');
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
@@ -1366,26 +1332,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         .then(function(r){return r.ok?r.json():null;});
     })['catch'](function(){return null;}).then(drawStyle);
 
-  // 행을 눌러 펼친다. 표는 통째로 다시 그려지므로 위임으로 컨테이너에 한 번만 건다.
-  (function(){
-    var box=el('sttbl'); if(!box)return;
-    function toggle(tr){
-      var k=tr.getAttribute('data-k');
-      var det=box.querySelector('.stdet[data-for="'+k+'"]'); if(!det)return;
-      var open=tr.getAttribute('aria-expanded')!=='true';
-      if(open)det.removeAttribute('hidden'); else det.setAttribute('hidden','');
-      tr.setAttribute('aria-expanded',open?'true':'false');
-    }
-    box.addEventListener('click',function(e){
-      var tr=e.target&&e.target.closest?e.target.closest('tr.clk'):null;
-      if(tr&&box.contains(tr))toggle(tr);
-    });
-    box.addEventListener('keydown',function(e){
-      if(e.key!=='Enter'&&e.key!==' ')return;
-      var tr=e.target&&e.target.closest?e.target.closest('tr.clk'):null;
-      if(tr&&box.contains(tr)){e.preventDefault();toggle(tr);}
-    });
-  })();
+  // 행 토글은 없앴다 — 상위 10종목이 항상 펼쳐져 있어 누를 것이 없다(2026-07-29).
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
