@@ -621,6 +621,34 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var base=null;
     S.variants.forEach(function(v){if(v.k===S.k_requested)base=v;});
     var h='';
+    // ── 상위 10종목으로 좁힌 판 ── 요청이라 맨 위에 둔다. 두 잣대를 나란히 두는 이유는
+    //    시총 순위가 주식수 이력 때문에 2020-06 부터만 매겨져서다(구간이 규칙을 가린다).
+    (S.tops||[]).length&&(function(){
+      h+='<div class="card"><h3>상위 '+(S.topn||10)+'종목으로 좁힌 판<span class="hn">K=2 에서 다시 고른다</span></h3>'+
+        '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">잣대</th><th class="l">구간</th>'+
+        '<th>개월</th><th>CAGR %</th><th>샤프</th><th>MDD %</th><th>회전 %</th>'+
+        '<th>α vs 풀</th><th>α vs SPY</th><th>t (SPY)</th></tr></thead><tbody>';
+      S.tops.forEach(function(v){
+        if(!v.metrics){h+='<tr><td class="l">'+esc(v.label)+'</td><td colspan="9">'+esc(v.verdict||'—')+'</td></tr>';return;}
+        h+='<tr><td class="l">'+esc(v.label)+'</td><td class="l">'+esc(v.start)+'~'+esc(v.end)+'</td>'+
+           '<td>'+v.n_months+'</td><td>'+nf(v.metrics.cagr,2)+'</td><td>'+nf(v.metrics.sharpe,2)+'</td>'+
+           '<td>'+nf(v.metrics.mdd,2)+'</td><td>'+nf(v.turnover.mean,0)+'</td>'+
+           '<td>'+pc(v.pool.alpha)+'</td><td>'+pc(v.spy.alpha)+'</td><td>'+pc(v.spy.t)+'</td></tr>'+
+           '<tr><td class="l" colspan="10"><span class="sub">대조군 같은 구간 — 풀 CAGR '+
+           nf(v.pool.metrics.cagr,2)+'% · 샤프 '+nf(v.pool.metrics.sharpe,2)+' / SPY CAGR '+
+           nf(v.spy.metrics.cagr,2)+'% · 샤프 '+nf(v.spy.metrics.sharpe,2)+'</span></td></tr>';
+      });
+      h+='</tbody></table></div>';
+      S.tops.forEach(function(v){
+        if(!v.latest)return;
+        h+='<p class="lblnote" style="margin:10px 0 2px"><b>'+esc(v.label)+'</b> — '+esc(v.latest.rebal)+
+           ' 리밸런스 기준 지금 담는 '+v.latest.n+'종목(각 '+(100/v.latest.n).toFixed(0)+'%)</p><div class="ovwrap">'+
+           v.latest.tickers.map(function(t){
+             return '<span class="stk"><a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+
+                    '</a><i>'+(v.latest.counts[t]||0)+'</i></span>';}).join('')+'</div>';
+      });
+      h+='</div>';
+    })();
     if(base&&base.metrics){
       var m=base.metrics, p=base.pool, sp=base.spy;
       h+='<div class="card"><h3>K='+base.k+' (요청값)<span class="hn">'+esc(base.start)+' ~ '+esc(base.end)+
@@ -650,8 +678,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<td>'+pc(v.spy.t)+'</td><td>'+nf(v.p_spy,4)+'</td></tr>';
     });
     var mm=S.multiplicity||{};
-    h+='</tbody></table></div><p class="lblnote" style="margin:10px 0 0">문턱을 '+(mm.m||0)+
-       '개 훑었으므로 미보정 p 를 그대로 유의성으로 읽으면 안 됩니다 — Bonferroni '+(mm.bonferroni||0)+
+    h+='</tbody></table></div><p class="lblnote" style="margin:10px 0 0">문턱 4개와 좁힌 판 2개, '+
+       '<b>모두 '+(mm.m||0)+'개 변형</b>을 쟀으므로 미보정 p 를 그대로 유의성으로 읽으면 안 됩니다 — Bonferroni '+(mm.bonferroni||0)+
        '건 · Holm '+(mm.holm||0)+'건 · BH(q=.10) '+(mm.bh10||0)+'건 통과.</p></div>';
 
     if(base&&base.latest){

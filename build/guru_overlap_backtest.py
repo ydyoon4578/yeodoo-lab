@@ -49,6 +49,8 @@ OUT = os.path.join(DATA, "guru_overlap.json")
 KS = [2, 3, 4, 5]        # 훑는 문턱. 요청값은 2이고 나머지는 민감도다
 MIN_HOLD = 5             # 이보다 적게 뽑히는 분기는 '동일가중 포트폴리오'라 부르기 어렵다
 MIN_MONTHS = 60          # 성과를 낼 최소 개월(5년)
+TOPN = 10                # 좁힌 판의 종목 수(요청)
+SH_COVER = 0.80          # 시총 순위를 매기려면 그 분기 후보의 이 비율 이상에 주식수가 있어야 한다
 
 
 def spy_monthly(months):
@@ -140,6 +142,84 @@ def build_weights(counts, k, P, mi, months):
     return W, turn, nhold, last
 
 
+def load_shares():
+    """티커 → [(기간종료일, 백만주)…] 오름차순. 랩이 SEC XBRL 로 이미 갖고 있는 것을 쓴다.
+
+    ⚠ 이 시계열은 종목당 20관측(약 5년)뿐이다 — 496종 중 331종이 2019년, 132종이 2020년에
+      시작한다. **2019-11 이전에는 커버가 0%다.** 그래서 시총 순위로 좁힌 판은 13년을 못 돌린다.
+      없는 것을 오늘 주식수로 메우면 그건 PIT 가 아니라 '오늘의 승자를 과거에 심는 것'이다.
+    """
+    import importlib.util
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tech_backtest.py")
+    spec = importlib.util.spec_from_file_location("_tb", p)
+    tb = importlib.util.module_from_spec(spec); spec.loader.exec_module(tb)
+    return {t: sorted(v["sh"]) for t, v in tb.load_fund().items() if v.get("sh")}
+
+
+def mcap_at(t, m, SH, P, mi, months):
+    """그 시점 시가총액(백만$) = 그 달 말까지 공시된 최신 주식수 × 그 달 종가. 없으면 None."""
+    end = month_end(m)
+    sh = None
+    for d, v in SH.get(t, []):            # 오름차순 — 마지막으로 통과한 값이 그 시점 최신이다
+        if d <= end:
+            sh = v
+        else:
+            break
+    px = P.get(t, [None] * len(months))[mi[m]]
+    return None if (sh is None or px is None) else sh * px
+
+
+def build_topn(counts, k, n, rank, SH, P, mi, months):
+    """K곳 이상 중 상위 n종목만 동일가중. rank='mc'(시점 시총) 또는 'ov'(겹친 운용사 수).
+
+    'ov' 를 함께 두는 이유 — 시총 순위는 주식수가 있는 구간(2020~)에서만 매길 수 있다.
+    겹침 수는 13F 만으로 매겨지므로 13년 전체를 돌 수 있다. 같은 '상위 10종목' 규칙을
+    두 잣대로 재 두면, 짧은 구간의 결과가 규칙 탓인지 구간 탓인지 가늠할 수 있다.
+    """
+    plan, skipped = {}, 0
+    for m, cnt in counts.items():
+        sel = [t for t, c in cnt.items() if c >= k]
+        if len(sel) < n:
+            continue
+        if rank == "mc":
+            mc = {t: mcap_at(t, m, SH, P, mi, months) for t in sel}
+            have = [t for t in sel if mc[t] is not None]
+            if len(have) < max(n, SH_COVER * len(sel)):
+                skipped += 1              # 그 시점엔 순위를 매길 수 없다 — 추정으로 메우지 않는다
+                continue
+            plan[m] = sorted(have, key=lambda t: -mc[t])[:n]
+        else:
+            plan[m] = sorted(sel, key=lambda t: (-cnt[t], t))[:n]
+    if not plan:
+        return {}, [], [], None, skipped
+    W, cur, turn, nhold = {}, None, [], []
+    start = mi[min(plan)]
+    for i in range(start, len(months)):
+        m = months[i]
+        if m in plan:
+            new = {t: 1.0 / len(plan[m]) for t in plan[m]}
+            if cur:
+                keys = set(cur) | set(new)
+                turn.append({"m": m, "v": round(sum(abs(new.get(t, 0) - cur.get(t, 0))
+                                                    for t in keys) / 2 * 100, 1)})
+            cur = new
+            nhold.append({"m": m, "n": len(new)})
+        elif cur is not None:
+            nxt, tot = {}, 0.0
+            for t, x in cur.items():
+                p0, p1 = P.get(t, [None] * len(months))[i - 1], P.get(t, [None] * len(months))[i]
+                if p0 is None or p1 is None or p0 <= 0:
+                    continue
+                v = x * (p1 / p0); nxt[t] = v; tot += v
+            cur = {t: v / tot for t, v in nxt.items()} if tot > 0 else cur
+        if cur:
+            W[m] = dict(cur)
+    lm = max(plan)
+    last = {"rebal": lm, "n": len(plan[lm]), "tickers": plan[lm],
+            "counts": {t: counts[lm].get(t, 0) for t in plan[lm]}}
+    return W, turn, nhold, last, skipped
+
+
 def monthly_returns(W, P, mi, months):
     """비중 시계열 → 월 수익률. 비중은 그 달 말에 정해지고 다음 달 수익을 받는다."""
     out = {}
@@ -216,13 +296,55 @@ def main() -> int:
               % (row["pool"]["alpha"] or 0, row["pool"]["t"] or 0, row["pool"]["beta"] or 0,
                  row["spy"]["alpha"] or 0, row["spy"]["t"] or 0, row["spy"]["beta"] or 0))
 
-    # 다중검정 — K를 4개 훑었다. 하나만 보고 고르면 그것이 사후 선택이다.
+    # ── 상위 10종목으로 좁힌 판 ──────────────────────────────────────────
+    # 요청은 '시총 상위 10'이다. 그런데 시점별 주식수가 2019~2020년부터라 그 규칙은 13년을
+    # 못 돈다. 없는 구간을 오늘 주식수로 메우면 오늘의 승자를 과거에 심는 것이 되므로 하지 않고,
+    # **돌 수 있는 구간만** 돌린다. 대신 13F 만으로 매길 수 있는 '겹친 운용사 수 상위 10'을
+    # 같은 규칙·전 구간으로 나란히 둔다 — 짧은 구간의 결과가 규칙 탓인지 구간 탓인지 가르려는 것이다.
+    SH = load_shares()
+    tops = []
+    for rank, label in (("mc", "시점 시가총액 상위 %d" % TOPN),
+                        ("ov", "겹친 운용사 수 상위 %d" % TOPN)):
+        W, turn, nhold, last, skip = build_topn(counts, 2, TOPN, rank, SH, P, mi, months)
+        rets = monthly_returns(W, P, mi, months)
+        if len(rets) < MIN_MONTHS:
+            tops.append({"rank": rank, "label": label, "n_months": len(rets),
+                         "verdict": "표본 부족", "skipped_quarters": skip})
+            continue
+        ms = sorted(rets)
+        r = np.array([rets[m] for m in ms])
+        rf = np.array([RF.get(m, 0.0) for m in ms])
+        row = {"rank": rank, "label": label, "k": 2, "top": TOPN,
+               "start": ms[0], "end": ms[-1], "n_months": len(ms),
+               "skipped_quarters": skip, "metrics": ann_from_monthly(r, rf),
+               "turnover": {"mean": round(float(np.mean([x["v"] for x in turn])), 1) if turn else None},
+               "latest": last}
+        for name, bs in (("pool", pool), ("spy", spy)):
+            b = np.array([bs.get(m, 0.0) for m in ms])
+            a, beta, t, _ = capm(r, b, rf)
+            row[name] = {"metrics": ann_from_monthly(b, rf), "alpha": a, "beta": beta, "t": t}
+        tops.append(row)
+        print("  상위%d(%s) %s~%s %d개월 · CAGR %6.2f%% (풀 %5.2f · SPY %5.2f) · 샤프 %.2f "
+              "(%.2f · %.2f) · MDD %6.2f%% · 회전 %.0f%%"
+              % (TOPN, rank, row["start"], row["end"], len(ms), row["metrics"]["cagr"],
+                 row["pool"]["metrics"]["cagr"], row["spy"]["metrics"]["cagr"],
+                 row["metrics"]["sharpe"], row["pool"]["metrics"]["sharpe"],
+                 row["spy"]["metrics"]["sharpe"], row["metrics"]["mdd"],
+                 row["turnover"]["mean"] or 0))
+        print("        알파 vs 풀 %+.2f%%/yr (t %+.2f) · vs SPY %+.2f%%/yr (t %+.2f · β %.2f)"
+              % (row["pool"]["alpha"] or 0, row["pool"]["t"] or 0,
+                 row["spy"]["alpha"] or 0, row["spy"]["t"] or 0, row["spy"]["beta"] or 0))
+        print("        지금 담는 것: %s" % ", ".join(last["tickers"]))
+
+    # 다중검정 — 문턱 4개 + 좁힌 판 2개 = 6개를 쟀다. 그중 하나를 골라 보이면 그것이
+    # 사후 선택이다. K 변형만 세고 좁힌 판을 빼면 분모가 거짓말을 한다.
     from scipy import stats
+    tested = variants + tops
     pv = []
-    for v in variants:
+    for v in tested:
         t, n = (v.get("spy") or {}).get("t"), v.get("n_months")
         pv.append(None if t is None or not n else float(2 * (1 - stats.t.cdf(abs(t), n - 2))))
-    for v, p in zip(variants, pv):
+    for v, p in zip(tested, pv):
         if p is not None:
             v["p_spy"] = round(p, 4)
     mult = holm_bh(pv)
@@ -252,10 +374,16 @@ def main() -> int:
             "K를 4개 훑었다 — 넷 중 제일 좋은 것을 고르면 그것이 사후 선택이다. 넷을 전부 싣고 "
             "다중검정 보정을 함께 적는다.",
             "거래비용이 0이다. 분기 리밸런스 회전율이 붙으므로 실제 수익은 이보다 낮다.",
+            "**시총 상위 10은 2020-06부터만 잰다.** 시점별 주식수(SEC XBRL)가 종목당 20관측"
+            "(약 5년)뿐이라 2019-11 이전에는 커버가 0%다. 없는 구간을 오늘 주식수로 메우면 "
+            "오늘의 승자를 과거에 심는 것이라 하지 않았다. 73개월은 코로나 이후 메가캡 구간에 "
+            "치우쳐 있으므로 그 결과를 13년짜리와 나란히 읽으면 안 된다 — 그래서 13F만으로 "
+            "매길 수 있는 '겹친 운용사 수 상위 10'을 같은 규칙·전 구간으로 함께 싣는다.",
         ],
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "span": {"start": months[0], "end": months[-1]},
-        "ks": KS, "k_requested": 2,
+        "ks": KS, "k_requested": 2, "topn": TOPN,
+        "tops": tops,
         "quarters": qdiag,
         "multiplicity": mult,
         "variants": variants,
