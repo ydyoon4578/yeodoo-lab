@@ -83,7 +83,10 @@ CH_EXTRA = .105         # 곡선을 표 두 개보다 아래로 더 내린 만�
 LAG_M = 2               # 분기말 → 체결월
 WINDOW = ST.WINDOW      # 최근 252거래일
 MIN_HOLD = 4            # 유니버스 내 보유가 이보다 적으면 그 분기는 산출하지 않는다
-TOP_OVERLAP = 10        # 최다 보유 몇 종목 — 10위 동점은 전부 넣으므로 실제로는 10개 이상
+TOP_OVERLAP = 20        # 최다 보유 몇 종목 — 동점은 전부 넣으므로 실제로는 이보다 많다.
+                        #   실측(2026-03-31): 20위가 4곳인데 4곳짜리가 17종목이라 **35종목**이 된다.
+                        #   10 → 11종목, 15 → 18종목. 20 부근에서 동점이 폭발한다.
+CH_EXTRA_OV = .050      # 겹침 쪽은 표가 길어 곡선을 덜 내린다(본 쪽은 CH_EXTRA)
 
 # 이름을 짧게 — 표 칸에 들어가야 한다
 X0, X1 = ST.X0, ST.X1
@@ -486,7 +489,7 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
                cell_weight=lambda r, c: "bold" if (r == 0 and c > 0) else "normal")
 
     cx0, cw = X0 + LW + .052, X1 - (X0 + LW + .052)
-    ch_bot = y3 - CH_EXTRA
+    ch_bot = y3 - CH_EXTRA_OV
     ax = fig.add_axes([cx0, ch_bot, cw, t_top - ch_bot])
     ax.set_facecolor(PAPER)
     xi = np.arange(len(nav))
@@ -517,8 +520,10 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
     #   대신 한 표를 넓게 쓰고, 남는 폭에 **누가 들고 있는지**를 적는다(다른 데 없는 정보다).
     yp = ch_bot - .020
     tx(fig, X0, yp, "포트폴리오", fontsize=9.2, weight="bold")
-    tx(fig, X1, yp + .0012, "%s 체결 · 동일가중 %d종목 · 다음 공시 전까지 바뀌지 않는다"
-       % (P.dates[R["_prev_i"]], len(now)), fontsize=6.5, color=MUTED, ha="right")
+    cutn = min(now.values()) if now else 0
+    tx(fig, X1, yp + .0012, "%s 체결 · 동일가중 %d종목 · %d위가 %d곳인데 동점이 많아 %d종목이 됐다"
+       % (P.dates[R["_prev_i"]], len(now), TOP_OVERLAP, cutn, len(now)),
+       fontsize=6.5, color=(NEG if len(now) > TOP_OVERLAP * 1.3 else MUTED), ha="right")
     yt = yp - .0150
     rows_ = []
     for k, t in enumerate(sorted(now, key=lambda t: (-now[t], t))):
@@ -539,9 +544,13 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
             return MUTED
         return INK if c in (1, 2) else MUTED
 
+    # ⚠ 행 높이를 고정하면 동점이 늘어난 해에 표가 꼬리말(.034)을 덮는다. 남은 공간에서
+    #   되계산해 몇 종목이 오든 안 넘치게 한다. 실측 35종목에서 .0145 가 나온다.
+    rh = min(.0155, max(.0092, (yt - .052) / (len(rows_) + 1)))
+    fs_ = 6.9 if rh > .0130 else 6.2
     yb = table(fig, X0, yt, [.026, .052, .175, .040, .034, .040, .050, .467],
                ["#", "티커", "종목명", "섹터", "지수", "보유", "비중%", "들고 있는 운용사"], rows_,
-               row_h=.0155, fs=6.9, hfs=6.4,
+               row_h=rh, fs=fs_, hfs=6.4,
                aligns=["c", "l", "l", "l", "l", "r", "r", "l"], cell_color=c3,
                cell_weight=lambda r, c: "bold" if c in (1, 4, 5) else "normal", zebra=True)
     tx(fig, X0, yb - .008,
