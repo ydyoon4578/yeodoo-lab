@@ -180,12 +180,15 @@ def idio_vol(rs, mkt, i, n=120):
 
 
 def load_index_tr(dates):
-    """같은 구간의 SPX·NDX **총수익(TR)** 일간수익 — dates 격자에 맞춰 반환.
+    """같은 구간의 지수 일간수익 — dates 격자에 맞춰 반환.
 
-    왜 TR인가. 랩 전략 수익은 배당 재투자 기준인데 `^GSPC`·`^NDX`는 **가격지수(PR)**라
-    배당이 빠져 있다. 2006년 이후 그 격차가 연 2.0%p — PR로 그리면 전략이 그만큼 유리해
-    보인다. assets.json 은 yfinance auto_adjust=True(배당·분할 조정)로 받으므로
-    **SPY·QQQ가 곧 SPX·NDX의 TR 프록시**다. 배포 원장 카드가 'SPX(TR)'로 적는 것과 같은 기준.
+    ⚠ **가격지수(PR)**를 쓴다(사용자 결정 2026-07-28 — TR/PR 두 표기가 헷갈린다는 이유).
+    랩 전략 수익은 배당 재투자 기준인데 `^GSPC`·`^NDX`는 배당이 빠져 있어, 2006년 이후
+    연 약 2.0%p만큼 **지수가 불리하게** 잡힌다. 즉 이 곡선과의 격차는 그만큼 과장돼 있다 —
+    화면·문구에 그 사실을 함께 적어야 오독이 안 생긴다(limits·각주 참조).
+
+    동일가중 S&P 500(RSP)은 생존편향 눈금 전용이라 성격이 다르다(실제 ETF, 배당 재투자).
+    지수 비교선으로 쓰지 않고 surv_proxy 계산에만 들어간다.
 
     못 읽으면 빈 dict — 지수 곡선만 빠지고 카드는 그대로 그려진다.
     """
@@ -197,7 +200,7 @@ def load_index_tr(dates):
     adates = A.get("dates") or []
     pos = {d: i for i, d in enumerate(adates)}
     out = {}
-    for tk, label in (("SPY", "SPX(TR)"), ("QQQ", "NDX(TR)"), ("RSP", "EW-SPX(TR)")):
+    for tk, label in (("^GSPC", "S&P 500"), ("^NDX", "NASDAQ 100"), ("RSP", "동일가중 S&P 500")):
         raw = (A.get("px") or {}).get(tk)
         if not raw:
             print("  [지수곡선] %s 없음 — 건너뜀" % tk); continue
@@ -267,8 +270,8 @@ def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
             "dd": pick(dd, True), "dd_b": pick(ddb, True), "yearly": yearly,
             "partial": [yearly[0]["y"], yearly[-1]["y"]] if yearly else []}
 
-    # ── 같은 구간 지수 곡선(TR) ──────────────────────────────────────────
-    # 배포 원장 카드처럼 SPX(TR)·NDX(TR)를 같이 그린다. 대조군(동일가중)을 대체하지 않는다 —
+    # ── 같은 구간 지수 곡선(PR) ──────────────────────────────────────────
+    # S&P 500·NASDAQ 100 을 같이 그린다. ⚠ 가격지수라 배당이 빠져 지수가 연 ~2%p 불리하다 —
     # 판정은 대조군으로 하고, 지수는 '살 수 있는 대안'으로 나란히 둘 뿐이다.
     # 전략 NAV와 같은 시작점(100)·같은 날짜에서 출발시켜야 그림이 비교 가능하다.
     if idx_rets:
@@ -290,7 +293,7 @@ def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
             iyr[lab] = {y: (round((v[1] / v[0] - 1) * 100, 2) if v[0] else None)
                         for y, v in g.items()}
         if ic:
-            pack["idx"] = ic          # {'SPX(TR)': [...], 'NDX(TR)': [...]}
+            pack["idx"] = ic          # {'S&P 500': [...], 'NASDAQ 100': [...]}
             pack["idx_dd"] = idd
             for row in yearly:        # 연도별 막대에도 같은 이름으로 얹는다
                 row["i"] = {lab: iyr[lab].get(row["y"]) for lab in iyr}
@@ -944,7 +947,7 @@ def run():
     build_strats()
     out = []
     bench_r = ixr[MIN_HIST:]
-    IDXR = load_index_tr(dates)      # 같은 구간 SPX·NDX 총수익(TR) — 카드에 나란히 그린다
+    IDXR = load_index_tr(dates)      # 같은 구간 지수(PR) — 카드에 나란히 그린다
 
     bnav_ref = None          # 생존편향 눈금용 대조군 NAV(전략 루프에서 채운다)
     for S in STRATS:
@@ -1530,7 +1533,7 @@ def run():
             for k, v in idx_sh.items() if v.get("sharpe") is not None))
 
     surv = None
-    _rsp = (IDXR or {}).get("EW-SPX(TR)")
+    _rsp = (IDXR or {}).get("동일가중 S&P 500")
     if _rsp:
         _nv = [100.0]
         for i in range(MIN_HIST + 1, n):
@@ -1586,6 +1589,10 @@ def run():
             "표본이 %s(%d거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 "
             "실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다." % (_span_txt, n - MIN_HIST),
             "비용 0(gross). 회전율이 높은 규칙일수록 실제와 벌어지므로 연 회전율을 함께 싣는다.",
+            # 지수를 PR 로 바꾼 이상(사용자 결정), 그 격차가 과장이라는 사실을 반드시 함께 적는다.
+            "차트의 S&P 500·NASDAQ 100 은 가격지수다 — 배당이 빠져 있다. 전략 수익은 배당을 "
+            "재투자한 기준이라, 지수가 연 약 2%p 불리하게 잡힌다. 지수와의 격차는 그만큼 과장된 "
+            "값이므로 '지수를 이겼다'를 그대로 읽지 말 것.",
             "다중검정 — 규칙 %d개를 같은 표본에서 돌렸다. 그중 최고는 우연히도 좋아 보인다. "
             "그래서 하나도 빼지 않고 전부 싣는다." % len(STRATS),
             "신호는 당일 종가로 계산해 다음 거래일부터 적용한다(선견 없음). 횡단면은 월말 리밸런스.",
