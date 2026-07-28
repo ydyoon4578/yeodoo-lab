@@ -40,13 +40,16 @@ jobs:
           python-version: '3.12'
       # yfinance 는 복제용 월봉(mpx)을 받는 데 쓴다. pandas·numpy 는 그 의존이다.
       - name: Install deps
-        run: pip install --quiet pandas numpy yfinance
+        run: pip install --quiet pandas numpy scipy yfinance
       - name: Fetch 13F history
         run: python build/refresh_13f_history.py
+      # 운용사별 복제 진단물 — 입력이 guru_history.json 뿐이라 같이 굽는다(네트워크 없음).
+      - name: Rebuild guru replication diagnostic
+        run: python build/guru17_backtest.py
       - name: Validate
         run: python build/validate_site.py
       # 이 잡은 asof 축을 건드리지 않는다(guru 축은 guru.json 이 대표다) — asof.json 을 넘기지 않는다.
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): 13F 보유 이력 자동 갱신" \
-            data/guru_history.json
+          bash build/ci_push.sh "chore(data): 13F 보유 이력·복제 진단 자동 갱신" \
+            data/guru_history.json data/guru17.json
