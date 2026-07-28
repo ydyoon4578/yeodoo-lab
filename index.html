@@ -231,6 +231,23 @@
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
+  /* 스타일 행을 누르면 그 스타일의 상위 10종목이 펼쳐진다 */
+  .sttbl tr.clk{cursor:pointer}
+  .sttbl tr.clk th:first-child::after{content:'▾';margin-left:5px;font-size:9px;color:var(--muted)}
+  .sttbl tr.clk[aria-expanded="true"] th:first-child::after{content:'▴';color:var(--accent)}
+  .sttbl tr.clk:focus{outline:2px solid var(--accent);outline-offset:-2px}
+  .sttbl tr.stdet[hidden]{display:none}
+  .sttbl tr.stdet td{background:var(--panel-2);text-align:left;white-space:normal;padding:11px 12px}
+  .stdin{font-size:11.5px;color:var(--ink-2);line-height:1.6}
+  .stdin .stsub{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+  .stchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .stchips .stk{display:inline-flex;align-items:baseline;gap:4px;font-family:var(--mono);font-size:11.5px;
+       font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:6px;
+       padding:2px 7px;text-decoration:none;color:var(--ink-2)}
+  .stchips .stk:hover{border-color:var(--accent);color:var(--accent)}
+  .stchips .stk b{font-size:9px;color:var(--muted)}
+  .stwarn{margin-top:8px;font-size:10.5px;color:var(--marg);line-height:1.6}
+  .stwarn b{color:var(--hot)}
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
@@ -756,7 +773,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <p class="stnote">지수를 위에 두고 스타일을 아래에 놓았습니다(개수는 위 부제에 적힙니다).
-        숫자는 <b>기간 수익률(%)</b>입니다.
+        숫자는 <b>기간 수익률(%)</b>입니다. <b>스타일 이름을 누르면</b> 그 스타일 지수의 산식을
+        유니버스 518종목에 적용해 뽑은 상위 10종목이 펼쳐집니다 — 이 랩이 계산한 것이지
+        <b>그 지수의 실제 편입 종목이 아닙니다</b>.
         <b>최근 잘 간 스타일을 따라 사라는 뜻이 아닙니다</b> —
         이 랩은 그 추종(팩터 모멘텀)을 검정해 자기 유니버스 대비 구별 불가로 기각했습니다.
         전체 표(러셀2000·금리·크레딧 포함)는 <a href="macro.html#nowperf-h">거시</a>에 있습니다.</p>
@@ -1248,11 +1267,38 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var c=v>0.005?'up':(v<-0.005?'dn':'z');
     return '<td class="'+c+'">'+(v>0?'+':'')+v.toFixed(2)+'</td>';
   }
+  // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
+  // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
+  var ST_KEY={MTUM:'mom',QUAL:'qual',VLUE:'val',USMV:'lowvol',RPG:'grow',
+              SDY:'divg',SPHB:'hbeta',SIZE:'size'};
+  var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   function stRow(x,cls){
-    return '<tr'+(cls?' class="'+cls+'"':'')+'><th scope="row">'+esc(x.n)+
-      '<small>'+esc(x.t)+'</small></th>'+
-      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
+    var k=ST_KEY[x.t], has=!!(STOP&&STOP[k]);
+    return '<tr'+(cls||has?' class="'+((cls||'')+(has?' clk':'')).trim()+'"':'')+
+      (has?' data-k="'+esc(k)+'" tabindex="0" role="button" aria-expanded="false"':'')+
+      '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+
+      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>'+
+      (has?'<tr class="stdet" hidden data-for="'+esc(k)+'"><td colspan="'+(1+ST_HZ.length)+'">'+
+           stDetail(STOP[k])+'</td></tr>':'');
+  }
+  // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
+  // 그 지수의 실제 편입이 아니다. 그 말을 칩 옆이 아니라 **여기 본문에** 적는다.
+  function stDetail(s){
+    if(s.unavailable)
+      return '<div class="stdin"><b>'+esc(s.label)+' — 산출하지 않습니다.</b> '+esc(s.unavailable)+'</div>';
+    var h='<div class="stdin"><b>'+esc(s.label)+' 상위 '+s.top.length+'종목</b> '+
+      '<span class="stsub">'+esc(s.rule)+' · '+esc(s.n_scored)+'종목 채점 · 기준 '+
+      '<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.index_ref)+'</a></span>'+
+      '<div class="stchips">'+s.top.map(function(x,i){
+        var d=Object.keys(x.d||{}).filter(function(k){return x.d[k]!=null;})
+                .map(function(k){return k+' '+x.d[k];}).join(' · ');
+        return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+esc(d)+'">'+
+               '<b>'+(i+1)+'</b>'+esc(x.t)+'</a>';}).join('')+'</div>';
+    // 생성기 문장에 마크다운 강조가 들어 있다 — 별표를 노출하지 않고 <b>로 옮긴다.
+    if(s.substitution)h+='<div class="stwarn">⚠ '+esc(s.substitution)
+      .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')+'</div>';
+    return h+'</div>';
   }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
@@ -1267,8 +1313,35 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var s=el('st-sub');
     if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
   }
-  fetch('data/market_board.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;}).then(drawStyle);
+  // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
+  fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;})
+    .then(function(sj){
+      if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
+      return fetch('data/market_board.json',{cache:'no-cache'})
+        .then(function(r){return r.ok?r.json():null;});
+    })['catch'](function(){return null;}).then(drawStyle);
+
+  // 행을 눌러 펼친다. 표는 통째로 다시 그려지므로 위임으로 컨테이너에 한 번만 건다.
+  (function(){
+    var box=el('sttbl'); if(!box)return;
+    function toggle(tr){
+      var k=tr.getAttribute('data-k');
+      var det=box.querySelector('.stdet[data-for="'+k+'"]'); if(!det)return;
+      var open=tr.getAttribute('aria-expanded')!=='true';
+      if(open)det.removeAttribute('hidden'); else det.setAttribute('hidden','');
+      tr.setAttribute('aria-expanded',open?'true':'false');
+    }
+    box.addEventListener('click',function(e){
+      var tr=e.target&&e.target.closest?e.target.closest('tr.clk'):null;
+      if(tr&&box.contains(tr))toggle(tr);
+    });
+    box.addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      var tr=e.target&&e.target.closest?e.target.closest('tr.clk'):null;
+      if(tr&&box.contains(tr)){e.preventDefault();toggle(tr);}
+    });
+  })();
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
