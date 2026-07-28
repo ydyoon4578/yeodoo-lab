@@ -217,7 +217,7 @@
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
   .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
-  .sttbl{border-collapse:collapse;width:100%;min-width:620px;font-variant-numeric:tabular-nums}
+  .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
   .sttbl th,.sttbl td{padding:7px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
   .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
@@ -756,8 +756,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <p class="stnote">지수를 위에 두고 스타일을 아래에 놓았습니다(개수는 위 부제에 적힙니다).
-        숫자는 <b>기간 수익률(%)</b>이고,
-        52H는 최근 1년 고점 대비입니다. <b>최근 잘 간 스타일을 따라 사라는 뜻이 아닙니다</b> —
+        숫자는 <b>기간 수익률(%)</b>입니다.
+        <b>최근 잘 간 스타일을 따라 사라는 뜻이 아닙니다</b> —
         이 랩은 그 추종(팩터 모멘텀)을 검정해 자기 유니버스 대비 구별 불가로 기각했습니다.
         전체 표(러셀2000·금리·크레딧 포함)는 <a href="macro.html#nowperf-h">거시</a>에 있습니다.</p>
     </section>
@@ -1248,12 +1248,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var c=v>0.005?'up':(v<-0.005?'dn':'z');
     return '<td class="'+c+'">'+(v>0?'+':'')+v.toFixed(2)+'</td>';
   }
+  // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   function stRow(x,cls){
     return '<tr'+(cls?' class="'+cls+'"':'')+'><th scope="row">'+esc(x.n)+
       '<small>'+esc(x.t)+'</small></th>'+
-      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+
-      '<td class="z">'+(x.off52==null?'—':x.off52.toFixed(1))+'</td>'+
-      '<td class="z">'+(x.rsi==null?'—':x.rsi.toFixed(0))+'</td></tr>';
+      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
@@ -1261,7 +1260,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
     var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
     var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
-          '<th>52H</th><th>RSI</th></tr></thead><tbody>';
+          '</tr></thead><tbody>';
     ix.forEach(function(x){h+=stRow(x,'ix');});
     st.forEach(function(x,i){h+=stRow(x,i===0?'gap':'');});
     box.innerHTML=h+'</tbody>';
