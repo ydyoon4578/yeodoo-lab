@@ -178,12 +178,6 @@
   .fcell.flag{background:color-mix(in srgb,var(--hot) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 30%,transparent) inset}
 
   /* 경고는 숫자 바로 옆(아래) — 접지 않는다 */
-  /* 경고 한 줄 — 전에는 원문 2문단짜리 상자 둘이 종목마다 화면 절반을 먹었다.
-     경고를 지운 게 아니라 한 줄로 줄이고 원문은 접었다. */
-  .tpwarn{margin:14px 0 0;font-size:12px;line-height:1.7;color:var(--ink-2);
-          border-left:3px solid var(--hot);padding:2px 0 2px 11px}
-  .tpwarn b{color:var(--hot)}
-
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
@@ -760,17 +754,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('statline').innerHTML=out.join('');
   }
 
-  // 원문 경고 안의 추천등급 숫자는 '검증 시점' 기록이라 오늘 파일과 어긋난다.
-  // 대조용 재집계 문장은 한 곳에서만 만든다 — 머리말과 종목 카드 두 곳에 베껴 두면 또 어긋난다.
-  function rkLiveText(){
-    var t=rkTally(),parts=[],order=['strong_buy','buy','hold','underperform','sell','strong_sell','none'],j;
-    for(j=0;j<order.length;j++)if(t[order[j]])parts.push((RKLAB[order[j]]||order[j])+' '+t[order[j]]);
-    return '오늘 로드한 파일에서 다시 센 전체 분포: <b>'+esc(parts.join(' · ')||'없음')+'</b> '+
-           '(커버 '+nAll()+'종목 중 등급 있는 종목 '+cnt('rk')+') · '+
-           '매도계열(sell·strong_sell·underperform) <b>'+rkSellCount()+'건</b>. '+
-           '위 문구의 숫자는 검증 시점 기록이고 이 줄은 오늘 값이라 서로 다를 수 있습니다.';
-  }
-
   // ── 종목 목록 ─────────────────────────────────────────────────────────
   function filtered(){
     var q=state.q,out=[],s=DATA.stocks;
@@ -1310,22 +1293,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var cells=[['목표 최저',lo!=null?'$'+fmt(lo,2):'—',0],['목표 평균','$'+fmt(tm,2),0],['목표 최고',hi!=null?'$'+fmt(hi,2):'—',0],
                ['상승여력',((typeof fu.up==='number'&&fu.up===fu.up)?pctf(fu.up,1):'—'),1],
                ['애널리스트',(fu.nan!=null?fu.nan+'명':'—'),0]];
+    // 경고 문구는 화면에서 뺐다(사용자 결정) — 종목마다 똑같은 글이 자리만 먹었다.
+    //   대신 상승여력 칸에 ⚠ 표시(.flag)와 title 툴팁으로 원문을 붙인다. 툴팁은 0픽셀이다.
+    //   ⚠ 이 카드 제목이 '참고 표기 · 신호 아님'을 이미 달고 있고, 상승여력·추천등급이
+    //     bscore·sscore·flags·timing 어디에도 안 들어가는 것은 생성기 쪽 사실이라 그대로다.
+    var tip=(fd.up||'')+(fd.rk?'\n\n'+fd.rk:'');
     var grid='';
     for(var i=0;i<cells.length;i++)
-      grid+='<div class="fcell'+(cells[i][2]?' flag':'')+'"><div class="fcl">'+esc(cells[i][0])+'</div><div class="fcv">'+esc(cells[i][1])+'</div></div>';
+      grid+='<div class="fcell'+(cells[i][2]?' flag':'')+'"'+(cells[i][2]&&tip?' title="'+esc(tip)+'"':'')+
+            '><div class="fcl">'+esc(cells[i][0])+(cells[i][2]?' ⚠':'')+'</div><div class="fcv">'+esc(cells[i][1])+'</div></div>';
     grid='<div class="fgrid">'+grid+'</div>';
 
-    // 상승여력·추천등급 경고 원문 상자(2문단)는 뺐다 — 종목마다 똑같은 글이 화면 절반을 먹었다.
-    // 경고 자체를 없애지는 않는다: 상승여력 칸에 flag 표시를 유지하고 한 줄로 요약해 붙인다.
-    var rkv=fu.rk?(RKLAB[fu.rk]||fu.rk):null;
-    var warn='<p class="tpwarn">⚠ <b>상승여력·추천등급은 매수 근거가 아닙니다</b> — 전수검증에서 상승여력은 '+
-      '주가 하락의 기계적 산물이고(우리 매수점수와 상관 −0.71), 등급은 512종목 중 매도 0건인 편향 척도입니다.'+
-      (rkv?' 이 종목 등급 <b>'+esc(rkv)+'</b>.':'')+
-      '<details class="more"><summary>검증 원문(data/stocks.json → fund_defs)</summary><div class="mbody">'+
-      esc(fd.up||'(fund_defs.up 원문 없음)')+'<br><br>'+esc(fd.rk||'(fund_defs.rk 원문 없음)')+
-      '<br><br>'+rkLiveText()+'</div></details></p>';
-
-    return head+bar+grid+warn+histRow(s)+'</div>';
+    return head+bar+grid+histRow(s)+'</div>';
   }
 
   // ── 목표주가 이력 ──────────────────────────────────────────────────────
