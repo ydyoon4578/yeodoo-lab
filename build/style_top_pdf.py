@@ -89,6 +89,10 @@ IDXC = {"SPX": CHAMP, "NDX": RP, "공통": ACC}           # 소속 지수 구분
 
 X0, X1 = .058, .942                       # 본문 좌·우 경계
 
+# 요약 쪽 제목 — 이 모듈을 import 해 쓰는 다른 문서가 갈아 끼운다(기본값은 이 문서 것).
+TITLE = "스타일 상위 10종목 전략"
+SUBTITLE = "최근 1년 요약"
+
 
 def idx_of(P, t):
     """그 종목이 어느 지수 소속인가 — 'SPX' 단독 · 'NDX' 단독 · '공통'(양쪽 모두)."""
@@ -796,8 +800,8 @@ def draw_block(fig, P, top, S, R):
 # ── 요약 쪽 ────────────────────────────────────────────────────────────────
 def draw_summary(fig, P, res, order, total):
     d0, d1 = P.dates[res[order[0]]["start"]], P.dates[res[order[0]]["end"]]
-    tx(fig, X0, .962, "스타일 상위 10종목 전략", fontsize=23, weight="bold")
-    tx(fig, X0, .928, "최근 1년 요약", fontsize=10, color=ACC)
+    tx(fig, X0, .962, TITLE, fontsize=23, weight="bold")
+    tx(fig, X0, .928, SUBTITLE, fontsize=10, color=ACC)
     tx(fig, X1, .932, "%s ~ %s" % (d0, d1), fontsize=8.5, color=MUTED, ha="right")
     hline(fig, X0, X1, .916, RULE, .9)
 
