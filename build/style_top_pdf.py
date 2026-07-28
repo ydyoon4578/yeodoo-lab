@@ -360,6 +360,43 @@ SECS = {"Information Technology": "IT", "Health Care": "헬스", "Financials": "
 
 
 # ── 백테스트 ────────────────────────────────────────────────────────────────
+def build_issuer(P):
+    """티커 → 발행사 키. 클래스 꼬리를 떼어 같은 회사를 묶는다(정의는 style_top.py 가 정본).
+
+    ⚠ 어느 클래스를 남기나 — **클래스 A 를 남긴다**(사용자 결정 2026-07-28).
+      style_top.py 는 '점수가 높은 쪽'을 남기는데, 알파벳에서 그 규칙은 GOOG(클래스 C,
+      무의결권)를 남기는 날이 생긴다. 둘 중 하나만 실을 거라면 의결권 있는 A 가 맞다.
+      정렬 키에 A 우선을 먼저 넣어, 같은 발행사 안에서는 A 가 항상 앞에 오게 한다.
+    ⚠ S&P 정본은 복수 클래스를 둘 다 편입한다 — 이건 10칸 목록에서 한 회사가 두 칸을
+      먹지 않게 하려는 표시 목적의 의도적 이탈이다. 유니버스에서 걸리는 것은 셋뿐이다
+      (알파벳·폭스·뉴스코프, 실측).
+    """
+    import re as _re
+    out = {}
+    for t, u in P.uni.items():
+        n = (u.get("name") or "").upper().strip()
+        n = _re.sub(r"\s*-\s*(CL|CLASS|SER|SERIES)\s+[A-Z0-9]+$", "", n)
+        n = _re.sub(r"\s*-\s*[A-Z]$", "", n)
+        out[t] = _re.sub(r"[^A-Z0-9]", "", n) or t
+    return out
+
+
+def iss_of(P):
+    """발행사 맵을 Panel 에 캐시한다. 전역에 두고 main() 에서만 채우면, 다른 진입점(예:
+    build/guru_top_pdf.py 가 ST.Panel() 만 쓰는 경우)에서 빈 채로 남아 통합이 조용히 꺼진다."""
+    m = getattr(P, "_iss", None)
+    if m is None:
+        m = build_issuer(P)
+        P._iss = m
+    return m
+
+
+def is_class_a(P, t):
+    """이름이 클래스 A 라고 말하는가. 이름에 클래스 표기가 없으면 단일 클래스로 본다."""
+    n = (((P.uni.get(t) or {}).get("name")) or "").upper()
+    return bool(__import__("re").search(r"-\s*(CL|CLASS)?\s*A\b|\bCLASS A\b", n))
+
+
 def backtest(P, fn):
     """최근 1년. 월말 리밸런스 · 상위 10 동일가중 · 사이에는 표류.
 
@@ -380,8 +417,25 @@ def backtest(P, fn):
         if len(s) >= MIN_NAMES:
             ok = [t for t in s if t in P.px and not np.isnan(P.px[t][i])]
             ok.sort(key=lambda t: (-s[t], -tie.get(t, 0.0), t))
-            if len(ok) >= TOPN:
-                out = [(t, s[t], tie.get(t, s[t])) for t in ok[:TOPN]]
+            # 같은 발행사의 다른 클래스는 하나만 — 밀려난 자리는 다음 순위가 채운다.
+            #   실측(성장): GOOG·GOOGL 이 둘 다 들어와 알파벳 한 회사가 10칸 중 2칸(20%)이었다.
+            #   분산이 아니라 착시다. build/style_top.py 가 홈 JSON 에서 이미 하던 것을 PDF 도 한다.
+            #
+            #   순위는 그 발행사의 **최고 점수**로 정하고(자리를 잃지 않는다), 그 자리에 실을
+            #   티커는 **클래스 A**를 쓴다(사용자 결정). 둘을 갈라 두지 않으면, A 의 점수가 조금
+            #   낮은 날 알파벳이 통째로 뒤로 밀리거나 C 가 실린다.
+            _iss = iss_of(P)
+            seen, ded = set(), []
+            for t in ok:
+                k = _iss.get(t, t)
+                if k in seen:
+                    continue
+                seen.add(k)
+                same = [x for x in ok if _iss.get(x, x) == k]
+                a_ = next((x for x in same if is_class_a(P, x)), None)
+                ded.append(a_ or t)
+            if len(ded) >= TOPN:
+                out = [(t, s[t], tie.get(t, s[t])) for t in ded[:TOPN]]
         cache[i] = out
         return out
 

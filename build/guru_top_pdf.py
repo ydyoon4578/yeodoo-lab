@@ -98,6 +98,33 @@ BM1, BM2 = ST.BM1, ST.BM2
 IDXC, SECS = ST.IDXC, ST.SECS
 
 
+def _short(nm):
+    """운용사 표기를 표에 들어갈 만큼 줄인다 — 괄호 안 통칭(버핏·달리오…)을 쓴다."""
+    i, j = nm.find("("), nm.find(")")
+    return nm[i + 1:j] if 0 <= i < j else nm.split(" ")[0]
+
+
+def dedup_class(P, ranked):
+    """(티커, 값) 순위 목록에서 같은 발행사의 다른 클래스를 하나로 줄인다.
+
+    거장 쪽도 같은 문제가 있다 — 실측(최다 보유): GOOGL 2위·GOOG 4위로 알파벳이 두 칸이었고,
+    1위 바스켓에도 GOOGL·GOOG 가 따로 들어왔다. 분산이 아니라 착시다.
+    발행사 판정과 '클래스 A 를 남긴다'는 규칙은 style_top_pdf 의 것을 그대로 쓴다(정본 하나).
+    순위는 그 발행사의 최고 값으로 정하고, 실을 티커만 A 로 바꾼다.
+    """
+    iss = ST.iss_of(P)
+    seen, out = set(), []
+    for t, v in ranked:
+        k = iss.get(t, t)
+        if k in seen:
+            continue
+        seen.add(k)
+        same = [x for x, _ in ranked if iss.get(x, x) == k]
+        a_ = next((x for x in same if ST.is_class_a(P, x)), None)
+        out.append(((a_ or t), v))
+    return out
+
+
 def add_months(ym, k):
     y, m = int(ym[:4]), int(ym[5:7])
     m += k
@@ -146,9 +173,9 @@ def build_weights(cik, G, P):
         if len(w) < MIN_HOLD:
             diag["thin"] += 1
             continue
-        top = sorted(w.items(), key=lambda kv: -kv[1])[:TOPN]
+        top = dedup_class(P, sorted(w.items(), key=lambda kv: -kv[1]))[:TOPN]
         s = sum(v for _t, v in top) or 1.0
-        sched.append((i, ex_m, {t: v / s for t, v in top}))   # ← 상위 10의 합을 100%로
+        sched.append((i, ex_m, {t: v / s for t, v in top}))   # ← 상위 N의 합을 100%로
     sched.sort(key=lambda x: x[0])
     return sched, diag
 
@@ -188,11 +215,70 @@ def build_overlap(G, P):
         if len(cnt) < TOP_OVERLAP:
             diag["thin"] += 1
             continue
-        ranked = sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0]))
-        cut = ranked[TOP_OVERLAP - 1][1]                   # 10위의 보유 운용사 수
+        ranked = dedup_class(P, sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0])))
+        if len(ranked) < TOP_OVERLAP:
+            diag["thin"] += 1
+            continue
+        cut = ranked[TOP_OVERLAP - 1][1]                   # 그 순위의 보유 운용사 수
         picked = [t for t, c in ranked if c >= cut]        # 동점은 전부
         w = {t: 1.0 / len(picked) for t in picked}         # 동일가중
         sched.append((i, ex_m, w, {t: cnt[t] for t in picked}))
+    sched.sort(key=lambda x: x[0])
+    return sched, diag
+
+
+def build_top1(G, P):
+    """운용사별 1위 종목 바스켓 — 분기마다 각 운용사의 유니버스 내 최대 비중 종목을 모은다.
+
+    ⚠ 같은 종목을 여러 곳이 1위로 지목해도 **한 칸이다**(중복 제거 후 동일가중).
+      지목 수만큼 비중을 주면 '여러 명이 1위로 꼽은 것이 더 좋다'는, 이 랩이 검증한 적 없는
+      가정을 규칙에 심는 것이 된다 — 겹침 쪽과 같은 이유다.
+    1위 판정은 build_weights 와 같은 주식수 고정 환산 뒤의 비중으로 한다.
+    """
+    H, FILED = G["holdings"], (G.get("filed") or {})
+    me_by_month = {}
+    for i in P.me:
+        me_by_month[P.dates[i][:7]] = i
+    me_by_month[P.dates[-1][:7]] = max(me_by_month.get(P.dates[-1][:7], -1), len(P.dates) - 1)
+
+    sched, diag = [], {"lookahead": 0, "thin": 0}
+    for q in sorted(H):
+        i = me_by_month.get(add_months(q[:7], LAG_M))
+        if i is None:
+            continue
+        qi = me_by_month.get(q[:7])
+        by = {}
+        for cik, hold in (H[q] or {}).items():
+            f = (FILED.get(q) or {}).get(cik)
+            if f and f > P.dates[i]:
+                diag["lookahead"] += 1
+                continue
+            w = {}
+            for t, v in (hold or {}).items():
+                if t not in P.px or not v or v <= 0:
+                    continue
+                pr = P.px[t][i]
+                pq = P.px[t][qi] if qi is not None else None
+                if pr is None or pr != pr or pr <= 0:
+                    continue
+                w[t] = v * ((pr / pq) if (pq and pq == pq and pq > 0) else 1.0)
+            if w:
+                by.setdefault(max(w, key=w.get), []).append(cik)
+        if len(by) < 3:
+            diag["thin"] += 1
+            continue
+        # 두 곳이 알파벳을 1위로 꼽았는데 하나는 GOOGL, 하나는 GOOG 이면 한 칸이어야 한다
+        merged = {}
+        for t, cs in by.items():
+            merged.setdefault(ST.iss_of(P).get(t, t), []).append((t, cs))
+        by2 = {}
+        for _k, grp in merged.items():
+            rep = next((t for t, _c in grp if ST.is_class_a(P, t)), grp[0][0])
+            by2[rep] = [c for _t, cs in grp for c in cs]
+        by = by2
+        ts = sorted(by)
+        sched.append((i, add_months(q[:7], LAG_M), {t: 1.0 / len(ts) for t in ts},
+                      {t: len(by[t]) for t in ts}, by))
     sched.sort(key=lambda x: x[0])
     return sched, diag
 
@@ -261,8 +347,13 @@ def pf_rows(P, w):
 def footer(fig, page, total, kind="top"):
     hline(fig, X0, X1, .034, LINE, .6)
     # 겹침 쪽은 동일가중이라 '원래 비중 비율로 환산'이 아니다 — 쪽마다 맞는 말을 적는다.
-    lead = ("거장 최다 보유 종목 · 분기마다 보유 운용사 수로 줄 세워 상위 %d(동점 포함)을 동일가중"
-            % TOP_OVERLAP) if kind == "overlap" else (
+    if kind == "overlap":
+        lead = ("거장 최다 보유 종목 · 분기마다 보유 운용사 수로 줄 세워 상위 %d(동점 포함)을 동일가중"
+                % TOP_OVERLAP)
+    elif kind == "top1":
+        lead = "거장별 1위 종목 · 분기마다 운용사별 최대 비중 종목을 모아 중복 제거 후 동일가중"
+    else:
+        lead = (
            "거장 상위 %d종목 전략 · 13F 보유 중 유니버스 상위 %d종목을 원래 비중 비율로 100%% 환산"
            % (TOPN, TOPN))
     tx(fig, X0, .026, lead + " · 대조군은 가격지수(PR) · 비용 0 · 명단은 손으로 고른 18곳이다",
@@ -418,7 +509,7 @@ def draw_block(fig, P, top, name, R, prev_w, now_w, now_lab, diag):
        fontsize=6.3, color=MUTED)
 
 
-def draw_overlap(fig, P, R, now, holders, diag, page, total):
+def draw_basket(fig, P, R, now, holders, page, total, SP):
     """거장 최다 보유 종목 — 한 쪽. draw_block 과 같은 배치를 쓴다."""
     nav = R["nav"]
     d0, d1 = P.dates[R["start"]], P.dates[R["end"]]
@@ -430,19 +521,15 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
     tn = ST.trails(nn, P.dates, R["start"])
 
     y = BLOCK_TOP
-    tx(fig, X0, y, "거장 최다 보유 종목", fontsize=15.5, weight="bold")
-    tx(fig, X1, y + .0015, "17곳 겹침", fontsize=8, color=ACC, ha="right")
-    tx(fig, X1, y - .0100, "%s ~ %s · 분기 %d회 리밸런스 · 최다 보유 상위 %d(동점 포함 %d종목) · "
-                           "동일가중 · 비용 0" % (d0, d1, R["n_rebal"], TOP_OVERLAP, len(now)),
-       fontsize=6.6, color=MUTED, ha="right")
+    tx(fig, X0, y, SP["title"], fontsize=15.5, weight="bold")
+    tx(fig, X1, y + .0015, SP["ref"], fontsize=8, color=ACC, ha="right")
+    tx(fig, X1, y - .0100, "%s ~ %s · 분기 %d회 리밸런스 · %s · 동일가중 · 비용 0"
+       % (d0, d1, R["n_rebal"], SP["rule"](len(now))), fontsize=6.6, color=MUTED, ha="right")
     y -= .0205
     hline(fig, X0, X1, y, RULE, .9)
     y -= .008
-    tx(fig, X0, y, "분기마다 명단 17곳의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
-                   "동일가중으로 담는다. %d위에 동점이 있으면 전부 넣으므로 종목 수는 %d개 이상이다."
-                   % (TOP_OVERLAP, TOP_OVERLAP, TOP_OVERLAP), fontsize=7.1, color=INK2)
-    tx(fig, X0, y - .0125, "개별 운용사를 복제하는 뒤쪽 쪽들과 달리, 여기서 묻는 것은 "
-                           "'여러 명이 겹쳐 든 것'이 따로 값을 하는가다.", fontsize=7.1, color=INK2)
+    tx(fig, X0, y, SP["desc1"], fontsize=7.1, color=INK2)
+    tx(fig, X0, y - .0125, SP["desc2"], fontsize=7.1, color=INK2)
     y -= .0285
 
     LW = .432
@@ -463,14 +550,14 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
             return INK
         return MUTED
 
-    y1 = table(fig, X0, t_top, [.132, .102, .099, .099], ["지표", "겹침", "S&P 500 PR", "NDX PR"],
+    y1 = table(fig, X0, t_top, [.132, .102, .099, .099], ["지표", SP["short"], "S&P 500 PR", "NDX PR"],
                rows, row_h=.0140, cell_color=cc,
                cell_weight=lambda r, c: "bold" if c == 1 else "normal")
 
     y2 = y1 - .015
     tx(fig, X0, y2, "기간별 수익률 %", fontsize=9.2, weight="bold")
     labs = [l for l, _ in ST.TRAIL] + ["YTD"]
-    prow = [["겹침"] + [num(tr.get(l), 1) for l in labs],
+    prow = [[SP["short"]] + [num(tr.get(l), 1) for l in labs],
             ["S&P 500 PR"] + [num(tg.get(l), 1) for l in labs],
             ["NDX PR"] + [num(tn.get(l), 1) for l in labs],
             ["초과(vs S&P)"] + [("—" if (tr.get(l) is None or tg.get(l) is None)
@@ -496,7 +583,7 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
     ax.axhline(100, color=LINE, lw=.6)
     ax.plot(xi, gn * 100, color=BM1, lw=1.0, ls="--", label="S&P 500(PR)")
     ax.plot(xi, nn * 100, color=BM2, lw=1.0, ls=":", label="NASDAQ 100(PR)")
-    ax.plot(xi, nav * 100, color=ACC, lw=1.7, label="겹침")
+    ax.plot(xi, nav * 100, color=ACC, lw=1.7, label=SP["short"])
     ax.set_ylabel("누적 (시작 = 100)", fontsize=6.8, color=MUTED, labelpad=2)
     ticks, seen = [], set()
     for k in range(len(xi)):
@@ -520,10 +607,9 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
     #   대신 한 표를 넓게 쓰고, 남는 폭에 **누가 들고 있는지**를 적는다(다른 데 없는 정보다).
     yp = ch_bot - .020
     tx(fig, X0, yp, "포트폴리오", fontsize=9.2, weight="bold")
-    cutn = min(now.values()) if now else 0
-    tx(fig, X1, yp + .0012, "%s 체결 · 동일가중 %d종목 · %d위가 %d곳인데 동점이 많아 %d종목이 됐다"
-       % (P.dates[R["_prev_i"]], len(now), TOP_OVERLAP, cutn, len(now)),
-       fontsize=6.5, color=(NEG if len(now) > TOP_OVERLAP * 1.3 else MUTED), ha="right")
+    sub, warn = SP["sub"](now)
+    tx(fig, X1, yp + .0012, "%s 체결 · %s" % (P.dates[R["_prev_i"]], sub),
+       fontsize=6.5, color=(NEG if warn else MUTED), ha="right")
     yt = yp - .0150
     rows_ = []
     for k, t in enumerate(sorted(now, key=lambda t: (-now[t], t))):
@@ -549,15 +635,12 @@ def draw_overlap(fig, P, R, now, holders, diag, page, total):
     rh = min(.0155, max(.0092, (yt - .052) / (len(rows_) + 1)))
     fs_ = 6.9 if rh > .0130 else 6.2
     yb = table(fig, X0, yt, [.026, .052, .175, .040, .034, .040, .050, .467],
-               ["#", "티커", "종목명", "섹터", "지수", "보유", "비중%", "들고 있는 운용사"], rows_,
+               ["#", "티커", "종목명", "섹터", "지수", SP["cnt"], "비중%", SP["who"]], rows_,
                row_h=rh, fs=fs_, hfs=6.4,
                aligns=["c", "l", "l", "l", "l", "r", "r", "l"], cell_color=c3,
                cell_weight=lambda r, c: "bold" if c in (1, 4, 5) else "normal", zebra=True)
-    tx(fig, X0, yb - .008,
-       "'보유'는 그 종목을 들고 있는 운용사 수다. 비중은 동일가중이라 보유 수가 많다고 더 담지 않는다 "
-       "— '많이 든 것이 더 좋다'는 검증한 적 없는 가정이라 규칙에 심지 않는다.",
-       fontsize=6.3, color=MUTED)
-    footer(fig, page, total, kind="overlap")
+    tx(fig, X0, yb - .008, SP["note"], fontsize=6.3, color=MUTED)
+    footer(fig, page, total, kind=SP["kind"])
 
 
 # ── 요약 쪽 ─────────────────────────────────────────────────────────────────
@@ -649,6 +732,37 @@ def draw_summary(fig, P, res, order, total):
     footer(fig, 1, total)
 
 
+# ── 바스켓 두 종류의 쪽 사양 ────────────────────────────────────────────────
+SPEC_OVERLAP = {
+    "kind": "overlap", "short": "겹침", "ref": "17곳 겹침",
+    "title": "거장 최다 보유 종목", "cnt": "보유", "who": "들고 있는 운용사",
+    "rule": lambda n: "최다 보유 상위 %d(동점 포함 %d종목)" % (TOP_OVERLAP, n),
+    "desc1": ("분기마다 명단 17곳의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
+              "동일가중으로 담는다. %d위에 동점이 있으면 전부 넣으므로 종목 수는 %d개 이상이다."
+              % (TOP_OVERLAP, TOP_OVERLAP, TOP_OVERLAP)),
+    "desc2": ("개별 운용사를 복제하는 뒤쪽 쪽들과 달리, 여기서 묻는 것은 "
+              "'여러 명이 겹쳐 든 것'이 따로 값을 하는가다."),
+    "sub": lambda now: ("동일가중 %d종목 · %d위가 %d곳인데 동점이 많아 %d종목이 됐다"
+                        % (len(now), TOP_OVERLAP, min(now.values()) if now else 0, len(now)),
+                        len(now) > TOP_OVERLAP * 1.3),
+    "note": ("'보유'는 그 종목을 들고 있는 운용사 수다. 비중은 동일가중이라 보유 수가 많다고 더 담지 "
+             "않는다 — '많이 든 것이 더 좋다'는 검증한 적 없는 가정이라 규칙에 심지 않는다."),
+}
+SPEC_TOP1 = {
+    "kind": "top1", "short": "1위", "ref": "운용사별 1위",
+    "title": "거장별 1위 종목", "cnt": "지목", "who": "1위로 지목한 운용사",
+    "rule": lambda n: "운용사별 1위 종목 %d개(중복 제거)" % n,
+    "desc1": ("분기마다 명단 17곳 각각의 유니버스 내 **최대 비중** 종목을 하나씩 뽑아 모으고, "
+              "중복을 없앤 뒤 동일가중으로 담는다.".replace("**", "")),
+    "desc2": ("한 종목을 여러 곳이 1위로 꼽아도 한 칸이다 — 지목 수만큼 비중을 주면 "
+              "'여러 명이 1위로 꼽은 것이 더 좋다'는 검증한 적 없는 가정을 규칙에 심게 된다."),
+    "sub": lambda now: ("운용사 %d곳 → 중복 제거 %d종목 · 동일가중"
+                        % (sum(now.values()), len(now)), False),
+    "note": ("'지목'은 그 종목을 1위로 꼽은 운용사 수다. 비중은 동일가중이라 지목 수가 많다고 더 "
+             "담지 않는다. 같은 발행사의 다른 클래스(GOOGL·GOOG)는 클래스 A 로 묶어 한 칸으로 센다."),
+}
+
+
 # ── 본체 ────────────────────────────────────────────────────────────────────
 def main() -> int:
     print("가격·유니버스 패널을 연다(style_top_pdf.Panel)…")
@@ -727,13 +841,9 @@ def main() -> int:
                     pp = P.px[t][last]
                     if pp is not None and pp == pp and pp > 0:
                         cnt[t] = cnt.get(t, 0) + 1
-        ranked = sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0]))
+        ranked = dedup_class(P, sorted(cnt.items(), key=lambda kv: (-kv[1], kv[0])))
         cut = ranked[min(TOP_OVERLAP, len(ranked)) - 1][1]
         now_cnt = {t: c for t, c in ranked if c >= cut}
-        # 누가 들고 있는지 — 괄호 안 통칭(버핏·달리오…)을 쓴다. 정식명은 표 폭에 안 들어간다.
-        def _short(nm):
-            i, j = nm.find("("), nm.find(")")
-            return nm[i + 1:j] if 0 <= i < j else nm.split(" ")[0]
         holders = {}
         for cik, hold in (H[qlast] or {}).items():
             nm = _short((cov.get(cik) or {}).get("name") or names.get(cik) or cik)
@@ -747,7 +857,22 @@ def main() -> int:
     else:
         OW = None
 
-    total = 1 + (1 if OW else 0) + len(order)
+    # ── 거장별 1위 종목 한 쪽 ──────────────────────────────────────────────
+    tsched, tdiag = build_top1(G, P)
+    TR_ = backtest(P, tsched)
+    if TR_:
+        TR_["_sched"] = tsched
+        TW = window(TR_, P); TW["_sched"] = tsched
+        TW["_prev_i"] = tsched[-1][0]
+        t1_cnt, t1_who = tsched[-1][3], {}
+        for t, cs in tsched[-1][4].items():
+            t1_who[t] = sorted(_short((cov.get(c) or {}).get("name") or names.get(c) or c)
+                               for c in cs)
+        print("  운용사별 1위: %d곳 → 중복 제거 %d종목" % (sum(t1_cnt.values()), len(t1_cnt)))
+    else:
+        TW = None
+
+    total = 1 + (1 if OW else 0) + (1 if TW else 0) + len(order)
 
     with PdfPages(OUT) as pdf:
         fig = ST.new_page(); draw_summary(fig, P, res, order, total)
@@ -755,7 +880,12 @@ def main() -> int:
         page = 2
         if OW:
             fig = ST.new_page()
-            draw_overlap(fig, P, OW, now_cnt, holders, odiag, page, total)
+            draw_basket(fig, P, OW, now_cnt, holders, page, total, SPEC_OVERLAP)
+            pdf.savefig(fig, facecolor=PAPER); plt.close(fig)
+            page += 1
+        if TW:
+            fig = ST.new_page()
+            draw_basket(fig, P, TW, t1_cnt, t1_who, page, total, SPEC_TOP1)
             pdf.savefig(fig, facecolor=PAPER); plt.close(fig)
             page += 1
         for cik in order:
