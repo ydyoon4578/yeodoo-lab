@@ -62,19 +62,8 @@ OUT = os.path.join(DATA, "guru_top_portfolios.pdf")
 sys.path.insert(0, HERE)
 import style_top_pdf as ST          # 판형·색·표·지표를 그대로 쓴다(베끼지 않는다)
 
-# style_top_pdf 는 맑은 고딕(Windows)을 잡는다. mac/리눅스에서도 같은 꼴이 나오게 다시 잡는다.
-for _p in ("/System/Library/Fonts/AppleSDGothicNeo.ttc", "/Library/Fonts/NanumGothic.ttf",
-           "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"):
-    if os.path.exists(_p):
-        try: font_manager.fontManager.addfont(_p)
-        except Exception: pass
-_HAVE = {f.name for f in font_manager.fontManager.ttflist}
-KFONT = next((n for n in ("Malgun Gothic", "Apple SD Gothic Neo", "NanumGothic",
-                          "Nanum Gothic", "Noto Sans CJK KR") if n in _HAVE), None)
-if not KFONT:
-    raise SystemExit("한글 폰트를 찾지 못했다 — 없이 그리면 문서 전체가 두부(□)로 나온다.")
-rcParams["font.family"] = KFONT
-rcParams["axes.unicode_minus"] = False
+# 폰트는 style_top_pdf 가 후보를 훑어 고르고 없으면 멈춘다 — 여기서 또 고르면 두 곳이 갈린다.
+KFONT = ST.KFONT
 
 TOPN = 20               # 상위 몇 종목 (10 → 20, 사용자 요청)
 ROW_H = .0145           # 보유 표 행 높이 — 한 쪽에 20행이 들어가므로 10행 때보다 키웠다
