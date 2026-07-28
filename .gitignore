@@ -24,3 +24,6 @@ data/_pit_px_cache.json
 # 편출 종목 시점별 주식수(yfinance) — x-small PIT 용
 #   ⚠ gitignore 는 줄 끝 주석을 지원하지 않는다. 패턴과 같은 줄에 쓰면 통째로 리터럴이 된다.
 data/_pit_sh_cache.json
+
+# macOS 파인더가 폴더마다 만드는 메타파일 — 저장소와 무관하다
+.DS_Store
