@@ -560,7 +560,7 @@ def month_ends(dates):
 
 # ── 전략 정의 ───────────────────────────────────────────────────────────
 # 각 전략은 (시점 i, 상태) → 목표 비중을 준다.
-#   kind='timing'  : 시장(동일가중 유니버스) 노출 0~1
+#   kind='timing'  : 시장(동일가중 유니버스) 노출 0~1 — 매매 대상은 동일가중, 판정 대조군은 SPX
 #   kind='xsec'    : 종목 선택 — 상위 TOPN 동일가중
 STRATS = []
 
@@ -865,7 +865,10 @@ def run():
     R = daily_rets(px)
     me = set(month_ends(dates))
 
-    # 동일가중 유니버스 지수(일간 리밸런스) — 타이밍 전략의 대상이자 모든 전략의 벤치마크
+    # 동일가중 유니버스 지수(일간 리밸런스) — **타이밍 전략이 실제로 매매하는 대상**이자
+    #   ixvol·ixgap·disp 등 지표의 입력이다. 대조군으로는 더 이상 쓰지 않는다(아래 bxr).
+    #   ⚠ 사용자 결정(2026-07-28): 판정 대조군을 S&P 500(PR)로 바꾼다. 매매 대상은 그대로 둔다 —
+    #     대상까지 바꾸면 33종이 전부 다른 전략이 되어 과거 수치와 비교가 끊긴다.
     ix = [100.0]
     ixr = [None]
     for i in range(1, n):
@@ -948,8 +951,18 @@ def run():
     out = []
     bench_r = ixr[MIN_HIST:]
     IDXR = load_index_tr(dates)      # 같은 구간 지수(PR) — 카드에 나란히 그린다
+    # 판정 대조군 = S&P 500(PR). assets.json 에서 못 읽으면 판정 근거가 통째로 사라지므로 멈춘다
+    #   — 조용히 동일가중으로 되돌아가면 화면은 'SPX 기준'이라 적힌 채 다른 숫자를 싣게 된다.
+    bxr = IDXR.get("S&P 500")
+    if not bxr:
+        raise SystemExit("대조군(S&P 500 PR)을 assets.json 에서 읽지 못했다 — 판정을 낼 수 없다.")
 
-    bnav_ref = None          # 생존편향 눈금용 대조군 NAV(전략 루프에서 채운다)
+    # ⚠ 생존편향 눈금은 **랩의 동일가중 유니버스**(오늘 명단을 과거로 소급)를 실제 RSP 와
+    #   견주는 것이다. 판정 대조군이 SPX 로 바뀐 뒤에도 이 눈금은 동일가중이어야 한다 —
+    #   bnav_ref 를 그대로 쓰면 'SPX vs RSP' 를 재고 그걸 생존편향이라 부르게 된다.
+    ewnav_ref = [100.0]
+    for _i in range(MIN_HIST + 1, n):
+        ewnav_ref.append(ewnav_ref[-1] * (1 + ixr[_i]))
     for S in STRATS:
         w = [0.0] * n
         if S["kind"] == "timing":
@@ -1238,8 +1251,7 @@ def run():
 
         bnav = [100.0]
         for i in range(MIN_HIST + 1, n):
-            bnav.append(bnav[-1] * (1 + ixr[i]))
-        bnav_ref = bnav          # 대조군은 전 전략 공통 — 생존편향 눈금에서 다시 쓴다
+            bnav.append(bnav[-1] * (1 + bxr[i]))
         d2 = dates[MIN_HIST:]
 
         # ── 실제 시작일에 맞춰 전부 다시 세운다 ────────────────────────────
@@ -1264,7 +1276,7 @@ def run():
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": tstat(srets, ixr[(start_i or (MIN_HIST + 1)):]),
+            "t": tstat(srets, bxr[(start_i or (MIN_HIST + 1)):]),
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
             "start": d2[0], "n_days": len(d2),
             "holdings": hold_now,
@@ -1539,7 +1551,7 @@ def run():
         for i in range(MIN_HIST + 1, n):
             _nv.append(_nv[-1] * (1 + _rsp[i]))
         _rs = ann_stats(_nv, dates[MIN_HIST:], rf)
-        _bs = ann_stats(bnav_ref, dates[MIN_HIST:], rf) if bnav_ref else {}
+        _bs = ann_stats(ewnav_ref, dates[MIN_HIST:], rf) if ewnav_ref else {}
         if _rs.get("cagr") is not None and _bs.get("cagr") is not None:
             surv = {
                 "lab_bench_cagr": _bs["cagr"], "rsp_cagr": _rs["cagr"],
@@ -1551,7 +1563,7 @@ def run():
                         "생존편향 단독의 상한으로 읽어야 한다."
                         % (len(tickers), _bs["cagr"] - _rs["cagr"]),
             }
-            print("  [생존편향 눈금] 랩 대조군 %.2f%% vs RSP %.2f%% → 격차 %+.2f%%p"
+            print("  [생존편향 눈금] 랩 동일가중 유니버스 %.2f%% vs RSP %.2f%% → 격차 %+.2f%%p"
                   % (_bs["cagr"], _rs["cagr"], _bs["cagr"] - _rs["cagr"]))
 
     doc = {
@@ -1559,7 +1571,7 @@ def run():
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": n - MIN_HIST,
         "n_stocks": len(tickers), "topn": TOPN,
-        "bench_label": "동일가중 유니버스 매수후보유",
+        "bench_label": "S&P 500(PR) 매수후보유",
         "span_years": round((n - MIN_HIST) / 252.0, 1),
         "surv_proxy": surv,
         "idx_stats": idx_sh,
@@ -1583,9 +1595,19 @@ def run():
             # ⚠ 이 값은 '수준이 얼마나 부풀려졌나'다. 초과수익이 넘어야 할 문턱이 **아니다** —
             #   초과는 전략−대조군인데 둘 다 같은 편향된 유니버스에서 나와 대체로 상쇄된다.
             #   예전엔 여기에 "초과가 이 안쪽이면 실력이 아니다"라고 적었다(잘못).
-            surv["note"] + " 즉 이 표의 CAGR은 전략도 대조군도 그만큼 부푼 세계의 숫자다. "
-            "초과수익(전략−대조군)에서는 대체로 상쇄되지만, 작은 종목에 치우친 규칙일수록 덜 상쇄된다.",
+            surv["note"] + " 전략 수익은 그만큼 부푼 세계의 숫자다. ⚠ 대조군을 S&P 500(PR)으로 "
+            "바꾼 뒤로는 이 편향이 초과수익에서 상쇄되지 않는다 — 예전 대조군(같은 유니버스 "
+            "동일가중)은 같은 편향을 태우고 있어 대체로 상쇄됐지만, 지수는 그렇지 않다. "
+            "즉 여기 초과수익·ΔSharpe·t 는 실제보다 좋게 나온 값이다.",
         ] if surv else []) + [
+            # 대조군을 바꾼 사실과 그 크기를 숫자로 남긴다. 이걸 안 적으면 예전 결과와 나란히
+            #   놓고 '전략이 좋아졌다'로 읽게 된다 — 좋아진 것은 전략이 아니라 문턱이다.
+            "⚠ 대조군을 바꿨다(2026-07-28 사용자 결정) — 예전에는 같은 유니버스 동일가중 "
+            "매수후보유였고 지금은 S&P 500(PR)이다. 동일가중 유니버스는 오늘 명단을 과거로 "
+            "소급한 것이라 실제 동일가중 S&P 500(RSP)보다 연 %+.2f%%p 높았다. 즉 예전 문턱이 "
+            "그만큼 높았다. 같은 규칙인데 ΔSharpe 가 전반적으로 올라간 것은 규칙이 좋아져서가 "
+            "아니라 문턱이 내려갔기 때문이다. 예전 판정과 나란히 놓고 비교하지 말 것."
+            % (surv.get("gap_cagr") if surv and surv.get("gap_cagr") is not None else 0.0),
             "표본이 %s(%d거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 "
             "실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다." % (_span_txt, n - MIN_HIST),
             "비용 0(gross). 회전율이 높은 규칙일수록 실제와 벌어지므로 연 회전율을 함께 싣는다.",

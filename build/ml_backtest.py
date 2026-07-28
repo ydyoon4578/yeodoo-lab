@@ -14,7 +14,8 @@
   · 검증      : 워크포워드 확장창. t 시점 예측은 t까지의 데이터로만 학습한다(재학습 월 1회).
   · 표준화    : 학습창 안에서만 평균·표준편차를 구한다. 전체 표본으로 표준화하면
                 미래 정보가 새어 들어간다(흔한 사고다).
-  · 판정      : 지수 타이밍은 SPY 상시보유, 종목선택은 동일가중 유니버스와 겨룬다.
+  · 판정      : 지수 타이밍은 SPY 상시보유, 종목선택·13F 복제는 S&P 500(PR)과 겨룬다.
+                (2026-07-28 사용자 결정 — 동일가중 유니버스 대조군은 쓰지 않는다)
 
 산출은 data/ml_strategies.json. build/asset_backtest.py가 이 파일을 읽어 아카이브 재점검표에
 합친다 — 표를 두 곳에 두면 갈린다.
@@ -257,7 +258,12 @@ def stock_selection(RF, TOPN=10, mode="value"):
     M = np.column_stack([P[t] for t in tick])
     R = np.full_like(M, np.nan)
     R[1:] = M[1:] / M[:-1] - 1
-    bench = np.nanmean(R, axis=1)
+    # 대조군 = S&P 500(PR). 사용자 결정(2026-07-28) — 동일가중 유니버스는 쓰지 않는다.
+    #   ⚠ 특징량(횡단면 순위·표준화)은 여전히 유니버스 전체에서 만든다. 바뀐 것은 **무엇과
+    #     견주는가**뿐이고 규칙이 무엇을 사는지는 그대로다.
+    bench = spx_daily(DTS)
+    if bench is None:
+        raise SystemExit("대조군(S&P 500 PR)을 assets.json 에서 읽지 못했다 — 판정을 낼 수 없다.")
 
     def roll_mean(A_, w):
         out = np.full_like(A_, np.nan)
@@ -404,7 +410,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
     return {
         "sid": sid, "arch": "ml-stock-selection" if mode == "value" else None,
         "chart": curve_pack(dd, nav, bn),
-        "bench_label": "동일가중 유니버스 매수후보유",
+        "bench_label": "S&P 500(PR) 매수후보유",
         "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
                      "tickers": sorted(hold),
                      "names": {t: (NMX.get(t) or t) for t in sorted(hold)},
@@ -477,6 +483,10 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     if st is None or st >= len(months) - 12:
         return None
 
+    # 대조군 = S&P 500(PR) 월수익. 사용자 결정(2026-07-28) — 동일가중 유니버스는 쓰지 않는다.
+    SPXM = spx_monthly(months)
+    if SPXM is None:
+        raise SystemExit("대조군(S&P 500 PR)을 assets.json 에서 읽지 못했다 — 판정을 낼 수 없다.")
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
     turn = 0
     for i in range(st + 1, len(months)):
@@ -488,10 +498,7 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         rr = [P[t][i] / P[t][i - 1] - 1 for t in hold
               if np.isfinite(P[t][i]) and np.isfinite(P[t][i - 1]) and P[t][i - 1]]
         v = float(np.mean(rr)) if rr else 0.0
-        # 대조군 = 같은 달 우리 유니버스 동일가중(복제가 '종목 고르기'로 이겼는지만 남긴다)
-        allr = [P[t][i] / P[t][i - 1] - 1 for t in tick
-                if np.isfinite(P[t][i]) and np.isfinite(P[t][i - 1]) and P[t][i - 1]]
-        b = float(np.mean(allr)) if allr else 0.0
+        b = float(SPXM[i]) if np.isfinite(SPXM[i]) else 0.0
         rets.append(v); nav.append(nav[-1] * (1 + v))
         brs.append(b); bn.append(bn[-1] * (1 + b))
 
@@ -517,7 +524,7 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         "sid": "guru-clone", "arch": "13f-best-ideas-clone",
         # 이 판은 월 단위라 날짜 계열이 months다(다른 판은 일별 DTS를 dd에 담는다)
         "chart": curve_pack(months[st:], nav, bn),
-        "bench_label": "동일가중 유니버스 매수후보유",
+        "bench_label": "S&P 500(PR) 매수후보유",
         "name": "13F 컨빅션 복제 (상위 %d종목)" % TOPN,
         "rule": "분기말 13F에서 (운용사 포트폴리오 내 비중 합) × (보유 운용사 수)가 높은 %d종목을 "
                 "동일가중 보유. 분기말 45일 뒤부터 적용하고 분기마다 교체." % TOPN,
@@ -540,6 +547,54 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
+
+
+def spx_daily(dates):
+    """dates 축에 맞춘 S&P 500(PR) 일별 수익. 못 읽으면 None — 부르는 쪽이 멈춘다."""
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception:
+        return None
+    ad = A.get("dates") or []
+    raw = (A.get("px") or {}).get("^GSPC")
+    if not raw:
+        return None
+    pos = {d: i for i, d in enumerate(ad)}
+    px_al, last = [], None
+    for d in dates:
+        i = pos.get(d)
+        if i is not None and i < len(raw) and raw[i] is not None:
+            last = float(raw[i])
+        px_al.append(last)
+    if sum(1 for x in px_al if x is not None) < len(dates) * 0.9:
+        return None
+    r = np.full(len(dates), np.nan)
+    for i in range(1, len(dates)):
+        a_, b_ = px_al[i - 1], px_al[i]
+        r[i] = (b_ / a_ - 1) if (a_ and b_) else 0.0
+    return r
+
+
+def spx_monthly(months):
+    """months('YYYY-MM') 축에 맞춘 S&P 500(PR) 월수익."""
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception:
+        return None
+    ad = A.get("dates") or []
+    raw = (A.get("px") or {}).get("^GSPC")
+    if not raw:
+        return None
+    last = {}
+    for i, d in enumerate(ad):
+        if i < len(raw) and raw[i] is not None:
+            last[d[:7]] = float(raw[i])
+    out = np.full(len(months), np.nan)
+    for j in range(1, len(months)):
+        a_, b_ = last.get(months[j - 1]), last.get(months[j])
+        if a_ and b_ and a_ > 0:
+            out[j] = b_ / a_ - 1.0
+    return out
 
 
 def main() -> int:
