@@ -214,6 +214,23 @@
   .calmac .st{margin-left:3px;font-style:normal;font-size:9px;letter-spacing:-.5px;color:var(--marg)}
   .calmac .st.hi{color:var(--hot)}
   .calmac .sep{color:var(--line)}
+  /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
+     (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
+  .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .sttbl{border-collapse:collapse;width:100%;min-width:620px;font-variant-numeric:tabular-nums}
+  .sttbl th,.sttbl td{padding:7px 11px;text-align:right;font-size:12px;white-space:nowrap;
+       border-top:1px solid var(--line-soft)}
+  .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
+       font-weight:700;border-top:0;background:var(--panel-2)}
+  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:normal;min-width:118px}
+  .sttbl tbody th{font-weight:700;font-size:12.5px;color:var(--ink-2)}
+  .sttbl tbody th small{display:block;font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--muted)}
+  .sttbl tr.ix th,.sttbl tr.ix td{background:var(--panel-2);font-weight:700}
+  .sttbl tr.gap th,.sttbl tr.gap td{border-top:2px solid var(--line)}
+  .sttbl td.up{color:var(--deploy)} .sttbl td.dn{color:var(--hot)} .sttbl td.z{color:var(--muted)}
+  .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
+  .stnote b{color:var(--ink-2)}
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
@@ -732,6 +749,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       </div>
     </section>
 
+    <!-- ①-b 스타일 성과 — 캘린더 바로 아래. 지수 두 줄을 위에 두어 '무엇 대비인가'를 먼저 보인다.
+         ⚠ 이 랩은 팩터 모멘텀을 '자기 유니버스 대비 구별 불가'로 기각했다. 최근 잘 나간 스타일을
+            추천처럼 읽히게 두면 자기모순이므로, 문구는 상태 표시에 머물러야 한다. -->
+    <section id="s-style" aria-labelledby="st-h">
+      <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
+      <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
+      <p class="stnote">지수를 위에 두고 스타일을 아래에 놓았습니다(개수는 위 부제에 적힙니다).
+        숫자는 <b>기간 수익률(%)</b>이고,
+        52H는 최근 1년 고점 대비입니다. <b>최근 잘 간 스타일을 따라 사라는 뜻이 아닙니다</b> —
+        이 랩은 그 추종(팩터 모멘텀)을 검정해 자기 유니버스 대비 구별 불가로 기각했습니다.
+        전체 표(러셀2000·금리·크레딧 포함)는 <a href="macro.html#nowperf-h">거시</a>에 있습니다.</p>
+    </section>
+
     <!-- ② 시장 -->
     <section id="s-market" aria-labelledby="mk-h">
       <p class="lbl" id="mk-h">지금 시장</p>
@@ -1205,6 +1235,41 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       renderCal();
     }).catch(function(){renderCal();});
 
+
+  // ── ①-b 스타일 성과 ──────────────────────────────────────────
+  // data/market_board.json(build/market_board.py)만 읽는다. 4KB라 홈 슬림 묶음에 넣지 않고
+  // 직접 받는다(events.json과 같은 방식) — 슬림을 거치면 갱신 잡을 하나 더 엮게 된다.
+  // 러셀2000(IWM)은 스타일이 아니라 지수라 홈에서는 뺀다. SPY는 위 지수 줄에 이미 있다.
+  // 전체 표(러셀2000·금리·크레딧 포함)는 macro.html 이 같은 파일로 그린다.
+  var ST_SKIP={IWM:1, SPY:1};
+  var ST_HZ=[['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],['12M','12개월'],['YTD','YTD']];
+  function stCell(v){
+    if(v==null||v!==v)return '<td class="z">—</td>';
+    var c=v>0.005?'up':(v<-0.005?'dn':'z');
+    return '<td class="'+c+'">'+(v>0?'+':'')+v.toFixed(2)+'</td>';
+  }
+  function stRow(x,cls){
+    return '<tr'+(cls?' class="'+cls+'"':'')+'><th scope="row">'+esc(x.n)+
+      '<small>'+esc(x.t)+'</small></th>'+
+      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+
+      '<td class="z">'+(x.off52==null?'—':x.off52.toFixed(1))+'</td>'+
+      '<td class="z">'+(x.rsi==null?'—':x.rsi.toFixed(0))+'</td></tr>';
+  }
+  function drawStyle(j){
+    var box=el('sttbl'); if(!box)return;
+    if(!j||!j.style){
+      box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
+    var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
+    var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
+          '<th>52H</th><th>RSI</th></tr></thead><tbody>';
+    ix.forEach(function(x){h+=stRow(x,'ix');});
+    st.forEach(function(x,i){h+=stRow(x,i===0?'gap':'');});
+    box.innerHTML=h+'</tbody>';
+    var s=el('st-sub');
+    if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
+  }
+  fetch('data/market_board.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;}).then(drawStyle);
 
   // ── ⑤ 최근 업데이트 ──────────────────────────────────────────
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
