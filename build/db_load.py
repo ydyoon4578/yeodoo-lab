@@ -101,8 +101,14 @@ def connect():
 
 # ── git 헬퍼 ────────────────────────────────────────────────────────
 def _git(*args):
+    # encoding 은 생략하면 안 된다. text=True 만 주면 로케일(한국어 Windows는 cp949)로 디코드하는데,
+    # 여기로 나오는 건 한글이 든 utf-8 JSON 이다. 디코드가 깨져도 **예외가 올라오지 않는다** —
+    # 터지는 자리가 stdout 을 읽는 워커 스레드라서, 호출자에게는 r.stdout=None 이 조용히 돌아온다.
+    # 그러면 read_at 의 json.loads(None) 이 TypeError 로 잡혀 None 이 되고, 그 커밋은 이력에서
+    # 통째로 빠진 채 적재가 '성공'으로 끝난다. 실측(data/events.json, 한글 336자): 고치기 전엔
+    # 그 커밋이 없는 것으로 처리됐고, utf-8 을 박은 뒤에야 정상 파싱된다.
     return subprocess.run(["git", "-C", ROOT, *args],
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, encoding="utf-8")
 
 
 def read_at(sha, relpath):
