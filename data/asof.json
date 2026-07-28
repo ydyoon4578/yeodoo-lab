@@ -1,6 +1,6 @@
 {
  "note": "기준일 정본. build/asof_index.py가 만들고, 전 페이지 내비 칩·홈·sources.html이 이 파일만 읽는다. 페이지에 날짜를 직접 적지 말 것.",
- "generated": "2026-07-28T03:57:48Z",
+ "generated": "2026-07-28T04:00:02Z",
  "primary": "2026-07-27",
  "unified": false,
  "axes": [
@@ -119,6 +119,7 @@
    "as_of": "2026-07-27",
    "cadence": "매일",
    "note": "애널리스트 추정 스냅샷 — 과거 시점 값이 없어 백테스트에 못 쓴다. 매일 쌓는 중",
+   "collected": "2026-07-28",
    "sched": "월~토 09:10 KST",
    "lag_days": 0
   },
