@@ -140,7 +140,12 @@ def js_checks(label, html):
     # node가 없는 환경에서는 검사를 건너뛴다 — 못 잡는 것보다 거짓 통과를 만드는 게 나쁘다.
     if NODE:
         for k, s in enumerate(raw):
-            r = _sp0.run([NODE, "--check", "-"], input=s, capture_output=True, text=True)
+            # encoding 은 생략하면 안 된다. text=True 만 주면 로케일 인코딩(한국어 Windows는
+            # cp949)으로 stdin을 쓰다가 주석의 '—'에서 UnicodeEncodeError 가 난다. 그 예외는
+            # stdin 을 쓰는 **워커 스레드**에서만 터져 파이썬은 죽지 않고, stdin 이 닫히지 않은
+            # node 가 입력을 영원히 기다린다 — 검증이 실패가 아니라 '멈춤'으로 끝난다(실측).
+            r = _sp0.run([NODE, "--check", "-"], input=s, capture_output=True,
+                         text=True, encoding="utf-8")
             if r.returncode != 0:
                 first = next((l.strip() for l in (r.stderr or "").split("\n")
                               if l.strip() and "SyntaxError" in l), (r.stderr or "")[:120])
@@ -1097,8 +1102,10 @@ except Exception as e:
 # 빌드 스텝이 없으니 "한 곳에서 만들어 전부에 밀어넣고 어긋나면 막는다"가 유일한 보증이다.
 try:
     import subprocess as _sp
+    # sync_nav.py 는 stdout 을 utf-8 로 고정해 찍는다(그쪽 38번 줄). 여기서 로케일로 읽으면
+    # 드리프트 메시지가 깨지거나 디코드 예외로 바뀌어, 진짜 사유가 '실행 실패'로 덮인다.
     _r = _sp.run([sys.executable, os.path.join(ROOT, "build", "sync_nav.py"), "--check"],
-                 capture_output=True, text=True)
+                 capture_output=True, text=True, encoding="utf-8")
     if _r.returncode != 0:
         for _l in (_r.stdout or "").strip().split("\n"):
             if "어긋남" in _l:
@@ -1135,7 +1142,7 @@ for _f in PAGES:
 try:
     import subprocess as _sp
     _r = _sp.run([sys.executable, os.path.join(ROOT, "build", "sync_shell.py"), "--check"],
-                 capture_output=True, text=True)
+                 capture_output=True, text=True, encoding="utf-8")   # 위 sync_nav 와 같은 이유
     if _r.returncode != 0:
         _msg = ((_r.stdout or "") + (_r.stderr or "")).strip()
         errors.append("공통 셸 드리프트 — build/sync_shell.py를 다시 돌릴 것: "
