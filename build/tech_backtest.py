@@ -1311,23 +1311,34 @@ def run():
     # 1회 교정 측정이라 코드에 상수로 박는다(상시 산출은 불가: 원천이 라이선스이고
     # CI 러너가 사내망에 못 닿으며, yfinance 는 편출·상폐 종목을 주지 않는다).
     # 재측정하면 이 표를 갱신할 것. (sid: PIT CAGR%, PIT Sharpe, PIT t)
-    PIT_MEASURED = {
-        "x-mom12":      (30.91, 0.84,  1.62), "x-lowvol":  (5.58, 0.28, -1.05),
-        "x-rev1m":      (-1.60, 0.02, -0.96), "x-52wh":    (9.39, 0.45, -0.30),
-        "x-dist200":    (29.53, 0.84,  1.52), "x-volsurge": (5.75, 0.24, -0.78),
-        "x-mom-trend":  (28.82, 0.80,  1.49), "x-rev1w":   (15.67, 0.55, 0.77),
-        "x-minvar":      (5.41, 0.26, -1.02), "x-riskbudget": (5.58, 0.28, -1.05),
-        "x-lowbeta":    (-1.77, -0.22, -1.61), "x-snapback": (3.90, 0.15, -1.18),
-        "x-maxlow":      (7.92, 0.42, -0.81), "x-max5low":  (4.90, 0.22, -1.38),
-        "x-recency":     (5.50, 0.24, -0.28), "x-ivol":    (10.30, 0.55, -0.41),
-    }
-    PIT_WINDOW, PIT_BENCH = "2020-09~2026-07", 11.67
+    # 값은 **build/pit_backtest.py 가 만든 data/pit_strategies.json 에서 읽는다.** 예전엔 상수표로
+    # 박아 뒀는데(사내 DB 가격을 쓰던 시절엔 재현이 안 돼 그럴 수밖에 없었다), 지금은 가격을
+    # yfinance 로 받아 누구나 다시 돌릴 수 있으므로 산출물을 단일 출처로 둔다.
+    # ⚠ 파일이 없으면 **조용히 넘어가지 않는다** — 그러면 판정이 소급 기준으로 슬그머니 되돌아간다.
+    PIT_MEASURED, PIT_WINDOW, PIT_BENCH = {}, None, None
+    try:
+        _pj = json.load(io.open(os.path.join(DATA, "pit_strategies.json"), encoding="utf-8"))
+        PIT_WINDOW = "%s~%s" % (_pj["start"][:7], _pj["as_of"][:7])
+        for _r in _pj.get("strategies") or []:
+            _m, _b = _r.get("metrics") or {}, _r.get("bench") or {}
+            PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"))
+            PIT_BENCH = _b.get("cagr")
+        print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
+              % ("pit_strategies.json", len(PIT_MEASURED), PIT_WINDOW, PIT_BENCH or 0))
+    except FileNotFoundError:
+        print("⚠ [PIT] data/pit_strategies.json 이 없다 — 생존편향 반영 없이 소급 기준 판정이 나간다. "
+              "사내망 PC에서 `python build/pit_backtest.py` 를 돌릴 것.")
+    except Exception as _e:
+        print("⚠ [PIT] pit_strategies.json 을 못 읽었다(%s) — 소급 기준 판정이 나간다." % str(_e)[:60])
+
     _dg = []
     for r in out:
         m = PIT_MEASURED.get(r["sid"])
         if not m:
             continue
         pc, ps, pt = m
+        if pt is None:
+            continue
         r["pit"] = {"window": PIT_WINDOW, "cagr": pc, "sharpe": ps, "t": pt,
                     "bench_cagr": PIT_BENCH, "excess_cagr": round(pc - PIT_BENCH, 2)}
         if r["verdict"] == "통과 후보" and abs(pt) < tcrit:
@@ -1427,6 +1438,49 @@ def run():
                 "규칙 수가 늘어도 실제로 검증한 '서로 다른 아이디어' 수는 그만큼 늘지 않는다.",
     }
 
+    # 생존편향 실측 한 줄을 **데이터에서** 만든다. 숫자를 문장에 박으면 재측정할 때마다 거짓말이 된다.
+    _pit_limit = None
+    if PIT_MEASURED and PIT_BENCH is not None:
+        _w0, _w1 = PIT_WINDOW.split("~")
+        _idx = [i for i, d in enumerate(dates[MIN_HIST:]) if _w0 <= d[:7] <= _w1]
+        _lab_bench = None
+        if len(_idx) > 60:
+            _i, _j = _idx[0], _idx[-1]
+            _bn = [100.0]
+            for k in range(MIN_HIST + 1, n):
+                _bn.append(_bn[-1] * (1 + ixr[k]))
+            if _bn[_i] > 0:
+                _yrs = (_j - _i) / 252.0
+                _lab_bench = ((_bn[_j] / _bn[_i]) ** (1 / _yrs) - 1) * 100 if _yrs > 0 else None
+        # ⚠ 전 구간 CAGR(2017-08~) 과 PIT CAGR(2020-09~) 을 빼면 안 된다. 그 차이의 상당 부분이
+        #   생존편향이 아니라 구간이 달라서 생긴다. 랩 쪽도 PIT 창으로 잘라 같은 구간끼리 뺀다.
+        _ov = []
+        for _r in out:
+            _m = PIT_MEASURED.get(_r["sid"])
+            if not (_m and _m[0] is not None):
+                continue
+            _nv, _dd = _r.get("nav") or [], _r.get("dates") or []
+            _k = [q for q, dd in enumerate(_dd) if _w0 <= dd[:7] <= _w1]
+            if len(_k) < 20 or not _nv[_k[0]]:
+                continue
+            _yr = (_k[-1] - _k[0]) * 5 / 252.0          # nav 는 5거래일 간격 표본
+            if _yr <= 0:
+                continue
+            _labc = ((_nv[_k[-1]] / _nv[_k[0]]) ** (1 / _yr) - 1) * 100
+            _ov.append(_labc - _m[0])
+        _ov.sort()
+        _med = _ov[len(_ov) // 2] if _ov else None
+        _pit_limit = (
+            "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간"
+            "(%s)을 다시 돌린 결과다. 대조군 CAGR이 %s%.2f%%로, 가격·거래량 규칙 %d종의 CAGR은 "
+            "중앙값 %.1f%%p 과대로 나온다. 모멘텀 계열이 가장 심해 t가 3.4 안팎에서 1.5 미만으로 "
+            "내려앉는다 — 다만 t 하락분 전부가 편향은 아니다. PIT 표본이 짧아(1461일 대 2252일) "
+            "그중 3분의 1가량은 구간 단축에서 온다. 그래도 남는 하락이 커서 '통과'는 유지되지 않는다. "
+            "산출: build/pit_backtest.py (멤버십은 사내 DB, 가격은 yfinance)."
+            % (PIT_WINDOW,
+               ("%.2f%%→" % _lab_bench) if _lab_bench else "",
+               PIT_BENCH, len(PIT_MEASURED), _med if _med is not None else 0))
+
     # 표본 길이를 사람이 읽는 말로 — 문장에 '3년'을 박아 두면 구간을 바꿀 때마다 거짓말이 된다.
     _yrs = (n - MIN_HIST) / 252.0
     _span_txt = ("%.1f년" % _yrs) if _yrs < 10 else ("%d년" % round(_yrs))
@@ -1497,15 +1551,12 @@ def run():
             "생존편향 — 오늘의 %d종목을 과거 %s에 그대로 적용한다. 그 사이 편출된 종목이 없어 "
             "모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다. "
             "구간이 길수록 누락된 편출 종목이 쌓여 이 왜곡은 더 커진다." % (len(tickers), _span_txt),
-            # 2026-07-27 1회 실측. 사내 DB의 시점별 지수 편입 이력으로 **같은 구간**(2020-09~
-            # 2026-07, SPX 멤버십이 그때부터라 여기 맞췄다)을 다시 돌려 잰 값이다. 상시 산출이
-            # 아니라 교정용 한 번의 측정이고, 원천 데이터는 라이선스라 공개하지 않는다.
-            # 구간을 안 맞추면 2017~2020 강세장이 섞여 편향이 과대평가된다 — 반드시 맞춰서 잰다.
-            "생존편향의 크기(실측) — 시점별 실제 편입 종목으로 같은 구간을 다시 돌리면 대조군 CAGR이 "
-            "19.9%→11.7%(연 8.3%p 과대)로, 가격·거래량 규칙 16종의 CAGR은 중앙값 10.4%p 과대로 "
-            "나온다. 모멘텀 계열이 가장 심해 CAGR 80%대가 29~31%로 내려앉고 t값도 전부 1.6 미만이 "
-            "된다. 이 표의 순위와 판정은 그만큼 할인해서 읽어야 한다.",
-        ] + ([
+            # 실측 한 줄은 build/pit_backtest.py 산출물에서 만든다(위 _pit_limit).
+            # 구간을 안 맞추면 2017~2020 강세장이 섞여 편향이 과대평가된다 — 그래서 같은 구간으로 잰다.
+        ] + ([_pit_limit] if _pit_limit else
+             ["생존편향의 크기 — 아직 재지 못했다. 사내망 PC에서 build/pit_backtest.py 를 돌리면 "
+              "매월말 실제 편입 종목 기준으로 다시 재서 이 자리에 수치가 들어온다."]) + ([
+
             # 보정은 못 해도 크기는 잴 수 있다. 눈금이 없으면 독자가 스스로 할인할 방법이 없다.
             # ⚠ 이 값은 '수준이 얼마나 부풀려졌나'다. 초과수익이 넘어야 할 문턱이 **아니다** —
             #   초과는 전략−대조군인데 둘 다 같은 편향된 유니버스에서 나와 대체로 상쇄된다.
