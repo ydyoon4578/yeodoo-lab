@@ -36,6 +36,7 @@ import tech_backtest as TB          # noqa: E402  지표·통계를 다시 구�
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 CACHE = os.path.join(DATA, "_pit_px_cache.json")
+SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 OUT = os.path.join(DATA, "pit_strategies.json")
 MEMB = os.path.join(DATA, "pit_members.json")
 
@@ -46,7 +47,8 @@ TOPN = TB.TOPN
 # 반쪽만 PIT 로 바꾸면 비교가 성립하지 않는다.
 PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
-              "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol"]
+              "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
+              "x-small"]   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -162,6 +164,28 @@ def main():
         else:
             vlm[t] = None
 
+    # ── 시점별 주식수(x-small 용) ──────────────────────────────────────
+    # 오늘의 유니버스는 랩이 SEC XBRL 로 이미 갖고 있고(data/fx), 편출 종목만 yfinance 캐시에서.
+    # ⚠ 두 출처는 정의가 미세하게 다르다(실측: yfinance 가 0.3~2.3% 낮다). 시총이 자릿수로
+    #   벌어지는 횡단면이라 순위 영향은 거의 없지만, 민감도를 재서 limits 에 싣는다.
+    SH = {}
+    _fu = TB.load_fund()
+    for t in tickers:
+        a = (_fu.get(t) or {}).get("sh")
+        if a:
+            SH[t] = a
+    _nsec = len(SH)
+    if os.path.exists(SHCACHE):
+        # 🚨 단위를 맞춘다. 랩의 SEC 계열(data/fx)은 **백만주**로 저장돼 있고(AOS 139.17),
+        #    yfinance get_shares_full 은 **원주**를 준다(94,896,231). 그대로 섞으면 편출 종목
+        #    시총이 10^6 배로 부풀어 '가장 작은 10'에 영영 못 들어간다 — 실제로 그렇게 나왔고
+        #    (700자리 중 편출 0건) 하마터면 '소형주는 PIT 를 통과했다'는 거짓 결론이 될 뻔했다.
+        for t, a in json.load(io.open(SHCACHE, encoding="utf-8")).items():
+            if t in tickers and t not in SH:
+                SH[t] = [[d, v / 1e6] for d, v in a]
+    print("  주식수 %d종 (SEC %d + yfinance %d)" % (len(SH), _nsec, len(SH) - _nsec))
+    C_SH = SH
+
     R = TB.daily_rets(px)
     me = set(TB.month_ends(dates))
     # ⚠ i0 를 START 직후 아무 날로 잡으면 안 된다. 전략은 첫 월말 리밸까지 보유가 없어 수익 0인데
@@ -190,7 +214,8 @@ def main():
 
     TB.build_strats()
     BY = {s["sid"]: s for s in TB.STRATS}
-    C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol}
+    C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
+         "SH": C_SH, "dates": dates}
 
     # 커버리지 — 매월말 '멤버인데 가격이 없는' 비율. 남은 편향의 크기를 정직하게 싣는다.
     cov = []
@@ -267,7 +292,10 @@ def main():
             "t 는 이 표본(%d거래일·규칙 %d종)에서 계산한 값이다. 랩 본편의 본페로니 임계(표본 "
             "2252일·규칙 51종 기준)를 그대로 들이대면 잣대가 어긋난다 — 여기서는 문턱을 넘고 말고가 "
             "아니라 '소급 표본 대비 t 가 얼마나 무너지는가'로 읽어야 한다." % (n - i0, len(PRICE_SIDS)),
-            "가격·거래량 규칙 %d종만 다룬다. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외." % len(PRICE_SIDS),
+            "규칙 %d종을 다룬다. 소형주(시가총액)는 시점별 주식수를 랩의 SEC XBRL(오늘의 유니버스)과 "
+            "yfinance(편출 종목)로 합쳐 재현했다 — 두 출처의 주식수는 0.3~2.3%% 차이 나지만 시총이 "
+            "자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. 나머지 펀더멘털 규칙(저PER·고ROE 등)은 "
+            "시점별 재무가 없어 제외." % len(PRICE_SIDS),
             "비용 0(gross) · 신호는 당일 종가로 계산해 다음 거래일부터 적용(선견 없음).",
         ],
         "strategies": out,
@@ -322,6 +350,14 @@ def score(S, t, j, C):
             return None
         a, b = TB.sma(V, j, 20), TB.sma(V, j, 60)
         return (a / b) if (a and b and b > 0) else None
+    if sid == "x-small":
+        # 랩과 같은 정의 — 시가총액 = 그 시점 주식수 × 종가. 작을수록 위(음수로 뒤집는다).
+        a = (C.get("SH") or {}).get(t)
+        if not a:
+            return None
+        sn = TB.asof_fund(a, C["dates"][j])
+        p0 = P[j]
+        return -(sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
     return S["fn"](t, j, P, R[t], TB.vol(R[t], j, 60))
 
 
@@ -361,6 +397,27 @@ def fetch_cache():
     json.dump(out, io.open(CACHE, "w", encoding="utf-8"), separators=(",", ":"))
     print("→ %s · %d종 (이번에 %d종 추가) · 못 받은 %d종은 인수·상폐로 보인다"
           % (CACHE, len(out), got, len(want) - len(out)))
+
+    # 시점별 주식수 — x-small(시가총액) 을 PIT 로 재려면 필요하다.
+    # 오늘의 유니버스는 랩이 SEC XBRL 로 이미 갖고 있고(data/fx), 편출 종목만 여기서 받는다.
+    # ⚠ 두 출처는 정의가 미세하게 다르다(실측 yfinance 가 0.3~2.3% 낮다). 시총이 자릿수로
+    #   벌어지는 횡단면에서는 순위에 거의 영향이 없지만, limits 에 적고 민감도도 재 둔다.
+    sh = json.load(io.open(SHCACHE, encoding="utf-8")) if os.path.exists(SHCACHE) else {}
+    tgt = [t for t in sorted(out) if t not in sh]
+    print("주식수 수집 %d종 (이미 %d종)" % (len(tgt), len(sh)))
+    for k, t in enumerate(tgt):
+        try:
+            ser = yf.Ticker(t).get_shares_full(start="2019-01-01")
+            if ser is not None and len(ser):
+                # 날짜 내림차순 [(날짜, 주식수)] — 랩의 asof_fund 와 같은 모양
+                sh[t] = [[str(d.date()), float(v)] for d, v in ser.items()][::-1]
+        except Exception as e:
+            print("  [sh] %s 실패: %s" % (t, str(e)[:50]))
+        if k % 10 == 9:
+            json.dump(sh, io.open(SHCACHE, "w", encoding="utf-8"), separators=(",", ":"))
+        time.sleep(1.5)
+    json.dump(sh, io.open(SHCACHE, "w", encoding="utf-8"), separators=(",", ":"))
+    print("→ %s · %d종" % (SHCACHE, len(sh)))
     return 0
 
 
