@@ -387,7 +387,7 @@ def main() -> int:
         print("❌ 이번 분기 수집 0곳 — 갱신 중단(이전본 유지)")
         return 1
 
-    managers, overlap = [], {}
+    managers, overlap, OFFNM = [], {}, {}
     for cik, d in sorted(cur.items(), key=lambda kv: -sum(h["v"] for h in kv[1]["holds"].values())):
         p = (prev.get(cik) or {}).get("holds") or {}
         rows = []
@@ -422,6 +422,7 @@ def main() -> int:
         #   90개 이하인 나머지 11사는 차이 0.0%p라 아무도 눈치채지 못했다.
         uni_val = sum(r["v"] for r in rows if not r.get("off"))
         off_n = sum(1 for r in rows if r.get("off"))
+        full = rows                  # 겹침은 이걸로 센다 — 아래 자르기 전 목록이다
         rows = rows[:KEEP_HOLD]      # 화면에 싣는 목록만 자른다(집계는 위에서 끝냈다)
         managers.append({
             "cik": cik, "label": GURUS[cik], "filer": d["name"],
@@ -430,14 +431,17 @@ def main() -> int:
             "uni_pct": round(uni_val / d["total_val"] * 100, 1) if d["total_val"] else None,
             "n": len(rows), "n_off": off_n, "holds": rows,
         })
-        for r in rows:
+        # ⚠ full 을 돈다. 위 주석대로 '자르기 전 전체'로 세야 하는데 이 루프만 rows(잘린 것)를
+        #   돌고 있었다 — uni_val·off_n 만 고쳐 두고 정작 겹침은 그대로였다(2026-07-28 발견).
+        #   보유가 90개를 넘는 운용사는 상위 90개 밖의 종목이 겹침에 아예 안 잡혔다.
+        #   브리지워터는 유니버스 안 보유가 355종목인데 그중 상위 90개(유니버스 밖 포함)만 셌다.
+        for r in full:
             if r["chg"] == "전량매도":
                 continue
             overlap.setdefault(r["t"], []).append(cik)
-
-    OFFNM = {}
-    for m in managers:
-        for r in m["holds"]:
+            # 유니버스 밖 표시도 여기서 같이 모은다. 예전처럼 managers[].holds(잘린 목록)로
+            # 만들면, 겹침에는 들어왔는데 어느 운용사의 상위 90개에도 없는 종목이 off=0 으로
+            # 찍혀 **유니버스 안 종목으로 둔갑한다**(브리지워터의 유니버스 밖 830종목이 그렇다).
             if r.get("off") and r.get("nm"):
                 OFFNM.setdefault(r["t"], r["nm"])
     ov = [{"t": t, "n": len(v), "ciks": sorted(v),
