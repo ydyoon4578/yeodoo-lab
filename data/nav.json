@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "6e81663918449543",
+ "generated_from": "25b161f55305a005",
  "categories": [
   {
    "name": "시장",
@@ -247,6 +247,16 @@
      "src": "agg",
      "effort": "M",
      "anchor": "route",
+     "live": true
+    },
+    {
+     "name": "운용사 복제 진단",
+     "file": "guru17.html",
+     "status": "existing",
+     "desc": "따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)",
+     "verdict": "na",
+     "src": "agg",
+     "effort": "M",
      "live": true
     },
     {
