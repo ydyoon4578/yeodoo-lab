@@ -341,6 +341,73 @@ def main() -> int:
             nav=b.get("nav"), bnav=b.get("bench"),
         ))
 
+    # ── ⑤ 거장 겹침 복제 ──────────────────────────────────────────────────
+    # 13F 명단 중 K곳 이상이 들고 있는 종목을 동일가중으로 담는 규칙(build/guru_overlap_backtest.py).
+    # 변형 6종을 **전부** 싣는다. 좋은 것만 올리면 목록이 다중검정 분모를 숨기게 된다 —
+    # 종목 전략 블록에 적어 둔 것과 같은 이유다("무엇을 재고 무엇을 버렸나"가 사라진다).
+    #
+    # 대조군은 **같은 풀 동일가중**으로 잡는다. SPY 도 같이 쟀지만 그쪽을 bench 로 놓으면
+    # 이 계열이 실제보다 좋아 보인다 — 유니버스가 대형주 518종목이라 SPY 를 넘는 것은
+    # 종목선택이 아니라 동일가중이 만든 사이즈 틸트로도 설명된다. 더 어려운 쪽을 잣대로 둔다.
+    def _ov_grade(ds, tt):
+        """Δ샤프와 t 로 등급을 매긴다. 눈으로 고르지 않으려고 규칙으로 박아 둔다."""
+        if ds is None:
+            return "판정 불가"
+        if ds <= -0.10:
+            return "열위"
+        if tt is not None and abs(tt) >= 1.96:
+            return "통과 후보" if tt > 0 else "역방향 유의"
+        return "구별 불가"
+
+    ovd = load("guru_overlap.json") or {}
+    _ovn = 0
+    for v in ((ovd.get("variants") or []) + (ovd.get("tops") or [])):
+        m, pl = v.get("metrics") or {}, v.get("pool") or {}
+        bm = pl.get("metrics") or {}
+        if not m or not bm:
+            continue                     # 표본 부족으로 성과가 없는 변형은 싣지 않는다
+        ds = (round(m["sharpe"] - bm["sharpe"], 3)
+              if m.get("sharpe") is not None and bm.get("sharpe") is not None else None)
+        _nm = ovd.get("n_managers") or 17
+        if v.get("rank"):
+            sid = "g-overlap-top%d-%s" % (ovd.get("topn") or 10, v["rank"])
+            name = "거장 겹침 2곳 이상 · %s" % v.get("label")
+            _rule = ("쉽게 말해 — 13F 명단 %d곳 중 2곳 이상이 같이 들고 있는 종목을 추린 뒤, "
+                     "그중 %s만 남겨 같은 비중으로 담는다. 같은 회사의 다른 클래스는 하나만 "
+                     "담고 밀려난 자리는 다음 순위가 채운다." % (_nm, v.get("label")))
+        else:
+            sid = "g-overlap-k%d" % v["k"]
+            name = "거장 겹침 %d곳 이상 (동일가중)" % v["k"]
+            _rule = ("쉽게 말해 — 13F 명단 %d곳 중 %d곳 이상이 같이 들고 있는 종목을 전부 "
+                     "같은 비중으로 담는다." % (_nm, v["k"]))
+        rows.append(rec(
+            sid=sid, name=name, role="수익엔진", grade=_ov_grade(ds, pl.get("t")),
+            src="거장 겹침", cat="13F 복제",
+            rule=_rule + " 분기마다 다시 고르고, 공시일이 체결일보다 뒤인 운용사는 그 분기 "
+                         "세지 않는다(그때는 아직 알 수 없던 정보다).",
+            why="<b>%s.</b> 같은 풀(S&P 500 ∪ NASDAQ 100 동일가중) 대비 Δ샤프 %s · "
+                "알파 %s%%/yr (t %s). SPY 총수익 대비로는 알파 %s%%/yr (t %s)로 이겼지만, "
+                "이 랩은 더 어려운 쪽인 같은 풀을 잣대로 둔다 — 유니버스가 대형주라 지수를 "
+                "넘는 것은 동일가중이 만든 사이즈 틸트로도 설명되기 때문이다."
+                % (_ov_grade(ds, pl.get("t")), ds,
+                   pl.get("alpha"), pl.get("t"),
+                   (v.get("spy") or {}).get("alpha"), (v.get("spy") or {}).get("t")),
+            note="같은 아이디어의 변형 %d개 중 하나다 — 문턱 4개와 좁힌 판 2개를 함께 쟀고 "
+                 "어느 다중검정 보정으로도 통과 0건이다. 명단 17곳이 사후 선택이고 유니버스·"
+                 "CUSIP 매핑이 오늘 스냅샷이라 생존편향은 위쪽으로 남는다. 거래비용 0."
+                 % ((ovd.get("multiplicity") or {}).get("m") or 6),
+            bench_label="같은 풀 동일가중(월 리밸)",
+            start=v.get("start"), end=v.get("end"),
+            metrics=m, bench=dict(bm, label="같은 풀 동일가중(월 리밸)"),
+            d_sharpe=ds, t=pl.get("t"), beta=pl.get("beta"),
+            turnover=(v.get("turnover") or {}).get("mean"),
+            holdings=({"kind": "xsec", "tickers": (v.get("latest") or {}).get("tickers")}
+                      if (v.get("latest") or {}).get("tickers") else None),
+        ))
+        _ovn += 1
+    if _ovn:
+        print("  거장 겹침 %d종 추가(대조군 = 같은 풀 동일가중)" % _ovn)
+
     # ── 목록 제외(운용 결정) ────────────────────────────────────────────────
     # 사용자 결정(2026-07-27). 위험감축 5종·방어보험 3종 + 합병차익 1종을 목록에서 뺀다.
     #
