@@ -255,25 +255,11 @@ def main() -> int:
 
     # ── ② 종목 전략 ──
     t = load("tech_strategies.json") or {}
-    # ── 종목선택 전략은 SPX(TR) 미달이면 목록에서 뺀다 ────────────────────────
-    # 사용자 결정(2026-07-27). 상위 10종목을 고른다는 규칙이 그냥 지수를 산 것보다도
-    # 위험조정 성과가 나쁘면 볼 이유가 없다 — 대상은 전부 이미 '열위' 판정을 받은 것들이다.
-    #
-    # ⚠ **측정 기록에서 지우는 것이 아니라 화면 목록에서만 뺀다.** tech_strategies.json 은
-    #   그대로 전부 싣는다. 이유: ① 본페로니 임계는 '같은 표본에서 몇 개를 돌렸나'로 정해지는데
-    #   진 것을 지우고 N을 줄이면 임계가 내려가 남은 것이 쉽게 통과한다(자기에게 유리한 보정).
-    #   ② 랩이 스스로 내건 '좋은 것만 고르지 않고 전부 싣는다'가 깨진다.
-    #   실측으로 N 51→45 면 t_crit 3.30→3.26, 통과 후보는 4종 그대로라 영향은 없지만,
-    #   규칙을 지우기 시작하면 그 다음부터는 영향이 생긴다.
-    _tsh = ((t.get("idx_stats") or {}).get("SPX(TR)") or {}).get("sharpe")
+    # SPX(TR) Sharpe 미달 종목선택 제외는 2026-07-28 에 **되돌렸다**(사용자 결정).
+    # 종목 전략은 전부 목록에 싣는다 — 판정(등급)이 이미 그 정보를 담고 있고, 목록에서까지
+    # 빼면 '무엇을 재고 무엇을 버렸나'가 화면에서 사라진다.
     _hidden, _hidden_bond, _hidden_sids = [], [], set()
     for r in (t.get("strategies") or []):
-        if (_tsh is not None
-                and (r.get("holdings") or {}).get("kind") == "xsec"
-                and (r.get("metrics") or {}).get("sharpe") is not None
-                and r["metrics"]["sharpe"] < _tsh):
-            _hidden.append((r["name"], r["metrics"]["sharpe"]))
-            continue
         rows.append(rec(
             sid="t-" + r["sid"], name=r["name"], role=r.get("role") or "미분류",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
@@ -292,11 +278,6 @@ def main() -> int:
             holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
             arch=r.get("arch"),
         ))
-    if _hidden:
-        print("  종목선택 %d종을 목록에서 제외(SPX(TR) Sharpe %.3f 미만) — 측정 기록에는 남는다:"
-              % (len(_hidden), _tsh))
-        for _n, _sh in sorted(_hidden, key=lambda x: -x[1]):
-            print("    · %-30s Sharpe %.2f" % (_n[:30], _sh))
 
     if _hidden_bond:
         print("  대조군에 채권 ETF 가 섞인 %d종을 목록에서 제외:" % len(_hidden_bond))
@@ -435,12 +416,10 @@ def main() -> int:
             "여기서도 **측정 기록은 지우지 않는다** — asset_strategies.json·"
             "archive_backtests.json·deploy_index.json 은 그대로 둔다."
             % len(_hid2)) if _hid2 else None,
-        "hidden_note": ("종목선택 전략 중 같은 구간 SPX(TR) Sharpe %.3f 에 못 미친 %d종은 목록에서 뺐다"
-                        "(사용자 결정 2026-07-27). 지수를 그냥 사는 것보다 위험조정 성과가 나쁜 "
-                        "종목선택은 볼 이유가 없다. 다만 **측정 기록에서 지운 것은 아니다** — "
-                        "tech_strategies.json 은 전부 그대로 싣는다. 진 것을 지우고 다중검정 N을 "
-                        "줄이면 본페로니 임계가 내려가 남은 것이 쉽게 통과하기 때문이다."
-                        % (_tsh, len(_hidden))) if _hidden else None,
+        "hidden_note": ("대조군에 채권 ETF 가 섞였거나(잣대가 달라진다) 이 랩에서 다루지 않기로 한 "
+                        "%d종은 목록에서 뺐다(사용자 결정). **측정 기록에서 지운 것은 아니다** — "
+                        "원본 파일은 전부 그대로이고, 다중검정 N 도 줄이지 않는다."
+                        % len(_hidden)) if _hidden else None,
         "role_order": ROLE_ORDER, "grade_order": GRADE_ORDER,
         "by_holds": dict(Counter(r["holds"] for r in rows)),
         "by_cmp": {"가능": sum(1 for r in rows if r["cmp_ok"]),
