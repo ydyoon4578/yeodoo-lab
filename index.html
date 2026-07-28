@@ -194,6 +194,12 @@
            font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2)}
   .caldate em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--accent)}
   .calcell .cnt{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+  /* '+21'은 개수만 알려주고 끝나는 글자가 아니라 나머지를 펼치는 버튼이다.
+     버튼 기본 모양은 지우고 칩처럼 두되, 누를 수 있다는 것은 점선 밑줄로 알린다. */
+  .calcell button.cnt{border:0;background:none;padding:0 2px;cursor:pointer;font-weight:700;
+       text-decoration:underline dotted;text-underline-offset:2px}
+  .calcell button.cnt:hover,.calcell button.cnt:focus{color:var(--accent);outline:none}
+  .calcell button.cnt[aria-expanded="true"]{color:var(--accent)}
   .caltk{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
   .caltk+.caltk{margin-top:4px;padding-top:4px;border-top:1px dotted var(--line-soft)}
   /* 줄머리 라벨 — 색만으로는 '장후'와 '시각 미공개'가 안 갈린다는 지적. 글자로도 적는다.
@@ -218,6 +224,9 @@
   .tk2{position:relative;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);
        background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
        text-decoration:none;display:inline-block}
+  /* display를 못 박아 뒀으므로 hidden 속성만으로는 안 숨는다(UA의 [hidden]{display:none}을 이긴다).
+     캘린더의 '접힌 나머지 종목'이 이 속성으로 숨으므로 명시적으로 되돌려 준다. */
+  .tk2[hidden]{display:none}
   a.tk2:hover,a.tk2:focus{border-color:var(--accent);color:var(--accent);outline:none}
   /* 발표 시각 3상태 — 장전/장후/미공개. 전에는 장전만 색이 있고 나머지는 구분이 없어서,
      장 끝나고 나오는 실적과 시각 자체가 안 알려진 것이 한 덩어리로 보였다.
@@ -1117,13 +1126,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var list=ev.filter(function(x){
                 return g[0]==='미공개'?!(x.hour==='장전'||x.hour==='장후'):x.hour===g[0];});
               if(!list.length)return;
+              // 넘치는 것도 **다 그려 두고 접어만 둔다**(hidden). 개수만 적고 버리면 나머지를
+              // 볼 방법이 없어, 그날 누가 발표하는지 알려면 종목 페이지를 하나씩 열어야 했다.
+              // 접힌 것은 표시만 없을 뿐 같은 마크업이라, 펼치면 툴팁·링크가 그대로 산다.
+              var extra=list.length-PER;
               out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
-                list.slice(0,PER).map(function(x){
+                list.map(function(x,i){
                   var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
-                  return '<a class="tk2 '+g[1]+'" href="co.html?t='+encodeURIComponent(x.t)+'#est'+
+                  return '<a class="tk2 '+g[1]+(i>=PER?' tkx" hidden':'"')+' href="co.html?t='+encodeURIComponent(x.t)+'#est'+
                          '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):' · 시각 미공개')+esc(mc)+'">'+esc(x.t)+'</a>';
                 }).join('')+
-                (list.length>PER?'<span class="cnt">+'+(list.length-PER)+'</span>':'')+'</div>';
+                (extra>0?'<button type="button" class="cnt" aria-expanded="false" data-n="+'+extra+'"'+
+                         ' title="나머지 '+extra+'개 펼치기">+'+extra+'</button>':'')+'</div>';
             });
             return out;
           })()+
@@ -1144,6 +1158,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     el('wk-sub').textContent='· 지난 1주+앞으로 3주 · 실적 '+shownE+'건 · 주요 지표·이벤트 '+shownM+'건 · 데이터 기준 '+base;
   }
+  // '+21'을 눌러 그 줄의 나머지를 펼친다. 줄(=발표 시각)마다 따로 접힌다 —
+  // 장전만 보고 싶은데 장후까지 같이 펼쳐지면 좁은 칸이 더 읽기 어려워진다.
+  // 캘린더는 renderCal이 통째로 다시 그리므로(innerHTML) 위임으로 컨테이너에 한 번만 건다.
+  (function(){
+    var box=el('wk-cal-grid'); if(!box)return;
+    box.addEventListener('click',function(e){
+      var b=e.target&&e.target.closest?e.target.closest('button.cnt'):null;
+      if(!b||!box.contains(b))return;
+      var open=b.getAttribute('aria-expanded')!=='true';
+      var xs=b.parentNode.querySelectorAll('a.tkx'), n=b.getAttribute('data-n');
+      for(var i=0;i<xs.length;i++){
+        if(open)xs[i].removeAttribute('hidden'); else xs[i].setAttribute('hidden','');
+      }
+      b.setAttribute('aria-expanded',open?'true':'false');
+      b.textContent=open?'접기':n;
+      b.title=open?'나머지 접기':'나머지 '+n.slice(1)+'개 펼치기';
+    });
+  })();
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
   // 캘린더 이벤트·주목도 정본을 먼저 읽고(없어도 진행) 홈 묶음을 읽는다.
   fetch('data/events.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
