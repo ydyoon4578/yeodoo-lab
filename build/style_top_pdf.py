@@ -566,7 +566,7 @@ def num(v, d=2, sign=True):
 
 def footer(fig, page, total):
     hline(fig, X0, X1, .034, LINE, .6)
-    tx(fig, X0, .026, "여두 전략 랩 · 스타일 상위 10종목 전략 · 지수 SPX = S&P 500 단독 · "
+    tx(fig, X0, .026, "스타일 상위 10종목 전략 · 지수 SPX = S&P 500 단독 · "
                       "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0",
        fontsize=6.4, color=MUTED)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
@@ -728,18 +728,12 @@ def draw_block(fig, P, top, S, R):
 def draw_summary(fig, P, res, order, total):
     d0, d1 = P.dates[res[order[0]]["start"]], P.dates[res[order[0]]["end"]]
     tx(fig, X0, .962, "스타일 상위 10종목 전략", fontsize=23, weight="bold")
-    tx(fig, X0, .928, "여두 전략 랩 · 최근 1년 요약", fontsize=10, color=ACC)
+    tx(fig, X0, .928, "최근 1년 요약", fontsize=10, color=ACC)
     tx(fig, X1, .932, "%s ~ %s" % (d0, d1), fontsize=8.5, color=MUTED, ha="right")
     hline(fig, X0, X1, .916, RULE, .9)
 
-    tx(fig, X0, .903,
-       "여섯 개 스타일 규칙을 과거로 되돌려 매월 말 다시 골랐다. 후보는 S&P 500 ∪ NASDAQ 100 의 518종목이고\n"
-       "S&P 단독 415 · 양쪽 공통 88 · NASDAQ 단독 15 로 나뉜다 — 보유 표에 종목마다 어느 쪽인지 적었다.\n"
-       "상위 10종목을 동일가중으로 담아 다음 월말까지 표류시킨다. 비용 0(gross) · 대조군은 가격지수(PR)다.",
-       fontsize=8, color=INK2, linespacing=1.6)
-
-    y = .845
-    tx(fig, X0, y, "최근 1년 성과 한눈에", fontsize=11.5, weight="bold")
+    y = .895
+    tx(fig, X0, y, "최근 1년 성과", fontsize=11.5, weight="bold")
     rows, colors_ = [], []
     for key in order:
         S = next(s for s in STYLES if s[0] == key)
@@ -800,7 +794,7 @@ def draw_summary(fig, P, res, order, total):
     tx(fig, X0, yh, "월별 수익률 %", fontsize=11.5, weight="bold")
     tx(fig, X1, yh + .001, "* 는 구간이 열린 %s 부터의 부분 월" % P.dates[R0["start"]],
        fontsize=6.6, color=MUTED, ha="right")
-    hm_h = .012 * len(names) + .014
+    hm_h = .0145 * len(names) + .016
     lw_ = .085                                       # 행 이름 칸
     ax = fig.add_axes([X0 + lw_, yh - .014 - hm_h, X1 - X0 - lw_, hm_h])
     from matplotlib.colors import LinearSegmentedColormap
@@ -906,8 +900,7 @@ def main() -> int:
             pdf.savefig(fig); plt.close(fig)
 
         d = pdf.infodict()
-        d["Title"] = "여두 전략 랩 — 스타일 상위 10종목 전략(최근 1년)"
-        d["Author"] = "여두 전략 랩"
+        d["Title"] = "스타일 상위 10종목 전략(최근 1년)"
     print("→ %s · %d쪽 · %dKB" % (OUT, total, os.path.getsize(OUT) // 1024))
     return 0
 
