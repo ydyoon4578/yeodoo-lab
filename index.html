@@ -338,6 +338,18 @@
   details.more .mbody{margin-top:7px}
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
 
+  /* ── 진단 배너 ── 매일 보는 것이 아니라 한 번 답해 둔 질문으로 가는 줄.
+       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다. */
+  .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:13px 16px;border:1px solid var(--line);border-left:3px solid var(--hot);
+    border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
+  .dbanner:hover{background:var(--panel-2);border-color:var(--accent)}
+  .dbanner .dq{font-weight:700;font-size:14.5px}
+  .dbanner .da{font-size:13px;color:var(--muted);flex:1 1 260px}
+  .dbanner .da b{color:var(--hot)}
+  .dbanner .dgo{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+  @media(max-width:640px){.dbanner{gap:6px}.dbanner .dgo{display:none}}
+
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
    23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
@@ -711,6 +723,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="signote" id="signote">불러오는 중…</div>
       <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
     </section>
+
+    <!-- ⑤ 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다. -->
+    <a class="dbanner" href="guru17.html">
+      <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
+      <span class="da"><b>아니오</b> — 유명 운용사들의 13F를 복제해 재봤습니다. 결합검정·지속성·사전규칙이 모두 같은 답입니다.</span>
+      <span class="dgo">진단 보기 →</span>
+    </a>
 
   </div>
 
