@@ -345,13 +345,18 @@ def draw_block(fig, P, top, name, R, prev_w, now_w, now_lab, diag):
                      aligns=["c", "l", "l", "l", "l", "r"], cell_color=c3,
                      cell_weight=lambda r, c: "bold" if c in (1, 4) else "normal", zebra=True)
 
-    pf(X0, "직전 리밸런스", "%s · 지금 보유 중" % P.dates[R["_prev_i"]], prev_w, ns, False)
-    pf(X0 + .456, "오늘 재산출", "%s · 다음 리밸런스 후보" % now_lab, now_w, ps, True)
+    # ⚠ 왼쪽을 '지금 보유 중'이라 적으면 안 된다. 리밸런스 뒤로는 표류시키므로 지금 실제
+    #   비중은 **오른쪽**이다(같은 주식수를 오늘 가격으로 평가한 것). 왼쪽은 체결 시점의 비중이다.
+    yb = pf(X0, "직전 리밸런스", "%s 체결 시 비중" % P.dates[R["_prev_i"]], prev_w, ns, False)
+    pf(X0 + .456, "오늘 다시 고르면", now_lab, now_w, ps, True)
     keep = len(ps & ns)
     tx(fig, X1, yp + .0012,
-       "교체 %d종목 · 유지 %d종목 · ＋ 신규편입 · 붉은 종목은 오늘 재산출에서 빠진 자리 · "
-       "룩어헤드로 버린 분기 %d" % (len(ns) - keep, keep, diag.get("lookahead", 0)),
-       fontsize=6.4, color=MUTED, ha="right")
+       "바뀌는 종목 %d · 그대로 %d · ＋ 새로 들어옴 · 붉은 종목은 오늘 기준 상위 10에서 밀려난 자리"
+       % (len(ns) - keep, keep), fontsize=6.4, color=MUTED, ha="right")
+    # 두 칸의 비중이 왜 다른가 — 문서 안에서 답한다. 표 아래에 둔다(제목 옆은 자리가 없다).
+    tx(fig, X0, yb - .006,
+       "두 칸의 차이는 매매가 아니라 주가 변동이다 — 같은 공시·같은 주식수를 다른 날 가격으로 평가한 것.",
+       fontsize=6.3, color=MUTED)
 
 
 # ── 요약 쪽 ─────────────────────────────────────────────────────────────────
@@ -472,7 +477,7 @@ def main() -> int:
         #     13F 는 분기에 한 번뿐이라 다음 후보는 '같은 명단을 오늘 가격으로 옮긴 것'이 맞다.
         H = G["holdings"]
         qlast = max((q for q in H if cik in H[q]), default=None)
-        now_w, now_lab = prev_w, "오늘"
+        now_w, now_lab = prev_w, "오늘 가격"
         if qlast:
             raw = H[qlast][cik] or {}
             qi = None
@@ -493,7 +498,7 @@ def main() -> int:
                 top = sorted(w.items(), key=lambda kv: -kv[1])[:TOPN]
                 ssum = sum(v for _t, v in top) or 1.0
                 now_w = {t: v / ssum for t, v in top}
-                now_lab = "%s 공시 · %s 가격" % (qlast, P.dates[last])
+                now_lab = "%s 공시 · %s 가격 = 지금 비중" % (qlast, P.dates[last])
         res[cik] = {"name": (cov[cik].get("name") or names.get(cik) or cik),
                     "full": R, "w": W, "prev": prev_w, "now": now_w,
                     "now_lab": now_lab, "diag": diag}
