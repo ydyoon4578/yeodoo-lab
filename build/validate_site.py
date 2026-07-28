@@ -400,6 +400,13 @@ if pool:
             if os.path.exists(_p):
                 _v = json.load(io.open(_p, encoding="utf-8")).get(_k) or []
                 _want += len(_v)
+        # 거장 겹침(guru_overlap.json)은 변형이 variants·tops 두 목록에 나뉘어 있고, 성과가
+        # 안 나온 변형(표본 부족)은 원장에 싣지 않는다 — 원장이 세는 것과 같은 기준으로 센다.
+        _gp = os.path.join(ROOT, "data", "guru_overlap.json")
+        if os.path.exists(_gp):
+            _gv = json.load(io.open(_gp, encoding="utf-8"))
+            _want += sum(1 for _x in ((_gv.get("variants") or []) + (_gv.get("tops") or []))
+                         if (_x.get("metrics") and (_x.get("pool") or {}).get("metrics")))
         # 의도적으로 목록에서 뺀 것(n_hidden)은 더해서 센다 — 그래야 '낡은 목록' 검출이
         # 살아 있으면서 의도적 제외를 오탐하지 않는다. 제외를 숨은 채로 두면 이 가드가 죽는다.
         _got = (_si.get("n") or 0) + (_si.get("n_hidden") or 0)
