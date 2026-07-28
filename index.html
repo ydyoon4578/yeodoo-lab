@@ -218,7 +218,6 @@
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
   .callegend .lgc{margin-right:4px;pointer-events:none}
-  .callegend .lgn{margin-left:auto}
 
   /* 티커 툴팁 — hover와 focus 둘 다에 뜬다. 모바일엔 hover가 없어 탭(focus)으로도 열려야 한다. */
   .tk2{position:relative;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);
@@ -235,6 +234,10 @@
   .tk2.bmo{border-color:color-mix(in srgb,var(--bmo) 45%,transparent);color:var(--bmo)}
   .tk2.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .tk2.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
+  /* 두 소스의 날짜가 어긋난 건. 시각 3상태(색·점선)를 이미 쓰고 있어 색을 하나 더 쓰면
+     '장전/장후/미공개'와 섞인다 — 겹치지 않는 축으로 물음표 첨자를 얹는다. */
+  .tk2.dq::before{content:'?';font-size:8px;font-weight:800;vertical-align:super;
+       margin-right:1px;color:var(--marg)}
   .tip{position:relative}
   .tk2[data-nm]::after,.tip[data-nm]::after{content:attr(data-nm);position:absolute;left:50%;bottom:calc(100% + 6px);
        transform:translateX(-50%);white-space:nowrap;background:var(--ink);color:var(--ground);
@@ -723,9 +726,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
         <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
         <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
+        <span><span class="tk2 dq lgc">AAPL</span> 두 소스의 날짜가 다름 — 늦은 쪽에 놓았다</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
         <span><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
-        <span class="lgn">하루 안에서는 장전 → 장후 → 미공개 순, 같은 시각끼리는 시가총액 큰 순 · 티커에 커서를 올리거나 누르면 회사 이름</span>
       </div>
     </section>
 
@@ -1133,8 +1136,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
                 list.map(function(x,i){
                   var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
-                  return '<a class="tk2 '+g[1]+(i>=PER?' tkx" hidden':'"')+' href="co.html?t='+encodeURIComponent(x.t)+'#est'+
-                         '" data-nm="'+esc(x.n||x.t)+(x.hour?' · '+esc(x.hour):' · 시각 미공개')+esc(mc)+'">'+esc(x.t)+'</a>';
+                  // 두 소스의 날짜가 어긋난 건은 표시해 둔다(alt = 밀어낸 이른 날짜).
+                  // 늦은 쪽에 놓았을 뿐 어느 쪽이 옳은지는 모른다 — 그 사실을 숨기면 안 된다.
+                  var q=x.alt?(' · ⚠ 날짜 불일치 — 다른 소스는 '+esc(x.alt)):'';
+                  // 툴팁에 장전/장후를 적지 않는다 — 줄머리 라벨이 이미 그 말을 하고 있다.
+                  return '<a class="tk2 '+g[1]+(x.alt?' dq':'')+(i>=PER?' tkx" hidden':'"')+' href="co.html?t='+encodeURIComponent(x.t)+'#est'+
+                         '" data-nm="'+esc(x.n||x.t)+esc(mc)+q+'">'+esc(x.t)+'</a>';
                 }).join('')+
                 (extra>0?'<button type="button" class="cnt" aria-expanded="false" data-n="+'+extra+'"'+
                          ' title="나머지 '+extra+'개 펼치기">+'+extra+'</button>':'')+'</div>';

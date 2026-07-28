@@ -107,8 +107,13 @@ def main() -> int:
             except Exception:
                 continue
             if d0 <= dd <= d1:
-                up.append({"t": x["t"], "n": x.get("n") or x["t"], "dt": x["dt"],
-                           "hour": x.get("hour") or "", "mc": round(MC.get(x["t"], 0.0))})
+                z = {"t": x["t"], "n": x.get("n") or x["t"], "dt": x["dt"],
+                     "hour": x.get("hour") or "", "mc": round(MC.get(x["t"], 0.0))}
+                # 두 소스의 날짜가 어긋난 건은 홈에서도 표시해야 한다. 밀어낸 날짜(alt)까지
+                # 같이 넘긴다 — '늦은 쪽에 놓았다'는 것을 툴팁이 말할 수 있어야 한다.
+                if x.get("src") == "conflict" and x.get("alt"):
+                    z["alt"] = x["alt"]
+                up.append(z)
     # 날짜별로 묶되 그 안에서는 **시가총액 큰 순**. 하루에 수십 종목이 뜨는 날이 있어
     # 알파벳 순으로 두면 큰 회사가 '+37' 뒤에 숨는다.
     up.sort(key=lambda z: (z["dt"], -z["mc"], z["t"]))
