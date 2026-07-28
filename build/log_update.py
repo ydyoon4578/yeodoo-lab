@@ -26,6 +26,9 @@ TARGETS = {
     "market", "sector", "macro", "screener", "relvalue", "valuation", "portfolio",
     "company", "method", "roadmap", "sources", "site",
     "filings", "industry",
+    # 13F 계열(거장 포트폴리오·운용사 복제 진단). 예전엔 이 영역 변경을 site 로 뭉뚱그려
+    # 기록해서 갱신 피드에서 어디가 바뀐 건지 알 수 없었다.
+    "guru",
 }
 
 
