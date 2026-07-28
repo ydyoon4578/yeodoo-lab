@@ -46,6 +46,10 @@ HOR = [("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
 SECTOR = [("XLK", "IT"), ("XLF", "금융"), ("XLV", "헬스케어"), ("XLY", "경기소비"),
           ("XLC", "커뮤니케이션"), ("XLI", "산업재"), ("XLP", "필수소비"), ("XLE", "에너지"),
           ("XLU", "유틸리티"), ("XLRE", "부동산"), ("XLB", "소재")]
+# 지수 — 홈에 스타일표를 얹으면서 '무엇 대비인가'를 맨 위에 둘 자리가 필요해졌다(2026-07-28).
+# STYLE 에 QQQ 를 끼워 넣지 않고 따로 두는 이유 — 그러면 macro.html 의 스타일표에 지수 행이
+# 하나 더 생겨 '스타일 11종'이라던 그 화면의 셈이 조용히 달라진다. 축이 다르면 목록도 나눈다.
+INDEX = [("SPY", "S&P 500"), ("QQQ", "NASDAQ 100")]
 # 스타일 — assets 패널에 있는 팩터 ETF. SPY는 '기준선'으로 같이 낸다(초과를 눈으로 재게).
 STYLE = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("VLUE", "가치"), ("USMV", "저변동"),
          ("RPG", "성장"), ("SDY", "배당성장"), ("SPHB", "고베타"),
@@ -174,6 +178,7 @@ def build() -> dict:
         "basis": {"horizons": list(bases), "base_dates": {k: dates[v] if v is not None else None
                                                           for k, v in bidx.items()},
                   "rsi": "Wilder(14)", "off52": "최근 252거래일 종가 고점 대비 %"},
+        "index": rows(INDEX, "지수"),
         "sector": rows(SECTOR, "섹터"),
         "style": rows(STYLE, "스타일"),
         "credit": rows(CREDIT, "크레딧"),
@@ -184,8 +189,8 @@ def build() -> dict:
 if __name__ == "__main__":
     doc = build()
     json.dump(doc, io.open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    n = {k: len(doc[k]) for k in ("sector", "style", "credit")}
+    n = {k: len(doc[k]) for k in ("index", "sector", "style", "credit")}
     print(f"→ {OUT}")
-    print(f"  기준일 {doc['as_of']} · 섹터 {n['sector']} · 스타일 {n['style']} · "
+    print(f"  기준일 {doc['as_of']} · 지수 {n['index']} · 섹터 {n['sector']} · 스타일 {n['style']} · "
           f"크레딧 {n['credit']} · 만기 {len(doc['rates']['tenor'])}")
     print("  기준일자: " + " · ".join(f"{k} {v}" for k, v in doc["basis"]["base_dates"].items()))
