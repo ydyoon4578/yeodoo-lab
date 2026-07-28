@@ -50,10 +50,25 @@ MIN_NAMES = 100        # 후보가 이보다 적은 달은 그 규칙의 자료�
 SP_WP, MSCI_WP = 10.0, 2.5
 WIN = 3.0
 
-for p in (r"C:\Windows\Fonts\malgun.ttf", r"C:\Windows\Fonts\malgunbd.ttf"):
-    if os.path.exists(p):
-        font_manager.fontManager.addfont(p)
-rcParams["font.family"] = "Malgun Gothic"
+# 한글 폰트 — Windows(맑은 고딕)에서 만들던 문서라 mac/리눅스에도 같은 꼴이 나오게 고른다.
+#   ⚠ 전에는 rcParams 에 "Malgun Gothic" 을 그냥 박아 뒀다. 그 폰트가 없는 기계(mac·리눅스·CI)
+#     에서 돌리면 matplotlib 이 조용히 대체 폰트로 떨어지고 **한글이 전부 두부(□)로 나온다.**
+#     경고는 findfont 한 줄뿐이라 로그를 안 보면 모른 채 배포된다(실제로 그렇게 한 번 나갔다).
+#     그래서 후보를 훑어 고르고, 하나도 없으면 그리지 말고 멈춘다.
+for _p in (r"C:\Windows\Fonts\malgun.ttf", r"C:\Windows\Fonts\malgunbd.ttf",
+           "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+           "/Library/Fonts/NanumGothic.ttf",
+           "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"):
+    if os.path.exists(_p):
+        try: font_manager.fontManager.addfont(_p)
+        except Exception: pass
+KFONT = next((n for n in ("Malgun Gothic", "Apple SD Gothic Neo", "NanumGothic",
+                          "Nanum Gothic", "Noto Sans CJK KR")
+              if n in {f.name for f in font_manager.fontManager.ttflist}), None)
+if not KFONT:
+    raise SystemExit("한글 폰트를 찾지 못했다 — 맑은 고딕·애플 SD 고딕·나눔고딕 중 하나가 필요하다. "
+                     "없이 그리면 문서 전체가 두부(□)로 나온다.")
+rcParams["font.family"] = KFONT
 rcParams["axes.unicode_minus"] = False
 
 # 색은 사이트(index.html)의 밝은 테마를 그대로 가져온다 — 따뜻한 종이 바탕에 같은 강조색.
