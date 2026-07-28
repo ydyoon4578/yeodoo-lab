@@ -100,6 +100,16 @@
         color:var(--muted);vertical-align:1px}
   tr.offrow th,tr.offrow td{background:color-mix(in srgb,var(--muted) 5%,transparent)}
   .ovrow.offrow{background:color-mix(in srgb,var(--muted) 5%,transparent)}
+  /* 겹침 전략 — 현재 편입 종목 칩. 200종목 가까이 되므로 표가 아니라 칩으로 눕힌다. */
+  .ovwrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .stk{display:inline-flex;align-items:baseline;gap:4px;font-family:var(--mono);font-size:11.5px;
+       font-weight:700;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .stk[hidden]{display:none}
+  .stk a{text-decoration:none;color:var(--ink-2)} .stk a:hover{color:var(--accent)}
+  .stk i{font-style:normal;font-size:9.5px;font-weight:800;color:var(--accent)}
+  .cnt2{margin-top:10px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);
+        background:none;border:0;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+  .cnt2:hover,.cnt2:focus{color:var(--accent);outline:none}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:15px 18px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
@@ -473,6 +483,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <nav class="views" id="views" aria-label="보기 전환">
     <a class="vtab" href="#pf" data-v="pf">운용사별 보유</a>
     <a class="vtab" href="#overlap" data-v="overlap">공통 보유종목</a>
+    <a class="vtab" href="#strat" data-v="strat">겹침 전략</a>
   </nav>
 
   <section id="pf" aria-labelledby="p-h">
@@ -491,6 +502,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div id="ovout"><div class="skel">불러오는 중…</div></div>
   </section>
 
+  <section id="strat" aria-labelledby="s-h" hidden>
+    <p class="lbl" id="s-h">겹침 전략 — K곳 이상이 들고 있는 종목 동일가중</p>
+    <p class="lblnote">위 표를 <b>규칙으로 바꿔</b> 돌린 것입니다. 분기말 13F에서 K곳 이상이 보유한 종목을
+      동일가중으로 담고, 공시일이 체결일보다 뒤인 운용사는 그 분기 세지 않습니다(룩어헤드 차단).
+      유니버스가 S&amp;P 500 ∪ NASDAQ 100 이라 <b>지수 편입 종목만</b>이라는 조건은 규칙에 내장돼 있습니다.
+      <b>요청값은 K=2</b>이고 3~5는 민감도입니다 — 넷 중 좋은 것을 고르면 그게 사후 선택이라 전부 싣습니다.</p>
+    <div id="stout"><div class="skel">불러오는 중…</div></div>
+  </section>
+
   <div class="note" id="limits"></div>
 
   <footer>
@@ -498,6 +518,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a href="co.html#ins">내부자 거래</a> · <a href="filings.html">8-K 공시 피드</a> ·
     <a href="sources.html">데이터 출처·기준일</a>
     <br>출처 SEC Form 13F 분기 데이터셋 · CUSIP↔티커는 SEC 공매도 미결제(FTD) 파일 · 생성 <code>build/refresh_13f.py</code>
+    <br>겹침 전략은 운용사별 13F 이력(<code>build/refresh_13f_history.py</code>)으로 따로 돌린다 · 생성 <code>build/guru_overlap_backtest.py</code>
   </footer>
 </div>
 
@@ -508,7 +529,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function nf(v,d){return (v==null||v!==v)?'—':Number(v).toLocaleString('en-US',{maximumFractionDigits:d==null?0:d});}
   var D=null, cur=null;
 
-  var VIEWS=['pf','overlap'];
+  var VIEWS=['pf','overlap','strat'];
   function showView(v){
     v=(VIEWS.indexOf(v)>=0?v:'pf');
     for(var i=0;i<VIEWS.length;i++){
@@ -589,6 +610,80 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        '겹치는 종목만 보면 "다들 같은 걸 산다"로 읽히기 쉬워, 겹치지 않는 쪽의 수도 같이 적습니다.</div>';
     el('ovout').innerHTML=h;
   }
+
+  // ── 겹침 전략 ── 위 표를 규칙으로 바꿔 돌린 결과(build/guru_overlap_backtest.py).
+  // ⚠ 판정을 부드럽게 쓰지 않는다. 이 랩의 대조군은 둘이고, 둘을 같이 봐야 답이 나온다 —
+  //   SPY만 놓고 보면 이겼고, 같은 풀 동일가중을 놓고 보면 졌다. 뒤쪽이 더 어려운 질문이다.
+  function pc(v,d){return (v==null||v!==v)?'—':(v>0?'+':'')+Number(v).toFixed(d==null?2:d);}
+  function renderStrat(S){
+    if(!S||!S.variants){el('stout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
+      '<code>data/guru_overlap.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
+    var base=null;
+    S.variants.forEach(function(v){if(v.k===S.k_requested)base=v;});
+    var h='';
+    if(base&&base.metrics){
+      var m=base.metrics, p=base.pool, sp=base.spy;
+      h+='<div class="card"><h3>K='+base.k+' (요청값)<span class="hn">'+esc(base.start)+' ~ '+esc(base.end)+
+         ' · '+base.n_months+'개월 · 현재 '+base.latest.n+'종목</span></h3>'+
+         '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">지표</th><th>전략</th>'+
+         '<th>같은 풀 동일가중</th><th>SPY 총수익</th></tr></thead><tbody>'+
+         [['CAGR %','cagr'],['변동성 %','vol'],['샤프','sharpe'],['MDD %','mdd']].map(function(x){
+           return '<tr><td class="l">'+x[0]+'</td><td>'+nf(m[x[1]],2)+'</td><td>'+
+                  nf(p.metrics[x[1]],2)+'</td><td>'+nf(sp.metrics[x[1]],2)+'</td></tr>';}).join('')+
+         '<tr><td class="l">알파 %/yr (t)</td><td>—</td><td>'+pc(p.alpha)+' ('+pc(p.t)+')</td>'+
+         '<td>'+pc(sp.alpha)+' ('+pc(sp.t)+')</td></tr>'+
+         '<tr><td class="l">베타</td><td>—</td><td>'+nf(p.beta,2)+'</td><td>'+nf(sp.beta,2)+'</td></tr>'+
+         '</tbody></table></div>'+
+         '<p class="lblnote" style="margin:10px 0 0">분기 회전율 평균 <b>'+nf(base.turnover.mean,0)+'%</b>(편도) · '+
+         '거래비용 0으로 잰 값이라 실제 수익은 이보다 낮습니다.</p></div>';
+    }
+    h+='<div class="card"><h3>문턱 K 민감도<span class="hn">넷을 전부 싣는다</span></h3>'+
+       '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">K</th><th>종목</th><th>CAGR %</th>'+
+       '<th>샤프</th><th>MDD %</th><th>회전 %</th><th>α vs 풀</th><th>α vs SPY</th><th>t (SPY)</th>'+
+       '<th>미보정 p</th></tr></thead><tbody>';
+    S.variants.forEach(function(v){
+      if(!v.metrics){h+='<tr><td class="l">'+v.k+'</td><td colspan="9">'+esc(v.verdict||'—')+'</td></tr>';return;}
+      h+='<tr><td class="l">'+v.k+(v.k===S.k_requested?' <span class="on">요청</span>':'')+'</td>'+
+         '<td>'+v.holds.min+'~'+v.holds.max+'</td><td>'+nf(v.metrics.cagr,2)+'</td>'+
+         '<td>'+nf(v.metrics.sharpe,2)+'</td><td>'+nf(v.metrics.mdd,2)+'</td>'+
+         '<td>'+nf(v.turnover.mean,0)+'</td><td>'+pc(v.pool.alpha)+'</td><td>'+pc(v.spy.alpha)+'</td>'+
+         '<td>'+pc(v.spy.t)+'</td><td>'+nf(v.p_spy,4)+'</td></tr>';
+    });
+    var mm=S.multiplicity||{};
+    h+='</tbody></table></div><p class="lblnote" style="margin:10px 0 0">문턱을 '+(mm.m||0)+
+       '개 훑었으므로 미보정 p 를 그대로 유의성으로 읽으면 안 됩니다 — Bonferroni '+(mm.bonferroni||0)+
+       '건 · Holm '+(mm.holm||0)+'건 · BH(q=.10) '+(mm.bh10||0)+'건 통과.</p></div>';
+
+    if(base&&base.latest){
+      var L=base.latest, TOP=40;
+      h+='<div class="card"><h3>지금 담는 것 (K='+base.k+')<span class="hn">'+esc(L.rebal)+
+         ' 리밸런스 · '+L.n+'종목 동일가중</span></h3><div class="ovwrap">';
+      L.tickers.forEach(function(t,i){
+        h+='<span class="stk'+(i>=TOP?' stx':'')+'"'+(i>=TOP?' hidden':'')+'>'+
+           '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a><i>'+L.counts[t]+'</i></span>';
+      });
+      h+='</div>'+(L.n>TOP?'<button type="button" class="cnt2" id="stmore" aria-expanded="false">'+
+         '나머지 '+(L.n-TOP)+'종목 펼치기</button>':'')+
+         '<p class="lblnote" style="margin:10px 0 0">숫자는 그 종목을 들고 있는 운용사 수입니다. '+
+         '전부 같은 비중(1/'+L.n+')으로 담습니다.</p></div>';
+    }
+    h+='<div class="note"><b>규칙</b><br>· '+Object.keys(S.spec||{}).map(function(k){
+         return esc(S.spec[k]);}).join('<br>· ')+'</div>';
+    h+='<div class="note hard"><b>이 숫자를 성과로 읽기 전에</b><br>· '+
+       (S.limits||[]).map(function(s){return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+
+       '</div>';
+    el('stout').innerHTML=h;
+    var b=el('stmore');
+    if(b)b.addEventListener('click',function(){
+      var open=b.getAttribute('aria-expanded')!=='true';
+      Array.prototype.forEach.call(el('stout').querySelectorAll('.stx'),function(x){
+        if(open)x.removeAttribute('hidden'); else x.setAttribute('hidden','');});
+      b.setAttribute('aria-expanded',open?'true':'false');
+      b.textContent=open?'접기':'나머지 '+(base.latest.n-40)+'종목 펼치기';
+    });
+  }
+  fetch('data/guru_overlap.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;}).then(renderStrat);
 
   fetch('data/guru.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     if(!j||!j.managers){
