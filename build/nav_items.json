@@ -1,369 +1,378 @@
 {
- "note": "내비 정본. build/sync_nav.py가 이 파일만 읽어 nav_block.html을 만들고 전 HTML의 NAV:BEGIN~END를 치환한다. 여기 외의 곳에서 메뉴를 손으로 고치지 말 것 — CI가 해시로 막는다.",
- "axis_note": "src=출처(raw 원문/agg 집계/model 모델/est 추정/ext 외부). verdict=판정(pass/marginal/unverified/rejected/na). 메뉴 배지는 verdict만 표시하고 verdicts.json과 대조된다.",
- "categories": [
-  {
-   "name": "시장",
-   "slug": "market",
-   "short": "시장",
-   "tools": [
+  "note": "내비 정본. build/sync_nav.py가 이 파일만 읽어 nav_block.html을 만들고 전 HTML의 NAV:BEGIN~END를 치환한다. 여기 외의 곳에서 메뉴를 손으로 고치지 말 것 — CI가 해시로 막는다.",
+  "axis_note": "src=출처(raw 원문/agg 집계/model 모델/est 추정/ext 외부). verdict=판정(pass/marginal/unverified/rejected/na). 메뉴 배지는 verdict만 표시하고 verdicts.json과 대조된다.",
+  "categories": [
     {
-     "name": "시장 폭·동향",
-     "file": "market.html",
-     "status": "existing",
-     "desc": "518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M"
+      "name": "시장",
+      "slug": "market",
+      "short": "시장",
+      "tools": [
+        {
+          "name": "시장 폭·동향",
+          "file": "market.html",
+          "status": "existing",
+          "desc": "518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "섹터 히트맵",
+          "file": "sector.html",
+          "status": "existing",
+          "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "국가경제 분석",
+          "file": "regime.html",
+          "status": "existing",
+          "desc": "FRED 39지표로 만든 국면 판정 — 미국 단일",
+          "src": "model",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "경제지표 열람",
+          "file": "macro.html",
+          "status": "existing",
+          "desc": "FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "발표 일정",
+          "file": "calendar.html#macro",
+          "status": "existing",
+          "desc": "이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M",
+          "anchor": "static"
+        }
+      ]
     },
     {
-     "name": "섹터 히트맵",
-     "file": "sector.html",
-     "status": "existing",
-     "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M"
+      "name": "공시·산업",
+      "slug": "filings",
+      "short": "공시",
+      "tools": [
+        {
+          "name": "8-K 공시 피드",
+          "file": "filings.html",
+          "status": "existing",
+          "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "산업 탐색",
+          "file": "industry.html",
+          "status": "existing",
+          "desc": "SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다",
+          "src": "raw",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "관전 포인트",
+          "file": "industry.html#watch",
+          "status": "existing",
+          "desc": "산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M",
+          "anchor": "route"
+        }
+      ]
     },
     {
-     "name": "국가경제 분석",
-     "file": "regime.html",
-     "status": "existing",
-     "desc": "FRED 39지표로 만든 국면 판정 — 미국 단일",
-     "src": "model",
-     "verdict": "unverified",
-     "effort": "S"
+      "name": "종목",
+      "slug": "stocks",
+      "short": "종목",
+      "tools": [
+        {
+          "name": "종목 신호",
+          "file": "stocks.html",
+          "status": "existing",
+          "desc": "518종목 테크니컬 22지표·컴포짓·타이밍",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "지표별 타이밍",
+          "file": "signals.html",
+          "status": "existing",
+          "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
+          "src": "model",
+          "verdict": "rejected",
+          "effort": "M"
+        },
+        {
+          "name": "실적 및 전망",
+          "file": "co.html#est",
+          "status": "existing",
+          "desc": "목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중",
+          "src": "est",
+          "verdict": "unverified",
+          "effort": "M",
+          "anchor": "static"
+        },
+        {
+          "name": "재무제표",
+          "file": "co.html#fs",
+          "status": "existing",
+          "desc": "SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "L"
+        },
+        {
+          "name": "IR자료실",
+          "file": "co.html#ir",
+          "status": "existing",
+          "desc": "EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "내부자 거래",
+          "file": "co.html#ins",
+          "status": "existing",
+          "desc": "임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님",
+          "src": "raw",
+          "verdict": "unverified",
+          "effort": "M"
+        }
+      ]
     },
     {
-     "name": "경제지표 열람",
-     "file": "macro.html",
-     "status": "existing",
-     "desc": "FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
+      "name": "가치평가",
+      "slug": "valuation",
+      "short": "가치",
+      "tools": [
+        {
+          "name": "상대가치평가",
+          "file": "rel-value.html",
+          "status": "existing",
+          "desc": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "밸류에이션 모델",
+          "file": "valuation.html",
+          "status": "existing",
+          "desc": "역산 DCF·민감도 격자·DDM — 적정주가 한 숫자를 주지 않는다",
+          "src": "model",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "지수 역산",
+          "file": "valuation.html#index",
+          "status": "existing",
+          "desc": "유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음",
+          "src": "raw",
+          "verdict": "unverified",
+          "effort": "M"
+        }
+      ]
     },
     {
-     "name": "발표 일정",
-     "file": "calendar.html#macro",
-     "status": "existing",
-     "desc": "이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M",
-     "anchor": "static"
+      "name": "전략",
+      "slug": "strategy",
+      "short": "전략",
+      "tools": [
+        {
+          "name": "전략 랩",
+          "file": "explorer.html",
+          "status": "existing",
+          "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
+          "src": "model",
+          "verdict": "pass",
+          "effort": "S"
+        },
+        {
+          "name": "스크리너",
+          "file": "screener.html",
+          "status": "existing",
+          "desc": "자유조합 스크린 — 초과수익 확인된 스크린 0종",
+          "src": "model",
+          "verdict": "rejected",
+          "effort": "L"
+        },
+        {
+          "name": "거장 포트폴리오·매매",
+          "file": "guru.html",
+          "status": "existing",
+          "desc": "13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "L"
+        },
+        {
+          "name": "공통 보유종목",
+          "file": "guru.html#overlap",
+          "status": "existing",
+          "desc": "명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M",
+          "anchor": "route"
+        },
+        {
+          "name": "운용사 복제 진단",
+          "file": "guru17.html",
+          "status": "existing",
+          "desc": "따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "전략 탐색 풀",
+          "file": "rotation.html",
+          "status": "existing",
+          "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
+          "src": "ext",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "내 포트폴리오",
+          "file": "portfolio.html",
+          "status": "existing",
+          "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "L"
+        }
+      ]
+    },
+    {
+      "name": "랩 원장",
+      "slug": "ledger",
+      "short": "원장",
+      "tools": [
+        {
+          "name": "데이터 출처·기준일",
+          "file": "sources.html",
+          "status": "existing",
+          "desc": "기준일이 왜 하나가 아닌지 — as-of 정본",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "등급·판정 규약",
+          "file": "method.html",
+          "status": "existing",
+          "desc": "A~F 등급은 섹터 백분위 서술이지 예측이 아니다",
+          "src": "none",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "갱신 기록",
+          "file": "updates.html",
+          "status": "existing",
+          "desc": "언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "S"
+        },
+        {
+          "name": "만들지 않은 것",
+          "file": "roadmap.html",
+          "status": "existing",
+          "desc": "메뉴에서 뺀 칸과 그 사유 — 칸은 지우되 사유는 지우지 않는다",
+          "src": "none",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "BK",
+          "file": "kb.html",
+          "status": "existing",
+          "desc": "별도 열람 잠금",
+          "src": "none",
+          "verdict": "na",
+          "effort": "S",
+          "locked": true
+        }
+      ]
     }
-   ]
-  },
-  {
-   "name": "공시·산업",
-   "slug": "filings",
-   "short": "공시",
-   "tools": [
+  ],
+  "status_note": "new-now=이번에 만든다 / existing=기존 / new-later=다음 / needs-source=소스 대기 / wont-build=만들지 않기로 확정(사유는 roadmap.html)",
+  "grade_note": "A~F 등급은 종목·지표 화면에서 섹터 내 백분위를 나타내는 서술적 표기다. 수익 예측 등급이 아니며, 메뉴의 판정 배지(verdict)와는 별개 축이다.",
+  "locked_note": "locked=true면 메뉴 이름 옆에 🔒를 붙인다. 잠금 여부는 페이지의 AES 게이트 유무로 판정하며 build/validate_site.py가 대조한다.",
+  "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
+  "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
+  "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
+  "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 40슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
+  "retired": [
     {
-     "name": "8-K 공시 피드",
-     "file": "filings.html",
-     "status": "existing",
-     "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
+      "name": "실시간 내러티브",
+      "cat": "공시룸 (뉴스룸)",
+      "was_file": "roadmap.html#narrative",
+      "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
+      "retired_on": "2026-07-25",
+      "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
+      "principle": "LLM으로 요약해 채우는 길은 있지만, 이 랩의 \"해설을 붙이지 않는다\" 원칙과 정면으로 충돌한다. 원칙을 꺾느니 칸을 뺀다.",
+      "paid_path": "유료 라이선스 피드(Dow Jones·Benzinga·Refinitiv) 계약. 연 단위 비용이 든다.",
+      "replaced_by": "filings.html — 8-K 원문 피드. 회사가 스스로 단 Item 코드로 분류하고 해설을 붙이지 않는다."
     },
     {
-     "name": "산업 탐색",
-     "file": "industry.html",
-     "status": "existing",
-     "desc": "SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다",
-     "src": "raw",
-     "verdict": "unverified",
-     "effort": "M"
+      "name": "프리미엄 뉴스",
+      "cat": "공시룸 (뉴스룸)",
+      "was_file": "roadmap.html#news",
+      "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
+      "retired_on": "2026-07-25",
+      "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
+      "principle": "유료 뉴스를 사더라도 요약 없이 링크만 나열하면 EDGAR 원문 링크와 다를 바가 없다.",
+      "paid_path": "위와 동일.",
+      "replaced_by": "co.html#ir — 회사별 EDGAR 제출 원문 링크."
     },
     {
-     "name": "관전 포인트",
-     "file": "industry.html#watch",
-     "status": "existing",
-     "desc": "산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M",
-     "anchor": "route"
+      "name": "밸류체인",
+      "cat": "산업 분석",
+      "was_file": "roadmap.html#value-chain",
+      "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
+      "retired_on": "2026-07-25",
+      "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
+      "principle": "유일한 구조화 실마리였던 고객집중도 공시(ASC 280, 매출 10% 이상 고객)는 XBRL 차원(dimension)에 실려 있어 companyfacts API로는 나오지 않는다 — AAPL·NVDA·AVGO·WDC 실측에서 집중도 태그 0개(2026-07-25). 10-K 본문을 NLP로 파싱하는 길은 남지만 그건 랩이 읽고 해석한 결과다.",
+      "paid_path": "유료 공급망 데이터셋(FactSet Revere·Bloomberg SPLC).",
+      "replaced_by": null
+    },
+    {
+      "name": "RIM",
+      "cat": "종목 가치평가",
+      "was_file": "valuation.html#rim",
+      "desc": "잔여이익 모델 — 자기자본 시계열이 있어야 성립",
+      "retired_on": "2026-07-25",
+      "why": "데이터가 없어서가 아니다. 필요한 시계열을 전부 확보한 뒤 모형의 전제(클린 서플러스)를 재무를 수집한 510사 전수로 쟀고, 성립하지 않았다 — 장부가 증분이 이익−배당과 중앙값 7.92% 어긋난다.",
+      "principle": "가장 큰 누락 항목은 OCI가 아니라 자사주 매입이었다. 자사주·신주 발행을 모두 반영해도 중앙값 4.75%, 4곳 중 1곳은 10%를 넘는다. 전제가 깨진 채 잔여이익을 미래로 늘려 만든 값을 RIM이라고 부를 수 없다. 측정은 build/refresh_facts.py의 clean_surplus_stat()에 남겼다.",
+      "paid_path": "자기자본 변동표를 항목별로 분해한 데이터(주식보상·OCI·자사주). XBRL 차원에 실려 companyfacts API로는 나오지 않는다 — 유료 재무 데이터셋이면 가능하다.",
+      "replaced_by": "valuation.html#rim 섹션 자체는 남는다 — 이제 모형이 아니라 그 전제를 잰 결과를 싣는다."
+    },
+    {
+      "name": "실적 발표 일정",
+      "cat": "종목",
+      "was_file": "calendar.html#earnings",
+      "desc": "실적 발표 예정일",
+      "retired_on": "2026-07-25",
+      "why": "실적 발표 **예정일**은 무료 공개 데이터에 없다. SEC는 이미 일어난 발표만 안다 — 8-K Item 2.02로 제출된 뒤에야 기록이 생기고, 그건 공시 피드에 이미 있다. 앞으로의 일정은 회사 IR 공지나 데이터 벤더의 상품이지 SEC 제출 대상이 아니다.",
+      "principle": "남은 길인 yfinance는 비공식 API라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 실제로 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀 종목 갱신이 사흘 멈춘 전례가 있다. 한 칸을 위해 그 위험을 상시로 안지 않는다.",
+      "paid_path": "Finnhub 무료 등급(공식 API)에 실적 캘린더가 있다. 키만 받으면 붙일 수 있다 — 비용이 아니라 계정 문제다.",
+      "replaced_by": "filings.html — 이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있다."
     }
-   ]
-  },
-  {
-   "name": "종목",
-   "slug": "stocks",
-   "short": "종목",
-   "tools": [
-    {
-     "name": "종목 신호",
-     "file": "stocks.html",
-     "status": "existing",
-     "desc": "518종목 테크니컬 22지표·컴포짓·타이밍",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "S"
-    },
-    {
-     "name": "지표별 타이밍",
-     "file": "signals.html",
-     "status": "existing",
-     "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
-     "src": "model",
-     "verdict": "rejected",
-     "effort": "M"
-    },
-    {
-     "name": "실적 및 전망",
-     "file": "co.html#est",
-     "status": "existing",
-     "desc": "목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중",
-     "src": "est",
-     "verdict": "unverified",
-     "effort": "M",
-     "anchor": "static"
-    },
-    {
-     "name": "재무제표",
-     "file": "co.html#fs",
-     "status": "existing",
-     "desc": "SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "L"
-    },
-    {
-     "name": "IR자료실",
-     "file": "co.html#ir",
-     "status": "existing",
-     "desc": "EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "내부자 거래",
-     "file": "co.html#ins",
-     "status": "existing",
-     "desc": "임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님",
-     "src": "raw",
-     "verdict": "unverified",
-     "effort": "M"
-    }
-   ]
-  },
-  {
-   "name": "가치평가",
-   "slug": "valuation",
-   "short": "가치",
-   "tools": [
-    {
-     "name": "상대가치평가",
-     "file": "rel-value.html",
-     "status": "existing",
-     "desc": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M"
-    },
-    {
-     "name": "밸류에이션 모델",
-     "file": "valuation.html",
-     "status": "existing",
-     "desc": "역산 DCF·민감도 격자·DDM — 적정주가 한 숫자를 주지 않는다",
-     "src": "model",
-     "verdict": "unverified",
-     "effort": "M"
-    },
-    {
-     "name": "지수 역산",
-     "file": "valuation.html#index",
-     "status": "existing",
-     "desc": "유니버스 합계 역산 — 지수가 아니라 시총 87% 커버 묶음",
-     "src": "raw",
-     "verdict": "unverified",
-     "effort": "M"
-    }
-   ]
-  },
-  {
-   "name": "전략",
-   "slug": "strategy",
-   "short": "전략",
-   "tools": [
-    {
-     "name": "전략 랩",
-     "file": "explorer.html",
-     "status": "existing",
-     "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
-     "src": "model",
-     "verdict": "pass",
-     "effort": "S"
-    },
-    {
-     "name": "스크리너",
-     "file": "screener.html",
-     "status": "existing",
-     "desc": "자유조합 스크린 — 초과수익 확인된 스크린 0종",
-     "src": "model",
-     "verdict": "rejected",
-     "effort": "L"
-    },
-    {
-     "name": "거장 포트폴리오·매매",
-     "file": "guru.html",
-     "status": "existing",
-     "desc": "13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "L"
-    },
-    {
-     "name": "공통 보유종목",
-     "file": "guru.html#overlap",
-     "status": "existing",
-     "desc": "명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M",
-     "anchor": "route"
-    },
-    {
-     "name": "전략 탐색 풀",
-     "file": "rotation.html",
-     "status": "existing",
-     "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
-     "src": "ext",
-     "verdict": "unverified",
-     "effort": "S"
-    },
-    {
-     "name": "내 포트폴리오",
-     "file": "portfolio.html",
-     "status": "existing",
-     "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
-     "src": "agg",
-     "verdict": "na",
-     "effort": "L"
-    }
-   ]
-  },
-  {
-   "name": "랩 원장",
-   "slug": "ledger",
-   "short": "원장",
-   "tools": [
-    {
-     "name": "데이터 출처·기준일",
-     "file": "sources.html",
-     "status": "existing",
-     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "등급·판정 규약",
-     "file": "method.html",
-     "status": "existing",
-     "desc": "A~F 등급은 섹터 백분위 서술이지 예측이 아니다",
-     "src": "none",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "갱신 기록",
-     "file": "updates.html",
-     "status": "existing",
-     "desc": "언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에",
-     "src": "agg",
-     "verdict": "na",
-     "effort": "S"
-    },
-    {
-     "name": "만들지 않은 것",
-     "file": "roadmap.html",
-     "status": "existing",
-     "desc": "메뉴에서 뺀 칸과 그 사유 — 칸은 지우되 사유는 지우지 않는다",
-     "src": "none",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "BK",
-     "file": "kb.html",
-     "status": "existing",
-     "desc": "별도 열람 잠금",
-     "src": "none",
-     "verdict": "na",
-     "effort": "S",
-     "locked": true
-    }
-   ]
-  }
- ],
- "status_note": "new-now=이번에 만든다 / existing=기존 / new-later=다음 / needs-source=소스 대기 / wont-build=만들지 않기로 확정(사유는 roadmap.html)",
- "grade_note": "A~F 등급은 종목·지표 화면에서 섹터 내 백분위를 나타내는 서술적 표기다. 수익 예측 등급이 아니며, 메뉴의 판정 배지(verdict)와는 별개 축이다.",
- "locked_note": "locked=true면 메뉴 이름 옆에 🔒를 붙인다. 잠금 여부는 페이지의 AES 게이트 유무로 판정하며 build/validate_site.py가 대조한다.",
- "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
- "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
- "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
- "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 40슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
- "retired": [
-  {
-   "name": "실시간 내러티브",
-   "cat": "공시룸 (뉴스룸)",
-   "was_file": "roadmap.html#narrative",
-   "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
-   "retired_on": "2026-07-25",
-   "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
-   "principle": "LLM으로 요약해 채우는 길은 있지만, 이 랩의 \"해설을 붙이지 않는다\" 원칙과 정면으로 충돌한다. 원칙을 꺾느니 칸을 뺀다.",
-   "paid_path": "유료 라이선스 피드(Dow Jones·Benzinga·Refinitiv) 계약. 연 단위 비용이 든다.",
-   "replaced_by": "filings.html — 8-K 원문 피드. 회사가 스스로 단 Item 코드로 분류하고 해설을 붙이지 않는다."
-  },
-  {
-   "name": "프리미엄 뉴스",
-   "cat": "공시룸 (뉴스룸)",
-   "was_file": "roadmap.html#news",
-   "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
-   "retired_on": "2026-07-25",
-   "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
-   "principle": "유료 뉴스를 사더라도 요약 없이 링크만 나열하면 EDGAR 원문 링크와 다를 바가 없다.",
-   "paid_path": "위와 동일.",
-   "replaced_by": "co.html#ir — 회사별 EDGAR 제출 원문 링크."
-  },
-  {
-   "name": "밸류체인",
-   "cat": "산업 분석",
-   "was_file": "roadmap.html#value-chain",
-   "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
-   "retired_on": "2026-07-25",
-   "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
-   "principle": "유일한 구조화 실마리였던 고객집중도 공시(ASC 280, 매출 10% 이상 고객)는 XBRL 차원(dimension)에 실려 있어 companyfacts API로는 나오지 않는다 — AAPL·NVDA·AVGO·WDC 실측에서 집중도 태그 0개(2026-07-25). 10-K 본문을 NLP로 파싱하는 길은 남지만 그건 랩이 읽고 해석한 결과다.",
-   "paid_path": "유료 공급망 데이터셋(FactSet Revere·Bloomberg SPLC).",
-   "replaced_by": null
-  },
-  {
-   "name": "RIM",
-   "cat": "종목 가치평가",
-   "was_file": "valuation.html#rim",
-   "desc": "잔여이익 모델 — 자기자본 시계열이 있어야 성립",
-   "retired_on": "2026-07-25",
-   "why": "데이터가 없어서가 아니다. 필요한 시계열을 전부 확보한 뒤 모형의 전제(클린 서플러스)를 재무를 수집한 510사 전수로 쟀고, 성립하지 않았다 — 장부가 증분이 이익−배당과 중앙값 7.92% 어긋난다.",
-   "principle": "가장 큰 누락 항목은 OCI가 아니라 자사주 매입이었다. 자사주·신주 발행을 모두 반영해도 중앙값 4.75%, 4곳 중 1곳은 10%를 넘는다. 전제가 깨진 채 잔여이익을 미래로 늘려 만든 값을 RIM이라고 부를 수 없다. 측정은 build/refresh_facts.py의 clean_surplus_stat()에 남겼다.",
-   "paid_path": "자기자본 변동표를 항목별로 분해한 데이터(주식보상·OCI·자사주). XBRL 차원에 실려 companyfacts API로는 나오지 않는다 — 유료 재무 데이터셋이면 가능하다.",
-   "replaced_by": "valuation.html#rim 섹션 자체는 남는다 — 이제 모형이 아니라 그 전제를 잰 결과를 싣는다."
-  },
-  {
-   "name": "실적 발표 일정",
-   "cat": "종목",
-   "was_file": "calendar.html#earnings",
-   "desc": "실적 발표 예정일",
-   "retired_on": "2026-07-25",
-   "why": "실적 발표 **예정일**은 무료 공개 데이터에 없다. SEC는 이미 일어난 발표만 안다 — 8-K Item 2.02로 제출된 뒤에야 기록이 생기고, 그건 공시 피드에 이미 있다. 앞으로의 일정은 회사 IR 공지나 데이터 벤더의 상품이지 SEC 제출 대상이 아니다.",
-   "principle": "남은 길인 yfinance는 비공식 API라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 실제로 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀 종목 갱신이 사흘 멈춘 전례가 있다. 한 칸을 위해 그 위험을 상시로 안지 않는다.",
-   "paid_path": "Finnhub 무료 등급(공식 API)에 실적 캘린더가 있다. 키만 받으면 붙일 수 있다 — 비용이 아니라 계정 문제다.",
-   "replaced_by": "filings.html — 이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있다."
-  }
- ]
+  ]
 }
