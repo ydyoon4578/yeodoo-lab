@@ -452,8 +452,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </details>
 
   <h2 class="sec">부록 · 운용사별</h2>
-  <p class="secnote" id="secnote">순위표가 아니다. 판정은 위 세 줄이 한다. 개별 알파는 참고용이며,
-    오른쪽의 <b>세 해 제외</b> 열을 같이 보라 — 알파가 몇 해에 몰려 있으면 그 숫자는 전략이 아니라 사건이다.</p>
+  <p class="secnote" id="secnote">순위표가 아니다 — 가나다순으로 싣는다. 판정은 위 판정 상자가 한다.
+    <b>미보정 p</b> 열은 다중검정 보정 <b>전</b> 값이라 그대로 유의성으로 읽으면 안 되고,
+    오른쪽 <b>세 해 제외</b> 열을 같이 보라 — 알파가 몇 해에 몰려 있으면 그 숫자는 전략이 아니라 사건이다.</p>
   <div class="fswrap"><table class="tbl" id="tbl"><tbody><tr><td class="skel">불러오는 중…</td></tr></tbody></table></div>
   <p class="foot" id="foot"></p>
 </main>
@@ -470,25 +471,31 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function drawVerdict(j){
     var h=j.headline||{}, g=h.grs||{}, p=h.persistence||{}, r=h.prereg_rule||{}, m=h.multiplicity||{};
     var out='<div class="ans">아니오 — 따라 살 근거가 없다.</div>'+
-      '<div class="sub">아래 세 검정이 모두 같은 방향을 가리킨다. 셋은 서로 다른 질문이다.</div><div class="lines">';
+      '<div class="sub">아래 검정들이 서로 다른 질문을 던지는데 답이 모두 같다. '+
+      '검정마다 표본 구간이 다르므로 각 줄에 자기 개월수를 적었다.</div><div class="lines">';
     if(g.F!=null){
       out+='<div class="line"><span class="lb">결합검정</span><span class="lv">'+
         '<b>F('+g.df1+','+g.df2+')='+num(g.F,3)+' · p='+num(g.p,3)+'</b>'+
         '<span class="lw">'+esc(g.n_managers)+'곳의 알파가 <b>전부 0</b>이라는 가설을 기각하지 못한다. '+
-        '개별로 17번 묻는 대신 한 번에 물은 결과다.</span></span></div>';
+        '개별로 '+esc(g.n_managers)+'번 묻는 대신 한 번에 물은 결과다. '+
+        '전 운용사가 함께 존재하는 구간만 쓰므로 표본은 '+esc(g.months)+'개월이다.</span></span></div>';
     }
     if(p.spearman!=null){
       out+='<div class="line"><span class="lb">지속성</span><span class="lv">'+
         '<b>Spearman '+num(p.spearman,3)+' (p='+num(p.spearman_p,3)+')</b>'+
-        '<span class="lw">전반기에 잘한 곳이 후반기에도 잘하지 않는다. '+
-        '전반 상위'+esc(p.top_k)+'의 후반 알파 '+num(p.top_next)+'%, 하위'+esc(p.top_k)+'는 '+num(p.bottom_next)+'% — '+
-        '순서가 유지되지 않는다.</span></span></div>';
+        '<span class="lw">전반기 순위가 후반기를 예고하는지 <b>이 표본으로는 가릴 수 없다</b> — '+
+        '점추정은 약한 양(+)이지만 p='+num(p.spearman_p,2)+'라 0과 구별되지 않는다. '+
+        '전반 상위'+esc(p.top_k)+'의 후반 알파 '+num(p.top_next)+'%, 하위'+esc(p.top_k)+'는 '+num(p.bottom_next)+'%. '+
+        (p.split?esc(p.split[0])+'~'+esc(p.split[1])+' 대 '+esc(p.split[2])+'~'+esc(p.split[3])+'.':'')+
+        '</span></span></div>';
     }
     if(r.t!=null){
       out+='<div class="line"><span class="lb">사전 규칙</span><span class="lv">'+
-        '<b>α '+sgn(r.alpha)+'%/yr · t '+sgn(r.t)+'</b>'+
+        '<b>α '+sgn(r.alpha)+'%/yr · t '+sgn(r.t)+' · β '+num(r.beta)+'</b>'+
         '<span class="lw">'+esc(r.rule)+'. '+esc(r.start)+'~'+esc(r.end)+' '+esc(r.n_months)+'개월. '+
         '사후에 승자를 아는 것이 아니라 <b>그때 알 수 있던 정보만</b> 써서 고른 결과이고, 유의하지 않다. '+
+        '베타가 '+num(r.beta)+'라 초과수익의 상당 부분이 시장 노출이다 — '+
+        '이 랩이 13F 컨빅션 복제를 기각한 사유가 정확히 그것이었다. '+
         '이 표를 실제로 쓰는 방법이 작동하지 않는다는 뜻이다.</span></span></div>';
     }
     if(m.m!=null){
@@ -503,16 +510,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function drawRows(j){
     var live=[], off=[];
     (j.managers||[]).forEach(function(x){ (x.alpha==null?off:live).push(x); });
-    var h='<thead><tr><th>운용사</th><th>α %/yr</th><th>t</th><th>β</th>'+
+    // ⚠ 표시 순서는 **가나다순**이다. 생성기는 알파 내림차순으로 주지만 그대로 그리면
+    //   1행 최상단이 최고 알파가 되어 캡션('순위표가 아니다')을 디자인이 반박한다.
+    live.sort(function(a2,b2){return a2.name.localeCompare(b2.name,'ko');});
+    // 다중검정 문턱 — 데이터의 m 에서 파생한다(손으로 적지 않는다).
+    var m=(j.headline||{}).multiplicity||{}, thr=(m.m?0.05/m.m:null);
+    var h='<thead><tr><th>운용사</th><th>α %/yr</th><th>t</th><th>미보정 p</th><th>β</th>'+
       '<th>한 해 제외</th><th>세 해 제외</th><th>CAGR</th><th>대조군</th><th>개월</th></tr></thead><tbody>';
     live.forEach(function(x){
       var w1=x.drop_worst_year||{}, w3=x.drop_worst3_years||{};
       var f1=(x.alpha>0&&w1.alpha!=null&&w1.alpha<0), f3=(x.alpha>0&&w3.alpha!=null&&w3.alpha<0);
-      var weak=(x.t==null||Math.abs(x.t)<1.96);
+      // 문턱 대비 판정은 **전 행에 같은 잣대**로 붙인다. |t|>1.96 하나만 딱지를 비우면
+      // 헤드라인('통과 0건')과 어긋나 보여 독자가 그 행만 유의하다고 읽는다.
+      var pass=(thr!=null&&x.p!=null&&x.p<thr);
       h+='<tr><td><span class="nm">'+esc(x.name)+'</span>'+
         (f1||f3?'<span class="ns">단일 연도 의존 — 몇 해를 빼면 부호가 뒤집힌다</span>':'')+'</td>'+
-        '<td>'+sgn(x.alpha)+(weak?'<span class="tag">유의하지 않음</span>':'')+'</td>'+
+        '<td class="ins">'+sgn(x.alpha)+'</td>'+
         '<td class="ins">'+sgn(x.t)+'</td>'+
+        '<td class="ins">'+num(x.p,4)+(pass?'':'<span class="tag">문턱 미달</span>')+'</td>'+
         '<td class="ins">'+num(x.beta)+'</td>'+
         '<td class="'+(f1?'flip':'ins')+'">'+sgn(w1.alpha)+(w1.year?'<span class="tag">'+esc(w1.year)+'</span>':'')+'</td>'+
         '<td class="'+(f3?'flip':'ins')+'">'+sgn(w3.alpha)+'</td>'+
@@ -523,7 +538,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     off.forEach(function(x){
       h+='<tr class="off"><td><span class="nm">'+esc(x.name)+'</span>'+
         '<span class="ns">'+esc(x.why||'')+'</span></td>'+
-        '<td colspan="8">'+esc(x.verdict||'산출 안 함')+'</td></tr>';
+        '<td colspan="9">'+esc(x.verdict||'산출 안 함')+'</td></tr>';
     });
     return h+'</tbody>';
   }
@@ -533,8 +548,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       el('verdict').innerHTML='<div class="skel">데이터를 불러오지 못했습니다.</div>';return;
     }
     var sp=j.span||{};
-    el('stamp').textContent='검정 구간 '+(sp.start||'')+' ~ '+(sp.end||'')+' · '+(sp.n_months||0)+'개월 · '+
-      (j.managers.length)+'곳';
+    // span 은 가격 패널이 덮는 범위일 뿐 어떤 검정의 표본도 아니다. 검정마다 구간이 다르므로
+    // 여기서는 '자료 범위'라고만 적고, 표본 길이는 각 카드가 자기 것을 찍는다.
+    el('stamp').textContent='자료 범위 '+(sp.start||'')+' ~ '+(sp.end||'')+' · 운용사 '+
+      (j.managers.length)+'곳(성과 산출 '+((j.headline.multiplicity||{}).m||0)+'곳)';
     el('verdict').innerHTML=drawVerdict(j);
     el('limits').innerHTML='<h2>이 숫자를 알파로 읽으면 안 되는 이유</h2><ul>'+
       (j.not_alpha||[]).map(function(s){return '<li>'+md(s)+'</li>';}).join('')+'</ul>';
@@ -543,7 +560,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('spec').innerHTML=Object.keys(LB).filter(function(k){return S[k];}).map(function(k){
       return '<div><dt>'+esc(LB[k])+'</dt><dd>'+esc(S[k])+'</dd></div>';}).join('');
     el('tbl').innerHTML=drawRows(j);
-    el('foot').innerHTML=md(j.note||'');
+    var mm=(j.headline||{}).multiplicity||{};
+    el('foot').innerHTML=(mm.m?'<b>미보정 p 를 읽는 법.</b> 검정을 '+esc(mm.m)+'번 돌렸으므로 문턱은 '+
+      '0.05/'+esc(mm.m)+' = '+num(0.05/mm.m,4)+' 이다. 이 문턱을 넘는 행은 없다(Bonferroni '+
+      esc(mm.bonferroni)+'건 · Holm '+esc(mm.holm)+'건 · BH '+esc(mm.bh10)+'건). '+
+      '표의 p 는 보정 전 값이라 단독으로 유의성을 말하지 않는다.<br><br>':'')+md(j.note||'');
   })['catch'](function(){
     el('verdict').innerHTML='<div class="skel">데이터를 불러오지 못했습니다.</div>';
   });
