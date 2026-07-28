@@ -281,7 +281,11 @@ def main() -> int:
             # 대조군 이름은 파일 머리에 하나로 있다(종목 전략은 전부 같은 대조군을 쓴다).
             # 레코드로 안 옮기면 화면이 '무엇과 겨뤘나'를 못 적는다.
             bench_label=t.get("bench_label"),
-            start=t.get("start"), end=t.get("as_of"),
+            # ⚠ 구간은 **전략별**로 다르다. 펀더멘털이 늦게 채워지는 규칙은 한동안 후보가 없어
+            #   실제 시작이 늦다(고ROE 2021-01, 장부가대비저평가 2020-03). 문서 전체 start 를
+            #   쓰면 화면이 "2017-08 부터 쟀다"고 잘못 말하고, 같은 표에 놓인 다른 전략과
+            #   같은 구간인 것처럼 보인다.
+            start=r.get("start") or t.get("start"), end=t.get("as_of"),
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),

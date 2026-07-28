@@ -1088,6 +1088,7 @@ def run():
             turn = sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, n)) / max(1, (n - MIN_HIST) / 252)
             expo = sum(w[MIN_HIST:]) / max(1, n - MIN_HIST)
             # 지금 이 규칙이 어떤 상태인지 — 타이밍은 '얼마나 들고 있나'가 곧 구성이다
+            start_i = MIN_HIST + 1
             hold_now = {"kind": "timing", "as_of": dates[-1],
                         "exposure_now": round(w[n - 1] * 100, 1),
                         "note": "노출 %d%%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. "
@@ -1098,6 +1099,7 @@ def run():
             nav = [100.0]
             srets = []
             turns = 0
+            first_i = None       # 실제로 무언가를 보유하기 시작한 시점
             for i in range(MIN_HIST + 1, n):
                 # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 월말까지 기다리지 않고
                 # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 '월말 리밸런스'를 어기는
@@ -1215,12 +1217,15 @@ def run():
                     if new:
                         turns += len(set(new) ^ set(hold)) / (2 * TOPN) if hold else 1.0
                         hold = new
+                if hold and first_i is None:
+                    first_i = i
                 rs = [R[t][i] for t in hold if R[t][i] is not None]
                 r = sum(rs) / len(rs) if rs else 0.0
                 srets.append(r)
                 nav.append(nav[-1] * (1 + r))
             turn = turns / max(1, (n - MIN_HIST) / 252)
             expo = 1.0
+            start_i = first_i
             hold_now = {"kind": "xsec", "as_of": dates[-1], "n": len(hold),
                         "tickers": sorted(hold),
                         # 이름을 같이 실어야 화면에서 티커에 커서를 올렸을 때 회사명이 뜬다
@@ -1233,6 +1238,18 @@ def run():
             bnav.append(bnav[-1] * (1 + ixr[i]))
         bnav_ref = bnav          # 대조군은 전 전략 공통 — 생존편향 눈금에서 다시 쓴다
         d2 = dates[MIN_HIST:]
+
+        # ── 실제 시작일에 맞춰 전부 다시 세운다 ────────────────────────────
+        # 펀더멘털이 늦게 채워지는 규칙은 한동안 후보가 없어 현금으로 앉아 있다(고ROE 는 3.4년,
+        # 장부가대비저평가는 2.7년). 그 구간에서 전략 NAV 는 100 에 고정인데 대조군·지수는
+        # 계속 복리로 오른다 — 그대로 두면 차트가 '깨져' 보이고 CAGR·샤프·초과수익이 전부
+        # 죽은 구간에 끌려 내려간다. 비교는 **같은 날에서 함께 출발**해야 성립한다.
+        _k = max(0, (start_i or (MIN_HIST + 1)) - (MIN_HIST + 1))
+        if _k:
+            nav = [x / nav[_k] * 100 for x in nav[_k:]]
+            bnav = [x / bnav[_k] * 100 for x in bnav[_k:]]
+            srets = srets[_k:]
+            d2 = d2[_k:]
         st = ann_stats(nav, d2, rf)
         bs = ann_stats(bnav, d2, rf)
         out.append({
@@ -1244,15 +1261,17 @@ def run():
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": tstat(srets, ixr[MIN_HIST + 1:]),
+            "t": tstat(srets, ixr[(start_i or (MIN_HIST + 1)):]),
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
+            "start": d2[0], "n_days": len(d2),
             "holdings": hold_now,
             "nav": [round(x, 2) for x in nav[::5]],
             "bnav": [round(x, 2) for x in bnav[::5]],
             "dates": d2[::5],
             # 카드에 그릴 곡선 묶음 — 낙폭·연도별을 전체 계열에서 계산해 둔다.
             # 화면이 줄인 곡선에서 다시 재면 카드에 적힌 MDD와 그림이 어긋난다.
-            "chart": curve_pack(d2, nav, bnav, idx_rets=IDXR, i0=MIN_HIST),
+            "chart": curve_pack(d2, nav, bnav, idx_rets=IDXR,
+                                i0=(start_i or (MIN_HIST + 1)) - 1),
         })
         # 입력이 격자를 못 덮으면 그 규칙은 '못한' 게 아니라 '못 잰' 것이다.
         # 심리 게이트가 정확히 그랬다 — sentiment.json 이 3년뿐이라 10년 격자 앞부분에서
