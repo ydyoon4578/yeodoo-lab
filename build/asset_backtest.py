@@ -133,6 +133,17 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
             return " · ".join("%s %d%%" % (k, round(p)) for k, p in parts)
         return "%d자산 동일가중" % len(parts)
     bench_label = _blabel(bench_w)
+
+    # 대조군 구성 티커 — 라벨은 5자산 이상이면 "N자산 동일가중"으로 접혀 티커를 잃는다.
+    # 화면·필터가 "이 대조군에 채권이 섞였나" 같은 질문을 하려면 구성을 알아야 하는데,
+    # 한글 라벨을 파싱해 알아내는 건 부서지기 쉽다 — 구조로 싣는다.
+    def _btk(fn):
+        try:
+            w = fn(start) or {}
+        except Exception:
+            return []
+        return sorted(w)
+    bench_tickers = _btk(bench_w)
     # 지금 뭘 들고 있나 — 이게 안 보이면 규칙을 읽어도 실제로 쓸 수가 없다.
     try:
         _w = wfn(n - 1) or {}
@@ -153,7 +164,7 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     chart = curve_pack(dd, nav, bnav)
     return {"name": label, "rule": rule, "why": why, "note": note, "chart": chart,
             "start": DTS[start], "end": DTS[-1], "n_days": n - start,
-            "metrics": ms, "bench": mb, "bench_label": bench_label,
+            "metrics": ms, "bench": mb, "bench_label": bench_label, "bench_tickers": bench_tickers,
             "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
             "t": tstat(rets, brets), "turnover": round(turn / 2 / yrs, 1),
