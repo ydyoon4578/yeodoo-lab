@@ -110,7 +110,15 @@
   .prenote .prebody p:last-child{margin-bottom:0}
   .prenote .prebody b{color:var(--ink)}
   .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 2px 3px;text-transform:uppercase;letter-spacing:.08em}
-  .item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:11px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
+  /* 마킹 — 내가 눈여겨보는 전략에 표시. 목록이 80종을 넘어 매번 다시 찾는 일이 생긴다.
+     서버가 없는 정적 사이트라 localStorage 에 sid 로 저장한다(_i 는 데이터가 바뀌면 어긋난다). */
+  .mk{flex:none;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;
+      border:0;background:none;cursor:pointer;font-size:15px;line-height:1;color:var(--line);
+      border-radius:7px;transition:color .12s,background .12s;padding:0}
+  .mk:hover{background:var(--panel-2);color:var(--muted)}
+  .mk.on{color:var(--accent)}
+  .item.marked{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--panel))}
+  .item{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:11px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
   .item:hover{border-color:var(--accent)}
   .item[aria-selected="true"]{background:var(--sel);border-color:var(--accent);border-left-color:var(--vc,var(--accent))}
   .item .vdot{width:9px;height:9px;border-radius:50%;background:var(--vc);flex-shrink:0}
@@ -825,6 +833,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
       <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"><span class="fltlab">용도</span></div>
       <div class="chiprow" id="vfilters" role="group" aria-label="운용 등급 필터"><span class="fltlab">등급</span></div>
+      <div class="chiprow" id="mfilters" role="group" aria-label="마킹 필터"><span class="fltlab">내 표시</span></div>
     </div>
   </div>
 
@@ -990,7 +999,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function mlabel(k){return (KINDS&&KINDS.metric_labels&&KINDS.metric_labels[k])||k;}
   function roleLab(r){return (KINDS&&KINDS.bench_roles&&KINDS.bench_roles[r])||null;}
 
-  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),sort:"kind",sel:0};
+  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"kind",sel:0};
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
   // 9px 글씨에 하드코딩 hex를 쓰면 다크에서 대비 2.9:1 → 색은 테두리·배경 힌트로만 쓰고 글씨는 테마 잉크색
@@ -1135,6 +1144,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       b.title=TIP[g]||''; bf.appendChild(b);
     });
   }
+  function markChip(){
+    var mf=el('mfilters'); if(!mf)return;
+    mf.innerHTML='<span class="fltlab">내 표시</span>';
+    var n=MK.set.size;
+    var b=chip('m','마킹만 보기',n,state.mk,function(){
+      if(!MK.set.size){state.mk=false;return;}     // 표시가 없으면 켜도 빈 목록만 나온다
+      state.mk=!state.mk; render(); markChip(); fltLabel();
+    });
+    b.setAttribute('aria-pressed',state.mk);
+    if(!n){b.disabled=true;b.title='아직 표시한 전략이 없습니다 — 목록의 ☆ 를 누르세요';}
+    else b.title='표시한 '+n+'종만 봅니다 (이 브라우저에 저장)';
+    mf.appendChild(b);
+    if(n){
+      var c=document.createElement('button');
+      c.className='fchip'; c.textContent='전체 해제';
+      c.title='표시를 모두 지웁니다';
+      c.addEventListener('click',function(){
+        if(!confirm('표시한 '+MK.set.size+'종을 모두 해제할까요?'))return;
+        MK.set=new Set(); MK.save(); state.mk=false; render(); markChip(); fltLabel();
+      });
+      mf.appendChild(c);
+    }
+  }
+
   function buildKindFilter(){
     var kf=el('kfilters'); if(!kf)return;
     kf.innerHTML='<span class="fltlab">성격</span>';
@@ -1166,12 +1199,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   });
   function nMonths(d){return (d.bt&&d.bt.metrics&&d.bt.metrics.basis&&d.bt.metrics.basis.n_months)||0;}
 
+  // ── 마킹 저장소 ────────────────────────────────────────────────────────
+  //  sid 로 저장한다. _i(배열 위치)는 전략이 추가·제외될 때마다 밀려서 다른 전략에 표시가 옮겨붙는다.
+  var MK={
+    key:'yeodoo-marks', set:new Set(),
+    load:function(){try{var a=JSON.parse(localStorage.getItem(this.key)||'[]');
+      if(Array.isArray(a))this.set=new Set(a);}catch(e){}},
+    // ⚠ [].slice.call(Set) 은 빈 배열이 된다(Set 은 array-like 가 아니다) — 표시가 저장된 척만 하고
+    //   새로고침에서 통째로 사라진다. Array.from 을 쓸 것.
+    save:function(){try{localStorage.setItem(this.key,JSON.stringify(Array.from(this.set)));}catch(e){}},
+    has:function(sid){return sid&&this.set.has(sid);},
+    toggle:function(sid){if(!sid)return false;
+      if(this.set.has(sid))this.set.delete(sid);else this.set.add(sid);
+      this.save();return this.set.has(sid);}
+  };
+  MK.load();
+
   function filtered(){
     var rows=D.filter(function(d){
       if(state.vf.size && !state.vf.has(d.v))return false;
       if(state.bf.size && !state.bf.has(benchGroup(d)))return false;
       if(state.af.size && !state.af.has((d.det&&d.det.archetype)||'미분류'))return false;
       if(state.kf.size && !state.kf.has(kindOf(d)))return false;
+      if(state.mk && !MK.has(d.sid))return false;
       if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")+" "+(d.det.kind||"")+" "+(d.det.identity||"")):"";
         var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt+extra).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
       return true;
@@ -1216,7 +1266,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var NARROW='(max-width:760px)';
   function fltLabel(){
     var b=el('fltnow'); if(!b)return;
-    var n=state.vf.size+state.af.size+state.kf.size, w=el('chipwrap');
+    var n=state.vf.size+state.af.size+state.kf.size+state.bf.size+(state.mk?1:0), w=el('chipwrap');
     b.textContent=(w&&w.hidden)?('필터'+(n?' · '+n+'개 적용':'')):'필터 접기';
   }
   function setFlt(open){
@@ -1275,6 +1325,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         (nMonths(d)?'<span>'+nMonths(d)+'개월</span>':'')+'</span></span>'+
         '<span class="metric">'+headM(d)+'</span>';
       b.addEventListener('click',function(){select(d);});
+      // 마킹 버튼은 행 안에 있지만 행 선택과 별개다 — 전파를 막지 않으면 누를 때마다 카드가 바뀐다.
+      var mk=document.createElement('span');
+      mk.className='mk'+(MK.has(d.sid)?' on':'');
+      mk.setAttribute('role','button'); mk.setAttribute('tabindex','0');
+      mk.title=MK.has(d.sid)?'마킹 해제':'마킹 — 눈여겨보는 전략으로 표시';
+      mk.setAttribute('aria-label',mk.title);
+      mk.textContent=MK.has(d.sid)?'★':'☆';
+      function flip(ev){
+        ev.stopPropagation(); ev.preventDefault();
+        var on=MK.toggle(d.sid);
+        mk.classList.toggle('on',on); mk.textContent=on?'★':'☆';
+        mk.title=on?'마킹 해제':'마킹 — 눈여겨보는 전략으로 표시';
+        mk.setAttribute('aria-label',mk.title);
+        b.classList.toggle('marked',on);
+        markChip(); if(state.mk)render();
+      }
+      mk.addEventListener('click',flip);
+      mk.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' ')flip(ev);});
+      if(MK.has(d.sid))b.classList.add('marked');
+      b.appendChild(mk);
       listEl.appendChild(b);
     });
     drawDetail(D[state.sel]);
@@ -1936,6 +2006,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(keep&&!d.det.kind)d.det=Object.assign({},d.det,{kind:keep});
     }); buildArchetypeFilter(); if(window.__rebuildChips)window.__rebuildChips(); render(); }
     buildKindFilter();
+    markChip();
     // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
     if(bt&&bt.strategies){ D.forEach(function(d){
       if(bt.strategies[d.n]){ d.bt=bt.strategies[d.n]; return; }
