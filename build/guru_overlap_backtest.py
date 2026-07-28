@@ -30,7 +30,7 @@
 """
 from __future__ import annotations
 import datetime as dt
-import io, json, os, sys
+import io, json, os, re, sys
 
 import numpy as np
 try: sys.stdout.reconfigure(encoding="utf-8")
@@ -156,6 +156,42 @@ def load_shares():
     return {t: sorted(v["sh"]) for t, v in tb.load_fund().items() if v.get("sh")}
 
 
+def issuer_map():
+    """티커 → 발행사 키. 같은 회사의 다른 클래스를 한 몸으로 묶는다.
+
+    왜 필요한가 — 10종목만 담는데 GOOGL·GOOG 가 둘 다 들어오면 알파벳 한 회사가 20%다.
+    분산이 아니라 착시다. 이름에서 클래스 꼬리(-CL A · - CLASS B · -A)를 떼어 묶는다.
+    유니버스 518종목에서 걸리는 것은 셋뿐이다 — 알파벳·폭스·뉴스코프(2026-07-28 실측).
+    ⚠ 시총으로 순위를 매길 때도 이게 필요하다. SEC XBRL 의 주식수는 클래스별이 아니라
+      **회사 전체**라, 두 클래스가 같은 시총으로 잡혀 나란히 상위에 올라온다.
+    """
+    st = load("stocks.json") or {}
+    out = {}
+    for s in (st.get("stocks") or []):
+        n = (s.get("n") or s.get("name") or "").upper().strip()
+        if not n:
+            out[s["t"]] = s["t"]
+            continue
+        n = re.sub(r"\s*-\s*(CL|CLASS|SER|SERIES)\s+[A-Z0-9]+$", "", n)
+        n = re.sub(r"\s*-\s*[A-Z]$", "", n)
+        out[s["t"]] = re.sub(r"[^A-Z0-9]", "", n) or s["t"]
+    return out
+
+
+def pick_top(ranked, n, ISS):
+    """순위 목록에서 발행사가 겹치지 않게 위에서부터 n개. 반환 (고른 것, 밀려난 것)."""
+    keep, seen, dropped = [], set(), []
+    for t in ranked:
+        k = ISS.get(t, t)
+        if k in seen:
+            dropped.append(t)          # 같은 회사의 다른 클래스 — 자리를 아래로 넘긴다
+            continue
+        seen.add(k); keep.append(t)
+        if len(keep) >= n:
+            break
+    return keep, dropped
+
+
 def mcap_at(t, m, SH, P, mi, months):
     """그 시점 시가총액(백만$) = 그 달 말까지 공시된 최신 주식수 × 그 달 종가. 없으면 None."""
     end = month_end(m)
@@ -169,14 +205,14 @@ def mcap_at(t, m, SH, P, mi, months):
     return None if (sh is None or px is None) else sh * px
 
 
-def build_topn(counts, k, n, rank, SH, P, mi, months):
+def build_topn(counts, k, n, rank, SH, P, mi, months, ISS):
     """K곳 이상 중 상위 n종목만 동일가중. rank='mc'(시점 시총) 또는 'ov'(겹친 운용사 수).
 
     'ov' 를 함께 두는 이유 — 시총 순위는 주식수가 있는 구간(2020~)에서만 매길 수 있다.
     겹침 수는 13F 만으로 매겨지므로 13년 전체를 돌 수 있다. 같은 '상위 10종목' 규칙을
     두 잣대로 재 두면, 짧은 구간의 결과가 규칙 탓인지 구간 탓인지 가늠할 수 있다.
     """
-    plan, skipped = {}, 0
+    plan, skipped, dropped = {}, 0, {}
     for m, cnt in counts.items():
         sel = [t for t, c in cnt.items() if c >= k]
         if len(sel) < n:
@@ -187,9 +223,16 @@ def build_topn(counts, k, n, rank, SH, P, mi, months):
             if len(have) < max(n, SH_COVER * len(sel)):
                 skipped += 1              # 그 시점엔 순위를 매길 수 없다 — 추정으로 메우지 않는다
                 continue
-            plan[m] = sorted(have, key=lambda t: -mc[t])[:n]
+            ranked = sorted(have, key=lambda t: -mc[t])
         else:
-            plan[m] = sorted(sel, key=lambda t: (-cnt[t], t))[:n]
+            ranked = sorted(sel, key=lambda t: (-cnt[t], t))
+        # 같은 발행사의 다른 클래스는 하나만 — 밀려난 자리는 다음 순위가 채운다
+        keep, drop = pick_top(ranked, n, ISS)
+        if len(keep) < n:
+            continue                      # 후보가 모자라면 그 분기는 건너뛴다
+        plan[m] = keep
+        if drop:
+            dropped[m] = drop
     if not plan:
         return {}, [], [], None, skipped
     W, cur, turn, nhold = {}, None, [], []
@@ -216,8 +259,9 @@ def build_topn(counts, k, n, rank, SH, P, mi, months):
             W[m] = dict(cur)
     lm = max(plan)
     last = {"rebal": lm, "n": len(plan[lm]), "tickers": plan[lm],
-            "counts": {t: counts[lm].get(t, 0) for t in plan[lm]}}
-    return W, turn, nhold, last, skipped
+            "counts": {t: counts[lm].get(t, 0) for t in plan[lm]},
+            "dropped": dropped.get(lm) or []}
+    return W, turn, nhold, last, skipped, dropped
 
 
 def monthly_returns(W, P, mi, months):
@@ -301,11 +345,11 @@ def main() -> int:
     # 못 돈다. 없는 구간을 오늘 주식수로 메우면 오늘의 승자를 과거에 심는 것이 되므로 하지 않고,
     # **돌 수 있는 구간만** 돌린다. 대신 13F 만으로 매길 수 있는 '겹친 운용사 수 상위 10'을
     # 같은 규칙·전 구간으로 나란히 둔다 — 짧은 구간의 결과가 규칙 탓인지 구간 탓인지 가르려는 것이다.
-    SH = load_shares()
+    SH, ISS = load_shares(), issuer_map()
     tops = []
     for rank, label in (("mc", "시점 시가총액 상위 %d" % TOPN),
                         ("ov", "겹친 운용사 수 상위 %d" % TOPN)):
-        W, turn, nhold, last, skip = build_topn(counts, 2, TOPN, rank, SH, P, mi, months)
+        W, turn, nhold, last, skip, drop = build_topn(counts, 2, TOPN, rank, SH, P, mi, months, ISS)
         rets = monthly_returns(W, P, mi, months)
         if len(rets) < MIN_MONTHS:
             tops.append({"rank": rank, "label": label, "n_months": len(rets),
@@ -316,7 +360,8 @@ def main() -> int:
         rf = np.array([RF.get(m, 0.0) for m in ms])
         row = {"rank": rank, "label": label, "k": 2, "top": TOPN,
                "start": ms[0], "end": ms[-1], "n_months": len(ms),
-               "skipped_quarters": skip, "metrics": ann_from_monthly(r, rf),
+               "skipped_quarters": skip, "dedup_quarters": len(drop),
+               "metrics": ann_from_monthly(r, rf),
                "turnover": {"mean": round(float(np.mean([x["v"] for x in turn])), 1) if turn else None},
                "latest": last}
         for name, bs in (("pool", pool), ("spy", spy)):

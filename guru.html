@@ -625,6 +625,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //    시총 순위가 주식수 이력 때문에 2020-06 부터만 매겨져서다(구간이 규칙을 가린다).
     (S.tops||[]).length&&(function(){
       h+='<div class="card"><h3>상위 '+(S.topn||10)+'종목으로 좁힌 판<span class="hn">K=2 에서 다시 고른다</span></h3>'+
+        '<p class="lblnote" style="margin:2px 0 8px">같은 회사의 다른 클래스는 하나만 담습니다 — '+
+        '10종목 중 둘이 알파벳이면 분산이 아니라 착시입니다. 밀려난 자리는 다음 순위가 채웁니다.</p>'+
         '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">잣대</th><th class="l">구간</th>'+
         '<th>개월</th><th>CAGR %</th><th>샤프</th><th>MDD %</th><th>회전 %</th>'+
         '<th>α vs 풀</th><th>α vs SPY</th><th>t (SPY)</th></tr></thead><tbody>';
@@ -641,8 +643,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       h+='</tbody></table></div>';
       S.tops.forEach(function(v){
         if(!v.latest)return;
+        var dq=(v.latest.dropped||[]).length?' · <b>'+v.latest.dropped.map(esc).join('·')+
+               '</b> 는 같은 발행사의 다른 클래스라 빼고 다음 순위로 채웠습니다':'';
         h+='<p class="lblnote" style="margin:10px 0 2px"><b>'+esc(v.label)+'</b> — '+esc(v.latest.rebal)+
-           ' 리밸런스 기준 지금 담는 '+v.latest.n+'종목(각 '+(100/v.latest.n).toFixed(0)+'%)</p><div class="ovwrap">'+
+           ' 리밸런스 기준 지금 담는 '+v.latest.n+'종목(각 '+(100/v.latest.n).toFixed(0)+'%)'+dq+
+           '</p><div class="ovwrap">'+
            v.latest.tickers.map(function(t){
              return '<span class="stk"><a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+
                     '</a><i>'+(v.latest.counts[t]||0)+'</i></span>';}).join('')+'</div>';
