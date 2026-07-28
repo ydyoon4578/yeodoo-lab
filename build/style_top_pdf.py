@@ -4,7 +4,7 @@
 무엇을. build/style_top.py 가 '오늘 무엇을 담나'를 낸다면, 여기서는 그 규칙을 **과거로 되돌려
 매월 다시 골라** 최근 1년 성과를 잰다. 요약 1쪽 + 한 쪽에 전략 두 개.
 
-규칙 — 일곱 스타일 공통
+규칙 — 여섯 스타일 공통
   후보     유니버스 518종목(S&P 500 ∪ NASDAQ 100)
   선정     그 시점 점수 상위 10종목, 동일가중
   리밸런스  월말. 사이에는 표류(매수후보유)
@@ -19,7 +19,7 @@
 시점 정확성.
   · 재무는 **기간종료일 + 45일**이 지난 것만 쓴다. 분기 재무는 분기가 끝난 날 바로 공개되지
     않는다. 안 자르면 없던 정보를 쓰는 것이 된다.
-  · 가격·시가총액은 그날 종가와 그때까지 공시된 주식수로 만든다.
+  · 가격은 그날 종가로 만든다.
 
   python build/style_top_pdf.py
 """
@@ -56,14 +56,31 @@ for p in (r"C:\Windows\Fonts\malgun.ttf", r"C:\Windows\Fonts\malgunbd.ttf"):
 rcParams["font.family"] = "Malgun Gothic"
 rcParams["axes.unicode_minus"] = False
 
-INK, MUTED, LINE = "#14181D", "#6A737D", "#D7DBE0"
+# 색은 사이트(index.html)의 밝은 테마를 그대로 가져온다 — 따뜻한 종이 바탕에 같은 강조색.
+#   --panel #FFFDF5 · --ground #FAF7EC · --panel-2 #F3EFE1 · --line #E4DFD0
+#   --ink #14181D · --ink-2 #3C444D · --muted #6A737D
+#   --accent #8A6B00 · --deploy #0E8A54 · --hot #A64B3B · --champ #2C6E8F
+#   --rp #7A5AA6 · --marg #B25E12
+PAPER, GROUND, PANEL2 = "#FFFDF5", "#FAF7EC", "#F3EFE1"
+INK, INK2, MUTED = "#14181D", "#3C444D", "#6A737D"
+LINE, RULE = "#E4DFD0", "#C8C0AC"        # RULE 은 --line 을 한 단계 눌러 만든 굵은 선
 POS, NEG, ACC = "#0E8A54", "#A64B3B", "#8A6B00"
-HEAD_BG, ZEBRA, RULE = "#EFF2F5", "#FAFBFC", "#AEB6BE"
-BM1, BM2 = "#2C6E8F", "#8E7CB8"          # S&P 500(PR) · NASDAQ 100(PR)
-SCOL = {"mom": "#8A6B00", "qual": "#0E8A54", "val": "#A64B3B", "lowvol": "#2C6E8F",
-        "grow": "#8E7CB8", "hbeta": "#C4761F", "size": "#4B7A2E"}   # 요약 곡선용
+CHAMP, RP, MARG = "#2C6E8F", "#7A5AA6", "#B25E12"
+HEAD_BG, ZEBRA = PANEL2, GROUND
+BM1, BM2 = CHAMP, RP                     # S&P 500(PR) · NASDAQ 100(PR)
+SCOL = {"mom": ACC, "qual": POS, "val": NEG,
+        "lowvol": CHAMP, "grow": RP, "hbeta": MARG}     # 요약 곡선용
+IDXC = {"SPX": CHAMP, "NDX": RP, "공통": ACC}           # 소속 지수 구분색
 
 X0, X1 = .058, .942                       # 본문 좌·우 경계
+
+
+def idx_of(P, t):
+    """그 종목이 어느 지수 소속인가 — 'SPX' 단독 · 'NDX' 단독 · '공통'(양쪽 모두)."""
+    v = set((P.uni.get(t) or {}).get("idx") or [])
+    if "SPX" in v and "NDX" in v:
+        return "공통"
+    return "NDX" if "NDX" in v else ("SPX" if "SPX" in v else "—")
 
 
 def load(fn):
@@ -159,12 +176,6 @@ class Panel:
         v = self.asof(t, key, i, 1)
         return v[0] if v else None
 
-    def mcap(self, t, i):
-        """시가총액 — 단위는 **백만 달러**. sh 가 백만주, 재무가 백만 달러라 그 눈금을 따른다."""
-        sh = self.last(t, "sh", i)
-        p = self.px.get(t, np.array([np.nan]))[i] if t in self.px else np.nan
-        return None if (sh is None or np.isnan(p)) else sh * p
-
 
 def rets(a):
     return a[1:] / a[:-1] - 1.0
@@ -214,11 +225,6 @@ def sc_lowvol(P, i):
 def sc_hbeta(P, i):
     _, b = _vol_beta(P, i)
     return b, b
-
-
-def sc_size(P, i):
-    d = {t: -m for t in P.uni for m in [P.mcap(t, i)] if m}      # 작을수록 상위
-    return d, d
 
 
 def sc_qual(P, i):
@@ -345,9 +351,6 @@ STYLES = [
     ("hbeta", "고베타", "S&P 500 High Beta", sc_hbeta, "베타", lambda P, i, t, s, u: "%.2f" % s,
      "최근 252거래일 일간수익률을 S&P 500 에 회귀했을 때 베타가 가장 큰 10종목. 공분산÷시장분산으로 직접 계산한다.\n"
      "시장이 오르면 더 오르고 내리면 더 내리는 증폭 장치다. 초과수익 규칙이라기보다 방향성 베팅이라 MDD 를 같이 봐야 한다."),
-    ("size", "중소형", "MSCI USA Size", sc_size, "시총 $B", lambda P, i, t, s, u: "%.1f" % (-s / 1e3),
-     "그 시점 시가총액(그때까지 공시된 주식수 × 종가)이 가장 작은 10종목. 유니버스가 S&P 500 ∪ NASDAQ 100 이라 '대형지수 안의 소형'이다.\n"
-     "개별 이슈와 유동성에 민감해 변동성이 크고 월별 종목 교체도 잦다. 지수 편입·편출로 명단 자체가 흔들리는 축이기도 하다."),
 ]
 
 SECS = {"Information Technology": "IT", "Health Care": "헬스", "Financials": "금융",
@@ -563,15 +566,16 @@ def num(v, d=2, sign=True):
 
 def footer(fig, page, total):
     hline(fig, X0, X1, .034, LINE, .6)
-    tx(fig, X0, .026, "여두 전략 랩 · 스타일 상위 10종목 전략 · 유니버스 S&P 500 ∪ NASDAQ 100 "
-                      "· 대조군은 가격지수(PR) · 비용 0", fontsize=6.4, color=MUTED)
+    tx(fig, X0, .026, "여두 전략 랩 · 스타일 상위 10종목 전략 · 지수 SPX = S&P 500 단독 · "
+                      "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0",
+       fontsize=6.4, color=MUTED)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
        fontsize=6.4, color=MUTED, ha="right")
 
 
 def new_page():
     fig = plt.figure(figsize=(8.27, 11.69))       # A4
-    fig.patch.set_facecolor("white")
+    fig.patch.set_facecolor(PAPER)
     return fig
 
 
@@ -597,7 +601,7 @@ def draw_block(fig, P, top, S, R):
     y -= .0205
     hline(fig, X0, X1, y, RULE, .9)
     y -= .008
-    tx(fig, X0, y, desc, fontsize=7.1, color="#3D454D", linespacing=1.58)
+    tx(fig, X0, y, desc, fontsize=7.1, color=INK2, linespacing=1.58)
     y -= .0285
 
     # ① 최근 1년 성과 ─ 왼쪽 위
@@ -649,6 +653,7 @@ def draw_block(fig, P, top, S, R):
     cx0, cw = X0 + LW + .052, X1 - (X0 + LW + .052)
     ch_top, ch_bot = t_top, y3
     ax = fig.add_axes([cx0, ch_bot, cw, ch_top - ch_bot])
+    ax.set_facecolor(PAPER)
     xi = np.arange(len(nav))
     ax.axhline(100, color=LINE, lw=.6)
     ax.plot(xi, gn * 100, color=BM1, lw=1.0, ls="--", label="S&P 500(PR)")
@@ -687,25 +692,28 @@ def draw_block(fig, P, top, S, R):
         rows_, flags = [], []
         for k, (t, sc, un) in enumerate(items):
             u = P.uni.get(t) or {}
-            nm = (u.get("name") or "")[:26]
+            nm = (u.get("name") or "")[:24]
             sec = SECS.get(u.get("sector") or "", "")
             new = t not in other
             flags.append(new)
             rows_.append(["%d" % (k + 1), ("＋" if (new and mark_new) else "") + t, nm, sec,
-                          mfmt(P, at_i, t, sc, un)])
+                          idx_of(P, t), mfmt(P, at_i, t, sc, un)])
 
         def c3(r, c):
+            if c == 4:                       # 소속 지수는 그 자체가 범주라 색을 따로 쓴다
+                return IDXC.get(rows_[r][4], MUTED)
             if c == 0:
                 return MUTED
             if flags[r]:
                 return POS if mark_new else NEG
             return INK if c in (1, 2) else MUTED
 
-        return table(fig, x0, yt - .0122, [.026, .062, .208, .046, .086],
-                     ["#", "티커", "종목명", "섹터", mlab], rows_,
-                     row_h=.0128, fs=6.9, hfs=6.4, aligns=["c", "l", "l", "l", "r"],
-                     cell_color=c3,
-                     cell_weight=lambda r, c: "bold" if c == 1 else "normal", zebra=True)
+        return table(fig, x0, yt - .0122, [.026, .058, .180, .044, .036, .084],
+                     ["#", "티커", "종목명", "섹터", "지수", mlab], rows_,
+                     row_h=.0128, fs=6.9, hfs=6.4,
+                     aligns=["c", "l", "l", "l", "l", "r"], cell_color=c3,
+                     cell_weight=lambda r, c: "bold" if c in (1, 4) else "normal",
+                     zebra=True)
 
     pf(X0, R["prev_i"], "전월말 리밸런스", "%s · 지금 보유 중" % P.dates[R["prev_i"]],
        R["prev"], ns, False)
@@ -714,85 +722,6 @@ def draw_block(fig, P, top, S, R):
     keep = len(ps & ns)
     tx(fig, X1, yp + .0012, "교체 %d종목 · 유지 %d종목 · ＋ 신규편입 · 붉은 종목은 이번 재산출에서 빠진 자리"
        % (TOPN - keep, keep), fontsize=6.4, color=MUTED, ha="right")
-
-
-# ── 마지막 쪽의 남는 반 쪽 ───────────────────────────────────────────────────
-def draw_overview(fig, P, res, keys, top):
-    """전략 수가 홀수라 마지막 반 쪽이 빈다. 거기에 '전략끼리 어디서 겹치나'를 넣는다.
-
-    한 종목이 여러 규칙에 동시에 잡힌다는 건 그 종목이 여러 축에서 극단이라는 뜻이고,
-    일곱 전략을 같이 담을 때 실제 분산이 생각보다 작다는 뜻이기도 하다.
-    """
-    lab = {S[0]: S[1] for S in STYLES}
-    at = P.dates[res[keys[0]]["today_i"]]
-
-    y = top
-    tx(fig, X0, y, "전략끼리 겹치는 곳", fontsize=15.5, weight="bold")
-    tx(fig, X1, y + .0015, "오늘 재산출 %s 기준" % at, fontsize=8, color=ACC, ha="right")
-    y -= .0205
-    hline(fig, X0, X1, y, RULE, .9)
-    y -= .008
-    tx(fig, X0, y,
-       "일곱 규칙이 오늘 각각 고른 10종목을 겹쳐 본 것이다. 한 종목이 여러 규칙에 동시에 잡히면\n"
-       "그 종목이 여러 축에서 극단이라는 뜻이고, 일곱을 함께 담아도 분산이 덜 생긴다는 뜻이다.",
-       fontsize=7.1, color="#3D454D", linespacing=1.58)
-    y -= .0285
-
-    # ① 여러 전략이 함께 담은 종목
-    held = {}
-    for k in keys:
-        for t, _s, _u in res[k]["today"]:
-            held.setdefault(t, []).append(lab[k])
-    dup = sorted([(t, v) for t, v in held.items() if len(v) >= 2],
-                 key=lambda kv: (-len(kv[1]), kv[0]))
-    tx(fig, X0, y, "여러 전략이 함께 담은 종목", fontsize=9.2, weight="bold")
-    tx(fig, X1, y + .001, "전체 %d자리 중 서로 다른 종목 %d개 · 겹친 종목 %d개"
-       % (len(keys) * TOPN, len(held), len(dup)), fontsize=6.6, color=MUTED, ha="right")
-    if dup:
-        rows = [[t, (P.uni.get(t) or {}).get("name", "")[:30],
-                 SECS.get((P.uni.get(t) or {}).get("sector") or "", ""),
-                 " · ".join(v), "%d" % len(v)] for t, v in dup[:10]]
-        y = table(fig, X0, y - .0135, [.062, .268, .050, .434, .070],
-                  ["티커", "종목명", "섹터", "담은 전략", "전략 수"], rows,
-                  row_h=.0172, fs=7.2, hfs=6.6, aligns=["l", "l", "l", "l", "c"],
-                  cell_weight=lambda r, c: "bold" if c in (0, 4) else "normal", zebra=True)
-        if len(dup) > 10:
-            tx(fig, X0, y - .0085, "…  겹친 종목 %d개 중 위 10개만" % len(dup),
-               fontsize=6.5, color=MUTED)
-            y -= .0085
-    else:
-        tx(fig, X0, y - .016, "겹치는 종목이 없다 — 일곱 규칙이 서로 다른 곳을 보고 있다.",
-           fontsize=7.4, color=MUTED)
-        y -= .022
-
-    # ② 전략별 섹터 구성
-    y -= .022
-    tx(fig, X0, y, "전략별 섹터 구성", fontsize=9.2, weight="bold")
-    tx(fig, X1, y + .001, "오늘 재산출 10종목을 섹터로 나눈 수", fontsize=6.6, color=MUTED,
-       ha="right")
-    secs = [s for s in SECS.values()
-            if any(SECS.get((P.uni.get(t) or {}).get("sector") or "") == s
-                   for k in keys for t, _s, _u in res[k]["today"])]
-    rows, mat = [], []
-    for k in keys:
-        c = {}
-        for t, _s, _u in res[k]["today"]:
-            c[SECS.get((P.uni.get(t) or {}).get("sector") or "", "")] = \
-                c.get(SECS.get((P.uni.get(t) or {}).get("sector") or "", ""), 0) + 1
-        mat.append(c)
-        rows.append([lab[k]] + [("%d" % c[s] if c.get(s) else "·") for s in secs])
-    w = (X1 - X0 - .078) / len(secs)
-    yb = table(fig, X0, y - .0135, [.078] + [w] * len(secs), ["전략"] + secs, rows,
-          row_h=.0195, fs=7.4, hfs=6.6, aligns=["l"] + ["c"] * len(secs),
-          cell_color=lambda r, c: (INK if c == 0 else
-                                   (MUTED if rows[r][c] == "·" else
-                                    (ACC if int(rows[r][c]) >= 4 else INK))),
-          cell_weight=lambda r, c: "bold" if (c == 0 or (rows[r][c] != "·"
-                                                         and int(rows[r][c]) >= 4)) else "normal",
-          zebra=True)
-    tx(fig, X0, yb - .0105,
-       "한 섹터에 4종목 이상 몰린 칸은 강조했다 — 그 규칙이 그달 사실상 섹터 베팅이 됐다는 뜻이다.",
-       fontsize=6.8, color=MUTED)
 
 
 # ── 요약 쪽 ────────────────────────────────────────────────────────────────
@@ -804,10 +733,10 @@ def draw_summary(fig, P, res, order, total):
     hline(fig, X0, X1, .916, RULE, .9)
 
     tx(fig, X0, .903,
-       "일곱 개 스타일 규칙을 과거로 되돌려 매월 말 다시 골랐다. 후보는 S&P 500 ∪ NASDAQ 100 의 518종목,\n"
-       "그 시점 점수 상위 10종목을 동일가중으로 담고 다음 월말까지 표류시킨다. 거래비용과 세금은 0(gross)이며,\n"
-       "대조군 S&P 500·NASDAQ 100 은 배당이 빠진 가격지수(PR)다.",
-       fontsize=8, color="#3D454D", linespacing=1.6)
+       "여섯 개 스타일 규칙을 과거로 되돌려 매월 말 다시 골랐다. 후보는 S&P 500 ∪ NASDAQ 100 의 518종목이고\n"
+       "S&P 단독 415 · 양쪽 공통 88 · NASDAQ 단독 15 로 나뉜다 — 보유 표에 종목마다 어느 쪽인지 적었다.\n"
+       "상위 10종목을 동일가중으로 담아 다음 월말까지 표류시킨다. 비용 0(gross) · 대조군은 가격지수(PR)다.",
+       fontsize=8, color=INK2, linespacing=1.6)
 
     y = .845
     tx(fig, X0, y, "최근 1년 성과 한눈에", fontsize=11.5, weight="bold")
@@ -819,16 +748,18 @@ def draw_summary(fig, P, res, order, total):
         mg = metrics(bench_nav(P, P.gspc, R["start"], R["end"]))
         mn = metrics(bench_nav(P, P.ndx, R["start"], R["end"]))
         keep = len(set(t for t, _s, _u in R["prev"]) & set(t for t, _s, _u in R["today"]))
-        rows.append([S[1], S[2][:34], num(m["ret"], 2), num(m["vol"], 2, False),
+        ix = [idx_of(P, t) for t, _s, _u in R["today"]]
+        rows.append([S[1], S[2].split(" (")[0], num(m["ret"], 2), num(m["vol"], 2, False),
                      num(m["sharpe"], 2), num(m["mdd"], 2),
                      num(m["ret"] - mg["ret"], 2), num(m["ret"] - mn["ret"], 2),
-                     "%d" % (TOPN - keep)])
+                     "%d" % (TOPN - keep),
+                     "%d·%d·%d" % (ix.count("SPX"), ix.count("공통"), ix.count("NDX"))])
         colors_.append(m["ret"])
     R0 = res[order[0]]
-    for lab, a in (("S&P 500 (PR)", P.gspc), ("NASDAQ 100 (PR)", P.ndx)):
+    for lab, a in (("S&P 500 PR", P.gspc), ("NASDAQ 100 PR", P.ndx)):
         mb = metrics(bench_nav(P, a, R0["start"], R0["end"]))
         rows.append([lab, "대조군 · 가격지수", num(mb["ret"], 2), num(mb["vol"], 2, False),
-                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—"])
+                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—", "—"])
     nS = len(order)
 
     def cc(r, c):
@@ -844,15 +775,16 @@ def draw_summary(fig, P, res, order, total):
         return INK
 
     ytab = table(fig, X0, y - .017,
-                 [.112, .221, .085, .075, .065, .075, .086, .086, .055],
+                 [.118, .152, .084, .072, .062, .072, .082, .082, .046, .090],
                  ["전략", "참조 지수", "1년 수익률 %", "변동성 %", "샤프", "MDD %",
-                  "vs S&P %p", "vs NDX %p", "교체"],
+                  "vs S&P %p", "vs NDX %p", "교체", "SPX·공통·NDX"],
                  rows, row_h=.0175, fs=7.6, hfs=6.6,
-                 aligns=["l", "l", "r", "r", "r", "r", "r", "r", "c"], cell_color=cc,
+                 aligns=["l", "l", "r", "r", "r", "r", "r", "r", "c", "c"], cell_color=cc,
                  cell_weight=lambda r, c: "bold" if (c == 0 or c == 2) and r < nS else "normal",
                  zebra=True)
     tx(fig, X0, ytab - .0085,
-       "'교체'는 전월말 명단과 오늘 재산출 명단의 차이다 — 이 규칙이 달마다 손을 얼마나 대는지를 뜻한다.",
+       "'교체'는 전월말 명단과 오늘 재산출 명단의 차이다 — 이 규칙이 달마다 손을 얼마나 대는지를 뜻한다. "
+       "맨 오른쪽은 오늘 담은 10종목이 어느 지수 소속인지의 구성이다.",
        fontsize=6.6, color=MUTED)
 
     # ② 월별 수익률 — 어느 달에 무엇이 먹혔나. 표의 1년 숫자 하나로는 안 보이는 것이다.
@@ -872,9 +804,9 @@ def draw_summary(fig, P, res, order, total):
     lw_ = .085                                       # 행 이름 칸
     ax = fig.add_axes([X0 + lw_, yh - .014 - hm_h, X1 - X0 - lw_, hm_h])
     from matplotlib.colors import LinearSegmentedColormap
-    cmap = LinearSegmentedColormap.from_list(
-        "rg", ["#8E3F2F", "#C48D80", "#EFE3DF", "#FFFFFF", "#DDEDE4", "#7FB99C", "#0E7A4A"])
-    cmap.set_bad("#F3F4F6")
+    cmap = LinearSegmentedColormap.from_list(       # 중앙은 종이색 — 사이트 톤에 맞춘다
+        "rg", ["#8E3F2F", "#BE8878", "#EADAD2", PAPER, "#D9E9DF", "#7CB697", "#0E7A4A"])
+    cmap.set_bad(PANEL2)
     lim = float(np.nanpercentile(np.abs(grid), 92)) or 1.0
     ax.imshow(np.ma.masked_invalid(grid), cmap=cmap, vmin=-lim, vmax=lim, aspect="auto")
     ax.set_xticks(range(len(ms)))
@@ -902,6 +834,7 @@ def draw_summary(fig, P, res, order, total):
     tx(fig, X0, yc, "1년 누적 곡선 · 시작 = 100", fontsize=11.5, weight="bold")
     ch_h = yc - .014 - .072
     ax2 = fig.add_axes([X0 + .048, yc - .014 - ch_h, X1 - X0 - .058, ch_h])
+    ax2.set_facecolor(PAPER)
     xi = np.arange(len(navs[0]))
     ax2.axhline(100, color=LINE, lw=.6)
     for lab, a, col, ls, lw in (("S&P 500(PR)", navs[nS], INK, "--", 1.1),
@@ -967,9 +900,8 @@ def main() -> int:
             fig = new_page()
             for bi, S in enumerate(detail[pi:pi + 2]):
                 draw_block(fig, P, BLOCK_TOPS[bi], S, res[S[0]])
-            hline(fig, X0, X1, .524, LINE, .8)
-            if pi + 2 > len(detail):          # 전략이 홀수라 남은 반 쪽을 채운다
-                draw_overview(fig, P, res, [S[0] for S in detail], BLOCK_TOPS[1])
+            if pi + 1 < len(detail):
+                hline(fig, X0, X1, .524, LINE, .8)
             footer(fig, 2 + pi // 2, total)
             pdf.savefig(fig); plt.close(fig)
 
