@@ -351,9 +351,13 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dbanner .da b{color:var(--hot)}
   .dbanner .dgo{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
-  @media(max-width:640px){.dbanner{gap:8px}.dbanner .dgo{display:none}
+  /* 모바일에서는 접는다. 375px 화면의 가용 폭은 343px 인데 질문 182 + 답 184 = 366 이라
+     한 줄에 물리적으로 안 들어간다. nowrap 을 고집하면 홈 전체에 가로 스크롤이 생긴다
+     (실측: .wrap scrollWidth 407 > 375). '한 줄'은 데스크톱 기준이고, 좁은 화면에서
+     답을 잘라내거나 감추는 것보다 두 줄이 정직하다. */
+  @media(max-width:640px){.dbanner{gap:4px 8px;flex-wrap:wrap}.dbanner .dgo{display:none}
     .dbanner .dq{font-size:13.5px;white-space:normal}
-    .dbanner .da{flex:none;white-space:nowrap}}
+    .dbanner .da{flex:1 1 100%;white-space:normal}}
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
