@@ -102,6 +102,16 @@
   .ns{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
   .ins{color:var(--muted)}
   .flip{color:var(--hot);font-weight:700}
+  /* 정렬 가능한 열. 기본은 가나다순이고(순위표가 아니다), 누를 때만 그 열로 다시 그린다. */
+  .tbl th.s{cursor:pointer;user-select:none;white-space:nowrap}
+  .tbl th.s:hover{color:var(--ink-2)}
+  .tbl th.s::after{content:'⇅';margin-left:4px;opacity:.3;font-size:9px}
+  .tbl th.s[data-dir="1"]::after{content:'▲';opacity:.95}
+  .tbl th.s[data-dir="-1"]::after{content:'▼';opacity:.95}
+  /* 대조군 값은 같은 칸 아랫줄에 둔다 — 열을 두 배로 늘리면 표가 화면을 벗어난다. */
+  .bv{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+  .pos{color:var(--deploy)} .neg{color:var(--hot)}
+  .tbl td.z{color:var(--muted)}
   .tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;
     padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--muted);
     background:var(--panel-2);margin-left:6px;vertical-align:middle}
@@ -457,6 +467,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     오른쪽 <b>세 해 제외</b> 열을 같이 보라 — 알파가 몇 해에 몰려 있으면 그 숫자는 전략이 아니라 사건이다.</p>
   <div class="fswrap"><table class="tbl" id="tbl"><tbody><tr><td class="skel">불러오는 중…</td></tr></tbody></table></div>
   <p class="foot" id="foot"></p>
+
+  <h2 class="sec">부록 · 수익·위험</h2>
+  <p class="secnote">칸마다 <b>윗줄이 운용사, 아랫줄이 대조군</b>이다. 대조군은 그 운용사와 <b>같은 구간</b>으로
+    다시 재므로, 다른 운용사의 대조군 값과는 서로 비교되지 않는다(구간이 제각각이다).
+    열 이름을 누르면 그 열로 정렬한다 — 기본은 가나다순이다.</p>
+  <p class="secnote" id="cmpsum"></p>
+  <div class="fswrap"><table class="tbl" id="cmptbl"><tbody><tr><td class="skel">불러오는 중…</td></tr></tbody></table></div>
+
+  <h2 class="sec">부록 · 상황별</h2>
+  <p class="secnote">칸은 <b>운용사 − 대조군</b>(%p, 월평균)이다. 원값과 개월수는 칸에 마우스를 올리면 나온다.
+    국면은 확장(Goldilocks·Recovery·Overheating) → 둔화(SoftLanding·LateCycle) 순으로 놓았고,
+    그 구간에 <b>6개월</b>이 안 되는 국면은 비워 둔다.</p>
+  <div class="fswrap"><table class="tbl" id="regtbl"><tbody><tr><td class="skel">불러오는 중…</td></tr></tbody></table></div>
+  <p class="foot" id="condfoot"></p>
 </main>
 <script>
 (function(){
@@ -543,6 +567,117 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return h+'</tbody>';
   }
 
+  // ── 부록 표 두 개(수익·위험 · 상황별) ─────────────────────────────────
+  // 검정 표와 나눠 둔다. α·t·p 를 읽는 눈과 '얼마 벌고 얼마 흔들렸나'를 보는 눈이 다른데,
+  // 한 표에 다 넣으면 열이 열여섯 개가 되어 어느 쪽도 안 읽힌다.
+  // ⚠ 이 두 표는 서술이다. 구간을 사후에 쪼갠 평균이라 검정이 아니고, 판정은 위 판정 상자가 한다.
+  var LIVE=[], OFFR=[], RGCOLS=[];
+  var SORT={cmptbl:{k:'name',d:1}, regtbl:{k:'name',d:1}};
+  // 국면 열 순서 — 성장축(확장→둔화→수축), 그 안에서 물가축 순. 사전순으로 두면
+  // Goldilocks 옆에 LateCycle 이 와서 경기 순환으로 안 읽힌다.
+  var RGORD=['Goldilocks','Recovery','Overheating','SoftLanding','LateCycle','Stagflation','Recession'];
+
+  function xs(o){return (o&&o.r!=null&&o.b!=null)?(o.r-o.b):null;}
+  function key(x,k){
+    var m=x.metrics||{}, b=x.bench||{}, c=x.cond||{}, rg=c.regime||{};
+    if(k==='name')return x.name;
+    if(k==='n')return x.n_months;
+    if(k==='exc')return (m.cagr==null||b.cagr==null)?null:(m.cagr-b.cagr);
+    if(k==='up'||k==='down')return xs(c[k]);
+    if(k==='cagr'||k==='vol'||k==='sharpe'||k==='mdd')return m[k];
+    return xs(rg[k]);
+  }
+  function byName(a,b){return String(a.name).localeCompare(String(b.name),'ko');}
+  function sorted(id){
+    var st=SORT[id];
+    return LIVE.slice().sort(function(a,b){
+      if(st.k==='name')return st.d*byName(a,b);
+      var x=key(a,st.k), y=key(b,st.k);
+      // 값 없는 행은 방향과 무관하게 뒤로 — 오름차순에서 빈칸이 1등으로 올라오면 표가 거짓말을 한다
+      if(x==null&&y==null)return byName(a,b);
+      if(x==null)return 1;
+      if(y==null)return -1;
+      return st.d*(x-y)||byName(a,b);
+    });
+  }
+  function th(id,k,lab,sub){
+    var st=SORT[id];
+    return '<th class="s" data-k="'+esc(k)+'"'+(st.k===k?' data-dir="'+st.d+'"':'')+'>'+esc(lab)+
+           (sub?'<span class="ns">'+esc(sub)+'</span>':'')+'</th>';
+  }
+  function two(v,bv){return '<td>'+num(v)+'<span class="bv">'+num(bv)+'</span></td>';}
+  // 색은 **찍히는 숫자**를 따라간다. v>0 으로 가르면 반올림해서 0.00으로 보이는 칸이
+  // 빨강/초록을 달고 있어, 없는 차이를 있는 것처럼 읽게 만든다.
+  function tone(v){return v==null?'z':(Math.abs(v)<0.005?'z':(v>0?'pos':'neg'));}
+  function cell(o){
+    var v=xs(o);
+    if(v==null)return '<td class="z">—</td>';
+    return '<td class="'+tone(v)+'" title="운용사 '+num(o.r)+'% · 대조군 '+num(o.b)+
+           '% · '+esc(o.n)+'개월">'+sgn(v)+'</td>';
+  }
+  function offRows(cols){
+    return OFFR.map(function(x){
+      return '<tr class="off"><td><span class="nm">'+esc(x.name)+'</span>'+
+        '<span class="ns">'+esc(x.why||'')+'</span></td>'+
+        '<td colspan="'+cols+'">'+esc(x.verdict||'산출 안 함')+'</td></tr>';
+    }).join('');
+  }
+  function drawCmp(){
+    var id='cmptbl';
+    var h='<thead><tr>'+th(id,'name','운용사')+th(id,'cagr','CAGR %','대조군')+
+      th(id,'exc','초과 %p')+th(id,'vol','변동성 %','대조군')+th(id,'sharpe','샤프','대조군')+
+      th(id,'mdd','MDD %','대조군')+th(id,'n','개월')+'</tr></thead><tbody>';
+    sorted(id).forEach(function(x){
+      var m=x.metrics||{}, b=x.bench||{}, e=key(x,'exc');
+      h+='<tr><td><span class="nm">'+esc(x.name)+'</span></td>'+
+        two(m.cagr,b.cagr)+
+        '<td class="'+tone(e)+'">'+sgn(e)+'</td>'+
+        two(m.vol,b.vol)+two(m.sharpe,b.sharpe)+two(m.mdd,b.mdd)+
+        '<td class="ins">'+esc(x.n_months)+'</td></tr>';
+    });
+    return h+offRows(6)+'</tbody>';
+  }
+  function drawReg(){
+    var id='regtbl';
+    var h='<thead><tr>'+th(id,'name','운용사')+th(id,'up','상승월')+th(id,'down','하락월')+
+      RGCOLS.map(function(k){return th(id,k,k);}).join('')+'</tr></thead><tbody>';
+    sorted(id).forEach(function(x){
+      var c=x.cond||{}, rg=c.regime||{};
+      h+='<tr><td><span class="nm">'+esc(x.name)+'</span></td>'+
+        cell(c.up)+cell(c.down)+
+        RGCOLS.map(function(k){return cell(rg[k]);}).join('')+'</tr>';
+    });
+    return h+offRows(2+RGCOLS.length)+'</tbody>';
+  }
+  // 표 열네 줄을 눈으로 세는 대신 한 줄로 적는다. 네 잣대를 나란히 두는 것이 요점이다 —
+  // 수익만 세면 '절반이 이겼다'가 되고, 위험까지 세면 다른 그림이 된다. 해석은 붙이지 않는다.
+  function cmpSummary(){
+    var n=LIVE.length, c=0, s=0, v=0, d=0;
+    LIVE.forEach(function(x){
+      var m=x.metrics||{}, b=x.bench||{};
+      if(m.cagr!=null&&b.cagr!=null&&m.cagr>b.cagr)c++;
+      if(m.sharpe!=null&&b.sharpe!=null&&m.sharpe>b.sharpe)s++;
+      if(m.vol!=null&&b.vol!=null&&m.vol<b.vol)v++;
+      if(m.mdd!=null&&b.mdd!=null&&m.mdd>b.mdd)d++;      // MDD는 음수라 큰 쪽이 얕다
+    });
+    if(!n)return '';
+    return '산출된 <b>'+n+'곳</b> 중 같은 구간 대조군을 앞선 곳 — CAGR <b>'+c+'곳</b> · '+
+           '샤프 <b>'+s+'곳</b> · 변동성이 더 낮은 곳 <b>'+v+'곳</b> · MDD가 더 얕은 곳 <b>'+d+'곳</b>.';
+  }
+  function paint(id){var t=el(id); if(t)t.innerHTML=(id==='cmptbl'?drawCmp():drawReg());}
+  // 열 이름 클릭으로 정렬. 표는 통째로 다시 그리므로 위임으로 한 번만 건다.
+  ['cmptbl','regtbl'].forEach(function(id){
+    var t=el(id); if(!t)return;
+    t.addEventListener('click',function(e){
+      var h=e.target&&e.target.closest?e.target.closest('th.s'):null;
+      if(!h||!t.contains(h))return;
+      var k=h.getAttribute('data-k'), st=SORT[id];
+      st.d=(st.k===k)?-st.d:(k==='name'?1:-1);   // 숫자 열은 큰 값부터가 자연스럽다
+      st.k=k;
+      paint(id);
+    });
+  });
+
   fetch('data/guru17.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     if(!j||!j.headline||!j.managers){
       el('verdict').innerHTML='<div class="skel">데이터를 불러오지 못했습니다.</div>';return;
@@ -560,6 +695,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('spec').innerHTML=Object.keys(LB).filter(function(k){return S[k];}).map(function(k){
       return '<div><dt>'+esc(LB[k])+'</dt><dd>'+esc(S[k])+'</dd></div>';}).join('');
     el('tbl').innerHTML=drawRows(j);
+    (j.managers||[]).forEach(function(x){ (x.alpha==null?OFFR:LIVE).push(x); });
+    // 국면 열은 데이터에 실제로 나온 것만 세운다 — 그 구간에 6개월이 안 되는 국면은
+    // 생성기가 아예 담지 않으므로(Recession이 그렇다), 열을 손으로 적으면 빈 열이 생긴다.
+    var seen={};
+    LIVE.forEach(function(x){Object.keys(((x.cond||{}).regime)||{}).forEach(function(k){seen[k]=1;});});
+    RGCOLS=RGORD.filter(function(k){return seen[k];})
+      .concat(Object.keys(seen).filter(function(k){return RGORD.indexOf(k)<0;}).sort());
+    el('cmpsum').innerHTML=cmpSummary();
+    paint('cmptbl'); paint('regtbl');
+    if(j.cond_note)el('condfoot').innerHTML=md(j.cond_note);
     var mm=(j.headline||{}).multiplicity||{};
     el('foot').innerHTML=(mm.m?'<b>미보정 p 를 읽는 법.</b> 검정을 '+esc(mm.m)+'번 돌렸으므로 문턱은 '+
       '0.05/'+esc(mm.m)+' = '+num(0.05/mm.m,4)+' 이다. 이 문턱을 넘는 행은 없다(Bonferroni '+

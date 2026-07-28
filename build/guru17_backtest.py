@@ -75,6 +75,7 @@ CONC_TOP1 = 0.50        # 집중도 게이트 — top1 비중
 CONC_EFFN = 3.0         # 집중도 게이트 — 유효종목수(1/HHI)
 CONC_FRAC = 0.20        # 위 둘 중 하나에 걸린 분기 비율이 이보다 크면 복제 불가
 MIN_MONTHS = 60         # 성과를 낼 최소 개월(5년). 미만이면 표에 싣되 판정하지 않는다
+MIN_COND_M = 6          # 상황별 칸을 적을 최소 개월. 이보다 적으면 평균이 한두 달의 얼굴이 된다
 
 
 def load(fn):
@@ -111,6 +112,46 @@ def ann_from_monthly(rets, rf):
             "vol": None if vol is None else round(vol, 2),
             "sharpe": None if sh is None else round(sh, 3),
             "mdd": round(mdd, 2)}
+
+
+def load_regime():
+    """data/regime.json 의 월말 라벨 → {'YYYY-MM': 라벨}. 없으면 빈 dict(상황별만 빠진다)."""
+    try:
+        h = (load("regime.json") or {}).get("history") or []
+    except Exception:
+        return {}
+    return {x["dt"][:7]: x["r"] for x in h if x.get("dt") and x.get("r")}
+
+
+def conditional(ms, r, b, REG):
+    """상황별 월평균 — 대조군 상승월/하락월, 그리고 국면별. 운용사와 대조군을 같이 담는다.
+
+    ⚠ 이것은 **서술**이지 검정이 아니다. 구간을 사후에 쪼개 평균을 낸 것이므로 표본은
+      더 짧아지고 다중검정 문제는 더 나빠진다. 여기에 t 나 p 를 붙이지 않는 이유다.
+    ⚠ 국면 라벨(regime.json)은 오늘 시점의 개정된 FRED 시리즈로 되짚어 매긴다.
+      그때 알 수 있던 라벨이 아니므로 '국면을 보고 갈아타면 된다'로 읽으면 안 된다.
+    """
+    def cell(sel):
+        n = int(sel.sum())
+        if n < MIN_COND_M:
+            return None
+        return {"n": n, "r": round(float(np.mean(r[sel])) * 100, 2),
+                "b": round(float(np.mean(b[sel])) * 100, 2)}
+
+    out = {}
+    up = b > 0
+    for key, sel in (("up", up), ("down", ~up)):
+        c = cell(sel)
+        if c:
+            out[key] = c
+    reg = {}
+    for lab in sorted({REG.get(m) for m in ms} - {None}):
+        c = cell(np.array([REG.get(m) == lab for m in ms]))
+        if c:
+            reg[lab] = c
+    if reg:
+        out["regime"] = reg
+    return out or None
 
 
 def capm(r, b, rf):
@@ -286,6 +327,7 @@ def monthly_returns(W, P, mi, months):
 def compute():
     G = load("guru_history.json")
     RF = (load("rf_monthly.json") or {}).get("monthly") or {}
+    REG = load_regime()
     months, P = G["months"], G["mpx"]
     # 부분월 제거 — 진행 중인 달은 버린다(값이 있어도 그 달은 아직 끝나지 않았다).
     now_m = dt.date.today().strftime("%Y-%m")
@@ -335,6 +377,7 @@ def compute():
         row["start"], row["end"] = ms[0], ms[-1]
         row["metrics"] = ann_from_monthly(r, rf)
         row["bench"] = ann_from_monthly(b, rf)
+        row["cond"] = conditional(ms, r, b, REG)
         a, beta, t, resid = capm(r, b, rf)
         row["alpha"], row["beta"], row["t"] = a, beta, t
         # ── 연도 집중도 ── 알파가 몇 해에 몰려 있나. 한 해를 빼서 부호가 뒤집히면
@@ -520,6 +563,11 @@ def main() -> int:
             "gates": "가격결측 비중>20% 또는 유니버스내 <4종목 분기 제외 · 결측은 이월(연속 4분기 초과 시 정지) "
                      "· top1>50% 또는 유효종목수<3 인 분기가 20% 초과면 복제 불가",
         },
+        "cond_note": "상승월·하락월은 대조군 수익 부호로 나눈 것이고, 국면은 data/regime.json 의 "
+                     "월말 라벨이다. 둘 다 **서술이지 검정이 아니다** — 구간을 사후에 쪼갠 평균이라 "
+                     "표본은 더 짧아지고 다중검정 문제는 더 나빠진다. 특히 국면 라벨은 오늘 시점의 "
+                     "개정된 FRED 시리즈로 되짚어 매긴 것이어서 그때 알 수 있던 값이 아니다. "
+                     "'어느 국면에서 강했다'를 '국면을 보고 갈아타면 된다'로 읽으면 안 된다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "span": {"start": months[0], "end": months[-1], "n_months": len(months)},
         "headline": head,
@@ -558,9 +606,23 @@ def main() -> int:
         if r.get("alpha") is None:
             print("  %-26s %s — %s" % (r["name"][:26], r.get("verdict", "?"), (r.get("why") or "")[:52]))
             continue
+        m_, b_ = r["metrics"] or {}, r["bench"] or {}
         print("  %-26s α %+6.2f%%/yr (t %+5.2f) · β %.2f · %d개월 · CAGR %5.2f%% vs 벤치 %5.2f%%"
               % (r["name"][:26], r["alpha"], r["t"] or 0, r["beta"] or 0, r["n_months"],
-                 (r["metrics"] or {}).get("cagr") or 0, (r["bench"] or {}).get("cagr") or 0))
+                 m_.get("cagr") or 0, b_.get("cagr") or 0))
+        print("  %-26s   변동성 %5.2f%% (벤치 %5.2f) · 샤프 %5.2f (%5.2f) · MDD %6.2f%% (%6.2f)"
+              % ("", m_.get("vol") or 0, b_.get("vol") or 0, m_.get("sharpe") or 0,
+                 b_.get("sharpe") or 0, m_.get("mdd") or 0, b_.get("mdd") or 0))
+        cd = r.get("cond") or {}
+        u, d = cd.get("up") or {}, cd.get("down") or {}
+        if u and d:
+            print("  %-26s   상승월 %+.2f%% (벤치 %+.2f · %d개월) · 하락월 %+.2f%% (%+.2f · %d개월)"
+                  % ("", u["r"], u["b"], u["n"], d["r"], d["b"], d["n"]))
+        rg = cd.get("regime") or {}
+        if rg:
+            print("  %-26s   국면별 초과 %s" % ("", " · ".join(
+                "%s %+.2f%%p(%d)" % (k, v["r"] - v["b"], v["n"])
+                for k, v in sorted(rg.items(), key=lambda kv: -(kv[1]["r"] - kv[1]["b"])))))
     return 0
 
 
