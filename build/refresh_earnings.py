@@ -14,6 +14,9 @@
   · 한 응답이 **1,500건에서 잘린다**. 90일을 한 번에 부르면 정확히 1500건이 와서 뒤가 통째로
     사라지는데, 화면에는 '그날 발표가 없는 것'처럼 보인다. 7일씩 끊어 받으면 5,968건이 된다
     (유니버스 커버리지 184종목 → 481종목).
+    ⚠ 7일도 실적 시즌 피크에는 부족하다 — 2026-07-28 실행에서 1개 구간이 상한에 닿았다.
+    고정 폭을 더 줄이면 한산한 구간까지 호출만 늘어나므로, **닿은 구간만 반으로 쪼개
+    다시 받는다**(fetch_span). 하루로 좁혀도 닿으면 그 날짜를 로그에 찍는다.
   · 과거는 **약 30일까지만** 준다. 7일 전 창은 471건이 오지만 90일 전·1년 전·5년 전은 전부 0건.
   · 종목별 stock/earnings는 최근 4분기만 준다.
   · **회사가 확정하지 않은 종목에 추정 날짜를 넣어 주면서 확정과 구분해 주지 않는다.**
@@ -41,6 +44,8 @@ KEY = (os.getenv("FINNHUB_API_KEY") or "").strip()
 BASE = "https://finnhub.io/api/v1/"
 AHEAD = 90          # 앞으로 몇 일치를 실을 것인가
 BACK = 30           # 과거는 약 30일까지만 응답한다(실측) — 그 창을 매번 통째로 훑어 누적한다
+CAP = 1500          # 한 응답의 상한(실측). 이 수에 닿으면 잘렸다고 본다
+CHUNK = 7           # 기본 청크(일). 닿은 구간만 반씩 쪼갠다 — fetch_span 참조
 
 # ── 2차 소스(Nasdaq) 교차검증 창 ──────────────────────────────────────────
 # 홈 캘린더가 그리는 구간(지난 1주+앞으로 3주)과 '다음 발표일'을 덮을 만큼만 본다.
@@ -71,6 +76,31 @@ def api(path, **q):
                 raise
             time.sleep(3)
     return None
+
+
+def fetch_span(a, b, rows, seen, st):
+    """[a, b] 을 한 번에 받고, 상한에 닿으면 반으로 쪼개 다시 받는다.
+
+    7일 고정으로는 부족하다 — 실적 시즌 피크에서 실제로 닿았다(2026-07-28 실행, 1개 구간).
+    닿은 구간은 뒤쪽이 잘려 나가는데 화면에는 '그날 발표가 없는 것'처럼 보인다.
+    한산한 구간까지 무조건 잘게 쪼개면 호출만 늘어나므로, **닿은 구간만** 쪼갠다.
+    """
+    r = api("calendar/earnings", **{"from": str(a), "to": str(b)})
+    st["calls"] += 1
+    time.sleep(1.1)              # 무료 티어 분당 제한 회피 — 쪼개기 전에 쉰다
+    chunk = (r or {}).get("earningsCalendar") or []
+    if len(chunk) >= CAP:
+        if a < b:
+            mid = a + (b - a) // 2
+            st["split"] += 1
+            fetch_span(a, mid, rows, seen, st)
+            fetch_span(mid + dt.timedelta(days=1), b, rows, seen, st)
+            return
+        st["capped"].append(str(a))   # 하루짜리인데도 상한 — 더 쪼갤 수 없다
+    for x in chunk:
+        k = (x.get("symbol"), x.get("date"))
+        if k not in seen:
+            seen.add(k); rows.append(x)
 
 
 def nasdaq_calendar(frm, to):
@@ -125,23 +155,22 @@ def main() -> int:
     to = today + dt.timedelta(days=AHEAD)
     # ⚠ 응답이 **1,500건에서 잘린다**(실측: 90일 한 번에 = 정확히 1500). 그냥 넓게 부르면
     #   실적 시즌 초반만 담기고 뒤가 통째로 사라지는데, 화면에는 '그날 발표가 없는 것'처럼 보인다.
-    #   그래서 7일씩 끊어 받아 합친다(같은 건은 심볼+날짜로 중복 제거).
-    rows, seen, capped = [], set(), 0
+    #   7일씩 끊어 받되, 상한에 닿은 구간은 반으로 쪼개 다시 받는다(같은 건은 심볼+날짜로 중복 제거).
+    rows, seen = [], set()
+    st = {"calls": 0, "split": 0, "capped": []}
     cur = frm
     while cur < to:
-        nxt_ = min(to, cur + dt.timedelta(days=7))
-        r = api("calendar/earnings", **{"from": str(cur), "to": str(nxt_)})
-        chunk = (r or {}).get("earningsCalendar") or []
-        if len(chunk) >= 1500:
-            capped += 1
-        for x in chunk:
-            k = (x.get("symbol"), x.get("date"))
-            if k not in seen:
-                seen.add(k); rows.append(x)
+        nxt_ = min(to, cur + dt.timedelta(days=CHUNK))
+        fetch_span(cur, nxt_, rows, seen, st)
         cur = nxt_
-        time.sleep(1.1)          # 무료 티어 분당 제한 회피
-    print("응답 %d건 (%s ~ %s)%s"
-          % (len(rows), frm, to, ("  ⚠ 상한에 닿은 구간 %d개" % capped) if capped else ""))
+    print("응답 %d건 (%s ~ %s) · 호출 %d회%s"
+          % (len(rows), frm, to, st["calls"],
+             (" · 상한에 닿아 쪼갠 구간 %d개" % st["split"]) if st["split"] else ""))
+    if st["capped"]:
+        # 하루로 좁혀도 1,500건이면 더 쪼갤 단위가 없다. 그 날은 뒤쪽이 빠진 채로 실린다 —
+        # 조용히 넘어가면 '그날 발표가 적은 것'으로 보이므로 날짜를 찍어 둔다.
+        print("⚠ 하루 단위인데도 상한에 닿은 날 %d일: %s — 그 날의 일부가 빠졌을 수 있다"
+              % (len(st["capped"]), ", ".join(st["capped"][:8])))
 
     # ── 2차 소스 교차검증 ──────────────────────────────────────────────
     NAS, nas_days, nas_fails = nasdaq_calendar(today - dt.timedelta(days=XC_BACK),
@@ -278,7 +307,8 @@ def main() -> int:
                    "added": n_only},
         "limits": [
             "한 번의 응답이 1,500건에서 잘린다(실측). 넓은 구간을 한 번에 부르면 뒤쪽이 통째로 "
-            "빠지는데 화면에는 '발표가 없는 날'처럼 보이므로, 7일씩 끊어 받아 합친다.",
+            "빠지는데 화면에는 '발표가 없는 날'처럼 보이므로, 7일씩 끊어 받아 합친다. "
+            "실적 시즌에는 7일도 상한에 닿아, 닿은 구간은 반으로 쪼개 다시 받는다.",
             "과거는 약 30일까지만 응답한다(실측: 7일 전 471건 · 90일 전 0건 · 1년 전 0건). "
             "그래서 지나간 건은 이 스크립트가 직접 누적한다(data/earnings_history.json) — "
             "그 파일이 두꺼워져야 서프라이즈 검증(SUE·PEAD)이 언젠가 가능해진다.",
