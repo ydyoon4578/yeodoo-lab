@@ -77,7 +77,7 @@ LINE, RULE = "#E4DFD0", "#C8C0AC"
 POS, NEG, ACC = "#0E8A54", "#A64B3B", "#8A6B00"
 CHAMP, RP, MARG = "#2C6E8F", "#7A5AA6", "#B25E12"
 HEAD_BG, ZEBRA = PANEL2, GROUND
-MGR, BEN = ACC, CHAMP                    # 복제 곡선 · 같은 풀 동일가중 대조군
+MGR, BEN, BEN2 = ACC, CHAMP, RP          # 복제 · S&P 500(PR) · NASDAQ 100(PR)
 
 X0, X1 = .058, .942
 
@@ -168,7 +168,7 @@ def table(fig, x0, y_top, widths, header, rows, *, row_h=.0150, fs=7.2, hfs=6.8,
 
 def footer(fig, page, total, gen):
     hline(fig, X0, X1, .034, LINE, .6)
-    tx(fig, X0, .026, "운용사별 13F 복제 진단 · 대조군은 같은 풀 동일가중(월 리밸) · "
+    tx(fig, X0, .026, "운용사별 13F 복제 진단 · 대조군은 S&P 500(PR)·NASDAQ 100(PR) · "
                       "비용 0 · 13F는 롱온리·분기말·45일 지연 · 전략이 아니라 진단물이다",
        fontsize=6.4, color=MUTED)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, gen), fontsize=6.4, color=MUTED, ha="right")
@@ -196,6 +196,173 @@ def ax_at(fig, x, y, w, h):
     ax.grid(True, axis="y", color=LINE, lw=.5, alpha=.9)
     ax.set_axisbelow(True)
     return ax
+
+
+# 사양·경고 원문은 data/guru17.json 이 정본이다. 대조군만 이 문서 것으로 갈아 둔다.
+SPEC = {
+    "rebalance": "분기말 + 2개월의 월말 (3/31→5/31 · 6/30→8/31 · 9/30→11/30 · 12/31→2/28)",
+    "lookahead_guard": "공시일(13F filed)이 체결일보다 뒤인 셀은 버린다",
+    "weights": "주식수 고정 환산 — 분기말 가치 × P[체결월]/P[분기말], 유니버스 안에서 재정규화",
+    "between": "리밸런스 사이 표류(매수후보유)",
+    "bench": "S&P 500(PR) 대조군 · CAPM 알파/베타로 처리 (NASDAQ 100(PR)은 참고 표기)",
+    "rf": "FRED DGS3MO 월율, 초과수익 기준",
+    "gates": "가격결측 비중>20% 또는 유니버스내 <4종목 분기 제외 · 결측은 이월(연속 4분기 초과 시 정지) · top1>50% 또는 유효종목수<3 인 분기가 20% 초과면 복제 불가"
+}
+NOT_ALPHA = [
+    "운용사 명단이 사후 선택이다 — 2026년 시점의 유명세로 손으로 고른 18곳이고, 그중 17곳이 지금도 영업 중이다(13년 구간에서 폐업·청산 0곳). 어떤 대조군도 어떤 다중검정 보정도 이 편향을 상쇄하지 못한다.",
+    "'17종 = 전수'가 아니다. 13F 제출인 수천 곳 중 손으로 고른 18곳의 전수일 뿐이다.",
+    "유니버스(518종목)와 CUSIP→티커 매핑이 모두 오늘 스냅샷이라, 과거 보유 중 '지금 대형주로 살아남은 것'만 남는다. 방향은 상방이고 크기는 이 저장소 안에서 측정할 수 없다. 대조군을 같은 풀 동일가중으로 두어 일부를 상쇄할 뿐이다.",
+    "표본에 판정 능력이 없다 — 추적오차 12.7%·13년이면 Bonferroni 문턱을 80% 검정력으로 넘는 데 연 13.5%p 알파가 필요하다. 이 문장은 같은 풀 대조군(유의 0건)을 두고 적은 것이다. 지수 대조군에서 유의 건수가 늘어난다면 검정력이 좋아진 것이 아니라 상쇄되지 않은 편향이 알파에 실린 것으로 읽어야 한다.",
+    "대조군을 지수(PR)로 두면 유니버스 생존편향이 양쪽에서 상쇄되지 않는다 — guru17.html 은 같은 풀 동일가중을 써서 그 편향을 일부 상쇄한다. 이 문서의 초과수익에는 그 편향이 그대로 실려 있고, 방향은 위쪽이며 크기는 이 저장소 안에서 잴 수 없다."
+]
+
+
+# ── 대조군을 SPX·NDX 로 갈아 끼우고 전부 다시 잰다 ─────────────────────────
+def idx_monthly(months):
+    """data/assets.json 일별 지수 -> months 축의 월수익. SPX·NDX 둘 다 가격지수(PR)."""
+    A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    dates, px = A["dates"], A["px"]
+    out = {}
+    for key in ("^GSPC", "^NDX"):
+        v = px.get(key) or []
+        last = {}
+        for i, d in enumerate(dates):
+            if i < len(v) and v[i] is not None:
+                last[d[:7]] = v[i]
+        r = {}
+        for j in range(1, len(months)):
+            a_, b_ = last.get(months[j - 1]), last.get(months[j])
+            if a_ and b_ and a_ > 0:
+                r[months[j]] = b_ / a_ - 1.0
+        out[key] = r
+    return out["^GSPC"], out["^NDX"]
+
+
+def restat(rows, series, SPX, NDX, RF, REG):
+    """대조군을 SPX 로 바꿔 알파·베타·t·p·상황별·연도집중도를 다시 잰다.
+
+    운용사 자신의 수익(metrics)과 자료 품질(이월·건너뜀·집중도)은 대조군과 무관하므로
+    compute() 결과를 그대로 쓴다. 바뀌는 것은 대조군에 기대어 재는 값뿐이다.
+    그래서 이 문서의 알파·t·p 는 guru17.html 과 다르다 — 같은 자를 쓰지 않기 때문이고
+    어느 한쪽이 틀린 것이 아니다. 1쪽에 그 사실을 적는다.
+    """
+    from scipy import stats
+    out = []
+    for row in rows:
+        r_ = dict(row)
+        S = series.get(row["cik"])
+        if not S or row.get("metrics") is None:
+            out.append(r_)
+            continue
+        ms = S["months"]
+        r = np.asarray(S["r"], float)
+        rf = np.asarray([RF.get(m, 0.0) for m in ms], float)
+        b = np.asarray([SPX.get(m, 0.0) for m in ms], float)
+        nn = np.asarray([NDX.get(m, 0.0) for m in ms], float)
+        r_["bench"] = GB.ann_from_monthly(b, rf)
+        r_["bench_ndx"] = GB.ann_from_monthly(nn, rf)
+        a, beta, t, resid = GB.capm(r, b, rf)
+        r_["alpha"], r_["beta"], r_["t"] = a, beta, t
+        r_["p"] = (None if (t is None or len(ms) < 3)
+                   else round(float(2 * (1 - stats.t.cdf(abs(t), len(ms) - 2))), 4))
+        r_["cond"] = GB.conditional(ms, r, b, REG)
+        yrs = sorted({m[:4] for m in ms})
+        r_.pop("drop_worst_year", None)
+        r_.pop("drop_worst3_years", None)
+        if a is not None and len(yrs) >= 5:
+            drops = []
+            for y in yrs:
+                sel = [i for i, m in enumerate(ms) if m[:4] != y]
+                if len(sel) < 36:
+                    continue
+                a2, _, _, _ = GB.capm(r[sel], b[sel], rf[sel])
+                if a2 is not None:
+                    drops.append((a2, y))
+            if drops:
+                drops.sort()
+                r_["drop_worst_year"] = {"year": drops[0][1], "alpha": drops[0][0]}
+                bad3 = {d[1] for d in drops[:3]}
+                sel3 = [i for i, m in enumerate(ms) if m[:4] not in bad3]
+                if len(sel3) >= 36:
+                    a3, _, _, _ = GB.capm(r[sel3], b[sel3], rf[sel3])
+                    r_["drop_worst3_years"] = {"years": [d[1] for d in drops[:3]], "alpha": a3}
+        out.append(r_)
+    out.sort(key=lambda x: -(x.get("alpha") if x.get("alpha") is not None else -1e9))
+    return out
+
+
+def restat_headline(rows, series, SPX, RF):
+    """결합검정(GRS)·지속성·다중검정을 SPX 기준으로 다시 낸다.
+
+    사전규칙(매년 상위 3곳)은 싣지 않는다 — 알파 정의가 바뀌면 그 규칙의 명단부터 다시
+    짜야 하고, 그건 이 문서가 아니라 백테스트 쪽 일이다. 빈칸으로 두지 않고 사유를 적는다.
+    """
+    from scipy import stats
+    live = [r for r in rows if r.get("alpha") is not None]
+    ciks = [r["cik"] for r in live]
+    out = {}
+    if not ciks:
+        return out
+    common = set(series[ciks[0]]["months"])
+    for c in ciks[1:]:
+        common &= set(series[c]["months"])
+    common = sorted(common)
+
+    if len(common) > len(ciks) + 2:
+        B = np.array([SPX.get(m, 0.0) for m in common])
+        F = np.array([RF.get(m, 0.0) for m in common])
+        resid, alph = [], []
+        for c in ciks:
+            S = series[c]
+            idx = {m: i for i, m in enumerate(S["months"])}
+            sel = [idx[m] for m in common]
+            R = np.asarray(S["r"], float)[sel]
+            a, be, t, e = GB.capm(R, B, F)
+            if e is None:
+                resid = []
+                break
+            resid.append(e)
+            alph.append(float(np.mean((R - F) - (be or 0) * (B - F))))
+        if resid:
+            g = GB.grs(np.array(resid), alph, B - F)
+            if g:
+                g["n_managers"] = len(ciks)
+                g["months"] = len(common)
+                out["grs"] = g
+
+    half = len(common) // 2
+    if half >= 30:
+        h1, h2 = common[:half], common[half:]
+        a1, a2 = [], []
+        for c in ciks:
+            S = series[c]
+            idx = {m: i for i, m in enumerate(S["months"])}
+            for tgt, acc in ((h1, a1), (h2, a2)):
+                sel = [idx[m] for m in tgt if m in idx]
+                if len(sel) < 24:
+                    acc.append(None)
+                    continue
+                R = np.asarray(S["r"], float)[sel]
+                mm = [m for m in tgt if m in idx]
+                a, _, _, _ = GB.capm(R, np.array([SPX.get(m, 0.0) for m in mm]),
+                                     np.array([RF.get(m, 0.0) for m in mm]))
+                acc.append(a)
+        pair = [(x, y) for x, y in zip(a1, a2) if x is not None and y is not None]
+        if len(pair) >= 6:
+            xs = np.array([q[0] for q in pair])
+            ys = np.array([q[1] for q in pair])
+            sp_ = stats.spearmanr(xs, ys)
+            k = max(1, len(pair) // 5)
+            out["persistence"] = {
+                "n": len(pair), "split": [h1[0], h1[-1], h2[0], h2[-1]],
+                "spearman": round(float(sp_.statistic), 3),
+                "spearman_p": round(float(sp_.pvalue), 4),
+                "top_k": k,
+                "top_next": round(float(np.mean(ys[np.argsort(-xs)[:k]])), 2),
+                "bottom_next": round(float(np.mean(ys[np.argsort(xs)[:k]])), 2)}
+
+    out["multiplicity"] = GB.holm_bh([r.get("p") for r in live])
+    return out
 
 
 # ── 1쪽: 판정 ────────────────────────────────────────────────────────────────
@@ -227,13 +394,12 @@ def draw_verdict(fig, D, total, gen):
             num(per.get("top_next"), 2), num(per.get("bottom_next"), 2)),
          "전반기(%s~%s) 알파로 후반기(%s~%s)를 예고할 수 있는지 %s곳으로 잰 것이다."
          % tuple(list(per.get("split") or ["—"] * 4) + [per.get("n", "—")])),
-        ("③ 규칙으로 돌리면 되는가 — 사전규칙",
-         "%s · 알파 %s%%p · 베타 %s · t = %s"
-         % (pre.get("verdict", "—"), num(pre.get("alpha"), 2), pre.get("beta", "—"),
-            pre.get("t", "—")),
-         "%s (%s ~ %s · %s개월). 매년 명단이 바뀌므로 사후선택이 아니다."
-         % (pre.get("rule", "—"), pre.get("start", "—"), pre.get("end", "—"),
-            pre.get("n_months", "—"))),
+        ("③ 보정 후에도 남는가 — 다중검정",
+         "Bonferroni %s곳 · Holm %s곳 · BH(10%%) %s곳 / %s곳"
+         % (mul.get("bonferroni", "—"), mul.get("holm", "—"), mul.get("bh10", "—"),
+            mul.get("m", "—")),
+         "같은 자를 같은 풀 동일가중으로 바꾸면(guru17.html) 이 셋이 전부 0곳이 된다. "
+         "대조군을 무엇으로 두느냐가 답을 바꾼다는 뜻이며, 그 차이가 곧 유니버스 생존편향이다."),
     ]
     for i, (h, big, sub) in enumerate(cards):
         top = y
@@ -251,13 +417,20 @@ def draw_verdict(fig, D, total, gen):
     y -= .006
     tx(fig, X0, y, "다중검정 — 개별 유의 건수", fontsize=9.5, weight="bold")
     y -= .020
+    nb = mul.get("bonferroni") or 0
     tx(fig, X0, y, "운용사 %s곳을 한 번에 검정한다. 보정 후 유의: Bonferroni %s건 · Holm %s건 · "
                    "BH(10%%) %s건." % (mul.get("m", "—"), mul.get("bonferroni", "—"),
                                       mul.get("holm", "—"), mul.get("bh10", "—")),
        fontsize=7.6, color=INK2)
     y -= .015
-    tx(fig, X0, y, "유의 0건은 예상된 결과이며 알파 부재의 증거가 아니다 — 이 문장은 결과를 "
-                   "보기 전에 사양에 적어 둔 것이다.", fontsize=7.6, color=NEG)
+    if nb:
+        tx(fig, X0, y, "※ 이 %d건을 실력의 증거로 읽으면 안 된다. 지수 대조군에서는 유니버스 "
+                       "생존편향이 상쇄되지 않고 알파 쪽으로 흘러들며, 같은 풀 대조군에서는 "
+                       "같은 운용사가 0건이다(아래 이유 5)." % nb,
+           fontsize=7.6, color=NEG)
+    else:
+        tx(fig, X0, y, "유의 0건은 예상된 결과이며 알파 부재의 증거가 아니다 — 이 문장은 결과를 "
+                       "보기 전에 사양에 적어 둔 것이다.", fontsize=7.6, color=NEG)
     y -= .028
 
     # ── 알파로 쓰면 안 되는 이유 ───────────────────────────────────────────
@@ -296,7 +469,8 @@ def draw_verdict(fig, D, total, gen):
     live = [m for m in (D.get("managers") or []) if m.get("alpha") is not None]
     if live and y > .200:
         y -= .012
-        tx(fig, X0, y, "알파와 검정 문턱 — 왜 유의 0건인가", fontsize=9.5, weight="bold")
+        tx(fig, X0, y, "알파와 검정 문턱 — 오차선이 0을 지나면 개별로도 유의하지 않다",
+           fontsize=9.5, weight="bold")
         y -= .018
         tx(fig, X0, y, "막대는 운용사별 알파(%p), 가로선은 그 운용사의 표준오차 ±2배다. "
                        "선이 0을 지나면 개별로도 유의하지 않다.", fontsize=7.0, color=MUTED)
@@ -322,7 +496,7 @@ def draw_verdict(fig, D, total, gen):
         ax.axvline(0, color=INK, lw=.8, zorder=5)
         ax.set_yticks(ys)
         ax.set_yticklabels([v[1][:18] for v in vals], fontsize=5.8)
-        ax.set_xlabel("알파 %p (연율, 같은 풀 동일가중 대조군 기준)", fontsize=6, color=MUTED)
+        ax.set_xlabel("알파 %p (연율, S&P 500(PR) 기준)", fontsize=6, color=MUTED)
         ax.set_ylim(-.7, len(vals) - .3)
     footer(fig, 1, total, gen)
 
@@ -338,7 +512,7 @@ def draw_ranking(fig, D, total, gen, page):
     tx(fig, X0, y, "알파 내림차순. ※ 이 명단은 2026년 시점의 유명세로 손으로 고른 것이므로, "
                    "1위가 '가장 잘하는 운용사'라는 뜻이 아니다.", fontsize=7.6, color=NEG)
     y -= .014
-    tx(fig, X0, y, "알파·베타·t·p 는 같은 풀 동일가중 대조군에 대한 CAPM 회귀 결과다. "
+    tx(fig, X0, y, "알파·베타·t·p 는 S&P 500(PR)에 대한 CAPM 회귀 결과다. "
                    "p 가 작아 보이는 곳도 다중검정 보정 후에는 유의 0건이다(1쪽).",
        fontsize=7.4, color=MUTED)
     y -= .024
@@ -346,24 +520,28 @@ def draw_ranking(fig, D, total, gen, page):
     rows = []
     for i, m in enumerate(live):
         mt, bh = m.get("metrics") or {}, m.get("bench") or {}
+        nd = m.get("bench_ndx") or {}
         rows.append((str(i + 1), m["name"][:22], str(m.get("n_months", "—")),
                      num(m.get("alpha"), 2), num(mt.get("cagr"), 1), num(bh.get("cagr"), 1),
+                     num(nd.get("cagr"), 1),
                      "%.3f" % m["beta"] if m.get("beta") is not None else "—",
                      "%.2f" % m["t"] if m.get("t") is not None else "—",
                      "%.4f" % m["p"] if m.get("p") is not None else "—",
                      num(mt.get("mdd"), 1)))
 
     def cc(i, j, c):
-        if j in (3, 4, 5, 9):
+        if j in (3, 4, 5, 6, 10):          # 알파·복제/SPX/NDX CAGR·MDD 는 부호로 색을 준다
             try:
                 return POS if float(str(c).replace("%", "")) > 0 else NEG
             except Exception:
                 return INK
         return INK
 
-    y = table(fig, X0, y, [.036, .224, .056, .080, .082, .082, .066, .062, .076, .080],
-              ["#", "운용사", "개월", "알파%p", "복제 CAGR", "대조군 CAGR", "베타", "t", "p", "MDD"],
-              rows, aligns=["r", "l", "r", "r", "r", "r", "r", "r", "r", "r"],
+    y = table(fig, X0, y,
+              [.034, .196, .046, .074, .076, .072, .072, .058, .056, .070, .070],
+              ["#", "운용사", "개월", "알파%p", "복제 CAGR", "SPX CAGR", "NDX CAGR",
+               "베타", "t", "p", "MDD"],
+              rows, aligns=["r", "l", "r", "r", "r", "r", "r", "r", "r", "r", "r"],
               cell_color=cc, zebra=True)
 
     y -= .026
@@ -420,7 +598,7 @@ def draw_block(fig, top, m, S, HOLD):
     # 범례는 그림 **안** 왼쪽 위에 둔다. 축 아래에 두면 연도 눈금 글자와 겹쳐 연도가 안 읽힌다.
     if S:
         ax.legend(handles=[Line2D([], [], color=MGR, lw=1.5, label="복제"),
-                           Line2D([], [], color=BEN, lw=1.2, label="같은 풀 동일가중(대조군)")],
+                           Line2D([], [], color=BEN, lw=1.2, label="S&P 500(PR)")],
                   loc="upper left", fontsize=5.8, frameon=True, framealpha=.92,
                   facecolor=PAPER, edgecolor=LINE, borderpad=.35, handlelength=1.6,
                   labelcolor=INK2)
@@ -450,10 +628,11 @@ def draw_block(fig, top, m, S, HOLD):
                 return POS if float(c) > 0 else NEG
             except Exception:
                 return INK
-        ry = table(fig, rx, ry, [.118, .124, .126], ["지표", "복제", "대조군"], rows,
-                   aligns=["l", "r", "r"], cell_color=cc, fs=7.4)
+        ry = table(fig, rx, ry, [.094, .092, .092, .090],
+                   ["지표", "복제", "S&P 500", "NDX"], rows,
+                   aligns=["l", "r", "r", "r"], cell_color=cc, fs=7.2)
         ry -= .015
-        tx(fig, rx, ry, "CAPM (대조군 기준)", fontsize=7.4, weight="bold", color=INK2)
+        tx(fig, rx, ry, "CAPM (S&P 500 기준)", fontsize=7.4, weight="bold", color=INK2)
         ry -= .016
         acol = POS if (m.get("alpha") or 0) > 0 else NEG
         tx(fig, rx, ry, "알파", fontsize=7.2, color=MUTED)
@@ -538,25 +717,27 @@ def draw_block(fig, top, m, S, HOLD):
 
 # ── 본체 ────────────────────────────────────────────────────────────────────
 def main() -> int:
-    D = json.load(io.open(os.path.join(DATA, "guru17.json"), encoding="utf-8"))
     G = json.load(io.open(os.path.join(DATA, "guru.json"), encoding="utf-8"))
-    gen = (D.get("generated") or "")[:10] or dt.date.today().isoformat()
+    gen = dt.date.today().isoformat()
 
-    print("월별 계열을 얻기 위해 guru17_backtest.compute() 를 다시 돌린다…")
-    rows, series, bench, RF, months = GB.compute()
+    print("월별 계열을 얻는다(guru17_backtest.compute)…")
+    rows, series, pool, RF, months = GB.compute()
+    SPX, NDX = idx_monthly(months)
+    miss = [m for m in months[1:] if m not in SPX]
+    if len(miss) > (len(months) - 1) * 0.02:
+        raise SystemExit("SPX 월수익이 %d/%d개월 비었다 — data/assets.json 을 확인할 것."
+                         % (len(miss), len(months) - 1))
+    print("대조군을 S&P 500(PR)·NASDAQ 100(PR) 로 갈고 전부 다시 잰다 (%s ~ %s)"
+          % (months[0], months[-1]))
+    REG = GB.load_regime()
+    ms_rows = restat(rows, series, SPX, NDX, RF, REG)
+    HL = restat_headline(ms_rows, series, SPX, RF)
+    D = {"managers": ms_rows, "headline": HL,
+         "span": {"start": months[0], "end": months[-1], "n_months": len(months)},
+         "spec": SPEC, "not_alpha": NOT_ALPHA}
 
-    # 두 소스가 어긋나면 멈춘다 — 낡은 JSON 위에 새 곡선을 얹지 않는다.
-    sp = D.get("span") or {}
-    if months and (sp.get("start") != months[0] or sp.get("end") != months[-1]):
-        raise SystemExit("guru17.json 구간(%s~%s)과 방금 계산한 구간(%s~%s)이 다르다 — "
-                         "build/guru17_backtest.py 를 먼저 다시 돌릴 것."
-                         % (sp.get("start"), sp.get("end"), months[0], months[-1]))
-    if len(rows) != len(D.get("managers") or []):
-        raise SystemExit("운용사 수가 다르다(JSON %d · 재계산 %d) — guru17_backtest.py 를 먼저 돌릴 것."
-                         % (len(D.get("managers") or []), len(rows)))
-    # 구간·운용사 수가 같아도 계열 자체가 다를 수 있다(가격 패널만 갱신된 경우). 곡선에서 되짚은
-    # CAGR 이 표의 CAGR 과 어긋나면, 표와 그림이 서로 다른 것을 말하고 있다는 뜻이다 — 멈춘다.
-    for m in (D.get("managers") or []):
+    # 곡선과 표가 같은 것을 말하는지 — 운용사별 CAGR 로 되짚는다
+    for m in ms_rows:
         S, mt = series.get(m["cik"]), m.get("metrics")
         if not S or not mt or mt.get("cagr") is None:
             continue
@@ -565,17 +746,16 @@ def main() -> int:
             continue
         c = (float(np.prod(1.0 + r)) ** (12.0 / r.size) - 1.0) * 100.0
         if abs(c - mt["cagr"]) > 0.05:
-            raise SystemExit("%s — 곡선 CAGR %.2f%% 과 표 CAGR %.2f%% 이 다르다. "
-                             "guru17.json 이 낡았다. build/guru17_backtest.py 를 먼저 돌릴 것."
+            raise SystemExit("%s — 곡선 CAGR %.2f%% 과 표 CAGR %.2f%% 이 다르다."
                              % (m["name"], c, mt["cagr"]))
 
-    # 최신 보유 — guru.json 은 cik 가 int, guru17.json 은 str 이다.
     hold = {}
     for g in (G.get("managers") or []):
-        h = dict(g); h["_as_of"] = G.get("as_of") or "—"
+        h = dict(g)
+        h["_as_of"] = G.get("as_of") or "—"
         hold[str(g.get("cik"))] = h
 
-    ms = D.get("managers") or []
+    ms = ms_rows
     live = [m for m in ms if m.get("alpha") is not None]
     dead = [m for m in ms if m.get("alpha") is None]
     order = live + dead                        # 성과를 낸 곳 먼저, 그다음 성과를 못 낸 곳
