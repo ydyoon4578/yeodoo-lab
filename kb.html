@@ -8,6 +8,7 @@
 <title>K · B — 여두 전략 랩</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
   :root{
     --ground:#F4F1EA;--panel:#FFFFFF;--panel-2:#F8F6F1;--line:#E2DDD1;--line-soft:#EDE9E0;
@@ -107,9 +108,73 @@
   @media(max-width:640px){body{font-size:15px}.wrap{padding:0 14px 50px}}
   @media print{.gate,.tabbar,.themebtn{display:none!important}.tabpane{display:block!important}
     body{background:#fff;color:#000}.tw,table,.fitem,.verdict{page-break-inside:avoid}}
+
+/* SHELL:BEGIN */
+/* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
+   23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
+   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다.
+   ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰면 안 된다 — HTML 파서는 주석 안이든
+      아니든 그 지점에서 style 요소를 끝내버린다(실제로 한 번 밟았다). */
+
+/* ① 글꼴 — Pretendard.
+   기존 스택 첫 후보는 "Malgun Gothic"이었다. 윈도 기본 한글 글꼴이라 굵기가 사실상 400/700
+   두 단계뿐이고 맥에서는 Apple SD Gothic Neo로 떨어져, 같은 화면이 OS마다 다른 글꼴로 보였다.
+   Pretendard는 100~900 가변에 라틴·숫자가 Inter 계열이라 한글과 숫자가 한 글꼴로 붙는다.
+   --mono의 한글 후보도 Pretendard로 바꾼다 — 고정폭이 필요한 건 숫자뿐인데, 한글까지 고정폭
+   스택으로 떨어뜨리면 본문과 다른 글꼴이 한 줄 안에서 섞인다. */
+:root{
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
+  /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
+     stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다. */
+  --w-wide:1440px;--w-base:1200px;--w-read:980px;
+}
+
+/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
+   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
+   ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
+:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
+@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}}
+:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
+:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}
+
+/* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
+   한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
+   음절을 벌려 읽기를 방해한다. 실제로 이 규칙 때문에 통계량 |t|가 화면에서 |T|로 찍힌 적이 있다. */
+body{font-family:var(--sans);letter-spacing:-.003em}
+h1,h2,h3,h4{letter-spacing:-.02em}
+h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-height:1.14}
+/* 큰 제목은 본문 글꼴로. 고정폭 스택에서 한글은 Pretendard로, 라틴·숫자는 SF Mono로 떨어져
+   한 제목 안에 두 글꼴이 섞인다("… RP 통합 (Multi-Sleeve Core)"가 그렇게 보였다).
+   작은 머리글(h4 등)은 라틴 약어가 대부분이라 그대로 둔다.
+   :not(._)은 특이도를 페이지 규칙(.dtop h2 같은 것)과 맞추려고 붙였다 — 요소 선택자만으로는
+   페이지 쪽이 이긴다. !important를 쓰지 않으려는 최소 장치다. */
+:is(h1,h2):not(._){font-family:var(--sans);letter-spacing:-.025em}
+.eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em}
+.lbl{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.012em;text-transform:none;color:var(--ink)}
+.lbl::before{height:16px}
+.lbl .sub{font-size:12.5px;font-weight:500}
+.card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+
+/* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
+.tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
+
+/* ⑤ 표 — 머리글은 한글이라 고정폭을 벗기고, 행에 hover를 준다(어느 줄을 읽는지 잃지 않게). */
+.tbl{font-variant-numeric:tabular-nums}
+.tbl thead th{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
+.tbl tbody th{font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+.tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+
+/* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+/* SHELL:END */
 </style>
 </head>
-<body>
+<body data-tool="kb.html">
 <div class="wrap">
   <header class="mast">
     <div class="utilbar">
