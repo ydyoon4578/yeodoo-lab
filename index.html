@@ -243,6 +243,8 @@
   .sthrow:first-child{border-top:0}
   .sthrow:nth-child(even){background:var(--panel-2)}
   .sthlbl{flex:none;width:74px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  a.sthlbl.lnk{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
+  a.sthlbl.lnk:hover{color:var(--accent);border-bottom-color:var(--accent)}
   .stdin{flex:1;min-width:0;font-size:11.5px;color:var(--ink-2)}
   .stdin.na{color:var(--muted);font-size:11px}
   .stchips{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
@@ -633,6 +635,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -1321,6 +1324,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 대응 ETF가 없어 위 표에는 행이 없는 스타일. 구성종목 목록에는 같이 들어간다.
   // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
   var ST_EXTRA=['puregrow'];
+  // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
+  // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
+  var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
   function drawStHold(keys){
     var box=el('stmore'); if(!box||!STOP)return;
@@ -1331,7 +1337,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!have.length){box.innerHTML='';return;}
     box.innerHTML='<div class="sthold">'+have.map(function(k){
       var s=STOP[k];
-      return '<div class="sthrow"><span class="sthlbl">'+esc(s.label)+'</span>'+stDetail(s)+'</div>';
+      // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로 — 없는 것은 그대로 글씨다.
+      var lbl=ST_PERF[k]
+        ? '<a class="sthlbl lnk" href="style.html#s='+ST_PERF[k]+'" title="이 스타일의 최근 1년 백테스트">'+
+          esc(s.label)+'</a>'
+        : '<span class="sthlbl">'+esc(s.label)+'</span>';
+      return '<div class="sthrow">'+lbl+stDetail(s)+'</div>';
     }).join('')+'</div>';
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
