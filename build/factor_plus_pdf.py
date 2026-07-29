@@ -8,7 +8,7 @@ import 해서 쓴다 — 같은 자를 써야 두 문서를 나란히 놓을 수
 
   대조군   S&P 500(PR) · NASDAQ 100(PR) 둘 다 (스타일 전략과 같다)
   선정     상위 10종목 동일가중 · 월말 리밸런스 · 사이에는 표류
-  구간     최근 252거래일 · 비용 0
+  구간     최근 1년(월말에서 열어 12개월) · 비용 0
   재무     기간종료일 + 45일이 지나 실제로 공시된 것만 (look-ahead 차단은 Panel 이 맡는다)
 
 ## 강화의 네 가지 방식 — 지어내지 않고 원래 팩터에서 파생한다
@@ -132,7 +132,8 @@ def bt2(P, fn):
     원본과 다른 점은 pick() 을 캐시하지 않고 시간 순서대로 도는 것뿐이다.
     """
     end = len(P.dates) - 1
-    start = max(0, end - ST.WINDOW)
+    # 창 시작을 월말로 맞춘다(style_top_pdf.backtest 와 같은 규약) — 부분 월을 없앤다.
+    start = next((i for i in P.me if i >= max(0, end - ST.WINDOW)), max(0, end - ST.WINDOW))
     _iss = ST.iss_of(P)
 
     def score(i):
