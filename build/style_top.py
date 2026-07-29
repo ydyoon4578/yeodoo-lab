@@ -355,7 +355,7 @@ def main() -> int:
              "이익변동성 표본이 5년(분기 20개 → YoY 16개)이다", QUAL,
              lambda t: {"ROE %": R2(fund(t, "roe")), "D/E %": R2(fund(t, "de")),
                         "이익변동성": R2(evar.get(t))}),
-        pack("val", "가치", "MSCI USA Enhanced Value",
+        pack("val", "가치(MSCI)", "MSCI USA Enhanced Value",
              "https://www.msci.com/indexes/index/705973/msci-usa-enhanced-value-index",
              "선행 E/P · B/P · EBITDA/EV 의 z 평균(전부 높을수록 싸다)",
              "원지수의 EV/CFO 대신 EV/EBITDA 를 썼다 — 랩 패널이 들고 있는 쪽이다", VAL,
@@ -373,10 +373,13 @@ def main() -> int:
              lambda t: {"주당매출 3Y CAGR %": R2((sps.get(t) or 0) * 100),
                         "EPS변화/주가 %": R2((epc.get(t) or 0) * 100),
                         "12M 수익률 %": R2((mom12r.get(t) or 0) * 100) if t in mom12r else None}),
-        pack("spval", "가치(S&P)", "S&P 500 Value (S&P U.S. Style)",
+        # 홈 스타일표의 '가치' 행이 이것이다(대응 ETF는 IVE). 그래서 라벨이 그냥 '가치'이고,
+        #   MSCI 계열 쪽에 (MSCI)를 붙여 구분한다 — 표와 구성종목 목록의 이름을 맞추려는 것이다
+        #   (사용자 결정 2026-07-29).
+        pack("spval", "가치", "S&P 500 Value (S&P U.S. Style)",
              "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
              "주당순자산÷주가 · 주당이익÷주가 · 주당매출÷주가 의 z 평균(원시값 90퍼센타일 윈저화)",
-             "위의 '가치'는 MSCI Enhanced Value(선행 E/P·B/P·EBITDA/EV)로 **다른 지수**다. "
+             "'가치(MSCI)'는 MSCI Enhanced Value(선행 E/P·B/P·EBITDA/EV)로 **다른 지수**다. "
              "이쪽 E/P 는 후행이다", SPVAL,
              lambda t: {"PBR": R2(fund(t, "pb")), "PER(후행)": R2(fund(t, "tpe")),
                         "PSR": R2(fund(t, "ps"))}),

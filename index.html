@@ -234,22 +234,31 @@
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
-  /* 상위 10종목은 항상 펼쳐 둔다 — 누르는 행이 아니므로 ▾ 표시도 포커스 링도 없다 */
-  .sttbl tr.stdet td{background:var(--panel-2);text-align:left;white-space:normal;padding:7px 12px}
-  .stdin{font-size:11.5px;color:var(--ink-2);line-height:1.6}
-  .stdin .stsub{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
-  .stchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-  .stchips .stk{display:inline-flex;align-items:baseline;gap:4px;font-family:var(--mono);font-size:11.5px;
-       font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:6px;
-       padding:2px 7px;text-decoration:none;color:var(--ink-2)}
+  /* 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이라
+     여덟 줄이 같은 격자에 정렬된다. 산식은 줄 전체의 툴팁으로 내렸다. */
+  .stmore{margin-top:10px}
+  .sthold{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  .sthrow{display:flex;align-items:center;gap:10px;padding:5px 11px;
+       border-top:1px solid var(--line-soft)}
+  .sthrow:first-child{border-top:0}
+  .sthrow:nth-child(even){background:var(--panel-2)}
+  .sthlbl{flex:none;width:74px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  .stdin{flex:1;min-width:0;font-size:11.5px;color:var(--ink-2)}
+  .stdin.na{color:var(--muted);font-size:11px}
+  .stchips{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+  .stchips .stk{display:inline-flex;align-items:baseline;gap:3px;font-family:var(--mono);font-size:11px;
+       font-weight:700;background:var(--ground);border:1px solid var(--line);border-radius:6px;
+       padding:1px 6px;text-decoration:none;color:var(--ink-2)}
   .stchips .stk:hover{border-color:var(--accent);color:var(--accent)}
-  .stchips .stk b{font-size:9px;color:var(--muted)}
-  .stwarn{margin-top:8px;font-size:10.5px;color:var(--marg);line-height:1.6}
-  .stwarn b{color:var(--hot)}
-  /* 대응 ETF가 없는 스타일 — 표 밖에 그대로 편다(접이식 버튼은 걷어냈다) */
-  .stmore{margin-top:2px}
-  .stdet2{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
-       padding:11px 13px;margin:2px 0 8px}
+  .stchips .stk b{font-size:8.5px;font-weight:600;color:var(--muted)}
+  .stchips .stsrc{margin-left:auto;padding-left:10px;font-size:10px;color:var(--muted);
+       text-decoration:none;white-space:nowrap}
+  .stchips .stsrc:hover{color:var(--accent);text-decoration:underline}
+  @media(max-width:640px){
+    .sthrow{flex-direction:column;align-items:flex-start;gap:4px}
+    .sthlbl{width:auto}
+    .stchips .stsrc{margin-left:0;padding-left:0}
+  }
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
@@ -1268,33 +1277,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               SDY:'divg',SPHB:'hbeta',SIZE:'size'};
   var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
-  // 상위 10종목은 **접지 않고 바로 편다**(사용자 결정 2026-07-29). 눌러야 나오면 그 표에
-  // 무엇이 들어 있는지 여덟 번 눌러 봐야 알았다. 대신 행 자체를 한 줄로 좁혀 길이를 벌충한다.
+  // 표는 **수익률만** 담는다. 구성종목을 행 사이에 끼워 넣으니 표가 성과표와 종목목록
+  // 사이 어디쯤이 돼 둘 다 안 읽혔다 — 아래로 따로 뺐다(사용자 결정 2026-07-29).
   function stRow(x,cls){
-    var k=ST_KEY[x.t], has=!!(STOP&&STOP[k]);
     return '<tr'+(cls?' class="'+cls+'"':'')+
       '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+
-      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>'+
-      (has?'<tr class="stdet" data-for="'+esc(k)+'"><td colspan="'+(1+ST_HZ.length)+'">'+
-           stDetail(STOP[k])+'</td></tr>':'');
+      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
   // 그 지수의 실제 편입이 아니다. 그 말을 칩 옆이 아니라 **여기 본문에** 적는다.
+  // 한 줄로 낸다 — 종목 칩과 출처만 남기고, 되풀이되던 제목('OO 상위 10종목')과 산식 문단은
+  // 툴팁으로 내렸다(2026-07-29). 바로 위 행이 이미 그 스타일 이름이고, 여덟 스타일마다
+  // 문단이 깔리니 표가 아니라 글이 됐다 — 블록 높이가 85~109px 에서 한 줄로 준다.
   function stDetail(s){
+    var tip=(s.rule||'')+' · '+(s.n_scored||0)+'종목 채점 · 기준 '+(s.index_ref||'')+
+      (s.substitution?'  ⚠ '+String(s.substitution).replace(/\*\*/g,''):'');
     if(s.unavailable)
-      return '<div class="stdin"><b>'+esc(s.label)+' — 산출하지 않습니다.</b> '+esc(s.unavailable)+'</div>';
-    var h='<div class="stdin"><b>'+esc(s.label)+' 상위 '+s.top.length+'종목</b> '+
-      '<span class="stsub">'+esc(s.rule)+' · '+esc(s.n_scored)+'종목 채점 · 기준 '+
-      '<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.index_ref)+'</a></span>'+
-      '<div class="stchips">'+s.top.map(function(x,i){
+      return '<div class="stdin na" title="'+esc(s.unavailable)+'">산출하지 않습니다 — '+
+             esc(String(s.unavailable).split('.')[0])+'.</div>';
+    return '<div class="stdin" title="'+esc(tip)+'"><div class="stchips">'+
+      s.top.map(function(x,i){
         var d=Object.keys(x.d||{}).filter(function(k){return x.d[k]!=null;})
                 .map(function(k){return k+' '+x.d[k];}).join(' · ');
         return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+esc(d)+'">'+
-               '<b>'+(i+1)+'</b>'+esc(x.t)+'</a>';}).join('')+'</div>';
-    // 생성기 문장에 마크다운 강조가 들어 있다 — 별표를 노출하지 않고 <b>로 옮긴다.
-    if(s.substitution)h+='<div class="stwarn">⚠ '+esc(s.substitution)
-      .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')+'</div>';
-    return h+'</div>';
+               '<b>'+(i+1)+'</b>'+esc(x.t)+'</a>';}).join('')+
+      '<a class="stsrc" href="'+esc(s.url)+'" target="_blank" rel="noopener" '+
+      'title="'+esc(tip)+'">'+esc(s.index_ref)+(s.substitution?' ⚠':'')+'</a>'+
+      '</div></div>';
   }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
@@ -1308,20 +1317,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     box.innerHTML=h+'</tbody>';
     var s=el('st-sub');
     if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
-    drawStMore();
+    // 구성종목 목록은 표와 같은 순서로 아래에 깐다 — 표의 스타일 순서 그대로 + 순수 계열 둘.
+    drawStHold(st.map(function(x){return ST_KEY[x.t];}));
   }
-  // 대응 ETF가 없는 스타일(S&P 정본에만 있는 것) — 표 밖에 이어 붙인다.
+  // 대응 ETF가 없어 위 표에는 행이 없는 스타일. 구성종목 목록에는 같이 들어간다.
   // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
-  // 여기도 접지 않는다(사용자 결정 2026-07-29) — 버튼과 토글 리스너를 걷어냈다.
   var ST_EXTRA=['puregrow','pureval'];
-  function drawStMore(){
+  // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
+  function drawStHold(keys){
     var box=el('stmore'); if(!box||!STOP)return;
-    var have=ST_EXTRA.filter(function(k){return STOP[k]&&(STOP[k].top||[]).length;});
+    var seen={}, have=[];
+    (keys||[]).concat(ST_EXTRA).forEach(function(k){
+      if(k&&STOP[k]&&!seen[k]){seen[k]=1;have.push(k);}
+    });
     if(!have.length){box.innerHTML='';return;}
-    box.innerHTML='<p class="stnote" style="margin:12px 0 6px">대응 ETF가 없어 위 표에는 없는 것 — '+
-      '<b>S&amp;P U.S. Style 정본</b>의 순수 계열 둘입니다.</p>'+
-      have.map(function(k){
-        return '<div class="stdet2" data-for="'+esc(k)+'">'+stDetail(STOP[k])+'</div>';}).join('');
+    box.innerHTML='<div class="sthold">'+have.map(function(k){
+      var s=STOP[k];
+      return '<div class="sthrow"><span class="sthlbl">'+esc(s.label)+'</span>'+stDetail(s)+'</div>';
+    }).join('')+'</div>';
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
