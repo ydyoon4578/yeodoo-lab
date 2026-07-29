@@ -1069,8 +1069,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             det:{kind:x.role||'미분류'},
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
             _start:x.start, _end:x.end,
-            _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable
+            _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
+            _risk:x.risk||null, _rv:x.risk_verdict||null
           };
+          // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
+          // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
+          // 등급만 보면 전부 '구별 불가'로 보인다 — 두 축을 같이 놓아야 읽힌다.
+          // 목록은 이 문구를 잘라서 보여준다 — 판정은 **앞**에 두어야 살아남고,
+          // 근거 수치는 뒤에 붙여 펼쳤을 때 읽히게 한다.
+          if(x.risk_verdict&&x.risk&&x.risk_verdict!=='판정 불가'){
+            var rk=x.risk, fp=function(p){return p<0.0005?'p&lt;0.001':'p='+Number(p).toFixed(3);};
+            d.vt='<b>위험 축 '+x.risk_verdict+'</b> — '+d.vt+
+                 ' <em>위험 축 근거 — 낙폭 '+(rk.d_mdd>0?'+':'')+rk.d_mdd+'%p('+fp(rk.p_mdd)+') · '+
+                 'CVaR5 '+(rk.d_cvar>0?'+':'')+rk.d_cvar+'%p('+fp(rk.p_cvar)+') · '+
+                 '짝지은 순환 블록 부트스트랩 '+rk.n_boot+'회, 블록 '+rk.block+'일. '+
+                 '판정은 CVaR5 로 가른다 — 이 표본에 큰 낙폭 사건이 사실상 하나뿐이라 '+
+                 'MDD 검정은 힘이 없다.</em>';
+          }
           // 목록 헤드라인 — 성격에 맞는 지표를 고른다(수익엔진=CAGR · 배분기=샤프 · 그 외=MDD)
           var hk=(x.role==='수익엔진')?['cagr','CAGR','%']:
                  (x.role==='배분기')?['sharpe','샤프','']:['mdd','최대낙폭','%'];

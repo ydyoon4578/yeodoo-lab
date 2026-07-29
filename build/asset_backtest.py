@@ -24,6 +24,70 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402  정의를 복제하지 않는다
 
+import numpy as np  # noqa: E402  위험 축 부트스트랩 전용 — 나머지 계산은 순수 파이썬 그대로다
+
+# ── 위험 축 판정 ────────────────────────────────────────────────────────
+# 왜 만드나. 기존 판정은 t — 일간 수익률 **차의 평균**을 본다. 그런데 타이밍 오버레이는
+# 설계상 수익을 내주고 위험을 사는 규칙이다. 실측(200일선): 낙폭을 -55.2%에서 -26.8%로
+# 절반 넘게 줄이고 샤프도 0.441→0.521 로 올렸는데 t 는 -0.60 이었다. 통과가 안 되는 게
+# 아니라 **그 축으로는 잴 수가 없다**. 그래서 '낙폭을 실제로 줄였나'를 따로 묻는 축을 둔다.
+#
+# 왜 블록 부트스트랩인가. MDD 는 경로에 의존하는 통계량이고 일간 수익률에는 변동성 군집이
+# 있다. 하루씩 섞으면(iid) 그 군집이 깨져 낙폭이 실제보다 얕게 나온다 — 검정이 헐거워진다.
+# 블록을 통째로 뽑아 국소 의존구조를 살린다. 블록 63일(한 분기)은 낙폭이 만들어지는
+# 시간척도를 담기 위한 값이다.
+#
+# 왜 짝지어 뽑나. 전략과 대조군에서 **같은 시점 블록**을 뽑는다. 따로 뽑으면 서로 다른
+# 시장을 비교하는 셈이 되어 뜻이 없다 — 국면을 공통으로 묶어야 '같은 장에서 누가 덜 깨졌나'가 된다.
+BOOT_N, BOOT_BLOCK, BOOT_SEED = 4000, 63, 20260729
+
+
+def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED):
+    """짝지은 순환 블록 부트스트랩 → 낙폭·Calmar 개선폭과 그 p값.
+
+    반환 d_mdd 는 (전략 MDD − 대조군 MDD)다. 둘 다 음수이므로 **양수면 덜 깨졌다**는 뜻이다.
+    p 는 재표본에서 개선이 사라진 비율(단측) — 작을수록 '우연이 아니다'에 가깝다.
+    """
+    n = min(len(rets), len(brets))
+    if n < block * 4:
+        return None
+    r = np.asarray(rets[:n], float)
+    b = np.asarray(brets[:n], float)
+    rng = np.random.default_rng(seed)
+    nb = -(-n // block)
+    off = np.arange(block)
+    yrs = n / 252.0
+
+    k5 = max(1, int(n * 0.05))                             # 하위 5% 일수
+
+    def paths(src, idx):
+        x = src[idx]
+        nav = np.cumprod(1.0 + x, axis=1)
+        mdd = (nav / np.maximum.accumulate(nav, axis=1) - 1.0).min(axis=1) * 100.0
+        # CVaR5 — 그 경로에서 가장 나쁜 5% 일간수익률의 평균(%). 수백 일이 들어가므로
+        # MDD 와 달리 재표본마다 안정적이다. '덜 깨진다'를 검정력 있게 재는 쪽이 이것이다.
+        cvar = np.partition(x, k5, axis=1)[:, :k5].mean(axis=1) * 100.0
+        cagr = np.power(np.maximum(nav[:, -1], 1e-9), 1.0 / yrs) - 1.0
+        return mdd, cvar, cagr
+
+    dm, dv, dc = [], [], []
+    for c0 in range(0, n_boot, 500):                       # 메모리 상한을 두고 나눠 돈다
+        m = min(500, n_boot - c0)
+        st = rng.integers(0, n, (m, nb))
+        idx = ((st[:, :, None] + off) % n).reshape(m, -1)[:, :n]   # 순환 — 모든 날이 같은 확률
+        mr, vr, cr = paths(r, idx)
+        mb, vb, cb = paths(b, idx)                         # ★ 같은 idx — 짝지은 재표본
+        dm.append(mr - mb)
+        dv.append(vr - vb)
+        # Calmar 는 |MDD| 가 0에 가까우면 발산한다 — 바닥을 두고 막는다
+        dc.append(cr / np.maximum(np.abs(mr) / 100.0, 0.02)
+                  - cb / np.maximum(np.abs(mb) / 100.0, 0.02))
+    dm, dv, dc = np.concatenate(dm), np.concatenate(dv), np.concatenate(dc)
+    return {"d_mdd": round(float(dm.mean()), 2), "p_mdd": round(float((dm <= 0).mean()), 4),
+            "d_cvar": round(float(dv.mean()), 3), "p_cvar": round(float((dv <= 0).mean()), 4),
+            "d_calmar": round(float(dc.mean()), 3), "p_calmar": round(float((dc <= 0).mean()), 4),
+            "n_boot": n_boot, "block": block}
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "asset_strategies.json")
@@ -199,7 +263,8 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
             "metrics": ms, "bench": mb, "bench_label": bench_label, "bench_tickers": bench_tickers,
             "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-            "t": tstat(rets, brets), "turnover": round(turn / 2 / yrs, 1),
+            "t": tstat(rets, brets), "risk": risk_bootstrap(rets, brets),
+            "turnover": round(turn / 2 / yrs, 1),
             "nav": [round(x, 2) for x in nav[::step]],
             "bnav": [round(x, 2) for x in bnav[::step]]}
 
@@ -563,7 +628,7 @@ def build():
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
                 "metrics": ms, "bench": mb, "bench_label": "SPY 상시보유(종가→종가)",
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, brs), "turnover": 252.0,
+                "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": 252.0,
                 "nav": [round(x, 2) for x in nav[::step]],
                 "bnav": [round(x, 2) for x in bn[::step]]}
     add("overnight", "overnight-drift", s_overnight)
@@ -678,7 +743,7 @@ def build():
                 "metrics": ms, "bench": mb, "bench_unstable": False,
                 "bench_label": "QQQ 상시보유(종가→종가)",
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, brs), "turnover": 252.0,
+                "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": 252.0,
                 "nav": [round(x, 2) for x in nav[::step]],
                 "bnav": [round(x, 2) for x in bn[::step]]}
     add("overnight-ndx", "overnight-holding-ndx", s_overnight_ndx)
@@ -1134,6 +1199,33 @@ def main() -> int:
             r["verdict"] = "통과 후보"
         else:
             r["verdict"] = "구별 불가"
+
+    # ── 위험 축 판정 ── 수익 축(verdict)과 **따로** 매긴다. 덮어쓰지 않는다.
+    #   두 축은 다른 질문에 답한다 — verdict 는 '더 벌었나', risk_verdict 는 '덜 깨졌나'다.
+    #   한 전략이 '수익 축 구별 불가 · 위험 축 확인'일 수 있고, 그게 이 축을 만든 이유다.
+    #   문턱은 수익 축과 같은 규율을 쓴다(본페로니 0.05/n). 축을 하나 더 열었다고 해서
+    #   검정 횟수만 늘고 문턱이 헐거워지면 그건 그냥 다중검정을 늘린 것이다.
+    pcrit = 0.05 / max(1, n)
+    for r in rows:
+        rk = r.get("risk")
+        if not rk:
+            r["risk_verdict"] = "판정 불가"      # 표본이 블록 4개에 못 미치거나 외부 산출물
+            continue
+        # 판정은 **CVaR5** 로 가른다. MDD 로 가르지 않는 이유는 검정력이다 — 이 표본에서
+        # 큰 낙폭 사건은 사실상 2008 하나이고, 사건이 한 번이면 어떤 재표본법도 힘이 없다.
+        # CVaR5 는 수백 일이 들어가 재표본마다 안정적이라 실제로 판정이 선다.
+        # 다만 방향은 MDD 와 어긋나면 안 된다 — 둘이 다른 말을 하면 판정을 세우지 않는다.
+        if rk["d_cvar"] <= 0 or rk["d_mdd"] <= 0:
+            r["risk_verdict"] = "위험 악화" if rk["d_cvar"] <= 0 else "구별 불가"
+        elif rk["p_cvar"] < pcrit:
+            r["risk_verdict"] = "위험감축 확인"
+        else:
+            r["risk_verdict"] = "구별 불가"
+    r_cnt = {}
+    for r in rows:
+        r_cnt[r.get("risk_verdict")] = r_cnt.get(r.get("risk_verdict"), 0) + 1
+    print("  위험 축(블록 부트스트랩 %d회 · 블록 %d일 · p<%.5f): %s"
+          % (BOOT_N, BOOT_BLOCK, pcrit, r_cnt))
 
     # 정렬은 t 우선 — Δ샤프로 줄 세우면 현금성 대조군을 쓴 전략이 허수로 맨 위에 온다
     rows.sort(key=lambda x: -(x.get("t") if x.get("t") is not None else -9))
