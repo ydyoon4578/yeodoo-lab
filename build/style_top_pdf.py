@@ -13,8 +13,8 @@
   비용     0(gross)
 
 포트폴리오는 두 벌을 나란히 싣는다.
-  · 전월말 리밸런스 — 이번 달 내내 실제로 들고 있는 명단
-  · 오늘 재산출     — 같은 규칙을 오늘 다시 돌린 결과, 즉 다음 리밸런스 후보
+  · 전월말 기준 — 이번 달 내내 실제로 들고 있는 명단
+  · 금일 기준   — 같은 규칙을 오늘 다시 돌린 결과, 즉 다음 리밸런스 후보
 
 시점 정확성.
   · 재무는 **기간종료일 + 45일**이 지난 것만 쓴다. 분기 재무는 분기가 끝난 날 바로 공개되지
@@ -164,7 +164,7 @@ class Panel:
         sp = importlib.util.spec_from_file_location("_tb", os.path.join(HERE, "tech_backtest.py"))
         tb = importlib.util.module_from_spec(sp); sp.loader.exec_module(tb)
         self.fx = tb.load_fund()
-        # 진짜 월말만. 마지막 거래일은 리밸런스가 아니라 '오늘 재산출' 자리라 따로 둔다.
+        # 진짜 월말만. 마지막 거래일은 리밸런스가 아니라 '금일 기준' 자리라 따로 둔다.
         self.me = [i for i in range(len(self.dates) - 1)
                    if self.dates[i][:7] != self.dates[i + 1][:7]]
 
@@ -529,9 +529,16 @@ TRAIL = [("1주", 5), ("1개월", 21), ("3개월", 63), ("6개월", 126), ("1년
 
 
 def trails(nav, dates, start):
+    """기간별 수익률 %. 창보다 긴 구간은 창 시작으로 자른다.
+
+    ⚠ 창을 월말에 맞추면서 길이가 252일에서 251일로 줄었다. 그대로 두면 '1년' 칸이
+      범위를 벗어나 전부 '—' 로 비었다 — 창 자체가 최근 1년이므로 시작점으로 자른다.
+      전략과 대조군이 같은 창이라 비교는 그대로 성립한다.
+    """
     out = {}
     for lab, n in TRAIL:
-        out[lab] = (nav[-1] / nav[-1 - n] - 1) * 100 if len(nav) > n else None
+        out[lab] = ((nav[-1] / nav[max(len(nav) - 1 - n, 0)] - 1) * 100
+                    if len(nav) > 1 else None)
     y0 = dates[-1][:4] + "-01-01"                 # YTD — 전년 마지막 거래일 대비
     j = None
     for k in range(len(nav)):
@@ -792,41 +799,54 @@ def draw_block(fig, P, top, S, R):
     now_t = [t for t, _s, _u in R["today"]]
     ps, ns = set(prev_t), set(now_t)
 
+    # MTD — 직전 월말 종가 대비 오늘까지. 종목의 성질이라 두 표에 같은 값이 들어간다:
+    # 왼쪽 표에서는 이번 달 실제 기여분이고, 오른쪽 표에서는 후보가 이번 달 어땠는지다.
+    mtd_i = max([j for j in P.me if j < R["end"]] or [R["start"]])
+
+    def mtd(t):
+        a = P.px.get(t)
+        if a is None or np.isnan(a[mtd_i]) or a[mtd_i] <= 0 or np.isnan(a[R["end"]]):
+            return "—"
+        return num((a[R["end"]] / a[mtd_i] - 1) * 100, 1)
+
     def pf(x0, at_i, title, sub, items, other, mark_new):
         tx(fig, x0, yt, title, fontsize=7.5, weight="bold")
         tx(fig, x0 + .428, yt, sub, fontsize=6.5, color=MUTED, ha="right")
         rows_, flags = [], []
         for k, (t, sc, un) in enumerate(items):
             u = P.uni.get(t) or {}
-            nm = (u.get("name") or "")[:24]
+            nm = (u.get("name") or "")[:19]
             sec = SECS.get(u.get("sector") or "", "")
             new = t not in other
             flags.append(new)
             rows_.append(["%d" % (k + 1), ("＋" if (new and mark_new) else "") + t, nm, sec,
-                          idx_of(P, t), mfmt(P, at_i, t, sc, un)])
+                          idx_of(P, t), mtd(t), mfmt(P, at_i, t, sc, un)])
 
         def c3(r, c):
             if c == 4:                       # 소속 지수는 그 자체가 범주라 색을 따로 쓴다
                 return IDXC.get(rows_[r][4], MUTED)
+            if c == 5:                       # MTD 는 부호가 뜻이라 신규·이탈 색보다 앞선다
+                v = rows_[r][5]
+                return MUTED if v == "—" else (NEG if v.startswith("-") else POS)
             if c == 0:
                 return MUTED
             if flags[r]:
                 return POS if mark_new else NEG
             return INK if c in (1, 2) else MUTED
 
-        return table(fig, x0, yt - .0122, [.026, .058, .180, .044, .036, .084],
-                     ["#", "티커", "종목명", "섹터", "지수", mlab], rows_,
+        return table(fig, x0, yt - .0122, [.026, .058, .140, .040, .034, .046, .084],
+                     ["#", "티커", "종목명", "섹터", "지수", "MTD %", mlab], rows_,
                      row_h=.0128, fs=6.9, hfs=6.4,
-                     aligns=["c", "l", "l", "l", "l", "r"], cell_color=c3,
+                     aligns=["c", "l", "l", "l", "l", "r", "r"], cell_color=c3,
                      cell_weight=lambda r, c: "bold" if c in (1, 4) else "normal",
                      zebra=True)
 
-    pf(X0, R["prev_i"], "전월말 리밸런스", "%s · 지금 보유 중" % P.dates[R["prev_i"]],
+    pf(X0, R["prev_i"], "전월말 기준", "%s · 지금 보유 중" % P.dates[R["prev_i"]],
        R["prev"], ns, False)
-    pf(X0 + .456, R["today_i"], "오늘 재산출", "%s · 다음 리밸런스 후보"
+    pf(X0 + .456, R["today_i"], "금일 기준", "%s · 다음 리밸런스 후보"
        % P.dates[R["today_i"]], R["today"], ps, True)
     keep = len(ps & ns)
-    tx(fig, X1, yp + .0012, "교체 %d종목 · 유지 %d종목 · ＋ 신규편입 · 붉은 종목은 이번 재산출에서 빠진 자리"
+    tx(fig, X1, yp + .0012, "교체 %d종목 · 유지 %d종목 · ＋ 신규편입 · 붉은 종목은 금일 기준에서 빠진 자리 · MTD 는 직전 월말 대비"
        % (TOPN - keep, keep), fontsize=6.4, color=MUTED, ha="right")
 
 
@@ -891,7 +911,7 @@ def draw_summary(fig, P, res, order, total):
     tx(fig, X0, ytab - .0085,
        "'이긴 달'은 %d개월 중 그 지수를 이긴 달 수다 — 왼쪽이 S&P 500, 오른쪽이 NDX. "
        "1년 수익률 하나로는 크게 몇 번 이긴 것과 꾸준히 이긴 것이 구별되지 않아 같이 싣는다.\n"
-       "'교체'는 전월말 명단과 오늘 재산출 명단의 차이다 — 이 규칙이 달마다 손을 얼마나 대는지를 뜻한다. "
+       "'교체'는 전월말 기준과 금일 기준 명단의 차이다 — 이 규칙이 달마다 손을 얼마나 대는지를 뜻한다. "
        "맨 오른쪽은 오늘 담은 10종목이 어느 지수 소속인지의 구성이다." % nwin,
        fontsize=6.6, color=MUTED, linespacing=1.55)
 
