@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/style_top_pdf.py — 스타일 상위 10종목 전략 PDF → data/top10_strategies.pdf
+"""build/style_top_pdf.py — 스타일 상위 10종목 전략 PDF → data/style_strategies.pdf
 
 무엇을. build/style_top.py 가 '오늘 무엇을 담나'를 낸다면, 여기서는 그 규칙을 **과거로 되돌려
 매월 다시 골라** 최근 1년 성과를 잰다. 요약 1쪽 + 한 쪽에 전략 두 개.
@@ -41,7 +41,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(DATA, "top10_strategies.pdf")
+OUT = os.path.join(DATA, "style_strategies.pdf")
 
 TOPN = 10
 LAG_DAYS = 45          # 분기 재무 공시 지연
@@ -553,6 +553,23 @@ def monthly(nav, dates, start):
     return ms, out
 
 
+def win_rate(nav, bench, dates, start):
+    """전략이 지수를 이긴 달 수와 비교한 달 수 → (이긴 달, 전체 달).
+
+    같은 창·같은 월말 경계로 자른 월 수익률끼리 비교한다. 첫 달은 부분 월이지만
+    전략과 지수가 같은 날부터 시작하므로 그대로 센다(둘 다 짧다).
+    무승부(정확히 동률)는 이긴 것으로 세지 않는다.
+    """
+    if bench is None:
+        return None, 0
+    ms, a = monthly(nav, dates, start)
+    _, b = monthly(bench, dates, start)
+    pair = [(a[m], b[m]) for m in ms if a.get(m) is not None and b.get(m) is not None]
+    if not pair:
+        return None, 0
+    return sum(1 for x, y in pair if x > y), len(pair)
+
+
 # ── 그리기 도구 ─────────────────────────────────────────────────────────────
 def tx(fig, x, y, s, **kw):
     kw.setdefault("color", INK); kw.setdefault("fontsize", 8)
@@ -685,6 +702,13 @@ def draw_block(fig, P, top, S, R):
     for lab, k, d, sg in (("수익률 %", "ret", 2, True), ("변동성 %", "vol", 2, False),
                           ("샤프", "sharpe", 2, True), ("MDD %", "mdd", 2, True)):
         rows.append([lab, num(m.get(k), d, sg), num(mg.get(k), d, sg), num(mn.get(k), d, sg)])
+    # 이 줄만 성격이 다르다 — 지수의 수치가 아니라 '그 지수를 이긴 달의 비율'이다.
+    wg, nwin = win_rate(nav, gn, P.dates, R["start"])
+    wn, _ = win_rate(nav, nn, P.dates, R["start"])
+    WR = len(rows)
+    rows.append(["이긴 달", "—",
+                 "—" if wg is None else "%d/%d" % (wg, nwin),
+                 "—" if wn is None else "%d/%d" % (wn, nwin)])
 
     def cc(r, c):
         if c == 0:
@@ -694,6 +718,9 @@ def draw_block(fig, P, top, S, R):
             if r in (0, 2) and v != "—":
                 return POS if not v.startswith("-") else NEG
             return INK
+        if r == WR:                       # 승률은 전략의 성적이므로 대조군 색으로 죽이지 않는다
+            w = (wg if c == 2 else wn)
+            return MUTED if w is None else (POS if w * 2 > nwin else NEG)
         return MUTED
 
     y1 = table(fig, X0, t_top, [.132, .102, .099, .099], ["지표", "전략", "S&P 500 PR", "NDX PR"],
@@ -816,9 +843,14 @@ def draw_summary(fig, P, res, order, total):
         mn = metrics(bench_nav(P, P.ndx, R["start"], R["end"]))
         keep = len(set(t for t, _s, _u in R["prev"]) & set(t for t, _s, _u in R["today"]))
         ix = [idx_of(P, t) for t, _s, _u in R["today"]]
+        wg, nwin = win_rate(R["nav"], bench_nav(P, P.gspc, R["start"], R["end"]),
+                            P.dates, R["start"])
+        wn, _ = win_rate(R["nav"], bench_nav(P, P.ndx, R["start"], R["end"]),
+                         P.dates, R["start"])
         rows.append([S[1], S[2].split(" (")[0], num(m["ret"], 2), num(m["vol"], 2, False),
                      num(m["sharpe"], 2), num(m["mdd"], 2),
                      num(m["ret"] - mg["ret"], 2), num(m["ret"] - mn["ret"], 2),
+                     "%d/%d·%d/%d" % (wg, nwin, wn, nwin) if wg is not None else "—",
                      "%d" % (TOPN - keep),
                      "%d·%d·%d" % (ix.count("SPX"), ix.count("공통"), ix.count("NDX"))])
         colors_.append(m["ret"])
@@ -826,7 +858,7 @@ def draw_summary(fig, P, res, order, total):
     for lab, a in (("S&P 500 PR", P.gspc), ("NASDAQ 100 PR", P.ndx)):
         mb = metrics(bench_nav(P, a, R0["start"], R0["end"]))
         rows.append([lab, "대조군 · 가격지수", num(mb["ret"], 2), num(mb["vol"], 2, False),
-                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—", "—"])
+                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—", "—", "—"])
     nS = len(order)
 
     def cc(r, c):
@@ -842,17 +874,19 @@ def draw_summary(fig, P, res, order, total):
         return INK
 
     ytab = table(fig, X0, y - .017,
-                 [.118, .152, .084, .072, .062, .072, .082, .082, .046, .090],
+                 [.118, .140, .072, .060, .052, .062, .072, .072, .105, .042, .086],
                  ["전략", "참조 지수", "1년 수익률 %", "변동성 %", "샤프", "MDD %",
-                  "vs S&P %p", "vs NDX %p", "교체", "SPX·공통·NDX"],
+                  "vs S&P %p", "vs NDX %p", "이긴 달 S&P·NDX", "교체", "SPX·공통·NDX"],
                  rows, row_h=.0175, fs=7.6, hfs=6.6,
-                 aligns=["l", "l", "r", "r", "r", "r", "r", "r", "c", "c"], cell_color=cc,
+                 aligns=["l", "l", "r", "r", "r", "r", "r", "r", "c", "c", "c"], cell_color=cc,
                  cell_weight=lambda r, c: "bold" if (c == 0 or c == 2) and r < nS else "normal",
                  zebra=True)
     tx(fig, X0, ytab - .0085,
+       "'이긴 달'은 %d개월 중 그 지수를 이긴 달 수다 — 왼쪽이 S&P 500, 오른쪽이 NDX. "
+       "1년 수익률 하나로는 크게 몇 번 이긴 것과 꾸준히 이긴 것이 구별되지 않아 같이 싣는다.\n"
        "'교체'는 전월말 명단과 오늘 재산출 명단의 차이다 — 이 규칙이 달마다 손을 얼마나 대는지를 뜻한다. "
-       "맨 오른쪽은 오늘 담은 10종목이 어느 지수 소속인지의 구성이다.",
-       fontsize=6.6, color=MUTED)
+       "맨 오른쪽은 오늘 담은 10종목이 어느 지수 소속인지의 구성이다." % nwin,
+       fontsize=6.6, color=MUTED, linespacing=1.55)
 
     # ② 월별 수익률 — 어느 달에 무엇이 먹혔나. 표의 1년 숫자 하나로는 안 보이는 것이다.
     names = [r[0] for r in rows]
