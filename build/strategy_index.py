@@ -313,6 +313,10 @@ def main() -> int:
             # 위험 축 — 수익 축(grade)과 다른 질문에 답한다. 같이 실어야 '덜 벌었지만
             # 덜 깨졌다'가 화면에서 읽힌다. 자산 전략에만 있다(다른 원천은 없음).
             risk_verdict=r.get("risk_verdict"), risk=r.get("risk"),
+            # 비용 후 — 회전이 큰 규칙은 무비용 숫자만 보면 안 된다. gross 를 대체하지 않고 함께 싣는다.
+            metrics_net=r.get("metrics_net"), bench_net=r.get("bench_net"),
+            cost_bp=r.get("cost_bp"), cost_drag=r.get("cost_drag"),
+            cost_kill=r.get("cost_kill"), cost_sensitive=r.get("cost_sensitive"),
         ))
 
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
