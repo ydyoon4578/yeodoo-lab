@@ -19,6 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 MEMBERS = os.path.join(HERE, "..", "data", "members.json")
 OUT = os.path.join(HERE, "..", "data", "stocks.json")
 TPHIST = os.path.join(HERE, "..", "data", "target_history.json")   # 애널리스트 목표주가 스냅샷 이력(직접 누적)
+FUNDHIST = os.path.join(HERE, "..", "data", "fund_history.json")  # 벤더 비율 스냅샷 이력(시점별 백테스트용)
 # 일별 종가 패널 길이. **다운로드 기간과 저장 창을 한 상수에서 파생**한다 —
 # 예전엔 period="3y"(내려받기)와 .tail(756)(저장)이 따로 박혀 있었고, 3y가 마침 753봉이라
 # tail이 no-op이어서 캡이 있다는 사실 자체가 보이지 않았다. period만 늘리면 패널은 756에서
@@ -652,6 +653,74 @@ def update_target_history(path, as_of, tp_now):
     snaps.append({"d": as_of, "n": len(tp_now), "tp": tp_now})
     if len(snaps) > HIST_MAX_SNAPS:
         del snaps[:len(snaps) - HIST_MAX_SNAPS]
+    doc["snaps"] = snaps
+    json.dump(doc, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    return True, "기록", len(snaps)
+
+
+# ── 벤더 비율 시점별 보관 ────────────────────────────────────────────────────
+# 왜. 사이트의 스타일 화면은 stocks.json 의 **벤더 비율**(roe·pb·tpe…)로 순위를 매기는데
+# 그 값은 오늘치만 있다. 그래서 같은 규칙을 과거로 되돌리는 style_strategies.pdf 는
+# SEC 재무에서 직접 만들 수밖에 없고, 두 문서의 재무 기반 스타일 명단이 갈린다
+# (실측 2026-07-29: 퀄리티·가치·성장이 각각 6~7/10 만 겹친다).
+#
+# ⚠ 이 보관은 **오늘부터 쌓이는 것**이다. 과거를 만들어 주지 않는다 — 1년쯤 지나야
+#   1년짜리 백테스트를 벤더 비율로 돌릴 수 있다.
+# ⚠ 그리고 이것이 백테스트를 더 '정확'하게 만들지는 않는다. SEC 재무는 제출일이 있어
+#   시점을 알 수 있지만, 벤더 스냅샷은 '우리가 그날 찍었다'는 것뿐이다. 얻는 것은
+#   **사이트와의 일치**이지 정확성이 아니다. 그 값어치가 용량보다 큰지는 따로 판단할 것.
+FUND_HIST_KEYS = ("roe", "de", "fpe", "pb", "tpe", "ps", "mc", "eveb")   # 스타일이 실제로 쓰는 것만
+FH_MIN_DAYS = 25          # 스타일이 월말 리밸런스라 월 1회면 충분하다(일별이면 연 15MB)
+FH_MAX_SNAPS = 120        # 10년치. 512종목·8필드 기준 스냅 1개 ≈ 40KB → 파일 상한 ≈ 4.7MB
+
+
+def update_fund_history(path, as_of, rows, eveb=None):
+    """data/fund_history.json 에 {as_of, 필드별 티커→값} 스냅샷을 append.
+
+    rows: [{"t":티커, "fund":{...}}] — 이번 빌드의 종목 레코드.
+    eveb: {티커: EV/EBITDA}. ⚠ 이 값은 fundx 에 있는데 상세 분리 루프가 fundx 를 pop 해
+          버리므로 **그 전에 떠서** 넘겨야 한다. 안 넘기면 조용히 빠진다.
+    반환 (기록여부, 사유, 스냅샷수).
+    """
+    import datetime as _dt
+    doc = {"schema": 1,
+           "keys": list(FUND_HIST_KEYS),
+           "note": "벤더 비율(yfinance) 스냅샷 이력. 사이트 스타일 화면이 쓰는 값을 시점별로 남겨 "
+                   "훗날 같은 값으로 백테스트할 수 있게 한다. 월 1회 기록. "
+                   "⚠ 오늘부터 쌓이는 자료라 과거 구간은 없다.",
+           "snaps": []}
+    if os.path.exists(path):
+        try:
+            doc = json.load(open(path, encoding="utf-8"))
+            doc["keys"] = list(FUND_HIST_KEYS)
+        except Exception:
+            pass
+    snaps = doc.get("snaps") or []
+    if snaps:
+        try:
+            gap = (_dt.date.fromisoformat(as_of)
+                   - _dt.date.fromisoformat(snaps[-1].get("d", ""))).days
+        except Exception:
+            gap = 10 ** 6
+        if gap < FH_MIN_DAYS:
+            return False, f"직전 기록 {gap}일 전(최소 {FH_MIN_DAYS}일) — 생략", len(snaps)
+    v, n = {}, 0
+    for k in FUND_HIST_KEYS:
+        col = {}
+        for r in rows:
+            x = (eveb or {}).get(r["t"]) if k == "eveb" else (r.get("fund") or {}).get(k)
+            if isinstance(x, list):          # fundx 값은 [값, 퍼센타일…] 꼴이다
+                x = x[0] if x else None
+            if isinstance(x, (int, float)) and x == x:
+                col[r["t"]] = round(float(x), 4)
+        if col:
+            v[k] = col
+            n = max(n, len(col))
+    if not v:
+        return False, "이번 빌드에 벤더 값이 없다", len(snaps)
+    snaps.append({"d": as_of, "n": n, "v": v})
+    if len(snaps) > FH_MAX_SNAPS:
+        del snaps[:len(snaps) - FH_MAX_SNAPS]
     doc["snaps"] = snaps
     json.dump(doc, open(path, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     return True, "기록", len(snaps)
@@ -1359,6 +1428,14 @@ def main():
     # ⚠ 워크플로 커밋 대상에 data/sd 포함 필수(home_reco 누락 사고와 동일 함정) · stocks.html이 선택 시 fetch.
     SD_DIR = os.path.join(HERE, "..", "data", "sd")
     os.makedirs(SD_DIR, exist_ok=True)
+    # ⚠ 아래 루프가 fundx 를 pop 한다 — 벤더 비율 이력에 쓸 eveb 는 여기서 미리 뜬다.
+    _eveb_now = {}
+    for s in stocks:
+        _v = (s.get("fundx") or {}).get("eveb")
+        if isinstance(_v, list) and _v:
+            _v = _v[0]
+        if isinstance(_v, (int, float)) and _v == _v:
+            _eveb_now[s["t"]] = float(_v)
     _keep = set()
     for s in stocks:
         det = {"as_of": as_of, "t": s["t"]}
@@ -1390,6 +1467,13 @@ def main():
         print(f"목표주가 이력 {'기록' if _wrote else '생략'}({_why}) · 스냅샷 {_ns2}개 · {_sz}KB · 이번 커버 {len(tp_hist)}/{len(stocks)}종목")
     except Exception as e:
         print("  목표주가 이력 갱신 실패(무시):", e)
+    # ── 벤더 비율 스냅샷 누적(같은 성격 — 실패해도 빌드는 계속) ──
+    try:
+        _w2, _y2, _n3 = update_fund_history(FUNDHIST, as_of, stocks, _eveb_now)
+        _s2 = os.path.getsize(FUNDHIST)//1024 if os.path.exists(FUNDHIST) else 0
+        print(f"벤더 비율 이력 {'기록' if _w2 else '생략'}({_y2}) · 스냅샷 {_n3}개 · {_s2}KB")
+    except Exception as e:
+        print("  벤더 비율 이력 갱신 실패(무시):", e)
     # ── 홈 전용 초소형 요약 — 계산은 build/home_summary.py 한 곳(화면·DB가 다시 계산하지 않는다) ──
     # 실패를 삼키지 않는다: 홈의 신호 목록·성과 카드가 전부 여기서 나오므로 조용히 빈 채로 배포되면 안 된다.
     import home_summary
