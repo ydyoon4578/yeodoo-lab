@@ -310,6 +310,9 @@ def main() -> int:
             bench_unstable=r.get("bench_unstable"), beta=r.get("beta"),
             holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
             arch=r.get("arch"),
+            # 위험 축 — 수익 축(grade)과 다른 질문에 답한다. 같이 실어야 '덜 벌었지만
+            # 덜 깨졌다'가 화면에서 읽힌다. 자산 전략에만 있다(다른 원천은 없음).
+            risk_verdict=r.get("risk_verdict"), risk=r.get("risk"),
         ))
 
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
