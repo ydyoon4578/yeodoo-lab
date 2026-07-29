@@ -786,8 +786,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
       <p class="stnote" id="stnote"></p>
-      <!-- 위 표는 ETF 수익률이라 대응 ETF가 없는 스타일은 행이 없다. S&P 정본에만 있는 세 가지를
-           여기 따로 둔다 — 표를 수익률 없는 행으로 오염시키지 않으려는 것이다. -->
+      <!-- 구성종목은 표보다 넓다. 표는 '랩 규칙 ↔ 대응 ETF' 짝만 담지만(2026-07-29 사용자 결정)
+           여기에는 짝이 없어 표에서 뺀 것(중소형)과 애초에 대응 ETF가 없는 것(순수성장)도 들어간다.
+           표에서 뺀 것은 각주가 이름으로 밝힌다 — 조용히 줄이면 '이게 전부'로 읽힌다. -->
       <div class="stmore" id="stmore"></div>
     </section>
 
@@ -1340,24 +1341,32 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
     ix.forEach(function(x){h+=stRow(x,'ix');});
-    // 짝이 있는 것을 먼저(랩→ETF), 짝이 없는 ETF(배당성장·중소형·동일가중)를 뒤에 모은다.
-    // market_board 순서를 그대로 따르면 SDY 가 성장과 고베타 사이에 홀로 끼어 짝의 결이 끊긴다.
+    // 짝이 있는 것만 표에 낸다(랩→ETF). 짝 없는 셋(배당성장 SDY·중소형 SIZE·동일가중 RSP)은
+    // 표가 17행까지 길어져서 뺐다(사용자 결정 2026-07-29) — macro.html 전체 표에 그대로 있다.
+    //   ⚠ 뺀 사실은 부제에 적는다. 조용히 줄이면 '이게 전부'로 읽힌다.
+    //   ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 drawStHold 가 이 배열로
+    //     구성종목 줄을 만들므로, 여기서 SIZE 를 지우면 중소형 종목 줄이 경고 없이 사라진다.
     var pair=[], solo=[];
     st.forEach(function(x){ (labOf(x.t)?pair:solo).push(x); });
-    pair.forEach(function(x){ h+=stRow(labRow(labOf(x.t)),'gap')+stRow(etfRow(x),''); });
-    solo.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
+    if(pair.length){
+      pair.forEach(function(x){ h+=stRow(labRow(labOf(x.t)),'gap')+stRow(etfRow(x),''); });
+    }else{
+      // 랩 자료를 못 받은 경우(fail-soft). 여기서 solo 를 숨기면 표에 지수 두 줄만 남는다.
+      solo.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
+    }
     box.innerHTML=h+'</tbody>';
     var s=el('st-sub');
     if(s){
-      var t='· 기간별 수익률 % · 지수 '+ix.length+' + ETF '+st.length+'종';
-      if(pair.length)t+=' · 랩 '+pair.length+'종 병기';
+      var t='· 기간별 수익률 % · 지수 '+ix.length;
+      t+=pair.length? ' + 랩 '+pair.length+'종·대응 ETF '+pair.length+'종'
+                    : ' + ETF '+solo.length+'종';
       t+=' · 기준 '+(j.as_of||'');
       // 랩 쪽은 자동 갱신 잡이 다르다. 기준일이 갈리면 표 전체가 한 날짜인 척하지 않게 적는다
       // (macro.html 이 FRED 금리가 하루 늦을 때 쓰는 방식과 같다).
       if(pair.length&&SLAB&&SLAB._as_of&&SLAB._as_of!==j.as_of)t+=' · 랩은 '+SLAB._as_of;
       s.textContent=t;
     }
-    drawStNote(pair.length?SLAB:null);
+    drawStNote(pair.length?SLAB:null, pair.length?solo:[]);
     // 구성종목 목록은 표와 같은 순서로 아래에 깐다 — 표의 스타일 순서 그대로 + 순수 계열 둘.
     // ⚠ 여기에 넘기는 것은 **홈 키**(ST_KEY)다. 백테스트 키를 넘기면 가치가 spval(S&P 500
     //   Value)에서 val(MSCI Enhanced Value)로 조용히 바뀐다 — 둘 다 style_top.json 에 있어
@@ -1367,21 +1376,32 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 표 아래 각주 — 두 종류 행을 같은 잣대로 읽으면 안 되는 이유를 적는다.
   // 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목을 과거로 소급한다).
   // 그것을 안 적고 +134% 를 +22% 위에 얹으면 표가 거짓말을 한다.
-  function drawStNote(sl){
+  function drawStNote(sl,hidden){
     var n=el('stnote'); if(!n)return;
     if(!sl){n.innerHTML='';return;}
+    // 표에서 뺀 ETF 를 이름으로 적는다 — 숨긴 것을 숨기면 표가 '이게 전부'라고 말하게 된다.
+    // '규칙이 없다'가 아니라 '**백테스트**가 없다'다. 중소형은 규칙이 있어 구성종목이 아래에
+    // 나오지만 style_perf 에 백테스트가 없어 짝을 못 만든다 — 둘을 뭉개면 안 된다.
+    var hid=(hidden||[]).length
+      ? '· 짝지을 랩 백테스트가 없는 ETF '+(hidden||[]).map(function(x){
+          return esc(x.n)+'('+esc(x.t)+')';}).join(' · ')+' 는 표에서 뺐습니다 — '+
+        '<a href="macro.html#nowperf-h">매크로 보드</a>의 전체 표에 있습니다.'
+      : '';
     n.innerHTML=
       '<b>랩 행은 상품이 아닙니다.</b> 이 랩이 유니버스 상위 10종목을 동일가중으로 담아 월말마다 '+
-      '다시 고른 <b>백테스트</b>이고 보수·거래비용이 0입니다. 아래 ETF 는 실제로 운용된 펀드입니다. '+
+      '다시 고른 <b>백테스트</b>이고 보수·거래비용이 0입니다. 짝지은 ETF 는 실제로 운용된 펀드입니다. '+
       '<b>차이를 초과수익으로 읽으면 안 됩니다.</b><br>'+
       '· <b>생존편향</b> — 랩은 오늘 살아남은 518종목을 과거로 소급해 고릅니다(선정 시점 명단이 아닙니다). '+
       '그만큼 랩 쪽이 유리하게 부풀려져 있습니다.<br>'+
       '· 구간 정의도 다릅니다 — ETF 는 달력일(1주=7일), 랩은 거래일 봉수(1주=5거래일)로 잽니다. 이름만 같습니다.<br>'+
-      '· 랩 구간은 '+esc(sl._start||'')+' 이후 1년뿐이라 <b>‘1년’이 곧 전 구간</b>입니다. 그 앞은 재지 않았습니다.';
+      '· 랩 구간은 '+esc(sl._start||'')+' 이후 1년뿐이라 <b>‘1년’이 곧 전 구간</b>입니다. 그 앞은 재지 않았습니다.'+
+      (hid?'<br>'+hid:'');
   }
-  // 대응 ETF가 없어 위 표에는 행이 없는 스타일. 구성종목 목록에는 같이 들어간다.
-  // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
-  var ST_EXTRA=['puregrow'];
+  // 표에 없는데 구성종목만 덧붙일 스타일 — 지금은 없다(2026-07-29 사용자 결정).
+  //   순수성장(puregrow)이 여기 있었다. 표에 대응 ETF 행이 없는데 목록에만 있어 홈에서 갈 곳이
+  //   없는 줄이었다. data/style_top.json 에는 그대로 남아 있고(build/style_top.py 가 계속 만든다)
+  //   지우려면 그쪽을 고쳐야 한다 — 홈에서 안 보이는 것과 재지 않는 것은 다른 얘기다.
+  var ST_EXTRA=[];
   // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
