@@ -1274,7 +1274,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   VLUE 도 같은 spval 로 받아 둔다 — market_board.json 이 아직 VLUE 행을 들고 있어서다.
   //   그 매핑이 없으면 가치 행만 구성종목이 안 열린다. 자산 패널이 IVE 로 갱신되면 지워도 된다.
   var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',VLUE:'spval',USMV:'lowvol',RPG:'grow',
-              SDY:'divg',SPHB:'hbeta',SIZE:'size'};
+              SPHB:'hbeta',SIZE:'size'};
   var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   // 표는 **수익률만** 담는다. 구성종목을 행 사이에 끼워 넣으니 표가 성과표와 종목목록
@@ -1322,7 +1322,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // 대응 ETF가 없어 위 표에는 행이 없는 스타일. 구성종목 목록에는 같이 들어간다.
   // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
-  var ST_EXTRA=['puregrow','pureval'];
+  var ST_EXTRA=['puregrow'];
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
   function drawStHold(keys){
     var box=el('stmore'); if(!box||!STOP)return;

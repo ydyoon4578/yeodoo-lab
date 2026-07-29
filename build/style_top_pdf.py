@@ -834,7 +834,14 @@ def draw_summary(fig, P, res, order, total):
 
     y = .895
     tx(fig, X0, y, "최근 1년 성과", fontsize=11.5, weight="bold")
+    # 대조군을 맨 위에 둔다 — 전략을 읽기 전에 기준선을 먼저 보라는 뜻이다.
+    R0 = res[order[0]]
     rows, colors_ = [], []
+    for lab, a in (("S&P 500 PR", P.gspc), ("NASDAQ 100 PR", P.ndx)):
+        mb = metrics(bench_nav(P, a, R0["start"], R0["end"]))
+        rows.append([lab, "대조군 · 가격지수", num(mb["ret"], 2), num(mb["vol"], 2, False),
+                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—", "—", "—"])
+    nB = len(rows)
     for key in order:
         S = next(s for s in STYLES if s[0] == key)
         R = res[key]
@@ -854,15 +861,9 @@ def draw_summary(fig, P, res, order, total):
                      "%d" % (TOPN - keep),
                      "%d·%d·%d" % (ix.count("SPX"), ix.count("공통"), ix.count("NDX"))])
         colors_.append(m["ret"])
-    R0 = res[order[0]]
-    for lab, a in (("S&P 500 PR", P.gspc), ("NASDAQ 100 PR", P.ndx)):
-        mb = metrics(bench_nav(P, a, R0["start"], R0["end"]))
-        rows.append([lab, "대조군 · 가격지수", num(mb["ret"], 2), num(mb["vol"], 2, False),
-                     num(mb["sharpe"], 2), num(mb["mdd"], 2), "—", "—", "—", "—", "—"])
-    nS = len(order)
 
     def cc(r, c):
-        if r >= nS:
+        if r < nB:
             return MUTED
         if c == 0:
             return INK
@@ -879,7 +880,7 @@ def draw_summary(fig, P, res, order, total):
                   "vs S&P %p", "vs NDX %p", "이긴 달 S&P·NDX", "교체", "SPX·공통·NDX"],
                  rows, row_h=.0175, fs=7.6, hfs=6.6,
                  aligns=["l", "l", "r", "r", "r", "r", "r", "r", "c", "c", "c"], cell_color=cc,
-                 cell_weight=lambda r, c: "bold" if (c == 0 or c == 2) and r < nS else "normal",
+                 cell_weight=lambda r, c: "bold" if (c == 0 or c == 2) and r >= nB else "normal",
                  zebra=True)
     tx(fig, X0, ytab - .0085,
        "'이긴 달'은 %d개월 중 그 지수를 이긴 달 수다 — 왼쪽이 S&P 500, 오른쪽이 NDX. "
@@ -890,9 +891,9 @@ def draw_summary(fig, P, res, order, total):
 
     # ② 월별 수익률 — 어느 달에 무엇이 먹혔나. 표의 1년 숫자 하나로는 안 보이는 것이다.
     names = [r[0] for r in rows]
-    navs = ([res[k]["nav"] for k in order]
-            + [bench_nav(P, P.gspc, R0["start"], R0["end"]),
-               bench_nav(P, P.ndx, R0["start"], R0["end"])])
+    navs = ([bench_nav(P, P.gspc, R0["start"], R0["end"]),
+             bench_nav(P, P.ndx, R0["start"], R0["end"])]
+            + [res[k]["nav"] for k in order])          # rows 와 같은 순서라야 라벨이 안 밀린다
     ms, _ = monthly(navs[0], P.dates, R0["start"])
     grid = np.array([[monthly(n, P.dates, R0["start"])[1].get(m, np.nan) for m in ms]
                      for n in navs], float)
@@ -928,7 +929,7 @@ def draw_summary(fig, P, res, order, total):
                 continue
             ax.text(c, r, "%+.1f" % v, ha="center", va="center", fontsize=5.9,
                     color=("white" if abs(v) > lim * .62 else INK),
-                    weight=("bold" if r < nS else "normal"))
+                    weight=("bold" if r >= nB else "normal"))
 
     # ③ 1년 누적 곡선 — 일곱 전략과 두 지수를 한 판에.
     yc = yh - .014 - hm_h - .030
@@ -938,8 +939,8 @@ def draw_summary(fig, P, res, order, total):
     ax2.set_facecolor(PAPER)
     xi = np.arange(len(navs[0]))
     ax2.axhline(100, color=LINE, lw=.6)
-    for lab, a, col, ls, lw in (("S&P 500(PR)", navs[nS], INK, "--", 1.1),
-                                ("NASDAQ 100(PR)", navs[nS + 1], MUTED, ":", 1.1)):
+    for lab, a, col, ls, lw in (("S&P 500(PR)", navs[0], INK, "--", 1.1),
+                                ("NASDAQ 100(PR)", navs[1], MUTED, ":", 1.1)):
         ax2.plot(xi, a * 100, color=col, ls=ls, lw=lw, label=lab, zorder=2)
     for k in order:
         ax2.plot(xi, res[k]["nav"] * 100, color=SCOL[k], lw=1.35, zorder=3,

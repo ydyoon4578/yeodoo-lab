@@ -13,17 +13,11 @@
   성장     S&P 500 Pure Growth: 3년 주당매출 성장 · 3년 주당이익 변화/주가 · 12개월 모멘텀
   고베타   S&P 500 High Beta : 최근 252거래일 일간수익률의 S&P 500 대비 베타 최대
   중소형   MSCI Size         : 시가총액 최소
-  배당성장 S&P High Yield Dividend Aristocrats : ⚠ 아래 '대체' 참조
 
 대체한 것 — 숨기지 않고 적는다.
   · 가치의 EV/CFO 를 **EV/EBITDA**로 바꿨다. 랩 패널이 그쪽을 들고 있다(eveb, 커버 93.8%).
   · 이익변동성은 5년 YoY EPS 성장률의 표준편차인데, 랩의 재무 시계열이 분기 20개(약 5년)라
     YoY 관측이 16개다. 정의는 같고 표본이 딱 5년이다.
-  · **배당성장은 정의를 못 지킨다.** 원지수는 20년 연속 증배가 조건인데 랩에는 5년치뿐이다.
-    5년 연속 회계연도에 감배가 없는 종목을 배당성장률과 배당수익률로 세운 **대용**이며,
-    원지수 편입과 다르다. 그렇게 표시한다. 5년으로 줄이며 생기는 함정 셋을 규칙으로 막는다 —
-    연도 구멍(관측 5개 ≠ 5년), 액면분할 미반영(주식수로 되돌린다), 그리고 창 밖의 감배를
-    못 보는 것(한 해 2배 초과 급증은 복원·신규 개시로 보고 제외).
   · 무위험수익률을 모멘텀 분자에서 빼지 않았다(횡단면 순위에 상수는 영향이 없다).
 
 ⚠ 이것은 **오늘의 화면**이지 백테스트가 아니다. 성과를 주장하지 않으며, 이 랩은 팩터 모멘텀을
@@ -120,67 +114,6 @@ def zavg(parts):
 def series_at(ser, back):
     """날짜 내림차순 시계열에서 back번째 관측. 없으면 None."""
     return ser[back][1] if ser and len(ser) > back else None
-
-
-DIVG_YEARS = 5          # 배당성장 표본(회계연도). 원지수는 20년이다 — 대용임을 화면에 적는다.
-DIVG_SPLIT = 1.5        # 분할 판별 1차 조건 — 주식수가 이 배수를 넘게 변한다
-DIVG_SPLIT_TOL = .4     # 2차 조건 — dps 가 그 역수배로 함께 움직였나(이 비율 오차 안)
-DIVG_JUMP = 2.0         # 한 해에 이만큼 뛰면 '감배 후 복원·신규 개시'로 보고 제외한다
-
-
-def ann_bucket(t, key):
-    """data/fx/<티커>.json 의 **연간(a)** 버킷 → {연도: 값}.
-
-    tech_backtest.load_fund() 는 i·q(시점·분기)만 보므로 여기서 직접 읽는다.
-    dps 를 분기로 읽으면 회사마다 분기값과 연 누적값이 섞여 성장률이 튄다 —
-    수집기(refresh_facts.pick)가 350~380일 구간만 담아 둔 a 버킷은 그 문제가 없다.
-    """
-    p = os.path.join(DATA, "fx", "%s.json" % t)
-    if not os.path.exists(p):
-        return {}
-    try:
-        d = json.load(io.open(p, encoding="utf-8"))
-    except Exception:
-        return {}
-    rows = (((d.get("tags") or {}).get(key) or {}).get("a") or [])
-    return {e[:4]: float(v) for e, v in rows
-            if v is not None and isinstance(v, (int, float)) and float(v) > 0}
-
-
-def divg_window(t):
-    """최신 DIVG_YEARS 개 **연속** 회계연도의 분할보정 주당배당.
-
-    → (연도들, 보정 dps, 원본 dps) 또는 None(자격 미달).
-
-    ⚠ 관측이 5개라고 5년이 아니다 — VTR 은 2023 다음이 2017 이라 그냥 자르면
-      9년을 5년으로 착각한다. 그래서 연도 간격을 확인한다.
-    ⚠ dps 는 공시된 그대로라 액면분할이 반영돼 있지 않다. AVGO 14.40 → 1.64 는
-      감배가 아니라 10:1 분할이다. 분할이면 주식수가 같은 배수로 늘므로 sh 로 되돌린다.
-    🚨 **주식수가 늘었다는 것만으로 분할이라 하면 안 된다.** VICI 는 MGP 인수로 주식이
-      1.52배 늘었지만 배당은 1.09배 오른 것이라 분할이 아니다. 그런데 분할로 보고 과거
-      배당을 1.52 로 나누면 성장률이 6%→18% 로 부풀어 1위로 올라온다(실측으로 잡았다).
-      그래서 **주식수가 r 배 되는 동시에 dps 가 대략 1/r 배**가 된 경우만 분할로 본다.
-      둘이 어긋나면 손대지 않는다 — 못 고치는 것보다 없는 분할을 만드는 쪽이 나쁘다.
-    """
-    dps, sh = ann_bucket(t, "dps"), ann_bucket(t, "sh")
-    ys = sorted(dps, reverse=True)
-    if len(ys) < DIVG_YEARS:
-        return None
-    win = sorted(ys[:DIVG_YEARS])
-    if int(win[-1]) - int(win[0]) != DIVG_YEARS - 1:
-        return None                                  # 중간에 빠진 해가 있다
-    raw = [dps[y] for y in win]
-    adj, f = list(raw), 1.0                          # 최신에서 거꾸로 훑으며 배수를 누적
-    for i in range(len(win) - 1, 0, -1):
-        a, b = win[i - 1], win[i]
-        if a in sh and b in sh and sh[a] > 0 and raw[i - 1] > 0:
-            r = sh[b] / sh[a]
-            if r > DIVG_SPLIT or r < 1 / DIVG_SPLIT:
-                got = raw[i] / raw[i - 1]            # dps 가 실제로 움직인 배수
-                if abs(got * r - 1.0) < DIVG_SPLIT_TOL:   # 1/r 배에 가까운가
-                    f *= r
-        adj[i - 1] = raw[i - 1] / f
-    return win, adj, raw
 
 
 def main() -> int:
@@ -370,47 +303,6 @@ def main() -> int:
             if SPVAL[t][0] > vmean + PURE_MIN:
                 PURE_V.append(t)
 
-    # ── 배당성장 ── 원지수의 20년을 5년으로 줄인 **대용**이다. 원지수 편입과 다르다.
-    #   전에는 산출하지 않았다. 근거는 'dps 시계열이 분기값과 누적값이 섞여 성장률이
-    #   연 45~78% 로 튄다'였는데, 그건 **분기(q) 버킷** 이야기였다. 연간(a) 버킷은
-    #   멀쩡하다(실측 2026-07-29: AMCR 0.4675→0.5075 · PNC 4.80→6.60 · KO 1.68→2.04,
-    #   전부 단조 증가). 연간을 그대로 쓰면 4년 CAGR 중위값이 7.4% 로 상식 범위에 든다.
-    #
-    #   대신 5년으로 줄이면서 생기는 함정 셋을 규칙으로 막는다.
-    #     ① 관측 5개 ≠ 5년 연속 — 구멍 있는 37종목을 divg_window() 가 떨군다.
-    #     ② 액면분할이 dps 에 없다 — 주식수로 되돌린다. 안 하면 AVGO·LRCX·ODFL 같은
-    #        진짜 배당성장주가 '감배'로 탈락한다(실측 8종목).
-    #     ③ 20년 조건이 실제로 막아 주던 것은 **감배 후 복원**이다. 5년 창에서는 잘랐던
-    #        사실이 창 밖이라 안 보여, OXY(2020년 −98% 후 복원)가 성장률 1위로 올라온다.
-    #        한 해에 2배 넘게 뛴 이력이 있으면 제외한다(복원·신규 개시 둘 다 걸린다).
-    DIVG, DIVG_D = {}, {}
-    _dv_excl = {"gap": 0, "cut": 0, "jump": 0, "nopx": 0}
-    for t in uni:
-        w = divg_window(t)
-        if w is None:
-            _dv_excl["gap"] += 1
-            continue
-        yrs, adj, raw = w
-        if any(adj[i] < adj[i - 1] * .999 for i in range(1, len(adj))):
-            _dv_excl["cut"] += 1
-            continue
-        if any(adj[i] > adj[i - 1] * DIVG_JUMP for i in range(1, len(adj))):
-            _dv_excl["jump"] += 1
-            continue
-        px = PX.get(t)
-        if px is None or np.isnan(px[-1]) or px[-1] <= 0:
-            _dv_excl["nopx"] += 1
-            continue
-        DIVG[t] = {"cagr": (adj[-1] / adj[0]) ** (1 / (len(adj) - 1)) - 1,
-                   "yield": adj[-1] / float(px[-1]) * 100,
-                   "yrs": "%s~%s" % (yrs[0], yrs[-1]), "adj": adj, "raw": raw,
-                   "split": any(abs(a - r) > 1e-9 for a, r in zip(adj, raw))}
-    # 원지수는 배당수익률로 가중한다 — 여기서는 성장률과 수익률의 z 평균으로 세운다.
-    DIVG_S = zavg([zs({t: v["cagr"] for t, v in DIVG.items()}),
-                   zs({t: v["yield"] for t, v in DIVG.items()})])
-    print("  배당성장 %d종목 (제외 — 5년연속 아님 %d · 감배 %d · 급증 %d · 종가없음 %d)"
-          % (len(DIVG_S), _dv_excl["gap"], _dv_excl["cut"], _dv_excl["jump"], _dv_excl["nopx"]))
-
     def pack(key, label, ref, url, rule, sub, score, detail, rev_=False, n_=TOPN, slab="합성 z"):
         # 점수가 (자른 z, 안 자른 z) 쌍이면 둘로 정렬한다 — 앞이 같을 때만 뒤가 순서를 가른다.
         pair = any(isinstance(v, tuple) for v in score.values())
@@ -484,30 +376,6 @@ def main() -> int:
              lambda t: {"성장점수": R2(GROW[t][0]), "가치점수": R2(SPVAL[t][0]),
                         "성장랭크": GRK.get(t), "가치랭크": VRK.get(t)},
              slab="−(성장랭크÷가치랭크)"),
-        pack("pureval", "순수가치", "S&P 500 Pure Value",
-             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
-             "성장랭크÷가치랭크가 가장 큰 쪽(가치는 높고 성장은 낮은 종목) · 시총 33% 바스켓 안에서 "
-             "가치점수가 평균+0.25 를 넘는 것만",
-             "정본은 S&P Total Market 에서 표준화하고 모기업 지수에서 랭크한다 — 여기서는 둘 다 "
-             "유니버스 518종목이다", {t: ratio[t] for t in PURE_V},
-             lambda t: {"가치점수": R2(SPVAL[t][0]), "성장점수": R2(GROW[t][0]),
-                        "가치랭크": VRK.get(t), "성장랭크": GRK.get(t)},
-             slab="성장랭크÷가치랭크"),
-        pack("divg", "배당성장", "S&P High Yield Dividend Aristocrats",
-             "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-high-yield-dividend-aristocrats/",
-             "5년 연속 회계연도에 감배가 없는 종목을 배당성장률·배당수익률의 z 평균으로",
-             "원지수는 **20년** 연속 증배가 조건인데 랩의 연간 재무는 5년치다. "
-             "5년 창에서는 그 이전의 감배가 보이지 않으므로, 한 해에 2배 넘게 뛴 이력이 있으면 "
-             "감배 후 복원·신규 개시로 보고 제외한다(원지수 편입 종목과 다르다). "
-             "주당배당은 공시 그대로라 액면분할이 반영돼 있지 않다 — 주식수가 r 배 되는 동시에 "
-             "주당배당이 1/r 배가 된 경우만 분할로 보고 되돌린다. 둘이 어긋나면 손대지 않으므로, "
-             "분할을 주식수로 확증하지 못한 종목은 '감배'로 빠진다(없는 분할을 만드는 것보다 낫다)",
-             DIVG_S,
-             lambda t: {"배당성장률 %": R2(DIVG[t]["cagr"] * 100),
-                        "배당수익률 %": R2(DIVG[t]["yield"]),
-                        "구간": DIVG[t]["yrs"],
-                        "주당배당": " → ".join("%.3f" % v for v in DIVG[t]["adj"]),
-                        "분할보정": "예" if DIVG[t]["split"] else "아니오"}),
         pack("hbeta", "고베타", "S&P 500 High Beta",
              "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-high-beta-indices.pdf",
              "최근 252거래일 일간수익률의 S&P 500 대비 베타가 가장 큰 순", None, beta,
