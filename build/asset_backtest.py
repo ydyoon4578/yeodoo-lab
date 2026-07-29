@@ -304,6 +304,10 @@ ROLE = {
     "seasonal": "타이밍오버레이", "curve-inv": "타이밍오버레이", "vix-level": "타이밍오버레이",
     "unrate-trend": "타이밍오버레이", "timing-ensemble": "타이밍오버레이",
     "vol-target-spy": "위험감축",
+    # 타이밍 규칙에 따라붙는 반론을 하나씩 검정하는 줄들. 낙폭 게이트와 적응형 변동성
+    # 레짐은 '깨지면 줄인다'가 목적이라 위험감축, 나머지는 진입 여부를 정하므로 오버레이.
+    "sma-grid": "타이밍오버레이", "sma200-confirm": "타이밍오버레이",
+    "rel-mom3": "타이밍오버레이", "dd-gate": "위험감축", "vol-regime": "위험감축",
 }
 
 
@@ -1137,6 +1141,151 @@ def build():
                            "세 규칙이 같은 자산의 같은 가격을 보므로 신호가 크게 겹친다 — "
                            "분산 효과를 기대할 자리가 아니라는 것이 사전 예상이다.")
     add("timing-ensemble", None, s_ens)
+
+    # ── 타이밍 규칙에 흔히 따라붙는 반론들 ──────────────────────────────
+    # 앞 아홉이 '유명한 규칙을 목록에 올린다'였다면, 여기 다섯은 그 규칙들에 늘 따라붙는
+    # 반론을 하나씩 검정한다. 각 줄이 답하는 질문을 note 에 적어 둔다.
+
+    # 10) 이동평균 기간을 바꾸면? — '200이 특별한가'
+    def s_smagrid():
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=270)
+        LOOK = (100, 150, 200, 250)
+        def w(i):
+            s = ser("SPY")
+            v = [s[i] > m for n_ in LOOK for m in [sma(s, i, n_)]
+                 if m is not None and s[i] is not None]
+            if not v:
+                return {"SPY": 1.0}
+            k = sum(v) / len(v)
+            return {"SPY": k, SAFE: 1.0 - k} if 0 < k < 1 else ({"SPY": 1.0} if k else {SAFE: 1.0})
+        return run_weights(w, st, "이동평균 기간 앙상블 (100·150·200·250)",
+                           lambda i: {"SPY": 1.0},
+                           "네 기간의 이동평균 신호 중 찬성 비율만큼 SPY 를 들고 나머지는 SHY.",
+                           "200일이라는 숫자가 특별한지 묻는 줄이다. 네 기간을 고르게 섞은 것이 "
+                           "200일 단독과 비슷하면 '200'은 규칙이 아니라 관습이라는 뜻이고, "
+                           "크게 나쁘면 그 숫자가 표본에 맞춰진 것이라는 뜻이 된다.")
+    add("sma-grid", None, s_smagrid)
+
+    # 11) 낙폭 게이트 — '손절이 되는가'. 상태(state)가 필요해 미리 걸어 둔다.
+    def _dd_state(out=-0.10, back=-0.05):
+        """전고점 대비 out 이하로 빠지면 이탈, back 이상 회복하면 재진입.
+
+        히스테리시스(나가는 문턱과 들어오는 문턱을 다르게)를 두는 이유는 한 문턱만 쓰면
+        그 근처에서 매달 들락거리기 때문이다. 전고점은 이탈 중에도 계속 갱신한다 —
+        나가 있는 동안 시장이 오르면 그 고점이 재진입 기준이 되어야 한다.
+        """
+        s = ser("SPY")
+        on, peak, stt = True, None, []
+        for i in range(len(DTS)):
+            p = s[i] if s else None
+            if p is None:
+                stt.append(on); continue
+            peak = p if peak is None else max(peak, p)
+            dd = p / peak - 1.0
+            if on and dd <= out:
+                on = False
+            elif (not on) and dd >= back:
+                on = True
+            stt.append(on)
+        return stt
+    _DD = None
+
+    def s_ddgate():
+        nonlocal _DD
+        _DD = _dd_state()
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=30)
+        def w(i):
+            return {"SPY": 1.0} if _DD[i] else {SAFE: 1.0}
+        return run_weights(w, st, "낙폭 게이트 (-10% 이탈 / -5% 복귀)",
+                           lambda i: {"SPY": 1.0},
+                           "전고점 대비 -10% 아래로 빠지면 SHY 로 나가고, -5% 위로 회복하면 "
+                           "다시 SPY. 두 문턱을 다르게 둬 경계에서 들락거리지 않게 한다.",
+                           "'가격이 이동평균 아래로 갔나'가 아니라 '얼마나 깨졌나'로 판단하면 "
+                           "다른가를 묻는 줄이다. 손절은 가장 흔히 권해지는 처방인데, "
+                           "-10%는 이미 깨진 뒤라 되사는 값이 비쌀 수 있다.")
+    add("dd-gate", None, s_ddgate)
+
+    # 12) 적응형 변동성 레짐 — 'VIX 25 같은 고정 문턱이 옳은가'
+    def s_volregime():
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=830)
+        def w(i):
+            s = ser("SPY")
+            v = vol(s, i, 60)
+            if v is None or i < 780:
+                return {"SPY": 1.0}
+            hist = [x for j in range(i - 756, i, 21) for x in [vol(s, j, 60)] if x is not None]
+            if len(hist) < 24:
+                return {"SPY": 1.0}
+            thr = sorted(hist)[int(len(hist) * 0.8)]
+            return {SAFE: 1.0} if v > thr else {"SPY": 1.0}
+        return run_weights(w, st, "적응형 변동성 레짐 (자기 3년 80퍼센타일)",
+                           lambda i: {"SPY": 1.0},
+                           "최근 60일 실현변동성이 직전 3년 분포의 80퍼센타일을 넘으면 SHY.",
+                           "VIX 25 같은 고정 문턱은 변동성 수준 자체가 시대마다 달라 "
+                           "2017년과 2022년에 같은 뜻이 아니다. 문턱을 자기 과거 분포로 "
+                           "잡으면 나은지 본다 — 고정 문턱 줄(vix-level)과 짝지어 읽을 것.")
+    add("vol-regime", None, s_volregime)
+
+    # 13) 확인 지연 — '휩쏘가 문제 아닌가'
+    def _confirm_state(nday=5):
+        """200일선 신호가 nday 거래일 연속 같아야 실제로 갈아탄다."""
+        s = ser("SPY")
+        on, run_, last, stt = True, 0, None, []
+        for i in range(len(DTS)):
+            m = sma(s, i, 200)
+            cur = None if (m is None or s is None or s[i] is None) else (s[i] > m)
+            if cur is None:
+                stt.append(on); continue
+            if cur == last:
+                run_ += 1
+            else:
+                run_, last = 1, cur
+            if run_ >= nday:
+                on = cur
+            stt.append(on)
+        return stt
+    _CF = None
+
+    def s_confirm():
+        nonlocal _CF
+        _CF = _confirm_state()
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=215)
+        def w(i):
+            return {"SPY": 1.0} if _CF[i] else {SAFE: 1.0}
+        return run_weights(w, st, "200일선 + 확인 지연 5일",
+                           lambda i: {"SPY": 1.0},
+                           "200일선 신호가 5거래일 연속 같은 방향일 때만 갈아탄다.",
+                           "이동평균 규칙에 늘 따라붙는 반론이 '경계에서 들락거려 비용만 "
+                           "든다'는 것이다. 확인 지연을 넣으면 회전이 줄어드는 대신 신호가 "
+                           "늦는다 — 어느 쪽이 큰지 sma200 줄과 나란히 놓고 본다.")
+    add("sma200-confirm", None, s_confirm)
+
+    # 14) 자산 간 상대 모멘텀 — '나갈 곳을 현금 말고 딴 자산으로 두면?'
+    def s_relmom():
+        ts = ["SPY", "TLT", "GLD", SAFE]
+        st = first_common(ts, pad=285)
+        def w(i):
+            sc = {}
+            for t in ("SPY", "TLT", "GLD"):
+                r12, r1 = ret(ser(t), i, 252), ret(ser(t), i, 21)
+                if r12 is not None and r1 is not None:
+                    sc[t] = r12 - r1
+            pos = {t: v for t, v in sc.items() if v > 0}
+            if not pos:
+                return {SAFE: 1.0}
+            return {max(pos, key=pos.get): 1.0}
+        return run_weights(w, st, "3자산 상대 모멘텀 (SPY·TLT·GLD)",
+                           lambda i: {"SPY": 1 / 3, "TLT": 1 / 3, "GLD": 1 / 3},
+                           "월말에 SPY·TLT·GLD 중 12-1 모멘텀이 가장 큰 하나만 보유. "
+                           "셋 다 음수면 SHY.",
+                           "앞의 게이트들은 나가면 전부 단기채로 갔다. 나갈 곳을 채권·금으로 "
+                           "두면 달라지는지 본다. 대조군은 SPY 가 아니라 같은 세 자산 "
+                           "동일가중이다 — 고르는 행위가 그냥 셋 다 들기를 이기는지가 질문이므로.")
+    add("rel-mom3", None, s_relmom)
 
 
 def main() -> int:
