@@ -2,7 +2,7 @@
 """build/factor_plus_pdf.py — 강화 팩터 전략 → data/factor_plus.pdf
 
 무엇을. build/style_top_pdf.py 의 스타일 6종(모멘텀·퀄리티·가치·저변동·성장·고베타)을
-결합·필터·게이트로 강화해 8종을 만든다. 판형·색·표·지표·대조군은 style_top_pdf 를 그대로
+결합·필터·게이트·정규화로 강화하고, 하나는 크기까지 조절해 9종을 만든다. 판형·색·표·지표·대조군은 style_top_pdf 를 그대로
 import 해서 쓴다 — 같은 자를 써야 두 문서를 나란히 놓을 수 있고, 한쪽만 고쳐져 조용히
 달라지는 일이 없다.
 
@@ -11,15 +11,16 @@ import 해서 쓴다 — 같은 자를 써야 두 문서를 나란히 놓을 수
   구간     최근 1년(월말에서 열어 12개월) · 비용 0
   재무     기간종료일 + 45일이 지나 실제로 공시된 것만 (look-ahead 차단은 Panel 이 맡는다)
 
-## 강화의 네 가지 방식 — 지어내지 않고 원래 팩터에서 파생한다
+## 강화의 다섯 가지 방식 — 지어내지 않고 원래 팩터에서 파생한다
 
   ① 결합   두 팩터의 z 를 평균한다. 한쪽이 꺾일 때 다른 쪽이 받친다.
   ② 필터   후보를 먼저 거른 뒤 남은 것에서 고른다(예: 적자 기업 제외).
   ③ 게이트  가격 조건을 얹는다(예: 200일선 위인 종목만) — 가치함정·하락추세 회피.
   ④ 정규화 팩터를 위험으로 나눈다(예: 모멘텀 ÷ 변동성).
+  ⑤ 크기   고르는 규칙은 그대로 두고 **얼마나 들지**를 조절한다(모멘텀 변동성 관리).
 
-⚠ 이 8종은 **같은 표본에서 같은 유니버스로 돌린 것**이다. 규칙을 더 만들수록 그중 최고는
-  우연히도 좋아 보인다. 그래서 좋은 것만 고르지 않고 8종을 전부 싣는다. 문서 어디에도
+⚠ 이 9종은 **같은 표본에서 같은 유니버스로 돌린 것**이다. 규칙을 더 만들수록 그중 최고는
+  우연히도 좋아 보인다. 그래서 좋은 것만 고르지 않고 9종을 전부 싣는다. 문서 어디에도
   '통과'라고 적지 않는다 — 이 문서는 성과 표시이지 판정이 아니다. 판정은 다중검정 임계를
   갖춘 build/tech_backtest.py 쪽 일이다.
 
@@ -209,8 +210,9 @@ def bt2(P, fn):
             "today_i": end, "today": today, "n_rebal": len(picks), "init_i": init_i}
 
 
-# ── 강화 전략 8종 ───────────────────────────────────────────────────────────
+# ── 강화 전략 9종 ───────────────────────────────────────────────────────────
 # 스타일 팩터를 결합·필터·게이트·정규화로 강화한 것들이다.
+# (⑤ 크기 조절인 '모멘텀 변동성 관리'는 점수함수가 아니라 사후 비중이라 main() 에서 붙인다)
 
 def sc_multi5(P, i):
     """모멘텀·퀄리티·가치·성장·저변동 다섯 합성점수의 z 평균.
@@ -301,7 +303,7 @@ STRATS = [
 def footer(fig, page, total):
     ST.hline(fig, ST.X0, ST.X1, .034, ST.LINE, .6)
     ST.tx(fig, ST.X0, .026,
-          "강화 팩터 전략 8종 · 스타일 6종을 결합·필터·게이트·정규화로 강화 · "
+          "강화 팩터 전략 9종 · 스타일 6종을 결합·필터·게이트·정규화·크기조절로 강화 · "
           "지수 SPX = S&P 500 단독 · NDX = NASDAQ 100 단독 · 공통 = 양쪽 · 대조군은 가격지수(PR) · 비용 0",
           fontsize=6.2, color=ST.MUTED)
     ST.tx(fig, ST.X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
@@ -311,11 +313,29 @@ def footer(fig, page, total):
 def main() -> int:
     print("가격·재무 패널을 연다…")
     P = ST.Panel()
+
+    strats = list(STRATS)
+    # ── ⑤ 크기 조절 ── 모멘텀과 같은 10종목을 고르되 비중을 그 위험에 맞춘다.
+    #   근거: Barroso & Santa-Clara, "Momentum Has Its Moments"(JFE 2015).
+    #   비중을 정하려면 목표변동성이 필요한데 표시 창(1년) 안에서는 못 잡는다 —
+    #   ST.vm_weights 가 긴 창으로 모멘텀을 한 번 더 돌려 월별 비중을 미리 만든다.
+    _wmap = ST.vm_weights(P)
+    _Rmom = bt2(P, ST.sc_mom)
+    if _wmap and _Rmom:
+        _w = _wmap.get(P.dates[_Rmom["end"]][:7], 1.0)
+        strats.append((
+            "mom_vm", "모멘텀 변동성 관리", "Barroso & Santa-Clara (JFE 2015) · 크래시 표본 1건",
+            ST.sc_mom, "12M 수익률 %", ST.d_mom,
+            # 두 줄이 한계다(draw_block 이 desc 에 .0285 만 준다). 폰트에 없는 글자도 쓰지 않는다.
+            "모멘텀과 같은 10종목을 고르되 크기를 조절한다 - 비중 = min(1, 목표변동성 ÷ 직전 6개월 실현변동성),\n"
+            "목표는 그 시점까지의 실적으로만 잡는다(사후 아님). 이번 달 %.0f%%. 2026-07 의 -30.6%% 는 "
+            "패닉형이 아니라 강세장 되돌림이었다(진입 직전 SPY 200일선 위·VIX 16.4)." % (_w * 100)))
+
     # 그리기 함수들이 모듈 전역 STYLES 를 본다 — 우리 목록으로 갈아 끼운다(구현은 하나만 둔다).
-    ST.STYLES = STRATS
+    ST.STYLES = strats
     ST.footer = footer
-    ST.TITLE = "강화 팩터 전략 8종"
-    ST.SUBTITLE = "스타일 6종을 결합·필터·게이트·정규화로 강화 · 최근 1년 요약"
+    ST.TITLE = "강화 팩터 전략 9종"
+    ST.SUBTITLE = "스타일 6종을 결합·필터·게이트·정규화·크기조절로 강화 · 최근 1년 요약"
     # 요약 쪽 곡선 색 표도 갈아 끼운다 — 원본은 스타일 6종 키만 갖고 있어 KeyError 가 난다.
     #   강화 계열은 바탕이 된 스타일 색을 물려받게 둔다 — 두 문서를 나란히 놓았을 때
     #   계열이 눈으로 이어진다.
@@ -323,14 +343,15 @@ def main() -> int:
         "multi5": ST.INK2,
         "val_qual": ST.NEG, "mom_qual": ST.CHAMP, "mom_lv": "#5B8FA8",
         "grow_prof": ST.RP, "lv_qual": ST.POS, "btp": "#7A4B3B", "agg": "#B03A2E",
+        "mom_vm": ST.ACC,
     }
-    miss = [k for k, *_ in STRATS if k not in ST.SCOL]
+    miss = [k for k, *_ in strats if k not in ST.SCOL]
     if miss:
         raise SystemExit("곡선 색이 없는 전략: %s" % miss)
 
     res, order = {}, []
-    for S in STRATS:
-        R = bt2(P, S[3])
+    for S in strats:
+        R = ST.vol_managed(P, _Rmom, _wmap) if S[0] == "mom_vm" else bt2(P, S[3])
         if not R:
             print("  건너뜀 %s — 후보가 얕아 상위 10을 못 채운 달이 많다" % S[1])
             continue
@@ -352,7 +373,7 @@ def main() -> int:
         for i in range(0, len(order), 2):
             fig = ST.new_page()
             for k, key in enumerate(order[i:i + 2]):
-                S = next(s for s in STRATS if s[0] == key)
+                S = next(s for s in strats if s[0] == key)
                 ST.draw_block(fig, P, ST.BLOCK_TOPS[k], S[:7], res[key])
             footer(fig, page, total)
             pdf.savefig(fig, facecolor=ST.PAPER); plt.close(fig)

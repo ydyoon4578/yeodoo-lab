@@ -1039,7 +1039,6 @@ def draw_summary(fig, P, res, order, total):
 
 
 def main() -> int:
-    global STYLES          # 아래에서 늘린 목록으로 갈아 끼운다(draw_summary 가 전역을 뒤진다)
     P = Panel()
     print("유니버스 %d · 일별 %d일(%s~%s) · 월말 %d회"
           % (len(P.uni), len(P.dates), P.dates[0], P.dates[-1], len(P.me)))
@@ -1062,41 +1061,8 @@ def main() -> int:
     if not order:
         print("낼 수 있는 전략이 없다"); return 1
 
-    # ── 모멘텀 변동성 관리 ── 종목은 같고 크기만 다르다. 나란히 놓아야 값어치가 보인다.
-    styles = list(STYLES)
-    if "mom" in res:
-        wmap = vm_weights(P)
-        if wmap:
-            R = vol_managed(P, res["mom"], wmap)
-            res["mom_vm"] = R
-            order.append("mom_vm")
-            w_now = wmap.get(P.dates[R["end"]][:7], 1.0)
-            m = metrics(R["nav"])
-            S0 = next(s for s in STYLES if s[0] == "mom")
-            styles.append((
-                # 설명이 두 줄뿐이라 '크래시 표본 1건' 경고를 참조 줄로 올린다 — 빠뜨리면
-                # 꼬리 개선이 한 달에 기댄다는 사실이 문서에서 사라진다.
-                "mom_vm", "모멘텀(변동성 관리)", "Barroso & Santa-Clara (JFE 2015) · 크래시 표본 1건",
-                S0[3], S0[4], S0[5],
-                # ⚠ 설명은 **두 줄**이 한계다. draw_block 이 desc 에 .0285 만 주고 바로 표를 얹는다 —
-                #   세 줄을 쓰면 '최근 1년 성과' 제목 위로 겹쳐 찍힌다(실제로 그랬다). 마크다운도
-                #   해석되지 않으니 ** 를 쓰지 않는다.
-                #   폰트에 없는 글자도 쓰지 않는다 — 맑은 고딕에 U+2212(−)·U+26A0(⚠)가 없어 두부로 찍힌다.
-                "모멘텀과 같은 10종목을 고르되 크기를 조절한다 - 비중 = min(1, 목표변동성 ÷ 직전 6개월 실현변동성),\n"
-                "목표는 그 시점까지의 실적으로만 잡는다(사후 아님). 이번 달 %.0f%%. 2026-07 의 -30.6%% 는 "
-                "패닉형이 아니라 강세장 되돌림이었다(진입 직전 SPY 200일선 위·VIX 16.4)."
-                % (w_now * 100)))
-            print("  %-5s %s~%s · 1년 %+7.2f%% · 샤프 %5.2f · MDD %7.2f%% · 이번달 비중 %.0f%%"
-                  % ("모멘텀VM", P.dates[R["start"]], P.dates[R["end"]],
-                     m["ret"], m["sharpe"], m["mdd"], w_now * 100))
-            SCOL["mom_vm"] = POS
-
-    # draw_summary·곡선 범례가 모듈 전역 STYLES 를 뒤진다 — 늘린 목록으로 갈아 끼운다.
-    # (안 하면 mom_vm 을 못 찾아 StopIteration 으로 죽는다)
-    STYLES = styles
-
     order.sort(key=lambda k: -metrics(res[k]["nav"])["ret"])       # 요약은 1년 수익률 순
-    detail = [S for S in styles if S[0] in res]                    # 본문은 정의 순서 그대로
+    detail = [S for S in STYLES if S[0] in res]                    # 본문은 정의 순서 그대로
     total = 1 + (len(detail) + 1) // 2
 
     with PdfPages(OUT) as pdf:
@@ -1133,6 +1099,8 @@ def main() -> int:
 #   ⚠ 이 MDD 개선은 사실상 **크래시 한 번(2026-07)에 기댄다.** 표본이 그것뿐이다.
 #     잘 확립된 문헌과 방향이 같다는 것이 이 결과의 값어치이지, 랩이 증명한 것이 아니다.
 #   📌 종목 선택은 모멘텀과 **똑같다.** 바뀌는 것은 얼마나 드느냐뿐이다.
+#   📌 전략 자체는 이 문서가 아니라 **factor_plus.pdf** 에 실린다(그쪽이 '강화' 문서다).
+#      여기에는 두 함수만 남겨 두고 factor_plus 가 import 해 쓴다.
 VM_LOOK = 6            # 비중을 정할 때 보는 직전 개월 수(원문과 같다)
 VM_WARM = 24           # 목표변동성을 잡기 위한 최소 실적. 그 전에는 비중 1.
 
