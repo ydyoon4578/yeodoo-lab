@@ -276,12 +276,29 @@ def sc_hbeta(P, i):
     return b, b
 
 
+def avg_eq(P, t, i):
+    """ROE 의 분모 — **평균 자기자본**. 분자가 TTM(4분기)이므로 기초·기말의 평균이다.
+
+    교과서 정의가 이것이고 DuPont 분해도 평균을 쓴다. 최신 분기 하나로 나누면 기간이
+    어긋나 자기자본이 변한 기업이 체계적으로 왜곡된다 — 실측(2026-07-29, 461종목):
+    자사주 매입으로 자본이 15%↑ 줄어든 종목은 벤더 ROE 대비 중위 1.21배로 부풀고,
+    증자·유보로 10%↑ 늘어난 종목은 0.85배로 눌렸다.
+    ⚠ 분기 관측이 5개 미만이면 최신값으로 물러선다(평균을 만들 기간이 없다).
+    """
+    eqs = P.asof(t, "eq", i, 5)
+    if not eqs:
+        return None
+    base = (eqs[0] + eqs[4]) / 2 if len(eqs) >= 5 else eqs[0]
+    return base if base > 0 else None
+
+
 def sc_qual(P, i):
     roe, de, ev = {}, {}, {}
     for t in P.uni:
         ni, eq, li = P.ttm(t, "ni", i), P.last(t, "eq", i), P.last(t, "liab", i)
-        if ni is not None and eq and eq > 0:
-            roe[t] = ni / eq * 100
+        aeq = avg_eq(P, t, i)
+        if ni is not None and aeq:
+            roe[t] = ni / aeq * 100                  # 분모는 평균, D/E 는 시점값 그대로
         if li is not None and eq and eq > 0:
             de[t] = -(li / eq * 100)
         eps = P.asof(t, "eps", i, 20)
@@ -353,10 +370,11 @@ def d_mom(P, i, t, sc, un):
 
 
 def d_qual(P, i, t, sc, un):
-    ni, eq = P.ttm(t, "ni", i), P.last(t, "eq", i)
-    if ni is None or not eq or eq <= 0:
+    # 점수를 만든 것과 **같은 정의**로 적는다 — 표의 숫자와 순위가 어긋나면 못 읽는다.
+    ni, aeq = P.ttm(t, "ni", i), avg_eq(P, t, i)
+    if ni is None or not aeq:
         return "—"
-    return "%.1f" % (ni / eq * 100)
+    return "%.1f" % (ni / aeq * 100)
 
 
 def d_val(P, i, t, sc, un):
