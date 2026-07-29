@@ -8,7 +8,7 @@
   후보     유니버스 518종목(S&P 500 ∪ NASDAQ 100)
   선정     그 시점 점수 상위 10종목, 동일가중
   리밸런스  월말. 사이에는 표류(매수후보유)
-  구간     최근 252거래일(1년)
+  구간     최근 1년 — 월말에서 열어 온전한 12개월
   대조군    S&P 500(PR) · NASDAQ 100(PR) — 둘 다 가격지수
   비용     0(gross)
 
@@ -422,7 +422,10 @@ def backtest(P, fn):
     구간 시작 시점의 보유는 그 이전 마지막 월말 선정이다. 그래야 창 첫날부터 진짜 포트폴리오다.
     """
     end = len(P.dates) - 1
-    start = max(0, end - WINDOW)
+    # 창 시작을 **월말**로 맞춘다. 252거래일을 그냥 빼면 월 중간(예: 07-25)에서 시작해
+    # 첫 달이 부분 월이 되고 표에 13개월이 찍힌다. 그 달은 며칠치라 다른 달과 같은 자로
+    # 읽을 수 없다 — 시작을 그 다음 월말로 밀어 온전한 12개월만 남긴다.
+    start = next((i for i in P.me if i >= max(0, end - WINDOW)), max(0, end - WINDOW))
     rebal = [i for i in P.me if start < i < end]
 
     cache = {}
@@ -540,25 +543,28 @@ def trails(nav, dates, start):
 
 
 def monthly(nav, dates, start):
-    """달마다의 수익률 %. 첫 달은 창이 열린 날부터라 부분 월이다(표에 * 로 적는다)."""
+    """달마다의 수익률 %.
+
+    창이 월말에서 열리므로 시작 달은 그날 하루뿐이라 수익률이 없다 — 그 달은 목록에서
+    뺀다. 남는 것은 전부 온전한 달이다(마지막 달만 오늘까지의 진행 중인 달이다).
+    """
     lastk = {}
     for k in range(len(nav)):
         lastk[dates[start + k][:7]] = k
-    ms = sorted(lastk)
     out, prev = {}, 0
-    for m in ms:
+    for m in sorted(lastk):
         k = lastk[m]
         out[m] = (nav[k] / nav[prev] - 1) * 100 if k > prev else None
         prev = k
+    ms = [m for m in sorted(out) if out[m] is not None]
     return ms, out
 
 
 def win_rate(nav, bench, dates, start):
     """전략이 지수를 이긴 달 수와 비교한 달 수 → (이긴 달, 전체 달).
 
-    같은 창·같은 월말 경계로 자른 월 수익률끼리 비교한다. 첫 달은 부분 월이지만
-    전략과 지수가 같은 날부터 시작하므로 그대로 센다(둘 다 짧다).
-    무승부(정확히 동률)는 이긴 것으로 세지 않는다.
+    같은 창·같은 월말 경계로 자른 월 수익률끼리 비교한다. 창이 월말에서 열리므로
+    전부 온전한 달이다. 무승부(정확히 동률)는 이긴 것으로 세지 않는다.
     """
     if bench is None:
         return None, 0
@@ -900,8 +906,6 @@ def draw_summary(fig, P, res, order, total):
 
     yh = ytab - .034
     tx(fig, X0, yh, "월별 수익률 %", fontsize=11.5, weight="bold")
-    tx(fig, X1, yh + .001, "* 는 구간이 열린 %s 부터의 부분 월" % P.dates[R0["start"]],
-       fontsize=6.6, color=MUTED, ha="right")
     hm_h = .0145 * len(names) + .016
     lw_ = .085                                       # 행 이름 칸
     ax = fig.add_axes([X0 + lw_, yh - .014 - hm_h, X1 - X0 - lw_, hm_h])
@@ -912,7 +916,7 @@ def draw_summary(fig, P, res, order, total):
     lim = float(np.nanpercentile(np.abs(grid), 92)) or 1.0
     ax.imshow(np.ma.masked_invalid(grid), cmap=cmap, vmin=-lim, vmax=lim, aspect="auto")
     ax.set_xticks(range(len(ms)))
-    ax.set_xticklabels([("%s*" % m[2:] if j == 0 else m[2:]) for j, m in enumerate(ms)])
+    ax.set_xticklabels([m[2:] for m in ms])
     ax.set_yticks(range(len(names)))
     ax.set_yticklabels(names, fontsize=7)
     ax.tick_params(labelsize=6.4, colors=MUTED, length=0)
