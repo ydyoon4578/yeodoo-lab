@@ -1271,9 +1271,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
   // 가치는 IVE(S&P 500 Value)→spval 이다. 전에는 VLUE(MSCI Enhanced Value)→val 이었는데
   // 옆줄 성장이 S&P 계열이라 계보가 어긋나 있었다(사용자 결정 2026-07-28).
-  //   VLUE 도 같은 spval 로 받아 둔다 — market_board.json 이 아직 VLUE 행을 들고 있어서다.
-  //   그 매핑이 없으면 가치 행만 구성종목이 안 열린다. 자산 패널이 IVE 로 갱신되면 지워도 된다.
-  var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',VLUE:'spval',USMV:'lowvol',RPG:'grow',
+  var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',USMV:'lowvol',RPG:'grow',
               SPHB:'hbeta',SIZE:'size'};
   var STOP=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
