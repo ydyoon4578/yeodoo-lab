@@ -94,6 +94,31 @@ def zfit(X):
     return mu, sd
 
 
+def expand2(row):
+    """원 특징 + 제곱 + 모든 쌍곱(2차 다항 확장). 7개 → 35개.
+
+    왜 두나. Gu·Kelly·Xiu(RFS 2020)가 트리·신경망이 선형을 이겼다고 보고하면서, 그 이득이
+    **비선형 상호작용**에서 나온다고 못 박았다. 이 랩에는 선형(릿지·로지스틱)뿐이라 그 주장이
+    검정된 적이 없다.
+
+    트리를 직접 구현하는 대신 특징을 2차로 펴서 같은 릿지에 넣는다. 이유가 둘이다 —
+      ① 상호작용이 값을 하는지만 묻는 것이면 이것으로 충분하다. 목표·창·표준화·솔버·벌점이
+         전부 그대로라, 갈리는 것이 **오직 특징 사상**뿐이다. 트리를 넣으면 모델·분할규칙·
+         깊이가 한꺼번에 바뀌어 무엇 때문에 갈렸는지 말할 수 없다.
+      ② 워크플로가 pandas·numpy·yfinance 만 깐다(sklearn 없음). 트리를 손으로 짜면
+         깊이·분할수 같은 새 손잡이가 생기고, 사전등록 규약상 그걸 탐색할 수 없어
+         고른 값이 곧 임의값이 된다.
+    벌점은 L2=1.0 그대로다. 열이 5배가 되므로 같은 벌점이면 계수당 제약이 더 세지는데,
+    그것을 보정하려고 값을 만지면 그 순간 탐색이 된다 — 고정한다.
+    """
+    p = row.shape[1]
+    cols = [row, row ** 2]
+    for a in range(p):
+        for b in range(a + 1, p):
+            cols.append((row[:, a] * row[:, b])[:, None])
+    return np.hstack(cols)
+
+
 # ── ① 지수 타이밍 ────────────────────────────────────────────────────────
 FEATS_MKT = [
     "200일선 이격도", "50일선 이격도", "20일 실현변동성", "12-1 모멘텀",
@@ -228,11 +253,14 @@ CONF = 0.55         # '고신뢰'의 정의: 초과수익이 양(+)일 예측확
 def stock_selection(RF, TOPN=10, mode="value"):
     """mode='value' 릿지로 초과수익 **크기**를 예측(원래 것) ·
        mode='dir'   로지스틱으로 초과수익 **방향**을 예측해 확률 상위 TOPN ·
-       mode='conf'  같은 확률에서 CONF 이상만 산다(없으면 현금).
+       mode='conf'  같은 확률에서 CONF 이상만 산다(없으면 현금) ·
+       mode='inter' 같은 릿지·같은 목표인데 특징만 2차로 편다(상호작용 검정).
 
-    셋은 특징 7개·워크포워드·표준화·재학습 주기가 **완전히 같다**. 다른 것은 목표(y)와
-    모델뿐이다. 그래야 '방향이 크기보다 낫다'는 주장이 이 데이터에서 참인지 갈린다 —
-    조건을 하나라도 더 바꾸면 무엇 때문에 갈렸는지 말할 수 없다."""
+    넷은 특징 원본 7개·워크포워드·표준화·재학습 주기가 **완전히 같다**. 다른 것은 목표(y)와
+    모델, 그리고 inter 판에서만 특징 사상이다. 그래야 '방향이 크기보다 낫다'·'비선형
+    상호작용이 값을 한다'가 이 데이터에서 각각 갈린다 — 조건을 하나라도 더 바꾸면 무엇
+    때문에 갈렸는지 말할 수 없다."""
+    EXP = expand2 if mode == "inter" else (lambda a: a)
     st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     NMX = {x["t"]: (x.get("name") or x["t"]) for x in st_["stocks"]}
     DTS = st_["pxd_dates"]
@@ -330,12 +358,14 @@ def stock_selection(RF, TOPN=10, mode="value"):
                 ok = np.isfinite(row).all(axis=1) & np.isfinite(yk)
                 if ok.sum() < 50:
                     continue
-                Xs.append(row[ok]); ys.append(yk[ok])
+                # 결측 검사는 **원 특징**에서 한다. 확장한 뒤에 하면 곱에서 생긴 NaN 까지
+                # 세게 되어 같은 종목이 이유 없이 더 걸러진다.
+                Xs.append(EXP(row[ok])); ys.append(yk[ok])
             built_to = max(built_to, hi)
             if Xs:
                 Xtr = np.vstack(Xs); ytr = np.concatenate(ys)
                 mu, sd = zfit(Xtr)
-                if mode == "value":
+                if mode in ("value", "inter"):
                     beta_w = ridge((Xtr - mu) / sd, ytr, L2)
                 else:
                     # 목표를 '초과수익이 양이었나'로 바꾼다. 특징·창·표준화는 그대로다.
@@ -344,7 +374,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
                 row = np.column_stack([f[i - 1] for f in F])
                 ok = np.isfinite(row).all(axis=1)
                 if ok.sum() >= TOPN:
-                    z = (row[ok] - mu) / sd
+                    z = (EXP(row[ok]) - mu) / sd
                     sc = beta_w[0] + z @ beta_w[1:]
                     names_ok = np.array(tick)[ok]
                     if mode == "conf":
@@ -397,6 +427,17 @@ def stock_selection(RF, TOPN=10, mode="value"):
                  "이 규칙의 값은 살 때가 아니라 안 살 때 나오므로, 방향 예측판과의 차이가 곧 "
                  "'참는 것'의 값이다.",
                  "문턱 %d%%는 사전등록 값이고 결과를 보고 고치지 않았다." % round(CONF * 100)),
+        "inter": ("ml-xsec-inter", "머신러닝 상호작용 종목선택 (릿지·2차 확장)",
+                  "크기 예측판과 같은 목표·같은 릿지인데, 특징 7개를 제곱과 쌍곱까지 펴서 "
+                  "35개로 넣는다. 상위 %d종목 동일가중, 나머지 규약은 완전히 같다." % TOPN,
+                  "Gu·Kelly·Xiu(Review of Financial Studies 2020)가 트리·신경망이 선형을 "
+                  "이겼다고 보고하면서 그 이득이 비선형 상호작용에서 나온다고 못 박았다. "
+                  "이 랩에는 선형뿐이라 그 주장이 검정된 적이 없다. 모델을 트리로 바꾸면 "
+                  "분할규칙·깊이가 한꺼번에 달라져 무엇 때문에 갈렸는지 말할 수 없으므로, "
+                  "특징 사상 하나만 바꿔 상호작용의 값을 따로 잰다.",
+                  "목표는 크기 예측판과 같은 초과수익의 크기다. 벌점 L2=1.0 도 그대로 두었다 — "
+                  "열이 5배라 계수당 제약은 더 세지지만, 그것을 보정하려 값을 만지면 그 순간 "
+                  "탐색이 되어 사전등록이 무의미해진다."),
     }
     sid, nm, rule, why, tgt = SPEC[mode]
     if mode == "conf":
@@ -611,6 +652,9 @@ def main() -> int:
                       # '방향이 크기보다 낫다'·'참는 것이 값을 한다'가 이 데이터에서 갈린다.
                       (lambda: stock_selection(RF, mode="dir"), "횡단면 종목선택(방향)"),
                       (lambda: stock_selection(RF, mode="conf"), "횡단면 종목선택(고신뢰)"),
+                      # 같은 목표·같은 릿지에서 특징 사상만 2차로 편 판. 크기 예측판과 나란히
+                      # 둬야 '비선형 상호작용이 값을 하는가'가 갈린다.
+                      (lambda: stock_selection(RF, mode="inter"), "횡단면 종목선택(상호작용)"),
                       (lambda: guru_clone(RF), "13F 컨빅션 복제")):
         try:
             r = fn()
