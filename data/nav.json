@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "25b161f55305a005",
+ "generated_from": "67f903756f70650e",
  "categories": [
   {
    "name": "시장",
@@ -214,6 +214,16 @@
      "status": "existing",
      "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
      "verdict": "pass",
+     "src": "model",
+     "effort": "S",
+     "live": true
+    },
+    {
+     "name": "스타일 전략",
+     "file": "style.html",
+     "status": "existing",
+     "desc": "여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년",
+     "verdict": "unverified",
      "src": "model",
      "effort": "S",
      "live": true

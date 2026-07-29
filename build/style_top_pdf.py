@@ -1082,7 +1082,97 @@ def main() -> int:
         d = pdf.infodict()
         d["Title"] = "스타일 상위 10종목 전략(최근 1년)"
     print("→ %s · %d쪽 · %dKB" % (OUT, total, os.path.getsize(OUT) // 1024))
+
+    # ── 같은 내용을 화면용 JSON 으로도 낸다 ────────────────────────────────
+    # PDF 는 수익률 순으로 정렬해 **쪽 번호가 매달 바뀌므로** 사이트에서 #page=N 으로
+    # 걸 수 없다. style.html 이 이 파일 하나를 읽어 스타일 한 종을 그린다.
+    dump_json(P, res, detail)
     return 0
+
+
+def _thin(a, k=140):
+    """곡선을 k점으로 줄인다 — 화면 폭이 그보다 촘촘할 이유가 없다(strategy_index 와 같은 규약)."""
+    a = [None if (x != x) else round(float(x), 5) for x in a]
+    if len(a) <= k:
+        return a
+    step = (len(a) - 1) / (k - 1)
+    out = [a[min(len(a) - 1, round(i * step))] for i in range(k)]
+    out[-1] = a[-1]
+    return out
+
+
+def dump_json(P, res, detail):
+    R0 = res[detail[0][0]]
+    gn = bench_nav(P, P.gspc, R0["start"], R0["end"])
+    nn = bench_nav(P, P.ndx, R0["start"], R0["end"])
+    ms, _ = monthly(res[detail[0][0]]["nav"], P.dates, R0["start"])
+    doc = {
+        "as_of": P.dates[R0["end"]], "start": P.dates[R0["start"]],
+        "note": ("style_strategies.pdf 와 같은 계산이다 — 규칙을 과거로 되돌려 매월 다시 골라 "
+                 "최근 1년을 잰 것이다. 상위 10종목 동일가중 · 월말 리밸런스 · 비용 0 · "
+                 "대조군은 S&P 500(PR)·NASDAQ 100(PR)."),
+        "caveat": ("⚠ 홈 화면의 스타일 구성종목 칩과 명단이 다를 수 있다. 그쪽은 벤더 비율을 "
+                   "그대로 쓰고 여기는 백테스트라 SEC 재무를 45일 지연으로 쓴다 — "
+                   "모멘텀·저변동·고베타는 같고, 퀄리티·가치·성장은 6~7/10 만 겹친다."),
+        "months": ms,
+        "bench": {},
+        "styles": [],
+    }
+    for lab, a in (("spx", gn), ("ndx", nn)):
+        m = metrics(a)
+        _ms, mo = monthly(a, P.dates, R0["start"])
+        doc["bench"][lab] = {
+            "label": "S&P 500 PR" if lab == "spx" else "NASDAQ 100 PR",
+            "metrics": {k: (None if v is None else round(v, 2)) for k, v in m.items()},
+            "trails": {k: (None if v is None else round(v, 1))
+                       for k, v in trails(a, P.dates, R0["start"]).items()},
+            "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
+            "nav": _thin([x * 100 for x in a]),
+        }
+    for S in detail:
+        key, label, ref, _fn, mlab, mfmt, desc = S
+        R = res[key]
+        nav = R["nav"]
+        _ms, mo = monthly(nav, P.dates, R["start"])
+        wg, nw = win_rate(nav, gn, P.dates, R["start"])
+        wn, _ = win_rate(nav, nn, P.dates, R["start"])
+
+        def side(items, at_i, other):
+            out = []
+            for k, (t, sc, un) in enumerate(items):
+                u = P.uni.get(t) or {}
+                out.append({"r": k + 1, "t": t, "n": u.get("name") or "",
+                            "s": SECS.get(u.get("sector") or "", ""), "idx": idx_of(P, t),
+                            "new": t not in other, "mtd": _mtd_of(P, R, t),
+                            "v": mfmt(P, at_i, t, sc, un)})
+            return out
+
+        ps = {t for t, _s, _u in R["prev"]}
+        ns = {t for t, _s, _u in R["today"]}
+        doc["styles"].append({
+            "key": key, "label": label, "ref": ref, "desc": desc, "mlab": mlab,
+            "n_rebal": R["n_rebal"],
+            "metrics": {k: (None if v is None else round(v, 2)) for k, v in metrics(nav).items()},
+            "trails": {k: (None if v is None else round(v, 1))
+                       for k, v in trails(nav, P.dates, R["start"]).items()},
+            "win": {"spx": [wg, nw], "ndx": [wn, nw]},
+            "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
+            "nav": _thin([x * 100 for x in nav]),
+            "prev": {"d": P.dates[R["prev_i"]], "rows": side(R["prev"], R["prev_i"], ns)},
+            "today": {"d": P.dates[R["today_i"]], "rows": side(R["today"], R["today_i"], ps)},
+        })
+    p = os.path.join(DATA, "style_perf.json")
+    json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("→ %s (%dKB · 스타일 %d종)" % (p, os.path.getsize(p) // 1024, len(doc["styles"])))
+
+
+def _mtd_of(P, R, t):
+    """직전 월말 대비 오늘까지. draw_block 의 mtd 와 같은 정의다."""
+    mi = max([j for j in P.me if j < R["end"]] or [R["start"]])
+    a = P.px.get(t)
+    if a is None or np.isnan(a[mi]) or a[mi] <= 0 or np.isnan(a[R["end"]]):
+        return None
+    return round((a[R["end"]] / a[mi] - 1) * 100, 1)
 
 
 if __name__ == "__main__":
