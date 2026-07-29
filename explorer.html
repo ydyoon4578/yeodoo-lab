@@ -1076,6 +1076,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
           // 등급만 보면 전부 '구별 불가'로 보인다 — 두 축을 같이 놓아야 읽힌다.
+          // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
+          // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
+          if(x.metrics_net&&x.cost_drag!=null){
+            var mn=x.metrics_net, bn=x.bench_net||{};
+            if(x.cost_sensitive||x.cost_kill)
+              d.vt='<b>비용 민감 (연 −'+x.cost_drag+'%p)</b> — '+d.vt;
+            d.vt+=' <em>비용 후(왕복 '+x.cost_bp+'bp) — CAGR '+
+                  (x.metrics&&x.metrics.cagr!=null?x.metrics.cagr:'—')+'% → '+
+                  (mn.cagr!=null?mn.cagr:'—')+'% · 샤프 '+
+                  (x.metrics&&x.metrics.sharpe!=null?x.metrics.sharpe:'—')+' → '+
+                  (mn.sharpe!=null?mn.sharpe:'—')+
+                  (bn.sharpe!=null?'(대조군 '+bn.sharpe+')':'')+
+                  ' · 전량교체 한 번당 왕복비용을 그날 수익에서 뗀다. 판정은 기존대로 '+
+                  '무비용 기준이고 이 줄은 참고다.</em>';
+          }
           // 목록은 이 문구를 잘라서 보여준다 — 판정은 **앞**에 두어야 살아남고,
           // 근거 수치는 뒤에 붙여 펼쳤을 때 읽히게 한다.
           if(x.risk_verdict&&x.risk&&x.risk_verdict!=='판정 불가'){

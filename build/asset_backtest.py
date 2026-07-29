@@ -41,6 +41,17 @@ import numpy as np  # noqa: E402  위험 축 부트스트랩 전용 — 나머�
 # 시장을 비교하는 셈이 되어 뜻이 없다 — 국면을 공통으로 묶어야 '같은 장에서 누가 덜 깨졌나'가 된다.
 BOOT_N, BOOT_BLOCK, BOOT_SEED = 4000, 63, 20260729
 
+# ── 거래비용 ────────────────────────────────────────────────────────────
+# 왜 넣나. 이 표는 지금까지 전부 무비용(gross)이었다. 그런데 회전이 0인 상시보유와 연 50회
+# 갈아타는 달력 규칙을 같은 줄에 놓고 견주면 비교 자체가 기울어 있다 — 후자만 실제로는
+# 없는 돈을 벌고 있는 셈이다. 전량교체 한 번당 왕복 5bp 를 떼고 다시 잰다.
+#   5bp 근거 — 이 파일의 매매 대상은 전부 대형 ETF(SPY·SHY·TLT·GLD…)다. 호가 스프레드가
+#   1~2bp 수준이고 여기에 체결 충격을 얹은 값이다. 개별주 10종목 포트라면 더 물어야 하므로
+#   이 수치를 종목 전략에 그대로 옮기면 안 된다.
+#   ⚠ 무비용 숫자를 없애지 않는다. 판정(verdict)은 기존대로 gross 로 두고 비용 후는 **따로**
+#     싣는다 — 비용 가정 하나로 과거 판정이 통째로 흔들리면 그것대로 못 믿을 표가 된다.
+COST_RT = 0.0005
+
 
 def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED):
     """짝지은 순환 블록 부트스트랩 → 낙폭·Calmar 개선폭과 그 p값.
@@ -188,26 +199,39 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         return set(range(start, n))
     ends = _ends(cadence)
     bends = _ends(bench_cadence or cadence)
-    def walk(fn, ends):
+    def walk(fn, ends, cost=0.0):
+        """cost 는 **전량교체 한 번당** 떼는 비율(왕복). 그날 갈아탄 만큼만 비례해 뗀다.
+
+        연간 합계로 빼지 않고 매매가 일어난 날의 수익에서 바로 빼는 이유는, 그래야 복리와
+        낙폭에도 비용이 반영되기 때문이다. 연말에 한 번 빼면 MDD 는 무비용 그대로 남는다.
+        """
         hold, nav, rets, turn = {}, [100.0], [], 0.0
         for i in range(start + 1, n):
+            tc = 0.0
             if (i - 1) in ends or not hold:
                 w = fn(i - 1) or {}
                 tot = sum(w.values())
                 if tot > 0:
                     w = {k: v / tot for k, v in w.items() if v > 0}
-                    turn += sum(abs(w.get(k, 0) - hold.get(k, 0)) for k in set(w) | set(hold))
+                    d = sum(abs(w.get(k, 0) - hold.get(k, 0)) for k in set(w) | set(hold))
+                    turn += d
+                    tc = d / 2 * cost        # d=2 가 전량교체 한 번 → 왕복비용 한 번
                     hold = w
             r = 0.0
             for t, wt in hold.items():
                 s = ser(t)
                 if s and s[i] is not None and s[i - 1]:
                     r += wt * (s[i] / s[i - 1] - 1)
+            r -= tc
             rets.append(r)
             nav.append(nav[-1] * (1 + r))
         return nav, rets, turn
     nav, rets, turn = walk(wfn, ends)
     bnav, brets, _ = walk(bench_w, bends)
+    # 비용 후 — 같은 규칙을 왕복 COST_RT 로 다시 걸어 본다. 대조군도 같은 비용을 문다
+    # (상시보유는 회전이 0에 가까워 거의 안 물지만, 규칙을 한쪽에만 적용하면 그것 자체가 편향이다).
+    nav_c, rets_c, _ = walk(wfn, ends, COST_RT)
+    bnav_c, brets_c, _ = walk(bench_w, bends, COST_RT)
 
     # 대조군이 무엇인지 화면에 적으려면 이름이 있어야 한다. 35개 호출부에 인자를 하나씩
     # 더 붙이는 대신 가중치에서 뽑는다 — 대조군은 결국 '무엇을 얼마나 들고 있나'가 전부다.
@@ -251,6 +275,7 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         hold_now = None
     dd = DTS[start:]
     ms, mb = ann_stats(nav, dd, RF), ann_stats(bnav, dd, RF)
+    msc, mbc = ann_stats(nav_c, dd, RF), ann_stats(bnav_c, dd, RF)   # 비용 후
     yrs = max(1e-9, (n - start) / 252)
     step = max(1, len(nav) // 220)
     # ⚠ 대조군이 현금성(변동성 ~0)이면 샤프 차이가 허수가 된다 — 분모가 0에 가까워
@@ -265,6 +290,17 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
             "t": tstat(rets, brets), "risk": risk_bootstrap(rets, brets),
             "turnover": round(turn / 2 / yrs, 1),
+            # 비용 후 — gross 를 대체하지 않고 나란히 싣는다.
+            #   cost_kill 은 '무비용에서는 대조군보다 샤프가 높았는데 비용을 물리니 뒤집혔다'는
+            #   뜻이다. 회전이 큰 규칙에서만 켜지고, 켜지면 그 줄의 우위는 비용이 먹는다.
+            "cost_bp": round(COST_RT * 10000, 1),
+            "metrics_net": msc, "bench_net": mbc,
+            "cost_drag": round((ms.get("cagr") or 0) - (msc.get("cagr") or 0), 2),
+            "cost_kill": bool(((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0)) > 0
+                              and ((msc.get("sharpe") or 0) - (mbc.get("sharpe") or 0)) <= 0),
+            # 우위가 없던 줄은 cost_kill 이 안 켜진다(뒤집힐 우위가 없으니까). 그래서 '비용에
+            # 민감한가'를 따로 표시한다 — 연 0.5%p 넘게 깎이면 무비용 숫자를 그대로 읽으면 안 된다.
+            "cost_sensitive": bool((ms.get("cagr") or 0) - (msc.get("cagr") or 0) >= 0.5),
             "nav": [round(x, 2) for x in nav[::step]],
             "bnav": [round(x, 2) for x in bnav[::step]]}
 
@@ -1327,8 +1363,9 @@ def build():
               "시장에 있으므로, 그 기간이 정말 특별한지가 질문이다.",
               "실측 — 거래일의 23.8%만 시장에 있으면서 연 4.68%를 냈다. 노출 시간만으로 환산하면 "
               "연 21.2%로 상시보유 11.0%의 두 배 가까이다. 월말 닷새가 나머지보다 확실히 "
-              "생산적이라는 뜻이다. 다만 연 24회 왕복이라 이 숫자는 무비용이다 — 왕복 5bp만 "
-              "붙어도 연 2.4%p가 사라져 실제 CAGR 4.68%의 절반이 날아간다.")
+              "생산적이라는 뜻이다. 다만 연 24회 왕복이다 — 왕복 5bp를 물리면 연 1.25%p가 "
+              "깎여 CAGR 4.68% → 3.43%, 샤프는 0.14 → 0.01 로 사실상 0이 된다. "
+              "노출당 환산이 커 보이는 것과 실제로 손에 남는 것은 다른 얘기다.")
 
     # 16) 옵션 만기 주간 — 세 번째 금요일이 낀 주
     def _opex_flags():
@@ -1352,7 +1389,8 @@ def build():
               "안 되면 그 이야기가 이미 가격에 들어갔다는 뜻이다.",
               "실측 — 노출 23.4%에 연 2.98%. 노출당 환산 13.4%로 상시보유 11.0%보다 조금 나은 "
               "정도다. 월말 효과(노출당 21.2%)와 견주면 만기 주간 쪽은 약하다. 회전은 똑같이 "
-              "연 24회라 비용을 넣으면 남는 것이 없다.")
+              "연 24회이고, 왕복 5bp를 물리면 연 1.23%p가 깎여 CAGR 2.98% → 1.75%, "
+              "샤프는 이미 음수(-0.03)에서 -0.16 으로 더 내려간다. 남는 것이 없다.")
 
     # 17) FOMC 사이클 짝수 주 — Cieslak·Morse·Vissing-Jorgensen (Journal of Finance 2019)
     #   출처 연준 공개 달력(발표일 기준). 2021~ 은 fomccalendars.htm, 2006~2020 은 연도별
@@ -1428,7 +1466,10 @@ def build():
               "노출 시간으로 환산하면 18.3%로 상시보유 11.0%를 크게 웃돈다. 짝수 주가 홀수 주보다 "
               "확실히 생산적이라는 원 보고가 20년 구간에서 재현된다. 낙폭도 -22.7%로 절반 아래다"
               "(상시보유 -55.2%). 처음 넣을 때 쓰던 2021년 이후 구간에서도 노출당 20.2%로 "
-              "같은 방향이었다 — 최근에만 나는 현상이 아니다. 회전이 연 50회라 무비용 숫자다.")
+              "같은 방향이었다 — 최근에만 나는 현상이 아니다. "
+              "다만 회전이 연 50회로 이 파일에서 가장 크다. 왕복 5bp를 물리면 연 2.69%p가 "
+              "깎여 CAGR 9.28% → 6.59%, 샤프는 0.427 → 0.256 으로 상시보유(0.447)에 확실히 "
+              "진다. 사이클 효과가 실재하는 것과 그것으로 돈을 버는 것은 다른 문제다.")
 
 
 def main() -> int:
