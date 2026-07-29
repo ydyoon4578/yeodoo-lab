@@ -2,7 +2,7 @@ name: Refresh market sentiment (VIX/FRED)
 
 on:
   schedule:
-    - cron: '5 0 * * 1-6'    # 매일(월~토) 09:05 KST (UTC 자정 넘어 요일 0-5→1-6)
+    - cron: '20 22 * * 0-5'    # 매일(월~토) 07:20 KST (UTC 자정 前이라 요일은 0-5)
   workflow_dispatch:
 
 permissions:

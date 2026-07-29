@@ -16,7 +16,7 @@ name: Refresh forward estimates
 
 on:
   schedule:
-    - cron: '10 0 * * 1-6'    # 매일(월~토) 09:10 KST — 종목 갱신 뒤 (UTC 자정 넘어 요일 0-5→1-6)
+    - cron: '30 22 * * 5'    # 매주 토 07:30 KST — 주간으로 내림(사용자 결정 2026-07-29)
   workflow_dispatch:
 
 permissions:

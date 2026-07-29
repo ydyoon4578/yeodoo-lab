@@ -2,7 +2,7 @@ name: Refresh stock signals (yfinance)
 
 on:
   schedule:
-    - cron: '45 23 * * 0-5'    # 매일(월~토) 08:45 KST — 미국장 마감 후
+    - cron: '50 21 * * 0-5'    # 매일(월~토) 06:50 KST — 미국장 마감 후(겨울 EST 마감 +35분)
   workflow_dispatch:
 
 permissions:

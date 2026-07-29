@@ -13,7 +13,7 @@ name: Refresh asset panel & archive re-check
 
 on:
   schedule:
-    - cron: '25 1 * * 6'    # 매주 토 10:25 KST
+    - cron: '40 23 * * 5'    # 매주 토 08:40 KST
   workflow_dispatch:
 
 permissions:

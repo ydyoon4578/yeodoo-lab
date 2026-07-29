@@ -1329,9 +1329,21 @@ def main():
     # 매번 SystemExit → stocks.json 이 안 써지고 다음날도 같은 이전본과 비교해 **자기영속**한다
     # (KB_RotationDaily exit 8 과 같은 유형). 길이가 달라진 실행에서는 비교를 건너뛰고 경고만 남긴다.
     try:
-        _old_len = len(json.load(open(OUT, encoding="utf-8")).get("pxd_dates") or [])
+        _prev = json.load(open(OUT, encoding="utf-8"))
+        _old_len = len(_prev.get("pxd_dates") or [])
     except Exception:
-        _old_len = 0
+        _prev, _old_len = {}, 0
+
+    # ── 기준일 역행 중단 ── 이르게 돌아 당일 봉이 잘리면 as_of 가 하루 뒤로 간다.
+    #   그런데 워크플로는 커밋(ci_push)이 **먼저**고 신선도 검사(check_freshness)가 **나중**이라,
+    #   가드가 없으면 낡은 스냅샷이 stocks.json·data/sd/*·home_reco.json·asof.json 까지 배포된
+    #   **뒤에야** 잡이 빨개진다. 실제로 그 사고가 있었고(2026-07-21 미 동부 15:10 실행) DB 쪽에
+    #   철회분을 지우는 전용 루틴(db_load.purge_retracted)까지 남아 있다.
+    #   여기서 멈추면 최악이 '배포 후 롤백'이 아니라 '아무것도 안 바뀜 + 빨간불'이 된다.
+    #   refresh_sentiment.py 가 이미 같은 가드를 쓰고 있다(:440) — 규약을 맞춘다.
+    if _prev.get("as_of") and _prev["as_of"] > as_of:
+        raise SystemExit(f"기준일 역행 {_prev['as_of']}→{as_of} — 미 동부 마감 전 실행 의심. "
+                         f"갱신 중단, 이전본 유지")
     _len_changed = bool(_old_len) and _old_len != len(pxd_dates)
     if _len_changed:
         print(f"⚠ 패널 길이 변경 {_old_len}→{len(pxd_dates)} — 타점 급감 게이트는 이번 실행만 건너뛴다"
