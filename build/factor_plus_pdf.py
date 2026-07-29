@@ -70,11 +70,13 @@ def raw_bp(P, i):
 
 
 def raw_roe(P, i):
+    """TTM 순이익 ÷ **평균 자기자본**(교과서 정의). ST.avg_eq 규약을 따른다 —
+    분자가 4분기이므로 분모도 그 기간의 기초·기말 평균이라야 기간이 맞는다."""
     out = {}
     for t in P.uni:
-        ni, eq = P.ttm(t, "ni", i), P.last(t, "eq", i)
-        if ni is not None and eq and eq > 0:
-            out[t] = ni / eq * 100
+        ni, aeq = P.ttm(t, "ni", i), ST.avg_eq(P, t, i)
+        if ni is not None and aeq:
+            out[t] = ni / aeq * 100
     return out
 
 
