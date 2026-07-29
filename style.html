@@ -266,6 +266,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:END -->
 
 <style>
+  /* 이 쪽은 보유 표 두 벌을 나란히 놓는다 — sources 의 읽기폭(980)보다 기본폭이 맞다. */
+  .wrap{max-width:var(--w-base)}
   .pghead h1{font-size:1.6rem;margin:0 0 .2rem}
   .pghead .sub{color:var(--muted);margin:0 0 1rem;font-size:.92rem}
   .tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
@@ -459,6 +461,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAV:END -->
 
 <main id="main">
+<div class="wrap">
   <header class="pghead">
     <h1>스타일 전략</h1>
     <p class="sub" id="sub">최근 1년 · 상위 10종목 동일가중 · 월말 리밸런스</p>
@@ -472,6 +475,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <p class="note warn" id="caveat"></p>
   <p class="note">같은 계산을 판형에 맞춰 담은 문서:
     <a href="data/style_strategies.pdf">style_strategies.pdf</a></p>
+</div>
 </main>
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html#view=runs">전략 랩</a><br>
@@ -635,15 +639,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       row(D.bench.ndx.label,D.bench.ndx.monthly)+'</tbody></table>';
   }
 
-  function port(side,title,mlab){
+  // ⚠ r.new 는 '반대편 명단에 없다'는 뜻일 뿐이라 양쪽에서 의미가 반대다.
+  //   전월말 쪽 = 금일 기준에서 빠진 자리(편출) · 금일 쪽 = 새로 들어온 자리(편입).
+  //   PDF(draw_block)는 mark_new 로 갈라 색까지 반대로 칠한다 — 화면도 같아야 한다.
+  function port(side,title,mlab,isIn){
     var h='<div><h3 style="font-size:.98rem;margin:.2rem 0 .4rem">'+esc(title)+
       ' <span class="mut" style="font-weight:400">'+esc(side.d)+'</span></h3>'+
       '<table class="st"><thead><tr><th>#</th><th>티커</th><th>종목명</th><th>지수</th>'+
       '<th>MTD %</th><th>'+esc(mlab)+'</th></tr></thead><tbody>';
     side.rows.forEach(function(r){
       h+='<tr><td class="mut">'+r.r+'</td>'+
-        '<td><a href="stocks.html#t='+encodeURIComponent(r.t)+'" class="'+(r.new?'newin':'')+'">'+
-        (r.new?'＋':'')+esc(r.t)+'</a></td>'+
+        '<td><a href="stocks.html#t='+encodeURIComponent(r.t)+'" class="'+
+          (r.new?(isIn?'newin':'gone'):'')+'">'+
+        (r.new?(isIn?'＋':'−'):'')+esc(r.t)+'</a></td>'+
         '<td class="mut">'+esc((r.n||'').slice(0,22))+'</td>'+
         '<td class="mut">'+esc(r.idx)+'</td>'+
         '<td class="'+cls(r.mtd)+'">'+num(r.mtd,1)+'</td>'+
@@ -669,7 +677,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div><h3 style="font-size:.98rem;margin:.2rem 0 .4rem">기간별 수익률 %</h3>'+trail(s)+'</div>'+
         '<div style="overflow-x:auto"><h3 style="font-size:.98rem;margin:.2rem 0 .4rem">월별 수익률 %</h3>'+
           months(s)+'</div>'+
-        '<div class="two">'+port(s.prev,'전월말 기준',s.mlab)+port(s.today,'금일 기준',s.mlab)+'</div>'+
+        '<div class="two">'+port(s.prev,'전월말 기준',s.mlab,false)+
+          port(s.today,'금일 기준',s.mlab,true)+'</div>'+
+        '<p class="note">＋ 는 금일 기준에서 새로 들어온 자리, − 는 전월말에 있다가 빠진 자리다.</p>'+
       '</div>';
     document.title='여두 · '+s.label+' 전략';
   }
