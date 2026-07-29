@@ -1039,6 +1039,7 @@ def draw_summary(fig, P, res, order, total):
 
 
 def main() -> int:
+    global STYLES          # 아래에서 늘린 목록으로 갈아 끼운다(draw_summary 가 전역을 뒤진다)
     P = Panel()
     print("유니버스 %d · 일별 %d일(%s~%s) · 월말 %d회"
           % (len(P.uni), len(P.dates), P.dates[0], P.dates[-1], len(P.me)))
@@ -1061,8 +1062,35 @@ def main() -> int:
     if not order:
         print("낼 수 있는 전략이 없다"); return 1
 
+    # ── 모멘텀 변동성 관리 ── 종목은 같고 크기만 다르다. 나란히 놓아야 값어치가 보인다.
+    styles = list(STYLES)
+    if "mom" in res:
+        wmap = vm_weights(P)
+        if wmap:
+            R = vol_managed(P, res["mom"], wmap)
+            res["mom_vm"] = R
+            order.append("mom_vm")
+            w_now = wmap.get(P.dates[R["end"]][:7], 1.0)
+            m = metrics(R["nav"])
+            S0 = next(s for s in STYLES if s[0] == "mom")
+            styles.append((
+                "mom_vm", "모멘텀(변동성 관리)", "Barroso & Santa-Clara (JFE 2015)",
+                S0[3], S0[4], S0[5],
+                "모멘텀과 **똑같은 10종목**을 고르되 크기를 조절한다 — 비중 = min(1, 목표변동성 ÷ 직전 6개월 실현변동성).\n"
+                "모멘텀의 위험은 자기 실현분산으로 예측된다는 연구를 그대로 옮긴 것이다. 목표는 그 시점까지의 실적으로만 잡는다(사후 아님).\n"
+                "이번 달 비중 %.0f%%. ⚠ 랩 표본에서 크래시는 2026-07 한 번뿐이라 꼬리 개선의 근거가 그 한 달에 기댄다."
+                % (w_now * 100)))
+            print("  %-5s %s~%s · 1년 %+7.2f%% · 샤프 %5.2f · MDD %7.2f%% · 이번달 비중 %.0f%%"
+                  % ("모멘텀VM", P.dates[R["start"]], P.dates[R["end"]],
+                     m["ret"], m["sharpe"], m["mdd"], w_now * 100))
+            SCOL["mom_vm"] = POS
+
+    # draw_summary·곡선 범례가 모듈 전역 STYLES 를 뒤진다 — 늘린 목록으로 갈아 끼운다.
+    # (안 하면 mom_vm 을 못 찾아 StopIteration 으로 죽는다)
+    STYLES = styles
+
     order.sort(key=lambda k: -metrics(res[k]["nav"])["ret"])       # 요약은 1년 수익률 순
-    detail = [S for S in STYLES if S[0] in res]                    # 본문은 정의 순서 그대로
+    detail = [S for S in styles if S[0] in res]                    # 본문은 정의 순서 그대로
     total = 1 + (len(detail) + 1) // 2
 
     with PdfPages(OUT) as pdf:
@@ -1088,6 +1116,63 @@ def main() -> int:
     # 걸 수 없다. style.html 이 이 파일 하나를 읽어 스타일 한 종을 그린다.
     dump_json(P, res, detail)
     return 0
+
+
+# ── 모멘텀 변동성 관리 ───────────────────────────────────────────────────────
+# 근거: Barroso & Santa-Clara, "Momentum Has Its Moments"(JFE 2015). 모멘텀의 위험은
+#   **자기 실현분산으로 예측된다** — 직전 6개월 실현변동성으로 목표에 맞춰 비중을 줄이면
+#   크래시가 크게 완화된다. 랩 실측(2026-07-29, 확장창 목표로 룩어헤드 제거, 57개월):
+#     원본  CAGR 41.67% · 샤프 1.16 · MDD −30.59%
+#     관리  CAGR 38.85% · 샤프 1.22 · MDD −20.13%   (연 2.8%p 를 내주고 꼬리를 10%p 줄인다)
+#   ⚠ 이 MDD 개선은 사실상 **크래시 한 번(2026-07)에 기댄다.** 표본이 그것뿐이다.
+#     잘 확립된 문헌과 방향이 같다는 것이 이 결과의 값어치이지, 랩이 증명한 것이 아니다.
+#   📌 종목 선택은 모멘텀과 **똑같다.** 바뀌는 것은 얼마나 드느냐뿐이다.
+VM_LOOK = 6            # 비중을 정할 때 보는 직전 개월 수(원문과 같다)
+VM_WARM = 24           # 목표변동성을 잡기 위한 최소 실적. 그 전에는 비중 1.
+
+
+def vm_weights(P):
+    """월 → 비중. **긴 창으로 모멘텀을 한 번 돌려** 미리 계산한다.
+
+    표시 창이 1년뿐이라 그 안에서는 목표변동성을 잡을 수 없다(직전 6개월조차 창 밖이다).
+    목표는 '그 시점까지의 실현변동성'이라 확장창이다 — 전 표본 변동성을 쓰면 룩어헤드다.
+    """
+    global WINDOW
+    old, WINDOW = WINDOW, len(P.dates) - 800
+    try:
+        R = backtest(P, sc_mom)
+    finally:
+        WINDOW = old
+    if not R:
+        return {}
+    ms, mo = monthly(R["nav"], P.dates, R["start"])
+    r = [mo[m] for m in ms if mo.get(m) is not None]
+    mk = [m for m in ms if mo.get(m) is not None]
+    out = {}
+    for i, m in enumerate(mk):
+        if i < VM_WARM:
+            out[m] = 1.0
+            continue
+        tgt = float(np.std(np.array(r[:i], float), ddof=1))
+        v = float(np.std(np.array(r[i - VM_LOOK:i], float), ddof=1))
+        out[m] = 1.0 if v <= 0 else min(1.0, tgt / v)
+    return out
+
+
+def vol_managed(P, R, wmap):
+    """모멘텀 결과 R 에 월별 비중을 얹어 NAV 를 다시 만든다.
+
+    남는 비중은 현금(수익 0)이고 레버리지는 쓰지 않는다(비중 상한 1).
+    보유 명단은 손대지 않는다 — 고르는 규칙이 아니라 크기 규칙이다.
+    """
+    nav = R["nav"]
+    out = np.ones(len(nav))
+    for k in range(1, len(nav)):
+        w = wmap.get(P.dates[R["start"] + k][:7], 1.0)
+        out[k] = out[k - 1] * (1 + (nav[k] / nav[k - 1] - 1) * w)
+    R2 = dict(R)
+    R2["nav"] = out
+    return R2
 
 
 def _thin(a, k=140):
