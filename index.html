@@ -1273,11 +1273,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 따로 그린다(코드는 공유하지 않는다). 랩 행 병기는 홈에만 있다 — 그쪽은 'ETF 수익률 원장'
   // 이라고 스스로 서문에 적어 둔 표라, 백테스트 행을 끼우면 표의 정체가 무너진다.
   var ST_SKIP={IWM:1, SPY:1};
-  var ST_HZ=[['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],['12M','12개월'],['YTD','YTD']];
+  var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
+             ['12M','12개월'],['YTD','YTD']];
   function stCell(v){
     if(v==null||v!==v)return '<td class="z">—</td>';
     var c=v>0.005?'up':(v<-0.005?'dn':'z');
-    return '<td class="'+c+'">'+(v>0?'+':'')+v.toFixed(2)+'</td>';
+    // 표시 자리에서 0 으로 반올림되면 부호를 떼어 '-0.00' 을 막는다(음의 0 은 값이 아니다).
+    var s=v.toFixed(2);
+    if(Number(s)===0)s='0.00';
+    return '<td class="'+c+'">'+(Number(s)>0?'+':'')+s+'</td>';
   }
   // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
@@ -1320,7 +1324,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //     합성한다. 새 표를 하나 더 두면 IVE→spval→val 계보가 두 곳으로 갈라져 반드시 어긋난다.
   //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
   //     빈다(—). 나머지 다섯은 이름이 같다.
-  var ST_TR={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
+  var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
   function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
   // stRow 를 그대로 재활용한다 — <small> 슬롯(x.t)에 티커 대신 꼬리표를 넣으면 두 종류 행이
   // 구별된다. 새 CSS도 새 렌더러도 필요 없다.

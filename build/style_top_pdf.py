@@ -595,7 +595,9 @@ def metrics(nav):
             "mdd": float(np.min(nav / np.maximum.accumulate(nav) - 1)) * 100}
 
 
-TRAIL = [("1주", 5), ("1개월", 21), ("3개월", 63), ("6개월", 126), ("1년", 252)]
+# ⚠ 여기 라벨은 홈(index.html)의 ST_TR 매핑과 짝이다 — 한쪽만 바꾸면 그 칸이 조용히
+#   빈다(build/validate_site.py 가 대조한다).
+TRAIL = [("1일", 1), ("1주", 5), ("1개월", 21), ("3개월", 63), ("6개월", 126), ("1년", 252)]
 
 
 def trails(nav, dates, start):
@@ -734,7 +736,12 @@ def table(fig, x0, y_top, widths, header, rows, *, row_h=.0148, fs=7.2, hfs=6.8,
 def num(v, d=2, sign=True):
     if v is None or (isinstance(v, float) and v != v):
         return "—"
-    return ("%+." + str(d) + "f") % v if sign else ("%." + str(d) + "f") % v
+    s = ("%+." + str(d) + "f") % v if sign else ("%." + str(d) + "f") % v
+    # 표시 자리에서 0 으로 반올림되면 부호를 아예 뗀다 — '-0.0' 도 '+0.0' 도 없는 방향을
+    # 주장한다. (1일 수익률처럼 작은 값을 1자리로 낼 때 생긴다. index.html stCell 도 같은 규칙.)
+    if s.lstrip("+-").strip("0.") == "":
+        s = s.lstrip("+-")
+    return s
 
 
 def footer(fig, page, total):
@@ -829,7 +836,7 @@ def draw_block(fig, P, top, S, R):
             return POS if not v.startswith("-") else NEG
         return MUTED
 
-    y3 = table(fig, X0, y2 - .0132, [.117] + [.0525] * 6, [""] + labs, prow,
+    y3 = table(fig, X0, y2 - .0132, [.117] + [.315 / len(labs)] * len(labs), [""] + labs, prow,
                row_h=.0140, cell_color=cc2,
                cell_weight=lambda r, c: "bold" if (r == 0 and c > 0) else "normal")
 
@@ -1212,7 +1219,7 @@ def dump_json(P, res, detail):
         doc["bench"][lab] = {
             "label": "S&P 500 PR" if lab == "spx" else "NASDAQ 100 PR",
             "metrics": {k: (None if v is None else round(v, 2)) for k, v in m.items()},
-            "trails": {k: (None if v is None else round(v, 1))
+            "trails": {k: (None if v is None else round(v, 2))
                        for k, v in trails(a, P.dates, R0["start"]).items()},
             "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
             "nav": _thin([x * 100 for x in a]),
@@ -1241,7 +1248,7 @@ def dump_json(P, res, detail):
             "key": key, "label": label, "ref": ref, "desc": desc, "mlab": mlab,
             "n_rebal": R["n_rebal"],
             "metrics": {k: (None if v is None else round(v, 2)) for k, v in metrics(nav).items()},
-            "trails": {k: (None if v is None else round(v, 1))
+            "trails": {k: (None if v is None else round(v, 2))
                        for k, v in trails(nav, P.dates, R["start"]).items()},
             "win": {"spx": [wg, nw], "ndx": [wn, nw]},
             "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
