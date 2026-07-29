@@ -445,6 +445,11 @@ def main() -> int:
         #   ⚠ data/guru_overlap.json 은 손대지 않는다. guru.html#overlap 과 진단물은 그대로다.
         "g-overlap-k2", "g-overlap-k3", "g-overlap-k4", "g-overlap-k5",
         "g-overlap-top10-ov", "g-overlap-top10-mc",                            # 거장 겹침
+        # 수익엔진 다섯(2026-07-29 추가, 사용자 결정). 판정은 이미 갈려 있었다 —
+        #   회전율 밴드 '제한적 유효' · 오버나이트 보유 '구별 불가' · 나머지 셋 '열위'.
+        #   통과는 하나도 없다. 목록에서만 빼고 측정 기록은 원본에 그대로 둔다(다중검정 N 유지).
+        "eps-revision-turnover-band",                                          # 리비전 변형
+        "a-overnight-ndx", "a-vrp-shortvol", "a-overnight", "a-quality-tilt",  # 자산배분
     }
     # ⚠ 이 가드는 'sid 가 바뀌어 제외가 조용히 풀렸나'를 보는 것이다. 그런데 앞의 채권 대조군
     #   필터가 먼저 지운 전략은 rows 에 없어 '못 찾음'으로 오인된다 — 두 제외는 공존해야 한다.
@@ -481,12 +486,14 @@ def main() -> int:
         "hidden": ([{"name": _n, "sharpe": _s} for _n, _s in sorted(_hidden, key=lambda x: -x[1])]
                    + [{"name": _n, "role": _r} for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0]))]),
         "hidden_note_defensive": (
-            "위험감축·방어보험·합병차익·섹터RP·거장겹침 %d종을 목록에서 뺐다(사용자 결정). "
-            "이 계열을 이 랩에서 다루지 않기로 한 **운용 결정**이지 성과 판정이 아니다 — "
-            "이들의 headline 은 최대낙폭이고 그 축에서는 낮을수록 좋아서, 빠지는 8종 중 "
+            "위험감축·방어보험·합병차익·섹터RP·거장겹침·수익엔진 %d종을 목록에서 뺐다(사용자 결정). "
+            "이 계열들을 이 랩에서 다루지 않기로 한 **운용 결정**이지 성과 판정이 아니다 — "
+            "방어 계열의 headline 은 최대낙폭이고 그 축에서는 낮을수록 좋아서, 빠지는 8종 중 "
             "−11.19%%·−12.33%%·−15.30%% 는 전 목록에서 가장 좋은 낙폭이다. "
             "합병차익(a-merger-arb)은 낙폭 계열이 아니라 별건이며, 단독 Sharpe −0.109 로 "
             "절대수익형의 목적을 못 채운 쪽이다. "
+            "수익엔진 다섯(회전율 밴드·오버나이트 둘·숏볼·퀄리티 틸트)은 판정이 이미 갈려 "
+            "있었다 — 제한적 유효 1·구별 불가 1·열위 3 으로 통과가 없다. "
             "여기서도 **측정 기록은 지우지 않는다** — asset_strategies.json·"
             "archive_backtests.json·deploy_index.json 은 그대로 둔다."
             % len(_hid2)) if _hid2 else None,
