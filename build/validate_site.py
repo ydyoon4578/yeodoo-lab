@@ -184,7 +184,9 @@ for p in PAGES:
 GATE_PLAIN = {"kb.html": "kb_content.html"}   # 게이트 → 평문 파일명(기본은 같은 이름; kb는 content 조각만 암호화)
 import base64 as _b64
 import hashlib as _hl
-for _gp in PAGES + ["kb.html"]:
+# kb.html 은 이미 PAGES 안에 있다(루트의 '_' 로 시작하지 않는 모든 .html). 그냥 이어 붙이면
+# 같은 페이지를 두 번 돌아 같은 오류가 두 번 찍힌다 — 실패 1건이 2건으로 보였다. 순서는 두고 중복만 지운다.
+for _gp in dict.fromkeys(PAGES + ["kb.html"]):
     _sv = rd(_gp)
     if not is_locked(_sv): continue
     if _gp not in PAGES: js_checks(_gp + "(셸)", _sv)   # kb.html은 PAGES 밖 — 게이트 셸 JS 검사 여기서
