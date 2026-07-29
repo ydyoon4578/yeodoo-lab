@@ -420,7 +420,7 @@ def draw_block(fig, P, top, name, R, prev_w, now_w, now_lab, diag):
             return POS if not v.startswith("-") else NEG
         return MUTED
 
-    y3 = table(fig, X0, y2 - .0132, [.117] + [.0525] * 6, [""] + labs, prow,
+    y3 = table(fig, X0, y2 - .0132, [.117] + [.315 / len(labs)] * len(labs), [""] + labs, prow,
                row_h=.0140, cell_color=cc2,
                cell_weight=lambda r, c: "bold" if (r == 0 and c > 0) else "normal")
 
@@ -560,7 +560,7 @@ def draw_basket(fig, P, R, now, holders, page, total, SP):
             return POS if not v.startswith("-") else NEG
         return MUTED
 
-    y3 = table(fig, X0, y2 - .0132, [.117] + [.0525] * 6, [""] + labs, prow,
+    y3 = table(fig, X0, y2 - .0132, [.117] + [.315 / len(labs)] * len(labs), [""] + labs, prow,
                row_h=.0140, cell_color=cc2,
                cell_weight=lambda r, c: "bold" if (r == 0 and c > 0) else "normal")
 
