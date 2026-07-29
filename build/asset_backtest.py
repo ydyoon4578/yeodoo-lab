@@ -78,6 +78,38 @@ def macro_asof(sid, d):
     return m.get(k) if k else None
 
 
+def _eom(k):
+    """'YYYY-MM-01' → 그 달의 말일(date)."""
+    y, mo = int(k[:4]), int(k[5:7])
+    return dt.date(y + (mo == 12), (mo % 12) + 1, 1) - dt.timedelta(days=1)
+
+
+def macro_asof_m(sid, d, lag_days, n=1):
+    """월간 거시 계열 — **발표 시차를 반영한** 최신 n개(오래된→최신). 모자라면 [].
+
+    ⚠ FRED 월간 계열의 키는 **관측월 1일**이다(UNRATE['2026-06-01'] = 6월 실업률).
+      실제 발표는 그 달이 끝난 뒤다 — 6월치는 7월 초에 나온다. macro_asof 를 그대로 쓰면
+      6월 30일에 6월 실업률을 아는 셈이 되어, 그날 세상에 없던 정보로 매매하게 된다.
+      일간 계열(T10Y2Y·VIXCLS 등)은 키가 곧 관측일이라 이 문제가 없다 — 월간만 이 함수를 쓴다.
+    """
+    m = A["macro"].get(sid) or {}
+    out = []
+    for k in sorted(m):
+        if (_eom(k) + dt.timedelta(days=lag_days)).isoformat() <= d:
+            out.append(m[k])
+        else:
+            break
+    return out[-n:] if len(out) >= n else []
+
+
+def sma(s, i, n):
+    """s[i] 까지의 n일 단순이동평균. 결측이 20%를 넘으면 None."""
+    if s is None or i < n:
+        return None
+    v = [s[j] for j in range(i - n + 1, i + 1) if s[j] is not None]
+    return sum(v) / len(v) if len(v) >= n * 0.8 else None
+
+
 def run_weights(wfn, start, label, bench_w, rule, why, note=None,
                 cadence="month", bench_cadence=None):
     """wfn(i) -> {티커: 비중}. 정해진 주기에만 호출하고 그 사이는 보유.
@@ -201,6 +233,12 @@ ROLE = {
     "quality-tilt": "수익엔진", "carry": "수익엔진", "hrp-sleeve": "배분기",
     "regime-switch": "타이밍오버레이", "ml-timing": "타이밍오버레이",
     "ml-xsec": "수익엔진", "guru-clone": "수익엔진",
+    # 고전 타이밍 규칙 — 전부 '언제 들어가 있을까'만 정하므로 타이밍오버레이다.
+    # 변동성 타깃은 노출을 위로 늘리지 않고 줄이기만 해 성격이 다르다(위험감축).
+    "sma200": "타이밍오버레이", "golden-cross": "타이밍오버레이", "abs-mom": "타이밍오버레이",
+    "seasonal": "타이밍오버레이", "curve-inv": "타이밍오버레이", "vix-level": "타이밍오버레이",
+    "unrate-trend": "타이밍오버레이", "timing-ensemble": "타이밍오버레이",
+    "vol-target-spy": "위험감축",
 }
 
 
@@ -884,6 +922,150 @@ def build():
                            "아카이브 사유는 '개선 없음 — 현 가중이 강건 교차점'이었다. "
                            "대조군을 동일가중으로 두고 그 명제를 재현한다.")
     add("min-cvar", "min-cvar", s_cvar)
+
+    # ── 고전 타이밍 규칙 ────────────────────────────────────────────────
+    # 왜 이제 넣나. 이 랩에는 타이밍오버레이가 이미 여럿 있지만 **가장 유명한 것들이 통째로
+    # 빠져 있었다** — 200일선·골든크로스·단일자산 절대모멘텀·계절성·장단기금리차·VIX 게이트.
+    # 사람들이 실제로 입에 올리는 규칙이 목록에 없으면 "그건 안 해 봤잖아"라는 말을 못 막는다.
+    # 판정이 어떻게 나오든 목록에 있는 것 자체가 답이 된다.
+    #
+    # 대조군은 전부 **SPY 상시보유**다. 이 규칙들은 '무엇을 살까'가 아니라 '언제 들어가 있을까'만
+    # 정한다 — 들어가 있을 때 사는 것이 SPY 이므로, 정당한 귀무가설은 '그냥 계속 들고 있기'다.
+    # 전략도 대조군도 같은 SPY 계열이라 TR/PR 표기 차이가 양쪽에서 상쇄된다.
+    #
+    # 대피처는 SHY(단기국채)로 통일했다. 현금 0%로 두면 '이탈'이 곧 무수익이 되어, 규칙의
+    # 값어치가 아니라 그 시기 단기금리의 값어치가 섞여 든다.
+    SAFE = "SHY"
+
+    def _gate(sid, arch, label, sigfn, rule, why, note=None, pad=210):
+        """SPY ↔ SHY 사이만 오가는 게이트. sigfn(i) -> True 면 위험선호."""
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=pad)
+
+        def w(i):
+            try:
+                on = sigfn(i)
+            except Exception:
+                on = True                       # 신호를 못 내면 '가만히 있기'가 기본값이다
+            return {"SPY": 1.0} if on is not False else {SAFE: 1.0}
+        add(sid, arch, lambda: run_weights(w, st, label, lambda i: {"SPY": 1.0},
+                                           rule, why, note))
+
+    # 1) 200일 이동평균 — Faber(2007)의 그 규칙
+    _gate("sma200", None, "200일 이동평균 (Faber)",
+          lambda i: (lambda s, m: None if m is None or s[i] is None else s[i] > m)(
+              ser("SPY"), sma(ser("SPY"), i, 200)),
+          "월말에 SPY 종가가 200일 단순이동평균 위면 SPY 100%, 아래면 SHY 100%.",
+          "가장 널리 인용되는 타이밍 규칙인데 이 랩 목록에 없었다. 원논문의 주장은 "
+          "'수익은 비슷하고 낙폭이 준다'이지 '더 번다'가 아니다 — 그래서 CAGR 이 아니라 "
+          "MDD·샤프를 같이 봐야 한다.",
+          pad=210)
+
+    # 2) 골든크로스 — 50/200 교차
+    _gate("golden-cross", None, "골든크로스 (50/200)",
+          lambda i: (lambda a, b: None if a is None or b is None else a > b)(
+              sma(ser("SPY"), i, 50), sma(ser("SPY"), i, 200)),
+          "월말에 SPY 50일 이동평균이 200일 이동평균 위면 SPY, 아래면 SHY.",
+          "200일선과 같은 재료(가격)를 쓰지만 신호가 더 늦다. 둘을 같이 실어야 "
+          "'교차가 종가보다 나은가'를 비교할 수 있다.",
+          pad=210)
+
+    # 3) 절대 모멘텀 — 단일자산 12-1
+    _gate("abs-mom", None, "절대 모멘텀 (SPY 12-1)",
+          lambda i: (lambda r12, r1: None if r12 is None or r1 is None else (r12 - r1) > 0)(
+              ret(ser("SPY"), i, 252), ret(ser("SPY"), i, 21)),
+          "월말에 SPY 의 최근 1개월을 뺀 12개월 수익률이 양수면 SPY, 아니면 SHY.",
+          "기존 tsmom-multi·gem 은 여러 자산을 함께 고르는 규칙이라 '타이밍'과 '종목선택'이 "
+          "섞여 있다. 단일자산으로 두면 타이밍 그 자체만 남는다.",
+          pad=285)
+
+    # 4) 계절성 — Sell in May
+    _gate("seasonal", None, "계절성 (11~4월만 보유)",
+          lambda i: int(DTS[i][5:7]) % 12 + 1 in (11, 12, 1, 2, 3, 4),
+          "월말에 다음 달이 11~4월이면 SPY, 5~10월이면 SHY.",
+          "달력만 보고 매매하는 규칙이라 경제적 근거가 가장 약하다. 데이터 마이닝 의심이 "
+          "제일 큰 축이므로, 통과하더라도 그 사실을 먼저 적어야 한다. 여기 싣는 이유는 "
+          "'해 보지 않았다'는 말을 없애기 위해서다.",
+          pad=25)
+
+    # 5) 장단기금리차 역전 게이트
+    _gate("curve-inv", None, "수익률곡선 역전 게이트",
+          lambda i: (lambda v: None if v is None else v >= 0)(macro_asof("T10Y2Y", DTS[i])),
+          "월말에 10년-2년 스프레드가 음수(역전)면 SHY, 아니면 SPY.",
+          "역전은 침체를 12~18개월 선행한다. 신호 즉시 이탈하면 남은 강세장을 통째로 "
+          "버리게 된다 — 그 대가가 숫자로 얼마인지 재는 것이 이 줄의 목적이다.",
+          pad=25)
+
+    # 6) VIX 절대수준 게이트
+    _gate("vix-level", None, "VIX 수준 게이트 (25)",
+          lambda i: (lambda v: None if v is None else v < 25.0)(
+              (ser("^VIX") or [None])[i] if ser("^VIX") else None),
+          "월말 VIX 종가가 25 미만이면 SPY, 이상이면 SHY.",
+          "기존 vix-ts 는 기간구조(콘탱고/백워데이션)를 보고, 이쪽은 절대수준만 본다. "
+          "문턱 25 는 흔히 쓰는 값이라 그대로 뒀다 — 최적화하면 그 순간 과최적합이 된다.",
+          pad=25)
+
+    # 7) 실업률 추세 — Sahm 계열
+    def _sahm(i):
+        h = macro_asof_m("UNRATE", DTS[i], 21, 15)      # 관측월 말 + 21일 후에야 볼 수 있다
+        if len(h) < 15:
+            return None
+        ma3 = [sum(h[k - 2:k + 1]) / 3 for k in range(2, len(h))]
+        return (ma3[-1] - min(ma3[-13:-1])) < 0.5
+    _gate("unrate-trend", None, "실업률 추세 게이트 (Sahm)",
+          _sahm,
+          "월말에 실업률 3개월 평균이 직전 12개월 최저보다 0.5%p 이상 높으면 SHY, 아니면 SPY.",
+          "실업률은 월간이고 관측월이 끝난 뒤에야 발표된다 — 발표 시차 21일을 넣어 "
+          "그날 실제로 알 수 있던 값만 쓴다. 시차를 안 넣으면 없던 정보로 매매하게 된다.",
+          pad=25)
+
+    # 8) 변동성 타깃 — 단일자산
+    def s_voltgt():
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=80)
+        def w(i):
+            v = vol(ser("SPY"), i, 60)
+            if v is None:
+                return {"SPY": 1.0}
+            av = v * math.sqrt(252)
+            k = min(1.0, 0.12 / av) if av > 0 else 1.0
+            return {"SPY": k, SAFE: 1.0 - k} if k < 1.0 else {"SPY": 1.0}
+        return run_weights(w, st, "변동성 타깃 (SPY 12%)", lambda i: {"SPY": 1.0},
+                           "월말에 최근 60일 실현변동성을 연율화해, 목표 12%를 넘는 만큼 "
+                           "SPY 비중을 줄이고 나머지를 SHY 로. 레버리지는 쓰지 않는다(최대 100%).",
+                           "기존 rp-voltarget 은 4자산 리스크패리티 위에 얹은 것이라 "
+                           "타깃팅 효과와 배분 효과가 섞인다. 단일자산이면 '변동성이 클 때 "
+                           "줄이는 것' 하나만 남는다. 위로는 안 늘리므로 구조적으로 "
+                           "상시보유보다 수익이 낮고, 값어치가 있다면 샤프·MDD 에서 나온다.")
+    add("vol-target-spy", None, s_voltgt)
+
+    # 9) 다수결 앙상블 — 규칙 셋의 합의
+    def s_ens():
+        ts = ["SPY", SAFE, "^VIX"]
+        st = first_common(ts, pad=285)
+        def votes(i):
+            s = ser("SPY")
+            v = []
+            m = sma(s, i, 200)
+            v.append(None if (m is None or s[i] is None) else s[i] > m)
+            r12, r1 = ret(s, i, 252), ret(s, i, 21)
+            v.append(None if (r12 is None or r1 is None) else (r12 - r1) > 0)
+            vx = (ser("^VIX") or [None])[i] if ser("^VIX") else None
+            v.append(None if vx is None else vx < 25.0)
+            return [x for x in v if x is not None]
+        def w(i):
+            v = votes(i)
+            if not v:
+                return {"SPY": 1.0}
+            k = sum(1 for x in v if x) / len(v)          # 찬성 비율만큼만 노출
+            return {"SPY": k, SAFE: 1.0 - k} if 0 < k < 1 else ({"SPY": 1.0} if k else {SAFE: 1.0})
+        return run_weights(w, st, "타이밍 3규칙 다수결", lambda i: {"SPY": 1.0},
+                           "200일선·절대모멘텀·VIX 게이트 셋의 찬성 비율만큼 SPY 를 들고 "
+                           "나머지는 SHY. 셋 다 찬성이면 100%, 하나면 33%.",
+                           "'규칙 하나하나는 약해도 합치면 낫다'는 흔한 주장을 그대로 검정한다. "
+                           "세 규칙이 같은 자산의 같은 가격을 보므로 신호가 크게 겹친다 — "
+                           "분산 효과를 기대할 자리가 아니라는 것이 사전 예상이다.")
+    add("timing-ensemble", None, s_ens)
 
 
 def main() -> int:
