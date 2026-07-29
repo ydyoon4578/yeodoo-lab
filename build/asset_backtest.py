@@ -308,6 +308,8 @@ ROLE = {
     # 레짐은 '깨지면 줄인다'가 목적이라 위험감축, 나머지는 진입 여부를 정하므로 오버레이.
     "sma-grid": "타이밍오버레이", "sma200-confirm": "타이밍오버레이",
     "rel-mom3": "타이밍오버레이", "dd-gate": "위험감축", "vol-regime": "위험감축",
+    # 달력·구조 계열 — 가격도 재무도 안 보고 날짜만 본다. 성격은 여전히 진입 여부다.
+    "tom": "타이밍오버레이", "opex": "타이밍오버레이", "fomc-even": "타이밍오버레이",
 }
 
 
@@ -1286,6 +1288,113 @@ def build():
                            "두면 달라지는지 본다. 대조군은 SPY 가 아니라 같은 세 자산 "
                            "동일가중이다 — 고르는 행위가 그냥 셋 다 들기를 이기는지가 질문이므로.")
     add("rel-mom3", None, s_relmom)
+
+    # ── 달력·구조 계열 ────────────────────────────────────────────────
+    # 여기까지는 전부 가격이나 거시를 봤다. 이 셋은 **아무 것도 안 본다** — 날짜만 본다.
+    # 팩터(가치·모멘텀·퀄리티…)와 계보가 아예 다른 계열이라 목록에 하나도 없었다.
+    # 문헌은 오래됐고 인용도 많은데, 그래서 더 '지금도 되나'를 물어야 하는 쪽이다.
+    #
+    # ⚠ 셋 다 일간 리밸런스다. 회전이 앞의 월말 규칙들과 자릿수가 다르므로 무비용(gross)
+    #   숫자를 그대로 읽으면 안 된다 — 회전 칸을 반드시 같이 볼 것.
+    def _day_gate(sid, label, flagfn, rule, why, note=None, st_min=None):
+        ts = ["SPY", SAFE]
+        st = first_common(ts, pad=25)
+        if st_min:
+            st = max(st, next((i for i, d in enumerate(DTS) if d >= st_min), len(DTS) - 1))
+        fl = flagfn()
+        n_ = len(DTS)
+        def w(i):
+            # run_weights 는 fn(i-1) 의 가중으로 i 일 수익을 낸다 — 하루 뒤 상태를 봐야 한다.
+            j = min(i + 1, n_ - 1)
+            return {"SPY": 1.0} if fl[j] else {SAFE: 1.0}
+        add(sid, None, lambda: run_weights(w, st, label, lambda i: {"SPY": 1.0},
+                                           rule, why, note, cadence="day"))
+
+    # 15) 월말 효과 — Ariel(1987) · Lakonishok & Smidt(1988)
+    def _tom_flags(lo=-1, hi=3):
+        n_ = len(DTS)
+        me = [i for i in range(n_ - 1) if DTS[i][:7] != DTS[i + 1][:7]] + [n_ - 1]
+        f = [False] * n_
+        for e in me:
+            for k in range(lo, hi + 1):
+                if 0 <= e + k < n_:
+                    f[e + k] = True
+        return f
+    _day_gate("tom", "월말 효과 (마지막날 −1 ~ +3)", _tom_flags,
+              "월 마지막 거래일 하루 전부터 다음 달 세 번째 거래일까지만 SPY, 나머지 기간은 SHY.",
+              "달력만 보는 규칙이다. 월말·월초에 수익이 몰린다는 보고가 1980년대부터 있었고 "
+              "연금 납입과 월말 리밸런스 자금이 이유로 거론된다. 한 해 거래일의 약 4분의 1만 "
+              "시장에 있으므로, 그 기간이 정말 특별한지가 질문이다.",
+              "실측 — 거래일의 23.8%만 시장에 있으면서 연 4.68%를 냈다. 노출 시간만으로 환산하면 "
+              "연 21.2%로 상시보유 11.0%의 두 배 가까이다. 월말 닷새가 나머지보다 확실히 "
+              "생산적이라는 뜻이다. 다만 연 24회 왕복이라 이 숫자는 무비용이다 — 왕복 5bp만 "
+              "붙어도 연 2.4%p가 사라져 실제 CAGR 4.68%의 절반이 날아간다.")
+
+    # 16) 옵션 만기 주간 — 세 번째 금요일이 낀 주
+    def _opex_flags():
+        n_ = len(DTS)
+        third = {}
+        for d in DTS:
+            y, m = int(d[:4]), int(d[5:7])
+            if (y, m) not in third:
+                first = dt.date(y, m, 1)
+                third[(y, m)] = first + dt.timedelta(days=(4 - first.weekday()) % 7 + 14)
+        f = [False] * n_
+        for i, d in enumerate(DTS):
+            dd = dt.date.fromisoformat(d)
+            fr = third[(dd.year, dd.month)]
+            f[i] = (dd - dt.timedelta(days=dd.weekday())) == (fr - dt.timedelta(days=fr.weekday()))
+        return f
+    _day_gate("opex", "옵션 만기 주간", _opex_flags,
+              "매월 세 번째 금요일이 포함된 주(월~금)만 SPY, 나머지는 SHY.",
+              "만기 주간에는 델타 헤지 청산과 롤이 겹쳐 수급이 한쪽으로 쏠린다는 관찰이 있다. "
+              "가격도 재무도 안 보고 달력만 보는 규칙이라, 되면 구조적 수급이 남아 있다는 뜻이고 "
+              "안 되면 그 이야기가 이미 가격에 들어갔다는 뜻이다.",
+              "실측 — 노출 23.4%에 연 2.98%. 노출당 환산 13.4%로 상시보유 11.0%보다 조금 나은 "
+              "정도다. 월말 효과(노출당 21.2%)와 견주면 만기 주간 쪽은 약하다. 회전은 똑같이 "
+              "연 24회라 비용을 넣으면 남는 것이 없다.")
+
+    # 17) FOMC 사이클 짝수 주 — Cieslak·Morse·Vissing-Jorgensen (Journal of Finance 2019)
+    #   출처 https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm (발표일 기준)
+    #   ⚠ 연준 공개 달력이 2021년부터라 이 줄만 구간이 짧다. 그 이전은 연도별 과거 페이지를
+    #     하나씩 받아야 해서 넣지 않았다 — 표본이 짧다는 사실을 판정과 함께 읽을 것.
+    FOMC = ["2021-01-27", "2021-03-17", "2021-04-28", "2021-06-16", "2021-07-28",
+            "2021-09-22", "2021-11-03", "2021-12-15",
+            "2022-01-26", "2022-03-16", "2022-05-04", "2022-06-15", "2022-07-27",
+            "2022-09-21", "2022-11-02", "2022-12-14",
+            "2023-02-01", "2023-03-22", "2023-05-03", "2023-06-14", "2023-07-26",
+            "2023-09-20", "2023-11-01", "2023-12-13",
+            "2024-01-31", "2024-03-20", "2024-05-01", "2024-06-12", "2024-07-31",
+            "2024-09-18", "2024-11-07", "2024-12-18",
+            "2025-01-29", "2025-03-19", "2025-05-07", "2025-06-18", "2025-07-30",
+            "2025-09-17", "2025-10-29", "2025-12-10",
+            "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17", "2026-07-29"]
+
+    def _fomc_flags():
+        ds = sorted(dt.date.fromisoformat(x) for x in FOMC)
+        f = [False] * len(DTS)
+        for i, d in enumerate(DTS):
+            dd = dt.date.fromisoformat(d)
+            prev = None
+            for x in ds:
+                if x - dt.timedelta(days=1) <= dd:
+                    prev = x
+                else:
+                    break
+            if prev is None:
+                continue
+            # 사이클 시간의 0일은 발표 **전날**이다(원논문 정의). 짝수 주 0·2·4·6 이 위험선호.
+            f[i] = (((dd - (prev - dt.timedelta(days=1))).days // 7) % 2 == 0)
+        return f
+    _day_gate("fomc-even", "FOMC 사이클 짝수 주", _fomc_flags,
+              "직전 FOMC 발표 전날을 0일로 두고 짝수 주(0·2·4·6주차)에만 SPY, 홀수 주는 SHY.",
+              "주식 위험프리미엄이 FOMC 사이클의 짝수 주에 몰려 있다는 보고다(Journal of "
+              "Finance 2019). 연준의 비공식 소통 경로가 이유로 거론된다. 발표된 지 오래된 "
+              "규칙이라 지금도 남아 있는지가 질문이다.",
+              "실측 — 절반의 시간만 시장에 있으면서 연 9.64%(같은 구간 상시보유 14.23%). "
+              "노출당 환산 20.2% 대 14.2%로 짝수 주가 홀수 주보다 확실히 생산적이다. "
+              "다만 구간이 2021년부터라 사이클이 44회뿐이고 회전은 연 50회다.",
+              st_min="2021-01-26")
 
 
 def main() -> int:
