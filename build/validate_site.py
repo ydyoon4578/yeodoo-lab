@@ -1589,6 +1589,63 @@ except FileNotFoundError:
 except Exception as e:
     errors.append(f"events.json 검증 실패: {e}")
 
+# ── 홈 스타일 표: 랩 행 ↔ ETF 행 짝짓기(2026-07-29) ────────────────────────
+#   홈은 ETF 수익률(market_board.json) 옆에 이 랩의 스타일 백테스트(style_trails.json)를
+#   나란히 그린다. 두 정본이 세 군데서 조용히 어긋날 수 있어 기계가 대신 본다.
+#     ① 구간 라벨 — 홈은 1W/1M/… 로 묻고 랩은 '1주'/'1개월'/… 로 답한다. 어느 한쪽 이름이
+#        바뀌면 그 칸만 —(빈칸)이 되고 표는 멀쩡해 보인다. ST_TR 매핑을 실제 데이터에 대본다.
+#     ② 짝 — index.html 의 ST_KEY(티커→홈키)∘ST_PERF(홈키→백테스트키) 합성이 실제 키에
+#        닿는지. 닿지 않으면 그 스타일의 랩 행이 통째로 사라진다(에러 없음).
+#     ③ 기준일 — style_trails 와 market_board 는 서로 다른 입력에서 날짜를 얻는다
+#        (stocks.json 매일 · assets.json 주 1회). 크게 벌어지면 한 표가 두 날짜를 말한다.
+try:
+    _ih = rd("index.html")
+
+    def _obj(name):
+        """index.html 의 `var NAME={a:'b',…};` 를 dict 로. 값이 전부 문자열인 매핑 전용."""
+        m = re.search(r"var %s\s*=\s*\{(.*?)\}\s*;" % name, _ih, re.S)
+        if not m:
+            raise ValueError("index.html 에서 %s 를 찾지 못했다" % name)
+        return dict(re.findall(r"""['"]?([\w]+)['"]?\s*:\s*['"]([^'"]*)['"]""", m.group(1)))
+    _tr_map, _k_map, _p_map = _obj("ST_TR"), _obj("ST_KEY"), _obj("ST_PERF")
+    _sl = json.load(io.open(os.path.join(ROOT, "data", "style_trails.json"), encoding="utf-8"))
+    _mb = json.load(io.open(os.path.join(ROOT, "data", "market_board.json"), encoding="utf-8"))
+    _by = {s["key"]: s for s in (_sl.get("styles") or [])}
+    if not _by:
+        errors.append("style_trails.json: styles 비어 있음 — build/style_top_pdf.py --json 실행 필요")
+    # ① 구간 라벨
+    for _s in _by.values():
+        _miss = [v for v in _tr_map.values() if v not in (_s.get("trails") or {})]
+        if _miss:
+            errors.append(f"style_trails: {_s['key']} 에 구간 {_miss} 없음 — index.html ST_TR 와 "
+                          f"build/style_top_pdf.py TRAIL 이 어긋났다(그 칸이 조용히 빈다)")
+            break
+    # ② 짝 — **양방향 도달성**으로 본다. '짝이 N종이어야 한다'고 손으로 적으면 그 숫자가
+    #    다음번에 낡는다. 대신 두 방향을 각각 묻는다: 홈이 가리키는 키가 자료에 있는가,
+    #    자료에 있는 스타일이 홈에 닿는가. 어느 쪽이 끊겨도 그 랩 행은 에러 없이 사라진다.
+    _want = {_p_map[_k_map[t]] for t in _k_map if _k_map[t] in _p_map}
+    _dangle = sorted(_want - set(_by))
+    _orphan = sorted(set(_by) - _want)
+    if _dangle:
+        errors.append(f"홈 스타일 표: index.html 이 가리키는 랩 키 {_dangle} 가 style_trails 에 없다 "
+                      f"— 그 스타일의 랩 행이 조용히 사라진다")
+    if _orphan:
+        errors.append(f"홈 스타일 표: 랩 스타일 {_orphan} 를 가리키는 ETF 가 없다 — 잰 것이 "
+                      f"화면에 안 나온다(index.html ST_KEY·ST_PERF 확인)")
+    # ③ 기준일
+    _d1, _d2 = _sl.get("as_of") or "", _mb.get("as_of") or ""
+    if _d1 and _d2 and _d1 != _d2:
+        _gap = abs((_dt.date.fromisoformat(_d1) - _dt.date.fromisoformat(_d2)).days)
+        if _gap > 14:
+            errors.append(f"홈 스타일 표: 랩 기준일 {_d1} 과 ETF 기준일 {_d2} 이 {_gap}일 벌어졌다 — "
+                          f"style_top_pdf.py --json 이 갱신 잡에서 밀렸다")
+        else:
+            print(f"  ~ 홈 스타일 표: 랩 {_d1} · ETF {_d2}({_gap}일 차) — 부제에 함께 표시된다")
+except FileNotFoundError as e:
+    errors.append(f"홈 스타일 표 검증: 파일 없음 {e} — build/style_top_pdf.py --json 실행 필요")
+except Exception as e:
+    errors.append(f"홈 스타일 표 검증 실패: {e}")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

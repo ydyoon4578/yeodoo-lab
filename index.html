@@ -784,6 +784,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <section id="s-style" aria-labelledby="st-h">
       <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
+      <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
+      <p class="stnote" id="stnote"></p>
       <!-- 위 표는 ETF 수익률이라 대응 ETF가 없는 스타일은 행이 없다. S&P 정본에만 있는 세 가지를
            여기 따로 둔다 — 표를 수익률 없는 행으로 오염시키지 않으려는 것이다. -->
       <div class="stmore" id="stmore"></div>
@@ -1259,10 +1261,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 
   // ── ①-b 스타일 성과 ──────────────────────────────────────────
-  // data/market_board.json(build/market_board.py)만 읽는다. 4KB라 홈 슬림 묶음에 넣지 않고
-  // 직접 받는다(events.json과 같은 방식) — 슬림을 거치면 갱신 잡을 하나 더 엮게 된다.
+  // data/market_board.json(build/market_board.py) + data/style_trails.json 둘을 읽는다.
+  // 각각 4.8KB·0.8KB 라 홈 슬림 묶음에 넣지 않고 직접 받는다(events.json과 같은 방식) —
+  // 슬림을 거치면 갱신 잡을 하나 더 엮게 된다.
+  //   ⚠ style_trails 는 style_perf.json(28.9KB)의 **1KB 발췌**다. 원본을 통째로 받으면
+  //     홈 전송량이 gzip 기준 +24% 늘고 그중 96%(nav 곡선·보유명단)를 안 쓴다.
+  //     곡선과 명단이 필요한 style.html 은 계속 원본을 읽는다.
   // 러셀2000(IWM)은 스타일이 아니라 지수라 홈에서는 뺀다. SPY는 위 지수 줄에 이미 있다.
-  // 전체 표(러셀2000·금리·크레딧 포함)는 macro.html 이 같은 파일로 그린다.
+  // 전체 표(러셀2000·금리·크레딧 포함)는 macro.html 이 **같은 market_board.json** 을 읽어
+  // 따로 그린다(코드는 공유하지 않는다). 랩 행 병기는 홈에만 있다 — 그쪽은 'ETF 수익률 원장'
+  // 이라고 스스로 서문에 적어 둔 표라, 백테스트 행을 끼우면 표의 정체가 무너진다.
   var ST_SKIP={IWM:1, SPY:1};
   var ST_HZ=[['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],['12M','12개월'],['YTD','YTD']];
   function stCell(v){
@@ -1276,7 +1284,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 옆줄 성장이 S&P 계열이라 계보가 어긋나 있었다(사용자 결정 2026-07-28).
   var ST_KEY={MTUM:'mom',QUAL:'qual',IVE:'spval',USMV:'lowvol',RPG:'grow',
               SPHB:'hbeta',SIZE:'size'};
-  var STOP=null;
+  var STOP=null, SLAB=null;
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   // 표는 **수익률만** 담는다. 구성종목을 행 사이에 끼워 넣으니 표가 성과표와 종목목록
   // 사이 어디쯤이 돼 둘 다 안 읽혔다 — 아래로 따로 뺐다(사용자 결정 2026-07-29).
@@ -1306,6 +1314,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       'title="'+esc(tip)+'">'+esc(s.index_ref)+(s.substitution?' ⚠':'')+'</a>'+
       '</div></div>';
   }
+  // 랩 행 ↔ ETF 행 — 사용자 요청으로 '모멘텀(랩) / MTUM(ETF)' 처럼 짝지어 낸다(2026-07-29).
+  //   ⚠ 랩 키는 **새 매핑을 만들지 않는다.** ST_KEY(티커→홈 키)와 ST_PERF(홈 키→백테스트 키)를
+  //     합성한다. 새 표를 하나 더 두면 IVE→spval→val 계보가 두 곳으로 갈라져 반드시 어긋난다.
+  //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
+  //     빈다(—). 나머지 다섯은 이름이 같다.
+  var ST_TR={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
+  function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
+  // stRow 를 그대로 재활용한다 — <small> 슬롯(x.t)에 티커 대신 꼬리표를 넣으면 두 종류 행이
+  // 구별된다. 새 CSS도 새 렌더러도 필요 없다.
+  function labRow(s){
+    var r={};
+    ST_HZ.forEach(function(h){ var v=(s.trails||{})[ST_TR[h[0]]]; r[h[0]]=(v==null?null:v); });
+    return {n:s.label, t:'랩 · 상위10', r:r};
+  }
+  // 짝지어진 ETF 행은 **티커를 제목으로** 올린다. 그러지 않으면 첫 열이 '모멘텀 / 모멘텀 /
+  // 퀄리티 / 퀄리티' 로 읽혀 두 행이 같은 것의 반복처럼 보인다. 바로 위 랩 행이 이미
+  // 한글 이름을 말하고 있으므로 여기서는 티커가 더 많은 정보를 준다.
+  function etfRow(x){ return {n:x.t, t:'ETF', r:x.r}; }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
     if(!j||!j.style){
@@ -1314,12 +1340,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
     ix.forEach(function(x){h+=stRow(x,'ix');});
-    st.forEach(function(x,i){h+=stRow(x,i===0?'gap':'');});
+    // 짝이 있는 것을 먼저(랩→ETF), 짝이 없는 ETF(배당성장·중소형·동일가중)를 뒤에 모은다.
+    // market_board 순서를 그대로 따르면 SDY 가 성장과 고베타 사이에 홀로 끼어 짝의 결이 끊긴다.
+    var pair=[], solo=[];
+    st.forEach(function(x){ (labOf(x.t)?pair:solo).push(x); });
+    pair.forEach(function(x){ h+=stRow(labRow(labOf(x.t)),'gap')+stRow(etfRow(x),''); });
+    solo.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
     box.innerHTML=h+'</tbody>';
     var s=el('st-sub');
-    if(s)s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + 스타일 '+st.length+'종 · 기준 '+esc(j.as_of||'');
+    if(s){
+      var t='· 기간별 수익률 % · 지수 '+ix.length+' + ETF '+st.length+'종';
+      if(pair.length)t+=' · 랩 '+pair.length+'종 병기';
+      t+=' · 기준 '+(j.as_of||'');
+      // 랩 쪽은 자동 갱신 잡이 다르다. 기준일이 갈리면 표 전체가 한 날짜인 척하지 않게 적는다
+      // (macro.html 이 FRED 금리가 하루 늦을 때 쓰는 방식과 같다).
+      if(pair.length&&SLAB&&SLAB._as_of&&SLAB._as_of!==j.as_of)t+=' · 랩은 '+SLAB._as_of;
+      s.textContent=t;
+    }
+    drawStNote(pair.length?SLAB:null);
     // 구성종목 목록은 표와 같은 순서로 아래에 깐다 — 표의 스타일 순서 그대로 + 순수 계열 둘.
+    // ⚠ 여기에 넘기는 것은 **홈 키**(ST_KEY)다. 백테스트 키를 넘기면 가치가 spval(S&P 500
+    //   Value)에서 val(MSCI Enhanced Value)로 조용히 바뀐다 — 둘 다 style_top.json 에 있어
+    //   에러도 빈 줄도 안 난다.
     drawStHold(st.map(function(x){return ST_KEY[x.t];}));
+  }
+  // 표 아래 각주 — 두 종류 행을 같은 잣대로 읽으면 안 되는 이유를 적는다.
+  // 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목을 과거로 소급한다).
+  // 그것을 안 적고 +134% 를 +22% 위에 얹으면 표가 거짓말을 한다.
+  function drawStNote(sl){
+    var n=el('stnote'); if(!n)return;
+    if(!sl){n.innerHTML='';return;}
+    n.innerHTML=
+      '<b>랩 행은 상품이 아닙니다.</b> 이 랩이 유니버스 상위 10종목을 동일가중으로 담아 월말마다 '+
+      '다시 고른 <b>백테스트</b>이고 보수·거래비용이 0입니다. 아래 ETF 는 실제로 운용된 펀드입니다. '+
+      '<b>차이를 초과수익으로 읽으면 안 됩니다.</b><br>'+
+      '· <b>생존편향</b> — 랩은 오늘 살아남은 518종목을 과거로 소급해 고릅니다(선정 시점 명단이 아닙니다). '+
+      '그만큼 랩 쪽이 유리하게 부풀려져 있습니다.<br>'+
+      '· 구간 정의도 다릅니다 — ETF 는 달력일(1주=7일), 랩은 거래일 봉수(1주=5거래일)로 잽니다. 이름만 같습니다.<br>'+
+      '· 랩 구간은 '+esc(sl._start||'')+' 이후 1년뿐이라 <b>‘1년’이 곧 전 구간</b>입니다. 그 앞은 재지 않았습니다.';
   }
   // 대응 ETF가 없어 위 표에는 행이 없는 스타일. 구성종목 목록에는 같이 들어간다.
   // spval 은 IVE 가 대응 ETF라 위 표의 '가치' 행으로 올라갔다 — 남은 건 순수 계열 둘이다.
@@ -1346,10 +1404,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }).join('')+'</div>';
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
+  // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
+  // (ETF 9행) 그려진다. 이 파일을 만드는 build/style_top_pdf.py --json 은 갱신 잡에 물려
+  // 있지만, 하나가 밀렸다고 홈이 깨지면 안 된다.
   fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     ['catch'](function(){return null;})
     .then(function(sj){
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
+      return fetch('data/style_trails.json',{cache:'no-cache'})
+        .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
+    })['catch'](function(){return null;})
+    .then(function(tj){
+      if(tj&&tj.styles){
+        SLAB={_as_of:tj.as_of||'', _start:tj.start||''};
+        tj.styles.forEach(function(s){SLAB[s.key]=s;});
+      }
       return fetch('data/market_board.json',{cache:'no-cache'})
         .then(function(r){return r.ok?r.json():null;});
     })['catch'](function(){return null;}).then(drawStyle);

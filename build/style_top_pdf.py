@@ -55,13 +55,22 @@ import numpy as np
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
-import matplotlib
-matplotlib.use("Agg")
-from matplotlib import font_manager, rcParams
-from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+# matplotlib 은 **그릴 때만** 필요하다. 계산(백테스트 → data/style_*.json)에는 numpy 와
+# 표준라이브러리뿐이라, 없는 기계에서도 --json 은 돌아야 한다. 러너(ubuntu)에 이것을 깔지
+# 않으려고 세운 벽이다 — 깔면 한글 폰트까지 같이 얹어야 하고, 그러면 JSON 한 줄 뽑자고
+# CI 에 폰트 패키지를 물리게 된다. 실패는 **그리려 할 때** 크게 낸다(new_page 참조).
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    from matplotlib import font_manager, rcParams
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Rectangle
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    HAVE_MPL = True
+except Exception as _e:                     # noqa: BLE001 — 무엇이 없든 계산은 계속한다
+    HAVE_MPL, _MPL_ERR = False, str(_e)
+    font_manager = rcParams = Line2D = Rectangle = plt = PdfPages = None
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -80,21 +89,34 @@ WIN = 3.0
 #     에서 돌리면 matplotlib 이 조용히 대체 폰트로 떨어지고 **한글이 전부 두부(□)로 나온다.**
 #     경고는 findfont 한 줄뿐이라 로그를 안 보면 모른 채 배포된다(실제로 그렇게 한 번 나갔다).
 #     그래서 후보를 훑어 고르고, 하나도 없으면 그리지 말고 멈춘다.
-for _p in (r"C:\Windows\Fonts\malgun.ttf", r"C:\Windows\Fonts\malgunbd.ttf",
-           "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-           "/Library/Fonts/NanumGothic.ttf",
-           "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"):
-    if os.path.exists(_p):
-        try: font_manager.fontManager.addfont(_p)
-        except Exception: pass
-KFONT = next((n for n in ("Malgun Gothic", "Apple SD Gothic Neo", "NanumGothic",
-                          "Nanum Gothic", "Noto Sans CJK KR")
-              if n in {f.name for f in font_manager.fontManager.ttflist}), None)
-if not KFONT:
-    raise SystemExit("한글 폰트를 찾지 못했다 — 맑은 고딕·애플 SD 고딕·나눔고딕 중 하나가 필요하다. "
-                     "없이 그리면 문서 전체가 두부(□)로 나온다.")
-rcParams["font.family"] = KFONT
-rcParams["axes.unicode_minus"] = False
+#     ⚠ 폰트가 없을 때 **여기서** 멈추면 안 된다. 이 모듈은 계산 전용(--json)으로도 불리고
+#       다른 PDF 생성기 넷이 판형·색 정본으로 import 한다 — import 시점에 죽이면 그 전부가
+#       폰트 없는 기계에서 못 돌아간다. 그래서 여기서는 고르기만 하고, 실제로 못 그리는 순간
+#       (new_page)에 크게 실패한다. '조용히 두부로 배포'는 여전히 막는다.
+KFONT = None
+if HAVE_MPL:
+    for _p in (r"C:\Windows\Fonts\malgun.ttf", r"C:\Windows\Fonts\malgunbd.ttf",
+               "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+               "/Library/Fonts/NanumGothic.ttf",
+               "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"):
+        if os.path.exists(_p):
+            try: font_manager.fontManager.addfont(_p)
+            except Exception: pass
+    KFONT = next((n for n in ("Malgun Gothic", "Apple SD Gothic Neo", "NanumGothic",
+                              "Nanum Gothic", "Noto Sans CJK KR")
+                  if n in {f.name for f in font_manager.fontManager.ttflist}), None)
+    if KFONT:
+        rcParams["font.family"] = KFONT
+        rcParams["axes.unicode_minus"] = False
+
+
+def require_draw():
+    """그리기에 필요한 것이 갖춰졌는지 — 갖춰지지 않았으면 여기서 크게 죽는다."""
+    if not HAVE_MPL:
+        raise SystemExit("matplotlib 이 없다(%s) — 그림 없이 JSON 만 뽑으려면 --json 을 쓴다." % _MPL_ERR)
+    if not KFONT:
+        raise SystemExit("한글 폰트를 찾지 못했다 — 맑은 고딕·애플 SD 고딕·나눔고딕 중 하나가 필요하다. "
+                         "없이 그리면 문서 전체가 두부(□)로 나온다.")
 
 # 색은 사이트(index.html)의 밝은 테마를 그대로 가져온다 — 따뜻한 종이 바탕에 같은 강조색.
 #   --panel #FFFDF5 · --ground #FAF7EC · --panel-2 #F3EFE1 · --line #E4DFD0
@@ -725,6 +747,7 @@ def footer(fig, page, total):
 
 
 def new_page():
+    require_draw()
     fig = plt.figure(figsize=(8.27, 11.69))       # A4
     fig.patch.set_facecolor(PAPER)
     return fig
@@ -1039,6 +1062,9 @@ def draw_summary(fig, P, res, order, total):
 
 
 def main() -> int:
+    # --json : 그림 없이 data/style_perf.json · style_trails.json 만 낸다. CI 용 경로다
+    #          (matplotlib·한글 폰트 없이 도는 유일한 진입점).
+    json_only = "--json" in sys.argv[1:]
     P = Panel()
     print("유니버스 %d · 일별 %d일(%s~%s) · 월말 %d회"
           % (len(P.uni), len(P.dates), P.dates[0], P.dates[-1], len(P.me)))
@@ -1065,23 +1091,26 @@ def main() -> int:
     detail = [S for S in STYLES if S[0] in res]                    # 본문은 정의 순서 그대로
     total = 1 + (len(detail) + 1) // 2
 
-    with PdfPages(OUT) as pdf:
-        fig = new_page()
-        draw_summary(fig, P, res, order, total)
-        pdf.savefig(fig); plt.close(fig)
-
-        for pi in range(0, len(detail), 2):
+    if json_only:
+        print("--json · PDF 는 건너뛴다")
+    else:
+        with PdfPages(OUT) as pdf:
             fig = new_page()
-            for bi, S in enumerate(detail[pi:pi + 2]):
-                draw_block(fig, P, BLOCK_TOPS[bi], S, res[S[0]])
-            if pi + 1 < len(detail):
-                hline(fig, X0, X1, .524, LINE, .8)
-            footer(fig, 2 + pi // 2, total)
+            draw_summary(fig, P, res, order, total)
             pdf.savefig(fig); plt.close(fig)
 
-        d = pdf.infodict()
-        d["Title"] = "스타일 상위 10종목 전략(최근 1년)"
-    print("→ %s · %d쪽 · %dKB" % (OUT, total, os.path.getsize(OUT) // 1024))
+            for pi in range(0, len(detail), 2):
+                fig = new_page()
+                for bi, S in enumerate(detail[pi:pi + 2]):
+                    draw_block(fig, P, BLOCK_TOPS[bi], S, res[S[0]])
+                if pi + 1 < len(detail):
+                    hline(fig, X0, X1, .524, LINE, .8)
+                footer(fig, 2 + pi // 2, total)
+                pdf.savefig(fig); plt.close(fig)
+
+            d = pdf.infodict()
+            d["Title"] = "스타일 상위 10종목 전략(최근 1년)"
+        print("→ %s · %d쪽 · %dKB" % (OUT, total, os.path.getsize(OUT) // 1024))
 
     # ── 같은 내용을 화면용 JSON 으로도 낸다 ────────────────────────────────
     # PDF 는 수익률 순으로 정렬해 **쪽 번호가 매달 바뀌므로** 사이트에서 #page=N 으로
@@ -1223,6 +1252,25 @@ def dump_json(P, res, detail):
     p = os.path.join(DATA, "style_perf.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dKB · 스타일 %d종)" % (p, os.path.getsize(p) // 1024, len(doc["styles"])))
+    dump_trails(doc)
+
+
+def dump_trails(doc):
+    """홈(index.html)이 ETF 행 옆에 랩 행을 병기하려고 읽는 **슬림** 조각.
+
+    style_perf.json 을 통째로 받게 하면 안 된다 — 28.9KB 중 홈이 쓰는 trails 는 486B(1.7%)
+    뿐이고 나머지는 nav 곡선과 보유명단이다(gzip 기준 홈 전송량 +24%). index.html 이 스스로
+    적어 둔 기준("4KB라 홈 슬림 묶음에 넣지 않고 직접 받는다")을 지키려면 1KB 짜리가 맞다.
+    style.html 은 계속 style_perf.json 전체를 읽는다 — 그쪽은 곡선과 명단이 본문이다.
+    """
+    slim = {
+        "as_of": doc["as_of"], "start": doc["start"],
+        "styles": [{"key": s["key"], "label": s["label"], "trails": s["trails"]}
+                   for s in doc["styles"]],
+    }
+    p = os.path.join(DATA, "style_trails.json")
+    json.dump(slim, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("→ %s (%dB · 스타일 %d종)" % (p, os.path.getsize(p), len(slim["styles"])))
 
 
 def _mtd_of(P, R, t):
