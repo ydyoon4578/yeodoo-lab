@@ -297,8 +297,11 @@ def build():
         st = first_common(ts)
         def w(i):
             d = DTS[i]
-            sp = macro_asof("T10Y2Y", d)          # 기간스프레드
-            un = macro_asof("UNRATE", d)
+            sp = macro_asof("T10Y2Y", d)          # 기간스프레드 — 일간이라 시차 없음
+            # ⚠ 실업률은 월간이고 관측월이 끝난 뒤에 발표된다. 전에는 macro_asof 로 읽어
+            #   그달 말일에 그달 실업률을 아는 셈이었다(look-ahead). 발표 시차를 넣는다.
+            _u = macro_asof_m("UNRATE", d, 21)
+            un = _u[-1] if _u else None
             risk_off = (sp is not None and sp < 0) or (un is not None and un > 5.5)
             return {"TLT": 0.5, "GLD": 0.5} if risk_off else {"SPY": 1.0}
         return run_weights(w, st, "매크로 레짐 안전자산 로테이션",
@@ -725,7 +728,10 @@ def build():
         if not (A["macro"].get("EBP")):
             return None
         def w(i):
-            e = macro_asof("EBP", DTS[i])
+            # ⚠ EBP 도 월간이다(연준이 관측월 뒤에 낸다). macro_asof 로 읽으면 그달 말일에
+            #   그달 EBP 를 아는 셈이 된다 — 발표 시차 30일을 넣는다.
+            _e = macro_asof_m("EBP", DTS[i], 30)
+            e = _e[-1] if _e else None
             if e is None:
                 return {"SPY": 1.0}
             return {"SHY": 1.0} if e > 0.3 else {"SPY": 1.0}
