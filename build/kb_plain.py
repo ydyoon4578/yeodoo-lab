@@ -39,8 +39,11 @@ def main():
             print("없음:", p)
             return 1
 
-    gate = io.open(GATE, encoding="utf-8").read()
-    frag = io.open(FRAG, encoding="utf-8").read()
+    # newline="" = 바이트 정확 읽기. 이게 없으면 유니버설 개행 번역이 끼어 CRLF 조각의
+    # sha256 이 달라진다 — validate_site.py 와 kb_lock.py 는 둘 다 바이트 정확이라
+    # 이 파일만 어긋나 '조각 불일치'가 영원히 뜬다(실측 2026-07-29).
+    gate = io.open(GATE, encoding="utf-8", newline="").read()
+    frag = io.open(FRAG, encoding="utf-8", newline="").read()
 
     m = re.search(r'ph:\s*["\']([0-9a-f]{64})["\']', gate)
     if not m:

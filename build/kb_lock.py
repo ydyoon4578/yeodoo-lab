@@ -29,7 +29,6 @@ import io
 import os
 import re
 import secrets
-import subprocess
 import sys
 
 try: sys.stdout.reconfigure(encoding="utf-8")
@@ -165,11 +164,23 @@ def main() -> int:
     print("기록: kb.html  ct %d chars · ph %s…" % (len(p["ct"]), p["ph"][:12]))
 
     # 평문 한 장을 다시 만들어 둔다 — validate 의 평문 의존 검사 6종이 그것을 본다.
-    r = subprocess.run([sys.executable, os.path.join(ROOT, "build", "kb_plain.py")],
-                       capture_output=True, text=True)
-    print((r.stdout or r.stderr).strip() or "kb_plain.py 무응답")
-    if r.returncode != 0:
-        print("  ⚠ kb_plain.py 가 실패했다 — 평문 의존 검사 6종은 계속 SKIP 된다.")
+    #
+    # ⚠ 예전엔 subprocess 로 돌렸다가 메시지를 통째로 잃었다(실측 2026-07-29).
+    #   kb_plain.py 는 stdout 을 UTF-8 로 재설정하는데 부모의 text=True 는 **로케일**
+    #   (한국어 윈도면 cp949)로 디코딩한다. 한글 UTF-8 바이트가 cp949 로 안 풀려
+    #   subprocess 리더 스레드가 UnicodeDecodeError 로 죽고 r.stdout 이 None 이 됐다.
+    #   그 결과 진짜 사유 대신 '무응답'만 찍혔다. 파이프를 없애면 그 층 자체가 사라진다.
+    try:
+        import importlib.util as _ilu
+        _sp = _ilu.spec_from_file_location("_kbplain", os.path.join(ROOT, "build", "kb_plain.py"))
+        _kp = _ilu.module_from_spec(_sp)
+        _sp.loader.exec_module(_kp)
+        rc = _kp.main()
+    except Exception as e:
+        print("  ⚠ kb_plain.py 를 부르지 못했다 — %s: %s" % (type(e).__name__, e))
+        rc = 1
+    if rc != 0:
+        print("  ⚠ 평문 한 장을 못 만들었다 — 평문 의존 검사 6종은 계속 SKIP 된다.")
     print("다음: python build/validate_site.py")
     return 0
 
