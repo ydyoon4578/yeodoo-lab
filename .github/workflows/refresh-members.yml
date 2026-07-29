@@ -11,7 +11,7 @@ name: Refresh index membership
 
 on:
   schedule:
-    - cron: '30 23 * * 5'    # 매주 토 08:30 KST — 종목 갱신(08:45)보다 앞
+    - cron: '40 21 * * 5'    # 매주 토 06:40 KST — 종목 갱신(06:50)보다 앞
   workflow_dispatch:
 
 permissions:

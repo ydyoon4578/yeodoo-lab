@@ -5,7 +5,10 @@ name: Validate site
 #       lab 링크 앵커 실재·선별 상수(QUOTA/CATORD) 프론트↔일일잡 일치.
 on:
   push:
-    paths: ['**.html', 'data/**', 'build/**', '.github/workflows/validate.yml']
+    # ⚠ 워크플로 전체를 넣는다. 예전엔 validate.yml 하나만 있어서 **cron 만 고친 커밋에는
+    #   CI 가 아예 돌지 않았다** — 라벨 정본(data/schedule.json) 재생성을 빠뜨린 바로 그 커밋이
+    #   게이트를 통과하는 구조였다.
+    paths: ['**.html', 'data/**', 'build/**', '.github/workflows/**']
   pull_request:
   workflow_dispatch:
 
