@@ -49,13 +49,13 @@ jobs:
         # '기준일 정본 불일치' 검사가 다음 실행에서 잡을 실패시킨다.
         run: python build/asof_index.py
       # ⚠ 생성기 산출물 전부 넘긴다: stocks.json(슬림)·home_reco.json·data/sd/(종목별 상세, 삭제 포함)
-      #   + target_history.json(목표주가 이력 누적 — 커밋 안 하면 매 실행 fresh checkout이라 영구 유실)
+      #   + target_history.json·fund_history.json(누적 이력 — 커밋 안 하면 매 실행 fresh checkout이라 영구 유실)
       #   하나라도 빠지면 해당 화면이 낡은 채 고착된다(home_reco 누락 사고의 교훈).
       #   빠뜨림은 ci_push.sh의 누락 가드가 data/ 전체를 훑어 잡는다.
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
-            data/stocks.json data/home_reco.json data/sd data/target_history.json \
+            data/stocks.json data/home_reco.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
