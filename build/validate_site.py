@@ -1641,6 +1641,22 @@ try:
                           f"style_top_pdf.py --json 이 갱신 잡에서 밀렸다")
         else:
             print(f"  ~ 홈 스타일 표: 랩 {_d1} · ETF {_d2}({_gap}일 차) — 부제에 함께 표시된다")
+    # ④ 유니버스 편향 실측치의 신선도 — style_pit.json 은 사내망 PC 에서만 만들 수 있고
+    #    (입력이 gitignore) 화면 각주가 그 수치를 인용한다. 배포 수치는 매주 갱신되므로
+    #    오래 두면 각주가 옛 창의 편향을 현재 수치인 척 말한다. 자동화가 불가능한 파일이라
+    #    실패가 아니라 경고로 낸다 — 대신 조용히는 두지 않는다.
+    _sp = os.path.join(ROOT, "data", "style_pit.json")
+    if not os.path.exists(_sp):
+        print("  ~ data/style_pit.json 없음 — 화면 각주가 수치 없는 정성 문구로 나간다"
+              "(사내망 PC 에서 build/style_pit.py 실행)")
+    else:
+        _pj = json.load(io.open(_sp, encoding="utf-8"))
+        _pd = _pj.get("as_of") or ""
+        if _pd and _d1 and _pd != _d1:
+            _g2 = abs((_dt.date.fromisoformat(_pd) - _dt.date.fromisoformat(_d1)).days)
+            if _g2 > 45:
+                print(f"  ~ 유니버스 편향 실측이 {_pd} 로 랩 기준일 {_d1} 보다 {_g2}일 낡았다 — "
+                      f"build/style_pit.py 를 다시 돌릴 것(각주가 옛 창의 수치를 인용한다)")
 except FileNotFoundError as e:
     errors.append(f"홈 스타일 표 검증: 파일 없음 {e} — build/style_top_pdf.py --json 실행 필요")
 except Exception as e:

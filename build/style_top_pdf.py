@@ -499,10 +499,16 @@ def is_class_a(P, t):
     return bool(__import__("re").search(r"-\s*(CL|CLASS)?\s*A\b|\bCLASS A\b", n))
 
 
-def backtest(P, fn):
+def backtest(P, fn, pool_of=None):
     """최근 1년. 월말 리밸런스 · 상위 10 동일가중 · 사이에는 표류.
 
     구간 시작 시점의 보유는 그 이전 마지막 월말 선정이다. 그래야 창 첫날부터 진짜 포트폴리오다.
+
+    pool_of — 선택 시점 i 를 받아 그날 고를 수 있는 티커 집합을 주는 함수. None 이면 제한이
+      없다(=기본 동작, 오늘의 유니버스 전체 = 생존편향). build/style_pit.py 가 선정 시점
+      멤버십을 넘겨 편향 크기를 재는 데 쓴다. **훅을 여기 둔 이유**: 백테스트를 두 벌로
+      만들면 반드시 어긋나고, 그때 '편향을 재는 쪽'이 틀렸는지 '배포하는 쪽'이 틀렸는지
+      알 수 없게 된다. 같은 코드가 두 경우를 다 돌아야 차이가 곧 편향이다.
     """
     end = len(P.dates) - 1
     # 창 시작을 **월말**로 맞춘다. 252거래일을 그냥 빼면 월 중간(예: 07-25)에서 시작해
@@ -520,7 +526,12 @@ def backtest(P, fn):
         s, tie = fn(P, i)
         out = None
         if len(s) >= MIN_NAMES:
-            ok = [t for t in s if t in P.px and not np.isnan(P.px[t][i])]
+            # 마스크는 pit_backtest.py:242 와 같은 자리에 둔다 — 채점은 그대로 하고
+            # **후보에서 거른다**. 채점 단계에서 거르면 z 표준화의 모집단이 달라져
+            # 편향 측정이 아니라 다른 규칙이 된다.
+            pool = pool_of(i) if pool_of else None
+            ok = [t for t in s if t in P.px and not np.isnan(P.px[t][i])
+                  and (pool is None or t in pool)]
             ok.sort(key=lambda t: (-s[t], -tie.get(t, 0.0), t))
             # 같은 발행사의 다른 클래스는 하나만 — 밀려난 자리는 다음 순위가 채운다.
             #   실측(성장): GOOG·GOOGL 이 둘 다 들어와 알파벳 한 회사가 10칸 중 2칸(20%)이었다.
@@ -763,8 +774,9 @@ def footer(fig, page, total):
     tx(fig, X0, .026, "스타일 상위 10종목 전략 · 지수 SPX = S&P 500 단독 · "
                       "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0",
        fontsize=6.4, color=MUTED)
-    tx(fig, X0, .0175, "생존편향 — 재무는 시점(공시 45일 지연)이지만 유니버스는 오늘 518종목의 소급이다. "
-                       "창 시작 멤버 517종 중 29종이 오늘 명단에 없다(2026-07-29 실측).",
+    # 한 줄에서 넘치지 않게 짧게 — 렌더해 보고 오른쪽이 잘려 줄였다. 자세한 것은 style.html.
+    tx(fig, X0, .0175, "유니버스 편향(실측) — 선정 시점 구성으로 다시 재면 "
+                       + pit_caveat(short=True) + ". 대부분 사후편입 선견이다.",
        fontsize=6.0, color=NEG)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
        fontsize=6.4, color=MUTED, ha="right")
@@ -1213,6 +1225,37 @@ def _thin(a, k=140):
     return out
 
 
+def pit_caveat(short=False):
+    """유니버스 편향 문구를 data/style_pit.json 실측에서 만든다.
+
+    ⚠ '생존편향'이라고만 적으면 안 된다 — 실측해 보니 편향의 94~100% 가 **사후편입 선견**
+      (그때 지수에 없던 종목을 미리 고른 것)이고 교과서적 생존편향(편출 종목 부재)은
+      모멘텀 2.9%p·나머지 0 이었다. 지배 채널을 작은 채널 이름으로 부르면 원인을 잘못 짚는다.
+    파일이 없으면(러너 등) 수치 없이 정성 문구만 낸다 — 없는 숫자를 지어내지 않는다.
+    """
+    try:
+        j = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
+        u, st = j["universe"], j["styles"]
+        big = sorted(st.values(), key=lambda s: -abs(s["bias"]["ret"]))[:2]
+        nums = " · ".join("%s %+.0f%% → %+.0f%%" % (s["label"], s["published"]["ret"], s["pit"]["ret"])
+                          for s in big)
+        head = ("🚨 유니버스 편향(실측) — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
+                "오늘 %d종목을 과거로 소급해 고르는데, 그중 %d종은 구간 시작 시점에 아직 지수 "
+                "비멤버였다. 지수는 많이 오른 종목을 편입하므로 소급 유니버스는 '오를 것'을 미리 "
+                "아는 셈이 된다. 선정 시점 구성이력으로 다시 재면 %s(%s 기준). "
+                "편향의 대부분이 이 사후편입 선견이고, 편출 종목 부재(구간 시작 멤버 %d종 중 "
+                "%d종이 오늘 없음)의 기여는 작다. 위험조정으로 보면 세 스타일 모두 "
+                "S&P 500 에 열위가 된다. 자세한 분해는 랩의 유니버스 편향 측정 참조. "
+                % (u["today"], u["not_yet_member_at_start"], nums, j["as_of"],
+                   u["n_members_at_start"], u["gone_at_start"]))
+        return head if not short else nums
+    except Exception:
+        return ("🚨 유니버스 편향 — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
+                "오늘의 종목을 과거로 소급해 고르므로, 그때는 지수에 없던 종목까지 후보가 된다. "
+                "지수는 많이 오른 종목을 편입하니 그만큼 수익률이 유리하게 부풀려져 있다. "
+                if not short else "측정 파일 없음")
+
+
 def dump_json(P, res, detail):
     R0 = res[detail[0][0]]
     gn = bench_nav(P, P.gspc, R0["start"], R0["end"])
@@ -1223,16 +1266,13 @@ def dump_json(P, res, detail):
         "note": ("style_strategies.pdf 와 같은 계산이다 — 규칙을 과거로 되돌려 매월 다시 골라 "
                  "최근 1년을 잰 것이다. 상위 10종목 동일가중 · 월말 리밸런스 · 비용 0 · "
                  "대조군은 S&P 500(PR)·NASDAQ 100(PR)."),
-        # 생존편향을 caveat 맨 앞에 둔다 — 이 화면은 +134% 를 보여준다. 그 수치를 읽는 사람이
-        # 가장 먼저 알아야 하는 것이 '고른 명단이 오늘의 생존자'라는 사실이다.
-        # (전에는 caveat 이 벤더 비율 얘기만 해서 style.html 에는 생존편향 경고가 아예 없었다.)
+        # 유니버스 편향을 caveat 맨 앞에 둔다 — 이 화면은 +137% 를 보여준다. 그 수치를 읽는
+        # 사람이 가장 먼저 알아야 하는 것이 '고를 수 있었던 명단이 그때 것이 아니다'라는 사실이다.
+        # 수치는 build/style_pit.py 의 실측(data/style_pit.json)에서 **파생**한다 — 손으로 적으면
+        # 다음 갱신에 낡는다(이 저장소가 반복해 겪은 라벨 드리프트).
         # ⚠ 화면에 그대로 나가는 문장이다. 마크다운(**)을 쓰지 말 것 — textContent 로 꽂히므로
         #   별표가 글자로 보인다. 사내 DB 테이블명도 적지 말 것(공개 사이트다).
-        "caveat": ("🚨 생존편향 — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
-                   "오늘 살아남은 518종목을 과거로 소급해 고른다. 이 랩에는 선정 시점의 지수 "
-                   "구성이력이 있어 이 창을 100% 덮는데도 이 계산은 쓰지 않는다. "
-                   "2026-07-29 실측: 창 시작 멤버 517종 중 29종이 오늘 유니버스에 없다"
-                   "(개명 4종 제외하면 실질 25종). 그만큼 수익률이 유리하게 부풀려져 있다. "
+        "caveat": (pit_caveat() +
                    "⚠ 홈 화면의 스타일 구성종목 칩과 명단이 다를 수 있다. 그쪽은 벤더 비율을 "
                    "그대로 쓰고 여기는 백테스트라 SEC 재무를 45일 지연으로 쓴다 — "
                    "모멘텀·저변동·고베타는 같고, 퀄리티·가치·성장은 6~7/10 만 겹친다."),
@@ -1302,6 +1342,21 @@ def dump_trails(doc):
         "styles": [{"key": s["key"], "label": s["label"], "trails": s["trails"]}
                    for s in doc["styles"]],
     }
+    # 유니버스 편향 실측치 몇 개를 여기 태워 보낸다 — 홈이 style_pit.json(5KB)을 따로 받지
+    # 않게. 홈 각주가 이 값으로 문장을 만든다. 없으면 홈은 수치 없이 정성 문구만 낸다.
+    try:
+        j = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
+        slim["pit"] = {
+            "as_of": j["as_of"], "not_yet": j["universe"]["not_yet_member_at_start"],
+            "today": j["universe"]["today"],
+            "styles": {k: {"label": s["label"], "pub": s["published"]["ret"],
+                           "pit": s["pit"]["ret"], "bias": s["bias"]["ret"],
+                           "look": s["channel"]["lookahead"],
+                           "surv": s["channel"]["survivorship"]}
+                       for k, s in j["styles"].items()},
+        }
+    except Exception:
+        pass
     p = os.path.join(DATA, "style_trails.json")
     json.dump(slim, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dB · 스타일 %d종)" % (p, os.path.getsize(p), len(slim["styles"])))
