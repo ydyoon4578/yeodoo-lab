@@ -61,8 +61,22 @@ def wanted():
 
 def main() -> int:
     want = wanted()
-    cmap, src = RF.load_cik_map()
-    print("편출 명단 %d종 · 티커→CIK 출처 %s(%d개)" % (len(want), src, len(cmap)))
+    # 🚨 RF.load_cik_map() 을 쓰면 안 된다 — 그것은 data/industry.json(오늘 518종)을 먼저
+    #   읽으므로 편출 종목 CIK 가 **전부 없다**(실측: 첫 실행에서 32/32 실패).
+    #   여기 필요한 것은 SEC 전체 등록 목록이다. industry.json 은 보조로만 얹는다
+    #   (그쪽에 전신 법인 보정이 들어 있어 겹치는 티커는 그 값이 더 정확하다).
+    cmap = dict(edgar.ticker_cik_map())
+    n_sec = len(cmap)
+    try:
+        aux, src2 = RF.load_cik_map()
+        if src2 == "data/industry.json":
+            cmap.update(aux)
+    except Exception:
+        pass
+    if not cmap:
+        raise SystemExit("SEC company_tickers.json 을 못 읽었다 — 러너의 SEC 응답을 확인할 것")
+    print("편출 명단 %d종 · 티커→CIK: SEC 전체 %d개(+보조 %d개)"
+          % (len(want), n_sec, len(cmap) - n_sec))
     os.makedirs(OUT_DIR, exist_ok=True)
 
     got, no_cik, no_facts, changed = [], [], [], 0
