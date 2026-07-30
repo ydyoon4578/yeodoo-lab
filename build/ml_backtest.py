@@ -30,7 +30,8 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tech_backtest import ann_stats, tstat, maxdd, curve_pack  # noqa: E402
+from tech_backtest import (ann_stats, tstat, maxdd, curve_pack,  # noqa: E402
+                           risk_bootstrap)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -235,7 +236,7 @@ def market_timing(A, RF):
         "start": DTS[st], "end": DTS[-1], "n_days": n - st,
         "metrics": ms, "bench": mb, "bench_unstable": False,
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-        "t": tstat(rets, brs), "turnover": round(turn / max(1e-9, (n - st) / 252), 1),
+        "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / max(1e-9, (n - st) / 252), 1),
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
@@ -465,7 +466,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
         "start": DTS[st2], "end": DTS[-1], "n_days": n - st2,
         "metrics": ms, "bench": mb, "bench_unstable": False,
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-        "t": tstat(rets, brs), "turnover": round(turn / TOPN / yrs, 1),
+        "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / TOPN / yrs, 1),
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
