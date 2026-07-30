@@ -47,16 +47,37 @@ import edgar
 
 
 def wanted():
-    p = os.path.join(DATA, "style_pit.json")
-    if not os.path.exists(p):
-        raise SystemExit("data/style_pit.json 이 없다 — 사내망 PC 에서 build/style_pit.py 를 "
-                         "먼저 돌려 편출 명단을 커밋할 것.")
-    j = json.load(io.open(p, encoding="utf-8"))
-    ts = ((j.get("universe") or {}).get("gone_tickers")) or []
-    if not ts:
-        raise SystemExit("style_pit.json 에 universe.gone_tickers 가 없다 — "
-                         "build/style_pit.py 를 다시 돌려 명단을 채울 것.")
-    return list(ts)
+    """받을 명단 → {티커: 마지막 멤버월 or None}.
+
+    정본은 data/pit_universe.json(build/pit_backtest.py --universe-only 가 낸다) — PIT 창
+    전체(2020-09~)의 편출 종목이라 펀더멘털 규칙까지 덮는다. 스타일 창만 담은
+    style_pit.json 의 gone_tickers 도 합친다(둘의 창이 달라 서로를 포함하지 않는다).
+    """
+    out = {}
+    p = os.path.join(DATA, "pit_universe.json")
+    if os.path.exists(p):
+        for t, v in (json.load(io.open(p, encoding="utf-8")).get("tickers") or {}).items():
+            out[t] = (v or {}).get("last")
+    q = os.path.join(DATA, "style_pit.json")
+    if os.path.exists(q):
+        for t in ((json.load(io.open(q, encoding="utf-8")).get("universe") or {})
+                  .get("gone_tickers") or []):
+            out.setdefault(t, None)
+    if not out:
+        raise SystemExit("편출 명단이 없다 — 사내망 PC 에서 "
+                         "build/pit_backtest.py --universe-only 를 돌려 "
+                         "data/pit_universe.json 을 커밋할 것.")
+    return out
+
+
+def earliest_period(tags):
+    """이 법인이 보고한 가장 이른 기간말. 티커 재사용 판정에 쓴다."""
+    ds = []
+    for v in (tags or {}).values():
+        for row in ((v or {}).get("q") or []) + ((v or {}).get("a") or []) + ((v or {}).get("i") or []):
+            if isinstance(row, list) and row and isinstance(row[0], str):
+                ds.append(row[0])
+    return min(ds) if ds else None
 
 
 def main() -> int:
@@ -79,8 +100,9 @@ def main() -> int:
           % (len(want), n_sec, len(cmap) - n_sec))
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    got, no_cik, no_facts, changed = [], [], [], 0
-    for n, t in enumerate(want, 1):
+    got, no_cik, no_facts, reused, changed = [], [], [], [], 0
+    for n, t in enumerate(sorted(want), 1):
+        last = want[t]
         cik = cmap.get(t) or cmap.get(t.upper())
         if not cik:
             no_cik.append(t); continue
@@ -96,6 +118,14 @@ def main() -> int:
                     break
         if not j or not tags:
             no_facts.append(t); continue
+        # 🚨 티커 재사용 가드 — 이 티커가 지수 멤버였던 마지막 달보다 법인의 **최초** 보고기간이
+        #   뒤면, SEC 가 준 것은 그 티커를 뒤에 물려받은 **다른 회사**다(FB → ProShares 선례).
+        #   그 재무를 쓰면 '그 시점에 존재하지도 않던 회사의 숫자로 과거를 채점' 하게 된다.
+        ep = earliest_period(tags)
+        if last and ep and ep[:7] > last:
+            reused.append("%s(법인 최초 %s > 멤버 마지막 %s · %s)"
+                          % (t, ep[:7], last, (j.get("entityName") or "")[:24]))
+            continue
         std = "IFRS" if not (((j.get("facts") or {}).get("us-gaap"))) else "us-gaap"
         doc = {"t": t, "cik": int(cik), "nm": j.get("entityName") or t,
                "labels": {k: RF.LABEL[k] for k in tags if k in RF.LABEL},
@@ -117,6 +147,8 @@ def main() -> int:
     print()
     print("받음 %d종(변경 %d) · CIK 없음 %d종 %s · 재무 없음 %d종 %s"
           % (len(got), changed, len(no_cik), no_cik, len(no_facts), no_facts))
+    if reused:
+        print("⚠ 티커 재사용으로 제외 %d종: %s" % (len(reused), " · ".join(reused)))
     if not got:
         raise SystemExit("한 종목도 못 받았다 — CIK 해석이나 SEC 응답을 확인할 것")
     sz = sum(os.path.getsize(os.path.join(OUT_DIR, f)) for f in os.listdir(OUT_DIR)) / 1024

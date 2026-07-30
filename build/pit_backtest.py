@@ -135,6 +135,36 @@ def load_prices(need, MEMBER_SPAN):
     return px
 
 
+def dump_universe(mem, span, px_map):
+    """편출 종목 명단을 data/pit_universe.json 으로 — **러너가 읽는 유일한 경로**.
+
+    build/pit_facts.py 가 이 명단으로 SEC 재무를 받아 data/fx_pit 에 넣고, 그것이 있어야
+    펀더멘털 규칙(저PER·고ROE 등)을 PIT 로 잴 수 있다. 멤버십 원천(pit_members.json)은
+    사내 DB 라이선스라 gitignore — 러너가 스스로 계산할 수 없으므로 이 파일을 커밋한다.
+
+    ⚠ 티커별 멤버 기간(first/last)을 같이 싣는다. 재사용 티커를 걸러내려면 러너가
+      'SEC 가 준 법인의 최초 보고기간이 이 티커의 마지막 멤버월보다 늦은가' 를 볼 수 있어야
+      한다(FB → ProShares ETF 선례). 명단만 주면 그 판정을 못 한다.
+    ⚠ 가격이 없는 편출 종목은 애초에 보유할 수 없으니 재무를 받을 이유도 없다 — 뺀다.
+    """
+    st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    today = {s["t"] for s in st["stocks"]}
+    union = set()
+    for v in mem.values():
+        union |= set(v)
+    gone = sorted(t for t in (union - today) if px_map.get(t))
+    doc = {
+        "note": ("PIT 창에서 지수에 있었다가 오늘 유니버스에 없는 종목. build/pit_facts.py 가 "
+                 "이 명단으로 SEC 재무를 받는다(data/fx_pit). 가격이 없는 종목은 보유 자체가 "
+                 "불가하므로 제외했다. first/last 는 멤버였던 월이고 티커 재사용 판정에 쓴다."),
+        "start": START, "n_today": len(today), "n_union": len(union), "n_gone": len(gone),
+        "tickers": {t: {"first": span[t][0], "last": span[t][1]} for t in gone},
+    }
+    p = os.path.join(DATA, "pit_universe.json")
+    json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("→ %s · 편출 %d종(가격 있는 것만)" % (p, len(gone)))
+
+
 def main():
     print("PIT 백테스트 — 매월말 실제 편입 종목만 후보 (SPX ∪ NDX, %s~)" % START)
     mem = fetch_members()
@@ -148,6 +178,9 @@ def main():
             a, b = span.get(t, (ym, ym))
             span[t] = (min(a, ym), max(b, ym))
     px_map = load_prices(need, span)
+    dump_universe(mem, span, px_map)
+    if "--universe-only" in sys.argv:
+        return 0
 
     # 거래일 격자 — 랩과 같은 격자를 쓴다(랩이 이미 yfinance 거래일로 만들어 둔 것).
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
