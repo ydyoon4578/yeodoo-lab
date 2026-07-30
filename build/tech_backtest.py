@@ -41,6 +41,9 @@ OUT = os.path.join(DATA, "tech_strategies.json")
 
 TOPN = 10          # 횡단면 전략이 들고 갈 종목 수 — 50이면 '고른' 게 아니라 사실상 지수다
 MIN_HIST = 260     # 신호 계산에 필요한 최소 과거 길이(약 1년)
+XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
+                           # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
+                           # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
 
 
 # ── 유틸 ────────────────────────────────────────────────────────────────
@@ -444,34 +447,48 @@ def _days_between(a, b):
     return abs(_ord(a) - _ord(b))
 
 
-def yoy_pair(series, date, lag=FUND_LAG_DAYS):
+def yoy_pair(series, date, lag=FUND_LAG_DAYS, seam=None):
     """(최신값, 전년 동기값) — 공시지연 컷 뒤 최신 관측과 그 1년 전 관측.
 
     🚨 **인덱스로 4칸 뒤를 세면 안 된다.** yoy_eps 의 주석과 같은 이유이고, 실측으로도
       확인됐다 — 인덱스 방식이면 6개월·9개월·15개월·18개월, 심지어 94~103개월 간격이
       '전년 동기'로 섞여 들어온다(29,550 관측 중 1,057건 = 3.6%). 날짜로 320~410일 안에서
       가장 가까운 것을 찾고, 못 찾으면 그 분기를 버린다.
+    seam 을 주면 그 날짜를 **건너뛰는** 짝은 버린다 — 분할 이음매 양쪽은 기준이 달라 비율이
+    분할비를 그대로 뒤집어쓴다(split_trim 참조). 이음매 한쪽 안에서만 짝을 짓는다.
     반환은 (d0, v0, d1, v1) 또는 None.
     """
     ser = asof_all(series, date, lag)
     if not ser:
         return None
     d0, v0 = ser[0]
+    if seam and d0 < seam:                 # 최신값이 이미 이음매 이전 = 기준이 오늘과 다르다
+        return None
     best = None
     for d1, v1 in ser[1:]:
         gap = _days_between(d0, d1)
         if gap > 410:
             break
+        if seam and d1 < seam:             # 짝이 이음매를 건너뛴다
+            continue
         if 320 <= gap <= 410 and (best is None or gap < best[0]):
             best = (gap, d1, v1)
     return (d0, v0, best[1], best[2]) if best else None
 
 
 def asof_all(series, date, lag=FUND_LAG_DAYS):
-    """공시지연 컷을 통과한 관측 전체(날짜 내림차순). asof_fund 가 첫 값만 주는 것의 확장."""
+    """공시지연 컷을 통과한 관측 전체(날짜 내림차순). asof_fund 가 첫 값만 주는 것의 확장.
+
+    🚨 `_shift(d, days)` 는 d **−** days 다(뺀다). 여기에 `-lag` 를 넘겼던 탓에 컷이 90일
+      과거가 아니라 90일 **미래**였다 — 적대감사가 잡았다. 실측: 리밸런스 2024-07-31 에서
+      AAPL 이 2024-09-28 기간말(실제 제출 2024-11-01)을 썼고, asof_fund 와 첫 값이 갈린
+      경우가 69,434 중 64,440(92.8%). 20-F 종목은 최악 180일까지 앞섰다.
+      방향 확인: 성과를 부풀리는 게 아니라 x-shiss 를 망치고 있었다(t 1.38 → 2.77).
+      그래도 미래정보이므로 이 계열이 내는 수치는 무효다.
+    """
     if not series:
         return []
-    cut = _shift(date, -lag)
+    cut = _shift(date, lag)
     return [(d, v) for d, v in series if d <= cut]
 
 
@@ -664,30 +681,43 @@ def split_trim(sh, eps, dps, tk=""):
       ② 분할 기준 — 절반 넘게 어긋날 수 있다. 정답은 **최신**이다(조정주가가 오늘 기준이므로).
          🚨 여기서 다수결을 쓰면 거꾸로 간다 — CMG 는 분할 전 관측이 11개로 다수라
            중앙값 규칙이 분할 전(27.79)을 남겼다. 최신에서 거슬러 올라가며 자른다.
+
+    🚨 단계 ②를 **주식수 변화 자체를 신호로 쓰는 규칙**(x-shiss)에 그대로 적용하면 신호를
+    거세한다 — 적대감사 실측: OMC 20개 관측 중 19개 삭제(단절 1.53배의 정체는 분할이 아니라
+    IPG 합병 대가 주식발행 +53%), MSTR 12/20 삭제(ATM 대량발행). 즉 순주식발행 회피가
+    겨냥해야 하는 가장 전형적인 사건이 일어나면 그 종목은 꼴찌가 아니라 **후보에서 사라진다**.
+    그래서 이음매 날짜를 함께 돌려준다. 주당지표는 지금처럼 자르고(기준이 섞이면 답이 없다),
+    주식수 성장률은 ①만 적용한 계열에서 **이음매를 건너뛰는 짝만** 배제한다 — 이음매 양쪽은
+    각각 내부적으로 일관되므로 잘못된 값은 이음매를 지나는 비율 하나뿐이다.
+    ⚠ 비율만으로 분할과 증자를 구별하려는 시도는 하지 않는다: 인접 분기 |>1.2배| 168건 중
+      단순 분할비(±2%) 근접은 67건뿐이고 나머지는 단위오류(1000배대)와 실제 자본거래다.
     """
     if not sh or len(sh) < 3:
-        return sh, eps, dps
+        return sh, eps, dps, sh, None
     vs = sorted(v for _d, v in sh if v and v > 0)
     if not vs:
-        return sh, eps, dps
+        return sh, eps, dps, sh, None
     med = vs[len(vs) // 2]
     # ① 단위 오류 — 100배 넘게 벗어난 관측(분할로는 설명 안 되는 크기)
     bad = {d for d, v in sh if not v or v <= 0 or v / med > 100 or med / v > 100}
     ok = [(d, v) for d, v in sh if d not in bad]
+    unit = list(ok)                        # ①만 적용한 계열(주식수 성장률용)
     # ② 분할 기준 — 최신부터 거슬러 올라가 첫 단절 이전을 전부 버린다
+    seam = None
     for i in range(len(ok) - 1):
         a, b = ok[i][1], ok[i + 1][1]
         if a and b and b > 0 and (a / b >= 1.5 or a / b <= 1 / 1.5):
-            bad |= {d for d, _v in sh if d < ok[i][0]}
+            seam = ok[i][0]
+            bad |= {d for d, _v in sh if d < seam}
             break
     if not bad:
-        return sh, eps, dps
+        return sh, eps, dps, unit, seam
     worst = max((max(v / med, med / v) for d, v in sh if d in bad and v and v > 0), default=0)
     SPLIT_TRIMMED[tk] = (min(bad), round(worst, 2), len(bad), len(sh))
     keep = lambda ser: [(d, v) for d, v in (ser or []) if d not in bad]
     # eps·dps 는 sh 와 같은 기간말 격자를 쓰므로 같은 날짜를 뺀다. 격자가 어긋난 관측은
     # 판정할 근거가 없어 남긴다(총액 항목은 애초에 분할과 무관하다).
-    return keep(sh), keep(eps), keep(dps)
+    return keep(sh), keep(eps), keep(dps), unit, seam
 
 
 def load_fund(extra_dirs=()):
@@ -720,7 +750,7 @@ def load_fund(extra_dirs=()):
 
         eq, sh, ep = series("eq"), series("sh"), series("eps")
         rev, ni, dps = series("rev"), series("ni"), series("dps")
-        sh, ep, dps = split_trim(sh, ep, dps, j.get("t") or fn[:-5])
+        sh, ep, dps, sh_u, seam = split_trim(sh, ep, dps, j.get("t") or fn[:-5])
         asset, liab = series("asset"), series("liab")
         cfo, capex = dict(series("cfo")), dict(series("capex"))
         # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
@@ -731,7 +761,9 @@ def load_fund(extra_dirs=()):
                                           "rev": rev, "ni": ni, "dps": dps,
                                           "asset": asset, "liab": liab,
                                           # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
-                                          "cash": series("cash")}
+                                          "cash": series("cash"),
+                                          # 주식수 성장률용: 단위오류만 교정, 분할 이음매는 날짜로 표시
+                                          "sh_u": sh_u, "sh_seam": seam}
     return out
 
 
@@ -1104,8 +1136,12 @@ def build_strats():
          lambda t, i, P, Rt, V: ret(P, i - 126, 126),
          "Novy-Marx 'Is momentum really momentum?'(JFE 2012). 모멘텀의 예측력이 최근 6개월이 "
          "아니라 그보다 앞선 중기 구간에서 온다는 주장이다. 이 표의 12-1 모멘텀은 최근 1개월만 "
-         "빼는데, 여기서는 최근 6개월을 통째로 뺀다 — 같은 '모멘텀' 이름을 쓰지만 창이 겹치지 "
-         "않으므로 둘 중 어느 구간이 실제로 일하는지 갈라 볼 수 있다.")
+         "빼는데, 여기서는 최근 6개월을 통째로 뺀다. "
+         "🚨 처음 이 자리에 '창이 겹치지 않으므로 어느 구간이 일하는지 갈라 볼 수 있다'고 적었는데 "
+         "사실이 아니다 — 12-1 은 ret(252)−ret(21) 이고 그 252일 성분이 에코 창을 전부 포함한다. "
+         "적대감사 실측: 일간수익 상관 0.888 · 월별 보유 교집합 중앙 0.50 · 12-1 초과수익에 회귀한 "
+         "증분 알파는 연 +5.35%p 지만 t 는 1.01 이다. 즉 12-1 을 이미 들고 있으면 이 규칙이 "
+         "추가로 주는 것은 없다. 별개 축으로 세지 말 것(다중검정 족 수를 부풀린다).")
     xsec("x-season", "동월 계절성 (같은 달 과거 2~5년 평균)",
          "다음 달과 같은 달의 과거 2·3·4·5년 전 월수익률 평균이 가장 큰 %d종목 동일가중, "
          "월말 리밸런스(결측 연도는 제외하고 남은 것의 평균)." % TOPN,
@@ -1130,23 +1166,31 @@ def build_strats():
          "그 변화율 축은 없었다. "
          "⚠ 총자산이 0 으로 들어온 분기가 실제로 있다(PSKY 2025-03·06, SW 2024-03). 분자가 0 이면 "
          "증가율이 −100%로 1등이 되어 자료 구멍이 편입된다 — 그래서 0 이하를 먼저 뺀다.")
-    xsec("x-shiss", "순주식발행 회피 (주식수 증가 최저)",
-         "발행주식수의 전년 동기 대비 증가율이 가장 낮은(자사주 소각) %d종목 동일가중, "
+    xsec("x-shiss", "순주식발행 회피 (희석주식수 증가 최저)",
+         "가중평균 희석주식수의 전년 동기 대비 증가율이 가장 낮은(자사주 소각) %d종목 동일가중, "
          "월말 리밸런스. 증가율 절대값이 50%%를 넘으면 제외." % TOPN,
          None,
          "Pontiff·Woodgate(JF 2008). 주식을 새로 찍는 회사는 부진하고 줄이는 회사는 낫다는 것이다. "
          "이 표의 총주주환원 축은 배당(고배당수익률)뿐이고 주식수 축은 없었다. "
-         "⚠ 절대값 50% 컷은 분할 미조정·주식교환 M&A 를 걸러내려는 것이다. 분할 기준 불일치는 "
-         "split_trim 이 먼저 잘라내지만 남는 오탐을 한 겹 더 막는다.")
-    xsec("x-cash", "현금보유비율 상위 (현금 ÷ 총자산)",
+         "🚨 적대감사가 이 규칙의 첫 구현을 무효로 만들었다. split_trim 이 분할 이음매 이전 이력을 "
+         "전부 지우는데, 대규모 발행이야말로 이음매로 잡힌다 — OMC 20개 관측 중 19개 삭제(단절의 "
+         "정체는 분할이 아니라 IPG 합병 대가 발행 +53%), MSTR 12/20 삭제(ATM 대량발행). 즉 이 규칙이 "
+         "벌해야 하는 종목이 꼴찌가 아니라 후보에서 사라졌다. 지금은 단위오류만 교정한 계열을 쓰고 "
+         "이음매를 건너뛰는 짝만 버린다. 문서의 절대값 50% 컷은 실측 0.2%만 걸러 사실상 무해했다. "
+         "⚠ 태그는 가중평균 '희석' 주식수다(시점 잔고가 아니라 기간 평균). 옵션·전환권 희석이 "
+         "섞이고 소각 반영이 최대 1분기 늦다 — 원논문의 순발행과 같지 않다.")
+    xsec("x-cash", "현금성자산 비율 상위 (현금및현금성자산 ÷ 총자산)",
          "최신 분기 현금및현금성자산을 총자산으로 나눈 값이 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % TOPN,
          None,
          "Palazzo(JFE 2012). 현금을 많이 쥔 회사가 위험이 커질 때 더 잘 버틴다는 것이다. "
          "이 표의 재무구조 축은 부채(저부채)뿐이고 자산 쪽 현금 축은 없었다. "
-         "⚠ 원논문의 분자는 '현금+단기투자'인데 이 랩의 cash 태그는 현금및현금성자산만이다 — "
-         "유가증권을 많이 든 회사(애플 등)는 순위가 갈린다. 원논문 t 를 그대로 이 표의 "
-         "기대치로 읽지 말 것.")
+         "🚨 원논문의 분자는 '현금+단기투자'인데 이 랩의 cash 태그는 현금및현금성자산만이다. "
+         "이탈이 순위에 결정적이라는 것이 실측으로 확인됐다 — 현금부자 대형주 6종(AAPL·MSFT·GOOGL·"
+         "META·NVDA·AMZN)의 편입 횟수가 107회 중 전원 0회다. 유동성을 유가증권으로 굴리는 "
+         "회사가 구조적으로 전부 빠지므로, 이것은 '현금비율 상위'가 아니라 '현금을 유가증권으로 "
+         "안 굴리는 회사 상위'다. 그래서 이름도 그렇게 고쳤다. 은행은 CashAndDueFromBanks 를 써서 "
+         "금융 76종 중 34종이 태그 결측이다. 원논문 t 를 이 표의 기대치로 읽지 말 것.")
 
 
 # ── 실행 ────────────────────────────────────────────────────────────────
@@ -1408,6 +1452,7 @@ def run():
             nav = [100.0]
             srets = []
             turns = 0
+            thin = 0             # 후보가 얇아 무보유로 둔 월말 수(커버리지 게이트)
             first_i = None       # 실제로 무언가를 보유하기 시작한 시점
             for i in range(MIN_HIST + 1, n):
                 # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 월말까지 기다리지 않고
@@ -1505,7 +1550,10 @@ def run():
                                     g = pr[1] / pr[3] - 1.0
                                     v = -max(-2.0, min(2.0, g))     # 낮을수록 위
                             elif sid == "x-shiss":
-                                pr = yoy_pair(f.get("sh"), dt_)
+                                # 🚨 split_trim 을 거친 sh 가 아니라 단위오류만 교정한 sh_u +
+                                #   이음매를 쓴다(안 그러면 대규모 발행 종목이 후보에서 사라진다).
+                                pr = yoy_pair(f.get("sh_u") or f.get("sh"), dt_,
+                                              seam=f.get("sh_seam"))
                                 if pr and pr[1] > 0 and pr[3] > 0:
                                     g = pr[1] / pr[3] - 1.0
                                     v = -g if abs(g) <= 0.5 else None
@@ -1547,7 +1595,20 @@ def run():
                             sc.append((v, t))
                     sc.sort(reverse=True)
                     new = [t for _v, t in sc[:TOPN]]
-                    if new:
+                    if len(sc) < XSEC_MIN_POOL:
+                        # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
+                        #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
+                        #   중앙값이 2021-06-30 인데 백테스트는 2017-08 에 시작한다. 그 사이 x-agrow
+                        #   후보는 2~5종이었고 전부 외국 연차보고(20-F) 발행인이었다(ASML·NBIS·SHOP·
+                        #   CCEP·TRI·PDD — KEEP_I 가 분기제출자만 5년으로 자르기 때문). x-agrow 와
+                        #   x-cash 의 상위10 바스켓 자카드가 그 구간 평균 0.83, 즉 서로 다른 축이라던
+                        #   두 규칙이 같은 6종을 들고 있었다. sc[:TOPN] 이 후보 전량을 통과시키므로
+                        #   순위가 아무 일도 하지 않는다.
+                        #   후보가 0 이 아니라 3~7개라서 기존 first_i 재기준도 발동하지 않아
+                        #   start=2017-08 · n_days=2238 이 그대로 보고됐다.
+                        thin += 1
+                        hold = []                      # → 무보유. 재기준이 시작일을 정직하게 잡는다
+                    elif new:
                         turns += len(set(new) ^ set(hold)) / (2 * TOPN) if hold else 1.0
                         hold = new
                 if hold and first_i is None:
@@ -1596,6 +1657,9 @@ def run():
             "t": tstat(srets, bxr[(start_i or (MIN_HIST + 1)):]),
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
             "start": d2[0], "n_days": len(d2),
+            # 커버리지 게이트가 무보유로 둔 월말 수. 0 이 아니면 그 규칙의 표본은 화면에 적힌
+            # 기간보다 짧다 — 시작일(start)이 이미 재기준돼 있으므로 여기서는 사유만 남긴다.
+            "n_thin": (thin if S["kind"] == "xsec" else 0),
             "holdings": hold_now,
             "nav": [round(x, 2) for x in nav[::5]],
             "bnav": [round(x, 2) for x in bnav[::5]],
@@ -1654,10 +1718,12 @@ def run():
     # 박아 뒀는데(사내 DB 가격을 쓰던 시절엔 재현이 안 돼 그럴 수밖에 없었다), 지금은 가격을
     # yfinance 로 받아 누구나 다시 돌릴 수 있으므로 산출물을 단일 출처로 둔다.
     # ⚠ 파일이 없으면 **조용히 넘어가지 않는다** — 그러면 판정이 소급 기준으로 슬그머니 되돌아간다.
-    PIT_MEASURED, PIT_WINDOW, PIT_BENCH = {}, None, None
+    PIT_MEASURED, PIT_WINDOW, PIT_BENCH, PIT_ASOF, PIT_DOC = {}, None, None, None, {}
     try:
         _pj = json.load(io.open(os.path.join(DATA, "pit_strategies.json"), encoding="utf-8"))
-        PIT_WINDOW = "%s~%s" % (_pj["start"][:7], _pj["as_of"][:7])
+        PIT_ASOF = _pj["as_of"]
+        PIT_WINDOW = "%s~%s" % (_pj["start"][:7], PIT_ASOF[:7])
+        PIT_DOC = _pj
         for _r in _pj.get("strategies") or []:
             _m, _b = _r.get("metrics") or {}, _r.get("bench") or {}
             # retro = **같은 창의 소급 레그**. 이것과의 차이가 유니버스 편향이다 —
@@ -1667,7 +1733,12 @@ def run():
                                        _r.get("bias_excess"), _rt.get("excess_cagr"),
                                        _rt.get("t"), _r.get("bias_cagr"),
                                        (_rt.get("metrics") or {}).get("cagr"),
-                                       _r.get("bench_bias_cagr"))
+                                       _r.get("bench_bias_cagr"),
+                                       # 🚨 대조군·창을 전략별로 받는다. 전에는 마지막 전략의
+                                       #   bench 를 전 규칙 공통으로 썼는데, 보유시작 재기준으로
+                                       #   창이 갈리는 규칙(x-season 은 231거래일 늦게 시작)에서
+                                       #   초과수익이 이중으로 어긋났다(적대감사).
+                                       _b.get("cagr"), _r.get("start"), _r.get("n_days"))
             PIT_BENCH = _b.get("cagr")
         print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
               % ("pit_strategies.json", len(PIT_MEASURED), PIT_WINDOW, PIT_BENCH or 0))
@@ -1682,11 +1753,23 @@ def run():
         m = PIT_MEASURED.get(r["sid"])
         if not m:
             continue
-        pc, ps, pt, pbias, prx, prt, pbc, prc, pbb = m
+        pc, ps, pt, pbias, prx, prt, pbc, prc, pbb, pbn, pst, pnd = m
         if pt is None:
             continue
-        r["pit"] = {"window": PIT_WINDOW, "cagr": pc, "sharpe": ps, "t": pt,
-                    "bench_cagr": PIT_BENCH, "excess_cagr": round(pc - PIT_BENCH, 2),
+        _bn = pbn if pbn is not None else PIT_BENCH
+        _win = ("%s~%s" % (pst[:7], PIT_ASOF[:7])) if (pst and PIT_ASOF) else PIT_WINDOW
+        r["pit"] = {"window": _win, "cagr": pc, "sharpe": ps, "t": pt,
+                    "n_days": pnd,
+                    # 다중검정 문턱은 화면이 손으로 적지 않게 여기서 실어 보낸다 — explorer 에
+                    # '27종·3.11·랩 51종·3.30' 이 박혀 있었고 실제(33·57)와 어긋났다.
+                    "n_rules": len(PIT_MEASURED), "t_crit": PIT_DOC.get("t_crit"),
+                    "n_family_lab": PIT_DOC.get("n_family_lab"),
+                    "t_crit_lab": PIT_DOC.get("t_crit_lab"),
+                    "n_over": sum(1 for _v in PIT_MEASURED.values()
+                                  if _v[2] is not None
+                                  and abs(_v[2]) >= (PIT_DOC.get("t_crit_lab") or 99)),
+                    "t_max": PIT_DOC.get("t_max"),
+                    "bench_cagr": _bn, "excess_cagr": round(pc - _bn, 2),
                     # 같은 창의 소급 레그와 그 차이 — 화면이 '편향이 얼마였나'를 적을 수 있게.
                     # 🚨 bias_cagr(전략 CAGR 기준)가 편향의 본체다. bias_excess 는 두 레그의
                     #   대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 항상 그만큼 깎인다.
