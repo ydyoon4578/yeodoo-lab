@@ -349,15 +349,29 @@ def main():
             # 같은 창의 소급 레그와 그 차이 = 유니버스 편향(구간 차이가 섞이지 않는다)
             "retro": {"metrics": B_["metrics"], "bench": B_["bench"],
                       "excess_cagr": B_["excess_cagr"], "t": B_["t"]},
+            # 🚨 두 지표를 같이 낸다(적대감사가 잡은 결함).
+            #   bias_cagr   = 전략 자체가 얼마나 부풀었나. **이것이 편향의 본체다.**
+            #   bias_excess = 초과수익 기준. 두 레그의 대조군이 각자의 동일가중 지수라
+            #     벤치에 실린 편향(실측 5.25%p)이 **상쇄된다** — 그래서 이 값은 항상
+            #     bias_cagr − 5.25 이고 하한이 −5.25 다. 즉 '편향 0' 과 'PIT 가 유리' 를
+            #     구별하지 못한다. 실제로 그 탓에 "고배당은 PIT 로 오히려 좋아진다"고
+            #     잘못 읽었다 — 전략 CAGR 은 33.42 → 32.68 로 **나빠졌는데** 벤치가 더
+            #     내려가 −4.51 로 찍혔다. 화면은 bias_cagr 를 먼저 적어야 한다.
+            "bias_cagr": round((B_["metrics"].get("cagr") or 0)
+                               - (P_["metrics"].get("cagr") or 0), 2),
+            "bench_bias_cagr": round((B_["bench"].get("cagr") or 0)
+                                     - (P_["bench"].get("cagr") or 0), 2),
             "bias_excess": round(B_["excess_cagr"] - P_["excess_cagr"], 2),
             "bias_sharpe": round((B_["metrics"].get("sharpe") or 0)
                                  - (P_["metrics"].get("sharpe") or 0), 3),
             "holdings": {"kind": "xsec", "as_of": dates[-1],
                          "n": len(P_["hold"]), "tickers": P_["hold"]},
         })
-        print("  %-26s PIT 초과 %+7.2f (t %5.2f) · 소급 초과 %+7.2f (t %5.2f) → 편향 %+7.2f%%p"
-              % (S["name"][:26], P_["excess_cagr"], P_["t"] or 0,
-                 B_["excess_cagr"], B_["t"] or 0, out[-1]["bias_excess"]))
+        print("  %-24s CAGR 소급 %+7.2f → PIT %+7.2f (편향 %+6.2f) · 초과 %+7.2f → %+7.2f "
+              "(t %5.2f → %5.2f)"
+              % (S["name"][:24], B_["metrics"].get("cagr") or 0,
+                 P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
+                 B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
 
     doc = {
         "note": "매월말 실제 지수 편입 종목만 후보로 두고 다시 돌린 결과. 같은 창에서 소급 "
@@ -382,10 +396,26 @@ def main():
             % (100 * cov_min, 100 * cov_med),
             "'거래량 급증' 규칙은 아예 뺐다 — 거래량이 오늘의 유니버스에만 있어 후보가 100%% "
             "생존자로 좁혀지는데, 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다.",
+            "🚨 **편향은 bias_cagr(전략 CAGR 기준)로 읽을 것.** bias_excess 는 초과수익 기준인데, "
+            "두 레그의 대조군이 각자의 동일가중 지수라 벤치에 실린 편향(실측 %.2f%%p)이 "
+            "**상쇄된다** — 그래서 bias_excess 는 항상 bias_cagr 에서 그만큼 깎이고 하한이 "
+            "음수가 된다. 즉 '편향 없음' 과 'PIT 가 유리' 를 구별하지 못한다. 실제로 그 탓에 "
+            "고배당을 'PIT 로 오히려 좋아진다' 고 잘못 읽었다(bias_excess −4.51 이었지만 "
+            "bias_cagr 는 +1.18 로 소급이 부풀려진 쪽이었다)."
+            % (round((bench_bias := (out[0]["retro"]["bench"]["cagr"]
+                                     - out[0]["bench"]["cagr"])) , 2) if out else 0),
             "t 는 이 표본(%d거래일·규칙 %d종)에서 계산한 값이다. **규칙 %d종을 한 표에서 재므로 "
-            "다중검정이다** — 본페로니 5%%면 |t|≈2.9 가 필요하고 그것을 넘는 규칙은 극소수다. "
-            "여기서는 문턱을 넘고 말고보다 '소급 대비 t 가 얼마나 무너지는가'로 읽는 것이 안전하다."
-            % (n - i0, len(PRICE_SIDS) + len(FUND_SIDS), len(PRICE_SIDS) + len(FUND_SIDS)),
+            "다중검정이다** — 본페로니 5%%면 |t|≥%.2f 가 필요하다(랩 본편 51종 족으로 보면 "
+            "|t|≥3.30). 검정족은 재측정한 수가 아니라 탐색한 가설 수여야 하므로 후자가 맞고, "
+            "이 표에서 그 문턱을 넘는 규칙은 **0종**이다. 문턱을 넘고 말고보다 "
+            "'소급 대비 t 가 얼마나 무너지는가'로 읽는 것이 안전하다."
+            % (n - i0, len(PRICE_SIDS) + len(FUND_SIDS), len(PRICE_SIDS) + len(FUND_SIDS),
+               TB.z_crit(len(PRICE_SIDS) + len(FUND_SIDS)) if hasattr(TB, "z_crit") else 3.11),
+            "🚨 주당지표 분할 기준 — 주가는 분할조정본인데 SEC 주당지표(eps·dps)와 주식수는 "
+            "당시 보고치라 한 계열에 분할 전·후 기준이 섞인다(실측: CMG sh 1387.37 옆에 27.79). "
+            "그대로 두면 나중에 분할한 종목의 이익수익률·배당수익률이 분할비만큼 부풀어 **선견**이 "
+            "된다 — tech_backtest.split_trim() 이 기준 불일치 관측을 잘라낸다(89종). "
+            "자르기 전에는 저PER t 2.63·저PSR 2.49·고배당 2.94 로 문턱을 넘는 것처럼 보였다.",
             "규칙 %d종(가격·거래량 %d + 펀더멘털 %d). 소형주(시가총액)는 시점별 주식수를 랩의 "
             "SEC XBRL 과 yfinance(편출분)로 합쳐 재현했다 — 두 출처가 0.3~2.3%% 차이 나지만 시총이 "
             "자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. "

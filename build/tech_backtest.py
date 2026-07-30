@@ -533,6 +533,81 @@ def ttm(series, date, lag=FUND_LAG_DAYS):
     return sum(v for _d, v in got[:4])
 
 
+def z_of(p):
+    """양측 p 에 대응하는 정규 임계값. 이분법 — 의존성 없이 재현되게.
+
+    모듈 레벨에 둔다 — 전에는 판정 루프 안에 갇혀 있어서 다른 생성기(pit_backtest)가
+    문턱을 **손으로 적었다**. 손으로 적은 임계는 규칙 수가 바뀌면 조용히 낡는다
+    (실측 사고: pit_strategies.json 이 27종인데 문턱을 16종 시절 값 2.9 로 적어,
+     하필 그 값만이 고배당 t 2.94 를 '통과' 로 만들었다).
+    """
+    lo, hi = 0.0, 10.0
+    for _ in range(200):
+        m = (lo + hi) / 2
+        cdf = 0.5 * (1 + math.erf(m / math.sqrt(2)))
+        if 1 - cdf > p / 2:
+            lo = m
+        else:
+            hi = m
+    return round((lo + hi) / 2, 2)
+
+
+def z_crit(n, alpha=0.05):
+    """규칙 n 종을 같은 표본에서 돌렸을 때의 본페로니 임계."""
+    return z_of(alpha / max(1, n))
+
+
+SPLIT_TRIMMED = {}      # 티커 → (자른 날짜, 배수). 얼마나 잘랐는지 로그·limits 에 싣는다
+
+
+def split_trim(sh, eps, dps, tk=""):
+    """🚨 분할 기준 불일치 관측을 잘라낸다 — 안 자르면 순수 선견이 된다.
+
+    주가는 **분할조정본**(auto_adjust=True)이라 전 구간이 오늘 기준이다. 그런데 SEC 주당지표
+    (eps·dps)와 주식수(sh)는 **당시 보고치**다. refresh_facts.pick() 이 같은 기간의 중복
+    보고 중 filed 최신본을 남기는데, SEC 의 소급재작성은 뒤 제출본에 비교표시로 다시 실린
+    기간까지만 닿는다 — 그래서 한 계열 안에서 분할 전·후 기준이 **섞인다**.
+      실측(data/fx/CMG.json): sh 2023-06-30 = 1387.37, 2023-03-31 = 27.79(×49.92).
+      그 시점 E/P 가 112.5%(실제 ~1.7%)로 나와 x-ep 이 CMG 를 70개 월말 중 42회 담았다.
+      분할비는 미래 정보이므로 이것은 편향이 아니라 **선견**이다.
+
+    되돌리지 않고 **자른다.** 배수를 도출해 재계산하려면 실제 증자·합병(PCG 4.05배 파산탈출
+    증자 등)과 분할을 비율만으로 구별해야 하고 그 판단이 틀리면 없던 숫자를 만든다.
+    자르면 그 시점 후보에서 빠질 뿐이다(적대감사가 두 방식을 다 재서 같은 답을 확인했다).
+    ⚠ 총액 항목(rev·ni·eq·liab·cfo·capex)은 달러라 분할과 무관하다 — 건드리지 않는다.
+    두 단계로 나눈다 — 섞이는 사유가 둘이고 정답 기준이 서로 다르기 때문이다.
+      ① 단위 오류(천주 vs 백만주) — 소수의 관측만 어긋난다. 정답은 **다수**다.
+         실측: WAT sh 59.76 옆에 82139.0(×1380) · ROL ×3273 · COP ×1134 · TER ×978.
+         분할비는 아무리 커도 50 정도이므로 100배 넘는 것은 분할이 아니라 단위다.
+      ② 분할 기준 — 절반 넘게 어긋날 수 있다. 정답은 **최신**이다(조정주가가 오늘 기준이므로).
+         🚨 여기서 다수결을 쓰면 거꾸로 간다 — CMG 는 분할 전 관측이 11개로 다수라
+           중앙값 규칙이 분할 전(27.79)을 남겼다. 최신에서 거슬러 올라가며 자른다.
+    """
+    if not sh or len(sh) < 3:
+        return sh, eps, dps
+    vs = sorted(v for _d, v in sh if v and v > 0)
+    if not vs:
+        return sh, eps, dps
+    med = vs[len(vs) // 2]
+    # ① 단위 오류 — 100배 넘게 벗어난 관측(분할로는 설명 안 되는 크기)
+    bad = {d for d, v in sh if not v or v <= 0 or v / med > 100 or med / v > 100}
+    ok = [(d, v) for d, v in sh if d not in bad]
+    # ② 분할 기준 — 최신부터 거슬러 올라가 첫 단절 이전을 전부 버린다
+    for i in range(len(ok) - 1):
+        a, b = ok[i][1], ok[i + 1][1]
+        if a and b and b > 0 and (a / b >= 1.5 or a / b <= 1 / 1.5):
+            bad |= {d for d, _v in sh if d < ok[i][0]}
+            break
+    if not bad:
+        return sh, eps, dps
+    worst = max((max(v / med, med / v) for d, v in sh if d in bad and v and v > 0), default=0)
+    SPLIT_TRIMMED[tk] = (min(bad), round(worst, 2), len(bad), len(sh))
+    keep = lambda ser: [(d, v) for d, v in (ser or []) if d not in bad]
+    # eps·dps 는 sh 와 같은 기간말 격자를 쓰므로 같은 날짜를 뺀다. 격자가 어긋난 관측은
+    # 판정할 근거가 없어 남긴다(총액 항목은 애초에 분할과 무관하다).
+    return keep(sh), keep(eps), keep(dps)
+
+
 def load_fund(extra_dirs=()):
     """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순.
 
@@ -563,6 +638,7 @@ def load_fund(extra_dirs=()):
 
         eq, sh, ep = series("eq"), series("sh"), series("eps")
         rev, ni, dps = series("rev"), series("ni"), series("dps")
+        sh, ep, dps = split_trim(sh, ep, dps, j.get("t") or fn[:-5])
         asset, liab = series("asset"), series("liab")
         cfo, capex = dict(series("cfo")), dict(series("capex"))
         # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
@@ -1381,19 +1457,7 @@ def run():
     # 권고한 |t|≈3.0과도 대체로 같은 자리에 온다.
     N = len(out)
     alpha = 0.05 / max(1, N)
-    # 정규 근사 역함수(Acklam 근사 대신 이분법 — 정확도보다 의존성 없음이 중요하다)
-    def z_of(p):
-        lo, hi = 0.0, 10.0
-        for _ in range(200):
-            m = (lo + hi) / 2
-            # Φ(m) 를 erf로
-            cdf = 0.5 * (1 + math.erf(m / math.sqrt(2)))
-            if 1 - cdf > p / 2:
-                lo = m
-            else:
-                hi = m
-        return round((lo + hi) / 2, 2)
-    tcrit = z_of(alpha)
+    tcrit = z_of(alpha)      # 모듈 레벨 함수 — pit_backtest 도 z_crit() 으로 같은 것을 쓴다
     for r in out:
         t = r["t"]
         if r.get("cov_short"):
@@ -1435,7 +1499,9 @@ def run():
             _rt = _r.get("retro") or {}
             PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"),
                                        _r.get("bias_excess"), _rt.get("excess_cagr"),
-                                       _rt.get("t"))
+                                       _rt.get("t"), _r.get("bias_cagr"),
+                                       (_rt.get("metrics") or {}).get("cagr"),
+                                       _r.get("bench_bias_cagr"))
             PIT_BENCH = _b.get("cagr")
         print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
               % ("pit_strategies.json", len(PIT_MEASURED), PIT_WINDOW, PIT_BENCH or 0))
@@ -1450,13 +1516,16 @@ def run():
         m = PIT_MEASURED.get(r["sid"])
         if not m:
             continue
-        pc, ps, pt, pbias, prx, prt = m
+        pc, ps, pt, pbias, prx, prt, pbc, prc, pbb = m
         if pt is None:
             continue
         r["pit"] = {"window": PIT_WINDOW, "cagr": pc, "sharpe": ps, "t": pt,
                     "bench_cagr": PIT_BENCH, "excess_cagr": round(pc - PIT_BENCH, 2),
                     # 같은 창의 소급 레그와 그 차이 — 화면이 '편향이 얼마였나'를 적을 수 있게.
-                    "retro_excess": prx, "retro_t": prt, "bias_excess": pbias}
+                    # 🚨 bias_cagr(전략 CAGR 기준)가 편향의 본체다. bias_excess 는 두 레그의
+                    #   대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 항상 그만큼 깎인다.
+                    "retro_excess": prx, "retro_t": prt, "bias_excess": pbias,
+                    "retro_cagr": prc, "bias_cagr": pbc, "bench_bias_cagr": pbb}
         if r["verdict"] == "통과 후보" and abs(pt) < tcrit:
             _dg.append((r["name"], r["t"], pt))
             r["verdict"] = "구별 불가"
