@@ -1315,7 +1315,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(v==null)return '<div class="mv sm">'+esc(d.m||'')+'</div><small>'+esc(d.ml||'')+'</small>';
     return '<div class="mv">'+mfmt(key,v)+'</div><small>'+esc(lab)+'</small>';
   }
-  var NARROW='(max-width:760px)';
   function fltLabel(){
     var b=el('fltnow'); if(!b)return;
     var n=state.vf.size+state.af.size+state.kf.size+state.bf.size+(state.mk?1:0), w=el('chipwrap');
@@ -1328,10 +1327,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   (function(){
     var b=el('fltbtn'); if(!b)return;
     b.addEventListener('click',function(){setFlt(el('chipwrap').hidden);});
-    // 넓은 화면에서도 접은 채 시작한다. 칩 줄 4개(벤치마크·성격·용도·등급)가 펼쳐져 있으면
-    // 그것만 200px을 먹어 목록 첫 줄이 화면 밖으로 밀린다 — 이 페이지에서 먼저 보여야 하는 건
-    // 필터가 아니라 전략이다. 적용 중인 개수는 버튼에 붙어 있으므로 접혀도 상태는 보인다.
-    setFlt(false);
+    // **항상 펼친 채 시작한다**(사용자 결정 2026-07-30). 전에는 넓은 화면에서도 접고
+    // 시작했는데 — 칩 줄 넷이 200px 을 먹어 목록 첫 줄이 밀린다는 이유였다 — 정작 어떤 축으로
+    // 걸러 볼 수 있는지가 화면에 안 보였다. 접는 것은 버튼으로 언제든 되므로 기본값을 뒤집는다.
+    //   ⚠ 화면 폭으로 분기하지 않는다. 그렇게 두면 창이 760px 아래인 사람에게는 여전히
+    //     닫혀 보인다(실측: 이 프리뷰 창이 715px 이라 분기판에서 접혀 있었다).
+    setFlt(true);
   })();
   function render(){
     var rows=filtered();
