@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """build/style_pit.py — 스타일 백테스트의 **유니버스 편향 크기를 실제로 잰다** → data/style_pit.json
 
-## 🚨 이름부터 — 이것은 '생존편향'이 아니다
+## 🚨 이름부터 — '생존편향' 하나로 부르면 안 된다
 
-재 보니 편향의 94~100% 가 **사후편입 선견(look-ahead)** 이었다. 교과서적 생존편향(편출·폐지
-종목이 후보에 없던 것)은 모멘텀 4.3%p, 나머지 0 이다. 두 채널을 반드시 갈라 적을 것 —
-지배 채널을 작은 채널 이름으로 부르면 원인을 잘못 짚게 된다(적대감사가 잡은 결함).
+채널이 둘이고 **스타일마다 지배 채널이 다르다**. 하나의 이름으로 부르면 원인을 잘못 짚는다
+(적대감사가 잡은 결함). 실측 요약(2026-07-29 기준, 채점 모집단까지 좁힌 값):
+    선견 지배 … 고베타 86.3%p · 모멘텀 68.5%p · 성장 26.2%p
+    생존 지배 … 가치 9.5%p
+    무영향   … 저변동 0 · 퀄리티 −0.1
+⚠ 크기는 점추정으로 읽지 말 것. 구간이 12개월뿐이라 상위 2달이 총편향의 34~53% 를 차지한다
+  (가치 42%). 방향은 견고하지만 크기는 표본오차와 섞여 있다 — |채널| 2%p 미만은 잡음이다.
 
   선견(lookahead)   … 그때 지수에 없던 종목을 미리 고른 것. **이쪽이 거의 전부다.**
                        오늘 518종 중 30종은 창 시작 시점에 아직 비멤버였다. 지수는 많이 오른
@@ -29,11 +33,18 @@
   sc_lowvol·sc_hbeta 는 zs 를 쓰지 않아 이 효과가 정확히 0 이라 모멘텀에만 생겼고 눈에 안 띈다.
   그 크기는 channel.harness_zpop 으로 계속 낸다 — 숨기지 않고 세어 둔다.
 
-## 왜 여섯 스타일이 아니라 셋인가
+## 여섯 스타일 전부 잰다 — 채널이 스타일마다 다르다
 
-가격만으로 정의되는 규칙만 다룬다 — 모멘텀·저변동·고베타. 퀄리티·가치·성장은 시점별 재무가
-필요한데 편출 종목의 재무가 **0건**이다(data/fx 는 전부 오늘의 유니버스). 반쪽만 PIT 로 바꾸면
-비교가 성립하지 않는다. build/pit_backtest.py 가 가격 규칙 16종만 다루는 이유가 정확히 같다.
+처음엔 셋(모멘텀·저변동·고베타)만 됐다. 편출 종목의 재무가 0건이었기 때문이다. 그래서
+build/pit_facts.py 로 SEC 재무를 받아(러너) data/fx_pit/ 에 넣고 여섯 전부로 늘렸다.
+그러고 나서야 보인 것이 있다 — **가치는 유일하게 생존편향이 지배한다.**
+편출 종목(CAG·CPB·EMN·MHK·LKQ 류)은 전형적인 값싼 주식이고 지수에서 빠진 이유가 부진이다.
+가치 스크린은 그들을 골랐어야 했는데 후보에 없었다. 재무를 받기 전에는 이 11%p 가 안 보였다.
+반대로 성장·고베타·모멘텀은 사후편입 선견이 지배한다. 하나의 이름으로 부르면 둘 다 놓친다.
+
+⚠ 뒤 셋의 채점 커버리지는 완전하지 않다. 편출 20종 중 채점되는 것이 퀄리티 13 · 가치 17 ·
+  성장 20 이다(AZN·GFS 는 sh 결손, LKQ·LW·MTCH 는 liab 결손 — 외국 신고인·태그 차이).
+  퀄리티·가치의 생존 채널은 그만큼 과소측정 쪽이다. 실행 로그가 이 수를 매번 찍는다.
 
 ## 남은 불확실성 — '하한'이라고 단정하지 않는다
 
@@ -84,9 +95,15 @@ CACHE = os.path.join(DATA, "_pit_px_cache.json")
 sys.path.insert(0, HERE)
 import style_top_pdf as ST
 
-# 가격만으로 정의되는 스타일. 여기 손대려면 위 독스트링의 '왜 셋인가'를 먼저 읽을 것.
+# 여섯 스타일 전부. 앞 셋은 가격만, 뒤 셋은 시점별 재무가 필요하다 — 편출 종목 재무를
+# data/fx_pit/ 로 받아(build/pit_facts.py, 러너) 뒤 셋도 잴 수 있게 됐다.
+#   ⚠ 뒤 셋의 채점 함수는 P.px 가 아니라 **P.uni** 를 순회한다(sc_qual:331·sc_val:350·
+#     sc_grow:368). 그래서 주입할 때 P.px 만으로는 후보가 되지 않고 P.uni 도 채워야 한다.
 STYLES = [("mom", "모멘텀", ST.sc_mom), ("lowvol", "저변동", ST.sc_lowvol),
-          ("hbeta", "고베타", ST.sc_hbeta)]
+          ("hbeta", "고베타", ST.sc_hbeta),
+          ("qual", "퀄리티", ST.sc_qual), ("val", "가치", ST.sc_val),
+          ("grow", "성장", ST.sc_grow)]
+FX_PIT = os.path.join(DATA, "fx_pit")
 
 
 def need(path, what):
@@ -95,6 +112,29 @@ def need(path, what):
                          "자료 없이 돌려 'PIT' 라고 적힌 생존자 백테스트를 내보내지 않는다."
                          % (what, path))
     return json.load(io.open(path, encoding="utf-8"))
+
+
+def concentr(nav_a, nav_b, P, start):
+    """편향이 몇 달에 실려 있나 — 월별 기여와 상위 2달 몫.
+
+    두 nav 의 **월별 수익률 차**를 낸다. 상위 2달이 총합의 대부분이면 그 편향은 점추정으로
+    읽을 것이 아니라 '그 몇 달 이야기' 다. 재실행이 필요 없다(nav 만 쓴다).
+    """
+    a, b = np.asarray(nav_a, float), np.asarray(nav_b, float)
+    if len(a) != len(b) or len(a) < 2:
+        return {"months": [], "top2_share": None}
+    ends = [k for k in range(1, len(a))
+            if P.dates[start + k][:7] != P.dates[start + k - 1][:7]] + [len(a) - 1]
+    out, prev = [], 0
+    for e in ends:
+        if e <= prev:
+            continue
+        d = ((a[e] / a[prev]) - (b[e] / b[prev])) * 100
+        out.append([P.dates[start + e][:7], round(float(d), 2)])
+        prev = e
+    tot = sum(abs(x[1]) for x in out)
+    top2 = sum(sorted((abs(x[1]) for x in out), reverse=True)[:2])
+    return {"months": out, "top2_share": (round(top2 / tot, 3) if tot > 0 else None)}
 
 
 def perf(nav):
@@ -106,7 +146,32 @@ def perf(nav):
     x = np.asarray(nav, float)
     m = ST.metrics(x)
     m["total"] = (x[-1] / x[0] - 1) * 100
+    m["nav"] = x                      # concentr 가 쓰고, JSON 에 싣기 전에 지운다
     return m
+
+
+def narrowed(fn, pool_of):
+    """채점 모집단까지 그 시점 후보로 좁힌 채점 함수.
+
+    🚨 이것이 'PIT' 의 정확한 뜻이다(적대감사가 잡은 결함). backtest 의 마스크는 **채점 뒤**에
+      걸리므로, 좁히지 않으면 세 레그가 모두 538종으로 z 표준화·윈저화를 한다. 실제로 그때
+      규칙을 돌렸다면 모집단도 그 시점 후보였다. 좁히면 두 가지가 동시에 해결된다 —
+        ① pit 레그가 진짜 PIT 가 된다(실측: 가치 생존채널 11.34 → 9.49%p).
+        ② base 레그를 today 로 좁히면 538 패널이 518 패널과 같아져 **하니스 채널이 0 이 된다**.
+           즉 앞서 5.56%p 를 따로 빼서 세던 것을 애초에 만들지 않는다. base==published 로
+           확인할 수 있고, 그 등식이 이 방식이 옳다는 증거다.
+    P.uni·P.px 를 임시로 좁혀 부르고 반드시 되돌린다(finally).
+    """
+    def g(P, i):
+        pool = pool_of(i)
+        su, sp = P.uni, P.px
+        P.uni = {t: v for t, v in su.items() if t in pool}
+        P.px = {t: v for t, v in sp.items() if t in pool}
+        try:
+            return fn(P, i)
+        finally:
+            P.uni, P.px = su, sp
+    return g
 
 
 def ew_nav(P, pool_at, start, end):
@@ -209,6 +274,11 @@ def main() -> int:
         res[key] = {"label": label, "published": m}
 
     # ── ② 주입 후 — 세 레그를 **같은 패널**에서 잰다 ────────────────────────
+    # 주입은 세 축을 같이 해야 한다:
+    #   px  … 가격(sc_mom·_vol_beta 가 P.px 를 순회)
+    #   uni … 후보 명부(sc_qual·sc_val·sc_grow 가 P.uni 를 순회 — 이것 없으면 뒤 셋은 주입이
+    #         아무 효과가 없고 '편출 기여 0' 이 자료 부재 때문인지 진짜인지 구별이 안 된다)
+    #   fx  … 시점별 재무(data/fx_pit, build/pit_facts.py 가 러너에서 받은 것)
     # 🚨 적대감사가 잡은 결함. 앵커(518종)와 PIT(538종)를 각각 다른 패널에서 재고 그 차이를
     #   전부 '편향'이라 적었더니, 모멘텀에서 5.56%p 가 편향이 아니라 **하니스 산물**이었다.
     #   sc_mom 은 zs() 로 표준화하는데 모집단이 518→538 로 바뀌면 평균·표준편차·윈저 경계가
@@ -218,6 +288,36 @@ def main() -> int:
     #   고침: 편향은 **패널을 고정하고** base(마스크 없음) 대비로 잰다. published 는 앵커 전용.
     for t, a in inject.items():
         P.px[t] = a
+    # 재무 — data/fx 와 data/fx_pit 를 함께 훑어 다시 만든다(load_fund 이 한 벌이라 어긋날 일 없다).
+    if os.path.isdir(FX_PIT):
+        import importlib.util
+        _sp = importlib.util.spec_from_file_location("_tb2", os.path.join(HERE, "tech_backtest.py"))
+        _tb = importlib.util.module_from_spec(_sp); _sp.loader.exec_module(_tb)
+        P.fx = _tb.load_fund(extra_dirs=[FX_PIT])
+        n_fx = len([t for t in inject if t in P.fx])
+        print("편출 재무 주입 %d/%d종(data/fx_pit %d개)"
+              % (n_fx, len(inject), len(os.listdir(FX_PIT))))
+    else:
+        n_fx = 0
+        print("⚠ data/fx_pit 없음 — 퀄리티·가치·성장은 편출 후보 없이 측정된다"
+              "(러너에서 pit-facts 워크플로를 돌릴 것)")
+    # 명부 — 뒤 셋이 순회하는 축. 이름은 재무 파일에서 가져오고 없으면 티커로 둔다
+    # (이름은 build_issuer 의 발행사 키에 쓰인다 — 없으면 티커가 곧 발행사가 된다).
+    nm = {}
+    if os.path.isdir(FX_PIT):
+        for f in os.listdir(FX_PIT):
+            try:
+                d = json.load(io.open(os.path.join(FX_PIT, f), encoding="utf-8"))
+                nm[d.get("t") or f[:-5]] = d.get("nm") or ""
+            except Exception:
+                pass
+    for t in inject:
+        if t not in P.uni:
+            P.uni[t] = {"t": t, "name": nm.get(t) or t, "idx": []}
+    # 🚨 발행사 맵은 P._iss 에 **캐시된다**(iss_of). 앵커 레그에서 이미 채워졌으므로 지워야
+    #   새 명부가 반영된다. 안 지우면 주입 종목이 발행사 중복제거에서 조용히 빠진다.
+    if hasattr(P, "_iss"):
+        del P._iss
     cov = []
     for i in win_me:
         m = members_at(i)
@@ -226,12 +326,24 @@ def main() -> int:
     print("멤버 대비 가격 보유율: 최저 %.1f%% · 중앙 %.1f%%"
           % (100 * min(cov), 100 * sorted(cov)[len(cov) // 2]))
 
+    # 주입 종목이 스타일별로 **실제 채점되는지** 센다. 이것 없이 '편출 기여 0' 을 적으면
+    # 자료가 없어서 0 인지 진짜 0 인지 구별이 안 된다(적대감사가 짚은 함정).
+    scored = {}
+    for key, label, fn in STYLES:
+        s, _tie = fn(P, win_me[0])
+        scored[key] = len([t for t in inject if t in s])
+    print("주입 %d종 중 채점되는 수: %s"
+          % (len(inject), " · ".join("%s %d" % (STYLES[k][1], scored[STYLES[k][0]])
+                                     for k in range(len(STYLES)))))
+
     LEGS = (("base", lambda i: today),                      # 마스크 없음 = 오늘의 유니버스
             ("mask", lambda i: members_at(i) & today),      # 그때 멤버였던 오늘 종목만
             ("pit", members_at))                            # 그때 멤버 전부(편출 포함)
     for key, label, fn in STYLES:
         for tag, po in LEGS:
-            R = ST.backtest(P, fn, pool_of=po)
+            # 채점 모집단까지 좁힌다 — narrowed() 의 주석 참조. 이것이 PIT 의 정확한 뜻이고,
+            # base 가 published 와 같아지는 것으로 검증된다(하니스 채널이 구조적으로 0).
+            R = ST.backtest(P, narrowed(fn, po), pool_of=po)
             if not R:
                 raise SystemExit("%s 의 %s 레그가 실패했다" % (label, tag))
             m = perf(R["nav"]); m["n_rebal"] = R["n_rebal"]
@@ -246,13 +358,24 @@ def main() -> int:
         v["channel"] = {
             "lookahead": round(v["base"]["ret"] - v["mask"]["ret"], 2),
             "survivorship": round(v["mask"]["ret"] - v["pit"]["ret"], 2),
+            # 좁히기 전에는 이 자리에 5~7%p 가 있었다. 지금은 0 이어야 한다 — 0 이 아니면
+            # 좁히기가 어딘가 새고 있다는 뜻이므로 그대로 세어 둔다(0 을 확인하려고 남긴다).
             "harness_zpop": round(v["published"]["ret"] - v["base"]["ret"], 2),
         }
+        # 🚨 집중도 — 이것 없이 점추정만 내면 안 된다(적대감사). 총편향이 몇 달에 실려
+        #   있는지를 nav 에서 바로 센다(재실행 없음). 한두 달이 대부분이면 그 수치는
+        #   '측정' 이라기보다 '그 달 이야기' 다. 가치가 정확히 그런 경우로 나왔다.
+        v["concentration"] = concentr(v["base"]["nav"], v["pit"]["nav"], P, start)
+        c = v["concentration"]
         print("  %-5s 배포 %+8.2f · 기준선 %+8.2f · 마스크 %+8.2f · PIT %+8.2f "
-              "→ 총편향 %+7.2f%%p (선견 %+.2f · 생존 %+.2f · 하니스 %+.2f)"
+              "→ 총편향 %+7.2f%%p (선견 %+.2f · 생존 %+.2f · 잔여하니스 %+.2f) "
+              "· 상위2달 %.0f%%"
               % (label, v["published"]["ret"], v["base"]["ret"], v["mask"]["ret"],
                  v["pit"]["ret"], v["bias"]["ret"], v["channel"]["lookahead"],
-                 v["channel"]["survivorship"], v["channel"]["harness_zpop"]))
+                 v["channel"]["survivorship"], v["channel"]["harness_zpop"],
+                 100 * (c["top2_share"] or 0)))
+        for lg in ("published", "base", "mask", "pit"):      # nav 는 JSON 에 싣지 않는다
+            v[lg].pop("nav", None)
 
     # ── 앵커 검증 — survivor 가 배포 수치와 같은가 ──────────────────────────
     # 같지 않으면 '편향을 쟀다'고 말할 수 없다. data/style_perf.json 의 metrics.ret 과 대조한다.
@@ -285,29 +408,53 @@ def main() -> int:
                      for k in ("ret", "total", "sharpe", "mdd")}
     print("  대조군 동일가중 기준선 %+.2f%% · PIT %+.2f%% → 편향 %+.2f%%p"
           % (bench["base"]["ret"], bench["pit"]["ret"], bench["bias"]["ret"]))
+    bench["concentration"] = concentr(bench["base"]["nav"], bench["pit"]["nav"], P, start)
+    for lg in ("base", "pit"):
+        bench[lg].pop("nav", None)
 
     doc = {
         "as_of": P.dates[end], "start": P.dates[start],
         "n_days": end - start + 1, "n_month_ends": len([j for j in P.me if start <= j <= end]),
         "note": ("같은 백테스트 코드에 pool_of 만 갈아 끼워 유니버스 편향을 잰 것이다. "
-                 "published = 지금 화면에 나가는 수치(앵커 전용) · base = 같은 패널·마스크 없음"
-                 "(편향의 기준선) · mask = 선정 시점 멤버 ∩ 오늘 · pit = 선정 시점 멤버 전부. "
+                 "채점 모집단까지 그 시점 후보로 좁힌다 — 그것이 PIT 의 정확한 뜻이고, "
+                 "그래서 base 가 published 와 정확히 일치한다(잔여 하니스 0). "
+                 "published = 지금 화면에 나가는 수치(앵커) · base = 오늘 유니버스 · "
+                 "mask = 선정 시점 멤버 ∩ 오늘 · pit = 선정 시점 멤버 전부. "
                  "base→mask 가 사후편입 선견, mask→pit 가 교과서적 생존편향이다. "
-                 "가격만으로 정의되는 스타일 셋만 다룬다 — 편출 종목의 재무가 0건이라 "
-                 "퀄리티·가치·성장은 반쪽만 PIT 가 되고 그러면 비교가 성립하지 않는다."),
-        "headline": ("편향의 대부분은 생존편향이 아니라 **사후편입 선견**이다. 오늘 유니버스에는 "
-                     "창 시작 시점에 아직 지수 비멤버였던 종목이 %d종 있고, 지수는 많이 오른 "
-                     "종목을 편입하므로 소급 유니버스는 '오를 것'을 미리 아는 셈이 된다. "
-                     "거울 방향(창 시작 멤버 %d종 중 %d종이 오늘 유니버스에 없음)의 기여는 "
-                     "훨씬 작다." % (len(not_yet), len(m0), len(m0 - today))),
+                 "여섯 스타일 전부 다룬다 — 편출 종목 재무를 data/fx_pit 로 받아(build/pit_facts.py, "
+                 "러너) 퀄리티·가치·성장도 잴 수 있게 됐다. 채점되는 편출 종목 수는 scored 에 있다."),
+        "headline": ("편향에는 채널이 둘이고 스타일마다 지배 채널이 다르다. "
+                     "(1) 사후편입 선견 — 오늘 %d종목 중 %d종은 구간 시작 시점에 아직 지수 "
+                     "비멤버였다. 지수는 많이 오른 종목을 편입하므로 소급 유니버스는 '오를 것'을 "
+                     "미리 아는 셈이 된다. 고베타·모멘텀·성장이 여기에 걸린다. "
+                     "(2) 생존편향 — 구간 시작 멤버 %d종 중 %d종이 오늘 유니버스에 없다. "
+                     "가치가 여기에 걸린다(편출 종목은 전형적인 값싼 주식이고 지수에서 빠진 "
+                     "이유가 부진이라, 가치 스크린이 골랐어야 할 후보가 없었다). "
+                     "채널별 크기는 styles[*].channel 에 있다."
+                     % (len(today), len(not_yet), len(m0), len(m0 - today))),
+        "scored": {STYLES[k][0]: scored[STYLES[k][0]] for k in range(len(STYLES))},
         "limits": ("'하한'이라고 단정하지 않는다. 창 편출 %d티커 중 가격 확보 %d개, 미확보 %d개인데 "
                    "그중 개명 5개(BK→BNY·MMC→MRSH·FI→FISV·PARA→PSKY·SATS→ECHO)는 후임 티커로 "
                    "재실행해 영향 0.00%%p 를 확인했고, SOLS 는 이력이 짧아 어느 스타일에서도 채점 "
                    "자체가 안 된다. 실효 미검증은 6개(CTRA·DAY·HOLX·IPG·K·WBA)이고 대부분 인수·"
                    "비상장화 편출이라 방향을 단정하지 않는다 — 다만 저변동은 딜가에 고정된 저변동 "
                    "종목이 상위10 문턱(실현변동성 16~18%%) 아래라 과소측정 쪽이 유력하다. "
-                   "모멘텀 편향에는 하니스 산물이 섞이지 않게 base 를 같은 패널에서 따로 쟀다"
-                   "(그 크기는 channel.harness_zpop 에 남긴다). "
+                   "🚨 **크기를 점추정으로 읽지 말 것** — 구간이 12개월뿐이라 편향이 몇 달에 "
+                   "몰려 있다(concentration.top2_share 참조). 특히 가치의 생존 채널은 교체가 "
+                   "9개월·18슬롯에 불과하고 상당 부분이 한계슬롯에서 밀려난 생존 종목의 그 달 "
+                   "큰 수익에서 나온다 — 방향은 신뢰할 만하지만 크기는 표본오차와 구별하기 어렵다. "
+                   "|채널| 2%%p 미만(퀄리티·성장의 생존 채널)은 잡음으로 읽을 것. "
+                   "재무 커버리지도 완전하지 않다 — 편출 20종 중 채점되는 것이 퀄리티 13·가치 17·"
+                   "성장 20 이다. 사유는 태그로 메울 수 있는 것(LKQ·LW 의 liab, LW 의 rev)과 "
+                   "그렇지 않은 것(AZN·GFS 는 IFRS 라 분기 프레임이 없다 · MTCH·INSM 은 평균 "
+                   "자기자본이 음수 · ENPH 는 분기 eps 프레임이 희소)이 섞여 있고, 오늘 유니버스도 "
+                   "같은 규칙으로 빠지는 종목이 많아(퀄리티 채점률 오늘 62%% vs 편출 65%%) "
+                   "차별적 불리함은 아니다. 가치만 격차가 있다(오늘 92%% vs 편출 85%%). "
+                   "채점 모집단까지 좁혀 하니스 산물을 애초에 만들지 않았다"
+                   "(channel.harness_zpop 이 0 인지로 확인할 수 있다). "
+                   "sc_val·sc_grow 는 성분이 결손이면 0.0 으로 채우는데(for/else) 이는 배포 "
+                   "수치에도 같이 있는 성질이라 여기서 바꾸지 않았다. "
+                   "비율의 분모가 배당수정가라 고배당 종목이 싸게 잡힌다(가치 생존채널에 약 0.3%%p). "
                    "보유 중 가격이 끊긴 종목은 마지막 종가에 빠져나온 것으로 보아 파산 손실을 "
                    "덜 잡는다. 멤버십은 SPX∪NDX 합집합·월 해상도(그 달 마지막 스냅샷)다."
                    % (len(gone), len(inject), len(missing))),

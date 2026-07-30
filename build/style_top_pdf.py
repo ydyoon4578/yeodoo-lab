@@ -775,8 +775,10 @@ def footer(fig, page, total):
                       "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0",
        fontsize=6.4, color=MUTED)
     # 한 줄에서 넘치지 않게 짧게 — 렌더해 보고 오른쪽이 잘려 줄였다. 자세한 것은 style.html.
+    #   ⚠ '대부분 선견이다' 를 손으로 붙였다가 지웠다 — 가치는 반대로 편출 누락이 전부인데
+    #     각주가 가치 블록 바로 아래에 놓인다(적대감사가 잡았다). 채널은 자료에서 파생한다.
     tx(fig, X0, .0175, "유니버스 편향(실측) — 선정 시점 구성으로 다시 재면 "
-                       + pit_caveat(short=True) + ". 대부분 사후편입 선견이다.",
+                       + pit_caveat(short=True) + ". " + pit_channel_line(),
        fontsize=6.0, color=NEG)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
        fontsize=6.4, color=MUTED, ha="right")
@@ -1225,30 +1227,63 @@ def _thin(a, k=140):
     return out
 
 
+def pit_channel_line():
+    """채널 지배를 **자료에서** 한 줄로. 손으로 '대부분 선견' 이라 적으면 가치에 거짓이다."""
+    try:
+        st = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))["styles"]
+        L = [s["label"] for s in st.values()
+             if s["channel"]["lookahead"] >= 1.0
+             and s["channel"]["lookahead"] > abs(s["channel"]["survivorship"])]
+        S = [s["label"] for s in st.values()
+             if abs(s["channel"]["survivorship"]) >= 1.0
+             and abs(s["channel"]["survivorship"]) >= s["channel"]["lookahead"]]
+        out = []
+        if L:
+            out.append("사후편입 선견: " + "·".join(L))
+        if S:
+            out.append("편출 누락: " + "·".join(S))
+        return " / ".join(out) if out else "채널 유의미하지 않음"
+    except Exception:
+        return ""
+
+
 def pit_caveat(short=False):
     """유니버스 편향 문구를 data/style_pit.json 실측에서 만든다.
 
-    ⚠ '생존편향'이라고만 적으면 안 된다 — 실측해 보니 편향의 94~100% 가 **사후편입 선견**
-      (그때 지수에 없던 종목을 미리 고른 것)이고 교과서적 생존편향(편출 종목 부재)은
-      모멘텀 2.9%p·나머지 0 이었다. 지배 채널을 작은 채널 이름으로 부르면 원인을 잘못 짚는다.
+    ⚠ '생존편향'이라고만 적으면 안 된다. 채널이 둘이고 **스타일마다 지배 채널이 다르다** —
+      고베타·모멘텀·성장은 사후편입 선견(그때 지수에 없던 종목을 미리 고른 것)이 지배하고,
+      **가치는 반대로 편출 종목 부재(교과서적 생존편향)가 전부다.** 하나의 이름으로 부르면
+      한쪽을 반드시 틀리게 말한다. 그래서 채널 판정을 pit_channel_line() 이 자료에서 뽑는다.
     파일이 없으면(러너 등) 수치 없이 정성 문구만 낸다 — 없는 숫자를 지어내지 않는다.
     """
     try:
         j = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
         u, st = j["universe"], j["styles"]
-        big = sorted(st.values(), key=lambda s: -abs(s["bias"]["ret"]))[:2]
-        nums = " · ".join("%s %+.0f%% → %+.0f%%" % (s["label"], s["published"]["ret"], s["pit"]["ret"])
-                          for s in big)
+        hit = [s for s in st.values() if abs(s["bias"]["ret"]) >= 1.0]
+        big = sorted(hit, key=lambda s: -abs(s["bias"]["ret"]))
+        # ⚠ 표기는 base→pit 이다. published→pit 로 적으면 하니스 몫이 섞인다 —
+        #   지금은 좁히기로 base==published 라 같은 값이지만, 계약은 base 로 못 박는다.
+        nums = " · ".join("%s %+.0f%% → %+.0f%%" % (s["label"], s["base"]["ret"], s["pit"]["ret"])
+                          for s in big[:3])
+        if short:
+            return nums or "편향 유의미하지 않음"
+        # 채널 지배는 **자료에서 판정**한다. '대부분 선견'이라고 못 박으면 안 된다 —
+        # 가치는 반대로 생존 채널이 전부다(실측). 스타일마다 다르므로 갈라서 적는다.
+        look = [s["label"] for s in big if s["channel"]["lookahead"] > abs(s["channel"]["survivorship"])]
+        surv = [s["label"] for s in big if abs(s["channel"]["survivorship"]) >= s["channel"]["lookahead"]]
+        ch = ""
+        if look:
+            ch += "사후편입 선견이 지배하는 것은 " + "·".join(look) + " 이고, "
+        if surv:
+            ch += "편출 종목 부재(생존편향)가 지배하는 것은 " + "·".join(surv) + " 다. "
         head = ("🚨 유니버스 편향(실측) — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
                 "오늘 %d종목을 과거로 소급해 고르는데, 그중 %d종은 구간 시작 시점에 아직 지수 "
-                "비멤버였다. 지수는 많이 오른 종목을 편입하므로 소급 유니버스는 '오를 것'을 미리 "
-                "아는 셈이 된다. 선정 시점 구성이력으로 다시 재면 %s(%s 기준). "
-                "편향의 대부분이 이 사후편입 선견이고, 편출 종목 부재(구간 시작 멤버 %d종 중 "
-                "%d종이 오늘 없음)의 기여는 작다. 위험조정으로 보면 세 스타일 모두 "
-                "S&P 500 에 열위가 된다. 자세한 분해는 랩의 유니버스 편향 측정 참조. "
-                % (u["today"], u["not_yet_member_at_start"], nums, j["as_of"],
-                   u["n_members_at_start"], u["gone_at_start"]))
-        return head if not short else nums
+                "비멤버였고(선견), 반대로 그때 멤버 %d종 중 %d종은 오늘 유니버스에 없다(생존). "
+                "선정 시점 구성이력으로 다시 재면 %s(%s 기준). %s"
+                "자세한 분해는 랩의 유니버스 편향 측정 참조. "
+                % (u["today"], u["not_yet_member_at_start"],
+                   u["n_members_at_start"], u["gone_at_start"], nums, j["as_of"], ch))
+        return head
     except Exception:
         return ("🚨 유니버스 편향 — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
                 "오늘의 종목을 과거로 소급해 고르므로, 그때는 지수에 없던 종목까지 후보가 된다. "
