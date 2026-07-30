@@ -734,6 +734,243 @@ def spx_monthly(months):
     return out
 
 
+# ── ③ 특징 확대판 (새 사전등록) ───────────────────────────────────────────
+# 왜 또 등록하나. 앞 판에서 트리·2차확장이 선형을 못 이겼는데, 그 판의 특징이 7개뿐이었다.
+# Gu·Kelly·Xiu 의 설정은 특징이 수십 개이고 거기에 **시장 상태 변수를 곱해** 조건부 모형을
+# 만든다. 특징이 적으면 상호작용이 값을 할 자리 자체가 없으므로, 앞 판의 결과만으로
+# '비선형이 안 된다'고 말하면 성급하다. 그래서 특징을 늘려 한 번 더 등록한다.
+#
+# ⚠ 앞 판(FEATS 7개)은 **손대지 않는다**. 사전등록물은 결과가 나온 뒤에 고치는 순간 의미를
+#   잃는다. 이건 별개의 등록이고 코드 경로도 따로 둔다.
+#
+# 재무를 넣지 않은 이유 — 넣고 싶었으나 표본이 못 버틴다. 실측: 시점 정합(기간종료+45일)으로
+#   자르면 eps·rev·ni·sh 는 2021-05, eq·asset 은 2022-08 부터 YoY 가 선다. 거기에 학습창을
+#   얹으면 검정 구간이 2년 아래로 떨어지는데, 이 파일의 MIN_TEST 규칙이 바로 그 길이를
+#   '판정 불가'로 못 박아 두었다. 창을 반토막 내면 특징을 늘린 효과와 구간이 짧아진 효과가
+#   섞여 무엇 때문에 갈렸는지 말할 수 없다. 그래서 전 구간에서 구할 수 있는 것만 쓴다.
+#
+# 시장 상태 4개는 **전 종목이 같은 값**이다. 횡단면 순위에서 상수는 선형 모형의 순서를 전혀
+#   바꾸지 못한다 — 오직 상호작용을 통해서만 값을 한다. 즉 이 넷은 트리에게만 재료이고,
+#   그래서 이 판이 '비선형이 값을 하는가'를 앞 판보다 정직하게 묻는다.
+FEATS_WIDE = [
+    "12-1 모멘텀", "1개월 반전", "6-1 모멘텀", "3개월 모멘텀",
+    "60일 변동성", "특이변동성", "60일 왜도",
+    "200일선 이격", "50일선 이격", "52주 고점 대비", "52주 저점 대비", "MAX(21일)",
+    "거래량 추세", "거래대금(로그)", "비유동성(Amihud)", "베타",
+    "시장 200일선 이격", "시장 60일 변동성", "VIX", "장단기 금리차",
+]
+
+
+def stock_selection_wide(RF, TOPN=10, model="ridge"):
+    """특징 20개 · 워크포워드 · 상위 TOPN 동일가중. model='ridge' 또는 'forest'.
+
+    앞 판(stock_selection)과 목표·창·표준화·재학습 주기·보유기간이 같다. 다른 것은
+    **특징 집합과 모델**뿐이다."""
+    st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    NMX = {x["t"]: (x.get("name") or x["t"]) for x in st_["stocks"]}
+    DTS = st_["pxd_dates"]
+    n = len(DTS)
+    P, V = {}, {}
+    for s in st_["stocks"]:
+        t = s["t"]
+        p = os.path.join(DIR_SD, "%s.json" % t)
+        if not os.path.exists(p):
+            continue
+        d = json.load(io.open(p, encoding="utf-8"))
+        a = d.get("pxd")
+        if not (isinstance(a, list) and len(a) == n):
+            continue
+        P[t] = np.array([np.nan if x is None else x for x in a], float)
+        vd = d.get("vd")
+        V[t] = np.array([np.nan if x is None else x for x in vd], float) \
+            if isinstance(vd, list) and len(vd) == n else np.full(n, np.nan)
+    tick = sorted(P)
+    if len(tick) < 100:
+        return None
+    M = np.column_stack([P[t] for t in tick])
+    VOL = np.column_stack([V[t] for t in tick])
+    R = np.full_like(M, np.nan)
+    R[1:] = M[1:] / M[:-1] - 1
+    bench = spx_daily(DTS)
+    if bench is None:
+        raise SystemExit("대조군(S&P 500 PR)을 읽지 못했다 — 판정을 낼 수 없다.")
+
+    def roll_mean(A_, w):
+        out = np.full_like(A_, np.nan)
+        for i in range(w, A_.shape[0]):
+            out[i] = np.nanmean(A_[i - w + 1:i + 1], axis=0)
+        return out
+
+    def ratio(w):
+        out = np.full_like(M, np.nan)
+        out[w:] = M[w:] / M[:-w] - 1
+        return out
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        mom12, mom6, mom3, mom1 = ratio(252), ratio(126), ratio(63), ratio(21)
+        sma200, sma50 = roll_mean(M, 200), roll_mean(M, 50)
+        vol60 = np.full_like(M, np.nan)
+        skew60 = np.full_like(M, np.nan)
+        ivol = np.full_like(M, np.nan)
+        maxret = np.full_like(M, np.nan)
+        hi52 = np.full_like(M, np.nan)
+        lo52 = np.full_like(M, np.nan)
+        beta = np.full_like(M, np.nan)
+        amihud = np.full_like(M, np.nan)
+        dvol = np.log(np.maximum(M * VOL, 1.0))
+        for i in range(252, n):
+            w = R[i - 59:i + 1]
+            mu_ = np.nanmean(w, axis=0)
+            sd_ = np.nanstd(w, axis=0)
+            vol60[i] = sd_
+            with np.errstate(invalid="ignore", divide="ignore"):
+                skew60[i] = np.nanmean((w - mu_) ** 3, axis=0) / np.maximum(sd_, 1e-12) ** 3
+            maxret[i] = np.nanmax(R[i - 20:i + 1], axis=0)
+            win = M[i - 251:i + 1]
+            hi52[i] = M[i] / np.nanmax(win, axis=0) - 1
+            lo52[i] = M[i] / np.nanmin(win, axis=0) - 1
+            bm = bench[i - 119:i + 1]
+            bb = R[i - 119:i + 1]
+            bv = np.nanvar(bm)
+            if bv > 0:
+                bt = np.nanmean((bb - np.nanmean(bb, axis=0)) *
+                                (bm - np.nanmean(bm))[:, None], axis=0) / bv
+                beta[i] = bt
+                # 특이변동성 = 시장 회귀 잔차의 표준편차(같은 120일 창)
+                resid = bb - bt[None, :] * bm[:, None]
+                ivol[i] = np.nanstd(resid, axis=0)
+            amihud[i] = np.nanmean(np.abs(R[i - 20:i + 1]) /
+                                   np.maximum(M[i - 20:i + 1] * VOL[i - 20:i + 1], 1.0), axis=0)
+        v20, v60 = roll_mean(VOL, 20), roll_mean(VOL, 60)
+        vtr = v20 / v60
+
+    # 시장 상태 — 전 종목 공통. 열로 펴서 같은 값을 모든 종목에 준다.
+    def bcast(vec):
+        return np.repeat(np.asarray(vec, float)[:, None], M.shape[1], axis=1)
+    bc = np.nancumprod(1 + np.nan_to_num(bench))
+    bsma = np.full(n, np.nan)
+    for i in range(200, n):
+        bsma[i] = bc[i] / np.nanmean(bc[i - 199:i + 1]) - 1
+    bvol = np.full(n, np.nan)
+    for i in range(60, n):
+        bvol[i] = np.nanstd(bench[i - 59:i + 1])
+    A_ = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    apos = {d: i for i, d in enumerate(A_.get("dates") or [])}
+
+    def align_px(tk):
+        raw = (A_.get("px") or {}).get(tk) or []
+        out, last = np.full(n, np.nan), np.nan
+        for i, d in enumerate(DTS):
+            j = apos.get(d)
+            if j is not None and j < len(raw) and raw[j] is not None:
+                last = float(raw[j])
+            out[i] = last
+        return out
+
+    def align_macro(sid):
+        m = (A_.get("macro") or {}).get(sid) or {}
+        ks = sorted(m)
+        out, last, j = np.full(n, np.nan), np.nan, 0
+        for i, d in enumerate(DTS):
+            while j < len(ks) and ks[j] <= d:
+                last = m[ks[j]]; j += 1
+            out[i] = last
+        return out
+
+    F = [mom12 - mom1, -mom1, mom6 - mom1, mom3,
+         vol60, ivol, skew60,
+         M / sma200 - 1, M / sma50 - 1, hi52, lo52, maxret,
+         vtr, dvol, amihud, beta,
+         bcast(bsma), bcast(bvol), bcast(align_px("^VIX")), bcast(align_macro("T10Y2Y"))]
+    assert len(F) == len(FEATS_WIDE), "특징 수와 이름표가 어긋났다"
+
+    fwd = np.full_like(M, np.nan)
+    fwd[:-HOLD - 1] = M[HOLD + 1:] / M[1:-HOLD] - 1
+    fwd_b = np.full(n, np.nan)
+    fwd_b[:-HOLD - 1] = bc[HOLD + 1:] / bc[1:-HOLD] - 1
+
+    start = 260
+    st2 = start + 252
+    if st2 >= n - 40:
+        return None
+    month_end = [i for i in range(st2, n - 1) if DTS[i][:7] != DTS[i + 1][:7]]
+
+    hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
+    turn = 0
+    mdl, mu, sd = None, None, None
+    Xs, ys, built_to = [], [], start
+    for i in range(st2 + 1, n):
+        if (i - 1) in month_end:
+            hi = i - HOLD - 2
+            for k in range(built_to, hi):
+                row = np.column_stack([f[k] for f in F])
+                yk = fwd[k] - fwd_b[k]
+                ok = np.isfinite(row).all(axis=1) & np.isfinite(yk)
+                if ok.sum() < 50:
+                    continue
+                Xs.append(row[ok]); ys.append(yk[ok])
+            built_to = max(built_to, hi)
+            if Xs:
+                Xtr = np.vstack(Xs); ytr = np.concatenate(ys)
+                mu, sd = zfit(Xtr)
+                Z = (Xtr - mu) / sd
+                mdl = forest_fit(Z, ytr) if model == "forest" else ridge(Z, ytr, L2)
+            if mdl is not None:
+                row = np.column_stack([f[i - 1] for f in F])
+                ok = np.isfinite(row).all(axis=1)
+                if ok.sum() >= TOPN:
+                    z = (row[ok] - mu) / sd
+                    sc = forest_pred(mdl, z) if model == "forest" else (mdl[0] + z @ mdl[1:])
+                    names_ok = np.array(tick)[ok]
+                    new = list(names_ok[np.argsort(-sc)[:TOPN]])
+                    turn += len(set(new) - set(hold))
+                    hold = new
+        rr = 0.0
+        if hold:
+            idx = [tick.index(t) for t in hold]
+            v = R[i, idx]
+            rr = float(np.nanmean(v)) if np.isfinite(v).any() else 0.0
+        rets.append(rr); nav.append(nav[-1] * (1 + rr))
+        br = bench[i] if np.isfinite(bench[i]) else 0.0
+        brs.append(br); bn.append(bn[-1] * (1 + br))
+
+    dd = DTS[st2:]
+    ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
+    step = max(1, len(nav) // 220)
+    yrs = max(1e-9, (n - st2) / 252)
+    sid = "ml-xsec-w-forest" if model == "forest" else "ml-xsec-w-ridge"
+    nm = ("특징 20개 종목선택 (랜덤 포레스트)" if model == "forest"
+          else "특징 20개 종목선택 (릿지)")
+    return {
+        "sid": sid, "arch": None,
+        "chart": curve_pack(dd, nav, bn),
+        "bench_label": "S&P 500(PR) 매수후보유",
+        "holdings": {"kind": "xsec", "as_of": DTS[-1], "n": len(hold),
+                     "tickers": sorted(hold),
+                     "names": {t: NMX.get(t, t) for t in sorted(hold)},
+                     "note": "특징 20개 판이 지금 담고 있는 %d종목이다." % len(hold)},
+        "name": nm,
+        "rule": ("가격·거래 16개와 시장상태 4개, 모두 %d개 특징으로 향후 21거래일 초과수익을 "
+                 "%s로 예측해 상위 %d종목을 동일가중 보유. 월말 재학습·리밸런스."
+                 % (len(FEATS_WIDE), "랜덤 포레스트" if model == "forest" else "릿지", TOPN)),
+        "why": ("앞 판(특징 7개)에서 트리·2차확장이 선형을 못 이겼는데, 특징이 적으면 상호작용이 "
+                "값을 할 자리 자체가 없다. 특징을 20개로 늘리고 시장상태 4개를 더해 다시 묻는다 — "
+                "시장상태는 전 종목이 같은 값이라 선형 횡단면 순위를 전혀 못 바꾸고 오직 "
+                "상호작용으로만 값을 한다. 그래서 이 판이 '비선형이 값을 하는가'를 더 정직하게 묻는다."),
+        "note": ("재무는 넣지 않았다. 시점 정합으로 자르면 eq·asset 이 2022-08 부터라 검정 구간이 "
+                 "2년 아래로 떨어지는데, 이 파일 규칙이 그 길이를 판정 불가로 못 박고 있다. "
+                 "창을 반토막 내면 특징 효과와 구간 효과가 섞인다. 앞 판은 손대지 않았다 — "
+                 "사전등록물은 결과가 나온 뒤 고치면 의미를 잃으므로 별개 등록으로 둔다."),
+        "start": DTS[st2], "end": DTS[-1], "n_days": n - st2,
+        "metrics": ms, "bench": mb, "bench_unstable": False,
+        "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
+        "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs),
+        "turnover": round(turn / TOPN / yrs, 1),
+        "nav": [round(x, 2) for x in nav[::step]],
+        "bnav": [round(x, 2) for x in bn[::step]],
+    }
+
+
 def main() -> int:
     ap = os.path.join(DATA, "assets.json")
     if not os.path.exists(ap):
@@ -753,6 +990,10 @@ def main() -> int:
                       (lambda: stock_selection(RF, mode="inter"), "횡단면 종목선택(상호작용)"),
                       # 논문의 승자 모델. 상호작용판과 나란히 둬야 '상호작용이냐 형태냐'가 갈린다.
                       (lambda: stock_selection(RF, mode="tree"), "횡단면 종목선택(랜덤 포레스트)"),
+                      # 새 사전등록 — 특징 20개. 같은 특징에서 선형과 트리를 나란히 돌려야
+                      # '특징을 늘리면 비선형이 이기는가'가 갈린다.
+                      (lambda: stock_selection_wide(RF, model="ridge"), "특징20 종목선택(릿지)"),
+                      (lambda: stock_selection_wide(RF, model="forest"), "특징20 종목선택(포레스트)"),
                       (lambda: guru_clone(RF), "13F 컨빅션 복제")):
         try:
             r = fn()
