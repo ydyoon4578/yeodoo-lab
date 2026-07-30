@@ -702,12 +702,6 @@
     "Conditional Volatility Targeting, Financial Analysts Journal (2020)",
     "The Impact of Volatility Targeting, Harvey et al., Journal of Portfolio Management (2018)"
    ],
-   "lab": {
-    "v": "기각",
-    "t": "변동성 타깃팅 — NDX 단일자산 (Volatility Targeting · NDX)",
-    "why": "단일 팩터로 검증 통과했으나 증분은 제한적(marginal).",
-    "href": "archive.html#a-vol-targeting-ndx"
-   },
    "recent_at": "2026-07-27"
   },
   {
