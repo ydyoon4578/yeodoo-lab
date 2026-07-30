@@ -340,6 +340,74 @@ def tstat(a, b):
     return round(m / (sd / math.sqrt(len(d))), 2) if sd > 0 else None
 
 
+# ── 위험 축 판정 ────────────────────────────────────────────────────────
+# 왜 만드나. 기존 판정은 t — 일간 수익률 차의 평균을 본다. 그런데 타이밍 오버레이는
+# 설계상 수익을 내주고 위험을 사는 규칙이다. 실측(200일선): 낙폭을 -55.2%에서 -26.8%로
+# 절반 넘게 줄이고 샤프도 0.441→0.521 로 올렸는데 t 는 -0.60 이었다. 통과가 안 되는 게
+# 아니라 그 축으로는 잴 수가 없다. 그래서 '낙폭을 실제로 줄였나'를 따로 묻는 축을 둔다.
+#
+# 왜 블록 부트스트랩인가. MDD 는 경로에 의존하는 통계량이고 일간 수익률에는 변동성 군집이
+# 있다. 하루씩 섞으면(iid) 그 군집이 깨져 낙폭이 실제보다 얕게 나온다 — 검정이 헐거워진다.
+# 블록을 통째로 뽑아 국소 의존구조를 살린다. 블록 63일(한 분기)은 낙폭이 만들어지는
+# 시간척도를 담기 위한 값이다.
+#
+# 왜 짝지어 뽑나. 전략과 대조군에서 같은 시점 블록을 뽑는다. 따로 뽑으면 서로 다른
+# 시장을 비교하는 셈이 되어 뜻이 없다 — 국면을 공통으로 묶어야 '같은 장에서 누가 덜 깨졌나'가 된다.
+#
+# ⚠ 여기 두는 이유. 처음엔 asset_backtest 안에 있었는데 ml_backtest 가 못 써서 ML 여섯 줄이
+#   통째로 '판정 불가'였다. 지표 정의는 이 파일 한 곳에만 둔다는 규약(ann_stats·tstat 과 같은
+#   결)에 맞춰 옮겼다. 복제하면 두 표의 위험 축이 조용히 갈린다.
+BOOT_N, BOOT_BLOCK, BOOT_SEED = 4000, 63, 20260729
+
+
+def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED):
+    """짝지은 순환 블록 부트스트랩 → 낙폭·CVaR5·Calmar 개선폭과 그 p값.
+
+    반환 d_mdd 는 (전략 MDD − 대조군 MDD)다. 둘 다 음수이므로 양수면 덜 깨졌다는 뜻이다.
+    p 는 재표본에서 개선이 사라진 비율(단측) — 작을수록 '우연이 아니다'에 가깝다.
+    """
+    import numpy as np
+    n = min(len(rets), len(brets))
+    if n < block * 4:
+        return None
+    r = np.asarray(rets[:n], float)
+    b = np.asarray(brets[:n], float)
+    rng = np.random.default_rng(seed)
+    nb = -(-n // block)
+    off = np.arange(block)
+    yrs = n / 252.0
+
+    k5 = max(1, int(n * 0.05))                             # 하위 5% 일수
+
+    def paths(src, idx):
+        x = src[idx]
+        nav = np.cumprod(1.0 + x, axis=1)
+        mdd = (nav / np.maximum.accumulate(nav, axis=1) - 1.0).min(axis=1) * 100.0
+        # CVaR5 — 그 경로에서 가장 나쁜 5% 일간수익률의 평균(%). 수백 일이 들어가므로
+        # MDD 와 달리 재표본마다 안정적이다. '덜 깨진다'를 검정력 있게 재는 쪽이 이것이다.
+        cvar = np.partition(x, k5, axis=1)[:, :k5].mean(axis=1) * 100.0
+        cagr = np.power(np.maximum(nav[:, -1], 1e-9), 1.0 / yrs) - 1.0
+        return mdd, cvar, cagr
+
+    dm, dv, dc = [], [], []
+    for c0 in range(0, n_boot, 500):                       # 메모리 상한을 두고 나눠 돈다
+        m = min(500, n_boot - c0)
+        st = rng.integers(0, n, (m, nb))
+        idx = ((st[:, :, None] + off) % n).reshape(m, -1)[:, :n]   # 순환 — 모든 날이 같은 확률
+        mr, vr, cr = paths(r, idx)
+        mb, vb, cb = paths(b, idx)                         # ★ 같은 idx — 짝지은 재표본
+        dm.append(mr - mb)
+        dv.append(vr - vb)
+        # Calmar 는 |MDD| 가 0에 가까우면 발산한다 — 바닥을 두고 막는다
+        dc.append(cr / np.maximum(np.abs(mr) / 100.0, 0.02)
+                  - cb / np.maximum(np.abs(mb) / 100.0, 0.02))
+    dm, dv, dc = np.concatenate(dm), np.concatenate(dv), np.concatenate(dc)
+    return {"d_mdd": round(float(dm.mean()), 2), "p_mdd": round(float((dm <= 0).mean()), 4),
+            "d_cvar": round(float(dv.mean()), 3), "p_cvar": round(float((dv <= 0).mean()), 4),
+            "d_calmar": round(float(dc.mean()), 3), "p_calmar": round(float((dc <= 0).mean()), 4),
+            "n_boot": n_boot, "block": block}
+
+
 # ── 펀더멘털(XBRL) ───────────────────────────────────────────────────────
 # data/fx/<티커>.json 에 SEC EDGAR companyfacts에서 뽑은 분기 시계열이 있다.
 # 여기서 쓰는 것: eq(자본총계·시점) · sh(희석주식수) · cfo·capex(현금흐름).
