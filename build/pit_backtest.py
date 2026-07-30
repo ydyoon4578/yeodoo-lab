@@ -48,14 +48,18 @@ TOPN = TB.TOPN
 PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
-              "x-small"]   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
+              "x-small",   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
+              # 2026-07-30 웹 리서치로 추가. 🚨 여기 안 넣으면 새 규칙이 **소급 t 로만** 판정돼
+              # '통과 후보' 가 된다 — 이 파일이 막으려는 바로 그 일이다(소급 t 3.2~3.7 이 나왔다).
+              "x-echo", "x-season", "x-coskew"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
 #   ⚠ 재무 커버리지가 가격보다 낮다 — 편출 종목 중 몇 종이 실제로 채점되는지 매 실행에 찍고
 #     limits 에 싣는다. 커버리지가 낮으면 그 규칙의 PIT 는 '후보가 생존자로 좁혀진' 쪽이다.
 FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
-             "x-dy", "x-fcfy", "x-sue", "x-epsacc"]
+             "x-dy", "x-fcfy", "x-sue", "x-epsacc",
+             "x-agrow", "x-shiss", "x-cash"]      # 2026-07-30 추가
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -258,7 +262,9 @@ def main():
     TB.build_strats()
     BY = {s["sid"]: s for s in TB.STRATS}
     C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
-         "SH": C_SH, "dates": dates, "FU": _fu}
+         "SH": C_SH, "dates": dates, "FU": _fu,
+         # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
+         "me": sorted(me)}
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
     # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
@@ -489,7 +495,30 @@ def score(S, t, j, C):
         if sid == "x-dy":
             dp = TB.ttm(f.get("dps"), dt_)
             return (dp / p0) if (dp is not None and p0 and p0 > 0) else None
+        if sid == "x-agrow":
+            pr = TB.yoy_pair(f.get("asset"), dt_)
+            if not pr or pr[1] <= 0 or pr[3] <= 0:
+                return None
+            g = pr[1] / pr[3] - 1.0
+            return -max(-2.0, min(2.0, g))
+        if sid == "x-shiss":
+            pr = TB.yoy_pair(f.get("sh"), dt_)
+            if not pr or pr[1] <= 0 or pr[3] <= 0:
+                return None
+            g = pr[1] / pr[3] - 1.0
+            return -g if abs(g) <= 0.5 else None
+        if sid == "x-cash":
+            ch = TB.asof_fund(f.get("cash"), dt_)
+            at = TB.asof_fund(f.get("asset"), dt_)
+            return (ch / at) if (ch is not None and at and at > 0) else None
         return None
+    if sid == "x-echo":
+        return TB.ret(P, j - 126, 126)
+    if sid == "x-coskew":
+        ck = TB.coskew(R[t], ixr, j, 252)
+        return -ck if ck is not None else None
+    if sid == "x-season":
+        return TB.same_month_avg(P, j, C["dates"], C["me"])
     if sid == "x-52wh":
         win = [x for x in P[max(0, j - 251):j + 1] if x]
         hi = max(win) if win else None

@@ -444,6 +444,88 @@ def _days_between(a, b):
     return abs(_ord(a) - _ord(b))
 
 
+def yoy_pair(series, date, lag=FUND_LAG_DAYS):
+    """(최신값, 전년 동기값) — 공시지연 컷 뒤 최신 관측과 그 1년 전 관측.
+
+    🚨 **인덱스로 4칸 뒤를 세면 안 된다.** yoy_eps 의 주석과 같은 이유이고, 실측으로도
+      확인됐다 — 인덱스 방식이면 6개월·9개월·15개월·18개월, 심지어 94~103개월 간격이
+      '전년 동기'로 섞여 들어온다(29,550 관측 중 1,057건 = 3.6%). 날짜로 320~410일 안에서
+      가장 가까운 것을 찾고, 못 찾으면 그 분기를 버린다.
+    반환은 (d0, v0, d1, v1) 또는 None.
+    """
+    ser = asof_all(series, date, lag)
+    if not ser:
+        return None
+    d0, v0 = ser[0]
+    best = None
+    for d1, v1 in ser[1:]:
+        gap = _days_between(d0, d1)
+        if gap > 410:
+            break
+        if 320 <= gap <= 410 and (best is None or gap < best[0]):
+            best = (gap, d1, v1)
+    return (d0, v0, best[1], best[2]) if best else None
+
+
+def asof_all(series, date, lag=FUND_LAG_DAYS):
+    """공시지연 컷을 통과한 관측 전체(날짜 내림차순). asof_fund 가 첫 값만 주는 것의 확장."""
+    if not series:
+        return []
+    cut = _shift(date, -lag)
+    return [(d, v) for d, v in series if d <= cut]
+
+
+def coskew(rs, mkt, i, n=252):
+    """공편왜도 — E[(ri−μi)(rm−μm)²] / (sd(ri)·var(rm)). Ang·Chen·Xing(RFS 2006) 식(6).
+
+    시장이 크게 움직일 때 같이 무너지는 정도를 3차 모멘트로 잰다. 이 표에는 저베타·특이변동성
+    (둘 다 2차 모멘트)이 있는데, 꼬리의 **비대칭**은 그 둘이 못 재는 축이다.
+    """
+    xs, ys = [], []
+    for k in range(max(0, i - n + 1), i + 1):
+        a, m = rs[k], mkt[k]
+        if a is None or m is None:
+            continue
+        xs.append(a); ys.append(m)
+    if len(xs) < 200:
+        return None
+    mx = sum(xs) / len(xs)
+    my = sum(ys) / len(ys)
+    n2 = len(xs)
+    vx = sum((x - mx) ** 2 for x in xs) / max(1, n2 - 1)
+    vy = sum((y - my) ** 2 for y in ys) / max(1, n2 - 1)
+    if vx <= 0 or vy <= 0:
+        return None
+    num = sum((x - mx) * (y - my) ** 2 for x, y in zip(xs, ys)) / n2
+    return num / (vx ** 0.5 * vy)
+
+
+def same_month_avg(P, i, dates, me, lags=(23, 35, 47, 59)):
+    """같은 달 계절성 — 다음 달과 같은 달의 과거 2~5년 월수익 평균.
+
+    Heston·Sadka(2008). OSAP MomSeason 의 lag 목록(23·35·47·59개월)을 그대로 쓴다 —
+    i 가 월말이면 t+1 이 다음 달이고, 그 달과 같은 달이 23·35·47·59 개월 전이다.
+    결측은 제외하고 남은 것의 산술평균. 하나도 없으면 None.
+
+    ⚠ 월수익은 랩의 month_ends 격자로 만든다. 달력 월말이 아니라 **거래일 월말**이어야
+      다른 규칙과 같은 시점을 본다.
+    """
+    ends = [j for j in me if j <= i]
+    if len(ends) < max(lags) + 2:
+        return None
+    pos = len(ends) - 1                          # ends[pos] == i (월말이면)
+    vals = []
+    for L in lags:
+        a, b = pos - L, pos - L - 1
+        if b < 0:
+            continue
+        j1, j0 = ends[a], ends[b]
+        p1, p0 = P[j1], P[j0]
+        if p1 and p0 and p0 > 0:
+            vals.append(p1 / p0 - 1.0)
+    return (sum(vals) / len(vals)) if vals else None
+
+
 def yoy_eps(series):
     """[(기간종료일, 전년 동기 대비 EPS 변화)] — 날짜 내림차순.
 
@@ -647,7 +729,9 @@ def load_fund(extra_dirs=()):
         if eq or sh or fcf or ep:
             out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf, "eps": ep,
                                           "rev": rev, "ni": ni, "dps": dps,
-                                          "asset": asset, "liab": liab}
+                                          "asset": asset, "liab": liab,
+                                          # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
+                                          "cash": series("cash")}
     return out
 
 
@@ -726,7 +810,9 @@ def xsec(sid, name, rule, fn, why, arch=None):
 
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
 FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
-             "x-rgrow", "x-lowde", "x-dy", "x-small"}
+             "x-rgrow", "x-lowde", "x-dy", "x-small",
+             # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
+             "x-agrow", "x-shiss", "x-cash"}
 
 
 def build_strats():
@@ -1005,6 +1091,62 @@ def build_strats():
            "최근 120일 평균수익/분산으로 켈리 비중을 계산해 0~1로 자른다.",
            None, "기대수익과 위험을 한 식에 넣는다. 레버리지를 안 쓰므로 상한 1에서 잘린다. 아카이브의 '켈리 기준 레버리지 스케일링'.",
            arch="kelly-scaling")
+
+    # ── 2026-07-30 웹 리서치로 추가한 6종 ─────────────────────────────────
+    # 출처는 Chen·Zimmermann Open Source Asset Pricing(github.com/OpenSourceAP/CrossSection)의
+    # 신호 정의 코드와 원논문이다. 그 저장소는 ~300개 신호를 파이썬으로 공개해 계산식·창 길이·
+    # 부호를 코드로 확인할 수 있다 — 이 랩이 필요한 '숫자로 된 정의'를 그대로 준다.
+    #   ⚠ 랩에 이미 있는 축(모멘텀·저변동·밸류·수익성)과 겹치지 않는 것만 골랐고, 선별 단계에서
+    #     실측으로 걸러 낸 함정을 각 구현에 반영했다(아래 주석).
+    xsec("x-echo", "에코 모멘텀 (12~7개월 전 구간)",
+         "최근 6개월을 완전히 무시하고 12개월 전~7개월 전 6개월 누적수익률이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스." % TOPN,
+         lambda t, i, P, Rt, V: ret(P, i - 126, 126),
+         "Novy-Marx 'Is momentum really momentum?'(JFE 2012). 모멘텀의 예측력이 최근 6개월이 "
+         "아니라 그보다 앞선 중기 구간에서 온다는 주장이다. 이 표의 12-1 모멘텀은 최근 1개월만 "
+         "빼는데, 여기서는 최근 6개월을 통째로 뺀다 — 같은 '모멘텀' 이름을 쓰지만 창이 겹치지 "
+         "않으므로 둘 중 어느 구간이 실제로 일하는지 갈라 볼 수 있다.")
+    xsec("x-season", "동월 계절성 (같은 달 과거 2~5년 평균)",
+         "다음 달과 같은 달의 과거 2·3·4·5년 전 월수익률 평균이 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스(결측 연도는 제외하고 남은 것의 평균)." % TOPN,
+         None,
+         "Heston·Sadka(2008). 종목마다 특정 달에 강한 경향이 있다는 주장이다. 이 랩에 있는 "
+         "계절성은 '11~4월만 보유'(시장 전체)뿐이고 종목별 달력 축은 없었다. "
+         "⚠ 5년 룩백이라 10년 패널에서 유효 구간이 절반으로 줄고, 관측이 종목당 최대 4개뿐이라 "
+         "평균이 잡음에 약하다. 계절성은 원래 데이터 스누핑에 가장 취약한 축이다.")
+    xsec("x-coskew", "공편왜도 최저 (가장 음의 꼬리 동조)",
+         "최근 252거래일 일별수익으로 공편왜도 E[(ri−μi)(rm−μm)²]/(sd(ri)·var(rm))를 구해 "
+         "가장 음인 %d종목 동일가중, 월말 리밸런스(유효관측 200일 이상)." % TOPN,
+         None,
+         "Ang·Chen·Xing 'Downside Risk'(RFS 2006) 식(6). 시장이 크게 흔들릴 때 같이 무너지는 "
+         "종목은 그 위험의 대가로 더 높은 수익을 요구받는다는 것이다. 이 표의 저베타·특이변동성은 "
+         "둘 다 2차 모멘트이고, 꼬리의 비대칭은 그것들이 못 재는 축이다.")
+    xsec("x-agrow", "자산성장 회피 (총자산 증가 최저)",
+         "총자산의 전년 동기 대비 증가율이 가장 낮은 %d종목 동일가중, 월말 리밸런스. "
+         "총자산이 0 이하인 분기는 제외하고, 증가율은 ±200%%로 자른다." % TOPN,
+         None,
+         "Cooper·Gulen·Schill(JF 2008). 자산을 빠르게 늘린 회사가 이후 부진하다는 것으로, "
+         "투자(investment) 팩터의 대표 대리변수다. 이 표에 자산 규모(소형주)는 있지만 "
+         "그 변화율 축은 없었다. "
+         "⚠ 총자산이 0 으로 들어온 분기가 실제로 있다(PSKY 2025-03·06, SW 2024-03). 분자가 0 이면 "
+         "증가율이 −100%로 1등이 되어 자료 구멍이 편입된다 — 그래서 0 이하를 먼저 뺀다.")
+    xsec("x-shiss", "순주식발행 회피 (주식수 증가 최저)",
+         "발행주식수의 전년 동기 대비 증가율이 가장 낮은(자사주 소각) %d종목 동일가중, "
+         "월말 리밸런스. 증가율 절대값이 50%%를 넘으면 제외." % TOPN,
+         None,
+         "Pontiff·Woodgate(JF 2008). 주식을 새로 찍는 회사는 부진하고 줄이는 회사는 낫다는 것이다. "
+         "이 표의 총주주환원 축은 배당(고배당수익률)뿐이고 주식수 축은 없었다. "
+         "⚠ 절대값 50% 컷은 분할 미조정·주식교환 M&A 를 걸러내려는 것이다. 분할 기준 불일치는 "
+         "split_trim 이 먼저 잘라내지만 남는 오탐을 한 겹 더 막는다.")
+    xsec("x-cash", "현금보유비율 상위 (현금 ÷ 총자산)",
+         "최신 분기 현금및현금성자산을 총자산으로 나눈 값이 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스." % TOPN,
+         None,
+         "Palazzo(JFE 2012). 현금을 많이 쥔 회사가 위험이 커질 때 더 잘 버틴다는 것이다. "
+         "이 표의 재무구조 축은 부채(저부채)뿐이고 자산 쪽 현금 축은 없었다. "
+         "⚠ 원논문의 분자는 '현금+단기투자'인데 이 랩의 cash 태그는 현금및현금성자산만이다 — "
+         "유가증권을 많이 든 회사(애플 등)는 순위가 갈린다. 원논문 t 를 그대로 이 표의 "
+         "기대치로 읽지 말 것.")
 
 
 # ── 실행 ────────────────────────────────────────────────────────────────
@@ -1355,10 +1497,34 @@ def run():
                                 v = (dp / p0) if (dp is not None and p0 and p0 > 0) else None
                             elif sid == "x-small":
                                 v = -mcap if mcap else None
+                            elif sid == "x-agrow":
+                                # 🚨 0 이하를 **분자·분모 둘 다** 뺀다. 분자가 0 이면 증가율이
+                                #   −100% 로 1등이 되어 자료 구멍이 편입된다(실측 PSKY·SW).
+                                pr = yoy_pair(f.get("asset"), dt_)
+                                if pr and pr[1] > 0 and pr[3] > 0:
+                                    g = pr[1] / pr[3] - 1.0
+                                    v = -max(-2.0, min(2.0, g))     # 낮을수록 위
+                            elif sid == "x-shiss":
+                                pr = yoy_pair(f.get("sh"), dt_)
+                                if pr and pr[1] > 0 and pr[3] > 0:
+                                    g = pr[1] / pr[3] - 1.0
+                                    v = -g if abs(g) <= 0.5 else None
+                            elif sid == "x-cash":
+                                ch = asof_fund(f.get("cash"), dt_)
+                                at = asof_fund(f.get("asset"), dt_)
+                                v = (ch / at) if (ch is not None and at and at > 0) else None
                         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
                             iv = idio_vol(R[t], ixr, i - 1, 120)
                             v = -iv if iv is not None else None
+                        elif sid == "x-coskew":
+                            # 같은 사유(시장 수익 필요). 정렬이 내림차순이므로 '가장 음인 것'을
+                            # 뽑으려면 부호를 뒤집어 넣는다.
+                            ck = coskew(R[t], ixr, i - 1, 252)
+                            v = -ck if ck is not None else None
+                        elif sid == "x-season":
+                            # 월말 격자가 필요해 람다로는 못 준다.
+                            v = same_month_avg(P, i - 1, dates, sorted(me))
                         elif sid == "x-snapback":
                             m200 = sma(P, i - 1, 200)
                             if not m200 or not P[i - 1] or P[i - 1] <= m200:
