@@ -1430,7 +1430,12 @@ def run():
         PIT_WINDOW = "%s~%s" % (_pj["start"][:7], _pj["as_of"][:7])
         for _r in _pj.get("strategies") or []:
             _m, _b = _r.get("metrics") or {}, _r.get("bench") or {}
-            PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"))
+            # retro = **같은 창의 소급 레그**. 이것과의 차이가 유니버스 편향이다 —
+            # 랩 본편(2252일)과 직접 빼면 구간 차이가 섞여 편향이 아니게 된다.
+            _rt = _r.get("retro") or {}
+            PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"),
+                                       _r.get("bias_excess"), _rt.get("excess_cagr"),
+                                       _rt.get("t"))
             PIT_BENCH = _b.get("cagr")
         print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
               % ("pit_strategies.json", len(PIT_MEASURED), PIT_WINDOW, PIT_BENCH or 0))
@@ -1445,11 +1450,13 @@ def run():
         m = PIT_MEASURED.get(r["sid"])
         if not m:
             continue
-        pc, ps, pt = m
+        pc, ps, pt, pbias, prx, prt = m
         if pt is None:
             continue
         r["pit"] = {"window": PIT_WINDOW, "cagr": pc, "sharpe": ps, "t": pt,
-                    "bench_cagr": PIT_BENCH, "excess_cagr": round(pc - PIT_BENCH, 2)}
+                    "bench_cagr": PIT_BENCH, "excess_cagr": round(pc - PIT_BENCH, 2),
+                    # 같은 창의 소급 레그와 그 차이 — 화면이 '편향이 얼마였나'를 적을 수 있게.
+                    "retro_excess": prx, "retro_t": prt, "bias_excess": pbias}
         if r["verdict"] == "통과 후보" and abs(pt) < tcrit:
             _dg.append((r["name"], r["t"], pt))
             r["verdict"] = "구별 불가"
