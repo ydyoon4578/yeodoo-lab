@@ -49,6 +49,13 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
               "x-small"]   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
+
+# 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
+# (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
+#   ⚠ 재무 커버리지가 가격보다 낮다 — 편출 종목 중 몇 종이 실제로 채점되는지 매 실행에 찍고
+#     limits 에 싣는다. 커버리지가 낮으면 그 규칙의 PIT 는 '후보가 생존자로 좁혀진' 쪽이다.
+FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
+             "x-dy", "x-fcfy", "x-sue", "x-epsacc"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -202,7 +209,10 @@ def main():
     # ⚠ 두 출처는 정의가 미세하게 다르다(실측: yfinance 가 0.3~2.3% 낮다). 시총이 자릿수로
     #   벌어지는 횡단면이라 순위 영향은 거의 없지만, 민감도를 재서 limits 에 싣는다.
     SH = {}
-    _fu = TB.load_fund()
+    # 재무는 오늘의 유니버스(data/fx)와 편출 종목(data/fx_pit)을 함께 훑는다 — 후자가 있어야
+    # 펀더멘털 규칙을 PIT 로 잴 수 있다. 없으면 그 규칙들은 후보가 생존자로만 좁혀진다.
+    _FXP = os.path.join(DATA, "fx_pit")
+    _fu = TB.load_fund(extra_dirs=[_FXP] if os.path.isdir(_FXP) else [])
     for t in tickers:
         a = (_fu.get(t) or {}).get("sh")
         if a:
@@ -248,7 +258,17 @@ def main():
     TB.build_strats()
     BY = {s["sid"]: s for s in TB.STRATS}
     C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
-         "SH": C_SH, "dates": dates}
+         "SH": C_SH, "dates": dates, "FU": _fu}
+
+    # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
+    # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
+    _st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    _today = {s["t"] for s in _st["stocks"]}
+    _gone = [t for t in tickers if t not in _today]
+    _fx_gone = [t for t in _gone if (_fu.get(t) or {}).get("eq") or (_fu.get(t) or {}).get("eps")]
+    fx_cov = (len(_fx_gone) / len(_gone)) if _gone else 0.0
+    print("  편출 %d종 중 재무 있는 것 %d종(%.0f%%) — 펀더멘털 규칙의 PIT 커버리지"
+          % (len(_gone), len(_fx_gone), 100 * fx_cov))
 
     # 커버리지 — 매월말 '멤버인데 가격이 없는' 비율. 남은 편향의 크기를 정직하게 싣는다.
     cov = []
@@ -262,7 +282,7 @@ def main():
     print("  멤버 대비 가격 보유율: 최저 %.1f%% · 중앙 %.1f%%" % (100 * cov_min, 100 * cov_med))
 
     out = []
-    for sid in PRICE_SIDS:
+    for sid in PRICE_SIDS + FUND_SIDS:
         S = BY.get(sid)
         if not S:
             continue
@@ -340,10 +360,60 @@ def main():
 
 
 def score(S, t, j, C):
-    """tech_backtest 의 횡단면 점수 갈래(가격·거래량 규칙만)를 그대로 옮긴 것."""
+    """tech_backtest 의 횡단면 점수 갈래를 그대로 옮긴 것(가격·거래량 + 펀더멘털).
+
+    ⚠ 정의를 여기서 새로 쓰면 안 된다 — tech_backtest.py:1232-1281 과 **같은 산식**이어야
+      '소급 대비 PIT' 비교가 성립한다. 옮길 때 접근자(asof_fund·ttm·_shift)도 그쪽 것을 쓴다.
+    """
     sid = S["sid"]
     P = C["px"][t]
     R, ixr, ixvol = C["R"], C["ixr"], C["ixvol"]
+
+    # ── 펀더멘털 ─────────────────────────────────────────────────────────
+    if sid in ("x-sue", "x-epsacc") or sid in FUND_SIDS:
+        f = (C.get("FU") or {}).get(t) or {}
+        dt_ = C["dates"][j]
+        p0 = P[j]
+        if sid == "x-sue":
+            return TB.sue(f.get("eps") or [], dt_)
+        if sid == "x-epsacc":
+            e = TB.eps_accel(f.get("eps") or [], dt_)
+            return (e / p0) if (e is not None and p0 and p0 > 0) else None
+        sn = TB.asof_fund(f.get("sh"), dt_)
+        mcap = (sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
+        if sid == "x-btp":
+            e = TB.asof_fund(f.get("eq"), dt_)
+            return (e / sn / p0) if (e is not None and mcap) else None
+        if sid == "x-fcfy":
+            fc = TB.ttm(f.get("fcf"), dt_)
+            return (fc / mcap) if (fc is not None and mcap) else None
+        if sid == "x-ep":
+            v = TB.ttm(f.get("eps"), dt_)
+            return (v / p0) if (v is not None and p0 and p0 > 0) else None
+        if sid == "x-sp":
+            rv = TB.ttm(f.get("rev"), dt_)
+            return (rv / mcap) if (rv is not None and mcap) else None
+        if sid == "x-roe":
+            nn, e = TB.ttm(f.get("ni"), dt_), TB.asof_fund(f.get("eq"), dt_)
+            return (nn / e) if (nn is not None and e and e > 0) else None
+        if sid == "x-npm":
+            nn, rv = TB.ttm(f.get("ni"), dt_), TB.ttm(f.get("rev"), dt_)
+            return (nn / rv) if (nn is not None and rv and rv > 0) else None
+        if sid == "x-rgrow":
+            a1 = TB.ttm(f.get("rev"), dt_)
+            a0 = TB.ttm(f.get("rev"), TB._shift(dt_, 365))
+            return (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
+        if sid == "x-lowde":
+            e = TB.asof_fund(f.get("eq"), dt_)
+            lb = TB.asof_fund(f.get("liab"), dt_)
+            if lb is None:
+                at = TB.asof_fund(f.get("asset"), dt_)
+                lb = (at - e) if (at is not None and e is not None) else None
+            return -(lb / e) if (lb is not None and e and e > 0) else None
+        if sid == "x-dy":
+            dp = TB.ttm(f.get("dps"), dt_)
+            return (dp / p0) if (dp is not None and p0 and p0 > 0) else None
+        return None
     if sid == "x-52wh":
         win = [x for x in P[max(0, j - 251):j + 1] if x]
         hi = max(win) if win else None
