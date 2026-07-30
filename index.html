@@ -1377,6 +1377,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   에러도 빈 줄도 안 난다.
     drawStHold(st.map(function(x){return ST_KEY[x.t];}));
   }
+  // 유니버스 편향 실측 한 줄 — style_trails.json 의 pit 블록에서 만든다(build/style_pit.py 산출).
+  // 값이 없으면 빈 문자열을 돌려 정성 문구만 남는다. **수치를 손으로 적지 않는다.**
+  function pitLine(){
+    var p=SLAB&&SLAB._pit; if(!p||!p.styles)return '';
+    var ks=Object.keys(p.styles).sort(function(a,b){
+      return Math.abs(p.styles[b].bias)-Math.abs(p.styles[a].bias);});
+    var big=ks.slice(0,2).map(function(k){var s=p.styles[k];
+      return esc(s.label)+' '+Math.round(s.pub)+'% → '+Math.round(s.pit)+'%';}).join(' · ');
+    return ' 선정 시점 구성이력으로 다시 재면 <b>'+big+'</b> 입니다(오늘 '+p.today+'종 중 '+
+           p.not_yet+'종이 구간 시작 시점 비멤버 · 기준 '+esc(p.as_of)+').'+
+           ' 편출 종목 누락의 기여는 이보다 훨씬 작습니다.';
+  }
   // 표 아래 각주 — 두 종류 행을 같은 잣대로 읽으면 안 되는 이유를 적는다.
   // 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목을 과거로 소급한다).
   // 그것을 안 적고 +134% 를 +22% 위에 얹으면 표가 거짓말을 한다.
@@ -1395,8 +1407,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<b>랩 행은 상품이 아닙니다.</b> 이 랩이 유니버스 상위 10종목을 동일가중으로 담아 월말마다 '+
       '다시 고른 <b>백테스트</b>이고 보수·거래비용이 0입니다. 짝지은 ETF 는 실제로 운용된 펀드입니다. '+
       '<b>차이를 초과수익으로 읽으면 안 됩니다.</b><br>'+
-      '· <b>생존편향</b> — 랩은 오늘 살아남은 518종목을 과거로 소급해 고릅니다(선정 시점 명단이 아닙니다). '+
-      '그만큼 랩 쪽이 유리하게 부풀려져 있습니다.<br>'+
+      // 🚨 '생존편향'이라고만 적으면 원인을 잘못 짚는다. 실측(build/style_pit.py)으로 편향의
+      // 94~100% 가 **사후편입 선견**이었고 편출 누락은 모멘텀 2.9%p·나머지 0 이었다.
+      // 수치는 data/style_pit.json 에서 파생한다 — 손으로 적으면 다음 갱신에 낡는다.
+      '· <b>유니버스 선견</b> — 랩은 오늘 518종목을 과거로 소급해 고릅니다. 그중 일부는 그때 아직 '+
+      '지수에 편입되지도 않았습니다. 지수는 많이 오른 종목을 편입하니, 소급 유니버스는 '+
+      '<b>‘오를 것’을 미리 아는 셈</b>이 됩니다.'+pitLine()+'<br>'+
       '· 구간 정의도 다릅니다 — ETF 는 달력일(1주=7일), 랩은 거래일 봉수(1주=5거래일)로 잽니다. 이름만 같습니다.<br>'+
       '· 랩 구간은 '+esc(sl._start||'')+' 이후 1년뿐이라 <b>‘1년’이 곧 전 구간</b>입니다. 그 앞은 재지 않았습니다.'+
       (hid?'<br>'+hid:'');
@@ -1440,7 +1456,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     })['catch'](function(){return null;})
     .then(function(tj){
       if(tj&&tj.styles){
-        SLAB={_as_of:tj.as_of||'', _start:tj.start||''};
+        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
       return fetch('data/market_board.json',{cache:'no-cache'})
