@@ -465,19 +465,26 @@ def ttm(series, date, lag=FUND_LAG_DAYS):
     return sum(v for _d, v in got[:4])
 
 
-def load_fund():
-    """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순."""
+def load_fund(extra_dirs=()):
+    """티커 → {'eq': [(기간종료일, 값)…], 'sh': …, 'fcf': …}. 전부 날짜 내림차순.
+
+    extra_dirs — data/fx 말고 더 훑을 디렉터리. 기본은 없음(=기존 동작 그대로).
+      build/style_pit.py 가 data/fx_pit(지수에서 빠진 종목의 재무)을 얹어 PIT 백테스트를
+      돌릴 때 쓴다. **왜 별 디렉터리인가**: refresh_facts.py:551 이 오늘 유니버스에 없는
+      data/fx/*.json 을 지운다 — 편출 종목 재무를 fx 에 넣으면 다음 주 갱신에 사라진다.
+    """
     out = {}
-    d = os.path.join(DATA, "fx")
-    if not os.path.isdir(d):
-        return out
-    for fn in sorted(os.listdir(d)):
-        if not fn.endswith(".json"):
-            continue
+    dirs = [os.path.join(DATA, "fx")] + [d for d in extra_dirs]
+    files = []
+    for d in dirs:
+        if os.path.isdir(d):
+            files += [os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith(".json")]
+    for path in files:
         try:
-            j = json.load(io.open(os.path.join(d, fn), encoding="utf-8"))
+            j = json.load(io.open(path, encoding="utf-8"))
         except Exception:
             continue
+        fn = os.path.basename(path)
         tg = j.get("tags") or {}
 
         def series(key):
