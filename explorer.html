@@ -1083,6 +1083,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           //   안 보여주면 독자는 소급 수치만 본다. 비용 후 표시와 같은 관례로 싣는다.
           if(x.pit){
             var Pt=x.pit, f=function(v){return v==null?'—':((v>0?'+':'')+v);};
+            // 문턱·족 수·넘는 규칙 수를 손으로 적지 않는다 — '27종·3.11·랩 51종·3.30' 이 박혀
+            // 있었고 실제는 33종·57종이었다. pit_backtest 가 도출해 실어 보낸 값만 쓴다.
+            var thr = (Pt.t_crit==null) ? '' :
+              ('규칙 '+Pt.n_rules+'종 다중검정 문턱은 |t|≥'+Pt.t_crit+'(랩 '+Pt.n_family_lab+
+               '종 족으로는 '+Pt.t_crit_lab+')이고 이 표에서 넘는 규칙은 '+
+               (Pt.n_over?(Pt.n_over+'종'):'없다')+'(최대 |t| '+Pt.t_max+').');
             // 🚨 편향은 **bias_cagr(전략 CAGR 기준)** 로 적는다. bias_excess 를 쓰면
             //   두 레그의 대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 값이 깎이고,
             //   음수가 나와 '소급이 오히려 불리했다' 로 거꾸로 읽힌다(고배당에서 실제로 그랬다).
@@ -1094,8 +1100,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   '각자의 동일가중 유니버스 대비 초과는 '+f(Pt.retro_excess)+'%p(t '+
                   (Pt.retro_t==null?'—':Pt.retro_t)+') → '+f(Pt.excess_cagr)+'%p(t '+
                   (Pt.t==null?'—':Pt.t)+') — 대조군도 함께 '+f(Pt.bench_bias_cagr)+'%p 내려가므로 '+
-                  '초과 기준 차이(위 편향과 다르다)는 그만큼 상쇄돼 있다. '+
-                  '규칙 27종 다중검정 문턱은 |t|≥3.11(랩 51종 족으로는 3.30)이고 이 표에서 넘는 규칙은 없다.</em>';
+                  '초과 기준 차이(위 편향과 다르다)는 그만큼 상쇄돼 있다. '+thr+'</em>';
           }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
