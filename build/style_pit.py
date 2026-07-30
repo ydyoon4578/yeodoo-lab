@@ -316,6 +316,10 @@ def main() -> int:
                      #   gone_at_start 는 창 시작 **스냅샷**이다. 517 과 짝이 맞는 것은 후자다.
                      "gone": len(gone), "gone_at_start": len(m0 - today),
                      "filled": len(inject),
+                     # 러너가 읽는다 — build/pit_facts.py 가 이 명단으로 SEC 재무를 받아
+                     # data/fx_pit/ 에 넣는다. 멤버십(pit_members.json)은 gitignore 라
+                     # 러너가 스스로 계산할 수 없으므로 여기 실어 보내는 것이 유일한 경로다.
+                     "gone_tickers": gone,
                      "not_yet_member_at_start": len(not_yet), "not_yet": not_yet,
                      "missing": sorted(missing), "reused_ticker_suspect": sorted(gap),
                      "cov_min": round(min(cov), 4), "cov_med": round(sorted(cov)[len(cov) // 2], 4)},
