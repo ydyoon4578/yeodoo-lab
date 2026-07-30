@@ -1076,6 +1076,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
           // 등급만 보면 전부 '구별 불가'로 보인다 — 두 축을 같이 놓아야 읽힌다.
+          // 시점정확(PIT) 실측 — build/pit_backtest.py 가 **같은 창**에서 소급 유니버스로도
+          // 한 번 더 돌려 잰 것. 랩 본편은 2252일이고 PIT 은 1461일이라, 그 둘을 직접 빼면
+          // 편향이 아니라 '편향 + 구간 차이' 가 나온다. 그래서 retro(같은 창 소급) 대비로 적는다.
+          // ⚠ 전에는 이 값이 판정 강등에만 쓰이고 화면에는 숫자가 안 나갔다 — 편향을 재 놓고
+          //   안 보여주면 독자는 소급 수치만 본다. 비용 후 표시와 같은 관례로 싣는다.
+          if(x.pit){
+            var Pt=x.pit, f=function(v){return v==null?'—':((v>0?'+':'')+v);};
+            if(Pt.bias_excess!=null&&Pt.bias_excess>=5)
+              d.vt='<b>유니버스 편향 큼 (초과 '+f(Pt.retro_excess)+' → '+f(Pt.excess_cagr)+'%p)</b> — '+d.vt;
+            d.vt+=' <em>시점정확(PIT '+esc(Pt.window||'')+') — 같은 창에서 소급 유니버스로 재면 초과 '+
+                  f(Pt.retro_excess)+'%p(t '+(Pt.retro_t==null?'—':Pt.retro_t)+'), '+
+                  '매월말 실제 편입만 후보로 두면 '+f(Pt.excess_cagr)+'%p(t '+
+                  (Pt.t==null?'—':Pt.t)+')'+
+                  (Pt.bias_excess==null?'':' · 유니버스 편향 '+f(Pt.bias_excess)+'%p')+'</em>';
+          }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
           if(x.metrics_net&&x.cost_drag!=null){

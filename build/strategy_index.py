@@ -277,6 +277,10 @@ def main() -> int:
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
             holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
             arch=r.get("arch"),
+            # 시점정확(PIT) 실측 — build/pit_backtest.py 가 같은 창에서 소급 레그와 함께 잰 것.
+            # ⚠ 전에는 이 값이 판정 강등에만 쓰이고 **화면에는 숫자가 안 나갔다**. 편향을 재
+            #   놓고 안 보여주면 독자는 소급 수치만 보게 된다 — 목록에 실어 카드가 적게 한다.
+            pit=r.get("pit"),
         ))
 
     if _hidden_bond:

@@ -281,20 +281,35 @@ def main():
     cov_min, cov_med = (min(cov), sorted(cov)[len(cov) // 2]) if cov else (0, 0)
     print("  멤버 대비 가격 보유율: 최저 %.1f%% · 중앙 %.1f%%" % (100 * cov_min, 100 * cov_med))
 
-    out = []
-    for sid in PRICE_SIDS + FUND_SIDS:
-        S = BY.get(sid)
-        if not S:
-            continue
+    # ── 같은 창의 소급 레그 ────────────────────────────────────────────────
+    # 🚨 편향은 **같은 창**에서 재야 한다. 랩 본편은 2252일이고 여기는 1461일이라, 두 수치를
+    #   빼면 편향이 아니라 '편향 + 구간 차이' 가 나온다(스타일 측정에서 같은 함정을 겪었다).
+    #   그래서 이 창에서 소급 유니버스(오늘 518종)로 한 번 더 돌린다.
+    #   · 채점은 종목별로 독립이라(z 표준화가 없다) 후보집합이 점수를 바꾸지 않는다 —
+    #     스타일 쪽에서 필요했던 '채점 모집단 좁히기' 가 여기서는 불필요하다.
+    #   · 다만 대조군과 ixr(동일가중 지수)은 유니버스에 딸린 값이라 레그별로 따로 만든다.
+    #     x-ivol·x-lowbeta·x-minvar 가 ixr 을 쓰므로 이것을 공유하면 반쪽만 소급이 된다.
+    lab_uni = sorted(set(tickers) & _today)
+    ixr_lab = [None] * n
+    for i in range(1, n):
+        rs = [R[t][i] for t in lab_uni if R[t][i] is not None]
+        ixr_lab[i] = sum(rs) / len(rs) if rs else 0.0
+    ixvol_lab = [TB.vol(ixr_lab, i, 20) for i in range(n)]
+
+    def run(S, pool_at, IXR, IXVOL):
+        """한 전략을 한 유니버스로 돌린다. pool_at 이 None 이면 제한 없음(소급)."""
+        CC = dict(C, ixr=IXR, ixvol=IXVOL)
         hold, nav, srets, turns = [], [100.0], [], 0
         for i in range(i0 + 1, n):
             if (i - 1) in me:
-                pool = members_at(i - 1)
+                pool = pool_at(i - 1) if pool_at else None
                 sc = []
                 for t in tickers:
-                    if t not in pool:              # ★ PIT 마스킹
+                    if pool is not None and t not in pool:      # ★ PIT 마스킹
                         continue
-                    v = score(S, t, i - 1, C)
+                    if pool is None and t not in _today:        # 소급 레그 = 오늘의 유니버스
+                        continue
+                    v = score(S, t, i - 1, CC)
                     if v is not None and v == v:
                         sc.append((v, t))
                 sc.sort(reverse=True)
@@ -307,24 +322,49 @@ def main():
             nav.append(nav[-1] * (1 + srets[-1]))
         bnav = [100.0]
         for i in range(i0 + 1, n):
-            bnav.append(bnav[-1] * (1 + (ixr[i] or 0.0)))
+            bnav.append(bnav[-1] * (1 + (IXR[i] or 0.0)))
         d2 = dates[i0:]
         stt, bs = TB.ann_stats(nav, d2, rf), TB.ann_stats(bnav, d2, rf)
-        out.append({
-            "sid": sid, "name": S["name"], "metrics": stt, "bench": bs,
+        return {
+            "metrics": stt, "bench": bs,
             "excess_cagr": round(stt.get("cagr", 0) - bs.get("cagr", 0), 2),
             "d_sharpe": round((stt.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": TB.tstat(srets, ixr[i0 + 1:]),
+            "t": TB.tstat(srets, IXR[i0 + 1:]),
             "turnover": round(turns / max(1, (n - i0) / 252), 2),
-            "holdings": {"kind": "xsec", "as_of": dates[-1], "n": len(hold), "tickers": sorted(hold)},
+            "hold": sorted(hold),
+        }
+
+    out = []
+    for sid in PRICE_SIDS + FUND_SIDS:
+        S = BY.get(sid)
+        if not S:
+            continue
+        P_ = run(S, members_at, ixr, ixvol)          # PIT
+        B_ = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
+        out.append({
+            "sid": sid, "name": S["name"],
+            "metrics": P_["metrics"], "bench": P_["bench"],
+            "excess_cagr": P_["excess_cagr"], "d_sharpe": P_["d_sharpe"],
+            "t": P_["t"], "turnover": P_["turnover"],
+            # 같은 창의 소급 레그와 그 차이 = 유니버스 편향(구간 차이가 섞이지 않는다)
+            "retro": {"metrics": B_["metrics"], "bench": B_["bench"],
+                      "excess_cagr": B_["excess_cagr"], "t": B_["t"]},
+            "bias_excess": round(B_["excess_cagr"] - P_["excess_cagr"], 2),
+            "bias_sharpe": round((B_["metrics"].get("sharpe") or 0)
+                                 - (P_["metrics"].get("sharpe") or 0), 3),
+            "holdings": {"kind": "xsec", "as_of": dates[-1],
+                         "n": len(P_["hold"]), "tickers": P_["hold"]},
         })
-        print("  %-28s CAGR %7.2f (대조군 %6.2f) · Sharpe %5.2f · t %5.2f"
-              % (S["name"][:28], stt.get("cagr", 0), bs.get("cagr", 0),
-                 stt.get("sharpe") or 0, out[-1]["t"] or 0))
+        print("  %-26s PIT 초과 %+7.2f (t %5.2f) · 소급 초과 %+7.2f (t %5.2f) → 편향 %+7.2f%%p"
+              % (S["name"][:26], P_["excess_cagr"], P_["t"] or 0,
+                 B_["excess_cagr"], B_["t"] or 0, out[-1]["bias_excess"]))
 
     doc = {
-        "note": "매월말 실제 지수 편입 종목만 후보로 두고 다시 돌린 결과. 랩 본편(오늘의 유니버스를 "
-                "과거로 소급)과의 차이가 생존편향의 크기다.",
+        "note": "매월말 실제 지수 편입 종목만 후보로 두고 다시 돌린 결과. 같은 창에서 소급 "
+                "유니버스(오늘 518종)로도 한 번 더 돌려 retro 에 담았고, 그 차이(bias_excess)가 "
+                "유니버스 편향의 크기다 — 랩 본편(2252일)과 직접 빼면 구간 차이가 섞여 편향이 "
+                "아니게 된다. 채점은 종목별로 독립이라(z 표준화 없음) 후보집합이 점수를 바꾸지 "
+                "않으므로, 스타일 측정에서 필요했던 '채점 모집단 좁히기' 가 여기서는 불필요하다.",
         "start": dates[i0], "as_of": dates[-1], "n_days": n - i0,
         "span_years": round((n - i0) / 252.0, 1),
         "universe": "SPX ∪ NDX · 매월말 실제 편입(public.index_constituents) · 가격은 yfinance",
@@ -342,13 +382,19 @@ def main():
             % (100 * cov_min, 100 * cov_med),
             "'거래량 급증' 규칙은 아예 뺐다 — 거래량이 오늘의 유니버스에만 있어 후보가 100%% "
             "생존자로 좁혀지는데, 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다.",
-            "t 는 이 표본(%d거래일·규칙 %d종)에서 계산한 값이다. 랩 본편의 본페로니 임계(표본 "
-            "2252일·규칙 51종 기준)를 그대로 들이대면 잣대가 어긋난다 — 여기서는 문턱을 넘고 말고가 "
-            "아니라 '소급 표본 대비 t 가 얼마나 무너지는가'로 읽어야 한다." % (n - i0, len(PRICE_SIDS)),
-            "규칙 %d종을 다룬다. 소형주(시가총액)는 시점별 주식수를 랩의 SEC XBRL(오늘의 유니버스)과 "
-            "yfinance(편출 종목)로 합쳐 재현했다 — 두 출처의 주식수는 0.3~2.3%% 차이 나지만 시총이 "
-            "자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. 나머지 펀더멘털 규칙(저PER·고ROE 등)은 "
-            "시점별 재무가 없어 제외." % len(PRICE_SIDS),
+            "t 는 이 표본(%d거래일·규칙 %d종)에서 계산한 값이다. **규칙 %d종을 한 표에서 재므로 "
+            "다중검정이다** — 본페로니 5%%면 |t|≈2.9 가 필요하고 그것을 넘는 규칙은 극소수다. "
+            "여기서는 문턱을 넘고 말고보다 '소급 대비 t 가 얼마나 무너지는가'로 읽는 것이 안전하다."
+            % (n - i0, len(PRICE_SIDS) + len(FUND_SIDS), len(PRICE_SIDS) + len(FUND_SIDS)),
+            "규칙 %d종(가격·거래량 %d + 펀더멘털 %d). 소형주(시가총액)는 시점별 주식수를 랩의 "
+            "SEC XBRL 과 yfinance(편출분)로 합쳐 재현했다 — 두 출처가 0.3~2.3%% 차이 나지만 시총이 "
+            "자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. "
+            "펀더멘털 규칙은 2026-07-30 에 추가했다 — 편출 종목 재무를 SEC 에서 받아(build/pit_facts.py, "
+            "러너) data/fx_pit 에 넣은 뒤 가능해졌다. 편출 %d종 중 재무가 있는 것은 %d종(%.0f%%)이고, "
+            "없는 %d종(폐지·개명 티커라 SEC 현행 목록에 없다)만큼 그 규칙들의 후보는 여전히 "
+            "생존자 쪽으로 좁혀져 있다."
+            % (len(PRICE_SIDS) + len(FUND_SIDS), len(PRICE_SIDS), len(FUND_SIDS),
+               len(_gone), len(_fx_gone), 100 * fx_cov, len(_gone) - len(_fx_gone)),
             "비용 0(gross) · 신호는 당일 종가로 계산해 다음 거래일부터 적용(선견 없음).",
         ],
         "strategies": out,
