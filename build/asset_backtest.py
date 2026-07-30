@@ -273,7 +273,8 @@ ROLE = {
     "vrp-shortvol": "수익엔진", "credit-bond-gate": "타이밍오버레이", "ebp-gate": "타이밍오버레이",
     "quality-tilt": "수익엔진", "carry": "수익엔진", "hrp-sleeve": "배분기",
     "regime-switch": "타이밍오버레이", "ml-timing": "타이밍오버레이",
-    "ml-xsec": "수익엔진", "ml-xsec-inter": "수익엔진", "guru-clone": "수익엔진",
+    "ml-xsec": "수익엔진", "ml-xsec-inter": "수익엔진", "ml-xsec-tree": "수익엔진",
+    "guru-clone": "수익엔진",
     # 고전 타이밍 규칙 — 전부 '언제 들어가 있을까'만 정하므로 타이밍오버레이다.
     # 변동성 타깃은 노출을 위로 늘리지 않고 줄이기만 해 성격이 다르다(위험감축).
     "sma200": "타이밍오버레이", "golden-cross": "타이밍오버레이", "abs-mom": "타이밍오버레이",

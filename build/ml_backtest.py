@@ -120,6 +120,83 @@ def expand2(row):
     return np.hstack(cols)
 
 
+# ── 얕은 랜덤 포레스트 ────────────────────────────────────────────────────
+# Gu·Kelly·Xiu 의 승자 모델이 트리다. 2차 확장은 상호작용을 '선형 해 안에서' 흉내 낸 것이고,
+# 트리는 그 상호작용을 **분할로 직접** 만든다. 둘을 같이 둬야 '상호작용이 문제였나, 아니면
+# 선형이라는 형태가 문제였나'가 갈린다.
+#
+# 사전등록 값 — 결과를 보고 고치지 않는다. 손잡이를 최소로 두려고 일부러 작게 잡았다.
+#   나무 100 · 깊이 4 · 분할 후보 특징 √p · 리프 최소표본 200 · 나무당 표본 6만행
+#   깊이 4 는 최대 16개 리프다. 특징이 7개뿐이라 이보다 깊이 가면 잡음을 외운다.
+#   리프 200 은 종목 500개 × 학습 수백일에서 리프 하나가 최소 한 시점 폭은 되게 하는 값이다.
+#   분할점은 각 특징의 사분위(25·50·75%)만 본다 — 모든 값을 훑으면 느리고, 후보를 늘리는 것
+#   자체가 과적합 손잡이가 된다.
+#   ⚠ 나무당 표본을 6만행으로 자른다. 학습창이 끝에서 종목 500 × 2400일 = 120만행까지
+#     자라는데 그것을 100그루가 매 리밸런스마다 훑으면 실행이 끝나지 않는다(실측으로 확인).
+#     자르는 것은 속도 때문만이 아니다 — 배깅의 목적이 나무마다 다른 데이터를 보게 해 분산을
+#     줄이는 것이라, 부분표본은 그 목적에 오히려 부합한다(sklearn 의 max_samples 와 같은 뜻).
+#     6만은 결과를 보고 고른 값이 아니라 '한 번 돌 수 있는 크기'로 먼저 박은 값이다.
+RF_TREES, RF_DEPTH, RF_LEAF, RF_SEED = 100, 4, 200, 20260729
+RF_MAXROWS = 60000
+
+
+def _tree_fit(X, y, depth, leaf, feat_idx, rng, qs=(25, 50, 75)):
+    """분산 감소 기준 회귀트리 하나. 반환은 (특징, 문턱, 왼쪽, 오른쪽) 중첩 튜플 또는 평균값."""
+    if depth == 0 or len(y) < 2 * leaf:
+        return float(y.mean())
+    best = None
+    for f in feat_idx:
+        col = X[:, f]
+        for q in np.percentile(col, qs):
+            m = col <= q
+            nl = int(m.sum())
+            if nl < leaf or (len(y) - nl) < leaf:
+                continue
+            # 분산 감소 = 전체 SSE − (왼쪽 SSE + 오른쪽 SSE). 상수항은 비교에 영향이 없다.
+            sse = ((y[m] - y[m].mean()) ** 2).sum() + ((y[~m] - y[~m].mean()) ** 2).sum()
+            if best is None or sse < best[0]:
+                best = (sse, f, float(q), m)
+    if best is None:
+        return float(y.mean())
+    _, f, q, m = best
+    return (f, q,
+            _tree_fit(X[m], y[m], depth - 1, leaf, feat_idx, rng),
+            _tree_fit(X[~m], y[~m], depth - 1, leaf, feat_idx, rng))
+
+
+def _tree_pred(node, X):
+    if not isinstance(node, tuple):
+        return np.full(len(X), node)
+    f, q, lo, hi = node
+    out = np.empty(len(X))
+    m = X[:, f] <= q
+    if m.any():
+        out[m] = _tree_pred(lo, X[m])
+    if (~m).any():
+        out[~m] = _tree_pred(hi, X[~m])
+    return out
+
+
+def forest_fit(X, y, seed=RF_SEED):
+    """배깅 + 특징 부분집합. 나무마다 표본과 특징을 달리 뽑아 분산을 줄인다."""
+    rng = np.random.default_rng(seed)
+    p = X.shape[1]
+    k = max(1, int(round(math.sqrt(p))))
+    m = min(len(y), RF_MAXROWS)
+    trees = []
+    for _ in range(RF_TREES):
+        idx = rng.integers(0, len(y), m)               # 부트스트랩(상한 RF_MAXROWS)
+        fs = rng.choice(p, size=k, replace=False)      # 분할 후보 특징
+        trees.append(_tree_fit(X[idx], y[idx], RF_DEPTH, RF_LEAF, fs, rng))
+    return trees
+
+
+def forest_pred(trees, X):
+    if not trees:
+        return np.zeros(len(X))
+    return np.mean([_tree_pred(t, X) for t in trees], axis=0)
+
+
 # ── ① 지수 타이밍 ────────────────────────────────────────────────────────
 FEATS_MKT = [
     "200일선 이격도", "50일선 이격도", "20일 실현변동성", "12-1 모멘텀",
@@ -262,6 +339,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
     상호작용이 값을 한다'가 이 데이터에서 각각 갈린다 — 조건을 하나라도 더 바꾸면 무엇
     때문에 갈렸는지 말할 수 없다."""
     EXP = expand2 if mode == "inter" else (lambda a: a)
+    FOREST = (mode == "tree")
     st_ = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     NMX = {x["t"]: (x.get("name") or x["t"]) for x in st_["stocks"]}
     DTS = st_["pxd_dates"]
@@ -366,7 +444,11 @@ def stock_selection(RF, TOPN=10, mode="value"):
             if Xs:
                 Xtr = np.vstack(Xs); ytr = np.concatenate(ys)
                 mu, sd = zfit(Xtr)
-                if mode in ("value", "inter"):
+                if FOREST:
+                    # 트리는 계수가 아니라 나무 목록을 들고 있다. 표준화는 트리에 필요 없지만
+                    # 다른 판과 입력을 한 글자도 다르게 두지 않으려고 그대로 통과시킨다.
+                    beta_w = forest_fit((Xtr - mu) / sd, ytr)
+                elif mode in ("value", "inter"):
                     beta_w = ridge((Xtr - mu) / sd, ytr, L2)
                 else:
                     # 목표를 '초과수익이 양이었나'로 바꾼다. 특징·창·표준화는 그대로다.
@@ -376,7 +458,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
                 ok = np.isfinite(row).all(axis=1)
                 if ok.sum() >= TOPN:
                     z = (EXP(row[ok]) - mu) / sd
-                    sc = beta_w[0] + z @ beta_w[1:]
+                    sc = forest_pred(beta_w, z) if FOREST else (beta_w[0] + z @ beta_w[1:])
                     names_ok = np.array(tick)[ok]
                     if mode == "conf":
                         # 확률로 바꿔 문턱을 넘는 것만 산다. 없으면 아무것도 사지 않는다 —
@@ -439,6 +521,19 @@ def stock_selection(RF, TOPN=10, mode="value"):
                   "목표는 크기 예측판과 같은 초과수익의 크기다. 벌점 L2=1.0 도 그대로 두었다 — "
                   "열이 5배라 계수당 제약은 더 세지지만, 그것을 보정하려 값을 만지면 그 순간 "
                   "탐색이 되어 사전등록이 무의미해진다."),
+        "tree": ("ml-xsec-tree", "머신러닝 종목선택 (랜덤 포레스트·워크포워드)",
+                 "같은 특징 7개·같은 목표로 얕은 회귀트리 %d그루를 배깅해 예측하고 상위 "
+                 "%d종목을 동일가중 보유. 나무 깊이 %d · 리프 최소 %d표본 · 분할 후보는 "
+                 "루트(7)개 특징. 나머지 규약은 크기 예측판과 완전히 같다."
+                 % (RF_TREES, TOPN, RF_DEPTH, RF_LEAF),
+                 "Gu·Kelly·Xiu 의 승자 모델이 트리다. 2차 확장판은 상호작용을 선형 해 '안에서' "
+                 "흉내 낸 것이고, 트리는 그 상호작용을 분할로 직접 만든다. 둘을 같이 둬야 "
+                 "'상호작용이 문제였나, 선형이라는 형태가 문제였나'가 갈린다. sklearn 이 "
+                 "없어 numpy 로 직접 짰다.",
+                 "깊이 %d·리프 %d·나무 %d은 사전등록 값이고 결과를 보고 고치지 않았다. "
+                 "손잡이가 많을수록 '한 번만 돌린다'는 약속이 지켜지지 않으므로 일부러 작게 "
+                 "잡았다 — 분할점도 각 특징의 사분위 세 곳만 본다."
+                 % (RF_DEPTH, RF_LEAF, RF_TREES)),
     }
     sid, nm, rule, why, tgt = SPEC[mode]
     if mode == "conf":
@@ -656,6 +751,8 @@ def main() -> int:
                       # 같은 목표·같은 릿지에서 특징 사상만 2차로 편 판. 크기 예측판과 나란히
                       # 둬야 '비선형 상호작용이 값을 하는가'가 갈린다.
                       (lambda: stock_selection(RF, mode="inter"), "횡단면 종목선택(상호작용)"),
+                      # 논문의 승자 모델. 상호작용판과 나란히 둬야 '상호작용이냐 형태냐'가 갈린다.
+                      (lambda: stock_selection(RF, mode="tree"), "횡단면 종목선택(랜덤 포레스트)"),
                       (lambda: guru_clone(RF), "13F 컨빅션 복제")):
         try:
             r = fn()
