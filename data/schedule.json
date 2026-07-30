@@ -32,10 +32,10 @@
   },
   "refresh-assets.yml": {
    "cron": [
-    "40 23 * * 5"
+    "40 23 * * 0-5"
    ],
    "label": [
-    "매주 토 08:40 KST"
+    "매일(월~토) 08:40 KST"
    ]
   },
   "refresh-calendar.yml": {
