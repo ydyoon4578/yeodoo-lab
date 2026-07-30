@@ -326,7 +326,8 @@ def main() -> int:
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
     # 성격은 규칙이 하는 일로 정한다(재검 산출물에는 role이 없다).
     RECHK_ROLE = {
-        "vol-targeting-ndx": "위험감축", "low-beta-weight-tilt": "위험감축",
+        # vol-targeting-ndx 는 2026-07-30 에 삭제됐다(archive_index·archive_backtests 양쪽에서).
+        "low-beta-weight-tilt": "위험감축",
         "bond-trend-gate": "타이밍오버레이", "cross-asset-rp-extended": "배분기",
         "tail-risk-hedge": "방어보험",
     }
@@ -426,6 +427,22 @@ def main() -> int:
     #   asset_strategies.json·archive_backtests.json·deploy_index.json 은 손대지 않는다.
     #   진 것을 원본에서 지우면 다중검정 N이 줄어 남은 것이 쉽게 통과한다(자기에게 유리한 보정).
     #
+    # 🚨 2026-07-30: 위험감축 7종에 대해서만 이 원칙의 **예외**를 두었다(사용자 결정).
+    #   목록 제외가 아니라 원본에서 지웠다 — 등록부(asset_backtest 의 s_voltgt·s_ddgate·
+    #   s_volregime)와 수기 정본(deploy_index·strategy_detail·strategy_backtests·
+    #   archive_index·archive_backtests)에서 전부 제거했다.
+    #   그래서 여기 HIDE_SIDS 에 있던 dynamic-vol-target·duration-scaling·
+    #   bond-regime-overlay-agg 세 줄도 같이 없앴다(가리킬 대상이 없어 가드가 '제외가 풀렸다'로 죈다).
+    #   ⚠ 지우기 전에 위 우려를 실제로 재 봤다 — **문턱은 거의 안 움직인다.**
+    #     자산배분 n 57 → 54 · t_crit 3.33 → 3.31 이고, 그 사이(3.31~3.33)에 들어와 판정이
+    #     뒤집히는 전략은 **0종**이다(남는 것 중 최고 |t| 는 머신러닝 횡단면 3.02).
+    #     종목전략 t_crit 3.33 은 애초에 이 7종을 안 세므로 **불변**이다.
+    #   ⚠ archive_backtests 의 n_tests_total(20)은 줄이지 않았다 — 그 값은 '게시 건수'가 아니라
+    #     '재검을 몇 번 돌렸나'이고, 지운 것을 빼면 보정 분모가 관대해진다(validate 게이트의 취지).
+    #   ⚠ rotation_pool 의 랩 판정 배지 1건('변동성 타게팅' → 변동성 타깃팅 NDX '기각')은 남겼다.
+    #     그 판정은 실제로 내려졌던 것이고 배지는 자립 문안이라, 지우면 기록을 과하게 정리하는 쪽이다.
+    #   되살리려면 커밋 78815cd3 다음 커밋의 역패치를 적용하면 된다(git 에 전문이 남아 있다).
+    #
     # ⚠⚠ 이 제외는 **성과 판정이 아니다.** 이 전략들의 headline 은 최대낙폭이고, 그 축에서는
     #    낮을수록 좋다 — 빠지는 8종 중 −11.19%·−12.33%·−15.30% 는 전 목록에서 가장 좋은 낙폭이다.
     #    자기 목적(모전략 낙폭 감축) 기준으로는 대체로 성공한 축에 든다:
@@ -436,7 +453,7 @@ def main() -> int:
     #    그럼에도 목록에서 빼는 것은 "이 랩에서 이 계열을 다루지 않는다"는 운용 결정이지
     #    "성과가 나쁘다"는 측정 결과가 아니다. 되살리려면 이 집합에서 sid 를 빼면 된다.
     HIDE_SIDS = {
-        "dynamic-vol-target", "duration-scaling", "bond-regime-overlay-agg",   # 배포 원장
+        # (배포 원장의 위험감축 3종은 2026-07-30 에 원본째로 삭제 — 위 주석 참조)
         "a-rp-voltarget", "a-vol-roll", "a-tail-hedge",                        # 자산배분
         "r-low-beta-weight-tilt", "r-tail-risk-hedge",                         # 기각 재검
         # 합병차익거래(2026-07-27 추가, 사용자 결정). 같은 원칙 — 목록에서만 빼고 기록은 둔다.
