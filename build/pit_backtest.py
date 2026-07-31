@@ -53,7 +53,7 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               # '통과 후보' 가 된다 — 이 파일이 막으려는 바로 그 일이다(소급 t 3.2~3.7 이 나왔다).
               "x-echo", "x-season", "x-coskew",
               # 2026-07-31 추가(가격만 쓰는 것)
-              "x-ltrev"]
+              "x-ltrev", "x-lowcorr", "x-cntd"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
@@ -63,7 +63,7 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              "x-dy", "x-fcfy", "x-sue", "x-epsacc",
              "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
              # 2026-07-31 추가 — 전부 흐름 항목이라 ttm2(q, a) 로 읽어야 한다.
-             "x-poacc", "x-gpa", "x-ocfp", "x-aci"]
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -527,6 +527,13 @@ def score(S, t, j, C):
         if sid == "x-fcfy":
             fc = TB.ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
             return (fc / mcap) if (fc is not None and mcap) else None
+        if sid == "x-payout":
+            dp = TB.ttm(f.get("dps"), dt_)
+            bbv = TB.ttm2(f.get("bb"), f.get("bb_a"), dt_)
+            if not (mcap and (dp is not None or bbv is not None)):
+                return None
+            tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
+            return (tot / mcap) if tot >= 0 else None
         if sid == "x-poacc":
             cut_ = TB._shift(dt_, TB.FUND_LAG_DAYS)
             nim = dict(f.get("ni_a") or []); cfm = dict(f.get("cfo_a") or [])
@@ -616,6 +623,11 @@ def score(S, t, j, C):
     if sid == "x-coskew":
         ck = TB.coskew(R[t], ixr, j, 252)
         return -ck if ck is not None else None
+    if sid == "x-lowcorr":
+        cr = TB.mkt_corr(R[t], ixr, j, 252)
+        return -cr if cr is not None else None
+    if sid == "x-cntd":
+        return TB.updown(R[t], j, 231)
     if sid == "x-season":
         return TB.same_month_avg(P, j, C["dates"], C["me"])
     if sid == "x-52wh":

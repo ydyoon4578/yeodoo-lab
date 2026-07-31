@@ -492,6 +492,43 @@ def asof_all(series, date, lag=FUND_LAG_DAYS):
     return [(d, v) for d, v in series if d <= cut]
 
 
+def mkt_corr(rs, mkt, i, n=252):
+    """종목 수익률과 시장 수익률의 상관 — 베타를 ρ×(σi/σm)로 쪼갠 것 중 **ρ 성분**.
+
+    Frazzini·Pedersen(JFE 2014)이 베타를 이렇게 분해한다. 이 표의 저베타는 두 성분이 섞여
+    있어 '시장과 덜 움직인다'와 '덜 흔들린다'가 구별되지 않는다 — ρ 만 보면 변동성 크기를
+    빼고 동조 여부만 남는다. 유효 관측이 n의 8할 미만이면 None(짧은 이력이 상관을 왜곡한다).
+    """
+    xs, ys = [], []
+    for k in range(max(0, i - n + 1), i + 1):
+        a, b = rs[k] if k < len(rs) else None, mkt[k] if k < len(mkt) else None
+        if a is not None and b is not None:
+            xs.append(a); ys.append(b)
+    if len(xs) < int(n * 0.8):
+        return None
+    m1, m2 = sum(xs) / len(xs), sum(ys) / len(ys)
+    s1 = math.sqrt(sum((x - m1) ** 2 for x in xs))
+    s2 = math.sqrt(sum((y - m2) ** 2 for y in ys))
+    if not s1 or not s2:
+        return None
+    return sum((x - m1) * (y - m2) for x, y in zip(xs, ys)) / (s1 * s2)
+
+
+def updown(rs, i, n=231):
+    """(오른 날 − 내린 날) ÷ 유효일수. 수익률 **크기를 버리고 부호 개수만** 센다.
+
+    Da·Gurun·Warachka(RFS 2014)의 정보 이산성(information discreteness)에서 쓰는 성분이다.
+    이 표의 모멘텀·반전은 전부 수익률 크기로 만들어져 있어, '같은 12개월 수익이라도 잘게
+    꾸준히 올랐나 한 번에 튀었나'는 재지 못한다.
+    """
+    w = [r for r in rs[max(0, i - n + 1):i + 1] if r is not None]
+    if len(w) < int(n * 0.8):
+        return None
+    up = sum(1 for r in w if r > 0)
+    dn = sum(1 for r in w if r < 0)
+    return (up - dn) / len(w)
+
+
 def coskew(rs, mkt, i, n=252):
     """공편왜도 — E[(ri−μi)(rm−μm)²] / (sd(ri)·var(rm)). Ang·Chen·Xing(RFS 2006) 식(6).
 
@@ -899,7 +936,7 @@ FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
              # 2026-07-31 추가 — 흐름 항목은 반드시 ttm2(q, a) 로 읽는다(ttm 독스트링 참조).
-             "x-poacc", "x-gpa", "x-ocfp", "x-aci"}
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout"}
 
 
 def build_strats():
@@ -1240,6 +1277,45 @@ def build_strats():
          "모멘텀은 12-1·에코로 중기라, 3~5년 지평은 통째로 비어 있었다. "
          "⚠ 룩백이 1260거래일이라 10년 패널에서 유효 구간이 절반으로 줄고, 커버리지 게이트가 "
          "그때까지 무보유로 두므로 시작일이 자동으로 늦춰진다(그 편이 정직하다).")
+
+    # ── 2026-07-31 2차: 붐비는 칸의 후보 3종 — 사전등록한 게이트로 판정한다 ────────
+    # 이 셋은 어제 리서치에서 '실현가능성은 통과했는데 붐비는 칸이라 단독 t 로는 판단 불가'로
+    # 보류했던 것이다(저위험 7종·모멘텀 4종·환원 1종). 이제 증분 알파 기계가 있으므로 넣는다.
+    #
+    # 🚨 **판정 기준을 돌리기 전에 못박는다** — '가장 닮은 기존 규칙 대비 증분 알파 |t| ≥ 2'.
+    #   돌려 보고 기준을 정하면 그건 검정이 아니다. 그리고 **떨어져도 지우지 않는다** —
+    #   진 것을 지우면 다중검정 족 수가 줄어 남은 규칙이 쉽게 통과한다(이 랩이 피해 온 방향).
+    #   결과는 카드의 '증분 알파' 줄에 그대로 나오고, 통과 여부는 독자가 그 줄로 읽으면 된다.
+    xsec("x-payout", "총주주환원수익률 (배당 + 자사주매입)",
+         "최근 12개월 배당총액과 자사주매입액을 더해 시가총액으로 나눈 값이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "Boudoukh·Michaely·Richardson·Roberts(JF 2007). 배당만 보면 환원의 절반을 놓친다는 "
+         "것이다 — 미국 기업의 주주환원은 2000년대 이후 자사주매입이 배당을 넘었다. "
+         "이 표의 환원 축은 고배당수익률 하나뿐이라 자사주가 통째로 빠져 있었다. "
+         "🚨 자사주(bb) 태그는 분기 버킷에 Q1 만 남아 있어(현금흐름표가 YTD 누적이다) "
+         "연간 버킷으로 읽는다 — 그러지 않으면 환원율이 4배 과소된다(ttm 독스트링 참조). "
+         "⚠ 고배당수익률과 겹치는 축이므로 단독 t 가 아니라 그 규칙 대비 증분 알파로 읽을 것.")
+    xsec("x-lowcorr", "시장 저상관 (베타의 상관 성분만)",
+         "최근 252거래일 일간수익률과 동일가중 지수의 상관이 가장 낮은 %d종목 동일가중, "
+         "월말 리밸런스(유효관측 80%% 이상)." % TOPN,
+         None,
+         "Frazzini·Pedersen(JFE 2014)은 베타를 ρ×(σ종목/σ시장)으로 쪼갠다. 이 표의 저베타는 "
+         "두 성분이 섞여 있어 '시장과 덜 움직인다'와 '덜 흔들린다'가 구별되지 않는다 — "
+         "여기서는 변동성 크기를 빼고 동조 여부만 본다. "
+         "⚠ 이 표의 저위험 칸은 이미 7종(저변동성·특이변동성·저베타·최소분산·리스크버짓·"
+         "복권형 둘)으로 가장 붐빈다. 리서치 감사가 ρ(이 규칙, 저베타)=0.39 를 실측했다 — "
+         "단독 t 로 판단하면 안 되고 증분 알파로 걸러야 한다.")
+    xsec("x-cntd", "경로 일관성 (오른 날 − 내린 날)",
+         "최근 231거래일 중 (오른 날 − 내린 날) ÷ 유효일수가 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스." % TOPN,
+         lambda t, i, P, Rt, V: updown(Rt, i, 231),
+         "Da·Gurun·Warachka(RFS 2014)의 정보 이산성에서 쓰는 성분이다. 이 표의 모멘텀·반전은 "
+         "전부 수익률 크기로 만들어져 있어, 같은 12개월 수익이라도 잘게 꾸준히 올랐는지 "
+         "한 번에 튀었는지는 재지 못한다. 부호 개수만 세면 그 축이 분리된다. "
+         "🚨 원 논문의 신호는 이것 단독이 아니라 '모멘텀과 곱한 조건부 신호'다. 단독 정렬로 "
+         "바꾼 것이므로 원 논문의 t 를 이 규칙의 기대치로 읽으면 안 된다. "
+         "⚠ 리서치 감사 실측 ρ(이 규칙, 12-1 모멘텀)=0.605 — 증분 알파로 걸러야 한다.")
 
     # ── 2026-07-30 웹 리서치로 추가한 6종 ─────────────────────────────────
     # 출처는 Chen·Zimmermann Open Source Asset Pricing(github.com/OpenSourceAP/CrossSection)의
@@ -1631,6 +1707,15 @@ def run():
                             elif sid == "x-fcfy":
                                 fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
                                 v = (fc / mcap) if (fc is not None and mcap) else None
+                            elif sid == "x-payout":
+                                # 환원총액 = 배당총액(주당배당 × 주식수) + 자사주매입액.
+                                # 🚨 bb 는 연간 버킷으로 읽어야 한다(분기엔 Q1 만 남는다).
+                                dp = ttm(f.get("dps"), dt_)
+                                bbv = ttm2(f.get("bb"), f.get("bb_a"), dt_)
+                                if mcap and (dp is not None or bbv is not None):
+                                    tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
+                                    # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
+                                    v = (tot / mcap) if tot >= 0 else None
                             elif sid == "x-poacc":
                                 # 퍼센트 영업발생액 = (순이익 − 영업현금흐름) ÷ |순이익|. 낮을수록 위.
                                 # 분모가 자산이 아니라 |순이익|이라 잔고 태그의 2021-06 절벽을 안 탄다.
@@ -1739,6 +1824,10 @@ def run():
                             # 뽑으려면 부호를 뒤집어 넣는다.
                             ck = coskew(R[t], ixr, i - 1, 252)
                             v = -ck if ck is not None else None
+                        elif sid == "x-lowcorr":
+                            # 같은 사유. '가장 낮은 상관'을 뽑으므로 부호를 뒤집는다.
+                            cr = mkt_corr(R[t], ixr, i - 1, 252)
+                            v = -cr if cr is not None else None
                         elif sid == "x-season":
                             # 월말 격자가 필요해 람다로는 못 준다.
                             v = same_month_avg(P, i - 1, dates, sorted(me))
