@@ -1616,8 +1616,45 @@ try:
             _p = _line.split("|", 1)[0]
             if _p not in _staged:
                 errors.append(f"REBAKE_TABLE의 {_p}을(를) 커밋하는 잡이 없음 — 사문이거나 워크플로에서 빠졌다")
+    # ── 데이터를 커밋하는 잡은 커밋 전에 스스로 검증해야 한다 ────────────────
+    # 🚨 GitHub Actions 는 GITHUB_TOKEN 으로 민 푸시에 워크플로를 **재귀 실행하지 않는다**.
+    #   그래서 봇의 데이터 커밋에는 이 CI(validate.yml)가 아예 안 돈다 — paths 에 data/** 가
+    #   있어도 마찬가지다(2026-07-31 실측: 봇 커밋 뒤 validate 런이 하나도 안 생긴다).
+    #   즉 데이터의 실제 관문은 CI 가 아니라 **각 잡 안의 Validate 단계**다. 그게 빠진 잡이
+    #   생기면 그 축은 아무 검증 없이 배포된다 — 그리고 그 사실이 어디에도 안 드러난다.
+    for _fn in sorted(os.listdir(_wf_dir)):
+        if not _fn.endswith(".yml"): continue
+        _s = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read()
+        if "ci_push.sh" in _s and "validate_site.py" not in _s:
+            errors.append(f".github/workflows/{_fn}: 데이터를 커밋하는데 validate_site.py 단계가 없음 "
+                          f"— 봇 커밋에는 CI 가 안 도므로 이 잡의 산출물은 아무도 검증하지 않는다")
 except Exception as e:
     errors.append(f"재생성 표 검증 실패: {e}")
+
+# ── 성장률 눈금 규약: 같은 키 이름이 파일마다 100배 다르면 화면이 뒤집힌다 ──
+#   data/stocks.json 의 fund.rg 는 _x100 을 거쳐 **백분율**(중앙 9.1)인데, data/estimates.json 의
+#   rg 는 정보원 원값 그대로 **분수**(중앙 0.056)였다. screener.html 이 그 분수를 '배' 단위로 그려
+#   AVGO 0.629 를 "0.629배"(= −37% 축소)로 찍고 있었다 — 실제로는 +62.9% 성장이고,
+#   rg 상위 10 중 8행이 그렇게 방향이 뒤집혀 있었다. '성장률 상위' 표 아래에서.
+#   두 파일의 값 크기를 직접 대조한다. 눈금이 같으면 O(1), 다르면 100배가 벌어진다.
+try:
+    import statistics as _st2
+    _sj = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _ej = json.load(io.open(os.path.join(ROOT, "data", "estimates.json"), encoding="utf-8"))
+    _sv = [abs(s["fund"]["rg"]) for s in _sj.get("stocks", [])
+           if isinstance((s.get("fund") or {}).get("rg"), (int, float))]
+    _ev = [abs(r["rg"]) for r in (_ej.get("rows") or {}).values()
+           if isinstance(r.get("rg"), (int, float))]
+    if len(_sv) > 50 and len(_ev) > 50:
+        _ms, _me = _st2.median(_sv), _st2.median(_ev)
+        if _ms > 0 and _me / _ms < 0.1:
+            errors.append("성장률 눈금 불일치 — stocks.json fund.rg 중앙 %.3f(백분율) vs "
+                          "estimates.json rg 중앙 %.3f(분수). 같은 키 이름이 100배 다른 눈금이다"
+                          % (_ms, _me))
+except FileNotFoundError:
+    pass
+except Exception as e:
+    errors.append(f"성장률 눈금 검증 실패: {e}")
 
 # ── 기각 아카이브 분류(k) 무결성 ─────────────────────────────────────────
 #   45종을 한 칸에 세면 '좋은 전략 45개가 기각됐다'로 읽힌다. k로 갈라 세되,

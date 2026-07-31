@@ -326,10 +326,18 @@ def index_fcf_stat(tickers, mc_by_t):
         used += 1
         if v < 0:
             neg += 1
+    # ⚠ 분모는 '시총을 아는 종목'의 합이다 — 시총이 없는 종목은 분자·분모에서 **함께** 빠진다.
+    #   그래서 정보원이 죽어 시총 결손이 늘면 mc_cover 는 오히려 안 떨어진다(분모도 같이 줄어서).
+    #   커버리지 숫자만 보면 안 보이는 열화라, 시총 결손 종목 수를 함께 내보내 드러낸다.
+    #   (2026-07-30 실측: 시총 커버가 79%까지 내려간 날에도 이 지표는 정상으로 보였다.)
     tot_mc = sum(v for v in mc_by_t.values() if v)
+    n_nomc = sum(1 for v in mc_by_t.values() if not v)
+    if n_nomc:
+        print("  ⚠ 시총 결손 %d/%d종목 — mc_cover 의 분모에서도 빠진다(커버가 높게 보인다)"
+              % (n_nomc, len(mc_by_t)))
     if not used or not mc:
         return None
-    return {"n": used, "n_uni": len(mc_by_t), "n_neg": neg,
+    return {"n": used, "n_uni": len(mc_by_t), "n_neg": neg, "n_nomc": n_nomc,
             "fcf_musd": round(fcf, 0),                    # 백만 달러
             "mc_cover": round(mc / tot_mc * 100, 1) if tot_mc else None,
             # fund.mc는 억$ 단위다 — 백만$로 맞춰 수익률을 낸다
