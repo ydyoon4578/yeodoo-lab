@@ -1099,6 +1099,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (Pt.t==null?'—':Pt.t)+') — 대조군도 함께 '+f(Pt.bench_bias_cagr)+'%p 내려가므로 '+
                   '초과 기준 차이(위 편향과 다르다)는 그만큼 상쇄돼 있다. '+thr+'</em>';
           }
+          // 증분 알파 — 가장 닮은 규칙을 이미 들고 있을 때 이 규칙이 더 주는 것.
+          // 단독 t 만 실으면 같은 베팅을 여러 번 센 것이 안 보인다(에코 모멘텀 단독 3.80 → 증분 0.85).
+          if(x.incr&&x.incr.t!=null){
+            var ic=x.incr, solo=(x.t==null?null:x.t);
+            var absorbed=(Math.abs(ic.t)<2&&solo!=null&&Math.abs(solo)>=2);
+            if(absorbed) d.vt='<b>이웃 규칙이 설명함</b> — '+d.vt;
+            d.vt+=' <em>증분 알파 — 가장 닮은 규칙은 <b>'+esc(ic.vs||'')+'</b>(초과수익 상관 '+
+                  ic.corr+'). 그것에 회귀하고 남는 알파는 연 '+(ic.alpha>0?'+':'')+ic.alpha+
+                  '%p(t '+ic.t+')'+(solo==null?'':(', 단독 t 는 '+solo))+'. '+
+                  (absorbed?'즉 이 규칙의 단독 성과는 이웃이 대부분 설명한다 — 둘을 서로 다른 '+
+                            '검증으로 세면 안 된다.'
+                          :'이웃과 구별되는 몫이 남아 있는지를 이 값으로 읽는다.')+'</em>';
+          }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
           if(x.metrics_net&&x.cost_drag!=null){
