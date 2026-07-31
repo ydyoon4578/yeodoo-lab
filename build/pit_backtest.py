@@ -51,7 +51,9 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-small",   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
               # 2026-07-30 웹 리서치로 추가. 🚨 여기 안 넣으면 새 규칙이 **소급 t 로만** 판정돼
               # '통과 후보' 가 된다 — 이 파일이 막으려는 바로 그 일이다(소급 t 3.2~3.7 이 나왔다).
-              "x-echo", "x-season", "x-coskew"]
+              "x-echo", "x-season", "x-coskew",
+              # 2026-07-31 추가(가격만 쓰는 것)
+              "x-ltrev"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
@@ -59,7 +61,9 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
 #     limits 에 싣는다. 커버리지가 낮으면 그 규칙의 PIT 는 '후보가 생존자로 좁혀진' 쪽이다.
 FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              "x-dy", "x-fcfy", "x-sue", "x-epsacc",
-             "x-agrow", "x-shiss", "x-cash"]      # 2026-07-30 추가
+             "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
+             # 2026-07-31 추가 — 전부 흐름 항목이라 ttm2(q, a) 로 읽어야 한다.
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -263,6 +267,8 @@ def main():
     BY = {s["sid"]: s for s in TB.STRATS}
     C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
          "SH": C_SH, "dates": dates, "FU": _fu,
+         # x-gpa·x-ocfp·x-aci 가 금융업을 뺀다 — 랩과 같은 섹터 라벨을 써야 정의가 같다.
+         "sector": {t: (m or {}).get("sector") for t, m in (TB.load()[3] or {}).items()},
          # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
          "me": sorted(me)}
 
@@ -519,8 +525,48 @@ def score(S, t, j, C):
             e = TB.asof_fund(f.get("eq"), dt_)
             return (e / sn / p0) if (e is not None and mcap) else None
         if sid == "x-fcfy":
-            fc = TB.ttm(f.get("fcf"), dt_)
+            fc = TB.ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
             return (fc / mcap) if (fc is not None and mcap) else None
+        if sid == "x-poacc":
+            cut_ = TB._shift(dt_, TB.FUND_LAG_DAYS)
+            nim = dict(f.get("ni_a") or []); cfm = dict(f.get("cfo_a") or [])
+            rvm = dict(f.get("rev_a") or [])
+            d_ = next((d for d, _x in (f.get("ni_a") or []) if d <= cut_ and d in cfm), None)
+            if not d_:
+                return None
+            ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
+            if not (rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_):
+                return None
+            return -((ni_ - cf_) / abs(ni_))
+        if sid in ("x-gpa", "x-ocfp", "x-aci"):
+            if (C.get("sector") or {}).get(t) == "Financials":
+                return None
+            at = TB.asof_fund(f.get("asset"), dt_)
+            if sid == "x-ocfp":
+                cf_ = TB.ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
+                return (cf_ / at) if (cf_ is not None and at and at > 0) else None
+            if sid == "x-gpa":
+                g = TB.ttm2(f.get("gp"), f.get("gp_a"), dt_)
+                rv_ = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                cg = TB.ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
+                if g is not None and cg is not None and rv_ and rv_ > 0:
+                    if abs(g + cg - rv_) / rv_ > 0.01:
+                        g = None
+                if g is None and rv_ is not None and cg is not None:
+                    g = rv_ - cg
+                return (g / at) if (g is not None and at and at > 0) else None
+            cx = [(d, x) for d, x in (f.get("capex_a") or [])
+                  if d <= TB._shift(dt_, TB.FUND_LAG_DAYS)]
+            rvm = dict(f.get("rev_a") or [])
+            rat = []
+            for d, x in cx[:4]:
+                r_ = rvm.get(d)
+                if r_ and r_ > 0 and x is not None:
+                    rat.append(x / r_)
+            if len(rat) == 4 and sum(rat[1:]) > 0:
+                ci = rat[0] / (sum(rat[1:]) / 3.0) - 1.0
+                return -ci if abs(ci) <= 3.0 else None
+            return None
         if sid == "x-ep":
             v = TB.ttm(f.get("eps"), dt_)
             return (v / p0) if (v is not None and p0 and p0 > 0) else None
