@@ -36,7 +36,12 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 2026-07-31: 30 → 60. ML 단계가 하루 만에 1.4분 → 26~29분이 됐다(랜덤 포레스트 종목선택
+    #   0238f71a + 특징 20개 2×2 be30349e, 둘 다 07-30 오후). 07-31 11:30 실행이 정확히
+    #   30분에서 잘렸고, 그 뒤 단계가 전부 skip 되어 자산 패널·스타일 성과·시장판이 통째로 못 나갔다.
+    #   ⚠ 여유를 늘린 것이지 해결한 게 아니다 — 무거운 연구 단계가 매일 도는 수집·표시 산출물을
+    #     인질로 잡는 구조는 그대로다(13F 때와 같은 결합).
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
