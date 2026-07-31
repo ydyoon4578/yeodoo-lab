@@ -38,6 +38,7 @@ import io
 import json
 import os
 import re
+import statistics
 import sys
 import urllib.request
 import zipfile
@@ -385,6 +386,98 @@ def main() -> int:
 
     if not cur:
         print("❌ 이번 분기 수집 0곳 — 갱신 중단(이전본 유지)")
+        return 1
+
+    # ── 제출 단위 정규화(천$ → 달러) ──────────────────────────────────────
+    # 🚨 13F 정보표의 VALUE 는 2023년 규칙 변경 전까지 **천 달러** 단위였고, 지금도 그 눈금으로
+    #   내는 운용사가 남아 있다. 정규화 없이 합산하면 total_val·holds[].v 가 운용사마다 단위가
+    #   1000배 다른 필드가 된다.
+    #   2026-07-31 실측(기준 2026-03-31): 17곳 중 2곳(바우포스트·듀케인)이 천$였고, guru.html 에
+    #   "$5M"(실제 $5.1B) · 아마존 주당 $0.21 이 아무 배지 없이 나가고 있었다. 겹침 비율(%)은
+    #   스케일 불변이라 정상으로 보여 오래 안 들켰다.
+    #   ⚠ 운용사 명단을 하드코딩하면 틀린다 — 시기에 따라 바뀐다(히말라야는 2024-06-30 에 전환했다).
+    #   판정 근거는 **우리 가격 패널의 분기말 종가**다. 내재주가(VALUE/SSHPRNAMT)를 종가로 나눈
+    #   중앙비가 달러면 ~1, 천$면 ~0.001 이라 세 자릿수가 벌어져 오판 여지가 없다.
+    #   (내재주가의 절대 수준만 보는 방식은 쓰지 않는다 — 천$ 로 낸 고가주 위주 제출이 1을 넘겨
+    #    달러로 오분류된다.)
+    def _closes_at(period, want):
+        """보고 기준일 이하 마지막 거래일의 종가. {티커: 종가}. 가격 패널 밖이면 빈 dict."""
+        ds = st.get("pxd_dates") or []
+        iso_ = _iso(period)
+        idx = max((i for i, d_ in enumerate(ds) if d_ <= iso_), default=None)
+        if idx is None:
+            return {}
+        got = {}
+        for t in want:
+            try:
+                with io.open(os.path.join(DATA, "sd", t + ".json"), encoding="utf-8") as fh_:
+                    px = json.load(fh_).get("pxd") or []
+                if idx < len(px) and px[idx]:
+                    got[t] = float(px[idx])
+            except Exception:
+                pass
+        return got
+
+    def _med_ratio(holds, closes):
+        """내재주가 ÷ 실제 종가의 중앙값. 표본이 3종목 미만이면 None."""
+        rat = []
+        for t, h in holds.items():
+            if h.get("off") or not h.get("sh") or not h.get("v"):
+                continue
+            c = closes.get(t)
+            if c and c > 0:
+                rat.append((h["v"] / h["sh"]) / c)
+        return (statistics.median(rat), len(rat)) if len(rat) >= 3 else (None, len(rat))
+
+    def _renorm(book, period, tag):
+        want = {t for d_ in book.values() for t, h in d_["holds"].items() if not h.get("off")}
+        closes = _closes_at(period, want)
+        scaled, unknown, bad = 0, [], []
+        for cik, d_ in book.items():
+            m_, n_ = _med_ratio(d_["holds"], closes)
+            tv = d_.get("total_val") or 0
+            if m_ is not None:
+                sc, why = (1000.0 if m_ < 0.02 else 1.0), "종가 대조 %d종목 중앙비 %.5f" % (n_, m_)
+            else:
+                # 가격 대조 표본이 모자란 제출(채권 위주 등)은 **보고 규모**로 가른다.
+                #   13F 는 13F증권 1억$ 이상일 때 내는 보고다. 그래서
+                #     · 보고총액이 1억$ 미만이면 달러일 수 없다 → 천$
+                #     · ×1000 이 5조$ 를 넘으면 천$ 일 수 없다(최대 신고자도 4조$대) → 달러
+                #   그 사이는 못 가른다. 그때만 경고하고 원값을 둔다(오판보다 낫다).
+                if tv and tv < 1e8:
+                    sc, why = 1000.0, "가격 대조 %d종목뿐 · 보고총액 %.1f백만 = 13F 하한 미만" % (n_, tv / 1e6)
+                elif tv and tv * 1000 > 5e12:
+                    sc, why = 1.0, "가격 대조 %d종목뿐 · ×1000 이면 %.1f조$ — 최대 신고자를 넘는다" % (n_, tv * 1000 / 1e12)
+                else:
+                    unknown.append("%s(대조 %d종목 · 총액 %.2g)" % (d_.get("name") or cik, n_, tv))
+                    continue
+            if sc != 1.0:
+                d_["total_val"] = tv * sc
+                for h in d_["holds"].values():
+                    h["v"] *= sc
+                scaled += 1
+                print("  · %s: 천$ 제출 → ×1000 (%s)" % (d_.get("name") or cik, why))
+            # 정규화 뒤에도 종가와 2배 넘게 어긋나면 그건 우리가 모르는 눈금이다.
+            if m_ is not None and not (0.5 <= m_ * sc <= 2.0):
+                bad.append("%s(중앙비 %.3f · %d종목)" % (d_.get("name") or cik, m_ * sc, n_))
+        if unknown:
+            print("  ⚠ %s 단위 판정 불가 %d곳(가격 대조도 규모 판정도 못 함): %s"
+                  % (tag, len(unknown), ", ".join(unknown[:5])))
+        return scaled, bad
+
+    try:
+        _sc, _bad = _renorm(cur, cur_per, "이번 분기")
+        if prev:
+            _renorm(prev, prev_per, "직전 분기")
+        # 정규화 뒤에도 종가와 2배 넘게 어긋나는 제출이 있으면 그건 우리가 모르는 눈금이다.
+        # 조용히 내보내면 이번과 똑같은 사고가 다른 배수로 반복된다.
+        if _bad:
+            print("❌ 정규화 뒤에도 종가와 어긋나는 제출: " + " · ".join(_bad))
+            print("   갱신 중단(이전본 유지) — 13F VALUE 눈금 규약을 다시 확인할 것")
+            return 1
+        print("  단위 정규화: %d곳 ×1000 · 나머지 달러" % _sc)
+    except Exception as e:
+        print("❌ 제출 단위 정규화 실패: %s — 갱신 중단(이전본 유지)" % e)
         return 1
 
     managers, overlap, OFFNM = [], {}, {}
