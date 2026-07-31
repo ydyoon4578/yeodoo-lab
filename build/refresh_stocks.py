@@ -984,6 +984,7 @@ def main():
     #   정보원이 완전히 끊겨도 커버리지는 100%로 보이고 아래 절대 하한이 영영 안 걸린다.
     #   폴백은 이번에 새로 받은 값에만 기대야 진짜 장애가 드러난다. 직전 값은 **대조에만** 쓴다.
     _mc_est = []      # 정의 폴백으로 채운 종목 — 페이로드에 남겨 '어디가 추정치인지'를 사후에 알 수 있게 한다
+    _prev_sh = {}     # 직전 빌드에서 역산한 주식수(아래에서 채운다). 게이트 진단문도 이걸 참조한다
     _miss = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
     if _miss:
         print(f"  ⚠ 시가총액 결손 {len(_miss)}종목 — 개별 재수집(직렬)")
@@ -1008,7 +1009,7 @@ def main():
         print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
         # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
         #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
-        _prev_mc, _prev_sh = {}, {}
+        _prev_mc = {}
         try:
             _pd0 = json.load(open(OUT, encoding="utf-8"))
             _prev_mc = {s["t"]: (s.get("fund") or {}).get("mc") * MC_UNIT
@@ -1153,9 +1154,22 @@ def main():
     # 위 복구 2단을 다 쓰고도 하한을 못 넘으면 그건 화면이 깨진 채 배포되는 것이므로 중단한다.
     _low = [(k, _ucov[k], v) for k, v in FUND_GATE_FLOOR.items() if k in _ucov and _ucov[k] < v]
     if _low:
+        # 실패 메시지 자체가 진단이 되게 한다. 로그 본문은 사내 PC 에서 못 받고 주석 한 줄만 남으므로
+        # (build/gate.py 참조), "왜 못 메웠나"를 그 한 줄에 담아야 다음 수를 정할 수 있다.
+        #   2026-07-31: 이게 없어서 'impl 이 없나 sho 가 없나 응답이 아예 없나'를 못 가리고
+        #   같은 수치(81.7%)를 두 번 받아 들며 추측만 했다.
+        _mk = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
+        _c = {"응답없음": 0, "impl만": 0, "sho만": 0, "둘다": 0, "주식수없음": 0}
+        for t in _mk:
+            g = fund.get(t)
+            if not g: _c["응답없음"] += 1; continue
+            i_, s_ = bool(g.get("impl")), bool(g.get("sho"))
+            _c["둘다" if (i_ and s_) else "impl만" if i_ else "sho만" if s_ else "주식수없음"] += 1
         raise SystemExit("펀더멘털 절대 하한 미달(" +
                          ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
-                         ") — 복구 2단으로도 못 메웠다, 갱신 중단(이전본 유지)")
+                         f") — 시총 결손 {len(_mk)}종목 내역: " +
+                         " · ".join(f"{k} {v}" for k, v in _c.items() if v) +
+                         f" (직전빌드 대조기준 {len(_prev_sh)}종목) — 갱신 중단(이전본 유지)")
     # 폴백이 커버를 메우면 **하한은 만족하는데 정보원은 계속 죽어 있는** 상태가 조용히 이어진다.
     # 커버리지만 보면 100%라 안 보이므로 추정 비중을 따로 드러낸다(이전 빌드와 나란히 놓아 추세도 보이게).
     if _mc_est:
