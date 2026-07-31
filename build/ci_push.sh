@@ -19,15 +19,27 @@
 # 리베이스는 반드시 충돌한다. 재시도해도 같은 충돌이 또 난다.
 #
 # ── 그래서 충돌을 '해결'하지 않고 없앤다 ──────────────────────────────
-#   1) 리베이스에서 asof.json이 충돌하면 상대(upstream) 것을 그냥 받는다.
+#   1) 리베이스에서 파생물이 충돌하면 상대(upstream) 것을 그냥 받는다.
 #      어느 쪽을 고르든 상관없다 — 어차피 다음 줄에서 덮어쓴다.
 #   2) 리베이스가 끝난 뒤 원본에서 정본을 **다시 굽는다**. 그 시점엔 두 잡의 원본이
 #      모두 트리에 반영돼 있으므로, 다시 구운 결과가 유일하게 옳은 값이다.
 #      (한쪽 것을 고르고 끝냈다면 상대 잡의 갱신이 정본에서 누락된 채 배포된다.)
 #   3) 달라졌으면 amend 해서 커밋 하나로 유지한다.
 #
-# asof.json 외의 파일이 충돌하면 자동 해소하지 않는다 — 사람이 봐야 하는 상황이므로
+# 표에 없는 파일이 충돌하면 자동 해소하지 않는다 — 사람이 봐야 하는 상황이므로
 # abort 하고 실패시킨다. 파생물에만 쓰는 규칙을 원본에 적용하면 데이터가 조용히 사라진다.
+#
+# ── 2026-07-31: 대상을 asof.json 하나에서 파생물 전반으로 넓혔다 ───────
+# 위 원리는 asof.json 고유의 것이 아니다. "원본에서 다시 굽는 파일"이면 전부 같다.
+# 그런데 구현이 asof.json 하나에 하드코딩돼 있어서, 그날 refresh-assets 가 28분치
+# 생성물을 통째로 버렸다 — 10:08 체크아웃 → 10:36 푸시 시도, 그 2분 전(10:34)에
+# 사람이 strategy_index.json·strategy_charts.json 을 건드린 커밋을 밀었다.
+# 둘 다 '원본에서 굽는 파일'이라 리베이스 후 다시 구우면 그만인데, 표에 없어서
+# abort 했다. 그 결과 그날 자산 패널·스타일 성과가 하루 통째로 낡은 채 남았다.
+#
+# ⚠ 표에 올릴 조건 — **원본만 있으면 언제든 똑같이 재현되는 순수 파생물**일 것.
+#   수집물(assets.json·stocks.json 처럼 외부에서 받아온 것)은 절대 올리면 안 된다.
+#   다시 구울 수 없으므로 한쪽을 버리는 순간 그 잡의 수집 결과가 영구 유실된다.
 set -euo pipefail
 
 MSG="${1:?커밋 메시지가 필요하다}"
@@ -40,7 +52,35 @@ fi
 
 WATCH="${WATCH:-data/}"
 MAX_TRIES="${MAX_TRIES:-5}"
-ASOF="data/asof.json"
+
+# ── 파생물 재생성 표 ─────────────────────────────────────────────────
+# "경로|생성명령". 여기 있는 파일만 충돌을 자동 해소하고, 리베이스 뒤 이 순서대로 다시 굽는다.
+# 순서 = 의존 순서다. strategy_index 가 charts 보다 먼저고, 모든 축의 as_of 를 읽는
+# asof.json 이 맨 마지막이다.
+# 같은 명령이 두 줄에 나오면(style_perf·style_trails) 한 번만 실행한다.
+REBAKE_TABLE="\
+data/strategy_index.json|build/strategy_index.py
+data/strategy_charts.json|build/strategy_charts.py
+data/market_board.json|build/market_board.py
+data/style_perf.json|build/style_top_pdf.py --json
+data/style_trails.json|build/style_top_pdf.py --json
+data/schedule.json|build/schedule_index.py
+data/asof.json|build/asof_index.py"
+
+# 경로 → 생성명령 (없으면 빈 문자열). bash 3.2(macOS)에도 도는 방식으로 연관배열을 피한다.
+# ⚠ 파이프라인(`printf | while`)으로 쓰면 안 된다 — 마지막 read 가 EOF 에서 1을 내고
+#   그게 함수의 종료코드가 되어, 호출부의 `c="$(...)"` 대입이 set -e 로 잡을 안 죽인다.
+#   (실측: 표에 없는 첫 경로 data/assets.json 에서 스크립트가 통째로 멎었다.)
+#   그래서 here-string 으로 서브셸을 없애고 종료코드를 명시한다.
+rebake_cmd_for() {
+  local line
+  while IFS= read -r line; do
+    case "$line" in
+      "$1|"*) printf '%s' "${line#*|}"; return 0 ;;
+    esac
+  done <<< "$REBAKE_TABLE"
+  return 0
+}
 # Actions 러너에는 python·python3 둘 다 있지만 macOS 로컬엔 python3만 있다.
 # 재시도 경로에서만 쓰는 호출이라, 여기서 못 찾으면 경합이 났을 때만 터진다 — 가장 늦게 들키는 자리다.
 PY="$(command -v python3 || command -v python)"
@@ -76,11 +116,31 @@ fi
 
 git commit -m "$MSG"
 
-# asof.json을 이 잡이 커밋에 포함했는가. 포함한 잡만 리베이스 뒤 다시 굽는다.
-WANTS_ASOF=0
+# 이 잡이 커밋에 포함한 파생물은 무엇인가. 그것만 리베이스 뒤 다시 굽는다.
+# (충돌은 이 잡이 커밋한 파일에서만 날 수 있으므로, 이 목록이 곧 자동 해소 가능 범위다.)
+MINE=""
 for p in "${PATHS[@]}"; do
-  [ "$p" = "$ASOF" ] && WANTS_ASOF=1
+  c="$(rebake_cmd_for "$p")"
+  if [ -n "$c" ]; then
+    MINE="$MINE$p|$c
+"
+  fi
 done
+
+# 표 순서대로, 명령 중복은 한 번만 실행한다(style_perf·style_trails 가 한 명령을 공유한다).
+rebake_all() {
+  local ran="" line p c
+  while IFS= read -r line; do
+    p="${line%%|*}"; c="${line#*|}"
+    case "$MINE" in *"$p|$c"*) ;; *) continue ;; esac
+    case "$ran" in *"[$c]"*) continue ;; esac
+    ran="$ran[$c]"
+    echo "  다시 굽는다: $c"
+    # shellcheck disable=SC2086
+    "$PY" $c
+  done <<< "$REBAKE_TABLE"
+  return 0
+}
 
 for ((try = 1; try <= MAX_TRIES; try++)); do
   if git push origin HEAD:main; then
@@ -93,26 +153,63 @@ for ((try = 1; try <= MAX_TRIES; try++)); do
 
   if ! git rebase origin/main; then
     CONFLICTS="$(git diff --name-only --diff-filter=U)"
-    if [ "$CONFLICTS" != "$ASOF" ]; then
-      echo "::error::파생물이 아닌 파일이 충돌했습니다 — 자동 해소하지 않습니다. 사람이 봐야 합니다:"
-      echo "$CONFLICTS"
+    # 리베이스는 충돌 말고도 실패한다(미스테이징 변경이 남아 있는 경우 등). 그때 충돌 목록은 비고,
+    # 빈 목록을 '전부 파생물'로 읽으면 --continue 가 "no rebase in progress"로 터진다.
+    # (실측으로 잡음: 원래 코드는 `!= data/asof.json` 비교라 이 경우가 우연히 걸러졌었다.)
+    if [ -z "$CONFLICTS" ]; then
+      echo "::error::리베이스가 충돌 없이 실패했습니다 — 자동 해소 대상이 아닙니다:"
+      git status --porcelain | head -20
       git rebase --abort || true
       exit 1
     fi
-    # 파생물이다. 여기서 고른 값은 바로 아래에서 다시 구워 덮어쓴다.
-    echo "asof.json 충돌 — 파생물이므로 upstream 것을 받고 리베이스 뒤 다시 굽는다"
-    git checkout --ours -- "$ASOF"
-    git add -- "$ASOF"
+    BAD=""
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      case "$MINE" in *"$f|"*) ;; *) BAD="$BAD$f
+" ;; esac
+    done <<< "$CONFLICTS"
+    if [ -n "$BAD" ]; then
+      echo "::error::다시 구울 수 없는 파일이 충돌했습니다 — 자동 해소하지 않습니다. 사람이 봐야 합니다:"
+      echo "$BAD"
+      git rebase --abort || true
+      exit 1
+    fi
+    # 전부 파생물이다. 여기서 고른 값은 바로 아래에서 다시 구워 덮어쓴다.
+    echo "파생물 충돌 — upstream 것을 받고 리베이스 뒤 다시 굽는다:"
+    echo "$CONFLICTS" | sed 's/^/  · /'
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      git checkout --ours -- "$f"
+      git add -- "$f"
+    done <<< "$CONFLICTS"
     GIT_EDITOR=true git rebase --continue
   fi
 
-  if [ "$WANTS_ASOF" = "1" ]; then
+  if [ -n "$MINE" ]; then
     # 상대 잡의 원본까지 반영된 상태에서 다시 굽는다 — 이게 유일하게 옳은 정본이다.
-    "$PY" build/asof_index.py
-    if [ -n "$(git status --porcelain -- "$ASOF")" ]; then
-      git add -- "$ASOF"
-      git commit --amend --no-edit
-      echo "기준일 정본 재생성 후 커밋에 합침"
+    rebake_all
+    if [ -n "$(git status --porcelain -- "$WATCH")" ]; then
+      git add -- "${PATHS[@]}"
+      # 재생성이 PATHS 밖 파일을 건드렸다면 그건 조용히 흘리면 안 되는 신호다(위 누락 가드와 같은 규칙).
+      LEFT="$(git status --porcelain -- "$WATCH" | grep -E '^([ ?])' || true)"
+      if [ -n "$LEFT" ]; then
+        echo "::error::재생성 결과가 커밋 목록 밖의 파일을 바꿨습니다 — 사람이 봐야 합니다:"
+        echo "$LEFT"
+        exit 1
+      fi
+      if ! git diff --cached --quiet; then
+        # ⚠ 충돌을 전부 upstream 것으로 받으면 우리 커밋이 '빈 커밋'이 되어 리베이스에서 떨어져 나간다.
+        #   그 상태에서 --amend 하면 **남의 커밋**을 고쳐 쓰게 된다(git이 거부하면 재생성 결과가 통째로
+        #   커밋되지 않은 채 남고, 다음 푸시는 up-to-date 라 잡은 초록불로 끝난다 — 조용한 유실).
+        #   그래서 HEAD가 아직 우리 커밋인지 제목으로 확인하고, 아니면 새 커밋을 만든다.
+        if [ "$(git log -1 --format=%s)" = "$MSG" ]; then
+          git commit --amend --no-edit
+          echo "파생물 정본 재생성 후 커밋에 합침"
+        else
+          git commit -m "$MSG"
+          echo "리베이스에서 우리 커밋이 비워졌다 — 재생성 결과로 새 커밋을 만든다"
+        fi
+      fi
     fi
   fi
 done
