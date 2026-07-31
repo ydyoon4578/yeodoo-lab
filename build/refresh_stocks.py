@@ -315,7 +315,10 @@ def _yf_sym(t: str) -> str:
     return t.replace(".", "-")
 
 
-FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")  # 필드 단위 완전성 게이트 대상(정상 커버 99~100%)
+# 필드 단위 완전성 게이트 대상. 실측 정상 커버(2026-07-31): ps 99.8 · pm 99.8 · mc 100.0 · roe 91.1.
+#   ⚠ roe 만 91%대다 — 자기자본이 음수/결측인 종목이 46종쯤 있어 **구조적 결측**이다.
+#     예전 주석은 4개 모두 "99~100%"라 적었는데 사실이 아니다. 하한을 그 숫자로 잡으면 정상 빌드가 죽는다.
+FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")
 FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이 %p 이상 급락하면 중단
 # ── 절대 하한 ────────────────────────────────────────────────────────────
 # 위 상대 게이트만으로는 **낮은 기준선을 학습한다**. 2026-07-29~30 실측:
@@ -324,8 +327,17 @@ FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이
 # 그 뒤 수동 실행이 82%를 커밋하자 다음부터는 82→79 = 3%p 라 조용히 통과했다.
 # 즉 한 번 낮은 값이 들어오면 게이트가 그것을 정상으로 알아버린다.
 # mc·ps 는 정상 100%·99.8% 이고, 비면 화면의 시총 정렬·필터가 통째로 깨진다.
-FUND_GATE_FLOOR = {"mc": 95.0, "ps": 95.0}
+# ⚠ 핵심이라 선언한 필드는 전부 하한을 가져야 한다. 처음엔 mc·ps 만 넣었는데, 그러면
+#   financialData 모듈만 깎여 pm·roe 가 빠지는 조합(오늘 사고의 거울상)에서 아무 게이트도 안 걸린다.
+#   그 조합은 실제로 화면을 바꾼다 — 재현 시 스크리닝 결과가 growth 48→34 · garp 41→30 으로 조용히 준다.
+#   아래 assert 가 '핵심 선언인데 하한 없음' 조합을 애초에 못 만들게 막는다.
+FUND_GATE_FLOOR = {"mc": 95.0, "ps": 95.0, "pm": 95.0, "roe": 85.0}
+assert set(FUND_GATE_KEYS) <= set(FUND_GATE_FLOOR), "핵심 필드에 절대 하한이 빠졌다"
 MC_RETRY_MAX = 250                          # 시가총액 결손 개별 재수집 상한(이보다 많으면 정보원 장애)
+# 직렬 재수집의 벽시계 예산. 이 루프가 발동하는 조건이 곧 최악 지연 조건(야후가 러너 IP를 조일 때)이라
+# 종목 수 상한만으로는 시간이 안 막힌다. 예산을 넘기면 남은 종목은 2단 폴백(추가 호출 0)에 넘긴다 —
+# 폴백이 mc 를 세우면 그대로 커밋에 성공하므로, 잡 타임아웃에 잘려 그날치를 통째로 버리는 것보다 낫다.
+MC_RETRY_BUDGET_S = 420
 # 화면·페이로드의 시가총액 단위는 억$다(AAPL 48972). 정보원 원값은 달러다.
 # ⚠ 이 환산이 두 곳(fund_metrics 의 저장, 폴백의 직전값 대조)에 필요하다. 상수를 나눠 적지 말 것 —
 #   실제로 폴백 쪽에서 달러와 억$를 그대로 비교해 정상값 13/17을 기각했다(시뮬레이션에서 잡음).
@@ -617,7 +629,11 @@ def fetch_fund(t, retries=3):
                     pass
             # 정상 응답이면 mc·ps가 둘 다 있다(각 99~100% 필드). 둘 다 있으면 곧바로 반환(healthy 런 재시도 0회).
             #   실측 사고: mc는 100%인데 ps만 72%로 빠진 부분 응답 → mc만 보면 재시도가 안 걸린다.
-            if rec.get("mc") is not None and rec.get("ps") is not None:
+            # pm 도 본다 — pm 은 financialData, mc·ps 는 price/summaryDetail 계열이라 **다른 모듈**이다.
+            #   mc·ps 만 보면 financialData 만 깎인 부분 응답에 재시도가 아예 안 붙는다(오늘 사고의 거울상).
+            #   roe 는 넣지 않는다: 자기자본 음수 등으로 정상 커버가 91%대라, 넣으면 그 46종이 매 실행
+            #   재시도를 다 태워 쓰로틀링을 오히려 키운다.
+            if all(rec.get(k) is not None for k in ("mc", "ps", "pm")):
                 return t, rec
         except Exception:
             rec = None
@@ -970,12 +986,21 @@ def main():
         if len(_miss) > MC_RETRY_MAX:
             raise SystemExit(f"시가총액 결손 {len(_miss)}/{len(raw)}종목 — 개별 재수집 상한({MC_RETRY_MAX}) 초과, "
                              f"정보원 장애로 보고 갱신 중단(이전본 유지)")
-        _got = 0
-        for t in _miss:
+        _got = 0; _t0 = time.monotonic(); _cut = 0
+        for _i, t in enumerate(_miss):
+            if time.monotonic() - _t0 > MC_RETRY_BUDGET_S:
+                _cut = len(_miss) - _i
+                print(f"    ⏱ 재수집 예산 {MC_RETRY_BUDGET_S}s 소진 — 남은 {_cut}종목은 2단 폴백으로 넘긴다")
+                break
             time.sleep(0.25)
             _t, f2 = fetch_fund(t, retries=2)
+            # ⚠ 대입이 아니라 **병합**이다. 판정 기준은 mc 하나뿐인데 통째로 갈아끼우면,
+            #   2차 응답에 목표주가·유동주식수·회사소개가 빠졌을 때 그것들이 조용히 사라진다.
+            #   목표주가는 target_history 에 주 1회 쌓는 소급 불가 누적물이라 그날 스냅샷이 영구 결손된다.
             if f2 and f2.get("mc") is not None:
-                fund[t] = f2; _got += 1
+                _base = fund.get(t) or {}
+                fund[t] = {**_base, **{k: v for k, v in f2.items() if v is not None}}
+                _got += 1
         print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
         # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
         #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
@@ -1043,12 +1068,27 @@ def main():
     #   축이라 조용히 비면 화면이 망가진다. 반면 나머지 16개는 구조적 결측(금융의 cr/eveb/fcf,
     #   무배당의 dy, 사이클 업종의 eg)이 커서 유니버스 구성만 바뀌어도 20%p가 흔들린다 → **경고 로그만**.
     #   펀더멘털은 매매 신호가 아니라 표시이므로, 표시 결손 때문에 테크니컬 갱신까지 멈추는 건 과하다.
+    # ── 분모를 유니버스로 ────────────────────────────────────────────────
+    # 🚨 fx_cov 의 분모는 **응답에 성공한 종목**(len(fund))이지 유니버스(len(raw))가 아니다.
+    #    fetch_fund 가 예외를 내면 그 종목은 fund 에 아예 안 들어가고, 남은 종목만으로 비율을 재므로
+    #    **쓰로틀링이 심할수록 커버리지가 올라간다**. 100종이 통째로 죽으면 fx_cov['mc']=100.0 인데
+    #    화면 실제 커버는 80.7% 다. 종목 수 게이트는 50% 미만에서만 걸리니 그 사이가 통째로 사각지대다.
+    #    (게이트를 넣은 목적이 바로 그 상황을 잡는 것이었다 — 분모가 틀리면 정반대로 동작한다.)
+    #    화면은 `for t in raw` 로 유니버스 전부를 그리므로, 판정도 유니버스 분모라야 화면과 같은 말을 한다.
+    _ucov = {k: round(100.0 * sum(1 for t in raw if (fx_v.get(t) or {}).get(k) is not None) / max(len(raw), 1), 1)
+             for k in FUND_META}
+    if any(abs(_ucov[k] - fx_cov[k]) >= 0.1 for k in FUND_META):
+        print("  ⚠ 응답 분모와 유니버스 분모가 갈린다(종목이 통째로 빠졌다는 뜻): " +
+              " ".join(f"{k} {fx_cov[k]:.0f}→{_ucov[k]:.0f}" for k in FUND_META if abs(_ucov[k] - fx_cov[k]) >= 0.1))
     try:
-        _pcov = (json.load(open(OUT, encoding="utf-8")).get("fund_cov") or {})
+        _prev_doc = json.load(open(OUT, encoding="utf-8"))
+        # uni_cov 는 2026-07-31 부터 저장한다. 그 전 빌드는 fund_cov 로 대체한다 —
+        # 과거 40개 빌드 전수 대조에서 종목이 통째로 빠진 적이 없어 두 값이 동일했다.
+        _pcov = (_prev_doc.get("uni_cov") or _prev_doc.get("fund_cov") or {})
     except Exception:
         _pcov = {}
-    _drop = [(k, _pcov[k], fx_cov[k]) for k in FUND_META
-             if k in _pcov and _pcov[k] - fx_cov[k] >= FUND_GATE_DROP]
+    _drop = [(k, _pcov[k], _ucov[k]) for k in FUND_META
+             if k in _pcov and _pcov[k] - _ucov[k] >= FUND_GATE_DROP]
     if _drop:
         _msg = ", ".join(f"{k} {a:.0f}%→{b:.0f}%" for k, a, b in _drop)
         if any(k in FUND_GATE_KEYS for k, _, _ in _drop):
@@ -1058,7 +1098,7 @@ def main():
     # 위 게이트는 **이전 빌드와의 차이**만 본다. 그래서 한 번 낮은 값이 커밋되면 그것을 정상으로
     # 알아버린다(2026-07-30 실측: 100%→82% 는 죽였지만 82%→79% 는 그냥 통과시켰다).
     # 위 복구 2단을 다 쓰고도 하한을 못 넘으면 그건 화면이 깨진 채 배포되는 것이므로 중단한다.
-    _low = [(k, fx_cov[k], v) for k, v in FUND_GATE_FLOOR.items() if k in fx_cov and fx_cov[k] < v]
+    _low = [(k, _ucov[k], v) for k, v in FUND_GATE_FLOOR.items() if k in _ucov and _ucov[k] < v]
     if _low:
         raise SystemExit("펀더멘털 절대 하한 미달(" +
                          ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
@@ -1427,7 +1467,9 @@ def main():
                               "high_cheap": "높을수록 저평가(현금수익률)",
                               "high_good": "높을수록 양호", "low_good": "낮을수록 양호",
                               "high_neutral": "방향만 있고 우열은 없음", "none": "방향 없음"},
-           "fund_cov": fx_cov,
+           # fund_cov = 응답에 성공한 종목 분모 · uni_cov = 유니버스 분모(화면과 같은 말).
+           #   게이트는 uni_cov 로 판정한다. 둘을 함께 남겨야 '종목이 통째로 빠졌다'가 사후에 보인다.
+           "fund_cov": fx_cov, "uni_cov": _ucov,
            "fund_pct_basis": {"n": len(fx_v), "as_of": as_of,
                               "note": "lo/hi 임계 = 커버 종목 실측 33/67 백분위. 관행수치(‘PER 15 미만은 싸다’ 등)를 쓰지 않으며 "
                                       "갱신 때마다 재계산된다. 상세(sd/)의 fundx는 [값, 전체퍼센타일, 섹터퍼센타일]이며 "

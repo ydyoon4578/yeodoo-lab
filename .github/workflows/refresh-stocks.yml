@@ -17,7 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     # 15개 워크플로 중 유일하게 없었다 — 기본 360분이라 Yahoo 쓰로틀 재시도가 붙으면
     # 몇 시간을 물고 있는다. 실측 실행시간은 10년 패널에서도 3분대다.
-    timeout-minutes: 30
+    # 2026-07-31: 30 → 45. 시가총액 결손 직렬 재수집(최대 250종)이 붙는 날은 그 루프에만
+    #   MC_RETRY_BUDGET_S=7분을 쓴다. 30분 컷은 '2단 폴백으로 성공했을 실행'을 잘라
+    #   그날치 수집물과 소급 불가 누적물(target_history·fund_history)까지 버리게 만든다.
+    #   시간 상한의 1차 방어선은 잡 타임아웃이 아니라 코드의 예산이다(refresh_stocks.py).
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
