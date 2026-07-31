@@ -1534,6 +1534,52 @@ except SystemExit as e:
 except Exception as e:
     errors.append(f"갱신 주기 라벨 검증 실패: {e}")
 
+# ── 13F 평가액 눈금: 제출사마다 단위가 다르면 화면이 1000배 틀린다 ─────────
+#   13F 정보표의 VALUE 는 2023년 규칙 변경 전까지 천 달러 단위였고, 지금도 그 눈금으로 내는
+#   운용사가 있다. 정규화 없이 합산하면 운용사마다 단위가 1000배 다른 필드가 된다.
+#   2026-07-31 실측: 17곳 중 2곳이 천$라 guru.html 에 "$5M"(실제 $5.1B) · 아마존 주당 $0.21 이
+#   아무 배지 없이 나가고 있었다. 겹침 비율(%)은 스케일 불변이라 정상으로 보여 오래 안 들켰다.
+#   생성기(build/refresh_13f.py)가 정규화하지만, 그 판정이 실패해도 화면은 조용하다 —
+#   그래서 **결과물을 직접** 검사한다. 내재주가(평가액÷주식수)를 우리 가격 패널의 분기말 종가와
+#   대조하면 맞는 눈금은 ~1, 틀린 눈금은 ~0.001 이라 오판 여지가 없다.
+try:
+    import statistics as _stat
+    _g = json.load(io.open(os.path.join(ROOT, "data", "guru.json"), encoding="utf-8"))
+    _s = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _ds = _s.get("pxd_dates") or []
+    _i = max((i for i, d in enumerate(_ds) if d <= (_g.get("as_of") or "")), default=None)
+    if _i is None:
+        errors.append("guru.json 기준일(%s)이 가격 패널 범위 밖 — 13F 눈금을 검사할 수 없다" % _g.get("as_of"))
+    else:
+        _cl = {}
+        for _t in {h["t"] for m in _g.get("managers", []) for h in m.get("holds", []) if not h.get("off")}:
+            try:
+                _px = json.load(io.open(os.path.join(ROOT, "data", "sd", _t + ".json"), encoding="utf-8")).get("pxd") or []
+                if _i < len(_px) and _px[_i]: _cl[_t] = float(_px[_i])
+            except Exception:
+                pass
+        _off_scale, _nojudge = [], 0
+        for _m in _g.get("managers", []):
+            _r = [(h["v"] / h["sh"]) / _cl[h["t"]] for h in _m.get("holds", [])
+                  if not h.get("off") and h.get("sh") and h.get("v") and _cl.get(h["t"])]
+            if len(_r) < 3:
+                _nojudge += 1
+                continue
+            _md = _stat.median(_r)
+            if not (0.5 <= _md <= 2.0):
+                _off_scale.append("%s(내재주가가 종가의 %.4f배 · %d종목)" % (_m.get("label"), _md, len(_r)))
+        if _off_scale:
+            errors.append("13F 평가액 눈금이 종가와 어긋남 — " + " · ".join(_off_scale[:4]) +
+                          " (0.001배면 천$ 제출을 정규화하지 못한 것)")
+        # 판정 가능한 운용사가 절반도 안 되면 검사가 무력화된 것이다 — 통과로 읽히면 안 된다.
+        if _nojudge * 2 > len(_g.get("managers", []) or [1]):
+            errors.append("13F 눈금 판정 가능한 운용사가 %d/%d뿐 — 가격 패널 대조가 무력하다"
+                          % (len(_g.get("managers", [])) - _nojudge, len(_g.get("managers", []))))
+except FileNotFoundError:
+    pass
+except Exception as e:
+    errors.append(f"13F 평가액 눈금 검증 실패: {e}")
+
 # ── 여러 잡이 공유하는 산출물은 재생성 표에 있어야 한다 ────────────────────
 #   build/ci_push.sh는 리베이스 충돌을 만나면 REBAKE_TABLE에 있는 파일만 자동 해소하고,
 #   없으면 abort 한다 — 그 잡의 그날치 산출물이 통째로 버려진다.
