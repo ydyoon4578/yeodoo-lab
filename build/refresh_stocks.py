@@ -317,6 +317,19 @@ def _yf_sym(t: str) -> str:
 
 FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")  # 필드 단위 완전성 게이트 대상(정상 커버 99~100%)
 FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이 %p 이상 급락하면 중단
+# ── 절대 하한 ────────────────────────────────────────────────────────────
+# 위 상대 게이트만으로는 **낮은 기준선을 학습한다**. 2026-07-29~30 실측:
+#   07-28 mc 100.0% → 07-29 82.0% → 07-30 79.0%
+# 07-30 예약분은 100%와 비교당해 20%p 게이트에 걸려 죽었지만(그건 옳게 작동한 것),
+# 그 뒤 수동 실행이 82%를 커밋하자 다음부터는 82→79 = 3%p 라 조용히 통과했다.
+# 즉 한 번 낮은 값이 들어오면 게이트가 그것을 정상으로 알아버린다.
+# mc·ps 는 정상 100%·99.8% 이고, 비면 화면의 시총 정렬·필터가 통째로 깨진다.
+FUND_GATE_FLOOR = {"mc": 95.0, "ps": 95.0}
+MC_RETRY_MAX = 250                          # 시가총액 결손 개별 재수집 상한(이보다 많으면 정보원 장애)
+# 화면·페이로드의 시가총액 단위는 억$다(AAPL 48972). 정보원 원값은 달러다.
+# ⚠ 이 환산이 두 곳(fund_metrics 의 저장, 폴백의 직전값 대조)에 필요하다. 상수를 나눠 적지 말 것 —
+#   실제로 폴백 쪽에서 달러와 억$를 그대로 비교해 정상값 13/17을 기각했다(시뮬레이션에서 잡음).
+MC_UNIT = 1e8
 
 
 def _numf(x):
@@ -423,7 +436,7 @@ def fund_metrics(fund, sect):
             # 분모 가드: EBITDA가 0/음수면 부호가 뒤집혀 '순현금'으로 오독된다 → 산출 안 함
             "nde": ((td - tc)/eb if (td is not None and tc is not None and eb and eb > 0) else None),
             "dy": _numf(g("dy")), "po": _x100(g("po")),
-            "mc": (mc/1e8 if (mc and mc > 0) else None), "beta": _numf(g("beta")),
+            "mc": (mc/MC_UNIT if (mc and mc > 0) else None), "beta": _numf(g("beta")),
         }
     for _m in pb_logs:
         print(f"  ⚠ PBR 가드 — {_m}")
@@ -572,6 +585,13 @@ def fetch_fund(t, retries=3):
                    "cr": info.get("currentRatio"), "de": info.get("debtToEquity"),
                    "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
                    "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
+                   # 발행주식수 — mc 폴백(종가×주식수)에만 쓴다. 화면엔 안 나간다.
+                   #   float 은 유동주식수를 **먼저** 보므로 시가총액 되계산에 쓰면 안 된다(다른 수다).
+                   #   둘 다 defaultKeyStatistics 라, summaryDetail 이 깎여 mc 가 빌 때도 살아남는다.
+                   #   ⚠ impl 을 먼저 쓸 것. sharesOutstanding 은 **한 클래스만** 세는 회사가 있다
+                   #     (실측: GOOGL −52.0% · UAA −55.7% · BRK.B −35.2% · META −13.4% · ABNB −29.6%.
+                   #      같은 종목에 impl 을 쓰면 11/11 오차 0.00%. 단일 클래스는 둘이 같다).
+                   "impl": info.get("impliedSharesOutstanding"), "sho": info.get("sharesOutstanding"),
                    "td": info.get("totalDebt"), "tc": info.get("totalCash"),
                    "rev": info.get("totalRevenue"),
                    # ── 회사 소개(표시 전용, 신호 아님) — 같은 info 응답에서 키만 더 꺼낸다. 추가 호출 0 ──
@@ -931,6 +951,64 @@ def main():
         for t, f in ex.map(fetch_fund, list(raw.keys())):
             if f: fund[t] = f
     print(f"펀더멘털 {len(fund)}종목")
+    # ── 시가총액 결손 복구 2단 ────────────────────────────────────────────
+    # 왜 필요한가(2026-07-29~30): 러너에서 mc 커버가 100%→82%→79%로 무너졌다.
+    #   로컬(주거용 IP)은 같은 시각 100%다 → 정보원 스키마 변경이 아니라 Yahoo가
+    #   Actions IP에 거는 쓰로틀링이고, 응답에서 summaryDetail/price 모듈이 통째로 빠진다.
+    #   기존 ps 폴백(mc/rev)은 mc가 있어야 도니 같이 무너졌다 — 그래서 mc부터 세운다.
+    #
+    #   1단 개별 재수집: 8워커 병렬의 배치 압력이 원인이므로 **직렬로, 간격을 두고** 다시 묻는다.
+    #   2단 정의 폴백:   시가총액 = 종가 × 발행주식수. 종가는 이미 받은 패널에 있어 추가 호출 0이고,
+    #                   주식수는 defaultKeyStatistics라 summaryDetail이 깎여도 살아남는다.
+    #
+    # ⚠ 직전 빌드 mc에 종가비를 곱하는 방법은 일부러 쓰지 않는다. 값은 정확하지만 mc가 자기참조가 되어,
+    #   정보원이 완전히 끊겨도 커버리지는 100%로 보이고 아래 절대 하한이 영영 안 걸린다.
+    #   폴백은 이번에 새로 받은 값에만 기대야 진짜 장애가 드러난다. 직전 값은 **대조에만** 쓴다.
+    _miss = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
+    if _miss:
+        print(f"  ⚠ 시가총액 결손 {len(_miss)}종목 — 개별 재수집(직렬)")
+        if len(_miss) > MC_RETRY_MAX:
+            raise SystemExit(f"시가총액 결손 {len(_miss)}/{len(raw)}종목 — 개별 재수집 상한({MC_RETRY_MAX}) 초과, "
+                             f"정보원 장애로 보고 갱신 중단(이전본 유지)")
+        _got = 0
+        for t in _miss:
+            time.sleep(0.25)
+            _t, f2 = fetch_fund(t, retries=2)
+            if f2 and f2.get("mc") is not None:
+                fund[t] = f2; _got += 1
+        print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
+        # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
+        #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
+        try:
+            _prev_mc = {s["t"]: (s.get("fund") or {}).get("mc") * MC_UNIT
+                        for s in json.load(open(OUT, encoding="utf-8")).get("stocks", [])
+                        if (s.get("fund") or {}).get("mc")}
+        except Exception:
+            _prev_mc = {}
+        _fill = _rej = 0
+        for t in _miss:
+            f = fund.get(t)
+            if not f or f.get("mc") is not None: continue
+            c = raw[t]["close"]
+            n = f.get("impl") or f.get("sho")     # impl 우선 — sho 는 한 클래스만 세는 회사가 있다
+            try:
+                if not n or not len(c): continue
+                est = float(c.iloc[-1]) * float(n)
+            except Exception:
+                continue
+            # 대조: 직전 값이 있는데 40% 넘게 벗어나면 채우지 않는다(클래스 누락형 과소추정을 거른다).
+            p = _prev_mc.get(t)
+            if p and p > 0 and abs(est / p - 1) > 0.40:
+                _rej += 1; continue
+            f["mc"] = est; _fill += 1
+            # mc가 서면 ps도 정의대로 되계산한다(같은 이유로 비어 있었다).
+            if f.get("ps") is None and f.get("rev"):
+                try: f["ps"] = f["mc"] / f["rev"]
+                except (TypeError, ZeroDivisionError): pass
+        if _fill: print(f"    정의 폴백(종가×주식수) 보완 {_fill}종목")
+        if _rej: print(f"    폴백 기각 {_rej}종목(직전 시가총액과 40% 넘게 어긋남)")
+        _left = sum(1 for t in raw if (fund.get(t) or {}).get("mc") is None)
+        print(f"    남은 시가총액 결손 {_left}종목")
     # ⚠ 아래 두 소스는 개별 실패를 예외로 삼키므로, 전량 실패해도 잡은 '성공'으로 끝나고 화면의 패널만 조용히 사라진다.
     #   커버리지가 절반 미만이면 중단해 이전본을 유지하고 워크플로를 빨간불로 알린다.
     if len(fund) < len(raw) * 0.5:
@@ -976,6 +1054,15 @@ def main():
         if any(k in FUND_GATE_KEYS for k, _, _ in _drop):
             raise SystemExit(f"펀더멘털 핵심 필드 커버 급락({_msg}) — 정보원 스키마 변경 의심, 갱신 중단(이전본 유지)")
         print(f"  ⚠ 펀더멘털 커버 하락(비핵심, 계속 진행): {_msg}")
+    # ── 절대 하한 ────────────────────────────────────────────────────────
+    # 위 게이트는 **이전 빌드와의 차이**만 본다. 그래서 한 번 낮은 값이 커밋되면 그것을 정상으로
+    # 알아버린다(2026-07-30 실측: 100%→82% 는 죽였지만 82%→79% 는 그냥 통과시켰다).
+    # 위 복구 2단을 다 쓰고도 하한을 못 넘으면 그건 화면이 깨진 채 배포되는 것이므로 중단한다.
+    _low = [(k, fx_cov[k], v) for k, v in FUND_GATE_FLOOR.items() if k in fx_cov and fx_cov[k] < v]
+    if _low:
+        raise SystemExit("펀더멘털 절대 하한 미달(" +
+                         ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
+                         ") — 복구 2단으로도 못 메웠다, 갱신 중단(이전본 유지)")
     oh_rel = (oh_c - oh_c.groupby(sect).transform("median") + 50.0).clip(0, 100)   # 섹터 상대 과열도(피어 대비)
     # 매수 점수 = 추세+모멘텀 (저과열은 점수 아닌 '필터'로만 — 저과열 가중이 수익을 깎는 것을 실측으로 확인).
     #   그리드 검증(5y 주간): 상승추세∩과열≤60 + tr+mo top8 → ex-SPY20 +2.72%p·hit 56.2%·중앙 roc3m 25%(추격 아님)
