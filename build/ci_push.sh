@@ -40,6 +40,10 @@
 # ⚠ 표에 올릴 조건 — **원본만 있으면 언제든 똑같이 재현되는 순수 파생물**일 것.
 #   수집물(assets.json·stocks.json 처럼 외부에서 받아온 것)은 절대 올리면 안 된다.
 #   다시 구울 수 없으므로 한쪽을 버리는 순간 그 잡의 수집 결과가 영구 유실된다.
+#   또 **봇 잡이 커밋하는 파일**만 올린다. 사람이 손으로 굽는 것(data/schedule.json — 크론을
+#   고칠 때만 다시 굽는다)은 여기 있어도 영원히 안 쓰이는 사문이라 오해만 만든다.
+#   두 방향 다 build/validate_site.py 가 CI 에서 강제한다(2개 잡 이상이 커밋하는데 표에 없으면 실패,
+#   표에 있는데 커밋하는 잡이 없어도 실패).
 set -euo pipefail
 
 MSG="${1:?커밋 메시지가 필요하다}"
@@ -64,7 +68,7 @@ data/strategy_charts.json|build/strategy_charts.py
 data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json
 data/style_trails.json|build/style_top_pdf.py --json
-data/schedule.json|build/schedule_index.py
+data/home_flow.json|build/home_flow.py
 data/asof.json|build/asof_index.py"
 
 # 경로 → 생성명령 (없으면 빈 문자열). bash 3.2(macOS)에도 도는 방식으로 연관배열을 피한다.

@@ -1534,6 +1534,45 @@ except SystemExit as e:
 except Exception as e:
     errors.append(f"갱신 주기 라벨 검증 실패: {e}")
 
+# ── 여러 잡이 공유하는 산출물은 재생성 표에 있어야 한다 ────────────────────
+#   build/ci_push.sh는 리베이스 충돌을 만나면 REBAKE_TABLE에 있는 파일만 자동 해소하고,
+#   없으면 abort 한다 — 그 잡의 그날치 산출물이 통째로 버려진다.
+#   그래서 **둘 이상의 잡이 커밋하는 파일**은 표에 있거나, 여기 예외 목록에 사유와 함께 있어야 한다.
+#   2026-07-31 실측으로 잡음: data/home_flow.json을 5개 잡(stocks·earnings·filings·insider·13f)이
+#   커밋하는데 표에 없었다. 이 파일은 매 실행 generated 타임스탬프가 바뀌는 한 줄 JSON이라
+#   두 잡의 실행 창이 겹치면 충돌이 **확정**이고, 늦게 민 쪽은 소급 불가 누적물
+#   (target_history·fund_history)까지 함께 잃는다.
+try:
+    _wf_dir = os.path.join(ROOT, ".github", "workflows")
+    _staged = {}
+    for _fn in sorted(os.listdir(_wf_dir)):
+        if not _fn.endswith(".yml"): continue
+        _s = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read()
+        # ci_push.sh 호출부만 본다(주석의 경로가 섞이지 않게 호출 줄부터 빈 줄 전까지).
+        for _m in re.finditer(r"ci_push\.sh[^\n]*\n(?:\s+[^\n]*\n)*", _s):
+            _blk = _m.group(0)
+            _blk = re.sub(r"(?m)^\s*#.*$", "", _blk)
+            for _p in set(re.findall(r"data/[A-Za-z0-9_/.]+", _blk)):
+                _staged.setdefault(_p, set()).add(_fn)
+    _tbl = io.open(os.path.join(ROOT, "build", "ci_push.sh"), encoding="utf-8").read()
+    # 수집물이라 다시 못 굽는 것들. 충돌하면 사람이 봐야 하므로 표에 넣으면 안 된다.
+    #   (한 잡만 커밋하므로 애초에 잡끼리 충돌하지 않는다 — 사람과 겹칠 때만 abort 한다.)
+    _rebake_exempt = set()
+    for _p, _jobs in sorted(_staged.items()):
+        if len(_jobs) < 2 or _p in _rebake_exempt: continue
+        if (_p + "|") not in _tbl:
+            errors.append(
+                f"{_p}을(를) {len(_jobs)}개 잡이 커밋하는데 ci_push.sh의 REBAKE_TABLE에 없음"
+                f"({', '.join(sorted(_jobs))}) — 충돌 시 그날치 산출물이 통째로 버려진다")
+    # 반대 방향: 표에 있는데 아무 잡도 안 넘기는 줄은 사문이다(조용히 썩는다).
+    for _line in _tbl.splitlines():
+        if _line.startswith("data/") and "|" in _line:
+            _p = _line.split("|", 1)[0]
+            if _p not in _staged:
+                errors.append(f"REBAKE_TABLE의 {_p}을(를) 커밋하는 잡이 없음 — 사문이거나 워크플로에서 빠졌다")
+except Exception as e:
+    errors.append(f"재생성 표 검증 실패: {e}")
+
 # ── 기각 아카이브 분류(k) 무결성 ─────────────────────────────────────────
 #   45종을 한 칸에 세면 '좋은 전략 45개가 기각됐다'로 읽힌다. k로 갈라 세되,
 #   ① 모든 항목에 유효한 k가 있고 ② kinds에 뜻이 적혀 있고 ③ 합이 총계와 맞아야 한다.
