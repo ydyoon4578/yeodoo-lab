@@ -1256,9 +1256,9 @@ def build_strats():
          "빼는데, 여기서는 최근 6개월을 통째로 뺀다. "
          "🚨 처음 이 자리에 '창이 겹치지 않으므로 어느 구간이 일하는지 갈라 볼 수 있다'고 적었는데 "
          "사실이 아니다 — 12-1 은 ret(252)−ret(21) 이고 그 252일 성분이 에코 창을 전부 포함한다. "
-         "적대감사 실측: 일간수익 상관 0.888 · 월별 보유 교집합 중앙 0.50 · 12-1 초과수익에 회귀한 "
-         "증분 알파는 연 +5.35%p 지만 t 는 1.01 이다. 즉 12-1 을 이미 들고 있으면 이 규칙이 "
-         "추가로 주는 것은 없다. 별개 축으로 세지 말 것(다중검정 족 수를 부풀린다).")
+         "월별 보유 교집합 중앙이 0.50 이고, 12-1 을 이미 들고 있으면 이 규칙이 추가로 주는 것이 "
+         "있는지는 아래 '증분 알파' 줄에서 확인할 것(그 값은 매 실행 도출된다 — 여기 손으로 적었던 "
+         "수치는 표본이 바뀌면 조용히 낡는다). 별개 축으로 세지 말 것(다중검정 족 수를 부풀린다).")
     xsec("x-season", "동월 계절성 (같은 달 과거 2~5년 평균)",
          "다음 달과 같은 달의 과거 2·3·4·5년 전 월수익률 평균이 가장 큰 %d종목 동일가중, "
          "월말 리밸런스(결측 연도는 제외하고 남은 것의 평균)." % TOPN,
@@ -1983,6 +1983,55 @@ def run():
             return None
         return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
 
+    def _paired_excess(r1, r2):
+        """두 규칙의 **공통 날짜**에서 초과수익(전략−대조군) 두 계열을 만든다.
+
+        🚨 날짜로 맞춰야 한다. 보유시작 재기준·커버리지 게이트 때문에 규칙마다 구간이 다르고
+          (발생액 2018-12 · 장기반전 2021-08 · 총이익 2021-09), 길이만 보고 자르면 서로 다른
+          시점을 겹쳐 놓게 된다. 종전 타이밍 중복표는 전부 같은 구간이라 이 문제가 없었다.
+        """
+        def ex(r):
+            d, nv, bv = r.get("dates") or [], r.get("nav") or [], r.get("bnav") or []
+            if not (len(d) == len(nv) == len(bv)):
+                return {}
+            return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
+        e1, e2 = ex(r1), ex(r2)
+        ds = sorted(set(e1) & set(e2))
+        xs, ys, prev = [], [], None
+        for d in ds:
+            if prev is not None:
+                a1, b1 = e1[d]; a0, b0 = e1[prev]
+                a2, b2 = e2[d]; c0, d0 = e2[prev]
+                if a0 and b0 and c0 and d0:
+                    xs.append((a1 / a0 - 1) - (b1 / b0 - 1))
+                    ys.append((a2 / c0 - 1) - (b2 / d0 - 1))
+            prev = d
+        return xs, ys
+
+    def _incr(a, b):
+        """a(후보 초과수익)를 b(기존 규칙 초과수익)에 회귀 — 절편이 증분 알파다.
+
+        붐비는 축에 규칙을 하나 더 얹을 때 '단독 t'는 답이 못 된다. 이미 들고 있는 규칙이
+        설명하고 남는 것이 있느냐가 질문이고, 그 답이 절편이다. 실측 사례: 에코 모멘텀은
+        단독 t 3.80 인데 12-1 대비 증분 알파 t 는 1.01 이었다 — 별개 축이 아니었다.
+        """
+        n = len(a)
+        if n < 60 or len(b) != n:
+            return None
+        ma, mb = sum(a) / n, sum(b) / n
+        sbb = sum((x - mb) ** 2 for x in b)
+        if sbb <= 0:
+            return None
+        beta = sum((x - mb) * (y - ma) for x, y in zip(b, a)) / sbb
+        alpha = ma - beta * mb
+        res = [y - (alpha + beta * x) for x, y in zip(b, a)]
+        s2 = sum(r * r for r in res) / max(1, n - 2)
+        se = math.sqrt(s2 * (1.0 / n + mb * mb / sbb)) if s2 > 0 else 0.0
+        # nav 는 5거래일 간격 표본이므로 연율화 배수는 252/5
+        return {"alpha": round(alpha * (252 / 5) * 100, 2),
+                "t": round(alpha / se, 2) if se else None,
+                "beta": round(beta, 3), "n": n}
+
     # ── 표본 구간의 성격 ────────────────────────────────────────────────
     # 결과가 '타이밍은 안 통한다'로 읽히기 쉽다. 하지만 이 표본에서 벤치마크 자체가
     # 연 22%·샤프 1.08이면, 어느 날이든 현금을 쥔 규칙은 구조적으로 진다. 그건 규칙의
@@ -2032,11 +2081,74 @@ def run():
                 _pairs.append({"a": _tm[_i]["name"], "b": _tm[_j]["name"], "c": round(c, 3)})
     _pairs.sort(key=lambda x: -x["c"])
     _cs = sorted(x["c"] for x in _pairs)
+
+    # ── 종목선택 규칙의 중복도 + 증분 알파 ───────────────────────────────
+    # 🚨 종전에는 타이밍 23종만 쟀다. 그런데 본페로니 족은 xsec 을 **독립 검정으로 세고 있었고**,
+    #   실제로는 안 그랬다 — 에코 모멘텀이 12-1 과 상관 0.888·보유 교집합 0.50 인데도 별개로
+    #   세어졌다. 적대감사가 두 번 권고한 확장이다. 임계를 낮추지는 않는다(재량이 들어가면
+    #   검정이 아니게 된다). 대신 '몇 개를 검증했는가'를 독자가 깎아 읽을 수 있게 싣는다.
+    _xs = [r for r in out if r["kind"] == "xsec"]
+    _xpairs = []
+    for _i in range(len(_xs)):
+        for _j in range(_i + 1, len(_xs)):
+            a, b = _paired_excess(_xs[_i], _xs[_j])
+            c = _corr(a, b)
+            if c is not None:
+                _xpairs.append({"a": _xs[_i]["name"], "b": _xs[_j]["name"],
+                                "c": round(c, 3), "n": len(a)})
+    _xpairs.sort(key=lambda x: -x["c"])
+    _xcs = sorted(x["c"] for x in _xpairs)
+
+    # 규칙마다 '가장 닮은 기존 규칙'을 찾아 그것 대비 증분 알파를 잰다.
+    _byname = {r["name"]: r for r in _xs}
+    for r in _xs:
+        best = None
+        for r2 in _xs:
+            if r2 is r:
+                continue
+            a, b = _paired_excess(r, r2)
+            c = _corr(a, b)
+            if c is None:
+                continue
+            if best is None or c > best[0]:
+                best = (c, r2["name"], a, b)
+        if not best:
+            continue
+        inc = _incr(best[2], best[3])
+        if inc:
+            r["incr"] = {"vs": best[1], "corr": round(best[0], 3),
+                         "alpha": inc["alpha"], "t": inc["t"], "beta": inc["beta"]}
+    # 🚨 '증분 알파 없음'을 그대로 세면 안 된다 — 두 가지가 섞인다.
+    #   (a) 이웃이 설명하고 남는 게 없다(진짜 중복)  (b) 애초에 단독으로도 알파가 없다.
+    #   이 표는 통과 후보가 0종이라 대부분이 (b)다. 정보가 있는 것은 **단독으로는 세 보이는데
+    #   이웃 대비로는 사라지는** 규칙이므로, 단독 |t|≥2 인 것만 센다(에코 모멘텀이 그 사례다).
+    _nz = [r for r in _xs if r.get("incr") and r["incr"].get("t") is not None]
+    _weak = sorted((r for r in _nz if abs(r["incr"]["t"]) < 2.0 and abs(r.get("t") or 0) >= 2.0),
+                   key=lambda r: -(r["incr"]["corr"]))
+    # 사실상 같은 규칙(ρ≥0.99) — 족 수를 부풀리는 가장 뚜렷한 형태다.
+    _twins = [p for p in _xpairs if p["c"] >= 0.99]
+
     dup = {
         "n_timing": len(_tm),
         "median": round(_cs[len(_cs) // 2], 3) if _cs else None,
         "n_over_95": sum(1 for c in _cs if c >= 0.95),
         "top": _pairs[:6],
+        "n_xsec": len(_xs),
+        "xsec_median": round(_xcs[len(_xcs) // 2], 3) if _xcs else None,
+        "xsec_n_over_80": sum(1 for c in _xcs if c >= 0.80),
+        "xsec_top": _xpairs[:6],
+        # 단독으로는 세 보이는데 이웃 대비로는 사라지는 규칙(단독 |t|≥2 · 증분 |t|<2).
+        "xsec_n_absorbed": len(_weak),
+        "xsec_absorbed": [{"name": r["name"], "vs": r["incr"]["vs"], "corr": r["incr"]["corr"],
+                           "t_solo": r.get("t"), "t_incr": r["incr"]["t"]} for r in _weak[:8]],
+        "xsec_n_twins": len(_twins),
+        "xsec_twins": _twins[:4],
+        "xsec_note": "종목선택 규칙끼리의 초과수익 상관(공통 날짜에서만 계산 — 규칙마다 구간이 "
+                     "다르다)과, 가장 닮은 규칙 대비 증분 알파. 증분 알파는 후보 초과수익을 "
+                     "이웃 초과수익에 회귀한 절편이다 — 이웃을 이미 들고 있는 사람에게 새로 "
+                     "주는 것이 있느냐를 묻는다. ⚠ 증분 알파가 없다고 다 중복인 것은 아니다. "
+                     "이 표는 통과 후보가 0종이라 대부분은 애초에 단독 알파가 없어서다. "
+                     "그래서 '흡수됨'은 단독 |t|≥2 인 규칙만 센다.",
         "note": "타이밍 규칙끼리의 일간 수익률 상관. 0.95를 넘으면 이름만 다른 같은 베팅에 가깝다. "
                 "규칙 수가 늘어도 실제로 검증한 '서로 다른 아이디어' 수는 그만큼 늘지 않는다.",
     }
