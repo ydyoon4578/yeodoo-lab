@@ -338,6 +338,9 @@ MC_RETRY_MAX = 250                          # 시가총액 결손 개별 재수�
 # 종목 수 상한만으로는 시간이 안 막힌다. 예산을 넘기면 남은 종목은 2단 폴백(추가 호출 0)에 넘긴다 —
 # 폴백이 mc 를 세우면 그대로 커밋에 성공하므로, 잡 타임아웃에 잘려 그날치를 통째로 버리는 것보다 낫다.
 MC_RETRY_BUDGET_S = 420
+# 역산 주식수(직전 빌드 유래)로 채우는 것을 허용할 최대 비중. 복수 클래스 종목만 해당하고
+# 유니버스의 2~3%뿐이다. 상한이 없으면 정보원이 통째로 죽어도 커버가 100%로 보인다.
+MC_HIST_MAX = 0.05
 # 화면·페이로드의 시가총액 단위는 억$다(AAPL 48972). 정보원 원값은 달러다.
 # ⚠ 이 환산이 두 곳(fund_metrics 의 저장, 폴백의 직전값 대조)에 필요하다. 상수를 나눠 적지 말 것 —
 #   실제로 폴백 쪽에서 달러와 억$를 그대로 비교해 정상값 13/17을 기각했다(시뮬레이션에서 잡음).
@@ -1005,25 +1008,61 @@ def main():
         print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
         # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
         #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
+        _prev_mc, _prev_sh = {}, {}
         try:
+            _pd0 = json.load(open(OUT, encoding="utf-8"))
             _prev_mc = {s["t"]: (s.get("fund") or {}).get("mc") * MC_UNIT
-                        for s in json.load(open(OUT, encoding="utf-8")).get("stocks", [])
-                        if (s.get("fund") or {}).get("mc")}
+                        for s in _pd0.get("stocks", []) if (s.get("fund") or {}).get("mc")}
+            # ── 직전 빌드에서 **주식수를 역산**한다: 직전 시가총액 ÷ 그날 종가 ──────────
+            # 이게 sho(sharesOutstanding)를 안전하게 쓰기 위한 기준이다. sho 는 한 클래스만 세는
+            # 회사가 있어 그대로 쓰면 GOOGL −52% · BRK.B −35% 로 틀린다. 그런데 **역산 주식수와
+            # 대조하면 그 회사들이 정확히 걸린다** — 실측 비율: 복수 클래스 8종 0.452~0.873 ·
+            # 단일 클래스 8종 전부 1.000. 0.87 과 1.00 사이가 비어 있어 오판 여지가 없다.
+            #   (직전 mc 는 정보원이 준 값이라 전 클래스 합산이고, 종가는 우리 패널이라 정확하다.
+            #    분할이 나도 패널이 소급 조정되므로 비율은 그대로 1 이 된다.)
+            _pa = _pd0.get("as_of") or ""
+            for t, pm in _prev_mc.items():
+                c = (raw.get(t) or {}).get("close")
+                if c is None or not len(c): continue
+                s = c.loc[:_pa] if _pa else c
+                if not len(s): continue
+                pc = float(s.iloc[-1])
+                if pc > 0: _prev_sh[t] = pm / pc
         except Exception:
-            _prev_mc = {}
-        _rej = 0
+            pass
+        _rej = 0; _hist_n = []
         for t in _miss:
             f = fund.get(t)
             if not f or f.get("mc") is not None: continue
             c = raw[t]["close"]
-            # 🚨 impl(impliedSharesOutstanding) **만** 쓴다. sho(sharesOutstanding)로 내려가면 안 된다 —
-            #   한 클래스만 세는 회사가 있어서 GOOGL −52.0% · UAA −55.7% · BRK.B −35.2% · ABNB −29.6% ·
-            #   META −13.4% 로 틀린다. 그중 −35%·−30%·−13% 는 어떤 상식적인 대조 밴드도 통과해 버린다
-            #   (처음엔 밴드 40%로 걸러 낸다고 적었지만 실측 5건 중 3건이 통과했다 — 걸러 낼 수 있는
-            #    문제가 아니라 애초에 쓰면 안 되는 값이었다).
-            #   끊어도 손실이 없다: 90종목 표본에서 impl 가용률 100%, sho 만 있는 종목 0개.
-            #   impl 이 없으면 채우지 않고 결손으로 남긴다 — 절대 하한이 판단하게 한다.
+            # ── 주식수 고르기 ────────────────────────────────────────────────
+            # impl(impliedSharesOutstanding)이 1순위다 — 전 클래스를 세므로 그대로 정확하다
+            # (실측 11/11 오차 0.00%).
+            # 🚨 impl 이 없을 때 sho(sharesOutstanding)로 내려가는 것 자체는 필요하다. 한때
+            #   "로컬 표본에서 impl 100% 니 sho 를 끊어도 손실이 없다"고 판단해 끊었는데 **틀렸다** —
+            #   러너에서 쓰로틀당한 종목은 impl 이 빠지고 sho 만 남아서, 끊은 채로 돌리자 mc 커버가
+            #   81.7% 로 떨어져 하한에 걸렸다(2026-07-31 실측). 로컬(주거용 IP)의 가용률로 러너를
+            #   판단하면 안 된다.
+            # 🚨 다만 sho 를 그냥 쓰면 한 클래스만 세는 회사에서 틀린다(GOOGL −52% · BRK.B −35%).
+            #   그래서 **직전 빌드에서 역산한 주식수와 대조**해 통과한 것만 쓴다. 실측 분리가 확실하다:
+            #   복수 클래스 8종 0.452~0.873 · 단일 클래스 8종 1.000. 대조할 기준이 없으면(신규 편입)
+            #   sho 는 쓰지 않는다 — 검증 못 한 값으로 화면을 채우느니 결손으로 두는 게 낫다.
+            # 순서: ① impl → ② 역산과 맞는 sho → ③ 복수 클래스로 확인된 종목만 역산 주식수.
+            #   ③ 에 상한(MC_HIST_MAX)을 두는 이유: 역산은 **직전 빌드에서 온 값**이라 무제한 허용하면
+            #   정보원이 통째로 죽어도 커버가 100%로 보이고 절대 하한이 영영 안 걸린다.
+            #   복수 클래스는 유니버스의 2~3%뿐이라 이 상한 안에서 해결된다.
             n = f.get("impl")
+            if not n:
+                _sp, _sh = _prev_sh.get(t), f.get("sho")
+                if _sh and _sp and 0.95 <= float(_sh) / _sp <= 1.05:
+                    n = _sh                      # ② 단일 클래스로 확인됨
+                elif _sh and _sp and len(_hist_n) < len(raw) * MC_HIST_MAX:
+                    # ③ sho 는 있는데 역산과 안 맞는다 = 이 회사는 sho 가 한 클래스만 센다는 뜻이다.
+                    #   총 주식수는 직전 빌드가 안다(정보원이 준 시총 ÷ 그날 종가). 하루 사이 주식수
+                    #   변화는 0.1% 수준이라, −52% 로 틀리거나 대형주를 비워 두는 것보다 낫다.
+                    n = _sp; _hist_n.append(t)
+                else:
+                    _rej += 1; continue
             try:
                 if not n or not len(c): continue
                 est = float(c.iloc[-1]) * float(n)
@@ -1043,7 +1082,8 @@ def main():
                 try: f["ps"] = f["mc"] / f["rev"]
                 except (TypeError, ZeroDivisionError): pass
         if _mc_est: print(f"    정의 폴백(종가×발행주식수) 보완 {len(_mc_est)}종목")
-        if _rej: print(f"    폴백 기각 {_rej}종목(직전 시가총액과 25% 넘게 어긋남)")
+        if _hist_n: print(f"    복수 클래스 {len(_hist_n)}종목은 직전 빌드 역산 주식수로 채움: {', '.join(sorted(_hist_n)[:8])}")
+        if _rej: print(f"    폴백 기각 {_rej}종목(주식수가 직전 역산과 안 맞거나 대조 기준 없음)")
         _left = sum(1 for t in raw if (fund.get(t) or {}).get("mc") is None)
         print(f"    남은 시가총액 결손 {_left}종목")
     # ⚠ 아래 두 소스는 개별 실패를 예외로 삼키므로, 전량 실패해도 잡은 '성공'으로 끝나고 화면의 패널만 조용히 사라진다.
