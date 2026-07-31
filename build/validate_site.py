@@ -532,8 +532,11 @@ if pool:
         _au = _as.get("audit") or {}
         # 재점검표는 아카이브 38건을 빠짐없이 덮어야 한다 — 빠지면 그 항목이 화면에서 사라진다
         _covered = {a["sid"] for a in (_au.get("items") or [])}
-        _tsids = {r["arch"] for r in (json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"),
-                  encoding="utf-8")).get("strategies") or []) if r.get("arch")}
+        _tj = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+        _tsids = {r["arch"] for r in (_tj.get("strategies") or []) if r.get("arch")}
+        # 목록에서 뺀 규칙도 아카이브를 '재현했다'는 사실은 그대로다 — 그 arch 도 커버로 센다.
+        # (안 세면 규칙을 뺄 때마다 아카이브 항목이 덩달아 화면에서 사라진다.)
+        _tsids |= {r["arch"] for r in (_tj.get("retired") or []) if r.get("arch")}
         _missing = _sids - _covered - _tsids
         if _missing:
             errors.append(f"asset_strategies.audit: 아카이브 {len(_missing)}건이 재점검표에서 누락 "
