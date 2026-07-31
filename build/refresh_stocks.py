@@ -645,6 +645,32 @@ def fetch_fund(t, retries=3):
     return t, rec   # 재시도 소진: 부분 응답이라도(또는 None) 최선값 반환
 
 
+def fetch_shares(t):
+    """발행주식수만 따로 받는다. `.info` 와 **다른 엔드포인트**다
+    (query2 …/ws/fundamentals-timeseries/… — .info 는 quoteSummary·v7 quote 를 쓴다).
+
+    왜 필요한가(2026-07-31 실측). 러너의 쓰로틀이 깊어지면 `.info` 응답에 marketCap 도
+    impliedSharesOutstanding 도 sharesOutstanding 도 **셋 다 없는** 종목이 나온다(95/518).
+    그 상태에서 `.info` 를 몇 번 더 두드려도 같은 응답이 온다 — 개별 재수집 회복률 0이었다.
+    경로가 다르면 따로 살아남을 수 있고, 실제로 이 시계열은 값을 준다.
+
+    ⚠ 이 값은 **전 클래스 합산**이다. sharesOutstanding 이 한 클래스만 세는 회사에서도 맞는다 —
+      실측 GOOGL 12,230M · BRK.B 2,157M · META 2,548M 로, sho(5,867M · 1,398M · 2,205M)와 달리
+      직전 빌드 역산값과 10/10 정확히 일치했다. 그래서 sho 보다 **먼저** 쓴다.
+    """
+    try:
+        s = yf.Ticker(_yf_sym(t)).get_shares_full(
+            start=pd.Timestamp.now("UTC").date() - pd.Timedelta(days=548))
+        if s is None or not len(s):
+            return t, None
+        if hasattr(s, "columns"):
+            s = s[s.columns[0]]
+        v = float(s.iloc[-1])
+        return t, (v if v > 0 else None)
+    except Exception:
+        return t, None
+
+
 # ── 목표주가 이력 누적 ──────────────────────────────────────────────────────
 # 검증에서 확인: 컨센서스 목표가의 포인트-인-타임 스냅샷은 무료로 소급 취득이 불가능하다
 # (yfinance .info는 현재값만, upgrades_downgrades는 '액션을 낸 증권사'만 남는 재구성이라 컨센서스가 아니다).
@@ -1007,6 +1033,16 @@ def main():
                 fund[t] = {**_base, **{k: v for k, v in f2.items() if v is not None}}
                 _got += 1
         print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
+        # ── 1.5단: 주식수만 다른 엔드포인트에서 ───────────────────────────
+        # 같은 `.info` 를 다시 두드리는 것으로는 안 되는 국면이 있다(회복률 0). 경로를 바꾼다.
+        _still = [t for t in _miss if (fund.get(t) or {}).get("mc") is None and fund.get(t)]
+        if _still:
+            _sn = 0
+            with ThreadPoolExecutor(max_workers=4) as ex:
+                for t, v in ex.map(fetch_shares, _still):
+                    if v:
+                        fund[t]["tsh"] = v; _sn += 1
+            print(f"    주식수 별도 수집(fundamentals-timeseries) {_sn}/{len(_still)}종목")
         # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
         #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
         _prev_mc = {}
@@ -1052,7 +1088,7 @@ def main():
             #   ③ 에 상한(MC_HIST_MAX)을 두는 이유: 역산은 **직전 빌드에서 온 값**이라 무제한 허용하면
             #   정보원이 통째로 죽어도 커버가 100%로 보이고 절대 하한이 영영 안 걸린다.
             #   복수 클래스는 유니버스의 2~3%뿐이라 이 상한 안에서 해결된다.
-            n = f.get("impl")
+            n = f.get("impl") or f.get("tsh")   # 둘 다 전 클래스 합산이라 그대로 정확하다
             if not n:
                 _sp, _sh = _prev_sh.get(t), f.get("sho")
                 if _sh and _sp and 0.95 <= float(_sh) / _sp <= 1.05:
@@ -1159,12 +1195,12 @@ def main():
         #   2026-07-31: 이게 없어서 'impl 이 없나 sho 가 없나 응답이 아예 없나'를 못 가리고
         #   같은 수치(81.7%)를 두 번 받아 들며 추측만 했다.
         _mk = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
-        _c = {"응답없음": 0, "impl만": 0, "sho만": 0, "둘다": 0, "주식수없음": 0}
+        _c = {"응답없음": 0, "impl": 0, "tsh": 0, "sho": 0, "주식수없음": 0}
         for t in _mk:
             g = fund.get(t)
             if not g: _c["응답없음"] += 1; continue
-            i_, s_ = bool(g.get("impl")), bool(g.get("sho"))
-            _c["둘다" if (i_ and s_) else "impl만" if i_ else "sho만" if s_ else "주식수없음"] += 1
+            _c["impl" if g.get("impl") else "tsh" if g.get("tsh") else
+               "sho" if g.get("sho") else "주식수없음"] += 1
         raise SystemExit("펀더멘털 절대 하한 미달(" +
                          ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
                          f") — 시총 결손 {len(_mk)}종목 내역: " +
