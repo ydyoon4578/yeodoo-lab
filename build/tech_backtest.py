@@ -618,18 +618,39 @@ def ttm(series, date, lag=FUND_LAG_DAYS):
 
     ⚠ 잔고 항목(자본·자산·부채·주식수)에는 쓰면 안 된다 — 그건 시점 값이라 더하면 4배가 된다.
       그쪽은 asof_fund를 쓴다.
+
+    🚨 **간격이 1년이라고 그 관측이 1년치인 것은 아니다** — 현금흐름표에서 이 가정이 깨진다.
+      10-Q 의 현금흐름표는 **YTD 누적**이라 기간이 3·6·9개월이고, refresh_facts.pick() 이
+      80~100일(분기)과 350~380일(연간)만 남기고 6·9개월은 버리므로 q 버킷에 **Q1 만** 남는다.
+      그러면 관측 간격은 371일인데 각 값은 90일치다 — 위의 '간격 300일 = 연간' 규칙이
+      Q1 한 분기를 1년치로 반환한다.
+        실측(KO): capex q=[2026-04-03 266, 2025-03-28 309, 2024-03-29 370] 인데 a=[2025 2112].
+                  ttm 이 266 을 돌려줬다 — 실제의 1/8. cfo 도 2021 vs 7408(1/3.7)이고,
+                  KO 2025 Q1 cfo 는 **−5202** 로 음수라 계절 왜곡까지 탄다.
+        전수: 같은 기간 a 값 대비 q-ttm 비율 중앙 cfo 0.19 · capex 0.22 · bb 0.27.
+             손익계산서 태그는 정상(rev·ni·opinc 0.98, cogs·gp 0.97) — 그쪽은 기간이 분기다.
+      그래서 **연간(a) 버킷을 같이 받아** 4분기 합이 안 되면 a 를 쓴다. a 도 없을 때만 종전처럼
+      최근 하나를 1년치로 본다(진짜 연 1회 보고 종목).
+      ⚠ 이 결함은 배포 목록의 x-fcfy(잉여현금흐름 수익률)를 그대로 관통하고 있었다.
     """
-    if not series:
-        return None
+    return ttm2(series, None, date, lag)
+
+
+def ttm2(series, annual, date, lag=FUND_LAG_DAYS):
+    """ttm 의 본체 — 분기 계열과 연간(a) 계열을 함께 받는다. 위 독스트링 참조."""
     cut = _shift(date, lag)
-    got = [(d, v) for d, v in series if d <= cut]
-    if not got:
-        return None
+    got = [(d, v) for d, v in (series or []) if d <= cut]
+    # ① 진짜 분기 보고 — 최근 4개가 400일 안에 들어오면 그대로 더한다(손익계산서 태그의 정상 경로)
+    if len(got) >= 4 and _days_between(got[0][0], got[3][0]) <= 400:
+        return sum(v for _d, v in got[:4])
+    # ② 연간 버킷이 있으면 그것이 정답이다 — 간격만 보고 Q1 을 1년치로 읽는 함정을 여기서 막는다
+    ann = [(d, v) for d, v in (annual or []) if d <= cut]
+    if ann:
+        return ann[0][1]
+    # ③ 연 1회만 보고하는 종목 — 종전 동작
     if len(got) >= 2 and _days_between(got[0][0], got[1][0]) >= 300:
         return got[0][1]
-    if len(got) < 4 or _days_between(got[0][0], got[3][0]) > 400:
-        return None
-    return sum(v for _d, v in got[:4])
+    return None
 
 
 def z_of(p):
@@ -742,17 +763,40 @@ def load_fund(extra_dirs=()):
         fn = os.path.basename(path)
         tg = j.get("tags") or {}
 
+        def _clean(a):
+            return [(x[0], x[1]) for x in (a or []) if isinstance(x, list) and len(x) == 2
+                    and isinstance(x[1], (int, float))]
+
         def series(key):
             v = tg.get(key) or {}
-            a = v.get("i") or v.get("q") or []
-            return [(x[0], x[1]) for x in a if isinstance(x, list) and len(x) == 2
-                    and isinstance(x[1], (int, float))]
+            return _clean(v.get("i") or v.get("q"))
+
+        def annual(key):
+            """연간(a) 버킷만. 🚨 흐름 항목은 q 버킷이 Q1 만 남아 있을 수 있어 이것이 정답이다
+            (ttm2 참조). 커버리지: ni 510 · cfo 510 · rev 505 · capex 432 · bb 414종."""
+            return _clean((tg.get(key) or {}).get("a"))
 
         eq, sh, ep = series("eq"), series("sh"), series("eps")
         rev, ni, dps = series("rev"), series("ni"), series("dps")
         sh, ep, dps, sh_u, seam = split_trim(sh, ep, dps, j.get("t") or fn[:-5])
         asset, liab = series("asset"), series("liab")
-        cfo, capex = dict(series("cfo")), dict(series("capex"))
+        cfo_s, capex_s = series("cfo"), series("capex")
+        cfo, capex = dict(cfo_s), dict(capex_s)
+        # 🚨 잉여현금흐름은 **연간 버킷으로** 만든다. q 버킷은 Q1 만 남아(refresh_facts.pick 이
+        #   6·9개월 YTD 를 버린다) 같은 기간말 교집합을 잡아도 'Q1 cfo − Q1 capex' 가 되고,
+        #   ttm 이 그걸 1년치로 읽어 x-fcfy 가 실제의 1/3~1/8 을 쓰고 있었다(KO 1755 vs 5296).
+        #   연간이 없는 종목만 종전 경로로 남긴다.
+        cfo_a, capex_a = dict(annual("cfo")), dict(annual("capex"))
+        fcf_a = sorted(((k, cfo_a[k] - capex_a[k]) for k in cfo_a if k in capex_a), reverse=True)
+        # 미개척 태그 — 수익성(gp·cogs·opinc)·환원(bb)·현금흐름(cfo) 축을 열어 둔다.
+        # 🚨 전부 **기간 흐름** 항목이므로 쓰는 쪽에서 반드시 ttm() 을 거칠 것. asof_fund 로 읽으면
+        #   종목마다 보고 주기가 달라 그대로 깨진다 — 실측(515종): cfo 는 연간형 467 대 분기형 12,
+        #   capex 342 대 21, bb 317 대 11 인데 opinc 은 분기형 389 대 연간형 1, cogs 295 대 1 이다.
+        #   즉 같은 '흐름'인데도 태그마다 지배적 주기가 반대라, 섞으면 연간 쪽이 4배로 부푼다.
+        #   (ttm() 이 관측 간격 300일로 주기를 판정해 이 문제를 이미 처리한다.)
+        # ⚠ 커버리지는 series() 기준 gp 38% · cogs 58% · opinc 76% · bb 78% · iss 19% 다.
+        #   바스켓 10종에 XSEC_MIN_POOL(30) 게이트가 걸리므로 gp 단독은 아슬아슬하다 —
+        #   rev−cogs 폴백을 쓰면 늘지만 업종 왜곡이 따라온다(건보사 benefit expense 미태깅).
         # 잉여현금흐름은 같은 기간종료일에 둘 다 있을 때만 만든다. capex가 없는 종목을
         # cfo만으로 채우면 자본지출이 큰 업종이 통째로 좋아 보인다.
         fcf = sorted(((k, cfo[k] - capex[k]) for k in cfo if k in capex), reverse=True)
@@ -763,7 +807,16 @@ def load_fund(extra_dirs=()):
                                           # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
                                           "cash": series("cash"),
                                           # 주식수 성장률용: 단위오류만 교정, 분할 이음매는 날짜로 표시
-                                          "sh_u": sh_u, "sh_seam": seam}
+                                          "sh_u": sh_u, "sh_seam": seam,
+                                          # 흐름 항목 — 쓰는 쪽에서 ttm2(q, a) 를 쓸 것.
+                                          # q 만 쓰면 현금흐름 계열이 Q1 하나로 1년을 주장한다.
+                                          "cfo": cfo_s, "capex": capex_s, "gp": series("gp"),
+                                          "cogs": series("cogs"), "opinc": series("opinc"),
+                                          "bb": series("bb"), "fcf_a": fcf_a,
+                                          "cfo_a": annual("cfo"), "capex_a": annual("capex"),
+                                          "bb_a": annual("bb"), "ni_a": annual("ni"),
+                                          "rev_a": annual("rev"), "gp_a": annual("gp"),
+                                          "cogs_a": annual("cogs"), "opinc_a": annual("opinc")}
     return out
 
 
@@ -844,7 +897,9 @@ def xsec(sid, name, rule, fn, why, arch=None):
 FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
-             "x-agrow", "x-shiss", "x-cash"}
+             "x-agrow", "x-shiss", "x-cash",
+             # 2026-07-31 추가 — 흐름 항목은 반드시 ttm2(q, a) 로 읽는다(ttm 독스트링 참조).
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci"}
 
 
 def build_strats():
@@ -1123,6 +1178,68 @@ def build_strats():
            "최근 120일 평균수익/분산으로 켈리 비중을 계산해 0~1로 자른다.",
            None, "기대수익과 위험을 한 식에 넣는다. 레버리지를 안 쓰므로 상한 1에서 잘린다. 아카이브의 '켈리 기준 레버리지 스케일링'.",
            arch="kelly-scaling")
+
+    # ── 2026-07-31 웹·GitHub·논문 리서치로 추가한 5종 ──────────────────────
+    # 선정 기준을 바꿨다. 지난 6종은 '랩에 없는 축'이면 넣었는데, 이번에는 JKP(Jensen·Kelly·
+    # Pedersen, JF 2023)의 **13개 테마 분류표**에 랩 34종을 매핑해 **0개짜리 칸**부터 메웠다.
+    # 이유는 실측이다 — 붐비는 칸에 하나 더 얹으면 새 정보 없이 다중검정 족 수만 늘어난다
+    # (지난번 에코 모멘텀이 그랬다: 12-1 대비 증분 알파 t 1.01).
+    #   빈 칸이었던 것: Accruals(0) · Quality의 총이익축(0) · Profitability의 현금축(0) ·
+    #                  Investment의 비정상투자축(0) · Long-Term Reversal(0)
+    #   일부러 안 넣은 것: 저상관(BAC)·경로일관성(CNTD) — 각각 저위험 7종·모멘텀 4종이라는
+    #     가장 붐비는 칸의 8번째·5번째다. 적대감사가 ρ(BAC, 베타)=0.390 · ρ(CNTD, 12-1)=0.605 를
+    #     실측했고, 넣으려면 단독 판정이 아니라 기존 규칙 대비 증분 알파로 걸러야 한다.
+    xsec("x-poacc", "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
+         "(순이익 − 영업현금흐름) ÷ |순이익| 이 가장 낮은 %d종목 동일가중, 월말 리밸런스. "
+         "둘 다 최근 12개월치를 쓴다." % TOPN,
+         None,
+         "Sloan(1996) 발생액 이상현상의 Hafzalla·Lundholm·Van Winkle(2011) 퍼센트 판이다. "
+         "이익이 현금으로 뒷받침되지 않는 회사가 이후 부진하다는 것으로, 이 랩의 34종에 "
+         "발생액 축이 통째로 없었다(JKP 13개 테마 중 0개짜리 칸). "
+         "분모를 자산이 아니라 |순이익|으로 두는 판을 고른 이유가 데이터에 있다 — 자산(잔고) 태그는 "
+         "KEEP_I=20 절단 탓에 2021-06 부터라 자산분모 규칙은 표본이 4.9년으로 잘리는데, "
+         "이 판은 손익·현금흐름만 써서 2018-10 부터 7.8년을 쓴다. "
+         "⚠ 순이익이 0 근처면 비율이 폭발하므로 |순이익|이 매출의 1% 미만인 관측은 뺀다.")
+    xsec("x-gpa", "총이익 자산대비 (Gross Profitability)",
+         "(매출총이익 ÷ 총자산)이 가장 큰 %d종목 동일가중, 월말 리밸런스. 금융업 제외." % TOPN,
+         None,
+         "Novy-Marx 'The Other Side of Value'(JFE 2013). 순이익보다 총이익이 미래 수익성을 "
+         "더 잘 예측한다는 것이다 — 판관비·감가상각·이자는 회계 재량이 크게 섞이는데 총이익은 덜하다. "
+         "이 랩의 수익성 축은 고ROE(순이익/자본)와 고순이익률(순이익/매출)뿐이라 둘 다 순이익 기반이고 "
+         "자산 분모가 없었다. "
+         "🚨 gp 태그가 38%%뿐이라 매출−매출원가 폴백을 쓰는데, 그대로 두면 건강보험사가 상위를 "
+         "차지한다(benefit expense 를 매출원가로 태깅하지 않아 총이익이 과대계상된다). 그래서 "
+         "(1) 금융업 제외 (2) gp·cogs 가 둘 다 있으면 |gp+cogs−rev|/rev < 1%% 정합성 검사를 "
+         "통과한 것만 쓴다. 적대감사 실측으로 이 검사가 180종 중 16종(CMI 2.99·ABBV 0.52 등)을 걸러낸다.")
+    xsec("x-ocfp", "현금기반 수익성 (영업현금흐름 ÷ 총자산)",
+         "최근 12개월 영업현금흐름을 총자산으로 나눈 값이 가장 큰 %d종목 동일가중, 월말 리밸런스. "
+         "금융업 제외." % TOPN,
+         None,
+         "Ball·Gerakos·Linnainmaa·Nikolaev 'Deflating Profitability'(JFE 2016)의 현금 기반 "
+         "수익성 축약판이다. 발생액을 걷어낸 수익성이 발생액이 섞인 수익성보다 낫다는 것으로, "
+         "위 발생액 규칙과 같은 관찰의 다른 쪽 끝이다(그쪽은 발생액을 벌하고 이쪽은 현금을 상준다). "
+         "cfo·자산 커버리지가 각각 100%%라 이 랩의 수익성 후보 중 데이터가 가장 좋다. "
+         "⚠ 원식의 분자는 운전자본 변동까지 조정한 것인데 이 랩엔 그 태그(rect·invt·ap)가 없어 "
+         "영업현금흐름 자체를 쓴다 — 원논문 t 를 그대로 기대치로 읽지 말 것.")
+    xsec("x-aci", "비정상 자본투자 회피 (설비투자 급증 회피)",
+         "설비투자÷매출이 직전 3개 회계연도 평균 대비 가장 낮은 %d종목 동일가중, 월말 리밸런스. "
+         "금융업 제외." % TOPN,
+         None,
+         "Titman·Wei·Xie 'Capital Investments and Stock Returns'(JFQA 2004). 자기 과거 대비 "
+         "설비투자를 갑자기 늘린 회사가 이후 부진하다는 것이다. 이 랩에 자산성장 회피(총자산 증가율)는 "
+         "있지만 그건 인수·운전자본까지 섞인 총량이고, 이쪽은 설비투자만 자기 과거와 견준다. "
+         "🚨 4개 회계연도가 필요한데 분기(q) 버킷의 설비투자는 Q1 만 남아 있어 쓸 수 없다 — "
+         "연간(a) 버킷으로 계산한다(ttm 독스트링의 현금흐름표 함정 참조). "
+         "⚠ 매출이 0 이하인 해와 비율이 ±300%%를 벗어나는 관측은 뺀다.")
+    xsec("x-ltrev", "장기 반전 (5년 전 ~ 1년 전)",
+         "5년 전부터 1년 전까지의 누적수익률이 가장 낮은 %d종목 동일가중, 월말 리밸런스"
+         "(최근 1년은 통째로 제외 — 모멘텀 구간과 겹치지 않게)." % TOPN,
+         lambda t, i, P, Rt, V: (lambda r: (-r) if r is not None else None)(ret(P, i - 252, 1008)),
+         "De Bondt·Thaler(1985) 과잉반응 가설. 오래 진 종목이 이후 이긴다는 것으로, 발표된 이상현상 "
+         "중 가장 오래된 축에 든다. 이 랩의 반전 축은 1주·1개월·월내 시점가중 셋 다 단기이고 "
+         "모멘텀은 12-1·에코로 중기라, 3~5년 지평은 통째로 비어 있었다. "
+         "⚠ 룩백이 1260거래일이라 10년 패널에서 유효 구간이 절반으로 줄고, 커버리지 게이트가 "
+         "그때까지 무보유로 두므로 시작일이 자동으로 늦춰진다(그 편이 정직하다).")
 
     # ── 2026-07-30 웹 리서치로 추가한 6종 ─────────────────────────────────
     # 출처는 Chen·Zimmermann Open Source Asset Pricing(github.com/OpenSourceAP/CrossSection)의
@@ -1512,8 +1629,60 @@ def run():
                                 # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
                                 v = (e / sn / p0) if (e is not None and mcap) else None
                             elif sid == "x-fcfy":
-                                fc = ttm(f.get("fcf"), dt_)
+                                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
                                 v = (fc / mcap) if (fc is not None and mcap) else None
+                            elif sid == "x-poacc":
+                                # 퍼센트 영업발생액 = (순이익 − 영업현금흐름) ÷ |순이익|. 낮을수록 위.
+                                # 분모가 자산이 아니라 |순이익|이라 잔고 태그의 2021-06 절벽을 안 탄다.
+                                # 🚨 두 항을 각자 ttm2 로 읽으면 안 된다 — 순이익은 분기합산(최근 분기말
+                                #   기준 12개월)이 되고 현금흐름은 연간버킷(직전 회계연도)이 되어 창이
+                                #   최대 3분기 어긋난다. **같은 회계연도 기간말**에서 둘 다 뽑는다.
+                                cut_ = _shift(dt_, FUND_LAG_DAYS)
+                                nim = dict(f.get("ni_a") or [])
+                                cfm = dict(f.get("cfo_a") or [])
+                                rvm = dict(f.get("rev_a") or [])
+                                d_ = next((d for d, _x in (f.get("ni_a") or [])
+                                           if d <= cut_ and d in cfm), None)
+                                if d_:
+                                    ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
+                                    # 🚨 순이익이 0 근처면 비율이 폭발한다 — 매출의 1% 미만이면 뺀다.
+                                    if rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_:
+                                        v = -((ni_ - cf_) / abs(ni_))
+                            elif sid in ("x-gpa", "x-ocfp", "x-aci"):
+                                # 금융업은 자산의 뜻이 달라(예대 잔고) 자산분모 수익성이 성립하지 않는다.
+                                if (meta.get(t) or {}).get("sector") == "Financials":
+                                    v = None
+                                else:
+                                    at = asof_fund(f.get("asset"), dt_)
+                                    if sid == "x-ocfp":
+                                        cf_ = ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
+                                        v = (cf_ / at) if (cf_ is not None and at and at > 0) else None
+                                    elif sid == "x-gpa":
+                                        g = ttm2(f.get("gp"), f.get("gp_a"), dt_)
+                                        rv_ = ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                                        cg = ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
+                                        # 🚨 gp·cogs 가 둘 다 있으면 정합성부터 본다. 안 맞으면 그 종목의
+                                        #   태깅을 믿을 수 없다(건보사 유형) → 후보에서 뺀다.
+                                        if g is not None and cg is not None and rv_ and rv_ > 0:
+                                            if abs(g + cg - rv_) / rv_ > 0.01:
+                                                g = None
+                                        if g is None and rv_ is not None and cg is not None:
+                                            g = rv_ - cg              # 태그가 없을 때만 폴백
+                                        v = (g / at) if (g is not None and at and at > 0) else None
+                                    else:                              # x-aci
+                                        # 설비투자÷매출을 연간 격자에서 4개 뽑아 최근/직전3년평균 −1.
+                                        cx = [(d, x) for d, x in (f.get("capex_a") or [])
+                                              if d <= _shift(dt_, FUND_LAG_DAYS)]
+                                        rvm = dict(f.get("rev_a") or [])
+                                        rat = []
+                                        for d, x in cx[:4]:
+                                            r_ = rvm.get(d)
+                                            if r_ and r_ > 0 and x is not None:
+                                                rat.append(x / r_)
+                                        if len(rat) == 4 and sum(rat[1:]) > 0:
+                                            base = sum(rat[1:]) / 3.0
+                                            ci = rat[0] / base - 1.0
+                                            v = -ci if abs(ci) <= 3.0 else None
                             elif sid == "x-ep":
                                 ep_ = ttm(f.get("eps"), dt_)
                                 v = (ep_ / p0) if (ep_ is not None and p0 and p0 > 0) else None
