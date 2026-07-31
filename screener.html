@@ -1565,8 +1565,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     {k:'rp90',t:'EPS 컨센서스 상향 (90일)',u:'%p',d:'90일간 다음 회계연도 EPS 추정이 주가 대비 얼마나 올라갔나',dec:2},
     {k:'rp30',t:'EPS 컨센서스 상향 (30일)',u:'%p',d:'최근 한 달간의 같은 값 — 더 빠른 신호, 더 시끄럽다',dec:2},
     {k:'up',  t:'상향 애널리스트 수 (30일)',u:'명',d:'최근 30일 추정을 올린 애널리스트 수(내린 수는 옆에)',dec:0,alt:'dn',altl:'하향'},
-    {k:'eg',  t:'선행 EPS 성장률',u:'배',d:'다음 회계연도 EPS가 올해 대비 몇 배가 되나 — 올해가 적자·저이익이면 값이 폭주한다',dec:2},
-    {k:'rg',  t:'선행 매출 성장률',u:'배',d:'다음 회계연도 매출 성장. EPS보다 회계 처리에 덜 휘둘린다',dec:3},
+    {k:'eg',  t:'선행 EPS 성장률',u:'%',d:'다음 회계연도 EPS가 올해 대비 몇 % 늘어나나 — 올해가 적자·저이익이면 값이 폭주한다',dec:1},
+    {k:'rg',  t:'선행 매출 성장률',u:'%',d:'다음 회계연도 매출 성장. EPS보다 회계 처리에 덜 휘둘린다',dec:1},
     {k:'nan', t:'애널리스트 커버리지',u:'명',d:'추정에 참여한 애널리스트 수 — 적을수록 위 값들이 한 사람에게 휘둘린다',dec:0}
   ];
   fetch('data/estimates.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})

@@ -980,6 +980,7 @@ def main():
     # ⚠ 직전 빌드 mc에 종가비를 곱하는 방법은 일부러 쓰지 않는다. 값은 정확하지만 mc가 자기참조가 되어,
     #   정보원이 완전히 끊겨도 커버리지는 100%로 보이고 아래 절대 하한이 영영 안 걸린다.
     #   폴백은 이번에 새로 받은 값에만 기대야 진짜 장애가 드러난다. 직전 값은 **대조에만** 쓴다.
+    _mc_est = []      # 정의 폴백으로 채운 종목 — 페이로드에 남겨 '어디가 추정치인지'를 사후에 알 수 있게 한다
     _miss = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
     if _miss:
         print(f"  ⚠ 시가총액 결손 {len(_miss)}종목 — 개별 재수집(직렬)")
@@ -1010,28 +1011,39 @@ def main():
                         if (s.get("fund") or {}).get("mc")}
         except Exception:
             _prev_mc = {}
-        _fill = _rej = 0
+        _rej = 0
         for t in _miss:
             f = fund.get(t)
             if not f or f.get("mc") is not None: continue
             c = raw[t]["close"]
-            n = f.get("impl") or f.get("sho")     # impl 우선 — sho 는 한 클래스만 세는 회사가 있다
+            # 🚨 impl(impliedSharesOutstanding) **만** 쓴다. sho(sharesOutstanding)로 내려가면 안 된다 —
+            #   한 클래스만 세는 회사가 있어서 GOOGL −52.0% · UAA −55.7% · BRK.B −35.2% · ABNB −29.6% ·
+            #   META −13.4% 로 틀린다. 그중 −35%·−30%·−13% 는 어떤 상식적인 대조 밴드도 통과해 버린다
+            #   (처음엔 밴드 40%로 걸러 낸다고 적었지만 실측 5건 중 3건이 통과했다 — 걸러 낼 수 있는
+            #    문제가 아니라 애초에 쓰면 안 되는 값이었다).
+            #   끊어도 손실이 없다: 90종목 표본에서 impl 가용률 100%, sho 만 있는 종목 0개.
+            #   impl 이 없으면 채우지 않고 결손으로 남긴다 — 절대 하한이 판단하게 한다.
+            n = f.get("impl")
             try:
                 if not n or not len(c): continue
                 est = float(c.iloc[-1]) * float(n)
             except Exception:
                 continue
-            # 대조: 직전 값이 있는데 40% 넘게 벗어나면 채우지 않는다(클래스 누락형 과소추정을 거른다).
+            # 대조 밴드는 이제 '보조'다(분할·자사주 소각 등으로 주식수가 통째로 어긋난 경우를 잡는다).
+            #   ±25%: 실적일 급등락(일간 ±10~20%)은 통과시키고 배수 오류는 잡는 폭이다.
+            #   실측 자연 오차는 중앙 0.05% · 99분위 1.12% 라 정상값이 걸릴 여지가 없다.
+            #   직전 값이 없는 신규 편입 종목은 그냥 채운다 — impl 폴백은 실측 18/18 오차 0.00%라
+            #   정확하고, 안 채우면 신규 편입 종목의 시총이 영영 빈다.
             p = _prev_mc.get(t)
-            if p and p > 0 and abs(est / p - 1) > 0.40:
+            if p and p > 0 and abs(est / p - 1) > 0.25:
                 _rej += 1; continue
-            f["mc"] = est; _fill += 1
+            f["mc"] = est; _mc_est.append(t)
             # mc가 서면 ps도 정의대로 되계산한다(같은 이유로 비어 있었다).
             if f.get("ps") is None and f.get("rev"):
                 try: f["ps"] = f["mc"] / f["rev"]
                 except (TypeError, ZeroDivisionError): pass
-        if _fill: print(f"    정의 폴백(종가×주식수) 보완 {_fill}종목")
-        if _rej: print(f"    폴백 기각 {_rej}종목(직전 시가총액과 40% 넘게 어긋남)")
+        if _mc_est: print(f"    정의 폴백(종가×발행주식수) 보완 {len(_mc_est)}종목")
+        if _rej: print(f"    폴백 기각 {_rej}종목(직전 시가총액과 25% 넘게 어긋남)")
         _left = sum(1 for t in raw if (fund.get(t) or {}).get("mc") is None)
         print(f"    남은 시가총액 결손 {_left}종목")
     # ⚠ 아래 두 소스는 개별 실패를 예외로 삼키므로, 전량 실패해도 잡은 '성공'으로 끝나고 화면의 패널만 조용히 사라진다.
@@ -1080,6 +1092,7 @@ def main():
     if any(abs(_ucov[k] - fx_cov[k]) >= 0.1 for k in FUND_META):
         print("  ⚠ 응답 분모와 유니버스 분모가 갈린다(종목이 통째로 빠졌다는 뜻): " +
               " ".join(f"{k} {fx_cov[k]:.0f}→{_ucov[k]:.0f}" for k in FUND_META if abs(_ucov[k] - fx_cov[k]) >= 0.1))
+    _prev_doc = {}
     try:
         _prev_doc = json.load(open(OUT, encoding="utf-8"))
         # uni_cov 는 2026-07-31 부터 저장한다. 그 전 빌드는 fund_cov 로 대체한다 —
@@ -1103,6 +1116,14 @@ def main():
         raise SystemExit("펀더멘털 절대 하한 미달(" +
                          ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
                          ") — 복구 2단으로도 못 메웠다, 갱신 중단(이전본 유지)")
+    # 폴백이 커버를 메우면 **하한은 만족하는데 정보원은 계속 죽어 있는** 상태가 조용히 이어진다.
+    # 커버리지만 보면 100%라 안 보이므로 추정 비중을 따로 드러낸다(이전 빌드와 나란히 놓아 추세도 보이게).
+    if _mc_est:
+        _pest = len(_prev_doc.get("mc_est") or []) if isinstance(_prev_doc, dict) else 0
+        print(f"  ⚠ 시가총액 {len(_mc_est)}종목({len(_mc_est)/len(raw)*100:.1f}%)이 정보원 값이 아니라 "
+              f"종가×발행주식수 추정이다 (직전 빌드 {_pest}종목)")
+        if len(_mc_est) > len(raw) * 0.20:
+            print("     정보원 결손이 20%를 넘는다 — 폴백이 메우고 있을 뿐 원인은 그대로다")
     oh_rel = (oh_c - oh_c.groupby(sect).transform("median") + 50.0).clip(0, 100)   # 섹터 상대 과열도(피어 대비)
     # 매수 점수 = 추세+모멘텀 (저과열은 점수 아닌 '필터'로만 — 저과열 가중이 수익을 깎는 것을 실측으로 확인).
     #   그리드 검증(5y 주간): 상승추세∩과열≤60 + tr+mo top8 → ex-SPY20 +2.72%p·hit 56.2%·중앙 roc3m 25%(추격 아님)
@@ -1470,6 +1491,9 @@ def main():
            # fund_cov = 응답에 성공한 종목 분모 · uni_cov = 유니버스 분모(화면과 같은 말).
            #   게이트는 uni_cov 로 판정한다. 둘을 함께 남겨야 '종목이 통째로 빠졌다'가 사후에 보인다.
            "fund_cov": fx_cov, "uni_cov": _ucov,
+           # 시가총액을 정보원에서 못 받아 종가×발행주식수로 채운 종목. 커버가 100%로 보여도
+           #   여기가 계속 두툼하면 정보원이 낫지 않은 것이다 — 커버리지만 보면 안 보인다.
+           "mc_est": sorted(_mc_est),
            "fund_pct_basis": {"n": len(fx_v), "as_of": as_of,
                               "note": "lo/hi 임계 = 커버 종목 실측 33/67 백분위. 관행수치(‘PER 15 미만은 싸다’ 등)를 쓰지 않으며 "
                                       "갱신 때마다 재계산된다. 상세(sd/)의 fundx는 [값, 전체퍼센타일, 섹터퍼센타일]이며 "
