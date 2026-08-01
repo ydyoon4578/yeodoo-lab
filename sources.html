@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 데이터 출처·기준일·갱신 주기 고지. 무료 공개 데이터 원칙과 사내 DB(라이선스 데이터) 파생 항목의 공개 범위.">
+<meta name="description" content="여두 전략 랩 — 데이터 출처·기준일·갱신 주기 고지. 무료 공개 데이터 원칙과 DB 파생 항목의 공개 범위.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <title>여두 · 데이터 출처·기준일</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
@@ -21,8 +21,8 @@
 <style>
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
-    --good:#0E8A54;--marg:#B25E12;--hot:#A64B3B;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    --good:#0E8A54;--marg:#A35510;--hot:#A64B3B;
     --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
   }
   @media (prefers-color-scheme:dark){:root{
@@ -31,7 +31,7 @@
     --good:#38D083;--marg:#F0863C;--hot:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--good:#0E8A54;--marg:#B25E12;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--good:#0E8A54;--marg:#A35510;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
   :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--good:#38D083;--marg:#F0863C;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
   /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
   :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
@@ -124,10 +124,10 @@
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
    손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
    ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
-:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}}
-:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}
+:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}}
+:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}
 
 /* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
    한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
@@ -434,7 +434,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p class="lede">이 사이트의 모든 데이터가 <b>어디서 오고, 언제 기준이며, 언제 갱신되는지</b>를 고지합니다.</p>
     <div class="policy"><b>데이터 정책</b> —
       <b>1)</b> 웹 공개 데이터(yfinance·FRED·FINRA·공개 문헌)를 우선 사용.
-      <b>2)</b> 사내 리서치 DB는 보조로 사용하며, 사용한 부분은 <span class="dbtag">사내 DB</span> 태그로 구분 명시 — 집계 성과만 공개, 원천 수치·종목 선정은 비공개.
+      <b>2)</b> DB는 보조로 사용하며, 사용한 부분은 <span class="dbtag">DB</span> 태그로 구분 명시 — 집계 성과만 공개, 원천 수치·종목 선정은 비공개.
       <b>3)</b> 기준일 정합을 CI로 검증 — 데이터셋 간 날짜 꼬임(미래 날짜·기준일 불일치)이 배포되지 않도록 차단.</div>
   </header>
 
@@ -444,7 +444,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <thead><tr><th scope="col">데이터</th><th scope="col">출처</th><th scope="col">기준일</th><th scope="col">갱신</th></tr></thead>
       <tbody>
         <tr><th scope="row"><a href="stocks.html">종목 시그널</a></th>
-          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 사내 DB(index_constituents) 스냅샷</td>
+          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 DB(public.index_constituents) 스냅샷</td>
           <td class="dt" id="src-stk">—</td><td id="up-src-stk">—</td></tr>
         <tr><th scope="row"><a href="regime.html">시장 국면</a></th>
           <td><span class="freetag">무료</span>FRED · yfinance</td>
@@ -471,10 +471,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌) — <b>GitHub Actions가 아니라 사람이 돌리는 갱신</b>입니다. 그래서 며칠 비는 날이 있고, 옆 기준일이 그 사실을 그대로 드러냅니다</td>
           <td class="dt" id="src-rot">—</td><td id="up-src-rot">—</td></tr>
         <tr><th scope="row"><a href="explorer.html">현재 포트폴리오 구성</a></th>
-          <td>yfinance(ETF·지수 가격) + <span class="dbtag">사내 DB</span>(종목선택 전략 신호)</td>
+          <td>yfinance(ETF·지수 가격) + <span class="dbtag">DB</span>(종목선택 전략 신호)</td>
           <td class="dt" id="src-hold">—</td><td id="up-src-hold">—</td></tr>
         <tr class="dbrow"><th scope="row"><a href="explorer.html">전략 백테스트·판정</a></th>
-          <td><span class="dbtag">사내 DB</span>사내 리서치 DB(FactSet) · 벤치마크는 배당 재투자(총수익) 기준 SPY·QQQ</td>
+          <td><span class="dbtag">DB</span>public.index_constituents · 벤치마크는 배당 재투자(총수익) 기준 SPY·QQQ</td>
           <td class="dt" id="src-bt">—</td><td id="up-src-bt">—</td></tr>
       </tbody>
     </table>
@@ -485,7 +485,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="card">
     <h3><span class="freetag">무료</span><a href="stocks.html">종목 시그널</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/stocks.json · data/sd/ · data/home_reco.json</span></h3>
     <p>S&amp;P 500 · NASDAQ 100 512종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
-      구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 사내 DB <b>index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
+      구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 DB <b>public.index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
       갱신 잡에는 완전성 게이트가 있어 데이터 소스 부분 장애 시 갱신을 중단하고 이전본을 유지합니다.</p>
     <div class="meta"><span><b>기준일</b><span id="d-stk">—</span></span><span><b>공매도 기준일</b><span id="d-si">—</span></span><span><b>구성종목 스냅샷</b><span id="d-memb">—</span></span><span><b>갱신</b><i class="v" id="up2-src-stk">—</i> (GitHub Actions)</span></div>
   </div>
@@ -508,26 +508,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="card">
     <h3><span class="freetag">무료</span><a href="explorer.html">현재 포트폴리오 구성</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/strategy_holdings.json</span></h3>
     <p>전략별 <b>현재 보유 종목·자산과 비중</b>을 공개합니다. 자산배분 전략(12개 자산 분산·업종 분산·변동성 타깃)은
-      yfinance 가격으로, 종목선택 전략(실적 상향주·저평가주·잉여현금 개선주·투자스타일 추종)은 사내 DB 신호로 산출합니다.
+      yfinance 가격으로, 종목선택 전략(실적 상향주·저평가주·잉여현금 개선주·투자스타일 추종)은 DB 신호로 산출합니다.
       리서치 재현 기준의 구성이며 실제 운용 계좌·실시간 비중이 아닙니다.</p>
     <div class="meta"><span><b>리밸 기준일</b><span id="d-hold">—</span></span><span><b>생성일</b><span id="d-holdgen">—</span></span><span><b>갱신</b><i class="v" id="up2-src-hold">—</i> (GitHub Actions)</span></div>
   </div>
 
   <div class="card" style="background:color-mix(in srgb,var(--marg) 6%,var(--panel))">
-    <h3><span class="dbtag">사내 DB</span><a href="explorer.html">전략 백테스트 · 판정</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/strategy_backtests.json · data/strategy_detail.json</span></h3>
-    <p>전략 리스트의 백테스트 곡선·지표·판정은 <b>사내 리서치 DB(FactSet 라이선스 데이터: 가격·애널리스트 추정치·팩터)</b>에서 파생된 결과입니다.
+    <h3><span class="dbtag">DB</span><a href="explorer.html">전략 백테스트 · 판정</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/strategy_backtests.json · data/strategy_detail.json</span></h3>
+    <p>전략 리스트의 백테스트 곡선·지표·판정은 <b>DB</b>에서 파생된 결과입니다 — 사용 테이블은 <span style="font-family:var(--mono);font-size:11px">public.index_constituents</span>(지수 멤버십·GICS 라벨)입니다.
       공개 범위는 <b>집계 성과(월간 누적수익·낙폭·연환산 지표)와 정성 판정</b>으로 한정하며,
       원천 수치(가격·추정치·팩터값)와 종목 선정 결과(보유 리스트)는 공개하지 않습니다.
       백테스트 구간은 전략별로 다르며 탐색기 각 패널에 표기됩니다. 무비용·월말(gross) 기준입니다. <b>차트의 S&P 500·NASDAQ 100 은 가격지수</b>(^GSPC·^NDX)라 배당이 빠져 있습니다 — 전략 수익은 배당을 재투자한 기준이므로 <b>지수가 연 약 2%p 불리하게 잡힙니다.</b> 지수와의 격차를 그대로 '이겼다'로 읽지 마십시오. 다만 배포 원장 6종은 예외로, 배당을 재투자한 지수(SPY·QQQ)로 실제 검증한 기록이라 그 표기를 그대로 둡니다.</p>
     <p><b>성과지표 산출(지표 체계 v2)</b> — 전 지표를 <b>월간 수익률 기준·연환산(√12)</b>으로 통일하고, 샤프·소르티노 등 위험조정지표는
       <b>무위험금리를 차감한 초과수익</b>으로 계산합니다. 무위험금리는 <b>FRED 3개월 국채수익률(DGS3MO)</b>을 월평균 → 월복리 환산해 쓰며
       (인증 불필요 공개 CSV, 캐시 <span style="font-family:var(--mono);font-size:11px">data/rf_monthly.json</span>),
-      사내 DB에는 단기금리 계열이 없어 외부 조달이 유일한 정합 경로입니다.
+      DB에는 단기금리 계열이 없어 외부 조달이 유일한 정합 경로입니다.
       MDD·얼서·회복기간도 <b>월말 NAV 기준</b>으로 통일했고(종전에는 MDD만 일별 기준), <b>미완결 월은 제외</b>합니다.
       벤치마크가 현금성이어서 분모가 붕괴하는 지표(베타·알파·포착률 등)는 <b>수치를 만들지 않고 생략 사유를 표기</b>합니다.
       산출기: <span style="font-family:var(--mono);font-size:11px">build/strategy_metrics.py</span> (외부 의존 없이 커밋된 월말 시계열 + FRED만 사용).</p>
     <p><b>데이터 주의 — 업종(GICS) 분류는 시점 정합이 아닙니다.</b>
-      사내 DB <span style="font-family:var(--mono);font-size:11px">index_constituents</span>에서 <b>지수 멤버십은 시점 정합(PIT)</b>이지만,
+      DB <span style="font-family:var(--mono);font-size:11px">public.index_constituents</span>에서 <b>지수 멤버십은 시점 정합(PIT)</b>이지만,
       같은 테이블의 <b>업종 라벨(gics_name)은 현재 분류를 과거 전 구간에 소급 적용한 백필</b>입니다.
       실측 근거: 2018-09 개편으로 신설된 'Communication Services'가 2014-06 스냅샷에 이미 존재하고,
       2014~2026년 사이 업종이 한 번이라도 바뀐 종목이 <b>0건</b>이며(이 기간에 GICS 대개편이 두 차례 있었습니다),
