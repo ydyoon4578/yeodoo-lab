@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-31",
+  "generated": "2026-08-01",
   "note": "웹 리서치 기반 로테이션 전략 풀 · 미검증 · 외부 출처 · 투자자문 아님",
   "source": "web research (seed + workflow verified)",
   "strategies": [
@@ -368,8 +368,8 @@
       "principle": "Cohen & Frazzini(2008, Journal of Finance)는 기업 간 고객-공급 관계가 공개 정보임에도 투자자 주의의 한계 때문에 가격에 즉시 반영되지 않는다는 것을 보였다. 표본에서 해당 고객사는 공급업체 매출의 평균 약 20%를 차지할 만큼 실질적 연결이었고, 고객사 뉴스가 공급업체 가격으로 옮겨가는 데 시간이 걸렸다. Menzly & Ozbas(2010, Journal of Finance)는 같은 현상을 '시장 분할과 투자자 전문화'로 설명하며, 정보투자자가 많은 종목일수록 교차예측력이 약해지고 기관 보유 변화가 정보거래 행태를 반영한다는 것을 보였다. 즉 알파의 원천은 새로운 정보가 아니라 이미 공개된 정보가 연결 고리를 타고 확산되는 속도의 마찰이다.",
       "entry": "매월 말 각 공급업체의 공시된 주요 고객사를 매핑한 뒤(고객사 매출비중 임계치, 예: 10% 이상), 직전 1개월 고객사 수익률로 공급업체를 랭킹한다. 상위 20%를 동일가중 롱(롱숏이면 하위 20% 숏)하고 1개월 보유 후 재랭킹한다. 고객사가 복수인 경우 매출비중 가중 평균 수익률을 쓰고, 공급업체 자체 모멘텀·산업 모멘텀과의 중복을 통제한다. 유동성 하한과 종목당 비중 상한을 두어 소형주 쏠림과 시장충격을 제한한다.",
       "performance": "원논문의 상위20% 롱·하위20% 숏 포트폴리오는 Fama-French 3팩터 기준 월 1.45%(연 약 18.4%)의 비정상 수익을 냈고, 자체 가격모멘텀·산업모멘텀·산업내 lead-lag·유동성을 통제해도 크기와 유의성이 크게 훼손되지 않았다. 반론도 분명하다 — Journal of Accounting Research(2017)의 'Anticipated Earnings Announcements and the Customer-Supplier Anomaly' 연구는 이 아노말리 수익이 예정된 실적발표일 부근에 집중된다고 보고해, 순수한 '연결 지연' 해석을 약화시킨다. 또한 고객사 매핑이 연 1회 10-K 공시에 의존해 시점 정확도가 낮고, 효과가 소형 공급업체에 편중돼 거래비용·용량 제약이 크다. Menzly-Ozbas의 결과 자체가 '정보투자자가 늘면 예측력이 약해진다'는 것이므로, 발견 이후 감쇠는 이론적으로도 예상되는 경로다.",
-      "recent": "고객–공급사 연결이 재편되는 국면이 2026년 더 뚜렷해졌다 — 관세 압박으로 공급망 리더의 77%가 이미 중국 밖 관세중립국으로 소싱을 옮겼고, 93%가 아시아 내 다변화를, 87%가 24개월 내 멕시코·중미 니어쇼어링 파일럿을 계획한다(동남아 소싱 비중 30%→54%). 리더의 73%는 2026년 말 '관세 흡수 한계'에 도달할 것으로 본다. 링크가 통째로 바뀌는 구간에서는 과거 관계로 추정한 고객-공급 링크가 신호가 아니라 잡음이 되므로, 링크 데이터의 시점 정합(PIT)이 이 전략의 급소로 남는다.",
-      "recent_at": "2026-07-27",
+      "recent": "고객–공급사 연결이 재편되는 국면이 2026년에도 뚜렷하다 — 2025년 철강·알루미늄 관세가 50%로 배가되고 무역가중 제조업 관세율이 1.9%→4.7%로 두 배 넘게 올랐으며(UNCTAD), 조사 기업의 82%가 관세로 공급망 영향을 받고 39%가 비용을 고객에 전가하지 않고 흡수·검토 중이라고 답했다. 니어쇼어링·다변화로 소싱이 옮겨가며 링크가 통째로 바뀌는 구간에서는 과거 관계로 추정한 고객-공급 링크가 신호가 아니라 잡음이 되므로, 링크 데이터의 시점 정합(PIT)이 이 전략의 급소로 남는다.",
+      "recent_at": "2026-08-01",
       "sources": [
         "Supply Chain Signals: Enhancing the Customer Momentum Strategy with Network Centrality, FactSet Insight",
         "Key trends impacting supply chains in 2026, KPMG",
@@ -412,14 +412,14 @@
       "principle": "주가는 한 달의 마지막 며칠과 다음 달 첫 며칠에 상승하는 경향을 보인다. 원인으로 퇴직연금 월초 자동 유입, 월말 기관 리밸런싱, 배당 재투자 등 자금흐름 구조가 지목된다. 미국 고유 요인이 아니라 30개국에서 동일하게 관찰되어 강건성이 높다. 시장에 머무는 시간이 1/3에 불과해 최대낙폭이 구조적으로 축소되는 것이 최대 강점이다.",
       "entry": "월말 기준 4번째 마지막 거래일 종가 매수 후 신월 3번째 거래일 종가 매도(총 7거래일). 나머지 기간은 현금/단기채. 종가가 200MA 상회할 때만 진입하는 추세 필터 적용 가능.",
       "performance": "S&P 500 기준 CAGR 6.8%(B&H 7.4%, 배당제외)이나 MDD는 27% 대 56%로 절반. 다른 백테스트는 CAGR 7.2%, 노출 33%, 승률 62%, Profit Factor 2.0, MDD 27%. SPY ETF 단독은 CAGR 2.87%, MDD 11.97%.",
-      "recent": "30개국 1994~2023년 일간수익 재검에서 월말·월초 구간의 평균 일간수익이 10bp로, 그 외 구간 0bp와 뚜렷이 갈린다. 2026년 연구는 원인을 '느리게 움직이는 기관 자금 + 마찰'의 이중 경로로 보고, 리밸런싱 주기가 낮을수록 효과가 계단식으로 쌓인다는 가설(infrequent rebalancing)을 제시한다. 다만 SPY 1993-02~2026-04 전수 검증에서 효과의 본체는 분포 자체의 우측 이동이지 소수 이상치가 아니었고, Day +1 수익은 10년 단위로 비교하면 뚜렷이 약해졌다. 지수·변동성 이상은 여러 시장에서 공통으로 남아 있다.",
+      "recent": "월말·월초 구간의 이상수익이 여러 시장에서 재확인된다 — 영국 주가지수 1990~2023 재검(Vidal·Vidal-García)에서 월 전환일 부근에 유의한 초과수익과 변동성 이상이 함께 나타났고, 30개국 1994~2023 일간수익 재검에서도 월말·월초 평균 일간수익이 10bp로 그 외 구간 0bp와 뚜렷이 갈린다. 다만 SPY 1993~2026 전수 검증에서 효과의 본체는 분포 우측 이동이지 소수 이상치가 아니었으나 Day +1 수익은 10년 단위로 뚜렷이 약해졌고, 원인은 '느리게 움직이는 기관 자금 + 마찰'의 이중 경로로 설명된다.",
       "sources": [
         "Infrequent rebalancing, risk deferral, and equity returns at the turn of the month, Journal of International Financial Markets (2026)",
         "Turn of the Month Effect, Vidal & Vidal-García, SSRN 4106003",
         "Equity Returns at the Turn of the Month, Xu & McConnell, FAJ 64(2)",
         "Market Effect Research: Turn of the Month Effect (2026-04, SPY 전수)"
       ],
-      "recent_at": "2026-07-25"
+      "recent_at": "2026-08-01"
     },
     {
       "id": "C2",
@@ -468,7 +468,7 @@
       "principle": "Lou, Polk & Skouras(2019, JFE)는 수익률을 야간·주간 성분으로 분해해 강한 성분별 지속성과 교차기간 반전('tug of war')을 문서화했다 — 모멘텀 수익은 거의 전부 야간에, 가치·수익성 등은 주간에 발생한다. 서로 다른 투자자 클리엔텔의 거래 시간대 선호가 원인으로 제시된다. 역사적으로 미국 대형주 수익 상당분이 야간에 누적됐다.",
       "entry": "지수/대형주를 종가 근처 매수, 익일 개장 직후 청산해 야간만 보유(주간 무노출). 일 단위 반복. 실무 구현은 체결·스프레드·오버나이트 갭 리스크에 민감.",
       "performance": "장기 백테스트에선 야간 프리미엄이 뚜렷했으나 실거래 구현은 실패 사례가 많다 — NightShares 500(NSPY)은 상장 후 −6.9%(같은 기간 S&P +22%)로 2023년 청산됐다. 거래비용·갭·군집이 이론적 엣지를 잠식한다.",
-      "recent": "뉴욕 연준 리버티스트리트(2026-07, 'The Disappearing Overnight Drift')는 과거 종가→시가 초과수익의 60% 이상을 만들던 미 동부시간 새벽 2~3시 구간이 2021~2025년 표본에서 사실상 0으로 눌렸다고 보고했다 — 알고리즘 유동성 공급자 확대로 마감 재고가 줄며 프리미엄이 소멸했다는 설명이다. Perreten·Wallmeier(2024)의 팬데믹 후 소멸 보고와 같은 방향이며, NightShares 청산과 함께 실전 알파로는 회의적 국면이 굳어졌다. 종가매수·시가매도 왕복이 신호의 본질이라 비용 breakeven이 2bp 안팎인 이 랩의 기각 판정을 강화한다.",
+      "recent": "뉴욕 연준 리버티스트리트(Boyarchenko·Larsen·Whelan, 2026-07-01, 'The Disappearing Overnight Drift')는 과거 종가→시가 초과수익의 대부분을 만들던 미 동부시간 새벽 2~3시 구간(1998~2019년 연 약 3.7%)이 2021년 이후 사실상 0으로 눌렸다고 보고했다 — 마감 시점 주문불균형 분산 축소(유동성공급자 위험부담 여력 개선)를 주된 원인으로 지목한다. Perreten·Wallmeier(2024)의 팬데믹 후 소멸 보고와 같은 방향이며, NightShares 청산과 함께 실전 알파로는 회의적 국면이 굳어졌다. 종가매수·시가매도 왕복이 신호의 본질이라 비용 breakeven이 2bp 안팎인 이 랩의 기각 판정을 강화한다.",
       "sources": [
         "A Tug of War: Overnight versus Intraday Expected Returns, Lou, Polk & Skouras, Journal of Financial Economics, Vol. 134(1), pp. 192-213 (2019)",
         "'Night Effect' ETFs to Shut Down With Overnight Stock Returns Elusive, Bloomberg (2023-07-19); NightShares 500 (NSPY) liquidated Aug 2023 (재보도: WealthManagement.com)",
@@ -481,7 +481,7 @@
         "why": "종가매수/시가매도 일별 왕복이 신호의 본질 → 비용 breakeven 2bp.",
         "href": "archive.html#a-overnight-drift"
       },
-      "recent_at": "2026-07-27"
+      "recent_at": "2026-08-01"
     },
     {
       "cat": "C",
@@ -792,14 +792,14 @@
       "principle": "Perold(1986)·Black & Jones(1987)가 옵션형 보험의 대안으로 제시. 규칙은 위험자산 노출 = 승수(M)×쿠션, 쿠션=자산−플로어. 포트폴리오가 오르면 쿠션이 커져 위험노출 확대, 내리면 쿠션이 줄어 자동 축소되어 플로어에 수렴. 승수 M(보통 3~5)이 공격성을 결정하며, 상승 참여와 하락 방어를 M으로 조율한다.",
       "entry": "플로어 설정(예: 시작자본의 90%). 매 리밸런싱마다 위험자산 배분액 = M×(자산−플로어), 나머지는 안전자산(단기채). 쿠션 변동 임계 초과 시 재조정. 리밸런싱 빈도·M로 갭리스크 제어.",
       "performance": "연속 거래 가정이 지켜지면 플로어를 안정적으로 방어하나, 하루 낙폭이 1/M을 넘으면 리밸런싱 전에 플로어 붕괴(갭리스크)가 현실화 — 1987년 10월이 대표 사례이며 강제 청산이 당일 하락을 증폭. 강한 상승장에선 조기 디레버리징으로 상방 참여가 제한되는 '캐시락(cash-lock)'도 약점. 완화책: 빈번 리밸런싱·낮은 M·OTM 풋 갭헤지(각각 상방/비용 트레이드오프).",
-      "recent": "조건부 승수(conditional multiple)로 변동성 국면에 M을 낮추는 갭리스크 최적화 연구가 이어지며, 2025년 11월에는 위험자산 가격변동에 승수를 동적으로 연동하는 수정형 동적승수(D-CPPI) 연구가 발표됐다. CPPI는 여전히 원금보장형 구조화상품·타깃데이트 글라이드패스의 기반으로 실무에서 쓰이지만, 이론적 안전성이 연속거래·유동성 가정에 의존해 급락 갭 구간에서 하루 낙폭이 1/M을 넘으면 플로어가 붕괴할 수 있다는 한계는 그대로다.",
+      "recent": "갭리스크를 겨냥한 승수(M) 최적화 연구가 이어진다 — 부족확률(shortfall probability)로 허용 승수 범위를 좁힌 뒤 오메가비율로 최적 M을 고르는 2단계 접근, 변동성 국면에 M을 낮추는 조건부 승수, 2025년 11월의 동적승수(D-CPPI) 등이 대표적이다(2026년 상반기까지 관련 연구 지속). CPPI는 여전히 원금보장형 구조화상품·타깃데이트 글라이드패스의 기반으로 쓰이지만, 이론적 안전성이 연속거래·유동성 가정에 의존해 급락 갭 구간에서 하루 낙폭이 1/M을 넘으면 플로어가 붕괴할 수 있다는 한계는 그대로다.",
       "sources": [
         "Portfolio insurance: Gap risk under conditional multiples, European Journal of Operational Research",
         "Introduction to CPPI, QuantPedia",
         "Multiplier Optimization for CPPI Strategy, Int. J. Theoretical and Applied Finance (2020)"
       ],
       "id": "D5",
-      "recent_at": "2026-07-27"
+      "recent_at": "2026-08-01"
     },
     {
       "cat": "D",
@@ -864,7 +864,7 @@
       "principle": "채권 총수익 ≈ 캐리(이표수익 − 자금조달금리) + 롤다운(곡선 불변 가정 하 잔존만기 감소에 따른 자본이득) + 곡선 이동 효과. 앞의 두 항은 사전에 관측 가능해 기대수익의 '모델 없는(model-free)' 예측변수가 된다. Koijen·Moskowitz·Pedersen·Vrugt \"Carry\"(NBER WP 19325, 2013; JFE 2018)는 캐리를 자산군 전반의 수익예측변수로 정식화하고, 미국채에서 듀레이션당 캐리 상위 만기 매수·하위 매도 롱숏의 샤프 약 0.68을 보고했다. Martens·Beekhuizen·Duyvesteyn·Zomerdijk \"Carry Investing on the Yield Curve\"(FAJ 75(4), 2019)는 국가별 만기 버킷 캐리 롱숏을 13개국으로 합성한 글로벌 커브 캐리 팩터의 정보비율 약 1.0을 보고하고, 이것이 BAB(단기 매수·장기 매도)로 설명되지 않으며 오히려 커브 캐리 보유 시 BAB의 추가 가치가 없다고 보였다. Brooks·Moskowitz \"Yield Curve Premia\"(SSRN 2956411)는 value·momentum·carry가 곡선의 처음 세 주성분(level·slope·curvature) 정보를 흡수하며, 캐리가 슬로프·곡률에 담긴 기대수익을 대리함을 보였다(defensive 추가 시 4팩터). 경제적으로는 기간 프리미엄(term premium)과 곡선 기대가설의 실패(Fama-Bliss 계열 예측회귀)에 대한 보상으로 해석된다.",
       "entry": "1) 곡선 스냅샷: 무이표 곡선(예: FRED DGS 시리즈, Nelson-Siegel 피팅)에서 각 만기 n의 캐리+롤다운을 y(n) − r_short + (n년 → n−h년 이동에 따른 기대 가격변화)/h로 산출, 듀레이션당(per-unit-duration)으로 정규화. 2) 종목·버킷 선택: 2y/5y/7y/10y/20y/30y 버킷 중 듀레이션당 캐리 상위 1~2개 집중, 롱온리 운용이면 상위 버킷 ETF에 채권 슬리브 100% 배분(예: 커브가 벨리에서 가파를 때 IEI/IEF). 3) 리밸: 월말 1회(FAJ 논문 컨벤션), 회전 억제를 위한 히스테리시스(진입 상위30% / 이탈 하위50%), 신호 lag 1~2영업일. 4) 리스크 제어: 슬리브 듀레이션 목표 3~7년 밴드, 커브 역전(10y−2y < 0) 시 캐리가 음수인 장기 구간 배제(사실상 단기로 회피), 실현 금리변동성 타게팅으로 듀레이션 스케일링. 5) 롱숏 버전(선물): 듀레이션 중립 스프레드(예: 5y 롱 vs 30y 숏, DV01 매칭), 총 DV01을 NAV의 일정 수준으로 제한. 6) 비용: 국채 ETF 왕복 2~5bp, 선물 롤 비용 반영.",
       "performance": "강점 — (a) 사전 관측 가능하고 추정오차가 작은 신호(가격·수익률만 필요, 회계·추정치 불필요), (b) 학술적으로 다국가·장기 표본에서 재현(FAJ 글로벌 커브 캐리 IR≈1.0, 미국채 롱숏 샤프≈0.68), (c) 주식 팩터와 상관이 낮아 자산배분 분산효과, (d) 거래비용·용량 측면에서 국채는 가장 유동적인 시장. 약점·논쟁 — (i) 핵심 가정인 '곡선 불변'이 깨지면 몇 달치 롤다운이 하루 만에 소멸(2022년 전 구간 금리 급등, 2023·2025년 장기물 기간 프리미엄 재확대가 대표 사례), (ii) 캐리는 위기·급락 국면에서 좌측꼬리가 두꺼운(drawdown 확률 높은) 전형적 캐리형 손익구조로, 변동성 대비 진짜 리스크가 과소평가되기 쉬움, (iii) 곡선이 평탄·역전이면 신호 자체가 소멸(2022~2024 미국 역전기에는 사실상 단기채 보유와 동일), (iv) 롱숏 성과는 자금조달금리 가정에 민감 — FAJ 논문은 BAB의 우월성이 funding rate 가정에 좌우된다고 명시, (v) 감쇠 논쟁: Baltussen·Martens·Penninga(JPM 2021, 1800~2020 딥샘플)는 국채 팩터(value·momentum·low-risk)의 프리미엄이 표본 간 감쇠하지 않는다고 보고해 감쇠론에 반증을 제시하나, 캐리 단독의 최근 20년 IR은 금리 레짐(장기 하락추세 종료)에 상당히 의존한다는 비판이 남아 있음. 실무적으로는 '알파'라기보다 기간 프리미엄 수취 = 리스크 프리미엄에 가깝게 취급하는 것이 안전.",
-      "recent": "미 국채 곡선이 2022~2024년 역전을 벗어나 완만한 정(+) 기울기로 복귀했고, 2026년 전망은 대체로 추가 스티프닝(단기물은 연준의 중립 전환, 장기물은 재정·발행 부담에 따른 기간 프리미엄 상승)에 무게를 둔다(Ameriprise·Charles Schwab 2026). 이는 롤다운 캐리에 우호적 복귀지만, 다수 하우스는 2~10년(특히 단중기) 비중 확대와 인텀(5~10년) 듀레이션 유지를 권고하며 장기물은 곡선 이동 손실에 노출된다고 본다. 2026년 실무 트렌드는 순수 장기 롤다운 대신 '캐리 앤 롤' 플레이북과 듀레이션 중립 커브 스프레드로 이동 중이며, 인플레 상방 서프라이즈가 최대 리스크다.",
+      "recent": "미 국채 곡선이 2022~2024년 역전을 벗어나 완만한 정(+) 기울기로 복귀했고, 2026년 전망은 추가 스티프닝(단기물은 연준의 도비시 전환, 장기물은 재정적자·발행 부담에 따른 기간 프리미엄 상승)에 무게를 둔다 — 다수 하우스는 이번 un-inversion이 경기 낙관보다 기간 프리미엄 상승이 주도한다고 본다(WisdomTree·Capital Group·Schwab·Morningstar). 이는 롤다운 캐리에 우호적 복귀지만 대부분 2~5년 비중 확대와 인텀 듀레이션을 권고하고 장기물은 곡선 이동 손실에 노출된다고 보며, 실무는 순수 장기 롤다운 대신 '캐리 앤 롤'·듀레이션 중립 커브 스프레드로 이동 중이고 인플레 상방 서프라이즈가 최대 리스크다.",
       "sources": [
         "Koijen, Moskowitz, Pedersen, Vrugt, \"Carry\", NBER Working Paper 19325 (2013) / Journal of Financial Economics 127(2), 2018 — https://www.nber.org/system/files/working_papers/w19325/w19325.pdf",
         "Martens, Beekhuizen, Duyvesteyn, Zomerdijk, \"Carry Investing on the Yield Curve\", Financial Analysts Journal 75(4), 2019 — https://www.tandfonline.com/doi/full/10.1080/0015198X.2019.1628552 (요약: https://rpc.cfainstitute.org/research/financial-analysts-journal/2019/ip-carry-investing-on-the-yield-curve, WP: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2808327)",
@@ -878,7 +878,7 @@
         "WisdomTree, \"The Answer to the Curve Steepener: Active/Passive Barbell\" (2025-12) 및 \"Putting a Steeper Yield Curve to the Test\" (2026-01) — https://www.wisdomtree.com/investments/blog/2026/01/14/putting-a-steeper-yield-curve-to-the-test"
       ],
       "id": "D8",
-      "recent_at": "2026-07-31"
+      "recent_at": "2026-08-01"
     },
     {
       "id": "D9",
@@ -1017,7 +1017,7 @@
       "principle": "Moskowitz, Ooi & Pedersen(2012)은 58개 국제 선물시장(주식·채권·통화·원자재)에서 1985-2009 크고 유의미한 알파를 입증했다. 횡단면 모멘텀과 달리 각 자산을 자기 과거와 비교해 올랐는지만 묻는다. 1~12개월 지속 후 장기 부분 반전하며 초기 과소반응·지연된 과잉반응 이론과 정합적이다. 극단 시장 국면에서 가장 강한 성과를 보인다.",
       "entry": "각 자산 과거 12개월 초과수익>0이면 롱, 작으면 숏. 포지션 = 목표변동성/자산 실현변동성(역변동성 가중). 월간 리밸런싱, 58개 선물 분산.",
       "performance": "1985-2009 분산 TSMOM에서 크고 통계적으로 유의미한 알파. 관리선물(CTA)의 학술 토대이며 위기 국면 성과가 가장 우수해 주식 포트폴리오의 테일 헤지 역할.",
-      "recent": "저금리 종료 이후 금리·통화 추세 재개로 CTA 성과 환경 개선. 다만 잦은 추세 반전(whipsaw)에선 부진 불가피.",
+      "recent": "2025년은 추세추종에 가혹했다 — 2025년 4월 SG Trend 지수 −4.89%(연초 대비 −9.33%), TTU Trend Following 지수 −6.20%(−9.38%) 등 상관 붕괴와 급반전(whipsaw)으로 주요 CTA 지수가 연중 큰 폭 부진했다(Top Traders Unplugged). 관리선물은 지속적 추세와 변동성에서 성과가 나므로 2026년 성과도 방향성 있는 추세의 재개 여부에 달려 있고, 위기 국면 테일 헤지 특성은 유지되나 완만·무추세 장에서는 구조적으로 부진하다는 점이 재확인됐다.",
       "sources": [
         "Time Series Momentum, Moskowitz Ooi & Pedersen, Journal of Financial Economics (2012)",
         "Time Series Momentum Effect, Quantpedia (2025)"
@@ -1027,7 +1027,8 @@
         "t": "시계열 모멘텀 — 멀티에셋 (Time-Series Momentum · CTA)",
         "why": "통합 포트폴리오의 RP 추세 게이트와 정보 중복(corr 0.43).",
         "href": "archive.html#a-tsmom-multiasset"
-      }
+      },
+      "recent_at": "2026-08-01"
     },
     {
       "id": "E2",
@@ -1230,7 +1231,7 @@
       "principle": "Gatev·Goetzmann·Rouwenhorst(2006, RFS 19:797-827)의 거리법(distance method): 12개월 형성기간 동안 정규화 누적수익 경로의 유클리드 거리 최소 페어를 선택하고, 6개월 거래기간에 스프레드가 형성기 표준편차의 ±2σ 벌어지면 진입, 수렴(스프레드 0교차) 시 청산. 이론적 근거는 공적분(cointegration): 각 가격은 랜덤워크로 발산해도 두 가격의 선형결합은 정상성(stationary)을 가져 평균 주변에서 진동. 저자들은 초과수익이 페어에 내재한 공통요인(common factor) 노출로 설명되며 전통적 리스크로는 설명되지 않는다고 봄. 실무 계량화는 z-score, 스프레드 반감기(half-life)로 평균회귀 속도를 측정",
       "entry": "형성기 12개월 정규화가격 거리 최소 상위 5·20 페어 선택 → 거래기간 6개월. 진입: 스프레드 z-score ±2σ 초과(저평가 롱/고평가 숏, 달러중립). 청산: z=0(스프레드 수렴) 또는 거래기간 종료. 실무 필터: 스프레드 반감기 5~30일, 공적분(Engle-Granger/Johansen) 검정 통과 페어만. 리밸런싱은 월 단위 롤링으로 페어풀 갱신, 자기금융(self-financing) 롱숏",
       "performance": "[강점] GGR 원논문 1962~2002 상위20 페어 연 최대 ~11%(월 0.86%, 1962~88기) 초과수익, 보수적 거래비용 상회. 시장중립이라 지수·팩터와 저상관 → 분산효과 우수. Do·Faff(2010)도 GFC 등 장기 시장혼란기에 강한 성과(위기 헤지 특성) 확인. [약점] 심각한 성과 감쇠: Do·Faff 복제 결과 월 초과수익이 1962~88 0.86% → 1989~2002 0.37% → 2003~09 0.24%로 급락. 원인은 퀀트 헤지펀드 경쟁 심화(alpha crowding)와 시장효율 상승, 그리고 수렴하지 않는(nonconverging) 페어 비중 증가. 거래비용 반영 시 GGR 기본법은 대체로 무수익화. 숏 차입비용·역사관계 붕괴(구조변화)·꼬리위험(스프레드 발산 지속) 상존",
-      "recent": "2025~26 학계·실무는 단순 거리법의 쇠퇴를 전제로 적응형·정교화로 이동. Journal of Asset Management(2025, Springer, s41260-025-00416-0)은 유사 ETF 간 공적분 페어 발굴로 접근성·안정성 개선을 제시. ETF 30페어(2000~2024) 연구는 z-score 임계 하향 시 거래기회·수익·Sharpe 증가하나 변동성·MDD도 확대되어, 공적분이 유지되는 짧은 창(window)이 장기 수익을 제약 → 적응적 페어선택·강한 리스크관리 필요를 강조. 강화학습 기반 통계차익(arXiv 2403.12180)과 copula 기반 페어(MDPI JRFM 2025, 18/9/506) 등 비선형·확률의존구조 확장이 활발. 실무 대형 스탯아브(D.E. Shaw·Citadel·Renaissance)는 다변량·고빈도로 진화",
+      "recent": "2025~26 학계·실무는 단순 거리법의 쇠퇴를 전제로 적응형·비선형으로 이동한다 — 딥러닝 기반 실시간 공적분 예측(Frontiers 2026, 암호자산 페어), 시계열 딥러닝 페어(ScienceDirect 2026), 강화학습 통계차익(DDQN, arXiv 2403.12180), copula 기반 확률의존구조 확장이 활발하며 상당수가 암호자산 페어에 집중된다. copula법이 엄격한 가정 없이 거래기회를 늘려 거리법·공적분 대비 수익·위험조정수익을 개선한다는 보고가 이어지나, 공적분이 유지되는 짧은 창(window)과 alpha crowding에 따른 감쇠는 그대로여서 적응적 페어선택·강한 리스크관리가 필수다.",
       "sources": [
         "Gatev, Goetzmann & Rouwenhorst (2006) 'Pairs Trading: Performance of a Relative-Value Arbitrage Rule', Review of Financial Studies 19(3):797-827 — https://ideas.repec.org/a/oup/rfinst/v19y2006i3p797-827.html (원 NBER w7032: https://www.nber.org/papers/w7032)",
         "Do & Faff (2010) 'Does Simple Pairs Trading Still Work?', Financial Analysts Journal 66(4) — https://www.tandfonline.com/doi/abs/10.2469/faj.v66.n4.1",
@@ -1239,7 +1240,8 @@
         "Performance of Pairs Trading Strategies Based on Various Copula Methods, JRFM 18(9):506 (2025) — https://www.mdpi.com/1911-8074/18/9/506",
         "Examining Pairs Trading Profitability, Yale Economics (2024) — https://economics.yale.edu/sites/default/files/2024-05/Zhu_Pairs_Trading.pdf"
       ],
-      "id": "E10"
+      "id": "E10",
+      "recent_at": "2026-08-01"
     },
     {
       "cat": "E",
@@ -1314,7 +1316,8 @@
         "Invesco S&P Spin-Off ETF (CSD), S&P U.S. Spin-Off Index 기반 (4년 보유 룰) — https://www.invesco.com/us/financial-products/etfs/product-detail?audienceType=Investor&ticker=CSD",
         "Recent Spinoffs 트래커 (2025-2026 완료 건: Midera/MFP 등) — https://www.stockspinoffs.com/recent-spinoffs/"
       ],
-      "id": "E13"
+      "id": "E13",
+      "recent_at": "2026-08-01"
     },
     {
       "cat": "E",
@@ -1429,7 +1432,7 @@
       "principle": "원전: Bali, Cakici, Whitelaw(2011), \"Maxing Out: Stocks as Lotteries and the Cross-Section of Expected Returns\", Journal of Financial Economics 99(2), 427-446. 과거 1개월 내 최대 일간수익률(MAX(1)) 또는 상위 5일 평균(MAX(5))이 높은 종목이 다음 달 유의하게 저조. 최저-최고 MAX 십분위 간 원시·위험조정 수익 격차가 월 1% 초과이며, 규모·BM·모멘텀·단기반전·유동성·왜도 통제 후에도 유지. 특히 MAX를 통제하면 Ang et al.(2006)의 '고 고유변동성=저수익' 퍼즐이 부호 반전 → 고유변동성 이상현상의 상당 부분이 복권수요의 대리변수였다는 해석. 이론적 기반은 Tversky-Kahneman 누적전망이론(작은 확률 과대가중)과 Barberis-Huang(2008) 왜도선호, 그리고 미분산 개인투자자의 종목 선택. 채널 근거: 효과가 기관보유비중 낮고 개인 거래비중 높은 종목에 집중되며, Gu et al.(2025, Accounting & Finance) 중국 A주 분해에서는 복권형 이상현상이 주로 '오버나이트 수익' 구간에서 발생(개인 주문 흐름 가설과 정합).",
       "entry": "시그널: 매월 말, 각 종목의 직전 1개월(약 21거래일) 일간수익률 중 최대값 MAX(1) 및 상위 5일 평균 MAX(5)를 계산. 유니버스 내 횡단면 십분위 정렬. 리밸: 월말 1회, 실행 지연 lag 2영업일(하우스 규약), 거래비용 5bp 가정. 구현 A(권장, 롱온리 필터): 챔피언/모멘텀 후보 바스켓에서 MAX(5) 상위 10~20% 종목을 사전 배제한 뒤 동일가중 top-N 구성. 구현 B(롱숏): 저MAX 십분위 롱 / 고MAX 십분위 숏, 섹터·규모 중립화. 필수 정제: (1) 베타 중립화 — 원시 MAX는 고베타·고발행 종목과 강하게 얽히므로 MAXβ(베타·체계적위험 제거 잔차 기준) 사용, (2) 실적발표일 급등 제외 — 어닝 서프라이즈발 극단 일간수익은 복권이 아니라 PEAD 신호이므로 발표 전후 ±1일 제외, (3) 유동성·시총 하한(마이크로캡·페니주 배제, 실무상 시총 하위 20% 컷), (4) 신주발행/희석 통제(주식발행 팩터와 상관 높음), (5) PIT 멤버십 적용·생존편향 금지, (6) 2026 부분월 drop_incomplete_month + ex2026 + 부트스트랩 검증. NDX 유니버스(100종)에서는 단면 폭이 좁아 십분위 대신 상위 10종목 배제 방식이 현실적.",
       "performance": "강점: 원전 표본(1962~2005, NYSE/AMEX/NASDAQ)에서 저-고 MAX 스프레드 월 1%+(FF3/FF4 알파 기준 유의), 다수 국가(호주 1991~2013, 중국, 신흥국, 스리랑카)로 외적 타당성 확장, 암호자산에서도 확인. 대부분의 수익이 숏사이드(고MAX 저조)에서 발생 → 롱온리 운용에서는 '배제 필터'로만 수익화 가능하며 이것이 오히려 실무 친화적(거래비용·대차비용 없음). 약점·감쇠 논쟁(균형): (1) Hou-Xue-Zhang(2020, RFS 'Replicating Anomalies')은 BCW MAX를 포함한 다수 마찰 변수가 대형주 가중·NYSE 브레이크포인트 적용 시 유의성을 잃는다고 보고 — 즉 상당 부분이 소형·저유동 종목 효과. (2) Ince-Ozsoylev(2024/2026 재검증, SSRN 5030210)는 원시 MAX 이상현상이 현대 미스프라이싱 팩터모형(특히 주식발행 팩터) 통제 시 소멸하며, 진짜로 남는 것은 베타중립화한 MAXβ(월 −0.81%, t=−3.62, 1968~2022)라고 결론 — 원전 스펙 그대로는 취약, 정제 스펙은 생존. (3) 회전율이 높다(월간 시그널, 단기반전과 부분 중첩) — 단기반전·저변동과의 상관 통제 필수, 신규 알파가 아니라 기존 팩터의 중복일 위험. (4) 대안 해석: 복권선호가 아니라 단순 과잉반응(overreaction)이라는 반론 존재(Critical Finance Review). (5) 롱숏 숏사이드는 급등주 대차 비용·숏스퀴즈 리스크가 커 실현 알파가 논문 대비 크게 축소.",
-      "recent": "2024~2026: 학계 컨센서스가 '원시 MAX는 흔들리지만 정제 MAX는 살아있다'로 이동. Ince & Ozsoylev의 재검증(SSRN 5030210, 2024-11 공개)이 MAXβ를 제시하며 2026년 초 Swedroe 등 실무 매체에서 널리 소개됨 — 핵심은 원시 MAX가 주식발행/체계적위험과 혼재되어 있었고, 베타 중립화 후에야 순수 복권선호 프리미엄(월 −0.81%, t=−3.62)이 드러나며 대형주·고유동성 구간에서도 성립한다는 점. 2025년 Gu et al.(Accounting & Finance)의 중국 A주 분해는 복권형 이상현상이 오버나이트 수익에 집중됨을 보여 개인 주문흐름 채널을 지지(기존 풀의 '오버나이트 드리프트'와는 반대 방향 결과라 교차검증 소재). 2025년 Journal of Behavioral Finance는 모멘텀×복권선호 상호작용을 다뤄 MAX-모멘텀 패턴이 EW/VW·규모·BM·1993년 전후 하위표본에서 견고하다고 보고(HXZ 비판과 상충하는 증거). 2026년 Nguyen(JBFA)은 실적발표 전 10일 구간에서 복권수요가 오히려 +85bp 양(+)의 위험조정 수익을 낳음을 보고 — 이벤트 구간에서는 부호가 뒤집히므로 어닝 윈도 제외 필터가 필수임을 재확인. 시장 환경 측면에서는 0DTE 옵션(SPX 3년간 5배 이상 성장, 소매 비중 50~60%, CBOE)과 AI·암호자산 FOMO로 복권수요 자체는 2025~2026년에 오히려 확대 — 시그널 원천은 소멸되지 않았으나, 동시에 급등 AI 주도주를 무차별 배제하면 강세장에서 심각한 언더퍼폼 위험(2023~2025 반도체·AI 랠리 구간 검증 필수).",
+      "recent": "2024~2026 학계 컨센서스는 '원시 MAX는 흔들리지만 정제 MAX는 살아있다'로 굳어졌다. Ince·Ozsoylev의 재검증(SSRN 5030210)에 이어 Bali·Ince·Ozsoylev의 2026년 1월 'MAX on Steroids: A New Measure of Investor Attraction to Lottery Stocks'(SSRN 6065166)는 시장 움직임을 통제한 β-MAX를 제시하며, 원시 MAX의 음(−)의 수익은 극단 일간수익이 과거에 지속적으로 반복된 종목에서만 나타나(순수 복권 해석과 상충) β-MAX가 지속성 여부와 무관하게 예측력을 갖는 더 나은 복권 대리변수라고 결론지었다. 시장 환경 측면에서는 0DTE 옵션·AI/암호자산 FOMO로 복권수요 자체가 2025~2026년 오히려 확대돼 시그널 원천은 소멸되지 않았으나, 급등 AI 주도주를 무차별 배제하면 강세장에서 심각한 언더퍼폼 위험(반도체·AI 랠리 구간 검증 필수)이 있다.",
       "sources": [
         "https://www.sciencedirect.com/science/article/abs/pii/S0304405X1000190X",
         "https://pages.stern.nyu.edu/~rwhitela/papers/max%20jfe11.pdf",
@@ -1447,7 +1450,8 @@
         "https://jfin-swufe.springeropen.com/articles/10.1186/s40854-021-00291-9",
         "https://www.garp.org/risk-intelligence/credit/lottery-ticket-economy-260529"
       ],
-      "id": "E18"
+      "id": "E18",
+      "recent_at": "2026-08-01"
     },
     {
       "cat": "E",
@@ -1734,7 +1738,7 @@
       "entry": "①유니버스: S&P 500 또는 러셀1000 등 유동성 상위 종목(마이크로캡 배제 — 등가중 성과가 초소형주에 왜곡되는 것을 방지). ②시그널: 매월 말, 다음 달과 같은 캘린더월의 과거 20년 수익률(t+1월이 3월이면 과거 20개의 3월 수익률)의 평균 또는 중앙값을 계산. 관측치 10개 미만이면 제외. ③표준화: 같은 달의 시장 평균을 차감해 시장중립 계절성 점수를 만들고, 12개월 모멘텀·직전 1개월 반전·규모·업종에 대해 횡단면 회귀로 직교화한 잔차를 최종 스코어로 사용. ④포트폴리오: 스코어 상위 10%(롱온리는 상위 30~50종목) 동일가중, 보유 1개월, 월말 리밸런싱. 롱숏은 하위 10% 숏. ⑤리스크 통제: 업종 비중 벤치마크 대비 ±5%p 제한, 종목당 상한 3%. ⑥거래비용: 월 회전율이 100%에 육박하므로 왕복비용을 반드시 반영하고, 진입 상위 10%/이탈 상위 30%의 버퍼로 교체를 줄인다.",
       "performance": "Keloharju 외(2016)는 과거 같은 캘린더월 수익률로 종목을 선택하는 전략이 연평균 13%의 수익을 낸다고 보고했고, 이 연구는 AQR Insight Award 우수상(Honourable Mention)을 받았다. 다만 감쇠·반론이 뚜렷하다. ①거래비용 장벽: Heston·Sadka는 이 전략이 사실상 매월 100%에 가까운 회전율을 요구하며 왕복 거래비용이 약 70bp를 넘으면 수익성이 사라진다고 지적했다 — 총수익(gross) 기준 수치를 실현 가능한 알파로 읽으면 안 된다. ②등가중·소형주 의존: 등가중 포트폴리오는 초소형주에 크게 좌우되며 마이크로캡을 제외하면 스프레드가 축소된다. ③해석 논쟁: 리스크 프리미엄이냐 미스프라이싱이냐가 미해결이며, 저자들 스스로 2021년 논문에서 계절적 반전을 근거로 미스프라이싱 해석에 손을 들었다 — 미스프라이싱이라면 차익거래 자본 유입에 따른 소멸 위험이 크다. ④국가별 불균질: Li·Zhang·Zheng은 42개 시장 분석에서 선진 21개국에서는 유의하나 신흥 21개국에서는 유의하지 않다고 보고했다. ⑤사후 감쇠: Chen·Zimmermann의 오픈소스 횡단면 데이터셋은 이례현상의 게재 후 수익 감쇠를 광범위하게 확인하며 계절성 계열도 예외로 보기 어렵다. ⑥데이터마이닝 우려: 20개 연간 시차를 탐색하는 구조 자체가 다중검정 문제에 노출돼 있어 out-of-sample·비용차감·직교화 검증이 필수다. 결론적으로 단독 주력 전략보다는 기존 모멘텀·밸류 스코어에 얹는 저상관 보조 틸트가 현실적이다.",
       "recent": "2016년 JF 게재 이후 논쟁의 축은 존재 여부에서 원인과 실현 가능성으로 이동했다. 2020년 Hirshleifer 외의 무드 베타(JFE), 2021년 Keloharju 외의 계절적 반전(JFE)이 각각 행동재무·미스프라이싱 해석을 강화했고 이후 중국 등 개별 시장으로의 확장 연구가 이어졌다. 실무 쪽에서는 Quantpedia 등이 재현 방법을 공개해 진입장벽이 낮아진 반면, Alpha Architect 등은 캘린더 이례현상이 10년 단위로 일관되지 않아 액티브 전략으로 옮기기 어렵다는 회의론을 제시한다. Chen·Zimmermann의 공개 데이터로 다수 특성이 재현 가능해지면서 계절성 시그널도 독자 알파가 아니라 다른 특성과의 직교성으로 평가받는 단계에 들어섰다.",
-      "recent_at": "2026-07-22",
+      "recent_at": "2026-08-01",
       "sources": [
         "Seasonality in the cross-section of stock returns (Heston & Sadka, 2008, Journal of Financial Economics 87:418-445) — https://www.sciencedirect.com/science/article/abs/pii/S0304405X0700195X",
         "Seasonality in the Cross-Section of Expected Stock Returns (Heston & Sadka, 2005, SSRN) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=687022",
@@ -1910,8 +1914,8 @@
       "principle": "이익전망이 올라가는 종목을 사는 전략은 보통 '왜 올라갔는가'를 묻지 않는다. 그런데 Jegadeesh와 Livnat는 매출 서프라이즈가 이익 서프라이즈를 통제한 뒤에도 실적발표 후 주가 흐름(드리프트)을 예측하며, 애널리스트조차 매출 정보를 전망에 늦게 반영한다고 보고했다 — 매출은 이익보다 회계적 조작 여지가 적고 미래 이익 성장에 대한 지속성이 높은데도 시장의 소화가 느리다는 것이다. 또 Ertimur·Livnat·Martikainen은 투자자가 매출 쪽 1달러 서프라이즈를 비용 절감 쪽 1달러보다 높게 평가하고 그 격차가 성장주에서 특히 크다고 보고했는데, 성장주 비중이 높은 NASDAQ 100에서 이런 구분의 효과가 더 클 것이라는 예측으로 이어진다. 요컨대 매출이 받쳐주지 않는 이익전망 상향은 되돌려질 확률이 높으니, 그런 종목을 걸러내면 같은 신호에서 더 오래가는 부분만 남길 수 있다는 가설이다.",
       "entry": "①기반 전략: NASDAQ 100 구성종목을 향후 12개월 주당순이익 컨센서스의 최근 3개월 평균 상향 강도로 랭킹해 상위 종목을 동일가중으로 담는 이익전망 상향 전략(월말 리밸런싱, 진입은 상위권·이탈은 완충을 둔 하위권 기준으로 잦은 교체 억제). ②게이트: 랭킹 산출 직후 매출 축 필터를 얹는다 — 매출 컨센서스 데이터가 있으면 매출 전망 상향이나 매출 서프라이즈를, 없으면 최근 12개월 누적 매출의 6개월 모멘텀·매출 증가 가속도·분기 매출 추세의 기울기 변화 같은 실현 매출 추세 지표를 쓰되, 유니버스 중앙값 이상인 종목만 통과시킨다. ③보유 종목 수는 게이트 없는 원형과 동일하게 고정하고 게이트로 후보가 모자라면 차순위 종목으로 채운다 — 필터가 종목 수를 줄여 만들어내는 집중 효과를 게이트의 성과로 오인하지 않기 위한 필수 설계다. ④판정: 게이트 없음 / 매출 게이트 / 마진 게이트(이익률 개선 상위) 3종을 같은 조건으로 나란히 백테스트해 매출 게이트의 증분이 통계적으로 유의한지만 본다.",
       "performance": "Jegadeesh와 Livnat(2006, Financial Analysts Journal)는 실적발표 후 드리프트가 매출 서프라이즈가 이익 서프라이즈와 같은 방향일 때 더 강하고, 이 결과가 기관투자자 보유 비중·차익거래 위험·회전율을 통제해도 강건하다고 보고했다. 같은 저자들의 연구(미국 상장사, 1987~2003)는 실적발표 전후 4거래일 초과수익이 매출 서프라이즈 최하위 5분위 평균 −0.66%에서 최상위 5분위 +1.60%까지 단조 증가하고, 이익 서프라이즈를 통제한 뒤에도 매출 서프라이즈가 큰 종목에 유의한 발표 후 초과수익이 남는다고 보고했다. Ertimur·Livnat·Martikainen(2003)은 투자자가 매출 1달러 서프라이즈에 비용 절감 1달러 서프라이즈보다 강하게 반응하며 그 격차가 성장주에서 더 크다고 보고했다. 유의할 점: 이 수치들은 모두 분기 실적발표 이벤트 기준 미국 전체 표본의 주장이며, 월간 이익전망 상향 전략에 매출 게이트를 얹었을 때의 증분 성과는 어느 문헌도 직접 보여주지 않는다 — 게이트의 효과는 별도 검증이 필요하다.",
-      "recent": "2026년은 이례적으로 애널리스트가 연중 이익 추정을 하향이 아니라 상향으로 되돌리는 국면이다 — 통상 1.00에서 연말 0.92까지 흘러내리던 추정치 지수가 2026년엔 여름 저점(0.96) 이후 반등해 5월 1.06을 넘겼다(RIA). FactSet은 CY2026 EPS +13.7%·매출 +6.5%를 제시하고 Q1 2026 블렌디드 이익성장 27.1%·서프라이즈 평균 20.7%(5년 평균의 약 3배)로 상향의 실적 뒷받침을 확인했는데, 이런 낙관은 오히려 '이익이 매출로 뒷받침되는가'라는 게이트의 필요성을 키운다. AI 설비투자 사이클의 감가상각 회계 선택으로 이익이 현금흐름보다 좋아 보일 수 있다는 지적과, 매출총이익 서프라이즈가 매출 서프라이즈의 예측력을 흡수한다는 절단면 논쟁은 그대로다. 이 항목은 랩이 사내 데이터로 검증을 계획하고 있는 후보다.",
-      "recent_at": "2026-07-31",
+      "recent": "2026년은 애널리스트가 연중 이익 추정을 이례적으로 상향으로 되돌리는 국면이 이어졌다 — FactSet은 2026년 2분기 실적기간 중 EPS 추정치가 분기 초 대비 +3.4% 상향돼 2021년 2분기 이후 5년 만의 최대 분기 내 상향이며 11개 전 섹터가 매출 성장을 보고했다고 밝혔다. 이런 광범위한 상향·낙관은 오히려 '이익이 매출로 뒷받침되는가'라는 게이트의 필요성을 키운다 — AI 설비투자의 감가상각 회계로 이익이 현금흐름보다 좋아 보일 수 있다는 지적과, 매출총이익 서프라이즈가 매출 서프라이즈의 예측력을 흡수한다는 절단면 논쟁은 그대로다. 이 항목은 랩이 사내 데이터로 검증을 계획하고 있는 후보다.",
+      "recent_at": "2026-08-01",
       "sources": [
         "Revenue Surprises and Stock Returns (Jegadeesh & Livnat, 워킹페이퍼 2004 — JAE 2006 게재본의 저자 공개판) — https://pages.stern.nyu.edu/~jlivnat/JAE%20submission.pdf",
         "Post-Earnings-Announcement Drift: The Role of Revenue Surprises (Jegadeesh & Livnat, Financial Analysts Journal 62(2), 2006 — CFA Institute) — https://rpc.cfainstitute.org/research/financial-analysts-journal/2006/post-earnings-announcement-drift-the-role-of-revenue-surprises",
@@ -2006,8 +2010,8 @@
       "principle": "지수 집중 문제의 본질은 500개 종목 중 490개를 어떻게 가중하느냐가 아니라, 상위 10개가 지수의 40% 가까이를 차지한다는 데 있다. 전면 동일가중은 이 문제를 해결하지만 그 대가로 소형주·가치주 쏠림과 높은 회전율이라는 의도치 않은 부작용을 함께 떠안는다. 상위 몇 종목만 제외하면 이런 왜곡을 최소화하면서 집중 회피 효과만 분리할 수 있다. 여기에 더해 시총 상위 10위에 진입한 종목은 이미 높은 기대가 가격에 반영된 뒤라 이후 장기 성과가 시장에 뒤지는 경향이 보고되어 있어, 상위권 제외 자체가 초과수익의 원천일 수 있다. 집중도가 장기적으로 평균회귀한다면, 집중이 극단에 달한 국면일수록 소외된 다수 종목의 따라잡기가 잔여 490종의 상대 성과를 밀어올린다는 논리다.",
       "entry": "매월 말 지수 구성종목을 그 시점의 시가총액 순으로 정렬해 상위 10종목을 제외하고, 잔여 종목을 동일가중으로 보유한다(변형: 잔여 시총가중 = 순수 집중 회피형). 상위 10 고정 대신 '비중 합계가 20%에 도달하는 상위 k종' 또는 '개별 비중 3% 초과 종목' 제외로 바꾸는 변형도 있다. 월말 리밸런싱이며, 시총의 '순위'만 쓰는 기계적 룰이라 전면 동일가중보다 회전율이 낮다. 성과 판단은 반드시 지수 원본(시총가중)·전면 동일가중과의 3자 비교로 하고, 지수 집중도가 높은 국면에만 적용하는 조건부 버전으로 확장할 수 있다.",
       "performance": "CFA Institute Enterprising Investor의 'Market Concentration and Lost Decades'(Pauley·Bales·Schreiber, 2025)는 미국 증시의 두 '잃어버린 10년'에서 2000–2010년 상위 500 전체가 연 −0.99%일 때 상위 10 제외 490종 동일가중은 연 +2.55%(상위 10 동일가중은 연 −6.63%), 1964–1974년에는 전체 연 +1.24% 대비 잔여 490종 연 +3.09%(상위 10은 −0.44%)였다고 보고했다. 또 상위 10 비중이 23%를 넘은 국면에서는 이후 5년간 잔여 490종이 상위 10을 88%의 확률로 이겼으며, 현재 상위 10 비중(약 37%)은 50여 년 만의 최고이고 상위 10과 나머지의 밸류에이션 격차는 2000년 기술주 버블 정점을 빼면 최악 수준이라고 주장했다. Forbes(McKenna, 2021)가 소개한 Dimensional 연구도 시총 상위 10위에 진입한 종목이 이후 시장에 뒤지는 경향을 보고했는데, 예컨대 인텔은 상위 10 진입 전 연평균 29%p 시장을 앞섰으나 진입 후 10년간 연 약 6%p 뒤졌다고 한다.",
-      "recent": "상위 10종목이 S&P 500의 35~40%를 차지하는 극단적 집중이 2024년 이후 시장 구조 논쟁의 중심이 됐고, 위 CFA Institute 글(2025)도 그 맥락에서 나왔다. 다만 반론도 뚜렷하다 — 이 전략은 본질적으로 메가캡 언더웨이트 베팅이어서 메가캡 주도 강세장이 길어지면 그 기간 내내 뒤지며, '집중도는 평균회귀한다'는 전제가 무너지고 집중이 계속 심화되면 초과의 근거 자체가 사라진다. 출처가 제시한 수치 상당수도 집중도가 이미 높았던 국면의 조건부 결과라는 점을 유의해야 한다. 이 항목은 랩이 사내 데이터로 검증을 계획하고 있는 후보다.",
-      "recent_at": "2026-07-22",
+      "recent": "2026년 메가캡 쏠림이 다소 완화되며 상위 10 제외 논지에 우호적 국면이 이어졌다 — 상위 10 비중은 2025년 약 40.7%로 사상 최고를 찍었고 매그니피센트7은 2026년 6월 약 33.8%까지 내렸으며, 동일가중 S&P 500이 연초 5%p 넘게 앞서다 7월 기준 약 2%p 우위로 좁혀졌다(24/7 Wall St·Guinness). 상위 10이 지수 비중 약 41%를 차지하면서 이익은 약 32%만 낸다는 괴리도 근거로 인용되나, 이 우위는 국면 의존적이라 메가캡 주도장이 재개되면 되돌려지고 '집중도 평균회귀' 전제가 깨진 채 집중이 계속 심화되면 초과 근거 자체가 사라진다. 이 항목은 랩이 사내 데이터로 검증을 계획하고 있는 후보다.",
+      "recent_at": "2026-08-01",
       "sources": [
         "Market Concentration and Lost Decades — Pauley, Bales & Schreiber, CFA Institute Enterprising Investor (2025) — https://rpc.cfainstitute.org/blogs/enterprising-investor/2025/market-concentration-and-lost-decades",
         "Is Bigger Better? Stocks Tend To Underperform After Joining Top 10 — Kristin McKenna, Forbes (2021) — https://www.forbes.com/sites/kristinmckenna/2021/06/07/is-bigger-better-stocks-tend-to-underperform-after-joining-top-10/"
@@ -2024,8 +2028,8 @@
       "principle": "동일가중 지수의 초과수익은 섹터 베팅 성분과 섹터 내부 종목 균등화 성분으로 분해할 수 있다. S&P 다우존스 인덱스 연구진은 섹터마다 종목 수가 다르다는 점을 보정한 집중도 지표(종목 수 조정 허핀달 지수)를 쓰면 섹터 간 집중도 비교가 가능해지고, 이렇게 잰 집중도가 대부분의 섹터에서 평균회귀하는 경향이 있다고 주장한다. 집중도가 정점을 찍고 내려오는 구간에서는 소외됐던 다수 종목이 따라잡으면서 해당 섹터의 동일가중이 시가총액가중을 앞서는 경향이 보고된다. 현재 S&P 500 집중의 상당 부분이 IT·커뮤니케이션 섹터 내부의 초대형주 쏠림에서 나오는 만큼, 문제가 되는 섹터 내부만 균등화하면 전면 동일가중이 부수적으로 떠안는 소형·밸류 틸트와 섹터 베팅을 줄이면서 집중 회피 효과를 더 정밀하게 겨냥할 수 있다는 논리다.",
       "entry": "매월 말 지수 구성 종목의 시가총액 비중으로 업종(GICS 섹터)별 집중도를 계산하되, 섹터별 종목 수 차이를 보정한 지표(허핀달 지수×섹터 종목 수, 또는 유효 종목 수/실제 종목 수 비율)로 표준화한다. 섹터 비중은 벤치마크(시가총액가중)와 동일하게 고정하고, 보정 집중도가 그 시점까지의 자기 역사 대비 상위 1/3에 드는 섹터만 내부를 동일가중으로 전환하며(미래 정보를 쓰지 않도록 과거 데이터만으로 백분위 산출, 고정 임계치 금지) 나머지 섹터는 시가총액가중을 유지한다. 월말 리밸런싱. 판정을 위해 전 섹터 내부 동일가중(무조건형)·전면 동일가중·시가총액가중 세 대조군을 함께 추적해 게이트의 순기여와 회전율을 분리 보고한다.",
       "performance": "S&P DJI의 프레스턴(2023)은 S&P 500의 섹터 비중을 그대로 두고 섹터 내부만 동일가중한 가상 포트폴리오의 누적 수익 곡선이 S&P 500 동일가중 지수와 그래프상 구분되지 않는다고 보고했다 — 동일가중 지수의 장기 초과수익 대부분이 섹터 배분이 아니라 섹터 내부 균등화에서 나왔다는 주장이다. 같은 분석은 IT 섹터의 보정 집중도가 하락한 구간에서 IT 섹터 동일가중이 시가총액가중을 대체로 앞섰다고 보고한다. 이 접근의 토대인 간티·라자라의 원 연구 보고서는 대부분 섹터에서 집중도가 평균회귀한다고 주장하는 것으로 알려져 있으나, 원문 PDF는 일반 접근이 막혀 있어 여기 요약은 S&P DJI가 공개 블로그로 재서술한 내용과 2차 소개에 근거한다.",
-      "recent": "2026년 메가캡 쏠림이 완화되며 동일가중 S&P 500이 시가총액가중을 연초 이후 약 2%p(4월까지는 5%p 근처) 앞서는 국면이 이어졌고, 분기 리밸런싱의 저가매수 규율이 성과 배경으로 지목된다. 다만 이 우위는 국면 의존적이어서 메가캡 주도장이 재개되면 되돌려질 수 있고, 업종 분류 개편 이력(2018·2023)이 있어 과거 구간 검증 시 시점 처리에 주의가 필요하다.",
-      "recent_at": "2026-07-23",
+      "recent": "2026년 메가캡 쏠림이 완화되며 동일가중 S&P 500이 시가총액가중을 연초 이후 약 2%p(4월까지는 5%p 근처) 앞서는 국면이 이어졌고, 일부 리서치는 '동일가중으로의 레짐 전환' 가능성과 메가캡 이익 우위의 약화를 지적한다(Guinness·Aligne Wealth). 리밸런싱의 저가매수 규율이 성과 배경으로 지목되나 이 우위는 국면 의존적이어서 메가캡 주도장이 재개되면 되돌려질 수 있고, 업종 분류 개편 이력(2018·2023)이 있어 과거 구간 검증 시 시점 처리에 주의가 필요하다.",
+      "recent_at": "2026-08-01",
       "sources": [
         "Equally Weighting within Sectors: Impact and Potential Applications — Hamish Preston, S&P Dow Jones Indices (Indexology 블로그의 InvestmentNews 재게재, 2023-05-26) — https://www.investmentnews.com/industry-news/equally-weighting-within-sectors-impact-and-potential-applications/237450",
         "The Equal-Weight S&P 500 is Quietly Crushing the Market in 2026 — 24/7 Wall St. via Yahoo Finance (2026-03-05) — https://finance.yahoo.com/news/equal-weight-p-500-quietly-133117336.html"
@@ -2178,6 +2182,29 @@
         "The Profitability of Trading NOA and Accruals: One Effect or Two? (Papanastasopoulos, 2017, International Review of Financial Analysis) — https://www.sciencedirect.com/science/article/abs/pii/S1057521917301291",
         "Net Operating Assets as a Predictor of Industry Stock Returns (Zhang, SSRN 900264) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=900264",
         "Scaled Net Operating Assets (SNOA) — definition (GuruFocus glossary) — https://www.gurufocus.com/glossary/SNOA"
+      ]
+    },
+    {
+      "id": "E39",
+      "cat": "E",
+      "cat_label": "추가 알파·팩터·이벤트",
+      "name": "죄악주 프리미엄 (Sin/Vice Stock Premium)",
+      "type": "팩터·사회적규범 스크린",
+      "target": "미국·글로벌 주식 (술·담배·도박, 확장 시 방산·성인)",
+      "purpose": "규범제약 기관투자자가 회피해 저평가·저커버리지 상태로 방치되는 vice 산업 종목을 담아, 방치(neglect)·평판/소송 리스크 프리미엄에서 나오는 초과수익을 취한다. 단, 그 프리미엄이 순수 알파인지 퀄리티·수익성 팩터의 재라벨링인지를 반드시 분해해 판정한다.",
+      "principle": "Hong & Kacperczyk(2009, Journal of Financial Economics)는 술·담배·도박 등 'sin' 종목이 사회적 규범 때문에 연기금·대학기금·보험사 등 규범제약 기관에 덜 보유되고 애널리스트 커버리지도 낮아, 표준 리스크 팩터 통제 후에도 비교대상 대비 약 15~20% 낮은 밸류에이션과 연 약 2.5%의 위험조정 초과수익을 낸다는 것을 보였다. 원리는 (1) 규범제약 투자자 이탈에 따른 방치·저커버리지로 인한 저평가, (2) 규범이 높인 소송·평판 리스크에 대한 보상이다 — 신정보가 아니라 자연적 차익거래자(뮤추얼·헤지펀드)의 참여가 제한된 시장에서 규범이 만든 구조적 미스프라이싱이 원천이다. 다만 이 해석은 강하게 반박된다 — Blitz & Fabozzi(2017, Journal of Portfolio Management)는 sin 프리미엄이 Fama-French 5팩터의 수익성(RMW)·투자(CMA) 노출로 완전히 설명되며 통제 후 알파가 사라진다고 보고했다(sin 종목은 자본지출이 적고 이익률이 높은 전형적 고퀄리티 기업이라는 것). 따라서 이 전략의 관건은 프리미엄의 존재가 아니라, 퀄리티·수익성으로 설명되지 않는 잔차가 남는가다.",
+      "entry": "①유니버스: GICS 하위산업으로 vice 산업 식별 — 양조(Brewers)·증류/와인(Distillers & Vintners)·담배(Tobacco)·카지노게이밍(Casinos & Gaming), 확장 시 방산(Aerospace & Defense)·성인. 마이크로캡·저유동성 배제, 종목당 비중 상한과 산업(특히 담배) 편중 상한. ②구성: 롱온리 틸트면 vice 바스켓 동일가중 또는 시장 대비 오버웨이트, 롱숏이면 규모·산업만 매칭한 대조군 대비 롱숏. 월말 리밸런싱, 진입/이탈 버퍼로 회전 억제. ③필수 정제(반론 정면 테스트): 성과를 반드시 FF5(특히 RMW 수익성·CMA 투자)+모멘텀으로 위험조정해 Blitz-Fabozzi가 지목한 퀄리티 노출을 제거한 잔차 알파의 유의성(t·부트스트랩 p)을 본다 — 잔차가 0이면 이 카드는 '퀄리티의 우회'일 뿐이다. ④운용 제약 확인: 일부 계정은 매출제약(ESG 만다트)으로 편입 자체가 불가하므로 그 제약이 없는 계정에서만 구현. ⑤PIT 멤버십·생존편향 금지(피인수·상장폐지된 vice 종목 포함).",
+      "performance": "강점 — Hong-Kacperczyk(2009)의 원 표본에서 sin 종목은 비교대상 대비 약 15~20% 저평가·연 약 2.5% 위험조정 초과수익을 냈고 낮은 기관보유·애널리스트 커버리지가 방치 가설과 정합한다. 실무에서도 vice 지향 펀드(예: USA Mutuals Vice Fund, VICEX)가 시장·ESG 대비 우위를 보인 국면이 있고, 술·담배·온라인도박의 비탄력적 수요·강한 현금흐름이 방어적 성격을 뒷받침한다. 약점·감쇠 논쟁(핵심) — Blitz & Fabozzi(2017, JPM)는 프리미엄이 FF5 수익성·투자 팩터로 완전히 설명돼 통제 후 알파가 소멸하며 이 결과가 시장·기간에 걸쳐 강건하다고 보고했다(=평판 리스크 프리미엄의 별도 증거 없음). 그 밖에 ①극심한 종목 집중(소수 담배·주류 대형주 의존)과 산업 특이 리스크(규제·소송·세금), ②ESG 자금 확대 국면의 역풍과 반대로 ESG 후퇴 국면의 순풍이라는 성과의 국면 의존성, ③아노말리 공표 후 감쇠(McLean-Pontiff류) 노출이 있다. 결론적으로 단독 알파로 보기 전에 '퀄리티/수익성으로 설명되지 않는 잔차'의 존재를 사내 데이터로 먼저 확인해야 하는 후보다.",
+      "recent": "2025년 ESG 역풍(정치·규제 환경 변화) 속에서 vice 지향 상품이 강세를 보였다 — USA Mutuals Vice Fund(VICEX)는 2025년 1월 20일 이후 약 +16.4%로 Vanguard ESG US Stock ETF(ESGV, 약 +3.5%)와 SPY(약 +4.2%)를 크게 앞섰다는 보도가 있으나, 이는 특정 구간·특정 펀드의 성과이며 방산 랠리 등 산업 요인이 크다. 술·담배·온라인도박 시장은 2024~2035 완만한 성장 전망이 이어지지만(온라인도박 CAGR 약 12%), 학계에서는 Blitz-Fabozzi식 '수익성·투자 팩터로 설명된다'는 해석과 Hong-Kacperczyk식 '방치·규범 프리미엄' 해석이 여전히 병립한다. 규범제약 완화(ESG 후퇴)가 길어지면 방치 프리미엄의 원천 자체가 줄어들 수 있다는 점이 이 전략의 구조적 리스크다.",
+      "recent_at": "2026-08-01",
+      "sources": [
+        "The Price of Sin: The Effects of Social Norms on Markets (Hong & Kacperczyk, 2009, Journal of Financial Economics 93(1)) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=766465",
+        "Sin Stocks Revisited: Resolving the Sin Stock Anomaly (Blitz & Fabozzi, 2017, Journal of Portfolio Management 44(1)) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3015690",
+        "Research reveals why sin stocks outperform (Robeco, 2017) — https://www.robeco.com/en-int/insights/2017/09/research-reveals-why-sin-stocks-outperform",
+        "Sin Stocks Are Profitable (Larry Swedroe, ETF.com) — https://www.etf.com/sections/index-investor-corner/swedroe-sin-stocks-are-profitable",
+        "ESG Outcasts: A Study of the ESG Performance of Sin Stocks (Sustainability 13(17):9556, 2021) — https://www.mdpi.com/2071-1050/13/17/9556",
+        "Shunned Stocks and Market States (Han, Li & Onishchenko) — https://hull-repository.worktribe.com/OutputFile/3904797",
+        "Does Divesting From 'Sin Stocks' Really Hurt Targeted Companies? (Columbia Business School) — https://business.columbia.edu/leading-through-crisis/columbia-business/does-divesting-sin-stocks-really-hurt-targeted-companies"
       ]
     }
   ],
