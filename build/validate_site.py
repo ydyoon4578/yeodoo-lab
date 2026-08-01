@@ -1787,6 +1787,68 @@ except FileNotFoundError as e:
 except Exception as e:
     errors.append(f"홈 스타일 표 검증 실패: {e}")
 
+# ── head 메타: 공유 링크가 남의 페이지를 말하지 않게 ────────────────────────
+# 실사고(2026-08-02 발견): style.html 의 og:title·og:description·twitter:* 4줄이 통째로
+# sources.html 것이었다. <title>·canonical 은 옳아서 화면·검색에서는 멀쩡했고, 카톡·슬랙에
+# 링크를 붙였을 때만 '데이터 출처·기준일'로 떴다 — 아무 검사도 이 파일의 head 를 보지 않았다.
+# 새 페이지는 기존 페이지를 복사해 만들므로 이 사고는 구조적으로 반복된다.
+#
+# 규칙은 '<title> 과 닮았는가'가 아니라 '**다른 페이지 것과 똑같은가**'로 잡는다.
+#   · 닮음 검사는 오탐이 난다 — explorer(「여두 · 전략 랩」/「여두 전략 리스트」)와
+#     stocks(「여두 · 종목 신호」/「여두 종목 시그널」)는 일부러 다르게 적은 것이고,
+#     index 는 브랜드 낱말만으로 이뤄져 있어 낱말 비교 자체가 성립하지 않는다.
+#   · 복붙 사고의 지문은 '완전 일치'다. 사람이 일부러 두 페이지에 같은 제목·설명을 다는 일은
+#     없으므로 오탐이 0이고, style.html 사고는 이 규칙 하나에 정확히 걸린다.
+# twitter:* 는 og:* 의 사본이어야 한다 — 한쪽만 고치고 다른 쪽을 잊는 것이 이 사고의 후속판이다.
+_own, _seen_t, _seen_d, _seen_td = {}, {}, {}, {}
+_heads = []
+for _p in PAGES:
+    _s = rd(_p)
+    _h = _s[:_s.find("</head>")] if "</head>" in _s else _s[:4000]
+    # 색인에서 뺀 페이지(kb 같은 잠금 게이트)는 공유 카드가 필요 없다 — 면제 근거를 페이지가 스스로 밝힌다.
+    if re.search(r'name="robots"[^>]*content="[^"]*noindex', _h): continue
+    _heads.append((_p, _h))
+
+def _hm(h, pat):
+    mm = re.search(pat, h)
+    return mm.group(1).strip() if mm else None
+
+for _p, _h in _heads:                       # 1차 — 각 페이지의 <title> 을 먼저 모은다
+    _own[_p] = _hm(_h, r"<title>([^<]*)</title>")
+for _p, _h in _heads:
+    _ti, _ot = _own[_p], _hm(_h, r'og:title"\s+content="([^"]*)"')
+    _od = _hm(_h, r'og:description"\s+content="([^"]*)"')
+    _tt = _hm(_h, r'twitter:title"\s+content="([^"]*)"')
+    _td = _hm(_h, r'twitter:description"\s+content="([^"]*)"')
+    _ou, _cn = _hm(_h, r'og:url"\s+content="([^"]*)"'), _hm(_h, r'rel="canonical"\s+href="([^"]*)"')
+    if not _ti: errors.append(f"{_p}: <title> 없음"); continue
+    if not _ot or not _od:
+        errors.append(f"{_p}: og:title/og:description 없음 — 공유하면 제목·설명이 빈다"); continue
+    # ① og:title 이 **남의 <title>** 과 같다 = 그 페이지에서 복사해 왔다는 뜻
+    _steal = next((q for q, t in _own.items() if q != _p and t and t == _ot), None)
+    if _steal:
+        errors.append(f"{_p}: og:title「{_ot}」이 {_steal} 의 <title> 과 같다 — 복붙 사고")
+    for _lbl, _v, _bag in (("og:title", _ot, _seen_t), ("og:description", _od, _seen_d)):
+        if _v in _bag:
+            errors.append(f"{_p}: {_lbl} 이 {_bag[_v]} 것과 완전히 같다 — 복붙 사고")
+        else:
+            _bag[_v] = _p
+    # ② twitter:title 은 og:title 의 사본 — 한쪽만 고치면 공유 경로마다 다른 제목이 뜬다.
+    #    ⚠ description 은 같은 규칙을 걸면 안 된다. 7장이 트위터용으로 **일부러 짧게** 적어
+    #      두었다(예: roadmap「…칸과 그 사유 — 칸은 지우되 사유는 지우지 않습니다」→「…칸과 그 사유.」).
+    #      그건 사고가 아니라 편집이다. 그래서 설명은 동일성이 아니라 중복만 본다.
+    if _tt and _tt != _ot:
+        errors.append(f"{_p}: twitter:title 이 og:title 과 다르다 —「{_tt}」/「{_ot}」")
+    if _td:
+        if _td in _seen_td:
+            errors.append(f"{_p}: twitter:description 이 {_seen_td[_td]} 것과 완전히 같다 — 복붙 사고")
+        else:
+            _seen_td[_td] = _p
+    # ③ 자기 자신을 가리키는가
+    for _k, _v in (("og:url", _ou), ("canonical", _cn)):
+        if _v and not _v.endswith("/" + _p):
+            errors.append(f"{_p}: {_k} 가 자기 파일({_p})을 가리키지 않는다 — {_v}")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
