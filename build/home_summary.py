@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """홈 전용 초소형 요약(data/home_reco.json) — **홈이 읽는 유일한 대형 데이터 대체물**.
 
-홈은 stocks.json(354KB)·rotation_pool.json(364KB)·strategy_backtests.json(85KB)을 절대 fetch하지
+홈은 stocks.json(raw 691KB · gz 199KB)·rotation_pool.json·strategy_backtests.json 을 절대 fetch하지
 않는다. 대신 빌드가 필요한 값만 여기에 구워 1~2KB로 만든다.
 
 담는 것
@@ -51,7 +51,7 @@ def _breadth(stocks):
     """③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'.
 
     홈에 폭 카드를 세우려면 flags/timing 분포가 필요한데, 그것 때문에 홈이 stocks.json
-    392KB를 받게 하면 이 파일의 존재 이유가 사라진다. 정수 몇 개만 여기서 세어 싣는다(+0.3KB).
+    raw 691KB(gz 199KB)를 받게 하면 이 파일의 존재 이유가 사라진다. 정수 몇 개만 여기서 세어 싣는다(+0.3KB).
     """
     fl, tm = {}, {}
     for s in stocks:

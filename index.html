@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="여두 전략 랩 — NASDAQ 100·S&P 500 518종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
-<title>여두 전략 랩</title>
+<title>여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/index.html">
 <meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/index.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 전략 랩">
+<meta property="og:title" content="여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개">
 <meta property="og:description" content="계량 리서치 공개 — 구현·적대검증한 전략의 통과와 기각을 전부 공개. 종목 시그널·시장 국면·전략 탐색.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 전략 랩">
+<meta name="twitter:title" content="여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개">
 <meta name="twitter:description" content="계량 리서치 공개 — 구현·적대검증한 전략의 통과와 기각을 전부 공개. 종목 시그널·시장 국면·전략 탐색.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
@@ -25,11 +25,11 @@
      상단 내비·데이터 밀도형 카드. 다크 토큰은 기존 값을 보존한다. */
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;
-    --deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;
+    --deploy:#0C7A4A;--deploy-bg:#dcefe5;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
     /* 발표 시각 — 장전 파랑·장후 초록. 둘 다 이미 대비를 맞춰 둔 팔레트 값을 그대로 쓴다
        (--bmo는 --champ 계열 파랑, --amc는 --deploy 계열 초록). */
-    --bmo:#2C6E8F;--amc:#0E8A54;
+    --bmo:#2C6E8F;--amc:#0C7A4A;
     --gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
     /* 국면·심리 색은 .card .cv의 글자색(20px bold)으로 쓰인다 — 다크 패널 위 대비 3:1을
        못 지키면 침체·스태그플레이션 전환 시 카드 대표값이 묻힌다. 그래서 다른 색과 똑같이
@@ -49,7 +49,7 @@
     --sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0E8A54;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;--deploy:#0C7A4A;--deploy-bg:#dcefe5;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0C7A4A;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
   :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#6BB0D6;--amc:#38D083;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
   :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
   *,*::before,*::after{box-sizing:border-box}
@@ -85,10 +85,22 @@
 
   /* ── 본문 흐름 ──────────────────────────────────────────────── */
   .home{margin-top:30px;display:flex;flex-direction:column;gap:34px}
-  .mkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  /* minmax 하한은 반드시 min(…,100%) 로 감싼다 — 안 감싸면 320px 화면에서 격자가
+     .wrap(가용 292px)을 넘겨 페이지 전체에 가로 스크롤이 생긴다(.dbanner 에서 한 번 밟았다).
+     min-height 는 로딩 자리표시자 한 줄(48px)과 실제 카드 높이의 차이를 미리 먹어 두는 것이다. */
+  .mkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;min-height:300px}
+  /* 칸(.mkslot)은 항상 셋이다 — 내용이 도착한 것만 채운다. 래퍼가 생기면서 stretch 로
+     높이가 맞던 성질이 카드에서 래퍼로 옮겨가므로 여기서 되돌려 준다. */
+  .mkgrid>.mkslot{display:flex;flex-direction:column}
+  .mkgrid>.mkslot>.card{flex:1}
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+  /* 섹션 제목 옆 '전체 보기' — 홈은 요약이고 정본은 각 페이지에 있다. 그 경로가 본문에
+     없으면 메가메뉴를 열어야만 갈 수 있다(모바일 3탭). 라벨 오른쪽 끝에 붙인다. */
+  .lbl .more2{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:600;
+       letter-spacing:.02em;color:var(--muted);text-decoration:none;white-space:nowrap}
+  .lbl a.more2:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 
   /* ── 판정 원장 ──────────────────────────────────────────────── */
   .ledger{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 22px}
@@ -96,7 +108,7 @@
   /* ── 오늘의 신호 ────────────────────────────────────────────── */
   .signote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:9px;padding:9px 13px;margin:0 0 13px;font-size:11.5px;color:var(--ink-2);line-height:1.65}
   .signote b{color:var(--ink)}
-  .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px;min-height:330px}
   .rcol{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
   .rcol h4{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}
   a.rstk{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;text-decoration:none}
@@ -113,8 +125,16 @@
   @media(max-width:400px){.rstk .rn2{display:none}}
 
   /* ── 시장 카드(지금 시장) ───────────────────────────────────── */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
-  a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  /* 카드는 <div>다(2026-08-01). 전에는 <a>였는데 안에 든 details(한계 고지)의 summary를
+     누르면 클릭이 부모 링크로 버블링돼 펼쳐지지 않고 페이지가 이동했다 — 접힌 것이 하필
+     「수익 예측 신호가 아닙니다」·「지수가 아니라 몇 종목이 어느 상태인가」라 한계를 접어 두기로 한
+     2026-07-26 결정은 살아 있는데 펼치는 길만 막혀 있던 셈이다. HTML 상으로도 <a>는 interactive
+     content를 자손으로 못 갖는다. 카드 전체 클릭감은 제목 링크를 카드 크기로 늘려 유지하고,
+     details는 z-index로 그 위에 올린다(아래 .card details.more). */
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
+  .card.lk:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card .ch a.cl{color:inherit;text-decoration:none}
+  .card.lk .ch a.cl::after{content:"";position:absolute;inset:0;border-radius:12px}
   .card .ch{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
   .card .cv{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--edge,var(--ink));margin-top:6px;line-height:1.2}
   .card .cd{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.55}
@@ -135,7 +155,10 @@
   .card .rstrip{display:flex;gap:1px;margin-top:10px;height:14px;border-radius:4px;overflow:hidden}
   .card .rstrip i{flex:1;background:var(--c,var(--muted));opacity:.85}
   .card .rstrip i:last-child{opacity:1;box-shadow:inset 0 0 0 1.5px var(--ink)}
-  .card details.more{margin-top:9px}
+  /* 늘린 제목 링크(.cl::after)가 카드를 덮으므로 details는 그 위로 올려야 눌린다 */
+  .card details.more{margin-top:9px;position:relative;z-index:1}
+  .card a.cbadge{position:relative;z-index:1;text-decoration:none}
+  .card a.cbadge:hover{border-color:var(--accent);color:var(--accent)}
   .card details.more>summary{font-size:11px}
   .card details.more .mbody{font-size:11.5px;color:var(--ink-2);line-height:1.6}
   /* 국면별 성과 · 주간 일정 (2026-07-26) — 글 대신 표·막대 */
@@ -144,7 +167,7 @@
   .rott td.bx{width:100%}
   .rott td.vv{text-align:right;font-weight:700;color:var(--ink);width:62px}
   .rbar.neg>i{background:var(--hot)}
-  .wkgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+  .wkgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px}
   .wkcol{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
   .wkcol h3{margin:0 0 8px;font-size:12.5px;font-weight:800}
   .wkcol h3 span{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600;margin-left:6px}
@@ -161,7 +184,7 @@
   .wkt.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .wkt.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .wkday .wn{font-size:11.5px;color:var(--ink-2);line-height:1.5}
-  .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+  .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:12px}
   .flrow{display:grid;grid-template-columns:58px 1fr auto;gap:8px;align-items:baseline;
          padding:6px 0;border-top:1px solid var(--line-soft);font-size:11.5px}
   .flrow:first-child{border-top:0}
@@ -180,13 +203,25 @@
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
   @media(max-width:900px){.calix{display:none}}
-  .calwrap{margin:10px 0 0;overflow-x:auto}
+  /* 캘린더·스타일 표도 도착 전엔 한 줄(48px)이고 도착하면 600px/460px 로 늘어난다.
+     그 사이에 있는 것이 전부 밀리므로 미리 자리를 잡아 둔다. 과다 예약은 빈 칸만 남기고
+     이동은 만들지 않는다 — 반대는 성립하지 않는다. */
+  .calwrap{margin:10px 0 0;overflow-x:auto;min-height:660px}
+  /* 캘린더 높이는 데이터에 거의 안 흔들린다(창이 늘 4주 × 5일이다) — 좁은 화면에서는
+     범례가 접혀 더 커지므로 그만큼 더 잡는다. 실측 1280px 669 / 500px 762. */
+  @media(max-width:900px){.calwrap{min-height:770px}}
   .calgrid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:1px;background:var(--line);
            border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:760px}
   .caldow{background:var(--panel-2);padding:7px 9px;font-family:var(--mono);font-size:10px;font-weight:700;
           letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center}
   .calcell{background:var(--panel);padding:8px 9px;min-height:96px;display:flex;flex-direction:column;gap:5px}
-  .calcell.off{background:var(--panel-2);opacity:.5}
+  /* 지난 칸은 배경으로만 구분한다. 전에는 opacity:.5 를 걸었는데, 그러면 합성 대비가
+     지표명 1.92 · 티커 2.54 · 등락률 1.94 로 비텍스트 3:1 조차 못 넘었다. 그 칸에 든 것은
+     이미 확정된 사실(발표를 마친 실적, 그날 실제 지수 등락률)이고, 지난 1주를 일부러 넣은
+     이유(아래 renderCal 주석)가 바로 그것이다 — 창을 한 주 늘려 놓고 스타일로 도로 지웠던 셈.
+     '지났다'는 신호는 배경 + 날짜색으로 충분하다. 링크·버튼은 살아 있으므로 흐리지 않는다. */
+  .calcell.off{background:var(--panel-2)}
+  .calcell.off .caldate{color:var(--muted)}
   .calcell.today{background:color-mix(in srgb,var(--accent) 9%,var(--panel))}
   /* 데이터 기준일(as_of) 표시 — '오늘'과 다를 수 있어 테두리로만 남긴다 */
   .calcell.base{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink-2) 30%,transparent)}
@@ -216,7 +251,7 @@
   .calmac .sep{color:var(--line)}
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
-  .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-height:460px}
   .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
   .sttbl th,.sttbl td{padding:4px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
@@ -385,7 +420,14 @@
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   .lockmark{margin-left:5px;font-size:11px;opacity:.65;vertical-align:1px}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media(pointer:coarse){a.rstk,a.upd,a.tile{min-height:40px}}
+  /* 터치 타깃 — 전에는 a.rstk·a.upd·a.tile 셋뿐이었고 그중 a.upd 는 홈에 마크업이 없다.
+     실측: a.tk2 22.8px · button.cnt 15.2×21px · .stchips .stk 21.6px · footer a 18.9px.
+     특히 '+N' 은 접힌 종목을 볼 유일한 통로인데(renderCal 주석) 누르면 옆 티커가 눌렸다.
+     칸이 세로로 터지지 않게 min-height 대신 padding 으로 키운다(.calcell 이 흡수한다). */
+  @media(pointer:coarse){a.rstk,a.tile{min-height:40px}
+    a.tk2,.stchips .stk{padding-top:4px;padding-bottom:4px}
+    .calcell button.cnt{padding:5px 8px}
+    .stchips .stsrc,a.sthlbl.lnk,footer a,details.more>summary{display:inline-block;padding:4px 0;min-height:24px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
   /* 설명·한계는 기본으로 숨기고 눌러서 본다(전 페이지 공통 패턴 — stocks.html에서 가져옴) */
@@ -398,8 +440,27 @@
   details.more .mbody{margin-top:7px}
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
 
+  /* ── 판정 스트립 ── 배포·제한적 유효·기각 건수. 판정 원장 블록을 뺀(2026-07-26) 뒤로
+       이 랩이 무엇을 세어 왔는지가 홈에서 완전히 사라져 있었다 — 섹션을 되살리는 게 아니라
+       한 줄로 되찾는다. 숫자는 전부 data/verdicts.json 에서 읽는다(손으로 적지 않는 규약).
+       ⚠ 성과 수치는 넣지 않는다. 여기 수익률이 들어가는 순간 판정 원장이 추천표로 읽힌다. */
+  .vstrip{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;
+    padding:11px 16px;border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
+  .vstrip:hover{background:var(--panel-2);border-color:var(--accent)}
+  /* display를 못 박아 뒀으므로 hidden 속성만으로는 안 숨는다(.tk2와 같은 이유) */
+  .vstrip[hidden]{display:none}
+  .vstrip .vs{display:inline-flex;align-items:baseline;gap:6px;font-size:12.5px;color:var(--muted)}
+  .vstrip .vs b{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--vc,var(--ink))}
+  .vstrip .vgo{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    color:var(--muted);white-space:nowrap}
+  @media(max-width:640px){.vstrip{gap:6px 14px}.vstrip .vgo{margin-left:0;flex-basis:100%}}
+
   /* ── 진단 배너 ── 매일 보는 것이 아니라 한 번 답해 둔 질문으로 가는 줄.
-       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다. */
+       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다.
+       기각 판정이 붙은 도구가 셋(13F 복제·지표별 타이밍·스크리너)이라 세로로 쌓는다 —
+       하나만 걸어 두면 '기각은 예외적인 사고'로 읽힌다. */
+  .dstack{display:flex;flex-direction:column;gap:9px}
   .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
     padding:13px 16px;border:1px solid var(--line);border-left:3px solid var(--hot);
     border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
@@ -444,10 +505,10 @@
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
    손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
    ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
-:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}}
-:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}
+:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}}
+:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}
 
 /* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
    한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
@@ -751,7 +812,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Yeodoo Quant Strategy Lab</div>
+    <div class="eyebrow" id="eyebrow">계량 리서치 공개 · 통과와 기각 전부</div>
     <h1 class="title">여두 <span class="gx">전략 랩</span></h1>
     <div class="asofbar" id="asofbar">
       <button class="asoftag" id="asoftoggle" type="button" aria-expanded="false" aria-controls="asoftbl"
@@ -759,7 +820,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <!-- 예전엔 여기에 '가격·테크니컬·EPS·시장국면 통일'이라고 정적으로 적어뒀다. 축이 하나라도
            밀리는 날 그 문장이 거짓이 되므로, 주장 대신 아래 표로 축별 날짜를 그대로 보여준다. -->
       <span class="asofnote">축이 여럿이다 — 아래 표가 정본</span>
-      <span class="stalewarn" id="stalewarn" hidden></span>
+      <span class="stalewarn" id="stalewarn" role="status" aria-live="polite" hidden></span>
     </div>
     <div class="asoftbl" id="asoftbl" aria-label="축별 데이터 기준일" hidden></div>
   </header>
@@ -767,7 +828,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="home">
     <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
     <section id="s-week" aria-labelledby="wk-h">
-      <p class="lbl" id="wk-h">일정 캘린더</p>
+      <p class="lbl" id="wk-h">일정 캘린더<a class="more2" href="calendar.html">전체 일정 →</a></p>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
@@ -782,7 +843,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          ⚠ 이 랩은 팩터 모멘텀을 '자기 유니버스 대비 구별 불가'로 기각했다. 최근 잘 나간 스타일을
             추천처럼 읽히게 두면 자기모순이므로, 문구는 상태 표시에 머물러야 한다. -->
     <section id="s-style" aria-labelledby="st-h">
-      <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
+      <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
       <p class="stnote" id="stnote"></p>
@@ -794,7 +855,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     <!-- ② 시장 -->
     <section id="s-market" aria-labelledby="mk-h">
-      <p class="lbl" id="mk-h">지금 시장</p>
+      <p class="lbl" id="mk-h">지금 시장<a class="more2" href="market.html">시장 대시보드 →</a></p>
       <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
     </section>
 
@@ -802,17 +863,38 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
          시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
     <section id="s-today" aria-labelledby="td-h">
-      <p class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span></p>
+      <p class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></p>
       <div class="signote" id="signote">불러오는 중…</div>
       <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
     </section>
 
-    <!-- ⑤ 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다. -->
-    <a class="dbanner" href="guru17.html">
-      <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
-      <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
-      <span class="dgo">진단 보기 →</span>
-    </a>
+    <!-- ⑤ 판정 스트립 + 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다.
+         스트립의 숫자는 JS가 data/verdicts.json 에서 채운다. 못 읽으면 hidden 인 채로 남는다 —
+         없는 숫자를 지어내느니 줄 자체가 없는 편이 낫다. -->
+    <a class="vstrip" id="vstrip" href="explorer.html#view=runs" hidden></a>
+
+    <div class="dstack">
+      <a class="dbanner" href="guru17.html">
+        <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
+        <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
+        <span class="dgo">진단 보기 →</span>
+      </a>
+      <!-- 아래 두 줄의 답은 각 페이지가 스스로 내건 결론을 옮긴 것이다 — signals.html 의 한 줄 결론
+           「교과서 매수 신호를 그대로 따라 담으면 이 표본에서는 벤치마크에 크게 집니다」와
+           screener.html 리드 「초과수익이 확인된 스크린은 한 종도 없었습니다」. 홈에서 결론을 새로 짓지 않는다.
+           ⚠ 개수(신호 32개·스크린 0종)는 일부러 적지 않았다. 홈은 그 두 파일을 읽지 않으므로
+              여기 숫자를 박으면 손으로 적은 숫자가 되고, 늘거나 줄면 그날로 거짓이 된다. -->
+      <a class="dbanner" href="signals.html">
+        <span class="dq">교과서 테크니컬 신호를 따르면 되는가?</span>
+        <span class="da"><b>아니오</b> — 지표별로 전부 같은 잣대로 재봤습니다.</span>
+        <span class="dgo">성적표 보기 →</span>
+      </a>
+      <a class="dbanner" href="screener.html">
+        <span class="dq">스크리너로 초과수익이 나는가?</span>
+        <span class="da"><b>아니오</b> — 사전계산 스크린을 전부 재현해 재봤습니다.</span>
+        <span class="dgo">기각 사유 보기 →</span>
+      </a>
+    </div>
 
   </div>
 
@@ -827,6 +909,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 한 번 클릭에 두 번 토글되고, 결과적으로 테마가 바뀌지 않는다.
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  // ── 데이터 읽기는 여기 한 곳으로 ─────────────────────────────────────
+  // 전에는 fetch 12곳이 각자 {cache:'no-cache'} 를 달고 있었다. 데이터는 하루 한 번 갱신인데
+  // GitHub Pages 가 주는 10분 캐시(max-age=600)조차 쓰지 않고 매번 조건부 요청을 냈고,
+  // data/asof.json 은 내비 블록과 본문에서 각각 요청되면서 no-cache 탓에 메모리 캐시 조회마저
+  // 건너뛰어 같은 5KB 에 왕복이 두 번 났다(내비 fetch 는 23장 전부에 있다).
+  // 신선도 판정의 근거인 asof 만 fresh 로 두고 — 그 값으로 지연 경고를 내므로 낡으면 안 된다 —
+  // 나머지는 브라우저 캐시에 맡긴다. 최악 10분이고, 화면이 말하는 기준일은 각 파일 자신의
+  // as_of 라 캐시 때문에 어긋날 수 없다(오래된 파일이면 그 파일의 as_of 가 그렇게 말한다).
+  // ⚠ 실패를 null 로 바꾸는 것도 여기서 한다 — 호출부마다 ['catch'] 를 적던 것을 없앤다.
+  function getj(name,fresh){
+    return fetch('data/'+name, fresh?{cache:'no-cache'}:undefined)
+      .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
+  }
 
   // ── 데이터 신선도: as_of 이후 흐른 영업일. 미 휴장·1회 결측 허용(3영업일부터 경고) ──
   function bdGap(asof){
@@ -850,11 +946,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ── 판정 원장 ────────────────────────────────────────────────
-  // 홈의 '전략' 블록은 2026-07-26에 뺐다(요청). 다만 verdicts.json은 계속 읽는다 —
-  // 푸터의 아카이브 건수를 여기서 채우기 때문이다. 숫자를 손으로 적지 않는 규약도 그대로다.
-  fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
+  // 홈의 '전략' 섹션 블록은 2026-07-26에 뺐다(요청) — 되살리지 않는다. 다만 그 뒤로 이 랩이
+  // 무엇을 세어 왔는지가 홈에서 통째로 사라져 있었다: verdicts.json 의 집계 8개를 받아놓고
+  // 실제로 화면에 나가는 건 푸터의 숫자 하나뿐이었고, 그 하나마저 링크 텍스트에 붙어
+  // '전략 랩 44건'으로 읽혔다(44는 랩이 돌린 규칙 수가 아니라 기각 아카이브 총계다).
+  // 그래서 (a) 푸터 숫자에 라벨을 붙이고 (b) 판정 스트립 한 줄을 낸다. 섹션 복원이 아니다.
+  // 숫자를 손으로 적지 않는 규약은 그대로 — 전부 이 파일에서 읽는다.
+  getj('verdicts.json').then(function(v){
     if(!v)return;
-    var ta=el('ft-arc'); if(ta)ta.textContent=' '+v.archive_n+'건';
+    var ta=el('ft-arc'); if(ta)ta.textContent=' · 기각 아카이브 '+v.archive_n+'건';
+    // 스트립 — 셋 다 있어야 낸다. 하나라도 없으면 '나머지는 0'으로 읽히므로 줄 자체를 안 낸다.
+    var vs=el('vstrip');
+    if(vs&&v.deploy_n!=null&&v.marginal_n!=null&&v.reject_total!=null){
+      vs.innerHTML=
+        '<span class="vs" style="--vc:var(--deploy)"><b>'+v.deploy_n+'</b>배포</span>'+
+        '<span class="vs" style="--vc:var(--marg)"><b>'+v.marginal_n+'</b>제한적 유효</span>'+
+        '<span class="vs" style="--vc:var(--hot)"><b>'+v.reject_total+'</b>기각</span>'+
+        '<span class="vgo">전략 랩에서 전부 보기 →</span>';
+      vs.removeAttribute('hidden');
+    }
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
@@ -865,9 +975,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var head=tot+'종 (확정 '+(conf==null?'—':conf)+' · 잠정 '+(prov==null?'—':prov)+')';
     return '<div class="rcol"><h4><span>'+title+' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span></span><span style="white-space:nowrap">'+head+'</span></h4>'+
     (arr.length?arr.map(function(x){
-      return '<a class="rstk '+cls+'" href="stocks.html#t='+x.t+'&p='+(buy?'swingbuy':'swingsell')+'">'+
+      // 티커도 esc·encodeURIComponent 를 통과시킨다. 바로 옆 sec·name 은 처음부터 esc 를
+      // 거쳤는데 t 만 빠져 있었다 — 티커는 '어차피 A~Z'라고 여긴 자리다. 실제로는 위키
+      // 심볼 셀에서 그대로 올라오고(build/refresh_members.py), 그쪽 형식 관문은 NDX 에만
+      // 있었다. 두 곳 다 막는다. 화면 쪽이 마지막 방어선이므로 여기서도 가정하지 않는다.
+      return '<a class="rstk '+cls+'" href="stocks.html#t='+encodeURIComponent(x.t)+'&p='+(buy?'swingbuy':'swingsell')+'">'+
         '<span><span class="mk" style="color:var('+(buy?'--deploy':'--hot')+')">'+(x.prov?(buy?'△':'▽'):(buy?'▲':'▼'))+'</span>'+
-        '<span class="rk">'+x.t+'</span>'+(x.sec?'<span class="rsec">'+esc(x.sec)+'</span>':'')+
+        '<span class="rk">'+esc(x.t)+'</span>'+(x.sec?'<span class="rsec">'+esc(x.sec)+'</span>':'')+
         '<span class="rn2">'+esc(x.name||'')+'</span></span><span class="rv">'+recoVal(x)+'</span></a>';}).join('')
       :'<div style="color:var(--muted);font-size:12px;padding:6px 0">최근 타점 없음</div>')+'</div>';
   }
@@ -876,6 +990,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var ma=el('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     MK.main=h.as_of||null;
     if(h.breadth){MK.bd=h.breadth; renderMarket();}   // 폭 카드는 국면·심리와 같은 그리드에 붙는다
+    if(h.breadth&&h.breadth.n){EB.n=h.breadth.n; setEyebrow();}
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
@@ -894,13 +1009,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
+    // 폭 카드는 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 칸이 영영 '불러오는 중'이다
+    MK.bd=false; renderMarket();
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
     staleCheck();
   }
   function loadFull(){   // 폴백: 대형 stocks.json에서 목록만 재계산(성과 카드는 뜨지 않는다)
-    fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    getj('stocks.json').then(function(d){
       if(!d){stkFail();return;}
       var st=d.stocks||[], dts=d.pxd_dates||[], N=dts.length, WIN=10;
       var SECKO={'Information Technology':'IT','Health Care':'헬스케어','Financials':'금융','Consumer Discretionary':'경기소비','Consumer Staples':'필수소비','Industrials':'산업재','Communication Services':'커뮤니케이션','Energy':'에너지','Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
@@ -936,9 +1053,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
   var MK={rg:null,sn:null,main:null,bd:null};
 
+  // ── 히어로 눈썹 ─────────────────────────────────────────────
+  // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
+  // 화면 최상단 한 줄이 동어반복에 쓰이고 있었다. 정작 meta description 이 약속한
+  // '518종목 · FRED 매크로 · 통과와 기각 전부 공개'는 검색 결과에만 있고 화면엔 없었다.
+  // 문장이 아니라 라벨이므로 2026-07-26에 뺀 '소개 문구'와는 성격이 다르다.
+  var EB={n:null,ind:null};
+  function setEyebrow(){
+    var e=el('eyebrow'); if(!e)return;
+    var p=[];
+    if(EB.n)p.push(EB.n+'종목');
+    if(EB.ind)p.push('FRED '+EB.ind+'지표');
+    p.push('통과와 기각 전부 공개');
+    e.textContent=p.join(' · ');
+  }
+
   // ── 기준일 표 — 내비 칩·홈·sources.html이 같은 정본(data/asof.json) 하나를 읽는다 ──
   // 페이지마다 날짜를 따로 적으면 어긋나는 날 어느 쪽이 맞는지 아무도 모른다(그 사고가 있었다).
-  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+  getj('asof.json',1).then(function(j){
     var w=el('asoftbl'); if(!w||!j||!(j.axes||[]).length)return;
     // 축을 그대로 나열하면 같은 날짜가 몇 번씩 반복돼(대표일에만 4축) 읽기 어렵다.
     // 날짜로 묶으면 줄 수가 줄고, '몇 축이 같은 날인가'가 한눈에 보인다 — 이 사이트가
@@ -990,7 +1122,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // 기준일 불일치 고지는 fetch 도착 순서에 좌우되면 안 된다 — DOM 텍스트가 아니라 MK 상태로 판정하고,
   // 어느 소스가 먼저 도착하든 도착할 때마다 다시 맞춰본다(noteAdd는 중복 삽입을 스스로 막는다).
-  // 특히 폴백 경로(loadFull → stocks.json 401KB 2차 fetch)에서는 국면·심리가 반드시 먼저 끝나므로
+  // 특히 폴백 경로(loadFull → stocks.json 2차 fetch · 실측 raw 691KB / gz 199KB)에서는 국면·심리가 먼저 끝나므로
   // 예전의 '한 번만 비교' 방식은 확정적으로 고지를 놓쳤다.
   function syncAsof(){
     if(!MK.main)return;   // 기준일 미확정(로딩 중·종목 실패) → 비교 자체를 하지 않는다
@@ -1021,13 +1153,31 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return body?'<details class="more"><summary>'+esc(sum)+'</summary><div class="mbody">'+body+'</div></details>':'';
   }
 
+  // 세 칸을 **항상** 예약한다. 전에는 도착한 것만 이어 붙여 innerHTML 을 통째로 갈아끼웠고,
+  // 이 함수가 세 곳(home_reco·regime·sentiment)에서 각각 불리므로 그때마다
+  //   · 카드 폭이 1156 → 571 → 376px 로 두 번 줄어 화면이 두 번 재배치되고
+  //   · **사용자가 열어 둔 details(한계 고지)가 매번 닫혔다.**
+  // 칸은 한 번만 만들고, 내용이 바뀐 칸만 다시 그린다.
+  var MKSK='<div class="card"><div class="ch"><span>불러오는 중…</span></div></div>';
+  function mkFail(t){return '<div class="card"><div class="ch"><span>'+esc(t)+'을 불러오지 못했습니다</span></div></div>';}
   function renderMarket(){
     var w=el('marketcards'); if(!w)return;
+    if(!w.getAttribute('data-slots')){
+      w.innerHTML='<div class="mkslot" data-k="rg"></div><div class="mkslot" data-k="sn"></div>'+
+                  '<div class="mkslot" data-k="bd"></div>';
+      w.setAttribute('data-slots','1');
+    }
+    function put(k,html){
+      var c=w.querySelector('.mkslot[data-k="'+k+'"]'); if(!c)return;
+      // 같은 내용이면 손대지 않는다 — 다시 그리면 열어 둔 details 가 닫힌다.
+      if(c.getAttribute('data-h')===html)return;
+      c.setAttribute('data-h',html); c.innerHTML=html;
+    }
     var h='', rg=MK.rg, sn=MK.sn;
     if(rg&&rg.regime&&rg.regime.label){
       var c=RGC[rg.regime.label]||'var(--muted)', ko=RGKO[rg.regime.label]||rg.regime.label, R=rg.regime;
-      h+='<a class="card" href="regime.html" style="--edge:'+c+'">'+
-        '<div class="ch"><span>현재 국면</span><span>'+esc(rg.as_of||'')+'</span></div>'+
+      h='<div class="card lk" style="--edge:'+c+'">'+
+        '<div class="ch"><a class="cl" href="regime.html">현재 국면</a><span>'+esc(rg.as_of||'')+'</span></div>'+
         '<div class="cv">'+(R.emoji||'')+' '+esc(ko)+'</div>'+
         // 최근 3년 국면 이력 — '지금이 어디쯤인지'는 글보다 띠가 빠르다
         (function(){
@@ -1041,17 +1191,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               ['금융',esc(AXKO[R.financial]||R.financial||'—')]])+
         fold('이 국면을 어떻게 읽나',
              (R.desc?'<p>'+esc(R.desc)+'</p>':'')+(R.strategy?'<p>'+esc(R.strategy)+'</p>':''))+
-        '</a>';
-    }
+        '</div>';
+      put('rg',h);
+    } else { put('rg', rg===false?mkFail('시장 국면'):MKSK); }
     if(sn&&sn.score!=null&&SNTE[sn.label]){
       var sc=SNTC[sn.label]||'var(--muted)', p=sn.prev||{};
       function dl(k,lab){var v=p[k]; return v==null?'':'<span>'+lab+' '+Math.round(v)+'</span>';}
-      h+='<a class="card" href="regime.html#sent" style="--edge:'+sc+'">'+
-        '<div class="ch"><span>시장 심리</span><span>'+esc(sn.as_of||'')+'</span></div>'+
+      h='<div class="card lk" style="--edge:'+sc+'">'+
+        '<div class="ch"><a class="cl" href="regime.html#sent">시장 심리</a><span>'+esc(sn.as_of||'')+'</span></div>'+
         '<div class="cv">'+SNTE[sn.label]+' '+esc(sn.label)+' <span class="tnum">'+Math.round(sn.score)+'</span></div>'+
-        // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다
-        spark((sn.history||[]).map(function(x){return x.score;}),320,38,0,100)+
-        '<div class="barl"><span>'+esc(((sn.history||[])[0]||{}).dt||'')+'</span><span>0~100 · 점선 50</span></div>'+
+        // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다.
+        // ⚠ 자르지 않으면 이력 전량(2,765점 · 11년)이 320px 에 들어가 화소당 8.6점이 된다.
+        //   그건 곡선이 아니라 덩어리라 위 목적이 정확히 무산되고, path 문자열 3만 자를
+        //   renderMarket 이 불릴 때마다 다시 만든다. 옆 국면 띠와 같은 3년으로 맞춘다
+        //   (거래일 750일 ≈ 36개월). 시작 라벨도 **자른 뒤**의 첫 날짜여야 한다 —
+        //   전에는 history[0] 을 그대로 써서, 자르면 그 자리에서 거짓말이 된다.
+        (function(){
+          var hs=(sn.history||[]).slice(-750);
+          return spark(hs.map(function(x){return x.score;}),320,38,0,100)+
+            '<div class="barl"><span>'+esc((hs[0]||{}).dt||'')+'</span>'+
+            '<span>0~100 · 점선 50</span></div>';
+        })()+
         mtbl([p.d1!=null?['전일',Math.round(p.d1)]:null,
               p.w1!=null?['1주 전',Math.round(p.w1)]:null,
               p.m1!=null?['1개월 전',Math.round(p.m1)]:null,
@@ -1060,18 +1220,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              '<p>VIX 수준·기간구조·MOVE를 합성한 <b>상태 요약</b>입니다 — 수익 예측 신호가 아닙니다.</p>'+
              (sn.weight_available!=null&&sn.weight_available<0.999?
                '<p style="color:var(--marg)">일부 지표 결측 — 가중 가용 '+Math.round(sn.weight_available*100)+'%</p>':''))+
-        '</a>';
-    }
+        '</div>';
+      put('sn',h);
+    } else { put('sn', sn===false?mkFail('시장 심리'):MKSK); }
     // ③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'. home_reco.json의 정수 몇 개로 만든다
-    //    (이것 때문에 홈이 stocks.json 392KB를 받게 하지 않는다).
+    //    (이것 때문에 홈이 stocks.json raw 691KB / gz 199KB 를 받게 하지 않는다).
     var b=MK.bd;
     if(b&&b.n){
       // 분모는 n(전체)이 아니라 n_ma200(200일선이 산출되는 종목)이다.
       // 이력이 짧아 200일선이 없는 종목은 '이탈' 플래그가 안 붙을 뿐인데 여집합으로 세면 '위'로 잡힌다.
       var den=b.n_ma200||b.n, pct=Math.round(1000*b.above200/den)/10, f=b.flags||{};
       var wide=pct>=50;
-      h+='<a class="card" href="#s-today" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
-        '<div class="ch"><span>시장 폭</span><span>'+b.n+'종목</span></div>'+
+      h='<div class="card lk" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
+        '<div class="ch"><a class="cl" href="market.html">시장 폭</a><span>'+b.n+'종목</span></div>'+
         '<div class="cv"><span class="tnum">'+pct.toFixed(1)+'%</span> 200일선 위</div>'+
         '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
         '<div class="barl"><span>200일선 위 '+b.above200+'</span><span>아래 '+(den-b.above200)+'</span></div>'+
@@ -1083,20 +1244,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              '<p>지수가 아니라 <b>몇 종목이 어느 상태인가</b>입니다. 소수 대형주가 끌어올린 장세인지 '+
              '여기서 갈립니다.</p>'+(b.n_partial?'<p>이력이 짧아 200일선을 못 내는 '+b.n_partial+
              '종목은 분모에서 뺐습니다.</p>':''))+
-        '<div class="cbadge">오늘의 신호로 ↓</div></a>';
-    }
-    w.innerHTML=h||'<div class="card"><div class="ch"><span>시장 상태를 불러오지 못했습니다</span></div></div>';
+        '<a class="cbadge" href="#s-today">오늘의 신호로 ↓</a></div>';
+      put('bd',h);
+    } else { put('bd', b===false?mkFail('시장 폭'):MKSK); }
   }
   // 국면·심리 렌더는 종목 파이프라인과 독립이다 — 하나가 죽어도 나머지는 뜬다
-  fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(rg){
-    MK.rg=rg; renderMarket(); syncAsof(); staleCheck();
+  getj('regime.json').then(function(rg){
+    MK.rg=rg||false; renderMarket(); syncAsof(); staleCheck();
     if(rg&&rg.as_of){
       var n=(rg.indicators||[]).length, tb=el('tb-reg'); if(n&&tb)tb.textContent='매크로 '+n+'지표';
+      if(n){EB.ind=n; setEyebrow();}
     }
-  }).catch(renderMarket);
-  fetch('data/sentiment.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(sn){
-    MK.sn=sn; renderMarket(); syncAsof(); staleCheck();
-  }).catch(renderMarket);
+  });
+  getj('sentiment.json').then(function(sn){
+    MK.sn=sn||false; renderMarket(); syncAsof(); staleCheck();
+  });
 
 
   // ── 캘린더 ── 실적 발표와 경제지표를 한 판에. 월~금만 그린다(미장 주말은 빈 칸이라 자리만 먹는다).
@@ -1240,9 +1402,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   })();
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
   // 캘린더 이벤트·주목도 정본을 먼저 읽고(없어도 진행) 홈 묶음을 읽는다.
-  fetch('data/events.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;})
-    .then(function(ev){
+  // ⚠ 두 파일은 서로를 참조하지 않는다 — 전에는 events 를 받은 **뒤에야** home_flow 를 요청해
+  //   홈 첫 섹션(캘린더, LCP 유력 후보)이 필요 없는 왕복 하나를 더 기다렸다. events 는
+  //   별·FOMC 만 주는 장식 데이터이고 없으면 없는 대로 그린다(아래 renderCal). 나란히 받는다.
+  Promise.all([getj('events.json'), getj('home_flow.json')])
+    .then(function(a){
+      var ev=a[0];
       if(ev){
         var bn=(ev.stars&&ev.stars.by_name)||{};
         Object.keys(bn).forEach(function(k){MSTAR[nk(k)]=bn[k];});
@@ -1250,7 +1415,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(!f||!f.d)return; CALFOMC.push(f.d); FOMCNM[f.d]=f.name||'FOMC 금리결정';
         });
       }
-      return fetch('data/home_flow.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;});
+      return a[1];
     })
     .then(function(hf){
       var HF=hf||{};
@@ -1347,7 +1512,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     ix.forEach(function(x){h+=stRow(x,'ix');});
     // 짝이 있는 것만 표에 낸다(랩→ETF). 짝 없는 셋(배당성장 SDY·중소형 SIZE·동일가중 RSP)은
     // 표가 17행까지 길어져서 뺐다(사용자 결정 2026-07-29) — macro.html 전체 표에 그대로 있다.
-    //   ⚠ 뺀 사실은 부제에 적는다. 조용히 줄이면 '이게 전부'로 읽힌다.
+    //   ⚠ 이 줄은 원래 '뺀 사실은 부제에 적는다'였다. 그 안내는 2026-07-31 사용자 결정으로
+    //     drawStNote 에서 함께 뺐으므로(길어서) 지금은 부제·각주 어디에도 제외 문구가 없는 것이
+    //     의도된 상태다. 다시 적기로 하면 drawStNote 의 hidden 인자가 그대로 남아 있다.
     //   ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 drawStHold 가 이 배열로
     //     구성종목 줄을 만들므로, 여기서 SIZE 를 지우면 중소형 종목 줄이 경고 없이 사라진다.
     var pair=[], solo=[];
@@ -1454,21 +1621,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
   // (ETF 9행) 그려진다. 이 파일을 만드는 build/style_top_pdf.py --json 은 갱신 잡에 물려
   // 있지만, 하나가 밀렸다고 홈이 깨지면 안 된다.
-  fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;})
-    .then(function(sj){
+  // ⚠ 셋은 서로를 참조하지 않는다(각각 STOP·SLAB·표 원본을 채울 뿐). 전에는 3단 직렬이라
+  //   합쳐 5.3KB 받는 데 4G 에서 왕복 3회를 썼다. '구성종목이 먼저 와야 한 번만 그린다'는
+  //   조건은 Promise.all 이 더 강하게 보장한다 — 셋이 다 온 뒤에 drawStyle 이 한 번 돈다.
+  Promise.all([getj('style_top.json'), getj('style_trails.json'), getj('market_board.json')])
+    .then(function(a){
+      var sj=a[0], tj=a[1];
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
-      return fetch('data/style_trails.json',{cache:'no-cache'})
-        .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
-    })['catch'](function(){return null;})
-    .then(function(tj){
       if(tj&&tj.styles){
         SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
-      return fetch('data/market_board.json',{cache:'no-cache'})
-        .then(function(r){return r.ok?r.json():null;});
-    })['catch'](function(){return null;}).then(drawStyle);
+      return a[2];
+    }).then(drawStyle);
 
   // 행 토글은 없앴다 — 상위 10종목이 항상 펼쳐져 있어 누를 것이 없다(2026-07-29).
 
@@ -1476,9 +1641,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
   //   여기 없는 target은 '기타'로 떨어져 어느 화면 얘기인지 알 수 없게 된다.
 
-  fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){
+  // 폴백은 **데이터를 못 받았을 때만** 탄다. 전에는 catch 가 렌더 뒤에 걸려 있어
+  // renderReco 가 던진 예외(마크업이 한 군데만 어긋나도 난다)까지 폴백을 탔고,
+  // 그러면 stocks.json 199KB(gz)를 받고도 결국 같은 renderReco 를 다시 불러
+  // **화면은 그대로 실패**했다. 렌더 예외는 폴백이 아니라 실패 표시로 보낸다.
+  getj('home_reco.json').then(function(h){
     if(h&&h.buy){renderReco(h);}else{loadFull();}
-  }).catch(loadFull);
+  })['catch'](function(e){ if(window.console&&console.error)console.error(e); stkFail(); });
 })();
 </script>
 </body>
