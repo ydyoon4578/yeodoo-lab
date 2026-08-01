@@ -93,6 +93,7 @@ def main() -> int:
 
     # ── 수집 ──────────────────────────────────────────────────────────
     spx = {}
+    bad_sym = []
     for rows in wiki_rows(WIKI_SPX):
         head = [h.lower() for h in rows[0]]
         if "symbol" in head and any("gics sector" in h for h in head):
@@ -100,7 +101,17 @@ def main() -> int:
             i_s = next(k for k, h in enumerate(head) if "gics sector" in h)
             for r in rows[1:]:
                 if len(r) > max(i_t, i_n, i_s):
-                    spx[norm(r[i_t])] = {"name": r[i_n], "sector": r[i_s]}
+                    # 관문 0: 티커 형식. NDX 쪽에는 처음부터 있었는데 여기엔 없었다 —
+                    # 위키 심볼 셀에 무엇이 들어오든 members.json → stocks.json → 화면까지
+                    # 그대로 흘렀다는 뜻이다. wiki_rows 가 태그를 지운 **뒤** H.unescape 를
+                    # 하므로, 엔티티로 적힌 것은 이 지점에서 태그로 되돌아온다.
+                    # 아래 관문(개수·교차확인·변동)은 503종 중 한 행이 이상해도 전부 통과한다.
+                    # 형식은 여기서만 막을 수 있다.
+                    t = norm(r[i_t])
+                    if not re.fullmatch(r"[A-Z.]{1,6}", t):
+                        bad_sym.append(r[i_t][:40])
+                        continue
+                    spx[t] = {"name": r[i_n], "sector": r[i_s]}
             break
     ndx = {}
     for rows in wiki_rows(WIKI_NDX):
@@ -114,6 +125,13 @@ def main() -> int:
     print("수집 — SPX %d · NDX %d" % (len(spx), len(ndx)))
 
     fail = []
+    # ── 관문 0: 티커 형식 ──
+    # 조용히 버리지 않는다. 원문이 오염됐거나 파싱이 깨진 것인데, 버리고 넘어가면 개수 관문이
+    # 잡아 줄 만큼 크게 틀린 날에만 알려지고 한두 건은 영영 안 보인다.
+    if bad_sym:
+        fail.append("SPX 심볼 형식 위반 %d건: %s — 추측으로 고치지 않는다"
+                    % (len(bad_sym), ", ".join(bad_sym[:5])))
+
     # ── 관문 2: 개수 ──
     if not (LIM_SPX[0] <= len(spx) <= LIM_SPX[1]):
         fail.append("SPX 개수 %d — 정상 범위 %s 밖(파싱이 깨졌을 가능성)" % (len(spx), LIM_SPX))
