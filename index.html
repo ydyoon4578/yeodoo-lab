@@ -298,6 +298,13 @@
   .sttbl tr.hold>td{padding:2px 11px 7px 24px;border-top:0;text-align:left;white-space:normal;
        background:var(--panel-2)}
   .sttbl tr.hold:hover>*{background:var(--panel-2)}
+  /* 섹터 → 산업 트리(#mktbl). 부모 줄은 굵게, 자식 줄은 들여쓰고 톤을 낮춰 한눈에 층이 보이게.
+     ⚠ 자식이 없는 섹터도 이름 시작 위치가 같아야 한다 — 버튼 자리를 빈 span 으로 채운다.
+       안 그러면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다. */
+  .sttbl tr.secr>th{font-weight:700}
+  .sttbl tr.subr>th{padding-left:30px;font-weight:400;color:var(--muted)}
+  .sttbl tr.subr>td{color:color-mix(in srgb,currentColor 80%,transparent)}
+  .sttbl tr.subr>th small{margin-left:6px}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
   /* 구성종목 — 이제 표 **안의 접힌 행**이다(사용자 요청 2026-08-02).
@@ -1350,58 +1357,83 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   한쪽만 고치면 같은 열이 다른 날을 가리키고, 표는 멀쩡해 보인다.
   function drawMkTbl(){
     var box=el('mktbl'); if(!box)return;
-    var mb=MK.mb, ivr=MK.iv, iv=Array.isArray(ivr)?ivr:((ivr&&ivr.rows)||null);
-    var sec=(mb&&mb.sector)||null;
-    if(!sec&&!iv){
-      if(mb===false&&ivr===false)box.innerHTML='<tbody><tr><td class="skel2">섹터·산업을 불러오지 못했습니다.</td></tr></tbody>';
+    var ivr=MK.iv, D=(ivr&&!Array.isArray(ivr))?ivr:null;
+    var secs=D&&D.sectors, kids=D&&D.rows;
+    if(!secs||!secs.length){
+      if(ivr===false)box.innerHTML='<tbody><tr><td class="skel2">섹터·산업을 불러오지 못했습니다.</td></tr></tbody>';
       return;
     }
+    var mb=MK.mb, etf={};
+    if(mb&&mb.sector)mb.sector.forEach(function(x){etf[x.t]=x;});
+    var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
+    var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
     var ncol=ST_HZ.length+1;
-    var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
-          '</tr></thead><tbody>';
-    // 두 묶음 다 1개월 내림차순. 카드였을 때와 같은 순서라 눈이 옮겨 가도 헷갈리지 않는다.
     function bym(a,b2){var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
       return (y==null?-1e9:y)-(x==null?-1e9:x);}
-    function row(nm,sub,r,tip){
-      return '<tr><th scope="row"'+(tip?' title="'+esc(tip)+'"':'')+'>'+esc(nm)+
-        '<small>'+esc(sub)+'</small></th>'+
-        ST_HZ.map(function(z){return stCell((r||{})[z[0]]);}).join('')+'</tr>';
+    // 첫 칸 툴팁 — 표에 열로 세우면 수익률 7칸과 섞여 무엇이 수익률인지 안 보인다.
+    function tip(x,isSec){
+      var t=[x.n+'종'];
+      if(isSec&&etf[x.sec]&&(etf[x.sec].r||{})['1M']!=null)
+        t.push('섹터 ETF('+x.sec+') 1개월 '+((etf[x.sec].r['1M']>0?'+':'')+etf[x.sec].r['1M'].toFixed(2))+
+               '% — 시총가중이라 이 줄(동일가중)과 다르다');
+      t.push(x.pe==null?'PER — 흑자 표본 부족':
+        ('PER 중앙 '+x.pe+' (흑자 '+x.n_pe+'/'+x.n+'종)'+
+         (imk&&imk.pe?' · 시장 대비 '+(x.pe/imk.pe).toFixed(2)+'배':'')));
+      if(x.pb!=null)t.push('PBR 중앙 '+x.pb);
+      if(x.n_ma200)t.push('200일선 위 '+x.above+'/'+x.n_ma200+'종 ('+
+        (100*x.above/x.n_ma200).toFixed(0)+'%)');
+      if(rgn&&x.rg&&x.rg[rgk]!=null)
+        t.push((RGKO[rgk]||rgk)+' 국면 월평균 '+(x.rg[rgk]>0?'+':'')+x.rg[rgk].toFixed(2)+'% ('+rgn+'개월)');
+      return t.join('\n');
     }
-    if(sec&&sec.length){
-      var sb=(MK.bd&&MK.bd.sector)||{};
-      h+='<tr class="grp"><th colspan="'+ncol+'">섹터 '+sec.length+'개 <em>SPDR 섹터 ETF · '+
-         '실제 상품의 수익률 · 1개월 내림차순'+(mb.as_of?' · 기준 '+esc(mb.as_of):'')+'</em></th></tr>';
-      sec.slice().sort(bym).forEach(function(x){
-        var w=sb[x.t], pct=(w&&w.n)?(100*w.above/w.n):null;
-        h+=row(x.n, x.t, x.r, pct==null?'':'200일선 위 '+w.above+'/'+w.n+'종 ('+pct.toFixed(0)+'%)');
+    function cells(r){return ST_HZ.map(function(z){return stCell((r||{})[z[0]]);}).join('');}
+    var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
+          '</tr></thead><tbody>';
+    h+='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
+       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 그 섹터의 산업(SIC 대분류)이 펼쳐집니다 · '+
+       '이름에 마우스를 올리면 종목수·섹터ETF·PER·폭'+(rgn?'·국면별 성과':'')+
+       (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
+    secs.slice().sort(bym).forEach(function(x){
+      var ks=kids.filter(function(k){return k.sec===x.sec;}).sort(function(a,b2){
+        // '그 밖'은 산업이 아니라 나머지라 언제나 맨 끝에 둔다.
+        if((a.sic==null)!==(b2.sic==null))return a.sic==null?1:-1;
+        return bym(a,b2);
       });
-    }
-    if(iv&&iv.length){
-      var imk=(ivr&&!Array.isArray(ivr)&&ivr.mkt)||null;
-      var rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
-      var rgn=(ivr&&ivr.regime_n&&rgk)?ivr.regime_n[rgk]:null;
-      h+='<tr class="grp"><th colspan="'+ncol+'">산업 '+iv.length+'개 <em>SEC 부여 SIC 대분류 · '+
-         '유니버스 종목 <b>동일가중</b> · 5종 이상만 · 1개월 내림차순'+
-         (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+
-         ' · 이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+'</em></th></tr>';
-      iv.slice().sort(bym).forEach(function(x){
-        // 카드에서 보여 주던 것(종목수·PER·폭·국면별)을 버리지 않고 첫 칸 툴팁으로 옮긴다.
-        var pct=x.n_ma200?(100*x.above/x.n_ma200):null;
-        var rel=(x.pe!=null&&imk&&imk.pe)?(x.pe/imk.pe):null;
-        var t=[x.n+'종'];
-        t.push(x.pe==null?'PER — 흑자 표본 부족':
-          ('PER 중앙 '+x.pe+' (흑자 '+x.n_pe+'/'+x.n+'종)'+(rel?' · 시장 대비 '+rel.toFixed(2)+'배':'')));
-        if(x.pb!=null)t.push('PBR 중앙 '+x.pb);
-        if(pct!=null)t.push('200일선 위 '+x.above+'/'+x.n_ma200+'종 ('+pct.toFixed(0)+'%)');
-        if(rgn&&x.rg&&x.rg[rgk]!=null)
-          t.push((RGKO[rgk]||rgk)+' 국면 월평균 '+(x.rg[rgk]>0?'+':'')+x.rg[rgk].toFixed(2)+'% ('+rgn+'개월)');
-        h+=row(x.nm,'SIC '+x.sic,x.r,t.join('\n'));
+      var id='mk-'+x.sec;
+      h+='<tr class="secr"><th scope="row" title="'+esc(tip(x,true))+'">'+
+         (ks.length?('<button type="button" class="htg" data-hold="'+id+'" aria-expanded="false" '+
+           'aria-controls="'+id+'" title="'+esc(x.nm+' 하위 산업 '+ks.length+'개 펼치기')+'">▸</button>'):
+           '<span class="htg" aria-hidden="true"> </span>')+
+         esc(x.nm)+'<small>'+esc(x.sec)+'</small></th>'+cells(x.r)+'</tr>';
+      ks.forEach(function(k,i){
+        h+='<tr class="subr" id="'+id+(i?'-'+i:'')+'" data-grp="'+id+'" hidden>'+
+           '<th scope="row" title="'+esc(tip(k,false))+'">'+esc(k.nm)+
+           '<small>'+esc(k.sic?'SIC '+k.sic:x.nm+' 나머지')+' · '+k.n+'종</small></th>'+
+           cells(k.r)+'</tr>';
       });
-    }
+    });
     box.innerHTML=h+'</tbody>';
+    // 한 섹터의 하위 줄은 여러 <tr> 이라 id 하나로 못 묶는다 — data-grp 로 모아 접고 편다.
+    if(!box.__htg){
+      box.__htg=1;
+      box.addEventListener('click',function(e){
+        var b2=e.target&&e.target.closest?e.target.closest('button.htg'):null;
+        if(!b2)return;
+        var g=b2.getAttribute('data-hold');
+        var rs=box.querySelectorAll('tr.subr[data-grp="'+g+'"]');
+        if(!rs.length)return;
+        var open=rs[0].hasAttribute('hidden');
+        for(var i=0;i<rs.length;i++){
+          if(open)rs[i].removeAttribute('hidden'); else rs[i].setAttribute('hidden','');
+        }
+        b2.setAttribute('aria-expanded',open?'true':'false');
+        b2.textContent=open?'▾':'▸';
+      });
+    }
     var s2=el('mkt-sub');
-    if(s2)s2.textContent='· 기간별 수익률 % · 섹터 '+((sec&&sec.length)||0)+' + 산업 '+((iv&&iv.length)||0)+'개';
+    if(s2)s2.textContent='· 기간별 수익률 % · 섹터 '+secs.length+'개 · 하위 산업 '+kids.length+'개';
   }
+
   // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
   // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
   // 두 원본의 가장 큰 덩어리가 홈에서 안 쓰였다: sentiment.history 2,765점 중 그리는 건 750점,
