@@ -99,6 +99,12 @@
        이 카드가 답하려는 질문이라서다 — **오른 섹터가 넓게 오른 것인가.** */
   .secrow{display:grid;grid-template-columns:52px 52px 1fr 34px;align-items:center;gap:7px;
        padding:2px 0;font-size:11px}
+  /* 산업 줄은 PER 한 칸이 더 붙는다(사용자 요청 2026-08-02). 이름을 4px 줄이고 간격을
+     6px 로 좁혀 막대가 70px 아래로 내려가지 않게 한다 — 더 좁아지면 막대가 눈금을 잃는다. */
+  .secrow.v5{grid-template-columns:48px 44px 40px 1fr 30px;gap:6px}
+  .secrow .sv{font-family:var(--mono);text-align:right;color:var(--ink-2);
+       font-variant-numeric:tabular-nums}
+  .secrow .sv.hi{color:var(--marg)} .secrow .sv.lo{color:var(--champ)}
   .secrow+.secrow{border-top:1px dotted var(--line-soft)}
   .secrow .sn{color:var(--ink-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .secrow .sr{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
@@ -1346,7 +1352,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //    (기준일이 실제로 같은지는 build/home_summary.py 가 market_board 규칙을 따라 맞춘다).
     //    ⚠ 27줄을 다 세우면 카드가 옆 카드의 두 배가 된다. 위아래 5개씩만 내고 나머지는 접는다 —
     //      가운데는 대개 시장 평균 근처라 '어디가 끌고 어디가 끄는가'는 양 끝에서 갈린다.
-    var iv=MK.iv;
+    // ⚠ 모양이 배열에서 {mkt, rows} 로 바뀌었다(밸류에이션을 더하면서). 옛 파일이
+    //   캐시에 남아 있을 수 있으므로 둘 다 받는다 — 이 사이트는 데이터 JSON 이 index.html 과
+    //   **따로** 캐시된다(각각 max-age 600). 실제로 새 화면 + 옛 데이터 조합이 뜬 적이 있다.
+    var ivr=MK.iv, iv=Array.isArray(ivr)?ivr:((ivr&&ivr.rows)||null);
+    var imk=(ivr&&!Array.isArray(ivr)&&ivr.mkt)||null;
     if(iv&&iv.length){
       var top=iv.slice(0,5), bot=iv.slice(-5), mid=iv.slice(5,-5);
       var ihi=(iv[0].r||{})['1M'], ilo=(iv[iv.length-1].r||{})['1M'];
@@ -1355,9 +1365,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var v=(x.r||{})['1M'];
         var pct=x.n_ma200?(100*x.above/x.n_ma200):null;
         var c=pct==null?'var(--muted)':(pct>=50?'var(--deploy)':'var(--hot)');
-        return '<div class="secrow"><span class="sn" title="'+esc('SIC '+x.sic+' · '+x.n+'종')+'">'+
+        // PER 은 **시장 중앙값 대비**로 색을 준다. 레벨만으로는 싸고 비싼 것을 말할 수 없다
+        // (은행 13.8 · 전자 42.2 는 업종 구조다) — 눈금이 되는 것은 배수다.
+        var rel=(x.pe!=null&&imk&&imk.pe)?(x.pe/imk.pe):null;
+        var vc=rel==null?'':(rel>=1.2?' hi':(rel<=0.8?' lo':''));
+        var vt=x.pe==null?('PER 산출 불가 — 흑자 종목 '+(x.n_pe||0)+'종'):
+          ('PER 중앙 '+x.pe+' (흑자 '+x.n_pe+'/'+x.n+'종)'+
+           (rel?' · 시장 대비 '+rel.toFixed(2)+'배':'')+
+           (x.pb!=null?'\nPBR 중앙 '+x.pb+' ('+x.n_pb+'종)':'\nPBR — 표본 부족'));
+        return '<div class="secrow v5"><span class="sn" title="'+esc('SIC '+x.sic+' · '+x.n+'종')+'">'+
           esc(x.nm)+'</span><span class="sr '+(v>0.005?'up':(v<-0.005?'dn':'z'))+'">'+
           (v==null?'—':(v>0?'+':'')+v.toFixed(1))+'</span>'+
+          '<span class="sv'+vc+'" title="'+esc(vt)+'">'+(x.pe==null?'—':x.pe.toFixed(0))+'</span>'+
           '<span class="sb" title="'+(pct==null?'폭 자료 없음':'200일선 위 '+x.above+'/'+x.n_ma200+'종')+
           '"><i style="--c:'+c+';width:'+(pct==null?0:pct.toFixed(0))+'%"></i></span>'+
           '<span class="sp">'+(pct==null?'—':pct.toFixed(0)+'%')+'</span></div>';
@@ -1366,15 +1385,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div class="ch"><a class="cl" href="industry.html">산업</a><span>'+esc(MK.ivd||'')+'</span></div>'+
         '<div class="cv">'+(igap==null?'—':'<span class="tnum">'+igap.toFixed(1)+'</span>%p')+' 격차</div>'+
         '<div class="barl"><span>1개월 최고−최저</span><span>'+iv.length+'개 산업</span></div>'+
-        '<div style="margin-top:8px">'+top.map(irow).join('')+'</div>'+
+        // 열 이름을 한 줄 깐다 — 숫자가 셋이 되면서 무엇이 무엇인지 짐작에 맡길 수 없다.
+        '<div class="secrow v5" style="margin-top:8px;color:var(--muted);font-size:9.5px;'+
+        'border-bottom:1px solid var(--line-soft);padding-bottom:3px">'+
+        '<span>산업</span><span class="sr">1개월</span><span class="sv">PER</span>'+
+        '<span style="text-align:center">200일선 위</span><span class="sp"></span></div>'+
+        '<div>'+top.map(irow).join('')+'</div>'+
         (mid.length?fold('가운데 '+mid.length+'개 더 보기','<div>'+mid.map(irow).join('')+'</div>'):'')+
         '<div>'+bot.map(irow).join('')+'</div>'+
-        fold('산업은 무엇으로 나눴나',
+        (imk&&imk.pe?('<div class="barl" style="margin-top:6px"><span>시장 중앙 PER '+
+          imk.pe.toFixed(1)+'</span><span>PBR '+(imk.pb!=null?imk.pb.toFixed(2):'—')+'</span></div>'):'')+
+        fold('산업은 무엇으로 나눴고 PER 은 어떻게 읽나',
              '<p>SEC 가 회사에 부여한 <b>SIC 대분류(2자리)</b>입니다. 랩의 분류가 아닙니다.</p>'+
              '<p>4자리로 쪼개면 183그룹인데 83그룹이 1종목이라 ‘산업 평균’이 성립하지 않습니다. '+
              '2자리로 묶어 <b>5종 이상</b>인 '+iv.length+'개만 싣습니다 — 유니버스의 87%입니다.</p>'+
-             '<p>왼쪽은 그 산업 종목들의 <b>동일가중 1개월 수익률</b>, 막대는 200일선 위 비율입니다. '+
-             '기간 기준일은 위 섹터 카드와 같습니다.</p>')+
+             '<p>왼쪽은 <b>동일가중 1개월 수익률</b>, 막대는 200일선 위 비율입니다. '+
+             '기간 기준일은 위 섹터 카드와 같습니다.</p>'+
+             '<p>PER 은 그 산업 <b>흑자 종목의 중앙값</b>입니다(적자는 제외 — 뜻이 흐려집니다). '+
+             '⚠ <b>레벨을 산업끼리 비교하지 마세요.</b> 은행 13.8 과 전자·전기 42.2 는 싸고 비싼 것이 '+
+             '아니라 업종 구조입니다. 색은 시장 중앙값 대비 ±20%를 넘을 때만 붙였고, 그것이 이 '+
+             '카드가 줄 수 있는 유일한 눈금입니다 — 자기 이력 대비 백분위를 내려면 과거 스냅샷이 '+
+             '필요한데 아직 한 달치뿐입니다.</p>')+
         '</div>';
       put('in',h);
     } else { put('in', iv===false?mkFail('산업'):MKSK); }
