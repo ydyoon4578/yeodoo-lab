@@ -482,7 +482,6 @@ def main() -> int:
         "div": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-high-dividend-index/",
         "buyback": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-buyback-index/",
         "fcfy": "https://www.paceretfs.com/products/cowz",
-        "garp": "https://www.spglobal.com/spdji/en/indices/strategy-indices/sp-500-garp-index/",
         "divlv": "https://www.spglobal.com/spdji/en/documents/methodologies/"
                  "methodology-sp-low-volatility-high-dividend-indices.pdf",
         "netbuy": "https://indexes.nasdaq.com/docs/Methodology_DRB.pdf",
@@ -496,8 +495,6 @@ def main() -> int:
         "fcfy": "정본의 분모는 **기업가치(EV)** 인데 여기서는 시가총액을 쓴다 — data/fx 에 "
                 "순부채를 만들 태그가 없다(liab 는 매입채무까지 포함한 부채총계다). "
                 "금융·부동산 제외는 정본과 같다.",
-        "garp": "정본은 성장 상위 150종을 거른 뒤 QV 상위 75종이다. 여기서는 유니버스가 518종이고 "
-                "재무 결측으로 채점 가능 종목이 달마다 달라, 개수 대신 **비율(상위 30%)** 로 옮겼다.",
         "divlv": "정본은 배당수익률 상위 **75종** 을 거른 뒤 저변동 50종이다. 여기서는 채점 가능 "
                  "종목이 달마다 달라 개수 대신 **비율(상위 15%)** 로 옮겼다.",
         "netbuy": "정본은 '순감소 5% 이상'을 **자격**으로 두고 시총가중한다. 여기서는 상위 10종목을 "
