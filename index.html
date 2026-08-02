@@ -1752,9 +1752,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(v==null||v!==v)return '<td class="shp z">—</td>';
     return '<td class="shp">'+v.toFixed(2)+'</td>';
   }
+  // 지수 줄에 붙는 한 줄 설명. **다우는 가격가중**이라 나머지 셋(시총가중)과 성격이 다르다 —
+  // 같은 열에 서지만 같은 잣대는 아니라는 것을 여기서 말한다.
+  var IXNOTE={SPY:'S&P 500 · 시총가중 500종',QQQ:'NASDAQ 100 · 시총가중 100종',
+              DIA:'다우존스 산업평균 30종 · **가격가중** — 주가가 높은 종목이 더 크게 움직인다. '+
+                  '시총가중인 나머지 셋과 같은 잣대가 아니다.',
+              IWM:'러셀 2000 · 시총가중 소형주 2000종'};
   function stRow(x,cls,sh){
+    var nt=IXNOTE[x.t];
     return '<tr'+(cls?' class="'+cls+'"':'')+
-      '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+
+      '><th scope="row"'+(nt?' title="'+esc(nt.replace(/\*\*/g,''))+'"':'')+'>'+
+      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지

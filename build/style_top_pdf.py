@@ -1756,7 +1756,8 @@ def dump_json(P, res, detail):
     #   이 표의 존재 이유가 비교라 그것만은 막아야 한다 — 그래서 market_board.py 가 아니라
     #   백테스트와 같은 자리에서, 같은 start·end 로 잰다.
     doc["etf_sharpe"] = {}
-    for _tk in ("SPY", "QQQ", "MTUM", "QUAL", "IVE", "USMV", "RPG", "SPHB"):
+    # DIA·IWM 은 2026-08-03 에 홈 지수 줄에 더해지면서 함께 잰다(같은 창·같은 metrics).
+    for _tk in ("SPY", "QQQ", "DIA", "IWM", "MTUM", "QUAL", "IVE", "USMV", "RPG", "SPHB"):
         _nv = bench_nav(P, P._align(P.A, _tk), R0["start"], R0["end"])
         if _nv is None:
             continue
