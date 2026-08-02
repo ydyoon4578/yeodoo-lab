@@ -57,7 +57,7 @@ SECTOR = [("XLK", "IT"), ("XLF", "금융"), ("XLV", "헬스케어"), ("XLY", "�
 #   같은 잣대는 아니고, 그 사실은 화면 툴팁이 말한다(index.html 의 IXNOTE).
 # ⚠ IWM 은 style 목록에도 있다. 거기서는 ST_SKIP 이 걸러 왔고 지금도 그대로다 —
 #   같은 티커가 한 표에 두 번 서지 않게.
-INDEX = [("SPY", "S&P 500"), ("QQQ", "NASDAQ 100"),
+INDEX = [("SPY", "S&P 500"), ("QQQ", "나스닥 100"),
          ("DIA", "다우존스 30"), ("IWM", "러셀 2000")]
 # 스타일 — assets 패널에 있는 팩터 ETF. SPY는 '기준선'으로 같이 낸다(초과를 눈으로 재게).
 #   가치는 IVE(iShares S&P 500 Value)다. 전에는 VLUE(MSCI USA Enhanced Value)였는데 옆줄
