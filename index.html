@@ -93,6 +93,20 @@
      높이가 맞던 성질이 카드에서 래퍼로 옮겨가므로 여기서 되돌려 준다. */
   .mkgrid>.mkslot{display:flex;flex-direction:column}
   .mkgrid>.mkslot>.card{flex:1}
+  /* 섹터 줄 — 이름 · 1개월 수익률 · 폭 막대. 한 카드에 11줄이 들어가야 하므로 행 높이를
+     최소로 두고, 숫자는 등폭·고정폭으로 잡아 세로로 자릿수가 맞게 한다.
+     ⚠ 막대는 '200일선 위 비율'이지 수익률이 아니다. 둘을 한 줄에 두는 이유는 그것이
+       이 카드가 답하려는 질문이라서다 — **오른 섹터가 넓게 오른 것인가.** */
+  .secrow{display:grid;grid-template-columns:52px 52px 1fr 34px;align-items:center;gap:7px;
+       padding:2px 0;font-size:11px}
+  .secrow+.secrow{border-top:1px dotted var(--line-soft)}
+  .secrow .sn{color:var(--ink-2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .secrow .sr{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+  .secrow .sr.up{color:var(--deploy)} .secrow .sr.dn{color:var(--hot)} .secrow .sr.z{color:var(--muted)}
+  .secrow .sb{height:7px;border-radius:4px;background:color-mix(in srgb,var(--muted) 20%,transparent);
+       overflow:hidden}
+  .secrow .sb>i{display:block;height:100%;border-radius:4px;background:var(--c,var(--muted))}
+  .secrow .sp{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-align:right}
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
@@ -1090,7 +1104,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             EASY:'완화',NEUTRAL:'중립',ELEVATED:'경계',STRESSED:'경색'};
   var SNTC={'극단공포':'var(--sn-xfear)','공포':'var(--sn-fear)','중립':'var(--sn-neut)','탐욕':'var(--sn-greed)','극단탐욕':'var(--sn-xgreed)'};
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
-  var MK={rg:null,sn:null,main:null,bd:null};
+  // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
+  // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
+  var MK={rg:null,sn:null,main:null,bd:null,mb:null};
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1202,8 +1218,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function renderMarket(){
     var w=el('marketcards'); if(!w)return;
     if(!w.getAttribute('data-slots')){
+      // 다섯 칸 — 앞 셋은 시장 전체의 상태(국면·심리·폭)이고, 뒤 둘은 **그 시장을 쪼갠 것**
+      // 이다(사용자 요청 2026-08-02 "시장을 좀 더 세분화해서 보고싶어").
+      //   sc 섹터   어디가 움직였나 · 그 움직임이 넓은가
+      //   rk 위험선호 돈이 위험 쪽으로 갔나 · 금리 곡선은 어디에 있나
+      // 둘 다 **추가 요청이 0회**다 — market_board.json 은 위 스타일 표가 이미 받고 있고
+      // 그 안의 sector·credit·rates 를 여태 아무도 안 쓰고 있었다(5KB 중 절반).
       w.innerHTML='<div class="mkslot" data-k="rg"></div><div class="mkslot" data-k="sn"></div>'+
-                  '<div class="mkslot" data-k="bd"></div>';
+                  '<div class="mkslot" data-k="bd"></div><div class="mkslot" data-k="sc"></div>'+
+                  '<div class="mkslot" data-k="rk"></div>';
       w.setAttribute('data-slots','1');
     }
     function put(k,html){
@@ -1283,6 +1306,72 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<a class="cbadge" href="#s-today">오늘의 신호로 ↓</a></div>';
       put('bd',h);
     } else { put('bd', b===false?mkFail('시장 폭'):MKSK); }
+    // ④ 섹터 — 지수 한 줄이 감추는 것을 쪼개 본다. **수익률과 폭을 같은 줄에** 둔다:
+    //    오른 섹터가 넓게 오른 것인지(대형주 몇 개가 끈 것인지) 한 줄에서 갈린다.
+    //    머리 숫자는 1개월 최고−최저 격차다 — 시장이 한 방향인지 갈리는지를 한 수로 말한다.
+    var mb=MK.mb;
+    if(mb&&mb.sector&&mb.sector.length){
+      var sec=mb.sector.slice().sort(function(a,b2){return (b2.r||{})['1M']-(a.r||{})['1M'];});
+      var sb=(MK.bd&&MK.bd.sector)||{};
+      var hi=(sec[0].r||{})['1M'], lo=(sec[sec.length-1].r||{})['1M'];
+      var gap=(hi!=null&&lo!=null)?(hi-lo):null;
+      h='<div class="card lk" style="--edge:var(--champ)">'+
+        '<div class="ch"><a class="cl" href="sector.html">섹터</a><span>'+esc(mb.as_of||'')+'</span></div>'+
+        '<div class="cv">'+(gap==null?'—':'<span class="tnum">'+gap.toFixed(1)+'</span>%p')+' 격차</div>'+
+        '<div class="barl"><span>1개월 최고−최저</span><span>'+sec.length+'개 섹터</span></div>'+
+        '<div style="margin-top:8px">'+sec.map(function(x){
+          var v=(x.r||{})['1M'], w2=sb[x.t];
+          // 폭을 못 받았으면(home_reco 가 늦으면) 막대만 비운다 — 수익률 줄은 그대로 산다.
+          var pct=(w2&&w2.n)?(100*w2.above/w2.n):null;
+          var c=pct==null?'var(--muted)':(pct>=50?'var(--deploy)':'var(--hot)');
+          return '<div class="secrow"><span class="sn" title="'+esc(x.t)+'">'+esc(x.n)+'</span>'+
+            '<span class="sr '+(v>0.005?'up':(v<-0.005?'dn':'z'))+'">'+
+            (v==null?'—':(v>0?'+':'')+v.toFixed(1))+'</span>'+
+            '<span class="sb" title="'+(pct==null?'폭 자료 없음':
+              '200일선 위 '+w2.above+'/'+w2.n+'종')+'"><i style="--c:'+c+';width:'+
+            (pct==null?0:pct.toFixed(0))+'%"></i></span>'+
+            '<span class="sp">'+(pct==null?'—':pct.toFixed(0)+'%')+'</span></div>';
+        }).join('')+'</div>'+
+        fold('이 카드를 어떻게 읽나',
+             '<p>왼쪽은 <b>1개월 수익률</b>, 막대는 그 섹터에서 <b>200일선 위 종목 비율</b>입니다. '+
+             '올랐는데 막대가 짧으면 소수 종목이 끈 상승입니다.</p>'+
+             '<p>격차는 최고·최저 섹터의 1개월 수익률 차이입니다 — 클수록 시장이 한 방향이 아닙니다.</p>')+
+        '</div>';
+      put('sc',h);
+    } else { put('sc', mb===false?mkFail('섹터'):MKSK); }
+    // ⑤ 위험선호 — 주식 안에서만 보면 놓치는 축. 같은 하루에 하이일드가 투자등급을 이기면
+    //    돈이 위험 쪽으로 간 것이고, 금리 곡선은 그 배경을 말한다.
+    //    ⚠ 머리 숫자는 하이일드−투자등급이다. 두 채권의 **금리 민감도가 다르다**(LQD 듀레이션이
+    //      길다) — 금리가 내리면 LQD 가 더 오르므로 이 차이는 순수한 신용 스프레드가 아니다.
+    //      그 사실을 fold 에 적는다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아니다.
+    if(mb&&mb.credit&&mb.credit.length){
+      var cm={}; mb.credit.forEach(function(x){cm[x.t]=x;});
+      var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
+      var sp=(hy!=null&&ig!=null)?(hy-ig):null;
+      var rt=mb.rates||{}, cv=rt.curve||{}, tn=rt.tenor||[];
+      var t10=null; tn.forEach(function(x){if(x.t==='DGS10')t10=x;});
+      h='<div class="card lk" style="--edge:'+(sp==null?'var(--muted)':(sp>=0?'var(--deploy)':'var(--hot)'))+'">'+
+        '<div class="ch"><a class="cl" href="macro.html">위험선호</a><span>'+esc(mb.as_of||'')+'</span></div>'+
+        '<div class="cv">'+(sp==null?'—':(sp>0?'+':'')+'<span class="tnum">'+sp.toFixed(2)+'</span>%p')+
+        ' '+(sp==null?'':(sp>=0?'위험선호':'위험회피'))+'</div>'+
+        '<div class="barl"><span>하이일드 − 투자등급</span><span>1개월</span></div>'+
+        mtbl(mb.credit.map(function(x){
+          var v=(x.r||{})['1M'];
+          return [esc(x.n), (v==null?'—':(v>0?'+':'')+v.toFixed(2)+'%')];
+        }))+
+        (tn.length?('<div class="barl" style="margin-top:9px"><span>국채 금리</span><span>'+
+          esc(rt.as_of||'')+'</span></div>'+
+          mtbl([t10?['10년', t10.lv.toFixed(2)+'%']:null,
+                cv.s10_2!=null?['곡선 10년−2년', (cv.s10_2>0?'+':'')+cv.s10_2+'bp']:null,
+                cv.s10_3m!=null?['곡선 10년−3개월', (cv.s10_3m>0?'+':'')+cv.s10_3m+'bp']:null])):'')+
+        fold('이 숫자를 어떻게 읽나',
+             '<p>하이일드가 투자등급을 이기면 돈이 위험 쪽으로 간 것입니다. 다만 두 채권은 '+
+             '<b>금리 민감도가 다릅니다</b> — 투자등급(LQD)이 듀레이션이 길어 금리가 내리면 '+
+             '더 오릅니다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아닙니다.</p>'+
+             '<p>곡선이 음수면 장기금리가 단기보다 낮은 <b>역전</b>입니다.</p>')+
+        '</div>';
+      put('rk',h);
+    } else { put('rk', mb===false?mkFail('위험선호'):MKSK); }
   }
   // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
   // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
@@ -1755,6 +1844,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               _etf:tj.etf_sharpe||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
+      // 같은 파일이 위 스타일 표와 아래 섹터·위험선호 카드를 함께 먹인다 — 요청은 한 번이다.
+      // ⚠ 못 받았을 때도 renderMarket 을 부른다. 그래야 그 두 칸이 '불러오는 중…' 으로
+      //   영원히 남지 않고 실패 표시로 바뀐다(MKSK ↔ mkFail 판정이 null/false 로 갈린다).
+      MK.mb=a[2]||false; renderMarket();
       return a[2];
     }).then(drawStyle);
 

@@ -68,11 +68,31 @@ def _breadth(stocks):
     # 오늘 기준 4종목(Q·FDXF·HONA·SPCX) 차이지만 신규 상장이 몰리면 커진다.
     full = [s for s in stocks if not s.get("part")]
     below_full = sum(1 for s in full if "200일이탈" in (s.get("flags") or []))
+    # ── 섹터별 폭 ── 전체 한 숫자로는 '어디가 강한가'를 못 본다(사용자 요청 2026-08-02
+    #   "시장을 좀 더 세분화해서 보고싶어"). 같은 분모 규칙(part 제외)을 섹터 안에서 다시 적용한다.
+    # ⚠ 키를 **섹터 ETF 티커**로 둔다. 홈이 market_board.json 의 sector 행과 짝지어 그리는데,
+    #   한글 이름으로 키를 잡으면 그쪽 표기가 바뀌는 날 조인이 조용히 끊긴다. 티커는 안 바뀐다.
+    #   market.html 도 같은 폭을 stocks.json 에서 직접 세지만(그 화면은 원본을 받는다) 분모
+    #   규칙이 같아야 두 화면의 숫자가 일치한다 — 여기서 규칙을 바꾸면 그쪽도 볼 것.
+    SEC_ETF = {"Information Technology": "XLK", "Financials": "XLF", "Health Care": "XLV",
+               "Consumer Discretionary": "XLY", "Communication Services": "XLC",
+               "Industrials": "XLI", "Consumer Staples": "XLP", "Energy": "XLE",
+               "Utilities": "XLU", "Real Estate": "XLRE", "Materials": "XLB"}
+    sec = {}
+    for s in full:
+        tk = SEC_ETF.get(s.get("sector") or "")
+        if not tk:
+            continue                              # 미분류는 섹터 카드에 세지 않는다
+        d = sec.setdefault(tk, {"n": 0, "above": 0})
+        d["n"] += 1
+        if "200일이탈" not in (s.get("flags") or []):
+            d["above"] += 1
     return {
         "n": n,
         "n_ma200": len(full),                     # 200일선이 산출되는 종목 수(비율의 분모)
         "n_partial": n - len(full),               # 이력이 짧아 판정 불가
         "above200": len(full) - below_full,
+        "sector": sec,                            # {섹터ETF: {n, above}} — 홈 폭 카드가 쪼개 그린다
         "flags": dict(sorted(fl.items(), key=lambda kv: -kv[1])),
         "timing": tm,
     }
