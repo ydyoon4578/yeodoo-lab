@@ -1626,7 +1626,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (bdg?'<em>'+bdg+'</em>':'')+'</div>'+
           (function(){var q=(CAL.i||{})[k]; if(!q)return '';
             var f=function(lab,v){return v==null?'':'<span><b>'+lab+'</b><i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i></span>';};
-            return '<div class="calix">'+f('S&amp;P 500',q.s)+f('NASDAQ 100',q.n)+'</div>';})()+
+            return '<div class="calix">'+f('S&amp;P 500',q.s)+f('나스닥 100',q.n)+'</div>';})()+
           // 발표 시각별로 줄을 나눈다 — 색만 다르고 한 줄에 섞여 있으면 '장 끝나고 나오는
           // 것'과 '시각을 모르는 것'이 눈으로 안 갈린다. 남는 개수도 줄마다 따로 적는다
           // (한 덩어리로 '+37'만 적으면 어느 시각이 잘렸는지 알 수 없다).
@@ -1754,7 +1754,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // 지수 줄에 붙는 한 줄 설명. **다우는 가격가중**이라 나머지 셋(시총가중)과 성격이 다르다 —
   // 같은 열에 서지만 같은 잣대는 아니라는 것을 여기서 말한다.
-  var IXNOTE={SPY:'S&P 500 · 시총가중 500종',QQQ:'NASDAQ 100 · 시총가중 100종',
+  var IXNOTE={SPY:'S&P 500 · 시총가중 500종',QQQ:'나스닥 100 · 시총가중 100종',
               DIA:'다우존스 산업평균 30종 · **가격가중** — 주가가 높은 종목이 더 크게 움직인다. '+
                   '시총가중인 나머지 셋과 같은 잣대가 아니다.',
               IWM:'러셀 2000 · 시총가중 소형주 2000종'};
