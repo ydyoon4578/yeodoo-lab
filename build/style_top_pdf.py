@@ -543,21 +543,22 @@ def sc_divlv(P, i):
     """S&P 500 Low Volatility High Dividend(SPHD) — 배당 상위를 거른 뒤 변동성이 낮은 순.
 
     정본은 두 단계다. ① 12개월 배당수익률 상위 75종 ② 그중 252거래일 실현변동성이 가장 낮은
-    50종. 여기서는 ①을 비율(상위 15% = 75/500)로 옮기고 ②는 상위 10종목만 세운다.
-    ⚠ 관문에 MIN_NAMES 바닥이 걸린다 — 배당 지급 종목이 355종이라 15%는 53종인데, 백테스트가
-      한 달을 쓰려면 후보가 100종 이상이어야 한다(backtest.pick). 그래서 실제 관문은 상위
-      100종(≈28%)이고 정본보다 느슨하다. substitution 에 적는다.
+    50종. 여기서는 ①을 **비율(상위 15% = 75/500)** 로 옮기고 ②는 상위 10종목만 세운다.
+    개수를 고정하면 채점 가능 종목이 달마다 달라 관문이 어떤 달은 상위 15%, 어떤 달은 25%가 된다.
     """
     dy, _ = sc_div(P, i)
     if not dy:
         return {}, {}
     v, _b = _vol_beta(P, i)
     pool = sorted((t for t in dy if t in v), key=lambda t: -dy[t])
-    if len(pool) < MIN_NAMES:
+    if len(pool) < 100:                           # 배당 지급 종목이 이보다 적으면 자료가 얕다
         return {}, {}
-    gate = pool[:max(MIN_NAMES, int(round(len(pool) * 0.15)))]
+    gate = pool[:max(30, int(round(len(pool) * 0.15)))]
     d = {t: -v[t] for t in gate}                  # 변동성은 낮을수록 상위
     return d, d
+
+
+sc_divlv.min_names = 30                            # 관문이 스스로 좁힌다(355종의 15% ≈ 53)
 
 
 def _sh_change(P, t, i):
@@ -607,6 +608,85 @@ def sc_netbuy(P, i):
     return d, d
 
 
+def sc_squal(P, i):
+    """S&P 500 Quality(SPHQ) — ROE · 발생액비율 · 재무레버리지의 z 평균 상위.
+
+    MSCI 퀄리티(sc_qual)와 **다른 규칙이다.** 저쪽 셋은 ROE·D/E·이익변동성이고 이쪽은
+    ROE·**발생액비율**·재무레버리지다. 가르는 것은 발생액비율 — 순이익이 영업현금흐름에서
+    얼마나 멀어졌는가로, 회계이익만 좋아 보이는 회사를 잡아내는 자리다.
+      발생액비율 = (순이익 − 영업활동현금흐름) ÷ 평균 총자산. 낮을수록 좋다.
+    ⚠ 재무레버리지 자리에 부채총계÷자기자본을 쓴다 — data/fx 에 차입금 태그가 없다.
+    """
+    roe, acc, lev = {}, {}, {}
+    for t in P.uni:
+        ni, cfo = P.ttm12(t, "ni", i, "ni_a"), P.ttm12(t, "cfo", i, "cfo_a")
+        aeq = avg_eq(P, t, i)
+        if ni is not None and aeq:
+            roe[t] = ni / aeq * 100
+        aset = P.asof(t, "asset", i, 5)
+        if ni is not None and cfo is not None and aset:
+            base = (aset[0] + aset[4]) / 2 if len(aset) >= 5 else aset[0]
+            if base > 0:
+                acc[t] = -((ni - cfo) / base * 100)     # 발생액은 낮을수록 상위
+        eq, li = P.last(t, "eq", i), P.last(t, "liab", i)
+        if li is not None and eq and eq > 0:
+            lev[t] = -(li / eq)
+    return zavg([zs(roe, SP_WP), zs(acc, SP_WP), zs(lev, SP_WP)])
+
+
+# 순수 계열(S&P 500 Pure Growth / Pure Value)의 바스켓 규칙. 방법론 문서 p6~p9.
+#   ① 성장점수 높은 순 = 성장랭크 1위 · 가치점수 높은 순 = 가치랭크 1위
+#   ② 성장랭크÷가치랭크 오름차순 — 위쪽이 순수성장, 아래쪽이 순수가치
+#   ③ 시가총액 누적 33%까지가 각 바스켓
+#   ④ 그중 점수가 (전체 평균 + 0.25)를 넘는 것만 '순수'로 남긴다
+# ⚠ 정본은 S&P Total Market 에서 표준화하고 모지수에서 랭크한다 — 여기서는 둘 다 유니버스
+#   518종목이다. build/style_top.py 가 오늘 명단에 대해 이미 하던 계산을 그대로 옮겼다.
+PURE_BASKET, PURE_MIN = 1 / 3.0, 0.25
+
+
+def _pure(P, i, value_side):
+    g, _gu = sc_grow(P, i)
+    v, _vu = sc_val(P, i)
+    common = sorted(set(g) & set(v))
+    if len(common) < MIN_NAMES:
+        return {}, {}
+    gr = {t: k + 1 for k, t in enumerate(sorted(common, key=lambda x: -g[x]))}
+    vr = {t: k + 1 for k, t in enumerate(sorted(common, key=lambda x: -v[x]))}
+    ratio = {t: gr[t] / vr[t] for t in common}
+    order = sorted(common, key=lambda t: ratio[t])
+    mcv = {t: (mcap(P, t, i) or 0.0) for t in common}
+    tot = sum(mcv.values()) or 1.0
+    gmean, vmean = float(np.mean([g[t] for t in common])), float(np.mean([v[t] for t in common]))
+    out, a = {}, 0.0
+    for t in (reversed(order) if value_side else order):
+        if a / tot >= PURE_BASKET:
+            break
+        a += mcv[t]
+        if value_side:
+            if v[t] > vmean + PURE_MIN:
+                out[t] = ratio[t]                    # 가치 쪽은 비율이 클수록 순수하다
+        else:
+            if g[t] > gmean + PURE_MIN:
+                out[t] = -ratio[t]
+    return out, out
+
+
+def sc_puregrow(P, i):
+    """S&P 500 Pure Growth — 성장은 높고 가치는 낮은 쪽, 시총 33% 바스켓 안에서."""
+    return _pure(P, i, False)
+
+
+def sc_purevalue(P, i):
+    """S&P 500 Pure Value — 가치는 높고 성장은 낮은 쪽, 시총 33% 바스켓 안에서."""
+    return _pure(P, i, True)
+
+
+# 바스켓 규칙이 후보를 스스로 좁힌다(실측 순수성장 50종). MIN_NAMES 100 을 그대로 걸면
+# 규칙이 통째로 건너뛰어진다 — backtest.pick 의 주석 참조.
+sc_puregrow.min_names = 30
+sc_purevalue.min_names = 30
+
+
 def sc_garp(P, i):
     """S&P 500 GARP — 성장 상위 관문을 통과한 것 중 '퀄리티·가치' 복합점수가 높은 순.
 
@@ -616,6 +696,7 @@ def sc_garp(P, i):
     ⚠ 여기서는 ①을 개수가 아니라 **비율(상위 30% = 150/500)** 로 옮긴다. 유니버스가 518종인
       데다 재무 결측으로 채점 가능 종목이 달마다 달라, 150 을 고정하면 관문이 어떤 달은
       상위 30% 이고 어떤 달은 상위 45% 가 된다 — 개수보다 비율을 지키는 편이 정본에 가깝다.
+      비율만 지키므로 관문 통과가 100종에 못 미칠 수 있다(아래 min_names 참조).
     ⚠ 성장률은 **TTM 대 3년 전 TTM** 으로 잰다. 한 분기끼리 비교하면 계절성이 성장률로 둔갑한다.
     """
     eg, sg, roe, lev, ep = {}, {}, {}, {}, {}
@@ -641,10 +722,13 @@ def sc_garp(P, i):
     gz = zavg([zs(eg, SP_WP), zs(sg, SP_WP)])
     qz = zavg([zs(roe, SP_WP), zs(lev, SP_WP), zs(ep, SP_WP)])
     pool = sorted((t for t in gz[0] if t in qz[0]), key=lambda t: -gz[0][t])
-    if len(pool) < MIN_NAMES:
+    if len(pool) < MIN_NAMES:                     # 관문에 넣을 후보 자체가 얕으면 그 달은 버린다
         return {}, {}
-    gate = pool[:max(MIN_NAMES, int(round(len(pool) * 0.30)))]
+    gate = pool[:max(30, int(round(len(pool) * 0.30)))]
     return ({t: qz[0][t] for t in gate}, {t: qz[1][t] for t in gate})
+
+
+sc_garp.min_names = 30                             # 성장 관문이 스스로 좁힌다(위 30% 규칙)
 
 
 # ── 보유 표의 마지막 칸 ──────────────────────────────────────────────────────
@@ -723,6 +807,18 @@ STYLES = [
      lambda P, i, t, s, u: "%.2f" % s,
      "영업활동현금흐름에서 설비투자를 뺀 최근 1년 잉여현금흐름을 시가총액으로 나눈 값이 가장 높은 10종목.\n"
      "회계이익이 아니라 실제로 남은 현금을 본다. 경기민감·에너지에 쏠리기 쉽고, 투자를 줄여 현금이 남은 회사도 같이 걸린다."),
+    ("squal", "퀄리티(S&P)", "S&P 500 Quality (SPHQ)", sc_squal, "합성 z",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "ROE · 발생액비율(낮을수록) · 재무레버리지(낮을수록)의 z 평균 상위 10종목. 정본은 100종을 담는다.\n"
+     "위 퀄리티(MSCI)와 가르는 것은 발생액비율이다 — 순이익이 영업현금흐름에서 멀어진 회사, 즉 장부만 좋아 보이는 회사를 걸러낸다."),
+    ("puregrow", "순수성장", "S&P 500 Pure Growth", sc_puregrow, "−(성장랭크÷가치랭크)",
+     lambda P, i, t, s, u: "%.3f" % (-s),
+     "성장랭크÷가치랭크가 가장 작은 쪽(성장은 높고 가치는 낮은 종목) · 시총 33% 바스켓 안에서 성장점수가 평균+0.25 를 넘는 것만.\n"
+     "성장과 가치를 섞어 담지 않고 성장 쪽만 순수하게 담는다. 그만큼 쏠림이 크고 국면이 바뀔 때 낙폭도 크다."),
+    ("purevalue", "순수가치", "S&P 500 Pure Value", sc_purevalue, "성장랭크÷가치랭크",
+     lambda P, i, t, s, u: "%.3f" % s,
+     "성장랭크÷가치랭크가 가장 큰 쪽(가치는 높고 성장은 낮은 종목) · 시총 33% 바스켓 안에서 가치점수가 평균+0.25 를 넘는 것만.\n"
+     "순수성장의 거울이다. 싼 것을 사되 성장이 약한 쪽만 담으므로 가치함정에 그대로 노출된다."),
     ("divlv", "고배당저변동", "S&P 500 Low Volatility High Dividend (SPHD)", sc_divlv, "변동성 %",
      lambda P, i, t, s, u: "%.1f" % (-s),
      "배당수익률 상위를 거른 뒤 그 안에서 252거래일 실현변동성이 가장 낮은 10종목. 정본은 상위 75종 → 저변동 50종이다.\n"
@@ -807,7 +903,11 @@ def backtest(P, fn, pool_of=None):
             return cache[i]
         s, tie = fn(P, i)
         out = None
-        if len(s) >= MIN_NAMES:
+        # MIN_NAMES 는 '그 규칙의 자료가 아직 얕은가'를 보는 관문이지 규칙 설계를 재는 자가
+        # 아니다. **관문을 스스로 좁히는 규칙**(순수성장·순수가치·GARP·고배당저변동)은
+        # 설계상 후보가 100종에 못 미친다 — 실측으로 순수성장은 50종이라 통째로 건너뛰어졌다.
+        # 그래서 규칙이 자기 최소치를 말할 수 있게 한다(sc_*.min_names). 안 적은 규칙은 종전대로.
+        if len(s) >= getattr(fn, "min_names", MIN_NAMES):
             # 마스크는 pit_backtest.py:242 와 같은 자리에 둔다 — 채점은 그대로 하고
             # **후보에서 거른다**. 채점 단계에서 거르면 z 표준화의 모집단이 달라져
             # 편향 측정이 아니라 다른 규칙이 된다.
