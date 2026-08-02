@@ -69,7 +69,17 @@ SIC2 = {
     "65": "부동산", "67": "리츠·지주", "70": "호텔·숙박", "73": "사업서비스(SW·IT)",
     "78": "영화·영상", "79": "레저·엔터", "80": "의료서비스", "87": "엔지니어링·컨설팅",
 }
-IND_MIN = 5        # 이보다 적은 그룹은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
+# GICS 섹터 → 섹터 ETF 티커. **키를 한글 이름이 아니라 티커로 둔다** — 홈이
+# market_board.json 의 sector 행과 짝지어 그리는데, 한글 표기가 바뀌는 날 조인이 조용히 끊긴다.
+# _breadth(섹터별 폭)와 _industry(섹터-산업 트리)가 같이 쓴다.
+SEC_ETF = {"Information Technology": "XLK", "Financials": "XLF", "Health Care": "XLV",
+           "Consumer Discretionary": "XLY", "Communication Services": "XLC",
+           "Industrials": "XLI", "Consumer Staples": "XLP", "Energy": "XLE",
+           "Utilities": "XLU", "Real Estate": "XLRE", "Materials": "XLB"}
+SEC_KO = {v: SECKO[k] for k, v in SEC_ETF.items()}
+# 섹터 안에서 다시 나누므로 그룹이 잘아진다 — 5 에서 4 로 내렸다.
+# 실측(2026-08-03): MIN 5 면 하위 33개·커버 79%, MIN 4 면 37개·커버 82%.
+IND_MIN = 4        # 이보다 적은 묶음은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
 # ⚠ 기간 규칙은 build/market_board.py 의 HOR 와 **같아야 한다.** 홈에서 섹터 카드 바로
 #   아래에 산업 카드가 붙으므로, 두 카드의 '1개월'이 다른 날을 가리키면 나란히 못 읽는다.
 #   그쪽은 달력일 차감 후 그 날짜 이하의 마지막 관측을 쓴다(_base_dates + _at) — 같은 규칙이다.
@@ -80,21 +90,26 @@ IND_HOR = [("1D", 1), ("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 36
 
 
 def _industry(stocks, dates, root):
-    """SIC 대분류별 동일가중 수익률 + 200일선 위 비율.
+    """섹터 11개와 그 **하위 산업**을 한 덩어리로 → {"sectors": [...], "rows": [...], ...}
 
-    섹터(11개)와 종목(518개) 사이가 홈에서 비어 있었다(사용자 요청 2026-08-02
-    "산업 단위로 더 쪼개줘"). 섹터 카드와 같은 형태로 한 단 아래를 본다.
-
-    가격은 data/sd/*.json 에서 읽는다(518파일 · 실측 1.1초). stocks.json 에는 가격이 없고,
-    홈이 그 원본을 받을 수는 없으므로 여기서 정수 몇 개로 접어 넣는다 — 이 파일의 취지다.
+    🚨 **산업을 SIC 만으로 묶고 주섹터에 매달면 트리가 거짓말을 한다.** SIC(SEC 부여)와
+      GICS 섹터(벤더)는 다른 분류라 한 SIC 가 여러 섹터에 걸친다 — 실측(2026-08-03):
+          사업서비스(SW·IT) 63종 → IT 26 · 금융 13 · 산업재 9 · 커뮤 8 · 경소 5 …  순도 41%
+          화학·제약 35종        → 헬스 18 · 소재 11 · 필소 6                      순도 51%
+          기계·컴퓨터장비 33종   → IT 18 · 산업재 14                              순도 55%
+      '사업서비스는 IT 하위'라고 적으면 63종 중 37종이 남의 섹터에 있는 채로 IT 밑에 선다.
+      그래서 **(섹터, SIC) 쌍으로 묶는다.** 이러면 모든 하위 줄이 정의상 부모 섹터 안에
+      100% 들어간다 — 같은 SIC 가 섹터마다 따로 서고(예: 사업서비스가 IT 에도 금융에도),
+      그것이 사실이다.
+    ⚠ 하위에 못 들어간 종목은 섹터마다 '그 밖' 한 줄로 남긴다. 안 남기면 하위 합이 섹터에
+      못 미치는데 화면은 그 사실을 말하지 않는다(경기소비는 하위 커버가 47%다).
     """
     ind_p = os.path.join(root, "data", "industry.json")
     if not os.path.exists(ind_p):
-        return []
+        return {}
     co = (json.load(io.open(ind_p, encoding="utf-8")) or {}).get("co") or {}
     if not co:
-        return []
-    # 기간별 기준 인덱스 — market_board 와 같은 규칙(달력일 차감 → 그 이하 마지막 거래일)
+        return {}
     import datetime as _dt
     d0 = _dt.date.fromisoformat(dates[-1])
     base = {}
@@ -103,23 +118,55 @@ def _industry(stocks, dates, root):
         ks = [i for i, d in enumerate(dates) if d <= tgt]
         base[k] = ks[-1] if ks else None
 
-    grp = {}
+    # (섹터, SIC) → 종목. 섹터나 SIC 가 없으면 어느 쪽에도 세지 않는다.
+    pair, bysec = {}, {}
     for s in stocks:
+        sec = SEC_ETF.get(s.get("sector") or "")
         code = ((co.get(s["t"]) or [None])[0] or "")[:2]
-        if not code:
-            continue                              # SIC 미부여 — 조용히 섞지 않고 뺀다
-        g = grp.setdefault(code, {"ts": [], "objs": [], "above": 0, "n_ma200": 0})
-        g["ts"].append(s["t"]); g["objs"].append(s)
-        if not s.get("part"):
-            g["n_ma200"] += 1
-            if "200일이탈" not in (s.get("flags") or []):
-                g["above"] += 1
+        if not sec:
+            continue
+        bysec.setdefault(sec, []).append(s)
+        if code:
+            pair.setdefault((sec, code), []).append(s)
 
-    # 가격은 **종목당 한 번만** 읽는다. 기간마다 다시 열면 518파일 × 구간수가 되고,
-    # 정작 쓰는 것은 파일마다 값 세 개(기준 둘 + 최신 하나)뿐이다.
-    keep = [t for code, g in grp.items() if len(g["ts"]) >= IND_MIN for t in g["ts"]]
+    keep = {k: v for k, v in pair.items() if len(v) >= IND_MIN}
+    PX = _load_px([s["t"] for v in list(keep.values()) + list(bysec.values()) for s in v], dates, root)
+
+    def agg(objs, label, sec, sic):
+        r = {}
+        for k in base:
+            i0, vs = base[k], []
+            if i0 is not None:
+                for s in objs:
+                    px = PX.get(s["t"])
+                    if px and px[i0] and px[-1] and px[i0] > 0:
+                        vs.append(px[-1] / px[i0] - 1.0)
+            r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= max(3, len(objs) // 2) else None
+        full = [s for s in objs if not s.get("part")]
+        above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
+        return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r,
+                "above": above, "n_ma200": len(full),
+                "_ts": [s["t"] for s in objs], **_val(objs)}
+
+    sectors, rows = [], []
+    for sec, objs in bysec.items():
+        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, None))
+        subs = sorted([(c, v) for (s2, c), v in keep.items() if s2 == sec],
+                      key=lambda kv: -len(kv[1]))
+        used = set()
+        for c, v in subs:
+            rows.append(agg(v, SIC2.get(c, "SIC " + c), sec, c))
+            used.update(s["t"] for s in v)
+        rest = [s for s in objs if s["t"] not in used]
+        if rest:
+            rows.append(agg(rest, "그 밖", sec, None))
+    return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX}
+
+
+def _load_px(ts, dates, root):
+    """티커 → 일별 종가. **종목당 한 번만** 읽는다(중복 티커가 섞여 들어온다)."""
     PX = {}
-    for t in keep:
+    for t in set(ts):
         p = os.path.join(root, "data", "sd", "%s.json" % t)
         if not os.path.exists(p):
             continue
@@ -129,34 +176,19 @@ def _industry(stocks, dates, root):
             continue
         if len(px) == len(dates):
             PX[t] = px
+    return PX
 
-    out = []
-    for code, g in grp.items():
-        if len(g["ts"]) < IND_MIN:
-            continue
-        r = {}
-        for k in list(base):
-            i0, vs = base[k], []
-            if i0 is not None:
-                for t in g["ts"]:
-                    px = PX.get(t)
-                    if not px:
-                        continue
-                    a, b = px[i0], px[-1]
-                    if a and b and a > 0:
-                        vs.append(b / a - 1.0)
-            # 동일가중 평균. 절반 넘게 못 구하면 그 칸은 비운다 — 몇 종목의 평균을
-            # 산업 수익률이라 부르지 않는다.
-            r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= max(3, len(g["ts"]) // 2) else None
-        v = _val(g["objs"])
-        # _ts 는 _by_regime 이 쓰고 나서 지운다 — 티커 목록까지 홈에 실을 이유가 없다.
-        out.append({"sic": code, "n": len(g["ts"]), "nm": SIC2.get(code, "SIC " + code),
-                    "above": g["above"], "n_ma200": g["n_ma200"], "r": r, "_ts": g["ts"], **v})
-    out.sort(key=lambda x: -(x["r"].get("1M") if x["r"].get("1M") is not None else -1e9))
-    rg, rgn = _by_regime(out, PX, dates, root)
-    # 시장 중앙값을 함께 싣는다 — **레벨만 보면 못 읽는 수치라서다.** 은행 PER 13.8 과
-    # 전자 42.2 는 싸고 비싼 것이 아니라 업종 구조다. 시장 대비 배수라야 눈금이 생긴다.
-    return {"mkt": _val(stocks), "rows": out, "regime_n": rgn}
+
+def _segments(stocks, dates, root):
+    """홈이 읽는 섹터·산업 한 덩어리. _industry 에 국면 통계를 얹고 내부 필드를 턴다."""
+    d = _industry(stocks, dates, root)
+    if not d:
+        return {}
+    PX = d.pop("px")
+    # 국면 통계는 섹터·산업 **양쪽**에 붙인다. 표에서 부모 줄에도 툴팁이 뜬다.
+    _, rgn = _by_regime(d["sectors"] + d["rows"], PX, dates, root)
+    d["regime_n"] = rgn
+    return d
 
 
 def _by_regime(rows, PX, dates, root):
@@ -262,10 +294,6 @@ def _breadth(stocks):
     #   한글 이름으로 키를 잡으면 그쪽 표기가 바뀌는 날 조인이 조용히 끊긴다. 티커는 안 바뀐다.
     #   market.html 도 같은 폭을 stocks.json 에서 직접 세지만(그 화면은 원본을 받는다) 분모
     #   규칙이 같아야 두 화면의 숫자가 일치한다 — 여기서 규칙을 바꾸면 그쪽도 볼 것.
-    SEC_ETF = {"Information Technology": "XLK", "Financials": "XLF", "Health Care": "XLV",
-               "Consumer Discretionary": "XLY", "Communication Services": "XLC",
-               "Industrials": "XLI", "Consumer Staples": "XLP", "Energy": "XLE",
-               "Utilities": "XLU", "Real Estate": "XLRE", "Materials": "XLB"}
     sec = {}
     for s in full:
         tk = SEC_ETF.get(s.get("sector") or "")
@@ -295,7 +323,7 @@ def build(stocks, dates, as_of, root):
         "buy_conf": nb_c, "buy_prov": nb_p, "sell_conf": ns_c, "sell_prov": ns_p,
         "breadth": _breadth(stocks),
         # 섹터(11)와 종목(518) 사이 — SIC 대분류. 홈 산업 카드가 읽는다.
-        "industry": _industry(stocks, dates, root),
+        "industry": _segments(stocks, dates, root),
     }
 
 
