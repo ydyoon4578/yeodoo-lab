@@ -237,7 +237,9 @@ def main() -> int:
             doc = {}
     months = doc.get("months") or {}
     cik = doc.get("cik") or {}
-    cik_hist = doc.get("cik_hist") or {}
+    # 지난 실행의 판정. 아래에서 **바닥으로 깐다** — 버리지 않는다(이유는 names 주석).
+    prev_hist = doc.get("cik_hist") or {}
+    prev_conf = list(doc.get("cik_conflicts") or [])
 
     today = dt.date.today()
     end = "%04d-%02d" % (today.year, today.month)
@@ -254,7 +256,18 @@ def main() -> int:
         print("  받을 것 없음")
 
     fail, gaps = [], list(doc.get("gaps") or [])
-    names = {}          # CIK → {티커: 회사명} — 아래 묶음 검증에 쓴다
+    # CIK → {티커: 회사명}. 아래 묶음 검증에 쓴다. **파일에 싣고 다시 읽는다.**
+    # 🚨 전에는 매 실행 빈 dict 로 시작했다. 증분 갱신은 이번 달 하나만 받으므로 names 에도
+    #    그 달 것만 담겼고, 아래 재분류가 그것만으로 cik_hist 를 통째로 다시 만들었다 —
+    #    실측(2026-08-02): 개명 51건이 3건으로 줄었다. 남은 셋은 그달에 함께 나온 복수
+    #    클래스(GOOG/GOOGL·FOX/FOXA·NWS/NWSA)뿐이고, 2015~2026 에 걸쳐 관측한 개명
+    #    (AA→ARNC→HWM, CTL→LUMN …)이 전부 사라졌다. 이 파일이 스스로 note 에 '조인은
+    #    cik_hist 로 할 것'이라 적어 둔 바로 그 지도가 **갱신할 때마다 조용히 비워지고
+    #    있었다.** 티커로 조인하면 개명한 회사가 '편출'로 보여, 재려던 생존편향을 오히려
+    #    부풀린다 — 방향이 나쁜 쪽으로 틀리는 오류다.
+    #    --rebuild 로 140개월을 다시 받으면 복원되지만 위키 요청 280회·20분이고,
+    #    무엇보다 **아무도 사라진 줄 모른다.**
+    names = {c: dict(v) for c, v in (doc.get("cik_names") or {}).items()}
     for n, (mk, iso) in enumerate(todo, 1):
         rec = {}
         for idx in ("spx", "ndx"):
@@ -330,6 +343,19 @@ def main() -> int:
             conflicts.append({"cik": c, "tickers": tn,
                               "why": "같은 달에 함께 나오는데 회사 이름이 무관하다 — 파싱 사고로 본다"})
 
+    # 이번에 판정하지 못한 CIK 은 지난 판정을 그대로 쓴다.
+    # cik_names 가 없던 시절에 만들어진 파일을 증분 갱신해도 그때 관측한 개명이 사라지지
+    # 않게 하는 이행 장치다. 위 names 가 파일에 실리기 시작하면 다음 실행부터는 전 기간을
+    # 다시 분류하므로 judged 가 모두를 덮어 이 구문은 저절로 아무 일도 하지 않게 된다.
+    # ⚠ 새 관측이 이긴다 — 지난 판정을 setdefault 로만 채우고 덮어쓰지 않는다.
+    judged = set(cik_hist) | {x.get("cik") for x in conflicts}
+    for c, ts in prev_hist.items():
+        if c not in judged:
+            cik_hist[c] = ts
+    for x in prev_conf:
+        if x.get("cik") not in judged:
+            conflicts.append(x)
+
     ks = sorted(months)
     doc = {
         "note": "위키백과 지수 목록 문서의 **과거 리비전**에서 뽑은 월말 시점 편입 명단. "
@@ -351,6 +377,10 @@ def main() -> int:
         # 이름이 안 맞아 채택하지 않은 묶음. 비어 있어야 정상이고, 있으면 그 CIK 는
         # 정체성 조인에 쓰면 안 된다(파싱이 어긋난 자리다).
         "cik_conflicts": conflicts,
+        # 관측한 CIK → {티커: 그때 회사명}. 위 두 줄을 만드는 **입력**이라 함께 싣는다 —
+        # 이것이 없으면 증분 갱신이 이번 달 이름만 보고 판정을 다시 만든다(names 주석 참조).
+        # 조인에 쓰라고 두는 것이 아니다. 40KB 쯤 늘지만 그 값으로 개명 지도가 유지된다.
+        "cik_names": {c: dict(sorted(v.items())) for c, v in sorted(names.items())},
     }
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
