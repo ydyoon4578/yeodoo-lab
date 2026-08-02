@@ -69,6 +69,7 @@ data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json
 data/style_trails.json|build/style_top_pdf.py --json
 data/home_flow.json|build/home_flow.py
+data/home_market.json|build/home_market.py
 data/asof.json|build/asof_index.py"
 
 # 경로 → 생성명령 (없으면 빈 문자열). bash 3.2(macOS)에도 도는 방식으로 연관배열을 피한다.

@@ -913,11 +913,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ── 데이터 읽기는 여기 한 곳으로 ─────────────────────────────────────
   // 전에는 fetch 12곳이 각자 {cache:'no-cache'} 를 달고 있었다. 데이터는 하루 한 번 갱신인데
   // GitHub Pages 가 주는 10분 캐시(max-age=600)조차 쓰지 않고 매번 조건부 요청을 냈고,
-  // data/asof.json 은 내비 블록과 본문에서 각각 요청되면서 no-cache 탓에 메모리 캐시 조회마저
-  // 건너뛰어 같은 5KB 에 왕복이 두 번 났다(내비 fetch 는 23장 전부에 있다).
   // 신선도 판정의 근거인 asof 만 fresh 로 두고 — 그 값으로 지연 경고를 내므로 낡으면 안 된다 —
   // 나머지는 브라우저 캐시에 맡긴다. 최악 10분이고, 화면이 말하는 기준일은 각 파일 자신의
   // as_of 라 캐시 때문에 어긋날 수 없다(오래된 파일이면 그 파일의 as_of 가 그렇게 말한다).
+  // ⚠ 남아 있는 것: data/asof.json 은 내비 블록(sync_nav.py 생성, 23장 전부에 있다)과 여기서
+  //   각각 요청되고 **둘 다 fresh 라 왕복이 두 번 난다**(실측으로 확인). 없애려면 내비가 받은
+  //   약속을 본문이 나눠 쓰게 해야 하는데, 내비는 생성 블록이라 두 곳을 함께 고쳐야 한다.
+  //   여기서 fresh 를 떼는 것으로 때우지 않는다 — 순서 보장이 없어 지연 경고의 근거가
+  //   최대 10분 낡을 수 있고, 그건 이 줄이 지키려는 바로 그것이다.
   // ⚠ 실패를 null 로 바꾸는 것도 여기서 한다 — 호출부마다 ['catch'] 를 적던 것을 없앤다.
   function getj(name,fresh){
     return fetch('data/'+name, fresh?{cache:'no-cache'}:undefined)
@@ -1202,16 +1205,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div class="cv">'+SNTE[sn.label]+' '+esc(sn.label)+' <span class="tnum">'+Math.round(sn.score)+'</span></div>'+
         // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다.
         // ⚠ 자르지 않으면 이력 전량(2,765점 · 11년)이 320px 에 들어가 화소당 8.6점이 된다.
-        //   그건 곡선이 아니라 덩어리라 위 목적이 정확히 무산되고, path 문자열 3만 자를
-        //   renderMarket 이 불릴 때마다 다시 만든다. 옆 국면 띠와 같은 3년으로 맞춘다
-        //   (거래일 750일 ≈ 36개월). 시작 라벨도 **자른 뒤**의 첫 날짜여야 한다 —
-        //   전에는 history[0] 을 그대로 써서, 자르면 그 자리에서 거짓말이 된다.
-        (function(){
-          var hs=(sn.history||[]).slice(-750);
-          return spark(hs.map(function(x){return x.score;}),320,38,0,100)+
-            '<div class="barl"><span>'+esc((hs[0]||{}).dt||'')+'</span>'+
-            '<span>0~100 · 점선 50</span></div>';
-        })()+
+        //   그건 곡선이 아니라 덩어리다. 지금은 build/home_market.py 가 끝 750점(3년 —
+        //   옆 국면 띠 36개월과 같은 창)만 실어 준다. spark 는 x 를 등간격 인덱스로 그리므로
+        //   점마다 날짜가 필요 없고, 라벨용 시작 날짜 하나(hist_start)만 함께 온다.
+        //   ⚠ 자르는 창을 바꾸려면 build/home_market.py 의 SN_HIST 와 같이 바꿀 것.
+        spark(sn.scores||[],320,38,0,100)+
+        '<div class="barl"><span>'+esc(sn.hist_start||'')+'</span>'+
+        '<span>0~100 · 점선 50</span></div>'+
         mtbl([p.d1!=null?['전일',Math.round(p.d1)]:null,
               p.w1!=null?['1주 전',Math.round(p.w1)]:null,
               p.m1!=null?['1개월 전',Math.round(p.m1)]:null,
@@ -1248,16 +1248,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       put('bd',h);
     } else { put('bd', b===false?mkFail('시장 폭'):MKSK); }
   }
-  // 국면·심리 렌더는 종목 파이프라인과 독립이다 — 하나가 죽어도 나머지는 뜬다
-  getj('regime.json').then(function(rg){
-    MK.rg=rg||false; renderMarket(); syncAsof(); staleCheck();
-    if(rg&&rg.as_of){
-      var n=(rg.indicators||[]).length, tb=el('tb-reg'); if(n&&tb)tb.textContent='매크로 '+n+'지표';
-      if(n){EB.ind=n; setEyebrow();}
-    }
-  });
-  getj('sentiment.json').then(function(sn){
-    MK.sn=sn||false; renderMarket(); syncAsof(); staleCheck();
+  // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
+  // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
+  // 두 원본의 가장 큰 덩어리가 홈에서 안 쓰였다: sentiment.history 2,765점 중 그리는 건 750점,
+  // regime.indicators 39개는 **개수 하나**만 쓴다(눈썹의 'FRED 39지표').
+  // ⚠ 원본을 지운 게 아니다 — asof_index 가 축 기준일을 거기서 읽고 regime.html 은 전체 이력을 쓴다.
+  // ⚠ 한 파일이 두 카드를 먹이므로 실패하면 둘 다 실패다. 대신 요청이 하나 준다.
+  getj('home_market.json').then(function(j){
+    MK.rg=(j&&j.regime)||false;
+    MK.sn=(j&&j.sentiment)||false;
+    renderMarket(); syncAsof(); staleCheck();
+    var n=j&&j.regime&&j.regime.n_indicators;
+    if(n){EB.ind=n; setEyebrow();}
   });
 
 
