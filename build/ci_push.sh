@@ -69,6 +69,7 @@ data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json
 data/style_trails.json|build/style_top_pdf.py --json
 data/home_flow.json|build/home_flow.py
+data/style_top.json|build/style_top.py
 data/home_market.json|build/home_market.py
 data/asof.json|build/asof_index.py"
 

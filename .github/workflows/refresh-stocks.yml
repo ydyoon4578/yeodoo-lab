@@ -39,6 +39,15 @@ jobs:
       # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
       - name: Rebuild home slim bundle
         run: python build/home_flow.py
+      # 스타일별 상위 10종목(data/style_top.json) — 홈 스타일 표 아래 '구성종목' 줄의 원본.
+      # ⚠ 이 단계가 **없어서 그 파일이 2026-07-28 에 고착돼 있었다.** 어느 워크플로도
+      #   build/style_top.py 를 부르지 않았고(refresh-assets 가 부르는 것은 style_top_pdf.py
+      #   --json 으로, 그건 style_perf/style_trails 만 낸다), 홈은 07-31 성과 행 옆에
+      #   07-28 구성종목을 나란히 놓고 있었다. 여기가 제자리다 — 입력인 stocks.json 과
+      #   data/sd/ 를 방금 이 잡이 만들었고 numpy 도 이미 깔려 있다.
+      #   (assets.json 의 SPY 는 베타용인데 날짜 교집합으로 맞추므로 하루 차이는 무해하다.)
+      - name: Rebuild style top holdings
+        run: python build/style_top.py
       # 전 전략 통합 목록 — 원본(tech·asset·archive·deploy)이 바뀌면 같이 다시 굽는다.
       # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
       - name: Rebuild unified strategy index
@@ -60,7 +69,8 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/sd data/target_history.json data/fund_history.json \
-            data/signal_lab.json data/home_flow.json data/strategy_index.json data/strategy_charts.json data/asof.json
+            data/signal_lab.json data/home_flow.json data/style_top.json \
+            data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
