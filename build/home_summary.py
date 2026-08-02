@@ -127,6 +127,39 @@ def _industry(stocks, dates, root):
     keeps = {k: v for k, v in bysub.items() if len(v) >= IND_MIN}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
 
+    # 샤프 — 스타일 표와 **같은 창**으로 잰다(2026-08-03 사용자 요청으로 두 표가 합쳐졌다).
+    # data/style_trails.json 의 start 를 그대로 읽는다. 창을 여기서 따로 정하면 같은 열의
+    # 두 숫자가 다른 기간이 되고, 합친 표의 존재 이유가 사라진다.
+    # ⚠ 정의는 같지만(일간 초과 없는 평균÷표준편차×√252) **리밸런스가 다르다** —
+    #   스타일 줄은 월말 리밸런스 백테스트고 이 줄은 동일가중 바스켓이다. 화면에 적는다.
+    i_sh = None
+    try:
+        _st = json.load(io.open(os.path.join(root, "data", "style_trails.json"), encoding="utf-8"))
+        _d0 = _st.get("start") or ""
+        _ks = [i for i, d in enumerate(dates) if d <= _d0]
+        i_sh = _ks[-1] if _ks else None
+    except Exception:
+        pass
+
+    def sharpe(objs):
+        if i_sh is None or i_sh >= len(dates) - 30:
+            return None
+        rs = []
+        for k in range(i_sh + 1, len(dates)):
+            vs = []
+            for s2 in objs:
+                px = PX.get(s2["t"])
+                if px and px[k] and px[k - 1] and px[k - 1] > 0:
+                    vs.append(px[k] / px[k - 1] - 1.0)
+            if len(vs) >= max(3, len(objs) // 2):
+                rs.append(sum(vs) / len(vs))
+        if len(rs) < 60:
+            return None
+        m = sum(rs) / len(rs)
+        v = sum((x - m) ** 2 for x in rs) / (len(rs) - 1)
+        sd = v ** 0.5
+        return round(m / sd * (252 ** 0.5), 2) if sd > 0 else None
+
     def agg(objs, label, sec, sic, lv=1, parent=None):
         r = {}
         for k in base:
@@ -141,6 +174,7 @@ def _industry(stocks, dates, root):
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
         return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
+                "sharpe": sharpe(objs),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
