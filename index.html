@@ -269,8 +269,13 @@
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
-  /* 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이라
-     여덟 줄이 같은 격자에 정렬된다. 산식은 줄 전체의 툴팁으로 내렸다. */
+  /* 구성종목 — 표 아래 한 덩어리. 스타일마다 두 줄이다(2026-08-02 사용자 요청으로
+     기간별 수익률을 위 표에서 여기로 내렸다):
+       첫 줄  이름 · 기간별 수익률 7칸
+       둘째 줄 상위 10종목 칩 · 출처
+     ⚠ 왜 한 줄이 아닌가 — 이름(74px) + 수익률 7칸 + 칩 10개를 한 줄에 두면 셋 다 눌린다.
+       수익률을 **그 규칙이 담은 종목 바로 위**에 붙이는 것이 이 변경의 전부라, 둘을
+       떼어 놓지만 않으면 줄이 나뉘는 것은 상관없다. */
   .stmore{margin-top:10px}
   .sthold{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
   /* 두 묶음의 머리. 위는 공개 지수 산식, 아래는 이 랩의 스크린 — 성격이 달라 섞으면
@@ -281,13 +286,30 @@
   .sthold>.sthgrp:first-child{border-top:0}
   .sthgrp em{font-style:normal;font-weight:500;font-size:10.5px;color:var(--muted)}
   .sthgrp a{color:inherit}
-  .sthrow{display:flex;align-items:center;gap:10px;padding:5px 11px;
+  .sthrow{display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:6px 11px;
        border-top:1px solid var(--line-soft)}
   .sthrow:first-child{border-top:0}
   .sthrow:nth-child(even){background:var(--panel-2)}
   .sthlbl{flex:none;width:74px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
   a.sthlbl.lnk{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
   a.sthlbl.lnk:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  /* 첫 줄 — 이름 + 기간별 수익률. 이름 칸이 고정폭이라 줄마다 격자가 맞는다.
+     열 이름(1일·1주·…)은 묶음마다 **한 번만** 적는다(.sthhd.hz) — 줄마다 붙이면
+     7칸 × 13줄 = 91번 되풀이돼 숫자가 아니라 글자가 화면을 채운다. */
+  .sthhd{display:flex;align-items:center;gap:10px}
+  .strt{flex:1;min-width:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));
+       gap:2px;text-align:right;font-family:var(--mono);font-size:11px;
+       font-variant-numeric:tabular-nums;white-space:nowrap}
+  .strt span{overflow:hidden;text-overflow:ellipsis}
+  .strt .up{color:var(--deploy)} .strt .dn{color:var(--hot)} .strt .z{color:var(--muted)}
+  .sthhd.hz{padding:2px 11px 0}
+  .sthhd.hz .strt{font-size:9.5px;letter-spacing:.04em;color:var(--muted);font-weight:700}
+  /* ⚠ 스크린 줄의 수익률은 **다른 종류의 수치다**(style_top.json 의 trails_fixed) —
+     오늘 명단을 과거로 되돌린 것이라 룩어헤드다. 실측으로 +404% 가 나오는데 바로 위
+     백테스트 줄의 최고가 +153% 다. 같은 초록/빨강으로 칠하면 '스크린이 훨씬 낫다'로
+     읽힌다 — 색을 빼서 눈이 먼저 다른 종류임을 알게 한다. 부호는 글자로 남는다. */
+  .strt.fix span{color:var(--muted);font-style:italic}
+  .sthhd.hz .strt.fix span{font-style:normal}
   .stdin{flex:1;min-width:0;font-size:11.5px;color:var(--ink-2)}
   .stdin.na{color:var(--muted);font-size:11px}
   .stchips{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
@@ -300,8 +322,13 @@
        text-decoration:none;white-space:nowrap}
   .stchips .stsrc:hover{color:var(--accent);text-decoration:underline}
   @media(max-width:640px){
-    .sthrow{flex-direction:column;align-items:flex-start;gap:4px}
+    /* 이름을 수익률 위로 올린다 — 좁은 화면에서 74px 을 이름에 떼어 주면 7칸이 각각
+       35px 이 되어 '+153.69' 가 잘린다. 열 이름 줄은 이름 칸이 비어 있으므로 숨긴다
+       (안 숨기면 빈 줄 하나가 생긴다). */
+    .sthhd{flex-direction:column;align-items:stretch;gap:2px}
+    .sthhd.hz .sthlbl{display:none}
     .sthlbl{width:auto}
+    .strt{font-size:10px;gap:1px}
     .stchips .stsrc{margin-left:0;padding-left:0}
   }
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
@@ -917,6 +944,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 한 번 클릭에 두 번 토글되고, 결과적으로 테마가 바뀌지 않는다.
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // 시가총액(억 달러) → 읽는 글. 1조$ 부터는 조 단위로 접는다 — '45,371억$' 는 큰 회사인지
+  // 한눈에 안 들어온다. 값이 없거나 0 이면 **빈 문자열**이라 부르는 쪽이 그 칸을 통째로 뺀다
+  // (0 을 그대로 쓰면 '시총 0억$' 이라고 적힌 회사가 생긴다).
+  // 실적 캘린더와 구성종목 칩 두 곳이 쓴다 — 접는 기준을 두 곳에 두면 언젠가 갈린다.
+  function mcapTxt(v){
+    if(typeof v!=='number'||!isFinite(v)||v<=0)return '';
+    return v>=10000?(v/10000).toFixed(1)+'조$':v.toLocaleString()+'억$';
+  }
 
   // ── 데이터 읽기는 여기 한 곳으로 ─────────────────────────────────────
   // 전에는 fetch 12곳이 각자 {cache:'no-cache'} 를 달고 있었다. 데이터는 하루 한 번 갱신인데
@@ -1367,7 +1402,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var extra=list.length-PER;
               out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
                 list.map(function(x,i){
-                  var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
+                  var mc=mcapTxt(x.mc); mc=mc?(' · 시총 '+mc):'';
                   // 두 소스의 날짜가 어긋난 건은 표시해 둔다(alt = 밀어낸 이른 날짜).
                   // 늦은 쪽에 놓았을 뿐 어느 쪽이 옳은지는 모른다 — 그 사실을 숨기면 안 된다.
                   var q=x.alt?(' · ⚠ 날짜 불일치 — 다른 소스는 '+esc(x.alt)):'';
@@ -1450,14 +1485,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var ST_SKIP={IWM:1, SPY:1};
   var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
              ['12M','12개월'],['YTD','YTD']];
-  function stCell(v){
-    if(v==null||v!==v)return '<td class="z">—</td>';
-    var c=v>0.005?'up':(v<-0.005?'dn':'z');
+  // 수익률 한 칸의 색과 글자. 위 ETF 표(td)와 아래 구성종목 줄(span) **두 곳**이 쓴다 —
+  // 규칙을 두 곳에 적으면 '-0.00' 을 막는 처리가 한쪽에만 남는 날이 온다.
+  function stNum(v){
+    if(v==null||v!==v)return {c:'z',s:'—'};
     // 표시 자리에서 0 으로 반올림되면 부호를 떼어 '-0.00' 을 막는다(음의 0 은 값이 아니다).
     var s=v.toFixed(2);
     if(Number(s)===0)s='0.00';
-    return '<td class="'+c+'">'+(Number(s)>0?'+':'')+s+'</td>';
+    return {c:v>0.005?'up':(v<-0.005?'dn':'z'), s:(Number(s)>0?'+':'')+s};
   }
+  function stCell(v){var x=stNum(v);return '<td class="'+x.c+'">'+x.s+'</td>';}
   // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
   // 가치는 IVE(S&P 500 Value)→spval 이다. 전에는 VLUE(MSCI Enhanced Value)→val 이었는데
@@ -1488,30 +1525,46 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       s.top.map(function(x,i){
         var d=Object.keys(x.d||{}).filter(function(k){return x.d[k]!=null;})
                 .map(function(k){return k+' '+x.d[k];}).join(' · ');
-        return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+esc(d)+'">'+
+        // 칩에 마우스를 올리면 **회사 이름과 시가총액이 먼저** 나온다(사용자 요청 2026-08-02).
+        // 티커 열 개만 늘어놓으면 SNDK·GDDY 가 무슨 회사인지, 이 명단이 대형주 열 개인지
+        // 소형주 열 개인지 알 수가 없다 — 종목 페이지를 열어야 알던 것을 여기서 답한다.
+        // 지표값(d)은 줄바꿈으로 아래에 붙인다. 전부터 있던 것이고, '왜 이 종목이 뽑혔나'는
+        // 이름 다음에 오는 질문이라 순서가 그렇다.
+        // ⚠ mc 가 없어도 이름은 나온다 — 배포된 style_top.json 이 아직 옛 파일이면
+        //   (캐시·갱신 지연) x.mc 가 undefined 이고, 그때 칸만 빠지지 툴팁이 죽지 않는다.
+        var mc=mcapTxt(x.mc);
+        var head=esc(x.n||x.t)+(mc?' · 시총 '+mc:'');
+        return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+
+               head+(d?'\n'+esc(d):'')+'">'+
                '<b>'+(i+1)+'</b>'+esc(x.t)+'</a>';}).join('')+
       '<a class="stsrc" href="'+esc(s.url)+'" target="_blank" rel="noopener" '+
       'title="'+esc(tip)+'">'+esc(s.index_ref)+(s.substitution?' ⚠':'')+'</a>'+
       '</div></div>';
   }
-  // 랩 행 ↔ ETF 행 — 사용자 요청으로 '모멘텀(랩) / MTUM(ETF)' 처럼 짝지어 낸다(2026-07-29).
+  // 랩 백테스트 ↔ ETF — 전에는 '모멘텀(랩) / MTUM(ETF)' 로 표 안에서 짝지어 냈다(2026-07-29).
+  // 지금은 랩 행을 표에서 빼 **아래 구성종목 줄로 내렸다**(사용자 요청 2026-08-02). 매핑은
+  // 그대로 쓴다 — 표에서 어느 ETF 를 실을지 고르는 데도, 아래 줄에 어느 백테스트를 붙일지
+  // 정하는 데도 같은 계보가 필요하다.
   //   ⚠ 랩 키는 **새 매핑을 만들지 않는다.** ST_KEY(티커→홈 키)와 ST_PERF(홈 키→백테스트 키)를
   //     합성한다. 새 표를 하나 더 두면 IVE→spval→val 계보가 두 곳으로 갈라져 반드시 어긋난다.
   //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
   //     빈다(—). 나머지 다섯은 이름이 같다.
   var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
   function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
-  // stRow 를 그대로 재활용한다 — <small> 슬롯(x.t)에 티커 대신 꼬리표를 넣으면 두 종류 행이
-  // 구별된다. 새 CSS도 새 렌더러도 필요 없다.
-  function labRow(s){
-    var r={};
-    ST_HZ.forEach(function(h){ var v=(s.trails||{})[ST_TR[h[0]]]; r[h[0]]=(v==null?null:v); });
-    return {n:s.label, t:'랩 · 상위10', r:r};
+  // 홈 키(mom·spval·… / sc_*) → 그 줄의 기간별 수익률. 구성종목 줄이 쓴다.
+  // ETF 티커를 거치지 않는다 — 아래 줄은 ETF 가 아니라 랩 규칙의 목록이라서다.
+  //   ⚠ 두 종류가 있고 **섞으면 안 된다.** 그래서 값과 함께 종류(fix)를 돌려준다.
+  //     fix=false — style_trails.json. 월말마다 그 시점 자료로 다시 뽑아 갈아탄 백테스트.
+  //     fix=true  — style_top.json 의 trails_fixed. 오늘 명단을 그대로 과거로 되돌린 것이라
+  //                 룩어헤드다(스크린 점수의 과거 이력이 없어 리밸런스를 재현할 수 없다 —
+  //                 build/style_top.py 의 fixed_trails 주석에 이유를 길게 적어 두었다).
+  function trailsOf(k){
+    var p=ST_PERF[k];
+    if(SLAB&&p&&SLAB[p]&&SLAB[p].trails)return {v:SLAB[p].trails, fix:false};
+    var s=STOP&&STOP[k];
+    if(s&&s.trails_fixed)return {v:s.trails_fixed, fix:true};
+    return null;
   }
-  // 짝지어진 ETF 행은 **티커를 제목으로** 올린다. 그러지 않으면 첫 열이 '모멘텀 / 모멘텀 /
-  // 퀄리티 / 퀄리티' 로 읽혀 두 행이 같은 것의 반복처럼 보인다. 바로 위 랩 행이 이미
-  // 한글 이름을 말하고 있으므로 여기서는 티커가 더 많은 정보를 준다.
-  function etfRow(x){ return {n:x.t, t:'ETF', r:x.r}; }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
     if(!j||!j.style){
@@ -1527,32 +1580,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //     의도된 상태다. 다시 적기로 하면 drawStNote 의 hidden 인자가 그대로 남아 있다.
     //   ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 drawStHold 가 이 배열로
     //     구성종목 줄을 만들므로, 여기서 SIZE 를 지우면 중소형 종목 줄이 경고 없이 사라진다.
+    // 표에는 **ETF 만** 남는다(사용자 요청 2026-08-02). 랩 백테스트 행은 아래 구성종목 줄로
+    // 내려가 그 규칙이 오늘 담은 10종목 바로 위에 붙는다 — 수익률과 명단이 떨어져 있으면
+    // '이 숫자가 저 열 종목의 것'이라는 연결이 화면에서 끊긴다.
+    // ⚠ 랩 행이 사라졌다고 짝 판정(labOf)까지 없애지 않는다. **어느 ETF 를 싣는가**가 여전히
+    //   그 판정이다 — 짝 없는 셋(배당성장 SDY·중소형 SIZE·동일가중 RSP)은 표가 17행까지
+    //   길어져서 뺀 것이고(2026-07-29), macro.html 전체 표에 그대로 있다.
+    // ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 drawStHold 가 이 배열로
+    //   구성종목 줄을 만들므로, 여기서 SIZE 를 지우면 중소형 종목 줄이 경고 없이 사라진다.
     var pair=[], solo=[];
     st.forEach(function(x){ (labOf(x.t)?pair:solo).push(x); });
-    if(pair.length){
-      pair.forEach(function(x){ h+=stRow(labRow(labOf(x.t)),'gap')+stRow(etfRow(x),''); });
-    }else{
-      // 랩 자료를 못 받은 경우(fail-soft). 여기서 solo 를 숨기면 표에 지수 두 줄만 남는다.
-      solo.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
-    }
+    // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
+    // 지수 두 줄만 남으므로 있는 것을 다 낸다.
+    var show=pair.length?pair:solo;
+    // 이름을 제목으로, 티커를 <small> 로 올린다. 전에는 반대였다 — 바로 위 랩 행이 이미
+    // '모멘텀'이라 말하고 있어 ETF 행까지 한글 이름을 달면 첫 열이 '모멘텀 / 모멘텀' 으로
+    // 읽혔다. 그 랩 행이 없어진 지금은 티커만 있는 행이 오히려 무엇인지 말하지 않는다.
+    show.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
     box.innerHTML=h+'</tbody>';
     var s=el('st-sub');
     if(s){
-      var t='· 기간별 수익률 % · 지수 '+ix.length;
-      t+=pair.length? ' + 랩 '+pair.length+'종·대응 ETF '+pair.length+'종'
-                    : ' + ETF '+solo.length+'종';
-      // 두 원천의 갱신 주기가 다르다 — ETF 는 자산 패널(주 1회), 랩은 종목 패널(매일).
-      // 갈릴 수 있으므로 **각 날짜가 무엇의 기준인지 적는다.** 전에는 앞 날짜에 라벨이 없어
-      // '기준 07-28 · 랩은 07-29' 로 읽혀 앞의 것이 무엇인지 알 수 없었다(사용자 지적).
-      var d1=j.as_of||'', d2=(SLAB&&SLAB._as_of)||'';
-      if(pair.length&&d1&&d2&&d1!==d2){
-        t+=' · ETF 기준 '+d1+' · 랩 기준 '+d2;
-        // 1일 열은 하루만 어긋나도 서로 다른 날을 비교한다 — 그 사실을 표 옆에 적는다.
-        t+=' (1일 열은 서로 다른 날)';
-      }else{
-        t+=' · 기준 '+(d1||d2);
-      }
-      s.textContent=t;
+      // 이 표는 이제 ETF 원장 하나다. 랩 기준일은 아래 구성종목 묶음 머리가 스스로 적는다 —
+      // 두 날짜를 여기 한 줄에 겹쳐 두면 어느 것이 어느 표의 기준인지 다시 헷갈린다.
+      s.textContent='· 기간별 수익률 % · 지수 '+ix.length+' + ETF '+show.length+'종 · 기준 '+
+                    (j.as_of||'');
     }
     drawStNote(pair.length?SLAB:null, pair.length?solo:[]);
     // 구성종목 목록은 표와 같은 순서로 아래에 깐다 — 표의 스타일 순서 그대로 + 순수 계열 둘.
@@ -1588,18 +1639,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            p.not_yet+'종이 구간 시작 시점 비멤버 · 기준 '+esc(p.as_of)+').'+ch+
            ' 짧은 구간이라 몇 달에 몰려 있습니다 — 크기는 점추정으로 읽지 마세요.';
   }
-  // 표 아래 각주 — 두 종류 행을 같은 잣대로 읽으면 안 되는 이유를 적는다.
-  // 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목을 과거로 소급한다).
-  // 그것을 안 적고 +134% 를 +22% 위에 얹으면 표가 거짓말을 한다.
+  // 표 아래 각주.
+  // ⚠ 2026-08-02 부터 **비운다.** 이 각주가 하던 말('랩 행은 백테스트다 — ETF 와 직접
+  //   비교하지 마세요')은 랩 행이 표를 떠나면서 갈 곳이 바뀌었다. 지금은 그 수치가 있는
+  //   자리, 즉 아래 '지수 방법론' 묶음 머리가 같은 말을 한다(drawStHold). 경고를 숫자에서
+  //   두 블록 떨어진 곳에 두면 숫자만 보고 지나간다.
+  //   지우지 않고 남기는 이유 — 표에 다시 무언가를 얹기로 하면 각주 자리가 여기다.
+  //   `sl`·`hidden` 인자도 그대로 받는다(각각 랩 자료 유무, 표에서 뺀 ETF 목록).
   function drawStNote(sl,hidden){
     var n=el('stnote'); if(!n)return;
-    if(!sl){n.innerHTML='';return;}
-    // 사용자 결정(2026-07-31): 길어서 뺐다. 한 줄만 남긴다 — 표가 +134% 를 +22% 위에 얹는데
-    // '랩 행은 백테스트다'를 아예 안 적으면 표 자체가 거짓말이 된다. 상세는 style.html 에 있다.
-    // ⚠ 함께 뺀 것: 표에서 제외한 ETF(SDY·SIZE·RSP) 안내. 그 셋은 매크로 보드 전체 표에 있다.
-    //   `hidden` 인자는 그대로 받는다 — 다시 적기로 하면 여기서 쓰면 된다.
-    n.innerHTML='랩 행은 <b>백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 거래일 기준. '+
-      'ETF 와 직접 비교하지 마세요.';
+    n.innerHTML='';
   }
   // 표에 없는데 구성종목만 덧붙일 스타일 — 지금은 없다(2026-07-29 사용자 결정).
   //   순수성장(puregrow)이 여기 있었다. 표에 대응 ETF 행이 없는데 목록에만 있어 홈에서 갈 곳이
@@ -1615,7 +1664,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   Volatility)이 같은 이름이라, 안 붙이면 한쪽이 다른 쪽을 덮어써 조용히 사라진다.
   // 명단은 build/style_top.py 가 stocks.json 의 screens 결과를 **그대로 읽어** 만든다 —
   // 산식을 두 곳에 두면 screener.html 과 홈이 다른 10종을 말하는 날이 온다.
-  var ST_SCR=['sc_qval','sc_growth','sc_income','sc_cash','sc_garp','sc_lowvol','sc_growth_margin'];
+  // ⚠ 마진이 끄는 성장(sc_growth_margin)을 뺐다(사용자 결정 2026-08-02). 자격을 넘긴 종목이
+  //   5종뿐이라 '상위 10종목' 줄에 다섯 칸만 찍혔다 — 다른 줄과 같은 자로 읽히지 않는다.
+  //   build/style_top.py 도 이 스크린을 건너뛴다(양쪽을 같이 고치지 않으면 style_top.json 에
+  //   아무도 안 읽는 줄이 남는다). screener.html 에는 그대로 있다 — 스크린 자체를 없앤 것이
+  //   아니라 홈의 10종목 줄에서 뺀 것이다.
+  var ST_SCR=['sc_qval','sc_growth','sc_income','sc_cash','sc_garp','sc_lowvol'];
   var ST_EXTRA=ST_SCR;
   // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
@@ -1636,6 +1690,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
       return out;
     }
+    // 기간별 수익률 한 줄. 숫자 자체는 위 ETF 표와 **같은 stNum** 으로 만든다 —
+    // 반올림과 '-0.00' 처리가 갈리면 같은 화면의 두 숫자를 나란히 읽을 수 없다.
+    // 다만 룩어헤드 줄(fix)은 **색을 쓰지 않는다.** 칸마다 툴팁으로도 한 번 더 말한다.
+    var FIXTIP='오늘 명단을 그대로 과거로 되돌린 값입니다 — 백테스트가 아닙니다';
+    function rt(t){
+      return '<div class="strt'+(t.fix?' fix':'')+'">'+ST_HZ.map(function(z){
+        var x=stNum(t.v[ST_TR[z[0]]]);
+        return '<span class="'+(t.fix?'':x.c)+'" title="'+esc(z[1])+
+               (t.fix?' · '+FIXTIP:'')+'">'+x.s+'</span>';
+      }).join('')+'</div>';
+    }
+    // 열 이름은 묶음마다 한 줄만. 이름 칸(빈 span)을 함께 둬야 아래 줄들과 격자가 맞는다.
+    function rtHead(fix){
+      return '<div class="sthhd hz"><span class="sthlbl"></span><div class="strt'+
+             (fix?' fix':'')+'">'+
+             ST_HZ.map(function(z){return '<span>'+esc(z[1])+'</span>';}).join('')+'</div></div>';
+    }
     function row(k){
       var s=STOP[k];
       // 이름이 갈 곳이 있으면 링크로 — 지수 스타일은 백테스트(style.html), 스크린은 screener.html.
@@ -1643,19 +1714,45 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var tip=ST_PERF[k]?'이 스타일의 최근 1년 백테스트':'이 스크린의 판정과 조건';
       var lbl=h?'<a class="sthlbl lnk" href="'+h+'" title="'+tip+'">'+esc(s.label)+'</a>'
               :'<span class="sthlbl">'+esc(s.label)+'</span>';
-      return '<div class="sthrow">'+lbl+stDetail(s)+'</div>';
+      // 수익률이 없으면 첫 줄은 이름뿐이다(fail-soft) — style_trails.json 을 못 받아도
+      // 명단은 그대로 나온다. 둘은 서로 다른 파일이고 갱신 잡도 다르다.
+      var tr=trailsOf(k);
+      return '<div class="sthrow"><div class="sthhd">'+lbl+(tr?rt(tr):'')+'</div>'+
+             stDetail(s)+'</div>';
+    }
+    // 묶음 하나 — 그 안에 수익률이 하나라도 있을 때만 열 이름 줄을 깐다.
+    // 열 이름 줄의 꼬리표(fix)는 그 묶음 첫 줄의 종류를 따른다. 한 묶음 안에서 종류가
+    // 섞이는 경우는 없다 — 위는 전부 백테스트, 아래는 전부 되돌아보기다.
+    function grp(list){
+      var t=null;
+      list.forEach(function(k){ if(!t)t=trailsOf(k); });
+      return (t?rtHead(t.fix):'')+list.map(row).join('');
     }
     var A=pick(keys), B=pick(ST_SCR);
     if(!A.length&&!B.length){box.innerHTML='';return;}
     var h='';
-    if(A.length)h+='<div class="sthgrp">지수 방법론 <em>MSCI · S&amp;P 공개 산식을 이 유니버스에 적용</em></div>'+
-                   A.map(row).join('');
+    // 수익률이 표에서 여기로 내려왔으므로, 그 수치를 어떻게 읽어야 하는지도 여기서 말한다
+    // (전에는 표 아래 각주였다 — drawStNote 참조). 이 랩이 스스로 잰 것 중 가장 큰 것이
+    // 생존편향이다(오늘의 518종목을 과거로 소급한다). 그것을 안 적고 +153% 를 ETF 의 +25%
+    // 옆에 두면 화면이 거짓말을 한다.
+    if(A.length){
+      var d=(SLAB&&SLAB._as_of)||'';
+      h+='<div class="sthgrp">지수 방법론 <em>MSCI · S&amp;P 공개 산식을 이 유니버스에 적용 · '+
+         '수익률은 <b>백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
+         '위 ETF 표와 직접 비교하지 마세요'+(d?' · 기준 '+esc(d):'')+'</em></div>'+grp(A);
+    }
     // 스크린 묶음은 판정을 함께 적는다. 안 적으면 '랩이 고른 열 종목'으로 읽히는데,
     // 이 랩은 이 스크린들을 이미 기각했다(screener.html 의 한 줄 결론).
+    // 스크린 줄의 수익률은 위 묶음과 **다른 종류**다. 그 말을 묶음 머리에서 먼저 한다 —
+    // 실측(2026-08-02)으로 여기가 +404%, 위 백테스트의 최고가 +153% 다. 종목을 오늘 자료로
+    // 골라 놓고 과거를 재니 좋게 나오는 것이 당연하고, 그것을 안 적으면 화면이
+    // '스크린이 훨씬 낫다'고 말하게 된다. 색을 뺀 것(.strt.fix)과 같은 이유다.
     if(B.length)h+='<div class="sthgrp">랩 스크린 '+
                    '<em>조건을 만족하는 목록일 뿐 매수 신호가 아닙니다 — '+
-                   '<a href="screener.html">초과수익이 확인된 스크린은 0종</a></em></div>'+
-                   B.map(row).join('');
+                   '<a href="screener.html">초과수익이 확인된 스크린은 0종</a>'+
+                   ' · 수익률은 <b>오늘 명단을 과거로 되돌린 것</b>이라 백테스트가 아닙니다'+
+                   '(이미 오른 종목이 뽑힌 결과 — 위 묶음과 같은 잣대로 읽지 마세요)</em></div>'+
+                   grp(B);
     box.innerHTML='<div class="sthold">'+h+'</div>';
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).

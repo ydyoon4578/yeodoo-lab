@@ -156,6 +156,13 @@ def main() -> int:
     tb = importlib.util.module_from_spec(spec); spec.loader.exec_module(tb)
     FX = tb.load_fund()
 
+    # 구간 정의(1일·1주·…·1년·YTD)는 style_top_pdf.py 가 정본이다. 여기서 다시 적으면
+    # 홈 한 화면 안에서 위 묶음과 아래 묶음의 '3개월'이 다른 날을 가리키는 날이 온다.
+    # ⚠ import 만 한다 — 그 모듈은 계산에 numpy 만 쓰고 matplotlib 은 그릴 때만 부른다
+    #   (그쪽 파일 머리의 설명). 폰트 없는 러너에서도 이 import 는 안전하다.
+    spec2 = importlib.util.spec_from_file_location("_sp", os.path.join(HERE, "style_top_pdf.py"))
+    sp = importlib.util.module_from_spec(spec2); spec2.loader.exec_module(sp)
+
     ISS = issuer_map(uni)
 
     # ── 랩 스크린 ───────────────────────────────────────────────────
@@ -170,6 +177,12 @@ def main() -> int:
     SCR_DOC = load("screens.json") or {}
     SCR_RES = (st.get("screens") or {})
     SCR_DIR = SCR_DOC.get("dir") or {}
+    # 홈의 '상위 10종목' 줄에 싣지 않을 스크린. **스크린을 없애는 것이 아니다** —
+    # screener.html 은 screens.json 과 stocks.json 을 직접 읽으므로 그 화면에는 그대로 있다.
+    # index.html 의 ST_SCR 과 짝이다. 한쪽만 고치면 style_top.json 에 아무도 안 읽는 줄이
+    # 남거나(여기만 두면) 화면에서 조용히 사라진다(저쪽만 빼면).
+    SCR_SKIP = {"growth_margin": "자격 통과가 5종뿐이라 10칸 줄에 맞지 않는다"
+                                 " — 사용자 결정 2026-08-02"}
     # 스크린이 쓰는 지표의 한글 이름 — 칩 툴팁에 그대로 나간다.
     SCR_LBL = {"fpe": "선행PER", "tpe": "PER", "ps": "PSR", "pb": "PBR", "de": "부채비율 D/E %",
                "beta": "베타", "roe": "ROE %", "pm": "순이익률 %", "rg": "매출성장 %",
@@ -178,6 +191,14 @@ def main() -> int:
     def fund(t, k):
         v = (uni[t].get("fund") or {}).get(k)
         return v if isinstance(v, (int, float)) else None
+
+    # 시가총액(억 달러) — 홈의 종목 칩에 마우스를 올렸을 때 이름과 함께 나갈 값이다.
+    # 없으면 **None 으로 둔다.** home_flow.py 는 없는 것을 0 으로 채우는데(정렬 키라
+    # 숫자여야 한다) 여기는 정렬이 아니라 글로 나가는 자리라, 0 을 쓰면 화면에
+    # '시총 0억$' 이라고 적힌 회사가 생긴다. 모르는 것은 그 칸을 빼는 편이 맞다.
+    def mc_of(t):
+        v = fund(t, "mc")
+        return None if v is None else round(float(v))
 
     def rets(a):
         return a[1:] / a[:-1] - 1.0
@@ -327,6 +348,50 @@ def main() -> int:
             if SPVAL[t][0] > vmean + PURE_MIN:
                 PURE_V.append(t)
 
+    # ── 스크린 줄의 기간별 수익률 ────────────────────────────────────────────
+    # ⚠ 지수 방법론 줄의 수익률(data/style_trails.json)과 **종류가 다른 수치다.**
+    #     저쪽 — 월말마다 그 시점 자료로 다시 뽑아 갈아탄 백테스트(style_top_pdf.backtest).
+    #     이쪽 — **오늘 뽑힌 열 종목을 1년 전에 사서 그대로 들고 있었다면** 얼마였나.
+    #
+    #   왜 같은 방식으로 못 하나. 스크린 점수는 벤더 스냅샷 지표(선행PER·선행EPS성장·
+    #   배당수익률·FCF수익률 …)의 백분위로 매긴다. 그 값의 **과거 이력이 이 저장소에 없다** —
+    #   data/fund_history.json 은 스냅샷이 딱 하나고(2026-07-29) data/estimates.json 도 3일치다.
+    #   과거 월말의 점수를 다시 만들 수 없으니 리밸런스를 재현할 방법이 없다.
+    #   data/screens.json 의 policy 가 말하는 '사내 PIT 데이터로 돌린 백테스트'가 사내망에만
+    #   있는 이유가 정확히 이것이다.
+    #
+    #   그래서 이 수치는 **룩어헤드다.** 이미 오른 종목이 오늘 스크린에 뽑혔을 수 있고,
+    #   그것을 모르는 척 과거로 되돌리는 것이라 좋게 나오게 되어 있다. 숨기지 않는다 —
+    #   키 이름을 trails_fixed 로 따로 두고(홈이 백테스트와 다른 꼬리표로 그린다) 문서에
+    #   trails_fixed_note 를 함께 싣는다. 같은 이름(trails)을 쓰면 언젠가 둘이 섞인다.
+    FIX_WIN = 252
+
+    def fixed_trails(tickers):
+        """오늘 명단을 창 시작에 동일가중으로 사서 그대로 둔 곡선의 기간별 수익률 %."""
+        end = len(dates) - 1
+        start = max(0, end - FIX_WIN)
+        rows = []
+        for t in tickers:
+            a = PX.get(t)
+            if a is None:
+                continue
+            seg = a[start:end + 1]
+            if np.isnan(seg[0]) or seg[0] <= 0:
+                continue                        # 창 시작에 값이 없으면 그 종목은 뺀다
+            rows.append(seg / seg[0])
+        if len(rows) < 2:                       # 두 종목 미만이면 '바스켓'이라 부를 수 없다
+            return None
+        nav = np.nanmean(np.array(rows, float), axis=0)
+        # 중간 결측(거래정지 등)은 직전 값으로 끌고 간다. 그대로 두면 그 칸이 NaN 이 되어
+        # 뒤의 구간 수익률이 통째로 빈다 — 한 종목의 하루 공백이 1년 칸을 지우면 안 된다.
+        for i in range(1, len(nav)):
+            if np.isnan(nav[i]):
+                nav[i] = nav[i - 1]
+        if np.isnan(nav[0]):
+            return None
+        out = sp.trails(nav, dates, start)
+        return {k: (None if v is None or v != v else round(float(v), 2)) for k, v in out.items()}
+
     def pack(key, label, ref, url, rule, sub, score, detail, rev_=False, n_=TOPN, slab="합성 z"):
         # 점수가 (자른 z, 안 자른 z) 쌍이면 둘로 정렬한다 — 앞이 같을 때만 뒤가 순서를 가른다.
         pair = any(isinstance(v, tuple) for v in score.values())
@@ -345,6 +410,7 @@ def main() -> int:
                               if pair else None),
                 "dedup_dropped": dropped or None,
                 "top": [{"t": t, "n": uni[t].get("name"), "s": uni[t].get("sector"),
+                         "mc": mc_of(t),
                          "score": round(v[0] if pair else v, 3),
                          "score_unclipped": (round(v[1], 3) if pair else None),
                          "d": detail(t)} for t, v in rows]}
@@ -415,6 +481,9 @@ def main() -> int:
     # ⚠ 대응 ETF 가 없다. 홈 성과표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29 결정)
     #   이 스타일은 표에 못 들어가고 구성종목 줄에만 나온다(index.html 의 ST_EXTRA).
     for sk, sc in (SCR_DOC.get("screens") or {}).items():
+        if sk in SCR_SKIP:
+            print("  · screens.%s 는 홈에 싣지 않는다 — 건너뛴다(%s)" % (sk, SCR_SKIP[sk]))
+            continue
         rows = SCR_RES.get(sk) or []
         score = {r["t"]: float(r["s"]) for r in rows
                  if r.get("t") in uni and r.get("s") is not None}
@@ -433,11 +502,12 @@ def main() -> int:
         rule = "%s 의 좋은쪽 백분위 평균. 하한 %s 을 넘은 종목만 채점한다." % (cond, qual)
         if qmax:
             rule += " 상한: %s." % qmax
-        styles.append(
-            pack("sc_" + sk, sc.get("name") or sk, "여두 전략 랩 · 스크린",
-                 "screener.html#s=" + sk, rule, None, score,
-                 (lambda ks: (lambda t: {SCR_LBL.get(k, k): R2(fund(t, k)) for k in ks}))(keys),
-                 slab="적합도"))
+        ent = pack("sc_" + sk, sc.get("name") or sk, "여두 전략 랩 · 스크린",
+                   "screener.html#s=" + sk, rule, None, score,
+                   (lambda ks: (lambda t: {SCR_LBL.get(k, k): R2(fund(t, k)) for k in ks}))(keys),
+                   slab="적합도")
+        ent["trails_fixed"] = fixed_trails([x["t"] for x in ent["top"]])
+        styles.append(ent)
 
     doc = {
         "note": "스타일별 상위 10종목. 유니버스 518종목(S&P 500 ∪ NASDAQ 100)에 각 스타일 지수의 "
@@ -448,6 +518,14 @@ def main() -> int:
                 "구별 불가'로 기각했다 — 순위를 매수 신호로 읽지 말 것.",
         "as_of": st.get("as_of"), "universe": len(uni), "topn": TOPN,
         "px_window": {"from": dates[0], "to": dates[-1], "n": len(dates)},
+        "trails_fixed_note":
+            "스크린 줄에만 있는 trails_fixed 는 **백테스트가 아니다.** 오늘 뽑힌 상위 10종목을 "
+            "%d거래일 전에 동일가중으로 사서 그대로 들고 있었다면 얼마였나를 되돌아본 값이다. "
+            "종목을 오늘 자료로 골라 놓고 과거를 재므로 **룩어헤드이며 좋게 나오게 되어 있다.** "
+            "지수 방법론 줄의 수익률(data/style_trails.json)은 월말마다 그 시점 자료로 다시 뽑는 "
+            "백테스트라 종류가 다르다 — 같은 잣대로 비교하지 말 것. 스크린을 같은 방식으로 재려면 "
+            "벤더 스냅샷 지표의 과거 이력이 필요한데 이 저장소에는 없다"
+            "(data/fund_history.json 스냅샷 1개 · data/estimates.json 3일)." % FIX_WIN,
         "styles": styles,
     }
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(
