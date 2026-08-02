@@ -476,6 +476,45 @@ def main() -> int:
              {t: v for t in uni for v in [fund(t, "mc")] if v},
              lambda t: {"시가총액 억$": R2(fund(t, "mc"))}, rev_=True, slab="시가총액 억$"),
     ]
+    # ── 공개 산식 지수 넷 — **정의는 build/style_top_pdf.py 가 정본이다** ─────────────
+    # 2026-08-02 사용자 요청("공개 산식이 있는 지수·ETF 를 더 찾아 같은 방식으로").
+    # ⚠ 점수 함수를 여기 다시 짜지 않는다. 그 파일의 sc_* 를 **오늘 날짜로 한 번 불러** 쓴다.
+    #   산식이 두 곳에 있으면 홈의 10종목과 바로 그 위에 붙는 기간별 수익률이 서로 다른 규칙을
+    #   말하는 날이 온다 — 이 파일이 랩 스크린에 대해 이미 지키고 있는 경계와 같은 이유다.
+    #   (위 여섯 스타일은 이 파일에 산식이 따로 있다. 그건 이 구조가 생기기 전의 것이고,
+    #    합치는 것은 별개의 일이라 여기서 건드리지 않는다.)
+    # 방법론 문서 주소만 여기서 준다 — 그쪽 STYLES 는 화면 링크를 들고 있지 않다.
+    IDX_URL = {
+        "div": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-high-dividend-index/",
+        "buyback": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-buyback-index/",
+        "fcfy": "https://www.paceretfs.com/products/cowz",
+        "garp": "https://www.spglobal.com/spdji/en/indices/strategy-indices/sp-500-garp-index/",
+    }
+    # 정본에서 벗어난 곳. 화면이 칩 옆 ⚠ 로 이것을 낸다 — 근사한 것을 근사했다고 적지 않으면
+    # 그냥 그 지수인 척이 된다.
+    IDX_SUB = {
+        "fcfy": "정본의 분모는 **기업가치(EV)** 인데 여기서는 시가총액을 쓴다 — data/fx 에 "
+                "순부채를 만들 태그가 없다(liab 는 매입채무까지 포함한 부채총계다). "
+                "금융·부동산 제외는 정본과 같다.",
+        "garp": "정본은 성장 상위 150종을 거른 뒤 QV 상위 75종이다. 여기서는 유니버스가 518종이고 "
+                "재무 결측으로 채점 가능 종목이 달마다 달라, 개수 대신 **비율(상위 30%)** 로 옮겼다.",
+    }
+    Pn = sp.Panel()
+    ilast = len(Pn.dates) - 1
+    for S in sp.STYLES:
+        if S[0] not in IDX_URL:
+            continue
+        key, label, ref, fn, mlab, desc = S[0], S[1], S[2], S[3], S[4], S[6]
+        sc, tie = fn(Pn, ilast)
+        if not sc:
+            print("  ⚠ %s 채점 결과가 없다 — 건너뛴다" % label)
+            continue
+        styles.append(
+            pack(key, label, ref, IDX_URL[key], desc.split("\n")[0], IDX_SUB.get(key),
+                 {t: (sc[t], tie.get(t, 0.0)) for t in sc},
+                 (lambda d, m: (lambda t: {m: R2(d.get(t))}))(sc, mlab),
+                 slab=mlab))
+
     # 다른 스타일은 공개 지수 방법론을 따르지만 GARP 는 이 랩의 스크린이다 —
     # index_ref 를 지수 이름이 아니라 그 화면으로 적어 출처를 헷갈리지 않게 한다.
     # ⚠ 대응 ETF 가 없다. 홈 성과표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29 결정)

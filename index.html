@@ -1610,7 +1610,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 여기에 넘기는 것은 **홈 키**(ST_KEY)다. 백테스트 키를 넘기면 가치가 spval(S&P 500
     //   Value)에서 val(MSCI Enhanced Value)로 조용히 바뀐다 — 둘 다 style_top.json 에 있어
     //   에러도 빈 줄도 안 난다.
-    drawStHold(st.map(function(x){return ST_KEY[x.t];}));
+    // 뒤에 ST_IDX 를 잇는다 — 짝 ETF 가 없어 표에는 없지만 산식은 공개된 지수들이다.
+    // pick() 이 중복과 자료 없는 키를 걸러 주므로 그냥 이어 붙이면 된다.
+    drawStHold(st.map(function(x){return ST_KEY[x.t];}).concat(ST_IDX));
   }
   // 유니버스 편향 실측 한 줄 — style_trails.json 의 pit 블록에서 만든다(build/style_pit.py 산출).
   // 값이 없으면 빈 문자열을 돌려 정성 문구만 남는다. **수치를 손으로 적지 않는다.**
@@ -1671,9 +1673,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   아니라 홈의 10종목 줄에서 뺀 것이다.
   var ST_SCR=['sc_qval','sc_growth','sc_income','sc_cash','sc_garp','sc_lowvol'];
   var ST_EXTRA=ST_SCR;
-  // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
+  // style.html 이 다루는 것들 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
-  var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
+  // 뒤의 넷은 2026-08-02 에 더한 공개 산식 지수들이고 양쪽 키가 같다.
+  var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
+               div:'div',buyback:'buyback',fcfy:'fcfy',garp:'garp'};
+  // 산식은 공개돼 있는데 **대응 ETF 가 없어** 위 표에는 못 들어가는 지수들(사용자 요청
+  // 2026-08-02). 표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29) 여기 구성종목
+  // 줄에만 나온다 — 위 여섯과 성격은 같고(공개 산식 · 월말 리밸런스 백테스트) 짝만 없다.
+  // ⚠ garp 는 아래 랩 스크린의 sc_garp(합리적 가격의 성장주)와 **다른 규칙이다.** 이쪽은
+  //   S&P 500 GARP 지수의 두 단계 관문이고, 저쪽은 이 랩이 정의한 백분위 스크린이다.
+  //   키를 갈라 두었고 index_ref 도 서로 다르게 나간다.
+  // ⚠ build/validate_site.py 가 이 배열을 읽는다 — 여기 없는 백테스트 키는 '잰 것이 화면에
+  //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
+  var ST_IDX=['div','buyback','fcfy','garp'];
   // 백테스트가 아니라 스크린인 것 — 이름을 그 화면의 해당 스크린으로 보낸다.
   function scrHref(k){ return /^sc_/.test(k)?('screener.html#s='+k.slice(3)):null; }
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
