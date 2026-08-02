@@ -269,6 +269,12 @@
   .sttbl tr.ix th,.sttbl tr.ix td{background:var(--panel-2);font-weight:700}
   .sttbl tr.gap th,.sttbl tr.gap td{border-top:2px solid var(--line)}
   .sttbl td.up{color:var(--deploy)} .sttbl td.dn{color:var(--hot)} .sttbl td.z{color:var(--muted)}
+  /* 샤프 — 정렬 기준이라 구분 바로 옆이다. 수익률 7칸과 **성격이 다르다**(비율이지 수익이
+     아니다) — 초록/빨강을 칠하면 옆 칸들과 같은 종류로 읽힌다. 색 없이 굵게만 두고
+     세로선으로 두 블록을 가른다. */
+  .sttbl th.shp,.sttbl td.shp{border-right:1px solid var(--line);font-weight:700;color:var(--ink-2)}
+  .sttbl thead th.shp{color:var(--muted)}
+  .sttbl td.shp.z{color:var(--muted);font-weight:400}
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   /* 묶음 머리 — ETF 원장과 지수 방법론은 성격이 다르다(하나는 실제 상품 수익률, 하나는
      이 랩의 백테스트). 한 표에 넣은 이상 선 하나로는 부족해 글자로 가른다. */
@@ -1492,9 +1498,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   // 표는 **수익률만** 담는다. 구성종목을 행 사이에 끼워 넣으니 표가 성과표와 종목목록
   // 사이 어디쯤이 돼 둘 다 안 읽혔다 — 아래로 따로 뺐다(사용자 결정 2026-07-29).
-  function stRow(x,cls){
+  // 샤프 한 칸. 수익률과 **성격이 다르다**(비율이지 수익이 아니다) — 초록/빨강을 칠하면
+  // 옆 7칸과 같은 종류로 읽힌다. 색 없이 굵게만 두고 세로선으로 블록을 가른다.
+  function stShp(v){
+    if(v==null||v!==v)return '<td class="shp z">—</td>';
+    return '<td class="shp">'+v.toFixed(2)+'</td>';
+  }
+  function stRow(x,cls,sh){
     return '<tr'+(cls?' class="'+cls+'"':'')+
-      '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+
+      '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
@@ -1549,6 +1561,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var p=ST_PERF[k];
     return (SLAB&&p&&SLAB[p]&&SLAB[p].trails)?{v:SLAB[p].trails}:null;
   }
+  // 샤프 — 지수 방법론 줄은 백테스트에서, ETF·지수 행은 같은 창으로 잰 값에서 온다
+  // (build/style_top_pdf.py 가 둘 다 같은 start·end·metrics 로 만든다). 창이 하나라
+  // 한 열에 나란히 놓고 비교해도 된다 — 이 표에서 그것이 되는 유일한 열이다.
+  function sharpeOf(k){
+    var p=ST_PERF[k], s=(SLAB&&p)?SLAB[p]:null;
+    return (s&&typeof s.sharpe==='number')?s.sharpe:null;
+  }
+  function etfSharpe(t){
+    var m=SLAB&&SLAB._etf;
+    return (m&&typeof m[t]==='number')?m[t]:null;
+  }
   // 지수 방법론 한 줄 — 이름(백테스트 링크) · 참조지수 · 기간별 수익률 7칸.
   // 종목 10개는 **바로 아래 접힌 행**으로 내린다(사용자 요청 2026-08-02). 한 스타일이
   // 한 줄을 쓰게 되고, 열은 위 ETF 행과 같은 표라 저절로 맞는다.
@@ -1564,9 +1587,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var ref='<small title="'+esc(tip)+'">'+esc(s.index_ref||'')+(s.substitution?' ⚠':'')+'</small>';
     var btn='<button type="button" class="htg" data-hold="h-'+esc(k)+'" aria-expanded="false" '+
             'aria-controls="h-'+esc(k)+'" title="구성종목 10개 펼치기">▸</button>';
-    return '<tr><th scope="row">'+btn+nm+ref+'</th>'+
+    return '<tr><th scope="row">'+btn+nm+ref+'</th>'+stShp(sharpeOf(k))+
            ST_HZ.map(function(z){return stCell(t?t.v[ST_TR[z[0]]]:null);}).join('')+'</tr>'+
-           '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+1)+'">'+
+           '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+2)+'">'+
            stDetail(s)+'</td></tr>';
   }
   function drawStyle(j){
@@ -1574,10 +1597,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!j||!j.style){
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
     var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
-    var ncol=ST_HZ.length+1;
-    var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
+    var ncol=ST_HZ.length+2;                     // 구분 + 샤프 + 구간 7칸
+    // 샤프를 **구분 바로 옆**에 둔다 — 아래 묶음이 이 값으로 정렬되므로 정렬 기준이
+    // 첫 숫자여야 표가 왜 그 순서인지 눈으로 읽힌다.
+    var h='<thead><tr><th>구분</th><th class="shp" title="'+
+          esc('연율 샤프 — 같은 창(1년) · 같은 계산. ETF·지수 행과 지수 방법론 행을 '+
+              '나란히 비교해도 되는 유일한 열이다')+'">샤프</th>'+
+          ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
-    ix.forEach(function(x){h+=stRow(x,'ix');});
+    ix.forEach(function(x){h+=stRow(x,'ix',etfSharpe(x.t));});
     // ⚠ 어느 ETF 를 싣는지는 여전히 짝 판정(labOf)이 정한다 — 짝 없는 셋(배당성장 SDY·
     //   중소형 SIZE·동일가중 RSP)은 표가 길어져서 뺀 것이고(2026-07-29) macro.html 에 있다.
     // ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 지수 방법론 묶음이 이 배열로
@@ -1588,8 +1616,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 지수 두 줄만 남으므로 있는 것을 다 낸다.
     var show=pair.length?pair:solo;
     h+='<tr class="grp"><th colspan="'+ncol+'">스타일 ETF <em>실제 상품의 수익률 — '+
-       '아래 묶음과 같은 잣대로 읽어도 되는 유일한 행이다</em></th></tr>';
-    show.forEach(function(x){ h+=stRow(x,''); });
+       '아래 묶음과 같은 잣대로 읽어도 되는 유일한 행이다 · 샤프순</em></th></tr>';
+    // 아래 묶음과 같은 기준으로 세운다. 한 열이 정렬 기준인데 위아래가 다른 순서면
+    // 그 열이 무엇을 뜻하는지 화면이 두 번 말하게 된다.
+    show.slice().sort(function(a,b){
+      var x=etfSharpe(a.t), y=etfSharpe(b.t);
+      return (y==null?-Infinity:y)-(x==null?-Infinity:x);
+    }).forEach(function(x){ h+=stRow(x,'',etfSharpe(x.t)); });
     // 지수 방법론 — 공개 산식을 이 유니버스에 적용한 이 랩의 백테스트.
     // 경고를 숫자와 같은 표에 둔다. 위 ETF 행과 열이 맞아 버렸으므로, 안 적으면 두 종류가
     // 한 잣대로 읽힌다 — 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목
@@ -1598,12 +1631,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     st.map(function(x){return ST_KEY[x.t];}).concat(ST_IDX).forEach(function(k){
       if(k&&!ST_HIDE[k]&&STOP[k]&&!seen[k]){seen[k]=1;keys.push(k);}
     });
+    // 샤프 내림차순(사용자 요청 2026-08-02). **공통 창이라 정렬이 성립한다** — 열일곱 줄이
+    // 전부 같은 start~as_of 를 쓴다(backtest 가 창을 한 번만 정하고, 그 창에서 후보를
+    // 못 고르는 규칙은 아예 빠진다). 창이 다르면 이 정렬은 규칙이 아니라 기간을 줄 세운다.
+    // ⚠ 샤프가 없는 줄(자료 못 받음)은 뒤로 — 0 으로 치면 음의 샤프보다 앞에 온다.
+    keys.sort(function(a,b){
+      var x=sharpeOf(a), y=sharpeOf(b);
+      return (y==null?-Infinity:y)-(x==null?-Infinity:x);
+    });
     if(keys.length){
-      var d=(SLAB&&SLAB._as_of)||'';
+      var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'';
       h+='<tr class="grp"><th colspan="'+ncol+'">지수 방법론 '+keys.length+'종 '+
          '<em>MSCI · S&amp;P · Nasdaq · Pacer 공개 산식을 이 유니버스(518종)에 적용 · '+
          '<b>수익률은 백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
-         '상위 10종목 동일가중'+(d?' · 기준 '+esc(d):'')+
+         '상위 10종목 동일가중 · <b>샤프순</b>(공통 창'+
+         (d0&&d?' '+esc(d0)+'~'+esc(d):'')+')'+
          ' · 이름을 누르면 <a href="style.html">상세</a>, ▸ 를 누르면 구성종목</em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
@@ -1674,7 +1716,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
                div:'div',buyback:'buyback',fcfy:'fcfy',
                divlv:'divlv',netbuy:'netbuy',squal:'squal',
-               puregrow:'puregrow',purevalue:'purevalue'};
+               puregrow:'puregrow',purevalue:'purevalue',
+               spmo:'spmo',qvm:'qvm',snqual:'snqual'};
   // 대응 ETF 가 없어 위 ETF 묶음에는 못 들어가지만 산식이 공개된 지수들. 지수 방법론 묶음
   // 끝에 이 순서로 붙는다(퀄리티 → 순수 계열 → GARP → 배당 → 환원 → 현금흐름).
   // ⚠ 합리적성장(S&P 500 GARP)이 여기 있었다 — 2026-08-02 사용자 결정으로 뺐다.
@@ -1685,7 +1728,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   그쪽은 이 랩이 정의한 백분위 스크린이지 S&P 지수가 아니다.
   // ⚠ build/validate_site.py 가 이 배열을 읽는다 — 여기 없는 백테스트 키는 '잰 것이 화면에
   //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
-  var ST_IDX=['squal','puregrow','purevalue','div','divlv','buyback','netbuy','fcfy'];
+  // ⚠ 배열 순서는 **화면 순서가 아니다.** 표는 샤프 내림차순으로 다시 세운다(drawStyle).
+  //   여기 순서는 중복 제거 순서일 뿐이라, 새 지수는 끝에 붙이면 된다.
+  var ST_IDX=['squal','snqual','spmo','qvm','puregrow','purevalue',
+              'div','divlv','buyback','netbuy','fcfy'];
   // 중소형은 뺀다(사용자 결정 2026-08-02). 대응 ETF(SIZE)가 짝 판정에서 빠져 표에 원래
   // 없었고, 구성종목 줄에만 혼자 남아 있었다.
   // ⚠ 랩 스크린(sc_*)은 홈에서 통째로 뺐다(사용자 결정 2026-08-02). ST_SCR·ST_EXTRA·
@@ -1705,7 +1751,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var sj=a[0], tj=a[1];
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
       if(tj&&tj.styles){
-        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null};
+        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null,
+              _etf:tj.etf_sharpe||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
       return a[2];

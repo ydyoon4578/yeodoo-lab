@@ -486,6 +486,10 @@ def main() -> int:
                  "methodology-sp-low-volatility-high-dividend-indices.pdf",
         "netbuy": "https://indexes.nasdaq.com/docs/Methodology_DRB.pdf",
         "squal": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-quality-index/",
+        "spmo": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-momentum-indices.pdf",
+        "qvm": "https://www.spglobal.com/spdji/en/documents/methodologies/"
+               "methodology-sp-qvml-multi-factor-indices.pdf",
+        "snqual": "https://www.msci.com/indexes/index/705693",
         "puregrow": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
         "purevalue": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
     }
@@ -500,6 +504,12 @@ def main() -> int:
         "netbuy": "정본은 '순감소 5% 이상'을 **자격**으로 두고 시총가중한다. 여기서는 상위 10종목을 "
                   "세우는 형태라 자격을 순위로 옮겼다(상위 10종은 언제나 5%를 넘는다).",
         "squal": "재무레버리지 자리에 **부채총계÷자기자본** 을 쓴다 — data/fx 에 차입금 태그가 없다.",
+        "spmo": "위 모멘텀(MSCI)과 사촌이라 오늘 상위 10종 중 **7종이 같다.** 6개월 축 하나가 "
+                "순위를 얼마나 바꾸는지가 이 줄이 답하는 질문이다.",
+        "qvm": "세 팩터 점수는 이 표의 퀄리티 · 가치 · 모멘텀 줄과 **같은 산식**을 쓴다. "
+               "정본의 세부 정의와 완전히 같지는 않지만, 그래야 '그 셋을 평균한 줄'이 성립한다.",
+        "snqual": "퀄리티(MSCI) 줄과 원시값은 같고 **표준화 모집단만 섹터 안**이다. "
+                  "관측 20종 미만인 섹터는 z 를 만들 수 없어 통째로 빠진다.",
         "puregrow": "정본은 S&P Total Market 에서 표준화하고 모지수에서 랭크한다 — "
                     "여기서는 둘 다 유니버스 518종목이다.",
         "purevalue": "정본은 S&P Total Market 에서 표준화하고 모지수에서 랭크한다 — "
