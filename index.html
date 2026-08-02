@@ -1672,16 +1672,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   // 나머지는 2026-08-02 에 더한 공개 산식 지수들이고 양쪽 키가 같다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
-               div:'div',buyback:'buyback',fcfy:'fcfy',garp:'garp',
+               div:'div',buyback:'buyback',fcfy:'fcfy',
                divlv:'divlv',netbuy:'netbuy',squal:'squal',
                puregrow:'puregrow',purevalue:'purevalue'};
   // 대응 ETF 가 없어 위 ETF 묶음에는 못 들어가지만 산식이 공개된 지수들. 지수 방법론 묶음
   // 끝에 이 순서로 붙는다(퀄리티 → 순수 계열 → GARP → 배당 → 환원 → 현금흐름).
-  // ⚠ garp 는 screener.html 의 sc_garp(합리적 가격의 성장주)와 **다른 규칙이다.** 이쪽은
-  //   S&P 500 GARP 지수의 두 단계 관문이고, 저쪽은 이 랩이 정의한 백분위 스크린이다.
+  // ⚠ 합리적성장(S&P 500 GARP)이 여기 있었다 — 2026-08-02 사용자 결정으로 뺐다.
+  //   build/style_top_pdf.py 의 sc_garp·STYLES 항목과 style_top.py 의 IDX_URL·IDX_SUB 도
+  //   **함께** 지웠다. 한쪽만 빼면 style_trails.json 에 아무도 안 읽는 스타일이 남고
+  //   validate_site 의 고아 검사가 그것을 잡는다.
+  //   screener.html 의 sc_garp(합리적 가격의 성장주)는 **다른 규칙이고 그대로 있다** —
+  //   그쪽은 이 랩이 정의한 백분위 스크린이지 S&P 지수가 아니다.
   // ⚠ build/validate_site.py 가 이 배열을 읽는다 — 여기 없는 백테스트 키는 '잰 것이 화면에
   //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
-  var ST_IDX=['squal','puregrow','purevalue','garp','div','divlv','buyback','netbuy','fcfy'];
+  var ST_IDX=['squal','puregrow','purevalue','div','divlv','buyback','netbuy','fcfy'];
   // 중소형은 뺀다(사용자 결정 2026-08-02). 대응 ETF(SIZE)가 짝 판정에서 빠져 표에 원래
   // 없었고, 구성종목 줄에만 혼자 남아 있었다.
   // ⚠ 랩 스크린(sc_*)은 홈에서 통째로 뺐다(사용자 결정 2026-08-02). ST_SCR·ST_EXTRA·

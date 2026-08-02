@@ -687,50 +687,6 @@ sc_puregrow.min_names = 30
 sc_purevalue.min_names = 30
 
 
-def sc_garp(P, i):
-    """S&P 500 GARP — 성장 상위 관문을 통과한 것 중 '퀄리티·가치' 복합점수가 높은 순.
-
-    정본은 두 단계다. ① 3년 EPS 성장률과 3년 주당매출(SPS) 성장률의 z 평균으로 성장 상위
-    150종을 고르고, ② 그 안에서 재무레버리지(낮을수록)·ROE·이익수익률(E/P)의 z 평균으로
-    75종을 남긴다.
-    ⚠ 여기서는 ①을 개수가 아니라 **비율(상위 30% = 150/500)** 로 옮긴다. 유니버스가 518종인
-      데다 재무 결측으로 채점 가능 종목이 달마다 달라, 150 을 고정하면 관문이 어떤 달은
-      상위 30% 이고 어떤 달은 상위 45% 가 된다 — 개수보다 비율을 지키는 편이 정본에 가깝다.
-      비율만 지키므로 관문 통과가 100종에 못 미칠 수 있다(아래 min_names 참조).
-    ⚠ 성장률은 **TTM 대 3년 전 TTM** 으로 잰다. 한 분기끼리 비교하면 계절성이 성장률로 둔갑한다.
-    """
-    eg, sg, roe, lev, ep = {}, {}, {}, {}, {}
-    j3 = max(0, i - 252 * 3)
-    for t in P.uni:
-        a = P.px.get(t)
-        p = a[i] if a is not None else float("nan")
-        e0, e3 = P.ttm12(t, "eps", i), P.ttm12(t, "eps", j3)
-        if e0 and e3 and e0 > 0 and e3 > 0:
-            eg[t] = ((e0 / e3) ** (1 / 3.0) - 1.0) * 100
-        r0, r3 = P.ttm12(t, "rev", i, "rev_a"), P.ttm12(t, "rev", j3, "rev_a")
-        s0, s3 = P.last(t, "sh", i), P.last(t, "sh", j3)
-        if r0 and r3 and s0 and s3 and r0 > 0 and r3 > 0 and s0 > 0 and s3 > 0:
-            sg[t] = (((r0 / s0) / (r3 / s3)) ** (1 / 3.0) - 1.0) * 100
-        ni, eq, li = P.ttm12(t, "ni", i, "ni_a"), P.last(t, "eq", i), P.last(t, "liab", i)
-        aeq = avg_eq(P, t, i)
-        if ni is not None and aeq:
-            roe[t] = ni / aeq * 100
-        if li is not None and eq and eq > 0:
-            lev[t] = -(li / eq)                    # 레버리지는 낮을수록 상위
-        if e0 is not None and not np.isnan(p) and p > 0:
-            ep[t] = e0 / p * 100
-    gz = zavg([zs(eg, SP_WP), zs(sg, SP_WP)])
-    qz = zavg([zs(roe, SP_WP), zs(lev, SP_WP), zs(ep, SP_WP)])
-    pool = sorted((t for t in gz[0] if t in qz[0]), key=lambda t: -gz[0][t])
-    if len(pool) < MIN_NAMES:                     # 관문에 넣을 후보 자체가 얕으면 그 달은 버린다
-        return {}, {}
-    gate = pool[:max(30, int(round(len(pool) * 0.30)))]
-    return ({t: qz[0][t] for t in gate}, {t: qz[1][t] for t in gate})
-
-
-sc_garp.min_names = 30                             # 성장 관문이 스스로 좁힌다(위 30% 규칙)
-
-
 # ── 보유 표의 마지막 칸 ──────────────────────────────────────────────────────
 # 점수를 그대로 적으면 못 읽는다. 자른 z 는 상위권이 통째로 동점이고(모멘텀), 안 자른 z 는
 # 순위와 어긋난다(퀄리티에서 MA 가 그렇다 — ROE 가 압도적이라 안 자른 z 는 1등인데 D/E 때문에
@@ -827,10 +783,6 @@ STYLES = [
      lambda P, i, t, s, u: "%.2f" % s,
      "최근 1년 발행주식수가 가장 많이 줄어든 10종목. 정본은 순감소 5% 이상을 자격으로 두고 시총가중한다.\n"
      "자사주매입 줄과 다른 축이다 — 저쪽은 얼마를 썼나이고 이쪽은 실제로 주식수가 줄었나다. 옵션·전환사채 발행이 상쇄하면 여기서 빠진다."),
-    ("garp", "합리적성장", "S&P 500 GARP", sc_garp, "QV 점수",
-     lambda P, i, t, s, u: "%.2f" % s,
-     "3년 EPS·주당매출 성장률로 성장 상위 30% 를 거른 뒤, 그 안에서 재무레버리지(낮을수록)·ROE·이익수익률의 z 평균 상위 10종목.\n"
-     "성장주를 사되 값과 재무건전성을 함께 본다. 두 관문을 다 넘어야 해 후보가 얇고, 성장 관문 탓에 실적 추정이 꺾이면 함께 밀린다."),
 ]
 
 SECS = {"Information Technology": "IT", "Health Care": "헬스", "Financials": "금융",
