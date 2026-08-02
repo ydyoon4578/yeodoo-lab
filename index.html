@@ -1453,7 +1453,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var ss=kids.filter(function(k){return k.lv===3&&k.p===gid;}).sort(bym);
         h+=row(g,2,'s-'+s0.sec,'g-'+gid,
                (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
-        if(g.nm==='그 밖')h+=stockRows(s0.sec+'|'+g.nm,'g-'+gid,3,s0.nm+' 나머지');
         // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았어도 **버튼은 달아 둔다** —
         // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
         // ⚠ '그 밖'에도 단다(사용자 요청). 나머지라고 못 펼치면 그 종목들은 어디에서도 못 본다.
@@ -1463,8 +1462,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                  (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
           h+=stockRows(pid,sid,4,x.nm);
         });
-        // 서브산업이 하나도 기준을 못 넘은 그룹 — 종목이 그룹에 직접 매달린다(3단).
-        if(!ss.length)h+=stockRows(gid,'g-'+gid,3,g.nm);
+        // 하위 서브산업이 없는 줄 — 종목이 이 줄에 **직접** 매달린다(3단).
+        // 둘이 여기 걸린다: ① 서브산업이 하나도 기준을 못 넘은 산업그룹
+        //                  ② 섹터 직속 '그 밖'(gid 가 곧 그 부모 id 다)
+        // ⚠ 전에는 ②를 위에서 따로 한 번 더 그렸다. gid 가 같은 pid 라 **종목이 두 줄씩**
+        //   나왔다(사용자 지적: ALNY·CCEP 가 두 번). 갈래는 여기 하나만 둔다.
+        if(!ss.length)h+=stockRows(gid,'g-'+gid,3,g.nm==='그 밖'?(s0.nm+' 나머지'):g.nm);
       });
     });
     return h;
