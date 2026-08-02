@@ -249,6 +249,7 @@ class Panel:
             if v and len(v) == len(self.dates):
                 self.px[t] = np.array([x if x is not None else np.nan for x in v], float)
         A = load("assets.json") or {}
+        self.A = A                              # ETF 샤프를 같은 창으로 재려고 들고 있는다
         self.spy = self._align(A, "SPY")
         self.gspc = self._align(A, "^GSPC")     # S&P 500 가격지수(PR)
         self.ndx = self._align(A, "^NDX")       # NASDAQ 100 가격지수(PR)
@@ -382,7 +383,13 @@ def avg_eq(P, t, i):
     return base if base > 0 else None
 
 
-def sc_qual(P, i):
+def _qual_raw(P, i):
+    """MSCI Quality 의 세 축 원시값 — ROE(+) · 부채비율 D/E(−) · 이익변동성(−).
+
+    sc_qual 과 sc_snqual(섹터 중립)이 **같은 원시값**을 쓴다. 두 곳에 적으면 '섹터 안에서
+    잰 퀄리티'와 '전체에서 잰 퀄리티'가 다른 지표를 뜻하게 되고, 두 줄을 나란히 놓은
+    화면에서 그 차이가 섹터 중립 때문인지 정의 때문인지 알 수 없게 된다.
+    """
     roe, de, ev = {}, {}, {}
     for t in P.uni:
         ni, eq, li = P.ttm(t, "ni", i), P.last(t, "eq", i), P.last(t, "liab", i)
@@ -396,6 +403,11 @@ def sc_qual(P, i):
              for k in range(len(eps) - 4) if eps[k + 4] and abs(eps[k + 4]) > 1e-9]
         if len(g) >= 8:
             ev[t] = -float(np.std(np.array(g, float), ddof=1))
+    return roe, de, ev
+
+
+def sc_qual(P, i):
+    roe, de, ev = _qual_raw(P, i)
     return zavg([zs(roe, MSCI_WP), zs(de, MSCI_WP), zs(ev, MSCI_WP)])
 
 
@@ -608,6 +620,73 @@ def sc_netbuy(P, i):
     return d, d
 
 
+def sc_spmo(P, i):
+    """S&P 500 Momentum(SPMO) — 최근 1개월을 뺀 **12개월** 위험조정 모멘텀의 z.
+
+    위 모멘텀(MSCI)과 원시값의 정의는 같고, MSCI 가 6개월 축을 함께 평균하는 데 비해
+    이쪽은 12개월 하나만 본다. 그래서 최근 반년의 반전을 덜 타고 더 오래 붙어 있는다.
+    ⚠ 오늘 상위 10종 중 7종이 모멘텀(MSCI) 줄과 같다(실측 2026-07-31). 산식이 사촌이라
+      명단이 겹치는 것은 당연하고, 그럼에도 싣는 것은 **6개월 축 하나가 순위를 얼마나
+      바꾸는가**가 이 표에서 답할 수 있는 질문이기 때문이다. 겹치는 것이 싫으면 이 줄을
+      먼저 뺄 것.
+    """
+    if i < 252 * 3 + 22:
+        return {}, {}
+    m12 = {}
+    for t, a in P.px.items():
+        w = a[max(0, i - 252 * 3 + 1):i + 1][::5]
+        w = w[~np.isnan(w)]
+        if len(w) < 100:
+            continue
+        sig = float(np.std(rets(w), ddof=1)) * np.sqrt(52)
+        p1, p13 = a[i - 21], a[i - 21 - 252]
+        if sig <= 0 or np.isnan(p1) or np.isnan(p13) or p13 <= 0:
+            continue
+        m12[t] = (p1 / p13 - 1) / sig
+    return zs(m12, MSCI_WP)
+
+
+def sc_snqual(P, i):
+    """MSCI USA Sector Neutral Quality — 퀄리티 z 를 **섹터 안에서** 매긴다.
+
+    퀄리티(MSCI) 줄과 원시값은 같고 표준화 모집단만 다르다. 전체에서 재면 구조적으로 ROE 가
+    높은 업종(IT·헬스케어)이 통째로 상위를 먹는데, 섹터 안에서 재면 '같은 업종에서 좋은
+    회사'가 남는다 — 팩터를 사려다 업종을 사는 일을 막자는 것이 이 지수의 취지다.
+    ⚠ 얇은 섹터는 통째로 빠진다. zs 는 관측 20종 미만이면 빈 dict 를 돌려주므로
+      유틸리티·소재처럼 유니버스에 30종 안팎인 업종은 결측이 몇만 생겨도 사라진다.
+    """
+    roe, de, ev = _qual_raw(P, i)
+    secs = {}
+    for t in P.uni:
+        secs.setdefault(P.uni[t].get("sector") or "", []).append(t)
+    cl, un = {}, {}
+    for _s, ts in secs.items():
+        keep = set(ts)
+        c, u = zavg([zs({t: d[t] for t in d if t in keep}, MSCI_WP) for d in (roe, de, ev)])
+        cl.update(c); un.update(u)
+    return cl, un
+
+
+def sc_qvm(P, i):
+    """S&P 500 Quality, Value & Momentum Multi-Factor(QVML) — 세 팩터 점수의 평균 상위.
+
+    정본은 상위 20% 를 담고 float 시총 × 멀티팩터점수로 가중한다. 여기서는 상위 10종목이다.
+    ⚠ 세 점수는 이 파일의 sc_qual · sc_val · sc_mom 을 **그대로** 쓴다. 정본의 세부 정의와
+      완전히 같지는 않지만, 같은 표의 퀄리티·가치·모멘텀 줄과 산식이 같아야 '그 셋을
+      평균한 줄'이라는 말이 성립한다. 다른 정의를 쓰면 세 줄과 이 줄이 서로를 설명하지 못한다.
+    ⚠ 세 팩터를 **모두** 가진 종목만 남는다(zavg 규약). 하나라도 결측이면 두 개 평균으로
+      상위에 오르는 일이 없다 — 그건 다른 규칙이다.
+    """
+    q, qu = sc_qual(P, i)
+    v, vu = sc_val(P, i)
+    m, mu = sc_mom(P, i)
+    common = set(q) & set(v) & set(m)
+    if len(common) < MIN_NAMES:
+        return {}, {}
+    return ({t: (q[t] + v[t] + m[t]) / 3.0 for t in common},
+            {t: (qu[t] + vu[t] + mu[t]) / 3.0 for t in common})
+
+
 def sc_squal(P, i):
     """S&P 500 Quality(SPHQ) — ROE · 발생액비율 · 재무레버리지의 z 평균 상위.
 
@@ -763,6 +842,17 @@ STYLES = [
      lambda P, i, t, s, u: "%.2f" % s,
      "영업활동현금흐름에서 설비투자를 뺀 최근 1년 잉여현금흐름을 시가총액으로 나눈 값이 가장 높은 10종목.\n"
      "회계이익이 아니라 실제로 남은 현금을 본다. 경기민감·에너지에 쏠리기 쉽고, 투자를 줄여 현금이 남은 회사도 같이 걸린다."),
+    ("spmo", "모멘텀(S&P)", "S&P 500 Momentum (SPMO)", sc_spmo, "12M 위험조정", d_mom,
+     "최근 1개월을 뺀 12개월 수익률을 3년 주간변동성으로 나눈 값의 z 상위 10종목. 정본은 100종을 담는다.\n"
+     "위 모멘텀(MSCI)이 6개월 축을 함께 보는 것과 다르다 — 12개월 하나만 보므로 최근 반년의 반전을 덜 타고 더 오래 붙어 있는다."),
+    ("qvm", "멀티팩터", "S&P 500 Quality, Value & Momentum (QVML)", sc_qvm, "세 팩터 평균 z",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "퀄리티 · 가치 · 모멘텀 점수를 평균해 가장 높은 10종목. 정본은 상위 20% 를 담는다.\n"
+     "한 팩터만 좋은 종목이 아니라 셋 다 무난한 '올라운더'를 고른다. 어느 하나에서도 1등이 아니라 국면 쏠림이 적은 대신 폭발력도 없다."),
+    ("snqual", "퀄리티(섹터중립)", "MSCI USA Sector Neutral Quality", sc_snqual, "합성 z",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "퀄리티 세 축(ROE · D/E · 이익변동성)의 z 를 **섹터 안에서** 매겨 상위 10종목.\n"
+     "전체에서 재면 구조적으로 ROE 가 높은 IT·헬스케어가 상위를 먹는다. 같은 업종에서 좋은 회사를 고르는 규칙이라 업종이 흩어진다."),
     ("squal", "퀄리티(S&P)", "S&P 500 Quality (SPHQ)", sc_squal, "합성 z",
      lambda P, i, t, s, u: "%.2f" % s,
      "ROE · 발생액비율(낮을수록) · 재무레버리지(낮을수록)의 z 평균 상위 10종목. 정본은 100종을 담는다.\n"
@@ -1660,6 +1750,18 @@ def dump_json(P, res, detail):
             "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
             "nav": _thin([x * 100 for x in a]),
         }
+    # 홈 표의 ETF 행에도 샤프를 적을 수 있게 **같은 창·같은 metrics** 로 잰다
+    # (사용자 요청 2026-08-02 "메인에 샤프도 표시").
+    # ⚠ 두 곳에서 따로 계산하면 창이 하루만 어긋나도 같은 열의 두 숫자가 비교 불가능해진다.
+    #   이 표의 존재 이유가 비교라 그것만은 막아야 한다 — 그래서 market_board.py 가 아니라
+    #   백테스트와 같은 자리에서, 같은 start·end 로 잰다.
+    doc["etf_sharpe"] = {}
+    for _tk in ("SPY", "QQQ", "MTUM", "QUAL", "IVE", "USMV", "RPG", "SPHB"):
+        _nv = bench_nav(P, P._align(P.A, _tk), R0["start"], R0["end"])
+        if _nv is None:
+            continue
+        _sh = metrics(_nv)["sharpe"]
+        doc["etf_sharpe"][_tk] = None if _sh is None else round(_sh, 2)
     for S in detail:
         key, label, ref, _fn, mlab, mfmt, desc = S
         R = res[key]
@@ -1706,10 +1808,14 @@ def dump_trails(doc):
     적어 둔 기준("4KB라 홈 슬림 묶음에 넣지 않고 직접 받는다")을 지키려면 1KB 짜리가 맞다.
     style.html 은 계속 style_perf.json 전체를 읽는다 — 그쪽은 곡선과 명단이 본문이다.
     """
+    # 샤프를 함께 싣는다 — 홈이 이 값으로 지수 방법론 줄을 **정렬**하고 열에 적는다
+    # (사용자 요청 2026-08-02). 창은 styles·etf_sharpe 가 전부 같다(start ~ as_of).
     slim = {
         "as_of": doc["as_of"], "start": doc["start"],
-        "styles": [{"key": s["key"], "label": s["label"], "trails": s["trails"]}
+        "styles": [{"key": s["key"], "label": s["label"], "trails": s["trails"],
+                    "sharpe": (s.get("metrics") or {}).get("sharpe")}
                    for s in doc["styles"]],
+        "etf_sharpe": doc.get("etf_sharpe") or {},
     }
     # 유니버스 편향 실측치 몇 개를 여기 태워 보낸다 — 홈이 style_pit.json(5KB)을 따로 받지
     # 않게. 홈 각주가 이 값으로 문장을 만든다. 없으면 홈은 수치 없이 정성 문구만 낸다.
