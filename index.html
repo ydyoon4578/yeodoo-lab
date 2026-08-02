@@ -291,10 +291,18 @@
      하나에 두 일을 시키면 상세로 가려던 클릭이 목록만 여는 사고가 난다. */
   .sttbl .stnm{font-weight:700;color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
   .sttbl .stnm:hover{color:var(--accent);border-bottom-color:var(--accent)}
-  .sttbl button.htg{border:0;background:none;cursor:pointer;padding:0 5px 0 0;margin:0;
-       font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1}
-  .sttbl button.htg:hover,.sttbl button.htg:focus{color:var(--accent);outline:none}
+  /* 펼침 버튼 — 9px 글자에 여백 0 이라 누를 곳이 사실상 없었다(사용자 지적 2026-08-03).
+     22×22 로 키우고 테두리를 줘 '누를 것'으로 보이게 한다. 모바일 최소 권장(24px)에
+     맞추려고 pointer:coarse 에서 한 번 더 키운다(아래 미디어쿼리). */
+  .sttbl button.htg{border:1px solid transparent;border-radius:5px;background:none;cursor:pointer;
+       padding:0;margin:0 6px 0 0;width:22px;height:22px;flex:none;
+       display:inline-flex;align-items:center;justify-content:center;vertical-align:-5px;
+       font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1}
+  .sttbl button.htg:hover,.sttbl button.htg:focus{color:var(--accent);outline:none;
+       border-color:var(--line);background:color-mix(in srgb,var(--accent) 10%,transparent)}
   .sttbl button.htg[aria-expanded="true"]{color:var(--accent)}
+  /* 버튼이 없는 줄도 이름 시작 위치가 같아야 층이 안 어긋난다 */
+  .sttbl th>span.htg{display:inline-block;width:22px;margin-right:6px}
   .sttbl tr.hold>td{padding:2px 11px 7px 24px;border-top:0;text-align:left;white-space:normal;
        background:var(--panel-2)}
   .sttbl tr.hold:hover>*{background:var(--panel-2)}
@@ -302,13 +310,15 @@
      ⚠ 자식이 없는 섹터도 이름 시작 위치가 같아야 한다 — 버튼 자리를 빈 span 으로 채운다.
        안 그러면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다. */
   .sttbl tr.lv1>th{font-weight:700}
-  .sttbl tr.lv2>th{padding-left:26px;font-weight:600}
-  .sttbl tr.lv3>th{padding-left:48px;font-weight:400;color:var(--muted)}
-  .sttbl tr.lv3>td{color:color-mix(in srgb,currentColor 80%,transparent)}
+  .sttbl tr.lv2>th{padding-left:28px;font-weight:600}
+  .sttbl tr.lv3>th{padding-left:52px;font-weight:400}
+  .sttbl tr.lv4>th{padding-left:78px;font-weight:400;color:var(--muted)}
+  .sttbl tr.lv4>td{color:color-mix(in srgb,currentColor 78%,transparent)}
+  .sttbl tr.lv3>td{color:color-mix(in srgb,currentColor 88%,transparent)}
   .sttbl tr.lv2>th small,.sttbl tr.lv3>th small{margin-left:6px}
   /* GICS 서브산업 이름은 길다. 첫 열을 넓히면 수익률 7칸이 밀리므로 줄임표로 자르고
      전체 이름은 툴팁 첫 줄에 둔다(마우스를 올리면 나온다). */
-  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm{display:inline-block;max-width:186px;
+  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm,.sttbl tr.lv4>th .snm{display:inline-block;max-width:176px;
        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
@@ -466,7 +476,8 @@
   @media(pointer:coarse){a.rstk,a.tile{min-height:40px}
     a.tk2,.stchips .stk{padding-top:4px;padding-bottom:4px}
     .calcell button.cnt{padding:5px 8px}
-    .sttbl button.htg{padding:4px 8px 4px 0}
+    .sttbl button.htg{width:28px;height:28px}
+    .sttbl th>span.htg{width:28px}
     .stchips .stsrc,.sttbl .stnm,footer a,details.more>summary{display:inline-block;padding:4px 0;min-height:24px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
@@ -1117,7 +1128,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
   // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
   // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
-  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:'',board:null};
+  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:'',board:null,
+        stk:null,        // 종목 단(지연 로딩). null=아직 안 받음 · []=요청 중이거나 실패
+        open:{}};        // 펼쳐 둔 노드 — 다시 그려도 그대로 두려고 밖에 둔다
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1423,8 +1436,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         h+=row(g,2,'s-'+s0.sec,ss.length?('g-'+gid):null,
                (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
         ss.forEach(function(x){
-          h+=row(x,3,'g-'+gid,null,
+          var sid='g-'+gid+'|'+x.nm;
+          var st=(MK.stk||[]).filter(function(k){return k.p===gid+'|'+x.nm;});
+          // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았으면 **버튼은 달아 둔다** —
+          // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
+          h+=row(x,3,'g-'+gid,(x.sic?sid:null),
                  (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
+          st.sort(function(a,b2){return ((b2.r||{})['1M']==null?-1e9:b2.r['1M'])-((a.r||{})['1M']==null?-1e9:a.r['1M']);});
+          st.forEach(function(k){
+            h+=row(k,4,sid,null,(k.sn||k.nm)+'\n'+x.nm,k.nm,k.sn||'');
+          });
         });
       });
     });
@@ -1432,12 +1453,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // 트리 접기 — 표를 다시 그려도 리스너가 쌓이지 않게 위임으로 한 번만 건다.
   function wireTree(box){
-    if(!box||box.__htg)return;
-    {
+    // 다시 그린 뒤에도 **열어 둔 곳이 그대로여야 한다.** 표가 두 파일(+종목 파일)로 채워져
+    // 여러 번 그려지는데, 그때마다 접히면 펼치는 행위 자체가 되돌려진다.
+    if(MK.open)Object.keys(MK.open).forEach(function(id){
+      var rs=box.querySelectorAll('tr[data-p="'+id.replace(/"/g,'')+'"]');
+      for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden');
+      var b3=box.querySelector('button.htg[data-open="'+id.replace(/"/g,'')+'"]');
+      if(b3){b3.setAttribute('aria-expanded','true');b3.textContent='▾';}
+    });
+    if(!box.__htg){
       box.__htg=1;
       // 접을 때는 **자손까지** 접는다. 안 그러면 부모를 접었다 펴는 순간 손자가 펼쳐진 채로
       // 튀어나와, 눈에는 두 단이 건너뛴 것처럼 보인다.
       function shut(id){
+        delete MK.open[id];
         var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
         for(var i=0;i<rs.length;i++){
           rs[i].setAttribute('hidden','');
@@ -1454,10 +1483,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         if(!b2)return;
         var id=b2.getAttribute('data-open');
         var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
-        if(!rs.length)return;
+        if(!rs.length){
+          // 종목 단을 아직 안 받았다. 한 번만 받아 오고, 도착하면 표를 다시 그린다 —
+          // MK.open 이 남아 있으므로 열어 둔 곳은 그대로 복원된다.
+          if(MK.stk===null&&/^g-/.test(id)){
+            MK.stk=[];                                   // 중복 요청 방지
+            MK.open[id]=1;
+            b2.setAttribute('aria-expanded','true'); b2.textContent='▾';
+            getj('home_stocks.json').then(function(sj){
+              MK.stk=(sj&&sj.rows)||[];
+              if(MK.board)drawStyle(null);
+            })['catch'](function(){ MK.stk=[]; });
+          }
+          return;
+        }
         var open=rs[0].hasAttribute('hidden');
-        if(open){ for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden'); }
-        else shut(id);
+        if(open){ for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden'); MK.open[id]=1; }
+        else { shut(id); delete MK.open[id]; }
         b2.setAttribute('aria-expanded',open?'true':'false');
         b2.textContent=open?'▾':'▸';
       });

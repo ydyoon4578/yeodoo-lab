@@ -151,7 +151,7 @@ def _industry(stocks, dates, root):
                 px = PX.get(s2["t"])
                 if px and px[k] and px[k - 1] and px[k - 1] > 0:
                     vs.append(px[k] / px[k - 1] - 1.0)
-            if len(vs) >= max(3, len(objs) // 2):
+            if len(vs) >= (1 if len(objs) == 1 else max(3, len(objs) // 2)):
                 rs.append(sum(vs) / len(vs))
         if len(rs) < 60:
             return None
@@ -160,7 +160,7 @@ def _industry(stocks, dates, root):
         sd = v ** 0.5
         return round(m / sd * (252 ** 0.5), 2) if sd > 0 else None
 
-    def agg(objs, label, sec, sic, lv=1, parent=None):
+    def agg(objs, label, sec, sic, lv=1, parent=None, sub=None):
         r = {}
         for k in base:
             i0, vs = base[k], []
@@ -169,12 +169,26 @@ def _industry(stocks, dates, root):
                     px = PX.get(s["t"])
                     if px and px[i0] and px[-1] and px[i0] > 0:
                         vs.append(px[-1] / px[i0] - 1.0)
-            r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= max(3, len(objs) // 2) else None
+            # ⚠ 한 종목짜리 줄(종목 단)은 평균이 아니라 그 종목 자체다 — 최소 3관측 규칙을
+            #   그대로 걸면 값이 통째로 빈다. 그 규칙은 '몇 종목의 평균을 산업이라 부르지
+            #   말자'는 것이지 단일 종목을 막자는 것이 아니다.
+            need = 1 if len(objs) == 1 else max(3, len(objs) // 2)
+            r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= need else None
+        # 종목 단(lv 4)은 **가볍게** 싣는다. 한 종목의 PER·폭·국면 통계는 종목 페이지가
+        # 훨씬 잘 보여 주고, 417줄에 그것들을 얹으면 파일이 세 배가 된다(실측 166KB).
+        # 여기서 답해야 하는 질문은 '이 산업 안에서 어느 종목이 끌었나' 하나다.
+        if lv >= 4:
+            # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
+            # (실측 19.7 → 29.7KB), 화면에서 종목 수익률의 둘째 자리를 읽을 일은 없다.
+            # 샤프도 싣지 않는다 — 한 종목의 샤프는 종목 페이지가 맥락과 함께 보여 준다.
+            return {"nm": label, "sn": sub, "sec": sec, "sic": None, "n": 1,
+                    "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
+                    "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
         return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
-                "sharpe": sharpe(objs),
+                "sharpe": sharpe(objs), **({"sn": sub} if sub else {}),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
@@ -191,7 +205,13 @@ def _industry(stocks, dates, root):
                           key=lambda kv: -len(kv[1]))
             sused = set()
             for c, v in subs:
+                sid = gid + "|" + c
                 rows.append(agg(v, c, sec, c, 3, gid))      # 서브산업(4차)
+                # 마지막 단 — **종목 그 자체**(사용자 요청 2026-08-03 "다 풀면 종목들 나오게").
+                # 위 줄들과 같은 모양이라 같은 열에서 읽힌다. 이름은 표시용으로만 자른다.
+                for s2 in sorted(v, key=lambda z: z["t"]):
+                    rows.append(agg([s2], s2["t"], sec, None, 4, sid,
+                                    (s2.get("name") or "")[:22]))
                 sused.update(s["t"] for s in v)
             grest = [s for s in gv if s["t"] not in sused]
             # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
@@ -220,14 +240,23 @@ def _load_px(ts, dates, root):
 
 
 def _segments(stocks, dates, root):
-    """홈이 읽는 섹터·산업 한 덩어리. _industry 에 국면 통계를 얹고 내부 필드를 턴다."""
+    """홈이 읽는 섹터·산업 한 덩어리. _industry 에 국면 통계를 얹고 내부 필드를 턴다.
+
+    ⚠ **종목 단(lv 4)은 이 파일에 싣지 않는다.** 417줄을 넣으면 gz 10.4 → 26.4KB 가 되는데
+      (실측), 이 파일은 홈이 stocks.json 691KB 를 안 받게 하려고 만든 것이라 그 자체가
+      무거워지면 존재 이유가 없어진다. 대부분의 방문자는 3단까지 펼치지도 않는다.
+      → data/home_stocks.json 으로 떼어내고 **처음 펼칠 때** 받는다(index.html).
+    """
     d = _industry(stocks, dates, root)
     if not d:
         return {}
     PX = d.pop("px")
     # 국면 통계는 섹터·산업 **양쪽**에 붙인다. 표에서 부모 줄에도 툴팁이 뜬다.
-    _, rgn = _by_regime(d["sectors"] + d["rows"], PX, dates, root)
+    # 국면 통계는 상위 단만 — 종목 한 개의 국면별 월평균은 잡음이고, 417줄에 얹으면
+    # 파일이 배로 는다. 표에서도 종목 줄 툴팁에는 안 쓴다.
+    _, rgn = _by_regime(d["sectors"] + [x for x in d["rows"] if x["lv"] < 4], PX, dates, root)
     d["regime_n"] = rgn
+    d["stocks_url"] = "home_stocks.json"     # 종목 단은 여기서 온다(지연 로딩)
     return d
 
 
@@ -367,13 +396,30 @@ def build(stocks, dates, as_of, root):
     }
 
 
+def write_stocks(doc, root):
+    """종목 단(lv 4)을 data/home_stocks.json 으로 떼어내고 본체에서 지운다."""
+    iv = doc.get("industry") or {}
+    rows = iv.get("rows") or []
+    deep = [x for x in rows if x.get("lv", 0) >= 4]
+    iv["rows"] = [x for x in rows if x.get("lv", 0) < 4]
+    p = os.path.join(root, "data", "home_stocks.json")
+    json.dump({"as_of": doc.get("as_of"), "note":
+               "섹터·산업 트리의 마지막 단(종목). 홈이 3단을 처음 펼칠 때만 받는다 — "
+               "data/home_reco.json 에 넣으면 그 파일이 gz 10 → 26KB 가 된다.",
+               "rows": deep},
+              io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    return p, len(deep)
+
+
 def write(stocks, dates, as_of, root):
     """실패를 삼키지 않는다 — 홈의 핵심 모듈이라 조용히 빈 채로 배포되면 안 된다."""
     doc = build(stocks, dates, as_of, root)
     if not doc["buy"] and not doc["sell"]:
         raise SystemExit("home_reco: 최근 타점이 하나도 없다 — 마커 산출이 깨졌는지 확인")
+    sp, n_deep = write_stocks(doc, root)
     p = os.path.join(root, "data", "home_reco.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("  → %s (종목 %d줄 · 지연 로딩)" % (os.path.basename(sp), n_deep))
     return p, doc
 
 
