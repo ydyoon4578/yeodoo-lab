@@ -75,22 +75,24 @@ IND_HOR = [("1D", 1), ("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 36
 def _industry(stocks, dates, root):
     """섹터 11개와 그 **하위 산업**을 한 덩어리로 → {"sectors": [...], "rows": [...], ...}
 
-    하위 분류는 **GICS 서브산업**이다(사용자 요청 2026-08-03 "sic말고 gics").
-    data/members.json 이 들고 있고, 그 출처는 위키백과 S&P 500 목록의 GICS 열이다 —
-    **이 화면의 섹터와 같은 출처·같은 체계**라 서브산업이 섹터 밖으로 새지 않는다.
+    하위 분류는 **GICS 다.** 위키백과 GICS 문서에서 4단 구조 전문을 받아
+    (build/refresh_members.gics_tree) members.json 에 종목마다 산업그룹·산업·서브산업을
+    실어 둔다. 홈은 그중 **두 단**을 쓴다 — 섹터(1차) → 산업그룹(2차) → 서브산업(4차).
 
-    🚨 왜 SIC 를 버렸나. SIC(SEC 부여)와 GICS 섹터(위키)는 다른 분류라 한 SIC 가 여러 섹터에
-      걸쳤다 — 실측: 사업서비스 63종이 IT 26 · 금융 13 · 산업재 9 · 커뮤 8 …(순도 41%),
-      화학·제약 51%, 기계·컴퓨터장비 55%. 순도 90% 미만이 27개 중 14개였다.
-      (섹터, SIC) 쌍으로 묶어 트리를 억지로 맞추고 있었는데, 같은 SIC 가 섹터마다 쪼개져
-      '사업서비스'가 네 섹터에 각각 서는 표가 됐다. GICS 는 정의상 트리라 그 봉합이 필요 없다.
-    ⚠ 위키 S&P 500 표가 싣는 GICS 는 **섹터(1차)와 서브산업(4차) 둘뿐**이다. 산업그룹(2차 ·
-      25개)과 산업(3차 · 74개)은 그 표에 없다 — 만들려면 서브산업→상위 대응표를 손으로
-      적어야 하고, 그건 없는 자료를 지어내는 일이라 하지 않았다.
-    ⚠ NDX 전용 15종(ASML·ARM·PDD·SHOP·MELI·MSTR …)은 서브산업이 없다. 위키 NASDAQ-100 표는
-      ICB 분류라 GICS 를 싣지 않는다 — 그 종목들은 섹터의 '그 밖' 줄로 간다.
-    ⚠ 하위에 못 들어간 종목은 섹터마다 '그 밖' 한 줄로 남긴다. 안 남기면 하위 합이 섹터에
-      못 미치는데 화면은 그 사실을 말하지 않는다.
+    왜 이 두 단인가(실측 2026-08-03 · GICS 있는 503종):
+        산업그룹(2차)  25개 중 3종이상 24개 · 커버 **100%**   ← 중간 단으로 완벽하다
+        산업(3차)      69개 중 3종이상 51개 · 커버  94%
+        서브산업(4차)  127개 중 3종이상 71개 · 커버  83%      ← 가장 잘다
+      2차는 빠짐 없이 덮고 4차는 가장 잘다. 3차는 둘 사이라 따로 세우면 층만 하나 늘고
+      새로 보이는 것이 없다 — 접히는 표에서 층은 비용이다.
+
+    🚨 SIC 를 쓰지 않는다(사용자 결정 2026-08-03). SIC(SEC 부여)와 GICS 섹터는 다른 분류라
+      한 SIC 가 여러 섹터에 걸쳤다 — 사업서비스 63종이 IT 26 · 금융 13 · 산업재 9 …(순도 41%),
+      순도 90% 미만이 27개 중 14개였다. GICS 는 정의상 트리라 그 문제가 없다.
+    ⚠ NDX 전용 15종(ASML·ARM·PDD·SHOP·MELI·MSTR …)은 GICS 가 없다. 위키 NASDAQ-100 표는
+      ICB 분류라 GICS 를 싣지 않는다 — 추측으로 채우지 않고 각 단의 '그 밖' 줄로 보낸다.
+    ⚠ 하위에 못 들어간 종목은 단마다 '그 밖' 한 줄로 남긴다. 안 남기면 합이 부모에 못 미치는데
+      화면은 그 사실을 말하지 않는다.
     """
     mem_p = os.path.join(root, "data", "members.json")
     if not os.path.exists(mem_p):
@@ -106,22 +108,26 @@ def _industry(stocks, dates, root):
         ks = [i for i, d in enumerate(dates) if d <= tgt]
         base[k] = ks[-1] if ks else None
 
-    # 서브산업 → 종목. GICS 는 트리라 서브산업 하나가 섹터 하나에만 속한다 —
-    # (섹터, 서브산업) 쌍으로 묶을 필요가 없다(SIC 때는 필요했다).
-    pair, bysec = {}, {}
+    # 섹터 → 산업그룹 → 서브산업. GICS 는 트리라 상위 단이 하위 단을 유일하게 결정한다.
+    bysec, bygrp, bysub, gsec = {}, {}, {}, {}
     for s in stocks:
         sec = SEC_ETF.get(s.get("sector") or "")
-        sub = ((mem.get(s["t"]) or {}).get("sub") or "").strip()
         if not sec:
             continue
         bysec.setdefault(sec, []).append(s)
-        if sub:
-            pair.setdefault((sec, sub), []).append(s)
+        m2 = mem.get(s["t"]) or {}
+        grp, sub = (m2.get("grp") or "").strip(), (m2.get("sub") or "").strip()
+        if grp:
+            bygrp.setdefault((sec, grp), []).append(s)
+            gsec[grp] = sec
+            if sub:
+                bysub.setdefault((grp, sub), []).append(s)
 
-    keep = {k: v for k, v in pair.items() if len(v) >= IND_MIN}
-    PX = _load_px([s["t"] for v in list(keep.values()) + list(bysec.values()) for s in v], dates, root)
+    keepg = {k: v for k, v in bygrp.items() if len(v) >= IND_MIN}
+    keeps = {k: v for k, v in bysub.items() if len(v) >= IND_MIN}
+    PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
 
-    def agg(objs, label, sec, sic):
+    def agg(objs, label, sec, sic, lv=1, parent=None):
         r = {}
         for k in base:
             i0, vs = base[k], []
@@ -134,21 +140,32 @@ def _industry(stocks, dates, root):
         full = [s for s in objs if not s.get("part")]
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
         return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r,
-                "above": above, "n_ma200": len(full),
+                "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
     for sec, objs in bysec.items():
-        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, None))
-        subs = sorted([(c, v) for (s2, c), v in keep.items() if s2 == sec],
-                      key=lambda kv: -len(kv[1]))
-        used = set()
-        for c, v in subs:
-            rows.append(agg(v, c, sec, c))          # 이름이 곧 GICS 서브산업 라벨이다
-            used.update(s["t"] for s in v)
-        rest = [s for s in objs if s["t"] not in used]
+        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, None, 1, None))
+        gs = sorted([(g, v) for (s2, g), v in keepg.items() if s2 == sec],
+                    key=lambda kv: -len(kv[1]))
+        gused = set()
+        for g, gv in gs:
+            gid = sec + "|" + g
+            rows.append(agg(gv, g, sec, g, 2, sec))         # 산업그룹(2차)
+            gused.update(s["t"] for s in gv)
+            subs = sorted([(c, v) for (g2, c), v in keeps.items() if g2 == g],
+                          key=lambda kv: -len(kv[1]))
+            sused = set()
+            for c, v in subs:
+                rows.append(agg(v, c, sec, c, 3, gid))      # 서브산업(4차)
+                sused.update(s["t"] for s in v)
+            grest = [s for s in gv if s["t"] not in sused]
+            # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
+            if grest and len(subs):
+                rows.append(agg(grest, "그 밖", sec, None, 3, gid))
+        rest = [s for s in objs if s["t"] not in gused]
         if rest:
-            rows.append(agg(rest, "그 밖", sec, None))
+            rows.append(agg(rest, "그 밖", sec, None, 2, sec))
     return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX}
 
 

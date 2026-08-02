@@ -41,6 +41,11 @@ WIKI_SPX = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 WIKI_NDX = "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies"
 SPY_XLSX = ("https://www.ssga.com/us/en/intermediary/library-content/products/"
             "fund-data/etfs/us/holdings-daily-us-en-spy.xlsx")
+# GICS 4단 구조(섹터 11 → 산업그룹 25 → 산업 74 → 서브산업 163). 위키백과가 코드와 함께
+# 전문을 싣는다 — S&P 500 목록 표는 **섹터와 서브산업만** 주므로 그 사이 두 단을 여기서 잇는다.
+# ⚠ 정본은 MSCI/S&P 라이선스라 받아올 수 없다. 이 표는 그 구조를 옮겨 적은 공개 문서이고,
+#   우리는 서브산업 이름으로 조인만 한다(실측 2026-08-03: 유니버스 127개 전부 조인).
+WIKI_GICS = "https://en.wikipedia.org/wiki/Global_Industry_Classification_Standard"
 
 GICS = {"Communication Services", "Consumer Discretionary", "Consumer Staples", "Energy",
         "Financials", "Health Care", "Industrials", "Information Technology", "Materials",
@@ -84,6 +89,42 @@ def spy_symbols():
     ss = z.read(name).decode("utf-8", "replace")
     return {norm(s) for s in re.findall(r"<t[^>]*>([^<]*)</t>", ss)
             if re.fullmatch(r"[A-Z]{1,5}(\.[A-Z])?", s.strip().upper())}
+
+
+def gics_tree():
+    """서브산업 이름 → {code, sector, group, industry}. 못 받으면 {} (호출부가 잡는다).
+
+    위키백과 GICS 문서는 4단 구조 전문을 코드와 함께 싣는다(섹터 11 → 산업그룹 25 →
+    산업 74 → 서브산업 163). S&P 500 목록 표는 **섹터와 서브산업만** 주므로 그 사이
+    두 단을 여기서 잇는다 — 손으로 대응표를 적지 않고 공개된 구조를 그대로 읽는다.
+    ⚠ rowspan 때문에 행마다 열 수가 다르다. 열 위치로 읽으면 어긋나므로 **코드 자릿수
+      (2/4/6/8)로 어느 단인지 판정**하고 직전 값을 이어 쓴다.
+    """
+    try:
+        t = get(WIKI_GICS).decode("utf-8", "replace")
+    except Exception as e:
+        print("  ⚠ GICS 구조 문서 실패: %s" % e)
+        return {}
+    m = re.search(r"<table[^>]*>.*?</table>", t, re.S)
+    if not m:
+        return {}
+    cur, out = {}, {}
+    for tr in re.findall(r"<tr.*?</tr>", m.group(0), re.S):
+        cs = [H.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+              for c in re.findall(r"<t[hd].*?</t[hd]>", tr, re.S)]
+        if not cs or cs[0] == "Sector":
+            continue
+        i = 0
+        while i < len(cs):
+            c = cs[i]
+            if re.fullmatch(r"\d{2}|\d{4}|\d{6}|\d{8}", c) and i + 1 < len(cs):
+                cur[len(c)] = (c, cs[i + 1]); i += 2
+            else:
+                i += 1
+        if all(k in cur for k in (2, 4, 6, 8)):
+            out[cur[8][1]] = {"code": cur[8][0], "sector": cur[2][1],
+                              "group": cur[4][1], "industry": cur[6][1]}
+    return out
 
 
 def main() -> int:
@@ -164,10 +205,25 @@ def main() -> int:
         old = cur_m.get(t) or {}
         return old.get("name") or wiki_name
 
+    GT = gics_tree()
+    if len(GT) < 150:
+        # 163개가 정상이다. 크게 모자라면 파싱이 어긋난 것이라 그 단을 통째로 비운다 —
+        # 절반만 붙은 계층은 화면에서 '그 밖'이 부푸는 것으로만 보여 알아채기 어렵다.
+        print("  ⚠ GICS 구조 %d개만 파싱됐다(정상 163) — 상위 두 단을 싣지 않는다" % len(GT))
+        GT = {}
+    else:
+        print("GICS 구조 — 서브산업 %d · 산업 %d · 산업그룹 %d"
+              % (len(GT), len({v["industry"] for v in GT.values()}),
+                 len({v["group"] for v in GT.values()})))
+
+    def gics_of(sub):
+        g = GT.get(sub or "")
+        return {"grp": g["group"], "ind": g["industry"]} if g else {}
+
     new = {}
     for t, v in spx.items():
         new[t] = {"name": nm(t, v["name"]), "sector": v["sector"], "idx": ["SPX"],
-                  **({"sub": v["sub"]} if v.get("sub") else {})}
+                  **({"sub": v["sub"]} if v.get("sub") else {}), **gics_of(v.get("sub"))}
     for t, v in ndx.items():
         if t in new:
             new[t]["idx"] = ["NDX", "SPX"]
@@ -176,7 +232,8 @@ def main() -> int:
             old = cur_m.get(t) or {}
             # NDX 전용은 서브산업도 없다 — 기존 값이 있으면 잇고, 없으면 비운다(추측 금지).
             new[t] = {"name": nm(t, v["name"]), "sector": old.get("sector", ""), "idx": ["NDX"],
-                      **({"sub": old["sub"]} if old.get("sub") else {})}
+                      **({"sub": old["sub"]} if old.get("sub") else {}),
+                      **gics_of(old.get("sub"))}
     name_drift = sorted(t for t in new if t in cur_m
                         and (spx.get(t) or ndx.get(t) or {}).get("name")
                         and cur_m[t].get("name") != (spx.get(t) or ndx.get(t))["name"])
