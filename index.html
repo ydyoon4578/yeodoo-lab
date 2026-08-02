@@ -1394,7 +1394,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
     h+='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
-       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 그 섹터의 산업(SIC 대분류)이 펼쳐집니다 · '+
+       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 그 섹터의 <b>GICS 서브산업</b>이 '+
+       '펼쳐집니다(위키 S&amp;P 500 목록의 GICS 열 — 섹터와 같은 출처) · '+
        '이름에 마우스를 올리면 종목수·섹터ETF·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
     secs.slice().sort(bym).forEach(function(x){
