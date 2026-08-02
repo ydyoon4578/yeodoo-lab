@@ -1394,13 +1394,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(mb&&mb.sector)mb.sector.forEach(function(x){etf[x.t]=x;});
     var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
     var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
+    // 정렬은 **시가총액 내림차순**이다(사용자 요청 2026-08-03). 큰 것부터 보는 편이
+    // 시장을 읽는 순서에 맞고, 순위가 매일 뒤집히지 않아 같은 자리에서 같은 줄을 찾게 된다
+    // (수익률순은 하루만 지나도 표가 통째로 재배열됐다).
+    // ⚠ 시총을 못 구하면 1개월 수익률로 물러선다 — '가급적'이라는 말이 그 뜻이다.
     function bym(a,b2){
       if((a.nm==='그 밖')!==(b2.nm==='그 밖'))return a.nm==='그 밖'?1:-1;   // 나머지는 언제나 끝
-      var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
-      return (y==null?-1e9:y)-(x==null?-1e9:x);
+      var x=a.mc,y=b2.mc;
+      if(x!=null&&y!=null&&x!==y)return y-x;
+      if((x==null)!==(y==null))return x==null?1:-1;
+      var u=(a.r||{})['1M'],v=(b2.r||{})['1M'];
+      return (v==null?-1e9:v)-(u==null?-1e9:u);
     }
     function tip(x,isSec){
-      var t=[x.n+'종'];
+      var t=[x.n+'종'+(x.mc?' · 시총 '+mcapTxt(x.mc):'')];
       if(isSec&&etf[x.sec]&&(etf[x.sec].r||{})['1M']!=null)
         t.push('섹터 ETF('+x.sec+') 1개월 '+((etf[x.sec].r['1M']>0?'+':'')+etf[x.sec].r['1M'].toFixed(2))+
                '% — 시총가중이라 이 줄(동일가중)과 다르다');
@@ -1421,10 +1428,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 종목 줄 — 어느 단 아래에도 같은 모양으로 붙는다. 아직 안 받았으면 빈 문자열.
     function stockRows(pid,domid,lv,ctx){
       var st=(MK.stk||[]).filter(function(k){return k.p===pid;});
-      st.sort(function(a,b2){
-        var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
-        return (y==null?-1e9:y)-(x==null?-1e9:x);
-      });
+      st.sort(bym);                                  // 종목도 시총순
       return st.map(function(k){
         return row(k,lv,domid,null,(k.sn||k.nm)+'\n'+ctx,k.nm,k.sn||'');
       }).join('');
@@ -1441,7 +1445,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         cells(x)+'</tr>';
     }
     var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
-       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 <b>GICS 산업그룹(2차) → 서브산업(4차)</b> '+
+       '<b>동일가중</b> · <b>시총 내림차순</b> · ▸ 를 누르면 <b>GICS 산업그룹(2차) → 서브산업(4차) → 종목</b> '+
        '순으로 펼쳐집니다(위키백과 GICS 구조 — 섹터와 같은 체계) · '+
        '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
