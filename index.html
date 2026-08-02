@@ -1395,6 +1395,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div>'+bot.map(irow).join('')+'</div>'+
         (imk&&imk.pe?('<div class="barl" style="margin-top:6px"><span>시장 중앙 PER '+
           imk.pe.toFixed(1)+'</span><span>PBR '+(imk.pb!=null?imk.pb.toFixed(2):'—')+'</span></div>'):'')+
+        // 국면별 성과 — **현재 국면 하나만** 낸다(사용자 요청 2026-08-03). 여섯 국면을 다
+        // 세우면 27×6 표가 되는데, 지금 쓸모 있는 질문은 '지금 이 국면에서 어땠나' 하나다.
+        // regime.json 이 sector_perf 로 섹터에 대해 이미 하던 것을 한 단 아래로 내린 것이다.
+        (function(){
+          var R=MK.rg&&MK.rg.regime, key=R&&R.label;
+          var nmo=(ivr&&ivr.regime_n&&key)?ivr.regime_n[key]:null;
+          if(!key||!nmo)return '';
+          var got=iv.filter(function(x){return x.rg&&x.rg[key]!=null;});
+          if(got.length<5)return '';
+          got.sort(function(a,b2){return b2.rg[key]-a.rg[key];});
+          var pick=got.slice(0,6).concat(got.slice(-4));
+          var ko=RGKO[key]||key;
+          return fold(esc(ko)+' 국면에서 역사적으로 · '+nmo+'개월',
+            mtbl(pick.map(function(x,i){
+              return [(i===6?'⋯ ':'')+esc(x.nm), (x.rg[key]>0?'+':'')+x.rg[key].toFixed(2)+'%'];
+            }))+
+            '<p style="margin-top:7px">월평균 수익률입니다(동일가중). 위 여섯이 강했고 아래 넷이 약했습니다.</p>'+
+            '<p style="color:var(--marg)">🚨 <b>예측이 아닙니다.</b> 국면 라벨은 그 달이 끝난 뒤에 '+
+            '붙고, 여기서는 같은 달의 수익률을 그 라벨에 묶었습니다 — ‘그 국면이었을 때 어땠나’라는 '+
+            '기술 통계이지 ‘이 국면이 오면 이걸 사라’가 아닙니다. 국면을 미리 안다는 가정이 들어가면 '+
+            '다른 주장이 되고, 이 랩은 그 주장을 하지 않습니다.</p>'+
+            '<p style="color:var(--marg)">표본 '+nmo+'개월뿐이고, 오늘의 518종목을 과거로 소급합니다'+
+            '(생존편향). 8개월 미만인 국면은 아예 내지 않습니다.</p>');
+        })()+
         fold('산업은 무엇으로 나눴고 PER 은 어떻게 읽나',
              '<p>SEC 가 회사에 부여한 <b>SIC 대분류(2자리)</b>입니다. 랩의 분류가 아닙니다.</p>'+
              '<p>4자리로 쪼개면 183그룹인데 83그룹이 1종목이라 ‘산업 평균’이 성립하지 않습니다. '+
