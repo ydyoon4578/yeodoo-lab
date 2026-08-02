@@ -62,6 +62,7 @@ SEC_KO = {v: SECKO[k] for k, v in SEC_ETF.items()}
 # 실측(2026-08-03, GICS 서브산업 127개): MIN 3 이면 71개·커버 83% · MIN 4 면 49개·커버 70% ·
 # MIN 5 면 36개·커버 59%. 섹터 안에 접어 두므로 한 번에 보이는 것은 한 섹터분(6~7줄)이라
 # 개수보다 커버를 택했다. 3종 평균은 얇지만 줄마다 종목수를 함께 낸다.
+NOM = "그 밖"      # 나머지 줄 이름 — 부모 id 를 만들 때도 쓰므로 한 곳에 둔다
 IND_MIN = 3        # 이보다 적은 묶음은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
 # ⚠ 기간 규칙은 build/market_board.py 의 HOR 와 **같아야 한다.** 홈에서 섹터 카드 바로
 #   아래에 산업 카드가 붙으므로, 두 카드의 '1개월'이 다른 날을 가리키면 나란히 못 읽는다.
@@ -174,14 +175,14 @@ def _industry(stocks, dates, root):
             #   말자'는 것이지 단일 종목을 막자는 것이 아니다.
             need = 1 if len(objs) == 1 else max(3, len(objs) // 2)
             r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= need else None
-        # 종목 단(lv 4)은 **가볍게** 싣는다. 한 종목의 PER·폭·국면 통계는 종목 페이지가
+        # 종목 줄은 **가볍게** 싣는다. 한 종목의 PER·폭·국면 통계는 종목 페이지가
         # 훨씬 잘 보여 주고, 417줄에 그것들을 얹으면 파일이 세 배가 된다(실측 166KB).
         # 여기서 답해야 하는 질문은 '이 산업 안에서 어느 종목이 끌었나' 하나다.
-        if lv >= 4:
+        if sub is not None:                     # sub 가 있으면 종목 줄이다
             # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
             # (실측 19.7 → 29.7KB), 화면에서 종목 수익률의 둘째 자리를 읽을 일은 없다.
             # 샤프도 싣지 않는다 — 한 종목의 샤프는 종목 페이지가 맥락과 함께 보여 준다.
-            return {"nm": label, "sn": sub, "sec": sec, "sic": None, "n": 1,
+            return {"nm": label, "sn": sub, "st": 1, "sec": sec, "sic": None, "n": 1,
                     "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
                     "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
@@ -192,6 +193,14 @@ def _industry(stocks, dates, root):
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
+
+    def _stocks(objs, sec, pid, lv):
+        """그 묶음의 종목 줄. **나머지('그 밖')에도 붙인다**(사용자 요청 2026-08-03) —
+        나머지라고 못 펼치면 그 종목들은 화면 어디에서도 볼 수 없다.
+        lv 는 부모+1 이다: 서브산업 아래는 4단, 섹터 직속 나머지 아래는 3단."""
+        for s2 in sorted(objs, key=lambda z: z["t"]):
+            rows.append(agg([s2], s2["t"], sec, None, lv, pid, (s2.get("name") or "")[:22]))
+
     for sec, objs in bysec.items():
         sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, None, 1, None))
         gs = sorted([(g, v) for (s2, g), v in keepg.items() if s2 == sec],
@@ -205,21 +214,24 @@ def _industry(stocks, dates, root):
                           key=lambda kv: -len(kv[1]))
             sused = set()
             for c, v in subs:
-                sid = gid + "|" + c
                 rows.append(agg(v, c, sec, c, 3, gid))      # 서브산업(4차)
-                # 마지막 단 — **종목 그 자체**(사용자 요청 2026-08-03 "다 풀면 종목들 나오게").
-                # 위 줄들과 같은 모양이라 같은 열에서 읽힌다. 이름은 표시용으로만 자른다.
-                for s2 in sorted(v, key=lambda z: z["t"]):
-                    rows.append(agg([s2], s2["t"], sec, None, 4, sid,
-                                    (s2.get("name") or "")[:22]))
+                _stocks(v, sec, gid + "|" + c, 4)
                 sused.update(s["t"] for s in v)
             grest = [s for s in gv if s["t"] not in sused]
-            # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
             if grest and len(subs):
-                rows.append(agg(grest, "그 밖", sec, None, 3, gid))
+                # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
+                rows.append(agg(grest, NOM, sec, None, 3, gid))
+                _stocks(grest, sec, gid + "|" + NOM, 4)
+            elif grest:
+                # 서브산업이 **하나도** 3종을 못 넘는 그룹. '그 밖' 줄을 끼우면 그룹과 똑같은
+                # 줄이 하나 더 생기므로, 종목을 그룹에 **직접** 매단다(3단).
+                # ⚠ 이 갈래가 없으면 그 그룹의 종목은 화면 어디에서도 볼 수 없다 —
+                #   실측으로 4종목이 그렇게 빠져 있었다.
+                _stocks(grest, sec, gid, 3)
         rest = [s for s in objs if s["t"] not in gused]
         if rest:
-            rows.append(agg(rest, "그 밖", sec, None, 2, sec))
+            rows.append(agg(rest, NOM, sec, None, 2, sec))
+            _stocks(rest, sec, sec + "|" + NOM, 3)
     return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX}
 
 
@@ -254,7 +266,7 @@ def _segments(stocks, dates, root):
     # 국면 통계는 섹터·산업 **양쪽**에 붙인다. 표에서 부모 줄에도 툴팁이 뜬다.
     # 국면 통계는 상위 단만 — 종목 한 개의 국면별 월평균은 잡음이고, 417줄에 얹으면
     # 파일이 배로 는다. 표에서도 종목 줄 툴팁에는 안 쓴다.
-    _, rgn = _by_regime(d["sectors"] + [x for x in d["rows"] if x["lv"] < 4], PX, dates, root)
+    _, rgn = _by_regime(d["sectors"] + [x for x in d["rows"] if not x.get("st")], PX, dates, root)
     d["regime_n"] = rgn
     d["stocks_url"] = "home_stocks.json"     # 종목 단은 여기서 온다(지연 로딩)
     return d
@@ -400,8 +412,8 @@ def write_stocks(doc, root):
     """종목 단(lv 4)을 data/home_stocks.json 으로 떼어내고 본체에서 지운다."""
     iv = doc.get("industry") or {}
     rows = iv.get("rows") or []
-    deep = [x for x in rows if x.get("lv", 0) >= 4]
-    iv["rows"] = [x for x in rows if x.get("lv", 0) < 4]
+    deep = [x for x in rows if x.get("st")]
+    iv["rows"] = [x for x in rows if not x.get("st")]
     p = os.path.join(root, "data", "home_stocks.json")
     json.dump({"as_of": doc.get("as_of"), "note":
                "섹터·산업 트리의 마지막 단(종목). 홈이 3단을 처음 펼칠 때만 받는다 — "
