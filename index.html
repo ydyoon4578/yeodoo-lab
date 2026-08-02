@@ -305,6 +305,10 @@
   .sttbl tr.subr>th{padding-left:30px;font-weight:400;color:var(--muted)}
   .sttbl tr.subr>td{color:color-mix(in srgb,currentColor 80%,transparent)}
   .sttbl tr.subr>th small{margin-left:6px}
+  /* GICS 서브산업 이름은 길다. 첫 열을 넓히면 수익률 7칸이 밀리므로 줄임표로 자르고
+     전체 이름은 툴팁 첫 줄에 둔다(마우스를 올리면 나온다). */
+  .sttbl tr.subr>th .snm{display:inline-block;max-width:196px;overflow:hidden;
+       text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
   /* 구성종목 — 이제 표 **안의 접힌 행**이다(사용자 요청 2026-08-02).
@@ -1406,9 +1410,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            '<span class="htg" aria-hidden="true"> </span>')+
          esc(x.nm)+'<small>'+esc(x.sec)+'</small></th>'+cells(x.r)+'</tr>';
       ks.forEach(function(k,i){
+        // GICS 서브산업 이름은 길다('Industrial Machinery & Supplies & Components').
+        // 칸을 넓히지 않고 줄임표로 자르되, **전체 이름을 툴팁 첫 줄에** 둔다.
         h+='<tr class="subr" id="'+id+(i?'-'+i:'')+'" data-grp="'+id+'" hidden>'+
-           '<th scope="row" title="'+esc(tip(k,false))+'">'+esc(k.nm)+
-           '<small>'+esc(k.sic?'SIC '+k.sic:x.nm+' 나머지')+' · '+k.n+'종</small></th>'+
+           '<th scope="row" title="'+esc((k.sic?k.nm:x.nm+' 나머지')+'\n'+tip(k,false))+'">'+
+           '<span class="snm">'+esc(k.nm)+'</span>'+
+           '<small>'+k.n+'종</small></th>'+
            cells(k.r)+'</tr>';
       });
     });

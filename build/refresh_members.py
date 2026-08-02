@@ -99,6 +99,11 @@ def main() -> int:
         if "symbol" in head and any("gics sector" in h for h in head):
             i_t, i_n = head.index("symbol"), head.index("security")
             i_s = next(k for k, h in enumerate(head) if "gics sector" in h)
+            # GICS **서브산업**(4차)도 같이 받는다(2026-08-03). 위키 S&P 500 표가 싣는 GICS 는
+            # 섹터(1차)와 서브산업(4차) 둘뿐이다 — 2차(산업그룹 25)·3차(산업 74)는 없다.
+            # 그 둘을 만들려면 서브산업→상위 대응표를 손으로 적어야 하는데, 그건 이 표에
+            # 없는 것을 지어내는 일이라 하지 않는다. 홈의 섹터-산업 트리가 이 값을 쓴다.
+            i_g = next((k for k, h in enumerate(head) if "sub-industry" in h or "sub industry" in h), None)
             for r in rows[1:]:
                 if len(r) > max(i_t, i_n, i_s):
                     # 관문 0: 티커 형식. NDX 쪽에는 처음부터 있었는데 여기엔 없었다 —
@@ -111,7 +116,8 @@ def main() -> int:
                     if not re.fullmatch(r"[A-Z.]{1,6}", t):
                         bad_sym.append(r[i_t][:40])
                         continue
-                    spx[t] = {"name": r[i_n], "sector": r[i_s]}
+                    spx[t] = {"name": r[i_n], "sector": r[i_s],
+                              "sub": (r[i_g].strip() if i_g is not None and len(r) > i_g else "")}
             break
     ndx = {}
     for rows in wiki_rows(WIKI_NDX):
@@ -160,14 +166,17 @@ def main() -> int:
 
     new = {}
     for t, v in spx.items():
-        new[t] = {"name": nm(t, v["name"]), "sector": v["sector"], "idx": ["SPX"]}
+        new[t] = {"name": nm(t, v["name"]), "sector": v["sector"], "idx": ["SPX"],
+                  **({"sub": v["sub"]} if v.get("sub") else {})}
     for t, v in ndx.items():
         if t in new:
             new[t]["idx"] = ["NDX", "SPX"]
         else:
             # NDX 전용 — 위키 NDX 표는 ICB 분류라 GICS가 없다. 기존 명단에서 잇는다.
             old = cur_m.get(t) or {}
-            new[t] = {"name": nm(t, v["name"]), "sector": old.get("sector", ""), "idx": ["NDX"]}
+            # NDX 전용은 서브산업도 없다 — 기존 값이 있으면 잇고, 없으면 비운다(추측 금지).
+            new[t] = {"name": nm(t, v["name"]), "sector": old.get("sector", ""), "idx": ["NDX"],
+                      **({"sub": old["sub"]} if old.get("sub") else {})}
     name_drift = sorted(t for t in new if t in cur_m
                         and (spx.get(t) or ndx.get(t) or {}).get("name")
                         and cur_m[t].get("name") != (spx.get(t) or ndx.get(t))["name"])
