@@ -178,16 +178,24 @@ def _industry(stocks, dates, root):
         # 종목 줄은 **가볍게** 싣는다. 한 종목의 PER·폭·국면 통계는 종목 페이지가
         # 훨씬 잘 보여 주고, 417줄에 그것들을 얹으면 파일이 세 배가 된다(실측 166KB).
         # 여기서 답해야 하는 질문은 '이 산업 안에서 어느 종목이 끌었나' 하나다.
+        # 시가총액 합(억$). 줄 정렬 기준이다 — 큰 것부터 보는 편이 시장을 읽는 순서에 맞다
+        # (사용자 요청 2026-08-03 "종목이나 섹터는 가급적 시총순"). 없는 종목은 0 으로 친다.
+        mc = 0.0
+        for s2 in objs:
+            v = (s2.get("fund") or {}).get("mc")
+            if isinstance(v, (int, float)) and v > 0:
+                mc += float(v)
+        mc = round(mc) or None
         if sub is not None:                     # sub 가 있으면 종목 줄이다
             # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
             # (실측 19.7 → 29.7KB), 화면에서 종목 수익률의 둘째 자리를 읽을 일은 없다.
             # 샤프도 싣지 않는다 — 한 종목의 샤프는 종목 페이지가 맥락과 함께 보여 준다.
-            return {"nm": label, "sn": sub, "st": 1, "sec": sec, "sic": None, "n": 1,
+            return {"nm": label, "sn": sub, "st": 1, "sec": sec, "sic": None, "n": 1, "mc": mc,
                     "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
                     "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
-        return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r,
+        return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r, "mc": mc,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
                 "sharpe": sharpe(objs), **({"sn": sub} if sub else {}),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
