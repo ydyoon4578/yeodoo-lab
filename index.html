@@ -313,13 +313,20 @@
   .sttbl tr.lv2>th{padding-left:28px;font-weight:600}
   .sttbl tr.lv3>th{padding-left:52px;font-weight:400}
   .sttbl tr.lv4>th{padding-left:78px;font-weight:400;color:var(--muted)}
-  .sttbl tr.lv4>td{color:color-mix(in srgb,currentColor 78%,transparent)}
-  .sttbl tr.lv3>td{color:color-mix(in srgb,currentColor 88%,transparent)}
+  /* ⚠ 하위 단의 td 에 color 를 걸지 않는다. .sttbl td.up/.dn 과 특이도가 같아
+     나중에 선언된 이쪽이 이겨 **초록·빨강이 통째로 회색으로 덮였다**(사용자 지적).
+     층은 이름 칸의 굵기·들여쓰기로만 구분하고, 숫자의 색은 어느 단에서나 같다. */
+
   .sttbl tr.lv2>th small,.sttbl tr.lv3>th small{margin-left:6px}
   /* GICS 서브산업 이름은 길다. 첫 열을 넓히면 수익률 7칸이 밀리므로 줄임표로 자르고
      전체 이름은 툴팁 첫 줄에 둔다(마우스를 올리면 나온다). */
-  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm,.sttbl tr.lv4>th .snm{display:inline-block;max-width:176px;
-       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+  /* GICS 서브산업 이름은 길다('Industrial Machinery & Supplies & Components').
+     줄임표로 자르니 무엇인지 알 수 없다는 지적 — **자르지 않고 접는다.**
+     첫 열은 원래 nowrap 이라 여기서만 풀고, 접힌 줄이 버튼 아래로 흘러 들어가지 않게
+     이름 칸을 버튼 옆 블록으로 잡는다. */
+  .sttbl tr.lv2>th,.sttbl tr.lv3>th,.sttbl tr.lv4>th{white-space:normal}
+  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm,.sttbl tr.lv4>th .snm{
+       display:inline-block;max-width:260px;vertical-align:top;line-height:1.35}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
   /* 구성종목 — 이제 표 **안의 접힌 행**이다(사용자 요청 2026-08-02).
@@ -1411,6 +1418,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('');}
     // 한 줄 — lv 로 들여쓰기와 접힘이 갈린다. 펼칠 자식이 있으면 ▸ 버튼을, 없으면 자리만 둔다
     // (없으면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다).
+    // 종목 줄 — 어느 단 아래에도 같은 모양으로 붙는다. 아직 안 받았으면 빈 문자열.
+    function stockRows(pid,domid,lv,ctx){
+      var st=(MK.stk||[]).filter(function(k){return k.p===pid;});
+      st.sort(function(a,b2){
+        var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
+        return (y==null?-1e9:y)-(x==null?-1e9:x);
+      });
+      return st.map(function(k){
+        return row(k,lv,domid,null,(k.sn||k.nm)+'\n'+ctx,k.nm,k.sn||'');
+      }).join('');
+    }
     var seq=0;
     function row(x,lv,pid,myid,tipTxt,label,sub){
       seq++;
@@ -1433,20 +1451,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       gs.forEach(function(g){
         var gid=g.sec+'|'+g.nm;
         var ss=kids.filter(function(k){return k.lv===3&&k.p===gid;}).sort(bym);
-        h+=row(g,2,'s-'+s0.sec,ss.length?('g-'+gid):null,
+        h+=row(g,2,'s-'+s0.sec,'g-'+gid,
                (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
+        if(g.nm==='그 밖')h+=stockRows(s0.sec+'|'+g.nm,'g-'+gid,3,s0.nm+' 나머지');
+        // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았어도 **버튼은 달아 둔다** —
+        // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
+        // ⚠ '그 밖'에도 단다(사용자 요청). 나머지라고 못 펼치면 그 종목들은 어디에서도 못 본다.
         ss.forEach(function(x){
-          var sid='g-'+gid+'|'+x.nm;
-          var st=(MK.stk||[]).filter(function(k){return k.p===gid+'|'+x.nm;});
-          // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았으면 **버튼은 달아 둔다** —
-          // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
-          h+=row(x,3,'g-'+gid,(x.sic?sid:null),
+          var pid=gid+'|'+x.nm, sid='g-'+pid;
+          h+=row(x,3,'g-'+gid,sid,
                  (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
-          st.sort(function(a,b2){return ((b2.r||{})['1M']==null?-1e9:b2.r['1M'])-((a.r||{})['1M']==null?-1e9:a.r['1M']);});
-          st.forEach(function(k){
-            h+=row(k,4,sid,null,(k.sn||k.nm)+'\n'+x.nm,k.nm,k.sn||'');
-          });
+          h+=stockRows(pid,sid,4,x.nm);
         });
+        // 서브산업이 하나도 기준을 못 넘은 그룹 — 종목이 그룹에 직접 매달린다(3단).
+        if(!ss.length)h+=stockRows(gid,'g-'+gid,3,g.nm);
       });
     });
     return h;
