@@ -453,6 +453,12 @@ def sc_grow(P, i):
 # ⚠ 넣지 않은 것과 그 이유 — 흉내만 낸 지수는 이름만 지수인 다른 규칙이 되기 때문이다.
 #     S&P 500 배당귀족  25년 연속 증배가 조건인데 data/fx 의 배당 이력은 중앙값 20분기(5년)다.
 #                       조건을 물어볼 자료 자체가 없다.
+#     DJ US Dividend 100  SCHD 다. 만들어 돌려 보고 뺐다 — **백테스트가 안 된다.** 복합점수에
+#     (SCHD)            5년 배당성장률이 들어가는데, 1년 전 월말에서 그 값을 만들려면 6년 전
+#                       배당이 필요하다. 오늘은 118종이 채점되지만 13개월 전에는 20종으로
+#                       주저앉아 MIN_NAMES(100)에 못 미친다(실측). 10년 연속 배당이라는
+#                       자격 관문도 해당 종목이 28종뿐이라 5년으로 낮춰야 했다 — 관문·성장
+#                       기간·총부채까지 셋을 갈면 이름만 SCHD 인 다른 규칙이 된다.
 #     MSCI USA 최소분산  공분산행렬 최적화라 '상위 10종목'이라는 형태가 성립하지 않는다.
 #                       (저변동 lowvol 이 규칙 기반 사촌이고 이미 있다.)
 #     동일가중·매출가중   선택 규칙이 아니라 **가중 방식**이다. 상위 10종목이 없다(RSP 를
@@ -530,6 +536,74 @@ def sc_fcfy(P, i):
         v = P.ttm12(t, "fcf", i, "fcf_a")
         if v is not None:
             d[t] = v / mc * 100
+    return d, d
+
+
+def sc_divlv(P, i):
+    """S&P 500 Low Volatility High Dividend(SPHD) — 배당 상위를 거른 뒤 변동성이 낮은 순.
+
+    정본은 두 단계다. ① 12개월 배당수익률 상위 75종 ② 그중 252거래일 실현변동성이 가장 낮은
+    50종. 여기서는 ①을 비율(상위 15% = 75/500)로 옮기고 ②는 상위 10종목만 세운다.
+    ⚠ 관문에 MIN_NAMES 바닥이 걸린다 — 배당 지급 종목이 355종이라 15%는 53종인데, 백테스트가
+      한 달을 쓰려면 후보가 100종 이상이어야 한다(backtest.pick). 그래서 실제 관문은 상위
+      100종(≈28%)이고 정본보다 느슨하다. substitution 에 적는다.
+    """
+    dy, _ = sc_div(P, i)
+    if not dy:
+        return {}, {}
+    v, _b = _vol_beta(P, i)
+    pool = sorted((t for t in dy if t in v), key=lambda t: -dy[t])
+    if len(pool) < MIN_NAMES:
+        return {}, {}
+    gate = pool[:max(MIN_NAMES, int(round(len(pool) * 0.15)))]
+    d = {t: -v[t] for t in gate}                  # 변동성은 낮을수록 상위
+    return d, d
+
+
+def _sh_change(P, t, i):
+    """주식수 순감소율 % — 1년 전 대비. 늘었으면 음수. 잴 수 없으면 None.
+
+    🚨 여기서 쓰는 계열은 sh 가 아니라 **sh_u** 다. sh 는 분할기준이 섞인 관측을 잘라낸
+      계열인데, 그 자르기를 '주식수 변화 자체를 신호로 쓰는 규칙'에 그대로 쓰면 신호를
+      거세한다 — tech_backtest.split_trim 의 🚨 참조(OMC 는 20개 관측 중 19개가 삭제됐고
+      그 단절의 정체는 분할이 아니라 합병 대가 주식발행 +53% 였다. MSTR 도 대량발행으로
+      12/20 삭제). 즉 이 규칙이 겨냥해야 할 가장 전형적인 사건이 일어난 종목이 꼴찌가
+      아니라 **후보에서 사라진다.**
+      대신 그 함수가 함께 돌려주는 이음매(sh_seam)를 **건너뛰는 짝만** 배제한다.
+    """
+    f = P.fx.get(t) or {}
+    cut = (dt.date.fromisoformat(P.dates[i]) - dt.timedelta(days=LAG_DAYS)).isoformat()
+    obs = [(d, v) for d, v in (f.get("sh_u") or []) if d <= cut and v and v > 0]
+    if len(obs) < 2:
+        return None
+    d0, v0 = obs[0]
+    for d1, v1 in obs[1:]:
+        gap = (dt.date.fromisoformat(d0) - dt.date.fromisoformat(d1)).days
+        if gap < 300:
+            continue
+        if gap > 430:
+            return None                           # 1년짜리 짝이 없다
+        seam = f.get("sh_seam")
+        if seam and d1 <= seam <= d0:
+            return None                           # 이음매를 건너뛰는 짝은 쓰지 않는다
+        return (v1 - v0) / v1 * 100
+    return None
+
+
+def sc_netbuy(P, i):
+    """Nasdaq US Buyback Achievers(PKW) — 최근 1년 발행주식수 **순감소율**이 큰 순.
+
+    정본은 '순감소 5% 이상'을 자격으로 두고 시총가중한다. 여기서는 상위 10종목을 세우는
+    형태라 자격을 문턱이 아니라 **순위**로 옮긴다(5% 문턱은 상위 10종이면 언제나 넘는다).
+    ⚠ 자사주매입(sc_buyback)과 다른 축이다. 저쪽은 '얼마를 썼나'(매입액÷시총)이고 이쪽은
+      '실제로 주식수가 줄었나'다. 스톡옵션·전환사채로 발행이 그만큼 늘면 매입액이 커도
+      순감소는 0 이라, 두 줄의 명단이 갈린다.
+    """
+    d = {}
+    for t in P.uni:
+        v = _sh_change(P, t, i)
+        if v is not None:
+            d[t] = v
     return d, d
 
 
@@ -649,6 +723,14 @@ STYLES = [
      lambda P, i, t, s, u: "%.2f" % s,
      "영업활동현금흐름에서 설비투자를 뺀 최근 1년 잉여현금흐름을 시가총액으로 나눈 값이 가장 높은 10종목.\n"
      "회계이익이 아니라 실제로 남은 현금을 본다. 경기민감·에너지에 쏠리기 쉽고, 투자를 줄여 현금이 남은 회사도 같이 걸린다."),
+    ("divlv", "고배당저변동", "S&P 500 Low Volatility High Dividend (SPHD)", sc_divlv, "변동성 %",
+     lambda P, i, t, s, u: "%.1f" % (-s),
+     "배당수익률 상위를 거른 뒤 그 안에서 252거래일 실현변동성이 가장 낮은 10종목. 정본은 상위 75종 → 저변동 50종이다.\n"
+     "고배당만 보면 주가가 빠져서 수익률이 높아진 종목이 섞인다. 변동성 관문이 그 함정을 거르는 자리다."),
+    ("netbuy", "주식수감소", "Nasdaq US Buyback Achievers (PKW)", sc_netbuy, "순감소율 %",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "최근 1년 발행주식수가 가장 많이 줄어든 10종목. 정본은 순감소 5% 이상을 자격으로 두고 시총가중한다.\n"
+     "자사주매입 줄과 다른 축이다 — 저쪽은 얼마를 썼나이고 이쪽은 실제로 주식수가 줄었나다. 옵션·전환사채 발행이 상쇄하면 여기서 빠진다."),
     ("garp", "합리적성장", "S&P 500 GARP", sc_garp, "QV 점수",
      lambda P, i, t, s, u: "%.2f" % s,
      "3년 EPS·주당매출 성장률로 성장 상위 30% 를 거른 뒤, 그 안에서 재무레버리지(낮을수록)·ROE·이익수익률의 z 평균 상위 10종목.\n"
