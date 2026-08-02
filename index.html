@@ -1042,7 +1042,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var as=el('stkasof'); if(as)as.textContent='· 기준일 '+(h.as_of||'');
     var ma=el('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     MK.main=h.as_of||null;
-    if(h.breadth){MK.bd=h.breadth; renderMarket();}   // 폭 카드는 국면·심리와 같은 그리드에 붙는다
+    // 폭 카드는 국면·심리와 같은 그리드에 붙는다. 산업은 breadth 밖(문서 최상위)에 있으므로
+    // 따로 얹는다 — '폭'이 아니라 다른 축이라 그쪽에 넣지 않았다.
+    if(h.breadth){MK.bd=h.breadth; MK.iv=h.industry||null; MK.ivd=h.as_of||''; renderMarket();}
     if(h.breadth&&h.breadth.n){EB.n=h.breadth.n; setEyebrow();}
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
@@ -1063,7 +1065,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
     // 폭 카드는 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 칸이 영영 '불러오는 중'이다
-    MK.bd=false; renderMarket();
+    MK.bd=false; MK.iv=false; renderMarket();
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
@@ -1106,7 +1108,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
   // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
   // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
-  var MK={rg:null,sn:null,main:null,bd:null,mb:null};
+  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:''};
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1226,7 +1228,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 그 안의 sector·credit·rates 를 여태 아무도 안 쓰고 있었다(5KB 중 절반).
       w.innerHTML='<div class="mkslot" data-k="rg"></div><div class="mkslot" data-k="sn"></div>'+
                   '<div class="mkslot" data-k="bd"></div><div class="mkslot" data-k="sc"></div>'+
-                  '<div class="mkslot" data-k="rk"></div>';
+                  '<div class="mkslot" data-k="in"></div><div class="mkslot" data-k="rk"></div>';
       w.setAttribute('data-slots','1');
     }
     function put(k,html){
@@ -1339,6 +1341,43 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '</div>';
       put('sc',h);
     } else { put('sc', mb===false?mkFail('섹터'):MKSK); }
+    // ⑤ 산업 — 섹터(11)와 종목(518) 사이가 비어 있었다(사용자 요청 2026-08-02).
+    //    SIC 대분류 27개. 섹터 카드와 **같은 줄 모양·같은 기간 정의**라 위아래로 읽힌다
+    //    (기준일이 실제로 같은지는 build/home_summary.py 가 market_board 규칙을 따라 맞춘다).
+    //    ⚠ 27줄을 다 세우면 카드가 옆 카드의 두 배가 된다. 위아래 5개씩만 내고 나머지는 접는다 —
+    //      가운데는 대개 시장 평균 근처라 '어디가 끌고 어디가 끄는가'는 양 끝에서 갈린다.
+    var iv=MK.iv;
+    if(iv&&iv.length){
+      var top=iv.slice(0,5), bot=iv.slice(-5), mid=iv.slice(5,-5);
+      var ihi=(iv[0].r||{})['1M'], ilo=(iv[iv.length-1].r||{})['1M'];
+      var igap=(ihi!=null&&ilo!=null)?(ihi-ilo):null;
+      function irow(x){
+        var v=(x.r||{})['1M'];
+        var pct=x.n_ma200?(100*x.above/x.n_ma200):null;
+        var c=pct==null?'var(--muted)':(pct>=50?'var(--deploy)':'var(--hot)');
+        return '<div class="secrow"><span class="sn" title="'+esc('SIC '+x.sic+' · '+x.n+'종')+'">'+
+          esc(x.nm)+'</span><span class="sr '+(v>0.005?'up':(v<-0.005?'dn':'z'))+'">'+
+          (v==null?'—':(v>0?'+':'')+v.toFixed(1))+'</span>'+
+          '<span class="sb" title="'+(pct==null?'폭 자료 없음':'200일선 위 '+x.above+'/'+x.n_ma200+'종')+
+          '"><i style="--c:'+c+';width:'+(pct==null?0:pct.toFixed(0))+'%"></i></span>'+
+          '<span class="sp">'+(pct==null?'—':pct.toFixed(0)+'%')+'</span></div>';
+      }
+      h='<div class="card lk" style="--edge:var(--rp)">'+
+        '<div class="ch"><a class="cl" href="industry.html">산업</a><span>'+esc(MK.ivd||'')+'</span></div>'+
+        '<div class="cv">'+(igap==null?'—':'<span class="tnum">'+igap.toFixed(1)+'</span>%p')+' 격차</div>'+
+        '<div class="barl"><span>1개월 최고−최저</span><span>'+iv.length+'개 산업</span></div>'+
+        '<div style="margin-top:8px">'+top.map(irow).join('')+'</div>'+
+        (mid.length?fold('가운데 '+mid.length+'개 더 보기','<div>'+mid.map(irow).join('')+'</div>'):'')+
+        '<div>'+bot.map(irow).join('')+'</div>'+
+        fold('산업은 무엇으로 나눴나',
+             '<p>SEC 가 회사에 부여한 <b>SIC 대분류(2자리)</b>입니다. 랩의 분류가 아닙니다.</p>'+
+             '<p>4자리로 쪼개면 183그룹인데 83그룹이 1종목이라 ‘산업 평균’이 성립하지 않습니다. '+
+             '2자리로 묶어 <b>5종 이상</b>인 '+iv.length+'개만 싣습니다 — 유니버스의 87%입니다.</p>'+
+             '<p>왼쪽은 그 산업 종목들의 <b>동일가중 1개월 수익률</b>, 막대는 200일선 위 비율입니다. '+
+             '기간 기준일은 위 섹터 카드와 같습니다.</p>')+
+        '</div>';
+      put('in',h);
+    } else { put('in', iv===false?mkFail('산업'):MKSK); }
     // ⑤ 위험선호 — 주식 안에서만 보면 놓치는 축. 같은 하루에 하이일드가 투자등급을 이기면
     //    돈이 위험 쪽으로 간 것이고, 금리 곡선은 그 배경을 말한다.
     //    ⚠ 머리 숫자는 하이일드−투자등급이다. 두 채권의 **금리 민감도가 다르다**(LQD 듀레이션이
