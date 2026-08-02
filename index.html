@@ -1309,6 +1309,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //    ⚠ 머리 숫자는 하이일드−투자등급이다. 두 채권의 **금리 민감도가 다르다**(LQD 듀레이션이
     //      길다) — 금리가 내리면 LQD 가 더 오르므로 이 차이는 순수한 신용 스프레드가 아니다.
     //      그 사실을 fold 에 적는다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아니다.
+    // ⚠ mb 는 위에서 지운 섹터 카드가 선언하고 있던 것이다. 그 블록을 들어내면서 함께
+    //   사라져 renderMarket 이 여기서 ReferenceError 로 죽었다(위험선호 카드와 아래
+    //   drawMkTbl 이 통째로 안 그려졌다). 이 줄에서 다시 잡는다.
+    var mb=MK.mb;
     if(mb&&mb.credit&&mb.credit.length){
       var cm={}; mb.credit.forEach(function(x){cm[x.t]=x;});
       var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
