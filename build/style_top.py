@@ -489,6 +489,9 @@ def main() -> int:
         "buyback": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-buyback-index/",
         "fcfy": "https://www.paceretfs.com/products/cowz",
         "garp": "https://www.spglobal.com/spdji/en/indices/strategy-indices/sp-500-garp-index/",
+        "divlv": "https://www.spglobal.com/spdji/en/documents/methodologies/"
+                 "methodology-sp-low-volatility-high-dividend-indices.pdf",
+        "netbuy": "https://indexes.nasdaq.com/docs/Methodology_DRB.pdf",
     }
     # 정본에서 벗어난 곳. 화면이 칩 옆 ⚠ 로 이것을 낸다 — 근사한 것을 근사했다고 적지 않으면
     # 그냥 그 지수인 척이 된다.
@@ -498,6 +501,11 @@ def main() -> int:
                 "금융·부동산 제외는 정본과 같다.",
         "garp": "정본은 성장 상위 150종을 거른 뒤 QV 상위 75종이다. 여기서는 유니버스가 518종이고 "
                 "재무 결측으로 채점 가능 종목이 달마다 달라, 개수 대신 **비율(상위 30%)** 로 옮겼다.",
+        "divlv": "정본은 배당수익률 상위 **75종** 을 거른 뒤 저변동 50종이다. 여기서는 배당 지급 "
+                 "종목이 355종뿐이라 15% 관문이 53종이 되는데, 백테스트가 한 달을 쓰려면 후보가 "
+                 "100종 이상이어야 해 실제 관문은 상위 100종(≈28%)이다 — 정본보다 느슨하다.",
+        "netbuy": "정본은 '순감소 5% 이상'을 **자격**으로 두고 시총가중한다. 여기서는 상위 10종목을 "
+                  "세우는 형태라 자격을 순위로 옮겼다(상위 10종은 언제나 5%를 넘는다).",
     }
     Pn = sp.Panel()
     ilast = len(Pn.dates) - 1

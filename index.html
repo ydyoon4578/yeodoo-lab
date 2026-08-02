@@ -1677,7 +1677,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   // 뒤의 넷은 2026-08-02 에 더한 공개 산식 지수들이고 양쪽 키가 같다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
-               div:'div',buyback:'buyback',fcfy:'fcfy',garp:'garp'};
+               div:'div',buyback:'buyback',fcfy:'fcfy',garp:'garp',
+               divlv:'divlv',netbuy:'netbuy'};
   // 산식은 공개돼 있는데 **대응 ETF 가 없어** 위 표에는 못 들어가는 지수들(사용자 요청
   // 2026-08-02). 표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29) 여기 구성종목
   // 줄에만 나온다 — 위 여섯과 성격은 같고(공개 산식 · 월말 리밸런스 백테스트) 짝만 없다.
@@ -1686,7 +1687,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   키를 갈라 두었고 index_ref 도 서로 다르게 나간다.
   // ⚠ build/validate_site.py 가 이 배열을 읽는다 — 여기 없는 백테스트 키는 '잰 것이 화면에
   //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
-  var ST_IDX=['div','buyback','fcfy','garp'];
+  var ST_IDX=['div','buyback','fcfy','divlv','netbuy','garp'];
   // 백테스트가 아니라 스크린인 것 — 이름을 그 화면의 해당 스크린으로 보낸다.
   function scrHref(k){ return /^sc_/.test(k)?('screener.html#s='+k.slice(3)):null; }
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
