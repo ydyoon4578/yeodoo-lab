@@ -1047,7 +1047,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     MK.main=h.as_of||null;
     // 폭 카드는 국면·심리와 같은 그리드에 붙는다. 산업은 breadth 밖(문서 최상위)에 있으므로
     // 따로 얹는다 — '폭'이 아니라 다른 축이라 그쪽에 넣지 않았다.
-    if(h.breadth){MK.bd=h.breadth; MK.iv=h.industry||null; MK.ivd=h.as_of||''; renderMarket();}
+    if(h.breadth){
+      MK.bd=h.breadth; MK.iv=h.industry||null; MK.ivd=h.as_of||'';
+      renderMarket();
+      // 섹터·산업은 위 기간별 수익률 표 **안**에 들어간다. 그 표가 이미 그려졌다면
+      // 다시 그려야 이 자료가 자리를 찾는다(둘의 도착 순서는 정해져 있지 않다).
+      if(MK.board)drawStyle(null);
+    }
     if(h.breadth&&h.breadth.n){EB.n=h.breadth.n; setEyebrow();}
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
@@ -1068,7 +1074,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
     // 폭 카드는 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 칸이 영영 '불러오는 중'이다
-    MK.bd=false; MK.iv=false; renderMarket();
+    MK.bd=false; MK.iv=false; renderMarket(); if(MK.board)drawStyle(null);
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
@@ -1111,7 +1117,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
   // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
   // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
-  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:''};
+  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:'',board:null};
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1769,6 +1775,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
+    // 🚨 이 표는 **두 파일이 채운다** — style_top/style_trails/market_board(여기 j)와
+    //   home_reco(섹터·산업, MK.iv). 둘은 각자 도착하므로 먼저 온 쪽만으로 그리면
+    //   나중 것이 통째로 빠진다. 실제로 배포 직후 섹터 묶음이 0줄로 나갔다.
+    //   → 넘어온 보드를 붙들어 두고, home_reco 가 늦게 오면 그쪽이 다시 부른다.
+    if(j)MK.board=j; else j=MK.board;
+    if(!j)return;
     if(!j||!j.style){
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
     var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
