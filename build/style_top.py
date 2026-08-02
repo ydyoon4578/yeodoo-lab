@@ -158,17 +158,22 @@ def main() -> int:
 
     ISS = issuer_map(uni)
 
-    # ── GARP(합리적 가격의 성장주) ─────────────────────────────────────
-    # ⚠ 여기서 점수를 다시 만들지 않는다. screener.html 이 쓰는 결과가 이미 stocks.json 에
-    #   구워져 있다(build/screens_apply.py 가 굽고 build/refresh_stocks.py 가 부른다).
-    #   산식을 이 파일에 재구현하면 임계·백분위 정의가 갈리는 날 두 화면이 조용히 다른
-    #   명단을 말하게 된다 — 그건 이 사이트가 가장 싫어하는 종류의 어긋남이다.
-    #   그래서 '이미 계산된 적합도'를 점수로 받아 순위만 매긴다.
-    GARP = {r["t"]: float(r["s"]) for r in ((st.get("screens") or {}).get("garp") or [])
-            if r.get("t") in uni and r.get("s") is not None}
-    if not GARP:
-        print("  ⚠ stocks.json 에 screens.garp 가 없다 — GARP 스타일을 건너뛴다"
-              "(build/screens_apply.py 가 돌았는지 확인할 것)")
+    # ── 랩 스크린 ───────────────────────────────────────────────────
+    # 위의 스타일들은 공개 지수 방법론(MSCI·S&P)을 따르지만, 이쪽은 이 랩이 정의한 스크린이다
+    # (screener.html). 성격이 달라 홈에서도 따로 묶어 아래에 둔다.
+    # ⚠ **점수를 다시 만들지 않는다.** screener.html 이 쓰는 결과가 이미 stocks.json 의
+    #   screens 에 구워져 있다(build/screens_apply.py). 산식을 이 파일에 재구현하면
+    #   임계·백분위 정의가 갈리는 날 두 화면이 조용히 다른 명단을 말한다.
+    # ⚠ 키에 sc_ 를 붙인다. 스크린 키와 스타일 키가 **겹친다** — 스크린 lowvol(저변동 방어주)과
+    #   지수 스타일 lowvol(S&P 500 Low Volatility)이 같은 이름이라, 안 붙이면 한쪽이
+    #   다른 쪽을 덮어써서 화면에서 조용히 사라진다.
+    SCR_DOC = load("screens.json") or {}
+    SCR_RES = (st.get("screens") or {})
+    SCR_DIR = SCR_DOC.get("dir") or {}
+    # 스크린이 쓰는 지표의 한글 이름 — 칩 툴팁에 그대로 나간다.
+    SCR_LBL = {"fpe": "선행PER", "tpe": "PER", "ps": "PSR", "pb": "PBR", "de": "부채비율 D/E %",
+               "beta": "베타", "roe": "ROE %", "pm": "순이익률 %", "rg": "매출성장 %",
+               "gr": "선행EPS성장 %", "dy": "배당수익률 %", "fcfy": "FCF수익률 %"}
 
     def fund(t, k):
         v = (uni[t].get("fund") or {}).get(k)
@@ -409,16 +414,29 @@ def main() -> int:
     # index_ref 를 지수 이름이 아니라 그 화면으로 적어 출처를 헷갈리지 않게 한다.
     # ⚠ 대응 ETF 가 없다. 홈 성과표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29 결정)
     #   이 스타일은 표에 못 들어가고 구성종목 줄에만 나온다(index.html 의 ST_EXTRA).
-    if GARP:
+    for sk, sc in (SCR_DOC.get("screens") or {}).items():
+        rows = SCR_RES.get(sk) or []
+        score = {r["t"]: float(r["s"]) for r in rows
+                 if r.get("t") in uni and r.get("s") is not None}
+        if not score:
+            print("  ⚠ screens.%s 결과가 없다 — 건너뛴다(build/screens_apply.py 가 돌았는지 확인)" % sk)
+            continue
+        keys = sc.get("keys") or []
+        # 조건은 화면과 같은 말로 적는다 — '좋은 쪽 백분위'라는 규약을 여기서 다시 설명하지 않고,
+        # 어느 지표가 어느 방향인지만 밝힌다(dir 는 screens.json 이 정본이다).
+        cond = " · ".join("%s(%s)" % (SCR_LBL.get(k, k), "낮을수록" if SCR_DIR.get(k) == "low" else "높을수록")
+                          for k in keys)
+        qual = " · ".join("%s %s" % (SCR_LBL.get(k, k), v)
+                          for k, v in (sc.get("qualify") or {}).items())
+        qmax = " · ".join("%s %s 이하" % (SCR_LBL.get(k, k), v)
+                          for k, v in (sc.get("qualify_max") or {}).items())
+        rule = "%s 의 좋은쪽 백분위 평균. 하한 %s 을 넘은 종목만 채점한다." % (cond, qual)
+        if qmax:
+            rule += " 상한: %s." % qmax
         styles.append(
-            pack("garp", "합리적 가격의 성장주", "여두 전략 랩 · GARP 스크린",
-                 "screener.html#s=garp",
-                 "선행 EPS 성장률(+) · 선행 PER(낮을수록) · ROE(+) 의 좋은쪽 백분위 평균. "
-                 "세 지표가 각각 하한(성장 60 · 밸류 45 · ROE 50 백분위)을 넘은 종목만 채점한다.",
-                 None, GARP,
-                 lambda t: {"선행EPS성장 %": R2(fund(t, "gr")),
-                            "선행PER": R2(fund(t, "fpe")),
-                            "ROE %": R2(fund(t, "roe"))},
+            pack("sc_" + sk, sc.get("name") or sk, "여두 전략 랩 · 스크린",
+                 "screener.html#s=" + sk, rule, None, score,
+                 (lambda ks: (lambda t: {SCR_LBL.get(k, k): R2(fund(t, k)) for k in ks}))(keys),
                  slab="적합도"))
 
     doc = {
