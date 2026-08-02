@@ -1748,7 +1748,12 @@ try:
     # ② 짝 — **양방향 도달성**으로 본다. '짝이 N종이어야 한다'고 손으로 적으면 그 숫자가
     #    다음번에 낡는다. 대신 두 방향을 각각 묻는다: 홈이 가리키는 키가 자료에 있는가,
     #    자료에 있는 스타일이 홈에 닿는가. 어느 쪽이 끊겨도 그 랩 행은 에러 없이 사라진다.
+    # 짝 ETF 가 없어 표에 못 들어가는 지수들(index.html 의 ST_IDX)도 화면에 나오는 것이므로
+    # 도달 가능으로 친다 — 없으면 그 넷이 통째로 '고아'로 잡힌다(2026-08-02).
+    _m_idx = re.search(r"var ST_IDX\s*=\s*\[(.*?)\]\s*;", _ih, re.S)
+    _idx_extra = set(re.findall(r"['\"]([\w]+)['\"]", _m_idx.group(1))) if _m_idx else set()
     _want = {_p_map[_k_map[t]] for t in _k_map if _k_map[t] in _p_map}
+    _want |= {_p_map[k] for k in _idx_extra if k in _p_map}
     _dangle = sorted(_want - set(_by))
     _orphan = sorted(set(_by) - _want)
     if _dangle:

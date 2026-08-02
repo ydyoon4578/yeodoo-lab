@@ -91,7 +91,10 @@ DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "style_strategies.pdf")
 
 TOPN = 10
-LAG_DAYS = 45          # 분기 재무 공시 지연
+LAG_DAYS = 45          # 분기 재무 공시 지연(10-Q 마감 40일 기준)
+# 연간 재무 공시 지연. 10-K 마감은 회계연도 종료 후 60~75일이라 45일로는 아직 세상에 없는
+# 수치를 쓰게 된다. 연간(a) 버킷을 탈 수 있는 경로(Panel.ttm12)는 전부 이 값을 쓴다.
+ANN_LAG_DAYS = 90
 WINDOW = 252           # 성과·차트 구간 — 최근 1년
 MIN_NAMES = 100        # 후보가 이보다 적은 달은 그 규칙의 자료가 아직 얕은 것으로 본다
 SP_WP, MSCI_WP = 10.0, 2.5
@@ -200,6 +203,35 @@ def zavg(parts):
             {k: float(np.mean([p[1][k] for p in parts])) for k in common})
 
 
+def load_ccy():
+    """티커 → 재무제표 보고통화. data/fx 태그의 단위(u)에서 읽는다.
+
+    ⚠ 왜 필요한가 — data/fx 는 원문서 통화를 그대로 싣는다. 실측 3종이 EUR 이다
+      (ASML · CCEP · FER). 주가는 USD 이므로 '재무 흐름 ÷ 주가×주식수' 로 수익률을 만드는
+      규칙(자사주·FCF·주주환원)에서 EUR 분자를 USD 분모로 나누게 되고, 그 종목만 조용히
+      1.1배쯤 어긋난다. 배당수익률도 dps 가 EUR/shares 라 같은 문제다.
+      환율 이력을 들일 수는 없으니 **그 종목을 뺀다** — 셋을 섞느니 세 자리를 비우는 편이 낫다.
+      (z 로 표준화하는 기존 스타일들은 비율·주가 기반이라 이 문제를 타지 않는다.)
+    """
+    out = {}
+    d = os.path.join(DATA, "fx")
+    if not os.path.isdir(d):
+        return out
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".json"):
+            continue
+        try:
+            j = json.load(io.open(os.path.join(d, fn), encoding="utf-8"))
+        except Exception:
+            continue
+        for v in (j.get("tags") or {}).values():
+            u = (v or {}).get("u") or ""
+            if u and u != "shares":
+                out[j.get("t") or fn[:-5]] = u.split("/")[0]
+                break
+    return out
+
+
 class Panel:
     """가격·재무를 시점으로 잘라 쓰는 얇은 층."""
 
@@ -224,9 +256,32 @@ class Panel:
         sp = importlib.util.spec_from_file_location("_tb", os.path.join(HERE, "tech_backtest.py"))
         tb = importlib.util.module_from_spec(sp); sp.loader.exec_module(tb)
         self.fx = tb.load_fund()
+        self.tb = tb                      # ttm2(주기 판정)를 빌려 쓴다 — ttm12 참조
+        self.ccy = load_ccy()
         # 진짜 월말만. 마지막 거래일은 리밸런스가 아니라 '금일 기준' 자리라 따로 둔다.
         self.me = [i for i in range(len(self.dates) - 1)
                    if self.dates[i][:7] != self.dates[i + 1][:7]]
+
+    def usd(self, t):
+        """재무제표가 달러로 적혀 있나. 금액÷시가총액 규칙은 아니면 그 종목을 뺀다(load_ccy)."""
+        return self.ccy.get(t, "USD") == "USD"
+
+    def ttm12(self, t, key, i, ann=None, lag=None):
+        """진짜 12개월치. **관측 4개를 그냥 더하면 안 된다** — 현금흐름 계열(cfo·capex·bb)은
+        10-Q 가 YTD 누적이라 q 버킷에 Q1 만 남고, 그러면 '최근 4개 합'이 실제의 1/4 이 된다
+        (tech_backtest.ttm2 독스트링의 🚨 · 전수 비율 중앙 bb 0.27 · cfo 0.19).
+        그 주기 판정을 여기서 다시 짜지 않고 그 함수를 그대로 부른다.
+
+        🚨 지연 기본값이 **90일**(ANN_LAG_DAYS)이다. 이 파일의 LAG_DAYS 45일이 아니다.
+          45일은 10-Q 마감(대형가속신고자 40일)에 맞춘 값인데, 이 경로는 연간(a) 버킷으로
+          떨어질 수 있고 **10-K 마감은 회계연도 종료 후 60~75일**이다. 45일을 쓰면 아직
+          제출되지 않은 연간 수치를 그 시점에 알았다고 가정하게 된다 — 룩어헤드다.
+          실측으로 그 차이가 작지 않았다: 잉여현금흐름 규칙의 1년 수익률이 45일에서
+          +101.61%(샤프 3.59 · MDD -9.4%)였다. 분기 재무만 쓰는 기존 여섯 스타일은
+          LAG_DAYS 를 그대로 쓴다 — 그쪽은 연간 버킷을 타지 않는다."""
+        f = self.fx.get(t) or {}
+        return self.tb.ttm2(f.get(key) or [], (f.get(ann) if ann else None),
+                            self.dates[i], ANN_LAG_DAYS if lag is None else lag)
 
     def _align(self, A, tk):
         """assets.json 격자를 종목 가격 격자에 맞춘다. 빈 날은 직전 값으로 채운다."""
@@ -390,6 +445,134 @@ def sc_grow(P, i):
     return zavg([zs(sps, SP_WP), zs(epc, SP_WP), zs(mom, SP_WP)])
 
 
+# ── 공개 산식 지수 다섯 ──────────────────────────────────────────────────────
+# 2026-08-02 사용자 요청 — "공개 산식이 있는 지수·ETF 를 더 찾아 같은 방식으로".
+# 고른 잣대는 하나다: **산식이 공개돼 있고, 이 저장소의 자료로 그 산식을 그대로 계산할 수
+# 있는가.** 근사가 필요한 곳은 STYLES 의 substitution 에 적었다.
+#
+# ⚠ 넣지 않은 것과 그 이유 — 흉내만 낸 지수는 이름만 지수인 다른 규칙이 되기 때문이다.
+#     S&P 500 배당귀족  25년 연속 증배가 조건인데 data/fx 의 배당 이력은 중앙값 20분기(5년)다.
+#                       조건을 물어볼 자료 자체가 없다.
+#     MSCI USA 최소분산  공분산행렬 최적화라 '상위 10종목'이라는 형태가 성립하지 않는다.
+#                       (저변동 lowvol 이 규칙 기반 사촌이고 이미 있다.)
+#     동일가중·매출가중   선택 규칙이 아니라 **가중 방식**이다. 상위 10종목이 없다(RSP 를
+#                       ETF 표에서 뺀 것과 같은 이유).
+#     S&P 500 순수가치   style_top.py 에 PURE_V 가 이미 계산돼 있지만, 모지수 스타일점수
+#                       machinery 를 이쪽에도 옮겨야 해 이번 범위 밖으로 둔다.
+#     주주환원(SYLD)     만들어 돌려 보고 뺐다. 정의상 배당수익률 + 자사주매입률이라 새 축이
+#                       아니고, 실측(2026-07-31) 상위 10종 중 8종이 자사주매입 줄과 같았다
+#                       (CHTR·CRM·IT·LUV·TTD·AIG·GDDY 그대로). 바로 윗줄과 같은 티커를
+#                       보여 주는 줄은 독자에게 정보가 아니다. 규칙이 나빠서가 아니라
+#                       **화면에서 겹쳐서** 뺀 것이다 — 되살리려면 sc_div·sc_buyback 을
+#                       더하는 함수 하나면 된다.
+
+
+def mcap(P, t, i):
+    """시가총액(백만달러) — 주가 × 희석주식수.
+
+    data/fx 의 sh 는 **백만주**(태그 s=m)이고 금액 태그도 백만달러라 그대로 약분된다.
+    실측 대조(2026-07-31, 496종): 벤더 시총 대비 배율 중앙 1.00.
+    """
+    a = P.px.get(t)
+    sh = P.last(t, "sh", i)
+    if a is None or np.isnan(a[i]) or a[i] <= 0 or not sh or sh <= 0:
+        return None
+    return a[i] * sh
+
+
+def sc_div(P, i):
+    """S&P 500 High Dividend — 배당수익률이 높은 순(정본은 상위 80종, 여기서는 10종)."""
+    d = {}
+    for t in P.uni:
+        a = P.px.get(t)
+        if not P.usd(t) or a is None or np.isnan(a[i]) or a[i] <= 0:
+            continue
+        v = P.ttm12(t, "dps", i)
+        if v and v > 0:
+            d[t] = v / a[i] * 100
+    return d, d                                   # 연속값이라 동점이 없다
+
+
+def sc_buyback(P, i):
+    """S&P 500 Buyback — 최근 1년 자사주 매입액 ÷ 시가총액이 큰 순(정본 100종)."""
+    d = {}
+    for t in P.uni:
+        mc = mcap(P, t, i)
+        if not P.usd(t) or not mc:
+            continue
+        v = P.ttm12(t, "bb", i, "bb_a")
+        if v and v > 0:
+            d[t] = v / mc * 100
+    return d, d
+
+
+# COWZ 가 유니버스에서 빼는 업종. 은행·보험의 영업활동현금흐름은 예금·보험부채의 증감을
+# 담고 설비투자는 거의 없어 'FCF 수익률'이 사업의 현금창출력을 뜻하지 않는다. 리츠도
+# 감가상각이 커 같은 이유로 왜곡된다. 정본이 이 둘을 제외하는 이유이고, 안 빼면 실제로
+# 상위 20종 중 9종이 금융이 된다(실측 2026-07-31).
+FCF_EXCL = {"Financials", "Real Estate"}
+
+
+def sc_fcfy(P, i):
+    """Pacer US Cash Cows 100(COWZ) — 잉여현금흐름 수익률이 높은 순(정본 100종).
+
+    ⚠ 정본의 분모는 **기업가치(EV)** 다. 여기서는 시가총액을 쓴다 — data/fx 에 순부채를
+      만들 태그가 없다(liab 는 매입채무까지 포함한 부채총계라 차입금이 아니다).
+      부채가 큰 회사가 정본보다 좋게 나오는 방향의 이탈이라, substitution 에 적는다.
+    """
+    d = {}
+    for t in P.uni:
+        if (P.uni[t].get("sector") or "") in FCF_EXCL:
+            continue
+        mc = mcap(P, t, i)
+        if not P.usd(t) or not mc:
+            continue
+        v = P.ttm12(t, "fcf", i, "fcf_a")
+        if v is not None:
+            d[t] = v / mc * 100
+    return d, d
+
+
+def sc_garp(P, i):
+    """S&P 500 GARP — 성장 상위 관문을 통과한 것 중 '퀄리티·가치' 복합점수가 높은 순.
+
+    정본은 두 단계다. ① 3년 EPS 성장률과 3년 주당매출(SPS) 성장률의 z 평균으로 성장 상위
+    150종을 고르고, ② 그 안에서 재무레버리지(낮을수록)·ROE·이익수익률(E/P)의 z 평균으로
+    75종을 남긴다.
+    ⚠ 여기서는 ①을 개수가 아니라 **비율(상위 30% = 150/500)** 로 옮긴다. 유니버스가 518종인
+      데다 재무 결측으로 채점 가능 종목이 달마다 달라, 150 을 고정하면 관문이 어떤 달은
+      상위 30% 이고 어떤 달은 상위 45% 가 된다 — 개수보다 비율을 지키는 편이 정본에 가깝다.
+    ⚠ 성장률은 **TTM 대 3년 전 TTM** 으로 잰다. 한 분기끼리 비교하면 계절성이 성장률로 둔갑한다.
+    """
+    eg, sg, roe, lev, ep = {}, {}, {}, {}, {}
+    j3 = max(0, i - 252 * 3)
+    for t in P.uni:
+        a = P.px.get(t)
+        p = a[i] if a is not None else float("nan")
+        e0, e3 = P.ttm12(t, "eps", i), P.ttm12(t, "eps", j3)
+        if e0 and e3 and e0 > 0 and e3 > 0:
+            eg[t] = ((e0 / e3) ** (1 / 3.0) - 1.0) * 100
+        r0, r3 = P.ttm12(t, "rev", i, "rev_a"), P.ttm12(t, "rev", j3, "rev_a")
+        s0, s3 = P.last(t, "sh", i), P.last(t, "sh", j3)
+        if r0 and r3 and s0 and s3 and r0 > 0 and r3 > 0 and s0 > 0 and s3 > 0:
+            sg[t] = (((r0 / s0) / (r3 / s3)) ** (1 / 3.0) - 1.0) * 100
+        ni, eq, li = P.ttm12(t, "ni", i, "ni_a"), P.last(t, "eq", i), P.last(t, "liab", i)
+        aeq = avg_eq(P, t, i)
+        if ni is not None and aeq:
+            roe[t] = ni / aeq * 100
+        if li is not None and eq and eq > 0:
+            lev[t] = -(li / eq)                    # 레버리지는 낮을수록 상위
+        if e0 is not None and not np.isnan(p) and p > 0:
+            ep[t] = e0 / p * 100
+    gz = zavg([zs(eg, SP_WP), zs(sg, SP_WP)])
+    qz = zavg([zs(roe, SP_WP), zs(lev, SP_WP), zs(ep, SP_WP)])
+    pool = sorted((t for t in gz[0] if t in qz[0]), key=lambda t: -gz[0][t])
+    if len(pool) < MIN_NAMES:
+        return {}, {}
+    gate = pool[:max(MIN_NAMES, int(round(len(pool) * 0.30)))]
+    return ({t: qz[0][t] for t in gate}, {t: qz[1][t] for t in gate})
+
+
 # ── 보유 표의 마지막 칸 ──────────────────────────────────────────────────────
 # 점수를 그대로 적으면 못 읽는다. 자른 z 는 상위권이 통째로 동점이고(모멘텀), 안 자른 z 는
 # 순위와 어긋난다(퀄리티에서 MA 가 그렇다 — ROE 가 압도적이라 안 자른 z 는 1등인데 D/E 때문에
@@ -453,6 +636,23 @@ STYLES = [
     ("hbeta", "고베타", "S&P 500 High Beta", sc_hbeta, "베타", lambda P, i, t, s, u: "%.2f" % s,
      "최근 252거래일 일간수익률을 S&P 500 에 회귀했을 때 베타가 가장 큰 10종목. 공분산÷시장분산으로 직접 계산한다.\n"
      "시장이 오르면 더 오르고 내리면 더 내리는 증폭 장치다. 초과수익 규칙이라기보다 방향성 베팅이라 MDD 를 같이 봐야 한다."),
+    # ── 여기부터 다섯은 2026-08-02 에 더했다(위 '공개 산식 지수 다섯' 주석 참조) ──
+    ("div", "고배당", "S&P 500 High Dividend", sc_div, "배당수익률 %",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "최근 1년 주당배당금(선언 기준)을 주가로 나눈 배당수익률이 가장 높은 10종목. 정본은 상위 80종을 담는다.\n"
+     "유틸리티·리츠·필수소비에 쏠린다. 수익률이 높은 이유가 배당이 커서가 아니라 주가가 빠져서인 경우가 섞이므로 함정이 있다."),
+    ("buyback", "자사주매입", "S&P 500 Buyback", sc_buyback, "매입률 %",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "최근 1년 자사주 매입액을 시가총액으로 나눈 비율이 가장 높은 10종목. 정본은 상위 100종을 담는다.\n"
+     "주식수를 줄여 주당 지분을 키우는 회사를 담는다. 고점에서 사들이는 회사도 함께 걸리므로 밸류에이션을 같이 봐야 한다."),
+    ("fcfy", "잉여현금흐름", "Pacer US Cash Cows 100 (COWZ)", sc_fcfy, "FCF수익률 %",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "영업활동현금흐름에서 설비투자를 뺀 최근 1년 잉여현금흐름을 시가총액으로 나눈 값이 가장 높은 10종목.\n"
+     "회계이익이 아니라 실제로 남은 현금을 본다. 경기민감·에너지에 쏠리기 쉽고, 투자를 줄여 현금이 남은 회사도 같이 걸린다."),
+    ("garp", "합리적성장", "S&P 500 GARP", sc_garp, "QV 점수",
+     lambda P, i, t, s, u: "%.2f" % s,
+     "3년 EPS·주당매출 성장률로 성장 상위 30% 를 거른 뒤, 그 안에서 재무레버리지(낮을수록)·ROE·이익수익률의 z 평균 상위 10종목.\n"
+     "성장주를 사되 값과 재무건전성을 함께 본다. 두 관문을 다 넘어야 해 후보가 얇고, 성장 관문 탓에 실적 추정이 꺾이면 함께 밀린다."),
 ]
 
 SECS = {"Information Technology": "IT", "Health Care": "헬스", "Financials": "금융",
