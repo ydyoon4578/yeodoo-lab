@@ -273,6 +273,14 @@
      여덟 줄이 같은 격자에 정렬된다. 산식은 줄 전체의 툴팁으로 내렸다. */
   .stmore{margin-top:10px}
   .sthold{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  /* 두 묶음의 머리. 위는 공개 지수 산식, 아래는 이 랩의 스크린 — 성격이 달라 섞으면
+     '같은 잣대로 뽑은 여덟'으로 읽힌다. 선 하나로는 부족해 글자로 가른다. */
+  .sthgrp{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:7px 11px;
+       background:var(--panel-2);border-top:1px solid var(--line);
+       font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  .sthold>.sthgrp:first-child{border-top:0}
+  .sthgrp em{font-style:normal;font-weight:500;font-size:10.5px;color:var(--muted)}
+  .sthgrp a{color:inherit}
   .sthrow{display:flex;align-items:center;gap:10px;padding:5px 11px;
        border-top:1px solid var(--line-soft)}
   .sthrow:first-child{border-top:0}
@@ -1602,34 +1610,53 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   대응 ETF 가 없어 성과표에는 못 들어간다(표는 '랩 규칙 ↔ ETF' 짝만 싣는다 — 2026-07-29 결정).
   //   명단은 build/style_top.py 가 stocks.json 의 screens.garp 를 **그대로 읽어** 만든다 —
   //   산식을 두 곳에 두면 screener.html 과 홈이 다른 10종을 말하는 날이 온다.
-  var ST_EXTRA=['garp'];
+  // 표에 없는데 구성종목만 덧붙일 것 — 랩 스크린 전부(screener.html).
+  // ⚠ 키에 sc_ 가 붙는다. 스크린 lowvol(저변동 방어주)과 지수 스타일 lowvol(S&P 500 Low
+  //   Volatility)이 같은 이름이라, 안 붙이면 한쪽이 다른 쪽을 덮어써 조용히 사라진다.
+  // 명단은 build/style_top.py 가 stocks.json 의 screens 결과를 **그대로 읽어** 만든다 —
+  // 산식을 두 곳에 두면 screener.html 과 홈이 다른 10종을 말하는 날이 온다.
+  var ST_SCR=['sc_qval','sc_growth','sc_income','sc_cash','sc_garp','sc_lowvol','sc_growth_margin'];
+  var ST_EXTRA=ST_SCR;
   // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
-  // 백테스트가 아니라 스크린인 것 — 이름을 그 화면으로 보낸다.
-  var ST_SCREEN={garp:'screener.html#s=garp'};
+  // 백테스트가 아니라 스크린인 것 — 이름을 그 화면의 해당 스크린으로 보낸다.
+  function scrHref(k){ return /^sc_/.test(k)?('screener.html#s='+k.slice(3)):null; }
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
+  // 중소형은 뺀다(사용자 결정 2026-08-02). 성과표에 짝 ETF 가 없어 표에는 원래 없었고,
+  // 구성종목 줄에만 혼자 남아 있었다. 위 comment 에 '여기서 지우면 경고 없이 사라진다'고
+  // 적어 두었던 것은 그때 판단이고, 지금은 빼기로 한 것이라 사라지는 게 의도다.
+  var ST_HIDE={size:1};
   function drawStHold(keys){
     var box=el('stmore'); if(!box||!STOP)return;
-    var seen={}, have=[];
-    (keys||[]).concat(ST_EXTRA).forEach(function(k){
-      if(k&&STOP[k]&&!seen[k]){seen[k]=1;have.push(k);}
-    });
-    if(!have.length){box.innerHTML='';return;}
-    box.innerHTML='<div class="sthold">'+have.map(function(k){
+    function pick(list){
+      var seen={}, out=[];
+      (list||[]).forEach(function(k){
+        if(k&&!ST_HIDE[k]&&STOP[k]&&!seen[k]){seen[k]=1;out.push(k);}
+      });
+      return out;
+    }
+    function row(k){
       var s=STOP[k];
-      // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로 — 없는 것은 그대로 글씨다.
-      // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로. GARP 는 백테스트가 아니라
-      // 스크린이라 그쪽(screener.html)으로 보낸다 — 갈 곳이 있는데 글씨로 두지 않는다.
-      var lbl=ST_PERF[k]
-        ? '<a class="sthlbl lnk" href="style.html#s='+ST_PERF[k]+'" title="이 스타일의 최근 1년 백테스트">'+
-          esc(s.label)+'</a>'
-        : (ST_SCREEN[k]
-          ? '<a class="sthlbl lnk" href="'+ST_SCREEN[k]+'" title="이 스크린의 판정과 조건">'+
-            esc(s.label)+'</a>'
-          : '<span class="sthlbl">'+esc(s.label)+'</span>');
+      // 이름이 갈 곳이 있으면 링크로 — 지수 스타일은 백테스트(style.html), 스크린은 screener.html.
+      var h=ST_PERF[k]?('style.html#s='+ST_PERF[k]):scrHref(k);
+      var tip=ST_PERF[k]?'이 스타일의 최근 1년 백테스트':'이 스크린의 판정과 조건';
+      var lbl=h?'<a class="sthlbl lnk" href="'+h+'" title="'+tip+'">'+esc(s.label)+'</a>'
+              :'<span class="sthlbl">'+esc(s.label)+'</span>';
       return '<div class="sthrow">'+lbl+stDetail(s)+'</div>';
-    }).join('')+'</div>';
+    }
+    var A=pick(keys), B=pick(ST_SCR);
+    if(!A.length&&!B.length){box.innerHTML='';return;}
+    var h='';
+    if(A.length)h+='<div class="sthgrp">지수 방법론 <em>MSCI · S&amp;P 공개 산식을 이 유니버스에 적용</em></div>'+
+                   A.map(row).join('');
+    // 스크린 묶음은 판정을 함께 적는다. 안 적으면 '랩이 고른 열 종목'으로 읽히는데,
+    // 이 랩은 이 스크린들을 이미 기각했다(screener.html 의 한 줄 결론).
+    if(B.length)h+='<div class="sthgrp">랩 스크린 '+
+                   '<em>조건을 만족하는 목록일 뿐 매수 신호가 아닙니다 — '+
+                   '<a href="screener.html">초과수익이 확인된 스크린은 0종</a></em></div>'+
+                   B.map(row).join('');
+    box.innerHTML='<div class="sthold">'+h+'</div>';
   }
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
