@@ -47,28 +47,10 @@ def _reco(stocks, dates, conf_key, prov_key):
     return rows, len(c), len(c) - n_prov, n_prov      # 목록 · 전체 · 확정 · 잠정
 
 
-# SIC 대분류(2자리) 한글 이름. **4자리가 아니라 2자리로 묶는 이유** —
-#   실측(2026-08-02, 유니버스 518종): 4자리는 183그룹인데 83그룹이 1종목이고, 5종 이상인
-#   그룹이 24개뿐이라 커버가 240/518(46%)이다. '산업 평균'이 종목 하나인 줄이 절반을 넘는다.
-#   3자리는 132그룹·커버 330(64%), 2자리는 54그룹인데 5종 이상이 27개로 가장 많고
-#   커버가 450/518(87%)이다. 그룹 수는 4자리와 비슷한데 통계가 서는 유일한 자릿수다.
-# ⚠ 이름은 SIC 공식 대분류 제목을 옮긴 것이다. data/industry.json 은 4자리 설명만 들고
-#   있어(2자리 제목이 없다) 여기 적는다 — 없는 코드는 'SIC nn' 으로 나간다(조용히 빠지지 않게).
-SIC2 = {
-    "01": "농업", "10": "금속광업", "13": "석유·가스 채굴", "14": "비금속 광물",
-    "15": "건축 시공", "16": "토목 건설", "17": "전문 건설", "20": "식품", "21": "담배",
-    "23": "의류 제조", "26": "제지", "27": "인쇄·출판", "28": "화학·제약", "29": "정유",
-    "30": "고무·플라스틱", "31": "가죽", "32": "요업·시멘트", "33": "1차 금속",
-    "34": "금속 가공", "35": "기계·컴퓨터장비", "36": "전자·전기장비", "37": "운송장비",
-    "38": "계측·의료기기", "39": "기타 제조", "40": "철도", "42": "화물운송·창고",
-    "44": "해운", "45": "항공운송", "47": "운송 서비스", "48": "통신",
-    "49": "전기·가스·수도", "50": "도매(내구재)", "51": "도매(비내구재)",
-    "52": "소매(건자재)", "53": "소매(종합)", "54": "소매(식품)", "55": "소매(자동차·주유)",
-    "56": "소매(의류)", "57": "소매(가구·가전)", "58": "외식", "59": "소매(기타)",
-    "60": "은행", "61": "여신금융", "62": "증권·자산운용", "63": "보험", "64": "보험중개",
-    "65": "부동산", "67": "리츠·지주", "70": "호텔·숙박", "73": "사업서비스(SW·IT)",
-    "78": "영화·영상", "79": "레저·엔터", "80": "의료서비스", "87": "엔지니어링·컨설팅",
-}
+# ⚠ SIC 대분류(2자리) 한글 이름표가 여기 있었다 — 2026-08-03 에 하위 분류를 GICS
+#   서브산업으로 바꾸면서(사용자 요청 "sic말고 gics") 쓰는 곳이 없어졌다.
+#   SIC 자체는 data/industry.json 과 industry.html 에 그대로 살아 있다. 홈만 GICS 를 쓴다 —
+#   홈의 섹터가 GICS(위키 S&P 500 표)라 하위도 같은 체계여야 트리가 성립하기 때문이다.
 # GICS 섹터 → 섹터 ETF 티커. **키를 한글 이름이 아니라 티커로 둔다** — 홈이
 # market_board.json 의 sector 행과 짝지어 그리는데, 한글 표기가 바뀌는 날 조인이 조용히 끊긴다.
 # _breadth(섹터별 폭)와 _industry(섹터-산업 트리)가 같이 쓴다.
@@ -77,9 +59,10 @@ SEC_ETF = {"Information Technology": "XLK", "Financials": "XLF", "Health Care": 
            "Industrials": "XLI", "Consumer Staples": "XLP", "Energy": "XLE",
            "Utilities": "XLU", "Real Estate": "XLRE", "Materials": "XLB"}
 SEC_KO = {v: SECKO[k] for k, v in SEC_ETF.items()}
-# 섹터 안에서 다시 나누므로 그룹이 잘아진다 — 5 에서 4 로 내렸다.
-# 실측(2026-08-03): MIN 5 면 하위 33개·커버 79%, MIN 4 면 37개·커버 82%.
-IND_MIN = 4        # 이보다 적은 묶음은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
+# 실측(2026-08-03, GICS 서브산업 127개): MIN 3 이면 71개·커버 83% · MIN 4 면 49개·커버 70% ·
+# MIN 5 면 36개·커버 59%. 섹터 안에 접어 두므로 한 번에 보이는 것은 한 섹터분(6~7줄)이라
+# 개수보다 커버를 택했다. 3종 평균은 얇지만 줄마다 종목수를 함께 낸다.
+IND_MIN = 3        # 이보다 적은 묶음은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
 # ⚠ 기간 규칙은 build/market_board.py 의 HOR 와 **같아야 한다.** 홈에서 섹터 카드 바로
 #   아래에 산업 카드가 붙으므로, 두 카드의 '1개월'이 다른 날을 가리키면 나란히 못 읽는다.
 #   그쪽은 달력일 차감 후 그 날짜 이하의 마지막 관측을 쓴다(_base_dates + _at) — 같은 규칙이다.
@@ -92,23 +75,28 @@ IND_HOR = [("1D", 1), ("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 36
 def _industry(stocks, dates, root):
     """섹터 11개와 그 **하위 산업**을 한 덩어리로 → {"sectors": [...], "rows": [...], ...}
 
-    🚨 **산업을 SIC 만으로 묶고 주섹터에 매달면 트리가 거짓말을 한다.** SIC(SEC 부여)와
-      GICS 섹터(벤더)는 다른 분류라 한 SIC 가 여러 섹터에 걸친다 — 실측(2026-08-03):
-          사업서비스(SW·IT) 63종 → IT 26 · 금융 13 · 산업재 9 · 커뮤 8 · 경소 5 …  순도 41%
-          화학·제약 35종        → 헬스 18 · 소재 11 · 필소 6                      순도 51%
-          기계·컴퓨터장비 33종   → IT 18 · 산업재 14                              순도 55%
-      '사업서비스는 IT 하위'라고 적으면 63종 중 37종이 남의 섹터에 있는 채로 IT 밑에 선다.
-      그래서 **(섹터, SIC) 쌍으로 묶는다.** 이러면 모든 하위 줄이 정의상 부모 섹터 안에
-      100% 들어간다 — 같은 SIC 가 섹터마다 따로 서고(예: 사업서비스가 IT 에도 금융에도),
-      그것이 사실이다.
+    하위 분류는 **GICS 서브산업**이다(사용자 요청 2026-08-03 "sic말고 gics").
+    data/members.json 이 들고 있고, 그 출처는 위키백과 S&P 500 목록의 GICS 열이다 —
+    **이 화면의 섹터와 같은 출처·같은 체계**라 서브산업이 섹터 밖으로 새지 않는다.
+
+    🚨 왜 SIC 를 버렸나. SIC(SEC 부여)와 GICS 섹터(위키)는 다른 분류라 한 SIC 가 여러 섹터에
+      걸쳤다 — 실측: 사업서비스 63종이 IT 26 · 금융 13 · 산업재 9 · 커뮤 8 …(순도 41%),
+      화학·제약 51%, 기계·컴퓨터장비 55%. 순도 90% 미만이 27개 중 14개였다.
+      (섹터, SIC) 쌍으로 묶어 트리를 억지로 맞추고 있었는데, 같은 SIC 가 섹터마다 쪼개져
+      '사업서비스'가 네 섹터에 각각 서는 표가 됐다. GICS 는 정의상 트리라 그 봉합이 필요 없다.
+    ⚠ 위키 S&P 500 표가 싣는 GICS 는 **섹터(1차)와 서브산업(4차) 둘뿐**이다. 산업그룹(2차 ·
+      25개)과 산업(3차 · 74개)은 그 표에 없다 — 만들려면 서브산업→상위 대응표를 손으로
+      적어야 하고, 그건 없는 자료를 지어내는 일이라 하지 않았다.
+    ⚠ NDX 전용 15종(ASML·ARM·PDD·SHOP·MELI·MSTR …)은 서브산업이 없다. 위키 NASDAQ-100 표는
+      ICB 분류라 GICS 를 싣지 않는다 — 그 종목들은 섹터의 '그 밖' 줄로 간다.
     ⚠ 하위에 못 들어간 종목은 섹터마다 '그 밖' 한 줄로 남긴다. 안 남기면 하위 합이 섹터에
-      못 미치는데 화면은 그 사실을 말하지 않는다(경기소비는 하위 커버가 47%다).
+      못 미치는데 화면은 그 사실을 말하지 않는다.
     """
-    ind_p = os.path.join(root, "data", "industry.json")
-    if not os.path.exists(ind_p):
+    mem_p = os.path.join(root, "data", "members.json")
+    if not os.path.exists(mem_p):
         return {}
-    co = (json.load(io.open(ind_p, encoding="utf-8")) or {}).get("co") or {}
-    if not co:
+    mem = (json.load(io.open(mem_p, encoding="utf-8")) or {}).get("members") or {}
+    if not mem:
         return {}
     import datetime as _dt
     d0 = _dt.date.fromisoformat(dates[-1])
@@ -118,16 +106,17 @@ def _industry(stocks, dates, root):
         ks = [i for i, d in enumerate(dates) if d <= tgt]
         base[k] = ks[-1] if ks else None
 
-    # (섹터, SIC) → 종목. 섹터나 SIC 가 없으면 어느 쪽에도 세지 않는다.
+    # 서브산업 → 종목. GICS 는 트리라 서브산업 하나가 섹터 하나에만 속한다 —
+    # (섹터, 서브산업) 쌍으로 묶을 필요가 없다(SIC 때는 필요했다).
     pair, bysec = {}, {}
     for s in stocks:
         sec = SEC_ETF.get(s.get("sector") or "")
-        code = ((co.get(s["t"]) or [None])[0] or "")[:2]
+        sub = ((mem.get(s["t"]) or {}).get("sub") or "").strip()
         if not sec:
             continue
         bysec.setdefault(sec, []).append(s)
-        if code:
-            pair.setdefault((sec, code), []).append(s)
+        if sub:
+            pair.setdefault((sec, sub), []).append(s)
 
     keep = {k: v for k, v in pair.items() if len(v) >= IND_MIN}
     PX = _load_px([s["t"] for v in list(keep.values()) + list(bysec.values()) for s in v], dates, root)
@@ -155,7 +144,7 @@ def _industry(stocks, dates, root):
                       key=lambda kv: -len(kv[1]))
         used = set()
         for c, v in subs:
-            rows.append(agg(v, SIC2.get(c, "SIC " + c), sec, c))
+            rows.append(agg(v, c, sec, c))          # 이름이 곧 GICS 서브산업 라벨이다
             used.update(s["t"] for s in v)
         rest = [s for s in objs if s["t"] not in used]
         if rest:
