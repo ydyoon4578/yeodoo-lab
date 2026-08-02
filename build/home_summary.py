@@ -146,12 +146,65 @@ def _industry(stocks, dates, root):
             # 산업 수익률이라 부르지 않는다.
             r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= max(3, len(g["ts"]) // 2) else None
         v = _val(g["objs"])
+        # _ts 는 _by_regime 이 쓰고 나서 지운다 — 티커 목록까지 홈에 실을 이유가 없다.
         out.append({"sic": code, "n": len(g["ts"]), "nm": SIC2.get(code, "SIC " + code),
-                    "above": g["above"], "n_ma200": g["n_ma200"], "r": r, **v})
+                    "above": g["above"], "n_ma200": g["n_ma200"], "r": r, "_ts": g["ts"], **v})
     out.sort(key=lambda x: -(x["r"].get("1M") if x["r"].get("1M") is not None else -1e9))
+    rg, rgn = _by_regime(out, PX, dates, root)
     # 시장 중앙값을 함께 싣는다 — **레벨만 보면 못 읽는 수치라서다.** 은행 PER 13.8 과
     # 전자 42.2 는 싸고 비싼 것이 아니라 업종 구조다. 시장 대비 배수라야 눈금이 생긴다.
-    return {"mkt": _val(stocks), "rows": out}
+    return {"mkt": _val(stocks), "rows": out, "regime_n": rgn}
+
+
+def _by_regime(rows, PX, dates, root):
+    """국면별 산업 월평균 수익률을 rows 에 얹는다(x["rg"]). → (rows, {국면: 개월수})
+
+    data/regime.json 이 이미 sector_perf(섹터 ETF 8종)를 같은 형태로 들고 있다. 그 아래
+    한 단을 같은 방식으로 낸다(사용자 요청 2026-08-03).
+
+    🚨 **이 수치는 예측이 아니다.** 국면 라벨은 그 달이 끝난 뒤에 붙고, 여기서는 같은 달의
+      수익률을 그 라벨에 묶는다 — '그 국면이었을 때 이 산업이 어땠나'라는 **기술 통계**이지
+      '이 국면이 오면 이 산업을 사라'가 아니다. 국면을 미리 알 수 있다는 가정이 들어가면
+      그건 다른 주장이고, 이 랩은 그 주장을 하지 않는다.
+    🚨 표본이 얕다. 종목 가격이 2016-08 부터라 120개월뿐이고, 국면마다 5~39개월로 갈린다
+      (실측: Goldilocks 39 · Recovery 33 · Overheating 27 · SoftLanding 9 · LateCycle 7 ·
+      Recession 5). 개월수를 **반드시 함께 낸다** — 5개월 평균과 39개월 평균을 같은 무게로
+      보여 주면 그건 자료가 아니라 착시다. MIN 개월 미만은 아예 비운다.
+    ⚠ 생존편향도 그대로 있다. 오늘의 518종을 과거로 소급한다(이 랩의 상시 한계).
+    """
+    RG_MIN = 8
+    p = os.path.join(root, "data", "regime.json")
+    if not os.path.exists(p):
+        return rows, {}
+    try:
+        hist = (json.load(io.open(p, encoding="utf-8")) or {}).get("history") or []
+    except Exception:
+        return rows, {}
+    lab = {(x.get("dt") or "")[:7]: x.get("r") for x in hist if x.get("r")}
+    # 월말 인덱스 — 그 달의 마지막 거래일. 첫 달은 직전 달이 없어 수익률을 못 만든다.
+    me = [i for i in range(len(dates) - 1) if dates[i][:7] != dates[i + 1][:7]] + [len(dates) - 1]
+    n_by = {}
+    for k in range(1, len(me)):
+        r = lab.get(dates[me[k]][:7])
+        if r:
+            n_by[r] = n_by.get(r, 0) + 1
+    for x in rows:
+        acc = {}
+        for k in range(1, len(me)):
+            r = lab.get(dates[me[k]][:7])
+            if not r:
+                continue
+            i0, i1 = me[k - 1], me[k]
+            vs = []
+            for t in x.get("_ts", []):
+                px = PX.get(t)
+                if px and px[i0] and px[i1] and px[i0] > 0:
+                    vs.append(px[i1] / px[i0] - 1.0)
+            if len(vs) >= max(3, len(x.get("_ts", [])) // 2):
+                acc.setdefault(r, []).append(sum(vs) / len(vs) * 100)
+        x["rg"] = {r: round(sum(v) / len(v), 2) for r, v in acc.items() if len(v) >= RG_MIN}
+        x.pop("_ts", None)
+    return rows, {r: n for r, n in n_by.items() if n >= RG_MIN}
 
 
 # 밸류에이션은 **중앙값**이다. 평균을 쓰면 PER 300짜리 한 종목이 산업을 통째로 끈다.
