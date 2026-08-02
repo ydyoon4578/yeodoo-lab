@@ -73,7 +73,10 @@ IND_MIN = 5        # 이보다 적은 그룹은 '산업 평균'이라 부를 수
 # ⚠ 기간 규칙은 build/market_board.py 의 HOR 와 **같아야 한다.** 홈에서 섹터 카드 바로
 #   아래에 산업 카드가 붙으므로, 두 카드의 '1개월'이 다른 날을 가리키면 나란히 못 읽는다.
 #   그쪽은 달력일 차감 후 그 날짜 이하의 마지막 관측을 쓴다(_base_dates + _at) — 같은 규칙이다.
-IND_HOR = [("1M", 30), ("3M", 91)]
+# 구간은 build/market_board.py 의 HOR 와 **글자 그대로 같다**(+YTD). 홈에서 섹터 11행과
+# 산업 27행이 **한 표**에 들어가므로(2026-08-03 사용자 요청 "스타일처럼 걍 수익률로"),
+# 두 묶음의 '3개월'이 다른 날을 가리키면 같은 열에서 못 읽는다.
+IND_HOR = [("1D", 1), ("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
 
 
 def _industry(stocks, dates, root):
@@ -95,8 +98,8 @@ def _industry(stocks, dates, root):
     import datetime as _dt
     d0 = _dt.date.fromisoformat(dates[-1])
     base = {}
-    for k, nd in IND_HOR:
-        tgt = (d0 - _dt.timedelta(days=nd)).isoformat()
+    for k, tgt in [(k, (d0 - _dt.timedelta(days=nd)).isoformat()) for k, nd in IND_HOR] + \
+                  [("YTD", "%d-12-31" % (d0.year - 1))]:      # YTD 는 전년 말 — market_board 와 같다
         ks = [i for i, d in enumerate(dates) if d <= tgt]
         base[k] = ks[-1] if ks else None
 
@@ -132,7 +135,7 @@ def _industry(stocks, dates, root):
         if len(g["ts"]) < IND_MIN:
             continue
         r = {}
-        for k, _nd in IND_HOR:
+        for k in list(base):
             i0, vs = base[k], []
             if i0 is not None:
                 for t in g["ts"]:
