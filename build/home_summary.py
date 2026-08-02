@@ -105,8 +105,8 @@ def _industry(stocks, dates, root):
         code = ((co.get(s["t"]) or [None])[0] or "")[:2]
         if not code:
             continue                              # SIC 미부여 — 조용히 섞지 않고 뺀다
-        g = grp.setdefault(code, {"ts": [], "above": 0, "n_ma200": 0})
-        g["ts"].append(s["t"])
+        g = grp.setdefault(code, {"ts": [], "objs": [], "above": 0, "n_ma200": 0})
+        g["ts"].append(s["t"]); g["objs"].append(s)
         if not s.get("part"):
             g["n_ma200"] += 1
             if "200일이탈" not in (s.get("flags") or []):
@@ -145,9 +145,37 @@ def _industry(stocks, dates, root):
             # 동일가중 평균. 절반 넘게 못 구하면 그 칸은 비운다 — 몇 종목의 평균을
             # 산업 수익률이라 부르지 않는다.
             r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= max(3, len(g["ts"]) // 2) else None
+        v = _val(g["objs"])
         out.append({"sic": code, "n": len(g["ts"]), "nm": SIC2.get(code, "SIC " + code),
-                    "above": g["above"], "n_ma200": g["n_ma200"], "r": r})
+                    "above": g["above"], "n_ma200": g["n_ma200"], "r": r, **v})
     out.sort(key=lambda x: -(x["r"].get("1M") if x["r"].get("1M") is not None else -1e9))
+    # 시장 중앙값을 함께 싣는다 — **레벨만 보면 못 읽는 수치라서다.** 은행 PER 13.8 과
+    # 전자 42.2 는 싸고 비싼 것이 아니라 업종 구조다. 시장 대비 배수라야 눈금이 생긴다.
+    return {"mkt": _val(stocks), "rows": out}
+
+
+# 밸류에이션은 **중앙값**이다. 평균을 쓰면 PER 300짜리 한 종목이 산업을 통째로 끈다.
+# ⚠ 음수 PER(적자)은 뺀다 — 뜻이 흐려지는 값이라 넣으면 중앙값이 아니라 잡음이 된다.
+#   그래서 n_pe(실제로 쓴 종목 수)를 함께 싣는다. 5종 중 2종으로 만든 중앙값과
+#   63종으로 만든 중앙값을 화면이 같은 무게로 보여 주면 안 된다.
+# ⚠ 상한은 이상치 컷이다(PER 200·PBR 50). 중앙값이라 영향은 작지만, 이익이 0에 가까운
+#   회사의 PER 수천은 '자료'가 아니라 분모 사고에 가깝다.
+VAL_CAP = {"tpe": 200.0, "pb": 50.0}
+VAL_MIN_N = 3
+
+
+def _val(objs):
+    """{pe, pb, n_pe, n_pb} — 종목 묶음의 밸류에이션 중앙값."""
+    out = {}
+    for key, name in (("tpe", "pe"), ("pb", "pb")):
+        vs = sorted(v for v in ((s.get("fund") or {}).get(key) for s in objs)
+                    if isinstance(v, (int, float)) and 0 < v < VAL_CAP[key])
+        if len(vs) >= VAL_MIN_N:
+            m = len(vs) // 2
+            out[name] = round(vs[m] if len(vs) % 2 else (vs[m - 1] + vs[m]) / 2, 2)
+        else:
+            out[name] = None
+        out["n_" + name] = len(vs)
     return out
 
 
