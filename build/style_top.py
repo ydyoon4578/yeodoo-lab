@@ -158,6 +158,18 @@ def main() -> int:
 
     ISS = issuer_map(uni)
 
+    # ── GARP(합리적 가격의 성장주) ─────────────────────────────────────
+    # ⚠ 여기서 점수를 다시 만들지 않는다. screener.html 이 쓰는 결과가 이미 stocks.json 에
+    #   구워져 있다(build/screens_apply.py 가 굽고 build/refresh_stocks.py 가 부른다).
+    #   산식을 이 파일에 재구현하면 임계·백분위 정의가 갈리는 날 두 화면이 조용히 다른
+    #   명단을 말하게 된다 — 그건 이 사이트가 가장 싫어하는 종류의 어긋남이다.
+    #   그래서 '이미 계산된 적합도'를 점수로 받아 순위만 매긴다.
+    GARP = {r["t"]: float(r["s"]) for r in ((st.get("screens") or {}).get("garp") or [])
+            if r.get("t") in uni and r.get("s") is not None}
+    if not GARP:
+        print("  ⚠ stocks.json 에 screens.garp 가 없다 — GARP 스타일을 건너뛴다"
+              "(build/screens_apply.py 가 돌았는지 확인할 것)")
+
     def fund(t, k):
         v = (uni[t].get("fund") or {}).get(k)
         return v if isinstance(v, (int, float)) else None
@@ -393,6 +405,21 @@ def main() -> int:
              {t: v for t in uni for v in [fund(t, "mc")] if v},
              lambda t: {"시가총액 억$": R2(fund(t, "mc"))}, rev_=True, slab="시가총액 억$"),
     ]
+    # 다른 스타일은 공개 지수 방법론을 따르지만 GARP 는 이 랩의 스크린이다 —
+    # index_ref 를 지수 이름이 아니라 그 화면으로 적어 출처를 헷갈리지 않게 한다.
+    # ⚠ 대응 ETF 가 없다. 홈 성과표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29 결정)
+    #   이 스타일은 표에 못 들어가고 구성종목 줄에만 나온다(index.html 의 ST_EXTRA).
+    if GARP:
+        styles.append(
+            pack("garp", "합리적 가격의 성장주", "여두 전략 랩 · GARP 스크린",
+                 "screener.html#s=garp",
+                 "선행 EPS 성장률(+) · 선행 PER(낮을수록) · ROE(+) 의 좋은쪽 백분위 평균. "
+                 "세 지표가 각각 하한(성장 60 · 밸류 45 · ROE 50 백분위)을 넘은 종목만 채점한다.",
+                 None, GARP,
+                 lambda t: {"선행EPS성장 %": R2(fund(t, "gr")),
+                            "선행PER": R2(fund(t, "fpe")),
+                            "ROE %": R2(fund(t, "roe"))},
+                 slab="적합도"))
 
     doc = {
         "note": "스타일별 상위 10종목. 유니버스 518종목(S&P 500 ∪ NASDAQ 100)에 각 스타일 지수의 "

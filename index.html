@@ -1597,10 +1597,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   순수성장(puregrow)이 여기 있었다. 표에 대응 ETF 행이 없는데 목록에만 있어 홈에서 갈 곳이
   //   없는 줄이었다. data/style_top.json 에는 그대로 남아 있고(build/style_top.py 가 계속 만든다)
   //   지우려면 그쪽을 고쳐야 한다 — 홈에서 안 보이는 것과 재지 않는 것은 다른 얘기다.
-  var ST_EXTRA=[];
+  // 표에 없는데 구성종목만 덧붙일 스타일.
+  // garp — screener.html 의 GARP 스크린(선행EPS성장·선행PER·ROE 백분위)을 상위 10종으로 낸다.
+  //   대응 ETF 가 없어 성과표에는 못 들어간다(표는 '랩 규칙 ↔ ETF' 짝만 싣는다 — 2026-07-29 결정).
+  //   명단은 build/style_top.py 가 stocks.json 의 screens.garp 를 **그대로 읽어** 만든다 —
+  //   산식을 두 곳에 두면 screener.html 과 홈이 다른 10종을 말하는 날이 온다.
+  var ST_EXTRA=['garp'];
   // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
+  // 백테스트가 아니라 스크린인 것 — 이름을 그 화면으로 보낸다.
+  var ST_SCREEN={garp:'screener.html#s=garp'};
   // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
   function drawStHold(keys){
     var box=el('stmore'); if(!box||!STOP)return;
@@ -1612,10 +1619,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     box.innerHTML='<div class="sthold">'+have.map(function(k){
       var s=STOP[k];
       // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로 — 없는 것은 그대로 글씨다.
+      // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로. GARP 는 백테스트가 아니라
+      // 스크린이라 그쪽(screener.html)으로 보낸다 — 갈 곳이 있는데 글씨로 두지 않는다.
       var lbl=ST_PERF[k]
         ? '<a class="sthlbl lnk" href="style.html#s='+ST_PERF[k]+'" title="이 스타일의 최근 1년 백테스트">'+
           esc(s.label)+'</a>'
-        : '<span class="sthlbl">'+esc(s.label)+'</span>';
+        : (ST_SCREEN[k]
+          ? '<a class="sthlbl lnk" href="'+ST_SCREEN[k]+'" title="이 스크린의 판정과 조건">'+
+            esc(s.label)+'</a>'
+          : '<span class="sthlbl">'+esc(s.label)+'</span>');
       return '<div class="sthrow">'+lbl+stDetail(s)+'</div>';
     }).join('')+'</div>';
   }
