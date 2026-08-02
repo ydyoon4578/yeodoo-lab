@@ -301,14 +301,15 @@
   /* 섹터 → 산업 트리(#mktbl). 부모 줄은 굵게, 자식 줄은 들여쓰고 톤을 낮춰 한눈에 층이 보이게.
      ⚠ 자식이 없는 섹터도 이름 시작 위치가 같아야 한다 — 버튼 자리를 빈 span 으로 채운다.
        안 그러면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다. */
-  .sttbl tr.secr>th{font-weight:700}
-  .sttbl tr.subr>th{padding-left:30px;font-weight:400;color:var(--muted)}
-  .sttbl tr.subr>td{color:color-mix(in srgb,currentColor 80%,transparent)}
-  .sttbl tr.subr>th small{margin-left:6px}
+  .sttbl tr.lv1>th{font-weight:700}
+  .sttbl tr.lv2>th{padding-left:26px;font-weight:600}
+  .sttbl tr.lv3>th{padding-left:48px;font-weight:400;color:var(--muted)}
+  .sttbl tr.lv3>td{color:color-mix(in srgb,currentColor 80%,transparent)}
+  .sttbl tr.lv2>th small,.sttbl tr.lv3>th small{margin-left:6px}
   /* GICS 서브산업 이름은 길다. 첫 열을 넓히면 수익률 7칸이 밀리므로 줄임표로 자르고
      전체 이름은 툴팁 첫 줄에 둔다(마우스를 올리면 나온다). */
-  .sttbl tr.subr>th .snm{display:inline-block;max-width:196px;overflow:hidden;
-       text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm{display:inline-block;max-width:186px;
+       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
   /* 구성종목 — 이제 표 **안의 접힌 행**이다(사용자 요청 2026-08-02).
@@ -1361,10 +1362,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   한쪽만 고치면 같은 열이 다른 날을 가리키고, 표는 멀쩡해 보인다.
   function drawMkTbl(){
     var box=el('mktbl'); if(!box)return;
-    var ivr=MK.iv, D=(ivr&&!Array.isArray(ivr))?ivr:null;
+    var D=(MK.iv&&!Array.isArray(MK.iv))?MK.iv:null;
     var secs=D&&D.sectors, kids=D&&D.rows;
     if(!secs||!secs.length){
-      if(ivr===false)box.innerHTML='<tbody><tr><td class="skel2">섹터·산업을 불러오지 못했습니다.</td></tr></tbody>';
+      if(MK.iv===false)box.innerHTML='<tbody><tr><td class="skel2">섹터·산업을 불러오지 못했습니다.</td></tr></tbody>';
       return;
     }
     var mb=MK.mb, etf={};
@@ -1372,9 +1373,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
     var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
     var ncol=ST_HZ.length+1;
-    function bym(a,b2){var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
-      return (y==null?-1e9:y)-(x==null?-1e9:x);}
-    // 첫 칸 툴팁 — 표에 열로 세우면 수익률 7칸과 섞여 무엇이 수익률인지 안 보인다.
+    function bym(a,b2){
+      if((a.nm==='그 밖')!==(b2.nm==='그 밖'))return a.nm==='그 밖'?1:-1;   // 나머지는 언제나 끝
+      var x=(a.r||{})['1M'],y=(b2.r||{})['1M'];
+      return (y==null?-1e9:y)-(x==null?-1e9:x);
+    }
     function tip(x,isSec){
       var t=[x.n+'종'];
       if(isSec&&etf[x.sec]&&(etf[x.sec].r||{})['1M']!=null)
@@ -1391,56 +1394,76 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return t.join('\n');
     }
     function cells(r){return ST_HZ.map(function(z){return stCell((r||{})[z[0]]);}).join('');}
+    // 한 줄 — lv 로 들여쓰기와 접힘이 갈린다. 펼칠 자식이 있으면 ▸ 버튼을, 없으면 자리만 둔다
+    // (없으면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다).
+    var seq=0;
+    function row(x,lv,pid,myid,tipTxt,label,sub){
+      seq++;
+      return '<tr class="lv'+lv+'"'+(lv>1?' hidden data-p="'+esc(pid)+'"':'')+
+        (myid?' data-id="'+esc(myid)+'"':'')+'>'+
+        '<th scope="row" title="'+esc(tipTxt)+'">'+
+        (myid?('<button type="button" class="htg" data-open="'+esc(myid)+'" aria-expanded="false">▸</button>')
+             :'<span class="htg" aria-hidden="true"> </span>')+
+        '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
+        cells(x.r)+'</tr>';
+    }
     var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
     h+='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
-       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 그 섹터의 <b>GICS 서브산업</b>이 '+
-       '펼쳐집니다(위키 S&amp;P 500 목록의 GICS 열 — 섹터와 같은 출처) · '+
-       '이름에 마우스를 올리면 종목수·섹터ETF·PER·폭'+(rgn?'·국면별 성과':'')+
+       '<b>동일가중</b> · 1개월 내림차순 · ▸ 를 누르면 <b>GICS 산업그룹(2차) → 서브산업(4차)</b> '+
+       '순으로 펼쳐집니다(위키백과 GICS 구조 — 섹터와 같은 체계) · '+
+       '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
-    secs.slice().sort(bym).forEach(function(x){
-      var ks=kids.filter(function(k){return k.sec===x.sec;}).sort(function(a,b2){
-        // '그 밖'은 산업이 아니라 나머지라 언제나 맨 끝에 둔다.
-        if((a.sic==null)!==(b2.sic==null))return a.sic==null?1:-1;
-        return bym(a,b2);
-      });
-      var id='mk-'+x.sec;
-      h+='<tr class="secr"><th scope="row" title="'+esc(tip(x,true))+'">'+
-         (ks.length?('<button type="button" class="htg" data-hold="'+id+'" aria-expanded="false" '+
-           'aria-controls="'+id+'" title="'+esc(x.nm+' 하위 산업 '+ks.length+'개 펼치기')+'">▸</button>'):
-           '<span class="htg" aria-hidden="true"> </span>')+
-         esc(x.nm)+'<small>'+esc(x.sec)+'</small></th>'+cells(x.r)+'</tr>';
-      ks.forEach(function(k,i){
-        // GICS 서브산업 이름은 길다('Industrial Machinery & Supplies & Components').
-        // 칸을 넓히지 않고 줄임표로 자르되, **전체 이름을 툴팁 첫 줄에** 둔다.
-        h+='<tr class="subr" id="'+id+(i?'-'+i:'')+'" data-grp="'+id+'" hidden>'+
-           '<th scope="row" title="'+esc((k.sic?k.nm:x.nm+' 나머지')+'\n'+tip(k,false))+'">'+
-           '<span class="snm">'+esc(k.nm)+'</span>'+
-           '<small>'+k.n+'종</small></th>'+
-           cells(k.r)+'</tr>';
+    secs.slice().sort(bym).forEach(function(s0){
+      var gs=kids.filter(function(k){return k.lv===2&&k.p===s0.sec;}).sort(bym);
+      h+=row(s0,1,null,gs.length?('s-'+s0.sec):null,tip(s0,true),s0.nm,s0.sec);
+      gs.forEach(function(g){
+        var gid=g.sec+'|'+g.nm;
+        var ss=kids.filter(function(k){return k.lv===3&&k.p===gid;}).sort(bym);
+        h+=row(g,2,'s-'+s0.sec,ss.length?('g-'+gid):null,
+               (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
+        ss.forEach(function(x){
+          h+=row(x,3,'g-'+gid,null,
+                 (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
+        });
       });
     });
     box.innerHTML=h+'</tbody>';
-    // 한 섹터의 하위 줄은 여러 <tr> 이라 id 하나로 못 묶는다 — data-grp 로 모아 접고 편다.
     if(!box.__htg){
       box.__htg=1;
+      // 접을 때는 **자손까지** 접는다. 안 그러면 부모를 접었다 펴는 순간 손자가 펼쳐진 채로
+      // 튀어나와, 눈에는 두 단이 건너뛴 것처럼 보인다.
+      function shut(id){
+        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
+        for(var i=0;i<rs.length;i++){
+          rs[i].setAttribute('hidden','');
+          var cid=rs[i].getAttribute('data-id');
+          if(cid){
+            shut(cid);
+            var cb=box.querySelector('button.htg[data-open="'+cid+'"]');
+            if(cb){cb.setAttribute('aria-expanded','false');cb.textContent='▸';}
+          }
+        }
+      }
       box.addEventListener('click',function(e){
         var b2=e.target&&e.target.closest?e.target.closest('button.htg'):null;
         if(!b2)return;
-        var g=b2.getAttribute('data-hold');
-        var rs=box.querySelectorAll('tr.subr[data-grp="'+g+'"]');
+        var id=b2.getAttribute('data-open');
+        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
         if(!rs.length)return;
         var open=rs[0].hasAttribute('hidden');
-        for(var i=0;i<rs.length;i++){
-          if(open)rs[i].removeAttribute('hidden'); else rs[i].setAttribute('hidden','');
-        }
+        if(open){ for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden'); }
+        else shut(id);
         b2.setAttribute('aria-expanded',open?'true':'false');
         b2.textContent=open?'▾':'▸';
       });
     }
     var s2=el('mkt-sub');
-    if(s2)s2.textContent='· 기간별 수익률 % · 섹터 '+secs.length+'개 · 하위 산업 '+kids.length+'개';
+    if(s2)s2.textContent='· 기간별 수익률 % · 섹터 '+secs.length+' · 산업그룹 '+
+      kids.filter(function(k){return k.lv===2;}).length+' · 서브산업 '+
+      kids.filter(function(k){return k.lv===3;}).length+'개';
   }
+
 
   // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
   // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
