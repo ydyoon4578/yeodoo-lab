@@ -26,6 +26,13 @@ name: Refresh asset panel & archive re-check
 #   버려졌다(그날 두 번: 푸시 충돌 · 30분 타임아웃).
 #   → 커밋을 **두 번**으로 나눴다. 1부(수집·표시, 2~3분)를 먼저 커밋하고, 2부(연구, 26~29분)를
 #     그 뒤에 둔다. 워크플로를 쪼개지 않은 이유는 아래 1부 주석에 적었다.
+#
+# 2026-08-03: 순서를 바꾸는 것으로는 부족했다. 패널이 1.76배가 되자(7f3402d) ML 이 56분
+#   안팎이 되어 **60분 잡 타임아웃에 두 번 연속 잘렸다**(정기 01:09 · 수동 02:55).
+#   1부는 매번 멀쩡히 커밋됐으니 07-31 의 분리는 제 일을 했지만, 2부는 그날 이후 한 번도
+#   못 돌았다 — ml_strategies.json 이 08-01 에 멈춰 있었다.
+#   → 2부를 **refresh-ml.yml 로 뗐다.** 한 잡에 2~3분과 56분을 같이 두면 예산을 어느
+#     쪽에 맞춰도 한쪽이 손해다. 이 잡은 다시 '수집·표시' 하나만 한다.
 
 on:
   schedule:
@@ -44,7 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     # 2026-07-31: 30 → 60. ML 단계가 하루 만에 1.4분 → 26~29분이 됐다(랜덤 포레스트 종목선택
     #   0238f71a + 특징 20개 2×2 be30349e, 둘 다 07-30 오후). 11:30 실행이 정확히 30분에서 잘렸다.
-    timeout-minutes: 60
+    # 2026-08-03: 60 → 25. ML 을 refresh-ml.yml 로 뗐다(아래 '2부' 주석). 남은 것은 수집·표시뿐
+    #   이고 실측 2~3분이다 — 패널 다운로드 72초가 그중 대부분이다. 25분은 러너가 느린 날과
+    #   패널이 더 자랄 여지를 둔 값이다.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,7 +63,8 @@ jobs:
       - name: Install deps
         run: pip install --quiet pandas numpy yfinance
 
-      # ══ 1부: 수집·표시 (실측 2~3분) ══════════════════════════════════════
+      # ══ 수집·표시 (실측 2~3분) ═══════════════════════════════════════════
+      # (2026-08-03 까지 '1부'였다. 2부는 refresh-ml.yml 로 나갔다 — 아래 꼬리말 참조.)
       # 🚨 이 부분을 **먼저 커밋한다**. 예전엔 무거운 ML 단계가 앞에 있고 커밋이 마지막 한 번뿐이라,
       #   ML 이 죽으면(07-31 두 번: 푸시 충돌 · 30분 타임아웃) 이미 성공한 자산 패널·시장판·
       #   스타일 성과가 **통째로 버려졌다**. 13F 를 별도 워크플로로 뗀 것과 같은 결합이다.
@@ -102,27 +113,15 @@ jobs:
             data/strategy_index.json data/strategy_charts.json \
             data/market_board.json data/style_perf.json data/style_trails.json \
             data/home_flow.json data/asof.json
-      # 신선도는 1부 직후에 본다 — 2부가 죽어도 '패널이 낡았나'는 답이 나와야 한다.
+      # 신선도는 커밋 직후에 본다 — 뒤가 죽어도 '패널이 낡았나'는 답이 나와야 한다.
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10
 
-      # ══ 2부: 연구 (실측 26~29분) ═════════════════════════════════════════
-      # 여기서부터 죽어도 위에서 그날치는 이미 커밋됐다. 잡은 빨간불이 되고(옳다),
-      # 사유는 build/gate.py 가 체크런 주석에 남긴다.
-      - name: Run ML & clone (pre-registered protocol)
-        run: python build/ml_backtest.py
-      - name: Re-run archived strategies (with today's ML)
-        run: python build/asset_backtest.py
-      - name: Rebuild unified strategy index (with today's ML)
-        run: python build/strategy_index.py
-      - name: Rebuild lab charts (with today's ML)
-        run: python build/strategy_charts.py
-      - name: Rebuild as-of index (with today's ML)
-        run: python build/asof_index.py
-      - name: Validate
-        run: python build/validate_site.py
-      - name: Commit research outputs
-        run: |
-          bash build/ci_push.sh "chore(data): ML 사전등록 검정·아카이브 재검 자동 갱신" \
-            data/ml_strategies.json data/asset_strategies.json \
-            data/strategy_index.json data/strategy_charts.json data/asof.json
+      # ══ 2부(연구)는 여기 있었다 — 2026-08-03 refresh-ml.yml 로 뗐다 ═══════
+      # 사유는 그쪽 머리말에 적었다. 요약하면 패널이 1.76배가 되면서(7f3402d) ML 이
+      # 56분 안팎이 됐고, 60분 잡 타임아웃에 두 번 연속 잘렸다. 타임아웃만 올리면
+      # 2~3분짜리 수집·표시가 계속 그 사고에 인질로 잡힌다.
+      # refresh-ml 은 이 잡이 **성공한 뒤** workflow_run 으로 이어 달린다 — 크론을 새로
+      # 잡지 않으므로 ML 이 어제 패널을 보는 일도 없다(쪼개지 않았던 원래 사유가 그것이다).
+      # ⚠ 이 잡의 이름("Refresh asset panel & archive re-check")이 그쪽 트리거 키다.
+      #   name: 을 바꾸면 refresh-ml 이 조용히 안 뜬다.
