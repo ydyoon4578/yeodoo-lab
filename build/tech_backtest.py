@@ -899,6 +899,65 @@ def z_crit(n, alpha=0.05):
 
 
 RETIRED_RECS = []       # 목록에서 뺀 규칙의 기록(arch 태그 보존용) — build_strats 가 채운다
+_CLASSMATE = None       # 티커 → 같은 회사(같은 CIK)의 티커 묶음. 아래 load_classmates 가 채운다
+DUAL_SKIPS = {}         # sid → 이중클래스라서 건너뛴 선택 횟수. 로그·limits 에 싣는다
+
+
+def load_classmates():
+    """티커 → 같은 회사의 티커들(자기 자신 포함). 판정은 **CIK** 로 한다.
+
+    🚨 티커 모양으로 추측하지 않는다. GOOG/GOOGL 은 접두사가 같지만 BRK.B/BF.B 는
+      아무 관계도 없고, 반대로 NWS/NWSA 처럼 접미 한 글자만 다른 진짜 쌍도 있다.
+      SEC 가 부여한 CIK 가 '같은 발행인'의 정본이다(data/cik_map.json).
+    """
+    global _CLASSMATE
+    if _CLASSMATE is None:
+        _CLASSMATE = {}
+        try:
+            co = json.load(io.open(os.path.join(DATA, "cik_map.json"),
+                                   encoding="utf-8")).get("co") or {}
+        except Exception:
+            return _CLASSMATE
+        by = {}
+        for t, c in co.items():
+            if c:
+                by.setdefault(c, []).append(t)
+        for ts in by.values():
+            if len(ts) > 1:
+                for t in ts:
+                    _CLASSMATE[t] = set(ts)
+    return _CLASSMATE
+
+
+def pick_top(sc, sid="", topn=None):
+    """점수순 후보 sc=[(점수, 티커)…] 에서 상위 TOPN — **한 회사는 한 번만** 담는다.
+
+    🚨 사용자 결정 2026-08-04: "전략들에 두 종목이 같이 들어가면 안 된다."
+      알파벳(GOOG·GOOGL)·폭스(FOX·FOXA)·뉴스코프(NWS·NWSA)는 같은 회사의 다른 클래스라
+      둘 다 담으면 10종 바스켓이 아니라 **한 회사에 두 칸을 준 9종 바스켓**이 된다.
+      두 클래스는 재무가 같고 주가도 거의 같이 움직여서, 어떤 규칙이든 하나가 뽑히면
+      다른 하나도 바로 옆 순위에 선다 — 우연이 아니라 구조적으로 겹친다.
+    남기는 쪽은 **점수가 높은 클래스**다. 규칙을 하나 더 만들지 않으려는 것이다
+    (거래대금이 큰 쪽·먼저 상장된 쪽 같은 기준을 넣으면 그 자체가 새 파라미터가 된다).
+    ⚠ 지수 복제(build/style_top*.py)에는 쓰지 않는다. 실제 지수는 두 클래스를 **둘 다**
+      담으므로, 거기서 하나를 빼면 복제가 아니라 다른 규칙이 된다.
+    """
+    cm = load_classmates()
+    n = TOPN if topn is None else topn
+    out, used, skipped = [], set(), 0
+    for _v, t in sc:
+        if len(out) >= n:
+            break                          # 바스켓이 찬 뒤의 후보는 애초에 안 뽑힌다
+        if t in used:
+            skipped += 1                   # 이 순위면 뽑혔을 자리인데 같은 회사가 이미 있다
+            continue
+        out.append(t)
+        mates = cm.get(t)
+        if mates:
+            used |= mates                  # 같은 회사의 다른 클래스는 이후 순위에서 제외
+    if skipped and sid:
+        DUAL_SKIPS[sid] = DUAL_SKIPS.get(sid, 0) + skipped
+    return out
 SPLIT_TRIMMED = {}      # 티커 → (자른 날짜, 배수). 얼마나 잘랐는지 로그·limits 에 싣는다
 SPLIT_REBASED = {}      # 티커 → 되맞춘 관측 수. 자르는 대신 살린 양을 로그·limits 에 싣는다
 _SPLITS = None          # 티커 → [(날짜, 분할비)] — data/splits.json. 없으면 {} 로 남는다
@@ -2334,7 +2393,7 @@ def run():
                         if v is not None and v == v:
                             sc.append((v, t))
                     sc.sort(reverse=True)
-                    new = [t for _v, t in sc[:TOPN]]
+                    new = pick_top(sc, S["sid"])
                     if len(sc) < XSEC_MIN_POOL:
                         # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
                         #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
@@ -2891,6 +2950,15 @@ def run():
     }
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
+    # 이중클래스 배제가 실제로 몇 번 걸렸는지 남긴다. 0 이면 규칙이 놀고 있다는 뜻이고,
+    # 그것도 알아야 한다(cik_map.json 이 없으면 조용히 0 이 된다).
+    if DUAL_SKIPS:
+        _tp = sorted(DUAL_SKIPS.items(), key=lambda kv: -kv[1])[:5]
+        print("이중클래스 배제: %d회 · %d규칙 (같은 회사의 다른 클래스가 상위에 같이 선 자리) — %s"
+              % (sum(DUAL_SKIPS.values()), len(DUAL_SKIPS),
+                 " · ".join("%s %d" % (k, v) for k, v in _tp)))
+    else:
+        print("이중클래스 배제: 0회 — data/cik_map.json 이 없거나 겹친 적이 없다")
     print("다중검정 임계 |t| ≥ %.2f (본페로니 α=0.05/%d)" % (tcrit, N))
     import collections as _c
     print("판정:", dict(_c.Counter(r["verdict"] for r in out)))

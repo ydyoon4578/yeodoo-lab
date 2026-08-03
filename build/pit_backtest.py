@@ -314,7 +314,10 @@ def main():
                 if len(sc) < TB.XSEC_MIN_POOL:                  # 소급 레그와 같은 커버리지 게이트
                     hold = []
                 else:
-                    new = [t for _v, t in sc[:TOPN]]
+                    # 🚨 소급 레그와 **같은 선택 규칙**을 써야 한다 — 한 회사는 한 번만
+                    #   (TB.pick_top). 여기만 두 클래스를 담으면 두 레그의 차이가
+                    #   생존편향이 아니라 '바스켓 구성 규칙이 달라서'가 된다.
+                    new = TB.pick_top(sc)
                     if new:
                         turns += (len(set(new) ^ set(hold)) / (2 * TOPN)) if hold else 1.0
                         hold = new
