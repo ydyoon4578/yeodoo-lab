@@ -1733,8 +1733,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     wireTree(box);                                 // 섹터·산업 트리 접기(같은 표 안이다)
     // 펼침 — 표를 다시 그려도 리스너가 쌓이지 않게 **위임으로 한 번만** 건다.
     // 행마다 걸면 innerHTML 을 갈아 끼울 때 옛 리스너가 남아 같은 클릭이 두 번 처리된다.
-    if(!box.__htg){
-      box.__htg=1;
+    // 🚨 플래그 이름은 wireTree 의 것과 **달라야 한다.** 둘 다 같은 box(el('sttbl'))에 걸고,
+    //   바로 위 wireTree(box) 가 먼저 돌며 __htg 를 세운다. 같은 이름을 쓰면 이 가드가
+    //   false 가 되어 구성종목 핸들러가 **한 번도 안 붙는다** — ▸ 를 눌러도 아무 일이
+    //   없었다(2026-08-03, 섹터·산업을 같은 표로 옮기면서 생긴 충돌).
+    if(!box.__hold){
+      box.__hold=1;
       box.addEventListener('click',function(e){
         var b=e.target&&e.target.closest?e.target.closest('button.htg'):null;
         if(!b)return;
