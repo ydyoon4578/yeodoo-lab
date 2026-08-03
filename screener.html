@@ -21,7 +21,7 @@
          유니버스나 스크린 정의·랩 판정이 바뀌면 이 세 줄을 같이 고칠 것.
      (2) 리드문의 "한 종도 없었습니다"는 초기 표시값일 뿐이고, 로드 후 screens[].lab.v를 세어(labCount) 덮어쓴다.
          헤더 칩의 "초과수익 확인 N종"·①의 문장도 같은 함수에서 나온다 — 판정 문구가 새로 생기면 LABV_PASS/LABV_FAIL에 넣을 것.
-     (3) ④다의 백분위 대조 스냅숏 상수(PCTDIFF: 기준일 2026-07-24 · 같은 표본 0.3%p · 선행 PER 1.0%p · PBR 6.2%p).
+     (3) ⑤다의 백분위 대조 스냅숏 상수(PCTDIFF: 기준일 2026-07-24 · 같은 표본 0.3%p · 선행 PER 1.0%p · PBR 6.2%p).
          화면이 계산하는 값이 아니라 사람이 data/stocks.json + data/sd/*.json을 전수 대조해 적은 값이라 자동 갱신되지 않는다.
          stocks.json의 as_of가 그 기준일과 다르면 화면이 "스냅숏 이후 갱신됨"이라고 스스로 밝힌다.
      그 밖의 본문 숫자는 전부 data/stocks.json·data/screens.json에서 채운다. -->
@@ -609,7 +609,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="cav-h" id="caveats">
-    <p class="lbl" id="cav-h">④ 이 화면이 감추지 않는 것 <span class="sub">· 알려진 결함과 정의 충돌</span></p>
+    <p class="lbl" id="cav-h">⑤ 이 화면이 감추지 않는 것 <span class="sub">· 알려진 결함과 정의 충돌</span></p>
     <p class="lblnote">스크린 엔진을 읽고 데이터를 전수 대조하다 발견한 것들입니다. 고치면 사전계산 목록이 바뀌므로
       이 페이지에서 임의로 고치지 않고, <b>있는 그대로 적고 영향 범위만 실측</b>했습니다.</p>
     <div id="caveats-body"><div class="skel">불러오는 중…</div></div>
@@ -677,7 +677,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var PRESET=null;
   var ROWS=[];
   var NEGC={};                  // 지표별 음수 개수(부호 오독 경고용)
-  var CONF={};                  // 방향 정의가 두 파일에서 어긋나는 지표 → 사유(④가에서 표로도 낸다)
+  var CONF={};                  // 방향 정의가 두 파일에서 어긋나는 지표 → 사유(⑤가에서 표로도 낸다)
 
   // ── 백분위: build/screens_apply.py _pct_tie_avg 와 동일(동점=평균 순위) ──
   //   같은 규칙을 쓰지 않으면 같은 조건에서 다른 목록이 나온다. 실제로 그런 적이 있어
@@ -799,7 +799,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     for(j=0;j<gs.length;j++){ if(gmap[gs[j]]) MGRP.push([gs[j],gmap[gs[j]]]); }
     for(j=0;j<gorder.length;j++){ if(gs.indexOf(gorder[j])<0) MGRP.push([gorder[j],gmap[gorder[j]]]); }
 
-    // 방향 충돌 판정은 한 곳에서만 한다 — 조건 줄의 † 표시와 ④가의 표가 같은 근거를 쓰게.
+    // 방향 충돌 판정은 한 곳에서만 한다 — 조건 줄의 † 표시와 ⑤가의 표가 같은 근거를 쓰게.
     var EXP={low_cheap:'low',low_good:'low',high_good:'high',high_cheap:'high'};
     for(j=0;j<MET.length;j++){
       var mk=MET[j], fdir=(FX[mk]||{}).dir, sdir=DIRS[mk];
@@ -1047,7 +1047,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+='<details class="fgroup" open><summary>재무 지표 백분위 <span class="gc">'+MET.length+'개 · 결측은 실격(스크린 규칙과 동일)</span></summary>'+
       '<div class="crow" style="padding-left:14px;border-top:0"><span class="cv" style="grid-column:1/-1">'+
       '빈칸 = 조건 없음. 축은 스크린 정의를 따릅니다 — <b class="cflag">†</b>가 붙은 지표는 그 “좋은 쪽”이 '+
-      '지표 사전과 어긋나는 것이라 <a href="#caveats" style="color:var(--accent)">④가</a>에 사유를 적어 두었습니다.</span></div>';
+      '지표 사전과 어긋나는 것이라 <a href="#caveats" style="color:var(--accent)">⑤가</a>에 사유를 적어 두었습니다.</span></div>';
     for(j=0;j<MGRP.length;j++){
       g=MGRP[j][0]; ks=MGRP[j][1];
       h+='<div class="crow" style="border-top:1px solid var(--line);padding-top:9px"><span class="cn" style="color:var(--accent)">'+esc(g)+'</span><span></span><span></span><span></span></div>';
@@ -1315,7 +1315,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+=th('t','티커')+th('name','종목명')+th('sector','섹터')+th('timing','타이밍');
     for(j=0;j<cols.length;j++){
       var d=FX[cols[j]]||{};
-      // 열 제목에 **축**을 적는다 — 흐린 숫자가 종목 화면의 백분위와 같은 뜻이라는 오독을 막는다(→ ④다).
+      // 열 제목에 **축**을 적는다 — 흐린 숫자가 종목 화면의 백분위와 같은 뜻이라는 오독을 막는다(→ ⑤다).
       h+=th('m:'+cols[j],(d.label||cols[j])+(d.unit?' ('+d.unit+')':'')+
         (axisKind(cols[j])==='good'?' · 좋은 쪽 %ile':' · 값 오름차순 %ile'));
     }
@@ -1342,9 +1342,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         : '<div class="note plain"><b>조건을 만족하는 종목이 없습니다.</b> 위의 조건별 독립 집계를 보면 어느 조건이 표본을 깎았는지 알 수 있습니다.</div>')+
       '<p class="rescap">지표 칸은 <b>값</b>과 그 뒤 흐린 숫자로 <b>축 백분위</b>를 같이 적습니다'+
         (cols.length?' — 축은 열 제목에 적어 두었습니다(방향이 정의된 지표는 <b>좋은 쪽 %ile</b>, 그렇지 않은 지표는 <b>값 오름차순 %ile</b>)':'')+'. '+
-        '<b>종목 화면의 백분위와 같은 숫자가 아닙니다</b> — 거기는 값 오름차순이고 기본이 섹터 상대입니다(→ <a href="#caveats">④다</a>). '+
+        '<b>종목 화면의 백분위와 같은 숫자가 아닙니다</b> — 거기는 값 오름차순이고 기본이 섹터 상대입니다(→ <a href="#caveats">⑤다</a>). '+
         '티커 뒤 <b class="pmark">*</b>는 상장 기간이 짧아 200일선이 산출되지 않는 종목, '+
-        '값 뒤 <b class="warnmark">!</b>는 음수라 백분위가 “가장 싼 쪽”으로 잡히는 값입니다(→ <a href="#caveats">④나</a>). '+
+        '값 뒤 <b class="warnmark">!</b>는 음수라 백분위가 “가장 싼 쪽”으로 잡히는 값입니다(→ <a href="#caveats">⑤나</a>). '+
         '열 제목을 누르면 그 열로 정렬합니다 — 정렬은 보기 편하라고 있는 것이고 <b>우열이나 추천 순위가 아닙니다.</b> 결측은 정렬 방향과 무관하게 항상 끝으로 갑니다.</p>';
     var tb=el('results').querySelector('thead');
     if(tb)tb.addEventListener('click',function(e){
@@ -1448,11 +1448,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<td>'+(SECC[SECL[i2]]>=15?'≥15':'<b style="color:var(--hot)">15 미만</b>')+'</td></tr>';
     }
 
-    // (4) 마스킹 대상 지표 이름도 fundx_defs[k].dn에서 뽑는다(④나 본문에 쓰는 목록)
+    // (4) 마스킹 대상 지표 이름도 fundx_defs[k].dn에서 뽑는다(⑤나 본문에 쓰는 목록)
     var dnl=[], fk2=keys(FX), z4;
     for(z4=0;z4<fk2.length;z4++){ if(FX[fk2[z4]].dn) dnl.push(FX[fk2[z4]].label||fk2[z4]); }
 
-    // (5) ④다 — 축 방향 차이를 보여줄 실측 예를 오늘 데이터에서 직접 뽑는다(하드코딩하지 않는다).
+    // (5) ⑤다 — 축 방향 차이를 보여줄 실측 예를 오늘 데이터에서 직접 뽑는다(하드코딩하지 않는다).
     //     dir='low'인 지표는 이 화면의 '좋은 쪽 백분위'와 종목 화면의 '값 오름차순 백분위'가 서로 반대쪽 끝에 놓인다.
     //     dn(마스킹) 지표는 종목 화면이 음수를 표본에서 빼 백분위를 아예 주지 않는 경우가 있어 예시로 쓰지 않는다.
     var exs='', exd=-1, ek, et, lowlab=[];
@@ -1472,7 +1472,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         }
       }
     }
-    // ④다의 대조 상수 — 화면이 계산하는 값이 아니라 사람이 전수 대조해 적은 스냅숏이다(head 주석 참조).
+    // ⑤다의 대조 상수 — 화면이 계산하는 값이 아니라 사람이 전수 대조해 적은 스냅숏이다(head 주석 참조).
     // ⚠ same은 '공식 차이'가 아니라 **독자가 두 화면에서 실제로 보는 숫자의 격차**다.
     //   종목 화면 값은 refresh_stocks.py:372가 int(round(pct))로 정수 반올림해 저장한 것이고
     //   이 화면은 브라우저에서 미반올림으로 계산한다. 그래서 공식 차이(최대 100/n≈0.25%p)보다 크다.
