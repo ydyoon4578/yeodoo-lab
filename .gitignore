@@ -16,10 +16,9 @@ build/nav_head.html
 build/nav_body.html
 
 # PIT 백테스트 로컬 입력 — 저장소에 두지 않는다.
-#   pit_members.json   지수 편입 명단. 사내 DB(라이선스) 원천이라 커밋 금지(사용자 결정 2026-07-27).
 #   _pit_px_cache.json 편출 종목 가격(yfinance). 재현 가능하지만 4MB라 로컬에만 둔다.
-# 둘 다 없으면 build/pit_backtest.py 는 사내망 PC에서 한 번 다시 만들면 된다.
-data/pit_members.json
+# ⚠ pit_members.json(사내 DB 산출)은 2026-08-03 에 걷어냈다 — 멤버십은 이제
+#   data/index_history.json(위키 과거 리비전, 커밋됨)에서 온다. build/index_members.py 참조.
 data/_pit_px_cache.json
 # 편출 종목 시점별 주식수(yfinance) — x-small PIT 용
 #   ⚠ gitignore 는 줄 끝 주석을 지원하지 않는다. 패턴과 같은 줄에 쓰면 통째로 리터럴이 된다.

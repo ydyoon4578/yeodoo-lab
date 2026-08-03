@@ -7,11 +7,12 @@
   있던 종목만** 후보로 두고 같은 규칙을 다시 돌린다. 두 결과의 차이가 생존편향의 크기다.
 
 데이터 출처가 둘인 이유.
-  · 멤버십 — 사내 DB `public.index_constituents` (SPX 2020-09~, NDX 2014-06~).
-             둘의 합집합을 쓰므로 늦은 쪽(2020-09)에 맞춘다.
+  · 멤버십 — **위키백과 지수 목록 문서의 과거 리비전**(data/index_history.json,
+             build/refresh_index_history.py 산출 · CC BY-SA). SPX∪NDX 합집합을 쓴다.
+             ⚠ 2026-08-03 이전엔 사내 DB(public.index_constituents)였고 그 산출물이
+             gitignore 라 이 검정이 PC 한 대에 묶여 있었다. 대조 실측은 실질 일치 60/60.
   · 가격  — **yfinance**. 오늘의 유니버스는 랩이 이미 받아 둔 data/sd/*.json 을 그대로 쓰고,
              그 사이 지수에서 빠진 종목만 따로 받아 data/_pit_px_cache.json 에 캐시한다.
-             (사내 DB의 ohlcv 는 쓰지 않는다 — 사용자 결정.)
 
   편출 종목의 가격이 왜 대체로 있나. 지수에서 빠지는 사유의 대부분은 '작아져서'이고 그 회사들은
   **여전히 상장돼 거래된다.** yfinance 가 못 주는 것은 인수·합병·상장폐지·심볼 인계된 경우다.
@@ -38,7 +39,6 @@ DATA = os.path.join(ROOT, "data")
 CACHE = os.path.join(DATA, "_pit_px_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 OUT = os.path.join(DATA, "pit_strategies.json")
-MEMB = os.path.join(DATA, "pit_members.json")
 
 START = "2020-09-01"
 TOPN = TB.TOPN
@@ -71,42 +71,22 @@ EXCLUDED_SIDS = {"x-volsurge": "편출 종목 거래량 부재 — 후보가 생
 
 
 def fetch_members():
-    """월말 멤버십을 사내 DB에서 받아 data/pit_members.json 에 캐시한다.
+    """월말 멤버십 — data/index_history.json(위키 과거 리비전) 하나만 읽는다.
 
-    DB 는 사내망에서만 닿는다(CI 러너는 못 간다). 한 번 받아 두면 이후 실행은 캐시로 돈다.
+    ⚠ 2026-08-03 에 **사내 DB 경로를 걷어냈다**(사용자 결정). 전에는 public.index_constituents
+      를 질의해 data/pit_members.json 에 캐시했고, 그 파일이 라이선스 원천이라 gitignore 였다 —
+      러너가 스스로 만들 수 없어, 이 랩이 스스로 최대 약점으로 꼽는 **생존편향 측정이 PC 한
+      대에 묶여 있었다.** 위키 산출물은 저장소에 커밋되므로 CI 에서도 돈다.
+      대조 실측은 build/refresh_index_history.py 머리말에 있다(실질 일치 60/60 · 티커가 아니라
+      CIK 로 조인해야 한다는 것도 그 대조에서 나왔다).
+    ⚠ 범위는 위키본이 넓다(2015-01~ vs DB 2020-09~). 그래도 START 는 그대로 둔다 —
+      앞당기면 게시된 수치가 통째로 바뀐다. 넓히는 것은 '더 길게 재기로 한다'는 별도 결정이다.
     """
-    if os.path.exists(MEMB):
-        d = json.load(io.open(MEMB, encoding="utf-8"))
-        print("  멤버십 캐시 사용 — %d개월" % len(d["members"]))
-        return d["members"]
-    sys.path.insert(0, r"C:\Projects\Yeouido\strategy")
-    from _common import conn                       # noqa: E402
-    import pandas as pd
-    c = conn()
-    df = pd.read_sql(
-        """
-        -- ⚠ max(dt) 를 두 지수 **합쳐서** 뽑으면 안 된다. 지수마다 그 달 마지막 dt 가 달라
-        --   한쪽만 남는 달이 생긴다(실측: 2026-08 에 NDX 0행 → 15종이 조용히 증발).
-        --   그리고 DB 는 미래 일자 행을 들고 있어(오늘 이후) 상한을 걸지 않으면 그게 뽑힌다.
-        WITH me AS (
-          SELECT index, date_trunc('month', dt) mon, max(dt) dt
-          FROM public.index_constituents
-          WHERE index IN ('SPX Index','NDX Index') AND dt >= %s AND dt <= CURRENT_DATE
-          GROUP BY index, date_trunc('month', dt)
-        )
-        SELECT DISTINCT to_char(ic.dt,'YYYY-MM') ym,
-               replace(replace(coalesce(bb_ticker, ticker),' US EQUITY',''),' US','') t
-        FROM public.index_constituents ic
-        JOIN me ON ic.index = me.index AND ic.dt = me.dt
-        """, c, params=(START,))
-    df["t"] = df["t"].str.strip().str.strip("$")
-    df = df[(df["t"].str.len() > 0) & (~df["t"].str.contains(r"[/_]", regex=True))]
-    mem = {ym: sorted(set(g["t"])) for ym, g in df.groupby("ym")}
-    json.dump({"note": "월말 지수 편입 종목(SPX ∪ NDX). 사내 DB public.index_constituents 에서 "
-                       "받아 캐시한 것 — 원천은 라이선스라 이 파일만 저장소에 둔다.",
-               "source": "public.index_constituents", "start": START, "members": mem},
-              io.open(MEMB, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    print("  멤버십 %d개월 받아 캐시 (%s)" % (len(mem), MEMB))
+    import index_members                            # noqa: E402  같은 build/ 안
+    mem, carried = index_members.load(START)
+    print("  멤버십 %d개월 (위키 과거 리비전 · data/index_history.json)" % len(mem))
+    for ym, ix, n in carried:
+        print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (ym, ix.upper(), n))
     return mem
 
 
@@ -434,7 +414,7 @@ def main():
                 "않으므로, 스타일 측정에서 필요했던 '채점 모집단 좁히기' 가 여기서는 불필요하다.",
         "start": dates[i0], "as_of": dates[-1], "n_days": n - i0,
         "span_years": round((n - i0) / 252.0, 1),
-        "universe": "SPX ∪ NDX · 매월말 실제 편입(public.index_constituents) · 가격은 yfinance",
+        "universe": "SPX ∪ NDX · 매월말 실제 편입(위키백과 과거 리비전 · data/index_history.json) · 가격은 yfinance",
         "coverage": {"min": round(cov_min, 4), "median": round(cov_med, 4)},
         "limits": [
             "구간이 %s부터다 — SPX 멤버십이 그때부터만 있어 합집합을 거기 맞췄다." % START,

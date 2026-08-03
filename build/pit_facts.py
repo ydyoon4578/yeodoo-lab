@@ -18,7 +18,7 @@ GitHub Actions 러너에서만 받고 있고(build/refresh_facts.py ← .github/
 ## 무엇을 받는지 러너가 어떻게 아나
 
 명단은 data/style_pit.json 의 universe.gone_tickers 다(build/style_pit.py 가 로컬에서 넣는다).
-선정 시점 멤버십(data/pit_members.json)이 사내 DB 원천이라 gitignore 이므로 러너는 스스로
+선정 시점 멤버십(data/index_history.json)은 저장소에 커밋된다. 러너는
 계산할 수 없다 — 커밋된 명단을 읽는 것이 유일한 경로다. 명단이 없으면 크게 죽는다.
 
 ## 한계

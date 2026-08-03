@@ -1487,10 +1487,10 @@ if tool_skips:
 # '보정 전' 수치가 같은 화면의 표와 안 맞는다 — 2026-08-03 실측: pit 07-29 vs perf 07-31 이라
 # 성장의 '보정 전'(+44%)이 표(+23.21%)보다 오히려 높아, 독자가 보정 배율을 대응시킬 수 없었다.
 #
-# 🚨 **경고로만 낸다(errors 아님).** style_pit.py 는 data/pit_members.json(사내 DB 원천, gitignore)
+# 🚨 **경고로만 낸다(errors 아님).** style_pit.py 는 가격 캐시(data/_pit_px_cache.json, gitignore)
 #    이 있어야 돌아 러너에서 재생성할 수 없다. errors 로 올리면 그 파일을 못 만드는 CI 가
 #    영구히 빨간불이 되어 일일 데이터 잡 전부가 멈춘다.
-#    → 사내망 PC 에서 build/style_pit.py 를 style_top_pdf 와 같은 as_of 로 한 번 돌린 뒤,
+#    → build/style_pit.py 를 style_top_pdf 와 같은 as_of 로 한 번 돌린 뒤,
 #      이 블록을 errors.append 로 승격할 것.
 try:
     _pp = os.path.join(ROOT, "data", "style_pit.json")
@@ -1501,7 +1501,7 @@ try:
         if _pa and _qa and _pa != _qa:
             print(f"⚠ 편향 캐비엇 기준일 불일치 — style_pit.json {_pa} vs style_perf.json {_qa}. "
                   f"style.html 캐비엇의 '보정 전' 수치가 같은 화면의 표와 다른 날을 가리킨다. "
-                  f"사내망 PC 에서 build/style_pit.py 재실행 필요(러너는 pit_members.json 이 없어 못 만든다).")
+                  f"build/style_pit.py 재실행 필요(가격 캐시가 있는 PC 에서).")
 except Exception as _e:
     print(f"⚠ 편향 캐비엇 기준일 검사 실패: {_e}")
 # ── 가격 패널 길이: 본체와 상세가 같은 좌표계인가 ──────────────────────────

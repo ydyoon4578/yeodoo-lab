@@ -84,16 +84,16 @@ build/pit_facts.py 로 SEC 재무를 받아(러너) data/fx_pit/ 에 넣고 여�
 
 · 상장폐지 처리 — 보유 중 가격이 끊기면 그 종목은 그날부터 수익 계산에서 빠지고 남은 종목이
   비중을 나눠 갖는다(=마지막 종가에 빠져나온 것으로 본다). 파산 손실은 그만큼 덜 잡힌다.
-· 멤버십은 SPX∪NDX 합집합이고 월 해상도다. 스냅샷은 그 달 마지막 dt 이므로(pit_backtest.py
-  의 SQL 이 월별 max(dt) 를 잡는다) 월말 선정과 시점이 맞는다. 다만 파일에 dt·지수 라벨이
-  남지 않아 저장소만으로는 그 규약을 감사할 수 없다 — 재수집 때 함께 저장할 것.
+· 멤버십은 SPX∪NDX 합집합이고 월 해상도다. 스냅샷은 그 달의 위키 리비전이므로
+  월말 선정과 시점이 맞는다. 지수별 명단·결손 기록은 data/index_history.json 의
+  months·gaps 에 그대로 남아 저장소만으로 감사할 수 있다.
 · 가격 캐시는 2026-07-27 까지라 창 마지막 하루는 편출 종목이 비어 있다.
 
 ## 실행
 
   python build/style_pit.py
 
-로컬 전용이다 — data/pit_members.json(사내 DB 원천)과 data/_pit_px_cache.json 은 gitignore 라
+가격 캐시(data/_pit_px_cache.json)만 gitignore 라
 러너에 없다. 산출물 data/style_pit.json 만 커밋한다(build/pit_backtest.py 와 같은 방식).
 자료가 없으면 **크게 죽는다** — 'PIT' 라고 적힌 생존자 백테스트를 내보내는 것이 최악이다.
 """
@@ -109,7 +109,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "style_pit.json")
-MEMB = os.path.join(DATA, "pit_members.json")
+# ⚠ pit_members.json(사내 DB 산출) 은 2026-08-03 에 걷어냈다 — 멤버십은 index_members 가
+#   data/index_history.json(위키 과거 리비전)에서 읽는다. 그 파일은 저장소에 커밋된다.
 CACHE = os.path.join(DATA, "_pit_px_cache.json")
 
 sys.path.insert(0, HERE)
@@ -218,7 +219,12 @@ def ew_nav(P, pool_at, start, end):
 
 
 def main() -> int:
-    mem = need(MEMB, "선정 시점 멤버십")["members"]
+    # ⚠ 2026-08-03: 사내 DB 산출(pit_members.json) → 위키 과거 리비전(index_history.json).
+    #   그 파일은 저장소에 커밋되므로 이 스크립트가 더 이상 사내망 PC 에 묶이지 않는다.
+    import index_members                          # noqa: E402  같은 build/ 안
+    mem, _carried = index_members.load()
+    for _ym, _ix, _n in _carried:
+        print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (_ym, _ix.upper(), _n))
     cache = need(CACHE, "편출 종목 가격 캐시")
     P = ST.Panel()
     end = len(P.dates) - 1
@@ -484,7 +490,7 @@ def main() -> int:
                      "gone": len(gone), "gone_at_start": len(m0 - today),
                      "filled": len(inject),
                      # 러너가 읽는다 — build/pit_facts.py 가 이 명단으로 SEC 재무를 받아
-                     # data/fx_pit/ 에 넣는다. 멤버십(pit_members.json)은 gitignore 라
+                     # data/fx_pit/ 에 넣는다. 멤버십(index_history.json)은 커밋되므로
                      # 러너가 스스로 계산할 수 없으므로 여기 실어 보내는 것이 유일한 경로다.
                      "gone_tickers": gone,
                      "not_yet_member_at_start": len(not_yet), "not_yet": not_yet,
