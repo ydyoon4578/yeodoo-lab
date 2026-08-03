@@ -126,6 +126,34 @@ def _industry(stocks, dates, root):
 
     keepg = {k: v for k, v in bygrp.items() if len(v) >= IND_MIN}
     keeps = {k: v for k, v in bysub.items() if len(v) >= IND_MIN}
+
+    # ── 왜 3차(산업)를 안 쓰는지 **화면이 스스로 말하게** 한다 ──────────────
+    # 이 트리는 1차 → 2차 → 4차다. 번호를 그렇게 적어 놓고 3차가 어디 갔는지는
+    # 말하지 않아서, 읽는 사람이 곧바로 "3차는?" 하고 묻게 돼 있었다(사용자 지적).
+    # 사유는 코드 주석에만 있었다 — 화면에 없으면 없는 것이다. 여기서 재서 실어 보낸다.
+    # 🚨 손으로 적지 않는다. 숫자가 바뀌면 문장도 같이 바뀌어야 한다.
+    tiers, has = [], [s for s in stocks if (mem.get(s["t"]) or {}).get("sub")]
+    for lbl, key in (("섹터", "sector"), ("산업그룹", "grp"), ("산업", "ind"), ("서브산업", "sub")):
+        cnt = {}
+        for s in has:
+            v = ((s.get("sector") if key == "sector" else (mem.get(s["t"]) or {}).get(key)) or "").strip()
+            if v:
+                cnt[v] = cnt.get(v, 0) + 1
+        big = {k: v for k, v in cnt.items() if v >= IND_MIN}
+        tiers.append({"nm": lbl, "n": len(cnt), "keep": len(big),
+                      "cov": round(sum(big.values()) / max(1, len(has)) * 100)})
+    # 3차가 4차와 **구성이 완전히 같은** 칸의 수. 이것이 3차를 뺀 진짜 이유다 —
+    # 그 칸들은 층을 하나 더 만들 뿐 새로 갈리는 것이 없다.
+    _ci, _cs = {}, {}
+    for s in has:
+        m2 = mem.get(s["t"]) or {}
+        for d, k in ((_ci, "ind"), (_cs, "sub")):
+            v = (m2.get(k) or "").strip()
+            if v:
+                d[v] = d.get(v, 0) + 1
+    dup = sum(1 for k, v in _ci.items() if _cs.get(k) == v)
+    gics_tiers = {"n_gics": len(has), "n_all": len(stocks), "rows": tiers,
+                  "ind_dup": dup, "ind_n": len(_ci), "min": IND_MIN}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
 
     # 샤프 — 스타일 표와 **같은 창**으로 잰다(2026-08-03 사용자 요청으로 두 표가 합쳐졌다).
@@ -243,7 +271,8 @@ def _industry(stocks, dates, root):
         if rest:
             rows.append(agg(rest, NOM, sec, 2, sec))
             _stocks(rest, sec, sec + "|" + NOM, 3)
-    return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX}
+    return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX,
+            "tiers": gics_tiers}
 
 
 def _load_px(ts, dates, root):
