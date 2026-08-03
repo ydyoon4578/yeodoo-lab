@@ -107,6 +107,27 @@ TAGS = (
                "PaymentsToAcquireProductiveAssets"), "USD", "m"),
     ("sh",    ("WeightedAverageNumberOfDilutedSharesOutstanding",
                "WeightedAverageNumberOfSharesOutstandingBasic"), "shares", "m"),
+    # 기말 발행주식수 — sh(가중평균 희석)의 **대타**다. 쓰는 쪽이 sh 를 먼저 보고 없을
+    # 때만 쓴다. 별 키로 두는 이유: 같은 후보 목록에 넣으면 '가장 최근까지 보고된 태그가
+    # 이긴다'는 규칙이 멀쩡한 회사의 희석주식수까지 이걸로 갈아치운다. 둘은 정의가 다르다.
+    # 🚨 이게 없으면 통째로 못 재는 회사가 있다. 실측(2026-08-04): HSY 는 희석주식수를
+    #   2015-10 이후 안 내고(옛 태그가 11년 묵어 최신성 가드가 버린다) 이 태그만 낸다.
+    #   KKR·LYB·SJM 도 같다 — 넷 다 지금 주식수 계열이 아예 없다.
+    ("sho",   ("CommonStockSharesOutstanding",), "shares", "m"),
+    # ── 아래 다섯은 2026-08-04 추가(사용자 요청). 지금까지 재무 태그가 16종뿐이라
+    #   유동비율·순부채/EBITDA·알트만 Z 같은 표준 지표를 **물어볼 자료 자체가 없었다.**
+    #   같은 엔드포인트라 호출은 안 는다. 표본 24사 실측 커버리지를 각 줄에 적는다.
+    ("ca",    ("AssetsCurrent",), "USD", "m"),                     # 83% — 은행·보험은 유동/비유동을 안 가른다
+    ("cl",    ("LiabilitiesCurrent",), "USD", "m"),                # 83% — 같은 이유
+    ("re",    ("RetainedEarningsAccumulatedDeficit",), "USD", "m"),  # 100%
+    # ⚠ 차입금은 이름마다 범위가 다르다(LongTermDebt 는 유동성 대체분을 포함하기도 한다).
+    #   '가장 최근까지 보고된 태그' 규칙을 그대로 쓰되, 회사마다 다른 태그가 뽑힐 수 있음을
+    #   여기 적어 둔다 — 회사 간 절대 비교보다 **한 회사의 시계열** 용도로 쓸 것.
+    ("debt",  ("LongTermDebtNoncurrent", "LongTermDebt",
+               "LongTermDebtAndCapitalLeaseObligations"), "USD", "m"),   # 합집합 75%+
+    ("dep",   ("DepreciationDepletionAndAmortization",
+               "DepreciationAmortizationAndAccretionNet",
+               "DepreciationAndAmortization", "Depreciation"), "USD", "m"),  # 합집합 58%+
     # 아래 둘은 RIM의 전제(클린서플러스)를 실제로 재기 위해 넣는다. 장부가 증분이
     # '이익 − 배당'과 맞지 않는 가장 큰 이유가 자사주 매입이다 — 실측(2026-07-25):
     # AAPL의 잔차가 −79,922 → +10,789로, MTD는 −766 → +34로 줄어든다.
@@ -135,6 +156,10 @@ TAGS_IFRS = (
     ("cash",  ("CashAndCashEquivalents",), "USD", "m"),
     ("cfo",   ("CashFlowsFromUsedInOperatingActivities",), "USD", "m"),
     ("capex", ("PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",), "USD", "m"),
+    # IFRS 쪽에는 주식수가 아예 없었다 — 그래서 CCEP·FER·TRI 는 주식수 계열이 통째로
+    # 비어 있었다(실측 2026-08-04). us-gaap 의 WeightedAverageNumberOf… 대응 이름이다.
+    # 희석 기준(Adjusted…)을 먼저 본다 — us-gaap 쪽도 희석을 먼저 보므로 정의를 맞춘다.
+    ("sh",    ("AdjustedWeightedAverageShares", "WeightedAverageShares"), "shares", "m"),
 )
 
 # 화면에 그대로 쓰는 항목 이름. 여기 없는 키는 만들지 않는다.
@@ -143,7 +168,9 @@ LABEL = {
     "ni": "순이익", "eps": "주당순이익(희석)", "dps": "주당배당금(선언)",
     "asset": "자산총계", "liab": "부채총계", "eq": "자기자본(지배주주지분)",
     "cash": "현금및현금성자산", "cfo": "영업활동현금흐름", "capex": "설비투자(CAPEX)",
-    "sh": "희석주식수", "bb": "자사주 매입", "iss": "주식 발행",
+    "sh": "희석주식수", "sho": "발행주식수(기말)", "bb": "자사주 매입", "iss": "주식 발행",
+    "ca": "유동자산", "cl": "유동부채", "re": "이익잉여금", "debt": "장기차입금",
+    "dep": "감가상각비",
 }
 
 

@@ -40,7 +40,7 @@ CACHE = os.path.join(DATA, "_pit_px_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 OUT = os.path.join(DATA, "pit_strategies.json")
 
-START = "2020-09-01"
+START = "2015-01-01"      # 2026-08-04: 2020-09-01 → 여기로 (사용자 결정 — 아래 주석 참조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -79,8 +79,13 @@ def fetch_members():
       대에 묶여 있었다.** 위키 산출물은 저장소에 커밋되므로 CI 에서도 돈다.
       대조 실측은 build/refresh_index_history.py 머리말에 있다(실질 일치 60/60 · 티커가 아니라
       CIK 로 조인해야 한다는 것도 그 대조에서 나왔다).
-    ⚠ 범위는 위키본이 넓다(2015-01~ vs DB 2020-09~). 그래도 START 는 그대로 둔다 —
-      앞당기면 게시된 수치가 통째로 바뀐다. 넓히는 것은 '더 길게 재기로 한다'는 별도 결정이다.
+    ⚠ 범위는 위키본이 넓다(2015-01~ vs DB 2020-09~).
+      🚨 2026-08-04 — 그 '별도 결정'을 했다(사용자 요청). START 를 2015-01-01 로 앞당긴다.
+      이유: 재무 보관 깊이를 18년으로 늘리자 원시 t 가 본페로니를 넘는 규칙이 여럿 생겼고,
+      그 전부를 생존편향 보정이 다시 눌렀다(강등 5종 → 13종). 즉 병목이 '표본이 짧다'에서
+      '생존편향 측정 창이 짧다'로 옮겨갔다. PIT 창 5.8년으로 17년짜리 규칙을 판정하는
+      것은 짧은 쪽이 결론을 지배한다는 뜻이다. 게시 수치가 바뀐다 — 그게 목적이다.
+      ⚠ 2015-01 이 한계다. index_history.json 이 거기서 시작한다(위키 리비전 보존 범위).
     """
     import index_members                            # noqa: E402  같은 build/ 안
     mem, carried = index_members.load(START)
@@ -683,7 +688,7 @@ def fetch_cache():
         if not ch:
             continue
         try:
-            d = yf.download(ch, period="10y", auto_adjust=True, progress=False, threads=False)["Close"]
+            d = yf.download(ch, start=START, auto_adjust=True, progress=False, threads=False)["Close"]
         except Exception as e:
             print("  [yf] 배치 실패:", str(e)[:60]); continue
         for t in ch:
@@ -706,7 +711,7 @@ def fetch_cache():
     print("주식수 수집 %d종 (이미 %d종)" % (len(tgt), len(sh)))
     for k, t in enumerate(tgt):
         try:
-            ser = yf.Ticker(t).get_shares_full(start="2019-01-01")
+            ser = yf.Ticker(t).get_shares_full(start=START)
             if ser is not None and len(ser):
                 # 날짜 내림차순 [(날짜, 주식수)] — 랩의 asof_fund 와 같은 모양
                 sh[t] = [[str(d.date()), float(v)] for d, v in ser.items()][::-1]

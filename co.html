@@ -925,8 +925,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // ── 재무제표: 회사별 XBRL 시계열(SEC EDGAR companyfacts 수집분) ─────────
   var XC=null;   // yfinance ↔ SEC 대조 통계(data/facts.json). 이 표 아래에 그대로 싣는다.
-  var FS_FLOW=['rev','cogs','gp','opinc','ni','eps','dps','cfo','capex','sh'];  // 기간 항목
-  var FS_INST=['asset','liab','eq','cash'];                                      // 시점 항목
+  // 2026-08-04: 유동자산·유동부채·장기차입금·이익잉여금·감가상각비를 추가했다(수집 쪽 TAGS 참조).
+  // 없는 회사는 fsTable 이 그 줄을 통째로 건너뛴다 — 커버리지는 항목마다 다르다
+  // (실측 518사: 이익잉여금 97% · 감가상각 97% · 차입금 85% · 유동자산/부채 84%.
+  //  은행·보험은 유동/비유동을 가르지 않아 그 줄이 없는 것이 정상이다).
+  var FS_FLOW=['rev','cogs','gp','opinc','ni','eps','dps','cfo','capex','dep','sh'];  // 기간 항목
+  var FS_INST=['asset','ca','liab','cl','debt','eq','re','cash','sho'];               // 시점 항목
   var fsPeriod='q';
 
   function ensureFacts(s){
