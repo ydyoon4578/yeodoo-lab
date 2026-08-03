@@ -1054,9 +1054,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전).
   // ⚠ rg·sn 은 화면에 안 그린다(홈 '지금 시장'은 2026-08-03 에 뺐다) — 기준일 불일치
   //   고지(syncAsof)와 눈썹의 'FRED n지표'가 아직 읽으므로 상태로는 남는다.
-  var MK={rg:null,sn:null,main:null,mb:null,iv:null,ivd:'',board:null,
-        stk:null,        // 종목 단(지연 로딩). null=아직 안 받음 · []=요청 중이거나 실패
-        open:{}};        // 펼쳐 둔 노드 — 다시 그려도 그대로 두려고 밖에 둔다
+  // ⚠ stk(종목 단 지연 로딩)·open(펼쳐 둔 노드)은 2026-08-03 에 나갔다 — 홈이 GICS 11섹터만
+  //   내면서 펼칠 하위 단이 없어졌다. iv(home_reco.industry)는 남는다: st-sub 한 줄이
+  //   '섹터 11 → 산업그룹 n → 서브산업 n' 으로 무엇이 있는지 계속 말한다.
+  var MK={rg:null,sn:null,main:null,mb:null,iv:null,ivd:'',board:null};
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1179,16 +1180,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     function cells(x){return stShp(typeof x.sharpe==='number'?x.sharpe:null)+
       ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('');}
-    // 한 줄 — lv 로 들여쓰기와 접힘이 갈린다. 펼칠 자식이 있으면 ▸ 버튼을, 없으면 자리만 둔다
-    // (없으면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다).
-    // 종목 줄 — 어느 단 아래에도 같은 모양으로 붙는다. 아직 안 받았으면 빈 문자열.
-    function stockRows(pid,domid,lv,ctx){
-      var st=(MK.stk||[]).filter(function(k){return k.p===pid;});
-      st.sort(bym);                                  // 종목도 시총순
-      return st.map(function(k){
-        return row(k,lv,domid,null,(k.sn||k.nm)+'\n'+ctx,k.nm,k.sn||'');
-      }).join('');
-    }
+    // 한 줄 — 지금은 섹터(lv1)만 그린다. lv 인자는 남겨 둔다: 하위 단을 되살리면 그대로 쓰인다.
+    // (stockRows 는 2026-08-03 에 나갔다 — 종목 단이 없어 부를 곳이 없다.)
     var seq=0;
     function row(x,lv,pid,myid,tipTxt,label,sub){
       seq++;
@@ -1200,93 +1193,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
         cells(x)+'</tr>';
     }
+    // ⚠ 2026-08-03 사용자 결정 — 홈은 **GICS 11섹터만** 낸다. 산업그룹(2차)·서브산업(4차)·
+    //   종목 단(4단 트리)을 전부 뺐다. 그것들이 필요하면 industry.html(SIC 183분류)과
+    //   stocks.html 이 그 화면이고, 홈은 시장을 넓은 것에서 좁은 것으로 읽는 첫 칸만 맡는다.
+    //   함께 나간 것: 펼침 버튼(data-open)·wireTree·home_stocks.json 지연 로딩.
+    //   ⚠ home_reco.json 의 industry.rows(lv2·lv3)는 그대로 받는다 — 아래 st-sub 한 줄이
+    //     '섹터 11 → 산업그룹 n → 서브산업 n' 으로 무엇이 있는지는 계속 말한다(화면에서 뺀
+    //     것과 세지 않는 것은 다르다).
     var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
-       '<b>동일가중</b> · <b>시총 내림차순</b> · ▸ 를 누르면 <b>GICS 산업그룹(2차) → 서브산업(4차) → 종목</b> '+
-       '순으로 펼쳐집니다(위키백과 GICS 구조 — 섹터와 같은 체계) · '+
+       '<b>동일가중</b> · <b>시총 내림차순</b> · GICS 11섹터 기준(위키백과 GICS 구조) · '+
+       '더 잘게 보려면 <a href="industry.html">산업 탐색</a>·<a href="stocks.html">종목 신호</a> · '+
        '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
     secs.slice().sort(bym).forEach(function(s0){
-      var gs=kids.filter(function(k){return k.lv===2&&k.p===s0.sec;}).sort(bym);
-      h+=row(s0,1,null,gs.length?('s-'+s0.sec):null,tip(s0,true),s0.nm,s0.sec);
-      gs.forEach(function(g){
-        var gid=g.sec+'|'+g.nm;
-        var ss=kids.filter(function(k){return k.lv===3&&k.p===gid;}).sort(bym);
-        h+=row(g,2,'s-'+s0.sec,'g-'+gid,
-               (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
-        // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았어도 **버튼은 달아 둔다** —
-        // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
-        // ⚠ '그 밖'에도 단다(사용자 요청). 나머지라고 못 펼치면 그 종목들은 어디에서도 못 본다.
-        ss.forEach(function(x){
-          var pid=gid+'|'+x.nm, sid='g-'+pid;
-          h+=row(x,3,'g-'+gid,sid,
-                 (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
-          h+=stockRows(pid,sid,4,x.nm);
-        });
-        // 하위 서브산업이 없는 줄 — 종목이 이 줄에 **직접** 매달린다(3단).
-        // 둘이 여기 걸린다: ① 서브산업이 하나도 기준을 못 넘은 산업그룹
-        //                  ② 섹터 직속 '그 밖'(gid 가 곧 그 부모 id 다)
-        // ⚠ 전에는 ②를 위에서 따로 한 번 더 그렸다. gid 가 같은 pid 라 **종목이 두 줄씩**
-        //   나왔다(사용자 지적: ALNY·CCEP 가 두 번). 갈래는 여기 하나만 둔다.
-        if(!ss.length)h+=stockRows(gid,'g-'+gid,3,g.nm==='그 밖'?(s0.nm+' 나머지'):g.nm);
-      });
+      h+=row(s0,1,null,null,tip(s0,true),s0.nm,s0.sec);
     });
     return h;
   }
-  // 트리 접기 — 표를 다시 그려도 리스너가 쌓이지 않게 위임으로 한 번만 건다.
-  function wireTree(box){
-    // 다시 그린 뒤에도 **열어 둔 곳이 그대로여야 한다.** 표가 두 파일(+종목 파일)로 채워져
-    // 여러 번 그려지는데, 그때마다 접히면 펼치는 행위 자체가 되돌려진다.
-    if(MK.open)Object.keys(MK.open).forEach(function(id){
-      var rs=box.querySelectorAll('tr[data-p="'+id.replace(/"/g,'')+'"]');
-      for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden');
-      var b3=box.querySelector('button.htg[data-open="'+id.replace(/"/g,'')+'"]');
-      if(b3){b3.setAttribute('aria-expanded','true');b3.textContent='▾';}
-    });
-    if(!box.__htg){
-      box.__htg=1;
-      // 접을 때는 **자손까지** 접는다. 안 그러면 부모를 접었다 펴는 순간 손자가 펼쳐진 채로
-      // 튀어나와, 눈에는 두 단이 건너뛴 것처럼 보인다.
-      function shut(id){
-        delete MK.open[id];
-        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
-        for(var i=0;i<rs.length;i++){
-          rs[i].setAttribute('hidden','');
-          var cid=rs[i].getAttribute('data-id');
-          if(cid){
-            shut(cid);
-            var cb=box.querySelector('button.htg[data-open="'+cid+'"]');
-            if(cb){cb.setAttribute('aria-expanded','false');cb.textContent='▸';}
-          }
-        }
-      }
-      box.addEventListener('click',function(e){
-        var b2=e.target&&e.target.closest?e.target.closest('button.htg'):null;
-        if(!b2)return;
-        var id=b2.getAttribute('data-open');
-        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
-        if(!rs.length){
-          // 종목 단을 아직 안 받았다. 한 번만 받아 오고, 도착하면 표를 다시 그린다 —
-          // MK.open 이 남아 있으므로 열어 둔 곳은 그대로 복원된다.
-          if(MK.stk===null&&/^g-/.test(id)){
-            MK.stk=[];                                   // 중복 요청 방지
-            MK.open[id]=1;
-            b2.setAttribute('aria-expanded','true'); b2.textContent='▾';
-            getj('home_stocks.json').then(function(sj){
-              MK.stk=(sj&&sj.rows)||[];
-              if(MK.board)drawStyle(null);
-            })['catch'](function(){ MK.stk=[]; });
-          }
-          return;
-        }
-        var open=rs[0].hasAttribute('hidden');
-        if(open){ for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden'); MK.open[id]=1; }
-        else { shut(id); delete MK.open[id]; }
-        b2.setAttribute('aria-expanded',open?'true':'false');
-        b2.textContent=open?'▾':'▸';
-      });
-    }
-  }
-
+  // ⚠ 섹터 트리 접기(wireTree)와 종목 단 지연 로딩(home_stocks.json)이 여기 있었다.
+  //   2026-08-03 홈을 GICS 11섹터만 내기로 하면서 함께 나갔다 — 펼칠 하위 단이 없으므로
+  //   data-open 버튼도, 그것을 받는 위임 리스너도 만들지 않는다.
+  //   되살리려면 mkSegRows 의 lv2~lv4 렌더와 이 리스너를 같이 되돌려야 한다.
 
   // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
   // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
@@ -1671,13 +1598,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
     box.innerHTML=h+'</tbody>';
-    wireTree(box);                                 // 섹터·산업 트리 접기(같은 표 안이다)
     // 펼침 — 표를 다시 그려도 리스너가 쌓이지 않게 **위임으로 한 번만** 건다.
     // 행마다 걸면 innerHTML 을 갈아 끼울 때 옛 리스너가 남아 같은 클릭이 두 번 처리된다.
-    // 🚨 플래그 이름은 wireTree 의 것과 **달라야 한다.** 둘 다 같은 box(el('sttbl'))에 걸고,
-    //   바로 위 wireTree(box) 가 먼저 돌며 __htg 를 세운다. 같은 이름을 쓰면 이 가드가
-    //   false 가 되어 구성종목 핸들러가 **한 번도 안 붙는다** — ▸ 를 눌러도 아무 일이
-    //   없었다(2026-08-03, 섹터·산업을 같은 표로 옮기면서 생긴 충돌).
+    // ⚠ 이 표의 유일한 펼침이다(지수 방법론의 구성종목 10종). 섹터 트리가 나가면서
+    //   wireTree 도 함께 나갔으므로 리스너가 하나뿐이다 — 전에는 둘이 같은 box 에 걸리고
+    //   중복방지 플래그 이름까지 겹쳐(__htg) 이쪽이 **한 번도 안 붙은** 사고가 있었다.
+    //   되살릴 때 그 이름을 다시 겹치지 말 것.
     if(!box.__hold){
       box.__hold=1;
       box.addEventListener('click',function(e){
