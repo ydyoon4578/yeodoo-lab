@@ -349,12 +349,19 @@
   .prsplit b{color:var(--hot);margin-right:8px}
   .prsplit span{font-family:var(--mono);color:var(--ink-2)}
   .prsplit em{display:block;margin-top:3px;font-style:normal;font-size:11px;color:var(--muted)}
-  .prline{margin:8px 0 0;padding:8px 11px;border:1px solid var(--line-soft);border-radius:8px;
-          background:var(--panel-2);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
-  .prline .pl{font-size:10.5px;font-weight:700;color:var(--muted)}
-  .prline .pv{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
-  .prline .pv b{color:var(--ink);font-weight:700}
-  .prline em{flex-basis:100%;font-style:normal;font-size:10.5px;color:var(--muted);line-height:1.55}
+  .prtblwrap{margin:8px 0 0;padding:8px 11px 9px;border:1px solid var(--line-soft);border-radius:8px;background:var(--panel-2)}
+  .prsc{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .prtbl{border-collapse:collapse;width:100%;font-size:12px;min-width:440px}
+  .prtbl caption{caption-side:top;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+                 text-transform:uppercase;color:var(--muted);padding:0 0 5px}
+  .prtbl th,.prtbl td{padding:4px 8px;border-bottom:1px solid var(--line-soft);text-align:right;font-variant-numeric:tabular-nums}
+  .prtbl thead th{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);
+                  text-transform:uppercase;border-bottom:1px solid var(--line);white-space:nowrap}
+  .prtbl tbody th[scope="row"]{text-align:left;font-size:11.5px;color:var(--ink-2);font-weight:600;white-space:nowrap}
+  .prtbl tbody tr:last-child th,.prtbl tbody tr:last-child td{border-bottom:0}
+  .prtbl td.mv{font-family:var(--mono);font-weight:600;color:var(--ink);white-space:nowrap}
+  .prtbl td.mv.pw{color:var(--gA)} .prtbl td.mv.pl{color:var(--rej)}
+  .prtblwrap em{display:block;margin-top:7px;font-style:normal;font-size:10.5px;color:var(--muted);line-height:1.55}
   .cmpwarn{margin:10px 0 0;padding:9px 12px;border-radius:8px;border:1px solid color-mix(in srgb,var(--marg) 35%,transparent);
            background:color-mix(in srgb,var(--marg) 8%,transparent);font-size:11.5px;line-height:1.6}
   .cmpwarn b{display:block;color:var(--marg);font-size:12px;margin-bottom:3px}
@@ -1150,11 +1157,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 새 분류 축(구성·대조군 비교·같은 구간 지수)을 **전 레코드**에 붙인다.
         // 배포 원장은 deploy_index.json에서 따로 들어오므로 이름으로 맞춰 준다 —
         // 안 붙이면 배포 전략만 큰 칸이 없어 목록 맨 위가 분류 밖으로 떨어진다.
-        var MX={}; ix.items.forEach(function(x){MX[x.name]=x;});
+        // ⚠ 이름을 키로 잇는다. D 쪽 이름은 위에서 ixL 로 편 뒤라(SPX→S&P 500) 원문 그대로
+        //   키를 만들면 그 표기를 쓰는 전략이 통째로 안 이어진다 — 배포 원장 4종이 그래서
+        //   지수 눈금·구성·비교가능 표시를 못 받고 있었다. 양쪽 표기를 다 키로 둔다.
+        var MX={}; ix.items.forEach(function(x){MX[x.name]=x; MX[ixL(x.name)]=x;});
         D.forEach(function(d){
           var x=MX[d.n]; if(!x)return;
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
           d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
+          d._mx=x.metrics||null;   // 전략 자신의 지표 — 지수 눈금과 나란히 놓을 왼쪽 열
+          d._prb=x.pr_basis||null; // 그 전략의 지표가 어느 주기로 계산됐나(일간/월말)
           if(!d._hold&&x.holdings)d._hold=x.holdings;
         });
         window.__PRNOTE=ix.pr_note||''; window.__CMPNOTE=ix.cmp_note||'';
@@ -1869,13 +1881,45 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              (d._cmpw?'<span>'+esc(d._cmpw)+'</span>':'')+'</div>';
       }
       if(d._bl)out+='<div class="benchline"><span>대조군</span><b>'+esc(d._bl)+'</b></div>';
-      var pr=d._pr;
+      // ── 같은 구간 지수(PR) — CAGR 한 줄이 아니라 지표를 통째로 나란히 놓는다 ──────
+      // 대조군이 없는 전략이 31개다(타이밍 오버레이·ML 종목선택 …). 그런 전략은 15행 지표표도
+      // 안 나온다(d.bt 가 있는 전략이 10개뿐). 그래서 "그래서 좋은 건가"에 답할 눈금이 이 표뿐이라
+      // CAGR·변동성·MDD·샤프를 전부 싣는다 — 전략 97개 전부가 가진 네 지표다.
+      // ⚠ 지수도 **전략과 같은 함수·같은 월말 주기**로 잰다(build/strategy_index.py:pr_baseline).
+      //   일간으로 재면 SPX 샤프가 0.351 vs 0.535 로 갈려 같은 표에 못 놓는다.
+      var pr=d._pr, mx=d._mx;
       if(pr&&(pr.spx||pr.ndx)){
-        var f2=function(v){return (v==null||v!==v)?'—':((v>0?'+':'')+Number(v).toFixed(2)+'%');};
-        out+='<div class="prline"><span class="pl">같은 구간 지수(PR)</span>'+
-          (pr.spx?'<span class="pv">S&amp;P 500 <b>'+f2(pr.spx.cagr)+'</b></span>':'')+
-          (pr.ndx?'<span class="pv">NASDAQ 100 <b>'+f2(pr.ndx.cagr)+'</b></span>':'')+
-          '<em>연환산 · 배당 제외. 전략 수익은 배당을 담은 총수익이라 이 줄과 겨루면 연 2.0%p만큼 전략이 유리해 보입니다 — 판정은 위의 대조군으로 합니다.</em></div>';
+        var PR_ROWS=[['cagr','연평균 수익 (CAGR)','%',2,1],['vol','연변동성','%',2,-1],
+                     ['mdd','최대낙폭 (MDD)','%',2,1],['sharpe','샤프 (초과수익)','',3,1]];
+        var pcell=function(o,k,nd,u){
+          if(!o||o[k]==null||o[k]!==o[k])return '<td class="mv">—</td>';
+          return '<td class="mv">'+Number(o[k]).toFixed(nd)+(u||'')+'</td>';
+        };
+        // 전략이 지수보다 나은 칸에만 표식. dir=1 이면 클수록 좋고, -1 이면 작을수록 좋다.
+        var pwin=function(k,dir,ix){
+          if(!mx||mx[k]==null||!ix||ix[k]==null)return '<td class="mv">—</td>';
+          var g=(mx[k]-ix[k])*dir;
+          return '<td class="mv '+(g>0?'pw':(g<0?'pl':''))+'">'+((g>0?'+':'')+g.toFixed(k==='sharpe'?3:2))+'</td>';
+        };
+        var prb=PR_ROWS.map(function(r){
+          var k=r[0],u=r[2],nd=r[3],dir=r[4];
+          return '<tr><th scope="row">'+r[1]+'</th>'+pcell(mx,k,nd,u)+
+            pcell(pr.spx,k,nd,u)+pwin(k,dir,pr.spx)+
+            pcell(pr.ndx,k,nd,u)+pwin(k,dir,pr.ndx)+'</tr>';
+        }).join('');
+        out+='<div class="prtblwrap"><div class="prsc"><table class="prtbl">'+
+          '<caption>같은 구간 지수(PR)와 나란히 — 전략의 구간·월말 기준으로 다시 잰 값</caption>'+
+          '<thead><tr><th scope="col">지표</th><th scope="col">전략</th>'+
+          '<th scope="col">S&amp;P 500</th><th scope="col">차이</th>'+
+          '<th scope="col">나스닥 100</th><th scope="col">차이</th></tr></thead>'+
+          '<tbody>'+prb+'</tbody></table></div>'+
+          '<em>지수는 <b>가격지수(PR)</b>라 배당이 빠져 있습니다 — 전략 수익은 배당을 담은 총수익이라 '+
+          '수익 쪽 비교에서 연 2.0%p만큼 전략이 유리해 보입니다(변동성·MDD·샤프는 이 왜곡이 훨씬 작습니다). '+
+          '판정은 대조군이 있는 전략이면 위의 대조군으로 합니다. '+
+          '지수는 이 전략의 지표와 <b>같은 주기·같은 무위험이자율 규약</b>으로 다시 쟀습니다'+
+          (d._prb?' (이 전략은 <b>'+esc(d._prb)+'</b> 기준)':'')+
+          ' — 주기가 다르면 같은 지수라도 샤프가 0.35 대 0.54 로 갈립니다. '+
+          '각 줄은 <b>그 전략 자신의 구간</b>에서 잰 값이라 전략끼리 세로로 비교하지 마십시오.</em></div>';
       }
       // 대조군 판정과 지수 눈금이 반대로 나온 전략 — 초과분의 정체가 갈리는 지점이라 표시한다.
       //   (지수는 PR이라 연 2.0%p 보정한 뒤 비교한다 · 생성 build/strategy_index.py:pr_split)
@@ -1928,6 +1972,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<div><span>MDD</span><b>'+f(mm.mdd)+'%</b></div>'+
           '<div><span>대조군 샤프</span><b>'+f(bb.sharpe,3)+'</b></div>'+
           '<div><span>대조군 CAGR</span><b>'+f(bb.cagr)+'%</b></div>'+
+          '<div><span>대조군 MDD</span><b>'+f(bb.mdd)+'%</b></div>'+
         '</div>'+
         (function(){
           // 곡선 자료가 오면 배포 카드와 같은 그림 세 장을 그린다(누적수익 로그축·낙폭·연도별).

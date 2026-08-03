@@ -42,7 +42,9 @@ function unwrap(src) {
 // 브라우저를 흉내 내는 것이 목적이 아니라 조립을 재현하는 것이다.
 function stub(html) {
   const o = {
-    _a: {}, hidden: false, _h: html || "", style: {}, classList: { add() {}, remove() {}, contains() { return false; } },
+    _a: {}, hidden: false, _h: html || "", dataset: {},
+    style: { setProperty() {}, removeProperty() {}, getPropertyValue() { return ""; } },
+    classList: { add() {}, remove() {}, contains() { return false; } },
     getAttribute(k) { return k in this._a ? this._a[k] : null; },
     setAttribute(k, v) { this._a[k] = v; },
     removeAttribute(k) { delete this._a[k]; },
