@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "581fb2652688ec33",
+ "generated_from": "25fd5ab20c1ddad0",
  "categories": [
   {
    "name": "시장",
@@ -79,7 +79,7 @@
      "name": "산업 탐색",
      "file": "industry.html",
      "status": "existing",
-     "desc": "SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다",
+     "desc": "GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단",
      "verdict": "unverified",
      "src": "raw",
      "effort": "M",

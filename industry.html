@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — SEC가 부여한 SIC 4자리로 518사를 183개 산업으로 가릅니다. 11섹터보다 잘지만 낡은 분류라는 한계도 함께 적습니다.">
-<title>여두 · 산업 탐색 (SIC)</title>
+<meta name="description" content="여두 전략 랩 — GICS 서브산업으로 518사를 가릅니다. 섹터 11 → 산업그룹 → 서브산업 세 단을 그대로 펼쳐 보입니다.">
+<title>여두 · 산업 탐색 (GICS)</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/industry.html">
 <meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/industry.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 · 산업 탐색 (SIC)">
-<meta property="og:description" content="SEC가 부여한 SIC 4자리 — 11섹터보다 잘지만, 낡았다는 한계도 같이 적습니다.">
+<meta property="og:title" content="여두 · 산업 탐색 (GICS)">
+<meta property="og:description" content="GICS 서브산업 — 11섹터로는 안 갈라지는 것을 세 단으로 펼쳐 봅니다.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 · 산업 탐색 (SIC)">
-<meta name="twitter:description" content="SIC 4자리로 본 183개 산업 — 한계까지 함께.">
+<meta name="twitter:title" content="여두 · 산업 탐색 (GICS)">
+<meta name="twitter:description" content="GICS 서브산업로 본 산업 지도 — 한계까지 함께.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
@@ -313,7 +313,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-filings">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-filings" hidden role="group" aria-label="공시·산업">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단</span></a>
           <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
@@ -456,20 +456,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Industry · SIC 4자리</div>
+    <div class="eyebrow">Industry · GICS 서브산업</div>
     <h1 class="title">11개 섹터로는<br>안 갈라지는 것</h1>
-    <p class="lede">종목 화면이 쓰는 섹터는 11개뿐이라 "정보기술"에 반도체 장비사와 회계 소프트웨어 회사가 같이 들어갑니다.
-      SEC는 제출 서류를 분류하려고 회사마다 <b>SIC 4자리</b>를 부여하는데, 이 값으로 가르면 같은 518사가
-      <b>183개</b>로 나뉩니다. 이 화면은 그 분류를 그대로 보여줍니다 — 랩이 만든 분류가 아닙니다.</p>
+    <p class="lede">홈·섹터 화면이 쓰는 섹터는 11개뿐이라 "정보기술"에 반도체 장비사와 회계 소프트웨어 회사가
+      같이 들어갑니다. <b>GICS</b>는 그 아래를 <b>산업그룹(2차) → 서브산업(4차)</b>으로 다시 가릅니다.
+      이 화면은 그 세 단을 펼쳐 보여줍니다 — 랩이 만든 분류가 아니라 위키백과 S&amp;P 500 표의 GICS 구조입니다.</p>
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
   <div class="note hard">
-    <b>SIC를 믿고 쓰면 안 되는 이유</b> — 이 코드는 <b>1987년 체계</b>이고, SEC가 서류 분류용으로 붙인 뒤
-    회사의 사업이 바뀌어도 잘 갱신되지 않습니다. 실제로 이 데이터에서 <code>AMZN</code>은
-    <b>5961 Retail-Catalog &amp; Mail-Order Houses(통신판매업)</b>로 잡힙니다 — AWS가 반영될 자리가 없습니다.
-    <code>GOOGL</code>과 <code>META</code>는 <b>둘 다 7370</b>으로 같은 칸에 들어갑니다.
-    그래서 이 화면은 SIC를 <b>탐색용 렌즈</b>로만 쓰고, 어떤 신호·점수도 여기서 만들지 않습니다.
+    <b>이 화면이 하지 않는 것</b> — 분류는 <b>탐색용 렌즈</b>일 뿐이고 어떤 신호·점수도 여기서 만들지 않습니다.
+    서브산업은 회사 수가 적은 칸이 많아(한두 사뿐인 칸도 있습니다) 그 안의 평균은 종목 하나로 크게 흔들립니다 —
+    그래서 회사 수를 항상 함께 적습니다.
+    <br>⚠ 2026-08-03 이전에는 이 화면이 <b>SEC의 SIC 4자리</b>를 썼습니다. 그 체계는 1987년판이라 회사의 사업이
+    바뀌어도 갱신되지 않았고(AMZN이 통신판매업, GOOGL·META가 같은 7370), 사이트의 다른 화면은 전부 GICS라
+    한 사이트가 두 분류를 말하고 있었습니다. 그래서 GICS로 통일했습니다.
   </div>
 
   <nav class="views" id="views" aria-label="보기 전환">
@@ -479,7 +480,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="watch" aria-labelledby="w-h" hidden>
     <h2 class="lbl" id="w-h">관전 포인트 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 산업 단위로 눈에 띄는 것</span></h2>
-    <p class="lblnote">SIC 산업을 축으로, 이 랩이 이미 들고 있는 데이터(종목 시그널 · 8-K 공시 · 내부자 거래)에서
+    <p class="lblnote">GICS 서브산업을 축으로, 이 랩이 이미 들고 있는 데이터(종목 시그널 · 8-K 공시 · 내부자 거래)에서
       <b>눈에 띄는 어긋남</b>만 골라 서술합니다. 새로 받아오는 데이터는 없습니다.</p>
 
     <div class="note hard">
@@ -495,14 +496,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <section id="browse" aria-labelledby="ind-h">
     <h2 class="lbl" id="ind-h">산업 분류</h2>
     <p class="lblnote">회사 수가 많은 순. 티커를 누르면 종목 화면으로 갑니다.
-      <span style="color:var(--rp)">보라색 테두리</span>는 한 SIC 안에 <b>섹터가 둘 이상 섞인</b> 분류입니다 —
+      칸 이름 옆에 <b>섹터 › 산업그룹</b>과 1개월 동일가중 수익률을 적어 둡니다.
       두 체계가 어긋나는 지점이라 그 자체가 볼거리입니다.</p>
 
     <div class="filters">
       <div class="frow">
         <span class="fl">검색</span>
-        <input type="search" id="q" placeholder="티커 · SIC 코드 · 분류명(영문)" autocomplete="off" aria-label="검색">
-        <button class="chip" id="splitonly" aria-pressed="false" type="button">섹터가 섞인 분류만</button>
+        <input type="search" id="q" placeholder="티커 · 서브산업·산업그룹명(영문)" autocomplete="off" aria-label="검색">
+        <!-- ⚠ '섹터가 섮인 분류' 필터를 뻐다(2026-08-03) — GICS 서브산업은 정의상 한 섹터 안이라 섮일 수 없다. -->
         <button class="chip" id="solo" aria-pressed="false" type="button">1사뿐인 분류 숨기기</button>
         <button class="chip" id="reset" type="button">초기화</button>
         <span id="hits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
@@ -522,7 +523,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a href="index.html">← 전략 랩 홈</a> · <a href="filings.html">8-K 공시 피드</a> ·
     <a href="sector.html">섹터 히트맵</a> · <a href="stocks.html">종목 신호</a> ·
     <a href="sources.html">데이터 출처·기준일</a>
-    <br>출처 SEC EDGAR submissions API(SIC) + 유니버스 섹터는 members.json(S&amp;P 500 표의 GICS) · 생성 <code>build/refresh_filings.py</code>
+    <br>출처 위키백과 S&amp;P 500 표의 GICS(<code>data/members.json</code>) · 집계 <code>build/home_summary.py</code> · 8-K·내부자는 SEC EDGAR
   </footer>
 </div>
 
@@ -530,7 +531,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 (function(){
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  var D=null, SEC={}, q='', selSec={}, splitOnly=false, hideSolo=false;
+  var D=null, SEC={}, q='', selSec={}, hideSolo=false;
 
   function ty(v,lab,note,edge){
     return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';
@@ -544,7 +545,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function match(g){
     if(hideSolo&&g.ts.length<2)return false;
-    if(splitOnly&&!g._split)return false;
+
     var keys=Object.keys(selSec);
     if(keys.length){
       var hit=false, c=g._secs;
@@ -567,13 +568,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!rows.length){el('list').innerHTML='<div class="skel">조건에 맞는 분류가 없습니다.</div>';return;}
     var h='';
     for(var i=0;i<rows.length;i++){
-      var g=rows[i], c=g._secs, sk=Object.keys(c).sort(function(a,b){return c[b]-c[a];});
-      var mix='';
-      for(var j=0;j<sk.length;j++) mix+='<span'+(g._split?' class="multi"':'')+'>'+esc(sk[j])+' '+c[sk[j]]+'</span>';
+      // 카드 머리 = 서브산업 이름 · 윗단(섹터 › 산업그룹) · 회사 수.
+      //   ⚠ 종목은 시총 내림차순으로 이미 정렬돼 있다(위 byPath). 여기서 다시 정렬하지 않는다.
+      var g=rows[i];
+      var mix='<span>'+esc(g.secnm)+(g.sd?' &rsaquo; '+esc(g.sd):'')+'</span>'+
+              (g.r&&g.r['1M']!=null?'<span>1개월 '+(g.r['1M']>0?'+':'')+g.r['1M'].toFixed(2)+'%</span>':'');
       var mem='';
       for(var k=0;k<g.ts.length;k++) mem+='<a href="stocks.html#t='+encodeURIComponent(g.ts[k])+'">'+esc(g.ts[k])+'</a>';
-      h+='<div class="ind'+(g._split?' split':'')+'">'+
-           '<h3><span class="sic">'+esc(g.sic)+'</span>'+esc(g.sd)+'<span class="cnt">'+g.ts.length+'사</span></h3>'+
+      h+='<div class="ind">'+
+           '<h3>'+esc(g.sic)+'<span class="cnt">'+g.ts.length+'사</span></h3>'+
            '<div class="secmix">'+mix+'</div>'+
            '<div class="mem">'+mem+'</div>'+
          '</div>';
@@ -598,35 +601,88 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     });
   }
 
-  // 섹터는 종목 화면과 같은 원본(data/stocks.json)에서 읽는다 — 여기서 따로 만들면 두 화면이 어긋난다.
+  // ⚠ 2026-08-03: data/industry.json(SEC SIC) 을 끊고 **GICS** 로 갈아탔다(사용자 결정).
+  //   재료는 이미 있는 둘이다 — home_reco.json 의 industry(섹터 11 · 산업그룹 32 · 서브산업 88,
+  //   수익률·시총·200일선 포함)와 home_stocks.json(518종, p 필드가 "섹터|산업그룹|서브산업").
+  //   새로 수집하는 것은 없다.
+  //   ⚠ SIC 시절의 '섹터가 섞인 분류'(_split) 개념은 사라진다 — GICS 서브산업은 정의상
+  //     한 섹터 안에 있다. 그 필터와 타일도 함께 뺐다.
   Promise.all([
-    fetch('data/industry.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
+    fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
+    fetch('data/home_stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
     fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
   ]).then(function(res){
-    var j=res[0], st=res[1];
-    if(!j||!j.groups){
-      el('list').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다</b> — <code>data/industry.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
-      el('tally').innerHTML=ty('—','불러오기 실패','data/industry.json','var(--hot)');
+    var hr=res[0], hs=res[1], st=res[2];
+    var IND=hr&&hr.industry;
+    if(!IND||!IND.rows||!hs||!hs.rows){
+      el('list').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다</b> — <code>data/home_reco.json</code> 또는 <code>data/home_stocks.json</code>을 읽지 못했습니다. 추정치로 채우지 않습니다.</div>';
+      el('tally').innerHTML=ty('—','불러오기 실패','home_reco / home_stocks','var(--hot)');
       return;
     }
     if(st&&st.stocks) st.stocks.forEach(function(s){SEC[s.t]=s.sector||'';});
     window.__STOCKS=(st&&st.stocks)||[];   // 관전 포인트가 타이밍·플래그를 읽는다
-    D=j;
-    D.groups.forEach(function(g){g._secs=secsOf(g);g._split=Object.keys(g._secs).length>1;});
-    var nsplit=D.groups.filter(function(g){return g._split;}).length;
-    var solo=D.groups.filter(function(g){return g.ts.length<2;}).length;
-    var big=D.groups[0];
+    // 섹터 티커(XLK) → 한글 이름
+    var SNM={}; (IND.sectors||[]).forEach(function(s){SNM[s.sec]=s.nm;});
+    // 서브산업(lv3) 을 카드로. p = "섹터|산업그룹" 이고 nm 이 서브산업 이름이다.
+    // 종목은 home_stocks 의 p("섹터|산업그룹|서브산업")로 붙인다 — 시총 내림차순.
+    var byPath={};
+    hs.rows.forEach(function(x){ (byPath[x.p]=byPath[x.p]||[]).push(x); });
+    Object.keys(byPath).forEach(function(k){
+      byPath[k].sort(function(a,b){
+        var u=a.mc,v=b.mc;
+        if(u!=null&&v!=null&&u!==v)return v-u;
+        if((u==null)!==(v==null))return u==null?1:-1;
+        return String(a.nm).localeCompare(String(b.nm));
+      });
+    });
+    var groups=[];
+    (IND.rows||[]).filter(function(r){return r.lv===3;}).forEach(function(r){
+      var path=r.p+'|'+r.nm;
+      var ts=(byPath[path]||[]).map(function(x){return x.nm;});
+      if(!ts.length)return;
+      groups.push({sic:r.nm, sd:(r.p||'').split('|')[1]||'', sec:r.sec,
+                   secnm:SNM[r.sec]||r.sec, ts:ts, mc:r.mc, r:r.r});
+    });
+    // ⚠ 서브산업에 안 걸리는 종목이 있다(실측 22종). 둘이다 —
+    //   ① 산업그룹 아래 '그 밖'(서브산업 문턱을 못 넘은 잔여) ② 서브산업 행이 하나도 없는
+    //   산업그룹(XLC|Telecommunication Services 4종). 그대로 두면 이 종목들이 **이 화면
+    //   어디에서도 안 보인다** — 홈 트리가 '그 밖'에도 펼침 버튼을 달았던 것과 같은 이유로
+    //   잔여 칸을 만들어 싣는다. 어느 칸에도 안 뜨는 종목을 남기지 않는다.
+    var seen={}; groups.forEach(function(g){seen[g.sec+'|'+g.sd+'|'+g.sic]=1;});
+    var lv3set={}; (IND.rows||[]).filter(function(r){return r.lv===3;})
+      .forEach(function(r){lv3set[r.p+'|'+r.nm]=1;});
+    var rest={};
+    hs.rows.forEach(function(x){ if(!lv3set[x.p]) (rest[x.p]=rest[x.p]||[]).push(x); });
+    Object.keys(rest).forEach(function(path){
+      var arr=rest[path];
+      arr.sort(function(a,b){
+        var u=a.mc,v=b.mc;
+        if(u!=null&&v!=null&&u!==v)return v-u;
+        if((u==null)!==(v==null))return u==null?1:-1;
+        return String(a.nm).localeCompare(String(b.nm));
+      });
+      var pp=path.split('|'), sec=pp[0], grp=pp[1]||'';
+      groups.push({sic:(grp==='그 밖'?'그 밖':grp), sd:(grp==='그 밖'?'':grp), sec:sec,
+                   secnm:SNM[sec]||sec, ts:arr.map(function(x){return x.nm;}),
+                   mc:null, r:null, rest:true});
+    });
+    groups.sort(function(a,b){return b.ts.length-a.ts.length||String(a.sic).localeCompare(String(b.sic));});
+    var nGrp=(IND.rows||[]).filter(function(r){return r.lv===2;}).length;
+    var solo=groups.filter(function(g){return g.ts.length<2;}).length;
+    var big=groups[0];
+    D={groups:groups, as_of:hs.as_of||hr.as_of||'', n_co:hs.rows.length};
+    D.groups.forEach(function(g){g._secs=secsOf(g);g._split=false;});
     el('tally').innerHTML=
-      ty(j.n_sic,'SIC 분류','같은 518사를 가른 수','var(--ink)')+
-      ty(Object.keys(SEC).length?new Set(Object.values(SEC)).size:'—','GICS 섹터','비교 대상 체계','var(--champ)')+
-      ty(nsplit,'섹터가 섞인 분류','두 체계가 어긋나는 칸','var(--rp)')+
-      ty(solo,'1사뿐인 분류','이만큼은 사실상 개별 종목','var(--marg)');
+      ty(groups.length,'GICS 서브산업','같은 '+hs.rows.length+'사를 가른 수','var(--ink)')+
+      ty(nGrp,'산업그룹','서브산업의 윗단','var(--rp)')+
+      ty((IND.sectors||[]).length,'GICS 섹터','홈·섹터 화면이 쓰는 단','var(--champ)')+
+      ty(solo,'1사뿐인 칸','이만큼은 사실상 개별 종목','var(--marg)');
     el('limits').innerHTML='<b>이 데이터의 성격</b><br>'+
-      '· SIC는 SEC가 부여한 값입니다 — 랩의 분류가 아니고, 랩이 고치지도 않습니다.<br>'+
-      '· 가장 큰 분류는 <code>'+esc(big.sic)+' '+esc(big.sd)+'</code>('+big.ts.length+'사)입니다.<br>'+
-      '· '+solo+'개 분류는 회사가 1곳뿐입니다. 그런 칸의 "산업 평균"은 그 회사 자신이라 의미가 없어, 통계를 내지 않습니다.<br>'+
-      '· <code>7389 Services-Business Services, NEC</code>처럼 NEC(따로 분류되지 않은 것)로 끝나는 코드는 잔여 범주라 내용이 섞여 있습니다.<br>'+
-      '· 기준일 '+esc(j.as_of)+' · 대상 '+j.n_co+'사 · SIC 없음 '+(j.no_sic?j.no_sic.length:0)+'사';
+      '· GICS는 S&P·MSCI의 분류이고 이 랩은 위키백과 S&P 500 표에서 받습니다 — 랩이 만든 분류가 아닙니다.<br>'+
+      '· 가장 큰 칸은 <code>'+esc(big.sic)+'</code>('+big.ts.length+'사 · '+esc(big.secnm)+')입니다.<br>'+
+      '· '+solo+'개 칸은 회사가 1곳뿐입니다. 그런 칸의 "산업 평균"은 그 회사 자신이라 의미가 없어, 통계를 내지 않습니다.<br>'+
+      '· 종목은 <b>시가총액 내림차순</b>입니다. 수익률은 그 칸 종목의 <b>동일가중</b>이라 시총가중 ETF와 다릅니다.<br>'+
+      '· 기준일 '+esc(D.as_of)+' · 대상 '+D.n_co+'사 · 원본 <code>data/home_reco.json</code> · <code>data/home_stocks.json</code>';
     buildSecChips(); render(); onHash();
   })['catch'](function(){
     el('list').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
@@ -674,7 +730,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (foot?'<p class="wfoot">'+foot+'</p>':'')+'</div>';
   }
   function tk(t){return '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a>';}
-  function sicLabel(g){return '<b>'+esc(g.sic)+'</b> '+esc(g.sd);}
+  // 칸 이름 = 서브산업(굵게) + 윗단(섹터 › 산업그룹). SIC 시절엔 코드 + 영문명이었다.
+  function sicLabel(g){return '<b>'+esc(g.sic)+'</b> '+esc(g.secnm||'')+(g.sd?' › '+esc(g.sd):'');}
 
   function renderWatch(FIL,INS){
     if(!D||!D.groups){el('wbody').innerHTML='<div class="note hard">산업 데이터를 불러오지 못했습니다.</div>';return;}
@@ -697,7 +754,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       lone.push({g:g,t:odd,side:side,n:b.length+s.length});
     });
     lone.sort(function(a,b){return b.n-a.n;});
-    h+=card('산업 안에서 혼자 반대 방향','같은 SIC 안에서 타이밍 판정이 나머지와 갈린 종목입니다. '+
+    h+=card('산업 안에서 혼자 반대 방향','같은 서브산업 안에서 타이밍 판정이 나머지와 갈린 종목입니다. '+
       '<b>같은 업을 하는데 신호만 다르다</b>는 뜻이지, 그 종목이 옳다는 뜻이 아닙니다.',
       lone.slice(0,12).map(function(x){
         return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
@@ -788,22 +845,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     if(!h)h='<div class="note">지금 데이터에서는 눈에 띄는 항목이 없습니다 — <b>없으면 없다고 적습니다.</b></div>';
     h+='<div class="note"><b>어떻게 골랐는가</b><br>'+
-       '· 회사가 '+MINCO+'곳 미만인 SIC는 전부 제외했습니다. 1~3사짜리 "산업 평균"은 그 회사 자신입니다.<br>'+
+      '· 회사가 '+MINCO+'곳 미만인 서브산업은 전부 제외했습니다. 1~3사짜리 "산업 평균"은 그 회사 자신입니다.<br>'+
        '· 순위를 매기지 않았습니다. 각 묶음은 조건을 만족한 것을 건수·비중 순으로 늘어놓은 것뿐입니다.<br>'+
        '· 임계값(60%·3건·8건 등)은 화면이 읽히게 하려고 고른 값이고, 검증으로 얻은 값이 아닙니다.</div>';
     el('wbody').innerHTML=h;
   }
 
   el('q').addEventListener('input',function(){q=this.value.trim().toLowerCase();render();});
-  el('splitonly').addEventListener('click',function(){
-    splitOnly=!splitOnly; this.setAttribute('aria-pressed',splitOnly?'true':'false'); render();
-  });
   el('solo').addEventListener('click',function(){
     hideSolo=!hideSolo; this.setAttribute('aria-pressed',hideSolo?'true':'false'); render();
   });
   el('reset').addEventListener('click',function(){
-    q='';selSec={};splitOnly=false;hideSolo=false;
-    el('q').value='';el('splitonly').setAttribute('aria-pressed','false');el('solo').setAttribute('aria-pressed','false');
+    q='';selSec={};hideSolo=false;
+    el('q').value='';el('solo').setAttribute('aria-pressed','false');
     Array.prototype.forEach.call(el('secchips').querySelectorAll('.chip'),function(b){b.setAttribute('aria-pressed','false');});
     render();
   });

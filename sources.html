@@ -287,7 +287,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-filings">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-filings" hidden role="group" aria-label="공시·산업">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단</span></a>
           <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
@@ -464,8 +464,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <tr><th scope="row"><a href="co.html#ins">내부자 거래(Form 4/5)</a></th>
           <td><span class="freetag">무료</span>SEC Form 3/4/5 분기 데이터셋(무인증) — 보통주 거래만. <b>실시간 아님</b>: 소스가 분기 단위라 수십 일 지연이 구조적</td>
           <td class="dt" id="src-ins">—</td><td id="up-src-ins">—</td></tr>
-        <tr><th scope="row"><a href="filings.html">SEC 공시·산업분류</a></th>
-          <td><span class="freetag">무료</span>SEC EDGAR submissions API(무인증) — 8-K Item 코드·SIC 4자리·회사별 제출 이력</td>
+        <tr><th scope="row"><a href="filings.html">SEC 공시</a></th>
+          <!-- ⚠ SIC 4자리를 뺐다(2026-08-03) — 분류를 GICS 로 통일하면서 수집을 끊었다.
+               같은 응답에서 티커→CIK 지도는 계속 만든다(재무 수집의 입력이다). -->
+          <td><span class="freetag">무료</span>SEC EDGAR submissions API(무인증) — 8-K Item 코드·회사별 제출 이력·티커→CIK 지도</td>
           <td class="dt" id="src-fil">—</td><td id="up-src-fil">—</td></tr>
         <tr><th scope="row"><a href="rotation.html">전략 탐색 풀</a></th>
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌) — <b>GitHub Actions가 아니라 사람이 돌리는 갱신</b>입니다. 그래서 며칠 비는 날이 있고, 옆 기준일이 그 사실을 그대로 드러냅니다</td>
