@@ -1261,6 +1261,14 @@ def load_fund(extra_dirs=()):
                                           "asset": asset, "liab": liab,
                                           # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
                                           "cash": series("cash"),
+                                          # 🚨 2026-08-04 에 수집을 시작한 다섯. **여기 안 실으면
+                                          #   화면에도 백테스트에도 없는 것과 같다.** 실측으로 걸렸다 —
+                                          #   이 다섯을 쓰는 규칙을 시험 삼아 돌리니 198개월 전부
+                                          #   후보 0 이었고, 원인이 규칙이 아니라 이 줄의 누락이었다.
+                                          #   수집(refresh_facts)과 배선(여기)은 다른 일이다.
+                                          "ca": series("ca"), "cl": series("cl"),
+                                          "debt": series("debt"), "re": series("re"),
+                                          "dep": series("dep"), "dep_a": annual("dep"),
                                           # 주식수 성장률용: 단위오류만 교정, 분할 이음매는 날짜로 표시
                                           "sh_u": sh_u, "sh_seam": seam,
                                           # 흐름 항목 — 쓰는 쪽에서 ttm2(q, a) 를 쓸 것.
