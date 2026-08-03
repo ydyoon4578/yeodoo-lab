@@ -166,7 +166,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:BEGIN -->
 <style>
   /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
-     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
      현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
   /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
@@ -314,7 +314,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
-          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -484,7 +484,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <div class="card">
     <h3><span class="freetag">무료</span><a href="stocks.html">종목 시그널</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/stocks.json · data/sd/ · data/home_reco.json</span></h3>
-    <p>S&amp;P 500 · NASDAQ 100 512종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
+    <p>S&amp;P 500 · NASDAQ 100 종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
       구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 DB <b>public.index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
       갱신 잡에는 완전성 게이트가 있어 데이터 소스 부분 장애 시 갱신을 중단하고 이전본을 유지합니다.</p>
     <div class="meta"><span><b>기준일</b><span id="d-stk">—</span></span><span><b>공매도 기준일</b><span id="d-si">—</span></span><span><b>구성종목 스냅샷</b><span id="d-memb">—</span></span><span><b>갱신</b><i class="v" id="up2-src-stk">—</i> (GitHub Actions)</span></div>
@@ -539,7 +539,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </div>
 
   <footer>
-    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html#view=runs">전략 랩</a><br>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html">전략 랩</a><br>
     과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>

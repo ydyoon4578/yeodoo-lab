@@ -559,7 +559,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:BEGIN -->
 <style>
   /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
-     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
      현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
   /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
@@ -708,7 +708,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
-          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -879,7 +879,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     <!-- ⑤ 판정 스트립(배포·제한적 유효·기각 건수)과 진단 배너 셋이 여기 있었다.
          2026-08-03 사용자 결정으로 뺀다. 셋 다 갈 곳이 있다 —
-           · 판정 건수 → explorer.html#view=runs (스트립이 걸던 바로 그 링크다)
+           · 판정 건수 → explorer.html (스트립이 걸던 바로 그 링크다)
            · 세 질문   → 내비 '전략' 묶음의 지표별 타이밍·스크리너에 기각 배지가 붙어 있고,
                         운용사 복제 진단은 푸터에도 있다. 어느 쪽도 고아가 되지 않는다.
          ⚠ verdicts.json 페치는 **남긴다** — 푸터의 '기각 아카이브 n건'(#ft-arc)이 그걸 읽는다.
@@ -888,7 +888,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </div>
 
   <footer>
-    <a href="explorer.html#view=runs">전략 랩</a><span id="ft-arc"></span> · <a href="guru17.html">운용사 복제 진단</a> · <a href="sources.html">데이터 출처·기준일</a> · <a href="method.html">등급·판정 규약</a> · <a href="roadmap.html">만들지 않은 것</a> · <a href="updates.html">갱신 기록</a> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
+    <a href="explorer.html">전략 랩</a><span id="ft-arc"></span> · <a href="guru17.html">운용사 복제 진단</a> · <a href="sources.html">데이터 출처·기준일</a> · <a href="method.html">등급·판정 규약</a> · <a href="roadmap.html">만들지 않은 것</a> · <a href="updates.html">갱신 기록</a> · <a href="kb.html" rel="nofollow">BK</a><span class="lockmark" title="열람 암호 필요">🔒</span>
   </footer>
 </div>
 
@@ -947,7 +947,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // ── 판정 원장 ────────────────────────────────────────────────
   // 홈의 '전략' 섹션 블록은 2026-07-26에 뺐고, 그 자리를 대신하던 판정 스트립 한 줄도
-  // 2026-08-03 에 뺐다(사용자 결정) — 둘 다 되살리지 않는다. 건수는 explorer.html#view=runs
+  // 2026-08-03 에 뺐다(사용자 결정) — 둘 다 되살리지 않는다. 건수는 explorer.html
   // 가 대표한다.
   // 남는 것은 푸터의 '기각 아카이브 n건' 하나다. 라벨을 붙여 둔 이유는 그대로 유효하다 —
   // 숫자만 링크 텍스트에 붙어 있으면 '전략 랩 44건'으로 읽히는데, 44는 랩이 돌린 규칙 수가

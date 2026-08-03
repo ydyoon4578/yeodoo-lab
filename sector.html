@@ -245,7 +245,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:BEGIN -->
 <style>
   /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
-     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
      현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
   /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
@@ -393,7 +393,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
-          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -683,7 +683,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a href="index.html">← 전략 랩 홈</a> · <a href="roadmap.html">만들지 않은 것</a> ·
     <a href="method.html">등급·판정 규약</a> ·
     <a href="regime.html">국가경제 분석</a> ·
-    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
+    <a href="sources.html">데이터 출처·기준일</a>
     <br>집계 원본: <code>data/stocks.json</code>(섹터·플래그·타이밍·컴포지트·재무) · <code>data/regime.json</code>(레짐 판정·섹터 ETF 조건부 성과). 이 페이지는 두 파일을 브라우저에서 읽어 그 자리에서 계산합니다 — 사전 계산된 요약본을 두지 않습니다.
   </footer>
 </div>

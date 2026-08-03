@@ -362,10 +362,10 @@ def main():
            None if s_nf is None else rnd(1 - s_nf / 100, 3)),
     ]
 
-    # b200: 자체 512종목 패널(data/stocks.json의 '200일이탈' 플래그로 역산)
+    # b200: 자체 유니버스 패널(data/stocks.json의 '200일이탈' 플래그로 역산)
     b200 = {"key": "b200", "label": "시장 폭(200일선 위 비율)", "raw": None, "raw_fmt": "—", "pctl": None,
             "score": None, "weight": 0.0, "contrib": 0.0,
-            "desc": "S&P 500 512종목 중 200일 이동평균 위 비율. 현 구성종목 기준이라 생존편향 존재, 5년 표본으로 예측력 검증 실패 — 점수 미반영.",
+            "desc": "유니버스(S&P 500 · NASDAQ 100) 중 200일 이동평균 위 비율. 현 구성종목 기준이라 생존편향 존재, 5년 표본으로 예측력 검증 실패 — 점수 미반영.",
             "as_of": ld}
     try:
         sj = json.load(open(STOCKS, encoding="utf-8"))
@@ -415,7 +415,7 @@ def main():
             {"key": "hyg_ief", "name": "HYG, IEF",         "provider": "yfinance",                    "since": "2007-04-11"},
             {"key": "rsp_spy", "name": "RSP, SPY",         "provider": "yfinance",                    "since": "2003-05-01"},
             {"key": "nfci",    "name": "Chicago Fed NFCI", "provider": "FRED NFCI",                   "since": "1971-01-08"},
-            {"key": "b200",    "name": "자체 512종목 패널", "provider": "yeouido-lab",                  "since": "2022-05-02"},
+            {"key": "b200",    "name": "자체 유니버스 패널", "provider": "yeouido-lab",                  "since": "2022-05-02"},
         ],
         "note": ("이 지수는 '현재 시장이 얼마나 겁먹었는가'를 요약한 상태 지표이며 수익 예측 신호가 아닙니다. "
                  "자체 백테스트 결과 (1) 극단공포 구간의 이후 60일 수익은 평균보다 높았으나 위험(변동성·낙폭)도 약 3배여서 "
