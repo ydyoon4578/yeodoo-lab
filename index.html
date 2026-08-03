@@ -56,7 +56,6 @@
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
-  .tnum{font-variant-numeric:tabular-nums}
   a{color:inherit}
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
 
@@ -92,7 +91,6 @@
   /* 칸(.mkslot)은 항상 셋이다 — 내용이 도착한 것만 채운다. 래퍼가 생기면서 stretch 로
      높이가 맞던 성질이 카드에서 래퍼로 옮겨가므로 여기서 되돌려 준다. */
   .mkgrid>.mkslot{display:flex;flex-direction:column}
-  .mkgrid>.mkslot>.card{flex:1}
   /* ⚠ .secrow 한 벌(섹터·산업 카드의 줄)이 여기 있었다 — 2026-08-03 에 그 둘이 표로
      옮겨가면서(#mktbl) 쓰는 곳이 없어졌다. 표는 .sttbl 을 그대로 쓴다. */
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -134,25 +132,10 @@
      content를 자손으로 못 갖는다. 카드 전체 클릭감은 제목 링크를 카드 크기로 늘려 유지하고,
      details는 z-index로 그 위에 올린다(아래 .card details.more). */
   .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
-  .card.lk:hover{border-color:var(--accent);transform:translateY(-2px)}
-  .card .ch a.cl{color:inherit;text-decoration:none}
-  .card.lk .ch a.cl::after{content:"";position:absolute;inset:0;border-radius:12px}
-  .card .ch{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
-  .card .cv{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--edge,var(--ink));margin-top:6px;line-height:1.2}
-  .card .cd{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.55}
-  .card .cx{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:8px;display:flex;gap:9px;flex-wrap:wrap}
   .axis{font-family:var(--mono);font-size:10px;font-weight:700;border-radius:5px;padding:2px 7px;color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent)}
-  .cbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 7px;margin-top:9px;display:inline-block}
 
   /* 지금 시장 — 글 대신 그림·표로 (2026-07-26). 설명은 접기로 내린다. */
   .card .spk{display:block;width:100%;height:38px;margin:9px 0 0}
-  .card .mtbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;margin-top:9px}
-  .card .mtbl td{padding:3px 0;border-top:1px solid var(--line-soft);color:var(--muted);white-space:nowrap}
-  .card .mtbl td:last-child{text-align:right;color:var(--ink);font-weight:700}
-  .card .mtbl tr:first-child td{border-top:0}
-  .card .bar{margin:10px 0 0;height:9px;border-radius:5px;background:color-mix(in srgb,var(--muted) 20%,transparent);overflow:hidden}
-  .card .bar>i{display:block;height:100%;background:var(--edge,var(--accent));border-radius:5px}
-  .card .barl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px}
   /* 국면 이력 띠 — 최근 3년을 월 단위 블록으로. 지금이 어디쯤인지 한눈에 보인다 */
   /* ── 게이지 ── 0~100 눈금 위의 위치. CNN Fear & Greed 가 쓰는 방식을 가져왔다 —
      숫자만 있으면 '68' 이 높은지 낮은지 모르지만, 띠 위의 점은 볼 필요도 없이 읽힌다.
@@ -164,30 +147,13 @@
   .gauge{--g1:var(--line);--g2:var(--line);--g3:var(--line);--g4:var(--line);--g5:var(--line);
        margin:9px 0 0;height:10px;border-radius:6px;position:relative;
        background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5))}
-  .gauge>i{position:absolute;top:-3px;width:4px;height:16px;border-radius:2px;
-       background:var(--ink);box-shadow:0 0 0 2px var(--panel);transform:translateX(-2px)}
-  .gauge>b{position:absolute;top:-2px;width:1px;height:14px;background:var(--panel);opacity:.5}
-  .gaugel{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;
-       color:var(--muted);margin-top:5px}
-  .gaugel span:nth-child(2){opacity:.7}
   /* 종합 한 줄 — 네 카드를 각자 읽고 머리로 합치게 두지 않는다. 심리와 폭이 어긋나는
      경우가 이 섹션에서 가장 말할 값어치가 있는 것이라(소수가 끄는 장세) 그것을 문장으로 낸다. */
   .mksum{margin:0 0 12px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;
        background:var(--panel);border-left:3px solid var(--edge,var(--accent));
        font-size:12.5px;color:var(--ink-2);line-height:1.6}
-  .mksum b{color:var(--ink)}
-  .mksum .mkchips{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;
-       font-family:var(--mono);font-size:11px;color:var(--muted)}
-  .mksum .mkchips b{color:var(--edge,var(--ink));font-weight:700}
-  .card .rstrip{display:flex;gap:1px;margin-top:10px;height:14px;border-radius:4px;overflow:hidden}
-  .card .rstrip i{flex:1;background:var(--c,var(--muted));opacity:.85}
-  .card .rstrip i:last-child{opacity:1;box-shadow:inset 0 0 0 1.5px var(--ink)}
   /* 늘린 제목 링크(.cl::after)가 카드를 덮으므로 details는 그 위로 올려야 눌린다 */
   .card details.more{margin-top:9px;position:relative;z-index:1}
-  .card a.cbadge{position:relative;z-index:1;text-decoration:none}
-  .card a.cbadge:hover{border-color:var(--accent);color:var(--accent)}
-  .card details.more>summary{font-size:11px}
-  .card details.more .mbody{font-size:11.5px;color:var(--ink-2);line-height:1.6}
   /* 국면별 성과 · 주간 일정 (2026-07-26) — 글 대신 표·막대 */
   .skel2{padding:14px 2px;color:var(--muted);font-size:12.5px}
   .rott td.nm{font-family:var(--sans);font-size:12px;color:var(--ink);font-weight:600;width:118px}
@@ -408,7 +374,7 @@
        overflow:hidden;text-overflow:ellipsis}
   .tk2[data-nm]:hover::after,.tk2[data-nm]:focus::after,
   .tip[data-nm]:hover::after,.tip[data-nm]:focus::after{opacity:1}
-  @media(max-width:700px){ .tk2[data-nm]::after{left:0;transform:none} }
+  @media(max-width:700px){ .tk2[data-nm]::after{left:0;transform:none}}
   /* ── 등급 배지 · 레이팅 필(SA 시그니처, 도구 페이지로 확장 예정) ── */
   .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
@@ -435,8 +401,7 @@
   .asofrow .axc em{font-style:normal;font-size:9.5px;color:var(--muted);margin-left:6px}
   @media(max-width:560px){
     .asofrow{grid-template-columns:1fr}
-    .asofrow .ad{flex-direction:row;align-items:baseline;gap:8px}
-  }
+    .asofrow .ad{flex-direction:row;align-items:baseline;gap:8px}}
 
   /* ── 도구 디렉터리(HOMEDIR 블록이 쓰는 클래스) ───────────────── */
   .ldtally{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
@@ -938,15 +903,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     </section>
 
-    <!-- ② 시장 -->
-    <section id="s-market" aria-labelledby="mk-h">
-      <p class="lbl" id="mk-h">지금 시장<a class="more2" href="market.html">시장 대시보드 →</a></p>
-      <div class="mksum" id="mksum" hidden></div>
-      <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
-      <!-- ⚠ 섹터·산업 표가 여기 있었다 — 2026-08-03 에 위 '기간별 수익률' 표 안으로
-           들어갔다(사용자 요청). 지수(SPY·QQQ) 아래, 스타일 ETF 위가 그 자리다.
-           표가 둘이면 같은 구간·같은 색인데도 열이 따로 놀고 스크롤도 따로 났다. -->
-    </section>
 
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
@@ -1091,9 +1047,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     MK.main=h.as_of||null;
     // 폭 카드는 국면·심리와 같은 그리드에 붙는다. 산업은 breadth 밖(문서 최상위)에 있으므로
     // 따로 얹는다 — '폭'이 아니라 다른 축이라 그쪽에 넣지 않았다.
-    if(h.breadth){
-      MK.bd=h.breadth; MK.iv=h.industry||null; MK.ivd=h.as_of||'';
-      renderMarket();
+    // ⚠ 전에는 breadth 가 있을 때만 산업을 얹었다 — 폭 카드와 한 묶음이었기 때문이다.
+    //   그 카드가 빠졌으므로(2026-08-03) 산업 자체를 조건으로 본다.
+    if(h.industry){
+      MK.iv=h.industry; MK.ivd=h.as_of||'';
       // 섹터·산업은 위 기간별 수익률 표 **안**에 들어간다. 그 표가 이미 그려졌다면
       // 다시 그려야 이 자료가 자리를 찾는다(둘의 도착 순서는 정해져 있지 않다).
       if(MK.board)drawStyle(null);
@@ -1117,8 +1074,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
-    // 폭 카드는 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 칸이 영영 '불러오는 중'이다
-    MK.bd=false; MK.iv=false; renderMarket(); if(MK.board)drawStyle(null);
+    // 섹터·산업은 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 줄이 영영 안 선다
+    MK.iv=false; if(MK.board)drawStyle(null);
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
@@ -1149,19 +1106,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }).catch(stkFail);
   }
 
-  // ── ④ 지금 시장(국면·심리) ───────────────────────────────────
-  // 색은 토큰만 가리킨다 — hex를 여기 박으면 다크 팔레트를 못 따라간다(--edge에 var() 참조를 넣어도 정상 해석된다)
-  var RGC={Goldilocks:'var(--rg-gold)',Recovery:'var(--rg-recov)',SoftLanding:'var(--rg-soft)',LateCycle:'var(--rg-late)',Overheating:'var(--rg-over)',Stagflation:'var(--rg-stag)',Recession:'var(--rg-rec)'};
+  // 국면 이름 한글 — 섹터·산업 표의 국면별 성과 줄이 쓴다(mkSegRows).
+  // ⚠ 색·심리 어휘 상수는 홈 '지금 시장'과 함께 나갔다(2026-08-03). market.html 에 있다.
   var RGKO={Goldilocks:'골디락스',Recovery:'회복',SoftLanding:'연착륙',LateCycle:'후기 사이클',Overheating:'과열',Stagflation:'스태그플레이션',Recession:'침체'};
-  // 색은 냉(공포)↔온(탐욕) 축만 — 탐욕을 초록으로 칠하면 '탐욕=좋음'으로 읽히는데 검증은 반대다.
-  // 3축 값(refresh_regime.py의 어휘 전부) — 새 값이 오면 원문을 그대로 보여준다(조용히 빈칸이 되지 않게)
-  var AXKO={EXPANSION:'확장',SLOWING:'둔화',CONTRACTION:'수축',LOW:'낮음',MODERATE:'보통',HIGH:'높음',
-            EASY:'완화',NEUTRAL:'중립',ELEVATED:'경계',STRESSED:'경색'};
-  var SNTC={'극단공포':'var(--sn-xfear)','공포':'var(--sn-fear)','중립':'var(--sn-neut)','탐욕':'var(--sn-greed)','극단탐욕':'var(--sn-xgreed)'};
-  var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
   // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
-  // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
-  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:'',board:null,
+  // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전).
+  // ⚠ rg·sn 은 화면에 안 그린다(홈 '지금 시장'은 2026-08-03 에 뺐다) — 기준일 불일치
+  //   고지(syncAsof)와 눈썹의 'FRED n지표'가 아직 읽으므로 상태로는 남는다.
+  var MK={rg:null,sn:null,main:null,mb:null,iv:null,ivd:'',board:null,
         stk:null,        // 종목 단(지연 로딩). null=아직 안 받음 · []=요청 중이거나 실패
         open:{}};        // 펼쳐 둔 노드 — 다시 그려도 그대로 두려고 밖에 둔다
 
@@ -1240,230 +1192,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!MK.main)return;   // 기준일 미확정(로딩 중·종목 실패) → 비교 자체를 하지 않는다
     if(MK.rg&&MK.rg.as_of&&MK.rg.as_of!==MK.main)noteAdd('시장국면 '+MK.rg.as_of);
     if(MK.sn&&MK.sn.as_of&&MK.sn.as_of!==MK.main)noteAdd('시장심리 '+MK.sn.as_of);
-  }
-  // ── 그림 도우미 ── 글로 설명하던 것을 그림으로 바꾼다(2026-07-26).
-  function spark(vals,w_,h_,lo_,hi_){
-    var v=(vals||[]).filter(function(x){return x!=null&&x===x;});
-    if(v.length<3)return '';
-    var lo=(lo_!=null?lo_:Math.min.apply(null,v)), hi=(hi_!=null?hi_:Math.max.apply(null,v));
-    if(!(hi>lo))return '';
-    var d=v.map(function(x,i){
-      return (i?'L':'M')+((i/(v.length-1))*w_).toFixed(1)+' '+(h_-((x-lo)/(hi-lo))*h_).toFixed(1);
-    }).join(' ');
-    // 중립선(50)은 심리 점수에서만 뜻이 있다 — lo/hi를 준 경우에만 그린다
-    var mid=(lo_!=null&&hi_!=null)?('<line x1="0" y1="'+(h_-((50-lo)/(hi-lo))*h_).toFixed(1)+
-      '" x2="'+w_+'" y2="'+(h_-((50-lo)/(hi-lo))*h_).toFixed(1)+
-      '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>'):'';
-    return '<svg class="spk" viewBox="0 0 '+w_+' '+h_+'" preserveAspectRatio="none" aria-hidden="true">'+
-      mid+'<path d="'+d+'" fill="none" stroke="var(--edge,var(--accent))" stroke-width="1.6"/></svg>';
-  }
-  function mtbl(rows){
-    var r=rows.filter(Boolean).map(function(x){return '<tr><td>'+esc(x[0])+'</td><td>'+x[1]+'</td></tr>';}).join('');
-    return r?'<table class="mtbl"><tbody>'+r+'</tbody></table>':'';
-  }
-  function fold(sum,body){
-    return body?'<details class="more"><summary>'+esc(sum)+'</summary><div class="mbody">'+body+'</div></details>':'';
-  }
-
-  // 세 칸을 **항상** 예약한다. 전에는 도착한 것만 이어 붙여 innerHTML 을 통째로 갈아끼웠고,
-  // 이 함수가 세 곳(home_reco·regime·sentiment)에서 각각 불리므로 그때마다
-  //   · 카드 폭이 1156 → 571 → 376px 로 두 번 줄어 화면이 두 번 재배치되고
-  //   · **사용자가 열어 둔 details(한계 고지)가 매번 닫혔다.**
-  // 칸은 한 번만 만들고, 내용이 바뀐 칸만 다시 그린다.
-  var MKSK='<div class="card"><div class="ch"><span>불러오는 중…</span></div></div>';
-  function mkFail(t){return '<div class="card"><div class="ch"><span>'+esc(t)+'을 불러오지 못했습니다</span></div></div>';}
-  // 게이지 한 줄. v 를 [lo,hi] 위의 위치로 찍는다. zones 는 왼쪽부터의 색 다섯.
-  // ticks 는 눈금(값 배열) — 밴드의 경계를 눈으로 잡게 한다.
-  function gauge(v,lo,hi,zones,ticks,labels){
-    if(v==null||v!==v)return '';
-    var pct=Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
-    var z=zones.map(function(c,i){return '--g'+(i+1)+':'+c;}).join(';');
-    return '<div class="gauge" style="'+z+'">'+
-      (ticks||[]).map(function(t){
-        return '<b style="left:'+((t-lo)/(hi-lo)*100).toFixed(1)+'%"></b>';}).join('')+
-      '<i style="left:'+pct.toFixed(1)+'%"></i></div>'+
-      '<div class="gaugel">'+(labels||[]).map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
-  }
-  // 종합 한 줄 — **네 카드를 각자 읽고 머리로 합치게 두지 않는다.**
-  // 이 섹션에서 가장 말할 값어치가 있는 것은 심리와 폭이 어긋나는 경우다:
-  // 심리가 뜨거운데 폭이 안 받치면 소수 대형주가 끄는 장세이고, 그 판정은 두 카드를
-  // 나란히 놓는 것만으로는 안 나온다(CNN Fear & Greed 해설이 같은 지적을 한다).
-  // 🚨 상태 요약이지 예측이 아니다 — 문장 끝에 그 말을 함께 낸다.
-  function drawMkSum(){
-    var box=el('mksum'); if(!box)return;
-    var rg=MK.rg, sn=MK.sn, b=MK.bd, mb=MK.mb;
-    if(!rg||!sn||!b||!b.n){box.hidden=true;return;}
-    var ko=(rg.regime&&RGKO[rg.regime.label])||'', sc=sn.score;
-    var den=b.n_ma200||b.n, wide=den?100*b.above200/den:null;
-    var hot=sc!=null&&sc>=60, cold=sc!=null&&sc<=40;
-    var brd=wide!=null&&wide>=55, nar=wide!=null&&wide<45;
-    var msg;
-    if(hot&&nar)msg='심리는 뜨거운데 <b>폭이 안 받칩니다</b> — 소수 종목이 끄는 장세입니다.';
-    else if(cold&&brd)msg='심리는 얼어 있는데 <b>폭은 버티고 있습니다</b> — 지수보다 종목이 낫습니다.';
-    else if(hot&&brd)msg='심리와 폭이 <b>같은 방향</b>입니다 — 오름세가 넓게 퍼져 있습니다.';
-    else if(cold&&nar)msg='심리와 폭이 <b>같이 약합니다</b> — 오르는 종목 자체가 적습니다.';
-    else msg='심리와 폭이 <b>어느 쪽으로도 치우치지 않았습니다</b>.';
-    var cm={}; ((mb&&mb.credit)||[]).forEach(function(x){cm[x.t]=x;});
-    var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
-    var sp=(hy!=null&&ig!=null)?(hy-ig):null;
-    var c=(rg.regime&&RGC[rg.regime.label])||'var(--accent)';
-    box.hidden=false;
-    box.setAttribute('style','--edge:'+c);
-    box.innerHTML='<span>'+(rg.regime&&rg.regime.emoji||'')+' <b>'+esc(ko)+'</b> 국면 · '+msg+
-      ' <span style="color:var(--muted)">지금 상태를 적은 것이지 앞을 맞히는 값이 아닙니다.</span></span>'+
-      '<div class="mkchips">'+
-      '<span>심리 <b>'+(sc==null?'—':Math.round(sc))+'</b> '+esc(sn.label||'')+'</span>'+
-      '<span>폭 <b>'+(wide==null?'—':wide.toFixed(1)+'%')+'</b> 200일선 위</span>'+
-      (sp==null?'':'<span>위험선호 <b>'+(sp>0?'+':'')+sp.toFixed(2)+'%p</b> 하이일드−투자등급</span>')+
-      '<span>기준 '+esc(rg.as_of||'')+'</span></div>';
-  }
-  function renderMarket(){
-    var w=el('marketcards'); if(!w)return;
-    if(!w.getAttribute('data-slots')){
-      // 다섯 칸 — 앞 셋은 시장 전체의 상태(국면·심리·폭)이고, 뒤 둘은 **그 시장을 쪼갠 것**
-      // 이다(사용자 요청 2026-08-02 "시장을 좀 더 세분화해서 보고싶어").
-      //   sc 섹터   어디가 움직였나 · 그 움직임이 넓은가
-      //   rk 위험선호 돈이 위험 쪽으로 갔나 · 금리 곡선은 어디에 있나
-      // 둘 다 **추가 요청이 0회**다 — market_board.json 은 위 스타일 표가 이미 받고 있고
-      // 그 안의 sector·credit·rates 를 여태 아무도 안 쓰고 있었다(5KB 중 절반).
-      w.innerHTML='<div class="mkslot" data-k="rg"></div><div class="mkslot" data-k="sn"></div>'+
-                  '<div class="mkslot" data-k="bd"></div><div class="mkslot" data-k="rk"></div>';
-      w.setAttribute('data-slots','1');
-    }
-    function put(k,html){
-      var c=w.querySelector('.mkslot[data-k="'+k+'"]'); if(!c)return;
-      // 같은 내용이면 손대지 않는다 — 다시 그리면 열어 둔 details 가 닫힌다.
-      if(c.getAttribute('data-h')===html)return;
-      c.setAttribute('data-h',html); c.innerHTML=html;
-    }
-    var h='', rg=MK.rg, sn=MK.sn;
-    if(rg&&rg.regime&&rg.regime.label){
-      var c=RGC[rg.regime.label]||'var(--muted)', ko=RGKO[rg.regime.label]||rg.regime.label, R=rg.regime;
-      h='<div class="card lk" style="--edge:'+c+'">'+
-        '<div class="ch"><a class="cl" href="regime.html">현재 국면</a><span>'+esc(rg.as_of||'')+'</span></div>'+
-        '<div class="cv">'+(R.emoji||'')+' '+esc(ko)+'</div>'+
-        // 최근 3년 국면 이력 — '지금이 어디쯤인지'는 글보다 띠가 빠르다
-        (function(){
-          var hh=(rg.history||[]).slice(-36);
-          return hh.length?('<div class="rstrip">'+hh.map(function(x){
-            return '<i style="--c:'+(RGC[x.r]||'var(--muted)')+'" title="'+esc(x.dt)+' '+esc(RGKO[x.r]||x.r)+'"></i>';
-          }).join('')+'</div><div class="barl"><span>'+esc((hh[0]||{}).dt||'')+'</span><span>최근 36개월</span></div>'):'';
-        })()+
-        mtbl([['성장',esc(AXKO[R.growth]||R.growth||'—')],
-              ['물가',esc(AXKO[R.inflation]||R.inflation||'—')],
-              ['금융',esc(AXKO[R.financial]||R.financial||'—')]])+
-        fold('이 국면을 어떻게 읽나',
-             (R.desc?'<p>'+esc(R.desc)+'</p>':'')+(R.strategy?'<p>'+esc(R.strategy)+'</p>':''))+
-        '</div>';
-      put('rg',h);
-    } else { put('rg', rg===false?mkFail('시장 국면'):MKSK); }
-    if(sn&&sn.score!=null&&SNTE[sn.label]){
-      var sc=SNTC[sn.label]||'var(--muted)', p=sn.prev||{};
-      function dl(k,lab){var v=p[k]; return v==null?'':'<span>'+lab+' '+Math.round(v)+'</span>';}
-      h='<div class="card lk" style="--edge:'+sc+'">'+
-        '<div class="ch"><a class="cl" href="regime.html#sent">시장 심리</a><span>'+esc(sn.as_of||'')+'</span></div>'+
-        '<div class="cv">'+SNTE[sn.label]+' '+esc(sn.label)+' <span class="tnum">'+Math.round(sn.score)+'</span></div>'+
-        // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다.
-        // ⚠ 자르지 않으면 이력 전량(2,765점 · 11년)이 320px 에 들어가 화소당 8.6점이 된다.
-        //   그건 곡선이 아니라 덩어리다. 지금은 build/home_market.py 가 끝 750점(3년 —
-        //   옆 국면 띠 36개월과 같은 창)만 실어 준다. spark 는 x 를 등간격 인덱스로 그리므로
-        //   점마다 날짜가 필요 없고, 라벨용 시작 날짜 하나(hist_start)만 함께 온다.
-        //   ⚠ 자르는 창을 바꾸려면 build/home_market.py 의 SN_HIST 와 같이 바꿀 것.
-        // 0~100 위의 위치를 먼저 보이고, 이력 곡선은 그 아래에 둔다. 숫자만으로는
-        // 68 이 높은지 모르지만 띠 위의 점은 볼 필요도 없이 읽힌다(CNN Fear & Greed 방식).
-        gauge(sn.score,0,100,
-              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
-               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
-              [25,45,55,75],['극단 공포 0','중립 50','극단 탐욕 100'])+
-        spark(sn.scores||[],320,34,0,100)+
-        '<div class="barl"><span>'+esc(sn.hist_start||'')+'</span>'+
-        '<span>3년 이력 · 점선 50</span></div>'+
-        mtbl([p.d1!=null?['전일',Math.round(p.d1)]:null,
-              p.w1!=null?['1주 전',Math.round(p.w1)]:null,
-              p.m1!=null?['1개월 전',Math.round(p.m1)]:null,
-              sn.score_pctl!=null?['이력 백분위',Math.round(sn.score_pctl*100)+'%']:null])+
-        fold('이 점수로 무엇을 알 수 있나',
-             '<p>VIX 수준·기간구조·MOVE를 합성한 <b>상태 요약</b>입니다 — 수익 예측 신호가 아닙니다.</p>'+
-             (sn.weight_available!=null&&sn.weight_available<0.999?
-               '<p style="color:var(--marg)">일부 지표 결측 — 가중 가용 '+Math.round(sn.weight_available*100)+'%</p>':''))+
-        '</div>';
-      put('sn',h);
-    } else { put('sn', sn===false?mkFail('시장 심리'):MKSK); }
-    // ③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'. home_reco.json의 정수 몇 개로 만든다
-    //    (이것 때문에 홈이 stocks.json raw 691KB / gz 199KB 를 받게 하지 않는다).
-    var b=MK.bd;
-    if(b&&b.n){
-      // 분모는 n(전체)이 아니라 n_ma200(200일선이 산출되는 종목)이다.
-      // 이력이 짧아 200일선이 없는 종목은 '이탈' 플래그가 안 붙을 뿐인데 여집합으로 세면 '위'로 잡힌다.
-      var den=b.n_ma200||b.n, pct=Math.round(1000*b.above200/den)/10, f=b.flags||{};
-      var wide=pct>=50;
-      h='<div class="card lk" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
-        '<div class="ch"><a class="cl" href="market.html">시장 폭</a><span>'+b.n+'종목</span></div>'+
-        '<div class="cv"><span class="tnum">'+pct.toFixed(1)+'%</span> 200일선 위</div>'+
-        // 50% 가 갈림선이다 — 막대만 있으면 '67.5%' 가 넓은 건지 눈으로 안 잡힌다.
-        gauge(pct,0,100,
-              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
-               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
-              [30,45,55,70],['좁다 0%','절반 50%','넓다 100%'])+
-        '<div class="barl"><span>200일선 위 '+b.above200+'</span><span>아래 '+(den-b.above200)+'</span></div>'+
-        mtbl([['상승추세',f['상승추세']!=null?f['상승추세']:'—'],
-              ['52주 돌파',f['52주돌파']!=null?f['52주돌파']:'—'],
-              ['변동성 수축',f['변동수축']!=null?f['변동수축']:'—'],
-              ['과밀 숏',f['과밀숏']!=null?f['과밀숏']:'—']])+
-        fold('폭을 왜 보나',
-             '<p>지수가 아니라 <b>몇 종목이 어느 상태인가</b>입니다. 소수 대형주가 끌어올린 장세인지 '+
-             '여기서 갈립니다.</p>'+(b.n_partial?'<p>이력이 짧아 200일선을 못 내는 '+b.n_partial+
-             '종목은 분모에서 뺐습니다.</p>':''))+
-        '<a class="cbadge" href="#s-today">오늘의 신호로 ↓</a></div>';
-      put('bd',h);
-    } else { put('bd', b===false?mkFail('시장 폭'):MKSK); }
-    // ⚠ 섹터·산업 카드가 여기 있었다 — 2026-08-03 에 표(#mktbl · drawMkTbl)로 옮겼다.
-    //   카드 폭 300px 에 구간 7칸이 안 들어가 1개월 하나만 보여 주고 있었고, 그러면서
-    //   PER·폭까지 한 줄에 밀어 넣어 셋 다 눌렸다. 수익률은 표가 맞는 그릇이다.
-    //   PER·폭·국면별 성과는 버리지 않았다 — 표의 첫 칸 툴팁으로 옮겼다(drawMkTbl 참조).
-    // ⑤ 위험선호 — 주식 안에서만 보면 놓치는 축. 같은 하루에 하이일드가 투자등급을 이기면
-    //    돈이 위험 쪽으로 간 것이고, 금리 곡선은 그 배경을 말한다.
-    //    ⚠ 머리 숫자는 하이일드−투자등급이다. 두 채권의 **금리 민감도가 다르다**(LQD 듀레이션이
-    //      길다) — 금리가 내리면 LQD 가 더 오르므로 이 차이는 순수한 신용 스프레드가 아니다.
-    //      그 사실을 fold 에 적는다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아니다.
-    // ⚠ mb 는 위에서 지운 섹터 카드가 선언하고 있던 것이다. 그 블록을 들어내면서 함께
-    //   사라져 renderMarket 이 여기서 ReferenceError 로 죽었다(위험선호 카드와 아래
-    //   drawMkTbl 이 통째로 안 그려졌다). 이 줄에서 다시 잡는다.
-    var mb=MK.mb;
-    if(mb&&mb.credit&&mb.credit.length){
-      var cm={}; mb.credit.forEach(function(x){cm[x.t]=x;});
-      var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
-      var sp=(hy!=null&&ig!=null)?(hy-ig):null;
-      var rt=mb.rates||{}, cv=rt.curve||{}, tn=rt.tenor||[];
-      var t10=null; tn.forEach(function(x){if(x.t==='DGS10')t10=x;});
-      h='<div class="card lk" style="--edge:'+(sp==null?'var(--muted)':(sp>=0?'var(--deploy)':'var(--hot)'))+'">'+
-        '<div class="ch"><a class="cl" href="macro.html">위험선호</a><span>'+esc(mb.as_of||'')+'</span></div>'+
-        '<div class="cv">'+(sp==null?'—':(sp>0?'+':'')+'<span class="tnum">'+sp.toFixed(2)+'</span>%p')+
-        ' '+(sp==null?'':(sp>=0?'위험선호':'위험회피'))+'</div>'+
-        // 0 을 가운데 두고 ±3%p 안에서 위치를 찍는다. 부호만으로는 '살짝'과 '많이'가 안 갈린다.
-        gauge(sp==null?null:Math.max(-3,Math.min(3,sp)),-3,3,
-              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
-               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
-              [-1.5,-0.3,0.3,1.5],['위험회피 −3%p','0','위험선호 +3%p'])+
-        '<div class="barl"><span>하이일드 − 투자등급</span><span>1개월</span></div>'+
-        mtbl(mb.credit.map(function(x){
-          var v=(x.r||{})['1M'];
-          return [esc(x.n), (v==null?'—':(v>0?'+':'')+v.toFixed(2)+'%')];
-        }))+
-        (tn.length?('<div class="barl" style="margin-top:9px"><span>국채 금리</span><span>'+
-          esc(rt.as_of||'')+'</span></div>'+
-          mtbl([t10?['10년', t10.lv.toFixed(2)+'%']:null,
-                cv.s10_2!=null?['곡선 10년−2년', (cv.s10_2>0?'+':'')+cv.s10_2+'bp']:null,
-                cv.s10_3m!=null?['곡선 10년−3개월', (cv.s10_3m>0?'+':'')+cv.s10_3m+'bp']:null])):'')+
-        fold('이 숫자를 어떻게 읽나',
-             '<p>하이일드가 투자등급을 이기면 돈이 위험 쪽으로 간 것입니다. 다만 두 채권은 '+
-             '<b>금리 민감도가 다릅니다</b> — 투자등급(LQD)이 듀레이션이 길어 금리가 내리면 '+
-             '더 오릅니다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아닙니다.</p>'+
-             '<p>곡선이 음수면 장기금리가 단기보다 낮은 <b>역전</b>입니다.</p>')+
-        '</div>';
-      put('rk',h);
-    } else { put('rk', mb===false?mkFail('위험선호'):MKSK); }
-    drawMkSum();
   }
   // 섹터·산업 성과표 — 위 스타일 표(#sttbl)와 **같은 표 형식**이다(사용자 요청 2026-08-03).
   // 같은 .sttbl · 같은 stCell · 같은 ST_HZ 라 열이 저절로 맞고 색 규칙도 하나다.
@@ -1628,7 +1356,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   getj('home_market.json').then(function(j){
     MK.rg=(j&&j.regime)||false;
     MK.sn=(j&&j.sentiment)||false;
-    renderMarket(); syncAsof(); staleCheck();
+    syncAsof(); staleCheck();
     var n=j&&j.regime&&j.regime.n_indicators;
     if(n){EB.ind=n; setEyebrow();}
   });
@@ -2113,10 +1841,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               _etf:tj.etf_sharpe||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
-      // 같은 파일이 위 스타일 표와 아래 섹터·위험선호 카드를 함께 먹인다 — 요청은 한 번이다.
-      // ⚠ 못 받았을 때도 renderMarket 을 부른다. 그래야 그 두 칸이 '불러오는 중…' 으로
-      //   영원히 남지 않고 실패 표시로 바뀐다(MKSK ↔ mkFail 판정이 null/false 로 갈린다).
-      MK.mb=a[2]||false; renderMarket();
+      // market_board 는 기간별 수익률 표의 지수 줄(SPY·QQQ·DIA·IWM)과 섹터 줄을 먹인다.
+      MK.mb=a[2]||false;
       return a[2];
     }).then(drawStyle);
 
