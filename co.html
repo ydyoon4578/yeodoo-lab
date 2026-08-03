@@ -605,7 +605,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ══ #est — 유일하게 살아있는 탭 ══════════════════════════════════════ -->
   <section id="est" class="panel" aria-labelledby="est-h">
-    <p class="lbl" id="est-h">실적 및 전망 <span class="sub">출처 yfinance 컨센서스 · 랩의 추정이 아님</span></p>
+    <h2 class="lbl" id="est-h">실적 및 전망 <span class="sub">출처 yfinance 컨센서스 · 랩의 추정이 아님</span></h2>
 
 
     <div id="detail"><div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div></div>
@@ -615,7 +615,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <!-- hidden을 마크업에 두지 않는다: JS가 안 돌면 결핍 사유가 통째로 사라져 '감추지 않고 사유를 적습니다'와
        정반대가 된다. 탭 전환은 body 끝 스크립트의 showTab()이 동기로 잡는다(hidden은 런타임에만 건다). -->
   <section id="fs" class="panel" aria-labelledby="fs-h">
-    <p class="lbl" id="fs-h">재무제표 <span class="sub">출처 SEC EDGAR companyfacts (XBRL) · 회사가 태깅한 값 그대로</span></p>
+    <h2 class="lbl" id="fs-h">재무제표 <span class="sub">출처 SEC EDGAR companyfacts (XBRL) · 회사가 태깅한 값 그대로</span></h2>
     <details class="more"><summary>읽는 법 · 단위</summary><div class="mbody">종목별 <code>data/fx/&lt;티커&gt;.json</code>에서 읽습니다.
       랩이 조정·재분류하지 않습니다. 항목마다 <b>어느 XBRL 태그에서 왔는지</b>를 함께 적는 이유는,
       회사마다 쓰는 태그가 달라 같은 줄이라도 정의가 다를 수 있기 때문입니다.
@@ -630,7 +630,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ══ #ir — SEC EDGAR submissions 수집분 ═══════════════════════════════ -->
   <section id="ir" class="panel" aria-labelledby="ir-h">
-    <p class="lbl" id="ir-h">IR자료실 <span class="sub">출처 SEC EDGAR · 회사가 제출한 원문 링크</span></p>
+    <h2 class="lbl" id="ir-h">IR자료실 <span class="sub">출처 SEC EDGAR · 회사가 제출한 원문 링크</span></h2>
     <details class="more"><summary>EDGAR 원문 링크만 싣는 이유</summary><div class="mbody">종목별 <code>data/fil/&lt;티커&gt;.json</code>에서 읽습니다.
       회사 자체 IR 사이트 주소는 SEC가 주지 않습니다
       (submissions 응답에 <code>investorWebsite</code> 필드가 있긴 하지만 실측 12/12 전부 비어 있었습니다).
@@ -640,7 +640,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ══ #ins — SEC Form 4/5 분기 데이터셋 수집분 ════════════════════════ -->
   <section id="ins" class="panel" aria-labelledby="ins-h">
-    <p class="lbl" id="ins-h">내부자 거래 <span class="sub">출처 SEC Form 4/5 분기 데이터셋 · 실시간 아님</span></p>
+    <h2 class="lbl" id="ins-h">내부자 거래 <span class="sub">출처 SEC Form 4/5 분기 데이터셋 · 실시간 아님</span></h2>
     <details class="more"><summary>무엇이 담기나</summary><div class="mbody">종목별 <code>data/ins/&lt;티커&gt;.json</code>에서 읽습니다.
       임원·이사·10% 이상 주주가 보통주를 사고판 기록입니다(Table I). 파생상품 거래는 담지 않습니다.</div></details>
     <div class="fsctl" id="insctl" hidden>

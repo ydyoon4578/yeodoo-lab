@@ -557,7 +557,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </header>
 
   <section aria-labelledby="pick-h" id="sec-pick">
-    <p class="lbl" id="pick-h">① 종목 선택 <span class="sub">· 티커 또는 회사명</span></p>
+    <h2 class="lbl" id="pick-h">① 종목 선택 <span class="sub">· 티커 또는 회사명</span></h2>
     <p class="lblnote">티커·회사명 일부를 입력하거나 섹터로 좁혀서 고르십시오. 선택하면 그 종목의 상세 파일
       <code>data/sd/&lt;티커&gt;.json</code> 하나만 추가로 받습니다. 주소창의 <code>#t=티커</code>로 바로 열 수도 있습니다.</p>
     <div class="card">
@@ -571,7 +571,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="stock-h" id="sec-stock">
-    <p class="lbl" id="stock-h">② 선택 종목 <span class="sub">· 배지는 커버 종목 안에서의 상대 위치·회계 특이사항</span></p>
+    <h2 class="lbl" id="stock-h">② 선택 종목 <span class="sub">· 배지는 커버 종목 안에서의 상대 위치·회계 특이사항</span></h2>
     <p class="lblnote">배지는 <b>커버 종목 실측 33/67 백분위</b>(상대 위치, 임계는 지표마다 결측을 뺀 표본에서 냅니다 — 지표별 커버율은 ③ 표)와
       몇 가지 회계적 분기점(적자·자본잠식·순현금 등)에서 나옵니다.
       아래 표의 백분위는 <b>섹터 상대</b>라서 모집단이 다릅니다 — 배지와 등급이 서로 다른 인상을 줄 수 있고, 그건 오류가 아니라 모집단 차이입니다.</p>
@@ -579,7 +579,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="met-h" id="sec-metrics">
-    <p class="lbl" id="met-h">③ 재무 지표 <span id="nmet">—종</span> <span class="sub">· 값 · 전체 백분위 · 섹터 백분위 · 등급</span></p>
+    <h2 class="lbl" id="met-h">③ 재무 지표 <span id="nmet">—종</span> <span class="sub">· 값 · 전체 백분위 · 섹터 백분위 · 등급</span></h2>
     <p class="lblnote">막대는 <b>섹터 백분위</b>이며 방향은 언제나 <b>왼쪽=값 낮음 / 오른쪽=값 높음</b>입니다(색은 순서만 나타냅니다).
       등급은 그 위에 지표별 방향을 적용해 매깁니다 — PER은 낮은 쪽이, ROE는 높은 쪽이 A입니다.
       방향이 없거나 우열이 정의되지 않은 지표에는 등급을 주지 않고 그 사유를 적습니다.</p>
@@ -587,14 +587,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="gd-h" id="sec-gdist">
-    <p class="lbl" id="gd-h">④ 등급 분포 <span class="sub">· 개수만 · 합계 점수를 만들지 않는다</span></p>
+    <h2 class="lbl" id="gd-h">④ 등급 분포 <span class="sub">· 개수만 · 합계 점수를 만들지 않는다</span></h2>
     <p class="lblnote">등급이 붙은 지표들의 <b>개수</b>입니다. 이 개수를 더하거나 평균 내 하나의 종합 점수로 만들지 않습니다 —
       랩은 그런 합성값을 검증한 적이 없고, 검증 안 된 합성값은 랭킹 신호처럼 보이기 때문입니다.</p>
     <div class="card" id="gdist"><div class="empty">종목을 고르면 표시됩니다.</div></div>
   </section>
 
   <section aria-labelledby="peer-h" id="sec-peers">
-    <p class="lbl" id="peer-h">⑤ 피어 비교 <span class="sub">· 같은 섹터 종목들 사이의 위치</span></p>
+    <h2 class="lbl" id="peer-h">⑤ 피어 비교 <span class="sub">· 같은 섹터 종목들 사이의 위치</span></h2>
     <p class="lblnote">같은 섹터 커버 종목 안에서 이 종목이 어디쯤인지입니다. 피어 값은 <b><code>data/stocks.json</code>의 요약 필드</b>에서 읽습니다 —
       커버 종목의 상세 파일을 전부 받지 않기 위해서입니다(몇 종목인지는 아래 안내에 데이터에서 읽어 적습니다).
       그래서 <b>요약에 실린 지표만</b> 피어 비교가 가능하고,
@@ -603,7 +603,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="scr-h" id="sec-screens">
-    <p class="lbl" id="scr-h">⑥ 스크린 통과 여부 <span class="sub">· 필터이지 매수 신호가 아니다</span></p>
+    <h2 class="lbl" id="scr-h">⑥ 스크린 통과 여부 <span class="sub">· 필터이지 매수 신호가 아니다</span></h2>
     <p class="lblnote">랩이 사전 계산해 <code>data/stocks.json</code>에 구워 둔 스크린 결과입니다. 판정 계산은
       <code>build/screens_apply.py</code> 한 곳에서만 하고 이 화면은 읽기만 합니다.</p>
     <div class="note" id="scrpolicy"><b>스크린에 대한 랩의 판정</b> — 불러오는 중…</div>
@@ -611,14 +611,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section aria-labelledby="rate-h" id="sec-rates">
-    <p class="lbl" id="rate-h">⑦ 할인율 환경 <span class="sub">· 배경 수치 · 적정 배수를 계산하지 않는다</span></p>
+    <h2 class="lbl" id="rate-h">⑦ 할인율 환경 <span class="sub">· 배경 수치 · 적정 배수를 계산하지 않는다</span></h2>
     <p class="lblnote">밸류에이션 배수의 수준을 좌우한다고 흔히 말하는 금리들입니다. <b>이 화면은 이 금리로 적정 배수를 계산하지 않습니다.</b>
       금리와 배수의 관계는 이 랩이 검증한 적이 없어 모릅니다 — 그래서 배경 수치로만 둡니다.</p>
     <div class="card" id="rates"><div class="skel">불러오는 중…</div></div>
   </section>
 
   <section aria-labelledby="how-h" id="sec-how">
-    <p class="lbl" id="how-h">⑧ 이 화면의 규칙 <span class="sub">· 등급을 어떻게 매겼는가</span></p>
+    <h2 class="lbl" id="how-h">⑧ 이 화면의 규칙 <span class="sub">· 등급을 어떻게 매겼는가</span></h2>
     <p class="lblnote">등급을 붙이는 화면이므로 계산 규칙을 전부 적어 둡니다. 규약 자체는
       <a href="method.html" style="color:var(--accent)">등급·판정 규약</a>이 정본이고, 이 절은 그 규약을 이 데이터에 어떻게 적용했는지입니다.</p>
     <div class="card" id="how"><div class="skel">불러오는 중…</div></div>

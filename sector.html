@@ -519,7 +519,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ① 표본 먼저 ─────────────────────────────────────────────────── -->
   <section aria-labelledby="samp-h">
-    <p class="lbl" id="samp-h">표본 먼저 <span class="sub">· 성과보다 앞에 둔다</span></p>
+    <h2 class="lbl" id="samp-h">표본 먼저 <span class="sub">· 성과보다 앞에 둔다</span></h2>
     <p class="lblnote">이 페이지 아래쪽 숫자는 전부 "같은 국면이었던 달의 단순 평균"입니다.
       그 달이 몇 개였는지를 먼저 보지 않으면 <b id="nmin">—</b>개월 평균과 <b id="nmax">—</b>개월 평균이 같은 무게로 읽힙니다.
       아래에서 <b>표본 20개월 미만</b>인 레짐은 이 페이지 전체에서 흐리게·해칭 처리하고, 매트릭스에서는 <b>아예 칠하지 않습니다</b>.</p>
@@ -529,7 +529,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ② 오늘의 히트맵 ─────────────────────────────────────────────── -->
   <section aria-labelledby="heat-h">
-    <p class="lbl" id="heat-h">오늘의 섹터 상태 <span class="sub">· 열 제목을 누르면 정렬</span></p>
+    <h2 class="lbl" id="heat-h">오늘의 섹터 상태 <span class="sub">· 열 제목을 누르면 정렬</span></h2>
     <p class="lblnote">각 셀은 <b>값 + 분모</b>입니다. 분모를 적는 이유는 결측이 섹터마다 다르기 때문입니다 —
       예를 들어 배당수익률은 커버 전체에서 <span id="dycov">—</span>%만 값이 있고, 나머지는 대부분 무배당입니다
       (파이프라인은 결측 배당을 <b>무배당</b>과 <b>미확인</b>으로 나누지만, 이 페이지가 읽는 슬림 <code>stocks.json</code>에는 그 구분이 실려 있지 않아 여기서는 합쳐 셉니다).
@@ -565,7 +565,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        위(브레드스)는 '몇 %가 200일선 위인가', 아래(레짐 평균)는 '과거 같은 국면의 평균'이다.
        정작 **그 섹터가 최근에 얼마나 갔는가**는 어디에도 없었다. 그 칸을 여기서 메운다. -->
   <section aria-labelledby="perf-h">
-    <p class="lbl" id="perf-h">섹터 ETF 실제 성과 <span class="sub">· 기간별 수익률 · 열 제목을 누르면 정렬</span></p>
+    <h2 class="lbl" id="perf-h">섹터 ETF 실제 성과 <span class="sub">· 기간별 수익률 · 열 제목을 누르면 정렬</span></h2>
     <p class="lblnote">위 표가 <b>종목 집계</b>(200일선 위 비율 등)라면, 이 표는 <b>SPDR 섹터 ETF 자체의 수익률</b>입니다.
       둘은 다른 것을 잽니다 — 종목 절반이 200일선 위여도 큰 종목이 빠지면 ETF는 내릴 수 있습니다.
       <b>52H</b>는 최근 1년 고점 대비, <b>RSI</b>는 Wilder(14)입니다.
@@ -641,7 +641,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ③ 현재 레짐 조건부 성과 ─────────────────────────────────────── -->
   <section aria-labelledby="cur-h">
-    <p class="lbl" id="cur-h">현재 레짐의 과거 월평균 <span class="sub" id="cursub"></span></p>
+    <h2 class="lbl" id="cur-h">현재 레짐의 과거 월평균 <span class="sub" id="cursub"></span></h2>
     <p class="lblnote">아래는 <b>지금 사야 할 섹터</b>가 아닙니다. <b id="histyA">—</b>년 이후 같은 국면으로 판정된 달들의 SPDR 섹터 ETF 월평균 수익률을
       큰 순서로 세운 것입니다. 국면 판정 자체가 사후적이고, 판정 규칙이 바뀌면 이 표도 바뀝니다.
       <b>XLRE(2015-10)·XLC(2018-06) 상장</b> — 이 두 줄만 상장 이후 달로 평균해 표본이 레짐 개월수보다 적습니다.</p>
@@ -650,7 +650,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ④ 전 레짐 × 섹터 매트릭스 ───────────────────────────────────── -->
   <section aria-labelledby="mx-h">
-    <p class="lbl" id="mx-h">전 레짐 × 섹터 매트릭스 <span class="sub">· 월평균 %, <span id="histyB">—</span>~</span></p>
+    <h2 class="lbl" id="mx-h">전 레짐 × 섹터 매트릭스 <span class="sub">· 월평균 %, <span id="histyB">—</span>~</span></h2>
     <p class="lblnote">숨기지 않고 전부 폅니다. 다만 <b>표본 20개월 미만</b>인 열은 <b>색을 칠하지 않고</b> 해칭만 남겼습니다 —
       색이 없는 칸은 값이 없다는 뜻이 아니라 <b>색으로 비교할 표본이 아니라는 뜻</b>입니다. 색은 여기서도 <b>높다/낮다</b>이며, 음수는 숫자 앞의 부호로 읽습니다.</p>
     <p class="lblnote">열 머리의 <b>"레짐 N개월"</b>은 <b>그 국면으로 판정된 달의 수</b>이지 각 ETF가 실제로 관측된 달의 수가 아닙니다 —
@@ -665,7 +665,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ⑤ 대응표 ───────────────────────────────────────────────────── -->
   <section aria-labelledby="map-h">
-    <p class="lbl" id="map-h">XL* ETF ↔ GICS 섹터 대응</p>
+    <h2 class="lbl" id="map-h">XL* ETF ↔ GICS 섹터 대응</h2>
     <p class="lblnote">위 두 블록은 <b>같은 섹터 이름을 쓰지만 같은 바구니가 아닙니다.</b>
       히트맵은 이 랩이 커버하는 종목을 GICS 분류로 묶은 것이고, 조건부 성과는 SPDR 섹터 ETF의 실제 수익률입니다.
       구성 종목·가중치·시작 시점이 다르므로 "히트맵에서 짙은 섹터가 저 표에서도 위"일 이유는 없습니다.
