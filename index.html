@@ -488,45 +488,9 @@
   details.more .mbody{margin-top:7px}
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
 
-  /* ── 판정 스트립 ── 배포·제한적 유효·기각 건수. 판정 원장 블록을 뺀(2026-07-26) 뒤로
-       이 랩이 무엇을 세어 왔는지가 홈에서 완전히 사라져 있었다 — 섹션을 되살리는 게 아니라
-       한 줄로 되찾는다. 숫자는 전부 data/verdicts.json 에서 읽는다(손으로 적지 않는 규약).
-       ⚠ 성과 수치는 넣지 않는다. 여기 수익률이 들어가는 순간 판정 원장이 추천표로 읽힌다. */
-  .vstrip{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;
-    padding:11px 16px;border:1px solid var(--line);border-left:3px solid var(--accent);
-    border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
-  .vstrip:hover{background:var(--panel-2);border-color:var(--accent)}
-  /* display를 못 박아 뒀으므로 hidden 속성만으로는 안 숨는다(.tk2와 같은 이유) */
-  .vstrip[hidden]{display:none}
-  .vstrip .vs{display:inline-flex;align-items:baseline;gap:6px;font-size:12.5px;color:var(--muted)}
-  .vstrip .vs b{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--vc,var(--ink))}
-  .vstrip .vgo{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
-    color:var(--muted);white-space:nowrap}
-  @media(max-width:640px){.vstrip{gap:6px 14px}.vstrip .vgo{margin-left:0;flex-basis:100%}}
-
-  /* ── 진단 배너 ── 매일 보는 것이 아니라 한 번 답해 둔 질문으로 가는 줄.
-       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다.
-       기각 판정이 붙은 도구가 셋(13F 복제·지표별 타이밍·스크리너)이라 세로로 쌓는다 —
-       하나만 걸어 두면 '기각은 예외적인 사고'로 읽힌다. */
-  .dstack{display:flex;flex-direction:column;gap:9px}
-  .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
-    padding:13px 16px;border:1px solid var(--line);border-left:3px solid var(--hot);
-    border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
-  .dbanner:hover{background:var(--panel-2);border-color:var(--accent)}
-  .dbanner .dq{font-weight:700;font-size:14.5px;white-space:nowrap;flex:none}
-  /* 한 줄 유지: 설명은 늘어나되 접히지 않는다. 폭이 모자라면 말줄임으로 흘린다
-     — 배너가 두 줄이 되면 '한 줄짜리 안내'라는 역할이 흐려진다. */
-  .dbanner .da{font-size:13px;color:var(--muted);flex:1 1 auto;min-width:0;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .dbanner .da b{color:var(--hot)}
-  .dbanner .dgo{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
-  /* 모바일에서는 접는다. 375px 화면의 가용 폭은 343px 인데 질문 182 + 답 184 = 366 이라
-     한 줄에 물리적으로 안 들어간다. nowrap 을 고집하면 홈 전체에 가로 스크롤이 생긴다
-     (실측: .wrap scrollWidth 407 > 375). '한 줄'은 데스크톱 기준이고, 좁은 화면에서
-     답을 잘라내거나 감추는 것보다 두 줄이 정직하다. */
-  @media(max-width:640px){.dbanner{gap:4px 8px;flex-wrap:wrap}.dbanner .dgo{display:none}
-    .dbanner .dq{font-size:13.5px;white-space:normal}
-    .dbanner .da{flex:1 1 100%;white-space:normal}}
+  /* 판정 스트립(.vstrip)과 진단 배너(.dstack/.dbanner) CSS 가 여기 있었다 —
+     2026-08-03 마크업과 함께 나갔다. 색 토큰(--hot·--marg·--deploy)은 남긴다:
+     .signote·.calmac·.asofrow .lag·.gapbox.soonbox 와 '잠정' 배지가 계속 쓴다. */
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
@@ -913,33 +877,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
     </section>
 
-    <!-- ⑤ 판정 스트립 + 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다.
-         스트립의 숫자는 JS가 data/verdicts.json 에서 채운다. 못 읽으면 hidden 인 채로 남는다 —
-         없는 숫자를 지어내느니 줄 자체가 없는 편이 낫다. -->
-    <a class="vstrip" id="vstrip" href="explorer.html#view=runs" hidden></a>
-
-    <div class="dstack">
-      <a class="dbanner" href="guru17.html">
-        <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
-        <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
-        <span class="dgo">진단 보기 →</span>
-      </a>
-      <!-- 아래 두 줄의 답은 각 페이지가 스스로 내건 결론을 옮긴 것이다 — signals.html 의 한 줄 결론
-           「교과서 매수 신호를 그대로 따라 담으면 이 표본에서는 벤치마크에 크게 집니다」와
-           screener.html 리드 「초과수익이 확인된 스크린은 한 종도 없었습니다」. 홈에서 결론을 새로 짓지 않는다.
-           ⚠ 개수(신호 32개·스크린 0종)는 일부러 적지 않았다. 홈은 그 두 파일을 읽지 않으므로
-              여기 숫자를 박으면 손으로 적은 숫자가 되고, 늘거나 줄면 그날로 거짓이 된다. -->
-      <a class="dbanner" href="signals.html">
-        <span class="dq">교과서 테크니컬 신호를 따르면 되는가?</span>
-        <span class="da"><b>아니오</b> — 지표별로 전부 같은 잣대로 재봤습니다.</span>
-        <span class="dgo">성적표 보기 →</span>
-      </a>
-      <a class="dbanner" href="screener.html">
-        <span class="dq">스크리너로 초과수익이 나는가?</span>
-        <span class="da"><b>아니오</b> — 사전계산 스크린을 전부 재현해 재봤습니다.</span>
-        <span class="dgo">기각 사유 보기 →</span>
-      </a>
-    </div>
+    <!-- ⑤ 판정 스트립(배포·제한적 유효·기각 건수)과 진단 배너 셋이 여기 있었다.
+         2026-08-03 사용자 결정으로 뺀다. 셋 다 갈 곳이 있다 —
+           · 판정 건수 → explorer.html#view=runs (스트립이 걸던 바로 그 링크다)
+           · 세 질문   → 내비 '전략' 묶음의 지표별 타이밍·스크리너에 기각 배지가 붙어 있고,
+                        운용사 복제 진단은 푸터에도 있다. 어느 쪽도 고아가 되지 않는다.
+         ⚠ verdicts.json 페치는 **남긴다** — 푸터의 '기각 아카이브 n건'(#ft-arc)이 그걸 읽는다.
+            지우면 푸터 숫자가 조용히 빈다. -->
 
   </div>
 
@@ -1002,25 +946,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ── 판정 원장 ────────────────────────────────────────────────
-  // 홈의 '전략' 섹션 블록은 2026-07-26에 뺐다(요청) — 되살리지 않는다. 다만 그 뒤로 이 랩이
-  // 무엇을 세어 왔는지가 홈에서 통째로 사라져 있었다: verdicts.json 의 집계 8개를 받아놓고
-  // 실제로 화면에 나가는 건 푸터의 숫자 하나뿐이었고, 그 하나마저 링크 텍스트에 붙어
-  // '전략 랩 44건'으로 읽혔다(44는 랩이 돌린 규칙 수가 아니라 기각 아카이브 총계다).
-  // 그래서 (a) 푸터 숫자에 라벨을 붙이고 (b) 판정 스트립 한 줄을 낸다. 섹션 복원이 아니다.
-  // 숫자를 손으로 적지 않는 규약은 그대로 — 전부 이 파일에서 읽는다.
+  // 홈의 '전략' 섹션 블록은 2026-07-26에 뺐고, 그 자리를 대신하던 판정 스트립 한 줄도
+  // 2026-08-03 에 뺐다(사용자 결정) — 둘 다 되살리지 않는다. 건수는 explorer.html#view=runs
+  // 가 대표한다.
+  // 남는 것은 푸터의 '기각 아카이브 n건' 하나다. 라벨을 붙여 둔 이유는 그대로 유효하다 —
+  // 숫자만 링크 텍스트에 붙어 있으면 '전략 랩 44건'으로 읽히는데, 44는 랩이 돌린 규칙 수가
+  // 아니라 기각 아카이브 총계다.
+  // 숫자를 손으로 적지 않는 규약도 그대로 — data/verdicts.json 에서 읽는다.
+  // ⚠ 그 경로를 이 파일 어딘가에 **글자 그대로** 남겨 둔다. getj 가 'data/' 를 붙이므로
+  //   호출부에는 파일명만 있고, validate_site 의 '홈이 verdicts.json 을 읽는가' 검사는
+  //   문자열로 찾는다 — 스트립을 빼면서 주석의 경로까지 지웠다가 그 검사에 걸렸다(2026-08-03).
   getj('verdicts.json').then(function(v){
     if(!v)return;
     var ta=el('ft-arc'); if(ta)ta.textContent=' · 기각 아카이브 '+v.archive_n+'건';
-    // 스트립 — 셋 다 있어야 낸다. 하나라도 없으면 '나머지는 0'으로 읽히므로 줄 자체를 안 낸다.
-    var vs=el('vstrip');
-    if(vs&&v.deploy_n!=null&&v.marginal_n!=null&&v.reject_total!=null){
-      vs.innerHTML=
-        '<span class="vs" style="--vc:var(--deploy)"><b>'+v.deploy_n+'</b>배포</span>'+
-        '<span class="vs" style="--vc:var(--marg)"><b>'+v.marginal_n+'</b>제한적 유효</span>'+
-        '<span class="vs" style="--vc:var(--hot)"><b>'+v.reject_total+'</b>기각</span>'+
-        '<span class="vgo">전략 랩에서 전부 보기 →</span>';
-      vs.removeAttribute('hidden');
-    }
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
