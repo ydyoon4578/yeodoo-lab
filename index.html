@@ -251,10 +251,15 @@
        border-top:1px solid var(--line-soft)}
   .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
        font-weight:700;border-top:0;background:var(--panel-2)}
-  /* 첫 열이 넓어졌다 — 이름 오른쪽에 참조지수를 함께 싣는다(사용자 요청 2026-08-02).
-     'Pacer US Cash Cows 100 (COWZ)' 같은 이름이 들어오므로 150px 로는 줄이 접힌다.
-     넓어진 만큼 표가 min-width 를 넘으면 .stwrap 이 가로로 스크롤한다(전부터 그랬다). */
-  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:nowrap;min-width:236px}
+  /* 첫 열은 **내용에 딱 맞춘다**(사용자 요청 2026-08-03).
+     표가 width:100% 라 table-layout:auto 는 남는 폭을 내용이 가장 긴 열에 몰아준다 —
+     그게 첫 열이라 실측 464px 이 됐는데 정작 필요한 것은 357px 이었다(가장 긴 이름
+     'S&P 500 Low Volatility High Dividend' 335px + 좌우 패딩 22px). 107px 이 빈칸이었다.
+     width:1px 은 '이 열을 최소로' 라는 뜻이고, white-space:nowrap 이 있어 내용 아래로는
+     안 줄어든다. 남는 폭은 숫자 열들이 고르게 나눠 갖는다(실측 75px 씩).
+     ⚠ min-width 를 없앴다. nowrap 이 이미 하한을 만들므로 이중으로 걸 필요가 없고,
+       걸어 두면 내용이 짧아져도 그 폭이 남는다. */
+  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:nowrap;width:1px}
   .sttbl tbody th{font-weight:700;font-size:12.5px;color:var(--ink-2)}
   /* 티커는 이름 **오른쪽**에 붙인다. 아래 줄로 내리면 행이 두 줄이 되어 표가 두 배로
      길어졌다(사용자 결정 2026-07-29). 같은 줄에 두면 세로가 절반으로 준다. */
@@ -1188,8 +1193,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<tr class="lv'+lv+'"'+(lv>1?' hidden data-p="'+esc(pid)+'"':'')+
         (myid?' data-id="'+esc(myid)+'"':'')+'>'+
         '<th scope="row" title="'+esc(tipTxt)+'">'+
-        (myid?('<button type="button" class="htg" data-open="'+esc(myid)+'" aria-expanded="false">▸</button>')
-             :'<span class="htg" aria-hidden="true"> </span>')+
+        // ⚠ 펼침 버튼 자리표시자를 뺐다(2026-08-03). 하위 단이 없어져 myid 가 항상 null 이라
+        //   빈 span 이 모든 섹터 줄을 28px 오른쪽으로 밀고 있었다 — 바로 아래 스타일 ETF 줄은
+        //   이름부터 시작하는데 섹터만 들여쓰여 두 묶음이 어긋나 보였다.
+        //   자리표시자는 '버튼 있는 줄과 없는 줄의 층을 맞추려고' 둔 것이라, 버튼이 사라진
+        //   지금은 이유가 없다. 하위 단을 되살리면 이 span 도 같이 되살릴 것.
         '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
         cells(x)+'</tr>';
     }
