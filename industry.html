@@ -109,9 +109,6 @@
   .ind{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 18px;margin-bottom:11px}
   .ind.split{border-left:3px solid var(--rp)}
   .ind h3{margin:0;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-  .ind h3 .sic{font-size:10.5px;font-weight:800;color:var(--panel);background:var(--champ);border-radius:5px;padding:2px 7px;flex:none}
-  @media (prefers-color-scheme:dark){.ind h3 .sic{color:#131820}}
-  :root[data-theme="dark"] .ind h3 .sic{color:#131820}
   .ind h3 .cnt{font-size:11px;font-weight:600;color:var(--muted);margin-left:auto}
   .secmix{margin:9px 0 0;display:flex;gap:5px;flex-wrap:wrap}
   .secmix span{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
@@ -553,8 +550,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(!hit)return false;
     }
     if(q){
-      if(g.sic.indexOf(q)>=0)return true;
-      if(g.sd.toLowerCase().indexOf(q)>=0)return true;
+      if(g.sub.indexOf(q)>=0)return true;
+      if(g.grp.toLowerCase().indexOf(q)>=0)return true;
       for(var j=0;j<g.ts.length;j++) if(g.ts[j].toLowerCase().indexOf(q)>=0)return true;
       return false;
     }
@@ -571,12 +568,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 카드 머리 = 서브산업 이름 · 윗단(섹터 › 산업그룹) · 회사 수.
       //   ⚠ 종목은 시총 내림차순으로 이미 정렬돼 있다(위 byPath). 여기서 다시 정렬하지 않는다.
       var g=rows[i];
-      var mix='<span>'+esc(g.secnm)+(g.sd?' &rsaquo; '+esc(g.sd):'')+'</span>'+
+      var mix='<span>'+esc(g.secnm)+(g.grp?' &rsaquo; '+esc(g.grp):'')+'</span>'+
               (g.r&&g.r['1M']!=null?'<span>1개월 '+(g.r['1M']>0?'+':'')+g.r['1M'].toFixed(2)+'%</span>':'');
       var mem='';
       for(var k=0;k<g.ts.length;k++) mem+='<a href="stocks.html#t='+encodeURIComponent(g.ts[k])+'">'+esc(g.ts[k])+'</a>';
       h+='<div class="ind">'+
-           '<h3>'+esc(g.sic)+'<span class="cnt">'+g.ts.length+'사</span></h3>'+
+           '<h3>'+esc(g.sub)+'<span class="cnt">'+g.ts.length+'사</span></h3>'+
            '<div class="secmix">'+mix+'</div>'+
            '<div class="mem">'+mem+'</div>'+
          '</div>';
@@ -640,7 +637,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var path=r.p+'|'+r.nm;
       var ts=(byPath[path]||[]).map(function(x){return x.nm;});
       if(!ts.length)return;
-      groups.push({sic:r.nm, sd:(r.p||'').split('|')[1]||'', sec:r.sec,
+      groups.push({sub:r.nm, grp:(r.p||'').split('|')[1]||'', sec:r.sec,
                    secnm:SNM[r.sec]||r.sec, ts:ts, mc:r.mc, r:r.r});
     });
     // ⚠ 서브산업에 안 걸리는 종목이 있다(실측 22종). 둘이다 —
@@ -648,7 +645,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   산업그룹(XLC|Telecommunication Services 4종). 그대로 두면 이 종목들이 **이 화면
     //   어디에서도 안 보인다** — 홈 트리가 '그 밖'에도 펼침 버튼을 달았던 것과 같은 이유로
     //   잔여 칸을 만들어 싣는다. 어느 칸에도 안 뜨는 종목을 남기지 않는다.
-    var seen={}; groups.forEach(function(g){seen[g.sec+'|'+g.sd+'|'+g.sic]=1;});
+    var seen={}; groups.forEach(function(g){seen[g.sec+'|'+g.grp+'|'+g.sub]=1;});
     var lv3set={}; (IND.rows||[]).filter(function(r){return r.lv===3;})
       .forEach(function(r){lv3set[r.p+'|'+r.nm]=1;});
     var rest={};
@@ -662,11 +659,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         return String(a.nm).localeCompare(String(b.nm));
       });
       var pp=path.split('|'), sec=pp[0], grp=pp[1]||'';
-      groups.push({sic:(grp==='그 밖'?'그 밖':grp), sd:(grp==='그 밖'?'':grp), sec:sec,
+      groups.push({sub:(grp==='그 밖'?'그 밖':grp), grp:(grp==='그 밖'?'':grp), sec:sec,
                    secnm:SNM[sec]||sec, ts:arr.map(function(x){return x.nm;}),
                    mc:null, r:null, rest:true});
     });
-    groups.sort(function(a,b){return b.ts.length-a.ts.length||String(a.sic).localeCompare(String(b.sic));});
+    groups.sort(function(a,b){return b.ts.length-a.ts.length||String(a.sub).localeCompare(String(b.sub));});
     var nGrp=(IND.rows||[]).filter(function(r){return r.lv===2;}).length;
     var solo=groups.filter(function(g){return g.ts.length<2;}).length;
     var big=groups[0];
@@ -679,7 +676,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ty(solo,'1사뿐인 칸','이만큼은 사실상 개별 종목','var(--marg)');
     el('limits').innerHTML='<b>이 데이터의 성격</b><br>'+
       '· GICS는 S&P·MSCI의 분류이고 이 랩은 위키백과 S&P 500 표에서 받습니다 — 랩이 만든 분류가 아닙니다.<br>'+
-      '· 가장 큰 칸은 <code>'+esc(big.sic)+'</code>('+big.ts.length+'사 · '+esc(big.secnm)+')입니다.<br>'+
+      '· 가장 큰 칸은 <code>'+esc(big.sub)+'</code>('+big.ts.length+'사 · '+esc(big.secnm)+')입니다.<br>'+
       '· '+solo+'개 칸은 회사가 1곳뿐입니다. 그런 칸의 "산업 평균"은 그 회사 자신이라 의미가 없어, 통계를 내지 않습니다.<br>'+
       '· 종목은 <b>시가총액 내림차순</b>입니다. 수익률은 그 칸 종목의 <b>동일가중</b>이라 시총가중 ETF와 다릅니다.<br>'+
       '· 기준일 '+esc(D.as_of)+' · 대상 '+D.n_co+'사 · 원본 <code>data/home_reco.json</code> · <code>data/home_stocks.json</code>';
@@ -731,7 +728,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function tk(t){return '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a>';}
   // 칸 이름 = 서브산업(굵게) + 윗단(섹터 › 산업그룹). SIC 시절엔 코드 + 영문명이었다.
-  function sicLabel(g){return '<b>'+esc(g.sic)+'</b> '+esc(g.secnm||'')+(g.sd?' › '+esc(g.sd):'');}
+  function gicsLabel(g){return '<b>'+esc(g.sub)+'</b> '+esc(g.secnm||'')+(g.grp?' › '+esc(g.grp):'');}
 
   function renderWatch(FIL,INS){
     if(!D||!D.groups){el('wbody').innerHTML='<div class="note hard">산업 데이터를 불러오지 못했습니다.</div>';return;}
@@ -757,7 +754,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+=card('산업 안에서 혼자 반대 방향','같은 서브산업 안에서 타이밍 판정이 나머지와 갈린 종목입니다. '+
       '<b>같은 업을 하는데 신호만 다르다</b>는 뜻이지, 그 종목이 옳다는 뜻이 아닙니다.',
       lone.slice(0,12).map(function(x){
-        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+        return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                '<span class="wr">'+tk(x.t)+' <em>혼자 '+esc(x.side)+'</em> · 판정 있는 '+x.n+'사 중</span></div>';
       }),'var(--rp)',null,lone.length);
 
@@ -774,7 +771,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+=card('산업 전체가 한 방향','판정이 있는 회사가 전부 같은 쪽인 산업입니다. '+
       '업종 공통 요인일 수도, 우연일 수도 있습니다 — 회사 수가 적을수록 우연이기 쉽습니다.',
       uni_.slice(0,10).map(function(x){
-        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+        return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                '<span class="wr"><em>'+x.n+'사 전부 '+esc(x.side)+'</em> · '+
                x.g.ts.slice(0,8).map(tk).join(' ')+(x.g.ts.length>8?' …':'')+'</span></div>';
       }),'var(--marg)',null,uni_.length);
@@ -790,7 +787,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+=card('200일선 아래가 몰린 산업','회사의 60% 이상이 200일 이동평균 아래인 산업입니다. '+
       '<b>추세 상태의 서술일 뿐</b>이고, 랩이 검증한 전략이 아닙니다.',
       brk.slice(0,10).map(function(x){
-        return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+        return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                '<span class="wr"><em>'+x.n+'/'+x.g.ts.length+'사</em> ('+Math.round(x.p*100)+'%)</span></div>';
       }),'var(--hot)',null,brk.length);
 
@@ -803,14 +800,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         for(var i=0;i<f.it.length;i++)if(FIL.major.indexOf(f.it[i])>=0){isMaj=true;break;}
         if(!isMaj)return;
         var g=sicOf[f.t]; if(!g||g.ts.length<MINCO)return;
-        var k=g.sic; (maj[k]=maj[k]||{g:g,n:0,ts:{}}); maj[k].n++; maj[k].ts[f.t]=1;
+        var k=g.sub; (maj[k]=maj[k]||{g:g,n:0,ts:{}}); maj[k].n++; maj[k].ts[f.t]=1;
       });
       var mj=Object.keys(maj).map(function(k){return maj[k];}).filter(function(x){return x.n>=3;});
       mj.sort(function(a,b){return b.n-a.n;});
       h+=card('중요 8-K가 몰린 산업','최근 '+FIL.window_days+'일간 랩이 \'중요\'로 묶은 Item(지배구조·회계 신뢰성·상장 지위 등)이 '+
         '많이 제출된 산업입니다. <b>중요 묶음은 랩의 편집 판단</b>이고, 주가 영향을 예측하는 분류가 아닙니다.',
         mj.slice(0,10).map(function(x){
-          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+          return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                  '<span class="wr"><em>'+x.n+'건</em> · '+Object.keys(x.ts).length+'사 · '+
                  Object.keys(x.ts).slice(0,8).map(tk).join(' ')+'</span></div>';
         }),'var(--champ)','원문은 <a href="filings.html">8-K 공시 피드</a>에서 Item별로 볼 수 있습니다.',mj.length);
@@ -823,7 +820,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         if(g.ts.length<MINCO)return;
         var b=0,s=0,co=0;
         g.ts.forEach(function(t){var v=INS.by_t[t];if(!v)return;b+=v[0];s+=v[1];if(v[0]||v[1])co++;});
-        if(b+s>=8)ins[g.sic]={g:g,b:b,s:s,co:co};
+        if(b+s>=8)ins[g.sub]={g:g,b:b,s:s,co:co};
       });
       var arr=Object.keys(ins).map(function(k){return ins[k];});
       var sells=arr.filter(function(x){return x.s>=x.b*3&&x.s>=8;}).sort(function(a,b){return b.s-a.s;});
@@ -832,13 +829,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         ')에 <b>재량 거래(P·S)만</b> 세었습니다 — 주식보상·세금 반납은 뺐습니다. '+
         '매도는 분산·세금 등 개인 사정으로도 일어나므로 <b>그 자체로 부정적 신호가 아닙니다</b>.',
         sells.slice(0,8).map(function(x){
-          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+          return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                  '<span class="wr"><em>매도 '+x.s+'건</em> vs 매수 '+x.b+'건 · '+x.co+'사</span></div>';
         }),'var(--hot)',null,sells.length);
       h+=card('내부자 장내매수가 있는 산업','같은 구간에서 매수(P)가 매도(S) 이상인 산업입니다. '+
         '내부자 매수가 초과수익으로 이어지는지 이 랩은 <b>검증한 적이 없습니다</b>.',
         buys.slice(0,8).map(function(x){
-          return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
+          return '<div class="wrow"><span class="wl">'+gicsLabel(x.g)+'</span>'+
                  '<span class="wr"><em>매수 '+x.b+'건</em> vs 매도 '+x.s+'건 · '+x.co+'사</span></div>';
         }),'var(--deploy)','종목별 원문은 <a href="co.html#ins">종목 재무 → 내부자 거래</a>에서 볼 수 있습니다.',buys.length);
     }

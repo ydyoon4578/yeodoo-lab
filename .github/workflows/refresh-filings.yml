@@ -1,6 +1,6 @@
 name: Refresh SEC filings (EDGAR)
 
-# 8-K 피드 · SIC 산업분류 · 회사별 제출 이력을 SEC EDGAR submissions API에서 수집한다.
+# 8-K 피드 · 회사별 제출 이력 · 티커→CIK 지도를 SEC EDGAR submissions API에서 수집한다.
 # 무인증·무료. 표준 라이브러리만 쓰므로 설치 단계가 없다(의존성이 늘면 크론이 깨질 확률도 는다).
 #
 # 주기 — 주 1회. 8-K는 매일 몇 건씩 들어오지만 이 랩의 화면은 90일 창을 보여주므로
@@ -42,12 +42,12 @@ jobs:
         run: python build/asof_index.py
       - name: Validate
         run: python build/validate_site.py
-      # ⚠ 산출물 전부 넘긴다: filings.json(8-K 피드)·industry.json(SIC)·data/fil/(회사별, 삭제 포함).
+      # ⚠ 산출물 전부 넘긴다: filings.json(8-K 피드)·cik_map.json(티커→CIK)·data/fil/(회사별, 삭제 포함).
       #   빠뜨림은 ci_push.sh의 누락 가드가 data/ 전체를 훑어 잡는다.
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): SEC 공시·산업분류 자동 갱신" \
-            data/filings.json data/industry.json data/fil data/home_flow.json data/asof.json
+          bash build/ci_push.sh "chore(data): SEC 공시 자동 갱신" \
+            data/filings.json data/cik_map.json data/fil data/home_flow.json data/asof.json
       # '돌았는데 낡은 데이터'면 잡 실패 → GitHub 기본 실패 알림 메일.
       # 창이 넉넉한 이유: as_of는 우리가 수집한 날이 아니라 회사가 마지막으로 제출한 날이다.
       # 연휴가 길면 며칠씩 안 움직이는 게 정상이라, 가격 잡(2일)과 같은 잣대를 쓰면 오탐이 된다.

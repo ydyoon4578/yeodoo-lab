@@ -49,8 +49,8 @@ def _reco(stocks, dates, conf_key, prov_key):
 
 # ⚠ SIC 대분류(2자리) 한글 이름표가 여기 있었다 — 2026-08-03 에 하위 분류를 GICS
 #   서브산업으로 바꾸면서(사용자 요청 "sic말고 gics") 쓰는 곳이 없어졌다.
-#   SIC 자체는 data/industry.json 과 industry.html 에 그대로 살아 있다. 홈만 GICS 를 쓴다 —
 #   홈의 섹터가 GICS(위키 S&P 500 표)라 하위도 같은 체계여야 트리가 성립하기 때문이다.
+#   그 뒤 industry.html 도 GICS 로 넘어가면서(같은 날) 사이트에 SIC 는 남아 있지 않다.
 # GICS 섹터 → 섹터 ETF 티커. **키를 한글 이름이 아니라 티커로 둔다** — 홈이
 # market_board.json 의 sector 행과 짝지어 그리는데, 한글 표기가 바뀌는 날 조인이 조용히 끊긴다.
 # _breadth(섹터별 폭)와 _industry(섹터-산업 트리)가 같이 쓴다.
@@ -161,7 +161,10 @@ def _industry(stocks, dates, root):
         sd = v ** 0.5
         return round(m / sd * (252 ** 0.5), 2) if sd > 0 else None
 
-    def agg(objs, label, sec, sic, lv=1, parent=None, sub=None):
+    # ⚠ 예전엔 인자로 sic(=SIC 이름표)을 하나 더 받아 줄마다 실었는데, GICS 로 갈아탄 뒤
+    #   그 값이 label 과 글자 그대로 같아졌다(실측 95줄 전부 일치, 나머지는 null).
+    #   같은 값을 두 키로 싣지 않는다 — 읽는 곳도 없었다.
+    def agg(objs, label, sec, lv=1, parent=None, sub=None):
         r = {}
         for k in base:
             i0, vs = base[k], []
@@ -190,12 +193,12 @@ def _industry(stocks, dates, root):
             # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
             # (실측 19.7 → 29.7KB), 화면에서 종목 수익률의 둘째 자리를 읽을 일은 없다.
             # 샤프도 싣지 않는다 — 한 종목의 샤프는 종목 페이지가 맥락과 함께 보여 준다.
-            return {"nm": label, "sn": sub, "st": 1, "sec": sec, "sic": None, "n": 1, "mc": mc,
+            return {"nm": label, "sn": sub, "st": 1, "sec": sec, "n": 1, "mc": mc,
                     "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
                     "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
-        return {"nm": label, "sec": sec, "sic": sic, "n": len(objs), "r": r, "mc": mc,
+        return {"nm": label, "sec": sec, "n": len(objs), "r": r, "mc": mc,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
                 "sharpe": sharpe(objs), **({"sn": sub} if sub else {}),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
@@ -207,28 +210,28 @@ def _industry(stocks, dates, root):
         나머지라고 못 펼치면 그 종목들은 화면 어디에서도 볼 수 없다.
         lv 는 부모+1 이다: 서브산업 아래는 4단, 섹터 직속 나머지 아래는 3단."""
         for s2 in sorted(objs, key=lambda z: z["t"]):
-            rows.append(agg([s2], s2["t"], sec, None, lv, pid, (s2.get("name") or "")[:22]))
+            rows.append(agg([s2], s2["t"], sec, lv, pid, (s2.get("name") or "")[:22]))
 
     for sec, objs in bysec.items():
-        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, None, 1, None))
+        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, 1, None))
         gs = sorted([(g, v) for (s2, g), v in keepg.items() if s2 == sec],
                     key=lambda kv: -len(kv[1]))
         gused = set()
         for g, gv in gs:
             gid = sec + "|" + g
-            rows.append(agg(gv, g, sec, g, 2, sec))         # 산업그룹(2차)
+            rows.append(agg(gv, g, sec, 2, sec))            # 산업그룹(2차)
             gused.update(s["t"] for s in gv)
             subs = sorted([(c, v) for (g2, c), v in keeps.items() if g2 == g],
                           key=lambda kv: -len(kv[1]))
             sused = set()
             for c, v in subs:
-                rows.append(agg(v, c, sec, c, 3, gid))      # 서브산업(4차)
+                rows.append(agg(v, c, sec, 3, gid))         # 서브산업(3차)
                 _stocks(v, sec, gid + "|" + c, 4)
                 sused.update(s["t"] for s in v)
             grest = [s for s in gv if s["t"] not in sused]
             if grest and len(subs):
                 # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
-                rows.append(agg(grest, NOM, sec, None, 3, gid))
+                rows.append(agg(grest, NOM, sec, 3, gid))
                 _stocks(grest, sec, gid + "|" + NOM, 4)
             elif grest:
                 # 서브산업이 **하나도** 3종을 못 넘는 그룹. '그 밖' 줄을 끼우면 그룹과 똑같은
@@ -238,7 +241,7 @@ def _industry(stocks, dates, root):
                 _stocks(grest, sec, gid, 3)
         rest = [s for s in objs if s["t"] not in gused]
         if rest:
-            rows.append(agg(rest, NOM, sec, None, 2, sec))
+            rows.append(agg(rest, NOM, sec, 2, sec))
             _stocks(rest, sec, sec + "|" + NOM, 3)
     return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX}
 
@@ -411,7 +414,7 @@ def build(stocks, dates, as_of, root):
         "buy": buy, "sell": sell, "nbuy": nb, "nsell": ns,
         "buy_conf": nb_c, "buy_prov": nb_p, "sell_conf": ns_c, "sell_prov": ns_p,
         "breadth": _breadth(stocks),
-        # 섹터(11)와 종목(518) 사이 — SIC 대분류. 홈 산업 카드가 읽는다.
+        # 섹터(11)와 종목(518) 사이 — GICS 산업그룹·서브산업. 홈 산업 카드가 읽는다.
         "industry": _segments(stocks, dates, root),
     }
 
