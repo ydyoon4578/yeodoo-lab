@@ -462,13 +462,15 @@ def load_fund():
 def load_cik_map():
     """공시 파이프라인이 이미 확정한 티커→CIK를 재사용한다(전신 법인 보정 포함).
     없으면 SEC 매핑을 직접 읽는다."""
-    p = os.path.join(DATA, "industry.json")
+    # ⚠ 2026-08-03: data/industry.json → data/cik_map.json 으로 바뀌었고 값 모양도
+    #   [sic, sd, cik] 배열 → cik 하나로 바뀌었다(SIC 분류를 걷어냈다).
+    p = os.path.join(DATA, "cik_map.json")
     if os.path.exists(p):
         try:
             co = json.load(io.open(p, encoding="utf-8")).get("co") or {}
-            m = {t: v[2] for t, v in co.items() if len(v) > 2}
+            m = {t: v for t, v in co.items() if v}
             if m:
-                return m, "data/industry.json"
+                return m, "data/cik_map.json"
         except Exception:
             pass
     return {k: v for k, v in edgar.ticker_cik_map().items()}, "SEC company_tickers.json"

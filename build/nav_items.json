@@ -73,7 +73,7 @@
      "name": "산업 탐색",
      "file": "industry.html",
      "status": "existing",
-     "desc": "SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다",
+     "desc": "GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단",
      "src": "raw",
      "verdict": "unverified",
      "effort": "M"

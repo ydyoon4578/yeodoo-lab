@@ -437,7 +437,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-filings">공시<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-filings" hidden role="group" aria-label="공시·산업">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">SEC 부여 SIC 4자리 — 11섹터를 183개로 가른다</span></a>
+          <a class="mmi" href="industry.html" data-nav="industry.html"><span class="mmn">산업 탐색</span><span class="mmb vunv">미검증</span><span class="mmd">GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단</span></a>
           <a class="mmi" href="industry.html#watch" data-nav="industry.html#watch"><span class="mmn">관전 포인트</span><span class="mmb vunv">미검증</span><span class="mmd">산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다</span></a>
         </div>
       </li>
@@ -1088,7 +1088,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var d=s._fil, fl=d.filings||[];
     var h='<div class="card"><div class="selhd">'+
           '<span class="tk">'+esc(d.t)+'</span><span class="nm">'+esc(d.nm||'')+'</span>'+
-          (d.sic?'<span class="chip" title="SEC 부여 산업분류">SIC '+esc(d.sic)+' · '+esc(d.sd||'')+'</span>':'')+
+          // ⚠ SIC 칩을 뺐다(2026-08-03) — 분류를 GICS 로 통일하면서 그 값을 더 이상 만들지
+          //   않는다. 산업 분류는 industry.html(GICS 서브산업)이 맡는다.
           (d.st?'<span class="chip">설립 '+esc(d.st)+'</span>':'')+
           (d.fy?'<span class="chip" title="회계연도 종료 월일(MMDD)">FY말 '+esc(d.fy)+'</span>':'')+
           '<span class="px">CIK '+esc(String(d.cik))+'<br>최근 제출 '+esc(String(d.n_recent||0))+'건</span></div></div>';

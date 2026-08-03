@@ -82,15 +82,15 @@ def earliest_period(tags):
 
 def main() -> int:
     want = wanted()
-    # 🚨 RF.load_cik_map() 을 쓰면 안 된다 — 그것은 data/industry.json(오늘 518종)을 먼저
+    # 🚨 RF.load_cik_map() 을 쓰면 안 된다 — 그것은 data/cik_map.json(오늘 518종)을 먼저
     #   읽으므로 편출 종목 CIK 가 **전부 없다**(실측: 첫 실행에서 32/32 실패).
-    #   여기 필요한 것은 SEC 전체 등록 목록이다. industry.json 은 보조로만 얹는다
+    #   여기 필요한 것은 SEC 전체 등록 목록이다. cik_map.json 은 보조로만 얹는다
     #   (그쪽에 전신 법인 보정이 들어 있어 겹치는 티커는 그 값이 더 정확하다).
     cmap = dict(edgar.ticker_cik_map())
     n_sec = len(cmap)
     try:
         aux, src2 = RF.load_cik_map()
-        if src2 == "data/industry.json":
+        if src2 == "data/cik_map.json":
             cmap.update(aux)
     except Exception:
         pass
