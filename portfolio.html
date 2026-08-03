@@ -713,8 +713,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <h2 class="lbl" id="mix-h">④ 구성 집계 <span class="sub">· 분모를 항상 적는다</span></h2>
     <p class="lblnote">비중 기준 집계입니다. 값이 결측인 종목은 분모에서 빼고, 그 사실을 각 블록에 적습니다.
       <b>어떤 구성이 좋은 구성인지 이 화면은 말하지 않습니다.</b> 집중되어 있다/분산되어 있다는 사실만 셉니다.
-      아래 막대는 전부 <b>0~100% 고정 눈금</b>입니다(최대 항목에 맞춘 자동 확대 없음) —
-      ⑤의 상관 막대와 같은 규칙이며, 눈금을 늘려 차이를 크게 보이게 만들지 않습니다.</p>
+      아래 막대는 전부 <b>0~100% 고정 눈금</b>입니다 — 최대 항목에 맞춰 늘리지 않습니다(⑤의 상관 막대와 같은 규칙).</p>
     <div id="mixbox"><div class="skel">보유 종목을 추가하면 표시됩니다.</div></div>
   </section>
 
@@ -1305,8 +1304,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '규약 정본은 <a href="method.html" style="color:var(--accent)">등급·판정 규약</a>에 있습니다.</div>'+
       '<div class="tblwrap"><table class="wide">'+th+'<tbody>'+rows+'</tbody></table></div>'+leg;
     html('gradecap','섹터 백분위는 <code>data/sd/&lt;티커&gt;.json</code>의 <code>fundx</code>['+
-      '값, 전체백분위, 섹터백분위]에서 그대로 읽습니다. 등급 구간은 <b>좋은 쪽 백분위</b> 기준 '+
-      'A≥80 &gt; B≥60 &gt; C≥40 &gt; D≥20 &gt; F 이며, 방향 변환은 ⑥ 계산식에 적어 두었습니다.');
+      '값, 전체백분위, 섹터백분위]에서 그대로 읽습니다. '+
+      '구간과 방향 변환은 ⑥ 계산식에 적어 두었습니다.');
   }
 
   // ══ ④ 구성 집계 ════════════════════════════════════════════════════════
@@ -1402,7 +1401,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (partN?('<div class="note"><b>200일선이 없는 종목이 '+partN+'개</b> 들어 있습니다(상장 200거래일 미만). '+
         '&lsquo;상승추세&rsquo;·&lsquo;200일이탈&rsquo;·&lsquo;골든임박&rsquo;처럼 200일선을 쓰는 플래그는 이 종목들에 아예 붙지 않으므로, '+
         '위 플래그 비중의 분모에서 이 '+partN+'개를 빼고 읽으셔야 합니다.</div>'):'')+
-      '<div class="note"><b>이 집계가 말하지 않는 것</b> — 섹터가 몰려 있다/흩어져 있다는 사실만 셉니다. '+
+      // '…사실만 셉니다'는 이 섹션 머리(715행)가 이미 같은 말을 한다 — 그 사이에 있는 건 막대
+      // 네 묶음뿐이라 표현만 바꿔 두 번 읽힌다. 한계 주장은 그대로 남긴다(2026-08-03).
+      '<div class="note"><b>이 집계가 말하지 않는 것</b> — '+
         '몇 %가 적정한지, 어느 섹터가 유리한지 이 랩은 판단하지 않습니다. '+
         '1/HHI도 &lsquo;분산이 잘 됐다&rsquo;는 뜻이 아닙니다 — 서로 상관이 높은 종목을 많이 담아도 이 값은 커집니다. '+
         '실제로 같이 움직였는지는 ⑤의 상관에서만 볼 수 있습니다.</div>';

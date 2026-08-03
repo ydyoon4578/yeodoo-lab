@@ -638,8 +638,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p class="lbl" id="cur-h">현재 레짐의 과거 월평균 <span class="sub" id="cursub"></span></p>
     <p class="lblnote">아래는 <b>지금 사야 할 섹터</b>가 아닙니다. <b id="histyA">—</b>년 이후 같은 국면으로 판정된 달들의 SPDR 섹터 ETF 월평균 수익률을
       큰 순서로 세운 것입니다. 국면 판정 자체가 사후적이고, 판정 규칙이 바뀌면 이 표도 바뀝니다.
-      <b>11개 ETF의 시작 시점은 서로 다릅니다</b> — XLRE는 2015-10, XLC는 2018-06 상장이라 이 두 줄만 상장 이후 달로 평균했고,
-      옆에 적힌 레짐 개월수보다 <b>적은 표본</b>입니다.</p>
+      <b>XLRE(2015-10)·XLC(2018-06) 상장</b> — 이 두 줄만 상장 이후 달로 평균해 표본이 레짐 개월수보다 적습니다.</p>
     <div id="curbars"><div class="skel">불러오는 중…</div></div>
   </section>
 
@@ -664,8 +663,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p class="lblnote">위 두 블록은 <b>같은 섹터 이름을 쓰지만 같은 바구니가 아닙니다.</b>
       히트맵은 이 랩이 커버하는 종목을 GICS 분류로 묶은 것이고, 조건부 성과는 SPDR 섹터 ETF의 실제 수익률입니다.
       구성 종목·가중치·시작 시점이 다르므로 "히트맵에서 짙은 섹터가 저 표에서도 위"일 이유는 없습니다.
-      시작 시점 차이는 ETF 사이에도 있습니다 — 9개는 분석 창 전체를 덮지만 <b>XLRE는 2015-10, XLC는 2018-06</b> 상장이라
-      그 이후 달만 월평균에 들어갑니다. 아래 표에서 해당 줄에 상장월을 적었습니다.</p>
+      시작 시점 차이는 ETF 사이에도 있습니다 — 9개는 분석 창 전체를 덮지만 <b>XLRE·XLC</b>는 상장 이후 달만
+      월평균에 들어갑니다(상장월은 아래 표에 적었습니다).</p>
+    <!-- 상장월 숫자를 여기서 뺐다(2026-08-03) — 같은 사실이 ①표본 배너 · ④레짐 개월수 주의 ·
+         아래 대응표 본문 셋에 남는다. ①·④는 각각 다른 일을 하므로 손대지 않았다. -->
     <div class="tblwrap" style="padding:4px 6px"><div id="maptbl"><div class="skel">불러오는 중…</div></div></div>
   </section>
 
@@ -1048,8 +1049,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       return out.join('<i>·</i>');
     }
-    el('covA').innerHTML='산출 종목 수 — '+covLine(COLA)+
-      '<i>·</i>200일선 위·상승추세는 상장 200거래일 이상 종목만 분모';
+    // 분모 규칙 꼬리표를 뺐다(2026-08-03) — 바로 아래 문단(549~551행)이 제외 종목 수와 사유까지
+    // 적는 정본이고 화면에서 세로로 붙어 있다. 셀 툴팁(779행)에도 같은 규칙이 남는다.
+    el('covA').innerHTML='산출 종목 수 — '+covLine(COLA);
     el('covB').innerHTML='산출 종목 수 — '+covLine(COLB)+
       '<i>·</i>결측 + (선행 PER·PBR의) 음수 제외 후 실제로 중앙값에 들어간 종목 수';
 

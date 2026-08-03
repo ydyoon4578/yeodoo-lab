@@ -542,9 +542,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section aria-labelledby="comp-h">
     <p class="lbl" id="comp-h">④ 컴포짓 <span id="ncomp">—</span>종 백분위 분포 <span class="sub">· 10구간 히스토그램 + 사분위</span></p>
+    <!-- 이유를 여기서 뺀 까닭 — 같은 설명이 카드 **아래** note 에 더 정확하게(백분위 정의상 균등)
+         있고 그쪽은 숫자 바로 옆이다. 위아래 둘 다 두면 카드에 닿기 전에 같은 말을 두 번 읽는다.
+         경고 자체('가운데 봉우리 ≠ 중립')는 여기 남긴다(2026-08-03). -->
     <p class="lblnote">컴포짓은 하위 지표들의 <b>횡단면 백분위를 평균낸 값</b>입니다(0~100).
-      평균을 내면 분포가 가운데로 모이는 것이 수학적 성질이므로, 봉우리가 가운데 있다고 해서
-      시장이 중립이라는 뜻이 아닙니다. 입력이 하나뿐인 컴포짓은 분포가 균등한 것이 당연합니다.</p>
+      <b>봉우리가 가운데 있다고 시장이 중립이라는 뜻은 아닙니다</b> — 이유는 카드 아래 주석에 있습니다.</p>
     <div id="comps"><div class="skel">불러오는 중…</div></div>
   </section>
 
@@ -557,9 +559,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section aria-labelledby="sent-h">
     <p class="lbl" id="sent-h">⑥ 시장 심리 지수 <span class="sub">· 상태 요약 · 수익 예측 신호 아님</span></p>
+    <!-- '수익 예측 신호 아님'은 절 제목 sub 와 카드 아래 note 둘에 남는다. 국면 페이지 링크도
+         그 note 가 들고 있다(938행). 여기서는 그 둘의 반복만 걷었다(2026-08-03).
+         ⚠ 카드 아래 note 는 sentiment.json 의 note 를 그대로 찍고, 그 글이 이 문단 내용을 전부
+           포함한 뒤 극단공포 위험조정·유효 표본·GFC 부호반전까지 더 적는다. -->
     <p class="lblnote">VIX 수준·VIX 기간구조·MOVE를 합성한 0~100 상태 지표입니다.
-      <b>상태 요약일 뿐 수익 예측 신호가 아닙니다</b> — 랩 자체 검증에서 이 지수는 VIX 단독보다 낫지 않았고,
-      극단탐욕='매도'에는 통계적 근거가 없었습니다. 구성요소·백테스트 전문은 국면 페이지에 있습니다.</p>
+      랩 자체 검증에서 <b>이 지수는 VIX 단독보다 낫지 않았고, 극단탐욕='매도'에는 통계적 근거가 없었습니다.</b></p>
     <div class="card" id="sent"><div class="skel">불러오는 중…</div></div>
   </section>
 

@@ -505,11 +505,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       날짜는 <b>미국 동부 기준</b>입니다.</p>
 
     <div class="note">
-      <b>이 칸은 오래 비어 있었습니다.</b> 실적 <u>예정일</u>은 SEC에 없기 때문입니다 — SEC는 8-K Item 2.02로
-      <b>이미 일어난</b> 발표만 압니다(그건 <a href="filings.html">공시 피드</a>에 있습니다). 앞으로의 일정은
-      회사 IR 공지이거나 벤더가 모아 파는 것입니다. 남은 길이던 yfinance <code>earnings_dates</code>는 비공식이라
-      끊기면 이 칸이 같이 죽습니다(2026-07-25에 실제로 Actions 러너가 Yahoo에 401로 막혀 종목 갱신이 사흘 멈췄습니다).
-      <b>Finnhub 무료 키를 받아 공식 API로 채웠습니다.</b>
+      <b>출처는 Finnhub 공식 API</b>이고 Nasdaq 캘린더로 교차검증합니다. 실적 <u>예정일</u>은 SEC에 없습니다 —
+      SEC는 8-K Item 2.02로 <b>이미 일어난</b> 발표만 알고, 그건 <a href="filings.html">공시 피드</a>에 있습니다.
+      예정일이 얼마나 확정적인지는 아래 <b>이 화면의 한계</b>에 적었습니다.
+      <!-- 쓰지 않기로 한 경로(yfinance earnings_dates)의 이력과 2026-07-25 러너 401 사건 경위를 여기서 뺐다
+           (2026-08-03). 살아 있는 한계는 지우지 않았다 — 621행이 earnings.json 의 limits 를 그대로 찍고,
+           거기에 '발표 일정은 회사가 바꾼다 · 여기 날짜는 조회 시점의 예정일이며 확정이 아니다'가 들어 있다. -->
     </div>
 
     <div class="filters">
