@@ -71,6 +71,8 @@
   .ax b{color:var(--muted);font-weight:400;margin-right:5px}
   .hstrat{padding:14px 26px;border-top:1px solid var(--line-soft);background:var(--panel-2);font-size:13.5px;color:var(--ink-2)}
   .hstrat b{color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-right:8px}
+  /* 값 옆의 단서 — 이 줄이 랩의 판정으로 읽히지 않게 한다(값은 교과서 매핑이다) */
+  .hstrat em{display:block;margin-top:5px;font-style:normal;font-size:11.5px;color:var(--muted);line-height:1.55}
 
   /* 종합 요약 박스 — 새 색을 만들지 않고 검증된 조합 재사용(panel-2 배경 + cold 좌측바) */
   .rsum{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--cold);border-radius:12px;padding:15px 18px}
@@ -674,7 +676,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var hero='<div class="hero" style="--rc:'+rc+'"><div class="hrow"><div class="hemoji" aria-hidden="true">'+rg.emoji+'</div>'+
       '<div><div class="hlab">'+rg.label+' · '+(RKO[rg.label]||'')+'</div><div class="hdesc">'+rg.desc+'</div>'+
       '<div class="haxes"><span class="ax"><b>성장</b>'+(GKO[rg.growth]||rg.growth)+'</span><span class="ax"><b>물가</b>'+(GKO[rg.inflation]||rg.inflation)+'</span><span class="ax"><b>금융</b>'+(GKO[rg.financial]||rg.financial)+'</span></div></div></div>'+
-      '<div class="hstrat"><b>참고 전략</b>'+rg.strategy+'</div></div>';
+      // ⚠ 라벨을 '참고 전략' → '이 국면의 교과서적 대응'으로 바꾸고 단서를 붙인다(2026-08-03).
+      //   이 값의 출처는 build/refresh_regime.py 의 MATRIX — 성장×물가 9칸에 **손으로 적어 둔
+      //   교과서 매핑**이고 이 랩이 검증한 규칙이 아니다. 그런데 이 줄은 #summary 보다 위,
+      //   스크롤 전에 읽히는 자리에서 아무 단서 없이 자산배분 행동을 말하고 있었다 —
+      //   같은 페이지 782행은 '지표 상태 집계입니다 · 방향 예측이 아닙니다'로 못 박고,
+      //   내비는 이 페이지에 '미검증' 배지를 단다. 값 자체는 regime.json 그대로 둔다.
+      '<div class="hstrat"><b>이 국면의 교과서적 대응</b>'+rg.strategy+
+      '<em>성장×물가 매트릭스에 적힌 통념이며 랩이 검증한 규칙이 아닙니다</em></div></div>';
     // indicator groups
     var groups=["성장","노동","물가","금융","금리","주택"], ig='';
     groups.forEach(function(g){
@@ -1287,10 +1296,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        btable('분위 버킷별 이후 수익 — 역사 대비 상대 위치 기준','확장 백분위 · 겹치는 관측을 에피소드로 묶어 t검정',bt.buckets_pctl,bt.base_pctl,curPct,true);
 
     // ⑤ 정직 고지
+    // ⚠ 이 블록은 **코드에만 있고 렌더되지 않았다**(2026-08-03 실측: vv 참조 0곳, SD.note·
+    //   SD.disclaimer 출력 0곳). 그런데 market.html 562·935~936행이 '구성요소·백테스트 전문은
+    //   국면 페이지에', '구간별 백테스트(표본 수·t·p 포함)는 국면 페이지의 시장 심리 절에'로
+    //   독자를 이리로 보낸다 — 링크를 따라온 사람이 약속받은 근거를 못 찾고 있었다.
+    //   글자를 새로 짓는 것이 아니라 **이미 쓴 글자를 화면에 내보내는 일**이다. 수치는 전부
+    //   sentiment.json 에서 읽는다(하드코딩 없음).
+    //   ⚠ n1 은 소수 1자리라 -0.189 와 -0.201 이 둘 다 -0.2 가 된다 — 여기서는 3자리로 쓴다.
     var vv=bt.vs_vix_only||{};
+    function ic(v){return (v==null||isNaN(v))?'—':Number(v).toFixed(3);}
+    var honest='';
+    if(SD&&(SD.note||SD.disclaimer))
+      honest+='<div class="tbintro"><b>정직 고지</b> '+esc(SD.note||SD.disclaimer)+'</div>';
+    if(vv&&vv.verdict)
+      honest+='<div class="tbintro"><b>VIX 단독과 비교</b> '+esc(vv.basis||'')+
+              ' — 합성 <b>'+ic(vv.ic60_composite)+'</b> · VIX 단독 <b>'+ic(vv.ic60_vix_only)+'</b>'+
+              (vv.n!=null?' (n='+Number(vv.n).toLocaleString('en-US')+')':'')+
+              '. '+esc(vv.verdict)+'</div>';
     // 게이지는 히어로 2열의 우측으로, 상세(구성요소·히스토리·백테스트·고지)는 아래 섹션에 그대로.
     var gh=el('senthero'); if(gh)gh.innerHTML=g;
-    host.innerHTML=head()+comp+hist+tb;
+    host.innerHTML=head()+comp+hist+tb+honest;
     drawSpark();
   }
 

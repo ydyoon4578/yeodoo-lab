@@ -522,7 +522,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a href="index.html">← 전략 랩 홈</a> · <a href="filings.html">8-K 공시 피드</a> ·
     <a href="sector.html">섹터 히트맵</a> · <a href="stocks.html">종목 신호</a> ·
     <a href="sources.html">데이터 출처·기준일</a>
-    <br>출처 SEC EDGAR submissions API(SIC) + 유니버스 섹터는 yfinance · 생성 <code>build/refresh_filings.py</code>
+    <br>출처 SEC EDGAR submissions API(SIC) + 유니버스 섹터는 members.json(S&amp;P 500 표의 GICS) · 생성 <code>build/refresh_filings.py</code>
   </footer>
 </div>
 
@@ -618,7 +618,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var big=D.groups[0];
     el('tally').innerHTML=
       ty(j.n_sic,'SIC 분류','같은 518사를 가른 수','var(--ink)')+
-      ty(Object.keys(SEC).length?new Set(Object.values(SEC)).size:'—','yfinance 섹터','비교 대상 체계','var(--champ)')+
+      ty(Object.keys(SEC).length?new Set(Object.values(SEC)).size:'—','GICS 섹터','비교 대상 체계','var(--champ)')+
       ty(nsplit,'섹터가 섞인 분류','두 체계가 어긋나는 칸','var(--rp)')+
       ty(solo,'1사뿐인 분류','이만큼은 사실상 개별 종목','var(--marg)');
     el('limits').innerHTML='<b>이 데이터의 성격</b><br>'+
@@ -660,9 +660,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     ]).then(function(a){renderWatch(a[0],a[1]);});
   }
 
-  function card(title,sub,rows,color,foot){
+  // ⚠ total 은 **자르기 전** 건수다. 전에는 rows.length(=잘린 뒤)만 찍어, 조건을 만족한 건수가
+  //   표시 개수보다 많아도 잘렸다는 표시가 어디에도 없었다(실측 2026-08-03: 중요 8-K 23건 →
+  //   '10건', 내부자 매도 29건 → '8건'). 분모를 먼저 적는 이 사이트의 규칙과 정면으로 어긋난다.
+  //   같은 저장소 rel-value.html:831 이 같은 상황에서 '앞 N종목만 표시했습니다(조건 일치 N종목)'
+  //   라고 밝히는 방식을 따른다. total 을 안 넘기면 예전과 똑같이 동작한다.
+  function card(title,sub,rows,color,foot,total){
     if(!rows.length)return '';
-    return '<div class="wcard" style="--wc:'+color+'"><h3>'+esc(title)+'<span class="wn">'+rows.length+'건</span></h3>'+
+    var _n=(total!=null&&total>rows.length)
+      ? ('해당 '+total+'건 중 '+rows.length+'건 표시') : (rows.length+'건');
+    return '<div class="wcard" style="--wc:'+color+'"><h3>'+esc(title)+'<span class="wn">'+_n+'</span></h3>'+
       '<p class="wsub">'+sub+'</p><div class="wrows">'+rows.join('')+'</div>'+
       (foot?'<p class="wfoot">'+foot+'</p>':'')+'</div>';
   }
@@ -695,7 +702,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       lone.slice(0,12).map(function(x){
         return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                '<span class="wr">'+tk(x.t)+' <em>혼자 '+esc(x.side)+'</em> · 판정 있는 '+x.n+'사 중</span></div>';
-      }),'var(--rp)');
+      }),'var(--rp)',null,lone.length);
 
     // ② 산업 전체가 한 방향
     var uni_=[];
@@ -713,7 +720,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                '<span class="wr"><em>'+x.n+'사 전부 '+esc(x.side)+'</em> · '+
                x.g.ts.slice(0,8).map(tk).join(' ')+(x.g.ts.length>8?' …':'')+'</span></div>';
-      }),'var(--marg)');
+      }),'var(--marg)',null,uni_.length);
 
     // ③ 200일선 이탈이 몰린 산업
     var brk=[];
@@ -728,7 +735,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       brk.slice(0,10).map(function(x){
         return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                '<span class="wr"><em>'+x.n+'/'+x.g.ts.length+'사</em> ('+Math.round(x.p*100)+'%)</span></div>';
-      }),'var(--hot)');
+      }),'var(--hot)',null,brk.length);
 
     // ④ 8-K 중요 항목이 몰린 산업
     if(FIL&&FIL.feed){
@@ -749,7 +756,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                  '<span class="wr"><em>'+x.n+'건</em> · '+Object.keys(x.ts).length+'사 · '+
                  Object.keys(x.ts).slice(0,8).map(tk).join(' ')+'</span></div>';
-        }),'var(--champ)','원문은 <a href="filings.html">8-K 공시 피드</a>에서 Item별로 볼 수 있습니다.');
+        }),'var(--champ)','원문은 <a href="filings.html">8-K 공시 피드</a>에서 Item별로 볼 수 있습니다.',mj.length);
     }
 
     // ⑤ 내부자 재량 거래가 몰린 산업
@@ -770,13 +777,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         sells.slice(0,8).map(function(x){
           return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                  '<span class="wr"><em>매도 '+x.s+'건</em> vs 매수 '+x.b+'건 · '+x.co+'사</span></div>';
-        }),'var(--hot)');
+        }),'var(--hot)',null,sells.length);
       h+=card('내부자 장내매수가 있는 산업','같은 구간에서 매수(P)가 매도(S) 이상인 산업입니다. '+
         '내부자 매수가 초과수익으로 이어지는지 이 랩은 <b>검증한 적이 없습니다</b>.',
         buys.slice(0,8).map(function(x){
           return '<div class="wrow"><span class="wl">'+sicLabel(x.g)+'</span>'+
                  '<span class="wr"><em>매수 '+x.b+'건</em> vs 매도 '+x.s+'건 · '+x.co+'사</span></div>';
-        }),'var(--deploy)','종목별 원문은 <a href="co.html#ins">종목 재무 → 내부자 거래</a>에서 볼 수 있습니다.');
+        }),'var(--deploy)','종목별 원문은 <a href="co.html#ins">종목 재무 → 내부자 거래</a>에서 볼 수 있습니다.',buys.length);
     }
 
     if(!h)h='<div class="note">지금 데이터에서는 눈에 띄는 항목이 없습니다 — <b>없으면 없다고 적습니다.</b></div>';
