@@ -273,7 +273,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
   .tabs a{padding:.34rem .7rem;border:1px solid var(--line);border-radius:999px;
     text-decoration:none;color:var(--ink-2);font-size:.9rem;background:var(--panel)}
-  .tabs a[aria-current=true]{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:600}
+  .tabs a[aria-current="page"]{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:600}
   .stwrap{display:grid;gap:1rem}
   .stwrap h2{font-size:1.15rem;margin:.2rem 0 .1rem}
   .stwrap .ref{color:var(--accent);font-size:.85rem}
@@ -310,7 +310,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
@@ -467,7 +467,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p class="sub" id="sub">상위 10종목 동일가중 · 월말 리밸런스</p>
   </header>
 
-  <div class="tabs" id="tabs" role="tablist" aria-label="스타일 선택"></div>
+  <!-- ⚠ role="tablist"/"tab" 을 뺐다(2026-08-03). 이것들은 href="#s=..." 로 이동하는 진짜
+         링크이고, 탭 위젯이 요구하는 aria-selected·aria-controls·tabpanel·화살표키
+         이동이 하나도 없다. 역할만 선언하면 보조기기가 '탭'으로 안내하고 사용자는
+         동작하지 않는 키를 기대하게 된다 — 링크 묶음으로 정직하게 적는다. -->
+  <nav class="tabs" id="tabs" aria-label="스타일 선택"></nav>
 
   <section id="body" aria-live="polite"><p class="muted">불러오는 중…</p></section>
 
@@ -481,7 +485,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        그 아래에 짝 없는 </div> 가 하나 남아 있었다(파일 전체 여는 9 · 닫는 10).
        다른 페이지(index·portfolio·valuation·sector)는 전부 이 구조다. -->
   <footer>
-    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">국가경제 분석</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a><br>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a><br>
     과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
@@ -569,7 +573,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function tabs(){
     var box=document.getElementById('tabs');
     box.innerHTML=D.styles.map(function(s){
-      return '<a href="#s='+s.key+'" role="tab" aria-current="'+(s.key===KEY)+'">'+esc(s.label)+'</a>';
+      return '<a href="#s='+s.key+'"'+(s.key===KEY?' aria-current="page"':'')+'>'+esc(s.label)+'</a>';
     }).join('');
   }
 

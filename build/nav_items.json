@@ -26,7 +26,7 @@
      "effort": "M"
     },
     {
-     "name": "국가경제 분석",
+     "name": "시장 국면",
      "file": "regime.html",
      "status": "existing",
      "desc": "FRED 39지표로 만든 국면 판정 — 미국 단일",

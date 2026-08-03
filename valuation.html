@@ -408,7 +408,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
@@ -726,7 +726,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         그래서 전제를 <b>자기자본 두 시점과 연간 순이익이 모두 있는 회사 전수</b>로 쟀습니다(표본 수는 아래 박스):</p>
       <div class="egrid" id="rimnums"></div>
       <p class="capn" id="csverdict" style="margin-top:10px">불러오는 중…</p>
-      <p><b>결론 — 미국 회계에서 클린 서플러스는 성립하지 않습니다.</b> 가장 큰 누락 항목은 OCI가 아니라
+      <p><b>결론 — 미국 회계에서 클린 서플러스는 성립하지 않습니다.</b> 가장 큰 누락 항목은 OCI(기타포괄손익)가 아니라
         <b>자사주 매입</b>이었습니다(예: AAPL의 잔차가 −79,922 → +10,789백만$로, MTD는 −766 → +34로 줄어듭니다).
         자사주와 신주 발행을 모두 반영해도 <b>4곳 중 1곳</b>은 기초 자기자본의 10%를 넘게 어긋납니다.
         이 상태에서 잔여이익을 미래로 늘리면, 나오는 값은 RIM이 아니라 <b>맞물리지 않는 두 시계열을 억지로 이은 다른 무엇</b>입니다.
@@ -1022,7 +1022,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+='</div>';
     h+='<p class="capn">⚠ FCF의 정의는 정보원(yfinance)의 <code>freeCashflow</code>(영업현금흐름 − 설비투자)이며, '+
        '레버드/언레버드 구분이 문서화돼 있지 않습니다. 이 페이지는 그것을 시가총액으로 나눈 값(FCF 수익률)을 쓰므로 '+
-       '<b>자기자본 기준으로 취급</b>하고 할인율도 자기자본비용(CAPM)을 씁니다. 엄밀한 FCFE가 아니며, '+
+       '<b>자기자본 기준으로 취급</b>하고 할인율도 자기자본비용(CAPM)을 씁니다. 엄밀한 FCFE(자기자본 잉여현금흐름)가 아니며, '+
        '기업 전체 FCF를 자기자본비용으로 할인하는 흔한 오류와 이 구분은 사실상 종이 한 장 차이입니다 — '+
        '그 불확실성까지 감안해서 읽으십시오.</p>';
     el('cover').innerHTML=h;
