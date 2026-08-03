@@ -154,6 +154,31 @@
   .card .bar>i{display:block;height:100%;background:var(--edge,var(--accent));border-radius:5px}
   .card .barl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px}
   /* 국면 이력 띠 — 최근 3년을 월 단위 블록으로. 지금이 어디쯤인지 한눈에 보인다 */
+  /* ── 게이지 ── 0~100 눈금 위의 위치. CNN Fear & Greed 가 쓰는 방식을 가져왔다 —
+     숫자만 있으면 '68' 이 높은지 낮은지 모르지만, 띠 위의 점은 볼 필요도 없이 읽힌다.
+     심리(0~100)·폭(0~100%)·위험선호(중앙 0) 셋이 같은 부품을 쓴다. 셋이 같은 모양이라
+     카드를 옮겨 볼 때 눈이 새로 배울 것이 없다. */
+  /* ⚠ --g1~--g5 는 JS 가 줄마다 인라인으로 준다. 여기 **기본값을 반드시 둔다** —
+     var() 가 정의되지 않으면 background 선언이 통째로 무효가 되어 띠가 조용히 사라진다
+     (build/validate_site.py 가 이 실수를 잡는다). 기본은 회색 단색이다. */
+  .gauge{--g1:var(--line);--g2:var(--line);--g3:var(--line);--g4:var(--line);--g5:var(--line);
+       margin:9px 0 0;height:10px;border-radius:6px;position:relative;
+       background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5))}
+  .gauge>i{position:absolute;top:-3px;width:4px;height:16px;border-radius:2px;
+       background:var(--ink);box-shadow:0 0 0 2px var(--panel);transform:translateX(-2px)}
+  .gauge>b{position:absolute;top:-2px;width:1px;height:14px;background:var(--panel);opacity:.5}
+  .gaugel{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;
+       color:var(--muted);margin-top:5px}
+  .gaugel span:nth-child(2){opacity:.7}
+  /* 종합 한 줄 — 네 카드를 각자 읽고 머리로 합치게 두지 않는다. 심리와 폭이 어긋나는
+     경우가 이 섹션에서 가장 말할 값어치가 있는 것이라(소수가 끄는 장세) 그것을 문장으로 낸다. */
+  .mksum{margin:0 0 12px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;
+       background:var(--panel);border-left:3px solid var(--edge,var(--accent));
+       font-size:12.5px;color:var(--ink-2);line-height:1.6}
+  .mksum b{color:var(--ink)}
+  .mksum .mkchips{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;
+       font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .mksum .mkchips b{color:var(--edge,var(--ink));font-weight:700}
   .card .rstrip{display:flex;gap:1px;margin-top:10px;height:14px;border-radius:4px;overflow:hidden}
   .card .rstrip i{flex:1;background:var(--c,var(--muted));opacity:.85}
   .card .rstrip i:last-child{opacity:1;box-shadow:inset 0 0 0 1.5px var(--ink)}
@@ -916,6 +941,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <!-- ② 시장 -->
     <section id="s-market" aria-labelledby="mk-h">
       <p class="lbl" id="mk-h">지금 시장<a class="more2" href="market.html">시장 대시보드 →</a></p>
+      <div class="mksum" id="mksum" hidden></div>
       <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
       <!-- ⚠ 섹터·산업 표가 여기 있었다 — 2026-08-03 에 위 '기간별 수익률' 표 안으로
            들어갔다(사용자 요청). 지수(SPY·QQQ) 아래, 스타일 ETF 위가 그 자리다.
@@ -1246,6 +1272,51 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 칸은 한 번만 만들고, 내용이 바뀐 칸만 다시 그린다.
   var MKSK='<div class="card"><div class="ch"><span>불러오는 중…</span></div></div>';
   function mkFail(t){return '<div class="card"><div class="ch"><span>'+esc(t)+'을 불러오지 못했습니다</span></div></div>';}
+  // 게이지 한 줄. v 를 [lo,hi] 위의 위치로 찍는다. zones 는 왼쪽부터의 색 다섯.
+  // ticks 는 눈금(값 배열) — 밴드의 경계를 눈으로 잡게 한다.
+  function gauge(v,lo,hi,zones,ticks,labels){
+    if(v==null||v!==v)return '';
+    var pct=Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+    var z=zones.map(function(c,i){return '--g'+(i+1)+':'+c;}).join(';');
+    return '<div class="gauge" style="'+z+'">'+
+      (ticks||[]).map(function(t){
+        return '<b style="left:'+((t-lo)/(hi-lo)*100).toFixed(1)+'%"></b>';}).join('')+
+      '<i style="left:'+pct.toFixed(1)+'%"></i></div>'+
+      '<div class="gaugel">'+(labels||[]).map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
+  }
+  // 종합 한 줄 — **네 카드를 각자 읽고 머리로 합치게 두지 않는다.**
+  // 이 섹션에서 가장 말할 값어치가 있는 것은 심리와 폭이 어긋나는 경우다:
+  // 심리가 뜨거운데 폭이 안 받치면 소수 대형주가 끄는 장세이고, 그 판정은 두 카드를
+  // 나란히 놓는 것만으로는 안 나온다(CNN Fear & Greed 해설이 같은 지적을 한다).
+  // 🚨 상태 요약이지 예측이 아니다 — 문장 끝에 그 말을 함께 낸다.
+  function drawMkSum(){
+    var box=el('mksum'); if(!box)return;
+    var rg=MK.rg, sn=MK.sn, b=MK.bd, mb=MK.mb;
+    if(!rg||!sn||!b||!b.n){box.hidden=true;return;}
+    var ko=(rg.regime&&RGKO[rg.regime.label])||'', sc=sn.score;
+    var den=b.n_ma200||b.n, wide=den?100*b.above200/den:null;
+    var hot=sc!=null&&sc>=60, cold=sc!=null&&sc<=40;
+    var brd=wide!=null&&wide>=55, nar=wide!=null&&wide<45;
+    var msg;
+    if(hot&&nar)msg='심리는 뜨거운데 <b>폭이 안 받칩니다</b> — 소수 종목이 끄는 장세입니다.';
+    else if(cold&&brd)msg='심리는 얼어 있는데 <b>폭은 버티고 있습니다</b> — 지수보다 종목이 낫습니다.';
+    else if(hot&&brd)msg='심리와 폭이 <b>같은 방향</b>입니다 — 오름세가 넓게 퍼져 있습니다.';
+    else if(cold&&nar)msg='심리와 폭이 <b>같이 약합니다</b> — 오르는 종목 자체가 적습니다.';
+    else msg='심리와 폭이 <b>어느 쪽으로도 치우치지 않았습니다</b>.';
+    var cm={}; ((mb&&mb.credit)||[]).forEach(function(x){cm[x.t]=x;});
+    var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
+    var sp=(hy!=null&&ig!=null)?(hy-ig):null;
+    var c=(rg.regime&&RGC[rg.regime.label])||'var(--accent)';
+    box.hidden=false;
+    box.setAttribute('style','--edge:'+c);
+    box.innerHTML='<span>'+(rg.regime&&rg.regime.emoji||'')+' <b>'+esc(ko)+'</b> 국면 · '+msg+
+      ' <span style="color:var(--muted)">지금 상태를 적은 것이지 앞을 맞히는 값이 아닙니다.</span></span>'+
+      '<div class="mkchips">'+
+      '<span>심리 <b>'+(sc==null?'—':Math.round(sc))+'</b> '+esc(sn.label||'')+'</span>'+
+      '<span>폭 <b>'+(wide==null?'—':wide.toFixed(1)+'%')+'</b> 200일선 위</span>'+
+      (sp==null?'':'<span>위험선호 <b>'+(sp>0?'+':'')+sp.toFixed(2)+'%p</b> 하이일드−투자등급</span>')+
+      '<span>기준 '+esc(rg.as_of||'')+'</span></div>';
+  }
   function renderMarket(){
     var w=el('marketcards'); if(!w)return;
     if(!w.getAttribute('data-slots')){
@@ -1298,9 +1369,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         //   옆 국면 띠 36개월과 같은 창)만 실어 준다. spark 는 x 를 등간격 인덱스로 그리므로
         //   점마다 날짜가 필요 없고, 라벨용 시작 날짜 하나(hist_start)만 함께 온다.
         //   ⚠ 자르는 창을 바꾸려면 build/home_market.py 의 SN_HIST 와 같이 바꿀 것.
-        spark(sn.scores||[],320,38,0,100)+
+        // 0~100 위의 위치를 먼저 보이고, 이력 곡선은 그 아래에 둔다. 숫자만으로는
+        // 68 이 높은지 모르지만 띠 위의 점은 볼 필요도 없이 읽힌다(CNN Fear & Greed 방식).
+        gauge(sn.score,0,100,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [25,45,55,75],['극단 공포 0','중립 50','극단 탐욕 100'])+
+        spark(sn.scores||[],320,34,0,100)+
         '<div class="barl"><span>'+esc(sn.hist_start||'')+'</span>'+
-        '<span>0~100 · 점선 50</span></div>'+
+        '<span>3년 이력 · 점선 50</span></div>'+
         mtbl([p.d1!=null?['전일',Math.round(p.d1)]:null,
               p.w1!=null?['1주 전',Math.round(p.w1)]:null,
               p.m1!=null?['1개월 전',Math.round(p.m1)]:null,
@@ -1323,7 +1400,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       h='<div class="card lk" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
         '<div class="ch"><a class="cl" href="market.html">시장 폭</a><span>'+b.n+'종목</span></div>'+
         '<div class="cv"><span class="tnum">'+pct.toFixed(1)+'%</span> 200일선 위</div>'+
-        '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
+        // 50% 가 갈림선이다 — 막대만 있으면 '67.5%' 가 넓은 건지 눈으로 안 잡힌다.
+        gauge(pct,0,100,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [30,45,55,70],['좁다 0%','절반 50%','넓다 100%'])+
         '<div class="barl"><span>200일선 위 '+b.above200+'</span><span>아래 '+(den-b.above200)+'</span></div>'+
         mtbl([['상승추세',f['상승추세']!=null?f['상승추세']:'—'],
               ['52주 돌파',f['52주돌파']!=null?f['52주돌파']:'—'],
@@ -1359,6 +1440,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div class="ch"><a class="cl" href="macro.html">위험선호</a><span>'+esc(mb.as_of||'')+'</span></div>'+
         '<div class="cv">'+(sp==null?'—':(sp>0?'+':'')+'<span class="tnum">'+sp.toFixed(2)+'</span>%p')+
         ' '+(sp==null?'':(sp>=0?'위험선호':'위험회피'))+'</div>'+
+        // 0 을 가운데 두고 ±3%p 안에서 위치를 찍는다. 부호만으로는 '살짝'과 '많이'가 안 갈린다.
+        gauge(sp==null?null:Math.max(-3,Math.min(3,sp)),-3,3,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [-1.5,-0.3,0.3,1.5],['위험회피 −3%p','0','위험선호 +3%p'])+
         '<div class="barl"><span>하이일드 − 투자등급</span><span>1개월</span></div>'+
         mtbl(mb.credit.map(function(x){
           var v=(x.r||{})['1M'];
@@ -1377,6 +1463,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '</div>';
       put('rk',h);
     } else { put('rk', mb===false?mkFail('위험선호'):MKSK); }
+    drawMkSum();
   }
   // 섹터·산업 성과표 — 위 스타일 표(#sttbl)와 **같은 표 형식**이다(사용자 요청 2026-08-03).
   // 같은 .sttbl · 같은 stCell · 같은 ST_HZ 라 열이 저절로 맞고 색 규칙도 하나다.
