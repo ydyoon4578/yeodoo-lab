@@ -50,7 +50,7 @@ def wanted():
     """받을 명단 → {티커: 마지막 멤버월 or None}.
 
     정본은 data/pit_universe.json(build/pit_backtest.py --universe-only 가 낸다) — PIT 창
-    전체(2020-09~)의 편출 종목이라 펀더멘털 규칙까지 덮는다. 스타일 창만 담은
+    전체(2015-01~)의 편출 종목이라 펀더멘털 규칙까지 덮는다. 스타일 창만 담은
     style_pit.json 의 gone_tickers 도 합친다(둘의 창이 달라 서로를 포함하지 않는다).
     """
     out = {}
