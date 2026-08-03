@@ -17,18 +17,18 @@
    "alias": "역변동성 가중 + 추세게이트 + 목표변동성 10%"
   }
  ],
- "marginal_n": 9,
+ "marginal_n": 6,
  "deploy_n": 3,
  "reject_compare_n": 2,
- "explorer_n": 14,
- "archive_n": 45,
+ "explorer_n": 11,
+ "archive_n": 44,
  "archive_cats": 10,
- "reject_total": 47,
- "archive_reject_n": 33,
+ "reject_total": 46,
+ "archive_reject_n": 32,
  "archive_variant_n": 7,
  "archive_undetermined_n": 4,
  "archive_undecidable_n": 1,
- "n_tech": 51,
- "n_asset": 36,
- "n_rechk": 5
+ "n_tech": 54,
+ "n_asset": 35,
+ "n_rechk": 4
 }

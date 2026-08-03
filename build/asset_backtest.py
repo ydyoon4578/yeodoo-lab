@@ -281,11 +281,11 @@ ROLE = {
     "sma200": "타이밍오버레이", "golden-cross": "타이밍오버레이", "abs-mom": "타이밍오버레이",
     "seasonal": "타이밍오버레이", "curve-inv": "타이밍오버레이", "vix-level": "타이밍오버레이",
     "unrate-trend": "타이밍오버레이", "timing-ensemble": "타이밍오버레이",
-    "vol-target-spy": "위험감축",
-    # 타이밍 규칙에 따라붙는 반론을 하나씩 검정하는 줄들. 낙폭 게이트와 적응형 변동성
-    # 레짐은 '깨지면 줄인다'가 목적이라 위험감축, 나머지는 진입 여부를 정하므로 오버레이.
+    # 타이밍 규칙에 따라붙는 반론을 하나씩 검정하는 줄들. 전부 진입 여부를 정하므로 오버레이다.
+    # ⚠ 여기 있던 '위험감축' 세 줄(vol-target-spy·dd-gate·vol-regime)은 2026-07-30 에 전략째로
+    #   지웠다(사용자 결정) — 아래 s_voltgt·s_ddgate·s_volregime 이 있던 자리다.
     "sma-grid": "타이밍오버레이", "sma200-confirm": "타이밍오버레이",
-    "rel-mom3": "타이밍오버레이", "dd-gate": "위험감축", "vol-regime": "위험감축",
+    "rel-mom3": "타이밍오버레이",
     # 달력·구조 계열 — 가격도 재무도 안 보고 날짜만 본다. 성격은 여전히 진입 여부다.
     "tom": "타이밍오버레이", "opex": "타이밍오버레이", "fomc-even": "타이밍오버레이",
 }
@@ -1074,27 +1074,7 @@ def build():
           "그날 실제로 알 수 있던 값만 쓴다. 시차를 안 넣으면 없던 정보로 매매하게 된다.",
           pad=25)
 
-    # 8) 변동성 타깃 — 단일자산
-    def s_voltgt():
-        ts = ["SPY", SAFE]
-        st = first_common(ts, pad=80)
-        def w(i):
-            v = vol(ser("SPY"), i, 60)
-            if v is None:
-                return {"SPY": 1.0}
-            av = v * math.sqrt(252)
-            k = min(1.0, 0.12 / av) if av > 0 else 1.0
-            return {"SPY": k, SAFE: 1.0 - k} if k < 1.0 else {"SPY": 1.0}
-        return run_weights(w, st, "변동성 타깃 (SPY 12%)", lambda i: {"SPY": 1.0},
-                           "월말에 최근 60일 실현변동성을 연율화해, 목표 12%를 넘는 만큼 "
-                           "SPY 비중을 줄이고 나머지를 SHY 로. 레버리지는 쓰지 않는다(최대 100%).",
-                           "기존 rp-voltarget 은 4자산 리스크패리티 위에 얹은 것이라 "
-                           "타깃팅 효과와 배분 효과가 섞인다. 단일자산이면 '변동성이 클 때 "
-                           "줄이는 것' 하나만 남는다. 위로는 안 늘리므로 구조적으로 "
-                           "상시보유보다 수익이 낮고, 값어치가 있다면 샤프·MDD 에서 나온다.")
-    add("vol-target-spy", None, s_voltgt)
-
-    # 9) 다수결 앙상블 — 규칙 셋의 합의
+    # 8) 다수결 앙상블 — 규칙 셋의 합의
     def s_ens():
         ts = ["SPY", SAFE, "^VIX"]
         st = first_common(ts, pad=285)
@@ -1126,7 +1106,7 @@ def build():
     # 앞 아홉이 '유명한 규칙을 목록에 올린다'였다면, 여기 다섯은 그 규칙들에 늘 따라붙는
     # 반론을 하나씩 검정한다. 각 줄이 답하는 질문을 note 에 적어 둔다.
 
-    # 10) 이동평균 기간을 바꾸면? — '200이 특별한가'
+    # 9) 이동평균 기간을 바꾸면? — '200이 특별한가'
     def s_smagrid():
         ts = ["SPY", SAFE]
         st = first_common(ts, pad=270)
@@ -1147,69 +1127,7 @@ def build():
                            "크게 나쁘면 그 숫자가 표본에 맞춰진 것이라는 뜻이 된다.")
     add("sma-grid", None, s_smagrid)
 
-    # 11) 낙폭 게이트 — '손절이 되는가'. 상태(state)가 필요해 미리 걸어 둔다.
-    def _dd_state(out=-0.10, back=-0.05):
-        """전고점 대비 out 이하로 빠지면 이탈, back 이상 회복하면 재진입.
-
-        히스테리시스(나가는 문턱과 들어오는 문턱을 다르게)를 두는 이유는 한 문턱만 쓰면
-        그 근처에서 매달 들락거리기 때문이다. 전고점은 이탈 중에도 계속 갱신한다 —
-        나가 있는 동안 시장이 오르면 그 고점이 재진입 기준이 되어야 한다.
-        """
-        s = ser("SPY")
-        on, peak, stt = True, None, []
-        for i in range(len(DTS)):
-            p = s[i] if s else None
-            if p is None:
-                stt.append(on); continue
-            peak = p if peak is None else max(peak, p)
-            dd = p / peak - 1.0
-            if on and dd <= out:
-                on = False
-            elif (not on) and dd >= back:
-                on = True
-            stt.append(on)
-        return stt
-    _DD = None
-
-    def s_ddgate():
-        nonlocal _DD
-        _DD = _dd_state()
-        ts = ["SPY", SAFE]
-        st = first_common(ts, pad=30)
-        def w(i):
-            return {"SPY": 1.0} if _DD[i] else {SAFE: 1.0}
-        return run_weights(w, st, "낙폭 게이트 (-10% 이탈 / -5% 복귀)",
-                           lambda i: {"SPY": 1.0},
-                           "전고점 대비 -10% 아래로 빠지면 SHY 로 나가고, -5% 위로 회복하면 "
-                           "다시 SPY. 두 문턱을 다르게 둬 경계에서 들락거리지 않게 한다.",
-                           "'가격이 이동평균 아래로 갔나'가 아니라 '얼마나 깨졌나'로 판단하면 "
-                           "다른가를 묻는 줄이다. 손절은 가장 흔히 권해지는 처방인데, "
-                           "-10%는 이미 깨진 뒤라 되사는 값이 비쌀 수 있다.")
-    add("dd-gate", None, s_ddgate)
-
-    # 12) 적응형 변동성 레짐 — 'VIX 25 같은 고정 문턱이 옳은가'
-    def s_volregime():
-        ts = ["SPY", SAFE]
-        st = first_common(ts, pad=830)
-        def w(i):
-            s = ser("SPY")
-            v = vol(s, i, 60)
-            if v is None or i < 780:
-                return {"SPY": 1.0}
-            hist = [x for j in range(i - 756, i, 21) for x in [vol(s, j, 60)] if x is not None]
-            if len(hist) < 24:
-                return {"SPY": 1.0}
-            thr = sorted(hist)[int(len(hist) * 0.8)]
-            return {SAFE: 1.0} if v > thr else {"SPY": 1.0}
-        return run_weights(w, st, "적응형 변동성 레짐 (자기 3년 80퍼센타일)",
-                           lambda i: {"SPY": 1.0},
-                           "최근 60일 실현변동성이 직전 3년 분포의 80퍼센타일을 넘으면 SHY.",
-                           "VIX 25 같은 고정 문턱은 변동성 수준 자체가 시대마다 달라 "
-                           "2017년과 2022년에 같은 뜻이 아니다. 문턱을 자기 과거 분포로 "
-                           "잡으면 나은지 본다 — 고정 문턱 줄(vix-level)과 짝지어 읽을 것.")
-    add("vol-regime", None, s_volregime)
-
-    # 13) 확인 지연 — '휩쏘가 문제 아닌가'
+    # 10) 확인 지연 — '휩쏘가 문제 아닌가'
     def _confirm_state(nday=5):
         """200일선 신호가 nday 거래일 연속 같아야 실제로 갈아탄다."""
         s = ser("SPY")
@@ -1244,7 +1162,7 @@ def build():
                            "늦는다 — 어느 쪽이 큰지 sma200 줄과 나란히 놓고 본다.")
     add("sma200-confirm", None, s_confirm)
 
-    # 14) 자산 간 상대 모멘텀 — '나갈 곳을 현금 말고 딴 자산으로 두면?'
+    # 11) 자산 간 상대 모멘텀 — '나갈 곳을 현금 말고 딴 자산으로 두면?'
     def s_relmom():
         ts = ["SPY", "TLT", "GLD", SAFE]
         st = first_common(ts, pad=285)
@@ -1288,7 +1206,7 @@ def build():
         add(sid, None, lambda: run_weights(w, st, label, lambda i: {"SPY": 1.0},
                                            rule, why, note, cadence="day"))
 
-    # 15) 월말 효과 — Ariel(1987) · Lakonishok & Smidt(1988)
+    # 12) 월말 효과 — Ariel(1987) · Lakonishok & Smidt(1988)
     def _tom_flags(lo=-1, hi=3):
         n_ = len(DTS)
         me = [i for i in range(n_ - 1) if DTS[i][:7] != DTS[i + 1][:7]] + [n_ - 1]
@@ -1309,7 +1227,7 @@ def build():
               "깎여 CAGR 4.68% → 3.43%, 샤프는 0.14 → 0.01 로 사실상 0이 된다. "
               "노출당 환산이 커 보이는 것과 실제로 손에 남는 것은 다른 얘기다.")
 
-    # 16) 옵션 만기 주간 — 세 번째 금요일이 낀 주
+    # 13) 옵션 만기 주간 — 세 번째 금요일이 낀 주
     def _opex_flags():
         n_ = len(DTS)
         third = {}
@@ -1334,7 +1252,7 @@ def build():
               "연 24회이고, 왕복 5bp를 물리면 연 1.23%p가 깎여 CAGR 2.98% → 1.75%, "
               "샤프는 이미 음수(-0.03)에서 -0.16 으로 더 내려간다. 남는 것이 없다.")
 
-    # 17) FOMC 사이클 짝수 주 — Cieslak·Morse·Vissing-Jorgensen (Journal of Finance 2019)
+    # 14) FOMC 사이클 짝수 주 — Cieslak·Morse·Vissing-Jorgensen (Journal of Finance 2019)
     #   출처 연준 공개 달력(발표일 기준). 2021~ 은 fomccalendars.htm, 2006~2020 은 연도별
     #        과거 페이지 fomchistorical<연도>.htm 에서 옮겼다.
     #   ⚠ **정기 회의만** 담는다. 비정기 전화회의(2008년 6회 · 2020년 3월 등)는 뺐다 —

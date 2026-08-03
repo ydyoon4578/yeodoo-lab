@@ -110,6 +110,18 @@ def thin(a, k=60):
 # ⚠ 이 줄은 판정용이 아니다. 전략 수익은 배당을 재투자한 총수익(TR) 기준인데 지수는 PR이라
 #   배당이 빠져 있다. 2006년 이후 그 격차가 연 2.0%p다 — PR과 겨루면 전략이 그만큼 유리해
 #   보인다. 판정은 각 전략의 대조군(TR 대 TR)으로 하고, 이 줄은 '세상의 눈금'으로만 읽는다.
+#
+# 🚨 **주기가 곧 눈금이다 — 전략과 같은 주기로 재지 않으면 나란히 못 놓는다.**
+#   같은 SPX·같은 구간인데 일간이냐 월말이냐로 값이 이만큼 갈린다(2006~2026 실측):
+#     샤프 0.351(일간) vs 0.535(월말) · 변동성 19.35 vs 15.15 · MDD -56.78 vs -52.56.
+#   CAGR만 싣던 동안은 티가 안 났지만(9.01 vs 9.00) 나머지 지표는 그대로 거짓 비교가 된다.
+#
+# ⚠ 그런데 **전략마다 주기가 다르다.** 원천 파일에는 그 사실이 안 적혀 있고 nav·chart 는
+#   원천에서 이미 얇게 만들어 길이로도 못 읽는다(종목 전략 448점/8.9년, 13F 156점/13년).
+#   실측으로 갈린다 — 12-1 모멘텀의 대조군 SPX 는 vol 18.93·MDD -33.92(일간)인데
+#   13F 의 대조군 SPX 는 vol 14.45·MDD -24.77(월말)이다.
+#   → 두 주기를 다 계산해 두고, **대조군이 지수인 전략은 그 대조군 수치에 맞는 쪽**을 고른다.
+#     고를 근거가 없으면 다수인 일간으로 두고 화면에 그렇게 적는다(pr_basis).
 def pr_baseline():
     A = load("assets.json") or {}
     dts, px = A.get("dates") or [], A.get("px") or {}
@@ -118,29 +130,81 @@ def pr_baseline():
     rf = (load("rf_monthly.json") or {}).get("monthly") or {}
     import sys as _s
     _s.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from tech_backtest import ann_stats            # noqa: E402  같은 계산을 두 번 쓰지 않는다
-    idx = {d: i for i, d in enumerate(dts)}
+    from tech_backtest import ann_stats            # noqa: E402  일간 — 원천 다수가 쓰는 것
+    from strategy_metrics import series_block      # noqa: E402  월말 — 지표표가 쓰는 것
 
-    def window(start, end):
-        """[start, end] 구간의 SPX·NDX 가격지수 성과. 구간이 자료 밖이면 None."""
+    # 계열은 한 번만 만든다 — 전략마다 다시 만들 이유가 없다.
+    DAY, MON = {}, {}
+    for tk, lab in (("^GSPC", "spx"), ("^NDX", "ndx")):
+        a = px.get(tk)
+        if not a:
+            continue
+        DAY[lab] = [(dts[i], a[i]) for i in range(len(dts)) if a[i]]
+        last = {}
+        for d, v in DAY[lab]:
+            last[d[:7]] = (d, v)
+        MON[lab] = [(m, last[m][0], last[m][1]) for m in sorted(last)]
+
+    def window(start, end, rf_from="*"):
+        """[start, end] 의 SPX·NDX 가격지수(PR)를 **두 주기 다** 잰다 → {'D':{...}, 'M':{...}}.
+
+        rf_from 은 무위험이자율을 어디부터 평균 낼지다 — 원천이 쓴 규약을 그대로 따른다.
+        ⚠ ann_stats 는 건네받은 rf **전체**의 평균을 쓴다. 그래서 어디서부터 잘라 주느냐가
+          곧 샤프가 된다. 원천마다 규약이 다르다:
+            · 종목 전략(tech_backtest)  rf[k] for k >= 패널 시작(2017-08)
+            · 자산배분·ML(asset/ml)     rf 파일 전체(1981-09~ · 연 3.7%)
+          같은 SPX·같은 구간인데 여기서 다른 규약을 쓰면 대조군 열과 지수 열이 어긋난다
+          (실측 0.627 vs 0.557). series_block 은 달마다 찾아 쓰므로 이 문제가 없다.
+        """
         if not (start and end):
             return None
-        ks = next((i for i, d in enumerate(dts) if d >= start), None)
-        ke = next((i for i in range(len(dts) - 1, -1, -1) if dts[i] <= end), None)
-        if ks is None or ke is None or ke - ks < 120:      # 반년도 안 되면 눈금이 못 된다
-            return None
-        out = {}
-        for tk, lab in (("^GSPC", "spx"), ("^NDX", "ndx")):
-            a = px.get(tk)
-            if not a:
-                continue
-            nv = [x for x in a[ks:ke + 1] if x]
-            if len(nv) < 120:
-                continue
-            base = nv[0]
-            out[lab] = ann_stats([100.0 * x / base for x in nv], dts[ks:ke + 1], rf)
-        return out or None
+        out = {"D": {}, "M": {}}
+        rfw = rf if rf_from == "*" else ({k: v for k, v in rf.items() if k >= rf_from} or rf)
+        for lab in DAY:
+            sel = [x for x in DAY[lab] if start <= x[0] <= end]
+            if len(sel) >= 120:                    # 반년도 안 되면 눈금이 못 된다
+                base = sel[0][1]
+                out["D"][lab] = ann_stats([100.0 * x[1] / base for x in sel],
+                                          [x[0] for x in sel], rfw)
+            sel = [x for x in MON[lab] if start <= x[1] <= end]
+            if len(sel) >= 7:
+                base = sel[0][2]
+                b = series_block([100.0 * x[2] / base for x in sel], [x[0] for x in sel], rf)
+                for k in ("_ex", "_r", "label"):   # 관계지표용 원계열은 직렬화하지 않는다
+                    b.pop(k, None)
+                out["M"][lab] = b
+        return out if (out["D"] or out["M"]) else None
     return window
+
+
+# 이 전략의 지표가 어느 주기로 계산됐나 — 대조군이 지수면 그 수치가 답을 알려 준다.
+# 변동성·MDD 는 주기에 크게 갈리므로(위 주석 실측) 둘의 합으로 맞춰 보면 판정이 선명하다.
+PR_BASIS_TOL = 1.5          # %p 합. 이보다 멀면 '맞춘 것'으로 치지 않는다.
+
+
+def pick_basis(bench, both, hint="D"):
+    """('D'|'M', 실측여부). 못 맞추면 원천이 쓰는 규약(hint)으로 되돌린다.
+
+    hint 는 빌더를 읽어서 정한다 — strategy_metrics.series_block 를 거치는 원천
+    (배포 원장·기각 재검·거장 겹침)은 월말이고, tech/asset/ml 은 일간 ann_stats 다.
+    이걸 안 주면 배포 원장 7종·기각 재검 2종이 월간 지표인데 일간 지수와 겨루게 된다.
+    """
+    lab = (bench or {}).get("label") or ""
+    key = "spx" if "S&P 500" in lab else ("ndx" if ("NASDAQ" in lab or "NDX" in lab) else None)
+    bv, bm = (bench or {}).get("vol"), (bench or {}).get("mdd")
+    if key and bv is not None and bm is not None:
+        sc = {}
+        for b in ("D", "M"):
+            ix = (both.get(b) or {}).get(key)
+            if ix and ix.get("vol") is not None and ix.get("mdd") is not None:
+                sc[b] = abs(bv - ix["vol"]) + abs(bm - ix["mdd"])
+        if sc:
+            win = min(sc, key=sc.get)
+            if sc[win] <= PR_BASIS_TOL:
+                return win, True
+    if both.get(hint):
+        return hint, False
+    return ("D" if both.get("D") else "M"), False
 
 
 def rec(**kw):
@@ -157,12 +221,22 @@ def rec(**kw):
     if why:
         kw["cmp_why"] = why
     if _PRW:
-        pr = _PRW(kw.get("start"), kw.get("end"))
-        if pr:
-            kw["pr"] = pr
-            _s = pr_split(kw)
-            if _s:
-                kw["pr_split"] = _s
+        both = _PRW(kw.get("start"), kw.get("end"), kw.pop("rf_from", "*"))
+        if both:
+            # 대조군 이름은 bench 안에 있기도 하고(종목 전략) 레코드 최상위에만 있기도 하다
+            # (자산배분 31종). 주기 판정은 둘 다 봐야 한다.
+            _b = dict(kw.get("bench") or {})
+            _b.setdefault("label", None)
+            if not _b["label"]:
+                _b["label"] = kw.get("bench_label")
+            _k, _sure = pick_basis(_b, both, kw.pop("pr_hint", "D"))
+            pr = both.get(_k) or {}
+            if pr:
+                kw["pr"] = pr
+                kw["pr_basis"] = ("월말" if _k == "M" else "일간") + ("" if _sure else " (원천 규약)")
+                _s = pr_split(kw)
+                if _s:
+                    kw["pr_split"] = _s
     return kw
 
 
@@ -243,10 +317,16 @@ def main() -> int:
             sid=x["sid"], name=n, alias=x.get("alias"), aka=x.get("aka") or [],
             role=d.get("kind") or "미분류", grade=GRADE.get(x.get("v"), "판정 불가"),
             src="배포 원장", cat=x.get("c"),
+            pr_hint="M",   # strategy_metrics.series_block(월말)이 만든 지표다
+
             rule=x.get("t"), why=x.get("vt"),
             start=b.get("start"), end=b.get("end"),
-            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
-            bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"), "sharpe": bm.get("sharpe")},
+            # 변동성·MDD 도 옮긴다 — 원천(series_block)에 다 있는데 셋만 옮기고 있었다.
+            # 화면의 지수 비교표가 '연변동성 —' 로 비고, 주기 판정도 근거를 잃는다.
+            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "vol": m.get("vol"),
+                     "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
+            bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"),
+                   "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             nav=b.get("nav"), bnav=b.get("bench"),
             bench_label=b.get("bench_label"),
             holdings=HOLD_DEP.get(n),
@@ -272,6 +352,9 @@ def main() -> int:
             #   쓰면 화면이 "2017-08 부터 쟀다"고 잘못 말하고, 같은 표에 놓인 다른 전략과
             #   같은 구간인 것처럼 보인다.
             start=r.get("start") or t.get("start"), end=t.get("as_of"),
+            # 무위험 규약 — tech_backtest 는 rf 를 **패널 시작부터** 평균 낸다(전략별 구간이
+            # 아니라). 지수 눈금도 같은 규약으로 재야 대조군 열과 어긋나지 않는다.
+            rf_from=(t.get("start") or "")[:7] or "*",
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
@@ -281,6 +364,9 @@ def main() -> int:
             # ⚠ 전에는 이 값이 판정 강등에만 쓰이고 **화면에는 숫자가 안 나갔다**. 편향을 재
             #   놓고 안 보여주면 독자는 소급 수치만 보게 된다 — 목록에 실어 카드가 적게 한다.
             pit=r.get("pit"),
+            # 가장 닮은 규칙 대비 증분 알파 — '이걸 이미 들고 있으면 이게 더 주는 게 있나'.
+            # 단독 t 만 보면 같은 베팅을 여러 번 센다(에코 모멘텀 단독 3.80 → 증분 0.85).
+            incr=r.get("incr"),
         ))
 
     if _hidden_bond:
@@ -307,6 +393,8 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            pr_hint="D",   # asset_backtest/ml_backtest 는 일간 ann_stats 다
+
             bench_label=r.get("bench_label"),
             start=r.get("start"), end=r.get("end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
@@ -326,7 +414,8 @@ def main() -> int:
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
     # 성격은 규칙이 하는 일로 정한다(재검 산출물에는 role이 없다).
     RECHK_ROLE = {
-        "vol-targeting-ndx": "위험감축", "low-beta-weight-tilt": "위험감축",
+        # vol-targeting-ndx 는 2026-07-30 에 삭제됐다(archive_index·archive_backtests 양쪽에서).
+        "low-beta-weight-tilt": "위험감축",
         "bond-trend-gate": "타이밍오버레이", "cross-asset-rp-extended": "배분기",
         "tail-risk-hedge": "방어보험",
     }
@@ -339,14 +428,17 @@ def main() -> int:
         rows.append(rec(
             sid="r-" + sid, name=x.get("n") or sid, role=RECHK_ROLE.get(sid, "미분류"),
             grade="미채택", src="기각 재검", cat=x.get("c"),
+            pr_hint="M",   # 배포 원장과 같은 파일·같은 함수에서 온다
+
             bench_label=b.get("bench_label") or ((b.get("metrics") or {}).get("b") or {}).get("label"),
             rule="기각한 전략을 단독으로 다시 검정한 결과다. 원 기각 사유가 "
                  "'배포 포트폴리오에 얹으면 개선이 없다'는 상대 판정이었기 때문이다.",
             why=x.get("r"),
             start=b.get("start"), end=b.get("end"),
-            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "mdd": m.get("mdd")},
+            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"),
+                     "vol": m.get("vol"), "mdd": m.get("mdd")},
             bench={"label": b.get("bench_label") or (bm.get("label")), "cagr": bm.get("cagr"),
-                   "sharpe": bm.get("sharpe")},
+                   "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             d_sharpe=(round(m["sharpe"] - bm["sharpe"], 3)
                       if m.get("sharpe") is not None and bm.get("sharpe") is not None else None),
             nav=b.get("nav"), bnav=b.get("bench"),
@@ -394,6 +486,8 @@ def main() -> int:
         rows.append(rec(
             sid=sid, name=name, role="수익엔진", grade=_ov_grade(ds, pl.get("t")),
             src="거장 겹침", cat="13F 복제",
+            pr_hint="M",   # 월 리밸 계열이다(대조군도 '같은 풀 동일가중(월 리밸)')
+
             rule=_rule + " 분기마다 다시 고르고, 공시일이 체결일보다 뒤인 운용사는 그 분기 "
                          "세지 않는다(그때는 아직 알 수 없던 정보다).",
             why="<b>%s.</b> 같은 풀(S&P 500 ∪ NASDAQ 100 동일가중) 대비 Δ샤프 %s · "
@@ -426,6 +520,22 @@ def main() -> int:
     #   asset_strategies.json·archive_backtests.json·deploy_index.json 은 손대지 않는다.
     #   진 것을 원본에서 지우면 다중검정 N이 줄어 남은 것이 쉽게 통과한다(자기에게 유리한 보정).
     #
+    # 🚨 2026-07-30: 위험감축 7종에 대해서만 이 원칙의 **예외**를 두었다(사용자 결정).
+    #   목록 제외가 아니라 원본에서 지웠다 — 등록부(asset_backtest 의 s_voltgt·s_ddgate·
+    #   s_volregime)와 수기 정본(deploy_index·strategy_detail·strategy_backtests·
+    #   archive_index·archive_backtests)에서 전부 제거했다.
+    #   그래서 여기 HIDE_SIDS 에 있던 dynamic-vol-target·duration-scaling·
+    #   bond-regime-overlay-agg 세 줄도 같이 없앴다(가리킬 대상이 없어 가드가 '제외가 풀렸다'로 죈다).
+    #   ⚠ 지우기 전에 위 우려를 실제로 재 봤다 — **문턱은 거의 안 움직인다.**
+    #     자산배분 n 57 → 54 · t_crit 3.33 → 3.31 이고, 그 사이(3.31~3.33)에 들어와 판정이
+    #     뒤집히는 전략은 **0종**이다(남는 것 중 최고 |t| 는 머신러닝 횡단면 3.02).
+    #     종목전략 t_crit 3.33 은 애초에 이 7종을 안 세므로 **불변**이다.
+    #   ⚠ archive_backtests 의 n_tests_total(20)은 줄이지 않았다 — 그 값은 '게시 건수'가 아니라
+    #     '재검을 몇 번 돌렸나'이고, 지운 것을 빼면 보정 분모가 관대해진다(validate 게이트의 취지).
+    #   ⚠ rotation_pool 의 랩 판정 배지 1건('변동성 타게팅' → 변동성 타깃팅 NDX '기각')은 남겼다.
+    #     그 판정은 실제로 내려졌던 것이고 배지는 자립 문안이라, 지우면 기록을 과하게 정리하는 쪽이다.
+    #   되살리려면 커밋 78815cd3 다음 커밋의 역패치를 적용하면 된다(git 에 전문이 남아 있다).
+    #
     # ⚠⚠ 이 제외는 **성과 판정이 아니다.** 이 전략들의 headline 은 최대낙폭이고, 그 축에서는
     #    낮을수록 좋다 — 빠지는 8종 중 −11.19%·−12.33%·−15.30% 는 전 목록에서 가장 좋은 낙폭이다.
     #    자기 목적(모전략 낙폭 감축) 기준으로는 대체로 성공한 축에 든다:
@@ -436,7 +546,7 @@ def main() -> int:
     #    그럼에도 목록에서 빼는 것은 "이 랩에서 이 계열을 다루지 않는다"는 운용 결정이지
     #    "성과가 나쁘다"는 측정 결과가 아니다. 되살리려면 이 집합에서 sid 를 빼면 된다.
     HIDE_SIDS = {
-        "dynamic-vol-target", "duration-scaling", "bond-regime-overlay-agg",   # 배포 원장
+        # (배포 원장의 위험감축 3종은 2026-07-30 에 원본째로 삭제 — 위 주석 참조)
         "a-rp-voltarget", "a-vol-roll", "a-tail-hedge",                        # 자산배분
         "r-low-beta-weight-tilt", "r-tail-risk-hedge",                         # 기각 재검
         # 합병차익거래(2026-07-27 추가, 사용자 결정). 같은 원칙 — 목록에서만 빼고 기록은 둔다.
@@ -517,10 +627,12 @@ def main() -> int:
         "by_cmp": {"가능": sum(1 for r in rows if r["cmp_ok"]),
                    "애매": sum(1 for r in rows if not r["cmp_ok"])},
         "holds_order": ["종목", "비중", "노출", "없음"],
-        "pr_note": "‘같은 구간 지수(PR)’는 판정용이 아니라 세상의 눈금이다. 전략 수익은 배당을 "
+        "pr_note": "‘같은 구간 지수(PR)’는 판정용이 아니라 세상의 눈금이다. 전략과 같은 함수·같은 "
+                   "월말 주기로 재 CAGR·변동성·MDD·샤프를 모두 싣는다. 다만 전략 수익은 배당을 "
                    "재투자한 총수익(TR)인데 지수는 가격지수(PR)라 배당이 빠져 있고, 2006년 이후 "
-                   "그 격차가 연 2.0%p다 — PR과 겨루면 전략이 그만큼 유리해 보인다. "
-                   "판정은 각 전략의 대조군(TR 대 TR)으로 한다.",
+                   "그 격차가 연 2.0%p다 — 수익 쪽 비교에서 전략이 그만큼 유리해 보인다"
+                   "(변동성·MDD·샤프는 이 왜곡이 훨씬 작다). "
+                   "판정은 대조군이 있는 전략이면 그 대조군(TR 대 TR)으로 한다.",
         "cmp_note": "대조군이 전략과 같은 것을 목표로 할 때만 Δ샤프를 우열로 읽을 수 있다. "
                     "위험감축은 목표가 낙폭이라 상시보유와 CAGR·샤프로 겨루면 "
                     "지는 것이 정상이고, 대조군이 현금성이면 샤프 분모가 0에 가까워 Δ가 허수가 된다. "

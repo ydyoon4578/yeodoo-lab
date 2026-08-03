@@ -21,7 +21,7 @@
 <style>
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
     --hot:#A64B3B;--hot-bg:#f2e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dcefe5;--watch:#B25E12;--watch-bg:#f7e6d5;
     --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);--sel:color-mix(in srgb,var(--accent) 12%,var(--panel));
   }
@@ -31,7 +31,7 @@
     --hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#F0863C;--watch-bg:#2b1c12;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);--sel:color-mix(in srgb,var(--accent) 16%,var(--panel));
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--hot:#A64B3B;--hot-bg:#f2e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dcefe5;--watch:#B25E12;--watch-bg:#f7e6d5;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);--sel:color-mix(in srgb,var(--accent) 12%,var(--panel));}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--hot:#A64B3B;--hot-bg:#f2e0db;--cold:#2C6E8F;--cold-bg:#dbe9f0;--good:#0E8A54;--good-bg:#dcefe5;--watch:#B25E12;--watch-bg:#f7e6d5;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);--sel:color-mix(in srgb,var(--accent) 12%,var(--panel));}
   :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--hot:#E5806A;--hot-bg:#2c1815;--cold:#6BB0D6;--cold-bg:#152834;--good:#38D083;--good-bg:#12291f;--watch:#F0863C;--watch-bg:#2b1c12;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);--sel:color-mix(in srgb,var(--accent) 16%,var(--panel));}
   *,*::before,*::after{box-sizing:border-box}
   /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
@@ -301,10 +301,10 @@
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
    손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
    ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
-:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}}
-:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}
+:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}}
+:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}
 
 /* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
    한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
@@ -741,7 +741,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var FLAGCLS={"과매수":"과매수","과매도":"과매도","상승추세":"상승추세","눌림목":"눌림목","깊은눌림":"deepdip","약세반등":"bearrally","골든임박":"goldnear","거래급증":"volsurge","변동수축":"squeeze2","시장강세":"rsstrong","52주돌파":"b52돌파","200일이탈":"b200이탈","과밀숏":"gmilshort"};
   // [라벨, 거래일 수] — 전부 일봉 한 배열에서 자른다. 주봉 배열을 따로 두면 타점 인덱스 도메인이
   //   갈려 매핑·음영 같은 보정 코드가 붙는다(실제로 붙었다가 걷어냈다).
-  var PERIODS=[["1일",2],["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252],["3년",756],["10년",2514]];
+  // ⚠ 마지막 칸은 **패널 전체**다. 전에는 ["10년",2514] 로 길이를 손으로 적었는데,
+  //   2026-08-03 에 가격 패널이 2009-01 고정 시작으로 바뀌면서(refresh_stocks.PX_START)
+  //   그 숫자가 패널보다 짧아졌다 — 손으로 적은 길이는 패널이 자라는 순간 낡는다.
+  //   1e9 를 두면 슬라이스가 언제나 전 구간이 되고, 다시 고칠 일이 없다.
+  var PERIODS=[["1일",2],["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252],["3년",756],["10년",2514],["전체",1e9]];
   function perAvail(s,p){
     var n=(s.pxd||[]).length;
     return n>=Math.min(p[1],20);   // 이력이 짧은 종목은 긴 구간 칩을 내지 않는다(빈 차트 방지)

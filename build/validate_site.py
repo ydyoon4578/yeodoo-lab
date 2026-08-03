@@ -532,8 +532,11 @@ if pool:
         _au = _as.get("audit") or {}
         # 재점검표는 아카이브 38건을 빠짐없이 덮어야 한다 — 빠지면 그 항목이 화면에서 사라진다
         _covered = {a["sid"] for a in (_au.get("items") or [])}
-        _tsids = {r["arch"] for r in (json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"),
-                  encoding="utf-8")).get("strategies") or []) if r.get("arch")}
+        _tj = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+        _tsids = {r["arch"] for r in (_tj.get("strategies") or []) if r.get("arch")}
+        # 목록에서 뺀 규칙도 아카이브를 '재현했다'는 사실은 그대로다 — 그 arch 도 커버로 센다.
+        # (안 세면 규칙을 뺄 때마다 아카이브 항목이 덩달아 화면에서 사라진다.)
+        _tsids |= {r["arch"] for r in (_tj.get("retired") or []) if r.get("arch")}
         _missing = _sids - _covered - _tsids
         if _missing:
             errors.append(f"asset_strategies.audit: 아카이브 {len(_missing)}건이 재점검표에서 누락 "
@@ -1531,6 +1534,128 @@ except SystemExit as e:
 except Exception as e:
     errors.append(f"갱신 주기 라벨 검증 실패: {e}")
 
+# ── 13F 평가액 눈금: 제출사마다 단위가 다르면 화면이 1000배 틀린다 ─────────
+#   13F 정보표의 VALUE 는 2023년 규칙 변경 전까지 천 달러 단위였고, 지금도 그 눈금으로 내는
+#   운용사가 있다. 정규화 없이 합산하면 운용사마다 단위가 1000배 다른 필드가 된다.
+#   2026-07-31 실측: 17곳 중 2곳이 천$라 guru.html 에 "$5M"(실제 $5.1B) · 아마존 주당 $0.21 이
+#   아무 배지 없이 나가고 있었다. 겹침 비율(%)은 스케일 불변이라 정상으로 보여 오래 안 들켰다.
+#   생성기(build/refresh_13f.py)가 정규화하지만, 그 판정이 실패해도 화면은 조용하다 —
+#   그래서 **결과물을 직접** 검사한다. 내재주가(평가액÷주식수)를 우리 가격 패널의 분기말 종가와
+#   대조하면 맞는 눈금은 ~1, 틀린 눈금은 ~0.001 이라 오판 여지가 없다.
+try:
+    import statistics as _stat
+    _g = json.load(io.open(os.path.join(ROOT, "data", "guru.json"), encoding="utf-8"))
+    _s = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _ds = _s.get("pxd_dates") or []
+    _i = max((i for i, d in enumerate(_ds) if d <= (_g.get("as_of") or "")), default=None)
+    if _i is None:
+        errors.append("guru.json 기준일(%s)이 가격 패널 범위 밖 — 13F 눈금을 검사할 수 없다" % _g.get("as_of"))
+    else:
+        _cl = {}
+        for _t in {h["t"] for m in _g.get("managers", []) for h in m.get("holds", []) if not h.get("off")}:
+            try:
+                _px = json.load(io.open(os.path.join(ROOT, "data", "sd", _t + ".json"), encoding="utf-8")).get("pxd") or []
+                if _i < len(_px) and _px[_i]: _cl[_t] = float(_px[_i])
+            except Exception:
+                pass
+        _off_scale, _nojudge = [], 0
+        for _m in _g.get("managers", []):
+            _r = [(h["v"] / h["sh"]) / _cl[h["t"]] for h in _m.get("holds", [])
+                  if not h.get("off") and h.get("sh") and h.get("v") and _cl.get(h["t"])]
+            if len(_r) < 3:
+                _nojudge += 1
+                continue
+            _md = _stat.median(_r)
+            if not (0.5 <= _md <= 2.0):
+                _off_scale.append("%s(내재주가가 종가의 %.4f배 · %d종목)" % (_m.get("label"), _md, len(_r)))
+        if _off_scale:
+            errors.append("13F 평가액 눈금이 종가와 어긋남 — " + " · ".join(_off_scale[:4]) +
+                          " (0.001배면 천$ 제출을 정규화하지 못한 것)")
+        # 판정 가능한 운용사가 절반도 안 되면 검사가 무력화된 것이다 — 통과로 읽히면 안 된다.
+        if _nojudge * 2 > len(_g.get("managers", []) or [1]):
+            errors.append("13F 눈금 판정 가능한 운용사가 %d/%d뿐 — 가격 패널 대조가 무력하다"
+                          % (len(_g.get("managers", [])) - _nojudge, len(_g.get("managers", []))))
+except FileNotFoundError:
+    pass
+except Exception as e:
+    errors.append(f"13F 평가액 눈금 검증 실패: {e}")
+
+# ── 여러 잡이 공유하는 산출물은 재생성 표에 있어야 한다 ────────────────────
+#   build/ci_push.sh는 리베이스 충돌을 만나면 REBAKE_TABLE에 있는 파일만 자동 해소하고,
+#   없으면 abort 한다 — 그 잡의 그날치 산출물이 통째로 버려진다.
+#   그래서 **둘 이상의 잡이 커밋하는 파일**은 표에 있거나, 여기 예외 목록에 사유와 함께 있어야 한다.
+#   2026-07-31 실측으로 잡음: data/home_flow.json을 5개 잡(stocks·earnings·filings·insider·13f)이
+#   커밋하는데 표에 없었다. 이 파일은 매 실행 generated 타임스탬프가 바뀌는 한 줄 JSON이라
+#   두 잡의 실행 창이 겹치면 충돌이 **확정**이고, 늦게 민 쪽은 소급 불가 누적물
+#   (target_history·fund_history)까지 함께 잃는다.
+try:
+    _wf_dir = os.path.join(ROOT, ".github", "workflows")
+    _staged = {}
+    for _fn in sorted(os.listdir(_wf_dir)):
+        if not _fn.endswith(".yml"): continue
+        _s = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read()
+        # ci_push.sh 호출부만 본다(주석의 경로가 섞이지 않게 호출 줄부터 빈 줄 전까지).
+        for _m in re.finditer(r"ci_push\.sh[^\n]*\n(?:\s+[^\n]*\n)*", _s):
+            _blk = _m.group(0)
+            _blk = re.sub(r"(?m)^\s*#.*$", "", _blk)
+            for _p in set(re.findall(r"data/[A-Za-z0-9_/.]+", _blk)):
+                _staged.setdefault(_p, set()).add(_fn)
+    _tbl = io.open(os.path.join(ROOT, "build", "ci_push.sh"), encoding="utf-8").read()
+    # 수집물이라 다시 못 굽는 것들. 충돌하면 사람이 봐야 하므로 표에 넣으면 안 된다.
+    #   (한 잡만 커밋하므로 애초에 잡끼리 충돌하지 않는다 — 사람과 겹칠 때만 abort 한다.)
+    _rebake_exempt = set()
+    for _p, _jobs in sorted(_staged.items()):
+        if len(_jobs) < 2 or _p in _rebake_exempt: continue
+        if (_p + "|") not in _tbl:
+            errors.append(
+                f"{_p}을(를) {len(_jobs)}개 잡이 커밋하는데 ci_push.sh의 REBAKE_TABLE에 없음"
+                f"({', '.join(sorted(_jobs))}) — 충돌 시 그날치 산출물이 통째로 버려진다")
+    # 반대 방향: 표에 있는데 아무 잡도 안 넘기는 줄은 사문이다(조용히 썩는다).
+    for _line in _tbl.splitlines():
+        if _line.startswith("data/") and "|" in _line:
+            _p = _line.split("|", 1)[0]
+            if _p not in _staged:
+                errors.append(f"REBAKE_TABLE의 {_p}을(를) 커밋하는 잡이 없음 — 사문이거나 워크플로에서 빠졌다")
+    # ── 데이터를 커밋하는 잡은 커밋 전에 스스로 검증해야 한다 ────────────────
+    # 🚨 GitHub Actions 는 GITHUB_TOKEN 으로 민 푸시에 워크플로를 **재귀 실행하지 않는다**.
+    #   그래서 봇의 데이터 커밋에는 이 CI(validate.yml)가 아예 안 돈다 — paths 에 data/** 가
+    #   있어도 마찬가지다(2026-07-31 실측: 봇 커밋 뒤 validate 런이 하나도 안 생긴다).
+    #   즉 데이터의 실제 관문은 CI 가 아니라 **각 잡 안의 Validate 단계**다. 그게 빠진 잡이
+    #   생기면 그 축은 아무 검증 없이 배포된다 — 그리고 그 사실이 어디에도 안 드러난다.
+    for _fn in sorted(os.listdir(_wf_dir)):
+        if not _fn.endswith(".yml"): continue
+        _s = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read()
+        if "ci_push.sh" in _s and "validate_site.py" not in _s:
+            errors.append(f".github/workflows/{_fn}: 데이터를 커밋하는데 validate_site.py 단계가 없음 "
+                          f"— 봇 커밋에는 CI 가 안 도므로 이 잡의 산출물은 아무도 검증하지 않는다")
+except Exception as e:
+    errors.append(f"재생성 표 검증 실패: {e}")
+
+# ── 성장률 눈금 규약: 같은 키 이름이 파일마다 100배 다르면 화면이 뒤집힌다 ──
+#   data/stocks.json 의 fund.rg 는 _x100 을 거쳐 **백분율**(중앙 9.1)인데, data/estimates.json 의
+#   rg 는 정보원 원값 그대로 **분수**(중앙 0.056)였다. screener.html 이 그 분수를 '배' 단위로 그려
+#   AVGO 0.629 를 "0.629배"(= −37% 축소)로 찍고 있었다 — 실제로는 +62.9% 성장이고,
+#   rg 상위 10 중 8행이 그렇게 방향이 뒤집혀 있었다. '성장률 상위' 표 아래에서.
+#   두 파일의 값 크기를 직접 대조한다. 눈금이 같으면 O(1), 다르면 100배가 벌어진다.
+try:
+    import statistics as _st2
+    _sj = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _ej = json.load(io.open(os.path.join(ROOT, "data", "estimates.json"), encoding="utf-8"))
+    _sv = [abs(s["fund"]["rg"]) for s in _sj.get("stocks", [])
+           if isinstance((s.get("fund") or {}).get("rg"), (int, float))]
+    _ev = [abs(r["rg"]) for r in (_ej.get("rows") or {}).values()
+           if isinstance(r.get("rg"), (int, float))]
+    if len(_sv) > 50 and len(_ev) > 50:
+        _ms, _me = _st2.median(_sv), _st2.median(_ev)
+        if _ms > 0 and _me / _ms < 0.1:
+            errors.append("성장률 눈금 불일치 — stocks.json fund.rg 중앙 %.3f(백분율) vs "
+                          "estimates.json rg 중앙 %.3f(분수). 같은 키 이름이 100배 다른 눈금이다"
+                          % (_ms, _me))
+except FileNotFoundError:
+    pass
+except Exception as e:
+    errors.append(f"성장률 눈금 검증 실패: {e}")
+
 # ── 기각 아카이브 분류(k) 무결성 ─────────────────────────────────────────
 #   45종을 한 칸에 세면 '좋은 전략 45개가 기각됐다'로 읽힌다. k로 갈라 세되,
 #   ① 모든 항목에 유효한 k가 있고 ② kinds에 뜻이 적혀 있고 ③ 합이 총계와 맞아야 한다.
@@ -1623,7 +1748,12 @@ try:
     # ② 짝 — **양방향 도달성**으로 본다. '짝이 N종이어야 한다'고 손으로 적으면 그 숫자가
     #    다음번에 낡는다. 대신 두 방향을 각각 묻는다: 홈이 가리키는 키가 자료에 있는가,
     #    자료에 있는 스타일이 홈에 닿는가. 어느 쪽이 끊겨도 그 랩 행은 에러 없이 사라진다.
+    # 짝 ETF 가 없어 표에 못 들어가는 지수들(index.html 의 ST_IDX)도 화면에 나오는 것이므로
+    # 도달 가능으로 친다 — 없으면 그 넷이 통째로 '고아'로 잡힌다(2026-08-02).
+    _m_idx = re.search(r"var ST_IDX\s*=\s*\[(.*?)\]\s*;", _ih, re.S)
+    _idx_extra = set(re.findall(r"['\"]([\w]+)['\"]", _m_idx.group(1))) if _m_idx else set()
     _want = {_p_map[_k_map[t]] for t in _k_map if _k_map[t] in _p_map}
+    _want |= {_p_map[k] for k in _idx_extra if k in _p_map}
     _dangle = sorted(_want - set(_by))
     _orphan = sorted(set(_by) - _want)
     if _dangle:
@@ -1661,6 +1791,113 @@ except FileNotFoundError as e:
     errors.append(f"홈 스타일 표 검증: 파일 없음 {e} — build/style_top_pdf.py --json 실행 필요")
 except Exception as e:
     errors.append(f"홈 스타일 표 검증 실패: {e}")
+
+# ── head 메타: 공유 링크가 남의 페이지를 말하지 않게 ────────────────────────
+# 실사고(2026-08-02 발견): style.html 의 og:title·og:description·twitter:* 4줄이 통째로
+# sources.html 것이었다. <title>·canonical 은 옳아서 화면·검색에서는 멀쩡했고, 카톡·슬랙에
+# 링크를 붙였을 때만 '데이터 출처·기준일'로 떴다 — 아무 검사도 이 파일의 head 를 보지 않았다.
+# 새 페이지는 기존 페이지를 복사해 만들므로 이 사고는 구조적으로 반복된다.
+#
+# 규칙은 '<title> 과 닮았는가'가 아니라 '**다른 페이지 것과 똑같은가**'로 잡는다.
+#   · 닮음 검사는 오탐이 난다 — explorer(「여두 · 전략 랩」/「여두 전략 리스트」)와
+#     stocks(「여두 · 종목 신호」/「여두 종목 시그널」)는 일부러 다르게 적은 것이고,
+#     index 는 브랜드 낱말만으로 이뤄져 있어 낱말 비교 자체가 성립하지 않는다.
+#   · 복붙 사고의 지문은 '완전 일치'다. 사람이 일부러 두 페이지에 같은 제목·설명을 다는 일은
+#     없으므로 오탐이 0이고, style.html 사고는 이 규칙 하나에 정확히 걸린다.
+# twitter:* 는 og:* 의 사본이어야 한다 — 한쪽만 고치고 다른 쪽을 잊는 것이 이 사고의 후속판이다.
+_own, _seen_t, _seen_d, _seen_td = {}, {}, {}, {}
+_heads = []
+for _p in PAGES:
+    _s = rd(_p)
+    _h = _s[:_s.find("</head>")] if "</head>" in _s else _s[:4000]
+    # 색인에서 뺀 페이지(kb 같은 잠금 게이트)는 공유 카드가 필요 없다 — 면제 근거를 페이지가 스스로 밝힌다.
+    if re.search(r'name="robots"[^>]*content="[^"]*noindex', _h): continue
+    _heads.append((_p, _h))
+
+def _hm(h, pat):
+    mm = re.search(pat, h)
+    return mm.group(1).strip() if mm else None
+
+for _p, _h in _heads:                       # 1차 — 각 페이지의 <title> 을 먼저 모은다
+    _own[_p] = _hm(_h, r"<title>([^<]*)</title>")
+for _p, _h in _heads:
+    _ti, _ot = _own[_p], _hm(_h, r'og:title"\s+content="([^"]*)"')
+    _od = _hm(_h, r'og:description"\s+content="([^"]*)"')
+    _tt = _hm(_h, r'twitter:title"\s+content="([^"]*)"')
+    _td = _hm(_h, r'twitter:description"\s+content="([^"]*)"')
+    _ou, _cn = _hm(_h, r'og:url"\s+content="([^"]*)"'), _hm(_h, r'rel="canonical"\s+href="([^"]*)"')
+    if not _ti: errors.append(f"{_p}: <title> 없음"); continue
+    if not _ot or not _od:
+        errors.append(f"{_p}: og:title/og:description 없음 — 공유하면 제목·설명이 빈다"); continue
+    # ① og:title 이 **남의 <title>** 과 같다 = 그 페이지에서 복사해 왔다는 뜻
+    _steal = next((q for q, t in _own.items() if q != _p and t and t == _ot), None)
+    if _steal:
+        errors.append(f"{_p}: og:title「{_ot}」이 {_steal} 의 <title> 과 같다 — 복붙 사고")
+    for _lbl, _v, _bag in (("og:title", _ot, _seen_t), ("og:description", _od, _seen_d)):
+        if _v in _bag:
+            errors.append(f"{_p}: {_lbl} 이 {_bag[_v]} 것과 완전히 같다 — 복붙 사고")
+        else:
+            _bag[_v] = _p
+    # ② twitter:title 은 og:title 의 사본 — 한쪽만 고치면 공유 경로마다 다른 제목이 뜬다.
+    #    ⚠ description 은 같은 규칙을 걸면 안 된다. 7장이 트위터용으로 **일부러 짧게** 적어
+    #      두었다(예: roadmap「…칸과 그 사유 — 칸은 지우되 사유는 지우지 않습니다」→「…칸과 그 사유.」).
+    #      그건 사고가 아니라 편집이다. 그래서 설명은 동일성이 아니라 중복만 본다.
+    if _tt and _tt != _ot:
+        errors.append(f"{_p}: twitter:title 이 og:title 과 다르다 —「{_tt}」/「{_ot}」")
+    if _td:
+        if _td in _seen_td:
+            errors.append(f"{_p}: twitter:description 이 {_seen_td[_td]} 것과 완전히 같다 — 복붙 사고")
+        else:
+            _seen_td[_td] = _p
+    # ③ 자기 자신을 가리키는가
+    for _k, _v in (("og:url", _ou), ("canonical", _cn)):
+        if _v and not _v.endswith("/" + _p):
+            errors.append(f"{_p}: {_k} 가 자기 파일({_p})을 가리키지 않는다 — {_v}")
+
+# ── 홈 렌더 조립 검사 ─────────────────────────────────────────────────
+#   홈의 표·카드는 자료가 여러 파일에서 **따로 도착**하고, 그 조립이 어긋나면 화면이
+#   조용히 비어서 나간다. 문법 검사로는 안 잡힌다 — 실제로 두 번 그렇게 배포됐다
+#   (섹터 묶음 0줄 · 종목 두 줄씩). build/test_home_render.js 가 브라우저 없이
+#   렌더러를 실제 data/*.json 에 물려 그 조립만 재현한다.
+#   ⚠ node 가 없으면 건너뛴다(이 저장소의 다른 node 검사와 같은 규칙) — 못 잡는 것보다
+#     거짓 통과를 만드는 것이 나쁘지만, 도구 부재로 일일 잡을 죽이는 것은 더 나쁘다.
+_hr = os.path.join(ROOT, "build", "test_home_render.js")
+if not NODE:
+    tool_skips.append("홈 렌더 조립 검사(node 없음)")
+elif not os.path.exists(_hr):
+    tool_skips.append("홈 렌더 조립 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _hr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
+            errors.append("홈 렌더 조립 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ 홈 렌더 조립 검사 통과(" +
+                  next((x for x in _r.stdout.split("\n") if "표:" in x), "").strip() + ")")
+    except Exception as _e:
+        tool_skips.append(f"홈 렌더 조립 검사({_e})")
+
+# ── explorer 지수 비교표 검사 ──────────────────────────────────────────
+#   같은 이유다. 여기서 조용히 깨진 것 둘 — 이름 조인이 끊겨 배포 원장 4종이 지수 눈금을
+#   통째로 못 받았고(목록 쪽 이름은 'SPX'→'S&P 500' 을 편 뒤인데 키는 원문이었다),
+#   지수를 전략과 다른 주기로 재 같은 SPX 가 한 화면에서 두 값으로 나왔다.
+_xr = os.path.join(ROOT, "build", "test_explorer_render.js")
+if not NODE:
+    tool_skips.append("explorer 렌더 검사(node 없음)")
+elif not os.path.exists(_xr):
+    tool_skips.append("explorer 렌더 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _xr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
+            errors.append("explorer 렌더 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ explorer 렌더 검사 통과(" +
+                  next((x for x in _r.stdout.split("\n") if "비교표:" in x), "").strip() + ")")
+    except Exception as _e:
+        tool_skips.append(f"explorer 렌더 검사({_e})")
 
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
