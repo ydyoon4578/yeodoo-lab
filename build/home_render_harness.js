@@ -40,16 +40,34 @@ function unwrap(src) {
 
 // 최소 DOM 그림자. 렌더러가 실제로 부르는 것만 흉내 낸다 —
 // 브라우저를 흉내 내는 것이 목적이 아니라 조립을 재현하는 것이다.
+//
+// 🚨 addEventListener 는 **기록한다**(전에는 no-op 이었다). 그 한 줄 때문에 못 잡은 사고가
+//    있다 — 구성종목 ▸ 핸들러가 wireTree 와 중복방지 플래그 이름(__htg)이 겹쳐 **한 번도
+//    안 붙었는데**, 검사는 마크업만 세므로 통과했다(2026-08-03, 배포 하루 뒤 사용자 신고).
+//    리스너를 담아 두면 dispatch 로 눌러 볼 수 있고, '붙었나'가 검사 대상이 된다.
 function stub(html) {
   const o = {
-    _a: {}, hidden: false, _h: html || "", dataset: {},
+    _a: {}, hidden: false, _h: html || "", dataset: {}, _ls: {},
     style: { setProperty() {}, removeProperty() {}, getPropertyValue() { return ""; } },
     classList: { add() {}, remove() {}, contains() { return false; } },
     getAttribute(k) { return k in this._a ? this._a[k] : null; },
     setAttribute(k, v) { this._a[k] = v; },
     removeAttribute(k) { delete this._a[k]; },
     hasAttribute(k) { return k in this._a; },
-    addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {},
+    addEventListener(t, fn) { (this._ls[t] || (this._ls[t] = [])).push(fn); },
+    removeEventListener(t, fn) {
+      const a = this._ls[t]; if (!a) return;
+      const i = a.indexOf(fn); if (i >= 0) a.splice(i, 1);
+    },
+    // 붙어 있는 리스너를 순서대로 부른다. 위임 리스너가 여럿이면 **전부** 돈다 —
+    // 실제 브라우저와 같다. 한 handler 가 던져도 나머지를 계속 돌린다(브라우저도 그렇다).
+    dispatch(t, ev) {
+      const a = (this._ls[t] || []).slice();
+      for (const fn of a) { try { fn.call(this, ev); } catch (e) { (ev.__err || (ev.__err = [])).push(e); } }
+      return a.length;
+    },
+    listeners(t) { return (this._ls[t] || []).length; },
+    appendChild() {}, remove() {},
     querySelector() { return null; }, querySelectorAll() { return []; },
     closest() { return null; }, focus() {}, click() {}, scrollIntoView() {},
     getBoundingClientRect() { return { width: 0, height: 0, top: 0, left: 0 }; },
@@ -58,6 +76,24 @@ function stub(html) {
     get children() { return []; }, get cells() { return []; },
   };
   return o;
+}
+
+// 위임 리스너를 눌러 보기 위한 가짜 버튼. 진짜 DOM 트리가 없으므로 **위임 핸들러가
+// 실제로 보는 것만** 만들어 준다 — e.target.closest(선택자) 와 getAttribute 둘뿐이다.
+// (트리를 통째로 짓는 대신 이 둘만 두는 이유: 검사가 재려는 것은 '리스너가 붙어 있고
+//  그 안의 토글 로직이 도는가'이지 브라우저의 선택자 구현이 아니다.)
+function fakeBtn(attrs, sel) {
+  const b = stub("");
+  Object.assign(b._a, attrs || {});
+  b._sel = sel || "button.htg";
+  b.closest = function (s) { return s === this._sel ? this : null; };
+  return b;
+}
+
+// 위임 리스너에 넘길 최소 이벤트. 핸들러가 던진 예외는 ev.__err 에 모인다(dispatch 참조).
+function clickOn(node) {
+  return { type: "click", target: node, currentTarget: null,
+           preventDefault() {}, stopPropagation() {} };
 }
 
 // 브라우저 전역의 최소 대역. 없는 것을 부르면 조용히 통과시킨다 —
@@ -103,6 +139,6 @@ function browserGlobals(getEl, dataDir, slow) {
 }
 
 module.exports = {
-  mainScript, unwrap, stub, browserGlobals,
+  mainScript, unwrap, stub, browserGlobals, fakeBtn, clickOn,
   body(path) { return unwrap(mainScript(fs.readFileSync(path, "utf8"))); },
 };
