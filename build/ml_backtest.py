@@ -38,6 +38,23 @@ DATA = os.path.join(ROOT, "data")
 DIR_SD = os.path.join(DATA, "sd")
 OUT = os.path.join(DATA, "ml_strategies.json")
 
+# ── 거래비용 ────────────────────────────────────────────────────────────
+# asset_backtest 의 5bp 를 그대로 옮기면 안 된다. 그쪽은 대형 ETF 하나를 켜고 끄는 것이고
+# 이쪽은 개별주 10종목 포트를 매달 갈아엎는다. 가정을 나눠 둔다.
+#   COST_RT_STOCK 20bp — S&P500·NASDAQ100 대형주라도 호가 스프레드가 ETF보다 넓고, 10종목에
+#     자금을 나눠 담아 종목당 체결 규모가 커지므로 충격이 붙는다. 왕복 20bp(편도 10bp)는
+#     대형주 체결에서 흔히 인용되는 범위의 보수적인 쪽으로 잡은 값이다.
+#   COST_RT_ETF 5bp — 지수 타이밍판은 SPY 하나를 켜고 끄므로 asset_backtest 와 같은 가정.
+# ⚠ 환산식이 함수마다 다르다. 회전을 세는 방법이 다르기 때문이다 —
+#     종목선택  turn = Σ(신규 편입 종목수), turnover = turn/TOPN/년
+#               → k종목 교체는 포트의 k/TOPN 을 왕복한 것이므로 연 비용 = turnover × RT
+#     지수타이밍 turn = Σ|Δ노출|, turnover = turn/년
+#               → 0→1→0 한 번이 |Δw| 2 이므로 연 비용 = turnover × RT/2
+#   같은 상수를 쓰되 나누는 수가 다르다. 한쪽 식을 다른 쪽에 옮기면 두 배로 틀린다.
+# ⚠ 판정(verdict)은 기존대로 무비용이다. 사전등록물의 판정을 비용 가정 하나로 뒤집지 않는다 —
+#   비용 후는 나란히 싣는 참고 열이다(asset_backtest 와 같은 규약).
+COST_RT_STOCK, COST_RT_ETF = 0.0020, 0.0005
+
 L2 = 1.0            # 고정. 탐색하지 않는다.
 REFIT = 21          # 재학습 주기(거래일) ≈ 월 1회
 MIN_TRAIN = 504     # 최소 학습 표본(≈2년) — 이보다 짧으면 예측하지 않는다
@@ -86,6 +103,17 @@ def logit(X, y, lam, iters=25):
         if np.max(np.abs(step)) < 1e-7:
             break
     return b
+
+
+
+def cost_cols(nav_g, nav_c, dd, RF, rt_bp):
+    """무비용/비용후 NAV 두 벌 → 화면에 실을 비용 열. 대조군은 매수후보유(회전 0)라
+    비용을 물지 않으므로 따로 계산하지 않고 그 사실을 필드로 적는다."""
+    mg, mc = ann_stats(nav_g, dd, RF), ann_stats(nav_c, dd, RF)
+    drag = round((mg.get("cagr") or 0) - (mc.get("cagr") or 0), 2)
+    return {"cost_bp": round(rt_bp * 10000, 1), "metrics_net": mc,
+            "cost_drag": drag, "cost_sensitive": bool(drag >= 0.5),
+            "cost_note": "대조군은 매수후보유라 회전이 0이다 — 비용을 물지 않는다."}
 
 
 def zfit(X):
@@ -280,15 +308,20 @@ def market_timing(A, RF):
         pred[i] = beta[0] + float(z @ beta[1:])
 
     nav, rets, bn, brs = [100.0], [], [100.0], []
+    nav_c = [100.0]        # 비용 후 NAV — 무비용본과 나란히 간다
     w_prev = 0.0
     turn = 0.0
     for i in range(st + 1, n):
         w_ = 1.0 if (np.isfinite(pred[i - 1]) and pred[i - 1] > 0) else 0.0
-        turn += abs(w_ - w_prev); w_prev = w_
+        dw = abs(w_ - w_prev)
+        turn += dw; w_prev = w_
+        # |Δ노출| 2 가 한 왕복(0→1→0)이므로 한 다리는 RT/2 다. 종목선택 쪽 식과 다르다.
+        tc = dw * COST_RT_ETF / 2
         rr = r[i] if np.isfinite(r[i]) else 0.0
         rfd = (sum(RF.values()) / len(RF) / 21) if RF else 0.0
         v = w_ * rr + (1 - w_) * rfd
         rets.append(v); nav.append(nav[-1] * (1 + v))
+        nav_c.append(nav_c[-1] * (1 + v - tc))
         brs.append(rr); bn.append(bn[-1] * (1 + rr))
     dd = DTS[st:]
     ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
@@ -314,6 +347,7 @@ def market_timing(A, RF):
         "metrics": ms, "bench": mb, "bench_unstable": False,
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / max(1e-9, (n - st) / 252), 1),
+        **cost_cols(nav, nav_c, dd, RF, COST_RT_ETF),
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
@@ -421,6 +455,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
     # 포트폴리오이고, 그 사실 자체가 보고할 결과다.
     diag = {"n_rebal": 0, "n_bind": 0, "n_dropped": 0, "p_min": 1.0, "p_max": 0.0}
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
+    nav_c = [100.0]        # 비용 후 NAV — 무비용본과 나란히 간다
     turn = 0
     beta_w, mu, sd = None, None, None
     # 학습창은 확장형(start 고정, hi 만 늘어난다)이라 매 리밸런스에 처음부터 다시 만들 이유가
@@ -429,6 +464,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
     # 지난번에 만든 데까지 기억해 두고 **새로 늘어난 날만** 덧붙인다. 결과는 완전히 같다.
     Xs, ys, built_to = [], [], start
     for i in range(st2 + 1, n):
+        tc = 0.0           # 그날 갈아탄 만큼만 비용을 뗀다
         if (i - 1) in month_end:
             hi = i - HOLD - 2
             for k in range(built_to, hi):
@@ -475,12 +511,15 @@ def stock_selection(RF, TOPN=10, mode="value"):
                         new = list(names_ok[kept]) if kept else []
                     else:
                         new = list(names_ok[np.argsort(-sc)][:TOPN])
-                    turn += len(set(new) - set(hold))
+                    nnew = len(set(new) - set(hold))
+                    turn += nnew
+                    tc = nnew / TOPN * COST_RT_STOCK   # k종목 교체 = 포트 k/TOPN 왕복
                     hold = new
         col = {t: j for j, t in enumerate(tick)}
         rr = [R[i, col[t]] for t in hold if np.isfinite(R[i, col[t]])]
         v = float(np.mean(rr)) if rr else 0.0
         rets.append(v); nav.append(nav[-1] * (1 + v))
+        nav_c.append(nav_c[-1] * (1 + v - tc))
         b = bench[i] if np.isfinite(bench[i]) else 0.0
         brs.append(b); bn.append(bn[-1] * (1 + b))
 
@@ -562,6 +601,7 @@ def stock_selection(RF, TOPN=10, mode="value"):
         "metrics": ms, "bench": mb, "bench_unstable": False,
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / TOPN / yrs, 1),
+        **cost_cols(nav, nav_c, dd, RF, COST_RT_STOCK),
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
@@ -625,18 +665,24 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     if SPXM is None:
         raise SystemExit("대조군(S&P 500 PR)을 assets.json 에서 읽지 못했다 — 판정을 낼 수 없다.")
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
+    nav_c = [100.0]        # 비용 후
     turn = 0
     for i in range(st + 1, len(months)):
         m = months[i - 1]
+        tc = 0.0
         if m in basket:
             new = [t for t in basket[m] if np.isfinite(P[t][i - 1])]
             if new:
-                turn += len(set(new) - set(hold)); hold = new
+                nnew = len(set(new) - set(hold))
+                turn += nnew
+                tc = nnew / max(1, len(new)) * COST_RT_STOCK   # 교체 비중만큼 왕복
+                hold = new
         rr = [P[t][i] / P[t][i - 1] - 1 for t in hold
               if np.isfinite(P[t][i]) and np.isfinite(P[t][i - 1]) and P[t][i - 1]]
         v = float(np.mean(rr)) if rr else 0.0
         b = float(SPXM[i]) if np.isfinite(SPXM[i]) else 0.0
         rets.append(v); nav.append(nav[-1] * (1 + v))
+        nav_c.append(nav_c[-1] * (1 + v - tc))
         brs.append(b); bn.append(bn[-1] * (1 + b))
 
     def mstats(x, nv):
@@ -681,6 +727,13 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": round(mu / (sd / math.sqrt(len(d))), 2) if sd > 0 else None,
         "turnover": round(turn / TOPN / max(1e-9, (len(months) - st) / 12), 1),
+        # 월별 계열이라 일별용 cost_cols 를 못 쓴다 — 같은 mstats 로 비용 후를 낸다.
+        "cost_bp": round(COST_RT_STOCK * 10000, 1),
+        "metrics_net": mstats([nav_c[k + 1] / nav_c[k] - 1 for k in range(len(nav_c) - 1)], nav_c),
+        "cost_drag": round((ms.get("cagr") or 0)
+                           - (mstats([nav_c[k + 1] / nav_c[k] - 1
+                                      for k in range(len(nav_c) - 1)], nav_c).get("cagr") or 0), 2),
+        "cost_note": "대조군은 매수후보유라 회전이 0이다 — 비용을 물지 않는다.",
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
@@ -896,10 +949,12 @@ def stock_selection_wide(RF, TOPN=10, model="ridge"):
     month_end = [i for i in range(st2, n - 1) if DTS[i][:7] != DTS[i + 1][:7]]
 
     hold, nav, rets, bn, brs = [], [100.0], [], [100.0], []
+    nav_c = [100.0]        # 비용 후 NAV — 무비용본과 나란히 간다
     turn = 0
     mdl, mu, sd = None, None, None
     Xs, ys, built_to = [], [], start
     for i in range(st2 + 1, n):
+        tc = 0.0           # 그날 갈아탄 만큼만 비용을 뗀다
         if (i - 1) in month_end:
             hi = i - HOLD - 2
             for k in range(built_to, hi):
@@ -923,7 +978,9 @@ def stock_selection_wide(RF, TOPN=10, model="ridge"):
                     sc = forest_pred(mdl, z) if model == "forest" else (mdl[0] + z @ mdl[1:])
                     names_ok = np.array(tick)[ok]
                     new = list(names_ok[np.argsort(-sc)[:TOPN]])
-                    turn += len(set(new) - set(hold))
+                    nnew = len(set(new) - set(hold))
+                    turn += nnew
+                    tc = nnew / TOPN * COST_RT_STOCK   # k종목 교체 = 포트 k/TOPN 왕복
                     hold = new
         rr = 0.0
         if hold:
@@ -931,6 +988,7 @@ def stock_selection_wide(RF, TOPN=10, model="ridge"):
             v = R[i, idx]
             rr = float(np.nanmean(v)) if np.isfinite(v).any() else 0.0
         rets.append(rr); nav.append(nav[-1] * (1 + rr))
+        nav_c.append(nav_c[-1] * (1 + rr - tc))
         br = bench[i] if np.isfinite(bench[i]) else 0.0
         brs.append(br); bn.append(bn[-1] * (1 + br))
 
@@ -966,6 +1024,7 @@ def stock_selection_wide(RF, TOPN=10, model="ridge"):
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs),
         "turnover": round(turn / TOPN / yrs, 1),
+        **cost_cols(nav, nav_c, dd, RF, COST_RT_STOCK),
         "nav": [round(x, 2) for x in nav[::step]],
         "bnav": [round(x, 2) for x in bn[::step]],
     }
