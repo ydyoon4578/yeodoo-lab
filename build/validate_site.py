@@ -1854,6 +1854,30 @@ for _p, _h in _heads:
         if _v and not _v.endswith("/" + _p):
             errors.append(f"{_p}: {_k} 가 자기 파일({_p})을 가리키지 않는다 — {_v}")
 
+# ── 홈 렌더 조립 검사 ─────────────────────────────────────────────────
+#   홈의 표·카드는 자료가 여러 파일에서 **따로 도착**하고, 그 조립이 어긋나면 화면이
+#   조용히 비어서 나간다. 문법 검사로는 안 잡힌다 — 실제로 두 번 그렇게 배포됐다
+#   (섹터 묶음 0줄 · 종목 두 줄씩). build/test_home_render.js 가 브라우저 없이
+#   렌더러를 실제 data/*.json 에 물려 그 조립만 재현한다.
+#   ⚠ node 가 없으면 건너뛴다(이 저장소의 다른 node 검사와 같은 규칙) — 못 잡는 것보다
+#     거짓 통과를 만드는 것이 나쁘지만, 도구 부재로 일일 잡을 죽이는 것은 더 나쁘다.
+_hr = os.path.join(ROOT, "build", "test_home_render.js")
+if not NODE:
+    tool_skips.append("홈 렌더 조립 검사(node 없음)")
+elif not os.path.exists(_hr):
+    tool_skips.append("홈 렌더 조립 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _hr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
+            errors.append("홈 렌더 조립 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ 홈 렌더 조립 검사 통과(" +
+                  next((x for x in _r.stdout.split("\n") if "표:" in x), "").strip() + ")")
+    except Exception as _e:
+        tool_skips.append(f"홈 렌더 조립 검사({_e})")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
