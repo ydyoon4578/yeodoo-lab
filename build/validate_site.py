@@ -1868,7 +1868,12 @@ elif not os.path.exists(_hr):
     tool_skips.append("홈 렌더 조립 검사(스크립트 없음)")
 else:
     try:
-        _r = _sp0.run([NODE, _hr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        # ⚠ encoding 을 고정한다 — 이 검사는 한글로 찍는다. 윈도우 로케일(cp949)로 읽으면
+        #   읽기 스레드가 UnicodeDecodeError 로 죽고, 그 예외가 아래 except 로 떨어져
+        #   **검사가 조용히 tool_skips 로 간다.** 화면에는 '통과 ✅' 만 남아 안 돈 것을
+        #   알 길이 없다(2026-08-03 실측 — 위 sync_nav·node --check 와 같은 사유다).
+        _r = _sp0.run([NODE, _hr], cwd=ROOT, capture_output=True, text=True,
+                      encoding="utf-8", timeout=180)
         if _r.returncode != 0:
             _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
             errors.append("홈 렌더 조립 검사 실패 — " + " / ".join(_tail))
@@ -1889,7 +1894,8 @@ elif not os.path.exists(_xr):
     tool_skips.append("explorer 렌더 검사(스크립트 없음)")
 else:
     try:
-        _r = _sp0.run([NODE, _xr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        _r = _sp0.run([NODE, _xr], cwd=ROOT, capture_output=True, text=True,
+                      encoding="utf-8", timeout=180)   # 바로 위 홈 렌더 검사와 같은 사유
         if _r.returncode != 0:
             _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
             errors.append("explorer 렌더 검사 실패 — " + " / ".join(_tail))
