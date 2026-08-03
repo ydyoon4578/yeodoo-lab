@@ -721,7 +721,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         이 식이 내부적으로 맞물리려면 <b>클린 서플러스</b> — 장부가 증분 = 이익 − 배당 — 가 성립해야 합니다.
         장부가와 이익이 따로 놀면 "이익을 다 반영한 장부가"라는 전제가 깨지고, 같은 회사를 두 번 세거나 빠뜨리게 됩니다.</p>
       <p>필요한 시계열은 <b>2026-07-25에 전부 확보했습니다</b>(자기자본 100% · 순이익 100% · EPS 99% · DPS 80%).
-        그래서 전제를 <b>재무를 수집한 510사 전수로 쟀습니다</b>:</p>
+        <!-- ⚠ '510사'를 뺐다(2026-08-03) — facts.json 의 clean_surplus.n 은 509 이고, 바로 아래
+             #rimnums·#csverdict 가 그 값을 찍는다. 한 화면에서 같은 측정의 분모가 둘로 갈렸다. -->
+        그래서 전제를 <b>자기자본 두 시점과 연간 순이익이 모두 있는 회사 전수</b>로 쟀습니다(표본 수는 아래 박스):</p>
       <div class="egrid" id="rimnums"></div>
       <p class="capn" id="csverdict" style="margin-top:10px">불러오는 중…</p>
       <p><b>결론 — 미국 회계에서 클린 서플러스는 성립하지 않습니다.</b> 가장 큰 누락 항목은 OCI가 아니라
@@ -750,7 +752,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <br><br>왜 이렇게까지 적는가 — <b>집합을 안 맞추면 숫자가 통째로 틀립니다.</b>
       SEC frames API로 곧이곧대로 합치면 영업현금흐름은 488사, 설비투자는 329사가 잡히는데,
       그대로 빼면 FCF가 <b>+80% 부풀려집니다</b>(실측 2026-07-25). 교집합만 쓰면 시총 커버가 60%로 떨어집니다.
-      이 화면은 회사별 수집분에서 두 다리가 모두 있는 회사만 골라 커버를 87%까지 올린 것이고,
+      이 화면은 회사별 수집분에서 두 다리가 모두 있는 회사만 골라 커버를 위에 적은 만큼까지 올린 것이고,
       그래도 <b>지수는 아닙니다</b>.
       <br><br>또 하나: 편입·편출 이력이 없어 <b>오늘 구성으로만</b> 계산합니다. 과거 시계열을 그리지 않는 이유입니다
       (오늘 구성을 과거에 적용하면 살아남은 회사만 세는 생존편향이 됩니다).
@@ -772,7 +774,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a href="index.html">← 전략 랩 홈</a> · <a href="roadmap.html">만들지 않은 것</a> ·
     <a href="method.html">등급·판정 규약</a> ·
     <a href="sources.html">데이터 출처·기준일</a>
-    <br>입력: <code>data/stocks.json</code>(시가총액·FCF 수익률·베타·성장률) · <code>data/regime.json</code>(무위험이자율·기대인플레).
+    <br>입력: <code>data/stocks.json</code>(시가총액·FCF 수익률·베타·성장률) · <code>data/regime.json</code>(무위험이자율·기대인플레) ·
+    <code>data/facts.json</code>(클린서플러스 실측·지수 FCF·배당 이력 분모) · <code>data/fx/&lt;티커&gt;.json</code>(종목 배당 이력).
     기준일은 각 파일의 <code>as_of</code>를 그대로 표시합니다. 모델·가정은 이 페이지가 계산하며 데이터 파일에 없습니다.
   </footer>
 </div>
@@ -1390,7 +1393,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       h+='<p class="capn">이 격자 전체에서 값이 나오지 않습니다.</p>';
     }
     h+='<div class="note"><b>이 숫자를 읽을 때</b><br>'+
-       '· 커버 '+pf(IDX.mc_cover,1)+'짜리 묶음입니다 — 빠진 13%가 어느 쪽으로 기울었는지 이 화면은 모릅니다.<br>'+
+       // ⚠ 여집합도 같은 값에서 낸다. 전에는 커버만 동적이고 여집합이 '13%' 로 박혀 있어
+       //   화면에 '커버 87.4% — 빠진 13%'(합 100.4)가 그대로 나갔다(2026-08-03).
+       '· 커버 '+pf(IDX.mc_cover,1)+'짜리 묶음입니다 — 빠진 '+pf(100-IDX.mc_cover,1)+'가 어느 쪽으로 기울었는지 이 화면은 모릅니다.<br>'+
        '· 회계연도 종료월이 회사마다 달라, 합계는 <b>같은 달로 정렬된 값이 아닙니다</b>.<br>'+
        '· FCF 음수 '+nf(IDX.n_neg,0)+'사를 빼지 않았습니다. 빼면 합계가 좋아 보입니다.<br>'+
        '· 역산 성장률이 높다·낮다가 <b>비싸다·싸다를 뜻하지 않습니다</b>. 이 랩은 그 관계를 검증한 적이 없습니다.</div>';
@@ -1513,6 +1518,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // RIM 실측 박스는 data/facts.json의 clean_surplus(수집기가 전 종목에서 잰 값)로 채운다.
     // 그 측정이 이 칸을 켜지 않는 이유 자체다 — 화면에 숫자로 적는다.
     fetch('data/facts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(fj){
+      // ⚠ 기준일 칩을 하나 더 단다. 03·04·05 의 숫자는 전부 이 파일에서 오는데, 머리말 칩은
+      //   stocks.json·regime.json 것만 찍고 있었다. 두 날짜가 4주 가까이 벌어져 있어(실측
+      //   facts 2026-07-04 vs stocks 2026-07-31) 독자가 머리말 날짜를 페이지 전체 기준일로
+      //   읽으면 아래 세 섹션을 4주 최신으로 오해한다(2026-08-03).
+      var ar=el('asofrow');
+      if(ar&&fj&&fj.as_of)ar.insertAdjacentHTML('beforeend',
+        '<span>재무·지수 <b>'+esc(fj.as_of)+'</b></span>');
       var cs=fj&&fj.clean_surplus, rn=el('rimnums');
       if(!rn)return;
       if(!cs){rn.innerHTML=box('실측','읽지 못함','data/facts.json의 clean_surplus를 불러오지 못했습니다.');return;}
