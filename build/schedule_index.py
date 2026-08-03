@@ -64,6 +64,10 @@ NO_ROW = {
     # sources.html 에 행을 추가하고 여기서 ROWS 로 옮긴다 — 지금 표에 실으면
     # 갈 곳 없는 행이 하나 생긴다.
     "refresh-cot.yml":       "CFTC COT — 소비 화면이 아직 없다(생기면 ROWS 로 옮길 것)",
+    # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
+    "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
+    "refresh-ml.yml":        "ML 연구 산출물 — refresh-assets 직후 연쇄(workflow_run)라 "
+                             "고유 주기가 없다. 백테스트 행이 대표",
 }
 
 DOW = "일월화수목금토"
@@ -115,14 +119,20 @@ def build() -> dict:
         fn = os.path.basename(p)
         src = io.open(p, encoding="utf-8").read()
         crons = re.findall(r"-\s*cron:\s*'([^']+)'", src)
+        # ⚠ 등록 여부를 cron 유무보다 **먼저** 본다. 전에는 cron 이 없으면 여기서 continue 로
+        #   빠져 ROWS/NO_ROW 등록을 아무도 안 물었다 — 이 게이트가 막으려던 '라벨 없는 잡이
+        #   조용히 느는 것'이 정확히 그 경로로 일어난다. 실제로 pit-facts.yml(workflow_dispatch)
+        #   이 그렇게 미등록 상태로 들어와 있었고, 2026-08-03 refresh-ml.yml(workflow_run)이
+        #   두 번째였다. **둘 다 데이터를 커밋한다** — 표에 실을지는 선택이지만, 그 선택을
+        #   한 번은 하게 만드는 것이 이 게이트의 일이다.
+        if fn not in ROWS and fn not in NO_ROW:
+            unmapped.append(fn)
         if not crons:
             continue
         labels = [kst_label(c) for c in crons]
         jobs[fn] = {"cron": crons, "label": labels}
         if fn in ROWS:
             rows[ROWS[fn]] = " + ".join(labels)
-        elif fn not in NO_ROW:
-            unmapped.append(fn)
     if unmapped:
         raise SystemExit(
             f"❌ 워크플로 {unmapped} 가 build/schedule_index.py의 ROWS/NO_ROW 어디에도 없습니다.\n"

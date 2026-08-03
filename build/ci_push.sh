@@ -62,7 +62,12 @@ MAX_TRIES="${MAX_TRIES:-5}"
 # 순서 = 의존 순서다. strategy_index 가 charts 보다 먼저고, 모든 축의 as_of 를 읽는
 # asof.json 이 맨 마지막이다.
 # 같은 명령이 두 줄에 나오면(style_perf·style_trails) 한 번만 실행한다.
+# ⚠ asset_strategies 는 strategy_index 보다 **앞**이다 — 목록이 이 파일을 읽는다.
+#   2026-08-03 에 들어왔다: ML 을 refresh-ml.yml 로 떼면서 이 파일을 커밋하는 잡이
+#   refresh-assets 하나에서 둘이 됐다(그전엔 한 잡이 두 번 커밋했을 뿐이라 경합이 없었다).
+#   asset_backtest.py 는 stdlib 만 쓰고 61초에 결정적으로 재현된다 — 표에 올릴 조건을 만족한다.
 REBAKE_TABLE="\
+data/asset_strategies.json|build/asset_backtest.py
 data/strategy_index.json|build/strategy_index.py
 data/strategy_charts.json|build/strategy_charts.py
 data/market_board.json|build/market_board.py

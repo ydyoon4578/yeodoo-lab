@@ -1,0 +1,84 @@
+name: Refresh ML research (pre-registered protocol)
+
+# 사전등록 규약으로 도는 연구 산출물 — ML 검정(data/ml_strategies.json)과 그것을 읽는
+# 아카이브 재검·전략 목록·차트.
+#
+# 왜 따로인가 — 2026-08-03 까지 이것은 refresh-assets.yml 의 '2부'였다. 그날 두 번 연속
+#   (정기 01:09 · 수동 02:55) **60분 잡 타임아웃에 잘렸다.** 사유는 이 단계가 느려진 것이
+#   아니라 입력이 커진 것이다:
+#     7f3402d(08-03 06:13) 가 가격 패널을 롤링 10년 → 2009-01 고정 시작으로 바꿨고
+#     (2,514 → 4,421행 · 1.76배), 06:50 일일 잡이 그 데이터를 실제로 늘렸다.
+#     ML 은 그 패널을 워크포워드로 훑으므로 그대로 1.76배가 된다 —
+#     08-01 실측 32분 × 1.76 ≈ 56분. 1부(2.4분)를 더하면 60분을 넘는다.
+#   그 커밋은 '대가를 적어 둔다'에 디스크·커밋 크기를 적었지만 이 실행시간은 빠져 있었다.
+#
+#   타임아웃만 올리지 않은 이유 — 한 잡에 두 예산을 묶어 두면 **수집·표시(2~3분)가 연구
+#   (56분+)의 사고에 계속 인질로 잡힌다.** 그 결합은 이미 두 번 값을 치렀다: 13F 를 뗀 것
+#   (refresh-13f-history.yml 주석)과, 07-31 에 2부를 뒤로 보내고 커밋을 두 번으로 나눈 것.
+#   세 번째로 같은 경계가 다시 나타났으므로 이번엔 잡 자체를 가른다.
+#
+# 순서 — refresh-assets 가 **성공한 뒤에** 돈다(workflow_run). 크론으로 떼지 않은 것이 요점이다:
+#   ① 새 크론 슬롯을 만들면 두 잡의 간격을 사람이 손으로 맞춰야 하고, 앞 잡이 늦으면
+#      ML 이 **어제 패널**을 보게 된다(원래 쪼개지 않은 사유가 바로 이것이었다).
+#   ② workflow_run 은 앞 잡이 assets.json 을 커밋한 뒤에 뜨므로 오늘 패널이 보장된다.
+#   ⚠ 그래서 checkout 은 ref: main 이어야 한다 — workflow_run 의 github.sha 는 앞 잡이
+#     **시작한** 커밋이고, 그 시점엔 오늘 패널이 아직 트리에 없다.
+#
+# 무게 — 실측 56분 안팎(패널 4,421행). timeout 120 은 패널이 더 자랄 여지까지 둔 값이다.
+#   ⚠ 이 값은 패널 길이에 비례한다. PX_START 를 다시 앞당기면 여기도 함께 봐야 한다.
+#
+# 실패해도 그날 화면은 안 낡는다 — 수집·표시는 refresh-assets 가 이미 커밋했다.
+#   여기서 죽으면 연구 산출물만 어제 것으로 남고, 사유는 build/gate.py 가 남긴다.
+
+on:
+  workflow_run:
+    workflows: ["Refresh asset panel & archive re-check"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-ml
+  cancel-in-progress: false
+
+jobs:
+  ml:
+    runs-on: ubuntu-latest
+    # workflow_run 은 앞 잡이 **실패해도** 뜬다. 패널이 안 갱신된 채 돌면 어제 것으로 재는
+    # 셈이라 돌 이유가 없다 — 성공했을 때만 간다(수동 실행은 언제나 통과시킨다).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main            # ⚠ 위 '순서' 주석 참조 — github.sha 로는 오늘 패널을 못 본다
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # refresh-assets 와 같은 목록이다. ml_backtest 는 복제용 월봉을 yfinance 로 받는다.
+      - name: Install deps
+        run: pip install --quiet pandas numpy yfinance
+
+      - name: Run ML & clone (pre-registered protocol)
+        run: python build/ml_backtest.py
+      # 아카이브 재검은 ml_strategies.json 을 읽는다. refresh-assets 의 1부가 **어제 것**으로
+      # 한 번 돌려 두었고, 여기서 오늘 것으로 다시 맞춘다.
+      - name: Re-run archived strategies (with today's ML)
+        run: python build/asset_backtest.py
+      - name: Rebuild unified strategy index (with today's ML)
+        run: python build/strategy_index.py
+      - name: Rebuild lab charts (with today's ML)
+        run: python build/strategy_charts.py
+      - name: Rebuild as-of index (with today's ML)
+        run: python build/asof_index.py
+      # 🚨 봇 커밋에는 validate.yml 이 안 돈다(GITHUB_TOKEN 푸시는 워크플로를 재귀 실행하지
+      #   않는다). 데이터의 실제 관문은 이 단계다 — build/validate_site.py 가 그 사실을 강제한다.
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit research outputs
+        run: |
+          bash build/ci_push.sh "chore(data): ML 사전등록 검정·아카이브 재검 자동 갱신" \
+            data/ml_strategies.json data/asset_strategies.json \
+            data/strategy_index.json data/strategy_charts.json data/asof.json
