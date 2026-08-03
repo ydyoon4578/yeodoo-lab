@@ -495,9 +495,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function drawVerdict(j){
     var h=j.headline||{}, g=h.grs||{}, p=h.persistence||{}, r=h.prereg_rule||{}, m=h.multiplicity||{};
-    var out='<div class="ans">아니오 — 따라 살 근거가 없다.</div>'+
-      '<div class="sub">아래 검정들이 서로 다른 질문을 던지는데 답이 모두 같다. '+
-      '검정마다 표본 구간이 다르므로 각 줄에 자기 개월수를 적었다.</div><div class="lines">';
+    // ⚠ 결론을 **네 검정에서 도출한다**. 전에는 고정 문자열이었다 — 아래 카드는 전부 파생값이고
+    //   매월 16일 재생성되는데(refresh-13f-history), 결론만 안 따라가므로 검정이 뒤집혀도
+    //   최상단은 계속 '아니오'라고 말하게 된다(2026-08-03).
+    //   🚨 갈릴 때 '근거가 있다'로 뒤집지 않는다. 이 페이지는 '따라 사도 되는가'에 답하는 곳이지
+    //     추천하는 곳이 아니다 — 갈리면 '갈렸다'고만 적고 수치를 직접 보게 한다.
+    //     사전등록 규약과도 무관하다: 규칙·파라미터는 그대로고 결론 문장만 데이터를 따라간다.
+    var _sig=0, _tot=0;
+    if(g.p!=null){_tot++; if(g.p<0.05)_sig++;}                       // 결합검정: 알파가 전부 0인가
+    if(p.spearman_p!=null){_tot++; if(p.spearman_p<0.05&&p.spearman>0)_sig++;}  // 지속성
+    if(r.t!=null){_tot++; if(Math.abs(r.t)>=2)_sig++;}               // 사전규칙
+    if(m.holm!=null||m.bonferroni!=null||m.bh10!=null){              // 다중검정 생존
+      _tot++; if((m.bonferroni||0)>0||(m.holm||0)>0||(m.bh10||0)>0)_sig++;}
+    var _ans, _sub;
+    if(_tot===0){ _ans='검정 결과를 불러오지 못했다.'; _sub='아래 줄이 비어 있으면 자료가 도착하지 않은 것이다.'; }
+    else if(_sig===0){ _ans='아니오 — 따라 살 근거가 없다.';
+      _sub='아래 검정들이 서로 다른 질문을 던지는데 답이 모두 같다. 검정마다 표본 구간이 다르므로 각 줄에 자기 개월수를 적었다.'; }
+    else if(_sig<_tot){ _ans='검정이 갈렸다 — 아래 수치를 직접 보라.';
+      _sub=_tot+'개 검정 중 '+_sig+'개에서만 유의했다. 하나가 유의하다고 따라 사도 된다는 뜻이 아니다 — 서로 다른 질문이라 답이 갈리면 그 자체가 결론이다.'; }
+    else { _ans=_tot+'개 검정이 모두 유의했다 — 아래 수치를 직접 보라.';
+      _sub='이 페이지는 추천하는 곳이 아니다. 표본 구간·다중검정 보정을 각 줄에서 확인하라.'; }
+    var out='<div class="ans">'+_ans+'</div>'+
+      '<div class="sub">'+_sub+'</div><div class="lines">';
     if(g.F!=null){
       out+='<div class="line"><span class="lb">결합검정</span><span class="lv">'+
         '<b>F('+g.df1+','+g.df2+')='+num(g.F,3)+' · p='+num(g.p,3)+'</b>'+

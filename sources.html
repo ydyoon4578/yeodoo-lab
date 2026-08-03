@@ -443,10 +443,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <table class="srctbl">
       <thead><tr><th scope="col">데이터</th><th scope="col">출처</th><th scope="col">기준일</th><th scope="col">갱신</th></tr></thead>
       <tbody>
-        <tr><th scope="row"><a href="stocks.html">종목 시그널</a></th>
+        <tr><th scope="row"><a href="stocks.html">종목 신호</a></th>
           <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 DB(public.index_constituents) 스냅샷</td>
           <td class="dt" id="src-stk">—</td><td id="up-src-stk">—</td></tr>
-        <tr><th scope="row"><a href="regime.html">시장 국면</a></th>
+        <tr><th scope="row"><a href="regime.html">국가경제 분석</a></th>
           <td><span class="freetag">무료</span>FRED · yfinance</td>
           <td class="dt" id="src-rg">—</td><td id="up-src-rg">—</td></tr>
         <tr><th scope="row"><a href="regime.html#sent">시장 심리</a></th>
@@ -467,7 +467,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <tr><th scope="row"><a href="filings.html">SEC 공시·산업분류</a></th>
           <td><span class="freetag">무료</span>SEC EDGAR submissions API(무인증) — 8-K Item 코드·SIC 4자리·회사별 제출 이력</td>
           <td class="dt" id="src-fil">—</td><td id="up-src-fil">—</td></tr>
-        <tr><th scope="row"><a href="rotation.html">오늘의 전략 탐색</a></th>
+        <tr><th scope="row"><a href="rotation.html">전략 탐색 풀</a></th>
           <td><span class="freetag">무료</span>웹 리서치(공개 문헌) — <b>GitHub Actions가 아니라 사람이 돌리는 갱신</b>입니다. 그래서 며칠 비는 날이 있고, 옆 기준일이 그 사실을 그대로 드러냅니다</td>
           <td class="dt" id="src-rot">—</td><td id="up-src-rot">—</td></tr>
         <tr><th scope="row"><a href="explorer.html">현재 포트폴리오 구성</a></th>
@@ -483,7 +483,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <p class="lbl">데이터셋별 상세</p>
 
   <div class="card">
-    <h3><span class="freetag">무료</span><a href="stocks.html">종목 시그널</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/stocks.json · data/sd/ · data/home_reco.json</span></h3>
+    <h3><span class="freetag">무료</span><a href="stocks.html">종목 신호</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/stocks.json · data/sd/ · data/home_reco.json</span></h3>
     <p>S&amp;P 500 · NASDAQ 100 종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
       구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 DB <b>public.index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
       갱신 잡에는 완전성 게이트가 있어 데이터 소스 부분 장애 시 갱신을 중단하고 이전본을 유지합니다.</p>
@@ -491,14 +491,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </div>
 
   <div class="card">
-    <h3><span class="freetag">무료</span><a href="regime.html">시장 국면</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/regime.json</span></h3>
+    <h3><span class="freetag">무료</span><a href="regime.html">국가경제 분석</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/regime.json</span></h3>
     <p>매크로 39지표(성장·노동·물가·금융·금리·주택)는 <b>FRED</b>(세인트루이스 연준 공개 API), 레짐별 자산·섹터·팩터 조건부 성과는 <b>yfinance</b>.
       각 지표의 '서프라이즈'는 자체 6개월 추세 대비 이탈이며 <b>애널리스트 컨센서스가 아닙니다</b>.</p>
     <div class="meta"><span><b>기준일</b><span id="d-rg">—</span></span><span><b>갱신</b><i class="v" id="up2-src-rg">—</i> (GitHub Actions)</span></div>
   </div>
 
   <div class="card">
-    <h3><span class="freetag">무료</span><a href="rotation.html">오늘의 전략 탐색</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/rotation_pool.json</span></h3>
+    <h3><span class="freetag">무료</span><a href="rotation.html">전략 탐색 풀</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/rotation_pool.json</span></h3>
     <p>전략 풀은 <b>공개 논문·기관 리서치 웹 리서치</b>로 수집·검증한 카드이며, 카드마다 원 출처 링크를 표기합니다.
       성과 수치는 원 출처 인용(미검증)이고, 랩이 자체 검증한 전략에는 별도 판정 배지가 붙습니다.
       기준일·갱신일은 로테이션 페이지 상단에 표기됩니다.</p>
@@ -539,7 +539,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </div>
 
   <footer>
-    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html">전략 랩</a><br>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">국가경제 분석</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a><br>
     과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
