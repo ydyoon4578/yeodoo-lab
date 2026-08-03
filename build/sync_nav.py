@@ -5,7 +5,7 @@
 빌드 스텝이 없는 사이트에서 22장의 HTML이 같은 메뉴를 갖게 하는 유일한 방법은
 "한 곳에서 만들어 전부에 밀어넣고, 어긋나면 CI가 막는" 것이다. 이 스크립트가 그 한 곳이다.
 
-  build/nav_items.json   ← 40슬롯 정본(사람이 고치는 유일한 파일)
+  build/nav_items.json   ← 메뉴 정본(사람이 고치는 유일한 파일)
         │
         ├─ build/nav_head.html   생성: <head>에 들어갈 메뉴 CSS
         └─ build/nav_body.html   생성: <body> 최상단에 들어갈 메뉴 마크업 + JS
@@ -115,7 +115,7 @@ def tool_live(t: dict) -> bool:
 # 기존 SA 셸의 토큰(--panel/--line/--accent/--mono …)만 쓴다. 새 색을 만들지 않는다.
 NAV_CSS = """<style>
   /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
-     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
      현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
   /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라

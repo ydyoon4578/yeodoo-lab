@@ -153,7 +153,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:BEGIN -->
 <style>
   /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
-     10 카테고리 × 40 슬롯. 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
      현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
 
   /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
@@ -302,7 +302,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
-          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
           <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
@@ -435,7 +435,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section aria-labelledby="wont-h">
     <p class="lbl" id="wont-h">메뉴에서 뺀 칸 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 슬롯 수에서 제외</span></p>
-    <p class="lblnote">무료 공개 데이터로는 만들 수 없다고 확정해 <b>40슬롯에서 뺀</b> 칸입니다. 메뉴에는 더 이상 없습니다.
+    <p class="lblnote">무료 공개 데이터로는 만들 수 없다고 확정해 <b>메뉴 슬롯에서 뺀</b> 칸입니다. 메뉴에는 더 이상 없습니다.
       다만 <b>지웠다고 없던 일로 하지는 않습니다</b> — 왜 못 만드는지, 돈을 쓰면 되는지, 무엇이 대신 그 자리를 맡았는지를 여기 남깁니다.</p>
     <div id="wonts"><div class="skel">불러오는 중…</div></div>
   </section>
@@ -445,13 +445,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <b>준비중</b>은 붙일 소스가 실재하고 순서만 남은 칸이라, 지우면 이 사이트가 무엇을 다루려 하는지가 같이 사라집니다.
     그래서 준비중이라고 적힌 채로 둡니다.
     <b>못 만드는 칸</b>은 무료 공개 데이터에 길이 없다고 확정한 것이라, 메뉴에 세워 두면 "언젠가 되겠지"라는
-    빈 약속이 됩니다. 2026-07-25에 3칸을 슬롯에서 뺐습니다 — 대신 <b>왜 못 만드는지와 무엇이 대신하는지를
+    빈 약속이 됩니다. 2026-07-25에 그런 칸들을 슬롯에서 뺐습니다 — 대신 <b>왜 못 만드는지와 무엇이 대신하는지를
     위에 그대로 남깁니다</b>. 사유를 지우는 것과 칸을 지우는 것은 다릅니다.
   </div>
 
   <footer>
     <a href="index.html">← 전략 랩 홈</a> · <a href="method.html">등급·판정 규약</a> ·
-    <a href="sources.html" rel="nofollow">데이터 출처·기준일</a><span title="열람 암호 필요">🔒</span>
+    <a href="sources.html">데이터 출처·기준일</a>
     <br>이 목록은 메뉴 정본(<code>build/nav_items.json</code>)에서 자동 생성됩니다 — 도구가 켜지면 여기서 저절로 빠집니다.
   </footer>
 </div>
@@ -496,7 +496,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                  '<span class="sc">'+esc(t._cat)+' · 공수 '+esc(t.effort||'—')+'</span>'+
                  '<span class="sd">'+esc(t.desc)+'</span></div>';
         }).join('')+'</div></div>';
-    }).join('') : '<div class="note" style="margin:0"><b>대기 중인 칸이 없습니다.</b> 메뉴의 28칸이 전부 동작합니다 — 붙일 소스가 남아 있는데 안 붙인 칸은 하나도 없습니다. 만들지 않기로 한 것은 아래에 있습니다.</div>';
+    }).join('') : '<div class="note" style="margin:0"><b>대기 중인 칸이 없습니다.</b> 메뉴의 '+tools.length+'칸이 전부 동작합니다 — 붙일 소스가 남아 있는데 안 붙인 칸은 하나도 없습니다. 만들지 않기로 한 것은 아래에 있습니다.</div>';
 
     // ── 메뉴에서 뺀 칸 ── 슬롯에는 없지만 사유는 계속 게시한다
     var w=j.retired||[];

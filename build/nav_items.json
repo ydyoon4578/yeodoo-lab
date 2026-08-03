@@ -204,7 +204,7 @@
      "name": "스타일 전략",
      "file": "style.html",
      "status": "existing",
-     "desc": "여섯 스타일을 과거로 되돌려 매월 다시 고른 최근 1년",
+     "desc": "공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과",
      "src": "model",
      "verdict": "unverified",
      "effort": "S"
@@ -326,7 +326,7 @@
  "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
  "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
  "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
- "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 40슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
+ "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 메뉴 슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
  "retired": [
   {
    "name": "실시간 내러티브",

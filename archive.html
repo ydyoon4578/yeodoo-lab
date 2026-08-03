@@ -23,15 +23,17 @@
 <div class="b">
   <b>전략 랩으로 합쳤습니다</b>
   기각 아카이브(전략 랩)와 백테스트 원장을 한 페이지로 통합했습니다(2026-07-26).
-  돌린 규칙·재현 재점검·스탠드얼론 재검은 이제 탭으로 나뉘어 있습니다.
   <p>자동으로 이동하지 않으면 <a id="go" href="explorer.html">여기를 누르세요</a>.</p>
 </div>
 <script>
-/* 기존 딥링크 보존 — #s-<sid>는 재점검/돌린규칙 뷰, #rc-<sid>는 재검 뷰로 넘긴다.
-   해시를 그대로 들고 가야 explorer의 부팅 로직이 알아서 뷰를 고른다. */
+/* 기존 딥링크 보존 — #s-<sid>는 explorer 의 부팅 로직이 알아서 연다.
+   해시가 없으면 기각 원장(#archledger)으로 보낸다. 이 주소를 저장해 둔 사람이
+   찾던 것이 그것이기 때문이다.
+   ⚠ 전에는 '#view=runs' 였다 — 그 탭은 2554b44 에서 폐지됐고 explorer 의 해시
+     처리기는 '#s-' 만 받으므로, 이 폴백은 그냥 페이지 맨 위로 떨어지고 있었다. */
 (function(){
   var h = location.hash || '';
-  var url = 'explorer.html' + (h || '#view=runs');
+  var url = 'explorer.html' + (h || '#archledger');
   var a = document.getElementById('go');
   if (a) a.href = url;
   location.replace(url);
