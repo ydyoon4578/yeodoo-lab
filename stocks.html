@@ -236,6 +236,7 @@
   details.more .mbody{margin-top:7px}
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
   .note{margin-top:16px;font-size:11px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line-soft);padding-top:11px}
+  .note>div+div{margin-top:5px}   /* 서로 다른 사실을 한 문단에 몰지 않는다(2026-08-03) */
   .timing{margin:0 0 4px;padding-bottom:13px;border-bottom:1px solid var(--line-soft)}
   .timhd{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
   .timstate{font-family:var(--mono);font-size:16px;font-weight:700}
@@ -455,7 +456,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
@@ -640,7 +641,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </div>
 
   <footer>
-    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="regime.html">국가경제 분석</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="sources.html">데이터 출처</a> · <a href="explorer.html">전략 랩</a> · <a href="signals.html">지표별 타이밍 신호</a><br>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="sources.html">데이터 출처</a> · <a href="explorer.html">전략 랩</a> · <a href="signals.html">지표별 타이밍 신호</a><br>
     가격·테크니컬·EPS: yfinance · 공매도잔량: FINRA(격주, <span id="siasof">기준일 별도</span>) · 테크니컬은 전 지표 동일 기준일 · <span id="asof"></span>
   </footer>
 </div>
@@ -1226,9 +1227,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (s.part?'<div class="partnote">이 종목은 <b>상장 '+s.part+'거래일</b>이라 창이 확보된 단기 지표만 산출됩니다 — '+
         '200일선 이격도·52주 고점 위치·3/6개월 모멘텀·실현변동성은 <b>계산 자체가 불가능</b>합니다(빈 값을 채우지 않았습니다). '+
         '스윙 타점도 표시되지 않습니다. 상장 200거래일이 지나면 자동으로 전체 지표가 붙습니다.</div>':'')+
-      whyBlock(s)+timing(s)+body+fundX(s)+'<div class="note"><b style="color:var(--good)">▲</b> 매수 = 스윙 <b>저점</b> 근처 · <b style="color:var(--hot)">▼</b> 매도 = 스윙 <b>고점</b> 근처. <b>채운 도형(▲▼●)=확정</b> — 날짜 불변 · <b>빈 도형(△▽○)=잠정</b> — 이동 가능. '+
-      '<b>크기</b>는 다른 축입니다 — <b>큰 삼각형=강</b>(다이버전스·거래량 확인 동반) · <b>작은 삼각형=약</b>(구조 전환만). '+
-      '강이 수익이 더 좋다는 뜻은 아닙니다(확인 유무 표기일 뿐, 우위는 검증된 바 없습니다). 기준일 '+DATA.as_of+' · 공매도잔량만 '+(SI_ASOF||'—')+'(FINRA 격주) · 출처 yfinance·FINRA.<details class="more"><summary>타점을 어떻게 찍고, 무엇을 못 하는가</summary><div class="mbody"><p>타점은 ①스윙 전환점(지그재그) ②추세 내 눌림목/반등(K=5) 두 종류이며, 각 타점의 근거는 위 <b>왜 이 신호인가</b>에 나옵니다. 잠정 타점은 과거 실측 확정 확률이 이동 확률을 유의하게 웃돌 때만(실측 약 52~91%) 표시하고, 확정은 잠정 단계를 거쳐 등장합니다. 여기에 과열도·추세·모멘텀·변동성을 결합해 걸러냅니다 — 저점이라도 깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외(떨어지는 칼 회피), 고점이라도 추세·모멘텀 강한 상승 지속이면 매도 제외(강세종목 조기매도 회피). 임계는 시장국면(SPY 200MA 위=관대한 눌림매수)에 따라 조정됩니다.</p><p><b>한계 — 확정 저점의 약 50%만 이후 20일간 저점을 유지하고(5y 실측), 확정일 매수 수익은 시장 수준(+1.6% vs +1.4%)입니다. 수익 예측 도구가 아니라 진입 규율·구조 도구이며, 고점 표식은 하락 예측력이 없어 이익실현 레벨 참고일 뿐입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위.</p></div></details></div></div>';
+      whyBlock(s)+timing(s)+body+fundX(s)+'<div class="note"><div><b style="color:var(--good)">▲</b> 매수 = 스윙 <b>저점</b> 근처 · <b style="color:var(--hot)">▼</b> 매도 = 스윙 <b>고점</b> 근처. <b>채운 도형(▲▼●)=확정</b> — 날짜 불변 · <b>빈 도형(△▽○)=잠정</b> — 이동 가능.</div>'+
+      '<div><b>크기</b>는 다른 축입니다 — <b>큰 삼각형=강</b>(다이버전스·거래량 확인 동반) · <b>작은 삼각형=약</b>(구조 전환만).</div>'+
+      '<div>강이 수익이 더 좋다는 뜻은 아닙니다(확인 유무 표기일 뿐, 우위는 검증된 바 없습니다).</div><div>기준일 '+DATA.as_of+' · 공매도잔량만 '+(SI_ASOF||'—')+'(FINRA 격주) · 출처 yfinance·FINRA.</div><details class="more"><summary>타점을 어떻게 찍고, 무엇을 못 하는가</summary><div class="mbody"><p>타점은 ①스윙 전환점(지그재그) ②추세 내 눌림목/반등(K=5) 두 종류이며, 각 타점의 근거는 위 <b>왜 이 신호인가</b>에 나옵니다. 잠정 타점은 과거 실측 확정 확률이 이동 확률을 유의하게 웃돌 때만(실측 약 52~91%) 표시하고, 확정은 잠정 단계를 거쳐 등장합니다. 여기에 과열도·추세·모멘텀·변동성을 결합해 걸러냅니다 — 저점이라도 깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외(떨어지는 칼 회피), 고점이라도 추세·모멘텀 강한 상승 지속이면 매도 제외(강세종목 조기매도 회피). 임계는 시장국면(SPY 200MA 위=관대한 눌림매수)에 따라 조정됩니다.</p><p><b>한계 — 확정 저점의 약 50%만 이후 20일간 저점을 유지하고(5y 실측), 확정일 매수 수익은 시장 수준(+1.6% vs +1.4%)입니다. 수익 예측 도구가 아니라 진입 규율·구조 도구이며, 고점 표식은 하락 예측력이 없어 이익실현 레벨 참고일 뿐입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위.</p></div></details></div></div>';
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}

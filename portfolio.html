@@ -88,7 +88,6 @@
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11.5px}
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65;max-width:88ch}
-  h2.lbl{font-size:13px}
   h3.grph{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2);margin:22px 0 7px;
           display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
   h3.grph span{font-weight:400;font-size:10.5px;color:var(--muted)}
@@ -433,7 +432,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">국가경제 분석</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
@@ -1816,7 +1815,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<h3 class="grph">위험 지표 <span>· 위 창의 실측 · 미래 보장이 아님</span></h3>'+
       '<div class="tally">'+
         '<div class="ty"><b>'+esc(fx(A.volP*100,1))+'<small>%</small></b><span>포트 연율 변동성</span><em>'+
-          '일간 표준편차 × √252. 교차검산 √(wᵀΣw) 와 차이 '+esc((chk*100).toExponential(1))+'%p</em></div>'+
+          '일간 표준편차 × √252. 공분산행렬로 따로 계산한 값과 <b>일치</b>합니다'+
+          '(교차검산 차이 '+esc((chk*100).toExponential(1))+'%p — 부동소수점 오차 범위)</em></div>'+
         '<div class="ty"><b>'+esc(fx(A.wavg*100,1))+'<small>%</small></b><span>가중평균 개별 변동성</span><em>'+
           'Σ w(i)·σ(i) — 상관을 무시했을 때의 값</em></div>'+
         '<div class="ty"><b>'+(divr==null?'—':esc(fx(divr,2)))+'</b><span>분산 비율</span><em>'+

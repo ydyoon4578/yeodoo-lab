@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "7585b818b093e065",
+ "generated_from": "581fb2652688ec33",
  "categories": [
   {
    "name": "시장",
@@ -28,7 +28,7 @@
      "live": true
     },
     {
-     "name": "국가경제 분석",
+     "name": "시장 국면",
      "file": "regime.html",
      "status": "existing",
      "desc": "FRED 39지표로 만든 국면 판정 — 미국 단일",
