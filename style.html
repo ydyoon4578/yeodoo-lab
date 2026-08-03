@@ -594,9 +594,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return '<svg class="spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" '+
       'aria-label="누적 곡선">'+
       '<line x1="0" y1="'+y100.toFixed(1)+'" x2="'+W+'" y2="'+y100.toFixed(1)+
-      '" stroke="var(--line)" stroke-width="1"/>'+
+      '" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>'+
       series.map(function(x){
-        return '<path d="'+path(x.v)+'" fill="none" stroke="'+x.c+'" stroke-width="'+x.w+'"'+
+        return '<path d="'+path(x.v)+'" fill="none" vector-effect="non-scaling-stroke" stroke="'+x.c+'" stroke-width="'+x.w+'"'+
           (x.d?' stroke-dasharray="'+x.d+'"':'')+'/>';
       }).join('')+'</svg>';
   }

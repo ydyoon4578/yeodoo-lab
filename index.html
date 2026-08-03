@@ -195,7 +195,8 @@
   .calix b{color:var(--muted);font-weight:600}
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
-  @media(max-width:900px){.calix{display:none}}
+  /* .calix 를 숨기면 그것을 설명하는 범례 줄도 같이 숨긴다 — 안 그러면 없는 것을 가리킨다 */
+  @media(max-width:900px){.calix,.callegend .lg-calix{display:none}}
   /* 캘린더·스타일 표도 도착 전엔 한 줄(48px)이고 도착하면 600px/460px 로 늘어난다.
      그 사이에 있는 것이 전부 밀리므로 미리 자리를 잡아 둔다. 과다 예약은 빈 칸만 남기고
      이동은 만들지 않는다 — 반대는 성립하지 않는다. */
@@ -847,7 +848,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
         <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
         <span><i class="lg m"></i>아래 회색 줄 = 주요 경제지표</span>
-        <span><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
+        <!-- ⚠ 이 줄이 설명하는 .calix 는 900px 이하에서 display:none 이다(198행).
+             범례만 남으면 화면에 없는 것을 가리킨다 — 같은 폭에서 함께 숨긴다(2026-08-03). -->
+        <span class="lg-calix"><i class="lg m"></i>날짜 아래 = 그날 지수 등락률</span>
       </div>
     </section>
 
