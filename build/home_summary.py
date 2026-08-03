@@ -59,6 +59,10 @@ SEC_ETF = {"Information Technology": "XLK", "Financials": "XLF", "Health Care": 
            "Industrials": "XLI", "Consumer Staples": "XLP", "Energy": "XLE",
            "Utilities": "XLU", "Real Estate": "XLRE", "Materials": "XLB"}
 SEC_KO = {v: SECKO[k] for k, v in SEC_ETF.items()}
+# ETF 티커 → GICS **영문** 섹터명. 산업그룹 이름과 글자로 맞대 보려고 둔다(SEC_KO 는 한글이라
+# 'Energy' 와 '에너지'를 같다고 말할 수 없다). 여기서만 쓰지만 SEC_ETF 를 뒤집는 규칙이
+# 두 곳에 생기면 한쪽만 고쳐지는 날이 오므로 정본을 하나 둔다.
+ETF_GICS = {v: k for k, v in SEC_ETF.items()}
 # 실측(2026-08-03, GICS 서브산업 127개): MIN 3 이면 71개·커버 83% · MIN 4 면 49개·커버 70% ·
 # MIN 5 면 36개·커버 59%. 섹터 안에 접어 두므로 한 번에 보이는 것은 한 섹터분(6~7줄)이라
 # 개수보다 커버를 택했다. 3종 평균은 얇지만 줄마다 종목수를 함께 낸다.
@@ -247,7 +251,16 @@ def _industry(stocks, dates, root):
         gused = set()
         for g, gv in gs:
             gid = sec + "|" + g
-            rows.append(agg(gv, g, sec, 2, sec))            # 산업그룹(2차)
+            _g = agg(gv, g, sec, 2, sec)                    # 산업그룹(2차)
+            # 🚨 그 섹터의 산업그룹이 **하나뿐이고 이름도 섹터와 같으면** 표시하지 않는다
+            #   (사용자 결정 2026-08-04). 실측 3섹터가 그렇다 — 에너지/Energy · 소재/Materials
+            #   · 유틸리티/Utilities. GICS 가 원래 그렇게 생겼다(그 섹터는 2차가 자기 자신이다).
+            #   그 줄을 그리면 같은 이름이 두 번 나오고 층만 하나 늘 뿐 갈리는 것이 없다.
+            #   ⚠ 데이터에서 빼지는 않는다 — industry.html 이 이 줄로 서브산업의 부모를 찾는다.
+            #     화면 쪽이 이 표를 보고 건너뛴다.
+            if len(gs) == 1 and g == ETF_GICS.get(sec):
+                _g["solo"] = 1
+            rows.append(_g)
             gused.update(s["t"] for s in gv)
             subs = sorted([(c, v) for (g2, c), v in keeps.items() if g2 == g],
                           key=lambda kv: -len(kv[1]))

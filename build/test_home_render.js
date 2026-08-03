@@ -62,10 +62,9 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   console.log("페이지 자체 로드 후: 섹터 %d줄", late);
   if (!late) fail.push("섹터 줄이 0 — 자료 도착 순서 배선이 끊겼다");
 
-  // ⚠ 2026-08-03 홈이 **GICS 11섹터만** 내기로 바뀌었다(사용자 결정). 산업그룹·서브산업·
-  //    종목 단과 그 지연 로딩(home_stocks.json)이 전부 나갔으므로, 그것들을 재던 검사도 함께
-  //    걷는다. 지운 검사 — 트리 자식합, 종목 전량 도달·중복, 하위 단 up/dn 색.
-  //    ⚠ 되살리면 그 셋도 같이 되살릴 것. 지운 이유가 '안 쓰니까'이지 '필요 없어서'가 아니다.
+  // ⚠ 2026-08-04 홈이 **섹터 → 산업그룹(2차) → 종목** 두 단으로 돌아왔다(사용자 결정).
+  //    2026-08-03 에 '11섹터만' 으로 줄이면서 걷었던 검사 중 이 구조에 맞는 것을 되살린다.
+  //    서브산업(4차)은 여전히 안 낸다 — 그쪽은 industry.html 전담이라 lv4 가 나오면 실패다.
   const Hh = TBL.innerHTML;
 const cnt = n => (Hh.match(new RegExp('tr class="lv' + n + '"', "g")) || []).length;
 console.log("표: 묶음 %d · 섹터 %d · 하위단 %d · 열 %d",
@@ -76,10 +75,30 @@ console.log("표: 묶음 %d · 섹터 %d · 하위단 %d · 열 %d",
 const D = hr.industry;
 if (cnt(1) !== D.sectors.length)
   fail.push("섹터 줄 " + cnt(1) + " ≠ home_reco.industry.sectors " + D.sectors.length);
-if (cnt(2) + cnt(3) + cnt(4))
-  fail.push("하위 단이 " + (cnt(2) + cnt(3) + cnt(4)) + "줄 그려졌다 — 홈은 GICS 섹터만 낸다");
-if ((Hh.match(/class="htg" data-open/g) || []).length)
-  fail.push("펼침 버튼(data-open)이 남았다 — 펼칠 하위 단이 없는데 누를 것이 생긴다");
+// 산업그룹 줄 — solo(이름이 섹터와 같고 그 섹터의 유일한 2차)는 **빼는 것이 정본이다**.
+//   화면이 스스로 판정하지 않고 home_reco 의 solo 표를 읽으므로, 여기서도 그 표로 기대값을 만든다.
+const g2 = D.rows.filter(r => r.lv === 2);
+const bySec2 = {};
+g2.forEach(r => (bySec2[r.p] = bySec2[r.p] || []).push(r));
+const wantG = g2.filter(r => !(bySec2[r.p].length === 1 && r.solo)).length;
+if (cnt(2) !== wantG)
+  fail.push("산업그룹 줄 " + cnt(2) + " ≠ solo 뺀 기대값 " + wantG);
+if (cnt(4))
+  fail.push("서브산업(lv4)이 " + cnt(4) + "줄 새어 나왔다 — 홈은 2차까지만 낸다");
+// solo 섹터는 그 이름의 2차 줄이 화면에 있으면 안 된다(같은 이름이 두 번 나온다)
+g2.filter(r => bySec2[r.p].length === 1 && r.solo).forEach(r => {
+  if (Hh.indexOf('data-open="g-' + r.p + '-') >= 0)
+    fail.push("solo 산업그룹이 그려졌다: " + r.p + " / " + r.nm);
+});
+// 펼침 버튼은 섹터 11 + 산업그룹 wantG 개여야 한다(종목 줄에는 버튼이 없다)
+const nOpen = (Hh.match(/class="htg" data-open/g) || []).length;
+if (nOpen !== cnt(1) + wantG)
+  fail.push("펼침 버튼 " + nOpen + " ≠ 섹터 " + cnt(1) + " + 산업그룹 " + wantG);
+// 자식 줄은 부모 id 를 가리켜야 한다 — 끊기면 눌러도 아무 일도 안 일어난다
+const ids = new Set([...Hh.matchAll(/data-id="([^"]+)"/g)].map(m => m[1]));
+[...new Set([...Hh.matchAll(/data-p="([^"]+)"/g)].map(m => m[1]))].forEach(p => {
+  if (!ids.has(p)) fail.push("고아 줄 — data-p=" + p + " 를 가리키는 부모 줄이 없다");
+});
 
 // ④ 정렬(시총 내림차순)
 const dom = [...Hh.matchAll(/<tr class="lv1"[^>]*>(?:<th[^>]*>)(?:<(?:button|span)[^>]*>[^<]*<\/(?:button|span)>)?<span class="snm">([^<]*)</g)].map(m => m[1]);
