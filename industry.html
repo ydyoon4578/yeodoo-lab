@@ -64,6 +64,19 @@
   .note b{color:var(--ink)}
   .note.hard{border-left-color:var(--hot)}
   .note code{font-family:var(--mono);font-size:11.5px}
+  /* GICS 네 단 대조표 — 3차를 왜 뺐는지 보이라고 넣은 표다. 넓은 화면에서도 본문 폭을
+     넘지 않게 두고, 좁은 화면에서는 표만 가로로 구른다(문서 본문은 절대 안 구른다). */
+  .tiers{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-soft)}
+  .fswrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}
+  .ttab{border-collapse:collapse;font-size:12px;min-width:340px}
+  .ttab th,.ttab td{padding:4px 12px 4px 0;text-align:left;white-space:nowrap}
+  .ttab thead th{color:var(--muted);font-weight:600;border-bottom:1px solid var(--line-soft)}
+  .ttab tbody th{font-weight:600;color:var(--ink)}
+  .ttab td.tnum,.ttab th.tnum{text-align:right;padding-right:18px}
+  .ttab tr.dim th,.ttab tr.dim td{color:var(--muted)}
+  .xmk{font-size:10.5px;font-weight:700;color:var(--panel);background:var(--muted);border-radius:4px;padding:1px 5px}
+  @media (prefers-color-scheme:dark){.xmk{color:#131820}}
+  :root[data-theme="dark"] .xmk{color:#131820}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
 
   .filters{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
@@ -457,7 +470,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <h1 class="title">11개 섹터로는<br>안 갈라지는 것</h1>
     <p class="lede">홈·섹터 화면이 쓰는 섹터는 11개뿐이라 "정보기술"에 반도체 장비사와 회계 소프트웨어 회사가
       같이 들어갑니다. <b>GICS</b>는 그 아래를 <b>산업그룹(2차) → 서브산업(4차)</b>으로 다시 가릅니다.
-      이 화면은 그 세 단을 펼쳐 보여줍니다 — 랩이 만든 분류가 아니라 위키백과 S&amp;P 500 표의 GICS 구조입니다.</p>
+      이 화면은 그 세 단을 펼쳐 보여줍니다 — 랩이 만든 분류가 아니라 위키백과 S&amp;P 500 표의 GICS 구조입니다.
+      <span id="tier3">GICS는 네 단이고 <b>3차(산업)</b>는 여기 없습니다 — 왜 뺐는지는 아래에 적습니다.</span></p>
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
@@ -468,6 +482,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <br>⚠ 2026-08-03 이전에는 이 화면이 <b>SEC의 SIC 4자리</b>를 썼습니다. 그 체계는 1987년판이라 회사의 사업이
     바뀌어도 갱신되지 않았고(AMZN이 통신판매업, GOOGL·META가 같은 7370), 사이트의 다른 화면은 전부 GICS라
     한 사이트가 두 분류를 말하고 있었습니다. 그래서 GICS로 통일했습니다.
+    <div id="tiers" class="tiers"></div>
   </div>
 
   <nav class="views" id="views" aria-label="보기 전환">
@@ -674,6 +689,31 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ty(nGrp,'산업그룹','서브산업의 윗단','var(--rp)')+
       ty((IND.sectors||[]).length,'GICS 섹터','홈·섹터 화면이 쓰는 단','var(--champ)')+
       ty(solo,'1사뿐인 칸','이만큼은 사실상 개별 종목','var(--marg)');
+    // 🚨 3차(산업)를 왜 뺐는지 — 숫자는 손으로 적지 않고 home_reco.industry.tiers 에서 읽는다.
+    //   이 문단이 없어서 "3차는?" 이라는 질문이 나왔다(사용자 지적 2026-08-04). 번호를
+    //   1차·2차·4차로 적어 놓고 3차가 어디 갔는지 말하지 않으면 그 자체가 미완성 문장이다.
+    var TI=IND.tiers;
+    if(TI&&TI.rows&&TI.rows.length===4){
+      var tr=TI.rows, r3=tr[2];
+      el('tiers').innerHTML='<b>GICS 네 단 중 3차(산업)를 뺀 이유</b><br>'+
+        '<div class="fswrap"><table class="ttab"><thead><tr><th scope="col">단</th>'+
+        '<th scope="col" class="tnum">칸</th><th scope="col" class="tnum">'+TI.min+'사 이상</th>'+
+        '<th scope="col" class="tnum">그 안에 든 종목</th></tr></thead><tbody>'+
+        tr.map(function(x,i){
+          var me=(i===2);
+          return '<tr'+(me?' class="dim"':'')+'><th scope="row">'+esc(x.nm)+'('+(i+1)+'차)'+
+                 (me?' <span class="xmk">안 씀</span>':'')+'</th>'+
+                 '<td class="tnum">'+x.n+'</td><td class="tnum">'+x.keep+'</td>'+
+                 '<td class="tnum">'+x.cov+'%</td></tr>';
+        }).join('')+'</tbody></table></div>'+
+        '2차는 종목을 빠짐없이 덮고(100%) 4차는 가장 잘게 가릅니다. 3차는 그 사이인데, '+
+        '<b>'+TI.ind_n+'칸 중 '+TI.ind_dup+'칸이 4차와 구성이 완전히 같습니다</b> — '+
+        '그 칸에서는 3차를 세워도 아래에 서브산업이 하나뿐이라 층만 하나 늘고 새로 갈리는 것이 없습니다. '+
+        '접히는 표에서 층은 비용이라 뺐습니다.<br>'+
+        '⚠ 안 쓰는 것이지 없는 것이 아닙니다 — 3차는 <code>data/members.json</code>의 <code>ind</code>에 '+
+        '종목마다 실려 있습니다(위키백과 GICS 문서의 4단 구조 전문에서 코드 자릿수로 갈라 붙입니다). '+
+        '기준 '+TI.n_gics+'사(GICS가 있는 종목 · 전체 '+TI.n_all+'사).';
+    }
     el('limits').innerHTML='<b>이 데이터의 성격</b><br>'+
       '· GICS는 S&P·MSCI의 분류이고 이 랩은 위키백과 S&P 500 표에서 받습니다 — 랩이 만든 분류가 아닙니다.<br>'+
       '· 가장 큰 칸은 <code>'+esc(big.sub)+'</code>('+big.ts.length+'사 · '+esc(big.secnm)+')입니다.<br>'+
