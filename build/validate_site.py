@@ -1878,6 +1878,27 @@ else:
     except Exception as _e:
         tool_skips.append(f"홈 렌더 조립 검사({_e})")
 
+# ── explorer 지수 비교표 검사 ──────────────────────────────────────────
+#   같은 이유다. 여기서 조용히 깨진 것 둘 — 이름 조인이 끊겨 배포 원장 4종이 지수 눈금을
+#   통째로 못 받았고(목록 쪽 이름은 'SPX'→'S&P 500' 을 편 뒤인데 키는 원문이었다),
+#   지수를 전략과 다른 주기로 재 같은 SPX 가 한 화면에서 두 값으로 나왔다.
+_xr = os.path.join(ROOT, "build", "test_explorer_render.js")
+if not NODE:
+    tool_skips.append("explorer 렌더 검사(node 없음)")
+elif not os.path.exists(_xr):
+    tool_skips.append("explorer 렌더 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _xr], cwd=ROOT, capture_output=True, text=True, timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split("\n") if x.strip()][-6:]
+            errors.append("explorer 렌더 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ explorer 렌더 검사 통과(" +
+                  next((x for x in _r.stdout.split("\n") if "비교표:" in x), "").strip() + ")")
+    except Exception as _e:
+        tool_skips.append(f"explorer 렌더 검사({_e})")
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
