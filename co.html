@@ -182,6 +182,17 @@
 
   /* 경고는 숫자 바로 옆(아래) — 접지 않는다 */
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note.hard{border-left-color:var(--hot)}   /* class="note hard" 를 쓰는데 규칙이 없었다 */
+  /* details.more — 이 파일이 class="more" 를 쓰는데 규칙이 없어 요약 화살표·여백이 안 붙었다.
+     index.html 482~489 행의 정본을 그대로 옮긴다(2026-08-03). */
+  details.more{margin-top:7px}
+  details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more[open]>summary::before{content:'\25BE'}
+  details.more>summary:hover{color:var(--accent)}
+  details.more .mbody{margin-top:7px}
+  details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
   .note code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}

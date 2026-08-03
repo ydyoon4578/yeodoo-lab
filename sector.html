@@ -991,7 +991,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('asofline').innerHTML=
       '<span>종목·재무 기준일 <b>'+esc(a1)+'</b> <span style="opacity:.7">(data/stocks.json)</span></span>'+
       '<span>레짐·조건부 성과 기준일 <b>'+esc(a2)+'</b> <span style="opacity:.7">(data/regime.json)</span></span>'+
-      (same?'':'<span class="bad">⚠ 두 파일의 기준일이 다릅니다 — 좌우 블록을 같은 날로 읽지 마십시오.</span>');
+      (same?'':'<span class="bad">⚠ 두 파일의 기준일이 다릅니다 — 위 두 기준일을 같은 날로 읽지 마십시오.</span>');
     el('ldn').textContent = (S.n_stocks!=null?S.n_stocks:S.stocks.length);
     var dycov=(S.fund_cov||{}).dy;
     el('dycov').textContent = (dycov!=null?dycov:'—');
