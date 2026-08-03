@@ -336,7 +336,11 @@
         "Swedroe Spotlight: Enhancing Momentum Strategies Via Idiosyncratic Momentum, Alpha Architect"
       ],
       "id": "B4",
-      "recent_at": "2026-08-03"
+      "recent_at": "2026-08-03",
+      "lab": {
+        "v": "구별 불가",
+        "why": "이 랩이 같은 규약으로 재현했다(x-residmom · 36개월 회귀 잔차의 12-1 합 ÷ 잔차 표준편차). 샤프 1.06 으로 총수익 모멘텀 1.28 보다 낮아 '위험조정 수익 2배' 주장은 이 유니버스·이 창에서 서지 않는다. MDD 도 −42.85 vs −43.46 으로 0.6%p 차이뿐이다. 다만 같은 규칙은 아니다 — 상관 0.53, 증분 알파 +3.23%p 이나 t 0.91 로 유의하지 않다. ⚠ 팩터는 ETF 스프레드 대리변수(IWM−SPY, IVE−RPG)이고 Fama-French 정본이 아니다."
+      }
     },
     {
       "cat": "B",
@@ -355,7 +359,11 @@
         "Frog in the Pan Momentum: International Evidence, Alpha Architect"
       ],
       "id": "B5",
-      "recent_at": "2026-08-03"
+      "recent_at": "2026-08-03",
+      "lab": {
+        "v": "구별 불가",
+        "why": "이 랩이 같은 규약으로 재현했다(x-fip · 모멘텀 상위 5분위 ∩ 저ID 10종). 구현하고 보니 ID 는 이 표의 경로 일관성(x-cntd, 231거래일 오른날−내린날÷유효일수)과 창도 정의도 부호만 반대인 같은 측정이라, 갈리는 지점은 모멘텀 5분위 사전 필터 하나뿐이다. 그 필터가 더하는 것이 유의하지 않다 — 상관 0.806, 증분 알파 +2.92%p, t 1.39. MDD 는 −39.99 로 셋 중 가장 얕지만 t 1.76 이라 '완만하다'고 판정할 근거는 아니다."
+      }
     },
     {
       "id": "B7",
