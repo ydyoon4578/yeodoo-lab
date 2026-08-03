@@ -352,8 +352,10 @@
   .prtblwrap{margin:8px 0 0;padding:8px 11px 9px;border:1px solid var(--line-soft);border-radius:8px;background:var(--panel-2)}
   .prsc{overflow-x:auto;-webkit-overflow-scrolling:touch}
   /* 상세 패널이 좁다(≈413px). 최소폭을 박으면 마지막 '차이' 열이 잘린 채 나간다 —
-     숫자 칸만 nowrap 으로 지키고 지표 이름은 접히게 둬 폭에 맞춘다. */
-  .prtbl{border-collapse:collapse;width:100%;font-size:12px}
+     nowrap 을 푸는 것만으로는 안 된다(자동 배치는 내용 폭을 그대로 요구한다).
+     table-layout:fixed 로 열 폭을 못 박아야 지표 이름이 접히고 표가 폭에 들어온다. */
+  .prtbl{border-collapse:collapse;width:100%;font-size:12px;table-layout:fixed}
+  .prtbl col.lbl{width:26%}
   .prtbl caption{caption-side:top;text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.04em;
                  text-transform:uppercase;color:var(--muted);padding:0 0 5px}
   .prtbl th,.prtbl td{padding:4px 6px;border-bottom:1px solid var(--line-soft);text-align:right;font-variant-numeric:tabular-nums}
@@ -1912,6 +1914,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         out+='<div class="prtblwrap"><div class="prsc"><table class="prtbl">'+
           // ⚠ 주기를 캡션에 박아 두지 않는다 — 전략마다 다르다(아래 설명줄이 pr_basis 를 적는다).
           '<caption>같은 구간 지수(PR)와 나란히 — 이 전략의 구간·같은 기준으로 다시 잰 값</caption>'+
+          '<colgroup><col class="lbl"><col span="5"></colgroup>'+
           '<thead><tr><th scope="col">지표</th><th scope="col">전략</th>'+
           '<th scope="col">S&amp;P 500</th><th scope="col">차이</th>'+
           '<th scope="col">나스닥 100</th><th scope="col">차이</th></tr></thead>'+
