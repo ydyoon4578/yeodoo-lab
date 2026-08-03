@@ -37,6 +37,12 @@ jobs:
       # ⚠ 이 파일이 없으면 되맞추기가 꺼지고 예전처럼 잘라낸다 — 조용히 표본이 짧아진다.
       - name: Collect split history
         run: python build/refresh_splits.py
+      # SEC 로 주식수를 못 만드는 종목만 yfinance 로 메운다(실측 6종 — 다중클래스).
+      # data/fx 를 훑어 대상을 스스로 정하므로 명단을 손으로 관리하지 않는다.
+      # ⚠ 대상이 40종을 넘으면 SEC 수집이 깨진 것으로 보고 스스로 실패한다 —
+      #   조용히 다른 출처로 갈아타면 정의가 다른 숫자가 섞인다.
+      - name: Fill missing share counts (yfinance)
+        run: python build/refresh_shares_yf.py
       # 지표별 타이밍 신호 — 성적표는 3년 표본이라 천천히 바뀌지만 '오늘 발동 종목'은 매일 바뀐다.
       # 그래서 별도 주간 잡이 아니라 여기 붙인다(sd/ 가 방금 갱신된 직후여야 같은 기준일이 된다).
       - name: Measure indicator timing signals
@@ -75,7 +81,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/sd data/target_history.json data/fund_history.json \
-            data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json \
+            data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.

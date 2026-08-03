@@ -916,6 +916,44 @@ def load_splits():
     return _SPLITS
 
 
+_SHYF = None            # 티커 → [(날짜, 백만주)] — data/shares_yf.json(SEC 에 없는 종목만)
+
+
+def load_shares_yf():
+    """SEC 로 못 만드는 종목의 보완 주식수. 없으면 빈 지도 — 그 종목은 예전처럼 빠진다."""
+    global _SHYF
+    if _SHYF is None:
+        p = os.path.join(DATA, "shares_yf.json")
+        try:
+            _SHYF = json.load(io.open(p, encoding="utf-8")).get("co") or {}
+        except Exception:
+            _SHYF = {}
+    return _SHYF
+
+
+def shares_yf(tk):
+    """보완 주식수를 **오늘 기준으로 정확히** 되맞춰 돌려준다(날짜 내림차순).
+
+    🚨 여기서는 _rebase 의 '매끄러움' 추정을 쓰지 않는다. 쓸 필요가 없다 — 이 계열은
+      날짜별 기말 발행주식수라 관측 하나하나가 그 날의 실제 보고치다. 그래서 그 날짜
+      **이후 분할들의 곱**을 그대로 곱하면 끝이다(추정 없음). SEC 계열이 어려웠던 이유는
+      기간말마다 소급 여부가 달라 '어느 제출본인지'를 몰랐기 때문인데, 여기엔 그 문제가 없다.
+    """
+    ser = load_shares_yf().get(tk) or []
+    if not ser:
+        return []
+    spl = load_splits().get(tk) or []
+    out = []
+    for d, v in ser:
+        f = 1.0
+        for sd, r in spl:
+            if sd > d:
+                f *= r
+        out.append((d, v * f))
+    out.sort(reverse=True)
+    return out
+
+
 def _rebase(ok, splits):
     """당시 보고 주식수를 **오늘 기준**으로 되맞춘다. → (되맞춘 계열, 배수 적용 횟수)
 
@@ -1107,9 +1145,36 @@ def load_fund(extra_dirs=()):
             (ttm2 참조). 커버리지: ni 510 · cfo 510 · rev 505 · capex 432 · bb 414종."""
             return _clean((tg.get(key) or {}).get("a"))
 
-        eq, sh, ep = series("eq"), series("sh"), series("eps")
+        eq, ep = series("eq"), series("eps")
+        # 주식수는 세 벌을 차례로 본다. 셋 다 없어 통째로 빠지던 회사가 18종이었다
+        # (실측 2026-08-04). 순서에 이유가 있다 —
+        #   ① sh(가중평균 희석, 분기/시점) — EPS 의 분모와 같은 정의라 1순위다.
+        #   ② sh 의 연간 버킷 — 20-F 로 연 1회만 내는 외국 발행인(ARM·ASML·NBIS·PDD)은
+        #      분기 버킷이 비어 있다. 주식수는 **잔고 항목**이라 asof_fund 로 시점을 집으므로
+        #      연간 관측이어도 맞다(흐름 항목이었다면 이렇게 못 섞는다 — ttm 이 4년을 더한다).
+        #   ③ sho(기말 발행주식수) — 희석주식수를 아예 안 내는 회사(HSY·KKR·LYB·SJM).
+        #      정의가 달라(가중평균 아님, 희석 아님) 마지막이다.
+        #   ④ shares_yf(SEC 로는 못 만드는 다중클래스 6종 — ARES·BKR·BRK.B·ERIE·STZ·V).
+        #      출처가 다르므로 정말 마지막이다.
+        _tk = j.get("t") or fn[:-5]
         rev, ni, dps = series("rev"), series("ni"), series("dps")
-        sh, ep, dps, sh_u, seam = split_trim(sh, ep, dps, j.get("t") or fn[:-5])
+        sh = series("sh") or annual("sh") or series("sho")
+        sh, ep, dps, sh_u, seam = split_trim(sh, ep, dps, _tk)
+        if not sh:
+            # 🚨 이 계열에는 split_trim 을 태우지 않는다. 되맞춤이 이미 정확하고
+            #   (shares_yf 참조 — 추정이 아니라 날짜별 분할 곱), 그 위에 '매끄러움' 규칙을
+            #   또 걸면 **진짜 자본거래를 분할로 착각해 자른다**. 실측: ARES 는 345행이
+            #   251행으로 줄고 시작이 2015-11 → 2022-04 이 됐다(ARES 는 분할 이력이 없다).
+            sh = sh_u = shares_yf(_tk)
+            seam = None
+            # 주당지표는 여전히 SEC 의 당시 보고치다. 이 종목들은 배수를 정할 주식수
+            # 계열이 SEC 에 없어 되맞출 수 없다 — 마지막 분할 이전은 **자른다**(옛 방침).
+            # 해당은 둘뿐이다(BRK.B 2010-01-21 ×50 · V 2015-03-19 ×4). 나머지 넷은 분할이 없다.
+            _sp = load_splits().get(_tk) or []
+            if sh and _sp:
+                _cut = max(d for d, _r in _sp)
+                ep = [(d, v) for d, v in (ep or []) if d >= _cut]
+                dps = [(d, v) for d, v in (dps or []) if d >= _cut]
         asset, liab = series("asset"), series("liab")
         cfo_s, capex_s = series("cfo"), series("capex")
         cfo, capex = dict(cfo_s), dict(capex_s)
