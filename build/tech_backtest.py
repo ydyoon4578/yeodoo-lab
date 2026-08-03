@@ -1261,6 +1261,13 @@ def load_fund(extra_dirs=()):
                                           "asset": asset, "liab": liab,
                                           # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
                                           "cash": series("cash"),
+                                          # 🚨 2026-08-04 에 수집을 시작한 다섯. **여기 안 실으면
+                                          #   화면에도 백테스트에도 없는 것과 같다** — 실제로
+                                          #   x-noa·x-fscore 가 198개월 전부 후보 0 으로 나왔고,
+                                          #   원인이 규칙이 아니라 이 줄의 누락이었다.
+                                          "ca": series("ca"), "cl": series("cl"),
+                                          "debt": series("debt"), "re": series("re"),
+                                          "dep": series("dep"), "dep_a": annual("dep"),
                                           # 주식수 성장률용: 단위오류만 교정, 분할 이음매는 날짜로 표시
                                           "sh_u": sh_u, "sh_seam": seam,
                                           # 흐름 항목 — 쓰는 쪽에서 ttm2(q, a) 를 쓸 것.
@@ -1357,7 +1364,8 @@ def xsec(sid, name, rule, fn, why, arch=None):
 
 
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
-FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
+FUND_SIDS = {"x-dato", "x-noa", "x-fscore",     # 2026-08-04 사전등록 후보(PREREG-2026-08-04.md)
+             "x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
@@ -1831,6 +1839,49 @@ def build_strats():
          "이음매를 건너뛰는 짝만 버린다. 문서의 절대값 50% 컷은 실측 0.2%만 걸러 사실상 무해했다. "
          "⚠ 태그는 가중평균 '희석' 주식수다(시점 잔고가 아니라 기간 평균). 옵션·전환권 희석이 "
          "섞이고 소각 반영이 최대 1분기 늦다 — 원논문의 순발행과 같지 않다.")
+    # ── 2026-08-04 사전등록 후보 4종 ─────────────────────────────────────────
+    # 규약은 build/PREREG-2026-08-04.md 에 **돌리기 전에** 확정해 커밋했다(커밋 순서가 증거다).
+    # 결과를 보고 규칙을 고치지 않는다. 게시 기준도 거기 미리 적었다 — 단독 t 가 임계를 넘고
+    # **동시에** 최대 상관 상대 대비 증분 알파 t 가 2.0 이상일 때만.
+    xsec("x-illiq", "비유동성 프리미엄 (Amihud ILLIQ · 사이즈 중립)",
+         "최근 252거래일 |수익률|÷달러거래대금의 평균(ILLIQ)에 로그를 취해 그 달 후보 전체의 "
+         "로그 시가총액에 횡단면 회귀하고, 그 **잔차**가 가장 큰 %d종목 동일가중, 월말 리밸런스. "
+         "주가 $5 미만·유효일 126일 미만 제외." % TOPN,
+         None,
+         "Amihud(2002, JFM). 단위 거래대금당 가격충격이 큰 종목은 유동성 위험을 감내하는 "
+         "대가로 기대수익이 높다는 것이다. 🚨 사이즈 중립화는 선택이 아니다 — 이 계열 문헌이 "
+         "ILLIQ 와 시총의 상관을 −0.7 이상으로 보고하므로, 중립화 없이 쓰면 이 표에 이미 있는 "
+         "x-small 의 재판매가 된다. 산업 중립판은 **등록하지 않았다**(둘을 돌려 좋은 쪽을 "
+         "고르면 그것이 p-해킹이다).")
+    xsec("x-dato", "자산회전율 개선 상위 10 (듀폰 분해)",
+         "ttm 매출÷총자산(자산회전율)의 **전년 대비 변화**가 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스." % TOPN,
+         None,
+         "Fairfield·Yohn(2001, RAST) · Soliman(2008, TAR). 수익성의 '수준'을 쪼개는 것은 "
+         "예측에 도움이 안 되지만 '변화'를 회전율과 마진으로 쪼개면 개선된다는 것이고, "
+         "회전율 개선은 손익계산서에 바로 안 보여 가격 반영이 늦다는 주장이다. "
+         "⚠ 유효표본이 짧다 — 매출(rev)이 ASC 606 태그라 2017-03 부터뿐이다(약 9년). "
+         "섹터 중립판·마진판·둘의 스프레드판은 등록하지 않았다(같은 이유).")
+    xsec("x-noa", "순영업자산 최저 10 (대차대조표 팽창 회피)",
+         "(총자산−현금)−(총부채−장기차입금) 을 **직전년 총자산**으로 나눈 값이 가장 작은 "
+         "%d종목 동일가중, 월말 리밸런스. 장기차입금 태그가 없는 종목은 후보에서 제외." % TOPN,
+         None,
+         "Hirshleifer·Hou·Teoh·Zhang(2004, JAE). 누적 회계이익이 누적 현금흐름을 넘어 "
+         "대차대조표에 쌓이면 이후 수익률이 낮다는 것으로, 발생액(한 해의 변화)의 **누적 스톡** "
+         "판이다. 이 표에는 흐름 축(x-poacc·x-agrow)만 있고 스톡 축이 없었다. "
+         "🚨 장기차입금(debt)은 2026-08-04 에 처음 수집한 태그다(커버 85%). 없는 종목을 "
+         "0 으로 채우면 무차입 회사인 척이 되므로 후보에서 뺀다.")
+    xsec("x-fscore", "Piotroski F-Score 상위 10 (가치 게이트 안)",
+         "그 달 후보 중 장부가/시총 상위 30%%만 남기고, 그 안에서 9개 이진 신호 합계가 "
+         "가장 높은 %d종목 동일가중(동점은 장부가/시총이 높은 쪽), 월말 리밸런스. "
+         "9신호가 전부 계산되는 종목만 후보." % TOPN,
+         None,
+         "Piotroski(2000, JAR). 고B/M 바스켓은 진짜 저평가와 가치 함정이 섞여 있어, "
+         "회계 데이터만으로 펀더멘털의 방향을 이진 채점해 갈라내자는 것이다. "
+         "🚨 이 규칙의 후보 풀은 섹터가 크게 치우친다 — 9신호 중 매출총이익률 항이 gp 태그를 "
+         "쓰는데 커버가 37.7%이고, 통과율이 에너지 0%·유틸리티 3%·금융 5% 대 "
+         "필수소비 80%·IT 68%다(실측). 결함이 아니라 이 규칙이 무엇을 재는지의 일부이고, "
+         "원논문도 금융·리츠를 제외하므로 치우침의 방향은 같다.")
     xsec("x-cash", "현금성자산 비율 상위 (현금및현금성자산 ÷ 총자산)",
          "최신 분기 현금및현금성자산을 총자산으로 나눈 값이 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % TOPN,
@@ -2181,6 +2232,63 @@ def run():
                         _k = max(TOPN, int(len(_m) * 0.2))     # 상위 5분위(최소 TOPN)
                         # 승자만 남긴다 — 형성기 수익이 음수면 ID 의 sign 규약이 뒤집힌다.
                         fip_ok = {t2 for v2, t2 in _m[:_k] if v2 > 0}
+                    # ── x-illiq 사전 패스: 사이즈 중립화 ──────────────────────
+                    # 🚨 원 카드가 못박은 조건이다 — "ILLIQ 는 시총과 상관 −0.7 이상이라
+                    #   중립화 없으면 사실상 사이즈 팩터 재판매". 종목 하나만 보는 채점으로는
+                    #   못 만든다(그 달 후보 전체가 있어야 회귀가 성립한다). 그래서 여기서
+                    #   log(ILLIQ) 를 log(시총) 에 횡단면 OLS 로 회귀하고 **잔차**를 점수로 둔다.
+                    illiq_r = None
+                    if S["sid"] == "x-illiq":
+                        _pt = []
+                        for t2 in tickers:
+                            P2, V2 = px[t2], vlm.get(t2)
+                            if not V2 or not P2 or not P2[i - 1] or P2[i - 1] < 5.0:
+                                continue          # 주가 $5 미만은 규약대로 제외
+                            f2 = FU.get(t2) or {}
+                            sn2 = asof_fund(f2.get("sh"), dt_)
+                            mc2 = (sn2 * P2[i - 1]) if sn2 else None
+                            if not mc2 or mc2 <= 0:
+                                continue
+                            acc, cnt2 = 0.0, 0
+                            for k2 in range(max(1, i - 252), i):
+                                r2 = R[t2][k2]
+                                dv = (P2[k2] * V2[k2]) if (P2[k2] and V2[k2]) else None
+                                if r2 is None or not dv or dv <= 0:
+                                    continue
+                                acc += abs(r2) / dv
+                                cnt2 += 1
+                            if cnt2 < 126:        # 유효일 126일 미만은 후보 제외(규약)
+                                continue
+                            _pt.append((t2, math.log(acc / cnt2), math.log(mc2)))
+                        if len(_pt) >= XSEC_MIN_POOL:
+                            _mx = sum(z[2] for z in _pt) / len(_pt)
+                            _my = sum(z[1] for z in _pt) / len(_pt)
+                            _sxx = sum((z[2] - _mx) ** 2 for z in _pt)
+                            _b = (sum((z[2] - _mx) * (z[1] - _my) for z in _pt) / _sxx) if _sxx > 0 else 0.0
+                            illiq_r = {z[0]: z[1] - (_my + _b * (z[2] - _mx)) for z in _pt}
+                    # ── x-fscore 사전 패스: 가치 게이트(B/P 상위 30%)의 컷과 백분위 ──
+                    # 원 카드가 "고B/M 안에서 쓰는 도구" 라고 한 그 게이트다. 동점(정수 점수)이
+                    # 많아 2순위 기준이 필요한데, 새 파라미터를 만들지 않고 이 게이트를 쓴다.
+                    bp_pct = None
+                    if S["sid"] == "x-fscore":
+                        _bp = []
+                        for t2 in tickers:
+                            P2 = px[t2]
+                            if not P2 or not P2[i - 1]:
+                                continue
+                            f2 = FU.get(t2) or {}
+                            e2 = asof_fund(f2.get("eq"), dt_)
+                            sn2 = asof_fund(f2.get("sh"), dt_)
+                            mc2 = (sn2 * P2[i - 1]) if sn2 else None
+                            if e2 is None or e2 <= 0 or not mc2 or mc2 <= 0:
+                                continue
+                            _bp.append((e2 / mc2, t2))
+                        if len(_bp) >= XSEC_MIN_POOL:
+                            _bp.sort(reverse=True)
+                            _keep = _bp[:max(1, int(len(_bp) * 0.30))]
+                            _n2 = len(_keep)
+                            # 백분위는 [0,1) — F(정수)에 더해도 F 의 순위를 못 뒤집는다
+                            bp_pct = {t2: (_n2 - k2 - 1) / _n2 for k2, (_v2, t2) in enumerate(_keep)}
                     for t in tickers:
                         P = px[t]
                         sid = S["sid"]
@@ -2341,10 +2449,68 @@ def run():
                                 ch = asof_fund(f.get("cash"), dt_)
                                 at = asof_fund(f.get("asset"), dt_)
                                 v = (ch / at) if (ch is not None and at and at > 0) else None
+                            elif sid == "x-dato":
+                                # 자산회전율 = ttm2(매출) / 총자산. 그 **전년 대비 변화**가 신호다.
+                                # ⚠ 매출은 ASC 606 태그라 2017-03 부터뿐이다(유효표본 약 9년).
+                                _d1 = _shift(dt_, 365)
+                                r1, a1 = ttm2(f.get("rev"), f.get("rev_a"), dt_), asof_fund(f.get("asset"), dt_)
+                                r0, a0 = ttm2(f.get("rev"), f.get("rev_a"), _d1), asof_fund(f.get("asset"), _d1)
+                                v = ((r1 / a1) - (r0 / a0)) if (r1 is not None and r0 is not None
+                                                               and a1 and a1 > 0 and a0 and a0 > 0) else None
+                            elif sid == "x-noa":
+                                # 순영업자산 = (총자산 − 현금) − (총부채 − 장기차입금), 직전년 총자산으로 나눔.
+                                # 🚨 debt 가 없으면 후보에서 뺀다. 0 으로 채우면 무차입 회사인 척이 된다.
+                                at_ = asof_fund(f.get("asset"), dt_)
+                                ch_ = asof_fund(f.get("cash"), dt_)
+                                lb_ = asof_fund(f.get("liab"), dt_)
+                                db_ = asof_fund(f.get("debt"), dt_)
+                                a0_ = asof_fund(f.get("asset"), _shift(dt_, 365))
+                                if (at_ is not None and ch_ is not None and lb_ is not None
+                                        and db_ is not None and a0_ and a0_ > 0):
+                                    noa = (at_ - ch_) - (lb_ - db_)
+                                    v = -(noa / a0_)          # 낮을수록 위(대차대조표 팽창 회피)
+                            elif sid == "x-fscore":
+                                # 🚨 9신호가 **전부** 계산되는 종목만 후보다. 결측을 0점으로 두면
+                                #   자료가 없는 회사가 구조적으로 낮은 점수를 받아, 점수가 아니라
+                                #   태깅 결손이 순위를 만든다(적대감사가 A3 에서 잡은 유형).
+                                if bp_pct is not None and t in bp_pct:
+                                    _d1 = _shift(dt_, 365)
+                                    def _af(k, d=dt_):
+                                        return asof_fund(f.get(k), d)
+                                    def _an(k, d=dt_):
+                                        return ttm2(f.get(k), f.get(k + "_a"), d)
+                                    ni1, ni0 = _an("ni"), _an("ni", _d1)
+                                    cf1 = _an("cfo")
+                                    at1, at0 = _af("asset"), _af("asset", _d1)
+                                    db1, db0 = _af("debt"), _af("debt", _d1)
+                                    ca1, ca0 = _af("ca"), _af("ca", _d1)
+                                    cl1, cl0 = _af("cl"), _af("cl", _d1)
+                                    sh1, sh0 = _af("sh"), _af("sh", _d1)
+                                    gp1, gp0 = _an("gp"), _an("gp", _d1)
+                                    rv1, rv0 = _an("rev"), _an("rev", _d1)
+                                    ok = (None not in (ni1, ni0, cf1, db1, db0, ca1, ca0,
+                                                       cl1, cl0, sh1, sh0, gp1, gp0, rv1, rv0)
+                                          and at1 and at1 > 0 and at0 and at0 > 0
+                                          and cl1 > 0 and cl0 > 0 and rv1 > 0 and rv0 > 0 and sh0 > 0)
+                                    if ok:
+                                        F = 0
+                                        F += 1 if ni1 / at1 > 0 else 0
+                                        F += 1 if cf1 > 0 else 0
+                                        F += 1 if (ni1 / at1) > (ni0 / at0) else 0
+                                        F += 1 if cf1 > ni1 else 0
+                                        F += 1 if (db1 / at1) < (db0 / at0) else 0
+                                        F += 1 if (ca1 / cl1) > (ca0 / cl0) else 0
+                                        F += 1 if sh1 <= sh0 * 1.001 else 0
+                                        F += 1 if (gp1 / rv1) > (gp0 / rv0) else 0
+                                        F += 1 if (rv1 / at1) > (rv0 / at0) else 0
+                                        v = F + bp_pct[t]      # F 가 1순위, 같은 점수면 B/P 높은 쪽
                         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
                             iv = idio_vol(R[t], ixr, i - 1, 120)
                             v = -iv if iv is not None else None
+                        elif sid == "x-illiq":
+                            # 사전 패스가 만든 **사이즈 중립 잔차**. 없으면 후보가 아니다.
+                            v = illiq_r.get(t) if illiq_r else None
                         elif sid == "x-fip":
                             # 모멘텀 상위 5분위 밖이면 후보가 아니다(교집합 규약).
                             # ID 는 낮을수록 연속정보이므로 부호를 뒤집어 넣는다(정렬 내림차순).
