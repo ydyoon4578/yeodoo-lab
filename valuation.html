@@ -594,7 +594,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </header>
 
   <section id="reverse" aria-labelledby="rev-h">
-    <p class="lbl" id="rev-h">01 · Reverse DCF <span class="sub">· 주가에서 가정을 거꾸로 푼다</span></p>
+    <h2 class="lbl" id="rev-h">01 · Reverse DCF <span class="sub">· 주가에서 가정을 거꾸로 푼다</span></h2>
     <p class="lblnote">보통의 DCF는 성장률을 가정해 값을 냅니다. Reverse DCF는 반대로 갑니다 —
       <b>오늘 시가총액을 정답으로 놓고, 그 값이 나오려면 향후 FCF가 매년 몇 %씩 늘어야 하는지</b>를 역산합니다.
       나온 숫자는 <b>예측이 아니라 역산</b>입니다 — "시장의 기대"가 아니라
@@ -673,7 +673,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="simple" aria-labelledby="sim-h">
-    <p class="lbl" id="sim-h">02 · Simplified DCF <span class="sub">· 적정주가 한 숫자를 주지 않는다</span></p>
+    <h2 class="lbl" id="sim-h">02 · Simplified DCF <span class="sub">· 적정주가 한 숫자를 주지 않는다</span></h2>
     <p class="lblnote">DCF의 결과를 숫자 하나로 내면, 그 숫자에 담긴 <b>임의성</b>이 통째로 사라집니다.
       그래서 여기서는 값을 하나 내지 않고, <b>성장률 × 할인율의 조합마다 모델값이 얼마인지</b>를 격자로 전부 폅니다.
       각 칸은 <b>모델값 ÷ 오늘 시가총액(배)</b>입니다. 1.00배는 "그 가정 조합에서 모델값이 오늘 시가총액과 같다"는 뜻이고,
@@ -691,7 +691,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="ddm" aria-labelledby="ddm-h">
-    <p class="lbl" id="ddm-h">03 · DDM (배당할인모형) <span class="sub">· 적정주가 한 숫자 없음 — 성장률 × 할인율 격자</span></p>
+    <h2 class="lbl" id="ddm-h">03 · DDM (배당할인모형) <span class="sub">· 적정주가 한 숫자 없음 — 성장률 × 할인율 격자</span></h2>
     <p class="lblnote">고든 성장모형입니다. <b>V = 내년 배당 ÷ (자기자본비용 − 배당성장률)</b> —
       분모가 두 가정의 <b>차이</b>라, 둘을 조금만 건드려도 값이 몇 배로 흔들립니다.
       그래서 여기서도 값을 하나 내지 않고 격자로 폅니다. 배당 이력은
@@ -713,7 +713,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="rim" aria-labelledby="rim-h">
-    <p class="lbl" id="rim-h">04 · RIM (잔여이익모형) <span class="sub">· 전제를 실측했고, 그래서 켜지 않습니다</span></p>
+    <h2 class="lbl" id="rim-h">04 · RIM (잔여이익모형) <span class="sub">· 전제를 실측했고, 그래서 켜지 않습니다</span></h2>
     <p class="lblnote">데이터가 없어서가 아닙니다. 데이터를 붙인 뒤 <b>모형의 전제를 실제로 재봤고, 그 전제가 성립하지 않았습니다.</b></p>
     <div class="empty">
       <h3>RIM <span class="st">전제 불성립 — 실측 결과</span></h3>
@@ -741,7 +741,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="index" aria-labelledby="idx-h">
-    <p class="lbl" id="idx-h">05 · Index DCF (지수 단위) <span class="sub">· 지수가 아니라 커버 묶음 — 그 사실을 먼저 적습니다</span></p>
+    <h2 class="lbl" id="idx-h">05 · Index DCF (지수 단위) <span class="sub">· 지수가 아니라 커버 묶음 — 그 사실을 먼저 적습니다</span></h2>
     <p class="lblnote">개별 종목이 아니라 <b>유니버스를 통째로</b> 역산합니다. 지금 시가총액을 정당화하려면
       앞으로 몇 %씩 성장해야 하는가 — <a href="#reverse">01 Reverse DCF</a>와 같은 질문을 한 덩어리에 던집니다.</p>
 
@@ -1303,7 +1303,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // ── 민감도 격자: 배당성장률 × 시장위험프리미엄(→ 할인율) ──
     var gs=[g-0.02,g-0.01,g,g+0.01,g+0.02], mrps=[3.5,4.5,5.5,6.5], rf=rfVal();
-    var gh2='<p class="lbl" style="margin-top:28px">가정을 움직이면 값이 얼마나 흔들리는가</p>'+
+    var gh2='<h3 class="lbl" style="margin-top:28px">가정을 움직이면 값이 얼마나 흔들리는가</h3>'+
       '<p class="lblnote">가로는 배당성장률(과거 CAGR 기준 ±2%p), 세로는 시장위험프리미엄입니다. '+
       '<b>데이터는 하나도 바뀌지 않고 아무도 정답을 모르는 가정 두 개만 움직입니다.</b></p>'+
       '<div class="tblwrap"><table><thead><tr><th scope="col">MRP \\ 배당성장률</th>';
@@ -1363,7 +1363,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 격자: 할인율(=rf + β·MRP, 지수 β는 1로 둔다) × 예측기간
     var mrps=[3.5,4.5,5.5,6.5], nps=[5,10,15,20], gt=ST.gt/100;
     if(rf==null){gh.innerHTML='<p class="capn">무위험이자율을 읽지 못해 할인율을 만들 수 없습니다.</p>';return;}
-    var h='<p class="lbl" style="margin-top:28px">가정별 역산 성장률</p>'+
+    var h='<h3 class="lbl" style="margin-top:28px">가정별 역산 성장률</h3>'+
       '<p class="lblnote">지수의 베타는 정의상 <b>1</b>이므로 할인율은 rf + MRP입니다(개별 종목처럼 베타를 곱하지 않습니다). '+
       '영구성장률은 위에서 고른 <b>'+pf(ST.gt,1)+'</b>를 씁니다.</p>'+
       '<div class="tblwrap"><table><thead><tr><th scope="col">MRP \\ 예측기간</th>';

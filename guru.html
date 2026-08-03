@@ -488,7 +488,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </nav>
 
   <section id="pf" aria-labelledby="p-h">
-    <p class="lbl" id="p-h">운용사별 보유</p>
+    <h2 class="lbl" id="p-h">운용사별 보유</h2>
     <p class="lblnote">보고총액 순. 이 랩의 유니버스(518종목)와 겹치는 부분만 보이므로,
       각 운용사의 <b>보고 총액 대비 비중</b>을 함께 적습니다 — 비중이 낮으면 그만큼 안 보이는 것입니다.</p>
     <div class="mgrs" id="mgrs"></div>
@@ -496,7 +496,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="overlap" aria-labelledby="o-h" hidden>
-    <p class="lbl" id="o-h">공통 보유종목</p>
+    <h2 class="lbl" id="o-h">공통 보유종목</h2>
     <p class="lblnote">명단 중 몇 곳이 같이 들고 있는지. <b>많이 겹친다고 좋은 종목이라는 뜻이 아닙니다</b> —
       대형주일수록 자연히 겹칩니다(이 랩의 유니버스가 애초에 대형주 518종목입니다).
       이 랩은 겹침이 수익으로 이어지는지 검증한 적이 없습니다.</p>
@@ -504,7 +504,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="strat" aria-labelledby="s-h" hidden>
-    <p class="lbl" id="s-h">겹침 전략 — K곳 이상이 들고 있는 종목 동일가중</p>
+    <h2 class="lbl" id="s-h">겹침 전략 — K곳 이상이 들고 있는 종목 동일가중</h2>
     <p class="lblnote">위 표를 <b>규칙으로 바꿔</b> 돌린 것입니다. 분기말 13F에서 K곳 이상이 보유한 종목을
       동일가중으로 담고, 공시일이 체결일보다 뒤인 운용사는 그 분기 세지 않습니다(룩어헤드 차단).
       유니버스가 S&amp;P 500 ∪ NASDAQ 100 이라 <b>지수 편입 종목만</b>이라는 조건은 규칙에 내장돼 있습니다.
