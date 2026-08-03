@@ -182,8 +182,13 @@ def pr_baseline():
 PR_BASIS_TOL = 1.5          # %p 합. 이보다 멀면 '맞춘 것'으로 치지 않는다.
 
 
-def pick_basis(bench, both):
-    """('D'|'M', 확정여부). 근거가 없으면 다수인 일간을 쓰되 확정 아님으로 표시한다."""
+def pick_basis(bench, both, hint="D"):
+    """('D'|'M', 실측여부). 못 맞추면 원천이 쓰는 규약(hint)으로 되돌린다.
+
+    hint 는 빌더를 읽어서 정한다 — strategy_metrics.series_block 를 거치는 원천
+    (배포 원장·기각 재검·거장 겹침)은 월말이고, tech/asset/ml 은 일간 ann_stats 다.
+    이걸 안 주면 배포 원장 7종·기각 재검 2종이 월간 지표인데 일간 지수와 겨루게 된다.
+    """
     lab = (bench or {}).get("label") or ""
     key = "spx" if "S&P 500" in lab else ("ndx" if ("NASDAQ" in lab or "NDX" in lab) else None)
     bv, bm = (bench or {}).get("vol"), (bench or {}).get("mdd")
@@ -197,6 +202,8 @@ def pick_basis(bench, both):
             win = min(sc, key=sc.get)
             if sc[win] <= PR_BASIS_TOL:
                 return win, True
+    if both.get(hint):
+        return hint, False
     return ("D" if both.get("D") else "M"), False
 
 
@@ -222,11 +229,11 @@ def rec(**kw):
             _b.setdefault("label", None)
             if not _b["label"]:
                 _b["label"] = kw.get("bench_label")
-            _k, _sure = pick_basis(_b, both)
+            _k, _sure = pick_basis(_b, both, kw.pop("pr_hint", "D"))
             pr = both.get(_k) or {}
             if pr:
                 kw["pr"] = pr
-                kw["pr_basis"] = ("월말" if _k == "M" else "일간") + ("" if _sure else " (추정)")
+                kw["pr_basis"] = ("월말" if _k == "M" else "일간") + ("" if _sure else " (원천 규약)")
                 _s = pr_split(kw)
                 if _s:
                     kw["pr_split"] = _s
@@ -310,10 +317,16 @@ def main() -> int:
             sid=x["sid"], name=n, alias=x.get("alias"), aka=x.get("aka") or [],
             role=d.get("kind") or "미분류", grade=GRADE.get(x.get("v"), "판정 불가"),
             src="배포 원장", cat=x.get("c"),
+            pr_hint="M",   # strategy_metrics.series_block(월말)이 만든 지표다
+
             rule=x.get("t"), why=x.get("vt"),
             start=b.get("start"), end=b.get("end"),
-            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
-            bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"), "sharpe": bm.get("sharpe")},
+            # 변동성·MDD 도 옮긴다 — 원천(series_block)에 다 있는데 셋만 옮기고 있었다.
+            # 화면의 지수 비교표가 '연변동성 —' 로 비고, 주기 판정도 근거를 잃는다.
+            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "vol": m.get("vol"),
+                     "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
+            bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"),
+                   "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             nav=b.get("nav"), bnav=b.get("bench"),
             bench_label=b.get("bench_label"),
             holdings=HOLD_DEP.get(n),
@@ -380,6 +393,8 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            pr_hint="D",   # asset_backtest/ml_backtest 는 일간 ann_stats 다
+
             bench_label=r.get("bench_label"),
             start=r.get("start"), end=r.get("end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
@@ -413,14 +428,17 @@ def main() -> int:
         rows.append(rec(
             sid="r-" + sid, name=x.get("n") or sid, role=RECHK_ROLE.get(sid, "미분류"),
             grade="미채택", src="기각 재검", cat=x.get("c"),
+            pr_hint="M",   # 배포 원장과 같은 파일·같은 함수에서 온다
+
             bench_label=b.get("bench_label") or ((b.get("metrics") or {}).get("b") or {}).get("label"),
             rule="기각한 전략을 단독으로 다시 검정한 결과다. 원 기각 사유가 "
                  "'배포 포트폴리오에 얹으면 개선이 없다'는 상대 판정이었기 때문이다.",
             why=x.get("r"),
             start=b.get("start"), end=b.get("end"),
-            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "mdd": m.get("mdd")},
+            metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"),
+                     "vol": m.get("vol"), "mdd": m.get("mdd")},
             bench={"label": b.get("bench_label") or (bm.get("label")), "cagr": bm.get("cagr"),
-                   "sharpe": bm.get("sharpe")},
+                   "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             d_sharpe=(round(m["sharpe"] - bm["sharpe"], 3)
                       if m.get("sharpe") is not None and bm.get("sharpe") is not None else None),
             nav=b.get("nav"), bnav=b.get("bench"),
@@ -468,6 +486,8 @@ def main() -> int:
         rows.append(rec(
             sid=sid, name=name, role="수익엔진", grade=_ov_grade(ds, pl.get("t")),
             src="거장 겹침", cat="13F 복제",
+            pr_hint="M",   # 월 리밸 계열이다(대조군도 '같은 풀 동일가중(월 리밸)')
+
             rule=_rule + " 분기마다 다시 고르고, 공시일이 체결일보다 뒤인 운용사는 그 분기 "
                          "세지 않는다(그때는 아직 알 수 없던 정보다).",
             why="<b>%s.</b> 같은 풀(S&P 500 ∪ NASDAQ 100 동일가중) 대비 Δ샤프 %s · "
