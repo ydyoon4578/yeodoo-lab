@@ -182,6 +182,152 @@ def idio_vol(rs, mkt, i, n=120):
     return (sum((x - mu) ** 2 for x in res) / max(1, len(res) - 1)) ** 0.5
 
 
+def load_factor_proxies(dates):
+    """FF 3팩터의 **무료 대리변수** 일간수익 — dates 격자에 맞춰 {이름: [r…]}.
+
+    🚨 이것은 Fama-French 정본이 아니다. 정본(Ken French 데이터 라이브러리)은 전 상장주를
+      시총·장부가로 6분할해 만든 것이고, 여기 쓰는 것은 **ETF 스프레드**다:
+          SMB ≈ IWM − SPY   (러셀 2000 − S&P 500)
+          HML ≈ IVE  − RPG  (S&P 500 가치 − S&P 500 성장)
+      상관은 높지만 같은 계열이 아니다. ETF 는 배당 재투자·운용보수·리밸런스 규약이 섞여
+      있다. **'FF 회귀'라고 적지 않는다** — 화면·규칙 문구에 '대리변수'라고 쓴다.
+      정본을 붙이기로 하면 이 함수만 갈아 끼우면 된다.
+
+    ⚠ 시장(MKT)은 여기서 만들지 않는다. 이 랩의 시장은 **동일가중 유니버스 지수**(ixr)이고
+      그것이 타이밍 전략이 실제로 매매하는 대상이라, 다른 시장 정의를 섞으면 한 표 안에
+      두 시장이 공존한다. 잔차 회귀도 그 ixr 을 쓴다.
+
+    못 읽으면 빈 dict — 부르는 쪽이 그 전략만 건너뛴다(다른 전략은 그대로 돈다).
+    """
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception as e:
+        print("  [팩터대리] assets.json 없음 — 잔차 모멘텀 생략:", str(e)[:60])
+        return {}
+    adates = A.get("dates") or []
+    pos = {d: i for i, d in enumerate(adates)}
+    px = A.get("px") or {}
+
+    def series(tk):
+        raw = px.get(tk)
+        if not raw:
+            return None
+        out, last = [], None
+        for d in dates:
+            i = pos.get(d)
+            if i is not None and raw[i] is not None:
+                last = float(raw[i])
+            out.append(last)
+        if sum(1 for x in out if x is not None) < len(dates) * 0.9:
+            return None
+        r = [0.0] * len(dates)
+        for i in range(1, len(dates)):
+            a, b = out[i - 1], out[i]
+            r[i] = (b / a - 1) if (a and b) else 0.0
+        return r
+
+    need = {}
+    for tk in ("IWM", "SPY", "IVE", "RPG"):
+        s = series(tk)
+        if s is None:
+            print("  [팩터대리] %s 커버 부족 — 잔차 모멘텀 생략" % tk)
+            return {}
+        need[tk] = s
+    n = len(dates)
+    return {"SMB": [need["IWM"][i] - need["SPY"][i] for i in range(n)],
+            "HML": [need["IVE"][i] - need["RPG"][i] for i in range(n)]}
+
+
+def _monthly(rs, me, k, end):
+    """월말 인덱스 me 중 end 이하인 마지막 k+1 개 구간에서 **월간 누적수익** k 개.
+
+    일간 수익을 곱해 올린다(로그 근사가 아니라 정확한 복리). 한 달에 관측이 5일 미만이면
+    그 창을 통째로 버린다 — 상장 전이거나 자료 구멍이라 회귀에 넣으면 잔차가 거짓이 된다.
+    """
+    ms = [j for j in me if j <= end]
+    if len(ms) < k + 1:
+        return None
+    ms = ms[-(k + 1):]
+    out = []
+    for j in range(1, len(ms)):
+        a, b = ms[j - 1], ms[j]
+        acc, ok = 1.0, 0
+        for i in range(a + 1, b + 1):
+            v = rs[i] if i < len(rs) else None
+            if v is None:
+                continue
+            acc *= (1.0 + v)
+            ok += 1
+        if ok < 5:
+            return None
+        out.append(acc - 1.0)
+    return out
+
+
+def resid_mom(rs, facs, me, end, win=36, look=12, skip=1):
+    """잔차 모멘텀 — 팩터 회귀 잔차의 12-1 모멘텀을 잔차 변동성으로 표준화한 값.
+
+    Blitz·Huij·Martens(2011, J. Empirical Finance) 규약을 그대로 옮긴다:
+      ① 과거 win(36)개월 월간수익을 팩터에 회귀해 잔차를 얻는다(절편 포함).
+      ② 최근 skip(1)개월을 건너뛰고 그 앞 look(12)개월 잔차를 **합**한다.
+      ③ 그 합을 같은 창의 잔차 표준편차로 나눈다.
+    시장·규모·가치 공통요인을 걷어내므로 종목 특유의 추세만 남고, 요인 노출이 만드는
+    시변 베타 스윙을 타지 않는다는 것이 원논문의 주장이다.
+
+    ⚠ facs 는 **대리변수**다(load_factor_proxies 주석). 정본 FF 가 아니다.
+    ⚠ 12-1 을 '수익의 차'가 아니라 '잔차의 합'으로 계산한다. 총수익 모멘텀(x-mom12)과
+      갈리는 지점이 정확히 여기다 — 같은 12-1 이라도 무엇을 누적하느냐가 다르다.
+    ⚠ 표준화 분모는 **창 전체(36개월) 잔차의 표준편차**다. 12개월 구간만으로 재면
+      분모가 분자와 같은 표본이라 비율이 압축된다(원논문도 창 전체를 쓴다).
+    자료가 모자라거나 회귀가 특이하면 None — 그 종목은 그 시점 후보에서 빠진다.
+    """
+    ys = _monthly(rs, me, win, end)
+    if ys is None:
+        return None
+    xs = []
+    for f in facs:
+        m = _monthly(f, me, win, end)
+        if m is None:
+            return None
+        xs.append(m)
+    k = len(xs)
+    cols = [[1.0] * win] + xs
+    p = k + 1
+    # 절편 포함 최소자승 — 정규방정식을 가우스 소거(부분 피벗)로 푼다. p<=4 라 안정적이고
+    # 외부 의존이 없다. 특이하면 None(팩터가 상수이거나 완전 공선일 때).
+    xtx = [[sum(cols[a][i] * cols[b][i] for i in range(win)) for b in range(p)] for a in range(p)]
+    xty = [sum(cols[a][i] * ys[i] for i in range(win)) for a in range(p)]
+    M = [xtx[r][:] + [xty[r]] for r in range(p)]
+    for c in range(p):
+        piv = max(range(c, p), key=lambda r: abs(M[r][c]))
+        if abs(M[piv][c]) < 1e-12:
+            return None
+        M[c], M[piv] = M[piv], M[c]
+        d = M[c][c]
+        for j in range(c, p + 1):
+            M[c][j] /= d
+        for r in range(p):
+            if r == c:
+                continue
+            f2 = M[r][c]
+            if f2:
+                for j in range(c, p + 1):
+                    M[r][j] -= f2 * M[c][j]
+    bet = [M[r][p] for r in range(p)]
+    res = [ys[i] - sum(bet[a] * cols[a][i] for a in range(p)) for i in range(win)]
+    lo = win - skip - look
+    if lo < 0:
+        return None
+    seg = res[lo:win - skip]
+    if len(seg) < look:
+        return None
+    mu = sum(res) / len(res)
+    sd = (sum((x - mu) ** 2 for x in res) / max(1, len(res) - 1)) ** 0.5
+    if not sd or sd <= 0:
+        return None
+    return sum(seg) / sd
+
+
 def load_index_tr(dates):
     """같은 구간의 지수 일간수익 — dates 격자에 맞춰 반환.
 
@@ -1037,6 +1183,22 @@ def build_strats():
          "최근 12개월 수익 − 최근 1개월 수익 상위 %d종목 동일가중, 월말 리밸런스." % TOPN,
          lambda t, i, P, R, V: ((ret(P, i, 252) or -9) - (ret(P, i, 21) or 0)),
          "횡단면 모멘텀의 표준형. 이 표에서 기준선 역할을 한다.")
+    # 잔차 모멘텀 — 전략 탐색 풀 B4 를 그대로 구현한다(사용자 요청 2026-08-03).
+    #   ⚠ 이 표에 x-mom12 가 이미 있으므로 **증분이 있는지**가 판정의 핵심이다. 원논문 주장이
+    #     '총수익 모멘텀보다 위험조정 수익 2배'이니, 그 주장이 이 유니버스·이 창에서도 서는지를
+    #     같은 잣대로 본다. 상관이 0.99 를 넘으면 이름만 다른 같은 규칙이다(x-mom-trend 선례).
+    xsec("x-residmom", "잔차 모멘텀 상위 %d" % TOPN,
+         "과거 36개월 월간수익을 시장·규모·가치에 회귀한 잔차의 12-1개월 합을 잔차 "
+         "표준편차로 나눠 상위 %d종목 동일가중, 월말 리밸런스. 직전 1개월은 건너뛴다. "
+         "규모·가치는 ETF 스프레드 대리변수(IWM−SPY, IVE−RPG)이고 시장은 동일가중 "
+         "유니버스다 — Fama-French 정본이 아니다." % TOPN,
+         None,          # 팩터 수익이 필요해 람다로 못 준다 — 점수 루프의 갈래에서 계산한다
+         "Blitz·Huij·Martens(2011)는 공통요인 노출을 걷어낸 잔차의 모멘텀이 총수익 모멘텀보다 "
+         "위험조정 수익이 높고 모멘텀 크래시가 완만하다고 보고했다. 이 표에는 총수익 모멘텀"
+         "(x-mom12)이 이미 있으므로, 여기서 묻는 것은 더 좋은가가 아니라 그 둘이 다른 "
+         "규칙인가 다 — 상관과 증분 알파로 가른다. "
+         "⚠ 풀 항목이 인용한 '크래시를 피한다'는 설명은 최근 연구(2025)가 그 전제를 되묻고 "
+         "있어, 이 표는 크래시 회피를 근거로 삼지 않고 수치만 낸다.")
     xsec("x-lowvol", "저변동성 상위 %d" % TOPN,
          "최근 60일 실현변동성이 가장 낮은 %d종목 동일가중, 월말 리밸런스." % TOPN,
          lambda t, i, P, R, V: (-(V or 9)),
@@ -1439,7 +1601,10 @@ def run():
     n = len(dates)
     tickers = sorted(px)
     R = daily_rets(px)
-    me = set(month_ends(dates))
+    me_list = month_ends(dates)
+    me = set(me_list)
+    # 잔차 모멘텀용 팩터 대리변수 — 못 읽으면 빈 dict 이고 그 전략만 후보 0 으로 빠진다.
+    FACP = load_factor_proxies(dates)
 
     # 동일가중 유니버스 지수(일간 리밸런스) — **타이밍 전략이 실제로 매매하는 대상**이자
     #   ixvol·ixgap·disp 등 지표의 입력이다. 대조군으로는 더 이상 쓰지 않는다(아래 bxr).
@@ -1865,6 +2030,12 @@ def run():
                             # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
                             iv = idio_vol(R[t], ixr, i - 1, 120)
                             v = -iv if iv is not None else None
+                        elif sid == "x-residmom":
+                            # 팩터 수익 셋이 필요하다(시장 + 규모·가치 대리변수). 대리변수를
+                            # 못 읽었으면 후보가 0 이 되고, 그때는 XSEC_MIN_POOL 가드가 잡는다 —
+                            # 조용히 '있는 것 전부'를 고르는 일이 없게 그 경로에 맡긴다.
+                            v = (resid_mom(R[t], [ixr, FACP["SMB"], FACP["HML"]], me_list, i - 1)
+                                 if FACP else None)
                         elif sid == "x-coskew":
                             # 같은 사유(시장 수익 필요). 정렬이 내림차순이므로 '가장 음인 것'을
                             # 뽑으려면 부호를 뒤집어 넣는다.
