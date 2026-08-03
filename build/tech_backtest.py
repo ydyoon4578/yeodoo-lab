@@ -900,6 +900,79 @@ def z_crit(n, alpha=0.05):
 
 RETIRED_RECS = []       # 목록에서 뺀 규칙의 기록(arch 태그 보존용) — build_strats 가 채운다
 SPLIT_TRIMMED = {}      # 티커 → (자른 날짜, 배수). 얼마나 잘랐는지 로그·limits 에 싣는다
+SPLIT_REBASED = {}      # 티커 → 되맞춘 관측 수. 자르는 대신 살린 양을 로그·limits 에 싣는다
+_SPLITS = None          # 티커 → [(날짜, 분할비)] — data/splits.json. 없으면 {} 로 남는다
+
+
+def load_splits():
+    """분할 이력을 한 번만 읽는다. 파일이 없으면 빈 지도 — 되맞추기가 꺼지고 옛 동작(자르기)."""
+    global _SPLITS
+    if _SPLITS is None:
+        p = os.path.join(DATA, "splits.json")
+        try:
+            _SPLITS = json.load(io.open(p, encoding="utf-8")).get("co") or {}
+        except Exception:
+            _SPLITS = {}
+    return _SPLITS
+
+
+def _rebase(ok, splits):
+    """당시 보고 주식수를 **오늘 기준**으로 되맞춘다. → (되맞춘 계열, 배수 적용 횟수)
+
+    ok 는 날짜 내림차순, 단위오류를 이미 뺀 계열이다.
+
+    🚨 왜 '한 번 자르기'로는 안 되는가. 기준이 한 지점에서 바뀌는 게 아니라 관측마다
+      **따로** 바뀐다. refresh_facts.pick() 이 기간말마다 제출일 최신본을 남기는데,
+      어떤 기간은 분할 뒤 비교표시로 다시 실려 소급되고 어떤 기간은 아직 안 실렸다.
+      실측(NFLX, 2025-11-17 ×10 분할): 2026-03 소급됨 · 2025-09 아직 아님 ·
+      2025-06 소급됨 — 오르내린다. 그래서 관측 하나하나를 분류한다.
+
+    후보는 추정치가 아니라 **그 날짜 이후 실제 분할들의 접미 곱**이다(0개 반영 = 이미
+    오늘 기준, k개 반영 = 최근 k개만 소급된 상태). 그중 직전(이미 확정된) 관측과 가장
+    매끄럽게 이어지는 것을 고르고, 어느 후보로도 1.5배 안에 못 들어오면 되맞추기를
+    포기한다 — 거기서부터는 호출부가 예전처럼 자른다.
+    """
+    if len(ok) < 2:
+        return list(ok), 0
+    # 🚨 닻(최신 관측)이 반드시 오늘 기준인 것은 아니다. 마지막 제출 **뒤에** 분할이 있으면
+    #   계열 전체가 분할 전 기준으로 남는다. 이 경우 예전 코드는 단절이 없어 아무 일도
+    #   하지 않았고(그래서 조용히 틀렸다), 되맞추기도 닻을 그대로 믿으면 같이 틀린다.
+    #   실측(2026-08-04): KLAC 2026-06-12 ×10 분할, 최신 관측은 2026-03-31 —
+    #   주식수 131.75M(분할 전)에 분할조정 주가를 물려 E/P 가 10배로 나오고 있었다.
+    #   가르는 법: 최신이 **이미 소급됐다면** 바로 아래 관측과 분할비만큼 벌어져 있다.
+    #   실측 5종이 깨끗이 갈렸다 — BKNG 점프 24.386(≈×25, 이미 반영) vs
+    #   CRWD 1.026 · DD 0.983 · FDX 1.013 · KLAC 0.998(전 구간 분할 전).
+    f0, used = 1.0, 0
+    aft = [r for sd, r in splits if sd > ok[0][0]]
+    if aft:
+        pr = 1.0
+        for r in aft:
+            pr *= r
+        jump = (ok[0][1] / ok[1][1]) if ok[1][1] else None
+        if jump is None or abs(jump - pr) / pr > 0.05:
+            f0, used = pr, 1
+    out = [(ok[0][0], ok[0][1] * f0)]
+    prev = ok[0][1] * f0
+    for d, v in ok[1:]:
+        cands, f = [1.0], 1.0
+        for _sd, r in reversed([s for s in splits if s[0] > d]):
+            f *= r
+            cands.append(f)
+        best = bestk = None
+        for k in cands:
+            j = (v * k) / prev if prev else 0
+            if j <= 0:
+                continue
+            dev = max(j, 1.0 / j)
+            if best is None or dev < best:
+                best, bestk = dev, k
+        if best is None or best >= 1.5:
+            break                        # 분할로 설명 안 되는 단절 — 여기서 멈춘다
+        if bestk != 1.0:
+            used += 1
+        prev = v * bestk
+        out.append((d, prev))
+    return out, used
 
 
 def split_trim(sh, eps, dps, tk=""):
@@ -913,9 +986,21 @@ def split_trim(sh, eps, dps, tk=""):
       그 시점 E/P 가 112.5%(실제 ~1.7%)로 나와 x-ep 이 CMG 를 70개 월말 중 42회 담았다.
       분할비는 미래 정보이므로 이것은 편향이 아니라 **선견**이다.
 
-    되돌리지 않고 **자른다.** 배수를 도출해 재계산하려면 실제 증자·합병(PCG 4.05배 파산탈출
-    증자 등)과 분할을 비율만으로 구별해야 하고 그 판단이 틀리면 없던 숫자를 만든다.
-    자르면 그 시점 후보에서 빠질 뿐이다(적대감사가 두 방식을 다 재서 같은 답을 확인했다).
+    🚨 2026-08-04 — **먼저 되맞추고, 안 되는 것만 자른다.** 예전에는 무조건 잘랐고 그 이유는
+    하나였다: "배수를 도출해 재계산하려면 실제 증자·합병(PCG 4.05배 파산탈출 증자 등)과
+    분할을 **비율만으로** 구별해야 하고 그 판단이 틀리면 없던 숫자를 만든다."
+      그 전제가 사라졌다. data/splits.json(build/refresh_splits.py)이 분할 이력을 **코퍼릿
+      액션 그대로** 싣는다 — 비율을 추정하는 게 아니라 회사가 공시한 사실을 읽는다.
+      실측(2026-08-04): 이음매 비율과 실제 분할비가 CMG 49.923 vs ×50 · NVDA 10.038 vs ×10
+      · AMZN 20.051 vs ×20 · WMT 2.992 vs ×3 으로 맞물렸고, OMC 1.535(IPG 합병 신주)·
+      MSTR 8.838(ATM 대량발행)은 어느 분할과도 맞지 않았다. 즉 구별이 된다.
+      효과: 버리는 관측이 3,575 → 1,215(전체의 15.0% → 5.1%), 100종이 좋아졌다.
+      독립 검산 — 되맞춘 주식수 × 분할조정 주가로 시가총액을 다시 만들어 봤다. CMG 2009-06
+      26억$ · NFLX 2009-03 26억$ · AAPL 2009-03 809억$ 로 실제와 맞고, 최신 관측은 랩이
+      아는 오늘 시총과 −11%~+19%(분기 시차만큼) 안에 들었다.
+    ⚠ 분할이 **설명하지 못하는** 단절은 예전처럼 자른다. 그쪽은 실제 자본거래(합병·대량발행)
+      이거나 우리가 모르는 기준 변화인데, 둘을 여기서 가를 근거가 여전히 없기 때문이다.
+      남은 1,215개가 그것이다(HON·OMC·EXE·O·PCG·TFC·IFF·LHX·KDP — 전부 합병·증자 이력).
     ⚠ 총액 항목(rev·ni·eq·liab·cfo·capex)은 달러라 분할과 무관하다 — 건드리지 않는다.
     두 단계로 나눈다 — 섞이는 사유가 둘이고 정답 기준이 서로 다르기 때문이다.
       ① 단위 오류(천주 vs 백만주) — 소수의 관측만 어긋난다. 정답은 **다수**다.
@@ -944,23 +1029,47 @@ def split_trim(sh, eps, dps, tk=""):
     # ① 단위 오류 — 100배 넘게 벗어난 관측(분할로는 설명 안 되는 크기)
     bad = {d for d, v in sh if not v or v <= 0 or v / med > 100 or med / v > 100}
     ok = [(d, v) for d, v in sh if d not in bad]
-    unit = list(ok)                        # ①만 적용한 계열(주식수 성장률용)
-    # ② 분할 기준 — 최신부터 거슬러 올라가 첫 단절 이전을 전부 버린다
+    # ② 되맞추기 — 분할 이력으로 관측마다 기준을 오늘로 맞춘다(_rebase 참조).
+    #    splits.json 이 없으면 _rebase 가 첫 단절에서 바로 멈춰 예전 '자르기'와 같아진다.
+    reb, used = _rebase(ok, load_splits().get(tk) or [])
+    fac = {d: (v / raw) for (d, v), (_d0, raw) in zip(reb, ok) if raw}   # 날짜 → 적용 배수
+    unit = list(reb)                       # ①+② 계열(주식수 성장률용 — 자르지 않는다)
+    if used:
+        SPLIT_REBASED[tk] = used
+    # ③ 되맞추기가 멈춘 지점부터 자른다 — 분할이 설명하지 못한 단절이다.
     seam = None
-    for i in range(len(ok) - 1):
-        a, b = ok[i][1], ok[i + 1][1]
-        if a and b and b > 0 and (a / b >= 1.5 or a / b <= 1 / 1.5):
-            seam = ok[i][0]
-            bad |= {d for d, _v in sh if d < seam}
-            break
-    if not bad:
-        return sh, eps, dps, unit, seam
-    worst = max((max(v / med, med / v) for d, v in sh if d in bad and v and v > 0), default=0)
-    SPLIT_TRIMMED[tk] = (min(bad), round(worst, 2), len(bad), len(sh))
+    if len(reb) < len(ok):
+        seam = reb[-1][0]
+        bad |= {d for d, _v in sh if d < seam}
+    # ⚠ '버릴 게 없으면 그냥 돌려준다'는 지름길을 두지 않는다. 자를 게 없어도 되맞춤
+    #   배수는 적용해야 한다 — 실측으로 한 번 틀렸다(NFLX 는 버릴 관측이 0이라 조기
+    #   반환에 걸려 주식수만 70배로 고쳐지고 EPS 는 분할 전 값 그대로 남았고,
+    #   그 결과 2012년 E/P 가 463% 로 나왔다).
+    if bad:
+        worst = max((max(v / med, med / v) for d, v in sh if d in bad and v and v > 0), default=0)
+        SPLIT_TRIMMED[tk] = (min(bad), round(worst, 2), len(bad), len(sh))
     keep = lambda ser: [(d, v) for d, v in (ser or []) if d not in bad]
-    # eps·dps 는 sh 와 같은 기간말 격자를 쓰므로 같은 날짜를 뺀다. 격자가 어긋난 관측은
-    # 판정할 근거가 없어 남긴다(총액 항목은 애초에 분할과 무관하다).
-    return keep(sh), keep(eps), keep(dps), unit, seam
+    # 🚨 주당지표는 주식수와 **반대로** 움직인다. 분할 전 기준이면 주식수는 k 배 작고
+    #   EPS·DPS 는 k 배 크다 — 그래서 같은 배수로 나눈다. 기준은 '어느 제출본에서 왔나'라
+    #   항목이 아니라 기간말이 정하므로, 주식수에서 얻은 날짜별 배수를 그대로 쓴다.
+    #   🚨 sh 격자에 없는 날짜는 배수를 못 정한다. 예전에는 그대로 뒀는데, 되맞추기를
+    #   넣은 뒤로는 그러면 안 된다 — 옆의 주식수는 오늘 기준으로 고쳐졌는데 이 주당지표만
+    #   분할 전 기준으로 남으면 정확히 이 함수가 막으려던 선견이 되살아난다.
+    #   그래서 **그 날짜 뒤에 분할이 있는** 무배수 관측만 버린다(뒤에 분할이 없으면
+    #   기준이 흔들릴 수 없으므로 예전처럼 남긴다).
+    #   총액 항목 rev·ni·eq·liab·cfo·capex 는 달러라 애초에 분할과 무관하다.
+    spl = load_splits().get(tk) or []
+
+    def persh(ser):
+        out = []
+        for d, v in keep(ser):
+            if d in fac:
+                out.append((d, (v / fac[d]) if (fac[d] and v is not None) else v))
+            elif not any(sd > d for sd, _r in spl):
+                out.append((d, v))
+        return out
+
+    return keep(reb), persh(eps), persh(dps), unit, seam
 
 
 def load_fund(extra_dirs=()):
@@ -1039,6 +1148,14 @@ def load_fund(extra_dirs=()):
                                           "bb_a": annual("bb"), "ni_a": annual("ni"),
                                           "rev_a": annual("rev"), "gp_a": annual("gp"),
                                           "cogs_a": annual("cogs"), "opinc_a": annual("opinc")}
+    # 분할 기준 처리 결과를 **로그로 남긴다.** 조용히 자르면 표본이 왜 짧은지 아무도 모른다
+    # (실제로 그랬다 — SPLIT_TRIMMED 를 모으기만 하고 찍는 곳이 없었다).
+    if SPLIT_REBASED or SPLIT_TRIMMED:
+        nre = sum(SPLIT_REBASED.values())
+        ntr = sum(v[2] for v in SPLIT_TRIMMED.values())
+        print("  [분할 기준] 되맞춤 %d관측/%d종 · 자름 %d관측/%d종%s"
+              % (nre, len(SPLIT_REBASED), ntr, len(SPLIT_TRIMMED),
+                 "" if load_splits() else "  ⚠ data/splits.json 없음 — 되맞추기 꺼짐"))
     return out
 
 

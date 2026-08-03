@@ -220,6 +220,46 @@ def resolve_unit(units: dict, want: str):
     return want, None
 
 
+# 주당지표 단위오류 걸러내기 — 두 조건을 **함께** 만족할 때만 버린다.
+PERSHARE_ABS = 10000.0   # 주당 1만$ 를 넘는 주당지표는 주당지표가 아니다
+PERSHARE_REL = 100.0     # 그리고 그 계열 중앙값의 100배를 넘을 것
+UNIT_ERRORS = []         # (티커는 호출부가 안다) 버린 관측 기록 — main 이 로그로 찍는다
+
+
+def drop_pershare_unit_errors(ser, unit):
+    """EPS·DPS 에 섞여 들어온 단위오류를 버린다.
+
+    🚨 실측(2026-08-04, 보관 깊이를 18년으로 늘린 뒤 드러났다): SEC 원문에 EPS 가
+      HAL 790,000 · ICE 1.12억 · HIG 650,000 · TMO 500,000 · ROK 배당 184만 처럼 들어 있다.
+      금액을 주당지표 태그에 잘못 넣은 것이고, 그대로 두면 E/P 가 850만%로 나온다.
+      전에도 있던 결함인데(옛 5년 창에서 646건) 창을 늘리자 1,374건으로 드러났다.
+
+    ⚠ 왜 '중앙값의 100배'만으로는 안 되는가 — 진짜 극단값을 죽인다. 실측: WY 배당
+      26.46$(2010년 REIT 전환 특별배당, 중앙값 0.22 의 120배)는 **사실이다**.
+      EXE 852.97 · AIG 181.02 · TRGP 48.1 도 100배를 넘지만 주당지표로 가능한 크기다.
+      단위오류들은 전부 20만 이상이라 그 사이가 200배 넘게 비어 있다 — 절대 기준을
+      함께 걸면 둘이 깨끗이 갈린다(실측: 오류 6종 전건 적중 · 정상 4종 전건 보존).
+    ⚠ 총액 항목에는 쓰지 않는다. 단위는 'USD/shares' 로만 판별한다.
+    """
+    if unit != "USD/shares" or len(ser) < 3:
+        return ser
+    vs = sorted(abs(v) for _d, v in ser if v)
+    if not vs:
+        return ser
+    med = vs[len(vs) // 2]
+    if med <= 0:
+        return ser
+    out, bad = [], []
+    for d, v in ser:
+        if v and abs(v) >= PERSHARE_ABS and abs(v) / med >= PERSHARE_REL:
+            bad.append((d, v))
+        else:
+            out.append((d, v))
+    if bad:
+        UNIT_ERRORS.append((round(med, 3), bad))
+    return out
+
+
 def extract(facts: dict):
     """companyfacts → {키: {src, u, s, q/a/i}}. 값이 하나도 없는 항목은 담지 않는다.
 
@@ -278,6 +318,9 @@ def extract(facts: dict):
                 continue
             if _days(ser[0][0], newest) > 450:
                 dropped.append(name)
+                continue
+            ser = drop_pershare_unit_errors(ser, unit)
+            if not ser:
                 continue
             rec[name] = ser
         if dropped:
@@ -652,6 +695,11 @@ def main() -> int:
                 print("대조 %s: n=%d · 중앙값 %.2f%% · 20%%이내 %.0f%% · 2배초과 %d건"
                       % (lab, v["n"], v["median"], v["w20"], v["gross"]))
     print("항목 커버: " + " ".join("%s%.0f" % (k, summary["cov"][k]) for k in summary["cov"]))
+    if UNIT_ERRORS:
+        nb = sum(len(b) for _m, b in UNIT_ERRORS)
+        top = sorted(((abs(v), d) for _m, b in UNIT_ERRORS for d, v in b), reverse=True)[:3]
+        print("주당지표 단위오류 제거: %d관측 · 최대 %s"
+              % (nb, " · ".join("%s %g" % (d, v) for v, d in top)))
     if n_pred:
         print("전신 법인에서 재무를 가져온 종목: %d개" % n_pred)
     if empty:
