@@ -390,11 +390,21 @@ def index_fcf_stat(tickers, mc_by_t):
     fcf = 0.0
     mc = 0.0
     used, neg = 0, 0
-    for t in tickers:
+    # 🚨 이중클래스를 두 번 더하지 않는다(사용자 지적 2026-08-04). 시총 정보원이 회사 전체
+    #   시총을 두 티커에 똑같이 주고, 재무(fx)도 같은 CIK 라 같은 파일 값이다 — 그냥 돌면
+    #   알파벳의 FCF 와 시총이 **둘 다 두 번** 들어가 비율은 안 변하지만 가중치가 두 배가 된다.
+    #   같은 CIK 는 처음 하나만 쓴다(정렬이 고정이라 어느 것을 쓸지도 고정된다).
+    _seen_cik = set()
+    for t in sorted(tickers):
         try:
             d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
         except Exception:
             continue
+        _c = d.get("cik")
+        if _c:
+            if _c in _seen_cik:
+                continue
+            _seen_cik.add(_c)
         tg = d.get("tags") or {}
         cm = {x: y for x, y in ((tg.get("cfo") or {}).get("a") or [])}
         pm = {x: y for x, y in ((tg.get("capex") or {}).get("a") or [])}

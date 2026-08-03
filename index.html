@@ -1258,6 +1258,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     });
     var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 · 산업그룹 '+nG+
        '개 <em>유니버스 종목 <b>동일가중</b> · <b>시총 내림차순</b> · GICS(위키백과 구조) · '+
+       // 🚨 이중클래스 각주 — 숫자는 home_reco 가 세어 보낸다(손으로 적으면 지수가 바뀌는 날 틀린다).
+       //   시총 정보원이 두 티커 모두에 **회사 전체 시총**을 주므로 그냥 더하면 한 회사를 두 번 센다.
+       (function(){
+         var T=(D&&D.tiers)||null;
+         if(!T||!T.dual||!T.dual.length)return '';
+         return '시총 합은 <b>같은 회사를 한 번만</b> 셉니다(이중클래스 '+
+                T.dual.map(function(p){return p.join('·');}).join(', ')+
+                ' — 안 그러면 '+mcapTxt(T.dual_mc)+'가 두 번 들어갑니다). 종목 수는 그대로입니다 — '+
+                '두 클래스는 실제로 지수의 두 구성종목입니다. · ';
+       })()+
        '▸ 로 산업그룹을, 그 아래 ▸ 로 종목을 폅니다 — 종목 줄의 수익률은 이 표와 같은 열입니다 · '+
        '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';

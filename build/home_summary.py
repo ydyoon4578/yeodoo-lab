@@ -63,6 +63,16 @@ SEC_KO = {v: SECKO[k] for k, v in SEC_ETF.items()}
 # 'Energy' 와 '에너지'를 같다고 말할 수 없다). 여기서만 쓰지만 SEC_ETF 를 뒤집는 규칙이
 # 두 곳에 생기면 한쪽만 고쳐지는 날이 오므로 정본을 하나 둔다.
 ETF_GICS = {v: k for k, v in SEC_ETF.items()}
+
+# 티커 → CIK. 시가총액 **합**에서 같은 회사를 두 번 더하지 않으려고 쓴다(agg 참조).
+# 파일이 없으면 빈 지도 — 그러면 예전처럼 더해지고, 그 사실이 아래 dual 개수 0 으로 드러난다.
+CIK_OF = {}
+try:
+    CIK_OF = {t: c for t, c in (json.load(io.open(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                     "data", "cik_map.json"), encoding="utf-8")).get("co") or {}).items() if c}
+except Exception:
+    pass
 # 실측(2026-08-03, GICS 서브산업 127개): MIN 3 이면 71개·커버 83% · MIN 4 면 49개·커버 70% ·
 # MIN 5 면 36개·커버 59%. 섹터 안에 접어 두므로 한 번에 보이는 것은 한 섹터분(6~7줄)이라
 # 개수보다 커버를 택했다. 3종 평균은 얇지만 줄마다 종목수를 함께 낸다.
@@ -156,8 +166,22 @@ def _industry(stocks, dates, root):
             if v:
                 d[v] = d.get(v, 0) + 1
     dup = sum(1 for k, v in _ci.items() if _cs.get(k) == v)
+    # 이중클래스(같은 CIK 를 쓰는 티커) — 시총 합에서 뺀 양을 화면이 각주로 적을 수 있게 낸다.
+    # 🚨 손으로 적으면 안 된다. 지수에 이중클래스가 하나 더 들어오는 날 문장이 조용히 틀린다.
+    _bycik, _dual_mc, _dual_t = {}, 0.0, []
+    for s in stocks:
+        c = CIK_OF.get(s["t"])
+        if c:
+            _bycik.setdefault(c, []).append(s)
+    for c, ss in _bycik.items():
+        if len(ss) < 2:
+            continue
+        _dual_t.append(sorted(x["t"] for x in ss))
+        vs = sorted((float((x.get("fund") or {}).get("mc") or 0) for x in ss), reverse=True)
+        _dual_mc += sum(vs[1:])          # 가장 큰 것 하나만 남기고 나머지가 뺀 금액이다
     gics_tiers = {"n_gics": len(has), "n_all": len(stocks), "rows": tiers,
-                  "ind_dup": dup, "ind_n": len(_ci), "min": IND_MIN}
+                  "ind_dup": dup, "ind_n": len(_ci), "min": IND_MIN,
+                  "dual": sorted(_dual_t), "dual_mc": round(_dual_mc) or 0}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
 
     # 샤프 — 스타일 표와 **같은 창**으로 잰다(2026-08-03 사용자 요청으로 두 표가 합쳐졌다).
@@ -215,11 +239,24 @@ def _industry(stocks, dates, root):
         # 여기서 답해야 하는 질문은 '이 산업 안에서 어느 종목이 끌었나' 하나다.
         # 시가총액 합(억$). 줄 정렬 기준이다 — 큰 것부터 보는 편이 시장을 읽는 순서에 맞다
         # (사용자 요청 2026-08-03 "종목이나 섹터는 가급적 시총순"). 없는 종목은 0 으로 친다.
-        mc = 0.0
+        # 🚨 같은 회사를 두 번 더하지 않는다(사용자 지적 2026-08-04). 이중클래스는 티커가
+        #   둘인데 시총 정보원(yfinance)이 **회사 전체 시총**을 양쪽에 똑같이 준다 —
+        #   실측: GOOG 43,618억$ · GOOGL 43,554억$ 로 둘 다 알파벳 전체다. 그냥 더하면
+        #   커뮤니케이션 섹터 시총이 13.05조$ 로 나오는데 그중 4.4조$ 가 알파벳 한 번 더다
+        #   (51% 과대). FOX/FOXA · NWS/NWSA 도 같다.
+        #   판정은 CIK 로 한다 — 티커 모양으로 추측하면 BRK.B·BF.B 같은 무관한 쌍을 묶는다.
+        #   ⚠ 종목 **수**(n)는 줄이지 않는다. 두 클래스는 실제로 지수의 두 구성종목이다.
+        #     줄이는 것은 '금액의 합'뿐이고, 그 사실을 화면 각주에 적는다.
+        mc, seen = 0.0, set()
         for s2 in objs:
             v = (s2.get("fund") or {}).get("mc")
-            if isinstance(v, (int, float)) and v > 0:
-                mc += float(v)
+            if not (isinstance(v, (int, float)) and v > 0):
+                continue
+            key = CIK_OF.get(s2["t"]) or ("t:" + s2["t"])
+            if key in seen:
+                continue
+            seen.add(key)
+            mc += float(v)
         mc = round(mc) or None
         if sub is not None:                     # sub 가 있으면 종목 줄이다
             # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
