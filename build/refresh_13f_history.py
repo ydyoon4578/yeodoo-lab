@@ -13,7 +13,7 @@ CUSIP→티커는 refresh_13f.py의 FTD 방식을 그대로 재사용한다(13F�
   python build/refresh_13f_history.py --q 20     # 최근 20분기만
 """
 from __future__ import annotations
-import io, json, os, re, sys, time, urllib.request
+import io, json, os, re, statistics, sys, time, urllib.request
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
 except Exception: pass
 
@@ -136,6 +136,7 @@ def main() -> int:
     print("  CUSIP %d개" % len(cmap))
 
     hist = {}          # {분기: {cik: {티커: 가치}}}
+    shs = {}           # {분기: {cik: {티커: 주식수}}} — 제출 단위 판정에만 쓰고 파일에는 안 넣는다
     fdates = {}        # {분기: {cik: 공시일}} — 리밸런스 시점에 공개돼 있었는지 판정용
     names = {}
     # 운용사별 커버리지를 남긴다 — 명단에 이름이 있는데 데이터가 0인 것을 조용히 넘기면,
@@ -175,13 +176,16 @@ def main() -> int:
             time.sleep(SLEEP)
             if not hs:
                 continue
-            m = {}
+            m, msh = {}, {}
             for cu, val, _sh, _nm in hs:
                 t = cmap.get(cu)
                 if t:
                     m[t] = m.get(t, 0.0) + val
+                    msh[t] = msh.get(t, 0.0) + _sh
             if m:
                 hist.setdefault(rd, {})[str(cik)] = m
+                # 주식수는 저장하지 않는다 — 아래 단위 정규화에만 쓰고 버린다.
+                shs.setdefault(rd, {})[str(cik)] = msh
                 fdates.setdefault(rd, {})[str(cik)] = filed.get(rd) or ""
                 got += 1
         names[str(cik)] = label
@@ -220,6 +224,43 @@ def main() -> int:
             months = []
     else:
         months = []
+
+    # ── 제출 단위 정규화(천$ → 달러) ──────────────────────────────────────
+    # 🚨 13F 정보표의 VALUE 는 2023년 규칙 변경 전까지 **천 달러** 단위였다. 이 파일은 52분기를
+    #   담으므로 그 전환이 통째로 들어 있다 — 실측: 2022-09-30 까지 전 운용사가 천$, 2022-12-31
+    #   부터 전원 달러. 게다가 전환이 늦은 운용사가 있어 **같은 분기 안에서도 눈금이 섞인다**
+    #   (2026-03-31 기준 바우포스트·듀케인이 아직 천$, 히말라야는 2024-06-30 에 전환했다).
+    #   지금 이 파일을 읽는 유일한 소비처(guru17_backtest)는 운용사·분기 안에서 비중으로
+    #   정규화해 1000배가 상쇄되므로 결과가 맞다. 하지만 절대값을 쓰는 소비처가 하나만 생기면
+    #   그때 조용히 틀린다 — 파일에 섞인 눈금을 남겨 두는 것 자체가 함정이다.
+    #   판정 근거는 같은 잡이 이미 받아 둔 월봉이다(추가 호출 0). 내재주가(가치÷주식수)를
+    #   그 분기 월말 종가로 나눈 중앙비가 달러면 ~1, 천$면 ~0.001 이라 세 자릿수가 벌어진다.
+    _mi = {mo: i for i, mo in enumerate(months)}
+    _scaled = _unknown = 0
+    for rd, per_cik in hist.items():
+        _px = {}
+        _i = _mi.get(rd[:7])
+        if _i is not None:
+            for t, arr in mpx.items():
+                if _i < len(arr) and arr[_i]:
+                    _px[t] = float(arr[_i])
+        for cik, m in per_cik.items():
+            sh = (shs.get(rd) or {}).get(cik) or {}
+            rat = [(m[t] / sh[t]) / _px[t] for t in m
+                   if sh.get(t) and m.get(t) and _px.get(t)]
+            if len(rat) >= 3:
+                med = statistics.median(rat)
+            elif sum(m.values()) < 1e8:      # 13F 는 13F증권 1억$ 이상일 때 내는 보고다
+                med = 0.001
+            else:
+                _unknown += 1
+                continue
+            if med < 0.02:
+                for t in m:
+                    m[t] *= 1000.0
+                _scaled += 1
+    print("  제출 단위 정규화: %d건 ×1000 · 판정 불가 %d건 (분기×운용사 %d건 중)"
+          % (_scaled, _unknown, sum(len(v) for v in hist.values())))
 
     doc = {
         "note": "운용사별 13F 보유 이력. SEC 분기 벌크 데이터셋(ZIP 180MB) 대신 운용사별 EDGAR "
@@ -268,4 +309,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # 멈춤 사유를 체크런 주석으로 올린다 — 로그 본문은 사내 PC 에서 못 받는다(build/gate.py 참조)
+    import gate
+    gate.run(main, "13F 이력")

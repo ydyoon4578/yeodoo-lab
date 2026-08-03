@@ -60,6 +60,10 @@ NO_ROW = {
     "refresh-tech.yml":      "종목 전략 재계산 — 백테스트 행이 대표",
     "refresh-assets.yml":    "자산배분 전략 재계산 — 백테스트 행이 대표",
     "validate.yml":          "검증 전용(데이터 산출 없음)",
+    # COT 는 새 데이터 축이지만 아직 이것을 보여주는 화면이 없다. 화면을 만들 때
+    # sources.html 에 행을 추가하고 여기서 ROWS 로 옮긴다 — 지금 표에 실으면
+    # 갈 곳 없는 행이 하나 생긴다.
+    "refresh-cot.yml":       "CFTC COT — 소비 화면이 아직 없다(생기면 ROWS 로 옮길 것)",
 }
 
 DOW = "일월화수목금토"

@@ -48,14 +48,22 @@ TOPN = TB.TOPN
 PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
-              "x-small"]   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
+              "x-small",   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
+              # 2026-07-30 웹 리서치로 추가. 🚨 여기 안 넣으면 새 규칙이 **소급 t 로만** 판정돼
+              # '통과 후보' 가 된다 — 이 파일이 막으려는 바로 그 일이다(소급 t 3.2~3.7 이 나왔다).
+              "x-echo", "x-season", "x-coskew",
+              # 2026-07-31 추가(가격만 쓰는 것)
+              "x-ltrev", "x-lowcorr", "x-cntd"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
 #   ⚠ 재무 커버리지가 가격보다 낮다 — 편출 종목 중 몇 종이 실제로 채점되는지 매 실행에 찍고
 #     limits 에 싣는다. 커버리지가 낮으면 그 규칙의 PIT 는 '후보가 생존자로 좁혀진' 쪽이다.
 FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
-             "x-dy", "x-fcfy", "x-sue", "x-epsacc"]
+             "x-dy", "x-fcfy", "x-sue", "x-epsacc",
+             "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
+             # 2026-07-31 추가 — 전부 흐름 항목이라 ttm2(q, a) 로 읽어야 한다.
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -258,7 +266,11 @@ def main():
     TB.build_strats()
     BY = {s["sid"]: s for s in TB.STRATS}
     C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
-         "SH": C_SH, "dates": dates, "FU": _fu}
+         "SH": C_SH, "dates": dates, "FU": _fu,
+         # x-gpa·x-ocfp·x-aci 가 금융업을 뺀다 — 랩과 같은 섹터 라벨을 써야 정의가 같다.
+         "sector": {t: (m or {}).get("sector") for t, m in (TB.load()[3] or {}).items()},
+         # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
+         "me": sorted(me)}
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
     # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
@@ -300,6 +312,7 @@ def main():
         """한 전략을 한 유니버스로 돌린다. pool_at 이 None 이면 제한 없음(소급)."""
         CC = dict(C, ixr=IXR, ixvol=IXVOL)
         hold, nav, srets, turns = [], [100.0], [], 0
+        first = None                       # 실제로 무언가를 보유하기 시작한 시점
         for i in range(i0 + 1, n):
             if (i - 1) in me:
                 pool = pool_at(i - 1) if pool_at else None
@@ -313,25 +326,50 @@ def main():
                     if v is not None and v == v:
                         sc.append((v, t))
                 sc.sort(reverse=True)
-                new = [t for _v, t in sc[:TOPN]]
-                if new:
-                    turns += (len(set(new) ^ set(hold)) / (2 * TOPN)) if hold else 1.0
-                    hold = new
+                if len(sc) < TB.XSEC_MIN_POOL:                  # 소급 레그와 같은 커버리지 게이트
+                    hold = []
+                else:
+                    new = [t for _v, t in sc[:TOPN]]
+                    if new:
+                        turns += (len(set(new) ^ set(hold)) / (2 * TOPN)) if hold else 1.0
+                        hold = new
+            if hold and first is None:
+                first = i
             rs = [R[t][i] for t in hold if R[t][i] is not None]
             srets.append(sum(rs) / len(rs) if rs else 0.0)
             nav.append(nav[-1] * (1 + srets[-1]))
         bnav = [100.0]
         for i in range(i0 + 1, n):
             bnav.append(bnav[-1] * (1 + (IXR[i] or 0.0)))
-        d2 = dates[i0:]
+        # 재기준은 여기서 하지 않는다 — 두 레그의 보유시작이 갈릴 수 있고, 각자 자기 시점에
+        # 맞추면 창이 달라져 이 파일이 없애려는 '구간 차이가 편향으로 위장' 이 되살아난다.
+        # 원재료만 돌려주고 fin() 이 **공통 k** 로 마감한다.
+        return {"nav": nav, "bnav": bnav, "srets": srets, "turns": turns,
+                "first": first, "hold": sorted(hold), "IXR": IXR}
+
+    def fin(raw, k):
+        """🚨 보유시작 재기준 — 소급 레그(tech_backtest)에는 있는데 여기엔 없었다. 적대감사 실측:
+        x-season 은 same_month_avg 가 월말 61개를 요구해 PIT 창 시작보다 231거래일 늦게 첫 보유가
+        생긴다. 그 231일간 전략 NAV 는 100 에 고정인데 대조군은 복리로 올라 PIT 초과수익이 음(−)
+        쪽으로 5.27%p 과대, |t| 가 1.8배 과대, 화면에 적히는 생존편향 크기는 4.5%p 과소로 나왔다.
+        이 파일이 스스로 주석에 적어 둔 i0 이음매 함정과 같은 것으로, i0 조정이 20일은 막았지만
+        231일은 못 막았다. 창 길이가 전략마다 다르므로 start·n_days 도 전략별로 돌려준다
+        (전역 라벨 1463일/5.8년은 그런 전략에 대해 거짓이다)."""
+        nav, bnav = raw["nav"], raw["bnav"]
+        srets, d2 = raw["srets"], dates[i0:]
+        if k:
+            nav = [x / nav[k] * 100 for x in nav[k:]]
+            bnav = [x / bnav[k] * 100 for x in bnav[k:]]
+            srets, d2 = srets[k:], d2[k:]
         stt, bs = TB.ann_stats(nav, d2, rf), TB.ann_stats(bnav, d2, rf)
         return {
             "metrics": stt, "bench": bs,
             "excess_cagr": round(stt.get("cagr", 0) - bs.get("cagr", 0), 2),
             "d_sharpe": round((stt.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": TB.tstat(srets, IXR[i0 + 1:]),
-            "turnover": round(turns / max(1, (n - i0) / 252), 2),
-            "hold": sorted(hold),
+            "t": TB.tstat(srets, raw["IXR"][i0 + 1 + k:]),
+            "turnover": round(raw["turns"] / max(1, (n - i0 - k) / 252), 2),
+            "start": d2[0], "n_days": len(d2),
+            "hold": raw["hold"],
         }
 
     out = []
@@ -339,13 +377,20 @@ def main():
         S = BY.get(sid)
         if not S:
             continue
-        P_ = run(S, members_at, ixr, ixvol)          # PIT
-        B_ = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
+        _p = run(S, members_at, ixr, ixvol)          # PIT
+        _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
+        # 두 레그를 **늦은 쪽** 보유시작에 함께 맞춘다. 각자 맞추면 창이 갈려 편향에 구간 차이가
+        # 섞인다(x-season 은 두 레그가 같지만 커버리지 게이트 탓에 갈릴 수 있다).
+        _k = max(max(0, (_p["first"] or (i0 + 1)) - 1 - i0),
+                 max(0, (_b["first"] or (i0 + 1)) - 1 - i0))
+        P_, B_ = fin(_p, _k), fin(_b, _k)
         out.append({
             "sid": sid, "name": S["name"],
             "metrics": P_["metrics"], "bench": P_["bench"],
             "excess_cagr": P_["excess_cagr"], "d_sharpe": P_["d_sharpe"],
             "t": P_["t"], "turnover": P_["turnover"],
+            # 전략별 실효 창 — 전역 라벨과 다를 수 있다(보유시작 재기준·커버리지 게이트)
+            "start": P_["start"], "n_days": P_["n_days"],
             # 같은 창의 소급 레그와 그 차이 = 유니버스 편향(구간 차이가 섞이지 않는다)
             "retro": {"metrics": B_["metrics"], "bench": B_["bench"],
                       "excess_cagr": B_["excess_cagr"], "t": B_["t"]},
@@ -373,7 +418,15 @@ def main():
                  P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
                  B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
 
+    # 다중검정 문턱 — 이 표(재측정한 규칙 수)와 랩 족(탐색한 가설 수) 둘 다 도출한다.
+    # 랩 족은 TB.STRATS 레지스트리 길이로, tech_backtest 의 N = len(out) 과 같은 수다.
+    _NP = len(out)
+    _NLAB = len(TB.STRATS)
+    _TC, _TCLAB = TB.z_crit(_NP), TB.z_crit(_NLAB)
+    _TMAX = round(max((abs(r.get("t") or 0) for r in out), default=0), 2)
+
     doc = {
+        "t_crit": _TC, "t_crit_lab": _TCLAB, "n_family_lab": _NLAB, "t_max": _TMAX,
         "note": "매월말 실제 지수 편입 종목만 후보로 두고 다시 돌린 결과. 같은 창에서 소급 "
                 "유니버스(오늘 518종)로도 한 번 더 돌려 retro 에 담았고, 그 차이(bias_excess)가 "
                 "유니버스 편향의 크기다 — 랩 본편(2252일)과 직접 빼면 구간 차이가 섞여 편향이 "
@@ -385,6 +438,15 @@ def main():
         "coverage": {"min": round(cov_min, 4), "median": round(cov_med, 4)},
         "limits": [
             "구간이 %s부터다 — SPX 멤버십이 그때부터만 있어 합집합을 거기 맞췄다." % START,
+            "🚨 위의 start·n_days 는 **전역 라벨**이고 규칙마다 실효 창이 다르다 — 각 규칙의 "
+            "start·n_days 를 볼 것. 신호가 늦게 채워지는 규칙은 무보유 구간을 잘라내고 시작한다"
+            "(동월 계절성은 월말 61개를 요구해 231거래일 늦다). 재기준이 없던 동안 그 구간에서 "
+            "전략 NAV 는 100 에 고정인데 대조군만 복리로 올라, PIT 초과수익이 5.27%p 과대 음수·"
+            "|t| 1.8배 과대·화면의 편향 크기가 4.5%p 과소로 나갔다(적대감사가 잡았다). "
+            "두 레그는 늦은 쪽에 함께 맞춘다 — 각자 맞추면 창이 갈려 구간 차이가 편향으로 위장한다.",
+            "채점 후보가 %d종 미만인 월말은 무보유로 둔다(소급 레그와 같은 게이트). 후보 전량이 "
+            "바스켓을 통과하면 '선택'이 아니라 '있는 것 전부'이고, 그 구간 성과는 규칙이 아니라 "
+            "데이터 커버리지가 만든 것이다." % TB.XSEC_MIN_POOL,
             # ⚠ 예전엔 "누락은 프리미엄 받고 사라진 쪽이라 방향이 반대"라고 적었다. 실측으로 반증됐다 —
             #   캐시 종목은 전부 오늘까지 살아 있고 보유율은 2020-09 91.8%→최근 100%로 단조 상승한다.
             #   즉 결손은 '오늘까지 못 살아남음' 그 자체이고, 누락분을 되돌리면 초과수익은 **줄어든다**
@@ -404,13 +466,15 @@ def main():
             "bias_cagr 는 +1.18 로 소급이 부풀려진 쪽이었다)."
             % (round((bench_bias := (out[0]["retro"]["bench"]["cagr"]
                                      - out[0]["bench"]["cagr"])) , 2) if out else 0),
+            # ⚠ 문턱과 '넘는 규칙 수'를 손으로 적지 않는다 — 27종 시절 값 3.11 과 랩 51종 족
+            #   3.30 이 그대로 남아 실제(33종·57종)와 어긋났던 자리다. 둘 다 도출한다.
             "t 는 이 표본(%d거래일·규칙 %d종)에서 계산한 값이다. **규칙 %d종을 한 표에서 재므로 "
-            "다중검정이다** — 본페로니 5%%면 |t|≥%.2f 가 필요하다(랩 본편 51종 족으로 보면 "
-            "|t|≥3.30). 검정족은 재측정한 수가 아니라 탐색한 가설 수여야 하므로 후자가 맞고, "
-            "이 표에서 그 문턱을 넘는 규칙은 **0종**이다. 문턱을 넘고 말고보다 "
+            "다중검정이다** — 본페로니 5%%면 |t|≥%.2f 가 필요하다(랩 본편 %d종 족으로 보면 "
+            "|t|≥%.2f). 검정족은 재측정한 수가 아니라 탐색한 가설 수여야 하므로 후자가 맞고, "
+            "이 표에서 그 문턱을 넘는 규칙은 **%d종**이다(최대 |t| = %.2f). 문턱을 넘고 말고보다 "
             "'소급 대비 t 가 얼마나 무너지는가'로 읽는 것이 안전하다."
-            % (n - i0, len(PRICE_SIDS) + len(FUND_SIDS), len(PRICE_SIDS) + len(FUND_SIDS),
-               TB.z_crit(len(PRICE_SIDS) + len(FUND_SIDS)) if hasattr(TB, "z_crit") else 3.11),
+            % (n - i0, _NP, _NP, _TC, _NLAB, _TCLAB,
+               sum(1 for r in out if abs(r.get("t") or 0) >= _TCLAB), _TMAX),
             "🚨 주당지표 분할 기준 — 주가는 분할조정본인데 SEC 주당지표(eps·dps)와 주식수는 "
             "당시 보고치라 한 계열에 분할 전·후 기준이 섞인다(실측: CMG sh 1387.37 옆에 27.79). "
             "그대로 두면 나중에 분할한 종목의 이익수익률·배당수익률이 분할비만큼 부풀어 **선견**이 "
@@ -461,8 +525,55 @@ def score(S, t, j, C):
             e = TB.asof_fund(f.get("eq"), dt_)
             return (e / sn / p0) if (e is not None and mcap) else None
         if sid == "x-fcfy":
-            fc = TB.ttm(f.get("fcf"), dt_)
+            fc = TB.ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
             return (fc / mcap) if (fc is not None and mcap) else None
+        if sid == "x-payout":
+            dp = TB.ttm(f.get("dps"), dt_)
+            bbv = TB.ttm2(f.get("bb"), f.get("bb_a"), dt_)
+            if not (mcap and (dp is not None or bbv is not None)):
+                return None
+            tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
+            return (tot / mcap) if tot >= 0 else None
+        if sid == "x-poacc":
+            cut_ = TB._shift(dt_, TB.FUND_LAG_DAYS)
+            nim = dict(f.get("ni_a") or []); cfm = dict(f.get("cfo_a") or [])
+            rvm = dict(f.get("rev_a") or [])
+            d_ = next((d for d, _x in (f.get("ni_a") or []) if d <= cut_ and d in cfm), None)
+            if not d_:
+                return None
+            ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
+            if not (rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_):
+                return None
+            return -((ni_ - cf_) / abs(ni_))
+        if sid in ("x-gpa", "x-ocfp", "x-aci"):
+            if (C.get("sector") or {}).get(t) == "Financials":
+                return None
+            at = TB.asof_fund(f.get("asset"), dt_)
+            if sid == "x-ocfp":
+                cf_ = TB.ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
+                return (cf_ / at) if (cf_ is not None and at and at > 0) else None
+            if sid == "x-gpa":
+                g = TB.ttm2(f.get("gp"), f.get("gp_a"), dt_)
+                rv_ = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                cg = TB.ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
+                if g is not None and cg is not None and rv_ and rv_ > 0:
+                    if abs(g + cg - rv_) / rv_ > 0.01:
+                        g = None
+                if g is None and rv_ is not None and cg is not None:
+                    g = rv_ - cg
+                return (g / at) if (g is not None and at and at > 0) else None
+            cx = [(d, x) for d, x in (f.get("capex_a") or [])
+                  if d <= TB._shift(dt_, TB.FUND_LAG_DAYS)]
+            rvm = dict(f.get("rev_a") or [])
+            rat = []
+            for d, x in cx[:4]:
+                r_ = rvm.get(d)
+                if r_ and r_ > 0 and x is not None:
+                    rat.append(x / r_)
+            if len(rat) == 4 and sum(rat[1:]) > 0:
+                ci = rat[0] / (sum(rat[1:]) / 3.0) - 1.0
+                return -ci if abs(ci) <= 3.0 else None
+            return None
         if sid == "x-ep":
             v = TB.ttm(f.get("eps"), dt_)
             return (v / p0) if (v is not None and p0 and p0 > 0) else None
@@ -489,7 +600,36 @@ def score(S, t, j, C):
         if sid == "x-dy":
             dp = TB.ttm(f.get("dps"), dt_)
             return (dp / p0) if (dp is not None and p0 and p0 > 0) else None
+        if sid == "x-agrow":
+            pr = TB.yoy_pair(f.get("asset"), dt_)
+            if not pr or pr[1] <= 0 or pr[3] <= 0:
+                return None
+            g = pr[1] / pr[3] - 1.0
+            return -max(-2.0, min(2.0, g))
+        if sid == "x-shiss":
+            # 소급 레그와 문자 그대로 같아야 한다 — 다르면 '편향'이라 부른 값이 정의 차이다.
+            pr = TB.yoy_pair(f.get("sh_u") or f.get("sh"), dt_, seam=f.get("sh_seam"))
+            if not pr or pr[1] <= 0 or pr[3] <= 0:
+                return None
+            g = pr[1] / pr[3] - 1.0
+            return -g if abs(g) <= 0.5 else None
+        if sid == "x-cash":
+            ch = TB.asof_fund(f.get("cash"), dt_)
+            at = TB.asof_fund(f.get("asset"), dt_)
+            return (ch / at) if (ch is not None and at and at > 0) else None
         return None
+    if sid == "x-echo":
+        return TB.ret(P, j - 126, 126)
+    if sid == "x-coskew":
+        ck = TB.coskew(R[t], ixr, j, 252)
+        return -ck if ck is not None else None
+    if sid == "x-lowcorr":
+        cr = TB.mkt_corr(R[t], ixr, j, 252)
+        return -cr if cr is not None else None
+    if sid == "x-cntd":
+        return TB.updown(R[t], j, 231)
+    if sid == "x-season":
+        return TB.same_month_avg(P, j, C["dates"], C["me"])
     if sid == "x-52wh":
         win = [x for x in P[max(0, j - 251):j + 1] if x]
         hi = max(win) if win else None

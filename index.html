@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="여두 전략 랩 — NASDAQ 100·S&P 500 518종목과 FRED 매크로 지표로 퀀트 전략을 구현하고 적대적으로 검증한 뒤, 통과·기각 판정을 전부 공개합니다.">
-<title>여두 전략 랩</title>
+<title>여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/index.html">
 <meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/index.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 전략 랩">
+<meta property="og:title" content="여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개">
 <meta property="og:description" content="계량 리서치 공개 — 구현·적대검증한 전략의 통과와 기각을 전부 공개. 종목 시그널·시장 국면·전략 탐색.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 전략 랩">
+<meta name="twitter:title" content="여두 전략 랩 — 미국주식 퀀트 전략 백테스트·검증 공개">
 <meta name="twitter:description" content="계량 리서치 공개 — 구현·적대검증한 전략의 통과와 기각을 전부 공개. 종목 시그널·시장 국면·전략 탐색.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
@@ -25,11 +25,11 @@
      상단 내비·데이터 밀도형 카드. 다크 토큰은 기존 값을 보존한다. */
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;
-    --deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;
+    --deploy:#0C7A4A;--deploy-bg:#dcefe5;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
     /* 발표 시각 — 장전 파랑·장후 초록. 둘 다 이미 대비를 맞춰 둔 팔레트 값을 그대로 쓴다
        (--bmo는 --champ 계열 파랑, --amc는 --deploy 계열 초록). */
-    --bmo:#2C6E8F;--amc:#0E8A54;
+    --bmo:#2C6E8F;--amc:#0C7A4A;
     --gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
     /* 국면·심리 색은 .card .cv의 글자색(20px bold)으로 쓰인다 — 다크 패널 위 대비 3:1을
        못 지키면 침체·스태그플레이션 전환 시 카드 대표값이 묻힌다. 그래서 다른 색과 똑같이
@@ -49,7 +49,7 @@
     --sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#66757F;--accent:#8A6B00;--accent-2:#5E4900;--deploy:#0E8A54;--deploy-bg:#dcefe5;--marg:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0E8A54;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;--deploy:#0C7A4A;--deploy-bg:#dcefe5;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0C7A4A;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
   :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#6BB0D6;--amc:#38D083;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
   :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
   *,*::before,*::after{box-sizing:border-box}
@@ -85,10 +85,24 @@
 
   /* ── 본문 흐름 ──────────────────────────────────────────────── */
   .home{margin-top:30px;display:flex;flex-direction:column;gap:34px}
-  .mkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  /* minmax 하한은 반드시 min(…,100%) 로 감싼다 — 안 감싸면 320px 화면에서 격자가
+     .wrap(가용 292px)을 넘겨 페이지 전체에 가로 스크롤이 생긴다(.dbanner 에서 한 번 밟았다).
+     min-height 는 로딩 자리표시자 한 줄(48px)과 실제 카드 높이의 차이를 미리 먹어 두는 것이다. */
+  .mkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;min-height:300px}
+  /* 칸(.mkslot)은 항상 셋이다 — 내용이 도착한 것만 채운다. 래퍼가 생기면서 stretch 로
+     높이가 맞던 성질이 카드에서 래퍼로 옮겨가므로 여기서 되돌려 준다. */
+  .mkgrid>.mkslot{display:flex;flex-direction:column}
+  .mkgrid>.mkslot>.card{flex:1}
+  /* ⚠ .secrow 한 벌(섹터·산업 카드의 줄)이 여기 있었다 — 2026-08-03 에 그 둘이 표로
+     옮겨가면서(#mktbl) 쓰는 곳이 없어졌다. 표는 .sttbl 을 그대로 쓴다. */
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+  /* 섹션 제목 옆 '전체 보기' — 홈은 요약이고 정본은 각 페이지에 있다. 그 경로가 본문에
+     없으면 메가메뉴를 열어야만 갈 수 있다(모바일 3탭). 라벨 오른쪽 끝에 붙인다. */
+  .lbl .more2{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:600;
+       letter-spacing:.02em;color:var(--muted);text-decoration:none;white-space:nowrap}
+  .lbl a.more2:hover{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 
   /* ── 판정 원장 ──────────────────────────────────────────────── */
   .ledger{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 22px}
@@ -96,7 +110,7 @@
   /* ── 오늘의 신호 ────────────────────────────────────────────── */
   .signote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:9px;padding:9px 13px;margin:0 0 13px;font-size:11.5px;color:var(--ink-2);line-height:1.65}
   .signote b{color:var(--ink)}
-  .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+  .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px;min-height:330px}
   .rcol{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
   .rcol h4{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}
   a.rstk{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;text-decoration:none}
@@ -113,8 +127,16 @@
   @media(max-width:400px){.rstk .rn2{display:none}}
 
   /* ── 시장 카드(지금 시장) ───────────────────────────────────── */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
-  a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  /* 카드는 <div>다(2026-08-01). 전에는 <a>였는데 안에 든 details(한계 고지)의 summary를
+     누르면 클릭이 부모 링크로 버블링돼 펼쳐지지 않고 페이지가 이동했다 — 접힌 것이 하필
+     「수익 예측 신호가 아닙니다」·「지수가 아니라 몇 종목이 어느 상태인가」라 한계를 접어 두기로 한
+     2026-07-26 결정은 살아 있는데 펼치는 길만 막혀 있던 셈이다. HTML 상으로도 <a>는 interactive
+     content를 자손으로 못 갖는다. 카드 전체 클릭감은 제목 링크를 카드 크기로 늘려 유지하고,
+     details는 z-index로 그 위에 올린다(아래 .card details.more). */
+  .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
+  .card.lk:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card .ch a.cl{color:inherit;text-decoration:none}
+  .card.lk .ch a.cl::after{content:"";position:absolute;inset:0;border-radius:12px}
   .card .ch{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
   .card .cv{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--edge,var(--ink));margin-top:6px;line-height:1.2}
   .card .cd{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.55}
@@ -132,10 +154,38 @@
   .card .bar>i{display:block;height:100%;background:var(--edge,var(--accent));border-radius:5px}
   .card .barl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px}
   /* 국면 이력 띠 — 최근 3년을 월 단위 블록으로. 지금이 어디쯤인지 한눈에 보인다 */
+  /* ── 게이지 ── 0~100 눈금 위의 위치. CNN Fear & Greed 가 쓰는 방식을 가져왔다 —
+     숫자만 있으면 '68' 이 높은지 낮은지 모르지만, 띠 위의 점은 볼 필요도 없이 읽힌다.
+     심리(0~100)·폭(0~100%)·위험선호(중앙 0) 셋이 같은 부품을 쓴다. 셋이 같은 모양이라
+     카드를 옮겨 볼 때 눈이 새로 배울 것이 없다. */
+  /* ⚠ --g1~--g5 는 JS 가 줄마다 인라인으로 준다. 여기 **기본값을 반드시 둔다** —
+     var() 가 정의되지 않으면 background 선언이 통째로 무효가 되어 띠가 조용히 사라진다
+     (build/validate_site.py 가 이 실수를 잡는다). 기본은 회색 단색이다. */
+  .gauge{--g1:var(--line);--g2:var(--line);--g3:var(--line);--g4:var(--line);--g5:var(--line);
+       margin:9px 0 0;height:10px;border-radius:6px;position:relative;
+       background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5))}
+  .gauge>i{position:absolute;top:-3px;width:4px;height:16px;border-radius:2px;
+       background:var(--ink);box-shadow:0 0 0 2px var(--panel);transform:translateX(-2px)}
+  .gauge>b{position:absolute;top:-2px;width:1px;height:14px;background:var(--panel);opacity:.5}
+  .gaugel{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;
+       color:var(--muted);margin-top:5px}
+  .gaugel span:nth-child(2){opacity:.7}
+  /* 종합 한 줄 — 네 카드를 각자 읽고 머리로 합치게 두지 않는다. 심리와 폭이 어긋나는
+     경우가 이 섹션에서 가장 말할 값어치가 있는 것이라(소수가 끄는 장세) 그것을 문장으로 낸다. */
+  .mksum{margin:0 0 12px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;
+       background:var(--panel);border-left:3px solid var(--edge,var(--accent));
+       font-size:12.5px;color:var(--ink-2);line-height:1.6}
+  .mksum b{color:var(--ink)}
+  .mksum .mkchips{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;
+       font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .mksum .mkchips b{color:var(--edge,var(--ink));font-weight:700}
   .card .rstrip{display:flex;gap:1px;margin-top:10px;height:14px;border-radius:4px;overflow:hidden}
   .card .rstrip i{flex:1;background:var(--c,var(--muted));opacity:.85}
   .card .rstrip i:last-child{opacity:1;box-shadow:inset 0 0 0 1.5px var(--ink)}
-  .card details.more{margin-top:9px}
+  /* 늘린 제목 링크(.cl::after)가 카드를 덮으므로 details는 그 위로 올려야 눌린다 */
+  .card details.more{margin-top:9px;position:relative;z-index:1}
+  .card a.cbadge{position:relative;z-index:1;text-decoration:none}
+  .card a.cbadge:hover{border-color:var(--accent);color:var(--accent)}
   .card details.more>summary{font-size:11px}
   .card details.more .mbody{font-size:11.5px;color:var(--ink-2);line-height:1.6}
   /* 국면별 성과 · 주간 일정 (2026-07-26) — 글 대신 표·막대 */
@@ -144,7 +194,7 @@
   .rott td.bx{width:100%}
   .rott td.vv{text-align:right;font-weight:700;color:var(--ink);width:62px}
   .rbar.neg>i{background:var(--hot)}
-  .wkgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+  .wkgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px}
   .wkcol{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
   .wkcol h3{margin:0 0 8px;font-size:12.5px;font-weight:800}
   .wkcol h3 span{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600;margin-left:6px}
@@ -161,7 +211,7 @@
   .wkt.amc{border-color:color-mix(in srgb,var(--amc) 45%,transparent);color:var(--amc)}
   .wkt.tba{border-style:dashed;border-color:color-mix(in srgb,var(--muted) 55%,transparent);color:var(--muted)}
   .wkday .wn{font-size:11.5px;color:var(--ink-2);line-height:1.5}
-  .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+  .flgrid{margin:10px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:12px}
   .flrow{display:grid;grid-template-columns:58px 1fr auto;gap:8px;align-items:baseline;
          padding:6px 0;border-top:1px solid var(--line-soft);font-size:11.5px}
   .flrow:first-child{border-top:0}
@@ -180,13 +230,25 @@
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
   @media(max-width:900px){.calix{display:none}}
-  .calwrap{margin:10px 0 0;overflow-x:auto}
+  /* 캘린더·스타일 표도 도착 전엔 한 줄(48px)이고 도착하면 600px/460px 로 늘어난다.
+     그 사이에 있는 것이 전부 밀리므로 미리 자리를 잡아 둔다. 과다 예약은 빈 칸만 남기고
+     이동은 만들지 않는다 — 반대는 성립하지 않는다. */
+  .calwrap{margin:10px 0 0;overflow-x:auto;min-height:660px}
+  /* 캘린더 높이는 데이터에 거의 안 흔들린다(창이 늘 4주 × 5일이다) — 좁은 화면에서는
+     범례가 접혀 더 커지므로 그만큼 더 잡는다. 실측 1280px 669 / 500px 762. */
+  @media(max-width:900px){.calwrap{min-height:770px}}
   .calgrid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:1px;background:var(--line);
            border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:760px}
   .caldow{background:var(--panel-2);padding:7px 9px;font-family:var(--mono);font-size:10px;font-weight:700;
           letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center}
   .calcell{background:var(--panel);padding:8px 9px;min-height:96px;display:flex;flex-direction:column;gap:5px}
-  .calcell.off{background:var(--panel-2);opacity:.5}
+  /* 지난 칸은 배경으로만 구분한다. 전에는 opacity:.5 를 걸었는데, 그러면 합성 대비가
+     지표명 1.92 · 티커 2.54 · 등락률 1.94 로 비텍스트 3:1 조차 못 넘었다. 그 칸에 든 것은
+     이미 확정된 사실(발표를 마친 실적, 그날 실제 지수 등락률)이고, 지난 1주를 일부러 넣은
+     이유(아래 renderCal 주석)가 바로 그것이다 — 창을 한 주 늘려 놓고 스타일로 도로 지웠던 셈.
+     '지났다'는 신호는 배경 + 날짜색으로 충분하다. 링크·버튼은 살아 있으므로 흐리지 않는다. */
+  .calcell.off{background:var(--panel-2)}
+  .calcell.off .caldate{color:var(--muted)}
   .calcell.today{background:color-mix(in srgb,var(--accent) 9%,var(--panel))}
   /* 데이터 기준일(as_of) 표시 — '오늘'과 다를 수 있어 테두리로만 남긴다 */
   .calcell.base{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink-2) 30%,transparent)}
@@ -216,13 +278,16 @@
   .calmac .sep{color:var(--line)}
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
-  .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-height:460px}
   .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
   .sttbl th,.sttbl td{padding:4px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
   .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
        font-weight:700;border-top:0;background:var(--panel-2)}
-  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:nowrap;min-width:150px}
+  /* 첫 열이 넓어졌다 — 이름 오른쪽에 참조지수를 함께 싣는다(사용자 요청 2026-08-02).
+     'Pacer US Cash Cows 100 (COWZ)' 같은 이름이 들어오므로 150px 로는 줄이 접힌다.
+     넓어진 만큼 표가 min-width 를 넘으면 .stwrap 이 가로로 스크롤한다(전부터 그랬다). */
+  .sttbl th:first-child,.sttbl td:first-child{text-align:left;white-space:nowrap;min-width:236px}
   .sttbl tbody th{font-weight:700;font-size:12.5px;color:var(--ink-2)}
   /* 티커는 이름 **오른쪽**에 붙인다. 아래 줄로 내리면 행이 두 줄이 되어 표가 두 배로
      길어졌다(사용자 결정 2026-07-29). 같은 줄에 두면 세로가 절반으로 준다. */
@@ -231,20 +296,71 @@
   .sttbl tr.ix th,.sttbl tr.ix td{background:var(--panel-2);font-weight:700}
   .sttbl tr.gap th,.sttbl tr.gap td{border-top:2px solid var(--line)}
   .sttbl td.up{color:var(--deploy)} .sttbl td.dn{color:var(--hot)} .sttbl td.z{color:var(--muted)}
+  /* 샤프 — 정렬 기준이라 구분 바로 옆이다. 수익률 7칸과 **성격이 다르다**(비율이지 수익이
+     아니다) — 초록/빨강을 칠하면 옆 칸들과 같은 종류로 읽힌다. 색 없이 굵게만 두고
+     세로선으로 두 블록을 가른다. */
+  .sttbl th.shp,.sttbl td.shp{border-right:1px solid var(--line);font-weight:700;color:var(--ink-2)}
+  .sttbl thead th.shp{color:var(--muted)}
+  .sttbl td.shp.z{color:var(--muted);font-weight:400}
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  /* 묶음 머리 — ETF 원장과 지수 방법론은 성격이 다르다(하나는 실제 상품 수익률, 하나는
+     이 랩의 백테스트). 한 표에 넣은 이상 선 하나로는 부족해 글자로 가른다. */
+  .sttbl tr.grp>th{background:var(--panel-2);border-top:2px solid var(--line);
+       font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
+       font-weight:700;white-space:normal;padding:6px 11px}
+  .sttbl tr.grp em{font-style:normal;font-weight:500;letter-spacing:0;font-family:var(--sans)}
+  .sttbl tr.grp b{color:var(--ink-2)}
+  .sttbl tr.grp a{color:inherit}
+  /* 스타일 이름 — 누르면 그 줄의 종목 10개가 아래 접힌 행에서 펼쳐진다. 이름 자체는
+     백테스트 상세(style.html)로 가는 링크라, 여는 것은 **별도의 버튼**이어야 한다.
+     하나에 두 일을 시키면 상세로 가려던 클릭이 목록만 여는 사고가 난다. */
+  .sttbl .stnm{font-weight:700;color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
+  .sttbl .stnm:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  /* 펼침 버튼 — 9px 글자에 여백 0 이라 누를 곳이 사실상 없었다(사용자 지적 2026-08-03).
+     22×22 로 키우고 테두리를 줘 '누를 것'으로 보이게 한다. 모바일 최소 권장(24px)에
+     맞추려고 pointer:coarse 에서 한 번 더 키운다(아래 미디어쿼리). */
+  .sttbl button.htg{border:1px solid transparent;border-radius:5px;background:none;cursor:pointer;
+       padding:0;margin:0 6px 0 0;width:22px;height:22px;flex:none;
+       display:inline-flex;align-items:center;justify-content:center;vertical-align:-5px;
+       font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1}
+  .sttbl button.htg:hover,.sttbl button.htg:focus{color:var(--accent);outline:none;
+       border-color:var(--line);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .sttbl button.htg[aria-expanded="true"]{color:var(--accent)}
+  /* 버튼이 없는 줄도 이름 시작 위치가 같아야 층이 안 어긋난다 */
+  .sttbl th>span.htg{display:inline-block;width:22px;margin-right:6px}
+  .sttbl tr.hold>td{padding:2px 11px 7px 24px;border-top:0;text-align:left;white-space:normal;
+       background:var(--panel-2)}
+  .sttbl tr.hold:hover>*{background:var(--panel-2)}
+  /* 섹터 → 산업 트리(#mktbl). 부모 줄은 굵게, 자식 줄은 들여쓰고 톤을 낮춰 한눈에 층이 보이게.
+     ⚠ 자식이 없는 섹터도 이름 시작 위치가 같아야 한다 — 버튼 자리를 빈 span 으로 채운다.
+       안 그러면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다. */
+  .sttbl tr.lv1>th{font-weight:700}
+  .sttbl tr.lv2>th{padding-left:28px;font-weight:600}
+  .sttbl tr.lv3>th{padding-left:52px;font-weight:400}
+  .sttbl tr.lv4>th{padding-left:78px;font-weight:400;color:var(--muted)}
+  /* ⚠ 하위 단의 td 에 color 를 걸지 않는다. .sttbl td.up/.dn 과 특이도가 같아
+     나중에 선언된 이쪽이 이겨 **초록·빨강이 통째로 회색으로 덮였다**(사용자 지적).
+     층은 이름 칸의 굵기·들여쓰기로만 구분하고, 숫자의 색은 어느 단에서나 같다. */
+
+  .sttbl tr.lv2>th small,.sttbl tr.lv3>th small{margin-left:6px}
+  /* GICS 서브산업 이름은 길다. 첫 열을 넓히면 수익률 7칸이 밀리므로 줄임표로 자르고
+     전체 이름은 툴팁 첫 줄에 둔다(마우스를 올리면 나온다). */
+  /* GICS 서브산업 이름은 길다('Industrial Machinery & Supplies & Components').
+     줄임표로 자르니 무엇인지 알 수 없다는 지적 — **자르지 않고 접는다.**
+     첫 열은 원래 nowrap 이라 여기서만 풀고, 접힌 줄이 버튼 아래로 흘러 들어가지 않게
+     이름 칸을 버튼 옆 블록으로 잡는다. */
+  .sttbl tr.lv2>th,.sttbl tr.lv3>th,.sttbl tr.lv4>th{white-space:normal}
+  .sttbl tr.lv2>th .snm,.sttbl tr.lv3>th .snm,.sttbl tr.lv4>th .snm{
+       display:inline-block;max-width:260px;vertical-align:top;line-height:1.35}
   .stnote{margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
   .stnote b{color:var(--ink-2)}
-  /* 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이라
-     여덟 줄이 같은 격자에 정렬된다. 산식은 줄 전체의 툴팁으로 내렸다. */
-  .stmore{margin-top:10px}
-  .sthold{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
-  .sthrow{display:flex;align-items:center;gap:10px;padding:5px 11px;
-       border-top:1px solid var(--line-soft)}
-  .sthrow:first-child{border-top:0}
-  .sthrow:nth-child(even){background:var(--panel-2)}
-  .sthlbl{flex:none;width:74px;font-size:11.5px;font-weight:700;color:var(--ink-2)}
-  a.sthlbl.lnk{color:inherit;text-decoration:none;border-bottom:1px dotted var(--line)}
-  a.sthlbl.lnk:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  /* 구성종목 — 이제 표 **안의 접힌 행**이다(사용자 요청 2026-08-02).
+     전에는 표 아래 별도 블록(.sthold)이었고 줄마다 이름·수익률·칩 10개를 두 줄로 그렸다.
+     그 구조를 통째로 지운다 — 수익률이 위 ETF 표와 열이 안 맞는 것이 그 구조의 값이었다.
+     남는 것은 칩 자체의 모양(.stdin/.stchips)뿐이고, 그것은 접힌 행의 td 안에서 그대로 쓴다.
+     ⚠ 함께 지운 것: .stmore/.sthold/.sthgrp/.sthrow/.sthlbl/.sthhd/.strt(.fix 포함).
+       .strt.fix 는 랩 스크린의 '되돌아보기' 수익률을 회색 이탤릭으로 칠하던 규칙인데,
+       랩 스크린 묶음 자체가 홈에서 빠져 쓰이는 곳이 없다(screener.html 이 그 화면이다). */
   .stdin{flex:1;min-width:0;font-size:11.5px;color:var(--ink-2)}
   .stdin.na{color:var(--muted);font-size:11px}
   .stchips{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
@@ -256,9 +372,9 @@
   .stchips .stsrc{margin-left:auto;padding-left:10px;font-size:10px;color:var(--muted);
        text-decoration:none;white-space:nowrap}
   .stchips .stsrc:hover{color:var(--accent);text-decoration:underline}
+  /* 좁은 화면 — 칩 줄의 출처를 오른쪽 끝으로 밀지 않는다(칩이 여러 줄이면 붕 뜬다).
+     수익률 7칸은 표 안이라 .stwrap 의 가로 스크롤이 알아서 처리한다. */
   @media(max-width:640px){
-    .sthrow{flex-direction:column;align-items:flex-start;gap:4px}
-    .sthlbl{width:auto}
     .stchips .stsrc{margin-left:0;padding-left:0}
   }
   .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
@@ -385,7 +501,16 @@
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   .lockmark{margin-left:5px;font-size:11px;opacity:.65;vertical-align:1px}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media(pointer:coarse){a.rstk,a.upd,a.tile{min-height:40px}}
+  /* 터치 타깃 — 전에는 a.rstk·a.upd·a.tile 셋뿐이었고 그중 a.upd 는 홈에 마크업이 없다.
+     실측: a.tk2 22.8px · button.cnt 15.2×21px · .stchips .stk 21.6px · footer a 18.9px.
+     특히 '+N' 은 접힌 종목을 볼 유일한 통로인데(renderCal 주석) 누르면 옆 티커가 눌렸다.
+     칸이 세로로 터지지 않게 min-height 대신 padding 으로 키운다(.calcell 이 흡수한다). */
+  @media(pointer:coarse){a.rstk,a.tile{min-height:40px}
+    a.tk2,.stchips .stk{padding-top:4px;padding-bottom:4px}
+    .calcell button.cnt{padding:5px 8px}
+    .sttbl button.htg{width:28px;height:28px}
+    .sttbl th>span.htg{width:28px}
+    .stchips .stsrc,.sttbl .stnm,footer a,details.more>summary{display:inline-block;padding:4px 0;min-height:24px}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
 
   /* 설명·한계는 기본으로 숨기고 눌러서 본다(전 페이지 공통 패턴 — stocks.html에서 가져옴) */
@@ -398,8 +523,27 @@
   details.more .mbody{margin-top:7px}
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
 
+  /* ── 판정 스트립 ── 배포·제한적 유효·기각 건수. 판정 원장 블록을 뺀(2026-07-26) 뒤로
+       이 랩이 무엇을 세어 왔는지가 홈에서 완전히 사라져 있었다 — 섹션을 되살리는 게 아니라
+       한 줄로 되찾는다. 숫자는 전부 data/verdicts.json 에서 읽는다(손으로 적지 않는 규약).
+       ⚠ 성과 수치는 넣지 않는다. 여기 수익률이 들어가는 순간 판정 원장이 추천표로 읽힌다. */
+  .vstrip{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;
+    padding:11px 16px;border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
+  .vstrip:hover{background:var(--panel-2);border-color:var(--accent)}
+  /* display를 못 박아 뒀으므로 hidden 속성만으로는 안 숨는다(.tk2와 같은 이유) */
+  .vstrip[hidden]{display:none}
+  .vstrip .vs{display:inline-flex;align-items:baseline;gap:6px;font-size:12.5px;color:var(--muted)}
+  .vstrip .vs b{font-family:var(--mono);font-size:17px;font-weight:800;color:var(--vc,var(--ink))}
+  .vstrip .vgo{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    color:var(--muted);white-space:nowrap}
+  @media(max-width:640px){.vstrip{gap:6px 14px}.vstrip .vgo{margin-left:0;flex-basis:100%}}
+
   /* ── 진단 배너 ── 매일 보는 것이 아니라 한 번 답해 둔 질문으로 가는 줄.
-       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다. */
+       세 섹션(캘린더·시장·신호)은 '오늘 무엇을 볼 것인가' 축이라 그 뒤에 둔다.
+       기각 판정이 붙은 도구가 셋(13F 복제·지표별 타이밍·스크리너)이라 세로로 쌓는다 —
+       하나만 걸어 두면 '기각은 예외적인 사고'로 읽힌다. */
+  .dstack{display:flex;flex-direction:column;gap:9px}
   .dbanner{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
     padding:13px 16px;border:1px solid var(--line);border-left:3px solid var(--hot);
     border-radius:10px;background:var(--panel);text-decoration:none;color:inherit}
@@ -444,10 +588,10 @@
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
    손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
    ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
-:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}}
-:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#6A737D;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#B25E12;}
-:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;}
+:root{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+@media(prefers-color-scheme:dark){:root{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}}
+:root[data-theme="light"]{--ground:#FAF7EC;--panel:#FFFDF5;--panel-2:#F3EFE1;--line:#E4DFD0;--line-soft:#EDE9DC;--ink:#14181D;--ink-2:#3C444D;--muted:#646B74;--shadow:0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20);--hot:#A64B3B;--marg:#A35510;--deploy:#0C7A4A;--accent:#816400;}
+:root[data-theme="dark"]{--ground:#10141B;--panel:#171C24;--panel-2:#1F252F;--line:#2B323C;--line-soft:#232A33;--ink:#E6EAEF;--ink-2:#BAC3CC;--muted:#8B95A1;--shadow:0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65);--hot:#E5806A;--marg:#F0863C;--deploy:#38D083;--accent:#FFBC00;}
 
 /* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
    한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
@@ -751,7 +895,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Yeodoo Quant Strategy Lab</div>
+    <div class="eyebrow" id="eyebrow">계량 리서치 공개 · 통과와 기각 전부</div>
     <h1 class="title">여두 <span class="gx">전략 랩</span></h1>
     <div class="asofbar" id="asofbar">
       <button class="asoftag" id="asoftoggle" type="button" aria-expanded="false" aria-controls="asoftbl"
@@ -759,7 +903,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <!-- 예전엔 여기에 '가격·테크니컬·EPS·시장국면 통일'이라고 정적으로 적어뒀다. 축이 하나라도
            밀리는 날 그 문장이 거짓이 되므로, 주장 대신 아래 표로 축별 날짜를 그대로 보여준다. -->
       <span class="asofnote">축이 여럿이다 — 아래 표가 정본</span>
-      <span class="stalewarn" id="stalewarn" hidden></span>
+      <span class="stalewarn" id="stalewarn" role="status" aria-live="polite" hidden></span>
     </div>
     <div class="asoftbl" id="asoftbl" aria-label="축별 데이터 기준일" hidden></div>
   </header>
@@ -767,7 +911,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="home">
     <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
     <section id="s-week" aria-labelledby="wk-h">
-      <p class="lbl" id="wk-h">일정 캘린더</p>
+      <p class="lbl" id="wk-h">일정 캘린더<a class="more2" href="calendar.html">전체 일정 →</a></p>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
@@ -782,37 +926,64 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          ⚠ 이 랩은 팩터 모멘텀을 '자기 유니버스 대비 구별 불가'로 기각했다. 최근 잘 나간 스타일을
             추천처럼 읽히게 두면 자기모순이므로, 문구는 상태 표시에 머물러야 한다. -->
     <section id="s-style" aria-labelledby="st-h">
-      <p class="lbl" id="st-h">스타일 성과 <span class="sub" id="st-sub">· 기간별 수익률</span></p>
+      <p class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></p>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
       <p class="stnote" id="stnote"></p>
-      <!-- 구성종목은 표보다 넓다. 표는 '랩 규칙 ↔ 대응 ETF' 짝만 담지만(2026-07-29 사용자 결정)
-           여기에는 짝이 없어 표에서 뺀 것(중소형)과 애초에 대응 ETF가 없는 것(순수성장)도 들어간다.
-           표에서 뺀 것은 각주가 이름으로 밝힌다 — 조용히 줄이면 '이게 전부'로 읽힌다. -->
-      <div class="stmore" id="stmore"></div>
+      <!-- ⚠ 여기 있던 구성종목 블록(#stmore)을 없앴다(사용자 요청 2026-08-02).
+           ① 랩 스크린 묶음은 홈에서 통째로 뺐다 — screener.html 이 그 화면이다.
+           ② 지수 방법론은 **위 표 안으로 들어갔다.** 따로 두면 수익률 7칸이 위 ETF 표와
+              열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
+              한 스타일이 한 줄을 쓴다. -->
+
     </section>
 
     <!-- ② 시장 -->
     <section id="s-market" aria-labelledby="mk-h">
-      <p class="lbl" id="mk-h">지금 시장</p>
+      <p class="lbl" id="mk-h">지금 시장<a class="more2" href="market.html">시장 대시보드 →</a></p>
+      <div class="mksum" id="mksum" hidden></div>
       <div class="mkgrid" id="marketcards"><div class="card"><div class="ch"><span>불러오는 중…</span></div></div></div>
+      <!-- ⚠ 섹터·산업 표가 여기 있었다 — 2026-08-03 에 위 '기간별 수익률' 표 안으로
+           들어갔다(사용자 요청). 지수(SPY·QQQ) 아래, 스타일 ETF 위가 그 자리다.
+           표가 둘이면 같은 구간·같은 색인데도 열이 따로 놀고 스크롤도 따로 났다. -->
     </section>
 
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
          시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
     <section id="s-today" aria-labelledby="td-h">
-      <p class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span></p>
+      <p class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></p>
       <div class="signote" id="signote">불러오는 중…</div>
       <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
     </section>
 
-    <!-- ⑤ 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다. -->
-    <a class="dbanner" href="guru17.html">
-      <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
-      <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
-      <span class="dgo">진단 보기 →</span>
-    </a>
+    <!-- ⑤ 판정 스트립 + 진단 배너 — 매일 바뀌는 것이 아니라 한 번 답해 둔 질문. 그래서 위 세 섹션 뒤에 둔다.
+         스트립의 숫자는 JS가 data/verdicts.json 에서 채운다. 못 읽으면 hidden 인 채로 남는다 —
+         없는 숫자를 지어내느니 줄 자체가 없는 편이 낫다. -->
+    <a class="vstrip" id="vstrip" href="explorer.html#view=runs" hidden></a>
+
+    <div class="dstack">
+      <a class="dbanner" href="guru17.html">
+        <span class="dq">유명 헤지펀드를 따라 사면 되는가?</span>
+        <span class="da"><b>아니오</b> — 13F를 복제해 재봤습니다.</span>
+        <span class="dgo">진단 보기 →</span>
+      </a>
+      <!-- 아래 두 줄의 답은 각 페이지가 스스로 내건 결론을 옮긴 것이다 — signals.html 의 한 줄 결론
+           「교과서 매수 신호를 그대로 따라 담으면 이 표본에서는 벤치마크에 크게 집니다」와
+           screener.html 리드 「초과수익이 확인된 스크린은 한 종도 없었습니다」. 홈에서 결론을 새로 짓지 않는다.
+           ⚠ 개수(신호 32개·스크린 0종)는 일부러 적지 않았다. 홈은 그 두 파일을 읽지 않으므로
+              여기 숫자를 박으면 손으로 적은 숫자가 되고, 늘거나 줄면 그날로 거짓이 된다. -->
+      <a class="dbanner" href="signals.html">
+        <span class="dq">교과서 테크니컬 신호를 따르면 되는가?</span>
+        <span class="da"><b>아니오</b> — 지표별로 전부 같은 잣대로 재봤습니다.</span>
+        <span class="dgo">성적표 보기 →</span>
+      </a>
+      <a class="dbanner" href="screener.html">
+        <span class="dq">스크리너로 초과수익이 나는가?</span>
+        <span class="da"><b>아니오</b> — 사전계산 스크린을 전부 재현해 재봤습니다.</span>
+        <span class="dgo">기각 사유 보기 →</span>
+      </a>
+    </div>
 
   </div>
 
@@ -827,6 +998,31 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 한 번 클릭에 두 번 토글되고, 결과적으로 테마가 바뀌지 않는다.
   var el=function(i){return document.getElementById(i);};
   function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // 시가총액(억 달러) → 읽는 글. 1조$ 부터는 조 단위로 접는다 — '45,371억$' 는 큰 회사인지
+  // 한눈에 안 들어온다. 값이 없거나 0 이면 **빈 문자열**이라 부르는 쪽이 그 칸을 통째로 뺀다
+  // (0 을 그대로 쓰면 '시총 0억$' 이라고 적힌 회사가 생긴다).
+  // 실적 캘린더와 구성종목 칩 두 곳이 쓴다 — 접는 기준을 두 곳에 두면 언젠가 갈린다.
+  function mcapTxt(v){
+    if(typeof v!=='number'||!isFinite(v)||v<=0)return '';
+    return v>=10000?(v/10000).toFixed(1)+'조$':v.toLocaleString()+'억$';
+  }
+
+  // ── 데이터 읽기는 여기 한 곳으로 ─────────────────────────────────────
+  // 전에는 fetch 12곳이 각자 {cache:'no-cache'} 를 달고 있었다. 데이터는 하루 한 번 갱신인데
+  // GitHub Pages 가 주는 10분 캐시(max-age=600)조차 쓰지 않고 매번 조건부 요청을 냈고,
+  // 신선도 판정의 근거인 asof 만 fresh 로 두고 — 그 값으로 지연 경고를 내므로 낡으면 안 된다 —
+  // 나머지는 브라우저 캐시에 맡긴다. 최악 10분이고, 화면이 말하는 기준일은 각 파일 자신의
+  // as_of 라 캐시 때문에 어긋날 수 없다(오래된 파일이면 그 파일의 as_of 가 그렇게 말한다).
+  // ⚠ 남아 있는 것: data/asof.json 은 내비 블록(sync_nav.py 생성, 23장 전부에 있다)과 여기서
+  //   각각 요청되고 **둘 다 fresh 라 왕복이 두 번 난다**(실측으로 확인). 없애려면 내비가 받은
+  //   약속을 본문이 나눠 쓰게 해야 하는데, 내비는 생성 블록이라 두 곳을 함께 고쳐야 한다.
+  //   여기서 fresh 를 떼는 것으로 때우지 않는다 — 순서 보장이 없어 지연 경고의 근거가
+  //   최대 10분 낡을 수 있고, 그건 이 줄이 지키려는 바로 그것이다.
+  // ⚠ 실패를 null 로 바꾸는 것도 여기서 한다 — 호출부마다 ['catch'] 를 적던 것을 없앤다.
+  function getj(name,fresh){
+    return fetch('data/'+name, fresh?{cache:'no-cache'}:undefined)
+      .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
+  }
 
   // ── 데이터 신선도: as_of 이후 흐른 영업일. 미 휴장·1회 결측 허용(3영업일부터 경고) ──
   function bdGap(asof){
@@ -850,11 +1046,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ── 판정 원장 ────────────────────────────────────────────────
-  // 홈의 '전략' 블록은 2026-07-26에 뺐다(요청). 다만 verdicts.json은 계속 읽는다 —
-  // 푸터의 아카이브 건수를 여기서 채우기 때문이다. 숫자를 손으로 적지 않는 규약도 그대로다.
-  fetch('data/verdicts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(v){
+  // 홈의 '전략' 섹션 블록은 2026-07-26에 뺐다(요청) — 되살리지 않는다. 다만 그 뒤로 이 랩이
+  // 무엇을 세어 왔는지가 홈에서 통째로 사라져 있었다: verdicts.json 의 집계 8개를 받아놓고
+  // 실제로 화면에 나가는 건 푸터의 숫자 하나뿐이었고, 그 하나마저 링크 텍스트에 붙어
+  // '전략 랩 44건'으로 읽혔다(44는 랩이 돌린 규칙 수가 아니라 기각 아카이브 총계다).
+  // 그래서 (a) 푸터 숫자에 라벨을 붙이고 (b) 판정 스트립 한 줄을 낸다. 섹션 복원이 아니다.
+  // 숫자를 손으로 적지 않는 규약은 그대로 — 전부 이 파일에서 읽는다.
+  getj('verdicts.json').then(function(v){
     if(!v)return;
-    var ta=el('ft-arc'); if(ta)ta.textContent=' '+v.archive_n+'건';
+    var ta=el('ft-arc'); if(ta)ta.textContent=' · 기각 아카이브 '+v.archive_n+'건';
+    // 스트립 — 셋 다 있어야 낸다. 하나라도 없으면 '나머지는 0'으로 읽히므로 줄 자체를 안 낸다.
+    var vs=el('vstrip');
+    if(vs&&v.deploy_n!=null&&v.marginal_n!=null&&v.reject_total!=null){
+      vs.innerHTML=
+        '<span class="vs" style="--vc:var(--deploy)"><b>'+v.deploy_n+'</b>배포</span>'+
+        '<span class="vs" style="--vc:var(--marg)"><b>'+v.marginal_n+'</b>제한적 유효</span>'+
+        '<span class="vs" style="--vc:var(--hot)"><b>'+v.reject_total+'</b>기각</span>'+
+        '<span class="vgo">전략 랩에서 전부 보기 →</span>';
+      vs.removeAttribute('hidden');
+    }
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
@@ -865,9 +1075,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var head=tot+'종 (확정 '+(conf==null?'—':conf)+' · 잠정 '+(prov==null?'—':prov)+')';
     return '<div class="rcol"><h4><span>'+title+' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span></span><span style="white-space:nowrap">'+head+'</span></h4>'+
     (arr.length?arr.map(function(x){
-      return '<a class="rstk '+cls+'" href="stocks.html#t='+x.t+'&p='+(buy?'swingbuy':'swingsell')+'">'+
+      // 티커도 esc·encodeURIComponent 를 통과시킨다. 바로 옆 sec·name 은 처음부터 esc 를
+      // 거쳤는데 t 만 빠져 있었다 — 티커는 '어차피 A~Z'라고 여긴 자리다. 실제로는 위키
+      // 심볼 셀에서 그대로 올라오고(build/refresh_members.py), 그쪽 형식 관문은 NDX 에만
+      // 있었다. 두 곳 다 막는다. 화면 쪽이 마지막 방어선이므로 여기서도 가정하지 않는다.
+      return '<a class="rstk '+cls+'" href="stocks.html#t='+encodeURIComponent(x.t)+'&p='+(buy?'swingbuy':'swingsell')+'">'+
         '<span><span class="mk" style="color:var('+(buy?'--deploy':'--hot')+')">'+(x.prov?(buy?'△':'▽'):(buy?'▲':'▼'))+'</span>'+
-        '<span class="rk">'+x.t+'</span>'+(x.sec?'<span class="rsec">'+esc(x.sec)+'</span>':'')+
+        '<span class="rk">'+esc(x.t)+'</span>'+(x.sec?'<span class="rsec">'+esc(x.sec)+'</span>':'')+
         '<span class="rn2">'+esc(x.name||'')+'</span></span><span class="rv">'+recoVal(x)+'</span></a>';}).join('')
       :'<div style="color:var(--muted);font-size:12px;padding:6px 0">최근 타점 없음</div>')+'</div>';
   }
@@ -875,7 +1089,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var as=el('stkasof'); if(as)as.textContent='· 기준일 '+(h.as_of||'');
     var ma=el('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     MK.main=h.as_of||null;
-    if(h.breadth){MK.bd=h.breadth; renderMarket();}   // 폭 카드는 국면·심리와 같은 그리드에 붙는다
+    // 폭 카드는 국면·심리와 같은 그리드에 붙는다. 산업은 breadth 밖(문서 최상위)에 있으므로
+    // 따로 얹는다 — '폭'이 아니라 다른 축이라 그쪽에 넣지 않았다.
+    if(h.breadth){
+      MK.bd=h.breadth; MK.iv=h.industry||null; MK.ivd=h.as_of||'';
+      renderMarket();
+      // 섹터·산업은 위 기간별 수익률 표 **안**에 들어간다. 그 표가 이미 그려졌다면
+      // 다시 그려야 이 자료가 자리를 찾는다(둘의 도착 순서는 정해져 있지 않다).
+      if(MK.board)drawStyle(null);
+    }
+    if(h.breadth&&h.breadth.n){EB.n=h.breadth.n; setEyebrow();}
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
@@ -894,13 +1117,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function stkFail(){
     var ma=el('mainasof'); if(ma)ma.textContent='—';
+    // 폭 카드는 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 칸이 영영 '불러오는 중'이다
+    MK.bd=false; MK.iv=false; renderMarket(); if(MK.board)drawStyle(null);
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
     el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
     el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
     staleCheck();
   }
   function loadFull(){   // 폴백: 대형 stocks.json에서 목록만 재계산(성과 카드는 뜨지 않는다)
-    fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    getj('stocks.json').then(function(d){
       if(!d){stkFail();return;}
       var st=d.stocks||[], dts=d.pxd_dates||[], N=dts.length, WIN=10;
       var SECKO={'Information Technology':'IT','Health Care':'헬스케어','Financials':'금융','Consumer Discretionary':'경기소비','Consumer Staples':'필수소비','Industrials':'산업재','Communication Services':'커뮤니케이션','Energy':'에너지','Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
@@ -934,11 +1159,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             EASY:'완화',NEUTRAL:'중립',ELEVATED:'경계',STRESSED:'경색'};
   var SNTC={'극단공포':'var(--sn-xfear)','공포':'var(--sn-fear)','중립':'var(--sn-neut)','탐욕':'var(--sn-greed)','극단탐욕':'var(--sn-xgreed)'};
   var SNTE={'극단공포':'🧊','공포':'❄️','중립':'◐','탐욕':'🔥','극단탐욕':'🌋'};
-  var MK={rg:null,sn:null,main:null,bd:null};
+  // mb — market_board.json. 스타일 표가 이미 받는 파일이라 여기서 다시 받지 않고
+  // 그쪽이 받아 온 것을 그대로 얹는다(drawStyle 직전). 섹터·위험선호 카드가 읽는다.
+  var MK={rg:null,sn:null,main:null,bd:null,mb:null,iv:null,ivd:'',board:null,
+        stk:null,        // 종목 단(지연 로딩). null=아직 안 받음 · []=요청 중이거나 실패
+        open:{}};        // 펼쳐 둔 노드 — 다시 그려도 그대로 두려고 밖에 둔다
+
+  // ── 히어로 눈썹 ─────────────────────────────────────────────
+  // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
+  // 화면 최상단 한 줄이 동어반복에 쓰이고 있었다. 정작 meta description 이 약속한
+  // '518종목 · FRED 매크로 · 통과와 기각 전부 공개'는 검색 결과에만 있고 화면엔 없었다.
+  // 문장이 아니라 라벨이므로 2026-07-26에 뺀 '소개 문구'와는 성격이 다르다.
+  var EB={n:null,ind:null};
+  function setEyebrow(){
+    var e=el('eyebrow'); if(!e)return;
+    var p=[];
+    if(EB.n)p.push(EB.n+'종목');
+    if(EB.ind)p.push('FRED '+EB.ind+'지표');
+    p.push('통과와 기각 전부 공개');
+    e.textContent=p.join(' · ');
+  }
 
   // ── 기준일 표 — 내비 칩·홈·sources.html이 같은 정본(data/asof.json) 하나를 읽는다 ──
   // 페이지마다 날짜를 따로 적으면 어긋나는 날 어느 쪽이 맞는지 아무도 모른다(그 사고가 있었다).
-  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+  getj('asof.json',1).then(function(j){
     var w=el('asoftbl'); if(!w||!j||!(j.axes||[]).length)return;
     // 축을 그대로 나열하면 같은 날짜가 몇 번씩 반복돼(대표일에만 4축) 읽기 어렵다.
     // 날짜로 묶으면 줄 수가 줄고, '몇 축이 같은 날인가'가 한눈에 보인다 — 이 사이트가
@@ -990,7 +1234,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   // 기준일 불일치 고지는 fetch 도착 순서에 좌우되면 안 된다 — DOM 텍스트가 아니라 MK 상태로 판정하고,
   // 어느 소스가 먼저 도착하든 도착할 때마다 다시 맞춰본다(noteAdd는 중복 삽입을 스스로 막는다).
-  // 특히 폴백 경로(loadFull → stocks.json 401KB 2차 fetch)에서는 국면·심리가 반드시 먼저 끝나므로
+  // 특히 폴백 경로(loadFull → stocks.json 2차 fetch · 실측 raw 691KB / gz 199KB)에서는 국면·심리가 먼저 끝나므로
   // 예전의 '한 번만 비교' 방식은 확정적으로 고지를 놓쳤다.
   function syncAsof(){
     if(!MK.main)return;   // 기준일 미확정(로딩 중·종목 실패) → 비교 자체를 하지 않는다
@@ -1021,13 +1265,82 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return body?'<details class="more"><summary>'+esc(sum)+'</summary><div class="mbody">'+body+'</div></details>':'';
   }
 
+  // 세 칸을 **항상** 예약한다. 전에는 도착한 것만 이어 붙여 innerHTML 을 통째로 갈아끼웠고,
+  // 이 함수가 세 곳(home_reco·regime·sentiment)에서 각각 불리므로 그때마다
+  //   · 카드 폭이 1156 → 571 → 376px 로 두 번 줄어 화면이 두 번 재배치되고
+  //   · **사용자가 열어 둔 details(한계 고지)가 매번 닫혔다.**
+  // 칸은 한 번만 만들고, 내용이 바뀐 칸만 다시 그린다.
+  var MKSK='<div class="card"><div class="ch"><span>불러오는 중…</span></div></div>';
+  function mkFail(t){return '<div class="card"><div class="ch"><span>'+esc(t)+'을 불러오지 못했습니다</span></div></div>';}
+  // 게이지 한 줄. v 를 [lo,hi] 위의 위치로 찍는다. zones 는 왼쪽부터의 색 다섯.
+  // ticks 는 눈금(값 배열) — 밴드의 경계를 눈으로 잡게 한다.
+  function gauge(v,lo,hi,zones,ticks,labels){
+    if(v==null||v!==v)return '';
+    var pct=Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+    var z=zones.map(function(c,i){return '--g'+(i+1)+':'+c;}).join(';');
+    return '<div class="gauge" style="'+z+'">'+
+      (ticks||[]).map(function(t){
+        return '<b style="left:'+((t-lo)/(hi-lo)*100).toFixed(1)+'%"></b>';}).join('')+
+      '<i style="left:'+pct.toFixed(1)+'%"></i></div>'+
+      '<div class="gaugel">'+(labels||[]).map(function(x){return '<span>'+esc(x)+'</span>';}).join('')+'</div>';
+  }
+  // 종합 한 줄 — **네 카드를 각자 읽고 머리로 합치게 두지 않는다.**
+  // 이 섹션에서 가장 말할 값어치가 있는 것은 심리와 폭이 어긋나는 경우다:
+  // 심리가 뜨거운데 폭이 안 받치면 소수 대형주가 끄는 장세이고, 그 판정은 두 카드를
+  // 나란히 놓는 것만으로는 안 나온다(CNN Fear & Greed 해설이 같은 지적을 한다).
+  // 🚨 상태 요약이지 예측이 아니다 — 문장 끝에 그 말을 함께 낸다.
+  function drawMkSum(){
+    var box=el('mksum'); if(!box)return;
+    var rg=MK.rg, sn=MK.sn, b=MK.bd, mb=MK.mb;
+    if(!rg||!sn||!b||!b.n){box.hidden=true;return;}
+    var ko=(rg.regime&&RGKO[rg.regime.label])||'', sc=sn.score;
+    var den=b.n_ma200||b.n, wide=den?100*b.above200/den:null;
+    var hot=sc!=null&&sc>=60, cold=sc!=null&&sc<=40;
+    var brd=wide!=null&&wide>=55, nar=wide!=null&&wide<45;
+    var msg;
+    if(hot&&nar)msg='심리는 뜨거운데 <b>폭이 안 받칩니다</b> — 소수 종목이 끄는 장세입니다.';
+    else if(cold&&brd)msg='심리는 얼어 있는데 <b>폭은 버티고 있습니다</b> — 지수보다 종목이 낫습니다.';
+    else if(hot&&brd)msg='심리와 폭이 <b>같은 방향</b>입니다 — 오름세가 넓게 퍼져 있습니다.';
+    else if(cold&&nar)msg='심리와 폭이 <b>같이 약합니다</b> — 오르는 종목 자체가 적습니다.';
+    else msg='심리와 폭이 <b>어느 쪽으로도 치우치지 않았습니다</b>.';
+    var cm={}; ((mb&&mb.credit)||[]).forEach(function(x){cm[x.t]=x;});
+    var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
+    var sp=(hy!=null&&ig!=null)?(hy-ig):null;
+    var c=(rg.regime&&RGC[rg.regime.label])||'var(--accent)';
+    box.hidden=false;
+    box.setAttribute('style','--edge:'+c);
+    box.innerHTML='<span>'+(rg.regime&&rg.regime.emoji||'')+' <b>'+esc(ko)+'</b> 국면 · '+msg+
+      ' <span style="color:var(--muted)">지금 상태를 적은 것이지 앞을 맞히는 값이 아닙니다.</span></span>'+
+      '<div class="mkchips">'+
+      '<span>심리 <b>'+(sc==null?'—':Math.round(sc))+'</b> '+esc(sn.label||'')+'</span>'+
+      '<span>폭 <b>'+(wide==null?'—':wide.toFixed(1)+'%')+'</b> 200일선 위</span>'+
+      (sp==null?'':'<span>위험선호 <b>'+(sp>0?'+':'')+sp.toFixed(2)+'%p</b> 하이일드−투자등급</span>')+
+      '<span>기준 '+esc(rg.as_of||'')+'</span></div>';
+  }
   function renderMarket(){
     var w=el('marketcards'); if(!w)return;
+    if(!w.getAttribute('data-slots')){
+      // 다섯 칸 — 앞 셋은 시장 전체의 상태(국면·심리·폭)이고, 뒤 둘은 **그 시장을 쪼갠 것**
+      // 이다(사용자 요청 2026-08-02 "시장을 좀 더 세분화해서 보고싶어").
+      //   sc 섹터   어디가 움직였나 · 그 움직임이 넓은가
+      //   rk 위험선호 돈이 위험 쪽으로 갔나 · 금리 곡선은 어디에 있나
+      // 둘 다 **추가 요청이 0회**다 — market_board.json 은 위 스타일 표가 이미 받고 있고
+      // 그 안의 sector·credit·rates 를 여태 아무도 안 쓰고 있었다(5KB 중 절반).
+      w.innerHTML='<div class="mkslot" data-k="rg"></div><div class="mkslot" data-k="sn"></div>'+
+                  '<div class="mkslot" data-k="bd"></div><div class="mkslot" data-k="rk"></div>';
+      w.setAttribute('data-slots','1');
+    }
+    function put(k,html){
+      var c=w.querySelector('.mkslot[data-k="'+k+'"]'); if(!c)return;
+      // 같은 내용이면 손대지 않는다 — 다시 그리면 열어 둔 details 가 닫힌다.
+      if(c.getAttribute('data-h')===html)return;
+      c.setAttribute('data-h',html); c.innerHTML=html;
+    }
     var h='', rg=MK.rg, sn=MK.sn;
     if(rg&&rg.regime&&rg.regime.label){
       var c=RGC[rg.regime.label]||'var(--muted)', ko=RGKO[rg.regime.label]||rg.regime.label, R=rg.regime;
-      h+='<a class="card" href="regime.html" style="--edge:'+c+'">'+
-        '<div class="ch"><span>현재 국면</span><span>'+esc(rg.as_of||'')+'</span></div>'+
+      h='<div class="card lk" style="--edge:'+c+'">'+
+        '<div class="ch"><a class="cl" href="regime.html">현재 국면</a><span>'+esc(rg.as_of||'')+'</span></div>'+
         '<div class="cv">'+(R.emoji||'')+' '+esc(ko)+'</div>'+
         // 최근 3년 국면 이력 — '지금이 어디쯤인지'는 글보다 띠가 빠르다
         (function(){
@@ -1041,17 +1354,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               ['금융',esc(AXKO[R.financial]||R.financial||'—')]])+
         fold('이 국면을 어떻게 읽나',
              (R.desc?'<p>'+esc(R.desc)+'</p>':'')+(R.strategy?'<p>'+esc(R.strategy)+'</p>':''))+
-        '</a>';
-    }
+        '</div>';
+      put('rg',h);
+    } else { put('rg', rg===false?mkFail('시장 국면'):MKSK); }
     if(sn&&sn.score!=null&&SNTE[sn.label]){
       var sc=SNTC[sn.label]||'var(--muted)', p=sn.prev||{};
       function dl(k,lab){var v=p[k]; return v==null?'':'<span>'+lab+' '+Math.round(v)+'</span>';}
-      h+='<a class="card" href="regime.html#sent" style="--edge:'+sc+'">'+
-        '<div class="ch"><span>시장 심리</span><span>'+esc(sn.as_of||'')+'</span></div>'+
+      h='<div class="card lk" style="--edge:'+sc+'">'+
+        '<div class="ch"><a class="cl" href="regime.html#sent">시장 심리</a><span>'+esc(sn.as_of||'')+'</span></div>'+
         '<div class="cv">'+SNTE[sn.label]+' '+esc(sn.label)+' <span class="tnum">'+Math.round(sn.score)+'</span></div>'+
-        // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다
-        spark((sn.history||[]).map(function(x){return x.score;}),320,38,0,100)+
-        '<div class="barl"><span>'+esc(((sn.history||[])[0]||{}).dt||'')+'</span><span>0~100 · 점선 50</span></div>'+
+        // 3년 이력 스파크라인 — 지금 점수가 높은지 낮은지는 숫자 하나로는 모른다.
+        // ⚠ 자르지 않으면 이력 전량(2,765점 · 11년)이 320px 에 들어가 화소당 8.6점이 된다.
+        //   그건 곡선이 아니라 덩어리다. 지금은 build/home_market.py 가 끝 750점(3년 —
+        //   옆 국면 띠 36개월과 같은 창)만 실어 준다. spark 는 x 를 등간격 인덱스로 그리므로
+        //   점마다 날짜가 필요 없고, 라벨용 시작 날짜 하나(hist_start)만 함께 온다.
+        //   ⚠ 자르는 창을 바꾸려면 build/home_market.py 의 SN_HIST 와 같이 바꿀 것.
+        // 0~100 위의 위치를 먼저 보이고, 이력 곡선은 그 아래에 둔다. 숫자만으로는
+        // 68 이 높은지 모르지만 띠 위의 점은 볼 필요도 없이 읽힌다(CNN Fear & Greed 방식).
+        gauge(sn.score,0,100,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [25,45,55,75],['극단 공포 0','중립 50','극단 탐욕 100'])+
+        spark(sn.scores||[],320,34,0,100)+
+        '<div class="barl"><span>'+esc(sn.hist_start||'')+'</span>'+
+        '<span>3년 이력 · 점선 50</span></div>'+
         mtbl([p.d1!=null?['전일',Math.round(p.d1)]:null,
               p.w1!=null?['1주 전',Math.round(p.w1)]:null,
               p.m1!=null?['1개월 전',Math.round(p.m1)]:null,
@@ -1060,20 +1386,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              '<p>VIX 수준·기간구조·MOVE를 합성한 <b>상태 요약</b>입니다 — 수익 예측 신호가 아닙니다.</p>'+
              (sn.weight_available!=null&&sn.weight_available<0.999?
                '<p style="color:var(--marg)">일부 지표 결측 — 가중 가용 '+Math.round(sn.weight_available*100)+'%</p>':''))+
-        '</a>';
-    }
+        '</div>';
+      put('sn',h);
+    } else { put('sn', sn===false?mkFail('시장 심리'):MKSK); }
     // ③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'. home_reco.json의 정수 몇 개로 만든다
-    //    (이것 때문에 홈이 stocks.json 392KB를 받게 하지 않는다).
+    //    (이것 때문에 홈이 stocks.json raw 691KB / gz 199KB 를 받게 하지 않는다).
     var b=MK.bd;
     if(b&&b.n){
       // 분모는 n(전체)이 아니라 n_ma200(200일선이 산출되는 종목)이다.
       // 이력이 짧아 200일선이 없는 종목은 '이탈' 플래그가 안 붙을 뿐인데 여집합으로 세면 '위'로 잡힌다.
       var den=b.n_ma200||b.n, pct=Math.round(1000*b.above200/den)/10, f=b.flags||{};
       var wide=pct>=50;
-      h+='<a class="card" href="#s-today" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
-        '<div class="ch"><span>시장 폭</span><span>'+b.n+'종목</span></div>'+
+      h='<div class="card lk" style="--edge:'+(wide?'var(--deploy)':'var(--hot)')+'">'+
+        '<div class="ch"><a class="cl" href="market.html">시장 폭</a><span>'+b.n+'종목</span></div>'+
         '<div class="cv"><span class="tnum">'+pct.toFixed(1)+'%</span> 200일선 위</div>'+
-        '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
+        // 50% 가 갈림선이다 — 막대만 있으면 '67.5%' 가 넓은 건지 눈으로 안 잡힌다.
+        gauge(pct,0,100,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [30,45,55,70],['좁다 0%','절반 50%','넓다 100%'])+
         '<div class="barl"><span>200일선 위 '+b.above200+'</span><span>아래 '+(den-b.above200)+'</span></div>'+
         mtbl([['상승추세',f['상승추세']!=null?f['상승추세']:'—'],
               ['52주 돌파',f['52주돌파']!=null?f['52주돌파']:'—'],
@@ -1083,20 +1414,224 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              '<p>지수가 아니라 <b>몇 종목이 어느 상태인가</b>입니다. 소수 대형주가 끌어올린 장세인지 '+
              '여기서 갈립니다.</p>'+(b.n_partial?'<p>이력이 짧아 200일선을 못 내는 '+b.n_partial+
              '종목은 분모에서 뺐습니다.</p>':''))+
-        '<div class="cbadge">오늘의 신호로 ↓</div></a>';
-    }
-    w.innerHTML=h||'<div class="card"><div class="ch"><span>시장 상태를 불러오지 못했습니다</span></div></div>';
+        '<a class="cbadge" href="#s-today">오늘의 신호로 ↓</a></div>';
+      put('bd',h);
+    } else { put('bd', b===false?mkFail('시장 폭'):MKSK); }
+    // ⚠ 섹터·산업 카드가 여기 있었다 — 2026-08-03 에 표(#mktbl · drawMkTbl)로 옮겼다.
+    //   카드 폭 300px 에 구간 7칸이 안 들어가 1개월 하나만 보여 주고 있었고, 그러면서
+    //   PER·폭까지 한 줄에 밀어 넣어 셋 다 눌렸다. 수익률은 표가 맞는 그릇이다.
+    //   PER·폭·국면별 성과는 버리지 않았다 — 표의 첫 칸 툴팁으로 옮겼다(drawMkTbl 참조).
+    // ⑤ 위험선호 — 주식 안에서만 보면 놓치는 축. 같은 하루에 하이일드가 투자등급을 이기면
+    //    돈이 위험 쪽으로 간 것이고, 금리 곡선은 그 배경을 말한다.
+    //    ⚠ 머리 숫자는 하이일드−투자등급이다. 두 채권의 **금리 민감도가 다르다**(LQD 듀레이션이
+    //      길다) — 금리가 내리면 LQD 가 더 오르므로 이 차이는 순수한 신용 스프레드가 아니다.
+    //      그 사실을 fold 에 적는다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아니다.
+    // ⚠ mb 는 위에서 지운 섹터 카드가 선언하고 있던 것이다. 그 블록을 들어내면서 함께
+    //   사라져 renderMarket 이 여기서 ReferenceError 로 죽었다(위험선호 카드와 아래
+    //   drawMkTbl 이 통째로 안 그려졌다). 이 줄에서 다시 잡는다.
+    var mb=MK.mb;
+    if(mb&&mb.credit&&mb.credit.length){
+      var cm={}; mb.credit.forEach(function(x){cm[x.t]=x;});
+      var hy=((cm.HYG||{}).r||{})['1M'], ig=((cm.LQD||{}).r||{})['1M'];
+      var sp=(hy!=null&&ig!=null)?(hy-ig):null;
+      var rt=mb.rates||{}, cv=rt.curve||{}, tn=rt.tenor||[];
+      var t10=null; tn.forEach(function(x){if(x.t==='DGS10')t10=x;});
+      h='<div class="card lk" style="--edge:'+(sp==null?'var(--muted)':(sp>=0?'var(--deploy)':'var(--hot)'))+'">'+
+        '<div class="ch"><a class="cl" href="macro.html">위험선호</a><span>'+esc(mb.as_of||'')+'</span></div>'+
+        '<div class="cv">'+(sp==null?'—':(sp>0?'+':'')+'<span class="tnum">'+sp.toFixed(2)+'</span>%p')+
+        ' '+(sp==null?'':(sp>=0?'위험선호':'위험회피'))+'</div>'+
+        // 0 을 가운데 두고 ±3%p 안에서 위치를 찍는다. 부호만으로는 '살짝'과 '많이'가 안 갈린다.
+        gauge(sp==null?null:Math.max(-3,Math.min(3,sp)),-3,3,
+              ['var(--hot)','color-mix(in srgb,var(--hot) 55%,var(--muted))','var(--muted)',
+               'color-mix(in srgb,var(--deploy) 55%,var(--muted))','var(--deploy)'],
+              [-1.5,-0.3,0.3,1.5],['위험회피 −3%p','0','위험선호 +3%p'])+
+        '<div class="barl"><span>하이일드 − 투자등급</span><span>1개월</span></div>'+
+        mtbl(mb.credit.map(function(x){
+          var v=(x.r||{})['1M'];
+          return [esc(x.n), (v==null?'—':(v>0?'+':'')+v.toFixed(2)+'%')];
+        }))+
+        (tn.length?('<div class="barl" style="margin-top:9px"><span>국채 금리</span><span>'+
+          esc(rt.as_of||'')+'</span></div>'+
+          mtbl([t10?['10년', t10.lv.toFixed(2)+'%']:null,
+                cv.s10_2!=null?['곡선 10년−2년', (cv.s10_2>0?'+':'')+cv.s10_2+'bp']:null,
+                cv.s10_3m!=null?['곡선 10년−3개월', (cv.s10_3m>0?'+':'')+cv.s10_3m+'bp']:null])):'')+
+        fold('이 숫자를 어떻게 읽나',
+             '<p>하이일드가 투자등급을 이기면 돈이 위험 쪽으로 간 것입니다. 다만 두 채권은 '+
+             '<b>금리 민감도가 다릅니다</b> — 투자등급(LQD)이 듀레이션이 길어 금리가 내리면 '+
+             '더 오릅니다. 방향을 읽는 눈금이지 신용 스프레드 자체가 아닙니다.</p>'+
+             '<p>곡선이 음수면 장기금리가 단기보다 낮은 <b>역전</b>입니다.</p>')+
+        '</div>';
+      put('rk',h);
+    } else { put('rk', mb===false?mkFail('위험선호'):MKSK); }
+    drawMkSum();
   }
-  // 국면·심리 렌더는 종목 파이프라인과 독립이다 — 하나가 죽어도 나머지는 뜬다
-  fetch('data/regime.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(rg){
-    MK.rg=rg; renderMarket(); syncAsof(); staleCheck();
-    if(rg&&rg.as_of){
-      var n=(rg.indicators||[]).length, tb=el('tb-reg'); if(n&&tb)tb.textContent='매크로 '+n+'지표';
+  // 섹터·산업 성과표 — 위 스타일 표(#sttbl)와 **같은 표 형식**이다(사용자 요청 2026-08-03).
+  // 같은 .sttbl · 같은 stCell · 같은 ST_HZ 라 열이 저절로 맞고 색 규칙도 하나다.
+  // ⚠ 구간 정의가 두 원천에서 같아야 한 표에 설 수 있다. 섹터는 market_board.py 의 HOR,
+  //   산업은 home_summary.py 의 IND_HOR 인데 **글자 그대로 같게** 맞춰 뒀다(+YTD 는 전년 말).
+  //   한쪽만 고치면 같은 열이 다른 날을 가리키고, 표는 멀쩡해 보인다.
+  // 섹터·산업 묶음 — **표 조각을 문자열로 돌려준다.** 별도 표였을 때는 스스로 그렸는데,
+  // 2026-08-03 에 기간별 수익률 표 안으로 들어가면서 그 표가 끼워 넣는 형태가 됐다.
+  // 자료가 아직 없으면 빈 문자열 — 표는 나머지 묶음으로 그대로 그려진다(fail-soft).
+  function mkSegRows(ncol){
+    var D=(MK.iv&&!Array.isArray(MK.iv))?MK.iv:null;
+    var secs=D&&D.sectors, kids=D&&D.rows;
+    if(!secs||!secs.length)return '';
+    var mb=MK.mb, etf={};
+    if(mb&&mb.sector)mb.sector.forEach(function(x){etf[x.t]=x;});
+    var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
+    var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
+    // 정렬은 **시가총액 내림차순**이다(사용자 요청 2026-08-03). 큰 것부터 보는 편이
+    // 시장을 읽는 순서에 맞고, 순위가 매일 뒤집히지 않아 같은 자리에서 같은 줄을 찾게 된다
+    // (수익률순은 하루만 지나도 표가 통째로 재배열됐다).
+    // ⚠ 시총을 못 구하면 1개월 수익률로 물러선다 — '가급적'이라는 말이 그 뜻이다.
+    function bym(a,b2){
+      if((a.nm==='그 밖')!==(b2.nm==='그 밖'))return a.nm==='그 밖'?1:-1;   // 나머지는 언제나 끝
+      var x=a.mc,y=b2.mc;
+      if(x!=null&&y!=null&&x!==y)return y-x;
+      if((x==null)!==(y==null))return x==null?1:-1;
+      var u=(a.r||{})['1M'],v=(b2.r||{})['1M'];
+      return (v==null?-1e9:v)-(u==null?-1e9:u);
     }
-  }).catch(renderMarket);
-  fetch('data/sentiment.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(sn){
-    MK.sn=sn; renderMarket(); syncAsof(); staleCheck();
-  }).catch(renderMarket);
+    function tip(x,isSec){
+      var t=[x.n+'종'+(x.mc?' · 시총 '+mcapTxt(x.mc):'')];
+      if(isSec&&etf[x.sec]&&(etf[x.sec].r||{})['1M']!=null)
+        t.push('섹터 ETF('+x.sec+') 1개월 '+((etf[x.sec].r['1M']>0?'+':'')+etf[x.sec].r['1M'].toFixed(2))+
+               '% — 시총가중이라 이 줄(동일가중)과 다르다');
+      t.push(x.pe==null?'PER — 흑자 표본 부족':
+        ('PER 중앙 '+x.pe+' (흑자 '+x.n_pe+'/'+x.n+'종)'+
+         (imk&&imk.pe?' · 시장 대비 '+(x.pe/imk.pe).toFixed(2)+'배':'')));
+      if(x.pb!=null)t.push('PBR 중앙 '+x.pb);
+      if(x.n_ma200)t.push('200일선 위 '+x.above+'/'+x.n_ma200+'종 ('+
+        (100*x.above/x.n_ma200).toFixed(0)+'%)');
+      if(rgn&&x.rg&&x.rg[rgk]!=null)
+        t.push((RGKO[rgk]||rgk)+' 국면 월평균 '+(x.rg[rgk]>0?'+':'')+x.rg[rgk].toFixed(2)+'% ('+rgn+'개월)');
+      return t.join('\n');
+    }
+    function cells(x){return stShp(typeof x.sharpe==='number'?x.sharpe:null)+
+      ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('');}
+    // 한 줄 — lv 로 들여쓰기와 접힘이 갈린다. 펼칠 자식이 있으면 ▸ 버튼을, 없으면 자리만 둔다
+    // (없으면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다).
+    // 종목 줄 — 어느 단 아래에도 같은 모양으로 붙는다. 아직 안 받았으면 빈 문자열.
+    function stockRows(pid,domid,lv,ctx){
+      var st=(MK.stk||[]).filter(function(k){return k.p===pid;});
+      st.sort(bym);                                  // 종목도 시총순
+      return st.map(function(k){
+        return row(k,lv,domid,null,(k.sn||k.nm)+'\n'+ctx,k.nm,k.sn||'');
+      }).join('');
+    }
+    var seq=0;
+    function row(x,lv,pid,myid,tipTxt,label,sub){
+      seq++;
+      return '<tr class="lv'+lv+'"'+(lv>1?' hidden data-p="'+esc(pid)+'"':'')+
+        (myid?' data-id="'+esc(myid)+'"':'')+'>'+
+        '<th scope="row" title="'+esc(tipTxt)+'">'+
+        (myid?('<button type="button" class="htg" data-open="'+esc(myid)+'" aria-expanded="false">▸</button>')
+             :'<span class="htg" aria-hidden="true"> </span>')+
+        '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
+        cells(x)+'</tr>';
+    }
+    var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
+       '<b>동일가중</b> · <b>시총 내림차순</b> · ▸ 를 누르면 <b>GICS 산업그룹(2차) → 서브산업(4차) → 종목</b> '+
+       '순으로 펼쳐집니다(위키백과 GICS 구조 — 섹터와 같은 체계) · '+
+       '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
+       (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
+    secs.slice().sort(bym).forEach(function(s0){
+      var gs=kids.filter(function(k){return k.lv===2&&k.p===s0.sec;}).sort(bym);
+      h+=row(s0,1,null,gs.length?('s-'+s0.sec):null,tip(s0,true),s0.nm,s0.sec);
+      gs.forEach(function(g){
+        var gid=g.sec+'|'+g.nm;
+        var ss=kids.filter(function(k){return k.lv===3&&k.p===gid;}).sort(bym);
+        h+=row(g,2,'s-'+s0.sec,'g-'+gid,
+               (g.nm==='그 밖'?s0.nm+' 나머지':g.nm)+'\n'+tip(g,false),g.nm,g.n+'종');
+        // 종목 단은 별도 파일에서 온다(지연 로딩). 아직 안 받았어도 **버튼은 달아 둔다** —
+        // 누르는 순간 받아 오고, 그때 표가 다시 그려지며 열린 상태가 복원된다.
+        // ⚠ '그 밖'에도 단다(사용자 요청). 나머지라고 못 펼치면 그 종목들은 어디에서도 못 본다.
+        ss.forEach(function(x){
+          var pid=gid+'|'+x.nm, sid='g-'+pid;
+          h+=row(x,3,'g-'+gid,sid,
+                 (x.nm==='그 밖'?g.nm+' 나머지':x.nm)+'\n'+tip(x,false),x.nm,x.n+'종');
+          h+=stockRows(pid,sid,4,x.nm);
+        });
+        // 하위 서브산업이 없는 줄 — 종목이 이 줄에 **직접** 매달린다(3단).
+        // 둘이 여기 걸린다: ① 서브산업이 하나도 기준을 못 넘은 산업그룹
+        //                  ② 섹터 직속 '그 밖'(gid 가 곧 그 부모 id 다)
+        // ⚠ 전에는 ②를 위에서 따로 한 번 더 그렸다. gid 가 같은 pid 라 **종목이 두 줄씩**
+        //   나왔다(사용자 지적: ALNY·CCEP 가 두 번). 갈래는 여기 하나만 둔다.
+        if(!ss.length)h+=stockRows(gid,'g-'+gid,3,g.nm==='그 밖'?(s0.nm+' 나머지'):g.nm);
+      });
+    });
+    return h;
+  }
+  // 트리 접기 — 표를 다시 그려도 리스너가 쌓이지 않게 위임으로 한 번만 건다.
+  function wireTree(box){
+    // 다시 그린 뒤에도 **열어 둔 곳이 그대로여야 한다.** 표가 두 파일(+종목 파일)로 채워져
+    // 여러 번 그려지는데, 그때마다 접히면 펼치는 행위 자체가 되돌려진다.
+    if(MK.open)Object.keys(MK.open).forEach(function(id){
+      var rs=box.querySelectorAll('tr[data-p="'+id.replace(/"/g,'')+'"]');
+      for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden');
+      var b3=box.querySelector('button.htg[data-open="'+id.replace(/"/g,'')+'"]');
+      if(b3){b3.setAttribute('aria-expanded','true');b3.textContent='▾';}
+    });
+    if(!box.__htg){
+      box.__htg=1;
+      // 접을 때는 **자손까지** 접는다. 안 그러면 부모를 접었다 펴는 순간 손자가 펼쳐진 채로
+      // 튀어나와, 눈에는 두 단이 건너뛴 것처럼 보인다.
+      function shut(id){
+        delete MK.open[id];
+        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
+        for(var i=0;i<rs.length;i++){
+          rs[i].setAttribute('hidden','');
+          var cid=rs[i].getAttribute('data-id');
+          if(cid){
+            shut(cid);
+            var cb=box.querySelector('button.htg[data-open="'+cid+'"]');
+            if(cb){cb.setAttribute('aria-expanded','false');cb.textContent='▸';}
+          }
+        }
+      }
+      box.addEventListener('click',function(e){
+        var b2=e.target&&e.target.closest?e.target.closest('button.htg'):null;
+        if(!b2)return;
+        var id=b2.getAttribute('data-open');
+        var rs=box.querySelectorAll('tr[data-p="'+id+'"]');
+        if(!rs.length){
+          // 종목 단을 아직 안 받았다. 한 번만 받아 오고, 도착하면 표를 다시 그린다 —
+          // MK.open 이 남아 있으므로 열어 둔 곳은 그대로 복원된다.
+          if(MK.stk===null&&/^g-/.test(id)){
+            MK.stk=[];                                   // 중복 요청 방지
+            MK.open[id]=1;
+            b2.setAttribute('aria-expanded','true'); b2.textContent='▾';
+            getj('home_stocks.json').then(function(sj){
+              MK.stk=(sj&&sj.rows)||[];
+              if(MK.board)drawStyle(null);
+            })['catch'](function(){ MK.stk=[]; });
+          }
+          return;
+        }
+        var open=rs[0].hasAttribute('hidden');
+        if(open){ for(var i=0;i<rs.length;i++)rs[i].removeAttribute('hidden'); MK.open[id]=1; }
+        else { shut(id); delete MK.open[id]; }
+        b2.setAttribute('aria-expanded',open?'true':'false');
+        b2.textContent=open?'▾':'▸';
+      });
+    }
+  }
+
+
+  // 국면·심리는 원본(regime.json 5.2KB + sentiment.json 16.9KB gz) 대신 홈 전용 발췌
+  // data/home_market.json(2.3KB gz)을 읽는다 — build/home_market.py 가 굽는다.
+  // 두 원본의 가장 큰 덩어리가 홈에서 안 쓰였다: sentiment.history 2,765점 중 그리는 건 750점,
+  // regime.indicators 39개는 **개수 하나**만 쓴다(눈썹의 'FRED 39지표').
+  // ⚠ 원본을 지운 게 아니다 — asof_index 가 축 기준일을 거기서 읽고 regime.html 은 전체 이력을 쓴다.
+  // ⚠ 한 파일이 두 카드를 먹이므로 실패하면 둘 다 실패다. 대신 요청이 하나 준다.
+  getj('home_market.json').then(function(j){
+    MK.rg=(j&&j.regime)||false;
+    MK.sn=(j&&j.sentiment)||false;
+    renderMarket(); syncAsof(); staleCheck();
+    var n=j&&j.regime&&j.regime.n_indicators;
+    if(n){EB.ind=n; setEyebrow();}
+  });
 
 
   // ── 캘린더 ── 실적 발표와 경제지표를 한 판에. 월~금만 그린다(미장 주말은 빈 칸이라 자리만 먹는다).
@@ -1178,7 +1713,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (bdg?'<em>'+bdg+'</em>':'')+'</div>'+
           (function(){var q=(CAL.i||{})[k]; if(!q)return '';
             var f=function(lab,v){return v==null?'':'<span><b>'+lab+'</b><i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i></span>';};
-            return '<div class="calix">'+f('S&amp;P 500',q.s)+f('NASDAQ 100',q.n)+'</div>';})()+
+            return '<div class="calix">'+f('S&amp;P 500',q.s)+f('나스닥 100',q.n)+'</div>';})()+
           // 발표 시각별로 줄을 나눈다 — 색만 다르고 한 줄에 섞여 있으면 '장 끝나고 나오는
           // 것'과 '시각을 모르는 것'이 눈으로 안 갈린다. 남는 개수도 줄마다 따로 적는다
           // (한 덩어리로 '+37'만 적으면 어느 시각이 잘렸는지 알 수 없다).
@@ -1195,7 +1730,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var extra=list.length-PER;
               out+='<div class="caltk"><span class="calhl '+g[1]+'">'+g[0]+'</span>'+
                 list.map(function(x,i){
-                  var mc=x.mc?(' · 시총 '+(x.mc>=10000?(x.mc/10000).toFixed(1)+'조$':x.mc.toLocaleString()+'억$')):'';
+                  var mc=mcapTxt(x.mc); mc=mc?(' · 시총 '+mc):'';
                   // 두 소스의 날짜가 어긋난 건은 표시해 둔다(alt = 밀어낸 이른 날짜).
                   // 늦은 쪽에 놓았을 뿐 어느 쪽이 옳은지는 모른다 — 그 사실을 숨기면 안 된다.
                   var q=x.alt?(' · ⚠ 날짜 불일치 — 다른 소스는 '+esc(x.alt)):'';
@@ -1240,9 +1775,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   })();
   // 원본 대신 홈 전용 슬림 묶음을 읽는다(build/home_flow.py) — 홈이 535KB를 받지 않게.
   // 캘린더 이벤트·주목도 정본을 먼저 읽고(없어도 진행) 홈 묶음을 읽는다.
-  fetch('data/events.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;})
-    .then(function(ev){
+  // ⚠ 두 파일은 서로를 참조하지 않는다 — 전에는 events 를 받은 **뒤에야** home_flow 를 요청해
+  //   홈 첫 섹션(캘린더, LCP 유력 후보)이 필요 없는 왕복 하나를 더 기다렸다. events 는
+  //   별·FOMC 만 주는 장식 데이터이고 없으면 없는 대로 그린다(아래 renderCal). 나란히 받는다.
+  Promise.all([getj('events.json'), getj('home_flow.json')])
+    .then(function(a){
+      var ev=a[0];
       if(ev){
         var bn=(ev.stars&&ev.stars.by_name)||{};
         Object.keys(bn).forEach(function(k){MSTAR[nk(k)]=bn[k];});
@@ -1250,7 +1788,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(!f||!f.d)return; CALFOMC.push(f.d); FOMCNM[f.d]=f.name||'FOMC 금리결정';
         });
       }
-      return fetch('data/home_flow.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;});
+      return a[1];
     })
     .then(function(hf){
       var HF=hf||{};
@@ -1275,14 +1813,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var ST_SKIP={IWM:1, SPY:1};
   var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
              ['12M','12개월'],['YTD','YTD']];
-  function stCell(v){
-    if(v==null||v!==v)return '<td class="z">—</td>';
-    var c=v>0.005?'up':(v<-0.005?'dn':'z');
+  // 수익률 한 칸의 색과 글자. 위 ETF 표(td)와 아래 구성종목 줄(span) **두 곳**이 쓴다 —
+  // 규칙을 두 곳에 적으면 '-0.00' 을 막는 처리가 한쪽에만 남는 날이 온다.
+  function stNum(v){
+    if(v==null||v!==v)return {c:'z',s:'—'};
     // 표시 자리에서 0 으로 반올림되면 부호를 떼어 '-0.00' 을 막는다(음의 0 은 값이 아니다).
     var s=v.toFixed(2);
     if(Number(s)===0)s='0.00';
-    return '<td class="'+c+'">'+(Number(s)>0?'+':'')+s+'</td>';
+    return {c:v>0.005?'up':(v<-0.005?'dn':'z'), s:(Number(s)>0?'+':'')+s};
   }
+  function stCell(v){var x=stNum(v);return '<td class="'+x.c+'">'+x.s+'</td>';}
   // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
   // 가치는 IVE(S&P 500 Value)→spval 이다. 전에는 VLUE(MSCI Enhanced Value)→val 이었는데
@@ -1293,9 +1833,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 52H·RSI 는 홈에서 뺀다(요청) — 기간 수익률만 본다. 둘 다 macro.html 전체 표에 남아 있다.
   // 표는 **수익률만** 담는다. 구성종목을 행 사이에 끼워 넣으니 표가 성과표와 종목목록
   // 사이 어디쯤이 돼 둘 다 안 읽혔다 — 아래로 따로 뺐다(사용자 결정 2026-07-29).
-  function stRow(x,cls){
+  // 샤프 한 칸. 수익률과 **성격이 다르다**(비율이지 수익이 아니다) — 초록/빨강을 칠하면
+  // 옆 7칸과 같은 종류로 읽힌다. 색 없이 굵게만 두고 세로선으로 블록을 가른다.
+  function stShp(v){
+    if(v==null||v!==v)return '<td class="shp z">—</td>';
+    return '<td class="shp">'+v.toFixed(2)+'</td>';
+  }
+  // 지수 줄에 붙는 한 줄 설명. **다우는 가격가중**이라 나머지 셋(시총가중)과 성격이 다르다 —
+  // 같은 열에 서지만 같은 잣대는 아니라는 것을 여기서 말한다.
+  var IXNOTE={SPY:'S&P 500 · 시총가중 500종',QQQ:'나스닥 100 · 시총가중 100종',
+              DIA:'다우존스 산업평균 30종 · **가격가중** — 주가가 높은 종목이 더 크게 움직인다. '+
+                  '시총가중인 나머지 셋과 같은 잣대가 아니다.',
+              IWM:'러셀 2000 · 시총가중 소형주 2000종'};
+  function stRow(x,cls,sh){
+    var nt=IXNOTE[x.t];
     return '<tr'+(cls?' class="'+cls+'"':'')+
-      '><th scope="row">'+esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+
+      '><th scope="row"'+(nt?' title="'+esc(nt.replace(/\*\*/g,''))+'"':'')+'>'+
+      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
@@ -1313,79 +1867,174 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       s.top.map(function(x,i){
         var d=Object.keys(x.d||{}).filter(function(k){return x.d[k]!=null;})
                 .map(function(k){return k+' '+x.d[k];}).join(' · ');
-        return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+esc(d)+'">'+
+        // 칩에 마우스를 올리면 **회사 이름과 시가총액이 먼저** 나온다(사용자 요청 2026-08-02).
+        // 티커 열 개만 늘어놓으면 SNDK·GDDY 가 무슨 회사인지, 이 명단이 대형주 열 개인지
+        // 소형주 열 개인지 알 수가 없다 — 종목 페이지를 열어야 알던 것을 여기서 답한다.
+        // 지표값(d)은 줄바꿈으로 아래에 붙인다. 전부터 있던 것이고, '왜 이 종목이 뽑혔나'는
+        // 이름 다음에 오는 질문이라 순서가 그렇다.
+        // ⚠ mc 가 없어도 이름은 나온다 — 배포된 style_top.json 이 아직 옛 파일이면
+        //   (캐시·갱신 지연) x.mc 가 undefined 이고, 그때 칸만 빠지지 툴팁이 죽지 않는다.
+        var mc=mcapTxt(x.mc);
+        var head=esc(x.n||x.t)+(mc?' · 시총 '+mc:'');
+        return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.t)+'" title="'+
+               head+(d?'\n'+esc(d):'')+'">'+
                '<b>'+(i+1)+'</b>'+esc(x.t)+'</a>';}).join('')+
       '<a class="stsrc" href="'+esc(s.url)+'" target="_blank" rel="noopener" '+
       'title="'+esc(tip)+'">'+esc(s.index_ref)+(s.substitution?' ⚠':'')+'</a>'+
       '</div></div>';
   }
-  // 랩 행 ↔ ETF 행 — 사용자 요청으로 '모멘텀(랩) / MTUM(ETF)' 처럼 짝지어 낸다(2026-07-29).
+  // 랩 백테스트 ↔ ETF — 전에는 '모멘텀(랩) / MTUM(ETF)' 로 표 안에서 짝지어 냈다(2026-07-29).
+  // 지금은 랩 행을 표에서 빼 **아래 구성종목 줄로 내렸다**(사용자 요청 2026-08-02). 매핑은
+  // 그대로 쓴다 — 표에서 어느 ETF 를 실을지 고르는 데도, 아래 줄에 어느 백테스트를 붙일지
+  // 정하는 데도 같은 계보가 필요하다.
   //   ⚠ 랩 키는 **새 매핑을 만들지 않는다.** ST_KEY(티커→홈 키)와 ST_PERF(홈 키→백테스트 키)를
   //     합성한다. 새 표를 하나 더 두면 IVE→spval→val 계보가 두 곳으로 갈라져 반드시 어긋난다.
   //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
   //     빈다(—). 나머지 다섯은 이름이 같다.
   var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
   function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
-  // stRow 를 그대로 재활용한다 — <small> 슬롯(x.t)에 티커 대신 꼬리표를 넣으면 두 종류 행이
-  // 구별된다. 새 CSS도 새 렌더러도 필요 없다.
-  function labRow(s){
-    var r={};
-    ST_HZ.forEach(function(h){ var v=(s.trails||{})[ST_TR[h[0]]]; r[h[0]]=(v==null?null:v); });
-    return {n:s.label, t:'랩 · 상위10', r:r};
+  // 홈 키(mom·spval·… / sc_*) → 그 줄의 기간별 수익률. 구성종목 줄이 쓴다.
+  // ETF 티커를 거치지 않는다 — 아래 줄은 ETF 가 아니라 랩 규칙의 목록이라서다.
+  //   ⚠ 두 종류가 있고 **섞으면 안 된다.** 그래서 값과 함께 종류(fix)를 돌려준다.
+  //     fix=false — style_trails.json. 월말마다 그 시점 자료로 다시 뽑아 갈아탄 백테스트.
+  //     fix=true  — style_top.json 의 trails_fixed. 오늘 명단을 그대로 과거로 되돌린 것이라
+  //                 룩어헤드다(스크린 점수의 과거 이력이 없어 리밸런스를 재현할 수 없다 —
+  //                 build/style_top.py 의 fixed_trails 주석에 이유를 길게 적어 두었다).
+  function trailsOf(k){
+    var p=ST_PERF[k];
+    return (SLAB&&p&&SLAB[p]&&SLAB[p].trails)?{v:SLAB[p].trails}:null;
   }
-  // 짝지어진 ETF 행은 **티커를 제목으로** 올린다. 그러지 않으면 첫 열이 '모멘텀 / 모멘텀 /
-  // 퀄리티 / 퀄리티' 로 읽혀 두 행이 같은 것의 반복처럼 보인다. 바로 위 랩 행이 이미
-  // 한글 이름을 말하고 있으므로 여기서는 티커가 더 많은 정보를 준다.
-  function etfRow(x){ return {n:x.t, t:'ETF', r:x.r}; }
+  // 샤프 — 지수 방법론 줄은 백테스트에서, ETF·지수 행은 같은 창으로 잰 값에서 온다
+  // (build/style_top_pdf.py 가 둘 다 같은 start·end·metrics 로 만든다). 창이 하나라
+  // 한 열에 나란히 놓고 비교해도 된다 — 이 표에서 그것이 되는 유일한 열이다.
+  function sharpeOf(k){
+    var p=ST_PERF[k], s=(SLAB&&p)?SLAB[p]:null;
+    return (s&&typeof s.sharpe==='number')?s.sharpe:null;
+  }
+  function etfSharpe(t){
+    var m=SLAB&&SLAB._etf;
+    return (m&&typeof m[t]==='number')?m[t]:null;
+  }
+  // 지수 방법론 한 줄 — 이름(백테스트 링크) · 참조지수 · 기간별 수익률 7칸.
+  // 종목 10개는 **바로 아래 접힌 행**으로 내린다(사용자 요청 2026-08-02). 한 스타일이
+  // 한 줄을 쓰게 되고, 열은 위 ETF 행과 같은 표라 저절로 맞는다.
+  // ⚠ 이름 링크와 펼침 버튼을 **가른다.** 하나에 두 일을 시키면 상세로 가려던 클릭이
+  //   목록만 여는 사고가 난다. 버튼은 ▸, 이름은 style.html 로 간다.
+  function stIdxRow(k){
+    var s=STOP[k]; if(!s)return '';
+    var t=trailsOf(k), p=ST_PERF[k];
+    var nm=p?('<a class="stnm" href="style.html#s='+p+'" title="이 규칙의 최근 1년 백테스트">'+
+              esc(s.label)+'</a>'):('<span class="stnm">'+esc(s.label)+'</span>');
+    // 참조지수는 이름 오른쪽에. 정본에서 벗어난 곳이 있으면 ⚠ 를 붙이고 그 내용을 툴팁으로.
+    var tip=(s.rule||'')+(s.substitution?'\n⚠ '+String(s.substitution).replace(/\*\*/g,''):'');
+    var ref='<small title="'+esc(tip)+'">'+esc(s.index_ref||'')+(s.substitution?' ⚠':'')+'</small>';
+    var btn='<button type="button" class="htg" data-hold="h-'+esc(k)+'" aria-expanded="false" '+
+            'aria-controls="h-'+esc(k)+'" title="구성종목 10개 펼치기">▸</button>';
+    return '<tr><th scope="row">'+btn+nm+ref+'</th>'+stShp(sharpeOf(k))+
+           ST_HZ.map(function(z){return stCell(t?t.v[ST_TR[z[0]]]:null);}).join('')+'</tr>'+
+           '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+2)+'">'+
+           stDetail(s)+'</td></tr>';
+  }
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
+    // 🚨 이 표는 **두 파일이 채운다** — style_top/style_trails/market_board(여기 j)와
+    //   home_reco(섹터·산업, MK.iv). 둘은 각자 도착하므로 먼저 온 쪽만으로 그리면
+    //   나중 것이 통째로 빠진다. 실제로 배포 직후 섹터 묶음이 0줄로 나갔다.
+    //   → 넘어온 보드를 붙들어 두고, home_reco 가 늦게 오면 그쪽이 다시 부른다.
+    if(j)MK.board=j; else j=MK.board;
+    if(!j)return;
     if(!j||!j.style){
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
     var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
-    var h='<thead><tr><th>구분</th>'+ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
+    var ncol=ST_HZ.length+2;                     // 구분 + 샤프 + 구간 7칸
+    // 샤프를 **구분 바로 옆**에 둔다 — 아래 묶음이 이 값으로 정렬되므로 정렬 기준이
+    // 첫 숫자여야 표가 왜 그 순서인지 눈으로 읽힌다.
+    var h='<thead><tr><th>구분</th><th class="shp" title="'+
+          esc('연율 샤프 — 같은 창(1년) · 같은 계산. ETF·지수 행과 지수 방법론 행을 '+
+              '나란히 비교해도 되는 유일한 열이다')+'">샤프</th>'+
+          ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
-    ix.forEach(function(x){h+=stRow(x,'ix');});
-    // 짝이 있는 것만 표에 낸다(랩→ETF). 짝 없는 셋(배당성장 SDY·중소형 SIZE·동일가중 RSP)은
-    // 표가 17행까지 길어져서 뺐다(사용자 결정 2026-07-29) — macro.html 전체 표에 그대로 있다.
-    //   ⚠ 뺀 사실은 부제에 적는다. 조용히 줄이면 '이게 전부'로 읽힌다.
-    //   ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 drawStHold 가 이 배열로
-    //     구성종목 줄을 만들므로, 여기서 SIZE 를 지우면 중소형 종목 줄이 경고 없이 사라진다.
+    ix.forEach(function(x){h+=stRow(x,'ix',etfSharpe(x.t));});
+    // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
+    // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.
+    h+=mkSegRows(ncol);
+    // ⚠ 어느 ETF 를 싣는지는 여전히 짝 판정(labOf)이 정한다 — 짝 없는 셋(배당성장 SDY·
+    //   중소형 SIZE·동일가중 RSP)은 표가 길어져서 뺀 것이고(2026-07-29) macro.html 에 있다.
+    // ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 지수 방법론 묶음이 이 배열로
+    //   순서를 만들므로, 여기서 지우면 그 줄이 경고 없이 사라진다.
     var pair=[], solo=[];
     st.forEach(function(x){ (labOf(x.t)?pair:solo).push(x); });
-    if(pair.length){
-      pair.forEach(function(x){ h+=stRow(labRow(labOf(x.t)),'gap')+stRow(etfRow(x),''); });
-    }else{
-      // 랩 자료를 못 받은 경우(fail-soft). 여기서 solo 를 숨기면 표에 지수 두 줄만 남는다.
-      solo.forEach(function(x,i){ h+=stRow(x,i===0?'gap':''); });
+    // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
+    // 지수 두 줄만 남으므로 있는 것을 다 낸다.
+    var show=pair.length?pair:solo;
+    h+='<tr class="grp"><th colspan="'+ncol+'">스타일 ETF <em>실제 상품의 수익률 — '+
+       '아래 묶음과 같은 잣대로 읽어도 되는 유일한 행이다 · 샤프순</em></th></tr>';
+    // 아래 묶음과 같은 기준으로 세운다. 한 열이 정렬 기준인데 위아래가 다른 순서면
+    // 그 열이 무엇을 뜻하는지 화면이 두 번 말하게 된다.
+    show.slice().sort(function(a,b){
+      var x=etfSharpe(a.t), y=etfSharpe(b.t);
+      return (y==null?-Infinity:y)-(x==null?-Infinity:x);
+    }).forEach(function(x){ h+=stRow(x,'',etfSharpe(x.t)); });
+    // 지수 방법론 — 공개 산식을 이 유니버스에 적용한 이 랩의 백테스트.
+    // 경고를 숫자와 같은 표에 둔다. 위 ETF 행과 열이 맞아 버렸으므로, 안 적으면 두 종류가
+    // 한 잣대로 읽힌다 — 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목
+    // 소급). +154% 를 ETF 의 +25% 위에 얹으면서 그 말을 안 하면 표가 거짓말을 한다.
+    var keys=[], seen={};
+    st.map(function(x){return ST_KEY[x.t];}).concat(ST_IDX).forEach(function(k){
+      if(k&&!ST_HIDE[k]&&STOP[k]&&!seen[k]){seen[k]=1;keys.push(k);}
+    });
+    // 샤프 내림차순(사용자 요청 2026-08-02). **공통 창이라 정렬이 성립한다** — 열일곱 줄이
+    // 전부 같은 start~as_of 를 쓴다(backtest 가 창을 한 번만 정하고, 그 창에서 후보를
+    // 못 고르는 규칙은 아예 빠진다). 창이 다르면 이 정렬은 규칙이 아니라 기간을 줄 세운다.
+    // ⚠ 샤프가 없는 줄(자료 못 받음)은 뒤로 — 0 으로 치면 음의 샤프보다 앞에 온다.
+    keys.sort(function(a,b){
+      var x=sharpeOf(a), y=sharpeOf(b);
+      return (y==null?-Infinity:y)-(x==null?-Infinity:x);
+    });
+    if(keys.length){
+      var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'';
+      h+='<tr class="grp"><th colspan="'+ncol+'">지수 방법론 '+keys.length+'종 '+
+         '<em>MSCI · S&amp;P · Nasdaq · Pacer 공개 산식을 이 유니버스(518종)에 적용 · '+
+         '<b>수익률은 백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
+         '상위 10종목 동일가중 · <b>샤프순</b>(공통 창'+
+         (d0&&d?' '+esc(d0)+'~'+esc(d):'')+')'+
+         ' · 이름을 누르면 <a href="style.html">상세</a>, ▸ 를 누르면 구성종목</em></th></tr>';
+      keys.forEach(function(k){ h+=stIdxRow(k); });
     }
     box.innerHTML=h+'</tbody>';
+    wireTree(box);                                 // 섹터·산업 트리 접기(같은 표 안이다)
+    // 펼침 — 표를 다시 그려도 리스너가 쌓이지 않게 **위임으로 한 번만** 건다.
+    // 행마다 걸면 innerHTML 을 갈아 끼울 때 옛 리스너가 남아 같은 클릭이 두 번 처리된다.
+    if(!box.__htg){
+      box.__htg=1;
+      box.addEventListener('click',function(e){
+        var b=e.target&&e.target.closest?e.target.closest('button.htg'):null;
+        if(!b)return;
+        var r=el(b.getAttribute('data-hold')); if(!r)return;
+        var open=r.hasAttribute('hidden');
+        if(open)r.removeAttribute('hidden'); else r.setAttribute('hidden','');
+        b.setAttribute('aria-expanded',open?'true':'false');
+        b.textContent=open?'▾':'▸';
+        b.title=open?'구성종목 접기':'구성종목 10개 펼치기';
+      });
+    }
     var s=el('st-sub');
     if(s){
-      var t='· 기간별 수익률 % · 지수 '+ix.length;
-      t+=pair.length? ' + 랩 '+pair.length+'종·대응 ETF '+pair.length+'종'
-                    : ' + ETF '+solo.length+'종';
-      // 두 원천의 갱신 주기가 다르다 — ETF 는 자산 패널(주 1회), 랩은 종목 패널(매일).
-      // 갈릴 수 있으므로 **각 날짜가 무엇의 기준인지 적는다.** 전에는 앞 날짜에 라벨이 없어
-      // '기준 07-28 · 랩은 07-29' 로 읽혀 앞의 것이 무엇인지 알 수 없었다(사용자 지적).
-      var d1=j.as_of||'', d2=(SLAB&&SLAB._as_of)||'';
-      if(pair.length&&d1&&d2&&d1!==d2){
-        t+=' · ETF 기준 '+d1+' · 랩 기준 '+d2;
-        // 1일 열은 하루만 어긋나도 서로 다른 날을 비교한다 — 그 사실을 표 옆에 적는다.
-        t+=' (1일 열은 서로 다른 날)';
-      }else{
-        t+=' · 기준 '+(d1||d2);
-      }
-      s.textContent=t;
+      var D2=(MK.iv&&!Array.isArray(MK.iv))?MK.iv:null;
+      var nG=D2?D2.rows.filter(function(k){return k.lv===2;}).length:0;
+      var nS=D2?D2.rows.filter(function(k){return k.lv===3;}).length:0;
+      s.textContent='· % · 지수 '+ix.length+' · 섹터 '+((D2&&D2.sectors.length)||0)+
+                    ' → 산업그룹 '+nG+' → 서브산업 '+nS+
+                    ' · 스타일 ETF '+show.length+' · 지수 방법론 '+keys.length+
+                    ' · ETF 기준 '+(j.as_of||'');
     }
     drawStNote(pair.length?SLAB:null, pair.length?solo:[]);
-    // 구성종목 목록은 표와 같은 순서로 아래에 깐다 — 표의 스타일 순서 그대로 + 순수 계열 둘.
-    // ⚠ 여기에 넘기는 것은 **홈 키**(ST_KEY)다. 백테스트 키를 넘기면 가치가 spval(S&P 500
-    //   Value)에서 val(MSCI Enhanced Value)로 조용히 바뀐다 — 둘 다 style_top.json 에 있어
-    //   에러도 빈 줄도 안 난다.
-    drawStHold(st.map(function(x){return ST_KEY[x.t];}));
   }
   // 유니버스 편향 실측 한 줄 — style_trails.json 의 pit 블록에서 만든다(build/style_pit.py 산출).
   // 값이 없으면 빈 문자열을 돌려 정성 문구만 남는다. **수치를 손으로 적지 않는다.**
+  // ⚠ 2026-07-31 현재 호출부 없음 — 홈의 긴 주석을 한 줄로 줄이면서 빠졌다(사용자 결정).
+  //   지우지 않고 둔다: 채널 판정(사후편입 선견 vs 편출 누락)을 data/style_pit.json 에서
+  //   파생하는 로직이고, 손으로 다시 적으면 스타일마다 지배 채널이 달라 한쪽을 틀리게 말한다.
   function pitLine(){
     var p=SLAB&&SLAB._pit; if(!p||!p.styles)return '';
     // 🚨 '편출 누락 기여는 훨씬 작다' 를 손으로 붙였다가 지웠다 — 가치는 반대로 편출 누락이
@@ -1408,81 +2057,68 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            p.not_yet+'종이 구간 시작 시점 비멤버 · 기준 '+esc(p.as_of)+').'+ch+
            ' 짧은 구간이라 몇 달에 몰려 있습니다 — 크기는 점추정으로 읽지 마세요.';
   }
-  // 표 아래 각주 — 두 종류 행을 같은 잣대로 읽으면 안 되는 이유를 적는다.
-  // 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목을 과거로 소급한다).
-  // 그것을 안 적고 +134% 를 +22% 위에 얹으면 표가 거짓말을 한다.
+  // 표 아래 각주.
+  // ⚠ 2026-08-02 부터 **비운다.** 이 각주가 하던 말('랩 행은 백테스트다 — ETF 와 직접
+  //   비교하지 마세요')은 랩 행이 표를 떠나면서 갈 곳이 바뀌었다. 지금은 그 수치가 있는
+  //   자리, 즉 표 안의 '지수 방법론' 묶음 머리 행이 같은 말을 한다(drawStyle). 경고를
+  //   숫자에서 떨어진 곳에 두면 숫자만 보고 지나간다.
+  //   지우지 않고 남기는 이유 — 표에 다시 무언가를 얹기로 하면 각주 자리가 여기다.
+  //   `sl`·`hidden` 인자도 그대로 받는다(각각 랩 자료 유무, 표에서 뺀 ETF 목록).
   function drawStNote(sl,hidden){
     var n=el('stnote'); if(!n)return;
-    if(!sl){n.innerHTML='';return;}
-    // 표에서 뺀 ETF 를 이름으로 적는다 — 숨긴 것을 숨기면 표가 '이게 전부'라고 말하게 된다.
-    // '규칙이 없다'가 아니라 '**백테스트**가 없다'다. 중소형은 규칙이 있어 구성종목이 아래에
-    // 나오지만 style_perf 에 백테스트가 없어 짝을 못 만든다 — 둘을 뭉개면 안 된다.
-    var hid=(hidden||[]).length
-      ? '· 짝지을 랩 백테스트가 없는 ETF '+(hidden||[]).map(function(x){
-          return esc(x.n)+'('+esc(x.t)+')';}).join(' · ')+' 는 표에서 뺐습니다 — '+
-        '<a href="macro.html#nowperf-h">매크로 보드</a>의 전체 표에 있습니다.'
-      : '';
-    n.innerHTML=
-      '<b>랩 행은 상품이 아닙니다.</b> 이 랩이 유니버스 상위 10종목을 동일가중으로 담아 월말마다 '+
-      '다시 고른 <b>백테스트</b>이고 보수·거래비용이 0입니다. 짝지은 ETF 는 실제로 운용된 펀드입니다. '+
-      '<b>차이를 초과수익으로 읽으면 안 됩니다.</b><br>'+
-      // 🚨 '생존편향'이라고만 적으면 원인을 잘못 짚는다. 실측(build/style_pit.py)으로 채널이
-      // 둘이고 스타일마다 지배 채널이 다르다 — 고베타·모멘텀·성장은 사후편입 선견,
-      // **가치는 반대로 편출 누락이 전부**다. 수치·채널 판정 모두 data/style_pit.json 에서
-      // 파생한다(pitLine) — 손으로 적으면 한쪽을 반드시 틀리게 말한다.
-      '· <b>유니버스가 그때 것이 아닙니다</b> — 랩은 오늘 518종목을 과거로 소급해 고릅니다. '+
-      '일부는 그때 아직 지수에 편입되지도 않았고(지수는 많이 오른 종목을 편입하니 '+
-      '<b>‘오를 것’을 미리 아는 셈</b>), 반대로 그때 있었다가 빠진 종목은 후보에 없었습니다.'+
-      pitLine()+'<br>'+
-      '· 구간 정의도 다릅니다 — ETF 는 달력일(1주=7일), 랩은 거래일 봉수(1주=5거래일)로 잽니다. 이름만 같습니다.<br>'+
-      '· 랩 구간은 '+esc(sl._start||'')+' 이후 1년뿐이라 <b>‘1년’이 곧 전 구간</b>입니다. 그 앞은 재지 않았습니다.'+
-      (hid?'<br>'+hid:'');
+    n.innerHTML='';
   }
-  // 표에 없는데 구성종목만 덧붙일 스타일 — 지금은 없다(2026-07-29 사용자 결정).
-  //   순수성장(puregrow)이 여기 있었다. 표에 대응 ETF 행이 없는데 목록에만 있어 홈에서 갈 곳이
-  //   없는 줄이었다. data/style_top.json 에는 그대로 남아 있고(build/style_top.py 가 계속 만든다)
-  //   지우려면 그쪽을 고쳐야 한다 — 홈에서 안 보이는 것과 재지 않는 것은 다른 얘기다.
-  var ST_EXTRA=[];
-  // style.html 이 다루는 여섯 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
+  // style.html 이 다루는 것들 — **키 이름이 다르다.** 홈의 가치는 spval 인데 백테스트 쪽은
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
-  var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta'};
-  // 구성종목 — 표 아래 한 덩어리. 스타일마다 한 줄(이름 · 칩 10개 · 출처)이다.
-  function drawStHold(keys){
-    var box=el('stmore'); if(!box||!STOP)return;
-    var seen={}, have=[];
-    (keys||[]).concat(ST_EXTRA).forEach(function(k){
-      if(k&&STOP[k]&&!seen[k]){seen[k]=1;have.push(k);}
-    });
-    if(!have.length){box.innerHTML='';return;}
-    box.innerHTML='<div class="sthold">'+have.map(function(k){
-      var s=STOP[k];
-      // 백테스트 쪽(style.html)이 있는 스타일만 이름을 링크로 — 없는 것은 그대로 글씨다.
-      var lbl=ST_PERF[k]
-        ? '<a class="sthlbl lnk" href="style.html#s='+ST_PERF[k]+'" title="이 스타일의 최근 1년 백테스트">'+
-          esc(s.label)+'</a>'
-        : '<span class="sthlbl">'+esc(s.label)+'</span>';
-      return '<div class="sthrow">'+lbl+stDetail(s)+'</div>';
-    }).join('')+'</div>';
-  }
+  // 나머지는 2026-08-02 에 더한 공개 산식 지수들이고 양쪽 키가 같다.
+  var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
+               div:'div',buyback:'buyback',fcfy:'fcfy',
+               divlv:'divlv',netbuy:'netbuy',squal:'squal',
+               puregrow:'puregrow',purevalue:'purevalue',
+               spmo:'spmo',qvm:'qvm',snqual:'snqual'};
+  // 대응 ETF 가 없어 위 ETF 묶음에는 못 들어가지만 산식이 공개된 지수들. 지수 방법론 묶음
+  // 끝에 이 순서로 붙는다(퀄리티 → 순수 계열 → GARP → 배당 → 환원 → 현금흐름).
+  // ⚠ 합리적성장(S&P 500 GARP)이 여기 있었다 — 2026-08-02 사용자 결정으로 뺐다.
+  //   build/style_top_pdf.py 의 sc_garp·STYLES 항목과 style_top.py 의 IDX_URL·IDX_SUB 도
+  //   **함께** 지웠다. 한쪽만 빼면 style_trails.json 에 아무도 안 읽는 스타일이 남고
+  //   validate_site 의 고아 검사가 그것을 잡는다.
+  //   screener.html 의 sc_garp(합리적 가격의 성장주)는 **다른 규칙이고 그대로 있다** —
+  //   그쪽은 이 랩이 정의한 백분위 스크린이지 S&P 지수가 아니다.
+  // ⚠ build/validate_site.py 가 이 배열을 읽는다 — 여기 없는 백테스트 키는 '잰 것이 화면에
+  //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
+  // ⚠ 배열 순서는 **화면 순서가 아니다.** 표는 샤프 내림차순으로 다시 세운다(drawStyle).
+  //   여기 순서는 중복 제거 순서일 뿐이라, 새 지수는 끝에 붙이면 된다.
+  var ST_IDX=['squal','snqual','spmo','qvm','puregrow','purevalue',
+              'div','divlv','buyback','netbuy','fcfy'];
+  // 중소형은 뺀다(사용자 결정 2026-08-02). 대응 ETF(SIZE)가 짝 판정에서 빠져 표에 원래
+  // 없었고, 구성종목 줄에만 혼자 남아 있었다.
+  // ⚠ 랩 스크린(sc_*)은 홈에서 통째로 뺐다(사용자 결정 2026-08-02). ST_SCR·ST_EXTRA·
+  //   scrHref·drawStHold 가 여기 있었다. screener.html 이 그 화면이고 거기서는 그대로 산다.
+  //   build/style_top.py 는 sc_* 를 계속 만든다 — 홈에서 안 보이는 것과 재지 않는 것은
+  //   다른 얘기다. 다시 싣기로 하면 style_top.json 에 명단·trails_fixed 가 그대로 있다.
+  var ST_HIDE={size:1};
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
   // (ETF 9행) 그려진다. 이 파일을 만드는 build/style_top_pdf.py --json 은 갱신 잡에 물려
   // 있지만, 하나가 밀렸다고 홈이 깨지면 안 된다.
-  fetch('data/style_top.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;})
-    .then(function(sj){
+  // ⚠ 셋은 서로를 참조하지 않는다(각각 STOP·SLAB·표 원본을 채울 뿐). 전에는 3단 직렬이라
+  //   합쳐 5.3KB 받는 데 4G 에서 왕복 3회를 썼다. '구성종목이 먼저 와야 한 번만 그린다'는
+  //   조건은 Promise.all 이 더 강하게 보장한다 — 셋이 다 온 뒤에 drawStyle 이 한 번 돈다.
+  Promise.all([getj('style_top.json'), getj('style_trails.json'), getj('market_board.json')])
+    .then(function(a){
+      var sj=a[0], tj=a[1];
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
-      return fetch('data/style_trails.json',{cache:'no-cache'})
-        .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
-    })['catch'](function(){return null;})
-    .then(function(tj){
       if(tj&&tj.styles){
-        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null};
+        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null,
+              _etf:tj.etf_sharpe||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
-      return fetch('data/market_board.json',{cache:'no-cache'})
-        .then(function(r){return r.ok?r.json():null;});
-    })['catch'](function(){return null;}).then(drawStyle);
+      // 같은 파일이 위 스타일 표와 아래 섹터·위험선호 카드를 함께 먹인다 — 요청은 한 번이다.
+      // ⚠ 못 받았을 때도 renderMarket 을 부른다. 그래야 그 두 칸이 '불러오는 중…' 으로
+      //   영원히 남지 않고 실패 표시로 바뀐다(MKSK ↔ mkFail 판정이 null/false 로 갈린다).
+      MK.mb=a[2]||false; renderMarket();
+      return a[2];
+    }).then(drawStyle);
 
   // 행 토글은 없앴다 — 상위 10종목이 항상 펼쳐져 있어 누를 것이 없다(2026-07-29).
 
@@ -1490,9 +2126,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ⚠ build/log_update.py의 TARGETS와 **같은 집합**이어야 한다(validate_site.py가 대조한다).
   //   여기 없는 target은 '기타'로 떨어져 어느 화면 얘기인지 알 수 없게 된다.
 
-  fetch('data/home_reco.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(h){
+  // 폴백은 **데이터를 못 받았을 때만** 탄다. 전에는 catch 가 렌더 뒤에 걸려 있어
+  // renderReco 가 던진 예외(마크업이 한 군데만 어긋나도 난다)까지 폴백을 탔고,
+  // 그러면 stocks.json 199KB(gz)를 받고도 결국 같은 renderReco 를 다시 불러
+  // **화면은 그대로 실패**했다. 렌더 예외는 폴백이 아니라 실패 표시로 보낸다.
+  getj('home_reco.json').then(function(h){
     if(h&&h.buy){renderReco(h);}else{loadFull();}
-  }).catch(loadFull);
+  })['catch'](function(e){ if(window.console&&console.error)console.error(e); stkFail(); });
 })();
 </script>
 </body>

@@ -17,10 +17,12 @@
 
 무엇을 바꾸고 무엇을 안 바꾸나.
   바꾼다 — 글꼴 스택, 중립색 8종(--ground/--panel/--panel-2/--line/--line-soft/--ink/--ink-2/--muted),
+           공용 의미색 4종(--hot/--marg/--deploy/--accent — 아래 SHARED),
            셸 타이포(제목·섹션 라벨·카드 머리글·표 머리·칩), 숫자 정렬(tabular-nums).
-  안 바꾼다 — 의미색 전부(--accent/--deploy/--marg/--champ/--rp/--hot/--gA~F/--rg-*/--sn-*).
+  안 바꾼다 — 국면(--rg-*)·심리(--sn-*)·등급(--gA~F)·--champ·--rp.
            대비를 맞춰 고른 값이라 손대면 국면·심리·등급 표시가 한꺼번에 흔들린다.
-           중립색을 바꿀 때도 아래 contrast()로 **패널 대비가 이전보다 나빠지지 않는지** 검사한다.
+           색을 바꿀 때는 아래 check_contrast()로 **셸이 소유한 배경 3종 전부에서**
+           AA(4.5:1)를 넘는지, 그리고 이전보다 나빠지지 않는지 검사한다.
 
 사용:
     python3 build/sync_shell.py            # 전파
@@ -67,7 +69,11 @@ FONT_LINK = (
 LIGHT = {
     "--ground": "#FAF7EC", "--panel": "#FFFDF5", "--panel-2": "#F3EFE1",
     "--line": "#E4DFD0", "--line-soft": "#EDE9DC",
-    "--ink": "#14181D", "--ink-2": "#3C444D", "--muted": "#6A737D",
+    # --muted 는 2026-08-02 에 #6A737D → #646B74 로 내렸다. 이전 값은 --panel 위에서만 4.73:1 로
+    # AA 를 넘었고 --ground 4.49 · --panel-2 4.18 이었다 — 게이트가 --panel 하나만 보고 있어서
+    # 통과하던 조합만 검사하고 승인해 온 것이다(check_contrast 참조). 이 색이 붙은 자리가 하필
+    # 표 각주(.stnote)·캘린더 지표명·칩 보조글자라 본문보다 각주가 흐린 상태였다.
+    "--ink": "#14181D", "--ink-2": "#3C444D", "--muted": "#646B74",
     "--shadow": "0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20)",
 }
 DARK = {
@@ -76,16 +82,41 @@ DARK = {
     "--ink": "#E6EAEF", "--ink-2": "#BAC3CC", "--muted": "#8B95A1",
     "--shadow": "0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65)",
 }
-# 공용 부품이 기대는 의미색 2종. 색을 '바꾸는' 것이 아니라 **있게 보장하는** 것이다 —
-# 값은 21장이 이미 쓰던 정본 그대로다. 내비(sync_nav.py 생성)의 .asofchip.stale이 var(--hot)을
+# 셸이 소유하는 의미색. 색을 '바꾸는' 것이 아니라 **있게 보장하고 대비를 잠그는** 것이다.
+# 처음엔 --hot·--marg 둘뿐이었다 — 내비(sync_nav.py 생성)의 .asofchip.stale이 var(--hot)을
 # 쓰는데 explorer·signals에는 그 정의가 없어, 기준일이 낡았다는 표시가 아무 색도 없이 나왔다.
 # 공용 블록이 쓰는 토큰은 페이지마다 챙길 것이 아니라 셸이 책임진다.
-SHARED = {"light": {"--hot": "#A64B3B", "--marg": "#B25E12"},
-          "dark": {"--hot": "#E5806A", "--marg": "#F0863C"}}
+#
+# 2026-08-02 에 --deploy·--accent 를 여기로 올렸다. 이유는 두 가지다.
+#   ① 대비 게이트가 볼 수 없었다. 두 토큰은 25장의 각 :root 에만 있어 이 파일이 값을 모르고,
+#      모르는 값은 잠글 수 없다. 실제로 --deploy 는 라이트 3배경에서 4.31/4.09/3.82 로 전부
+#      AA 미달인 채 오래 배포돼 있었다 — 상승 숫자만 흐리고 하락(--hot 5.59)은 또렷한
+#      비대칭이라, 같은 표가 실제보다 나빠 보였다.
+#   ② 25장이 같은 값을 각자 들고 있었다(실측: --accent 25장 동일, --deploy 19장 동일).
+#      한 곳에서 못 바꾸는 색은 언젠가 갈라진다.
+# 라이트 4종은 이때 3배경 모두에서 AA(4.5) 를 넘도록 내렸다(색상은 유지, 명도만):
+#   --muted #6A737D→#646B74 · --deploy #0E8A54→#0C7A4A · --marg #B25E12→#A35510 · --accent #8A6B00→#816400
+# 다크는 전부 5.07:1 이상이라 손대지 않는다.
+SHARED = {"light": {"--hot": "#A64B3B", "--marg": "#A35510",
+                    "--deploy": "#0C7A4A", "--accent": "#816400"},
+          "dark": {"--hot": "#E5806A", "--marg": "#F0863C",
+                   "--deploy": "#38D083", "--accent": "#FFBC00"}}
 
 # 이전 값 — 대비가 나빠지지 않았는지 비교하는 기준선이다.
-OLD_LIGHT = {"--panel": "#FFFFFF", "--ink": "#1B2733", "--ink-2": "#42505E", "--muted": "#66757F"}
-OLD_DARK = {"--panel": "#181E26", "--ink": "#EAEEF2", "--ink-2": "#C4CDD6", "--muted": "#8A97A3"}
+# 배경을 3종으로 넓히면서(2026-08-02) 이전 배경값도 함께 적는다. 의미색 4종은 이번에 게이트로
+# 들어오므로 기준선은 '고치기 직전 값'이다 — 그 값들이 실제로 AA 미달이었고, 넓힌 목적이
+# 바로 그것을 잡는 것이다. 미달분은 아래 규칙상 '나빠짐'이 아니라 'AA 미달'로 잡힌다.
+OLD_LIGHT = {"--panel": "#FFFFFF", "--ground": "#F5F7FA", "--panel-2": "#EEF2F6",
+             "--ink": "#1B2733", "--ink-2": "#42505E", "--muted": "#66757F",
+             "--deploy": "#0E8A54", "--marg": "#B25E12", "--hot": "#A64B3B", "--accent": "#8A6B00"}
+OLD_DARK = {"--panel": "#181E26", "--ground": "#0F141A", "--panel-2": "#20272F",
+            "--ink": "#EAEEF2", "--ink-2": "#C4CDD6", "--muted": "#8A97A3",
+            "--deploy": "#38D083", "--marg": "#F0863C", "--hot": "#E5806A", "--accent": "#FFBC00"}
+
+# 게이트가 보는 조합. 배경 3종을 전부 보는 것이 핵심이다 — --panel 하나만 보던 때는
+# 통과하는 조합만 검사하고 승인했다(--muted 는 panel 4.73 으로 통과하면서 panel-2 4.18).
+GATE_FG = ("--ink", "--ink-2", "--muted", "--deploy", "--marg", "--hot", "--accent")
+GATE_BG = ("--panel", "--ground", "--panel-2")
 
 
 def _lin(c: float) -> float:
@@ -104,24 +135,40 @@ def contrast(a: str, b: str) -> float:
     return (hi + 0.05) / (lo + 0.05)
 
 
+def palette(mode: str) -> dict:
+    """셸이 소유한 색 전부 — 중립색 + 공용 의미색. 게이트와 CSS 생성이 같은 것을 본다."""
+    return dict(LIGHT if mode == "light" else DARK, **SHARED[mode])
+
+
 def check_contrast() -> list[str]:
-    """글자색 3종이 패널 위에서 이전보다 나빠지지 않는지. 나빠지면 배포를 막는다.
+    """셸이 소유한 글자색이 셸이 소유한 **모든 배경** 위에서 AA를 넘는지. 못 넘으면 배포를 막는다.
 
     화면에서 제일 자주 밟는 회귀가 '색을 예쁘게 바꿨더니 흐린 글씨가 안 보이는 것'이다.
     눈으로는 늦게 알아채므로 숫자로 잠근다(본문 4.5:1 기준은 WCAG AA).
 
+    ⚠ 전에는 배경을 --panel 하나만 봤다. 그건 검사가 아니라 **통과하는 조합만 골라 보는
+       것**이었다 — --muted 는 panel 4.73 으로 통과하면서 ground 4.49 · panel-2 4.18 이었고,
+       하필 그 색이 표 각주와 캘린더 지표명에 붙어 있었다. 배경은 셸이 소유한 3종을 전부 본다.
+
     ⚠ '이전보다 조금이라도 낮으면 실패'로 두면 안 된다. 14.4:1이 14.2:1이 되는 건 눈에
        보이지 않는 변화이고, 그걸 막으면 색을 영원히 못 고친다. 그래서 **선 근처(AAA 7:1
-       미만)에서만** 하락을 막고, 그 위에서는 AA만 지키면 통과시킨다."""
+       미만)에서만** 하락을 막고, 그 위에서는 AA만 지키면 통과시킨다.
+
+    검사 대상이 아닌 것 — 국면(--rg-*)·심리(--sn-*)·등급(--gA~F) 계열. 앞의 둘은 20px bold
+    대표값(큰 글자 3:1)이고 마지막은 흰 글자를 얹는 배지 배경이라, 본문 4.5:1 잣대를 그대로
+    들이대면 잘못 막는다. 이 계열은 페이지가 소유하며 각자 주석에 근거를 적어 두었다."""
     bad = []
-    for name, new, old in (("라이트", LIGHT, OLD_LIGHT), ("다크", DARK, OLD_DARK)):
-        for tok in ("--ink", "--ink-2", "--muted"):
-            n = contrast(new[tok], new["--panel"])
-            o = contrast(old[tok], old["--panel"])
-            if n < 4.5:
-                bad.append("%s %s 대비 %.2f:1 — AA(4.5) 미달" % (name, tok, n))
-            elif o < 7.0 and n < o - 0.15:
-                bad.append("%s %s 대비 %.2f:1 — 이전 %.2f:1보다 나빠짐(선 근처)" % (name, tok, n, o))
+    for name, mode, old in (("라이트", "light", OLD_LIGHT), ("다크", "dark", OLD_DARK)):
+        new = palette(mode)
+        for fg in GATE_FG:
+            for bg in GATE_BG:
+                n = contrast(new[fg], new[bg])
+                o = contrast(old[fg], old[bg])
+                if n < 4.5:
+                    bad.append("%s %s on %s 대비 %.2f:1 — AA(4.5) 미달" % (name, fg, bg, n))
+                elif o < 7.0 and n < o - 0.15:
+                    bad.append("%s %s on %s 대비 %.2f:1 — 이전 %.2f:1보다 나빠짐(선 근처)"
+                               % (name, fg, bg, n, o))
     return bad
 
 
@@ -131,8 +178,8 @@ def _decl(d: dict) -> str:
 
 def build_shell() -> str:
     # % 서식 대신 치환을 쓴다 — CSS에 color-mix(… 7%) 처럼 %가 그대로 들어간다.
-    css = (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(LIGHT) + _decl(SHARED["light"]))
-           .replace("@DARK@", _decl(DARK) + _decl(SHARED["dark"]))
+    css = (SHELL_BEGIN + _CSS.replace("@LIGHT@", _decl(palette("light")))
+           .replace("@DARK@", _decl(palette("dark")))
            + SHELL_END)
     # ⚠ style 종료 태그가 한 글자라도 섞이면 HTML 파서가 **주석 안이든 아니든** 거기서
     #   style 요소를 끝낸다. 그러면 뒤의 CSS 전체가 본문 글자로 쏟아진다. 실제로 밟았고
@@ -288,9 +335,14 @@ def main() -> int:
 
     for p, why in errs:
         print("  ✗ %s — %s" % (os.path.relpath(p, ROOT), "; ".join(why)))
-    lo = min(contrast(LIGHT[t], LIGHT["--panel"]) for t in ("--ink", "--ink-2", "--muted"))
-    do = min(contrast(DARK[t], DARK["--panel"]) for t in ("--ink", "--ink-2", "--muted"))
-    print("셸 %d바이트 · 최저 대비 라이트 %.2f:1 · 다크 %.2f:1" % (len(shell), lo, do))
+    # 보고하는 최저값은 게이트가 보는 조합과 같아야 한다 — 전에는 --panel 위 3색만 재서
+    # 화면에 5.29 를 찍으면서 실제 최저(panel-2 위 4.18)는 말하지 않았다. 검사와 보고가
+    # 다른 것을 보면, 통과 메시지가 통과를 뜻하지 않게 된다.
+    def _lo(mode):
+        pal = palette(mode)
+        return min(contrast(pal[f], pal[b]) for f in GATE_FG for b in GATE_BG)
+    print("셸 %d바이트 · 최저 대비(전경 %d × 배경 %d) 라이트 %.2f:1 · 다크 %.2f:1"
+          % (len(shell), len(GATE_FG), len(GATE_BG), _lo("light"), _lo("dark")))
     if a.check:
         if changed:
             print("어긋난 페이지 %d장: %s" % (len(changed), ", ".join(changed)))

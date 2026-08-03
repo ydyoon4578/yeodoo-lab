@@ -24,8 +24,23 @@ FUNDHIST = os.path.join(HERE, "..", "data", "fund_history.json")  # 벤더 비�
 # 예전엔 period="3y"(내려받기)와 .tail(756)(저장)이 따로 박혀 있었고, 3y가 마침 753봉이라
 # tail이 no-op이어서 캡이 있다는 사실 자체가 보이지 않았다. period만 늘리면 패널은 756에서
 # 잘려 아무것도 안 늘어난다. 둘을 묶어 그 함정을 없앤다.
-PX_DAYS = 2514            # 약 10년(252×10). 저장 패널이자 타점 산출 구간.
-PX_PERIOD = "10y"         # yfinance 다운로드 기간 — PX_DAYS를 채울 만큼 넉넉해야 한다.
+# 일별 종가 패널의 **시작일**. 2026-08-03 에 tail(2514일 ≈ 10년) 롤링 창에서 고정 시작일로
+# 바꿨다(사용자 요청 "가격 이력 2009년까지 늘려줘").
+# 🚨 **롤링으로 늘리면 목적을 못 이룬다.** regime.json 의 침체 19개월 중 12개월이 2009년이다
+#   (실측: 2009년 12 · 2010년 2 · 2020년 4 · 2025년 1). 4400일 롤링으로 늘려도 1년 뒤면
+#   그 12개월이 창 밖으로 나가 국면 표본이 원래대로 돌아간다. '2009년까지'는 길이가 아니라
+#   **시작점**에 대한 요구다. 그래서 날짜로 못 박는다.
+# ⚠ 대가 — 패널이 해마다 약 252행 늘어난다. data/sd 는 이 518개 파일이 매일 재작성돼
+#   커밋되므로 저장소가 연 3MB 씩 더 자란다(2026-08 기준 29MB → 51MB, 이후 +2.9MB/년).
+# ⚠ 늘리면 무엇이 되나 — 국면별 통계의 침체 표본이 5 → 19개월, 연착륙이 9 → 13개월이 된다.
+#   후기국면(LateCycle)은 **안 늘어난다.** 전체 이력 211개월에서도 7개월뿐이라 창의 문제가
+#   아니다(2024-06 ~ 2026-02). 그건 이 변경으로 해결되지 않는다.
+PX_START = "2009-01-01"
+PX_PERIOD = "max"         # yfinance 다운로드 기간 — PX_START 를 덮을 만큼 넉넉해야 한다.
+# 최소 길이 안전망. 다운로드가 짧게 오면 패널이 조용히 줄어드는데, stocks.json 의 bms/sms 는
+# pxd_dates 에 대한 **위치 인덱스**라 그 순간 화면의 모든 타점이 다른 날짜를 가리킨다.
+# 조용히 배포되느니 멈춘다(2026-08-03 기준 4,421거래일).
+PX_MIN_DAYS = 4000
 
 FACTORS = {
   "rsi": ("RSI(14)", "과매수·과매도", "과매수"), "stoch": ("스토캐스틱 %K", "과매수·과매도", "과매수"),
@@ -315,8 +330,36 @@ def _yf_sym(t: str) -> str:
     return t.replace(".", "-")
 
 
-FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")  # 필드 단위 완전성 게이트 대상(정상 커버 99~100%)
+# 필드 단위 완전성 게이트 대상. 실측 정상 커버(2026-07-31): ps 99.8 · pm 99.8 · mc 100.0 · roe 91.1.
+#   ⚠ roe 만 91%대다 — 자기자본이 음수/결측인 종목이 46종쯤 있어 **구조적 결측**이다.
+#     예전 주석은 4개 모두 "99~100%"라 적었는데 사실이 아니다. 하한을 그 숫자로 잡으면 정상 빌드가 죽는다.
+FUND_GATE_KEYS = ("ps", "pm", "roe", "mc")
 FUND_GATE_DROP = 20.0                       # 이전 빌드 대비 커버가 이 %p 이상 급락하면 중단
+# ── 절대 하한 ────────────────────────────────────────────────────────────
+# 위 상대 게이트만으로는 **낮은 기준선을 학습한다**. 2026-07-29~30 실측:
+#   07-28 mc 100.0% → 07-29 82.0% → 07-30 79.0%
+# 07-30 예약분은 100%와 비교당해 20%p 게이트에 걸려 죽었지만(그건 옳게 작동한 것),
+# 그 뒤 수동 실행이 82%를 커밋하자 다음부터는 82→79 = 3%p 라 조용히 통과했다.
+# 즉 한 번 낮은 값이 들어오면 게이트가 그것을 정상으로 알아버린다.
+# mc·ps 는 정상 100%·99.8% 이고, 비면 화면의 시총 정렬·필터가 통째로 깨진다.
+# ⚠ 핵심이라 선언한 필드는 전부 하한을 가져야 한다. 처음엔 mc·ps 만 넣었는데, 그러면
+#   financialData 모듈만 깎여 pm·roe 가 빠지는 조합(오늘 사고의 거울상)에서 아무 게이트도 안 걸린다.
+#   그 조합은 실제로 화면을 바꾼다 — 재현 시 스크리닝 결과가 growth 48→34 · garp 41→30 으로 조용히 준다.
+#   아래 assert 가 '핵심 선언인데 하한 없음' 조합을 애초에 못 만들게 막는다.
+FUND_GATE_FLOOR = {"mc": 95.0, "ps": 95.0, "pm": 95.0, "roe": 85.0}
+assert set(FUND_GATE_KEYS) <= set(FUND_GATE_FLOOR), "핵심 필드에 절대 하한이 빠졌다"
+MC_RETRY_MAX = 250                          # 시가총액 결손 개별 재수집 상한(이보다 많으면 정보원 장애)
+# 직렬 재수집의 벽시계 예산. 이 루프가 발동하는 조건이 곧 최악 지연 조건(야후가 러너 IP를 조일 때)이라
+# 종목 수 상한만으로는 시간이 안 막힌다. 예산을 넘기면 남은 종목은 2단 폴백(추가 호출 0)에 넘긴다 —
+# 폴백이 mc 를 세우면 그대로 커밋에 성공하므로, 잡 타임아웃에 잘려 그날치를 통째로 버리는 것보다 낫다.
+MC_RETRY_BUDGET_S = 420
+# 역산 주식수(직전 빌드 유래)로 채우는 것을 허용할 최대 비중. 복수 클래스 종목만 해당하고
+# 유니버스의 2~3%뿐이다. 상한이 없으면 정보원이 통째로 죽어도 커버가 100%로 보인다.
+MC_HIST_MAX = 0.05
+# 화면·페이로드의 시가총액 단위는 억$다(AAPL 48972). 정보원 원값은 달러다.
+# ⚠ 이 환산이 두 곳(fund_metrics 의 저장, 폴백의 직전값 대조)에 필요하다. 상수를 나눠 적지 말 것 —
+#   실제로 폴백 쪽에서 달러와 억$를 그대로 비교해 정상값 13/17을 기각했다(시뮬레이션에서 잡음).
+MC_UNIT = 1e8
 
 
 def _numf(x):
@@ -423,7 +466,7 @@ def fund_metrics(fund, sect):
             # 분모 가드: EBITDA가 0/음수면 부호가 뒤집혀 '순현금'으로 오독된다 → 산출 안 함
             "nde": ((td - tc)/eb if (td is not None and tc is not None and eb and eb > 0) else None),
             "dy": _numf(g("dy")), "po": _x100(g("po")),
-            "mc": (mc/1e8 if (mc and mc > 0) else None), "beta": _numf(g("beta")),
+            "mc": (mc/MC_UNIT if (mc and mc > 0) else None), "beta": _numf(g("beta")),
         }
     for _m in pb_logs:
         print(f"  ⚠ PBR 가드 — {_m}")
@@ -572,6 +615,13 @@ def fetch_fund(t, retries=3):
                    "cr": info.get("currentRatio"), "de": info.get("debtToEquity"),
                    "dy": info.get("dividendYield"), "po": info.get("payoutRatio"), "beta": info.get("beta"),
                    "mc": info.get("marketCap"), "fcf": info.get("freeCashflow"), "ebitda": info.get("ebitda"),
+                   # 발행주식수 — mc 폴백(종가×주식수)에만 쓴다. 화면엔 안 나간다.
+                   #   float 은 유동주식수를 **먼저** 보므로 시가총액 되계산에 쓰면 안 된다(다른 수다).
+                   #   둘 다 defaultKeyStatistics 라, summaryDetail 이 깎여 mc 가 빌 때도 살아남는다.
+                   #   ⚠ impl 을 먼저 쓸 것. sharesOutstanding 은 **한 클래스만** 세는 회사가 있다
+                   #     (실측: GOOGL −52.0% · UAA −55.7% · BRK.B −35.2% · META −13.4% · ABNB −29.6%.
+                   #      같은 종목에 impl 을 쓰면 11/11 오차 0.00%. 단일 클래스는 둘이 같다).
+                   "impl": info.get("impliedSharesOutstanding"), "sho": info.get("sharesOutstanding"),
                    "td": info.get("totalDebt"), "tc": info.get("totalCash"),
                    "rev": info.get("totalRevenue"),
                    # ── 회사 소개(표시 전용, 신호 아님) — 같은 info 응답에서 키만 더 꺼낸다. 추가 호출 0 ──
@@ -597,13 +647,43 @@ def fetch_fund(t, retries=3):
                     pass
             # 정상 응답이면 mc·ps가 둘 다 있다(각 99~100% 필드). 둘 다 있으면 곧바로 반환(healthy 런 재시도 0회).
             #   실측 사고: mc는 100%인데 ps만 72%로 빠진 부분 응답 → mc만 보면 재시도가 안 걸린다.
-            if rec.get("mc") is not None and rec.get("ps") is not None:
+            # pm 도 본다 — pm 은 financialData, mc·ps 는 price/summaryDetail 계열이라 **다른 모듈**이다.
+            #   mc·ps 만 보면 financialData 만 깎인 부분 응답에 재시도가 아예 안 붙는다(오늘 사고의 거울상).
+            #   roe 는 넣지 않는다: 자기자본 음수 등으로 정상 커버가 91%대라, 넣으면 그 46종이 매 실행
+            #   재시도를 다 태워 쓰로틀링을 오히려 키운다.
+            if all(rec.get(k) is not None for k in ("mc", "ps", "pm")):
                 return t, rec
         except Exception:
             rec = None
         if attempt < retries - 1:
             time.sleep(0.6 * (attempt + 1))   # 백오프 — 일시적 5xx가 가라앉을 시간
     return t, rec   # 재시도 소진: 부분 응답이라도(또는 None) 최선값 반환
+
+
+def fetch_shares(t):
+    """발행주식수만 따로 받는다. `.info` 와 **다른 엔드포인트**다
+    (query2 …/ws/fundamentals-timeseries/… — .info 는 quoteSummary·v7 quote 를 쓴다).
+
+    왜 필요한가(2026-07-31 실측). 러너의 쓰로틀이 깊어지면 `.info` 응답에 marketCap 도
+    impliedSharesOutstanding 도 sharesOutstanding 도 **셋 다 없는** 종목이 나온다(95/518).
+    그 상태에서 `.info` 를 몇 번 더 두드려도 같은 응답이 온다 — 개별 재수집 회복률 0이었다.
+    경로가 다르면 따로 살아남을 수 있고, 실제로 이 시계열은 값을 준다.
+
+    ⚠ 이 값은 **전 클래스 합산**이다. sharesOutstanding 이 한 클래스만 세는 회사에서도 맞는다 —
+      실측 GOOGL 12,230M · BRK.B 2,157M · META 2,548M 로, sho(5,867M · 1,398M · 2,205M)와 달리
+      직전 빌드 역산값과 10/10 정확히 일치했다. 그래서 sho 보다 **먼저** 쓴다.
+    """
+    try:
+        s = yf.Ticker(_yf_sym(t)).get_shares_full(
+            start=pd.Timestamp.now("UTC").date() - pd.Timedelta(days=548))
+        if s is None or not len(s):
+            return t, None
+        if hasattr(s, "columns"):
+            s = s[s.columns[0]]
+        v = float(s.iloc[-1])
+        return t, (v if v > 0 else None)
+    except Exception:
+        return t, None
 
 
 # ── 목표주가 이력 누적 ──────────────────────────────────────────────────────
@@ -669,9 +749,25 @@ def update_target_history(path, as_of, tp_now):
 # ⚠ 그리고 이것이 백테스트를 더 '정확'하게 만들지는 않는다. SEC 재무는 제출일이 있어
 #   시점을 알 수 있지만, 벤더 스냅샷은 '우리가 그날 찍었다'는 것뿐이다. 얻는 것은
 #   **사이트와의 일치**이지 정확성이 아니다. 그 값어치가 용량보다 큰지는 따로 판단할 것.
-FUND_HIST_KEYS = ("roe", "de", "fpe", "pb", "tpe", "ps", "mc", "eveb")   # 스타일이 실제로 쓰는 것만
+# 🚨 2026-08-02 에 여섯을 더했다(beta·pm·rg·gr·dy·fcfy). **랩 스크린을 언젠가 백테스트하려면
+#   이것들이 있어야 한다.** 사용자가 홈의 랩 스크린 줄에도 style.html 같은 백테스트 페이지를
+#   붙여 달라고 해서 재 봤는데, SEC 재무(data/fx)로 그 스크린을 재현하려 하면 **다른 스크린이
+#   된다** — 실측 2026-07-31 상위 10종 겹침: 배당인컴 7/10 · 현금창출력 4/10 · 저변동방어주 4/10.
+#   원인은 선행지표(fpe·gr)만이 아니었다. 스크린이 쓰는 값의 **정의 자체가 벤더 것**이다:
+#     de   yfinance debtToEquity 는 **차입금**÷자기자본인데 data/fx 에는 차입금 태그가 없다
+#          (liab 는 매입채무까지 포함한 부채총계다) — 순위상관 0.754 가 천장이었다.
+#     beta yfinance 는 5년 월간 회귀, 이 랩의 재구성은 252거래일 일간이다 — 0.824.
+#     dy   yfinance 는 예상배당(indicated), 재구성은 TTM 선언배당이다 — 0.937.
+#     fcfy 0.688 · pm 0.910.
+#   즉 스크린 백테스트는 **벤더 스냅샷이 쌓이는 것 말고는 길이 없다.** 이 파일이 존재하는
+#   이유가 그것이라 적혀 있는데(아래 note) 정작 스크린이 쓰는 여섯이 빠져 있었다.
+#   지금 넣어야 1년 뒤에 1년짜리가 돈다. 안 넣으면 1년 뒤에도 같은 자리다.
+#   ⚠ 용량 — 스냅 1개가 8필드 40KB 였으니 14필드면 ≈70KB, 월 1회 10년 상한으로 ≈8.4MB.
+#     data/screens.json 의 keys 와 짝이다. 스크린 정의에 새 지표가 들어오면 여기도 봐야 한다.
+FUND_HIST_KEYS = ("roe", "de", "fpe", "pb", "tpe", "ps", "mc", "eveb",
+                  "beta", "pm", "rg", "gr", "dy", "fcfy")
 FH_MIN_DAYS = 25          # 스타일이 월말 리밸런스라 월 1회면 충분하다(일별이면 연 15MB)
-FH_MAX_SNAPS = 120        # 10년치. 512종목·8필드 기준 스냅 1개 ≈ 40KB → 파일 상한 ≈ 4.7MB
+FH_MAX_SNAPS = 120        # 10년치. 512종목·14필드 기준 스냅 1개 ≈ 70KB → 파일 상한 ≈ 8.4MB
 
 
 def update_fund_history(path, as_of, rows, eveb=None):
@@ -931,6 +1027,133 @@ def main():
         for t, f in ex.map(fetch_fund, list(raw.keys())):
             if f: fund[t] = f
     print(f"펀더멘털 {len(fund)}종목")
+    # ── 시가총액 결손 복구 2단 ────────────────────────────────────────────
+    # 왜 필요한가(2026-07-29~30): 러너에서 mc 커버가 100%→82%→79%로 무너졌다.
+    #   로컬(주거용 IP)은 같은 시각 100%다 → 정보원 스키마 변경이 아니라 Yahoo가
+    #   Actions IP에 거는 쓰로틀링이고, 응답에서 summaryDetail/price 모듈이 통째로 빠진다.
+    #   기존 ps 폴백(mc/rev)은 mc가 있어야 도니 같이 무너졌다 — 그래서 mc부터 세운다.
+    #
+    #   1단 개별 재수집: 8워커 병렬의 배치 압력이 원인이므로 **직렬로, 간격을 두고** 다시 묻는다.
+    #   2단 정의 폴백:   시가총액 = 종가 × 발행주식수. 종가는 이미 받은 패널에 있어 추가 호출 0이고,
+    #                   주식수는 defaultKeyStatistics라 summaryDetail이 깎여도 살아남는다.
+    #
+    # ⚠ 직전 빌드 mc에 종가비를 곱하는 방법은 일부러 쓰지 않는다. 값은 정확하지만 mc가 자기참조가 되어,
+    #   정보원이 완전히 끊겨도 커버리지는 100%로 보이고 아래 절대 하한이 영영 안 걸린다.
+    #   폴백은 이번에 새로 받은 값에만 기대야 진짜 장애가 드러난다. 직전 값은 **대조에만** 쓴다.
+    _mc_est = []      # 정의 폴백으로 채운 종목 — 페이로드에 남겨 '어디가 추정치인지'를 사후에 알 수 있게 한다
+    _prev_sh = {}     # 직전 빌드에서 역산한 주식수(아래에서 채운다). 게이트 진단문도 이걸 참조한다
+    _miss = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
+    if _miss:
+        print(f"  ⚠ 시가총액 결손 {len(_miss)}종목 — 개별 재수집(직렬)")
+        if len(_miss) > MC_RETRY_MAX:
+            raise SystemExit(f"시가총액 결손 {len(_miss)}/{len(raw)}종목 — 개별 재수집 상한({MC_RETRY_MAX}) 초과, "
+                             f"정보원 장애로 보고 갱신 중단(이전본 유지)")
+        _got = 0; _t0 = time.monotonic(); _cut = 0
+        for _i, t in enumerate(_miss):
+            if time.monotonic() - _t0 > MC_RETRY_BUDGET_S:
+                _cut = len(_miss) - _i
+                print(f"    ⏱ 재수집 예산 {MC_RETRY_BUDGET_S}s 소진 — 남은 {_cut}종목은 2단 폴백으로 넘긴다")
+                break
+            time.sleep(0.25)
+            _t, f2 = fetch_fund(t, retries=2)
+            # ⚠ 대입이 아니라 **병합**이다. 판정 기준은 mc 하나뿐인데 통째로 갈아끼우면,
+            #   2차 응답에 목표주가·유동주식수·회사소개가 빠졌을 때 그것들이 조용히 사라진다.
+            #   목표주가는 target_history 에 주 1회 쌓는 소급 불가 누적물이라 그날 스냅샷이 영구 결손된다.
+            if f2 and f2.get("mc") is not None:
+                _base = fund.get(t) or {}
+                fund[t] = {**_base, **{k: v for k, v in f2.items() if v is not None}}
+                _got += 1
+        print(f"    개별 재수집 회복 {_got}/{len(_miss)}종목")
+        # ── 1.5단: 주식수만 다른 엔드포인트에서 ───────────────────────────
+        # 같은 `.info` 를 다시 두드리는 것으로는 안 되는 국면이 있다(회복률 0). 경로를 바꾼다.
+        _still = [t for t in _miss if (fund.get(t) or {}).get("mc") is None and fund.get(t)]
+        if _still:
+            _sn = 0
+            with ThreadPoolExecutor(max_workers=4) as ex:
+                for t, v in ex.map(fetch_shares, _still):
+                    if v:
+                        fund[t]["tsh"] = v; _sn += 1
+            print(f"    주식수 별도 수집(fundamentals-timeseries) {_sn}/{len(_still)}종목")
+        # 직전 빌드의 mc — 폴백 결과가 터무니없는지 **대조**하는 데만 쓴다(값의 출처로 쓰지 않는다).
+        #   페이로드는 억$로 저장돼 있으므로 정보원 단위(달러)로 되돌려 비교한다.
+        _prev_mc = {}
+        try:
+            _pd0 = json.load(open(OUT, encoding="utf-8"))
+            _prev_mc = {s["t"]: (s.get("fund") or {}).get("mc") * MC_UNIT
+                        for s in _pd0.get("stocks", []) if (s.get("fund") or {}).get("mc")}
+            # ── 직전 빌드에서 **주식수를 역산**한다: 직전 시가총액 ÷ 그날 종가 ──────────
+            # 이게 sho(sharesOutstanding)를 안전하게 쓰기 위한 기준이다. sho 는 한 클래스만 세는
+            # 회사가 있어 그대로 쓰면 GOOGL −52% · BRK.B −35% 로 틀린다. 그런데 **역산 주식수와
+            # 대조하면 그 회사들이 정확히 걸린다** — 실측 비율: 복수 클래스 8종 0.452~0.873 ·
+            # 단일 클래스 8종 전부 1.000. 0.87 과 1.00 사이가 비어 있어 오판 여지가 없다.
+            #   (직전 mc 는 정보원이 준 값이라 전 클래스 합산이고, 종가는 우리 패널이라 정확하다.
+            #    분할이 나도 패널이 소급 조정되므로 비율은 그대로 1 이 된다.)
+            _pa = _pd0.get("as_of") or ""
+            for t, pm in _prev_mc.items():
+                c = (raw.get(t) or {}).get("close")
+                if c is None or not len(c): continue
+                s = c.loc[:_pa] if _pa else c
+                if not len(s): continue
+                pc = float(s.iloc[-1])
+                if pc > 0: _prev_sh[t] = pm / pc
+        except Exception:
+            pass
+        _rej = 0; _hist_n = []
+        for t in _miss:
+            f = fund.get(t)
+            if not f or f.get("mc") is not None: continue
+            c = raw[t]["close"]
+            # ── 주식수 고르기 ────────────────────────────────────────────────
+            # impl(impliedSharesOutstanding)이 1순위다 — 전 클래스를 세므로 그대로 정확하다
+            # (실측 11/11 오차 0.00%).
+            # 🚨 impl 이 없을 때 sho(sharesOutstanding)로 내려가는 것 자체는 필요하다. 한때
+            #   "로컬 표본에서 impl 100% 니 sho 를 끊어도 손실이 없다"고 판단해 끊었는데 **틀렸다** —
+            #   러너에서 쓰로틀당한 종목은 impl 이 빠지고 sho 만 남아서, 끊은 채로 돌리자 mc 커버가
+            #   81.7% 로 떨어져 하한에 걸렸다(2026-07-31 실측). 로컬(주거용 IP)의 가용률로 러너를
+            #   판단하면 안 된다.
+            # 🚨 다만 sho 를 그냥 쓰면 한 클래스만 세는 회사에서 틀린다(GOOGL −52% · BRK.B −35%).
+            #   그래서 **직전 빌드에서 역산한 주식수와 대조**해 통과한 것만 쓴다. 실측 분리가 확실하다:
+            #   복수 클래스 8종 0.452~0.873 · 단일 클래스 8종 1.000. 대조할 기준이 없으면(신규 편입)
+            #   sho 는 쓰지 않는다 — 검증 못 한 값으로 화면을 채우느니 결손으로 두는 게 낫다.
+            # 순서: ① impl → ② 역산과 맞는 sho → ③ 복수 클래스로 확인된 종목만 역산 주식수.
+            #   ③ 에 상한(MC_HIST_MAX)을 두는 이유: 역산은 **직전 빌드에서 온 값**이라 무제한 허용하면
+            #   정보원이 통째로 죽어도 커버가 100%로 보이고 절대 하한이 영영 안 걸린다.
+            #   복수 클래스는 유니버스의 2~3%뿐이라 이 상한 안에서 해결된다.
+            n = f.get("impl") or f.get("tsh")   # 둘 다 전 클래스 합산이라 그대로 정확하다
+            if not n:
+                _sp, _sh = _prev_sh.get(t), f.get("sho")
+                if _sh and _sp and 0.95 <= float(_sh) / _sp <= 1.05:
+                    n = _sh                      # ② 단일 클래스로 확인됨
+                elif _sh and _sp and len(_hist_n) < len(raw) * MC_HIST_MAX:
+                    # ③ sho 는 있는데 역산과 안 맞는다 = 이 회사는 sho 가 한 클래스만 센다는 뜻이다.
+                    #   총 주식수는 직전 빌드가 안다(정보원이 준 시총 ÷ 그날 종가). 하루 사이 주식수
+                    #   변화는 0.1% 수준이라, −52% 로 틀리거나 대형주를 비워 두는 것보다 낫다.
+                    n = _sp; _hist_n.append(t)
+                else:
+                    _rej += 1; continue
+            try:
+                if not n or not len(c): continue
+                est = float(c.iloc[-1]) * float(n)
+            except Exception:
+                continue
+            # 대조 밴드는 이제 '보조'다(분할·자사주 소각 등으로 주식수가 통째로 어긋난 경우를 잡는다).
+            #   ±25%: 실적일 급등락(일간 ±10~20%)은 통과시키고 배수 오류는 잡는 폭이다.
+            #   실측 자연 오차는 중앙 0.05% · 99분위 1.12% 라 정상값이 걸릴 여지가 없다.
+            #   직전 값이 없는 신규 편입 종목은 그냥 채운다 — impl 폴백은 실측 18/18 오차 0.00%라
+            #   정확하고, 안 채우면 신규 편입 종목의 시총이 영영 빈다.
+            p = _prev_mc.get(t)
+            if p and p > 0 and abs(est / p - 1) > 0.25:
+                _rej += 1; continue
+            f["mc"] = est; _mc_est.append(t)
+            # mc가 서면 ps도 정의대로 되계산한다(같은 이유로 비어 있었다).
+            if f.get("ps") is None and f.get("rev"):
+                try: f["ps"] = f["mc"] / f["rev"]
+                except (TypeError, ZeroDivisionError): pass
+        if _mc_est: print(f"    정의 폴백(종가×발행주식수) 보완 {len(_mc_est)}종목")
+        if _hist_n: print(f"    복수 클래스 {len(_hist_n)}종목은 직전 빌드 역산 주식수로 채움: {', '.join(sorted(_hist_n)[:8])}")
+        if _rej: print(f"    폴백 기각 {_rej}종목(주식수가 직전 역산과 안 맞거나 대조 기준 없음)")
+        _left = sum(1 for t in raw if (fund.get(t) or {}).get("mc") is None)
+        print(f"    남은 시가총액 결손 {_left}종목")
     # ⚠ 아래 두 소스는 개별 실패를 예외로 삼키므로, 전량 실패해도 잡은 '성공'으로 끝나고 화면의 패널만 조용히 사라진다.
     #   커버리지가 절반 미만이면 중단해 이전본을 유지하고 워크플로를 빨간불로 알린다.
     if len(fund) < len(raw) * 0.5:
@@ -965,28 +1188,79 @@ def main():
     #   축이라 조용히 비면 화면이 망가진다. 반면 나머지 16개는 구조적 결측(금융의 cr/eveb/fcf,
     #   무배당의 dy, 사이클 업종의 eg)이 커서 유니버스 구성만 바뀌어도 20%p가 흔들린다 → **경고 로그만**.
     #   펀더멘털은 매매 신호가 아니라 표시이므로, 표시 결손 때문에 테크니컬 갱신까지 멈추는 건 과하다.
+    # ── 분모를 유니버스로 ────────────────────────────────────────────────
+    # 🚨 fx_cov 의 분모는 **응답에 성공한 종목**(len(fund))이지 유니버스(len(raw))가 아니다.
+    #    fetch_fund 가 예외를 내면 그 종목은 fund 에 아예 안 들어가고, 남은 종목만으로 비율을 재므로
+    #    **쓰로틀링이 심할수록 커버리지가 올라간다**. 100종이 통째로 죽으면 fx_cov['mc']=100.0 인데
+    #    화면 실제 커버는 80.7% 다. 종목 수 게이트는 50% 미만에서만 걸리니 그 사이가 통째로 사각지대다.
+    #    (게이트를 넣은 목적이 바로 그 상황을 잡는 것이었다 — 분모가 틀리면 정반대로 동작한다.)
+    #    화면은 `for t in raw` 로 유니버스 전부를 그리므로, 판정도 유니버스 분모라야 화면과 같은 말을 한다.
+    _ucov = {k: round(100.0 * sum(1 for t in raw if (fx_v.get(t) or {}).get(k) is not None) / max(len(raw), 1), 1)
+             for k in FUND_META}
+    if any(abs(_ucov[k] - fx_cov[k]) >= 0.1 for k in FUND_META):
+        print("  ⚠ 응답 분모와 유니버스 분모가 갈린다(종목이 통째로 빠졌다는 뜻): " +
+              " ".join(f"{k} {fx_cov[k]:.0f}→{_ucov[k]:.0f}" for k in FUND_META if abs(_ucov[k] - fx_cov[k]) >= 0.1))
+    _prev_doc = {}
     try:
-        _pcov = (json.load(open(OUT, encoding="utf-8")).get("fund_cov") or {})
+        _prev_doc = json.load(open(OUT, encoding="utf-8"))
+        # uni_cov 는 2026-07-31 부터 저장한다. 그 전 빌드는 fund_cov 로 대체한다 —
+        # 과거 40개 빌드 전수 대조에서 종목이 통째로 빠진 적이 없어 두 값이 동일했다.
+        _pcov = (_prev_doc.get("uni_cov") or _prev_doc.get("fund_cov") or {})
     except Exception:
         _pcov = {}
-    _drop = [(k, _pcov[k], fx_cov[k]) for k in FUND_META
-             if k in _pcov and _pcov[k] - fx_cov[k] >= FUND_GATE_DROP]
+    _drop = [(k, _pcov[k], _ucov[k]) for k in FUND_META
+             if k in _pcov and _pcov[k] - _ucov[k] >= FUND_GATE_DROP]
     if _drop:
         _msg = ", ".join(f"{k} {a:.0f}%→{b:.0f}%" for k, a, b in _drop)
         if any(k in FUND_GATE_KEYS for k, _, _ in _drop):
             raise SystemExit(f"펀더멘털 핵심 필드 커버 급락({_msg}) — 정보원 스키마 변경 의심, 갱신 중단(이전본 유지)")
         print(f"  ⚠ 펀더멘털 커버 하락(비핵심, 계속 진행): {_msg}")
+    # ── 절대 하한 ────────────────────────────────────────────────────────
+    # 위 게이트는 **이전 빌드와의 차이**만 본다. 그래서 한 번 낮은 값이 커밋되면 그것을 정상으로
+    # 알아버린다(2026-07-30 실측: 100%→82% 는 죽였지만 82%→79% 는 그냥 통과시켰다).
+    # 위 복구 2단을 다 쓰고도 하한을 못 넘으면 그건 화면이 깨진 채 배포되는 것이므로 중단한다.
+    _low = [(k, _ucov[k], v) for k, v in FUND_GATE_FLOOR.items() if k in _ucov and _ucov[k] < v]
+    if _low:
+        # 실패 메시지 자체가 진단이 되게 한다. 로그 본문은 사내 PC 에서 못 받고 주석 한 줄만 남으므로
+        # (build/gate.py 참조), "왜 못 메웠나"를 그 한 줄에 담아야 다음 수를 정할 수 있다.
+        #   2026-07-31: 이게 없어서 'impl 이 없나 sho 가 없나 응답이 아예 없나'를 못 가리고
+        #   같은 수치(81.7%)를 두 번 받아 들며 추측만 했다.
+        _mk = [t for t in raw if (fund.get(t) or {}).get("mc") is None]
+        _c = {"응답없음": 0, "impl": 0, "tsh": 0, "sho": 0, "주식수없음": 0}
+        for t in _mk:
+            g = fund.get(t)
+            if not g: _c["응답없음"] += 1; continue
+            _c["impl" if g.get("impl") else "tsh" if g.get("tsh") else
+               "sho" if g.get("sho") else "주식수없음"] += 1
+        raise SystemExit("펀더멘털 절대 하한 미달(" +
+                         ", ".join(f"{k} {c:.1f}% < {v:.0f}%" for k, c, v in _low) +
+                         f") — 시총 결손 {len(_mk)}종목 내역: " +
+                         " · ".join(f"{k} {v}" for k, v in _c.items() if v) +
+                         f" (직전빌드 대조기준 {len(_prev_sh)}종목) — 갱신 중단(이전본 유지)")
+    # 폴백이 커버를 메우면 **하한은 만족하는데 정보원은 계속 죽어 있는** 상태가 조용히 이어진다.
+    # 커버리지만 보면 100%라 안 보이므로 추정 비중을 따로 드러낸다(이전 빌드와 나란히 놓아 추세도 보이게).
+    if _mc_est:
+        _pest = len(_prev_doc.get("mc_est") or []) if isinstance(_prev_doc, dict) else 0
+        print(f"  ⚠ 시가총액 {len(_mc_est)}종목({len(_mc_est)/len(raw)*100:.1f}%)이 정보원 값이 아니라 "
+              f"종가×발행주식수 추정이다 (직전 빌드 {_pest}종목)")
+        if len(_mc_est) > len(raw) * 0.20:
+            print("     정보원 결손이 20%를 넘는다 — 폴백이 메우고 있을 뿐 원인은 그대로다")
     oh_rel = (oh_c - oh_c.groupby(sect).transform("median") + 50.0).clip(0, 100)   # 섹터 상대 과열도(피어 대비)
     # 매수 점수 = 추세+모멘텀 (저과열은 점수 아닌 '필터'로만 — 저과열 가중이 수익을 깎는 것을 실측으로 확인).
     #   그리드 검증(5y 주간): 상승추세∩과열≤60 + tr+mo top8 → ex-SPY20 +2.72%p·hit 56.2%·중앙 roc3m 25%(추격 아님)
     #   vs 구식(저과열 가중+과열≤45) +1.62%p — 상승추세 평균(+1.84)보다도 낮았음.
     buy_score = tr_c + mo_c
     sell_score = oh_rel + 0.6*(100 - tr_c) + 0.6*(100 - mo_c) + 0.3*vo_c
-    # 일별 종가 패널 (PX_DAYS 거래일) — 기간선택 슬라이스 + **타점 산출 구간**.
+    # 일별 종가 패널 (PX_START 이후) — 기간선택 슬라이스 + **타점 산출 구간**.
     #   252였을 때 타점이 최근 1년치만 나와 차트 앞부분이 '신호 없음'처럼 보였다.
     #   컨텍스트 계열(200MA·RSI·과열도)은 전체 이력으로 계산한 뒤 이 index로 reindex하므로
     #   구간을 늘려도 워밍업 결손이 없다.
-    daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index().tail(PX_DAYS)
+    daily = pd.DataFrame({t: raw[t]["close"] for t in raw}).sort_index()
+    daily = daily[daily.index >= pd.Timestamp(PX_START)]
+    if len(daily) < PX_MIN_DAYS:
+        raise SystemExit(f"❌ 가격 패널 {len(daily)}행 — PX_MIN_DAYS({PX_MIN_DAYS}) 미만이다. "
+                         f"다운로드가 짧게 왔다. bms/sms 가 위치 인덱스라 이대로 배포하면 "
+                         f"화면의 모든 타점이 다른 날짜를 가리킨다.")
     # ── 유령 거래일 제거 ──────────────────────────────────────────────────
     # 패널의 날짜 축은 전 종목 인덱스의 합집합이다. 그래서 **한 종목만 봉을 갖고 있어도**
     # 그 날짜가 패널에 들어오고, 나머지 517종목은 그 자리가 통째로 결측이 된다.
@@ -1340,7 +1614,12 @@ def main():
                               "high_cheap": "높을수록 저평가(현금수익률)",
                               "high_good": "높을수록 양호", "low_good": "낮을수록 양호",
                               "high_neutral": "방향만 있고 우열은 없음", "none": "방향 없음"},
-           "fund_cov": fx_cov,
+           # fund_cov = 응답에 성공한 종목 분모 · uni_cov = 유니버스 분모(화면과 같은 말).
+           #   게이트는 uni_cov 로 판정한다. 둘을 함께 남겨야 '종목이 통째로 빠졌다'가 사후에 보인다.
+           "fund_cov": fx_cov, "uni_cov": _ucov,
+           # 시가총액을 정보원에서 못 받아 종가×발행주식수로 채운 종목. 커버가 100%로 보여도
+           #   여기가 계속 두툼하면 정보원이 낫지 않은 것이다 — 커버리지만 보면 안 보인다.
+           "mc_est": sorted(_mc_est),
            "fund_pct_basis": {"n": len(fx_v), "as_of": as_of,
                               "note": "lo/hi 임계 = 커버 종목 실측 33/67 백분위. 관행수치(‘PER 15 미만은 싸다’ 등)를 쓰지 않으며 "
                                       "갱신 때마다 재계산된다. 상세(sd/)의 fundx는 [값, 전체퍼센타일, 섹터퍼센타일]이며 "
@@ -1483,4 +1762,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # 멈춤 사유를 체크런 주석으로 올린다 — 로그 본문은 사내 PC 에서 못 받는다(build/gate.py 참조)
+    import gate
+    gate.run(main, "종목 시그널")

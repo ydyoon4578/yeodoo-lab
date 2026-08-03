@@ -156,11 +156,49 @@ def main() -> int:
     tb = importlib.util.module_from_spec(spec); spec.loader.exec_module(tb)
     FX = tb.load_fund()
 
+    # 구간 정의(1일·1주·…·1년·YTD)는 style_top_pdf.py 가 정본이다. 여기서 다시 적으면
+    # 홈 한 화면 안에서 위 묶음과 아래 묶음의 '3개월'이 다른 날을 가리키는 날이 온다.
+    # ⚠ import 만 한다 — 그 모듈은 계산에 numpy 만 쓰고 matplotlib 은 그릴 때만 부른다
+    #   (그쪽 파일 머리의 설명). 폰트 없는 러너에서도 이 import 는 안전하다.
+    spec2 = importlib.util.spec_from_file_location("_sp", os.path.join(HERE, "style_top_pdf.py"))
+    sp = importlib.util.module_from_spec(spec2); spec2.loader.exec_module(sp)
+
     ISS = issuer_map(uni)
+
+    # ── 랩 스크린 ───────────────────────────────────────────────────
+    # 위의 스타일들은 공개 지수 방법론(MSCI·S&P)을 따르지만, 이쪽은 이 랩이 정의한 스크린이다
+    # (screener.html). 성격이 달라 홈에서도 따로 묶어 아래에 둔다.
+    # ⚠ **점수를 다시 만들지 않는다.** screener.html 이 쓰는 결과가 이미 stocks.json 의
+    #   screens 에 구워져 있다(build/screens_apply.py). 산식을 이 파일에 재구현하면
+    #   임계·백분위 정의가 갈리는 날 두 화면이 조용히 다른 명단을 말한다.
+    # ⚠ 키에 sc_ 를 붙인다. 스크린 키와 스타일 키가 **겹친다** — 스크린 lowvol(저변동 방어주)과
+    #   지수 스타일 lowvol(S&P 500 Low Volatility)이 같은 이름이라, 안 붙이면 한쪽이
+    #   다른 쪽을 덮어써서 화면에서 조용히 사라진다.
+    SCR_DOC = load("screens.json") or {}
+    SCR_RES = (st.get("screens") or {})
+    SCR_DIR = SCR_DOC.get("dir") or {}
+    # 홈의 '상위 10종목' 줄에 싣지 않을 스크린. **스크린을 없애는 것이 아니다** —
+    # screener.html 은 screens.json 과 stocks.json 을 직접 읽으므로 그 화면에는 그대로 있다.
+    # index.html 의 ST_SCR 과 짝이다. 한쪽만 고치면 style_top.json 에 아무도 안 읽는 줄이
+    # 남거나(여기만 두면) 화면에서 조용히 사라진다(저쪽만 빼면).
+    SCR_SKIP = {"growth_margin": "자격 통과가 5종뿐이라 10칸 줄에 맞지 않는다"
+                                 " — 사용자 결정 2026-08-02"}
+    # 스크린이 쓰는 지표의 한글 이름 — 칩 툴팁에 그대로 나간다.
+    SCR_LBL = {"fpe": "선행PER", "tpe": "PER", "ps": "PSR", "pb": "PBR", "de": "부채비율 D/E %",
+               "beta": "베타", "roe": "ROE %", "pm": "순이익률 %", "rg": "매출성장 %",
+               "gr": "선행EPS성장 %", "dy": "배당수익률 %", "fcfy": "FCF수익률 %"}
 
     def fund(t, k):
         v = (uni[t].get("fund") or {}).get(k)
         return v if isinstance(v, (int, float)) else None
+
+    # 시가총액(억 달러) — 홈의 종목 칩에 마우스를 올렸을 때 이름과 함께 나갈 값이다.
+    # 없으면 **None 으로 둔다.** home_flow.py 는 없는 것을 0 으로 채우는데(정렬 키라
+    # 숫자여야 한다) 여기는 정렬이 아니라 글로 나가는 자리라, 0 을 쓰면 화면에
+    # '시총 0억$' 이라고 적힌 회사가 생긴다. 모르는 것은 그 칸을 빼는 편이 맞다.
+    def mc_of(t):
+        v = fund(t, "mc")
+        return None if v is None else round(float(v))
 
     def rets(a):
         return a[1:] / a[:-1] - 1.0
@@ -310,6 +348,50 @@ def main() -> int:
             if SPVAL[t][0] > vmean + PURE_MIN:
                 PURE_V.append(t)
 
+    # ── 스크린 줄의 기간별 수익률 ────────────────────────────────────────────
+    # ⚠ 지수 방법론 줄의 수익률(data/style_trails.json)과 **종류가 다른 수치다.**
+    #     저쪽 — 월말마다 그 시점 자료로 다시 뽑아 갈아탄 백테스트(style_top_pdf.backtest).
+    #     이쪽 — **오늘 뽑힌 열 종목을 1년 전에 사서 그대로 들고 있었다면** 얼마였나.
+    #
+    #   왜 같은 방식으로 못 하나. 스크린 점수는 벤더 스냅샷 지표(선행PER·선행EPS성장·
+    #   배당수익률·FCF수익률 …)의 백분위로 매긴다. 그 값의 **과거 이력이 이 저장소에 없다** —
+    #   data/fund_history.json 은 스냅샷이 딱 하나고(2026-07-29) data/estimates.json 도 3일치다.
+    #   과거 월말의 점수를 다시 만들 수 없으니 리밸런스를 재현할 방법이 없다.
+    #   data/screens.json 의 policy 가 말하는 '사내 PIT 데이터로 돌린 백테스트'가 사내망에만
+    #   있는 이유가 정확히 이것이다.
+    #
+    #   그래서 이 수치는 **룩어헤드다.** 이미 오른 종목이 오늘 스크린에 뽑혔을 수 있고,
+    #   그것을 모르는 척 과거로 되돌리는 것이라 좋게 나오게 되어 있다. 숨기지 않는다 —
+    #   키 이름을 trails_fixed 로 따로 두고(홈이 백테스트와 다른 꼬리표로 그린다) 문서에
+    #   trails_fixed_note 를 함께 싣는다. 같은 이름(trails)을 쓰면 언젠가 둘이 섞인다.
+    FIX_WIN = 252
+
+    def fixed_trails(tickers):
+        """오늘 명단을 창 시작에 동일가중으로 사서 그대로 둔 곡선의 기간별 수익률 %."""
+        end = len(dates) - 1
+        start = max(0, end - FIX_WIN)
+        rows = []
+        for t in tickers:
+            a = PX.get(t)
+            if a is None:
+                continue
+            seg = a[start:end + 1]
+            if np.isnan(seg[0]) or seg[0] <= 0:
+                continue                        # 창 시작에 값이 없으면 그 종목은 뺀다
+            rows.append(seg / seg[0])
+        if len(rows) < 2:                       # 두 종목 미만이면 '바스켓'이라 부를 수 없다
+            return None
+        nav = np.nanmean(np.array(rows, float), axis=0)
+        # 중간 결측(거래정지 등)은 직전 값으로 끌고 간다. 그대로 두면 그 칸이 NaN 이 되어
+        # 뒤의 구간 수익률이 통째로 빈다 — 한 종목의 하루 공백이 1년 칸을 지우면 안 된다.
+        for i in range(1, len(nav)):
+            if np.isnan(nav[i]):
+                nav[i] = nav[i - 1]
+        if np.isnan(nav[0]):
+            return None
+        out = sp.trails(nav, dates, start)
+        return {k: (None if v is None or v != v else round(float(v), 2)) for k, v in out.items()}
+
     def pack(key, label, ref, url, rule, sub, score, detail, rev_=False, n_=TOPN, slab="합성 z"):
         # 점수가 (자른 z, 안 자른 z) 쌍이면 둘로 정렬한다 — 앞이 같을 때만 뒤가 순서를 가른다.
         pair = any(isinstance(v, tuple) for v in score.values())
@@ -328,6 +410,7 @@ def main() -> int:
                               if pair else None),
                 "dedup_dropped": dropped or None,
                 "top": [{"t": t, "n": uni[t].get("name"), "s": uni[t].get("sector"),
+                         "mc": mc_of(t),
                          "score": round(v[0] if pair else v, 3),
                          "score_unclipped": (round(v[1], 3) if pair else None),
                          "d": detail(t)} for t, v in rows]}
@@ -374,15 +457,9 @@ def main() -> int:
              "이쪽 E/P 는 후행이다", SPVAL,
              lambda t: {"PBR": R2(fund(t, "pb")), "PER(후행)": R2(fund(t, "tpe")),
                         "PSR": R2(fund(t, "ps"))}),
-        pack("puregrow", "순수성장", "S&P 500 Pure Growth",
-             "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
-             "성장랭크÷가치랭크가 가장 작은 쪽(성장은 높고 가치는 낮은 종목) · 시총 33% 바스켓 안에서 "
-             "성장점수가 평균+0.25 를 넘는 것만",
-             "정본은 S&P Total Market 에서 표준화하고 모기업 지수에서 랭크한다 — 여기서는 둘 다 "
-             "유니버스 518종목이다", {t: -ratio[t] for t in PURE_G},
-             lambda t: {"성장점수": R2(GROW[t][0]), "가치점수": R2(SPVAL[t][0]),
-                        "성장랭크": GRK.get(t), "가치랭크": VRK.get(t)},
-             slab="−(성장랭크÷가치랭크)"),
+        # ⚠ 순수성장(puregrow)이 여기 있었다 — 2026-08-02 에 아래 IDX 루프로 옮겼다.
+        #   이 파일의 것은 벤더 스냅샷 지표로, style_top_pdf 의 것은 SEC 재무로 계산해
+        #   **같은 이름의 두 명단**이 나오고 있었다. 이제 순수가치와 함께 한 곳에서 온다.
         pack("hbeta", "고베타", "S&P 500 High Beta",
              "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-high-beta-indices.pdf",
              "최근 252거래일 일간수익률의 S&P 500 대비 베타가 가장 큰 순", None, beta,
@@ -393,6 +470,99 @@ def main() -> int:
              {t: v for t in uni for v in [fund(t, "mc")] if v},
              lambda t: {"시가총액 억$": R2(fund(t, "mc"))}, rev_=True, slab="시가총액 억$"),
     ]
+    # ── 공개 산식 지수 넷 — **정의는 build/style_top_pdf.py 가 정본이다** ─────────────
+    # 2026-08-02 사용자 요청("공개 산식이 있는 지수·ETF 를 더 찾아 같은 방식으로").
+    # ⚠ 점수 함수를 여기 다시 짜지 않는다. 그 파일의 sc_* 를 **오늘 날짜로 한 번 불러** 쓴다.
+    #   산식이 두 곳에 있으면 홈의 10종목과 바로 그 위에 붙는 기간별 수익률이 서로 다른 규칙을
+    #   말하는 날이 온다 — 이 파일이 랩 스크린에 대해 이미 지키고 있는 경계와 같은 이유다.
+    #   (위 여섯 스타일은 이 파일에 산식이 따로 있다. 그건 이 구조가 생기기 전의 것이고,
+    #    합치는 것은 별개의 일이라 여기서 건드리지 않는다.)
+    # 방법론 문서 주소만 여기서 준다 — 그쪽 STYLES 는 화면 링크를 들고 있지 않다.
+    IDX_URL = {
+        "div": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-high-dividend-index/",
+        "buyback": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-buyback-index/",
+        "fcfy": "https://www.paceretfs.com/products/cowz",
+        "divlv": "https://www.spglobal.com/spdji/en/documents/methodologies/"
+                 "methodology-sp-low-volatility-high-dividend-indices.pdf",
+        "netbuy": "https://indexes.nasdaq.com/docs/Methodology_DRB.pdf",
+        "squal": "https://www.spglobal.com/spdji/en/indices/dividends-factors/sp-500-quality-index/",
+        "spmo": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-momentum-indices.pdf",
+        "qvm": "https://www.spglobal.com/spdji/en/documents/methodologies/"
+               "methodology-sp-qvml-multi-factor-indices.pdf",
+        "snqual": "https://www.msci.com/indexes/index/705693",
+        "puregrow": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+        "purevalue": "https://www.spglobal.com/spdji/en/documents/methodologies/methodology-sp-us-style.pdf",
+    }
+    # 정본에서 벗어난 곳. 화면이 칩 옆 ⚠ 로 이것을 낸다 — 근사한 것을 근사했다고 적지 않으면
+    # 그냥 그 지수인 척이 된다.
+    IDX_SUB = {
+        "fcfy": "정본의 분모는 **기업가치(EV)** 인데 여기서는 시가총액을 쓴다 — data/fx 에 "
+                "순부채를 만들 태그가 없다(liab 는 매입채무까지 포함한 부채총계다). "
+                "금융·부동산 제외는 정본과 같다.",
+        "divlv": "정본은 배당수익률 상위 **75종** 을 거른 뒤 저변동 50종이다. 여기서는 채점 가능 "
+                 "종목이 달마다 달라 개수 대신 **비율(상위 15%)** 로 옮겼다.",
+        "netbuy": "정본은 '순감소 5% 이상'을 **자격**으로 두고 시총가중한다. 여기서는 상위 10종목을 "
+                  "세우는 형태라 자격을 순위로 옮겼다(상위 10종은 언제나 5%를 넘는다).",
+        "squal": "재무레버리지 자리에 **부채총계÷자기자본** 을 쓴다 — data/fx 에 차입금 태그가 없다.",
+        "spmo": "위 모멘텀(MSCI)과 사촌이라 오늘 상위 10종 중 **7종이 같다.** 6개월 축 하나가 "
+                "순위를 얼마나 바꾸는지가 이 줄이 답하는 질문이다.",
+        "qvm": "세 팩터 점수는 이 표의 퀄리티 · 가치 · 모멘텀 줄과 **같은 산식**을 쓴다. "
+               "정본의 세부 정의와 완전히 같지는 않지만, 그래야 '그 셋을 평균한 줄'이 성립한다.",
+        "snqual": "퀄리티(MSCI) 줄과 원시값은 같고 **표준화 모집단만 섹터 안**이다. "
+                  "관측 20종 미만인 섹터는 z 를 만들 수 없어 통째로 빠진다.",
+        "puregrow": "정본은 S&P Total Market 에서 표준화하고 모지수에서 랭크한다 — "
+                    "여기서는 둘 다 유니버스 518종목이다.",
+        "purevalue": "정본은 S&P Total Market 에서 표준화하고 모지수에서 랭크한다 — "
+                     "여기서는 둘 다 유니버스 518종목이다.",
+    }
+    Pn = sp.Panel()
+    ilast = len(Pn.dates) - 1
+    for S in sp.STYLES:
+        if S[0] not in IDX_URL:
+            continue
+        key, label, ref, fn, mlab, desc = S[0], S[1], S[2], S[3], S[4], S[6]
+        sc, tie = fn(Pn, ilast)
+        if not sc:
+            print("  ⚠ %s 채점 결과가 없다 — 건너뛴다" % label)
+            continue
+        styles.append(
+            pack(key, label, ref, IDX_URL[key], desc.split("\n")[0], IDX_SUB.get(key),
+                 {t: (sc[t], tie.get(t, 0.0)) for t in sc},
+                 (lambda d, m: (lambda t: {m: R2(d.get(t))}))(sc, mlab),
+                 slab=mlab))
+
+    # 다른 스타일은 공개 지수 방법론을 따르지만 GARP 는 이 랩의 스크린이다 —
+    # index_ref 를 지수 이름이 아니라 그 화면으로 적어 출처를 헷갈리지 않게 한다.
+    # ⚠ 대응 ETF 가 없다. 홈 성과표는 '랩 규칙 ↔ ETF' 짝만 싣기로 한 화면이라(2026-07-29 결정)
+    #   이 스타일은 표에 못 들어가고 구성종목 줄에만 나온다(index.html 의 ST_EXTRA).
+    for sk, sc in (SCR_DOC.get("screens") or {}).items():
+        if sk in SCR_SKIP:
+            print("  · screens.%s 는 홈에 싣지 않는다 — 건너뛴다(%s)" % (sk, SCR_SKIP[sk]))
+            continue
+        rows = SCR_RES.get(sk) or []
+        score = {r["t"]: float(r["s"]) for r in rows
+                 if r.get("t") in uni and r.get("s") is not None}
+        if not score:
+            print("  ⚠ screens.%s 결과가 없다 — 건너뛴다(build/screens_apply.py 가 돌았는지 확인)" % sk)
+            continue
+        keys = sc.get("keys") or []
+        # 조건은 화면과 같은 말로 적는다 — '좋은 쪽 백분위'라는 규약을 여기서 다시 설명하지 않고,
+        # 어느 지표가 어느 방향인지만 밝힌다(dir 는 screens.json 이 정본이다).
+        cond = " · ".join("%s(%s)" % (SCR_LBL.get(k, k), "낮을수록" if SCR_DIR.get(k) == "low" else "높을수록")
+                          for k in keys)
+        qual = " · ".join("%s %s" % (SCR_LBL.get(k, k), v)
+                          for k, v in (sc.get("qualify") or {}).items())
+        qmax = " · ".join("%s %s 이하" % (SCR_LBL.get(k, k), v)
+                          for k, v in (sc.get("qualify_max") or {}).items())
+        rule = "%s 의 좋은쪽 백분위 평균. 하한 %s 을 넘은 종목만 채점한다." % (cond, qual)
+        if qmax:
+            rule += " 상한: %s." % qmax
+        ent = pack("sc_" + sk, sc.get("name") or sk, "여두 전략 랩 · 스크린",
+                   "screener.html#s=" + sk, rule, None, score,
+                   (lambda ks: (lambda t: {SCR_LBL.get(k, k): R2(fund(t, k)) for k in ks}))(keys),
+                   slab="적합도")
+        ent["trails_fixed"] = fixed_trails([x["t"] for x in ent["top"]])
+        styles.append(ent)
 
     doc = {
         "note": "스타일별 상위 10종목. 유니버스 518종목(S&P 500 ∪ NASDAQ 100)에 각 스타일 지수의 "
@@ -403,6 +573,14 @@ def main() -> int:
                 "구별 불가'로 기각했다 — 순위를 매수 신호로 읽지 말 것.",
         "as_of": st.get("as_of"), "universe": len(uni), "topn": TOPN,
         "px_window": {"from": dates[0], "to": dates[-1], "n": len(dates)},
+        "trails_fixed_note":
+            "스크린 줄에만 있는 trails_fixed 는 **백테스트가 아니다.** 오늘 뽑힌 상위 10종목을 "
+            "%d거래일 전에 동일가중으로 사서 그대로 들고 있었다면 얼마였나를 되돌아본 값이다. "
+            "종목을 오늘 자료로 골라 놓고 과거를 재므로 **룩어헤드이며 좋게 나오게 되어 있다.** "
+            "지수 방법론 줄의 수익률(data/style_trails.json)은 월말마다 그 시점 자료로 다시 뽑는 "
+            "백테스트라 종류가 다르다 — 같은 잣대로 비교하지 말 것. 스크린을 같은 방식으로 재려면 "
+            "벤더 스냅샷 지표의 과거 이력이 필요한데 이 저장소에는 없다"
+            "(data/fund_history.json 스냅샷 1개 · data/estimates.json 3일)." % FIX_WIN,
         "styles": styles,
     }
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(

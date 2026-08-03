@@ -48,6 +48,11 @@ def _cell(df, row, col):
         return None
 
 
+def _pct(v):
+    """분수 성장률 → 백분율. 저장소 규약은 성장률을 %로 담는 것이다(stocks.json fund.rg 와 같은 눈금)."""
+    return None if v is None else round(v * 100.0, 3)
+
+
 def pull(t, yf):
     """한 종목의 선행 지표. 네 모듈을 **같은 Ticker 객체**에서 꺼낸다(요청 1회)."""
     tk = yf.Ticker(t)
@@ -71,8 +76,14 @@ def pull(t, yf):
         "e7": _cell(tr, "+1y", "7daysAgo"),
         "r90": revpct("90daysAgo"), "r30": revpct("30daysAgo"), "r7": revpct("7daysAgo"),
         "up": _cell(rv, "0y", "upLast30days"), "dn": _cell(rv, "0y", "downLast30days"),
-        "eg": _cell(ee, "+1y", "growth"),            # 선행 EPS 성장률
-        "rg": _cell(re_, "+1y", "growth"),           # 선행 매출 성장률
+        # 🚨 정보원(yfinance earningsTrend growth)은 **분수**를 준다(0.629 = +62.9%).
+        #   이 저장소의 규약은 성장률을 **백분율**로 저장하는 것이다 — stocks.json 의 fund.rg 가
+        #   이미 _x100 을 거쳐 %로 들어간다(중앙 9.1). 같은 키 이름으로 두 파일이 100배 다른 눈금을
+        #   쓰고 있었고, screener.html 은 이 분수를 '배' 단위로 그려 **AVGO 0.629 를 '0.629배'**,
+        #   즉 −37% 축소로 보이게 찍고 있었다(실제 +62.9% 성장). rg 상위 10 중 8행이 그렇게 뒤집혔다.
+        #   여기서 %로 통일한다. 화면은 읽기만 한다.
+        "eg": _pct(_cell(ee, "+1y", "growth")),      # 선행 EPS 성장률(%)
+        "rg": _pct(_cell(re_, "+1y", "growth")),     # 선행 매출 성장률(%)
         "nan": _cell(ee, "0y", "numberOfAnalysts"),
     }
     return rec if any(v is not None for v in rec.values()) else None
@@ -151,7 +162,7 @@ def main() -> int:
             "rp90": "90일간 컨센서스 변화 ÷ 주가(%p) — 순위는 이 값으로 매긴다",
             "rp30": "30일간 · 주가 대비(%p)", "rp7": "7일간 · 주가 대비(%p)",
             "up": "최근 30일 상향 애널리스트 수", "dn": "최근 30일 하향 수",
-            "eg": "선행 EPS 성장률(다음 회계연도)", "rg": "선행 매출 성장률(다음 회계연도)",
+            "eg": "선행 EPS 성장률(다음 회계연도, %)", "rg": "선행 매출 성장률(다음 회계연도, %)",
             "nan": "추정에 참여한 애널리스트 수",
         },
         "limits": [
@@ -180,4 +191,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # 멈춤 사유를 체크런 주석으로 올린다 — 로그 본문은 사내 PC 에서 못 받는다(build/gate.py 참조)
+    import gate
+    gate.run(main, "선행 컨센서스")

@@ -41,6 +41,11 @@ WIKI_SPX = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 WIKI_NDX = "https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies"
 SPY_XLSX = ("https://www.ssga.com/us/en/intermediary/library-content/products/"
             "fund-data/etfs/us/holdings-daily-us-en-spy.xlsx")
+# GICS 4단 구조(섹터 11 → 산업그룹 25 → 산업 74 → 서브산업 163). 위키백과가 코드와 함께
+# 전문을 싣는다 — S&P 500 목록 표는 **섹터와 서브산업만** 주므로 그 사이 두 단을 여기서 잇는다.
+# ⚠ 정본은 MSCI/S&P 라이선스라 받아올 수 없다. 이 표는 그 구조를 옮겨 적은 공개 문서이고,
+#   우리는 서브산업 이름으로 조인만 한다(실측 2026-08-03: 유니버스 127개 전부 조인).
+WIKI_GICS = "https://en.wikipedia.org/wiki/Global_Industry_Classification_Standard"
 
 GICS = {"Communication Services", "Consumer Discretionary", "Consumer Staples", "Energy",
         "Financials", "Health Care", "Industrials", "Information Technology", "Materials",
@@ -86,6 +91,42 @@ def spy_symbols():
             if re.fullmatch(r"[A-Z]{1,5}(\.[A-Z])?", s.strip().upper())}
 
 
+def gics_tree():
+    """서브산업 이름 → {code, sector, group, industry}. 못 받으면 {} (호출부가 잡는다).
+
+    위키백과 GICS 문서는 4단 구조 전문을 코드와 함께 싣는다(섹터 11 → 산업그룹 25 →
+    산업 74 → 서브산업 163). S&P 500 목록 표는 **섹터와 서브산업만** 주므로 그 사이
+    두 단을 여기서 잇는다 — 손으로 대응표를 적지 않고 공개된 구조를 그대로 읽는다.
+    ⚠ rowspan 때문에 행마다 열 수가 다르다. 열 위치로 읽으면 어긋나므로 **코드 자릿수
+      (2/4/6/8)로 어느 단인지 판정**하고 직전 값을 이어 쓴다.
+    """
+    try:
+        t = get(WIKI_GICS).decode("utf-8", "replace")
+    except Exception as e:
+        print("  ⚠ GICS 구조 문서 실패: %s" % e)
+        return {}
+    m = re.search(r"<table[^>]*>.*?</table>", t, re.S)
+    if not m:
+        return {}
+    cur, out = {}, {}
+    for tr in re.findall(r"<tr.*?</tr>", m.group(0), re.S):
+        cs = [H.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+              for c in re.findall(r"<t[hd].*?</t[hd]>", tr, re.S)]
+        if not cs or cs[0] == "Sector":
+            continue
+        i = 0
+        while i < len(cs):
+            c = cs[i]
+            if re.fullmatch(r"\d{2}|\d{4}|\d{6}|\d{8}", c) and i + 1 < len(cs):
+                cur[len(c)] = (c, cs[i + 1]); i += 2
+            else:
+                i += 1
+        if all(k in cur for k in (2, 4, 6, 8)):
+            out[cur[8][1]] = {"code": cur[8][0], "sector": cur[2][1],
+                              "group": cur[4][1], "industry": cur[6][1]}
+    return out
+
+
 def main() -> int:
     dry = "--dry" in sys.argv
     cur = json.load(io.open(OUT, encoding="utf-8"))
@@ -93,14 +134,31 @@ def main() -> int:
 
     # ── 수집 ──────────────────────────────────────────────────────────
     spx = {}
+    bad_sym = []
     for rows in wiki_rows(WIKI_SPX):
         head = [h.lower() for h in rows[0]]
         if "symbol" in head and any("gics sector" in h for h in head):
             i_t, i_n = head.index("symbol"), head.index("security")
             i_s = next(k for k, h in enumerate(head) if "gics sector" in h)
+            # GICS **서브산업**(4차)도 같이 받는다(2026-08-03). 위키 S&P 500 표가 싣는 GICS 는
+            # 섹터(1차)와 서브산업(4차) 둘뿐이다 — 2차(산업그룹 25)·3차(산업 74)는 없다.
+            # 그 둘을 만들려면 서브산업→상위 대응표를 손으로 적어야 하는데, 그건 이 표에
+            # 없는 것을 지어내는 일이라 하지 않는다. 홈의 섹터-산업 트리가 이 값을 쓴다.
+            i_g = next((k for k, h in enumerate(head) if "sub-industry" in h or "sub industry" in h), None)
             for r in rows[1:]:
                 if len(r) > max(i_t, i_n, i_s):
-                    spx[norm(r[i_t])] = {"name": r[i_n], "sector": r[i_s]}
+                    # 관문 0: 티커 형식. NDX 쪽에는 처음부터 있었는데 여기엔 없었다 —
+                    # 위키 심볼 셀에 무엇이 들어오든 members.json → stocks.json → 화면까지
+                    # 그대로 흘렀다는 뜻이다. wiki_rows 가 태그를 지운 **뒤** H.unescape 를
+                    # 하므로, 엔티티로 적힌 것은 이 지점에서 태그로 되돌아온다.
+                    # 아래 관문(개수·교차확인·변동)은 503종 중 한 행이 이상해도 전부 통과한다.
+                    # 형식은 여기서만 막을 수 있다.
+                    t = norm(r[i_t])
+                    if not re.fullmatch(r"[A-Z.]{1,6}", t):
+                        bad_sym.append(r[i_t][:40])
+                        continue
+                    spx[t] = {"name": r[i_n], "sector": r[i_s],
+                              "sub": (r[i_g].strip() if i_g is not None and len(r) > i_g else "")}
             break
     ndx = {}
     for rows in wiki_rows(WIKI_NDX):
@@ -114,6 +172,13 @@ def main() -> int:
     print("수집 — SPX %d · NDX %d" % (len(spx), len(ndx)))
 
     fail = []
+    # ── 관문 0: 티커 형식 ──
+    # 조용히 버리지 않는다. 원문이 오염됐거나 파싱이 깨진 것인데, 버리고 넘어가면 개수 관문이
+    # 잡아 줄 만큼 크게 틀린 날에만 알려지고 한두 건은 영영 안 보인다.
+    if bad_sym:
+        fail.append("SPX 심볼 형식 위반 %d건: %s — 추측으로 고치지 않는다"
+                    % (len(bad_sym), ", ".join(bad_sym[:5])))
+
     # ── 관문 2: 개수 ──
     if not (LIM_SPX[0] <= len(spx) <= LIM_SPX[1]):
         fail.append("SPX 개수 %d — 정상 범위 %s 밖(파싱이 깨졌을 가능성)" % (len(spx), LIM_SPX))
@@ -140,16 +205,35 @@ def main() -> int:
         old = cur_m.get(t) or {}
         return old.get("name") or wiki_name
 
+    GT = gics_tree()
+    if len(GT) < 150:
+        # 163개가 정상이다. 크게 모자라면 파싱이 어긋난 것이라 그 단을 통째로 비운다 —
+        # 절반만 붙은 계층은 화면에서 '그 밖'이 부푸는 것으로만 보여 알아채기 어렵다.
+        print("  ⚠ GICS 구조 %d개만 파싱됐다(정상 163) — 상위 두 단을 싣지 않는다" % len(GT))
+        GT = {}
+    else:
+        print("GICS 구조 — 서브산업 %d · 산업 %d · 산업그룹 %d"
+              % (len(GT), len({v["industry"] for v in GT.values()}),
+                 len({v["group"] for v in GT.values()})))
+
+    def gics_of(sub):
+        g = GT.get(sub or "")
+        return {"grp": g["group"], "ind": g["industry"]} if g else {}
+
     new = {}
     for t, v in spx.items():
-        new[t] = {"name": nm(t, v["name"]), "sector": v["sector"], "idx": ["SPX"]}
+        new[t] = {"name": nm(t, v["name"]), "sector": v["sector"], "idx": ["SPX"],
+                  **({"sub": v["sub"]} if v.get("sub") else {}), **gics_of(v.get("sub"))}
     for t, v in ndx.items():
         if t in new:
             new[t]["idx"] = ["NDX", "SPX"]
         else:
             # NDX 전용 — 위키 NDX 표는 ICB 분류라 GICS가 없다. 기존 명단에서 잇는다.
             old = cur_m.get(t) or {}
-            new[t] = {"name": nm(t, v["name"]), "sector": old.get("sector", ""), "idx": ["NDX"]}
+            # NDX 전용은 서브산업도 없다 — 기존 값이 있으면 잇고, 없으면 비운다(추측 금지).
+            new[t] = {"name": nm(t, v["name"]), "sector": old.get("sector", ""), "idx": ["NDX"],
+                      **({"sub": old["sub"]} if old.get("sub") else {}),
+                      **gics_of(old.get("sub"))}
     name_drift = sorted(t for t in new if t in cur_m
                         and (spx.get(t) or ndx.get(t) or {}).get("name")
                         and cur_m[t].get("name") != (spx.get(t) or ndx.get(t))["name"])
@@ -217,4 +301,6 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # 멈춤 사유를 체크런 주석으로 올린다 — 로그 본문은 사내 PC 에서 못 받는다(build/gate.py 참조)
+    import gate
+    gate.run(main, "지수 편입 명단")

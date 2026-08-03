@@ -1,0 +1,50 @@
+name: Refresh CFTC COT (weekly)
+
+# CFTC 미결제약정 보고서(data/cot.json). S&P 500 · NASDAQ-100 · VIX 선물의
+# 참여자 유형별 롱·숏 포지션을 받는다 — sentiment.json 이 '가격'을 보는 데 반해
+# 이쪽은 '누가 어느 쪽에 서 있는가'라는 다른 축이다.
+#
+# 주기 — CFTC 는 **화요일 장마감 포지션을 그 주 금요일 15:30 ET** 에 낸다.
+#   금요일 15:30 ET = 토요일 05:30 KST(서머타임 04:30). 여유를 두고 토요일 08:00 KST 에 돈다.
+#   주간 데이터라 이보다 자주 받을 이유가 없고, 늦게 받아도 잃는 것이 없다.
+#
+# ⚠ 이 잡은 매번 전 이력을 다시 받는다(계약 3개 × 약 850~1,100주). Socrata 페이지가
+#   1,000행이라 호출이 계약당 2~3회고 전체가 1분 미만이다. 증분으로 만들면 중간에 정정된
+#   행을 놓치는데, CFTC 는 실제로 과거 주를 정정한다 — 통째로 다시 받는 편이 싸고 옳다.
+#
+# ⚠ 소비하는 쪽은 각 행의 release(발표일) 이후 **첫 거래일부터만** 그 값을 쓸 것.
+#   화요일 기준값을 화요일에 쓰면 룩어헤드다. 생성기가 release 를 미리 계산해 실어 둔다.
+
+on:
+  schedule:
+    - cron: '0 23 * * 5'    # 금 23:00 UTC = 토 08:00 KST (발표 금 15:30 ET 이후)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-cot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 표준 라이브러리만 쓴다 — pip 단계가 없다.
+      - name: Fetch CFTC COT
+        run: python build/refresh_cot.py
+      - name: Validate
+        run: python build/validate_site.py
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): CFTC 미결제약정(COT) 자동 갱신" data/cot.json
+      # '돌았는데 낡은 데이터'면 잡을 실패시킨다. 주간 데이터라 여유를 10영업일로 둔다
+      # (발표 지연 3일 + 명절 주간 + 크론 지연을 다 흡수하고도 두 주가 비면 진짜 이상한 것이다).
+      - name: Verify freshness
+        run: python build/check_freshness.py data/cot.json "COT" 10

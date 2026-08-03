@@ -46,6 +46,14 @@
     "매주 토 08:10 KST"
    ]
   },
+  "refresh-cot.yml": {
+   "cron": [
+    "0 23 * * 5"
+   ],
+   "label": [
+    "매주 토 08:00 KST"
+   ]
+  },
   "refresh-earnings.yml": {
    "cron": [
     "0 22 * * 0-5"
