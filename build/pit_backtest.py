@@ -605,7 +605,14 @@ def score(S, t, j, C):
             ch = TB.asof_fund(f.get("cash"), dt_)
             at = TB.asof_fund(f.get("asset"), dt_)
             return (ch / at) if (ch is not None and at and at > 0) else None
-        return None
+        # 🚨 FUND_SIDS 에 넣어 놓고 여기 갈래를 안 만들면 **조용히 무보유**가 되고, 표에는
+        #   '열위'라는 성적이 붙는다. 실제로 그렇게 한 번 틀렸다 — 2026-08-04 에 후보 규칙
+        #   하나를 FUND_SIDS 에만 넣고 돌렸더니 CAGR 0.00 · 초과 −17.59 · t −3.32 가 나왔는데
+        #   규칙의 성적이 아니라 갈래 누락이었다.
+        #   채점기가 두 벌이라(tech_backtest 와 여기) 한쪽만 고쳐지는 사고는 구조적으로 난다.
+        #   그러니 조용히 None 을 돌려주지 말고 여기서 죽는다.
+        raise SystemExit("pit_backtest.score: FUND_SIDS 에 %s 가 있는데 채점 갈래가 없다 — "
+                         "tech_backtest 의 같은 갈래를 그대로 옮겨 적을 것" % sid)
     if sid == "x-echo":
         return TB.ret(P, j - 126, 126)
     if sid == "x-coskew":
