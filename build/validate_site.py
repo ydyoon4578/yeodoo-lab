@@ -1384,16 +1384,67 @@ except Exception as e:
 
 # ── 홈 하드코딩 문구가 데이터와 따로 썩지 않게 ────────────────────────────────
 # (실사고: meta description은 512종목, 본문 히어로는 518종목 — 검색 스니펫·공유 카드에만 옛 유니버스가 나갔다)
+# ⚠ 2026-08-03: index.html 만 보던 것을 **전 페이지**로 넓혔다. 그날 sources.html 이 '512종목'을
+#   띄우고 있었는데(실제 518) 이 검사가 못 잡았다 — 같은 화면의 메가메뉴는 셸이 뿌린 518 을 띄워
+#   한 화면에 512 와 518 이 같이 보였다. 위 주석이 기록한 사고와 **같은 사고**가 다른 파일에서
+#   반복된 것이다.
+#   범위를 n±30 으로 좁힌 이유 — 'NASDAQ 100 종목'·'상위 200종목'·'488사' 처럼 유니버스가
+#   아닌 수가 걸린다(실측 오탐 3건). 유니버스 크기로 읽힐 만한 수만 본다.
 try:
-    _ix = rd("index.html")
     # _sj는 383행에서 screens.json으로 재사용된다 — 여기서 stocks.json을 다시 읽는다
     _stk = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
-    _n = _stk.get("n_stocks") or len(_stk.get("stocks") or [])
-    for _m in sorted(set(re.findall(r"(\d{3})종목", _ix))):
-        if int(_m) != _n:
-            errors.append(f"index.html '{_m}종목' ≠ stocks.json n_stocks {_n} — 유니버스 표기 갱신 누락")
+    _n = int(_stk.get("n_stocks") or len(_stk.get("stocks") or []))
+    # 지수 이름이 앞에 오면 유니버스 수가 아니다('S&P 500 종목 중 …'). 실측으로 걸린 오탐이다.
+    _IXNAME = ("S&P", "S&amp;P", "NASDAQ", "Nasdaq", "나스닥", "러셀", "Russell", "다우")
+    for _pg in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+        try:
+            _src = rd(_pg)
+        except Exception:
+            continue
+        # 주석은 뺀다 — 과거 사고를 기록해 둔 주석까지 잡으면 그 기록을 못 남긴다.
+        # HTML 주석과 <script> 안의 JS 주석 둘 다(실측: stocks.html 의 '// … 512종목 …' 이 걸렸다).
+        _body = re.sub(r"(?s)<!--.*?-->", "", _src)
+        _body = re.sub(r"(?s)/\*.*?\*/", "", _body)
+        _body = re.sub(r"(?m)^\s*//.*$", "", _body)
+        for _m in re.finditer(r"(?<![0-9])(\d{3})\s*종목(?![0-9])", _body):
+            _v = int(_m.group(1))
+            if _v == _n or abs(_v - _n) > 30:          # 유니버스 크기로 읽힐 수만 본다
+                continue
+            # ⚠ 지수명이 **바로 앞**일 때만 면제한다('S&P 500 종목'). 앞쪽 아무 데나 있으면
+            #   면제하던 판이 'S&P 500 · NASDAQ 100 512종목'의 512 까지 놓쳤다(실측).
+            _pre = _body[max(0, _m.start() - 12):_m.start()]
+            if any(_pre.endswith(_x + " ") or _pre.endswith(_x) for _x in _IXNAME):
+                continue
+            errors.append(f"{_pg} '{_m.group(0)}' ≠ stocks.json n_stocks {_n} — 유니버스 표기 갱신 누락")
 except Exception as e:
     errors.append(f"유니버스 표기 검증 실패: {e}")
+
+# ── 자물쇠 역방향: 잠기지 않은 페이지에 🔒를 달지 않는다 ─────────────────────
+# 아래 정방향 검사(잠긴 페이지에 🔒가 없다)만 있어서 반대 방향이 오래 살아 있었다 —
+# 2026-08-03 실측으로 공개 페이지 sources.html 에 '열람 암호 필요' 자물쇠가 10개 파일 푸터에,
+# explorer.html 에도 하나 붙어 있었다(총 11곳). 데이터 계보를 공개한다는 페이지가 잠긴 것처럼
+# 보이는 것은 잠금을 예고 안 하는 것만큼 나쁘다.
+try:
+    _locked = set()
+    for _f in os.listdir(ROOT):
+        if not _f.endswith(".html"):
+            continue
+        try:
+            if "crypto.subtle" in rd(_f):
+                _locked.add(_f)
+        except Exception:
+            continue
+    for _pg in sorted(f for f in os.listdir(ROOT) if f.endswith(".html")):
+        try:
+            _src = rd(_pg)
+        except Exception:
+            continue
+        for _m in re.finditer(r'<a[^>]+href="([^"#?]+)[^"]*"[^>]*>(?:(?!</a>).)*</a>\s*<span[^>]*>\s*\U0001F512', _src, re.S):
+            _t = _m.group(1)
+            if _t.endswith(".html") and _t not in _locked:
+                errors.append(f"{_pg}: 잠기지 않은 {_t} 에 🔒가 붙었다 — 공개 페이지를 잠긴 것처럼 보이게 한다")
+except Exception as e:
+    errors.append(f"자물쇠 역방향 검증 실패: {e}")
 
 # ── 자물쇠 표기 규약: 암호 게이트가 있는 페이지는 홈 내비에서 🔒로 예고돼야 한다 ──
 # 히어로가 '판정을 전부 공개합니다'라고 적어둔 터라, 예고 없는 암호창은 잠금 자체보다 신뢰를 깎는다.
@@ -1429,6 +1480,30 @@ if skips:
 if tool_skips:
     print(f"⚠ 검사 도구 부재 — {len(tool_skips)}개 검사 건너뜀(미검증이다. node 를 설치하면 되살아난다. CI 에서는 이미 오류로 잡는다):")
     for s in sorted(tool_skips): print("  ~", s)
+
+# ── 편향 캐비엇의 기준일이 표와 갈렸는가 ─────────────────────────────────
+# style.html 의 캐비엇은 style_perf.json 의 caveat 을 그대로 찍고, 그 문자열은 build/style_top_pdf.py
+# 가 **style_pit.json** 의 base/pit 에서 만든다. 두 파일의 as_of 가 다르면 캐비엇이 인용하는
+# '보정 전' 수치가 같은 화면의 표와 안 맞는다 — 2026-08-03 실측: pit 07-29 vs perf 07-31 이라
+# 성장의 '보정 전'(+44%)이 표(+23.21%)보다 오히려 높아, 독자가 보정 배율을 대응시킬 수 없었다.
+#
+# 🚨 **경고로만 낸다(errors 아님).** style_pit.py 는 data/pit_members.json(사내 DB 원천, gitignore)
+#    이 있어야 돌아 러너에서 재생성할 수 없다. errors 로 올리면 그 파일을 못 만드는 CI 가
+#    영구히 빨간불이 되어 일일 데이터 잡 전부가 멈춘다.
+#    → 사내망 PC 에서 build/style_pit.py 를 style_top_pdf 와 같은 as_of 로 한 번 돌린 뒤,
+#      이 블록을 errors.append 로 승격할 것.
+try:
+    _pp = os.path.join(ROOT, "data", "style_pit.json")
+    _qq = os.path.join(ROOT, "data", "style_perf.json")
+    if os.path.exists(_pp) and os.path.exists(_qq):
+        _pa = (json.load(io.open(_pp, encoding="utf-8")) or {}).get("as_of")
+        _qa = (json.load(io.open(_qq, encoding="utf-8")) or {}).get("as_of")
+        if _pa and _qa and _pa != _qa:
+            print(f"⚠ 편향 캐비엇 기준일 불일치 — style_pit.json {_pa} vs style_perf.json {_qa}. "
+                  f"style.html 캐비엇의 '보정 전' 수치가 같은 화면의 표와 다른 날을 가리킨다. "
+                  f"사내망 PC 에서 build/style_pit.py 재실행 필요(러너는 pit_members.json 이 없어 못 만든다).")
+except Exception as _e:
+    print(f"⚠ 편향 캐비엇 기준일 검사 실패: {_e}")
 # ── 가격 패널 길이: 본체와 상세가 같은 좌표계인가 ──────────────────────────
 #   stocks.json 의 bms/sms 는 pxd_dates 에 대한 **위치 인덱스**다. 본체와 data/sd 가
 #   다른 커밋에서 오면 타점이 엉뚱한 날짜를 가리키는데, 길이만 재면 기계적으로 잡힌다.
