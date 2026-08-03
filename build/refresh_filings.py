@@ -40,7 +40,7 @@ import edgar  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT_FEED = os.path.join(DATA, "filings.json")
-OUT_IND = os.path.join(DATA, "industry.json")
+OUT_CIK = os.path.join(DATA, "cik_map.json")
 DIR_CO = os.path.join(DATA, "fil")
 
 FEED_DAYS = 90           # 8-K 피드 창(일). 넓히면 파일만 커지고 화면은 안 좋아진다.
@@ -187,25 +187,24 @@ def main() -> int:
     io.open(OUT_FEED, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
 
-    # ── 산업(SIC) ───────────────────────────────────────────────────────
-    groups = {}
-    for r in ind_rows:
-        if not r["sic"]:
-            continue
-        g = groups.setdefault(r["sic"], {"sic": r["sic"], "sd": r["sd"], "ts": []})
-        g["ts"].append(r["t"])
+    # ── 티커→CIK 지도 ───────────────────────────────────────────────────────
+    # ⚠ 2026-08-03: SIC 분류를 걷어냈다(사용자 결정). 이 산출물은 예전에 data/industry.json 이었고
+    #   SIC 4자리 분류 + CIK 를 함께 담았는데, 화면 쪽 SIC 는 GICS 서브산업으로 대체됐다.
+    #   **CIK 지도만 남긴다** — 그것이 SEC 재무 수집(build/refresh_facts.py · pit_facts.py)의
+    #   입력이고, SEC 자체 company_tickers.json 보다 이 유니버스에 정확하다(전신 법인 보정이
+    #   여기 들어 있다). 그래서 파일 이름도 역할에 맞춘다: industry.json → cik_map.json.
+    #   ⚠ 값 모양이 바뀌었다 — 전에는 [sic, sd, cik] 배열이었고 지금은 cik 하나다.
+    #     읽는 쪽(refresh_facts:465·pit_facts:85)도 같이 고쳤다.
     ind = {
-        "note": "SEC가 회사에 부여한 SIC 4자리 산업분류. yfinance의 11섹터보다 잘아, "
-                "'같은 섹터인데 하는 일이 다른' 회사를 갈라 본다. 랩의 분류가 아니라 SEC 부여값이다.",
+        "note": "티커 → CIK(SEC 등록번호) 지도. SEC submissions API 응답에서 만든다. "
+                "전신 법인이 바뀐 종목은 병합된 대표 CIK 가 들어가므로 "
+                "SEC company_tickers.json 보다 이 랩의 유니버스에 정확하다.",
         "generated": doc["generated"],
         "as_of": as_of,
         "n_co": len(ind_rows),
-        "n_sic": len(groups),
-        "no_sic": [r["t"] for r in ind_rows if not r["sic"]],
-        "groups": sorted(groups.values(), key=lambda g: (-len(g["ts"]), g["sic"])),
-        "co": {r["t"]: [r["sic"], r["sd"], r["cik"]] for r in ind_rows},
+        "co": {r["t"]: r["cik"] for r in ind_rows},
     }
-    io.open(OUT_IND, "w", encoding="utf-8").write(
+    io.open(OUT_CIK, "w", encoding="utf-8").write(
         json.dumps(ind, ensure_ascii=False, separators=(",", ":")) + "\n")
 
     # ── 회사별 제출 이력 ────────────────────────────────────────────────

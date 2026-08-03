@@ -1062,7 +1062,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ⚠ stk(종목 단 지연 로딩)·open(펼쳐 둔 노드)은 2026-08-03 에 나갔다 — 홈이 GICS 11섹터만
   //   내면서 펼칠 하위 단이 없어졌다. iv(home_reco.industry)는 남는다: st-sub 한 줄이
   //   '섹터 11 → 산업그룹 n → 서브산업 n' 으로 무엇이 있는지 계속 말한다.
-  var MK={rg:null,sn:null,main:null,mb:null,iv:null,ivd:'',board:null};
+  // stk — 섹터별 종목 단(지연 로딩). null=아직 안 받음 · []=요청 중이거나 실패.
+  //   ▸ 를 처음 누를 때 받아 온다(22KB gz). 대부분의 방문에서 안 쓰이므로 미리 받지 않는다.
+  var MK={rg:null,sn:null,main:null,mb:null,iv:null,ivd:'',board:null,stk:null};
 
   // ── 히어로 눈썹 ─────────────────────────────────────────────
   // 전에는 "Yeodoo Quant Strategy Lab" — 바로 아래 h1 「여두 전략 랩」의 로마자 표기라
@@ -1188,33 +1190,59 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 한 줄 — 지금은 섹터(lv1)만 그린다. lv 인자는 남겨 둔다: 하위 단을 되살리면 그대로 쓰인다.
     // (stockRows 는 2026-08-03 에 나갔다 — 종목 단이 없어 부를 곳이 없다.)
     var seq=0;
-    function row(x,lv,pid,myid,tipTxt,label,sub){
+    function row(x,lv,pid,myid,tipTxt,label,sub,hold){
       seq++;
       return '<tr class="lv'+lv+'"'+(lv>1?' hidden data-p="'+esc(pid)+'"':'')+
         (myid?' data-id="'+esc(myid)+'"':'')+'>'+
         '<th scope="row" title="'+esc(tipTxt)+'">'+
-        // ⚠ 펼침 버튼 자리표시자를 뺐다(2026-08-03). 하위 단이 없어져 myid 가 항상 null 이라
-        //   빈 span 이 모든 섹터 줄을 28px 오른쪽으로 밀고 있었다 — 바로 아래 스타일 ETF 줄은
-        //   이름부터 시작하는데 섹터만 들여쓰여 두 묶음이 어긋나 보였다.
-        //   자리표시자는 '버튼 있는 줄과 없는 줄의 층을 맞추려고' 둔 것이라, 버튼이 사라진
-        //   지금은 이유가 없다. 하위 단을 되살리면 이 span 도 같이 되살릴 것.
+        // ⚠ 버튼이 없는 줄에는 자리표시자를 두지 않는다(2026-08-03). 전에는 빈 span 을 넣어
+        //   층을 맞췄는데, 모든 섹터 줄이 28px 밀려 바로 아래 스타일 ETF 줄과 어긋났다.
+        //   지금은 섹터가 전부 버튼을 가지므로 층이 저절로 맞는다.
+        (hold?('<button type="button" class="htg" data-hold="'+esc(hold)+'" aria-expanded="false" '+
+               'aria-controls="'+esc(hold)+'" title="이 섹터 종목 펼치기">▸</button>'):'')+
         '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
         cells(x)+'</tr>';
     }
-    // ⚠ 2026-08-03 사용자 결정 — 홈은 **GICS 11섹터만** 낸다. 산업그룹(2차)·서브산업(4차)·
-    //   종목 단(4단 트리)을 전부 뺐다. 그것들이 필요하면 industry.html(SIC 183분류)과
-    //   stocks.html 이 그 화면이고, 홈은 시장을 넓은 것에서 좁은 것으로 읽는 첫 칸만 맡는다.
-    //   함께 나간 것: 펼침 버튼(data-open)·wireTree·home_stocks.json 지연 로딩.
+    // 섹터 아래 접힌 줄 — 지수 방법론의 stDetail 과 같은 모양(.stdin/.stchips/.stk)을 쓴다.
+    // 한 화면에서 같은 일을 하는 두 줄이 다르게 생기면 그것만으로 읽는 규칙이 하나 늘어난다.
+    //   ⚠ 정렬은 **시총 내림차순**(사용자 요청). mc 가 없는 종목은 뒤로 보낸다.
+    //   ⚠ 종목 자료는 별도 파일에서 늦게 온다. 아직이면 안내를 넣어 두고, 도착하면 표를
+    //     다시 그린다(아래 리스너). 빈 줄을 펴 놓고 아무 말도 안 하면 고장으로 읽힌다.
+    function secDetail(s0){
+      var st=(MK.stk||[]).filter(function(k){return k.sec===s0.sec;});
+      if(!st.length)
+        return '<div class="stdin na">종목 목록을 불러오는 중…</div>';
+      st.sort(function(a,b){
+        var x=a.mc,y=b.mc;
+        if(x!=null&&y!=null&&x!==y)return y-x;
+        if((x==null)!==(y==null))return x==null?1:-1;
+        return String(a.nm).localeCompare(String(b.nm));
+      });
+      return '<div class="stdin" title="'+esc(s0.nm+' · '+st.length+'종 · 시총 내림차순')+
+        '"><div class="stchips">'+
+        st.map(function(x,i){
+          var mc=mcapTxt(x.mc);
+          return '<a class="stk" href="stocks.html#t='+encodeURIComponent(x.nm)+'" title="'+
+                 esc((x.sn||x.nm)+(mc?' · 시총 '+mc:''))+'">'+
+                 '<b>'+(i+1)+'</b>'+esc(x.nm)+'</a>';
+        }).join('')+
+        '<a class="stsrc" href="stocks.html" title="종목 신호 화면에서 지표까지 본다">'+
+        esc(s0.nm)+' '+st.length+'종</a></div></div>';
+    }
+    // ⚠ 2026-08-03 사용자 결정 — 홈은 **GICS 11섹터만** 낸다. 산업그룹(2차)·서브산업(4차)의
+    //   중간 단은 뺐다. 다만 섹터별 종목은 지수 방법론과 **같은 방식**으로 ▸ 한 줄로 편다
+    //   (사용자 요청) — 4단 트리로 돌아가는 것이 아니라, 섹터 아래 접힌 행 하나다.
     //   ⚠ home_reco.json 의 industry.rows(lv2·lv3)는 그대로 받는다 — 아래 st-sub 한 줄이
-    //     '섹터 11 → 산업그룹 n → 서브산업 n' 으로 무엇이 있는지는 계속 말한다(화면에서 뺀
-    //     것과 세지 않는 것은 다르다).
+    //     '섹터 11 → 산업그룹 n → 서브산업 n' 으로 무엇이 있는지는 계속 말한다.
     var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 <em>유니버스 종목 '+
        '<b>동일가중</b> · <b>시총 내림차순</b> · GICS 11섹터 기준(위키백과 GICS 구조) · '+
-       '더 잘게 보려면 <a href="industry.html">산업 탐색</a>·<a href="stocks.html">종목 신호</a> · '+
+       '▸ 를 누르면 그 섹터 종목을 <b>시총 내림차순</b>으로 폅니다 · '+
        '이름에 마우스를 올리면 종목수·PER·폭'+(rgn?'·국면별 성과':'')+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+'</em></th></tr>';
     secs.slice().sort(bym).forEach(function(s0){
-      h+=row(s0,1,null,null,tip(s0,true),s0.nm,s0.sec);
+      h+=row(s0,1,null,null,tip(s0,true),s0.nm,s0.sec,'h-sec-'+s0.sec);
+      h+='<tr class="hold" id="h-sec-'+esc(s0.sec)+'" hidden><td colspan="'+ncol+'">'+
+         secDetail(s0)+'</td></tr>';
     });
     return h;
   }
@@ -1617,12 +1645,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       box.addEventListener('click',function(e){
         var b=e.target&&e.target.closest?e.target.closest('button.htg'):null;
         if(!b)return;
-        var r=el(b.getAttribute('data-hold')); if(!r)return;
+        var id=b.getAttribute('data-hold');
+        var r=el(id); if(!r)return;
         var open=r.hasAttribute('hidden');
         if(open)r.removeAttribute('hidden'); else r.setAttribute('hidden','');
         b.setAttribute('aria-expanded',open?'true':'false');
         b.textContent=open?'▾':'▸';
-        b.title=open?'구성종목 접기':'구성종목 10개 펼치기';
+        var isSec=id.indexOf('h-sec-')===0;
+        b.title=open?(isSec?'섹터 종목 접기':'구성종목 접기')
+                    :(isSec?'이 섹터 종목 펼치기':'구성종목 10개 펼치기');
+        // 섹터 종목은 별도 파일에서 온다(22KB gz). 처음 펼칠 때 한 번만 받고, 도착하면 표를
+        // 다시 그린다 — 그때 이 줄은 접힌 채로 새로 그려지므로 열어 둔 상태를 되살려 준다.
+        //   ⚠ MK.stk 를 즉시 [] 로 두어 중복 요청을 막는다(빠르게 두 번 누르는 경우).
+        if(open&&isSec&&MK.stk===null){
+          MK.stk=[];
+          getj('home_stocks.json').then(function(sj){
+            MK.stk=(sj&&sj.rows)||[];
+            if(!MK.board)return;
+            drawStyle(null);
+            var b2=box.querySelector('button.htg[data-hold="'+id.replace(/"/g,'')+'"]');
+            var r2=el(id);
+            if(b2&&r2){r2.removeAttribute('hidden');
+                       b2.setAttribute('aria-expanded','true');b2.textContent='▾';}
+          })['catch'](function(){ MK.stk=[]; });
+        }
       });
     }
     var s=el('st-sub');
