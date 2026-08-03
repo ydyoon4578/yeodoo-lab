@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""SEC EDGAR submissions → 공시 피드 · 산업 분류 · 회사별 제출 이력
+"""SEC EDGAR submissions → 공시 피드 · 회사별 제출 이력 · 티커→CIK 지도
 
-메뉴 정본에서 이 소스 하나에 막혀 있던 세 칸을 연다:
+메뉴 정본에서 이 소스 하나에 막혀 있던 두 칸을 연다:
   filings.html      8-K 공시 피드      (Item 코드로 분류, 해설 없음)
   co.html#ir        IR자료실           (EDGAR 원문 링크 목록)
-  industry.html     산업 탐색          (SIC 4자리 — yfinance 11섹터보다 훨씬 잘다)
+그리고 화면에 안 보이는 산출물 하나 — data/cik_map.json 은 SEC 재무 수집의 입력이다.
 
 ── 이 화면들이 지키는 것 ───────────────────────────────────────────────
 * **해설을 붙이지 않는다.** 8-K의 분류는 랩이 읽고 판단한 게 아니라 회사가 스스로
@@ -114,10 +114,10 @@ def main() -> int:
             seen_acc.add(acc)
             ded.append(r)
         rs = sorted(ded, key=lambda r: str(r.get("filingDate") or ""), reverse=True)
-        sic = str(sub.get("sic") or "").strip()
-        sic_desc = str(sub.get("sicDescription") or "").strip()
-        ind_rows.append({"t": t, "sic": sic, "sd": sic_desc, "sec": sector,
-                         "cik": cik, "nm": sub.get("name") or name})
+        # ⚠ submissions 응답의 sic·sicDescription 은 읽지 않는다(2026-08-03). 산업 분류는
+        #   GICS 서브산업으로 옮겼고, 여기서 남길 것은 CIK 지도뿐이다.
+        ind_rows.append({"t": t, "sec": sector, "cik": cik,
+                         "nm": sub.get("name") or name})
 
         # 원문 링크는 통째로 저장하지 않고 조각(accession·주문서명)만 남긴다.
         # 완성된 URL을 넣으면 같은 접두사 60여 글자가 건마다 반복돼 피드가 두 배가 된다
@@ -140,7 +140,6 @@ def main() -> int:
                                   "it": edgar.parse_items(r.get("items")) if form == "8-K" else []}, **extra))
         co_docs[t] = {
             "t": t, "cik": cik, "nm": sub.get("name") or name,
-            "sic": sic, "sd": sic_desc,
             "fy": str(sub.get("fiscalYearEnd") or ""),
             "st": str(sub.get("stateOfIncorporationDescription") or ""),
             "ex": sub.get("exchanges") or [],
@@ -241,11 +240,11 @@ def main() -> int:
             n_del += 1
 
     sz_feed = os.path.getsize(OUT_FEED) / 1024
-    sz_ind = os.path.getsize(OUT_IND) / 1024
+    sz_ind = os.path.getsize(OUT_CIK) / 1024
     sz_co = sum(os.path.getsize(os.path.join(DIR_CO, f)) for f in os.listdir(DIR_CO)) / 1024
     print("8-K 피드: %d건 · %d사 · 최근 %d일 · 기준일 %s · %.0fKB"
           % (len(feed), len(ind_rows), FEED_DAYS, as_of, sz_feed))
-    print("산업(SIC): %d개 분류 · %.0fKB · SIC 없음 %d사" % (ind["n_sic"], sz_ind, len(ind["no_sic"])))
+    print("티커→CIK 지도: %d사 · %.0fKB" % (ind["n_co"], sz_ind))
     print("회사별 제출: %d파일 · %.0fKB (평균 %.1fKB) — 신규 %d · 변경 %d · 삭제 %d"
           % (len(co_docs), sz_co, sz_co / max(1, len(co_docs)), n_new, n_upd, n_del))
     if n_pred:
