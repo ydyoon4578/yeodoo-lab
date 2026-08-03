@@ -273,7 +273,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 1rem}
   .tabs a{padding:.34rem .7rem;border:1px solid var(--line);border-radius:999px;
     text-decoration:none;color:var(--ink-2);font-size:.9rem;background:var(--panel)}
-  .tabs a[aria-current=true]{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .tabs a[aria-current=true]{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:600}
   .stwrap{display:grid;gap:1rem}
   .stwrap h2{font-size:1.15rem;margin:.2rem 0 .1rem}
   .stwrap .ref{color:var(--accent);font-size:.85rem}
@@ -475,13 +475,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <p class="note warn" id="caveat"></p>
   <p class="note">같은 계산을 판형에 맞춰 담은 문서:
     <a href="data/style_strategies.pdf">style_strategies.pdf</a></p>
-</div>
-</main>
+
+  <!-- ⚠ 푸터는 .wrap **안**이다. 전에는 </div></main> 뒤에 있어 .wrap 의 max-width·좌우 여백을
+       못 받았고(넓은 화면에서 구분선이 끝에서 끝까지, 모바일에서 글자가 가장자리에 붙었다),
+       그 아래에 짝 없는 </div> 가 하나 남아 있었다(파일 전체 여는 9 · 닫는 10).
+       다른 페이지(index·portfolio·valuation·sector)는 전부 이 구조다. -->
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 리스트</a> · <a href="stocks.html">종목 시그널</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">오늘의 전략 탐색</a> · <a href="explorer.html">전략 랩</a><br>
     과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
+</main>
 <script>
 (function(){
   function el(i){return document.getElementById(i);}
