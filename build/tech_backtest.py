@@ -995,6 +995,43 @@ def pick_top(sc, sid="", topn=None):
 SPLIT_TRIMMED = {}      # 티커 → (자른 날짜, 배수). 얼마나 잘랐는지 로그·limits 에 싣는다
 SPLIT_REBASED = {}      # 티커 → 되맞춘 관측 수. 자르는 대신 살린 양을 로그·limits 에 싣는다
 _SPLITS = None          # 티커 → [(날짜, 분할비)] — data/splits.json. 없으면 {} 로 남는다
+_CCONC = None           # 티커 → [(제출일, 집중도%)] — data/cust_conc.json
+
+
+def load_custconc():
+    """고객 집중도(단일 고객 매출 비중). 파일이 없으면 빈 지도 — 그 규칙만 후보 0 이 된다.
+
+    규약은 build/PREREG-2026-08-04-CUSTCONC.md 에 **수집 전에** 확정해 커밋했다.
+    """
+    global _CCONC
+    if _CCONC is None:
+        _CCONC = {}
+        try:
+            co = json.load(io.open(os.path.join(DATA, "cust_conc.json"),
+                                   encoding="utf-8")).get("co") or {}
+        except Exception:
+            return _CCONC
+        for t, rows in co.items():
+            ser = sorted(((r[0], float(r[1])) for r in rows if r and r[1] is not None),
+                         reverse=True)          # 날짜 내림차순 — asof_fund 와 같은 모양
+            if ser:
+                _CCONC[t] = ser
+    return _CCONC
+
+
+def custconc_asof(t, date, stale_days=540):
+    """date 시점에 **이미 공시돼 있던** 가장 최근 집중도. 없거나 너무 낡으면 None.
+
+    🚨 여기에는 FUND_LAG_DAYS 를 더 빼지 않는다. 재무 태그는 기준이 '기간말'이라 공시까지의
+      시차를 빼야 했지만, 이 값은 기준이 **이미 제출일**이다. 한 번 더 빼면 이미 공개된 정보를
+      안 쓰는 셈이 되고 규약과도 달라진다.
+    ⚠ 540일(약 18개월)보다 오래된 값은 안 쓴다(규약). 공시를 멈춘 회사의 옛 수치를 현재값인
+      척 들고 있지 않는다 — refresh_facts 의 450일 규칙과 같은 취지다.
+    """
+    for d, v in (load_custconc().get(t) or []):
+        if d <= date:
+            return v if _days_between(date, d) <= stale_days else None
+    return None
 
 
 def load_splits():
@@ -1399,7 +1436,8 @@ def xsec(sid, name, rule, fn, why, arch=None):
 
 
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
-FUND_SIDS = {"x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
+FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-…-CUSTCONC.md)
+             "x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
@@ -1873,6 +1911,25 @@ def build_strats():
          "이음매를 건너뛰는 짝만 버린다. 문서의 절대값 50% 컷은 실측 0.2%만 걸러 사실상 무해했다. "
          "⚠ 태그는 가중평균 '희석' 주식수다(시점 잔고가 아니라 기간 평균). 옵션·전환권 희석이 "
          "섞이고 소각 반영이 최대 1분기 늦다 — 원논문의 순발행과 같지 않다.")
+    # 규약은 build/PREREG-2026-08-04-CUSTCONC.md 에 **자료를 모으기 전에** 확정해 커밋했다.
+    # 게시 기준도 거기 셋으로 적어 뒀다 — 단독 t 임계 · incr5.t ≥ 2.0 · PIT 레그도 통과.
+    xsec("x-custconc", "고객 집중도 상위 10 (단일 고객 매출 비중)",
+         "10-K·20-F 원문에 공시된 단일 고객 매출 비중이 가장 높은 %d종목 동일가중, "
+         "월말 리밸런스. 값은 그 10-K 제출일부터 쓰고 다음 10-K 까지 유지하며, "
+         "540일보다 오래되면 없는 것으로 둔다." % TOPN,
+         None,
+         "Dhaliwal·Judd·Serfling·Shaikh(2016, JAE)와 Campello·Gao(2017, JFE). 고객 집중이 높은 "
+         "기업은 협상력 열위·수요 충격 노출을 지고 자본시장이 그것을 요구수익률에 반영한다 — "
+         "자기자본비용이 높고 대출 스프레드가 넓다. 그렇다면 기대수익도 높아야 한다. "
+         "⚠ 반대 방향 문헌도 있다(Patatoukas 2012 — 집중이 운영 효율을 높인다). 방향은 결과 보기 "
+         "전에 자본비용 계열을 따라 고집중 롱으로 고정했다. "
+         "🚨 이 값은 XBRL 이 아니라 원문 텍스트에서 뽑는다(SEC companyfacts 는 고객 집중이 "
+         "붙는 차원을 걷어낸다). 추출은 브리틀해서 만드는 동안 다섯 번 틀렸고 표본 검산으로 "
+         "잡았다 — 부정문('does not have … 10 percent or more')을 집중 10%로 읽던 것, "
+         "'10 percent or more' 의 문턱 숫자를 값으로 쓰던 것, 마침표로 문장을 잘라 소수점에서 "
+         "끊기던 것, %% 뒤의 단어경계 때문에 백분율이 하나도 안 잡히던 것, 창 안 최댓값을 "
+         "집어 무관한 수를 달던 것. 지금은 '단일고객 표지 → customer → 서술어 → 백분율' "
+         "순서를 강제하고 뽑은 문장을 함께 저장한다(data/cust_conc.json).")
     xsec("x-cash", "현금성자산 비율 상위 (현금및현금성자산 ÷ 총자산)",
          "최신 분기 현금및현금성자산을 총자산으로 나눈 값이 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % TOPN,
@@ -2386,6 +2443,10 @@ def run():
                                 if pr and pr[1] > 0 and pr[3] > 0:
                                     g = pr[1] / pr[3] - 1.0
                                     v = -g if abs(g) <= 0.5 else None
+                            elif sid == "x-custconc":
+                                # 규약 그대로: build/PREREG-2026-08-04-CUSTCONC.md
+                                # 단일 고객 매출 비중이 **높을수록** 위(고집중 롱).
+                                v = custconc_asof(t, dt_)
                             elif sid == "x-cash":
                                 ch = asof_fund(f.get("cash"), dt_)
                                 at = asof_fund(f.get("asset"), dt_)

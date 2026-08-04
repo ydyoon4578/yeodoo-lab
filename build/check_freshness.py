@@ -63,8 +63,17 @@ def main() -> int:
     today = datetime.now(KST).date()
     n = biz_days_behind(as_of, today)
     if n >= max_biz:
-        print(f"::error::[{label}] 기준일 {as_of} — 오늘({today}) 기준 {n}영업일 지연(허용 {max_biz-1}). "
-              f"갱신이 누락됐다. Actions에서 해당 워크플로를 재실행하라.")
+        # 🚨 "재실행하라"만 적으면 안 된다. 지연의 원인이 **둘**이고 처방이 정반대다.
+        #   실측(2026-08-04): 잡은 정상으로 돌았는데 야후가 08-03 바를 **종가 NaN** 으로 주고
+        #   있었다(10/10 종목 전부). 같은 날 01:02 UTC 에는 실제 종가를 줬으니 원천이 오락가락한
+        #   것이다. 그 상태에서 재실행하면 같은 NaN 을 다시 받아 또 실패한다 — 기다리는 게 맞다.
+        print(f"::error::[{label}] 기준일 {as_of} — 오늘({today}) 기준 {n}영업일 지연(허용 {max_biz - 1}).")
+        print("::error::원인을 먼저 가를 것 — 처방이 정반대다.")
+        print("::error::  (A) 잡이 안 돌았거나 죽었다 → Actions 에서 재실행한다.")
+        print("::error::  (B) 원천에 아직 자료가 없다 → 재실행해도 같다. 원천이 채워지길 기다린다.")
+        print("::error::  가르는 법: 이 잡 로그에 수집 단계가 정상으로 찍혔는데 기준일만 안 움직였으면 (B)다.")
+        print("::error::  가격이면 원천을 직접 본다 — Ticker('SPY').history(period='5d') 의 "
+              "최근 행 Close 가 NaN 이면 (B)다.")
         return 1
     print(f"[{label}] 기준일 {as_of} · {n}영업일 — 신선(OK)")
     return 0
