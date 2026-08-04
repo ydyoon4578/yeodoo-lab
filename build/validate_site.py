@@ -1836,7 +1836,12 @@ try:
     _idx_extra = set(re.findall(r"['\"]([\w]+)['\"]", _m_idx.group(1))) if _m_idx else set()
     _want = {_p_map[_k_map[t]] for t in _k_map if _k_map[t] in _p_map}
     _want |= {_p_map[k] for k in _idx_extra if k in _p_map}
-    _dangle = sorted(_want - set(_by))
+    # 🚨 2026-08-05 — '못 쟀다'고 명시한 스타일은 매달린 것이 아니다. style_trails 의
+    #   skipped 에 사유와 함께 실려 있으면 화면이 '자료 없음'을 말할 수 있다. 그것까지
+    #   오류로 올리면 "입력이 없으니 정직하게 비웠다"를 고칠 수 없는 실패로 만든다.
+    #   ⚠ 다만 **조용히 사라지는 것**은 그대로 잡는다 — 둘의 차이가 이 검사의 전부다.
+    _skipped = set((_sl.get("skipped") or {}).keys())
+    _dangle = sorted(_want - set(_by) - _skipped)
     _orphan = sorted(set(_by) - _want)
     if _dangle:
         errors.append(f"홈 스타일 표: index.html 이 가리키는 랩 키 {_dangle} 가 style_trails 에 없다 "

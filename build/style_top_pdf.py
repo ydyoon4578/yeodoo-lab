@@ -1037,13 +1037,39 @@ def bench_nav(P, a, start, end):
     return np.where(np.isnan(out), 1.0, out)
 
 
+_RFD = None            # 일할 무위험(하루). 처음 쓸 때 한 번 읽는다.
+_SKIPPED = {}          # 자료 부족으로 못 낸 스타일 — 채우는 곳과 싣는 곳이 다른 함수라 모듈에 둔다
+
+
+def _rfd():
+    """무위험 일할 수익 — 랩 전체가 쓰는 data/rf_monthly.json 그대로.
+
+    🚨 2026-08-05 — 이 파일의 metrics() 만 **무위험을 안 빼고** 있었다(rf=0). 그 값이
+      style_perf.json·style_trails.json 을 거쳐 홈의 샤프 열이 되고, 홈은 그 열로 17줄을
+      **정렬한다**(index.html). 왜곡폭이 rf/vol 이라 저변동 규칙일수록 부당하게 유리해진다.
+      같은 저장소의 tech_backtest.ann_stats · asset_backtest · guru17_backtest.ann_from_monthly
+      · strategy_metrics 는 전부 초과수익 기준이고, strategy_metrics 머리말 1번이 정확히 이
+      결함을 '엔진을 다시 만든 이유'로 적어 두었다("Sharpe가 초과수익이 아니었다 … 저변동
+      전략일수록 부당하게 유리"). 한쪽만 고쳐진 두 벌이었다.
+    """
+    global _RFD
+    if _RFD is None:
+        try:
+            _m = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
+                                   encoding="utf-8")).get("monthly") or {}
+            _RFD = (sum(_m.values()) / len(_m) / 21) if _m else 0.0
+        except Exception:
+            _RFD = 0.0
+    return _RFD
+
+
 def metrics(nav):
     r = rets(nav)
     yrs = len(r) / 252.0
     sd = float(np.std(r, ddof=1))
     return {"ret": (nav[-1] ** (1 / yrs) - 1) * 100 if yrs > 0 and nav[-1] > 0 else None,
             "vol": sd * np.sqrt(252) * 100,
-            "sharpe": (float(np.mean(r)) / sd * np.sqrt(252)) if sd > 0 else None,
+            "sharpe": ((float(np.mean(r)) - _rfd()) / sd * np.sqrt(252)) if sd > 0 else None,
             "mdd": float(np.min(nav / np.maximum.accumulate(nav) - 1)) * 100}
 
 
@@ -1536,11 +1562,21 @@ def main() -> int:
           % (len(P.uni), len(P.dates), P.dates[0], P.dates[-1], len(P.me)))
 
     res, order = {}, []
+    _SKIPPED.clear()
     for S in STYLES:
         key, label = S[0], S[1]
         R = backtest(P, S[3])
         if not R:
+            # 🚨 2026-08-05 — 종전에는 그냥 continue 였다. 그러면 그 스타일이 산출물에서
+            #   통째로 사라지고, index.html 이 가리키는 랩 키가 매달린 채 그 줄이 화면에서
+            #   **조용히 없어진다**(validate_site 가 실제로 잡았다: 'div·divlv 가 없다').
+            #   빠진 이유가 자료 쪽인지 규칙 쪽인지도 화면에서 알 수 없다.
+            #   실제 사유(2026-08-05 실측): stocks.json 의 배당수익률(dy)이 518종 전부 결측이다.
+            #   refresh_stocks 의 단위 가드가 '보정 후 중앙값이 0.3~8% 밖'이면 dy 를 통째로
+            #   결측 처리하는데, 그것이 걸렸고 그 사실이 아래로 전달되지 않았다.
+            #   → 키는 남기고 '못 쟀다'를 값으로 싣는다. 없는 것과 나쁜 것은 다르다.
             print("  %-5s 건너뜀 — 자료 부족" % label)
+            _SKIPPED[key] = {"label": label, "why": "입력 자료 부족 — 이 스타일의 점수를 낼 수 없다"}
             continue
         res[key] = R
         order.append(key)
@@ -1837,6 +1873,8 @@ def dump_trails(doc):
         }
     except Exception:
         pass
+    if _SKIPPED:
+        slim["skipped"] = dict(_SKIPPED)     # 화면이 '자료 없음'을 말할 수 있게 — 키가 매달리지 않는다
     p = os.path.join(DATA, "style_trails.json")
     json.dump(slim, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dB · 스타일 %d종)" % (p, os.path.getsize(p), len(slim["styles"])))
