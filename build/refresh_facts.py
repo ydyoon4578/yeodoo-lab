@@ -424,7 +424,18 @@ def index_fcf_stat(tickers, mc_by_t):
     #   그래서 정보원이 죽어 시총 결손이 늘면 mc_cover 는 오히려 안 떨어진다(분모도 같이 줄어서).
     #   커버리지 숫자만 보면 안 보이는 열화라, 시총 결손 종목 수를 함께 내보내 드러낸다.
     #   (2026-07-30 실측: 시총 커버가 79%까지 내려간 날에도 이 지표는 정상으로 보였다.)
-    tot_mc = sum(v for v in mc_by_t.values() if v)
+    # ⚠ 분자(mc)를 CIK 로 중복 제거했으므로 분모도 같은 규칙이어야 한다. 안 그러면
+    #   mc_cover 가 이중클래스만큼 낮게 나온다(실측 2023-12 이후 유니버스 합계의 4~6%).
+    _cm, _tseen = load_cik_map()[0], set()
+    tot_mc = 0.0
+    for _t, _v in sorted(mc_by_t.items()):
+        if not _v:
+            continue
+        _k = _cm.get(_t) or ("t:" + _t)
+        if _k in _tseen:
+            continue
+        _tseen.add(_k)
+        tot_mc += _v
     n_nomc = sum(1 for v in mc_by_t.values() if not v)
     if n_nomc:
         print("  ⚠ 시총 결손 %d/%d종목 — mc_cover 의 분모에서도 빠진다(커버가 높게 보인다)"
