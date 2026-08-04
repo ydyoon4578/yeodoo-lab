@@ -71,7 +71,32 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
-EXCLUDED_SIDS = {"x-volsurge": "편출 종목 거래량 부재 — 후보가 생존자로만 좁혀져 PIT 이 성립 안 함"}
+EXCLUDED_SIDS = {
+    "x-volsurge": "편출 종목 거래량 부재 — 후보가 생존자로만 좁혀져 PIT 이 성립 안 함",
+    # 🚨 2026-08-04. 랩 본편의 x-52wh 는 이날 버그를 고쳤다 — 52주 최고가 창이 신호일을
+    #   포함해 신고가 종목의 점수가 정확히 1.0 이 되고(천장), 199개 월말 중 149개(75%)에서
+    #   10칸 전부가 티커 알파벳 역순으로 채워지고 있었다. 고친 방향은 규칙문 그대로
+    #   '최고가' = **일중 고가(hd)** 를 쓰는 것이다.
+    #   그런데 여기서는 같은 고침을 할 수 없다 — data/_pit_px_cache.json 이 편출 종목의
+    #   **종가만** 갖고 있어(147종·값이 스칼라) 고가가 없다. 랩 종목만 고가를 쓰고 편출 종목은
+    #   종가를 쓰면 같은 횡단면 안에서 두 자로 채점하는 것이라 더 나쁘다.
+    #   → 캐시가 OHLC 로 넓어질 때까지 PIT 에서 뺀다. **틀린 채로 재느니 안 재는 것이 낫다.**
+    #   (이 항목이 '채점기가 두 벌이면 한쪽만 고쳐진다'의 실례다 — 본편을 고친 그 자리에서
+    #    이쪽을 안 고쳤고, 적대감사가 build/pit_backtest.py:647 로 잡아냈다.)
+    "x-52wh": "편출 종목 고가 부재 — 랩 본편이 쓰는 일중 고가를 PIT 캐시가 안 갖고 있다",
+}
+
+
+def _lab_meta():
+    """랩 유니버스의 종목 메타(섹터·이름).
+
+    🚨 종전에는 `TB.load()[3]` 이었다. load() 가 고가·저가를 함께 돌려주기 시작하면서
+      3번이 meta 가 아니게 됐는데, 이런 어긋남은 예외를 안 내고 조용히 지나간다 —
+      섹터가 전부 None 이 되고 x-gpa·x-ocfp·x-aci 의 금융 제외가 사라져 PIT 표만
+      달라진다. 위치가 아니라 **이름으로** 집는다.
+    """
+    _dates, _px, _vlm, _hi, _lo, meta, _rf = TB.load()
+    return meta
 
 
 def fetch_members():
@@ -257,7 +282,7 @@ def main():
     C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
          "SH": C_SH, "dates": dates, "FU": _fu,
          # x-gpa·x-ocfp·x-aci 가 금융업을 뺀다 — 랩과 같은 섹터 라벨을 써야 정의가 같다.
-         "sector": {t: (m or {}).get("sector") for t, m in (TB.load()[3] or {}).items()},
+         "sector": {t: (m or {}).get("sector") for t, m in (_lab_meta() or {}).items()},
          # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
          "me": sorted(me)}
 
@@ -365,7 +390,10 @@ def main():
         }
 
     out = []
-    for sid in PRICE_SIDS + FUND_SIDS:
+    # 🚨 EXCLUDED_SIDS 를 **여기서 실제로 읽는다.** 종전에는 정의만 있고 저장소 어디에서도
+    #   참조되지 않는 죽은 변수였다(적대감사 실측: 참조 1건 = 정의 그 자체). 사유까지 적어 둔
+    #   딕셔너리인데 아무 코드도 안 봐서, 목록에 도로 넣어도 막는 것이 없었다.
+    for sid in [s for s in PRICE_SIDS + FUND_SIDS if s not in EXCLUDED_SIDS]:
         S = BY.get(sid)
         if not S:
             continue
@@ -632,9 +660,14 @@ def score(S, t, j, C):
     if sid == "x-season":
         return TB.same_month_avg(P, j, C["dates"], C["me"])
     if sid == "x-52wh":
-        win = [x for x in P[max(0, j - 251):j + 1] if x]
-        hi = max(win) if win else None
-        return (P[j] / hi) if (hi and P[j]) else None
+        # 🚨 EXCLUDED_SIDS 로 빠진 규칙이다(2026-08-04). 창이 신호일 j 를 포함해 신고가
+        #   종목의 점수가 정확히 1.0 이 되고, 그 동점이 티커 알파벳 역순으로 갈린다 —
+        #   랩 본편에서 고친 그 버그가 여기 그대로 남아 있었다. 본편은 일중 고가로 고쳤지만
+        #   PIT 가격 캐시에는 고가가 없다. 갈래를 지우지 않고 **죽게** 둔다: 누가 목록에
+        #   되돌려 넣으면 조용히 틀린 값을 내는 대신 여기서 멈춘다.
+        raise SystemExit("pit_backtest.score: x-52wh 는 EXCLUDED_SIDS 다 — PIT 가격 캐시에 "
+                         "고가가 없어 랩 본편(일중 고가)과 같은 규칙을 만들 수 없다. "
+                         "되살리려면 _pit_px_cache 를 OHLC 로 넓힐 것.")
     if sid == "x-dist200":
         m = TB.sma(P, j, 200)
         return (P[j] / m - 1) if (m and P[j]) else None

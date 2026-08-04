@@ -51,6 +51,24 @@ XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보�
                            # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
                            # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
 
+# ── 거래비용 ────────────────────────────────────────────────────────────
+# 🚨 이 랩은 회전율을 **싣기만 하고 한 번도 태우지 않았다.** 그래서 연 0.1회전 규칙과
+#   연 82회전 규칙이 같은 표에서 같은 t 로 겨뤘다. 그건 비교가 아니다.
+#   실제 크기(2026-08-04 실측): 회전율 상위는 t-disp 82.8 · t-macd 54.8 · t-kama 37.2 ·
+#   t-mavote 15.3 · x-rev1w 11.3 · x-snapback 11.6 회/년이다. 편도 10bp 만 태워도
+#   x-rev1w 는 연 2.3%p 를 잃는다 — 판정을 바꾸기 충분한 크기다.
+#
+# ⚠ 수치를 고르지 않는다. 하나를 고르면 '그 답이 나오는 비용'을 고른 셈이 되므로
+#   **세 수준을 전부 싣고**(5·10·20bp 편도) 대표값만 정해 둔다. 대표값은 미리 못박은
+#   것이지 결과를 보고 정한 것이 아니다.
+# ⚠ 이 편도 비용은 반값스프레드 + 수수료 + 소액 충격의 합으로 읽는다. 유니버스가
+#   S&P 500 ∪ NASDAQ 100 이라 스프레드는 좁지만, 규칙 대부분이 그 안에서도 작은 쪽을
+#   동일가중으로 담는다.
+# ⚠ 재조정(유지 종목의 비중 되맞춤)에서 나오는 매매는 안 센다 — 종전 turnover 정의와
+#   같은 범위로 두기 위해서다. 즉 여기 net 은 **낙관 쪽**이다.
+COST_BPS = (5, 10, 20)     # 편도(one-way). 왕복은 이 값의 두 배다.
+COST_BPS_MAIN = 10         # 대표값 — net 블록이 쓰는 값
+
 
 # ── 유틸 ────────────────────────────────────────────────────────────────
 def sma(xs, i, n):
@@ -680,6 +698,52 @@ def asof_all(series, date, lag=FUND_LAG_DAYS):
         return []
     cut = _shift(date, lag)
     return [(d, v) for d, v in series if d <= cut]
+
+
+_CS_K = 3 - 2 * math.sqrt(2)
+_CS_CACHE = {}
+
+
+def cs_spread(H, L, tk=""):
+    """Corwin–Schultz(JF 2012) 고저가 매수매도 스프레드 추정 — **일별 계열**을 돌려준다.
+
+    사전등록: build/PREREG-2026-08-04-HLSPREAD.md
+
+    왜 이 추정량인가. 이 랩의 유동성 지표는 한 번 죽었다 — Amihud ILLIQ 는 분자가
+    **미국 상장분 거래대금**인데 분모(시가총액)가 **전 클래스·전 시장**이라, 회사의 일부만
+    미국에서 거래되는 종목을 골라 버렸다(DATA-FACTS 7 · 보유칸 32.7%가 13종). 유통물량으로
+    고치는 길은 무료 자료가 깨져 막혀 있다. 이 추정량은 **거래대금도 발행주식수도 안 쓴다** —
+    그 종목의 미국 라인이 하루 동안 오간 고가·저가만 본다. 범위 불일치가 애초에 없다.
+
+    ⚠ 야간 갭 보정은 원논문 규약이다(추정량이 '두 날의 참가격이 같다'를 가정하므로, 갭이
+      있으면 그만큼 되민다). 새 파라미터가 아니다.
+    ⚠ 음수 추정치는 0 으로 둔다 — 이것도 원논문 규약이다(스프레드는 음수일 수 없고,
+      2일창 추정은 잡음으로 음수가 자주 나온다).
+    """
+    key = tk or id(H)
+    if key in _CS_CACHE:
+        return _CS_CACHE[key]
+    n_ = len(H)
+    out = [None] * n_
+    for i in range(1, n_):
+        h0, l0, h1, l1 = H[i - 1], L[i - 1], H[i], L[i]
+        if not (h0 and l0 and h1 and l1) or l0 <= 0 or l1 <= 0:
+            continue
+        if l1 > h0:                      # 갭 상승 — 다음날 봉을 갭만큼 내린다
+            g = l1 - h0; h1 -= g; l1 -= g
+        elif h1 < l0:                    # 갭 하락 — 올린다
+            g = l0 - h1; h1 += g; l1 += g
+        if h1 <= 0 or l1 <= 0:
+            continue
+        b = math.log(h0 / l0) ** 2 + math.log(h1 / l1) ** 2
+        hh, ll = max(h0, h1), min(l0, l1)
+        if ll <= 0:
+            continue
+        g2 = math.log(hh / ll) ** 2
+        a = (math.sqrt(2 * b) - math.sqrt(b)) / _CS_K - math.sqrt(g2 / _CS_K)
+        out[i] = max(0.0, 2 * (math.exp(a) - 1) / (1 + math.exp(a)))
+    _CS_CACHE[key] = out
+    return out
 
 
 def mkt_corr(rs, mkt, i, n=252):
@@ -1375,11 +1439,22 @@ def asof_fund(series, date, lag=FUND_LAG_DAYS):
 
 # ── 데이터 ──────────────────────────────────────────────────────────────
 def load():
+    """일봉을 읽는다 → dates, 종가, 거래량, **고가·저가**, 메타, 무위험이자율.
+
+    🚨 고가(hd)·저가(ld)는 2026-08-04 까지 **읽는 쪽이 없었다.** refresh_stocks.py:1693 이
+      종목당 4,422일치를 꼬박꼬박 써 두고 있었는데 여기서 pxd·vd 만 집어 갔다 — 즉 랩의
+      모든 규칙이 종가와 거래량만 볼 수 있었고, 일중 범위를 쓰는 규칙은 '나쁘다'가 아니라
+      **만들 수 없었다.** 재무 태그 다섯(ca·cl·debt·re·dep)에서 이미 두 번 난 사고와
+      같은 유형이고(수집≠배선), 그때 만든 validate_site 의 배선 검사는 재무 태그만 보고
+      일봉 계열은 안 봤다. 그 검사도 함께 넓혔다.
+      자료 상태 실측(2026-08-04): 518종 전부 hd·ld 가 pxd 와 같은 길이(4,422)이고,
+      2,112,332 봉 전수에서 ld ≤ pxd ≤ hd 위반이 **0건**이다 — 분할조정 기준이 종가와 같다.
+    """
     with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as f:
         st = json.load(f)
     dates = st["pxd_dates"]
     n = len(dates)
-    px, vlm, meta = {}, {}, {}
+    px, vlm, hi, lo, meta = {}, {}, {}, {}, {}
     for s in st["stocks"]:
         t = s["t"]
         p = os.path.join(DIR_SD, "%s.json" % t)
@@ -1394,10 +1469,15 @@ def load():
             continue
         px[t] = a
         vlm[t] = v if isinstance(v, list) and len(v) == n else None
+        # 길이가 안 맞으면 None 으로 둔다 — 짧은 계열을 그대로 태우면 날짜가 밀린 채
+        # 조용히 다른 날의 범위를 읽는다(종가와 달리 이건 눈에 안 띈다).
+        _h, _l = d.get("hd"), d.get("ld")
+        hi[t] = _h if isinstance(_h, list) and len(_h) == n else None
+        lo[t] = _l if isinstance(_l, list) and len(_l) == n else None
         meta[t] = {"name": s.get("name") or "", "sector": s.get("sector") or ""}
     rf = json.load(io.open(os.path.join(DATA, "rf_monthly.json"), encoding="utf-8")).get("monthly") or {}
     rf = {k: v for k, v in rf.items() if k >= dates[0][:7]}
-    return dates, px, vlm, meta, rf
+    return dates, px, vlm, hi, lo, meta, rf
 
 
 def daily_rets(px):
@@ -1942,6 +2022,36 @@ def build_strats():
          "회사가 구조적으로 전부 빠지므로, 이것은 '현금비율 상위'가 아니라 '현금을 유가증권으로 "
          "안 굴리는 회사 상위'다. 그래서 이름도 그렇게 고쳤다. 은행은 CashAndDueFromBanks 를 써서 "
          "금융 76종 중 34종이 태그 결측이다. 원논문 t 를 이 표의 기대치로 읽지 말 것.")
+    xsec("x-hlspread", "고저가 스프레드 상위 %d (변동성 중립)" % TOPN,
+         "각 종목의 최근 252거래일 Corwin-Schultz 고저가 스프레드 추정치(일별, 야간 갭 보정, "
+         "음수는 0) 평균을 낸다. 유효일 126일 미만·월말 주가 $5 미만은 제외. 그 달 후보 전체에 "
+         "대해 log(스프레드)를 log(252일 실현변동성)에 횡단면 회귀하고 그 잔차 상위 %d종을 "
+         "동일가중으로 산다. 월말 리밸런스." % TOPN,
+         None,
+         "Corwin·Schultz(JF 2012). 사전등록: build/PREREG-2026-08-04-HLSPREAD.md. "
+         "🚨 이 랩의 유동성 축은 한 번 죽었다 — Amihud ILLIQ(x-illiq)는 t 5.31·증분 t 3.20 으로 "
+         "게시 기준을 둘 다 넘고도 기각됐다. 분자가 미국 상장분 거래대금인데 분모(시가총액)가 "
+         "전 클래스·전 시장이라, 재고 있던 것이 '거래가 어려운 회사'가 아니라 '미국에서 일부만 "
+         "거래되는 회사'였기 때문이다(보유칸 32.7%가 13종). 유통물량으로 고치는 길은 무료 자료가 "
+         "깨져 막혀 있다(27종이 유통물량 > 발행주식수). 고저가 스프레드는 거래대금도 "
+         "발행주식수도 안 쓴다 — 그 함정을 정의상 밟지 않는다. 실측으로도 그렇다: x-illiq 이 "
+         "과다 선택하던 11종이 여기서는 보유칸의 2.0%다(ASML·BF.B·CCEP·FOXA·FER 는 0칸). "
+         "⚠ 변동성 중립화는 선택이 아니다 — 원신호는 실현변동성과 횡단면 상관 중앙 0.816 이라 "
+         "중립화 없이 쓰면 저변동성 계열을 뒤집어 다시 파는 것이 된다. 원신호판은 등록하지 않았다. "
+         "⚠ 그래도 집중은 남는다 — 상위 13종이 보유칸의 32.0%다(CBOE 38% · ERIE 33% · TECH 27% …). "
+         "유형이 다르다: 외국 발행인·이중클래스가 아니라 유통물량이 적고 주가가 높은 미국 회사다. "
+         "스프레드가 실제로 넓은 종목이 뽑히는 것이므로 인공물이라 단정하지 않지만, 그 종목들을 "
+         "실제로 사려면 비용이 크다는 뜻이기도 하다 — net 열을 함께 볼 것. "
+         "🚨 PIT 레그가 없다. data/_pit_px_cache.json 이 편출 종목의 종가만 갖고 있어 "
+         "고가·저가가 필요한 이 규칙은 시점정확으로 다시 못 돌린다. 사전등록 4종이 죽은 사유가 "
+         "정확히 그것이었으므로, 게시 기준을 넘어도 이번에는 게시하지 않는다(기록용). "
+         "🚨 그리고 넘지 못했다 — 사전등록 게이트 미달로 기각한다. 한 번 돌린 결과: "
+         "단독 t 4.86(임계 3.33 통과) · 비용 후 t 4.73(편도 10bp, 매매대금 연 5.6배라 "
+         "비용이 거의 안 문다) · 이웃 하나 통제 증분 t 2.80 — 여기까지는 다 넘는다. "
+         "그런데 이웃 5개 동시 통제 증분 t 는 1.11 로 게이트(2.0)에 못 미친다. "
+         "가장 닮은 이웃이 에코 모멘텀(ρ 0.468)인데, 하나만 떼면 남아 보이고 다섯을 떼면 "
+         "사라진다 — 붐비는 축이라는 뜻이다. 규칙은 결과를 보고 고치지 않았다. "
+         "살리려면 새 사전등록이 필요하다.")
 
     # ── 목록에서 뺀 규칙(2026-07-31, 사용자 결정) ───────────────────────────
     # 여기서 걸러진 규칙은 STRATS 에 들어가지 않는다 — 산출물·다중검정 족 수·PIT·화면 어디에도
@@ -1991,7 +2101,7 @@ def build_strats():
 
 # ── 실행 ────────────────────────────────────────────────────────────────
 def run():
-    dates, px, vlm, meta, rf = load()
+    dates, px, vlm, hid, lod, meta, rf = load()
     FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
     n = len(dates)
     tickers = sorted(px)
@@ -2105,6 +2215,7 @@ def run():
             state = 0.0
             peak = 0.0          # 샹들리에: 진입 후 고점
             kama_prev = None    # 적응형 이동평균: 직전 값(재귀식이라 이어져야 한다)
+            macd_sig = None     # MACD 신호선(9기간 EMA): 같은 사유로 상태를 이어 간다
             ddpk = None         # t-ddgate: MIN_HIST 이후 지수 고점(러닝 맥스 — 아래 설명)
             for i in range(n):
                 if i < MIN_HIST:
@@ -2133,10 +2244,20 @@ def run():
                         for j in range(max(0, i - n_ * 3) + 1, i + 1):
                             e = xs[j] * k + e * (1 - k)
                         return e
+                    # 🚨 2026-08-04 버그 수정. 종전 `sig = m*0.2 + prev*0.8` 의 prev 는
+                    #   전날의 **신호선**이 아니라 전날의 **MACD** 였다. 그러면
+                    #     m > sig ⟺ 0.8·m > 0.8·prev ⟺ m > prev
+                    #   가 되어, 9기간 EMA 교차가 아니라 **MACD 의 1일 차분 부호**를 본다.
+                    #   화면 카드에 적힌 규칙("MACD(12,26)가 신호선(9) 위면 편입")과 실제로
+                    #   돌린 규칙이 달랐고, 그 차이가 성적에 그대로 나왔다 — 종전 구현의
+                    #   연회전율 54.9 는 규칙의 성질이 아니라 이 버그의 산물이다(정본은 21 안팎).
+                    #   신호선은 누적이므로 매 시점 다시 만들 수 없다. 상태로 이어 간다.
                     m = ema(ix, i, 12) - ema(ix, i, 26)
-                    prev = ema(ix, i - 1, 12) - ema(ix, i - 1, 26) if i > 0 else m
-                    sig = m * 0.2 + prev * 0.8
-                    w[i] = 1.0 if m > sig else 0.0
+                    if macd_sig is None:
+                        macd_sig = m
+                    else:
+                        macd_sig = m * (2 / 10.0) + macd_sig * (1 - 2 / 10.0)   # 9기간 EMA
+                    w[i] = 1.0 if m > macd_sig else 0.0
                 elif sid == "t-disp":
                     hist = [x for x in disp[max(0, i - 252):i] if x]
                     cur = disp[i]
@@ -2232,10 +2353,14 @@ def run():
             # 신호는 당일 종가로 계산 → 다음 날부터 적용(선견 방지)
             nav = [100.0]
             srets = []
+            traded = []          # 그날 실제로 오간 금액(NAV 대비) — 비용은 이것에 붙는다
             for i in range(MIN_HIST + 1, n):
                 e = w[i - 1]
                 r = e * ixr[i] + (1 - e) * rfd_d[i]
                 srets.append(r)
+                # i 일에 적용되는 노출은 w[i-1], 그 전날 적용분은 w[i-2]. 차이만큼 i 일 시작에
+                # 매매한다. 첫날은 무에서 e 만큼 사는 것이므로 e 그대로다.
+                traded.append(abs(e - w[i - 2]) if i - 2 >= MIN_HIST else abs(e))
                 nav.append(nav[-1] * (1 + r))
             turn = sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, n)) / max(1, (n - MIN_HIST) / 252)
             expo = sum(w[MIN_HIST:]) / max(1, n - MIN_HIST)
@@ -2250,6 +2375,7 @@ def run():
             hold = []
             nav = [100.0]
             srets = []
+            traded = []          # 그날 실제로 오간 금액(NAV 대비) — 비용은 이것에 붙는다
             turns = 0
             thin = 0             # 후보가 얇아 무보유로 둔 월말 수(커버리지 게이트)
             # 🚨 얇은 달(<30)만 세는 것으로는 **커버리지 램프**를 못 본다. 후보가 67 → 505 로
@@ -2260,6 +2386,7 @@ def run():
             #   앞구간의 후보 풀 67~128종이었다). 월말마다 후보 수를 남겨 규칙마다 보고한다.
             pool_hist = []
             first_i = None       # 실제로 무언가를 보유하기 시작한 시점
+            _tr = 0.0            # 그날 오간 금액(리밸런스 날에만 0 이 아니다)
             for i in range(MIN_HIST + 1, n):
                 # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 월말까지 기다리지 않고
                 # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 '월말 리밸런스'를 어기는
@@ -2287,14 +2414,63 @@ def run():
                         _k = max(TOPN, int(len(_m) * 0.2))     # 상위 5분위(최소 TOPN)
                         # 승자만 남긴다 — 형성기 수익이 음수면 ID 의 sign 규약이 뒤집힌다.
                         fip_ok = {t2 for v2, t2 in _m[:_k] if v2 > 0}
+                    # 고저가 스프레드도 2단이다 — 중립화가 **횡단면 회귀**라 종목 하나만
+                    # 보는 채점으로는 못 만든다. 사전등록 문서의 규약 그대로:
+                    #   log(252일 평균 CS 스프레드) 를 log(252일 실현변동성) 에 회귀 → 잔차.
+                    # 근거: 원신호와 변동성의 횡단면 스피어만 상관이 중앙 0.816 이라,
+                    #   중립화 없이 쓰면 저변동성 계열을 뒤집어 다시 파는 것이 된다.
+                    hls = None
+                    if S["sid"] == "x-hlspread":
+                        rows = []
+                        for t2 in tickers:
+                            H2, L2 = hid.get(t2), lod.get(t2)
+                            if not (H2 and L2):
+                                continue
+                            w2 = [x for x in cs_spread(H2, L2, t2)[max(0, i - 252):i] if x is not None]
+                            if len(w2) < 126:              # 유효일 126일 미만은 후보 아님
+                                continue
+                            p2 = px[t2][i - 1]
+                            if not p2 or p2 < 5.0:         # 페니주 차단
+                                continue
+                            s2 = sum(w2) / len(w2)
+                            v2 = vol(R[t2], i - 1, 252)
+                            if s2 <= 0 or not v2 or v2 <= 0:
+                                continue
+                            rows.append((t2, math.log(s2), math.log(v2)))
+                        hls = {}
+                        if len(rows) >= 2:
+                            xs2 = [r2[2] for r2 in rows]; ys2 = [r2[1] for r2 in rows]
+                            mx2 = sum(xs2) / len(xs2); my2 = sum(ys2) / len(ys2)
+                            sxx = sum((x - mx2) ** 2 for x in xs2)
+                            bb = (sum((x - mx2) * (y - my2) for x, y in zip(xs2, ys2)) / sxx) if sxx > 0 else 0.0
+                            aa = my2 - bb * mx2
+                            hls = {rows[k2][0]: ys2[k2] - (aa + bb * xs2[k2]) for k2 in range(len(rows))}
                     for t in tickers:
                         P = px[t]
                         sid = S["sid"]
                         if sid == "x-52wh":
-                            # 종가가 통째로 비는 구간이 있는 종목이 있다(부분 상장 등) — 빈 창은 건너뛴다
-                            win = [x for x in P[max(0, i - 252):i] if x]
+                            # 🚨 2026-08-04 버그 수정. 종전에는 분모가 **종가의 최대**였다.
+                            #   그런데 창(P[i-252:i])이 신호일 i-1 을 포함하므로, 그날 종가가
+                            #   창 최대인 종목은 점수가 정확히 1.0 이 된다 — 점수에 천장이 생긴다.
+                            #   실측: 199개 월말 중 **149개(75%)에서 1.0 동점이 10종 이상**이었고
+                            #   (동점 중앙 25종·최대 146종), sc.sort(reverse=True) 가 (점수, 티커)
+                            #   튜플을 정렬하므로 그 10칸은 **티커 알파벳 역순(Z→A)** 으로 채워졌다.
+                            #   즉 이 규칙은 '고점에 가장 가까운 10종'이 아니라 '신고가 종목 중
+                            #   티커가 Z 에 가까운 10종'을 사고 있었다.
+                            #   고치는 방향은 규칙문 그대로다 — 규칙문은 '52주 **최고가**'라고
+                            #   적는데 구현이 종가 최대를 쓰고 있었다. 실제 일중 고가(hd)는 같은
+                            #   저장소에 4,422일치 있고(2026-08-04 배선), 종가와 분할조정 기준이
+                            #   같다는 것을 전수 확인했다(ld ≤ pxd ≤ hd 위반 0/2,112,332).
+                            #   고가를 쓰면 종가가 그 창의 최대와 같아지는 일이 사실상 없어져
+                            #   천장도 동점도 자연히 사라진다 — 동점을 깨는 새 파라미터를 넣는 것이
+                            #   아니라 원래 재려던 것을 재는 것이다.
+                            H = hid.get(t)
+                            win = [x for x in (H or P)[max(0, i - 252):i] if x]
                             hi = max(win) if win else None
                             v = (P[i - 1] / hi) if (hi and P[i - 1]) else None
+                        elif sid == "x-hlspread":
+                            # 사전 패스가 만든 잔차를 그대로 쓴다(값이 없으면 후보 아님).
+                            v = hls.get(t) if hls else None
                         elif sid == "x-dist200":
                             m = sma(P, i - 1, 200)
                             v = (P[i - 1] / m - 1) if (m and P[i - 1]) else None
@@ -2525,15 +2701,22 @@ def run():
                         #   이 가드는 그대로 둔다. 원인이 하나 사라졌을 뿐, '있는 것 전부를
                         #   고른 것처럼 보고하지 않는다'는 성질은 규칙 추가마다 다시 필요하다.
                         thin += 1
+                        # 들고 있던 것을 전부 판다 — 그것도 매매다(종전 turns 는 이걸 안 셌다).
+                        _tr += 1.0 if hold else 0.0
                         hold = []                      # → 무보유. 재기준이 시작일을 정직하게 잡는다
                     elif new:
                         turns += len(set(new) ^ set(hold)) / (2 * TOPN) if hold else 1.0
+                        # 오간 금액 = 대칭차 ÷ TOPN (판 것 + 산 것). turns 의 정의(교체 횟수)와
+                        # 분모가 2배 다르다 — 타이밍의 Σ|Δw| 와 눈금을 맞추려면 이쪽이다.
+                        _tr += (len(set(new) ^ set(hold)) / TOPN) if hold else 1.0
                         hold = new
                 if hold and first_i is None:
                     first_i = i
                 rs = [R[t][i] for t in hold if R[t][i] is not None]
                 r = sum(rs) / len(rs) if rs else 0.0
                 srets.append(r)
+                traded.append(_tr)
+                _tr = 0.0
                 nav.append(nav[-1] * (1 + r))
             turn = turns / max(1, (n - MIN_HIST) / 252)
             expo = 1.0
@@ -2560,9 +2743,92 @@ def run():
             nav = [x / nav[_k] * 100 for x in nav[_k:]]
             bnav = [x / bnav[_k] * 100 for x in bnav[_k:]]
             srets = srets[_k:]
+            traded = traded[_k:]
             d2 = d2[_k:]
         st = ann_stats(nav, d2, rf)
         bs = ann_stats(bnav, d2, rf)
+
+        # ── 비용을 태운다 ──────────────────────────────────────────────────
+        # 회전율을 싣기만 하고 한 번도 안 태우던 것을 여기서 태운다(COST_BPS 주석 참조).
+        # 대조군은 매수후보유라 비용이 사실상 없다 — 그래서 비용은 전략에만 붙는다.
+        _bx = bxr[(start_i or (MIN_HIST + 1)):]
+        _yrs = max(1e-9, len(srets) / 252.0)
+        net_sens, _mstats = {}, None
+        for _bps in COST_BPS:
+            _c = _bps / 10000.0
+            _sn = [srets[i] - _c * traded[i] for i in range(len(srets))]
+            _nv = [100.0]
+            for _r in _sn:
+                _nv.append(_nv[-1] * (1 + _r))
+            _ns = ann_stats(_nv, d2[:len(_nv)], rf)
+            net_sens[str(_bps)] = {
+                "cagr": _ns.get("cagr"), "sharpe": _ns.get("sharpe"),
+                "excess_cagr": round((_ns.get("cagr", 0) - bs.get("cagr", 0)), 2),
+                "d_sharpe": round((_ns.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
+                "t": tstat(_sn, _bx),
+            }
+            if _bps == COST_BPS_MAIN:
+                _mstats = _ns
+        _main = net_sens[str(COST_BPS_MAIN)]
+        net = dict(_main, bps=COST_BPS_MAIN,
+                   # 연 매매대금(NAV 배). turnover 와 달리 **두 족이 같은 눈금**이다 —
+                   # 종목선택의 turnover 는 '바스켓 교체 횟수'(대칭차÷2·TOPN)이고
+                   # 타이밍의 turnover 는 Σ|Δw| 라 같은 매매량이 2배 다르게 찍혀 있었다.
+                   traded=round(sum(traded) / _yrs, 2),
+                   drag=round((st.get("cagr", 0) - (_main.get("cagr") or 0)), 2),
+                   sens=net_sens)
+        # 자산 랩·ML 랩과 **같은 필드 이름**으로도 낸다. 셋이 같은 표(strategy_index)로 들어가는데
+        # 종목 랩만 이름이 다르면 화면이 종목 랩의 비용만 못 그린다 — 실제로 그랬다:
+        # explorer 의 '비용 후' 줄은 metrics_net·cost_bp 를 읽는데 종목 랩은 그 필드를
+        # 아예 안 냈고, 그래서 57종 전부 비용 표시가 없었다. asset_backtest 머리말이
+        # "이 수치를 종목 전략에 그대로 옮기면 안 된다(개별주 10종목 포트라면 더 물어야 한다)"
+        # 라고 적어 둔 그 자리가 비어 있던 셈이다.
+        # ⚠ 단위가 다르다 — 자산 랩의 cost_bp 는 **왕복**이고 COST_BPS 는 **편도**다.
+        #   같은 필드에 실을 때는 왕복으로 환산한다(편도 10bp = 왕복 20bp). 자산 랩은 왕복 5bp 라
+        #   같은 열에 놓고 크기를 비교하면 안 된다 — 대상이 ETF 냐 개별주 10종이냐가 다르다.
+        # ⚠ 대조군(bench_net)은 매수후보유라 회전이 0 이다 → 비용도 0. 자산 랩은 대조군도
+        #   물리지만(60/40 은 리밸런싱한다) 여기 대조군은 정말로 매매를 안 한다.
+        cost_extra = {
+            "cost_bp": round(COST_BPS_MAIN * 2, 1),
+            "metrics_net": _mstats or {}, "bench_net": bs,
+            "cost_drag": net["drag"],
+            "cost_kill": bool(((st.get("sharpe") or 0) - (bs.get("sharpe") or 0)) > 0
+                              and ((_main.get("sharpe") or 0) - (bs.get("sharpe") or 0)) <= 0),
+            "cost_sensitive": bool(net["drag"] >= 0.5),
+        }
+
+        # ── 🚨 매매 대상 대비 성적 ─────────────────────────────────────────
+        # 판정 대조군은 S&P 500(PR)이다(사용자 결정 2026-07-28). 그런데 **타이밍 규칙이
+        # 실제로 사는 것은 랩 동일가중 유니버스**이고 그 둘은 같은 자산이 아니다 —
+        # 동일가중 매수후보유 CAGR 18.66% · 샤프 0.965 대 S&P 500(PR) 12.10% · 0.669.
+        # 그래서 **노출을 1.0 으로 고정한 '타이밍을 전혀 하지 않는 규칙'** 을 같은 판정기에
+        # 넣으면 Δ샤프 +0.296 · 초과 +6.56%p · **t 4.90** 이 나온다(실측). 임계 3.33 을
+        # 그냥 넘는다. 즉 타이밍 20종의 t 에는 '타이밍 실력'이 아닌 몫
+        # (동일가중 vs 시총가중 + TR vs PR + 생존편향)이 통째로 들어 있다.
+        #
+        # 대조군은 바꾸지 않는다(사용자 결정을 코드가 되돌리면 안 된다). 대신 **자기가 사는
+        # 것 대비** 값을 나란히 싣는다 — 이 열에서 0 근처면 그 규칙은 아무 일도 안 한 것이다.
+        # ⚠ 종목선택 규칙에도 같이 싣는다. 이쪽에서는 이것이 **예전 대조군**(같은 유니버스
+        #   동일가중)이라, 문턱이 내려가기 전의 잣대로 다시 읽는 열이 된다.
+        _ewx = ixr[(start_i or (MIN_HIST + 1)):]
+        _ewnav = [100.0]
+        for _r in _ewx:
+            _ewnav.append(_ewnav[-1] * (1 + (_r or 0.0)))
+        _ews = ann_stats(_ewnav, d2[:len(_ewnav)], rf)
+        vs_traded = {
+            "label": "랩 동일가중 유니버스 매수후보유",
+            "cagr": _ews.get("cagr"), "sharpe": _ews.get("sharpe"),
+            "excess_cagr": round((st.get("cagr", 0) - _ews.get("cagr", 0)), 2),
+            "d_sharpe": round((st.get("sharpe") or 0) - (_ews.get("sharpe") or 0), 3),
+            "t": tstat(srets, [(x or 0.0) for x in _ewx]),
+            "t_net": tstat([srets[i] - (COST_BPS_MAIN / 10000.0) * traded[i]
+                            for i in range(len(srets))], [(x or 0.0) for x in _ewx]),
+            "note": ("타이밍 규칙이 실제로 매매하는 대상이다. 판정 대조군(S&P 500 PR)과 다른 자산이라, "
+                     "여기 t 가 0 근처면 그 규칙은 대조군 격차를 재고 있었던 것이다."
+                     if S["kind"] == "timing" else
+                     "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 "
+                     "문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."),
+        }
         out.append({
             "sid": S["sid"], "name": S["name"], "kind": S["kind"], "arch": S.get("arch"),
             # 성격 — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
@@ -2573,6 +2839,10 @@ def run():
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
             "t": tstat(srets, bxr[(start_i or (MIN_HIST + 1)):]),
+            # 🚨 비용 뒤 성적. 위 t·excess_cagr 는 전부 **무비용(gross)** 이다 —
+            #   이 랩이 회전율을 싣기만 하고 안 태우던 것을 2026-08-04 에 태우기 시작했다.
+            #   net.t 는 편도 10bp 기준이고, net.sens 에 5·10·20bp 를 전부 싣는다.
+            "net": net, **cost_extra, "vs_traded": vs_traded,
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
             "start": d2[0], "n_days": len(d2),
             # 커버리지 게이트가 무보유로 둔 월말 수. 0 이 아니면 그 규칙의 표본은 화면에 적힌
@@ -2899,12 +3169,31 @@ def run():
 
     _tm = [r for r in out if r["kind"] == "timing"]
     _rr = {r["sid"]: _rets(r) for r in _tm}
-    _pairs = []
+    # 원수익률 상관 — 종전부터 싣던 값. 남겨 두되 **판정에는 쓰지 않는다**: 타이밍 규칙은
+    # 대부분의 날을 100% 편입으로 보내므로 원수익률끼리는 구조적으로 높게 나오고,
+    # 그 높음은 '같은 베팅'이 아니라 '둘 다 대체로 들고 있었다'는 뜻이기도 하다.
+    _pairs_raw = []
     for _i in range(len(_tm)):
         for _j in range(_i + 1, len(_tm)):
             c = _corr(_rr[_tm[_i]["sid"]], _rr[_tm[_j]["sid"]])
             if c is not None:
-                _pairs.append({"a": _tm[_i]["name"], "b": _tm[_j]["name"], "c": round(c, 3)})
+                _pairs_raw.append({"a": _tm[_i]["name"], "b": _tm[_j]["name"], "c": round(c, 3)})
+    _pairs_raw.sort(key=lambda x: -x["c"])
+    _cs_raw = sorted(x["c"] for x in _pairs_raw)
+
+    # 🚨 **초과수익 상관으로 다시 잰다.** 종전에는 타이밍만 원수익률로, 종목선택만 초과수익으로
+    #   쟀다 — 같은 표의 두 족을 서로 다른 자로 잰 것이고, 그래서 나란히 못 놓는 숫자였다.
+    #   실측(2026-08-04, 타이밍 20종 190쌍): 초과수익 기준 중앙 0.713 · **0.80 이상이 69쌍**.
+    #   종목선택은 중앙 0.091 · 0.80 이상 3쌍이다. 즉 **훨씬 더 붐비는 쪽은 타이밍인데**
+    #   증분 알파 게이트는 종목선택에만 걸려 있었다.
+    _pairs = []
+    for _i in range(len(_tm)):
+        for _j in range(_i + 1, len(_tm)):
+            a, b = _paired_excess(_tm[_i], _tm[_j])
+            c = _corr(a, b)
+            if c is not None:
+                _pairs.append({"a": _tm[_i]["name"], "b": _tm[_j]["name"],
+                               "c": round(c, 3), "n": len(a)})
     _pairs.sort(key=lambda x: -x["c"])
     _cs = sorted(x["c"] for x in _pairs)
 
@@ -2926,43 +3215,55 @@ def run():
     _xcs = sorted(x["c"] for x in _xpairs)
 
     # 규칙마다 '가장 닮은 기존 규칙'을 찾아 그것 대비 증분 알파를 잰다.
+    #
+    # 🚨 **두 족 모두에 건다**(2026-08-04). 종전에는 _xs(종목선택)에만 걸려 있었다. 그 결과
+    #   PIT 강등 뒤 종목 랩에 하나 남은 '통과 후보'가 하필 **타이밍 규칙(t-chand, 단독 t 4.7)**
+    #   이었는데, 그 규칙만 이 랩의 두 관문(PIT·증분알파)을 **둘 다 안 거친** 상태였다 —
+    #   PIT 는 xsec 만 돌리고, 증분 알파도 xsec 만 쟀기 때문이다. 붐빔은 타이밍이 더 심한데
+    #   (초과수익 상관 중앙 0.713 대 0.091) 게이트는 반대쪽에만 있었다.
+    #   ⚠ 이웃은 **같은 족 안에서만** 고른다. 종목선택 규칙을 시장 오버레이로 통제하는 것은
+    #     '이미 들고 있는 사람에게 새로 주는 것이 있느냐'라는 이 검정의 질문과 맞지 않는다.
     _byname = {r["name"]: r for r in _xs}
-    for r in _xs:
-        best = None
-        for r2 in _xs:
-            if r2 is r:
+    for _fam in (_xs, _tm):
+        for r in _fam:
+            best = None
+            for r2 in _fam:
+                if r2 is r:
+                    continue
+                a, b = _paired_excess(r, r2)
+                c = _corr(a, b)
+                if c is None:
+                    continue
+                if best is None or c > best[0]:
+                    best = (c, r2["name"], a, b)
+            if not best:
                 continue
-            a, b = _paired_excess(r, r2)
-            c = _corr(a, b)
-            if c is None:
-                continue
-            if best is None or c > best[0]:
-                best = (c, r2["name"], a, b)
-        if not best:
-            continue
-        inc = _incr(best[2], best[3])
-        if inc:
-            r["incr"] = {"vs": best[1], "corr": round(best[0], 3),
-                         "alpha": inc["alpha"], "t": inc["t"], "beta": inc["beta"]}
-        # 🚨 '가장 닮은 이웃 하나'만 통제하면 문턱이 너무 무르다. 실측(2026-08-04, 게시 56종):
-        #   이웃 1개 → 5개로 바꾸면 증분 t 가 중앙 0.35 내리고 최악은 2.72 내린다.
-        #   **증분 t ≥ 2 를 넘던 13종 중 5종이 5개 통제에서 떨어진다**
-        #   (x-season 2.54→0.87 · x-payout 2.35→0.76 · x-residmom 2.78→1.58 · x-fcfy 3.71→2.10).
-        #   붐비는 축은 이웃이 여럿이라 하나만 빼서는 남는 것이 있어 보인다.
-        #   → 상위 5 이웃 **동시** 통제값을 함께 싣는다. 사전등록 게이트는 이쪽을 쓸 것.
-        nb = sorted(((abs(_corr(*_paired_excess(r, r2)) or 0), r2["name"], r2)
-                     for r2 in _xs if r2 is not r), key=lambda z: -z[0])[:5]
-        if len(nb) == 5:
-            m5 = _incr_multi(r, [z[2] for z in nb])
-            if m5:
-                r["incr5"] = dict(m5, vs=[z[1] for z in nb])
+            inc = _incr(best[2], best[3])
+            if inc:
+                r["incr"] = {"vs": best[1], "corr": round(best[0], 3),
+                             "alpha": inc["alpha"], "t": inc["t"], "beta": inc["beta"]}
+            # 🚨 '가장 닮은 이웃 하나'만 통제하면 문턱이 너무 무르다. 실측(2026-08-04, 게시 56종):
+            #   이웃 1개 → 5개로 바꾸면 증분 t 가 중앙 0.35 내리고 최악은 2.72 내린다.
+            #   **증분 t ≥ 2 를 넘던 13종 중 5종이 5개 통제에서 떨어진다**
+            #   (x-season 2.54→0.87 · x-payout 2.35→0.76 · x-residmom 2.78→1.58 · x-fcfy 3.71→2.10).
+            #   붐비는 축은 이웃이 여럿이라 하나만 빼서는 남는 것이 있어 보인다.
+            #   → 상위 5 이웃 **동시** 통제값을 함께 싣는다. 사전등록 게이트는 이쪽을 쓸 것.
+            nb = sorted(((abs(_corr(*_paired_excess(r, r2)) or 0), r2["name"], r2)
+                         for r2 in _fam if r2 is not r), key=lambda z: -z[0])[:5]
+            if len(nb) == 5:
+                m5 = _incr_multi(r, [z[2] for z in nb])
+                if m5:
+                    r["incr5"] = dict(m5, vs=[z[1] for z in nb])
     # 🚨 '증분 알파 없음'을 그대로 세면 안 된다 — 두 가지가 섞인다.
     #   (a) 이웃이 설명하고 남는 게 없다(진짜 중복)  (b) 애초에 단독으로도 알파가 없다.
     #   이 표는 통과 후보가 0종이라 대부분이 (b)다. 정보가 있는 것은 **단독으로는 세 보이는데
     #   이웃 대비로는 사라지는** 규칙이므로, 단독 |t|≥2 인 것만 센다(에코 모멘텀이 그 사례다).
-    _nz = [r for r in _xs if r.get("incr") and r["incr"].get("t") is not None]
-    _weak = sorted((r for r in _nz if abs(r["incr"]["t"]) < 2.0 and abs(r.get("t") or 0) >= 2.0),
-                   key=lambda r: -(r["incr"]["corr"]))
+    def _absorbed(fam):
+        _nz = [r for r in fam if r.get("incr") and r["incr"].get("t") is not None]
+        return sorted((r for r in _nz if abs(r["incr"]["t"]) < 2.0 and abs(r.get("t") or 0) >= 2.0),
+                      key=lambda r: -(r["incr"]["corr"]))
+    _weak = _absorbed(_xs)
+    _tweak = _absorbed(_tm)
     # 사실상 같은 규칙(ρ≥0.99) — 족 수를 부풀리는 가장 뚜렷한 형태다.
     _twins = [p for p in _xpairs if p["c"] >= 0.99]
 
@@ -2970,7 +3271,15 @@ def run():
         "n_timing": len(_tm),
         "median": round(_cs[len(_cs) // 2], 3) if _cs else None,
         "n_over_95": sum(1 for c in _cs if c >= 0.95),
+        "n_over_80": sum(1 for c in _cs if c >= 0.80),
         "top": _pairs[:6],
+        # 종전에 싣던 원수익률 상관 — 비교용으로만 남긴다(위 주석 참조).
+        "median_raw": round(_cs_raw[len(_cs_raw) // 2], 3) if _cs_raw else None,
+        "n_over_95_raw": sum(1 for c in _cs_raw if c >= 0.95),
+        # 타이밍도 증분 알파를 받는다(2026-08-04부터).
+        "timing_n_absorbed": len(_tweak),
+        "timing_absorbed": [{"name": r["name"], "vs": r["incr"]["vs"], "corr": r["incr"]["corr"],
+                             "t_solo": r.get("t"), "t_incr": r["incr"]["t"]} for r in _tweak[:8]],
         "n_xsec": len(_xs),
         "xsec_median": round(_xcs[len(_xcs) // 2], 3) if _xcs else None,
         "xsec_n_over_80": sum(1 for c in _xcs if c >= 0.80),
@@ -2987,7 +3296,9 @@ def run():
                      "주는 것이 있느냐를 묻는다. ⚠ 증분 알파가 없다고 다 중복인 것은 아니다. "
                      "이 표는 통과 후보가 0종이라 대부분은 애초에 단독 알파가 없어서다. "
                      "그래서 '흡수됨'은 단독 |t|≥2 인 규칙만 센다.",
-        "note": "타이밍 규칙끼리의 일간 수익률 상관. 0.95를 넘으면 이름만 다른 같은 베팅에 가깝다. "
+        "note": "타이밍 규칙끼리의 **초과수익** 상관(2026-08-04부터 — 그 전에는 원수익률로 쟀다). "
+                "두 족을 같은 자로 재야 나란히 놓을 수 있기 때문이다. 원수익률 상관은 "
+                "median_raw 로 함께 남긴다. 0.95를 넘으면 이름만 다른 같은 베팅에 가깝고, "
                 "규칙 수가 늘어도 실제로 검증한 '서로 다른 아이디어' 수는 그만큼 늘지 않는다.",
     }
 
