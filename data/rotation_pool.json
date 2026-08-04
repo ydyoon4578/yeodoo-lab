@@ -1406,7 +1406,12 @@
         "https://en.wikipedia.org/wiki/Piotroski_F-score"
       ],
       "id": "E16",
-      "recent_at": "2026-08-02"
+      "recent_at": "2026-08-02",
+      "lab": {
+        "v": "측정 불가",
+        "t": "Piotroski F-Score 9신호 (가치 게이트 안)",
+        "why": "2026-08-04 사전등록 후 돌렸으나 성적이 나오지 않았다. 9신호가 전부 계산되는 종목이 후보 문턱(30)에 한 번도 닿지 못했다 — 2015-06 에 1종 · 2020-06 에 15종 · 2026-06 에도 27종이다. 막는 것은 압도적으로 매출총이익(gp)이고(가치 게이트 통과 113~144종 중 96~115종 결측), 이건 우연이 아니라 구조적 충돌이다: 고 B/P 게이트가 부르는 업종(금융·리츠·유틸리티·에너지)이 정확히 매출총이익을 보고하지 않는 쪽이다. 원논문이 금융을 제외하는 것과 방향은 같지만 제외하고 남는 것도 30종이 안 된다. 신호를 8개로 줄이면 돌아가겠지만 그건 다른 전략이다."
+      }
     },
     {
       "cat": "E",
@@ -1498,7 +1503,12 @@
         "https://www.sciencedirect.com/science/article/abs/pii/S0927538X2400235X"
       ],
       "id": "E19",
-      "recent_at": "2026-07-23"
+      "recent_at": "2026-07-23",
+      "lab": {
+        "v": "기각",
+        "t": "비유동성 프리미엄 (Amihud ILLIQ · 사이즈 중립)",
+        "why": "2026-08-04 사전등록 후 한 번 돌렸다(build/PREREG-2026-08-04.md). 소급 t 5.31 · 최대 상관 상대(12-1 모멘텀 0.531) 대비 증분 알파 t 3.20 으로 게시 기준을 둘 다 넘었지만 기각했다 — 재는 것이 유동성이 아니었다. 보유칸 1,980개 중 647개(32.7%)가 13종에 몰렸고(ASML 175/198개월 · NWS 65% · BF.B 62% · ROL 51% · FOX 41% · PDD·CCEP·ARM·FER), 원인은 ILLIQ 의 분모가 미국 상장분 거래대금인데 사이즈 중립화에 쓴 시가총액은 전 클래스·전 시장이라는 범위 불일치다. 규모 효과가 아니라 유통물량 불일치라 사이즈 회귀로 못 걷는다. 유통물량(free float) 자료가 생기면 새 사전등록으로 되살릴 수 있다."
+      }
     },
     {
       "cat": "E",
@@ -1919,7 +1929,12 @@
         "Using Asset Turnover and Profit Margin to Forecast Changes in Profitability (Fairfield & Yohn, 2001, Review of Accounting Studies 6:371-385) — 초록 전문 확인 — https://link.springer.com/article/10.1023/A:1012430513430",
         "The Use of Dupont Analysis by Market Participants (Soliman) — Amanote 서지 페이지, 제목·저자·SSRN 버전 실재 확인 — https://research.amanote.com/publication/KIuS0nMBKQvf0BhiX4s4/the-use-of-dupont-analysis-by-market-participants",
         "The Use of Dupont Analysis by Market Participants (Soliman, 2008, DOI 10.2308/accr.2008.83.3.823) — Semantic Scholar API 메타데이터 확인 — https://api.semanticscholar.org/graph/v1/paper/DOI:10.2308/accr.2008.83.3.823?fields=title,abstract,year,authors,venue,externalIds"
-      ]
+      ],
+      "lab": {
+        "v": "기각",
+        "t": "자산회전율 개선 상위 10 (듀폰 분해)",
+        "why": "2026-08-04 사전등록 후 한 번 돌렸다. 소급 t 3.61(임계 3.34)·증분 t 3.02 로 기준은 넘었으나 생존편향(PIT) 레그에서 t 2.05 로 무너졌다. 더 결정적인 것은 같은 규칙을 PIT 창(2015-2026)에서 소급으로만 돌려도 t 가 1.78 이라는 점이다 — 3.61 을 만든 것은 2010-2015 구간이고 그때 후보 풀은 67~128종(유니버스의 13~25%)이었다. 매출이 ASC 606 태그라 그 시절 매출을 내던 회사만 채점된 것이고, 순위가 아니라 커버리지가 골랐다. 섹터 중립판·마진판·스프레드판은 등록하지 않았다(여럿을 돌려 제일 좋은 것을 고르면 p-해킹이다)."
+      }
     },
     {
       "id": "B9",
@@ -2200,7 +2215,12 @@
         "The Profitability of Trading NOA and Accruals: One Effect or Two? (Papanastasopoulos, 2017, International Review of Financial Analysis) — https://www.sciencedirect.com/science/article/abs/pii/S1057521917301291",
         "Net Operating Assets as a Predictor of Industry Stock Returns (Zhang, SSRN 900264) — https://papers.ssrn.com/sol3/papers.cfm?abstract_id=900264",
         "Scaled Net Operating Assets (SNOA) — definition (GuruFocus glossary) — https://www.gurufocus.com/glossary/SNOA"
-      ]
+      ],
+      "lab": {
+        "v": "기각",
+        "t": "순영업자산 최저 10 (대차대조표 팽창 회피)",
+        "why": "2026-08-04 사전등록 후 한 번 돌렸다. 단독 t 3.02 로 임계 3.34 에 못 미친다(증분 알파 t 2.62 는 넘었지만 게시 기준은 둘 다였다). 후보 풀도 63 → 267종으로 램프이고 상한이 267 인데, 장기차입금 태그 커버리지 85%가 그것을 묶는다. 이 규칙에 필요한 장기차입금은 2026-08-04 에 처음 수집한 항목이라, 그 전에는 아예 만들 수 없던 규칙이다."
+      }
     },
     {
       "id": "E39",
