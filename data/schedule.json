@@ -12,7 +12,7 @@
   "src-ins": "매주 토 08:00 KST",
   "src-rg": "매일(월~토) 07:10 KST",
   "src-snt": "매일(월~토) 07:20 KST",
-  "src-stk": "매일(월~토) 06:50 KST"
+  "src-stk": "매일(월~토) 06:50 KST + 매일(월~토) 08:20 KST"
  },
  "jobs": {
   "refresh-13f-history.yml": {
@@ -137,10 +137,12 @@
   },
   "refresh-stocks.yml": {
    "cron": [
-    "50 21 * * 0-5"
+    "50 21 * * 0-5",
+    "20 23 * * 0-5"
    ],
    "label": [
-    "매일(월~토) 06:50 KST"
+    "매일(월~토) 06:50 KST",
+    "매일(월~토) 08:20 KST"
    ]
   },
   "refresh-tech.yml": {
