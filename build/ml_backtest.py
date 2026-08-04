@@ -32,6 +32,98 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import (ann_stats, tstat, maxdd, curve_pack,  # noqa: E402
                            risk_bootstrap)
+import tech_backtest as TB          # noqa: E402  증분 알파 계산기를 다시 구현하지 않는다
+
+_GRID = {}
+
+
+def dates_for(nav, ds):
+    """nav 와 **같은 길이**의 날짜 축. 길이가 어긋나면 날짜 정합 회귀가 통째로 안 돈다.
+
+    nav 는 기준점 100.0 으로 시작해 구간마다 append 하므로 대개 len(ds)+1 이다.
+    그 한 칸은 첫 구간의 시작점이므로 앞을 한 번 더 쓴다.
+    """
+    ds = list(ds)
+    if not ds:
+        return []
+    if len(ds) == len(nav):
+        return ds
+    if len(ds) == len(nav) - 1:
+        return [ds[0]] + ds
+    return ds[:len(nav)] if len(ds) > len(nav) else ds + [ds[-1]] * (len(nav) - len(ds))
+
+
+def gthin(ds, nav, bnav, every=5):
+    """전략마다 다른 `step` 으로 얇게 만들면 **날짜 격자가 서로 안 맞는다.**
+
+    🚨 2026-08-05 실측: 그래서 이 랩의 incr5 가 전부 None 이었다. incr_multi 는 6계열의
+      **공통 날짜**에서만 회귀하는데, 전략마다 시작일이 달라 step 이 다르고(len//220)
+      그 결과 교집합이 사실상 비었다. 종목 랩은 전 규칙이 같은 격자라 이 문제가 없었다.
+    → 절대 위치로 자른다. 어느 전략이든 '전체 격자의 every 번째 날'만 남기므로 서로의
+      부분집합이 되고, 교집합이 짧은 쪽 길이만큼 남는다.
+    """
+    ds = dates_for(nav, ds)
+    keep = [i for i, d in enumerate(ds) if _GRID.get(d, i) % every == 0]
+    if len(keep) < 60:                      # 너무 짧아지면 그대로 둔다(회귀가 아예 안 도는 것보다 낫다)
+        keep = list(range(len(ds)))
+    return ([ds[i] for i in keep],
+            [round(nav[i], 2) for i in keep],
+            [round(bnav[i], 2) for i in keep])
+
+
+def attach_incr(rows, tcrit, label):
+    """랩 안에서 서로 얼마나 겹치는지 재고, 겹침이 남기는 것이 없으면 등급을 내린다.
+
+    🚨 2026-08-05. 이 검정은 종목 랩에만 있었다. 그래서 ML 계열 5종이 서로 초과수익 상관
+      0.86~0.93 인 채로 '통과 후보' 배지를 다섯 개 달고 있었다 — 한 규칙이 다섯 번 실린 것을
+      다섯 개의 독립 검증으로 세면서 본페로니 분모까지 그만큼 올린 셈이다.
+      계산기는 tech_backtest 의 모듈 함수를 그대로 쓴다(다시 구현하지 않는다 — 두 벌을 두면
+      한쪽만 고쳐진다는 것이 오늘의 교훈이다).
+    ⚠ 이웃은 **같은 랩 안에서만** 고른다. 자산배분 규칙을 종목선택 규칙으로 통제하는 것은
+      '이미 들고 있는 사람에게 새로 주는 것이 있느냐'라는 이 검정의 질문과 맞지 않는다.
+    ⚠ 강등만 한다. 넘었다고 등급을 올리지 않는다.
+    """
+    ok = [r for r in rows if r.get("dates") and r.get("nav") and r.get("bnav")]
+    for r in ok:
+        nb = []
+        for o in ok:
+            if o is r:
+                continue
+            c = TB.corr_of(*TB.paired_excess(r, o))
+            if c is not None:
+                nb.append((abs(c), c, o["name"], o))
+        if not nb:
+            continue
+        nb.sort(key=lambda z: -z[0])
+        a, b = TB.paired_excess(r, nb[0][3])
+        inc = TB.incr1(a, b)
+        if inc:
+            r["incr"] = {"vs": nb[0][2], "corr": round(nb[0][1], 3),
+                         "alpha": inc["alpha"], "t": inc["t"], "beta": inc["beta"]}
+        if len(nb) >= 5:
+            m5 = TB.incr_multi(r, [z[3] for z in nb[:5]])
+            if m5:
+                r["incr5"] = dict(m5, vs=[z[2] for z in nb[:5]])
+    dg = []
+    for r in rows:
+        if r.get("verdict") not in ("통과 후보", "대조군 우위(단일검정)"):
+            continue
+        i5 = (r.get("incr5") or {}).get("t")
+        if i5 is None or abs(i5) >= 2.0:
+            continue
+        dg.append((r["name"], r.get("t"), i5, (r.get("incr5") or {}).get("vs") or []))
+        r["verdict"] = "구별 불가"
+        r["why"] = (r.get("why") or "") + (
+            " ⚠ 이웃 5개를 동시에 통제하면 증분 알파 t가 %.2f로 게이트(2.0)에 못 미친다"
+            "(이웃: %s). 단독 t %s만 보면 문턱을 넘지만, 이 랩의 중복 판정 잣대는 "
+            "보유 겹침이 아니라 초과수익 상관이고 이웃 하나가 아니라 다섯이다."
+            % (i5, " · ".join((r.get("incr5") or {}).get("vs") or [])[:200], r.get("t")))
+    if dg:
+        print("  [%s 증분알파 게이트] 통과 후보 → 구별 불가 %d종:" % (label, len(dg)))
+        for nm, t0, i5, vs in dg:
+            print("    · %-30s t %s → incr5 %.2f" % (nm[:30], t0, i5))
+    return dg
+
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -354,8 +446,11 @@ def market_timing(A, RF):
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / max(1e-9, (n - st) / 252), 1),
         **cost_cols(nav, nav_c, dd, RF, COST_RT_ETF),
-        "nav": [round(x, 2) for x in nav[::step]],
-        "bnav": [round(x, 2) for x in bn[::step]],
+        # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
+        #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
+        "dates": (_gt := gthin(dd, nav, bn))[0],
+        "nav": _gt[1],
+        "bnav": _gt[2],
     }
 
 
@@ -608,8 +703,11 @@ def stock_selection(RF, TOPN=10, mode="value"):
         "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": round(turn / TOPN / yrs, 1),
         **cost_cols(nav, nav_c, dd, RF, COST_RT_STOCK),
-        "nav": [round(x, 2) for x in nav[::step]],
-        "bnav": [round(x, 2) for x in bn[::step]],
+        # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
+        #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
+        "dates": (_gt := gthin(dd, nav, bn))[0],
+        "nav": _gt[1],
+        "bnav": _gt[2],
     }
 
 
@@ -740,8 +838,11 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
                            - (mstats([nav_c[k + 1] / nav_c[k] - 1
                                       for k in range(len(nav_c) - 1)], nav_c).get("cagr") or 0), 2),
         "cost_note": "대조군은 매수후보유라 회전이 0이다 — 비용을 물지 않는다.",
-        "nav": [round(x, 2) for x in nav[::step]],
-        "bnav": [round(x, 2) for x in bn[::step]],
+        # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
+        #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
+        "dates": (_gt := gthin(months[st:], nav, bn))[0],
+        "nav": _gt[1],
+        "bnav": _gt[2],
     }
 
 
@@ -1031,8 +1132,11 @@ def stock_selection_wide(RF, TOPN=10, model="ridge"):
         "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs),
         "turnover": round(turn / TOPN / yrs, 1),
         **cost_cols(nav, nav_c, dd, RF, COST_RT_STOCK),
-        "nav": [round(x, 2) for x in nav[::step]],
-        "bnav": [round(x, 2) for x in bn[::step]],
+        # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
+        #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
+        "dates": (_gt := gthin(dd, nav, bn))[0],
+        "nav": _gt[1],
+        "bnav": _gt[2],
     }
 
 
@@ -1041,6 +1145,8 @@ def main() -> int:
     if not os.path.exists(ap):
         print("❌ data/assets.json 없음 — python build/refresh_assets.py 먼저"); return 1
     A = json.load(io.open(ap, encoding="utf-8"))
+    _GRID.clear()
+    _GRID.update({d: i for i, d in enumerate(A["dates"])})   # gthin 이 쓰는 절대 위치표
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
                            encoding="utf-8")).get("monthly") or {}
     # 🚨 자산 랩과 같은 사유로 패널 구간으로 자른다(2026-08-04). rf_monthly.json 전체는
@@ -1112,6 +1218,11 @@ def main() -> int:
         else:
             r["verdict"] = "대조군 열위"
             r["use"] = "대조군보다 나쁘다. 사전등록 규약대로 한 번 돌린 결과이며 재시도하지 않는다."
+
+    # 🚨 이 랩의 다섯(ml-xsec 계열)은 같은 모델족의 변형이다. 서로 초과수익 상관 0.86~0.93 인데
+    #   판정은 단독 t 하나로만 나가고 있었다 — 한 규칙이 다섯 번 실린 것을 다섯 개의 독립
+    #   검증으로 세면서 본페로니 분모까지 그만큼 올린 셈이다. 종목 랩과 같은 게이트를 건다.
+    attach_incr(rows, 2.0, "ML")
 
     doc = {
         "note": "머신러닝 두 건. 규약(모델·정규화·특징·검증)을 코드에 먼저 박고 한 번만 돌린 결과다. "
