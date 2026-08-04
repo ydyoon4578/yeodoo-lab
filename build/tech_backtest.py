@@ -838,6 +838,28 @@ def xsec_resid(rows):
     return {rows[i][0]: ys[i] - (a + b * xs[i]) for i in range(len(rows))}
 
 
+def vol_resolved(V, i, n=60, min_distinct=10, max_zero=0.20):
+    """거래량 계열이 그 창에서 **신호를 만들 만한 해상도를 갖는가.**
+
+    🚨 vd 는 2026-08-04 까지 백만주 **정수**로 저장됐다. 그래서 일평균 거래량이 100만주
+      미만인 종목은 0/1 만 찍는 이진열이 되고, 20일평균÷60일평균은 '급증'이 아니라
+      '어느 날이 우연히 1로 반올림됐는가'가 된다. 실측: x-volsurge 가 고른 종목의 60일
+      평균 vd 가 중앙 0.3(백만주)이고, 창 안 서로 다른 값이 중앙 3개뿐이었다.
+      저장 단위는 천주로 고쳤지만 **이미 저장된 이력은 다음 수집 때까지 그대로**다.
+      틀린 채로 재느니 안 재는 것이 낫다 — 해상도가 모자라면 후보에서 뺀다.
+    ⚠ 이것은 파라미터 조정이 아니라 **후보 자격**이다($5 필터·XSEC_MIN_POOL 과 같은 층이다).
+      신호를 정의할 수 없는 입력을 걸러내는 것이지 좋은 쪽을 고르는 것이 아니다.
+    """
+    if not V:
+        return False
+    w = [x for x in V[max(0, i - n + 1):i + 1] if x is not None]
+    if len(w) < n * 0.8:
+        return False
+    if sum(1 for x in w if x == 0) / len(w) > max_zero:
+        return False
+    return len(set(w)) >= min_distinct
+
+
 def _stall(rs, i, n=252, cap=0.10):
     """정지가격 게이트 — 창 안 일간수익이 정확히 0인 날이 cap 을 넘으면 True(후보 제외).
 
@@ -3076,7 +3098,10 @@ def run():
                         elif sid == "x-volsurge":
                             V = vlm[t]
                             m200 = sma(P, i - 1, 200)
-                            if not V or not m200 or not P[i - 1] or P[i - 1] <= m200:
+                            # 🚨 해상도 게이트(vol_resolved 참조). 거래량이 백만주 정수로
+                            #   저장돼 있던 탓에 이 규칙이 반올림 잡음을 순위로 쓰고 있었다.
+                            if (not V or not m200 or not P[i - 1] or P[i - 1] <= m200
+                                    or not vol_resolved(V, i - 1)):
                                 v = None
                             else:
                                 a = sma(V, i - 1, 20)
