@@ -307,6 +307,7 @@ def market_timing(A, RF):
         z = (X[i] - mu) / sd
         pred[i] = beta[0] + float(z @ beta[1:])
 
+    _rf_avg = (sum(RF.values()) / len(RF) / 21) if RF else 0.0   # 그 달이 없을 때만 쓰는 폴백
     nav, rets, bn, brs = [100.0], [], [100.0], []
     nav_c = [100.0]        # 비용 후 NAV — 무비용본과 나란히 간다
     w_prev = 0.0
@@ -318,7 +319,12 @@ def market_timing(A, RF):
         # |Δ노출| 2 가 한 왕복(0→1→0)이므로 한 다리는 RT/2 다. 종목선택 쪽 식과 다르다.
         tc = dw * COST_RT_ETF / 2
         rr = r[i] if np.isfinite(r[i]) else 0.0
-        rfd = (sum(RF.values()) / len(RF) / 21) if RF else 0.0
+        # 🚨 현금 수익은 **그 시점의** 금리로 준다(2026-08-04). 종전에는 표본 전체 평균을
+        #   상수로 줬는데, 이 규칙은 39.7% 의 날을 현금으로 보내므로 2009~2015 제로금리
+        #   구간에 존재하지 않던 이자를 받았다. 실측: 보고 CAGR 12.46% 중 0.86%p 가 그것이다
+        #   (시점별 금리로 다시 재면 11.60%). tech_backtest.py 는 정확히 이 실수를 이미
+        #   고쳐 두었는데(rfd_d) 이 파일이 갱신되지 않았다 — 랩이 셋이면 한쪽만 고쳐진다.
+        rfd = (RF[DTS[i][:7]] / 21) if RF.get(DTS[i][:7]) is not None else _rf_avg
         v = w_ * rr + (1 - w_) * rfd
         rets.append(v); nav.append(nav[-1] * (1 + v))
         nav_c.append(nav_c[-1] * (1 + v - tc))
@@ -1037,6 +1043,15 @@ def main() -> int:
     A = json.load(io.open(ap, encoding="utf-8"))
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
                            encoding="utf-8")).get("monthly") or {}
+    # 🚨 자산 랩과 같은 사유로 패널 구간으로 자른다(2026-08-04). rf_monthly.json 전체는
+    #   1981-09 부터라 평균이 연 3.79% 인데, ann_stats 는 그 평균만 쓴다. 랩마다 규약이
+    #   달랐다 — tech_backtest 는 이미 자르고 있었고 여기와 asset 만 안 잘랐다.
+    _rf_all = len(RF)
+    if A.get("dates"):
+        RF = {k: v for k, v in RF.items() if k >= A["dates"][0][:7]}
+        print("  무위험 계열 %d → %d개월(패널 %s~) · 평균 연 %.2f%%"
+              % (_rf_all, len(RF), A["dates"][0][:7],
+                 sum(RF.values()) / max(1, len(RF)) * 12 * 100))
     rows = []
     for fn, label in ((lambda: market_timing(A, RF), "지수 타이밍"),
                       (lambda: stock_selection(RF, mode="value"), "횡단면 종목선택(크기)"),
