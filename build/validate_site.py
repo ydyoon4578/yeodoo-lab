@@ -415,6 +415,61 @@ if pool:
         if _want and _got != _want:
             errors.append(f"strategy_index: {_si.get('n')}개(+제외 {_si.get('n_hidden') or 0})인데 "
                           f"원본 합계는 {_want}개 — python build/strategy_index.py 를 다시 돌릴 것")
+
+        # 🚨 2026-08-05 — 위 검사는 **합계만** 본다. 그래서 측정된 규칙을 목록에서 빼고 다른
+        #   것을 하나 복제해 넣어도 통과한다. 신원(sid)까지 본다.
+        #   ⚠ 통합 목록은 종목 규칙에 "t-" 접두를 붙인다(strategy_index 규약).
+        _idx_sid = set()
+        for _it in ((_si.get("items") or []) + (_si.get("hidden") or [])):
+            _s = _it.get("sid") if isinstance(_it, dict) else None
+            if _s:
+                _idx_sid.add(_s)
+                if _s.startswith("t-"):
+                    _idx_sid.add(_s[2:])
+        _idx_name = {(_it.get("name") or "") for _it in (_si.get("items") or [])}
+        _idx_name |= {(_h.get("name") or "") for _h in (_si.get("hidden") or []) if isinstance(_h, dict)}
+        _lost = []
+        for _f, _k in (("tech_strategies.json", "strategies"), ("asset_strategies.json", "strategies")):
+            _p = os.path.join(ROOT, "data", _f)
+            if not os.path.exists(_p):
+                continue
+            for _r in (json.load(io.open(_p, encoding="utf-8")).get(_k) or []):
+                _s = _r.get("sid")
+                if _s and _s not in _idx_sid and (_r.get("name") or "") not in _idx_name:
+                    _lost.append("%s(%s)" % (_s, _f.split("_")[0]))
+        if _lost:
+            errors.append("측정했는데 통합 목록에 없는 규칙 %d개: %s — 합계만 맞으면 통과하던 "
+                          "구멍이다(다른 것이 복제돼 자리를 채워도 안 걸린다)"
+                          % (len(_lost), ", ".join(sorted(_lost)[:12])))
+
+        # 🚨 2026-08-05 — 상세차트(strategy_charts.json)는 목록과 분리된 지연 로딩 파일이라
+        #   랩을 다시 돌리고 차트를 안 구우면 **카드와 곡선이 다른 실행의 것**이 된다.
+        #   실측으로 그 상태였다(차트 07:01 · 랩 15:56). x-52wh 처럼 그날 버그를 고친 규칙은
+        #   화면이 고치기 전 곡선을 계속 그린다. 어떤 검사도 이것을 안 봤다.
+        _cp = os.path.join(ROOT, "data", "strategy_charts.json")
+        if os.path.exists(_cp):
+            _cj = json.load(io.open(_cp, encoding="utf-8"))
+            _ch = _cj.get("charts") or {}
+            _miss = [_s for _s in _idx_sid if _s.startswith("t-x-") or _s.startswith("t-t-")]
+            _miss = [_s for _s in _miss if _s not in _ch]
+            if _miss:
+                errors.append("상세차트가 없는 규칙 %d개: %s — python build/strategy_charts.py 를 "
+                              "다시 돌릴 것(목록만 굽고 차트를 빠뜨리면 화면이 '차트 없는 전략'을 낸다)"
+                              % (len(_miss), ", ".join(sorted(_miss)[:8])))
+            # 끝점 대조 — 같은 실행의 산출물인지 본다(개수가 맞아도 내용이 낡을 수 있다).
+            _tsj = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+            _stale = []
+            for _r in (_tsj.get("strategies") or []):
+                _c = _ch.get("t-" + _r["sid"])
+                if not _c:
+                    continue
+                _cd = (_c.get("chart") or {}).get("dates") or _c.get("dates") or []
+                _rd = _r.get("dates") or []
+                if _cd and _rd and _cd[-1] != _rd[-1]:
+                    _stale.append("%s(차트 %s ≠ 랩 %s)" % (_r["sid"], _cd[-1], _rd[-1]))
+            if _stale:
+                errors.append("상세차트가 랩과 다른 실행의 것 %d개: %s — strategy_charts.py 를 "
+                              "다시 돌릴 것" % (len(_stale), " · ".join(_stale[:5])))
     except FileNotFoundError:
         pass
 

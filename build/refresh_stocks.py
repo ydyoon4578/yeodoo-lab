@@ -1066,10 +1066,24 @@ def main():
                 _prev_n[_s["t"]] = sum(1 for x in _p if x is not None)
     except Exception as _e:
         print("  [잘림검사] 직전 이력 못 읽음 — 이번엔 건너뜀:", str(_e)[:60])
+    # 🚨 2026-08-05 — 두 수의 **분모가 달랐다.** len(v) 는 period="max" 로 받은 상장 이후
+    #   전 이력 행수이고, _prev_n 은 저장된 PX_START(2009-01-01) 이후 창의 값 개수다.
+    #   오래 상장된 종목일수록 len(v) 가 크므로 가드가 느슨해진다 — 실측(적대감사): 4,422칸
+    #   중 1,327칸(30%)이 비어도 안 걸린다. **같은 창에서 세야 한다.**
+    #   그리고 절대 결손 하한을 함께 둔다. 비율만 보면 한 번 짧아진 길이가 다음 실행의
+    #   기준선이 되어 잘림이 굳는다("어제보다 짧아졌다"만 보면 어제가 이미 틀렸을 때 못 잡는다).
+    def _n_in_window(v):
+        try:
+            return int(len(v[v.index >= PX_START]))
+        except Exception:
+            return int(len(v))
     _short = [t for t, v in px.items()
-              if _prev_n.get(t) and len(v) < _prev_n[t] * 0.7 and t not in partial]
+              if _prev_n.get(t) and t not in partial
+              and (_n_in_window(v) < _prev_n[t] * 0.7
+                   or _prev_n[t] - _n_in_window(v) > 200)]
     if _short:
-        print(f"  이력 잘림 의심 {len(_short)}종 재수집(직전 실행 대비 70% 미만)")
+        print(f"  이력 잘림 의심 {len(_short)}종 재수집"
+              f"(같은 창 기준 · 직전 대비 70% 미만이거나 200칸 넘게 줄었다)")
         _fixed = 0
         for t in _short:
             d = _dl([_yf(t)], tries=2)
