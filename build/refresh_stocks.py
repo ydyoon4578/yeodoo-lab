@@ -899,6 +899,9 @@ def main():
             return d.xs(d.columns.get_level_values(0)[0], axis=1)
         return d
 
+    # 종가가 없어 버린 봉의 날짜 → 그런 종목 수. 아래 60분봉 복구가 '어느 날을 되살릴지'의 근거다.
+    _lost = {}
+
     def _closed(sub):
         """종가 없는 봉을 버린다 — 마지막 봉이 비면 **바로 이전 봉**이 마지막이 된다.
 
@@ -916,9 +919,74 @@ def main():
         수집 단계에서 자른다.
         """
         try:
+            for _x in sub.index[sub["Close"].isna()]:
+                _k = str(pd.Timestamp(_x).date())
+                _lost[_k] = _lost.get(_k, 0) + 1
             return sub[sub["Close"].notna()]
         except Exception:
             return sub
+
+    def _recover_intraday(px_, day):
+        """일봉 종가가 빈 날을 **60분봉으로 집계해** 되살린다. 되살린 종목 수를 반환.
+
+        야후는 일봉 집계만 깨지고 분봉은 멀쩡할 때가 있다 — 실측 2026-08-03: 일봉의
+        종가·고가·저가가 전 종목 NaN 인데(시가·거래량만 남았다) 60분봉은 7개 봉이 온전했다.
+        그러면 그날을 통째로 버릴 이유가 없다.
+
+        ⚠ 없는 값을 지어내는 것이 아니라 **같은 원천의 다른 집계**를 쓰는 것이다. 검증:
+          야후가 깨지기 전(01:02 UTC) data/assets.json 이 받아 둔 08-03 종가와 대조했더니
+          14종 전부 일치했고 최대 괴리가 0.0188%(대개 1센트)였다. SPY·HYG·VEU 는 완전 일치.
+        ⚠ 그래도 공식 종가와 똑같지는 않다 — 종가 단일가 체결이 마지막 체결과 다를 수 있다.
+          그래서 복구했다는 사실을 산출물(px_recon)에 남긴다. 조용히 섞지 않는다.
+        ⚠ 장중에 돌면 그날 봉이 반쪽이 된다. 세션이 끝났다는 증거를 요구한다 — 분봉의
+          마지막이 12:30 ET 이후일 것(13:00 조기폐장은 통과, 장중은 걸러낸다).
+        """
+        ts = pd.Timestamp(day).date()
+        tks = sorted(px_.keys())
+        n = 0
+        for i in range(0, len(tks), 120):
+            ch = tks[i:i + 120]
+            # 재시도를 두는 이유: 한 청크가 일시적으로 실패하면 복구율이 아래 50% 문턱을 못 넘어
+            # **되살릴 수 있었던 날을 통째로 버리게** 된다. 실패의 대가가 비대칭이다.
+            d = None
+            for _k in range(3):
+                try:
+                    d = yf.download([_yf(t) for t in ch], period="7d", interval="60m",
+                                    auto_adjust=True, progress=False, group_by="ticker", threads=True)
+                    if d is not None and len(d):
+                        break
+                except Exception:
+                    d = None
+                time.sleep(2 * (_k + 1))
+            if d is None or not len(d):
+                continue
+            for t in ch:
+                try:
+                    s = _unwrap(d, t)
+                    sub = s[[x.date() == ts for x in s.index]].dropna(subset=["Close"])
+                    if len(sub) < 2:
+                        continue
+                    lt = sub.index[-1]
+                    if lt.hour * 60 + lt.minute < 12 * 60 + 30:
+                        continue                      # 세션이 안 끝났다 — 반쪽 봉을 만들지 않는다
+                    idx0 = px_[t].index
+                    ni = pd.Timestamp(day)
+                    if getattr(idx0, "tz", None) is not None:
+                        ni = ni.tz_localize(idx0.tz)
+                    if len(idx0) and ni <= idx0.max():
+                        continue                      # 이미 있는 날이면 덮지 않는다
+                    row = pd.DataFrame([{
+                        "Open": float(sub["Open"].iloc[0]),
+                        "High": float(sub["High"].max()),
+                        "Low": float(sub["Low"].min()),
+                        "Close": float(sub["Close"].iloc[-1]),
+                        "Volume": float(sub["Volume"].sum()),
+                    }], index=[ni])
+                    px_[t] = pd.concat([px_[t], row]).sort_index()
+                    n += 1
+                except Exception:
+                    continue
+        return n
 
     def _dl(chy_, tries=3, period=PX_PERIOD):
         for k in range(tries):
@@ -998,6 +1066,33 @@ def main():
             raise SystemExit(
                 f"이력 잘림 {len(_still)}종이 재수집으로도 복구되지 않음 "
                 f"({', '.join(sorted(_still)[:8])}…) — 광범위한 입력 이상이다. 갱신 중단, 이전본 유지")
+
+    # ── 종가 결측 봉 복구 ────────────────────────────────────────────────────
+    # _closed() 가 버린 봉이 '가장 최근 거래일'이면 그날치를 통째로 잃는다. 실측 2026-08-04:
+    # 08-03 은 거래량 5,194만으로 **실제로 거래된 날**인데 일봉 종가가 비어 기준일이 07-31 에
+    # 묶였다. 분봉이 멀쩡하면 되살린다(위 _recover_intraday 의 검증 기록 참조).
+    # 정상적인 날에는 _lost 가 비어 비용이 0이다.
+    _rec = None
+    if _lost:
+        _want = max(_lost)
+        _have = max((str(pd.Timestamp(v.index.max()).date()) for v in px.values() if len(v)), default="")
+        if _want > _have:
+            print(f"  [종가결측] {_want} 일봉 종가가 {_lost[_want]}종에서 비었다(직전 확보일 {_have}) "
+                  f"— 60분봉으로 복구 시도")
+            _n = _recover_intraday(px, _want)
+            print(f"  [종가결측] 60분봉 복구 {_n}종")
+            # 일부만 되살아나면 그날 유니버스가 조각난다 — 단면 백분위·breadth 가 뜻을 잃는다.
+            # 절반도 못 되살리면 되살린 것을 도로 버리는 게 아니라 아예 시도를 무효로 본다.
+            if _n and _n < len(px) * 0.5:
+                print(f"  [종가결측] 복구율 {_n}/{len(px)} 이 절반 미만 — 조각난 단면을 만들지 않는다. "
+                      f"{_want} 를 버리고 {_have} 기준으로 간다")
+                for _t in list(px):
+                    _v = px[_t]
+                    if len(_v) and str(pd.Timestamp(_v.index.max()).date()) == _want:
+                        px[_t] = _v.iloc[:-1]
+            elif _n:
+                _rec = {"d": _want, "n": _n,
+                        "how": "일봉 종가 결측 → 같은 원천의 60분봉 마지막 체결로 집계"}
         for t in _still:
             partial[t] = int(len(px[t]))
 
@@ -1608,6 +1703,10 @@ def main():
     def _rnd(x, nd): return round(float(x), nd) if nd else int(round(float(x)))
     out = {"as_of": as_of, "source": "yfinance + 표준 테크니컬 (cloud)", "n_stocks": len(stocks), "pxd_dates": pxd_dates,
            "strong_tiers": True,   # 이 빌드가 타점 강/약(strong 인덱스)을 싣는다는 신호 — 없으면(구버전) 프런트가 전부 '강'으로 렌더
+
+           # 그날 일봉 종가가 비어 60분봉으로 되살렸으면 그 사실을 남긴다(정상일엔 null).
+           # 공식 종가와 소수점 끝자리가 다를 수 있는 값이라 조용히 섞으면 안 된다.
+           "px_recon": _rec,
 
            # 지수 구성종목인데 커버에서 빠진 것 — 숨기지 않고 사유와 함께 싣는다
            "excluded": [{"t": t, "name": (mem.get(t) or {}).get("name"), "idx": (mem.get(t) or {}).get("idx"),
