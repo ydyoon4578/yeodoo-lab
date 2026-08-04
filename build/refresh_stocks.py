@@ -1424,7 +1424,15 @@ def main():
         dser = daily[t] if t in daily.columns else None
         pxd = [None if dser is None or pd.isna(x) else round(float(x), 2) for x in (dser if dser is not None else [None]*len(pxd_dates))]
         vser = px[t]["Volume"].reindex(daily.index) if t in px else None
-        vd = [None if vser is None or pd.isna(x) else int(round(float(x)/1e6)) for x in (vser if vser is not None else [None]*len(pxd_dates))]  # 백만주 단위
+        # 🚨 2026-08-04: 단위를 백만주 → **천주**로 바꾼다. 종전 `int(round(v/1e6))` 은 하루
+        #   거래량이 50만주 미만인 날을 전부 0 으로 만들었다 — 실측 2,112,332칸 중 216,556칸
+        #   (10.25%)이 0 이고, 중앙 거래량이 1(백만주) 이하인 종목이 181종이다. 그 결과
+        #   x-volsurge(20일평균÷60일평균)는 '거래량 급증'이 아니라 **어느 날이 우연히 1로
+        #   반올림됐는가**를 순위로 쓰고 있었고(선택 종목의 60일 평균 vd 중앙 0.3), 화면의 MFI
+        #   는 같은 함수에 원주수를 먹는데 signal_lab 은 이 반올림값을 먹어 두 값이 갈렸다.
+        #   ⚠ vd 를 읽는 곳(tech_backtest·signal_lab·ml_backtest·pit_backtest)은 전부 비율로만
+        #     쓰므로 단위 변경이 로직에 영향을 주지 않는다. 바뀌는 것은 해상도뿐이다.
+        vd = [None if vser is None or pd.isna(x) else int(round(float(x)/1e3)) for x in (vser if vser is not None else [None]*len(pxd_dates))]  # 천주 단위
         # 고가·저가 — 22개 테크니컬 이벤트 중 절반 이상(스토캐스틱·CCI·Williams·MFI·돈치안·Aroon)이
         # 고저가를 쓴다. 종가만 저장하면 **게시한 신호를 과거로 되돌려 검증할 수 없다**.
         # 신호를 보여주면서 성적을 못 재는 상태를 없애려고 함께 싣는다(종목당 +약 9KB).

@@ -212,10 +212,22 @@ def prep(h, l, c, v):
     au, ad = aroon(h, l)
     s200 = sma(c, 200)
     rv = v.rolling(5).mean() / v.rolling(60).mean()
+    # 🚨 거래량 해상도 게이트(2026-08-04). 화면(refresh_stocks)은 **원주수**로 MFI 를 내는데
+    #   여기는 저장된 vd 를 먹는다. vd 가 백만주 정수로 저장돼 있던 탓에 두 값이 갈렸다 —
+    #   실측: MFI 셀의 5.04%가 NaN · 1.24%가 0/100 고정, NaN+고정이 30% 를 넘는 종목이 38종,
+    #   NVR 은 100% NaN 이다(mfi 정의상 음의 자금흐름이 0 이면 0으로 나눈다).
+    #   즉 화면은 어떤 종목의 MFI 신호를 띄우는데 그 신호의 성적표에는 그 종목이 한 건도
+    #   안 들어간다. 저장 단위는 천주로 고쳤지만 이력은 다음 수집 때까지 그대로다.
+    #   해상도가 모자란 구간은 **신호 없음(NaN)** 으로 둔다 — 틀린 채로 재느니 안 재는 것이 낫다.
+    _w = 60
+    _zero = (v.fillna(0) == 0).rolling(_w).mean()
+    _dist = v.rolling(_w).apply(lambda a: len(set(a[~pd.isna(a)])), raw=False)
+    _vol_ok = (_zero <= 0.20) & (_dist >= 10)
+    _mfi = mfi(h, l, c, v).where(_vol_ok)
     return {
         "rsi": rsi(c), "ml": ml, "ms": ms, "z": pd.Series(0.0, index=c.index),
         "pb": pb, "bw": bw, "k": k, "kd": k.rolling(3).mean(),
-        "cci": cci(h, l, c), "wr": willr(h, l, c), "mfi": mfi(h, l, c, v),
+        "cci": cci(h, l, c), "wr": willr(h, l, c), "mfi": _mfi,
         "s50": sma(c, 50), "s200": s200, "up": c > s200,
         "dcu": h.rolling(20).max(), "dcl": l.rolling(20).min(),
         "au": au, "ad": ad, "adx": ax, "c25": pd.Series(25.0, index=c.index),
