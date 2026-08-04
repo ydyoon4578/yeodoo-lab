@@ -1538,7 +1538,7 @@ except Exception as e:
 #        문서의 n_days 가 없어도 성립하고, 문턱 서술("2년(504거래일)")은 자연히 통과한다.
 #     ② 표본 주장 — "표본이/표본은/과거 N년"처럼 표본 길이를 단언하는 꼴만 골라
 #        그 문서의 n_days 와 대조한다.
-_PER_FILES = ("tech_strategies.json", "signal_lab.json", "ml_strategies.json",
+_PER_FILES = ("tech_strategies.json", "signal_lab.json", "guru_clone.json",
               "assets.json", "strategy_backtests.json", "archive_backtests.json")
 _PER_KEYS = ("limits", "protocol", "note", "notes", "caveats")
 #   '최근 N년'은 넣지 않는다 — assets.limits 의 "공개 CSV가 최근 3년만 준다"(정보원 라이선스
@@ -2037,7 +2037,10 @@ try:
     _sd_dir = os.path.join(ROOT, "data", "sd")
     _sd_keys = set()
     if os.path.isdir(_sd_dir):
-        _fs = [f for f in sorted(os.listdir(_sd_dir)) if f.endswith(".json")][:40]
+        # ⚠ 40종 표본이었다. 배선(키 존재)만 보는 검사라 표본으로 충분하다고 봤는데,
+        #   그러면 나머지 478종에서 계열이 통째로 사라져도 통과한다 — 이 검사가 막으려는
+        #   사고가 정확히 "조용히 없어지는 것"이므로 전수로 본다(파일 열기 518회, 수 초).
+        _fs = [f for f in sorted(os.listdir(_sd_dir)) if f.endswith(".json")]
         for _f in _fs:
             try:
                 _j = json.load(io.open(os.path.join(_sd_dir, _f), encoding="utf-8"))

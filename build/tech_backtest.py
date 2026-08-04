@@ -1344,7 +1344,7 @@ def _rebase(ok, splits):
     return out, used
 
 
-def split_trim(sh, eps, dps, tk=""):
+def split_trim(sh, eps, dps, tk="", eps_a=None, dps_a=None):
     """🚨 분할 기준 불일치 관측을 잘라낸다 — 안 자르면 순수 선견이 된다.
 
     주가는 **분할조정본**(auto_adjust=True)이라 전 구간이 오늘 기준이다. 그런데 SEC 주당지표
@@ -1390,10 +1390,10 @@ def split_trim(sh, eps, dps, tk=""):
       단순 분할비(±2%) 근접은 67건뿐이고 나머지는 단위오류(1000배대)와 실제 자본거래다.
     """
     if not sh or len(sh) < 3:
-        return sh, eps, dps, sh, None
+        return sh, eps, dps, sh, None, eps_a, dps_a
     vs = sorted(v for _d, v in sh if v and v > 0)
     if not vs:
-        return sh, eps, dps, sh, None
+        return sh, eps, dps, sh, None, eps_a, dps_a
     med = vs[len(vs) // 2]
     # ① 단위 오류 — 100배 넘게 벗어난 관측(분할로는 설명 안 되는 크기)
     bad = {d for d, v in sh if not v or v <= 0 or v / med > 100 or med / v > 100}
@@ -1438,7 +1438,16 @@ def split_trim(sh, eps, dps, tk=""):
                 out.append((d, v))
         return out
 
-    return keep(reb), persh(eps), persh(dps), unit, seam
+    # 🚨 2026-08-05 — **연간 버킷도 같은 배수를 태운다.** 하루 전에 ttm2 의 연간 폴백을
+    #   x-ep·x-dy·x-payout 에 이었는데, 그 폴백이 집는 eps_a·dps_a 가 여기를 안 거치고 있었다.
+    #   그러면 분자만 분할 전 기준·분모(주가)만 분할 후 기준이 되어 이 함수가 막으려는 선견이
+    #   정확히 되살아난다. 실측(적대감사): x-ep 보유칸 1,990개 중 1,503개(75.5%)가 '그 달
+    #   이후 실제로 분할한 종목'이었고, 이익수익률 30% 초과(현실 불가) 칸이 82.9% 였다.
+    #   NVDA 2019-06-28 — 분할조정 주가 4.08 · 연간 EPS 6.63(2021 ×4 · 2024 ×10 전 보고치)
+    #   → E/P 162.5%. 그날 상위 10종이 10/10 나중에 분할한 종목이었다.
+    #   ⚠ 배수를 못 정하는 날짜(sh 격자 밖)는 persh 가 '뒤에 분할이 있으면' 버린다 —
+    #     연간 관측은 회계연도말이라 sh 격자와 자주 어긋나므로 이 경로가 실제로 작동한다.
+    return keep(reb), persh(eps), persh(dps), unit, seam, persh(eps_a), persh(dps_a)
 
 
 def load_fund(extra_dirs=()):
@@ -1490,7 +1499,8 @@ def load_fund(extra_dirs=()):
         _tk = j.get("t") or fn[:-5]
         rev, ni, dps = series("rev"), series("ni"), series("dps")
         sh = series("sh") or annual("sh") or series("sho")
-        sh, ep, dps, sh_u, seam = split_trim(sh, ep, dps, _tk)
+        ep_a0, dp_a0 = annual("eps"), annual("dps")
+        sh, ep, dps, sh_u, seam, ep_a, dp_a = split_trim(sh, ep, dps, _tk, ep_a0, dp_a0)
         if not sh:
             # 🚨 이 계열에는 split_trim 을 태우지 않는다. 되맞춤이 이미 정확하고
             #   (shares_yf 참조 — 추정이 아니라 날짜별 분할 곱), 그 위에 '매끄러움' 규칙을
@@ -1555,7 +1565,7 @@ def load_fund(extra_dirs=()):
                                           #   있어야 작동한다 — 없으면 분기 결측 종목이 조용히
                                           #   후보에서 빠진다(연차보고 외국 발행인이 정확히
                                           #   그 집단이고, DATA-FACTS 7 이 지목한 무리와 겹친다).
-                                          "eps_a": annual("eps"), "dps_a": annual("dps"),
+                                          "eps_a": ep_a, "dps_a": dp_a,
                                           "cogs_a": annual("cogs"), "opinc_a": annual("opinc")}
     # 분할 기준 처리 결과를 **로그로 남긴다.** 조용히 자르면 표본이 왜 짧은지 아무도 모른다
     # (실제로 그랬다 — SPLIT_TRIMMED 를 모으기만 하고 찍는 곳이 없었다).

@@ -1517,16 +1517,19 @@ def main() -> int:
         r["role"] = ROLE.get(sid, "배분기")
         rows.append(r)
 
-    # 머신러닝·13F 복제는 별도 스크립트(build/ml_backtest.py)가 낸다 — 규약이 다르기 때문이다
-    # (사전등록·워크포워드). 표는 여기 하나로 합친다. 두 곳에 두면 갈린다.
-    mlp = os.path.join(DATA, "ml_strategies.json")
-    if os.path.exists(mlp):
-        for r in (json.load(io.open(mlp, encoding="utf-8")).get("strategies") or []):
+    # 13F 복제는 별도 스크립트(build/guru_clone.py)가 낸다 — 규약이 다르기 때문이다
+    # (공시지연 45일). 표는 여기 하나로 합친다. 두 곳에 두면 갈린다.
+    # 🚨 2026-08-05 — 종전에는 ml_strategies.json(머신러닝 8종 + 13F 복제 1종)을 읽었다.
+    #   머신러닝 여덟은 삭제했다(사용자 결정 · 사유는 build/DATA-FACTS.md 17번).
+    #   13F 복제는 머신러닝이 아니라 같이 지울 이유가 없어 따로 떼어 냈고, 산식은 그대로다.
+    gcp = os.path.join(DATA, "guru_clone.json")
+    if os.path.exists(gcp):
+        for r in (json.load(io.open(gcp, encoding="utf-8")).get("strategies") or []):
             r.setdefault("turnover", None)
             r["role"] = ROLE.get(r.get("sid"), "수익엔진")
             rows.append(r)
     else:
-        print("  ⚠ ml_strategies.json 없음 — python build/ml_backtest.py 를 먼저 돌릴 것")
+        print("  ⚠ guru_clone.json 없음 — python build/guru_clone.py 를 먼저 돌릴 것")
 
     # 판정 — 다중검정 보정 후 대조군 대비
     n = len(rows)
@@ -1667,6 +1670,19 @@ def main() -> int:
         _idx = {x["sid"]: x for x in (_ai.get("items") or [])}
     except FileNotFoundError:
         _idx = {}
+    # 돌렸다가 목록에서 뺀 아카이브 항목 — 사유와 마지막 수치를 남긴다.
+    RETIRED_ARCH = {
+        "ml-market-timing":
+            "2026-08-04 에 공개 데이터로 재현해 돌렸다(릿지·워크포워드, 특징 7개). "
+            "마지막 측정: CAGR 12.46%% · 샤프 0.700 · t −1.46 — 대조군 열위. "
+            "2026-08-05 에 목록에서 뺐다(사용자 결정) — 사유는 성과가 아니라 **운영 비용**이다. "
+            "ML 랩 전체가 한 번 도는 데 55분이 걸렸고, 얻는 것이 없었다.",
+        "ml-stock-selection":
+            "2026-08-04 에 재현해 일곱 판(릿지·로지스틱·고신뢰·상호작용·랜덤포레스트·특징20 둘)을 "
+            "돌렸다. 마지막 측정: 단독 t 3.19~4.24 로 전부 문턱을 넘었으나, 서로의 초과수익 상관이 "
+            "0.868~0.975 이고 이웃 5개 동시 통제 증분알파(incr5)가 −1.20~1.20 이라 게이트(2.0)를 "
+            "하나도 못 넘었다 — 한 규칙을 일곱 번 판 것이었다. 2026-08-05 에 목록에서 뺐다.",
+    }
     audit = []
     for sid, x in _idx.items():
         if sid in done:
@@ -1683,6 +1699,12 @@ def main() -> int:
             st, why = PENDING[sid]
             audit.append({"sid": sid, "n": x["n"], "c": x.get("c", ""),
                           "status": st, "why": why})
+        elif sid in RETIRED_ARCH:
+            # 🚨 한 번 돌렸다가 목록에서 뺀 것. 여기 안 적으면 그 아카이브 항목이 화면에서
+            #   **조용히 사라진다**(validate_site 가 실제로 잡아 줬다). '재현 못 했다'와
+            #   '재현했다가 뺐다'는 다른 사실이므로 마지막 수치까지 남긴다.
+            audit.append({"sid": sid, "n": x["n"], "c": x.get("c", ""),
+                          "status": "돌렸다가 뺌", "why": RETIRED_ARCH[sid]})
     doc_audit = {
         "note": "아카이브가 '이 저장소 데이터로는 재현할 수 없다'고 두었던 항목을 다시 점검한 결과. "
                 "대부분은 데이터가 세상에 없어서가 아니라 이 저장소가 안 갖고 있었을 뿐이었다.",

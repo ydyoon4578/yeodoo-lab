@@ -212,6 +212,8 @@ def prep(h, l, c, v):
     au, ad = aroon(h, l)
     s200 = sma(c, 200)
     rv = v.rolling(5).mean() / v.rolling(60).mean()
+    # ⚠ 아래 해상도 게이트를 MFI 에만 걸고 rvol 에는 안 걸었었다 — 같은 함수 안에서.
+    #   rvol 은 거래량 비율 그 자체라 오히려 MFI 보다 해상도에 더 직접적으로 걸린다.
     # 🚨 거래량 해상도 게이트(2026-08-04). 화면(refresh_stocks)은 **원주수**로 MFI 를 내는데
     #   여기는 저장된 vd 를 먹는다. vd 가 백만주 정수로 저장돼 있던 탓에 두 값이 갈렸다 —
     #   실측: MFI 셀의 5.04%가 NaN · 1.24%가 0/100 고정, NaN+고정이 30% 를 넘는 종목이 38종,
@@ -224,6 +226,7 @@ def prep(h, l, c, v):
     _dist = v.rolling(_w).apply(lambda a: len(set(a[~pd.isna(a)])), raw=False)
     _vol_ok = (_zero <= 0.20) & (_dist >= 10)
     _mfi = mfi(h, l, c, v).where(_vol_ok)
+    rv = rv.where(_vol_ok)
     return {
         "rsi": rsi(c), "ml": ml, "ms": ms, "z": pd.Series(0.0, index=c.index),
         "pb": pb, "bw": bw, "k": k, "kd": k.rolling(3).mean(),
