@@ -2348,6 +2348,134 @@ def build_strats():
                  z_crit(_before), z_crit(len(STRATS))))
 
 
+# ── 증분 알파 계산기 (모듈 레벨 — 랩 셋이 같은 것을 쓴다) ──────────────────
+# 🚨 2026-08-05: run() 안의 중첩 함수였다. 그래서 ml_backtest·asset_backtest 는 이 검정을
+#   아예 못 썼고, ML 5종이 서로 초과수익 상관 0.86~0.93 인 채로 "통과 후보" 배지를 달고
+#   있었다 — 이 랩이 DATA-FACTS 6·8 에서 중복 판정의 잣대라고 못박은 검정을 한 번도 안 받았다.
+#   다시 구현하지 않고 여기서 꺼내 쓴다. 같은 일을 두 벌 두면 한쪽만 고쳐진다는 것이
+#   오늘 하루의 교훈이다(x-52wh 가 tech 에서만 고쳐지고 pit 에 남아 있었다).
+def nav_rets(r):
+    v = r.get("nav") or []
+    return [v[i] / v[i - 1] - 1 for i in range(1, len(v))] if len(v) > 2 else []
+
+def corr_of(a, b):
+    if len(a) != len(b) or not a:
+        return None
+    m1, m2 = sum(a) / len(a), sum(b) / len(b)
+    s1 = math.sqrt(sum((x - m1) ** 2 for x in a))
+    s2 = math.sqrt(sum((y - m2) ** 2 for y in b))
+    if not s1 or not s2:
+        return None
+    return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
+
+def paired_excess(r1, r2):
+    """두 규칙의 **공통 날짜**에서 초과수익(전략−대조군) 두 계열을 만든다.
+
+    🚨 날짜로 맞춰야 한다. 보유시작 재기준·커버리지 게이트 때문에 규칙마다 구간이 다르고
+      (발생액 2018-12 · 장기반전 2021-08 · 총이익 2021-09), 길이만 보고 자르면 서로 다른
+      시점을 겹쳐 놓게 된다. 종전 타이밍 중복표는 전부 같은 구간이라 이 문제가 없었다.
+    """
+    def ex(r):
+        d, nv, bv = r.get("dates") or [], r.get("nav") or [], r.get("bnav") or []
+        if not (len(d) == len(nv) == len(bv)):
+            return {}
+        return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
+    e1, e2 = ex(r1), ex(r2)
+    ds = sorted(set(e1) & set(e2))
+    xs, ys, prev = [], [], None
+    for d in ds:
+        if prev is not None:
+            a1, b1 = e1[d]; a0, b0 = e1[prev]
+            a2, b2 = e2[d]; c0, d0 = e2[prev]
+            if a0 and b0 and c0 and d0:
+                xs.append((a1 / a0 - 1) - (b1 / b0 - 1))
+                ys.append((a2 / c0 - 1) - (b2 / d0 - 1))
+        prev = d
+    return xs, ys
+
+def incr_multi(r, others):
+    """후보를 이웃 **여럿에 동시에** 회귀 — 절편의 t 를 돌려준다.
+
+    _incr(이웃 하나)로는 붐비는 축을 못 걷는다. 이웃이 여럿이면 하나만 빼도 남는 것이
+    있어 보이기 때문이다. 실측은 위 호출부 주석에 있다.
+    🚨 날짜로 맞춘다. 규칙마다 구간이 다르므로(재기준·커버리지 게이트) **전원의 공통
+      날짜**에서만 회귀한다 — 길이로 자르면 서로 다른 시점을 겹쳐 놓게 된다.
+    """
+    def ser(x):
+        d, nv, bv = x.get("dates") or [], x.get("nav") or [], x.get("bnav") or []
+        if not (len(d) == len(nv) == len(bv)):
+            return {}
+        return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
+    maps = [ser(r)] + [ser(o) for o in others]
+    if not all(maps):
+        return None
+    ds = sorted(set.intersection(*[set(m) for m in maps]))
+    cols, prev = [[] for _ in maps], None
+    for d in ds:
+        if prev is not None and all((m[prev][0] and m[prev][1]) for m in maps):
+            for k, m in enumerate(maps):
+                a1, b1 = m[d]; a0, b0 = m[prev]
+                cols[k].append((a1 / a0 - 1) - (b1 / b0 - 1))
+        prev = d
+    y, X = cols[0], cols[1:]
+    n, k = len(y), len(X) + 1
+    if n < 60 + k:
+        return None
+    M = [[1.0] + [X[j][i] for j in range(len(X))] for i in range(n)]
+    XtX = [[sum(M[i][a] * M[i][b] for i in range(n)) for b in range(k)] for a in range(k)]
+    Xty = [sum(M[i][a] * y[i] for i in range(n)) for a in range(k)]
+
+    def solve(A, rhs):                     # 가우스-조던(작은 k 라 충분하다)
+        G = [A[i][:] + [rhs[i]] for i in range(k)]
+        for c in range(k):
+            p = max(range(c, k), key=lambda z: abs(G[z][c]))
+            if abs(G[p][c]) < 1e-14:
+                return None
+            G[c], G[p] = G[p], G[c]
+            pv = G[c][c]
+            G[c] = [v / pv for v in G[c]]
+            for rr in range(k):
+                if rr != c and G[rr][c]:
+                    f = G[rr][c]
+                    G[rr] = [G[rr][j] - f * G[c][j] for j in range(k + 1)]
+        return [G[i][k] for i in range(k)]
+    beta = solve(XtX, Xty)
+    if beta is None:
+        return None
+    res = [y[i] - sum(beta[a] * M[i][a] for a in range(k)) for i in range(n)]
+    s2 = sum(x * x for x in res) / (n - k)
+    e0 = solve(XtX, [1.0] + [0.0] * (k - 1))   # (X'X)^-1 의 첫 열
+    if e0 is None or s2 <= 0 or e0[0] <= 0:
+        return None
+    se = math.sqrt(s2 * e0[0])
+    return {"alpha": round(beta[0] * (252 / 5) * 100, 2),
+            "t": round(beta[0] / se, 2) if se else None, "n": n}
+
+def incr1(a, b):
+    """a(후보 초과수익)를 b(기존 규칙 초과수익)에 회귀 — 절편이 증분 알파다.
+
+    붐비는 축에 규칙을 하나 더 얹을 때 '단독 t'는 답이 못 된다. 이미 들고 있는 규칙이
+    설명하고 남는 것이 있느냐가 질문이고, 그 답이 절편이다. 실측 사례: 에코 모멘텀은
+    단독 t 3.80 인데 12-1 대비 증분 알파 t 는 1.01 이었다 — 별개 축이 아니었다.
+    """
+    n = len(a)
+    if n < 60 or len(b) != n:
+        return None
+    ma, mb = sum(a) / n, sum(b) / n
+    sbb = sum((x - mb) ** 2 for x in b)
+    if sbb <= 0:
+        return None
+    beta = sum((x - mb) * (y - ma) for x, y in zip(b, a)) / sbb
+    alpha = ma - beta * mb
+    res = [y - (alpha + beta * x) for x, y in zip(b, a)]
+    s2 = sum(r * r for r in res) / max(1, n - 2)
+    se = math.sqrt(s2 * (1.0 / n + mb * mb / sbb)) if s2 > 0 else 0.0
+    # nav 는 5거래일 간격 표본이므로 연율화 배수는 252/5
+    return {"alpha": round(alpha * (252 / 5) * 100, 2),
+            "t": round(alpha / se, 2) if se else None,
+            "beta": round(beta, 3), "n": n}
+
+
 # ── 실행 ────────────────────────────────────────────────────────────────
 def run():
     dates, px, vlm, hid, lod, meta, rf = load()
@@ -3493,127 +3621,9 @@ def run():
     # 같은 지수 가격에서 나오면 서로 다른 베팅이 아니라 같은 베팅 24개다. 실제로 얼마나
     # 겹치는지 재서 그대로 싣는다 — 본페로니는 검정이 독립일 때의 보정이라, 겹칠수록
     # 필요 이상으로 보수적이 된다(임계를 낮추지는 않는다. 재량이 들어가는 순간 검정이 아니게 된다).
-    def _rets(r):
-        v = r.get("nav") or []
-        return [v[i] / v[i - 1] - 1 for i in range(1, len(v))] if len(v) > 2 else []
-
-    def _corr(a, b):
-        if len(a) != len(b) or not a:
-            return None
-        m1, m2 = sum(a) / len(a), sum(b) / len(b)
-        s1 = math.sqrt(sum((x - m1) ** 2 for x in a))
-        s2 = math.sqrt(sum((y - m2) ** 2 for y in b))
-        if not s1 or not s2:
-            return None
-        return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
-
-    def _paired_excess(r1, r2):
-        """두 규칙의 **공통 날짜**에서 초과수익(전략−대조군) 두 계열을 만든다.
-
-        🚨 날짜로 맞춰야 한다. 보유시작 재기준·커버리지 게이트 때문에 규칙마다 구간이 다르고
-          (발생액 2018-12 · 장기반전 2021-08 · 총이익 2021-09), 길이만 보고 자르면 서로 다른
-          시점을 겹쳐 놓게 된다. 종전 타이밍 중복표는 전부 같은 구간이라 이 문제가 없었다.
-        """
-        def ex(r):
-            d, nv, bv = r.get("dates") or [], r.get("nav") or [], r.get("bnav") or []
-            if not (len(d) == len(nv) == len(bv)):
-                return {}
-            return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
-        e1, e2 = ex(r1), ex(r2)
-        ds = sorted(set(e1) & set(e2))
-        xs, ys, prev = [], [], None
-        for d in ds:
-            if prev is not None:
-                a1, b1 = e1[d]; a0, b0 = e1[prev]
-                a2, b2 = e2[d]; c0, d0 = e2[prev]
-                if a0 and b0 and c0 and d0:
-                    xs.append((a1 / a0 - 1) - (b1 / b0 - 1))
-                    ys.append((a2 / c0 - 1) - (b2 / d0 - 1))
-            prev = d
-        return xs, ys
-
-    def _incr_multi(r, others):
-        """후보를 이웃 **여럿에 동시에** 회귀 — 절편의 t 를 돌려준다.
-
-        _incr(이웃 하나)로는 붐비는 축을 못 걷는다. 이웃이 여럿이면 하나만 빼도 남는 것이
-        있어 보이기 때문이다. 실측은 위 호출부 주석에 있다.
-        🚨 날짜로 맞춘다. 규칙마다 구간이 다르므로(재기준·커버리지 게이트) **전원의 공통
-          날짜**에서만 회귀한다 — 길이로 자르면 서로 다른 시점을 겹쳐 놓게 된다.
-        """
-        def ser(x):
-            d, nv, bv = x.get("dates") or [], x.get("nav") or [], x.get("bnav") or []
-            if not (len(d) == len(nv) == len(bv)):
-                return {}
-            return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
-        maps = [ser(r)] + [ser(o) for o in others]
-        if not all(maps):
-            return None
-        ds = sorted(set.intersection(*[set(m) for m in maps]))
-        cols, prev = [[] for _ in maps], None
-        for d in ds:
-            if prev is not None and all((m[prev][0] and m[prev][1]) for m in maps):
-                for k, m in enumerate(maps):
-                    a1, b1 = m[d]; a0, b0 = m[prev]
-                    cols[k].append((a1 / a0 - 1) - (b1 / b0 - 1))
-            prev = d
-        y, X = cols[0], cols[1:]
-        n, k = len(y), len(X) + 1
-        if n < 60 + k:
-            return None
-        M = [[1.0] + [X[j][i] for j in range(len(X))] for i in range(n)]
-        XtX = [[sum(M[i][a] * M[i][b] for i in range(n)) for b in range(k)] for a in range(k)]
-        Xty = [sum(M[i][a] * y[i] for i in range(n)) for a in range(k)]
-
-        def solve(A, rhs):                     # 가우스-조던(작은 k 라 충분하다)
-            G = [A[i][:] + [rhs[i]] for i in range(k)]
-            for c in range(k):
-                p = max(range(c, k), key=lambda z: abs(G[z][c]))
-                if abs(G[p][c]) < 1e-14:
-                    return None
-                G[c], G[p] = G[p], G[c]
-                pv = G[c][c]
-                G[c] = [v / pv for v in G[c]]
-                for rr in range(k):
-                    if rr != c and G[rr][c]:
-                        f = G[rr][c]
-                        G[rr] = [G[rr][j] - f * G[c][j] for j in range(k + 1)]
-            return [G[i][k] for i in range(k)]
-        beta = solve(XtX, Xty)
-        if beta is None:
-            return None
-        res = [y[i] - sum(beta[a] * M[i][a] for a in range(k)) for i in range(n)]
-        s2 = sum(x * x for x in res) / (n - k)
-        e0 = solve(XtX, [1.0] + [0.0] * (k - 1))   # (X'X)^-1 의 첫 열
-        if e0 is None or s2 <= 0 or e0[0] <= 0:
-            return None
-        se = math.sqrt(s2 * e0[0])
-        return {"alpha": round(beta[0] * (252 / 5) * 100, 2),
-                "t": round(beta[0] / se, 2) if se else None, "n": n}
-
-    def _incr(a, b):
-        """a(후보 초과수익)를 b(기존 규칙 초과수익)에 회귀 — 절편이 증분 알파다.
-
-        붐비는 축에 규칙을 하나 더 얹을 때 '단독 t'는 답이 못 된다. 이미 들고 있는 규칙이
-        설명하고 남는 것이 있느냐가 질문이고, 그 답이 절편이다. 실측 사례: 에코 모멘텀은
-        단독 t 3.80 인데 12-1 대비 증분 알파 t 는 1.01 이었다 — 별개 축이 아니었다.
-        """
-        n = len(a)
-        if n < 60 or len(b) != n:
-            return None
-        ma, mb = sum(a) / n, sum(b) / n
-        sbb = sum((x - mb) ** 2 for x in b)
-        if sbb <= 0:
-            return None
-        beta = sum((x - mb) * (y - ma) for x, y in zip(b, a)) / sbb
-        alpha = ma - beta * mb
-        res = [y - (alpha + beta * x) for x, y in zip(b, a)]
-        s2 = sum(r * r for r in res) / max(1, n - 2)
-        se = math.sqrt(s2 * (1.0 / n + mb * mb / sbb)) if s2 > 0 else 0.0
-        # nav 는 5거래일 간격 표본이므로 연율화 배수는 252/5
-        return {"alpha": round(alpha * (252 / 5) * 100, 2),
-                "t": round(alpha / se, 2) if se else None,
-                "beta": round(beta, 3), "n": n}
-
+    # 계산기 자체는 모듈 레벨에 있다(ml·asset 랩이 같은 것을 쓰기 위해). 여기서는 옛 이름으로 잇는다.
+    _rets, _corr = nav_rets, corr_of
+    _paired_excess, _incr, _incr_multi = paired_excess, incr1, incr_multi
     # ── 표본 구간의 성격 ────────────────────────────────────────────────
     # 결과가 '타이밍은 안 통한다'로 읽히기 쉽다. 하지만 이 표본에서 벤치마크 자체가
     # 연 22%·샤프 1.08이면, 어느 날이든 현금을 쥔 규칙은 구조적으로 진다. 그건 규칙의
