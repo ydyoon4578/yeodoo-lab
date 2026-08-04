@@ -377,6 +377,9 @@ def _x100(x):
 
 
 PB_FLOOR = 0.05        # 이 미만의 **양수** PBR은 실물이 아니다(최악의 부실은행도 0.2~0.3이 바닥)
+PB_HIGH_MULT = 5.0     # 과대 쪽(>PB_CEIL) 판정 배수. 실측(2026-08-05)이 정한 값이다 —
+                       #   벤더가 틀린 쪽은 정의값과 34~43배 어긋나고(ASML·GDDY), 실물인 쪽은
+                       #   1.0~1.6배 안이다(CL·STX·IT). 5배면 둘이 깨끗이 갈린다.
 PB_CORRUPT_MULT = 50.0 # 항등식 대비 이 배수 이상 벌어져야 '단위 붕괴'로 판정(경계 근처 값은 건드리지 않는다)
 PB_CEIL = 100.0        # 되계산 값이 이보다 크면 항등식 쪽을 못 믿는다 → 채택하지 않음
 PB_FILL_MAX = 15       # 결측 보충(재무제표 호출)을 시도할 최대 종목 수. 초과하면 접고 로그를 남긴다
@@ -409,12 +412,29 @@ def _fix_pb(t, g):
         '가장 싸다'로 읽힌다. 확실하지 않으면 게시하지 않는다.
     """
     pb = _numf(g("pb"))
-    if pb is None or pb <= 0 or pb >= PB_FLOOR:
-        return pb, None                      # 정상값·음수(자본잠식)·결측은 그대로 통과
+    # 🚨 2026-08-05 — 가드가 **한쪽 방향만** 봤다. 같은 원인(클래스 비율·단위 붕괴)이 값을
+    #   크게 밀어 올린 경우는 검사조차 안 했고, 그래서 ASML 이 PBR 1392.21 로 게시되고
+    #   있었다(정의대로 계산하면 32.17). 아래 되계산기를 이미 갖고 있으면서 안 불렀다.
+    if pb is None or pb <= 0 or (PB_FLOOR <= pb <= PB_CEIL):
+        return pb, None                      # 정상 구간·음수(자본잠식)·결측은 그대로 통과
     # ① 정의 폴백 — 시가총액 / 자기자본
     v = pb_from_balance(_yf_sym(t), _numf(g("mc")))
     if v is not None and PB_FLOOR <= v <= PB_CEIL:
         return v, f"{t}: PBR {pb:.5f} → {v:.2f} (시가총액÷자기자본, 정의 되계산)"
+    if pb > PB_CEIL:
+        # 🚨 과대 쪽은 **일괄로 자르면 안 된다.** 자사주 매입으로 자기자본이 얇아진 회사는
+        #   PBR 이 실제로 수백이 나온다. 랩 자료로 직접 대조한 결과(2026-08-05):
+        #     ASML 벤더 1392.21 vs 정의 32.17(43배) · GDDY 1668.87 vs 49.30(34배) → 벤더가 틀렸다
+        #     MTD 2257.81 — 자기자본이 **음수**(−41.88M$)라 PBR 자체가 성립하지 않는다
+        #     CL 303.65 vs 495.86 · STX 170.30 vs 171.69 · IT 162.24 vs 159.36 → 실물이다
+        #   그래서 정의값과 **배수로 어긋날 때만** 손댄다. 정의값을 못 구하면 벤더 값을 남긴다 —
+        #   못 구한 것과 틀린 것은 다르고, 멀쩡한 값을 지우는 것이 더 나쁘다.
+        if v is not None and v > 0:
+            if max(pb / v, v / pb) >= PB_HIGH_MULT:
+                return v, f"{t}: PBR {pb:.2f} → {v:.2f} (정의값과 {max(pb/v, v/pb):.0f}배 어긋남)"
+            return pb, None                  # 정의값과 같은 자릿수 — 실물로 본다
+        # 정의 되계산이 아예 안 된다(자기자본 ≤ 0 등) → PBR 이 성립하지 않는다
+        return None, f"{t}: PBR {pb:.2f} · 자기자본이 0 이하라 PBR 이 성립하지 않는다 → 결측"
     # ② 항등식 폴백 — ROE × PER
     roe, tpe = _numf(g("roe")), _numf(g("tpe"))
     if roe and tpe and roe > 0 and tpe > 0:
@@ -1292,7 +1312,18 @@ def main():
         if not s: continue
         if s.get("dtc") is not None: raw[t]["sig"]["dtc"] = float(s["dtc"])
         fl = (fund.get(t) or {}).get("float")
-        if s.get("sish") and fl: raw[t]["sig"]["sipct"] = float(s["sish"]) / float(fl) * 100
+        # 🚨 2026-08-05 — 상한이 없어서 FDXF 가 16,831.83% 로 '과밀숏' 배지까지 달고 게시됐다.
+        #   원인은 분모다: yfinance floatShares 는 DATA-FACTS 7 이 실측한 대로 27종에서
+        #   유통물량 > 발행주식수라는 불가능한 값을 준다. 공매도잔량 비율은 물리적으로
+        #   100%를 크게 넘을 수 없으므로(대차 재사용을 감안해도 60% 를 상한으로 둔다),
+        #   범위를 벗어나면 **싣지 않는다** — 틀린 값을 배지까지 달아 내보내느니 결측이 낫다.
+        if s.get("sish") and fl:
+            _sip = float(s["sish"]) / float(fl) * 100
+            _sho = (fund.get(t) or {}).get("sho") or (fund.get(t) or {}).get("impl")
+            if _sho and float(fl) > float(_sho) * 1.02:
+                pass                          # 유통물량 > 발행주식수 — 분모 자체가 깨졌다
+            elif 0 < _sip <= 60:
+                raw[t]["sig"]["sipct"] = _sip
     vdf = pd.DataFrame({t: raw[t]["sig"] for t in raw}).T; pct = vdf.rank(pct=True)*100
     # ── 매수/매도 랭킹 스코어 = 과열도·추세·모멘텀·변동성 조합 + 섹터 상대(크로스섹션) — index 상위 랭킹용 ──
     def cser(keys):

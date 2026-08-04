@@ -661,12 +661,24 @@ def main() -> int:
         return 1
 
     # 유니버스에서 빠진 종목 파일 정리
-    keep = set(got)
+    # 🚨 2026-08-05 — 기준이 `set(got)`(이번 실행에서 **성공한** 종목)이었다. 네트워크가
+    #   흔들려 companyfacts 를 못 받은 회사는 miss 로 빠지고, 그 회사의 18년치 재무 시계열
+    #   파일이 그대로 삭제됐다. 커버 게이트는 90% 라 그 아래를 못 잡는다 — 즉 일시적 EDGAR
+    #   장애 한 번이 이미 발표한 자료를 영구히 지울 수 있었다(잡은 그대로 "성공"으로 끝난다).
+    #   정리의 기준은 "못 받았다"가 아니라 **"유니버스에 없다"** 여야 한다.
+    keep = {t for t, _c in uni}
+    n_miss = len(uni) - len(got)
     n_del = 0
-    for fn in os.listdir(DIR_FX):
-        if fn.endswith(".json") and fn[:-5] not in keep:
-            os.remove(os.path.join(DIR_FX, fn))
-            n_del += 1
+    if n_miss:
+        # 수집이 온전할 때만 정리한다. 지우는 것은 되돌릴 수 없고, 안 지우는 것은 다음
+        # 실행이 다시 지울 수 있다 — 비대칭이 명백하므로 안전한 쪽으로 판단한다.
+        print("  ⚠ 이번 실행에서 %d사를 못 받았다 — 스테일 파일 정리를 건너뛴다"
+              "(못 받은 회사의 재무가 지워지는 것을 막는다)" % n_miss)
+    else:
+        for fn in os.listdir(DIR_FX):
+            if fn.endswith(".json") and fn[:-5] not in keep:
+                os.remove(os.path.join(DIR_FX, fn))
+                n_del += 1
 
     # 가장 최근 관측일을 기준일로 삼는다(회사가 안 내면 안 움직인다 — 공시 축과 같은 성격)
     # ⚠ 예전엔 got[:80]만 훑었다. got 은 stocks.json 순서라 표본 밖 종목이 더 최근 기간을
