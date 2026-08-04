@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-08-04",
+   "hm": "09:31",
+   "target": "rotation",
+   "title": "오늘의 10선 갱신 + 신규 1종 추가 — 장기 반전(Long-Term Reversal)"
+  },
+  {
+   "dt": "2026-08-04",
    "hm": "09:02",
    "target": "explorer",
    "title": "규칙마다 후보 풀 기록 — '평소보다 얇았던 달'을 세어 한계로 싣는다"
