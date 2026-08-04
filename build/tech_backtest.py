@@ -746,6 +746,111 @@ def cs_spread(H, L, tk=""):
     return out
 
 
+_CLV_CACHE, _GAP_CACHE = {}, {}
+
+
+def clv_daily(H, L, C, tk=""):
+    """일별 종가 위치(Close Location Value) = (2C − H − L)/(H − L) ∈ [−1, 1].
+
+    사전등록: build/PREREG-2026-08-04-BATCH8.md (x-clv · t-clvgate)
+    +1 이면 그날 고가에 마감, −1 이면 저가에 마감이다. '그날의 마지막 힘이 어느 쪽이었나'를
+    재는 값이고, 종가만으로는 만들 수 없다 — 2026-08-04 에 고가·저가를 배선하고서야 생겼다.
+    """
+    if tk and tk in _CLV_CACHE:
+        return _CLV_CACHE[tk]
+    out = [None] * len(C)
+    for i in range(len(C)):
+        h, l, c = H[i], L[i], C[i]
+        if h is None or l is None or c is None or h <= l:
+            continue
+        out[i] = (2.0 * c - h - l) / (h - l)
+    if tk:
+        _CLV_CACHE[tk] = out
+    return out
+
+
+def gap_daily(H, L, C, tk=""):
+    """일별 (장외 이동, 실질범위) — 시가가 없어도 H·L·전일종가만으로 정확히 나온다.
+
+    사전등록: build/PREREG-2026-08-04-BATCH8.md (x-ongapd)
+    TR = max(H, C₋₁) − min(L, C₋₁) 는 전일종가를 포함한 실질범위이고,
+    gap = TR − (H − L) 은 **오늘 범위 밖에 놓인 부분** = 장이 닫혀 있는 동안 벌어진 이동이다.
+    """
+    if tk and tk in _GAP_CACHE:
+        return _GAP_CACHE[tk]
+    out = [None] * len(C)
+    for i in range(1, len(C)):
+        h, l, c0 = H[i], L[i], C[i - 1]
+        if h is None or l is None or c0 is None or h < l:
+            continue
+        tr = max(h, c0) - min(l, c0)
+        if tr <= 0:
+            continue
+        out[i] = (tr - (h - l), tr)
+    if tk:
+        _GAP_CACHE[tk] = out
+    return out
+
+
+def _ols(y, X):
+    """절편 포함 최소제곱 — (계수들, R²). X 는 열 리스트. 작은 k 라 가우스-조던으로 충분하다."""
+    n = len(y)
+    k = len(X) + 1
+    if n <= k:
+        return None, None
+    M = [[1.0] + [X[j][i] for j in range(len(X))] for i in range(n)]
+    A = [[sum(M[i][a] * M[i][b] for i in range(n)) for b in range(k)] for a in range(k)]
+    rhs = [sum(M[i][a] * y[i] for i in range(n)) for a in range(k)]
+    G = [A[i][:] + [rhs[i]] for i in range(k)]
+    for c in range(k):
+        p = max(range(c, k), key=lambda z: abs(G[z][c]))
+        if abs(G[p][c]) < 1e-14:
+            return None, None
+        G[c], G[p] = G[p], G[c]
+        pv = G[c][c]
+        G[c] = [v / pv for v in G[c]]
+        for r in range(k):
+            if r != c and G[r][c]:
+                f = G[r][c]
+                G[r] = [G[r][j] - f * G[c][j] for j in range(k + 1)]
+    beta = [G[i][k] for i in range(k)]
+    my = sum(y) / n
+    sst = sum((v - my) ** 2 for v in y)
+    sse = sum((y[i] - sum(beta[a] * M[i][a] for a in range(k))) ** 2 for i in range(n))
+    return beta, ((1.0 - sse / sst) if sst > 0 else None)
+
+
+def xsec_resid(rows):
+    """횡단면 OLS 잔차 — rows=[(티커, y, x)…] → {티커: 잔차}.
+
+    이 랩의 중립화는 전부 이 모양이다(x-illiq 사이즈 중립 · x-hlspread 변동성 중립 ·
+    x-clv 수익 중립 · x-delay R² 중립 · x-volvol 변동성 중립 · x-peerlag 자기수익 중립).
+    같은 일을 여섯 번 다시 쓰면 한 곳만 고쳐지는 사고가 난다 — 한 자리에 둔다.
+    """
+    if len(rows) < 2:
+        return {}
+    xs = [r[2] for r in rows]
+    ys = [r[1] for r in rows]
+    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+    sxx = sum((x - mx) ** 2 for x in xs)
+    b = (sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx) if sxx > 0 else 0.0
+    a = my - b * mx
+    return {rows[i][0]: ys[i] - (a + b * xs[i]) for i in range(len(rows))}
+
+
+def _stall(rs, i, n=252, cap=0.10):
+    """정지가격 게이트 — 창 안 일간수익이 정확히 0인 날이 cap 을 넘으면 True(후보 제외).
+
+    거래가 사실상 멈춘 종목은 베타·상관·변동성이 전부 아래로 치우친다. 사전등록 넷
+    (x-delay · x-peerlag · x-updown · x-volvol)이 같은 게이트를 쓴다.
+    """
+    w = rs[max(0, i - n + 1):i + 1]
+    v = [x for x in w if x is not None]
+    if not v:
+        return True
+    return (sum(1 for x in v if x == 0.0) / len(v)) > cap
+
+
 def mkt_corr(rs, mkt, i, n=252):
     """종목 수익률과 시장 수익률의 상관 — 베타를 ρ×(σi/σm)로 쪼갠 것 중 **ρ 성분**.
 
@@ -2053,6 +2158,100 @@ def build_strats():
          "사라진다 — 붐비는 축이라는 뜻이다. 규칙은 결과를 보고 고치지 않았다. "
          "살리려면 새 사전등록이 필요하다.")
 
+    # ── 사전등록 8종 (build/PREREG-2026-08-04-BATCH8.md) ──────────────────
+    # 규약은 돌리기 전에 확정해 커밋했다. 앞의 넷은 2026-08-04 에 배선한 고가·저가를 처음
+    # 쓰는 규칙이고, 뒤의 넷은 종가만 써서 PIT 레그를 붙일 수 있다.
+    xsec("x-clv", "종가 위치 상위 %d (마감 압력 · 1개월 수익 중립)" % TOPN,
+         "일별 종가위치 CLV=(2C−H−L)/(H−L) 의 최근 21거래일 평균을 낸다(유효 11일 미만 제외, "
+         "월말 종가 $5 이상). 그 달 후보 전체에서 원신호를 최근 21일 로그수익에 횡단면 회귀하고 "
+         "그 잔차가 가장 낮은 %d종을 동일가중으로 산다. 월말 리밸런스." % TOPN,
+         None,
+         "Lou·Polk·Skouras(RFS 2019) 'tug of war'. 수익의 야간 성분은 이어지고 일중 성분은 "
+         "되돌린다. 수익을 같게 통제하면 잔차 CLV 는 '그 수익을 일중에 벌었나'의 대용이므로 "
+         "일중 성분이 작은 쪽을 산다. 🚨 중립화는 선택이 아니다 — 원신호와 21일 로그수익의 "
+         "횡단면 스피어만이 중앙 +0.550 이라, 중립화 없이 쓰면 1개월 반전을 뒤집어 다시 파는 "
+         "것이 된다. 업종·변동성 중립화는 하지 않는다(잔차 vs log 252일 변동성 중앙 −0.121 — "
+         "필요 없다는 것이 실측이다). ⚠ PIT 레그가 없다 — 편출 종목 가격 캐시에 고가·저가가 "
+         "없어 시점정확으로 못 돌린다. "
+         "🚨 위 자동 판정('통과 후보')을 그대로 읽지 말 것 — 자동 판정기는 단독 t 와 Δ샤프만 "
+         "본다. 사전등록 게이트로는 기각이다. 한 번 돌린 결과: 단독 t 4.05(임계 3.37 통과) · "
+         "incr5 2.27(게이트 2.0 통과) · 자기가 사는 것 대비 t 2.33(양수 — 이 표에서 드물다). "
+         "그런데 비용 후 t 가 3.32 로 임계 3.37 에 0.05 못 미친다. 연 매매대금이 NAV 의 "
+         "23.0배라 편도 10bp 가 그만큼을 먹는다. 셋 중 둘을 넘고 셋째를 0.05 로 놓쳤다 — "
+         "게이트는 미리 못박은 것이고 반올림해서 통과시키지 않는다. 이 규칙은 오늘 비용 레그가 "
+         "없었다면 게시 후보로 올라갔을 것이다(그것이 비용 레그를 넣은 이유다). "
+         "살리려면 새 사전등록이 필요하다 — 회전을 줄인 판은 다른 전략이다.")
+    xsec("x-ongapd", "야간 갭 비중 확대 상위 %d" % TOPN,
+         "전일종가를 포함한 실질범위 TR 중 장외에서 벌어진 몫(gap)의 비중을 63일창과 252일창에서 "
+         "각각 재고 그 차이가 가장 큰 %d종을 동일가중으로 산다. 월말 리밸런스." % TOPN,
+         None,
+         "정보가 장중에 오느냐 장외에 오느냐가 옮겨 가는 것을 잡는다. 시가가 없어도 고가·저가와 "
+         "전일종가만으로 장외 이동이 정확히 나온다. ⚠ 중립화 없음 — 실측이 정했다(점수 vs "
+         "log 변동성 ρ 중앙 +0.002 · vs 갭비중 수준 −0.031 · vs 12−1 모멘텀 −0.020). "
+         "x-hlspread 가 중립화를 강제한 근거가 ρ 0.816 이었으므로 여기서 붙이면 근거 없는 "
+         "파라미터가 하나 늘 뿐이다. 수준판은 등록하지 않았다. ⚠ PIT 레그 없음(고가 부재). "
+         "⚠ 실적 발표 달력의 인공물일 수 있다 — 63일창에는 실적이 대개 한 번, 252일창에는 "
+         "네 번 들어간다.")
+    xsec("x-lshock", "고저가 스프레드 급확대 상위 %d (유동성 충격)" % TOPN,
+         "Corwin-Schultz 고저가 스프레드의 최근 63일 평균을 그 앞 231일 평균으로 나눈 로그비가 "
+         "가장 큰 %d종을 동일가중으로 산다. 월말 리밸런스." % TOPN,
+         None,
+         "Amihud(2002)의 '비유동성 충격은 동시대 가격을 눌러 이후 수익을 높인다'를 횡단면으로 "
+         "옮긴 것이다. 수준이 아니라 자기 평소 대비 변화를 보므로 x-hlspread(수준)와 축이 "
+         "다르다(점수 vs 스프레드 수준 ρ 중앙 −0.029). ⚠ 중립화 없음(vs Δlog변동성 +0.119). "
+         "⚠ 추정량이 잡음 바닥에 걸려 있다 — CS 일별 추정치의 45.1%가 0 으로 잘리므로 창 평균은 "
+         "'스프레드 크기'와 '추정치가 양수였던 빈도'가 섞인 값이다. ⚠ PIT 레그 없음(고가 부재).")
+    timing("t-clvgate", "시장 마감압력 게이트 (지수 CLV)",
+           "매일 전 종목의 종가위치를 동일가중 평균해 시장 마감압력을 만들고, 그 20일 평균이 "
+           "0보다 크면 편입, 아니면 현금(무위험).",
+           None,
+           "타이밍 20종이 전부 지수 '가격'을 본다. 이쪽은 같은 가격에서 일중 어디에 마감했나만 "
+           "뽑아내므로 수준·추세와 축이 다르다. 문턱 0 은 '종가가 그날 범위 한가운데 = 순 마감압력 "
+           "없음'이라는 정의상의 값이고 조정하지 않았다. ⚠ PIT 레그 없음(고가 부재).")
+    xsec("x-delay", "시장정보 반영 지연도 상위 %d (Hou-Moskowitz)" % TOPN,
+         "최근 252거래일 일간수익을 시장수익에 회귀하되, 시장의 1~4일 전 값을 넣은 모형과 "
+         "당일만 넣은 모형의 설명력 차이를 지연도로 쓴다. 그 달 후보 전체에서 지연도를 "
+         "log 설명력에 횡단면 회귀한 잔차 상위 %d종을 동일가중으로 산다. 월말 리밸런스." % TOPN,
+         None,
+         "Hou·Moskowitz(RFS 2005). 시장 정보가 늦게 반영되는 종목이 그 대가로 프리미엄을 "
+         "받는다는 것이다. 시장은 랩 동일가중 유니버스를 쓴다(판정 대조군 SPX 가 아니다 — "
+         "지연을 재는 대상은 이 규칙이 사는 모집단이다). 🚨 D1 은 비율통계라 분모가 작으면 "
+         "식별되지 않는다 — 비제한 R² 가 0.01 초과이고 그 달 후보의 20 백분위 이상인 종목만 "
+         "후보로 두고, 그 위에 log R² 중립화를 건다. 정지가격 게이트(일간수익 0인 날 10% 초과 "
+         "제외)도 함께 건다. 산업·사이즈 중립화는 하지 않는다(하면 규칙이 둘이 된다).")
+    xsec("x-peerlag", "상관이웃 선도-지연 상위 %d (자기수익 중립)" % TOPN,
+         "종목마다 최근 252일 일간수익 상관이 가장 높은 이웃 20종을 찾고, 그 이웃들의 최근 "
+         "21일 수익 평균을 자기 자신의 21일 수익에 횡단면 회귀한 잔차 상위 %d종을 동일가중으로 "
+         "산다. 월말 리밸런스." % TOPN,
+         None,
+         "정보확산 지연(lead-lag). 이웃이 먼저 움직였는데 나는 아직이면 따라잡힌다는 가설이다. "
+         "이 랩의 다른 규칙은 전부 종목 하나를 보는데 이것만 종목쌍을 본다. "
+         "🚨 계산 비용을 미리 적어 둔다 — 이 랩은 무의존(stdlib only)이라 상관행렬을 순수 "
+         "파이썬으로 만든다. 월말당 513종·131,328쌍, 쌍당 20.1µs → 월말당 2.6초 → 199개 월말에 "
+         "8.8분이다. 같은 회사의 다른 클래스는 이웃에서 뺀다(안 빼면 자기 자신을 이웃으로 "
+         "삼는다). ⚠ '이웃 − 자기' 단순 차분판과 '이웃 수익만' 판은 등록하지 않았다.")
+    xsec("x-updown", "상하방 베타 비대칭 상위 %d" % TOPN,
+         "최근 252거래일을 시장이 평균보다 내린 날과 오른 날로 갈라 각각 베타를 재고, "
+         "그 차이를 두 베타 크기의 합으로 나눈 값이 가장 큰 %d종을 동일가중으로 산다. "
+         "월말 리밸런스." % TOPN,
+         None,
+         "Ang·Chen·Xing(RFS 2006) 하방위험 프리미엄 — 시장이 내릴 때 더 크게 내리는 종목은 "
+         "위험보상을 요구받는다. 원차분(β⁻ − β⁺) 대신 비율형을 쓴 이유는 규모 무관하게 "
+         "만들기 위해서다(분모 0.2 미만은 제외 — 시장과 사실상 안 움직이는 종목에서 비율이 "
+         "폭주한다). 원차분판·β 중립판은 등록하지 않았다. ⚠ 표본에 하락 국면이 2020·2022 "
+         "둘뿐이다. 하방위험 프리미엄은 정의상 시장이 내릴 때 실현되므로, 여기 열위는 "
+         "반증이 아니라 검정 불능에 가깝다(x-maxlow 카드와 같은 사유).")
+    xsec("x-volvol", "변동성의 변동성 최하위 %d (변동성 수준 중립)" % TOPN,
+         "최근 252거래일을 21일 블록 12개로 잘라 블록별 실현변동성을 내고, 그 변동계수를 "
+         "변동성 수준에 횡단면 회귀한 잔차가 가장 낮은 %d종을 동일가중으로 산다. "
+         "월말 리밸런스." % TOPN,
+         None,
+         "Baltussen·van Bekkum·van der Grient(JFQA 2018). 위험의 크기가 아니라 위험이 "
+         "얼마나 불확실한가를 재고, 그런 종목은 저평가가 아니라 고평가된다는 것이다. "
+         "방향은 결과 보기 전에 그 논문을 따라 고정했다. 🚨 변동성 수준 중립화가 핵심이다 — "
+         "이 랩에는 이미 저변동성 계열이 넷 있어(x-lowvol·x-ivol·x-lowbeta …) 중립화 없이 "
+         "쓰면 그 축을 다시 파는 것이 된다. 중첩 롤링창판·고 VoV 롱판은 등록하지 않았다.")
+
     # ── 목록에서 뺀 규칙(2026-07-31, 사용자 결정) ───────────────────────────
     # 여기서 걸러진 규칙은 STRATS 에 들어가지 않는다 — 산출물·다중검정 족 수·PIT·화면 어디에도
     # 안 나온다. 정의(위 등록 코드)는 남긴다. 무엇을 시도했는지가 기록이고, 되살리려면 sid 를
@@ -2136,6 +2335,16 @@ def run():
         if len(rs) > 50:
             m = sum(rs) / len(rs)
             disp[i] = math.sqrt(sum((x - m) ** 2 for x in rs) / (len(rs) - 1))
+    # 시장 마감압력 — 그날 전 종목의 종가위치(CLV)를 동일가중 평균한 것. 사전등록 t-clvgate.
+    # 같은 지수 '가격'에서 **일중 어디에 마감했나**만 뽑아낸다 — 수준·추세와 축이 다르다.
+    # 2026-08-04 에 고가·저가를 배선하고서야 만들 수 있게 된 계열이다.
+    mclv = [None] * n
+    _clvs = {t: clv_daily(hid[t], lod[t], px[t], t) for t in tickers if hid.get(t) and lod.get(t)}
+    for i in range(n):
+        vs = [c[i] for c in _clvs.values() if c[i] is not None]
+        if len(vs) > 50:
+            mclv[i] = sum(vs) / len(vs)
+
     # 시장 폭 — 그날 '자기 200일선 위'인 종목의 비율. 지수 가격에는 안 보이는 내부 상태다.
     # 종목마다 200일 이동평균을 매일 다시 더하면 O(종목×일×200)이라 느리다 → 누적합으로 O(1).
     brd = [None] * n
@@ -2342,6 +2551,12 @@ def run():
                     if cur is not None and hist:
                         med = sorted(hist)[len(hist) // 2]
                         w[i] = 1.0 if cur < med else 0.0
+                elif sid == "t-clvgate":
+                    # 문턱 0 은 '종가가 그날 범위 한가운데 = 순 마감압력 없음'이라는 정의상의
+                    # 값이다(사전등록에 그렇게 못박았다 — 조정하지 않는다).
+                    win = [x for x in mclv[max(0, i - 19):i + 1] if x is not None]
+                    if len(win) >= 10:
+                        w[i] = 1.0 if (sum(win) / len(win)) > 0 else 0.0
                 elif sid == "t-volreg":
                     hist = [v for v in ixvol[max(0, i - 252):i] if v]
                     cur = ixvol[i]
@@ -2445,6 +2660,125 @@ def run():
                             bb = (sum((x - mx2) * (y - my2) for x, y in zip(xs2, ys2)) / sxx) if sxx > 0 else 0.0
                             aa = my2 - bb * mx2
                             hls = {rows[k2][0]: ys2[k2] - (aa + bb * xs2[k2]) for k2 in range(len(rows))}
+                    # ── 사전등록 8종 중 횡단면 중립화가 필요한 넷 ────────────────
+                    # 중립화는 그 달 후보 전체를 봐야 하므로 종목 하나만 받는 채점으로는 못 만든다.
+                    # x-hlspread·x-fip 과 같은 2단 구조다. 잔차 계산은 xsec_resid() 한 자리에 모았다.
+                    xsr = None
+                    _sid0 = S["sid"]
+                    if _sid0 == "x-clv":
+                        rows = []
+                        for t2 in tickers:
+                            H2, L2 = hid.get(t2), lod.get(t2)
+                            if not (H2 and L2):
+                                continue
+                            p2 = px[t2][i - 1]
+                            if not p2 or p2 < 5.0:
+                                continue
+                            w2 = [x for x in clv_daily(H2, L2, px[t2], t2)[max(0, i - 21):i] if x is not None]
+                            if len(w2) < 11:
+                                continue
+                            p0 = px[t2][max(0, i - 22)]
+                            if not p0 or p0 <= 0:
+                                continue
+                            rows.append((t2, sum(w2) / len(w2), math.log(p2 / p0)))
+                        # 방향: 잔차 **하위** 10종 롱 → 부호를 뒤집어 넣는다(정렬은 내림차순).
+                        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
+                    elif _sid0 == "x-volvol":
+                        rows = []
+                        for t2 in tickers:
+                            rs2 = R[t2]
+                            if _stall(rs2, i - 1):
+                                continue
+                            sig = []
+                            for b in range(12):        # 21일 비중첩 블록 12개
+                                e = i - 1 - 21 * b
+                                w2 = [x for x in rs2[max(0, e - 20):e + 1] if x is not None]
+                                if len(w2) < 15:
+                                    continue
+                                m2 = sum(w2) / len(w2)
+                                sig.append(math.sqrt(sum((x - m2) ** 2 for x in w2) / (len(w2) - 1)))
+                            if len(sig) < 10:
+                                continue
+                            ms = sum(sig) / len(sig)
+                            if ms <= 0:
+                                continue
+                            sd = math.sqrt(sum((x - ms) ** 2 for x in sig) / (len(sig) - 1))
+                            v2 = vol(rs2, i - 1, 252)
+                            if sd <= 0 or not v2 or v2 <= 0:
+                                continue
+                            rows.append((t2, math.log(sd / ms), math.log(v2)))
+                        # 방향: 잔차 **하위** 10종 롱(고평가 가설) → 부호를 뒤집는다.
+                        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
+                    elif _sid0 == "x-delay":
+                        rows = []
+                        for t2 in tickers:
+                            rs2 = R[t2]
+                            if _stall(rs2, i - 1):
+                                continue
+                            y, m0, m1, m2_, m3, m4 = [], [], [], [], [], []
+                            for k2 in range(max(4, i - 252), i):
+                                a2 = rs2[k2]
+                                if a2 is None or any(ixr[k2 - z] is None for z in range(5)):
+                                    continue
+                                y.append(a2); m0.append(ixr[k2]); m1.append(ixr[k2 - 1])
+                                m2_.append(ixr[k2 - 2]); m3.append(ixr[k2 - 3]); m4.append(ixr[k2 - 4])
+                            if len(y) < 126:
+                                continue
+                            _b, r2r = _ols(y, [m0])
+                            _b, r2u = _ols(y, [m0, m1, m2_, m3, m4])
+                            if r2r is None or r2u is None or r2u <= 0.01:
+                                continue
+                            rows.append((t2, 1.0 - r2r / r2u, math.log(r2u)))
+                        # 🚨 D1 은 비율통계라 분모(비제한 R²)가 작으면 식별되지 않는다.
+                        #   그 달 후보의 20 백분위 미만은 규약대로 통째로 뺀다.
+                        if rows:
+                            cut = sorted(r2[2] for r2 in rows)[int(len(rows) * 0.20)]
+                            rows = [r2 for r2 in rows if r2[2] >= cut]
+                        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
+                    elif _sid0 == "x-peerlag":
+                        # 종목쌍을 보는 유일한 규칙 — 상관행렬이 필요하다. 비용은 사전등록에
+                        # 실측으로 적어 뒀다(월말당 2.6초 · 199개 월말에 8.8분).
+                        zs, names = [], []
+                        for t2 in tickers:
+                            rs2 = R[t2]
+                            w2 = rs2[i - 252:i]
+                            if len(w2) < 252 or any(x is None for x in w2):
+                                continue
+                            if _stall(rs2, i - 1):
+                                continue
+                            m2 = sum(w2) / len(w2)
+                            sd = math.sqrt(sum((x - m2) ** 2 for x in w2))
+                            if sd <= 0:
+                                continue
+                            zs.append([(x - m2) / sd for x in w2]); names.append(t2)
+                        cm = load_classmates()
+                        NB = len(names)
+                        C2 = [[0.0] * NB for _ in range(NB)]
+                        for a2 in range(NB):
+                            za = zs[a2]
+                            for b2 in range(a2 + 1, NB):
+                                zb = zs[b2]
+                                s2 = 0.0
+                                for k2 in range(252):
+                                    s2 += za[k2] * zb[k2]
+                                C2[a2][b2] = s2; C2[b2][a2] = s2
+                        rows = []
+                        for a2 in range(NB):
+                            t2 = names[a2]
+                            mates = cm.get(t2) or set()
+                            nb = sorted(((C2[a2][b2], names[b2]) for b2 in range(NB)
+                                         if b2 != a2 and names[b2] not in mates), reverse=True)[:20]
+                            if len(nb) < 20:
+                                continue
+                            own = ret(px[t2], i - 1, 21)
+                            if own is None:
+                                continue
+                            prs = [ret(px[z2], i - 1, 21) for _c2, z2 in nb]
+                            prs = [x for x in prs if x is not None]
+                            if len(prs) < 20:
+                                continue
+                            rows.append((t2, sum(prs) / len(prs), own))
+                        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
                     for t in tickers:
                         P = px[t]
                         sid = S["sid"]
@@ -2471,6 +2805,67 @@ def run():
                         elif sid == "x-hlspread":
                             # 사전 패스가 만든 잔차를 그대로 쓴다(값이 없으면 후보 아님).
                             v = hls.get(t) if hls else None
+                        elif sid in ("x-clv", "x-volvol", "x-delay", "x-peerlag"):
+                            # 위 사전 패스가 중립화 잔차를 이미 만들어 뒀다.
+                            v = xsr.get(t) if xsr else None
+                        elif sid == "x-ongapd":
+                            H2, L2 = hid.get(t), lod.get(t)
+                            p2 = P[i - 1]
+                            if not (H2 and L2) or not p2 or p2 < 5.0:
+                                v = None
+                            else:
+                                g = gap_daily(H2, L2, P, t)
+
+                                def _share(w):
+                                    a = b = 0.0
+                                    c = 0
+                                    for k2 in range(max(0, i - w), i):
+                                        x = g[k2]
+                                        if x is None:
+                                            continue
+                                        a += x[0]; b += x[1]; c += 1
+                                    return (a / b, c) if b > 0 else (None, c)
+                                s63, n63 = _share(63)
+                                s252, n252 = _share(252)
+                                v = (s63 - s252) if (s63 is not None and s252 is not None
+                                                     and n63 >= 32 and n252 >= 126) else None
+                        elif sid == "x-lshock":
+                            H2, L2 = hid.get(t), lod.get(t)
+                            p2 = P[i - 1]
+                            if not (H2 and L2) or not p2 or p2 < 5.0:
+                                v = None
+                            else:
+                                S2 = cs_spread(H2, L2, t)
+                                a = [x for x in S2[max(0, i - 63):i] if x is not None]
+                                b = [x for x in S2[max(0, i - 252):max(0, i - 63)] if x is not None]
+                                if len(a) < 32 or len(b) < 95:
+                                    v = None
+                                else:
+                                    sa, sb = sum(a) / len(a), sum(b) / len(b)
+                                    v = math.log(sa / sb) if (sa > 0 and sb > 0) else None
+                        elif sid == "x-updown":
+                            rs2 = R[t]
+                            if _stall(rs2, i - 1):
+                                v = None
+                            else:
+                                w2 = [(rs2[k2], ixr[k2]) for k2 in range(max(0, i - 252), i)
+                                      if rs2[k2] is not None and ixr[k2] is not None]
+                                mu = (sum(z[1] for z in w2) / len(w2)) if w2 else 0.0
+                                dn = [z for z in w2 if z[1] < mu]
+                                up = [z for z in w2 if z[1] >= mu]
+                                if len(dn) < 40 or len(up) < 40:
+                                    v = None
+                                else:
+                                    def _beta(pairs):
+                                        mx2 = sum(z[1] for z in pairs) / len(pairs)
+                                        my2 = sum(z[0] for z in pairs) / len(pairs)
+                                        sxx = sum((z[1] - mx2) ** 2 for z in pairs)
+                                        if sxx <= 0:
+                                            return None
+                                        return sum((z[1] - mx2) * (z[0] - my2) for z in pairs) / sxx
+                                    bd, bu = _beta(dn), _beta(up)
+                                    den = (abs(bd) + abs(bu)) if (bd is not None and bu is not None) else None
+                                    v = ((bd - bu) / den) if (den and den >= 0.2) else None
                         elif sid == "x-dist200":
                             m = sma(P, i - 1, 200)
                             v = (P[i - 1] / m - 1) if (m and P[i - 1]) else None
