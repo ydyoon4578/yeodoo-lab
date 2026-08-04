@@ -2051,6 +2051,76 @@ try:
 except Exception as _e:
     tool_skips.append("배선 검사(%s)" % _e)
 
+
+# ── DATA-FACTS.md 가 스스로 검사받는다 ────────────────────────────────────
+#   🚨 문서에 박은 숫자는 아무도 안 볼 때 조용히 거짓이 된다. 2026-08-04 실측 두 건 —
+#   style_pit.py 머리말의 편향 요약이 두 달 만에 성장 26.2 → 2.4%p 로 어긋나 있었고,
+#   DATA-FACTS 의 gp 커버리지도 쓰는 사이에 37.7 → 38.3% 로 움직였다.
+#   그래서 그 문서의 <!-- DATA-FACTS-CHECK --> 블록을 읽어 **다시 재고** 어긋나면 실패시킨다.
+#   ⚠ 목적은 숫자를 얼리는 것이 아니라 **낡은 것을 알아채는 것**이다. 어긋나면 할 일은 둘 중
+#     하나 — 정상적으로 움직인 것이면 문서를 고치고, 뜻밖이면 왜 움직였는지 먼저 본다.
+try:
+    _dfp = os.path.join(ROOT, "build", "DATA-FACTS.md")
+    _dft = io.open(_dfp, encoding="utf-8").read()
+    _m = re.search(r"<!--\s*DATA-FACTS-CHECK\s*(\{.*?\})\s*-->", _dft, re.S)
+    if not _m:
+        errors.append("build/DATA-FACTS.md 에 DATA-FACTS-CHECK 블록이 없다 — "
+                      "문서의 수치를 기계가 다시 잴 수 없으면 낡아도 아무도 모른다")
+    else:
+        _exp = json.loads(_m.group(1))
+        _fxd = os.path.join(ROOT, "data", "fx")
+        _n_gp = _n_all = 0
+        _rev_old = []
+        for _f in os.listdir(_fxd):
+            if not _f.endswith(".json"):
+                continue
+            try:
+                _tg = json.load(io.open(os.path.join(_fxd, _f), encoding="utf-8")).get("tags") or {}
+            except Exception:
+                continue
+            _n_all += 1
+            if _tg.get("gp"):
+                _n_gp += 1
+            _q = (_tg.get("rev") or {}).get("q")
+            if _q:
+                _rev_old.append(_q[-1][0])
+        _rev_old.sort()
+        _cm = json.load(io.open(os.path.join(ROOT, "data", "cik_map.json"), encoding="utf-8")).get("co") or {}
+        _cnt = {}
+        for _t, _c in _cm.items():
+            if _c:
+                _cnt[_c] = _cnt.get(_c, 0) + 1
+        _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+        _xs = [_r for _r in _ts.get("strategies", []) if _r.get("pool")]
+        _got = {
+            "gp_cov_pct": round(_n_gp / max(1, _n_all) * 100, 1),
+            "rev_q_oldest_med": (_rev_old[len(_rev_old) // 2][:7] if _rev_old else ""),
+            "dual_pairs": sum(1 for _v in _cnt.values() if _v > 1),
+            "xsec_rules": len(_xs),
+            "narrow_rules": sum(1 for _r in _xs if _r["pool"]["narrow"]),
+        }
+        # 허용오차 — 자연스러운 움직임은 넘기고, 문서가 낡은 수준이면 잡는다.
+        _TOL = {"gp_cov_pct": 3.0, "dual_pairs": 0, "xsec_rules": 3, "narrow_rules": 3}
+        _drift = []
+        for _k, _v in _got.items():
+            if _k not in _exp:
+                continue
+            _e = _exp[_k]
+            if isinstance(_v, str):
+                if _v != _e:
+                    _drift.append("%s: 문서 %s → 실측 %s" % (_k, _e, _v))
+            else:
+                if abs(_v - _e) > _TOL.get(_k, 0):
+                    _drift.append("%s: 문서 %s → 실측 %s (허용 ±%s)" % (_k, _e, _v, _TOL.get(_k, 0)))
+        if _drift:
+            errors.append("build/DATA-FACTS.md 의 수치가 낡았다 %d건 — %s. "
+                          "정상적인 이동이면 문서를 고치고(그 블록도 함께), 뜻밖이면 왜 움직였는지 먼저 볼 것"
+                          % (len(_drift), " · ".join(_drift)))
+        else:
+            print("  ~ DATA-FACTS 수치 검사 통과(%d항목 재측정)" % len(_got))
+except Exception as _e:
+    tool_skips.append("DATA-FACTS 수치 검사(%s)" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
