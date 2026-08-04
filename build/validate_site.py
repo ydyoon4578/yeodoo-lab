@@ -2015,6 +2015,44 @@ try:
                       "(안 쓸 것이면 validate_site 의 _WIRE_SKIP 에 사유와 함께 적을 것)"
                       % (len(_missing), ", ".join(_missing)))
 
+    # ①-b 일봉 계열 → tech_backtest.load()
+    #   🚨 ① 은 **재무 태그만** 봤다. 그래서 같은 사고가 일봉 쪽에서 조용히 나 있었다 —
+    #   refresh_stocks.py 가 종목당 고가(hd)·저가(ld)를 4,422일치 써 두고 있었는데
+    #   tech_backtest.load() 는 pxd·vd 만 집어 갔다(2026-08-04 실측). 결과는 '규칙이
+    #   나쁘다'가 아니라 **일중 범위를 쓰는 규칙을 만들 수 없었다** 였고, 아무 검사도
+    #   그걸 말해 주지 않았다. 검사의 범위가 사고의 범위보다 좁으면 그 검사는 다음 사고를
+    #   못 막는다 — 그래서 여기를 넓힌다.
+    #   판정 방식: data/sd/*.json 의 **일봉 길이 배열** 키를 모으고, load() 원문이 그 키를
+    #   실제로 집어 가는지(`d.get("키")`) 본다. 원문 검사라 투박하지만, '읽는 코드가
+    #   존재하는가'를 묻는 데는 이것이 가장 직접적이다.
+    import inspect as _inspect
+    import re as _re
+    _SD_SKIP = {
+        "sig": "화면용 기술적 지표 스냅샷(오늘 값 하나) — 시계열이 아니라 백테스트에 못 쓴다",
+        "why": "화면용 설명 문자열",
+        "fundx": "화면용 밸류에이션 스냅샷 — 시점정합이 없어 백테스트에 쓰면 선견이다",
+        "fundx_flags": "화면용 태그", "fundx_na": "화면용 태그",
+        "prof": "회사 소개 텍스트", "as_of": "기준일", "t": "티커",
+    }
+    _sd_dir = os.path.join(ROOT, "data", "sd")
+    _sd_keys = set()
+    if os.path.isdir(_sd_dir):
+        _fs = [f for f in sorted(os.listdir(_sd_dir)) if f.endswith(".json")][:40]
+        for _f in _fs:
+            try:
+                _j = json.load(io.open(os.path.join(_sd_dir, _f), encoding="utf-8"))
+            except Exception:
+                continue
+            _sd_keys |= {k for k, v in _j.items() if isinstance(v, list) and len(v) > 500}
+    _src = _inspect.getsource(_TB.load)
+    _read = set(_re.findall(r'd\.get\(\s*["\'](\w+)["\']', _src))
+    _sd_missing = sorted(_sd_keys - _read - set(_SD_SKIP))
+    if _sd_missing:
+        errors.append("data/sd 에 모아 놓고 tech_backtest.load() 가 안 읽는 일봉 계열 %d개: %s — "
+                      "refresh_stocks 가 쓰면 load() 도 읽어야 한다"
+                      "(안 쓸 것이면 validate_site 의 _SD_SKIP 에 사유와 함께 적을 것)"
+                      % (len(_sd_missing), ", ".join(_sd_missing)))
+
     # ② tech_strategies 규칙 필드 → strategy_index 항목
     _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
     _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))

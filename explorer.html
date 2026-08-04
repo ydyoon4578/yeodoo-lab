@@ -1151,6 +1151,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (fell?'<b>하나만 떼면 남아 보이지만 여럿을 떼면 사라진다</b> — 붐비는 축이라는 뜻이다.'
                         :'사전등록 게이트는 이쪽 값을 쓴다.')+'</em>';
           }
+          // 🚨 자기가 실제로 사는 것 대비. 타이밍 규칙은 랩 동일가중 유니버스를 사는데
+          //   판정 대조군은 S&P 500(PR)이다 — 두 자산이 다르다. 그래서 노출 1.0 고정의
+          //   '타이밍을 전혀 하지 않는 규칙'조차 그 대조군 상대로는 t 4.90 이 나온다.
+          //   이 줄이 없으면 독자는 대조군 격차를 타이밍 실력으로 읽는다.
+          if(x.vs_traded&&x.vs_traded.t!=null){
+            var vt2=x.vs_traded, dead=(x.role==='타이밍오버레이'&&Math.abs(vt2.t)<1.5);
+            if(dead) d.vt='<b>자기가 사는 것과 구별 안 됨</b> — '+d.vt;
+            d.vt+=' <em>매매 대상 대비 — 이 규칙이 실제로 사는 것은 <b>'+esc(vt2.label||'')+
+                  '</b>(CAGR '+(vt2.cagr==null?'—':vt2.cagr)+'%)이고, 판정 대조군은 그와 다른 '+
+                  '자산이다. 자기가 사는 것 대비로는 초과 '+(vt2.excess_cagr>0?'+':'')+
+                  vt2.excess_cagr+'%p · Δ샤프 '+(vt2.d_sharpe>0?'+':'')+vt2.d_sharpe+
+                  ' · t '+vt2.t+(vt2.t_net==null?'':(' (비용 후 '+vt2.t_net+')'))+'. '+
+                  esc(vt2.note||'')+'</em>';
+          }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
           if(x.metrics_net&&x.cost_drag!=null){
@@ -1165,6 +1179,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (bn.sharpe!=null?'(대조군 '+bn.sharpe+')':'')+
                   ' · 전량교체 한 번당 왕복비용을 그날 수익에서 뗀다. 판정은 기존대로 '+
                   '무비용 기준이고 이 줄은 참고다.</em>';
+            // 🚨 비용 가정 하나로 판정이 흔들리면 그건 판정이 아니라 그 가정이다. 그래서
+            //   종목 랩은 편도 5·10·20bp 를 **전부** 재서 싣는다 — 어느 문턱에서 t 가
+            //   임계 아래로 내려가는지가 그 규칙이 얼마나 비용에 얹혀 있었나의 답이다.
+            //   (자산·ML 랩은 아직 단일 가정이라 sens 가 없다 — 그럴 땐 이 줄이 안 나온다.)
+            if(x.net&&x.net.sens){
+              var sn=x.net.sens, tc=(x.t_crit==null?null:x.t_crit), sg=[];
+              ['5','10','20'].forEach(function(k){
+                if(sn[k]&&sn[k].t!=null) sg.push(k+'bp '+sn[k].t);
+              });
+              if(sg.length){
+                var t20=(sn['20']&&sn['20'].t), t0=(x.t==null?null:x.t);
+                var flips=(tc!=null&&t0!=null&&Math.abs(t0)>=tc&&t20!=null&&Math.abs(t20)<tc);
+                if(flips) d.vt='<b>비용에서 뒤집힌다</b> — '+d.vt;
+                d.vt+=' <em>비용 민감도(편도) — t '+(t0==null?'—':t0)+'(무비용) → '+sg.join(' → ')+
+                      ' · 연 매매대금 '+(x.net.traded==null?'—':x.net.traded)+'배(NAV 대비, '+
+                      '족을 넘어 비교할 수 있는 것은 회전율이 아니라 이 값이다). '+
+                      (flips?'<b>편도 20bp 에서 다중검정 임계 아래로 내려간다.</b>'
+                           :'앞으로의 사전등록 게이트는 이 줄을 함께 본다.')+'</em>';
+              }
+            }
           }
           // 목록은 이 문구를 잘라서 보여준다 — 판정은 **앞**에 두어야 살아남고,
           // 근거 수치는 뒤에 붙여 펼쳤을 때 읽히게 한다.
