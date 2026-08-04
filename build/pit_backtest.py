@@ -37,6 +37,10 @@ import tech_backtest as TB          # noqa: E402  지표·통계를 다시 구�
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 CACHE = os.path.join(DATA, "_pit_px_cache.json")
+# 🚨 고가·저가 캐시는 **별 파일**이다(2026-08-05). 기존 종가 캐시(147종)를 깨지 않으려는 것이다 —
+#   형식을 바꾸면 전량 재수집이 필요하고, 그 사이 PIT 이 통째로 못 돈다. 없으면 없는 대로
+#   돌아가고(고가가 필요한 규칙만 빠진다) 받아 두면 그때부터 그 규칙들이 살아난다.
+HLCACHE = os.path.join(DATA, "_pit_hl_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 OUT = os.path.join(DATA, "pit_strategies.json")
 
@@ -85,6 +89,15 @@ EXCLUDED_SIDS = {
     #    이쪽을 안 고쳤고, 적대감사가 build/pit_backtest.py:647 로 잡아냈다.)
     "x-52wh": "편출 종목 고가 부재 — 랩 본편이 쓰는 일중 고가를 PIT 캐시가 안 갖고 있다",
 }
+# 고가·저가 캐시를 받아 두면 그 사유가 사라진다. 손으로 지우게 두지 않고 **파일 유무로 정한다** —
+# 사람이 지우는 것을 잊으면 규칙이 영영 검정을 안 받고, 그건 오늘 하루 내내 잡은 사고 유형이다.
+if os.path.exists(HLCACHE):
+    try:
+        _hl = json.load(io.open(HLCACHE, encoding="utf-8"))
+    except Exception:
+        _hl = {}
+    if len(_hl) >= 100:            # 편출 종목 대부분이 있어야 후보가 생존자로 좁혀지지 않는다
+        EXCLUDED_SIDS.pop("x-52wh", None)
 
 
 def _lab_meta():
@@ -162,6 +175,51 @@ def load_prices(need, MEMBER_SPAN):
               % (len(bad_reuse), ", ".join(sorted(bad_reuse))))
     print("  가격 %d종 (랩 %d + 편출캐시 %d)" % (len(px), n_lab, len(px) - n_lab))
     return px
+
+
+def load_highs(need, dates):
+    """티커 → 고가 배열(dates 와 같은 길이). 랩 종목은 data/sd, 편출 종목은 HL 캐시.
+
+    🚨 두 출처를 섞는 것이 이 함수의 전부이고, 섞이지 **않으면** 후보가 생존자로만 좁혀진다 —
+      그러면 생존편향을 재려는 표가 오히려 그 편향을 갖는다(x-volsurge 를 뺀 것과 같은 사유).
+      그래서 편출 종목 커버리지를 함께 돌려주고, 낮으면 부르는 쪽이 규칙을 뺀다.
+    """
+    hi = {}
+    st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    pd_ = st["pxd_dates"]
+    pos = {d: i for i, d in enumerate(dates)}
+    for s_ in st["stocks"]:
+        t = s_["t"]
+        if t not in need:
+            continue
+        fp = os.path.join(DATA, "sd", t + ".json")
+        if not os.path.exists(fp):
+            continue
+        a = json.load(io.open(fp, encoding="utf-8")).get("hd") or []
+        if len(a) != len(pd_):
+            continue
+        arr = [None] * len(dates)
+        for k, d in enumerate(pd_):
+            j = pos.get(d)
+            if j is not None:
+                arr[j] = a[k]
+        hi[t] = arr
+    n_lab = len(hi)
+    if os.path.exists(HLCACHE):
+        try:
+            hl = json.load(io.open(HLCACHE, encoding="utf-8"))
+        except Exception:
+            hl = {}
+        for t, ser in hl.items():
+            if t not in need or t in hi or not ser:
+                continue
+            arr = [None] * len(dates)
+            for d, v in ser.items():
+                j = pos.get(d)
+                if j is not None and isinstance(v, list) and v:
+                    arr[j] = v[0]
+            hi[t] = arr
+    return hi, n_lab, len(hi) - n_lab
 
 
 def dump_universe(mem, span, px_map):
@@ -285,6 +343,10 @@ def main():
          "sector": {t: (m or {}).get("sector") for t, m in (_lab_meta() or {}).items()},
          # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
          "me": sorted(me)}
+    # 고가 — x-52wh 가 쓴다. 편출 종목분은 HLCACHE 에서 온다(없으면 그 규칙이 EXCLUDED_SIDS 다).
+    if "x-52wh" not in EXCLUDED_SIDS:
+        C["hi"], _nl, _nx = load_highs(set(px), dates)
+        print("  고가 %d종 (랩 %d + 편출캐시 %d)" % (len(C["hi"]), _nl, _nx))
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
     # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
@@ -665,9 +727,14 @@ def score(S, t, j, C):
         #   랩 본편에서 고친 그 버그가 여기 그대로 남아 있었다. 본편은 일중 고가로 고쳤지만
         #   PIT 가격 캐시에는 고가가 없다. 갈래를 지우지 않고 **죽게** 둔다: 누가 목록에
         #   되돌려 넣으면 조용히 틀린 값을 내는 대신 여기서 멈춘다.
-        raise SystemExit("pit_backtest.score: x-52wh 는 EXCLUDED_SIDS 다 — PIT 가격 캐시에 "
-                         "고가가 없어 랩 본편(일중 고가)과 같은 규칙을 만들 수 없다. "
-                         "되살리려면 _pit_px_cache 를 OHLC 로 넓힐 것.")
+        H = (C.get("hi") or {}).get(t)
+        if H is None:
+            # 캐시가 없거나 그 종목이 없다 — 조용히 종가로 대체하지 않는다. 랩 종목만 고가를
+            # 쓰고 편출 종목은 종가를 쓰면 한 횡단면을 두 자로 채점하는 것이라 더 나쁘다.
+            return None
+        win = [x for x in H[max(0, j - 251):j + 1] if x]
+        h = max(win) if win else None
+        return (P[j] / h) if (h and P[j]) else None
     if sid == "x-dist200":
         m = TB.sma(P, j, 200)
         return (P[j] / m - 1) if (m and P[j]) else None
@@ -731,13 +798,16 @@ def fetch_cache():
     want = sorted(t for t in need - lab if t.isalpha() or "." in t)
     print("편출 종목 %d종 가격 수집 (yfinance)" % len(want))
     out = json.load(io.open(CACHE, encoding="utf-8")) if os.path.exists(CACHE) else {}
+    hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
     got = 0
     for i in range(0, len(want), 25):
         ch = [t for t in want[i:i + 25] if t not in out]
         if not ch:
             continue
         try:
-            d = yf.download(ch, start=START, auto_adjust=True, progress=False, threads=False)["Close"]
+            _raw = yf.download(ch, start=START, auto_adjust=True, progress=False, threads=False)
+            d = _raw["Close"]
+            _hi, _lo = _raw.get("High"), _raw.get("Low")
         except Exception as e:
             print("  [yf] 배치 실패:", str(e)[:60]); continue
         for t in ch:
@@ -745,11 +815,21 @@ def fetch_cache():
                 ser = d[t].dropna()
                 if len(ser) > 200:
                     out[t] = {str(k.date()): round(float(v), 4) for k, v in ser.items()}
+                    # 고가·저가도 같은 배치에서 받는다 — 따로 받으면 두 번 요청하고
+                    # 그 사이 조정계수가 바뀌면 종가와 기준이 어긋난다.
+                    if _hi is not None and _lo is not None and t in _hi and t in _lo:
+                        _h, _l = _hi[t].dropna(), _lo[t].dropna()
+                        hlout[t] = {str(k.date()): [round(float(_h[k]), 4), round(float(_l[k]), 4)]
+                                    for k in ser.index if k in _h.index and k in _l.index}
                     got += 1
         time.sleep(2)
     json.dump(out, io.open(CACHE, "w", encoding="utf-8"), separators=(",", ":"))
     print("→ %s · %d종 (이번에 %d종 추가) · 못 받은 %d종은 인수·상폐로 보인다"
           % (CACHE, len(out), got, len(want) - len(out)))
+    if hlout:
+        json.dump(hlout, io.open(HLCACHE, "w", encoding="utf-8"), separators=(",", ":"))
+        print("→ %s · %d종 — 이 파일이 있어야 고가·저가 규칙(x-52wh 등)의 PIT 레그가 돈다"
+              % (HLCACHE, len(hlout)))
 
     # 시점별 주식수 — x-small(시가총액) 을 PIT 로 재려면 필요하다.
     # 오늘의 유니버스는 랩이 SEC XBRL 로 이미 갖고 있고(data/fx), 편출 종목만 여기서 받는다.
