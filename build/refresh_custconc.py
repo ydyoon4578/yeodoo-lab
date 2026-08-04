@@ -63,14 +63,22 @@ CUSTW = re.compile(r"\b(?:customer|client)s?\b", re.I)
 WIN = 320                                   # 앞뒤 글자수
 # 🚨 % 뒤에 \b 를 붙이면 안 된다 — % 가 비단어 문자라 "88% of" 에서 경계가 성립하지 않는다.
 #   실측: 이 한 글자 때문에 WDC 창 52개 중 백분율이 잡힌 것이 **0개**였다.
-PCT = re.compile(r"\b(\d{1,3}(?:\.\d)?)\s?(?:%|percent\b)", re.I)
+# 🚨 2026-08-05 — 소수 한 자리만 받고 앞 경계가 없어서 "3.49%" 를 **49.0** 으로 읽었다
+#   (적대감사 실측: SO 2016~2020 의 49.0 이 그 정체다). 두 자리까지 받고,
+#   숫자·마침표 뒤에서는 시작하지 않게 막는다.
+PCT = re.compile(r"(?<![\d.])(\d{1,3}(?:\.\d{1,2})?)\s?(?:%|percent\b)", re.I)
 REV = re.compile(r"\b(?:net\s+)?(?:revenue|revenues|sales)\b", re.I)
 # 🚨 단일 고객 표지. 규약이 '단일만 쓴다'이므로 이 표지가 없으면 신호로 안 쓴다.
 ONE = re.compile(r"\b(?:one|a single|our single|its single|the single|our largest|"
                  r"its largest|the largest|one of our|a customer|customer [A-Z]\b)\b", re.I)
 # 복수 합산 표지 — 있으면 단일이 아니다("a group of four customers", "two customers")
+# 🚨 2026-08-05 확장. 종전에는 "Customer A and B accounted for 50%" · "Customer A, Customer B
+#   and Customer C comprised, in the aggregate, 30%" 를 못 잡아, 규약이 버리라고 못박은
+#   복수 합산이 그대로 실렸다(적대감사 실측 66칸).
 MANY = re.compile(r"\b(?:group of|two|three|four|five|six|seven|eight|nine|ten|"
-                  r"\d+\s+(?:largest\s+)?customers|customers\s+(?:each\s+)?accounted)\b", re.I)
+                  r"\d+\s+(?:largest\s+)?customers|customers\s+(?:each\s+)?accounted|"
+                  r"in the aggregate|collectively|combined)\b"
+                  r"|customer\s+[A-Z]\b\s*(?:,|and)\s*(?:and\s+)?(?:customer\s+)?[A-Z]\b", re.I)
 # 🚨 부정문 — 표본 검산에서 걸렸다. ASC 280 공시 문구는 **없다**고 적는 형태가 매우 흔하다:
 #   "The Company does not have revenue from transactions with a single customer amounting to
 #    10 percent or more of its revenues" → 이걸 '집중도 10%'로 읽으면 정반대가 된다.
@@ -131,10 +139,20 @@ TIGHT = re.compile(
     r"\b(?:one|a single|our single|the single|our largest|its largest|the largest|"
     r"customer\s+[A-Z]\b)[^%]{0,90}?customer(?!s)[^%]{0,120}?"
     r"(?:accounted for|represented|comprised|was|were|generated|provided)"
-    r"[^%]{0,60}?(\d{1,3}(?:\.\d)?)\s?(?:%|percent)", re.I)
+    r"[^%]{0,60}?(?<![\d.])(\d{1,3}(?:\.\d{1,2})?)\s?(?:%|percent)", re.I)
+# 🚨 2026-08-05 전면 개정. 종전 TIGHT2 는 `customer` 낱말과 서술어 사이에 60자 창만 두고
+#   **백분율의 주어를 확인하지 않았다.** 그래서 아래가 전부 단일고객 집중도로 실렸다 —
+#     "customer base. Customer revenue represented approximately 99 %"   (지역 공시)
+#     "customer group. … our personal vehicle products represented 95%"  (제품)
+#     "customer support. \"Cost of services\" represented 61.7%"          (원가)
+#   적대감사 실측: x-custconc 보유칸 1,990개 중 **약 46%가 고객이 아니었다**
+#   (제품믹스 246 · 지역/부문 251 · 채널 120 · 비용 86 · 조달 54 · 복수합산 66 …).
+#   → 서술어 **바로 앞**이 고객 명사구여야 한다. 사이에 문장부호나 다른 명사절이 끼면 안 된다.
 TIGHT2 = re.compile(
-    r"\bcustomer(?!s)[^%]{0,60}?(?:accounted for|represented|comprised)"
-    r"[^%]{0,60}?(\d{1,3}(?:\.\d)?)\s?(?:%|percent)", re.I)
+    r"\b(?:a|the|this|that|its|our|one|single|largest|significant|major|\s)*"
+    r"customer(?!s)\s*(?:\([^)]{0,20}\))?\s*"
+    r"(?:accounted for|represented|comprised|provided|generated)"
+    r"[^%.;:\"]{0,40}?(?<![\d.])(\d{1,3}(?:\.\d{1,2})?)\s?(?:%|percent)", re.I)
 
 
 def scan(txt: str):
@@ -148,7 +166,11 @@ def scan(txt: str):
                 continue
             v = float(m.group(1))
             if 0 < v <= 100:
-                hits.append((v, s[-260:]))
+                # 🚨 260자 꼬리만 남기면 사람이 검산해도 **주어가 안 보인다**("customer revenue
+                #   represented approximately 99 %" 로는 그것이 지역 공시인지 알 수 없다).
+                #   매치 앞쪽 문맥까지 남긴다.
+                _a = max(0, m.start() - 160)
+                hits.append((v, txt[_a:m.end()][-420:]))
         if hits:
             break                                     # 엄격한 쪽이 잡으면 느슨한 쪽은 안 본다
     if not hits:
