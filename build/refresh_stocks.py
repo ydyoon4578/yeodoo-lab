@@ -899,6 +899,27 @@ def main():
             return d.xs(d.columns.get_level_values(0)[0], axis=1)
         return d
 
+    def _closed(sub):
+        """종가 없는 봉을 버린다 — 마지막 봉이 비면 **바로 이전 봉**이 마지막이 된다.
+
+        야후는 장중이거나 자료 사고가 나면 **봉은 만들어 두고 종가만 null** 로 준다
+        (실측 2026-08-03: 전 종목이 시가·거래량은 있는데 Close 가 null). `dropna(how="all")`
+        은 그런 행을 안 지운다 — 한 칸이라도 값이 있기 때문이다. 그래서 종가가 NaN 인 행이
+        프레임 끝에 남았다.
+
+        indicators() 는 자체적으로 c.dropna() 를 타서 무사했지만 SPY 만 원본 Close 를 그대로
+        써서 조용히 무너졌다:
+          · spy3 = spy.iloc[-1]/… → NaN  → 전 종목 rs3m(상대강도)이 NaN 이 되어 화면에서 사라진다
+          · bool(NaN > sma) 는 False     → 시장 국면이 무조건 '리스크오프'로 고정된다
+        둘 다 라벨은 멀쩡해서 화면만 보고는 구분이 안 된다 — SPY 로드 실패를 중단시키는 위쪽
+        가드와 같은 취지의 사고다. 한 소비처만 고치면 다음에 다른 소비처가 또 밟으므로
+        수집 단계에서 자른다.
+        """
+        try:
+            return sub[sub["Close"].notna()]
+        except Exception:
+            return sub
+
     def _dl(chy_, tries=3, period=PX_PERIOD):
         for k in range(tries):
             try:
@@ -924,7 +945,7 @@ def main():
             continue
         for t in ch:
             try:
-                sub = _unwrap(df, t).dropna(how="all")
+                sub = _closed(_unwrap(df, t).dropna(how="all"))
             except Exception:
                 sub = None
             if sub is None or not len(sub):
@@ -966,7 +987,7 @@ def main():
             d = _dl([_yf(t)], tries=2)
             if d is None:
                 continue
-            sub = _unwrap(d, t).dropna(how="all")
+            sub = _closed(_unwrap(d, t).dropna(how="all"))
             if len(sub) > len(px[t]):
                 px[t] = sub; _fixed += 1
         print(f"  재수집으로 복구 {_fixed}/{len(_short)}종")
@@ -1005,6 +1026,13 @@ def main():
     spy3 = _f(spy.iloc[-1]/spy.iloc[-1-63]-1)
     # 시장 국면: SPY가 200MA 위=리스크온(눌림매수 관대·매도 엄격), 아래=리스크오프(매수 엄격·매도 관대)
     spy_riskon = bool(spy.iloc[-1] > sma(spy, 200).iloc[-1])
+    # 위 두 줄은 spy 끝에 NaN 이 하나만 있어도 조용히 무너진다 — spy3 는 NaN 이 되어 전 종목
+    # rs3m 이 사라지고, bool(NaN > x) 는 False 라 국면이 '리스크오프'로 고정된다. 지금은 수집
+    # 단계의 _closed() 가 종가 없는 봉을 잘라 여기까지 오지 않지만, 그 보장이 깨지면 화면은
+    # 멀쩡해 보이고 숫자만 틀린다. 위 'SPY 로드 실패' 가드와 같은 취지로 소리 내어 멈춘다.
+    if spy3 != spy3:
+        raise SystemExit(f"SPY 3개월 수익률 산출 불가(종가 {spy.index.max()} 결측 의심) — "
+                         "상대강도·국면이 조용히 틀리므로 갱신 중단(이전본 유지)")
     raw = {}; as_of = None
     for t in tickers:
         if t not in px: continue
