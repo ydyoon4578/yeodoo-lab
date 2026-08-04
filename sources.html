@@ -452,6 +452,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <tr><th scope="row"><a href="regime.html#sent">시장 심리</a></th>
           <td><span class="freetag">무료</span>yfinance(VIX·VIX3M·MOVE) · FRED(VIXCLS·NFCI)</td>
           <td class="dt" id="src-snt">—</td><td id="up-src-snt">—</td></tr>
+        <tr><th scope="row"><a href="regime.html#cot">시장 포지션(COT)</a></th>
+          <td><span class="freetag">무료</span>CFTC 공개보고(Socrata·무인증) — S&amp;P 500 · NASDAQ-100 · VIX 선물의 참여자 유형별 포지션. <b>화요일 장마감 기준·그 주 금요일 발표</b>라 3일 시차가 구조적</td>
+          <td class="dt" id="src-cot">—</td><td id="up-src-cot">—</td></tr>
         <tr><th scope="row"><a href="co.html#fs">SEC 재무제표(XBRL)</a></th>
           <td><span class="freetag">무료</span>SEC EDGAR companyfacts(무인증) — 회사가 태깅한 값 그대로, 랩이 조정·재분류하지 않음. 외국 사기업은 IFRS·보고통화 그대로</td>
           <td class="dt" id="src-fx">—</td><td id="up-src-fx">—</td></tr>
@@ -593,7 +596,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!a||!a.axes)return;
     // 재무 축은 '분기 결산 기간말'이라 분기에 한 번만 움직인다 — 90영업일을 넘겨야 이상하다.
     // 가격 축(2영업일)과 같은 잣대를 쓰면 정상 상태가 늘 빨갛게 뜬다.
-    var want={filings:['src-fil',10],facts:['src-fx',90],insider:['src-ins',120],calendar:['src-cal',10],guru:['src-guru',150]};
+    // COT 임계 10영업일은 갱신 잡(refresh-cot.yml)의 check_freshness 인자와 같은 값이다.
+    // 주간 자료라 정상 상태에서도 5영업일까지 벌어진다 — 가격 축(2)을 쓰면 늘 빨갛게 뜬다.
+    var want={filings:['src-fil',10],facts:['src-fx',90],insider:['src-ins',120],calendar:['src-cal',10],guru:['src-guru',150],cot:['src-cot',10]};
     for(var i=0;i<a.axes.length;i++){
       var w=want[a.axes[i].key];
       if(w)putFresh(w[0],a.axes[i].as_of,w[1]);

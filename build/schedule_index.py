@@ -41,6 +41,7 @@ ROWS = {
     "refresh-insider.yml":   "src-ins",
     "refresh-filings.yml":   "src-fil",
     "refresh-holdings.yml":  "src-hold",
+    "refresh-cot.yml":       "src-cot",
 }
 # 자동 잡이 없는 행 — 라벨을 여기서 같이 관리해 표 전체가 한 곳에서 나오게 한다.
 #   src-rot: 로컬 스케줄러 잡이 있으나 헤드리스 인증 실패로 자주 죽어, 사실상 사람이 돌린다
@@ -60,10 +61,6 @@ NO_ROW = {
     "refresh-tech.yml":      "종목 전략 재계산 — 백테스트 행이 대표",
     "refresh-assets.yml":    "자산배분 전략 재계산 — 백테스트 행이 대표",
     "validate.yml":          "검증 전용(데이터 산출 없음)",
-    # COT 는 새 데이터 축이지만 아직 이것을 보여주는 화면이 없다. 화면을 만들 때
-    # sources.html 에 행을 추가하고 여기서 ROWS 로 옮긴다 — 지금 표에 실으면
-    # 갈 곳 없는 행이 하나 생긴다.
-    "refresh-cot.yml":       "CFTC COT — 소비 화면이 아직 없다(생기면 ROWS 로 옮길 것)",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
     "refresh-ml.yml":        "ML 연구 산출물 — refresh-assets 직후 연쇄(workflow_run)라 "
