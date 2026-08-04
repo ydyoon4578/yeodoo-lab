@@ -3387,6 +3387,12 @@ def run():
         #   같은 열에 놓고 크기를 비교하면 안 된다 — 대상이 ETF 냐 개별주 10종이냐가 다르다.
         # ⚠ 대조군(bench_net)은 매수후보유라 회전이 0 이다 → 비용도 0. 자산 랩은 대조군도
         #   물리지만(60/40 은 리밸런싱한다) 여기 대조군은 정말로 매매를 안 한다.
+        # 얇게 만들 때 쓸 절대 위치 색인 — d2[i] 의 전체 격자 위치가 5의 배수인 것만 남긴다.
+        _off = MIN_HIST + max(0, (start_i or (MIN_HIST + 1)) - (MIN_HIST + 1))
+        _keep5 = [_i for _i in range(min(len(d2), len(nav), len(bnav))) if (_off + _i) % 5 == 0]
+        if len(_keep5) < 60:                 # 너무 짧아지면 그대로 둔다(회귀가 아예 안 도는 것보다 낫다)
+            _keep5 = list(range(min(len(d2), len(nav), len(bnav))))
+
         cost_extra = {
             "cost_bp": round(COST_BPS_MAIN * 2, 1),
             "metrics_net": _mstats or {}, "bench_net": bs,
@@ -3467,9 +3473,16 @@ def run():
                          [x for x in pool_hist if x[1] > 0])
                      if (S["kind"] == "xsec" and any(x[1] > 0 for x in pool_hist)) else None),
             "holdings": hold_now,
-            "nav": [round(x, 2) for x in nav[::5]],
-            "bnav": [round(x, 2) for x in bnav[::5]],
-            "dates": d2[::5],
+            # 🚨 2026-08-05 — `[::5]` 는 **그 규칙 자신의 시작점**부터 5칸씩 센다. 규칙마다
+            #   시작일이 다르므로(재기준·커버리지 게이트) 남는 날짜 격자가 서로 어긋나고,
+            #   incr5(6계열 공통 날짜 회귀)가 계산 자체를 못 한다 — 실측으로 3규칙
+            #   (x-season·x-aci·x-ltrev)이 그래서 incr5 가 None 이었다. 자산 랩에서 같은
+            #   원인으로 43종이 통째로 못 돌던 것과 같다(gthin 참조).
+            #   → 전체 격자의 **절대 위치**로 자른다. 어느 규칙이든 서로의 부분집합이 되어
+            #     교집합이 짧은 쪽 길이만큼 남는다.
+            "nav": [round(nav[_i], 2) for _i in _keep5],
+            "bnav": [round(bnav[_i], 2) for _i in _keep5],
+            "dates": [d2[_i] for _i in _keep5],
             # 카드에 그릴 곡선 묶음 — 낙폭·연도별을 전체 계열에서 계산해 둔다.
             # 화면이 줄인 곡선에서 다시 재면 카드에 적힌 MDD와 그림이 어긋난다.
             "chart": curve_pack(d2, nav, bnav, idx_rets=IDXR,

@@ -444,7 +444,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <thead><tr><th scope="col">데이터</th><th scope="col">출처</th><th scope="col">기준일</th><th scope="col">갱신</th></tr></thead>
       <tbody>
         <tr><th scope="row"><a href="stocks.html">종목 신호</a></th>
-          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 DB(public.index_constituents) 스냅샷.
+          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 위키백과 목록 + SSGA SPY 보유내역 교차 확인.
             갱신 시각이 둘인 것은 <b>뒤가 백업 슬롯</b>이기 때문이다 — 앞 슬롯이 유실된 날에만 실제로 수집한다(스케줄 크론 드롭 대비)</td>
           <td class="dt" id="src-stk">—</td><td id="up-src-stk">—</td></tr>
         <tr><th scope="row"><a href="regime.html">시장 국면</a></th>
@@ -491,7 +491,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="card">
     <h3><span class="freetag">무료</span><a href="stocks.html">종목 신호</a> <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">data/stocks.json · data/sd/ · data/home_reco.json</span></h3>
     <p>S&amp;P 500 · NASDAQ 100 종목의 가격·테크니컬 22지표·EPS(트레일링/포워드)는 <b>yfinance</b>, 공매도잔량·커버일수는 <b>FINRA</b>(격주 공시라 가격 기준일보다 오래됨 — 페이지에 별도 기준일 표기).
-      구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 DB <b>public.index_constituents</b>의 최신 스냅샷입니다 — 지수 구성·회사명·GICS 섹터는 공개 정보로 재구성 가능한 수준이며, 지수 정기변경 시 재생성해 갱신합니다.
+      구성종목 리스트(<span style="font-family:var(--mono)">data/members.json</span>)는 <b>위키백과 지수 목록</b>을 <b>SSGA SPY 보유내역</b>과 교차 확인해 만듭니다 (<span style="font-family:var(--mono)">build/refresh_members.py</span>). 지수 정기변경 시 재생성해 갱신합니다.<br><span class="warn" data-members-caveat>⚠ NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존합니다 — S&amp;P 500 과 검증 강도가 다릅니다.</span>
       갱신 잡에는 완전성 게이트가 있어 데이터 소스 부분 장애 시 갱신을 중단하고 이전본을 유지합니다.</p>
     <div class="meta"><span><b>기준일</b><span id="d-stk">—</span></span><span><b>공매도 기준일</b><span id="d-si">—</span></span><span><b>구성종목 스냅샷</b><span id="d-memb">—</span></span><span><b>갱신</b><i class="v" id="up2-src-stk">—</i> (GitHub Actions)</span></div>
   </div>

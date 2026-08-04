@@ -625,11 +625,18 @@ def run():
 
     nm = {S["sid"]: S["name"] for S in SIGNALS}
     # 표본 길이는 실제 격자에서 파생한다(문장에 연수를 적어 두면 패널을 늘릴 때 거짓말이 된다).
-    _yrs = n / 252.0
+    # 🚨 2026-08-05 — `n = len(dates)` 은 **워밍업 260일을 포함한** 전체 패널 길이다. 그런데
+    #   start 는 dates[MIN_HIST] 로 워밍업 뒤를 적는다. 그래서 같은 시작일인데 전략 랩은
+    #   '17년(4,162일)', 신호 랩은 '18년(4,422일)'이라고 말하고 있었다 — 260일이 부풀려져
+    #   있었다. 검정에 쓰이는 것은 워밍업 뒤 구간이므로 그쪽으로 맞춘다.
+    _n_test = n - MIN_HIST
+    _yrs = _n_test / 252.0
     _span_txt = ("%.1f년" % _yrs) if _yrs < 10 else ("%d년" % round(_yrs))
     doc = {
         "note": "지표별 타이밍 신호를 같은 잣대로 잰 결과. 좋은 것만 고르지 않고 전부 싣는다.",
-        "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": n, "n_stocks": len(tick),
+        "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": _n_test, "n_stocks": len(tick),
+        # 패널 전체 길이도 함께 남긴다 — 둘이 다르다는 사실 자체가 정보다.
+        "n_panel": n, "warmup": MIN_HIST,
         "horizons": list(HOR), "primary": PRIMARY, "t_crit": tcrit,
         "bench": "동일가중 유니버스(β조정)",
         "protocol": [
