@@ -477,8 +477,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <p class="note" id="note"></p>
   <p class="note warn" id="caveat"></p>
-  <p class="note">같은 계산을 판형에 맞춰 담은 문서:
-    <a href="data/style_strategies.pdf">style_strategies.pdf</a></p>
+  <!-- 🚨 2026-08-05 — 여기가 "같은 계산을 판형에 맞춰 담은 문서" 라고 적고 있었다. 아니다.
+       그 PDF 는 2026-07-30 에 손으로 구운 문서이고 전략 6종만 담겨 있는데, 이 화면이 읽는
+       style_perf.json 은 15종이다. CI 에 matplotlib·한글 폰트가 없어 자동으로 다시 굽지도
+       못한다 — 즉 갱신 시점도 담긴 범위도 다르다. '같은 계산' 이라고 쓰면 안 된다.
+       링크는 남기되 무엇인지 정확히 적는다. -->
+  <p class="note">판형 문서(손으로 굽는다 · 최근 생성 <b>2026-07-30</b> · 전략 6종만 담김):
+    <a href="data/style_strategies.pdf">style_strategies.pdf</a>
+    <span class="warn">— 위 표(15종)와 갱신 시점·범위가 다릅니다. 표가 정본입니다.</span></p>
 
   <!-- ⚠ 푸터는 .wrap **안**이다. 전에는 </div></main> 뒤에 있어 .wrap 의 max-width·좌우 여백을
        못 받았고(넓은 화면에서 구분선이 끝에서 끝까지, 모바일에서 글자가 가장자리에 붙었다),

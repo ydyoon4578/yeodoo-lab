@@ -3392,6 +3392,13 @@ def run():
         _keep5 = [_i for _i in range(min(len(d2), len(nav), len(bnav))) if (_off + _i) % 5 == 0]
         if len(_keep5) < 60:                 # 너무 짧아지면 그대로 둔다(회귀가 아예 안 도는 것보다 낫다)
             _keep5 = list(range(min(len(d2), len(nav), len(bnav))))
+        # 🚨 끝점은 반드시 **실제 마지막 값**이어야 한다. 절대 격자로 자르면 마지막 인덱스가
+        #   5의 배수가 아닐 때 빠지고, 그러면 스파크라인이 최신 수익률을 안 보여주며
+        #   상세차트와 카드의 끝 날짜가 어긋난다(validate_site 가 실제로 잡았다).
+        #   strategy_index.thin() 도 같은 이유로 끝점을 강제한다.
+        _last = min(len(d2), len(nav), len(bnav)) - 1
+        if _keep5 and _keep5[-1] != _last:
+            _keep5.append(_last)
 
         cost_extra = {
             "cost_bp": round(COST_BPS_MAIN * 2, 1),

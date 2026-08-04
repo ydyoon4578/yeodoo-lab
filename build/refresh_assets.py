@@ -120,6 +120,7 @@ def main() -> int:
     # 예전에는 그걸 "❌ 응답 없음" 한 줄 찍고 조용히 빼고 진행했다. 그 결과 하류의
     # market_board.py 완전성 게이트가 죽었고, 같은 잡의 **13F 재수집 결과까지 통째로
     # 폐기**됐다(커밋 단계가 스킵되므로). 값비싼 단계 앞에서 개별 재시도로 메운다.
+    _fixed_open = {}          # 개별 재수집으로 되살린 시가 — 아래 opens 에 얹는다
     _want = [t for t in TICK if t not in close.columns or close[t].notna().sum() < 100]
     for t in _want:
         for _k in range(2):
@@ -130,6 +131,17 @@ def main() -> int:
                     _s = _s[_s.columns[0]]
                 if _s.notna().sum() >= 100:
                     close[t] = _s
+                    # 🚨 2026-08-05 — 종전에는 종가만 되살리고 시가는 **재수집 이전의 원본 df**
+                    #   에서 뽑았다(아래 opens = df["Open"]). 그래서 배치가 SPY/QQQ 를 짧게
+                    #   흘리면 종가는 복구되고 시가만 빈 채로 통과했고, 오버나이트 계열
+                    #   전략이 '수익률 0%' 곡선을 게시했다. 같은 응답에서 함께 되살린다.
+                    try:
+                        _o = _d["Open"]
+                        if hasattr(_o, "columns"):
+                            _o = _o[_o.columns[0]]
+                        _fixed_open[t] = _o
+                    except Exception:
+                        pass
                     print("  ↻ %s 개별 재시도 성공(%d일)" % (t, int(_s.notna().sum())))
                     break
             except Exception:
@@ -138,6 +150,8 @@ def main() -> int:
         else:
             print("  ❌ %s 재시도 2회 실패" % t)
     opens = df["Open"]
+    for _t, _o in _fixed_open.items():
+        opens[_t] = _o
 
     # ── 종가 결측일 복구(60분봉) ──────────────────────────────────────────────
     # 야후는 일봉 집계만 깨지고 분봉은 멀쩡할 때가 있다(실측 2026-08-03: 전 종목 일봉의
@@ -220,6 +234,15 @@ def main() -> int:
     #
     # '처음부터 없던 것'과 '있다가 사라진 것'은 다르다. 신규 상장·상장폐지로 원래 못 받는
     # 티커까지 막으면 패널을 늘릴 수 없으므로, 직전 빌드에 있었던 것만 대상으로 한다.
+    # 🚨 2026-08-05 — 이 가드가 종가(px)만 봤다. 시가는 검사 대상이 아니라, 시가만 사라진
+    #   경우가 그대로 통과했다. 오버나이트 계열은 시가가 없으면 '수익률 0%' 가 된다 —
+    #   빈 것과 0인 것이 구별되지 않는 가장 나쁜 형태다.
+    _op_thin = sorted(t for t in prev_tickers()
+                      if t in op and sum(1 for x in op[t] if x is not None) < 100)
+    if _op_thin:
+        print("❌ 직전 빌드에 있던 티커의 시가가 100일 미만으로 얇다: %s" % ", ".join(_op_thin))
+        print("   시가가 비면 오버나이트 계열이 '수익률 0%' 곡선을 낸다 — 중단한다.")
+        return 1
     _gone = sorted(prev_tickers() - set(px))
     if _gone:
         print("❌ 직전 빌드에 있던 티커가 사라졌다: %s" % ", ".join(_gone))
