@@ -329,7 +329,23 @@ def main() -> int:
         for t in common:
             ratio[t] = gr[t] / vr[t]
         order = sorted(common, key=lambda t: ratio[t])
-        mcv = {t: (fund(t, "mc") or 0.0) for t in common}
+        # 🚨 시총 누적 33% 컷은 **회사당 한 번**으로 센다(2026-08-04). 시총 정보원이
+        #   이중클래스 두 티커에 각각 **회사 전체 시총**을 주므로 그냥 더하면 알파벳이
+        #   두 번 들어가 컷 위치가 밀린다(실측: 유니버스 합계가 2023-12 이후 4~6% 부푼다).
+        #   ⚠ 바스켓 **멤버십**에서는 두 티커를 다 남긴다 — 실제 S&P 순수성장/가치 지수도
+        #     두 클래스를 다 담는다. 여기서 고치는 것은 '금액의 합'뿐이다.
+        _cik = {}
+        try:
+            _cik = {k: v for k, v in (json.load(io.open(
+                os.path.join(DATA, "cik_map.json"), encoding="utf-8")).get("co") or {}).items() if v}
+        except Exception:
+            pass
+        mcv0 = {t: (fund(t, "mc") or 0.0) for t in common}
+        _seen, mcv = set(), {}
+        for t in sorted(common):
+            k = _cik.get(t) or ("t:" + t)
+            mcv[t] = 0.0 if k in _seen else mcv0[t]   # 같은 회사의 두 번째 클래스는 0 으로 센다
+            _seen.add(k)
         tot = sum(mcv.values()) or 1.0
         gmean = float(np.mean([GROW[t][0] for t in common]))
         vmean = float(np.mean([SPVAL[t][0] for t in common]))
