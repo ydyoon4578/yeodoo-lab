@@ -1090,6 +1090,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
+            _pool:x.pool||null, _thin:x.n_thin||0,
             _risk:x.risk||null, _rv:x.risk_verdict||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
@@ -1959,6 +1960,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(d._t!=null)labRows.push(['t값',Number(d._t).toFixed(2)]);
       if(d._beta!=null)labRows.push(['실측 베타',Number(d._beta).toFixed(2)]);
       if(d._turn!=null)labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회']);
+      // 🚨 채점 후보 수 — '상위 10종'이 몇 종중에서 골람 것인지를 적는다.
+      //   모으기만 하고 화면에 안 내면 모은 적 없는 것과 같다 — n_thin 이 오래 그 상태였다.
+      if(d._pool){
+        var P=d._pool;
+        labRows.push(['채점 후보', P.med+'종(중앙) · '+P.min+'~'+P.last+'종']);
+        if(P.narrow) labRows.push(['평소보다 얇은 달', P.narrow+'개월 — 그만큼 앞구간은 순위보다 커버리지가 골랐다']);
+      }
+      if(d._thin) labRows.push(['무보유로 둔 월말', d._thin+'개월 — 후보 30종 미만']);
       var h=d._hold, holdHtml='';
       if(h){
         if(h.kind==='timing'){

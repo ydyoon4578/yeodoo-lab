@@ -360,6 +360,10 @@ def main() -> int:
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
             holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
             arch=r.get("arch"),
+            # 채점 후보 수 — '상위 10종'이 몇 종 중에서 골라진 것인가. 이것도 재 놓고 화면에
+            # 안 내면 모은 적 없는 것과 같다(바로 아래 pit 이 그랬던 것과 같은 유형이라
+            # 붙여 둔다). narrow 는 '그 규칙 자신의 평소 후보 수 절반에도 못 미친 달'이다.
+            pool=r.get("pool"), n_thin=r.get("n_thin"),
             # 시점정확(PIT) 실측 — build/pit_backtest.py 가 같은 창에서 소급 레그와 함께 잰 것.
             # ⚠ 전에는 이 값이 판정 강등에만 쓰이고 **화면에는 숫자가 안 나갔다**. 편향을 재
             #   놓고 안 보여주면 독자는 소급 수치만 보게 된다 — 목록에 실어 카드가 적게 한다.

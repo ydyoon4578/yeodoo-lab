@@ -1274,14 +1274,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     secs.slice().sort(bym).forEach(function(s0){
       var sid='s-'+s0.sec, gs=(GRP[s0.sec]||[]).slice().sort(bym);
       var solo=(gs.length===1&&gs[0].solo);
-      h+=row(s0,1,null,sid,tip(s0,true),s0.nm,s0.sec,sid);
+      // 종목 수를 이름 옆에 적는다(사용자 요청 2026-08-04) — 전에는 ▸ 를 눌러야 알았다.
+      //   섹터 줄은 ETF 티커와 함께, 산업그룹 줄은 종목 수만. （▸ 로 펼치면 그 수만큼 줄이 나온다.）
+      h+=row(s0,1,null,sid,tip(s0,true),s0.nm,s0.sec+' · '+s0.n+'종',sid);
       if(solo||!gs.length){
         h+=stockRows(bySec[s0.sec],sid,2);          // 2차를 건너뛰므로 종목이 곧 2단이다
         return;
       }
       gs.forEach(function(g){
         var gid='g-'+s0.sec+'-'+g.nm.replace(/[^A-Za-z0-9]+/g,'_');
-        h+=row(g,2,sid,gid,tip(g,false),g.nm,null,gid);
+        h+=row(g,2,sid,gid,tip(g,false),g.nm,g.n+'종',gid);
         h+=stockRows(byGrp[s0.sec+'|'+g.nm],gid,3);
       });
     });
