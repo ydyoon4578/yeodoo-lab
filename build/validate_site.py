@@ -1980,6 +1980,77 @@ else:
     except Exception as _e:
         tool_skips.append(f"explorer 렌더 검사({_e})")
 
+
+# ── 배선 검사: 모아 놓고 안 잇는 것을 잡는다 ────────────────────────────
+#   🚨 2026-08-04 하루에 **네 번** 같은 사고가 났다. 전부 "수집은 됐는데 다음 단계가
+#   그 값을 안 받아" 조용히 없는 것과 같아진 경우다. 넷 다 실행은 **성공**했다 —
+#   그래서 아무도 몰랐다.
+#     ① refresh_facts 가 태그 5종(ca·cl·debt·re·dep)을 새로 모았는데 load_fund 가 안 실었다
+#        → 그것을 쓰는 규칙이 198개월 전부 후보 0. 규칙이 아니라 배선이 원인이었다.
+#     ② tech_backtest 가 pool·n_thin 을 냈는데 strategy_index 가 안 넘겨 화면이 계속 비었다
+#     ③ pit_backtest 는 FUND_SIDS 에 넣어도 score() 갈래가 없으면 무보유 → 표엔 '열위'
+#     ④ pit 실측이 판정 강등에만 쓰이고 화면에는 안 나갔다
+#   ③은 score() 가 이제 죽고, ④는 이미 이었다. ①②를 여기서 막는다.
+#   ⚠ 안 잇는 것이 늘 잘못은 아니다 — 그래서 '일부러 안 잇는 것' 목록을 명시로 둔다.
+#     목록에 적는 순간 그것은 결정이 되고, 아무도 모르게 빠지는 일은 없어진다.
+try:
+    sys.path.insert(0, os.path.join(ROOT, "build"))
+    import refresh_facts as _RF
+    import tech_backtest as _TB
+
+    # ① 수집 태그 → load_fund 계열
+    _tag_keys = {t[0] for t in _RF.TAGS} | {t[0] for t in _RF.TAGS_IFRS}
+    _WIRE_SKIP = {
+        "sho": "sh 가 없을 때만 쓰는 대타 — load_fund 안에서 sh 로 합쳐진다",
+        "iss": "주식 발행(현금흐름) — 쓰는 규칙이 아직 없다",
+    }
+    _fu = _TB.load_fund()
+    _sample = set()
+    for _v in _fu.values():
+        _sample |= set(_v)
+    _missing = sorted(_tag_keys - _sample - set(_WIRE_SKIP))
+    if _missing:
+        errors.append("수집만 되고 백테스트에 안 실린 재무 태그 %d개: %s — "
+                      "refresh_facts.TAGS 에 넣었으면 tech_backtest.load_fund 도 실어야 한다"
+                      "(안 쓸 것이면 validate_site 의 _WIRE_SKIP 에 사유와 함께 적을 것)"
+                      % (len(_missing), ", ".join(_missing)))
+
+    # ② tech_strategies 규칙 필드 → strategy_index 항목
+    _ts = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
+    _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
+    _IDX_SKIP = {
+        "sid", "kind", "why", "rule", "name", "verdict",   # 인덱스가 이름을 바꿔 싣는다
+        "dates", "chart", "exposure", "incr", "n_days", "role", "n_stocks",
+        "excess_cagr", "bench",                            # metrics/bench 로 접혀 들어간다
+    }
+    _by = {}
+    for _it in (_si.get("items") or []):
+        _s = _it.get("sid") or ""
+        _by[_s] = _it
+        if _s.startswith("t-"):
+            _by[_s[2:]] = _it
+    _lost = {}
+    for _r in _ts.get("strategies", []):
+        _it = _by.get(_r.get("sid"))
+        if not _it:
+            continue
+        for _k, _v in _r.items():
+            if _k in _IDX_SKIP or _v in (None, "", [], {}):
+                continue
+            if _k not in _it:
+                _lost.setdefault(_k, 0)
+                _lost[_k] += 1
+    if _lost:
+        errors.append("tech_strategies 에 있는데 strategy_index 로 안 넘어가는 필드 %d개: %s — "
+                      "화면(explorer)은 인덱스만 읽으므로 여기서 빠지면 잰 적 없는 것과 같다"
+                      "(안 보낼 것이면 validate_site 의 _IDX_SKIP 에 적을 것)"
+                      % (len(_lost), ", ".join("%s(%d규칙)" % (_k, _n) for _k, _n in sorted(_lost.items()))))
+    if not _missing and not _lost:
+        print("  ~ 배선 검사 통과(재무 태그 %d종 · 전략 필드 %d종)"
+              % (len(_tag_keys), len(_ts.get("strategies", []))))
+except Exception as _e:
+    tool_skips.append("배선 검사(%s)" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
