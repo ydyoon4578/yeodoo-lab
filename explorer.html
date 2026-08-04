@@ -1139,6 +1139,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                             '검증으로 세면 안 된다.'
                           :'이웃과 구별되는 몫이 남아 있는지를 이 값으로 읽는다.')+'</em>';
           }
+          // 🚨 이웃 **하나**만 통제하면 문턱이 무르다. 실측(2026-08-04, 게시 56종):
+          //   증분 t≥2 를 넘던 11종 중 이웃 5개 동시 통제에서도 넘는 것은 7종이다.
+          //   붐비는 축은 이웃이 여럿이라 하나만 빼서는 남는 것이 있어 보인다.
+          if(x.incr5&&x.incr5.t!=null){
+            var i5=x.incr5, one=(x.incr&&x.incr.t!=null)?x.incr.t:null;
+            var fell=(one!=null&&Math.abs(one)>=2&&Math.abs(i5.t)<2);
+            d.vt+=' <em>이웃 5개를 <b>동시에</b> 통제하면 증분 알파가 연 '+
+                  (i5.alpha>0?'+':'')+i5.alpha+'%p(t '+i5.t+')다'+
+                  (one==null?'':(' — 이웃 하나만 통제했을 땐 '+one+' 였다'))+'. '+
+                  (fell?'<b>하나만 떼면 남아 보이지만 여럿을 떼면 사라진다</b> — 붐비는 축이라는 뜻이다.'
+                        :'사전등록 게이트는 이쪽 값을 쓴다.')+'</em>';
+          }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
           if(x.metrics_net&&x.cost_drag!=null){
