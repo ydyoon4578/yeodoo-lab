@@ -53,6 +53,44 @@ def ser(t):
     return A["px"].get(t)
 
 
+_TRUE_PX = {}
+
+
+def ser_true(t):
+    """배당 **재투자 조정 전**의 실제 주가 계열을 되돌린다.
+
+    🚨 2026-08-04 버그 수정. `A["px"]` 는 `auto_adjust=True` 로 받은 배당조정가다. 과거로
+      갈수록 실제 주가보다 낮으므로, **실제 분배금 ÷ 조정가** 는 분배수익률이 아니라 과거일수록
+      부푼 값이다. 부푸는 배수가 자산마다 다르다는 것이 더 나쁘다(고배당일수록 크다) —
+      실측 첫날 기준 배수: HYG 3.31 · EMB 2.46 · VNQ 2.35 · LQD 2.27 · TLT 1.92 … SPY 1.46.
+      그래서 크로스에셋 캐리의 횡단면 순위가 캐리가 아니라 '누적 배당조정 배수'로도 만들어졌다.
+      실측: 코드가 계산하던 HYG 12개월 분배수익률이 2008-06 24.31% · 2010-06 23.46% 였다
+      (실제는 8% 안팎).
+
+    되돌리는 식. adj[i] = true[i] × Π_{k>i} (1 − d_k / true[k−1]) 이므로 f[i] = adj[i]/true[i]
+    를 뒤에서부터 세운다(마지막 날은 adj == true 라 f = 1):
+        f[i] = f[i+1] / (1 + f[i+1] · d_{i+1} / adj[i])
+    """
+    if t in _TRUE_PX:
+        return _TRUE_PX[t]
+    s = A["px"].get(t)
+    if not s:
+        _TRUE_PX[t] = None
+        return None
+    d = (A.get("div") or {}).get(t) or {}
+    n = len(s)
+    out = [None] * n
+    f = 1.0
+    for i in range(n - 1, -1, -1):
+        if s[i]:
+            out[i] = s[i] / f
+        if i > 0 and s[i - 1]:
+            dv = d.get(DTS[i]) or 0.0        # i일이 배당락일이면 그 금액
+            f = f / (1.0 + f * dv / s[i - 1]) if dv else f
+    _TRUE_PX[t] = out
+    return out
+
+
 def ret(s, i, n):
     if i < n or s[i] is None or s[i - n] is None or s[i - n] == 0:
         return None
@@ -917,7 +955,10 @@ def build():
         st = first_common(ts)
         DIV = A.get("div") or {}
         def yld(t, i):
-            s_ = ser(t)
+            # 🚨 분모는 **실제 주가**여야 한다(ser_true). 종전에는 배당조정가로 나눠서
+            #   같은 분배금이 과거일수록 크게 보였고, 그 부풂이 자산마다 달라 횡단면 순위
+            #   자체가 캐리가 아니라 누적 조정배수로도 만들어졌다(ser_true 독스트링 실측).
+            s_ = ser_true(t)
             if s_ is None or s_[i] is None or not s_[i]:
                 return None
             d = DIV.get(t)
@@ -1341,6 +1382,20 @@ def main() -> int:
     DTS = A["dates"]
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
                            encoding="utf-8")).get("monthly") or {}
+    # 🚨 무위험 계열을 **패널 구간으로 자른다**(2026-08-04). 종전에는 rf_monthly.json 전체
+    #   (1981-09~, 539개월)를 그대로 넘겼다. ann_stats 가 `sum(rf)/len(rf)` 로 평균만 쓰므로
+    #   그것은 **연 3.79%** 인데, 이 패널 구간(2006~)의 실제 평균은 훨씬 낮다. 즉 샤프의
+    #   분자에서 있지도 않던 이자를 빼고 있었다 — 전 전략이 같은 방향으로 낮게 나온다.
+    #   tech_backtest.load() 는 이미 같은 줄로 자르고 있었다(랩마다 규약이 달랐다는 뜻이다).
+    if DTS:
+        _n0 = len(RF)
+        RF = {k: v for k, v in RF.items() if k >= DTS[0][:7]}
+        print("  무위험 계열 %d → %d개월(패널 %s~) · 평균 연 %.2f%% → %.2f%%"
+              % (_n0, len(RF), DTS[0][:7],
+                 (sum(json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
+                                        encoding="utf-8")).get("monthly").values())
+                  / _n0 * 12 * 100),
+                 (sum(RF.values()) / max(1, len(RF)) * 12 * 100)))
     build()
 
     rows = []
