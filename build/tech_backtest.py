@@ -1058,8 +1058,18 @@ def ttm2(series, annual, date, lag=FUND_LAG_DAYS):
     """ttm 의 본체 — 분기 계열과 연간(a) 계열을 함께 받는다. 위 독스트링 참조."""
     cut = _shift(date, lag)
     got = [(d, v) for d, v in (series or []) if d <= cut]
-    # ① 진짜 분기 보고 — 최근 4개가 400일 안에 들어오면 그대로 더한다(손익계산서 태그의 정상 경로)
-    if len(got) >= 4 and _days_between(got[0][0], got[3][0]) <= 400:
+    # ① 진짜 분기 보고 — 최근 4개가 400일 안에 들어오고 **가운데가 안 벌어졌을 때만** 더한다.
+    #   🚨 2026-08-04 버그 수정. 종전에는 양 끝 간격(got[0]~got[3])만 봤다. 그런데 대부분의
+    #     발행인은 회계 4분기를 10-K 에 흡수시켜 q 버킷에 안 남기므로, 최근 4개가
+    #     (Q3, Q2, Q1, 전년 Q3) 처럼 **가운데가 ~182일 벌어진 채** 365일 안에 들어온다.
+    #     그러면 합계는 12개월이 아니라 **Q4 를 빼고 1년 전 같은 분기를 대신 넣은 15개월 창**이다.
+    #     실측(채점칸 기준 인접 간격 120일 초과 비율): dps 78.9% · rev 59.4% · eps 54.8% ·
+    #     ni 48.9%. 초과분은 거의 전부 180~210일(분기 하나 결측)이다.
+    #     오차 크기: 연간 버킷으로 결측 분기를 복원해 대면 eps 는 |오차|>10% 인 칸이 30.6%다.
+    #   → 인접 간격이 전부 120일 이하일 때만 ①로 인정하고, 아니면 ②(연간 버킷)로 내린다.
+    #     연간 버킷은 정의상 12개월치라 이 함정이 없다.
+    if (len(got) >= 4 and _days_between(got[0][0], got[3][0]) <= 400
+            and all(_days_between(got[k][0], got[k + 1][0]) <= 120 for k in range(3))):
         return sum(v for _d, v in got[:4])
     # ② 연간 버킷이 있으면 그것이 정답이다 — 간격만 보고 Q1 을 1년치로 읽는 함정을 여기서 막는다
     ann = [(d, v) for d, v in (annual or []) if d <= cut]
@@ -1541,6 +1551,11 @@ def load_fund(extra_dirs=()):
                                           "cfo_a": annual("cfo"), "capex_a": annual("capex"),
                                           "bb_a": annual("bb"), "ni_a": annual("ni"),
                                           "rev_a": annual("rev"), "gp_a": annual("gp"),
+                                          # 🚨 2026-08-04 추가. ttm2 의 연간 폴백은 연간 버킷이
+                                          #   있어야 작동한다 — 없으면 분기 결측 종목이 조용히
+                                          #   후보에서 빠진다(연차보고 외국 발행인이 정확히
+                                          #   그 집단이고, DATA-FACTS 7 이 지목한 무리와 겹친다).
+                                          "eps_a": annual("eps"), "dps_a": annual("dps"),
                                           "cogs_a": annual("cogs"), "opinc_a": annual("opinc")}
     # 분할 기준 처리 결과를 **로그로 남긴다.** 조용히 자르면 표본이 왜 짧은지 아무도 모른다
     # (실제로 그랬다 — SPLIT_TRIMMED 를 모으기만 하고 찍는 곳이 없었다).
@@ -2948,7 +2963,7 @@ def run():
                             elif sid == "x-payout":
                                 # 환원총액 = 배당총액(주당배당 × 주식수) + 자사주매입액.
                                 # 🚨 bb 는 연간 버킷으로 읽어야 한다(분기엔 Q1 만 남는다).
-                                dp = ttm(f.get("dps"), dt_)
+                                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
                                 bbv = ttm2(f.get("bb"), f.get("bb_a"), dt_)
                                 if mcap and (dp is not None or bbv is not None):
                                     tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
@@ -3007,19 +3022,20 @@ def run():
                                             ci = rat[0] / base - 1.0
                                             v = -ci if abs(ci) <= 3.0 else None
                             elif sid == "x-ep":
-                                ep_ = ttm(f.get("eps"), dt_)
+                                ep_ = ttm2(f.get("eps"), f.get("eps_a"), dt_)
                                 v = (ep_ / p0) if (ep_ is not None and p0 and p0 > 0) else None
                             elif sid == "x-sp":
-                                rv = ttm(f.get("rev"), dt_)
+                                rv = ttm2(f.get("rev"), f.get("rev_a"), dt_)
                                 v = (rv / mcap) if (rv is not None and mcap) else None
                             elif sid == "x-roe":
-                                nn, e = ttm(f.get("ni"), dt_), asof_fund(f.get("eq"), dt_)
+                                nn, e = ttm2(f.get("ni"), f.get("ni_a"), dt_), asof_fund(f.get("eq"), dt_)
                                 v = (nn / e) if (nn is not None and e and e > 0) else None
                             elif sid == "x-npm":
-                                nn, rv = ttm(f.get("ni"), dt_), ttm(f.get("rev"), dt_)
+                                nn, rv = ttm2(f.get("ni"), f.get("ni_a"), dt_), ttm2(f.get("rev"), f.get("rev_a"), dt_)
                                 v = (nn / rv) if (nn is not None and rv and rv > 0) else None
                             elif sid == "x-rgrow":
-                                a1, a0 = ttm(f.get("rev"), dt_), ttm(f.get("rev"), _shift(dt_, 365))
+                                a1, a0 = (ttm2(f.get("rev"), f.get("rev_a"), dt_),
+                                          ttm2(f.get("rev"), f.get("rev_a"), _shift(dt_, 365)))
                                 v = (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
                             elif sid == "x-lowde":
                                 e = asof_fund(f.get("eq"), dt_)
@@ -3030,7 +3046,7 @@ def run():
                                 # 부채가 적을수록 위. 자본잠식(e<=0)은 비율이 무의미해 뺀다.
                                 v = -(lb / e) if (lb is not None and e and e > 0) else None
                             elif sid == "x-dy":
-                                dp = ttm(f.get("dps"), dt_)
+                                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
                                 v = (dp / p0) if (dp is not None and p0 and p0 > 0) else None
                             elif sid == "x-small":
                                 v = -mcap if mcap else None
