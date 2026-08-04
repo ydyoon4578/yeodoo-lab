@@ -383,7 +383,12 @@
         "Key trends impacting supply chains in 2026, KPMG",
         "2026's supply chain challenge: confronting complexity and disruption in global trade, Thomson Reuters",
         "How Tariffs Are Reshaping Global Supply Chains, SupplyChainBrain (2025)"
-      ]
+      ],
+      "lab": {
+        "v": "측정 불가",
+        "t": "공급망 고객사 모멘텀 — 링크 자료 실측",
+        "why": "규약이 요구하는 '공급사 → 고객사' 매핑을 무료 SEC 자료로 만들 수 있는지 전수로 쟀다(2026-08-04). companyfacts 는 고객 집중이 XBRL 차원에 붙는데 차원을 걷어내 태그가 0건이고, 10-K 원문에는 집중 공시가 153/518종(30%)에 있으나 고객이 익명이다. 실명까지 잡힌 것은 518종 스캔에서 6종이고 문장을 열어 확인하니 진짜는 4종뿐이다(CHD→WMT · MCK→CVS · SBAC→TMUS · TTWO→AAPL/GOOGL/MSFT). 바스켓 후보 문턱이 30종이라 4종으로는 순위가 아무 일도 하지 않는다 — 검정해서 떨어뜨린 것이 아니라 돌릴 수가 없다. 유료 링크 자료 없이는 이 계열 전체가 막힌다. 곁가지로 고객 집중도(매출의 X%를 한 고객에 의존)는 뽑히고 분산도 크지만(80% 이상 6종: FER 99·CRWV 98·WDC 88·ALAB 86·MRVL 82), 지금 뽑은 것은 최신 10-K 한 장씩이라 백테스트에 쓰면 선견이다. SEC 가 과거 10-K 를 보관하므로 모으면 열리지만 그건 기전이 다른 별도 전략이다."
+      }
     },
     {
       "id": "B8",
