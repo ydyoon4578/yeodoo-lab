@@ -31,7 +31,8 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # 지표 함수는 **게시 파이프라인에서 그대로 가져온다**. 여기서 다시 구현하면 화면에 보이는 신호와
 # 여기서 재는 신호가 소리 없이 갈라진다(같은 이름의 다른 규칙이 된다).
-from refresh_stocks import rsi, macd, boll, stoch_k, adx, cci, willr, mfi, aroon, sma  # noqa: E402
+from refresh_stocks import (rsi, macd, boll, stoch_k, adx, cci, willr, mfi, aroon, sma,  # noqa: E402
+                            atr)          # 샹들리에 손절선이 ATR 을 쓴다 — 다시 구현하지 않는다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -139,6 +140,23 @@ def build_signals():
     sig("wr-ob", "Williams %R > −20", "Williams %R", "sell",
         "Williams %R(14)이 −20 위인 날.", "위의 대칭판.",
         lambda h, l, c, v, X: X["wr"] > -20)
+    # ── 샹들리에 추격 손절 (Chuck LeBeau) ──
+    # 🚨 이 랩에는 같은 이름의 시장 타이밍 규칙(t-chand)이 있는데 그것은 고가·저가가
+    #   배선되기 전에 만들어져 수익률 변동성 대용치를 쓴다. 여기는 원전대로 ATR 을 쓴다 —
+    #   같은 이름의 다른 규칙이므로 화면에도 '샹들리에(ATR)'라고 적는다.
+    #   그리고 t-chand 는 2026-08-05 에 강등됐다(4,162일 중 4,161일 100% 편입 · 매매대상
+    #   대비 t −1.00). 시장 게이트로 못 쓴다는 것과 **종목 추격 손절로 쓸 수 있나**는
+    #   다른 질문이고, 그 답을 여기서 잰다.
+    sig("chand-lose", "샹들리에 손절선 이탈", "샹들리에", "sell",
+        "종가가 (최근 22일 최고가 − ATR(22)×3) 아래로 처음 내려간 날.",
+        "추격 손절의 본래 용도다. 손절 폭을 고정 %가 아니라 그때의 변동성으로 잡으므로 "
+        "조용한 장에선 좁고 거친 장에선 넓다. 이탈 뒤 실제로 더 내리는지가 쟁점이다.",
+        lambda h, l, c, v, X: cd(c, X["chst"]))
+    sig("chand-back", "샹들리에 손절선 회복", "샹들리에", "buy",
+        "종가가 (최근 22일 최고가 − ATR(22)×3) 위로 되올라온 날.",
+        "이탈의 거울상. 손절 규칙은 되돌아오는 조건이 있어야 쓸 수 있는데, 그 재진입이 "
+        "값을 하는지 따로 재야 한다 — 손절만 좋고 재진입이 나쁘면 규칙 전체가 못 쓴다.",
+        lambda h, l, c, v, X: cu(c, X["chst"]))
     sig("mfi-os", "MFI < 20", "MFI", "buy",
         "MFI(14)가 20 아래인 날(거래량 가중 과매도).",
         "가격만 보는 RSI에 거래량을 더한 것. 거래량이 정보를 더하는지가 쟁점이다.",
@@ -235,6 +253,10 @@ def prep(h, l, c, v):
         "dcu": h.rolling(20).max(), "dcl": l.rolling(20).min(),
         "au": au, "ad": ad, "adx": ax, "c25": pd.Series(25.0, index=c.index),
         "rvol": rv,
+        # 샹들리에 손절선 — refresh_stocks.chandelier 와 **같은 산식**이다(22일 최고가 − ATR×3).
+        # ⚠ 여기서 다시 구현하면 화면과 성적표가 갈린다. 산식은 아래 한 줄이 전부라 옮겼지만
+        #   파라미터(22·3)를 바꿀 일이 생기면 두 곳을 함께 고칠 것.
+        "chst": h.rolling(22).max() - atr(h, l, c, 22) * 3.0,
     }
 
 

@@ -627,6 +627,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="chipwrap" id="chipwrap">
       <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span>
         <a class="fchip" href="signals.html" style="text-decoration:none">지표별 타이밍 신호 성적표 →</a></div>
+      <!-- 🚨 스윙 타점과 줄을 나눈다. 같은 줄에 두면 '같은 급의 매매 신호'로 읽히는데,
+           이쪽은 랩 실측에서 둘 다 '구별 불가'다(아래 라벨에 수치를 적는다). -->
+      <div class="chiprow"><span class="fchip lbl" title="최근 22일 최고가 − ATR(22)×3 을 추격 손절선으로 본다. 매매 신호가 아니라 보유 위험 상태다.">샹들리에 손절(ATR)</span><span id="presetsch" style="display:contents"></span>
+        <span class="fchip" style="opacity:.75;cursor:default" title="signal_lab 실측 2010-01~2026-08 · 임계 |t| ≥ 3.18. 이탈 42,907건 20일 초과 +0.035%p(t 0.95) · 회복 43,675건 +0.016%p(t 0.44). 귀무와 구별되지 않는다 — 매수·매도 근거로 쓰지 말 것.">랩 판정 <b>구별 불가</b> · 상태 표시</span></div>
       <div class="chiprow"><span class="fchip lbl" title="지금 어디로 가고 있나">추세</span><span id="presets2" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl" title="얼마나 밀렸나 / 올랐나">되돌림</span><span id="presets2b" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl" title="누가 사고파나 · 참고 표기">수급·기타</span><span id="presets2c" style="display:contents"></span></div>
@@ -698,6 +702,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     ["all","전체",null,false,null,null,"a"],
     ["swingbuy",'<span style="color:var(--good)">▲</span> 스윙 저점매수',"momentum",false,null,null,"r"],
     ["swingsell",'<span style="color:var(--hot)">▼</span> 스윙 고점매도',"trend",true,null,null,"r"],
+    // 샹들리에 추격 손절(ATR) — 2026-08-05 추가. 스윙 타점과 **다른 줄**에 둔다.
+    // 🚨 매매 신호가 아니라 **위험 상태**다. signal_lab 실측(2010-01~2026-08):
+    //   이탈 42,907건 · 20일 초과 +0.035%p · t 0.95 / 회복 43,675건 · +0.016%p · t 0.44
+    //   → 둘 다 '구별 불가'. 임계는 |t| ≥ 3.18 이다. 매수·매도 근거로 쓰면 안 된다.
+    //   그래도 싣는 이유는 '지금 이 종목이 추격 손절선 어느 쪽인가'가 보유자에게 상태
+    //   정보이기 때문이고, 그 사실을 라벨과 툴팁에 그대로 적는다.
+    ["chlose",'<span style="color:var(--hot)">✕</span> 샹들리에 이탈',"volatility",false,"샹들리에이탈",null,"ch"],
+    ["chnear",'<span style="color:var(--warn,#c90)">◇</span> 샹들리에 근접',"volatility",false,"샹들리에근접",null,"ch"],
     ["oh","과매수","overheat",false,"과매수",null,"s2"],["os","과매도","overheat",true,"과매도",null,"s2"],
     ["dip","눌림목","trend",false,"눌림목",null,"s2"],["brk","52주 돌파","momentum",false,"52주돌파",null,"s1"],
     ["squeeze","과밀숏","positioning",false,"과밀숏",null,"s3"],
@@ -715,6 +727,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SHOWN=PRESETS;  // 데이터로딩 후 빈 프리셋 제거
   // 시그널 칩 호버 설명(툴팁)
   var TIPS={
+    // 🚨 매매 신호가 아니다. signal_lab 실측 수치를 그대로 적는다 — 화면이 성적을 숨기면
+    //   독자는 다른 칩과 같은 급으로 읽는다.
+    chlose:"종가가 추격 손절선(최근 22일 최고가 − ATR(22)×3) 아래다. 랩 실측: 이탈 42,907건의 20일 초과수익 +0.035%p(t 0.95, 임계 3.18) — 귀무와 구별 안 됨. 매도 근거가 아니라 보유 위험 상태 표시다.",
+    chnear:"종가가 추격 손절선 위 3% 안이다. 같은 규칙의 경계 구간이며 역시 랩 판정은 '구별 불가'다.",
     qval:"선행 PER 하위권 + ROE 상위권 + 부채 적정 — '싸면서 잘 버는' 종목. 미검증 스크리닝",
     growth:"매출성장·이익전망 상위 + 이익률 평균 이상 — 성장하며 돈도 버는 종목. 미검증 스크리닝",
     income:"배당수익률 상위 + 부채·이익률이 배당을 감당 — 배당 인컴. 미검증 스크리닝",
@@ -1375,7 +1391,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       el('asof').textContent = '기준일 ' + (d.as_of||'—') + ' (전 지표 동일, yfinance 최신 거래일)';
     }
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
-    var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
+    var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall'),pfch=el('presetsch');SHOWN=[];PRESETS.forEach(function(p){
       var cnt=null,sk=swKeys(p[0]);
       if(p[6]==='a')cnt=d.stocks.length;   // 전체 — 필터를 걸지 않은 커버 종목 전부
       if(p[6]==='f')cnt=screenRows(p[0]).length;   // 펀더멘털 스크리닝 — 자격 통과 종목 수
@@ -1384,10 +1400,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      ({a:pfa,f:pf3,s1:pf2,s2:pf2b,s3:pf2c}[p[6]]||pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
+      ({a:pfa,f:pf3,s1:pf2,s2:pf2b,s3:pf2c,ch:pfch}[p[6]]||pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
     });
     // 데이터가 없어 칩이 전부 사라진 축은 라벨만 남아 빈 줄이 된다 — 줄째 감춘다
-    [['presets2'],['presets2b'],['presets2c'],['presets3']].forEach(function(x){
+    [['presets2'],['presets2b'],['presets2c'],['presets3'],['presetsch']].forEach(function(x){
       var c=el(x[0]); if(c&&!c.querySelector('.fchip'))c.parentNode.hidden=true;});
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
     // 딥링크: 홈 추천 종목 클릭 → #t=티커&p=탭 으로 진입, 해당 탭·종목 자동 선택
