@@ -1357,7 +1357,12 @@
         "Benzinga/Investing.com, \"Short Sellers Run Scared As Meme Stocks Roar\" — https://uk.investing.com/news/stock-market-news/short-sellers-run-scared-as-meme-stocks-roar-why-high-short-interest-stocks-keep-ripping-3495520"
       ],
       "id": "E14",
-      "recent_at": "2026-08-02"
+      "recent_at": "2026-08-02",
+      "lab": {
+        "v": "측정 불가",
+        "t": "공매도 잔량 — 계열이 아니라 스냅샷",
+        "why": "필요한 것은 시계열인데 저장소에는 한 장뿐이다(직접 확인 2026-08-04): dtc·sipct 는 516/518종에 있으나 stocks.json 의 sipct 정의가 as_of 2026-07-15 하나다. 시계열이 아니면 백테스트가 성립하지 않는다. refresh_stocks.py:834 가 FINRA 에 settlementDate 동등 필터로 질의하므로 과거 정산일도 같은 형태로 요청 가능해 보이지만, 보관 기간·호출 제한은 확인하지 않았다."
+      }
     },
     {
       "cat": "E",
@@ -1650,7 +1655,12 @@
         "Commitments of Traders — 공식 데이터 (CFTC) — https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm",
         "Commodity Futures Positioning: Gold, Silver, Copper, WTI Crude — COT Report (StoneX Market Intelligence, 2026) — https://www.stonex.com/en/market-intelligence/commodity-futures-positioning-gold-silver-copper-wti-crude-cot-report/",
         "Commodity Futures Positioning: Silver, WTI Crude Oil — COT report (StoneX, 2026-03-03) — https://www.stonex.com/en/market-intelligence/commodity-futures-positioning-silver-wti-crude-oil-cot-report-3-march-2026"
-      ]
+      ],
+      "lab": {
+        "v": "측정 불가",
+        "t": "원자재 헤징압력(COT) — 원자재 계약이 없다",
+        "why": "data/cot.json 의 contracts 가 spx·ndx·vix 셋뿐이고 원자재 계약은 0개다(직접 확인 2026-08-04). 게다가 이 저장소의 실물 자산 가격은 GLD·SLV·DBC·USO·UNG 다섯이고 DBC 는 바스켓이라 단일 원자재는 넷이다 — COT 를 채워도 가격 쪽이 카드가 요구하는 폭에 못 미친다."
+      }
     },
     {
       "id": "E25",
@@ -1704,7 +1714,12 @@
         "REITs and Interest Rates (Nareit) — https://www.reit.com/investing/reits-and-interest-rates",
         "2024 REIT Market Review and Performance Drivers for 2025 (ICR, 2025) — https://icrinc.com/news-resources/reit-market-review-performance-drivers-2025/",
         "2026 Mid-Year Update: REITs Rebound, Poised for Future Gains and Growth (Nareit, 2026) — https://www.reit.com/news/blog/market-commentary/2026-mid-year-update-reits-rebound-poised-future-gains-and-growth"
-      ]
+      ],
+      "lab": {
+        "v": "측정 불가",
+        "t": "리츠 산업내 모멘텀 — 후보 29종 < 문턱 30",
+        "why": "산업그룹 Equity Real Estate Investment Trusts (REITs) 에 29종이 있다(직접 확인 2026-08-04). 후보 문턱(XSEC_MIN_POOL 30)에 한 종 모자라 전 구간 무보유가 된다. 문턱을 낮추면 그 예외가 다른 규칙에도 열리므로 이 카드 하나를 위해 바꾸지 않는다."
+      }
     },
     {
       "id": "E27",
@@ -1728,7 +1743,12 @@
         "How to Use ETF Flows to Predict Subsequent Daily ETF Performance (Quantpedia) — https://quantpedia.com/how-to-use-etf-flows-to-predict-subsequent-daily-etf-performance/",
         "2025 ETF & ETP Market Trends: Flow and Tell year in review (iShares/BlackRock, 2026) — https://www.ishares.com/us/insights/2025-etf-market-trends-record-flows",
         "ETF Industry Sets Annual Inflow Record at $2.37T (ETF Trends, 2026) — https://www.etftrends.com/etf-industry-sets-annual-inflow-record-2-37t/"
-      ]
+      ],
+      "lab": {
+        "v": "측정 불가",
+        "t": "ETF 자금흐름 역발상 — 좌수·AUM 이 없다",
+        "why": "자금흐름을 만들려면 발행좌수나 순자산이 필요한데 data/assets.json 에 그 항목이 0건이다(키 12개 전수 확인 2026-08-04: as_of·dates·div·limits·macro·macro_meta·meta·n_days·note·open·px·start). 가격만으로는 유입·유출을 만들 수 없고, 수집기도 받지 않는다."
+      }
     },
     {
       "id": "E28",
@@ -2243,7 +2263,12 @@
         "ESG Outcasts: A Study of the ESG Performance of Sin Stocks (Sustainability 13(17):9556, 2021) — https://www.mdpi.com/2071-1050/13/17/9556",
         "Shunned Stocks and Market States (Han, Li & Onishchenko) — https://hull-repository.worktribe.com/OutputFile/3904797",
         "Does Divesting From 'Sin Stocks' Really Hurt Targeted Companies? (Columbia Business School) — https://business.columbia.edu/leading-through-crisis/columbia-business/does-divesting-sin-stocks-really-hurt-targeted-companies"
-      ]
+      ],
+      "lab": {
+        "v": "측정 불가",
+        "t": "죄악주 프리미엄 — 유니버스에 8종뿐",
+        "why": "GICS 서브산업으로 직접 셌다(2026-08-04): 담배 2 · 카지노·게이밍 3 · 증류주 2 · 맥주 1 = 8종. 이 랩의 바스켓은 상위 10종이고 후보 문턱은 30종이라, 8종에서는 순위가 아무 일도 하지 않는다('선택'이 아니라 '있는 것 전부'가 된다). 방위산업까지 넣어도 21종으로 문턱에 못 미친다."
+      }
     },
     {
       "id": "E40",

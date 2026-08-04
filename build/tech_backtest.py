@@ -2715,6 +2715,64 @@ def run():
             prev = d
         return xs, ys
 
+    def _incr_multi(r, others):
+        """후보를 이웃 **여럿에 동시에** 회귀 — 절편의 t 를 돌려준다.
+
+        _incr(이웃 하나)로는 붐비는 축을 못 걷는다. 이웃이 여럿이면 하나만 빼도 남는 것이
+        있어 보이기 때문이다. 실측은 위 호출부 주석에 있다.
+        🚨 날짜로 맞춘다. 규칙마다 구간이 다르므로(재기준·커버리지 게이트) **전원의 공통
+          날짜**에서만 회귀한다 — 길이로 자르면 서로 다른 시점을 겹쳐 놓게 된다.
+        """
+        def ser(x):
+            d, nv, bv = x.get("dates") or [], x.get("nav") or [], x.get("bnav") or []
+            if not (len(d) == len(nv) == len(bv)):
+                return {}
+            return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
+        maps = [ser(r)] + [ser(o) for o in others]
+        if not all(maps):
+            return None
+        ds = sorted(set.intersection(*[set(m) for m in maps]))
+        cols, prev = [[] for _ in maps], None
+        for d in ds:
+            if prev is not None and all((m[prev][0] and m[prev][1]) for m in maps):
+                for k, m in enumerate(maps):
+                    a1, b1 = m[d]; a0, b0 = m[prev]
+                    cols[k].append((a1 / a0 - 1) - (b1 / b0 - 1))
+            prev = d
+        y, X = cols[0], cols[1:]
+        n, k = len(y), len(X) + 1
+        if n < 60 + k:
+            return None
+        M = [[1.0] + [X[j][i] for j in range(len(X))] for i in range(n)]
+        XtX = [[sum(M[i][a] * M[i][b] for i in range(n)) for b in range(k)] for a in range(k)]
+        Xty = [sum(M[i][a] * y[i] for i in range(n)) for a in range(k)]
+
+        def solve(A, rhs):                     # 가우스-조던(작은 k 라 충분하다)
+            G = [A[i][:] + [rhs[i]] for i in range(k)]
+            for c in range(k):
+                p = max(range(c, k), key=lambda z: abs(G[z][c]))
+                if abs(G[p][c]) < 1e-14:
+                    return None
+                G[c], G[p] = G[p], G[c]
+                pv = G[c][c]
+                G[c] = [v / pv for v in G[c]]
+                for rr in range(k):
+                    if rr != c and G[rr][c]:
+                        f = G[rr][c]
+                        G[rr] = [G[rr][j] - f * G[c][j] for j in range(k + 1)]
+            return [G[i][k] for i in range(k)]
+        beta = solve(XtX, Xty)
+        if beta is None:
+            return None
+        res = [y[i] - sum(beta[a] * M[i][a] for a in range(k)) for i in range(n)]
+        s2 = sum(x * x for x in res) / (n - k)
+        e0 = solve(XtX, [1.0] + [0.0] * (k - 1))   # (X'X)^-1 의 첫 열
+        if e0 is None or s2 <= 0 or e0[0] <= 0:
+            return None
+        se = math.sqrt(s2 * e0[0])
+        return {"alpha": round(beta[0] * (252 / 5) * 100, 2),
+                "t": round(beta[0] / se, 2) if se else None, "n": n}
+
     def _incr(a, b):
         """a(후보 초과수익)를 b(기존 규칙 초과수익)에 회귀 — 절편이 증분 알파다.
 
@@ -2825,6 +2883,18 @@ def run():
         if inc:
             r["incr"] = {"vs": best[1], "corr": round(best[0], 3),
                          "alpha": inc["alpha"], "t": inc["t"], "beta": inc["beta"]}
+        # 🚨 '가장 닮은 이웃 하나'만 통제하면 문턱이 너무 무르다. 실측(2026-08-04, 게시 56종):
+        #   이웃 1개 → 5개로 바꾸면 증분 t 가 중앙 0.35 내리고 최악은 2.72 내린다.
+        #   **증분 t ≥ 2 를 넘던 13종 중 5종이 5개 통제에서 떨어진다**
+        #   (x-season 2.54→0.87 · x-payout 2.35→0.76 · x-residmom 2.78→1.58 · x-fcfy 3.71→2.10).
+        #   붐비는 축은 이웃이 여럿이라 하나만 빼서는 남는 것이 있어 보인다.
+        #   → 상위 5 이웃 **동시** 통제값을 함께 싣는다. 사전등록 게이트는 이쪽을 쓸 것.
+        nb = sorted(((abs(_corr(*_paired_excess(r, r2)) or 0), r2["name"], r2)
+                     for r2 in _xs if r2 is not r), key=lambda z: -z[0])[:5]
+        if len(nb) == 5:
+            m5 = _incr_multi(r, [z[2] for z in nb])
+            if m5:
+                r["incr5"] = dict(m5, vs=[z[1] for z in nb])
     # 🚨 '증분 알파 없음'을 그대로 세면 안 된다 — 두 가지가 섞인다.
     #   (a) 이웃이 설명하고 남는 게 없다(진짜 중복)  (b) 애초에 단독으로도 알파가 없다.
     #   이 표는 통과 후보가 0종이라 대부분이 (b)다. 정보가 있는 것은 **단독으로는 세 보이는데

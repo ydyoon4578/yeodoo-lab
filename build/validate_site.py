@@ -2098,9 +2098,11 @@ try:
             "dual_pairs": sum(1 for _v in _cnt.values() if _v > 1),
             "xsec_rules": len(_xs),
             "narrow_rules": sum(1 for _r in _xs if _r["pool"]["narrow"]),
+            "incr5_rules": sum(1 for _r in _ts.get("strategies", []) if _r.get("incr5")),
         }
         # 허용오차 — 자연스러운 움직임은 넘기고, 문서가 낡은 수준이면 잡는다.
-        _TOL = {"gp_cov_pct": 3.0, "dual_pairs": 0, "xsec_rules": 3, "narrow_rules": 3}
+        _TOL = {"gp_cov_pct": 3.0, "dual_pairs": 0, "xsec_rules": 3, "narrow_rules": 3,
+                "incr5_rules": 3}
         _drift = []
         for _k, _v in _got.items():
             if _k not in _exp:
