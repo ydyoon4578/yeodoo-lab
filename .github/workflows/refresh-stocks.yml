@@ -80,7 +80,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
-            data/stocks.json data/home_reco.json data/sd data/target_history.json data/fund_history.json \
+            data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
