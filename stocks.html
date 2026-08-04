@@ -1357,7 +1357,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
     }
     el('statline').innerHTML='<span class="stat"><b>'+d.n_stocks+'</b> 종목</span><span class="stat">S&amp;P 500 + NASDAQ 100</span><span class="stat">테크니컬 <b>'+Object.keys(F).length+'</b>개</span><span class="stat">기준일 <b>'+(d.as_of||'—')+'</b></span>'+staleStat(d.as_of);
-    el('asof').textContent='기준일 '+(d.as_of||'—')+' (전 지표 동일, yfinance 최신 거래일)';
+    // 🚨 2026-08-05 — 여기가 '(전 지표 동일, yfinance 최신 거래일)' 이라고만 적고 있었다.
+    //   그런데 그날 종가가 일봉 결측으로 60분봉에서 되살린 값일 수 있고, 그 사실은
+    //   stocks.json 의 px_recon 에 적혀 있는데 이 화면이 한 번도 안 읽었다 — 복구값을
+    //   원본 일봉 종가라고 말하는 상태였다(sources.html 만 배지를 달고 있었다).
+    //   복구일에는 그 문구를 쓰지 않고, 무엇을 어떻게 되살렸는지 배지로 말한다.
+    var _pr = d.px_recon;
+    if (_pr && _pr.d === d.as_of) {
+      el('asof').textContent = '기준일 ' + (d.as_of||'—') + ' (전 지표 동일)';
+      var _b = document.createElement('span');
+      _b.className = 'warn';
+      _b.style.marginLeft = '6px';
+      _b.textContent = '⚑ ' + _pr.d + ' 복구 ' + _pr.n + '종';
+      _b.title = _pr.how || '';            // 방법은 정본 문구를 그대로 쓴다(화면에 다시 적지 않는다)
+      el('asof').appendChild(_b);
+    } else {
+      el('asof').textContent = '기준일 ' + (d.as_of||'—') + ' (전 지표 동일, yfinance 최신 거래일)';
+    }
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
     var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
       var cnt=null,sk=swKeys(p[0]);

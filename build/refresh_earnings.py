@@ -291,6 +291,13 @@ def main() -> int:
     for z in up:
         if z["t"] not in nxt:
             nxt[z["t"]] = z["dt"]
+    # 교차검증 요약 — limits 문장이 이 값을 그대로 쓴다(문장에 숫자를 박지 않는다).
+    xchk = {"source": "Nasdaq calendar/earnings",
+            "window": {"from": str(today - dt.timedelta(days=XC_BACK)),
+                       "to": str(today + dt.timedelta(days=XC_AHEAD))},
+            "ok": bool(nas_days), "days": nas_days, "fail_days": nas_fails,
+            "agree": n_both, "conflict": n_moved, "hour_filled": n_hour,
+            "added": n_only}
     doc = {
         "note": "실적 발표 일정. 유니버스(data/stocks.json) 종목만 싣는다. "
                 "컨센서스 EPS는 발표 전 추정치이며 사후에 바뀔 수 있다.",
@@ -299,12 +306,7 @@ def main() -> int:
         "n_upcoming": len(up), "n_recent": len(recent), "n_history": len(hist),
         # 행마다 src 가 붙는다 — both(두 소스 일치) · conflict(불일치, 늦은 쪽 채택하고 alt 에
         # 밀어낸 날짜) · finnhub/nasdaq(한쪽에만 있어 교차검증 안 됨). 창 밖은 src 가 없다.
-        "xcheck": {"source": "Nasdaq calendar/earnings", "window": {
-                       "from": str(today - dt.timedelta(days=XC_BACK)),
-                       "to": str(today + dt.timedelta(days=XC_AHEAD))},
-                   "ok": bool(nas_days), "days": nas_days, "fail_days": nas_fails,
-                   "agree": n_both, "conflict": n_moved, "hour_filled": n_hour,
-                   "added": n_only},
+        "xcheck": xchk,
         "limits": [
             "한 번의 응답이 1,500건에서 잘린다(실측). 넓은 구간을 한 번에 부르면 뒤쪽이 통째로 "
             "빠지는데 화면에는 '발표가 없는 날'처럼 보이므로, 7일씩 끊어 받아 합친다. "
@@ -313,11 +315,22 @@ def main() -> int:
             "그래서 지나간 건은 이 스크립트가 직접 누적한다(data/earnings_history.json) — "
             "그 파일이 두꺼워져야 서프라이즈 검증(SUE·PEAD)이 언젠가 가능해진다.",
             "발표 일정은 회사가 바꾼다. 여기 날짜는 조회 시점의 예정일이며 확정이 아니다.",
-            "Finnhub은 회사가 날짜를 확정하지 않은 종목에 추정 날짜를 넣어 주면서 확정된 것과 "
-            "구분해 주지 않는다. 그 추정이 실제보다 이르면 발표가 없었는데도 지나간 칸에 남는다 "
-            "— 실측(2026-07-28) 창 안 417종목 중 26종목이 어긋났고 그중 23종목이 이른 쪽이었다. "
-            "그래서 Nasdaq 캘린더로 교차검증하고 어긋나면 늦은 쪽에 놓는다(src=conflict). "
-            "두 소스가 함께 틀릴 수 있다는 점은 그대로 남는다 — 확정 여부를 주는 소스가 아니다.",
+            # 🚨 2026-08-05 — 이 문장에 2026-07-28 자 수치가 박혀 있었고(창 417종·26종 어긋남),
+            #   같은 파일 머리말의 같은 날짜 실측치(451종·55종)와도, 그날의 실제 xcheck 와도
+            #   달랐다. 이 랩이 '한쪽만 믿으면 안 되는 이유'로 내세우는 수치가 정작 낡아 있었다.
+            #   → **그 실행의 xcheck 에서 만든다.** 문장에 숫자를 박지 않는다.
+            ("Finnhub은 회사가 날짜를 확정하지 않은 종목에 추정 날짜를 넣어 주면서 확정된 것과 "
+             "구분해 주지 않는다. 그 추정이 실제보다 이르면 발표가 없었는데도 지나간 칸에 남는다. "
+             "그래서 Nasdaq 캘린더로 교차검증한다 — 이번 실행은 %s. "
+             "어긋나면 늦은 쪽에 놓는다(src=conflict). 두 소스가 함께 틀릴 수 있다는 점은 "
+             "그대로 남는다 — 확정 여부를 주는 소스가 아니다."
+             % (("%s~%s 창에서 일치 %d · 어긋남 %d · 시각보정 %d · 추가 %d(조회 실패일 %d/%d)"
+                 % (((xchk.get("window") or {}).get("from") or "?"),
+                    ((xchk.get("window") or {}).get("to") or "?"),
+                    xchk.get("agree") or 0, xchk.get("conflict") or 0,
+                    xchk.get("hour_filled") or 0, xchk.get("added") or 0,
+                    xchk.get("fail_days") or 0, xchk.get("days") or 0))
+                if xchk else "교차검증을 못 돌렸다(그 사실 자체가 한계다)")),
             "컨센서스 EPS는 조정 EPS 기준이 많고 회사·집계기관마다 정의가 다르다 — "
             "GAAP 순이익과 직접 비교하지 말 것.",
         ],
