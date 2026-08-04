@@ -138,6 +138,53 @@ def main() -> int:
         else:
             print("  ❌ %s 재시도 2회 실패" % t)
     opens = df["Open"]
+
+    # ── 종가 결측일 복구(60분봉) ──────────────────────────────────────────────
+    # 야후는 일봉 집계만 깨지고 분봉은 멀쩡할 때가 있다(실측 2026-08-03: 전 종목 일봉의
+    # 종가·고가·저가가 NaN 이고 시가·거래량만 남았는데 60분봉은 온전했다).
+    # 이 파일은 그 경우 안전한 쪽으로 동작한다 — 아래 격자가 'SPY 종가 있는 날'만 쓰므로 그날이
+    # 통째로 빠진다. 문제는 **이미 발표한 날이 사라진다**는 것이다. 08-03 을 담아 배포한 뒤
+    # 다음 실행이 같은 결측을 만나면 패널 한가운데 구멍이 생긴다(이 잡은 전 구간을 매번 다시 받는다).
+    # 되살릴 수 있으면 되살린다 — build/refresh_stocks.py 의 _recover_intraday 와 같은 방법이고
+    # 검증 기록도 그쪽에 있다(깨지기 전 저장본과 14종 대조, 최대 괴리 0.0188%).
+    # ⚠ 분봉은 최근 구간만 제공되므로 최근 7행만 본다. 정상일에는 _miss 가 비어 비용이 0이다.
+    _miss = [d for d in close.index[-7:] if pd.isna(close["SPY"].get(d))]
+    if _miss:
+        print("  [종가결측] 일봉 종가 없는 최근 거래일 %d개 — 60분봉으로 복구 시도: %s"
+              % (len(_miss), ", ".join(str(pd.Timestamp(d).date()) for d in _miss)))
+        try:
+            _h = yf.download(list(TICK), period="7d", interval="60m", auto_adjust=True,
+                             progress=False, threads=True, group_by="ticker")
+        except Exception as _e:
+            _h = None
+            print("  [종가결측] 분봉 수집 실패 — 그날은 격자에서 빠진다:", str(_e)[:70])
+        if _h is not None and len(_h):
+            _n = 0
+            for _d in _miss:
+                _dd = pd.Timestamp(_d).date()
+                for _t in TICK:
+                    try:
+                        _s = _h[_t] if getattr(_h.columns, "nlevels", 1) > 1 else _h
+                        _sub = _s[[x.date() == _dd for x in _s.index]].dropna(subset=["Close"])
+                        if len(_sub) < 2:
+                            continue
+                        # 세션이 끝났다는 증거 — 12:30 ET 이후(13:00 조기폐장은 통과, 장중은 거른다).
+                        _lt = _sub.index[-1]
+                        if _lt.hour * 60 + _lt.minute < 12 * 60 + 30:
+                            continue
+                        if _t in close.columns and pd.isna(close.loc[_d, _t]):
+                            close.loc[_d, _t] = float(_sub["Close"].iloc[-1]); _n += 1
+                        if _t in opens.columns and pd.isna(opens.loc[_d, _t]):
+                            opens.loc[_d, _t] = float(_sub["Open"].iloc[0])
+                    except Exception:
+                        continue
+            print("  [종가결측] 60분봉 복구 %d칸" % _n)
+            for _d in _miss:
+                # SPY 를 못 되살리면 그날은 어차피 격자에 못 든다 — 조용히 넘어가지 않고 적는다.
+                if pd.isna(close["SPY"].get(_d)):
+                    print("  [종가결측] %s 는 SPY 복구 실패 — 그날을 버린다"
+                          % str(pd.Timestamp(_d).date()))
+
     # ⚠ 격자는 **미국 거래일(SPY가 거래된 날)** 로 맞춘다. BTC-USD가 주말에도 거래되는 탓에
     #   그냥 두면 비거래일 1,350행이 섞여 들어와, 주식 규칙의 '20일'이 실제로는 14영업일이 된다.
     if "SPY" not in close.columns:

@@ -581,7 +581,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var mj=sc.jobs&&sc.jobs['refresh-metrics.yml'], me=el('up-metrics');
     if(mj&&mj.label&&me)me.textContent=mj.label.join(' + ');
   });
-  j('data/home_reco.json').then(function(h){if(h){put(['d-stk'],h.as_of);putFresh('src-stk',h.as_of,2);}});
+  // 그날 종가를 원천의 일봉이 아니라 분봉 집계로 되살렸으면 가격 행에 그대로 밝힌다.
+  // 값이 있는데 화면이 침묵하면 '복구한 종가를 복구했다고 말하지 않는' 상태가 된다.
+  // ⚠ 문구는 asof.json 의 how 를 그대로 쓴다 — 여기에 다시 적으면 방법이 바뀔 때 화면만 옛말을 한다.
+  // ⚠ 기준일은 home_reco, 복구 여부는 asof 정본이라 fetch 가 둘이고 도착 순서를 보장할 수 없다.
+  //   putFresh 는 innerHTML 을 통째로 갈아끼우므로 asof 가 먼저 오면 배지가 지워진다.
+  //   그래서 양쪽에서 이 함수를 부르고, 중복은 클래스로 막는다(어느 쪽이 마지막이든 남는다).
+  var _PR = null;
+  function paintRecon(){
+    var pe = el('src-stk');
+    if(!_PR || !_PR.d || !pe || pe.querySelector('.recon')) return;
+    var s = document.createElement('span');
+    s.className = 'stale recon';
+    s.style.borderColor = 'var(--line)'; s.style.color = 'var(--muted)';
+    s.textContent = '⚑ ' + _PR.d + ' 복구 ' + _PR.n + '종';
+    s.title = _PR.d + ' 종가는 ' + (_PR.how || '원천 일봉 결측으로 대체 집계') +
+              '. 공식 종가와 소수점 끝자리가 다를 수 있습니다.';
+    pe.appendChild(document.createTextNode(' '));
+    pe.appendChild(s);
+  }
+  j('data/home_reco.json').then(function(h){if(h){put(['d-stk'],h.as_of);putFresh('src-stk',h.as_of,2);}paintRecon();});
   j('data/regime.json').then(function(r){if(r){put(['d-rg'],r.as_of);putFresh('src-rg',r.as_of,2);}});
   j('data/sentiment.json').then(function(r){if(r)putFresh('src-snt',r.as_of,2);});
   j('data/strategy_holdings.json').then(function(hd){
@@ -604,6 +623,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var w=want[a.axes[i].key];
       if(w)putFresh(w[0],a.axes[i].as_of,w[1]);
     }
+    _PR = a.px_recon; paintRecon();
   });
   j('data/rotation_pool.json').then(function(rp){if(rp){put(['d-rot'],rp.generated);putFresh('src-rot',rp.generated,2);}});
   j('data/strategy_backtests.json').then(function(bt){

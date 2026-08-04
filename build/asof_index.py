@@ -293,6 +293,12 @@ def main() -> int:
         "primary": primary,
         "unified": len(uni) == 1,
         "axes": axes,
+        # 그날 종가를 원천의 일봉이 아니라 분봉 집계로 되살렸으면 그 사실을 여기로 옮긴다.
+        # sources.html 은 날짜 하나 때문에 stocks.json(971KB)을 받지 않는 규약이라, 2KB 인
+        # 이 정본이 나르는 것이 맞다. 정상일에는 stocks.json 의 px_recon 이 null 이라 이 키도 null 이다.
+        # ⚠ 값이 있는데 화면이 안 읽으면 '복구한 종가를 복구했다고 말하지 않는' 상태가 된다 —
+        #   이 랩이 가장 경계하는 실패다. sources.html 의 가격 행이 이 키를 읽는다.
+        "px_recon": stocks.get("px_recon"),
         # 화면에 그대로 쓰는 한 줄 — '통일했다'는 주장을 데이터로만 하게 한다
         "summary": ("전 축 %s 통일" % primary) if len(uni) == 1 else
                    ("대표 %s · 축 %d개(%s)" % (primary, len(axes),
