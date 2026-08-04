@@ -444,7 +444,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <thead><tr><th scope="col">데이터</th><th scope="col">출처</th><th scope="col">기준일</th><th scope="col">갱신</th></tr></thead>
       <tbody>
         <tr><th scope="row"><a href="stocks.html">종목 신호</a></th>
-          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 DB(public.index_constituents) 스냅샷</td>
+          <td><span class="freetag">무료</span>yfinance · FINRA · 구성종목 리스트는 DB(public.index_constituents) 스냅샷.
+            갱신 시각이 둘인 것은 <b>뒤가 백업 슬롯</b>이기 때문이다 — 앞 슬롯이 유실된 날에만 실제로 수집한다(스케줄 크론 드롭 대비)</td>
           <td class="dt" id="src-stk">—</td><td id="up-src-stk">—</td></tr>
         <tr><th scope="row"><a href="regime.html">시장 국면</a></th>
           <td><span class="freetag">무료</span>FRED · yfinance</td>
