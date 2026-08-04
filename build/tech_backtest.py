@@ -2284,6 +2284,16 @@ def build_strats():
         "x-roe": "열위 — Δ샤프 −0.140",
         "x-npm": "열위 — Δ샤프 −0.141",
         "t-sentgate": "열위 — Δ샤프 −0.169",
+        # ③ 운영 비용 — 이 사유는 위 둘과 성격이 다르다(2026-08-04 사용자 결정).
+        #   성적을 보고 뺀 것이 아니라 **계산 시간**을 보고 뺐다. x-peerlag 은 이 랩에서
+        #   유일하게 종목쌍(상관행렬)을 보는 규칙이고, 무의존 규약(refresh-tech.yml 에
+        #   pip install 이 없다) 때문에 131,328쌍 × 199개 월말을 순수 파이썬으로 돈다 —
+        #   실측으로 전체 실행이 1분 40초 → 7분 16초가 됐다.
+        #   ⚠ 그래도 임계는 내려간다(66 → 65종). 성과 기반이 아니어도 남은 규칙에 유리한
+        #     방향인 것은 같으므로, 그 크기를 재서 아래 출력에 남긴다.
+        #   ⚠ 정의(등록 코드·사전 패스)는 지우지 않는다. 되살리려면 이 줄만 빼면 된다.
+        "x-peerlag": "운영 비용 — 상관행렬로 전체 실행이 1m40s → 7m16s (성과 사유 아님. "
+                     "단독 t 1.54 · incr5 0.24)",
     }
     # ⚠ 뺀 규칙의 기록은 들고 나간다. 셋(x-mom-trend·x-minvar·x-riskbudget)이 아카이브 항목을
     #   '이 규칙으로 재현했다'고 가리키는 arch 태그를 달고 있어, 그냥 지우면 그 아카이브 항목이
@@ -2294,8 +2304,9 @@ def build_strats():
     _before = len(STRATS)
     STRATS[:] = [s for s in STRATS if s["sid"] not in RETIRED]
     if _before != len(STRATS):
-        print("  목록 제외 %d종(중복 2 · 열위 9) — %d → %d종"
-              % (_before - len(STRATS), _before, len(STRATS)))
+        print("  목록 제외 %d종(중복 2 · 열위 9 · 운영비용 1) — %d → %d종  ⚠ 임계 %.2f → %.2f"
+              % (_before - len(STRATS), _before, len(STRATS),
+                 z_crit(_before), z_crit(len(STRATS))))
 
 
 # ── 실행 ────────────────────────────────────────────────────────────────
