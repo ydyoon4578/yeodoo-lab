@@ -138,6 +138,8 @@ def indicators(o, allow_partial=False):
         "macdh": (_f(mh) if n_hist >= 40 else np.nan), "aroon": (_f(au)-_f(ad) if n_hist >= 30 else np.nan),
         "roc1m": rr(21)*100, "roc3m": rr(63)*100, "roc6m": rr(126)*100,
         "atrp": _f(atr(h, l, c)/c.iloc[-1]*100),
+        # 샹들리에 추격 손절 — 손절선(chst)·이격%(chgap)·상태(chon)
+        **dict(zip(("chst", "chgap", "chon"), chandelier(h, l, c))),
         "vol": (_f(ret.tail(252).std()*np.sqrt(252)*100) if n_hist >= 60 else np.nan),
         "bbw": _f(bw),
         "rvol": (_f(v.tail(5).mean()/v.tail(60).mean()) if n_hist >= 60 and float(v.tail(60).mean() or 0) > 0 else np.nan),
@@ -233,8 +235,51 @@ def zigzag(a, rsi_a, theta):
     return piv, dvg
 
 
+def chandelier(h, l, c, n=22, mult=3.0):
+    """샹들리에 추격 손절선(Chuck LeBeau) — 최근 n일 최고가 − ATR(n) × mult.
+
+    🚨 이것이 '샹들리에'의 원전 정의다. 랩의 시장 타이밍 규칙 t-chand 는 같은 이름을 쓰지만
+      **고가·저가가 배선되기 전에 만들어져** 수익률 변동성 대용치(고점 × (1 − 3σ√20))를 쓴다.
+      2026-08-04 에 고가·저가를 이었으므로 종목 단위에서는 원전대로 잴 수 있다.
+      ⚠ 두 정의를 같은 이름으로 부르지 않는다 — 화면은 '샹들리에(ATR)'라고 적는다.
+
+    돌려주는 것 — (손절선, 손절선 대비 이격 %, 상태 1/0).
+      상태는 진입 뒤 종가가 손절선 아래로 내려가면 0, 50일선을 되찾으면 1로 되돌아간다.
+      (되돌아오는 조건은 t-chand 와 같게 뒀다 — 손절만 있고 재진입이 없으면 한 번 털린
+       종목이 영영 안 돌아와, '지금 어느 쪽인가'를 못 말한다.)
+    """
+    if len(c) < n + 2:
+        return None, None, None
+    # atr() 도 계열을 돌려준다(refresh_stocks 의 지표 함수 규약) — 마지막 값을 집는다.
+    _a = atr(h, l, c, n)
+    try:
+        _atr = float(_a.iloc[-1]) if hasattr(_a, "iloc") else float(_a)
+    except Exception:
+        return None, None, None
+    if _atr != _atr or _atr <= 0:
+        return None, None, None
+    hh = float(h.tail(n).max())
+    stop = hh - _atr * mult
+    px = float(c.iloc[-1])
+    if stop <= 0 or px <= 0:
+        return None, None, None
+    gap = (px / stop - 1) * 100
+    # sma() 는 롤링 **계열**을 돌려준다 — 마지막 값을 집는다(계열을 그대로 float 하면 죽는다).
+    s50 = sma(c, 50).iloc[-1] if len(c) >= 50 else float("nan")
+    st = 1 if px > stop else (1 if (s50 == s50 and px > float(s50)) else 0)
+    return round(stop, 4), round(gap, 2), st
+
+
 def flags(s):
     f = []
+    # 샹들리에 추격 손절 — 이격이 0 아래면 이미 털린 상태, 0~3%면 손절선에 붙어 있다.
+    # ⚠ 상태 표시가 아니라 **매매 신호**다. 성적은 signal_lab(chand-lose·chand-back)이 낸다.
+    _cg = s.get("chgap")
+    if _cg is not None and _cg == _cg:
+        if _cg < 0:
+            f.append("샹들리에이탈")
+        elif _cg <= 3:
+            f.append("샹들리에근접")
     if s.get("rsi", 50) >= 70 or s.get("pctb", .5) >= .95: f.append("과매수")
     if s.get("rsi", 50) <= 30 or s.get("pctb", .5) <= .05: f.append("과매도")
     up = s.get("d50", -1) > 0 and s.get("d200", -1) > 0 and s.get("adx", 0) >= 20
