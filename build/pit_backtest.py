@@ -63,7 +63,11 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              "x-dy", "x-fcfy", "x-sue", "x-epsacc",
              "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
              # 2026-07-31 추가 — 전부 흐름 항목이라 ttm2(q, a) 로 읽어야 한다.
-             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout"]
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout",
+             # 2026-08-04 사전등록. 편출 종목 집중도도 같이 모아 뒀다
+             # (build/refresh_custconc.py --pit) — 안 그러면 후보가 생존자로만 좁혀져
+             # 생존편향을 재려는 표가 오히려 그 편향을 갖는다(x-volsurge 를 뺀 것과 같은 사유).
+             "x-custconc"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -601,6 +605,8 @@ def score(S, t, j, C):
                 return None
             g = pr[1] / pr[3] - 1.0
             return -g if abs(g) <= 0.5 else None
+        if sid == "x-custconc":
+            return TB.custconc_asof(t, dt_)           # 소급 레그와 문자 그대로 같다
         if sid == "x-cash":
             ch = TB.asof_fund(f.get("cash"), dt_)
             at = TB.asof_fund(f.get("asset"), dt_)

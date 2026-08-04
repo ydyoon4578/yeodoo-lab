@@ -26,3 +26,6 @@ data/_pit_sh_cache.json
 
 # macOS 파인더가 폴더마다 만드는 메타파일 — 저장소와 무관하다
 .DS_Store
+
+# 고객집중도 수집 중간본(재개용). 원천은 SEC 원문이라 언제든 다시 만들 수 있고 30MB 대다.
+data/_custconc_raw.json
