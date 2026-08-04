@@ -72,9 +72,12 @@ jobs:
       #   생기고, ML 이 오늘 패널이 아니라 어제 패널을 보게 된다. 순서만 바꾸면 셋 다 안 생긴다.
       - name: Fetch asset panel
         run: python build/refresh_assets.py
-      # ⚠ asset_backtest 는 ml_strategies.json 을 읽는다. 1부에서는 **어제 것**을 읽고,
-      #   ML 이 갱신한 뒤 2부에서 다시 돌려 오늘 것으로 맞춘다. 1부만 커밋된 상태도
-      #   그 자체로 정합적이다(그 시점 트리에 있던 ml 파일로 돌린 결과다).
+      # 🚨 2026-08-05 — 종전에는 asset_backtest 가 ml_strategies.json 을 읽어서, ML 워크플로와
+      #   이 잡 사이에 '1부는 어제 것 · 2부는 오늘 것' 이라는 순서 결합이 있었다. ML 랩을
+      #   삭제하면서 그 결합이 사라졌다(build/DATA-FACTS.md 17번). 13F 복제만 남았고
+      #   그것은 여기서 바로 앞에 돌린다 — 0.4초라 별 워크플로로 뗄 이유가 없다.
+      - name: Rebuild 13F conviction clone
+        run: python build/guru_clone.py
       - name: Re-run archived strategies
         run: python build/asset_backtest.py
       # 전 전략 통합 목록 — 원본(tech·asset·archive·deploy)이 바뀌면 같이 다시 굽는다.
@@ -109,7 +112,7 @@ jobs:
       - name: Commit collected & display outputs
         run: |
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·스타일 성과 자동 갱신" \
-            data/assets.json data/asset_strategies.json \
+            data/assets.json data/asset_strategies.json data/guru_clone.json \
             data/strategy_index.json data/strategy_charts.json \
             data/market_board.json data/style_perf.json data/style_trails.json \
             data/home_flow.json data/asof.json

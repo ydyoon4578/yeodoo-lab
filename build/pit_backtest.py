@@ -582,6 +582,10 @@ def main():
 
 
 def score(S, t, j, C):
+    # 🚨 2026-08-05 — 여기 ttm() 을 쓰면 랩 본편(ttm2)과 **다른 규칙**이 된다. 하루 전에
+    #   tech_backtest 만 ttm2(q, a) 로 바꾸고 이 파일을 안 고쳐서 정확히 그 일이 있었다.
+    #   같은 사고가 오늘만 두 번째다(x-52wh 도 tech 에서만 고쳐졌었다). 채점기가 두 벌인 한
+    #   구조적으로 다시 난다 — 아래 갈래를 고칠 때 반드시 tech_backtest 와 나란히 볼 것.
     """tech_backtest 의 횡단면 점수 갈래를 그대로 옮긴 것(가격·거래량 + 펀더멘털).
 
     ⚠ 정의를 여기서 새로 쓰면 안 된다 — tech_backtest.py:1232-1281 과 **같은 산식**이어야
@@ -610,7 +614,7 @@ def score(S, t, j, C):
             fc = TB.ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
             return (fc / mcap) if (fc is not None and mcap) else None
         if sid == "x-payout":
-            dp = TB.ttm(f.get("dps"), dt_)
+            dp = TB.ttm2(f.get("dps"), f.get("dps_a"), dt_)
             bbv = TB.ttm2(f.get("bb"), f.get("bb_a"), dt_)
             if not (mcap and (dp is not None or bbv is not None)):
                 return None
@@ -657,20 +661,20 @@ def score(S, t, j, C):
                 return -ci if abs(ci) <= 3.0 else None
             return None
         if sid == "x-ep":
-            v = TB.ttm(f.get("eps"), dt_)
+            v = TB.ttm2(f.get("eps"), f.get("eps_a"), dt_)
             return (v / p0) if (v is not None and p0 and p0 > 0) else None
         if sid == "x-sp":
-            rv = TB.ttm(f.get("rev"), dt_)
+            rv = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
             return (rv / mcap) if (rv is not None and mcap) else None
         if sid == "x-roe":
-            nn, e = TB.ttm(f.get("ni"), dt_), TB.asof_fund(f.get("eq"), dt_)
+            nn, e = TB.ttm2(f.get("ni"), f.get("ni_a"), dt_), TB.asof_fund(f.get("eq"), dt_)
             return (nn / e) if (nn is not None and e and e > 0) else None
         if sid == "x-npm":
-            nn, rv = TB.ttm(f.get("ni"), dt_), TB.ttm(f.get("rev"), dt_)
+            nn, rv = TB.ttm2(f.get("ni"), f.get("ni_a"), dt_), TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
             return (nn / rv) if (nn is not None and rv and rv > 0) else None
         if sid == "x-rgrow":
-            a1 = TB.ttm(f.get("rev"), dt_)
-            a0 = TB.ttm(f.get("rev"), TB._shift(dt_, 365))
+            a1 = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
+            a0 = TB.ttm2(f.get("rev"), f.get("rev_a"), TB._shift(dt_, 365))
             return (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
         if sid == "x-lowde":
             e = TB.asof_fund(f.get("eq"), dt_)
@@ -680,7 +684,7 @@ def score(S, t, j, C):
                 lb = (at - e) if (at is not None and e is not None) else None
             return -(lb / e) if (lb is not None and e and e > 0) else None
         if sid == "x-dy":
-            dp = TB.ttm(f.get("dps"), dt_)
+            dp = TB.ttm2(f.get("dps"), f.get("dps_a"), dt_)
             return (dp / p0) if (dp is not None and p0 and p0 > 0) else None
         if sid == "x-agrow":
             pr = TB.yoy_pair(f.get("asset"), dt_)
