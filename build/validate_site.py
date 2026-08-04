@@ -1477,9 +1477,12 @@ if skips and os.environ.get("VALIDATE_REQUIRE_PLAINTEXT") == "1":
 if skips:
     print(f"⚠ 잠금 페이지 평문 부재(_build/pages/) — {len(skips)}개 검사 건너뜀(통과가 아니라 미검증이다. 평문 있는 곳에서 검증할 것):")
     for s in sorted(skips): print("  ~", s)
+# ⚠ 여기서 찍는 것은 **이 시점까지** 쌓인 것뿐이다. 아래에서 더 쌓이므로 파일 끝에서 한 번 더 찍는다.
+_skips_shown = set()
 if tool_skips:
     print(f"⚠ 검사 도구 부재 — {len(tool_skips)}개 검사 건너뜀(미검증이다. node 를 설치하면 되살아난다. CI 에서는 이미 오류로 잡는다):")
     for s in sorted(tool_skips): print("  ~", s)
+    _skips_shown = set(tool_skips)
 
 # ── 편향 캐비엇의 기준일이 표와 갈렸는가 ─────────────────────────────────
 # style.html 의 캐비엇은 style_perf.json 의 caveat 을 그대로 찍고, 그 문자열은 build/style_top_pdf.py
@@ -1700,7 +1703,11 @@ try:
     for _fn in sorted(os.listdir(_wf_dir)):
         if not _fn.endswith(".yml"): continue
         _s = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read()
-        if "ci_push.sh" in _s and "validate_site.py" not in _s:
+        # 🚨 2026-08-05 — 종전에는 파일 전문에 substring 검사를 했다. 그래서 주석 한 줄에
+        #   'validate_site.py' 가 있으면 실제 단계가 없어도 통과했다 — refresh-stocks.yml 이
+        #   정확히 그 상태였다. 검사가 막으려던 것을 검사가 통과시켰다. 주석을 걷어낸 뒤 본다.
+        _live = chr(10).join(_ln.split("#", 1)[0] for _ln in _s.split(chr(10)))
+        if "ci_push.sh" in _live and "validate_site.py" not in _live:
             errors.append(f".github/workflows/{_fn}: 데이터를 커밋하는데 validate_site.py 단계가 없음 "
                           f"— 봇 커밋에는 CI 가 안 도므로 이 잡의 산출물은 아무도 검증하지 않는다")
 except Exception as e:
@@ -2163,6 +2170,20 @@ try:
             print("  ~ DATA-FACTS 수치 검사 통과(%d항목 재측정)" % len(_got))
 except Exception as _e:
     tool_skips.append("DATA-FACTS 수치 검사(%s)" % _e)
+
+# 🚨 2026-08-05 — tool_skips 인쇄가 적재 지점보다 **600행 앞**에 있었다. 그래서 배선 검사와
+#   DATA-FACTS 수치 검사가 예외로 죽으면 그 사실이 어디에도 안 찍히고 exit 0 으로 끝났다
+#   (두 검사 다 try/except 로 tool_skips 에 넣기만 한다). 검사가 안 돈 것과 통과한 것이
+#   화면에서 구별되지 않았다 — 이 파일이 막으려는 사고를 이 파일이 저지르고 있었다.
+_late = [x for x in tool_skips if x not in _skips_shown]
+if _late:
+    print("⚠ 검사 건너뜀 %d건(위 목록 뒤에 발생 — 통과가 아니라 **미검증**이다):" % len(_late))
+    for _s in sorted(_late):
+        print("  ~", _s)
+    # 핵심 가드가 죽은 것은 통과로 넘기지 않는다. 도구 부재(node)와 달리 이쪽은 코드 오류다.
+    for _s in _late:
+        if _s.startswith("배선 검사") or _s.startswith("DATA-FACTS"):
+            errors.append("핵심 검사가 예외로 죽었다 — %s. 이 검사는 건너뛰면 안 된다" % _s)
 
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)

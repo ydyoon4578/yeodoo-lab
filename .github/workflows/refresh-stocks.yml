@@ -105,6 +105,12 @@ jobs:
       #   + target_history.json·fund_history.json(누적 이력 — 커밋 안 하면 매 실행 fresh checkout이라 영구 유실)
       #   하나라도 빠지면 해당 화면이 낡은 채 고착된다(home_reco 누락 사고의 교훈).
       #   빠뜨림은 ci_push.sh의 누락 가드가 data/ 전체를 훑어 잡는다.
+      # 🚨 2026-08-05 추가 — 이 잡만 Validate 단계가 없었다. 봇 커밋에는 CI 가 안 돌므로
+      #   이 잡의 산출물(stocks.json·data/sd/ 518종·home_reco 등 랩 입력 전부)은 아무도
+      #   검증하지 않은 채 배포되고 있었다. validate_site 에 그것을 잡는 가드가 있었는데,
+      #   위 주석에 'validate_site.py' 라는 글자가 있어서 substring 검사를 통과했다.
+      - name: Validate
+        run: python build/validate_site.py
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
