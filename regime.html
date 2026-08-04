@@ -232,6 +232,45 @@
   .xaok{margin-top:11px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
   .xamx td.z{color:var(--line);font-weight:400}
 
+  /* ── 시장 포지션(CFTC COT) ──────────────────────────────────────────────
+     이 화면의 주인공은 계약수가 아니라 **백분위 막대**다. 주가지수 선물은 딜러가 구조적
+     순숏, 자산운용사가 구조적 순롱이라(cot.json 의 warn) 절대 수준을 그대로 읽으면 늘
+     "딜러가 숏이다"라는 같은 말만 나온다. 자기 이력 대비 어디인지가 유일하게 움직이는 축이다.
+     ⚠ 순포지션에 롱=초록/숏=빨강을 칠하지 않는다. 그 색은 '좋다/나쁘다'로 읽히는데
+        여기서는 방향 자체가 그룹의 구조적 성격이라 좋고 나쁨이 아니다. 색은 백분위에만 쓴다. */
+  .ctbar{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 2px}
+  .ctbtn{font-family:var(--mono);font-size:11.5px;padding:6px 12px;border-radius:999px;cursor:pointer;
+         border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+  .ctbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);font-weight:700;
+         background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
+  .ctmeta{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.7;margin:8px 0 0}
+  .ctmeta b{color:var(--ink-2)}
+  .ctwarn{margin-top:11px;font-size:11.5px;line-height:1.75;color:var(--ink-2);
+          background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .ctwarn b{color:var(--ink)}
+  /* 카드가 정확히 4장이라 auto-fit 은 흔한 폭에서 3+1 로 갈라져 마지막 한 장이 떠 보인다.
+     칸을 세지 않고 2×2 를 기본으로 두고, 넉넉한 폭에서만 4열로 편다. */
+  .ctcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+  @media(min-width:1180px){.ctcards{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media(max-width:560px){.ctcards{grid-template-columns:1fr}}
+  .ctc{border:1px solid var(--line);border-radius:10px;padding:11px 12px 10px;background:var(--panel)}
+  .ctnm{font-family:var(--sans);font-size:12.5px;font-weight:700;color:var(--ink)}
+  .ctdesc{font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:3px}
+  .ctnet{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);
+         font-variant-numeric:tabular-nums;margin-top:8px;letter-spacing:-.02em}
+  .ctnet small{font-size:10.5px;font-weight:400;color:var(--muted);margin-left:5px;letter-spacing:0}
+  .ctpl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;
+        color:var(--muted);margin-top:9px}
+  .ctpl b{color:var(--ink-2)}
+  .ctpb{height:6px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);
+        margin-top:3px;position:relative;overflow:hidden}
+  .ctpb i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:999px}
+  .ctd{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;
+       color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+  .ctd b{color:var(--ink-2);font-weight:600}
+  .ctsp{width:100%;height:40px;display:block;margin-top:8px}
+  .ctfoot{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.75;margin-top:12px}
+
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
    23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
@@ -588,6 +627,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div id="regimeperf"><div class="empty">불러오는 중…</div></div>
 
   <section id="sent" aria-labelledby="sent-h"><h2 class="lbl" id="sent-h" style="font-size:11px;margin-top:40px">시장 심리 (0~100)</h2><div class="empty">불러오는 중…</div></section>
+
+  <!-- 시장 포지션(CFTC COT) — 심리가 '가격이 어디에 있나'를 본다면 이쪽은 '누가 어느 쪽에 서
+       있나'다. #cot 는 아래 COT IIFE 가 통째로 채운다(제목까지). 로드 실패해도 문구를 남기고
+       조용히 비우지 않는다 — 심리 단락과 같은 규약이다. -->
+  <section id="cot" aria-labelledby="cot-h"><h2 class="lbl" id="cot-h" style="font-size:11px;margin-top:40px">시장 포지션 (CFTC COT)</h2><div class="empty">불러오는 중…</div></section>
 
   <div id="macro"><div class="empty">불러오는 중…</div></div>
 
@@ -1369,6 +1413,170 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<span>기간 최저 '+n1(mn)+' · 최고 '+n1(mx)+' · 최근 '+n1(vals[vals.length-1])+'</span>'+
       '<span>관측 '+h.length.toLocaleString()+'일</span>';
   }
+})();
+</script>
+<script>
+/* ── 시장 포지션(CFTC COT) ───────────────────────────────────────────────────────
+   심리 단락이 '가격이 어디에 있나'를 본다면 이쪽은 '누가 어느 쪽에 서 있나'다.
+
+   ⚠ 읽기 규약이 원자재 COT 와 다르다. 주가지수 선물에서 딜러는 고객 포지션의 반대편에
+      서므로 구조적 순숏이고, 자산운용사는 현물 인덱스 대신 선물로 롱을 들어 구조적 순롱이다.
+      "상업=스마트머니"를 그대로 옮기면 매주 같은 말만 나온다. 그래서 주 지표를 계약수가 아니라
+      **자기 이력 대비 백분위**로 둔다 — cot.json 의 warn 이 요구하는 그대로다.
+   ⚠ 값은 화요일 장마감 기준, 발표는 그 주 금요일이다. 두 날짜를 함께 적는다(하나만 적으면
+      읽는 사람이 3일치 룩어헤드를 공짜로 가진 것으로 오해한다).
+   ⚠ 설명 문구를 여기 손으로 옮겨 적지 않는다. warn·note·source·license 는 JSON 에서 그대로
+      꺼내 쓴다 — 두 곳에 적으면 원천이 바뀔 때 화면만 옛말을 하게 된다. */
+(function(){
+  var host=document.getElementById('cot'); if(!host)return;
+  var CD=null, CUR=null;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  function n1(v){return v==null||isNaN(v)?'—':(Math.round(v*10)/10).toFixed(1);}
+  function head(){return '<h2 class="lbl" id="cot-h" style="font-size:11px;margin-top:40px">시장 포지션 (CFTC COT)</h2>';}
+  function fail(m){host.innerHTML=head()+'<div class="empty">'+esc(m)+'</div>';}
+
+  // 계약 3종. 이름은 CFTC 가 바꾸므로 화면 라벨은 여기서 들고, 정본 이름은 카드 각주에 그대로 싣는다.
+  var CONTRACTS=[['spx','S&P 500'],['ndx','NASDAQ-100'],['vix','VIX']];
+  // TFF(Traders in Financial Futures) — 금융선물용으로 만들어진 분류라 이쪽을 주로 쓴다.
+  var TFF=[
+    ['deal','딜러·중개','스왑·현물 시장을 만드는 쪽. 고객 포지션의 반대편에 서므로 구조적으로 순숏이다'],
+    ['am','자산운용사','연기금·뮤추얼펀드·보험. 현물 인덱스 대신 선물로 롱을 들기도 해 구조적으로 순롱이다'],
+    ['lev','레버리지 펀드','헤지펀드·CTA. 방향을 자주 바꾸는 쪽이라 백분위가 가장 크게 움직인다'],
+    ['oth','기타 보고대상','위 셋에 안 들어가는 대형 참가자(기업 재무·연기금 자체운용 등)']];
+  // Legacy — 1986년부터 쓰던 옛 분류. 금융선물엔 거칠지만 이력이 길고 밖에서 인용될 때가 많아 함께 싣는다.
+  var LEG=[['comm','상업(헤지)'],['ncomm','비상업(투기)'],['nonrep','비보고(소액)']];
+
+  // 순포지션을 미결제약정으로 나눈다 — 16년 사이 OI 가 몇 배로 변해 계약수 원값은 시대끼리 비교가 안 된다.
+  function series(c,g){
+    var out=[], ds=Object.keys(c.rows||{}).sort();
+    for(var i=0;i<ds.length;i++){
+      var r=c.rows[ds[i]], l=r[g+'_l'], s=r[g+'_s'];
+      if(l==null||s==null||!r.oi)continue;      // VIX 는 TFF 보고 개시 전 구간이 비어 있다
+      out.push({d:ds[i],net:l-s,v:(l-s)/r.oi*100});
+    }
+    return out;
+  }
+  // 자기 이력 백분위 — '지금 값 이하였던 주의 비율'. 최댓값이면 100 이 된다.
+  function pctl(vals,v){
+    if(!vals.length)return null;
+    var n=0; for(var i=0;i<vals.length;i++) if(vals[i]<=v) n++;
+    return n/vals.length*100;
+  }
+
+  function card(c,g,label,desc){
+    var S=series(c,g);
+    if(S.length<2)
+      return '<div class="ctc"><div class="ctnm">'+esc(label)+'</div>'+
+             '<div class="ctdesc">'+esc(desc)+'</div>'+
+             '<div class="ctd">이 계약에는 이 분류의 자료가 없습니다.</div></div>';
+    var last=S[S.length-1], vals=S.map(function(x){return x.v;}), p=pctl(vals,last.v);
+    function dlt(k){var j=S.length-1-k; return j>=0?(last.v-S[j].v):null;}
+    function dtxt(lab,k){var d=dlt(k);
+      return '<span>'+lab+' <b>'+(d==null?'—':(d>0?'+':'')+n1(d)+'%p')+'</b></span>';}
+    // 백분위 옆에 표본 수를 카드마다 적는다. 머리글의 '이력 N주'는 계약 전체 행수인데, VIX 는
+    // TFF 보고가 2006년에 시작해 그 분류만 96주 짧다 — 백분위의 실제 분모는 이쪽이다.
+    // 둘이 다른 채로 큰 숫자만 보이면 화면이 사실과 다른 표본을 주장하게 된다.
+    return '<div class="ctc">'+
+      '<div class="ctnm">'+esc(label)+'</div>'+
+      '<div class="ctdesc">'+esc(desc)+'</div>'+
+      '<div class="ctnet">'+(last.net>0?'+':'')+last.net.toLocaleString()+
+        '<small>계약 · 미결제 대비 '+(last.v>0?'+':'')+n1(last.v)+'%</small></div>'+
+      '<div class="ctpl"><span>자기 이력 백분위 · '+S.length.toLocaleString()+'주</span>'+
+        '<span><b>'+n1(p)+'</b> / 100</span></div>'+
+      '<div class="ctpb" role="img" aria-label="자기 이력 백분위 '+n1(p)+'점, 100점 만점">'+
+        '<i style="width:'+Math.max(0,Math.min(100,p))+'%"></i></div>'+
+      '<div class="ctd">'+dtxt('1주',1)+dtxt('4주',4)+dtxt('52주',52)+'</div>'+
+      '<canvas class="ctsp" id="ctsp-'+g+'" role="img" aria-label="'+esc(label)+
+        ' 순포지션(미결제 대비 %) 추이 '+esc(S[0].d)+' ~ '+esc(last.d)+'"></canvas>'+
+      '</div>';
+  }
+
+  function render(){
+    var c=CD.contracts[CUR]; if(!c){fail('계약 자료가 없습니다.');return;}
+    var ds=Object.keys(c.rows||{}).sort(), lastd=ds[ds.length-1], lastr=c.rows[lastd]||{};
+
+    var tabs='<div class="ctbar" role="group" aria-label="계약 선택">'+CONTRACTS.filter(function(x){
+        return CD.contracts[x[0]];}).map(function(x){
+        return '<button type="button" class="ctbtn" data-c="'+x[0]+'" aria-pressed="'+
+               (x[0]===CUR?'true':'false')+'">'+esc(x[1])+'</button>';}).join('')+'</div>';
+
+    var meta='<div class="ctmeta">기준 <b>'+esc(lastd)+'</b>(화요일 장마감) · 발표 <b>'+
+      esc(lastr.release||'—')+'</b>(금요일) · 이력 <b>'+(c.n||ds.length).toLocaleString()+'</b>주 ('+
+      esc(c.start||'—')+' ~ '+esc(c.end||'—')+') · 계약 '+esc(c.name||'—')+'</div>';
+
+    var warn=CD.warn?'<div class="ctwarn"><b>읽는 법</b> — '+esc(CD.warn)+'</div>':'';
+
+    var cards='<div class="ctcards">'+TFF.map(function(x){
+      return card(c,x[0],x[1],x[2]);}).join('')+'</div>';
+
+    // Legacy 는 카드로 또 벌이면 화면이 두 배가 되고 축이 흐려진다 — 같은 지표를 표 한 장으로만.
+    var lrows=LEG.map(function(x){
+      var S=series(c,x[0]);
+      if(S.length<2)return '<tr><th scope="row">'+esc(x[1])+'</th><td colspan="4">—</td></tr>';
+      var last=S[S.length-1], vals=S.map(function(y){return y.v;}), p=pctl(vals,last.v);
+      var j=S.length-1-52, d52=(j>=0)?(last.v-S[j].v):null;
+      return '<tr><th scope="row">'+esc(x[1])+'</th>'+
+        '<td class="pv">'+(last.net>0?'+':'')+last.net.toLocaleString()+'</td>'+
+        '<td class="pv">'+(last.v>0?'+':'')+n1(last.v)+'%</td>'+
+        '<td class="pv">'+n1(p)+'</td>'+
+        '<td class="pv">'+(d52==null?'—':(d52>0?'+':'')+n1(d52)+'%p')+'</td></tr>';}).join('');
+    var legacy='<div class="lbl" style="font-size:11px;margin-top:26px">옛 분류(Legacy) '+
+      '<span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+      '· 1986년부터 쓰던 3분류 — 금융선물엔 거칠지만 밖에서 이 이름으로 인용될 때가 많아 함께 싣는다</span></div>'+
+      '<div class="tblwrap"><table><thead><tr><th scope="col">분류</th>'+
+      '<th scope="col">순포지션(계약)</th><th scope="col">미결제 대비</th>'+
+      '<th scope="col">자기 이력 백분위</th><th scope="col">52주 변화</th></tr></thead><tbody>'+
+      lrows+'</tbody></table></div>';
+
+    var foot='<div class="ctfoot">'+(CD.note?esc(CD.note)+'<br>':'')+
+      (CD.source?'출처 — '+esc(CD.source)+'<br>':'')+
+      (CD.license?'이용 — '+esc(CD.license):'')+'</div>';
+
+    host.innerHTML=head()+tabs+meta+warn+cards+legacy+foot;
+
+    var bs=host.querySelectorAll('.ctbtn');
+    for(var i=0;i<bs.length;i++) bs[i].addEventListener('click',function(){
+      CUR=this.getAttribute('data-c'); render();});
+    drawAll();
+  }
+
+  function draw(g){
+    var cv=document.getElementById('ctsp-'+g); if(!cv||!CD)return;
+    var c=CD.contracts[CUR]; if(!c)return;
+    var S=series(c,g); if(S.length<2)return;
+    var dpr=window.devicePixelRatio||1, W=cv.clientWidth||280, H=cv.clientHeight||40;
+    cv.width=Math.max(1,Math.round(W*dpr)); cv.height=Math.max(1,Math.round(H*dpr));
+    var ctx=cv.getContext('2d'); if(!ctx)return;
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+    var vs=S.map(function(x){return x.v;});
+    var mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs);
+    if(mx-mn<1e-9)mx=mn+1;
+    var pad=3, ih=Math.max(1,H-pad*2);
+    var y=function(v){return pad+ih*(1-(v-mn)/(mx-mn));};
+    var x=function(i){return W*(i/(S.length-1));};
+    if(mn<0&&mx>0){                      // 0선 — 순롱↔순숏이 뒤집히는 지점이 어디인지 보이게
+      ctx.strokeStyle=css('--line')||'#E2DDD1'; ctx.lineWidth=1;
+      var y0=Math.round(y(0))+0.5; ctx.beginPath();ctx.moveTo(0,y0);ctx.lineTo(W,y0);ctx.stroke();
+    }
+    ctx.strokeStyle=css('--accent')||'#8A6B00'; ctx.lineWidth=1.4; ctx.lineJoin='round'; ctx.beginPath();
+    for(var i=0;i<S.length;i++){var px=x(i),py=y(S[i].v); if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py);}
+    ctx.stroke();
+    ctx.fillStyle=css('--ink')||'#2A2621';
+    ctx.beginPath(); ctx.arc(x(S.length-1),y(vs[vs.length-1]),2.5,0,Math.PI*2); ctx.fill();
+  }
+  function drawAll(){for(var i=0;i<TFF.length;i++)draw(TFF[i][0]);}
+
+  fetch('data/cot.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(!d||!d.contracts){fail('시장 포지션(COT) 데이터가 아직 준비되지 않았습니다.');return;}
+    CD=d;
+    for(var i=0;i<CONTRACTS.length;i++) if(d.contracts[CONTRACTS[i][0]]){CUR=CONTRACTS[i][0];break;}
+    if(!CUR){fail('시장 포지션(COT) 계약 자료가 비어 있습니다.');return;}
+    render();
+    var _rz; window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(drawAll,150);});
+    new MutationObserver(drawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  }).catch(function(){fail('시장 포지션(COT) 데이터를 불러오지 못했습니다.');});
 })();
 </script>
 </body>

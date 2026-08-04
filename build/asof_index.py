@@ -104,6 +104,7 @@ WF = {
     "insider": "refresh-insider.yml", "earnings": "refresh-earnings.yml",
     "estimates": "refresh-estimates.yml",
     "assets": "refresh-assets.yml", "tech": "refresh-tech.yml",
+    "cot": "refresh-cot.yml",
 }
 DOW = ["월", "화", "수", "목", "금", "토", "일"]
 
@@ -198,6 +199,12 @@ def main() -> int:
          # 뜻은 아니다 — 그렇게 읽히지 않게 적는다.
          "cadence": "매 거래일",
          "note": "상태 요약 — 수익 예측 신호가 아니다. 성분별로는 직전 값을 끌어다 쓴 것이 있어 전부 이 날짜의 관측은 아니다"},
+        # COT 는 축 날짜와 '알 수 있게 된 날'이 3일 다르다 — 기준은 화요일 장마감, 발표는 그 주
+        # 금요일 15:30 ET 다. 다른 축은 둘이 같아서 as_of 만 적어도 됐지만 여기는 그러면 읽는
+        # 사람이 3일치 룩어헤드를 공짜로 가진 것으로 오해한다. note 에 그 간격을 명시한다.
+        {"key": "cot", "label": "시장 포지션(CFTC COT)", "as_of": (load("cot.json") or {}).get("as_of"),
+         "cadence": "주 1회",
+         "note": "기준은 화요일 장마감 포지션이고 발표는 그 주 금요일이다 — 백테스트는 발표 이후 첫 거래일부터만 쓸 것"},
         {"key": "short", "label": "공매도잔량(FINRA)", "as_of": finra_asof(stocks),
          "cadence": "격주", "note": "FINRA 공시 주기상 구조적으로 뒤처진다",
          # 고정 요일이 없다 — 기준일이 달력상 15일·말일이라 요일이 매번 다르다.

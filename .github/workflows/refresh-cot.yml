@@ -39,11 +39,17 @@ jobs:
       # 표준 라이브러리만 쓴다 — pip 단계가 없다.
       - name: Fetch CFTC COT
         run: python build/refresh_cot.py
+      # 기준일 정본을 여기서 함께 다시 굽는다. COT 축(data/asof.json)이 생겼는데 이 잡이
+      # cot.json 만 커밋하면, 토요일 08:00 에 새 자료를 받아도 축은 다음 refresh-stocks
+      # (월 06:50)까지 옛 날짜를 말한다 — 화면 두 곳이 이틀 동안 서로 다른 말을 하게 된다.
+      # asof.json 은 순수 파생이라 ci_push 의 REBAKE_TABLE 이 충돌 시 다시 구워준다.
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
       - name: Validate
         run: python build/validate_site.py
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): CFTC 미결제약정(COT) 자동 갱신" data/cot.json
+          bash build/ci_push.sh "chore(data): CFTC 미결제약정(COT) 자동 갱신" data/cot.json data/asof.json
       # '돌았는데 낡은 데이터'면 잡을 실패시킨다. 주간 데이터라 여유를 10영업일로 둔다
       # (발표 지연 3일 + 명절 주간 + 크론 지연을 다 흡수하고도 두 주가 비면 진짜 이상한 것이다).
       - name: Verify freshness
