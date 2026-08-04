@@ -135,7 +135,11 @@
   .detail{position:sticky;top:152px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:0;box-shadow:var(--shadow);overflow:hidden}
   .dtop{padding:22px 24px 18px;border-bottom:1px solid var(--line-soft);border-top:4px solid var(--vc,var(--accent))}
   .dbadges{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
-  .vbadge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 11px;border-radius:999px;text-transform:uppercase}
+  /* 판정 배지. 기본색은 상세 패널이 판정마다 걸어 주는 --vc(VMETA.col)를 따른다 —
+     전에는 아래 세 판정에만 규칙이 있어 통과 후보·구별 불가·판정 불가는 색이 없었고,
+     감싸는 블록만 빨강이라 배지가 사실상 기각으로 읽혔다. */
+  .vbadge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 11px;border-radius:999px;text-transform:uppercase;
+       color:var(--vc,var(--ink));background:color-mix(in srgb,var(--vc,var(--ink)) 13%,transparent)}
   .vbadge.deploy{color:var(--deploy);background:var(--deploy-bg)} .vbadge.marginal{color:var(--marg);background:var(--marg-bg)} .vbadge.reject{color:var(--rej);background:var(--rej-bg)}
   .rbadge{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:999px;padding:4px 11px}
   .dtop h2{font-family:var(--mono);font-size:clamp(18px,2.6vw,23px);font-weight:600;margin:0;line-height:1.22;letter-spacing:-.01em;text-wrap:balance}
@@ -1884,7 +1888,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!d){detailEl.innerHTML="";return;}
     var vc='var('+VMETA[d.v].col+')';
     detailEl.style.setProperty('--vc',vc);
-    var vbg="var("+(d.v==="deploy"?"--deploy-bg":d.v==="marginal"?"--marg-bg":"--rej-bg")+")";
+    // 🚨 판정 배경을 세 갈래로만 나눠서, 배포·제한적 유효가 아닌 것은 **전부 빨강**이었다.
+    //   그래서 통과 후보(다중검정을 넘은 것)·구별 불가(대조군과 못 가른 것)·판정 불가
+    //   (표본이 짧아 못 잰 것)가 열위·미채택과 같은 색으로 칠해졌다 — 화면이 "다 검정해서
+    //   떨어뜨렸다"고 말하게 된다. 바로 윗줄 vc 가 VMETA.col 을 이미 들고 있는데 안 쓰고 있었다.
+    var vbg="color-mix(in srgb,"+vc+" 12%,transparent)";
     var det=d.det||null, k=kindOf(d), km=kmeta(k);
     // ── 어느 전략에서든 같은 자리에 붙는 세 줄 ──────────────────────────
     // ① 무엇과 겨뤘나(대조군 이름) ② 같은 구간의 지수(PR) ③ 나란히 못 두는 이유
