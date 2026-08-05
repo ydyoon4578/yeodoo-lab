@@ -2057,6 +2057,28 @@ else:
     except Exception as _e:
         tool_skips.append(f"explorer 렌더 검사({_e})")
 
+# ── 종목 페이지 조립 검사 ──────────────────────────────────────────────
+# 🚨 2026-08-05 — 종목 페이지에는 조립 검사가 **아예 없었다.** 그래서 프리셋을 걷어내며
+#   선언(pfch)만 지우고 참조를 남긴 것이 ReferenceError → 칩 렌더 전체 중단 → 필터 패널이
+#   통째로 사라지는 사고가 됐는데, validate_site 도 홈·explorer 검사도 전부 통과했다.
+#   문법도 마크업도 멀쩡했기 때문이다 — **돌려 봐야 잡히는 종류**다.
+_sr = os.path.join(ROOT, "build", "test_stocks_render.js")
+if not NODE:
+    tool_skips.append("종목 렌더 검사(node 없음)")
+elif not os.path.exists(_sr):
+    tool_skips.append("종목 렌더 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _sr], cwd=ROOT, capture_output=True, text=True,
+                      encoding="utf-8", timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split(chr(10)) if x.strip()][-6:]
+            errors.append("종목 렌더 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ " + next((x for x in _r.stdout.split(chr(10)) if "종목 렌더" in x), "").strip())
+    except Exception as _e:
+        tool_skips.append(f"종목 렌더 검사({_e})")
+
 
 # ── 배선 검사: 모아 놓고 안 잇는 것을 잡는다 ────────────────────────────
 #   🚨 2026-08-04 하루에 **네 번** 같은 사고가 났다. 전부 "수집은 됐는데 다음 단계가
