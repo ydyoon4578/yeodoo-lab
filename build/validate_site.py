@@ -2462,6 +2462,18 @@ try:
             if _need not in _sh4:
                 errors.append("stocks.html 의 테마 칩이 %s 를 안 적는다 — 라벨만 붙이고 무엇을 "
                               "설명하는지 안 대면 장식이다" % _msg)
+    # 🚨 채점기가 어느 워크플로에서도 안 불리면 themes.json 이 만든 날에 얼어붙는다.
+    #   그러면 홈의 '명단 확정 후 경과 영업일'이 영원히 0 이고, 사후 선택이 안 들어간 창이
+    #   생기는 것을 보여주려던 장치가 거짓말을 한다. 수집해 놓고 배선을 빠뜨린 그것이다.
+    _wired = False
+    for _fn2 in sorted(os.listdir(_wf_dir)):
+        if _fn2.endswith(".yml") and "refresh_themes.py" in io.open(
+                os.path.join(_wf_dir, _fn2), encoding="utf-8").read():
+            _wired = True
+            break
+    if not _wired:
+        errors.append("build/refresh_themes.py 를 부르는 워크플로가 없다 — themes.json 이 만든 "
+                      "날에 얼어붙고 홈의 '명단 확정 후 경과 영업일'이 영원히 0 이 된다")
     if "GICS 서브산업" not in (_th.get("control") or ""):
         errors.append("테마 채점 통제에 GICS 서브산업이 빠졌다 — 두 단만 통제하면 버리기로 한 "
                       "3·4차의 값이 테마의 값으로 둔갑한다(실측: 우주방산 z −0.4 → +13.4)")
