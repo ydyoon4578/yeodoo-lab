@@ -1128,6 +1128,47 @@ def build():
                  "1회만 남는다(사전등록 §1).")
     add("a7-fidelity", "business-cycle-sector-rotation", s_a7_fidelity)
 
+    # ── A7b 빠른 위험 게이트 + 국면 섹터 선택 (사전등록 PREREG-2026-08-06-A7B.md) ──
+    # 🚨 이 설계는 A7 결과를 **보고 나왔다**(사전등록 §0 에 고지). 진단이 가리킨 기전 둘을
+    #   고친다: ① 반응 하한 3개월 vs 코로나 급락 23거래일 ② 완벽한 타이밍조차 −40.6 —
+    #   주식 안에서 도는 것으로는 안 된다. 그래서 빠른 가격 게이트 + 주식 밖 대피다.
+    # ⚠ 국면 판정식은 A7 과 글자 그대로 같다. 여기서 고치면 무엇이 달라졌는지 알 수 없다.
+    # ⚠ 이 랩엔 "낙폭은 줄이되 시장은 못 이기는" 게이트가 이미 여섯이고 전부 구별 불가다.
+    #   그러므로 낙폭 축소는 증거가 아니라 기대되는 부작용이다 — 판정은 incr5 가 한다.
+    def s_a7b():
+        ts = SEC9 + ["IEF", "SPY"]
+        st = first_common(ts, pad=20)
+        if not (A["macro"].get("INDPRO") and A["macro"].get("UNRATE")):
+            return None
+        sig = _sig_series(_phase, st)
+        spy = A["px"].get("SPY")
+        def w(i):
+            m200 = sma(spy, i, 200)
+            # 게이트에는 히스테리시스를 안 건다 — 느린 것이 문제였는데 또 늦추면 고친 게 아니다.
+            if m200 is None or not spy[i]:
+                return _ew(SEC9)                        # 게이트를 못 재면 중립
+            if spy[i] <= m200:
+                return {"IEF": 1.0}                     # 위험 회피 — 주식 밖으로 나간다
+            v = sig.get(i)
+            return _ew(PHASE_W[v]) if v else _ew(SEC9)
+        return run_weights(
+            w, st, "위험 게이트 + 국면 섹터 (A7b)",
+            lambda i: {"SPY": 1.0},
+            "SPY 종가가 200일 단순이동평균 위면 A7 의 국면별 섹터를 동일가중으로 들고"
+            "(회복 XLF·XLY / 확장 XLK·XLI / 둔화 XLE·XLB·XLU / 침체 XLP·XLV·XLU), "
+            "아래면 IEF 100% 로 주식 밖으로 나간다. 국면 판정은 A7 과 같다 — 산업생산·실업률 "
+            "12개월 변화의 2×2 · 발표 30일 지연 · 히스테리시스 2개월. 게이트에는 히스테리시스 "
+            "없음. 월말 판정 · 대조군 SPY.",
+            "A7 재현이 실패한 두 기전을 고친 것이다. 국면 신호는 반응에 최소 3개월이 걸려 "
+            "코로나 급락 23거래일을 못 잡았고(실측: 침체 배분 전환일이 저점 두 달 뒤), "
+            "방어섹터는 방어를 못 했다(완벽한 타이밍도 −40.6 vs SPY −33.7). 그래서 게이트를 "
+            "가격 기반으로 빠르게 바꾸고 대피처를 주식 밖에 둔다.",
+            note="🚨 이 설계는 A7 성적을 보고 나왔다 — 사전등록의 원래 의미를 충족하지 못하며 "
+                 "그 사실을 PREREG-2026-08-06-A7B.md §0 에 고지했다. 그래서 게시 기준을 A7 보다 "
+                 "하나 더 높게 잡았다(a7-fidelity 대비 증분 t ≥ +2.0). 이 랩엔 낙폭만 줄이는 "
+                 "게이트가 이미 여섯이고 전부 구별 불가라, 낙폭 축소는 증거가 아니다.")
+    add("a7b-gate-sector", "business-cycle-sector-rotation", s_a7b)
+
     # ── 퀄리티 롱숏(ETF 프록시) ──
     def s_quality():
         ts = ["QUAL", "SIZE", "SPY"]
