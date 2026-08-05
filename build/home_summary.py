@@ -299,24 +299,14 @@ def _industry(stocks, dates, root):
                 _g["solo"] = 1
             rows.append(_g)
             gused.update(s["t"] for s in gv)
-            subs = sorted([(c, v) for (g2, c), v in keeps.items() if g2 == g],
-                          key=lambda kv: -len(kv[1]))
-            sused = set()
-            for c, v in subs:
-                rows.append(agg(v, c, sec, 3, gid))         # 서브산업(3차)
-                _stocks(v, sec, gid + "|" + c, 4)
-                sused.update(s["t"] for s in v)
-            grest = [s for s in gv if s["t"] not in sused]
-            if grest and len(subs):
-                # 산업그룹이 서브산업 하나로만 이뤄지면 '그 밖'이 곧 그 그룹이라 줄만 는다.
-                rows.append(agg(grest, NOM, sec, 3, gid))
-                _stocks(grest, sec, gid + "|" + NOM, 4)
-            elif grest:
-                # 서브산업이 **하나도** 3종을 못 넘는 그룹. '그 밖' 줄을 끼우면 그룹과 똑같은
-                # 줄이 하나 더 생기므로, 종목을 그룹에 **직접** 매단다(3단).
-                # ⚠ 이 갈래가 없으면 그 그룹의 종목은 화면 어디에서도 볼 수 없다 —
-                #   실측으로 4종목이 그렇게 빠져 있었다.
-                _stocks(grest, sec, gid, 3)
+            # 🚨 2026-08-05 — 서브산업(4차) 단을 없앴다(사용자 결정). 3차에 이어 4차도 안 쓴다.
+            #   남는 것은 섹터(1차) → 산업그룹(2차) 두 단이고, 종목은 산업그룹에 바로 매단다.
+            #   4차는 127칸 중 3종 이상이 71칸뿐이라 커버가 83% 였다 — 나머지 17%는 '그 밖'
+            #   줄로 흘렀고, 그 줄들이 표에서 가장 자주 눈에 걸렸다. 2차는 25칸 중 24칸이
+            #   3종 이상이고 커버 100% 다. 층을 하나 줄이면 '그 밖'도 함께 사라진다.
+            #   ⚠ keeps/bysub 계산은 남겨 둔다 — 아래 tiers 표가 '왜 3·4차를 안 쓰는지'를
+            #     화면에서 수치로 말하는 데 쓴다. 재 놓고 안 내면 모은 적 없는 것과 같다.
+            _stocks(gv, sec, gid, 3)
         rest = [s for s in objs if s["t"] not in gused]
         if rest:
             rows.append(agg(rest, NOM, sec, 2, sec))
