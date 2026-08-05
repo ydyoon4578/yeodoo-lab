@@ -41,13 +41,18 @@ jobs:
       # yfinance 는 복제용 월봉(mpx)을 받는 데 쓴다. pandas·numpy 는 그 의존이다.
       - name: Install deps
         run: pip install --quiet pandas numpy scipy yfinance
+      # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
+      #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
+      #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
       - name: Fetch 13F history
         run: python build/refresh_13f_history.py
       # 운용사별 복제 진단물 — 입력이 guru_history.json 뿐이라 같이 굽는다(네트워크 없음).
       - name: Rebuild guru replication diagnostic
         run: python build/guru17_backtest.py
       - name: Validate
-        run: python build/validate_site.py
+        run: python build/validate_gate.py check
       # 이 잡은 asof 축을 건드리지 않는다(guru 축은 guru.json 이 대표다) — asof.json 을 넘기지 않는다.
       - name: Commit if changed
         run: |

@@ -1762,7 +1762,17 @@ try:
         #   'validate_site.py' 가 있으면 실제 단계가 없어도 통과했다 — refresh-stocks.yml 이
         #   정확히 그 상태였다. 검사가 막으려던 것을 검사가 통과시켰다. 주석을 걷어낸 뒤 본다.
         _live = chr(10).join(_ln.split("#", 1)[0] for _ln in _s.split(chr(10)))
-        if "ci_push.sh" in _live and "validate_site.py" not in _live:
+        # 🚨 2026-08-05 — 잡들이 validate_site.py 를 직접 부르지 않고 validate_gate.py 를
+        #   거치게 바뀌었다(절대 기준 → 회귀 기준). 관문은 안에서 validate_site.py 를
+        #   그대로 돌린다. 둘 다 인정하지 않으면 이 검사가 정상 전환을 고장으로 읽는다.
+        _has_val = ("validate_site.py" in _live) or ("validate_gate.py" in _live)
+        # 관문의 check 만 있고 baseline 이 없으면 기준선 파일이 없어 절대 기준으로
+        # 퇴화한다 — 이름만 관문이고 하는 일은 전과 같아진다. 짝을 강제한다.
+        if "validate_gate.py check" in _live and "validate_gate.py baseline" not in _live:
+            errors.append(f".github/workflows/{_fn}: validate_gate check 만 있고 baseline 단계가 없음 "
+                          "— 기준선이 없으면 관문이 절대 기준으로 퇴화해서, 이 잡과 무관한 "
+                          "결함에 방금 받은 자료를 버린다(그걸 막으려고 만든 관문이다)")
+        if "ci_push.sh" in _live and not _has_val:
             errors.append(f".github/workflows/{_fn}: 데이터를 커밋하는데 validate_site.py 단계가 없음 "
                           f"— 봇 커밋에는 CI 가 안 도므로 이 잡의 산출물은 아무도 검증하지 않는다")
 except Exception as e:
@@ -2292,6 +2302,33 @@ if _leak:
     errors.append("라이선스 자료가 저장소에 추적되고 있다: %s — 사내 DB 산출물이라 공개 "
                   "저장소에 두면 안 된다(`git rm --cached` 로 빼고 .gitignore 에 넣을 것)"
                   % ", ".join(_leak))
+
+# ── 손으로 적은 갱신 주기가 크론과 어긋나는가 ────────────────────────────
+# 🚨 2026-08-05 — asof_index 의 cadence 는 손으로 적고 sched 는 크론에서 파생한다.
+#   둘이 한 문자열로 붙어 화면에 나가는데, 어긋나면 "매일 · 매주 토 07:30 KST" 같은
+#   자기모순이 그대로 찍힌다. 실제로 둘이 반대 방향으로 틀려 있었다 —
+#   선행 컨센서스(매일↔주간) · 자산 패널(주 1회↔매일). 정상 지연이 고장처럼 보였다.
+#   ⚠ '분기 데이터셋'처럼 **자료의 주기**를 적는 축은 잡 주기와 달라도 맞다. 그래서
+#     매일↔주간이 정면으로 뒤집힌 경우만 잡는다.
+try:
+    _aj = json.load(io.open(os.path.join(ROOT, "data", "asof.json"), encoding="utf-8"))
+    _bad_cad = []
+    for _a in (_aj.get("axes") or []):
+        _cad, _sch = (_a.get("cadence") or ""), (_a.get("sched") or "")
+        if not _sch:
+            continue
+        _daily_txt = ("매 거래일" in _cad) or ("매일" in _cad)
+        _weekly_txt = "주 1회" in _cad
+        _daily_cron = ("월~토" in _sch) or (_sch.count("매주") > 1)
+        _weekly_cron = ("매주" in _sch) and not _daily_cron
+        if (_daily_txt and _weekly_cron) or (_weekly_txt and _daily_cron):
+            _bad_cad.append("%s(적힘 '%s' ↔ 크론 '%s')" % (_a.get("label"), _cad, _sch))
+    if _bad_cad:
+        errors.append("갱신 주기 라벨이 크론과 어긋난다 %d개: %s — build/asof_index.py 의 "
+                      "cadence 는 손으로 적는 값이라 크론을 바꿀 때 같이 안 고쳐진다"
+                      % (len(_bad_cad), " · ".join(_bad_cad)))
+except FileNotFoundError:
+    pass
 
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)

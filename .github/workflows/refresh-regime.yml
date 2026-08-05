@@ -22,6 +22,11 @@ jobs:
           python-version: '3.12'
       - name: Install deps
         run: pip install --quiet pandas numpy yfinance fredapi
+      # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
+      #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
+      #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
       - name: Compute market regime
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
@@ -46,7 +51,7 @@ jobs:
       #   'validate_site.py' 글자만으로 통과하고 있었다. 봇 커밋에는 validate.yml 이 안 돌아
       #   이 축은 실제로 아무 검증도 거치지 않고 배포돼 왔다.
       - name: Validate
-        run: python build/validate_site.py
+        run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 시장 국면(레짐) 자동 갱신" \

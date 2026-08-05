@@ -239,9 +239,14 @@ def main() -> int:
         {"key": "earnings", "label": "실적 발표 일정", "as_of": (load("earnings.json") or {}).get("as_of"),
          "cadence": "매일", "note": "예정일은 회사가 바꾼다 — 조회 시점의 예정일이며 확정이 아니다"},
         {"key": "estimates", "label": "선행 컨센서스 지표", "as_of": (load("estimates.json") or {}).get("as_of"),
-         "cadence": "매일", "note": "애널리스트 추정 스냅샷 — 과거 시점 값이 없어 백테스트에 못 쓴다. 매일 쌓는 중"},
+         # 🚨 2026-08-05 — "매일"이라 적혀 있었는데 크론은 `30 22 * * 5`(매주 토)다.
+         #   2026-07-29 에 주간으로 내리면서 이 라벨을 안 고쳤다. 화면에는 그 결과
+         #   "매일 · 매주 토 07:30 KST"라는 자기모순이 찍혔고, 3영업일 지연이 고장처럼 보였다.
+         "cadence": "주 1회 수집", "note": "애널리스트 추정 스냅샷 — 과거 시점 값이 없어 백테스트에 못 쓴다. 주 1회 쌓는 중"},
         {"key": "assets", "label": "자산 패널·아카이브 재검", "as_of": (load("assets.json") or {}).get("as_of"),
-         "cadence": "주 1회", "note": "ETF·FRED·연준 EBP. 표본이 15~19년이라 하루로는 판정이 바뀌지 않는다"},
+         # 🚨 2026-08-05 — "주 1회"라 적혀 있었는데 크론은 `40 23 * * 0-5`(월~토 매일)다.
+         #   반대 방향으로 어긋난 짝이다. 판정이 하루로 안 바뀌는 것은 맞지만, 잡은 매일 돈다.
+         "cadence": "매 거래일", "note": "ETF·FRED·연준 EBP. 잡은 매일 돌지만 표본이 15~19년이라 하루로는 판정이 바뀌지 않는다"},
         {"key": "signals", "label": "지표별 타이밍 신호", "as_of": (load("signal_lab.json") or {}).get("as_of"),
          "cadence": "매 거래일", "note": "종목 스냅샷과 같은 잡에서 같은 기준일로 굽는다 — 어긋나면 그건 사고다"},
         {"key": "tech", "label": "전략 랩 백테스트", "as_of": (load("tech_strategies.json") or {}).get("as_of"),

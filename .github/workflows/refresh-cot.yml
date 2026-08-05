@@ -37,6 +37,11 @@ jobs:
         with:
           python-version: '3.12'
       # 표준 라이브러리만 쓴다 — pip 단계가 없다.
+      # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
+      #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
+      #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
       - name: Fetch CFTC COT
         run: python build/refresh_cot.py
       # 기준일 정본을 여기서 함께 다시 굽는다. COT 축(data/asof.json)이 생겼는데 이 잡이
@@ -46,7 +51,7 @@ jobs:
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
-        run: python build/validate_site.py
+        run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): CFTC 미결제약정(COT) 자동 갱신" data/cot.json data/asof.json

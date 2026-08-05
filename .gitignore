@@ -25,6 +25,9 @@ build/nav_body.html
 #     다르다.
 data/pit_members.json
 data/_pit_px_cache.json
+# 편출 종목 고가·저가(yfinance) — 2026-08-05 추가. x-52wh 등 고가·저가 규칙의 PIT 레그가
+#   이것을 읽는다. 10.6MB 이고 --fetch-cache 로 재현되므로 종가 캐시와 같이 로컬에만 둔다.
+data/_pit_hl_cache.json
 # 편출 종목 시점별 주식수(yfinance) — x-small PIT 용
 #   ⚠ gitignore 는 줄 끝 주석을 지원하지 않는다. 패턴과 같은 줄에 쓰면 통째로 리터럴이 된다.
 data/_pit_sh_cache.json
@@ -34,3 +37,5 @@ data/_pit_sh_cache.json
 
 # 고객집중도 수집 중간본(재개용). 원천은 SEC 원문이라 언제든 다시 만들 수 있고 30MB 대다.
 data/_custconc_raw.json
+# 검증 관문의 기준선(러너 안에서만 산다) — build/validate_gate.py
+.validate_baseline

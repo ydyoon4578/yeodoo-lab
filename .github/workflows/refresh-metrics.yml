@@ -34,10 +34,15 @@ jobs:
         with:
           python-version: '3.12'
       # 표준 라이브러리만 사용 — 설치 단계 없음(의존성이 늘면 크론이 깨질 확률도 는다)
+      # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
+      #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
+      #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
       - name: Recompute metrics v2
         run: python build/strategy_metrics.py
       - name: Validate
-        run: python build/validate_site.py
+        run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           # ⚠ 생성기 산출물 전부 넘긴다: strategy_backtests.json(지표 v2·월말 낙폭 재계산)
