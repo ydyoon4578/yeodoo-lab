@@ -1111,14 +1111,34 @@ for _fn in ("stocks.json", "home_reco.json", "regime.json", "sentiment.json", "m
             errors.append(f"{_fn}: {k}={v} 날짜 파싱 불가"); continue
         if str(v)[:10] > _tomorrow:
             errors.append(f"{_fn}: {k}={v} 미래 날짜 — 일자 꼬임")
-# rotation_select.py 쪽 상수는 잠금과 무관 — 평문 유무와 무관하게 항상 검증(CI 포함)
-if qp is None: errors.append("선별 상수(QUOTA)를 rotation_select.py에서 찾지 못함")
-if cp is None: errors.append("선별 상수(CATORD)를 rotation_select.py에서 찾지 못함")
+# rotation_select.py 쪽 계약은 잠금과 무관 — 평문 유무와 무관하게 항상 검증(CI 포함)
+# 2026-08-06 카테고리 쿼터를 없앴다(사용자 결정). 그래서 대조 대상이 바뀐다:
+#   (구) QUOTA·CATORD 가 양쪽에서 같은가   → 선정이 카테고리별 쿼터로 이뤄지던 시절의 계약
+#   (신) ① 어느 쪽에도 QUOTA 가 없는가     — 한쪽에만 되살아나면 화면과 갱신 대상이 갈린다
+#        ② 뽑는 개수 n 이 양쪽에서 같은가  — 이게 이제 유일한 선정 파라미터다
+# CATORD 는 rotation.html 의 분류·색상 표시에만 남아 있어 더는 대조 대상이 아니다.
+if qp is not None:
+    errors.append("rotation_select.py에 QUOTA가 되살아남 — 카테고리 쿼터는 2026-08-06에 폐지했다. "
+                  "선정에 카테고리를 다시 넣으려면 rotation.html과 함께 바꾸고 이 검사도 고칠 것")
+if rot is not None and qj is not None:
+    errors.append("rotation.html에 QUOTA가 되살아남 — 카테고리 쿼터는 2026-08-06에 폐지했다(위와 같음)")
+
+
+def _pickn(txt):
+    m = re.search(r"pick\(\s*S\s*,\s*(\d+)\s*,", txt)
+    return int(m.group(1)) if m else None
+
+
+_nj = _pickn(rot) if rot is not None else None
+_np = _pickn(sel)
+if _np is None:
+    errors.append("rotation_select.py에서 pick(S, n, …)의 n을 찾지 못함")
 if rot is not None:
-    if qj is None: errors.append("선별 상수(QUOTA)를 rotation.html에서 찾지 못함")
-    elif qp is not None and qj != qp: errors.append(f"QUOTA 불일치: rotation.html {qj} vs rotation_select.py {qp}")
-    if cj is None: errors.append("선별 상수(CATORD)를 rotation.html에서 찾지 못함")
-    elif cp is not None and cj != cp: errors.append(f"CATORD 불일치: rotation.html {cj} vs rotation_select.py {cp}")
+    if _nj is None:
+        errors.append("rotation.html에서 pick(S,n,…)의 n을 찾지 못함")
+    elif _np is not None and _nj != _np:
+        errors.append(f"선정 개수 불일치: rotation.html {_nj}선 vs rotation_select.py {_np}선 "
+                      f"— 화면에 뜨는 전략과 일일잡이 갱신하는 전략이 달라진다")
 
 # ── 시장 국면: 종합 요약(summary)·블록 슬롯 ──────────────────────────────
 #   요약 문장은 build/regime_summary.py 한 곳에서만 만든다(verdicts_gen과 같은 재계산 비교).
