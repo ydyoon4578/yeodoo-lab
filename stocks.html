@@ -1267,18 +1267,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var tiers=!!DATA.strong_tiers, strongSet={}; (s.strong||[]).forEach(function(i){strongSet[i]=1;});
     var sl=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return [i-off, tiers?!!strongSet[i]:true];});};
     // 샹들리에 교차는 강/약 등급이 없다(선을 넘었거나 아니거나다) — sl() 이 아니라 인덱스만 옮긴다.
-    var sli=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return i-off;});};
-    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw),chb:sli(s.chb),chs:sli(s.chs)};
+    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw)};
     var nb=mk.bms.length+mk.bmw.length, ns=mk.sms.length+mk.smw.length;
-    var nc=mk.chb.length+mk.chs.length;
     var ma20=sma(pxd,20).slice(off), ma60=sma(pxd,60).slice(off);   // 주봉이면 20주·60주
     var vsl=(s.vd||[]).slice(off);
     var ml=el('marklg');
-    // 🚨 범례에 ◆ 를 넣되 **판정을 같이 적는다.** 스윙 삼각형 옆에 모양만 하나 늘면 읽는 사람은
-    //   같은 급의 매매 신호로 받아들인다. 실제로는 랩에서 귀무와 구별되지 않은 신호다.
-    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span title="종가가 (최근 22일 최고가 − ATR(22)×3) 을 통과한 날. 랩 실측 구별 불가 — 매매 근거가 아니다"><span style="color:var(--good)">◆</span><span style="color:var(--hot)">◆</span>샹들리에 교차<b style="color:var(--muted)">(구별 불가)</b></span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
+    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
     drawChart(slice, sdates, mk, ma20, ma60, vsl);
-    var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점'+(nc?', 샹들리에 교차 '+nc+'회(랩 판정 구별 불가)':''));
+    var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점');
   }
   function drawChart(arr, dates, mk, ma20, ma60, vd){
     var cv=el('pxc');if(!cv)return;var ctx=cv.getContext('2d');
@@ -1325,24 +1321,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(hollow){ctx.fillStyle=css('--panel');ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=strong?2:1.4;ctx.stroke();}
       else{ctx.fillStyle=color;ctx.fill();}
       ctx.globalAlpha=1;}
-    // 샹들리에 손절선 교차(◆) — 스윙 타점(▲▼)과 **다른 축**이라 다른 도형을 쓴다.
-    // 🚨 같은 삼각형으로 그리면 '같은 급의 매매 신호'로 읽힌다. 스윙은 가격 구조의 전환점을
-    //   찾고 이쪽은 추격 손절선을 넘었는지만 본다. 게다가 랩 판정이 '구별 불가'다 — 모양이
-    //   같으면 그 차이가 화면에서 사라진다. 마름모는 삼각형과 실루엣이 겹치지 않는다.
-    // 도형은 가격선 **위**에 얹는다(삼각형은 아래/위로 5px 떨어져 있다) — 교차 사건이라
-    //   어느 쪽으로 떨어뜨려도 방향을 오독하게 만든다.
-    function dia(i,color){if(i>=arr.length||arr[i]==null)return;var x=X(i),y=Y(arr[i]),r=4.2;
-      ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();
-      ctx.fillStyle=css('--panel');ctx.fill();                 // 가격선을 가리고 얹어야 도형이 산다
-      ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();}
-    // p=[상대인덱스, 강여부]
     if(mk){var g=css('--good'),h=css('--hot');
       mk.bms.forEach(function(p){tri(p[0],true,g,false,p[1]);});
       mk.sms.forEach(function(p){tri(p[0],false,h,false,p[1]);});
       mk.bmw.forEach(function(p){tri(p[0],true,g,true,p[1]);});
-      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});
-      (mk.chb||[]).forEach(function(i){dia(i,g);});
-      (mk.chs||[]).forEach(function(i){dia(i,h);});}
+      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});}
   }
 
   // 자동갱신(GitHub cron) 조용한 실패 대비 — 기준일 이후 흐른 영업일이 3일 이상이면 명시 경고(휴장·1회 결측은 허용)
