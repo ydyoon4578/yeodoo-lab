@@ -2245,6 +2245,33 @@ if _late:
         if _s.startswith("배선 검사") or _s.startswith("DATA-FACTS"):
             errors.append("핵심 검사가 예외로 죽었다 — %s. 이 검사는 건너뛰면 안 된다" % _s)
 
+# ── 제어문자 검사: 정규식이 조용히 다른 규칙이 된다 ──────────────────────
+# 🚨 2026-08-05 하루에 **세 번** 났다. 편집 도구가 `\b`(단어경계)를 한 겹 덜 이스케이프하면
+#   0x08(백스페이스) 한 글자로 들어간다. 파이썬은 정상 컴파일하고 정규식도 정상 동작하는데
+#   **매치하는 대상만 달라진다** — refresh_custconc 의 MANY 가 그래서 복수고객을 못 잡았고,
+#   kb_lock 의 data-tool 검사가 그래서 있는데도 없다고 했다. 눈으로는 안 보인다.
+#   소스·문서에 인쇄 불가 제어문자가 있을 이유가 없으므로 통째로 막는다.
+_CTRL_OK = {chr(9), chr(10), chr(13)}          # 탭·개행·복귀만 허용
+_ctrl = []
+for _root, _dirs, _files in os.walk(ROOT):
+    _dirs[:] = [_d for _d in _dirs if _d not in (".git", "_build", "node_modules", "__pycache__")]
+    for _fn in _files:
+        if not _fn.endswith((".py", ".md", ".html", ".js", ".yml")):
+            continue
+        _fp = os.path.join(_root, _fn)
+        try:
+            _tx = io.open(_fp, encoding="utf-8").read()
+        except Exception:
+            continue
+        _bad = {c for c in _tx if ord(c) < 32 and c not in _CTRL_OK}
+        if _bad:
+            _ctrl.append("%s(%s)" % (os.path.relpath(_fp, ROOT),
+                                     " ".join("0x%02x" % ord(c) for c in sorted(_bad))))
+if _ctrl:
+    errors.append("인쇄 불가 제어문자가 들어간 파일 %d개: %s — 정규식이 조용히 다른 규칙이 "
+                  "된다(예: `\b` 를 덜 이스케이프하면 0x08 한 글자가 된다)"
+                  % (len(_ctrl), ", ".join(_ctrl[:6])))
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

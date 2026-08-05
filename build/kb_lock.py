@@ -88,6 +88,13 @@ def sanity(gate_text: str) -> list:
     """validate_site.py 의 게이트 검사를 그대로 재현한다 — 배포 전에 여기서 걸러 낸다."""
     import base64
     out = []
+    # 🚨 2026-08-05 — 게이트만 보고 **셸 속성은 안 봤다.** 그래서 재잠금이 <body> 를 새로 쓸
+    #   때마다 data-tool 이 사라졌고, 같은 실패가 두 번 났다(2026-08-02 커밋 524e691a 가
+    #   한 번 고쳤는데 2026-08-04 재잠금이 다시 지웠다). 화면에서는 내비가 현재 위치를
+    #   표시 못 하고, CI 는 그 상태로 커밋 단계까지 막는다.
+    #   여기서 막는다 — 아래 main() 이 복원까지 하지만, 복원이 실패하면 기록을 멈춘다.
+    if not re.search(r'<body[^>]*\bdata-tool\s*=', gate_text):
+        out.append("<body data-tool> 이 없다 — 내비가 현재 위치를 표시할 수 없다")
     m = BLOCK_RE.search(gate_text)
     if not m:
         return ["게이트 파라미터 블록 파싱 실패"]
@@ -154,6 +161,14 @@ def main() -> int:
 
     p = lock(frag, pw)
     new = gate[:m.start()] + render(varname, p) + gate[m.end():]
+    # 🚨 재잠금이 <body> 를 새로 쓰면서 셸 속성을 잃는 일이 반복됐다. 잃었으면 되돌린다 —
+    #   사람이 매번 기억해야 하는 것은 언젠가 잊는다(두 번 잊었다).
+    if not re.search(r'<body[^>]*\bdata-tool\s*=', new):
+        _bm = re.search(r'<body([^>]*)>', new)
+        if _bm:
+            new = new[:_bm.start()] + '<body data-tool="kb.html"%s>' % _bm.group(1) + new[_bm.end():]
+            print("  ↻ <body data-tool=\"kb.html\"> 를 되돌렸다(재잠금이 지웠다)")
+
     bad = sanity(new)
     if bad:
         print("자체검사 실패 — 기록하지 않았다:")
@@ -181,6 +196,20 @@ def main() -> int:
         rc = 1
     if rc != 0:
         print("  ⚠ 평문 한 장을 못 만들었다 — 평문 의존 검사 6종은 계속 SKIP 된다.")
+    # 🚨 잠근 뒤에 셸·내비 정본을 함께 민다. 종전에는 사람이 따로 돌려야 했고, 안 돌리면
+    #   '공통 셸 드리프트'·'내비 드리프트'가 CI 에서 터졌다(2026-08-05 실측: kb.html 1장 ·
+    #   내비 3장). 잠금과 전파는 늘 같이 일어나야 하는 일이므로 여기서 같이 한다.
+    for _mod, _lab in (("sync_shell", "공통 셸"), ("sync_nav", "내비 정본")):
+        try:
+            import importlib.util as _ilu2
+            _s2 = _ilu2.spec_from_file_location("_" + _mod, os.path.join(ROOT, "build", _mod + ".py"))
+            _m2 = _ilu2.module_from_spec(_s2)
+            _s2.loader.exec_module(_m2)
+            if hasattr(_m2, "main"):
+                _m2.main()
+        except Exception as _e2:
+            print("  ⚠ %s 전파 실패 — %s: %s (직접 python build/%s.py 를 돌릴 것)"
+                  % (_lab, type(_e2).__name__, _e2, _mod))
     print("다음: python build/validate_site.py")
     return 0
 
