@@ -1021,6 +1021,113 @@ def build():
                  "주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다.")
     add("a2-factor-rot", "regime-factor-rotation", s_a2factor)
 
+    # ── A7 경기순환 섹터 로테이션 (사전등록 PREREG-2026-08-06-A7SECTOR.md) ──
+    # 🚨 "출처 그대로 재현" 이 요청이다. 국면별 섹터는 출처 문장 그대로 옮겼고,
+    #   출처가 판단에 맡긴 자리(국면 판정식)만 내가 정했다 — 자유도 0 인 2×2 로.
+    #   히스테리시스 2개월 · 신호 30일 지연 · 5bp 비용은 전부 출처가 명시한 것이다.
+    # ⚠ 규칙을 여기서 고치면 그 검정은 무효다. 고치려면 새로 등록할 것.
+    SEC9 = ["XLK", "XLY", "XLF", "XLI", "XLB", "XLE", "XLU", "XLP", "XLV"]
+    CYC = ["XLK", "XLY", "XLF", "XLI", "XLB", "XLE"]       # 경기민감
+    DEF = ["XLP", "XLV", "XLU"]                            # 방어
+    PHASE_W = {                                            # 출처의 국면별 우위 섹터
+        "early": ["XLF", "XLY"],                           # 회복 — 부동산(XLRE)은 표본 사유로 제외
+        "mid":   ["XLK", "XLI"],                           # 확장
+        "late":  ["XLE", "XLB", "XLU"],                    # 둔화
+        "rec":   ["XLP", "XLV", "XLU"],                    # 침체
+    }
+
+    def _ew(ts):
+        return {t: 1.0 / len(ts) for t in ts}
+
+    def _hyst(seq):
+        """2개월 연속 같은 신호일 때만 전환. 출처가 권고한 국면 오판 방어다.
+
+        seq[i] = i 월말의 원신호. 돌려주는 것은 '실제로 들고 있는' 라벨.
+        ⚠ 미래참조 없음 — i 는 i·i−1 만 본다.
+        """
+        out, cur = [], None
+        for i, v in enumerate(seq):
+            if v is not None and i > 0 and seq[i - 1] == v:
+                cur = v                                    # 두 달 연속이면 전환
+            if cur is None:
+                cur = v                                    # 첫 판정은 그대로 받는다
+            out.append(cur)
+        return out
+
+    def _mstance(i):
+        """긴축(True)/완화(False). FEDFUNDS 최신 발표분 vs 12개월 전. 모자라면 None."""
+        v = macro_asof_m("FEDFUNDS", DTS[i], 30, n=13)
+        return None if len(v) < 13 else (v[-1] > v[0])
+
+    def _phase(i):
+        """Fidelity 4국면 — 산업생산 12개월 변화 × 실업률 12개월 변화의 2×2."""
+        g = macro_asof_m("INDPRO", DTS[i], 30, n=13)
+        u = macro_asof_m("UNRATE", DTS[i], 30, n=13)
+        if len(g) < 13 or len(u) < 13:
+            return None
+        gu, uu = g[-1] > g[0], u[-1] > u[0]                # 성장 +? 실업 +?
+        return ("late" if uu else "mid") if gu else ("rec" if uu else "early")
+
+    def _sig_series(fn, st):
+        """월말마다 fn(i) 를 재고 히스테리시스를 먹인 뒤 {인덱스: 라벨} 로 돌려준다."""
+        ends = month_ends(st, len(DTS))
+        raw = [fn(i) for i in ends]
+        return dict(zip(ends, _hyst(raw)))
+
+    def s_a7_conover():
+        ts = SEC9 + ["SPY"]
+        st = first_common(ts, pad=20)
+        if not A["macro"].get("FEDFUNDS"):
+            return None
+        sig = _sig_series(_mstance, st)
+        def w(i):
+            v = sig.get(i)
+            if v is None:
+                return _ew(SEC9)                           # 판정 불가 구간은 중립(9섹터 동일가중)
+            return _ew(DEF if v else CYC)
+        return run_weights(
+            w, st, "통화조건 섹터 로테이션 (Conover 2008)",
+            lambda i: {"SPY": 1.0},
+            "연방기금금리(최신 발표분)가 12개월 전보다 높으면 긴축으로 보아 방어 3섹터"
+            "(XLP·XLV·XLU) 동일가중, 낮으면 완화로 보아 경기민감 6섹터"
+            "(XLK·XLY·XLF·XLI·XLB·XLE) 동일가중. 월말 판정 · 2개월 연속 확인 후 전환 · "
+            "거시 발표 30일 지연 반영. 대조군은 SPY.",
+            "Conover·Jensen·Johnson·Mercer(2008, Journal of Investing) — 33년 자료에서 Fed "
+            "완화기 경기민감·긴축기 방어 전환이 낮은 리밸런싱 빈도로도 유의한 초과수익을 냈다"
+            "(긴축기 방어 로테이션 수익이 벤치마크의 약 2배·리스크는 더 낮음). 그 주장을 이 "
+            "패널에서 그대로 돌린다.",
+            note="⚠ 원논문은 연준 재할인율 변경 방향으로 통화조건을 판정한다. 그 계열은 "
+                 "1990년대 이후 정책수단이 아니게 됐으므로 같은 뜻의 연방기금금리로 바꿨다 — "
+                 "이 재현의 유일한 신호 대체다(사전등록 §2-A).")
+    add("a7-conover", "business-cycle-sector-rotation", s_a7_conover)
+
+    def s_a7_fidelity():
+        ts = SEC9 + ["SPY"]
+        st = first_common(ts, pad=20)
+        if not (A["macro"].get("INDPRO") and A["macro"].get("UNRATE")):
+            return None
+        sig = _sig_series(_phase, st)
+        def w(i):
+            v = sig.get(i)
+            return _ew(PHASE_W[v]) if v else _ew(SEC9)
+        return run_weights(
+            w, st, "4국면 섹터 로테이션 (Fidelity 프레임워크)",
+            lambda i: {"SPY": 1.0},
+            "산업생산 12개월 변화와 실업률 12개월 변화의 부호로 4국면을 판정하고 국면별 우위 "
+            "섹터를 동일가중으로 든다 — 회복 XLF·XLY / 확장 XLK·XLI / 둔화 XLE·XLB·XLU / "
+            "침체 XLP·XLV·XLU. 월말 판정 · 2개월 연속 확인 후 전환 · 거시 발표 30일 지연 반영. "
+            "대조군은 SPY.",
+            "Fidelity 4국면 프레임워크가 1962년 이후 자료에서 문서화한 국면별 상대우위 — "
+            "초기엔 금융·경기소비재·부동산, 후기엔 에너지·소재, 침체기엔 필수소비재·헬스케어·"
+            "유틸리티. 국면별 섹터 배정을 출처 문장 그대로 옮겨 돌린다.",
+            note="⚠ 국면 판정식은 출처가 판단에 맡긴 자리다. ISM 은 FRED 에서 받을 수 없어"
+                 "(NAPM 404 · 유료) 원문이 함께 지목한 산업생산을 쓴다. 수익률곡선·신용스프레드는 "
+                 "쓰지 않는다 — 넷을 다 쓰면 결합이 수십 가지가 되고 그중 하나를 고르는 순간 "
+                 "결과를 보고 고른 것과 구별되지 않는다. 2×2 는 결합 자유도가 0 이다. "
+                 "회복 국면의 부동산(XLRE)은 2015-10 상장이라 뺐다 — 넣으면 표본에 침체가 "
+                 "1회만 남는다(사전등록 §1).")
+    add("a7-fidelity", "business-cycle-sector-rotation", s_a7_fidelity)
+
     # ── 퀄리티 롱숏(ETF 프록시) ──
     def s_quality():
         ts = ["QUAL", "SIZE", "SPY"]
