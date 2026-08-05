@@ -2330,6 +2330,30 @@ try:
 except FileNotFoundError:
     pass
 
+# ── 소스 장애 대장이 화면까지 이어지는가 ────────────────────────────────
+# 🚨 2026-08-05 — 대장(data/source_outages.json)에 적힌 결측은 완전성 게이트를 통과한다.
+#   즉 '줄어든 지수'가 게시된다는 뜻이다. 그 사실이 화면에 안 나가면 이 저장소가 여러 번
+#   당한 그것이다 — 재 놓고 안 내면 모은 적 없는 것과 같다. 배선을 강제한다.
+try:
+    _og = json.load(io.open(os.path.join(ROOT, "data", "source_outages.json"), encoding="utf-8"))
+    _oge = _og.get("outages") or {}
+    _mk = io.open(os.path.join(ROOT, "market.html"), encoding="utf-8").read()
+    if "d.outages" not in _mk:
+        errors.append("market.html 이 sentiment.json 의 outages 를 안 읽는다 — 대장에 적힌 결측이 "
+                      "게이트를 통과해 게시되는데 화면은 그 사유를 말하지 않는다")
+    _sj = json.load(io.open(os.path.join(ROOT, "data", "sentiment.json"), encoding="utf-8"))
+    _miss = [c.get("key") for c in (_sj.get("components") or []) if c.get("score") is None]
+    _undoc = [k for k in _miss if k not in _oge]
+    if _undoc:
+        errors.append("시장 심리 컴포넌트 %s 가 결측인데 대장에 없다 — data/source_outages.json 에 "
+                      "사유를 적거나, 일시 장애면 갱신이 막힌 상태 그대로 두어야 한다" % ", ".join(_undoc))
+    _stale = [k for k, v in _oge.items() if (v.get("checked") or "") < "2000-01-01"]
+    if _stale:
+        errors.append("소스 장애 대장에 checked 날짜가 없는 항목 %s — 대장은 썩는다. 확인한 날을 적을 것"
+                      % ", ".join(_stale))
+except FileNotFoundError:
+    pass
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

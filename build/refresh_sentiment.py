@@ -13,7 +13,10 @@ refresh_sentiment.py — 여두 시장심리 지수(0~100) 빌더 (self-containe
 
 출력: data/sentiment.json  (GitHub Actions 일간 크론)
 """
+import csv as _csv
+import io as _io
 import os, sys, json, time, datetime as dt
+import urllib.request as _urlreq
 import numpy as np
 import pandas as pd
 
@@ -24,6 +27,8 @@ import yfinance as yf
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "data", "sentiment.json")
+# 미해결 외부 소스 장애 대장 — 완전성 게이트가 이것만 통과시킨다(위 게이트 주석 참고)
+OUTAGES = os.path.join(os.path.dirname(OUT), "source_outages.json")
 STOCKS = os.path.join(HERE, "..", "data", "stocks.json")
 
 FRED_KEY = os.getenv("FRED_API_KEY")            # ★ 하드코딩 금지 (없으면 NFCI 패널만 결측 처리)
@@ -62,6 +67,52 @@ def yf_close(ticker, tries=3, pause=3.0):
             return s
         except Exception as e:
             print(f"  {ticker} 실패({k+1}/{tries}): {e}")
+            if k < tries - 1: time.sleep(pause * (k + 1))
+    return pd.Series(dtype=float)
+
+def cboe_close(name, tries=3, pause=3.0):
+    """CBOE 자체 CDN 의 지수 일별 종가. 실패 시 빈 시리즈.
+
+    🚨 2026-08-05 — 왜 생겼나.
+      yfinance 의 ^VIX3M · ^MOVE · ^VIX9D 가 **셋 다 2026-07-17 에서 멈췄다.**
+      같은 날 ^VIX · VIXM · ^VVIX 는 08-04 까지 멀쩡하다. 특정 지수 심볼군만
+      골라 끊긴 것이니 시장 사건이 아니라 야후 쪽 장애다. 08-03 실행까지는
+      값이 있었으므로 이력이 **뒤로 잘렸다**고 보는 편이 맞다.
+      그 결과 반영 컴포넌트가 3→1 로 떨어졌고, 완전성 게이트가 (제 일을 하여)
+      갱신을 막았다. 축은 08-03 에 얼어붙었고 화면은 그 사실을 말하지 않았다.
+
+      VIX3M 은 CBOE 가 직접 내는 지수다. 발표 주체의 CDN 을 받아 쓰면 중개자
+      하나가 빠진다 — 키도 필요 없고 08-04 까지 들어온다(실측). 야후를 먼저
+      쓰되 끊기면 여기서 메운다. 순서를 이렇게 둔 이유는 기존 이력과 이어
+      붙는 쪽이 야후 값이기 때문이다.
+
+      MOVE 는 ICE BofA 독점이라 이런 대체가 없다 — 야후가 돌아올 때까지 결측이다.
+    """
+    url = "https://cdn.cboe.com/api/global/us_indices/daily_prices/%s_History.csv" % name
+    for k in range(tries):
+        try:
+            req = _urlreq.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            txt = _urlreq.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+            rows = [r for r in _csv.reader(_io.StringIO(txt)) if len(r) >= 5]
+            hdr = [c.strip().upper() for c in rows[0]]
+            di, ci = hdr.index("DATE"), hdr.index("CLOSE")
+            ix, vl = [], []
+            for r in rows[1:]:
+                try:
+                    v = float(r[ci])
+                except ValueError:
+                    continue                      # 휴장일의 빈 칸
+                if v <= 0:
+                    continue                      # CBOE 는 결측을 0 으로 적는 날이 있다
+                ix.append(pd.to_datetime(r[di])); vl.append(v)
+            s = pd.Series(vl, index=pd.DatetimeIndex(ix)).sort_index()
+            s = s[~s.index.duplicated(keep="last")]
+            if len(s) < 100:
+                raise ValueError(f"관측 {len(s)}개 — 너무 짧음")
+            print(f"  CBOE {name:<7} {len(s):6d}개  {s.index.min().date()}~{s.index.max().date()}")
+            return s
+        except Exception as e:
+            print(f"  CBOE {name} 실패({k+1}/{tries}): {e}")
             if k < tries - 1: time.sleep(pause * (k + 1))
     return pd.Series(dtype=float)
 
@@ -247,6 +298,16 @@ def main():
     IEF   = yf_close("IEF")
     RSP   = yf_close("RSP")
 
+    # 🚨 야후의 ^VIX3M 이 끊기면 발표 주체(CBOE)에서 직접 받아 메운다. 사정은 cboe_close() 주석.
+    #   야후가 살아 있으면 뒤쪽 결측만 채우므로 기존 값은 바뀌지 않는다.
+    _stale3m = (not len(VIX3M)) or (len(VIX) and (VIX.index.max() - VIX3M.index.max()).days > 5)
+    if _stale3m:
+        print("  ^VIX3M 이 %s 에서 멈췄다 — CBOE 에서 직접 받는다"
+              % (VIX3M.index.max().date() if len(VIX3M) else "빈 응답"))
+        _c3 = cboe_close("VIX3M")
+        if len(_c3):
+            VIX3M = VIX3M.combine_first(_c3) if len(VIX3M) else _c3
+
     print("FRED 로드…")
     VIXCLS = fred_series("VIXCLS")          # ^VIX 결측 보강(상관 1.00000)
     NFCI   = fred_series("NFCI")            # 주간·패널 전용
@@ -380,6 +441,17 @@ def main():
     panel.append(b200)
 
     n_ok = sum(1 for c in components if c["score"] is not None)
+    # 🚨 대장(source_outages.json)은 썩는다. 소스가 돌아와도 아무도 지우지 않으면
+    #   완전성 게이트가 그 컴포넌트에 대해 영구히 느슨해진 채 남는다 — 다음번 진짜
+    #   장애를 그냥 통과시킨다는 뜻이다. 회복을 감지하면 여기서 크게 떠든다.
+    try:
+        _l0 = (json.load(open(OUTAGES, encoding="utf-8")).get("outages") or {})
+        _back = [c["key"] for c in components if c["score"] is not None and c["key"] in _l0]
+        if _back:
+            print("  ⚠⚠ 대장에 적힌 %s 가 **돌아왔다** — data/source_outages.json 에서 지울 것. "
+                  "안 지우면 이 컴포넌트의 완전성 게이트가 계속 느슨하다" % ", ".join(_back))
+    except Exception:
+        pass
     print(f"컴포넌트 반영 {n_ok}/3 · 패널 {sum(1 for p in panel if p['raw'] is not None)}/4")
 
     # ── 백테스트 ───────────────────────────────────────────────────
@@ -433,7 +505,30 @@ def main():
     if old:
         o_ok = sum(1 for c in (old.get("components") or []) if c.get("score") is not None)
         if n_ok < o_ok:
-            raise SystemExit(f"반영 컴포넌트 급감 {o_ok}→{n_ok} (데이터 부분 장애 의심) — 갱신 중단, 이전본 유지")
+            # 🚨 2026-08-05 — 종전에는 여기서 무조건 멈췄다. 일시 장애에는 옳다. 그런데
+            #   소스가 **영영 사라지면** 이 규칙은 축을 영원히 얼린다. 실제로 그랬다:
+            #   야후의 ^MOVE 가 07-17 에서 끊겨 컴포넌트가 3→2 가 됐고, 축은 08-03 에
+            #   멈춘 채 화면은 3개가 다 살아 있는 08-03 점수를 계속 보여 줬다.
+            #   멈추는 것이 안전해 보이지만, 화면이 그 사실을 말하지 않으면 안전이 아니다.
+            #   그래서 **사람이 확인해 대장에 적은 손실만** 통과시킨다(data/source_outages.json).
+            #   적히지 않은 것이 하나라도 빠지면 종전대로 멈춘다 — 코드가 스스로 기준을
+            #   낮추는 길은 열지 않는다. 통과할 때는 가용가중이 출력에 실려 배너로 나간다.
+            _led = {}
+            try:
+                _led = (json.load(open(OUTAGES, encoding="utf-8")).get("outages") or {})
+            except Exception:
+                pass
+            _okk = {c["key"] for c in components if c["score"] is not None}
+            _lost = [c["key"] for c in components if c["score"] is None]
+            _un = [k for k in _lost if k not in _led]
+            if _un:
+                raise SystemExit(f"반영 컴포넌트 급감 {o_ok}→{n_ok} (데이터 부분 장애 의심) — "
+                                 f"갱신 중단, 이전본 유지. 대장에 없는 결측: {', '.join(_un)} "
+                                 f"(일시 장애면 그대로 두고, 소스가 사라진 것이면 "
+                                 f"data/source_outages.json 에 사유와 함께 적을 것)")
+            out["outages"] = [dict(_led[k], key=k) for k in _lost]
+            print("  ⚠ 대장에 적힌 결측 %d개(%s) — 가용가중 %.2f 로 재정규화해 진행한다"
+                  % (len(_lost), ", ".join(_lost), out.get("weight_available") or 0))
         o_pn = sum(1 for p in (old.get("panel") or []) if p.get("raw") is not None)
         n_pn = sum(1 for p in panel if p["raw"] is not None)
         if n_pn < o_pn - 1:

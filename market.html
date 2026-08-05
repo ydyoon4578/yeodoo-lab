@@ -899,9 +899,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<span>'+esc(x[0])+' <b class="tnum">'+n1(x[1])+'</b> ('+(dv>=0?'+':'')+n1(dv)+')</span>';
     }).join('')+'</div>'):'';
 
+    // 🚨 2026-08-05 — 가용 가중치만 적으면 '왜' 빠졌는지 화면에서 알 수 없다. 읽는 사람은
+    //   90% 라는 숫자만 보고 우리 쪽 버그인지 소스 장애인지 구별할 방법이 없다. 원인이
+    //   확인된 결측은 대장(data/source_outages.json)에 기록되고 sentiment.json 의
+    //   outages 로 실려 온다 — 그 사유를 여기서 그대로 적는다.
     var warn='';
-    if(d.weight_available!=null&&d.weight_available<0.999)
-      warn='<div class="note">구성요소 일부 결측 — 가용 가중치 '+Math.round(d.weight_available*100)+'%만으로 재정규화한 값입니다.</div>';
+    if(d.weight_available!=null&&d.weight_available<0.999){
+      var og=(d.outages||[]), why='';
+      if(og.length)why=' 빠진 것: '+og.map(function(o){
+        return esc(o.component||o.key)+'('+esc(o.source||'')+', '+esc(o.last_obs||'?')+' 이후 결측)';
+      }).join(' · ')+'.'+(og[0].workaround?' '+esc(og[0].workaround):'');
+      warn='<div class="note">구성요소 일부 결측 — 가용 가중치 '+Math.round(d.weight_available*100)+
+           '%만으로 재정규화한 값입니다.'+why+'</div>';
+    }
 
     // 백분위는 창(window)을 밝히지 않으면 읽을 수 없다.
     // 파일의 score_pctl은 원본 시계열 전체의 확장 백분위인데 그 표본 수·시작일이 파일에 없다.
