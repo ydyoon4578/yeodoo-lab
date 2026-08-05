@@ -83,6 +83,14 @@ FRED = {
     "VIXCLS": "VIX(종가)", "CPIAUCSL": "CPI(월)", "UNRATE": "실업률(월)",
     "USREC": "NBER 침체(월)", "DTWEXBGS": "달러지수", "DCOILWTICO": "WTI",
     "BAMLH0A0HYM2": "하이일드 OAS", "BAMLC0A0CM": "투자등급 OAS",
+    # 🚨 2026-08-06 추가 — 경기순환 섹터 로테이션(A7) 재현에 쓴다.
+    #   FEDFUNDS: Conover·Jensen·Johnson·Mercer(2008)의 '통화조건'(완화/긴축) 판정용.
+    #     원논문은 연준 **재할인율** 변경 방향을 쓰는데 그 계열은 1990년대 이후 정책수단이
+    #     아니게 됐다 — 같은 뜻의 현대 수단인 연방기금금리로 판정한다(사전등록에 적는다).
+    #   INDPRO: Fidelity 4국면의 성장 축. ISM(NAPM)은 FRED 에서 404 다(유료 계열).
+    #     A7 원문이 성장 동인을 "ISM·산업생산·GDP 추세"로 적었으므로 산업생산은
+    #     **대체가 아니라 원문이 지목한 것**이다.
+    "FEDFUNDS": "연방기금금리(월)", "INDPRO": "산업생산(월)",
 }
 
 
