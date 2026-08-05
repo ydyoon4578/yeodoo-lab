@@ -83,10 +83,18 @@ MANY = re.compile(r"\b(?:group of|two|three|four|five|six|seven|eight|nine|ten|"
 #   "The Company does not have revenue from transactions with a single customer amounting to
 #    10 percent or more of its revenues" → 이걸 '집중도 10%'로 읽으면 정반대가 된다.
 #   실측(2026-08-04 표본 10종): TRV 에서 잡힌 7건이 **전부** 이 형태였다.
-NEG = re.compile(r"\b(?:did not|does not|do not|no single|no customer|no one customer|"
-                 r"none of|not exceed|less than|fewer than|nor did)\b", re.I)
+# 🚨 2026-08-05 — `no single|no customer` 만 적어 두었더니 실무 문구의 절반을 놓쳤다.
+#   공시문은 고객 명사 앞에 형용사를 끼워 넣는다: "no **individual** customer",
+#   "no **other** customer", "no **nonaffiliated** customer", "no **end-**customer".
+#   뜻이 정반대인 문장이 그대로 값이 됐다. 명사 앞 두 낱말까지 허용한다.
+NEG = re.compile(r"\b(?:did not|does not|do not|no\s+(?:\w+[- ]){0,2}(?:customer|client)s?|"
+                 r"no sales from|none of|not exceed|less than|fewer than|nor did)\b", re.I)
 # 🚨 문턱 문구 — "10 percent or more" 의 10% 는 **공시 기준선**이지 측정된 집중도가 아니다.
-THRESH = re.compile(r"\b\d{1,3}(?:\.\d)?\s?(?:%|percent)\s+or\s+(?:more|greater|above)\b", re.I)
+#   2026-08-05: 어순이 뒤집힌 "more than 10 percent" 도 같은 문턱이다. 종전 정규식은
+#   "10 percent or more" 만 봤다 — 실제 공시문의 다수는 뒤집힌 쪽을 쓴다.
+THRESH = re.compile(r"\b\d{1,3}(?:\.\d)?\s?(?:%|percent)\s+or\s+(?:more|greater|above)\b"
+                    r"|\b(?:more than|at least|in excess of|exceed(?:ed|ing|s)?)\s+"
+                    r"(?:approximately\s+)?\d{1,3}(?:\.\d)?\s?(?:%|percent)\b", re.I)
 
 
 def fetch(url: str) -> str:
@@ -162,7 +170,29 @@ def scan(txt: str):
     for rx in (TIGHT, TIGHT2):
         for m in rx.finditer(txt):
             s = m.group(0)
-            if NEG.search(s) or THRESH.search(s) or MANY.search(s):
+            # 🚨 2026-08-05 — 종전에는 NEG·THRESH·MANY 를 **매치 구간 안에서만** 봤다.
+            #   그런데 TIGHT2 는 `customer` 낱말에서 매치가 시작한다. 부정어는 그 앞에 온다:
+            #
+            #       "No single customer accounted for more than 10% of revenue"
+            #        └───────┘ 매치 밖          └── 매치는 여기부터
+            #
+            #   그래서 **뜻이 정반대인 문장이 그대로 값으로 실렸다.** 어떤 고객도 10%를
+            #   넘지 않았다는 진술이 '고객 집중도 10%'로 기록됐다. 결측보다 나쁘다 —
+            #   집중도가 낮다는 사실이 높다는 값으로 뒤집혀 들어간다.
+            #   실측: 2026-08-05 수집본 2985관측 중 1161건(38.9%)이 이 모양이었다.
+            #   이전본이 0.2% 로 보였던 것은 고쳐져서가 아니라 저장하던 문맥이 31자여서
+            #   부정어가 잘려 나갔기 때문이다 — 값과 날짜는 이전본과 같다.
+            #
+            #   창을 넓히되 **문장 경계에서 끊는다.** 앞 문장의 'did not' 이 이 문장의
+            #   고객 집중도를 기각하면 반대 방향으로 틀린다. 뒤쪽도 본다 — "or more" 같은
+            #   문턱 문구는 백분율 **뒤에** 오므로 매치 안에 안 들어온다.
+            _pre = txt[max(0, m.start() - 220):m.start()]
+            _cut = max(_pre.rfind(". "), _pre.rfind("; "), _pre.rfind(".&#"))
+            if _cut >= 0:
+                _pre = _pre[_cut + 1:]
+            _post = txt[m.end():m.end() + 40].split(".")[0]
+            ctx = _pre + s + _post
+            if NEG.search(ctx) or THRESH.search(ctx) or MANY.search(ctx):
                 continue
             v = float(m.group(1))
             if 0 < v <= 100:
@@ -239,7 +269,12 @@ def main() -> int:
         if a.sample:
             print("%-6s 10-K %2d건 · 집중도 잡힘 %2d건" % (t, len(fl), len(rows)))
             for r in rows[-2:]:
-                print("    %s  %5.1f%%  %s" % (r["d"], r["pct"], r["s"][:150]))
+                # 🚨 2026-08-05 — 종전에는 문맥의 **앞** 150자를 찍었다. 그런데 저장하는
+                #   문맥은 `txt[매치시작-160 : 매치끝]` 이라 값이 나온 자리는 **끝**에 있다.
+                #   그래서 검산하려고 찍은 줄에 정작 그 백분율이 안 보였다 — 값 10.0 옆에
+                #   "approximately 13 %" 로 끝나는 남의 문장이 붙어 사람을 헷갈리게 했다.
+                #   검산용 출력이 검산할 수 없으면 없는 것과 같다. 뒤쪽을 찍는다.
+                print("    %s  %5.1f%%  …%s" % (r["d"], r["pct"], r["s"][-150:]))
         elif k % 20 == 0:
             json.dump(res, io.open(RAW, "w", encoding="utf-8"), ensure_ascii=False)
             print("  … %d/%d종 · 문서 %d건 · 값 있는 종목 %d"
