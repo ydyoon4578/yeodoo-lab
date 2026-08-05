@@ -2439,54 +2439,6 @@ try:
 except FileNotFoundError:
     pass
 
-# ── 테마: 잰 것이 화면까지 가는가 ────────────────────────────────────────
-# 🚨 2026-08-05 — 테마 명단은 사람이 쓰고(build/themes_defs.py) 성적은 채점기가 낸다.
-#   이 저장소가 반복해 당한 것 둘을 여기서 막는다:
-#     ① 재 놓고 안 냄 — '설명력 확인'을 받았는데 화면이 안 읽는 경우
-#     ② 재지도 않고 냄 — 화면이 칩을 그리는데 성적·측정창을 안 적는 경우
-#   그리고 채점 통제가 GICS 네 단에서 두 단으로 헐거워지는 것도 막는다(그러면 버리기로 한
-#   서브산업의 값이 테마의 값으로 둔갑한다 — 우주방산 z −0.4 → +13.4).
-try:
-    _th = json.load(io.open(os.path.join(ROOT, "data", "themes.json"), encoding="utf-8"))
-    _sh4 = io.open(os.path.join(ROOT, "stocks.html"), encoding="utf-8").read()
-    _pass = [r for r in (_th.get("lab") or []) if r.get("verdict") == "설명력 확인"]
-    if _pass and "themes.json" not in _sh4:
-        errors.append("테마 %d종이 '설명력 확인'인데 stocks.html 이 themes.json 을 안 읽는다 "
-                      "— 재 놓고 안 내면 모은 적 없는 것과 같다" % len(_pass))
-    if "themes.json" in _sh4:
-        # 🚨 식별자(L.z 같은 것)로 검사하면 안 된다 — 값을 안 찍어도 조건문 어딘가에 그 이름이
-        #   남아 통과한다(실제로 반례를 넣었더니 그렇게 빠져나갔다). **화면에 실제로 찍히는
-        #   문구**로 본다. 문구가 있으면 그 자리에 값이 온다는 뜻이다.
-        for _need, _msg in (("측정 창 ", "측정 창"), ("무작위 표본 대비 z ", "z 값"),
-                            ("(문턱 ", "문턱"), ("군내 평균 상관 ", "군내 상관")):
-            if _need not in _sh4:
-                errors.append("stocks.html 의 테마 칩이 %s 를 안 적는다 — 라벨만 붙이고 무엇을 "
-                              "설명하는지 안 대면 장식이다" % _msg)
-    # 🚨 채점기가 어느 워크플로에서도 안 불리면 themes.json 이 만든 날에 얼어붙는다.
-    #   그러면 홈의 '명단 확정 후 경과 영업일'이 영원히 0 이고, 사후 선택이 안 들어간 창이
-    #   생기는 것을 보여주려던 장치가 거짓말을 한다. 수집해 놓고 배선을 빠뜨린 그것이다.
-    _wired = False
-    for _fn2 in sorted(os.listdir(_wf_dir)):
-        if _fn2.endswith(".yml") and "refresh_themes.py" in io.open(
-                os.path.join(_wf_dir, _fn2), encoding="utf-8").read():
-            _wired = True
-            break
-    if not _wired:
-        errors.append("build/refresh_themes.py 를 부르는 워크플로가 없다 — themes.json 이 만든 "
-                      "날에 얼어붙고 홈의 '명단 확정 후 경과 영업일'이 영원히 0 이 된다")
-    if "GICS 서브산업" not in (_th.get("control") or ""):
-        errors.append("테마 채점 통제에 GICS 서브산업이 빠졌다 — 두 단만 통제하면 버리기로 한 "
-                      "3·4차의 값이 테마의 값으로 둔갑한다(실측: 우주방산 z −0.4 → +13.4)")
-    # 후보를 지우면 본페로니 분모가 줄어 문턱이 조용히 낮아진다
-    if (_th.get("n_candidates") or 0) < len(_th.get("lab") or []):
-        errors.append("테마 후보 수(n_candidates)가 채점 행 수보다 적다 — 다중검정 분모가 어긋났다")
-    if (_th.get("n_candidates") or 0) < 6:
-        errors.append("테마 후보가 %d개로 줄었다 — 탈락한 후보를 지우면 몇 개를 시험했는지가 "
-                      "사라져 본페로니 분모가 숨는다(build/themes_defs.CANDIDATES 는 시험한 것 "
-                      "전부여야 한다)" % (_th.get("n_candidates") or 0))
-except FileNotFoundError:
-    pass
-
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

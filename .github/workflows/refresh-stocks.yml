@@ -82,14 +82,6 @@ jobs:
         run: python build/signal_lab.py
       # 홈은 원본 대신 슬림 묶음(build/home_flow.py)을 읽는다 — 원본이 바뀌면 같이 다시 굽는다.
       # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
-      # 🚨 2026-08-05 — 테마 채점. 이걸 안 걸면 data/themes.json 이 만든 날에 얼어붙는다.
-      #   그러면 홈이 세는 '명단 확정 후 경과 영업일'이 영원히 0 이다 — 그 수는
-      #   window.end 와 added_on 의 차인데 window.end 는 채점기가 돌아야 움직인다.
-      #   사후 선택이 안 들어간 창이 생기는 것을 보여주려고 만든 장치가, 배선을 빠뜨리면
-      #   영원히 "아직 하루도 안 지났습니다"만 말한다. 수집 ≠ 배선.
-      # ⚠ 명단(build/themes_defs.py)은 손으로만 바뀐다. 이 단계는 **채점만** 한다.
-      - name: Score themes
-        run: python build/refresh_themes.py
       - name: Rebuild home slim bundle
         run: python build/home_flow.py
       # 스타일별 상위 10종목(data/style_top.json) — 홈 스타일 표 아래 '구성종목' 줄의 원본.
