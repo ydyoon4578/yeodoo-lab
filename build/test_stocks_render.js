@@ -95,8 +95,9 @@ if (typeof scope.swKeys === "function") {
 }
 
 // ── ③ 차트 마커 배선 ─────────────────────────────────────────────────────
-// 데이터에 chb/chs 가 있으면 차트가 그것을 읽어야 한다. 수집만 하고 안 그리면
-// '재 놓고 안 내면 모은 적 없는 것과 같다'.
+// 🚨 2026-08-05 — 샹들리에 마름모는 화면에서 뺐다(사용자 요청). 이 검사는 **반쪽만
+//   되살아나는 것**을 막는 용도로 남긴다: 데이터에 chb 가 다시 생겼는데 아무도 안 읽거나,
+//   그리면서 '구별 불가' 판정을 안 적는 상태. 지금은 nChb=0 이라 조용히 지나간다.
 const stocks = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "stocks.json"), "utf8"));
 const nChb = (stocks.stocks || []).filter(s => (s.chb || []).length).length;
 if (nChb > 0) {

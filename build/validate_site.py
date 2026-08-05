@@ -2376,36 +2376,22 @@ try:
 except FileNotFoundError:
     pass
 
-# ── 샹들리에: 화면이 찍는 것과 랩이 잰 것이 같은 신호인가 ─────────────────
-# 🚨 2026-08-05 — stocks.html 차트의 마름모(chb/chs) 옆에 칩이 랩 성적(구별 불가 · t 0.95/0.44)을
-#   인용한다. 두 정의가 갈리는 순간 그 인용은 **다른 신호의 성적**이 된다 — 이 저장소가
-#   반복해 당한 '채점기가 두 벌'이다. 실제로 처음 구현은 위·아래 두 밴드였고 랩은 선 하나였다.
-#   정의를 코드 두 곳에 두는 한 조용히 어긋나므로, 어긋나면 여기서 막는다.
+# ── 샹들리에 흔적이 남아 있나 ─────────────────────────────────────────────
+# 🚨 2026-08-05 — 화면에서 샹들리에를 전부 뺐다(칩·프리셋·차트 마름모·배지, 사용자 요청).
+#   여기 있던 '화면 정의 ↔ 랩 정의 대조' 가드는 대상이 사라져 무의미해졌으므로 걷는다.
+#   대신 반쪽만 되살아나는 것을 막는다 — 차트가 다시 chb 를 그리는데 판정을 안 적거나,
+#   데이터에 chb 가 남았는데 아무도 안 읽는 상태(수집만 하고 안 내는 것)를 잡는다.
 try:
-    _rs = io.open(os.path.join(ROOT, "build", "refresh_stocks.py"), encoding="utf-8").read()
-    _sl = io.open(os.path.join(ROOT, "build", "signal_lab.py"), encoding="utf-8").read()
-    _rs_body = (_rs.split("def chandelier_marks", 1)[1].split(chr(10) + "def ", 1)[0]
-                if "def chandelier_marks" in _rs else "")
-    if _rs_body:
-        # 랩: chst = h.rolling(22).max() - atr(h, l, c, 22) * 3.0
-        _lab_line = [l for l in _sl.split(chr(10)) if '"chst"' in l and "rolling" in l]
-        if not _lab_line:
-            errors.append("signal_lab 의 chst 정의를 못 찾았다 — 샹들리에 정의 대조 검사가 무력화됐다")
-        else:
-            _lab = _lab_line[0]
-            _want_n = "22" in _lab and "rolling(22)" in _rs_body.replace("rolling(n)", "rolling(22)")
-            # 화면 쪽이 '최저가 + ATR' 밴드를 쓰면 정의가 갈린 것이다(랩엔 그런 선이 없다)
-            if "rolling(n).min()" in _rs_body or "rolling(22).min()" in _rs_body:
-                errors.append("chandelier_marks 가 랩에 없는 하단 밴드(최저가+ATR)를 쓴다 — "
-                              "화면의 ◆ 와 칩이 인용하는 t 0.95/0.44 가 다른 신호가 된다")
-            if "max()" not in _rs_body or "atr(" not in _rs_body:
-                errors.append("chandelier_marks 가 (최고가 − ATR×배수) 형태가 아니다 — 랩 정의와 어긋난다")
-            if "* mult" not in _rs_body or "mult=3.0" not in _rs_body:
-                errors.append("chandelier_marks 의 배수가 3.0 이 아니다 — 랩은 3.0 으로 쟀다")
-    # 화면이 ◆ 를 찍으면 그 옆에 판정을 반드시 적어야 한다(재 놓고 안 내면 모은 적 없는 것과 같다)
-    _sh = io.open(os.path.join(ROOT, "stocks.html"), encoding="utf-8").read()
-    if "chb" in _sh and "구별 불가" not in _sh:
-        errors.append("stocks.html 이 샹들리에 교차를 그리는데 '구별 불가' 판정을 어디에도 안 적는다")
+    _sh3 = io.open(os.path.join(ROOT, "stocks.html"), encoding="utf-8").read()
+    _sj3 = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+    _has_data = any(x.get("chb") or x.get("chs") for x in (_sj3.get("stocks") or []))
+    _has_draw = "mk.chb" in _sh3
+    if _has_draw and "구별 불가" not in _sh3:
+        errors.append("stocks.html 이 샹들리에 교차를 그리는데 '구별 불가' 판정을 어디에도 안 적는다 "
+                      "— signal_lab 실측 t 0.95/0.44 로 귀무와 구별되지 않는 신호다")
+    if _has_data and not _has_draw:
+        errors.append("stocks.json 에 chb/chs 가 남아 있는데 화면이 안 읽는다 — "
+                      "수집만 하고 안 내면 모은 적 없는 것과 같고, 파일만 무거워진다")
 except FileNotFoundError:
     pass
 
