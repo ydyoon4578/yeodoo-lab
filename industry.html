@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — GICS 서브산업으로 518사를 가릅니다. 섹터 11 → 산업그룹 → 서브산업 세 단을 그대로 펼쳐 보입니다.">
+<meta name="description" content="여두 전략 랩 — GICS 산업그룹으로 518사를 가릅니다. 섹터 11 → 산업그룹 두 단만 씁니다 — 3차·4차는 쓰지 않습니다.">
 <title>여두 · 산업 탐색 (GICS)</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/industry.html">
@@ -12,10 +12,10 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
 <meta property="og:title" content="여두 · 산업 탐색 (GICS)">
-<meta property="og:description" content="GICS 서브산업 — 11섹터로는 안 갈라지는 것을 세 단으로 펼쳐 봅니다.">
+<meta property="og:description" content="GICS 산업그룹 — 11섹터로는 안 갈라지는 것을 한 단 더 펼쳐 봅니다.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="여두 · 산업 탐색 (GICS)">
-<meta name="twitter:description" content="GICS 서브산업로 본 산업 지도 — 한계까지 함께.">
+<meta name="twitter:description" content="GICS 산업그룹으로 본 산업 지도 — 한계까지 함께.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
@@ -466,12 +466,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">Industry · GICS 서브산업</div>
+    <div class="eyebrow">Industry · GICS 산업그룹</div>
     <h1 class="title">11개 섹터로는<br>안 갈라지는 것</h1>
     <p class="lede">홈·섹터 화면이 쓰는 섹터는 11개뿐이라 "정보기술"에 반도체 장비사와 회계 소프트웨어 회사가
-      같이 들어갑니다. <b>GICS</b>는 그 아래를 <b>산업그룹(2차) → 서브산업(4차)</b>으로 다시 가릅니다.
-      이 화면은 그 세 단을 펼쳐 보여줍니다 — 랩이 만든 분류가 아니라 위키백과 S&amp;P 500 표의 GICS 구조입니다.
-      <span id="tier3">GICS는 네 단이고 <b>3차(산업)</b>는 여기 없습니다 — 왜 뺐는지는 아래에 적습니다.</span></p>
+      같이 들어갑니다. <b>GICS</b>는 그 아래를 <b>산업그룹(2차)</b>으로 한 단 더 가릅니다.
+      이 화면은 그 두 단을 펼쳐 보여줍니다 — 랩이 만든 분류가 아니라 위키백과 S&amp;P 500 표의 GICS 구조입니다.
+      <span id="tier3">GICS는 네 단이지만 <b>3차(산업)·4차(서브산업)는 쓰지 않습니다</b> — 왜인지는 아래에 적습니다.</span></p>
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
@@ -492,7 +492,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="watch" aria-labelledby="w-h" hidden>
     <h2 class="lbl" id="w-h">관전 포인트 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 산업 단위로 눈에 띄는 것</span></h2>
-    <p class="lblnote">GICS 서브산업을 축으로, 이 랩이 이미 들고 있는 데이터(종목 시그널 · 8-K 공시 · 내부자 거래)에서
+    <p class="lblnote">GICS 산업그룹을 축으로, 이 랩이 이미 들고 있는 데이터(종목 시그널 · 8-K 공시 · 내부자 거래)에서
       <b>눈에 띄는 어긋남</b>만 골라 서술합니다. 새로 받아오는 데이터는 없습니다.</p>
 
     <div class="note hard">
@@ -647,12 +647,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         return String(a.nm).localeCompare(String(b.nm));
       });
     });
+    // 🚨 2026-08-05 — 서브산업(4차) 단을 없앴다(사용자 결정, 3차에 이어 4차도 안 쓴다).
+    //   이 페이지는 이제 **산업그룹(2차)** 지도다. lv3(서브산업) 행이 더는 만들어지지 않으므로
+    //   lv2 를 읽는다. 그대로 두면 groups 가 비고 전 종목이 '그 밖'으로 흘러, 페이지가
+    //   조용히 수익률·시총 없는 껍데기가 된다.
     var groups=[];
-    (IND.rows||[]).filter(function(r){return r.lv===3;}).forEach(function(r){
+    (IND.rows||[]).filter(function(r){return r.lv===2;}).forEach(function(r){
       var path=r.p+'|'+r.nm;
       var ts=(byPath[path]||[]).map(function(x){return x.nm;});
       if(!ts.length)return;
-      groups.push({sub:r.nm, grp:(r.p||'').split('|')[1]||'', sec:r.sec,
+      groups.push({sub:r.nm, grp:'', sec:r.sec,
                    secnm:SNM[r.sec]||r.sec, ts:ts, mc:r.mc, r:r.r});
     });
     // ⚠ 서브산업에 안 걸리는 종목이 있다(실측 22종). 둘이다 —
@@ -661,7 +665,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   어디에서도 안 보인다** — 홈 트리가 '그 밖'에도 펼침 버튼을 달았던 것과 같은 이유로
     //   잔여 칸을 만들어 싣는다. 어느 칸에도 안 뜨는 종목을 남기지 않는다.
     var seen={}; groups.forEach(function(g){seen[g.sec+'|'+g.grp+'|'+g.sub]=1;});
-    var lv3set={}; (IND.rows||[]).filter(function(r){return r.lv===3;})
+    var lv3set={}; (IND.rows||[]).filter(function(r){return r.lv===2;})
       .forEach(function(r){lv3set[r.p+'|'+r.nm]=1;});
     var rest={};
     hs.rows.forEach(function(x){ if(!lv3set[x.p]) (rest[x.p]=rest[x.p]||[]).push(x); });
@@ -685,33 +689,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     D={groups:groups, as_of:hs.as_of||hr.as_of||'', n_co:hs.rows.length};
     D.groups.forEach(function(g){g._secs=secsOf(g);g._split=false;});
     el('tally').innerHTML=
-      ty(groups.length,'GICS 서브산업','같은 '+hs.rows.length+'사를 가른 수','var(--ink)')+
-      ty(nGrp,'산업그룹','서브산업의 윗단','var(--rp)')+
-      ty((IND.sectors||[]).length,'GICS 섹터','홈·섹터 화면이 쓰는 단','var(--champ)')+
+      ty(groups.length,'GICS 산업그룹','같은 '+hs.rows.length+'사를 가른 수','var(--ink)')+
+      ty((IND.sectors||[]).length,'GICS 섹터','홈·섹터 화면이 쓰는 윗단','var(--champ)')+
       ty(solo,'1사뿐인 칸','이만큼은 사실상 개별 종목','var(--marg)');
-    // 🚨 3차(산업)를 왜 뺐는지 — 숫자는 손으로 적지 않고 home_reco.industry.tiers 에서 읽는다.
-    //   이 문단이 없어서 "3차는?" 이라는 질문이 나왔다(사용자 지적 2026-08-04). 번호를
-    //   1차·2차·4차로 적어 놓고 3차가 어디 갔는지 말하지 않으면 그 자체가 미완성 문장이다.
+    // 🚨 3차·4차를 왜 안 쓰는지 — 숫자는 손으로 적지 않고 home_reco.industry.tiers 에서 읽는다.
+    //   2026-08-04 에는 3차만 뺐고 그 사유를 안 적어 "3차는?" 이라는 질문이 나왔다.
+    //   2026-08-05 에 4차도 뺐다(사용자 결정) — 같은 표에 두 단을 다 흐리게 적는다.
     var TI=IND.tiers;
     if(TI&&TI.rows&&TI.rows.length===4){
       var tr=TI.rows, r3=tr[2];
-      el('tiers').innerHTML='<b>GICS 네 단 중 3차(산업)를 뺀 이유</b><br>'+
+      el('tiers').innerHTML='<b>GICS 네 단 중 두 단만 쓰는 이유</b><br>'+
         '<div class="fswrap"><table class="ttab"><thead><tr><th scope="col">단</th>'+
         '<th scope="col" class="tnum">칸</th><th scope="col" class="tnum">'+TI.min+'사 이상</th>'+
         '<th scope="col" class="tnum">그 안에 든 종목</th></tr></thead><tbody>'+
         tr.map(function(x,i){
-          var me=(i===2);
-          return '<tr'+(me?' class="dim"':'')+'><th scope="row">'+esc(x.nm)+'('+(i+1)+'차)'+
-                 (me?' <span class="xmk">안 씀</span>':'')+'</th>'+
+          var off=(i>=2);
+          return '<tr'+(off?' class="dim"':'')+'><th scope="row">'+esc(x.nm)+'('+(i+1)+'차)'+
+                 (off?' <span class="xmk">안 씀</span>':'')+'</th>'+
                  '<td class="tnum">'+x.n+'</td><td class="tnum">'+x.keep+'</td>'+
                  '<td class="tnum">'+x.cov+'%</td></tr>';
         }).join('')+'</tbody></table></div>'+
-        '2차는 종목을 빠짐없이 덮고(100%) 4차는 가장 잘게 가릅니다. 3차는 그 사이인데, '+
-        '<b>'+TI.ind_n+'칸 중 '+TI.ind_dup+'칸이 4차와 구성이 완전히 같습니다</b> — '+
-        '그 칸에서는 3차를 세워도 아래에 서브산업이 하나뿐이라 층만 하나 늘고 새로 갈리는 것이 없습니다. '+
-        '접히는 표에서 층은 비용이라 뺐습니다.<br>'+
-        '⚠ 안 쓰는 것이지 없는 것이 아닙니다 — 3차는 <code>data/members.json</code>의 <code>ind</code>에 '+
-        '종목마다 실려 있습니다(위키백과 GICS 문서의 4단 구조 전문에서 코드 자릿수로 갈라 붙입니다). '+
+        '<b>1차·2차만 씁니다(2026-08-05 결정).</b> 두 단은 종목을 <b>빠짐없이</b> 덮습니다(커버 100%). '+
+        '3차는 '+TI.ind_n+'칸 중 '+TI.ind_dup+'칸이 4차와 구성이 완전히 같아 층만 하나 늘고, '+
+        '4차는 '+tr[3].n+'칸 중 '+tr[3].keep+'칸만 '+TI.min+'사를 넘어 커버가 '+tr[3].cov+'%에 그칩니다 — '+
+        '나머지는 전부 “그 밖” 줄로 흘렀고 그 줄이 표에서 가장 자주 눈에 걸렸습니다. '+
+        '접히는 표에서 층은 비용이라, 잘게 가르는 대신 <b>빠짐없이 덮는 쪽</b>을 택했습니다.<br>'+
+        '⚠ 안 쓰는 것이지 없는 것이 아닙니다 — 3차·4차는 <code>data/members.json</code>의 '+
+        '<code>ind</code>·<code>sub</code>에 종목마다 그대로 실려 있습니다. '+
         '기준 '+TI.n_gics+'사(GICS가 있는 종목 · 전체 '+TI.n_all+'사).';
     }
     el('limits').innerHTML='<b>이 데이터의 성격</b><br>'+
