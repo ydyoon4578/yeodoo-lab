@@ -106,10 +106,6 @@
   /* 섹터 칩 — 홈의 .rsec와 동일한 결(영문 GICS 원문을 그대로 붙이면 길고 줄이 밀린다) */
   .secchip{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);border-radius:4px;padding:1px 5px;margin-left:6px;white-space:nowrap;vertical-align:1px}
   .secchip.lg{font-size:10.5px;padding:2px 8px;margin-left:0}
-  /* 테마 칩 — 섹터 칩과 **다른 색**을 쓴다. 같은 색이면 같은 급의 분류로 읽히는데,
-     섹터는 GICS 정본이고 테마는 우리가 손으로 쓴 명단이다. */
-  .thchip{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--cold);background:color-mix(in srgb,var(--cold) 12%,transparent);border-radius:4px;padding:1px 5px;margin-left:5px;white-space:nowrap;vertical-align:1px}
-  .thchip.lg{font-size:10.5px;padding:2px 8px;margin-left:6px}
   .flag{font-family:var(--mono);font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px}
   .flag.과매수,.flag.b200이탈{color:var(--hot);background:var(--hot-bg)} .flag.과매도{color:var(--cold);background:var(--cold-bg)}
   .flag.상승추세,.flag.b52돌파{color:var(--good);background:var(--good-bg)} .flag.눌림목{color:var(--watch);background:var(--watch-bg)}
@@ -819,35 +815,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 2026-08-05 — 샹들리에 프리셋을 뺐으므로(사용자 요청) 이 기계는 다시 스윙 전용이다.
   //   프리셋을 지우면서 isCh/mkWin/CH_WIN 도 함께 걷었다 — 닿지 않는 분기를 남겨 두면
   //   다음 사람이 '샹들리에도 되는구나'로 읽는다.
-  // ── 테마 칩 ─────────────────────────────────────────────────────────────
-  // 🚨 테마는 **사람이 손으로 쓴 명단**이다(build/themes_defs.py). 자동 추출은 세 경로를
-  //   실측으로 다 죽였다 — 정규식 정밀도 27%(우주방산 오염 81%) · 텍스트 군집은 산업을
-  //   빼면 92%가 사라짐 · 수익률 군집은 18개월 뒤 60~84%가 흩어짐.
-  // ⚠ '설명력 확인'을 받은 테마만 칩으로 낸다. 그리고 칩에는 **잰 창과 z 를 그대로 적는다**
-  //   — 라벨만 붙이고 무엇을 설명하는지 안 대면 그건 장식이다.
-  // ⚠ 명단을 2026-08-05 에 결과를 알고 썼으므로 정의상 미래참조다. 표시 전용이며
-  //   필터 칩줄(PRESETS)에는 넣지 않는다 — 테마는 분류 라벨이지 타이밍 신호가 아니다.
-  var THEME={};                       // 티커 → {label, tip}
-  fetch('data/themes.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(j){
-      if(!j)return;
-      var lab={}; (j.lab||[]).forEach(function(r){lab[r.key]=r;});
-      (j.defs||[]).forEach(function(d){
-        var L=lab[d.key]; if(!L||L.verdict!=='설명력 확인')return;
-        var tip=d.label+' — '+d.why+'  · 명단 '+L.n_def+'종(유니버스 내 '+L.n_used+'종) · '
-               +'시장과 GICS 네 단을 뺀 뒤 군내 평균 상관 '+L.corr.toFixed(3)
-               +' · 같은 크기 무작위 표본 대비 z '+(L.z>=0?'+':'')+L.z.toFixed(2)
-               +'(문턱 '+j.z_crit+') · 측정 창 '+j.window.start+'~'+j.window.end
-               +'. 손으로 쓴 명단이고 결과를 알고 쓴 것이라 매매 근거가 아니다.';
-        (d.members||[]).forEach(function(m){THEME[m.t]={label:d.label,tip:tip};});
-      });
-      if(typeof render==='function')render();
-    })['catch'](function(){});
-  function themeChip(t){
-    var x=THEME[t]; if(!x)return '';
-    return '<span class="thchip" title="'+esc(x.tip)+'">'+esc(x.label)+'</span>';
-  }
-
   function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
   function lastMkP(s,pk){var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
   function swFresh(s,sk,pk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
@@ -1013,7 +980,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }else{metric='<span class="metric"><div class="mv">'+Math.round(v)+'</div><div class="mbar"><i style="width:'+v+'%;background:'+cc(comp)+'"></i></div></span>';}
       return '<button class="item'+(state.preset==='tgt'?' wide':'')+'" role="option" data-t="'+s.t+'" aria-selected="'+(s===state.sel)+'">'+
         '<span><span class="tkline">'+(scr?'<span class="rk">'+(++rk)+'</span>':'')+'<span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib" title="'+esc(ixn(x))+'">'+esc(ixs(x))+'</span>';}).join('')+fl+'</span>'+
-        '<div class="nm">'+esc(s.name||'')+(s.sector?'<span class="secchip">'+esc(secKo(s.sector))+'</span>':'')+themeChip(s.t)+
+        '<div class="nm">'+esc(s.name||'')+(s.sector?'<span class="secchip">'+esc(secKo(s.sector))+'</span>':'')+
         (s.part?'<span class="partchip" title="상장 '+s.part+'거래일 — 창이 확보된 단기 지표만 산출됩니다(200일선·52주·중장기 모멘텀 없음)">부분 '+s.part+'일</span>':'')+'</div></span>'+metric+'</button>';
     }).join('');
     if(!listEl._deleg){listEl._deleg=1;listEl.addEventListener('click',function(e){var it=e.target.closest('.item');if(!it)return;
@@ -1264,7 +1231,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       fitems.map(function(x){if(x[2]==null)return '';var val=x[0]==="gr"?((x[2]>0?"+":"")+x[2]+"%"):x[2];var col=x[0]==="gr"?(x[2]>0?"var(--good)":"var(--hot)"):"var(--ink)";
         return '<div class="fcell"><div class="fcl">'+x[1]+(x[3]?' <span>'+x[3]+'</span>':'')+'</div><div class="fcv" style="color:'+col+'">'+val+'</div></div>';}).join('')+'</div></div>':'';
     detailEl.innerHTML='<div class="dtop"><div class="tkrow"><span class="tk">'+s.t+'</span>'+(s.idx||[]).map(function(x){return '<span class="ib">'+esc(ixn(x))+'</span>';}).join('')+'</div>'+
-      '<div class="nm">'+esc(s.name||'')+'</div>'+(s.sector?'<div class="sec"><span class="secchip lg">'+esc(secKo(s.sector))+'</span>'+themeChip(s.t).replace('thchip','thchip lg')+'</div>':'')+(fl?'<div class="flags">'+fl+'</div>':'')+'</div>'+
+      '<div class="nm">'+esc(s.name||'')+'</div>'+(s.sector?'<div class="sec"><span class="secchip lg">'+esc(secKo(s.sector))+'</span></div>':'')+(fl?'<div class="flags">'+fl+'</div>':'')+'</div>'+
       '<div class="chartcard"><div class="charthd"><span class="cl">주가 · <span id="chgd"></span></span><span class="chartbtns" id="chartbtns"></span></div>'+
         '<div class="marklegend" id="marklg" style="justify-content:flex-end;margin:-2px 0 1px"></div>'+
         '<canvas id="pxc" width="600" height="150" role="img" aria-label="주가 차트"></canvas></div>'+
