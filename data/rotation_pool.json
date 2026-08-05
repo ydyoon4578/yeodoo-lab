@@ -160,7 +160,13 @@
     "AlphaBetaStock (2026), 'Sector Rotation Shifts Toward Industrials And Energy As Tech Narrows' — https://alphabetastock.com/sector-rotation-industrials-energy-tech-narrowing-2026/"
    ],
    "id": "A7",
-   "recent_at": "2026-07-23"
+   "recent_at": "2026-07-23",
+   "lab": {
+    "v": "기각",
+    "t": "경기순환 섹터 로테이션 (Business-Cycle Sector Rotation · A7)",
+    "why": "사전등록 뒤 두 규칙을 한 번씩 돌려 게시 기준 미달 — Conover판 대조군 열위(위험 악화), Fidelity판 구별 불가(t 0.15). 결정적 진단: NBER 침체 라벨을 그날 아는 것으로 가정해 줘도 SPY 를 못 이긴다(샤프 −0.006). 국면 라벨을 섞으면 32%가 실제보다 낫다.",
+    "href": "archive.html#a-business-cycle-sector-rotation"
+   }
   },
   {
    "id": "A10",
