@@ -953,6 +953,74 @@ def build():
                            note="EBP는 월간이고 발표 지연이 있다 — 발표일 기준 최신값만 쓴다.")
     add("ebp-gate", "ebp-risk-appetite-gate", s_ebp)
 
+    # ── A2 국면 연동 팩터 로테이션 (사전등록 PREREG-2026-08-05-A2FACTOR.md) ──
+    # 🚨 이 규칙은 **수익 축으로 판정하지 않는다.** 조사 과정에서 프록시 13개 매핑이 이미
+    #   돌아 결과를 봤기 때문이다(Δ샤프 −0.140~+0.080 · 최대 |t| 1.58). 사전등록 §0 참고.
+    #   게시 기준은 아무도 안 본 축 — 낙폭조정 수익(Calmar) · 팩터 5종 동일가중 대조군이다.
+    # ⚠ 매핑·임계·대조군은 사전등록 문서에 박혀 있다. 여기서 고치면 그 검정은 무효다.
+    def s_a2factor():
+        FAC = ["MTUM", "VLUE", "SIZE", "QUAL", "USMV"]
+        ts = FAC + ["RPG", "IEF", "SPY"]
+        # pad=260 — 첫 판정일에 252일 베타가 이미 완전해야 한다(국면3 의 베타 상한 구속).
+        st = first_common(ts, pad=260)
+        if st >= len(DTS) - 300 or not A["macro"].get("VIXCLS"):
+            return None
+        spy = A["px"].get("SPY")
+
+        def _beta(t, i, n=252):
+            """SPY 대비 추적 n일 OLS 베타. i 일까지만 쓴다(미래참조 없음)."""
+            a, b = A["px"].get(t), spy
+            if not a or i < n:
+                return None
+            xs, ys = [], []
+            for j in range(i - n + 1, i + 1):
+                if a[j] and a[j - 1] and b[j] and b[j - 1]:
+                    xs.append(b[j] / b[j - 1] - 1); ys.append(a[j] / a[j - 1] - 1)
+            if len(xs) < n * 0.8:
+                return None
+            mx = sum(xs) / len(xs); my = sum(ys) / len(ys)
+            vx = sum((x - mx) ** 2 for x in xs)
+            if vx <= 0:
+                return None
+            return sum((xs[k] - mx) * (ys[k] - my) for k in range(len(xs))) / vx
+
+        def w(i):
+            v = macro_asof("VIXCLS", DTS[i])
+            m200 = sma(spy, i, 200)
+            if v is None or m200 is None or not spy[i]:
+                return {"SPY": 1.0}                     # 신호가 없으면 판단하지 않는다
+            up = spy[i] > m200
+            if up and v < 20:                           # 국면1 — 모멘텀+성장
+                return {"MTUM": 0.5, "RPG": 0.5}
+            if up and v <= 28:                          # 국면2 — 퀄리티+멀티팩터
+                return dict({"QUAL": 0.5}, **{t: 0.125 for t in FAC if t != "QUAL"})
+            # 국면3 — 저변동+퀄리티, 포트 베타 ≤ 0.80 을 **구속으로** 건다
+            bu, bq = _beta("USMV", i), _beta("QUAL", i)
+            if bu is None or bq is None or bu >= bq:
+                return {"USMV": 0.5, "QUAL": 0.5}       # 추정 불가 시 원문 그대로
+            x = min(1.0, max(0.5, (0.80 - bq) / (bu - bq)))
+            bmix = x * bu + (1 - x) * bq
+            if bmix <= 0.80:
+                return {"USMV": x, "QUAL": 1 - x}
+            k = 0.80 / bmix                             # 그래도 넘으면 IEF 로 희석
+            return {"USMV": k * x, "QUAL": k * (1 - x), "IEF": 1 - k}
+
+        return run_weights(
+            w, st, "국면 연동 팩터 로테이션 (A2)",
+            lambda i: {t: 0.2 for t in FAC},            # 대조군 = 팩터 5종 동일가중
+            "SPY 종가가 200일선 위이고 VIX<20 이면 MTUM50+RPG50, 200일선 위이고 VIX 20~28 이면 "
+            "QUAL50+나머지 팩터 4종 각 12.5%, 200일선 아래이거나 VIX>28 이면 USMV+QUAL 을 "
+            "추적 252일 베타로 포트 베타 0.80 이하가 되게 섞는다(그래도 넘으면 IEF 희석). "
+            "월말 판정·월 1회 전환. 대조군은 같은 팩터 5종 동일가중.",
+            "【문헌】팩터 프리미엄이 변동성·추세 국면에 따라 순환한다는 주장. 【실측】이 랩은 "
+            "'정적 팩터 대비 낙폭 축소'를 158개월 팩터 구간에서 한 번도 재본 적이 없다 — "
+            "quality-tilt 한 행이 전부다. 그 한 문장만 검정한다.",
+            note="🚨 수익 축은 판정에 쓰지 않는다 — 프록시 13매핑이 이미 돌아 결과를 봤다"
+                 "(사전등록 §0). 게시 기준은 Calmar 와 팩터 5종 EW 대조군이다. "
+                 "⚠ 국면2 는 158개월 중 15개월(에피소드 12·중앙 1개월)뿐이라 이 버킷 단독 "
+                 "주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다.")
+    add("a2-factor-rot", "regime-factor-rotation", s_a2factor)
+
     # ── 퀄리티 롱숏(ETF 프록시) ──
     def s_quality():
         ts = ["QUAL", "SIZE", "SPY"]
