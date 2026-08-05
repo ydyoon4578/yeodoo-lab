@@ -2412,6 +2412,33 @@ try:
 except FileNotFoundError:
     pass
 
+# ── 랩에서 돌린 풀 후보가 풀 카드에 비치는가 ─────────────────────────────
+# 🚨 2026-08-05 — A2(국면 연동 팩터 로테이션)를 사전등록하고 돌려 기각했는데, 정작
+#   사용자가 보는 풀 카드(rotation.html)에는 아무 표시가 없었다. 카드는 여전히 '검정한 적
+#   없는 아이디어'처럼 읽혔고, 그래서 "이건 어떻게 됐어"라는 질문이 되돌아왔다.
+#   재 놓고 안 내면 모은 적 없는 것과 같다 — 랩에 있는데 풀에 없으면 여기서 막는다.
+#   ⚠ 반대 방향(풀에 있는데 랩에 없음)은 정상이다. 풀은 아이디어 목록이라 대부분 미검정이다.
+try:
+    _pool = json.load(io.open(os.path.join(ROOT, "data", "rotation_pool.json"), encoding="utf-8"))
+    _ai2 = json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"), encoding="utf-8"))
+    _arch_by_name = {x.get("n"): x for x in (_ai2.get("items") or [])}
+    # 풀 카드가 이미 가리키고 있는 아카이브 이름들
+    _linked = {(x.get("lab") or {}).get("t") for x in (_pool.get("strategies") or [])}
+    # 아카이브 항목의 aka 에 풀 id(A2 등)가 적혀 있으면 그 카드는 반드시 연결돼야 한다
+    _ids = {x.get("id") for x in (_pool.get("strategies") or [])}
+    _orphan = []
+    for _n, _rec in _arch_by_name.items():
+        _tags = [str(a) for a in (_rec.get("aka") or [])] + [str(_rec.get("sid") or "")]
+        _hit = [i for i in _ids if i and any(i.lower() in t.lower() for t in _tags)]
+        if _hit and _n not in _linked:
+            _orphan.append("%s → 풀 %s" % (_rec.get("sid"), ",".join(sorted(_hit))))
+    if _orphan:
+        errors.append("랩에서 판정한 전략이 풀 카드에 안 비친다 %d건: %s — rotation_pool 의 "
+                      "해당 항목에 lab{v,t,why,href} 를 달 것(안 달면 카드가 '검정한 적 없는 "
+                      "아이디어'로 읽힌다)" % (len(_orphan), " · ".join(_orphan)))
+except FileNotFoundError:
+    pass
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
