@@ -805,7 +805,11 @@ def fetch_cache():
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
     got = 0
     for i in range(0, len(want), 25):
-        ch = [t for t in want[i:i + 25] if t not in out]
+        # 🚨 2026-08-05 — 종전에는 `t not in out`(종가 캐시)만 봤다. 그래서 고가·저가를
+        #   같은 배치에 얹었더니 **이미 종가가 있는 147종은 아예 안 받아** HL 캐시가 0종으로
+        #   남았다(실행은 성공으로 끝났다 — 전형적인 '조용한 미수집'이다).
+        #   둘 중 하나라도 없으면 받는다.
+        ch = [t for t in want[i:i + 25] if t not in out or t not in hlout]
         if not ch:
             continue
         try:
@@ -818,7 +822,9 @@ def fetch_cache():
             if t in d:
                 ser = d[t].dropna()
                 if len(ser) > 200:
-                    out[t] = {str(k.date()): round(float(v), 4) for k, v in ser.items()}
+                    # 이미 있는 종가는 덮어쓰지 않는다 — 재수집 시점이 달라 값이 미세하게
+                    # 흔들리면 그 위에서 잰 PIT 수치가 조용히 바뀐다.
+                    out.setdefault(t, {str(k.date()): round(float(v), 4) for k, v in ser.items()})
                     # 고가·저가도 같은 배치에서 받는다 — 따로 받으면 두 번 요청하고
                     # 그 사이 조정계수가 바뀌면 종가와 기준이 어긋난다.
                     if _hi is not None and _lo is not None and t in _hi and t in _lo:

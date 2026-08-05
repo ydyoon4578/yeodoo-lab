@@ -37,12 +37,17 @@ jobs:
           python-version: '3.12'
       - name: Install deps
         run: pip install --quiet yfinance pandas
+      # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
+      #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
+      #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
       - name: Fetch forward estimates
         run: python build/refresh_estimates.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
-        run: python build/validate_site.py
+        run: python build/validate_gate.py check
       # estimates.json은 **누적 파일**이다(snaps). 커밋에서 빠지면 매 실행이 fresh checkout이라
       # 그동안 쌓은 스냅샷이 영구 유실된다 — target_history·earnings_history와 같은 함정이다.
       - name: Commit if changed
