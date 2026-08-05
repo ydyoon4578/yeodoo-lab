@@ -110,7 +110,12 @@ def main():
         na = sum(1 for t in have if not (mem.get(t) or {}).get("sub"))
         na_r = (na / len(have)) if have else 1.0
         v = score([pos[t] for t in have])
+        # 🚨 어떤 종목이 채점에 **실제로 들어갔는지**를 함께 낸다. 개수만 내면 화면이
+        #   명단 12종을 늘어놓고 그 옆에 8종으로 잰 z 를 붙이게 된다 — 한 줄이 두 수를
+        #   말하는 꼴이고, 어느 종목이 빠졌는지는 아무도 모른다. 창(756거래일) 전체가
+        #   있는 종목만 들어가므로 신규상장은 자연히 빠진다.
         row = {"key": key, "n_def": len(mems), "n_used": len(have),
+               "used": have, "unused": [t for t in mems if t not in pos],
                "sub_na": round(na_r, 3)}
         if len(have) < MIN_N or v is None:
             row.update(verdict="측정불가", why="유니버스 안 종목이 %d종 — %d종 미만이면 "
