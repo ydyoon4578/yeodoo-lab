@@ -2272,6 +2272,27 @@ if _ctrl:
                   "된다(예: `\b` 를 덜 이스케이프하면 0x08 한 글자가 된다)"
                   % (len(_ctrl), ", ".join(_ctrl[:6])))
 
+# ── 라이선스 자료가 공개 저장소에 들어왔는가 ──────────────────────────────
+# 🚨 2026-08-05 — data/pit_members.json(사내 DB public.index_constituents 산출)이
+#   `git add -A` 에 쓸려 커밋됐다. 2026-08-03 에 파이프라인에서 걷어내면서 **무시 규칙도
+#   같이 지웠기** 때문이다. 이 저장소는 공개(GitHub Pages)라 올라가면 되돌리기 어렵다.
+#   푸시가 거부돼 공개되진 않았지만, 그건 운이었다. 규칙으로 막는다.
+_LICENSED = ("data/pit_members.json",)
+# ⚠ 여기를 try/except: pass 로 감싸면 안 된다. 검사가 죽어도 조용히 통과하는데,
+#   그건 이 검사가 막으려는 것보다 나쁘다(오늘만 같은 유형을 여러 번 고쳤다).
+#   _sp0 은 모듈 최상단에서 import 한 것이다 — 아래쪽 try 안의 _sp 는 그 블록이
+#   안 돌면 정의되지 않는다.
+_leak = []
+for _lf in _LICENSED:
+    _r = _sp0.run(["git", "ls-files", "--error-unmatch", _lf], cwd=ROOT,
+                  capture_output=True, text=True)
+    if _r.returncode == 0:
+        _leak.append(_lf)
+if _leak:
+    errors.append("라이선스 자료가 저장소에 추적되고 있다: %s — 사내 DB 산출물이라 공개 "
+                  "저장소에 두면 안 된다(`git rm --cached` 로 빼고 .gitignore 에 넣을 것)"
+                  % ", ".join(_leak))
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

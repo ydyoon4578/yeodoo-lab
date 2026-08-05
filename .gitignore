@@ -19,6 +19,11 @@ build/nav_body.html
 #   _pit_px_cache.json 편출 종목 가격(yfinance). 재현 가능하지만 4MB라 로컬에만 둔다.
 # ⚠ pit_members.json(사내 DB 산출)은 2026-08-03 에 걷어냈다 — 멤버십은 이제
 #   data/index_history.json(위키 과거 리비전, 커밋됨)에서 온다. build/index_members.py 참조.
+#   🚨 2026-08-05 — 걷어내면서 **무시 규칙도 같이 지웠다.** 그래서 예전 PC 에 남아 있던
+#     파일이 `git add -A` 에 쓸려 들어가 커밋됐다(푸시는 거부돼 공개되진 않았다).
+#     이 저장소는 공개다 — 사내 DB 산출물은 규칙으로 막는다. 안 쓰는 것과 올라가도 되는 것은
+#     다르다.
+data/pit_members.json
 data/_pit_px_cache.json
 # 편출 종목 시점별 주식수(yfinance) — x-small PIT 용
 #   ⚠ gitignore 는 줄 끝 주석을 지원하지 않는다. 패턴과 같은 줄에 쓰면 통째로 리터럴이 된다.
