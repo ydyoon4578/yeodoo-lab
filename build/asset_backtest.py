@@ -98,12 +98,25 @@ def attach_incr(rows, tcrit, label):
             m5 = TB.incr_multi(r, [z[3] for z in nb[:5]])
             if m5:
                 r["incr5"] = dict(m5, vs=[z[2] for z in nb[:5]])
-    dg = []
+    dg = []; un = []          # un = incr5 를 아예 못 잰 규칙(격자 불일치 등)
     for r in rows:
         if r.get("verdict") != "통과 후보":
             continue
         i5 = (r.get("incr5") or {}).get("t")
-        if i5 is None or abs(i5) >= 2.0:
+        # 🚨 2026-08-05 — 종전에는 `i5 is None` 이 그냥 continue 였다. **못 잰 것이 넘은 것과
+        #   같아진다.** 실제로 세 규칙(guru-clone·regime-switch·hrp-sleeve)이 날짜를 월 라벨로
+        #   내는 바람에 이웃이 0개였고, 이 게이트를 경고 한 줄 없이 통과하고 있었다. 지금은
+        #   셋 다 통과 후보가 아니라 실害는 없었지만, 통과 후보가 되는 순간 배지를 그냥 단다.
+        #   중복을 확인할 수 없는 규칙에 '통과 후보'를 달아 줄 근거는 없다 — 강등하고 적는다.
+        if i5 is None:
+            un.append((r["name"], r.get("t"), len(r.get("dates") or [])))
+            r["verdict"] = "구별 불가"
+            r["why"] = (r.get("why") or "") + (
+                " ⚠ 이웃 5개 동시 통제 증분알파(incr5)를 **계산할 수 없었다** — 이 규칙의 날짜 "
+                "격자가 다른 규칙들과 안 맞아 비교 가능한 이웃이 모자란다. 중복을 확인하지 "
+                "못한 규칙에 통과 배지를 달지 않는다(못 잰 것은 넘은 것이 아니다).")
+            continue
+        if abs(i5) >= 2.0:
             continue
         dg.append((r["name"], r.get("t"), i5, (r.get("incr5") or {}).get("vs") or []))
         r["verdict"] = "구별 불가"
@@ -116,6 +129,15 @@ def attach_incr(rows, tcrit, label):
         print("  [%s 증분알파 게이트] 통과 후보 → 구별 불가 %d종:" % (label, len(dg)))
         for nm, t0, i5, vs in dg:
             print("    · %-30s t %s → incr5 %.2f" % (nm[:30], t0, i5))
+    if un:
+        # 조용히 넘기지 않는다 — 못 잰 것이 몇 개인지 실행 로그에 남긴다.
+        print("  [%s 증분알파 게이트] **계산 불가**로 강등 %d종(날짜 격자 불일치 의심):" % (label, len(un)))
+        for nm, t0, nd in un:
+            print("    · %-30s t %s · dates %d" % (nm[:30], t0, nd))
+    # incr5 를 못 잰 규칙은 통과 후보가 아니어도 알린다 — 게이트의 사각지대이므로.
+    _blind = [r["name"] for r in rows if (r.get("incr5") or {}).get("t") is None]
+    if _blind:
+        print("  [%s 증분알파] incr5 미산출 %d종: %s" % (label, len(_blind), " · ".join(_blind[:6])))
     return dg
 
 

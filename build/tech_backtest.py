@@ -2417,6 +2417,38 @@ def corr_of(a, b):
         return None
     return sum((x - m1) * (y - m2) for x, y in zip(a, b)) / (s1 * s2)
 
+def _align_grid(maps):
+    """날짜 격자가 섞여 있으면 **거친 쪽(월말)으로 전원을 내린다.**
+
+    🚨 2026-08-05 — 자산 랩의 세 규칙(guru-clone·regime-switch·hrp-sleeve)은 날짜를
+      '2013-08'(월 라벨)로 내고 나머지는 '2013-08-20'(일 라벨)로 낸다. 교집합이 0 이라
+      이웃이 하나도 안 잡혔고, 이웃 5개를 못 채우니 incr5 가 None 이 됐다. 그리고 중복
+      게이트가 `i5 is None` 을 통과로 취급했다 — **못 잰 것이 넘은 것과 같아졌다.**
+
+    ⚠ 잣대를 두 벌로 만들지 않는다. 한쪽이라도 월이면 **전원** 월말로 내린다. 쌍 비교
+      (paired_excess)와 다중 회귀(incr_multi)가 같은 함수를 쓰게 한 이유가 이것이다 —
+      한쪽만 고치면 쌍에서는 이웃으로 뽑히고 다중에서는 교집합이 무너져 incr5 가 오히려
+      더 많이 None 이 된다(실제로 3종 → 8종으로 늘렸다가 되돌렸다).
+    ⚠ 전원 일간이면 아무것도 하지 않는다 — 종전과 완전히 같은 값이 나온다.
+    """
+    if not maps or not all(maps):
+        return maps
+    if all(all(len(k) == 7 for k in m) for m in maps):
+        return maps                                   # 전원 월간
+    if all(all(len(k) == 10 for k in m) for m in maps):
+        return maps                                   # 전원 일간 — 손대지 않는다
+    out = []
+    for m in maps:
+        if all(len(k) == 7 for k in m):
+            out.append(m)
+        else:
+            g = {}
+            for k in sorted(m):                       # 정렬이라 그 달의 마지막 관측이 남는다
+                g[k[:7]] = m[k]
+            out.append(g)
+    return out
+
+
 def paired_excess(r1, r2):
     """두 규칙의 **공통 날짜**에서 초과수익(전략−대조군) 두 계열을 만든다.
 
@@ -2429,7 +2461,7 @@ def paired_excess(r1, r2):
         if not (len(d) == len(nv) == len(bv)):
             return {}
         return {d[i]: (nv[i], bv[i]) for i in range(len(d))}
-    e1, e2 = ex(r1), ex(r2)
+    e1, e2 = _align_grid([ex(r1), ex(r2)])       # 격자 정규화는 한 곳에서만 한다
     ds = sorted(set(e1) & set(e2))
     xs, ys, prev = [], [], None
     for d in ds:
@@ -2458,6 +2490,7 @@ def incr_multi(r, others):
     maps = [ser(r)] + [ser(o) for o in others]
     if not all(maps):
         return None
+    maps = _align_grid(maps)                     # 쌍 비교와 **같은** 규약을 쓴다
     ds = sorted(set.intersection(*[set(m) for m in maps]))
     cols, prev = [[] for _ in maps], None
     for d in ds:
