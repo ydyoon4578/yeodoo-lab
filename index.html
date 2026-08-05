@@ -310,6 +310,12 @@
   .sttbl tr.lv2>th{padding-left:28px;font-weight:600}
   .sttbl tr.lv3>th{padding-left:52px;font-weight:400}
   .sttbl tr.lv4>th{padding-left:78px;font-weight:400;color:var(--muted)}
+  /* 테마 경고 — 표 **머리**에 둔다. 각주로 내리면 숫자만 읽힌다. */
+  .thwarn{font-size:11.5px;line-height:1.55;color:var(--ink-2);background:color-mix(in srgb,var(--marg) 9%,var(--panel));border-left:3px solid var(--marg);border-radius:0 6px 6px 0;padding:8px 10px;margin:0 0 8px}
+  .thwarn b{color:var(--ink)}
+  .sttbl tr.th1>th{font-weight:700}
+  .sttbl tr.th2>th{padding-left:28px;font-weight:400}
+  .thz{font-family:ui-monospace,monospace;font-size:9.5px;font-weight:700;color:var(--champ);margin-left:6px;white-space:nowrap}
   /* ⚠ 하위 단의 td 에 color 를 걸지 않는다. .sttbl td.up/.dn 과 특이도가 같아
      나중에 선언된 이쪽이 이겨 **초록·빨강이 통째로 회색으로 덮였다**(사용자 지적).
      층은 이름 칸의 굵기·들여쓰기로만 구분하고, 숫자의 색은 어느 단에서나 같다. */
@@ -878,6 +884,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     </section>
 
+    <!-- 테마 — 손으로 쓴 명단 3종. 섹터·산업그룹(GICS)과 **다른 축**이라 따로 둔다.
+         🚨 여기 수익률은 성과가 아니다. 명단을 2026-08-05 에 결과를 알고 썼으므로 그 이전
+            구간의 수익률은 전부 사후 선택이 들어간 값이다. 그 사실을 각주가 아니라
+            표 머리에 적는다 — 각주로 내리면 숫자만 읽힌다.
+         ⚠ 명단 확정 이후 경과 영업일을 함께 낸다. 시간이 흐르면 '확정 후' 구간이 생기고,
+            그때부터가 사후 선택이 안 들어간 유일한 창이다. 화면이 스스로 그 날을 센다. -->
+    <section id="s-theme" aria-labelledby="th-h">
+      <h2 class="lbl" id="th-h">테마 <span class="sub" id="th-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 화면 →</a></h2>
+      <div class="thwarn" id="thwarn"></div>
+      <div class="stwrap"><table class="sttbl" id="thtbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
+      <p class="stnote" id="thnote"></p>
+    </section>
 
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
@@ -1632,6 +1650,81 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+2)+'">'+
            stDetail(s)+'</td></tr>';
   }
+  // ── 테마 표 ──────────────────────────────────────────────────────────────
+  // 위 기간별 수익률 표와 **같은 .sttbl · 같은 stCell · 같은 ST_HZ** 를 쓴다 — 열이 저절로
+  // 맞고 색 규칙이 하나다. 다른 표를 새로 만들면 같은 열이 다른 날을 가리키게 된다.
+  //
+  // 🚨 여기 수익률은 **성과가 아니다.** 명단을 결과를 알고 썼으므로 명단 확정일 이전 구간의
+  //   수익률에는 사후 선택이 통째로 들어가 있다. 그 사실을 각주가 아니라 표 **머리**에 적는다
+  //   — 각주로 내리면 숫자만 읽힌다(이 저장소가 여러 번 그렇게 당했다).
+  // ⚠ 명단 확정 후 경과 영업일을 화면이 스스로 센다. 시간이 흐르면 '확정 후' 구간이 생기고
+  //   그때부터가 사후 선택이 안 들어간 유일한 창이다.
+  function drawThemes(){
+    var box=el('thtbl'); if(!box)return;
+    var TH=MK.th, HS=MK.hs;
+    if(!TH||!HS){return;}                       // 둘 다 와야 그린다(하나만 오면 다시 부른다)
+    var lab={}; (TH.lab||[]).forEach(function(r){lab[r.key]=r;});
+    var by={}; (HS.rows||[]).forEach(function(x){by[x.nm]=x;});
+    var HZ=ST_HZ, ncol=HZ.length;
+    var pass=(TH.defs||[]).filter(function(d){var L=lab[d.key];return L&&L.verdict==='설명력 확인';});
+    if(!pass.length){box.innerHTML='<tbody><tr><td class="skel2">설명력이 확인된 테마가 없습니다</td></tr></tbody>';return;}
+
+    // 명단 확정일 이후 흐른 영업일 — 가장 늦게 추가된 종목 기준(가장 보수적).
+    var added=''; pass.forEach(function(d){(d.members||[]).forEach(function(m){if(m.added_on>added)added=m.added_on;});});
+    var bd=0; if(added&&TH.window&&TH.window.end){
+      var a=new Date(added+'T00:00:00'), b=new Date(TH.window.end+'T00:00:00');
+      while(a<b){a.setDate(a.getDate()+1); if(a.getDay()!==0&&a.getDay()!==6)bd++;}
+    }
+    var w=el('thwarn');
+    if(w)w.innerHTML='<b>아래 수익률은 성과가 아닙니다.</b> 테마 명단은 사람이 '+esc(added)+
+      '에 <b>결과를 알고</b> 쓴 것이라, 그 이전 구간의 수익률에는 사후 선택이 통째로 들어가 있습니다 — '+
+      '“오른 종목을 모아 놓고 오른 것을 보여주는” 값입니다. '+
+      (bd>0? '명단 확정 후 <b>'+bd+'영업일</b>이 지났습니다 — 그 구간만이 사후 선택이 안 들어간 창입니다.'
+           : '명단 확정 후 <b>아직 하루도 지나지 않았습니다</b> — 사후 선택이 안 들어간 구간이 아직 없습니다.')+
+      ' 매매 근거가 아니라 “이 종목들이 무엇을 했나”로만 읽으십시오.';
+
+    var h='<thead><tr><th scope="col">테마</th>'+HZ.map(function(z){return '<th scope="col" class="tnum">'+z[1]+'</th>';}).join('')+'</tr></thead><tbody>';
+    pass.forEach(function(d){
+      var L=lab[d.key];
+      var ms=(d.members||[]).map(function(m){return by[m.t];}).filter(Boolean);
+      // 테마 줄 = 구성종목 **동일가중** 평균(시총가중이 아니다 — 화면에 적는다).
+      var agg={}; HZ.forEach(function(z){
+        var v=ms.map(function(x){return (x.r||{})[z[0]];}).filter(function(y){return y!=null;});
+        agg[z[0]]=v.length?v.reduce(function(a,b){return a+b;},0)/v.length:null;});
+      var tip=d.why+' · 시장과 GICS 네 단을 뺀 뒤 군내 평균 상관 '+L.corr.toFixed(3)+
+              ' · 무작위 표본 대비 z '+(L.z>=0?'+':'')+L.z.toFixed(2)+'(문턱 '+TH.z_crit+')'+
+              ' · 측정 창 '+TH.window.start+'~'+TH.window.end;
+      // 🚨 명단 수와 **채점에 들어간 수**를 구별해 적는다. 종전에는 명단 12종을 늘어놓고
+      //   그 옆에 8종으로 잰 z 를 붙였다 — 한 줄이 두 수를 말하는 꼴이다. 창(756거래일)
+      //   전체가 없는 신규상장은 채점에서 빠지는데, 그 사실이 화면에 없었다.
+      var nsk=ms.length-(L.n_used||0);
+      h+='<tr class="th1"><th scope="row" title="'+esc(tip)+'">'+esc(d.label)+
+         ' <small>'+ms.length+'종'+(nsk>0?' · 채점 '+L.n_used+'종':'')+'</small>'+
+         '<span class="thz">z '+(L.z>=0?'+':'')+L.z.toFixed(1)+'</span></th>'+
+         HZ.map(function(z){return stCell(agg[z[0]]);}).join('')+'</tr>';
+      ms.sort(function(a,b){return (b.mc||0)-(a.mc||0);});
+      var used={}; (L.used||[]).forEach(function(t){used[t]=1;});
+      ms.forEach(function(x){
+        // 채점에서 빠진 종목(상장 후 3년이 안 됐다)은 그렇다고 적는다 — 안 적으면 이 줄들도
+        // z 에 들어간 것으로 읽힌다.
+        var out=(L.used&&!used[x.nm]);
+        h+='<tr class="th2"'+(out?' style="opacity:.62"':'')+'><th scope="row">'+esc(x.nm)+
+           ' <small>'+esc(x.sn||'')+'</small>'+
+           (out?' <small title="최근 '+TH.window.days+'거래일 전체가 없어 채점에서 빠졌다(상장 3년 미만)">채점 제외</small>':'')+
+           '</th>'+HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('')+'</tr>';
+      });
+    });
+    box.innerHTML=h+'</tbody>';
+    var sub=el('th-sub');
+    if(sub)sub.textContent='· 설명력 확인 '+pass.length+'종 / 시험한 후보 '+TH.n_candidates+'종 · 기준일 '+(TH.as_of||'');
+    var nt=el('thnote');
+    if(nt)nt.innerHTML='테마 줄은 구성종목 <b>동일가중</b> 평균입니다(시총가중 ETF와 다릅니다). '+
+      'z는 시장과 GICS 네 단(산업그룹·서브산업)을 모두 뺀 잔차의 군내 평균 상관을 같은 크기 무작위 표본과 견준 값입니다 — '+
+      '<b>같이 움직인다</b>는 뜻이지 <b>더 오른다</b>는 뜻이 아닙니다. '+
+      '시험한 후보 '+TH.n_candidates+'종 중 '+pass.length+'종만 문턱(z ≥ '+TH.z_crit+')을 넘었습니다. '+
+      '탈락한 것도 <code>data/themes.json</code>에 그대로 남습니다.';
+  }
+
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
     // 🚨 이 표는 **두 파일이 채운다** — style_top/style_trails/market_board(여기 j)와
@@ -1870,6 +1963,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // renderReco 가 던진 예외(마크업이 한 군데만 어긋나도 난다)까지 폴백을 탔고,
   // 그러면 stocks.json 199KB(gz)를 받고도 결국 같은 renderReco 를 다시 불러
   // **화면은 그대로 실패**했다. 렌더 예외는 폴백이 아니라 실패 표시로 보낸다.
+  // 테마 — themes.json(명단·성적)과 home_stocks.json(종목별 수익률) 둘 다 있어야 그린다.
+  // ⚠ home_stocks 는 원래 트리를 펼칠 때만 늦게 받던 파일이다(22KB gz). 테마 표가 첫 화면에
+  //   있으므로 여기서 미리 받고 **MK.stk 에 같이 담아** 트리가 다시 받지 않게 한다 —
+  //   두 곳이 따로 받으면 같은 파일을 두 번 내려받는다.
+  // ⚠ themes.json 은 **캐시를 쓰지 않는다**(fresh). 채점 결과에 필드가 늘어날 때 옛 사본이
+  //   남아 있으면 화면이 조용히 반쪽만 그린다 — 실제로 그랬다: n_used 는 옛 파일에도 있어
+  //   '채점 8종'은 나오는데, 새로 넣은 used 배열이 없어 '채점 제외' 표시만 사라졌다.
+  //   반쪽만 맞는 화면이 전부 틀린 화면보다 알아채기 어렵다.
+  Promise.all([getj('themes.json', true), getj('home_stocks.json')]).then(function(a){
+    MK.th=a[0]; MK.hs=a[1];
+    if(a[1]&&a[1].rows&&MK.stk===null)MK.stk=a[1].rows;   // 트리와 캐시를 공유한다
+    if(!MK.th){                                            // 파일이 없으면 구획을 조용히 접는다
+      var sec=el('s-theme'); if(sec)sec.hidden=true; return;
+    }
+    drawThemes();
+  })['catch'](function(){ var sec=el('s-theme'); if(sec)sec.hidden=true; });
+
   getj('home_reco.json').then(function(h){
     if(h&&h.buy){renderReco(h);}else{loadFull();}
   })['catch'](function(e){ if(window.console&&console.error)console.error(e); stkFail(); });
