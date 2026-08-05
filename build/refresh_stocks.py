@@ -270,6 +270,52 @@ def chandelier(h, l, c, n=22, mult=3.0):
     return round(stop, 4), round(gap, 2), st
 
 
+def chandelier_marks(h, l, c, n=22, mult=3.0):
+    """샹들리에 손절선 교차 **사건**의 위치 인덱스 — (매수, 매도).
+
+    🚨 2026-08-05 — 왜 따로 만드나.
+      chandelier() 는 '지금 어느 쪽인가'만 돌려준다(마지막 값 하나). 화면의 칩은 그걸로
+      충분했지만 차트에 찍으려면 **언제 넘었는가**가 필요하다. 상태와 사건은 다른 것이다.
+
+    정의 — **랩(build/signal_lab.py)의 chand-lose · chand-back 과 글자 그대로 같다.**
+
+        chst = 최근 n일 최고가 − ATR(n)×mult          (선 하나)
+        매도 = 종가가 chst 를 위→아래로 통과한 날      (= chand-lose, cd(c, chst))
+        매수 = 종가가 chst 를 아래→위로 통과한 날      (= chand-back, cu(c, chst))
+
+    🚨 여기서 내 정의를 따로 만들면 안 된다 — 처음에 위·아래 두 밴드
+      (최고가−3ATR / 최저가+3ATR)로 짰다가 되돌렸다. 그러면 차트에 찍히는 마름모는
+      정의 A 인데 바로 옆 칩이 인용하는 성적(구별 불가 · t 0.95 / 0.44)은 정의 B 의
+      것이 된다. 이 저장소가 반복해 당한 **'채점기가 두 벌'** 이다. 화면이 신호를
+      보여 주면서 그 성적을 못 대면 보여 줄 자격이 없다.
+      두 밴드 정의는 덤으로 시끄럽기까지 했다 — 종목당 370회(12일에 한 번), 사흘
+      간격 연속 매도가 나왔다. 선 하나면 교차가 **반드시 번갈아** 나온다
+      (아래로 뚫은 뒤 다시 아래로 뚫으려면 그 사이에 위로 뚫어야 한다).
+
+    ⚠ 미래참조 없음 — i 일 판정에 i 일까지의 고가·저가·종가만 쓴다(rolling 은 과거창).
+    ⚠ 랩 실측 판정은 **구별 불가**다(chand-lose t 0.95 · chand-back t 0.44,
+      임계 |t| ≥ 3.18). 차트에 찍는 것은 상태를 보여 주기 위함이지 매매 근거가 아니다 —
+      화면이 그 판정을 같이 적지 않으면 찍지 말 것.
+    """
+    if len(c) < n + 2:
+        return [], []
+    a = atr(h, l, c, n)
+    if not hasattr(a, "rolling"):
+        return [], []
+    chst = h.rolling(n).max() - a * mult
+    buys, sells = [], []
+    cv, sv = c.values, chst.values
+    for i in range(1, len(cv)):
+        p0, p1, s0, s1 = cv[i - 1], cv[i], sv[i - 1], sv[i]
+        if p0 != p0 or p1 != p1 or s0 != s0 or s1 != s1:
+            continue
+        if p0 >= s0 and p1 < s1:
+            sells.append(i)
+        elif p0 <= s0 and p1 > s1:
+            buys.append(i)
+    return buys, sells
+
+
 def flags(s):
     f = []
     # 샹들리에 추격 손절 — 이격이 0 아래면 이미 털린 상태, 0~3%면 손절선에 붙어 있다.
@@ -1548,6 +1594,13 @@ def main():
         # 매수/매도 타점(마커) — 스윙 저점≈매수·고점≈매도(지그재그 전환점), 과열도·추세·모멘텀·변동성으로 필터 + 국면 조정.
         #   저점 매수: 깊은 붕괴(200MA −KNIFE 아래 & 6M<−15%)·아직 과매수(oh>65)면 제외 → 떨어지는 칼 회피.
         #   고점 매도: 강세 지속(상승추세 & 모멘텀↑ & oh<70)·아직 과매도(oh<35)면 제외 → 강세종목 조기매도 회피.
+        # 샹들리에 손절선 교차 사건 — 스윙 타점과 **다른 축**이다. 스윙은 가격 구조의 전환점을
+        # 찾고, 이쪽은 추격 손절선을 넘었는지만 본다. 차트에서도 다른 도형(마름모)을 쓴다.
+        # ⚠ 랩 판정 '구별 불가' — 화면이 그 사실을 함께 적는 조건에서만 노출한다.
+        # ⚠ _hs/_ls/dser 는 셋 다 daily.index 로 reindex 된 계열이다 — bms/sms 와 **같은 좌표계**여야
+        #   차트가 같은 x 에 찍는다. 다른 축(raw[t]["close"] 등)을 쓰면 며칠씩 밀린 채로 그려진다.
+        chb, chs = ([], []) if (dser is None or _hs is None or _ls is None) else \
+            chandelier_marks(_hs, _ls, dser)
         bms, sms = [], []
         bmw, smw = [], []      # 잠정(미확정 꼬리) 타점 — 진행 중 극점, 날짜 이동 가능. 차트에 '빈 도형'으로 표시
         bmr, smr = {}, {}      # 타점별 근거 문자열 {인덱스: "사유"}
@@ -1787,6 +1840,9 @@ def main():
                        "timing": raw[t]["timing"], "buy": raw[t]["buy"], "sell": raw[t]["sell"],
                        "bscore": round(float(buy_score.get(t, 0.0)), 3), "sscore": round(float(sell_score.get(t, 0.0)), 3),
                        "trig": trig, "bms": bms, "bmw": bmw, "sms": sms, "smw": smw, "sig": sig,
+                       # 샹들리에 손절선 교차 사건(chb=매수·chs=매도) — 스윙 타점과 다른 축이라
+                       # 차트에서 마름모로 찍는다. 랩 판정 '구별 불가'를 화면이 함께 적어야 한다.
+                       **({"chb": chb} if chb else {}), **({"chs": chs} if chs else {}),
                        **({"why": whyb} if whyb else {}),
                        "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd, "hd": hd, "ld": ld,
                        **({"part": partial[t]} if t in partial else {}),

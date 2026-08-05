@@ -708,6 +708,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   → 둘 다 '구별 불가'. 임계는 |t| ≥ 3.18 이다. 매수·매도 근거로 쓰면 안 된다.
     //   그래도 싣는 이유는 '지금 이 종목이 추격 손절선 어느 쪽인가'가 보유자에게 상태
     //   정보이기 때문이고, 그 사실을 라벨과 툴팁에 그대로 적는다.
+    //   ↓ 아래 둘은 **사건**(선을 넘은 날), 그 아래 둘은 **상태**(지금 어느 쪽인가)다.
+    //   차트에서는 마름모(◆)로 찍힌다 — 스윙 삼각형(▲▼)과 다른 축임을 모양으로 구분한다.
+    ["chandbuy",'<span style="color:var(--good)">◆</span> 샹들리에 매수교차',"volatility",false,null,null,"ch"],
+    ["chandsell",'<span style="color:var(--hot)">◆</span> 샹들리에 매도교차',"volatility",false,null,null,"ch"],
     ["chlose",'<span style="color:var(--hot)">✕</span> 샹들리에 이탈',"volatility",false,"샹들리에이탈",null,"ch"],
     ["chnear",'<span style="color:var(--warn,#c90)">◇</span> 샹들리에 근접',"volatility",false,"샹들리에근접",null,"ch"],
     ["oh","과매수","overheat",false,"과매수",null,"s2"],["os","과매도","overheat",true,"과매도",null,"s2"],
@@ -729,6 +733,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var TIPS={
     // 🚨 매매 신호가 아니다. signal_lab 실측 수치를 그대로 적는다 — 화면이 성적을 숨기면
     //   독자는 다른 칩과 같은 급으로 읽는다.
+    chandbuy:"종가가 추격 손절선(최근 22일 최고가 − ATR(22)×3)을 **아래→위로** 통과한 날이 최근 3거래일 안에 있는 종목 — 최신 교차순. 차트에 초록 마름모(◆)로 찍힌다. 🚨 랩 실측 43,675건 20일 초과 +0.016%p(t 0.44, 임계 3.18) — 귀무와 구별되지 않는다. 매수 근거가 아니라 추격 손절선을 되찾은 날의 표시다. 창을 3일로 둔 이유: 교차가 평균 14거래일에 한 번이라 스윙과 같은 10일 창을 주면 전체의 절반이 걸린다.",
+    chandsell:"종가가 추격 손절선(최근 22일 최고가 − ATR(22)×3)을 **위→아래로** 통과한 날이 최근 3거래일 안에 있는 종목 — 최신 교차순. 차트에 빨간 마름모(◆)로 찍힌다. 🚨 랩 실측 42,907건 20일 초과 +0.035%p(t 0.95, 임계 3.18) — 귀무와 구별되지 않는다. 매도 근거가 아니라 추격 손절이 발동한 날의 표시다.",
     chlose:"종가가 추격 손절선(최근 22일 최고가 − ATR(22)×3) 아래다. 랩 실측: 이탈 42,907건의 20일 초과수익 +0.035%p(t 0.95, 임계 3.18) — 귀무와 구별 안 됨. 매도 근거가 아니라 보유 위험 상태 표시다.",
     chnear:"종가가 추격 손절선 위 3% 안이다. 같은 규칙의 경계 구간이며 역시 랩 판정은 '구별 불가'다.",
     qval:"선행 PER 하위권 + ROE 상위권 + 부채 적정 — '싸면서 잘 버는' 종목. 미검증 스크리닝",
@@ -818,9 +824,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 최근 스윙 마커 인덱스(bms/bmw=매수, sms/smw=매도). 없으면 -1.
   var SW_WIN=10;   // 스윙 탭: 최근 N거래일(≈2주) 내 발동만 표시
   function lastMk(s,keys){var m=-1;keys.forEach(function(k){(s[k]||[]).forEach(function(i){if(i>m)m=i;});});return m;}
-  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
-  function lastMkP(s,pk){var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
-  function swFresh(s,sk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
+  // 🚨 2026-08-05 — 샹들리에 교차(chb/chs)도 '최근 마커순' 목록이라 스윙과 같은 기계를 탄다.
+  //   창은 따로 둔다. 스윙 타점은 창 10일에 203·96종인데, 샹들리에는 교차가 평균 14거래일에
+  //   한 번이라 같은 창을 주면 245·206종 — 전체의 절반이 걸려 필터 구실을 못 한다.
+  //   3일이면 132·95종으로 스윙과 같은 규모가 된다. 창 길이는 툴팁에 적는다.
+  var CH_WIN=3;
+  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:
+                             pk==='chandbuy'?['chb']:pk==='chandsell'?['chs']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
+  function isCh(pk){return pk==='chandbuy'||pk==='chandsell';}
+  function mkWin(pk){return isCh(pk)?CH_WIN:SW_WIN;}
+  // 샹들리에는 잠정/확정 구분이 없다 — 선을 넘었거나 아니거나다. prov 는 늘 false.
+  function lastMkP(s,pk){if(isCh(pk))return {i:lastMk(s,swKeys(pk)),prov:false};
+    var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
+  function swFresh(s,sk,pk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=mkWin(pk);}
 
   // ─── 펀더멘털 스크리닝 (2026-07-22) ────────────────────────────────────────
   // ⚠ 랩은 펀더멘털 팩터의 초과수익을 검증한 적이 없다. 아래는 '현재 단면에서 이 조건을 만족하는
@@ -855,8 +871,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 프리셋 설명 — 툴팁(hover)만으로는 '골든 임박·과밀숏'이 뭔지 알 수 없다는 피드백 → 목록 위에 상시 노출.
   // [이름, 평문 뜻, 판정 기준]. 기준값은 stocks.json의 flag_defs와 같은 정의를 풀어 쓴 것.
   var PDESC={
-    swingbuy:['스윙 저점매수','주가가 바닥을 찍고 돌아선 지점이 최근에 나온 종목. 확정 타점(▲)과 아직 확정 전인 잠정 타점(△)을 함께 본다. 다이버전스나 거래량이 확인된 타점은 <b>강</b>으로 진하게 표시.','최신 타점순 · 확정은 며칠 뒤에야 판정되므로 사후 표시'],
-    swingsell:['스윙 고점매도','주가가 고점을 찍고 꺾인 지점이 최근에 나온 종목. 매도라기보다 비중을 줄여 볼 구간이라는 뜻이다. 다이버전스나 거래량이 확인된 타점은 <b>강</b>으로 진하게 표시.','최신 타점순 · 하락추세에서만 표시'],
+    swingbuy:['스윙 저점매수','주가가 바닥을 찍고 돌아선 지점이 최근에 나온 종목. 확정 타점(▲)과 아직 확정 전인 잠정 타점(△)을 함께 본다. 다이버전스나 거래량이 확인된 타점은 강으로 진하게 표시.','최신 타점순 · 확정은 며칠 뒤에야 판정되므로 사후 표시'],
+    chandbuy:['샹들리에 매수교차','종가가 추격 손절선(최근 22일 최고가 − ATR(22)×3)을 아래에서 위로 통과한 날. 차트에 ◆로 찍는다. 스윙 타점(▲▼)과 다른 축이다 — 스윙은 가격 구조의 전환점을, 이쪽은 손절선 통과만 본다.','최신 교차순 · 최근 3거래일 · 랩 판정 구별 불가(t 0.44) — 매수 근거가 아니다'],
+    chandsell:['샹들리에 매도교차','종가가 같은 손절선을 위에서 아래로 통과한 날 — 추격 손절이 발동한 지점. 차트에 ◆로 찍는다.','최신 교차순 · 최근 3거래일 · 랩 판정 구별 불가(t 0.95) — 매도 근거가 아니다'],
+    swingsell:['스윙 고점매도','주가가 고점을 찍고 꺾인 지점이 최근에 나온 종목. 매도라기보다 비중을 줄여 볼 구간이라는 뜻이다. 다이버전스나 거래량이 확인된 타점은 강으로 진하게 표시.','최신 타점순 · 하락추세에서만 표시'],
     oh:['과매수','단기간에 많이 올라 열이 오른 상태. 쉬어갈 가능성을 보는 구간이지 하락 예고는 아니다.','RSI 70 이상 또는 볼린저 밴드 상단(%b 0.95↑)'],
     os:['과매도','단기간에 많이 빠져 눌린 상태. 반등 여지를 보지만 하락추세라면 더 빠질 수도 있다.','RSI 30 이하 또는 볼린저 밴드 하단(%b 0.05↓)'],
     dip:['눌림목','장기 상승추세를 유지하는 중에 잠깐 밀린 종목. 추세는 살아 있는데 단기 과열만 식은 상태를 찾는다.','상승추세(종가>50일선>200일선·ADX 20↑) + RSI 45 미만 + 볼린저 하단권(%b 0.3↓)'],
@@ -894,19 +912,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var fr=screenRows(p[0]).filter(keepQI);
       return {rows:fr,comp:'screen',total:fr.length,screen:p[0]};
     }
-    var sk=swKeys(p[0]),sc=p[0]==='swingbuy'?'bscore':'sscore';
+    // 🚨 샹들리에는 신호 강도 점수가 없다(선을 넘었거나 아니거나다). sc 를 그대로 두면
+    //   chandbuy 가 'sscore'(매도점수)로 동점을 가르게 된다 — 뜻이 없는 정렬이다. 티커순으로 둔다.
+    var sk=swKeys(p[0]),sc=isCh(p[0])?null:(p[0]==='swingbuy'?'bscore':'sscore');
     var rows=DATA.stocks.filter(function(s){
       if(flag && (s.flags||[]).indexOf(flag)<0)return false;
       if(tim && tim.indexOf(s.timing)<0)return false;
       if(state.idx.size){var ok=false;(s.idx||[]).forEach(function(x){if(state.idx.has(x))ok=true;});if(!ok)return false;}
       if(state.q){var hay=(s.t+' '+(s.name||'')+' '+(s.sector||'')+' '+secKo(s.sector)).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
       if(p[0]==='tgt')return (s.fund||{}).tpm!=null;   // 목표주가 탭: 목표가 보유 종목만
-      if(sk)return swFresh(s,sk);                 // 스윙: 최근 SW_WIN일 내 마커 보유만
+      if(sk)return swFresh(s,sk,p[0]);            // 스윙 10일 · 샹들리에 3일(mkWin) 내 마커 보유만
       return s.comp[comp]!=null;
     });
     // 스윙=최근 마커순(동점은 신호강도) / 매수·매도 신호=종합점수 내림차순 + 상위 50 캡(종목수 과다 방지) / 나머지=컴포짓 정렬
     var total=rows.length;
-    if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||((b[sc]||0)-(a[sc]||0));});
+    if(sk)rows.sort(function(a,b){var d=lastMk(b,sk)-lastMk(a,sk);return d||(sc?((b[sc]||0)-(a[sc]||0)):a.t.localeCompare(b.t));});
     else if(p[0]==='tgt')rows.sort(function(a,b){   // 상승여력(목표평균/현재가−1) 내림차순 — 사용자 지정
       var d=((b.fund||{}).up!=null?b.fund.up:-1e9)-((a.fund||{}).up!=null?a.fund.up:-1e9); return d||a.t.localeCompare(b.t);});
     else rows.sort(function(a,b){var d=(a.comp[comp]||0)-(b.comp[comp]||0);return asc?d:-d;});
@@ -963,8 +983,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 문자열 1회 빌드(리플로우 1회) + 이벤트 위임(리스너 1개) — 512행 성능
     listEl.innerHTML=rows.map(function(s){
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
-      if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
-        var mstr=(s.strong||[]).indexOf(mi)>=0;   // 최신 타점에 다이버전스·거래량 확인이 동반됐나
+      if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=(state.preset==='swingbuy'||state.preset==='chandbuy')?'--good':'--hot';
+        // 🚨 strong 은 **스윙 타점**의 등급이다. 샹들리에 교차일이 우연히 같은 인덱스면 남의
+      //   등급이 붙어 '강'으로 보인다 — 없는 판정을 화면이 지어내는 꼴이다. 샹들리에는 뺀다.
+      var mstr=!isCh(state.preset)&&(s.strong||[]).indexOf(mi)>=0;   // 최신 타점에 다이버전스·거래량 확인이 동반됐나
         metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mstr?' <span style="color:var(--accent);font-size:9px;font-weight:800" title="다이버전스·거래량 확인이 동반된 타점 — 확인 신호 유무 표기일 뿐, 검증된 수익 우위가 아님">강</span>':'')+(mp.prov?' <span style="color:var(--watch);font-size:9px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
       }else if(state.preset==='tgt'){
         // 목표주가 탭 — 목표평균·상승여력·커버 애널 수. 상승여력은 무채색(강조하지 않는다: 검증상 최근 하락의 기계적 반영)
@@ -1269,14 +1291,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // strong_tiers 플래그가 없는 구버전 데이터면 등급 정보가 없으므로 전부 '강'(진하게)으로 렌더 — 전부 흐려 보이는 오해 방지.
     var tiers=!!DATA.strong_tiers, strongSet={}; (s.strong||[]).forEach(function(i){strongSet[i]=1;});
     var sl=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return [i-off, tiers?!!strongSet[i]:true];});};
-    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw)};
+    // 샹들리에 교차는 강/약 등급이 없다(선을 넘었거나 아니거나다) — sl() 이 아니라 인덱스만 옮긴다.
+    var sli=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return i-off;});};
+    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw),chb:sli(s.chb),chs:sli(s.chs)};
     var nb=mk.bms.length+mk.bmw.length, ns=mk.sms.length+mk.smw.length;
+    var nc=mk.chb.length+mk.chs.length;
     var ma20=sma(pxd,20).slice(off), ma60=sma(pxd,60).slice(off);   // 주봉이면 20주·60주
     var vsl=(s.vd||[]).slice(off);
     var ml=el('marklg');
-    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
+    // 🚨 범례에 ◆ 를 넣되 **판정을 같이 적는다.** 스윙 삼각형 옆에 모양만 하나 늘면 읽는 사람은
+    //   같은 급의 매매 신호로 받아들인다. 실제로는 랩에서 귀무와 구별되지 않은 신호다.
+    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span title="종가가 (최근 22일 최고가 − ATR(22)×3) 을 통과한 날. 랩 실측 구별 불가 — 매매 근거가 아니다"><span style="color:var(--good)">◆</span><span style="color:var(--hot)">◆</span>샹들리에 교차<b style="color:var(--muted)">(구별 불가)</b></span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
     drawChart(slice, sdates, mk, ma20, ma60, vsl);
-    var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점');
+    var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점'+(nc?', 샹들리에 교차 '+nc+'회(랩 판정 구별 불가)':''));
   }
   function drawChart(arr, dates, mk, ma20, ma60, vd){
     var cv=el('pxc');if(!cv)return;var ctx=cv.getContext('2d');
@@ -1323,12 +1350,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(hollow){ctx.fillStyle=css('--panel');ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=strong?2:1.4;ctx.stroke();}
       else{ctx.fillStyle=color;ctx.fill();}
       ctx.globalAlpha=1;}
+    // 샹들리에 손절선 교차(◆) — 스윙 타점(▲▼)과 **다른 축**이라 다른 도형을 쓴다.
+    // 🚨 같은 삼각형으로 그리면 '같은 급의 매매 신호'로 읽힌다. 스윙은 가격 구조의 전환점을
+    //   찾고 이쪽은 추격 손절선을 넘었는지만 본다. 게다가 랩 판정이 '구별 불가'다 — 모양이
+    //   같으면 그 차이가 화면에서 사라진다. 마름모는 삼각형과 실루엣이 겹치지 않는다.
+    // 도형은 가격선 **위**에 얹는다(삼각형은 아래/위로 5px 떨어져 있다) — 교차 사건이라
+    //   어느 쪽으로 떨어뜨려도 방향을 오독하게 만든다.
+    function dia(i,color){if(i>=arr.length||arr[i]==null)return;var x=X(i),y=Y(arr[i]),r=4.2;
+      ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();
+      ctx.fillStyle=css('--panel');ctx.fill();                 // 가격선을 가리고 얹어야 도형이 산다
+      ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();}
     // p=[상대인덱스, 강여부]
     if(mk){var g=css('--good'),h=css('--hot');
       mk.bms.forEach(function(p){tri(p[0],true,g,false,p[1]);});
       mk.sms.forEach(function(p){tri(p[0],false,h,false,p[1]);});
       mk.bmw.forEach(function(p){tri(p[0],true,g,true,p[1]);});
-      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});}
+      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});
+      (mk.chb||[]).forEach(function(i){dia(i,g);});
+      (mk.chs||[]).forEach(function(i){dia(i,h);});}
   }
 
   // 자동갱신(GitHub cron) 조용한 실패 대비 — 기준일 이후 흐른 영업일이 3일 이상이면 명시 경고(휴장·1회 결측은 허용)
@@ -1395,7 +1434,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var cnt=null,sk=swKeys(p[0]);
       if(p[6]==='a')cnt=d.stocks.length;   // 전체 — 필터를 걸지 않은 커버 종목 전부
       if(p[6]==='f')cnt=screenRows(p[0]).length;   // 펀더멘털 스크리닝 — 자격 통과 종목 수
-      else if(sk)cnt=d.stocks.filter(function(s){return swFresh(s,sk);}).length;
+      else if(sk)cnt=d.stocks.filter(function(s){return swFresh(s,sk,p[0]);}).length;
       else if(p[4])cnt=d.stocks.filter(function(s){return (s.flags||[]).indexOf(p[4])>=0;}).length;
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
