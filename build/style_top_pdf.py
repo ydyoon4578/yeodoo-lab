@@ -512,7 +512,12 @@ def sc_div(P, i):
         a = P.px.get(t)
         if not P.usd(t) or a is None or np.isnan(a[i]) or a[i] <= 0:
             continue
-        v = P.ttm12(t, "dps", i)
+        # 🚨 2026-08-05 — 연간 버킷을 안 넘기고 있었다. 같은 날 tech_backtest.ttm2 에
+        #   **인접 관측 연속성** 게이트를 넣었는데(회계 4분기가 q 버킷에 안 남아 '12개월 합'이
+        #   실은 15개월 창이던 것을 막는 고침), dps 는 그 결측이 78.9% 라 분기 경로가 대부분
+        #   막히고 ann=None 이면 폴백이 없다. 실측(2026-06-30): 82종 → 연간 버킷을 넘기면 356종.
+        #   그래서 고배당·고배당저변동 두 스타일이 '자료 부족'으로 통째로 빠져 있었다.
+        v = P.ttm12(t, "dps", i, ann="dps_a")
         if v and v > 0:
             d[t] = v / a[i] * 100
     return d, d                                   # 연속값이라 동점이 없다
