@@ -1763,13 +1763,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(box.__paintTree)box.__paintTree();
     var s=el('st-sub');
     if(s){
-      var D2=(MK.iv&&!Array.isArray(MK.iv))?MK.iv:null;
-      var nG=D2?D2.rows.filter(function(k){return k.lv===2;}).length:0;
-      var nS=D2?D2.rows.filter(function(k){return k.lv===3;}).length:0;
-      s.textContent='· % · 지수 '+ix.length+' · 섹터 '+((D2&&D2.sectors.length)||0)+
-                    ' → 산업그룹 '+nG+' → 서브산업 '+nS+
-                    ' · 스타일 ETF '+show.length+' · 지수 방법론 '+keys.length+
-                    ' · ETF 기준 '+(j.as_of||'');
+      // 🚨 2026-08-05 — 종전에는 '· % · 지수 4 · 섹터 11 → 산업그룹 32 → 서브산업 88 ·
+      //   스타일 ETF 6 · 지수 방법론 16 · ETF 기준 2026-08-03' 을 다 적었다. 무엇이 몇 개
+      //   실렸는지는 **표 자체가 이미 보여 준다** — 제목 옆에서 다시 셀 필요가 없었고,
+      //   맨 앞의 '· %' 는 값 없는 라벨처럼 읽혔다. 여기서 표가 아닌 것은 기준일 하나뿐이니
+      //   그것만 남긴다(사용자 요청). 세부 개수는 macro.html '전체 표 →' 가 계속 낸다.
+      s.textContent=(j.as_of?'· 기준일 '+j.as_of:'');
     }
     drawStNote(pair.length?SLAB:null, pair.length?solo:[]);
   }

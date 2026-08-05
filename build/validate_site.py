@@ -2354,6 +2354,56 @@ try:
 except FileNotFoundError:
     pass
 
+# ── 샹들리에: 화면이 찍는 것과 랩이 잰 것이 같은 신호인가 ─────────────────
+# 🚨 2026-08-05 — stocks.html 차트의 마름모(chb/chs) 옆에 칩이 랩 성적(구별 불가 · t 0.95/0.44)을
+#   인용한다. 두 정의가 갈리는 순간 그 인용은 **다른 신호의 성적**이 된다 — 이 저장소가
+#   반복해 당한 '채점기가 두 벌'이다. 실제로 처음 구현은 위·아래 두 밴드였고 랩은 선 하나였다.
+#   정의를 코드 두 곳에 두는 한 조용히 어긋나므로, 어긋나면 여기서 막는다.
+try:
+    _rs = io.open(os.path.join(ROOT, "build", "refresh_stocks.py"), encoding="utf-8").read()
+    _sl = io.open(os.path.join(ROOT, "build", "signal_lab.py"), encoding="utf-8").read()
+    _rs_body = (_rs.split("def chandelier_marks", 1)[1].split(chr(10) + "def ", 1)[0]
+                if "def chandelier_marks" in _rs else "")
+    if _rs_body:
+        # 랩: chst = h.rolling(22).max() - atr(h, l, c, 22) * 3.0
+        _lab_line = [l for l in _sl.split(chr(10)) if '"chst"' in l and "rolling" in l]
+        if not _lab_line:
+            errors.append("signal_lab 의 chst 정의를 못 찾았다 — 샹들리에 정의 대조 검사가 무력화됐다")
+        else:
+            _lab = _lab_line[0]
+            _want_n = "22" in _lab and "rolling(22)" in _rs_body.replace("rolling(n)", "rolling(22)")
+            # 화면 쪽이 '최저가 + ATR' 밴드를 쓰면 정의가 갈린 것이다(랩엔 그런 선이 없다)
+            if "rolling(n).min()" in _rs_body or "rolling(22).min()" in _rs_body:
+                errors.append("chandelier_marks 가 랩에 없는 하단 밴드(최저가+ATR)를 쓴다 — "
+                              "화면의 ◆ 와 칩이 인용하는 t 0.95/0.44 가 다른 신호가 된다")
+            if "max()" not in _rs_body or "atr(" not in _rs_body:
+                errors.append("chandelier_marks 가 (최고가 − ATR×배수) 형태가 아니다 — 랩 정의와 어긋난다")
+            if "* mult" not in _rs_body or "mult=3.0" not in _rs_body:
+                errors.append("chandelier_marks 의 배수가 3.0 이 아니다 — 랩은 3.0 으로 쟀다")
+    # 화면이 ◆ 를 찍으면 그 옆에 판정을 반드시 적어야 한다(재 놓고 안 내면 모은 적 없는 것과 같다)
+    _sh = io.open(os.path.join(ROOT, "stocks.html"), encoding="utf-8").read()
+    if "chb" in _sh and "구별 불가" not in _sh:
+        errors.append("stocks.html 이 샹들리에 교차를 그리는데 '구별 불가' 판정을 어디에도 안 적는다")
+except FileNotFoundError:
+    pass
+
+# ── esc() 로 나가는 도움말 필드에 태그가 들었나 ──────────────────────────
+# 🚨 2026-08-05 — stocks.html 의 도움말(HELP)은 2·3번째 필드를 esc() 로 내보낸다.
+#   거기 <b> 를 쓰면 굵어지는 게 아니라 **글자 그대로 화면에 뜬다.** 실제로 swingbuy 가
+#   그 상태였고(오래됨), 내가 샹들리에 항목을 같은 형식으로 베껴 쓰면서 두 개를 더 만들었다.
+#   포맷이 허용하지 않는 마크업을 조용히 통과시키면 화면에서만 드러난다.
+try:
+    _sh2 = io.open(os.path.join(ROOT, "stocks.html"), encoding="utf-8").read()
+    if "# [이름, 평문 뜻, 판정 기준]" in _sh2 or "[이름, 평문 뜻, 판정 기준]" in _sh2:
+        _blk = _sh2.split("[이름, 평문 뜻, 판정 기준]", 1)[1].split("function mcOf", 1)[0]
+        _tags = re.findall(r"</?(?:b|i|em|strong|span)[^>]*>", _blk)
+        if _tags:
+            errors.append("stocks.html 도움말(HELP) 항목에 HTML 태그 %d개 — 이 필드는 esc() 로 "
+                          "나가므로 태그가 글자 그대로 노출된다: %s"
+                          % (len(_tags), ", ".join(sorted(set(_tags))[:4])))
+except FileNotFoundError:
+    pass
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
