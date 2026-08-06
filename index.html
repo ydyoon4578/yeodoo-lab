@@ -1231,13 +1231,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                'title="'+(lv===1?'이 섹터의 산업그룹·종목 펼치기':'이 산업그룹의 종목 펼치기')+
                '">▸</button>'):'<span class="htg"></span>')+
         '<span class="snm">'+esc(label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</th>'+
-        // 🚨 섹터 줄(lv===1)만 주가를 붙인다 — 그 섹터의 **ETF 종가**다(XLK·XLF …).
-        //   x 는 종목 묶음의 집계 객체라 px 가 없다. market_board 의 섹터 행(etf[])에는
-        //   있으므로 거기서 가져와 얹는다.
-        //   ⚠ 산업그룹 줄(lv===2)에는 안 붙인다. 살 수 있는 ETF 가 없어서, 뭔가 채우면
-        //     살 수 없는 값을 살 수 있는 것처럼 보이게 한다.
-        cells((lv===1 && etf[x.sec] && typeof etf[x.sec].px==='number')
-              ? Object.assign({}, x, {px: etf[x.sec].px}) : x)+'</tr>';
+        cells(x)+'</tr>';
     }
     // 종목 줄 — **표 안의 진짜 행**이다(칩이 아니다). 2026-08-02 에 칩으로 바꿨던 이유가
     // "수익률이 위 표와 열이 안 맞는다" 였는데, 이제 종목별 기간수익률을 보여 달라는
@@ -1531,9 +1525,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function stCell(v){var x=stNum(v);return '<td class="'+x.c+'">'+x.s+'</td>';}
   // 🚨 2026-08-06 — 기간별 수익률 표의 '주가' 열(사용자 요청, 1일 앞). 종전에는 수익률만
-  //   있어 화면이 "XLK 가 1일 +4.98%"라고만 말했다 — 무엇이 그만큼 움직였는지는 없었다.
-  // ⚠ **ETF 행만 값이 있다.** 산업그룹·랩 전략 줄은 여러 종목의 묶음이라 '주가'라는 단일
-  //   숫자가 없다. 평균가 같은 것을 채우면 살 수 없는 값을 살 수 있는 것처럼 보이게 한다.
+  //   있어 화면이 "ACN 이 1일 +0.2%"라고만 말했다 — 무엇이 그만큼 움직였는지는 없었다.
+  // ⚠ **종목 줄에만 값이 있다.** 섹터·산업그룹·랩 전략 줄은 여러 종목의 묶음이라 '주가'라는
+  //   단일 숫자가 없다. 평균가 같은 것을 채우면 살 수 없는 값을 살 수 있는 것처럼 보인다.
+  //   (섹터 ETF 종가를 붙여 봤다가 뺐다 — 사용자가 원한 것은 하위 개별 종목의 종가다.)
   // 🚨 stCell 과 **같은 바깥 스코프**에 둔다. 처음에 안쪽 함수 안에 뒀더니 stRow(지수·스타일
   //   ETF 줄)가 못 봐서 홈 렌더 검사가 곧바로 잡았다 — 표가 통째로 안 그려진다.
   function pxCell(x){
@@ -1568,7 +1563,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var nt=IXNOTE[x.t];
     return '<tr'+(cls?' class="'+cls+'"':'')+
       '><th scope="row"'+(nt?' title="'+esc(nt.replace(/\*\*/g,''))+'"':'')+'>'+
-      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+pxCell(x)+
+      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+pxCell(null)+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
