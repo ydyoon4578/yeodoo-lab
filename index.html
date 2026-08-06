@@ -307,6 +307,18 @@
      ⚠ 자식이 없는 섹터도 이름 시작 위치가 같아야 한다 — 버튼 자리를 빈 span 으로 채운다.
        안 그러면 그 줄만 왼쪽으로 튀어나와 층이 어긋나 보인다. */
   /* 주가 열 — 수익률(색)과 다른 성격이라 무채색으로 둔다. 값이 없는 줄은 가운뎃점. */
+  /* 시장 국면 카드 — 2026-08-06 복원 */
+  .rgcard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--rgc,var(--line));border-radius:12px;box-shadow:var(--shadow);padding:15px 18px}
+  .rgtop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .rgname{font-size:19px;font-weight:800;color:var(--rgc,var(--ink))}
+  .rgdesc{font-size:12.5px;color:var(--ink-2)}
+  .rgtxt{margin:11px 0 0;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  .rgchips{margin:12px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+  .rgchip{display:inline-flex;align-items:baseline;gap:5px;font-size:11.5px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:999px;padding:3px 10px}
+  .rgchip b{font-weight:700;color:var(--ink)}
+  .rgchip span{color:var(--ink-2)}
+  .rgchip.cond{border-style:dashed}
+  .rgwarn{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px}
   .sttbl .pxc{color:var(--ink-2);font-variant-numeric:tabular-nums}
   .sttbl .pxc.mut{color:var(--muted);text-align:center}
   .sttbl tr.lv1>th{font-weight:700}
@@ -861,6 +873,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <!-- ①-b 스타일 성과 — 캘린더 바로 아래. 지수 두 줄을 위에 두어 '무엇 대비인가'를 먼저 보인다.
          ⚠ 이 랩은 팩터 모멘텀을 '자기 유니버스 대비 구별 불가'로 기각했다. 최근 잘 나간 스타일을
             추천처럼 읽히게 두면 자기모순이므로, 문구는 상태 표시에 머물러야 한다. -->
+    <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
+         "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
+         전문은 여기 안 편다(regime.html 이 그 화면이다).
+         🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
+            (a7-conover 대조군 열위 · a7-fidelity 구별 불가 · a2-factor-rot 열위 ·
+             regime-switch 열위). 그 사실을 구획 안에 적는다 — 안 적으면 국면표가 매매
+             신호처럼 읽힌다. -->
+    <section id="s-regime" aria-labelledby="rg-h">
+      <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
+      <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
+    </section>
+
     <section id="s-style" aria-labelledby="st-h">
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
@@ -1318,8 +1342,41 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // regime.indicators 39개는 **개수 하나**만 쓴다(눈썹의 'FRED 39지표').
   // ⚠ 원본을 지운 게 아니다 — asof_index 가 축 기준일을 거기서 읽고 regime.html 은 전체 이력을 쓴다.
   // ⚠ 한 파일이 두 카드를 먹이므로 실패하면 둘 다 실패다. 대신 요청이 하나 준다.
+  // ── 시장 국면 카드 ────────────────────────────────────────────────────────
+  // 🚨 상태 표시다. 이 랩은 국면 기반 규칙을 반복해 기각했다 — 그 사실을 카드 안에 적는다.
+  //   안 적으면 국면표가 매매 신호처럼 읽히는데, 바로 그 오독을 막으려고 랩이 존재한다.
+  // ⚠ 축(chips)의 kind: real=실물 관측치 · cond=여건(금리·물가처럼 '높다/낮다'가 곧
+  //   좋다/나쁘다가 아닌 것). 여건 축은 테두리를 점선으로 두어 성격 차이를 남긴다.
+  var RGC={Goldilocks:'--rg-gold',Recovery:'--rg-recov',SoftLanding:'--rg-soft',
+           LateCycle:'--rg-late',Overheating:'--rg-over',Stagflation:'--rg-stag',Recession:'--rg-rec'};
+  function drawRegime(){
+    var box=el('rg-card'); if(!box)return;
+    var R=MK.rg;
+    if(!R||!R.regime){                       // 자료가 없으면 구획을 조용히 접는다
+      var sec=el('s-regime'); if(sec)sec.hidden=true; return;
+    }
+    var g=R.regime, sm=R.summary||{}, chips=sm.chips||[];
+    var ko=RGKO[g.label]||g.label;
+    box.innerHTML='<div class="rgcard" style="--rgc:var('+(RGC[g.label]||'--line')+')">'+
+      '<div class="rgtop"><span class="rgname">'+esc(g.emoji||'')+' '+esc(ko)+'</span>'+
+      '<span class="rgdesc">'+esc(g.desc||'')+'</span></div>'+
+      (sm.text?'<p class="rgtxt">'+esc(sm.text)+'</p>':'')+
+      (chips.length?'<div class="rgchips">'+chips.map(function(c){
+        return '<span class="rgchip'+(c.kind==='cond'?' cond':'')+'" title="'+
+               esc((c.kind==='cond'?'여건 축 — 높다/낮다가 곧 좋다/나쁘다가 아니다':'실물 관측')+
+                   ' · 지표 '+(c.n||0)+'개')+'"><b>'+esc(c.name)+'</b><span>'+esc(c.word)+'</span></span>';
+      }).join('')+'</div>':'')+
+      '<p class="rgwarn">국면은 <b>상태 표시</b>이지 매매 신호가 아닙니다. 이 랩은 국면으로 '+
+      '자산·팩터를 돌리는 규칙을 네 번 검정해 네 번 모두 기각했습니다 — 완벽한 국면 타이밍을 '+
+      '가정으로 부여해도 시장을 못 이겼습니다. 판정은 <a href="explorer.html">전략 랩</a>에 '+
+      '있습니다.</p></div>';
+    var sub=el('rg-sub');
+    if(sub)sub.textContent='· FRED '+(R.n_indicators||0)+'지표 · 기준일 '+(R.as_of||'');
+  }
+
   getj('home_market.json').then(function(j){
     MK.rg=(j&&j.regime)||false;
+    drawRegime();
     MK.sn=(j&&j.sentiment)||false;
     syncAsof(); staleCheck();
     var n=j&&j.regime&&j.regime.n_indicators;

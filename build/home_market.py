@@ -87,6 +87,15 @@ def main() -> int:
             "history": [{"dt": h.get("dt"), "r": h.get("r")} for h in hist[-RG_HIST:]],
             # 배열 대신 개수. 홈은 '.length' 만 쓰는데 그 정수 하나 때문에 gzip 3.1KB 를 받고 있었다.
             "n_indicators": len(rg.get("indicators") or []),
+            # 🚨 2026-08-06 — 지표 종합(요약 문장 + 축별 한 단어)을 싣는다(사용자 요청으로
+            #   홈에 시장 국면 구획을 되살렸다). indicators 39개 전문은 여전히 안 싣는다 —
+            #   홈이 쓰는 것은 **요약**이지 지표 하나하나가 아니다. 그 39개는 regime.html 이 편다.
+            #   chips 는 축 7개(소비·고용·생산·주택·물가·금융여건·금리) × 한 단어라 가볍다.
+            "summary": ({"text": (rg.get("summary") or {}).get("text"),
+                         "mode": (rg.get("summary") or {}).get("mode"),
+                         "chips": [{k: c.get(k) for k in ("name", "word", "kind", "n", "skip")}
+                                   for c in ((rg.get("summary") or {}).get("chips") or [])]}
+                        if rg.get("summary") else None),
         }
 
     if sn:
