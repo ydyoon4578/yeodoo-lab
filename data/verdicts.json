@@ -21,14 +21,14 @@
  "deploy_n": 3,
  "reject_compare_n": 2,
  "explorer_n": 11,
- "archive_n": 47,
+ "archive_n": 48,
  "archive_cats": 10,
- "reject_total": 49,
+ "reject_total": 50,
  "archive_reject_n": 35,
  "archive_variant_n": 7,
- "archive_undetermined_n": 4,
+ "archive_undetermined_n": 5,
  "archive_undecidable_n": 1,
- "n_tech": 64,
+ "n_tech": 66,
  "n_asset": 38,
  "n_rechk": 4
 }

@@ -561,5 +561,5 @@ SO 53.7 은 **자기자본비율**이다. 199개 월말 전부가 최소 2칸 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 45, "narrow_rules": 12, "incr5_rules": 62}
+ "xsec_rules": 45, "narrow_rules": 12, "incr5_rules": 66}
 -->

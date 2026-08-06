@@ -1663,6 +1663,75 @@ def timing(sid, name, rule, fn, why, arch=None):
     STRATS.append({"sid": sid, "name": name, "kind": "timing", "rule": rule, "why": why, "fn": fn, "arch": arch})
 
 
+def z_composite(rows):
+    """월말 단면 z-점수 컴포지트 — rows=[(티커, {지표명: 값})…] → {티커: 평균 z}.
+
+    🚨 2026-08-06 · E30(섹터 중립 밸류 컴포지트) 재현용. 카드가 지정한 컴포지트는
+      "네 지표를 표준화 점수로 환산해 평균"인데, 지표마다 결측 종목이 다르다.
+      **결측을 0 으로 채우면 안 된다** — 0 은 z 척도에서 '평균'이라, 자료가 없는 종목이
+      중간 순위를 공짜로 받는다. 있는 지표만으로 평균하고, 전부 없으면 뺀다.
+    ⚠ 표준화는 평균·표준편차 z 다(MAD 가 아니다). 이 랩의 xsec_resid·x-* 규칙들이 쓰는
+      방식과 같게 둔다 — 두 벌을 두면 한쪽만 고쳐진다.
+    ⚠ 꼬리를 자르지 않는다. 자르는 폭이 곧 자유도다.
+    """
+    keys = set()
+    for _t, m in rows:
+        keys |= {k for k, v in m.items() if v is not None and v == v}
+    zs = {}
+    for k in keys:
+        vs = [(t, m[k]) for t, m in rows if m.get(k) is not None and m[k] == m[k]]
+        if len(vs) < 2:
+            continue
+        xs = [v for _t, v in vs]
+        mu = sum(xs) / len(xs)
+        sd = (sum((x - mu) ** 2 for x in xs) / (len(xs) - 1)) ** 0.5
+        if sd <= 0:
+            continue
+        for t, v in vs:
+            zs.setdefault(t, []).append((v - mu) / sd)
+    return {t: sum(a) / len(a) for t, a in zs.items() if a}
+
+
+def pick_sector_neutral(sc, sec_of, mcap_of, per=1):
+    """섹터 중립 바스켓 — 각 섹터에서 점수 상위 `per` 종, 비중은 **유니버스 섹터 시총 비중**.
+
+    🚨 E30 카드의 규정 그대로다: "섹터마다 점수 상위 종목을 같은 수씩 뽑아 섹터 배분이
+      지수와 같아지게 하고, 섹터 안에서는 동일가중."
+    ⚠ per=1 로 박는다(사전등록 §3). 카드가 수를 정하지 않아 자유롭게 고르면 그 순간
+      자유도가 생긴다. 11섹터 × 1 = 11 이 이 랩의 TOPN(10)에 가장 가깝다.
+    ⚠ 섹터를 모르는 종목(sector 빈 문자열)은 **뺀다.** '기타' 칸을 만들면 그 칸이
+      중립의 예외가 되어, 중립이 유지되는지 확인할 수 없다.
+    돌려주는 것 — [(티커, 비중)…]. 비중 합은 1.
+    """
+    by = {}
+    for v, t in sc:                       # sc 는 점수 내림차순
+        g = (sec_of.get(t) or "").strip()
+        if g:
+            by.setdefault(g, []).append(t)
+    if not by:
+        return []
+    # 섹터 비중 = 그 시점 **유니버스 전체**의 섹터 시총 비중(고른 종목의 시총이 아니다).
+    # 고른 것으로 재면 그건 벤치마크가 아니라 자기 자신이다.
+    w_sec, tot = {}, 0.0
+    for t, mc in mcap_of.items():
+        g = (sec_of.get(t) or "").strip()
+        if g and g in by and mc and mc > 0:
+            w_sec[g] = w_sec.get(g, 0.0) + mc
+            tot += mc
+    if tot <= 0:
+        return []
+    out = []
+    for g, ts in by.items():
+        w = w_sec.get(g, 0.0) / tot
+        if w <= 0:
+            continue
+        picks = ts[:per]
+        for t in picks:
+            out.append((t, w / len(picks)))
+    s = sum(w for _t, w in out)
+    return [(t, w / s) for t, w in out] if s > 0 else []
+
+
 def xsec(sid, name, rule, fn, why, arch=None):
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why, "fn": fn, "arch": arch})
 
@@ -1670,6 +1739,8 @@ def xsec(sid, name, rule, fn, why, arch=None):
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
 FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-…-CUSTCONC.md)
              "x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
+             # E30 밸류 컴포지트 둘 — 사전등록 PREREG-2026-08-06-E30VALUE.md
+             "x-valcomp", "x-valcomp-sn",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
@@ -1968,6 +2039,30 @@ def build_strats():
          "팩터를 NASDAQ 100까지 합친 유니버스에 얹은 것이다. 회계 숫자는 기간 종료일로부터 "
          "90일이 지난 뒤에만 쓴다(공시 전 숫자로 고르지 않기 위해). 다만 저장된 값은 재작성 "
          "이후의 값이라 그 편향은 남는다.")
+    # ── E30 섹터 중립 밸류 컴포지트 (사전등록 PREREG-2026-08-06-E30VALUE.md) ──
+    # 🚨 카드가 판정 방식을 스스로 규정했다 — "(a)단순 장부가 밸류 · (b)섹터 제약 없는
+    #   컴포지트 · (c)섹터 중립 컴포지트 3자 비교". (a)는 위 x-btp 다(t 2.72 · 구별 불가).
+    #   묻는 것은 "밸류가 돈이 되는가"가 아니라 **"x-btp 의 실패가 종목선택 실패였나
+    #   업종 베팅 실패였나"** 이고, 답은 (c)−(b) 가 한다.
+    # 🚨 카드가 지정한 네 지표 중 **예상 FCF/P 는 원리적으로 불가능**하다 — 애널리스트
+    #   추정은 스냅샷만 있고 과거 시점 값이 없다(data/asof.json 의 선행 컨센서스 축이
+    #   스스로 "백테스트에 못 쓴다"고 적어 두었다). 셋만 쓴다.
+    _E30_MET = "장부가/주가 · 잉여현금흐름/주가 · 장부가/기업가치(총부채 근사) 세 지표를 "                "월말 단면 z-점수로 바꿔 단순평균한 밸류 종합점수"
+    _E30_WHY = ("AQR 이 밸류를 '산업 내' 정의로 구성하는 논리 — 제약 없는 밸류 스크린은 회계상 " 
+                "싸 보이는 금융·에너지를 과대편입하고 기술주를 과소편입해, 성패가 종목선택이 " 
+                "아니라 업종 방향에 좌우된다. 업종마다 회계 구조와 정상 밸류에이션 수준이 달라 " 
+                "같은 업종 안에서 비교해야 순수한 상대 저평가 정보가 남는다는 것이다. "
+                "이 랩의 x-btp 기각이 업종 베팅 탓이었는지를 가린다.")
+    xsec("x-valcomp", "밸류 컴포지트 상위 %d (섹터 제약 없음)" % TOPN,
+         _E30_MET + "가 가장 큰 %d종목 동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
+         None, _E30_WHY,
+         arch="within-industry-value")
+    xsec("x-valcomp-sn", "섹터 중립 밸류 컴포지트 (GICS 11섹터 × 1종)",
+         _E30_MET + "를 각 GICS 섹터 안에서 매겨 섹터별 1위 1종목씩 담는다(11종). "
+         "섹터 비중은 그 시점 유니버스의 섹터 시총 비중에 맞춘다 — 섹터 배분이 지수와 "
+         "같아지므로 업종 베팅이 제거되고 섹터 내 상대가치만 남는다. 월말 리밸런스.",
+         None, _E30_WHY,
+         arch="within-industry-value")
     xsec("x-fcfy", "잉여현금흐름 수익률 상위 %d" % TOPN,
          "주당 잉여현금흐름(영업현금흐름 − 자본지출)을 주가로 나눈 값이 가장 큰 %d종목 "
          "동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
@@ -2848,6 +2943,7 @@ def run():
         else:
             # 횡단면 — 월말에만 순위를 다시 매기고 그 사이는 보유
             hold = []
+            hw = None                      # 보유 비중(None 이면 동일가중 — 종전 경로)
             nav = [100.0]
             srets = []
             traded = []          # 그날 실제로 오간 금액(NAV 대비) — 비용은 이것에 붙는다
@@ -2870,6 +2966,7 @@ def run():
                 # 결과: 첫 월말 전까지는 후보가 없으므로 현금이다(선견 없이 정직한 상태다).
                 if (i - 1) in me:
                     sc = []
+                    comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
                     # 프로그인더팬은 **2단 선별**이라 종목 하나만 보는 채점으로는 못 만든다.
                     # 원논문은 모멘텀 5분위 × ID 5분위 이중정렬이므로, 여기서도 먼저 그 시점
                     # 모멘텀 상위 5분위 컷을 구한 뒤 아래 갈래에서 그 안에서만 ID 로 고른다.
@@ -3167,6 +3264,29 @@ def run():
                                 e = asof_fund(f.get("eq"), dt_)
                                 # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
                                 v = (e / sn / p0) if (e is not None and mcap) else None
+                            elif sid in ("x-valcomp", "x-valcomp-sn"):
+                                # 🚨 여기서는 **원지표 셋을 모아 두기만** 한다. z-점수는 단면이
+                                #   다 모여야 낼 수 있으므로 아래 루프 밖에서 z_composite 가 만든다.
+                                e = asof_fund(f.get("eq"), dt_)
+                                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
+                                lb = asof_fund(f.get("liab"), dt_)
+                                cs = asof_fund(f.get("cash"), dt_)
+                                m = {}
+                                if e is not None and mcap:
+                                    m["bp"] = e / mcap                     # 장부가/시총 = B/P
+                                if fc is not None and mcap:
+                                    m["fcfp"] = fc / mcap                  # FCF/시총
+                                if e is not None and mcap and lb is not None:
+                                    # ⚠ 기업가치 근사 — 이자부부채가 없어 총부채를 쓴다.
+                                    #   매입채무·이연법인세까지 들어가 자본집약 업종의 EV 가 부푼다.
+                                    #   섹터 중립판에서는 섹터 안에서 상쇄되지만 제약 없는 판에서는
+                                    #   안 된다(사전등록 §2·실패 시나리오 ②).
+                                    ev = mcap + lb - (cs or 0.0)
+                                    if ev > 0:
+                                        m["bev"] = e / ev
+                                if m:
+                                    comp_raw.setdefault(sid, []).append((t, m))
+                                v = None                                   # 점수는 나중에 붙인다
                             elif sid == "x-fcfy":
                                 fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
                                 v = (fc / mcap) if (fc is not None and mcap) else None
@@ -3337,9 +3457,31 @@ def run():
                             v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
                         if v is not None and v == v:
                             sc.append((v, t))
+                    # 🚨 E30 — z-점수는 단면이 다 모여야 낼 수 있다. 위 루프에서 원지표만
+                    #   모아 두었고 여기서 컴포지트를 만든다. 지표별로 결측 종목이 다르므로
+                    #   z_composite 가 있는 지표만으로 평균한다(0 으로 채우지 않는다 —
+                    #   0 은 z 척도에서 '평균'이라 자료 없는 종목이 중간 순위를 공짜로 받는다).
+                    if S["sid"] in comp_raw:
+                        sc = [(z, t) for t, z in z_composite(comp_raw[S["sid"]]).items()]
                     sc.sort(reverse=True)
                     pool_hist.append((dates[i - 1], len(sc)))
-                    new = pick_top(sc, S["sid"])
+                    if S["sid"] == "x-valcomp-sn":
+                        # 🚨 섹터 중립 — 각 섹터 1위 1종, 비중은 **유니버스 섹터 시총 비중**.
+                        #   이 엔진은 원래 동일가중 전제라 비중을 실을 자리가 없었다(아래 hw).
+                        _sec = {t: (meta.get(t) or {}).get("sector") or "" for _v, t in sc}
+                        _mc = {}
+                        for _v, t in sc:
+                            _f = FU.get(t) or {}
+                            _sn = asof_fund(_f.get("sh"), dates[i - 1])
+                            _p0 = px[t][i - 1] if px.get(t) else None
+                            if _sn and _p0 and _sn > 0 and _p0 > 0:
+                                _mc[t] = _sn * _p0
+                        _pw = pick_sector_neutral(sc, _sec, _mc, per=1)
+                        new = [t for t, _w in _pw]
+                        new_w = {t: w for t, w in _pw}
+                    else:
+                        new = pick_top(sc, S["sid"])
+                        new_w = None
                     if len(sc) < XSEC_MIN_POOL:
                         # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
                         #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
@@ -3362,17 +3504,25 @@ def run():
                         thin += 1
                         # 들고 있던 것을 전부 판다 — 그것도 매매다(종전 turns 는 이걸 안 셌다).
                         _tr += 1.0 if hold else 0.0
-                        hold = []                      # → 무보유. 재기준이 시작일을 정직하게 잡는다
+                        hold = []; hw = None           # → 무보유. 재기준이 시작일을 정직하게 잡는다
                     elif new:
                         turns += len(set(new) ^ set(hold)) / (2 * TOPN) if hold else 1.0
                         # 오간 금액 = 대칭차 ÷ TOPN (판 것 + 산 것). turns 의 정의(교체 횟수)와
                         # 분모가 2배 다르다 — 타이밍의 Σ|Δw| 와 눈금을 맞추려면 이쪽이다.
                         _tr += (len(set(new) ^ set(hold)) / TOPN) if hold else 1.0
                         hold = new
+                        hw = new_w                     # None 이면 동일가중(종전과 같다)
                 if hold and first_i is None:
                     first_i = i
-                rs = [R[t][i] for t in hold if R[t][i] is not None]
-                r = sum(rs) / len(rs) if rs else 0.0
+                if hw:
+                    # 가중 바스켓. 결측 종목은 빼고 남은 비중을 되정규화한다 —
+                    # 0 으로 두면 그날 현금을 든 것이 되어 섹터 중립이 조용히 깨진다.
+                    _pairs = [(hw[t], R[t][i]) for t in hold if R[t][i] is not None and t in hw]
+                    _sw = sum(w for w, _x in _pairs)
+                    r = (sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0
+                else:
+                    rs = [R[t][i] for t in hold if R[t][i] is not None]
+                    r = sum(rs) / len(rs) if rs else 0.0
                 srets.append(r)
                 traded.append(_tr)
                 _tr = 0.0

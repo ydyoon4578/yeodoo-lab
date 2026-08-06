@@ -1890,7 +1890,13 @@
     "Value: Why Now? Capturing the Comeback in Its Early Innings — AQR (1Q 2023) — https://www.aqr.com/-/media/AQR/Documents/Whitepapers/Value-Why-Now.pdf",
     "Factor Views — J.P. Morgan Asset Management (현재 2Q 2026판 게시) — https://am.jpmorgan.com/us/en/asset-management/adv/insights/portfolio-insights/asset-class-views/factor/",
     "Equity Factor Insights Q4 2025 — FTSE Russell / LSEG (2026-01) — https://www.lseg.com/content/dam/ftse-russell/en_us/documents/market-insights/equity-factor/equity-factor-insights-q4-2025.pdf"
-   ]
+   ],
+   "lab": {
+    "v": "구별 불가",
+    "t": "섹터 중립 밸류 컴포지트 (Within-Industry Value · E30)",
+    "why": "카드가 규정한 3자 비교를 그대로 돌렸다. 게시 기준은 둘 다 미달(t 2.94/2.67 · 문턱 3.37 · incr5 0.87/0.88)이나, 핵심 비교 (c)−(b)가 연 +3.34%p(t 1.08)로 0 이 아니다 — 섹터 중립화의 방향은 맞고 크기가 모자라다.",
+    "href": "archive.html#a-within-industry-value"
+   }
   },
   {
    "id": "E31",
