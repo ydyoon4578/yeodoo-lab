@@ -25,7 +25,14 @@ TARGETS = {
     "rotation", "explorer", "archive", "stocks", "regime", "sentiment", "holdings",
     "market", "sector", "macro", "screener", "relvalue", "valuation", "portfolio",
     "company", "method", "roadmap", "sources", "site",
-    "filings", "industry",
+    "filings",
+    # 🚨 industry.html 은 2026-08-06 에 삭제했지만(사용자 결정) 이 target 은 **남긴다.**
+    #   updates.json 에 industry 로 남긴 갱신이 4건 있다 — 지우면 그 기록들이 갱신 피드에서
+    #   '기타'로 떨어진다. 슬롯이 없어진 것과 그 슬롯의 역사가 없어지는 것은 다른 일이다.
+    #   ⚠ 그래서 updates.html 의 UPD 에도 같이 남겨야 한다(둘은 짝이고 검사가 대조한다).
+    #   ⚠ 처음에 "0건이라 잃을 것이 없다"며 뺐는데, 그건 내가 updates.json 을 잘못된 키
+    #     (items)로 세어 0 이 나온 것이었다. 실제 키는 events 다. 검사가 곧바로 잡았다.
+    "industry",
     # 13F 계열(거장 포트폴리오·운용사 복제 진단). 예전엔 이 영역 변경을 site 로 뭉뚱그려
     # 기록해서 갱신 피드에서 어디가 바뀐 건지 알 수 없었다.
     "guru",

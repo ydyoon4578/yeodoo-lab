@@ -1435,7 +1435,13 @@ except Exception as e:
 try:
     _lu = rd("build/log_update.py")
     _m = re.search(r"TARGETS\s*=\s*\{(.*?)\}", _lu, re.S)
-    _lt = set(re.findall(r'"([a-z]+)"', _m.group(1))) if _m else set()
+    # 🚨 2026-08-06 — 주석을 걷어내고 본다. 종전에는 블록 전문에 정규식을 물려서,
+    #   주석 안에 따옴표로 적힌 이름까지 target 으로 셌다. 실제로 물렸다 — industry 를
+    #   빼면서 "왜 뺐는지"를 주석에 적었더니 그 주석 때문에 '아직 남아 있다'로 잡혔다.
+    #   validate_site 안에서만 오늘 세 번째다(ci_push 검사·도움말 태그 검사·여기).
+    #   검사가 코드를 볼 때는 **살아 있는 줄만** 봐야 한다.
+    _live_t = chr(10).join(_ln.split("#", 1)[0] for _ln in (_m.group(1) if _m else "").split(chr(10)))
+    _lt = set(re.findall(r'"([a-z]+)"', _live_t)) if _m else set()
     # UPD 정본은 2026-07-25부터 updates.html에 있다(홈에서 갱신 피드를 뺐다).
     _ix2 = rd("updates.html")
     _m2 = re.search(r"var UPD=\{(.*?)\};", _ix2, re.S)

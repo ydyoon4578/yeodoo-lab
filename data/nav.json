@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "25fd5ab20c1ddad0",
+ "generated_from": "5d23d1f7a763b374",
  "categories": [
   {
    "name": "시장",
@@ -14,6 +14,16 @@
      "desc": "518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭",
      "verdict": "unverified",
      "src": "agg",
+     "effort": "M",
+     "live": true
+    },
+    {
+     "name": "8-K 공시 피드",
+     "file": "filings.html",
+     "status": "existing",
+     "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
+     "verdict": "na",
+     "src": "raw",
      "effort": "M",
      "live": true
     },
@@ -56,44 +66,6 @@
      "src": "raw",
      "effort": "M",
      "anchor": "static",
-     "live": true
-    }
-   ]
-  },
-  {
-   "name": "공시·산업",
-   "slug": "filings",
-   "short": "공시",
-   "tools": [
-    {
-     "name": "8-K 공시 피드",
-     "file": "filings.html",
-     "status": "existing",
-     "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "산업 탐색",
-     "file": "industry.html",
-     "status": "existing",
-     "desc": "GICS 서브산업 — 섹터 11 → 산업그룹 → 서브산업 세 단",
-     "verdict": "unverified",
-     "src": "raw",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "관전 포인트",
-     "file": "industry.html#watch",
-     "status": "existing",
-     "desc": "산업 단위로 눈에 띄는 어긋남 — 관찰이고 예측이 아니다",
-     "verdict": "unverified",
-     "src": "agg",
-     "effort": "M",
-     "anchor": "route",
      "live": true
     }
    ]
