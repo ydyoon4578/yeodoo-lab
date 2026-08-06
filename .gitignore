@@ -39,3 +39,6 @@ data/_pit_sh_cache.json
 data/_custconc_raw.json
 # 검증 관문의 기준선(러너 안에서만 산다) — build/validate_gate.py
 .validate_baseline
+# 사내 배포본 — build/deploy_local.py 산출물(저장소에 넣지 않는다)
+_deploy/
+_deploy.log
