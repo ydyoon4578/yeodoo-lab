@@ -262,7 +262,18 @@ def _industry(stocks, dates, root):
             # 소수 한 자리로 줄인다. 종목 줄 417개가 두 자리를 들고 있으면 gz 가 10KB 늘고
             # (실측 19.7 → 29.7KB), 화면에서 종목 수익률의 둘째 자리를 읽을 일은 없다.
             # 샤프도 싣지 않는다 — 한 종목의 샤프는 종목 페이지가 맥락과 함께 보여 준다.
+            # 🚨 2026-08-06 — 종가(px)를 싣는다(사용자 요청). 종전에는 수익률만 있어
+            #   화면이 "ACN 이 1일 +2.8%"라고만 말했다 — 무엇이 그만큼 움직였는지는 없었다.
+            #   PX 는 이 함수가 이미 들고 있다(수익률을 그것으로 만든다). 안 싣는 것이
+            #   안 재는 것보다 나을 이유가 없다.
+            #   ⚠ 배당조정가다 — 수익률과 **같은 계열**이어야 한다. 다른 데서 원주가를
+            #     가져오면 같은 줄의 두 숫자가 서로 다른 것을 가리킨다.
+            #   ⚠ 종목 줄에만 붙인다. 산업·섹터 줄은 여러 종목의 묶음이라 '주가'라는 단일
+            #     숫자가 없다(평균가를 채우면 살 수 없는 값을 살 수 있는 것처럼 보인다).
+            _p1 = PX.get(objs[0]["t"]) if objs else None
+            _last = _p1[-1] if (_p1 and _p1[-1]) else None
             return {"nm": label, "sn": sub, "st": 1, "sec": sec, "n": 1, "mc": mc,
+                    **({"px": round(float(_last), 2)} if _last else {}),
                     "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
                     "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
