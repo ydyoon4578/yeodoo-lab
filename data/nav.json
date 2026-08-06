@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "5d23d1f7a763b374",
+ "generated_from": "046b2ab460363201",
  "categories": [
   {
    "name": "시장",
@@ -299,16 +299,6 @@
      "live": true
     },
     {
-     "name": "만들지 않은 것",
-     "file": "roadmap.html",
-     "status": "existing",
-     "desc": "메뉴에서 뺀 칸과 그 사유 — 칸은 지우되 사유는 지우지 않는다",
-     "verdict": "na",
-     "src": "none",
-     "effort": "M",
-     "live": true
-    },
-    {
      "name": "BK",
      "file": "kb.html",
      "status": "existing",
@@ -327,7 +317,7 @@
   {
    "name": "실시간 내러티브",
    "cat": "공시룸 (뉴스룸)",
-   "was_file": "roadmap.html#narrative",
+   "was_file": "sources.html#narrative",
    "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
    "retired_on": "2026-07-25",
    "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
@@ -338,7 +328,7 @@
   {
    "name": "프리미엄 뉴스",
    "cat": "공시룸 (뉴스룸)",
-   "was_file": "roadmap.html#news",
+   "was_file": "sources.html#news",
    "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
    "retired_on": "2026-07-25",
    "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
@@ -349,7 +339,7 @@
   {
    "name": "밸류체인",
    "cat": "산업 분석",
-   "was_file": "roadmap.html#value-chain",
+   "was_file": "sources.html#value-chain",
    "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
    "retired_on": "2026-07-25",
    "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
@@ -378,6 +368,34 @@
    "principle": "남은 길인 yfinance는 비공식 API라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 실제로 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀 종목 갱신이 사흘 멈춘 전례가 있다. 한 칸을 위해 그 위험을 상시로 안지 않는다.",
    "paid_path": "Finnhub 무료 등급(공식 API)에 실적 캘린더가 있다. 키만 받으면 붙일 수 있다 — 비용이 아니라 계정 문제다.",
    "replaced_by": "filings.html — 이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있다."
+  },
+  {
+   "name": "산업 탐색",
+   "cat": "공시·산업",
+   "was_file": "industry.html",
+   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+   "retired_on": "2026-08-06",
+   "why": "홈의 '기간별 수익률' 표가 섹터 → 산업그룹 → 종목을 이미 같은 열·같은 창으로 편다. 2026-08-05 에 GICS 3·4차를 안 쓰기로 하면서 이 페이지가 홈 표와 같은 두 단을 그리게 됐고, 그 순간 같은 것을 두 곳에서 말하게 됐다. 한 곳으로 줄인다.",
+   "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
+  },
+  {
+   "name": "관전 포인트",
+   "cat": "공시·산업",
+   "was_file": "industry.html#watch",
+   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+   "retired_on": "2026-08-06",
+   "why": "산업 탐색 안의 탭이었다. 그 페이지를 빼면서 함께 빠진다. '산업 단위로 눈에 띄는 어긋남'이었는데 검증된 신호가 아니라 관찰이라 랩의 판정 체계에 실을 자리가 없었다.",
+   "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
+  },
+  {
+   "name": "만들지 않은 것",
+   "cat": "랩 원장",
+   "was_file": "roadmap.html",
+   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+   "retired_on": "2026-08-06",
+   "why": "이 페이지가 그리던 두 블록('소스 대기'·'메뉴에서 뺀 칸')을 데이터 출처 화면 (sources.html#s-wont)으로 옮겼다. '무엇을 어디서 받는가' 옆자리가 '무엇을 못 받는가'라, 두 화면으로 나눌 이유가 없었다.",
+   "principle": "탭을 지울 때 그 탭이 유일하게 그리던 것을 함께 지우면, 자료는 남고 화면에서만 사라진다 — 이 저장소가 '재 놓고 안 내면 모은 적 없는 것과 같다'고 부르는 그것이다.",
+   "replaced_by": "sources.html#s-wont"
   }
  ]
 }

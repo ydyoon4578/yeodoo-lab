@@ -322,7 +322,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일</span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본</span></a>
           <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span><span class="mmd">언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에</span></a>
-          <a class="mmi" href="roadmap.html" data-nav="roadmap.html"><span class="mmn">만들지 않은 것</span><span class="mmd">메뉴에서 뺀 칸과 그 사유 — 칸은 지우되 사유는 지우지 않는다</span></a>
           <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
         </div>
       </li>
@@ -537,6 +536,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="meta"><span><b>생성일</b><span id="d-btgen">—</span></span><span><b>백테스트 구간</b><span id="d-btspan">전략별 상이 — 각 패널 표기</span></span><span><b>무위험금리</b><span id="d-rf">—</span></span><span><b>갱신</b>지표 <i class="v" id="up-metrics">—</i> + 백테스트 시계열 수시(정적 재생성)</span></div>
   </div>
 
+  <!-- ── 못 만든 것 · 뺀 칸 ────────────────────────────────────────────────
+       🚨 sources.html#s-wont('만들지 않은 것')을 없애면서 여기로 옮겼다(2026-08-06 사용자 결정).
+          그 페이지가 유일하게 이 둘을 그리고 있었다 — 탭만 지우면 은퇴 사유 7건과
+          막힌 칸들이 자료로만 남고 화면에서 사라진다. 그건 이 저장소가 스스로 금한 것이다
+          ("칸은 지우되 사유는 지우지 않는다" — nav.json retired_note).
+       ⚠ 정본은 build/nav_items.json 이다. 어제 data/nav.json(파생물)에 적었다가
+          sync_nav 가 다시 구우면서 통째로 날아갔다. 파생물에 쓰지 말 것. -->
+  <section id="s-wont" aria-labelledby="wont-h">
+    <h2 class="lbl" id="wont-h">못 만든 것 · 메뉴에서 뺀 칸 <span class="sub">· 칸은 지우되 사유는 지우지 않는다</span></h2>
+    <div class="tally" id="tally"></div>
+    <h3 class="lbl" style="margin-top:20px">소스 대기</h3>
+    <div id="pipes"><div class="skel">불러오는 중…</div></div>
+    <h3 class="lbl" style="margin-top:20px">메뉴에서 뺀 칸</h3>
+    <div id="wonts"><div class="skel">불러오는 중…</div></div>
+  </section>
+
   <footer>
     여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a><br>
     과거 성과는 미래 수익을 보장하지 않습니다.
@@ -632,6 +647,66 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   });
   // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
 })();
+
+  // ── sources.html#s-wont 에서 옮겨 온 렌더러(2026-08-06). 자료는 data/nav.json 그대로다.
+  function fail(){['pipes','wonts'].forEach(function(k){var e=document.getElementById(k);if(e)e.innerHTML='<div class="skel">불러오지 못했습니다.</div>';});}
+  function el(id){return document.getElementById(id);}
+  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  fetch('data/nav.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.categories){fail();return;}
+    var tools=[];
+    j.categories.forEach(function(c){(c.tools||[]).forEach(function(t){t._cat=c.name;tools.push(t);});});
+
+    // ── 네 숫자 ──
+    // 앞의 셋(전체=동작+준비중)만 합이 맞는다. '뺀 칸'은 2026-07-25에 슬롯에서 아예 제외했으므로
+    // 전체 슬롯 수에 들어 있지 않다 — 여기서 빼면 준비중이 그만큼 모자라게 나온다(실제로 그렇게 틀렸었다).
+    var live   = tools.filter(function(t){return t.live;}).length;
+    var soon   = tools.length-live;
+    var wont   = (j.retired||[]).length;      // 슬롯 밖 — 아래 '뺀 칸' 섹션이 사유를 싣는다
+    el('tally').innerHTML=
+      ty(tools.length,'전체 슬롯','메뉴에 세운 칸','var(--ink)')+
+      ty(live,'동작 중','지금 열리는 화면','var(--deploy)')+
+      ty(soon,'준비중','소스·구현 대기','var(--champ)')+
+      ty(wont,'메뉴에서 뺌','슬롯 밖 · 사유는 아래','var(--hot)');
+
+    // ── 소스별 묶음(pipeline 0=영구 미제작은 제외, 99=후순위는 맨 뒤) ──
+    var byPipe={};
+    tools.filter(function(t){return !t.live;}).forEach(function(t){
+      var k=(t.pipeline==null?98:t.pipeline)+'|'+(t.blocked_by||'미분류');
+      (byPipe[k]=byPipe[k]||[]).push(t);
+    });
+    var keys=Object.keys(byPipe).sort(function(a,b){return (+a.split('|')[0])-(+b.split('|')[0]);});
+    el('pipes').innerHTML = keys.length ? keys.map(function(k,i){
+      var arr=byPipe[k], src=k.split('|').slice(1).join('|'), pri=+k.split('|')[0];
+      var order = pri>=98 ? '후순위' : (i+1)+'순위';
+      return '<div class="pipe"><h3><span class="pn">'+esc(order)+'</span>'+esc(src)+
+        '<span class="cnt">'+arr.length+'칸</span></h3>'+
+        (arr[0].blocked_why?'<p class="why">'+esc(arr[0].blocked_why)+'</p>':'')+
+        '<div class="slots">'+arr.map(function(t){
+          return '<div class="slot"><span class="sn">'+esc(t.name)+'</span>'+
+                 '<span class="sc">'+esc(t._cat)+' · 공수 '+esc(t.effort||'—')+'</span>'+
+                 '<span class="sd">'+esc(t.desc)+'</span></div>';
+        }).join('')+'</div></div>';
+    }).join('') : '<div class="note" style="margin:0"><b>대기 중인 칸이 없습니다.</b> 메뉴의 '+tools.length+'칸이 전부 동작합니다 — 붙일 소스가 남아 있는데 안 붙인 칸은 하나도 없습니다. 만들지 않기로 한 것은 아래에 있습니다.</div>';
+
+    // ── 메뉴에서 뺀 칸 ── 슬롯에는 없지만 사유는 계속 게시한다
+    var w=j.retired||[];
+    el('wonts').innerHTML = w.length ? w.map(function(t){
+      return '<div class="wont" id="'+esc(((t.was_file||'').split('#')[1]||''))+'"><h3>'+esc(t.name)+
+        ' <span style="font-weight:400;color:var(--muted);font-size:11.5px">· '+esc(t.cat)+
+        ' · '+esc(t.retired_on||'')+' 제외</span></h3>'+
+        '<p>'+esc(t.why||'')+'</p>'+
+        (t.principle?'<p class="alt">'+esc(t.principle)+'</p>':'')+
+        (t.paid_path?'<p class="alt"><b style="color:var(--marg)">돈으로 푸는 길</b> — '+esc(t.paid_path)+'</p>':'')+
+        (t.replaced_by?'<p class="alt"><b style="color:var(--deploy)">대신 만든 것</b> — '+esc(t.replaced_by)+'</p>':
+                       '<p class="alt"><b style="color:var(--hot)">대체 없음</b> — 이 자리는 비워 둡니다.</p>')+
+        '</div>';
+    }).join('') : '<div class="skel">해당 없음.</div>';
+  }).catch(fail);
+
+  function ty(n,lab,sub,c){
+    return '<div class="ty" style="--edge:'+c+'"><b class="tnum">'+n+'</b><span>'+lab+'</span><em>'+sub+'</em></div>';
+  }
 </script>
 </body>
 </html>
