@@ -126,6 +126,11 @@ def _price_row(px, dates, bidx, tkr, label):
     #   숫자는 나오는데 뜻이 없다(신규 ETF가 늘 고점 근처로 보인다).
     win = [v for v in s[-MIN_52:] if v is not None]
     return {"t": tkr, "n": label, "r": r,
+            # 🚨 2026-08-06 — 종가(px)를 함께 싣는다(사용자 요청). 종전에는 수익률만 있어
+            #   화면이 "XLK 가 1일 +4.98%"라고만 말했다 — 무엇이 그만큼 움직였는지는 없었다.
+            #   cur 는 이미 여기 있었다. 안 싣는 것이 안 재는 것보다 나을 이유가 없다.
+            #   ⚠ 배당조정가다(수익률과 같은 계열이어야 한다 — 두 벌을 두면 어긋난다).
+            "px": round(float(cur), 2),
             "off52": (round((cur / max(win) - 1) * 100, 1) if len(win) >= MIN_52 else None),
             "rsi": _rsi_wilder(s),
             "n_obs": len([v for v in s if v is not None])}
