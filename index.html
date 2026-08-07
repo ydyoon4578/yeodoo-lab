@@ -414,9 +414,6 @@
            align-items:baseline;padding:9px 14px;border-bottom:1px solid var(--line-soft)}
   .asofrow:last-child{border-bottom:0}
   .asofrow.pri{background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
-  /* 오늘 줄 — 대표(배경 틴트)와 다른 표시를 쓴다. 둘이 같은 강조면 무엇이 오늘인지 흐려진다. */
-  .asofrow.tdy{background:var(--panel-2);border-left:3px solid var(--accent)}
-  .asofrow .tdy-t{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
   .asofrow .ad{display:flex;flex-direction:column;gap:2px}
   .asofrow .ad b{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
   .asofrow .pri-t{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
@@ -1143,25 +1140,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               :d>j.primary?'<span class="ahead">대표 이후</span>':'')+'</span>'+
              '<span class="axs">'+chips+'</span></div>';
     }).join('');
-    // 🚨 2026-08-05 — 표에 **오늘이 어디에도 없었다.** 맨 위가 '대표'라 그게 오늘로 읽히는데,
-    //   미국 종가 기준이라 대표는 늘 하루 전이다. 어느 줄에도 오늘이 없으니 독자는
-    //   '왜 어제 날짜가 최신이지'를 표 안에서 풀 수 없었다. 오늘을 먼저 적고, 대표가
-    //   그로부터 며칠 전인지 그 자리에서 말한다.
-    var _t=new Date(), _pad=function(x){return (x<10?'0':'')+x;};
-    var _td=_t.getFullYear()+'-'+_pad(_t.getMonth()+1)+'-'+_pad(_t.getDate());
-    var _bd=function(a,b){                       // 영업일 차이(주말 제외) — 표의 lag 와 같은 규약
-      var x=new Date(a+'T00:00:00'), y=new Date(b+'T00:00:00'), n=0;
-      while(x<y){x.setDate(x.getDate()+1); if(x.getDay()!==0&&x.getDay()!==6)n++;}
-      return n;
-    };
-    if(_td>j.primary){
-      var _n=_bd(j.primary,_td);
-      w.insertAdjacentHTML('afterbegin',
-        '<div class="asofrow tdy"><span class="ad"><b>'+esc(_td)+'</b>'+
-        '<span class="tdy-t">오늘</span></span>'+
-        '<span class="axs"><span class="axc">대표 기준일은 '+esc(j.primary)+
-        '<em>'+(_n?_n+'영업일 전':'같은 날')+' · 미국 종가 기준이라 하루 뒤에 들어온다</em></span></span></div>');
-    }
+    // ⚠ '오늘' 줄은 뺐다(2026-08-07 사용자 결정). 2026-08-05 에 "표에 오늘이 어디에도
+    //   없다"는 이유로 넣었던 줄인데, 매일 같은 문장("대표 기준일은 …, 1영업일 전 · 미국
+    //   종가 기준이라 하루 뒤에 들어온다")만 반복해 홈 맨 위 한 칸을 차지했다.
+    //   같은 설명은 이 표를 펼쳤을 때 각 줄의 '−n영업일' 배지가 이미 하고 있다.
     var note=document.querySelector('.asofnote');
     if(note)note.textContent='축 '+j.axes.length+'개 · 날짜 '+order.length+'개 — 누르면 펼침';
   }).catch(function(){});
