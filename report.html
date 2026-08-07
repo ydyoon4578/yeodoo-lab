@@ -4,121 +4,127 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 매일 웹 리서치로 갱신하는 오늘의 전략 탐색 10선(외부 출처·미검증·참고용).">
+<meta name="description" content="여두 전략 랩 — 돌린 규칙 117종을 전략별로 그대로 복제해 잰 값 전부를 적은 상세 리포트(판정으로 줄 세우지 않음).">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
-<title>여두 · 오늘의 전략 탐색</title>
+<title>여두 · 전략 복제 리포트</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
-<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/rotation.html">
-<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/rotation.html">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/report.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/report.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 · 오늘의 전략 탐색">
-<meta property="og:description" content="시장 초과성과·타이밍·리스크관리 전략 풀에서 날짜별 10선 — 웹 리서치·미검증·참고용.">
+<meta property="og:title" content="여두 · 전략 복제 리포트">
+<meta property="og:description" content="규칙 117종을 전략별로 복제해 규칙·구간·성과·비용·회전·위험·중복·생존편향 보정·현재 보유까지 전부 적은 리포트.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 · 오늘의 전략 탐색">
-<meta name="twitter:description" content="시장 초과성과·타이밍·리스크관리 전략 풀에서 날짜별 10선 — 웹 리서치·미검증·참고용.">
+<meta name="twitter:title" content="여두 · 전략 복제 리포트">
+<meta name="twitter:description" content="규칙 117종을 전략별로 복제해 잰 값 전부를 적은 리포트 — 판정으로 줄 세우지 않는다.">
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--accent-2:#5E4900;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;
     --hot:#A64B3B;--good:#0E8A54;--watch:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;
     --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
+    --w-wide:1440px;--w-base:1200px;--w-read:980px;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   }
   @media (prefers-color-scheme:dark){:root{
     --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
-    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--accent-2:#FFD766;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;
     --hot:#E5806A;--good:#38D083;--watch:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--accent-2:#5E4900;--hot:#A64B3B;--good:#0E8A54;--watch:#B25E12;--champ:#2C6E8F;--rp:#7A5AA6;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
-  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--accent-2:#FFD766;--hot:#E5806A;--good:#38D083;--watch:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
-  /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
-  :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
   *,*::before,*::after{box-sizing:border-box}
-  /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
-     떨어졌고, 영문만 Segoe UI로 갈렸다 — 한 글꼴로 통일한다. 숫자·차트 라벨은 고정폭(--mono)
-     유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
-  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
-  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
-     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
-     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
-  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;text-decoration:none}
-  a.home:hover{border-color:var(--accent);color:var(--ink)}
-  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
-  header.mast{padding:64px 0 16px;border-bottom:1px solid var(--line)}
+  header.mast{padding:34px 0 16px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
-  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
-  .lede{margin:12px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)}
+  h1.title{font-weight:800;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.03em;margin:14px 0 0}
+  .lede{margin:12px 0 0;max-width:80ch;font-size:15px;color:var(--ink-2)}
   .warn{margin:14px 0 0;padding:11px 15px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:12.5px;color:var(--ink-2)}
   .warn b{color:var(--watch)}
   .statline{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
   .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted)}
   .stat b{color:var(--ink);font-size:14px;font-weight:600}
-  .catsec{margin-top:26px}
-  h2.cathead{font-size:13px}
-  .cathead{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:9px;margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line-soft)}
-  .cathead .dot{width:9px;height:9px;border-radius:50%}
-  .scard{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px}
-  .stop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
-  /* 브랜드색 배경 위 흰 글씨는 다크에서 대비 2.0:1 → 배경을 옅게 깔고 글씨를 그 색으로(AA 충족) */
-  .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--cidc,var(--ink));background:color-mix(in srgb,var(--cidc,var(--muted)) 16%,var(--panel))!important;border:1px solid color-mix(in srgb,var(--cidc,var(--muted)) 45%,transparent)}
-  .stop h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
-  .stop .stag{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
-  .todaybadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)}
-  /* 우리 랩이 유사 개념을 실제 구현·적대검증한 판정 — 웹 주장과 대비해 보여주는 게 이 사이트의 요점 */
-  .labbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px}
-  .lab-d{color:var(--good);background:color-mix(in srgb,var(--good) 13%,transparent);border:1px solid color-mix(in srgb,var(--good) 38%,transparent)}
-  .lab-m{color:var(--watch);background:color-mix(in srgb,var(--watch) 13%,transparent);border:1px solid color-mix(in srgb,var(--watch) 38%,transparent)}
-  .lab-r{color:var(--hot);background:color-mix(in srgb,var(--hot) 13%,transparent);border:1px solid color-mix(in srgb,var(--hot) 38%,transparent)}
-  /* 🚨 '구별 불가'·'측정 불가'는 기각이 아니다 — 전자는 대조군과 못 가른 것이고 후자는
-     자료가 모자라 성적 자체가 안 나온 것이다. 셋을 같은 빨강으로 칠하면 화면이
-     "검정해서 떨어뜨렸다"고 말하게 된다(2026-08-04 이전이 그랬다). 중립색으로 뗀다. */
-  .lab-n{color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent);border:1px solid var(--line)}
-  .srow.labrow{background:color-mix(in srgb,var(--panel-2) 70%,transparent);margin:0 -14px;padding:9px 14px}
-  .srow.labrow a{color:var(--accent)}
-  .srow{display:grid;grid-template-columns:88px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line-soft)}
-  .srow:first-of-type{border-top:none}
-  .srow .sk{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;padding-top:2px}
-  .srow p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.6}
-  .srow.purpose p{color:var(--ink);font-weight:600}
-  .ssrc{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line-soft);font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.5}
-  .ssrc b{color:var(--ink-2);font-weight:600}
-  .ssrc a{color:var(--accent);text-decoration:none;border-bottom:1px dotted color-mix(in srgb,var(--accent) 45%,transparent);word-break:break-all}
-  .ssrc a:hover{border-bottom-style:solid}
-  @media(max-width:560px){.srow{grid-template-columns:1fr;gap:2px}.stop .stag{margin-left:0;width:100%}}
-  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
-  footer a{color:var(--accent);text-decoration:none}
-  .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:30px;text-align:center}
-  .controls{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:14px 0 11px;margin-top:10px;border-bottom:1px solid var(--line-soft)}
+
+  /* ── 조작부 ───────────────────────────────────────────────────────── */
+  .controls{position:sticky;top:52px;z-index:5;background:color-mix(in srgb,var(--ground) 93%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:12px 0 10px;border-bottom:1px solid var(--line-soft)}
   .searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow)}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow)}
   .search input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
-  .search svg{flex-shrink:0;color:var(--muted)}
-  .chiprow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;user-select:none;transition:all .12s;display:inline-flex;align-items:center;gap:5px}
+  .search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+  .chiprow{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;align-items:center}
+  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px}
   .fchip:hover{border-color:var(--accent);color:var(--ink-2)}
   .fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-  .fchip .c{opacity:.65;font-size:10px}
-  .fchip .d{width:8px;height:8px;border-radius:50%}
-  .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:16px 2px 0;text-transform:uppercase;letter-spacing:.06em}
-  /*a11y-fixes*/
   @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--ground)}}
   :root[data-theme="dark"] .fchip[aria-pressed="true"]{color:var(--ground)}
-  .search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
-  a:focus-visible,button:focus-visible,input:focus-visible,[role="option"]:focus-visible,.fchip:focus-visible,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  /*touch-targets*/
-  @media(pointer:coarse){.fchip,.cbtn,.sortbtn,.item,.cbtn,.pill{min-height:40px}.fchip{padding-top:8px;padding-bottom:8px}}
-  /*reduced-motion*/
-  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
-  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
-  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
-  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+  .fchip .c{opacity:.62;font-size:10px}
+  .rowcount{font-family:var(--mono);font-size:11px;color:var(--muted);margin:14px 2px 6px;letter-spacing:.06em}
+
+  /* ── 목차 ─────────────────────────────────────────────────────────── */
+  details.toc{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}
+  details.toc>summary{cursor:pointer;padding:11px 16px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2);list-style:none}
+  details.toc>summary::-webkit-details-marker{display:none}
+  details.toc>summary::before{content:"▸ ";color:var(--accent)}
+  details.toc[open]>summary::before{content:"▾ "}
+  .tocgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1px 14px;padding:4px 16px 14px}
+  .tocgrid a{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline;text-decoration:none;color:var(--ink-2);font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--line-soft)}
+  .tocgrid a:hover{color:var(--accent)}
+  .tocgrid .tn{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .tocgrid .tt{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* ── 리포트 한 편 ─────────────────────────────────────────────────── */
+  /* scroll-margin-top 은 상단 내비(52px) + 붙박이 조작부(~105px) 를 더한 값이다.
+     모자라면 목차에서 뛰었을 때 리포트 제목이 조작부 뒤에 가려 어느 편인지 안 보인다. */
+  .rep{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px 22px 20px;margin:0 0 16px;scroll-margin-top:172px}
+  .rhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  .rhead .no{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent)}
+  .rhead h2{font-size:19px;margin:0;font-weight:800;letter-spacing:-.02em}
+  .rhead .sid{font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+  .rhead .tags{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent);border:1px solid var(--line)}
+  .tag.fam{color:var(--champ);background:color-mix(in srgb,var(--champ) 13%,transparent);border-color:color-mix(in srgb,var(--champ) 36%,transparent)}
+  .tag.vd{color:var(--muted)}
+  .tag.vd.pass{color:var(--good);background:color-mix(in srgb,var(--good) 13%,transparent);border-color:color-mix(in srgb,var(--good) 36%,transparent)}
+  .tag.vd.rej{color:var(--hot);background:color-mix(in srgb,var(--hot) 13%,transparent);border-color:color-mix(in srgb,var(--hot) 36%,transparent)}
+
+  .sec{margin-top:15px}
+  .sec>h3{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 7px;display:flex;align-items:center;gap:8px}
+  .sec>h3::after{content:"";height:1px;flex:1;background:var(--line-soft)}
+  .sec p{margin:0 0 6px;font-size:13.5px;color:var(--ink-2);line-height:1.66}
+  .sec p b{color:var(--ink)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;color:var(--ink-2)}
+  .kv dt{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;padding-top:3px}
+  .kv dd{margin:0}
+  table.t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  table.t th,table.t td{padding:5px 9px;border-bottom:1px solid var(--line-soft);text-align:right}
+  table.t th:first-child,table.t td:first-child{text-align:left}
+  table.t thead th{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;border-bottom:1px solid var(--line)}
+  table.t tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  table.t td.n{font-family:var(--mono)}
+  table.t tr.main td{font-weight:700;color:var(--ink)}
+  .pos{color:var(--good)}.neg{color:var(--hot)}
+  .tw{overflow-x:auto}
+  .tick{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:2px 7px;margin:2px 4px 2px 0}
+  .tick span{font-weight:400;color:var(--muted);font-size:10px}
+  .miss{margin-top:14px;padding:9px 13px;border-radius:9px;background:color-mix(in srgb,var(--muted) 8%,transparent);border:1px dashed var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}
+  .miss b{color:var(--ink-2)}
+  .caveat{font-size:11.5px;color:var(--muted);line-height:1.6;margin:6px 0 0}
+  .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:40px;text-align:center}
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  @media(max-width:640px){.rep{padding:16px 14px}.kv{grid-template-columns:1fr;gap:0 0}.kv dt{padding-top:8px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;scroll-behavior:auto!important}}
+  /* 인쇄 — 이건 '리포트'다. 조작부·메뉴를 빼고 한 편이 페이지 경계에서 안 갈리게 한다. */
+  @media print{
+    .controls,.topnav,.skiplink,details.toc,#rowcount,button.theme{display:none!important}
+    body{background:#fff;color:#000;font-size:11px}
+    .rep{break-inside:avoid;page-break-inside:avoid;box-shadow:none;border:1px solid #bbb;margin-bottom:10px}
+    .wrap{max-width:none;padding:0}
+  }
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
@@ -286,7 +292,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 </style>
 <!-- NAVCSS:END -->
 </head>
-<body data-tool="rotation.html">
+<body data-tool="report.html">
 <!-- NAV:BEGIN -->
 <a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
@@ -443,215 +449,358 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAV:END -->
 <div class="wrap" id="main">
   <header class="mast">
-    <div class="eyebrow">여두 전략 랩 · 로테이션</div>
-    <h1 class="title">오늘의 전략 탐색</h1>
-    <p class="lede">웹 리서치 전략 풀에서 <b>날짜별 10선</b> — 목적·원리·진입기준·성과·최근동향·출처. 매일 최근동향 갱신 + 신규 전략 발굴로 풀이 늘어납니다.</p>
-    <div class="warn"><b>⚠ 웹 리서치 · 미검증 · 참고용</b> — 공개 문헌에서 수집한 카드로, 성과 수치는 원 출처 인용입니다(재현·검증 안 됨).
-      랩이 검증한 카드엔 배지·사유를 답니다 — <span class="labbadge lab-d">배포</span>
-      <span class="labbadge lab-m">제한적 유효</span> <span class="labbadge lab-n">구별 불가</span>
-      <span class="labbadge lab-n">측정 불가</span> <span class="labbadge lab-r">기각</span>.
-      회색 둘은 기각이 아닙니다 — <b>구별 불가</b>는 대조군과 갈리지 않은 것이고,
-      <b>측정 불가</b>는 자료가 모자라 성적 자체가 나오지 않은 것입니다.
-      유망 전략은 순차로 랩 검증을 거쳐 <a href="explorer.html" style="color:var(--accent)">전략 랩</a>(통과) 또는 <a href="explorer.html#archledger" style="color:var(--accent)">아카이브</a>(탈락)로 이동합니다.</div>
+    <div class="eyebrow">여두 전략 랩 · 복제 리포트</div>
+    <h1 class="title">전략 복제 리포트</h1>
+    <p class="lede">이 랩이 실제로 돌린 <b>규칙 117종</b>을 전략별로 하나씩 적는다 — 규칙 자체, 근거, 원문 대비 달라진 점,
+      구간, 성과(전략·대조군 나란히), 비용 후 성과, 회전·노출, 위험, 이웃 대비 증분알파, 매매대상 대비,
+      생존편향 보정(PIT), 후보 풀, 지금 보유한 것까지. <b>판정으로 줄 세우지 않는다.</b></p>
+    <div class="warn"><b>⚠ 이 화면은 성과를 약속하지 않는다.</b>
+      게시 기준(① |t| ≥ 본페로니 임계 ② Δ샤프 &gt; 0 ③ 이웃 5개 동시 통제 증분알파 t ≥ +2.0 ④ 부호 정합)을
+      넘은 규칙은 <b>0종</b>이다. 여기 적는 것은 그 기준의 통과 여부가 아니라 <b>각 규칙을 그대로 돌렸을 때 나온 값 전부</b>다.
+      값이 비면 <b>'—'</b>로 두고 왜 없는지 함께 적는다 — 빈칸을 지우면 그 항목을 통과한 것처럼 읽히기 때문이다.
+      랩 전체의 한계(생존편향·구간 성질·다중검정)는 각 리포트 아래가 아니라
+      <a href="method.html" style="color:var(--accent)">방법·규약</a>과 페이지 맨 아래 '랩 전체의 한계'에 있다 — 먼저 읽을 것.</div>
     <div class="statline" id="statline"></div>
   </header>
+
   <div class="controls">
     <div class="searchrow">
       <label class="search">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input id="q" type="search" placeholder="전략·유형·타겟·원리·출처 검색 (예: 모멘텀, 변동성, BAB)" aria-label="검색">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="전략명·규칙·근거·보유종목 검색 (예: 모멘텀, 200일선, NVDA)" aria-label="검색">
       </label>
-      <button class="fchip" id="modebtn" aria-pressed="false" title="전체 풀 보기 / 오늘의 10선">전체 풀 보기</button>
     </div>
-    <div class="chiprow" id="catf"></div>
+    <div class="chiprow" id="filt"></div>
   </div>
+
   <div class="rowcount" id="rowcount"></div>
+  <details class="toc" id="toc"><summary>목차</summary><div class="tocgrid" id="tocgrid"></div></details>
   <div id="content"><div class="empty">불러오는 중…</div></div>
+  <div id="tail"></div>
+
   <footer>
-    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">시장 국면</a> · <a href="explorer.html">전략 랩</a> · <a href="sources.html">데이터 출처</a><br>
-    매일 웹 리서치로 최근동향 갱신 — 갱신 대상은 그날의 10선 + 가장 오래 방치된 3종(하루 13종) · 풀에서 날짜(KST) 시드 기반 10선 · 외부 출처 · 미검증.<br>
-    투자 자문·매매 권유 아님 · 성과 수치는 원 출처 인용(랩 재현·검증 없음) · 과거 성과는 미래 수익을 보장하지 않습니다.
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="method.html">방법·규약</a> · <a href="sources.html">데이터 출처</a><br>
+    생성: <code>build/strategy_report.py</code> → <code>data/strategy_report.json</code>.
+    수치를 여기서 새로 계산하지 않는다 — 랩이 이미 실은 값을 옮긴다(채점기를 두 벌 두면 두 화면이 다른 숫자를 말한다).<br>
+    투자 자문·매매 권유 아님 · 과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
-<script>
-(function(){
-  var el=function(i){return document.getElementById(i);};
-  var CATCOL={A:'var(--good)',B:'var(--champ)',C:'var(--accent)',D:'var(--rp)',E:'var(--watch)'};
-  var CATORD=['A','B','C','D','E'];
-  function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
-  // esc된 텍스트의 URL을 클릭 가능한 링크로(출처 논문·리포트 바로가기)
-  function linkify(t){return t.replace(/(https?:\/\/[^\s<]+)/g,function(u){
-    var tail='',m=u.match(/[.,;:]+$/);   // 출처 문장의 마침표·쉼표가 href에 흡수돼 죽은 링크가 되던 문제
-    if(m){tail=m[0];u=u.slice(0,u.length-tail.length);}
-    // 닫는 괄호는 URL 내 여는 괄호와 균형 맞을 때만 유지 — "(JFQA).pdf" 같은 괄호 포함 URL은 보존, 감싸는 괄호는 제외
-    while(u.charAt(u.length-1)===')' && (u.split('(').length-1)<(u.split(')').length-1)){u=u.slice(0,-1);tail=')'+tail;}
-    m=u.match(/[.,;:]+$/); if(m){tail=m[0]+tail;u=u.slice(0,u.length-m[0].length);}
-    var lbl=u.replace(/^https?:\/\/(www\.)?/,''); if(lbl.length>44)lbl=lbl.slice(0,44)+'…';
-    return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+lbl+'</a>'+tail;});}
-  // 날짜 시드 결정론적 10선 — 풀 전체를 섞어 앞에서 10개. 카테고리 쿼터 없음(2026-08-06).
-  //   쿼터가 있으면 카테고리는 균형이어도 전략은 안 균형이다(B 8종 4일 · E 42종 21일 주기).
-  //   build/rotation_select.py와 동일 알고리즘 유지 필수 — CI가 대조한다.
-  function pick(arr,n,seedStr){
-    // ⚠ Math.imul 필수: 일반 곱셈은 2^53을 넘겨 float64 정밀도를 잃고 파이썬(정확한 32비트)과 다른 시드가 된다
-    var seed=2166136261;for(var i=0;i<seedStr.length;i++){seed^=seedStr.charCodeAt(i);seed=Math.imul(seed,16777619)>>>0;}
-    function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
-    function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-    return sh(arr).slice(0,n);
-  }
-  function card(s,isToday){
-    var col=CATCOL[s.cat]||'var(--muted)';
-    var tb=isToday?'<span class="todaybadge">오늘의 10선</span>':'';
-    function row(k,v,cls){return v?'<div class="srow '+(cls||'')+'"><span class="sk">'+k+'</span><p>'+esc(v)+'</p></div>':'';}
-    var src=(s.sources||[]).map(function(x){return linkify(esc(x));}).join(' · ');
-    // 랩 자체 검증 결과(있는 경우) — 배지 + 전용 행. 검증 대상은 '랩의 특정 구현'이므로 카드 규칙과 동일하지 않을 수 있음을 명시.
-    var L=s.lab, lb='', lrow='';
-    if(L){
-      var cls=L.v==='배포'?'lab-d':(L.v==='marginal'?'lab-m'
-             :((L.v==='구별 불가'||L.v==='측정 불가')?'lab-n':'lab-r'));
-      var vlab=L.v==='marginal'?'제한적 유효':L.v;
-      lb='<span class="labbadge '+cls+'">랩 검증 '+esc(vlab)+'</span>';
-      // ⚠ t(랩에서 구현한 이름)·href(그 결과가 실린 화면)는 **없을 수 있다.** 사전등록해
-      //   돌려만 보고 게시하지 않은 검정이 그렇다. 갈 곳이 없는데 링크를 만들면
-      //   esc(undefined)='' 이라 **빈 앵커**가 되고 문장에도 구멍이 생긴다 —
-      //   실제로 B4·B5 카드가 그 상태였다(2026-08-04 실측).
-      var how = L.t ? ('랩에서 ' + (L.href ? ('<a href="' + esc(L.href) + '">' + esc(L.t) + '</a>')
-                                           : ('<b>' + esc(L.t) + '</b>')) + ' 형태로 구현·적대검증한 결과: ')
-                    : '랩이 직접 구현해 검정한 결과: ';
-      lrow='<div class="srow labrow"><span class="sk">우리 랩 검증</span><p><b class="'+cls+'" style="background:none;border:0;padding:0">'+esc(vlab)+'</b> — '+how+esc(L.why)+
-        ' <span style="color:var(--muted);font-size:12px">검증한 것은 랩의 특정 구현이므로 이 카드의 규칙과 완전히 같지는 않습니다.</span></p></div>';
-    }
-    return '<div class="scard" id="s-'+esc(s.id||'')+'"><div class="stop"><span class="cid" style="--cidc:'+col+'">'+esc(s.id||s.cat)+'</span>'+
-      '<h3>'+esc(s.name)+'</h3>'+tb+lb+'<span class="stag">'+esc(s.type||'')+(s.target?' · 타겟: '+esc(s.target):'')+'</span></div>'+
-      row('목적·타겟',s.purpose,'purpose')+row('핵심 원리',s.principle)+row('진입 기준',s.entry)+
-      row('성과',s.performance)+lrow+
-      // 갱신일이 없으면 '미기록'을 명시한다 — 전 카드가 매일 갱신되는 것처럼 보이면 안 된다(하루 12종만 갱신)
-      row('최근 동향<span style="display:block;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:9.5px;margin-top:2px">'+
-          (s.recent_at?esc(s.recent_at)+' 갱신':'갱신일 미기록(카드 작성 시점)')+'</span>',s.recent)+
-      (src?'<div class="ssrc"><b>출처</b> · '+src+'</div>':'')+'</div>';
-  }
-  var CATNM={A:'A. S&P 500 초과성과',B:'B. NASDAQ 100 초과성과',C:'C. 단기 마켓타이밍',D:'D. 자산배분·리스크관리',E:'E. 추가 알파·팩터·이벤트'};
-  var CATSHORT={A:'S&P 500 초과',B:'NASDAQ 100 초과',C:'단기 타이밍',D:'자산배분',E:'알파·팩터'};
-  var DATA=null, state={q:'', cats:new Set(), mode:'today', labonly:false};
-  // KST 고정: UTC였을 때 한국 사용자에게 00~09시에 '어제 날짜'가 뜨고 10선이 오전 9시에 바뀌었다.
-  // 갱신 잡(08:50 KST)이 뽑는 날짜와도 어긋났다 — rotation_select.py도 동일하게 KST를 쓴다.
-  function today(){return new Date(Date.now()+9*3600e3).toISOString().slice(0,10);}
-  function browsing(){return state.mode==='all' || !!state.q || state.cats.size>0 || state.labonly;}
-  function selection(){
-    var S=DATA.strategies;
-    if(!browsing()) return pick(S,10,today());   // 기본: 오늘의 10선
-    var q=state.q;
-    return S.filter(function(s){
-      if(state.cats.size && !state.cats.has(s.cat))return false;
-      if(state.labonly && !s.lab)return false;
-      if(q){var lb=s.lab?(' 랩검증 '+s.lab.v+' '+s.lab.t+' '+s.lab.why):'';
-        var hay=(s.id+' '+s.name+' '+s.type+' '+s.target+' '+s.purpose+' '+s.principle+' '+s.performance+' '+s.recent+lb+' '+(s.sources||[]).join(' ')).toLowerCase();if(hay.indexOf(q)<0)return false;}
-      return true;
-    });
-  }
-  function render(){
-    var sel=selection(), br=browsing();
-    // 전체 탐색 중일 때 '오늘의 10선'에 해당하는 전략을 배지로 구분
-    var t9=br?(function(){var m={};pick(DATA.strategies,10,today()).forEach(function(s){m[s.id]=1;});return m;})():null;
-    var nlab=sel.filter(function(s){return s.lab;}).length;   // 오늘 10선 중 랩이 이미 판정한 것 — 먼저 알려주는 게 정직하다
-    el('rowcount').textContent = (br ? (sel.length+'개 표시 / 전체 '+DATA.strategies.length)
-      : ('오늘의 10선 · '+today()+' (검색·필터로 전체 '+DATA.strategies.length+'종 탐색)'))
-      + (nlab?' · 이 중 '+nlab+'종은 랩 자체 검증 판정 있음':'');
-    var html='';
-    CATORD.forEach(function(c){
-      var items=sel.filter(function(s){return s.cat===c;});
-      if(!items.length)return;
-      html+='<div class="catsec"><h2 class="cathead"><span class="dot" style="background:'+(CATCOL[c])+'"></span>'+(CATNM[c]||c)+' <span style="color:var(--muted);font-weight:400;font-size:11px">· '+items.length+(br?'개':'선')+'</span></h2>'+
-        items.map(function(s){return card(s, t9?!!t9[s.id]:false);}).join('')+'</div>';
-    });
-    el('content').innerHTML=html||'<div class="empty">'+(br?'조건에 맞는 전략이 없습니다.':'오늘의 전략이 없습니다.')+'</div>';
-  }
-  // ⚠ 라벨도 상태를 따라가야 한다. 전에는 title 만 바뀌고 글자는 늘 '전체 풀 보기'였다 —
-  //   전체 풀을 보는 중에도 버튼이 '전체 풀 보기'라고 적혀 있어, 지금 어느 쪽을 보고 있는지가
-  //   화면에서 사라졌다(aria-pressed 는 보조기기에만 간다).
-  function syncMode(){var b=el('modebtn'),all=state.mode==='all';b.setAttribute('aria-pressed',all);
-    b.textContent=all?'오늘의 10선 보기':'전체 풀 보기';
-    b.title=all?'누르면 오늘의 10선으로':'누르면 전체 풀로';}
-  // 일일 자동갱신(최근동향 웹리서치 잡)이 멈추면 조용히 오래된 동향이 남으므로 명시 경고
-  function staleStat(gen){
-    var p=String(gen||'').split('-'); if(p.length!==3)return '';
-    var d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
-    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
-    while(d.getTime()<end&&n<40){d.setUTCDate(d.getUTCDate()+1);var w=d.getUTCDay();if(w!==0&&w!==6)n++;}
-    return n>=3?'<span class="stat" style="color:var(--hot);font-weight:700">⚠ 최근동향 '+n+'영업일 미갱신</span>':'';
-  }
-  fetch('data/rotation_pool.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
-    if(!d||!d.strategies){el('content').innerHTML='<div class="empty">데이터를 불러오지 못했습니다.</div>';return;}
-    DATA=d;
-    el('statline').innerHTML='<span class="stat"><b>10</b> 오늘의 전략</span>'+
-      '<span class="stat">풀 <b>'+d.strategies.length+'</b>종</span>'+
-      // '기준일'이라고 부르면 내비 칩의 데이터 기준일과 같은 것으로 읽힌다.
-      // 이건 오늘 날짜로 풀에서 10선을 고른 '선정일'이고, 풀 자체의 기준일은 아래 '갱신'이다.
-      '<span class="stat">선정일 <b>'+today()+'</b></span>'+
-      '<span class="stat">랩 검증 대조 <b>'+d.strategies.filter(function(s){return s.lab;}).length+'</b>종</span>'+
-      '<span class="stat">동향 갱신 이력 <b>'+d.strategies.filter(function(s){return s.recent_at;}).length+'</b>/'+d.strategies.length+'</span>'+
-      '<span class="stat">갱신 '+esc(d.generated||'—')+'</span>'+staleStat(d.generated);
-    // 카테고리 필터 칩(개수 포함)
-    var cf=el('catf');
-    CATORD.forEach(function(c){
-      var cnt=d.strategies.filter(function(s){return s.cat===c;}).length;
-      if(!cnt)return;
-      var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');
-      b.innerHTML='<span class="d" style="background:'+CATCOL[c]+'"></span>'+c+'. '+CATSHORT[c]+' <span class="c">'+cnt+'</span>';
-      b.addEventListener('click',function(){state.cats.has(c)?state.cats.delete(c):state.cats.add(c);b.setAttribute('aria-pressed',state.cats.has(c));render();});
-      cf.appendChild(b);
-    });
-    // 랩 자체 검증 판정이 붙은 전략만 보기 — 웹 주장과 자체 결론이 갈리는 지점을 한 번에 훑도록
-    (function(){
-      var n=d.strategies.filter(function(s){return s.lab;}).length; if(!n)return;
-      var b=document.createElement('button');b.className='fchip';b.setAttribute('aria-pressed','false');
-      b.innerHTML='<span class="d" style="background:var(--hot)"></span>랩 검증 있음 <span class="c">'+n+'</span>';
-      b.addEventListener('click',function(){state.labonly=!state.labonly;b.setAttribute('aria-pressed',state.labonly);render();});
-      cf.appendChild(b);
-    })();
-    el('q').addEventListener('input',function(e){state.q=e.target.value.toLowerCase().trim();render();});
-    el('modebtn').addEventListener('click',function(){state.mode=state.mode==='all'?'today':'all';syncMode();render();});
-    syncMode(); render(); gotoHash();
-    window.addEventListener('hashchange',gotoHash);
-  }).catch(function(){el('content').innerHTML='<div class="empty">데이터 로드 오류</div>';});
-  // 딥링크: #E12 처럼 전략 id로 바로 이동(현재 뷰에 없으면 전체 보기로 전환)
-  function gotoHash(){
-    var h=(location.hash||'').replace('#','').trim();
-    if(!h||!DATA)return;
-    if(DATA.id_moved&&DATA.id_moved[h])h=DATA.id_moved[h];   // 카테고리 재분류로 id가 바뀐 카드의 옛 링크를 살린다
-    var hit=null; DATA.strategies.forEach(function(x){if(x.id===h)hit=x;});
-    if(!hit)return;
-    // 검색·필터가 걸린 채로는 대상이 안 보일 수 있으므로 모두 해제하고 전체 풀에서 찾는다
-    if(selection().indexOf(hit)<0){
-      state.mode='all'; state.q=''; state.cats.clear(); state.labonly=false;
-      var qi=el('q'); if(qi)qi.value='';
-      document.querySelectorAll('.fchip[aria-pressed="true"]').forEach(function(b){b.setAttribute('aria-pressed','false');});
-      syncMode(); render();
-    }
-    var node=document.getElementById('s-'+h);
-    if(node)node.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
-  }
-})();
-</script>
 
 <script>
-/* 이 페이지 콘텐츠가 마지막으로 갱신된 시점 배지 — data/updates.json 공용(홈 '최근 업데이트'와 같은 소스) */
 (function(){
-  var TGT='rotation';
-  fetch('data/updates.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
-    if(!u||!u.events)return;
-    var e=u.events.filter(function(x){return x.target===TGT;})[0]; if(!e)return;
-    // dt를 UTC 자정으로 파싱해야 getUTC*와 기준이 맞는다(+09:00로 만들면 UTC상 전날이 되어 하루씩 밀림)
-    var t=new Date(e.dt+'T00:00:00Z'), now=new Date(Date.now()+9*3600e3);
-    var days=Math.round((Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-t.getTime())/864e5);
-    var ago=days<=0?'오늘':days===1?'어제':days+'일 전';
-    var h=document.querySelector('header.mast'); if(!h)return;
-    var d=document.createElement('div');
-    d.style.cssText='margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap';
-    d.innerHTML='<span style="font-weight:700;color:var(--accent)">최근 업데이트</span>'+
-      '<span>'+e.dt+' ('+ago+')</span><span style="color:var(--ink-2)">'+e.title+'</span>'+
-      (days<=3?'<span style="font-weight:700;color:var(--deploy);border:1px solid color-mix(in srgb,var(--deploy) 40%,transparent);border-radius:5px;padding:1px 6px">NEW</span>':'');
-    h.appendChild(d);
-  }).catch(function(){});
+"use strict";
+var el=function(i){return document.getElementById(i);};
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+// 🚨 esc 를 **먼저** 돌린 뒤에만 굵게 바꾼다. 순서를 뒤집으면 <b> 가 다시 이스케이프되거나,
+//   더 나쁘게는 원문의 태그가 살아난다. 이 저장소는 esc 필드에 마크다운을 흘려 별표가
+//   그대로 찍히는 사고를 하루에 네 번 낸 적이 있다 — 그래서 변환기를 두되 순서를 못박는다.
+function mb(s){return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}
+function num(v,nd){return (v===null||v===undefined)?'—':(nd===undefined?v:Number(v).toFixed(nd));}
+function sgn(v,nd,unit){                       // 부호에 색을 준다. 없으면 '—' 로 둔다.
+  if(v===null||v===undefined) return '<span style="color:var(--muted)">—</span>';
+  var t=(v>0?'+':'')+Number(v).toFixed(nd===undefined?2:nd)+(unit||'');
+  return '<span class="'+(v>0?'pos':(v<0?'neg':''))+'">'+t+'</span>';
+}
+function row(k,v){return '<tr><td>'+esc(k)+'</td>'+v+'</tr>';}
+
+// ── 리포트 한 편 ────────────────────────────────────────────────────────
+function sec(title,inner){return inner?('<div class="sec"><h3>'+esc(title)+'</h3>'+inner+'</div>'):'';}
+
+function perfTable(p){
+  if(!p||!p.length) return '';
+  var b='<div class="tw"><table class="t"><thead><tr><th>항목</th><th>전략</th><th>대조군</th><th>차</th></tr></thead><tbody>';
+  p.forEach(function(r){
+    var nd=(r.k==='샤프')?3:2;
+    // 🚨 변동성 차에는 색을 주지 않는다. 초록/빨강은 '좋다/나쁘다'로 읽히는데
+    //   변동성은 높은 쪽이 좋다는 뜻이 아니다(더 크게 걸었다는 뜻일 뿐이다).
+    //   CAGR·샤프·최대낙폭은 방향이 한 쪽이라 색을 준다.
+    var d=(r.k==='변동성')
+      ? (r.d==null?'<span style="color:var(--muted)">—</span>'
+                  :(r.d>0?'+':'')+Number(r.d).toFixed(nd))
+      : sgn(r.d,nd);
+    b+='<tr><td>'+esc(r.k)+'</td><td class="n">'+num(r.s,nd)+'</td><td class="n">'+num(r.b,nd)+
+       '</td><td class="n">'+d+'</td></tr>';
+  });
+  return b+'</tbody></table></div>';
+}
+
+function costBlock(c){
+  if(!c) return '';
+  var b='<div class="tw"><table class="t"><thead><tr><th>왕복 비용</th><th>CAGR</th><th>샤프</th><th>초과 CAGR</th><th>t</th></tr></thead><tbody>';
+  c.rows.forEach(function(r){
+    b+='<tr class="'+(r.main?'main':'')+'"><td>'+num(r.rt)+'bp'+(r.main?' · 대표':'')+
+       '</td><td class="n">'+num(r.cagr,2)+'</td><td class="n">'+num(r.sharpe,3)+
+       '</td><td class="n">'+sgn(r.excess,2)+'</td><td class="n">'+num(r.t,2)+'</td></tr>';
+  });
+  b+='</tbody></table></div>';
+  var f=[];
+  if(c.drag!=null) f.push('비용이 깎은 연수익 <b>'+num(c.drag,2)+'%p</b>');
+  if(c.traded!=null) f.push('연 매매대금 <b>NAV '+num(c.traded,2)+'배</b>');
+  if(c.kill) f.push('<b style="color:var(--hot)">비용이 우위를 없앤다</b>');
+  else if(c.sensitive) f.push('<b style="color:var(--watch)">비용 민감</b>');
+  b+='<p class="caveat">'+f.join(' · ')+(f.length?'<br>':'')+esc(c.note||'')+
+     (c.unit?'<br>'+esc(c.unit):'')+'</p>';
+  return b;
+}
+
+function riskBlock(r){
+  if(!r) return '';
+  var b='<div class="tw"><table class="t"><thead><tr><th>항목</th><th>전략 − 대조군</th><th>부트스트랩 p</th></tr></thead><tbody>';
+  r.rows.forEach(function(x){
+    b+='<tr><td>'+esc(x.k)+'</td><td class="n">'+sgn(x.v,x.k.indexOf('낙폭 개선')>=0?2:3)+
+       '</td><td class="n">'+num(x.p,4)+'</td></tr>';
+  });
+  b+='</tbody></table></div><p class="caveat">'+
+     (r.verdict?'판정 <b>'+esc(r.verdict)+'</b> · ':'')+
+     '블록 부트스트랩 '+num(r.n_boot)+'회 · 블록 '+num(r.block)+'거래일. '+
+     '⚠ 낙폭이 줄었다는 것은 <b>노출을 줄이면 기계적으로</b> 따라오는 결과이기도 하다 — 그 자체로는 규칙의 증거가 아니다.</p>';
+  return b;
+}
+
+function incrBlock(i){
+  if(!i) return '';
+  var b='';
+  if(i.one) b+='<p><b>가장 닮은 이웃 1개 통제</b> — '+esc(i.one.vs)+
+    ' · 상관 '+num(i.one.corr,3)+' · 증분알파 '+sgn(i.one.alpha,2,'%p')+
+    ' · t '+num(i.one.t,2)+' · 베타 '+num(i.one.beta,3)+'</p>';
+  if(i.five){
+    b+='<p><b>이웃 5개 동시 통제</b> — 증분알파 '+sgn(i.five.alpha,2,'%p')+
+       ' · t <b>'+num(i.five.t,2)+'</b> · 관측 '+num(i.five.n)+'</p>';
+    b+='<p class="caveat">통제한 이웃: '+i.five.vs.map(esc).join(' · ')+'</p>';
+  }
+  if(i.absorbed) b+='<p class="caveat">⚠ 중복 표에서 <b>흡수됨</b>으로 잡혔다 — '+esc(i.absorbed.vs)+
+    ' 와 상관 '+num(i.absorbed.corr,3)+', 단독 t '+num(i.absorbed.t_solo,2)+
+    ' 가 그 이웃을 통제하면 '+num(i.absorbed.t_incr,2)+' 로 내려간다.</p>';
+  if(i.note) b+='<p class="caveat">'+mb(i.note)+'</p>';
+  return b;
+}
+
+function vtBlock(v){
+  if(!v) return '';
+  return '<p>'+esc(v.label)+' 대비 — CAGR '+num(v.cagr,2)+'% · 샤프 '+num(v.sharpe,3)+
+    ' · 초과 '+sgn(v.excess,2,'%p')+' · Δ샤프 '+sgn(v.d_sharpe,3)+
+    ' · t <b>'+num(v.t,2)+'</b>'+(v.t_net!=null?' (비용 후 '+num(v.t_net,2)+')':'')+'</p>'+
+    (v.note?'<p class="caveat">'+esc(v.note)+'</p>':'');
+}
+
+function pitBlock(p){
+  if(!p) return '';
+  var a=p.pit||{}, r=p.retro||{}, bi=p.bias||{};
+  // 🚨 편향 열에는 색을 주지 않는다. 초록은 '좋다'로 읽히는데 편향이 크다는 것은
+  //   소급 수치가 그만큼 부풀어 있었다는 뜻이다 — 나쁜 소식이지 좋은 소식이 아니다.
+  //   왜곡의 크기이지 성과가 아니므로 부호만 적는다.
+  function bz(v,nd,u){
+    if(v===null||v===undefined) return '<span style="color:var(--muted)">—</span>';
+    return (v>0?'+':'')+Number(v).toFixed(nd)+(u||'');
+  }
+  var b='<div class="tw"><table class="t"><thead><tr><th>항목</th>'+
+    '<th>PIT — 그때 실제 편입</th><th>소급 — 오늘 명단</th><th>편향(소급 − PIT)</th></tr></thead><tbody>';
+  b+=row('CAGR','<td class="n">'+num(a.cagr,2)+'</td><td class="n">'+num(r.cagr,2)+'</td><td class="n">'+bz(bi.cagr,2,'%p')+'</td>');
+  b+=row('대조군 CAGR','<td class="n">'+num(a.bench_cagr,2)+'</td><td class="n">'+num(r.bench_cagr,2)+'</td><td class="n">'+bz(bi.bench_cagr,2,'%p')+'</td>');
+  b+=row('초과 CAGR','<td class="n">'+sgn(a.excess,2)+'</td><td class="n">'+sgn(r.excess,2)+'</td><td class="n">'+bz(bi.excess,2,'%p')+'</td>');
+  b+=row('샤프','<td class="n">'+num(a.sharpe,3)+'</td><td class="n">'+num(r.sharpe,3)+'</td><td class="n">'+bz(bi.sharpe,3)+'</td>');
+  b+=row('최대낙폭','<td class="n">'+num(a.mdd,2)+'</td><td class="n">'+num(r.mdd,2)+'</td><td class="n">—</td>');
+  b+=row('t','<td class="n"><b>'+num(a.t,2)+'</b></td><td class="n">'+num(r.t,2)+'</td><td class="n">—</td>');
+  b+='</tbody></table></div>';
+  b+='<p class="caveat">창 '+esc(p.window||'')+' · '+num(p.n_days)+'거래일 · PIT 회전율 '+num(a.turnover,2)+
+     ' · 이 표의 다중검정 임계 |t| '+num(p.t_crit,2)+' (랩 본편 족으로 보면 '+num(p.t_crit_lab,2)+')<br>'+
+     '두 열은 <b>같은 창</b>에서 잰 것이다 — 랩 본편(더 긴 구간)과 직접 빼면 구간 차이가 편향으로 위장한다.<br>'+
+     '🚨 편향은 <b>CAGR 줄</b>로 읽을 것. 초과 CAGR 줄의 편향은 두 레그의 대조군이 각자의 동일가중 지수라 '+
+     '벤치에 실린 편향(실측 5.21%p)이 상쇄돼, "편향 없음"과 "PIT 가 유리"를 구별하지 못한다.</p>';
+  return b;
+}
+
+function holdBlock(h){
+  if(!h) return '';
+  if(h.exposure_now!=null)
+    return '<p>노출 <b>'+num(h.exposure_now,1)+'%</b> — 유니버스 전체를 그 비율로 보유, 나머지는 무위험(현금).</p>'+
+           (h.note?'<p class="caveat">'+esc(h.note)+'</p>':'')+
+           '<p class="caveat">기준 '+esc(h.as_of||'')+'</p>';
+  var b='';
+  if(h.weights&&h.weights.length){
+    b+='<p>'+h.weights.map(function(w){
+      return '<span class="tick">'+esc(w[0])+' <span>'+num(w[1],1)+'%</span></span>';}).join('')+'</p>';
+  }else if(h.tickers&&h.tickers.length){
+    b+='<p>'+h.tickers.map(function(t){
+      var n=(h.names||{})[t];
+      return '<span class="tick" title="'+esc(n||t)+'">'+esc(t)+'</span>';}).join('')+'</p>';
+  }
+  if(h.note) b+='<p class="caveat">'+esc(h.note)+'</p>';
+  b+='<p class="caveat">기준 '+esc(h.as_of||'')+(h.n!=null?' · '+num(h.n)+'종':'')+'</p>';
+  return b;
+}
+
+function poolBlock(p){
+  if(!p) return '';
+  return '<p>후보 수 — 첫 달 <b>'+num(p.first)+'</b> → 마지막 <b>'+num(p.last)+
+    '</b> · 최소 '+num(p.min)+' · 중앙 '+num(p.med)+' · 리밸런스 '+num(p.n)+'회'+
+    (p.d0?' · 시작 '+esc(p.d0):'')+'</p>'+
+    (p.narrow?'<p class="caveat">⚠ 평소(중앙값)의 절반에도 못 미친 월말이 <b>'+num(p.narrow)+
+      '번</b> 있었다 — 그 구간의 "상위 10"은 전체에서 고른 상위 10과 같은 선택이 아니다. '+
+      '앞구간 성과에는 규칙이 아니라 자료 커버리지가 만든 몫이 섞여 있다.</p>'
+     :'<p class="caveat">평소의 절반에 못 미친 월말은 없었다.</p>');
+}
+
+function vdClass(v){
+  if(!v) return '';
+  if(v.indexOf('통과')>=0||v.indexOf('배포')>=0) return ' pass';
+  if(v.indexOf('열위')>=0) return ' rej';
+  return '';
+}
+
+function card(x,i){
+  var w=x.window||{};
+  var h='<article class="rep" id="'+esc(x.sid)+'">';
+  h+='<div class="rhead"><span class="no">§'+(i+1)+'</span><h2>'+esc(x.name)+'</h2>'+
+     '<span class="sid">'+esc(x.sid)+'</span><div class="tags">'+
+     '<span class="tag fam">'+esc(x.family)+'</span>'+
+     (x.role?'<span class="tag">'+esc(x.role)+'</span>':'')+
+     (x.kind?'<span class="tag">'+esc(x.kind==='xsec'?'종목선택':(x.kind==='timing'?'타이밍':x.kind))+'</span>':'')+
+     (x.verdict?'<span class="tag vd'+vdClass(x.verdict)+'">'+esc(x.verdict)+'</span>':'')+
+     '</div></div>';
+
+  h+=sec('규칙','<p>'+mb(x.rule)+'</p>');
+  h+=sec('근거·유의점',(x.why?'<p>'+mb(x.why)+'</p>':'')+(x.note?'<p>'+mb(x.note)+'</p>':''));
+  if(x.repro) h+=sec('원문 대비',
+    '<p><b>'+esc(x.repro.src||'')+'</b>'+(x.repro.cat?' · '+esc(x.repro.cat):'')+
+    (x.repro.status?' · '+esc(x.repro.status):'')+'</p><p>'+mb(x.repro.why||'')+'</p>');
+
+  h+=sec('구간·대조군','<dl class="kv">'+
+    '<dt>구간</dt><dd>'+esc(w.start||'—')+' ~ '+esc(w.end||'—')+' · '+num(w.n_days)+'거래일'+
+      (w.n_thin?' · 얇은 달 '+num(w.n_thin):'')+'</dd>'+
+    '<dt>대조군</dt><dd>'+esc(w.bench_label||'—')+
+      (w.bench_tickers?' ('+w.bench_tickers.map(esc).join('·')+')':'')+
+      (w.bench_from_lab?' <span style="color:var(--muted);font-size:11.5px">— 랩 전체 공통값</span>':'')+
+      (w.bench_unstable?' <span style="color:var(--watch)">⚠ 대조군 현금성 — Δ샤프를 판정에 쓰지 않는다</span>':'')+'</dd>'+
+    '</dl>');
+
+  h+=sec('성과 (비용 0)',perfTable(x.perf)+
+    '<p class="caveat">초과 CAGR '+sgn(x.excess_cagr,2,'%p')+' · Δ샤프 '+sgn(x.d_sharpe,3)+
+    ' · <b>t '+num(x.t,2)+'</b> (본페로니 임계 '+num(x.t_crit,2)+')'+
+    (x.turnover!=null?' · 연 회전율 '+num(x.turnover,2):'')+
+    (x.exposure!=null?' · 평균 노출 '+num(x.exposure,1)+'%':'')+'</p>');
+
+  h+=sec('비용 후',costBlock(x.cost));
+  h+=sec('위험 — 낙폭·꼬리',riskBlock(x.risk));
+  h+=sec('이 랩의 다른 규칙과 겹치는가',incrBlock(x.incr));
+  h+=sec('매매대상 대비',vtBlock(x.vs_traded));
+  h+=sec('생존편향 보정 (PIT)',pitBlock(x.pit));
+  h+=sec('후보 풀 추이',poolBlock(x.pool));
+  h+=sec('지금 들고 있는 것',holdBlock(x.holdings));
+
+  if(x.missing&&x.missing.length)
+    h+='<div class="miss"><b>못 잰 것</b> — '+x.missing.map(esc).join(' / ')+
+       '<br>비어 있는 것은 "재 봤더니 안 나왔다"가 아니라 대개 "그 족에 그 측정이 아예 없다"이다.</div>';
+  return h+'</article>';
+}
+
+// ── 화면 ────────────────────────────────────────────────────────────────
+var DATA=null, F={fam:'', kind:'', has:''}, Q='';
+
+function hay(x){
+  return [x.name,x.sid,x.rule,x.why,x.note,x.role,x.family,
+          (x.holdings&&x.holdings.tickers||[]).join(' '),
+          (x.repro&&x.repro.src)||''].join(' ').toLowerCase();
+}
+function shown(){
+  var q=Q.trim().toLowerCase();
+  return DATA.items.filter(function(x){
+    if(F.fam&&x.family!==F.fam) return false;
+    if(F.kind==='xsec'&&x.kind!=='xsec') return false;
+    if(F.kind==='timing'&&x.kind!=='timing') return false;
+    if(F.has==='pit'&&!x.pit) return false;
+    if(F.has==='risk'&&!x.risk) return false;
+    if(F.has==='vt'&&!x.vs_traded) return false;
+    if(q&&hay(x).indexOf(q)<0) return false;
+    return true;
+  });
+}
+function draw(){
+  var rows=shown();
+  el('rowcount').textContent=rows.length+' / '+DATA.items.length+'편';
+  el('tocgrid').innerHTML=rows.map(function(x,i){
+    return '<a href="#'+esc(x.sid)+'"><span class="tn">§'+(i+1)+'</span>'+
+           '<span>'+esc(x.name)+'</span><span class="tt">t '+num(x.t,2)+'</span></a>';}).join('');
+  el('content').innerHTML=rows.length?rows.map(card).join('')
+    :'<div class="empty">해당하는 전략이 없다.</div>';
+}
+function chips(){
+  var n=DATA.items, cnt=function(f){return n.filter(f).length;};
+  var defs=[
+    ['fam','','전체',n.length],
+    ['fam','자산배분','자산배분',cnt(function(x){return x.family==='자산배분';})],
+    ['fam','종목·타이밍','종목·타이밍',cnt(function(x){return x.family==='종목·타이밍';})],
+    ['kind','xsec','종목선택',cnt(function(x){return x.kind==='xsec';})],
+    ['kind','timing','타이밍',cnt(function(x){return x.kind==='timing';})],
+    ['has','pit','PIT 있음',cnt(function(x){return !!x.pit;})],
+    ['has','risk','위험 부트스트랩 있음',cnt(function(x){return !!x.risk;})],
+    ['has','vt','매매대상 대비 있음',cnt(function(x){return !!x.vs_traded;})]
+  ];
+  el('filt').innerHTML=defs.map(function(d){
+    return '<button class="fchip" data-g="'+d[0]+'" data-v="'+esc(d[1])+'" aria-pressed="'+
+      (F[d[0]]===d[1]&&(d[1]!==''||!F.fam))+'">'+esc(d[2])+' <span class="c">'+d[3]+'</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(el('filt').querySelectorAll('.fchip'),function(b){
+    b.addEventListener('click',function(){
+      var g=b.getAttribute('data-g'), v=b.getAttribute('data-v');
+      F[g]=(F[g]===v)?'':v;                      // 같은 칩을 다시 누르면 해제
+      if(g==='fam'&&v==='') {F.fam='';F.kind='';F.has='';}
+      chips(); draw();
+    });
+  });
+}
+function statline(){
+  var a=DATA.as_of||{}, t=DATA.t_crit||{}, n=DATA.n||{};
+  el('statline').innerHTML=
+    '<span class="stat">규칙 <b>'+n.total+'</b>편</span>'+
+    '<span class="stat">자산배분 <b>'+n.asset+'</b></span>'+
+    '<span class="stat">종목·타이밍 <b>'+n.tech+'</b></span>'+
+    '<span class="stat">PIT 레그 <b>'+n.pit+'</b></span>'+
+    '<span class="stat">임계 |t| <b>'+num(t.asset,2)+' · '+num(t.tech,2)+'</b></span>'+
+    '<span class="stat">기준일 <b>'+esc(a.tech||a.asset||'')+'</b></span>';
+}
+function tail(){
+  var L=DATA.limits||{};
+  function box(title,arr,note){
+    if(!arr||!arr.length) return '';
+    return '<details class="toc" style="margin-top:12px"><summary>'+esc(title)+' — '+arr.length+'항</summary>'+
+      '<div style="padding:2px 18px 16px;font-size:13px;color:var(--ink-2);line-height:1.68">'+
+      (note?'<p class="caveat" style="margin-bottom:8px">'+esc(note)+'</p>':'')+
+      arr.map(function(s){return '<p style="margin:0 0 9px">— '+mb(s)+'</p>';}).join('')+
+      '</div></details>';
+  }
+  var rt=(DATA.retired||{}).tech||[];
+  var h='<div class="rowcount" style="margin-top:26px">랩 전체의 한계 — 개별 리포트보다 먼저 읽을 것</div>';
+  h+=box('종목·타이밍 랩의 한계',L.tech);
+  h+=box('자산배분 랩의 한계',L.asset);
+  h+=box('자산배분 랩의 규약',L.protocol);
+  h+=box('PIT(생존편향 보정) 레그의 한계',L.pit);
+  if(rt.length) h+='<details class="toc" style="margin-top:12px"><summary>목록에서 뺀 규칙 — '+rt.length+'종</summary>'+
+    '<div style="padding:2px 18px 16px;font-size:13px;color:var(--ink-2);line-height:1.68">'+
+    '<p class="caveat" style="margin-bottom:8px">돌렸다가 뺀 것이다. 사유는 성과인 경우도, 운영 비용인 경우도 있다 — 그 구별을 남긴다.</p>'+
+    rt.map(function(r){return '<p style="margin:0 0 7px">— <b>'+esc(r.name)+'</b> <span class="sid">'+
+      esc(r.sid)+'</span> · '+esc(r.why)+'</p>';}).join('')+'</div></details>';
+  h+='<p class="caveat" style="margin-top:14px">'+mb(DATA.cost_note||'')+'</p>';
+  h+='<p class="caveat">'+mb(DATA.note||'')+'</p>';
+  el('tail').innerHTML=h;
+}
+
+fetch('data/strategy_report.json',{cache:'no-cache'}).then(function(r){
+  if(!r.ok) throw new Error(r.status); return r.json();
+}).then(function(j){
+  DATA=j; statline(); chips(); draw(); tail();
+  if(location.hash){var t=document.getElementById(location.hash.slice(1)); if(t)t.scrollIntoView();}
+}).catch(function(e){
+  el('content').innerHTML='<div class="empty">리포트를 불러오지 못했다 — '+esc(e.message)+
+    '<br><span style="font-size:11px">파일을 브라우저에서 직접 열면(file://) 자료를 못 받는다. 로컬 HTTP 서버로 열 것.</span></div>';
+});
+
+var qi=el('q'), timer=null;
+qi.addEventListener('input',function(){
+  clearTimeout(timer);
+  timer=setTimeout(function(){Q=qi.value; draw();},140);   // 117편을 다시 그리므로 살짝 미룬다
+});
 })();
 </script>
 </body>

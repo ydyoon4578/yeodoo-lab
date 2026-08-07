@@ -66,10 +66,13 @@ MAX_TRIES="${MAX_TRIES:-5}"
 #   2026-08-03 에 들어왔다: ML 을 refresh-ml.yml 로 떼면서 이 파일을 커밋하는 잡이
 #   refresh-assets 하나에서 둘이 됐다(그전엔 한 잡이 두 번 커밋했을 뿐이라 경합이 없었다).
 #   asset_backtest.py 는 stdlib 만 쓰고 61초에 결정적으로 재현된다 — 표에 올릴 조건을 만족한다.
+# ⚠ strategy_report 는 asset_strategies **뒤**여야 한다 — 그 파일에서 값을 옮겨 담는다.
+#   두 잡(refresh-tech·refresh-assets)이 커밋하므로 표에 없으면 충돌 시 그날치가 버려진다.
 REBAKE_TABLE="\
 data/asset_strategies.json|build/asset_backtest.py
 data/strategy_index.json|build/strategy_index.py
 data/strategy_charts.json|build/strategy_charts.py
+data/strategy_report.json|build/strategy_report.py
 data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json
 data/style_trails.json|build/style_top_pdf.py --json

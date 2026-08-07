@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "046b2ab460363201",
+ "generated_from": "90063fb81367f45a",
  "categories": [
   {
    "name": "시장",
@@ -239,6 +239,16 @@
      "verdict": "na",
      "src": "agg",
      "effort": "M",
+     "live": true
+    },
+    {
+     "name": "복제 리포트",
+     "file": "report.html",
+     "status": "existing",
+     "desc": "돌린 규칙 117종을 전략별로 — 판정이 아니라 잰 값 전부",
+     "verdict": "unverified",
+     "src": "model",
+     "effort": "S",
      "live": true
     },
     {
