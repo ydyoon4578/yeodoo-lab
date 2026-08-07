@@ -1732,6 +1732,96 @@ def pick_sector_neutral(sc, sec_of, mcap_of, per=1):
     return [(t, w / s) for t, w in out] if s > 0 else []
 
 
+def _gross_profit(f, dt):
+    """매출총이익 — gp 태그 우선, 없으면 매출−매출원가 폴백. (총이익, 매출) 을 준다.
+
+    🚨 gp·cogs 가 둘 다 있으면 **정합성부터 본다.** |gp+cogs−rev|/rev 가 1% 를 넘으면 그
+      종목의 태깅을 믿을 수 없다 → None 으로 뺀다. x-gpa 가 쓰는 가드와 같다: 건강보험사가
+      benefit expense 를 매출원가로 안 태깅해 총이익이 과대계상되는 것을 막는다
+      (적대감사 실측으로 180종 중 16종이 걸렸다 — CMI 2.99 · ABBV 0.52 등).
+    """
+    g = ttm2(f.get("gp"), f.get("gp_a"), dt)
+    rv = ttm2(f.get("rev"), f.get("rev_a"), dt)
+    cg = ttm2(f.get("cogs"), f.get("cogs_a"), dt)
+    if g is not None and cg is not None and rv and rv > 0:
+        if abs(g + cg - rv) / rv > 0.01:
+            g = None
+    if g is None and rv is not None and cg is not None:
+        g = rv - cg
+    return g, rv
+
+
+def _fscore(f, dt, mcap):
+    """Piotroski(2000) F-Score — 9개 이진 신호의 합(0~9). 사전등록 §2-①.
+
+    🚨 **9신호를 전부 낼 수 없으면 None 을 준다.** 8개만으로 매기면 0~9 척도가 깨져
+      다른 종목과 비교할 수 없다 — '자료가 부족해 6점'과 '실제로 6점'이 같은 값이 된다.
+
+    반환값은 점수가 아니라 `점수 + B/P 소수부`다. 이유: F-Score 는 0~9 정수라 동점이
+    대량으로 생기는데, 사전등록이 **동점을 B/P 높은 순으로 끊는다**고 못박았다(원논문의
+    표본이 고B/M 종목이기 때문). 소수부를 0~1 로 눌러 넣으면 정렬 한 번으로 둘 다 처리된다.
+    ⚠ 소수부가 1 을 넘으면 점수 경계를 침범하므로 반드시 [0,1) 로 자른다.
+    """
+    ni = ttm2(f.get("ni"), f.get("ni_a"), dt)
+    ni0 = ttm2(f.get("ni"), f.get("ni_a"), _shift(dt, -365))
+    cf = ttm2(f.get("cfo"), f.get("cfo_a"), dt)
+    at = asof_fund(f.get("asset"), dt)
+    at0 = asof_fund(f.get("asset"), _shift(dt, -365))
+    db = asof_fund(f.get("debt"), dt)
+    db0 = asof_fund(f.get("debt"), _shift(dt, -365))
+    ca = asof_fund(f.get("ca"), dt)
+    ca0 = asof_fund(f.get("ca"), _shift(dt, -365))
+    cl = asof_fund(f.get("cl"), dt)
+    cl0 = asof_fund(f.get("cl"), _shift(dt, -365))
+    sh = asof_fund(f.get("sh"), dt)
+    sh0 = asof_fund(f.get("sh"), _shift(dt, -365))
+    gp, rv = _gross_profit(f, dt)
+    gp0, rv0 = _gross_profit(f, _shift(dt, -365))
+    if any(x is None for x in (ni, ni0, cf, at, at0, db, db0, ca, ca0,
+                               cl, cl0, sh, sh0, gp, rv, gp0, rv0)):
+        return None
+    if not (at > 0 and at0 > 0 and cl > 0 and cl0 > 0 and rv > 0 and rv0 > 0):
+        return None
+    roa, roa0 = ni / at0, ni0 / at0          # ⚠ 원식은 둘 다 **직전** 자산으로 나눈다
+    s = 0
+    s += 1 if roa > 0 else 0                                   # ① 수익성
+    s += 1 if (cf / at0) > 0 else 0                            # ② 영업현금흐름
+    s += 1 if roa > roa0 else 0                                # ③ ROA 상승
+    s += 1 if (cf / at0) > roa else 0                          # ④ 발생액(현금이 이익을 앞선다)
+    s += 1 if (db / at) < (db0 / at0) else 0                   # ⑤ 레버리지 하락
+    s += 1 if (ca / cl) > (ca0 / cl0) else 0                   # ⑥ 유동비율 상승
+    s += 1 if sh <= sh0 else 0                                 # ⑦ 신주발행 없음
+    s += 1 if (gp / rv) > (gp0 / rv0) else 0                   # ⑧ 매출총이익률 상승
+    s += 1 if (rv / at0) > (rv0 / at0) else 0                  # ⑨ 자산회전율 상승
+    # 동점 처리 — B/P 를 [0,1) 로 눌러 소수부에 싣는다. B/P 가 없으면 0(가장 뒤).
+    eq = asof_fund(f.get("eq"), dt)
+    bp = (eq / mcap) if (eq is not None and mcap and mcap > 0) else 0.0
+    tie = min(max(bp, 0.0), 0.999) if bp == bp else 0.0
+    return s + tie * 0.999
+
+
+def pick_industry(ind_raw, top_sectors=2):
+    """산업 모멘텀 — 승자 섹터의 **전 종목**을 동일가중. 사전등록 §2-⑤.
+
+    🚨 상위 TOPN 을 쓰지 않는다. 원논문(Moskowitz·Grinblatt 1999)은 승자 산업의 전 종목을
+      동일가중으로 산다. 10종만 고르려면 종목 수준 정렬이 필요한데, 그러면 이 규칙이
+      재려는 산업 신호에 종목 모멘텀이 섞여 무엇을 쟀는지 알 수 없게 된다.
+
+    ind_raw: {섹터: [(티커, 6개월수익률), …]}
+    반환: [(티커, 비중%)] — 비중 합 100
+    """
+    if not ind_raw:
+        return []
+    rank = sorted(((sum(r for _t, r in v) / len(v), s) for s, v in ind_raw.items() if v),
+                  reverse=True)
+    win = [s for _r, s in rank[:top_sectors]]
+    names = [t for s in win for t, _r in ind_raw[s]]
+    if not names:
+        return []
+    w = 100.0 / len(names)
+    return [(t, w) for t in sorted(names)]
+
+
 def xsec(sid, name, rule, fn, why, arch=None):
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why, "fn": fn, "arch": arch})
 
@@ -1745,7 +1835,10 @@ FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
              # 2026-07-31 추가 — 흐름 항목은 반드시 ttm2(q, a) 로 읽는다(ttm 독스트링 참조).
-             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout"}
+             "x-poacc", "x-gpa", "x-ocfp", "x-aci", "x-payout",
+             # 2026-08-08 추가 — 사전등록 PREREG-2026-08-08-WEBRESEARCH5.md(§10 정정본)
+             #   x-indmom 은 가격·섹터만 쓰므로 여기 없다(람다 밖 갈래로 처리).
+             "x-fscore", "x-debtiss"}
 
 
 def build_strats():
@@ -2072,6 +2165,66 @@ def build_strats():
          "현금흐름이 분기가 아니라 연 단위로만 들어오는 종목이 많아, 차분을 내면 1년 간격이 된다. "
          "그래서 변화가 아니라 수준(레벨)으로 싣고 이름도 그렇게 붙였다. 원장의 개선분판과 같은 "
          "전략이 아니다.")
+
+    # ── 2026-08-08 웹·논문·GitHub 리서치로 추가한 5종 ───────────────────────
+    # 사전등록: build/PREREG-2026-08-08-WEBRESEARCH5.md (돌리기 전 커밋 6a6473a7)
+    #
+    # 고른 기준은 **결과가 아니라 빈 칸**이다. JKP(Jensen·Kelly·Pedersen, JF 2023) 13테마에
+    # 현재 횡단면 45종을 다시 매핑하니 Low Risk 11 · Value 9 · Momentum 8 로 붐비고,
+    # **Debt Issuance 가 한 번도 검정한 적 없는 유일한 0칸**이었다. Quality·Profitability 도
+    # 0 이지만 넷(ROE·순이익률·총이익자산대비·현금수익성)을 이미 돌려 넷 다 열위로 퇴출했으므로
+    # 다시 채우지 않는다 — 다섯 번째 수익성 변형은 같은 자리를 다시 파는 것이다.
+    #
+    # ⚠ x-indmom·x-fscore 는 붐비거나 이미 진 칸에 얹는다. **단독 t 로 판단하지 않는다** —
+    #   이웃 5개 동시 통제 증분알파(incr5)가 판정한다. 사전등록 §1 이 그것을 미리 못박았다.
+    xsec("x-fscore", "Piotroski F-Score 상위 %d" % TOPN,
+         "수익성·재무건전성·운영효율 9개 이진 신호의 합(0~9점)이 가장 높은 %d종목 동일가중, "
+         "월말 리밸런스. 동점은 장부가/시총이 높은 순으로 끊는다. 금융업 제외." % TOPN,
+         None,
+         "Piotroski 'Value Investing: The Use of Historical Financial Statement Information to "
+         "Separate Winners from Losers'(JAR 2000). 9신호는 ROA>0 · 영업현금흐름>0 · ROA 상승 · "
+         "영업현금흐름>ROA · 레버리지 하락 · 유동비율 상승 · 신주발행 없음 · 매출총이익률 상승 · "
+         "자산회전율 상승이다. 이 랩의 수익성 규칙 넷(ROE·순이익률·총이익자산대비·현금수익성)은 "
+         "전부 단일 비율이었고 넷 다 열위로 퇴출됐는데, 이것은 단일 비율이 아니라 이산 점수라 "
+         "형태가 다르다. "
+         "🚨 표본이 2017-03 부터 9.4년뿐이다 — 매출·매출원가 태그가 그 이전으로 거의 안 간다"
+         "(2017-01 후보 27종 → 2018-01 154종의 절벽). 같은 문턱 t 3.39 를 넘으려면 정보비율 "
+         "1.106 이 필요한데 전체 표본이면 0.835 면 된다. 이 랩의 관측 최대는 0.844 다 — "
+         "못 넘는 것은 대부분 표본 길이의 결과이지 F-Score 의 반증이 아니다. "
+         "⚠ 9신호를 전부 낼 수 없는 종목은 후보에서 뺀다(8개로 매기면 0~9 척도가 깨진다). "
+         "매출총이익은 gp 태그를 쓰되 없으면 매출−매출원가 폴백이고, 둘 다 있으면 정합성 "
+         "검사를 통과한 것만 쓴다(x-gpa 와 같은 가드 — 건보사 과대계상 방지).",
+         arch="piotroski-fscore")
+    xsec("x-debtiss", "총부채 증가율 최저 %d (순부채발행 회피)" % TOPN,
+         "총부채가 1년 전 대비 가장 적게 늘어난(또는 가장 많이 줄어든) %d종목 동일가중, "
+         "월말 리밸런스." % TOPN,
+         None,
+         "Spiess·Affleck-Graves 'The long-run performance of stock returns following debt "
+         "offerings'(JFE 1999). 부채를 발행한 회사가 이후 장기 부진하다는 것이다. "
+         "JKP 13테마 중 'Debt Issuance' 는 이 랩이 **한 번도 검정한 적 없는 유일한 빈 칸**이었다 — "
+         "자산성장·순주식발행·비정상자본투자는 있었지만 부채 쪽은 통째로 없었다. "
+         "⚠ JKP 의 정본은 3년 증가율(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다. 같은 신호의 "
+         "짧은 창이므로 원논문 t 를 이 규칙의 기대치로 읽지 말 것. 3년판은 사전등록에서 배제했다. "
+         "⚠ 직전 총부채가 0 이하인 관측은 뺀다(증가율이 정의되지 않는다).",
+         arch="debt-issuance")
+    xsec("x-indmom", "산업 모멘텀 (승자 2섹터 전 종목)",
+         "GICS 11섹터를 각 섹터 소속 종목의 최근 6개월 동일가중 수익률로 정렬해, 상위 2개 "
+         "섹터에 속한 **모든 종목**을 동일가중으로 보유한다. 월말 리밸런스.",
+         None,
+         "Moskowitz·Grinblatt 'Do Industries Explain Momentum?'(JF 1999). 종목 모멘텀의 "
+         "상당 부분이 사실은 산업 효과라는 주장이다. 이 랩의 모멘텀 축 8종은 전부 **종목** "
+         "수준이라 산업 수준 신호가 통째로 없었다. "
+         "🚨 이 규칙만 상위 %d종을 쓰지 않는다 — 원논문이 승자 산업의 **전 종목**을 동일가중으로 "
+         "사기 때문이다. 10종만 고르려면 종목 수준 정렬이 필요한데 그러면 재려는 산업 신호에 "
+         "종목 모멘텀이 섞인다. 보유 종목 수는 매달 다르다(대략 60~120종). "
+         "⚠ 원논문은 20개 산업 중 상위 3개(15%%)다. 11섹터의 15%%는 1.65 라 2섹터로 반올림했다. "
+         "1섹터·3섹터판은 사전등록에서 배제했다. "
+         "⚠ 섹터는 오늘의 GICS 를 과거에 적용한다(look-ahead). 통신서비스는 2018년에 생겼다. "
+         "편향 방향은 이 규칙에게 유리하다. "
+         "🚨 60~120종 동일가중이라 랩 동일가중 유니버스와 매우 닮을 수 있다 — 그러면 이것은 "
+         "'산업 신호'가 아니라 '지수를 조금 기울인 것'이다. 판정 대조군(S&P 500 PR)만 보면 "
+         "착시가 생기므로 **매매대상 대비** 열을 반드시 함께 읽을 것." % TOPN,
+         arch="industry-momentum")
 
     timing("t-disp", "횡단면 분산도 게이트",
            "종목 간 수익률 분산(횡단면 표준편차)이 과거 1년 중앙값보다 낮으면 편입, 높으면 현금.",
@@ -2967,6 +3120,7 @@ def run():
                 if (i - 1) in me:
                     sc = []
                     comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
+                    ind_raw = {}           # 산업 모멘텀 원지표 — 섹터 정렬도 단면이 다 모여야 한다
                     # 프로그인더팬은 **2단 선별**이라 종목 하나만 보는 채점으로는 못 만든다.
                     # 원논문은 모멘텀 5분위 × ID 5분위 이중정렬이므로, 여기서도 먼저 그 시점
                     # 모멘텀 상위 5분위 컷을 구한 뒤 아래 갈래에서 그 안에서만 ID 로 고른다.
@@ -3234,6 +3388,16 @@ def run():
                                 v = (ret(P, i - 1, 252) or -9) - (ret(P, i - 1, 21) or 0)
                         elif sid == "x-rev1w":
                             v = -(ret(P, i - 1, 5) or 9)
+                        elif sid == "x-indmom":
+                            # 🚨 여기서는 **섹터 수익률을 모으기만** 한다. 섹터 정렬은 단면이
+                            #   다 모여야 낼 수 있으므로 아래 루프 밖에서 한다(E30 과 같은 방식).
+                            #   종목 점수는 자기 섹터의 6개월 수익률이다 — 종목 수준 정보를
+                            #   일부러 넣지 않는다(그것을 넣으면 산업 신호가 아니게 된다).
+                            _r6 = ret(P, i - 1, 126)
+                            _sg = (meta.get(t) or {}).get("sector") or ""
+                            if _r6 is not None and _sg:
+                                ind_raw.setdefault(_sg, []).append((t, _r6))
+                            v = None                          # 점수는 나중에 붙인다
                         elif sid == "x-minvar":
                             # 완전 최적화 대신 축소추정 역분산 — 개별 분산을 시장분산 쪽으로 반씩 당긴다
                             sv = vol(R[t], i - 1, 120)
@@ -3316,6 +3480,21 @@ def run():
                                     # 🚨 순이익이 0 근처면 비율이 폭발한다 — 매출의 1% 미만이면 뺀다.
                                     if rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_:
                                         v = -((ni_ - cf_) / abs(ni_))
+                            # ── 2026-08-08 신규 3종 (PREREG-2026-08-08-WEBRESEARCH5.md) ──
+                            elif sid == "x-debtiss":
+                                # 총부채 1년 증가율. 낮을수록 좋으므로 부호를 뒤집는다.
+                                # ⚠ JKP 정본은 3년(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다.
+                                db1 = asof_fund(f.get("debt"), dt_)
+                                db0 = asof_fund(f.get("debt"), _shift(dt_, -365))
+                                v = -(db1 / db0 - 1.0) if (db1 is not None and db0 and db0 > 0) else None
+                            elif sid == "x-fscore":
+                                # Piotroski(2000) 9신호. 🚨 하나라도 못 내면 후보에서 뺀다 —
+                                #   8개로 매기면 0~9 척도가 깨져 다른 종목과 비교할 수 없다.
+                                # 금융업 제외 — 자산회전율·매출총이익률이 은행에서 뜻이 없다.
+                                if (meta.get(t) or {}).get("sector") == "Financials":
+                                    v = None
+                                else:
+                                    v = _fscore(f, dt_, mcap)
                             elif sid in ("x-gpa", "x-ocfp", "x-aci"):
                                 # 금융업은 자산의 뜻이 달라(예대 잔고) 자산분모 수익성이 성립하지 않는다.
                                 if (meta.get(t) or {}).get("sector") == "Financials":
@@ -3463,6 +3642,11 @@ def run():
                     #   0 은 z 척도에서 '평균'이라 자료 없는 종목이 중간 순위를 공짜로 받는다).
                     if S["sid"] in comp_raw:
                         sc = [(z, t) for t, z in z_composite(comp_raw[S["sid"]]).items()]
+                    # 산업 모멘텀 — 종목 점수는 자기 섹터의 6개월 수익률이다. 커버리지
+                    # 게이트(len(sc))가 종목 수를 세도록 sc 를 채워 둔다.
+                    if S["sid"] == "x-indmom" and ind_raw:
+                        _sr = {s: sum(r for _t, r in v) / len(v) for s, v in ind_raw.items() if v}
+                        sc = [(_sr[s], t) for s, v in ind_raw.items() for t, _r in v if s in _sr]
                     sc.sort(reverse=True)
                     pool_hist.append((dates[i - 1], len(sc)))
                     if S["sid"] == "x-valcomp-sn":
@@ -3477,6 +3661,10 @@ def run():
                             if _sn and _p0 and _sn > 0 and _p0 > 0:
                                 _mc[t] = _sn * _p0
                         _pw = pick_sector_neutral(sc, _sec, _mc, per=1)
+                        new = [t for t, _w in _pw]
+                        new_w = {t: w for t, w in _pw}
+                    elif S["sid"] == "x-indmom":
+                        _pw = pick_industry(ind_raw, top_sectors=2)
                         new = [t for t, _w in _pw]
                         new_w = {t: w for t, w in _pw}
                     else:
@@ -3506,10 +3694,17 @@ def run():
                         _tr += 1.0 if hold else 0.0
                         hold = []; hw = None           # → 무보유. 재기준이 시작일을 정직하게 잡는다
                     elif new:
-                        turns += len(set(new) ^ set(hold)) / (2 * TOPN) if hold else 1.0
-                        # 오간 금액 = 대칭차 ÷ TOPN (판 것 + 산 것). turns 의 정의(교체 횟수)와
-                        # 분모가 2배 다르다 — 타이밍의 Σ|Δw| 와 눈금을 맞추려면 이쪽이다.
-                        _tr += (len(set(new) ^ set(hold)) / TOPN) if hold else 1.0
+                        # 🚨 분모를 **바스켓 크기로** 일반화했다(2026-08-08). 종전은 2×TOPN 로
+                        #   박혀 있었는데, 바스켓이 TOPN 이 아닌 규칙에서 회전율이 틀린다:
+                        #     x-valcomp-sn(11종) → 분모 20 이라 약 9% 과대
+                        #     x-indmom(60~120종) → 4~6배 과대
+                        #   둘 다 TOPN 이면 (10+10) = 2×TOPN 이라 **기존 44규칙 값은 안 바뀐다.**
+                        _den = len(new) + len(hold)
+                        _sym = len(set(new) ^ set(hold))
+                        turns += (_sym / _den) if (hold and _den) else 1.0
+                        # 오간 금액 = 대칭차 ÷ 평균바스켓 (판 것 + 산 것). turns 의 정의(교체
+                        # 횟수)와 분모가 2배 다르다 — 타이밍의 Σ|Δw| 와 눈금을 맞추려면 이쪽이다.
+                        _tr += (2.0 * _sym / _den) if (hold and _den) else 1.0
                         hold = new
                         hw = new_w                     # None 이면 동일가중(종전과 같다)
                 if hold and first_i is None:
