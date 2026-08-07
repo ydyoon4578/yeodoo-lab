@@ -2106,6 +2106,56 @@ else:
         tool_skips.append(f"종목 렌더 검사({_e})")
 
 
+# ── 복제 리포트 조립 검사 ──────────────────────────────────────────────
+# 🚨 report.html 은 **fetch 한 번에 화면 전체가 달려 있다** — 통계줄·필터·목차·리포트
+#   117편·랩 한계가 전부 같은 .then 안에서 그려진다. 거기서 예외가 나면 unhandled
+#   rejection 이 되어 조용히 빈 화면이 나간다(종목 페이지가 정확히 그렇게 죽었다).
+#   문법도 마크업도 멀쩡하므로 **돌려 봐야 잡힌다.**
+#   이 검사는 두 가지를 더 지킨다: ① '못 잰 것' 상자가 사라지지 않았는가(빈칸을 지우면
+#   그 항목을 통과한 것처럼 읽힌다) ② esc() 필드로 마크다운 별표가 새지 않았는가.
+_rr = os.path.join(ROOT, "build", "test_report_render.js")
+if not NODE:
+    tool_skips.append("리포트 렌더 검사(node 없음)")
+elif not os.path.exists(_rr):
+    tool_skips.append("리포트 렌더 검사(스크립트 없음)")
+else:
+    try:
+        _r = _sp0.run([NODE, _rr], cwd=ROOT, capture_output=True, text=True,
+                      encoding="utf-8", timeout=180)
+        if _r.returncode != 0:
+            _tail = [x for x in (_r.stdout + _r.stderr).strip().split(chr(10)) if x.strip()][-6:]
+            errors.append("리포트 렌더 검사 실패 — " + " / ".join(_tail))
+        else:
+            print("  ~ " + next((x for x in _r.stdout.split(chr(10)) if "리포트 렌더" in x), "").strip())
+    except Exception as _e:
+        tool_skips.append(f"리포트 렌더 검사({_e})")
+
+
+# ── 복제 리포트가 랩과 같은 날을 말하는가 ──────────────────────────────
+# 🚨 report.html 은 랩 세 파일에서 값을 **옮긴** 것이다. 랩만 갱신되고 리포트가 안 굽히면
+#   같은 사이트의 두 화면이 다른 날짜·다른 t 를 말하게 된다 — 이 저장소가 여러 번 당한
+#   '채점기가 두 벌' 이다. 기준일이 어긋나면 여기서 막는다(build/strategy_report.py 재실행).
+_dd = os.path.join(ROOT, "data")
+try:
+    _rep = json.load(io.open(os.path.join(_dd, "strategy_report.json"), encoding="utf-8"))
+    _tech = json.load(io.open(os.path.join(_dd, "tech_strategies.json"), encoding="utf-8"))
+    _ass = json.load(io.open(os.path.join(_dd, "asset_strategies.json"), encoding="utf-8"))
+    for _k, _src, _lab in (("tech", _tech, "종목 랩"), ("asset", _ass, "자산 랩")):
+        _a, _b = (_rep.get("as_of") or {}).get(_k), _src.get("as_of")
+        if _a != _b:
+            errors.append("복제 리포트 기준일 불일치 — %s %s vs strategy_report %s. "
+                          "build/strategy_report.py 재실행 필요" % (_lab, _b, _a))
+        _n = len(_src.get("strategies") or [])
+        _m = len([x for x in _rep.get("items") or []
+                  if x.get("family") == ("종목·타이밍" if _k == "tech" else "자산배분")])
+        if _n != _m:
+            errors.append("복제 리포트 규칙 수 불일치 — %s %d종 vs 리포트 %d편" % (_lab, _n, _m))
+except FileNotFoundError:
+    errors.append("data/strategy_report.json 이 없다 — build/strategy_report.py 를 돌릴 것")
+except Exception as _e:
+    errors.append("복제 리포트 대조 실패 — %s" % _e)
+
+
 # ── 배선 검사: 모아 놓고 안 잇는 것을 잡는다 ────────────────────────────
 #   🚨 2026-08-04 하루에 **네 번** 같은 사고가 났다. 전부 "수집은 됐는데 다음 단계가
 #   그 값을 안 받아" 조용히 없는 것과 같아진 경우다. 넷 다 실행은 **성공**했다 —
