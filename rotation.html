@@ -46,32 +46,32 @@
      (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
      가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
-  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 11px;text-decoration:none}
+  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
   a.home:hover{border-color:var(--accent);color:var(--ink)}
-  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
   header.mast{padding:64px 0 16px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
   .lede{margin:12px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)}
-  .warn{margin:14px 0 0;padding:11px 15px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:12.5px;color:var(--ink-2)}
+  .warn{margin:14px 0 0;padding:11px 15px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:12.5px;color:var(--ink-2)}
   .warn b{color:var(--watch)}
   .statline{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
-  .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--muted)}
+  .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:4px 12px;color:var(--muted)}
   .stat b{color:var(--ink);font-size:14px;font-weight:600}
   .catsec{margin-top:26px}
   h2.cathead{font-size:13px}
   .cathead{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:9px;margin:0 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line-soft)}
   .cathead .dot{width:9px;height:9px;border-radius:50%}
-  .scard{background:var(--panel);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px}
+  .scard{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:14px}
   .stop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
   /* 브랜드색 배경 위 흰 글씨는 다크에서 대비 2.0:1 → 배경을 옅게 깔고 글씨를 그 색으로(AA 충족) */
-  .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--cidc,var(--ink));background:color-mix(in srgb,var(--cidc,var(--muted)) 16%,var(--panel))!important;border:1px solid color-mix(in srgb,var(--cidc,var(--muted)) 45%,transparent)}
+  .stop .cid{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:2px;color:var(--cidc,var(--ink));background:color-mix(in srgb,var(--cidc,var(--muted)) 16%,var(--panel))!important;border:1px solid color-mix(in srgb,var(--cidc,var(--muted)) 45%,transparent)}
   .stop h3{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
   .stop .stag{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
-  .todaybadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)}
+  .todaybadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:2px;color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)}
   /* 우리 랩이 유사 개념을 실제 구현·적대검증한 판정 — 웹 주장과 대비해 보여주는 게 이 사이트의 요점 */
-  .labbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:5px}
+  .labbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:2px}
   .lab-d{color:var(--good);background:color-mix(in srgb,var(--good) 13%,transparent);border:1px solid color-mix(in srgb,var(--good) 38%,transparent)}
   .lab-m{color:var(--watch);background:color-mix(in srgb,var(--watch) 13%,transparent);border:1px solid color-mix(in srgb,var(--watch) 38%,transparent)}
   .lab-r{color:var(--hot);background:color-mix(in srgb,var(--hot) 13%,transparent);border:1px solid color-mix(in srgb,var(--hot) 38%,transparent)}
@@ -96,11 +96,11 @@
   .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:30px;text-align:center}
   .controls{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:14px 0 11px;margin-top:10px;border-bottom:1px solid var(--line-soft)}
   .searchrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 13px;box-shadow:var(--shadow)}
+  .search{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:9px 13px;box-shadow:var(--shadow)}
   .search input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
   .search svg{flex-shrink:0;color:var(--muted)}
   .chiprow{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;user-select:none;transition:all .12s;display:inline-flex;align-items:center;gap:5px}
+  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 12px;cursor:pointer;user-select:none;transition:all .12s;display:inline-flex;align-items:center;gap:5px}
   .fchip:hover{border-color:var(--accent);color:var(--ink-2)}
   .fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
   .fchip .c{opacity:.65;font-size:10px}
@@ -116,9 +116,9 @@
   /*reduced-motion*/
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
   /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
-  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:999px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
@@ -167,7 +167,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .lbl::before{height:16px}
 .lbl .sub{font-size:12.5px;font-weight:500}
 .card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
-.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
 
 /* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
 .tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
@@ -179,7 +179,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 
 /* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
-:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
@@ -190,7 +190,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
    🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
      입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
        · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
-       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
    ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
      셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
 :where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
@@ -211,7 +211,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
   :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
   .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
-            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
   .skiplink:focus{left:0}
   .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
           backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
@@ -226,7 +226,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
   .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
-                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
   .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
@@ -236,12 +236,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
 
   .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
-           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
   .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
@@ -250,7 +250,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
@@ -259,17 +259,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
 
   .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
             padding:4px 9px;white-space:nowrap;flex:none}
   .asofchip:hover{border-color:var(--accent);color:var(--accent)}
   .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
   .asofchip.stale{border-color:var(--hot);color:var(--hot)}
   .asofchip.ready{display:inline-flex}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
             color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
             justify-content:center;flex:none}
   .themebtn:hover{border-color:var(--accent)}
-  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
              background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
              justify-content:center;flex:none}
 
@@ -663,7 +663,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     d.style.cssText='margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap';
     d.innerHTML='<span style="font-weight:700;color:var(--accent)">최근 업데이트</span>'+
       '<span>'+e.dt+' ('+ago+')</span><span style="color:var(--ink-2)">'+e.title+'</span>'+
-      (days<=3?'<span style="font-weight:700;color:var(--deploy);border:1px solid color-mix(in srgb,var(--deploy) 40%,transparent);border-radius:5px;padding:1px 6px">NEW</span>':'');
+      (days<=3?'<span style="font-weight:700;color:var(--deploy);border:1px solid color-mix(in srgb,var(--deploy) 40%,transparent);border-radius:2px;padding:1px 6px">NEW</span>':'');
     h.appendChild(d);
   }).catch(function(){});
 })();

@@ -247,7 +247,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .lbl::before{height:16px}
 .lbl .sub{font-size:12.5px;font-weight:500}
 .card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
-.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
 
 /* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
 .tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
@@ -259,7 +259,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 
 /* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
-:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
@@ -270,7 +270,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
    🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
      입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
        · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
-       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
    ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
      셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
 :where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,

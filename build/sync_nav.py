@@ -125,7 +125,7 @@ NAV_CSS = """<style>
   :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
   :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
   .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
-            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
   .skiplink:focus{left:0}
   .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
           backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
@@ -140,7 +140,7 @@ NAV_CSS = """<style>
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
   .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
-                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
   .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
@@ -150,12 +150,12 @@ NAV_CSS = """<style>
   .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
 
   .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
-           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
   .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
@@ -164,7 +164,7 @@ NAV_CSS = """<style>
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
@@ -173,17 +173,17 @@ NAV_CSS = """<style>
   .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
 
   .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
             padding:4px 9px;white-space:nowrap;flex:none}
   .asofchip:hover{border-color:var(--accent);color:var(--accent)}
   .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
   .asofchip.stale{border-color:var(--hot);color:var(--hot)}
   .asofchip.ready{display:inline-flex}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
             color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
             justify-content:center;flex:none}
   .themebtn:hover{border-color:var(--accent)}
-  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
              background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
              justify-content:center;flex:none}
 

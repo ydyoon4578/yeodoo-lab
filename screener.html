@@ -66,13 +66,13 @@
   header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:12px}
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
-  .vbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:5px;padding:3px 7px;white-space:nowrap;letter-spacing:.04em;
+  .vbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:2px;padding:3px 7px;white-space:nowrap;letter-spacing:.04em;
           border:1px solid color-mix(in srgb,var(--hot) 45%,transparent);background:color-mix(in srgb,var(--hot) 12%,transparent);color:var(--hot)}
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(25px,4.4vw,36px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
   .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
   .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
-  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 9px;white-space:nowrap}
+  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:3px 9px;white-space:nowrap}
   .stat b{color:var(--ink);font-weight:700}
   .stat.warn{border-color:var(--hot);color:var(--hot)} .stat.warn b{color:var(--hot)}
 
@@ -82,11 +82,11 @@
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
   .lblnote b{color:var(--ink-2)}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
   @media(max-width:640px){.card{padding:15px 14px}}
 
   /* ── 랩 판정 전문(가장 먼저 읽혀야 하는 블록) ── */
-  .policy{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--hot);border-radius:14px;
+  .policy{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--hot);border-radius:2px;
           box-shadow:var(--shadow);padding:22px 24px;margin:22px 0 0}
   @media(max-width:640px){.policy{padding:16px 15px}}
   .policy .pk{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--hot);font-weight:700}
@@ -107,29 +107,29 @@
 
   /* ── 사전계산 스크린 카드 ── */
   .scrgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:13px}
-  .scard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column}
+  .scard{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column}
   .scard h3{margin:0;font-family:var(--mono);font-size:14px;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
   .scard h3 .sk{font-size:10px;color:var(--muted);font-weight:600}
   .scard h3 .sn{margin-left:auto;font-size:11px;color:var(--ink-2);font-weight:700}
   .scard .sdesc{margin:9px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.65}
-  .qbox{margin:11px 0 0;border:1px solid var(--line-soft);background:var(--panel-2);border-radius:9px;padding:9px 11px}
+  .qbox{margin:11px 0 0;border:1px solid var(--line-soft);background:var(--panel-2);border-radius:2px;padding:9px 11px}
   .qbox .qh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .qline{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
   .qline b{color:var(--ink)}
   .qline .qx{color:var(--muted);font-size:10.5px}
   .labbox{margin:11px 0 0;border:1px solid color-mix(in srgb,var(--hot) 30%,var(--line));border-left:3px solid var(--hot);
-          border-radius:9px;padding:9px 11px;background:color-mix(in srgb,var(--hot) 6%,transparent)}
+          border-radius:2px;padding:9px 11px;background:color-mix(in srgb,var(--hot) 6%,transparent)}
   .labbox .lh{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--hot);font-weight:700}
   .labbox .lv{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--hot);margin-top:3px;line-height:1.35}
   .labbox .ln{margin-top:5px;font-size:11.5px;color:var(--ink-2);line-height:1.55}
   .tickers{margin:11px 0 0;display:flex;flex-wrap:wrap;gap:4px}
   .tk{font-family:var(--mono);font-size:11px;text-decoration:none;color:var(--ink-2);border:1px solid var(--line);
-      border-radius:6px;padding:2px 6px;white-space:nowrap}
+      border-radius:2px;padding:2px 6px;white-space:nowrap}
   .tk:hover{border-color:var(--accent);color:var(--accent)}
   .tk i{font-style:normal;color:var(--muted);font-size:9.5px;margin-left:4px}
   .scard .sfoot{margin-top:auto;padding-top:11px}
   .btn{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);background:var(--panel-2);
-       border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+       border:1px solid var(--line);border-radius:2px;padding:6px 11px;cursor:pointer;white-space:nowrap}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn.on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
 
@@ -147,7 +147,7 @@
   .crow .cn{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink);line-height:1.3}
   .crow .cn small{display:block;font-weight:400;font-size:10px;color:var(--muted);letter-spacing:0}
   .crow input[type=number]{width:62px;font-family:var(--mono);font-size:11.5px;padding:4px 5px;text-align:right;
-        border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+        border:1px solid var(--line);border-radius:2px;background:var(--panel);color:var(--ink)}
   .crow input[type=number].set{border-color:var(--accent);color:var(--accent);font-weight:700}
   .crow .cv{font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.4}
   .crow .cv b{color:var(--ink-2)}
@@ -166,7 +166,7 @@
   .chips{display:flex;flex-wrap:wrap;gap:5px;padding:8px 0 10px 14px}
   @media(max-width:640px){.chips{padding-left:6px}}
   .chip{font-family:var(--mono);font-size:11px;color:var(--ink-2);background:var(--panel);border:1px solid var(--line);
-        border-radius:7px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+        border-radius:2px;padding:4px 9px;cursor:pointer;white-space:nowrap}
   .chip:hover{border-color:var(--accent)}
   .chip.on{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);font-weight:700}
   .chip.off{border-color:var(--hot);color:var(--hot);background:color-mix(in srgb,var(--hot) 10%,transparent);font-weight:700}
@@ -175,7 +175,7 @@
 
   .resbar{position:sticky;top:52px;z-index:20;background:color-mix(in srgb,var(--panel) 94%,transparent);
           backdrop-filter:saturate(1.3) blur(8px);-webkit-backdrop-filter:saturate(1.3) blur(8px);
-          border:1px solid var(--line);border-radius:12px;padding:11px 14px;margin:14px 0 0}
+          border:1px solid var(--line);border-radius:2px;padding:11px 14px;margin:14px 0 0}
   .resbar .rline{font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.7}
   .resbar .rline b{font-size:17px;font-weight:800}
   .resbar .rline .sep{color:var(--line);margin:0 4px}
@@ -210,12 +210,12 @@
   details.tv[open]>summary::before{content:"▾ "}
   details.tv>summary:hover{color:var(--accent)}
 
-  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:2px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
   .note.ok{border-left-color:var(--deploy)}
   .note.bad{border-left-color:var(--hot)}
-  .note code,.lblnote code,.policy code{font-family:var(--mono);font-size:.92em;background:var(--panel);border:1px solid var(--line-soft);border-radius:4px;padding:0 4px}
+  .note code,.lblnote code,.policy code{font-family:var(--mono);font-size:.92em;background:var(--panel);border:1px solid var(--line-soft);border-radius:2px;padding:0 4px}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
@@ -270,7 +270,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .lbl::before{height:16px}
 .lbl .sub{font-size:12.5px;font-weight:500}
 .card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
-.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
 
 /* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
 .tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
@@ -282,7 +282,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 
 /* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
-:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
@@ -293,7 +293,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
    🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
      입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
        · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
-       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
    ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
      셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
 :where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
@@ -303,7 +303,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   /* 선행 지표 보드 — 6칸. 각 칸이 한 지표의 상위 10이다. */
   .fwdgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-top:12px}
-  .fwdcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+  .fwdcard{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
   .fwdcard h4{margin:0;font-size:13px;font-weight:800;letter-spacing:-.015em}
   .fwdcard .fwdd{margin:4px 0 8px;font-size:11px;color:var(--muted);line-height:1.5}
   .fwdcard .tbl{font-size:12px}
@@ -325,7 +325,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
   :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
   .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
-            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
   .skiplink:focus{left:0}
   .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
           backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
@@ -340,7 +340,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
   .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
-                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
   .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
@@ -350,12 +350,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
 
   .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
-           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
   .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
@@ -364,7 +364,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
@@ -373,17 +373,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
 
   .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
             padding:4px 9px;white-space:nowrap;flex:none}
   .asofchip:hover{border-color:var(--accent);color:var(--accent)}
   .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
   .asofchip.stale{border-color:var(--hot);color:var(--hot)}
   .asofchip.ready{display:inline-flex}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
             color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
             justify-content:center;flex:none}
   .themebtn:hover{border-color:var(--accent)}
-  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
              background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
              justify-content:center;flex:none}
 

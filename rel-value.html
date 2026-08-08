@@ -65,12 +65,12 @@
   .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
   .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
-  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 9px;white-space:nowrap}
+  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:3px 9px;white-space:nowrap}
   .stat b{color:var(--ink);font-weight:700}
 
   /* 이 페이지에서 가장 중요한 한 문장 — 접거나 각주로 내리지 않는다(method.html과 같은 취급) */
   .headline{margin:20px 0 0;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--hot);
-            border-radius:12px;box-shadow:var(--shadow);padding:15px 19px;font-size:14.5px;color:var(--ink);line-height:1.7}
+            border-radius:2px;box-shadow:var(--shadow);padding:15px 19px;font-size:14.5px;color:var(--ink);line-height:1.7}
   .headline b{color:var(--hot)}
   .headline a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 45%,transparent)}
   .headline a:hover{border-bottom-color:var(--accent)}
@@ -81,13 +81,13 @@
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
   .lblnote b{color:var(--ink-2)}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
   @media(max-width:640px){.card{padding:15px 14px}}
 
   /* ── 종목 선택 ── */
   .pickbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
   .pickbar input[type=text],.pickbar select{font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--panel);
-    border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0}
+    border:1px solid var(--line);border-radius:2px;padding:9px 11px;min-width:0}
   .pickbar input[type=text]{flex:1 1 240px}
   .pickbar select{flex:0 1 190px}
   .pickbar input[type=text]:focus,.pickbar select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
@@ -107,15 +107,15 @@
   .shead .snm{font-size:13.5px;color:var(--ink-2)}
   .shead .ssc{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:auto;white-space:nowrap}
   .badges{margin:13px 0 0;display:flex;flex-wrap:wrap;gap:5px}
-  .bdg{font-family:var(--mono);font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 8px;white-space:nowrap;
+  .bdg{font-family:var(--mono);font-size:10.5px;font-weight:700;border-radius:2px;padding:3px 8px;white-space:nowrap;
        border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2)}
 
   /* ── 등급 칩(method.html 정본과 같은 클래스·색) ── */
-  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:26px;border-radius:7px;
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:26px;border-radius:2px;
          font-family:var(--mono);font-size:14px;font-weight:800;padding:0 7px;color:#fff;line-height:1}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}
   .grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .nog{display:inline-flex;align-items:center;justify-content:center;min-height:26px;border-radius:7px;padding:3px 8px;
+  .nog{display:inline-flex;align-items:center;justify-content:center;min-height:26px;border-radius:2px;padding:3px 8px;
        font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);border:1px dashed var(--line);
        background:var(--panel-2);text-align:center;line-height:1.25}
 
@@ -132,7 +132,7 @@
   .mrow .mv{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right;white-space:nowrap}
   .mrow .mv.miss{color:var(--muted);font-size:11.5px;font-weight:700}
   .mrow .mg{justify-self:end}
-  .mrow .mtrk{position:relative;height:14px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line-soft);overflow:hidden}
+  .mrow .mtrk{position:relative;height:14px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);overflow:hidden}
   .mrow .mtrk i{position:absolute;top:0;bottom:0;left:0;background:var(--bar);opacity:.35;border-radius:3px 0 0 3px}
   .mrow .mtrk b{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--bar);border-radius:2px;transform:translateX(-1.5px)}
   .mrow .mtrk u{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
@@ -149,17 +149,17 @@
 
   /* ── 등급 분포 ── */
   .gdist{display:flex;flex-wrap:wrap;gap:8px}
-  .gdi{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--panel-2)}
+  .gdi{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:2px;padding:6px 10px;background:var(--panel-2)}
   .gdi .gn{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--ink)}
   .gdi .gu{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
 
   /* ── 피어 ── */
   .mtabs{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 12px}
   .mtabs button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--panel);
-    border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+    border:1px solid var(--line);border-radius:2px;padding:5px 10px;cursor:pointer;white-space:nowrap}
   .mtabs button:hover{border-color:var(--accent);color:var(--accent)}
   .mtabs button[aria-pressed="true"]{background:var(--panel-2);border-color:var(--accent);color:var(--accent)}
-  .strip{position:relative;height:44px;margin:6px 0 0;border-radius:8px;background:var(--panel-2);border:1px solid var(--line-soft)}
+  .strip{position:relative;height:44px;margin:6px 0 0;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft)}
   .strip s{position:absolute;top:9px;height:16px;width:2px;background:var(--muted);opacity:.5;text-decoration:none;transform:translateX(-1px)}
   .strip s.me{top:4px;height:26px;width:3px;background:var(--accent);opacity:1;transform:translateX(-1.5px);border-radius:2px}
   .strip u{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
@@ -181,10 +181,10 @@
   thead th{color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;
            border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:1}
 
-  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:2px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
-  .note code{font-family:var(--mono);font-size:11.5px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  .note code{font-family:var(--mono);font-size:11.5px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:1px 5px}
   .note a{color:var(--accent);text-decoration:none} .note a:hover{text-decoration:underline}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
   .empty{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:26px 0;text-align:center}
@@ -193,14 +193,14 @@
   .scrow{display:grid;grid-template-columns:1fr auto;gap:3px 12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line-soft)}
   .scrow:last-child{border-bottom:0}
   .scrow .sn{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
-  .scrow .sv{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .scrow .sv{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:2px 7px;white-space:nowrap}
   .scrow .sv.in{color:var(--accent);border-color:var(--accent)}
   .scrow .sd{grid-column:1/-1;font-size:11.5px;color:var(--muted);line-height:1.55}
   .scrow .sl{grid-column:1/-1;font-family:var(--mono);font-size:10.5px;color:var(--ink-2);line-height:1.55}
 
   /* ── 금리 ── */
   .rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-  .rate{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--panel-2)}
+  .rate{border:1px solid var(--line);border-radius:2px;padding:11px 13px;background:var(--panel-2)}
   .rate .rk{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
   .rate .rv{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--ink);line-height:1.2;margin-top:3px}
   .rate .rv small{font-size:.45em;font-weight:700;color:var(--muted);margin-left:2px}
@@ -259,7 +259,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .lbl::before{height:16px}
 .lbl .sub{font-size:12.5px;font-weight:500}
 .card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
-.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
 
 /* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
 .tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
@@ -271,7 +271,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 
 /* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
-:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
@@ -282,7 +282,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
    🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
      입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
        · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
-       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
    ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
      셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
 :where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
@@ -303,7 +303,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
   :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
   .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
-            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
   .skiplink:focus{left:0}
   .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
           backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
@@ -318,7 +318,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
   .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
-                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
   .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
@@ -328,12 +328,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
 
   .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
-           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
   .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
@@ -342,7 +342,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
@@ -351,17 +351,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
 
   .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
             padding:4px 9px;white-space:nowrap;flex:none}
   .asofchip:hover{border-color:var(--accent);color:var(--accent)}
   .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
   .asofchip.stale{border-color:var(--hot);color:var(--hot)}
   .asofchip.ready{display:inline-flex}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
             color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
             justify-content:center;flex:none}
   .themebtn:hover{border-color:var(--accent)}
-  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
              background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
              justify-content:center;flex:none}
 
