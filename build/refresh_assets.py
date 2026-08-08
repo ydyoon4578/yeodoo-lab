@@ -272,14 +272,45 @@ def main() -> int:
         rdr = list(csv.DictReader(io.StringIO(raw)))
         ebp = {}
         gz = {}
+        _bad = 0
+
+        def _iso(s):
+            """연준 CSV 날짜를 ISO(YYYY-MM-DD)로 맞춘다.
+
+            🚨 2026-08-07 — 연준이 형식을 바꿨다. ISO(1973-01-01) 로 오던 것이
+              **미국식(1/1/1973)** 으로 왔다. 종전에는 받은 문자열을 그대로 키로 썼고,
+              그러면 다른 FRED 계열(ISO)과 눈금이 달라진다. 아래에서 벌어진 일:
+                asset_backtest.macro_asof_m 이 int(s[:4]) 로 파싱 → '1/1/' 에서
+                ValueError → ebp-gate 전략만 죽음 → 아카이브 감사표에서 그 항목이
+                조용히 빠짐 → 커버리지 가드가 잡 전체를 막음 → assets.json 이 커밋되지
+                못해 **홈 달력의 8/6·8/7 지수 등락률까지 비었다.**
+              한 CSV 의 날짜 형식이 바뀌자 아무 상관 없는 달력 칸이 이틀 비었다.
+              그래서 형식은 **받는 자리에서** 맞춘다 — 읽는 쪽마다 고칠 일이 아니다.
+            """
+            s = (s or "").strip()
+            if not s:
+                return None
+            if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+                return s[:10]                       # 이미 ISO
+            p = s.split("/")
+            if len(p) == 3 and p[0].isdigit() and p[1].isdigit() and p[2].isdigit():
+                return "%04d-%02d-%02d" % (int(p[2]), int(p[0]), int(p[1]))   # M/D/YYYY
+            return None
+
         for r in rdr:
-            d = (r.get("date") or "").strip()
+            d = _iso(r.get("date"))
             if not d:
+                _bad += 1
                 continue
             try:
                 ebp[d] = float(r["ebp"]); gz[d] = float(r["gz_spread"])
             except (KeyError, ValueError):
                 pass
+        # 🚨 형식이 또 바뀌면 여기서 크게 말한다. 조용히 빈 계열을 내보내면 그 다음 사고는
+        #   저 아래(전략·감사표·달력)에서 터지고, 원인까지 되짚는 데 하루가 걸린다.
+        if _bad:
+            print("  ⚠ EBP 날짜 %d행을 못 읽었다 — 연준 CSV 형식이 또 바뀌었을 수 있다"
+                  "(첫 행: %r)" % (_bad, (rdr[0].get("date") if rdr else None)))
         if ebp:
             EXTRA["EBP"] = (ebp, "초과채권프리미엄(연준 GZ)")
             EXTRA["GZ_SPREAD"] = (gz, "GZ 신용스프레드(연준)")

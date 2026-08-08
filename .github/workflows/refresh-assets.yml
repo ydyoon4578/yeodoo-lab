@@ -84,6 +84,12 @@ jobs:
         run: python build/guru_clone.py
       - name: Re-run archived strategies
         run: python build/asset_backtest.py
+      # 🚨 판정 원장은 asset_strategies 를 읽는다. 이 잡이 그 파일을 다시 굽는데 원장을
+      #   안 구우면 둘이 어긋나 validate 가 막고, 관문이 잡 전체를 세운다 —
+      #   그러면 assets.json 이 커밋되지 못해 **홈 달력의 지수 등락률까지 빈다**
+      #   (2026-08-07·08-08 이틀 연속 그렇게 죽었다. refresh-tech 에는 이 단계가 있었다).
+      - name: Rebuild verdict ledger
+        run: python build/verdicts_gen.py
       # 전 전략 통합 목록 — 원본(tech·asset·archive·deploy)이 바뀌면 같이 다시 굽는다.
       # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
       - name: Rebuild unified strategy index

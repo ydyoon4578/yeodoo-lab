@@ -70,6 +70,7 @@ MAX_TRIES="${MAX_TRIES:-5}"
 #   두 잡(refresh-tech·refresh-assets)이 커밋하므로 표에 없으면 충돌 시 그날치가 버려진다.
 REBAKE_TABLE="\
 data/asset_strategies.json|build/asset_backtest.py
+data/verdicts.json|build/verdicts_gen.py
 data/strategy_index.json|build/strategy_index.py
 data/strategy_charts.json|build/strategy_charts.py
 data/strategy_report.json|build/strategy_report.py
