@@ -189,6 +189,130 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 /* SHELL:END */
+
+/* ══ A · 단말기 밀도 (2026-08-09 사용자 선택) ═══════════════════════════════
+   🚨 이 블록은 **공통 셸 뒤에** 있어야 한다. sync_shell.py 는 SHELL:BEGIN~END 사이만
+     갈아 끼우므로 이 자리는 보존되고, 같은 특이도면 뒤가 이기므로 셸의 색·글꼴을 덮는다.
+     앞쪽(첫 :root)에 두면 셸이 다시 덮어써서 이 디자인이 통째로 사라진다.
+
+   무엇을 걷어냈나 — 사용자 지적 "클로드 특유의 인터페이스 구성방식이 맘에 안 든다":
+     · 둥근 카드 + 그림자          → 괘선 한 줄로 구획
+     · 알약형 칩·배지(.tag/.stat)  → 가운뎃점으로 이은 평문
+     · eyebrow(대문자 자간 라벨)   → 삭제
+     · 제목 뒤 그라데이션 선        → 실선 한 줄
+     · 골드 accent 로 강조 도배    → 잉크 + 파랑 하나, 색은 **부호에만**
+   밀도를 올린 이유: 169종짜리 목록이고 화면 대부분이 숫자표다. 한 화면에 들어가는
+   줄 수가 곧 쓸모다.                                                          */
+:root{
+  --ground:#FBFAF7; --panel:#FBFAF7; --panel-2:#F2F0EB;
+  --line:#D8D6D0; --line-soft:#EDEBE6;
+  --ink:#111418; --ink-2:#41474E; --muted:#8A9099;
+  --accent:#0B5FA5; --good:#0A7A44; --hot:#B03A2E; --watch:#8A5A00; --champ:#0B5FA5;
+  --shadow:none;
+  --w-base:1120px;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0C0E11; --panel:#0C0E11; --panel-2:#161A1F;
+  --line:#252A30; --line-soft:#1A1E23;
+  --ink:#DEE3E8; --ink-2:#A8B0B8; --muted:#6C757E;
+  --accent:#5AA9E6; --good:#3BC77F; --hot:#E0705F; --watch:#D9A441; --champ:#5AA9E6;
+}}
+:root[data-theme="dark"]{
+  --ground:#0C0E11; --panel:#0C0E11; --panel-2:#161A1F;
+  --line:#252A30; --line-soft:#1A1E23;
+  --ink:#DEE3E8; --ink-2:#A8B0B8; --muted:#6C757E;
+  --accent:#5AA9E6; --good:#3BC77F; --hot:#E0705F; --watch:#D9A441; --champ:#5AA9E6;
+}
+
+body{font-size:13px;line-height:1.52;letter-spacing:0;font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--w-base);padding:0 18px 60px}
+
+/* 머리 — eyebrow·큰 제목·lede 문단을 한 줄로 접는다 */
+header.mast{padding:14px 0 7px;border-bottom:2px solid var(--ink)}
+.eyebrow{display:none}
+h1.title{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.01em;
+         margin:0;line-height:1.4;display:inline}
+.lede{display:inline;font-size:13px;color:var(--muted);margin:0}
+.lede b{color:var(--ink-2);font-weight:600}
+.lede::before{content:" — "}
+.warn{margin:8px 0 0;padding:0 0 0 10px;border:0;border-left:2px solid var(--line);
+      border-radius:0;background:none;font-size:12px;color:var(--muted);line-height:1.55}
+.warn b{color:var(--ink-2)}
+.statline{margin:7px 0 0;gap:0 14px;font-size:11.5px}
+.stat{background:none;border:0;border-radius:0;padding:0;color:var(--muted)}
+.stat b{font-size:11.5px;color:var(--ink);font-weight:700}
+
+/* 조작부 — 붙박이 유지, 테두리만 남긴다 */
+.controls{top:52px;padding:8px 0 7px;background:var(--ground);backdrop-filter:none;
+          -webkit-backdrop-filter:none;border-bottom:1px solid var(--line)}
+.search{border-radius:0;box-shadow:none;padding:5px 9px;background:var(--panel-2);border-color:var(--line)}
+.search input{font-size:12.5px}
+.chiprow{margin-top:6px;gap:0}
+.fchip{border-radius:0;border:0;border-right:1px solid var(--line);background:none;
+       padding:2px 10px;font-size:11.5px;font-weight:600;color:var(--muted);min-height:0}
+.fchip:first-child{padding-left:0}
+.fchip:last-child{border-right:0}
+.fchip:hover{color:var(--ink);background:none}
+.fchip[aria-pressed="true"]{background:none;color:var(--accent);border-color:var(--line)}
+:root[data-theme="dark"] .fchip[aria-pressed="true"],
+:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--accent)}
+.fchip .c{opacity:.7;font-size:10px}
+.rowcount{margin:9px 2px 4px;font-size:10.5px;letter-spacing:.04em}
+
+/* 목차 · 접이식 — 상자를 없애고 괘선만 */
+details.toc{background:none;border:0;border-top:1px solid var(--line);border-radius:0;
+            box-shadow:none;margin:0}
+details.toc>summary{padding:6px 0;font-size:11.5px;color:var(--muted)}
+.tocgrid{padding:0 0 10px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0 18px}
+.tocgrid a{border-bottom:1px dotted var(--line-soft);font-size:12px;padding:2px 0}
+
+/* 리포트 한 편 — 카드가 아니라 괘선으로 나눈 항목 */
+.rep{background:none;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none;
+     padding:12px 0 6px;margin:0;scroll-margin-top:150px}
+.rhead{padding-bottom:5px;border-bottom:0;gap:8px}
+.rhead .no{font-size:11px;color:var(--muted);min-width:32px}
+.rhead h2{font-size:14px;font-weight:700;letter-spacing:-.01em}
+.rhead .sid{background:none;border:0;padding:0;color:var(--muted);font-size:11px}
+.rhead .tags{gap:0}
+/* 배지 → 가운뎃점으로 이은 평문 */
+.tag{background:none!important;border:0;border-radius:0;padding:0 0 0 9px;color:var(--muted);
+     font-weight:600;font-size:11px;position:relative}
+.tag+.tag::before{content:"·";position:absolute;left:2px;color:var(--line)}
+.tag.fam{color:var(--muted)}
+.tag.vd{color:var(--ink-2)}
+.tag.vd.pass{color:var(--good)}
+.tag.vd.rej{color:var(--hot)}
+
+.sec{margin-top:10px}
+.sec>h3{font-size:10.5px;letter-spacing:.04em;text-transform:none;color:var(--accent);
+        margin:0 0 3px;padding-bottom:2px;border-bottom:1px solid var(--line-soft)}
+.sec>h3::after{display:none}
+.sec p{font-size:12.5px;margin:0 0 3px;line-height:1.55}
+.kv{font-size:12.5px;grid-template-columns:64px 1fr;gap:0 12px}
+.kv dt{font-size:10.5px;padding-top:1px}
+
+table.t{font-size:12px;font-family:var(--mono)}
+table.t th,table.t td{padding:2.5px 8px;border-bottom:1px solid var(--line-soft)}
+table.t td:first-child,table.t th:first-child{font-family:var(--sans)}
+table.t thead th{font-size:10.5px;font-family:var(--sans)}
+table.t tr.main td{border-top:1px solid var(--line);font-weight:700}
+table.t tbody tr:hover>*{background:var(--panel-2)}
+
+.tick{background:none;border:0;border-radius:0;padding:0 7px 0 0;font-size:11px;
+      color:var(--ink-2);margin:0}
+.miss{margin-top:8px;padding:0 0 0 10px;border:0;border-left:2px solid var(--line);
+      border-radius:0;background:none;font-size:11px}
+.caveat{font-size:11px;line-height:1.55}
+.empty{padding:24px;font-size:12px}
+footer{margin-top:24px;padding-top:12px;font-size:11px;line-height:1.6}
+
+/* 전략 지도 — 다른 것보다 위에 있으니 윗줄만 굵게 */
+#smap .rep{border-top:2px solid var(--ink)!important;padding-top:12px}
+#smap .rhead h2{font-size:14px}
+
+@media(max-width:640px){body{font-size:12.5px}.wrap{padding:0 12px 40px}
+  .kv{grid-template-columns:1fr}.rhead .tags{margin-left:0;width:100%}}
+@media print{.rep,#smap .rep{border-top:1px solid #999!important}}
 </style>
 <!-- NAVCSS:BEGIN -->
 <style>
