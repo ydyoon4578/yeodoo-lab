@@ -66,21 +66,27 @@ FONT_LINK = (
 # 아니라 패널까지 함께 데운다. 노랑 쪽으로 기울지만 채도는 낮게 잡아, 의미색(초록·빨강·금색)이
 # 배경과 다투지 않게 한다는 아래 원칙은 유지한다. 글자 대비는 check_contrast()가 잠근다
 # (muted 4.82 → 4.73:1, AA 4.5 위·하락 0.09로 문턱 0.15 안).
+# 🚨 2026-08-09 팔레트 교체 — 사용자 지적 "클로드 특유의 인터페이스 구성방식이 맘에 안 든다".
+#   따뜻한 크림 + 골드 accent 는 그 인상의 큰 몫이었다. 중립 잉크 + 파랑 하나로 바꾸고
+#   --shadow 를 none 으로 둔다(카드가 떠 보이는 것이 그 인상의 나머지 몫이다).
+#   ⚠ 바꾸기 전에 대비를 먼저 계산했다 — check_contrast 가 최저 라이트 5.17:1 · 다크 6.35:1
+#     로 이전보다 높다. 처음 고른 --muted 는 panel-2 위에서 4.14 로 AA 미달이라 되물렀다.
 LIGHT = {
-    "--ground": "#FAF7EC", "--panel": "#FFFDF5", "--panel-2": "#F3EFE1",
-    "--line": "#E4DFD0", "--line-soft": "#EDE9DC",
+    "--ground": "#FBFAF7", "--panel": "#FBFAF7", "--panel-2": "#F2F0EB",
+    "--line": "#D8D6D0", "--line-soft": "#EDEBE6",
     # --muted 는 2026-08-02 에 #6A737D → #646B74 로 내렸다. 이전 값은 --panel 위에서만 4.73:1 로
     # AA 를 넘었고 --ground 4.49 · --panel-2 4.18 이었다 — 게이트가 --panel 하나만 보고 있어서
     # 통과하던 조합만 검사하고 승인해 온 것이다(check_contrast 참조). 이 색이 붙은 자리가 하필
     # 표 각주(.stnote)·캘린더 지표명·칩 보조글자라 본문보다 각주가 흐린 상태였다.
-    "--ink": "#14181D", "--ink-2": "#3C444D", "--muted": "#646B74",
-    "--shadow": "0 1px 2px rgba(16,24,32,.04),0 10px 28px -18px rgba(16,24,32,.20)",
+    "--ink": "#111418", "--ink-2": "#3E444B", "--muted": "#5F656D",
+    # 그림자를 없앤다 — 이 사이트의 화면은 대부분 표다. 표를 카드에 얹어 띄울 이유가 없다.
+    "--shadow": "none",
 }
 DARK = {
-    "--ground": "#10141B", "--panel": "#171C24", "--panel-2": "#1F252F",
-    "--line": "#2B323C", "--line-soft": "#232A33",
-    "--ink": "#E6EAEF", "--ink-2": "#BAC3CC", "--muted": "#8B95A1",
-    "--shadow": "0 1px 2px rgba(0,0,0,.45),0 14px 34px -18px rgba(0,0,0,.65)",
+    "--ground": "#0C0E11", "--panel": "#0C0E11", "--panel-2": "#161A1F",
+    "--line": "#252A30", "--line-soft": "#1A1E23",
+    "--ink": "#DEE3E8", "--ink-2": "#AEB6BE", "--muted": "#949DA6",
+    "--shadow": "none",
 }
 # 셸이 소유하는 의미색. 색을 '바꾸는' 것이 아니라 **있게 보장하고 대비를 잠그는** 것이다.
 # 처음엔 --hot·--marg 둘뿐이었다 — 내비(sync_nav.py 생성)의 .asofchip.stale이 var(--hot)을
@@ -97,10 +103,10 @@ DARK = {
 # 라이트 4종은 이때 3배경 모두에서 AA(4.5) 를 넘도록 내렸다(색상은 유지, 명도만):
 #   --muted #6A737D→#646B74 · --deploy #0E8A54→#0C7A4A · --marg #B25E12→#A35510 · --accent #8A6B00→#816400
 # 다크는 전부 5.07:1 이상이라 손대지 않는다.
-SHARED = {"light": {"--hot": "#A64B3B", "--marg": "#A35510",
-                    "--deploy": "#0C7A4A", "--accent": "#816400"},
-          "dark": {"--hot": "#E5806A", "--marg": "#F0863C",
-                   "--deploy": "#38D083", "--accent": "#FFBC00"}}
+SHARED = {"light": {"--hot": "#A3352A", "--marg": "#7E5200",
+                    "--deploy": "#0A7040", "--accent": "#0A5697"},
+          "dark": {"--hot": "#E8887A", "--marg": "#DFAE55",
+                   "--deploy": "#4BD08D", "--accent": "#6FB6EA"}}
 
 # 이전 값 — 대비가 나빠지지 않았는지 비교하는 기준선이다.
 # 배경을 3종으로 넓히면서(2026-08-02) 이전 배경값도 함께 적는다. 의미색 4종은 이번에 게이트로
@@ -256,6 +262,20 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 :where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+
+/* ⑦ 장식 걷기 (2026-08-09) — 사용자 지적 "클로드 특유의 인터페이스 구성방식".
+   그 인상의 정체는 색만이 아니다. **떠 있는 둥근 카드**와 **알약 배지**가 나머지 몫이다.
+   팔레트는 위에서 바꿨고 여기서 형태를 걷는다.
+
+   🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
+     입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
+       · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
+       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+   ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
+     셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
+:where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
+       .asoftbl,.asofrow,.calgrid,.calcell,.chiprow,.statline){box-shadow:none}
+:where(.card,.scard,.rep,.panel,.box,.tile,.asoftbl,.calgrid,details.toc){border-radius:3px}
 """
 
 
