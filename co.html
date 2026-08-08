@@ -57,18 +57,18 @@
   .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
   .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
-  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 9px;white-space:nowrap}
+  .stat{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:3px 9px;white-space:nowrap}
   .stat b{color:var(--ink);font-weight:700}
 
   /* ── 탭 ── */
   .tabs{margin:26px 0 0;display:flex;gap:2px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
   a.tab{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--muted);text-decoration:none;
-        padding:9px 12px;border-radius:9px 9px 0 0;border:1px solid transparent;border-bottom:0;
+        padding:9px 12px;border-radius:2px 2px 0 0;border:1px solid transparent;border-bottom:0;
         display:inline-flex;align-items:center;gap:7px;margin-bottom:-1px;white-space:nowrap}
   a.tab:hover{color:var(--accent);background:var(--panel-2)}
   a.tab[aria-current="page"]{color:var(--ink);background:var(--panel);border-color:var(--line);
                              box-shadow:0 -2px 0 var(--accent) inset}
-  a.tab .tg{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:5px;padding:2px 5px;
+  a.tab .tg{font-family:var(--mono);font-size:9px;font-weight:700;border-radius:2px;padding:2px 5px;
             border:1px solid color-mix(in srgb,var(--champ) 40%,transparent);
             background:color-mix(in srgb,var(--champ) 12%,transparent);color:var(--champ)}
   @media(max-width:640px){a.tab{font-size:11.5px;padding:8px 9px}}
@@ -78,7 +78,7 @@
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11.5px}
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
   @media(max-width:640px){.card{padding:15px 14px}}
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:12.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .card h3 .hn{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:auto}
@@ -96,9 +96,9 @@
   .pick{display:flex;flex-direction:column;gap:9px}
   .pick label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .pick input{width:100%;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--panel-2);
-              border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+              border:1px solid var(--line);border-radius:2px;padding:10px 13px}
   .pick input:focus{outline:2px solid var(--accent);outline-offset:1px}
-  .plist{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line-soft);border-radius:10px}
+  .plist{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line-soft);border-radius:2px}
   .pit{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;width:100%;
        background:none;border:0;border-top:1px solid var(--line-soft);cursor:pointer;text-align:left;
        padding:8px 12px;color:inherit;font-family:inherit}
@@ -106,7 +106,7 @@
   .pit:hover{background:var(--panel-2)}
   /* 종목 선택기 — 탭 위에 고정. 어느 탭에서 보든 같은 자리에서 종목을 바꾼다. */
   .pickbar{margin:16px 0 0}
-  .pickbar .pick{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  .pickbar .pick{background:var(--panel);border:1px solid var(--line);border-radius:2px;
                  padding:11px 14px;box-shadow:var(--shadow)}
   .qsvg{width:100%;height:auto;display:block;margin:8px 0 0}
   .qsvg .qx{font-size:8px;fill:var(--muted);font-family:var(--mono)}
@@ -120,14 +120,14 @@
   .pit[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 12%,transparent)}
   .pit .tk{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink)}
   .pit .nm{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pit .sc{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
+  .pit .sc{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:1px 6px;white-space:nowrap}
   .pmore{padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--muted);border-top:1px solid var(--line-soft)}
 
   /* ── 선택 종목 헤더 ── */
   .selhd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
   .selhd .tk{font-family:var(--mono);font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1}
   .selhd .nm{font-size:13px;color:var(--ink-2)}
-  .selhd .chip{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .selhd .chip{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:2px;padding:2px 7px}
   .selhd .px{margin-left:auto;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);text-align:right}
   .selhd .px b{color:var(--ink);font-size:15px}
 
@@ -145,16 +145,16 @@
     .mrow{grid-template-columns:1fr auto;gap:4px 10px}
     .mrow .mg{grid-column:1/-1}
   }
-  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;border-radius:6px;
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:24px;border-radius:2px;
          font-family:var(--mono);font-size:13px;font-weight:800;padding:0 7px;color:#fff;line-height:1;flex:none}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}
   .grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
-  .nograde{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:2px 7px}
+  .nograde{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px dashed var(--line);border-radius:2px;padding:2px 7px}
 
   /* ── 목표주가 막대 ── */
   .tpbar{margin:16px 0 0}
-  .tptrack{position:relative;height:14px;border-radius:7px;background:var(--panel-2);border:1px solid var(--line-soft)}
-  .tptrack .band{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--champ) 22%,transparent);border-radius:7px}
+  .tptrack{position:relative;height:14px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft)}
+  .tptrack .band{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--champ) 22%,transparent);border-radius:2px}
   .tptrack .mk{position:absolute;top:-5px;width:3px;height:22px;border-radius:2px;transform:translateX(-1.5px)}
   .tptrack .mk.cur{background:var(--ink)}
   .tptrack .mk.avg{background:var(--champ)}
@@ -167,7 +167,7 @@
   .tpleg b{color:var(--ink)}
 
   .fgrid{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:2px}
-  .fcell{padding:10px 12px;background:var(--panel-2);border-radius:9px}
+  .fcell{padding:10px 12px;background:var(--panel-2);border-radius:2px}
   .fcell .fcl{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
   .fcell .fcv{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--ink);margin-top:3px}
   .fcell .fcv.na{color:var(--muted);font-weight:400}
@@ -177,11 +177,11 @@
   .profsum{margin:10px 0 0;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
   .profsum .wsrc{display:block;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--muted)}
   .snapchips .chip{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--ink-2);
-                   background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:2px 8px}
+                   background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:2px 8px}
   .fcell.flag{background:color-mix(in srgb,var(--hot) 9%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--hot) 30%,transparent) inset}
 
   /* 경고는 숫자 바로 옆(아래) — 접지 않는다 */
-  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:10px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:2px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note.hard{border-left-color:var(--hot)}   /* class="note hard" 를 쓰는데 규칙이 없었다 */
   /* details.more — 이 파일이 class="more" 를 쓰는데 규칙이 없어 요약 화살표·여백이 안 붙었다.
      index.html 482~489 행의 정본을 그대로 옮긴다(2026-08-03). */
@@ -195,13 +195,13 @@
   details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
-  .note code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  .note code{font-family:var(--mono);font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:1px 5px}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
   .empty{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:26px 0;text-align:center}
 
   /* 재무제표 — XBRL 시계열 */
   .fsctl{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
-  .fstab{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:var(--ground);color:var(--ink-2);cursor:pointer}
+  .fstab{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:6px 13px;border:1px solid var(--line);border-radius:2px;background:var(--ground);color:var(--ink-2);cursor:pointer}
   .fstab:hover{border-color:var(--accent);color:var(--ink)}
   .fstab[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
   @media (prefers-color-scheme:dark){.fstab[aria-pressed=true]{color:#131820}}
@@ -221,7 +221,7 @@
   /* 내부자 거래 */
   .instbl td.ileft,.instbl th{text-align:left}
   .instbl .icode{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;
-    border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-right:5px;color:var(--muted)}
+    border:1px solid var(--line);border-radius:2px;padding:0 5px;margin-right:5px;color:var(--muted)}
   .instbl .icode.idisc{border-color:var(--accent);color:var(--accent)}
   .instbl .iw{display:block;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
   .instbl a{color:var(--accent);text-decoration:none} .instbl a:hover{text-decoration:underline}
@@ -233,7 +233,7 @@
   .irrow .irf span{font-size:11.5px;color:var(--muted);margin-left:7px}
   .irrow .ird{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
   .irrow .iri{display:flex;gap:5px;flex-wrap:wrap}
-  .irrow .irit{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+  .irrow .irit{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
   .irrow .iru{font-family:var(--mono);font-size:11px;white-space:nowrap}
   .irrow .iru a{color:var(--accent);text-decoration:none}
   .irrow .iru a:hover{text-decoration:underline}
@@ -295,7 +295,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .lbl::before{height:16px}
 .lbl .sub{font-size:12.5px;font-weight:500}
 .card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
-.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:999px}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
 
 /* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
 .tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
@@ -307,7 +307,7 @@ h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-hei
 .tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 
 /* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
-:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
 html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
@@ -318,7 +318,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
    🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
      입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
        · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
-       · 큰 모서리(10px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
    ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
      셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
 :where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
@@ -339,7 +339,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
   :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
   .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
-            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 8px 0;font-family:var(--mono);font-size:13px}
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
   .skiplink:focus{left:0}
   .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
           backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
@@ -354,7 +354,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
   .navcat{position:relative}
   .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
-                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:8px;white-space:nowrap;
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
                  display:inline-flex;align-items:center;gap:3px}
   .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
   .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
@@ -364,12 +364,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
 
   .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
-           background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
   .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:9px;text-decoration:none;color:inherit}
+       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
@@ -378,7 +378,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
   span.mmi .mmn{color:var(--muted);font-weight:600}
-  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;
+  .mmb{font-family:var(--sans);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
        border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
        background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
   .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
@@ -387,17 +387,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .mmlk{font-size:9px;opacity:.6;margin-left:3px;vertical-align:1px}
 
   .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:8px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
             padding:4px 9px;white-space:nowrap;flex:none}
   .asofchip:hover{border-color:var(--accent);color:var(--accent)}
   .asofchip .ac1{color:var(--muted);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase}
   .asofchip.stale{border-color:var(--hot);color:var(--hot)}
   .asofchip.ready{display:inline-flex}
-  .themebtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
             color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
             justify-content:center;flex:none}
   .themebtn:hover{border-color:var(--accent)}
-  .navtoggle{display:none;width:34px;height:32px;border-radius:9px;border:1px solid var(--line);
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
              background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
              justify-content:center;flex:none}
 
