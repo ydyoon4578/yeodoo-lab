@@ -1134,6 +1134,27 @@ def _pool_limit(rows):
 
 
 RETIRED_RECS = []       # 목록에서 뺀 규칙의 기록(arch 태그 보존용) — build_strats 가 채운다
+
+
+def load_tested():
+    """세 번째 목록 — 돌렸지만 게시된 적 없는 규칙(build/tested_not_published.json).
+
+    🚨 이 목록이 왜 필요한가. 이 랩의 '이미 해 봤다' 기록이 세 곳에 흩어져 있었고
+      **둘만 기계가 읽었다**:
+        ① 살아 있는 것  data/tech_strategies.json:strategies   ✅
+        ② 퇴출한 것      data/tech_strategies.json:retired      ✅
+        ③ 돌렸지만 게시 안 함  build/PREREG-*.md 산문           ❌
+      2026-08-08 에 ①②만 보고 JKP 빈 칸을 세어, 이미 돌려 기각한 셋(x-illiq·x-noa·
+      x-fscore)을 '한 번도 검정한 적 없는 칸'이라 적고 신규로 등록했다. 코드에 남은
+      x-illiq 주석을 우연히 보고서야 알았다 — 사람이 조심해서 될 일이 아니다.
+
+    파일이 없으면 빈 목록을 준다(막지 않는다). 막는 것은 validate_site 의 몫이다.
+    """
+    p = os.path.join(ROOT, "build", "tested_not_published.json")
+    try:
+        return json.load(io.open(p, encoding="utf-8")).get("items") or []
+    except Exception:
+        return []
 _CLASSMATE = None       # 티커 → 같은 회사(같은 CIK)의 티커 묶음. 아래 load_classmates 가 채운다
 DUAL_SKIPS = {}         # sid → 이중클래스라서 건너뛴 선택 횟수. 로그·limits 에 싣는다
 
@@ -4436,6 +4457,13 @@ def run():
         "dup": dup, "regime": regime,
         # 목록에서 뺀 규칙 — 아카이브 재현 링크(arch)를 잃지 않으려고 남긴다.
         "retired": RETIRED_RECS,
+        # 🚨 세 번째 목록 — 돌렸지만 게시된 적 없는 규칙(build/tested_not_published.json).
+        #   2026-08-08 까지 이 기록은 build/PREREG-*.md **산문에만** 있었다. 살아 있는 것과
+        #   퇴출한 것은 여기 JSON 으로 나가는데 이것만 안 나가서, 규칙을 새로 고를 때
+        #   이미 판 자리를 '빈 칸'으로 세는 사고가 났다(x-illiq·x-noa·x-fscore 를 신규로
+        #   등록했다가 실행 전에 잡았다). 사람이 조심해서 될 일이 아니라 목록이 한 곳에
+        #   없어서 나는 일이라, 같은 파일로 내보낸다.
+        "tested": load_tested(),
 
         "strategies": out,
     }

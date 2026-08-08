@@ -451,7 +451,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 복제 리포트</div>
     <h1 class="title">전략 복제 리포트</h1>
-    <p class="lede">이 랩이 실제로 돌린 <b>규칙 117종</b>을 전략별로 하나씩 적는다 — 규칙 자체, 근거, 원문 대비 달라진 점,
+    <!-- 🚨 규칙 수를 손으로 박지 않는다. 117 로 박아 뒀다가 3종을 더한 날 곧바로 낡았다 —
+         화면이 자료와 다른 수를 말하면 나머지 숫자도 못 믿게 된다. 자료에서 읽는다. -->
+    <p class="lede">이 랩이 실제로 돌린 <b>규칙 <span id="lede-n">…</span>종</b>을 전략별로 하나씩 적는다 — 규칙 자체, 근거, 원문 대비 달라진 점,
       구간, 성과(전략·대조군 나란히), 비용 후 성과, 회전·노출, 위험, 이웃 대비 증분알파, 매매대상 대비,
       생존편향 보정(PIT), 후보 풀, 지금 보유한 것까지. <b>판정으로 줄 세우지 않는다.</b></p>
     <div class="warn"><b>⚠ 이 화면은 성과를 약속하지 않는다.</b>
@@ -497,6 +499,7 @@ function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){
 //   그대로 찍히는 사고를 하루에 네 번 낸 적이 있다 — 그래서 변환기를 두되 순서를 못박는다.
 function mb(s){return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}
 function num(v,nd){return (v===null||v===undefined)?'—':(nd===undefined?v:Number(v).toFixed(nd));}
+function num2(v){return (v===null||v===undefined)?'—':Number(v).toFixed(2);}
 function sgn(v,nd,unit){                       // 부호에 색을 준다. 없으면 '—' 로 둔다.
   if(v===null||v===undefined) return '<span style="color:var(--muted)">—</span>';
   var t=(v>0?'+':'')+Number(v).toFixed(nd===undefined?2:nd)+(unit||'');
@@ -752,6 +755,7 @@ function chips(){
 }
 function statline(){
   var a=DATA.as_of||{}, t=DATA.t_crit||{}, n=DATA.n||{};
+  var ld=el('lede-n'); if(ld) ld.textContent=n.total;
   el('statline').innerHTML=
     '<span class="stat">규칙 <b>'+n.total+'</b>편</span>'+
     '<span class="stat">자산배분 <b>'+n.asset+'</b></span>'+
@@ -770,8 +774,36 @@ function tail(){
       arr.map(function(s){return '<p style="margin:0 0 9px">— '+mb(s)+'</p>';}).join('')+
       '</div></details>';
   }
-  var rt=(DATA.retired||{}).tech||[];
+  var rt=(DATA.retired||{}).tech||[], ts=(DATA.tested||{}).tech||[];
   var h='<div class="rowcount" style="margin-top:26px">랩 전체의 한계 — 개별 리포트보다 먼저 읽을 것</div>';
+  // 🚨 세 번째 목록 — 돌렸지만 게시된 적 없는 규칙. 이 리포트가 '전 전략'을 낸다고 말하는
+  //   이상 이것도 내야 한다. 안 내면 독자는 이 랩이 위의 N종만 팠다고 읽는데, 실제로는
+  //   그보다 많이 팠다. 그 차이가 곧 다중검정의 크기다.
+  //   2026-08-08 에 이 목록이 기계가 읽는 곳에 없어서, 이미 돌려 기각한 규칙을
+  //   '한 번도 검정한 적 없는 빈 칸'이라 적고 신규로 등록하는 사고가 났다.
+  if(ts.length) h+='<details class="toc" style="margin-top:12px"><summary>돌렸지만 게시하지 않은 규칙 — '+ts.length+'종</summary>'+
+    '<div style="padding:2px 18px 16px;font-size:13px;color:var(--ink-2);line-height:1.68">'+
+    '<p class="caveat" style="margin-bottom:10px">위 목록에도 \'뺀 규칙\'에도 없지만 <b>한 번 돌아간</b> 것들이다. '+
+    '게시 기준을 못 넘었거나(대부분) 숫자는 넘었는데 그 숫자가 재려던 것이 아니어서 게시하지 않았다. '+
+    '⚠ 아래 t 는 <b>그때 그 표본</b>의 값이라 지금 값과 다르다 — 다시 재지 않는다(재려면 새 사전등록이다). '+
+    '비교용이 아니라 <b>\'이미 팠다\'는 표시</b>로 읽을 것.</p>'+
+    ts.map(function(x){
+      var num=[];
+      if(x.t!=null) num.push('단독 t '+num2(x.t));
+      if(x.incr!=null) num.push('증분 t '+num2(x.incr));
+      if(x.incr5!=null) num.push('incr5 '+num2(x.incr5));
+      if(x.pit_t!=null) num.push('PIT t '+num2(x.pit_t));
+      if(x.vs_traded_t!=null) num.push('매매대상 t '+num2(x.vs_traded_t));
+      return '<p style="margin:0 0 11px">— <b>'+esc(x.name)+'</b> <span class="sid">'+esc(x.sid)+'</span>'+
+        (x.paper?' <span style="color:var(--muted)">'+esc(x.paper)+'</span>':'')+
+        (num.length?'<br><span class="tt" style="font-family:var(--mono);font-size:11.5px">'+num.join(' · ')+
+          ' <span style="color:var(--muted)">('+esc(x.when||'')+')</span></span>':'')+
+        '<br>'+mb(x.why||'')+
+        (x.blocked_by?'<br><span class="caveat">막힌 이유 — '+mb(x.blocked_by)+'</span>':'')+
+        (x.readmitted?'<br><span style="color:var(--accent)">↻ '+esc(x.readmitted.when)+' 재등록 — '+
+          mb(x.readmitted.changed)+' <b>결과:</b> '+esc(x.readmitted.result||'')+'</span>':'')+
+        '</p>';
+    }).join('')+'</div></details>';
   h+=box('종목·타이밍 랩의 한계',L.tech);
   h+=box('자산배분 랩의 한계',L.asset);
   h+=box('자산배분 랩의 규약',L.protocol);
