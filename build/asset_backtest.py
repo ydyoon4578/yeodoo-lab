@@ -415,15 +415,19 @@ OUT_ROWS = []
 # 성격(role) — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
 # 파일 출처가 아니라 역할로 나눠야 읽는 사람이 비교할 수 있다. 자산 전략은 규칙마다 하는 일이
 # 달라 하나로 못 묶는다 — 비중을 정하면 배분기, 들어갈지 말지만 정하면 타이밍오버레이,
-# 위기에만 값을 하면 방어보험, 초과수익 자체가 목적이면 수익엔진.
+# 위기에만 값을 하면 위험방어, 초과수익 자체가 목적이면 수익엔진.
+# 🚨 2026-08-08 어휘 통일 — '방어보험'(2종)과 '위험감축'(1종)을 **위험방어** 하나로 합쳤다.
+#   둘은 뜻이 같은데 말만 달랐고, 각 1~2종짜리 고아 범주라 화면 집계에서 조용히 사라졌다
+#   (strategy_index.by_role 이 3값만 내고 있었다 — 셋 다 hidden 에 들어가 있어서다).
+#   판정 어휘도 같이 맞췄다: 자산 랩만 '대조군 열위'였고 종목 랩은 '열위'다. 같은 뜻이다.
 ROLE = {
-    "curve-carry": "타이밍오버레이", "tsmom-multi": "타이밍오버레이", "tail-hedge": "방어보험",
+    "curve-carry": "타이밍오버레이", "tsmom-multi": "타이밍오버레이", "tail-hedge": "위험방어",
     "macro-rot": "타이밍오버레이", "infl-real": "타이밍오버레이", "hrp-alloc": "배분기",
     "commod-tsmom": "타이밍오버레이", "rp-extended": "배분기", "vix-ts": "타이밍오버레이",
-    "gem": "타이밍오버레이", "vol-roll": "방어보험", "real-yield": "타이밍오버레이",
+    "gem": "타이밍오버레이", "vol-roll": "위험방어", "real-yield": "타이밍오버레이",
     "crypto-sat": "배분기", "sector-rp": "배분기", "bond-trend": "타이밍오버레이",
     "mf-satellite": "배분기", "credit-gate": "타이밍오버레이", "overnight": "수익엔진",
-    "merger-arb": "수익엔진", "min-cvar": "배분기", "rp-voltarget": "위험감축",
+    "merger-arb": "수익엔진", "min-cvar": "배분기", "rp-voltarget": "위험방어",
     "rp-cadence": "배분기", "rp-horizon": "타이밍오버레이", "overnight-ndx": "수익엔진",
     "vrp-shortvol": "수익엔진", "credit-bond-gate": "타이밍오버레이", "ebp-gate": "타이밍오버레이",
     "quality-tilt": "수익엔진", "carry": "수익엔진", "hrp-sleeve": "배분기",
@@ -1822,9 +1826,9 @@ def main() -> int:
             r["verdict"] = "판정 불가"
         elif r.get("bench_unstable"):
             # 대조군이 현금성이면 Δ샤프가 허수다 — t만으로 가른다
-            r["verdict"] = "통과 후보" if (t >= tcrit) else ("구별 불가" if t > 0 else "대조군 열위")
+            r["verdict"] = "통과 후보" if (t >= tcrit) else ("구별 불가" if t > 0 else "열위")
         elif r["d_sharpe"] <= 0:
-            r["verdict"] = "대조군 열위"
+            r["verdict"] = "열위"
         elif abs(t) >= tcrit:
             r["verdict"] = "통과 후보"
         else:

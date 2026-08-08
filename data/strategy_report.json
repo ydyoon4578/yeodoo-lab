@@ -331,6 +331,1445 @@
    }
   ]
  },
+ "map": {
+  "n": 169,
+  "axes": {
+   "where": [
+    "화면에 있음",
+    "화면에서 뺌",
+    "퇴출",
+    "돌렸지만 게시 안 함",
+    "재현 안 함",
+    "배포 원장"
+   ],
+   "role": [
+    "수익엔진",
+    "타이밍오버레이",
+    "배분기",
+    "위험방어",
+    "미분류"
+   ],
+   "verdict": [
+    "배포",
+    "제한적 유효",
+    "통과",
+    "구별 불가",
+    "열위",
+    "측정 불가",
+    "퇴출",
+    "미채택",
+    "판정 전"
+   ]
+  },
+  "by_where_role": {
+   "화면에 있음": {
+    "수익엔진": 49,
+    "타이밍오버레이": 41,
+    "배분기": 7
+   },
+   "화면에서 뺌": {
+    "타이밍오버레이": 8,
+    "위험방어": 3,
+    "수익엔진": 6,
+    "배분기": 6
+   },
+   "퇴출": {
+    "타이밍오버레이": 3,
+    "수익엔진": 10
+   },
+   "돌렸지만 게시 안 함": {
+    "수익엔진": 8,
+    "타이밍오버레이": 5
+   },
+   "재현 안 함": {
+    "미분류": 12
+   },
+   "배포 원장": {
+    "미분류": 11
+   }
+  },
+  "by_where_verdict": {
+   "화면에 있음": {
+    "구별 불가": 82,
+    "열위": 15
+   },
+   "화면에서 뺌": {
+    "구별 불가": 14,
+    "열위": 9
+   },
+   "퇴출": {
+    "퇴출": 13
+   },
+   "돌렸지만 게시 안 함": {
+    "열위": 12,
+    "측정 불가": 1
+   },
+   "재현 안 함": {
+    "판정 전": 12
+   },
+   "배포 원장": {
+    "배포": 3,
+    "제한적 유효": 6,
+    "미채택": 2
+   }
+  },
+  "rows": [
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "소형주 상위 10",
+    "sid": "x-small",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "200일선 이격도 상위 10",
+    "sid": "x-dist200",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "고저가 스프레드 상위 10 (변동성 중립)",
+    "sid": "x-hlspread",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "12-1 모멘텀 상위 10",
+    "sid": "x-mom12",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "시장 저상관 (베타의 상관 성분만)",
+    "sid": "x-lowcorr",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "에코 모멘텀 (12~7개월 전 구간)",
+    "sid": "x-echo",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "종가 위치 상위 10 (마감 압력 · 1개월 수익 중립)",
+    "sid": "x-clv",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "저PSR (매출수익률 상위 10)",
+    "sid": "x-sp",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "현금성자산 비율 상위 (현금및현금성자산 ÷ 총자산)",
+    "sid": "x-cash",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "상하방 베타 비대칭 상위 10",
+    "sid": "x-updown",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "자산성장 회피 (총자산 증가 최저)",
+    "sid": "x-agrow",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "순주식발행 회피 (희석주식수 증가 최저)",
+    "sid": "x-shiss",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "고객 집중도 상위 10 (단일 고객 매출 비중)",
+    "sid": "x-custconc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "변동성 타깃팅 (연 12%)",
+    "sid": "t-voltgt",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "주간 반전 (1주 최하위 10)",
+    "sid": "x-rev1w",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "복권형 회피 — MAX(5) 최하위 10",
+    "sid": "x-max5low",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "저부채 상위 10",
+    "sid": "x-lowde",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "잔차 모멘텀 상위 10",
+    "sid": "x-residmom",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "절대 모멘텀 (6개월)",
+    "sid": "t-tsmom6",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "과열 차단 (200일선 이격 상한)",
+    "sid": "t-gapcap",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "이동평균 합의 (20·50·100·200)",
+    "sid": "t-mavote",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "저베타 틸트",
+    "sid": "x-lowbeta",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "다기간 모멘텀 합의 (1·3·6·12개월)",
+    "sid": "t-mhvote",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "52주 채널 위치 비례",
+    "sid": "t-chan",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "켈리 스케일링 (레버리지 없음)",
+    "sid": "t-kelly",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "복권형 회피 (MAX 최하위 10)",
+    "sid": "x-maxlow",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "거래량 급증 + 추세 10",
+    "sid": "x-volsurge",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "하방 변동성 타깃 (연 9%)",
+    "sid": "t-semivol",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "200일 이동평균 타이밍",
+    "sid": "t-sma200",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "변동성 추격 손절 (샹들리에)",
+    "sid": "t-chand",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "이익 서프라이즈 (SUE 상위 10)",
+    "sid": "x-sue",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
+    "sid": "x-poacc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "변동성의 변동성 최하위 10 (변동성 수준 중립)",
+    "sid": "x-volvol",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "시장 폭 비례 노출",
+    "sid": "t-breadthc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "밸류 컴포지트 상위 10 (섹터 제약 없음)",
+    "sid": "x-valcomp",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "이익 개선 가속 상위 10",
+    "sid": "x-epsacc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "추세정렬 과매도 반등",
+    "sid": "x-snapback",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "동월 계절성 (같은 달 과거 2~5년 평균)",
+    "sid": "x-season",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "산업 모멘텀 (승자 2섹터 전 종목)",
+    "sid": "x-indmom",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "저변동성 상위 10",
+    "sid": "x-lowvol",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "50/200 골든크로스",
+    "sid": "t-cross",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "시장 폭 게이트 (200일선 위 비율)",
+    "sid": "t-breadth",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "드로다운 게이트 (−10%)",
+    "sid": "t-ddgate",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "비정상 자본투자 회피 (설비투자 급증 회피)",
+    "sid": "x-aci",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "총주주환원수익률 (배당 + 자사주매입)",
+    "sid": "x-payout",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "잉여현금흐름 수익률 상위 10",
+    "sid": "x-fcfy",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "돈치안 20일 돌파",
+    "sid": "t-donch",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
+    "sid": "x-btp",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "섹터 중립 밸류 컴포지트 (GICS 11섹터 × 1종)",
+    "sid": "x-valcomp-sn",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "MACD 신호선 교차",
+    "sid": "t-macd",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "야간 갭 비중 확대 상위 10",
+    "sid": "x-ongapd",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "특이변동성 최하위 10",
+    "sid": "x-ivol",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "절대 모멘텀 (12-1)",
+    "sid": "t-tsmom",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "고배당수익률 상위 10",
+    "sid": "x-dy",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "공편왜도 최저 (가장 음의 꼬리 동조)",
+    "sid": "x-coskew",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "총부채 증가율 최저 10 (순부채발행 회피)",
+    "sid": "x-debtiss",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "프로그인더팬 (연속정보 모멘텀 상위 10)",
+    "sid": "x-fip",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "고저가 스프레드 급확대 상위 10 (유동성 충격)",
+    "sid": "x-lshock",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "횡단면 분산도 게이트",
+    "sid": "t-disp",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "저변동성 국면만 편입",
+    "sid": "t-volreg",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "경로 일관성 (오른 날 − 내린 날)",
+    "sid": "x-cntd",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "적응형 이동평균 (효율성 비율)",
+    "sid": "t-kama",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "고매출성장 상위 10",
+    "sid": "x-rgrow",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "52주 신고가 근접 10",
+    "sid": "x-52wh",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "단기 반전 (1개월 최하위 10)",
+    "sid": "x-rev1m",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "저PER (이익수익률 상위 10)",
+    "sid": "x-ep",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "장기 반전 (5년 전 ~ 1년 전)",
+    "sid": "x-ltrev",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "시장 마감압력 게이트 (지수 CLV)",
+    "sid": "t-clvgate",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "Piotroski F-Score 상위 10",
+    "sid": "x-fscore",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "디지털자산 변동성 타깃 위성",
+    "sid": "crypto-sat",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "인플레이션 국면 실물자산 배분",
+    "sid": "infl-real",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "13F 컨빅션 복제 (상위 10종목)",
+    "sid": "guru-clone",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "위험방어",
+    "verdict": "구별 불가",
+    "name": "변동성 기간구조 롤 (VXZ 보유)",
+    "sid": "vol-roll",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
+    "sid": "rel-mom3",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "레짐 조건부 슬리브 스위칭",
+    "sid": "regime-switch",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "합병차익거래 (MNA ETF)",
+    "sid": "merger-arb",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "크로스에셋 캐리 (분배수익률 상위 4)",
+    "sid": "carry",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "원자재 시계열 모멘텀",
+    "sid": "commod-tsmom",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "크로스에셋 RP — 추세 게이트 6개월",
+    "sid": "rp-horizon",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "상품 커브 캐리 (GLD/DBC)",
+    "sid": "curve-carry",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "4국면 섹터 로테이션 (Fidelity 프레임워크)",
+    "sid": "a7-fidelity",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "채권 추세 게이트 — 4자산",
+    "sid": "bond-trend",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "글로벌 듀얼 모멘텀 (GEM)",
+    "sid": "gem",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "매니지드 퓨처스 위성 배분 (DBMF 20%)",
+    "sid": "mf-satellite",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "절대 모멘텀 (SPY 12-1)",
+    "sid": "abs-mom",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "VIX 기간구조 신호 (VIX/VIX3M)",
+    "sid": "vix-ts",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "시계열 모멘텀 — 멀티에셋 (CTA)",
+    "sid": "tsmom-multi",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "채권 슬리브 신용 게이트",
+    "sid": "credit-bond-gate",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "최소 CVaR 최적화 (4자산)",
+    "sid": "min-cvar",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "열위",
+    "name": "국면 연동 팩터 로테이션 (A2)",
+    "sid": "a2-factor-rot",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "초과채권프리미엄(EBP) 리스크선호 게이트",
+    "sid": "ebp-gate",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "위험 게이트 + 국면 섹터 (A7b)",
+    "sid": "a7b-gate-sector",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "퀄리티 틸트 (QUAL, ETF 프록시)",
+    "sid": "quality-tilt",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "열위",
+    "name": "통화조건 섹터 로테이션 (Conover 2008)",
+    "sid": "a7-conover",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "200일선 + 확인 지연 5일",
+    "sid": "sma200-confirm",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "골든크로스 (50/200)",
+    "sid": "golden-cross",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "200일 이동평균 (Faber)",
+    "sid": "sma200",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "실업률 추세 게이트 (Sahm)",
+    "sid": "unrate-trend",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "타이밍 3규칙 다수결",
+    "sid": "timing-ensemble",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "이동평균 기간 앙상블 (100·150·200·250)",
+    "sid": "sma-grid",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "매크로 레짐 안전자산 로테이션",
+    "sid": "macro-rot",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "FOMC 사이클 짝수 주",
+    "sid": "fomc-even",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "계층적 리스크패리티 배분 (역분산판)",
+    "sid": "hrp-alloc",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "섹터 리스크패리티",
+    "sid": "sector-rp",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "신용 레짐 게이트 (HYG/LQD 프록시)",
+    "sid": "credit-gate",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "구별 불가",
+    "name": "VIX 수준 게이트 (25)",
+    "sid": "vix-level",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
+    "sid": "overnight",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "구별 불가",
+    "name": "오버나이트 보유 (QQQ 종가→시가)",
+    "sid": "overnight-ndx",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "열위",
+    "name": "크로스에셋 RP — 분기 리밸런스",
+    "sid": "rp-cadence",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "계절성 (11~4월만 보유)",
+    "sid": "seasonal",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "수익률곡선 역전 게이트",
+    "sid": "curve-inv",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "배분기",
+    "verdict": "열위",
+    "name": "크로스에셋 RP — 자산군 확장 (TIP·EMB·SLV)",
+    "sid": "rp-extended",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "열위",
+    "name": "달러 축 — 미국 vs 해외 선진",
+    "sid": "usd-us-intl",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "월말 효과 (마지막날 −1 ~ +3)",
+    "sid": "tom",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "실질금리 레짐 오버레이 (DFII10)",
+    "sid": "real-yield",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "변동성 위험프리미엄 숏볼 (SVXY 25%)",
+    "sid": "vrp-shortvol",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "구별 불가",
+    "name": "계층적 리스크패리티 결합가중 (HRP Sleeve)",
+    "sid": "hrp-sleeve",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "옵션 만기 주간",
+    "sid": "opex",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "위험방어",
+    "verdict": "열위",
+    "name": "테일 리스크 헤지 (SPY 95% + VIXY 5%)",
+    "sid": "tail-hedge",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에서 뺌",
+    "role": "위험방어",
+    "verdict": "열위",
+    "name": "크로스에셋 RP — 목표변동성 8%",
+    "sid": "rp-voltarget",
+    "lab": "자산배분"
+   },
+   {
+    "where": "퇴출",
+    "role": "타이밍오버레이",
+    "verdict": "퇴출",
+    "name": "RSI 과매도 반등",
+    "sid": "t-rsi",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "타이밍오버레이",
+    "verdict": "퇴출",
+    "name": "연속 시계열 모멘텀",
+    "sid": "t-tsmomc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "타이밍오버레이",
+    "verdict": "퇴출",
+    "name": "시장 심리 게이트 (공포 매수)",
+    "sid": "t-sentgate",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "대형주 모멘텀 + 200일선 추세",
+    "sid": "x-mom-trend",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "최소분산 (축소추정)",
+    "sid": "x-minvar",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "리스크 버짓 (역변동성)",
+    "sid": "x-riskbudget",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "월내 시점 가중 반전 (최하위 10)",
+    "sid": "x-recency",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "고ROE 상위 10",
+    "sid": "x-roe",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "고순이익률 상위 10",
+    "sid": "x-npm",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "총이익 자산대비 (Gross Profitability)",
+    "sid": "x-gpa",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "현금기반 수익성 (영업현금흐름 ÷ 총자산)",
+    "sid": "x-ocfp",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "시장정보 반영 지연도 상위 10 (Hou-Moskowitz)",
+    "sid": "x-delay",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "퇴출",
+    "role": "수익엔진",
+    "verdict": "퇴출",
+    "name": "상관이웃 선도-지연 상위 10 (자기수익 중립)",
+    "sid": "x-peerlag",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "유동성 프리미엄 (Amihud ILLIQ · 사이즈 중립)",
+    "sid": "x-illiq",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "자산회전율 개선",
+    "sid": "x-dato",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "순영업자산 (대차대조표 팽창 회피)",
+    "sid": "x-noa",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "측정 불가",
+    "name": "Piotroski F-Score (9신호 · 가치 게이트)",
+    "sid": "x-fscore",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "이익잉여금 비율",
+    "sid": "x-reta",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "시장 순발행",
+    "sid": "t-netiss",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "EBIT/EV",
+    "sid": "x-ebitev",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "이익 폭 (Earnings Breadth)",
+    "sid": "t-earnbrd",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "감가상각률",
+    "sid": "x-depa",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "수익엔진",
+    "verdict": "열위",
+    "name": "재투자 강도",
+    "sid": "x-capdep",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "COT 미결제약정 — NASDAQ 100",
+    "sid": "t-cotndx",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "COT 미결제약정 — S&P 500",
+    "sid": "t-cotlev",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "타이밍오버레이",
+    "verdict": "열위",
+    "name": "COT 미결제약정 — VIX",
+    "sid": "t-cotvix",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "리스크 버짓 배분 (Risk Budgeting)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "켈리 기준 레버리지 스케일링 (Kelly Scaling)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "대형주 횡단면 모멘텀 · 200일선 추세 (Large-Cap Momentum · 200-DMA)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "소형주 단기 반전 롱숏 (Short-Term Reversal · Weekly)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "소형주 월간 반전 · 과매도 롱숏 (Monthly Reversal · Oversold)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "머신러닝 지수 타이밍 (ML Market Timing)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "축소추정 최소분산 배분 (Minimum Variance · Ledoit-Wolf)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "돈치안 채널 브레이크아웃 (Donchian Breakout)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "머신러닝 횡단면 종목선택 (ML Cross-Sectional Selection)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "추세정렬 과매도 반등 (Trend-Aligned Oversold Snapback)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "횡단면 분산도 리스크 게이트 (Cross-Sectional Dispersion Gate)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "재현 안 함",
+    "role": "미분류",
+    "verdict": "판정 전",
+    "name": "섹터 중립 밸류 컴포지트 (Within-Industry Value · E30)",
+    "sid": null,
+    "lab": "아카이브"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "배포",
+    "name": "이익추정 리비전 · 크로스에셋 RP 통합 (Multi-Sleeve Core)",
+    "sid": "multi-sleeve-core",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "배포",
+    "name": "이익추정 리비전 드리프트 (EPS Revision Drift · NDX 100)",
+    "sid": "eps-revision-drift-ndx",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "배포",
+    "name": "크로스에셋 리스크패리티 (Cross-Asset Risk Parity · 12자산)",
+    "sid": "cross-asset-rp-12",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "이익추정 리비전 — 유니버스 확장 (NDX ∪ SPX)",
+    "sid": "eps-revision-universe-ext",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "이익추정 리비전 — 회전율 밴드 (Buy 10 / Hold 40)",
+    "sid": "eps-revision-turnover-band",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "크로스에셋 RP — 변동성 추정창 변형 (90/60일)",
+    "sid": "cross-asset-rp-vol-window",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "섹터 모멘텀 로테이션 (Sector Momentum · Top 4)",
+    "sid": "sector-momentum-top4",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "200일 이동평균 시장 타이밍 (200-DMA Timing)",
+    "sid": "dma200-timing",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "제한적 유효",
+    "name": "잉여현금흐름 수익률 개선 (ΔFCF Yield · SPX Top 10)",
+    "sid": "dfcf-yield-spx",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "미채택",
+    "name": "장부가 대비 저평가 (Book-to-Price · SPX Top 10)",
+    "sid": "book-to-price-spx",
+    "lab": "배포 원장"
+   },
+   {
+    "where": "배포 원장",
+    "role": "미분류",
+    "verdict": "미채택",
+    "name": "팩터 모멘텀 로테이션 (Factor Momentum · 12M Top 2)",
+    "sid": "factor-momentum-top2",
+    "lab": "배포 원장"
+   }
+  ],
+  "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더하면 216 이 나오지만 겹침을 걷으면 169 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
+  "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, 각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. 합치기 전에는 그 셋이 전부 화면에서 빠져 있어 집계에 아예 안 나왔다."
+ },
  "items": [
   {
    "sid": "crypto-sat",
@@ -779,7 +2218,7 @@
    "sid": "vol-roll",
    "name": "변동성 기간구조 롤 (VXZ 보유)",
    "family": "자산배분",
-   "role": "방어보험",
+   "role": "위험방어",
    "kind": null,
    "arch": "vol-term-structure-roll",
    "rule": "중기 VIX 선물(VXZ)을 보유. 대조군은 단기(VIXY).",
@@ -1061,7 +2500,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -1171,7 +2610,7 @@
     "exposure_now": null,
     "note": "배포 슬리브 둘의 현재 배분이다."
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "위험 부트스트랩 — 이 규칙에서 산출에 실패했다",
@@ -2442,7 +3881,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3530,7 +4969,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3998,7 +5437,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4172,7 +5611,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5173,7 +6612,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6396,7 +7835,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6538,7 +7977,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6680,7 +8119,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6854,7 +8293,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7001,7 +8440,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7143,7 +8582,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7291,7 +8730,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7442,7 +8881,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7696,7 +9135,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7705,7 +9144,7 @@
    "sid": "tail-hedge",
    "name": "테일 리스크 헤지 (SPY 95% + VIXY 5%)",
    "family": "자산배분",
-   "role": "방어보험",
+   "role": "위험방어",
    "kind": null,
    "arch": "tail-risk-hedge",
    "rule": "월말에 SPY 95% · VIXY 5%로 되돌린다(상시 보험).",
@@ -7847,7 +9286,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7856,7 +9295,7 @@
    "sid": "rp-voltarget",
    "name": "크로스에셋 RP — 목표변동성 8%",
    "family": "자산배분",
-   "role": "위험감축",
+   "role": "위험방어",
    "kind": null,
    "arch": "cross-asset-rp-voltarget-grid",
    "rule": "역변동성 RP에 목표 연변동성 8% 스케일을 씌우고 나머지는 SHY. 월말.",
@@ -7898,9 +9337,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.626,
+     "s": 0.627,
      "b": 0.652,
-     "d": -0.026
+     "d": -0.025
     },
     {
      "k": "최대낙폭",
@@ -7910,7 +9349,7 @@
     }
    ],
    "excess_cagr": -2.82,
-   "d_sharpe": -0.026,
+   "d_sharpe": -0.025,
    "t": -2.7,
    "t_crit": 3.3,
    "cost": {
@@ -8013,7 +9452,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "대조군 열위",
+   "verdict": "열위",
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]

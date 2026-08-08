@@ -935,7 +935,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          mean:"대조군과 통계적으로 갈리지 않는다"},
     few:{lab:"소수 사건 의존",short:"소수 사건 의존",orig:"소수 사건 의존",col:"--marg",
          mean:"상위 몇 건을 빼면 엣지가 사라진다"},
-    worse:{lab:"대조군 열위",short:"열위",orig:"열위",col:"--rej",
+    worse:{lab:"열위",short:"열위",orig:"열위",col:"--rej",
            mean:"자기 대조군보다 나쁘다"},
     nojudge:{lab:"판정 불가",short:"판정 불가",orig:"판정 불가",col:"--muted",
              mean:"표본이 짧아 실력과 운을 가를 수 없다"}};
@@ -948,12 +948,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // ── 성격(kind) 축 — data/strategy_kinds.json 이 단일 출처. 도착 전에는 '미분류'로 렌더된다. ──
   var KINDS=null;
-  var KIND_ORDER=['수익엔진','배분기','위험감축','타이밍오버레이','미분류'];
+  var KIND_ORDER=['수익엔진','배분기','위험방어','타이밍오버레이','미분류'];
   // 벤치마크 2분할 — 판정 기준이 시장 지수(SPX/NDX)인 전략과, 지수 없이 모전략·기초자산·
   //   자기 유니버스(1/N)로 판정하는 독립형. bench_role=='index'가 곧 '지수 대비'다(단일 출처는 bt).
   var BENCH_ORDER=['지수 대비','독립형'];
   function benchGroup(d){return (d.bt&&d.bt.bench_role==='index')?'지수 대비':'독립형';}
-  var KIND_COLOR={'수익엔진':'#0E8A54','배분기':'#2C6E8F','위험감축':'#8256B8','타이밍오버레이':'#B9770E','미분류':'#9A9A9A'};
+  var KIND_COLOR={'수익엔진':'#0E8A54','배분기':'#2C6E8F','위험방어':'#8256B8','타이밍오버레이':'#B9770E','미분류':'#9A9A9A'};
   // 지수 표기 — 약어보다 이름이 읽기 쉽다는 요청. 전략 이름·설명은 사내 원장 키이기도 해서
   // 데이터의 값은 그대로 두고 **화면에 나가는 문자열만** 바꾼다(sid·arch는 소문자라 안 걸린다).
   // 'NDX 100'을 먼저 처리한다 — 나중에 하면 'NASDAQ 100 100'이 된다.
@@ -1068,7 +1068,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ── 통합 ── 배포 원장 14건 옆에 랩 전략 75건을 같은 목록으로 붙인다(2026-07-26).
   // 예전엔 탭 4개로 나눠져 있었는데, 그 나눔은 '전략이 무엇을 하는가'가 아니라
   // '어느 파일에서 나왔는가'를 따른 것이었다 — 보는 사람에겐 같은 것을 네 번 보여주는 셈이다.
-  // 성격(수익엔진·배분기·위험감축·타이밍오버레이)을 첫 축으로 삼아 한 목록에 넣는다.
+  // 성격(수익엔진·배분기·위험방어·타이밍오버레이)을 첫 축으로 삼아 한 목록에 넣는다.
   (function(){
     fetch('data/strategy_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
       .then(function(ix){

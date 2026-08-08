@@ -261,10 +261,108 @@ def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab):
     return doc
 
 
+# ── 전략 지도 ────────────────────────────────────────────────────────────
+# 🚨 2026-08-08 · 왜 만들었나 (사용자 요청 "지금 구분 너무 복잡해").
+#   점검해 보니 실제로 그랬다. 목록 상태가 **6종·5개 파일**에 흩어져 있고, 판정 어휘가
+#   **5벌**이고(종목 랩 '열위' vs 자산 랩 '대조군 열위' 처럼 같은 뜻 다른 말 포함),
+#   역할 5값 중 2개는 1~2종짜리 고아라 화면 집계에서 조용히 사라지고 있었다.
+#
+#   어휘는 정본에서 통일했고(asset_backtest·strategy_index·strategy_kinds),
+#   여기서는 **축 셋으로 한 장에 접는다**:
+#
+#     축1 어디 있나 — 화면에 있음 / 화면에서 뺌 / 퇴출 / 돌렸지만 게시 안 함 / 재현 안 함
+#     축2 무엇을 하나 — 수익엔진 / 타이밍오버레이 / 배분기 / 위험방어
+#     축3 어떻게 됐나 — 통과 / 구별 불가 / 열위 / 측정 불가 / 판정 전
+#
+# 🚨 **겹쳐 세지 않는다.** 목록을 그냥 더하면 216 이 나오는데 실제 고유 규칙은 169 다
+#   (아카이브 48 중 36 은 자산 랩에서 재현돼 이미 세어졌고, hidden 32 는 자산 랩·거장겹침의
+#   부분집합이다). 한 규칙은 한 칸에만 넣는다.
+_ROLE_CANON = {"방어보험": "위험방어", "위험감축": "위험방어"}   # 옛 어휘 호환
+_VERDICT_CANON = {"대조군 열위": "열위", "통과 후보": "통과"}     # 옛 어휘 호환
+
+
+def _canon_role(r, kind=None):
+    v = _ROLE_CANON.get(r, r)
+    if v:
+        return v
+    return {"xsec": "수익엔진", "timing": "타이밍오버레이"}.get(kind, "미분류")
+
+
+def _strategy_map(tech, asset, archive, index, deploy):
+    """전 규칙을 축 셋에 한 번씩만 넣는다. 겹치면 앞의 상태가 이긴다."""
+    hidden = {h.get("name") for h in (index.get("hidden") or [])}
+    in_items = {r.get("sid") for r in (index.get("items") or [])}
+    # 자산 랩에서 재현된 아카이브 항목 — 이미 자산 랩 sid 로 세었으므로 여기서 또 세지 않는다
+    reproduced = {it.get("n") for it in ((asset.get("audit") or {}).get("items") or [])
+                  if it.get("res")}
+
+    rows = []
+
+    def add(where, role, verdict, name, sid, lab):
+        rows.append({"where": where, "role": _canon_role(role),
+                     "verdict": _VERDICT_CANON.get(verdict, verdict) or "판정 전",
+                     "name": name, "sid": sid, "lab": lab})
+
+    for r in (tech.get("strategies") or []):
+        add("화면에 있음", _canon_role(r.get("role"), r.get("kind")), r.get("verdict"),
+            r.get("name"), r.get("sid"), "종목·타이밍")
+    for r in (asset.get("strategies") or []):
+        # 자산 랩은 절반 가까이가 '측정은 했지만 화면 목록에서 뺀' 상태다(운용 결정).
+        # 그 상태를 안 적으면 독자는 51종이 다 화면에 있는 줄 안다.
+        w = "화면에 있음" if ("a-" + str(r.get("sid"))) in in_items else "화면에서 뺌"
+        if r.get("name") in hidden:
+            w = "화면에서 뺌"
+        add(w, r.get("role"), r.get("verdict"), r.get("name"), r.get("sid"), "자산배분")
+    for r in (tech.get("retired") or []):
+        add("퇴출", _canon_role(None, r.get("kind")), "퇴출", r.get("name"), r.get("sid"), "종목·타이밍")
+    for r in (tech.get("tested") or []):
+        add("돌렸지만 게시 안 함", _canon_role(None, r.get("kind")),
+            "측정 불가" if r.get("t") is None else "열위",
+            r.get("name"), r.get("sid"), "종목·타이밍")
+    for it in (archive.get("items") or []):
+        if it.get("n") in reproduced:
+            continue                      # 자산 랩에서 이미 세었다
+        add("재현 안 함", "미분류", "판정 전", it.get("n"), None, "아카이브")
+    # 🚨 배포 원장 — 이 랩에서 **유일하게 '통과'가 있는 목록**이다. 빼면 지도가
+    #   "통과 0" 이라고 말하는데, 실제로는 배포 3종이 있다(다른 시기·다른 규약으로
+    #   판정된 것이라 랩 본편의 게시 기준과 같은 잣대가 아니다 — 그 사실을 함께 적는다).
+    _DV = {"deploy": "배포", "marginal": "제한적 유효", "reject": "미채택"}
+    for it in (deploy.get("items") or []):
+        add("배포 원장", "미분류", _DV.get(it.get("v"), it.get("v")),
+            it.get("n"), it.get("sid"), "배포 원장")
+
+    axes = {"where": ["화면에 있음", "화면에서 뺌", "퇴출", "돌렸지만 게시 안 함",
+                      "재현 안 함", "배포 원장"],
+            "role": ["수익엔진", "타이밍오버레이", "배분기", "위험방어", "미분류"],
+            "verdict": ["배포", "제한적 유효", "통과", "구별 불가", "열위",
+                        "측정 불가", "퇴출", "미채택", "판정 전"]}
+    grid = {}
+    for r in rows:
+        grid.setdefault(r["where"], {}).setdefault(r["role"], 0)
+        grid[r["where"]][r["role"]] += 1
+    vgrid = {}
+    for r in rows:
+        vgrid.setdefault(r["where"], {}).setdefault(r["verdict"], 0)
+        vgrid[r["where"]][r["verdict"]] += 1
+    return {
+        "n": len(rows), "axes": axes, "by_where_role": grid, "by_where_verdict": vgrid,
+        "rows": rows,
+        "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · "
+                "어떻게 됐나. 목록을 그냥 더하면 216 이 나오지만 겹침을 걷으면 %d 다"
+                "(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다)." % len(rows),
+        "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, "
+                 "각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. "
+                 "합치기 전에는 그 셋이 전부 화면에서 빠져 있어 집계에 아예 안 나왔다.",
+    }
+
+
 def main():
     tech = _load("tech_strategies.json")
     asset = _load("asset_strategies.json")
     pit = _load("pit_strategies.json")
+    archive = _load("archive_index.json")
+    index = _load("strategy_index.json")
+    deploy = _load("deploy_index.json")
 
     pit_by = {x.get("sid"): x for x in (pit.get("strategies") or [])}
     # 자산 랩 audit — 원문에서 무엇을 못 옮겼는지가 여기 적혀 있다. 복제 리포트의 알맹이다.
@@ -304,6 +402,8 @@ def main():
         #   말하는 이상 이것도 내야 한다. 안 내면 독자는 이 랩이 69종만 팠다고 읽는데
         #   실제로는 95종(69 + 퇴출 13 + 이 13)을 팠다. 그 차이가 다중검정의 크기다.
         "tested": {"tech": tech.get("tested") or []},
+        # 전략 지도 — 축 셋으로 접은 한 장(위 _strategy_map 머리말 참조)
+        "map": _strategy_map(tech, asset, archive, index, deploy),
         "items": [],
     }
     for r in (asset.get("strategies") or []):

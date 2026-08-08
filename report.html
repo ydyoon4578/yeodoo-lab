@@ -475,6 +475,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="chiprow" id="filt"></div>
   </div>
 
+  <div id="smap"></div>
   <div class="rowcount" id="rowcount"></div>
   <details class="toc" id="toc"><summary>목차</summary><div class="tocgrid" id="tocgrid"></div></details>
   <div id="content"><div class="empty">불러오는 중…</div></div>
@@ -753,6 +754,47 @@ function chips(){
     });
   });
 }
+// ── 전략 지도 ──────────────────────────────────────────────────────────
+// 🚨 이 랩의 구분이 너무 복잡했다(사용자 지적). 실측: 목록 상태가 6종·5개 파일에 흩어져
+//   있고 판정 어휘가 5벌이었으며, 역할 5값 중 둘은 1~2종짜리 고아라 화면 집계에서 조용히
+//   사라지고 있었다. 어휘는 정본에서 통일했고 여기서는 축 셋으로 한 장에 접는다.
+// ⚠ 이 표는 **겹쳐 세지 않는다.** 목록을 그냥 더하면 216 이지만 고유는 169 다.
+function smap(){
+  var m=DATA.map; if(!m) return;
+  var W=m.axes.where, R=m.axes.role, V=m.axes.verdict;
+  function tbl(title, axis, grid, note){
+    var used=axis.filter(function(k){return W.some(function(w){return (grid[w]||{})[k];});});
+    var h='<div class="sec"><h3>'+esc(title)+'</h3><div class="tw"><table class="t"><thead><tr><th>어디 있나</th>'+
+      used.map(function(k){return '<th>'+esc(k)+'</th>';}).join('')+'<th>계</th></tr></thead><tbody>';
+    W.forEach(function(w){
+      var row=grid[w]||{}, tot=0;
+      used.forEach(function(k){tot+=row[k]||0;});
+      if(!tot) return;
+      h+='<tr><td>'+esc(w)+'</td>'+used.map(function(k){
+        return '<td class="n">'+(row[k]||'<span style="color:var(--muted)">·</span>')+'</td>';}).join('')+
+        '<td class="n"><b>'+tot+'</b></td></tr>';
+    });
+    var sum={}, all=0;
+    W.forEach(function(w){used.forEach(function(k){sum[k]=(sum[k]||0)+((grid[w]||{})[k]||0);});});
+    used.forEach(function(k){all+=sum[k];});
+    h+='<tr class="main"><td>계</td>'+used.map(function(k){return '<td class="n">'+sum[k]+'</td>';}).join('')+
+       '<td class="n">'+all+'</td></tr>';
+    return h+'</tbody></table></div>'+(note?'<p class="caveat">'+note+'</p>':'')+'</div>';
+  }
+  el('smap').innerHTML='<article class="rep" style="border-color:color-mix(in srgb,var(--accent) 40%,var(--line))">'+
+    '<div class="rhead"><span class="no">지도</span><h2>이 랩이 판 것 전부 — '+m.n+'종</h2>'+
+    '<div class="tags"><span class="tag fam">축 3개</span></div></div>'+
+    '<p class="caveat" style="margin-top:10px">'+mb(m.note)+'</p>'+
+    tbl('무엇을 하는 규칙인가', R, m.by_where_role,
+        '수익엔진=수익이 목적 · 타이밍오버레이=노출 조절 · 배분기=자산군 비중 · ' +
+        '위험방어=낙폭 감축. 아카이브와 배포 원장은 이 축이 없어 미분류다.')+
+    tbl('어떻게 됐나', V, m.by_where_verdict,
+        '⚠ <b>배포·제한적 유효는 배포 원장의 판정</b>이고 다른 시기·다른 규약으로 내려진 것이다 — ' +
+        '랩 본편의 게시 기준(본페로니 임계·증분알파·부호 정합)과 <b>같은 잣대가 아니다.</b> ' +
+        '랩 본편에서 그 기준을 넘은 것은 <b>0종</b>이다.')+
+    '<p class="caveat">'+mb(m.vocab)+'</p></article>';
+}
+
 function statline(){
   var a=DATA.as_of||{}, t=DATA.t_crit||{}, n=DATA.n||{};
   var ld=el('lede-n'); if(ld) ld.textContent=n.total;
@@ -821,7 +863,7 @@ function tail(){
 fetch('data/strategy_report.json',{cache:'no-cache'}).then(function(r){
   if(!r.ok) throw new Error(r.status); return r.json();
 }).then(function(j){
-  DATA=j; statline(); chips(); draw(); tail();
+  DATA=j; statline(); smap(); chips(); draw(); tail();
   if(location.hash){var t=document.getElementById(location.hash.slice(1)); if(t)t.scrollIntoView();}
 }).catch(function(e){
   el('content').innerHTML='<div class="empty">리포트를 불러오지 못했다 — '+esc(e.message)+
