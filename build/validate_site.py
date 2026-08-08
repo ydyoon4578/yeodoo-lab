@@ -2135,6 +2135,71 @@ else:
 # 🚨 report.html 은 랩 세 파일에서 값을 **옮긴** 것이다. 랩만 갱신되고 리포트가 안 굽히면
 #   같은 사이트의 두 화면이 다른 날짜·다른 t 를 말하게 된다 — 이 저장소가 여러 번 당한
 #   '채점기가 두 벌' 이다. 기준일이 어긋나면 여기서 막는다(build/strategy_report.py 재실행).
+# ── 세 번째 목록 대조: '이미 판 자리'를 빈 칸으로 세지 않게 한다 ────────────
+# 🚨 2026-08-08 — 이 가드가 생긴 사고. 이 랩의 '이미 해 봤다' 기록이 세 곳에 흩어져 있고
+#   **둘만 기계가 읽었다**: 살아 있는 것·퇴출한 것은 JSON 인데, 돌렸지만 게시 안 한 13종은
+#   build/PREREG-*.md 산문에만 있었다. 그래서 JKP 빈 칸을 세면서 이미 돌려 기각한 셋
+#   (x-illiq t 5.31 · x-noa t 3.02 · x-fscore 측정 불가)을 '한 번도 검정한 적 없는 칸'이라
+#   적고 신규로 등록했다. 코드에 우연히 남아 있던 x-illiq 주석을 보고서야 알았다.
+#   사람이 조심해서 될 일이 아니라 목록이 한 곳에 없어서 나는 일이다.
+#
+# 규칙: 세 번째 목록의 sid 를 다시 살려 등록하려면 **readmitted 를 채워야 한다.**
+#   무엇을 바꿨는지(changed)와 그것이 결과가 아니라 자료·정의 때문임(why_ok)을 적고
+#   새 사전등록 문서를 가리켜야 한다. 안 적으면 여기서 막는다 — 같은 규칙을 문턱만
+#   바뀐 채 다시 돌리는 것과, 자료가 달라져 재현이 가능해진 것을 구별하기 위해서다.
+_n_err0 = len(errors)          # 🚨 이 블록이 낸 오류만 센다 — 아래 '통과' 줄의 조건이다
+try:
+    _tn = json.load(io.open(os.path.join(ROOT, "build", "tested_not_published.json"),
+                            encoding="utf-8"))
+    _tech3 = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"),
+                               encoding="utf-8"))
+    _tested = {x["sid"]: x for x in (_tn.get("items") or [])}
+    _live3 = {r["sid"]: r for r in (_tech3.get("strategies") or [])}
+    _retd3 = {r["sid"] for r in (_tech3.get("retired") or [])}
+
+    # ① 살아 있는 규칙이 세 번째 목록에 있으면 readmitted 가 있어야 한다
+    for _sid in sorted(set(_tested) & set(_live3)):
+        _rm = _tested[_sid].get("readmitted") or {}
+        if not (_rm.get("prereg") and _rm.get("changed") and _rm.get("why_ok")):
+            errors.append(
+                "'%s'(%s)는 %s 에 이미 돌려 게시하지 않은 규칙인데 다시 살아 있다 — "
+                "build/tested_not_published.json 의 readmitted 에 prereg·changed·why_ok 를 "
+                "적을 것(같은 규칙을 문턱만 바뀐 채 다시 돌리는 것과 구별해야 한다)"
+                % (_live3[_sid].get("name"), _sid, _tested[_sid].get("when")))
+
+    # ② 세 목록에 같은 sid 가 둘 이상 나오면 어느 것이 정본인지 알 수 없다
+    for _sid in sorted(set(_tested) & _retd3):
+        errors.append("'%s'가 퇴출 목록과 세 번째 목록에 **둘 다** 있다 — 한쪽으로 정할 것" % _sid)
+
+    # ③ arch 충돌 — 같은 아키타입을 다른 sid 로 다시 등록하면 '이전 판정' 줄이 갈린다
+    _arch_t = {x.get("arch"): x["sid"] for x in _tested.values() if x.get("arch")}
+    for _r in (_tech3.get("strategies") or []):
+        _a = _r.get("arch")
+        if _a and _a in _arch_t and _arch_t[_a] != _r["sid"]:
+            errors.append("'%s'(%s)의 arch '%s'가 세 번째 목록의 %s 와 같다 — "
+                          "같은 아키타입을 다른 sid 로 다시 등록했다"
+                          % (_r.get("name"), _r["sid"], _a, _arch_t[_a]))
+
+    # ④ 목록이 화면에 나가는지 — 모아 놓고 안 내면 모은 적 없는 것과 같다
+    if not (_tech3.get("tested") or []):
+        errors.append("data/tech_strategies.json 에 tested(세 번째 목록)가 비었다 — "
+                      "build/tech_backtest.py 가 안 싣고 있다(수집 ≠ 배선)")
+    elif len(_tech3["tested"]) != len(_tested):
+        errors.append("세 번째 목록 개수 불일치 — 정본 %d종 vs 산출 %d종. "
+                      "build/tech_backtest.py 재실행 필요"
+                      % (len(_tested), len(_tech3["tested"])))
+    # 🚨 '통과' 는 이 블록이 오류를 **하나도** 안 냈을 때만 찍는다. 종전에는 ④만 보고
+    #   찍어서, ①이 실패한 판에서도 "대조 통과" 가 함께 나왔다 — 실패하면서 통과라고
+    #   말하는 출력이다(자체 시험에서 잡았다).
+    if len(errors) == _n_err0:
+        print("  ~ 세 번째 목록 대조 통과(돌렸지만 게시 안 함 %d종 · 재등록 %d종)"
+              % (len(_tested), sum(1 for x in _tested.values() if x.get("readmitted"))))
+except FileNotFoundError as _e:
+    errors.append("build/tested_not_published.json 이 없다 — 세 번째 목록 대조를 못 한다")
+except Exception as _e:
+    errors.append("세 번째 목록 대조 실패 — %s" % _e)
+
+
 _dd = os.path.join(ROOT, "data")
 try:
     _rep = json.load(io.open(os.path.join(_dd, "strategy_report.json"), encoding="utf-8"))

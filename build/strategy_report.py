@@ -300,6 +300,10 @@ def main():
         "limits": {"tech": tech.get("limits") or [], "asset": asset.get("limits") or [],
                    "pit": pit.get("limits") or [], "protocol": asset.get("protocol") or []},
         "retired": {"tech": tech.get("retired") or []},
+        # 🚨 세 번째 목록 — 돌렸지만 게시된 적 없는 규칙. 이 리포트가 '전 전략'을 낸다고
+        #   말하는 이상 이것도 내야 한다. 안 내면 독자는 이 랩이 69종만 팠다고 읽는데
+        #   실제로는 95종(69 + 퇴출 13 + 이 13)을 팠다. 그 차이가 다중검정의 크기다.
+        "tested": {"tech": tech.get("tested") or []},
         "items": [],
     }
     for r in (asset.get("strategies") or []):

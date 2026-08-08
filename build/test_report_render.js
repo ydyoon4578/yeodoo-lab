@@ -61,6 +61,29 @@ async function main() {
   if (!/규칙 <b>/.test(stat)) fail.push("통계줄이 비었다");
   if (!/랩 전체의 한계/.test(tail)) fail.push("랩 전체의 한계 블록이 안 그려졌다");
 
+  // ── ①-2 세 번째 목록 — 돌렸지만 게시 안 한 규칙 ──────────────────────
+  // 🚨 이 목록이 화면에 안 나가면 독자는 이 랩이 위의 N종만 팠다고 읽는다. 실제로는
+  //   그보다 많이 팠고 그 차이가 다중검정의 크기다. 2026-08-08 에 이 목록이 기계가
+  //   읽는 곳에 없어서 이미 돌려 기각한 규칙을 '빈 칸'으로 세는 사고가 났다.
+  const nTested = ((D.tested || {}).tech || []).length;
+  if (nTested === 0) {
+    fail.push("자료에 tested(돌렸지만 게시 안 함)가 비었다 — build/strategy_report.py 가 안 싣고 있다");
+  } else {
+    const gotT = (tail.match(/돌렸지만 게시하지 않은 규칙 — (\d+)종/) || [])[1];
+    if (Number(gotT) !== nTested) {
+      fail.push("세 번째 목록이 화면에 " + (gotT || "0") + "종 — 자료엔 " + nTested + "종 있다");
+    }
+    // 재등록된 규칙은 '무엇을 바꿨나'가 화면에 나와야 한다. 안 나오면 독자는 같은 규칙을
+    // 그냥 다시 돌린 것으로 읽는다.
+    const nRe = ((D.tested || {}).tech || []).filter(x => x.readmitted).length;
+    const gotRe = (tail.match(/↻/g) || []).length;
+    if (gotRe !== nRe) fail.push("재등록 표시가 " + gotRe + "개 — 자료엔 " + nRe + "종 있다");
+  }
+  // 리드 문장의 규칙 수가 자료와 같은가(손으로 박아 두면 조용히 낡는다 — 실제로 낡았다)
+  // ⚠ textContent 에 숫자가 그대로 들어올 수 있다(페이지가 n.total 을 대입한다) → String 으로 감싼다.
+  const lede = String(el("lede-n").textContent || "").trim();
+  if (String(N) !== lede) fail.push("리드 문장의 규칙 수 '" + lede + "' 가 자료의 " + N + "과 다르다");
+
   // ── ② 각 절이 실제로 붙었나 ───────────────────────────────────────────
   // 절 제목은 sec() 이 내용이 있을 때만 낸다 — 자료에 있는 만큼 나와야 한다.
   const want = [
@@ -118,6 +141,16 @@ async function main() {
     process.exit(1);
   }
   console.log("리포트 렌더 검사: 통과 ✅ (리포트 " + nArt + "편 · 목차 " + nToc +
-              "줄 · '못 잰 것' " + gotMiss + "편 · 원본 대조 무편차)");
+              "줄 · '못 잰 것' " + gotMiss + "편 · 세 번째 목록 " + nTested +
+              "종 · 원본 대조 무편차)");
 }
-main();
+
+// 🚨 main() 이 던지면 **반드시 종료코드 1** 이어야 한다. 종전에는 그냥 `main()` 이라
+//   검사 자신이 죽어도 unhandled rejection 이 되어 **아무것도 안 찍고 exit 0** 이었다
+//   (실측: textContent 가 숫자라 .trim() 이 없어 죽었는데 "통과"로 지나갔다).
+//   이 저장소가 test_stocks_render.js 에서 이미 한 번 밟은 함정이고, 이번엔 검사를
+//   고치면서 같은 자리를 다시 밟았다 — 검사가 조용히 통과하면 없는 것만 못하다.
+main().catch(e => {
+  console.log("리포트 렌더 검사: 실패 ❌ — 검사 자신이 죽었다: " + (e && e.stack || e));
+  process.exit(1);
+});
