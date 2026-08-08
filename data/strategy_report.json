@@ -1770,6 +1770,8 @@
   "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더하면 216 이 나오지만 겹침을 걷으면 169 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
   "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, 각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. 합치기 전에는 그 셋이 전부 화면에서 빠져 있어 집계에 아예 안 나왔다."
  },
+ "refs_policy": "🚨 **URL 을 지어내지 않는다.** 이 저장소가 실제로 가진 링크가 아니면 직접 URL 을 적지 않고, 화면이 제목으로 학술검색 질의를 만들어 건다(결정적이고 항상 열린다). 저자·연도·학술지는 그 규칙을 등록할 때 코드 주석에 적어 둔 것과 같아야 한다 — 다르면 둘 중 하나가 틀린 것이다. 확실하지 않은 규칙은 **비워 둔다.** 없는 것을 지어 채우면 독자가 원문을 못 찾고, 그 사실도 모른다.",
+ "refs_search": "https://scholar.google.com/scholar?q=",
  "items": [
   {
    "sid": "crypto-sat",
@@ -1918,6 +1920,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Liu·Tsyvinski",
+      "y": 2021,
+      "t": "Risks and returns of cryptocurrency",
+      "j": "Review of Financial Studies 34"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -2068,6 +2096,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Neville·Draaisma·Funnell·Harvey·van Hemert",
+      "y": 2021,
+      "t": "The best strategies for inflationary times",
+      "j": "Journal of Portfolio Management 47"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -2209,6 +2263,36 @@
     "note": "가장 최근 분기 13F(제출 마감 45일 지연 반영)로 고른 10종목을 동일가중 보유 중이다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Cohen·Polk·Silli",
+      "y": 2010,
+      "t": "Best ideas",
+      "j": "SSRN working paper"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "13F",
+      "v": "SEC 13F 보유(제출 마감 45일 지연 반영)"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "위험 부트스트랩 — 이 규칙에서 산출에 실패했다"
@@ -2357,6 +2441,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Johnson",
+      "y": 2017,
+      "t": "Risk premia and the VIX term structure",
+      "j": "Journal of Financial and Quantitative Analysis 52"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -2501,6 +2611,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Antonacci",
+      "y": 2014,
+      "t": "Dual momentum investing",
+      "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -2611,6 +2747,25 @@
     "note": "배포 슬리브 둘의 현재 배분이다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "위험 부트스트랩 — 이 규칙에서 산출에 실패했다",
@@ -2760,6 +2915,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Mitchell·Pulvino",
+      "y": 2001,
+      "t": "Characteristics of risk and return in risk arbitrage",
+      "j": "Journal of Finance 56"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -2928,6 +3109,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Koijen·Moskowitz·Pedersen·Vrugt",
+      "y": 2018,
+      "t": "Carry",
+      "j": "Journal of Financial Economics 127"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3091,6 +3298,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moskowitz·Ooi·Pedersen",
+      "y": 2012,
+      "t": "Time series momentum",
+      "j": "Journal of Financial Economics 104"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3245,6 +3478,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3397,6 +3656,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Koijen·Moskowitz·Pedersen·Vrugt",
+      "y": 2018,
+      "t": "Carry",
+      "j": "Journal of Financial Economics 127"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3576,6 +3861,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Fidelity Investments",
+      "y": 2014,
+      "t": "The business cycle approach to equity sector investing",
+      "j": "운용사 백서 — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3734,6 +4045,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Hurst·Ooi·Pedersen",
+      "y": 2017,
+      "t": "A century of evidence on trend-following investing",
+      "j": "Journal of Portfolio Management 44"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -3882,6 +4219,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Antonacci",
+      "y": 2014,
+      "t": "Dual momentum investing",
+      "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4038,6 +4401,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Hurst·Ooi·Pedersen",
+      "y": 2017,
+      "t": "A century of evidence on trend-following investing",
+      "j": "Journal of Portfolio Management 44"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4180,6 +4569,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Antonacci",
+      "y": 2014,
+      "t": "Dual momentum investing",
+      "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4327,6 +4742,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Johnson",
+      "y": 2017,
+      "t": "Risk premia and the VIX term structure",
+      "j": "Journal of Financial and Quantitative Analysis 52"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4505,6 +4946,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moskowitz·Ooi·Pedersen",
+      "y": 2012,
+      "t": "Time series momentum",
+      "j": "Journal of Financial Economics 104"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4657,6 +5124,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Gilchrist·Zakrajšek",
+      "y": 2012,
+      "t": "Credit spreads and business cycle fluctuations",
+      "j": "American Economic Review 102"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4815,6 +5308,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Rockafellar·Uryasev",
+      "y": 2000,
+      "t": "Optimization of conditional value-at-risk",
+      "j": "Journal of Risk 2"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -4962,6 +5481,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Gilchrist·Zakrajšek",
+      "y": 2012,
+      "t": "Credit spreads and business cycle fluctuations",
+      "j": "American Economic Review 102"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5117,6 +5662,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Hodges·Hogan·Peterson·Ang",
+      "y": 2017,
+      "t": "Factor timing with cross-sectional and time-series predictors",
+      "j": "Journal of Portfolio Management 44"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5291,6 +5862,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Fidelity Investments",
+      "y": 2014,
+      "t": "The business cycle approach to equity sector investing",
+      "j": "운용사 백서 — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5438,6 +6035,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Asness·Frazzini·Pedersen",
+      "y": 2019,
+      "t": "Quality minus junk",
+      "j": "Review of Accounting Studies 24"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5612,6 +6235,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Conover·Jensen·Johnson·Mercer",
+      "y": 2008,
+      "t": "Sector rotation and monetary conditions",
+      "j": "Journal of Investing 17"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5754,6 +6403,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Faber",
+      "y": 2007,
+      "t": "A quantitative approach to tactical asset allocation",
+      "j": "Journal of Wealth Management 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -5896,6 +6571,25 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6038,6 +6732,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Faber",
+      "y": 2007,
+      "t": "A quantitative approach to tactical asset allocation",
+      "j": "Journal of Wealth Management 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6180,6 +6900,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Sahm",
+      "y": 2019,
+      "t": "Direct stimulus payments to individuals (Sahm rule)",
+      "j": "Brookings — 정책 문헌"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6322,6 +7068,25 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6464,6 +7229,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Faber",
+      "y": 2007,
+      "t": "A quantitative approach to tactical asset allocation",
+      "j": "Journal of Wealth Management 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6613,6 +7404,25 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6755,6 +7565,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Cieslak·Morse·Vissing-Jorgensen",
+      "y": 2019,
+      "t": "Stock returns over the FOMC cycle",
+      "j": "Journal of Finance 74"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -6942,6 +7778,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lopez de Prado",
+      "y": 2016,
+      "t": "Building diversified portfolios that outperform out of sample",
+      "j": "Journal of Portfolio Management 42"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7129,6 +7991,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7276,6 +8164,32 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Gilchrist·Zakrajšek",
+      "y": 2012,
+      "t": "Credit spreads and business cycle fluctuations",
+      "j": "American Economic Review 102"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7418,6 +8332,25 @@
     "note": null
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7545,6 +8478,32 @@
     "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lou·Polk·Skouras",
+      "y": 2019,
+      "t": "A tug of war: Overnight versus intraday expected returns",
+      "j": "Journal of Financial Economics 134"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "비용 후 성과 — 이 규칙에서 비용 레그가 안 돌았다"
@@ -7673,6 +8632,32 @@
     "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lou·Polk·Skouras",
+      "y": 2019,
+      "t": "A tug of war: Overnight versus intraday expected returns",
+      "j": "Journal of Financial Economics 134"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "비용 후 성과 — 이 규칙에서 비용 레그가 안 돌았다"
@@ -7836,6 +8821,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -7978,6 +8989,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Bouman·Jacobsen",
+      "y": 2002,
+      "t": "The Halloween indicator, sell in May and go away: Another puzzle",
+      "j": "American Economic Review 92"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8120,6 +9157,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Estrella·Mishkin",
+      "y": 1998,
+      "t": "Predicting U.S. recessions: Financial variables as leading indicators",
+      "j": "Review of Economics and Statistics 80"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8294,6 +9357,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8441,6 +9530,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Verdelhan",
+      "y": 2018,
+      "t": "The share of systematic variation in bilateral exchange rates",
+      "j": "Journal of Finance 73"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8583,6 +9698,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Ariel",
+      "y": 1987,
+      "t": "A monthly effect in stock returns",
+      "j": "Journal of Financial Economics 18"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8731,6 +9872,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Campbell·Shiller",
+      "y": 1996,
+      "t": "A scorecard for indexed government debt",
+      "j": "NBER Macroeconomics Annual 11"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8882,6 +10049,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Carr·Wu",
+      "y": 2009,
+      "t": "Variance risk premiums",
+      "j": "Review of Financial Studies 22"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -8992,6 +10185,32 @@
     "note": "배포 슬리브 둘의 현재 배분이다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lopez de Prado",
+      "y": 2016,
+      "t": "Building diversified portfolios that outperform out of sample",
+      "j": "Journal of Portfolio Management 42"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다",
     "위험 부트스트랩 — 이 규칙에서 산출에 실패했다",
@@ -9136,6 +10355,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Stoll·Whaley",
+      "y": 1987,
+      "t": "Program trading and expiration-day price effects",
+      "j": "Financial Analysts Journal 43"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -9287,6 +10532,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Bhansali",
+      "y": 2008,
+      "t": "Tail risk management",
+      "j": "Journal of Portfolio Management 34"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -9453,6 +10724,32 @@
     "note": null
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 자산 랩은 ETF 라 편입·편출 개념이 없다"
    ]
@@ -9664,6 +10961,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Banz",
+      "y": 1981,
+      "t": "The relationship between return and market value of common stocks",
+      "j": "Journal of Financial Economics 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -9875,6 +11202,25 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -10044,6 +11390,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Corwin·Schultz",
+      "y": 2012,
+      "t": "A simple way to estimate bid-ask spreads from daily high and low prices",
+      "j": "Journal of Finance 67"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -10261,6 +11629,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Jegadeesh·Titman",
+      "y": 1993,
+      "t": "Returns to buying winners and selling losers",
+      "j": "Journal of Finance 48"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -10477,6 +11871,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Novy-Marx",
+      "y": 2012,
+      "t": "Is momentum really momentum?",
+      "j": "Journal of Financial Economics 103"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -10616,6 +12036,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Le Beau",
+      "y": 1990,
+      "t": "Chandelier exit (Computer analysis of the futures markets)",
+      "j": "실무 문헌 — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -10828,6 +12270,29 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -11039,6 +12504,29 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -11208,6 +12696,21 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -11420,6 +12923,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lehmann",
+      "y": 1990,
+      "t": "Fads, martingales, and market efficiency",
+      "j": "Quarterly Journal of Economics 105"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -11631,6 +13160,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Pontiff·Woodgate",
+      "y": 2008,
+      "t": "Share issuance and cross-sectional returns",
+      "j": "Journal of Finance 63"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -11842,6 +13401,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Cooper·Gulen·Schill",
+      "y": 2008,
+      "t": "Asset growth and the cross-section of stock returns",
+      "j": "Journal of Finance 63"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -12053,6 +13642,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Barbee·Mukherji·Raines",
+      "y": 1996,
+      "t": "Do sales-price and debt-equity explain stock returns better than book-market and firm size?",
+      "j": "Financial Analysts Journal 52"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -12264,6 +13883,42 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Sloan",
+      "y": 1996,
+      "t": "Do stock prices fully reflect information in accruals and cash flows about future earnings?",
+      "j": "The Accounting Review 71"
+     },
+     {
+      "a": "Hafzalla·Lundholm·Van Winkle",
+      "y": 2011,
+      "t": "Percent accruals",
+      "j": "The Accounting Review 86"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -12433,6 +14088,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Blitz·Huij·Martens",
+      "y": 2011,
+      "t": "Residual momentum",
+      "j": "Journal of Empirical Finance 18"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -12603,6 +14280,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Baltussen·van Bekkum·van der Grient",
+      "y": 2018,
+      "t": "Unknown unknowns: Uncertainty about risk and stock returns",
+      "j": "Journal of Financial and Quantitative Analysis 53"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -12778,6 +14477,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Asness·Frazzini",
+      "y": 2013,
+      "t": "The devil in HML's details",
+      "j": "Journal of Portfolio Management 39"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -12948,6 +14673,21 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -13165,6 +14905,25 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -13334,6 +15093,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Ang·Chen·Xing",
+      "y": 2006,
+      "t": "Downside risk",
+      "j": "Review of Financial Studies 19"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -13546,6 +15327,33 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "고객 집중도",
+      "v": "SEC 10-K 본문 추출(data/cust_conc.json)"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -13757,6 +15565,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Bernard·Thomas",
+      "y": 1989,
+      "t": "Post-earnings-announcement drift: Delayed price response or risk premium?",
+      "j": "Journal of Accounting Research 27"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -13968,6 +15802,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Heston·Sadka",
+      "y": 2008,
+      "t": "Seasonality in the cross-section of stock returns",
+      "j": "Journal of Financial Economics 87"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -14184,6 +16044,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Fama·French",
+      "y": 1992,
+      "t": "The cross-section of expected stock returns",
+      "j": "Journal of Finance 47"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -14400,6 +16290,29 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -14611,6 +16524,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Titman·Wei·Xie",
+      "y": 2004,
+      "t": "Capital investments and stock returns",
+      "j": "Journal of Financial and Quantitative Analysis 39"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -14827,6 +16770,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Boudoukh·Michaely·Richardson·Roberts",
+      "y": 2007,
+      "t": "On the importance of measuring payout yield",
+      "j": "Journal of Finance 62"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -15003,6 +16976,32 @@
     "note": "마지막 월말 리밸런스에서 고른 11종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Asness·Porter·Stevens",
+      "y": 2000,
+      "t": "Predicting stock returns using industry-relative firm characteristics",
+      "j": "SSRN working paper"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -15355,6 +17354,28 @@
     "note": "마지막 월말 리밸런스에서 고른 101종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moskowitz·Grinblatt",
+      "y": 1999,
+      "t": "Do industries explain momentum?",
+      "j": "Journal of Finance 54"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -15525,6 +17546,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Lou·Polk·Skouras",
+      "y": 2019,
+      "t": "A tug of war: Overnight versus intraday expected returns",
+      "j": "Journal of Financial Economics 134"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -15695,6 +17738,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Amihud",
+      "y": 2002,
+      "t": "Illiquidity and stock returns: Cross-section and time-series effects",
+      "j": "Journal of Financial Markets 5"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -15907,6 +17972,25 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -16076,6 +18160,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Spiess·Affleck-Graves",
+      "y": 1999,
+      "t": "The long-run performance of stock returns following debt offerings",
+      "j": "Journal of Financial Economics 54"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -16288,6 +18398,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Jegadeesh",
+      "y": 1990,
+      "t": "Evidence of predictable behavior of security returns",
+      "j": "Journal of Finance 45"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -16499,6 +18635,29 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -16710,6 +18869,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Frazzini·Pedersen",
+      "y": 2014,
+      "t": "Betting against beta",
+      "j": "Journal of Financial Economics 111"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -16879,6 +19064,28 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Da·Gurun·Warachka",
+      "y": 2014,
+      "t": "Frog in the pan: Continuous information and momentum",
+      "j": "Review of Financial Studies 27"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -17091,6 +19298,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Harvey·Siddique",
+      "y": 2000,
+      "t": "Conditional skewness in asset pricing tests",
+      "j": "Journal of Finance 55"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -17302,6 +19535,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Litzenberger·Ramaswamy",
+      "y": 1979,
+      "t": "The effect of personal taxes and dividends on capital asset prices",
+      "j": "Journal of Financial Economics 7"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -17513,6 +19776,36 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Basu",
+      "y": 1977,
+      "t": "Investment performance of common stocks in relation to their price-earnings ratios",
+      "j": "Journal of Finance 32"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -17724,6 +20017,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "De Bondt·Thaler",
+      "y": 1985,
+      "t": "Does the stock market overreact?",
+      "j": "Journal of Finance 40"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -17935,6 +20254,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Da·Gurun·Warachka",
+      "y": 2014,
+      "t": "Frog in the pan: Continuous information and momentum",
+      "j": "Review of Financial Studies 27"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -18146,6 +20491,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Bali·Cakici·Whitelaw",
+      "y": 2011,
+      "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+      "j": "Journal of Financial Economics 99"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -18285,6 +20656,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moskowitz·Ooi·Pedersen",
+      "y": 2012,
+      "t": "Time series momentum",
+      "j": "Journal of Financial Economics 104"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -18497,6 +20890,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Bali·Cakici·Whitelaw",
+      "y": 2011,
+      "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+      "j": "Journal of Financial Economics 99"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -18636,6 +21055,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -18848,6 +21282,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Ang·Hodrick·Xing·Zhang",
+      "y": 2006,
+      "t": "The cross-section of volatility and expected returns",
+      "j": "Journal of Finance 61"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -18987,6 +21447,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moskowitz·Ooi·Pedersen",
+      "y": 2012,
+      "t": "Time series momentum",
+      "j": "Journal of Financial Economics 104"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -19199,6 +21681,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Frazzini·Pedersen",
+      "y": 2014,
+      "t": "Betting against beta",
+      "j": "Journal of Financial Economics 111"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -19338,6 +21846,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moreira·Muir",
+      "y": 2017,
+      "t": "Volatility-managed portfolios",
+      "j": "Journal of Finance 72"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -19478,6 +22008,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Kelly",
+      "y": 1956,
+      "t": "A new interpretation of information rate",
+      "j": "Bell System Technical Journal 35"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -19618,6 +22170,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Faber",
+      "y": 2007,
+      "t": "A quantitative approach to tactical asset allocation",
+      "j": "Journal of Wealth Management 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -19758,6 +22332,21 @@
     "note": "노출 50%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -19898,6 +22487,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -20038,6 +22642,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -20250,6 +22869,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Ang·Hodrick·Xing·Zhang",
+      "y": 2006,
+      "t": "The cross-section of volatility and expected returns",
+      "j": "Journal of Finance 61"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -20389,6 +23034,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -20529,6 +23189,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -20669,6 +23344,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -20881,6 +23571,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "George·Hwang",
+      "y": 2004,
+      "t": "The 52-week high and momentum investing",
+      "j": "Journal of Finance 59"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
    ]
@@ -21020,6 +23736,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Donchian",
+      "y": 1960,
+      "t": "High finance in copper",
+      "j": "Financial Analysts Journal 16"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21160,6 +23898,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Appel",
+      "y": 1979,
+      "t": "The moving average convergence-divergence method",
+      "j": "실무 문헌 — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21300,6 +24060,21 @@
     "note": "노출 73%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21470,6 +24245,32 @@
     "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [
+     {
+      "a": "Piotroski",
+      "y": 2000,
+      "t": "Value investing: The use of historical financial statement information to separate winners from losers",
+      "j": "Journal of Accounting Research 38 (Supplement)"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "재무",
+      "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21610,6 +24411,28 @@
     "note": "노출 90%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Moreira·Muir",
+      "y": 2017,
+      "t": "Volatility-managed portfolios",
+      "j": "Journal of Finance 72"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21750,6 +24573,28 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [
+     {
+      "a": "Kaufman",
+      "y": 1995,
+      "t": "Smarter trading (adaptive moving average)",
+      "j": "실무 문헌 — 학술 논문 아님"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -21890,6 +24735,21 @@
     "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -22030,6 +24890,21 @@
     "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "구별 불가",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"
@@ -22170,6 +25045,21 @@
     "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "열위",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
    "missing": [
     "PIT(생존편향 보정) — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다"

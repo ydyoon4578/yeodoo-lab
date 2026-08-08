@@ -46,6 +46,7 @@ except Exception:
     pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "strategy_report.json")
@@ -182,7 +183,40 @@ def _pit(r, pit_rec):
     }
 
 
-def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab):
+def _refs(sid, fam, kind, refs, fund_sids, has_pit):
+    """전략별 참고 — 논문과 **이 규칙이 실제로 쓴 자료**.
+
+    🚨 URL 을 지어내지 않는다. 저장소가 가진 링크가 아니면 제목으로 학술검색 질의를
+      만들어 화면이 건다(결정적이고 항상 열린다). 논문을 특정 못 한 규칙은 **비운다** —
+      없는 것을 지어 채우면 독자가 원문을 못 찾고 그 사실조차 모른다.
+
+    ⚠ 자료 쪽은 추측이 아니다. 어느 규칙이 재무를 쓰는지는 tech_backtest.FUND_SIDS 가,
+      PIT 레그가 있는지는 산출물이 알고 있다 — 그 두 사실에서 만든다.
+    """
+    papers = (refs.get("papers") or {}).get(sid) or []
+    src = []
+    if fam == "종목·타이밍":
+        src.append({"k": "일봉 OHLCV", "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"})
+        if sid in fund_sids:
+            src.append({"k": "재무", "v": "SEC XBRL 회사팩트(data/fx) — 공시지연 반영 후에만 읽는다"})
+        if has_pit:
+            src.append({"k": "지수 편입 이력", "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"})
+        if sid == "x-custconc":
+            src.append({"k": "고객 집중도", "v": "SEC 10-K 본문 추출(data/cust_conc.json)"})
+    else:
+        src.append({"k": "가격", "v": "yfinance — ETF·지수 종가"})
+        src.append({"k": "거시", "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"})
+        if sid == "guru-clone":
+            src.append({"k": "13F", "v": "SEC 13F 보유(제출 마감 45일 지연 반영)"})
+    src.append({"k": "무위험이자율", "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"})
+    return {"papers": papers, "src": src,
+            "no_paper": (not papers),
+            "note": ("원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 "
+                     "실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+                     if not papers else None)}
+
+
+def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids):
     sid = r.get("sid")
     m, b = r.get("metrics") or {}, r.get("bench") or {}
     vt = r.get("vs_traded") or {}
@@ -238,6 +272,8 @@ def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab):
                       "exposure_now": _f(hold.get("exposure_now"), 1),
                       "note": hold.get("note")} if hold else None),
         "verdict": r.get("verdict"),
+        # ⑪ 참고 — 논문과 이 규칙이 실제로 쓴 자료(맨 아래)
+        "refs": _refs(sid, fam, r.get("kind"), refs, fund_sids, bool(pit_of or r.get("pit"))),
     }
     # 🚨 왜 비었는지를 적는다. 이유는 대개 "그 족에 그 측정이 아예 없다"이지
     #   "재 봤더니 안 나왔다"가 아니다 — 그 구별을 남긴다.
@@ -362,6 +398,16 @@ def main():
     pit = _load("pit_strategies.json")
     archive = _load("archive_index.json")
     index = _load("strategy_index.json")
+    try:
+        refs = json.load(io.open(os.path.join(HERE, "strategy_refs.json"), encoding="utf-8"))
+    except Exception:
+        refs = {}
+    # 어느 규칙이 재무를 쓰는지는 랩이 안다 — 손으로 다시 적지 않는다(두 벌이 되면 갈린다).
+    try:
+        import tech_backtest as _T
+        fund_sids = set(_T.FUND_SIDS)
+    except Exception:
+        fund_sids = set()
     deploy = _load("deploy_index.json")
 
     pit_by = {x.get("sid"): x for x in (pit.get("strategies") or [])}
@@ -404,14 +450,17 @@ def main():
         "tested": {"tech": tech.get("tested") or []},
         # 전략 지도 — 축 셋으로 접은 한 장(위 _strategy_map 머리말 참조)
         "map": _strategy_map(tech, asset, archive, index, deploy),
+        "refs_policy": (refs.get("policy") or ""),
+        "refs_search": (refs.get("search") or {}).get("base") or "",
         "items": [],
     }
     for r in (asset.get("strategies") or []):
         out["items"].append(_one(r, "자산배분", asset.get("t_crit"),
-                                 audit_by.get(r.get("sid")), None, None, asset))
+                                 audit_by.get(r.get("sid")), None, None, asset, refs, fund_sids))
     for r in (tech.get("strategies") or []):
         out["items"].append(_one(r, "종목·타이밍", tech.get("t_crit"),
-                                 None, dup_by.get(r.get("sid")), pit_by.get(r.get("sid")), tech))
+                                 None, dup_by.get(r.get("sid")), pit_by.get(r.get("sid")), tech,
+                                 refs, fund_sids))
     # 족 → t 내림차순. 같은 족을 나란히 읽게 하고, 그 안에서 t 가 큰 것부터.
     # ⚠ 이 정렬은 **읽는 순서**일 뿐 순위가 아니다 — t 가 큰 것이 좋은 것이라는 뜻이 아니다.
     out["items"].sort(key=lambda x: (x["family"], -(x["t"] if x["t"] is not None else -99)))

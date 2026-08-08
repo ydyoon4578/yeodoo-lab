@@ -770,6 +770,38 @@ function poolBlock(p){
      :'<p class="caveat">평소의 절반에 못 미친 월말은 없었다.</p>');
 }
 
+// ── 참고 — 논문·자료 (전략 카드 맨 아래) ──────────────────────────────────
+// 🚨 URL 을 지어내지 않는다. 저장소가 가진 링크가 아니면 **제목으로 학술검색 질의**를
+//   만들어 건다 — 결정적이고 항상 열리며, 없는 주소를 만들어 내지 않는다.
+//   논문을 특정 못 한 규칙은 비워 두고 그 사실을 적는다. 지어 채우면 독자가 원문을
+//   못 찾고 그 사실조차 모른다.
+function refsBlock(rf){
+  if(!rf) return '';
+  var base=DATA.refs_search||'https://scholar.google.com/scholar?q=';
+  var h='';
+  if(rf.papers&&rf.papers.length){
+    h+='<div class="tw"><table class="t"><thead><tr><th>논문</th><th>저자</th><th>연도</th><th>학술지</th></tr></thead><tbody>';
+    rf.papers.forEach(function(p){
+      var q=base+encodeURIComponent(p.t||'');
+      h+='<tr><td><a href="'+esc(q)+'" target="_blank" rel="noopener noreferrer">'+esc(p.t)+'</a></td>'+
+         '<td style="text-align:left">'+esc(p.a||'')+'</td><td class="n">'+esc(p.y||'')+'</td>'+
+         '<td style="text-align:left">'+esc(p.j||'')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }else{
+    h+='<p class="caveat">'+mb(rf.note||'')+'</p>';
+  }
+  if(rf.src&&rf.src.length){
+    h+='<dl class="kv" style="margin-top:6px">'+rf.src.map(function(s){
+      return '<dt>'+esc(s.k)+'</dt><dd>'+esc(s.v)+'</dd>';}).join('')+'</dl>';
+  }
+  h+='<p class="caveat">자료 축의 수집 주기·결손 이력은 <a href="sources.html">데이터 출처</a>, '+
+     '검정 규약은 <a href="method.html">방법·규약</a>에 있다. '+
+     '논문 링크는 제목으로 만든 학술검색 질의다 — 이 저장소가 원문 주소를 갖고 있지 않아 '+
+     '주소를 지어내지 않았다.</p>';
+  return h;
+}
+
 function vdClass(v){
   if(!v) return '';
   if(v.indexOf('통과')>=0||v.indexOf('배포')>=0) return ' pass';
@@ -817,6 +849,7 @@ function card(x,i){
   h+=sec('후보 풀 추이',poolBlock(x.pool));
   h+=sec('지금 들고 있는 것',holdBlock(x.holdings));
 
+  h+=sec('참고 — 논문·자료',refsBlock(x.refs));
   if(x.missing&&x.missing.length)
     h+='<div class="miss"><b>못 잰 것</b> — '+x.missing.map(esc).join(' / ')+
        '<br>비어 있는 것은 "재 봤더니 안 나왔다"가 아니라 대개 "그 족에 그 측정이 아예 없다"이다.</div>';

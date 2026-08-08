@@ -103,6 +103,24 @@ async function main() {
                                 (stale[0].role || stale[0].verdict) + ") — 정본에서 통일할 것");
   }
 
+  // ── ①-4 참고 논문 — 지어낸 URL 이 없는가 ────────────────────────────
+  // 🚨 이 검사의 요점은 개수가 아니라 **출처의 정직성**이다. 저장소가 원문 주소를 갖고
+  //   있지 않으므로 화면의 논문 링크는 전부 학술검색 질의여야 한다. 직접 URL 이 하나라도
+  //   섞였다면 누군가(나 포함) 주소를 지어낸 것이다 — 독자는 그것이 진짜인지 알 수 없다.
+  const nPaper = D.items.filter(x => (x.refs || {}).papers && x.refs.papers.length).length;
+  const badUrl = D.items.flatMap(x => ((x.refs || {}).papers || []))
+                        .filter(p => typeof p.url === "string" && p.url);
+  if (badUrl.length) {
+    fail.push("참고 논문에 직접 URL 이 " + badUrl.length + "건 있다(" + badUrl[0].t +
+              ") — 저장소가 원문 주소를 갖고 있지 않다. 지어낸 주소인지 확인할 것");
+  }
+  const links = (content.match(/scholar\.google\.com/g) || []).length;
+  if (nPaper > 0 && links === 0) fail.push("논문이 " + nPaper + "편 있는데 화면에 검색 링크가 하나도 없다");
+  // 논문이 없는 규칙은 '왜 비었나'가 반드시 나와야 한다(빈칸을 지우지 않는다)
+  const nNoPaper = D.items.filter(x => (x.refs || {}).no_paper).length;
+  const gotNo = (content.match(/원 논문을 특정하지 못했다/g) || []).length;
+  if (gotNo !== nNoPaper) fail.push("'논문 없음' 사유가 " + gotNo + "편에만 있다 — 자료엔 " + nNoPaper + "편");
+
   // 리드 문장의 규칙 수가 자료와 같은가(손으로 박아 두면 조용히 낡는다 — 실제로 낡았다)
   // ⚠ textContent 에 숫자가 그대로 들어올 수 있다(페이지가 n.total 을 대입한다) → String 으로 감싼다.
   const lede = String(el("lede-n").textContent || "").trim();
@@ -119,6 +137,9 @@ async function main() {
     ["후보 풀 추이", D.items.filter(x => x.pool).length, x => !!x.pool],
     ["지금 들고 있는 것", D.items.filter(x => x.holdings).length, x => !!x.holdings],
     ["원문 대비", D.items.filter(x => x.repro).length, x => !!x.repro],
+    // 🚨 참고 블록은 **전 편에** 있어야 한다. 논문이 없는 규칙도 '왜 비었나'를 적고
+    //   자료 출처는 어느 규칙에나 있다 — 빠지면 독자가 무엇으로 만든 숫자인지 모른다.
+    ["참고 — 논문·자료", N, x => !!x.refs],
   ];
   for (const [title, n] of want) {
     const got = (content.match(new RegExp("<h3>" + title.replace(/[.*+?^${}()|[\]\\—·()]/g, "\\$&"), "g")) || []).length;
