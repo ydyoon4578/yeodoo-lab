@@ -33,6 +33,8 @@ OUT = os.path.join(DATA, "strategy_index.json")
 GRADE = {
     "deploy": "배포", "marginal": "제한적 유효", "reject": "미채택",
     "통과 후보": "통과 후보", "관례대로 유효": "통과 후보",
+    # ⚠ "대조군 열위" 는 2026-08-08 에 정본에서 "열위" 로 통일했다. 옛 산출물을
+    #   다시 읽을 때를 위해 매핑은 남긴다(지우면 옛 파일이 조용히 "판정 불가" 가 된다).
     "구별 불가": "구별 불가", "대조군 열위": "열위", "열위": "열위",
     "표본 부족 · 판정 불가": "판정 불가", "판정 불가": "판정 불가",
     "관례와 반대로 유의": "역방향 유의", "소수 사건 의존": "소수 사건 의존",
@@ -41,7 +43,7 @@ _PRW = None      # 같은 구간 지수(PR) 기준선을 계산하는 함수. ma
 
 GRADE_ORDER = ["배포", "제한적 유효", "통과 후보", "역방향 유의", "구별 불가",
                "소수 사건 의존", "열위", "미채택", "판정 불가"]
-ROLE_ORDER = ["수익엔진", "배분기", "위험감축", "타이밍오버레이", "미분류"]
+ROLE_ORDER = ["수익엔진", "배분기", "위험방어", "타이밍오버레이", "미분류"]
 
 
 # ── 대조군을 나란히 볼 수 있는가 ──────────────────────────────────────────
@@ -53,7 +55,7 @@ ROLE_ORDER = ["수익엔진", "배분기", "위험감축", "타이밍오버레�
 # 여기에 표본 부족·대조군 현금(샤프 분모가 0에 가까워 Δ가 허수)을 더한다.
 # ⚠ 방어보험은 2026-07-27 에 목록에서 사라졌지만(전 종목 제외) 여기에는 남긴다 — 제외를 되돌리면
 #   대조군 판정이 먼저 필요해지고, 그때 이 집합에 없으면 CAGR·샤프로 우열을 매기는 오독이 되살아난다.
-CMP_OFF_ROLE = {"위험감축", "방어보험"}
+CMP_OFF_ROLE = {"위험방어", "위험감축", "방어보험"}   # 뒤 둘은 옛 어휘(호환용)
 
 
 def comparability(role, grade, unstable, n_days=None):
@@ -442,9 +444,9 @@ def main() -> int:
     # 성격은 규칙이 하는 일로 정한다(재검 산출물에는 role이 없다).
     RECHK_ROLE = {
         # vol-targeting-ndx 는 2026-07-30 에 삭제됐다(archive_index·archive_backtests 양쪽에서).
-        "low-beta-weight-tilt": "위험감축",
+        "low-beta-weight-tilt": "위험방어",
         "bond-trend-gate": "타이밍오버레이", "cross-asset-rp-extended": "배분기",
-        "tail-risk-hedge": "방어보험",
+        "tail-risk-hedge": "위험방어",
     }
     ab = load("archive_backtests.json") or {}
     ai = {x["sid"]: x for x in ((load("archive_index.json") or {}).get("items") or [])}

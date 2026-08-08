@@ -79,6 +79,30 @@ async function main() {
     const gotRe = (tail.match(/↻/g) || []).length;
     if (gotRe !== nRe) fail.push("재등록 표시가 " + gotRe + "개 — 자료엔 " + nRe + "종 있다");
   }
+  // ── ①-3 전략 지도 ────────────────────────────────────────────────────
+  // 🚨 이 표는 '구분이 너무 복잡하다'는 지적에 답하려고 만든 것이다. 안 그려지면 그 답이
+  //   사라지고, 합이 안 맞으면 겹쳐 센 것이라 표가 거짓말을 한다.
+  const smap = el("smap").innerHTML || "";
+  const M = D.map || {};
+  if (!M.n) {
+    fail.push("자료에 map(전략 지도)이 없다 — build/strategy_report.py 가 안 싣고 있다");
+  } else {
+    if (!/이 랩이 판 것 전부/.test(smap)) fail.push("전략 지도가 안 그려졌다");
+    // 두 표의 합이 둘 다 map.n 과 같아야 한다. 다르면 한 규칙을 두 칸에 넣었거나 흘렸다.
+    for (const [k, lab] of [["by_where_role", "무엇을 하나"], ["by_where_verdict", "어떻게 됐나"]]) {
+      const tot = Object.values(M[k] || {}).reduce(
+        (a, row) => a + Object.values(row).reduce((x, y) => x + y, 0), 0);
+      if (tot !== M.n) fail.push("전략 지도 '" + lab + "' 합이 " + tot + " — map.n 은 " + M.n + " 이다(겹쳐 셌거나 흘렸다)");
+    }
+    // rows 는 한 규칙당 하나여야 한다
+    if ((M.rows || []).length !== M.n) fail.push("map.rows 가 " + (M.rows || []).length + "개 — n 은 " + M.n);
+    // 옛 어휘가 남아 있으면 통일이 안 된 것이다
+    const stale = (M.rows || []).filter(r => ["대조군 열위", "방어보험", "위험감축"].includes(r.verdict) ||
+                                             ["대조군 열위", "방어보험", "위험감축"].includes(r.role));
+    if (stale.length) fail.push("지도에 옛 어휘가 " + stale.length + "건 남았다(" +
+                                (stale[0].role || stale[0].verdict) + ") — 정본에서 통일할 것");
+  }
+
   // 리드 문장의 규칙 수가 자료와 같은가(손으로 박아 두면 조용히 낡는다 — 실제로 낡았다)
   // ⚠ textContent 에 숫자가 그대로 들어올 수 있다(페이지가 n.total 을 대입한다) → String 으로 감싼다.
   const lede = String(el("lede-n").textContent || "").trim();
@@ -142,7 +166,7 @@ async function main() {
   }
   console.log("리포트 렌더 검사: 통과 ✅ (리포트 " + nArt + "편 · 목차 " + nToc +
               "줄 · '못 잰 것' " + gotMiss + "편 · 세 번째 목록 " + nTested +
-              "종 · 원본 대조 무편차)");
+              "종 · 지도 " + (D.map||{}).n + "종 · 원본 대조 무편차)");
 }
 
 // 🚨 main() 이 던지면 **반드시 종료코드 1** 이어야 한다. 종전에는 그냥 `main()` 이라
