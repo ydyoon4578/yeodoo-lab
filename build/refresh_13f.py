@@ -170,6 +170,7 @@ def _f(x):
 
 
 EDGAR_FAIL = []      # EDGAR 경로가 죽었는지 산출물에 남긴다(조용한 퇴화 방지)
+EDGAR_LATEST = {}    # {cik: 그 운용사의 최신 13F 보고분기} — '아직 안 낸 곳'을 적을 때 쓴다
 
 
 def edgar_quarters(cmap: dict):
@@ -201,6 +202,7 @@ def edgar_quarters(cmap: dict):
         if best:
             per_cik[cik] = best
             periods.update(best)
+            EDGAR_LATEST[cik] = max(best)      # 이 운용사가 낸 것 중 가장 최근 분기
     if not periods:
         return None, None
     want = sorted(periods)[-2:][::-1]      # 최신, 그다음
@@ -554,6 +556,10 @@ def main() -> int:
             "uni_val": round(uni_val, 0),
             "uni_pct": round(uni_val / d["total_val"] * 100, 1) if d["total_val"] else None,
             "n": len(rows), "n_off": off_n, "holds": rows,
+            # 🚨 운용사별 기준 분기. 지금은 전원 같지만 필드로 둔다 — 13F 마감 전후에는
+            #   일부만 새 분기를 내는 구간이 반드시 생기고, 그때 전역 as_of 하나만 있으면
+            #   화면이 **모두 같은 분기인 것처럼** 말하게 된다.
+            "period": _iso(cur_per),
         })
         # ⚠ full 을 돈다. 위 주석대로 '자르기 전 전체'로 세야 하는데 이 루프만 rows(잘린 것)를
         #   돌고 있었다 — uni_val·off_n 만 고쳐 두고 정작 겹침은 그대로였다(2026-07-28 발견).
@@ -573,12 +579,48 @@ def main() -> int:
           for t, v in overlap.items()]
     ov.sort(key=lambda x: (-x["n"], x["t"]))
 
+    def _qdiff(a, b):
+        """분기 수 차이. 못 재면 None."""
+        try:
+            ya, ma = int(a[:4]), int(a[5:7]); yb, mb = int(b[:4]), int(b[5:7])
+            return (yb - ya) * 4 + (mb - ma) // 3
+        except Exception:
+            return None
+
+    def _pending(cur_, per_):
+        """이번 분기를 안 낸 운용사.
+
+        🚨 '아직 안 냈다'와 '오래전에 그만 냈다'를 같은 말로 적으면 거짓이 된다.
+          실측: 아이칸 캐피털의 최신 13F 는 **2011-03-31** 이다 — 15년째 안 낸다.
+          그것을 '제출 전'이라 적으면 곧 나올 것처럼 읽힌다. 네 분기를 선으로 가른다.
+        """
+        out = []
+        for c in GURUS:
+            if c in cur_:
+                continue
+            last = EDGAR_LATEST.get(c) or (_iso(prev_per) if prev_per else None)
+            d = _qdiff(last, _iso(per_)) if last else None
+            out.append({"cik": c, "label": GURUS[c], "last": last,
+                        "q_behind": d,
+                        "state": ("장기 미제출" if (d is not None and d > 4) else "제출 전")})
+        return out
+
     doc = {
         "note": "SEC Form 13F 분기 데이터셋. 롱온리 미국 상장주식만, 분기말 기준, 45일 뒤 제출. "
                 "변동은 분기말 잔고의 차이지 매매 기록이 아니다. 명단은 랩이 CIK로 고른 것이다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "as_of": _iso(cur_per),
         "prev_as_of": _iso(prev_per) if prev_per else None,
+        # 🚨 아직 이번 분기를 내지 않은 운용사. 종전에는 print 만 하고 **저장하지 않아서**
+        #   화면이 누가 빠졌는지 영영 몰랐다(이 저장소가 '수집 ≠ 배선'이라 부르는 그것이다).
+        #   13F 마감(분기말+45일) 전후로는 반드시 이 목록이 생긴다 — 그때 "17곳"이라 적힌
+        #   화면이 실은 10곳이면 독자는 나머지 7곳이 어떻게 됐는지 알 수 없다.
+        #   last 는 그 운용사가 실제로 낸 가장 최근 분기다(EDGAR 제출 이력).
+        "pending": sorted(_pending(cur, cur_per), key=lambda x: x["label"]),
+        "pending_note": "13F 는 분기말 45일 뒤가 마감이라(2/14·5/15·8/14·11/14) 그 전까지는 "
+                        "낸 곳과 안 낸 곳이 섞인다. state 가 '제출 전'이면 최근까지 내던 곳이 "
+                        "이번 분기만 아직인 것이고, '장기 미제출'이면 네 분기 넘게 안 낸 것이다 "
+                        "— 둘을 같은 말로 적으면 거짓이 된다.",
         "n_managers": len(managers),
         "n_listed": len(GURUS),
         "cusip_cover": round(covered / len(uni) * 100, 1),

@@ -572,7 +572,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!m){host.innerHTML='<div class="skel">운용사를 고르세요.</div>';return;}
     var h='<div class="card"><h3>'+esc(m.label)+
       '<span style="font-weight:400;color:var(--muted);font-size:11px">'+esc(m.filer)+' · CIK '+esc(String(m.cik))+'</span>'+
-      '<span class="hn">'+m.n+'종목 · 기준 '+esc(D.as_of)+'</span></h3>'+
+      '<span class="hn">'+m.n+'종목 · 기준 '+esc(m.period||D.as_of)+
+      // 🚨 운용사 자신의 보고분기를 쓴다. 13F 마감(분기말+45일) 전후에는 낸 곳과 안 낸
+      //   곳이 섞이는데, 전역 as_of 하나로 적으면 화면이 모두 같은 분기라고 말하게 된다.
+      ((m.period&&D.as_of&&m.period!==D.as_of)?' <b style="color:var(--marg)">(다름)</b>':'')+
+      '</span></h3>'+
       '<p class="lblnote" style="margin:6px 0 10px">13F 보고총액 <b>'+usd(m.total_val)+'</b>('+nf(m.total_n)+'종목) 중 '+
       '이 랩 유니버스와 겹치는 것이 <b>'+usd(m.uni_val)+'</b>('+(m.uni_pct==null?'—':nf(m.uni_pct,1)+'%')+')입니다. '+
       '평가액 상위 '+m.n+'종목을 싣고, 그중 <b>'+(m.n_off||0)+'종목</b>은 유니버스 밖이라 '+
@@ -742,6 +746,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ty(j.as_of,'보고 기준일','분기말 잔고','var(--champ)')+
       ty(lag+'일','지금 기준 지연','구조적 — 줄지 않는다','var(--hot)')+
       ty(top?(top.t+' '+top.n+'곳'):'—','가장 많이 겹친 종목','대형주일수록 자연히 겹친다','var(--marg)');
+    // 🚨 안 낸 곳을 이름과 사유까지 적는다. 종전에는 '17/18' 이라는 수만 있어 그 1곳이
+    //   누구인지 알 수 없었고, 산출물에도 없었다(수집 ≠ 배선). 13F 마감 전후에는 이 목록이
+    //   반드시 생긴다 — 그때 "N곳" 이라 적힌 화면이 실은 일부만이라는 사실을 여기서 말한다.
+    var pend=j.pending||[];
+    if(pend.length){
+      var pre=pend.filter(function(x){return x.state==='제출 전';});
+      var old=pend.filter(function(x){return x.state!=='제출 전';});
+      var ph='<div class="lblnote" style="margin:10px 0 0"><b>명단 중 이번 분기('+esc(j.as_of)+') 미반영 '+pend.length+'곳</b>';
+      if(pre.length) ph+='<br>· <b>제출 전</b> '+pre.map(function(x){
+        return esc(x.label)+'<span style="color:var(--muted)"> (최신 '+esc(x.last||'—')+')</span>';}).join(' · ');
+      if(old.length) ph+='<br>· <b style="color:var(--marg)">장기 미제출</b> '+old.map(function(x){
+        return esc(x.label)+'<span style="color:var(--muted)"> (최신 '+esc(x.last||'—')+' · '+x.q_behind+'분기 뒤)</span>';}).join(' · ')+
+        '<br><span style="color:var(--muted)">네 분기 넘게 안 낸 곳이다 — 곧 나올 것이 아니라 사실상 제출을 멈춘 것이다.</span>';
+      ph+='</div>';
+      // ⚠ 이 렌더가 두 번 돌면 목록이 두 번 붙는다. 자리를 하나 정해 두고 갈아 끼운다.
+      var slot=document.getElementById('g-pending');
+      if(!slot){ el('limits').insertAdjacentHTML('afterend','<div id="g-pending"></div>');
+                 slot=document.getElementById('g-pending'); }
+      slot.innerHTML=ph;
+    }
     el('limits').innerHTML='<b>이 데이터의 한계</b><br>· '+(j.limits||[]).map(esc).join('<br>· ')+
       '<br>· CUSIP↔티커 매핑 커버는 '+nf(j.cusip_cover,1)+'%입니다.';
     renderMgrs(); renderPf(); renderOv(); onHash();
