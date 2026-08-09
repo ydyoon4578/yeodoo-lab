@@ -169,6 +169,9 @@ def _f(x):
         return 0.0
 
 
+EDGAR_FAIL = []      # EDGAR 경로가 죽었는지 산출물에 남긴다(조용한 퇴화 방지)
+
+
 def edgar_quarters(cmap: dict):
     """운용사별 EDGAR 제출에서 최근 두 분기를 읽는다. 반환 계약은 read_quarter와 같다
     — (기준분기, {cik: {name, total_val, total_n, holds:{ticker:{v,sh}}}}).
@@ -188,7 +191,12 @@ def edgar_quarters(cmap: dict):
         except Exception:
             continue
         best = {}
-        for rd, acc, _form in sorted(fl):
+        # 🚨 filings() 는 (보고분기, 공시일, accession, 서식) **넷**을 준다. 셋으로 풀고
+        #   있어서 매 실행 ValueError 가 났고, 아래 넓은 except 가 그것을 삼켜 **조용히**
+        #   벌크로 내려갔다. 벌크는 분기말 +약 4개월이라 6월말 보유가 10월 말에야 들어온다 —
+        #   'EDGAR 로 2개월 반 먼저 본다'는 이 함수의 존재 이유가 통째로 죽어 있었다.
+        #   (CI 로그 실측: "EDGAR 직접 수집 실패(too many values to unpack (expected 3))")
+        for rd, _fd, acc, _form in sorted(fl):
             best[rd] = acc          # 같은 분기면 나중 제출이 덮는다
         if best:
             per_cik[cik] = best
@@ -343,7 +351,14 @@ def main() -> int:
     try:
         edgar_cur, edgar_prev = edgar_quarters(cmap)
     except Exception as e:
+        # 🚨 이 실패는 **조용히 넘어가면 안 된다.** 넘어가도 화면은 멀쩡해 보이지만(벌크가
+        #   채운다) 자료가 2개월 반 낡는다. 실제로 그 상태로 오래 굴러갔다 — 로그 한 줄이
+        #   경고 중 하나로 묻혔기 때문이다. 표식을 크게 남겨 신선도 검사가 잡게 한다.
+        import traceback
+        print("::warning::13F EDGAR 직접 수집 실패 — 벌크로 내려간다(자료가 약 2개월 반 낡는다)")
         print("⚠ EDGAR 직접 수집 실패(%s) — 벌크 데이터셋으로 진행" % e)
+        traceback.print_exc()
+        EDGAR_FAIL.append(str(e))
 
     zips = latest_13f(2)
     if not zips:
@@ -374,11 +389,27 @@ def main() -> int:
         return p_          # 이미 ISO
 
     # EDGAR가 더 최신 분기를 갖고 있으면 그쪽으로 간다. 같은 분기면 검증된 벌크를 쓴다.
+    #
+    # 🚨 **정족수를 건다.** edgar_quarters 는 '전체 명단 통틀어 최신 두 분기'를 잡고 각 분기에
+    #   낸 곳만 담는다. 그래서 한 곳만 일찍 내면 당분기 장부가 **그 한 곳뿐**이 된다.
+    #   실측(2026-08-10): 17곳 중 마클 하나만 2026-06-30 을 냈다 — 이 상태로 갈아타면
+    #   화면이 "거장 포트폴리오 17곳 → 1곳"으로 조용히 쪼그라들고, 겹침·컨빅션 복제까지
+    #   그 한 곳으로 계산된다. 13F 마감(분기말+45일) 전후로 며칠은 반드시 이 상태가 된다.
+    #   → 명단의 **절반 이상**이 그 분기를 내야 갈아탄다. 그 전까지는 검증된 벌크를 쓴다.
+    _QUORUM = 0.5
+    _n_edgar = len(edgar_cur[1]) if (edgar_cur and edgar_cur[1]) else 0
+    _quorum_ok = _n_edgar >= max(2, int(len(GURUS) * _QUORUM))
     if edgar_cur and edgar_cur[0] and (not cur_per or _iso(edgar_cur[0]) > _iso(cur_per)):
-        print("→ EDGAR 직접 수집이 더 최신(%s > %s) — 그쪽을 쓴다" % (edgar_cur[0], cur_per))
-        cur_per, cur = edgar_cur
-        if edgar_prev and edgar_prev[0]:
-            prev_per, prev = edgar_prev
+        if not _quorum_ok:
+            print("→ EDGAR 가 더 최신(%s)이지만 **%d/%d 곳뿐**이라 아직 안 바꾼다 "
+                  "(정족수 %d곳). 마감(분기말+45일) 직후 대부분이 내면 자동으로 넘어간다."
+                  % (edgar_cur[0], _n_edgar, len(GURUS), max(2, int(len(GURUS) * _QUORUM))))
+        else:
+            print("→ EDGAR 직접 수집이 더 최신(%s > %s) · %d/%d 곳 — 그쪽을 쓴다"
+                  % (edgar_cur[0], cur_per, _n_edgar, len(GURUS)))
+            cur_per, cur = edgar_cur
+            if edgar_prev and edgar_prev[0]:
+                prev_per, prev = edgar_prev
     else:
         print("→ 벌크 데이터셋 사용(EDGAR %s · 벌크 %s → ISO %s vs %s)"
               % (edgar_cur[0] if edgar_cur else "없음", cur_per,
