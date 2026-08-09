@@ -462,7 +462,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <li class="navcat" data-cat="market">
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
-          <a class="mmi" href="market.html" data-nav="market.html"><span class="mmn">시장 폭·동향</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 중 몇 %가 200일선 위인가 — 지수가 아니라 폭</span></a>
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
           <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
           <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
@@ -1348,7 +1347,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // ⑤ 정직 고지
     // ⚠ 이 블록은 **코드에만 있고 렌더되지 않았다**(2026-08-03 실측: vv 참조 0곳, SD.note·
-    //   SD.disclaimer 출력 0곳). 그런데 market.html 562·935~936행이 '구성요소·백테스트 전문은
+    //   SD.disclaimer 출력 0곳). 그런데 market.html(2026-08-10 삭제) 562·935~936행이 '구성요소·백테스트 전문은
     //   국면 페이지에', '구간별 백테스트(표본 수·t·p 포함)는 국면 페이지의 시장 심리 절에'로
     //   독자를 이리로 보낸다 — 링크를 따라온 사람이 약속받은 근거를 못 찾고 있었다.
     //   글자를 새로 짓는 것이 아니라 **이미 쓴 글자를 화면에 내보내는 일**이다. 수치는 전부
