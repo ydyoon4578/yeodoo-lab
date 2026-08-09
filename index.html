@@ -196,6 +196,36 @@
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
   .calfresh{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.5}
+
+  /* ── 종목 히트맵 ────────────────────────────────────────────────────
+     칸 크기 = 시가총액 · 색 = 그 기간 등락률 · 묶음 = 섹터 → 산업그룹.
+     ⚠ 색은 **오르내림 두 방향**뿐이다. 다른 화면의 판정색(--deploy/--hot)을 그대로 쓰면
+       '통과/기각'과 같은 색이 되어 뜻이 섞인다 — 히트맵 전용 색을 따로 둔다. */
+  .hmbar{display:flex;flex-wrap:wrap;gap:0;align-items:center;margin:0 0 6px}
+  .hmbar button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
+       background:none;border:0;border-right:1px solid var(--line);padding:2px 10px;cursor:pointer}
+  .hmbar button:first-of-type{padding-left:0}
+  .hmbar button:last-of-type{border-right:0}
+  .hmbar button[aria-pressed="true"]{color:var(--accent)}
+  .hmbar .hmleg{margin-left:auto;display:flex;align-items:center;gap:0;font-family:var(--mono);font-size:11px}
+  .hmbar .hmleg i{width:22px;height:11px;display:inline-block;font-style:normal}
+  .hmbar .hmleg b{font-weight:600;color:var(--muted);padding:0 6px}
+  .hmwrap{border:1px solid var(--line);background:var(--panel-2);overflow:hidden}
+  .hmtree{position:relative;width:100%}
+  .hmsec{position:absolute;overflow:hidden}
+  .hmsec>.hl{position:absolute;left:0;top:0;right:0;height:15px;font-size:11px;font-weight:700;
+       color:var(--ink-2);background:var(--panel-2);padding:1px 5px;white-space:nowrap;overflow:hidden}
+  .hmgrp{position:absolute;overflow:hidden}
+  .hmgrp>.gl{position:absolute;left:0;top:0;right:0;height:13px;font-size:11px;color:var(--muted);
+       background:var(--panel-2);padding:0 4px;white-space:nowrap;overflow:hidden}
+  .hmcell{position:absolute;overflow:hidden;display:flex;flex-direction:column;
+       align-items:center;justify-content:center;text-align:center;line-height:1.12;
+       color:#fff;text-decoration:none;padding:1px}
+  .hmcell .ht{font-family:var(--mono);font-weight:700;letter-spacing:-.02em}
+  .hmcell .hr{font-family:var(--mono);font-weight:600;opacity:.92}
+  .hmcell:hover{outline:2px solid var(--ink);outline-offset:-2px;z-index:5}
+  @media(max-width:640px){.hmbar .hmleg{display:none}}
+
   /* ⚠ 좁은 화면에서 .calix 를 display:none 으로 숨기고 있었다(2026-08-10 제거).
      격자가 min-width:760px 로 가로 스크롤하므로 칸 너비는 화면 폭과 무관하다 —
      숨길 이유가 없었고, 창을 조금만 좁히면 등락률이 통째로 사라졌다.
@@ -919,6 +949,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     </section>
 
+
+    <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
+         자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다(518종 · 119KB).
+         새 수집 잡도, 새 파일도 만들지 않는다. -->
+    <section id="s-heat" aria-labelledby="hm-h">
+      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
+      <div class="hmbar" id="hm-bar"></div>
+      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
+      <p class="stnote" id="hm-note"></p>
+    </section>
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
          시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
@@ -1960,6 +2000,198 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   getj('home_reco.json').then(function(h){
     if(h&&h.buy){renderReco(h);}else{loadFull();}
   })['catch'](function(e){ if(window.console&&console.error)console.error(e); stkFail(); });
+
+  // ── ⑥ 종목 히트맵 ────────────────────────────────────────────
+  // 칸 크기 = 시가총액 · 색 = 그 기간 등락률 · 묶음 = 섹터 → 산업그룹 → 종목.
+  //
+  // 🚨 새 자료를 만들지 않는다. data/home_stocks.json(518종·119KB) 하나로 끝난다 —
+  //   mc(시총) · r{1D,1W,1M,3M,6M,12M,YTD} · sec(섹터ETF) · p("XLK|Software & Services")가
+  //   이미 다 들어 있다. 수집 잡도, 새 파일도 늘리지 않는다.
+  //
+  // 🚨 색 규약은 **이 사이트를 따른다 — 초록이 상승이다.** 참고한 화면(블룸버그식)은
+  //   빨강이 상승인 한국식이었지만, 이 홈은 달력도 기간별 수익률 표도 전부 초록=상승이다.
+  //   같은 화면 위아래가 반대 색이면 그것이 더 나쁘다(달력 +1.48% 초록 / 히트맵 같은 값 빨강).
+  (function(){
+    var wrap=el('hm-tree'); if(!wrap) return;
+    var SECKO={XLK:'정보기술',XLF:'금융',XLY:'임의소비재',XLV:'헬스케어',XLI:'산업재',
+               XLC:'커뮤니케이션',XLP:'필수소비재',XLE:'에너지',XLU:'유틸리티',
+               XLRE:'부동산',XLB:'소재'};
+    // GICS 산업그룹 32개의 한글 이름. 자료에는 영문만 있고 이름은 표준 분류명이라
+    // 여기서 옮긴다(값을 만드는 것이 아니라 라벨만 옮기는 것이다).
+    // ⚠ '그 밖'은 자료가 이미 쓰는 말이다 — 섹터는 붙었는데 산업그룹이 안 붙은 종목이다.
+    var GRPKO={'Semiconductors & Semiconductor Equipment':'반도체·장비',
+      'Software & Services':'소프트웨어·서비스','Technology Hardware & Equipment':'기술 하드웨어',
+      'Media & Entertainment':'미디어·엔터','Telecommunication Services':'통신 서비스',
+      'Banks':'은행','Financial Services':'금융 서비스','Insurance':'보험',
+      'Capital Goods':'자본재','Commercial & Professional Services':'상업·전문 서비스',
+      'Transportation':'운송','Materials':'소재','Energy':'에너지','Utilities':'유틸리티',
+      'Health Care Equipment & Services':'헬스케어 장비·서비스',
+      'Pharmaceuticals, Biotechnology  & Life Sciences':'제약·바이오',
+      'Consumer Staples Distribution & Retail':'필수소비 유통',
+      'Food, Beverage & Tobacco':'식품·음료·담배','Household & Personal Products':'가정·개인용품',
+      'Equity Real Estate Investment Trusts (REITs)':'리츠',
+      'Automobiles & Components':'자동차·부품',
+      'Consumer Discretionary Distribution & Retail':'임의소비 유통',
+      'Consumer Durables & Apparel':'내구재·의류','Consumer Services':'소비자 서비스'};
+    var PERIODS=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],
+                 ['6M','6개월'],['12M','12개월'],['YTD','올해']];
+    var ROWS=null, PER='1D';
+
+    // 등락률 → 색. ±cap 에서 포화한다. 기간마다 흔들림 폭이 달라 cap 을 따로 둔다 —
+    // 1일 잣대(±3%)를 12개월에 그대로 쓰면 화면이 통째로 빨강/초록이 되어 아무것도 안 보인다.
+    var CAP={'1D':3,'1W':6,'1M':12,'3M':20,'6M':28,'12M':40,'YTD':40};
+    function col(v){
+      if(v==null||v!==v) return '#8A9099';
+      var c=CAP[PER]||3, x=Math.max(-1,Math.min(1,v/c));
+      // 0 은 중립 회색. 위로 갈수록 초록, 아래로 갈수록 빨강.
+      var a=Math.abs(x);
+      var n=[0x4A,0x50,0x58];                       // 중립
+      var t=x>0?[0x12,0x8F,0x54]:[0xC0,0x3B,0x2C];  // 상승 초록 / 하락 빨강
+      var m=function(i){return Math.round(n[i]+(t[i]-n[i])*(0.25+0.75*a));};
+      return 'rgb('+m(0)+','+m(1)+','+m(2)+')';
+    }
+
+    // ── squarified treemap ────────────────────────────────────────────
+    // 🚨 단순 분할(slice-and-dice)을 쓰면 칸이 가늘고 길어져 글자가 한 자도 안 들어간다.
+    //   가로세로비를 최소화하는 squarify 로 놓는다(Bruls·Huizing·van Wijk 2000).
+    function squarify(items, x, y, w, h){
+      var out=[], tot=0, i;
+      for(i=0;i<items.length;i++) tot+=items[i].v;
+      if(tot<=0||w<=0||h<=0) return out;
+      var list=items.slice().sort(function(a,b){return b.v-a.v;});
+      var scale=(w*h)/tot;
+      function worst(row, len){
+        var s=0,mx=0,mn=Infinity;
+        for(var j=0;j<row.length;j++){var a=row[j].v*scale;s+=a;if(a>mx)mx=a;if(a<mn)mn=a;}
+        if(s<=0||len<=0) return Infinity;
+        return Math.max(len*len*mx/(s*s), s*s/(len*len*mn));
+      }
+      var cx=x, cy=y, cw=w, ch=h, k=0;
+      while(k<list.length){
+        var vert = cw>=ch, len = vert?ch:cw;
+        var row=[list[k]], k2=k+1;
+        while(k2<list.length){
+          var t=row.concat([list[k2]]);
+          if(worst(t,len)>worst(row,len)) break;
+          row=t; k2++;
+        }
+        var rs=0,j;
+        for(j=0;j<row.length;j++) rs+=row[j].v*scale;
+        var thick = len>0 ? rs/len : 0;
+        var off=0;
+        for(j=0;j<row.length;j++){
+          var a=row[j].v*scale, sz = len>0 ? a/thick : 0;
+          out.push(vert
+            ? {d:row[j].d, x:cx, y:cy+off, w:thick, h:sz}
+            : {d:row[j].d, x:cx+off, y:cy, w:sz, h:thick});
+          off+=sz;
+        }
+        if(vert){ cx+=thick; cw-=thick; } else { cy+=thick; ch-=thick; }
+        k=k2;
+      }
+      return out;
+    }
+
+    function agg(rows, keyf){
+      var m={};
+      rows.forEach(function(r){
+        var k=keyf(r); if(!m[k]) m[k]={k:k, v:0, rows:[]};
+        m[k].v+=(r.mc||0); m[k].rows.push(r);
+      });
+      return Object.keys(m).map(function(k){return m[k];});
+    }
+    function wret(rows){                 // 시총가중 등락률 — 섹터 라벨에 쓴다
+      var s=0,w=0;
+      rows.forEach(function(r){var v=r.r&&r.r[PER]; if(v!=null){s+=v*(r.mc||0); w+=(r.mc||0);}});
+      return w>0?s/w:null;
+    }
+    function fmt(v){return v==null?'—':((v>0?'+':'')+v.toFixed(2)+'%');}
+
+    function paint(){
+      if(!ROWS||!ROWS.length){wrap.innerHTML='<div class="empty">자료를 받지 못했다.</div>';return;}
+      var W=wrap.clientWidth||wrap.parentNode.clientWidth||900;
+      var H=Math.max(420, Math.min(720, Math.round(W*0.62)));
+      wrap.style.height=H+'px';
+      var secs=agg(ROWS,function(r){return r.sec;});
+      var boxes=squarify(secs.map(function(g){return {v:g.v,d:g};}),0,0,W,H);
+      var html='';
+      boxes.forEach(function(b){
+        var g=b.d, lab=(SECKO[g.k]||g.k), wr=wret(g.rows);
+        html+='<div class="hmsec" style="left:'+b.x+'px;top:'+b.y+'px;width:'+b.w+'px;height:'+b.h+'px">';
+        if(b.h>26&&b.w>60) html+='<div class="hl">'+esc(lab)+' <span style="color:'+
+          (wr>0?'var(--deploy)':(wr<0?'var(--hot)':'var(--muted)'))+'">'+fmt(wr)+'</span></div>';
+        var top=(b.h>26&&b.w>60)?15:0;
+        // 산업그룹 — 칸이 좁으면 이 단을 건너뛰고 종목을 바로 놓는다(라벨이 자리를 다 먹는다)
+        var useGrp = b.w>150 && b.h-top>90;
+        var inner = useGrp ? agg(g.rows,function(r){return r.p||g.k;}) : [{k:g.k,v:g.v,rows:g.rows}];
+        squarify(inner.map(function(x){return {v:x.v,d:x};}),0,top,b.w,b.h-top).forEach(function(gb){
+          var gg=gb.d, graw=(gg.k.indexOf('|')>=0?gg.k.split('|')[1]:'');
+          var gname=GRPKO[graw]||graw;
+          var gtop=(useGrp&&gb.h>34&&gb.w>70&&gname)?13:0;
+          html+='<div class="hmgrp" style="left:'+gb.x+'px;top:'+gb.y+'px;width:'+gb.w+'px;height:'+gb.h+'px">';
+          if(gtop) html+='<div class="gl">'+esc(gname)+'</div>';
+          squarify(gg.rows.map(function(r){return {v:Math.max(r.mc||0,1),d:r};}),0,gtop,gb.w,gb.h-gtop)
+            .forEach(function(cb){
+              var r=cb.d, v=r.r&&r.r[PER];
+              // 글자는 들어갈 때만 넣는다. 억지로 넣으면 잘려서 티커가 'NV' 처럼 보인다.
+              var tf = Math.max(9, Math.min(26, Math.floor(Math.min(cb.w/3.4, cb.h/2.6))));
+              var showT = cb.w>=26 && cb.h>=15;
+              var showR = cb.w>=44 && cb.h>=30;
+              html+='<a class="hmcell" href="stocks.html#t='+esc(r.nm)+
+                '" title="'+esc(r.nm+' · '+(r.sn||'')+' · '+fmt(v))+
+                '" style="left:'+cb.x+'px;top:'+cb.y+'px;width:'+cb.w+'px;height:'+cb.h+
+                'px;background:'+col(v)+'">'+
+                (showT?'<span class="ht" style="font-size:'+tf+'px">'+esc(r.nm)+'</span>':'')+
+                (showR?'<span class="hr" style="font-size:'+Math.max(9,Math.round(tf*0.62))+'px">'+fmt(v)+'</span>':'')+
+                '</a>';
+            });
+          html+='</div>';
+        });
+        html+='</div>';
+      });
+      wrap.className='hmtree';
+      wrap.innerHTML=html;
+      var sub=el('hm-sub');
+      if(sub) sub.textContent='· '+ROWS.length+'종목 · 시총 크기 · '+
+        (PERIODS.filter(function(p){return p[0]===PER;})[0]||['','']) [1]+' 등락';
+      var nt=el('hm-note');
+      if(nt) nt.innerHTML='칸 크기는 시가총액, 색은 '+esc((PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1])+
+        ' 등락률이다(±'+(CAP[PER]||3)+'%에서 색이 포화한다 — 기간마다 흔들림 폭이 달라 잣대를 따로 둔다). '+
+        '<b>초록이 상승</b>이다 — 이 사이트의 다른 화면과 같은 규약이고, 참고한 블룸버그식 화면(빨강 상승)과는 반대다. '+
+        '칸을 누르면 그 종목 신호로 간다. 묶음은 GICS 섹터 11 → 산업그룹 32이고, 칸이 좁으면 산업그룹 단은 건너뛴다.';
+    }
+
+    function bar(){
+      var b=el('hm-bar'); if(!b) return;
+      b.innerHTML=PERIODS.map(function(p){
+        return '<button type="button" data-p="'+p[0]+'" aria-pressed="'+(p[0]===PER)+'">'+p[1]+'</button>';
+      }).join('')+
+      '<span class="hmleg"><b>하락</b><i style="background:'+
+        (function(){var s=PER;PER=s;return 'rgb(192,59,44)';})()+'"></i>'+
+        '<i style="background:rgb(74,80,88)"></i><i style="background:rgb(18,143,84)"></i><b>상승</b></span>';
+      b.addEventListener('click',function(e){
+        var t=e.target.closest('button[data-p]'); if(!t)return;
+        PER=t.getAttribute('data-p');
+        Array.prototype.forEach.call(b.querySelectorAll('button[data-p]'),function(x){
+          x.setAttribute('aria-pressed', x.getAttribute('data-p')===PER);});
+        paint();
+      });
+    }
+
+    getj('home_stocks.json').then(function(j){
+      ROWS=(j&&j.rows)||[];
+      // 섹터 트리도 같은 파일을 쓴다 — 이미 받았으면 그쪽이 다시 받지 않게 넘겨준다.
+      if(typeof MK!=='undefined' && MK && MK.stk===null) MK.stk=ROWS;
+      bar(); paint();
+    })['catch'](function(){ wrap.innerHTML='<div class="empty">종목 자료를 받지 못했다.</div>'; });
+
+    // 폭이 바뀌면 다시 놓는다 — 트리맵은 절대좌표라 CSS 로 따라가지 않는다.
+    var rt=null;
+    window.addEventListener('resize',function(){
+      clearTimeout(rt); rt=setTimeout(function(){ if(ROWS)paint(); },180);
+    });
+  })();
+
 })();
 </script>
 </body>
