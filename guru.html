@@ -53,7 +53,7 @@
   .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
   .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
   .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
-  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .ty em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--ink-2);line-height:1.5}
 
   .views{display:flex;gap:4px;margin:26px 0 0;border-bottom:1px solid var(--line)}
@@ -76,17 +76,17 @@
   .mg:hover{border-color:var(--accent)}
   .mg[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
   .mg b{display:block;font-size:13px;line-height:1.4}
-  .mg span{display:block;margin-top:4px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .mg span{display:block;margin-top:4px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 
   .fswrap{overflow-x:auto}
   .tbl{border-collapse:collapse;width:100%;font-size:12.5px}
   .tbl th,.tbl td{padding:7px 10px;border-top:1px solid var(--line-soft);text-align:right;white-space:nowrap}
-  .tbl thead th{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:700;border-top:0}
+  .tbl thead th{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:700;border-top:0}
   .tbl th[scope=row],.tbl td.l{text-align:left}
   .tbl tbody th{font-family:var(--mono);font-weight:800;font-size:12.5px}
   .tbl tbody th a{text-decoration:none} .tbl tbody th a:hover{color:var(--accent)}
-  .tbl .sub{display:block;font-family:var(--sans);font-size:10.5px;color:var(--muted);font-weight:400}
-  .chg{font-family:var(--mono);font-size:10px;font-weight:700;border:1px solid var(--line);border-radius:2px;padding:1px 6px}
+  .tbl .sub{display:block;font-family:var(--sans);font-size:11.5px;color:var(--muted);font-weight:400}
+  .chg{font-family:var(--mono);font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:2px;padding:1px 6px}
   .chg.신규{border-color:var(--deploy);color:var(--deploy)}
   .chg.증가{border-color:var(--champ);color:var(--champ)}
   .chg.감소{border-color:var(--marg);color:var(--marg)}
@@ -95,7 +95,7 @@
   /* 유니버스 밖 — 지우지 않고 표시한다. 버리면 그 운용사 포트폴리오의 절반이 사라지고
      남은 절반의 비중이 실제보다 커 보인다. 대신 이 사이트에 종목 화면이 없어 링크는 뺀다. */
   .tkoff{color:var(--ink-2)}
-  .offb{font-family:var(--mono);font-size:8.5px;font-weight:700;margin-left:5px;padding:1px 4px;
+  .offb{font-family:var(--mono);font-size:11px;font-weight:700;margin-left:5px;padding:1px 4px;
         border-radius:2px;border:1px dashed color-mix(in srgb,var(--muted) 60%,transparent);
         color:var(--muted);vertical-align:1px}
   tr.offrow th,tr.offrow td{background:color-mix(in srgb,var(--muted) 5%,transparent)}
@@ -106,24 +106,24 @@
        font-weight:700;background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:2px 7px}
   .stk[hidden]{display:none}
   .stk a{text-decoration:none;color:var(--ink-2)} .stk a:hover{color:var(--accent)}
-  .stk i{font-style:normal;font-size:9.5px;font-weight:800;color:var(--accent)}
+  .stk i{font-style:normal;font-size:11px;font-weight:800;color:var(--accent)}
   .cnt2{margin-top:10px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);
         background:none;border:0;padding:0;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
   .cnt2:hover,.cnt2:focus{color:var(--accent);outline:none}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:15px 18px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-  .card h3 .hn{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .card h3 .hn{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--muted)}
 
   .ovrow{display:grid;grid-template-columns:96px 60px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-top:1px solid var(--line-soft)}
   .ovrow .ot{font-family:var(--mono);font-size:13px;font-weight:800}
   .ovrow .ot a{text-decoration:none} .ovrow .ot a:hover{color:var(--accent)}
-  .ovrow .ot small{display:block;font-family:var(--sans);font-size:10px;font-weight:400;color:var(--muted)}
+  .ovrow .ot small{display:block;font-family:var(--sans);font-size:11px;font-weight:400;color:var(--muted)}
   .ovrow .on{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)}
   .ovrow .om{display:flex;gap:5px;flex-wrap:wrap}
-  .ovrow .om span{font-size:10.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
+  .ovrow .om span{font-size:11.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
 
-  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}

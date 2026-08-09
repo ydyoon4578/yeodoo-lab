@@ -962,7 +962,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     el('rowcount').innerHTML=esc(rows.length+"종목")+(f.screen?esc(" · 적합도순"):"")+(f.total>rows.length?esc(" / 전체 "+f.total+" · 종합점수 상위"):"")+esc(" · ")+curP()[1]+
       // 상승여력 내림차순은 구조적으로 '최근 급락 종목' 목록이 된다 — 실측 근거를 리스트 상단에 상시 노출
-      (state.preset==='tgt'?'<div style="margin-top:5px;font-size:10.5px;line-height:1.5;color:var(--watch);text-transform:none;letter-spacing:0;font-weight:400">'+
+      (state.preset==='tgt'?'<div style="margin-top:5px;font-size:11.5px;line-height:1.5;color:var(--watch);text-transform:none;letter-spacing:0;font-weight:400">'+
         '⚠ 상승여력 높은 순 — 상승여력의 <b>64%는 최근 하락의 기계적 반영</b>(목표가는 1~3개월 시차로 주가를 따라옴)이라 이 정렬은 사실상 <b>급락 종목 순</b>입니다. '+
         '검증 시점 상위 20종목의 <b>90%가 200일선 아래</b>였고, 예측력은 확인되지 않았습니다(5분위 최상−최하 60일 초과 +0.83%p, t=0.89). 컨센서스 정보일 뿐 랩의 신호가 아닙니다.</div>':'');
     listEl.innerHTML="";
@@ -974,7 +974,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
       if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
         var mstr=(s.strong||[]).indexOf(mi)>=0;   // 최신 타점에 다이버전스·거래량 확인이 동반됐나
-        metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mstr?' <span style="color:var(--accent);font-size:9px;font-weight:800" title="다이버전스·거래량 확인이 동반된 타점 — 확인 신호 유무 표기일 뿐, 검증된 수익 우위가 아님">강</span>':'')+(mp.prov?' <span style="color:var(--watch);font-size:9px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
+        metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mstr?' <span style="color:var(--accent);font-size:11px;font-weight:800" title="다이버전스·거래량 확인이 동반된 타점 — 확인 신호 유무 표기일 뿐, 검증된 수익 우위가 아님">강</span>':'')+(mp.prov?' <span style="color:var(--watch);font-size:11px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
       }else if(state.preset==='tgt'){
         // 목표주가 탭 — 목표평균·상승여력·커버 애널 수. 상승여력은 무채색(강조하지 않는다: 검증상 최근 하락의 기계적 반영)
         var fu=s.fund||{}, upv=fu.up, tpm=fu.tpm;

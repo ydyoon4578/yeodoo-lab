@@ -128,14 +128,14 @@
   .hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
   .hcard{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:14px 16px}
   .hcard h3{margin:0;font-family:var(--mono);font-size:12.5px;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .hcard h3 .hn{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:auto}
+  .hcard h3 .hn{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:auto}
   .hcard .hd{margin:6px 0 0;font-size:11.5px;color:var(--muted);line-height:1.5}
   .hbars{margin:12px 0 0;display:flex;align-items:flex-end;gap:2px;height:78px}
   .hbars i{flex:1;background:var(--bar);border-radius:2px 2px 0 0;min-height:1px}
-  .haxis{margin:5px 0 0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+  .haxis{margin:5px 0 0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
   .hq{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:4px 14px;font-family:var(--mono);font-size:11px;color:var(--ink-2);border-top:1px solid var(--line-soft);padding-top:8px}
   .hq b{color:var(--ink)}
-  .hmiss{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--marg)}
+  .hmiss{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--marg)}
 
   /* ── 심리 게이지 ── */
   .gauge{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
@@ -146,34 +146,34 @@
   .track{position:relative;margin:16px 0 0;height:12px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft)}
   .track b{position:absolute;top:-5px;width:3px;height:20px;border-radius:2px;background:var(--accent);transform:translateX(-1.5px)}
   .track u{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
-  .ticks{margin:7px 0 0;display:grid;grid-template-columns:repeat(5,1fr);font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;gap:2px}
+  .ticks{margin:7px 0 0;display:grid;grid-template-columns:repeat(5,1fr);font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;gap:2px}
   .ticks span.on{color:var(--ink);font-weight:700}
   .prevs{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
   .prevs b{color:var(--ink)}
   .sparkbox{margin:16px 0 0}
   .sparkbox svg{display:block;width:100%;height:150px}
-  .sparkleg{margin:7px 0 0;display:flex;flex-wrap:wrap;gap:4px 18px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .sparkleg{margin:7px 0 0;display:flex;flex-wrap:wrap;gap:4px 18px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
   .sparkleg b{color:var(--ink-2)}
 
   /* ── 표·주석 ── */
   details.tv{margin:14px 0 0;border-top:1px solid var(--line-soft);padding-top:10px}
   details.tv>summary{cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--muted);list-style:none}
   details.tv>summary::-webkit-details-marker{display:none}
-  details.tv>summary::before{content:"▸ ";font-size:9px}
+  details.tv>summary::before{content:"▸ ";font-size:11px}
   details.tv[open]>summary::before{content:"▾ "}
   details.tv>summary:hover{color:var(--accent)}
   .tblwrap{margin:10px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
   table{border-collapse:collapse;width:100%;min-width:340px;font-family:var(--mono);font-size:11.5px}
   th,td{padding:6px 10px;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap}
   th:first-child,td:first-child{text-align:left}
-  thead th{color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+  thead th{color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line)}
 
   .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:2px;padding:12px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
   .note b{color:var(--ink)}
   .note.plain{border-left-color:var(--champ)}
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
 
-  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
