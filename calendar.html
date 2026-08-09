@@ -57,7 +57,7 @@
   .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
   .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
   .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
-  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .ty em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--ink-2);line-height:1.5}
 
   .views{display:flex;gap:4px;margin:26px 0 0;border-bottom:1px solid var(--line)}
@@ -77,7 +77,7 @@
 
   .filters{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
   .frow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-  .frow>.fl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:52px}
+  .frow>.fl{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:52px}
   .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);border-radius:2px;background:var(--ground);color:var(--ink-2);cursor:pointer;line-height:1.4}
   .chip:hover{border-color:var(--accent);color:var(--ink)}
   .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
@@ -88,17 +88,17 @@
 
   .day{margin-bottom:2px}
   .dayh{position:sticky;top:0;z-index:2;background:var(--ground);padding:13px 0 7px;font-family:var(--mono);font-size:12px;font-weight:800;display:flex;align-items:baseline;gap:9px;border-bottom:1px solid var(--line)}
-  .dayh .ago{font-size:10.5px;font-weight:600;color:var(--muted)}
+  .dayh .ago{font-size:11.5px;font-weight:600;color:var(--muted)}
   .dayh.today .ago,.dayh.today{color:var(--deploy)}
   .dayh.past{opacity:.62}
-  .dayh .cnt{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--muted)}
+  .dayh .cnt{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--muted)}
   .eev{display:grid;grid-template-columns:64px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line-soft)}
   .eev .et{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--ink);text-decoration:none}
   .eev .et:hover{color:var(--accent)}
   .eev .en{font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .eev .em{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;text-align:right}
   .eev .em b{color:var(--ink)}
-  .eev .eh{display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:2px;
+  .eev .eh{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;
            padding:1px 5px;margin-right:5px;border:1px solid var(--line);color:var(--muted)}
   /* 장전은 파랑(--bmo), 장후는 초록(--amc) — 홈 캘린더의 배지와 같은 색으로 맞춘다(같은 뜻이
      페이지마다 다른 색이면 학습이 안 된다). 시각 미공개는 색 없이 무채색으로 남긴다. */
@@ -106,17 +106,17 @@
   .eev .eh.amc{color:var(--amc);border-color:color-mix(in srgb,var(--amc) 40%,transparent)}
   .eev .es2{grid-column:2/-1;font-size:11px;color:var(--muted);margin-top:1px}
   .ev{display:grid;grid-template-columns:74px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
-  .ev .ek{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:2px;padding:1px 0;text-align:center}
+  .ev .ek{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--utc,var(--muted));border:1px solid var(--utc,var(--line));border-radius:2px;padding:1px 0;text-align:center}
   .ev .en{font-size:13px;color:var(--ink)}
   .ev .es{grid-column:2;display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
   /* 주목도 별 — 이름 뒤에 붙는다. ★★★★(FOMC·고용·CPI)만 강조색. */
   .ev .est{margin-left:7px;font-size:11px;letter-spacing:-1px;color:var(--marg);white-space:nowrap}
   .ev .est.big{color:var(--hot);font-weight:700}
-  .ev .es a{font-family:var(--mono);font-size:10.5px;text-decoration:none;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
+  .ev .es a{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
   .ev .es a:hover{border-color:var(--accent);color:var(--accent)}
   .ev.past{opacity:.62}
 
-  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
@@ -124,7 +124,7 @@
   details.more{margin-top:7px}
   details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:12.5px}
   details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more>summary::before{content:'\25B8';font-size:11px}
   details.more[open]>summary::before{content:'\25BE'}
   details.more>summary:hover{color:var(--accent)}
   details.more .mbody{margin-top:7px}

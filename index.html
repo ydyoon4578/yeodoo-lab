@@ -71,15 +71,15 @@
   .herolede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
   .herolede b{color:var(--ink)}
   .asofbar{margin:18px 0 0;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:8px 15px;box-shadow:var(--shadow);font-family:var(--mono);font-size:12px}
-  .asofbar .asoftag{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:700;
+  .asofbar .asoftag{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700;
     font-family:inherit;background:none;border:1px solid var(--line);border-radius:2px;padding:3px 9px;cursor:pointer;
     display:inline-flex;align-items:center;gap:5px}
   .asofbar .asoftag:hover{border-color:var(--accent);color:var(--ink)}
-  .asofbar .asoftag .caret{font-size:9px;transition:transform .15s}
+  .asofbar .asoftag .caret{font-size:11px;transition:transform .15s}
   .asofbar .asoftag[aria-expanded=true] .caret{transform:rotate(180deg)}
   .asofbar b{color:var(--ink);font-size:14px;font-weight:700}
-  .asofbar .asofnote{color:var(--muted);font-size:10.5px;border-left:1px solid var(--line);padding-left:10px}
-  .stalewarn{color:var(--hot);font-size:10.5px;font-weight:700;border:1px solid color-mix(in srgb,var(--hot) 45%,transparent);border-radius:2px;padding:2px 8px}
+  .asofbar .asofnote{color:var(--muted);font-size:11.5px;border-left:1px solid var(--line);padding-left:10px}
+  .stalewarn{color:var(--hot);font-size:11.5px;font-weight:700;border:1px solid color-mix(in srgb,var(--hot) 45%,transparent);border-radius:2px;padding:2px 8px}
   @media(max-width:560px){.asofbar .asofnote{border-left:0;padding-left:0;flex-basis:100%}}
 
   /* ── 본문 흐름 ──────────────────────────────────────────────── */
@@ -110,7 +110,7 @@
   .signote b{color:var(--ink)}
   .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px;min-height:330px}
   .rcol{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 16px;box-shadow:var(--shadow)}
-  .rcol h4{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}
+  .rcol h4{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}
   a.rstk{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;text-decoration:none}
   a.rstk.brec{background:color-mix(in srgb,var(--deploy) 9%,transparent);border-bottom:0;border-radius:2px;padding:6px 9px;margin:2px 0}
   a.rstk.srec{background:color-mix(in srgb,var(--hot) 9%,transparent);border-bottom:0;border-radius:2px;padding:6px 9px;margin:2px 0}
@@ -119,8 +119,8 @@
   a.rstk:last-child{border-bottom:none} a.rstk:hover .rk{color:var(--accent)}
   .rstk .mk{font-family:var(--mono);font-size:11px;font-weight:700;width:13px;display:inline-block;flex:none}
   .rstk .rk{font-family:var(--mono);font-weight:700;color:var(--ink)}
-  .rstk .rn2{color:var(--muted);font-size:10.5px;font-weight:400;margin-left:5px}
-  .rstk .rsec{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);border-radius:2px;padding:1px 5px;margin-left:5px;white-space:nowrap}
+  .rstk .rn2{color:var(--muted);font-size:11.5px;font-weight:400;margin-left:5px}
+  .rstk .rsec{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent);border-radius:2px;padding:1px 5px;margin-left:5px;white-space:nowrap}
   .rstk .rv{font-family:var(--mono);font-size:11px;color:var(--ink-2);white-space:nowrap}
   @media(max-width:400px){.rstk .rn2{display:none}}
 
@@ -132,7 +132,7 @@
      content를 자손으로 못 갖는다. 카드 전체 클릭감은 제목 링크를 카드 크기로 늘려 유지하고,
      details는 z-index로 그 위에 올린다(아래 .card details.more). */
   .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:15px 17px;display:block;text-decoration:none;color:inherit;border-top:3px solid var(--edge,var(--line));transition:border-color .12s,transform .12s}
-  .axis{font-family:var(--mono);font-size:10px;font-weight:700;border-radius:2px;padding:2px 7px;color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent)}
+  .axis{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:2px 7px;color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent)}
 
   /* 지금 시장 — 글 대신 그림·표로 (2026-07-26). 설명은 접기로 내린다. */
   .card .spk{display:block;width:100%;height:38px;margin:9px 0 0}
@@ -168,9 +168,9 @@
          padding:7px 0;border-top:1px solid var(--line-soft)}
   .wkday:first-child{border-top:0}
   .wkday .wd{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted)}
-  .wkday .wd em{display:block;font-style:normal;font-size:9.5px;color:var(--accent);font-weight:700}
+  .wkday .wd em{display:block;font-style:normal;font-size:11px;color:var(--accent);font-weight:700}
   .wkday .wl{display:flex;flex-wrap:wrap;gap:4px}
-  .wkt{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);background:var(--panel-2);
+  .wkt{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);background:var(--panel-2);
        border:1px solid var(--line);border-radius:2px;padding:2px 6px;text-decoration:none}
   a.wkt:hover{border-color:var(--accent);color:var(--accent)}
   .wkt.bmo{border-color:color-mix(in srgb,var(--bmo) 45%,transparent);color:var(--bmo)}
@@ -190,7 +190,7 @@
   /* 날짜 칸의 지수 등락률 — 일정과 그날 시장 반응을 나란히 읽게 한다.
      8.5px은 실제로 읽기 어려워 9.5px로 올렸다(칸 폭은 flex-wrap이 흡수한다). 방향은 색으로도 읽힌다. */
   .calix{display:flex;flex-wrap:wrap;gap:2px 8px;margin:2px 0 5px;font-family:var(--mono);
-         font-size:9.5px;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.35}
+         font-size:11px;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.35}
   .calix span{display:inline-flex;gap:3px;white-space:nowrap}
   .calix b{color:var(--muted);font-weight:600}
   .calix i{font-style:normal;color:var(--muted)}
@@ -206,7 +206,7 @@
   @media(max-width:900px){.calwrap{min-height:770px}}
   .calgrid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:1px;background:var(--line);
            border:1px solid var(--line);border-radius:2px;overflow:hidden;min-width:760px}
-  .caldow{background:var(--panel-2);padding:7px 9px;font-family:var(--mono);font-size:10px;font-weight:700;
+  .caldow{background:var(--panel-2);padding:7px 9px;font-family:var(--mono);font-size:11px;font-weight:700;
           letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center}
   .calcell{background:var(--panel);padding:8px 9px;min-height:96px;display:flex;flex-direction:column;gap:5px}
   /* 지난 칸은 배경으로만 구분한다. 전에는 opacity:.5 를 걸었는데, 그러면 합성 대비가
@@ -225,8 +225,8 @@
      들어왔나'가 아니다. */
   .caldate{display:flex;align-items:baseline;justify-content:space-between;gap:6px;
            font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2)}
-  .caldate em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--accent)}
-  .calcell .cnt{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+  .caldate em{font-style:normal;font-size:11px;font-weight:700;color:var(--accent)}
+  .calcell .cnt{font-family:var(--mono);font-size:11px;color:var(--muted)}
   /* '+21'은 개수만 알려주고 끝나는 글자가 아니라 나머지를 펼치는 버튼이다.
      버튼 기본 모양은 지우고 칩처럼 두되, 누를 수 있다는 것은 점선 밑줄로 알린다. */
   .calcell button.cnt{border:0;background:none;padding:0 2px;cursor:pointer;font-weight:700;
@@ -237,14 +237,14 @@
   .caltk+.caltk{margin-top:4px;padding-top:4px;border-top:1px dotted var(--line-soft)}
   /* 줄머리 라벨 — 색만으로는 '장후'와 '시각 미공개'가 안 갈린다는 지적. 글자로도 적는다.
      칸이 좁으므로 라벨은 최소 폭으로 두고 줄바꿈되지 않게 고정한다. */
-  .calhl{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:-.02em;
+  .calhl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:-.02em;
          flex:none;white-space:nowrap;opacity:.85}
   .calhl.bmo{color:var(--bmo)} .calhl.amc{color:var(--amc)} .calhl.tba{color:var(--muted)}
-  .calmac{font-size:10.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line-soft);padding-top:5px;margin-top:auto}
+  .calmac{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px dashed var(--line-soft);padding-top:5px;margin-top:auto}
   .calmac b{color:var(--ink-2);font-weight:600}
   /* 주목도 별 — ★★★★(FOMC·고용·CPI)만 강조색. 이 랩이 매긴 눈금이지 검증 신호가 아니다. */
   .calmac b.hi{color:var(--hot)}
-  .calmac .st{margin-left:3px;font-style:normal;font-size:9px;letter-spacing:-.5px;color:var(--marg)}
+  .calmac .st{margin-left:3px;font-style:normal;font-size:11px;letter-spacing:-.5px;color:var(--marg)}
   .calmac .st.hi{color:var(--hot)}
   .calmac .sep{color:var(--line)}
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
@@ -253,7 +253,7 @@
   .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
   .sttbl th,.sttbl td{padding:4px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
-  .sttbl thead th{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
+  .sttbl thead th{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);
        font-weight:700;border-top:0;background:var(--panel-2)}
   /* 첫 열은 **내용에 딱 맞춘다**(사용자 요청 2026-08-03).
      표가 width:100% 라 table-layout:auto 는 남는 폭을 내용이 가장 긴 열에 몰아준다 —
@@ -267,7 +267,7 @@
   .sttbl tbody th{font-weight:700;font-size:12.5px;color:var(--ink-2)}
   /* 티커는 이름 **오른쪽**에 붙인다. 아래 줄로 내리면 행이 두 줄이 되어 표가 두 배로
      길어졌다(사용자 결정 2026-07-29). 같은 줄에 두면 세로가 절반으로 준다. */
-  .sttbl tbody th small{font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--muted);
+  .sttbl tbody th small{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted);
        margin-left:5px}
   .sttbl tr.ix th,.sttbl tr.ix td{background:var(--panel-2);font-weight:700}
   .sttbl tr.gap th,.sttbl tr.gap td{border-top:2px solid var(--line)}
@@ -282,7 +282,7 @@
   /* 묶음 머리 — ETF 원장과 지수 방법론은 성격이 다르다(하나는 실제 상품 수익률, 하나는
      이 랩의 백테스트). 한 표에 넣은 이상 선 하나로는 부족해 글자로 가른다. */
   .sttbl tr.grp>th{background:var(--panel-2);border-top:2px solid var(--line);
-       font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);
+       font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);
        font-weight:700;white-space:normal;padding:6px 11px}
   .sttbl tr.grp em{font-style:normal;font-weight:500;letter-spacing:0;font-family:var(--sans)}
   .sttbl tr.grp b{color:var(--ink-2)}
@@ -360,8 +360,8 @@
        font-weight:700;background:var(--ground);border:1px solid var(--line);border-radius:2px;
        padding:1px 6px;text-decoration:none;color:var(--ink-2)}
   .stchips .stk:hover{border-color:var(--accent);color:var(--accent)}
-  .stchips .stk b{font-size:8.5px;font-weight:600;color:var(--muted)}
-  .stchips .stsrc{margin-left:auto;padding-left:10px;font-size:10px;color:var(--muted);
+  .stchips .stk b{font-size:11px;font-weight:600;color:var(--muted)}
+  .stchips .stsrc{margin-left:auto;padding-left:10px;font-size:11px;color:var(--muted);
        text-decoration:none;white-space:nowrap}
   .stchips .stsrc:hover{color:var(--accent);text-decoration:underline}
   /* 좁은 화면 — 칩 줄의 출처를 오른쪽 끝으로 밀지 않는다(칩이 여러 줄이면 붕 뜬다).
@@ -369,13 +369,13 @@
   @media(max-width:640px){
     .stchips .stsrc{margin-left:0;padding-left:0}
   }
-  .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--muted);align-items:center}
+  .callegend{margin:8px 0 0;display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);align-items:center}
   .callegend i.lg{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .callegend i.lg.m{background:color-mix(in srgb,var(--muted) 55%,transparent)}
   .callegend .lgc{margin-right:4px;pointer-events:none}
 
   /* 티커 툴팁 — hover와 focus 둘 다에 뜬다. 모바일엔 hover가 없어 탭(focus)으로도 열려야 한다. */
-  .tk2{position:relative;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--ink-2);
+  .tk2{position:relative;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);
        background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:2px 6px;
        text-decoration:none;display:inline-block}
   /* display를 못 박아 뒀으므로 hidden 속성만으로는 안 숨는다(UA의 [hidden]{display:none}을 이긴다).
@@ -416,15 +416,15 @@
   .asofrow.pri{background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
   .asofrow .ad{display:flex;flex-direction:column;gap:2px}
   .asofrow .ad b{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
-  .asofrow .pri-t{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
-  .asofrow .lag{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--marg)}
+  .asofrow .pri-t{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--accent)}
+  .asofrow .lag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--marg)}
   /* 발표 일정처럼 앞으로의 예정표는 as_of가 수집일이라 대표일보다 뒤설 수 있다 —
      태그가 비면 버그로 보이므로 그렇게 적는다. */
-  .asofrow .ahead{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted)}
+  .asofrow .ahead{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted)}
   .asofrow .axs{display:flex;gap:6px;flex-wrap:wrap}
   .asofrow .axc{font-size:11.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);
                 border-radius:2px;padding:2px 8px;line-height:1.5}
-  .asofrow .axc em{font-style:normal;font-size:9.5px;color:var(--muted);margin-left:6px}
+  .asofrow .axc em{font-style:normal;font-size:11px;color:var(--muted);margin-left:6px}
   @media(max-width:560px){
     .asofrow{grid-template-columns:1fr}
     .asofrow .ad{flex-direction:row;align-items:baseline;gap:8px}}
@@ -442,7 +442,7 @@
          border-radius:2px;box-shadow:var(--shadow);padding:13px 16px 14px}
   .dcard h3{margin:0;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink);
             display:flex;align-items:baseline;gap:9px}
-  .dcard h3 .dc{margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap}
+  .dcard h3 .dc{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
   /* 판정 분포 막대 — 거시는 원문·집계가 대부분이고 퀀트는 기각이 눈에 띈다는 게 한눈에 보인다 */
   .dtools{display:flex;flex-direction:column;gap:1px}
   .dtools a,.dtools span{display:flex;align-items:baseline;gap:7px;padding:5px 0;font-size:12.5px;
@@ -450,7 +450,7 @@
   .dtools a:first-child,.dtools span:first-child{border-top:0}
   .dtools a{color:var(--ink)} .dtools a:hover{color:var(--accent)}
   .dtools span{color:var(--muted)}
-  .dtools b{margin-left:auto;font-family:var(--mono);font-size:9px;font-weight:700;border-radius:2px;padding:1px 5px;
+  .dtools b{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:1px 5px;
             white-space:nowrap;border:1px solid color-mix(in srgb,var(--bc,var(--muted)) 38%,transparent);
             background:color-mix(in srgb,var(--bc,var(--muted)) 11%,transparent);color:var(--bc,var(--muted))}
   .dtools b.vpass{--bc:var(--nv-pass)} .dtools b.vmarg{--bc:var(--nv-marg)}
@@ -485,10 +485,10 @@
   a.tile:hover{transform:translateY(-2px);border-color:var(--accent)}
   .tile .tn{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink);line-height:1.25}
   .tile .td{font-size:11.5px;color:var(--muted);line-height:1.45}
-  .tile .tb{font-family:var(--mono);font-size:10px;color:var(--edge,var(--muted));font-weight:700;margin-top:3px}
+  .tile .tb{font-family:var(--mono);font-size:11px;color:var(--edge,var(--muted));font-weight:700;margin-top:3px}
   @media(max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
 
-  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:10.5px;line-height:1.8}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
   .lockmark{margin-left:5px;font-size:11px;opacity:.65;vertical-align:1px}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -508,7 +508,7 @@
   details.more{margin-top:7px}
   details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px}
   details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more>summary::before{content:'\25B8';font-size:11px}
   details.more[open]>summary::before{content:'\25BE'}
   details.more>summary:hover{color:var(--accent)}
   details.more .mbody{margin-top:7px}

@@ -55,7 +55,7 @@
   .rej.hl{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent)}
   .rej{scroll-margin-top:24px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--rej);border-radius:2px;padding:11px 15px;margin-bottom:8px;box-shadow:var(--shadow)}
   .rej .rn{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-  .rej .xb{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--rej);background:var(--rej-bg);border-radius:2px;padding:1px 6px}
+  .rej .xb{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--rej);background:var(--rej-bg);border-radius:2px;padding:1px 6px}
   .rej .rr{margin-top:5px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
   /* 재검 부기 — 기각 항목 안에 접혀 있고, 배포 전략 카드(탐색기)와 색·틀이 겹치지 않게 무채색으로 둔다.
      강조색을 쓰면 '살아난 전략'으로 읽히므로 --accent 계열은 여기서 쓰지 않는다. */
@@ -84,8 +84,8 @@
   .statline .stat{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--line);
     border-radius:2px;padding:10px 14px;min-width:118px;box-shadow:var(--shadow)}
   .statline .stat b{display:block;font-family:var(--mono);font-size:21px;font-weight:800;line-height:1.1}
-  .statline .stat em{display:block;margin-top:4px;font-style:normal;font-size:10.5px;color:var(--muted)}
-  .statline .stat{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .statline .stat em{display:block;margin-top:4px;font-style:normal;font-size:11.5px;color:var(--muted)}
+  .statline .stat{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   /* 값은 대문자화에서 뺀다 — |t|(t통계량)가 |T|로 바뀌면 다른 기호가 된다 */
   .statline .stat b{text-transform:none}
   .statline .stat.ok{border-top-color:var(--good,#0E8A54)}
@@ -118,9 +118,9 @@
     padding:15px 18px;margin-bottom:12px}
   .rtop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .rtop h3{margin:0;font-size:14.5px;font-weight:700;flex:1}
-  .rkind{font-family:var(--mono);font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--muted);
+  .rkind{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);
     border:1px solid var(--line);border-radius:2px;padding:1px 6px}
-  .rv{font-family:var(--mono);font-size:10px;font-weight:800;border-radius:2px;padding:2px 8px;border:1px solid}
+  .rv{font-family:var(--mono);font-size:11px;font-weight:800;border-radius:2px;padding:2px 8px;border:1px solid}
   .rv.vpass{color:var(--good,#0E8A54);border-color:currentColor}
   .rv.vunv{color:var(--muted);border-color:var(--line)}
   .rv.vrej{color:var(--hot);border-color:currentColor}
@@ -129,12 +129,12 @@
   .rgrid{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:1px;
     background:var(--line-soft);border:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
   .rc{background:var(--panel);padding:7px 10px}
-  .rc span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .rc span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .rc.tstat span{text-transform:none}   /* 위와 같은 이유 — t통계량 라벨은 소문자여야 한다 */
   .rc b{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:800}
   .rc.up b{color:var(--good,#0E8A54)} .rc.dn b{color:var(--hot)}
   .spark{display:block;width:100%;height:44px;margin:11px 0 0}
-  .rbench{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .rbench{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
   .rarch{margin:9px 0 0;padding-top:9px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);line-height:1.6}
   .rarch b{color:var(--ink-2)}
   .ncard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--muted);
@@ -142,7 +142,7 @@
   .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
   .ncard h4{margin:0;font-size:13px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
-  .ncard h4 span{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--muted);margin-left:auto}
+  .ncard h4 span{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);margin-left:auto}
   .ncard p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.65}
   /* ── 지표별 타이밍 신호 ─────────────────────────────────────────────── */
   header.mast h1{margin:8px 0 0;font-size:clamp(30px,4.6vw,50px);line-height:1.12;letter-spacing:-.02em;font-weight:800}
@@ -151,9 +151,9 @@
   .statline{margin:20px 0 0;display:flex;gap:9px;flex-wrap:wrap}
   .stat{display:inline-flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
         border-radius:2px;padding:10px 14px;min-width:112px;box-shadow:var(--shadow);
-        font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+        font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .stat b{text-transform:none;font-size:21px;color:var(--ink);letter-spacing:-.01em;line-height:1.2}
-  .stat em{text-transform:none;letter-spacing:0;font-style:normal;font-size:10.5px;color:var(--muted);font-weight:400;margin-top:2px}
+  .stat em{text-transform:none;letter-spacing:0;font-style:normal;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
   .stat.ok b{color:var(--gA)} .stat.zero b{color:var(--rej)}
   .hardnote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--rej);
             border-radius:2px;padding:13px 16px;margin:22px 0 0;font-size:13px;line-height:1.68;color:var(--ink-2)}
@@ -172,23 +172,23 @@
   .pfg{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:1px;
        background:var(--line-soft);border:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
   .pfg>div{background:var(--panel);padding:7px 9px}
-  .pfg span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .pfg span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .pfg b{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink)}
   .pfg .up b{color:var(--gA)} .pfg .dn b{color:var(--rej)}
   .pfg .tcell span{text-transform:none}
   .spark{display:block;width:100%;height:44px;margin:11px 0 0}
-  .pfb{margin:6px 0 0;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .pfb{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 
   /* 신호 표 */
   .frow{margin:14px 0 0;display:flex;gap:7px;flex-wrap:wrap}
   .chip{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);background:var(--panel);
         border:1px solid var(--line);border-radius:2px;padding:5px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
   .chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-  .chip .cn{font-size:10px;color:var(--muted)}
+  .chip .cn{font-size:11px;color:var(--muted)}
   .tblwrap{margin:13px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel)}
   .sigt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:840px}
   .sigt.narrow{min-width:460px}
-  .sigt th{position:sticky;top:0;background:var(--panel-2);color:var(--muted);font-size:10px;font-weight:700;
+  .sigt th{position:sticky;top:0;background:var(--panel-2);color:var(--muted);font-size:11px;font-weight:700;
            letter-spacing:.04em;text-transform:uppercase;padding:9px 8px;text-align:right;white-space:nowrap;
            border-bottom:1px solid var(--line)}
   .sigt th.l,.sigt td.l{text-align:left}
@@ -198,13 +198,13 @@
   .sigt td.nm{font-family:var(--sans);font-size:12.5px;color:var(--ink);font-weight:600;white-space:normal;min-width:190px}
   .sigt td.up{color:var(--gA);font-weight:700} .sigt td.dn{color:var(--rej);font-weight:700}
   .sigt td.big{font-weight:800;color:var(--ink)}
-  .vb{font-family:var(--mono);font-size:9.5px;font-weight:700;border-radius:2px;padding:2px 7px;white-space:nowrap;
+  .vb{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:2px 7px;white-space:nowrap;
       border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 42%,transparent);
       background:color-mix(in srgb,var(--vc,var(--muted)) 12%,transparent);color:var(--vc,var(--muted))}
   .vb.ok{--vc:var(--gA)} .vb.inv{--vc:var(--accent)} .vb.few{--vc:var(--gD)} .vb.no{--vc:var(--muted)}
-  .sigt th .thb{display:block;font-size:9px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;margin-top:2px}
-  .sigt td .vb2{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:1px}
-  .dirb{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted)}
+  .sigt th .thb{display:block;font-size:11px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;margin-top:2px}
+  .sigt td .vb2{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:1px}
+  .dirb{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted)}
   .dirb.b{color:var(--gA)} .dirb.s{color:var(--rej)}
   tr.det td{background:var(--panel-2);white-space:normal;text-align:left;font-family:var(--sans);
             font-size:12.5px;line-height:1.68;color:var(--ink-2);padding:13px 14px}
@@ -213,7 +213,7 @@
   .tk{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2);background:var(--panel);
       border:1px solid var(--line);border-radius:2px;padding:3px 7px;text-decoration:none;display:inline-block}
   .tk:hover{border-color:var(--accent);color:var(--accent)}
-  .tk em{font-style:normal;color:var(--muted);font-weight:400;font-size:10px;margin-left:4px}
+  .tk em{font-style:normal;color:var(--muted);font-weight:400;font-size:11px;margin-left:4px}
 
   /* 오늘 목록 */
   .todaygrid{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
@@ -235,7 +235,7 @@
   details.more{margin-top:7px}
   details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:12.5px}
   details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:'\25B8';font-size:9px}
+  details.more>summary::before{content:'\25B8';font-size:11px}
   details.more[open]>summary::before{content:'\25BE'}
   details.more>summary:hover{color:var(--accent)}
   details.more .mbody{margin-top:7px}

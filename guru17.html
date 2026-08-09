@@ -46,7 +46,7 @@
   /* ── 머리 ── 이 페이지가 무엇인지 첫 화면에서 못 박는다 */
   h1{font-size:26px;line-height:1.3;margin:26px 0 6px;letter-spacing:-.01em}
   @media(max-width:640px){h1{font-size:21px}}
-  .kind{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+  .kind{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
     text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:2px;
     background:var(--panel-2);border:1px solid var(--line);color:var(--muted);vertical-align:middle;margin-left:8px}
   .q{font-size:15px;color:var(--ink-2);margin:0 0 20px}
@@ -93,7 +93,7 @@
   .tbl{border-collapse:collapse;width:100%;min-width:660px}
   .tbl th,.tbl td{padding:9px 12px;text-align:right;font-size:13px;white-space:nowrap;
     border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
-  .tbl th{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;
+  .tbl th{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;
     color:var(--muted);font-weight:700;background:var(--panel-2);position:sticky;top:0}
   .tbl th:first-child,.tbl td:first-child{text-align:left;white-space:normal;min-width:170px}
   .tbl tbody tr:last-child td{border-bottom:none}
@@ -105,14 +105,14 @@
   /* 정렬 가능한 열. 기본은 가나다순이고(순위표가 아니다), 누를 때만 그 열로 다시 그린다. */
   .tbl th.s{cursor:pointer;user-select:none;white-space:nowrap}
   .tbl th.s:hover{color:var(--ink-2)}
-  .tbl th.s::after{content:'⇅';margin-left:4px;opacity:.3;font-size:9px}
+  .tbl th.s::after{content:'⇅';margin-left:4px;opacity:.3;font-size:11px}
   .tbl th.s[data-dir="1"]::after{content:'▲';opacity:.95}
   .tbl th.s[data-dir="-1"]::after{content:'▼';opacity:.95}
   /* 대조군 값은 같은 칸 아랫줄에 둔다 — 열을 두 배로 늘리면 표가 화면을 벗어난다. */
   .bv{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
   .pos{color:var(--deploy)} .neg{color:var(--hot)}
   .tbl td.z{color:var(--muted)}
-  .tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.04em;
     padding:1px 6px;border-radius:2px;border:1px solid var(--line);color:var(--muted);
     background:var(--panel-2);margin-left:6px;vertical-align:middle}
   .off td{color:var(--muted)}
