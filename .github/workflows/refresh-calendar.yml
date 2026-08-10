@@ -9,7 +9,7 @@ name: Refresh release calendar (FRED)
 
 on:
   schedule:
-    - cron: '10 23 * * 5'    # 매주 토 08:10 KST — 시장 국면 뒤(내용을 요구하는 하드 의존)
+    - cron: '16 22 * * 5'    # 매주 토 07:16 KST — 시장 국면 뒤(내용을 요구하는 하드 의존)
   workflow_dispatch:
 
 permissions:

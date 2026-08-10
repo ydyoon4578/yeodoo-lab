@@ -20,7 +20,7 @@ name: Refresh 13F history (SEC, quarterly)
 
 on:
   schedule:
-    - cron: '0 2 16 * *'    # 매월 16일 11:00 KST (제출 마감 2/14·5/15·8/14·11/14 직후)
+    - cron: '22 22 15 * *'    # 매월 16일 07:22 KST (제출 마감 2/14·5/15·8/14·11/14 직후)
   workflow_dispatch:
 
 permissions:
