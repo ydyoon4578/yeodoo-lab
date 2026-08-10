@@ -4,7 +4,7 @@ name: Refresh strategy holdings (free data)
 # ⚠ 데이터 정책: build/refresh_holdings.py는 yfinance(무료)만 사용 — 라이선스 데이터 파생 보유는 공개 금지.
 on:
   schedule:
-    - cron: '40 22 1 * *'    # 매월 2일 07:40 KST (UTC 자정 前이라 일자는 1)
+    - cron: '5 22 1 * *'    # 매월 2일 07:05 KST (UTC 자정 前이라 일자는 1)
   workflow_dispatch:
 
 permissions:

@@ -36,7 +36,7 @@ KST = timezone(timedelta(hours=9))
 
 # 백업 슬롯의 cron 문자열. 워크플로에서 이 값을 바꾸면 여기도 바꿔야 한다 —
 # 안 바꾸면 백업이 '본 슬롯'으로 판정되어 늘 돌고, 이 파일이 있는 이유가 사라진다.
-BACKUP_CRON = "20 23 * * 0-5"
+BACKUP_CRON = "42 22 * * 0-5"
 
 
 def last_commit_kst_date(path: str) -> str | None:

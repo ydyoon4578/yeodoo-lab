@@ -2,7 +2,7 @@ name: Refresh market regime (FRED)
 
 on:
   schedule:
-    - cron: '10 22 * * 0-5'    # 매일(월~토) 07:10 KST
+    - cron: '56 21 * * 0-5'    # 매일(월~토) 06:56 KST
   workflow_dispatch:
 
 permissions:

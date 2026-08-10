@@ -7,7 +7,7 @@ name: Refresh strategy metrics (FRED rf)
 
 on:
   schedule:
-    - cron: '30 23 * * 5'    # 매주 토 08:30 KST — 전략 랩·자산 패널보다 앞
+    - cron: '26 22 * * 5'    # 매주 토 07:26 KST — 전략 랩·자산 패널보다 앞
   push:
     paths:
       - 'data/strategy_backtests.json'   # 시계열이 새로 커밋되면 지표를 즉시 다시 굽는다

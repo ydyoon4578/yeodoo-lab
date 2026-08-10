@@ -15,7 +15,7 @@ name: Refresh earnings calendar (Finnhub)
 
 on:
   schedule:
-    - cron: '0 22 * * 0-5'    # 매일(월~토) 07:00 KST — 종목 갱신 뒤(유니버스를 그날 것으로 쓴다)
+    - cron: '53 21 * * 0-5'    # 매일(월~토) 06:53 KST — 종목 갱신 뒤(유니버스를 그날 것으로 쓴다)
   workflow_dispatch:
 
 permissions:
