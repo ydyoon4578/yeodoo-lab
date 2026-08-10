@@ -1002,7 +1002,10 @@ except Exception as e:
 
 # ── 폭 토큰: 페이지 이동 시 콘텐츠 폭이 튀지 않게 세 가지로만 ──
 try:
-    _want = {"stocks.html": "--w-wide", "index.html": "--w-base", "explorer.html": "--w-base",
+    # 🚨 2026-08-10 — index.html 을 --w-base(1200) 에서 --w-wide(1680) 로 옮겼다(사용자 요청).
+    #   홈은 읽는 화면이 아니라 자료 화면이라 폭이 곧 정보량이다(히트맵 518칸).
+    #   이 표를 같이 안 고치면 이 검사가 '되돌려라'라고 말한다 — 기대값도 결정의 일부다.
+    _want = {"stocks.html": "--w-wide", "index.html": "--w-wide", "explorer.html": "--w-base",
              "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
              "sources.html": "--w-read"}
     _want = {k: v for k, v in _want.items() if k not in REDIRECTS}   # 리다이렉트는 본문이 없다

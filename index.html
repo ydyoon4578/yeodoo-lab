@@ -51,13 +51,18 @@
   }}
   :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--accent-2:#5E4900;--deploy:#0C7A4A;--deploy-bg:#dcefe5;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--bmo:#2C6E8F;--amc:#0C7A4A;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rg-gold:#0E8A54;--rg-recov:#1E8A80;--rg-soft:#B25E12;--rg-late:#C0722A;--rg-over:#B0483C;--rg-stag:#9A2F28;--rg-rec:#7A2620;--sn-xfear:#2C6E8F;--sn-fear:#4E90AE;--sn-neut:#786F61;--sn-greed:#B25E12;--sn-xgreed:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
   :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--accent-2:#FFD766;--deploy:#38D083;--deploy-bg:#12291f;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--bmo:#6BB0D6;--amc:#38D083;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rg-gold:#38D083;--rg-recov:#3FC7B4;--rg-soft:#F0863C;--rg-late:#E9A13F;--rg-over:#F08A72;--rg-stag:#F0707E;--rg-rec:#F25C6E;--sn-xfear:#6BB0D6;--sn-fear:#8CC4E0;--sn-neut:#A99C88;--sn-greed:#F0863C;--sn-xgreed:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
-  :root{--w-wide:1440px;--w-base:1200px;--w-read:980px}
+  /* 폭 토큰은 셸이 보장한다(build/sync_shell.py) — 페이지 사본은 2026-08-10 에 걷어냈다.
+     사본이 1440 으로 남아 있었는데 셸은 1680 이었다. 지금은 셸이 뒤에 와서 셸이 이기지만,
+     CSS 순서가 바뀌면 조용히 뒤집힌다. 같은 값을 두 곳에 두지 않는다. */
   *,*::before,*::after{box-sizing:border-box}
   :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
   a{color:inherit}
-  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
+  /* 🚨 2026-08-10 — 홈만 --w-base(1200) → --w-wide(1680)로 옮겼다(사용자 요청).
+     홈은 읽는 화면이 아니라 자료 화면이다. 히트맵 518칸·기간별 수익률 표·달력이
+     전부 폭을 먹는다. 글이 주인 페이지(--w-read 8장)는 건드리지 않는다. */
+  .wrap{max-width:var(--w-wide);margin:0 auto;padding:0 22px 80px}
 
   /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
   @media(max-width:640px){.wrap{padding:0 14px 60px}}
@@ -608,8 +613,15 @@
   --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
   /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
      stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
-     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다. */
-  --w-wide:1440px;--w-base:1200px;--w-read:980px;
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다.
+     🚨 2026-08-10 — --w-wide 를 1440 → 1680 으로 올렸다(사용자 요청 '화면을 최대한 넓게').
+       홈은 자료 화면이다. 종목 히트맵이 518칸을 그리는데 폭이 곧 읽히는 종목 수다 —
+       1200px 에서는 가장 작은 칸이 7×10px 라 글자가 안 들어갔다.
+       ⚠ 내비(.topnav .nvin)도 이 토큰을 쓴다. 본문만 넓히면 내비보다 본문이 넓어져
+         화면이 어긋나 보인다 — 그래서 페이지가 아니라 여기서 바꾼다.
+       ⚠ --w-read(980)는 그대로다. 글이 주인 화면은 한 줄이 길어지면 읽기 나빠진다 —
+         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다. */
+  --w-wide:1680px;--w-base:1200px;--w-read:980px;
 }
 
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
@@ -2160,11 +2172,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return out;
     }
 
+    // 🚨 칸 넓이의 가중 — 시총이 아니라 **시총의 제곱근**이다(2026-08-10 사용자 결정).
+    //   왜 바꿨나: 유니버스의 시총 배율이 835배(최소 65 · 최대 54,245)라, 넓이를 시총에
+    //   그대로 비례시키면 가장 작은 칸이 90px²(7×10px)가 된다. 거기엔 어떤 글꼴로도
+    //   글자가 안 들어간다 — 실측으로 티커가 317/518, 등락률이 84/518 만 보이고 있었다.
+    //   높이를 키워 해결하려면 6,900px 가 필요하다(면적 7.3배). 불가능하다.
+    //   제곱근으로 누르면 최소 칸이 591px² 가 되어 전부 들어간다.
+    //   ⚠ 대가가 있다. **넓이가 시총에 비례하지 않는다** — 순서는 그대로지만 'NVDA 가
+    //     최소 종목의 835배'라는 정보는 화면에서 사라진다. 설명문이 그 사실을 적는다.
+    //   ⚠ 등락률 가중(wret)은 건드리지 않는다. 그쪽은 '이 섹터가 얼마나 움직였나'라
+    //     진짜 시총가중이어야 한다 — 넓이를 누르는 것과 값을 누르는 것은 다른 일이다.
+    function WT(mc){ return Math.sqrt(Math.max(mc||0,0)); }
     function agg(rows, keyf){
       var m={};
       rows.forEach(function(r){
         var k=keyf(r); if(!m[k]) m[k]={k:k, v:0, rows:[]};
-        m[k].v+=(r.mc||0); m[k].rows.push(r);
+        m[k].v+=WT(r.mc); m[k].rows.push(r);
       });
       return Object.keys(m).map(function(k){return m[k];});
     }
@@ -2216,14 +2239,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           html+='<div class="hmgrp" style="left:'+(gb.x+0.5)+'px;top:'+(gb.y+0.5)+'px;width:'+
             Math.max(0,gb.w-1)+'px;height:'+Math.max(0,gb.h-1)+'px">';
           if(gtop) html+='<div class="gl">'+esc(gname)+'</div>';
-          squarify(gg.rows.map(function(r){return {v:Math.max(r.mc||0,1),d:r};}),0,gtop,gb.w,gb.h-gtop)
+          squarify(gg.rows.map(function(r){return {v:Math.max(WT(r.mc),1),d:r};}),0,gtop,gb.w,gb.h-gtop)
             .forEach(function(cb){
               var r=cb.d, v=r.r&&r.r[PER];
               // 글자는 들어갈 때만 넣는다. 억지로 넣으면 잘려서 티커가 'NV' 처럼 보인다.
               // 글자 크기는 칸에 맞춘다. 티커는 4~5자라 폭/3.0, 두 줄이면 높이/2.2 가 한계다.
-              var tf = Math.max(8, Math.min(30, Math.floor(Math.min(cb.w/3.0, cb.h/2.2))));
-              var showT = cb.w>=20 && cb.h>=11;
-              var showR = cb.w>=40 && cb.h>=26;
+              // 글꼴은 칸에 맞춘다. 티커 4~5자라 폭/3.0, 두 줄이면 높이/2.2 가 한계다.
+              // 🚨 하한을 8 → 6 으로, 문턱을 낮췄다(2026-08-10 사용자 요청 '작아도 좋으니 다').
+              //   제곱근 가중으로 최소 칸이 커졌으므로 이 문턱에서 518칸 전부가 글자를 받는다.
+              //   ⚠ 문턱을 0 으로 두지는 않는다. 글자가 칸보다 크면 잘려서 'NV' 처럼 보이는데,
+              //     그건 정보가 아니라 오해다 — 없는 것이 잘린 것보다 낫다.
+              var tf = Math.max(6, Math.min(30, Math.floor(Math.min(cb.w/3.0, cb.h/2.2))));
+              var showT = cb.w>=14 && cb.h>=8;
+              var showR = cb.w>=22 && cb.h>=15;
               var mcs = r.mc>=10000 ? ('$'+(r.mc/10000).toFixed(2)+'T')
                         : (r.mc>=10 ? ('$'+(r.mc/10).toFixed(0)+'B') : ('$'+(r.mc*100).toFixed(0)+'M'));
               var vcol = v==null?'var(--muted)':(v>0?'var(--deploy)':(v<0?'var(--hot)':'var(--muted)'));
@@ -2233,7 +2261,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                 '" style="left:'+cb.x+'px;top:'+cb.y+'px;width:'+cb.w+'px;height:'+cb.h+
                 'px;background:'+col(v)+'">'+
                 (showT?'<span class="ht" style="font-size:'+tf+'px">'+esc(r.nm)+'</span>':'')+
-                (showR?'<span class="hr" style="font-size:'+Math.max(9,Math.round(tf*(tf>=18?0.72:0.66)))+'px">'+fmt(v)+'</span>':'')+
+                (showR?'<span class="hr" style="font-size:'+Math.max(6,Math.round(tf*(tf>=18?0.72:0.7)))+'px">'+fmt(v)+'</span>':'')+
                 '</a>';
             });
           html+='</div>';
@@ -2247,10 +2275,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         (PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1]+' 등락'+
         (ASOF?' · 기준일 '+ASOF:'');
       var nt=el('hm-note');
-      if(nt) nt.innerHTML='칸 크기는 시가총액, 색은 '+esc((PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1])+
-        ' 등락률이다(±'+(CAP[PER]||3)+'%에서 색이 포화한다 — 기간마다 흔들림 폭이 달라 잣대를 따로 둔다). '+
-        '<b>초록이 상승</b>이다 — 이 사이트의 다른 화면과 같은 규약이고, 참고한 블룸버그식 화면(빨강 상승)과는 반대다. '+
-        '칸을 누르면 그 종목 신호로 간다. 묶음은 GICS 섹터 11 → 산업그룹 32이고, 칸이 좁으면 산업그룹 단은 건너뛴다.';
+      if(nt) nt.innerHTML='칸 크기는 <b>시가총액의 제곱근</b>, 색은 '+esc((PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1])+' 등락률이다(±'+(CAP[PER]||3)+'%에서 색이 포화한다 — 기간마다 흔들림 폭이 달라 잣대를 따로 둔다). '+'<b>넓이는 시총에 비례하지 않는다</b> — 유니버스의 시총 배율이 835배라 비례시키면 가장 작은 칸이 7×10px 가 되어 글자가 한 자도 안 들어간다. 제곱근으로 눌러 518종 전부에 티커와 등락률을 넣었다. 순서는 그대로지만 큰 종목이 실제만큼 크게 보이지는 않는다. '+'<b>초록이 상승</b>이다 — 이 사이트의 다른 화면과 같은 규약이다. 칸을 누르면 그 종목 신호로 간다. 묶음은 GICS 섹터 11 → 산업그룹이고, 칸이 좁으면 산업그룹 단은 건너뛴다.'
     }
 
     function bar(){
