@@ -277,6 +277,20 @@
   /* 캘린더·스타일 표도 도착 전엔 한 줄(48px)이고 도착하면 600px/460px 로 늘어난다.
      그 사이에 있는 것이 전부 밀리므로 미리 자리를 잡아 둔다. 과다 예약은 빈 칸만 남기고
      이동은 만들지 않는다 — 반대는 성립하지 않는다. */
+  /* ── 홈 2열 ── 폭이 필요한 구획만 넓은 쪽에 둔다(2026-08-11 사용자 결정).
+     1.55:1 은 캘린더의 min-width(760px)에서 나온 값이다 — 1636px 본문에서 좌측이
+     975px 가 되어 가로 스크롤이 안 생긴다. 비율을 줄이면 캘린더가 스크롤을 만든다.
+     🚨 1열 전환 문턱 1360px 은 계산해서 고른 값이다. 좌측 = (뷰포트 − 44패딩 − 26갭) × 1.55/2.55
+       이므로 좌측이 캘린더 min-width(760)에 닿는 지점이 정확히 뷰포트 1320px 이다.
+       실측: 1320 → 760px(딱 경계) · 1360 → 784px · 1680 → 979px.
+       1200 으로 두면 1200~1320 구간에서 캘린더에 가로 스크롤이 생긴다 — 2열로 만들어 놓고
+       스크롤을 만들면 넓게 쓴 것이 아니다. 여유 24px 을 두고 1360 에서 접는다.
+     ⚠ align-items:start — 안 주면 짧은 칸이 긴 칸 높이로 늘어나 빈 상자가 생긴다. */
+  .hgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+         gap:0 26px;align-items:start}
+  .hcol{display:flex;flex-direction:column;min-width:0}
+  @media(max-width:1360px){.hgrid{grid-template-columns:1fr;gap:0}}
+
   .calwrap{margin:10px 0 0;overflow-x:auto;min-height:660px}
   /* 캘린더 높이는 데이터에 거의 안 흔들린다(창이 늘 4주 × 5일이다) — 좁은 화면에서는
      범례가 접혀 더 커지므로 그만큼 더 잡는다. 실측 1280px 669 / 500px 762. */
@@ -953,8 +967,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="asoftbl" id="asoftbl" aria-label="축별 데이터 기준일" hidden></div>
   </header>
 
-  <div class="home">
-    <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
+    <!-- 🚨 2026-08-11 — 홈을 2열로 바꿨다(사용자 결정). 폭을 1680 으로 넓히고 나니
+         구획이 통짜로 늘어나 성기게 보였다 — 넓게 쓰는 것과 늘어나는 것은 다르다.
+         가르는 기준은 취향이 아니라 **폭이 필요한가**다(실측):
+           · 캘린더 .calgrid 는 min-width 760px — 절반 폭(640)에서 가로 스크롤이 생긴다.
+             그래서 넓은 쪽(1.55fr ≈ 975px)에 둔다.
+           · 시장 국면·오늘의 신호는 625px 에서 넘침 0 — 좁은 쪽(1fr ≈ 640px)에 쌓는다.
+           · 히트맵(518칸)과 기간별 수익률(10열)은 폭이 곧 정보량이라 아래에 통짜로 남긴다.
+         ⚠ 오늘의 신호가 히트맵보다 위로 올라온다. 2열의 결과이고, 신호가 히트맵보다
+           먼저 읽히는 편이 낫다고 보아 그대로 둔다. -->
+    <div class="hgrid">
     <section id="s-week" aria-labelledby="wk-h">
       <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
@@ -968,21 +990,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
       </div>
     </section>
-
-    <!-- ①-b 스타일 성과 — 캘린더 바로 아래. 지수 두 줄을 위에 두어 '무엇 대비인가'를 먼저 보인다.
-         ⚠ 이 랩은 팩터 모멘텀을 '자기 유니버스 대비 구별 불가'로 기각했다. 최근 잘 나간 스타일을
-            추천처럼 읽히게 두면 자기모순이므로, 문구는 상태 표시에 머물러야 한다. -->
-    <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
-         "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
-         전문은 여기 안 편다(regime.html 이 그 화면이다).
-         🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
-            (a7-conover 대조군 열위 · a7-fidelity 구별 불가 · a2-factor-rot 열위 ·
-             regime-switch 열위). 그 사실을 구획 안에 적는다 — 안 적으면 국면표가 매매
-             신호처럼 읽힌다. -->
-    <section id="s-regime" aria-labelledby="rg-h">
-      <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
-      <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
-    </section>
+      <div class="hcol">
+        <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
+           "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
+           전문은 여기 안 편다(regime.html 이 그 화면이다).
+           🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
+              (a7-conover 대조군 열위 · a7-fidelity 구별 불가 · a2-factor-rot 열위 ·
+               regime-switch 열위). 그 사실을 구획 안에 적는다 — 안 적으면 국면표가 매매
+               신호처럼 읽힌다. -->
+      <section id="s-regime" aria-labelledby="rg-h">
+        <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
+        <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
+      </section>
+  
+      <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
+           시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
+      <section id="s-today" aria-labelledby="td-h">
+        <h2 class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></h2>
+        <div class="signote" id="signote">불러오는 중…</div>
+        <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
+      </section>
+      </div>
+    </div>
 
     <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
          자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다(518종 · 119KB).
@@ -1004,14 +1033,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
               한 스타일이 한 줄을 쓴다. -->
 
-    </section>
-
-    <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
-         시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
-    <section id="s-today" aria-labelledby="td-h">
-      <h2 class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></h2>
-      <div class="signote" id="signote">불러오는 중…</div>
-      <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
     </section>
 
     <!-- ⑤ 판정 스트립(배포·제한적 유효·기각 건수)과 진단 배너 셋이 여기 있었다.
