@@ -1069,6 +1069,24 @@ try:
                 if _prev and e.get("dt") and e["dt"] > _prev:
                     errors.append(f"updates.json[{i}]: 정렬 오류 — 최신순이어야 함({e['dt']} > {_prev})")
                 _prev = e.get("dt") or _prev
+            # 🚨 오래 비어 있는 것도 결함이다 — 2026-08-10 에 사용자가 '마지막 기록이 3일
+            #   전'이라고 짚어서 알았다. 그날 방문자가 보는 변경이 다섯 건 있었는데 하나도
+            #   안 적혀 있었다. 이 피드는 **손으로 적는다**(log_update.py 를 부르는 워크플로가
+            #   하나도 없다). 사람이 기억해야 하는 것은 언젠가 잊힌다 —
+            #   코드 주석이 이미 "2026-07-23~25 사흘이 그렇게 비었다"고 적고 있었다.
+            #   ⚠ 실패가 아니라 경고다. 조용한 주가 정상일 수 있고(주말·휴장), 이 검사 때문에
+            #     일일 잡이 죽으면 그게 더 나쁘다. 문턱 10일은 '한산함'이 아니라 '멈춤'을 잡는다.
+            #   ⚠ datetime 은 여기서 따로 들인다 — 모듈 상단의 _dt 별칭은 이 블록보다
+            #     **아래**에서 만들어진다. 그대로 쓰면 NameError 가 나고, 그 예외를 바깥
+            #     except 가 삼켜 '검증 실패'로 둔갑한다(원인이 안 보이는 종류의 실패다).
+            import datetime as _dtl
+            _newest = next((e.get("dt") for e in _evs if e.get("dt")), None)
+            if _newest:
+                _gap = (_dtl.date.today() - _dtl.date.fromisoformat(_newest)).days
+                if _gap >= 10:
+                    print(f"⚠ 갱신 피드가 {_gap}일째 조용하다(마지막 {_newest}). "
+                          f"그동안 방문자가 보는 변경이 있었다면 build/log_update.py 로 남길 것 "
+                          f"— 이 피드를 채우는 자동 잡은 없다.")
 except Exception as e:
     errors.append(f"updates.json 검증 실패: {e}")
 
