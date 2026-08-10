@@ -668,7 +668,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              'Consumer Staples':'필수소비','Industrials':'산업재','Communication Services':'커뮤니케이션','Energy':'에너지',
              'Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
   function secKo(x){return x?(SECKO[x]||x):'';}
-  var DATA=null,F=null,SI_ASOF=null;
+  var DATA=null,F=null,SI_ASOF=null,MACD=null;
   var GROUPS=[["과매수·과매도","hot"],["추세","good"],["모멘텀","accent"],["변동성","watch"],["거래량","cold"],["포지셔닝","accent"]];
   var COMPS=[["overheat","과열도","hot"],["trend","추세","good"],["momentum","모멘텀","accent"],["volatility","변동성","watch"]];
   // 지표별 상태 분류(과매수/과매도·강세/약세 등) + 한 줄 설명. v=원값, p=퍼센타일. tone: hot/cold/good/watch/neut
@@ -712,6 +712,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     ["all","전체",null,false,null,null,"a"],
     ["swingbuy",'<span style="color:var(--good)">▲</span> 스윙 저점매수',"momentum",false,null,null,"r"],
     ["swingsell",'<span style="color:var(--hot)">▼</span> 스윙 고점매도',"trend",true,null,null,"r"],
+    // 🚨 MACD 교차 둘 — 2026-08-10 추가(사용자 요청). **표시용이고 매매 신호가 아니다.**
+    //   이 랩이 같은 표본(518종 · 2010-01~)에서 이미 쟀고 넷 다 '구별 불가'인데,
+    //   매수 쪽은 부호가 원하는 방향의 **반대**다 — 골든크로스 매수의 5일 t 가 −2.79 로
+    //   산 뒤 대조군보다 못했다. 그 수치를 아래 설명문(PDESC)이 그대로 적는다.
+    //   ⚠ 샹들리에 프리셋을 뺀 2026-08-05 결정과 다르게 목록을 두는 것이므로, 대신
+    //     설명문이 판정을 숨기지 않는다. 화면에서 지우는 것과 판정을 적는 것은 다른 선택이다.
+    ["macdbuy",'<span style="color:var(--good)">◇</span> MACD 상향교차',"momentum",false,null,null,"r"],
+    ["macdsell",'<span style="color:var(--hot)">◇</span> MACD 하향교차',"trend",true,null,null,"r"],
     // 🚨 2026-08-05 — 샹들리에 프리셋 넷(chandbuy·chandsell·chlose·chnear)을 뺐다(사용자 요청).
     //   칩 줄만 숨기면 프리셋은 레지스트리에 남아 #p=chandbuy 같은 URL 로 계속 닿는다 —
     //   화면에서 지운 것과 없는 것은 다르다. 정의 자체를 없앤다.
@@ -744,6 +752,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     lowvol:"베타 낮고 이익률 받쳐주는 방어형 — 하락장 방어·강세장 열위. 미검증 스크리닝",
     swingbuy:"차트 스윙 저점 매수 타점(확정 ▲ + 잠정 △)이 최근 발생한 종목 — 최신 타점순. '강'=다이버전스·거래량 확인이 동반된 타점(확인 유무 표기·검증된 우위 아님). 잠정=미확정이라 날짜 이동 가능",
     swingsell:"차트 스윙 고점 매도 타점(확정 ▼ + 잠정 ▽)이 최근 발생한 종목 — 최신 타점순. '강'=다이버전스·거래량 확인이 동반된 타점(확인 유무 표기·검증된 우위 아님). 잠정=미확정이라 날짜 이동 가능",
+    macdbuy:"MACD선이 신호선을 위로 뚫은 날이 최근인 종목 — 최신 교차순. 🚨 이 랩의 실측에서 이 신호는 부호가 반대다: 같은 표본(518종·2010-01~)에서 골든크로스 매수의 5일 초과수익 t 가 −2.79, 즉 산 뒤 대조군보다 못했다(판정 구별 불가). 매매 신호가 아니라 표시다",
+    macdsell:"MACD선이 신호선을 아래로 뚫은 날이 최근인 종목 — 최신 교차순. 같은 실측에서 20일 t −1.66 으로 방향은 맞으나 유의하지 않다(판정 구별 불가). 교차가 잦아 하루 만에 되돌리는 일이 흔하다 — 실측 MU 2026 06-24 매도 → 06-25 매수 → 06-29 매도",
     buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 내림차순 — 매수 후보 1차 기준",
     sell:"하락추세(200일선 아래) 종목 중 약세 종합점수 내림차순 — 비중축소 주의 (공매도 근거 아님)",
     oh:"과열도 상위 — RSI·스토캐스틱·MFI 등 과매수권",
@@ -826,8 +836,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 2026-08-05 — 샹들리에 프리셋을 뺐으므로(사용자 요청) 이 기계는 다시 스윙 전용이다.
   //   프리셋을 지우면서 isCh/mkWin/CH_WIN 도 함께 걷었다 — 닿지 않는 분기를 남겨 두면
   //   다음 사람이 '샹들리에도 되는구나'로 읽는다.
-  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
-  function lastMkP(s,pk){var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
+  // MACD 교차(mcb/mcs)도 같은 기계를 탄다 — 스윙과 좌표계가 같고 '최근 마커순'이라는 성질도 같다.
+  //   ⚠ 다만 MACD 에는 확정/잠정 구분이 없다(교차했거나 아니거나다). lastMkP 가 prov:false 를 준다.
+  function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:
+                             pk==='macdbuy'?['mcb']:pk==='macdsell'?['mcs']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
+  function isMacd(pk){return pk==='macdbuy'||pk==='macdsell';}
+  function lastMkP(s,pk){
+    if(isMacd(pk))return {i:lastMk(s,[pk==='macdbuy'?'mcb':'mcs']),prov:false};
+    var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
   function swFresh(s,sk,pk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
 
   // ─── 펀더멘털 스크리닝 (2026-07-22) ────────────────────────────────────────
@@ -865,6 +881,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var PDESC={
     swingbuy:['스윙 저점매수','주가가 바닥을 찍고 돌아선 지점이 최근에 나온 종목. 확정 타점(▲)과 아직 확정 전인 잠정 타점(△)을 함께 본다. 다이버전스나 거래량이 확인된 타점은 강으로 진하게 표시.','최신 타점순 · 확정은 며칠 뒤에야 판정되므로 사후 표시'],
     swingsell:['스윙 고점매도','주가가 고점을 찍고 꺾인 지점이 최근에 나온 종목. 매도라기보다 비중을 줄여 볼 구간이라는 뜻이다. 다이버전스나 거래량이 확인된 타점은 강으로 진하게 표시.','최신 타점순 · 하락추세에서만 표시'],
+    macdbuy:['MACD 상향교차','MACD선이 신호선을 위로 뚫은 지점. 교과서적으로는 매수 신호로 쓰이지만, 이 랩이 재 보니 그 반대였다 — 산 뒤 5일 초과수익 t 가 −2.79 다.','12·26일 지수이동평균 차이가 그 9일 평균을 상향 돌파 · 최근 3년만 표시'],
+    macdsell:['MACD 하향교차','MACD선이 신호선을 아래로 뚫은 지점. 방향은 맞았으나(20일 t −1.66) 유의하지 않고, 교차가 잦아 며칠 만에 되돌리는 일이 흔하다.','12·26일 지수이동평균 차이가 그 9일 평균을 하향 돌파 · 최근 3년만 표시'],
     oh:['과매수','단기간에 많이 올라 열이 오른 상태. 쉬어갈 가능성을 보는 구간이지 하락 예고는 아니다.','RSI 70 이상 또는 볼린저 밴드 상단(%b 0.95↑)'],
     os:['과매도','단기간에 많이 빠져 눌린 상태. 반등 여지를 보지만 하락추세라면 더 빠질 수도 있다.','RSI 30 이하 또는 볼린저 밴드 하단(%b 0.05↓)'],
     dip:['눌림목','장기 상승추세를 유지하는 중에 잠깐 밀린 종목. 추세는 살아 있는데 단기 과열만 식은 상태를 찾는다.','상승추세(종가>50일선>200일선·ADX 20↑) + RSI 45 미만 + 볼린저 하단권(%b 0.3↓)'],
@@ -902,7 +920,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var fr=screenRows(p[0]).filter(keepQI);
       return {rows:fr,comp:'screen',total:fr.length,screen:p[0]};
     }
-    var sk=swKeys(p[0]),sc=p[0]==='swingbuy'?'bscore':'sscore';
+    // 동점(같은 날 교차) 가름은 매수 프리셋이면 bscore, 매도면 sscore 다 — MACD 둘도 같다.
+    var sk=swKeys(p[0]),sc=(p[0]==='swingbuy'||p[0]==='macdbuy')?'bscore':'sscore';
     var rows=DATA.stocks.filter(function(s){
       if(flag && (s.flags||[]).indexOf(flag)<0)return false;
       if(tim && tim.indexOf(s.timing)<0)return false;
@@ -971,7 +990,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 문자열 1회 빌드(리플로우 1회) + 이벤트 위임(리스너 1개) — 512행 성능
     listEl.innerHTML=rows.map(function(s){
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
-      if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=state.preset==='swingbuy'?'--good':'--hot';
+      if(sk){var mp=lastMkP(s,state.preset),mi=mp.i,dt=(dts[mi]||'').slice(5),ago=NN-1-mi,mc=(state.preset==='swingbuy'||state.preset==='macdbuy')?'--good':'--hot';
         var mstr=(s.strong||[]).indexOf(mi)>=0;   // 최신 타점에 다이버전스·거래량 확인이 동반됐나
         metric='<span class="metric"><div class="mv" style="color:var('+mc+');font-size:13px">'+dt+(mstr?' <span style="color:var(--accent);font-size:11px;font-weight:800" title="다이버전스·거래량 확인이 동반된 타점 — 확인 신호 유무 표기일 뿐, 검증된 수익 우위가 아님">강</span>':'')+(mp.prov?' <span style="color:var(--watch);font-size:11px;font-weight:700">잠정</span>':'')+'</div><div class="nm" style="text-align:right;margin-top:2px">'+(ago<=0?'당일':ago+'일 전')+(mp.prov?' · 이동가능':'')+'</div></span>';
       }else if(state.preset==='tgt'){
@@ -1280,12 +1299,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var tiers=!!DATA.strong_tiers, strongSet={}; (s.strong||[]).forEach(function(i){strongSet[i]=1;});
     var sl=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return [i-off, tiers?!!strongSet[i]:true];});};
     // 샹들리에 교차는 강/약 등급이 없다(선을 넘었거나 아니거나다) — sl() 이 아니라 인덱스만 옮긴다.
-    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw)};
+    // MACD 교차는 강/약 등급이 없다(교차했거나 아니거나다) — sl() 이 아니라 인덱스만 옮긴다.
+    var _mv=function(a){return (a||[]).filter(function(i){return i>=off;}).map(function(i){return i-off;});};
+    var mk={bms:sl(s.bms),bmw:sl(s.bmw),sms:sl(s.sms),smw:sl(s.smw),mcb:_mv(s.mcb),mcs:_mv(s.mcs)};
     var nb=mk.bms.length+mk.bmw.length, ns=mk.sms.length+mk.smw.length;
     var ma20=sma(pxd,20).slice(off), ma60=sma(pxd,60).slice(off);   // 주봉이면 20주·60주
     var vsl=(s.vd||[]).slice(off);
     var ml=el('marklg');
-    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';
+    if(ml)ml.innerHTML='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> <span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>'+(MACD?' <span style="color:var(--muted)">◇MACD 교차 — 이 랩 실측에서 매수 부호가 반대다(5일 t −2.79) · 판정 구별 불가</span>':'');
     drawChart(slice, sdates, mk, ma20, ma60, vsl);
     var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점');
   }
@@ -1338,7 +1359,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       mk.bms.forEach(function(p){tri(p[0],true,g,false,p[1]);});
       mk.sms.forEach(function(p){tri(p[0],false,h,false,p[1]);});
       mk.bmw.forEach(function(p){tri(p[0],true,g,true,p[1]);});
-      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});}
+      mk.smw.forEach(function(p){tri(p[0],false,h,true,p[1]);});
+      // MACD 교차 — **삼각형과 다른 도형(작은 마름모)으로 그린다.** 같은 ▲로 그리면
+      //   검정을 통과하지 못한 신호가 스윙 타점과 같은 것으로 보인다. 도형이 곧 출처다.
+      //   가격선 아래쪽에 작게 깔아 스윙 타점을 가리지 않는다.
+      if(mk.mcb||mk.mcs){
+        function dia(i,up,color){if(i>=arr.length||arr[i]==null)return;
+          var x=X(i),y=Y(arr[i])+(up?20:-20),r=2.6;
+          ctx.globalAlpha=0.55;ctx.beginPath();
+          ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();
+          ctx.fillStyle=color;ctx.fill();ctx.globalAlpha=1;}
+        (mk.mcb||[]).forEach(function(i){dia(i,true,g);});
+        (mk.mcs||[]).forEach(function(i){dia(i,false,h);});
+      }}
   }
 
   // 자동갱신(GitHub cron) 조용한 실패 대비 — 기준일 이후 흐른 영업일이 3일 이상이면 명시 경고(휴장·1회 결측은 허용)
@@ -1352,9 +1385,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 스크린 정의는 별도 파일(로더와 공유) — 없으면 펀더멘털 칩만 빠지고 나머지는 정상 동작
   Promise.all([
     fetch('data/stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}),
-    fetch('data/screens.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
+    fetch('data/screens.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
+    // MACD 교차 타점(164KB) — 스윙 타점과 같은 좌표계의 인덱스 배열. 못 받으면 그 프리셋과
+    // 차트 마커만 빠지고 나머지는 그대로 돈다(fail-soft).
+    fetch('data/macd_marks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
   ]).then(function(res){
     var d=res[0]; if(res[1])applyScreens(res[1]);
+    if(res[2]&&res[2].marks){
+      MACD=res[2];
+      // 종목 객체에 얹는다 — 프리셋·차트가 스윙 마커(bms/sms)와 같은 방식으로 집는다.
+      (d&&d.stocks||[]).forEach(function(s){var m=MACD.marks[s.t];if(m){s.mcb=m.b;s.mcs=m.s;}});
+    }
     return d;
   }).then(function(d){
     if(!d){detailEl.innerHTML='<div class="empty">데이터를 불러오지 못했습니다.</div>';return;}
