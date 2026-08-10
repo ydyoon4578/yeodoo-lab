@@ -2168,7 +2168,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var vcol = v==null?'var(--muted)':(v>0?'var(--deploy)':(v<0?'var(--hot)':'var(--muted)'));
               html+='<a class="hmcell" href="stocks.html#t='+esc(r.nm)+
                 '" data-tip="'+esc([r.nm,(r.sn||''),fmt(v),vcol,mcs,
-                                    (SECKO[r.sec]||r.sec)].join(''))+
+                                    (SECKO[r.sec]||r.sec)].join('\u0001'))+
                 '" style="left:'+cb.x+'px;top:'+cb.y+'px;width:'+cb.w+'px;height:'+cb.h+
                 'px;background:'+col(v)+'">'+
                 (showT?'<span class="ht" style="font-size:'+tf+'px">'+esc(r.nm)+'</span>':'')+
@@ -2222,7 +2222,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var a=e.target.closest && e.target.closest('.hmcell'); if(!a) return;
       if(!tip){ tip=document.createElement('div'); tip.className='hmtip'; document.body.appendChild(tip); }
       var d=a.getAttribute('data-tip'); if(!d) return;
-      var p=d.split('');
+      var p=d.split('\u0001');
       tip.innerHTML='<b>'+esc(p[0])+'</b> <span style="color:'+p[3]+'">'+esc(p[2])+'</span>'+
                     '<br><span class="s">'+esc(p[1])+'</span>'+
                     '<br><span class="s">시총 '+esc(p[4])+' · '+esc(p[5])+'</span>';
