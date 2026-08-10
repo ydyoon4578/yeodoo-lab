@@ -991,7 +991,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
       <div class="hmbar" id="hm-bar"></div>
       <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
-      <p class="stnote" id="hm-note"></p>
     </section>
 
     <section id="s-style" aria-labelledby="st-h">
@@ -2271,11 +2270,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       wrap.className='hmtree';
       wrap.innerHTML=html;
       var sub=el('hm-sub');
-      if(sub) sub.textContent='· '+ROWS.length+'종목 · 시총 크기 · '+
+      if(sub) sub.textContent='· '+ROWS.length+'종목 · 시총 순 · '+
         (PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1]+' 등락'+
         (ASOF?' · 기준일 '+ASOF:'');
-      var nt=el('hm-note');
-      if(nt) nt.innerHTML='칸 크기는 <b>시가총액의 제곱근</b>, 색은 '+esc((PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1])+' 등락률이다(±'+(CAP[PER]||3)+'%에서 색이 포화한다 — 기간마다 흔들림 폭이 달라 잣대를 따로 둔다). '+'<b>넓이는 시총에 비례하지 않는다</b> — 유니버스의 시총 배율이 835배라 비례시키면 가장 작은 칸이 7×10px 가 되어 글자가 한 자도 안 들어간다. 제곱근으로 눌러 518종 전부에 티커와 등락률을 넣었다. 순서는 그대로지만 큰 종목이 실제만큼 크게 보이지는 않는다. '+'<b>초록이 상승</b>이다 — 이 사이트의 다른 화면과 같은 규약이다. 칸을 누르면 그 종목 신호로 간다. 묶음은 GICS 섹터 11 → 산업그룹이고, 칸이 좁으면 산업그룹 단은 건너뛴다.'
+      // 🚨 2026-08-10 — 히트맵 설명문을 걷었다(사용자 결정). 칸 크기·색 규약·묶음 구조를
+      //   문단으로 다시 말하지 않는다. 남길 것은 부제 한 줄이다.
+      //   ⚠ 다만 부제의 '시총 크기'는 **거짓이 된다** — 넓이는 시총이 아니라 시총의
+      //     제곱근이다(835배 배율이라 비례시키면 최소 칸이 7×10px 가 되어 글자가 안 들어간다).
+      //     설명을 지우는 것과 틀린 말을 남기는 것은 다르다. 그래서 '시총 순'으로 바꿨다 —
+      //     넓이가 시총 순서를 따른다는 것은 여전히 참이다.
     }
 
     function bar(){
