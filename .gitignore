@@ -46,3 +46,6 @@ _deploy.log
 # 애널리스트 등급 변경 이력 캐시(yfinance) — 재현 가능하고 수 MB라 로컬에만 둔다.
 #   build/fetch_ratings.py 가 만든다.
 data/_ratings_cache.json
+
+# 프로브 중간 산출(build/probe_ratings.py 가 매번 다시 만든다)
+build/_probe_ratings.json

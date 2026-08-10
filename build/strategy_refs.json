@@ -2,105 +2,851 @@
  "note": "전략별 참고 논문 — sid → 논문 목록. 이 파일이 정본이다(직접 고친다).",
  "policy": "🚨 **URL 을 지어내지 않는다.** 이 저장소가 실제로 가진 링크가 아니면 직접 URL 을 적지 않고, 화면이 제목으로 학술검색 질의를 만들어 건다(결정적이고 항상 열린다). 저자·연도·학술지는 그 규칙을 등록할 때 코드 주석에 적어 둔 것과 같아야 한다 — 다르면 둘 중 하나가 틀린 것이다. 확실하지 않은 규칙은 **비워 둔다.** 없는 것을 지어 채우면 독자가 원문을 못 찾고, 그 사실도 모른다.",
  "papers": {
-  "x-small":       [{"a": "Banz", "y": 1981, "t": "The relationship between return and market value of common stocks", "j": "Journal of Financial Economics 9"}],
-  "x-mom12":       [{"a": "Jegadeesh·Titman", "y": 1993, "t": "Returns to buying winners and selling losers", "j": "Journal of Finance 48"}],
-  "x-echo":        [{"a": "Novy-Marx", "y": 2012, "t": "Is momentum really momentum?", "j": "Journal of Financial Economics 103"}],
-  "x-residmom":    [{"a": "Blitz·Huij·Martens", "y": 2011, "t": "Residual momentum", "j": "Journal of Empirical Finance 18"}],
-  "x-fip":         [{"a": "Da·Gurun·Warachka", "y": 2014, "t": "Frog in the pan: Continuous information and momentum", "j": "Review of Financial Studies 27"}],
-  "x-52wh":        [{"a": "George·Hwang", "y": 2004, "t": "The 52-week high and momentum investing", "j": "Journal of Finance 59"}],
-  "x-indmom":      [{"a": "Moskowitz·Grinblatt", "y": 1999, "t": "Do industries explain momentum?", "j": "Journal of Finance 54"}],
-  "x-rev1m":       [{"a": "Jegadeesh", "y": 1990, "t": "Evidence of predictable behavior of security returns", "j": "Journal of Finance 45"}],
-  "x-rev1w":       [{"a": "Lehmann", "y": 1990, "t": "Fads, martingales, and market efficiency", "j": "Quarterly Journal of Economics 105"}],
-  "x-ltrev":       [{"a": "De Bondt·Thaler", "y": 1985, "t": "Does the stock market overreact?", "j": "Journal of Finance 40"}],
-  "x-season":      [{"a": "Heston·Sadka", "y": 2008, "t": "Seasonality in the cross-section of stock returns", "j": "Journal of Financial Economics 87"}],
-  "x-btp":         [{"a": "Fama·French", "y": 1992, "t": "The cross-section of expected stock returns", "j": "Journal of Finance 47"}],
-  "x-ep":          [{"a": "Basu", "y": 1977, "t": "Investment performance of common stocks in relation to their price-earnings ratios", "j": "Journal of Finance 32"}],
-  "x-sp":          [{"a": "Barbee·Mukherji·Raines", "y": 1996, "t": "Do sales-price and debt-equity explain stock returns better than book-market and firm size?", "j": "Financial Analysts Journal 52"}],
-  "x-dy":          [{"a": "Litzenberger·Ramaswamy", "y": 1979, "t": "The effect of personal taxes and dividends on capital asset prices", "j": "Journal of Financial Economics 7"}],
-  "x-payout":      [{"a": "Boudoukh·Michaely·Richardson·Roberts", "y": 2007, "t": "On the importance of measuring payout yield", "j": "Journal of Finance 62"}],
-  "x-valcomp":     [{"a": "Asness·Frazzini", "y": 2013, "t": "The devil in HML's details", "j": "Journal of Portfolio Management 39"}],
-  "x-valcomp-sn":  [{"a": "Asness·Porter·Stevens", "y": 2000, "t": "Predicting stock returns using industry-relative firm characteristics", "j": "SSRN working paper"}],
-  "x-poacc":       [{"a": "Sloan", "y": 1996, "t": "Do stock prices fully reflect information in accruals and cash flows about future earnings?", "j": "The Accounting Review 71"},
-                    {"a": "Hafzalla·Lundholm·Van Winkle", "y": 2011, "t": "Percent accruals", "j": "The Accounting Review 86"}],
-  "x-agrow":       [{"a": "Cooper·Gulen·Schill", "y": 2008, "t": "Asset growth and the cross-section of stock returns", "j": "Journal of Finance 63"}],
-  "x-shiss":       [{"a": "Pontiff·Woodgate", "y": 2008, "t": "Share issuance and cross-sectional returns", "j": "Journal of Finance 63"}],
-  "x-aci":         [{"a": "Titman·Wei·Xie", "y": 2004, "t": "Capital investments and stock returns", "j": "Journal of Financial and Quantitative Analysis 39"}],
-  "x-debtiss":     [{"a": "Spiess·Affleck-Graves", "y": 1999, "t": "The long-run performance of stock returns following debt offerings", "j": "Journal of Financial Economics 54"}],
-  "x-fscore":      [{"a": "Piotroski", "y": 2000, "t": "Value investing: The use of historical financial statement information to separate winners from losers", "j": "Journal of Accounting Research 38 (Supplement)"}],
-  "x-sue":         [{"a": "Bernard·Thomas", "y": 1989, "t": "Post-earnings-announcement drift: Delayed price response or risk premium?", "j": "Journal of Accounting Research 27"}],
-  "x-lowvol":      [{"a": "Ang·Hodrick·Xing·Zhang", "y": 2006, "t": "The cross-section of volatility and expected returns", "j": "Journal of Finance 61"}],
-  "x-ivol":        [{"a": "Ang·Hodrick·Xing·Zhang", "y": 2006, "t": "The cross-section of volatility and expected returns", "j": "Journal of Finance 61"}],
-  "x-lowbeta":     [{"a": "Frazzini·Pedersen", "y": 2014, "t": "Betting against beta", "j": "Journal of Financial Economics 111"}],
-  "x-lowcorr":     [{"a": "Frazzini·Pedersen", "y": 2014, "t": "Betting against beta", "j": "Journal of Financial Economics 111"}],
-  "x-maxlow":      [{"a": "Bali·Cakici·Whitelaw", "y": 2011, "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns", "j": "Journal of Financial Economics 99"}],
-  "x-max5low":     [{"a": "Bali·Cakici·Whitelaw", "y": 2011, "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns", "j": "Journal of Financial Economics 99"}],
-  "x-volvol":      [{"a": "Baltussen·van Bekkum·van der Grient", "y": 2018, "t": "Unknown unknowns: Uncertainty about risk and stock returns", "j": "Journal of Financial and Quantitative Analysis 53"}],
-  "x-coskew":      [{"a": "Harvey·Siddique", "y": 2000, "t": "Conditional skewness in asset pricing tests", "j": "Journal of Finance 55"}],
-  "x-hlspread":    [{"a": "Corwin·Schultz", "y": 2012, "t": "A simple way to estimate bid-ask spreads from daily high and low prices", "j": "Journal of Finance 67"}],
-  "x-lshock":      [{"a": "Amihud", "y": 2002, "t": "Illiquidity and stock returns: Cross-section and time-series effects", "j": "Journal of Financial Markets 5"}],
-  "x-cntd":        [{"a": "Da·Gurun·Warachka", "y": 2014, "t": "Frog in the pan: Continuous information and momentum", "j": "Review of Financial Studies 27"}],
-  "x-updown":      [{"a": "Ang·Chen·Xing", "y": 2006, "t": "Downside risk", "j": "Review of Financial Studies 19"}],
-  "t-sma200":      [{"a": "Faber", "y": 2007, "t": "A quantitative approach to tactical asset allocation", "j": "Journal of Wealth Management 9"}],
-  "t-tsmom":       [{"a": "Moskowitz·Ooi·Pedersen", "y": 2012, "t": "Time series momentum", "j": "Journal of Financial Economics 104"}],
-  "t-tsmom6":      [{"a": "Moskowitz·Ooi·Pedersen", "y": 2012, "t": "Time series momentum", "j": "Journal of Financial Economics 104"}],
-  "t-voltgt":      [{"a": "Moreira·Muir", "y": 2017, "t": "Volatility-managed portfolios", "j": "Journal of Finance 72"}],
-  "t-semivol":     [{"a": "Moreira·Muir", "y": 2017, "t": "Volatility-managed portfolios", "j": "Journal of Finance 72"}],
-  "t-chand":       [{"a": "Le Beau", "y": 1990, "t": "Chandelier exit (Computer analysis of the futures markets)", "j": "실무 문헌 — 학술 논문 아님"}],
-  "t-donch":       [{"a": "Donchian", "y": 1960, "t": "High finance in copper", "j": "Financial Analysts Journal 16"}],
-  "t-macd":        [{"a": "Appel", "y": 1979, "t": "The moving average convergence-divergence method", "j": "실무 문헌 — 학술 논문 아님"}],
-  "t-kama":        [{"a": "Kaufman", "y": 1995, "t": "Smarter trading (adaptive moving average)", "j": "실무 문헌 — 학술 논문 아님"}],
-  "t-kelly":       [{"a": "Kelly", "y": 1956, "t": "A new interpretation of information rate", "j": "Bell System Technical Journal 35"}],
-  "tom":           [{"a": "Ariel", "y": 1987, "t": "A monthly effect in stock returns", "j": "Journal of Financial Economics 18"}],
-  "seasonal":      [{"a": "Bouman·Jacobsen", "y": 2002, "t": "The Halloween indicator, sell in May and go away: Another puzzle", "j": "American Economic Review 92"}],
-  "opex":          [{"a": "Stoll·Whaley", "y": 1987, "t": "Program trading and expiration-day price effects", "j": "Financial Analysts Journal 43"}],
-  "fomc-even":     [{"a": "Cieslak·Morse·Vissing-Jorgensen", "y": 2019, "t": "Stock returns over the FOMC cycle", "j": "Journal of Finance 74"}],
-  "gem":           [{"a": "Antonacci", "y": 2014, "t": "Dual momentum investing", "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"}],
-  "abs-mom":       [{"a": "Antonacci", "y": 2014, "t": "Dual momentum investing", "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"}],
-  "rel-mom3":      [{"a": "Antonacci", "y": 2014, "t": "Dual momentum investing", "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"}],
-  "sma200":        [{"a": "Faber", "y": 2007, "t": "A quantitative approach to tactical asset allocation", "j": "Journal of Wealth Management 9"}],
-  "sma200-confirm":[{"a": "Faber", "y": 2007, "t": "A quantitative approach to tactical asset allocation", "j": "Journal of Wealth Management 9"}],
-  "sma-grid":      [{"a": "Faber", "y": 2007, "t": "A quantitative approach to tactical asset allocation", "j": "Journal of Wealth Management 9"}],
-  "tsmom-multi":   [{"a": "Moskowitz·Ooi·Pedersen", "y": 2012, "t": "Time series momentum", "j": "Journal of Financial Economics 104"}],
-  "commod-tsmom":  [{"a": "Moskowitz·Ooi·Pedersen", "y": 2012, "t": "Time series momentum", "j": "Journal of Financial Economics 104"}],
-  "carry":         [{"a": "Koijen·Moskowitz·Pedersen·Vrugt", "y": 2018, "t": "Carry", "j": "Journal of Financial Economics 127"}],
-  "curve-carry":   [{"a": "Koijen·Moskowitz·Pedersen·Vrugt", "y": 2018, "t": "Carry", "j": "Journal of Financial Economics 127"}],
-  "hrp-alloc":     [{"a": "Lopez de Prado", "y": 2016, "t": "Building diversified portfolios that outperform out of sample", "j": "Journal of Portfolio Management 42"}],
-  "hrp-sleeve":    [{"a": "Lopez de Prado", "y": 2016, "t": "Building diversified portfolios that outperform out of sample", "j": "Journal of Portfolio Management 42"}],
-  "min-cvar":      [{"a": "Rockafellar·Uryasev", "y": 2000, "t": "Optimization of conditional value-at-risk", "j": "Journal of Risk 2"}],
-  "unrate-trend":  [{"a": "Sahm", "y": 2019, "t": "Direct stimulus payments to individuals (Sahm rule)", "j": "Brookings — 정책 문헌"}],
-  "ebp-gate":      [{"a": "Gilchrist·Zakrajšek", "y": 2012, "t": "Credit spreads and business cycle fluctuations", "j": "American Economic Review 102"}],
-  "a7-conover":    [{"a": "Conover·Jensen·Johnson·Mercer", "y": 2008, "t": "Sector rotation and monetary conditions", "j": "Journal of Investing 17"}],
-  "a7-fidelity":   [{"a": "Fidelity Investments", "y": 2014, "t": "The business cycle approach to equity sector investing", "j": "운용사 백서 — 학술 논문 아님"}],
-  "a7b-gate-sector": [{"a": "Fidelity Investments", "y": 2014, "t": "The business cycle approach to equity sector investing", "j": "운용사 백서 — 학술 논문 아님"}],
-  "sector-rp":     [{"a": "Maillard·Roncalli·Teïletche", "y": 2010, "t": "The properties of equally weighted risk contribution portfolios", "j": "Journal of Portfolio Management 36"}],
-  "rp-cadence":    [{"a": "Maillard·Roncalli·Teïletche", "y": 2010, "t": "The properties of equally weighted risk contribution portfolios", "j": "Journal of Portfolio Management 36"}],
-  "rp-extended":   [{"a": "Maillard·Roncalli·Teïletche", "y": 2010, "t": "The properties of equally weighted risk contribution portfolios", "j": "Journal of Portfolio Management 36"}],
-  "rp-horizon":    [{"a": "Maillard·Roncalli·Teïletche", "y": 2010, "t": "The properties of equally weighted risk contribution portfolios", "j": "Journal of Portfolio Management 36"}],
-  "rp-voltarget":  [{"a": "Maillard·Roncalli·Teïletche", "y": 2010, "t": "The properties of equally weighted risk contribution portfolios", "j": "Journal of Portfolio Management 36"}],
-  "tail-hedge":    [{"a": "Bhansali", "y": 2008, "t": "Tail risk management", "j": "Journal of Portfolio Management 34"}],
-  "vrp-shortvol":  [{"a": "Carr·Wu", "y": 2009, "t": "Variance risk premiums", "j": "Review of Financial Studies 22"}],
-  "vix-ts":        [{"a": "Johnson", "y": 2017, "t": "Risk premia and the VIX term structure", "j": "Journal of Financial and Quantitative Analysis 52"}],
-  "vol-roll":      [{"a": "Johnson", "y": 2017, "t": "Risk premia and the VIX term structure", "j": "Journal of Financial and Quantitative Analysis 52"}],
-  "overnight":     [{"a": "Lou·Polk·Skouras", "y": 2019, "t": "A tug of war: Overnight versus intraday expected returns", "j": "Journal of Financial Economics 134"}],
-  "overnight-ndx": [{"a": "Lou·Polk·Skouras", "y": 2019, "t": "A tug of war: Overnight versus intraday expected returns", "j": "Journal of Financial Economics 134"}],
-  "x-ongapd":      [{"a": "Lou·Polk·Skouras", "y": 2019, "t": "A tug of war: Overnight versus intraday expected returns", "j": "Journal of Financial Economics 134"}],
-  "merger-arb":    [{"a": "Mitchell·Pulvino", "y": 2001, "t": "Characteristics of risk and return in risk arbitrage", "j": "Journal of Finance 56"}],
-  "quality-tilt":  [{"a": "Asness·Frazzini·Pedersen", "y": 2019, "t": "Quality minus junk", "j": "Review of Accounting Studies 24"}],
-  "guru-clone":    [{"a": "Cohen·Polk·Silli", "y": 2010, "t": "Best ideas", "j": "SSRN working paper"}],
-  "crypto-sat":    [{"a": "Liu·Tsyvinski", "y": 2021, "t": "Risks and returns of cryptocurrency", "j": "Review of Financial Studies 34"}],
-  "curve-inv":     [{"a": "Estrella·Mishkin", "y": 1998, "t": "Predicting U.S. recessions: Financial variables as leading indicators", "j": "Review of Economics and Statistics 80"}],
-  "credit-gate":   [{"a": "Gilchrist·Zakrajšek", "y": 2012, "t": "Credit spreads and business cycle fluctuations", "j": "American Economic Review 102"}],
-  "credit-bond-gate": [{"a": "Gilchrist·Zakrajšek", "y": 2012, "t": "Credit spreads and business cycle fluctuations", "j": "American Economic Review 102"}],
-  "mf-satellite":  [{"a": "Hurst·Ooi·Pedersen", "y": 2017, "t": "A century of evidence on trend-following investing", "j": "Journal of Portfolio Management 44"}],
-  "bond-trend":    [{"a": "Hurst·Ooi·Pedersen", "y": 2017, "t": "A century of evidence on trend-following investing", "j": "Journal of Portfolio Management 44"}],
-  "a2-factor-rot": [{"a": "Hodges·Hogan·Peterson·Ang", "y": 2017, "t": "Factor timing with cross-sectional and time-series predictors", "j": "Journal of Portfolio Management 44"}],
-  "usd-us-intl":   [{"a": "Verdelhan", "y": 2018, "t": "The share of systematic variation in bilateral exchange rates", "j": "Journal of Finance 73"}],
-  "real-yield":    [{"a": "Campbell·Shiller", "y": 1996, "t": "A scorecard for indexed government debt", "j": "NBER Macroeconomics Annual 11"}],
-  "infl-real":     [{"a": "Neville·Draaisma·Funnell·Harvey·van Hemert", "y": 2021, "t": "The best strategies for inflationary times", "j": "Journal of Portfolio Management 47"}]
+  "x-small": [
+   {
+    "a": "Banz",
+    "y": 1981,
+    "t": "The relationship between return and market value of common stocks",
+    "j": "Journal of Financial Economics 9"
+   }
+  ],
+  "x-mom12": [
+   {
+    "a": "Jegadeesh·Titman",
+    "y": 1993,
+    "t": "Returns to buying winners and selling losers",
+    "j": "Journal of Finance 48"
+   }
+  ],
+  "x-echo": [
+   {
+    "a": "Novy-Marx",
+    "y": 2012,
+    "t": "Is momentum really momentum?",
+    "j": "Journal of Financial Economics 103"
+   }
+  ],
+  "x-residmom": [
+   {
+    "a": "Blitz·Huij·Martens",
+    "y": 2011,
+    "t": "Residual momentum",
+    "j": "Journal of Empirical Finance 18"
+   }
+  ],
+  "x-fip": [
+   {
+    "a": "Da·Gurun·Warachka",
+    "y": 2014,
+    "t": "Frog in the pan: Continuous information and momentum",
+    "j": "Review of Financial Studies 27"
+   }
+  ],
+  "x-52wh": [
+   {
+    "a": "George·Hwang",
+    "y": 2004,
+    "t": "The 52-week high and momentum investing",
+    "j": "Journal of Finance 59"
+   }
+  ],
+  "x-indmom": [
+   {
+    "a": "Moskowitz·Grinblatt",
+    "y": 1999,
+    "t": "Do industries explain momentum?",
+    "j": "Journal of Finance 54"
+   }
+  ],
+  "x-rev1m": [
+   {
+    "a": "Jegadeesh",
+    "y": 1990,
+    "t": "Evidence of predictable behavior of security returns",
+    "j": "Journal of Finance 45"
+   }
+  ],
+  "x-rev1w": [
+   {
+    "a": "Lehmann",
+    "y": 1990,
+    "t": "Fads, martingales, and market efficiency",
+    "j": "Quarterly Journal of Economics 105"
+   }
+  ],
+  "x-ltrev": [
+   {
+    "a": "De Bondt·Thaler",
+    "y": 1985,
+    "t": "Does the stock market overreact?",
+    "j": "Journal of Finance 40"
+   }
+  ],
+  "x-season": [
+   {
+    "a": "Heston·Sadka",
+    "y": 2008,
+    "t": "Seasonality in the cross-section of stock returns",
+    "j": "Journal of Financial Economics 87"
+   }
+  ],
+  "x-btp": [
+   {
+    "a": "Fama·French",
+    "y": 1992,
+    "t": "The cross-section of expected stock returns",
+    "j": "Journal of Finance 47"
+   }
+  ],
+  "x-ep": [
+   {
+    "a": "Basu",
+    "y": 1977,
+    "t": "Investment performance of common stocks in relation to their price-earnings ratios",
+    "j": "Journal of Finance 32"
+   }
+  ],
+  "x-sp": [
+   {
+    "a": "Barbee·Mukherji·Raines",
+    "y": 1996,
+    "t": "Do sales-price and debt-equity explain stock returns better than book-market and firm size?",
+    "j": "Financial Analysts Journal 52"
+   }
+  ],
+  "x-dy": [
+   {
+    "a": "Litzenberger·Ramaswamy",
+    "y": 1979,
+    "t": "The effect of personal taxes and dividends on capital asset prices",
+    "j": "Journal of Financial Economics 7"
+   }
+  ],
+  "x-payout": [
+   {
+    "a": "Boudoukh·Michaely·Richardson·Roberts",
+    "y": 2007,
+    "t": "On the importance of measuring payout yield",
+    "j": "Journal of Finance 62"
+   }
+  ],
+  "x-valcomp": [
+   {
+    "a": "Asness·Frazzini",
+    "y": 2013,
+    "t": "The devil in HML's details",
+    "j": "Journal of Portfolio Management 39"
+   }
+  ],
+  "x-valcomp-sn": [
+   {
+    "a": "Asness·Porter·Stevens",
+    "y": 2000,
+    "t": "Predicting stock returns using industry-relative firm characteristics",
+    "j": "SSRN working paper"
+   }
+  ],
+  "x-poacc": [
+   {
+    "a": "Sloan",
+    "y": 1996,
+    "t": "Do stock prices fully reflect information in accruals and cash flows about future earnings?",
+    "j": "The Accounting Review 71"
+   },
+   {
+    "a": "Hafzalla·Lundholm·Van Winkle",
+    "y": 2011,
+    "t": "Percent accruals",
+    "j": "The Accounting Review 86"
+   }
+  ],
+  "x-agrow": [
+   {
+    "a": "Cooper·Gulen·Schill",
+    "y": 2008,
+    "t": "Asset growth and the cross-section of stock returns",
+    "j": "Journal of Finance 63"
+   }
+  ],
+  "x-shiss": [
+   {
+    "a": "Pontiff·Woodgate",
+    "y": 2008,
+    "t": "Share issuance and cross-sectional returns",
+    "j": "Journal of Finance 63"
+   }
+  ],
+  "x-aci": [
+   {
+    "a": "Titman·Wei·Xie",
+    "y": 2004,
+    "t": "Capital investments and stock returns",
+    "j": "Journal of Financial and Quantitative Analysis 39"
+   }
+  ],
+  "x-debtiss": [
+   {
+    "a": "Spiess·Affleck-Graves",
+    "y": 1999,
+    "t": "The long-run performance of stock returns following debt offerings",
+    "j": "Journal of Financial Economics 54"
+   }
+  ],
+  "x-fscore": [
+   {
+    "a": "Piotroski",
+    "y": 2000,
+    "t": "Value investing: The use of historical financial statement information to separate winners from losers",
+    "j": "Journal of Accounting Research 38 (Supplement)"
+   }
+  ],
+  "x-sue": [
+   {
+    "a": "Bernard·Thomas",
+    "y": 1989,
+    "t": "Post-earnings-announcement drift: Delayed price response or risk premium?",
+    "j": "Journal of Accounting Research 27"
+   }
+  ],
+  "x-lowvol": [
+   {
+    "a": "Ang·Hodrick·Xing·Zhang",
+    "y": 2006,
+    "t": "The cross-section of volatility and expected returns",
+    "j": "Journal of Finance 61"
+   }
+  ],
+  "x-ivol": [
+   {
+    "a": "Ang·Hodrick·Xing·Zhang",
+    "y": 2006,
+    "t": "The cross-section of volatility and expected returns",
+    "j": "Journal of Finance 61"
+   }
+  ],
+  "x-lowbeta": [
+   {
+    "a": "Frazzini·Pedersen",
+    "y": 2014,
+    "t": "Betting against beta",
+    "j": "Journal of Financial Economics 111"
+   }
+  ],
+  "x-lowcorr": [
+   {
+    "a": "Frazzini·Pedersen",
+    "y": 2014,
+    "t": "Betting against beta",
+    "j": "Journal of Financial Economics 111"
+   }
+  ],
+  "x-maxlow": [
+   {
+    "a": "Bali·Cakici·Whitelaw",
+    "y": 2011,
+    "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+    "j": "Journal of Financial Economics 99"
+   }
+  ],
+  "x-max5low": [
+   {
+    "a": "Bali·Cakici·Whitelaw",
+    "y": 2011,
+    "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+    "j": "Journal of Financial Economics 99"
+   }
+  ],
+  "x-volvol": [
+   {
+    "a": "Baltussen·van Bekkum·van der Grient",
+    "y": 2018,
+    "t": "Unknown unknowns: Uncertainty about risk and stock returns",
+    "j": "Journal of Financial and Quantitative Analysis 53"
+   }
+  ],
+  "x-coskew": [
+   {
+    "a": "Harvey·Siddique",
+    "y": 2000,
+    "t": "Conditional skewness in asset pricing tests",
+    "j": "Journal of Finance 55"
+   }
+  ],
+  "x-hlspread": [
+   {
+    "a": "Corwin·Schultz",
+    "y": 2012,
+    "t": "A simple way to estimate bid-ask spreads from daily high and low prices",
+    "j": "Journal of Finance 67"
+   }
+  ],
+  "x-lshock": [
+   {
+    "a": "Amihud",
+    "y": 2002,
+    "t": "Illiquidity and stock returns: Cross-section and time-series effects",
+    "j": "Journal of Financial Markets 5"
+   }
+  ],
+  "x-cntd": [
+   {
+    "a": "Da·Gurun·Warachka",
+    "y": 2014,
+    "t": "Frog in the pan: Continuous information and momentum",
+    "j": "Review of Financial Studies 27"
+   }
+  ],
+  "x-updown": [
+   {
+    "a": "Ang·Chen·Xing",
+    "y": 2006,
+    "t": "Downside risk",
+    "j": "Review of Financial Studies 19"
+   }
+  ],
+  "t-sma200": [
+   {
+    "a": "Faber",
+    "y": 2007,
+    "t": "A quantitative approach to tactical asset allocation",
+    "j": "Journal of Wealth Management 9"
+   }
+  ],
+  "t-tsmom": [
+   {
+    "a": "Moskowitz·Ooi·Pedersen",
+    "y": 2012,
+    "t": "Time series momentum",
+    "j": "Journal of Financial Economics 104"
+   }
+  ],
+  "t-tsmom6": [
+   {
+    "a": "Moskowitz·Ooi·Pedersen",
+    "y": 2012,
+    "t": "Time series momentum",
+    "j": "Journal of Financial Economics 104"
+   }
+  ],
+  "t-voltgt": [
+   {
+    "a": "Moreira·Muir",
+    "y": 2017,
+    "t": "Volatility-managed portfolios",
+    "j": "Journal of Finance 72"
+   }
+  ],
+  "t-semivol": [
+   {
+    "a": "Moreira·Muir",
+    "y": 2017,
+    "t": "Volatility-managed portfolios",
+    "j": "Journal of Finance 72"
+   }
+  ],
+  "t-chand": [
+   {
+    "a": "Le Beau",
+    "y": 1990,
+    "t": "Chandelier exit (Computer analysis of the futures markets)",
+    "j": "실무 문헌 — 학술 논문 아님"
+   }
+  ],
+  "t-donch": [
+   {
+    "a": "Donchian",
+    "y": 1960,
+    "t": "High finance in copper",
+    "j": "Financial Analysts Journal 16"
+   }
+  ],
+  "t-macd": [
+   {
+    "a": "Appel",
+    "y": 1979,
+    "t": "The moving average convergence-divergence method",
+    "j": "실무 문헌 — 학술 논문 아님"
+   }
+  ],
+  "t-kama": [
+   {
+    "a": "Kaufman",
+    "y": 1995,
+    "t": "Smarter trading (adaptive moving average)",
+    "j": "실무 문헌 — 학술 논문 아님"
+   }
+  ],
+  "t-kelly": [
+   {
+    "a": "Kelly",
+    "y": 1956,
+    "t": "A new interpretation of information rate",
+    "j": "Bell System Technical Journal 35"
+   }
+  ],
+  "tom": [
+   {
+    "a": "Ariel",
+    "y": 1987,
+    "t": "A monthly effect in stock returns",
+    "j": "Journal of Financial Economics 18"
+   }
+  ],
+  "seasonal": [
+   {
+    "a": "Bouman·Jacobsen",
+    "y": 2002,
+    "t": "The Halloween indicator, sell in May and go away: Another puzzle",
+    "j": "American Economic Review 92"
+   }
+  ],
+  "opex": [
+   {
+    "a": "Stoll·Whaley",
+    "y": 1987,
+    "t": "Program trading and expiration-day price effects",
+    "j": "Financial Analysts Journal 43"
+   }
+  ],
+  "fomc-even": [
+   {
+    "a": "Cieslak·Morse·Vissing-Jorgensen",
+    "y": 2019,
+    "t": "Stock returns over the FOMC cycle",
+    "j": "Journal of Finance 74"
+   }
+  ],
+  "gem": [
+   {
+    "a": "Antonacci",
+    "y": 2014,
+    "t": "Dual momentum investing",
+    "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+   }
+  ],
+  "abs-mom": [
+   {
+    "a": "Antonacci",
+    "y": 2014,
+    "t": "Dual momentum investing",
+    "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+   }
+  ],
+  "rel-mom3": [
+   {
+    "a": "Antonacci",
+    "y": 2014,
+    "t": "Dual momentum investing",
+    "j": "실무 문헌(McGraw-Hill) — 학술 논문 아님"
+   }
+  ],
+  "sma200": [
+   {
+    "a": "Faber",
+    "y": 2007,
+    "t": "A quantitative approach to tactical asset allocation",
+    "j": "Journal of Wealth Management 9"
+   }
+  ],
+  "sma200-confirm": [
+   {
+    "a": "Faber",
+    "y": 2007,
+    "t": "A quantitative approach to tactical asset allocation",
+    "j": "Journal of Wealth Management 9"
+   }
+  ],
+  "sma-grid": [
+   {
+    "a": "Faber",
+    "y": 2007,
+    "t": "A quantitative approach to tactical asset allocation",
+    "j": "Journal of Wealth Management 9"
+   }
+  ],
+  "tsmom-multi": [
+   {
+    "a": "Moskowitz·Ooi·Pedersen",
+    "y": 2012,
+    "t": "Time series momentum",
+    "j": "Journal of Financial Economics 104"
+   }
+  ],
+  "commod-tsmom": [
+   {
+    "a": "Moskowitz·Ooi·Pedersen",
+    "y": 2012,
+    "t": "Time series momentum",
+    "j": "Journal of Financial Economics 104"
+   }
+  ],
+  "carry": [
+   {
+    "a": "Koijen·Moskowitz·Pedersen·Vrugt",
+    "y": 2018,
+    "t": "Carry",
+    "j": "Journal of Financial Economics 127"
+   }
+  ],
+  "curve-carry": [
+   {
+    "a": "Koijen·Moskowitz·Pedersen·Vrugt",
+    "y": 2018,
+    "t": "Carry",
+    "j": "Journal of Financial Economics 127"
+   }
+  ],
+  "hrp-alloc": [
+   {
+    "a": "Lopez de Prado",
+    "y": 2016,
+    "t": "Building diversified portfolios that outperform out of sample",
+    "j": "Journal of Portfolio Management 42"
+   }
+  ],
+  "hrp-sleeve": [
+   {
+    "a": "Lopez de Prado",
+    "y": 2016,
+    "t": "Building diversified portfolios that outperform out of sample",
+    "j": "Journal of Portfolio Management 42"
+   }
+  ],
+  "min-cvar": [
+   {
+    "a": "Rockafellar·Uryasev",
+    "y": 2000,
+    "t": "Optimization of conditional value-at-risk",
+    "j": "Journal of Risk 2"
+   }
+  ],
+  "unrate-trend": [
+   {
+    "a": "Sahm",
+    "y": 2019,
+    "t": "Direct stimulus payments to individuals (Sahm rule)",
+    "j": "Brookings — 정책 문헌"
+   }
+  ],
+  "ebp-gate": [
+   {
+    "a": "Gilchrist·Zakrajšek",
+    "y": 2012,
+    "t": "Credit spreads and business cycle fluctuations",
+    "j": "American Economic Review 102"
+   }
+  ],
+  "a7-conover": [
+   {
+    "a": "Conover·Jensen·Johnson·Mercer",
+    "y": 2008,
+    "t": "Sector rotation and monetary conditions",
+    "j": "Journal of Investing 17"
+   }
+  ],
+  "a7-fidelity": [
+   {
+    "a": "Fidelity Investments",
+    "y": 2014,
+    "t": "The business cycle approach to equity sector investing",
+    "j": "운용사 백서 — 학술 논문 아님"
+   }
+  ],
+  "a7b-gate-sector": [
+   {
+    "a": "Fidelity Investments",
+    "y": 2014,
+    "t": "The business cycle approach to equity sector investing",
+    "j": "운용사 백서 — 학술 논문 아님"
+   }
+  ],
+  "sector-rp": [
+   {
+    "a": "Maillard·Roncalli·Teïletche",
+    "y": 2010,
+    "t": "The properties of equally weighted risk contribution portfolios",
+    "j": "Journal of Portfolio Management 36"
+   }
+  ],
+  "rp-cadence": [
+   {
+    "a": "Maillard·Roncalli·Teïletche",
+    "y": 2010,
+    "t": "The properties of equally weighted risk contribution portfolios",
+    "j": "Journal of Portfolio Management 36"
+   }
+  ],
+  "rp-extended": [
+   {
+    "a": "Maillard·Roncalli·Teïletche",
+    "y": 2010,
+    "t": "The properties of equally weighted risk contribution portfolios",
+    "j": "Journal of Portfolio Management 36"
+   }
+  ],
+  "rp-horizon": [
+   {
+    "a": "Maillard·Roncalli·Teïletche",
+    "y": 2010,
+    "t": "The properties of equally weighted risk contribution portfolios",
+    "j": "Journal of Portfolio Management 36"
+   }
+  ],
+  "rp-voltarget": [
+   {
+    "a": "Maillard·Roncalli·Teïletche",
+    "y": 2010,
+    "t": "The properties of equally weighted risk contribution portfolios",
+    "j": "Journal of Portfolio Management 36"
+   }
+  ],
+  "tail-hedge": [
+   {
+    "a": "Bhansali",
+    "y": 2008,
+    "t": "Tail risk management",
+    "j": "Journal of Portfolio Management 34"
+   }
+  ],
+  "vrp-shortvol": [
+   {
+    "a": "Carr·Wu",
+    "y": 2009,
+    "t": "Variance risk premiums",
+    "j": "Review of Financial Studies 22"
+   }
+  ],
+  "vix-ts": [
+   {
+    "a": "Johnson",
+    "y": 2017,
+    "t": "Risk premia and the VIX term structure",
+    "j": "Journal of Financial and Quantitative Analysis 52"
+   }
+  ],
+  "vol-roll": [
+   {
+    "a": "Johnson",
+    "y": 2017,
+    "t": "Risk premia and the VIX term structure",
+    "j": "Journal of Financial and Quantitative Analysis 52"
+   }
+  ],
+  "overnight": [
+   {
+    "a": "Lou·Polk·Skouras",
+    "y": 2019,
+    "t": "A tug of war: Overnight versus intraday expected returns",
+    "j": "Journal of Financial Economics 134"
+   }
+  ],
+  "overnight-ndx": [
+   {
+    "a": "Lou·Polk·Skouras",
+    "y": 2019,
+    "t": "A tug of war: Overnight versus intraday expected returns",
+    "j": "Journal of Financial Economics 134"
+   }
+  ],
+  "x-ongapd": [
+   {
+    "a": "Lou·Polk·Skouras",
+    "y": 2019,
+    "t": "A tug of war: Overnight versus intraday expected returns",
+    "j": "Journal of Financial Economics 134"
+   }
+  ],
+  "merger-arb": [
+   {
+    "a": "Mitchell·Pulvino",
+    "y": 2001,
+    "t": "Characteristics of risk and return in risk arbitrage",
+    "j": "Journal of Finance 56"
+   }
+  ],
+  "quality-tilt": [
+   {
+    "a": "Asness·Frazzini·Pedersen",
+    "y": 2019,
+    "t": "Quality minus junk",
+    "j": "Review of Accounting Studies 24"
+   }
+  ],
+  "guru-clone": [
+   {
+    "a": "Cohen·Polk·Silli",
+    "y": 2010,
+    "t": "Best ideas",
+    "j": "SSRN working paper"
+   }
+  ],
+  "crypto-sat": [
+   {
+    "a": "Liu·Tsyvinski",
+    "y": 2021,
+    "t": "Risks and returns of cryptocurrency",
+    "j": "Review of Financial Studies 34"
+   }
+  ],
+  "curve-inv": [
+   {
+    "a": "Estrella·Mishkin",
+    "y": 1998,
+    "t": "Predicting U.S. recessions: Financial variables as leading indicators",
+    "j": "Review of Economics and Statistics 80"
+   }
+  ],
+  "credit-gate": [
+   {
+    "a": "Gilchrist·Zakrajšek",
+    "y": 2012,
+    "t": "Credit spreads and business cycle fluctuations",
+    "j": "American Economic Review 102"
+   }
+  ],
+  "credit-bond-gate": [
+   {
+    "a": "Gilchrist·Zakrajšek",
+    "y": 2012,
+    "t": "Credit spreads and business cycle fluctuations",
+    "j": "American Economic Review 102"
+   }
+  ],
+  "mf-satellite": [
+   {
+    "a": "Hurst·Ooi·Pedersen",
+    "y": 2017,
+    "t": "A century of evidence on trend-following investing",
+    "j": "Journal of Portfolio Management 44"
+   }
+  ],
+  "bond-trend": [
+   {
+    "a": "Hurst·Ooi·Pedersen",
+    "y": 2017,
+    "t": "A century of evidence on trend-following investing",
+    "j": "Journal of Portfolio Management 44"
+   }
+  ],
+  "a2-factor-rot": [
+   {
+    "a": "Hodges·Hogan·Peterson·Ang",
+    "y": 2017,
+    "t": "Factor timing with cross-sectional and time-series predictors",
+    "j": "Journal of Portfolio Management 44"
+   }
+  ],
+  "usd-us-intl": [
+   {
+    "a": "Verdelhan",
+    "y": 2018,
+    "t": "The share of systematic variation in bilateral exchange rates",
+    "j": "Journal of Finance 73"
+   }
+  ],
+  "real-yield": [
+   {
+    "a": "Campbell·Shiller",
+    "y": 1996,
+    "t": "A scorecard for indexed government debt",
+    "j": "NBER Macroeconomics Annual 11"
+   }
+  ],
+  "infl-real": [
+   {
+    "a": "Neville·Draaisma·Funnell·Harvey·van Hemert",
+    "y": 2021,
+    "t": "The best strategies for inflationary times",
+    "j": "Journal of Portfolio Management 47"
+   }
+  ],
+  "x-revdrift": [
+   {
+    "a": "Womack",
+    "y": 1996,
+    "t": "Do brokerage analysts' recommendations have investment value?",
+    "j": "Journal of Finance 51"
+   },
+   {
+    "a": "Barber·Lehavy·McNichols·Trueman",
+    "y": 2001,
+    "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+    "j": "Journal of Finance 56"
+   },
+   {
+    "a": "Jegadeesh·Kim·Krische·Lee",
+    "y": 2004,
+    "t": "Analyzing the analysts: When do recommendations add value?",
+    "j": "Journal of Finance 59"
+   },
+   {
+    "a": "Loh·Stulz",
+    "y": 2011,
+    "t": "When are analyst recommendation changes influential?",
+    "j": "Review of Financial Studies 24"
+   }
+  ],
+  "x-revdrift-q": [
+   {
+    "a": "Womack",
+    "y": 1996,
+    "t": "Do brokerage analysts' recommendations have investment value?",
+    "j": "Journal of Finance 51"
+   },
+   {
+    "a": "Barber·Lehavy·McNichols·Trueman",
+    "y": 2001,
+    "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+    "j": "Journal of Finance 56"
+   },
+   {
+    "a": "Jegadeesh·Kim·Krische·Lee",
+    "y": 2004,
+    "t": "Analyzing the analysts: When do recommendations add value?",
+    "j": "Journal of Finance 59"
+   },
+   {
+    "a": "Loh·Stulz",
+    "y": 2011,
+    "t": "When are analyst recommendation changes influential?",
+    "j": "Review of Financial Studies 24"
+   }
+  ],
+  "x-revdrift-sn": [
+   {
+    "a": "Womack",
+    "y": 1996,
+    "t": "Do brokerage analysts' recommendations have investment value?",
+    "j": "Journal of Finance 51"
+   },
+   {
+    "a": "Barber·Lehavy·McNichols·Trueman",
+    "y": 2001,
+    "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+    "j": "Journal of Finance 56"
+   },
+   {
+    "a": "Jegadeesh·Kim·Krische·Lee",
+    "y": 2004,
+    "t": "Analyzing the analysts: When do recommendations add value?",
+    "j": "Journal of Finance 59"
+   },
+   {
+    "a": "Loh·Stulz",
+    "y": 2011,
+    "t": "When are analyst recommendation changes influential?",
+    "j": "Review of Financial Studies 24"
+   }
+  ]
  },
  "no_paper": {
   "note": "논문이 없거나 특정하지 못한 규칙 — **비워 두는 것이 정직하다.** 대부분은 이 랩이 자료 사정에 맞춰 만든 변형이거나, 실무 관행이라 원 논문이 특정되지 않는다. 지어 채우면 독자가 원문을 못 찾고 그 사실도 모른다.",
-  "kinds": ["이 랩이 만든 변형(중립화판·컴포지트·게이트 조합)", "실무 관행(이동평균 교차·채널 돌파 등 일부)", "운용사 백서만 있는 것", "원 논문을 특정하지 못한 것"]
+  "kinds": [
+   "이 랩이 만든 변형(중립화판·컴포지트·게이트 조합)",
+   "실무 관행(이동평균 교차·채널 돌파 등 일부)",
+   "운용사 백서만 있는 것",
+   "원 논문을 특정하지 못한 것"
+  ]
  },
  "search": {
   "base": "https://scholar.google.com/scholar?q=",
