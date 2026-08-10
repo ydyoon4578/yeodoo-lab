@@ -463,6 +463,26 @@ def _val(objs):
     return out
 
 
+def _idx_counts(stocks, root):
+    """{'SPX': n, 'NDX': n, 'both': n, 'all': n}. members.json 의 idx 를 센다.
+
+    ⚠ stocks.json 에도 idx 가 있지만 members.json 이 그 정본이다(refresh_members 가 관문
+      넷을 통과해야 쓴다). 같은 수를 두 곳에서 세면 언젠가 갈린다.
+    못 읽으면 빈 dict 을 준다 — 눈썹은 그때 종목 수를 아예 안 적는다(틀린 수보다 낫다).
+    """
+    p = os.path.join(root, "data", "members.json")
+    try:
+        mem = (json.load(io.open(p, encoding="utf-8")) or {}).get("members") or {}
+    except Exception:
+        return {}
+    if not mem:
+        return {}
+    spx = sum(1 for v in mem.values() if "SPX" in (v.get("idx") or []))
+    ndx = sum(1 for v in mem.values() if "NDX" in (v.get("idx") or []))
+    both = sum(1 for v in mem.values() if {"SPX", "NDX"} <= set(v.get("idx") or []))
+    return {"SPX": spx, "NDX": ndx, "both": both, "all": len(mem)}
+
+
 def _breadth(stocks):
     """③ 시장 폭 — 지수가 아니라 '몇 종목이 어느 상태인가'.
 
@@ -518,6 +538,11 @@ def build(stocks, dates, as_of, root):
         "buy": buy, "sell": sell, "nbuy": nb, "nsell": ns,
         "buy_conf": nb_c, "buy_prov": nb_p, "sell_conf": ns_c, "sell_prov": ns_p,
         "breadth": _breadth(stocks),
+        # 히어로 눈썹이 쓰는 지수별 종목 수(사용자 요청 2026-08-10 — '518종목 · FRED 39지표'
+        # 대신 'S&P 500 몇 · 나스닥 100 몇'). 합집합이 518이고 겹침이 있으므로 둘을 더하면
+        # 518이 넘는다 — 화면은 두 수를 나란히 적을 뿐 더하지 않는다.
+        # ⚠ 손으로 적지 않는다. 지수 리밸런스가 있는 날 조용히 낡는 종류의 숫자다.
+        "idx_n": _idx_counts(stocks, root),
         # 섹터(11)와 종목(518) 사이 — GICS 산업그룹·서브산업. 홈 산업 카드가 읽는다.
         "industry": _segments(stocks, dates, root),
     }

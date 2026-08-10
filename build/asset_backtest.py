@@ -277,6 +277,35 @@ def sma(s, i, n):
     return sum(v) / len(v) if len(v) >= n * 0.8 else None
 
 
+def pct1(w):
+    """{티커: 비중} → [(티커, %)…] 내림차순. **소수 1자리이고 합이 정확히 100.0** 이다.
+
+    🚨 2026-08-10. 종전에는 항목마다 따로 round(100*v/tot, 1) 했다. 반올림이 각자 놀아서
+      50전략 중 7개의 합이 99.9 또는 100.1 로 나왔다(a7-fidelity·bond-trend·tsmom-multi·
+      a7b-gate-sector·a7-conover·rp-extended·rp-voltarget). 화면은 이 값을 그대로 1자리로
+      그리므로, 더해 보는 사람에게는 비중이 100이 아닌 포트폴리오로 보인다.
+
+    최대잔여법(largest remainder) — 0.1%p 단위로 내림한 뒤 남은 몫을 **잘린 소수가 큰
+      순서로** 하나씩 나눠 준다. 어느 항목도 0.1%p 넘게 움직이지 않으면서 합이 맞는다.
+      ⚠ 비율을 다시 계산하는 것이 아니라 **표시 단위에 맞춰 배분**하는 것이다.
+      동점이면 비중이 큰 쪽, 그다음 티커 순으로 가른다 — 안 그러면 같은 입력이 실행마다
+      다른 표를 낸다(이 저장소가 동점 정렬로 여러 번 데었다).
+    ⚠ 0 이하는 담지 않는다. 그래서 분모도 **담기는 것들의 합**이어야 한다 — 전체 합으로
+      나누면 담긴 것들끼리는 100 이 안 된다.
+    """
+    pos = {k: float(v) for k, v in (w or {}).items() if v and v > 0}
+    tot = sum(pos.values())
+    if tot <= 0:
+        return []
+    tenths = {k: (1000.0 * v / tot) for k, v in pos.items()}      # 0.1%p 단위
+    base = {k: int(x) for k, x in tenths.items()}                 # 내림
+    rest = 1000 - sum(base.values())
+    order = sorted(pos, key=lambda k: (-(tenths[k] - base[k]), -pos[k], k))
+    for k in order[:max(0, rest)]:
+        base[k] += 1
+    return sorted(((k, round(base[k] / 10.0, 1)) for k in base), key=lambda z: (-z[1], z[0]))
+
+
 def run_weights(wfn, start, label, bench_w, rule, why, note=None,
                 cadence="month", bench_cadence=None):
     """wfn(i) -> {티커: 비중}. 정해진 주기에만 호출하고 그 사이는 보유.
@@ -361,8 +390,7 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         _w = wfn(n - 1) or {}
         _tot = sum(_w.values())
         hold_now = {"kind": "asset", "as_of": DTS[-1],
-                    "weights": sorted(((k, round(100 * v / _tot, 1)) for k, v in _w.items() if v > 0),
-                                      key=lambda z: -z[1])} if _tot > 0 else None
+                    "weights": pct1(_w)} if _tot > 0 else None
     except Exception:
         hold_now = None
     dd = DTS[start:]

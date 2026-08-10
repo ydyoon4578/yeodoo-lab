@@ -22,6 +22,13 @@
 from __future__ import annotations
 import io, json, os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    from asset_backtest import pct1 as _pct1     # 비중 → 소수1자리·합 100.0(최대잔여법)
+except Exception:                                # 임포트가 막히면 원값을 그대로 둔다
+    def _pct1(w):                                # (틀린 척도로 그리느니 손대지 않는 편이 낫다)
+        return [(k, v) for k, v in (w or {}).items() if v is not None]
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
 except Exception: pass
 
@@ -301,8 +308,14 @@ def main() -> int:
                 "as_of": _v.get("as_of"), "n": len(pos), "note": _v.get("note"),
                 "tickers": sorted(x.get("t") for x in pos if x.get("t")),
                 "names": {x["t"]: (x.get("n") or x["t"]) for x in pos if x.get("t")},
-                "weights": [(x.get("t") or x.get("n"), x.get("w")) for x in pos
-                            if x.get("w") is not None],
+                # 🚨 2026-08-10 — 척도를 통일한다. 배포 원장의 w 는 **0~1**(합 1.0)인데
+                #   자산 랩에서 오는 weights 는 0~100 이고, 화면(explorer·report)은 둘을
+                #   구분 없이 toFixed(1)+'%' 로 그린다. 그래서 배포 6건은 0.0435 → '0.0%'
+                #   처럼 **전 종목이 0.0%** 로 나갔다. 한 필드에 척도가 둘이면 언젠가 이렇게 된다.
+                #   pct1 은 자산 랩이 쓰는 그 함수다(최대잔여법 · 합이 정확히 100.0).
+                #   ⚠ 새로 구현하지 않고 가져다 쓴다 — 같은 식을 두 벌 두면 한쪽만 고쳐진다.
+                "weights": _pct1({(x.get("t") or x.get("n")): x.get("w")
+                                  for x in pos if x.get("w") is not None}),
             }
 
     # ── ① 배포 원장 ── 성격은 strategy_detail.json이 들고 있다(화면이 쓰던 축 그대로).

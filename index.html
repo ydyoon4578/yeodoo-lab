@@ -1119,7 +1119,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 다시 그려야 이 자료가 자리를 찾는다(둘의 도착 순서는 정해져 있지 않다).
       if(MK.board)drawStyle(null);
     }
-    if(h.breadth&&h.breadth.n){EB.n=h.breadth.n; setEyebrow();}
+    // 눈썹의 지수별 종목 수 — home_reco 가 members.json 을 세어 보낸다(화면이 다시 세지 않는다).
+    if(h.idx_n&&h.idx_n.SPX){EB.spx=h.idx_n.SPX; EB.ndx=h.idx_n.NDX; setEyebrow();}
     // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
     var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
@@ -1192,14 +1193,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 화면 최상단 한 줄이 동어반복에 쓰이고 있었다. 정작 meta description 이 약속한
   // '518종목 · FRED 매크로 · 통과와 기각 전부 공개'는 검색 결과에만 있고 화면엔 없었다.
   // 문장이 아니라 라벨이므로 2026-07-26에 뺀 '소개 문구'와는 성격이 다르다.
-  var EB={n:null,ind:null};
+  var EB={spx:null,ndx:null};
   function setEyebrow(){
     var e=el('eyebrow'); if(!e)return;
+    // 🚨 2026-08-10 — '518종목 · FRED 39지표 · 통과와 기각 전부 공개' 에서 유니버스만
+    //   남겼다(사용자 결정). 지수 이름을 적는 편이 '518종목' 보다 무엇을 다루는지 바로 말한다.
+    //   ⚠ 두 수를 더하지 않는다. 겹치는 종목이 있어(오늘 87종) 합은 518이 아니다 —
+    //     나란히 적을 뿐이다.
     var p=[];
-    if(EB.n)p.push(EB.n+'종목');
-    if(EB.ind)p.push('FRED '+EB.ind+'지표');
-    p.push('통과와 기각 전부 공개');
-    e.textContent=p.join(' · ');
+    if(EB.spx)p.push('S&P 500 '+EB.spx+'종목');
+    if(EB.ndx)p.push('나스닥 100 '+EB.ndx+'종목');
+    e.textContent=p.length?p.join(' · '):'계량 리서치 공개';
   }
 
   // ── 기준일 표 — 내비 칩·홈·sources.html이 같은 정본(data/asof.json) 하나를 읽는다 ──
@@ -1469,8 +1473,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     drawRegime();
     MK.sn=(j&&j.sentiment)||false;
     syncAsof(); staleCheck();
-    var n=j&&j.regime&&j.regime.n_indicators;
-    if(n){EB.ind=n; setEyebrow();}
+    // FRED 지표 수는 눈썹에서 뺐다(2026-08-10) — regime.html 이 그 화면이다.
   });
 
 
