@@ -2326,7 +2326,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     .then(function(j){
       ROWS=(j&&j.rows)||[]; ASOF=(j&&j.as_of)||'';
       // 섹터 트리도 같은 파일을 쓴다 — 이미 받았으면 그쪽이 다시 받지 않게 넘겨준다.
-      if(typeof MK!=='undefined' && MK && MK.stk===null) MK.stk=ROWS;
+      // 🚨 넘겨주고 **다시 그리라고 말해야 한다**(2026-08-11 사고). 종전에는 MK.stk 만
+      //   채우고 끝냈다. 그러면 이렇게 된다:
+      //     ① 표가 먼저 그려진다 → MK.stk 가 null 이라 '종목 목록을 불러오는 중…' 줄이 박힌다
+      //     ② 히트맵이 MK.stk 를 채운다 → 표는 그대로다
+      //     ③ 사용자가 산업그룹을 펼친다 → 클릭 핸들러의 지연 로딩은 조건이
+      //        `MK.stk===null` 이라 **안 걸린다**(히트맵이 이미 채웠으니까)
+      //     ④ paint() 는 hidden 만 토글할 뿐 표를 다시 그리지 않는다
+      //   → '불러오는 중' 이 영원히 남는다. 자료는 멀쩡히 있는데 화면만 못 받은 척한다.
+      //   넘겨주는 쪽이 다시 그리기까지 책임진다. 지연 로딩 경로가 하는 일과 같다.
+      if(typeof MK!=='undefined' && MK && MK.stk===null){
+        MK.stk=ROWS;
+        if(MK.board && typeof drawStyle==='function') drawStyle(null);
+      }
       bar(); paint();
     })['catch'](function(){ wrap.innerHTML='<div class="empty">종목 자료를 받지 못했다.</div>'; });
 

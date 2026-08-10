@@ -1069,11 +1069,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       for(i=0;i<ks.length;i++) h+=condRow(ks[i]);
     }
     h+='</details>';
-    h+='<details class="fgroup"><summary>컴포짓 <span class="gc">'+COMPK.length+'개 · 테크니컬 백분위</span></summary>';
+    h+='<details class="fgroup" open><summary>컴포짓 <span class="gc">'+COMPK.length+'개 · 테크니컬 백분위</span></summary>';
     for(i=0;i<COMPK.length;i++) h+=compRow(COMPK[i]);
     h+='</details>';
 
-    h+='<details class="fgroup"><summary>플래그 <span class="gc">'+FLAGL.length+'종 · 한 번 누르면 “있음”, 다시 누르면 “없음”, 또 누르면 해제</span></summary><div class="chips" id="flagchips">';
+    h+='<details class="fgroup" open><summary>플래그 <span class="gc">'+FLAGL.length+'종 · 한 번 누르면 “있음”, 다시 누르면 “없음”, 또 누르면 해제</span></summary><div class="chips" id="flagchips">';
     for(i=0;i<FLAGL.length;i++){
       var f=FLAGL[i], m=CD.flags[f];
       h+='<button type="button" class="chip'+(m==='in'?' on':(m==='out'?' off':''))+'" data-flag="'+esc(f)+'" '+
@@ -1081,7 +1081,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     h+='</div><div class="crow" style="padding-left:14px"><span class="cv" style="grid-column:1/-1">플래그는 조건식의 결과일 뿐 판단이 아닙니다. 정의는 칩에 마우스를 올리면 나옵니다(<code>flag_defs</code> 원문).</span></div></details>';
 
-    h+='<details class="fgroup"><summary>타이밍 · 섹터 · 지수 <span class="gc">선택 없음 = 전체</span></summary><div class="chips" id="timchips">';
+    h+='<details class="fgroup" open><summary>타이밍 · 섹터 · 지수 <span class="gc">선택 없음 = 전체</span></summary><div class="chips" id="timchips">';
     for(i=0;i<TIML.length;i++) h+='<button type="button" class="chip'+(CD.timing[TIML[i]]?' on':'')+'" data-tim="'+esc(TIML[i])+'">'+esc(TIML[i])+'<small>'+(TIMC[TIML[i]]||0)+'</small></button>';
     h+='</div><div class="chips" id="secchips">';
     for(i=0;i<SECL.length;i++) h+='<button type="button" class="chip'+(CD.sector[SECL[i]]?' on':'')+'" data-sec="'+esc(SECL[i])+'">'+esc(secKo(SECL[i]))+'<small>'+(SECC[SECL[i]]||0)+'</small></button>';
@@ -1089,7 +1089,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     for(i=0;i<IDXL.length;i++) h+='<button type="button" class="chip'+(CD.idx[IDXL[i]]?' on':'')+'" data-idx="'+esc(IDXL[i])+'">'+esc(IDXL[i])+'<small>'+(IDXC[IDXL[i]]||0)+'</small></button>';
     h+='</div></details>';
 
-    h+='<details class="fgroup"><summary>표시 열 추가 <span class="gc">필터에 쓴 지표는 자동으로 열이 됩니다</span></summary><div class="chips" id="showchips">';
+    h+='<details class="fgroup" open><summary>표시 열 추가 <span class="gc">필터에 쓴 지표는 자동으로 열이 됩니다</span></summary><div class="chips" id="showchips">';
     for(i=0;i<MET.length;i++) h+='<button type="button" class="chip'+(SHOW[MET[i]]?' on':'')+'" data-show="'+esc(MET[i])+'">'+esc((FX[MET[i]]&&FX[MET[i]].label)||MET[i])+'</button>';
     h+='</div></details>';
 
