@@ -98,7 +98,16 @@ def gics_tree():
     산업 74 → 서브산업 163). S&P 500 목록 표는 **섹터와 서브산업만** 주므로 그 사이
     두 단을 여기서 잇는다 — 손으로 대응표를 적지 않고 공개된 구조를 그대로 읽는다.
     ⚠ rowspan 때문에 행마다 열 수가 다르다. 열 위치로 읽으면 어긋나므로 **코드 자릿수
-      (2/4/6/8)로 어느 단인지 판정**하고 직전 값을 이어 쓴다.
+      (2/4/6/8)로 어느 단인지 판정**한다.
+
+    🚨 2026-08-10 — 상위 단을 '직전 값 이어쓰기'로 잡던 것을 **코드 앞자리 대조**로 바꿨다.
+      이어쓰기는 표의 행 순서를 믿는데, 위키 표에서 한 행이 그 순서를 벗어나면 조용히
+      엉뚱한 상위 단이 붙는다. 실제로 그랬다 — `Reinsurance`(40301050, 금융/보험)에
+      **섹터 Information Technology · 그룹 Software & Services** 가 붙어 있었다.
+      그 결과 EVEREST GROUP(재보험사)이 금융 섹터의 어느 그룹에도 못 들어가 홈 표의
+      '그 밖' 줄로 떨어졌다. 163개 중 1개였고, 한 개짜리 오류는 눈으로 안 보인다.
+      코드는 자기 자신이 계층을 말한다(앞 2자리=섹터 · 4자리=산업그룹 · 6자리=산업).
+      그것을 쓰면 행 순서에 의존하지 않는다.
     """
     try:
         t = get(WIKI_GICS).decode("utf-8", "replace")
@@ -108,7 +117,8 @@ def gics_tree():
     m = re.search(r"<table[^>]*>.*?</table>", t, re.S)
     if not m:
         return {}
-    cur, out = {}, {}
+    # ① 표에 나온 (코드 → 이름)을 자릿수별로 전부 모은다. 순서는 보지 않는다.
+    nm_of = {2: {}, 4: {}, 6: {}, 8: {}}
     for tr in re.findall(r"<tr.*?</tr>", m.group(0), re.S):
         cs = [H.unescape(re.sub(r"<[^>]+>", "", c)).strip()
               for c in re.findall(r"<t[hd].*?</t[hd]>", tr, re.S)]
@@ -118,12 +128,22 @@ def gics_tree():
         while i < len(cs):
             c = cs[i]
             if re.fullmatch(r"\d{2}|\d{4}|\d{6}|\d{8}", c) and i + 1 < len(cs):
-                cur[len(c)] = (c, cs[i + 1]); i += 2
+                nm_of[len(c)].setdefault(c, cs[i + 1]); i += 2
             else:
                 i += 1
-        if all(k in cur for k in (2, 4, 6, 8)):
-            out[cur[8][1]] = {"code": cur[8][0], "sector": cur[2][1],
-                              "group": cur[4][1], "industry": cur[6][1]}
+    # ② 서브산업마다 **자기 코드의 앞자리로** 상위 단을 찾는다. 이어쓰기를 쓰지 않는다.
+    out, orphan = {}, []
+    for code, sub in nm_of[8].items():
+        sec, grp, ind = (nm_of[2].get(code[:2]), nm_of[4].get(code[:4]),
+                         nm_of[6].get(code[:6]))
+        if not (sec and grp and ind):
+            orphan.append("%s %s" % (code, sub))
+            continue
+        out[sub] = {"code": code, "sector": sec, "group": grp, "industry": ind}
+    if orphan:
+        # 상위 단이 표에 없으면 **버린다.** 이어쓰기로 메우면 그게 위 사고의 원인이었다.
+        print("  ⚠ 상위 단을 못 찾은 서브산업 %d개(싣지 않는다): %s"
+              % (len(orphan), " · ".join(orphan[:6])))
     return out
 
 
