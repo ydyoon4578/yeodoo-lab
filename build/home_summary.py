@@ -290,7 +290,15 @@ def _industry(stocks, dates, root):
             _last = _p1[-1] if (_p1 and _p1[-1]) else None
             return {"nm": label, "sn": sub, "st": 1, "sec": sec, "n": 1, "mc": mc,
                     **({"px": round(float(_last), 2)} if _last else {}),
-                    "r": {k: (None if v is None else round(v, 1)) for k, v in r.items()},
+                    # 🚨 2026-08-10 — 1자리에서 2자리로. 화면은 이 값을 **2자리로 그리는데**
+                    #   (toFixed(2)) 1자리로 저장하고 있었다. 그래서 종목 줄의 둘째 자리는
+                    #   518종 전부 0 이었고, 작은 움직임이 통째로 사라졌다 —
+                    #   실측 MSFT 499.86 → 499.99 = +0.026% 가 '0.00%' 로 나갔고,
+                    #   같은 날 그런 종목이 14개였다. 같은 열의 섹터·산업 줄은 반올림 없이
+                    #   저장돼 진짜 2자리라, 한 열에 정밀도가 두 가지 섞여 있었다.
+                    #   ⚠ 없는 정밀도를 그리는 것이 0 을 그리는 것보다 나쁘다 — 둘 중
+                    #     맞추는 방향은 자료 쪽이다(화면을 1자리로 내리면 섹터 줄이 함께 뭉개진다).
+                    "r": {k: (None if v is None else round(v, 2)) for k, v in r.items()},
                     "lv": lv, "p": parent}
         full = [s for s in objs if not s.get("part")]
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
