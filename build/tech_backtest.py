@@ -31,6 +31,7 @@ data/sd/<티커>.json 의 종가(pxd)·거래량(vd) 753거래일 × 518종목.
 """
 from __future__ import annotations
 
+import bisect
 import datetime as dt
 import io
 import json
@@ -1155,6 +1156,86 @@ def load_tested():
         return json.load(io.open(p, encoding="utf-8")).get("items") or []
     except Exception:
         return []
+# ── 애널리스트 투자의견 이력 ────────────────────────────────────────────
+#   사전등록 PREREG-2026-08-10-REVDRIFT.md. build/fetch_ratings.py 가 받아 둔 캐시를 읽는다.
+#   🚨 이 캐시는 커밋하지 않는다(.gitignore — 재현 가능하고 5MB다). 없으면 세 규칙은
+#     후보 0 이 되어 무보유가 되고, 판정 루프가 그것을 '판정 불가'로 낸다.
+RAT_STALE = 365         # 한 증권사의 등급 유효기간(일). 사전등록 §2 ②에 박은 값이다.
+_RAT = None             # {티커: (일자배열, 점수배열, 증권사배열)} — 일자 오름차순
+_RAT_MEMO = {}          # (티커, 기준일수) → (평균등급, 증권사수). 같은 값을 세 규칙이 나눠 쓴다
+
+
+def load_ratings():
+    """투자의견 캐시 → {티커: (일자[], To점수[], 증권사[])}. 전부 일자 오름차순.
+
+    캐시 행은 [일자, From점수, To점수, 액션, 목표주가전, 목표주가후, 증권사번호]인데
+    여기서 쓰는 것은 셋뿐이다 — 신호가 **컨센서스 수준의 변화**라 From 이 필요 없고
+    (증권사별 최신 To 를 이어 붙이면 그 시점 의견이 나온다), 목표주가는 이번에 등록하지
+    않았다(사전등록 §2.5 — 봤고 안 돌린다).
+    ⚠ To 점수가 없는 건(매핑에 없는 어휘)은 여기서 버린다. 중립으로 떨어뜨리지 않는다.
+    """
+    p = os.path.join(DATA, "_ratings_cache.json")
+    try:
+        j = json.load(io.open(p, encoding="utf-8"))
+    except Exception:
+        return {}
+    out = {}
+    for t, evs in (j.get("rows") or {}).items():
+        d, s, f = [], [], []
+        for e in evs:
+            if len(e) < 7 or e[2] is None:
+                continue
+            d.append(e[0]); s.append(e[2]); f.append(e[6])
+        if d:
+            out[t] = (d, s, f)                 # fetch_ratings 가 이미 일자순으로 저장한다
+    return out
+
+
+def _rat_consensus(t, day):
+    """`day`(1970 기준 일수) 시점의 (평균등급, 증권사 수). 증권사별 마지막 유효 등급의 단순평균.
+
+    유효기간 RAT_STALE 을 넘긴 증권사는 커버를 접은 것으로 보고 뺀다 — 무한히 끌면
+    2013년에 Buy 를 낸 뒤 사라진 증권사가 2026년 평균에 남는다.
+    """
+    k = (t, day)
+    if k in _RAT_MEMO:
+        return _RAT_MEMO[k]
+    rec = (_RAT or {}).get(t)
+    r = (None, 0)
+    if rec:
+        d, s, f = rec
+        hi = bisect.bisect_right(d, day)               # day 이후는 미래다 — 선견을 막는다
+        lo = bisect.bisect_left(d, day - RAT_STALE)
+        if hi > lo:
+            last = {}
+            for k2 in range(lo, hi):
+                last[f[k2]] = s[k2]                    # 오름차순이라 뒤가 최신이다
+            if last:
+                v = list(last.values())
+                r = (sum(v) / float(len(v)), len(v))
+    _RAT_MEMO[k] = r
+    return r
+
+
+def rat_signal(t, date, cal_days):
+    """등급 리비전 신호 = (컨센서스 지금 − cal_days 전) × √증권사수.
+
+    🚨 `√n` 이 이 설계의 유일한 비자명한 선택이다(사전등록 §2 ③). n개의 평균은 흩어짐이
+      1/√n 이라, 곱하지 않으면 극단값이 **커버 얇은 종목에서만** 나온다 — 실측으로 상위
+      10의 60~70%가 커버 최하위 25% 종목이었다(중립 25%). √n 을 곱하면 30%로 내려온다.
+      성적을 올리는 장치가 아니라 신호가 재려는 것을 재게 하는 교정이다.
+    ⚠ 양 시점 모두 컨센서스가 있어야 한다. 한쪽이 비면 그건 리비전이 아니라
+      커버 개시·중단이라 다른 사건이다.
+    """
+    import datetime as _dt
+    day = (_dt.date(int(date[:4]), int(date[5:7]), int(date[8:10])) - _dt.date(1970, 1, 1)).days
+    c1, n1 = _rat_consensus(t, day)
+    c0, _n0 = _rat_consensus(t, day - cal_days)
+    if c1 is None or c0 is None:
+        return None
+    return (c1 - c0) * math.sqrt(n1)
+
+
 _CLASSMATE = None       # 티커 → 같은 회사(같은 CIK)의 티커 묶음. 아래 load_classmates 가 채운다
 DUAL_SKIPS = {}         # sid → 이중클래스라서 건너뛴 선택 횟수. 로그·limits 에 싣는다
 
@@ -2100,6 +2181,43 @@ def build_strats():
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
 
+    # ── 애널리스트 투자의견 리비전 3종 ───────────────────────────────
+    # 사전등록 PREREG-2026-08-10-REVDRIFT.md.
+    # 🚨 왜 이 셋인가 — **살아 있는 69종 전부가 가격·거래량·회계 숫자로만** 만들어져 있고
+    #   애널리스트 의견을 입력으로 쓰는 규칙이 하나도 없었다. JKP 빈 칸이 아니라 그보다
+    #   앞단의 빈 칸, 즉 새 입력 축이다.
+    #   바로 위 x-sue·x-epsacc 의 주석이 "그 전망은 유료 데이터라 무료로는 과거를 못 구한다"고
+    #   적고 있는데, **그 문장은 지금도 맞다 — 다만 다른 것에 대해서다.** 못 구하는 것은
+    #   EPS 추정치 이력이고(data/estimates.json 은 오늘 스냅샷뿐이다), 새로 구해진 것은
+    #   투자의견 이력이다(yfinance upgrades_downgrades · 517/518종 · 170,290건 · 2012~).
+    #   x-sue·x-epsacc 는 애널리스트를 못 구해 만든 **대체물**이었고 이 셋은 그 원본이다 —
+    #   그래서 둘과의 증분알파가 이 등록의 핵심 판정이다.
+    _REV_WHY = ("Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 "
+                "관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 "
+                "√증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — "
+                "n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 "
+                "최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. "
+                "⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. "
+                "생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다.")
+    xsec("x-revdrift", "투자의견 리비전 드리프트 (21일)",
+         "증권사별 최신 투자의견을 5→1 척도로 이어 붙여 컨센서스 평균을 만들고, 30일 전 "
+         "평균과의 차에 √증권사수를 곱한 값이 가장 큰 %d종목 동일가중, 월말 리밸런스. "
+         "한 증권사의 의견은 마지막 발표일로부터 365일까지만 유효하다." % TOPN,
+         None, _REV_WHY)
+    xsec("x-revdrift-q", "투자의견 리비전 드리프트 (63일)",
+         "위와 같되 비교 시점이 30일 전이 아니라 91일 전이다.",
+         None,
+         _REV_WHY + " 창을 하나만 걸면 결과가 창의 성질인지 신호의 성질인지 갈리지 않아 "
+         "21일판과 같이 싣는다. 이 랩은 같은 이유로 x-maxlow/x-max5low 를 같이 실었고 둘의 "
+         "샤프가 0.79 대 0.19 로 갈리자 '둘 다 신뢰할 수 없다'고 읽었다. 여기서도 같게 읽는다.")
+    xsec("x-revdrift-sn", "투자의견 리비전 드리프트 (21일 · 섹터중립)",
+         "21일판과 같은 점수로 각 섹터에서 1종씩 뽑고, 섹터 비중은 유니버스 섹터 시총 "
+         "비중을 따른다. 월말 리밸런스.",
+         None,
+         _REV_WHY + " 애널리스트 리비전은 섹터로 몰려 온다(업황이 돌면 그 섹터가 통째로 "
+         "상향된다). 중립화하지 않으면 이 규칙은 리비전이 아니라 섹터 베팅일 수 있다 — "
+         "21일판과 크게 갈리면 그쪽 성적은 섹터 배분에서 나온 것이다.")
+
     # ── 팩터 상위 10 목록 8종 ────────────────────────────────────────
     # "이 지표로 뽑으면 어떤 종목이 나오나"를 지표마다 보고 싶다는 요청. 목록만 만들면 그
     # 목록이 좋은지 알 수 없으므로, **목록 자체를 월말 리밸런스 전략으로 돌린다** — 그러면
@@ -2828,6 +2946,9 @@ def incr1(a, b):
 def run():
     dates, px, vlm, hid, lod, meta, rf = load()
     FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
+    global _RAT
+    _RAT = load_ratings()     # 티커 → 투자의견 이력. 없으면 빈 dict 이고 revdrift 3종만 후보 0
+    print("투자의견 이력 %d종 · %d건" % (len(_RAT), sum(len(v[0]) for v in _RAT.values())))
     n = len(dates)
     tickers = sorted(px)
     R = daily_rets(px)
@@ -3427,6 +3548,10 @@ def run():
                         elif sid == "x-lowbeta":
                             b = beta(R[t], ixr, i - 1, 120)
                             v = -b if b is not None else None
+                        elif sid in ("x-revdrift", "x-revdrift-sn", "x-revdrift-q"):
+                            # 21일판·섹터중립판은 달력 30일, 63일판은 91일. 세 규칙이
+                            # _rat_consensus 의 메모를 나눠 쓰므로 두 번째부터는 조회만 한다.
+                            v = rat_signal(t, dates[i - 1], 91 if sid == "x-revdrift-q" else 30)
                         elif sid == "x-sue":
                             v = sue((FU.get(t) or {}).get("eps") or [], dates[i - 1])
                         elif sid == "x-epsacc":
@@ -3667,7 +3792,7 @@ def run():
                         sc = [(_sr[s], t) for s, v in ind_raw.items() for t, _r in v if s in _sr]
                     sc.sort(reverse=True)
                     pool_hist.append((dates[i - 1], len(sc)))
-                    if S["sid"] == "x-valcomp-sn":
+                    if S["sid"] in ("x-valcomp-sn", "x-revdrift-sn"):
                         # 🚨 섹터 중립 — 각 섹터 1위 1종, 비중은 **유니버스 섹터 시총 비중**.
                         #   이 엔진은 원래 동일가중 전제라 비중을 실을 자리가 없었다(아래 hw).
                         _sec = {t: (meta.get(t) or {}).get("sector") or "" for _v, t in sc}
