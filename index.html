@@ -211,7 +211,10 @@
   .hmbar .hmleg i{width:22px;height:11px;display:inline-block;font-style:normal}
   .hmbar .hmleg b{font-weight:600;color:var(--muted);padding:0 6px}
   /* 배경을 어둡게 둬야 칸 사이 1px 틈이 '선'으로 읽힌다(밝으면 틈이 안 보인다) */
-  .hmwrap{border:1px solid var(--line);background:#1A1E23;overflow:hidden}
+  /* 좁은 화면에서 칸이 뭉개지면 섹터 등락률이 사라진다. 달력과 같은 처리를 쓴다 —
+     격자에 최소 폭을 주고 가로로 민다. 자료를 지우는 것보다 미는 편이 낫다. */
+  .hmwrap{border:1px solid var(--line);background:#1A1E23;overflow-x:auto;overflow-y:hidden}
+  .hmtree{min-width:760px}
   .hmtree{position:relative;width:100%}
   /* 🚨 섹터 구분이 허술했던 이유 — 얇은 띠 하나로만 나눴고 섹터끼리 딱 붙어 있어
      어디까지가 한 섹터인지 눈으로 안 잡혔다. 셋을 준다:
@@ -222,8 +225,12 @@
        background:rgba(0,0,0,.55);padding:0 7px;white-space:nowrap;overflow:hidden;
        border-bottom:1px solid rgba(255,255,255,.16)}
   .hmsec>.hl .hv{font-family:var(--mono);font-weight:700;font-size:11.5px}
-  /* 좁은 섹터(소재 등)는 이름만 — 그래도 반드시 적는다 */
-  .hmsec>.hl.nar{height:16px;font-size:11px;padding:0 4px}
+  /* 좁은 섹터(소재 등) — 가로 한 줄에 못 넣으면 두 줄로 쓴다. 값을 버리지 않는다. */
+  .hmsec>.hl.two{height:30px;flex-direction:column;align-items:flex-start;justify-content:center;
+       gap:0;font-size:11px;padding:0 4px;line-height:1.25}
+  .hmsec>.hl.two .hv{font-size:11px}
+  /* 세로도 없을 만큼 작으면 이름만 — 그래도 반드시 적는다 */
+  .hmsec>.hl.nar{height:15px;font-size:10.5px;padding:0 3px}
   .hmsec>.hl .hn{margin-left:auto;font-family:var(--mono);font-size:11px;color:#AEB6BE;font-weight:600}
   .hmgrp{position:absolute;overflow:hidden;border-radius:2px;
        outline:1px solid rgba(255,255,255,.09);outline-offset:-1px}
@@ -2146,7 +2153,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     function paint(){
       if(!ROWS||!ROWS.length){wrap.innerHTML='<div class="empty">자료를 받지 못했다.</div>';return;}
-      var W=wrap.clientWidth||wrap.parentNode.clientWidth||900;
+      var W=Math.max(760, wrap.clientWidth||wrap.parentNode.clientWidth||900);
       // 🚨 종전 0.62 배(실측 559px)에서는 518칸 중 라벨이 105개만 들어갔다.
       //   높이가 곧 읽히는 종목 수다. 0.82 배로 올리고 상한도 키운다.
       var H=Math.max(460, Math.min(980, Math.round(W*0.82)));
@@ -2161,14 +2168,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var g=b.d, lab=((ETF[g.k]&&ETF[g.k].n)||SECKO[g.k]||g.k), wr=sret(g.k);
         var bx=b.x+GUT/2, by=b.y+GUT/2, bw=Math.max(0,b.w-GUT), bh=Math.max(0,b.h-GUT);
         html+='<div class="hmsec" style="left:'+bx+'px;top:'+by+'px;width:'+bw+'px;height:'+bh+'px">';
-        // 🚨 소재(XLB)는 시총 비중 1.6% 로 가장 좁아 종전 문턱(폭>84)에 걸려 **이름이
-        //   아예 안 나왔다.** 섹터 이름은 이 화면의 뼈대라 빠지면 안 된다 — 문턱을 낮추고,
-        //   좁으면 등락률·종목수를 떼고 이름만 남긴다(작게라도 반드시 적는다).
-        var wide = bw>150, hasHd = bh>26&&bw>46;
-        if(hasHd) html+='<div class="hl'+(wide?'':' nar')+'">'+esc(lab)+
-          (wide?'<span class="hv" style="color:'+(wr>0?'#3DDC84':(wr<0?'#FF7A6E':'#AEB6BE'))+'">'+fmt(wr)+'</span>':'')+
-          (bw>210?'<span class="hn">'+g.rows.length+'종</span>':'')+'</div>';
-        var top=hasHd?(wide?20:17):0;
+        // 🚨 소재(XLB)는 시총 비중 1.6% 로 가장 좁다 — 실측 72px 폭 × 214px 높이.
+        //   ① 종전 문턱(폭>84)에서는 **이름조차 안 나왔다.**
+        //   ② 문턱만 낮췄더니 이번엔 이름만 나오고 **등락률이 빠졌다.**
+        //   가로로 한 줄에 못 넣는 것이지 자리가 없는 것이 아니다 — 세로는 214px 남는다.
+        //   → 좁으면 **두 줄**로 쓴다. 이름 위, 등락률 아래. 어느 섹터도 값을 잃지 않는다.
+        var wide = bw>150, hasHd = bh>26&&bw>44;
+        var two = hasHd && !wide && bh>44;      // 좁지만 세로가 있으면 두 줄
+        if(hasHd){
+          var vsp='<span class="hv" style="color:'+(wr>0?'#3DDC84':(wr<0?'#FF7A6E':'#AEB6BE'))+'">'+fmt(wr)+'</span>';
+          html+='<div class="hl'+(wide?'':(two?' two':' nar'))+'">'+esc(lab)+
+            ((wide||two)?vsp:'')+
+            (bw>210?'<span class="hn">'+g.rows.length+'종</span>':'')+'</div>';
+        }
+        var top=hasHd?(wide?20:(two?31:16)):0;
         // 산업그룹 — 칸이 좁으면 이 단을 건너뛰고 종목을 바로 놓는다(라벨이 자리를 다 먹는다)
         var useGrp = bw>170 && bh-top>100;
         var inner = useGrp ? agg(g.rows,function(r){return r.p||g.k;}) : [{k:g.k,v:g.v,rows:g.rows}];
