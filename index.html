@@ -1635,7 +1635,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   읽힌다. 자리는 이 페이지의 다른 머리글과 같은 .sub 다(시장 국면·종목 히트맵 등).
     var _ik=Object.keys(CAL.i||{}).sort(), _last=_ik[_ik.length-1]||null;
     var _sub=el('wk-sub');
-    if(_sub) _sub.textContent = _last ? ('· 지수 등락률 '+_last+' 기준') : '· 지수 등락률 미수신';
+    if(_sub) _sub.textContent = _last ? ('· 기준일 '+_last) : '· 지수 등락률 미수신';
     box.innerHTML='<div class="calgrid">'+h+'</div>';
     // 제목 옆 부제(구간·건수·기준일)는 뺐다 — 격자가 그 구간을 이미 보이고 있다
     // (사용자 결정 2026-07-29). 세던 shownE·shownM 도 쓰는 데가 없어져 같이 걷어냈다.

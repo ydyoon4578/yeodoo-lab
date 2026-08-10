@@ -74,7 +74,9 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   //    ⚠ 문턱은 10 이다. 지금 20칸(4주 × 평일 5)이지만 그 수를 강제하지 않는다 —
   //      이 검사가 잡으려는 것은 '격자가 통째로 안 그려졌다'이지 주 수가 아니다.
   if (nDay < 10) fail.push("캘린더 날짜칸이 " + nDay + "개뿐 — 격자 배선이 끊겼다");
-  if (!/^· 지수 등락률 \d{4}-\d{2}-\d{2} 기준$/.test(asof))
+  // ⚠ 2026-08-11 — 문구를 '지수 등락률 …기준' 에서 '기준일 …' 로 바꿨다(사용자 결정).
+  //   기대값도 같이 고친다. 안 고치면 이 검사가 '되돌려라'라고 말한다.
+  if (!/^· 기준일 \d{4}-\d{2}-\d{2}$/.test(asof))
     fail.push("캘린더 머리글 기준일이 안 붙었다: " + JSON.stringify(asof));
   if (/calfresh/.test(CALG.innerHTML))
     fail.push("걷어낸 .calfresh 가 격자 아래에 다시 나타났다");
