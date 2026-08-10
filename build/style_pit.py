@@ -124,10 +124,14 @@ import style_top_pdf as ST
 # data/fx_pit/ 로 받아(build/pit_facts.py, 러너) 뒤 셋도 잴 수 있게 됐다.
 #   ⚠ 뒤 셋의 채점 함수는 P.px 가 아니라 **P.uni** 를 순회한다(sc_qual:331·sc_val:350·
 #     sc_grow:368). 그래서 주입할 때 P.px 만으로는 후보가 되지 않고 P.uni 도 채워야 한다.
-STYLES = [("mom", "모멘텀", ST.sc_mom), ("lowvol", "저변동", ST.sc_lowvol),
-          ("hbeta", "고베타", ST.sc_hbeta),
-          ("qual", "퀄리티", ST.sc_qual), ("val", "가치", ST.sc_val),
-          ("grow", "성장", ST.sc_grow)]
+# 🚨 2026-08-10 — 여기 여섯을 손으로 적고 있었다. style_top_pdf.STYLES 에 열여덟이
+#   있는데 그중 여섯만 복사해 둔 것이라, 화면은 18줄을 내면서 편향은 6줄만 재고 있었다.
+#   같은 목록을 두 곳에 두면 한쪽만 자란다 — 이 저장소가 반복해 겪은 그 사고다.
+#   이제 정본 하나에서 끌어온다. 새 스타일이 style_top_pdf 에 붙으면 편향 측정도 따라온다.
+#   ⚠ 전부가 채점되지는 않는다. 편출 종목의 재무·가격이 없으면 그 스타일은 주입 효과가
+#     0 으로 나오는데, 그것이 '편향 없음'인지 '못 쟀음'인지는 다르다 — 아래 scored 가
+#     스타일마다 몇 종이 채점됐는지 세어 산출물에 싣는다.
+STYLES = [(s[0], s[1], s[3]) for s in ST.STYLES]
 FX_PIT = os.path.join(DATA, "fx_pit")
 
 
@@ -295,11 +299,17 @@ def main() -> int:
     #   published 는 배포 수치를 그대로 재현해야 한다. 그것이 이 측정의 앵커다 —
     #   재현되지 않으면 '편향'이 아니라 내가 계산을 바꾼 것이다.
     #   ⚠ 하지만 **이것을 편향의 기준선으로 쓰면 안 된다**(아래 참조).
-    res = {}
+    # 🚨 스타일 하나가 실패해도 전체를 죽이지 않는다(2026-08-10). 종전에는 SystemExit 라
+    #   목록을 6 → 18 로 넓히자 순수성장에서 멈춰 **앞서 잰 13개까지 통째로 버려졌다.**
+    #   못 잰 것은 '측정 불가'로 남긴다 — '재현 못 했다'와 '편향이 없다'는 다른 말이고,
+    #   섞으면 얇은 스타일이 영원히 '편향 0' 으로 보인다.
+    res, failed = {}, {}
     for key, label, fn in STYLES:
         R = ST.backtest(P, fn, pool_of=None)
         if not R:
-            raise SystemExit("%s 의 앵커 레그가 실패했다" % label)
+            failed[key] = {"label": label, "why": "앵커 레그 산출 실패(후보가 문턱에 못 닿음)"}
+            print("  ⚠ %s — 앵커 레그 실패, 측정 불가로 남긴다" % label)
+            continue
         m = perf(R["nav"]); m["n_rebal"] = R["n_rebal"]
         res[key] = {"label": label, "published": m}
 
@@ -370,14 +380,24 @@ def main() -> int:
             ("mask", lambda i: members_at(i) & today),      # 그때 멤버였던 오늘 종목만
             ("pit", members_at))                            # 그때 멤버 전부(편출 포함)
     for key, label, fn in STYLES:
+        if key in failed:
+            continue
+        _bad = None
         for tag, po in LEGS:
             # 채점 모집단까지 좁힌다 — narrowed() 의 주석 참조. 이것이 PIT 의 정확한 뜻이고,
             # base 가 published 와 같아지는 것으로 검증된다(하니스 채널이 구조적으로 0).
             R = ST.backtest(P, narrowed(fn, po), pool_of=po)
             if not R:
-                raise SystemExit("%s 의 %s 레그가 실패했다" % (label, tag))
+                _bad = tag
+                break
             m = perf(R["nav"]); m["n_rebal"] = R["n_rebal"]
             res[key][tag] = m
+        if _bad:
+            failed[key] = {"label": label,
+                           "why": "%s 레그 산출 실패 — 그 모집단에서 상위10을 채울 후보가 없다" % _bad}
+            res.pop(key, None)
+            print("  ⚠ %s — %s 레그 실패, 측정 불가로 남긴다" % (label, _bad))
+            continue
         v = res[key]
         # 두 채널을 분해한다. 합이 총편향이고, 어느 쪽이 지배하는지가 이 측정의 결론이다.
         #   lookahead  … 그때 지수에 없던 종목을 미리 고른 것(base → mask)
@@ -416,8 +436,15 @@ def main() -> int:
     except Exception as e:
         raise SystemExit("배포 수치(style_perf.json)를 못 읽어 앵커 검증을 못 한다: %s" % e)
     for key, label, _fn in STYLES:
-        got = (res.get(key, {}).get("published") or {}).get("ret")
         want = ((pub.get(key) or {}).get("metrics") or {}).get("ret")
+        # 🚨 못 잰 스타일은 앵커 대조 대상이 아니다(2026-08-10). '재현 실패'와 '측정 불가'는
+        #   다른 결함이고, 섞으면 자료가 얇은 스타일 하나가 전체 실행을 죽인다 —
+        #   실제로 순수성장·고배당저변동이 그랬다(편출 20종 중 채점 2종·3종).
+        #   그 둘은 위 unmeasured 에 사유와 함께 실린다. 여기서 다시 세지 않는다.
+        if key in failed:
+            anchor[key] = {"measured": None, "published": want, "unmeasured": True}
+            continue
+        got = (res.get(key, {}).get("published") or {}).get("ret")
         anchor[key] = {"measured": None if got is None else round(got, 2), "published": want}
         if got is None or want is None or abs(got - want) > 0.02:
             bad.append("%s 측정 %s vs 배포 %s" % (label, got, want))
@@ -501,6 +528,9 @@ def main() -> int:
                      "missing": sorted(missing), "reused_ticker_suspect": sorted(gap),
                      "cov_min": round(min(cov), 4), "cov_med": round(sorted(cov)[len(cov) // 2], 4)},
         "anchor": anchor, "styles": res, "bench": bench,
+        # 못 잰 스타일 — 산출물에 싣는다. 안 실으면 화면이 18줄 중 몇 줄만 편향을
+        # 말하는데 나머지가 "편향 없음"인지 "안 쟀음"인지 구별할 수 없다.
+        "unmeasured": failed,
     }
     json.dump(doc, io.open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dB)" % (OUT, os.path.getsize(OUT)))
