@@ -210,20 +210,39 @@
   .hmbar .hmleg{margin-left:auto;display:flex;align-items:center;gap:0;font-family:var(--mono);font-size:11px}
   .hmbar .hmleg i{width:22px;height:11px;display:inline-block;font-style:normal}
   .hmbar .hmleg b{font-weight:600;color:var(--muted);padding:0 6px}
-  .hmwrap{border:1px solid var(--line);background:var(--panel-2);overflow:hidden}
+  /* 배경을 어둡게 둬야 칸 사이 1px 틈이 '선'으로 읽힌다(밝으면 틈이 안 보인다) */
+  .hmwrap{border:1px solid var(--line);background:#1A1E23;overflow:hidden}
   .hmtree{position:relative;width:100%}
   .hmsec{position:absolute;overflow:hidden}
-  .hmsec>.hl{position:absolute;left:0;top:0;right:0;height:15px;font-size:11px;font-weight:700;
-       color:var(--ink-2);background:var(--panel-2);padding:1px 5px;white-space:nowrap;overflow:hidden}
+  .hmsec>.hl{position:absolute;left:0;top:0;right:0;height:16px;font-size:11.5px;font-weight:700;
+       color:var(--ink);background:var(--panel-2);padding:1px 5px;white-space:nowrap;overflow:hidden;
+       border-bottom:1px solid var(--line)}
   .hmgrp{position:absolute;overflow:hidden}
-  .hmgrp>.gl{position:absolute;left:0;top:0;right:0;height:13px;font-size:11px;color:var(--muted);
-       background:var(--panel-2);padding:0 4px;white-space:nowrap;overflow:hidden}
+  .hmgrp>.gl{position:absolute;left:0;top:0;right:0;height:14px;font-size:11px;color:var(--ink-2);
+       background:var(--panel-2);padding:0 4px;white-space:nowrap;overflow:hidden;
+       text-overflow:ellipsis}
+  /* 🚨 '너무 각지다'의 정체는 칸이 서로 붙어 한 덩어리로 보이는 것이었다.
+     칸마다 1px 틈(배경색이 비쳐 선이 된다)과 2px 모서리를 준다 — 사이트 표준 반경과 같다.
+     틈은 margin 이 아니라 inset 으로 준다. 트리맵은 절대좌표라 margin 이 좌표를 밀어낸다. */
   .hmcell{position:absolute;overflow:hidden;display:flex;flex-direction:column;
-       align-items:center;justify-content:center;text-align:center;line-height:1.12;
-       color:#fff;text-decoration:none;padding:1px}
-  .hmcell .ht{font-family:var(--mono);font-weight:700;letter-spacing:-.02em}
-  .hmcell .hr{font-family:var(--mono);font-weight:600;opacity:.92}
-  .hmcell:hover{outline:2px solid var(--ink);outline-offset:-2px;z-index:5}
+       align-items:center;justify-content:center;text-align:center;line-height:1.1;
+       color:#fff;text-decoration:none;padding:0 1px;border-radius:2px;
+       box-sizing:border-box;background-clip:padding-box;border:1px solid rgba(0,0,0,.28)}
+  /* 색 위의 흰 글자는 밝은 초록에서 대비가 떨어진다 — 얇은 그림자로 받친다.
+     테두리를 어둡게 준 것도 같은 이유다(칸 경계와 글자 둘 다 살린다). */
+  .hmcell .ht{font-family:var(--mono);font-weight:800;letter-spacing:-.03em;
+       text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  .hmcell .hr{font-family:var(--mono);font-weight:700;opacity:.95;
+       text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  .hmcell:hover{outline:2px solid #fff;outline-offset:-2px;z-index:5;filter:brightness(1.15)}
+  /* 🚨 시총이 833배 차이라(65 ~ 54,245억$) 작은 칸에는 글자가 물리적으로 안 들어간다.
+     518칸 중 이름이 보이는 것은 241개다. 나머지를 '없는 것'으로 두지 않으려고 띄우는 상자를
+     둔다 — 브라우저 기본 title 은 1초 지연에 스타일도 못 준다. */
+  .hmtip{position:fixed;z-index:60;pointer-events:none;background:var(--panel);
+       border:1px solid var(--ink);border-radius:2px;padding:5px 8px;font-size:12px;
+       line-height:1.45;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);display:none}
+  .hmtip b{font-family:var(--mono);font-size:13px}
+  .hmtip .s{color:var(--muted);font-size:11.5px}
   @media(max-width:640px){.hmbar .hmleg{display:none}}
 
   /* ⚠ 좁은 화면에서 .calix 를 display:none 으로 숨기고 있었다(2026-08-10 제거).
@@ -2040,14 +2059,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 등락률 → 색. ±cap 에서 포화한다. 기간마다 흔들림 폭이 달라 cap 을 따로 둔다 —
     // 1일 잣대(±3%)를 12개월에 그대로 쓰면 화면이 통째로 빨강/초록이 되어 아무것도 안 보인다.
     var CAP={'1D':3,'1W':6,'1M':12,'3M':20,'6M':28,'12M':40,'YTD':40};
+    // 🚨 종전 색이 뿌옇던 이유는 둘이었다.
+    //   ① 바닥값 0.25 — 0.1% 만 움직여도 이미 회색에서 25% 떠 있어 0 과 구별이 안 됐다.
+    //   ② 선형 보간 — 중간대(0.5~1%)가 전부 탁한 올리브·벽돌색으로 뭉쳤다(채도 0.49~0.59).
+    //   → 바닥값을 없애고 sqrt 로 올린다. 작은 움직임도 곧바로 색을 얻고(|x|=0.1 → 0.32),
+    //     중간대가 뭉치지 않으며, 진짜 0 만 중립으로 남는다. 끝점 채도도 올렸다.
     function col(v){
-      if(v==null||v!==v) return '#8A9099';
+      if(v==null||v!==v) return '#3A4048';
       var c=CAP[PER]||3, x=Math.max(-1,Math.min(1,v/c));
-      // 0 은 중립 회색. 위로 갈수록 초록, 아래로 갈수록 빨강.
-      var a=Math.abs(x);
-      var n=[0x4A,0x50,0x58];                       // 중립
-      var t=x>0?[0x12,0x8F,0x54]:[0xC0,0x3B,0x2C];  // 상승 초록 / 하락 빨강
-      var m=function(i){return Math.round(n[i]+(t[i]-n[i])*(0.25+0.75*a));};
+      var a=Math.sqrt(Math.abs(x));
+      var n=[0x2B,0x31,0x38];                       // 중립 — 어둡게 둬야 색이 뜬다
+      var t=x>0?[0x16,0xC0,0x55]:[0xE0,0x2B,0x28];  // 상승 초록 / 하락 빨강(채도 상향)
+      var m=function(i){return Math.round(n[i]+(t[i]-n[i])*a);};
       return 'rgb('+m(0)+','+m(1)+','+m(2)+')';
     }
 
@@ -2110,7 +2133,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function paint(){
       if(!ROWS||!ROWS.length){wrap.innerHTML='<div class="empty">자료를 받지 못했다.</div>';return;}
       var W=wrap.clientWidth||wrap.parentNode.clientWidth||900;
-      var H=Math.max(420, Math.min(720, Math.round(W*0.62)));
+      // 🚨 종전 0.62 배(실측 559px)에서는 518칸 중 라벨이 105개만 들어갔다.
+      //   높이가 곧 읽히는 종목 수다. 0.82 배로 올리고 상한도 키운다.
+      var H=Math.max(460, Math.min(980, Math.round(W*0.82)));
       wrap.style.height=H+'px';
       var secs=agg(ROWS,function(r){return r.sec;});
       var boxes=squarify(secs.map(function(g){return {v:g.v,d:g};}),0,0,W,H);
@@ -2134,11 +2159,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             .forEach(function(cb){
               var r=cb.d, v=r.r&&r.r[PER];
               // 글자는 들어갈 때만 넣는다. 억지로 넣으면 잘려서 티커가 'NV' 처럼 보인다.
-              var tf = Math.max(9, Math.min(26, Math.floor(Math.min(cb.w/3.4, cb.h/2.6))));
-              var showT = cb.w>=26 && cb.h>=15;
-              var showR = cb.w>=44 && cb.h>=30;
+              // 글자 크기는 칸에 맞춘다. 티커는 4~5자라 폭/3.0, 두 줄이면 높이/2.2 가 한계다.
+              var tf = Math.max(8, Math.min(30, Math.floor(Math.min(cb.w/3.0, cb.h/2.2))));
+              var showT = cb.w>=20 && cb.h>=11;
+              var showR = cb.w>=40 && cb.h>=26;
+              var mcs = r.mc>=10000 ? ('$'+(r.mc/10000).toFixed(2)+'T')
+                        : (r.mc>=10 ? ('$'+(r.mc/10).toFixed(0)+'B') : ('$'+(r.mc*100).toFixed(0)+'M'));
+              var vcol = v==null?'var(--muted)':(v>0?'var(--deploy)':(v<0?'var(--hot)':'var(--muted)'));
               html+='<a class="hmcell" href="stocks.html#t='+esc(r.nm)+
-                '" title="'+esc(r.nm+' · '+(r.sn||'')+' · '+fmt(v))+
+                '" data-tip="'+esc([r.nm,(r.sn||''),fmt(v),vcol,mcs,
+                                    (SECKO[r.sec]||r.sec)].join(''))+
                 '" style="left:'+cb.x+'px;top:'+cb.y+'px;width:'+cb.w+'px;height:'+cb.h+
                 'px;background:'+col(v)+'">'+
                 (showT?'<span class="ht" style="font-size:'+tf+'px">'+esc(r.nm)+'</span>':'')+
@@ -2184,6 +2214,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(typeof MK!=='undefined' && MK && MK.stk===null) MK.stk=ROWS;
       bar(); paint();
     })['catch'](function(){ wrap.innerHTML='<div class="empty">종목 자료를 받지 못했다.</div>'; });
+
+    // ── 띄우는 설명 상자 ────────────────────────────────────────────
+    // 작은 칸(277개)은 이름을 못 싣는다. 마우스를 올리면 그 자리에서 읽게 한다.
+    var tip=null;
+    function tipOn(e){
+      var a=e.target.closest && e.target.closest('.hmcell'); if(!a) return;
+      if(!tip){ tip=document.createElement('div'); tip.className='hmtip'; document.body.appendChild(tip); }
+      var d=a.getAttribute('data-tip'); if(!d) return;
+      var p=d.split('');
+      tip.innerHTML='<b>'+esc(p[0])+'</b> <span style="color:'+p[3]+'">'+esc(p[2])+'</span>'+
+                    '<br><span class="s">'+esc(p[1])+'</span>'+
+                    '<br><span class="s">시총 '+esc(p[4])+' · '+esc(p[5])+'</span>';
+      tip.style.display='block';
+      var x=e.clientX+14, y=e.clientY+14, r=tip.getBoundingClientRect();
+      if(x+r.width>window.innerWidth-8) x=e.clientX-r.width-14;
+      if(y+r.height>window.innerHeight-8) y=e.clientY-r.height-14;
+      tip.style.left=x+'px'; tip.style.top=y+'px';
+    }
+    function tipOff(){ if(tip) tip.style.display='none'; }
+    wrap.addEventListener('mousemove', tipOn);
+    wrap.addEventListener('mouseleave', tipOff);
+    wrap.addEventListener('click', tipOff);
 
     // 폭이 바뀌면 다시 놓는다 — 트리맵은 절대좌표라 CSS 로 따라가지 않는다.
     var rt=null;
