@@ -977,40 +977,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          ⚠ 오늘의 신호가 히트맵보다 위로 올라온다. 2열의 결과이고, 신호가 히트맵보다
            먼저 읽히는 편이 낫다고 보아 그대로 둔다. -->
     <div class="hgrid">
-    <section id="s-week" aria-labelledby="wk-h">
-      <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
-      <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
-      <div class="callegend">
-        <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
-        <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
-        <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
-        <!-- ⚠ 2026-08-10 — '아래 회색 줄 = 주요 경제지표'·'날짜 아래 = 그날 지수 등락률'
-             두 줄을 뺐다(사용자 결정). 회색 줄과 등락률은 격자에서 그 자리에 보이므로
-             범례가 다시 말할 필요가 없다. 남긴 셋은 색으로만 구분되는 것이라 설명이 없으면
-             무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
-      </div>
-    </section>
+      <!-- 좌: 시장 국면 → 일정 캘린더 (2026-08-11 사용자 결정).
+           국면은 한 줄짜리 **상태**라 일정 위의 배너로 읽히는 것이 자연스럽다.
+           우측은 오늘의 신호 하나뿐이라 .hcol 로 감싸지 않고 격자에 바로 둔다 —
+           자식이 하나면 감쌀 이유가 없다. -->
       <div class="hcol">
-        <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
-           "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
-           전문은 여기 안 편다(regime.html 이 그 화면이다).
-           🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
-              (a7-conover 대조군 열위 · a7-fidelity 구별 불가 · a2-factor-rot 열위 ·
-               regime-switch 열위). 그 사실을 구획 안에 적는다 — 안 적으면 국면표가 매매
-               신호처럼 읽힌다. -->
-      <section id="s-regime" aria-labelledby="rg-h">
-        <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
-        <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
+      <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
+         "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
+         전문은 여기 안 편다(regime.html 이 그 화면이다).
+         🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
+            (a7-conover 대조군 열위 · a7-fidelity 구별 불가 · a2-factor-rot 열위 ·
+             regime-switch 열위). 그 사실을 구획 안에 적는다 — 안 적으면 국면표가 매매
+             신호처럼 읽힌다. -->
+        <section id="s-regime" aria-labelledby="rg-h">
+          <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
+          <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
+        </section>
+      <section id="s-week" aria-labelledby="wk-h">
+        <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
+        <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
+        <div class="callegend">
+          <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
+          <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
+          <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
+          <!-- ⚠ 2026-08-10 — '아래 회색 줄 = 주요 경제지표'·'날짜 아래 = 그날 지수 등락률'
+               두 줄을 뺐다(사용자 결정). 회색 줄과 등락률은 격자에서 그 자리에 보이므로
+               범례가 다시 말할 필요가 없다. 남긴 셋은 색으로만 구분되는 것이라 설명이 없으면
+               무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
+        </div>
       </section>
-  
-      <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
-           시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
+      </div>
+
+    <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
+         시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
       <section id="s-today" aria-labelledby="td-h">
         <h2 class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></h2>
         <div class="signote" id="signote">불러오는 중…</div>
         <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
       </section>
-      </div>
     </div>
 
     <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
