@@ -260,6 +260,41 @@ def main() -> int:
     for t in new:
         new[t]["idx"] = sorted(new[t]["idx"])
 
+    # ── 수기 GICS 산업그룹 — **빈 칸만** 메운다 ────────────────────────
+    # 위키 NDX 표가 ICB 라 NDX 전용 종목은 산업그룹이 비고, 홈 표에서 '그 밖' 줄로 모였다
+    # (2026-08-10 실측 15종 — ASML·ARM 포함). 그 15종의 산업그룹은 추측이라기보다 회사가
+    # 무슨 사업을 하는지로 정해지는 공표된 사실인데, 기계로 확인할 무료 원천이 없다.
+    # 그래서 근거와 기입일을 적은 표(build/gics_manual.json)를 두고 여기서 얹는다.
+    #   🚨 원천이 이긴다. grp 이 이미 있으면 건드리지 않는다 — 위키·지수사가 나중에 GICS 를
+    #     실으면 수기값은 저절로 물러난다. 그래야 두 값이 조용히 싸우지 않는다.
+    #   🚨 섹터는 바꾸지 않는다. 산업그룹만 채운다.
+    #   grp_src 를 남겨 화면이 '이 종목은 수기'라고 말할 수 있게 한다.
+    man_used, man_stale = [], []
+    try:
+        _mp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gics_manual.json")
+        MAN = (json.load(io.open(_mp, encoding="utf-8")) or {}).get("map") or {}
+    except Exception as e:
+        MAN = {}
+        print("  ⚠ 수기 GICS 표를 못 읽었다: %s" % e)
+    for t, mv in MAN.items():
+        if t not in new:
+            man_stale.append(t)                     # 유니버스에서 빠진 종목의 수기값
+            continue
+        if new[t].get("grp"):
+            man_stale.append(t)                     # 원천이 값을 줬다 — 수기값은 이제 불필요
+            continue
+        new[t]["grp"] = mv["grp"]
+        if mv.get("ind"):
+            new[t]["ind"] = mv["ind"]
+        new[t]["grp_src"] = "manual"
+        man_used.append(t)
+    if man_used:
+        print("수기 GICS 산업그룹 %d종 적용: %s" % (len(man_used), " ".join(sorted(man_used))))
+    if man_stale:
+        # 조용히 넘기지 않는다 — 안 쓰이는 수기값은 지워야 표가 사실로 남는다.
+        print("  ⚠ 수기 표에서 이제 필요 없는 %d종(원천이 값을 주거나 유니버스에서 빠졌다): %s"
+              % (len(man_stale), " ".join(sorted(man_stale))))
+
     # ── 관문 4: 섹터 완전성 ──
     bad = sorted(t for t, v in new.items() if v["sector"] not in GICS)
     if bad:

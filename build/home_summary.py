@@ -78,6 +78,16 @@ except Exception:
 # 개수보다 커버를 택했다. 3종 평균은 얇지만 줄마다 종목수를 함께 낸다.
 NOM = "그 밖"      # 나머지 줄 이름 — 부모 id 를 만들 때도 쓰므로 한 곳에 둔다
 IND_MIN = 3        # 이보다 적은 묶음은 '산업 평균'이라 부를 수 없다 — 종목 몇 개의 평균이다
+# 🚨 산업그룹(2차)만 문턱을 따로 둔다 — 2026-08-10.
+#   위 IND_MIN=3 의 근거는 **서브산업(4차·127칸)** 실측이다. 그 단은 2026-08-05 에 없앴고
+#   지금 이 값이 실제로 거르는 것은 산업그룹(2차·25칸)인데, 거기서는 유니버스 전체를 통틀어
+#   딱 한 묶음만 걸린다 — 부동산의 Real Estate Management & Development(CBRE·CSGP 2종).
+#   그 하나 때문에 '그 밖' 줄이 남았다.
+#   2종을 '그 밖'이라 부르는 것보다 제 이름으로 '2종'이라 적는 것이 더 정확하다 —
+#   줄마다 종목수를 함께 내므로 얇다는 사실은 화면이 이미 말한다. 이름을 지울 이유가 없다.
+#   ⚠ IND_MIN 은 그대로 둔다. 아래 tiers 표가 '왜 3·4차를 안 쓰는지'를 그 값으로 설명하고
+#     있어서, 같이 바꾸면 그 설명문의 수치(MIN 3 이면 71개·커버 83%)가 거짓이 된다.
+GRP_MIN = 2        # 산업그룹(2차) 표시 문턱
 # ⚠ 기간 규칙은 build/market_board.py 의 HOR 와 **같아야 한다.** 홈에서 섹터 카드 바로
 #   아래에 산업 카드가 붙으므로, 두 카드의 '1개월'이 다른 날을 가리키면 나란히 못 읽는다.
 #   그쪽은 달력일 차감 후 그 날짜 이하의 마지막 관측을 쓴다(_base_dates + _at) — 같은 규칙이다.
@@ -138,7 +148,7 @@ def _industry(stocks, dates, root):
             if sub:
                 bysub.setdefault((grp, sub), []).append(s)
 
-    keepg = {k: v for k, v in bygrp.items() if len(v) >= IND_MIN}
+    keepg = {k: v for k, v in bygrp.items() if len(v) >= GRP_MIN}
     keeps = {k: v for k, v in bysub.items() if len(v) >= IND_MIN}
 
     # ── 왜 3차(산업)를 안 쓰는지 **화면이 스스로 말하게** 한다 ──────────────
@@ -179,8 +189,14 @@ def _industry(stocks, dates, root):
         _dual_t.append(sorted(x["t"] for x in ss))
         vs = sorted((float((x.get("fund") or {}).get("mc") or 0) for x in ss), reverse=True)
         _dual_mc += sum(vs[1:])          # 가장 큰 것 하나만 남기고 나머지가 뺀 금액이다
+    # 수기로 산업그룹을 채운 종목 수 — 화면이 "이 중 N종은 수기 분류"라고 말한다.
+    #   세는 것은 members.json 의 grp_src 다(build/refresh_members.py 가 찍는다).
+    #   🚨 손으로 적지 않는다. 위키가 나중에 GICS 를 실으면 grp_src 가 저절로 사라지고
+    #     화면의 숫자도 같이 줄어야 한다 — 상수로 박으면 그날 조용히 거짓말이 된다.
+    _man = sum(1 for s in stocks if (mem.get(s["t"]) or {}).get("grp_src") == "manual")
     gics_tiers = {"n_gics": len(has), "n_all": len(stocks), "rows": tiers,
-                  "ind_dup": dup, "ind_n": len(_ci), "min": IND_MIN,
+                  "ind_dup": dup, "ind_n": len(_ci), "min": IND_MIN, "grp_min": GRP_MIN,
+                  "manual_grp": _man,
                   "dual": sorted(_dual_t), "dual_mc": round(_dual_mc) or 0}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
 

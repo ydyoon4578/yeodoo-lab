@@ -224,7 +224,10 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Semiconductors & Semiconductor Equipment",
+   "ind": "Semiconductors & Semiconductor Equipment",
+   "grp_src": "manual"
   },
   "ALB": {
    "name": "ALBEMARLE CORP",
@@ -271,7 +274,10 @@
    "sector": "Health Care",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Pharmaceuticals, Biotechnology  & Life Sciences",
+   "ind": "Biotechnology",
+   "grp_src": "manual"
   },
   "AMAT": {
    "name": "APPLIED MATERIALS INC",
@@ -473,14 +479,20 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Semiconductors & Semiconductor Equipment",
+   "ind": "Semiconductors & Semiconductor Equipment",
+   "grp_src": "manual"
   },
   "ASML": {
    "name": "ASML HOLDING NV-NY REG SHS",
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Semiconductors & Semiconductor Equipment",
+   "ind": "Semiconductors & Semiconductor Equipment",
+   "grp_src": "manual"
   },
   "ATO": {
    "name": "ATMOS ENERGY CORP",
@@ -871,7 +883,10 @@
    "sector": "Consumer Staples",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Food, Beverage & Tobacco",
+   "ind": "Beverages",
+   "grp_src": "manual"
   },
   "CCI": {
    "name": "CROWN CASTLE INC",
@@ -1244,7 +1259,10 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Software & Services",
+   "ind": "IT Services",
+   "grp_src": "manual"
   },
   "CSCO": {
    "name": "CISCO SYSTEMS INC",
@@ -1950,7 +1968,10 @@
    "sector": "Industrials",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Capital Goods",
+   "ind": "Construction & Engineering",
+   "grp_src": "manual"
   },
   "FERG": {
    "name": "Ferguson Enterprises",
@@ -3157,7 +3178,10 @@
    "sector": "Consumer Discretionary",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Consumer Discretionary Distribution & Retail",
+   "ind": "Broadline Retail",
+   "grp_src": "manual"
   },
   "MET": {
    "name": "METLIFE INC",
@@ -3359,7 +3383,10 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Software & Services",
+   "ind": "Software",
+   "grp_src": "manual"
   },
   "MTB": {
    "name": "M & T BANK CORP",
@@ -3397,7 +3424,10 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Software & Services",
+   "ind": "IT Services",
+   "grp_src": "manual"
   },
   "NCLH": {
    "name": "NORWEGIAN CRUISE LINE HOLDIN",
@@ -3742,7 +3772,10 @@
    "sector": "Consumer Discretionary",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Consumer Discretionary Distribution & Retail",
+   "ind": "Broadline Retail",
+   "grp_src": "manual"
   },
   "PEG": {
    "name": "PUBLIC SERVICE ENTERPRISE GP",
@@ -4074,7 +4107,10 @@
    "sector": "Industrials",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Capital Goods",
+   "ind": "Aerospace & Defense",
+   "grp_src": "manual"
   },
   "RL": {
    "name": "RALPH LAUREN CORP",
@@ -4204,7 +4240,10 @@
    "sector": "Information Technology",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Software & Services",
+   "ind": "Software",
+   "grp_src": "manual"
   },
   "SHW": {
    "name": "SHERWIN-WILLIAMS CO/THE",
@@ -4303,7 +4342,10 @@
    "sector": "Communication Services",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Telecommunication Services",
+   "ind": "Diversified Telecommunication Services",
+   "grp_src": "manual"
   },
   "SPG": {
    "name": "SIMON PROPERTY GROUP INC",
@@ -4613,7 +4655,10 @@
    "sector": "Industrials",
    "idx": [
     "NDX"
-   ]
+   ],
+   "grp": "Commercial & Professional Services",
+   "ind": "Professional Services",
+   "grp_src": "manual"
   },
   "TRMB": {
    "name": "TRIMBLE INC",

@@ -1381,7 +1381,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       nG+=(gs.length===1&&gs[0].solo)?0:gs.length;
     });
     var h='<tr class="grp"><th colspan="'+ncol+'">섹터 '+secs.length+'개 · 산업그룹 '+nG+
-       '개 <em>유니버스 종목 <b>동일가중</b> · <b>시총 내림차순</b> · GICS(위키백과 구조) · '+
+       '개 <em>유니버스 종목 <b>동일가중</b> · <b>시총 내림차순</b> · GICS(위키백과 구조'+
+       // 🚨 수기 매핑 종목 수를 밝힌다 — 위키 NASDAQ-100 표는 ICB 라 NDX 전용 종목의 GICS
+       //   산업그룹이 없다. 그 칸을 build/gics_manual.json 으로 메웠고(2026-08-10 · 15종),
+       //   메웠다는 사실을 화면이 말하지 않으면 독자는 전부 GICS 원천인 줄 안다.
+       //   수는 home_reco 가 세어 보낸다 — 손으로 적으면 표가 바뀌는 날 조용히 틀린다.
+       (function(){
+         var n=(D&&D.tiers&&D.tiers.manual_grp)||0;
+         return n?(' · 이 중 <b>'+n+'종</b>은 원천에 GICS 가 없어 수기 분류'):'';
+       })()+') · '+
        // 🚨 이중클래스 각주 — 숫자는 home_reco 가 세어 보낸다(손으로 적으면 지수가 바뀌는 날 틀린다).
        //   시총 정보원이 두 티커 모두에 **회사 전체 시총**을 주므로 그냥 더하면 한 회사를 두 번 센다.
        (function(){
