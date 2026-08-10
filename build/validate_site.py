@@ -2333,6 +2333,50 @@ except Exception as _e:
     tool_skips.append("배선 검사(%s)" % _e)
 
 
+# ── el('x') 가 가리키는 요소가 그 페이지에 있나 ────────────────────────────
+#   🚨 2026-08-10 에 이 검사가 없어서 난 사고. sector.html 의 el('nmax') 가 가리키던
+#     안내문이 설명 정리 때 지워졌는데 **채우는 줄만 남았다**. el 은 getElementById 라
+#     null 을 주고 .textContent= 가 던져, 그 함수의 나머지가 통째로 죽었다 —
+#     rtally·sampfirst·partn·covA·covB·linknote·cursub·curbars·mx·maptbl 열 자리가
+#     라이브에서 비어 있었다.
+#     가장 나쁜 부분은 바깥 .catch() 가 그 TypeError 를 받아 "데이터를 불러오지
+#     못했습니다"를 그렸다는 것이다. **배선 결함이 자료 결함으로 위장했다** — 화면은
+#     자료 탓을 하고 있었고 자료는 멀쩡했다. 그래서 몇 주간 아무도 못 봤다.
+#   ⚠ 문자열 리터럴만 본다(el('up-'+rid) 같은 조립형은 대상이 아니다 — 그쪽은 id 가
+#     자료에서 오므로 정적으로 알 수 없다). 그래서 거짓양성이 없다: 실측 24페이지에서
+#     위 두 건 말고는 전부 짝이 맞았다.
+try:
+    import glob as _glob
+    _wire_bad = []
+    def _strip_comments(_t):
+        """JS 주석을 걷어낸다 — 주석에 적은 el('x') 예시를 배선으로 세지 않으려고.
+
+        🚨 이 검사를 처음 걸었을 때 **자기가 쓴 주석 네 줄에 스스로 걸렸다**. 사고를
+          설명하려고 주석에 el('nmax') 라고 적었더니 그것을 배선으로 읽었다. 주석은
+          코드가 아니다.
+        ⚠ '//' 는 줄 전체가 주석일 때만 자른다. 코드 중간의 '//' 는 URL(https://)일 수
+          있어서, 문자열 안인지 아닌지를 정규식으로는 못 가린다 — 덜 자르는 쪽으로 둔다.
+        """
+        _t = re.sub(r"/\*.*?\*/", " ", _t, flags=re.S)
+        return "\n".join(_ln for _ln in _t.split("\n") if not _ln.lstrip().startswith("//"))
+
+    for _p in sorted(_glob.glob(os.path.join(ROOT, "*.html"))):
+        _s = io.open(_p, encoding="utf-8").read()
+        _ids = set(re.findall(r'\bid="([A-Za-z0-9_\-]+)"', _s))
+        _used = set(re.findall(r"\bel\(\s*'([A-Za-z0-9_\-]+)'\s*\)", _strip_comments(_s)))
+        for _k in sorted(_used - _ids):
+            _wire_bad.append("%s: el('%s')" % (os.path.basename(_p), _k))
+    if _wire_bad:
+        errors.append("가리키는 요소가 없는 el() %d건: %s — 널 가드가 없으면 그 줄에서 "
+                      "예외가 나고 뒤가 통째로 죽는다(그리고 .catch 가 '자료를 못 받았다'로 "
+                      "위장한다). 요소를 되살리든 죽은 줄을 지우든 짝을 맞출 것"
+                      % (len(_wire_bad), " · ".join(_wire_bad[:8])))
+    else:
+        print("  ~ el() 배선 검사 통과(%d페이지)" % len(_glob.glob(os.path.join(ROOT, "*.html"))))
+except Exception as _e:
+    tool_skips.append("el() 배선 검사(%s)" % _e)
+
+
 # ── DATA-FACTS.md 가 스스로 검사받는다 ────────────────────────────────────
 #   🚨 문서에 박은 숫자는 아무도 안 볼 때 조용히 거짓이 된다. 2026-08-04 실측 두 건 —
 #   style_pit.py 머리말의 편향 요약이 두 달 만에 성장 26.2 → 2.4%p 로 어긋나 있었고,

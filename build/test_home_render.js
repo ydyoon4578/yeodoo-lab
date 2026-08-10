@@ -20,7 +20,8 @@ const opt = p => { try { return J(p); } catch (e) { return null; } };
 const TBL = H.stub(), SUB = H.stub();
 // 이름 붙인 것만 검사에서 들여다보고, **나머지 id 도 그림자를 준다** — 페이지 본문을
 // 통째로 돌리므로 모르는 id 에 null 을 주면 관계없는 곳에서 죽어 렌더러에 닿지도 못한다.
-const named = { sttbl: TBL, "st-sub": SUB };
+const CALG = H.stub(), CALS = H.stub();
+const named = { sttbl: TBL, "st-sub": SUB, "wk-cal-grid": CALG, "wk-sub": CALS };
 const spare = {};
 const el = n => named[n] || (spare[n] || (spare[n] = H.stub()));
 
@@ -61,6 +62,22 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   const late = (TBL.innerHTML.match(/tr class="lv1"/g) || []).length;
   console.log("페이지 자체 로드 후: 섹터 %d줄", late);
   if (!late) fail.push("섹터 줄이 0 — 자료 도착 순서 배선이 끊겼다");
+
+  // ⑦ 일정 캘린더 — 격자가 그려지고 **기준일이 머리글에 붙는가.**
+  //    🚨 2026-08-10 에 시차를 설명하던 격자 아래 세 줄(.calfresh)을 걷어내고 그 날짜만
+  //      머리글 .sub 로 옮겼다(사용자 결정). 옮긴 자리가 조용히 비면 화면은 "오늘 칸이
+  //      왜 비었나"에 아무 답도 못 한다 — 그 질문은 실제로 두 번 신고됐다.
+  //      설명을 지우는 것과 근거를 지우는 것은 다르다. 근거가 살아 있는지 여기서 못 박는다.
+  const nDay = (CALG.innerHTML.match(/class="caldate"/g) || []).length;
+  const asof = CALS.textContent || "";
+  console.log("캘린더: 날짜칸 %d개 · 머리글 기준일 %j", nDay, asof);
+  //    ⚠ 문턱은 10 이다. 지금 20칸(4주 × 평일 5)이지만 그 수를 강제하지 않는다 —
+  //      이 검사가 잡으려는 것은 '격자가 통째로 안 그려졌다'이지 주 수가 아니다.
+  if (nDay < 10) fail.push("캘린더 날짜칸이 " + nDay + "개뿐 — 격자 배선이 끊겼다");
+  if (!/^· 지수 등락률 \d{4}-\d{2}-\d{2} 기준$/.test(asof))
+    fail.push("캘린더 머리글 기준일이 안 붙었다: " + JSON.stringify(asof));
+  if (/calfresh/.test(CALG.innerHTML))
+    fail.push("걷어낸 .calfresh 가 격자 아래에 다시 나타났다");
 
   // ⚠ 2026-08-04 홈이 **섹터 → 산업그룹(2차) → 종목** 두 단으로 돌아왔다(사용자 결정).
   //    2026-08-03 에 '11섹터만' 으로 줄이면서 걷었던 검사 중 이 구조에 맞는 것을 되살린다.

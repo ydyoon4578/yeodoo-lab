@@ -195,7 +195,6 @@
   .calix b{color:var(--muted);font-weight:600}
   .calix i{font-style:normal;color:var(--muted)}
   .calix i.up{color:var(--deploy)} .calix i.dn{color:var(--hot)}
-  .calfresh{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.5}
 
   /* ── 종목 히트맵 ────────────────────────────────────────────────────
      칸 크기 = 시가총액 · 색 = 그 기간 등락률 · 묶음 = 섹터 → 산업그룹.
@@ -945,7 +944,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="home">
     <!-- ① 일정 캘린더 — 지난 1주 + 앞으로 3주. 시장 카드보다 위에 둔다(무엇이 언제 나오는지가 먼저다). -->
     <section id="s-week" aria-labelledby="wk-h">
-      <h2 class="lbl" id="wk-h">일정 캘린더<a class="more2" href="calendar.html">전체 일정 →</a></h2>
+      <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
       <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
       <div class="callegend">
         <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
@@ -1545,7 +1544,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (bdg?'<em>'+bdg+'</em>':'')+'</div>'+
           (function(){var q=(CAL.i||{})[k];
             // ⚠ 빈 칸에 '장 마감 전' 을 적었다가 뺐다(2026-08-10 사용자 결정).
-            //   그 설명은 격자 아래 한 줄(.calfresh)이 이미 하고 있어 칸마다 반복할 이유가 없다.
+            //   빈 칸의 이유는 머리글의 기준일 하나로 읽힌다 — 칸마다 반복할 이유가 없다.
             if(!q) return '';
             var f=function(lab,v){return v==null?'':'<span><b>'+lab+'</b><i class="'+(v>0?'up':(v<0?'dn':''))+'">'+(v>0?'+':'')+v.toFixed(2)+'%</i></span>';};
             return '<div class="calix">'+f('S&amp;P 500',q.s)+f('나스닥 100',q.n)+'</div>';})()+
@@ -1586,16 +1585,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '</div>';
       }
     }
-    // 🚨 마지막 등락률이 **언제 것인지** 격자 아래에 적는다. 이것이 없으면 오늘 칸이
-    //   빈 것을 보고 "자료가 안 들어왔다"로 읽는다 — 실제로 두 번 그렇게 신고받았다.
-    //   미국 종가라 그날 등락률은 한국 시각 다음 날 아침에 들어온다. 그 시차를 화면이 말한다.
+    // 🚨 마지막 등락률이 **언제 것인지**는 남긴다. 이것이 없으면 오늘 칸이 빈 것을 보고
+    //   "자료가 안 들어왔다"로 읽는다 — 실제로 두 번 그렇게 신고받았다.
+    //   시차를 설명하던 격자 아래 세 줄(.calfresh)은 걷어냈다(사용자 결정 2026-08-10).
+    //   날짜 하나면 같은 일을 한다 — 마지막이 어제인 것을 보면 오늘 칸이 빈 이유는 저절로
+    //   읽힌다. 자리는 이 페이지의 다른 머리글과 같은 .sub 다(시장 국면·종목 히트맵 등).
     var _ik=Object.keys(CAL.i||{}).sort(), _last=_ik[_ik.length-1]||null;
-    var _fresh = _last
-      ? '<div class="calfresh">지수 등락률 — 마지막 <b>'+_last+'</b>. '+
-        '미국 종가 기준이라 그날 등락률은 한국 시각으로 <b>다음 날 아침</b>에 들어온다. '+
-        '오늘·앞으로의 칸이 빈 것은 아직 안 나온 것이다.</div>'
-      : '<div class="calfresh">지수 등락률을 아직 받지 못했다.</div>';
-    box.innerHTML='<div class="calgrid">'+h+'</div>'+_fresh;
+    var _sub=el('wk-sub');
+    if(_sub) _sub.textContent = _last ? ('· 지수 등락률 '+_last+' 기준') : '· 지수 등락률 미수신';
+    box.innerHTML='<div class="calgrid">'+h+'</div>';
     // 제목 옆 부제(구간·건수·기준일)는 뺐다 — 격자가 그 구간을 이미 보이고 있다
     // (사용자 결정 2026-07-29). 세던 shownE·shownM 도 쓰는 데가 없어져 같이 걷어냈다.
   }
