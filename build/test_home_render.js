@@ -79,6 +79,21 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   if (/calfresh/.test(CALG.innerHTML))
     fail.push("걷어낸 .calfresh 가 격자 아래에 다시 나타났다");
 
+  // ⑧ 정밀도 — **없는 자리를 그리고 있지 않은가.**
+  //    🚨 2026-08-10 사고. home_summary 가 종목 수익률을 round(v,1) 로 저장하는데 화면은
+  //      toFixed(2) 로 그려서 +0.026% 가 '0.00%' 로 나갔다. 518종 전부 둘째 자리가 0
+  //      이었는데 아무도 못 봤다 — 없는 자리는 빈칸이 아니라 0 으로 보이기 때문이다.
+  //      증상을 직접 잰다: 소수 2자리로 찍힌 숫자 중 마지막 자리가 0 인 비율.
+  //      값이 고르면 10% 근처다. 저장이 1자리면 100% 가 된다.
+  //    ⚠ 문턱 35% 는 넉넉히 잡았다. 이 검사가 잡으려는 것은 '자리가 통째로 없음'이지
+  //      분포의 미세한 치우침이 아니다(목표주가처럼 원래 반올림된 값이 섞이면 올라간다).
+  const nums = (TBL.innerHTML.replace(/<[^>]*>/g, " ").match(/-?\d+\.\d\d(?!\d)/g) || []);
+  const zero = nums.filter(s => s.slice(-1) === "0").length;
+  const pct = nums.length ? Math.round((100 * zero) / nums.length) : 0;
+  console.log("정밀도: 2자리 숫자 %d개 중 끝자리 0 이 %d개 (%d%%)", nums.length, zero, pct);
+  if (nums.length >= 200 && pct >= 35)
+    fail.push("2자리로 그린 숫자의 " + pct + "%가 끝자리 0 — 저장 정밀도가 표시보다 낮다(round 자릿수를 볼 것)");
+
   // ⚠ 2026-08-04 홈이 **섹터 → 산업그룹(2차) → 종목** 두 단으로 돌아왔다(사용자 결정).
   //    2026-08-03 에 '11섹터만' 으로 줄이면서 걷었던 검사 중 이 구조에 맞는 것을 되살린다.
   //    서브산업(4차)은 여전히 안 낸다 — 그쪽은 industry.html 전담이라 lv4 가 나오면 실패다.
