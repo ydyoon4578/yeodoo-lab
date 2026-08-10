@@ -1816,12 +1816,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
     // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.
     h+=mkSegRows(ncol);
-    // ⚠ 어느 ETF 를 싣는지는 여전히 짝 판정(labOf)이 정한다 — 짝 없는 셋(배당성장 SDY·
-    //   중소형 SIZE·동일가중 RSP)은 표가 길어져서 뺀 것이고(2026-07-29) macro.html 에 있다.
-    // ⚠ 표에서만 뺀다. st 배열 자체는 건드리지 않는다 — 아래 지수 방법론 묶음이 이 배열로
+    // ⚠ 어느 ETF 를 싣는지는 짝 판정(labOf)이 정한다 — 랩 방법론과 짝이 있는 것만 싣는다.
+    // 🚨 2026-08-10 — 짝이 없어도 싣는 둘을 두었다(사용자 결정). 짝이 없다는 것과 볼 필요가
+    //   없다는 것은 다르다.
+    //   · RSP 동일가중 S&P 500 — 이 랩의 종목 규칙은 대조군이 시총가중이면 이기고
+    //     **랩 동일가중 유니버스면 대부분 진다**(vs_traded). 성적의 큰 부분이 '동일가중이
+    //     시총가중을 이겼다'인데, 그 잣대의 실제 상품이 이 표에 없었다.
+    //   · SDY 배당성장 — 고배당(div)·고배당저변동(divlv) 두 방법론이 아래에 있는데
+    //     그 계열의 상품 수익률이 없었다.
+    //   중소형 SIZE 는 그대로 뺀다 — 대응 방법론 size 가 ST_HIDE 라 짝이 반쪽이다.
+    // ⚠ 표에서만 거른다. st 배열 자체는 건드리지 않는다 — 아래 지수 방법론 묶음이 이 배열로
     //   순서를 만들므로, 여기서 지우면 그 줄이 경고 없이 사라진다.
+    var ETF_KEEP={RSP:1, SDY:1};
     var pair=[], solo=[];
-    st.forEach(function(x){ (labOf(x.t)?pair:solo).push(x); });
+    st.forEach(function(x){ (labOf(x.t)||ETF_KEEP[x.t]?pair:solo).push(x); });
     // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
     // 지수 두 줄만 남으므로 있는 것을 다 낸다.
     var show=pair.length?pair:solo;
@@ -1975,6 +1983,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // val 이다(그쪽 STYLES 정의를 따른다). 그대로 넘기면 못 찾고 첫 스타일로 떨어진다.
   // 나머지는 2026-08-02 에 더한 공개 산식 지수들이고 양쪽 키가 같다.
   var ST_PERF={mom:'mom',qual:'qual',spval:'val',lowvol:'lowvol',grow:'grow',hbeta:'hbeta',
+               size:'size',
                div:'div',buyback:'buyback',fcfy:'fcfy',
                divlv:'divlv',netbuy:'netbuy',squal:'squal',
                puregrow:'puregrow',purevalue:'purevalue',
@@ -1999,7 +2008,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   scrHref·drawStHold 가 여기 있었다. screener.html 이 그 화면이고 거기서는 그대로 산다.
   //   build/style_top.py 는 sc_* 를 계속 만든다 — 홈에서 안 보이는 것과 재지 않는 것은
   //   다른 얘기다. 다시 싣기로 하면 style_top.json 에 명단·trails_fixed 가 그대로 있다.
-  var ST_HIDE={size:1};
+  // 🚨 2026-08-10 — 여기 있던 {size:1} 을 걷었다(사용자 결정). 중소형을 숨긴 2026-08-02 의
+  //   사유는 '반쪽이라서'였다 — 대응 ETF(SIZE)가 짝 판정에서 빠져 표에 없었고 백테스트
+  //   곡선도 없어(style_top.py 에만 있고 style_top_pdf.py 에 없었다) 구성종목 줄에만 혼자
+  //   남아 있었다. 이번에 양쪽을 다 채웠다 — style_top_pdf 에 sc_size 를 넣어 곡선을 만들고
+  //   etf_sharpe 에 SIZE 를 더했다. 숨긴 이유가 사라졌으므로 되살린다.
+  var ST_HIDE={};
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
   // (ETF 9행) 그려진다. 이 파일을 만드는 build/style_top_pdf.py --json 은 갱신 잡에 물려

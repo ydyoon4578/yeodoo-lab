@@ -1,28 +1,13 @@
 {
- "as_of_members": "2026-08-07",
+ "as_of_members": "2026-08-10",
  "note": "지수 편입 명단. 출처 — S&P 500: 위키백과 목록 + SSGA SPY 보유내역 교차 확인, NASDAQ-100: 위키백과 목록. 오늘 스냅샷이며 과거 편입 이력이 아니다(백테스트의 생존편향은 각 결과 화면에 별도 명시).",
  "gates": {
   "spx_n": 503,
   "ndx_n": 102,
-  "added": [
-   "FERG"
-  ],
-  "removed": [
-   "EA"
-  ],
+  "added": [],
+  "removed": [],
   "cross_check": "SPY 보유내역 대조",
-  "sector_changed": [
-   {
-    "t": "APP",
-    "from": "Information Technology",
-    "to": "Communication Services"
-   },
-   {
-    "t": "DD",
-    "from": "Materials",
-    "to": "Industrials"
-   }
-  ],
+  "sector_changed": [],
   "name_style_kept": 517,
   "ndx_caveat": "NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존한다"
  },
@@ -1664,7 +1649,7 @@
     "SPX"
    ],
    "sub": "Reinsurance",
-   "grp": "Software & Services",
+   "grp": "Insurance",
    "ind": "Insurance"
   },
   "EIX": {
