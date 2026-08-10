@@ -213,14 +213,22 @@
   /* 배경을 어둡게 둬야 칸 사이 1px 틈이 '선'으로 읽힌다(밝으면 틈이 안 보인다) */
   .hmwrap{border:1px solid var(--line);background:#1A1E23;overflow:hidden}
   .hmtree{position:relative;width:100%}
-  .hmsec{position:absolute;overflow:hidden}
-  .hmsec>.hl{position:absolute;left:0;top:0;right:0;height:16px;font-size:11.5px;font-weight:700;
-       color:var(--ink);background:var(--panel-2);padding:1px 5px;white-space:nowrap;overflow:hidden;
-       border-bottom:1px solid var(--line)}
+  /* 🚨 섹터 구분이 허술했던 이유 — 얇은 띠 하나로만 나눴고 섹터끼리 딱 붙어 있어
+     어디까지가 한 섹터인지 눈으로 안 잡혔다. 셋을 준다:
+       ① 섹터 사이 틈(바탕색이 비쳐 굵은 선이 된다)  ② 섹터 테두리  ③ 제대로 된 머리줄 */
+  .hmsec{position:absolute;overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:2px}
+  .hmsec>.hl{position:absolute;left:0;top:0;right:0;height:19px;display:flex;align-items:center;
+       gap:6px;font-size:12px;font-weight:800;letter-spacing:-.01em;color:#EAEEF2;
+       background:rgba(0,0,0,.55);padding:0 7px;white-space:nowrap;overflow:hidden;
+       border-bottom:1px solid rgba(255,255,255,.16)}
+  .hmsec>.hl .hv{font-family:var(--mono);font-weight:700;font-size:11.5px}
+  .hmsec>.hl .hn{margin-left:auto;font-family:var(--mono);font-size:11px;color:#AEB6BE;font-weight:600}
   .hmgrp{position:absolute;overflow:hidden}
-  .hmgrp>.gl{position:absolute;left:0;top:0;right:0;height:14px;font-size:11px;color:var(--ink-2);
-       background:var(--panel-2);padding:0 4px;white-space:nowrap;overflow:hidden;
-       text-overflow:ellipsis}
+  /* 산업그룹은 섹터보다 한 단 아래라는 것이 보여야 한다 — 왼쪽 눈금과 옅은 배경으로 뗀다 */
+  .hmgrp>.gl{position:absolute;left:0;top:0;right:0;height:15px;display:flex;align-items:center;
+       font-size:11px;font-weight:600;color:#C7CDD4;background:rgba(0,0,0,.38);
+       padding:0 5px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+       border-left:3px solid rgba(255,255,255,.28)}
   /* 🚨 '너무 각지다'의 정체는 칸이 서로 붙어 한 덩어리로 보이는 것이었다.
      칸마다 1px 틈(배경색이 비쳐 선이 된다)과 2px 모서리를 준다 — 사이트 표준 반경과 같다.
      틈은 margin 이 아니라 inset 으로 준다. 트리맵은 절대좌표라 margin 이 좌표를 밀어낸다. */
@@ -955,6 +963,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
     </section>
 
+    <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
+         자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다(518종 · 119KB).
+         새 수집 잡도, 새 파일도 만들지 않는다. -->
+    <section id="s-heat" aria-labelledby="hm-h">
+      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
+      <div class="hmbar" id="hm-bar"></div>
+      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
+      <p class="stnote" id="hm-note"></p>
+    </section>
+
     <section id="s-style" aria-labelledby="st-h">
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
@@ -966,17 +984,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
               한 스타일이 한 줄을 쓴다. -->
 
-    </section>
-
-
-    <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
-         자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다(518종 · 119KB).
-         새 수집 잡도, 새 파일도 만들지 않는다. -->
-    <section id="s-heat" aria-labelledby="hm-h">
-      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
-      <div class="hmbar" id="hm-bar"></div>
-      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
-      <p class="stnote" id="hm-note"></p>
     </section>
 
     <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
@@ -2054,7 +2061,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       'Consumer Durables & Apparel':'내구재·의류','Consumer Services':'소비자 서비스'};
     var PERIODS=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],
                  ['6M','6개월'],['12M','12개월'],['YTD','올해']];
-    var ROWS=null, PER='1D';
+    var ROWS=null, PER='1D', ASOF='';
 
     // 등락률 → 색. ±cap 에서 포화한다. 기간마다 흔들림 폭이 달라 cap 을 따로 둔다 —
     // 1일 잣대(±3%)를 12개월에 그대로 쓰면 화면이 통째로 빨강/초록이 되어 아무것도 안 보인다.
@@ -2140,19 +2147,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var secs=agg(ROWS,function(r){return r.sec;});
       var boxes=squarify(secs.map(function(g){return {v:g.v,d:g};}),0,0,W,H);
       var html='';
+      // 🚨 섹터 사이에 틈을 준다. 종전에는 섹터끼리 딱 붙어 있어 어디까지가 한 섹터인지
+      //   눈으로 안 잡혔다 — '허접하다'의 정체가 이것이다. 바탕(어두운 색)이 비쳐 굵은 선이 된다.
+      var GUT=5;
       boxes.forEach(function(b){
         var g=b.d, lab=(SECKO[g.k]||g.k), wr=wret(g.rows);
-        html+='<div class="hmsec" style="left:'+b.x+'px;top:'+b.y+'px;width:'+b.w+'px;height:'+b.h+'px">';
-        if(b.h>26&&b.w>60) html+='<div class="hl">'+esc(lab)+' <span style="color:'+
-          (wr>0?'var(--deploy)':(wr<0?'var(--hot)':'var(--muted)'))+'">'+fmt(wr)+'</span></div>';
-        var top=(b.h>26&&b.w>60)?15:0;
+        var bx=b.x+GUT/2, by=b.y+GUT/2, bw=Math.max(0,b.w-GUT), bh=Math.max(0,b.h-GUT);
+        html+='<div class="hmsec" style="left:'+bx+'px;top:'+by+'px;width:'+bw+'px;height:'+bh+'px">';
+        var hasHd = bh>34&&bw>84;
+        if(hasHd) html+='<div class="hl">'+esc(lab)+
+          '<span class="hv" style="color:'+(wr>0?'#3DDC84':(wr<0?'#FF7A6E':'#AEB6BE'))+'">'+fmt(wr)+'</span>'+
+          (bw>190?'<span class="hn">'+g.rows.length+'종</span>':'')+'</div>';
+        var top=hasHd?20:0;
         // 산업그룹 — 칸이 좁으면 이 단을 건너뛰고 종목을 바로 놓는다(라벨이 자리를 다 먹는다)
-        var useGrp = b.w>150 && b.h-top>90;
+        var useGrp = bw>170 && bh-top>100;
         var inner = useGrp ? agg(g.rows,function(r){return r.p||g.k;}) : [{k:g.k,v:g.v,rows:g.rows}];
-        squarify(inner.map(function(x){return {v:x.v,d:x};}),0,top,b.w,b.h-top).forEach(function(gb){
+        squarify(inner.map(function(x){return {v:x.v,d:x};}),1,top,bw-2,bh-top-1).forEach(function(gb){
           var gg=gb.d, graw=(gg.k.indexOf('|')>=0?gg.k.split('|')[1]:'');
           var gname=GRPKO[graw]||graw;
-          var gtop=(useGrp&&gb.h>34&&gb.w>70&&gname)?13:0;
+          var gtop=(useGrp&&gb.h>38&&gb.w>78&&gname)?16:0;
           html+='<div class="hmgrp" style="left:'+gb.x+'px;top:'+gb.y+'px;width:'+gb.w+'px;height:'+gb.h+'px">';
           if(gtop) html+='<div class="gl">'+esc(gname)+'</div>';
           squarify(gg.rows.map(function(r){return {v:Math.max(r.mc||0,1),d:r};}),0,gtop,gb.w,gb.h-gtop)
@@ -2183,7 +2196,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       wrap.innerHTML=html;
       var sub=el('hm-sub');
       if(sub) sub.textContent='· '+ROWS.length+'종목 · 시총 크기 · '+
-        (PERIODS.filter(function(p){return p[0]===PER;})[0]||['','']) [1]+' 등락';
+        (PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1]+' 등락'+
+        (ASOF?' · 기준일 '+ASOF:'');
       var nt=el('hm-note');
       if(nt) nt.innerHTML='칸 크기는 시가총액, 색은 '+esc((PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1])+
         ' 등락률이다(±'+(CAP[PER]||3)+'%에서 색이 포화한다 — 기간마다 흔들림 폭이 달라 잣대를 따로 둔다). '+
@@ -2209,7 +2223,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
 
     getj('home_stocks.json').then(function(j){
-      ROWS=(j&&j.rows)||[];
+      ROWS=(j&&j.rows)||[]; ASOF=(j&&j.as_of)||'';
       // 섹터 트리도 같은 파일을 쓴다 — 이미 받았으면 그쪽이 다시 받지 않게 넘겨준다.
       if(typeof MK!=='undefined' && MK && MK.stk===null) MK.stk=ROWS;
       bar(); paint();
