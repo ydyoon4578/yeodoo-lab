@@ -1014,7 +1014,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<div class="grp"><h3><span>'+esc(g)+'</span><span class="gc">등급 '+ng+'종 · 등급 없음 '+nn+'종</span></h3>'+rows+'</div>';
     }).join('');
     host.innerHTML=html+
-      '<div class="note plain"><b>백분위는 값 오름차순 원순위입니다</b> — 저장된 백분위 100은 그 모집단에서 값이 가장 큰 종목, 0은 가장 작은 종목입니다. '+
+      '<div class="note plain"> — 저장된 백분위 100은 그 모집단에서 값이 가장 큰 종목, 0은 가장 작은 종목입니다. '+
       '등급은 여기에 지표별 방향(<code>fundx_defs.dir</code>)을 적용해 뒤집은 <b>좋은 쪽 백분위</b>로 매깁니다. '+
       '캡션에 그 좋은 쪽 백분위와 등급을 함께 적어 두었으니 계산을 그대로 검산할 수 있습니다. '+
       '<b>*</b> 표시는 요약 파일에 없어 이 화면이 섹터 표본을 직접 셀 수 없는 지표입니다.</div>';
@@ -1315,7 +1315,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          ' 커버 <b class="tnum">'+esc(String(DATA.fund_pct_basis.n||''))+'</b>종목 · 기준일 '+esc(DATA.fund_pct_basis.as_of||'')+'. '+
          '이 수는 커버 종목 수이지 지표별 분모가 아닙니다 — 임계는 지표마다 결측을 뺀 표본에서 내므로 지표별 분모는 이보다 작습니다'+
          '(지표별 커버율은 ③ 표의 “전체 커버 %”).</div>'):'')+
-      '<div class="note"><b>같은 사이트 안에 방향 정의가 둘 있습니다.</b> 등급은 <code>fundx_defs.dir</code>(표시용)을 쓰고, '+
+      '<div class="note"> 등급은 <code>fundx_defs.dir</code>(표시용)을 쓰고, '+
         '스크리닝은 <code>screens.json</code>의 <code>dir</code>(선별용)을 씁니다. 베타·배당수익률·성장률처럼 두 곳의 값이 다른 지표가 있습니다 — '+
         '표시에서는 우열을 정하지 않지만 선별에서는 조건으로 쓰기 때문입니다. 이 화면의 등급은 앞의 것만 따릅니다.</div>';
   }

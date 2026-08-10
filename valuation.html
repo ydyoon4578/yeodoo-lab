@@ -601,10 +601,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="reverse" aria-labelledby="rev-h">
     <h2 class="lbl" id="rev-h">01 · Reverse DCF <span class="sub">· 주가에서 가정을 거꾸로 푼다</span></h2>
-    <p class="lblnote">보통의 DCF는 성장률을 가정해 값을 냅니다. Reverse DCF는 반대로 갑니다 —
-      <b>오늘 시가총액을 정답으로 놓고, 그 값이 나오려면 향후 FCF가 매년 몇 %씩 늘어야 하는지</b>를 역산합니다.
-      나온 숫자는 <b>예측이 아니라 역산</b>입니다 — "시장의 기대"가 아니라
-      "이 가정 아래 오늘 가격과 <b>산술적으로</b> 맞아떨어지는 성장률"입니다.</p>
+    
 
     <div class="card">
       <p class="cardh">먼저 분모 <em id="coverh">· 커버 종목 중 몇 종목에서 계산이 되는가</em></p>
@@ -680,16 +677,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="simple" aria-labelledby="sim-h">
     <h2 class="lbl" id="sim-h">02 · Simplified DCF <span class="sub">· 적정주가 한 숫자를 주지 않는다</span></h2>
-    <p class="lblnote">DCF의 결과를 숫자 하나로 내면, 그 숫자에 담긴 <b>임의성</b>이 통째로 사라집니다.
-      그래서 여기서는 값을 하나 내지 않고, <b>성장률 × 할인율의 조합마다 모델값이 얼마인지</b>를 격자로 전부 폅니다.
-      각 칸은 <b>모델값 ÷ 오늘 시가총액(배)</b>입니다. 1.00배는 "그 가정 조합에서 모델값이 오늘 시가총액과 같다"는 뜻이고,
-      그 이상도 이하도 아닙니다 — <b>1.00배보다 크다고 '싸다'는 뜻이 아닙니다.</b></p>
+    
     <div class="card">
       <p class="cardh">민감도 격자 <em id="gridwho">—</em></p>
       <div id="grid"><div class="skel">불러오는 중…</div></div>
     </div>
     <div class="note">
-      <b>격자를 읽는 법</b> — 가운데 칸이 정확히 1.00배인 것은 <b>발견이 아니라 정의</b>입니다.
+       — 가운데 칸이 정확히 1.00배인 것은 <b>발견이 아니라 정의</b>입니다.
       가로축 가운데는 위(01)에서 쓴 CAPM 할인율이고, 세로축 가운데는 그 할인율에서 역산한 성장률이니까,
       그 조합이 오늘 시가총액과 같아지는 것은 계산 순서상 당연합니다. 격자의 쓸모는 가운데 칸이 아니라
       <b>가운데에서 한두 칸만 벗어났을 때 값이 얼마나 달라지는가</b>에 있습니다.
@@ -704,7 +698,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <a href="co.html#fs">SEC XBRL 수집분</a>에서 읽습니다.</p>
 
     <div class="note" style="border-left-color:var(--hot)">
-      <b>이 모형이 안 되는 곳</b> — 배당을 안 하거나 이력이 짧으면 성장률이 정의되지 않습니다.
+       — 배당을 안 하거나 이력이 짧으면 성장률이 정의되지 않습니다.
       유니버스 518종목 중 연간 주당배당금이 <b id="ddmn2">—</b>종목에만 있고, 4년치 이상은 <b id="ddmn4">—</b>종목입니다.
       <b>DDM은 유니버스 전체에 쓰는 도구가 아니라 배당을 오래 지급해 온 일부 종목에만 쓰는 도구입니다.</b>
       그리고 여기 쓰는 성장률은 <b>과거 배당의 외삽</b>이지 회사가 약속한 값이 아닙니다.

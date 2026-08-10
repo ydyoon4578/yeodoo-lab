@@ -662,10 +662,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        // 금리는 FRED가 T-1로 게시해 가격보다 하루 늦다. 같은 날인 척하지 않는다.
        (ra&&ra!==d.as_of?' · <b>금리는 '+esc(ra)+'</b>(FRED 국채는 하루 늦게 게시됩니다)':'')+
        (sp.length?' · 커브 '+sp.join(' · '):'')+'</p>'+
-       '<p class="lblnote">가격은 yfinance 배당 재투자 종가, 금리는 FRED 만기수익률입니다. '+
-       '기간은 <b>달력일 기준</b>(1주=7일 전 이하 마지막 거래일)이라, 거래일로 세는 종목 화면의 수치와 조금 다릅니다. '+
-       '<b>52H는 종가 기준</b> 1년 고점 대비입니다(장중 고가를 쓰지 않습니다). '+
-       'ETF마다 상장 시점이 달라 12개월·YTD가 없을 수 있고, 1년치가 안 되면 52H를 비웁니다.</p>';
+       '';
     box.innerHTML=h;
   })['catch'](function(){box.innerHTML='<div class="skel">성과 보드를 불러오지 못했습니다.</div>';});
 })();
