@@ -34,6 +34,20 @@ jobs:
       #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).
       - name: Validate baseline
         run: python build/validate_gate.py baseline
+      # 🚨 투자의견 리비전 3종(x-revdrift*)의 입력이다. 캐시는 gitignore 라 러너에 없고,
+      #   이 단계를 빠뜨리면 세 규칙이 **후보 0 으로 조용히 무보유**가 되어 지난 결과를 덮는다.
+      #   (tech_backtest 안에 판정 보류 가드를 하나 더 뒀지만, 그건 최후 방어이지 정상 경로가
+      #    아니다 — 정상 경로는 자료를 받는 것이다.)
+      #   실패해도 잡을 세우지 않는다: 나머지 69종은 이 자료와 무관하고, 세 규칙은 위 가드가
+      #   '판정 불가'로 낸다. 조용히 틀린 숫자보다 시끄럽게 빈 것이 낫다.
+      #   ⚠ 이 단계만 외부 패키지가 필요하다 — tech_backtest 본편은 표준 라이브러리로 돈다.
+      #     그래서 설치를 이 잡 맨 앞이 아니라 여기 둔다(나머지 단계의 실패 원인을 늘리지 않는다).
+      - name: Install deps (rating fetch only)
+        run: pip install --quiet pandas numpy yfinance
+        continue-on-error: true
+      - name: Fetch analyst rating history
+        run: python build/fetch_ratings.py
+        continue-on-error: true
       - name: Run technical backtests
         run: python build/tech_backtest.py
       - name: Rebuild verdict ledger
