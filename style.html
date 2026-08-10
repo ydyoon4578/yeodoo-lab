@@ -530,9 +530,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var a=el('up-'+rid);  if(a)a.textContent=sc.rows[rid];   // 한눈에 보기 표
       var b=el('up2-'+rid); if(b)b.textContent=sc.rows[rid];   // 아래 상세 카드(같은 값을 두 곳에)
     });
-    // 표에 행이 없는 잡은 jobs에서 직접 — 지표 재계산은 '백테스트' 카드에만 적힌다
-    var mj=sc.jobs&&sc.jobs['refresh-metrics.yml'], me=el('up-metrics');
-    if(mj&&mj.label&&me)me.textContent=mj.label.join(' + ');
+    // 🚨 2026-08-10 삭제. 여기 있던 두 줄이 el('up-metrics') 를 채웠는데 그 요소가 이 페이지에
+    //   없다(가리키던 '백테스트' 카드가 사라졌다). sector.html 의 같은 사고와 달리 널 가드가
+    //   있어 던지지는 않았지만, 도는 일 없이 남아 있던 코드다. 새 배선 검사가 이 짝을 본다.
   });
   j('data/home_reco.json').then(function(h){if(h){put(['d-stk'],h.as_of);putFresh('src-stk',h.as_of,2);}});
   j('data/regime.json').then(function(r){if(r){put(['d-rg'],r.as_of);putFresh('src-rg',r.as_of,2);}});

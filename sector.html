@@ -1012,8 +1012,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ① 표본 타일 — 개월수 내림차순, 20개월 미만은 흐리게
     var keys=[]; for(var kk in RN){ if(RN.hasOwnProperty(kk)) keys.push(kk); }
     keys.sort(function(a,b){return RN[b]-RN[a];});
-    // 안내문의 "N개월 평균과 M개월 평균" — 최소·최대 표본을 데이터에서 뽑는다(값을 본문에 박으면 갱신 때 거짓말이 된다)
-    if(keys.length){ el('nmax').textContent=RN[keys[0]]; el('nmin').textContent=RN[keys[keys.length-1]]; }
+    // 🚨 2026-08-10 삭제. 여기 있던 줄이 el('nmax')·el('nmin') 을 채웠는데 **그 두 요소가
+    //   HTML 에 없다**(채우려던 "N개월 평균과 M개월 평균" 안내문이 설명 정리 때 지워졌고,
+    //   채우는 줄만 남았다). el 은 getElementById 라 null 을 주므로 .textContent= 가 던지고,
+    //   이 함수의 **나머지가 통째로 죽었다** — rtally·sampfirst·partn·covA·covB·linknote·
+    //   cursub·curbars·mx·maptbl 열 자리가 라이브에서 비어 있었다.
+    //   더 나쁜 것은 바깥 .catch() 가 그 TypeError 를 받아 "데이터를 불러오지 못했습니다"를
+    //   그렸다는 점이다 — **배선 결함이 자료 결함으로 위장**했다. 그래서 아무도 못 봤다.
+    //   재발 방지: build/validate_site.py 가 el('x') 의 x 가 그 페이지 HTML 에 있는지 검사한다.
     var th='';
     for(i=0;i<keys.length;i++){
       var kx=keys[i], nx=RN[kx], thin=nx<MIN_MON;
