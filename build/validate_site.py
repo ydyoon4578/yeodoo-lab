@@ -2828,6 +2828,44 @@ try:
 except FileNotFoundError:
     pass
 
+# ── 백업 크론 표가 워크플로와 맞는가 ─────────────────────────────────────
+# 🚨 2026-08-12. build/should_refresh.py 의 BACKUP_CRONS 는 **워크플로에 적힌 cron 문자열과
+#   글자 단위로 같아야** 한다. 어긋나면 조용히 정반대가 된다:
+#     · 표에 없는 cron → '본 슬롯'으로 판정 → 백업이 **매일 두 번** 돈다(야후 쓰로틀·저장소 팽창)
+#     · 표에만 있고 워크플로에 없는 cron → 죽은 항목이 남아 다음 사람이 그걸 믿는다
+#   두 파일에 같은 값을 적어 두고 "같이 바꿀 것"이라고 주석만 달아 둔 상태였다 — 그 주석은
+#   지켜지지 않는다. 여기서 대조한다.
+try:
+    _sr = io.open(os.path.join(ROOT, "build", "should_refresh.py"), encoding="utf-8").read()
+    _blk = re.search(r"BACKUP_CRONS\s*=\s*\{(.*?)\}", _sr, re.S)
+    _tbl = dict(re.findall(r'"([^"]+)"\s*:\s*"([^"]+)"', _blk.group(1))) if _blk else {}
+    if not _tbl:
+        errors.append("build/should_refresh.py 의 BACKUP_CRONS 를 못 읽었다 — 백업 슬롯 판정이 "
+                      "무엇을 보고 있는지 확인할 것")
+    _wfd = os.path.join(ROOT, ".github", "workflows")
+    for _cron, _wf in sorted(_tbl.items()):
+        _p = os.path.join(_wfd, _wf)
+        if not os.path.exists(_p):
+            errors.append("BACKUP_CRONS 가 없는 워크플로를 가리킨다: %s (cron %r)" % (_wf, _cron))
+            continue
+        _txt = io.open(_p, encoding="utf-8").read()
+        if ("'%s'" % _cron) not in _txt and ('"%s"' % _cron) not in _txt:
+            errors.append("백업 크론 %r 이 %s 에 없다 — 표와 워크플로가 어긋나면 그 백업은 "
+                          "'본 슬롯'으로 판정돼 매일 두 번 돈다" % (_cron, _wf))
+    # 반대 방향 — gate 잡을 둔 워크플로는 백업 cron 이 반드시 표에 있어야 한다.
+    for _fn in sorted(os.listdir(_wfd)):
+        if not _fn.endswith(".yml"):
+            continue
+        _txt = io.open(os.path.join(_wfd, _fn), encoding="utf-8").read()
+        if not re.search(r"^\s{2}gate:\s*$", _txt, re.M):
+            continue
+        _crons = re.findall(r"-\s*cron:\s*['\"]([^'\"]+)['\"]", _txt)
+        if not any(c in _tbl for c in _crons):
+            errors.append("%s 에 gate 잡이 있는데 그 크론(%s) 중 어느 것도 BACKUP_CRONS 에 "
+                          "없다 — 관문이 늘 통과시켜 백업이 헛돈다" % (_fn, ", ".join(_crons)))
+except Exception as _e:
+    errors.append("백업 크론 대조가 예외로 죽었다 — %s" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
