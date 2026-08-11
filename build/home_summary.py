@@ -306,14 +306,19 @@ def _industry(stocks, dates, root):
             nok = 0
             if i0 is not None:
                 if etf:
-                    # 섹터 줄 — 섹터 ETF 실적을 **그대로** 옮긴다(사용자 결정 2026-08-11).
-                    # 다시 계산하지 않는다. ⚠ 그래서 섹터 줄은 아래 산업그룹의 시총가중 합과
-                    # 정확히 맞지 않는다 — ETF 는 분산요건 상한이 걸린 지수이고 구성종목도
-                    # 다르다(실측 커뮤니케이션 12M: ETF +5.21% · 유니버스 +35.59%).
-                    # 그 사실은 화면 hover 에 적는다. 한 칸에 한 숫자만 둔다.
-                    a = ETFPX.get(etf)
-                    if a and a[i0] and a[-1] and a[i0] > 0:
-                        num, den, nok = (a[-1] / a[i0] - 1.0), 1.0, len(objs)
+                    # 섹터 줄 — 섹터 ETF 실적을 **그대로** 쓴다(사용자 결정 2026-08-11).
+                    # 🚨 2026-08-12 — 그런데 **여기서 재면 안 된다.** 이 빌더는
+                    #   refresh-stocks(06:50) 안에서 도는데 assets.json 은
+                    #   refresh-assets(07:34)가 굽는다. 47분 먼저 도는 쪽이 47분 뒤에 나올
+                    #   파일을 읽으니 ETF 격자의 **마지막 칸이 늘 None** 이고, 아래
+                    #   `a[-1]` 가드가 falsy 가 되어 7개 구간이 전부 null 로 나갔다
+                    #   (실측 08-12: 11섹터 × 7구간 = 77칸 전부 빔. 기능을 넣은 날부터 계속).
+                    #   → 화면이 data/market_board.json 에서 옮긴다(index.html mkSegRows).
+                    #     지수 줄이 이미 그 파일에서 오므로 같은 기준일·같은 구간표가 된다.
+                    #   ⚠ 여기서 '마지막 유효값으로 물러서기' 를 하면 안 된다. 그러면 섹터
+                    #     줄만 어제까지를 재면서 같은 열의 다른 줄과 하루가 어긋난다 —
+                    #     표는 멀쩡해 보이고 숫자만 틀린다. 안 재는 편이 낫다.
+                    pass
                 else:
                     for s in objs:
                         px = PX.get(s["t"])
@@ -396,6 +401,10 @@ def _industry(stocks, dates, root):
         return {"nm": label, "sec": sec, "n": len(objs), "r": r, "mc": mc,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
                 "sharpe": sharpe(objs, etf), **({"sn": sub} if sub else {}),
+                # 🚨 이 줄의 r 은 **비어 있는 것이 정상이다** — 화면이 market_board.json 에서
+                #   옮긴다(위 etf 분기 참조). 표시가 없으면 다음 사람이 "왜 null 이지" 하고
+                #   여기서 다시 재려 들고, 그러면 어제 값으로 되돌아간다.
+                **({"r_src": "market_board.json"} if etf else {}),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
