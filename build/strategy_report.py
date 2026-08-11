@@ -149,7 +149,7 @@ def _incr(r, dup_of):
     return out
 
 
-def _pit(r, pit_rec):
+def _pit(r, pit_rec, na=None):
     """PIT — 같은 창의 소급 레그(retro)를 **나란히** 놓는다.
 
     🚨 랩 본편(더 긴 창)과 직접 빼면 안 된다. 창이 달라 구간 차이가 편향으로 위장한다.
@@ -160,7 +160,11 @@ def _pit(r, pit_rec):
     """
     p = pit_rec or r.get("pit")
     if not p:
-        return None
+        # 🚨 빈칸으로 두지 않는다. '해당 없음'(타이밍) · '사유가 있어 못 잼'(EXCLUDED_SIDS) ·
+        #   '아직 안 쟀음' 은 다른 것인데, 셋을 다 빈칸으로 두면 독자가 구별할 방법이 없다.
+        #   실제로 그 탓에 횡단면 13종이 검사를 안 받은 채 소급 t 로만 판정되고 있었다.
+        return {"na": na} if na else {"na": "PIT 레그가 없다 — 사유가 기록돼 있지 않다. "
+                                            "build/pit_backtest.py 의 목록을 볼 것."}
     ret = p.get("retro") or {}
     rm, rb = ret.get("metrics") or {}, ret.get("bench") or {}
     emb = r.get("pit") or {}
@@ -216,7 +220,7 @@ def _refs(sid, fam, kind, refs, fund_sids, has_pit):
                      if not papers else None)}
 
 
-def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids):
+def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids, na_of=None):
     sid = r.get("sid")
     m, b = r.get("metrics") or {}, r.get("bench") or {}
     vt = r.get("vs_traded") or {}
@@ -257,7 +261,7 @@ def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids):
                        "d_sharpe": _f(vt.get("d_sharpe"), 3), "t": _f(vt.get("t")),
                        "t_net": _f(vt.get("t_net")), "note": vt.get("note")} if vt else None),
         # ⑧ 생존편향 보정 ───────────────────────────────────────
-        "pit": _pit(r, pit_of),
+        "pit": _pit(r, pit_of, na_of),
         # ⑨ 후보 풀 ────────────────────────────────────────────
         "pool": ({"first": pool.get("first"), "last": pool.get("last"), "min": pool.get("min"),
                   "med": pool.get("med"), "narrow": pool.get("narrow"), "n": pool.get("n"),
@@ -278,10 +282,10 @@ def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids):
     # 🚨 왜 비었는지를 적는다. 이유는 대개 "그 족에 그 측정이 아예 없다"이지
     #   "재 봤더니 안 나왔다"가 아니다 — 그 구별을 남긴다.
     miss = []
-    if doc["pit"] is None:
-        miss.append("PIT(생존편향 보정)" + (" — 종목 랩 34종만 돈다(가격·재무가 시점별로 있어야 한다)"
-                                          if fam != "자산배분" else
-                                          " — 자산 랩은 ETF 라 편입·편출 개념이 없다"))
+    # 🚨 '못 잰 것' 목록도 사유를 그대로 옮긴다. 종전에는 "종목 랩 34종만 돈다" 는 문구를
+    #   박아 뒀는데 그 34 는 오래전 수이고, 무엇보다 **왜** 이 규칙이 빠졌는지를 말하지 않았다.
+    if (doc["pit"] or {}).get("na"):
+        miss.append("PIT(생존편향 보정) — " + doc["pit"]["na"])
     if doc["risk"] is None:
         miss.append("위험 부트스트랩" + (" — 종목 랩은 이 측정을 아예 안 돌린다"
                                       if fam != "자산배분" else " — 이 규칙에서 산출에 실패했다"))
@@ -454,13 +458,27 @@ def main():
         "refs_search": (refs.get("search") or {}).get("base") or "",
         "items": [],
     }
+    # PIT 이 없는 규칙의 **사유**. 산출물이 들고 있는 것을 옮기기만 한다(여기서 짓지 않는다).
+    _exc = pit.get("excluded") or {}
+    _na_tim = pit.get("na_timing") or "타이밍 규칙은 편입명단 개념이 없어 해당 없음."
+    _NA_ASSET = ("자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 "
+                 "없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다.")
+
+    def _na(r, fam):
+        if fam == "자산배분":
+            return _NA_ASSET
+        if r.get("kind") != "xsec":
+            return _na_tim
+        return _exc.get(r.get("sid"))          # 없으면 None → 기본 문구가 '사유 미기록' 이라 적는다
+
     for r in (asset.get("strategies") or []):
         out["items"].append(_one(r, "자산배분", asset.get("t_crit"),
-                                 audit_by.get(r.get("sid")), None, None, asset, refs, fund_sids))
+                                 audit_by.get(r.get("sid")), None, None, asset, refs, fund_sids,
+                                 _na(r, "자산배분")))
     for r in (tech.get("strategies") or []):
         out["items"].append(_one(r, "종목·타이밍", tech.get("t_crit"),
                                  None, dup_by.get(r.get("sid")), pit_by.get(r.get("sid")), tech,
-                                 refs, fund_sids))
+                                 refs, fund_sids, _na(r, "종목·타이밍")))
     # 족 → t 내림차순. 같은 족을 나란히 읽게 하고, 그 안에서 t 가 큰 것부터.
     # ⚠ 이 정렬은 **읽는 순서**일 뿐 순위가 아니다 — t 가 큰 것이 좋은 것이라는 뜻이 아니다.
     out["items"].sort(key=lambda x: (x["family"], -(x["t"] if x["t"] is not None else -99)))

@@ -3717,8 +3717,16 @@ def run():
                             elif sid == "x-debtiss":
                                 # 총부채 1년 증가율. 낮을수록 좋으므로 부호를 뒤집는다.
                                 # ⚠ JKP 정본은 3년(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다.
+                                # 🚨 2026-08-11 선견 교정 — 종전 분모가 `_shift(dt_, -365)` 였다.
+                                #   _shift 는 **빼는** 함수라 부호가 뒤집혀 '1년 전' 자리에
+                                #   **1년 뒤** 값이 들어갔다(실측 2024-06-28 신호일에서 430종 중
+                                #   426종이 2025년 기준일을 집었다: AAPL db1 2024-03-30 · db0
+                                #   2025-03-29). 그대로면 이 규칙은 '앞으로 부채를 줄일 회사' 를
+                                #   고르는 선견 신호다. 같은 파일의 x-rgrow·x-agrow 는 처음부터
+                                #   `_shift(dt_, 365)` 였다 — 이 한 줄만 부호가 반대였다.
+                                #   PIT 갈래를 만들다 나왔다(build/pit_backtest.py 의 같은 갈래).
                                 db1 = asof_fund(f.get("debt"), dt_)
-                                db0 = asof_fund(f.get("debt"), _shift(dt_, -365))
+                                db0 = asof_fund(f.get("debt"), _shift(dt_, 365))
                                 v = -(db1 / db0 - 1.0) if (db1 is not None and db0 and db0 > 0) else None
                             elif sid == "x-fscore":
                                 # Piotroski(2000) 9신호. 🚨 하나라도 못 내면 후보에서 뺀다 —
