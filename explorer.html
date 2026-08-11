@@ -1108,7 +1108,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
-            _pool:x.pool||null, _thin:x.n_thin||0,
+            _pool:x.pool||null, _thin:x.n_thin||0, _bask:x.bask||null,
             _risk:x.risk||null, _rv:x.risk_verdict||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
@@ -2034,6 +2034,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var P=d._pool;
         labRows.push(['채점 후보', P.med+'종(중앙) · '+P.min+'~'+P.last+'종']);
         if(P.narrow) labRows.push(['평소보다 얇은 달', P.narrow+'개월 — 그만큼 앞구간은 순위보다 커버리지가 골랐다']);
+      }
+      // 🚨 실제로 담은 종목 수. 위 '채점 후보'가 **몇 종 중에서** 라면 이쪽은 **몇 종을** 이다.
+      //   랩 규칙이 전부 상위 10종이던 동안은 볼 것이 없었는데, 2026-08-11 에 원 전략 크기
+      //   6종(50·52·100·155)이 들어오면서 '155종 중 155종'과 '52종 중 30종'을 화면이
+      //   구별해야 한다. 목표를 못 채운 달은 고른 것이 아니라 있는 것 전부다.
+      if(d._bask){
+        var BK=d._bask;
+        var bkTxt=BK.avg+'종(평균) · 목표 '+BK.tgt+'종';
+        if(BK.min!==BK.max) bkTxt+=' · '+BK.min+'~'+BK.max+'종';
+        labRows.push(['실제 보유 수', bkTxt]);
+        if(BK.short) labRows.push(['목표를 못 채운 달',
+          BK.short+'개월 / '+BK.n+' — 그 달은 고른 것이 아니라 후보 전부다']);
+        if(BK.empty) labRows.push(['통째로 비운 달', BK.empty+'개월 — 후보가 게이트 미만']);
       }
       if(d._thin) labRows.push(['무보유로 둔 월말', d._thin+'개월 — 후보 30종 미만']);
       var h=d._hold, holdHtml='';
