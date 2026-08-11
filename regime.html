@@ -1096,7 +1096,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   호의 케이싱에 통째로 덮였다). 점도 화살촉을 덮었다.
     for(var ti=1; ti<TR.length; ti++){
       var a=TR[ti], b0=TR[ti-1];
-      var ax=X(a.pos), ay=Ye(a.pos), bx=X(b0.pos), by=Ye(b0.pos);
+      var ax=X(a.pos), ay=Ym(a.pos), bx=X(b0.pos), by=Ym(b0.pos);
       // 🚨 수직 방향을 **왼→오른 기준으로 고정**한다. 종전에는 진행 방향에서 뽑았는데,
       //   같은 두 점을 반대로 오갈 때 수직도 같이 뒤집혀 (ti%2 부호와 상쇄되면서)
       //   제어점이 **똑같아졌다** — 두 호가 한 곡선 위에 포개졌다(실측 Q535.9 343.6 동일).
@@ -1119,7 +1119,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         'stroke-dasharray="'+(back?'7 4':'0')+'" marker-end="url(#tarr'+(back?'b':'f')+')"/>';
     }
     for(var ti=0; ti<TR.length; ti++){
-      var a=TR[ti], ax=X(a.pos), ay=Ye(a.pos);
+      var a=TR[ti], ax=X(a.pos), ay=Ym(a.pos);
       var last=(ti===TR.length-1), rad=_rad(a);
       var op=last?1:(0.78+0.22*ti/Math.max(1,TR.length-1));
       trail+='<circle cx="'+f(ax)+'" cy="'+f(ay)+'" r="'+f(rad)+'" fill="var(--ink)" '+
@@ -1146,8 +1146,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<marker id="tarrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">'+
         '<path d="M0 0 L10 5 L0 10 z" fill="var(--marg)"/></marker></defs>';
 
-    // 지금 — 경기 곡선 위. 이 랩이 잰 유일한 것이라 다른 색(잉크)으로 둔다.
-    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ye(np);
+    // 지금 — **증시 곡선** 위. 이 랩이 잰 유일한 것이라 다른 색(잉크)으로 둔다.
+    // 🚨 2026-08-12 — 종전에는 Ye(경기 곡선)에 찍었다. 가로 자리는 ECO_SHIFT=0.02 로
+    //   **증시 바닥**에 맞춰 놓고 세로만 경기 곡선에 얹어, 같은 점이 두 곡선을 가리켰다
+    //   (실측: 회복 0.34 에서 Ym 302.8 대 Ye 466.0 — 163px). 「지금」이 파란 경기 곡선
+    //   바닥에 앉아 '경제는 아직 바닥권' 으로 읽혔다. 가로·세로를 같은 곡선으로 맞춘다.
+    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ym(np);
     var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="12" fill="var(--ink)" opacity=".16"/>'+
       '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="6.5" fill="var(--ink)" stroke="var(--ground)" stroke-width="2"/>'+
       '<line x1="'+f(nx)+'" y1="'+f(ny+9)+'" x2="'+f(nx)+'" y2="'+(bot+28)+'" stroke="var(--ink)" stroke-width="1.4"/>'+
@@ -1165,11 +1169,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       band+='<line x1="'+PL+'" y1="'+BY+'" x2="'+(W-PR)+'" y2="'+BY+
         '" stroke="var(--line)" stroke-width="1.5"/>'+
         '<text x="'+PL+'" y="'+(BY-13)+'" font-size="11.5" font-weight="700" '+
-        'fill="var(--ink-2)">이 랩의 7국면 — 증시 곡선 기준 자리 · 개월수는 전체 창 · 이후12M 은 그 국면 뒤 SPY 중앙값(전체 이력)</text>';
+        // 🚨 기준선(_ALL.m12)을 여기서 찍는다 — 로드해 놓고 한 번도 안 그리고 있었다.
+        //   그것 없이는 "여섯 중 넷이 사실상 전체 중앙" 이라는 사실이 안 보인다.
+        'fill="var(--ink-2)">이 랩의 7국면 — 증시 곡선 기준(가로·세로) · 개월수는 창 '+
+        esc((cy.window||{}).start||'')+'~ · 이후12M 은 전체 이력 기준 · 전체 중앙 '+
+        ((((cy.fwd||{})._ALL||{}).m12!=null)
+           ? ((cy.fwd._ALL.m12>0?'+':'')+cy.fwd._ALL.m12.toFixed(1)+'% (n'+cy.fwd._ALL.n12+')')
+           : '—')+'</text>';
       ph.forEach(function(q){
         var qx=X(q.pos), cur=(q.k===now.r), nev=!!q.never;
         // 곡선에서 띠까지 점선으로 잇는다 — '이 국면이 곡선의 이 자리' 를 눈으로 잇게.
-        band+='<line x1="'+f(qx)+'" y1="'+f(Ye(q.pos)+7)+'" x2="'+f(qx)+'" y2="'+(BY-6)+
+        band+='<line x1="'+f(qx)+'" y1="'+f(Ym(q.pos)+7)+'" x2="'+f(qx)+'" y2="'+(BY-6)+
           '" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 5" opacity="'+
           (nev?'.22':(cur?'.75':'.4'))+'"/>'+
           '<circle cx="'+f(qx)+'" cy="'+BY+'" r="'+(cur?6:4)+'" fill="'+

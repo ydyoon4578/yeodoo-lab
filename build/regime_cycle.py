@@ -456,8 +456,16 @@ def main():
             if _i < len(_sp) and _sp[_i]:
                 _me[_x[:7]] = _i
 
+        # 🚨 2026-08-12 — 종전에는 j = min(i+n, 끝) 으로 **창을 잘라** 값을 냈다. 그래서
+        #   아직 n 거래일이 안 지난 최근 달의 **부분 수익**이 12개월 수익인 척 섞였다.
+        #   실측: 12개월이 안 지난 달 12개(전부 회복)가 섞여 회복 중앙이 16.08 → 15.29 로
+        #   내려갔고, 전체 중앙(16.04)보다 **낮은 것처럼** 보였다 — 교정하면 높다.
+        #   화면이 "숫자를 믿을 것" 이라 적는 바로 그 값이라 부호가 뒤집히면 안 된다.
+        #   → 창이 모자라면 None. 몇 달이 빠졌는지 아래에서 세어 화면에 싣는다.
         def _f(i, n):
-            j = min(i + n, len(_sp) - 1)
+            j = i + n
+            if j > len(_sp) - 1:
+                return None
             while j > i and not _sp[j]:
                 j -= 1
             return ((_sp[j] / _sp[i] - 1) * 100) if (_sp[i] and _sp[j] and j > i) else None
@@ -469,13 +477,26 @@ def main():
             _acc.setdefault(_h["r"], []).append((_f(_i, 21), _f(_i, 63), _f(_i, 252)))
         _all = [v for vs in _acc.values() for v in vs]
 
+        # 짝수면 가운데 둘의 평균 — [len//2] 는 중앙값이 아니라 상위 중간값이라
+        # 다른 도구로 다시 세면 값이 어긋난다(랩 본편에서 같은 것을 2026-08-11 에 고쳤다).
         def _md(vs, k):
             xs = sorted(v[k] for v in vs if v[k] is not None)
-            return round(xs[len(xs) // 2], 2) if xs else None
+            if not xs:
+                return None
+            m = (xs[len(xs) // 2] if len(xs) % 2
+                 else (xs[len(xs) // 2 - 1] + xs[len(xs) // 2]) / 2.0)
+            return round(m, 2)
+        # 🚨 지평마다 유효 관측 수가 다르다 — 12M 은 최근 달이 빠진다. n 을 하나만 실으면
+        #   화면이 '회복 n=51' 이라 적는데 12M 유효는 38 이 된다. 지평별로 센다.
+        def _n(vs, k):
+            return sum(1 for v in vs if v[k] is not None)
         for _k, _vs in _acc.items():
-            FWDRET[_k] = {"n": len(_vs), "m1": _md(_vs, 0), "m3": _md(_vs, 1), "m12": _md(_vs, 2)}
+            FWDRET[_k] = {"n": len(_vs), "m1": _md(_vs, 0), "m3": _md(_vs, 1), "m12": _md(_vs, 2),
+                          "n1": _n(_vs, 0), "n3": _n(_vs, 1), "n12": _n(_vs, 2)}
         FWDRET["_ALL"] = {"n": len(_all), "m1": _md(_all, 0), "m3": _md(_all, 1),
-                       "m12": _md(_all, 2)}
+                          "m12": _md(_all, 2), "n12": _n(_all, 2),
+                          # 아직 12개월이 안 지나 12M 에서 빠진 달 수 — 화면이 적는다.
+                          "short12": sum(1 for v in _all if v[2] is None)}
     except Exception as _e:
         print("  ⚠ 선도수익을 못 쟀다(%s) — 띠에 수치 없이 나간다" % str(_e)[:50])
 
