@@ -50,7 +50,7 @@ def wanted():
     """받을 명단 → {티커: 마지막 멤버월 or None}.
 
     정본은 data/pit_universe.json(build/pit_backtest.py --universe-only 가 낸다) — PIT 창
-    전체(2015-01~)의 편출 종목이라 펀더멘털 규칙까지 덮는다. 스타일 창만 담은
+    전체(2014-06~)의 편출 종목이라 펀더멘털 규칙까지 덮는다. 스타일 창만 담은
     style_pit.json 의 gone_tickers 도 합친다(둘의 창이 달라 서로를 포함하지 않는다).
     """
     out = {}
@@ -96,14 +96,31 @@ def main() -> int:
         pass
     if not cmap:
         raise SystemExit("SEC company_tickers.json 을 못 읽었다 — 러너의 SEC 응답을 확인할 것")
-    print("편출 명단 %d종 · 티커→CIK: SEC 전체 %d개(+보조 %d개)"
-          % (len(want), n_sec, len(cmap) - n_sec))
+    # 🚨 2026-08-11 — **그때의 CIK 를 먼저 본다.** 위 cmap 은 SEC 의 *현행* 티커→CIK 라
+    #   티커가 그 뒤 다른 법인에 넘어간 종목은 **남의 회사 재무**를 가져온다. 실측으로
+    #   6종이 그랬다: BBT 는 BB&T(0000092230) 가 아니라 BEACON FINANCIAL(0001108134),
+    #   AA 는 구 Alcoa(0000004281) 가 아니라 Alcoa Corp(0001675149) 를 받고 있었다.
+    #   아래 '법인 최초 보고기간 > 멤버 마지막월' 가드는 이걸 못 잡는다 — 티커를 물려받은
+    #   쪽이 **더 오래된 법인**이면 최초 보고기간이 앞서기 때문이다.
+    #   (같은 날 build/pit_backtest.py 는 가격 쪽에 같은 방어를 넣었다. 한쪽만 고치면
+    #    같은 종목이 가격은 A 회사, 재무는 B 회사가 되어 더 나쁘다.)
+    hcik = {}
+    _ih = os.path.join(DATA, "index_history.json")
+    if os.path.exists(_ih):
+        hcik = (json.load(io.open(_ih, encoding="utf-8")).get("cik") or {})
+    n_hist = sum(1 for t in want if hcik.get(t))
+    n_diff = sum(1 for t in want if hcik.get(t) and cmap.get(t)
+                 and str(hcik[t]).zfill(10) != str(cmap[t]).zfill(10))
+    print("편출 명단 %d종 · 티커→CIK: SEC 전체 %d개(+보조 %d개) · **당시 CIK 우선** %d종"
+          % (len(want), n_sec, len(cmap) - n_sec, n_hist))
+    if n_diff:
+        print("  🚨 당시 CIK 와 SEC 현행이 다른 종목 %d종 — 당시 것을 쓴다(티커 재배정)" % n_diff)
     os.makedirs(OUT_DIR, exist_ok=True)
 
     got, no_cik, no_facts, reused, changed = [], [], [], [], 0
     for n, t in enumerate(sorted(want), 1):
         last = want[t]
-        cik = cmap.get(t) or cmap.get(t.upper())
+        cik = hcik.get(t) or hcik.get(t.upper()) or cmap.get(t) or cmap.get(t.upper())
         if not cik:
             no_cik.append(t); continue
         j = edgar.get_json(RF.FACTS_URL % int(cik))
@@ -116,6 +133,18 @@ def main() -> int:
                 if ptags:
                     j, tags, cik, used_pred = pj, ptags, pcik, 1
                     break
+        if not tags and hcik.get(t) and cmap.get(t) and int(cmap[t]) != int(cik):
+            # ⚠ 당시 CIK 에 재무가 없으면 현행 CIK 로 물러선다. 위키 표가 분사 달에 전신
+            #   법인의 CIK 를 적어 두는 경우가 있어서다(실측 NAVI: 2014-06 행에 SLM 의
+            #   1084750 이 적혀 있고 그 아래엔 Navient 재무가 없다). 아래 재사용 가드는
+            #   그대로 걸리므로, 물러서도 '그 시점에 없던 회사' 는 걸러진다.
+            j2 = edgar.get_json(RF.FACTS_URL % int(cmap[t]))
+            t2 = RF.extract(j2) if j2 else {}
+            if t2:
+                print("  ~ %s 당시 CIK %s 에 재무 없음 → 현행 %s 로 물러섬(%s)"
+                      % (t, str(cik).zfill(10), str(cmap[t]).zfill(10),
+                         (j2.get("entityName") or "")[:30]))
+                j, tags, cik = j2, t2, cmap[t]
         if not j or not tags:
             no_facts.append(t); continue
         # 🚨 티커 재사용 가드 — 이 티커가 지수 멤버였던 마지막 달보다 법인의 **최초** 보고기간이
