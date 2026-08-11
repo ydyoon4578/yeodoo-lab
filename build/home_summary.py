@@ -199,6 +199,21 @@ def _industry(stocks, dates, root):
                   "manual_grp": _man,
                   "dual": sorted(_dual_t), "dual_mc": round(_dual_mc) or 0}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
+    # 🚨 2026-08-11 — 섹터 줄은 **섹터 ETF 그 자체**를 쓴다(사용자 결정). 종전에는 유니버스
+    #   종목의 동일가중이었고, 그래서 같은 화면이 한 섹터에 두 숫자를 말했다(이 표는 동일가중,
+    #   시장 보드는 ETF). 어느 쪽이 맞다기보다 **한 화면에 한 정의**여야 한다.
+    #   ETF 가격은 data/assets.json 에 2006년부터 다 있다. 격자를 dates 에 맞춘다.
+    ETFPX = {}
+    try:
+        _A = json.load(io.open(os.path.join(root, "data", "assets.json"), encoding="utf-8"))
+        _apos = {d: i for i, d in enumerate(_A["dates"])}
+        for _t in SEC_ETF.values():
+            _a = (_A.get("px") or {}).get(_t)
+            if _a:
+                ETFPX[_t] = [(_a[_apos[d]] if d in _apos else None) for d in dates]
+    except Exception as _e:
+        print("  ⚠ 섹터 ETF 가격을 못 읽었다(%s) — 섹터 줄이 빈다" % str(_e)[:50])
+
 
     # 샤프 — 스타일 표와 **같은 창**으로 잰다(2026-08-03 사용자 요청으로 두 표가 합쳐졌다).
     # data/style_trails.json 의 start 를 그대로 읽는다. 창을 여기서 따로 정하면 같은 열의
@@ -214,18 +229,38 @@ def _industry(stocks, dates, root):
     except Exception:
         pass
 
-    def sharpe(objs):
+    def sharpe(objs, etf=None):
+        # 🚨 2026-08-11 — 수익률을 시총가중으로 바꾸면서 여기도 같이 바꿨다. 한 줄의 수익률은
+        #   시총가중인데 샤프만 동일가중이면 같은 줄의 두 숫자가 다른 바스켓을 가리킨다.
+        #   창 시작 시점 시총으로 고정 가중한다(매수후보유 바스켓).
         if i_sh is None or i_sh >= len(dates) - 30:
             return None
         rs = []
-        for k in range(i_sh + 1, len(dates)):
-            vs = []
+        if etf:
+            a = ETFPX.get(etf)
+            if not a:
+                return None
+            for k in range(i_sh + 1, len(dates)):
+                if a[k] and a[k - 1] and a[k - 1] > 0:
+                    rs.append(a[k] / a[k - 1] - 1.0)
+        else:
+            W = {}
             for s2 in objs:
-                px = PX.get(s2["t"])
-                if px and px[k] and px[k - 1] and px[k - 1] > 0:
-                    vs.append(px[k] / px[k - 1] - 1.0)
-            if len(vs) >= (1 if len(objs) == 1 else max(3, len(objs) // 2)):
-                rs.append(sum(vs) / len(vs))
+                w = _w_at(s2, i_sh)
+                if w:
+                    W[s2["t"]] = w
+            for k in range(i_sh + 1, len(dates)):
+                num = den = 0.0
+                nok = 0
+                for s2 in objs:
+                    px = PX.get(s2["t"])
+                    if px and px[k] and px[k - 1] and px[k - 1] > 0:
+                        nok += 1
+                        w = W.get(s2["t"])
+                        if w:
+                            num += w * (px[k] / px[k - 1] - 1.0); den += w
+                if den > 0 and nok >= (1 if len(objs) == 1 else max(3, len(objs) // 2)):
+                    rs.append(num / den)
         if len(rs) < 60:
             return None
         m = sum(rs) / len(rs)
@@ -236,20 +271,63 @@ def _industry(stocks, dates, root):
     # ⚠ 예전엔 인자로 sic(=SIC 이름표)을 하나 더 받아 줄마다 실었는데, GICS 로 갈아탄 뒤
     #   그 값이 label 과 글자 그대로 같아졌다(실측 95줄 전부 일치, 나머지는 null).
     #   같은 값을 두 키로 싣지 않는다 — 읽는 곳도 없었다.
-    def agg(objs, label, sec, lv=1, parent=None, sub=None):
+    # 🚨 2026-08-11 — 동일가중을 걷어냈다(사용자 결정: "다 시총가중으로해 세부섹터도").
+    #   종전 정의는 '종목별 비율의 단순평균' 이었다. 그러면 4조$ 짜리와 300억$ 짜리가 같은
+    #   무게라 섹터 ETF 와 다른 숫자가 나오고, 같은 화면이 한 섹터를 두 번 다르게 말했다.
+    #   ⚠ 가중치는 **기준일 시총**이어야 한다. 오늘 시총을 그대로 쓰면 '오늘 큰 회사' 가
+    #     과거에도 컸던 것처럼 되어 선견이다. 주식수가 그 사이 안 바뀌었다고 보고
+    #     mc(기준일) = mc(오늘) × 조정가(기준일) ÷ 조정가(오늘) 로 되돌린다.
+    #   ⚠ 이중클래스는 시총 정보원이 **회사 전체 시총**을 양쪽에 똑같이 준다. 가중치로
+    #     그냥 쓰면 그 회사가 두 배로 실린다 — 클래스 수로 나눠 회사 합이 한 번만 되게 한다.
+    _cls_n = {}
+    for _v in bysec.values():
+        for _s in _v:
+            _k = CIK_OF.get(_s["t"])
+            if _k:
+                _cls_n[_k] = _cls_n.get(_k, 0) + 1
+
+    def _w_at(s2, i0):
+        """기준일 i0 의 시가총액 가중치. 못 구하면 None(그 종목은 그 구간에서 빠진다)."""
+        v = (s2.get("fund") or {}).get("mc")
+        if not (isinstance(v, (int, float)) and v > 0):
+            return None
+        px = PX.get(s2["t"])
+        if not (px and px[i0] and px[-1] and px[i0] > 0 and px[-1] > 0):
+            return None
+        w = float(v) * (px[i0] / px[-1])
+        c = CIK_OF.get(s2["t"])
+        return w / _cls_n[c] if (c and _cls_n.get(c, 1) > 1) else w
+
+    def agg(objs, label, sec, lv=1, parent=None, sub=None, etf=None):
         r = {}
         for k in base:
-            i0, vs = base[k], []
+            i0 = base[k]
+            num = den = 0.0
+            nok = 0
             if i0 is not None:
-                for s in objs:
-                    px = PX.get(s["t"])
-                    if px and px[i0] and px[-1] and px[i0] > 0:
-                        vs.append(px[-1] / px[i0] - 1.0)
+                if etf:
+                    # 섹터 줄 — 섹터 ETF 실적을 **그대로** 옮긴다(사용자 결정 2026-08-11).
+                    # 다시 계산하지 않는다. ⚠ 그래서 섹터 줄은 아래 산업그룹의 시총가중 합과
+                    # 정확히 맞지 않는다 — ETF 는 분산요건 상한이 걸린 지수이고 구성종목도
+                    # 다르다(실측 커뮤니케이션 12M: ETF +5.21% · 유니버스 +35.59%).
+                    # 그 사실은 화면 hover 에 적는다. 한 칸에 한 숫자만 둔다.
+                    a = ETFPX.get(etf)
+                    if a and a[i0] and a[-1] and a[i0] > 0:
+                        num, den, nok = (a[-1] / a[i0] - 1.0), 1.0, len(objs)
+                else:
+                    for s in objs:
+                        px = PX.get(s["t"])
+                        if not (px and px[i0] and px[-1] and px[i0] > 0):
+                            continue
+                        nok += 1
+                        w = _w_at(s, i0)
+                        if w:
+                            num += w * (px[-1] / px[i0] - 1.0); den += w
             # ⚠ 한 종목짜리 줄(종목 단)은 평균이 아니라 그 종목 자체다 — 최소 3관측 규칙을
             #   그대로 걸면 값이 통째로 빈다. 그 규칙은 '몇 종목의 평균을 산업이라 부르지
             #   말자'는 것이지 단일 종목을 막자는 것이 아니다.
             need = 1 if len(objs) == 1 else max(3, len(objs) // 2)
-            r[k] = round(sum(vs) / len(vs) * 100, 2) if len(vs) >= need else None
+            r[k] = round(num / den * 100, 2) if (den > 0 and nok >= need) else None
         # 종목 줄은 **가볍게** 싣는다. 한 종목의 PER·폭·국면 통계는 종목 페이지가
         # 훨씬 잘 보여 주고, 417줄에 그것들을 얹으면 파일이 세 배가 된다(실측 166KB).
         # 여기서 답해야 하는 질문은 '이 산업 안에서 어느 종목이 끌었나' 하나다.
@@ -304,7 +382,7 @@ def _industry(stocks, dates, root):
         above = sum(1 for s in full if "200일이탈" not in (s.get("flags") or []))
         return {"nm": label, "sec": sec, "n": len(objs), "r": r, "mc": mc,
                 "lv": lv, "p": parent, "above": above, "n_ma200": len(full),
-                "sharpe": sharpe(objs), **({"sn": sub} if sub else {}),
+                "sharpe": sharpe(objs, etf), **({"sn": sub} if sub else {}),
                 "_ts": [s["t"] for s in objs], **_val(objs)}
 
     sectors, rows = [], []
@@ -317,7 +395,7 @@ def _industry(stocks, dates, root):
             rows.append(agg([s2], s2["t"], sec, lv, pid, (s2.get("name") or "")[:22]))
 
     for sec, objs in bysec.items():
-        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, 1, None))
+        sectors.append(agg(objs, SEC_KO.get(sec, sec), sec, 1, None, etf=sec))
         gs = sorted([(g, v) for (s2, g), v in keepg.items() if s2 == sec],
                     key=lambda kv: -len(kv[1]))
         gused = set()

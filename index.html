@@ -1374,9 +1374,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     function tip(x,isSec){
       var t=[x.n+'종'+(x.mc?' · 시총 '+mcapTxt(x.mc):'')];
-      if(isSec&&etf[x.sec]&&(etf[x.sec].r||{})['1M']!=null)
-        t.push('섹터 ETF('+x.sec+') 1개월 '+((etf[x.sec].r['1M']>0?'+':'')+etf[x.sec].r['1M'].toFixed(2))+
-               '% — 시총가중이라 이 줄(동일가중)과 다르다');
+      // 🚨 2026-08-11 — 종전에는 "섹터 ETF 는 시총가중이라 이 줄(동일가중)과 다르다" 였다.
+      //   지금 섹터 줄은 **그 ETF 자체**다(home_summary 가 옮긴다). 같은 값을 두 번 적지 않고
+      //   무엇을 보고 있는지만 밝힌다.
+      if(isSec&&etf[x.sec])
+        t.push('이 줄의 수익률 = 섹터 ETF '+x.sec+' 실적 그대로');
       t.push(x.pe==null?'PER — 흑자 표본 부족':
         ('PER 중앙 '+x.pe+' (흑자 '+x.n_pe+'/'+x.n+'종)'+
          (imk&&imk.pe?' · 시장 대비 '+(x.pe/imk.pe).toFixed(2)+'배':'')));
@@ -1474,14 +1476,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         _tips.push('시총 합은 같은 회사를 한 번만 셉니다(이중클래스 '+
           T.dual.map(function(p){return p.join('·');}).join(', ')+
           ' — 안 그러면 '+mcapTxt(T.dual_mc)+'가 두 번 들어갑니다). 종목 수는 그대로입니다.');
-      _tips.push('동일가중 = 섹터 안의 종목을 전부 같은 비중으로 평균낸 값입니다. '+
-                 '시총가중이 아니라서 섹터 ETF 수익률과 다릅니다.');
+      _tips.push('섹터 줄 = SPDR 섹터 ETF(XLK·XLF…) 실적 그대로. '+
+                 '산업그룹·종목 줄 = 유니버스 종목을 기준일 시가총액으로 가중한 값. '+
+                 'ETF 는 분산요건 상한이 걸린 지수라 섹터 줄과 그 아래 합이 정확히 맞지는 않습니다.');
       _tips.push('▸ 로 산업그룹을, 그 아래 ▸ 로 종목을 폅니다. 종목 줄의 수익률은 이 표와 같은 열입니다.');
       if(rgn)_tips.push('이름에 마우스를 올리면 종목수·PER·폭·국면별 성과가 나옵니다.');
     })();
     var h='<tr class="grp"><th colspan="'+ncol+'" title="'+esc(_tips.join(' '))+'">'+
        '섹터 '+secs.length+'개 · 산업그룹 '+nG+'개 '+
-       '<em>종목 <b>동일가중</b> · 시총 내림차순'+
+       '<em><b>시총가중</b>(섹터=SPDR ETF) · 시총 내림차순'+
        (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+
        ' <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     secs.slice().sort(bym).forEach(function(s0){
@@ -1884,7 +1887,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 계산하지 않는다. build/home_perf.py 가 구운 경로를 그대로 그린다.
   //   그 경로는 **아래 표와 같은 정의**로 만들어졌고(섹터 = 기준일 대비 종목별 비율의 평균),
   //   그래서 각 선의 끝점이 아래 표의 그 칸과 글자 그대로 같다(빌드에서 15계열×5구간 대조).
-  //   ETF 섹터(market_board.sector)를 쓰면 안 된다 — 그건 시총가중이고 표는 동일가중이다.
+  //   섹터는 **SPDR 섹터 ETF** 다(2026-08-11 사용자 결정으로 동일가중을 걷어냈다).
   var STC_HZ='12M', STC_P=null;
 
   function drawStChart(){
@@ -1952,7 +1955,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
       '<div class="scgrid">'+
         chart(blk.dates, ixs, '지수', CIX)+
-        chart(blk.sec_dates, secs, '섹터 <span>· 유니버스 종목 동일가중 · 상위 3 · 하위 1만 표시</span>', CSEC)+
+        chart(blk.sec_dates, secs, '섹터 <span>· SPDR 섹터 ETF · 상위 3 · 하위 1만 표시</span>', CSEC)+
       '</div>'+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';

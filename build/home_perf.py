@@ -13,14 +13,14 @@
   · 지수 4줄 = data/market_board.json (build/market_board.py, 원자료 assets.json)
   · 섹터 11줄 = data/home_reco.json.industry (build/home_summary.py, 원자료 data/sd)
 
-그리고 섹터 수익률의 정의는 **'기준일 대비 종목별 비율의 평균'** 이다
-(home_summary.agg: mean over stocks of px[-1]/px[base] - 1). 일별 리밸런스 지수가 아니다.
-그래서 여기서도 **같은 식으로** 경로를 만든다 — 각 구간의 기준일 d0 에 대해
-    path[d] = mean_over_stocks( px[d]/px[d0] - 1 )
-이렇게 하면 경로의 마지막 점이 표의 그 칸과 글자 그대로 같아진다.
+🚨 2026-08-11 — 섹터 정의가 바뀌었다(사용자 결정). 종전에는 '기준일 대비 종목별 비율의
+평균'(동일가중)이었고 이 파일도 그 식으로 경로를 만들었다. 지금 표의 섹터 줄은
+**섹터 ETF 그 자체**다(home_summary 가 data/assets.json 에서 옮긴다).
+그래서 여기서도 ETF 가격 경로를 그대로 쓴다 — 같은 원천이라 끝점이 표와 어긋날 자리가 없다.
+⚠ 산업그룹 줄은 유니버스 종목의 기준일 시총가중이라 섹터 줄과 정확히 합쳐지지 않는다.
+  ETF 가 분산요건 상한이 걸린 지수이고 구성종목도 다르기 때문이다. 화면이 그것을 적는다.
 
-⚠ 구간마다 기준일이 다르므로 **구간마다 경로를 따로 굽는다.** 12개월 경로를 잘라
-  다시 기준화하면 안 된다 — 비율의 평균은 곱셈적이지 않아 끝점이 표와 어긋난다.
+⚠ 구간마다 기준일이 다르므로 **구간마다 경로를 따로 굽는다.**
 
 ⚠ 1일·1주는 점이 1~5개라 선으로 그릴 것이 없다. 굽지 않는다(화면도 그 두 칸을 안 낸다).
 
@@ -71,27 +71,11 @@ def main():
     adates, apx = A["dates"], A["px"]
     apos = {d: i for i, d in enumerate(adates)}
 
-    # ── 섹터: 랩 518종을 GICS 로 묶은 것(표의 섹터 줄과 같은 원자료·같은 정의) ──
-    S = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
-    sdates = S["pxd_dates"]
-    spos = {d: i for i, d in enumerate(sdates)}
-    sec_of = {x["t"]: x.get("sector") for x in S["stocks"]}
-    KO = {"Information Technology": "IT", "Financials": "금융", "Health Care": "헬스케어",
-          "Consumer Discretionary": "경기소비", "Communication Services": "커뮤니케이션",
-          "Industrials": "산업재", "Consumer Staples": "필수소비", "Energy": "에너지",
-          "Utilities": "유틸리티", "Materials": "소재", "Real Estate": "부동산"}
-    spx = {}
-    for t in sec_of:
-        fp = os.path.join(DATA, "sd", t + ".json")
-        if not os.path.exists(fp):
-            continue
-        a = json.load(io.open(fp, encoding="utf-8")).get("pxd")
-        if isinstance(a, list) and len(a) == len(sdates):
-            spx[t] = a
-    members = {}
-    for t, g in sec_of.items():
-        if g in KO and t in spx:
-            members.setdefault(KO[g], []).append(t)
+    # ── 섹터: **섹터 ETF 그 자체**(표의 섹터 줄과 같은 원자료·같은 정의) ──
+    SEC_ETF = {"XLK": "IT", "XLF": "금융", "XLV": "헬스케어", "XLY": "경기소비",
+               "XLC": "커뮤니케이션", "XLI": "산업재", "XLP": "필수소비", "XLE": "에너지",
+               "XLU": "유틸리티", "XLRE": "부동산", "XLB": "소재"}
+    sdates, spos = adates, apos          # ETF 도 assets.json 격자다 — 지수 줄과 같은 날짜
 
     out = {"note": ("홈 '기간별 수익률' 위 시계열. 🚨 끝점이 아래 표의 그 칸과 같도록 "
                     "표와 **같은 정의**로 만든다 — 섹터는 기준일 대비 종목별 비율의 평균이다. "
@@ -120,16 +104,12 @@ def main():
                 continue
             blk["ix"][nm] = [None if a[i] is None else round((a[i] / a[ai] - 1) * 100, 2)
                              for i in aidx]
-        for nm, ts in members.items():
-            path = []
-            for i in sidx:
-                vs = []
-                for t in ts:
-                    a = spx[t]
-                    if a[si] and a[i] and a[si] > 0:
-                        vs.append(a[i] / a[si] - 1.0)
-                path.append(round(sum(vs) / len(vs) * 100, 2) if vs else None)
-            blk["sec"][nm] = path
+        for _t, nm in SEC_ETF.items():
+            a = apx.get(_t)
+            if not a or a[si] in (None, 0):
+                continue
+            blk["sec"][nm] = [None if a[i] is None else round((a[i] / a[si] - 1) * 100, 2)
+                              for i in sidx]
         out["series"][hz] = blk
 
     io.open(OUT, "w", encoding="utf-8").write(
