@@ -42,7 +42,10 @@ data/_custconc_raw.json
 # 사내 배포본 — build/deploy_local.py 산출물(저장소에 넣지 않는다)
 _deploy/
 _deploy.log
-_rotation.log        # KB_RotationDaily 러너 로그(build/rotation_daily.ps1)
+# 전략 탐색 풀 일일 갱신 러너 로그 — build/rotation_daily.ps1 (작업 KB_RotationDaily)
+# ⚠ .gitignore 는 줄 끝 주석을 모른다. 여기 뒤에 설명을 붙이면 그것까지 패턴이 되어
+#   파일이 안 무시된다 — 처음에 그렇게 적었다가 러너의 '풀만 바뀌었나' 검사에 걸렸다.
+_rotation.log
 
 # 애널리스트 등급 변경 이력 캐시(yfinance) — 재현 가능하고 수 MB라 로컬에만 둔다.
 #   build/fetch_ratings.py 가 만든다.
