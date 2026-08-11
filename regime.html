@@ -1083,42 +1083,45 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 화살표가 왼쪽으로 가는 것은 오류가 아니다. 곡선의 순서가 통념이고 실제 이력이 그
     //   순서를 안 따른다는 사실이 그림에 드러나는 것이다(아래 drift 가 같은 것을 숫자로 말한다).
     var trail='', TR=cy.trail||[];
+    function _rad(q){ return 5.2+Math.min(7, q.months/2.2); }
+    // 🚨 호를 **먼저 전부** 그리고 점·라벨을 나중에 그린다. 종전에는 한 점씩 (호→점) 을
+    //   반복해서, 뒤 호의 바탕색 케이싱이 앞 호를 지웠다(실측: 2→3 주황 호가 3→4 검정
+    //   호의 케이싱에 통째로 덮였다). 점도 화살촉을 덮었다.
+    for(var ti=1; ti<TR.length; ti++){
+      var a=TR[ti], b0=TR[ti-1];
+      var ax=X(a.pos), ay=Ye(a.pos), bx=X(b0.pos), by=Ye(b0.pos);
+      // 🚨 수직 방향을 **왼→오른 기준으로 고정**한다. 종전에는 진행 방향에서 뽑았는데,
+      //   같은 두 점을 반대로 오갈 때 수직도 같이 뒤집혀 (ti%2 부호와 상쇄되면서)
+      //   제어점이 **똑같아졌다** — 두 호가 한 곡선 위에 포개졌다(실측 Q535.9 343.6 동일).
+      var sx=bx, sy=by, ex=ax, ey=ay;
+      if(ex<sx){ var _t=sx; sx=ex; ex=_t; _t=sy; sy=ey; ey=_t; }
+      var ddx=ex-sx, ddy=ey-sy, L=Math.sqrt(ddx*ddx+ddy*ddy)||1;
+      var mx=(bx+ax)/2, my=(by+ay)/2;
+      var bulge=(ti%2?-1:1)*Math.min(64, Math.max(24, L*0.16));
+      var cx2=mx+(-ddy/L)*bulge, cy2=my+(ddx/L)*bulge;
+      // 끝점을 목적지 점 반지름만큼 당긴다 — 안 그러면 화살촉이 점 밑에 깔려 안 보인다.
+      var vx=ax-cx2, vy=ay-cy2, vl=Math.sqrt(vx*vx+vy*vy)||1, pull=_rad(a)+7;
+      var tx=ax-(vx/vl)*pull, ty=ay-(vy/vl)*pull;
+      var back=(a.dir==='back'), col=back?'var(--marg)':'var(--ink)';
+      var op=(0.78+0.22*ti/Math.max(1,TR.length-1));
+      var dd='M'+f(bx)+' '+f(by)+' Q'+f(cx2)+' '+f(cy2)+' '+f(tx)+' '+f(ty);
+      trail+='<path d="'+dd+'" fill="none" stroke="var(--panel)" stroke-width="6" '+
+        'opacity="'+(op*0.9).toFixed(2)+'" stroke-linecap="round"/>'+
+        '<path d="'+dd+'" fill="none" stroke="'+col+'" stroke-width="2.4" '+
+        'opacity="'+op.toFixed(2)+'" stroke-linecap="round" '+
+        'stroke-dasharray="'+(back?'7 4':'0')+'" marker-end="url(#tarr'+(back?'b':'f')+')"/>';
+    }
     for(var ti=0; ti<TR.length; ti++){
       var a=TR[ti], ax=X(a.pos), ay=Ye(a.pos);
-      var last=(ti===TR.length-1);
-      // 🚨 점이 작고 반투명하면 자취가 있어도 안 보인다(실측: 3.8px·0.58 로 그렸더니
-      //   "앞의 3개는 왜 안 보이냐"는 말을 들었다). 최소 크기를 키우고 불투명도 바닥을 올린다.
-      var rad=5.2+Math.min(7, a.months/2.2);
+      var last=(ti===TR.length-1), rad=_rad(a);
       var op=last?1:(0.78+0.22*ti/Math.max(1,TR.length-1));
-      if(ti>0){
-        var b0=TR[ti-1], bx=X(b0.pos), by=Ye(b0.pos);
-        // 같은 자리로 되돌아오면 직선이 점이 된다 — 부풀린 호로 그려 되돌아온 것이 보이게.
-        var mx=(bx+ax)/2, my=(by+ay)/2, dx=ax-bx, dy=ay-by;
-        // 🚨 자취는 경기·증시 곡선과 **다른 색**이어야 한다. 같은 red/blue 를 쓰면 큰 호가
-        //   증시 곡선의 일부처럼 보인다(실측: 첫 렌더에서 구분이 안 됐다). 자취는 잉크색으로
-        //   묶고 방향은 점선/화살표로만 가른다. 뒤로 가는 것만 경고색을 얹는다.
-        var len=Math.sqrt(dx*dx+dy*dy)||1;
-        var bulge=(ti%2?-1:1)*Math.min(64, Math.max(20, len*0.16));
-        var cx2=mx+(-dy/len)*bulge, cy2=my+(dx/len)*bulge;
-        var col=(a.dir==='back')?'var(--marg)':'var(--ink)';
-        var dd='M'+f(bx)+' '+f(by)+' Q'+f(cx2)+' '+f(cy2)+' '+f(ax)+' '+f(ay);
-        // 바탕색 케이싱을 깔아 곡선 위를 지날 때 선이 끊겨 보이지 않게 한다
-        trail+='<path d="'+dd+'" fill="none" stroke="var(--panel)" stroke-width="5.5" '+
-          'opacity="'+(op*0.9).toFixed(2)+'" stroke-linecap="round"/>'+
-          '<path d="'+dd+'" fill="none" stroke="'+col+'" stroke-width="2.2" '+
-          'opacity="'+op.toFixed(2)+'" stroke-linecap="round" '+
-          'stroke-dasharray="'+(a.dir==='back'?'6 4':'0')+'" marker-end="url(#tarr'+
-          (a.dir==='back'?'b':'f')+')"/>';
-      }
       trail+='<circle cx="'+f(ax)+'" cy="'+f(ay)+'" r="'+f(rad)+'" fill="var(--ink)" '+
         'stroke="var(--panel)" stroke-width="2" opacity="'+op.toFixed(2)+'"><title>'+
         esc(a.ko+' · '+a.months+'개월 · '+a.from+(a.months>1?(' ~ '+a.to):''))+'</title></circle>';
       // 🚨 이름을 붙인다. 개월수만 적으면 어느 점이 후기사이클이고 어느 점이 골디락스인지
       //   알 수가 없다 — 곡선 위 자리만으로는 국면을 못 읽는다(사용자 지적 2026-08-11).
-      //   순번을 앞에 두어 어느 쪽이 먼저인지도 화살표 없이 읽히게 한다.
       if(!last){
         var lbl=(ti+1)+'. '+a.ko+' '+a.months+'개월';
-        // 위/아래를 번갈아 붙여 이웃 라벨과 안 겹치게. 곡선 위쪽이면 위로, 아래쪽이면 아래로.
         // 「지금」과 **같은 자리**로 되돌아온 지점은 라벨을 위로 올린다 — 아래로 두면
         // 「지금」 표시선·알약과 겹친다(회복 → 다른 국면 → 회복 처럼 되돌아올 때 생긴다).
         var same=(Math.abs(a.pos-TR[TR.length-1].pos)<1e-6);
@@ -1131,9 +1134,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
     }
     var defs='<defs>'+
-      '<marker id="tarrf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+      '<marker id="tarrf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">'+
         '<path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>'+
-      '<marker id="tarrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+      '<marker id="tarrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">'+
         '<path d="M0 0 L10 5 L0 10 z" fill="var(--marg)"/></marker></defs>';
 
     // 지금 — 경기 곡선 위. 이 랩이 잰 유일한 것이라 다른 색(잉크)으로 둔다.
