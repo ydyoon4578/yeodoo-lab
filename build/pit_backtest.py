@@ -42,9 +42,20 @@ CACHE = os.path.join(DATA, "_pit_px_cache.json")
 #   돌아가고(고가가 필요한 규칙만 빠진다) 받아 두면 그때부터 그 규칙들이 살아난다.
 HLCACHE = os.path.join(DATA, "_pit_hl_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
+REUSE = os.path.join(DATA, "pit_reuse.json")         # 티커가 다른 법인에 넘어갔는지(SEC 대조)
 OUT = os.path.join(DATA, "pit_strategies.json")
 
-START = "2015-01-01"      # 2026-08-04: 2020-09-01 → 여기로 (사용자 결정 — 아래 주석 참조)
+START = "2014-06-01"      # 2026-08-11: 2015-01-01 → 여기로 (아래 주석 참조)
+# 🚨 캐시를 받는 시작일은 START 와 **다르다.** 종전에는 같았고, 그래서 편출 종목은 창 첫날
+#   이전 가격이 아예 없었다 — 12-1 모멘텀은 12개월, 장기반전은 60개월을 뒤로 본다. 룩백이
+#   없으면 그 종목은 점수가 None 이 되어 후보에서 빠지고, **초기 월의 후보가 조용히
+#   생존자(랩 518종)로 좁혀진다.** 이 파일이 없애려는 바로 그 편향이 창 앞머리에 남는다.
+#   실측으로 그 자국이 보였다 — 멤버 대비 가격 보유율 최저 72.5% / 중앙 88.6% 이고
+#   "보유율이 시간에 따라 100% 로" 라고 limits 에 적혀 있었다. 그건 편출이 줄어서가 아니라
+#   캐시가 창 시작에 잘려 있어서였다.
+#   → 랩 일별 격자(data/stocks.json pxd_dates)와 같은 2009-01-01 부터 받는다. 랩 종목은
+#     이미 그 격자를 갖고 있으므로, 이렇게 해야 두 출처가 같은 길이의 이력을 준다.
+CACHE_START = "2009-01-01"
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -142,7 +153,17 @@ def fetch_members():
       그 전부를 생존편향 보정이 다시 눌렀다(강등 5종 → 13종). 즉 병목이 '표본이 짧다'에서
       '생존편향 측정 창이 짧다'로 옮겨갔다. PIT 창 5.8년으로 17년짜리 규칙을 판정하는
       것은 짧은 쪽이 결론을 지배한다는 뜻이다. 게시 수치가 바뀐다 — 그게 목적이다.
-      ⚠ 2015-01 이 한계다. index_history.json 이 거기서 시작한다(위키 리비전 보존 범위).
+      🚨 2026-08-11 — "2015-01 이 한계다(위키 리비전 보존 범위)" 라고 적어 뒀는데 **틀렸다.**
+        리비전은 훨씬 깊다. 실측으로 SPX 명단은 2007-04, NDX 는 2008-03 부터 파싱된다.
+        진짜 한계는 **CIK 컬럼**이고 그것은 2014-06(리비전 2014-05-22)에 생긴다 — 종전
+        주석이 "2015-03 부터"라 한 것은 성긴 표본을 안 좁힌 탓이었다. START 를 2014-06 으로
+        내린다(+7개월, 140 → 147개월).
+        ⚠ 그 아래로는 안 내린다. 명단이 없어서가 아니라 **가격이 없어서**다 — 2009-01 SPX
+          498종 중 2015 이후 한 번도 안 나오는 109종에서 30종을 표본으로 받아 보니 19종
+          (63%)은 가격이 아예 없고(BNI·EK·WFMI·ERTS·APOL…), 남은 11종은 하나도 빠짐없이
+          오늘까지 이어진다(아직 상장 중이거나 티커 재사용: S→SentinelOne · WB→Weibo).
+          거기서는 후보가 다시 생존자로만 채워져, 생존편향을 재려는 이 파일이 그 편향을
+          도로 갖는다. 더 내려가려면 관측창이 아니라 **원천**을 바꿔야 한다(상폐 포함 DB).
     """
     import index_members                            # noqa: E402  같은 build/ 안
     mem, carried = index_members.load(START)
@@ -150,6 +171,49 @@ def fetch_members():
     for ym, ix, n in carried:
         print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (ym, ix.upper(), n))
     return mem
+
+
+def _next_month(ym):
+    y, m = int(ym[:4]), int(ym[5:7])
+    return "%04d-%02d" % (y + (m == 12), 1 if m == 12 else m + 1)
+
+
+def load_reuse():
+    """티커가 다른 법인에 넘어갔는지 — data/pit_reuse.json(없으면 빈 판정).
+
+    만드는 곳은 fetch_cache() 다(SEC company_tickers.json 이 필요해 온라인이라야 한다).
+    여기서는 읽기만 한다 — 백테스트가 네트워크에 매달리면 CI 에서 조용히 다른 결과가 난다.
+    """
+    if not os.path.exists(REUSE):
+        return {}
+    try:
+        return (json.load(io.open(REUSE, encoding="utf-8")) or {}).get("reassigned") or {}
+    except Exception:
+        return {}
+
+
+def cutoff_month(t, MEMBER_SPAN, reassigned):
+    """이 티커의 가격을 어느 달까지 쓸 것인가.
+
+    🚨 왜 자르는가. 월말 리밸런스라 마지막 멤버월 M 에 뽑힌 종목은 M+1 까지 들고 있다.
+      그 뒤 가격은 PIT 이 **쓸 일이 없는데**, 티커가 다른 회사에 넘어갔으면 그 구간이
+      통째로 남의 회사다. 종전 방어(계열 기간이 멤버 기간과 '안 겹치면' 제외)는 이걸
+      못 잡는다 — 실측 3종이 그렇게 통과하고 있었다:
+          AA   위키 0000004281(구 Alcoa) → SEC 현행 0001675149(Alcoa Corp) · 멤버 ~2016-10
+          BBBY 위키 0000886158           → SEC 현행 0001130713            · 멤버 ~2017-06
+          BBT  위키 0000092230(BB&T)     → SEC 현행 0001108134            · 멤버 ~2019-11
+      셋 다 계열이 2005~2026 로 이어져 멤버 기간과 겹치므로 겹침 판정을 그냥 통과한다.
+      (BBT 가 후속 법인 스플라이스도 아니라는 것은 실측했다 — 2026-08-10 종가가 BBT 31.54,
+       TFC 51.86 으로 다르다. 즉 승계가 아니라 재배정이다.)
+    ⚠ 재배정이 확인된 티커는 **M+1 도 주지 않는다.** 그 한 달이 이미 남의 회사이기 때문이다
+      (AA 는 2016-11-01 에 신 Alcoa 로 넘어갔고 멤버 마지막 달이 2016-10 이다).
+      실제로는 존속법인(ARNC)으로 전환돼 이어졌겠지만 그 경로를 이 자료로는 못 따라간다 —
+      마지막 멤버월 종가로 청산한 것으로 둔다. 근사이고, 근사라고 적는다.
+    """
+    lo, hi = MEMBER_SPAN.get(t, (None, None))
+    if not hi:
+        return None
+    return hi if t in reassigned else _next_month(hi)
 
 
 def load_prices(need, MEMBER_SPAN):
@@ -174,25 +238,42 @@ def load_prices(need, MEMBER_SPAN):
         sys.exit("편출 종목 가격 캐시가 없다(%s) — `python build/pit_backtest.py --fetch-cache` 로 "
                  "먼저 받을 것. 없이 돌리면 생존자 전용 결과에 PIT 라벨이 붙는다." % CACHE)
     cache = json.load(io.open(CACHE, encoding="utf-8"))
-    bad_reuse = []
+    reassigned = load_reuse()
+    bad_reuse, cut = [], []
     for t, ser in cache.items():
         if t not in need or t in px or not ser:
             continue
-        # 티커 재사용 방어 — 캐시 계열이 '그 티커가 멤버였던 기간'과 안 겹치면 다른 회사다.
+        # ① 겹침 판정 — 계열이 '그 티커가 멤버였던 기간'과 아예 안 겹치면 다른 회사다.
         # 실측 사례: FB 캐시는 ProShares ETF(2025-06~), 멤버십의 FB 는 2020~2022 의 메타.
         ks = sorted(ser)
         lo, hi = MEMBER_SPAN.get(t, ("9999-99", "0000-00"))
         if ks[-1][:7] < lo or ks[0][:7] > hi:
             bad_reuse.append(t); continue
+        # ② 꼬리 절단 — 위 cutoff_month() 주석 참조. ①만으로는 AA·BBBY·BBT 를 못 잡는다.
+        cm = cutoff_month(t, MEMBER_SPAN, reassigned)
+        if cm and ks[-1][:7] > cm:
+            n0 = len(ser)
+            ser = {d: v for d, v in ser.items() if d[:7] <= cm}
+            cut.append((t, n0 - len(ser), cm, t in reassigned))
+            if not ser:
+                continue
         px[t] = ser
     if bad_reuse:
         print("  ⚠ 티커 재사용 의심 %d종 제외(계열 기간이 멤버 기간과 안 겹침): %s"
               % (len(bad_reuse), ", ".join(sorted(bad_reuse))))
+    if cut:
+        _re = [c for c in cut if c[3]]
+        print("  ✂ 편출 계열 꼬리 절단 %d종(멤버 종료 뒤 구간 %d거래일) · 그중 SEC 대조로 "
+              "재배정 확인 %d종: %s"
+              % (len(cut), sum(c[1] for c in cut), len(_re),
+                 ", ".join("%s→%s" % (c[0], c[2]) for c in sorted(_re)) or "없음"))
     print("  가격 %d종 (랩 %d + 편출캐시 %d)" % (len(px), n_lab, len(px) - n_lab))
-    return px
+    return px, {"n_cut": len(cut), "n_reassigned": sum(1 for c in cut if c[3]),
+                "reassigned": sorted(c[0] for c in cut if c[3]),
+                "n_dropped": len(bad_reuse), "dropped": sorted(bad_reuse)}
 
 
-def load_highs(need, dates):
+def load_highs(need, dates, MEMBER_SPAN=None):
     """티커 → 고가 배열(dates 와 같은 길이). 랩 종목은 data/sd, 편출 종목은 HL 캐시.
 
     🚨 두 출처를 섞는 것이 이 함수의 전부이고, 섞이지 **않으면** 후보가 생존자로만 좁혀진다 —
@@ -225,11 +306,17 @@ def load_highs(need, dates):
             hl = json.load(io.open(HLCACHE, encoding="utf-8"))
         except Exception:
             hl = {}
+        # 종가와 **같은 자리에서** 자른다. 한쪽만 자르면 같은 종목이 규칙마다 다른 이력을
+        # 갖게 되고, 그 어긋남은 예외를 안 내고 지나간다(이 파일이 세 번 겪은 유형이다).
+        reassigned = load_reuse()
         for t, ser in hl.items():
             if t not in need or t in hi or not ser:
                 continue
+            cm = cutoff_month(t, MEMBER_SPAN or {}, reassigned)
             arr = [None] * len(dates)
             for d, v in ser.items():
+                if cm and d[:7] > cm:
+                    continue
                 j = pos.get(d)
                 if j is not None and isinstance(v, list) and v:
                     arr[j] = v[0]
@@ -279,7 +366,7 @@ def main():
         for t in lst:
             a, b = span.get(t, (ym, ym))
             span[t] = (min(a, ym), max(b, ym))
-    px_map = load_prices(need, span)
+    px_map, reuse_rep = load_prices(need, span)
     dump_universe(mem, span, px_map)
     if "--universe-only" in sys.argv:
         return 0
@@ -360,7 +447,7 @@ def main():
          "me": sorted(me)}
     # 고가 — x-52wh 가 쓴다. 편출 종목분은 HLCACHE 에서 온다(없으면 그 규칙이 EXCLUDED_SIDS 다).
     if "x-52wh" not in EXCLUDED_SIDS:
-        C["hi"], _nl, _nx = load_highs(set(px), dates)
+        C["hi"], _nl, _nx = load_highs(set(px), dates, span)
         print("  고가 %d종 (랩 %d + 편출캐시 %d)" % (len(C["hi"]), _nl, _nx))
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
@@ -538,8 +625,21 @@ def main():
         "span_years": round((n - i0) / 252.0, 1),
         "universe": "SPX ∪ NDX · 매월말 실제 편입(위키백과 과거 리비전 · data/index_history.json) · 가격은 yfinance",
         "coverage": {"min": round(cov_min, 4), "median": round(cov_med, 4)},
+        # 티커 재사용 방어가 실제로 무엇을 했는지 — 숫자로 남긴다. 방어를 넣고 아무것도
+        # 안 걸리는 것과 16종을 잘라 낸 것은 다른 이야기이고, 화면이 그것을 인용할 수 있어야 한다.
+        "reuse_guard": reuse_rep,
         "limits": [
-            "구간이 %s부터다 — SPX 멤버십이 그때부터만 있어 합집합을 거기 맞췄다." % START,
+            "구간이 %s부터다. 🚨 멤버십이 거기서 끝나서가 아니다 — 위키 리비전은 훨씬 깊고 "
+            "실측으로 SPX 명단은 2007-04, NDX 는 2008-03 까지 파싱된다. 막는 것은 **조인**이다: "
+            "위키 표의 CIK 컬럼이 2014-06(리비전 2014-05-22)에 생겨 그 이전은 티커로만 묶어야 "
+            "하고, 그러면 개명과 티커 재사용을 구별할 수 없다. 더 내려가면 가격도 없다 — "
+            "2009-01 SPX 498종 중 2015 이후 한 번도 안 나오는 109종에서 30종을 표본으로 받아 "
+            "보니 19종(63%%)은 가격이 아예 없고 남은 11종은 전부 오늘까지 이어진다(아직 상장 "
+            "중이거나 재사용). 즉 그 아래에서는 후보가 다시 생존자로만 채워진다." % START,
+            "편출 종목의 가격 계열은 **마지막 멤버월에서 자른다**(재배정이 확인되지 않은 종목은 "
+            "월말 리밸런스를 감안해 +1개월). yfinance 는 티커를 '오늘 그 심볼을 가진 주체'로 "
+            "해석하므로, 안 자르면 사라진 회사의 티커에 남의 시계열이 조용히 이어 붙는다. "
+            "SEC 현행 티커→CIK 대조(data/pit_reuse.json)로 실제 재배정을 확인한다.",
             "🚨 위의 start·n_days 는 **전역 라벨**이고 규칙마다 실효 창이 다르다 — 각 규칙의 "
             "start·n_days 를 볼 것. 신호가 늦게 채워지는 규칙은 무보유 구간을 잘라내고 시작한다"
             "(동월 계절성은 월말 61개를 요구해 231거래일 늦다). 재기준이 없던 동안 그 구간에서 "
@@ -556,8 +656,15 @@ def main():
             "월말 멤버 중 가격을 못 구한 종목이 있다(보유율 최저 %.1f%% · 중앙 %.1f%%). 이 결손은 "
             "중립이 아니다 — 남은 종목은 전부 오늘까지 살아 있고 보유율이 시간에 따라 100%%로 오른다. "
             "누락분을 되돌리면 여기 초과수익은 더 줄어든다(재현 실험상 중앙 1.3%%p). 즉 이 표조차 "
-            "생존편향을 완전히 걷어내지 못했고, 남은 방향은 여전히 낙관 쪽이다."
+            "생존편향을 완전히 걷어내지 못했고, 남은 방향은 여전히 낙관 쪽이다. "
+            "⚠ 이 결손은 편출 종목이 인수·상폐돼 yfinance 가 아예 안 주는 것이고(편출 334종 중 "
+            "180종), 캐시를 더 받아서 메울 수 있는 종류가 아니다."
             % (100 * cov_min, 100 * cov_med),
+            "🚨 보유율(그날 가격이 있나)과 **채점 가능성**(룩백이 있나)은 다른 것이고, 종전에는 "
+            "한 문장이 둘을 같이 말하고 있었다. 2026-08-11 에 편출 가격 캐시를 창 시작이 아니라 "
+            "2009-01 부터 받도록 고쳤다 — 그 전에는 창 첫달에 12-1 모멘텀을 채점할 수 있는 멤버가 "
+            "58.8%%뿐이었고(고친 뒤 71.9%%), 채점 안 되는 그 넷은 전부 편출 종목이라 그 구간의 "
+            "후보가 사실상 오늘의 518종이었다. 즉 창 앞머리에 생존편향이 남아 있었다.",
             "'거래량 급증' 규칙은 아예 뺐다 — 거래량이 오늘의 유니버스에만 있어 후보가 100%% "
             "생존자로 좁혀지는데, 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다.",
             "🚨 **편향은 bias_cagr(전략 CAGR 기준)로 읽을 것.** bias_excess 는 초과수익 기준인데, "
@@ -809,6 +916,63 @@ def score(S, t, j, C):
     return S["fn"](t, j, P, R[t], TB.vol(R[t], j, 60))
 
 
+def write_reuse(want, span):
+    """SEC 현행 티커→CIK 와 위키 당시 CIK 를 맞대 '그 사이 티커가 다른 법인에 넘어갔는지'
+    를 판정해 data/pit_reuse.json 에 적는다.
+
+    🚨 왜 필요한가. yfinance 는 티커를 **오늘 그 심볼을 가진 주체**로 해석한다. 그래서
+      사라진 회사의 티커를 요청하면 남의 시계열이 조용히 이어 붙는다. 종전 방어(계열 기간이
+      멤버 기간과 겹치는가)는 계열이 2005~2026 로 통으로 이어질 때 그냥 통과한다.
+      실측(2026-08-11) 편출 132종: 일치 91 · 불일치 3(AA·BBBY·BBT) · 판정불가 38.
+    ⚠ 판정불가 38종은 두 갈래이고 **성격이 다르다.**
+      · 위키 CIK 없음 — NDX 표에는 CIK 컬럼이 아예 없다(AZN·BIDU·JD·CHKP 같은 것).
+      · SEC 현행 없음 — 아무도 그 티커를 안 갖고 있다. 이쪽은 오히려 **안전하다**
+        (재배정될 수 없으니 yfinance 가 주는 것은 그 회사의 진짜 이력이거나 아무것도 없다).
+      그래서 판정불가를 '재배정 아님'으로 취급하지 않고 사유별로 나눠 적는다.
+    ⚠ 이 판정은 온라인이라야 한다. 그래서 백테스트가 아니라 수집 단계에 둔다 — 채점이
+      네트워크에 매달리면 CI 와 로컬이 조용히 다른 결과를 낸다.
+    """
+    import urllib.request
+    ua = {"User-Agent": "yeouido-lab/1.0 (globalkbam@gmail.com) pit-reuse-check"}
+    try:
+        raw = urllib.request.urlopen(urllib.request.Request(
+            "https://www.sec.gov/files/company_tickers.json", headers=ua), timeout=60).read()
+        sec = json.loads(raw)
+    except Exception as e:
+        print("  ⚠ SEC 티커지도 실패(%s) — pit_reuse.json 을 갱신하지 않는다" % str(e)[:50])
+        return
+    now = {}
+    for v in sec.values():
+        now[str(v["ticker"]).upper().replace("-", ".")] = str(v["cik_str"]).zfill(10)
+    ih = json.load(io.open(os.path.join(DATA, "index_history.json"), encoding="utf-8"))
+    hist = ih.get("cik") or {}
+    bad, unknown, ok = {}, {}, 0
+    for t in want:
+        h, c = hist.get(t), now.get(t)
+        if not h:
+            unknown[t] = "위키 CIK 없음(NDX 표에는 CIK 컬럼이 없다)"
+        elif not c:
+            unknown[t] = "SEC 현행 매핑 없음 — 아무도 이 티커를 안 갖고 있다(재배정 불가)"
+        elif str(h).zfill(10) != c:
+            bad[t] = {"wiki_cik": str(h).zfill(10), "sec_cik": c,
+                      "first": span.get(t, (None, None))[0], "last": span.get(t, (None, None))[1]}
+        else:
+            ok += 1
+    doc = {"note": ("티커가 그 뒤 다른 법인에 넘어갔는지. SEC company_tickers.json(현행)과 "
+                    "data/index_history.json 의 당시 CIK 를 맞댄 것. build/pit_backtest.py 가 "
+                    "읽어 그 종목의 가격 계열을 마지막 멤버월에서 자른다(--fetch-cache 가 만든다)."),
+           "as_of": ih.get("as_of"), "n_checked": len(want), "n_match": ok,
+           "n_reassigned": len(bad), "n_unknown": len(unknown),
+           "reassigned": bad, "unknown": unknown}
+    json.dump(doc, io.open(REUSE, "w", encoding="utf-8"), ensure_ascii=False,
+              separators=(",", ":"))
+    print("→ %s · 대조 %d종: 일치 %d · **재배정 %d** · 판정불가 %d"
+          % (REUSE, len(want), ok, len(bad), len(unknown)))
+    for t, v in sorted(bad.items()):
+        print("   🚨 %-6s 위키 %s → SEC %s · 멤버 %s~%s" % (t, v["wiki_cik"], v["sec_cik"],
+                                                          v["first"], v["last"]))
+
+
 def fetch_cache():
     """편출 종목 가격을 yfinance 로 받아 캐시한다 — 저장소에 만드는 코드가 있어야 재현이 된다.
 
@@ -825,19 +989,35 @@ def fetch_cache():
                                              encoding="utf-8"))["stocks"]}
     want = sorted(t for t in need - lab if t.isalpha() or "." in t)
     print("편출 종목 %d종 가격 수집 (yfinance)" % len(want))
+    span = {}
+    for ym, lst in mem.items():
+        for t in lst:
+            a, b = span.get(t, (ym, ym))
+            span[t] = (min(a, ym), max(b, ym))
+    write_reuse(want, span)
     out = json.load(io.open(CACHE, encoding="utf-8")) if os.path.exists(CACHE) else {}
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
+    # 🚨 --rebuild 가 필요한 이유. 아래 루프는 '이미 있는 티커는 건너뛴다'가 기본이고
+    #   저장도 setdefault 다 — 재수집 시점이 달라 값이 미세하게 흔들리면 그 위에서 잰 PIT
+    #   수치가 조용히 바뀌기 때문이다. 그런데 그 보호가 **창을 앞으로 늘릴 때는 정반대로
+    #   작동한다** — 캐시가 2015-01 에서 시작하는 채로 영원히 굳는다. 창을 바꾸는 실행에서만
+    #   깃발로 푼다. 값이 바뀐다는 것을 알고 하는 것과 모르고 굳는 것은 다르다.
+    rebuild = "--rebuild" in sys.argv
+    if rebuild:
+        print("  --rebuild: 기존 %d종을 %s 부터 다시 받는다(값이 바뀐다)" % (len(out), CACHE_START))
     got = 0
     for i in range(0, len(want), 25):
         # 🚨 2026-08-05 — 종전에는 `t not in out`(종가 캐시)만 봤다. 그래서 고가·저가를
         #   같은 배치에 얹었더니 **이미 종가가 있는 147종은 아예 안 받아** HL 캐시가 0종으로
         #   남았다(실행은 성공으로 끝났다 — 전형적인 '조용한 미수집'이다).
         #   둘 중 하나라도 없으면 받는다.
-        ch = [t for t in want[i:i + 25] if t not in out or t not in hlout]
+        ch = want[i:i + 25] if rebuild else [t for t in want[i:i + 25]
+                                             if t not in out or t not in hlout]
         if not ch:
             continue
         try:
-            _raw = yf.download(ch, start=START, auto_adjust=True, progress=False, threads=False)
+            _raw = yf.download(ch, start=CACHE_START, auto_adjust=True, progress=False,
+                               threads=False)
             d = _raw["Close"]
             _hi, _lo = _raw.get("High"), _raw.get("Low")
         except Exception as e:
@@ -847,8 +1027,12 @@ def fetch_cache():
                 ser = d[t].dropna()
                 if len(ser) > 200:
                     # 이미 있는 종가는 덮어쓰지 않는다 — 재수집 시점이 달라 값이 미세하게
-                    # 흔들리면 그 위에서 잰 PIT 수치가 조용히 바뀐다.
-                    out.setdefault(t, {str(k.date()): round(float(v), 4) for k, v in ser.items()})
+                    # 흔들리면 그 위에서 잰 PIT 수치가 조용히 바뀐다. (--rebuild 때만 덮는다.)
+                    _new = {str(k.date()): round(float(v), 4) for k, v in ser.items()}
+                    if rebuild:
+                        out[t] = _new
+                    else:
+                        out.setdefault(t, _new)
                     # 고가·저가도 같은 배치에서 받는다 — 따로 받으면 두 번 요청하고
                     # 그 사이 조정계수가 바뀌면 종가와 기준이 어긋난다.
                     if _hi is not None and _lo is not None and t in _hi and t in _lo:
@@ -870,11 +1054,11 @@ def fetch_cache():
     # ⚠ 두 출처는 정의가 미세하게 다르다(실측 yfinance 가 0.3~2.3% 낮다). 시총이 자릿수로
     #   벌어지는 횡단면에서는 순위에 거의 영향이 없지만, limits 에 적고 민감도도 재 둔다.
     sh = json.load(io.open(SHCACHE, encoding="utf-8")) if os.path.exists(SHCACHE) else {}
-    tgt = [t for t in sorted(out) if t not in sh]
+    tgt = sorted(out) if rebuild else [t for t in sorted(out) if t not in sh]
     print("주식수 수집 %d종 (이미 %d종)" % (len(tgt), len(sh)))
     for k, t in enumerate(tgt):
         try:
-            ser = yf.Ticker(t).get_shares_full(start=START)
+            ser = yf.Ticker(t).get_shares_full(start=CACHE_START)
             if ser is not None and len(ser):
                 # 날짜 내림차순 [(날짜, 주식수)] — 랩의 asof_fund 와 같은 모양
                 sh[t] = [[str(d.date()), float(v)] for d, v in ser.items()][::-1]
