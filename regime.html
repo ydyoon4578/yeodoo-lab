@@ -198,6 +198,12 @@
   .cycwrap{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:2px;
            padding:10px 12px 4px;box-shadow:var(--shadow)}
   .cycwrap svg{display:block;width:100%;height:auto}
+  .cyctabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .cyctab{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:2px;
+          border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
+  .cyctab:hover{border-color:var(--accent);color:var(--accent)}
+  .cyctab.on{background:var(--accent);border-color:var(--accent);color:var(--ground)}
+  .cycbasis{font-size:10.5px;color:var(--muted);margin-left:4px;flex:1 1 240px;line-height:1.4}
   .cycnote{font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:9px;
            border-top:1px solid var(--line-soft);padding-top:9px}
   .cycnote b{color:var(--ink-2)}
@@ -976,53 +982,70 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 곡선의 순서는 통념이다. 이 랩의 212개월은 그 순서대로 돌지 않는다(아래 캡션의 실측).
   //   그래서 (a) 화살표·시계바늘·애니메이션을 쓰지 않고 (b) 최근 24개월이 몇 자리에
   //   흩어져 있는지를 같은 곡선 위에 숫자로 얹는다. 그림이 스스로 반증을 들고 있게 한다.
+  // 어느 자로 업종을 얹을지 — 화면 상태 하나. 값은 전부 빌드가 구운 것을 옮긴다.
+  var CYB='price';
+
   function renderCycle(cy){
     var host=el('cyclebody'), sec=el('cycle'); if(!host||!sec)return;
     // 🚨 층을 겹치지 않게 못 박는다. 처음엔 구획 이름을 띠 아래에 뒀는데 곡선 바닥의
-    //   국면 이름(침체·연착륙)과 같은 높이라 글자가 포개졌다. 이제 세 층이 분리된다:
+    //   국면 이름(침체·연착륙)과 같은 높이라 글자가 포개졌다. 이제 네 층이 분리된다:
     //     TOP-36..TOP-21      '지금' 말풍선
     //     bandTop+18          구획 이름(띠 안쪽 위)
-    //     curveTop..curveBot  곡선 — 띠 위아래로 여백을 둬 어느 라벨과도 안 만난다
-    var W=1000, H=320, PL=62, PR=62, TOP=66, BOT=44;
+    //     curveTop..curveBot  곡선
+    //     국면 이름 + 업종 칩  곡선 바깥쪽(위 반원은 위로, 아래 반원은 아래로)
+    var W=1000, H=384, PL=62, PR=62, TOP=66, BOT=44;
     var bandTop=TOP, bandBot=H-BOT;
-    var curveTop=TOP+66, curveBot=H-BOT-34;   // 정점 라벨과 구획 이름 사이를 26px 띄운다
+    var curveTop=TOP+108, curveBot=H-BOT-108;   // 업종 칩 3줄이 곡선 밖에 들어갈 여유
     var x0=PL, x1=W-PR, mid=(curveTop+curveBot)/2, amp=(curveBot-curveTop)/2;
     var X=function(p){return x0+p*(x1-x0);};
     var Y=function(p){return mid+amp*Math.cos(2*Math.PI*p);};   // p 0=바닥 · 0.5=정점
     var f=function(v){return v.toFixed(1);};
+    var S=cy.sectors||{}, byb=(CYB==='earn'?(S.earn||{}):(S.price||{})), topn=S.topn||3;
 
     var i, dpth='';
     for(i=0;i<=240;i++){var p=i/240; dpth+=(i?'L':'M')+f(X(p))+' '+f(Y(p));}
 
-    // ① 구획 띠 — 이름은 띠 **안쪽 위**에 둔다(곡선은 그보다 52px 아래에서 시작한다).
+    // ① 구획 띠 — 이름은 띠 안쪽 위에 둔다.
     var bands=(cy.bands||[]).map(function(b,k){
       return '<rect x="'+f(X(b.a))+'" y="'+bandTop+'" width="'+f(X(b.b)-X(b.a))+
-        '" height="'+(H-BOT-TOP)+'" fill="var(--ink)" opacity="'+(k%2?0.05:0.022)+'"/>'+
+        '" height="'+(bandBot-bandTop)+'" fill="var(--ink)" opacity="'+(k%2?0.05:0.022)+'"/>'+
         '<text x="'+f((X(b.a)+X(b.b))/2)+'" y="'+(bandTop+18)+'" text-anchor="middle" '+
         'font-size="11.5" font-weight="700" letter-spacing=".04em" fill="var(--muted)">'+esc(b.ko)+'</text>';
     }).join('');
 
-    // ② 국면 이름 — 곡선 **바깥쪽**에 붙인다(아래 반원이면 아래, 위 반원이면 위).
-    //   그래야 어느 라벨도 곡선을 가리지 않는다.
-    var now=cy.now||{}, marks='';
+    // ② 국면 이름 + 선호 업종 — 곡선 바깥쪽에 쌓는다.
+    var marks='', now=cy.now||{};
     (cy.phases||[]).forEach(function(ph){
-      if(ph.k===now.r) return;                 // 지금 국면은 아래 ③이 이름을 말한다(중복 방지)
-      var px=X(ph.pos), py=Y(ph.pos), below=(py>=mid);
-      var ly=py+(below?20:-22), ly2=ly+(below?12:12);
+      var px=X(ph.pos), py=Y(ph.pos), below=(py>=mid), on=(ph.k===now.r);
       var anc=ph.pos<0.04?'start':(ph.pos>0.96?'end':'middle');
       var tx=ph.pos<0.04?px-4:(ph.pos>0.96?px+4:px);
-      marks+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="3.4" fill="var(--panel)" '+
-        'stroke="var(--ink-2)" stroke-width="1.5"/>'+
-        '<text x="'+f(tx)+'" y="'+f(ly)+'" text-anchor="'+anc+'" font-size="11.5" font-weight="700" '+
-        'fill="var(--ink-2)">'+esc(ph.ko)+'</text>'+
-        '<text x="'+f(tx)+'" y="'+f(ly2)+'" text-anchor="'+anc+'" font-size="10" '+
-        'fill="var(--muted)" font-family="var(--mono)">'+ph.months+'개월'+
-        (ph.recent?' · 최근 '+ph.recent:'')+'</text>';
+      var dir=below?1:-1, y=py+dir*20;
+      if(!on){
+        marks+='<text x="'+f(tx)+'" y="'+f(y)+'" text-anchor="'+anc+'" font-size="11.5" '+
+          'font-weight="700" fill="var(--ink-2)">'+esc(ph.ko)+'</text>';
+        y+=dir*12;
+        marks+='<text x="'+f(tx)+'" y="'+f(y)+'" text-anchor="'+anc+'" font-size="10" '+
+          'fill="var(--muted)" font-family="var(--mono)">'+ph.months+'개월'+
+          (ph.recent?' · 최근 '+ph.recent:'')+'</text>';
+      }else{ y=py+dir*32; }   // 지금 국면의 이름은 ③ 말풍선이 말한다 — 업종만 이어 붙인다
+      marks+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="'+(on?0:3.4)+'" fill="var(--panel)" '+
+        'stroke="var(--ink-2)" stroke-width="1.5"/>';
+      // 선호 업종 — 없으면 '표본 부족'이라고 적는다. 빈칸으로 두지 않는다.
+      var rows=(byb[ph.k]||[]).slice(0,topn);
+      if(!rows.length){
+        marks+='<text x="'+f(tx)+'" y="'+f(y+dir*13)+'" text-anchor="'+anc+'" font-size="9.5" '+
+          'fill="var(--muted)" font-style="italic">표본 부족</text>';
+      }else rows.forEach(function(r,k2){
+        var yy=y+dir*(13+k2*12);
+        marks+='<text x="'+f(tx)+'" y="'+f(yy)+'" text-anchor="'+anc+'" font-size="10.5" '+
+          'fill="var(--ink-2)">'+esc(r.ko)+
+          '<tspan font-size="9" fill="var(--muted)" font-family="var(--mono)"> '+
+          (CYB==='earn'?((r.v>0?'+':'')+r.v+'%'):((r.v>0?'+':'')+r.v.toFixed(2)))+'</tspan></text>';
+      });
     });
 
-    // ③ 지금 — 큰 점 + 위로 뽑은 말풍선. 화살표는 안 붙인다(다음 자리를 말하지 않으므로).
-    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Y(np);
-    var nph=null;
+    // ③ 지금
+    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Y(np), nph=null;
     (cy.phases||[]).forEach(function(ph){ if(ph.k===now.r) nph=ph; });
     var nAnc=np<0.06?'start':(np>0.94?'end':'middle');
     var nowMark='<line x1="'+f(nx)+'" y1="'+f(ny-12)+'" x2="'+f(nx)+'" y2="'+(TOP-30)+
@@ -1035,28 +1058,40 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       'fill="var(--muted)" font-family="var(--mono)">'+(now.run||0)+'개월째 · '+esc(now.dt||'')+
       (nph?' · 전체 '+nph.months+'개월 · 최근24 중 '+nph.recent:'')+'</text>';
 
-    var svg='<div class="cycwrap"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 곡선 — '+
-      '현재 국면 '+esc(now.ko||'')+', '+(now.run||0)+'개월째. 곡선의 순서는 통념이며 이 랩의 이력은 '+
-      '그 순서대로 진행하지 않는다.">'+
+    var tabs='<div class="cyctabs" role="tablist">'+
+      '<button class="cyctab'+(CYB==='price'?' on':'')+'" data-b="price" role="tab" aria-selected="'+
+        (CYB==='price')+'">주가 기준</button>'+
+      '<button class="cyctab'+(CYB==='earn'?' on':'')+'" data-b="earn" role="tab" aria-selected="'+
+        (CYB==='earn')+'">실적 기준</button>'+
+      '<span class="cycbasis">'+esc(CYB==='earn'?(S.earn_basis||''):(S.price_basis||''))+'</span></div>';
+
+    var svg='<div class="cycwrap">'+tabs+'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 곡선 — '+
+      '현재 국면 '+esc(now.ko||'')+', '+(now.run||0)+'개월째. 국면마다 '+
+      (CYB==='earn'?'실적':'주가')+' 기준 선호 업종 상위 '+topn+'개를 함께 표시. '+
+      '곡선의 순서는 통념이며 이 랩의 이력은 그 순서대로 진행하지 않는다.">'+
       bands+
       '<path d="'+dpth+'" fill="none" stroke="var(--ink-2)" stroke-width="2.4" stroke-linecap="round"/>'+
       marks+nowMark+
       '</svg></div>';
 
-    // ④ 🚨 그림이 스스로 반증을 들고 있게 한다
     var dr=cy.drift||{};
     var cap='<div class="cycnote">'+
       '<b>곡선의 순서는 통념이다</b> — 성장×물가 매트릭스를 관용적으로 늘어놓은 배열이고 이 랩이 검정한 것이 아니다. '+
-      '이름 아래 숫자는 <b>실측</b>이다(2009년 이후 그 이름이었던 개월 수).'+
+      '이름 아래 「N개월」은 <b>실측</b>이다(2009년 이후 그 이름이었던 개월 수).'+
       '<br><b>🚨 이 이력은 곡선을 따라 돌지 않는다</b> — 212개월 중 이름이 바뀐 것이 '+dr.trans+'번인데 '+
       '그것이 순서쌍 '+dr.pairs+'개에 흩어져 있고 가장 많은 쌍이 '+dr.pairs_max+'번이다. '+
       '곡선 순서대로 나아간 전이 <b>'+dr.fwd+'</b>번 · 거꾸로 간 전이 <b>'+dr.back+'</b>번 — 방향이 없다. '+
-      '한 이름이 이어진 구간 '+dr.runs+'개 중 '+dr.runs_one+'개가 <b>한 달</b>이고 '+dr.runs_lt6+'개가 여섯 달 미만이다.'+
-      '<br>최근 24개월은 <b>'+dr.recent_labels+'개 자리</b>에 흩어져 있고 그 사이 이름이 <b>'+dr.recent_changes+'번</b> 바뀌었다 — '+
-      '각 이름의 「최근 N」이 그 분포다. 한 점이 곡선을 따라 미끄러진 것이 아니다.'+
-      '<br>이 그림은 <b>지금 어느 이름인지</b>만 말한다. 다음에 어디로 갈지도, 지금이 좋은 자리인지도 말하지 않는다.'+
+      '최근 24개월도 <b>'+dr.recent_labels+'개 자리</b>에 흩어져 있고 이름이 <b>'+dr.recent_changes+'번</b> 바뀌었다.'+
+      '<br><b>두 자는 다른 것을 잰다</b> — 침체 칸을 보라. 실적 상위는 방어(헬스케어·필수소비)인데 '+
+      '주가 상위는 경기민감(소재·경기소비·기술)이다. <b>주가가 실적보다 앞선다</b>는 통념이 이 자료에도 보인다. '+
+      '그래서 두 장을 겹치지 않고 나눠 둔다.'+
+      '<br>'+esc((S.caveat||''))+' 그리고 이 순위는 <b>과거 그 국면에서 그랬다</b>는 것이지 '+
+      '지금 사라는 뜻이 아니다 — 표본이 얇은 칸(후기사이클 7개월 · 연착륙 13개월)일수록 더 그렇다.'+
       '</div>';
     host.innerHTML=svg+cap;
+    var tb=host.querySelectorAll('.cyctab');
+    for(i=0;i<tb.length;i++)tb[i].addEventListener('click',function(){
+      CYB=this.getAttribute('data-b'); renderCycle(cy);});
     sec.hidden=false;
   }
 
