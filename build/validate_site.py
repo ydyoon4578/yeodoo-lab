@@ -1093,6 +1093,36 @@ try:
 except Exception as e:
     errors.append(f"updates.json 검증 실패: {e}")
 
+# ── PowerShell 스크립트는 UTF-8 BOM 이어야 한다 ──────────────────────────
+# 🚨 2026-08-11 에 실제로 당했다. build/rotation_daily.ps1 을 BOM 없이 저장했더니
+#   Windows PowerShell 5.1 이 그 파일을 **시스템 ANSI(CP949)로 읽어** 한글 주석이 깨졌고,
+#   깨진 바이트가 파서에 걸려 스크립트가 통째로 안 돌았다
+#   ("Missing expression after unary operator '!'" — 주석 안에서 난 오류다).
+#   5.1 은 BOM 이 없으면 UTF-8 인지 알 방법이 없다. pwsh(7+)는 UTF-8 이 기본이라 안 걸린다 —
+#   즉 개발자가 pwsh 로 시험하면 통과하고 작업 스케줄러(powershell.exe)에서만 죽는다.
+#   같은 자리에 build/deploy_local.ps1 도 BOM 없이 있었다(아직 안 터졌을 뿐이다).
+# ⚠ ASCII 만 있는 스크립트는 문제가 없으므로 비ASCII 가 든 것만 본다.
+try:
+    import glob as _glb
+    import codecs as _cdc
+    _nobom = []
+    for _p in sorted(_glb.glob(os.path.join(ROOT, "build", "*.ps1"))):
+        _raw = io.open(_p, "rb").read()
+        if _raw.startswith(_cdc.BOM_UTF8):
+            continue
+        try:
+            _txt = _raw.decode("utf-8")
+        except Exception:
+            _nobom.append(os.path.basename(_p) + "(UTF-8 도 아님)")
+            continue
+        if any(ord(_c) > 127 for _c in _txt):
+            _nobom.append(os.path.basename(_p))
+    if _nobom:
+        errors.append("PowerShell 스크립트에 UTF-8 BOM 이 없다 — Windows PowerShell 5.1 이 "
+                      "ANSI 로 읽어 한글 주석에서 파서가 죽는다: " + ", ".join(_nobom))
+except Exception as _e:
+    errors.append("ps1 BOM 검사 실패: %s" % _e)
+
 # ── 전략 탐색 풀(rotation_pool.json)이 멈췄는지 ──────────────────────────
 # 🚨 2026-08-11 에 사용자가 '최근 갱신이 8월 7일'이라고 짚어서 알았다. 이 풀을 채우는
 #   자동 잡은 **없다**(생산자는 로컬 작업 스케줄러 + 헤드리스 Claude 다 — asof_index.py 주석
