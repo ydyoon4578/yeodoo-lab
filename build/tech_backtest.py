@@ -3023,6 +3023,614 @@ def incr1(a, b):
 
 
 # ── 실행 ────────────────────────────────────────────────────────────────
+
+def xsec_score_at(S, i, X, pool=None):
+    """월말 신호일 i-1 에서 (점수, 티커) 목록을 낸다 — **이 랩의 유일한 횡단면 채점기**.
+
+    🚨 왜 함수로 들어냈나. 2026-08-11 까지 이 코드는 run() 안에 박혀 있었고,
+      build/pit_backtest.py 가 같은 규칙을 **손으로 다시 구현한 두 번째 사본**을 갖고 있었다.
+      그 두 벌이 어긋나서 하루에 넷을 잡았다 —
+        · x-52wh 를 랩에서만 고치고 PIT 을 안 고쳐 한 횡단면을 두 자로 채점
+        · ttm() → ttm2() 를 랩에서만 바꿔 같은 이름의 두 규칙이 다른 산식이 됨
+        · 화면의 생존편향 문장이 산출물 대신 다시 계산해 15.22 대 15.19 로 갈림
+        · x-debtiss 의 선견(_shift 부호)이 한쪽에만 있었다
+      그리고 사본을 만들기 어려운 **2단 규칙 7종**(횡단면 중립화·합성·정렬)은 아예
+      PIT 을 못 돌아, 소급 t 로만 판정되면서 생존편향 검사를 한 번도 안 받고 있었다.
+      → 사본을 없앤다. 랩은 pool=None 으로, PIT 은 그달 실제 편입명단을 pool 로 넘겨
+        **같은 함수**를 부른다. 규칙이 하나면 어긋날 자리가 없다.
+
+    pool — None 이면 X["tickers"] 전부(소급). 집합을 주면 그 안에서만 채점한다.
+      🚨 마스킹은 여기 **한 자리**에서만 한다. 사전패스(x-fip 의 모멘텀 5분위,
+        x-hlspread 의 변동성 회귀, E30 합성, 산업 모멘텀 섹터 정렬)가 전부 tickers 를
+        훑으므로, 여기서 좁히면 그 전부가 같이 좁아진다. 갈래마다 따로 거르면
+        '사전패스는 전 종목, 최종 선택만 후보' 가 되어 선견이 된다.
+
+    돌려주는 것: (sc, ind_raw, comp_raw). sc 는 (점수, 티커) 내림차순 정렬본이다.
+    """
+    FACP, FU, R = X["FACP"], X["FU"], X["R"]
+    dates, hid, lod = X["dates"], X["hid"], X["lod"]
+    ixr, ixvol, me, me_list = X["ixr"], X["ixvol"], X["me"], X["me_list"]
+    meta, px, vlm = X["meta"], X["px"], X["vlm"]
+    tickers = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool]
+    sc = []
+    comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
+    ind_raw = {}           # 산업 모멘텀 원지표 — 섹터 정렬도 단면이 다 모여야 한다
+    # 프로그인더팬은 **2단 선별**이라 종목 하나만 보는 채점으로는 못 만든다.
+    # 원논문은 모멘텀 5분위 × ID 5분위 이중정렬이므로, 여기서도 먼저 그 시점
+    # 모멘텀 상위 5분위 컷을 구한 뒤 아래 갈래에서 그 안에서만 ID 로 고른다.
+    #   ⚠ 컷을 고정 종목수가 아니라 **분위**로 잡는다. 유니버스가 커버 사정으로
+    #     흔들려도 '상위 20%'라는 규약이 그대로 유지된다.
+    #   ⚠ ret() 은 O(1) 이라 이 사전 패스는 월말당 518×2 회로 가볍다.
+    fip_ok = None
+    if S["sid"] == "x-fip":
+        _m = []
+        for t2 in tickers:
+            a2 = ret(px[t2], i - 1, 252)
+            if a2 is None:
+                continue
+            b2 = ret(px[t2], i - 1, 21)
+            _m.append((a2 - (b2 or 0), t2))
+        _m.sort(reverse=True)
+        _k = max(TOPN, int(len(_m) * 0.2))     # 상위 5분위(최소 TOPN)
+        # 승자만 남긴다 — 형성기 수익이 음수면 ID 의 sign 규약이 뒤집힌다.
+        fip_ok = {t2 for v2, t2 in _m[:_k] if v2 > 0}
+    # 고저가 스프레드도 2단이다 — 중립화가 **횡단면 회귀**라 종목 하나만
+    # 보는 채점으로는 못 만든다. 사전등록 문서의 규약 그대로:
+    #   log(252일 평균 CS 스프레드) 를 log(252일 실현변동성) 에 회귀 → 잔차.
+    # 근거: 원신호와 변동성의 횡단면 스피어만 상관이 중앙 0.816 이라,
+    #   중립화 없이 쓰면 저변동성 계열을 뒤집어 다시 파는 것이 된다.
+    hls = None
+    if S["sid"] == "x-hlspread":
+        rows = []
+        for t2 in tickers:
+            H2, L2 = hid.get(t2), lod.get(t2)
+            if not (H2 and L2):
+                continue
+            w2 = [x for x in cs_spread(H2, L2, t2)[max(0, i - 252):i] if x is not None]
+            if len(w2) < 126:              # 유효일 126일 미만은 후보 아님
+                continue
+            p2 = px[t2][i - 1]
+            if not p2 or p2 < 5.0:         # 페니주 차단
+                continue
+            s2 = sum(w2) / len(w2)
+            v2 = vol(R[t2], i - 1, 252)
+            if s2 <= 0 or not v2 or v2 <= 0:
+                continue
+            rows.append((t2, math.log(s2), math.log(v2)))
+        hls = {}
+        if len(rows) >= 2:
+            xs2 = [r2[2] for r2 in rows]; ys2 = [r2[1] for r2 in rows]
+            mx2 = sum(xs2) / len(xs2); my2 = sum(ys2) / len(ys2)
+            sxx = sum((x - mx2) ** 2 for x in xs2)
+            bb = (sum((x - mx2) * (y - my2) for x, y in zip(xs2, ys2)) / sxx) if sxx > 0 else 0.0
+            aa = my2 - bb * mx2
+            hls = {rows[k2][0]: ys2[k2] - (aa + bb * xs2[k2]) for k2 in range(len(rows))}
+    # ── 사전등록 8종 중 횡단면 중립화가 필요한 넷 ────────────────
+    # 중립화는 그 달 후보 전체를 봐야 하므로 종목 하나만 받는 채점으로는 못 만든다.
+    # x-hlspread·x-fip 과 같은 2단 구조다. 잔차 계산은 xsec_resid() 한 자리에 모았다.
+    xsr = None
+    _sid0 = S["sid"]
+    if _sid0 == "x-clv":
+        rows = []
+        for t2 in tickers:
+            H2, L2 = hid.get(t2), lod.get(t2)
+            if not (H2 and L2):
+                continue
+            p2 = px[t2][i - 1]
+            if not p2 or p2 < 5.0:
+                continue
+            w2 = [x for x in clv_daily(H2, L2, px[t2], t2)[max(0, i - 21):i] if x is not None]
+            if len(w2) < 11:
+                continue
+            p0 = px[t2][max(0, i - 22)]
+            if not p0 or p0 <= 0:
+                continue
+            rows.append((t2, sum(w2) / len(w2), math.log(p2 / p0)))
+        # 방향: 잔차 **하위** 10종 롱 → 부호를 뒤집어 넣는다(정렬은 내림차순).
+        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
+    elif _sid0 == "x-volvol":
+        rows = []
+        for t2 in tickers:
+            rs2 = R[t2]
+            if _stall(rs2, i - 1):
+                continue
+            sig = []
+            for b in range(12):        # 21일 비중첩 블록 12개
+                e = i - 1 - 21 * b
+                w2 = [x for x in rs2[max(0, e - 20):e + 1] if x is not None]
+                if len(w2) < 15:
+                    continue
+                m2 = sum(w2) / len(w2)
+                sig.append(math.sqrt(sum((x - m2) ** 2 for x in w2) / (len(w2) - 1)))
+            if len(sig) < 10:
+                continue
+            ms = sum(sig) / len(sig)
+            if ms <= 0:
+                continue
+            sd = math.sqrt(sum((x - ms) ** 2 for x in sig) / (len(sig) - 1))
+            v2 = vol(rs2, i - 1, 252)
+            if sd <= 0 or not v2 or v2 <= 0:
+                continue
+            rows.append((t2, math.log(sd / ms), math.log(v2)))
+        # 방향: 잔차 **하위** 10종 롱(고평가 가설) → 부호를 뒤집는다.
+        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
+    elif _sid0 == "x-delay":
+        rows = []
+        for t2 in tickers:
+            rs2 = R[t2]
+            if _stall(rs2, i - 1):
+                continue
+            y, m0, m1, m2_, m3, m4 = [], [], [], [], [], []
+            for k2 in range(max(4, i - 252), i):
+                a2 = rs2[k2]
+                if a2 is None or any(ixr[k2 - z] is None for z in range(5)):
+                    continue
+                y.append(a2); m0.append(ixr[k2]); m1.append(ixr[k2 - 1])
+                m2_.append(ixr[k2 - 2]); m3.append(ixr[k2 - 3]); m4.append(ixr[k2 - 4])
+            if len(y) < 126:
+                continue
+            _b, r2r = _ols(y, [m0])
+            _b, r2u = _ols(y, [m0, m1, m2_, m3, m4])
+            if r2r is None or r2u is None or r2u <= 0.01:
+                continue
+            rows.append((t2, 1.0 - r2r / r2u, math.log(r2u)))
+        # 🚨 D1 은 비율통계라 분모(비제한 R²)가 작으면 식별되지 않는다.
+        #   그 달 후보의 20 백분위 미만은 규약대로 통째로 뺀다.
+        if rows:
+            cut = sorted(r2[2] for r2 in rows)[int(len(rows) * 0.20)]
+            rows = [r2 for r2 in rows if r2[2] >= cut]
+        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
+    elif _sid0 == "x-peerlag":
+        # 종목쌍을 보는 유일한 규칙 — 상관행렬이 필요하다. 비용은 사전등록에
+        # 실측으로 적어 뒀다(월말당 2.6초 · 199개 월말에 8.8분).
+        zs, names = [], []
+        for t2 in tickers:
+            rs2 = R[t2]
+            w2 = rs2[i - 252:i]
+            if len(w2) < 252 or any(x is None for x in w2):
+                continue
+            if _stall(rs2, i - 1):
+                continue
+            m2 = sum(w2) / len(w2)
+            sd = math.sqrt(sum((x - m2) ** 2 for x in w2))
+            if sd <= 0:
+                continue
+            zs.append([(x - m2) / sd for x in w2]); names.append(t2)
+        cm = load_classmates()
+        NB = len(names)
+        C2 = [[0.0] * NB for _ in range(NB)]
+        for a2 in range(NB):
+            za = zs[a2]
+            for b2 in range(a2 + 1, NB):
+                zb = zs[b2]
+                s2 = 0.0
+                for k2 in range(252):
+                    s2 += za[k2] * zb[k2]
+                C2[a2][b2] = s2; C2[b2][a2] = s2
+        rows = []
+        for a2 in range(NB):
+            t2 = names[a2]
+            mates = cm.get(t2) or set()
+            nb = sorted(((C2[a2][b2], names[b2]) for b2 in range(NB)
+                         if b2 != a2 and names[b2] not in mates), reverse=True)[:20]
+            if len(nb) < 20:
+                continue
+            own = ret(px[t2], i - 1, 21)
+            if own is None:
+                continue
+            prs = [ret(px[z2], i - 1, 21) for _c2, z2 in nb]
+            prs = [x for x in prs if x is not None]
+            if len(prs) < 20:
+                continue
+            rows.append((t2, sum(prs) / len(prs), own))
+        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
+    for t in tickers:
+        P = px[t]
+        # 🚨 채점 갈래는 **접미사를 뗀 sid** 로 탄다(2026-08-11).
+        #   바스켓 크기만 다른 규칙(x-btp-n155 등)은 점수 함수가 짝과 완전히
+        #   같아야 한다 — 여기서 갈래를 새로 쓰면 '같은 점수에 N 만 다르다'는
+        #   전제가 깨져 비교가 성립하지 않는다. 이름만 보고 원본 갈래로 보낸다.
+        #   ⚠ 기존 규칙은 접미사가 없으므로 값이 그대로다.
+        sid = _BASE_SID(S["sid"])
+        if sid == "x-52wh":
+            # 🚨 2026-08-04 버그 수정. 종전에는 분모가 **종가의 최대**였다.
+            #   그런데 창(P[i-252:i])이 신호일 i-1 을 포함하므로, 그날 종가가
+            #   창 최대인 종목은 점수가 정확히 1.0 이 된다 — 점수에 천장이 생긴다.
+            #   실측: 199개 월말 중 **149개(75%)에서 1.0 동점이 10종 이상**이었고
+            #   (동점 중앙 25종·최대 146종), sc.sort(reverse=True) 가 (점수, 티커)
+            #   튜플을 정렬하므로 그 10칸은 **티커 알파벳 역순(Z→A)** 으로 채워졌다.
+            #   즉 이 규칙은 '고점에 가장 가까운 10종'이 아니라 '신고가 종목 중
+            #   티커가 Z 에 가까운 10종'을 사고 있었다.
+            #   고치는 방향은 규칙문 그대로다 — 규칙문은 '52주 **최고가**'라고
+            #   적는데 구현이 종가 최대를 쓰고 있었다. 실제 일중 고가(hd)는 같은
+            #   저장소에 4,422일치 있고(2026-08-04 배선), 종가와 분할조정 기준이
+            #   같다는 것을 전수 확인했다(ld ≤ pxd ≤ hd 위반 0/2,112,332).
+            #   고가를 쓰면 종가가 그 창의 최대와 같아지는 일이 사실상 없어져
+            #   천장도 동점도 자연히 사라진다 — 동점을 깨는 새 파라미터를 넣는 것이
+            #   아니라 원래 재려던 것을 재는 것이다.
+            H = hid.get(t)
+            win = [x for x in (H or P)[max(0, i - 252):i] if x]
+            hi = max(win) if win else None
+            v = (P[i - 1] / hi) if (hi and P[i - 1]) else None
+        elif sid == "x-hlspread":
+            # 사전 패스가 만든 잔차를 그대로 쓴다(값이 없으면 후보 아님).
+            v = hls.get(t) if hls else None
+        elif sid in ("x-clv", "x-volvol", "x-delay", "x-peerlag"):
+            # 위 사전 패스가 중립화 잔차를 이미 만들어 뒀다.
+            v = xsr.get(t) if xsr else None
+        elif sid == "x-ongapd":
+            H2, L2 = hid.get(t), lod.get(t)
+            p2 = P[i - 1]
+            if not (H2 and L2) or not p2 or p2 < 5.0:
+                v = None
+            else:
+                g = gap_daily(H2, L2, P, t)
+
+                def _share(w):
+                    a = b = 0.0
+                    c = 0
+                    for k2 in range(max(0, i - w), i):
+                        x = g[k2]
+                        if x is None:
+                            continue
+                        a += x[0]; b += x[1]; c += 1
+                    return (a / b, c) if b > 0 else (None, c)
+                s63, n63 = _share(63)
+                s252, n252 = _share(252)
+                v = (s63 - s252) if (s63 is not None and s252 is not None
+                                     and n63 >= 32 and n252 >= 126) else None
+        elif sid == "x-lshock":
+            H2, L2 = hid.get(t), lod.get(t)
+            p2 = P[i - 1]
+            if not (H2 and L2) or not p2 or p2 < 5.0:
+                v = None
+            else:
+                S2 = cs_spread(H2, L2, t)
+                a = [x for x in S2[max(0, i - 63):i] if x is not None]
+                b = [x for x in S2[max(0, i - 252):max(0, i - 63)] if x is not None]
+                if len(a) < 32 or len(b) < 95:
+                    v = None
+                else:
+                    sa, sb = sum(a) / len(a), sum(b) / len(b)
+                    v = math.log(sa / sb) if (sa > 0 and sb > 0) else None
+        elif sid == "x-updown":
+            rs2 = R[t]
+            if _stall(rs2, i - 1):
+                v = None
+            else:
+                w2 = [(rs2[k2], ixr[k2]) for k2 in range(max(0, i - 252), i)
+                      if rs2[k2] is not None and ixr[k2] is not None]
+                mu = (sum(z[1] for z in w2) / len(w2)) if w2 else 0.0
+                dn = [z for z in w2 if z[1] < mu]
+                up = [z for z in w2 if z[1] >= mu]
+                if len(dn) < 40 or len(up) < 40:
+                    v = None
+                else:
+                    def _beta(pairs):
+                        mx2 = sum(z[1] for z in pairs) / len(pairs)
+                        my2 = sum(z[0] for z in pairs) / len(pairs)
+                        sxx = sum((z[1] - mx2) ** 2 for z in pairs)
+                        if sxx <= 0:
+                            return None
+                        return sum((z[1] - mx2) * (z[0] - my2) for z in pairs) / sxx
+                    bd, bu = _beta(dn), _beta(up)
+                    den = (abs(bd) + abs(bu)) if (bd is not None and bu is not None) else None
+                    v = ((bd - bu) / den) if (den and den >= 0.2) else None
+        elif sid == "x-dist200":
+            m = sma(P, i - 1, 200)
+            v = (P[i - 1] / m - 1) if (m and P[i - 1]) else None
+        elif sid == "x-mom-trend":
+            m200 = sma(P, i - 1, 200)
+            if not m200 or not P[i - 1] or P[i - 1] <= m200:
+                v = None
+            else:
+                v = (ret(P, i - 1, 252) or -9) - (ret(P, i - 1, 21) or 0)
+        elif sid == "x-rev1w":
+            v = -(ret(P, i - 1, 5) or 9)
+        elif sid == "x-indmom":
+            # 🚨 여기서는 **섹터 수익률을 모으기만** 한다. 섹터 정렬은 단면이
+            #   다 모여야 낼 수 있으므로 아래 루프 밖에서 한다(E30 과 같은 방식).
+            #   종목 점수는 자기 섹터의 6개월 수익률이다 — 종목 수준 정보를
+            #   일부러 넣지 않는다(그것을 넣으면 산업 신호가 아니게 된다).
+            _r6 = ret(P, i - 1, 126)
+            _sg = (meta.get(t) or {}).get("sector") or ""
+            if _r6 is not None and _sg:
+                ind_raw.setdefault(_sg, []).append((t, _r6))
+            v = None                          # 점수는 나중에 붙인다
+        elif sid == "x-minvar":
+            # 완전 최적화 대신 축소추정 역분산 — 개별 분산을 시장분산 쪽으로 반씩 당긴다
+            sv = vol(R[t], i - 1, 120)
+            mv = ixvol[i - 1]
+            v = -(0.5 * sv + 0.5 * mv) if (sv and mv) else None
+        elif sid == "x-riskbudget":
+            sv = vol(R[t], i - 1, 60)
+            v = (1.0 / sv) if sv and sv > 0 else None
+        elif sid == "x-lowbeta":
+            b = beta(R[t], ixr, i - 1, 120)
+            v = -b if b is not None else None
+        elif sid in ("x-revdrift", "x-revdrift-sn", "x-revdrift-q"):
+            # 21일판·섹터중립판은 달력 30일, 63일판은 91일. 세 규칙이
+            # _rat_consensus 의 메모를 나눠 쓰므로 두 번째부터는 조회만 한다.
+            v = rat_signal(t, dates[i - 1], 91 if sid == "x-revdrift-q" else 30)
+        elif sid == "x-sue":
+            v = sue((FU.get(t) or {}).get("eps") or [], dates[i - 1])
+        elif sid == "x-epsacc":
+            e = eps_accel((FU.get(t) or {}).get("eps") or [], dates[i - 1])
+            p0 = P[i - 1]
+            v = (e / p0) if (e is not None and p0 and p0 > 0) else None
+        elif sid in FUND_SIDS:
+            # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜·주식수·주가가 필요하다.
+            # 잔고 항목은 asof_fund(시점 값), 기간 누적값은 ttm(12개월)을 쓴다.
+            f = FU.get(t) or {}
+            dt_ = dates[i - 1]
+            sn = asof_fund(f.get("sh"), dt_)
+            p0 = P[i - 1]
+            mcap = (sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
+            v = None
+            if sid == "x-btp":
+                e = asof_fund(f.get("eq"), dt_)
+                # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
+                v = (e / sn / p0) if (e is not None and mcap) else None
+            elif sid in ("x-valcomp", "x-valcomp-sn"):
+                # 🚨 여기서는 **원지표 셋을 모아 두기만** 한다. z-점수는 단면이
+                #   다 모여야 낼 수 있으므로 아래 루프 밖에서 z_composite 가 만든다.
+                e = asof_fund(f.get("eq"), dt_)
+                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
+                lb = asof_fund(f.get("liab"), dt_)
+                cs = asof_fund(f.get("cash"), dt_)
+                m = {}
+                if e is not None and mcap:
+                    m["bp"] = e / mcap                     # 장부가/시총 = B/P
+                if fc is not None and mcap:
+                    m["fcfp"] = fc / mcap                  # FCF/시총
+                if e is not None and mcap and lb is not None:
+                    # ⚠ 기업가치 근사 — 이자부부채가 없어 총부채를 쓴다.
+                    #   매입채무·이연법인세까지 들어가 자본집약 업종의 EV 가 부푼다.
+                    #   섹터 중립판에서는 섹터 안에서 상쇄되지만 제약 없는 판에서는
+                    #   안 된다(사전등록 §2·실패 시나리오 ②).
+                    ev = mcap + lb - (cs or 0.0)
+                    if ev > 0:
+                        m["bev"] = e / ev
+                if m:
+                    comp_raw.setdefault(sid, []).append((t, m))
+                v = None                                   # 점수는 나중에 붙인다
+            elif sid == "x-fcfy":
+                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
+                v = (fc / mcap) if (fc is not None and mcap) else None
+            elif sid == "x-payout":
+                # 환원총액 = 배당총액(주당배당 × 주식수) + 자사주매입액.
+                # 🚨 bb 는 연간 버킷으로 읽어야 한다(분기엔 Q1 만 남는다).
+                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
+                bbv = ttm2(f.get("bb"), f.get("bb_a"), dt_)
+                if mcap and (dp is not None or bbv is not None):
+                    tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
+                    # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
+                    v = (tot / mcap) if tot >= 0 else None
+            elif sid == "x-poacc":
+                # 퍼센트 영업발생액 = (순이익 − 영업현금흐름) ÷ |순이익|. 낮을수록 위.
+                # 분모가 자산이 아니라 |순이익|이라 잔고 태그의 2021-06 절벽을 안 탄다.
+                # 🚨 두 항을 각자 ttm2 로 읽으면 안 된다 — 순이익은 분기합산(최근 분기말
+                #   기준 12개월)이 되고 현금흐름은 연간버킷(직전 회계연도)이 되어 창이
+                #   최대 3분기 어긋난다. **같은 회계연도 기간말**에서 둘 다 뽑는다.
+                cut_ = _shift(dt_, FUND_LAG_DAYS)
+                nim = dict(f.get("ni_a") or [])
+                cfm = dict(f.get("cfo_a") or [])
+                rvm = dict(f.get("rev_a") or [])
+                d_ = next((d for d, _x in (f.get("ni_a") or [])
+                           if d <= cut_ and d in cfm), None)
+                if d_:
+                    ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
+                    # 🚨 순이익이 0 근처면 비율이 폭발한다 — 매출의 1% 미만이면 뺀다.
+                    if rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_:
+                        v = -((ni_ - cf_) / abs(ni_))
+            # ── 2026-08-08 신규 3종 (PREREG-2026-08-08-WEBRESEARCH5.md) ──
+            elif sid == "x-debtiss":
+                # 총부채 1년 증가율. 낮을수록 좋으므로 부호를 뒤집는다.
+                # ⚠ JKP 정본은 3년(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다.
+                # 🚨 2026-08-11 선견 교정 — 종전 분모가 `_shift(dt_, -365)` 였다.
+                #   _shift 는 **빼는** 함수라 부호가 뒤집혀 '1년 전' 자리에
+                #   **1년 뒤** 값이 들어갔다(실측 2024-06-28 신호일에서 430종 중
+                #   426종이 2025년 기준일을 집었다: AAPL db1 2024-03-30 · db0
+                #   2025-03-29). 그대로면 이 규칙은 '앞으로 부채를 줄일 회사' 를
+                #   고르는 선견 신호다. 같은 파일의 x-rgrow·x-agrow 는 처음부터
+                #   `_shift(dt_, 365)` 였다 — 이 한 줄만 부호가 반대였다.
+                #   PIT 갈래를 만들다 나왔다(build/pit_backtest.py 의 같은 갈래).
+                db1 = asof_fund(f.get("debt"), dt_)
+                db0 = asof_fund(f.get("debt"), _shift(dt_, 365))
+                v = -(db1 / db0 - 1.0) if (db1 is not None and db0 and db0 > 0) else None
+            elif sid == "x-fscore":
+                # Piotroski(2000) 9신호. 🚨 하나라도 못 내면 후보에서 뺀다 —
+                #   8개로 매기면 0~9 척도가 깨져 다른 종목과 비교할 수 없다.
+                # 금융업 제외 — 자산회전율·매출총이익률이 은행에서 뜻이 없다.
+                if (meta.get(t) or {}).get("sector") == "Financials":
+                    v = None
+                else:
+                    v = _fscore(f, dt_, mcap)
+            elif sid in ("x-gpa", "x-ocfp", "x-aci"):
+                # 금융업은 자산의 뜻이 달라(예대 잔고) 자산분모 수익성이 성립하지 않는다.
+                if (meta.get(t) or {}).get("sector") == "Financials":
+                    v = None
+                else:
+                    at = asof_fund(f.get("asset"), dt_)
+                    if sid == "x-ocfp":
+                        cf_ = ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
+                        v = (cf_ / at) if (cf_ is not None and at and at > 0) else None
+                    elif sid == "x-gpa":
+                        g = ttm2(f.get("gp"), f.get("gp_a"), dt_)
+                        rv_ = ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                        cg = ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
+                        # 🚨 gp·cogs 가 둘 다 있으면 정합성부터 본다. 안 맞으면 그 종목의
+                        #   태깅을 믿을 수 없다(건보사 유형) → 후보에서 뺀다.
+                        if g is not None and cg is not None and rv_ and rv_ > 0:
+                            if abs(g + cg - rv_) / rv_ > 0.01:
+                                g = None
+                        if g is None and rv_ is not None and cg is not None:
+                            g = rv_ - cg              # 태그가 없을 때만 폴백
+                        v = (g / at) if (g is not None and at and at > 0) else None
+                    else:                              # x-aci
+                        # 설비투자÷매출을 연간 격자에서 4개 뽑아 최근/직전3년평균 −1.
+                        cx = [(d, x) for d, x in (f.get("capex_a") or [])
+                              if d <= _shift(dt_, FUND_LAG_DAYS)]
+                        rvm = dict(f.get("rev_a") or [])
+                        rat = []
+                        for d, x in cx[:4]:
+                            r_ = rvm.get(d)
+                            if r_ and r_ > 0 and x is not None:
+                                rat.append(x / r_)
+                        if len(rat) == 4 and sum(rat[1:]) > 0:
+                            base = sum(rat[1:]) / 3.0
+                            ci = rat[0] / base - 1.0
+                            v = -ci if abs(ci) <= 3.0 else None
+            elif sid == "x-ep":
+                ep_ = ttm2(f.get("eps"), f.get("eps_a"), dt_)
+                v = (ep_ / p0) if (ep_ is not None and p0 and p0 > 0) else None
+            elif sid == "x-sp":
+                rv = ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                v = (rv / mcap) if (rv is not None and mcap) else None
+            elif sid == "x-roe":
+                nn, e = ttm2(f.get("ni"), f.get("ni_a"), dt_), asof_fund(f.get("eq"), dt_)
+                v = (nn / e) if (nn is not None and e and e > 0) else None
+            elif sid == "x-npm":
+                nn, rv = ttm2(f.get("ni"), f.get("ni_a"), dt_), ttm2(f.get("rev"), f.get("rev_a"), dt_)
+                v = (nn / rv) if (nn is not None and rv and rv > 0) else None
+            elif sid == "x-rgrow":
+                a1, a0 = (ttm2(f.get("rev"), f.get("rev_a"), dt_),
+                          ttm2(f.get("rev"), f.get("rev_a"), _shift(dt_, 365)))
+                v = (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
+            elif sid == "x-lowde":
+                e = asof_fund(f.get("eq"), dt_)
+                lb = asof_fund(f.get("liab"), dt_)
+                if lb is None:
+                    at = asof_fund(f.get("asset"), dt_)
+                    lb = (at - e) if (at is not None and e is not None) else None
+                # 부채가 적을수록 위. 자본잠식(e<=0)은 비율이 무의미해 뺀다.
+                v = -(lb / e) if (lb is not None and e and e > 0) else None
+            elif sid == "x-dy":
+                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
+                v = (dp / p0) if (dp is not None and p0 and p0 > 0) else None
+            elif sid == "x-small":
+                v = -mcap if mcap else None
+            elif sid == "x-agrow":
+                # 🚨 0 이하를 **분자·분모 둘 다** 뺀다. 분자가 0 이면 증가율이
+                #   −100% 로 1등이 되어 자료 구멍이 편입된다(실측 PSKY·SW).
+                pr = yoy_pair(f.get("asset"), dt_)
+                if pr and pr[1] > 0 and pr[3] > 0:
+                    g = pr[1] / pr[3] - 1.0
+                    v = -max(-2.0, min(2.0, g))     # 낮을수록 위
+            elif sid == "x-shiss":
+                # 🚨 split_trim 을 거친 sh 가 아니라 단위오류만 교정한 sh_u +
+                #   이음매를 쓴다(안 그러면 대규모 발행 종목이 후보에서 사라진다).
+                pr = yoy_pair(f.get("sh_u") or f.get("sh"), dt_,
+                              seam=f.get("sh_seam"))
+                if pr and pr[1] > 0 and pr[3] > 0:
+                    g = pr[1] / pr[3] - 1.0
+                    v = -g if abs(g) <= 0.5 else None
+            elif sid == "x-custconc":
+                # 규약 그대로: build/PREREG-2026-08-04-CUSTCONC.md
+                # 단일 고객 매출 비중이 **높을수록** 위(고집중 롱).
+                v = custconc_asof(t, dt_)
+            elif sid == "x-cash":
+                ch = asof_fund(f.get("cash"), dt_)
+                at = asof_fund(f.get("asset"), dt_)
+                v = (ch / at) if (ch is not None and at and at > 0) else None
+        elif sid == "x-ivol":
+            # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
+            iv = idio_vol(R[t], ixr, i - 1, 120)
+            v = -iv if iv is not None else None
+        elif sid == "x-fip":
+            # 모멘텀 상위 5분위 밖이면 후보가 아니다(교집합 규약).
+            # ID 는 낮을수록 연속정보이므로 부호를 뒤집어 넣는다(정렬 내림차순).
+            # 🚨 v 는 이 루프에서 **초기화되지 않는다** — 갈래마다 반드시 대입해야
+            #   한다. 안 그러면 직전 종목 점수가 그대로 남아 엉뚱한 종목이 뽑힌다
+            #   (실측으로 걸렸다: 보유가 알파벳으로 뭉쳐 나왔다).
+            _id = (info_discreteness(R[t], i - 1)
+                   if (fip_ok is not None and t in fip_ok) else None)
+            v = -_id if _id is not None else None
+        elif sid == "x-residmom":
+            # 팩터 수익 셋이 필요하다(시장 + 규모·가치 대리변수). 대리변수를
+            # 못 읽었으면 후보가 0 이 되고, 그때는 XSEC_MIN_POOL 가드가 잡는다 —
+            # 조용히 '있는 것 전부'를 고르는 일이 없게 그 경로에 맡긴다.
+            v = (resid_mom(R[t], [ixr, FACP["SMB"], FACP["HML"]], me_list, i - 1)
+                 if FACP else None)
+        elif sid == "x-coskew":
+            # 같은 사유(시장 수익 필요). 정렬이 내림차순이므로 '가장 음인 것'을
+            # 뽑으려면 부호를 뒤집어 넣는다.
+            ck = coskew(R[t], ixr, i - 1, 252)
+            v = -ck if ck is not None else None
+        elif sid == "x-lowcorr":
+            # 같은 사유. '가장 낮은 상관'을 뽑으므로 부호를 뒤집는다.
+            cr = mkt_corr(R[t], ixr, i - 1, 252)
+            v = -cr if cr is not None else None
+        elif sid == "x-season":
+            # 월말 격자가 필요해 람다로는 못 준다.
+            v = same_month_avg(P, i - 1, dates, sorted(me))
+        elif sid == "x-snapback":
+            m200 = sma(P, i - 1, 200)
+            if not m200 or not P[i - 1] or P[i - 1] <= m200:
+                v = None
+            else:
+                rv = rsi(P, i - 1)
+                v = -rv if rv is not None else None
+        elif sid == "x-volsurge":
+            V = vlm[t]
+            m200 = sma(P, i - 1, 200)
+            # 🚨 해상도 게이트(vol_resolved 참조). 거래량이 백만주 정수로
+            #   저장돼 있던 탓에 이 규칙이 반올림 잡음을 순위로 쓰고 있었다.
+            if (not V or not m200 or not P[i - 1] or P[i - 1] <= m200
+                    or not vol_resolved(V, i - 1)):
+                v = None
+            else:
+                a = sma(V, i - 1, 20)
+                b = sma(V, i - 1, 60)
+                v = (a / b) if (a and b and b > 0) else None
+        else:
+            v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
+        if v is not None and v == v:
+            sc.append((v, t))
+    # 🚨 E30 — z-점수는 단면이 다 모여야 낼 수 있다. 위 루프에서 원지표만
+    #   모아 두었고 여기서 컴포지트를 만든다. 지표별로 결측 종목이 다르므로
+    #   z_composite 가 있는 지표만으로 평균한다(0 으로 채우지 않는다 —
+    #   0 은 z 척도에서 '평균'이라 자료 없는 종목이 중간 순위를 공짜로 받는다).
+    if S["sid"] in comp_raw:
+        sc = [(z, t) for t, z in z_composite(comp_raw[S["sid"]]).items()]
+    # 산업 모멘텀 — 종목 점수는 자기 섹터의 6개월 수익률이다. 커버리지
+    # 게이트(len(sc))가 종목 수를 세도록 sc 를 채워 둔다.
+    if S["sid"] == "x-indmom" and ind_raw:
+        _sr = {s: sum(r for _t, r in v) / len(v) for s, v in ind_raw.items() if v}
+        sc = [(_sr[s], t) for s, v in ind_raw.items() for t, _r in v if s in _sr]
+    sc.sort(reverse=True)
+    return sc, ind_raw, comp_raw
+
+
+def xsec_pick_at(S, i, X, sc, ind_raw):
+    """점수 sc 에서 그달 바스켓을 고른다 — **선택도 한 벌**이어야 한다.
+
+    🚨 채점만 한 벌로 합치고 선택을 두 벌로 두면 소용이 없다. 실제로 그랬다:
+      build/pit_backtest.py 는 TB.pick_top() 만 불러서, 섹터 중립(x-valcomp-sn ·
+      x-revdrift-sn)과 산업 모멘텀(x-indmom)의 **가중 바스켓**을 재현하지 못했다.
+      그 셋이 PIT 을 못 돌던 사유의 절반이 이것이다.
+    돌려주는 것: (new, new_w). new_w 가 None 이면 동일가중이다.
+    """
+    dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    if S["sid"] in ("x-valcomp-sn", "x-revdrift-sn"):
+        # 🚨 섹터 중립 — 각 섹터 1위 1종, 비중은 **유니버스 섹터 시총 비중**.
+        #   이 엔진은 원래 동일가중 전제라 비중을 실을 자리가 없었다(부르는 쪽의 hw).
+        _sec = {t: (meta.get(t) or {}).get("sector") or "" for _v, t in sc}
+        _mc = {}
+        for _v, t in sc:
+            _f = FU.get(t) or {}
+            _sn = asof_fund(_f.get("sh"), dates[i - 1])
+            _p0 = px[t][i - 1] if px.get(t) else None
+            if _sn and _p0 and _sn > 0 and _p0 > 0:
+                _mc[t] = _sn * _p0
+        _pw = pick_sector_neutral(sc, _sec, _mc, per=1)
+        return [t for t, _w in _pw], {t: w for t, w in _pw}
+    if S["sid"] == "x-indmom":
+        _pw = pick_industry(ind_raw, top_sectors=2)
+        return [t for t, _w in _pw], {t: w for t, w in _pw}
+    return pick_top(sc, S["sid"], S.get("topn")), None
+
+
 def run():
     dates, px, vlm, hid, lod, meta, rf = load()
     FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
@@ -3050,6 +3658,13 @@ def run():
         ix.append(ix[-1] * (1 + r))
 
     ixvol = [vol(ixr, i, 20) for i in range(n)]
+    # 🚨 횡단면 채점기가 읽는 것 전부를 한 묶음으로 — xsec_score_at() 이 이것만 받는다.
+    #   build/pit_backtest.py 도 자기 자료로 같은 모양을 만들어 **같은 함수**를 부른다.
+    #   여기 키를 늘리면 그쪽도 같이 늘려야 한다(안 늘리면 KeyError 로 죽는다 — 조용히
+    #   다른 값이 나오는 것보다 낫고, 그게 이 묶음을 dict 로 둔 이유다).
+    _X = {"FACP": FACP, "FU": FU, "R": R, "dates": dates, "hid": hid, "lod": lod,
+          "ixr": ixr, "ixvol": ixvol, "me": me, "me_list": me_list, "meta": meta,
+          "px": px, "vlm": vlm, "tickers": tickers}
     # 지수의 200일선 이격 — t-gapcap 이 매 시점 직전 252일치를 다시 만드느라
     # sma(ix, j, 200) 를 i마다 252번(각 200회 덧셈) 돌렸다. 규칙과 무관하게 ix 에만
     # 의존하므로 한 번만 만들어 둔다: 252×200×n → n×200.
@@ -3342,575 +3957,9 @@ def run():
                 # 10년 구간에서 899회(월말이면 106회) 돌았다. 규약대로 월말에만 다시 뽑는다.
                 # 결과: 첫 월말 전까지는 후보가 없으므로 현금이다(선견 없이 정직한 상태다).
                 if (i - 1) in me:
-                    sc = []
-                    comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
-                    ind_raw = {}           # 산업 모멘텀 원지표 — 섹터 정렬도 단면이 다 모여야 한다
-                    # 프로그인더팬은 **2단 선별**이라 종목 하나만 보는 채점으로는 못 만든다.
-                    # 원논문은 모멘텀 5분위 × ID 5분위 이중정렬이므로, 여기서도 먼저 그 시점
-                    # 모멘텀 상위 5분위 컷을 구한 뒤 아래 갈래에서 그 안에서만 ID 로 고른다.
-                    #   ⚠ 컷을 고정 종목수가 아니라 **분위**로 잡는다. 유니버스가 커버 사정으로
-                    #     흔들려도 '상위 20%'라는 규약이 그대로 유지된다.
-                    #   ⚠ ret() 은 O(1) 이라 이 사전 패스는 월말당 518×2 회로 가볍다.
-                    fip_ok = None
-                    if S["sid"] == "x-fip":
-                        _m = []
-                        for t2 in tickers:
-                            a2 = ret(px[t2], i - 1, 252)
-                            if a2 is None:
-                                continue
-                            b2 = ret(px[t2], i - 1, 21)
-                            _m.append((a2 - (b2 or 0), t2))
-                        _m.sort(reverse=True)
-                        _k = max(TOPN, int(len(_m) * 0.2))     # 상위 5분위(최소 TOPN)
-                        # 승자만 남긴다 — 형성기 수익이 음수면 ID 의 sign 규약이 뒤집힌다.
-                        fip_ok = {t2 for v2, t2 in _m[:_k] if v2 > 0}
-                    # 고저가 스프레드도 2단이다 — 중립화가 **횡단면 회귀**라 종목 하나만
-                    # 보는 채점으로는 못 만든다. 사전등록 문서의 규약 그대로:
-                    #   log(252일 평균 CS 스프레드) 를 log(252일 실현변동성) 에 회귀 → 잔차.
-                    # 근거: 원신호와 변동성의 횡단면 스피어만 상관이 중앙 0.816 이라,
-                    #   중립화 없이 쓰면 저변동성 계열을 뒤집어 다시 파는 것이 된다.
-                    hls = None
-                    if S["sid"] == "x-hlspread":
-                        rows = []
-                        for t2 in tickers:
-                            H2, L2 = hid.get(t2), lod.get(t2)
-                            if not (H2 and L2):
-                                continue
-                            w2 = [x for x in cs_spread(H2, L2, t2)[max(0, i - 252):i] if x is not None]
-                            if len(w2) < 126:              # 유효일 126일 미만은 후보 아님
-                                continue
-                            p2 = px[t2][i - 1]
-                            if not p2 or p2 < 5.0:         # 페니주 차단
-                                continue
-                            s2 = sum(w2) / len(w2)
-                            v2 = vol(R[t2], i - 1, 252)
-                            if s2 <= 0 or not v2 or v2 <= 0:
-                                continue
-                            rows.append((t2, math.log(s2), math.log(v2)))
-                        hls = {}
-                        if len(rows) >= 2:
-                            xs2 = [r2[2] for r2 in rows]; ys2 = [r2[1] for r2 in rows]
-                            mx2 = sum(xs2) / len(xs2); my2 = sum(ys2) / len(ys2)
-                            sxx = sum((x - mx2) ** 2 for x in xs2)
-                            bb = (sum((x - mx2) * (y - my2) for x, y in zip(xs2, ys2)) / sxx) if sxx > 0 else 0.0
-                            aa = my2 - bb * mx2
-                            hls = {rows[k2][0]: ys2[k2] - (aa + bb * xs2[k2]) for k2 in range(len(rows))}
-                    # ── 사전등록 8종 중 횡단면 중립화가 필요한 넷 ────────────────
-                    # 중립화는 그 달 후보 전체를 봐야 하므로 종목 하나만 받는 채점으로는 못 만든다.
-                    # x-hlspread·x-fip 과 같은 2단 구조다. 잔차 계산은 xsec_resid() 한 자리에 모았다.
-                    xsr = None
-                    _sid0 = S["sid"]
-                    if _sid0 == "x-clv":
-                        rows = []
-                        for t2 in tickers:
-                            H2, L2 = hid.get(t2), lod.get(t2)
-                            if not (H2 and L2):
-                                continue
-                            p2 = px[t2][i - 1]
-                            if not p2 or p2 < 5.0:
-                                continue
-                            w2 = [x for x in clv_daily(H2, L2, px[t2], t2)[max(0, i - 21):i] if x is not None]
-                            if len(w2) < 11:
-                                continue
-                            p0 = px[t2][max(0, i - 22)]
-                            if not p0 or p0 <= 0:
-                                continue
-                            rows.append((t2, sum(w2) / len(w2), math.log(p2 / p0)))
-                        # 방향: 잔차 **하위** 10종 롱 → 부호를 뒤집어 넣는다(정렬은 내림차순).
-                        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
-                    elif _sid0 == "x-volvol":
-                        rows = []
-                        for t2 in tickers:
-                            rs2 = R[t2]
-                            if _stall(rs2, i - 1):
-                                continue
-                            sig = []
-                            for b in range(12):        # 21일 비중첩 블록 12개
-                                e = i - 1 - 21 * b
-                                w2 = [x for x in rs2[max(0, e - 20):e + 1] if x is not None]
-                                if len(w2) < 15:
-                                    continue
-                                m2 = sum(w2) / len(w2)
-                                sig.append(math.sqrt(sum((x - m2) ** 2 for x in w2) / (len(w2) - 1)))
-                            if len(sig) < 10:
-                                continue
-                            ms = sum(sig) / len(sig)
-                            if ms <= 0:
-                                continue
-                            sd = math.sqrt(sum((x - ms) ** 2 for x in sig) / (len(sig) - 1))
-                            v2 = vol(rs2, i - 1, 252)
-                            if sd <= 0 or not v2 or v2 <= 0:
-                                continue
-                            rows.append((t2, math.log(sd / ms), math.log(v2)))
-                        # 방향: 잔차 **하위** 10종 롱(고평가 가설) → 부호를 뒤집는다.
-                        xsr = {k2: -v2 for k2, v2 in xsec_resid(rows).items()}
-                    elif _sid0 == "x-delay":
-                        rows = []
-                        for t2 in tickers:
-                            rs2 = R[t2]
-                            if _stall(rs2, i - 1):
-                                continue
-                            y, m0, m1, m2_, m3, m4 = [], [], [], [], [], []
-                            for k2 in range(max(4, i - 252), i):
-                                a2 = rs2[k2]
-                                if a2 is None or any(ixr[k2 - z] is None for z in range(5)):
-                                    continue
-                                y.append(a2); m0.append(ixr[k2]); m1.append(ixr[k2 - 1])
-                                m2_.append(ixr[k2 - 2]); m3.append(ixr[k2 - 3]); m4.append(ixr[k2 - 4])
-                            if len(y) < 126:
-                                continue
-                            _b, r2r = _ols(y, [m0])
-                            _b, r2u = _ols(y, [m0, m1, m2_, m3, m4])
-                            if r2r is None or r2u is None or r2u <= 0.01:
-                                continue
-                            rows.append((t2, 1.0 - r2r / r2u, math.log(r2u)))
-                        # 🚨 D1 은 비율통계라 분모(비제한 R²)가 작으면 식별되지 않는다.
-                        #   그 달 후보의 20 백분위 미만은 규약대로 통째로 뺀다.
-                        if rows:
-                            cut = sorted(r2[2] for r2 in rows)[int(len(rows) * 0.20)]
-                            rows = [r2 for r2 in rows if r2[2] >= cut]
-                        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
-                    elif _sid0 == "x-peerlag":
-                        # 종목쌍을 보는 유일한 규칙 — 상관행렬이 필요하다. 비용은 사전등록에
-                        # 실측으로 적어 뒀다(월말당 2.6초 · 199개 월말에 8.8분).
-                        zs, names = [], []
-                        for t2 in tickers:
-                            rs2 = R[t2]
-                            w2 = rs2[i - 252:i]
-                            if len(w2) < 252 or any(x is None for x in w2):
-                                continue
-                            if _stall(rs2, i - 1):
-                                continue
-                            m2 = sum(w2) / len(w2)
-                            sd = math.sqrt(sum((x - m2) ** 2 for x in w2))
-                            if sd <= 0:
-                                continue
-                            zs.append([(x - m2) / sd for x in w2]); names.append(t2)
-                        cm = load_classmates()
-                        NB = len(names)
-                        C2 = [[0.0] * NB for _ in range(NB)]
-                        for a2 in range(NB):
-                            za = zs[a2]
-                            for b2 in range(a2 + 1, NB):
-                                zb = zs[b2]
-                                s2 = 0.0
-                                for k2 in range(252):
-                                    s2 += za[k2] * zb[k2]
-                                C2[a2][b2] = s2; C2[b2][a2] = s2
-                        rows = []
-                        for a2 in range(NB):
-                            t2 = names[a2]
-                            mates = cm.get(t2) or set()
-                            nb = sorted(((C2[a2][b2], names[b2]) for b2 in range(NB)
-                                         if b2 != a2 and names[b2] not in mates), reverse=True)[:20]
-                            if len(nb) < 20:
-                                continue
-                            own = ret(px[t2], i - 1, 21)
-                            if own is None:
-                                continue
-                            prs = [ret(px[z2], i - 1, 21) for _c2, z2 in nb]
-                            prs = [x for x in prs if x is not None]
-                            if len(prs) < 20:
-                                continue
-                            rows.append((t2, sum(prs) / len(prs), own))
-                        xsr = xsec_resid(rows)          # 방향: 잔차 상위 10종 롱
-                    for t in tickers:
-                        P = px[t]
-                        # 🚨 채점 갈래는 **접미사를 뗀 sid** 로 탄다(2026-08-11).
-                        #   바스켓 크기만 다른 규칙(x-btp-n155 등)은 점수 함수가 짝과 완전히
-                        #   같아야 한다 — 여기서 갈래를 새로 쓰면 '같은 점수에 N 만 다르다'는
-                        #   전제가 깨져 비교가 성립하지 않는다. 이름만 보고 원본 갈래로 보낸다.
-                        #   ⚠ 기존 규칙은 접미사가 없으므로 값이 그대로다.
-                        sid = _BASE_SID(S["sid"])
-                        if sid == "x-52wh":
-                            # 🚨 2026-08-04 버그 수정. 종전에는 분모가 **종가의 최대**였다.
-                            #   그런데 창(P[i-252:i])이 신호일 i-1 을 포함하므로, 그날 종가가
-                            #   창 최대인 종목은 점수가 정확히 1.0 이 된다 — 점수에 천장이 생긴다.
-                            #   실측: 199개 월말 중 **149개(75%)에서 1.0 동점이 10종 이상**이었고
-                            #   (동점 중앙 25종·최대 146종), sc.sort(reverse=True) 가 (점수, 티커)
-                            #   튜플을 정렬하므로 그 10칸은 **티커 알파벳 역순(Z→A)** 으로 채워졌다.
-                            #   즉 이 규칙은 '고점에 가장 가까운 10종'이 아니라 '신고가 종목 중
-                            #   티커가 Z 에 가까운 10종'을 사고 있었다.
-                            #   고치는 방향은 규칙문 그대로다 — 규칙문은 '52주 **최고가**'라고
-                            #   적는데 구현이 종가 최대를 쓰고 있었다. 실제 일중 고가(hd)는 같은
-                            #   저장소에 4,422일치 있고(2026-08-04 배선), 종가와 분할조정 기준이
-                            #   같다는 것을 전수 확인했다(ld ≤ pxd ≤ hd 위반 0/2,112,332).
-                            #   고가를 쓰면 종가가 그 창의 최대와 같아지는 일이 사실상 없어져
-                            #   천장도 동점도 자연히 사라진다 — 동점을 깨는 새 파라미터를 넣는 것이
-                            #   아니라 원래 재려던 것을 재는 것이다.
-                            H = hid.get(t)
-                            win = [x for x in (H or P)[max(0, i - 252):i] if x]
-                            hi = max(win) if win else None
-                            v = (P[i - 1] / hi) if (hi and P[i - 1]) else None
-                        elif sid == "x-hlspread":
-                            # 사전 패스가 만든 잔차를 그대로 쓴다(값이 없으면 후보 아님).
-                            v = hls.get(t) if hls else None
-                        elif sid in ("x-clv", "x-volvol", "x-delay", "x-peerlag"):
-                            # 위 사전 패스가 중립화 잔차를 이미 만들어 뒀다.
-                            v = xsr.get(t) if xsr else None
-                        elif sid == "x-ongapd":
-                            H2, L2 = hid.get(t), lod.get(t)
-                            p2 = P[i - 1]
-                            if not (H2 and L2) or not p2 or p2 < 5.0:
-                                v = None
-                            else:
-                                g = gap_daily(H2, L2, P, t)
-
-                                def _share(w):
-                                    a = b = 0.0
-                                    c = 0
-                                    for k2 in range(max(0, i - w), i):
-                                        x = g[k2]
-                                        if x is None:
-                                            continue
-                                        a += x[0]; b += x[1]; c += 1
-                                    return (a / b, c) if b > 0 else (None, c)
-                                s63, n63 = _share(63)
-                                s252, n252 = _share(252)
-                                v = (s63 - s252) if (s63 is not None and s252 is not None
-                                                     and n63 >= 32 and n252 >= 126) else None
-                        elif sid == "x-lshock":
-                            H2, L2 = hid.get(t), lod.get(t)
-                            p2 = P[i - 1]
-                            if not (H2 and L2) or not p2 or p2 < 5.0:
-                                v = None
-                            else:
-                                S2 = cs_spread(H2, L2, t)
-                                a = [x for x in S2[max(0, i - 63):i] if x is not None]
-                                b = [x for x in S2[max(0, i - 252):max(0, i - 63)] if x is not None]
-                                if len(a) < 32 or len(b) < 95:
-                                    v = None
-                                else:
-                                    sa, sb = sum(a) / len(a), sum(b) / len(b)
-                                    v = math.log(sa / sb) if (sa > 0 and sb > 0) else None
-                        elif sid == "x-updown":
-                            rs2 = R[t]
-                            if _stall(rs2, i - 1):
-                                v = None
-                            else:
-                                w2 = [(rs2[k2], ixr[k2]) for k2 in range(max(0, i - 252), i)
-                                      if rs2[k2] is not None and ixr[k2] is not None]
-                                mu = (sum(z[1] for z in w2) / len(w2)) if w2 else 0.0
-                                dn = [z for z in w2 if z[1] < mu]
-                                up = [z for z in w2 if z[1] >= mu]
-                                if len(dn) < 40 or len(up) < 40:
-                                    v = None
-                                else:
-                                    def _beta(pairs):
-                                        mx2 = sum(z[1] for z in pairs) / len(pairs)
-                                        my2 = sum(z[0] for z in pairs) / len(pairs)
-                                        sxx = sum((z[1] - mx2) ** 2 for z in pairs)
-                                        if sxx <= 0:
-                                            return None
-                                        return sum((z[1] - mx2) * (z[0] - my2) for z in pairs) / sxx
-                                    bd, bu = _beta(dn), _beta(up)
-                                    den = (abs(bd) + abs(bu)) if (bd is not None and bu is not None) else None
-                                    v = ((bd - bu) / den) if (den and den >= 0.2) else None
-                        elif sid == "x-dist200":
-                            m = sma(P, i - 1, 200)
-                            v = (P[i - 1] / m - 1) if (m and P[i - 1]) else None
-                        elif sid == "x-mom-trend":
-                            m200 = sma(P, i - 1, 200)
-                            if not m200 or not P[i - 1] or P[i - 1] <= m200:
-                                v = None
-                            else:
-                                v = (ret(P, i - 1, 252) or -9) - (ret(P, i - 1, 21) or 0)
-                        elif sid == "x-rev1w":
-                            v = -(ret(P, i - 1, 5) or 9)
-                        elif sid == "x-indmom":
-                            # 🚨 여기서는 **섹터 수익률을 모으기만** 한다. 섹터 정렬은 단면이
-                            #   다 모여야 낼 수 있으므로 아래 루프 밖에서 한다(E30 과 같은 방식).
-                            #   종목 점수는 자기 섹터의 6개월 수익률이다 — 종목 수준 정보를
-                            #   일부러 넣지 않는다(그것을 넣으면 산업 신호가 아니게 된다).
-                            _r6 = ret(P, i - 1, 126)
-                            _sg = (meta.get(t) or {}).get("sector") or ""
-                            if _r6 is not None and _sg:
-                                ind_raw.setdefault(_sg, []).append((t, _r6))
-                            v = None                          # 점수는 나중에 붙인다
-                        elif sid == "x-minvar":
-                            # 완전 최적화 대신 축소추정 역분산 — 개별 분산을 시장분산 쪽으로 반씩 당긴다
-                            sv = vol(R[t], i - 1, 120)
-                            mv = ixvol[i - 1]
-                            v = -(0.5 * sv + 0.5 * mv) if (sv and mv) else None
-                        elif sid == "x-riskbudget":
-                            sv = vol(R[t], i - 1, 60)
-                            v = (1.0 / sv) if sv and sv > 0 else None
-                        elif sid == "x-lowbeta":
-                            b = beta(R[t], ixr, i - 1, 120)
-                            v = -b if b is not None else None
-                        elif sid in ("x-revdrift", "x-revdrift-sn", "x-revdrift-q"):
-                            # 21일판·섹터중립판은 달력 30일, 63일판은 91일. 세 규칙이
-                            # _rat_consensus 의 메모를 나눠 쓰므로 두 번째부터는 조회만 한다.
-                            v = rat_signal(t, dates[i - 1], 91 if sid == "x-revdrift-q" else 30)
-                        elif sid == "x-sue":
-                            v = sue((FU.get(t) or {}).get("eps") or [], dates[i - 1])
-                        elif sid == "x-epsacc":
-                            e = eps_accel((FU.get(t) or {}).get("eps") or [], dates[i - 1])
-                            p0 = P[i - 1]
-                            v = (e / p0) if (e is not None and p0 and p0 > 0) else None
-                        elif sid in FUND_SIDS:
-                            # 펀더멘털은 종목 하나만 받는 람다로 못 준다 — 날짜·주식수·주가가 필요하다.
-                            # 잔고 항목은 asof_fund(시점 값), 기간 누적값은 ttm(12개월)을 쓴다.
-                            f = FU.get(t) or {}
-                            dt_ = dates[i - 1]
-                            sn = asof_fund(f.get("sh"), dt_)
-                            p0 = P[i - 1]
-                            mcap = (sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
-                            v = None
-                            if sid == "x-btp":
-                                e = asof_fund(f.get("eq"), dt_)
-                                # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
-                                v = (e / sn / p0) if (e is not None and mcap) else None
-                            elif sid in ("x-valcomp", "x-valcomp-sn"):
-                                # 🚨 여기서는 **원지표 셋을 모아 두기만** 한다. z-점수는 단면이
-                                #   다 모여야 낼 수 있으므로 아래 루프 밖에서 z_composite 가 만든다.
-                                e = asof_fund(f.get("eq"), dt_)
-                                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
-                                lb = asof_fund(f.get("liab"), dt_)
-                                cs = asof_fund(f.get("cash"), dt_)
-                                m = {}
-                                if e is not None and mcap:
-                                    m["bp"] = e / mcap                     # 장부가/시총 = B/P
-                                if fc is not None and mcap:
-                                    m["fcfp"] = fc / mcap                  # FCF/시총
-                                if e is not None and mcap and lb is not None:
-                                    # ⚠ 기업가치 근사 — 이자부부채가 없어 총부채를 쓴다.
-                                    #   매입채무·이연법인세까지 들어가 자본집약 업종의 EV 가 부푼다.
-                                    #   섹터 중립판에서는 섹터 안에서 상쇄되지만 제약 없는 판에서는
-                                    #   안 된다(사전등록 §2·실패 시나리오 ②).
-                                    ev = mcap + lb - (cs or 0.0)
-                                    if ev > 0:
-                                        m["bev"] = e / ev
-                                if m:
-                                    comp_raw.setdefault(sid, []).append((t, m))
-                                v = None                                   # 점수는 나중에 붙인다
-                            elif sid == "x-fcfy":
-                                fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
-                                v = (fc / mcap) if (fc is not None and mcap) else None
-                            elif sid == "x-payout":
-                                # 환원총액 = 배당총액(주당배당 × 주식수) + 자사주매입액.
-                                # 🚨 bb 는 연간 버킷으로 읽어야 한다(분기엔 Q1 만 남는다).
-                                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
-                                bbv = ttm2(f.get("bb"), f.get("bb_a"), dt_)
-                                if mcap and (dp is not None or bbv is not None):
-                                    tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
-                                    # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
-                                    v = (tot / mcap) if tot >= 0 else None
-                            elif sid == "x-poacc":
-                                # 퍼센트 영업발생액 = (순이익 − 영업현금흐름) ÷ |순이익|. 낮을수록 위.
-                                # 분모가 자산이 아니라 |순이익|이라 잔고 태그의 2021-06 절벽을 안 탄다.
-                                # 🚨 두 항을 각자 ttm2 로 읽으면 안 된다 — 순이익은 분기합산(최근 분기말
-                                #   기준 12개월)이 되고 현금흐름은 연간버킷(직전 회계연도)이 되어 창이
-                                #   최대 3분기 어긋난다. **같은 회계연도 기간말**에서 둘 다 뽑는다.
-                                cut_ = _shift(dt_, FUND_LAG_DAYS)
-                                nim = dict(f.get("ni_a") or [])
-                                cfm = dict(f.get("cfo_a") or [])
-                                rvm = dict(f.get("rev_a") or [])
-                                d_ = next((d for d, _x in (f.get("ni_a") or [])
-                                           if d <= cut_ and d in cfm), None)
-                                if d_:
-                                    ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
-                                    # 🚨 순이익이 0 근처면 비율이 폭발한다 — 매출의 1% 미만이면 뺀다.
-                                    if rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_:
-                                        v = -((ni_ - cf_) / abs(ni_))
-                            # ── 2026-08-08 신규 3종 (PREREG-2026-08-08-WEBRESEARCH5.md) ──
-                            elif sid == "x-debtiss":
-                                # 총부채 1년 증가율. 낮을수록 좋으므로 부호를 뒤집는다.
-                                # ⚠ JKP 정본은 3년(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다.
-                                # 🚨 2026-08-11 선견 교정 — 종전 분모가 `_shift(dt_, -365)` 였다.
-                                #   _shift 는 **빼는** 함수라 부호가 뒤집혀 '1년 전' 자리에
-                                #   **1년 뒤** 값이 들어갔다(실측 2024-06-28 신호일에서 430종 중
-                                #   426종이 2025년 기준일을 집었다: AAPL db1 2024-03-30 · db0
-                                #   2025-03-29). 그대로면 이 규칙은 '앞으로 부채를 줄일 회사' 를
-                                #   고르는 선견 신호다. 같은 파일의 x-rgrow·x-agrow 는 처음부터
-                                #   `_shift(dt_, 365)` 였다 — 이 한 줄만 부호가 반대였다.
-                                #   PIT 갈래를 만들다 나왔다(build/pit_backtest.py 의 같은 갈래).
-                                db1 = asof_fund(f.get("debt"), dt_)
-                                db0 = asof_fund(f.get("debt"), _shift(dt_, 365))
-                                v = -(db1 / db0 - 1.0) if (db1 is not None and db0 and db0 > 0) else None
-                            elif sid == "x-fscore":
-                                # Piotroski(2000) 9신호. 🚨 하나라도 못 내면 후보에서 뺀다 —
-                                #   8개로 매기면 0~9 척도가 깨져 다른 종목과 비교할 수 없다.
-                                # 금융업 제외 — 자산회전율·매출총이익률이 은행에서 뜻이 없다.
-                                if (meta.get(t) or {}).get("sector") == "Financials":
-                                    v = None
-                                else:
-                                    v = _fscore(f, dt_, mcap)
-                            elif sid in ("x-gpa", "x-ocfp", "x-aci"):
-                                # 금융업은 자산의 뜻이 달라(예대 잔고) 자산분모 수익성이 성립하지 않는다.
-                                if (meta.get(t) or {}).get("sector") == "Financials":
-                                    v = None
-                                else:
-                                    at = asof_fund(f.get("asset"), dt_)
-                                    if sid == "x-ocfp":
-                                        cf_ = ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
-                                        v = (cf_ / at) if (cf_ is not None and at and at > 0) else None
-                                    elif sid == "x-gpa":
-                                        g = ttm2(f.get("gp"), f.get("gp_a"), dt_)
-                                        rv_ = ttm2(f.get("rev"), f.get("rev_a"), dt_)
-                                        cg = ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
-                                        # 🚨 gp·cogs 가 둘 다 있으면 정합성부터 본다. 안 맞으면 그 종목의
-                                        #   태깅을 믿을 수 없다(건보사 유형) → 후보에서 뺀다.
-                                        if g is not None and cg is not None and rv_ and rv_ > 0:
-                                            if abs(g + cg - rv_) / rv_ > 0.01:
-                                                g = None
-                                        if g is None and rv_ is not None and cg is not None:
-                                            g = rv_ - cg              # 태그가 없을 때만 폴백
-                                        v = (g / at) if (g is not None and at and at > 0) else None
-                                    else:                              # x-aci
-                                        # 설비투자÷매출을 연간 격자에서 4개 뽑아 최근/직전3년평균 −1.
-                                        cx = [(d, x) for d, x in (f.get("capex_a") or [])
-                                              if d <= _shift(dt_, FUND_LAG_DAYS)]
-                                        rvm = dict(f.get("rev_a") or [])
-                                        rat = []
-                                        for d, x in cx[:4]:
-                                            r_ = rvm.get(d)
-                                            if r_ and r_ > 0 and x is not None:
-                                                rat.append(x / r_)
-                                        if len(rat) == 4 and sum(rat[1:]) > 0:
-                                            base = sum(rat[1:]) / 3.0
-                                            ci = rat[0] / base - 1.0
-                                            v = -ci if abs(ci) <= 3.0 else None
-                            elif sid == "x-ep":
-                                ep_ = ttm2(f.get("eps"), f.get("eps_a"), dt_)
-                                v = (ep_ / p0) if (ep_ is not None and p0 and p0 > 0) else None
-                            elif sid == "x-sp":
-                                rv = ttm2(f.get("rev"), f.get("rev_a"), dt_)
-                                v = (rv / mcap) if (rv is not None and mcap) else None
-                            elif sid == "x-roe":
-                                nn, e = ttm2(f.get("ni"), f.get("ni_a"), dt_), asof_fund(f.get("eq"), dt_)
-                                v = (nn / e) if (nn is not None and e and e > 0) else None
-                            elif sid == "x-npm":
-                                nn, rv = ttm2(f.get("ni"), f.get("ni_a"), dt_), ttm2(f.get("rev"), f.get("rev_a"), dt_)
-                                v = (nn / rv) if (nn is not None and rv and rv > 0) else None
-                            elif sid == "x-rgrow":
-                                a1, a0 = (ttm2(f.get("rev"), f.get("rev_a"), dt_),
-                                          ttm2(f.get("rev"), f.get("rev_a"), _shift(dt_, 365)))
-                                v = (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
-                            elif sid == "x-lowde":
-                                e = asof_fund(f.get("eq"), dt_)
-                                lb = asof_fund(f.get("liab"), dt_)
-                                if lb is None:
-                                    at = asof_fund(f.get("asset"), dt_)
-                                    lb = (at - e) if (at is not None and e is not None) else None
-                                # 부채가 적을수록 위. 자본잠식(e<=0)은 비율이 무의미해 뺀다.
-                                v = -(lb / e) if (lb is not None and e and e > 0) else None
-                            elif sid == "x-dy":
-                                dp = ttm2(f.get("dps"), f.get("dps_a"), dt_)
-                                v = (dp / p0) if (dp is not None and p0 and p0 > 0) else None
-                            elif sid == "x-small":
-                                v = -mcap if mcap else None
-                            elif sid == "x-agrow":
-                                # 🚨 0 이하를 **분자·분모 둘 다** 뺀다. 분자가 0 이면 증가율이
-                                #   −100% 로 1등이 되어 자료 구멍이 편입된다(실측 PSKY·SW).
-                                pr = yoy_pair(f.get("asset"), dt_)
-                                if pr and pr[1] > 0 and pr[3] > 0:
-                                    g = pr[1] / pr[3] - 1.0
-                                    v = -max(-2.0, min(2.0, g))     # 낮을수록 위
-                            elif sid == "x-shiss":
-                                # 🚨 split_trim 을 거친 sh 가 아니라 단위오류만 교정한 sh_u +
-                                #   이음매를 쓴다(안 그러면 대규모 발행 종목이 후보에서 사라진다).
-                                pr = yoy_pair(f.get("sh_u") or f.get("sh"), dt_,
-                                              seam=f.get("sh_seam"))
-                                if pr and pr[1] > 0 and pr[3] > 0:
-                                    g = pr[1] / pr[3] - 1.0
-                                    v = -g if abs(g) <= 0.5 else None
-                            elif sid == "x-custconc":
-                                # 규약 그대로: build/PREREG-2026-08-04-CUSTCONC.md
-                                # 단일 고객 매출 비중이 **높을수록** 위(고집중 롱).
-                                v = custconc_asof(t, dt_)
-                            elif sid == "x-cash":
-                                ch = asof_fund(f.get("cash"), dt_)
-                                at = asof_fund(f.get("asset"), dt_)
-                                v = (ch / at) if (ch is not None and at and at > 0) else None
-                        elif sid == "x-ivol":
-                            # 시장 수익이 필요해 람다(종목 하나만 받는다)로는 못 준다
-                            iv = idio_vol(R[t], ixr, i - 1, 120)
-                            v = -iv if iv is not None else None
-                        elif sid == "x-fip":
-                            # 모멘텀 상위 5분위 밖이면 후보가 아니다(교집합 규약).
-                            # ID 는 낮을수록 연속정보이므로 부호를 뒤집어 넣는다(정렬 내림차순).
-                            # 🚨 v 는 이 루프에서 **초기화되지 않는다** — 갈래마다 반드시 대입해야
-                            #   한다. 안 그러면 직전 종목 점수가 그대로 남아 엉뚱한 종목이 뽑힌다
-                            #   (실측으로 걸렸다: 보유가 알파벳으로 뭉쳐 나왔다).
-                            _id = (info_discreteness(R[t], i - 1)
-                                   if (fip_ok is not None and t in fip_ok) else None)
-                            v = -_id if _id is not None else None
-                        elif sid == "x-residmom":
-                            # 팩터 수익 셋이 필요하다(시장 + 규모·가치 대리변수). 대리변수를
-                            # 못 읽었으면 후보가 0 이 되고, 그때는 XSEC_MIN_POOL 가드가 잡는다 —
-                            # 조용히 '있는 것 전부'를 고르는 일이 없게 그 경로에 맡긴다.
-                            v = (resid_mom(R[t], [ixr, FACP["SMB"], FACP["HML"]], me_list, i - 1)
-                                 if FACP else None)
-                        elif sid == "x-coskew":
-                            # 같은 사유(시장 수익 필요). 정렬이 내림차순이므로 '가장 음인 것'을
-                            # 뽑으려면 부호를 뒤집어 넣는다.
-                            ck = coskew(R[t], ixr, i - 1, 252)
-                            v = -ck if ck is not None else None
-                        elif sid == "x-lowcorr":
-                            # 같은 사유. '가장 낮은 상관'을 뽑으므로 부호를 뒤집는다.
-                            cr = mkt_corr(R[t], ixr, i - 1, 252)
-                            v = -cr if cr is not None else None
-                        elif sid == "x-season":
-                            # 월말 격자가 필요해 람다로는 못 준다.
-                            v = same_month_avg(P, i - 1, dates, sorted(me))
-                        elif sid == "x-snapback":
-                            m200 = sma(P, i - 1, 200)
-                            if not m200 or not P[i - 1] or P[i - 1] <= m200:
-                                v = None
-                            else:
-                                rv = rsi(P, i - 1)
-                                v = -rv if rv is not None else None
-                        elif sid == "x-volsurge":
-                            V = vlm[t]
-                            m200 = sma(P, i - 1, 200)
-                            # 🚨 해상도 게이트(vol_resolved 참조). 거래량이 백만주 정수로
-                            #   저장돼 있던 탓에 이 규칙이 반올림 잡음을 순위로 쓰고 있었다.
-                            if (not V or not m200 or not P[i - 1] or P[i - 1] <= m200
-                                    or not vol_resolved(V, i - 1)):
-                                v = None
-                            else:
-                                a = sma(V, i - 1, 20)
-                                b = sma(V, i - 1, 60)
-                                v = (a / b) if (a and b and b > 0) else None
-                        else:
-                            v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
-                        if v is not None and v == v:
-                            sc.append((v, t))
-                    # 🚨 E30 — z-점수는 단면이 다 모여야 낼 수 있다. 위 루프에서 원지표만
-                    #   모아 두었고 여기서 컴포지트를 만든다. 지표별로 결측 종목이 다르므로
-                    #   z_composite 가 있는 지표만으로 평균한다(0 으로 채우지 않는다 —
-                    #   0 은 z 척도에서 '평균'이라 자료 없는 종목이 중간 순위를 공짜로 받는다).
-                    if S["sid"] in comp_raw:
-                        sc = [(z, t) for t, z in z_composite(comp_raw[S["sid"]]).items()]
-                    # 산업 모멘텀 — 종목 점수는 자기 섹터의 6개월 수익률이다. 커버리지
-                    # 게이트(len(sc))가 종목 수를 세도록 sc 를 채워 둔다.
-                    if S["sid"] == "x-indmom" and ind_raw:
-                        _sr = {s: sum(r for _t, r in v) / len(v) for s, v in ind_raw.items() if v}
-                        sc = [(_sr[s], t) for s, v in ind_raw.items() for t, _r in v if s in _sr]
-                    sc.sort(reverse=True)
+                    sc, ind_raw, comp_raw = xsec_score_at(S, i, _X)
                     pool_hist.append((dates[i - 1], len(sc)))
-                    if S["sid"] in ("x-valcomp-sn", "x-revdrift-sn"):
-                        # 🚨 섹터 중립 — 각 섹터 1위 1종, 비중은 **유니버스 섹터 시총 비중**.
-                        #   이 엔진은 원래 동일가중 전제라 비중을 실을 자리가 없었다(아래 hw).
-                        _sec = {t: (meta.get(t) or {}).get("sector") or "" for _v, t in sc}
-                        _mc = {}
-                        for _v, t in sc:
-                            _f = FU.get(t) or {}
-                            _sn = asof_fund(_f.get("sh"), dates[i - 1])
-                            _p0 = px[t][i - 1] if px.get(t) else None
-                            if _sn and _p0 and _sn > 0 and _p0 > 0:
-                                _mc[t] = _sn * _p0
-                        _pw = pick_sector_neutral(sc, _sec, _mc, per=1)
-                        new = [t for t, _w in _pw]
-                        new_w = {t: w for t, w in _pw}
-                    elif S["sid"] == "x-indmom":
-                        _pw = pick_industry(ind_raw, top_sectors=2)
-                        new = [t for t, _w in _pw]
-                        new_w = {t: w for t, w in _pw}
-                    else:
-                        new = pick_top(sc, S["sid"], S.get("topn"))
-                        new_w = None
+                    new, new_w = xsec_pick_at(S, i, _X, sc, ind_raw)
                     if len(sc) < XSEC_MIN_POOL:
                         # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
                         #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
