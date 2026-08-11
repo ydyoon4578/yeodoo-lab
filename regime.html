@@ -198,6 +198,9 @@
   .cycwrap{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:2px;
            padding:10px 12px 4px;box-shadow:var(--shadow)}
   .cycwrap svg{display:block;width:100%;height:auto}
+  .cych{font-size:12.5px;font-weight:800;color:var(--ink);margin:0 0 6px}
+  .cycb{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .cycwrap+.cycwrap{margin-top:14px}
   .cyctabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
   .cyctab{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:2px;
           border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
@@ -977,121 +980,133 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return 'FLAT';
   }
 
-  // ═══ 경기 사이클 곡선 ═══════════════════════════════════════════════
-  // 화면은 계산하지 않는다 — build/regime_cycle.py 가 구운 pos(0~1)를 좌표로 옮기기만 한다.
-  // 🚨 곡선의 순서는 통념이다. 이 랩의 212개월은 그 순서대로 돌지 않는다(아래 캡션의 실측).
-  //   그래서 (a) 화살표·시계바늘·애니메이션을 쓰지 않고 (b) 최근 24개월이 몇 자리에
-  //   흩어져 있는지를 같은 곡선 위에 숫자로 얹는다. 그림이 스스로 반증을 들고 있게 한다.
-  // 어느 자로 업종을 얹을지 — 화면 상태 하나. 값은 전부 빌드가 구운 것을 옮긴다.
-  var CYB='price';
+  // ═══ 경기 사이클 — 차트 셋 ═══════════════════════════════════════════
+  //   ① 두 사이클 겹쳐 보기(레퍼런스 11) — 주가 곡선이 실적 곡선보다 앞선다
+  //   ② 실적 기준 사이클(레퍼런스 33 위)
+  //   ③ 주가 기준 사이클(레퍼런스 33 아래)
+  // 화면은 계산하지 않는다 — build/regime_cycle.py 가 구운 pos·순위를 좌표로 옮기기만 한다.
+  // ⚠ 섹터를 '곡선 위 한 점'으로 놓지 않는다. 원형 평균의 집중도가 0.07~0.2 라 그 한 점이
+  //   자료로 지지되지 않는다. 국면마다 **상위 3개를 줄 세운 것**만 쓴다.
+  function cycGeom(W,H,TOP,BOT,PL,PR,inset){
+    var g={};
+    g.x0=PL; g.x1=W-PR; g.bandTop=TOP; g.bandBot=H-BOT;
+    g.curveTop=TOP+inset; g.curveBot=H-BOT-inset;
+    g.mid=(g.curveTop+g.curveBot)/2; g.amp=(g.curveBot-g.curveTop)/2;
+    g.X=function(p){return g.x0+p*(g.x1-g.x0);};
+    g.Y=function(p){return g.mid+g.amp*Math.cos(2*Math.PI*p);};
+    return g;
+  }
+  function cycPath(g,shift){
+    var d='',i;
+    for(i=0;i<=240;i++){var p=i/240; d+=(i?'L':'M')+g.X(p).toFixed(1)+' '+g.Y(p-(shift||0)).toFixed(1);}
+    return d;
+  }
+  function cycBands(cy,g,y){
+    return (cy.bands||[]).map(function(b,k){
+      return '<rect x="'+g.X(b.a).toFixed(1)+'" y="'+g.bandTop+'" width="'+(g.X(b.b)-g.X(b.a)).toFixed(1)+
+        '" height="'+(g.bandBot-g.bandTop)+'" fill="var(--ink)" opacity="'+(k%2?0.05:0.022)+'"/>'+
+        '<text x="'+((g.X(b.a)+g.X(b.b))/2).toFixed(1)+'" y="'+y+'" text-anchor="middle" '+
+        'font-size="11.5" font-weight="700" letter-spacing=".04em" fill="var(--muted)">'+esc(b.ko)+'</text>';
+    }).join('');
+  }
+
+  // ── ②③ 레퍼런스 33 형태 — 띠 + 곡선 + 곡선 위에 점찍은 업종 ──────────────
+  function cycChart33(cy,basis){
+    var S=cy.sectors||{}, by=(basis==='earn'?(S.earn||{}):(S.price||{})), topn=S.topn||3;
+    var W=1000,H=360, g=cycGeom(W,H,60,40,60,60,96);
+    var now=cy.now||{}, f=function(v){return v.toFixed(1);};
+    var marks='';
+    (cy.phases||[]).forEach(function(ph){
+      var rows=(by[ph.k]||[]).slice(0,topn);
+      var px=g.X(ph.pos), py=g.Y(ph.pos), below=(py>=g.mid), dir=below?1:-1;
+      var anc=ph.pos<0.04?'start':(ph.pos>0.96?'end':'middle');
+      var tx=ph.pos<0.04?px-2:(ph.pos>0.96?px+2:px);
+      // 국면 이름
+      marks+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="4" fill="var(--panel)" stroke="var(--ink-2)" stroke-width="1.6"/>'+
+        '<text x="'+f(tx)+'" y="'+f(py+dir*18)+'" text-anchor="'+anc+'" font-size="11.5" font-weight="700" '+
+        'fill="'+(ph.k===now.r?'var(--accent)':'var(--ink-2)')+'">'+esc(ph.ko)+'</text>'+
+        '<text x="'+f(tx)+'" y="'+f(py+dir*30)+'" text-anchor="'+anc+'" font-size="9.5" '+
+        'fill="var(--muted)" font-family="var(--mono)">'+ph.months+'개월</text>';
+      // 업종 — 곡선 위에 점을 찍고(그 국면 근처로 살짝 벌려) 라벨을 반대쪽에 쌓는다
+      if(!rows.length){
+        marks+='<text x="'+f(tx)+'" y="'+f(py-dir*16)+'" text-anchor="'+anc+'" font-size="9.5" '+
+          'fill="var(--muted)" font-style="italic">표본 부족</text>';
+        return;
+      }
+      rows.forEach(function(r,k2){
+        var sp=Math.max(0,Math.min(1,ph.pos+(k2-(rows.length-1)/2)*0.022));
+        var sx=g.X(sp), sy=g.Y(sp);
+        marks+='<circle cx="'+f(sx)+'" cy="'+f(sy)+'" r="3" fill="var(--accent)"/>';
+        var ly=py-dir*(16+k2*13);
+        marks+='<line x1="'+f(sx)+'" y1="'+f(sy)+'" x2="'+f(tx)+'" y2="'+f(ly+3)+
+          '" stroke="var(--line)" stroke-width="0.8"/>'+
+          '<text x="'+f(tx)+'" y="'+f(ly)+'" text-anchor="'+anc+'" font-size="10.5" fill="var(--ink-2)">'+
+          esc(r.ko)+'<tspan font-size="9" fill="var(--muted)" font-family="var(--mono)"> '+
+          (r.v>0?'+':'')+(basis==='earn'?r.v+'%':r.v.toFixed(2))+'</tspan></text>';
+      });
+    });
+    var np=(now.pos==null?0:now.pos), nx=g.X(np), ny=g.Y(np);
+    marks+='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="10" fill="var(--accent)" opacity=".2"/>'+
+      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="5.2" fill="var(--accent)"/>';
+    return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+
+      (basis==='earn'?'실적':'주가')+' 기준 경기 사이클 — 국면마다 상위 '+topn+'개 업종. 현재 국면 '+
+      esc(now.ko||'')+'">'+cycBands(cy,g,g.bandTop+17)+
+      '<path d="'+cycPath(g,0)+'" fill="none" stroke="var(--ink-2)" stroke-width="2.4" stroke-linecap="round"/>'+
+      marks+'</svg>';
+  }
+
+  // ── ① 레퍼런스 11 형태 — 두 곡선을 겹쳐 앞섬을 보인다 ────────────────────
+  function cycChart11(cy){
+    var W=1000,H=268, g=cycGeom(W,H,52,40,60,60,32), f=function(v){return v.toFixed(1);};
+    var LEAD=0.10;                       // 주가 곡선을 실적 곡선보다 이만큼 앞세워 그린다
+    var now=cy.now||{}, np=(now.pos==null?0:now.pos);
+    var lab='';
+    // 바닥·정점 표시 — 두 곡선의 것을 따로 적는다
+    function tag(p,shift,txt,cls){
+      var x=g.X(p), y=g.Y(p-shift);
+      return '<circle cx="'+f(x)+'" cy="'+f(y)+'" r="3.4" fill="var(--panel)" stroke="'+cls+'" stroke-width="1.6"/>'+
+        '<text x="'+f(x)+'" y="'+f(y-10)+'" text-anchor="middle" font-size="10" font-weight="700" fill="'+cls+'">'+
+        esc(txt)+'</text>';
+    }
+    lab+=tag(LEAD,LEAD,'증시 바닥','var(--accent)');
+    lab+=tag(0.5+LEAD,LEAD,'증시 정점','var(--accent)');
+    lab+='<text x="'+f(g.X(0))+'" y="'+f(g.Y(0)+18)+'" text-anchor="start" font-size="10" '+
+      'font-weight="700" fill="var(--ink-2)">경기 바닥</text>';
+    lab+='<text x="'+f(g.X(0.5))+'" y="'+f(g.Y(0.5)+20)+'" text-anchor="middle" font-size="10" '+
+      'font-weight="700" fill="var(--ink-2)">경기 정점</text>';
+    var nx=g.X(np), ny=g.Y(np-LEAD);
+    lab+='<line x1="'+f(nx)+'" y1="'+f(ny-11)+'" x2="'+f(nx)+'" y2="18" stroke="var(--accent)" stroke-width="1.2"/>'+
+      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="9" fill="var(--accent)" opacity=".2"/>'+
+      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="5" fill="var(--accent)"/>'+
+      '<text x="'+f(nx)+'" y="14" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--accent)">지금 · '+
+      esc(now.ko||'')+' '+(now.run||0)+'개월째</text>';
+    return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="증시 사이클과 경기 사이클 — '+
+      '주가 곡선이 실적 곡선보다 앞선다. 현재 '+esc(now.ko||'')+'">'+
+      '<path d="'+cycPath(g,0)+'" fill="none" stroke="var(--ink-2)" stroke-width="2" '+
+      'stroke-dasharray="5 4" opacity=".55"/>'+
+      '<path d="'+cycPath(g,LEAD)+'" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round"/>'+
+      lab+
+      '<g font-size="10.5"><rect x="'+(W-232)+'" y="'+(H-34)+'" width="222" height="26" fill="var(--panel)" '+
+      'stroke="var(--line)" rx="2"/>'+
+      '<line x1="'+(W-222)+'" y1="'+(H-21)+'" x2="'+(W-200)+'" y2="'+(H-21)+'" stroke="var(--accent)" stroke-width="2.6"/>'+
+      '<text x="'+(W-194)+'" y="'+(H-17)+'" fill="var(--ink-2)">증시</text>'+
+      '<line x1="'+(W-152)+'" y1="'+(H-21)+'" x2="'+(W-130)+'" y2="'+(H-21)+'" stroke="var(--ink-2)" stroke-width="2" '+
+      'stroke-dasharray="5 4" opacity=".55"/>'+
+      '<text x="'+(W-124)+'" y="'+(H-17)+'" fill="var(--ink-2)">경기(실적)</text></g>'+
+      '</svg>';
+  }
 
   function renderCycle(cy){
     var host=el('cyclebody'), sec=el('cycle'); if(!host||!sec)return;
-    // 🚨 층을 겹치지 않게 못 박는다. 처음엔 구획 이름을 띠 아래에 뒀는데 곡선 바닥의
-    //   국면 이름(침체·연착륙)과 같은 높이라 글자가 포개졌다. 이제 네 층이 분리된다:
-    //     TOP-36..TOP-21      '지금' 말풍선
-    //     bandTop+18          구획 이름(띠 안쪽 위)
-    //     curveTop..curveBot  곡선
-    //     국면 이름 + 업종 칩  곡선 바깥쪽(위 반원은 위로, 아래 반원은 아래로)
-    var W=1000, H=384, PL=62, PR=62, TOP=66, BOT=44;
-    var bandTop=TOP, bandBot=H-BOT;
-    var curveTop=TOP+108, curveBot=H-BOT-108;   // 업종 칩 3줄이 곡선 밖에 들어갈 여유
-    var x0=PL, x1=W-PR, mid=(curveTop+curveBot)/2, amp=(curveBot-curveTop)/2;
-    var X=function(p){return x0+p*(x1-x0);};
-    var Y=function(p){return mid+amp*Math.cos(2*Math.PI*p);};   // p 0=바닥 · 0.5=정점
-    var f=function(v){return v.toFixed(1);};
-    var S=cy.sectors||{}, byb=(CYB==='earn'?(S.earn||{}):(S.price||{})), topn=S.topn||3;
-
-    var i, dpth='';
-    for(i=0;i<=240;i++){var p=i/240; dpth+=(i?'L':'M')+f(X(p))+' '+f(Y(p));}
-
-    // ① 구획 띠 — 이름은 띠 안쪽 위에 둔다.
-    var bands=(cy.bands||[]).map(function(b,k){
-      return '<rect x="'+f(X(b.a))+'" y="'+bandTop+'" width="'+f(X(b.b)-X(b.a))+
-        '" height="'+(bandBot-bandTop)+'" fill="var(--ink)" opacity="'+(k%2?0.05:0.022)+'"/>'+
-        '<text x="'+f((X(b.a)+X(b.b))/2)+'" y="'+(bandTop+18)+'" text-anchor="middle" '+
-        'font-size="11.5" font-weight="700" letter-spacing=".04em" fill="var(--muted)">'+esc(b.ko)+'</text>';
-    }).join('');
-
-    // ② 국면 이름 + 선호 업종 — 곡선 바깥쪽에 쌓는다.
-    var marks='', now=cy.now||{};
-    (cy.phases||[]).forEach(function(ph){
-      var px=X(ph.pos), py=Y(ph.pos), below=(py>=mid), on=(ph.k===now.r);
-      var anc=ph.pos<0.04?'start':(ph.pos>0.96?'end':'middle');
-      var tx=ph.pos<0.04?px-4:(ph.pos>0.96?px+4:px);
-      var dir=below?1:-1, y=py+dir*20;
-      if(!on){
-        marks+='<text x="'+f(tx)+'" y="'+f(y)+'" text-anchor="'+anc+'" font-size="11.5" '+
-          'font-weight="700" fill="var(--ink-2)">'+esc(ph.ko)+'</text>';
-        y+=dir*12;
-        marks+='<text x="'+f(tx)+'" y="'+f(y)+'" text-anchor="'+anc+'" font-size="10" '+
-          'fill="var(--muted)" font-family="var(--mono)">'+ph.months+'개월'+
-          (ph.recent?' · 최근 '+ph.recent:'')+'</text>';
-      }else{ y=py+dir*32; }   // 지금 국면의 이름은 ③ 말풍선이 말한다 — 업종만 이어 붙인다
-      marks+='<circle cx="'+f(px)+'" cy="'+f(py)+'" r="'+(on?0:3.4)+'" fill="var(--panel)" '+
-        'stroke="var(--ink-2)" stroke-width="1.5"/>';
-      // 선호 업종 — 없으면 '표본 부족'이라고 적는다. 빈칸으로 두지 않는다.
-      var rows=(byb[ph.k]||[]).slice(0,topn);
-      if(!rows.length){
-        marks+='<text x="'+f(tx)+'" y="'+f(y+dir*13)+'" text-anchor="'+anc+'" font-size="9.5" '+
-          'fill="var(--muted)" font-style="italic">표본 부족</text>';
-      }else rows.forEach(function(r,k2){
-        var yy=y+dir*(13+k2*12);
-        marks+='<text x="'+f(tx)+'" y="'+f(yy)+'" text-anchor="'+anc+'" font-size="10.5" '+
-          'fill="var(--ink-2)">'+esc(r.ko)+
-          '<tspan font-size="9" fill="var(--muted)" font-family="var(--mono)"> '+
-          (CYB==='earn'?((r.v>0?'+':'')+r.v+'%'):((r.v>0?'+':'')+r.v.toFixed(2)))+'</tspan></text>';
-      });
-    });
-
-    // ③ 지금
-    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Y(np), nph=null;
-    (cy.phases||[]).forEach(function(ph){ if(ph.k===now.r) nph=ph; });
-    var nAnc=np<0.06?'start':(np>0.94?'end':'middle');
-    var nowMark='<line x1="'+f(nx)+'" y1="'+f(ny-12)+'" x2="'+f(nx)+'" y2="'+(TOP-30)+
-      '" stroke="var(--accent)" stroke-width="1.3"/>'+
-      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="10" fill="var(--accent)" opacity=".2"/>'+
-      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="5.2" fill="var(--accent)"/>'+
-      '<text x="'+f(nx)+'" y="'+(TOP-36)+'" text-anchor="'+nAnc+'" font-size="13" font-weight="800" '+
-      'fill="var(--accent)">지금 · '+esc(now.ko||'')+'</text>'+
-      '<text x="'+f(nx)+'" y="'+(TOP-21)+'" text-anchor="'+nAnc+'" font-size="10.5" '+
-      'fill="var(--muted)" font-family="var(--mono)">'+(now.run||0)+'개월째 · '+esc(now.dt||'')+
-      (nph?' · 전체 '+nph.months+'개월 · 최근24 중 '+nph.recent:'')+'</text>';
-
-    var tabs='<div class="cyctabs" role="tablist">'+
-      '<button class="cyctab'+(CYB==='price'?' on':'')+'" data-b="price" role="tab" aria-selected="'+
-        (CYB==='price')+'">주가 기준</button>'+
-      '<button class="cyctab'+(CYB==='earn'?' on':'')+'" data-b="earn" role="tab" aria-selected="'+
-        (CYB==='earn')+'">실적 기준</button>'+
-      '<span class="cycbasis">'+esc(CYB==='earn'?(S.earn_basis||''):(S.price_basis||''))+'</span></div>';
-
-    var svg='<div class="cycwrap">'+tabs+'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 곡선 — '+
-      '현재 국면 '+esc(now.ko||'')+', '+(now.run||0)+'개월째. 국면마다 '+
-      (CYB==='earn'?'실적':'주가')+' 기준 선호 업종 상위 '+topn+'개를 함께 표시. '+
-      '곡선의 순서는 통념이며 이 랩의 이력은 그 순서대로 진행하지 않는다.">'+
-      bands+
-      '<path d="'+dpth+'" fill="none" stroke="var(--ink-2)" stroke-width="2.4" stroke-linecap="round"/>'+
-      marks+nowMark+
-      '</svg></div>';
-
-    var dr=cy.drift||{};
-    var cap='<div class="cycnote">'+
-      '<b>곡선의 순서는 통념이다</b> — 성장×물가 매트릭스를 관용적으로 늘어놓은 배열이고 이 랩이 검정한 것이 아니다. '+
-      '이름 아래 「N개월」은 <b>실측</b>이다(2009년 이후 그 이름이었던 개월 수).'+
-      '<br><b>🚨 이 이력은 곡선을 따라 돌지 않는다</b> — 212개월 중 이름이 바뀐 것이 '+dr.trans+'번인데 '+
-      '그것이 순서쌍 '+dr.pairs+'개에 흩어져 있고 가장 많은 쌍이 '+dr.pairs_max+'번이다. '+
-      '곡선 순서대로 나아간 전이 <b>'+dr.fwd+'</b>번 · 거꾸로 간 전이 <b>'+dr.back+'</b>번 — 방향이 없다. '+
-      '최근 24개월도 <b>'+dr.recent_labels+'개 자리</b>에 흩어져 있고 이름이 <b>'+dr.recent_changes+'번</b> 바뀌었다.'+
-      '<br><b>두 자는 다른 것을 잰다</b> — 침체 칸을 보라. 실적 상위는 방어(헬스케어·필수소비)인데 '+
-      '주가 상위는 경기민감(소재·경기소비·기술)이다. <b>주가가 실적보다 앞선다</b>는 통념이 이 자료에도 보인다. '+
-      '그래서 두 장을 겹치지 않고 나눠 둔다.'+
-      '<br>'+esc((S.caveat||''))+' 그리고 이 순위는 <b>과거 그 국면에서 그랬다</b>는 것이지 '+
-      '지금 사라는 뜻이 아니다 — 표본이 얇은 칸(후기사이클 7개월 · 연착륙 13개월)일수록 더 그렇다.'+
-      '</div>';
-    host.innerHTML=svg+cap;
-    var tb=host.querySelectorAll('.cyctab');
-    for(i=0;i<tb.length;i++)tb[i].addEventListener('click',function(){
-      CYB=this.getAttribute('data-b'); renderCycle(cy);});
+    var S=cy.sectors||{};
+    var h='';
+    h+='<div class="cycwrap"><div class="cych">증시 사이클과 경기 사이클</div>'+cycChart11(cy)+
+       '<div class="cycb">주가 곡선을 실적 곡선보다 앞세워 그렸다</div></div>';
+    h+='<div class="cycwrap"><div class="cych">실적 기준 사이클</div>'+cycChart33(cy,'earn')+
+       '<div class="cycb">'+esc(S.earn_basis||'')+' · 국면별 상위 3</div></div>';
+    h+='<div class="cycwrap"><div class="cych">주가 기준 사이클</div>'+cycChart33(cy,'price')+
+       '<div class="cycb">'+esc(S.price_basis||'')+' · 국면별 상위 3</div></div>';
+    host.innerHTML=h;
     sec.hidden=false;
   }
 
