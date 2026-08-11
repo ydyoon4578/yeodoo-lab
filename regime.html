@@ -1166,6 +1166,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (nev?'var(--panel-2)':(cur?'var(--ink)':'var(--ink-2)'))+'" stroke="var(--panel)" '+
           'stroke-width="2"'+(nev?' stroke-dasharray="2 2"':'')+'/>';
         var t1=q.ko, t2=nev?'이 창에서 없었음':(q.months+'개월');
+        // 🚨 앵커가 경기 곡선에 맞춰지며(2026-08-11) 뒤 둘이 왼쪽 끝으로 감겼다
+        //   (후기사이클 0.00 · 연착륙 0.12). 가운데 정렬 그대로 두면 화면 밖으로 잘린다.
+        //   글자 폭을 어림해 양끝에서 밀어 넣는다.
+        var tw=Math.max(t1.length, t2.length)*6.2;
+        qx=Math.max(tw/2+4, Math.min(W-tw/2-4, qx));
         band+='<text x="'+f(qx)+'" y="'+(BY+20)+'" text-anchor="middle" font-size="11.5" '+
           'font-weight="'+(cur?'800':'600')+'" fill="'+(nev?'var(--muted)':'var(--ink)')+
           '" opacity="'+(nev?'.6':'1')+'">'+esc(t1)+(cur?' ●':'')+'</text>'+
@@ -1224,7 +1229,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ((cy.trail&&cy.trail.length>1)?(
         ' 자취의 점은 국면이 <b>바뀐 지점</b>이고 곁의 숫자는 그 국면에 머문 개월수다 — '+
         '한 국면 안에서 어디쯤인지는 이 분류기가 말하지 않으므로 머무는 동안 점은 움직이지 않는다. '+
-        '<b>화살표가 왼쪽으로 가면 교과서 순서와 반대로 간 것</b>이고, 이 창의 실측은 '+
+        // 🚨 2026-08-11 — 종전 문장은 "화살표가 **왼쪽**으로 가면 반대" 였다. 앵커를 경기
+        //   곡선에 맞추며 뒤 둘이 왼쪽 끝으로 감겨(후기사이클 0.00) **뒤로 가는 이동이
+        //   화면상 오른쪽을 가리키게** 됐다. 축은 원을 한 번 자른 것이라 화면 방향으로
+        //   순환 방향을 말할 수 없다 — 색·점선으로만 말한다.
+        '<b>주황 점선</b>이면 교과서 순서와 반대로 간 것이다(가로축은 한 바퀴를 한 번 자른 '+
+        '것이라 화면상 좌우와 순환 방향이 늘 같지는 않다). 이 창의 실측은 '+
         '앞으로 '+((cy.drift||{}).fwd||0)+'회 · 뒤로 '+((cy.drift||{}).back||0)+'회다.'):'')+
       '</div></div>'+tbl+
       '<div class="cycb"><b>창</b> '+esc((cy.window||{}).start||'')+' ~ '+esc((cy.window||{}).end||'')+
