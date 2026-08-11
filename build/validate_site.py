@@ -181,7 +181,9 @@ for p in PAGES:
 #   ct 손상은 괄호 균형 검사로는 안 잡히고(실증: ct 400자 치환 → 통과), 페이지가 영구 복호불가가 된다.
 #   ph = sha256(평문 utf-8 바이트). 잠금(재암호화) 도구가 반드시 함께 기록해야 하는 계약 —
 #   validate가 로컬 평문 사본과 대조해 '낡은 사본으로 초록불'(타 PC 재잠금 후 드리프트)을 기계적으로 잡는다.
-GATE_PLAIN = {"kb.html": "kb_content.html"}   # 게이트 → 평문 파일명(기본은 같은 이름; kb는 content 조각만 암호화)
+GATE_PLAIN = {"kb.html": "kb_content.html",
+              # 2026-08-11 — 두 번째 잠금 페이지. 본문(렌더러 포함)만 조각으로 뽑아 암호화한다.
+              "sources.html": "sources_content.html"}
 import base64 as _b64
 import hashlib as _hl
 # kb.html 은 이미 PAGES 안에 있다(루트의 '_' 로 시작하지 않는 모든 .html). 그냥 이어 붙이면

@@ -295,10 +295,14 @@ def pages() -> list[str]:
             if not fn.endswith(".html") or fn in SKIP:
                 continue
             p = os.path.join(d, fn)
-            # 조각 파일(_build/pages/kb_content.html)은 <head>가 없다 — 셸을 갖는 쪽은
-            # 이걸 끼워 넣는 kb.html이므로 여기서 다루지 않는다.
+            # 조각 파일(_build/pages/*_content.html)은 <head>가 없다 — 셸을 갖는 쪽은
+            # 이걸 끼워 넣는 게이트 페이지이므로 여기서 다루지 않는다.
             # 여는 <head>만 본다 — 닫는 </head>는 <style>이 커서 파일 한참 뒤에 있다.
-            if "<head" not in io.open(p, encoding="utf-8").read(2000):
+            # 🚨 접두 문자열 "<head" 로 보면 안 된다. **"<header" 가 걸린다.**
+            #   2026-08-11 에 sources_content.html 조각이 <header class="mast"> 로 시작해서
+            #   실제로 걸렸고, 조각을 셸 대상으로 오인해 "<style>가 없다"로 실패시켰다.
+            #   kb_content.html 은 우연히 앞머리에 <header 가 없어 그동안 안 드러났을 뿐이다.
+            if not re.search(r"<head[\s>]", io.open(p, encoding="utf-8").read(2000)):
                 continue
             out.append(p)
     return out
