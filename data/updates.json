@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-08-11",
+   "hm": "13:22",
+   "target": "explorer",
+   "title": "원 전략 크기 6종의 '실제 보유 수'를 전략 카드에 표시 — 목표를 못 채운 달까지"
+  },
+  {
+   "dt": "2026-08-11",
    "hm": "13:08",
    "target": "site",
    "title": "sources.html 열람 잠금(kb.html 과 같은 AES-256-GCM 게이트) · 시장 국면 화면 정리"

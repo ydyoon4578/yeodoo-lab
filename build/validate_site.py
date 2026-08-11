@@ -1095,6 +1095,31 @@ try:
 except Exception as e:
     errors.append(f"updates.json 검증 실패: {e}")
 
+# ── strategy_index 의 필드 중 화면이 한 번도 안 읽는 것 ──────────────────
+# 🚨 이 저장소가 반복해 온 실패는 두 종류다.
+#     ① 재 놓고 안 실었다 — 아래쪽 '_IDX_SKIP' 검사가 잡는다(tech → index).
+#     ② 실어 놓고 안 그렸다 — **이건 아무도 안 잡고 있었다.**
+#   2026-08-11 에 내가 ②를 만들었다. 바스켓 크기 계측(bask)을 index 까지 보내 놓고
+#   explorer 에 그리는 코드를 안 썼다. ①의 검사를 통과했기 때문에 초록불이었다.
+#   같은 자리에 has_detail 도 있었다 — 8행에 True 만 싣고 읽는 코드가 저장소에 0곳이다.
+# ⚠ 문자열 포함으로 보는 헐거운 검사다. 화면이 x.foo·"foo"·'foo' 중 어떤 형태로든
+#   한 번이라도 언급하면 통과한다. 그래도 '아예 아무 데도 없는' 필드는 확실히 잡힌다.
+try:
+    _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
+    _ex = io.open(os.path.join(ROOT, "explorer.html"), encoding="utf-8").read()
+    _IDX_ORPHAN_OK = set()      # 일부러 안 그리는 필드가 생기면 여기 사유와 함께 적을 것
+    _seen = set()
+    for _row in (_si.get("items") or []):
+        _seen |= set(_row.keys())
+    _orph = sorted(_k for _k in _seen - _IDX_ORPHAN_OK
+                   if ("." + _k) not in _ex and ('"' + _k + '"') not in _ex and ("'" + _k + "'") not in _ex)
+    if _orph:
+        errors.append("strategy_index 에 실었는데 explorer 가 한 번도 안 읽는 필드: "
+                      + ", ".join(_orph) + " — 그리든지, 안 보낼 것(재 놓고 안 그리면 잰 적 없는 것과 같다). "
+                      "일부러 남기는 것이면 validate_site 의 _IDX_ORPHAN_OK 에 사유와 함께 적을 것")
+except Exception as _e:
+    errors.append("strategy_index 고아 필드 검사 실패: %s" % _e)
+
 # ── PowerShell 스크립트는 UTF-8 BOM 이어야 한다 ──────────────────────────
 # 🚨 2026-08-11 에 실제로 당했다. build/rotation_daily.ps1 을 BOM 없이 저장했더니
 #   Windows PowerShell 5.1 이 그 파일을 **시스템 ANSI(CP949)로 읽어** 한글 주석이 깨졌고,

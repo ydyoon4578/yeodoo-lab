@@ -345,7 +345,6 @@ def main() -> int:
             nav=b.get("nav"), bnav=b.get("bench"),
             bench_label=b.get("bench_label"),
             holdings=HOLD_DEP.get(n),
-            has_detail=True,
         ))
 
     # ── ② 종목 전략 ──
