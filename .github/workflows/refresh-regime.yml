@@ -31,6 +31,11 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python build/refresh_regime.py
+      # 경기 사이클 곡선의 좌표 — regime.json 을 읽어 파생한다(네트워크 불필요).
+      # 🚨 refresh_regime.py **뒤에** 와야 한다. 순서가 바뀌면 국면은 오늘 것인데
+      #   곡선 위 점은 어제 자리에 남고, 같은 화면이 두 날짜를 말한다.
+      - name: Rebake business-cycle positions
+        run: python build/regime_cycle.py
       # 홈 전용 시장 요약(data/home_market.json) — 홈 카드가 쓰는 필드만 담은 발췌.
       # ⚠ **두 잡(refresh-regime 07:10 · refresh-sentiment 07:20)이 모두 이걸 굽는다.**
       #   한쪽에만 두면 그쪽이 먼저 도는 날 다른 원본이 어제 것이라 반쪽이 하루 낡는다.
@@ -55,7 +60,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 시장 국면(레짐) 자동 갱신" \
-            data/regime.json data/home_market.json data/asof.json
+            data/regime.json data/regime_cycle.json data/home_market.json data/asof.json
       # '돌았는데 낡은 데이터'면 잡 실패 → GitHub 기본 실패 알림 메일. '안 뜬' 케이스는 sources.html 배지가 드러낸다.
       - name: Verify freshness
         run: python build/check_freshness.py data/regime.json "시장 국면" 2

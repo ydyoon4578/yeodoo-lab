@@ -1150,6 +1150,31 @@ try:
 except Exception as _e:
     errors.append("ps1 BOM 검사 실패: %s" % _e)
 
+# ── 경기 사이클 곡선이 국면과 같은 날을 가리키는가 ────────────────────────
+# 🚨 regime_cycle.json 은 regime.json 에서 파생된다. 둘이 따로 커밋되면 곡선 위 점만
+#   어제 자리에 남고 화면은 아무 말도 안 한다 — 이 저장소가 반복해 온 '한 화면 두 날짜'다.
+#   refresh-regime 워크플로가 둘을 같이 굽고 같이 밀지만, 사람이 손으로 regime.json 만
+#   고치는 날이 온다. 그때 여기서 잡는다.
+try:
+    _rg = json.load(io.open(os.path.join(ROOT, "data", "regime.json"), encoding="utf-8"))
+    _cyp = os.path.join(ROOT, "data", "regime_cycle.json")
+    if os.path.exists(_cyp):
+        _cy = json.load(io.open(_cyp, encoding="utf-8"))
+        if _cy.get("as_of") != _rg.get("as_of"):
+            errors.append("경기 사이클 곡선 기준일 불일치 — regime_cycle.json %s vs regime.json %s. "
+                          "python build/regime_cycle.py 를 다시 돌릴 것"
+                          % (_cy.get("as_of"), _rg.get("as_of")))
+        _now = (_cy.get("now") or {}).get("r")
+        _lab = (_rg.get("regime") or {}).get("label")
+        if _now != _lab:
+            errors.append("경기 사이클 곡선이 다른 국면을 가리킨다 — 곡선 %s vs 국면 %s" % (_now, _lab))
+        # 곡선 위 자리는 빌드가 굽는다 — 화면이 숫자를 새로 적으면 채점기가 두 벌이 된다.
+        _rh = io.open(os.path.join(ROOT, "regime.html"), encoding="utf-8").read()
+        if "renderCycle" in _rh and "regime_cycle.json" not in _rh:
+            errors.append("regime.html 이 renderCycle 을 갖고 있는데 regime_cycle.json 을 안 받는다")
+except Exception as _e:
+    errors.append("경기 사이클 곡선 검사 실패: %s" % _e)
+
 # ── 전략 탐색 풀(rotation_pool.json)이 멈췄는지 ──────────────────────────
 # 🚨 2026-08-11 에 사용자가 '최근 갱신이 8월 7일'이라고 짚어서 알았다. 이 풀을 채우는
 #   자동 잡은 **없다**(생산자는 로컬 작업 스케줄러 + 헤드리스 Claude 다 — asof_index.py 주석
