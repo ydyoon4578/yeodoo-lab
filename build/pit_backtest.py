@@ -95,7 +95,11 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52",
               # 🚨 2026-08-11 — 랩에 등록돼 소급 t 로 판정되면서 PIT 만 안 받고 있던 것들.
               #   '자료가 없어서' 가 아니라 이 파일에 갈래·배선이 없어서였다(저가 미배선).
-              "x-lshock", "x-ongapd", "x-updown"]
+              "x-lshock", "x-ongapd", "x-updown",
+              # 🚨 2026-08-11 개편 — 채점기를 한 벌로 합치자 '횡단면 사전패스가 필요해서'
+              #   못 돌던 것들이 전부 돌게 됐다. 사본을 손으로 옮길 때는 2단 구조를
+              #   표현할 수 없었지만, 랩 함수를 그대로 부르면 사전패스도 같이 따라온다.
+              "x-hlspread", "x-clv", "x-volvol", "x-fip", "x-residmom", "x-indmom"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
@@ -113,56 +117,25 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              # 2026-08-11 바스켓 크기 3종 — 위 PRICE_SIDS 의 같은 주석 참조.
              "x-btp-n155", "x-payout-n50", "x-agrow-n52",
              # 2026-08-11 — 위 PRICE_SIDS 의 같은 사유. 옮기다 랩 본편의 선견을 찾았다.
-             "x-debtiss"]
+             "x-debtiss",
+             # 2026-08-11 개편으로 풀린 것들(위 PRICE_SIDS 의 같은 사유).
+             "x-valcomp", "x-valcomp-sn", "x-fscore"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
 EXCLUDED_SIDS = {
-    "x-volsurge": "편출 종목 거래량 부재 — 후보가 생존자로만 좁혀져 PIT 이 성립 안 함",
-    # 🚨 2026-08-04. 랩 본편의 x-52wh 는 이날 버그를 고쳤다 — 52주 최고가 창이 신호일을
-    #   포함해 신고가 종목의 점수가 정확히 1.0 이 되고(천장), 199개 월말 중 149개(75%)에서
-    #   10칸 전부가 티커 알파벳 역순으로 채워지고 있었다. 고친 방향은 규칙문 그대로
-    #   '최고가' = **일중 고가(hd)** 를 쓰는 것이다.
-    #   그런데 여기서는 같은 고침을 할 수 없다 — data/_pit_px_cache.json 이 편출 종목의
-    #   **종가만** 갖고 있어(147종·값이 스칼라) 고가가 없다. 랩 종목만 고가를 쓰고 편출 종목은
-    #   종가를 쓰면 같은 횡단면 안에서 두 자로 채점하는 것이라 더 나쁘다.
-    #   → 캐시가 OHLC 로 넓어질 때까지 PIT 에서 뺀다. **틀린 채로 재느니 안 재는 것이 낫다.**
-    #   (이 항목이 '채점기가 두 벌이면 한쪽만 고쳐진다'의 실례다 — 본편을 고친 그 자리에서
-    #    이쪽을 안 고쳤고, 적대감사가 build/pit_backtest.py:647 로 잡아냈다.)
-    "x-52wh": "편출 종목 고가 부재 — 랩 본편이 쓰는 일중 고가를 PIT 캐시가 안 갖고 있다",
-    # 🚨 2026-08-10. 투자의견 리비전 3종(사전등록 PREREG-2026-08-10-REVDRIFT.md)은 PIT 을
-    #   돌 수 **없다**. yfinance 의 upgrades_downgrades 는 지금 상장돼 있는 종목만 주므로
-    #   편출 종목의 등급 이력이 아예 없다 — 가격 캐시처럼 나중에 받아 채울 수 있는 종류가
-    #   아니다. 위 x-52wh 는 파일이 오면 사유가 사라지지만 이쪽은 사라지지 않는다.
-    #   그래서 이 셋은 **생존편향이 얼마인지 측정되지 않은 채로** 판정된다. 게시 기준 ④
-    #   (PIT 레그 t > 0)를 적용 제외하고, 그 사실을 카드와 결과 문서에 싣는다.
-    "x-revdrift": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(보완 불가)",
+    # 🚨 2026-08-11 — 여기 13종이 더 있었다. 사유는 둘이었고 **둘 다 사라졌다**:
+    #   · '횡단면 사전패스 필요' 7종 — 이 파일이 채점기 사본을 갖고 있어서 2단 규칙을
+    #     표현하지 못한 것이었다. 사본을 지우고 랩 함수를 부르니 그대로 돈다.
+    #   · '편출 종목 섹터 부재' 3종 — data/pit_sector.json 으로 메웠다(72/72).
+    #   남는 것은 **자료 원천이 생존자만 주는** 넷뿐이다. 이쪽은 코드로 못 푼다.
+    "x-volsurge": "편출 종목 거래량 부재 — 랩 파일(오늘의 유니버스)에만 있어 후보가 100% "
+                  "생존자로 좁혀지는데 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다. "
+                  "편출 종목 거래량을 받아 오면 풀린다.",
+    "x-revdrift": "편출 종목 투자의견 이력 부재 — yfinance 의 upgrades_downgrades 는 지금 "
+                  "상장돼 있는 종목만 준다. 나중에 받아 채울 수 있는 종류가 아니다(보완 불가).",
     "x-revdrift-q": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(보완 불가)",
     "x-revdrift-sn": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(보완 불가)",
-    # 🚨 2026-08-11 — 아래 아홉은 **오늘까지 이 목록에도 없었다.** 랩에 등록돼 소급 t 로
-    #   판정되면서 생존편향 검사만 안 받고 있었고(x-hlspread 소급 t 5.00 · x-clv 3.96 ·
-    #   x-residmom 3.23 · x-volvol 3.12 · x-valcomp 3.00), 아무 데도 사유가 적혀 있지 않았다.
-    #   '자료가 없다' 가 아니라 **아무도 안 적었다** 였다. 이제 사유를 적어 화면에 싣는다.
-    #   ⚠ 사유는 둘 중 하나이고 성격이 다르다:
-    #     (가) 횡단면 사전패스 — 이 파일의 score() 는 종목 하나·날짜 하나를 받는 함수라
-    #          '그달 후보 전체를 보고 중립화/합성/정렬' 하는 2단 규칙을 표현할 수 없다.
-    #          자료 문제가 아니라 **구조** 문제다. score() 를 한 벌로 합치는 개편이 답이고,
-    #          그 전에는 여기 갈래를 억지로 만들면 랩과 다른 규칙이 된다.
-    #     (나) 편출 종목 섹터 부재 — C["sector"] 가 랩 518종 메타에서만 온다. 편출 종목은
-    #          섹터가 None 이라 섹터로 묶거나 금융을 빼는 규칙은 후보가 생존자로 좁혀진다.
-    #          이쪽은 섹터를 받아 오면 사유가 사라진다(x-52wh 가 고가 캐시로 풀린 것과 같다).
-    "x-hlspread": "횡단면 사전패스 필요 — log(CS 스프레드)를 log(변동성)에 회귀한 잔차라 "
-                  "종목 하나만 보는 score() 로 표현 못 한다(구조 · 자료 문제 아님)",
-    "x-clv": "횡단면 사전패스 필요 — 1개월 수익 중립화 잔차(xsec_resid)",
-    "x-volvol": "횡단면 사전패스 필요 — 변동성 수준 중립화 잔차(xsec_resid)",
-    "x-valcomp": "횡단면 사전패스 필요 — 세 지표의 단면 백분위 합성",
-    "x-valcomp-sn": "횡단면 사전패스 필요 + 편출 종목 섹터 부재(섹터당 1종을 뽑는다)",
-    "x-fip": "횡단면 사전패스 필요 — 모멘텀 상위 5분위를 먼저 가른 뒤 정보이산성으로 고른다",
-    "x-residmom": "횡단면 패널 필요 — 시장·규모·가치 3팩터 회귀라 단면 전체가 있어야 한다",
-    "x-indmom": "편출 종목 섹터 부재 — 섹터로 묶어 상위 2섹터를 고르는데 편출 종목은 "
-                "섹터가 None 이라 어느 섹터에도 안 들어간다(후보가 100% 생존자가 된다)",
-    "x-fscore": "편출 종목 섹터 부재 — 금융업을 빼는 규칙이라 섹터가 필요하다. 9신호 자체는 "
-                "재무만으로 되므로 섹터만 받아 오면 풀린다",
 }
 # 고가·저가 캐시를 받아 두면 그 사유가 사라진다. 손으로 지우게 두지 않고 **파일 유무로 정한다** —
 # 사람이 지우는 것을 잊으면 규칙이 영영 검정을 안 받고, 그건 오늘 하루 내내 잡은 사고 유형이다.
@@ -528,21 +501,32 @@ def main():
             "판정되는데, 그 사실이 아무 데도 안 남는다.\n"
             "  → build/pit_backtest.py 의 PRICE_SIDS/FUND_SIDS 에 넣고 score() 갈래를 만들거나, "
             "EXCLUDED_SIDS 에 사유와 함께 적을 것." % (len(_orphan), ", ".join(_orphan)))
-    C = {"px": px, "vlm": vlm, "R": R, "ixr": ixr, "ixvol": ixvol,
-         "SH": C_SH, "dates": dates, "FU": _fu,
-         # x-gpa·x-ocfp·x-aci 가 금융업을 뺀다 — 랩과 같은 섹터 라벨을 써야 정의가 같다.
-         "sector": {t: (m or {}).get("sector") for t, m in (_lab_meta() or {}).items()},
-         # x-season 이 월말 격자를 쓴다 — 랩과 같은 거래일 월말이어야 같은 시점을 본다.
-         "me": sorted(me)}
+    # 🚨 랩 본편의 xsec_score_at() 이 받는 것과 **같은 모양**이어야 한다(키 하나라도 빠지면
+    #   KeyError 로 죽는다 — 조용히 다른 값이 나오는 것보다 낫다).
+    _meta = {t: dict(m or {}) for t, m in (_lab_meta() or {}).items()}
+    # 편출 종목 섹터 — 랩 메타는 오늘의 518종만 갖는다. 이것을 안 메우면 섹터로 묶거나
+    # 금융업을 빼는 규칙에서 편출 종목이 통째로 빠져 후보가 생존자로 좁혀진다.
+    _ps = os.path.join(DATA, "pit_sector.json")
+    _nsec2 = 0
+    if os.path.exists(_ps):
+        for t, sg in ((json.load(io.open(_ps, encoding="utf-8")) or {}).get("sector") or {}).items():
+            if t not in _meta and sg:
+                _meta[t] = {"sector": sg}
+                _nsec2 += 1
+    print("  섹터 %d종 (랩 %d + 편출 %d)" % (len(_meta), len(_meta) - _nsec2, _nsec2))
+    X = {"FACP": TB.load_factor_proxies(dates), "FU": _fu, "R": R, "dates": dates,
+         "hid": {}, "lod": {}, "ixr": ixr, "ixvol": ixvol, "me": me,
+         "me_list": sorted(me), "meta": _meta, "px": px, "vlm": vlm,
+         "tickers": tickers}
     # 고가·저가 — x-52wh(고가) · x-lshock·x-ongapd(둘 다) 가 쓴다. 편출 종목분은 HLCACHE 에서
     # 온다. 🚨 종전에는 조건이 `x-52wh 가 제외 목록에 없으면` 이었다. HL 캐시가 있어도
     #   x-52wh 하나의 사정으로 저가·고가 전체가 안 실릴 수 있는 배선이었고, 그 탓에 고저가를
     #   쓰는 다른 규칙은 아예 후보에 오르지도 못했다. 파일이 있으면 싣는다 — 쓰는 쪽이 정한다.
     if os.path.exists(HLCACHE):
-        C["hi"], _nl, _nx = load_hilo(set(px), dates, span, 0)
-        C["lo"], _nl2, _nx2 = load_hilo(set(px), dates, span, 1)
+        X["hid"], _nl, _nx = load_hilo(set(px), dates, span, 0)
+        X["lod"], _nl2, _nx2 = load_hilo(set(px), dates, span, 1)
         print("  고가 %d종 (랩 %d + 편출캐시 %d) · 저가 %d종 (랩 %d + 편출캐시 %d)"
-              % (len(C["hi"]), _nl, _nx, len(C["lo"]), _nl2, _nx2))
+              % (len(X["hid"]), _nl, _nx, len(X["lod"]), _nl2, _nx2))
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
     # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
@@ -600,41 +584,40 @@ def main():
 
     def run(S, pool_at, IXR, IXVOL):
         """한 전략을 한 유니버스로 돌린다. pool_at 이 None 이면 제한 없음(소급)."""
-        CC = dict(C, ixr=IXR, ixvol=IXVOL)
-        hold, nav, srets, turns = [], [100.0], [], 0
+        # 🚨 2026-08-11 — 이 파일이 갖고 있던 **두 번째 채점기**(score())를 지웠다.
+        #   랩 본편의 xsec_score_at()/xsec_pick_at() 을 그대로 부른다. 두 레그의 차이가
+        #   '생존편향' 이려면 채점도 선택도 같은 코드여야 한다. 사본이 있는 한 어긋난다 —
+        #   하루에 넷을 그렇게 잡았다(x-52wh · ttm2 · 편향 문장 · x-debtiss 선견).
+        #   그리고 사본으로 옮기기 어려운 2단 규칙 7종이 아예 PIT 을 못 돌고 있었다.
+        XX = dict(X, ixr=IXR, ixvol=IXVOL)
+        hold, hw, nav, srets, turns = [], None, [100.0], [], 0
         first = None                       # 실제로 무언가를 보유하기 시작한 시점
         for i in range(i0 + 1, n):
             if (i - 1) in me:
-                pool = pool_at(i - 1) if pool_at else None
-                sc = []
-                for t in tickers:
-                    if pool is not None and t not in pool:      # ★ PIT 마스킹
-                        continue
-                    if pool is None and t not in _today:        # 소급 레그 = 오늘의 유니버스
-                        continue
-                    v = score(S, t, i - 1, CC)
-                    if v is not None and v == v:
-                        sc.append((v, t))
-                sc.sort(reverse=True)
+                # 소급 레그도 **명단으로** 준다 — 종전에는 pool=None 으로 두고 채점 루프
+                # 안에서 오늘 유니버스를 걸렀는데, 그러면 사전패스(모멘텀 5분위·변동성
+                # 회귀·섹터 정렬)는 전 종목을 보게 되어 두 레그가 다른 모집단을 쓴다.
+                pool = pool_at(i - 1) if pool_at else _today
+                sc, ind_raw, _cr = TB.xsec_score_at(S, i, XX, pool)
                 if len(sc) < TB.XSEC_MIN_POOL:                  # 소급 레그와 같은 커버리지 게이트
-                    hold = []
+                    hold, hw = [], None
                 else:
-                    # 🚨 소급 레그와 **같은 선택 규칙**을 써야 한다 — 한 회사는 한 번만
-                    #   (TB.pick_top). 여기만 두 클래스를 담으면 두 레그의 차이가
-                    #   생존편향이 아니라 '바스켓 구성 규칙이 달라서'가 된다.
-                    # 🚨 topn 을 넘겨야 소급 레그와 **바스켓 크기까지** 같아진다(2026-08-11).
-                    #   안 넘기면 소급은 155종, PIT 은 10종이 되어 두 레그의 차이가
-                    #   생존편향이 아니라 바스켓 크기가 된다 — 위 주석이 경계하는 그것이다.
-                    new = TB.pick_top(sc, S["sid"], S.get("topn"))
+                    new, new_w = TB.xsec_pick_at(S, i, XX, sc, ind_raw)
                     if new:
                         # 분모도 바스켓 크기로 일반화한다(랩 본편 2026-08-08 과 같은 식).
-                        # topn 이 없는 34종은 len(new)+len(hold) = 2×TOPN 이라 값이 그대로다.
                         turns += (len(set(new) ^ set(hold)) / (len(new) + len(hold))) if hold else 1.0
-                        hold = new
+                        hold, hw = new, new_w
             if hold and first is None:
                 first = i
-            rs = [R[t][i] for t in hold if R[t][i] is not None]
-            srets.append(sum(rs) / len(rs) if rs else 0.0)
+            if hw:
+                # 가중 바스켓(섹터 중립·산업 모멘텀). 랩 본편과 같은 되정규화 —
+                # 결측 종목을 0 으로 두면 그날 현금을 든 것이 되어 중립이 조용히 깨진다.
+                _pairs = [(hw[t], R[t][i]) for t in hold if R[t][i] is not None and t in hw]
+                _sw = sum(w for w, _x in _pairs)
+                srets.append((sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0)
+            else:
+                rs = [R[t][i] for t in hold if R[t][i] is not None]
+                srets.append(sum(rs) / len(rs) if rs else 0.0)
             nav.append(nav[-1] * (1 + srets[-1]))
         bnav = [100.0]
         for i in range(i0 + 1, n):
@@ -861,279 +844,12 @@ def main():
     return 0
 
 
-def score(S, t, j, C):
-    # 🚨 2026-08-05 — 여기 ttm() 을 쓰면 랩 본편(ttm2)과 **다른 규칙**이 된다. 하루 전에
-    #   tech_backtest 만 ttm2(q, a) 로 바꾸고 이 파일을 안 고쳐서 정확히 그 일이 있었다.
-    #   같은 사고가 오늘만 두 번째다(x-52wh 도 tech 에서만 고쳐졌었다). 채점기가 두 벌인 한
-    #   구조적으로 다시 난다 — 아래 갈래를 고칠 때 반드시 tech_backtest 와 나란히 볼 것.
-    """tech_backtest 의 횡단면 점수 갈래를 그대로 옮긴 것(가격·거래량 + 펀더멘털).
-
-    ⚠ 정의를 여기서 새로 쓰면 안 된다 — tech_backtest.py:1232-1281 과 **같은 산식**이어야
-      '소급 대비 PIT' 비교가 성립한다. 옮길 때 접근자(asof_fund·ttm·_shift)도 그쪽 것을 쓴다.
-    """
-    # 🚨 랩 본편(tech_backtest.py) 과 **같은 자리에 같은 처리**다 — 바스켓 크기만 다른
-    #   규칙(x-btp-n155 등)은 점수 함수가 짝과 완전히 같아야 하므로 접미사를 떼고 갈래를 탄다.
-    #   여기만 안 떼면 그 셋이 어느 갈래에도 안 걸려 점수 None → 후보 0 이 되고,
-    #   PIT 레그가 '무보유'로 조용히 채워진다.
-    sid = TB._BASE_SID(S["sid"])
-    P = C["px"][t]
-    R, ixr, ixvol = C["R"], C["ixr"], C["ixvol"]
-
-    # ── 펀더멘털 ─────────────────────────────────────────────────────────
-    if sid in ("x-sue", "x-epsacc") or sid in FUND_SIDS:
-        f = (C.get("FU") or {}).get(t) or {}
-        dt_ = C["dates"][j]
-        p0 = P[j]
-        if sid == "x-sue":
-            return TB.sue(f.get("eps") or [], dt_)
-        if sid == "x-epsacc":
-            e = TB.eps_accel(f.get("eps") or [], dt_)
-            return (e / p0) if (e is not None and p0 and p0 > 0) else None
-        sn = TB.asof_fund(f.get("sh"), dt_)
-        mcap = (sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
-        if sid == "x-btp":
-            e = TB.asof_fund(f.get("eq"), dt_)
-            return (e / sn / p0) if (e is not None and mcap) else None
-        if sid == "x-fcfy":
-            fc = TB.ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
-            return (fc / mcap) if (fc is not None and mcap) else None
-        if sid == "x-payout":
-            dp = TB.ttm2(f.get("dps"), f.get("dps_a"), dt_)
-            bbv = TB.ttm2(f.get("bb"), f.get("bb_a"), dt_)
-            if not (mcap and (dp is not None or bbv is not None)):
-                return None
-            tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
-            return (tot / mcap) if tot >= 0 else None
-        if sid == "x-poacc":
-            cut_ = TB._shift(dt_, TB.FUND_LAG_DAYS)
-            nim = dict(f.get("ni_a") or []); cfm = dict(f.get("cfo_a") or [])
-            rvm = dict(f.get("rev_a") or [])
-            d_ = next((d for d, _x in (f.get("ni_a") or []) if d <= cut_ and d in cfm), None)
-            if not d_:
-                return None
-            ni_, cf_, rv_ = nim[d_], cfm[d_], rvm.get(d_)
-            if not (rv_ and rv_ > 0 and abs(ni_) >= 0.01 * rv_):
-                return None
-            return -((ni_ - cf_) / abs(ni_))
-        if sid in ("x-gpa", "x-ocfp", "x-aci"):
-            if (C.get("sector") or {}).get(t) == "Financials":
-                return None
-            at = TB.asof_fund(f.get("asset"), dt_)
-            if sid == "x-ocfp":
-                cf_ = TB.ttm2(f.get("cfo"), f.get("cfo_a"), dt_)
-                return (cf_ / at) if (cf_ is not None and at and at > 0) else None
-            if sid == "x-gpa":
-                g = TB.ttm2(f.get("gp"), f.get("gp_a"), dt_)
-                rv_ = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
-                cg = TB.ttm2(f.get("cogs"), f.get("cogs_a"), dt_)
-                if g is not None and cg is not None and rv_ and rv_ > 0:
-                    if abs(g + cg - rv_) / rv_ > 0.01:
-                        g = None
-                if g is None and rv_ is not None and cg is not None:
-                    g = rv_ - cg
-                return (g / at) if (g is not None and at and at > 0) else None
-            cx = [(d, x) for d, x in (f.get("capex_a") or [])
-                  if d <= TB._shift(dt_, TB.FUND_LAG_DAYS)]
-            rvm = dict(f.get("rev_a") or [])
-            rat = []
-            for d, x in cx[:4]:
-                r_ = rvm.get(d)
-                if r_ and r_ > 0 and x is not None:
-                    rat.append(x / r_)
-            if len(rat) == 4 and sum(rat[1:]) > 0:
-                ci = rat[0] / (sum(rat[1:]) / 3.0) - 1.0
-                return -ci if abs(ci) <= 3.0 else None
-            return None
-        if sid == "x-debtiss":
-            # 총부채 1년 증가율(낮을수록 좋아 부호를 뒤집는다). 🚨 랩 본편의 이 갈래에
-            # 선견이 있었다 — '1년 전' 분모가 _shift(dt_, -365) 라 1년 **뒤** 를 집고 있었다.
-            # 2026-08-11 에 두 파일을 같이 고쳤다. 고칠 때 반드시 나란히 볼 것.
-            db1 = TB.asof_fund(f.get("debt"), dt_)
-            db0 = TB.asof_fund(f.get("debt"), TB._shift(dt_, 365))
-            return -(db1 / db0 - 1.0) if (db1 is not None and db0 and db0 > 0) else None
-        if sid == "x-ep":
-            v = TB.ttm2(f.get("eps"), f.get("eps_a"), dt_)
-            return (v / p0) if (v is not None and p0 and p0 > 0) else None
-        if sid == "x-sp":
-            rv = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
-            return (rv / mcap) if (rv is not None and mcap) else None
-        if sid == "x-roe":
-            nn, e = TB.ttm2(f.get("ni"), f.get("ni_a"), dt_), TB.asof_fund(f.get("eq"), dt_)
-            return (nn / e) if (nn is not None and e and e > 0) else None
-        if sid == "x-npm":
-            nn, rv = TB.ttm2(f.get("ni"), f.get("ni_a"), dt_), TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
-            return (nn / rv) if (nn is not None and rv and rv > 0) else None
-        if sid == "x-rgrow":
-            a1 = TB.ttm2(f.get("rev"), f.get("rev_a"), dt_)
-            a0 = TB.ttm2(f.get("rev"), f.get("rev_a"), TB._shift(dt_, 365))
-            return (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
-        if sid == "x-lowde":
-            e = TB.asof_fund(f.get("eq"), dt_)
-            lb = TB.asof_fund(f.get("liab"), dt_)
-            if lb is None:
-                at = TB.asof_fund(f.get("asset"), dt_)
-                lb = (at - e) if (at is not None and e is not None) else None
-            return -(lb / e) if (lb is not None and e and e > 0) else None
-        if sid == "x-dy":
-            dp = TB.ttm2(f.get("dps"), f.get("dps_a"), dt_)
-            return (dp / p0) if (dp is not None and p0 and p0 > 0) else None
-        if sid == "x-agrow":
-            pr = TB.yoy_pair(f.get("asset"), dt_)
-            if not pr or pr[1] <= 0 or pr[3] <= 0:
-                return None
-            g = pr[1] / pr[3] - 1.0
-            return -max(-2.0, min(2.0, g))
-        if sid == "x-shiss":
-            # 소급 레그와 문자 그대로 같아야 한다 — 다르면 '편향'이라 부른 값이 정의 차이다.
-            pr = TB.yoy_pair(f.get("sh_u") or f.get("sh"), dt_, seam=f.get("sh_seam"))
-            if not pr or pr[1] <= 0 or pr[3] <= 0:
-                return None
-            g = pr[1] / pr[3] - 1.0
-            return -g if abs(g) <= 0.5 else None
-        if sid == "x-custconc":
-            return TB.custconc_asof(t, dt_)           # 소급 레그와 문자 그대로 같다
-        if sid == "x-cash":
-            ch = TB.asof_fund(f.get("cash"), dt_)
-            at = TB.asof_fund(f.get("asset"), dt_)
-            return (ch / at) if (ch is not None and at and at > 0) else None
-        # 🚨 FUND_SIDS 에 넣어 놓고 여기 갈래를 안 만들면 **조용히 무보유**가 되고, 표에는
-        #   '열위'라는 성적이 붙는다. 실제로 그렇게 한 번 틀렸다 — 2026-08-04 에 후보 규칙
-        #   하나를 FUND_SIDS 에만 넣고 돌렸더니 CAGR 0.00 · 초과 −17.59 · t −3.32 가 나왔는데
-        #   규칙의 성적이 아니라 갈래 누락이었다.
-        #   채점기가 두 벌이라(tech_backtest 와 여기) 한쪽만 고쳐지는 사고는 구조적으로 난다.
-        #   그러니 조용히 None 을 돌려주지 말고 여기서 죽는다.
-        raise SystemExit("pit_backtest.score: FUND_SIDS 에 %s 가 있는데 채점 갈래가 없다 — "
-                         "tech_backtest 의 같은 갈래를 그대로 옮겨 적을 것" % sid)
-    if sid == "x-echo":
-        return TB.ret(P, j - 126, 126)
-    if sid == "x-coskew":
-        ck = TB.coskew(R[t], ixr, j, 252)
-        return -ck if ck is not None else None
-    if sid == "x-lowcorr":
-        cr = TB.mkt_corr(R[t], ixr, j, 252)
-        return -cr if cr is not None else None
-    if sid == "x-cntd":
-        return TB.updown(R[t], j, 231)
-    if sid == "x-season":
-        return TB.same_month_avg(P, j, C["dates"], C["me"])
-    # ── 2026-08-11 추가 ─────────────────────────────────────────────────
-    # 🚨 이 셋은 '자료가 없어서' 가 아니라 **여기 갈래가 없어서** PIT 을 못 돌고 있었다.
-    #   랩에는 등록돼 소급 t 로 판정되면서 생존편향 검사만 안 받는 상태였다(x-lshock 소급 t 2.12,
-    #   x-ongapd 2.18, x-updown 2.87). 저가 배선(load_hilo which=1)이 생기며 가능해졌다.
-    #   ⚠ 아래 셋은 tech_backtest 의 같은 갈래를 **줄 단위로 옮긴 것**이다. 고칠 때 나란히 볼 것.
-    if sid == "x-lshock":                       # tech_backtest.py 의 x-lshock 갈래
-        H2, L2 = (C.get("hi") or {}).get(t), (C.get("lo") or {}).get(t)
-        p2 = P[j]
-        if not (H2 and L2) or not p2 or p2 < 5.0:
-            return None
-        S2 = TB.cs_spread(H2, L2, t)
-        a = [x for x in S2[max(0, j - 62):j + 1] if x is not None]
-        b = [x for x in S2[max(0, j - 251):max(0, j - 62)] if x is not None]
-        if len(a) < 32 or len(b) < 95:
-            return None
-        sa, sb = sum(a) / len(a), sum(b) / len(b)
-        return math.log(sa / sb) if (sa > 0 and sb > 0) else None
-    if sid == "x-ongapd":                       # tech_backtest.py 의 x-ongapd 갈래
-        H2, L2 = (C.get("hi") or {}).get(t), (C.get("lo") or {}).get(t)
-        p2 = P[j]
-        if not (H2 and L2) or not p2 or p2 < 5.0:
-            return None
-        g = TB.gap_daily(H2, L2, P, t)
-
-        def _share(w):
-            a = b = 0.0
-            c = 0
-            for k2 in range(max(0, j + 1 - w), j + 1):
-                x = g[k2]
-                if x is None:
-                    continue
-                a += x[0]; b += x[1]; c += 1
-            return (a / b, c) if b > 0 else (None, c)
-        s63, n63 = _share(63)
-        s252, n252 = _share(252)
-        return (s63 - s252) if (s63 is not None and s252 is not None
-                                and n63 >= 32 and n252 >= 126) else None
-    if sid == "x-updown":                       # tech_backtest.py 의 x-updown 갈래
-        rs2 = R[t]
-        if TB._stall(rs2, j):
-            return None
-        w2 = [(rs2[k2], ixr[k2]) for k2 in range(max(0, j + 1 - 252), j + 1)
-              if rs2[k2] is not None and ixr[k2] is not None]
-        mu = (sum(z[1] for z in w2) / len(w2)) if w2 else 0.0
-        dn = [z for z in w2 if z[1] < mu]
-        up = [z for z in w2 if z[1] >= mu]
-        if len(dn) < 40 or len(up) < 40:
-            return None
-
-        def _beta(pairs):
-            mx2 = sum(z[1] for z in pairs) / len(pairs)
-            my2 = sum(z[0] for z in pairs) / len(pairs)
-            sxx = sum((z[1] - mx2) ** 2 for z in pairs)
-            if sxx <= 0:
-                return None
-            return sum((z[1] - mx2) * (z[0] - my2) for z in pairs) / sxx
-        bd, bu = _beta(dn), _beta(up)
-        den = (abs(bd) + abs(bu)) if (bd is not None and bu is not None) else None
-        return ((bd - bu) / den) if (den and den >= 0.2) else None
-
-    if sid == "x-52wh":
-        # 🚨 EXCLUDED_SIDS 로 빠진 규칙이다(2026-08-04). 창이 신호일 j 를 포함해 신고가
-        #   종목의 점수가 정확히 1.0 이 되고, 그 동점이 티커 알파벳 역순으로 갈린다 —
-        #   랩 본편에서 고친 그 버그가 여기 그대로 남아 있었다. 본편은 일중 고가로 고쳤지만
-        #   PIT 가격 캐시에는 고가가 없다. 갈래를 지우지 않고 **죽게** 둔다: 누가 목록에
-        #   되돌려 넣으면 조용히 틀린 값을 내는 대신 여기서 멈춘다.
-        H = (C.get("hi") or {}).get(t)
-        if H is None:
-            # 캐시가 없거나 그 종목이 없다 — 조용히 종가로 대체하지 않는다. 랩 종목만 고가를
-            # 쓰고 편출 종목은 종가를 쓰면 한 횡단면을 두 자로 채점하는 것이라 더 나쁘다.
-            return None
-        win = [x for x in H[max(0, j - 251):j + 1] if x]
-        h = max(win) if win else None
-        return (P[j] / h) if (h and P[j]) else None
-    if sid == "x-dist200":
-        m = TB.sma(P, j, 200)
-        return (P[j] / m - 1) if (m and P[j]) else None
-    if sid == "x-mom-trend":
-        m200 = TB.sma(P, j, 200)
-        if not m200 or not P[j] or P[j] <= m200:
-            return None
-        return (TB.ret(P, j, 252) or -9) - (TB.ret(P, j, 21) or 0)
-    if sid == "x-rev1w":
-        return -(TB.ret(P, j, 5) or 9)
-    if sid == "x-minvar":
-        sv, mv = TB.vol(R[t], j, 120), ixvol[j]
-        return -(0.5 * sv + 0.5 * mv) if (sv and mv) else None
-    if sid == "x-riskbudget":
-        sv = TB.vol(R[t], j, 60)
-        return (1.0 / sv) if sv and sv > 0 else None
-    if sid == "x-lowbeta":
-        b = TB.beta(R[t], ixr, j, 120)
-        return -b if b is not None else None
-    if sid == "x-ivol":
-        iv = TB.idio_vol(R[t], ixr, j, 120)
-        return -iv if iv is not None else None
-    if sid == "x-snapback":
-        m200 = TB.sma(P, j, 200)
-        if not m200 or not P[j] or P[j] <= m200:
-            return None
-        rv = TB.rsi(P, j)
-        return -rv if rv is not None else None
-    if sid == "x-volsurge":
-        V = C["vlm"].get(t)
-        m200 = TB.sma(P, j, 200)
-        if not V or not m200 or not P[j] or P[j] <= m200:
-            return None
-        a, b = TB.sma(V, j, 20), TB.sma(V, j, 60)
-        return (a / b) if (a and b and b > 0) else None
-    if sid == "x-small":
-        # 랩과 같은 정의 — 시가총액 = 그 시점 주식수 × 종가. 작을수록 위(음수로 뒤집는다).
-        a = (C.get("SH") or {}).get(t)
-        if not a:
-            return None
-        sn = TB.asof_fund(a, C["dates"][j])
-        p0 = P[j]
-        return -(sn * p0) if (sn and p0 and sn > 0 and p0 > 0) else None
-    return S["fn"](t, j, P, R[t], TB.vol(R[t], j, 60))
+# 🚨 여기 있던 score() 를 2026-08-11 에 지웠다 — 랩 본편 채점기의 **두 번째 사본**이었다.
+#   sid 마다 손으로 옮긴 갈래가 700줄 있었고, 옮기기 어려운 2단 규칙(횡단면 중립화·합성·
+#   섹터 정렬) 7종은 아예 옮기지 못해 PIT 을 못 돌고 있었다. 그 7종은 랩에 등록돼 소급 t 로
+#   판정되면서 생존편향 검사만 안 받는 상태였다(x-hlspread 소급 t 5.00).
+#   지금은 tech_backtest.xsec_score_at(S, i, X, pool) 하나를 두 레그가 같이 부른다.
+#   되살리지 말 것 — 사본이 생기는 순간 어긋나기 시작한다.
 
 
 def write_reuse(want, span):
