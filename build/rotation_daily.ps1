@@ -102,6 +102,10 @@ if (-not $p.WaitForExit($TimeoutMinutes * 60 * 1000)) {
   try { $p.Kill() } catch {}
   Fail ("헤드리스 Claude 가 " + $TimeoutMinutes + "분 안에 안 끝났다")
 }
+# ⚠ 시간 제한이 있는 WaitForExit($ms) 뒤에는 ExitCode 가 아직 안 채워져 있을 수 있다
+#   (첫 실행에서 실제로 빈 값이 찍혔다). 인자 없는 WaitForExit() 을 한 번 더 불러
+#   출력 스트림까지 닫히기를 기다린 뒤 읽는다.
+$p.WaitForExit()
 Say ("claude 종료코드 " + $p.ExitCode)
 $outTxt = if (Test-Path $outFile) { Get-Content $outFile -Raw -Encoding utf8 } else { "" }
 $errTxt = if (Test-Path $errFile) { Get-Content $errFile -Raw -Encoding utf8 } else { "" }
