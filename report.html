@@ -734,6 +734,10 @@ function vtBlock(v){
 
 function pitBlock(p){
   if(!p) return '';
+  // 🚨 빈칸으로 두지 않는다. '해당 없음' 과 '아직 안 쟀다' 와 '못 잰다' 는 다른 것이고,
+  //   셋을 다 빈칸으로 두면 독자가 구별할 수 없다 — 실제로 그 탓에 횡단면 13종이
+  //   생존편향 검사를 한 번도 안 받은 채 소급 t 로만 판정되고 있었다(2026-08-11).
+  if(p.na) return '<p class="caveat">이 규칙에는 PIT 레그가 없다 — '+esc(p.na)+'</p>';
   var a=p.pit||{}, r=p.retro||{}, bi=p.bias||{};
   // 🚨 편향 열에는 색을 주지 않는다. 초록은 '좋다'로 읽히는데 편향이 크다는 것은
   //   소급 수치가 그만큼 부풀어 있었다는 뜻이다 — 나쁜 소식이지 좋은 소식이 아니다.
@@ -859,14 +863,21 @@ function card(x,i){
   h+=sec('성과 (비용 0)',perfTable(x.perf)+
     '<p class="caveat">초과 CAGR '+sgn(x.excess_cagr,2,'%p')+' · Δ샤프 '+sgn(x.d_sharpe,3)+
     ' · <b>t '+num(x.t,2)+'</b> (본페로니 임계 '+num(x.t_crit,2)+')'+
+    // 🚨 이 t 는 **오늘의 유니버스를 과거에 소급한** 표본에서 나온 값이다. 생존편향 보정
+    //   값이 있으면 여기 나란히 적는다 — 소급 t 만 보고 읽히는 것을 막는 것이 요점이다.
+    (x.pit&&x.pit.pit&&x.pit.pit.t!=null
+       ? ' · <b>PIT t '+num(x.pit.pit.t,2)+'</b> <span style="color:var(--muted)">(생존편향 보정 · 아래 표)</span>'
+       : (x.pit&&x.pit.na ? ' · <span style="color:var(--muted)">PIT 없음 — 아래 사유</span>' : ''))+
     (x.turnover!=null?' · 연 회전율 '+num(x.turnover,2):'')+
     (x.exposure!=null?' · 평균 노출 '+num(x.exposure,1)+'%':'')+'</p>');
 
+  // 🚨 PIT 을 성과 **바로 뒤**에 둔다. 종전에는 비용·위험·중복·매매대상 뒤였고, 그래서
+  //   같은 카드에서 소급 수치를 먼저 읽고 한참 내려가서야 그것이 부풀어 있다는 것을 알았다.
+  h+=sec('생존편향 보정 (PIT)',pitBlock(x.pit));
   h+=sec('비용 후',costBlock(x.cost));
   h+=sec('위험 — 낙폭·꼬리',riskBlock(x.risk));
   h+=sec('이 랩의 다른 규칙과 겹치는가',incrBlock(x.incr));
   h+=sec('매매대상 대비',vtBlock(x.vs_traded));
-  h+=sec('생존편향 보정 (PIT)',pitBlock(x.pit));
   h+=sec('후보 풀 추이',poolBlock(x.pool));
   h+=sec('지금 들고 있는 것',holdBlock(x.holdings));
 
