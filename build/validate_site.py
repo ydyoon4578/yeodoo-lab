@@ -1150,6 +1150,32 @@ try:
 except Exception as _e:
     errors.append("ps1 BOM 검사 실패: %s" % _e)
 
+# ── JS 문자열 안에서 쓰는 CSS 변수도 정의돼 있는가 ──────────────────────
+# 🚨 2026-08-11 에 당했다. 사이클 차트가 SVG 를 JS 문자열로 조립하면서 fill="var(--champ)"
+#   를 썼는데 regime.html 에는 그 토큰이 **없다**(kb.html 은 자기 팔레트를 따로 둬서 있다).
+#   색이 통째로 빠져 경기 곡선이 회색으로 그려졌고, 아무 검사도 안 걸렸다 —
+#   기존 '정의 없는 CSS 변수' 검사는 CSS 선언과 인라인 style= 만 보기 때문이다.
+#   그림이 잘못 그려져도 파서는 아무 말을 안 한다. 그래서 여기서 따로 본다.
+# ⚠ 문자열 안이라 오탐이 있을 수 있다(주석·설명문에 쓴 var(--x)). 실제 정의를 못 찾은 것만 낸다.
+try:
+    import glob as _g2
+    for _hp in sorted(_g2.glob(os.path.join(ROOT, "*.html"))):
+        _fn = os.path.basename(_hp)
+        _tx = io.open(_hp, encoding="utf-8").read()
+        _def = set(re.findall(r"(--[\w-]+)\s*:", _tx))
+        # 런타임에 심는 것도 정의로 친다 — explorer 의 --vc 가 그 경우다
+        # (b.style.setProperty('--vc', …)). 허용목록을 손으로 두면 낡는다.
+        _def |= set(re.findall(r"setProperty\(\s*['\"](--[\w-]+)", _tx))
+        # var(--x, 대체값) 형태는 대체값이 있으니 빠져도 화면이 안 깨진다 — 뺀다.
+        _use = set(re.findall(r"var\((--[\w-]+)\s*\)", _tx))
+        _bad = sorted(_use - _def)
+        if _bad:
+            errors.append("%s: 정의 없는 CSS 변수를 var() 로 쓴다 %s — 그 자리는 색·크기가 "
+                          "통째로 빠진 채 그려진다(파서는 아무 말도 안 한다)"
+                          % (_fn, ", ".join(_bad)))
+except Exception as _e:
+    errors.append("var(--x) 정의 검사 실패: %s" % _e)
+
 # ── 경기 사이클 곡선이 국면과 같은 날을 가리키는가 ────────────────────────
 # 🚨 regime_cycle.json 은 regime.json 에서 파생된다. 둘이 따로 커밋되면 곡선 위 점만
 #   어제 자리에 남고 화면은 아무 말도 안 한다 — 이 저장소가 반복해 온 '한 화면 두 날짜'다.
