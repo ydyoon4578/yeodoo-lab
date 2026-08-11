@@ -68,6 +68,11 @@ def main():
     #   NOTFRESH 가 뜨는 경우는 둘 중 하나다 — 아직 갱신 전이거나, 신규 카드를 갱신 **뒤에**
     #   넣어 10선이 어긋났거나. 후자가 2026-08-07 에 실제로 났던 사고다(그날 화면 10선 중 8종).
     notfresh = [s["id"] for s in sel if (s.get("recent_at") or "") != today]
+    # ⚠ generated 도 같이 본다. 카드를 다 갱신하고 이것만 안 올리면 카드는 최신인데
+    #   화면 통계줄의 '갱신'과 3영업일 정체 경고가 옛 날짜를 말한다 — 같은 화면이
+    #   두 가지를 말하게 된다. recent_at 만 검사하면 그 어긋남이 안 잡힌다.
+    if (d.get("generated") or "") != today:
+        notfresh.append("generated=" + (d.get("generated") or "없음"))
     print("FRESH_OK" if not notfresh else "NOTFRESH\t" + " ".join(notfresh))
 
 

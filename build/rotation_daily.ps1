@@ -28,6 +28,13 @@ param(
 # 단계마다 직접 판정한다 — 예외로 죽으면 로그가 안 남아 '왜 안 돌았는지'를 못 본다.
 $ErrorActionPreference = "Continue"
 $log = Join-Path $Repo "_rotation.log"
+# 로그는 매일 쌓인다. 1MB 를 넘으면 한 세대만 남기고 갈아 끼운다 —
+# 무한히 자라게 두면 언젠가 이 파일 때문에 무언가가 느려지고, 그때는 원인을 못 찾는다.
+if ((Test-Path $log) -and ((Get-Item $log).Length -gt 1MB)) {
+  $old = $log + ".1"
+  if (Test-Path $old) { Remove-Item $old -Force }
+  Move-Item $log $old
+}
 function Say($m) {
   $s = "{0}  {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $m
   Write-Host $s
@@ -51,9 +58,20 @@ if ($LASTEXITCODE -ne 0) { Fail "git pull 실패 - 충돌이 남아 있는지 �
 $headBefore = (git rev-parse --short HEAD)
 Say ("저장소 " + $headBefore)
 
-# 시작 시점에 이미 더러우면 그것부터 알린다. 우리가 만든 변경과 안 섞이게.
+# 🚨 어제 실패해서 남은 풀 변경 위에 오늘 것을 얹으면 안 된다.
+#   아래 ②의 검증 기준선을 **더러운 상태에서** 재게 되고, 그러면 어제 깬 것이
+#   '원래 깨져 있던 것'으로 둔갑해 오늘 통과하고 게시된다. 관문이 정확히 반대로 작동한다.
+#   → 풀이 이미 수정돼 있으면 시작하지 않는다. 사람이 보고 정리해야 한다.
+#   ⚠ 하루 안 도는 것보다 어제 실패한 것을 조용히 게시하는 것이 훨씬 나쁘다.
+#     안 돈 사실은 validate_site 가 3영업일부터, rotation.html 이 같은 문턱으로 알린다.
 $dirty0 = @(git status --porcelain)
 if ($dirty0.Count -gt 0) { Say ("[!] 시작 전부터 작업 트리가 더럽다: " + ($dirty0 -join " / ")) }
+if ($dirty0 | Where-Object { $_ -match "data/rotation_pool\.json" }) {
+  Say "[X] data/rotation_pool.json 이 이미 수정돼 있다 - 지난 실행이 실패하고 남긴 것으로 본다."
+  Say "    git diff data/rotation_pool.json 으로 확인하고, 쓸 만하면 커밋을, 아니면"
+  Say "    git checkout -- data/rotation_pool.json 으로 되돌린 뒤 다시 돌릴 것."
+  exit 1
+}
 
 # ── ② 검증 기준선 ──────────────────────────────────────────────────────
 # 🚨 절대 기준으로 걸면 이 잡과 무관한 결함 때문에 그날 리서치를 통째로 버린다.
@@ -145,6 +163,13 @@ $lu | ForEach-Object { Say ("  " + $_) }
 if ($DryRun) { Say "[DryRun] 여기까지. 커밋·푸시는 안 한다."; Say "===== 끝 ====="; exit 0 }
 
 git add data/rotation_pool.json data/updates.json data/asof.json
+# 🚨 git status 의 'M' 만 믿으면 안 된다. 이 저장소는 core.autocrlf=true 이고 커밋본은 LF 인데
+#   파이썬이 파일을 LF 로 다시 쓰면 **내용이 똑같아도** 작업본이 M 으로 뜬다(줄끝 정규화).
+#   그 상태로 커밋하면 'nothing to commit' 으로 죽는다. 스테이지에 실제로 뭔가 올라갔는지 본다.
+git diff --cached --quiet
+if ($LASTEXITCODE -eq 0) {
+  Fail "스테이지가 비었다 - 파일은 다시 써졌지만 내용이 그대로다. claude 가 실질적으로 아무것도 안 바꿨다."
+}
 git commit --quiet -m ("chore(rotation): " + $doneLine + " (" + $today + ")")
 if ($LASTEXITCODE -ne 0) { Fail "커밋 실패" }
 git push --quiet origin main
