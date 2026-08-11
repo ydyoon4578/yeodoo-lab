@@ -1020,7 +1020,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var R=cy.ref; if(!R){host.innerHTML='<div class="empty">사이클 자료가 아직 없습니다.</div>';sec.hidden=false;return;}
     var now=cy.now||{}, f=function(v){return v.toFixed(1);};
 
-    var W=1200, H=700;          // 아래 '이 랩의 7국면' 띠 자리를 위해 600 → 700
+    var W=1200, H=720;          // 아래 '이 랩의 7국면' 띠(개월수 + 이후12M 두 줄)
     var PL=70, PR=70, x0=PL, x1=W-PR;
     var BOXT=48, BOXH=66, BOXW=176;
     var top=206, bot=520, mid=(top+bot)/2, amp=(bot-top)/2*0.9;
@@ -1158,7 +1158,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       band+='<line x1="'+PL+'" y1="'+BY+'" x2="'+(W-PR)+'" y2="'+BY+
         '" stroke="var(--line)" stroke-width="1.5"/>'+
         '<text x="'+PL+'" y="'+(BY-13)+'" font-size="11.5" font-weight="700" '+
-        'fill="var(--ink-2)">이 랩의 7국면 — 같은 곡선 위 자리</text>';
+        'fill="var(--ink-2)">이 랩의 7국면 — 증시 곡선 기준 자리 · 개월수는 전체 창 · 이후12M 은 그 국면 뒤 SPY 중앙값(전체 이력)</text>';
       ph.forEach(function(q){
         var qx=X(q.pos), cur=(q.k===now.r), nev=!!q.never;
         // 곡선에서 띠까지 점선으로 잇는다 — '이 국면이 곡선의 이 자리' 를 눈으로 잇게.
@@ -1168,7 +1168,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<circle cx="'+f(qx)+'" cy="'+BY+'" r="'+(cur?6:4)+'" fill="'+
           (nev?'var(--panel-2)':(cur?'var(--ink)':'var(--ink-2)'))+'" stroke="var(--panel)" '+
           'stroke-width="2"'+(nev?' stroke-dasharray="2 2"':'')+'/>';
+        // 🚨 개월수 옆에 **이후 12개월 실측**을 같이 적는다. 자리만으로 읽게 두면
+        //   "정점 뒤에 있으니 줄여야겠다" 로 읽히는데, 실측이 그와 다를 수 있다
+        //   (2026-08-11 사용자 지적: 회복 15개월째인데 SPX 는 +33% 였다).
+        //   전체 중앙보다 낮으면 경고색, 높으면 그대로 — 자리가 아니라 숫자가 말하게 한다.
+        var fw=((cy.fwd||{})[q.k])||{}, fall=((cy.fwd||{})._ALL||{}).m12;
         var t1=q.ko, t2=nev?'이 창에서 없었음':(q.months+'개월');
+        var t3=(fw.m12==null)?'':('이후12M '+(fw.m12>0?'+':'')+fw.m12.toFixed(1)+'%');
+        var lowfw=(fw.m12!=null&&fall!=null&&fw.m12<fall*0.5);
         // 🚨 앵커가 경기 곡선에 맞춰지며(2026-08-11) 뒤 둘이 왼쪽 끝으로 감겼다
         //   (후기사이클 0.00 · 연착륙 0.12). 가운데 정렬 그대로 두면 화면 밖으로 잘린다.
         //   글자 폭을 어림해 양끝에서 밀어 넣는다.
@@ -1178,7 +1185,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           'font-weight="'+(cur?'800':'600')+'" fill="'+(nev?'var(--muted)':'var(--ink)')+
           '" opacity="'+(nev?'.6':'1')+'">'+esc(t1)+(cur?' ●':'')+'</text>'+
           '<text x="'+f(qx)+'" y="'+(BY+35)+'" text-anchor="middle" font-size="10" '+
-          'font-family="var(--mono)" fill="var(--muted)">'+esc(t2)+'</text>';
+          'font-family="var(--mono)" fill="var(--muted)">'+esc(t2)+'</text>'+
+          (t3?('<text x="'+f(qx)+'" y="'+(BY+49)+'" text-anchor="middle" font-size="10" '+
+            'font-family="var(--mono)" font-weight="'+(lowfw?'700':'400')+'" fill="'+
+            (lowfw?'var(--hot)':'var(--ink-2)')+'">'+esc(t3)+'</text>'):'');
       });
     }
 
@@ -1226,7 +1236,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<b>위</b>(곡선·단계 알약·업종 상자)는 널리 쓰이는 섹터 로테이션 도표를 그대로 옮긴 것이고 '+
       '증시 5단계·경기 4단계로 나뉜다. <b>아래 띠</b>는 <b>이 랩이 쓰는 7국면</b>이 그 곡선의 '+
       '어디에 놓이는지다 — 둘은 다른 분류이고 칸 수도 다르다(점선이 서로를 잇는다). '+
-      '「지금」 표시와 최근 이동 자취는 이 랩의 실측이다.'+
+      '「지금」 표시와 최근 이동 자취는 이 랩의 실측이다. '+
+      // 🚨 자리가 말하는 것과 실측이 다를 수 있다는 것을 먼저 적는다. 2026-08-11 에
+      //   회복이 증시 정점 뒤에 놓여 '고점 지났다' 로 읽혔는데 실측은 그렇지 않았다.
+      '🚨 <b>자리는 통념이고 「이후12M」이 실측이다</b> — 둘이 다르면 숫자를 믿을 것. '+
+      '그 숫자는 겹치는 표본의 중앙값이라 서술이지 검정이 아니다(이 랩의 정식 검정은 '+
+      '7국면이 다음 달을 못 가른다는 것이다 · p 0.152).'+
       // 🚨 자취를 '경로'로 읽지 않게 못 박는다. 점은 국면이 바뀐 지점이고, 한 국면 안에서
       //   '어디쯤인지'는 이 분류기가 말하지 않는다 — 그래서 머무는 동안 점이 안 움직인다.
       ((cy.trail&&cy.trail.length>1)?(
