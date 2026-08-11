@@ -1172,6 +1172,18 @@ try:
         _rh = io.open(os.path.join(ROOT, "regime.html"), encoding="utf-8").read()
         if "renderCycle" in _rh and "regime_cycle.json" not in _rh:
             errors.append("regime.html 이 renderCycle 을 갖고 있는데 regime_cycle.json 을 안 받는다")
+        # 선호 업종 두 자 — 화면에 탭이 있는데 자료가 없으면 빈 곡선이 된다(조용한 빈칸).
+        _sc = _cy.get("sectors") or {}
+        if "cyctab" in _rh:
+            for _b in ("price", "earn"):
+                if not (_sc.get(_b) or {}):
+                    errors.append("regime.html 에 선호 업종 탭이 있는데 regime_cycle.json 의 "
+                                  "sectors.%s 가 비었다 — build/regime_cycle.py 를 다시 돌릴 것" % _b)
+            # 🚨 순위를 화면이 다시 매기면 채점기가 두 벌이 된다. 정렬 코드가 없어야 한다.
+            _seg = _rh[_rh.find("function renderCycle"):]
+            _seg = _seg[:_seg.find("\n  }")]
+            if ".sort(" in _seg:
+                errors.append("renderCycle 안에 정렬이 있다 — 순위는 빌드가 정한다(채점기 두 벌 금지)")
 except Exception as _e:
     errors.append("경기 사이클 곡선 검사 실패: %s" % _e)
 
