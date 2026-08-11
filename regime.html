@@ -1087,7 +1087,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     host.innerHTML='<div class="cycwrap">'+svg+
       '<div class="cycb">위 곡선·단계·업종은 널리 쓰이는 섹터 로테이션 도표의 내용을 그대로 옮긴 것이다. '+
-      '「지금」 표시만 이 랩의 실측이다.</div></div>'+tbl;
+      '「지금」 표시만 이 랩의 실측이다.</div></div>'+tbl+
+      '<div class="cycb"><b>창</b> '+esc((cy.window||{}).start||'')+' ~ '+esc((cy.window||{}).end||'')+
+      ' · '+((cy.window||{}).months||0)+'개월. 섹터 지수는 랩 '+
+      (((cy.sectors||{}).price_meta||{}).n_stocks||0)+'종을 GICS 로 묶은 동일가중이고, 대조군은 '+
+      esc((((cy.sectors||{}).price_meta||{}).bench)||'')+'이다.'+
+      '<br>⚠ '+esc((cy.window||{}).surv||'')+'</div>';
     sec.hidden=false;
   }
 
