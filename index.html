@@ -1378,6 +1378,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!secs||!secs.length)return '';
     var mb=MK.mb, etf={};
     if(mb&&mb.sector)mb.sector.forEach(function(x){etf[x.t]=x;});
+    // 🚨 2026-08-12 — 섹터 줄의 수익률은 **여기서 market_board.json 을 옮긴다.**
+    //   종전에는 build/home_summary.py 가 data/assets.json 의 ETF 가격으로 직접 쟀는데,
+    //   그 빌더는 refresh-stocks(06:50) 안에서 돌고 assets.json 은 refresh-assets(07:34)가
+    //   굽는다 — **47분 먼저 도는 쪽이 47분 뒤에 나올 파일을 읽고 있었다.**
+    //   그래서 종목 격자는 오늘(08-11)로 끝나는데 ETF 격자의 마지막 칸이 None 이 되고,
+    //   agg 의 `a[-1]` 가드가 falsy 가 되어 **7개 구간이 전부 null** 로 나갔다
+    //   (실측: 11섹터 × 7구간 = 77칸 전부 빔. 기능을 넣은 날부터 계속 그랬다).
+    //   → 옮기기로 바꾸면 순서 결합이 사라진다. 지수 줄(SPY·QQQ…)이 이미 이 파일에서
+    //     오므로 **같은 파일 · 같은 기준일 · 같은 구간표**가 된다.
+    //   ⚠ 다시 계산하지 않는다. market_board.py 의 HOR 와 위 IND_HOR 는 글자 그대로 같다.
+    (secs||[]).forEach(function(s2){
+      var e=etf[s2.sec];
+      if(e&&e.r)s2.r=e.r;      // 못 받았으면 건드리지 않는다(fail-soft — 빈 칸으로 남는다)
+    });
     var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
     var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
     // 정렬은 **시가총액 내림차순**이다(사용자 요청 2026-08-03). 큰 것부터 보는 편이

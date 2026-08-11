@@ -137,6 +137,25 @@ console.log("표: 묶음 %d · 섹터 %d · 하위단 %d · 열 %d",
 const D = hr.industry;
 if (cnt(1) !== D.sectors.length)
   fail.push("섹터 줄 " + cnt(1) + " ≠ home_reco.industry.sectors " + D.sectors.length);
+
+// 🚨 2026-08-12 — **줄 수만 세면 안 된다.** 섹터 11줄이 다 서 있는데 수익률 칸이
+//   77칸 전부 비어 있던 채로 배포됐고, 이 검사는 초록불이었다(사용자가 눈으로 신고).
+//   원인은 빌더 순서(home_summary 06:50 vs assets.json 07:34)였는데, 줄 수는 그 사고에
+//   아무 영향을 안 받는다 — 세는 것과 값이 있는지는 다른 질문이다.
+//   섹터 줄의 수익률 칸이 실제로 숫자인지 본다. 화면이 market_board.json 에서 옮기므로
+//   그 파일이 비었거나 배선이 끊기면 여기서 잡힌다.
+{
+  const secTr = Hh.match(/<tr class="lv1"[\s\S]*?<\/tr>/g) || [];
+  const empty = secTr.filter(tr => {
+    // 수익률 칸은 stCell 이 만든 td 다. 숫자가 하나도 없으면 그 줄은 통째로 빈 것이다.
+    const tds = tr.match(/<td[^>]*>([^<]*)</g) || [];
+    return !tds.some(td => /-?\d/.test(td.replace(/<td[^>]*>/, "")));
+  }).length;
+  console.log("섹터 수익률: %d줄 중 값 없는 줄 %d", secTr.length, empty);
+  if (secTr.length && empty)
+    fail.push("섹터 줄 " + empty + "/" + secTr.length + " 이 수익률 칸이 통째로 비었다 — "
+      + "market_board.json 의 sector[].r 배선(index.html mkSegRows)을 확인할 것");
+}
 // 산업그룹 줄 — solo(이름이 섹터와 같고 그 섹터의 유일한 2차)는 **빼는 것이 정본이다**.
 //   화면이 스스로 판정하지 않고 home_reco 의 solo 표를 읽으므로, 여기서도 그 표로 기대값을 만든다.
 const g2 = D.rows.filter(r => r.lv === 2);
