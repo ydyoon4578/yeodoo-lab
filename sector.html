@@ -611,7 +611,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 색은 부호와 크기만 나타낸다. 짙다=좋다가 아니라 짙다=많이 움직였다.
     var mag=Math.min(1,Math.abs(v)/15), c=v>=0?'14,138,84':'166,75,59';
     return '<td style="background:rgba('+c+','+(mag*0.30).toFixed(3)+');color:'+
-      (v>=0?'var(--good)':'var(--hot)')+'">'+(v>0?'+':'')+v.toFixed(1)+'</td>';
+      (v>=0?'var(--deploy)':'var(--hot)')+'">'+(v>0?'+':'')+v.toFixed(1)+'</td>';
   }
   function draw(rows){
     rows=rows.slice().sort(function(a,b){
