@@ -1020,7 +1020,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var R=cy.ref; if(!R){host.innerHTML='<div class="empty">사이클 자료가 아직 없습니다.</div>';sec.hidden=false;return;}
     var now=cy.now||{}, f=function(v){return v.toFixed(1);};
 
-    var W=1200, H=600;
+    var W=1200, H=700;          // 아래 '이 랩의 7국면' 띠 자리를 위해 600 → 700
     var PL=70, PR=70, x0=PL, x1=W-PR;
     var BOXT=48, BOXH=66, BOXW=176;
     var top=206, bot=520, mid=(top+bot)/2, amp=(bot-top)/2*0.9;
@@ -1144,6 +1144,36 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       pill(nx, bot+40, ((cy.trail&&cy.trail.length)?(cy.trail.length+'. '):'')+
         '지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째', 'var(--ink)');
 
+    // ── 이 랩의 7국면이 이 곡선의 어디에 놓이는가 ──────────────────────
+    // 🚨 곡선 위에 더 얹지 않는다. 위에는 교과서 단계 알약(증시 5 · 경기 4)이 이미 있고,
+    //   거기 7개를 더하면 무엇이 교과서고 무엇이 이 랩 것인지 구별이 안 된다.
+    //   사용자 지적이 정확히 그것이었다 — "여기는 7가지, 경기사이클 차트는 4개로 구분하니 헷갈린다".
+    //   → 층을 갈라 **아래 띠**에 따로 깐다. 위=교과서, 아래=이 랩. 점선이 둘을 잇는다.
+    var BY=bot+86, ph=cy.phases||[];
+    var band='';
+    if(ph.length){
+      band+='<line x1="'+PL+'" y1="'+BY+'" x2="'+(W-PR)+'" y2="'+BY+
+        '" stroke="var(--line)" stroke-width="1.5"/>'+
+        '<text x="'+PL+'" y="'+(BY-13)+'" font-size="11.5" font-weight="700" '+
+        'fill="var(--ink-2)">이 랩의 7국면 — 같은 곡선 위 자리</text>';
+      ph.forEach(function(q){
+        var qx=X(q.pos), cur=(q.k===now.r), nev=!!q.never;
+        // 곡선에서 띠까지 점선으로 잇는다 — '이 국면이 곡선의 이 자리' 를 눈으로 잇게.
+        band+='<line x1="'+f(qx)+'" y1="'+f(Ye(q.pos)+7)+'" x2="'+f(qx)+'" y2="'+(BY-6)+
+          '" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 5" opacity="'+
+          (nev?'.22':(cur?'.75':'.4'))+'"/>'+
+          '<circle cx="'+f(qx)+'" cy="'+BY+'" r="'+(cur?6:4)+'" fill="'+
+          (nev?'var(--panel-2)':(cur?'var(--ink)':'var(--ink-2)'))+'" stroke="var(--panel)" '+
+          'stroke-width="2"'+(nev?' stroke-dasharray="2 2"':'')+'/>';
+        var t1=q.ko, t2=nev?'이 창에서 없었음':(q.months+'개월');
+        band+='<text x="'+f(qx)+'" y="'+(BY+20)+'" text-anchor="middle" font-size="11.5" '+
+          'font-weight="'+(cur?'800':'600')+'" fill="'+(nev?'var(--muted)':'var(--ink)')+
+          '" opacity="'+(nev?'.6':'1')+'">'+esc(t1)+(cur?' ●':'')+'</text>'+
+          '<text x="'+f(qx)+'" y="'+(BY+35)+'" text-anchor="middle" font-size="10" '+
+          'font-family="var(--mono)" fill="var(--muted)">'+esc(t2)+'</text>';
+      });
+    }
+
     var lg='<g font-size="12" fill="var(--ink-2)">'+
       '<rect x="'+(W/2-124)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--accent)" opacity=".45"/>'+
       '<text x="'+(W/2-103)+'" y="'+(H-20)+'">경기 Economy</text>'+
@@ -1160,7 +1190,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="섹터 로테이션 교과서 도표 — '+
       '증시 곡선이 경기 곡선보다 앞서고, 다섯 단계마다 선호 업종이 붙는다. '+
       '현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+'개월째.">'+
-      defs+grid+waves+boxes+trail+pills+nowg+lg+'</svg>';
+      defs+grid+waves+boxes+trail+pills+nowg+band+lg+'</svg>';
 
     // ── 이 랩이 실제로 잰 것과의 비교 ────────────────────────────────────
     var rows=(R.cmp||[]).map(function(c){
@@ -1184,8 +1214,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '주가 = 그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균 · 실적 = 그 국면 분기의 섹터 합산 순이익 YoY 중앙값.</div>';
 
     host.innerHTML='<div class="cycwrap">'+svg+
-      '<div class="cycb">위 곡선·단계·업종은 널리 쓰이는 섹터 로테이션 도표의 내용을 그대로 옮긴 것이다. '+
-      '「지금」 표시와 최근 이동 자취만 이 랩의 실측이다.'+
+      '<div class="cycb"><b>이 그림은 두 층이다.</b> '+
+      '<b>위</b>(곡선·단계 알약·업종 상자)는 널리 쓰이는 섹터 로테이션 도표를 그대로 옮긴 것이고 '+
+      '증시 5단계·경기 4단계로 나뉜다. <b>아래 띠</b>는 <b>이 랩이 쓰는 7국면</b>이 그 곡선의 '+
+      '어디에 놓이는지다 — 둘은 다른 분류이고 칸 수도 다르다(점선이 서로를 잇는다). '+
+      '「지금」 표시와 최근 이동 자취는 이 랩의 실측이다.'+
       // 🚨 자취를 '경로'로 읽지 않게 못 박는다. 점은 국면이 바뀐 지점이고, 한 국면 안에서
       //   '어디쯤인지'는 이 분류기가 말하지 않는다 — 그래서 머무는 동안 점이 안 움직인다.
       ((cy.trail&&cy.trail.length>1)?(
