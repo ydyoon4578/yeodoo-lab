@@ -198,6 +198,14 @@
   .cycwrap{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:2px;
            padding:10px 12px 4px;box-shadow:var(--shadow)}
   .cycwrap svg{display:block;width:100%;height:auto}
+  .gsbox{margin-top:14px;background:var(--panel-2);border:1px solid var(--line);
+         border-left:3px solid var(--accent);border-radius:2px;padding:12px 15px}
+  .gshd{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:7px}
+  .gshd span{font-weight:400;color:var(--muted);font-family:var(--mono);font-size:10.5px}
+  .gsrow{font-size:12px;color:var(--ink-2);line-height:1.75}
+  .gsok{color:var(--deploy);font-weight:700}
+  .gsno{color:var(--muted);font-weight:700}
+  .gsnote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
   .cchip{display:inline-block;font-size:11px;padding:2px 7px;margin:1px 3px 1px 0;border-radius:2px;
          background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
   .cchip.hit{background:var(--deploy);border-color:var(--deploy);color:var(--ground);font-weight:700}
@@ -984,6 +992,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 곡선·단계·업종 배열은 전부 **교과서**다. 이 랩이 잰 것이 아니다.
   //   빌드가 data/regime_cycle.json 의 ref 블록에 원문을 담아 두고, 화면은 그대로 그린다.
   //   이 랩이 실제로 잰 것은 아래 비교표에 따로 있다 — 두 개를 섞지 않는다.
+
+  // ── 이 랩이 실제로 검정한 것 ─────────────────────────────────────────
+  // 🚨 위 곡선은 교과서다. 이 칸은 **이 랩이 자기 국면 분류를 스스로 검정한 결과**다.
+  //   값은 빌드에 박혀 있다(GROWTH_SPLIT) — 매 빌드에 다시 재지 않는다. 라벨이 바뀌면
+  //   p 가 따라 움직여 화면이 매일 다른 숫자를 말하게 되고, 어느 것이 등록된 값인지
+  //   아무도 모르게 된다. 다시 재려면 새 사전등록이 필요하다.
+  function gsBlock(cy){
+    var g=cy.growth_split; if(!g)return '';
+    var P=g.primary||{}, S=g.seven||{}, F=g.family||{};
+    return '<div class="gsbox">'+
+      '<div class="gshd">이 랩이 자기 국면 분류를 검정한 결과 '+
+        '<span>· '+esc(g.when||'')+' · '+esc(g.prereg||'')+'</span></div>'+
+      '<div class="gsrow"><b>7국면 전체</b>가 다음 달 수익을 가르는가 — 최대격차 '+
+        S.gap+'%p · <b>p = '+S.p+'</b> → <span class="gsno">우연과 구별되지 않는다</span></div>'+
+      '<div class="gsrow"><b>성장축만 둘로</b>(확장 / 확장 아님) — '+esc(P.what||'')+
+        ' 확장아님 <b>+'+P.not_exp+'%</b>(n'+P.n_not+') vs 확장 <b>+'+P.exp+'%</b>(n'+P.n_exp+
+        ') · 격차 '+P.gap+'%p · <b>p = '+P.p+'</b> → <span class="gsok">가른다</span></div>'+
+      '<div class="gsnote">'+esc(F.note||'')+'</div>'+
+      '<div class="gsnote">🚨 '+esc(g.read||'')+'</div>'+
+      '<div class="gsnote">기준: '+esc(g.basis||'')+'</div>'+
+      '</div>';
+  }
+
   function renderCycle(cy){
     var host=el('cyclebody'), sec=el('cycle'); if(!host||!sec)return;
     var R=cy.ref; if(!R){host.innerHTML='<div class="empty">사이클 자료가 아직 없습니다.</div>';sec.hidden=false;return;}
@@ -1092,7 +1123,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ' · '+((cy.window||{}).months||0)+'개월. 섹터 지수는 랩 '+
       (((cy.sectors||{}).price_meta||{}).n_stocks||0)+'종을 GICS 로 묶은 동일가중이고, 대조군은 '+
       esc((((cy.sectors||{}).price_meta||{}).bench)||'')+'이다.'+
-      '<br>⚠ '+esc((cy.window||{}).surv||'')+'</div>';
+      '<br>⚠ '+esc((cy.window||{}).surv||'')+'</div>'+gsBlock(cy);
     sec.hidden=false;
   }
 

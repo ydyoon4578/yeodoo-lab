@@ -222,7 +222,7 @@ def main():
         it["sp"] = surprise(DS.get(it["k"]))
 
     # ── 히스토리(월별 레짐 라벨, ~15년) + 자산·섹터·팩터 조건부 성과 ──
-    hist, perf = build_history(S, cpi_yoy, asof)
+    hist, perf, hmeta = build_history(S, cpi_yoy, asof)
 
     # 종합 요약(지표 39개 → 한 문장) — 단일 소스는 regime_summary.build 하나뿐.
     # 히스테리시스: 직전 regime.json의 summary.axes를 넘겨 밴드 전환에 관성을 준다(문구 휩소 억제).
@@ -242,9 +242,52 @@ def main():
                       "financial": financial, "desc": desc, "strategy": strat},
            "summary": summary,
            "indicators": indicators, "history": hist,
+           # 🚨 필터 전 이력을 지우지 않는다 — 무엇이 바뀌었는지 셀 수 있어야 한다.
+           #   정본은 위 history(최소지속 MIN_RUN 개월 적용)다. 마지막 달은 prov:true(잠정).
+           "history_raw": hmeta["raw"], "history_filter": {
+               "min_run": hmeta["min_run"], "changed": hmeta["censored"],
+               "note": "1개월만 나타난 라벨을 직전 라벨로 이었다. 미래를 보는 필터라 "
+                       "마지막 달에는 적용하지 않는다(prov:true). 사전등록 "
+                       "PREREG-2026-08-11-REGIME.md §1."},
            "asset_perf": perf["macro"], "sector_perf": perf["sector"], "factor_perf": perf["factor"]}
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} · 레짐 {emoji}{lab} (성장 {growth}·물가 {inflation}·금융 {financial}) · 기준일 {asof}")
+
+
+MIN_RUN = 2      # 국면 최소 지속(개월). 사전등록 PREREG-2026-08-11-REGIME.md §1 에서 확정.
+
+
+def censor_runs(seq, min_run=MIN_RUN):
+    """1개월만 나타난 라벨을 직전 라벨로 잇는다 — 국면 최소 지속 필터.
+
+    🚨 왜 넣나. 필터 전 이력은 런 33개 중 **12개가 한 달**이었다. 한 달 뒤 되돌아오는
+      라벨은 국면이 아니라 문턱 근처의 잡음이다(성장점수가 정수라 지표 하나로 한 칸 넘는다).
+    🚨 왜 2인가. 가장 작은 필터라 만질 여지가 가장 적다. 3·6 을 쓰면 무엇을 고를지가
+      자유도가 되고 그건 이 랩이 전략에 금지한 사후 맞춤이다.
+      Bry–Boschan 관례는 6개월이지만 이 표본(런 중앙 2개월)에 6을 걸면 거의 전부가
+      하나로 뭉개진다 — 표본이 그 관례를 감당하지 못한다.
+
+    ⚠ **이 필터는 미래를 본다.** 한 달이 이어질지는 다음 달이 와야 안다. 그래서
+      마지막 달에는 적용하지 않고 그대로 둔다(호출부가 '잠정'으로 표시한다).
+      소급 정리이지 실시간 판정이 아니다.
+    """
+    if len(seq) < 3:
+        return list(seq), 0
+    out = list(seq)
+    changed = 0
+    # 마지막 달(len-1)은 건드리지 않는다 — 지속 여부를 아직 모른다.
+    i = 1
+    while i < len(out) - 1:
+        run = 1
+        while i + run < len(out) - 1 and out[i + run] == out[i]:
+            run += 1
+        if run < min_run and out[i] != out[i - 1]:
+            for k in range(i, i + run):
+                if out[k] != out[i - 1]:
+                    out[k] = out[i - 1]
+                    changed += 1
+        i += run
+    return out, changed
 
 
 def classify_month(g, i, fin):
@@ -275,7 +318,17 @@ def build_history(S, cpi_yoy, asof=None):
         g = "EXPANSION" if gs>=1 else ("CONTRACTION" if gs<=-2 else "SLOWING")
         inf = "HIGH" if (cp or 0)>=4 else ("MODERATE" if (cp or 0)>=2.5 else "LOW")
         labels[d] = classify_month(g, inf, None)
-    hist = [{"dt": d.date().isoformat(), "r": labels[d]} for d in idx]
+    raw = [labels[d] for d in idx]
+    cen, n_ch = censor_runs(raw)
+    # 필터본을 정본으로 쓴다 — 리본·조건부 성과·사이클 차트가 전부 이걸 읽는다.
+    # 원본을 지우지 않는다(history_raw). 무엇이 바뀌었는지 셀 수 있어야 한다.
+    for d, r2 in zip(idx, cen):
+        labels[d] = r2
+    hist = [{"dt": d.date().isoformat(), "r": r2} for d, r2 in zip(idx, cen)]
+    hist_raw = [{"dt": d.date().isoformat(), "r": r2} for d, r2 in zip(idx, raw)]
+    if hist:
+        hist[-1]["prov"] = True     # 마지막 달은 지속 여부를 모른다 — 잠정
+    print("  [최소지속 %d개월] 라벨 %d달 정정 · 마지막 달은 잠정" % (MIN_RUN, n_ch))
 
     # 레짐 조건부 성과: 자산·섹터·팩터 월수익을 레짐별 평균
     lab_s = pd.Series(labels)
@@ -310,7 +363,7 @@ def build_history(S, cpi_yoy, asof=None):
             print("  ⚠ 조건부 성과 수집 실패 → 직전 값 승계(자산성과는 갱신되지 않음)")
         except Exception as e:
             raise SystemExit(f"조건부 성과 수집 실패 & 승계 불가({e}) — 갱신 중단(이전본 유지)")
-    return hist, perf
+    return hist, perf, {"raw": hist_raw, "censored": n_ch, "min_run": MIN_RUN}
 
 
 if __name__ == "__main__":
