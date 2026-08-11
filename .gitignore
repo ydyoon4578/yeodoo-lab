@@ -42,6 +42,7 @@ data/_custconc_raw.json
 # 사내 배포본 — build/deploy_local.py 산출물(저장소에 넣지 않는다)
 _deploy/
 _deploy.log
+_rotation.log        # KB_RotationDaily 러너 로그(build/rotation_daily.ps1)
 
 # 애널리스트 등급 변경 이력 캐시(yfinance) — 재현 가능하고 수 MB라 로컬에만 둔다.
 #   build/fetch_ratings.py 가 만든다.
