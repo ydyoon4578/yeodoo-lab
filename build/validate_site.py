@@ -1150,6 +1150,39 @@ try:
 except Exception as _e:
     errors.append("ps1 BOM 검사 실패: %s" % _e)
 
+# ── 홈 표 위 시계열의 끝값이 표의 그 칸과 같은가 ─────────────────────────
+# 🚨 이 그림이 있는 이유는 아래 표를 그림으로 보자는 것이다. 끝값이 표와 다르면
+#   같은 화면이 한 섹터에 두 숫자를 말한다 — 이 저장소가 가장 싫어하는 상태다.
+#   build/home_perf.py 가 표와 **같은 정의**로 굽지만(섹터 = 기준일 대비 비율의 평균),
+#   한쪽 빌더만 고치는 날이 온다. 그때 여기서 잡는다.
+try:
+    _hp = os.path.join(ROOT, "data", "home_perf.json")
+    if os.path.exists(_hp):
+        _P = json.load(io.open(_hp, encoding="utf-8"))
+        _MB = json.load(io.open(os.path.join(ROOT, "data", "market_board.json"), encoding="utf-8"))
+        _HR = json.load(io.open(os.path.join(ROOT, "data", "home_reco.json"), encoding="utf-8"))
+        _secs = ((_HR.get("industry") or {}).get("sectors") or [])
+        _ixn = {"SPY": "S&P 500", "QQQ": "나스닥 100", "DIA": "다우존스 30", "IWM": "러셀 2000"}
+        _bad = []
+        for _hz, _blk in (_P.get("series") or {}).items():
+            for _x in (_MB.get("index") or []):
+                _nm = _ixn.get(_x.get("t"))
+                _w = (_x.get("r") or {}).get(_hz)
+                _v = (_blk.get("ix") or {}).get(_nm) or []
+                if _nm and _w is not None and _v and _v[-1] is not None and abs(_w - _v[-1]) > 0.011:
+                    _bad.append("%s %s 표 %.2f vs 그림 %.2f" % (_hz, _nm, _w, _v[-1]))
+            for _s in _secs:
+                _w = (_s.get("r") or {}).get(_hz)
+                _v = (_blk.get("sec") or {}).get(_s.get("nm")) or []
+                if _w is not None and _v and _v[-1] is not None and abs(_w - _v[-1]) > 0.011:
+                    _bad.append("%s %s 표 %.2f vs 그림 %.2f" % (_hz, _s.get("nm"), _w, _v[-1]))
+        if _bad:
+            errors.append("홈 시계열의 끝값이 기간별 수익률 표와 다르다(%d건): %s — "
+                          "python build/home_perf.py 를 market_board 뒤에 다시 돌릴 것"
+                          % (len(_bad), " / ".join(_bad[:4])))
+except Exception as _e:
+    errors.append("홈 시계열 대조 실패: %s" % _e)
+
 # ── JS 문자열 안에서 쓰는 CSS 변수도 정의돼 있는가 ──────────────────────
 # 🚨 2026-08-11 에 당했다. 사이클 차트가 SVG 를 JS 문자열로 조립하면서 fill="var(--champ)"
 #   를 썼는데 regime.html 에는 그 토큰이 **없다**(kb.html 은 자기 팔레트를 따로 둬서 있다).

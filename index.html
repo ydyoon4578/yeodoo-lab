@@ -349,6 +349,27 @@
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
   .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel);min-height:460px}
+  /* ── 기간별 수익률 막대 그림(2026-08-11) — 아래 표와 같은 자료를 그림으로 ──────
+     ⚠ 색은 이 표의 규칙을 그대로 따른다(.up=--deploy · .dn=--hot). 표와 그림이 같은
+       숫자를 다른 색으로 말하면 안 된다. */
+  .sctabs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px}
+  .sctab{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:2px;
+         border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
+  .sctab:hover{border-color:var(--accent);color:var(--accent)}
+  .sctab.on{background:var(--accent);border-color:var(--accent);color:var(--ground)}
+  .scgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 22px;align-items:start}
+  @media(max-width:820px){.scgrid{grid-template-columns:1fr;gap:16px}}
+  .schd{font-size:11px;font-weight:800;color:var(--ink-2);letter-spacing:.04em;margin:0 0 5px}
+  .schd span{font-weight:400;letter-spacing:0;color:var(--muted)}
+  .scrow{display:grid;grid-template-columns:112px minmax(60px,1fr) 54px;gap:8px;align-items:center;
+         padding:2px 0}
+  .scnm{font-size:11.5px;color:var(--ink-2);font-weight:600;overflow:hidden;text-overflow:ellipsis;
+        white-space:nowrap}
+  .sczero{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line);
+          transform:translateX(-.5px)}
+  .sccol svg{display:block;width:100%;height:auto}
+  .scfoot{font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  #stchart{margin:0 0 14px}
   .sttbl{border-collapse:collapse;width:100%;min-width:500px;font-variant-numeric:tabular-nums}
   .sttbl th,.sttbl td{padding:4px 11px;text-align:right;font-size:12px;white-space:nowrap;
        border-top:1px solid var(--line-soft)}
@@ -1041,6 +1062,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     <section id="s-style" aria-labelledby="st-h">
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
+      <!-- 표 위의 막대 그림. 아래 표와 **같은 배열**을 그린다(계산 없음) — drawStChart() 참조. -->
+      <div id="stchart"></div>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
       <p class="stnote" id="stnote"></p>
@@ -1853,6 +1876,88 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+3)+'">'+
            stDetail(s)+'</td></tr>';
   }
+  // ── 기간별 수익률 — 표 위의 시계열 ──────────────────────────────────
+  // 🚨 계산하지 않는다. build/home_perf.py 가 구운 경로를 그대로 그린다.
+  //   그 경로는 **아래 표와 같은 정의**로 만들어졌고(섹터 = 기준일 대비 종목별 비율의 평균),
+  //   그래서 각 선의 끝점이 아래 표의 그 칸과 글자 그대로 같다(빌드에서 15계열×5구간 대조).
+  //   ETF 섹터(market_board.sector)를 쓰면 안 된다 — 그건 시총가중이고 표는 동일가중이다.
+  var STC_HZ='12M', STC_P=null;
+
+  function drawStChart(){
+    var box=el('stchart'); if(!box)return;
+    if(!STC_P){box.innerHTML='';return;}
+    var blk=(STC_P.series||{})[STC_HZ];
+    if(!blk){box.innerHTML='';return;}
+
+    var HZL={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'12개월','YTD':'YTD'};
+    var tabs=Object.keys(STC_P.series).map(function(h){
+      return '<button class="sctab'+(h===STC_HZ?' on':'')+'" data-h="'+h+'">'+esc(HZL[h]||h)+'</button>';
+    }).join('');
+
+    // 한 장 그리기 — series = [{nm, v:[…]}], 강조할 것만 색을 준다
+    function chart(dates, series, title, emph){
+      var W=520, H=190, PL=8, PR=92, TOP=14, BOT=22;
+      var n=dates.length, lo=0, hi=0;
+      series.forEach(function(s){s.v.forEach(function(y){if(y==null)return;
+        if(y<lo)lo=y; if(y>hi)hi=y;});});
+      if(hi-lo<1){hi+=0.5;lo-=0.5;}
+      var pad=(hi-lo)*0.08; hi+=pad; lo-=pad;
+      var X=function(i){return PL+(n<2?0:i/(n-1))*(W-PL-PR);};
+      var Y=function(y){return TOP+(hi-y)/(hi-lo)*(H-TOP-BOT);};
+      var zero=Y(0), g='';
+      g+='<line x1="'+PL+'" y1="'+zero.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+zero.toFixed(1)+
+         '" stroke="var(--line)" stroke-width="1"/>';
+      // 흐린 선을 먼저, 강조선을 나중에 — 겹칠 때 강조가 위로 온다
+      var ord=series.slice().sort(function(a,b){return (emph[a.nm]?1:0)-(emph[b.nm]?1:0);});
+      ord.forEach(function(s){
+        var d='',started=false,last=null,li=0;
+        for(var i=0;i<n;i++){var y=s.v[i]; if(y==null)continue;
+          d+=(started?'L':'M')+X(i).toFixed(1)+' '+Y(y).toFixed(1); started=true; last=y; li=i;}
+        if(!started)return;
+        var col=emph[s.nm]||'var(--muted)';
+        g+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(emph[s.nm]?2:1.1)+
+           '" opacity="'+(emph[s.nm]?1:0.42)+'" stroke-linejoin="round"/>';
+        if(emph[s.nm]||series.length<=4){
+          g+='<text x="'+(X(li)+5).toFixed(1)+'" y="'+(Y(last)+3.5).toFixed(1)+'" font-size="10.5" '+
+             'font-weight="700" fill="'+col+'">'+esc(s.nm)+
+             '<tspan font-family="var(--mono)" font-size="9.5"> '+(last>0?'+':'')+last.toFixed(2)+'</tspan></text>';
+        }
+      });
+      g+='<text x="'+PL+'" y="'+(H-6)+'" font-size="9.5" fill="var(--muted)" '+
+         'font-family="var(--mono)">'+esc(dates[0])+'</text>'+
+         '<text x="'+(W-PR)+'" y="'+(H-6)+'" text-anchor="end" font-size="9.5" fill="var(--muted)" '+
+         'font-family="var(--mono)">'+esc(dates[n-1])+'</text>';
+      return '<div class="sccol"><div class="schd">'+title+'</div>'+
+        '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+' 누적 수익률 추이">'+g+'</svg></div>';
+    }
+
+    var CIX={'S&P 500':'var(--accent)','나스닥 100':'var(--champ)','다우존스 30':'var(--marg)',
+             '러셀 2000':'var(--deploy)'};
+    var ixs=Object.keys(blk.ix||{}).map(function(k){return {nm:k, v:blk.ix[k]};});
+
+    // 섹터는 11선이라 전부 칠하면 못 읽는다 — 그 구간 상·하위만 이름과 색을 준다.
+    var secs=Object.keys(blk.sec||{}).map(function(k){
+      var a=blk.sec[k], lastv=null;
+      for(var i=a.length-1;i>=0;i--){if(a[i]!=null){lastv=a[i];break;}}
+      return {nm:k, v:a, last:(lastv==null?-1e9:lastv)};
+    }).sort(function(a,b){return b.last-a.last;});
+    var CSEC={};
+    secs.slice(0,3).forEach(function(s,i){CSEC[s.nm]=['var(--deploy)','var(--accent)','var(--marg)'][i];});
+    if(secs.length)CSEC[secs[secs.length-1].nm]='var(--hot)';
+
+    box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
+      '<div class="scgrid">'+
+        chart(blk.dates, ixs, '지수', CIX)+
+        chart(blk.sec_dates, secs, '섹터 <span>· 유니버스 종목 동일가중 · 상위 3 · 하위 1만 표시</span>', CSEC)+
+      '</div>'+
+      '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
+      ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
+
+    var tb=box.querySelectorAll('.sctab');
+    for(var i=0;i<tb.length;i++)tb[i].addEventListener('click',function(){
+      STC_HZ=this.getAttribute('data-h'); drawStChart();});
+  }
+
   function drawStyle(j){
     var box=el('sttbl'); if(!box)return;
     // 🚨 이 표는 **두 파일이 채운다** — style_top/style_trails/market_board(여기 j)와
@@ -1860,6 +1965,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   나중 것이 통째로 빠진다. 실제로 배포 직후 섹터 묶음이 0줄로 나갔다.
     //   → 넘어온 보드를 붙들어 두고, home_reco 가 늦게 오면 그쪽이 다시 부른다.
     if(j)MK.board=j; else j=MK.board;
+    // 시계열 자료는 별도 파일이라 여기서 한 번만 받는다(받은 뒤에는 그리기만).    if(!STC_P){fetch('data/home_perf.json',{cache:'no-cache'})      .then(function(r){return r.ok?r.json():null;})      .then(function(pp){if(pp&&pp.series){STC_P=pp;drawStChart();}}).catch(function(){});}    else drawStChart();
     if(!j)return;
     if(!j||!j.style){
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
