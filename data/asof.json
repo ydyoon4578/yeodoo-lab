@@ -1,6 +1,6 @@
 {
  "note": "기준일 정본. build/asof_index.py가 만들고, 전 페이지 내비 칩·홈·sources.html이 이 파일만 읽는다. 페이지에 날짜를 직접 적지 말 것.",
- "generated": "2026-08-11T08:38:46Z",
+ "generated": "2026-08-11T09:15:03Z",
  "primary": "2026-08-10",
  "unified": false,
  "axes": [
