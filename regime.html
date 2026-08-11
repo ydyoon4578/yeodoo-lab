@@ -1077,6 +1077,51 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
     });
 
+    // ── 최근 이동 자취 ──────────────────────────────────────────────
+    // 🚨 달마다 점을 찍으면 안 된다 — pos 는 라벨이 정하므로 같은 국면 15개월이 한 자리에
+    //   겹친다. 산출(build/regime_cycle.py)이 이미 **런 단위**로 접어 보낸다. 여기서는 옮기기만.
+    // ⚠ 화살표가 왼쪽으로 가는 것은 오류가 아니다. 곡선의 순서가 통념이고 실제 이력이 그
+    //   순서를 안 따른다는 사실이 그림에 드러나는 것이다(아래 drift 가 같은 것을 숫자로 말한다).
+    var trail='', TR=cy.trail||[];
+    for(var ti=0; ti<TR.length; ti++){
+      var a=TR[ti], ax=X(a.pos), ay=Ye(a.pos);
+      var last=(ti===TR.length-1);
+      var rad=3.4+Math.min(6.5, a.months/2.6);
+      var op=last?1:(0.58+0.30*ti/Math.max(1,TR.length-1));
+      if(ti>0){
+        var b0=TR[ti-1], bx=X(b0.pos), by=Ye(b0.pos);
+        // 같은 자리로 되돌아오면 직선이 점이 된다 — 부풀린 호로 그려 되돌아온 것이 보이게.
+        var mx=(bx+ax)/2, my=(by+ay)/2, dx=ax-bx, dy=ay-by;
+        // 🚨 자취는 경기·증시 곡선과 **다른 색**이어야 한다. 같은 red/blue 를 쓰면 큰 호가
+        //   증시 곡선의 일부처럼 보인다(실측: 첫 렌더에서 구분이 안 됐다). 자취는 잉크색으로
+        //   묶고 방향은 점선/화살표로만 가른다. 뒤로 가는 것만 경고색을 얹는다.
+        var len=Math.sqrt(dx*dx+dy*dy)||1;
+        var bulge=(ti%2?-1:1)*Math.min(64, Math.max(20, len*0.16));
+        var cx2=mx+(-dy/len)*bulge, cy2=my+(dx/len)*bulge;
+        var col=(a.dir==='back')?'var(--marg)':'var(--ink)';
+        var dd='M'+f(bx)+' '+f(by)+' Q'+f(cx2)+' '+f(cy2)+' '+f(ax)+' '+f(ay);
+        // 바탕색 케이싱을 깔아 곡선 위를 지날 때 선이 끊겨 보이지 않게 한다
+        trail+='<path d="'+dd+'" fill="none" stroke="var(--panel)" stroke-width="5.5" '+
+          'opacity="'+(op*0.9).toFixed(2)+'" stroke-linecap="round"/>'+
+          '<path d="'+dd+'" fill="none" stroke="'+col+'" stroke-width="2.2" '+
+          'opacity="'+op.toFixed(2)+'" stroke-linecap="round" '+
+          'stroke-dasharray="'+(a.dir==='back'?'6 4':'0')+'" marker-end="url(#tarr'+
+          (a.dir==='back'?'b':'f')+')"/>';
+      }
+      trail+='<circle cx="'+f(ax)+'" cy="'+f(ay)+'" r="'+f(rad)+'" fill="var(--ink)" '+
+        'stroke="var(--panel)" stroke-width="2" opacity="'+op.toFixed(2)+'"><title>'+
+        esc(a.ko+' · '+a.months+'개월 · '+a.from+(a.months>1?(' ~ '+a.to):''))+'</title></circle>';
+      // 지금이 아닌 지점에는 머문 개월수를 작게 적는다 — 점 크기만으로는 못 읽는다.
+      if(!last && a.months>=2)
+        trail+='<text x="'+f(ax)+'" y="'+f(ay-rad-5)+'" text-anchor="middle" font-size="10" '+
+          'font-weight="700" fill="var(--ink-2)" opacity="'+op.toFixed(2)+'">'+a.months+'개월</text>';
+    }
+    var defs='<defs>'+
+      '<marker id="tarrf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+        '<path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>'+
+      '<marker id="tarrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+        '<path d="M0 0 L10 5 L0 10 z" fill="var(--marg)"/></marker></defs>';
+
     // 지금 — 경기 곡선 위. 이 랩이 잰 유일한 것이라 다른 색(잉크)으로 둔다.
     var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ye(np);
     var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="12" fill="var(--ink)" opacity=".16"/>'+
@@ -1088,12 +1133,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<rect x="'+(W/2-124)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--accent)" opacity=".45"/>'+
       '<text x="'+(W/2-103)+'" y="'+(H-20)+'">경기 Economy</text>'+
       '<rect x="'+(W/2+22)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--hot)" opacity=".45"/>'+
-      '<text x="'+(W/2+43)+'" y="'+(H-20)+'">증시 Market</text></g>';
+      '<text x="'+(W/2+43)+'" y="'+(H-20)+'">증시 Market</text>'+
+      ((cy.trail&&cy.trail.length>1)?(
+        '<line x1="'+(W/2+150)+'" y1="'+(H-24)+'" x2="'+(W/2+178)+'" y2="'+(H-24)+
+          '" stroke="var(--ink)" stroke-width="2.2"/>'+
+        '<text x="'+(W/2+184)+'" y="'+(H-20)+'">최근 이동 · 앞으로</text>'+
+        '<line x1="'+(W/2+240)+'" y1="'+(H-24)+'" x2="'+(W/2+268)+'" y2="'+(H-24)+
+          '" stroke="var(--marg)" stroke-width="2.2" stroke-dasharray="6 4"/>'+
+        '<text x="'+(W/2+274)+'" y="'+(H-20)+'">뒤로</text>'):'')+'</g>';
 
     var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="섹터 로테이션 교과서 도표 — '+
       '증시 곡선이 경기 곡선보다 앞서고, 다섯 단계마다 선호 업종이 붙는다. '+
       '현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+'개월째.">'+
-      grid+waves+boxes+pills+nowg+lg+'</svg>';
+      defs+grid+waves+boxes+trail+pills+nowg+lg+'</svg>';
 
     // ── 이 랩이 실제로 잰 것과의 비교 ────────────────────────────────────
     var rows=(R.cmp||[]).map(function(c){
@@ -1118,7 +1170,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     host.innerHTML='<div class="cycwrap">'+svg+
       '<div class="cycb">위 곡선·단계·업종은 널리 쓰이는 섹터 로테이션 도표의 내용을 그대로 옮긴 것이다. '+
-      '「지금」 표시만 이 랩의 실측이다.</div></div>'+tbl+
+      '「지금」 표시와 최근 이동 자취만 이 랩의 실측이다.'+
+      // 🚨 자취를 '경로'로 읽지 않게 못 박는다. 점은 국면이 바뀐 지점이고, 한 국면 안에서
+      //   '어디쯤인지'는 이 분류기가 말하지 않는다 — 그래서 머무는 동안 점이 안 움직인다.
+      ((cy.trail&&cy.trail.length>1)?(
+        ' 자취의 점은 국면이 <b>바뀐 지점</b>이고 곁의 숫자는 그 국면에 머문 개월수다 — '+
+        '한 국면 안에서 어디쯤인지는 이 분류기가 말하지 않으므로 머무는 동안 점은 움직이지 않는다. '+
+        '<b>화살표가 왼쪽으로 가면 교과서 순서와 반대로 간 것</b>이고, 이 창의 실측은 '+
+        '앞으로 '+((cy.drift||{}).fwd||0)+'회 · 뒤로 '+((cy.drift||{}).back||0)+'회다.'):'')+
+      '</div></div>'+tbl+
       '<div class="cycb"><b>창</b> '+esc((cy.window||{}).start||'')+' ~ '+esc((cy.window||{}).end||'')+
       ' · '+((cy.window||{}).months||0)+'개월. 섹터 지수는 랩 '+
       (((cy.sectors||{}).price_meta||{}).n_stocks||0)+'종을 GICS 로 묶은 동일가중이고, 대조군은 '+

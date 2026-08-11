@@ -1903,7 +1903,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // 한 장 그리기 — series = [{nm, v:[…]}], 강조할 것만 색을 준다
     function chart(dates, series, title, emph){
-      var W=520, H=190, PL=8, PR=92, TOP=14, BOT=22;
+      // 선이 많으면 세로를 늘리고 라벨 칸도 넓힌다 — 11개를 190px 에 쌓으면 글자가 겹친다.
+      var many=series.length>6;
+      var W=520, H=many?264:190, PL=8, PR=many?106:92, TOP=14, BOT=22;
       var n=dates.length, lo=0, hi=0;
       series.forEach(function(s){s.v.forEach(function(y){if(y==null)return;
         if(y<lo)lo=y; if(y>hi)hi=y;});});
@@ -1916,6 +1918,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '" stroke="var(--line)" stroke-width="1"/>';
       // 흐린 선을 먼저, 강조선을 나중에 — 겹칠 때 강조가 위로 온다
       var ord=series.slice().sort(function(a,b){return (emph[a.nm]?1:0)-(emph[b.nm]?1:0);});
+      var labs=[];
       ord.forEach(function(s){
         var d='',started=false,last=null,li=0;
         for(var i=0;i<n;i++){var y=s.v[i]; if(y==null)continue;
@@ -1924,11 +1927,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var col=emph[s.nm]||'var(--muted)';
         g+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(emph[s.nm]?2:1.1)+
            '" opacity="'+(emph[s.nm]?1:0.42)+'" stroke-linejoin="round"/>';
-        if(emph[s.nm]||series.length<=4){
-          g+='<text x="'+(X(li)+5).toFixed(1)+'" y="'+(Y(last)+3.5).toFixed(1)+'" font-size="10.5" '+
-             'font-weight="700" fill="'+col+'">'+esc(s.nm)+
-             '<tspan font-family="var(--mono)" font-size="9.5"> '+(last>0?'+':'')+last.toFixed(2)+'</tspan></text>';
-        }
+        if(emph[s.nm]||series.length<=4)
+          labs.push({nm:s.nm, col:col, x:X(li)+5, y:Y(last), v:last});
+      });
+      // 🚨 라벨 겹침 방지 — 11개를 끝값 자리에 그대로 찍으면 값이 가까운 섹터끼리 포개진다.
+      //   y 순으로 세우고 최소 간격만큼 아래로 민다. **선은 안 움직인다** — 민 것은 글자뿐이고,
+      //   민 만큼 가는 선으로 이어 어느 선의 라벨인지 잃지 않게 한다.
+      labs.sort(function(a,b){return a.y-b.y;});
+      var GAP=11.5, prev=-1e9;
+      labs.forEach(function(L){ L.ly=Math.max(L.y, prev+GAP); prev=L.ly; });
+      var over=labs.length?labs[labs.length-1].ly-(H-BOT-2):0;
+      if(over>0) labs.forEach(function(L){ L.ly-=over; });
+      labs.forEach(function(L){
+        if(Math.abs(L.ly-L.y)>2)
+          g+='<line x1="'+(L.x-3).toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+L.x.toFixed(1)+
+             '" y2="'+L.ly.toFixed(1)+'" stroke="'+L.col+'" stroke-width="0.8" opacity=".55"/>';
+        g+='<text x="'+L.x.toFixed(1)+'" y="'+(L.ly+3.5).toFixed(1)+'" font-size="10.5" '+
+           'font-weight="700" fill="'+L.col+'">'+esc(L.nm)+
+           '<tspan font-family="var(--mono)" font-size="9.5"> '+(L.v>0?'+':'')+L.v.toFixed(2)+'</tspan></text>';
       });
       g+='<text x="'+PL+'" y="'+(H-6)+'" font-size="9.5" fill="var(--muted)" '+
          'font-family="var(--mono)">'+esc(dates[0])+'</text>'+
@@ -1942,20 +1958,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              '러셀 2000':'var(--deploy)'};
     var ixs=Object.keys(blk.ix||{}).map(function(k){return {nm:k, v:blk.ix[k]};});
 
-    // 섹터는 11선이라 전부 칠하면 못 읽는다 — 그 구간 상·하위만 이름과 색을 준다.
+    // 🚨 2026-08-11 — 섹터 11개를 **전부** 그린다(사용자 결정). 종전에는 상위 3·하위 1만
+    //   이름과 색을 주고 나머지 7개는 회색으로 뭉개 놨는데, 그러면 "내 섹터가 어디"를 못 본다.
+    //   11색을 돌려 쓰고 끝값 순으로 정렬해 라벨을 세로로 쌓는다(겹치면 아래 shift 가 민다).
+    var SECPAL=['var(--accent)','var(--hot)','var(--deploy)','var(--marg)','var(--champ)',
+                '#7aa2f7','#e0af68','#9ece6a','#bb9af7','#2ac3de','#f7768e'];
     var secs=Object.keys(blk.sec||{}).map(function(k){
       var a=blk.sec[k], lastv=null;
       for(var i=a.length-1;i>=0;i--){if(a[i]!=null){lastv=a[i];break;}}
       return {nm:k, v:a, last:(lastv==null?-1e9:lastv)};
     }).sort(function(a,b){return b.last-a.last;});
     var CSEC={};
-    secs.slice(0,3).forEach(function(s,i){CSEC[s.nm]=['var(--deploy)','var(--accent)','var(--marg)'][i];});
-    if(secs.length)CSEC[secs[secs.length-1].nm]='var(--hot)';
+    secs.forEach(function(s,i){CSEC[s.nm]=SECPAL[i%SECPAL.length];});
 
     box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
       '<div class="scgrid">'+
         chart(blk.dates, ixs, '지수', CIX)+
-        chart(blk.sec_dates, secs, '섹터 <span>· SPDR 섹터 ETF · 상위 3 · 하위 1만 표시</span>', CSEC)+
+        chart(blk.sec_dates, secs, '섹터 <span>· SPDR 섹터 ETF 11종</span>', CSEC)+
       '</div>'+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
