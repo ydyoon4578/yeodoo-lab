@@ -106,6 +106,32 @@ SECTORS = [
     ("Real Estate",            "부동산",      "XLRE"),
 ]
 TOPN = 3            # 국면마다 곡선에 얹을 업종 수
+
+# ── 레퍼런스 도표(Sector Rotation) 원문 ─────────────────────────────────────
+# 🚨 이 블록은 **교과서다.** 이 랩이 잰 것이 아니라 널리 쓰이는 섹터 로테이션 도표의
+#   내용을 그대로 옮겨 적은 것이다. 화면이 그 사실을 말하고, 아래 cmp 가 이 랩의
+#   실측과 얼마나 겹치는지를 같이 낸다 — 겹치지 않으면 겹치지 않는 대로 보인다.
+# 곡선 위 자리(pos)는 증시 곡선 기준이다. 원 도표의 좌우 배열을 그대로 따랐다.
+REF_TITLE = "Sector Rotation (교과서 도표)"
+# 🚨 자리(pos)는 x축 0~1 위의 값이다. 증시 곡선은 0.02 에서 바닥, 0.52 에서 정점이고
+#   경기 곡선은 그것을 REF_LEAD 만큼 오른쪽으로 민 것이다 — 그래서 증시가 앞선다.
+#   박스 다섯은 원 도표의 좌우 배열을 그대로 따라 고르게 벌려 둔다.
+REF_BOXES = [
+    (0.02, "증시 바닥",  ["금융", "기술", "경기소비"],       "Finance · Technology · Cyclicals"),
+    (0.27, "강세장",     ["기술", "산업재", "소재"],          "Technology · Industrials · Basic Materials"),
+    (0.52, "증시 정점",  ["소재", "에너지", "필수소비"],       "Basic Materials · Energy · Staples"),
+    (0.77, "약세장",     ["에너지", "필수소비", "헬스케어"],    "Energy · Staples · Healthcare"),
+    (0.96, "약세장 후반", ["헬스케어", "유틸리티", "금융"],     "Healthcare · Utilities · Finance"),
+]
+# 증시 곡선의 단계(원 도표의 분홍 알약)
+REF_MKT = [(0.02, "증시 바닥"), (0.27, "강세장"), (0.52, "증시 정점"),
+           (0.77, "약세장"), (0.96, "약세장 후반")]
+# 경기 곡선의 단계(원 도표의 파란 알약) — 증시보다 REF_LEAD 만큼 뒤에 온다
+REF_ECO = [(0.22, "완전 침체"), (0.47, "회복 초기"), (0.72, "완전 회복"), (0.97, "침체 초기")]
+# 원 도표의 단계 ↔ 이 랩의 국면. 실측 비교를 붙이려면 이 다리가 있어야 한다.
+REF_MAP = [("증시 바닥", "Recession"), ("강세장", "Recovery"), ("증시 정점", "Overheating"),
+           ("약세장", "LateCycle"), ("약세장 후반", "SoftLanding")]
+REF_LEAD = 0.20     # 증시 곡선을 경기 곡선보다 이만큼 앞세워 그린다(원 도표의 시차)
 MIN_MATCH = 8       # 섹터 합산 YoY 를 세려면 두 분기에 다 있는 종목이 이만큼은 있어야 한다
 MIN_QTR = 3         # 그 국면에 분기가 이만큼도 없으면 실적 기준을 내지 않는다
 
@@ -293,6 +319,21 @@ def main():
     by_price = sector_by_price(d)
     by_earn, emeta = sector_by_earnings(d, ROOT)
 
+    # 교과서 도표 ↔ 이 랩 실측 — 겹치는 업종을 센다. 겹침이 적으면 적은 대로 낸다.
+    _koN = {k: ko for k, ko, _p, _dd in PHASE}
+    cmp_rows = []
+    for stage, rk in REF_MAP:
+        ref = next((b[2] for b in REF_BOXES if b[1] == stage), [])
+        mine = [r["ko"] for r in (by_price.get(rk) or [])[:TOPN]]
+        mine_e = [r["ko"] for r in (by_earn.get(rk) or [])[:TOPN]]
+        cmp_rows.append({
+            "stage": stage, "regime": rk, "ko": _koN.get(rk, rk),
+            "months": months.get(rk, 0),
+            "ref": ref, "price": mine, "earn": mine_e,
+            "hit_price": [x for x in ref if x in mine],
+            "hit_earn": [x for x in ref if x in mine_e],
+        })
+
     out = {
         "note": ("경기 사이클 곡선 위의 자리. 🚨 곡선의 순서는 통념이고 이 랩이 검정한 것이 아니다 — "
                  "실제 이력은 이 순서대로 돌지 않는다(아래 drift 참조). "
@@ -308,6 +349,13 @@ def main():
                 "pos": POS[cur], "run": run, "dt": hist[-1]["dt"][:7]},
         "recent": recent,
         "recent_n": len(recent),
+        # 레퍼런스 도표 원문 — 화면이 그대로 그린다(교과서라고 화면이 말한다).
+        "ref": {"title": REF_TITLE, "lead": REF_LEAD,
+                "boxes": [{"pos": p2, "stage": st, "ko": ko3, "en": en}
+                          for p2, st, ko3, en in REF_BOXES],
+                "mkt": [{"pos": p2, "ko": ko3} for p2, ko3 in REF_MKT],
+                "eco": [{"pos": p2, "ko": ko3} for p2, ko3 in REF_ECO],
+                "cmp": cmp_rows},
         # 선호 업종 두 자 — 화면은 이 순위를 그대로 얹기만 한다.
         "sectors": {"price": by_price, "earn": by_earn, "topn": TOPN, "earn_meta": emeta,
                     "price_basis": "그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균(%p)",

@@ -198,15 +198,15 @@
   .cycwrap{margin:10px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:2px;
            padding:10px 12px 4px;box-shadow:var(--shadow)}
   .cycwrap svg{display:block;width:100%;height:auto}
+  .cchip{display:inline-block;font-size:11px;padding:2px 7px;margin:1px 3px 1px 0;border-radius:2px;
+         background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
+  .cchip.hit{background:var(--deploy);border-color:var(--deploy);color:var(--ground);font-weight:700}
+  .cmptbl td,.cmptbl th{vertical-align:middle}
+  .cmut{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .cnum{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);text-align:center;white-space:nowrap}
   .cych{font-size:12.5px;font-weight:800;color:var(--ink);margin:0 0 6px}
   .cycb{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5}
   .cycwrap+.cycwrap{margin-top:14px}
-  .cyctabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-  .cyctab{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:2px;
-          border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
-  .cyctab:hover{border-color:var(--accent);color:var(--accent)}
-  .cyctab.on{background:var(--accent);border-color:var(--accent);color:var(--ground)}
-  .cycbasis{font-size:10.5px;color:var(--muted);margin-left:4px;flex:1 1 240px;line-height:1.4}
   .cycnote{font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:9px;
            border-top:1px solid var(--line-soft);padding-top:9px}
   .cycnote b{color:var(--ink-2)}
@@ -980,124 +980,114 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return 'FLAT';
   }
 
-  // ═══ 섹터 로테이션 — 경기 곡선과 증시 곡선, 그 위의 업종 ═══════════════
-  // 레퍼런스(Sector Rotation 도표) 형태. 두 사인파를 겹치고, 증시를 경기보다 앞세우고,
-  // 국면마다 상단 박스에 업종을 얹고 점선으로 곡선의 그 지점을 가리킨다.
-  // 화면은 계산하지 않는다 — build/regime_cycle.py 가 구운 pos·순위를 좌표로 옮긴다.
-  var CYB='price';                       // 업종 박스에 쓸 자(주가/실적)
-
+  // ═══ 섹터 로테이션 — 레퍼런스 도표를 그대로 ═══════════════════════════
+  // 🚨 곡선·단계·업종 배열은 전부 **교과서**다. 이 랩이 잰 것이 아니다.
+  //   빌드가 data/regime_cycle.json 의 ref 블록에 원문을 담아 두고, 화면은 그대로 그린다.
+  //   이 랩이 실제로 잰 것은 아래 비교표에 따로 있다 — 두 개를 섞지 않는다.
   function renderCycle(cy){
     var host=el('cyclebody'), sec=el('cycle'); if(!host||!sec)return;
-    var S=cy.sectors||{}, by=(CYB==='earn'?(S.earn||{}):(S.price||{})), topn=S.topn||3;
+    var R=cy.ref; if(!R){host.innerHTML='<div class="empty">사이클 자료가 아직 없습니다.</div>';sec.hidden=false;return;}
     var now=cy.now||{}, f=function(v){return v.toFixed(1);};
 
-    var W=1200, H=620;
-    var PL=76, PR=76, x0=PL, x1=W-PR;
-    var BOXT=54, BOXH=64, BOXW=118;        // 상단 업종 박스
-    var top=210, bot=560;                  // 곡선 영역
-    var mid=(top+bot)/2, amp=(bot-top)/2*0.86;
-    var LEAD=0.16;                         // 증시가 경기보다 이만큼 앞선다
+    var W=1200, H=600;
+    var PL=70, PR=70, x0=PL, x1=W-PR;
+    var BOXT=48, BOXH=66, BOXW=176;
+    var top=206, bot=520, mid=(top+bot)/2, amp=(bot-top)/2*0.9;
+    var LEAD=R.lead||0.2;
     var X=function(p){return x0+p*(x1-x0);};
-    var Ye=function(p){return mid+amp*Math.cos(2*Math.PI*p);};            // 경기
-    var Ym=function(p){return mid+amp*Math.cos(2*Math.PI*(p+LEAD));};     // 증시
+    // 증시: 0.02 에서 바닥 · 0.52 에서 정점. 경기: 그것을 LEAD 만큼 오른쪽으로 민 것.
+    var Ym=function(p){return mid+amp*Math.cos(2*Math.PI*(p-0.02));};
+    var Ye=function(p){return mid+amp*Math.cos(2*Math.PI*(p-0.02-LEAD));};
 
     function path(fn,close){
       var d='',i;
-      for(i=0;i<=280;i++){var p=i/280; d+=(i?'L':'M')+f(X(p))+' '+f(fn(p));}
+      for(i=0;i<=300;i++){var p=i/300; d+=(i?'L':'M')+f(X(p))+' '+f(fn(p));}
       if(close) d+='L'+f(X(1))+' '+bot+'L'+f(X(0))+' '+bot+'Z';
       return d;
     }
-
-    // ── 눈금선 ─────────────────────────────────────────────────────────
     var grid='';
-    [top, mid, bot].forEach(function(y){
-      grid+='<line x1="'+(PL-16)+'" y1="'+y+'" x2="'+(W-PR+16)+'" y2="'+y+
+    [top,mid,bot].forEach(function(y){
+      grid+='<line x1="'+(PL-18)+'" y1="'+y+'" x2="'+(W-PR+18)+'" y2="'+y+
         '" stroke="var(--line)" stroke-width="1"/>';
     });
-
-    // ── 두 곡선(면 채움) ────────────────────────────────────────────────
     var waves=
-      '<path d="'+path(Ym,1)+'" fill="var(--hot)" opacity=".13"/>'+
-      '<path d="'+path(Ye,1)+'" fill="var(--accent)" opacity=".13"/>'+
-      '<path d="'+path(Ym,0)+'" fill="none" stroke="var(--hot)" stroke-width="2.4"/>'+
-      '<path d="'+path(Ye,0)+'" fill="none" stroke="var(--accent)" stroke-width="2.4"/>';
+      '<path d="'+path(Ym,1)+'" fill="var(--hot)" opacity=".12"/>'+
+      '<path d="'+path(Ye,1)+'" fill="var(--accent)" opacity=".12"/>'+
+      '<path d="'+path(Ym,0)+'" fill="none" stroke="var(--hot)" stroke-width="2.6"/>'+
+      '<path d="'+path(Ye,0)+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
 
-    // ── 곡선 위 단계 라벨(알약) ─────────────────────────────────────────
-    function pill(x,y,txt,bg,anchor){
-      var w=txt.length*7.4+18, h=21, dx=(anchor==='start'?0:(anchor==='end'?-w:-w/2));
-      return '<g><rect x="'+f(x+dx)+'" y="'+f(y-h/2)+'" width="'+f(w)+'" height="'+h+
-        '" rx="10.5" fill="'+bg+'"/><text x="'+f(x+dx+w/2)+'" y="'+f(y+4)+'" text-anchor="middle" '+
-        'font-size="11.5" font-weight="700" fill="var(--ground)">'+esc(txt)+'</text></g>';
+    function pill(x,y,txt,bg){
+      var w=txt.length*7.6+20, h=22, dx=Math.max(4-x, Math.min(W-4-x-w, -w/2));
+      return '<rect x="'+f(x+dx)+'" y="'+f(y-h/2)+'" width="'+f(w)+'" height="'+h+'" rx="11" fill="'+bg+'"/>'+
+        '<text x="'+f(x+dx+w/2)+'" y="'+f(y+4.5)+'" text-anchor="middle" font-size="12" font-weight="700" '+
+        'fill="var(--ground)">'+esc(txt)+'</text>';
     }
-    // 증시 곡선: 바닥(p=1-LEAD) · 정점(p=0.5-LEAD)
-    var mb=1-LEAD, mt=0.5-LEAD;
-    var pills=
-      pill(X(mb%1), Ym(mb)+26, '증시 바닥', 'var(--hot)')+
-      pill(X(mt),   Ym(mt)-26, '증시 정점', 'var(--hot)')+
-      pill(X(0),    Ye(0)+26,  '경기 바닥', 'var(--accent)','start')+
-      pill(X(0.5),  Ye(0.5)-26,'경기 정점', 'var(--accent)');
-
-    // ── 상단 업종 박스 + 점선 연결 ──────────────────────────────────────
-    var boxes='';
-    (cy.phases||[]).forEach(function(ph){
-      var px=X(ph.pos);
-      var bx=Math.max(6, Math.min(W-BOXW-6, px-BOXW/2));
-      var rows=(by[ph.k]||[]).slice(0,topn);
-      var on=(ph.k===now.r);
-      boxes+='<line x1="'+f(px)+'" y1="'+(BOXT+BOXH)+'" x2="'+f(px)+'" y2="'+f(Ye(ph.pos))+
-        '" stroke="var(--deploy)" stroke-width="1.4" stroke-dasharray="2 4" opacity=".75"/>'+
-        '<circle cx="'+f(px)+'" cy="'+f(Ye(ph.pos))+'" r="4" fill="var(--panel)" '+
-        'stroke="var(--accent)" stroke-width="1.8"/>'+
-        '<rect x="'+f(bx)+'" y="'+BOXT+'" width="'+BOXW+'" height="'+BOXH+'" rx="9" '+
-        'fill="var(--deploy)" opacity="'+(on?1:0.86)+'"/>'+
-        (on?'<rect x="'+f(bx-2)+'" y="'+(BOXT-2)+'" width="'+(BOXW+4)+'" height="'+(BOXH+4)+
-            '" rx="11" fill="none" stroke="var(--accent)" stroke-width="2.4"/>':'');
-      if(!rows.length){
-        boxes+='<text x="'+f(bx+BOXW/2)+'" y="'+(BOXT+36)+'" text-anchor="middle" font-size="10" '+
-          'fill="var(--ground)" opacity=".85" font-style="italic">표본 부족</text>';
-      }else rows.forEach(function(r,k){
-        boxes+='<text x="'+f(bx+9)+'" y="'+(BOXT+20+k*17)+'" font-size="11" font-weight="600" '+
-          'fill="var(--ground)">'+esc(r.ko)+'</text>';
-      });
-      // 국면 이름은 박스 아래에
-      boxes+='<text x="'+f(px)+'" y="'+(BOXT+BOXH+15)+'" text-anchor="middle" font-size="10.5" '+
-        'font-weight="700" fill="'+(on?'var(--accent)':'var(--ink-2)')+'">'+esc(ph.ko)+'</text>'+
-        '<text x="'+f(px)+'" y="'+(BOXT+BOXH+27)+'" text-anchor="middle" font-size="9" '+
-        'fill="var(--muted)" font-family="var(--mono)">'+ph.months+'개월</text>';
+    // 단계 알약 — 곡선 위/아래로 번갈아 붙여 겹치지 않게
+    var pills='';
+    (R.mkt||[]).forEach(function(m){
+      var y=Ym(m.pos); pills+=pill(X(m.pos), y+(y>=mid?30:-30), m.ko, 'var(--hot)');
+    });
+    (R.eco||[]).forEach(function(e){
+      var y=Ye(e.pos); pills+=pill(X(e.pos), y+(y>=mid?30:-30), e.ko, 'var(--accent)');
     });
 
-    // ── 지금 ────────────────────────────────────────────────────────────
+    // 상단 업종 박스 + 점선
+    var boxes='';
+    (R.boxes||[]).forEach(function(b){
+      var px=X(b.pos), bx=Math.max(6, Math.min(W-BOXW-6, px-BOXW/2));
+      boxes+='<line x1="'+f(px)+'" y1="'+(BOXT+BOXH)+'" x2="'+f(px)+'" y2="'+f(Ym(b.pos))+
+        '" stroke="var(--deploy)" stroke-width="1.5" stroke-dasharray="2 4" opacity=".8"/>'+
+        '<circle cx="'+f(px)+'" cy="'+f(Ym(b.pos))+'" r="4.5" fill="var(--panel)" '+
+        'stroke="var(--hot)" stroke-width="2"/>'+
+        '<rect x="'+f(bx)+'" y="'+BOXT+'" width="'+BOXW+'" height="'+BOXH+'" rx="10" fill="var(--deploy)"/>';
+      (b.ko||[]).forEach(function(nm,k){
+        boxes+='<text x="'+f(bx+13)+'" y="'+(BOXT+21+k*18)+'" font-size="12.5" font-weight="600" '+
+          'fill="var(--ground)">'+esc(nm)+'</text>';
+      });
+    });
+
+    // 지금 — 경기 곡선 위. 이 랩이 잰 유일한 것이라 다른 색(잉크)으로 둔다.
     var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ye(np);
-    var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="11" fill="var(--accent)" opacity=".22"/>'+
-      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="6" fill="var(--accent)"/>'+
-      pill(nx, bot+30, '지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째', 'var(--ink)')+
-      '<line x1="'+f(nx)+'" y1="'+f(ny+8)+'" x2="'+f(nx)+'" y2="'+(bot+20)+
-      '" stroke="var(--ink)" stroke-width="1.3"/>';
+    var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="12" fill="var(--ink)" opacity=".16"/>'+
+      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="6.5" fill="var(--ink)" stroke="var(--ground)" stroke-width="2"/>'+
+      '<line x1="'+f(nx)+'" y1="'+f(ny+9)+'" x2="'+f(nx)+'" y2="'+(bot+28)+'" stroke="var(--ink)" stroke-width="1.4"/>'+
+      pill(nx, bot+40, '지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째', 'var(--ink)');
 
-    // ── 범례 ────────────────────────────────────────────────────────────
-    var lg='<g font-size="11.5" fill="var(--ink-2)">'+
-      '<rect x="'+(W/2-118)+'" y="'+(H-30)+'" width="14" height="14" rx="3" fill="var(--accent)" opacity=".45"/>'+
-      '<text x="'+(W/2-99)+'" y="'+(H-19)+'">경기(실적)</text>'+
-      '<rect x="'+(W/2+14)+'" y="'+(H-30)+'" width="14" height="14" rx="3" fill="var(--hot)" opacity=".45"/>'+
-      '<text x="'+(W/2+33)+'" y="'+(H-19)+'">증시(주가)</text></g>';
+    var lg='<g font-size="12" fill="var(--ink-2)">'+
+      '<rect x="'+(W/2-124)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--accent)" opacity=".45"/>'+
+      '<text x="'+(W/2-103)+'" y="'+(H-20)+'">경기 Economy</text>'+
+      '<rect x="'+(W/2+22)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--hot)" opacity=".45"/>'+
+      '<text x="'+(W/2+43)+'" y="'+(H-20)+'">증시 Market</text></g>';
 
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="섹터 로테이션 — 경기 곡선과 '+
-      '그보다 앞서는 증시 곡선, 국면마다 '+(CYB==='earn'?'실적':'주가')+' 기준 상위 '+topn+'개 업종. '+
-      '현재 국면 '+esc(now.ko||'')+' '+(now.run||0)+'개월째.">'+
-      grid+waves+pills+boxes+nowg+lg+'</svg>';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="섹터 로테이션 교과서 도표 — '+
+      '증시 곡선이 경기 곡선보다 앞서고, 다섯 단계마다 선호 업종이 붙는다. '+
+      '현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+'개월째.">'+
+      grid+waves+boxes+pills+nowg+lg+'</svg>';
 
-    var tabs='<div class="cyctabs" role="tablist">'+
-      '<button class="cyctab'+(CYB==='price'?' on':'')+'" data-b="price" role="tab" aria-selected="'+
-        (CYB==='price')+'">주가 기준</button>'+
-      '<button class="cyctab'+(CYB==='earn'?' on':'')+'" data-b="earn" role="tab" aria-selected="'+
-        (CYB==='earn')+'">실적 기준</button>'+
-      '<span class="cycbasis">'+esc(CYB==='earn'?(S.earn_basis||''):(S.price_basis||''))+
-      ' · 국면별 상위 '+topn+'</span></div>';
+    // ── 이 랩이 실제로 잰 것과의 비교 ────────────────────────────────────
+    var rows=(R.cmp||[]).map(function(c){
+      function chips(list,hit){
+        return (list||[]).map(function(x){
+          return '<span class="cchip'+(hit.indexOf(x)>=0?' hit':'')+'">'+esc(x)+'</span>';}).join('');
+      }
+      return '<tr><th scope="row">'+esc(c.stage)+'</th>'+
+        '<td>'+esc(c.ko)+' <span class="cmut">'+c.months+'개월</span></td>'+
+        '<td>'+chips(c.ref,[])+'</td>'+
+        '<td>'+chips(c.price,c.hit_price)+'</td>'+
+        '<td>'+chips(c.earn,c.hit_earn)+'</td>'+
+        '<td class="cnum">'+c.hit_price.length+'·'+c.hit_earn.length+' / 3</td></tr>';
+    }).join('');
+    var tbl='<h3 class="lbl" style="margin-top:22px">교과서와 이 랩의 실측을 나란히</h3>'+
+      '<div class="tblwrap"><table class="cmptbl"><thead><tr>'+
+      '<th scope="col">원 도표 단계</th><th scope="col">이 랩 국면</th><th scope="col">교과서 선호 업종</th>'+
+      '<th scope="col">실측 상위3 · 주가</th><th scope="col">실측 상위3 · 실적</th><th scope="col">겹침</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div class="cycb">진하게 칠한 칩이 교과서와 겹친 업종이다. '+
+      '주가 = 그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균 · 실적 = 그 국면 분기의 섹터 합산 순이익 YoY 중앙값.</div>';
 
-    host.innerHTML='<div class="cycwrap">'+tabs+svg+'</div>';
-    var tb=host.querySelectorAll('.cyctab');
-    for(var i=0;i<tb.length;i++)tb[i].addEventListener('click',function(){
-      CYB=this.getAttribute('data-b'); renderCycle(cy);});
+    host.innerHTML='<div class="cycwrap">'+svg+
+      '<div class="cycb">위 곡선·단계·업종은 널리 쓰이는 섹터 로테이션 도표의 내용을 그대로 옮긴 것이다. '+
+      '「지금」 표시만 이 랩의 실측이다.</div></div>'+tbl;
     sec.hidden=false;
   }
 
