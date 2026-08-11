@@ -2334,11 +2334,14 @@ def build_strats():
          "시가총액(주가 × 희석주식수)이 가장 작은 %d종목 동일가중, 월말 리밸런스." % TOPN,
          None, "규모 팩터(SMB). 다만 이 유니버스는 S&P 500 ∪ NASDAQ 100이라 '소형'이라 해도 대형주 "
                "안에서 작은 쪽일 뿐이다 — 원논문의 소형주 효과와 같은 것을 재고 있지 않다. "
-               "⚠ 이 표에서 유일하게 다중검정 문턱을 넘었지만(t 4.09), 그 숫자를 그대로 믿으면 안 된다. "
+               "⚠ 소급 t 가 다중검정 문턱을 넘지만 그 숫자를 그대로 믿으면 안 된다. "
                "이 랩의 생존편향이 정확히 이 전략에 가장 세게 걸린다 — 유니버스가 '오늘의 518종목'이라 "
                "그 사이 지수에서 빠진 회사가 하나도 없다. 지수에서 빠지는 것은 대개 작아진 회사이므로, "
                "'가장 작은 10종목'은 사실상 '작아졌다가 살아남아 되돌아온 10종목'만 고른 것이 된다. "
-               "편출 이력이 이 저장소에 없어 보정할 수 없다. 판정은 규칙대로 두되 근거로 쓰지 말 것.")
+               "🚨 종전에는 여기에 '유일하게 문턱을 넘었다(t 4.09)' 와 '편출 이력이 이 저장소에 없어 "
+               "보정할 수 없다' 가 적혀 있었다. 둘 다 이제 거짓이다 — 문턱을 넘는 규칙은 여럿이고, "
+               "편출 이력은 data/index_history.json 으로 들어와 아래 PIT 문장이 그 보정 결과다. "
+               "판정은 규칙대로 두되 소급 t 를 근거로 쓰지 말 것.")
 
     xsec("x-btp", "장부가 대비 저평가 (Book-to-Price 상위 %d)" % TOPN,
          "주당순자산(SEC XBRL 자본총계 ÷ 희석주식수)을 주가로 나눈 값이 가장 큰 %d종목 "
@@ -4217,7 +4220,7 @@ def run():
         for _r in _pj.get("strategies") or []:
             _m, _b = _r.get("metrics") or {}, _r.get("bench") or {}
             # retro = **같은 창의 소급 레그**. 이것과의 차이가 유니버스 편향이다 —
-            # 랩 본편(2252일)과 직접 빼면 구간 차이가 섞여 편향이 아니게 된다.
+            # 랩 본편(더 긴 창)과 직접 빼면 구간 차이가 섞여 편향이 아니게 된다.
             _rt = _r.get("retro") or {}
             PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"),
                                        _r.get("bias_excess"), _rt.get("excess_cagr"),
@@ -4539,47 +4542,43 @@ def run():
     }
 
     # 생존편향 실측 한 줄을 **데이터에서** 만든다. 숫자를 문장에 박으면 재측정할 때마다 거짓말이 된다.
+    #
+    # 🚨 2026-08-11 — 여기서 **다시 재고 있었다.** 랩 NAV(5거래일 표본)와 ixr 을 PIT 창으로
+    #   잘라 대조군 CAGR 과 편향 중앙값을 새로 만들었는데, 그 값들은 pit_backtest 가 이미
+    #   retro.bench.cagr · bias_cagr 로 실어 둔 것이다. 두 벌이 되니 어긋났다 —
+    #   대조군 15.22 vs 실린 값 15.19, 편향 중앙 10.2 vs 10.79. 표본 간격·연수 근사·
+    #   fin() 의 공통 k 정렬을 재현하지 않아 생긴 차이다.
+    #   → 계산을 걷어내고 **산출물의 값을 옮기기만 한다.** 이 랩의 규범 그대로다:
+    #     화면은 채점하지 않는다.
     _pit_limit = None
     if PIT_MEASURED and PIT_BENCH is not None:
-        _w0, _w1 = PIT_WINDOW.split("~")
-        _idx = [i for i, d in enumerate(dates[MIN_HIST:]) if _w0 <= d[:7] <= _w1]
-        _lab_bench = None
-        if len(_idx) > 60:
-            _i, _j = _idx[0], _idx[-1]
-            _bn = [100.0]
-            for k in range(MIN_HIST + 1, n):
-                _bn.append(_bn[-1] * (1 + ixr[k]))
-            if _bn[_i] > 0:
-                _yrs = (_j - _i) / 252.0
-                _lab_bench = ((_bn[_j] / _bn[_i]) ** (1 / _yrs) - 1) * 100 if _yrs > 0 else None
-        # ⚠ 전 구간 CAGR 과 PIT CAGR 을 그냥 빼면 안 된다. 창이 달라 그 차이의 상당 부분이
-        #   생존편향이 아니라 구간이 달라서 생긴다. 랩 쪽도 PIT 창으로 잘라 같은 구간끼리 뺀다.
-        _ov = []
-        for _r in out:
-            _m = PIT_MEASURED.get(_r["sid"])
-            if not (_m and _m[0] is not None):
-                continue
-            _nv, _dd = _r.get("nav") or [], _r.get("dates") or []
-            _k = [q for q, dd in enumerate(_dd) if _w0 <= dd[:7] <= _w1]
-            if len(_k) < 20 or not _nv[_k[0]]:
-                continue
-            _yr = (_k[-1] - _k[0]) * 5 / 252.0          # nav 는 5거래일 간격 표본
-            if _yr <= 0:
-                continue
-            _labc = ((_nv[_k[-1]] / _nv[_k[0]]) ** (1 / _yr) - 1) * 100
-            _ov.append(_labc - _m[0])
-        _ov.sort()
-        _med = _ov[len(_ov) // 2] if _ov else None
+        _rows = [_r for _r in (PIT_DOC.get("strategies") or []) if _r.get("bias_cagr") is not None]
+        _bias = sorted(_r["bias_cagr"] for _r in _rows)
+        # 짝수 개면 가운데 둘의 평균 — [len//2] 는 중앙값이 아니라 상위 중간값이라
+        # 다른 도구로 다시 세면 값이 어긋난다(실측 10.9 대 10.79). 옮겨 적는 줄이므로 정확히.
+        _med = (None if not _bias else
+                _bias[len(_bias) // 2] if len(_bias) % 2 else
+                (_bias[len(_bias) // 2 - 1] + _bias[len(_bias) // 2]) / 2.0)
+        # 소급 레그의 대조군 CAGR — 규칙마다 같은 값이지만 없을 수도 있으니 첫 유효값을 쓴다.
+        _lab_bench = next((((_r.get("retro") or {}).get("bench") or {}).get("cagr")
+                           for _r in _rows
+                           if ((_r.get("retro") or {}).get("bench") or {}).get("cagr") is not None),
+                          None)
+        _pt = sorted((abs(_r.get("t") or 0), _r["name"]) for _r in _rows)
         _pit_limit = (
             "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간"
-            "(%s)을 다시 돌린 결과다. 대조군 CAGR이 %s%.2f%%로, 가격·거래량 규칙 %d종의 CAGR은 "
-            "중앙값 %.1f%%p 과대로 나온다. 모멘텀 계열이 가장 심해 t가 3.4 안팎에서 1.5 미만으로 "
-            "내려앉는다 — 다만 t 하락분 전부가 편향은 아니다. PIT 표본이 짧아(1461일 대 2252일) "
-            "그중 3분의 1가량은 구간 단축에서 온다. 그래도 남는 하락이 커서 '통과'는 유지되지 않는다. "
-            "산출: build/pit_backtest.py (멤버십은 사내 DB, 가격은 yfinance)."
-            % (PIT_WINDOW,
+            "(%s · %d거래일)을 다시 돌린 결과다. 대조군 CAGR이 %s%.2f%%로, 규칙 %d종의 CAGR은 "
+            "중앙값 %.1f%%p 과대로 나온다. 이 표에서 PIT |t| 가 다중검정 임계 %.2f 를 넘는 규칙은 "
+            "%d종이고 최대 |t| 는 %.2f(%s)다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 "
+            "본편보다 짧아 일부는 구간 단축에서 온다. "
+            "산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, "
+            "가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다."
+            % (PIT_WINDOW, PIT_DOC.get("n_days") or 0,
                ("%.2f%%→" % _lab_bench) if _lab_bench else "",
-               PIT_BENCH, len(PIT_MEASURED), _med if _med is not None else 0))
+               PIT_BENCH, len(_rows), _med if _med is not None else 0,
+               PIT_DOC.get("t_crit") or 0,
+               sum(1 for _r in _rows if abs(_r.get("t") or 0) >= (PIT_DOC.get("t_crit") or 99)),
+               _pt[-1][0] if _pt else 0, _pt[-1][1] if _pt else "—"))
 
     # 표본 길이를 사람이 읽는 말로 — 문장에 '3년'을 박아 두면 구간을 바꿀 때마다 거짓말이 된다.
     _yrs = (n - MIN_HIST) / 252.0
