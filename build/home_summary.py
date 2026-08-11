@@ -366,8 +366,21 @@ def _industry(stocks, dates, root):
             #     숫자가 없다(평균가를 채우면 살 수 없는 값을 살 수 있는 것처럼 보인다).
             _p1 = PX.get(objs[0]["t"]) if objs else None
             _last = _p1[-1] if (_p1 and _p1[-1]) else None
+            # 🚨 2026-08-12 — 지수 소속(ix)을 싣는다(사용자 요청). 홈 히트맵이 S&P 500 /
+            #   나스닥 100 을 따로 볼 수 있어야 하는데, 종전 종목 줄에는 소속이 **아예 없었다**
+            #   (st·n·lv 는 518종 전부 1·1·3 인 상수다). 화면이 나눌 근거가 없었다.
+            #   ⚠ 새 파일을 만들지 않는다. members.json(113KB)을 홈이 받게 하면 히트맵 하나
+            #     때문에 홈의 첫 화면 요청이 늘어난다 — 이 줄에 비트 하나를 붙이는 쪽이 싸다
+            #     (실측 +2.6KB raw · 518줄).
+            #   ⚠ 정본은 members.json 이다(stocks.json 에도 idx 가 있고 2026-08-12 실측으로
+            #     518종 전부 일치하지만, 관문을 통과한 쪽은 members 다 — _idx_counts 와 같은
+            #     것을 세야 눈썹의 종목 수와 히트맵 버튼의 종목 수가 어긋나지 않는다).
+            #   비트: 1=SPX · 2=NDX · 3=둘 다. 실측 2026-08-10 — 416 / 15 / 87.
+            _ix = set((mem.get(label) or {}).get("idx") or [])
+            _ixb = (1 if "SPX" in _ix else 0) + (2 if "NDX" in _ix else 0)
             return {"nm": label, "sn": sub, "st": 1, "sec": sec, "n": 1, "mc": mc,
                     **({"px": round(float(_last), 2)} if _last else {}),
+                    **({"ix": _ixb} if _ixb else {}),
                     # 🚨 2026-08-10 — 1자리에서 2자리로. 화면은 이 값을 **2자리로 그리는데**
                     #   (toFixed(2)) 1자리로 저장하고 있었다. 그래서 종목 줄의 둘째 자리는
                     #   518종 전부 0 이었고, 작은 움직임이 통째로 사라졌다 —
