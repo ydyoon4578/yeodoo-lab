@@ -1198,9 +1198,13 @@ try:
         _rh = io.open(os.path.join(ROOT, "regime.html"), encoding="utf-8").read()
         if "renderCycle" in _rh and "regime_cycle.json" not in _rh:
             errors.append("regime.html 이 renderCycle 을 갖고 있는데 regime_cycle.json 을 안 받는다")
-        # 선호 업종 두 자 — 화면에 탭이 있는데 자료가 없으면 빈 곡선이 된다(조용한 빈칸).
+        # 🚨 레퍼런스 원문이 없으면 곡선이 통째로 안 그려진다 — 조용한 빈칸을 만들지 않는다.
+        if "renderCycle" in _rh and not (_cy.get("ref") or {}).get("boxes"):
+            errors.append("regime_cycle.json 에 ref.boxes 가 없다 — 화면이 통째로 빈다. "
+                          "build/regime_cycle.py 를 다시 돌릴 것")
+        # 비교표가 쓰는 두 자.
         _sc = _cy.get("sectors") or {}
-        if "cyctab" in _rh:
+        if "cmptbl" in _rh:      # 교과서 vs 실측 비교표가 두 자를 다 쓴다
             for _b in ("price", "earn"):
                 if not (_sc.get(_b) or {}):
                     errors.append("regime.html 에 선호 업종 탭이 있는데 regime_cycle.json 의 "
