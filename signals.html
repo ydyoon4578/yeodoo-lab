@@ -128,8 +128,14 @@
   .rv.vrej{color:var(--hot);border-color:currentColor}
   .rrule{margin:9px 0 0;font-size:12.5px;color:var(--ink);line-height:1.65}
   .rwhy{margin:5px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .rgrid{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:1px;
-    background:var(--line-soft);border:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  /* 🚨 격자선은 자식의 테두리로 그린다(2026-08-11). 종전에는 gap:1px 이 부모 배경을
+     비추게 했는데, dpr 이 1 이 아니면(브라우저 90% 확대 등) 그 간격이 0.89 device px 가
+     되고 양쪽 자식이 바깥으로 스냅되면 선이 **통째로 사라진다**. 일정 캘린더에서 실제로
+     그랬다 — 바깥 테두리만 남고 안쪽 격자가 군데군데 비었다.
+     컨테이너는 왼쪽·위만, 자식은 오른쪽·아래만 — 열 수가 동적이어도(auto-fit) 겹치지 않는다. */
+  .rgrid{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));
+    border-left:1px solid var(--line-soft);border-top:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  .rgrid>*{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
   .rc{background:var(--panel);padding:7px 10px}
   .rc span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .rc.tstat span{text-transform:none}   /* 위와 같은 이유 — t통계량 라벨은 소문자여야 한다 */
@@ -171,8 +177,14 @@
   .pfc h3{margin:0;font-size:14.5px;font-weight:800;letter-spacing:-.01em}
   .pfc .pfr{margin:7px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.6}
   .pfc .pfw{margin:7px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
-  .pfg{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:1px;
-       background:var(--line-soft);border:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  /* 🚨 격자선은 자식의 테두리로 그린다(2026-08-11). 종전에는 gap:1px 이 부모 배경을
+     비추게 했는데, dpr 이 1 이 아니면(브라우저 90% 확대 등) 그 간격이 0.89 device px 가
+     되고 양쪽 자식이 바깥으로 스냅되면 선이 **통째로 사라진다**. 일정 캘린더에서 실제로
+     그랬다 — 바깥 테두리만 남고 안쪽 격자가 군데군데 비었다.
+     컨테이너는 왼쪽·위만, 자식은 오른쪽·아래만 — 열 수가 동적이어도(auto-fit) 겹치지 않는다. */
+  .pfg{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));
+       border-left:1px solid var(--line-soft);border-top:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  .pfg>div{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
   .pfg>div{background:var(--panel);padding:7px 9px}
   .pfg span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .pfg b{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink)}
