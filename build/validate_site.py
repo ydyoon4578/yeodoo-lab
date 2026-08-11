@@ -1093,6 +1093,32 @@ try:
 except Exception as e:
     errors.append(f"updates.json 검증 실패: {e}")
 
+# ── 전략 탐색 풀(rotation_pool.json)이 멈췄는지 ──────────────────────────
+# 🚨 2026-08-11 에 사용자가 '최근 갱신이 8월 7일'이라고 짚어서 알았다. 이 풀을 채우는
+#   자동 잡은 **없다**(생산자는 로컬 작업 스케줄러 + 헤드리스 Claude 다 — asof_index.py 주석
+#   참조). 생산자가 죽으면 화면은 아무 말 없이 옛 동향을 계속 보여 준다.
+#   rotation.html 자신도 3영업일부터 경고를 띄우지만 그건 **누가 그 페이지를 열어야** 보인다.
+#   여기서 같이 잡아 검증 로그에 남긴다.
+#   ⚠ 실패가 아니라 경고다. 갱신 피드와 같은 방침 — 손으로 도는 일 때문에 자동 잡을
+#     죽이지 않는다. 문턱은 화면의 경고와 같은 3영업일로 맞춘다(두 화면이 다른 말을 하면 안 된다).
+try:
+    import datetime as _dtr
+    _pool = json.load(io.open(os.path.join(ROOT, "data", "rotation_pool.json"), encoding="utf-8"))
+    _gen = _pool.get("generated")
+    if _gen:
+        _dd, _bd = _dtr.date.fromisoformat(_gen), 0
+        while _dd < _dtr.date.today() and _bd < 60:
+            _dd += _dtr.timedelta(days=1)
+            if _dd.weekday() < 5:
+                _bd += 1
+        if _bd >= 3:
+            print("⚠ 전략 탐색 풀이 %d영업일째 안 돌았다(generated %s). "
+                  "이 풀은 자동 잡이 아니라 로컬 스케줄러 + 헤드리스 Claude 가 채운다 — "
+                  "생산자가 살아 있는지 확인할 것"
+                  "(build/rotation_select.py 독스트링에 절차가 있다)." % (_bd, _gen))
+except Exception as _e:
+    errors.append("rotation_pool 신선도 검사 실패: %s" % _e)
+
 # ── 일자 정합(데이터 정책 3): 알려진 날짜 필드가 전부 파싱되고 미래가 아니어야 한다 ──
 # (실사고: members.json에 미래 날짜 07-23이 들어가 있었음. TZ 여유로 +1일 허용.)
 import datetime as _dt
