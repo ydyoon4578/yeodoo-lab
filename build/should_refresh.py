@@ -20,6 +20,12 @@ stocks.json 에는 생성 시각 필드가 없다(as_of 는 '자료의 기준일
 얕은 클론이라 이력이 짧아 못 찾으면 '오늘 안 돎'으로 본다 — 판정을 못 하겠으면 **도는 쪽**이
 안전한 방향이다(한 번 더 도는 비용 < 하루를 잃는 비용).
 
+【무엇을 지키나 — 2026-08-12】
+stocks 만 이 보호를 받고 있었다. assets 는 백업 슬롯이 없어 **본 슬롯이 안 뜬 날을 통째로
+잃었다**(실측 08-11: 크론이 아예 발화하지 않아 시장판·스타일 성과가 하루 고착. 그 다음 날
+사용자가 "기간별 수익률 업데이트가 늦네"로 알아챘다 — 화면도 그때까지 조용했다).
+같은 보호를 assets 에도 붙인다.
+
   python build/should_refresh.py <json경로> <event_name> <cron> >> "$GITHUB_OUTPUT"
 """
 from __future__ import annotations
@@ -34,9 +40,16 @@ except Exception: pass
 
 KST = timezone(timedelta(hours=9))
 
-# 백업 슬롯의 cron 문자열. 워크플로에서 이 값을 바꾸면 여기도 바꿔야 한다 —
+# 백업 슬롯의 cron 문자열들. 워크플로에서 이 값을 바꾸면 여기도 바꿔야 한다 —
 # 안 바꾸면 백업이 '본 슬롯'으로 판정되어 늘 돌고, 이 파일이 있는 이유가 사라진다.
-BACKUP_CRON = "42 22 * * 0-5"
+# 🚨 2026-08-12 — 문자열 하나에서 **표**로 바꿨다. assets 에도 백업을 붙이는데, 종전처럼
+#   상수 하나면 assets 의 백업 cron 이 BACKUP_CRON 과 달라 '본 슬롯' 으로 판정되고
+#   **매일 두 번 도는** 정반대 결과가 난다. 값이 무엇에 쓰이는지가 아니라 '어느 워크플로의
+#   백업인가' 가 정보이므로 워크플로 이름을 같이 적는다(검증기가 이 표를 대조한다).
+BACKUP_CRONS = {
+    "42 22 * * 0-5": "refresh-stocks.yml",
+    "20 23 * * 0-5": "refresh-assets.yml",
+}
 
 
 def last_commit_kst_date(path: str) -> str | None:
@@ -67,7 +80,7 @@ def main() -> int:
         print(f"::notice::{event or '비스케줄'} 실행 — 항상 수집한다", file=sys.stderr)
         return 0
     # 본 슬롯은 언제나 돈다. 판정 대상은 백업 슬롯뿐이다.
-    if cron.strip() != BACKUP_CRON:
+    if cron.strip() not in BACKUP_CRONS:
         print("run=true")
         print(f"::notice::본 슬롯({cron}) — 수집한다", file=sys.stderr)
         return 0

@@ -9,7 +9,8 @@ on:
     # ⚠ 이 슬롯은 매일 뜨지만 매일 일하지는 않는다 — 아래 gate 잡이 오늘치가 이미 커밋됐으면
     #   본 잡을 통째로 건너뛴다. 안 그러면 519종을 하루 두 번 받아 야후 쓰로틀 위험이 두 배가
     #   되고, data/sd/ 518파일을 하루 두 번 커밋해 저장소가 두 배로 분다.
-    # ⚠ 이 cron 문자열을 바꾸면 build/should_refresh.py 의 BACKUP_CRON 도 같이 바꿀 것.
+    # ⚠ 이 cron 문자열을 바꾸면 build/should_refresh.py 의 BACKUP_CRONS 도 같이 바꿀 것.
+    #   (2026-08-12 부터 validate_site.py 가 그 표와 이 파일을 대조한다 — 어긋나면 빨개진다.)
     - cron: '42 22 * * 0-5'    # 백업 슬롯 — 매일(월~토) 07:42 KST
   workflow_dispatch:
 
