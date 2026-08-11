@@ -383,6 +383,26 @@ def main():
         recent.append({"dt": x["dt"][:7], "r": r, "pos": POS[r],
                        "age": len(hist[-RECENT:]) - 1 - i})   # 0 = 가장 최근
 
+    # ── 최근 이동 자취 — 달이 아니라 **런** 단위로 접는다 ────────────────
+    # 🚨 pos 는 라벨이 정한다(회복이면 언제나 0.32). 그래서 달마다 점을 찍으면 같은 자리에
+    #   15개가 겹쳐 자취가 안 보인다. 라벨이 바뀐 지점만 남기고 머문 개월수를 크기로 준다.
+    # ⚠ 런 안에서 위치를 조금씩 흩뿌리지 않는다. 그건 이 랩이 재지 않은 값을 그리는 것이다 —
+    #   같은 국면 안에서 '어디쯤인지' 는 이 분류기가 말하지 않는다.
+    # ⚠ 마지막 달은 최소지속 필터가 아직 확정 못 한 잠정값이다(regime.json 의 prov).
+    _ko1 = {k: ko for k, ko, _p, _dd in PHASE}
+    trail = []
+    for x in recent:
+        if trail and trail[-1]["r"] == x["r"]:
+            trail[-1]["months"] += 1
+            trail[-1]["to"] = x["dt"]
+        else:
+            trail.append({"r": x["r"], "ko": _ko1.get(x["r"], x["r"]), "pos": x["pos"],
+                          "months": 1, "from": x["dt"], "to": x["dt"]})
+    # 앞으로 갔나 뒤로 갔나 — 화살표 색이 이것으로 갈린다. 곡선의 순서는 통념이므로
+    # '뒤로' 가 잘못이라는 뜻이 아니다. 실제 이력이 그 순서를 안 따른다는 사실의 표시다.
+    for a, b in zip(trail, trail[1:]):
+        b["dir"] = "fwd" if b["pos"] > a["pos"] else "back"
+
     # ── 이 곡선을 '경로'로 읽으면 안 되는 근거를 같이 굽는다 ──────────────
     trans = sum(1 for a, b in zip(seq, seq[1:]) if a != b)
     pairs = {}
@@ -462,6 +482,12 @@ def main():
                 "pos": POS[cur], "run": run, "dt": hist[-1]["dt"][:7]},
         "recent": recent,
         "recent_n": len(recent),
+        # 화면이 그리는 것은 이쪽이다. recent 는 달 단위 원자료로 남긴다.
+        "trail": trail,
+        "trail_note": ("최근 %d개월의 이동을 국면이 바뀐 지점만 남겨 이은 것. 점 크기는 그 국면에 "
+                       "머문 개월수다. 🚨 한 국면 안에서 '어디쯤인지'는 이 분류기가 말하지 않으므로 "
+                       "머문 동안 점은 움직이지 않는다. 화살표가 왼쪽으로 가면 교과서 순서와 반대로 "
+                       "간 것이다 — 실측으로 그런 이동이 더 많다(아래 drift)." % len(recent)),
         # 레퍼런스 도표 원문 — 화면이 그대로 그린다(교과서라고 화면이 말한다).
         "ref": {"title": REF_TITLE, "lead": REF_LEAD,
                 "boxes": [{"pos": p2, "stage": st, "ko": ko3, "en": en}
