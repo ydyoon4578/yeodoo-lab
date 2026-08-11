@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "603073a09d023e71",
+ "generated_from": "8ff8e983b8235ff6",
  "categories": [
   {
    "name": "시장",
@@ -272,10 +272,11 @@
      "name": "데이터 출처·기준일",
      "file": "sources.html",
      "status": "existing",
-     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본",
+     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본 · 별도 열람 잠금",
      "verdict": "na",
      "src": "raw",
      "effort": "M",
+     "locked": true,
      "live": true
     },
     {

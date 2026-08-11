@@ -42,8 +42,17 @@ except Exception:
     sys.exit("cryptography 가 필요하다 —  pip install cryptography")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GATE = os.path.join(ROOT, "kb.html")
-FRAG = os.path.join(ROOT, "_build", "pages", "kb_content.html")
+
+# 잠금 페이지 목록. 🚨 2026-08-11 에 sources.html 이 두 번째로 들어오면서 일반화했다 —
+#   그 전에는 kb.html 이 상수로 박혀 있어서, 두 번째 페이지를 잠그려면 이 파일을 복사해야 했다.
+#   복사본이 생기면 규약(iterations·salt 길이·ph 계산)이 두 벌이 되고, 한쪽만 고쳐지는 날이 온다.
+#   이 파일 첫머리가 경계하는 바로 그 구조다.
+# ⚠ 조각 경로는 _build/pages/ 아래이고 그 폴더는 gitignore 다 — 평문은 저장소에 안 들어간다.
+PAGES = {
+    "kb":      ("kb.html",      "kb_content.html"),
+    "sources": ("sources.html", "sources_content.html"),
+}
+GATE = FRAG = None      # main() 이 --page 로 정한다
 
 ITER = 310000          # 게이트에 박힌 값과 같아야 한다
 SALT_LEN, IV_LEN = 16, 12
@@ -118,17 +127,25 @@ def sanity(gate_text: str) -> list:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="kb.html 본문 재잠금 + ph 기록")
+    ap = argparse.ArgumentParser(description="잠금 페이지 본문 재잠금 + ph 기록")
+    ap.add_argument("--page", default="kb", choices=sorted(PAGES),
+                    help="잠글 페이지(기본 kb — 종전 동작 그대로)")
     ap.add_argument("--check", action="store_true",
                     help="기록된 ph 와 조각 평문이 맞는지만 확인하고 끝낸다")
     a = ap.parse_args()
+
+    global GATE, FRAG
+    _g, _f = PAGES[a.page]
+    GATE = os.path.join(ROOT, _g)
+    FRAG = os.path.join(ROOT, "_build", "pages", _f)
+    print("페이지 %s ← 조각 %s" % (_g, _f))
 
     if not os.path.exists(GATE):
         print("없음:", GATE); return 1
     gate = read_exact(GATE)
     m = BLOCK_RE.search(gate)
     if not m:
-        print("게이트 파라미터 블록을 못 찾았다 — kb.html 구조가 바뀌었다."); return 1
+        print("게이트 파라미터 블록을 못 찾았다 — %s 구조가 바뀌었다." % _g); return 1
     if len(BLOCK_RE.findall(gate)) != 1:
         print("파라미터 블록이 둘 이상이다 — 어느 것을 고칠지 알 수 없다."); return 1
     varname = m.group(1)
@@ -145,7 +162,7 @@ def main() -> int:
         print("조각 sha256 :", ph_now)
         print("게이트 ph   :", cur or "(없음)")
         if not cur:
-            print("→ ph 가 없다. python build/kb_lock.py 로 다시 잠그며 기록할 것."); return 2
+            print("→ ph 가 없다. python build/kb_lock.py --page %s 로 다시 잠그며 기록할 것." % a.page); return 2
         if cur != ph_now:
             print("→ 불일치. 조각이 낡았거나 다른 PC에서 재잠금됐다."); return 3
         print("→ 일치."); return 0
@@ -166,8 +183,8 @@ def main() -> int:
     if not re.search(r'<body[^>]*\bdata-tool\s*=', new):
         _bm = re.search(r'<body([^>]*)>', new)
         if _bm:
-            new = new[:_bm.start()] + '<body data-tool="kb.html"%s>' % _bm.group(1) + new[_bm.end():]
-            print("  ↻ <body data-tool=\"kb.html\"> 를 되돌렸다(재잠금이 지웠다)")
+            new = new[:_bm.start()] + '<body data-tool="%s"%s>' % (_g, _bm.group(1)) + new[_bm.end():]
+            print("  ↻ <body data-tool=\"%s\"> 를 되돌렸다(재잠금이 지웠다)" % _g)
 
     bad = sanity(new)
     if bad:

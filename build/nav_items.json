@@ -249,10 +249,11 @@
      "name": "데이터 출처·기준일",
      "file": "sources.html",
      "status": "existing",
-     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본",
+     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본 · 별도 열람 잠금",
      "src": "raw",
      "verdict": "na",
-     "effort": "M"
+     "effort": "M",
+     "locked": true
     },
     {
      "name": "등급·판정 규약",
