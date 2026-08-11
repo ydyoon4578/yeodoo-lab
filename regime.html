@@ -189,6 +189,33 @@
   /* 트랙 최소폭을 min(320px,100%)로 — .wrap 좌우 패딩 20px에는 모바일 축소 미디어쿼리가 없어
      뷰포트 359px 이하에서 콘텐츠 폭이 320px 미만이 되고, 고정 320px 트랙이 넘쳐 페이지가
      가로로 스크롤됐다(320px 기기에서 약 40px 초과). 같은 파일의 .icards는 230px라 무사했다. */
+  /* ── 7축 한눈 막대(2026-08-11) — 표를 걷어내고 그림으로 ────────────────
+     🚨 색을 쓰지 않는다. 이 화면은 "밴드 0은 좋다는 뜻이 아니다"를 명시하고 있고
+       (금리 축의 밴드 0은 「낮은 수준」= 대개 침체) 그래서 밴드·문구에 색이 없었다.
+       막대만 초록·빨강으로 칠하면 그 원칙이 그림에서 깨진다 — 방향은 중심선의
+       어느 쪽으로 뻗는가로만 말한다. */
+  .axbars{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .axr{display:grid;grid-template-columns:64px 34px minmax(90px,1fr) 92px 52px 44px 44px;
+       gap:10px;align-items:center;background:var(--panel);padding:7px 12px}
+  .axr .axn{font-size:12.5px;font-weight:700;color:var(--ink)}
+  .axr .axk{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center}
+  .axr .axt{position:relative;height:12px;background:var(--panel-2);border-radius:2px}
+  .axr .axz{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line);transform:translateX(-.5px)}
+  .axr .axf{position:absolute;top:0;bottom:0;background:var(--ink-2);border-radius:1px}
+  .axr .axw{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2)}
+  .axr .axm{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+  .axr .axnn{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+  .axr .axx{text-align:right}
+  .axr.axlow{background:var(--panel-2)}
+  .axr.axlow .axn,.axr.axlow .axw,.axr.axlow .axm{color:var(--muted)}
+  .axr.axlow .axf{background:var(--muted)}
+  .axleg{font-size:11px;color:var(--muted);line-height:1.55;margin-top:7px}
+  .axleg b{color:var(--ink-2)}
+  details.axfold{margin-top:12px}
+  @media(max-width:720px){
+    .axr{grid-template-columns:56px minmax(70px,1fr) 78px 44px;gap:8px;padding:7px 10px}
+    .axr .axk,.axr .axnn{display:none}
+  }
   .xagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:10px}
   .xac{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
   /* 구성 지표 3개 미만 — '숫자'만 흐리게 한다. 예전에는 카드 전체에 opacity:.62를 걸었는데,
@@ -988,7 +1015,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var nEx=0; for(k in EXK)if(has(EXK,k))nEx++;
 
     // ── ① 무엇을 보고 있는지 ────────────────────────────────────────────────
-    var out='<div class="tbintro"><b>위 「지표 종합」의 7개 칩이 무엇으로 만들어졌는지</b>의 내역입니다. '+
+    var aud='<div class="tbintro"><b>위 「지표 종합」의 7개 칩이 무엇으로 만들어졌는지</b>의 내역입니다. '+
       '매크로 지표 <b>'+IL.length+'개</b> 중 <b>'+nUse+'개</b>가 7축에 들어가고 <b>'+nEx+'개</b>는 점수에서 빠집니다'+
       (unass.length?' · 배정 미상 '+unass.length+'개':'')+'. '+
       '축 점수와 판정 문구는 빌드 시점에 한 번 계산돼 regime.json에 구워지고 이 화면은 그것을 그대로 출력합니다 — '+
@@ -1031,7 +1058,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<td>'+(sc?sc.lead:'—')+(sc&&!sc.lead&&a.kind==='cond'?'<span style="display:block;font-size:11px;color:var(--muted)">문장 제외</span>':'')+'</td>'+
       '</tr>';
     }
-    out+='<h3 class="lbl">7축 개요 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+    aud+='<h3 class="lbl">7축 개요 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
         '· 성과가 아니라 표본(구성 지표 수)을 먼저 봅니다</span></h3>'+
       '<div class="tblwrap"><table><thead><tr>'+
         '<th scope="col">축</th><th scope="col">종류</th><th scope="col">지표 수 n</th>'+
@@ -1096,7 +1123,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           (thinC?'<br>구성 지표 '+t3.n+'개 — 평균으로 읽지 말 것.':'')+
         '</div></div>';
     }
-    out+='<h3 class="lbl">역매핑 — 축별 구성 지표 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+    aud+='<h3 class="lbl">역매핑 — 축별 구성 지표 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
         '· 목록은 빌드 소스 전사, 값·상태는 로드한 regime.json</span></h3>'+
       '<div class="xagrid">'+cards+'</div>';
 
@@ -1126,7 +1153,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var mfoot='<tr><th scope="row">합계</th>';
     for(q=0;q<COLS.length;q++)mfoot+='<td class="pv">'+(CT[COLS[q]]||0)+'</td>';
     mfoot+='<td class="pv">'+IL.length+'</td></tr>';
-    out+='<h3 class="lbl">그룹 × 축 대응 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+    aud+='<h3 class="lbl">그룹 × 축 대응 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
         '· 카드가 묶인 그룹 6종과 집계 축 7종은 같은 것이 아닙니다</span></h3>'+
       '<div class="tblwrap"><table class="xamx"><thead><tr><th scope="col">지표 그룹</th>'+
         COLS.map(function(c){return '<th scope="col">'+esc(c)+'</th>';}).join('')+
@@ -1156,7 +1183,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         ' 카드로는 아래 「매크로 지표 현황」에 그대로 표시됩니다 — 값을 감추는 것이 아니라 점수에만 넣지 않습니다.'+
         '</div></div>';
     }
-    out+='<h3 class="lbl">제외된 지표와 사유 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+    aud+='<h3 class="lbl">제외된 지표와 사유 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
         '· '+nEx+'개 · regime.json summary.excluded 원문</span></h3>'+
       (exc?'<div class="xagrid">'+exc+'</div>':'<div class="tbintro">제외된 지표가 없습니다.</div>')+
       '<div class="chartnote">두 지표는 <b>스케일이 비대칭</b>이라 판정 람다가 good을 낼 수 없는 구조입니다 — '+
@@ -1179,7 +1206,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       mrows2+='<tr'+(AX_MODE[i][0]===s.mode?' class="xacur"':'')+'>'+
         '<th scope="row">'+AX_MODE[i][0]+(AX_MODE[i][0]===s.mode?' ◀ 이번 회차':'')+'</th>'+
         '<td style="text-align:left">'+AX_MODE[i][1]+'</td></tr>';
-    out+='<h3 class="lbl">요약 문장 모드 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
+    aud+='<h3 class="lbl">요약 문장 모드 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
         '· summary.mode = '+esc(s.mode||'—')+'</span></h3>'+
       '<div class="tblwrap"><table><thead><tr><th scope="col">모드</th>'+
         '<th scope="col" style="text-align:left">뜻</th></tr></thead><tbody>'+mrows2+'</tbody></table></div>'+
@@ -1195,14 +1222,43 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // ── ⑦ 자기 대조 결과 ────────────────────────────────────────────────────
     if(warn.length){
-      out+='<div class="xawarn">⚠ 화면에 전사한 축 구성이 regime.json과 어긋납니다 — 아래를 그대로 적습니다.<br>· '+
+      aud+='<div class="xawarn">⚠ 화면에 전사한 축 구성이 regime.json과 어긋납니다 — 아래를 그대로 적습니다.<br>· '+
         warn.map(function(w){return esc(w);}).join('<br>· ')+
         '<br>build/regime_summary.py가 바뀌었다면 이 페이지의 전사본도 함께 고쳐야 합니다.</div>';
     }else{
-      out+='<div class="xaok">자기 대조 — 전사한 축 구성으로 다시 센 지표 수·평균 점수·혼조 판정, '+
+      aud+='<div class="xaok">자기 대조 — 전사한 축 구성으로 다시 센 지표 수·평균 점수·혼조 판정, '+
         '그리고 재현한 요약 모드가 regime.json의 게시값과 모두 일치합니다 ('+AX_SRC.length+'축 · 지표 '+
         IL.length+'개 전수 배정 확인).</div>';
     }
+
+    // ── ⓪ 한눈에 보는 7축 — 표 대신 막대 ───────────────────────────────────
+    // 🚨 막대에 색을 주지 않는다. 이 화면은 원래 "밴드 0은 '좋다'가 아니다"라고
+    //   적고 있었고(금리 축의 밴드 0은 「낮은 수준」인데 그건 대개 침체다) 그래서
+    //   밴드·문구에 색을 안 줬다. 막대만 초록·빨강으로 칠하면 그 원칙이 그림에서
+    //   깨진다 — 방향은 **중심선의 어느 쪽으로 뻗는가**로만 말한다.
+    var bars='';
+    for(i=0;i<AX.length;i++){
+      var ab=AX[i], abLow=(!ab.skip&&(ab.n||0)<3), abM=(ab.skip||ab.m==null)?null:ab.m;
+      var abW=abM==null?0:Math.min(1,Math.abs(abM))*50;
+      bars+='<div class="axr'+(abLow?' axlow':'')+'">'+
+        '<span class="axn">'+esc(ab.name)+'</span>'+
+        '<span class="axk">'+(ab.kind==='real'?'실물':'여건')+'</span>'+
+        '<span class="axt"><i class="axz"></i>'+
+          (abM==null?'':'<i class="axf" style="'+(abM>=0?'left:50%':'right:50%')+';width:'+abW.toFixed(1)+'%;min-width:2px"></i>')+
+        '</span>'+
+        '<span class="axw">'+esc(ab.skip?'집계 안 함':(ab.word||'—'))+'</span>'+
+        '<span class="axm">'+(abM==null?'—':axSg(abM,2))+'</span>'+
+        '<span class="axnn">n '+(ab.n==null?'—':ab.n)+(abLow?'<span class="xadag"> †</span>':'')+'</span>'+
+        '<span class="axx">'+(ab.mixed?'<span class="xaflag">혼조</span>':'')+'</span>'+
+      '</div>';
+    }
+    var out='<div class="axbars">'+bars+'</div>'+
+      '<div class="axleg">막대 길이는 축 점수 m(−1~+1)이고 가운데가 0이다 · '+
+      (thin.length?'<b>†</b> '+esc(thin.join('·'))+' 축은 지표가 3개 미만이라 평균으로 읽으면 안 된다 · ':'')+
+      '색을 쓰지 않는다 — 어느 쪽이 좋은 쪽인지는 축마다 다르다(금리가 낮은 국면은 대개 침체다)</div>'+
+      '<details class="more axfold"><summary>이 점수가 어떻게 만들어졌나 — 지표 '+IL.length+
+        '개의 축 배정·제외·문장 규칙과 자기 대조</summary><div class="mbody">'+aud+'</div></details>';
+
     body.innerHTML=out;
     host.hidden=false;
   }
@@ -1350,9 +1406,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<b>소멸</b>은 전 구간에서 유의해 보이던 것이 여기서 사라졌다는 표시다 — 그래서 “극단탐욕=매도”를 주장하지 않는다</div>'+
       '<div style="margin-top:6px;color:var(--muted)">구간 이름은 명목 10%가 아니라 임계값 서술이라 표본 비중이 균등하지 않다(각 행에 실제 비중 표기).</div>'+
       '</div></details></div>';
-    tb=tbintro+
+    // 🚨 두 표는 화면에 늘 펴 두지 않는다(2026-08-11). 이 절이 답하는 것은 '지금 심리가
+    //   얼마인가'이고, 구간별 백테스트는 그 뒤에 '그래서 이게 예측력이 있나'를 따지는
+    //   감사 자료다. 그런데 표 둘과 서문이 절의 절반을 차지해 게이지·추이가 밀려 있었다.
+    //   ⚠ 접되 **지우지 않는다.** 아래 「정직 고지」가 주장하는 내용의 출처가 정확히 이 두 표다.
+    tb='<details class="more btfold"><summary>구간별 이후 수익 — 심리가 이 구간일 때 그 뒤 20·60일 (표 2개)</summary>'+
+       '<div class="mbody">'+tbintro+
        btable('레벨 버킷별 이후 수익 — 점수 절대값 기준','SPY '+esc(bt.sample||'')+' · n='+(bt.n_days||'—')+' · 무비용(gross)',bt.buckets,bt.base,curLvl,false)+
-       btable('분위 버킷별 이후 수익 — 역사 대비 상대 위치 기준','확장 백분위 · 겹치는 관측을 에피소드로 묶어 t검정',bt.buckets_pctl,bt.base_pctl,curPct,true);
+       btable('분위 버킷별 이후 수익 — 역사 대비 상대 위치 기준','확장 백분위 · 겹치는 관측을 에피소드로 묶어 t검정',bt.buckets_pctl,bt.base_pctl,curPct,true)+
+       '</div></details>';
 
     // ⑤ 정직 고지
     // ⚠ 이 블록은 **코드에만 있고 렌더되지 않았다**(2026-08-03 실측: vv 참조 0곳, SD.note·
@@ -1521,7 +1583,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       esc(lastr.release||'—')+'</b>(금요일) · 이력 <b>'+(c.n||ds.length).toLocaleString()+'</b>주 ('+
       esc(c.start||'—')+' ~ '+esc(c.end||'—')+') · 계약 '+esc(c.name||'—')+'</div>';
 
-    var warn=CD.warn?'<div class="ctwarn"><b>읽는 법</b> — '+esc(CD.warn)+'</div>':'';
+    // 읽는 법은 접어 둔다 — 한 번 읽으면 되는 글인데 매주 같은 문단이 표 위를 차지했다.
+    var warn=CD.warn?'<details class="more"><summary>읽는 법 — 주가지수 COT 는 원자재와 다르게 읽는다</summary>'+
+      '<div class="mbody"><div class="ctwarn">'+esc(CD.warn)+'</div></div></details>':'';
 
     var cards='<div class="ctcards">'+TFF.map(function(x){
       return card(c,x[0],x[1],x[2]);}).join('')+'</div>';
