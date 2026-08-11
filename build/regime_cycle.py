@@ -91,6 +91,71 @@ BANDS = [(0.00, 0.24, "침체·바닥"), (0.24, 0.46, "회복"),
 
 RECENT = 24
 
+# 🚨 창 — 사용자 결정 2026-08-11. 이 파일이 내는 모든 수치가 이 창이다.
+#   2015 로 자른 이유는 하나가 아니다:
+#     · 섹터 순위를 ETF 로 재면 XLC(2018-06 상장) 때문에 11종이 2018 이후만 완비된다.
+#       랩 518종으로 직접 만들면 그 병목이 사라지고 가격이 2009 까지 있다.
+#     · 그런데 편출 종목을 되살려 생존편향을 걷는 길은 자료에서 막혔다 — 2015~ PIT 명단의
+#       편출 324종 중 가격이 있는 것은 147종뿐이고, 없는 177종이 총 멤버-개월의 52% 다.
+#       그리고 그 결손은 무작위가 아니라 **인수·상폐된 쪽**이다(EA·BK·MMC·ATVI…).
+#       반만 걷고 PIT 이라 부르면 안 걷힌 절반이 하필 나쁜 결말들이다.
+#     → 그래서 걷지 않는다. 대신 **오늘의 518종으로 과거를 잰다는 사실을 화면에 적는다.**
+#       창을 2015 로 맞춘 것은 이 랩의 PIT 자료가 시작하는 해와 눈금을 맞추려는 것이다.
+WINDOW = "2015-01"
+SURV_NOTE = ("오늘의 518종으로 과거를 잰다 — 그사이 지수에서 빠진 종목은 빠져 있다. "
+             "이 랩의 실측으로 그 격차는 유니버스 전체 기준 연 +6.25%p 다.")
+
+# 섹터 월수익을 만들 때 이만큼은 종목이 있어야 그 달 그 섹터를 쓴다.
+SEC_MIN_N = 5
+
+
+def sector_ret_lab(root, window):
+    """랩 518종을 GICS 섹터로 묶어 월수익(동일가중)을 만든다.
+
+    🚨 ETF(XLK…) 대신 이걸 쓰는 이유: XLC 가 2018-06 에야 상장해 ETF 로는 11개 섹터가
+      2018 이후만 완비된다. 랩 가격은 2009 부터 518종 전부 있다.
+    ⚠ 대조군도 같은 유니버스로 잡는다 — 그 달 **전체 518종 동일가중**. SPY(시총가중)를
+      빼면 '동일가중 대 시총가중' 차이가 섹터 순위에 섞인다. 같은 자로 재야 한다.
+    """
+    st = json.load(io.open(os.path.join(root, "data", "stocks.json"), encoding="utf-8"))
+    dates = st["pxd_dates"]
+    sec = {x["t"]: x.get("sector") for x in st["stocks"]}
+    me = {}
+    for i, d in enumerate(dates):
+        me[d[:7]] = i                      # 그 달의 마지막 거래일 인덱스
+    months = sorted(me)
+
+    px = {}
+    for t in sec:
+        fp = os.path.join(root, "data", "sd", t + ".json")
+        if not os.path.exists(fp):
+            continue
+        a2 = json.load(io.open(fp, encoding="utf-8")).get("pxd")
+        if isinstance(a2, list) and len(a2) == len(dates):
+            px[t] = a2
+
+    ret = collections.defaultdict(dict)
+    allr = {}
+    for k in range(1, len(months)):
+        m1 = months[k]
+        if m1 < window:
+            continue
+        i0, i1 = me[months[k - 1]], me[m1]
+        by, tot = collections.defaultdict(list), []
+        for t, a2 in px.items():
+            p0, p1 = a2[i0], a2[i1]
+            if p0 and p1 and p0 > 0:
+                r = (p1 / p0 - 1) * 100
+                tot.append(r)
+                if sec.get(t):
+                    by[sec[t]].append(r)
+        if tot:
+            allr[m1] = sum(tot) / len(tot)
+        for s2, v in by.items():
+            if len(v) >= SEC_MIN_N:
+                ret[s2][m1] = sum(v) / len(v)
+    return ret, allr, len(px)
+
 # GICS 섹터 → (한글, SPDR ETF). sector_perf 는 ETF 키, fx 는 GICS 이름을 쓴다 — 둘을 잇는다.
 SECTORS = [
     ("Information Technology", "기술",       "XLK"),
@@ -151,27 +216,34 @@ def _qmon(q):
     return "%04d-%02d" % (int(q[:4]), int(q[5]) * 3)
 
 
-def sector_by_price(reg_json):
-    """주가 기준 — 그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균(%p).
+def sector_by_price(reg_json, root):
+    """주가 기준 — 그 국면의 섹터 월평균 − 같은 달 전체 518종 동일가중 평균(%p).
 
-    🚨 SPY 를 빼는 이유: 빼지 않으면 '어느 국면이 통째로 좋았나'가 순위를 지배한다.
-      연착륙(13개월)은 SPY 자체가 +2.86%/월이라 모든 섹터가 좋아 보인다.
-      레퍼런스 11.png 도 제목에 '벤치마크 대비 상대성과에 의거'라고 적어 두었다.
+    🚨 빼는 이유: 안 빼면 '어느 국면이 통째로 좋았나'가 순위를 지배한다.
+      레퍼런스 도표도 제목에 '벤치마크 대비 상대성과에 의거'라고 적어 두었다.
+    ⚠ 대조군을 SPY 가 아니라 같은 유니버스의 동일가중으로 잡았다 — 자를 하나로 맞춘다.
     """
-    sp = reg_json.get("sector_perf") or {}
-    spy = (reg_json.get("asset_perf") or {}).get("SPY") or {}
+    ret, allr, nstk = sector_ret_lab(root, WINDOW)
+    reg = {x["dt"][:7]: x["r"] for x in (reg_json.get("history") or [])}
+    ko_of = {g: ko for g, ko, _e in SECTORS}
+    per = collections.defaultdict(lambda: collections.defaultdict(list))
+    nmon = collections.Counter()
+    for m in sorted(allr):
+        r = reg.get(m)
+        if not r:
+            continue
+        nmon[r] += 1
+        for g, series in ret.items():
+            if m in series and g in ko_of:
+                per[r][g].append(series[m] - allr[m])
     out = {}
     for k, _ko, _p, _d in PHASE:
-        rows = []
-        for _g, ko, etf in SECTORS:
-            v = (sp.get(etf) or {}).get(k)
-            b = spy.get(k)
-            if v is None or b is None:
-                continue
-            rows.append({"ko": ko, "v": round(v - b, 2)})
+        rows = [{"ko": ko_of[g], "v": round(statistics.mean(v), 2), "n": len(v)}
+                for g, v in (per.get(k) or {}).items() if v]
         rows.sort(key=lambda x: -x["v"])
         out[k] = rows
-    return out
+    return out, {"n_stocks": nstk, "months": dict(nmon), "min_n": SEC_MIN_N,
+                 "bench": "같은 달 전체 %d종 동일가중" % nstk}
 
 
 def sector_by_earnings(reg_json, root):
@@ -212,6 +284,9 @@ def sector_by_earnings(reg_json, root):
     for (s, q), cur in ni.items():
         prv = ni.get((s, _prevq(q)))
         r = reg.get(_qmon(q))
+        if _qmon(q) < WINDOW:          # 창 밖 분기는 안 센다(주가 쪽과 같은 창이어야 한다)
+            dropped["창 밖"] += 1
+            continue
         if not prv or not r:
             dropped["국면·직전분기 없음"] += 1
             continue
@@ -250,6 +325,13 @@ def main():
         print("history 가 비어 있다 — 굽지 않는다")
         return 1
 
+    # 🚨 창을 여기서 한 번 자르고 아래 전부가 그 창을 쓴다. 통계마다 따로 자르면
+    #   언젠가 한 곳이 빠지고 화면이 두 창을 말한다.
+    full_n = len(hist)
+    hist = [x for x in hist if x["dt"][:7] >= WINDOW]
+    if not hist:
+        print("창(%s) 안에 이력이 없다" % WINDOW)
+        return 1
     seq = [x["r"] for x in hist]
 
     # ── 지금 ────────────────────────────────────────────────────────────
@@ -316,7 +398,7 @@ def main():
     for x in rec:
         rmonths[x] = rmonths.get(x, 0) + 1
 
-    by_price = sector_by_price(d)
+    by_price, pmeta = sector_by_price(d, ROOT)
     by_earn, emeta = sector_by_earnings(d, ROOT)
 
     # 교과서 도표 ↔ 이 랩 실측 — 겹치는 업종을 센다. 겹침이 적으면 적은 대로 낸다.
@@ -340,6 +422,11 @@ def main():
                  "만든 곳 build/regime_cycle.py, 원자료 data/regime.json."),
         "as_of": d.get("as_of"),
         "src_generated": d.get("as_of"),
+        "window": {"start": WINDOW, "end": hist[-1]["dt"][:7], "months": len(hist),
+                   "full_months": full_n,
+                   "why": "섹터 순위를 랩 518종으로 직접 만들면서 창을 이 랩 PIT 자료의 "
+                          "시작(2015-01)에 맞췄다. 이 화면의 모든 수치가 이 창이다.",
+                   "surv": SURV_NOTE},
         "order_basis": "통념(성장×물가 매트릭스의 관용적 배열) — 실측 아님",
         "phases": [{"k": k, "ko": ko, "pos": p, "desc": ds,
                     "months": months.get(k, 0), "recent": rmonths.get(k, 0)}
@@ -361,8 +448,8 @@ def main():
                     "price_basis": "그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균(%p)",
                     "earn_basis": "그 국면에 속한 분기의 섹터 합산 순이익 YoY 중앙값(%) · "
                                   "짝지어진 종목만 · 기저 적자 분기 제외",
-                    "caveat": "🚨 실적 쪽은 오늘의 518종으로 과거를 계산한다 — 생존편향이 있다. "
-                              "가격 쪽 PIT 장치가 여기에는 없다."},
+                    "price_meta": pmeta,
+                    "caveat": SURV_NOTE},
         "drift": {
             "trans": trans, "n_months": len(seq),
             "pairs": len(pairs), "pairs_max": max(pairs.values()) if pairs else 0,
@@ -377,6 +464,8 @@ def main():
         json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n")
     dr = out["drift"]
     print("→ %s" % OUT)
+    print("   창 %s ~ %s · %d개월(전체 %d 중) · 섹터 지수는 랩 %d종 동일가중"
+          % (WINDOW, hist[-1]["dt"][:7], len(hist), full_n, pmeta.get("n_stocks", 0)))
     print("   지금 %s(%s) · 곡선 위 %.2f · %d개월째" % (cur, out["now"]["ko"], POS[cur], run))
     print("   최근 %d개월 %d개 자리 · 이름 %d종 · 그 사이 전환 %d회"
           % (RECENT, len(recent), dr["recent_labels"], dr["recent_changes"]))
