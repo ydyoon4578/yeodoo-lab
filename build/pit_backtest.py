@@ -57,7 +57,11 @@ PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               # '통과 후보' 가 된다 — 이 파일이 막으려는 바로 그 일이다(소급 t 3.2~3.7 이 나왔다).
               "x-echo", "x-season", "x-coskew",
               # 2026-07-31 추가(가격만 쓰는 것)
-              "x-ltrev", "x-lowcorr", "x-cntd"]
+              "x-ltrev", "x-lowcorr", "x-cntd",
+              # 🚨 2026-08-11 바스켓 크기 6종(PREREG-2026-08-11-BASKET.md). 여기 안 넣으면
+              #   짝이 되는 10종판에는 PIT 레그가 있는데 이쪽만 없어서, 같은 점수 함수의
+              #   두 규칙이 **서로 다른 잣대로** 판정된다. 위 x-echo 주석과 같은 사유다.
+              "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
@@ -71,7 +75,9 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              # 2026-08-04 사전등록. 편출 종목 집중도도 같이 모아 뒀다
              # (build/refresh_custconc.py --pit) — 안 그러면 후보가 생존자로만 좁혀져
              # 생존편향을 재려는 표가 오히려 그 편향을 갖는다(x-volsurge 를 뺀 것과 같은 사유).
-             "x-custconc"]
+             "x-custconc",
+             # 2026-08-11 바스켓 크기 3종 — 위 PRICE_SIDS 의 같은 주석 참조.
+             "x-btp-n155", "x-payout-n50", "x-agrow-n52"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -417,9 +423,14 @@ def main():
                     # 🚨 소급 레그와 **같은 선택 규칙**을 써야 한다 — 한 회사는 한 번만
                     #   (TB.pick_top). 여기만 두 클래스를 담으면 두 레그의 차이가
                     #   생존편향이 아니라 '바스켓 구성 규칙이 달라서'가 된다.
-                    new = TB.pick_top(sc)
+                    # 🚨 topn 을 넘겨야 소급 레그와 **바스켓 크기까지** 같아진다(2026-08-11).
+                    #   안 넘기면 소급은 155종, PIT 은 10종이 되어 두 레그의 차이가
+                    #   생존편향이 아니라 바스켓 크기가 된다 — 위 주석이 경계하는 그것이다.
+                    new = TB.pick_top(sc, S["sid"], S.get("topn"))
                     if new:
-                        turns += (len(set(new) ^ set(hold)) / (2 * TOPN)) if hold else 1.0
+                        # 분모도 바스켓 크기로 일반화한다(랩 본편 2026-08-08 과 같은 식).
+                        # topn 이 없는 34종은 len(new)+len(hold) = 2×TOPN 이라 값이 그대로다.
+                        turns += (len(set(new) ^ set(hold)) / (len(new) + len(hold))) if hold else 1.0
                         hold = new
             if hold and first is None:
                 first = i
@@ -600,7 +611,11 @@ def score(S, t, j, C):
     ⚠ 정의를 여기서 새로 쓰면 안 된다 — tech_backtest.py:1232-1281 과 **같은 산식**이어야
       '소급 대비 PIT' 비교가 성립한다. 옮길 때 접근자(asof_fund·ttm·_shift)도 그쪽 것을 쓴다.
     """
-    sid = S["sid"]
+    # 🚨 랩 본편(tech_backtest.py) 과 **같은 자리에 같은 처리**다 — 바스켓 크기만 다른
+    #   규칙(x-btp-n155 등)은 점수 함수가 짝과 완전히 같아야 하므로 접미사를 떼고 갈래를 탄다.
+    #   여기만 안 떼면 그 셋이 어느 갈래에도 안 걸려 점수 None → 후보 0 이 되고,
+    #   PIT 레그가 '무보유'로 조용히 채워진다.
+    sid = TB._BASE_SID(S["sid"])
     P = C["px"][t]
     R, ixr, ixvol = C["R"], C["ixr"], C["ixvol"]
 
