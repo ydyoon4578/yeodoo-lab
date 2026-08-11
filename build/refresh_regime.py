@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 refresh_regime.py — 시장 국면(레짐) 스냅샷 빌더 (self-contained, FRED + yfinance, 무료).
-랩의 기존 regime/macro_dashboard.py 3축 분류(성장×물가×금융)를 FRED 공개데이터로 재현.
+랩의 기존 regime/macro_dashboard.py 분류를 FRED 공개데이터로 재현.
+🚨 라벨은 **성장×물가 2축**이다. classify_month(g, i, fin) 은 fin 을 받지만 쓰지 않고
+   호출부도 None 을 넘긴다 — 금융 축은 국면 이름에 안 들어가고 전략 문장 꼬리표와
+   지표 카드에만 쓰인다. 종전 머리말·meta 가 "3축 분류" 라 적어 독자가 금융이
+   판정에 들어가는 줄 알았다(2026-08-12 교정).
 출력: data/regime.json (현재 레짐·축별 지표·히스토리·레짐별 자산 조건부 성과).
 GitHub Actions 주간 크론으로 갱신.
 """
