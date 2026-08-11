@@ -75,9 +75,37 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   //      이 검사가 잡으려는 것은 '격자가 통째로 안 그려졌다'이지 주 수가 아니다.
   if (nDay < 10) fail.push("캘린더 날짜칸이 " + nDay + "개뿐 — 격자 배선이 끊겼다");
   // ⚠ 2026-08-11 — 문구를 '지수 등락률 …기준' 에서 '기준일 …' 로 바꿨다(사용자 결정).
-  //   기대값도 같이 고친다. 안 고치면 이 검사가 '되돌려라'라고 말한다.
-  if (!/^· 기준일 \d{4}-\d{2}-\d{2}$/.test(asof))
-    fail.push("캘린더 머리글 기준일이 안 붙었다: " + JSON.stringify(asof));
+  // 🚨 2026-08-12 — 다시 바꿨다(사용자 지적: "굳이 기준일 넣을 필요 있나"). 이제 **신선하면
+  //   빈 문자열**이고, 밀렸을 때만 말한다. 그래서 위의 "근거가 살아 있는가" 는 문구 존재가
+  //   아니라 **조건부 규약**으로 못 박는다:
+  //     지연 0~1영업일 → 반드시 빈칸       (평소에 날짜를 안 적는 것이 요구사항이다)
+  //     지연 2영업일↑ → 반드시 경고 문구   (근거가 사라지면 안 된다는 원래 요구사항이다)
+  //   ⚠ '빈칸이면 통과' 로 느슨하게 두면 안 된다 — 자료가 고착돼도 초록불이 뜬다.
+  //     그래서 실제 지연을 여기서 다시 재어 둘 중 어느 쪽이어야 하는지 판정한다.
+  const HF = J("home_flow.json");
+  const _ik = Object.keys(((HF || {}).index || {}).rows || {}).sort();
+  const _last = _ik.length ? _ik[_ik.length - 1] : null;
+  let _lag = 0;
+  if (_last) {
+    const p = _last.split("-");
+    let d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    const t = new Date(), end = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    while (d.getTime() < end && _lag < 40) {
+      d.setUTCDate(d.getUTCDate() + 1);
+      const w = d.getUTCDay(); if (w !== 0 && w !== 6) _lag++;
+    }
+  }
+  if (!_last) {
+    if (asof !== "· 지수 등락률 미수신")
+      fail.push("지수 등락률이 아예 없는데 머리글이 침묵한다: " + JSON.stringify(asof));
+  } else if (_lag >= 2) {
+    if (!/영업일 지연$/.test(asof))
+      fail.push("지수 등락률이 " + _lag + "영업일 밀렸는데 머리글에 경고가 없다: " +
+                JSON.stringify(asof));
+  } else if (asof !== "") {
+    fail.push("신선한데(" + _lag + "영업일) 머리글에 날짜가 붙었다 — 평소엔 비어야 한다: " +
+              JSON.stringify(asof));
+  }
   if (/calfresh/.test(CALG.innerHTML))
     fail.push("걷어낸 .calfresh 가 격자 아래에 다시 나타났다");
 

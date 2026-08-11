@@ -101,6 +101,8 @@
   .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
   .lbl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)}
+  /* 부제가 '밀렸다'를 말할 때만 붙는다 — 평소 회색 부제와 색으로 갈라야 눈에 걸린다. */
+  .lbl .sub.wsub{color:var(--hot);font-weight:700}
   /* 섹션 제목 옆 '전체 보기' — 홈은 요약이고 정본은 각 페이지에 있다. 그 경로가 본문에
      없으면 메가메뉴를 열어야만 갈 수 있다(모바일 3탭). 라벨 오른쪽 끝에 붙인다. */
   .lbl .more2{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:600;
@@ -293,10 +295,15 @@
        1200 으로 두면 1200~1320 구간에서 캘린더에 가로 스크롤이 생긴다 — 2열로 만들어 놓고
        스크롤을 만들면 넓게 쓴 것이 아니다. 여유 24px 을 두고 1360 에서 접는다.
      ⚠ align-items:start — 안 주면 짧은 칸이 긴 칸 높이로 늘어나 빈 상자가 생긴다. */
-  .hgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  /* 🚨 2026-08-12 — 캘린더가 격자에서 **나갔다**(사용자 결정: 히트맵 → 캘린더 순).
+     1.55fr 은 오로지 캘린더의 min-width:760px 때문에 있던 값이다. 그것이 통짜 폭으로
+     빠졌으니 남은 둘(국면·신호)은 성격이 대등하다 → 1:1 로 되돌린다.
+     ⚠ 아래 1360px 접힘도 캘린더가 근거였다. 남은 둘은 625px 에서 넘침 0 이라 더 늦게
+       접어도 되지만, 그대로 둔다 — 일찍 접히면 통짜로 넓어질 뿐 깨지지 않는다. */
+  .hgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
          gap:0 26px;align-items:start}
-  /* 좌측 열 안의 구획 간격도 .home 과 같은 리듬(34px)으로 맞춘다 — 안 주면 국면과
-     캘린더가 맞붙는다. 격자의 row-gap 은 열 사이가 아니라 행 사이라 여기엔 안 닿는다. */
+  /* 열 안에 구획이 둘 이상일 때 .home 과 같은 리듬(34px)을 준다. 격자의 row-gap 은
+     열 사이가 아니라 행 사이라 여기엔 안 닿는다. */
   .hcol{display:flex;flex-direction:column;gap:34px;min-width:0}
   @media(max-width:1360px){.hgrid{grid-template-columns:1fr;gap:0}}
 
@@ -1007,23 +1014,46 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          구획이 통짜로 늘어나 성기게 보였다 — 넓게 쓰는 것과 늘어나는 것은 다르다.
          가르는 기준은 취향이 아니라 **폭이 필요한가**다(실측):
            · 캘린더 .calgrid 는 min-width 760px — 절반 폭(640)에서 가로 스크롤이 생긴다.
-             그래서 넓은 쪽(1.55fr ≈ 975px)에 둔다.
-           · 시장 국면·오늘의 신호는 625px 에서 넘침 0 — 좁은 쪽(1fr ≈ 640px)에 쌓는다.
-           · 히트맵(518칸)과 기간별 수익률(10열)은 폭이 곧 정보량이라 아래에 통짜로 남긴다.
-         ⚠ 오늘의 신호가 히트맵보다 위로 올라온다. 2열의 결과이고, 신호가 히트맵보다
-           먼저 읽히는 편이 낫다고 보아 그대로 둔다. -->
+           · 시장 국면·오늘의 신호는 625px 에서 넘침 0.
+           · 히트맵(518칸)과 기간별 수익률(10열)은 폭이 곧 정보량이다.
+         🚨 2026-08-12 사용자 결정으로 **순서를 다시 정했다**: 히트맵 → 캘린더 → (국면 |
+            신호) → 기간별 수익률. 폭이 필요한 셋이 위로 올라오면서 격자에는 좁아도 되는
+            둘만 남았다 — 그래서 격자가 1.55:1 에서 1:1 이 됐다(위 .hgrid 주석 참조). -->
   <!-- 🚨 .home 은 구획 사이 34px 을 만드는 flex 컨테이너다(.home{gap:34px}).
        2026-08-11 에 2열로 바꾸면서 이 여는 태그를 실수로 지웠고, 그 뒤 홈의
        모든 구획이 간격 0 으로 붙어 있었다 — CSS 는 남아 있었는데 컨테이너가 없었다.
        ⚠ 이런 것은 문법 오류가 안 난다. 화면이 그냥 촘촘해질 뿐이라 눈으로만 잡힌다. -->
   <div class="home">
+    <!-- ① 종목 히트맵 — 2026-08-12 사용자 결정으로 홈 맨 위. 시총 크기 × 등락률 색 ×
+         섹터·산업그룹 묶음. 자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다
+         (518종 · 119KB). 새 수집 잡도, 새 파일도 만들지 않는다.
+         ⚠ 히트맵은 폭이 곧 정보량이라(518칸) 격자에 넣지 않고 통짜로 둔다. -->
+    <section id="s-heat" aria-labelledby="hm-h">
+      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
+      <div class="hmbar" id="hm-bar"></div>
+      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
+    </section>
+
+    <!-- ② 일정 캘린더 — 히트맵 다음(2026-08-12 사용자 결정). 격자에서 빼면서
+         .calgrid 의 min-width:760px 제약이 사라졌다 — 통짜 폭이라 가로 스크롤이 안 난다. -->
+    <section id="s-week" aria-labelledby="wk-h">
+      <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
+      <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
+      <div class="callegend">
+        <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
+        <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
+        <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
+        <!-- ⚠ 2026-08-10 — '아래 회색 줄 = 주요 경제지표'·'날짜 아래 = 그날 지수 등락률'
+             두 줄을 뺐다(사용자 결정). 회색 줄과 등락률은 격자에서 그 자리에 보이므로
+             범례가 다시 말할 필요가 없다. 남긴 셋은 색으로만 구분되는 것이라 설명이 없으면
+             무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
+      </div>
+    </section>
+
     <div class="hgrid">
-      <!-- 좌: 시장 국면 → 일정 캘린더 (2026-08-11 사용자 결정).
-           국면은 한 줄짜리 **상태**라 일정 위의 배너로 읽히는 것이 자연스럽다.
-           우측은 오늘의 신호 하나뿐이라 .hcol 로 감싸지 않고 격자에 바로 둔다 —
-           자식이 하나면 감쌀 이유가 없다. -->
-      <div class="hcol">
-      <!-- ② 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
+      <!-- 좌: 시장 국면 · 우: 오늘의 신호. 둘 다 자식이 하나라 .hcol 로 감싸지 않고
+           격자에 바로 둔다 — 자식이 하나면 감쌀 이유가 없다. -->
+      <!-- ③ 시장 국면 — 2026-08-03 에 홈에서 뺐던 구획을 되살린다(사용자 요청 2026-08-06).
          "지표 종합까지"가 요청 범위다 — 국면 한 줄과 축 7개의 한 단어 요약. 지표 39개
          전문은 여기 안 편다(regime.html 이 그 화면이다).
          🚨 이것은 **상태 표시**이지 신호가 아니다. 이 랩은 국면 기반 규칙을 여러 번 기각했다
@@ -1034,38 +1064,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <h2 class="lbl" id="rg-h">시장 국면 <span class="sub" id="rg-sub">· 불러오는 중…</span><a class="more2" href="regime.html">지표 39개 전체 →</a></h2>
           <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
         </section>
-      <section id="s-week" aria-labelledby="wk-h">
-        <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
-        <div class="calwrap"><div id="wk-cal-grid"><div class="skel2">불러오는 중…</div></div></div>
-        <div class="callegend">
-          <span><span class="tk2 bmo lgc">AAPL</span> 장전 발표</span>
-          <span><span class="tk2 amc lgc">AAPL</span> 장후 발표</span>
-          <span><span class="tk2 tba lgc">AAPL</span> 시각 미공개</span>
-          <!-- ⚠ 2026-08-10 — '아래 회색 줄 = 주요 경제지표'·'날짜 아래 = 그날 지수 등락률'
-               두 줄을 뺐다(사용자 결정). 회색 줄과 등락률은 격자에서 그 자리에 보이므로
-               범례가 다시 말할 필요가 없다. 남긴 셋은 색으로만 구분되는 것이라 설명이 없으면
-               무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
-        </div>
-      </section>
-      </div>
 
-    <!-- ④ 신호 — 관문 역할이 위로 올라오면서 아래로 밀렸다. 의도된 손실이고,
-         시장 폭 카드에서 여기로 점프하는 앵커를 제공해 완화한다. 경고 문구는 그대로 둔다. -->
+    <!-- ④ 신호 — 경고 문구는 그대로 둔다. 시장 폭 카드에서 여기로 점프하는 앵커가 있다. -->
       <section id="s-today" aria-labelledby="td-h">
         <h2 class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></h2>
         <div class="signote" id="signote">불러오는 중…</div>
         <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
       </section>
     </div>
-
-    <!-- ③-b 종목 히트맵 — 시총 크기 × 등락률 색 × 섹터·산업그룹 묶음.
-         자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다(518종 · 119KB).
-         새 수집 잡도, 새 파일도 만들지 않는다. -->
-    <section id="s-heat" aria-labelledby="hm-h">
-      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
-      <div class="hmbar" id="hm-bar"></div>
-      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
-    </section>
 
     <section id="s-style" aria-labelledby="st-h">
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
@@ -1142,7 +1148,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 도착한 소스 전부를 보고 가장 뒤처진 것을 알린다(종목 파이프라인이 죽어도 나머지는 감시된다).
   function staleCheck(){
     var e=el('stalewarn'); if(!e)return;
-    var src=[['',MK.main],['시장국면 ',MK.rg&&MK.rg.as_of],['시장심리 ',MK.sn&&MK.sn.as_of]], worst=null;
+    // 🚨 2026-08-12 — 「기간별 수익률」 두 소스를 여기 더한다. 사용자가 "업데이트가 늦네"
+    //   라고 알아챌 때까지 **화면 어디에도 경고가 없었다** — 감시 목록이 종목·국면·심리
+    //   셋뿐이었고, market_board·style_trails 는 다른 워크플로(refresh-assets.yml)가
+    //   굽는데 그 잡이 멈춰도 홈은 조용했다. 실측 그날: 종목·국면 08-11(신선)인데
+    //   시장판·스타일은 08-10 에 멈춰 있었다.
+    //   ⚠ 감시 목록은 '홈이 그리는 소스 전부' 여야 한다. 하나 빠지면 그 축만 조용히 고착된다.
+    var src=[['',MK.main],['시장국면 ',MK.rg&&MK.rg.as_of],['시장심리 ',MK.sn&&MK.sn.as_of],
+             ['기간별수익률 ',MK.mb&&MK.mb.as_of],['랩 스타일 ',SLAB&&SLAB._as_of]], worst=null;
     src.forEach(function(x){
       if(!x[1])return;
       var n=bdGap(x[1]); if(!worst||n>worst[1])worst=[x[0],n];
@@ -1688,9 +1701,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   시차를 설명하던 격자 아래 세 줄(.calfresh)은 걷어냈다(사용자 결정 2026-08-10).
     //   날짜 하나면 같은 일을 한다 — 마지막이 어제인 것을 보면 오늘 칸이 빈 이유는 저절로
     //   읽힌다. 자리는 이 페이지의 다른 머리글과 같은 .sub 다(시장 국면·종목 히트맵 등).
+    // 🚨 2026-08-12 — 날짜를 **평소에는 안 적는다**(사용자 지적: "굳이 기준일 넣을 필요 있나").
+    //   매일 같은 자리에 어제 날짜가 뜨는 것은 정보가 아니라 잡음이었다. 다만 통째로 지우면
+    //   위에 적힌 신고 두 건(빈 오늘 칸 → "자료 미수신")이 되돌아온다 — 그 신고는 자료가
+    //   **밀렸을 때** 나온 것이므로, 밀렸을 때만 말하면 둘 다 해결된다.
+    //   기준: bdGap>=2 영업일. 미국 자료는 정상이 T-1(=1)이라 2 부터가 '한 번 걸렀다' 다
+    //   (build/check_freshness.py 와 같은 규약).
     var _ik=Object.keys(CAL.i||{}).sort(), _last=_ik[_ik.length-1]||null;
     var _sub=el('wk-sub');
-    if(_sub) _sub.textContent = _last ? ('· 기준일 '+_last) : '· 지수 등락률 미수신';
+    if(_sub){
+      var _lag=_last?bdGap(_last):0;
+      _sub.textContent = !_last ? '· 지수 등락률 미수신'
+        : (_lag>=2 ? ('· 지수 등락률 '+_last+'까지 · '+_lag+'영업일 지연') : '');
+      _sub.className = 'sub' + ((!_last||_lag>=2)?' wsub':'');
+    }
     box.innerHTML='<div class="calgrid">'+h+'</div>';
     // 제목 옆 부제(구간·건수·기준일)는 뺐다 — 격자가 그 구간을 이미 보이고 있다
     // (사용자 결정 2026-07-29). 세던 shownE·shownM 도 쓰는 데가 없어져 같이 걷어냈다.
@@ -2236,6 +2260,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       // market_board 는 기간별 수익률 표의 지수 줄(SPY·QQQ·DIA·IWM)과 섹터 줄을 먹인다.
       MK.mb=a[2]||false;
+      // ⚠ 이 둘은 홈에서 **가장 늦게** 도착한다. staleCheck 는 이미 세 번 돌았고 그때는
+      //   MK.mb·SLAB 이 없었다 — 여기서 한 번 더 안 부르면 새로 더한 감시가 영영 안 걸린다.
+      staleCheck();
       return a[2];
     }).then(drawStyle);
 

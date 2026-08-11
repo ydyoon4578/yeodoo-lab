@@ -134,6 +134,9 @@ BANDS = [(round(a + ECO_SHIFT, 4), round(b + ECO_SHIFT, 4), ko)
                           (0.46, 0.70, "확장·정점"), (0.70, 1.00, "둔화·후퇴")]]
 
 RECENT = 24
+# 자취에 그릴 **국면 개수**. 달 창이 아니라 런 개수로 자른다(2026-08-12 사용자 결정).
+# 마지막 하나가 「지금」이므로 5 면 화면에 1·2·3·4 + 「5. 지금」이 된다.
+TRAIL_RUNS = 5
 
 # 🚨 창 — 사용자 결정 2026-08-11. 이 파일이 내는 모든 수치가 이 창이다.
 #   2015 로 자른 이유는 하나가 아니다:
@@ -506,15 +509,42 @@ def main():
     # ⚠ 런 안에서 위치를 조금씩 흩뿌리지 않는다. 그건 이 랩이 재지 않은 값을 그리는 것이다 —
     #   같은 국면 안에서 '어디쯤인지' 는 이 분류기가 말하지 않는다.
     # ⚠ 마지막 달은 최소지속 필터가 아직 확정 못 한 잠정값이다(regime.json 의 prov).
+    # 🚨 2026-08-12 — **달 창(24개월)이 아니라 국면 개수(5개)로 자른다**(사용자 결정).
+    #   달로 자르면 두 가지가 동시에 나빴다:
+    #     ① 개수가 자료에 휘둘린다 — 국면이 잦으면 점 8개, 뜸하면 2개.
+    #     ② 🚨 **맨 앞 점의 개월수가 창에 잘려 거짓말을 한다.** 종전 코드는 창 안에 든
+    #        달만 셌으므로, 창 밖으로 넘어가는 첫 런은 실제보다 짧게 적혔다
+    #        (실측: 과열이 24개월 창에서 3개월로 나왔는데 실제 런은 8개월).
+    #   → 이력 전체에서 런을 접고 뒤에서 TRAIL_RUNS 개만 취한다. 개월수는 언제나 **참값**이다.
     _ko1 = {k: ko for k, ko, _p, _dd in PHASE}
-    trail = []
-    for x in recent:
-        if trail and trail[-1]["r"] == x["r"]:
-            trail[-1]["months"] += 1
-            trail[-1]["to"] = x["dt"]
+    _runs_all = []
+    for x in hist:
+        r = x["r"]
+        if r not in POS:
+            continue
+        if _runs_all and _runs_all[-1]["r"] == r:
+            _runs_all[-1]["months"] += 1
+            _runs_all[-1]["to"] = x["dt"][:7]
         else:
-            trail.append({"r": x["r"], "ko": _ko1.get(x["r"], x["r"]), "pos": x["pos"],
-                          "months": 1, "from": x["dt"], "to": x["dt"]})
+            _runs_all.append({"r": r, "ko": _ko1.get(r, r), "pos": POS[r],
+                              "months": 1, "from": x["dt"][:7], "to": x["dt"][:7]})
+    trail = _runs_all[-TRAIL_RUNS:]
+    # ⚠ 창보다 국면이 적을 수 있다(이력 앞쪽). 그때는 있는 만큼만 나간다 — 채우지 않는다.
+    trail_runs_total = len(_runs_all)
+    # 🚨 그리는 **순서**를 여기서 정한다. 같은 국면으로 되돌아오면 점이 정확히 같은 자리에
+    #   오는데(pos 는 라벨이 정한다), 순서대로 그리면 반지름 큰 점이 작은 점을 통째로 덮는다
+    #   — 지금 창은 다섯 중 셋이 회복이라 셋 중 둘이 화면에서 사라졌다.
+    #   큰 것부터 그려 동심원으로 남긴다. ⚠ 화면에서 정렬하면 안 된다(채점기 두 벌 금지 ·
+    #   build/validate_site.py 가 renderCycle 안의 .sort 를 막는다). 순서는 산출이 준다.
+    trail_z = [i for i, _ in sorted(enumerate(trail), key=lambda kv: (-kv[1]["months"], kv[0]))]
+    # 겹치는 자리 중 가장 큰 무리 — 화면이 "다섯 중 셋이 한 점" 이라고 적을 때 쓴다.
+    # ⚠ 화면에 숫자를 박아 넣으면 안 된다. 다음 달에 국면이 바뀌면 그 문장이 조용히 거짓이 된다.
+    _cnt = {}
+    for _q in trail:
+        _cnt[_q["r"]] = _cnt.get(_q["r"], 0) + 1
+    _top = max(_cnt.items(), key=lambda kv: (kv[1], kv[0])) if _cnt else None
+    trail_overlap = ({"ko": _ko1.get(_top[0], _top[0]), "n": _top[1]}
+                     if (_top and _top[1] > 1) else None)
     # 앞으로 갔나 뒤로 갔나 — 화살표 색이 이것으로 갈린다. 곡선의 순서는 통념이므로
     # '뒤로' 가 잘못이라는 뜻이 아니다. 실제 이력이 그 순서를 안 따른다는 사실의 표시다.
     for a, b in zip(trail, trail[1:]):
@@ -613,10 +643,18 @@ def main():
         "recent_n": len(recent),
         # 화면이 그리는 것은 이쪽이다. recent 는 달 단위 원자료로 남긴다.
         "trail": trail,
-        "trail_note": ("최근 %d개월의 이동을 국면이 바뀐 지점만 남겨 이은 것. 점 크기는 그 국면에 "
-                       "머문 개월수다. 🚨 한 국면 안에서 '어디쯤인지'는 이 분류기가 말하지 않으므로 "
-                       "머문 동안 점은 움직이지 않는다. 화살표가 왼쪽으로 가면 교과서 순서와 반대로 "
-                       "간 것이다 — 실측으로 그런 이동이 더 많다(아래 drift)." % len(recent)),
+        "trail_z": trail_z,          # 그리는 순서(먼저 = 큰 점) — 화면은 정렬하지 않는다
+        "trail_overlap": trail_overlap,   # 같은 자리에 겹친 점 중 가장 큰 무리(없으면 null)
+        "trail_runs": TRAIL_RUNS,
+        "trail_span": ((trail[0]["from"] + " ~ " + trail[-1]["to"]) if trail else ""),
+        "trail_months": sum(x["months"] for x in trail),
+        "trail_runs_total": trail_runs_total,
+        "trail_note": ("최근 국면 %d개(%s · %d개월)의 이동. 달 창이 아니라 **국면 개수**로 잘랐으므로 "
+                       "각 점의 개월수는 잘리지 않은 참값이다. 점 크기는 머문 개월수다. "
+                       "🚨 한 국면 안에서 '어디쯤인지'는 이 분류기가 말하지 않으므로 머문 동안 점은 "
+                       "움직이지 않는다. 주황 점선이면 교과서 순서와 반대로 간 것이다(아래 drift)."
+                       % (len(trail), (trail[0]["from"] + "~" + trail[-1]["to"]) if trail else "-",
+                          sum(x["months"] for x in trail))),
         # 레퍼런스 도표 원문 — 화면이 그대로 그린다(교과서라고 화면이 말한다).
         "ref": {"title": REF_TITLE, "lead": REF_LEAD,
                 "boxes": [{"pos": p2, "stage": st, "ko": ko3, "en": en}
