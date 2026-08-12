@@ -306,8 +306,140 @@ def pct1(w):
     return sorted(((k, round(base[k] / 10.0, 1)) for k in base), key=lambda z: (-z[1], z[0]))
 
 
+# 🚨 다중검정 보정 스위치(2026-08-12 사용자 지시로 껐다). 종목 랩의 tech_backtest.BONFERRONI
+#   와 같은 이름·같은 값으로 둔다 — 두 랩이 다른 잣대를 쓰면 같은 화면의 두 배지가 다른 뜻이 된다.
+#   되돌리려면 이 한 줄만 True 로 바꾼다(임계 계산은 지우지 않았다).
+BONFERRONI = False
+T_CRIT_PLAIN = 2.0
+AX_T = 2.0        # 판정 축별 t 문턱 — 보정을 끈 것과 같은 관례값
+
+
+# ── 판정 축 ────────────────────────────────────────────────────────────
+# 🚨 2026-08-12 사용자 지시 "판정 푹 늘려". 종전 자산 랩의 판정은 **t 하나**였다 —
+#   '대조군보다 더 벌었나'만 묻는다. 그런데 이 랩의 배포 3종은 t 로 통과한 적이 없다
+#   (Multi-Sleeve Core 의 ΔSharpe p=0.22 · 배포 근거는 CAPM 알파와 낙폭 −18.5 vs −32.6).
+#   즉 **이 랩 자신이 배포를 결정할 때 쓴 잣대가 판정표에는 없었다.** 그것을 세운다.
+# ⚠ 축을 늘리는 것은 문턱을 낮추는 것과 다르다. 각 축은 자기 질문에만 답하고 서로 덮어쓰지
+#   않는다. 한 축이 통과해도 다른 축의 실패가 지워지지 않는다.
+def _ols_alpha(rets, brets):
+    """CAPM 알파(연율 %)와 t. 무위험 대비가 아니라 **대조군 대비** 회귀다 —
+    이 랩의 대조군이 무위험이 아니라 포트폴리오이기 때문이다."""
+    n = min(len(rets), len(brets))
+    if n < 250:
+        return None
+    x, y = brets[:n], rets[:n]
+    mx, my = sum(x) / n, sum(y) / n
+    sxx = sum((v - mx) * (v - mx) for v in x)
+    if sxx <= 0:
+        return None
+    beta = sum((v - mx) * (w - my) for v, w in zip(x, y)) / sxx
+    a = my - beta * mx
+    resid = [y[i] - a - beta * x[i] for i in range(n)]
+    s2 = sum(v * v for v in resid) / max(1, n - 2)
+    se = math.sqrt(s2 * (1.0 / n + mx * mx / sxx))
+    return {"alpha": round(a * 252 * 100, 2), "beta": round(beta, 3),
+            "t": round(a / se, 2) if se > 0 else None}
+
+
+def _capture(rets, brets):
+    """상승·하락 포착률 — 대조군이 오른 날/내린 날에 전략이 그 몇 배를 따라갔나."""
+    n = min(len(rets), len(brets))
+    up_s = up_b = dn_s = dn_b = 0.0
+    nu = nd = 0
+    for i in range(n):
+        if brets[i] > 0:
+            up_s += rets[i]
+            up_b += brets[i]
+            nu += 1
+        elif brets[i] < 0:
+            dn_s += rets[i]
+            dn_b += brets[i]
+            nd += 1
+    if nu < 60 or nd < 60 or up_b == 0 or dn_b == 0:
+        return None
+    return {"up": round(up_s / up_b, 3), "down": round(dn_s / dn_b, 3),
+            "n_up": nu, "n_dn": nd}
+
+
+def _roll12(nav, bnav):
+    """12개월(252거래일) 롤링 초과 승률과 최악 12개월 — 꾸준함 축."""
+    n = min(len(nav), len(bnav))
+    if n < 252 * 2:
+        return None
+    win = tot = 0
+    wv = None
+    for i in range(252, n):
+        a = nav[i] / nav[i - 252] - 1
+        b = bnav[i] / bnav[i - 252] - 1
+        if a > b:
+            win += 1
+        if wv is None or a < wv:
+            wv = a
+        tot += 1
+    return {"win12": round(100.0 * win / max(1, tot), 1),
+            "worst12": round((wv or 0) * 100, 2), "n": tot}
+
+
+def _regime_split(rets, brets, dates):
+    """침체(NBER USREC=1) 구간과 그 밖을 갈라 잰다.
+
+    ⚠ USREC 은 **사후 확정치**다(NBER 이 나중에 선언한다). 이 축은 '그때 알 수 있었나'가
+      아니라 '지나고 보니 침체에 어땠나'만 말한다 — 매매 규칙으로 쓰면 안 되고 규칙의
+      성격을 읽는 용도다. 화면에도 그렇게 적는다.
+    """
+    m = (A.get("macro") or {}).get("USREC") or {}
+    if not m:
+        return None
+    ks = sorted(m)
+    pos, out = 0, {}
+    lab = []
+    for d in dates:
+        while pos + 1 < len(ks) and ks[pos + 1] <= d:
+            pos += 1
+        v = m[ks[pos]] if ks and ks[pos] <= d else None
+        lab.append(None if v is None else int(v))
+    for key, want in (("rec", 1), ("exp", 0)):
+        s = b = 0.0
+        c = 0
+        for i in range(min(len(rets), len(lab))):
+            if lab[i] == want:
+                s += rets[i]
+                b += brets[i]
+                c += 1
+        if c >= 120:
+            out[key] = {"s": round(s * 252 / c * 100, 2),
+                        "b": round(b * 252 / c * 100, 2), "n": c}
+    return out or None
+
+
+def axes_pack(rets, brets, nav, bnav, dates):
+    """네 축을 한 번에. 각 축은 수치와 **자기 판정**을 함께 낸다."""
+    out = {}
+    al = _ols_alpha(rets, brets)
+    if al:
+        tv = al.get("t") or 0
+        out["alpha"] = dict(al, v=("알파 확인" if tv >= AX_T else
+                                   ("음의 알파" if tv <= -AX_T else "구별 불가")))
+    cp = _capture(rets, brets)
+    if cp:
+        # 하락 포착이 1보다 작을수록 덜 따라 내려갔다는 뜻이다.
+        out["capture"] = dict(cp, v=("하락 방어" if cp["down"] < 0.90 else
+                                     ("하락 증폭" if cp["down"] > 1.10 else "구별 불가")))
+    rl = _roll12(nav, bnav)
+    if rl:
+        out["roll"] = dict(rl, v=("꾸준함 확인" if rl["win12"] >= 60 else
+                                  ("꾸준히 뒤짐" if rl["win12"] <= 40 else "구별 불가")))
+    rg = _regime_split(rets, brets, dates)
+    if rg and "rec" in rg:
+        d = rg["rec"]["s"] - rg["rec"]["b"]
+        out["regime"] = dict(rg, d_rec=round(d, 2),
+                             v=("침체에 강함" if d > 5 else
+                                ("침체에 약함" if d < -5 else "구별 불가")))
+    return out or None
+
+
 def run_weights(wfn, start, label, bench_w, rule, why, note=None,
-                cadence="month", bench_cadence=None):
+                cadence="month", bench_cadence=None, bench2_w=None, bench2_label=None):
     """wfn(i) -> {티커: 비중}. 정해진 주기에만 호출하고 그 사이는 보유.
     ⚠ bench_cadence를 안 주면 대조군도 같은 주기를 쓴다. '주기 변형' 전략에서 이걸 빠뜨리면
       전략과 대조군이 **완전히 같은 계열**이 되어 t가 정의되지 않는다(실제로 그렇게 났다)."""
@@ -353,6 +485,19 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     # (상시보유는 회전이 0에 가까워 거의 안 물지만, 규칙을 한쪽에만 적용하면 그것 자체가 편향이다).
     nav_c, rets_c, _ = walk(wfn, ends, COST_RT)
     bnav_c, brets_c, _ = walk(bench_w, bends, COST_RT)
+    # 🚨 보조 대조군(2026-08-12 사용자 결정). 주대조군 하나로는 어느 쪽으로 두든 한쪽이
+    #   유리하다 — 채권으로 빠지는 규칙을 SPY 와 겨루면 '주식이 더 올랐다'를 재고, 60/40 과
+    #   겨루면 문턱이 연 3.3%p 낮다(실측 SPY 11.19% vs 60/40 7.93%, 2006~2026).
+    #   그래서 **둘 다 재서 나란히 둔다.** 판정은 주대조군으로 하고 보조는 진단으로 적는다.
+    b2 = None
+    if bench2_w is not None:
+        b2nav, b2rets, _ = walk(bench2_w, _ends(bench_cadence or cadence))
+        m2 = ann_stats(b2nav, DTS[start:], RF)
+        b2 = {"label": bench2_label or "보조 대조군",
+              "metrics": m2,
+              "d_sharpe": round((ann_stats(nav, DTS[start:], RF).get("sharpe") or 0)
+                                - (m2.get("sharpe") or 0), 3),
+              "t": tstat(rets, b2rets)}
 
     # 대조군이 무엇인지 화면에 적으려면 이름이 있어야 한다. 35개 호출부에 인자를 하나씩
     # 더 붙이는 대신 가중치에서 뽑는다 — 대조군은 결국 '무엇을 얼마나 들고 있나'가 전부다.
@@ -413,6 +558,11 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
             "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
             "t": tstat(rets, brets), "risk": risk_bootstrap(rets, brets),
+            # 판정 축을 늘린다(2026-08-12 사용자 지시) — 알파·포착률·꾸준함·국면.
+            "axes": axes_pack(rets, brets, nav, bnav, dd),
+            # 보조 대조군 — 판정에는 안 쓴다. 주대조군 하나로는 잣대가 한쪽으로 기우는 것을
+            # 읽는 사람이 알 수 없어서 나란히 둔다.
+            "bench2": b2,
             "turnover": round(turn / 2 / yrs, 1),
             # 비용 후 — gross 를 대체하지 않고 나란히 싣는다.
             #   cost_kill 은 '무비용에서는 대조군보다 샤프가 높았는데 비용을 물리니 뒤집혔다'는
@@ -1394,6 +1544,15 @@ def build():
     #   아니라 11자산이 된다.
     TAA_UNI8 = ["SPY", "QQQ", "EFA", "EEM", "TLT", "GLD", "DBC", "VNQ"]
 
+    # 🚨 대조군을 둘 다 잰다(2026-08-12 사용자 결정). 어느 쪽으로 두든 한쪽이 유리하다 —
+    #   채권으로 빠지는 규칙을 SPY 와 겨루면 '주식이 더 올랐다'를 재고, 60/40 과 겨루면
+    #   문턱이 연 3.3%p 낮다(SPY 11.19% vs 60/40 7.93%, 2006~2026 실측).
+    #   주대조군은 SPY 상시보유 — 랩의 다른 타이밍 43종과 같은 잣대라 세로 비교가 되고,
+    #   채권 대조군 필터(2026-07-28)에도 걸리지 않아 목록에 들어온다.
+    #   60/40 은 보조로 병기한다(판정에는 안 쓴다).
+    def _bench_spy(i):
+        return {"SPY": 1.0}
+
     def _bench6040(i):
         return {"SPY": 0.6, "AGG": 0.4}
 
@@ -1440,12 +1599,13 @@ def build():
         return {pick[0]: 1.0} if pick else {"SHY": 1.0}
     add("taa-vaa-g4", "", lambda: run_weights(
         _w_vaa, first_common(VAA_OFF + VAA_DEF), "경계형 자산배분 VAA-G4 (Keller 2017)",
-        _bench6040,
+        _bench_spy,
         "월말에 공격 4종(SPY·EFA·EEM·AGG)의 13612W 모멘텀이 전부 양수면 그중 최고 1종에 100%. "
         "하나라도 음수면 방어 3종(LQD·IEF·SHY) 중 최고 1종에 100%.",
         "Keller·Keuning(2017). 13612W 는 1·3·6·12개월 수익을 12:4:2:1 로 가중한 빠른 모멘텀이다. "
         "이 랩의 절대모멘텀·GEM 과 달리 공격 유니버스 전체의 폭(breadth)을 보고 한 번에 방어로 "
-        "넘어간다 — 하나만 나빠도 전량 방어다."))
+        "넘어간다 — 하나만 나빠도 전량 방어다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ② DAA — Keller·Keuning (2018) SSRN 3212862
     DAA_CAN = ["EEM", "AGG"]
@@ -1469,12 +1629,13 @@ def build():
         return w or {"SHY": 1.0}
     add("taa-daa-g6", "", lambda: run_weights(
         _w_daa, first_common(DAA_CAN + DAA_OFF + DAA_DEF), "방어형 자산배분 DAA (카나리아 2종)",
-        _bench6040,
+        _bench_spy,
         "월말에 카나리아 2종(EEM·AGG)의 13612W 중 음수인 개수 b 로 현금비율 CF=b/2 를 정한다. "
         "(1−CF) 는 공격 10자산 중 13612W 상위 6종 동일가중, CF 는 방어 3종(SHY·IEF·LQD) 중 최고 1종.",
         "Keller·Keuning(2018). VAA 가 방어 전환을 0/1 로 하는 데 비해 DAA 는 비율로 한다 — "
         "카나리아 하나만 나쁘면 절반만 방어다. 원문 카나리아는 VWO·BND 인데 이 패널의 EEM·AGG 로 "
-        "바꿨다(등록 §2)."))
+        "바꿨다(등록 §2).",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ③④ BAA — Keller (2022) SSRN 4166845
     BAA_CAN = ["SPY", "EFA", "EEM", "AGG"]
@@ -1504,18 +1665,20 @@ def build():
         return w
     add("taa-baa-a", "", lambda: run_weights(
         _mk_baa(BAA_OFF_A, 1), first_common(BAA_CAN + BAA_OFF_A + BAA_DEF),
-        "대담형 자산배분 BAA (공격형 · 1종 집중)", _bench6040,
+        "대담형 자산배분 BAA (공격형 · 1종 집중)", _bench_spy,
         "카나리아 4종(SPY·EFA·EEM·AGG)의 13612W 가 전부 양수면 공격 4종(QQQ·EEM·EFA·AGG) 중 "
         "SMA 상대모멘텀(p0÷12개월 평균) 최고 1종에 100%. 아니면 방어 7종 중 같은 척도 상위 3을 "
         "동일가중하되 SHY 보다 낮은 것은 그 몫을 SHY 로 돌린다.",
         "Keller(2022). 카나리아는 빠른 13612W, 선별은 느린 SMA 상대모멘텀 — 척도가 둘이다. "
-        "빠른 것으로 위험을 끄고 느린 것으로 고른다는 설계다."))
+        "빠른 것으로 위험을 끄고 느린 것으로 고른다는 설계다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
     add("taa-baa-b", "", lambda: run_weights(
         _mk_baa(BAA_OFF_B, 6), first_common(BAA_CAN + BAA_OFF_B + BAA_DEF),
-        "대담형 자산배분 BAA (균형형 · 6종 분산)", _bench6040,
+        "대담형 자산배분 BAA (균형형 · 6종 분산)", _bench_spy,
         "③과 같되 공격 유니버스가 11자산이고 SMA 상대모멘텀 상위 6종을 동일가중한다.",
         "원문은 12자산(VGK·EWJ 포함)인데 이 패널에 지역 분해가 없어 EFA 하나로 접었다 — "
-        "그만큼 원문과 다른 규칙이다(등록 §2)."))
+        "그만큼 원문과 다른 규칙이다(등록 §2).",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑤ 허스트 국면 스위치 — R/S 통계량
     def _hurst(i, n=252):
@@ -1561,11 +1724,12 @@ def build():
         return {t: 0.5 for t, _ in sc[:2]} if len(sc) >= 2 else {"SHY": 1.0}
     add("st-hurst", "", lambda: run_weights(
         lambda i: _regime_alloc((_hurst(i) or 0.5) > 0.5, i),
-        first_common(TAA_UNI8), "허스트 지수 국면 스위치 (추세 ↔ 반전)", _bench6040,
+        first_common(TAA_UNI8), "허스트 지수 국면 스위치 (추세 ↔ 반전)", _bench_spy,
         "월말에 SPY 일간수익 252일의 R/S 허스트 H 를 잰다. H>0.5 면 8자산 12개월 모멘텀 상위 2, "
         "H≤0.5 면 같은 8자산 직전 21일 수익 하위 2를 동일가중.",
         "허스트 H 는 계열이 추세적(H>0.5)인지 평균회귀적(H<0.5)인지를 재는 고전 통계량이다. "
-        "국면을 거시로 판정하지 않고 가격 계열 자신의 성질로 가른다."))
+        "국면을 거시로 판정하지 않고 가격 계열 자신의 성질로 가른다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑥ 분산비 — Lo·MacKinlay (1988) RFS 1(1)
     def _vratio(i, n=252, q=5):
@@ -1586,12 +1750,13 @@ def build():
         return vq / (q * v1)
     add("st-vratio", "", lambda: run_weights(
         lambda i: _regime_alloc((_vratio(i) or 1.0) > 1.0, i),
-        first_common(TAA_UNI8), "분산비(Lo-MacKinlay) 국면 스위치", _bench6040,
+        first_common(TAA_UNI8), "분산비(Lo-MacKinlay) 국면 스위치", _bench_spy,
         "월말에 SPY 252일 분산비 VR(5)=Var(5일수익)÷(5·Var(1일수익)) 을 잰다. VR>1 이면 추세 "
         "국면 배분, VR≤1 이면 반전 국면 배분. 배분 규칙은 허스트판과 글자 그대로 같다.",
         "Lo·MacKinlay(1988)의 분산비 검정. ⚠ 허스트판과 유니버스·배분이 같고 국면 통계량만 "
         "다르다 — 둘이 비슷하면 국면 통계량의 선택이 무의미하다는 뜻이고, 그것을 재려고 "
-        "일부러 짝으로 넣었다."))
+        "일부러 짝으로 넣었다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑦ OU 평균회귀 z-score
     def _ou(t, i, n=120):
@@ -1630,11 +1795,12 @@ def build():
         cand.sort(key=lambda x: x[1])
         return {t: 0.5 for t, _ in cand[:2]}
     add("st-ou", "", lambda: run_weights(
-        _w_ou, first_common(TAA_UNI8), "OU 평균회귀 z-score 하위 2", _bench6040,
+        _w_ou, first_common(TAA_UNI8), "OU 평균회귀 z-score 하위 2", _bench_spy,
         "8자산 각각의 log가격에 120일 OU 과정을 적합해 반감기와 z-score 를 낸다. 반감기가 "
         "5~120일인 자산만 후보로 두고 z-score 가 가장 낮은 2종을 동일가중. 후보 2종 미만이면 SHY.",
         "평균회귀를 '싸 보인다'로만 쓰지 않고 회귀 속도(반감기)가 실제로 있는 자산만 "
-        "후보로 둔다. 반감기 관문이 없으면 추세 자산의 눌림목을 평균회귀로 오인한다."))
+        "후보로 둔다. 반감기 관문이 없으면 추세 자산의 눌림목을 평균회귀로 오인한다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑧ 축소 공분산 최소분산 — Ledoit·Wolf (2004) JMVA 88(2)
     def _w_minvar(i, n=252, delta=0.3):
@@ -1681,10 +1847,11 @@ def build():
             w = {a: v / tot for a, v in w.items()}
         return {a: v for a, v in w.items() if v > 1e-4}
     add("st-minvar-lw", "", lambda: run_weights(
-        _w_minvar, first_common(TAA_UNI8), "축소 공분산 최소분산 (Ledoit-Wolf 목표)", _bench6040,
+        _w_minvar, first_common(TAA_UNI8), "축소 공분산 최소분산 (Ledoit-Wolf 목표)", _bench_spy,
         "8자산 252일 표본공분산을 상수상관 목표로 δ=0.3 만큼 축소한 뒤 롱온리 최소분산 비중을 낸다.",
         "Ledoit·Wolf(2004). 표본공분산은 자산 수가 관측 대비 많아지면 불안정해지고 최소분산이 "
-        "그 잡음을 극대화한다. ⚠ 최적 δ 를 추정하지 않고 0.3 으로 못박았다 — 추정하면 그게 자유도다."))
+        "그 잡음을 극대화한다. ⚠ 최적 δ 를 추정하지 않고 0.3 으로 못박았다 — 추정하면 그게 자유도다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑨ 위험균형 × 개별 추세 게이트 (2단)
     def _w_rptrend(i):
@@ -1711,10 +1878,11 @@ def build():
             out["SHY"] = out.get("SHY", 0.0) + cash / tot
         return out
     add("st-rp-trend", "", lambda: run_weights(
-        _w_rptrend, first_common(TAA_UNI8), "위험균형 × 개별 추세 게이트 (2단)", _bench6040,
+        _w_rptrend, first_common(TAA_UNI8), "위험균형 × 개별 추세 게이트 (2단)", _bench_spy,
         "1단 8자산 120일 역변동성 가중. 2단 각 자산이 200일선 아래면 그 몫만 SHY 로 옮긴다.",
         "이 랩의 rp-* 계열은 게이트가 포트폴리오 전체에 하나 걸려 전량이 들락거린다. "
-        "이쪽은 자산마다 따로 걸어 노출이 연속으로 변한다."))
+        "이쪽은 자산마다 따로 걸어 노출이 연속으로 변한다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑩ 능형회귀 1개월 예측 — 간단 ML(확장창)
     def _w_ridge(i, lam=1.0):
@@ -1773,12 +1941,13 @@ def build():
         return [m12, v60, ts_, sum(vv) / len(vv)]
     add("ml-ridge", "", lambda: run_weights(
         _w_ridge, first_common(["SPY", "SHY"], pad=1600), "능형회귀 1개월 예측 (SPY 롱/현금)",
-        _bench6040,
+        _bench_spy,
         "특징 4개(SPY 12개월 모멘텀·60일 실현변동성·T10Y2Y·VIX 20일평균)로 SPY 다음 달 수익을 "
         "확장창 능형회귀(λ=1.0 고정, 표준화)로 예측한다. 예측이 양수면 SPY 100%, 아니면 SHY 100%.",
         "요청대로 가벼운 ML 이다. ⚠ 확장창이다 — 매 월말 그 시점까지의 관측만으로 다시 적합한다. "
         "⚠ λ 를 교차검증으로 고르지 않는다(고르면 그게 자유도다). 이 랩은 ML 랩을 한 번 삭제한 "
-        "적이 있고(DATA-FACTS #17) 그 사유는 55분을 써서 얻는 것이 없었다는 것이다."))
+        "적이 있고(DATA-FACTS #17) 그 사유는 55분을 써서 얻는 것이 없었다는 것이다.",
+        bench2_w=_bench6040, bench2_label="60/40 (SPY 60 · AGG 40)"))
 
     # ⑩ 핼러윈 — Jacobsen·Visaltanachoti (2009) RFS 22(1)
     _sec("sec-halloween", "핼러윈 섹터 (11~4월 경기민감)",
@@ -2433,7 +2602,11 @@ def main() -> int:
             lo = m
         else:
             hi = m
-    tcrit = round((lo + hi) / 2, 2)
+    tcrit_bonf = round((lo + hi) / 2, 2)
+    # 🚨 사용자 지시로 보정을 끈다. 무엇을 포기하는지 적어 둔다 —
+    #   71종을 같은 표본에서 돌렸으므로 |t|>2.0 는 영가설에서도 3~4종이 나온다(71×0.05≈3.6).
+    #   즉 '통과 후보' 는 이제 "다중검정을 넘었다"가 아니라 "단독 관례 임계를 넘었다" 뿐이다.
+    tcrit = tcrit_bonf if BONFERRONI else T_CRIT_PLAIN
     for r in rows:
         t = r.get("t")
         if r.get("verdict") == "표본 부족 · 판정 불가":
@@ -2647,6 +2820,14 @@ def main() -> int:
         "note": "아카이브에서 '재현 불가'로 두었던 전략들을 공개 데이터로 실제로 돌린 결과. "
                 "좋은 것만 고르지 않고 돌린 것을 전부 싣는다.",
         "as_of": DTS[-1], "t_crit": tcrit, "n": n,
+        # 화면이 배지 뜻을 스스로 적으려면 이 값이 필요하다 — 안 실으면 보정을 껐는데
+        # 화면은 계속 "다중검정을 넘었다"고 말한다(종목 랩이 같은 사고를 낸 적이 있다).
+        "gates": {"bonferroni": BONFERRONI, "t_crit_bonferroni": tcrit_bonf,
+                  "t_crit_plain": T_CRIT_PLAIN, "axes_t": AX_T},
+        "axes_note": ("판정 축을 넷 더 세웠다(2026-08-12) — CAPM 알파 · 상승/하락 포착률 · "
+                      "12개월 롤링 초과 승률 · 침체 국면 성과. 수익 축(t)과 위험 축은 그대로 "
+                      "두고 덮어쓰지 않는다. ⚠ 침체 축의 USREC 은 사후 확정치라 매매 규칙으로 "
+                      "쓸 수 없다 — 규칙의 성격을 읽는 용도다."),
         "source": "가격 yfinance · 거시 FRED 공개 CSV(키 불필요) — 둘 다 무료·무인증",
         "protocol": [
             "월말 리밸런스·무비용(gross). 이 랩의 기본 규약 그대로다.",
@@ -2654,7 +2835,12 @@ def main() -> int:
             "그건 전략이 아니라 비교의 잘못이다(아카이브에 그 사고가 있다).",
             "구간은 전략마다 다르다. 쓰는 ETF의 상장일에 묶이기 때문이며, 그건 데이터 결손이 "
             "아니라 그 전략의 실제 제약이다.",
-            "전략 %d개를 같은 표본에서 돌렸으므로 본페로니로 임계를 |t|≥%.2f로 올렸다." % (n, tcrit),
+            (("전략 %d개를 같은 표본에서 돌렸으므로 본페로니로 임계를 |t|≥%.2f로 올렸다."
+              % (n, tcrit)) if BONFERRONI else
+             ("🚨 다중검정 보정을 껐다(사용자 결정 2026-08-12). 임계는 관례값 |t|≥%.1f 이고, "
+              "전략 %d개를 같은 표본에서 돌렸으므로 영가설에서도 약 %d종이 그 임계를 넘는다 — "
+              "'통과 후보'는 다중검정을 넘었다는 뜻이 아니다(본페로니 임계는 %.2f 였다)."
+              % (T_CRIT_PLAIN, n, round(n * 0.05), tcrit_bonf))),
             "대조군이 현금성(연변동성 2%% 미만)인 전략은 샤프 차이가 허수가 된다 — 분모가 0에 "
             "가까워 작은 수익 차이가 몇 단위로 증폭된다. 그런 행은 Δ샤프를 판정에 쓰지 않고 "
             "t만 보며, 화면에 '대조군 현금성'으로 표시한다.",

@@ -356,6 +356,18 @@
   .vblock .vwhy>summary:hover{color:var(--accent)}
   .vblock .vwb{margin-top:6px;padding-left:11px;border-left:2px solid var(--line-soft);
     font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  /* 판정 축 — 수익 축 t 하나로는 '구별 불가'인 규칙의 성격이 여기서 드러난다. */
+  .axg{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);margin:10px 0 0}
+  .axg>div{background:var(--panel);padding:8px 10px}
+  .axg .axk{font-size:11px;color:var(--muted);display:block}
+  .axg .axv{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--ink)}
+  .axg .axb{display:inline-block;font-size:11px;font-weight:700;border-radius:2px;
+    padding:0 5px;margin-left:5px;border:1px solid var(--line);color:var(--muted)}
+  .axg .axb.ok{border-color:var(--deploy);color:var(--deploy)}
+  .axg .axb.no{border-color:var(--hot);color:var(--hot)}
+  .axg .axs{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+  .axnote{font-size:11.5px;color:var(--muted);line-height:1.65;margin:6px 0 0}
   .powerbox{margin-top:12px;padding:11px 13px;border-radius:2px;background:var(--panel);border:1px solid var(--line-soft)}
   .powerbox h5{margin:0 0 7px;font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-2)}
   .powerbox svg{width:100%;height:auto;display:block;max-width:420px;overflow:visible}
@@ -1223,7 +1235,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
             _pool:x.pool||null, _thin:x.n_thin||0, _bask:x.bask||null,
-            _risk:x.risk||null, _rv:x.risk_verdict||null
+            _risk:x.risk||null, _rv:x.risk_verdict||null, _ax:x.axes||null, _b2:x.bench_alt||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
@@ -1686,6 +1698,48 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return m>0?(m/12):null;
   }
   function spanTxt(a,b){var y=spanY(a,b);return y==null?'':(Math.round(y*10)/10)+'년';}
+
+  // ── 판정 축 넷 ─────────────────────────────────────────────────────
+  // 🚨 이 랩의 판정은 오래 수익 축 t 하나였다. 그런데 배포 3종조차 t 로 통과한 적이 없고
+  //   (Multi-Sleeve Core 의 ΔSharpe p=0.22) 배포 근거는 CAPM 알파와 낙폭이었다 —
+  //   **이 랩이 배포를 정할 때 쓴 잣대가 판정표에는 없었다.** 그 넷을 여기에 세운다.
+  // ⚠ 축을 늘리는 것은 문턱을 낮추는 것과 다르다. 각 축은 자기 질문에만 답하고,
+  //   한 축의 통과가 다른 축의 실패를 지우지 않는다.
+  function axesBlock(d){
+    var a=d&&d._ax; if(!a)return '';
+    var cell=function(k,label,val,sub,verd,good){
+      if(val==null)return '';
+      var cls=(verd&&good&&good.indexOf(verd)>=0)?'ok':((verd&&verd!=='구별 불가')?'no':'');
+      return '<div><span class="axk">'+esc(label)+'</span>'+
+        '<b class="axv">'+esc(val)+'</b>'+
+        (verd?'<span class="axb '+cls+'">'+esc(verd)+'</span>':'')+
+        (sub?'<span class="axs">'+esc(sub)+'</span>':'')+'</div>';
+    };
+    var f=function(v,n){return (v==null||v!==v)?null:Number(v).toFixed(n==null?2:n);};
+    var al=a.alpha||{}, cp=a.capture||{}, rl=a.roll||{}, rg=a.regime||{};
+    var h='';
+    h+=cell('alpha','CAPM 알파 (연율)', (al.alpha!=null?((al.alpha>0?'+':'')+f(al.alpha)+'%'):null),
+            (al.t!=null?('t '+f(al.t)+' · β '+f(al.beta,3)):''), al.v, ['알파 확인']);
+    h+=cell('capture','하락 포착률', f(cp.down,2),
+            (cp.up!=null?('상승 포착 '+f(cp.up,2)+' · 하락일 '+cp.n_dn+'일'):''), cp.v, ['하락 방어']);
+    h+=cell('roll','12개월 초과 승률', (rl.win12!=null?f(rl.win12,1)+'%':null),
+            (rl.worst12!=null?('최악 12개월 '+f(rl.worst12,1)+'%'):''), rl.v, ['꾸준함 확인']);
+    if(rg.rec) h+=cell('regime','침체 국면 연율', (rg.rec.s!=null?((rg.rec.s>0?'+':'')+f(rg.rec.s)+'%'):null),
+            ('대조군 '+f(rg.rec.b)+'% · '+rg.rec.n+'일'), rg.v, ['침체에 강함']);
+    // 보조 대조군 — 주대조군 하나로는 잣대가 한쪽으로 기우는 것을 읽는 사람이 알 수 없다.
+    var b2=d._b2;
+    if(b2&&b2.t!=null){
+      h+=cell('b2','보조 대조군 대비 t', f(b2.t),
+              esc(b2.label||'')+' · Δ샤프 '+((b2.d_sharpe>0?'+':'')+f(b2.d_sharpe,3)), null, null);
+    }
+    if(!h)return '';
+    return '<div class="chartttl" style="margin-top:12px">판정 축</div><div class="axg">'+h+'</div>'+
+      '<p class="axnote">수익 축(t)과 별개다 — 각 축은 자기 질문에만 답하고 서로 덮어쓰지 않는다. '+
+      '하락 포착률은 대조군이 내린 날 전략이 그 몇 배를 따라갔나이며 1보다 작을수록 덜 내려갔다는 뜻이다. '+
+      '⚠ 침체 구간은 NBER 의 <b>사후 확정</b> 판정이라 매매 규칙으로 쓸 수 없다 — 성격을 읽는 칸이다.'+
+      (d._b2?' 🚨 <b>보조 대조군은 판정에 안 쓴다.</b> 대조군을 무엇으로 두느냐로 t 가 크게 움직이므로 '+
+            '(실측: 같은 규칙이 한쪽에서 −2.10, 다른 쪽에서 +1.02) 둘을 나란히 둔 것이다.':'')+'</p>';
+  }
 
   function svgYearly(bt,vc){
     var ys=bt.yearly,n=ys.length,W=580,H=118,pL=30,pR=10,pT=12,pB=16,pw=W-pL-pR,ph=H-pT-pB;
@@ -2552,6 +2606,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           })()+
           ((d.vp&&d.vp.length)?'<ul class="vpts">'+d.vp.map(function(s){
             return '<li>'+s+'</li>';}).join('')+'</ul>':'')+
+          axesBlock(d)+
           (d.vpn?'<p class="vtn">'+esc(d.vpn)+'</p>':'')+
           ((d.bt&&d.bt.metrics)?powerBox(d.bt.metrics)+multNote(d.bt.metrics):'')+
         '</div>'+
