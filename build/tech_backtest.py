@@ -1009,6 +1009,58 @@ def sue(series, date, lag=FUND_LAG_DAYS, win=8):
     return (cur / sd) if sd > 1e-9 else None
 
 
+def gp_series(f):
+    """분기 매출총이익 [(기간종료일, rev − cogs)] — 날짜 내림차순.
+
+    사전등록 PREREG-2026-08-12-INCOME-LINES.md §2②.
+    🚨 **기간종료일이 정확히 같은 분기끼리만** 뺀다. rev 와 cogs 는 태그가 따로라 한쪽에만
+      있는 분기가 흔한데(실측 rev 505종 · cogs 303종), 가장 가까운 날짜로 맞추면 다른 분기의
+      원가를 이번 분기 매출에서 빼게 된다. 못 맞춘 분기는 **버린다** — 보간하지 않는다.
+    ⚠ 연간(_a) 폴백을 쓰지 않는다. 이 계열은 분기 대 분기 비교(yoy)에만 쓰이므로 연간을
+      섞으면 4배 큰 숫자가 한 칸에 들어간다.
+    """
+    rv = f.get("rev") or []
+    cg = dict(f.get("cogs") or [])
+    if not rv or not cg:
+        return []
+    return [(d, v - cg[d]) for d, v in rv if d in cg]
+
+
+def cost_disc(f, date, lag=FUND_LAG_DAYS):
+    """비용규율 — 매출 증가율 − 매출원가 증가율(전년 동기 대비). 사전등록 §2③.
+
+    Abarbanell·Bushee(1997, 1998). 매출이 원가보다 빨리 늘면 마진이 벌어지는 중이다.
+    ⚠ 분모가 0 에 가까우면 폭발한다 — **전년 동기 |rev| 와 |cogs| 가 둘 다 0 보다 클 때만** 낸다.
+    ⚠ 표준화하지 않는다(그건 ②가 한다). 둘이 같은 결과를 내면 표준화가 결과를 만든 게 아니다.
+    """
+    rv, cgm = f.get("rev") or [], dict(f.get("cogs") or [])
+    if not rv or not cgm:
+        return None
+    cut = _shift(date, lag)
+    # 그 시점에 공개돼 있던 가장 최근 분기 — rev·cogs 가 **둘 다** 있는 분기만 후보다.
+    cur = next(((d, v) for d, v in rv if d <= cut and d in cgm), None)
+    if cur is None:
+        return None
+    d0, rev0 = cur
+    cogs0 = cgm[d0]
+    # 전년 동기는 날짜로 찾는다(yoy_eps 와 같은 규약 — 52/53주 회계연도·결측 분기 때문).
+    prev = None
+    for d2, v2 in rv:
+        if d2 >= d0 or d2 not in cgm:
+            continue
+        gap = _days_between(d0, d2)
+        if gap > 410:
+            break
+        if 320 <= gap <= 410 and (prev is None or gap < prev[0]):
+            prev = (gap, v2, cgm[d2])
+    if prev is None:
+        return None
+    _g, rev1, cogs1 = prev
+    if not (abs(rev1) > 0 and abs(cogs1) > 0):
+        return None
+    return (rev0 - rev1) / abs(rev1) - (cogs0 - cogs1) / abs(cogs1)
+
+
 def eps_accel(series, date, lag=FUND_LAG_DAYS):
     """이익 개선의 **가속** — 이번 분기 전년비 변화 − 직전 분기 전년비 변화. 주당 금액.
 
@@ -2258,6 +2310,45 @@ def build_strats():
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
 
+    # ── 손익계산서 위쪽 줄의 서프라이즈 3종 ──────────────────────────
+    # 사전등록 build/PREREG-2026-08-12-INCOME-LINES.md 에 **돌리기 전에** 확정해 커밋했다.
+    # 🚨 x-sue 는 손익계산서 **맨 아랫줄 하나(EPS)**만 본다. 그 위 줄들이 따로 정보를
+    #   갖는지 이 랩은 재 본 적이 없다 — 수준 축에는 x-gpa 가 있는데 변화 축이 비어 있었다.
+    # 🚨 셋 다 기존 sue() 를 **글자 하나 안 고치고** 쓴다. 표준화를 새로 만들면 x-sue 와의
+    #   차이가 '신호가 다른 것'인지 '표준화가 다른 것'인지 못 가른다.
+    # 게시 기준도 등록 §3 에 셋으로 적어 뒀다 — 단독 t 임계 · incr5.t ≥ 2.0 · PIT 레그도 통과.
+    xsec("x-sur", "매출 서프라이즈 (SUR 상위 %d)" % TOPN,
+         "직전 공개 분기의 전년 동기 대비 매출 변화를 그 종목의 변화 표준편차로 나눈 값이 "
+         "가장 큰 %d종목 동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
+         None,
+         "Jegadeesh·Livnat(2006, JAE). 매출 서프라이즈는 이익 서프라이즈보다 되돌림이 적다 — "
+         "가격·수량 변화가 일회성 항목보다 오래 가기 때문이다. x-sue 와 같은 분기 실적에서 "
+         "나오므로 단독 t 가 아니라 x-sue 대비 증분알파가 판정이다. "
+         "⚠ 매출 태그는 ASC 606 때문에 2017 년부터다(DATA-FACTS #2) — 창 앞 7년은 그때 이미 "
+         "이 태그로 보고하던 소수만 채점된다. 유효표본이 다른 규칙의 절반이다.")
+    xsec("x-sugp", "매출총이익 서프라이즈 (SUGP 상위 %d)" % TOPN,
+         "매출 − 매출원가를 분기별로 만들어(기간종료일이 같은 분기끼리만) 전년 동기 대비 "
+         "변화를 그 종목의 변화 표준편차로 나눈 값이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "Novy-Marx(2013)는 매출총이익이 감가상각 정책·일회성 항목·자본구조에 덜 오염된 "
+         "수익성 지표라고 본다. 이 랩은 그 주장을 수준 축(x-gpa)에만 넣어 두었고 변화 축은 "
+         "비어 있었다. "
+         "🚨 이 규칙은 '매출총이익 서프라이즈가 높은 종목'이 아니라 '매출원가를 보고하는 "
+         "업종 안에서' 그런 종목이다 — 은행·보험·유틸리티·에너지는 매출원가 줄을 안 낸다. "
+         "실측 커버 294/519(56.6%) · IT 22% 산업재 18% 헬스케어 17%. 결손이 아니라 이 규칙이 "
+         "무엇을 재는지의 일부다(DATA-FACTS #1). "
+         "⚠ x-gpa 는 gp 태그(커버 38.3%), 이건 rev−cogs(58.4%)라 유니버스가 다르다 — "
+         "둘의 차이를 신호의 차이로 읽지 말 것.")
+    xsec("x-cdisc", "비용규율 상위 %d (매출증가 − 원가증가)" % TOPN,
+         "전년 동기 대비 매출 증가율에서 매출원가 증가율을 뺀 값이 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스. 전년 동기 매출·매출원가가 둘 다 0 보다 클 때만 후보다." % TOPN,
+         None,
+         "Abarbanell·Bushee(1997, 1998)의 비용 신호. 위 x-sugp 와 같은 재료를 쓰지만 "
+         "표준화하지 않는다 — x-sugp 가 '이 회사 기준으로 얼마나 놀라운가'라면 이건 "
+         "'마진이 벌어지는가'다. 둘이 같은 결과를 내면 표준화가 결과를 만든 게 아니고 "
+         "갈리면 그 반대다(x-sue 와 x-epsacc 를 같이 실은 것과 같은 이유). "
+         "커버·섹터 쏠림은 x-sugp 와 같다.")
+
     # ── 애널리스트 투자의견 리비전 3종 ───────────────────────────────
     # 사전등록 PREREG-2026-08-10-REVDRIFT.md.
     # 🚨 왜 이 셋인가 — **살아 있는 69종 전부가 가격·거래량·회계 숫자로만** 만들어져 있고
@@ -3354,6 +3445,14 @@ def xsec_score_at(S, i, X, pool=None):
             v = rat_signal(t, dates[i - 1], 91 if sid == "x-revdrift-q" else 30)
         elif sid == "x-sue":
             v = sue((FU.get(t) or {}).get("eps") or [], dates[i - 1])
+        # 손익계산서 위쪽 줄 3종 — PREREG-2026-08-12-INCOME-LINES.md.
+        # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
+        elif sid == "x-sur":
+            v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        elif sid == "x-sugp":
+            v = sue(gp_series(FU.get(t) or {}), dates[i - 1])
+        elif sid == "x-cdisc":
+            v = cost_disc(FU.get(t) or {}, dates[i - 1])
         elif sid == "x-epsacc":
             e = eps_accel((FU.get(t) or {}).get("eps") or [], dates[i - 1])
             p0 = P[i - 1]
