@@ -80,7 +80,12 @@ TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
 # 반쪽만 PIT 로 바꾸면 비교가 성립하지 않는다.
-PRICE_SIDS = ["x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
+PRICE_SIDS = [
+             # 2026-08-12 3차 배치 — PREREG-2026-08-12-MOMENTS.md §4. 결과를 보고 넣으면
+             #   사후 선택이므로 **등록과 함께 미리** 넣는다. 둘 다 종가만 쓰므로
+             #   편출 종목 종가 캐시로 그대로 돈다(x-amihud 가 막힌 거래량 벽이 없다).
+             "x-mommvol", "x-rskew",
+             "x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
               "x-small",   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
@@ -119,7 +124,13 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              # 2026-08-11 — 위 PRICE_SIDS 의 같은 사유. 옮기다 랩 본편의 선견을 찾았다.
              "x-debtiss",
              # 2026-08-11 개편으로 풀린 것들(위 PRICE_SIDS 의 같은 사유).
-             "x-valcomp", "x-valcomp-sn", "x-fscore"]
+             "x-valcomp", "x-valcomp-sn", "x-fscore",
+             # 🚨 2026-08-12 1차 배치(PREREG-…-INCOME-LINES) 3종. 등록할 때 이 목록에
+             #   넣는 것을 빠뜨렸고, 아래 완전성 가드가 그것을 잡았다 — 가드가 없었으면
+             #   세 규칙이 소급 t 로만 판정된 채 조용히 지나갔다.
+             #   편출 종목 재무 실측: rev 133/145(92%) · rev∩cogs 94/145(65%) 로
+             #   랩 유니버스(97%·58%)와 비슷하다 — 제외 사유가 없다.
+             "x-sur", "x-sugp", "x-cdisc"]
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
