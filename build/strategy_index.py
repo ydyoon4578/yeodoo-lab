@@ -648,6 +648,12 @@ def main() -> int:
         #   통과는 하나도 없다. 목록에서만 빼고 측정 기록은 원본에 그대로 둔다(다중검정 N 유지).
         "eps-revision-turnover-band",                                          # 리비전 변형
         "a-overnight-ndx", "a-vrp-shortvol", "a-overnight", "a-quality-tilt",  # 자산배분
+        # 페어 트레이딩 넷(2026-08-12 추가, 사용자 결정). 같은 날 사전등록해 돌린 배치이고
+        #   (build/PREREG-2026-08-12-PAIRS.md) **넷 다 '열위'** 로 통과가 하나도 없다.
+        #   목록에서만 빼고 측정 기록은 원본에 그대로 둔다 —
+        #   data/pairs_strategies.json·pairs_book.json 과 사전등록·결과 문서는 손대지 않는다.
+        #   ⚠ 진 것을 원본에서 지우면 다중검정 N 이 줄어 남은 것이 쉽게 통과한다.
+        "p-ggr-top5", "p-ggr-top20", "p-comb-top5", "p-comb-top20",            # 페어 트레이딩
     }
     # ⚠ 이 가드는 'sid 가 바뀌어 제외가 조용히 풀렸나'를 보는 것이다. 그런데 앞의 채권 대조군
     #   필터가 먼저 지운 전략은 rows 에 없어 '못 찾음'으로 오인된다 — 두 제외는 공존해야 한다.

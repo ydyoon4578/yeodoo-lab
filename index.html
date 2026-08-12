@@ -1251,7 +1251,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function recoCol(title,sub,tot,conf,prov,arr,cls,buy){
     var head=tot+'종 (확정 '+(conf==null?'—':conf)+' · 잠정 '+(prov==null?'—':prov)+')';
-    return '<div class="rcol"><h4><span>'+title+' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span></span><span style="white-space:nowrap">'+head+'</span></h4>'+
+    // sub 가 비면 빈 span 도 앞 공백도 내지 않는다 — 껍데기만 남으면 자간·줄바꿈이 어긋난다.
+    return '<div class="rcol"><h4><span>'+title+
+      (sub?' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span>':'')+
+      '</span><span style="white-space:nowrap">'+head+'</span></h4>'+
     (arr.length?arr.map(function(x){
       // 티커도 esc·encodeURIComponent 를 통과시킨다. 바로 옆 sec·name 은 처음부터 esc 를
       // 거쳤는데 t 만 빠져 있었다 — 티커는 '어차피 A~Z'라고 여긴 자리다. 실제로는 위키
@@ -1293,8 +1296,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   ⚠ stocks.html 의 그 문단을 지우면 이 판정이 사이트에서 **완전히** 사라진다.
       '';
     el('recostocks').innerHTML=
-      recoCol('🟢 스윙 저점매수','최근 '+(h.win||10)+'거래일 · 최신순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
-      recoCol('🔴 스윙 고점매도','이익실현·비중축소 참고', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
+      recoCol('🟢 스윙 저점매수','', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
+      recoCol('🔴 스윙 고점매도','', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
     syncAsof(); staleCheck();
   }
   function stkFail(){
@@ -2243,7 +2246,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
       '<div class="scgrid">'+
         chart(blk.dates, ixs, '지수', CIX)+
-        chart(blk.sec_dates, secs, '섹터 <span>· SPDR 섹터 ETF 11종</span>', CSEC)+
+        chart(blk.sec_dates, secs, '섹터', CSEC)+
       '</div>'+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
