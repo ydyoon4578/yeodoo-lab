@@ -1009,6 +1009,54 @@ def sue(series, date, lag=FUND_LAG_DAYS, win=8):
     return (cur / sd) if sd > 1e-9 else None
 
 
+EARNVOL_WIN = 8          # 사전등록 PREREG-2026-08-12-POLICY.md §2② — 분기 수
+
+
+def div_growth(f, date, lag=FUND_LAG_DAYS):
+    """배당 증액률 — 직전 공개 분기 주당배당금의 전년 동기 대비 증가율. 사전등록 §2①.
+
+    ⚠ 전년 동기는 **날짜로** 찾는다(yoy_eps 와 같은 규약 — 52/53주 회계연도·결측 분기).
+    ⚠ 전년 동기 배당이 0 이하면 낸다고 하지 않는다 — 무배당에서 배당 개시는 증가율이
+      정의되지 않는다(분모 0). 개시 효과를 재려면 다른 규칙이어야 한다.
+    """
+    ser = f.get("dps") or []
+    if not ser:
+        return None
+    cut = _shift(date, lag)
+    cur = next(((d, v) for d, v in ser if d <= cut), None)
+    if cur is None:
+        return None
+    d0, v0 = cur
+    prev = None
+    for d2, v2 in ser:
+        if d2 >= d0:
+            continue
+        gap = _days_between(d0, d2)
+        if gap > 410:
+            break
+        if 320 <= gap <= 410 and (prev is None or gap < prev[0]):
+            prev = (gap, v2)
+    if prev is None or prev[1] <= 0:
+        return None
+    return v0 / prev[1] - 1.0
+
+
+def earn_vol(f, date, lag=FUND_LAG_DAYS, win=EARNVOL_WIN):
+    """이익 변동성 — 최근 win 분기 EPS 의 표준편차 ÷ 평균 |EPS|. 사전등록 §2②. 작을수록 안정.
+
+    🚨 이 값은 **x-sue 의 분모와 형제다**(그쪽은 전년동기 변화의 표준편차). 그래서 이 규칙이
+      새 정보가 아니라 x-sue 를 뒤집은 것일 수 있다 — 판정은 incr5 다. 등록 §2② 참조.
+    """
+    ser = asof_all(f.get("eps") or [], date, lag)
+    if len(ser) < win:
+        return None
+    xs = [v for _d, v in ser[:win]]
+    m = sum(xs) / len(xs)
+    sd = (sum((x - m) ** 2 for x in xs) / max(1, len(xs) - 1)) ** 0.5
+    den = sum(abs(x) for x in xs) / len(xs)
+    return (sd / den) if den > 1e-9 else None
+
+
 RSKEW_WIN = 60           # 사전등록 PREREG-2026-08-12-MOMENTS.md §2② 에서 확정.
 MOMVOL_VWIN = 126        # 같은 문서 §2① — 모멘텀의 분모(실현변동성) 창.
 
