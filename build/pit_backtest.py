@@ -117,7 +117,12 @@ PRICE_SIDS = [
               #   그 상태에서는 PIT 을 못 재고 소급 t 로만 판정되며, 화면에 아무 표시도 안 난다
               #   (x-volratio 는 실제로 소급 t 2.86 으로 '통과 후보'에 올라 있었다).
               #   둘 다 일간 수익률만 쓰므로 편출 종목 종가 캐시로 그대로 돈다.
-              "x-acorr", "x-volratio"]
+              "x-acorr", "x-volratio",
+              # 시가총액 하한 변형 3종 — PREREG-2026-08-12-MCAPFLOOR.md §4.
+              #   결과를 보고 넣으면 사후 선택이므로 **등록과 함께 미리** 넣는다.
+              #   가격과 시점별 주식수만 쓰므로 편출 종목 캐시(_pit_px_cache·_pit_sh_cache)로
+              #   그대로 돈다. 하한은 랩 함수 xsec_score_at 안에서 걸리므로 이쪽에 배선은 없다.
+              "x-mom12-mcf", "x-dist200-mcf", "x-hlspread-mcf"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
