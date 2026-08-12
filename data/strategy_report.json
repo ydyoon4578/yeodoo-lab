@@ -28,7 +28,7 @@
    "표본 구간에서 지수가 200일선 위에 있던 날이 88%(4168일 중 3662일)이고, 고점 대비 -10%를 밑돈 국면은 12번뿐이었다. 현금을 쥐는 규칙은 이런 구간에서 구조적으로 진다 — 여기 '열위'가 많은 것은 규칙의 실력만이 아니라 구간의 성질이기도 하다. 반대로 이 표본은 하락 방어 능력을 사실상 검증하지 못한다.",
    "규칙끼리 많이 겹친다 — 타이밍 규칙 쌍의 상관 중앙값이 0.664이고 3쌍은 0.95를 넘는다. 규칙 수가 곧 검증한 아이디어 수는 아니다.",
    "후보 풀이 표본 앞구간에서 얇다 — 횡단면 72규칙 중 22규칙에서, 그 규칙 자신의 평소 후보 수(중앙값) 절반에도 못 미친 월말이 합계 592번 있었다(최대 고매출성장 상위 10: 99개월 · 평소 322종인데 최소 71종까지 내려갔다 · 2010-01-29 시작). 재무 태그가 과거로 갈수록 얇아지기 때문이다. 🚨 얇은 달 게이트(후보 30 미만)는 이걸 못 잡는다 — 평소의 절반 안에서 고른 '상위 10'은 전체에서 고른 '상위 10'과 같은 선택이 아니고, 그만큼 앞구간 성과에는 규칙이 아니라 커버리지가 만든 몫이 섞여 있다.",
-   "이중클래스 — 같은 회사의 두 클래스(GOOG·GOOGL 등)를 한 바스켓에 담지 않는다(2026-08-04 사용자 결정). 담으면 10종이 아니라 한 회사에 두 칸을 준 9종 바스켓이 되기 때문이다. 실측 798회·46규칙에서 걸렸고, 그 자리는 다음 순위 종목이 채웠다."
+   "이중클래스 — 같은 회사의 두 클래스(GOOG·GOOGL 등)를 한 바스켓에 담지 않는다(2026-08-04 사용자 결정). 담으면 10종이 아니라 한 회사에 두 칸을 준 9종 바스켓이 되기 때문이다. 실측 808회·46규칙에서 걸렸고, 그 자리는 다음 순위 종목이 채웠다."
   ],
   "asset": [
    "무비용이다. 오버나이트 드리프트처럼 연 252회 왕복하는 규칙은 무비용 수치를 그대로 읽으면 안 된다 — 함께 적은 회전율을 반드시 볼 것.",
@@ -538,6 +538,14 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "통과",
+    "name": "상하방 베타 비대칭 상위 20",
+    "sid": "x-updown",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "통과",
     "name": "저PSR (매출수익률 상위 10)",
     "sid": "x-sp",
     "lab": "종목·타이밍"
@@ -548,14 +556,6 @@
     "verdict": "통과",
     "name": "현금성자산 비율 상위 (현금및현금성자산 ÷ 총자산)",
     "sid": "x-cash",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "통과",
-    "name": "상하방 베타 비대칭 상위 10",
-    "sid": "x-updown",
     "lab": "종목·타이밍"
    },
    {
@@ -15198,6 +15198,253 @@
    ]
   },
   {
+   "sid": "x-updown",
+   "name": "상하방 베타 비대칭 상위 20",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "최근 252거래일을 시장이 평균보다 내린 날과 오른 날로 갈라 각각 베타를 재고, 그 차이를 두 베타 크기의 합으로 나눈 값이 가장 큰 20종을 동일가중으로 산다. 월말 리밸런스.",
+   "why": "Ang·Chen·Xing(RFS 2006) 하방위험 프리미엄 — 시장이 내릴 때 더 크게 내리는 종목은 위험보상을 요구받는다. 원차분(β⁻ − β⁺) 대신 비율형을 쓴 이유는 규모 무관하게 만들기 위해서다(분모 0.2 미만은 제외 — 시장과 사실상 안 움직이는 종목에서 비율이 폭주한다). 원차분판·β 중립판은 등록하지 않았다. 🚨 2026-08-12 에 상위 10 → 20 으로 교체했다. 이 규칙의 초과수익은 몇 달이 다 만드는데(2020-04 +50.1%% · 2020-11 +28.5%%) 그 안에서 한 종목이 포트를 흔든다 — 2020-04 의 APA +214%% 는 10종 동일가중에서 +21.4%%p 기여다. 20종이면 절반이 된다. 실측(10 → 20): CAGR 23.72 → 23.16 · MDD −31.9 → −28.5 · 얼서 7.6 → 5.5 · 12개월 롤링 초과 승률 72%% → 84%% · 최장 열위 14.8개월 → 5.8개월. ⚠ 30·52 판도 같이 돌려 보고했다(52 가 t 3.86 으로 가장 세다). 20 은 t 극대화가 아니라 낙폭·수익·꾸준함의 균형으로 고른 것이다. ⚠ 표본에 하락 국면이 2020·2022 둘뿐이다. 하방위험 프리미엄은 정의상 시장이 내릴 때 실현되므로 여기 성적은 검정 불능에 가깝다(x-maxlow 카드와 같은 사유).",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2010-01-29",
+    "end": "2026-08-11",
+    "n_days": 4158,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 23.64,
+     "b": 12.68,
+     "d": 10.96
+    },
+    {
+     "k": "변동성",
+     "s": 18.76,
+     "b": 17.22,
+     "d": 1.54
+    },
+    {
+     "k": "샤프",
+     "s": 1.152,
+     "b": 0.699,
+     "d": 0.453
+    },
+    {
+     "k": "최대낙폭",
+     "s": -28.52,
+     "b": -33.92,
+     "d": 5.4
+    }
+   ],
+   "excess_cagr": 10.96,
+   "d_sharpe": 0.453,
+   "t": 3.38,
+   "t_crit": 2.0,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 23.18,
+      "sharpe": 1.132,
+      "excess": 10.5,
+      "t": 3.25,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 22.73,
+      "sharpe": 1.112,
+      "excess": 10.05,
+      "t": 3.11,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 21.82,
+      "sharpe": 1.072,
+      "excess": 9.14,
+      "t": 2.85,
+      "main": false
+     }
+    ],
+    "drag": 0.91,
+    "traded": 7.44,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 3.74,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "공편왜도 최저 (가장 음의 꼬리 동조)",
+     "corr": 0.475,
+     "alpha": 7.34,
+     "t": 2.92,
+     "beta": 0.474
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 19.26,
+    "sharpe": 0.993,
+    "excess": 4.38,
+    "d_sharpe": 0.159,
+    "t": 1.44,
+    "t_net": 1.15,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "window": "2021-07~2026-08",
+    "start": "2021-07-30",
+    "n_days": 1263,
+    "pit": {
+     "cagr": 11.83,
+     "sharpe": 0.554,
+     "mdd": -21.5,
+     "bench_cagr": 9.72,
+     "excess": 2.11,
+     "t": 0.26,
+     "d_sharpe": 0.13,
+     "turnover": 4.41
+    },
+    "retro": {
+     "cagr": 17.92,
+     "sharpe": 0.873,
+     "mdd": -19.92,
+     "bench_cagr": 15.22,
+     "excess": 2.7,
+     "t": 0.34
+    },
+    "bias": {
+     "cagr": 6.09,
+     "excess": 0.59,
+     "sharpe": 0.319,
+     "bench_cagr": 5.5
+    },
+    "t_crit": 3.35,
+    "t_crit_lab": 3.45,
+    "holdings": [
+     "PANW",
+     "PLTR",
+     "STX",
+     "TMUS",
+     "TTWO",
+     "VEEV",
+     "VRSN",
+     "WDAY",
+     "WDC",
+     "XOM"
+    ]
+   },
+   "pool": {
+    "first": 412,
+    "last": 510,
+    "min": 409,
+    "med": 474,
+    "narrow": 0,
+    "n": 199,
+    "d0": "2010-01-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-08-11",
+    "n": 20,
+    "tickers": [
+     "DVN",
+     "ECHO",
+     "EXE",
+     "FANG",
+     "HPE",
+     "IBM",
+     "MPC",
+     "MSFT",
+     "MU",
+     "NFLX",
+     "NOW",
+     "OKE",
+     "ORCL",
+     "OXY",
+     "TMUS",
+     "VEEV",
+     "VRSK",
+     "VRSN",
+     "WDAY",
+     "XOM"
+    ],
+    "names": {
+     "DVN": "DEVON ENERGY CORP",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EXE": "EXPAND ENERGY CORP",
+     "FANG": "DIAMONDBACK ENERGY INC",
+     "HPE": "HEWLETT PACKARD ENTERPRISE",
+     "IBM": "INTL BUSINESS MACHINES CORP",
+     "MPC": "MARATHON PETROLEUM CORP",
+     "MSFT": "MICROSOFT CORP",
+     "MU": "MICRON TECHNOLOGY INC",
+     "NFLX": "NETFLIX INC",
+     "NOW": "SERVICENOW INC",
+     "OKE": "ONEOK INC",
+     "ORCL": "ORACLE CORP",
+     "OXY": "OCCIDENTAL PETROLEUM CORP",
+     "TMUS": "T-MOBILE US INC",
+     "VEEV": "Veeva Systems Inc A",
+     "VRSK": "VERISK ANALYTICS INC",
+     "VRSN": "VERISIGN INC",
+     "WDAY": "WORKDAY INC-CLASS A",
+     "XOM": "EXXON MOBIL CORP"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "마지막 월말 리밸런스에서 고른 20종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
+   },
+   "verdict": "통과 후보",
+   "refs": {
+    "papers": [
+     {
+      "a": "Ang·Chen·Xing",
+      "y": 2006,
+      "t": "Downside risk",
+      "j": "Review of Financial Studies 19"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
+   "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "x-debtiss",
    "name": "총부채 증가율 최저 10 (순부채발행 회피)",
    "family": "종목·타이밍",
@@ -16906,233 +17153,6 @@
     ],
     "no_paper": true,
     "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
-   "sid": "x-updown",
-   "name": "상하방 베타 비대칭 상위 10",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "최근 252거래일을 시장이 평균보다 내린 날과 오른 날로 갈라 각각 베타를 재고, 그 차이를 두 베타 크기의 합으로 나눈 값이 가장 큰 10종을 동일가중으로 산다. 월말 리밸런스.",
-   "why": "Ang·Chen·Xing(RFS 2006) 하방위험 프리미엄 — 시장이 내릴 때 더 크게 내리는 종목은 위험보상을 요구받는다. 원차분(β⁻ − β⁺) 대신 비율형을 쓴 이유는 규모 무관하게 만들기 위해서다(분모 0.2 미만은 제외 — 시장과 사실상 안 움직이는 종목에서 비율이 폭주한다). 원차분판·β 중립판은 등록하지 않았다. ⚠ 표본에 하락 국면이 2020·2022 둘뿐이다. 하방위험 프리미엄은 정의상 시장이 내릴 때 실현되므로, 여기 열위는 반증이 아니라 검정 불능에 가깝다(x-maxlow 카드와 같은 사유).",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2010-01-29",
-    "end": "2026-08-11",
-    "n_days": 4158,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 24.2,
-     "b": 12.68,
-     "d": 11.52
-    },
-    {
-     "k": "변동성",
-     "s": 20.23,
-     "b": 17.22,
-     "d": 3.01
-    },
-    {
-     "k": "샤프",
-     "s": 1.105,
-     "b": 0.699,
-     "d": 0.406
-    },
-    {
-     "k": "최대낙폭",
-     "s": -31.92,
-     "b": -33.92,
-     "d": 2.0
-    }
-   ],
-   "excess_cagr": 11.52,
-   "d_sharpe": 0.406,
-   "t": 2.86,
-   "t_crit": 2.0,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 23.68,
-      "sharpe": 1.083,
-      "excess": 11.0,
-      "t": 2.75,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 23.16,
-      "sharpe": 1.062,
-      "excess": 10.48,
-      "t": 2.63,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 22.12,
-      "sharpe": 1.02,
-      "excess": 9.44,
-      "t": 2.39,
-      "main": false
-     }
-    ],
-    "drag": 1.04,
-    "traded": 8.46,
-    "kill": false,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 4.25,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "시장 저상관 (베타의 상관 성분만)",
-     "corr": 0.412,
-     "alpha": 7.53,
-     "t": 2.28,
-     "beta": 0.393
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 19.26,
-    "sharpe": 0.993,
-    "excess": 4.94,
-    "d_sharpe": 0.112,
-    "t": 1.31,
-    "t_net": 1.06,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "window": "2021-07~2026-08",
-    "start": "2021-07-30",
-    "n_days": 1263,
-    "pit": {
-     "cagr": 11.83,
-     "sharpe": 0.554,
-     "mdd": -21.5,
-     "bench_cagr": 9.72,
-     "excess": 2.11,
-     "t": 0.26,
-     "d_sharpe": 0.13,
-     "turnover": 4.41
-    },
-    "retro": {
-     "cagr": 17.92,
-     "sharpe": 0.873,
-     "mdd": -19.92,
-     "bench_cagr": 15.22,
-     "excess": 2.7,
-     "t": 0.34
-    },
-    "bias": {
-     "cagr": 6.09,
-     "excess": 0.59,
-     "sharpe": 0.319,
-     "bench_cagr": 5.5
-    },
-    "t_crit": 3.35,
-    "t_crit_lab": 3.45,
-    "holdings": [
-     "PANW",
-     "PLTR",
-     "STX",
-     "TMUS",
-     "TTWO",
-     "VEEV",
-     "VRSN",
-     "WDAY",
-     "WDC",
-     "XOM"
-    ]
-   },
-   "pool": {
-    "first": 412,
-    "last": 510,
-    "min": 409,
-    "med": 474,
-    "narrow": 0,
-    "n": 199,
-    "d0": "2010-01-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-08-11",
-    "n": 10,
-    "tickers": [
-     "NOW",
-     "OKE",
-     "ORCL",
-     "OXY",
-     "TMUS",
-     "VEEV",
-     "VRSK",
-     "VRSN",
-     "WDAY",
-     "XOM"
-    ],
-    "names": {
-     "NOW": "SERVICENOW INC",
-     "OKE": "ONEOK INC",
-     "ORCL": "ORACLE CORP",
-     "OXY": "OCCIDENTAL PETROLEUM CORP",
-     "TMUS": "T-MOBILE US INC",
-     "VEEV": "Veeva Systems Inc A",
-     "VRSK": "VERISK ANALYTICS INC",
-     "VRSN": "VERISIGN INC",
-     "WDAY": "WORKDAY INC-CLASS A",
-     "XOM": "EXXON MOBIL CORP"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "마지막 월말 리밸런스에서 고른 10종목을 동일가중으로 보유 중이다. 다음 월말에 다시 뽑는다."
-   },
-   "verdict": "통과 후보",
-   "refs": {
-    "papers": [
-     {
-      "a": "Ang·Chen·Xing",
-      "y": 2006,
-      "t": "Downside risk",
-      "j": "Review of Financial Studies 19"
-     }
-    ],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "지수 편입 이력",
-      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": false,
-    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
