@@ -69,7 +69,22 @@ def main() -> int:
                                "yearly": b.get("yearly") or []}
             src["r-" + sid] = "archive_backtests.json"
 
+    # 🚨 지수(S&P 500·NASDAQ 100) 월별을 **한 벌만** 싣는다. 배포 원장 전략은 자기 레코드에
+    #   지수를 안 갖고 있어(대조군이 모전략·동일가중인 것도 있다) 같은 표를 못 그렸다 —
+    #   그래서 카드마다 구성이 달랐다. 여기서 공유 계열을 주면 두 렌더러가 같은 블록을 쓴다.
+    # ⚠ 새로 계산하지 않는다. 랩 백테스트가 이미 만든 monthly 의 i 칸을 그대로 옮긴다.
+    idx_m, best = {}, 0
+    for c in out.values():
+        m = c.get("monthly") or []
+        if len(m) > best and any(r.get("i") for r in m):
+            best = len(m)
+            idx_m = {}
+            for r in m:
+                for lab, v in (r.get("i") or {}).items():
+                    idx_m.setdefault(lab, {})[r["m"]] = v
+
     doc = {
+        "idx_monthly": idx_m,
         "note": "랩 전략 상세 차트(곡선·낙폭·연도별). 목록 페이로드와 분리해 전략을 처음 "
                 "눌렀을 때 한 번만 받는다. 수치는 각 백테스트가 전체 계열에서 계산한 것을 "
                 "그대로 옮긴 것이며 여기서 다시 계산하지 않는다.",

@@ -223,7 +223,11 @@ def _industry(stocks, dates, root):
     i_sh = None
     try:
         _st = json.load(io.open(os.path.join(root, "data", "style_trails.json"), encoding="utf-8"))
-        _d0 = _st.get("start") or ""
+        # 🚨 홈 샤프 열은 **5년 창**이다(2026-08-12 사용자 요청). start5 를 읽는다 —
+        #   여기만 1년(start)으로 두면 지수·스타일 줄은 5년, 섹터 줄만 1년이 되어
+        #   한 열에 두 창이 섞인다. 이 열의 존재 이유가 바로 그것을 막는 것이다.
+        #   ⚠ start5 가 없으면(옛 산출물) 1년으로 물러선다 — 그때는 열 전체가 1년이다.
+        _d0 = _st.get("start5") or _st.get("start") or ""
         _ks = [i for i, d in enumerate(dates) if d <= _d0]
         i_sh = _ks[-1] if _ks else None
     except Exception:

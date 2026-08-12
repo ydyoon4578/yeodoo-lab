@@ -2012,8 +2012,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 따로 그린다(코드는 공유하지 않는다). 랩 행 병기는 홈에만 있다 — 그쪽은 'ETF 수익률 원장'
   // 이라고 스스로 서문에 적어 둔 표라, 백테스트 행을 끼우면 표의 정체가 무너진다.
   var ST_SKIP={IWM:1, SPY:1};
+  // ⚠ 3년·5년 은 **누적**이다(연율 아니다) — 옆 칸들과 같은 뜻이어야 한 줄로 읽힌다.
   var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
-             ['12M','12개월'],['YTD','YTD']];
+             ['12M','1년'],['3Y','3년'],['5Y','5년'],['YTD','YTD']];
   // 수익률 한 칸의 색과 글자. 위 ETF 표(td)와 아래 구성종목 줄(span) **두 곳**이 쓴다 —
   // 규칙을 두 곳에 적으면 '-0.00' 을 막는 처리가 한쪽에만 남는 날이 온다.
   function stNum(v){
@@ -2109,7 +2110,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //     합성한다. 새 표를 하나 더 두면 IVE→spval→val 계보가 두 곳으로 갈라져 반드시 어긋난다.
   //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
   //     빈다(—). 나머지 다섯은 이름이 같다.
-  var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
+  var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년',
+             '3Y':'3년','5Y':'5년','YTD':'YTD'};
   function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
   // 홈 키(mom·spval·… / sc_*) → 그 줄의 기간별 수익률. 구성종목 줄이 쓴다.
   // ETF 티커를 거치지 않는다 — 아래 줄은 ETF 가 아니라 랩 규칙의 목록이라서다.
@@ -2120,17 +2122,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //                 build/style_top.py 의 fixed_trails 주석에 이유를 길게 적어 두었다).
   function trailsOf(k){
     var p=ST_PERF[k];
-    return (SLAB&&p&&SLAB[p]&&SLAB[p].trails)?{v:SLAB[p].trails}:null;
+    if(!(SLAB&&p&&SLAB[p]&&SLAB[p].trails))return null;
+    // 3년·5년은 1년 창 산출물에 있을 수 없어 **5년 창에서 따로** 나온다(trails5).
+    // 둘을 한 지도로 합쳐 준다 — 화면이 두 출처를 아는 순간 열이 갈린다.
+    var v={}, a=SLAB[p].trails, b=SLAB[p].trails5||{}, k2;
+    for(k2 in a)if(a.hasOwnProperty(k2))v[k2]=a[k2];
+    for(k2 in b)if(b.hasOwnProperty(k2))v[k2]=b[k2];
+    return {v:v};
   }
   // 샤프 — 지수 방법론 줄은 백테스트에서, ETF·지수 행은 같은 창으로 잰 값에서 온다
   // (build/style_top_pdf.py 가 둘 다 같은 start·end·metrics 로 만든다). 창이 하나라
   // 한 열에 나란히 놓고 비교해도 된다 — 이 표에서 그것이 되는 유일한 열이다.
+  // 홈 샤프 열은 **5년 창**이다(사용자 요청 2026-08-12). 없으면 1년으로 물러선다 —
+  // 자료가 얇은 스타일은 5년을 못 채우고, 그때 칸을 비우는 것보다 있는 것을 적는 편이 낫다.
   function sharpeOf(k){
     var p=ST_PERF[k], s=(SLAB&&p)?SLAB[p]:null;
-    return (s&&typeof s.sharpe==='number')?s.sharpe:null;
+    if(!s)return null;
+    if(typeof s.sharpe5==='number')return s.sharpe5;
+    return (typeof s.sharpe==='number')?s.sharpe:null;
   }
   function etfSharpe(t){
-    var m=SLAB&&SLAB._etf;
+    var m5=SLAB&&SLAB._etf5, m=SLAB&&SLAB._etf;
+    if(m5&&typeof m5[t]==='number')return m5[t];
     return (m&&typeof m[t]==='number')?m[t]:null;
   }
   // 지수 방법론 한 줄 — 이름(백테스트 링크) · 참조지수 · 기간별 수익률 7칸.
@@ -2276,7 +2289,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 샤프를 **구분 바로 옆**에 둔다 — 아래 묶음이 이 값으로 정렬되므로 정렬 기준이
     // 첫 숫자여야 표가 왜 그 순서인지 눈으로 읽힌다.
     var h='<thead><tr><th>구분</th><th class="shp" title="'+
-          esc('연율 샤프 — 같은 창(1년) · 같은 계산. ETF·지수 행과 지수 방법론 행을 '+
+          esc('연율 샤프 — 최근 5년 · 같은 창·같은 계산. ETF·지수 행과 지수 방법론 행을 '+
               '나란히 비교해도 되는 유일한 열이다')+'">샤프</th>'+
           '<th class="pxc" title="'+esc('그 줄이 ETF 인 행만 값이 있다 — 섹터·지수·스타일 ETF 의 최근 종가(배당조정). 산업그룹·랩 전략 행은 살 수 있는 한 종목이 아니라 비운다')+'">주가</th>'+
           ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
@@ -2339,12 +2352,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return (y==null?-Infinity:y)-(x==null?-Infinity:x);
     });
     if(keys.length){
-      var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'';
+      // 샤프·3년·5년 칸은 5년 창, 1일~1년 칸은 1년 창에서 나온다. 둘 다 적는다 —
+      // 한 줄만 적으면 옆 칸이 그 창에서 나온 것처럼 읽힌다.
+      var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'', d5=(SLAB&&SLAB._start5)||'';
       h+='<tr class="grp"><th colspan="'+ncol+'">지수 방법론 '+keys.length+'종 '+
          '<em>MSCI · S&amp;P · Nasdaq · Pacer 공개 산식을 이 유니버스에 적용 · '+
          '<b>수익률은 백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
-         '상위 10종목 동일가중 · <b>샤프순</b>(공통 창'+
-         (d0&&d?' '+esc(d0)+'~'+esc(d):'')+')'+
+         '상위 10종목 동일가중 · <b>샤프순</b>'+
+         (d5&&d?'(샤프·3년·5년 창 '+esc(d5)+'~'+esc(d)+')':'')+
+         (d0&&d?' · 1일~1년 칸은 '+esc(d0)+'~'+esc(d):'')+
          ' · 이름을 누르면 <a href="style.html">상세</a>, ▸ 를 누르면 구성종목</em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
@@ -2507,8 +2523,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var sj=a[0], tj=a[1];
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
       if(tj&&tj.styles){
-        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _pit:tj.pit||null,
-              _etf:tj.etf_sharpe||null};
+        SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _start5:tj.start5||'', _pit:tj.pit||null,
+              _etf:tj.etf_sharpe||null, _etf5:tj.etf_sharpe5||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
       // market_board 는 기간별 수익률 표의 지수 줄(SPY·QQQ·DIA·IWM)과 섹터 줄을 먹인다.

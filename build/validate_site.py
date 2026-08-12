@@ -2142,7 +2142,11 @@ try:
         errors.append("style_trails.json: styles 비어 있음 — build/style_top_pdf.py --json 실행 필요")
     # ① 구간 라벨
     for _s in _by.values():
-        _miss = [v for v in _tr_map.values() if v not in (_s.get("trails") or {})]
+        # 3년·5년은 1년 창 산출물에 있을 수 없어 **별 키(trails5)** 로 온다(2026-08-12).
+        # 두 지도를 합쳐서 본다 — 합치지 않으면 정상 배선을 '어긋났다'고 오진한다.
+        _tv = dict(_s.get("trails") or {})
+        _tv.update(_s.get("trails5") or {})
+        _miss = [v for v in _tr_map.values() if v not in _tv]
         if _miss:
             errors.append(f"style_trails: {_s['key']} 에 구간 {_miss} 없음 — index.html ST_TR 와 "
                           f"build/style_top_pdf.py TRAIL 이 어긋났다(그 칸이 조용히 빈다)")

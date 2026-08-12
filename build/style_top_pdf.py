@@ -99,6 +99,18 @@ LAG_DAYS = 45          # 분기 재무 공시 지연(10-Q 마감 40일 기준)
 # 수치를 쓰게 된다. 연간(a) 버킷을 탈 수 있는 경로(Panel.ttm12)는 전부 이 값을 쓴다.
 ANN_LAG_DAYS = 90
 WINDOW = 252           # 성과·차트 구간 — 최근 1년
+# 🚨 홈 「기간별 수익률」의 샤프만 **5년**으로 잰다(사용자 요청 2026-08-12).
+#   위 WINDOW 는 안 건드린다 — 그 값은 스타일 랩 본편(PDF·style.html·수익률 7칸)의 창이라
+#   같이 늘리면 화면 전체가 다른 것을 말하게 된다. 그래서 같은 코드를 창만 바꿔 한 번 더 돌린다.
+# ⚠ 한 열에 두 창이 섞이면 안 되므로 ETF 행과 지수 방법론 행을 **같은 5년 창**으로 함께 잰다.
+# ⚠ 1260(=5년)이 아니라 1290 이다. 창 시작을 **월말로 스냅**하므로 1260 을 그대로 두면
+#   실제 길이가 1245일로 줄어 5년 칸이 통째로 빈다(실측). 여유를 두고, 아래에서 정확히
+#   1260일(3년은 756일)을 뒤로 본다.
+WINDOW5 = 1290
+# 홈 표 ETF 행에 샤프를 적는 대상. 1년·5년 두 곳에서 같은 목록을 써야 한 열이 성립한다 —
+# 손으로 두 번 적으면 조용히 갈린다.
+ETF_SHARPE_TK = ("SPY", "QQQ", "DIA", "IWM", "MTUM", "QUAL", "IVE", "USMV", "RPG", "SPHB",
+                 "RSP", "SDY", "SIZE")
 MIN_NAMES = 100        # 후보가 이보다 적은 달은 그 규칙의 자료가 아직 얕은 것으로 본다
 SP_WP, MSCI_WP = 10.0, 2.5
 WIN = 3.0
@@ -443,6 +455,12 @@ def sc_grow(P, i):
         for b in (12, 8, 4):
             if len(rv) > b and len(shs) > b and shs[0] > 0 and shs[b] > 0 and rv[b] != 0:
                 a_, b_ = rv[0] / shs[0], rv[b] / shs[b]
+                # 🚨 밑이 음수면 분수 거듭제곱이 **복소수**가 되고 zs() 의 float() 에서 죽는다.
+                #   b_ 의 부호는 아래에서 abs 로 이미 다루는데 a_ 는 안 보고 있었다 —
+                #   1년 창에서는 안 걸리다가 5년 창을 돌리자 났다(2026-08-12 실측).
+                #   주당매출이 음수인 시점은 성장률이 정의되지 않는다 → 다음 b 로 넘긴다.
+                if a_ <= 0:
+                    continue
                 g = ((a_ / abs(b_)) ** (4.0 / b) - 1.0) if b_ > 0 else -(((a_ / abs(b_)) ** (4.0 / b)) - 1.0)
                 sps[t] = g
                 break
@@ -1834,13 +1852,51 @@ def dump_json(P, res, detail):
     #     S&P 500 으로 두면 이기고 **랩 동일가중 유니버스로 두면 대부분 진다**(vs_traded).
     #     즉 '동일가중이 시총가중을 이겼다'가 성적의 큰 부분인데, 그 잣대의 실제 상품
     #     수익률이 홈 표에 없었다. 읽는 사람이 그 차이를 눈으로 볼 수단이 없었다는 뜻이다.
-    for _tk in ("SPY", "QQQ", "DIA", "IWM", "MTUM", "QUAL", "IVE", "USMV", "RPG", "SPHB",
-                "RSP", "SDY", "SIZE"):
+    for _tk in ETF_SHARPE_TK:
         _nv = bench_nav(P, P._align(P.A, _tk), R0["start"], R0["end"])
         if _nv is None:
             continue
         _sh = metrics(_nv)["sharpe"]
         doc["etf_sharpe"][_tk] = None if _sh is None else round(_sh, 2)
+
+    # ── 5년 창 한 벌 더 ────────────────────────────────────────────────
+    # 홈 표의 샤프 열 전용이다. 같은 backtest·같은 metrics 를 창만 바꿔 다시 돌린다 —
+    # 여기서 따로 계산하면 ETF 행과 방법론 행이 다른 자로 재진다.
+    # ⚠ 5년을 못 채우는 스타일(자료가 얕은 것)은 None 으로 남는다. 화면은 '—' 로 찍는다.
+    global WINDOW
+    _oldw, WINDOW = WINDOW, WINDOW5
+    try:
+        _s5, _e5, _tr5, _R5 = {}, {}, {}, None
+        for _S in STYLES:
+            _r = backtest(P, _S[3])
+            if not _r:
+                continue
+            if _R5 is None:
+                _R5 = _r
+            _m = metrics(_r["nav"])["sharpe"]
+            _s5[_S[0]] = None if _m is None else round(_m, 2)
+            # 홈 표의 3년·5년 칸도 이 창에서 나온다. 1년 창 산출물에는 있을 수 없는 값이라
+            # 여기서만 만든다 — 없으면 그 두 칸이 방법론 줄에서만 통째로 빈다.
+            _nv, _t5 = _r["nav"], {}
+            for _lab, _n in (("3년", 756), ("5년", 1260)):
+                # trails() 와 같은 규약 — 창보다 긴 구간은 창 시작으로 자른다.
+                _t5[_lab] = (round((_nv[-1] / _nv[max(len(_nv) - 1 - _n, 0)] - 1) * 100, 2)
+                             if len(_nv) > 1 else None)
+            _tr5[_S[0]] = _t5
+        if _R5 is not None:
+            for _tk in ETF_SHARPE_TK:
+                _nv = bench_nav(P, P._align(P.A, _tk), _R5["start"], _R5["end"])
+                if _nv is None:
+                    continue
+                _sh = metrics(_nv)["sharpe"]
+                _e5[_tk] = None if _sh is None else round(_sh, 2)
+            doc["start5"] = P.dates[_R5["start"]]
+        doc["style_sharpe5"], doc["etf_sharpe5"] = _s5, _e5
+        doc["style_trails5"] = _tr5
+        print("  5년 샤프 — 스타일 %d종 · ETF %d종 (창 %s~%s)"
+              % (len(_s5), len(_e5), doc.get("start5") or "—", doc["as_of"]))
+    finally:
+        WINDOW = _oldw
     for S in detail:
         key, label, ref, _fn, mlab, mfmt, desc = S
         R = res[key]
@@ -1889,12 +1945,19 @@ def dump_trails(doc):
     """
     # 샤프를 함께 싣는다 — 홈이 이 값으로 지수 방법론 줄을 **정렬**하고 열에 적는다
     # (사용자 요청 2026-08-02). 창은 styles·etf_sharpe 가 전부 같다(start ~ as_of).
+    _s5 = doc.get("style_sharpe5") or {}
     slim = {
         "as_of": doc["as_of"], "start": doc["start"],
+        # 홈 샤프 열은 5년 창이다(위 WINDOW5). 1년 값도 같이 실어 둔다 — 두 창을 나란히
+        # 볼 일이 생겼을 때 다시 굽지 않아도 되고, 5년이 없는 스타일의 물러섬이기도 하다.
+        "start5": doc.get("start5"),
         "styles": [{"key": s["key"], "label": s["label"], "trails": s["trails"],
-                    "sharpe": (s.get("metrics") or {}).get("sharpe")}
+                    "sharpe": (s.get("metrics") or {}).get("sharpe"),
+                    "sharpe5": _s5.get(s["key"]),
+                    "trails5": (doc.get("style_trails5") or {}).get(s["key"])}
                    for s in doc["styles"]],
         "etf_sharpe": doc.get("etf_sharpe") or {},
+        "etf_sharpe5": doc.get("etf_sharpe5") or {},
     }
     # 유니버스 편향 실측치 몇 개를 여기 태워 보낸다 — 홈이 style_pit.json(5KB)을 따로 받지
     # 않게. 홈 각주가 이 값으로 문장을 만든다. 없으면 홈은 수치 없이 정성 문구만 낸다.
