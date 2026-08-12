@@ -1506,7 +1506,15 @@ try:
 
     # ③ 모든 배포 HTML은 자기가 어느 슬롯인지 밝혀야 한다(현재위치 강조의 유일한 입력).
     # 홈은 도구가 아니라 도구들의 관문이라 슬롯 목록에 없다 — 유효한 data-tool로 인정한다
-    _known = {t["file"].split("#")[0] for t in _tools} | {"index.html"}
+    # 🚨 2026-08-12 — **메뉴에서 뺐지만 남아 있는 페이지**도 유효한 슬롯으로 인정한다.
+    #   nav_items.json 의 retired[].was_file 이 그 목록이다(BK/kb.html 이 첫 사례).
+    #   전에는 이 검사가 '메뉴에 없으면 고아'로 봤는데, 이 저장소의 규약은
+    #   "칸은 지우되 사유는 지우지 않는다" 라 **뺀 페이지가 사유와 함께 남는 것이 정상**이다.
+    #   그 사유가 retired 에 적혀 있으면 통과시키고, 안 적혀 있으면 그대로 막는다 —
+    #   즉 '조용히 사라진 슬롯'과 '기록하고 뺀 슬롯'을 가른다.
+    _retired_files = {(r.get("was_file") or "").split("#")[0]
+                      for r in (_ni.get("retired") or [])} - {""}
+    _known = ({t["file"].split("#")[0] for t in _tools} | {"index.html"}) | _retired_files
     for _fn in sorted(f for f in os.listdir(ROOT)
                       if f.endswith(".html") and f not in REDIRECTS):
         _s = rd(_fn)

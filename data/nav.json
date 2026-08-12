@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "9f004c35fa214a4e",
+ "generated_from": "5acbb4b27dacd154",
  "categories": [
   {
    "name": "시장",
@@ -242,21 +242,10 @@
    "short": "원장",
    "tools": [
     {
-     "name": "데이터 출처·기준일",
-     "file": "sources.html",
-     "status": "existing",
-     "desc": "기준일이 왜 하나가 아닌지 — as-of 정본 · 별도 열람 잠금",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "M",
-     "locked": true,
-     "live": true
-    },
-    {
      "name": "등급·판정 규약",
      "file": "method.html",
      "status": "existing",
-     "desc": "A~F 등급은 섹터 백분위 서술이지 예측이 아니다",
+     "desc": "A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다",
      "verdict": "na",
      "src": "none",
      "effort": "M",
@@ -266,20 +255,20 @@
      "name": "갱신 기록",
      "file": "updates.html",
      "status": "existing",
-     "desc": "언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에",
+     "desc": "자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나",
      "verdict": "na",
      "src": "agg",
      "effort": "S",
      "live": true
     },
     {
-     "name": "BK",
-     "file": "kb.html",
+     "name": "데이터 출처·기준일",
+     "file": "sources.html",
      "status": "existing",
-     "desc": "별도 열람 잠금",
+     "desc": "축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금",
      "verdict": "na",
-     "src": "none",
-     "effort": "S",
+     "src": "raw",
+     "effort": "M",
      "locked": true,
      "live": true
     }
@@ -399,6 +388,16 @@
    "retired_on": "2026-08-12",
    "why": "쓰이지 않았다. 본문에서 이 두 페이지를 가리키는 링크가 사이트 전체에 0개였고 — 들어오는 경로가 공통 내비 탭 하나뿐이었다 — 유지 비용만 남았다(HTML 221KB · facts.json 의 index_fcf 를 매주 계산해 이 페이지 하나에만 실었다).",
    "principle": "적정주가를 한 숫자로 주지 않는 것이 이 랩의 방침이라, 세 화면 다 '미검증' 배지를 단 계산기였다. 검정을 통과한 판정이 아니라 도구였고 아무도 안 썼다면 지우는 것이 맞다. 🚨 다만 다시 만들 때 같은 함정을 밟지 않도록 실측을 남긴다 — 지수 단위 FCF 를 SEC frames 로 직접 합치면 영업현금흐름 488사 대 설비투자 329사로 집합이 어긋나 FCF 가 +80% 부풀려진다. 두 다리가 모두 잡힌 427사(시총 87%)만 써야 성립한다."
+  },
+  {
+   "name": "BK",
+   "cat": "랩 원장",
+   "was_file": "kb.html",
+   "arch": null,
+   "desc": "메뉴에서 뺐다 — 페이지는 그대로 있다",
+   "retired_on": "2026-08-12",
+   "why": "사용자 요청으로 원장 목록에서 뺐다. 페이지(kb.html)와 잠금은 그대로이고 지운 것은 메뉴 칸과 홈 푸터 링크다 — 이제 직접 URL 로만 들어간다.",
+   "principle": "⚠ 이 칸은 '무료 자료로 못 만든다'가 아니라 '메뉴에 안 내보낸다'다. 다른 은퇴 항목과 성격이 다르므로 그렇게 적어 둔다. 되살리려면 build/nav_items.json 의 ledger 에 다시 넣고 sync_nav 를 돌리면 된다."
   }
  ]
 }

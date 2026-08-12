@@ -47,6 +47,15 @@ def main() -> int:
         for r in (d.get(key) or []):
             c = r.get("chart")
             if c:
+                # ⚠ 월별의 지수 칸은 **화면이 쓰는 둘만** 남긴다. 원본(tech_strategies.json)은
+                #   셋을 다 들고 있고 여기서 값을 고치지도 않는다 — 브라우저가 받는 묶음에서
+                #   안 그리는 계열을 빼는 것뿐이다(월별을 넣자 2.0 → 3.0MB 가 됐다).
+                m = c.get("monthly")
+                if m:
+                    keep = ("S&P 500", "NASDAQ 100")
+                    c = dict(c, monthly=[
+                        (dict(row, i={k: v for k, v in row["i"].items() if k in keep})
+                         if row.get("i") else row) for row in m])
                 out[pre + r["sid"]] = c
                 src[pre + r["sid"]] = fn
 
