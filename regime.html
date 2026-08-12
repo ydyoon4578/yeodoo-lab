@@ -138,13 +138,30 @@
 
   /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
   .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
-  /* 스타일 ETF × 국면 격자. 값과 표본(n)을 한 칸에 같이 찍는다 — n 없이 색만 보면
-     사건 한 번짜리 칸이 진하게 칠해져 제일 눈에 띈다. */
-  .sgrid td.sgc{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
-  .sgrid td.sgc small{display:inline-block;margin-left:5px;font-weight:400;opacity:.6;font-size:10px}
-  .sgrid td.sgc.thin{opacity:.5}
-  .sgrid td.sgc.na{color:var(--muted);font-weight:400;text-align:center}
-  .sgrid tbody th small{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:400}
+  /* 스타일 ETF × 국면 — 국면마다 한 판, 판 안에서 성적순 발산 막대.
+     🚨 여섯 판이 **같은 자**를 쓴다(가장 긴 막대가 전체 최대). 판마다 최대로 늘리면
+        ±0.2%p 국면이 ±3.7%p 국면과 똑같이 꽉 찬 막대가 된다 — 여기서 가장 하기 쉬운 거짓말이다.
+     ⚠ 값 옆 n 을 늘 같이 찍고 n<10 은 흐리게. 색만 보면 사건 한 번짜리가 제일 눈에 띈다. */
+  .sbwrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:10px}
+  @media(max-width:1000px){.sbwrap{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:640px){.sbwrap{grid-template-columns:1fr}}
+  .sbpanel{border:1px solid var(--line);border-radius:3px;background:var(--panel);padding:9px 11px 10px}
+  .sbh{font-weight:700;font-size:12.5px;color:var(--ink);margin-bottom:7px;
+       display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+       border-bottom:1px solid var(--line-soft);padding-bottom:5px}
+  .sbh span{font-family:var(--mono);font-size:10.5px;font-weight:400;color:var(--muted)}
+  .sbrow{display:grid;grid-template-columns:74px 1fr 62px;gap:6px;align-items:center;padding:1.5px 0}
+  .sbrow.thin{opacity:.45}
+  .sbn{font-size:10.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 가운데 0 선. 막대는 그 선에서 좌우로 자란다. */
+  .sbt{position:relative;height:9px;background:linear-gradient(var(--line-soft),var(--line-soft))
+       no-repeat center/1px 100%}
+  .sbt i{position:absolute;top:0;height:9px;border-radius:1px}
+  .sbt i.p{background:var(--good)} .sbt i.m{background:var(--hot)}
+  .sbv{font-family:var(--mono);font-size:10.5px;font-weight:700;text-align:right;
+       font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sbv.p{color:var(--good)} .sbv.m{color:var(--hot)}
+  .sbv small{margin-left:4px;font-weight:400;opacity:.55;font-size:9.5px;color:var(--muted)}
   .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
   .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
   footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
@@ -1391,54 +1408,55 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function styleGrid(cy){
     var st=cy&&cy.styles, PH=(cy&&cy.phases)||[];
     if(!st||!st.price)return '';
-    var rows=st.price, meta=st.price_meta||{}, etf=meta.etf||{};
-    // 국면 순서는 곡선과 같게(phases 순서). 값이 하나도 없는 국면은 열을 안 만든다.
+    var rows=st.price, meta=st.price_meta||{};
+    // 국면 순서는 곡선과 같게(phases 순서). 값이 하나도 없는 국면은 판을 안 만든다.
     var ks=PH.map(function(p){return p.k;}).filter(function(k){return (rows[k]||[]).length;});
-    // 스타일 순서는 **고정**한다. 국면마다 정렬을 바꾸면 가로로 눈이 못 따라간다.
-    var order=[], seen={};
-    ks.forEach(function(k){(rows[k]||[]).forEach(function(r){
-      if(!seen[r.t]){seen[r.t]=1;order.push({t:r.t,ko:r.ko});}});});
-    var koOf={}; PH.forEach(function(p){koOf[p.k]=p.ko;});
+    var koOf={}, moOf={};
+    PH.forEach(function(p){koOf[p.k]=p.ko; moOf[p.k]=p.months;});
+    // 🚨 자를 **여섯 판이 공유한다.** 판마다 최대값으로 늘리면 ±0.2%p 짜리 국면이
+    //   ±3.7%p 짜리 국면과 똑같이 꽉 찬 막대로 보인다 — 그게 이 표에서 가장 하기 쉬운 거짓말이다.
     var vmax=0;
     ks.forEach(function(k){(rows[k]||[]).forEach(function(r){
       if(Math.abs(r.v)>vmax)vmax=Math.abs(r.v);});});
     if(!(vmax>0))vmax=1;
-    var cell=function(k,t){
-      var r=(rows[k]||[]).filter(function(x){return x.t===t;})[0];
-      if(!r)return '<td class="sgc na" title="표본이 '+esc(String(meta.min_n||3))+
-                   '개월 미만이라 재지 않았습니다">·</td>';
-      // ⚠ 이 페이지에는 --up/--dn 이 없다. 여기서 쓰는 색(--good/--hot)을 그대로 쓴다.
-      var a=Math.min(1,Math.abs(r.v)/vmax), col=r.v>0?'var(--good)':'var(--hot)';
-      // n 이 10 미만이면 흐리게 — 그 칸은 사건 한두 번이 만든 값이다.
-      var thin=r.n<10;
-      return '<td class="sgc'+(thin?' thin':'')+'" title="'+
-        esc(koOf[k]+' · '+r.ko+' '+(r.v>0?'+':'')+r.v+'%p · '+r.n+'개월'+
-            (thin?' ⚠ 표본이 얇습니다':'')+' · 상장 '+((etf[t]||{}).start||'?'))+'"'+
-        ' style="background:color-mix(in srgb,'+col+' '+Math.round(a*55)+'%,transparent)">'+
-        (r.v>0?'+':'')+r.v.toFixed(2)+'<small>'+r.n+'</small></td>';
-    };
+    // 국면별 개월 수는 phases 가 들고 있는 '최근 창' 기준이라 칸의 n 과 다르다.
+    //   판 머리에는 **그 판에서 실제로 쓴 개월 수의 폭**을 적는다(자료에서 뽑는다).
+    function panel(k){
+      var rs=(rows[k]||[]).slice().sort(function(a,b){return b.v-a.v;});
+      var ns=rs.map(function(r){return r.n;});
+      var nlo=Math.min.apply(null,ns), nhi=Math.max.apply(null,ns);
+      var bars=rs.map(function(r){
+        var w=Math.abs(r.v)/vmax*50, thin=r.n<10;   // 50 = 반쪽 폭(%)
+        var pos=r.v>0;
+        return '<div class="sbrow'+(thin?' thin':'')+'" title="'+
+          esc(koOf[k]+' · '+r.ko+' '+(r.v>0?'+':'')+r.v+'%p · '+r.n+'개월'+
+              (thin?' ⚠ 표본이 얇습니다':''))+'">'+
+          '<span class="sbn">'+esc(r.ko)+'</span>'+
+          '<span class="sbt"><i class="'+(pos?'p':'m')+'" style="'+
+            (pos?'left:50%;':'right:50%;')+'width:'+w.toFixed(2)+'%"></i></span>'+
+          '<span class="sbv '+(pos?'p':'m')+'">'+(pos?'+':'')+r.v.toFixed(2)+
+            '<small>'+r.n+'</small></span></div>';
+      }).join('');
+      return '<div class="sbpanel"><div class="sbh">'+esc(koOf[k]||k)+
+        '<span>'+(nlo===nhi?nlo+'개월':nlo+'~'+nhi+'개월')+'</span></div>'+bars+'</div>';
+    }
     return '<h3 class="lbl" style="margin-top:26px">스타일 ETF 는 국면마다 갈리나</h3>'+
-      '<div class="tblwrap"><table class="cmptbl sgrid"><thead><tr><th scope="col">스타일</th>'+
-      ks.map(function(k){return '<th scope="col">'+esc(koOf[k]||k)+'</th>';}).join('')+
-      '</tr></thead><tbody>'+
-      order.map(function(o){
-        return '<tr><th scope="row">'+esc(o.ko)+'<small>'+esc(o.t)+'</small></th>'+
-               ks.map(function(k){return cell(k,o.t);}).join('')+'</tr>';
-      }).join('')+'</tbody></table></div>'+
-      '<div class="cycb">'+esc(st.price_basis||'')+
-      ' · 작은 숫자는 그 칸을 만든 <b>개월 수</b>다. 10개월 미만은 흐리게 칠했다.<br>'+
+      '<div class="sbwrap">'+ks.map(panel).join('')+'</div>'+
+      '<div class="cycb">막대는 '+esc(st.price_basis||'')+
+      ' — 오른쪽이 SPY 를 이긴 것이다. <b>여섯 판이 같은 자를 쓴다</b>(최대 '+
+      vmax.toFixed(2)+'%p 가 막대 끝). 값 옆 작은 숫자는 그 막대를 만든 <b>개월 수</b>이고, '+
+      '10개월 미만은 흐리게 그렸다.<br>'+
       '⚠ '+esc(meta.note||'')+'<br>'+
-      // 🚨 '가장 큰 칸' 을 손으로 적지 않는다 — ETF 를 더하면 조용히 틀린 값이 남는다.
-      //   (실제로 10 → 17종으로 늘릴 때 아래 문장이 거짓이 될 뻔했다.)
-      '🚨 <b>칸 값이 대부분 ±1%p 안이다.</b> 스타일 ETF 는 국면으로 잘 안 갈린다는 뜻이고, '+
+      // 🚨 '가장 큰 막대' 를 손으로 적지 않는다 — ETF 를 더하면 조용히 틀린 값이 남는다.
+      '🚨 <b>막대가 대부분 ±1%p 안이다.</b> 스타일 ETF 는 국면으로 잘 안 갈린다는 뜻이고, '+
       (function(){
         var b=null;
         ks.forEach(function(k){(rows[k]||[]).forEach(function(r){
           if(!b||Math.abs(r.v)>Math.abs(b.v))b={k:k,v:r.v,n:r.n,ko:r.ko};});});
-        return b?('가장 큰 칸('+esc(b.ko)+' '+esc(koOf[b.k]||b.k)+' '+(b.v>0?'+':'')+b.v+'%p)도 '+
+        return b?('가장 긴 막대('+esc(b.ko)+' '+esc(koOf[b.k]||b.k)+' '+(b.v>0?'+':'')+b.v+'%p)도 '+
                   b.n+'개월뿐이다. '):'';
       })()+
-      '이 랩은 이 7국면이 다음 달을 못 가른다는 것을 이미 검정했다 — 이 표는 서술이지 예측이 아니다.</div>';
+      '이 랩은 이 7국면이 다음 달을 못 가른다는 것을 이미 검정했다 — 이 그림은 서술이지 예측이 아니다.</div>';
   }
 
   function renderAxes(d){
