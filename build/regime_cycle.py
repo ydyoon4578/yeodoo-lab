@@ -337,7 +337,16 @@ def sector_by_price(reg_json, root):
 STYLES_ETF = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("USMV", "저변동"),
               ("VLUE", "가치"), ("SIZE", "중소형"), ("IVE", "가치(S&P)"),
               ("RPG", "성장"), ("SPHB", "고베타"), ("SDY", "배당성장"),
-              ("RSP", "동일가중")]
+              ("RSP", "동일가중"),
+              # 2026-08-13 보강 7종. 축이 새로 생기거나 짝이 채워지는 것만 골랐다 —
+              # 같은 축을 다른 운용사 판으로 하나 더 넣으면 줄만 늘고 축은 안 는다.
+              ("SPMO", "모멘텀(S&P)"),      # MTUM 과 산식이 다르다(6개월 축 유무)
+              ("IVW", "성장(S&P)"),         # IVE(가치 S&P)의 짝 — 계보를 맞춘다
+              ("RPV", "순수가치"),           # RPG(순수성장)의 짝
+              ("SPLV", "저변동(S&P)"),      # USMV(MSCI 최소분산)와 산식이 다르다
+              ("SCHD", "고배당+질"),         # SDY 는 '배당을 늘려 온 회사' 라 축이 다르다
+              ("VYM", "고배당"),             # SCHD 와 달리 질 필터가 없다
+              ("PKW", "자사주매입")]
 STYLE_BENCH = "SPY"
 STYLE_MIN_N = 3
 
@@ -391,10 +400,17 @@ def style_by_price(reg_json, root):
         out.sort(key=lambda x: -x["v"])
         if out:
             rows[k] = out
+    # 🚨 주의 문구를 **자료에서 만든다.** 손으로 적으면 ETF 를 더할 때마다 조용히 거짓이
+    #   된다(실제로 10 → 17종으로 늘리며 그 문장이 틀렸다). 상장일로 갈라 그때그때 센다.
+    early = sorted(t for t, m in meta.items() if m["start"] <= "2008-12")
+    late = sorted(((m["start"], t) for t, m in meta.items() if m["start"] > "2008-12"))
+    note = ("상장일이 제각각이라 국면마다 표본이 갈린다 — 2009 침체까지 겪은 것은 "
+            "%s %d종뿐이고, 나머지 %d종은 그 뒤에 상장해 침체 표본이 2020 코로나 넉 달뿐이다"
+            "(%s). 칸마다 n 을 같이 싣는 이유다."
+            % ("·".join(early), len(early), len(late),
+               " · ".join("%s %s" % (t, st[:7]) for st, t in late)))
     return rows, {"bench": "같은 달 %s" % STYLE_BENCH, "min_n": STYLE_MIN_N, "etf": meta,
-                  "note": "상장일이 제각각이라 국면마다 표본이 갈린다 — 2009 침체를 겪은 것은 "
-                          "IVE·RPG·SDY·RSP 뿐이고 나머지는 2011~2013 상장이라 침체 표본이 "
-                          "2020 코로나 넉 달뿐이다. 칸마다 n 을 같이 싣는 이유다."}
+                  "early": early, "late": [t for _st, t in late], "note": note}
 
 
 def sector_by_earnings(reg_json, root):

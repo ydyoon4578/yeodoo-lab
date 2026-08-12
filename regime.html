@@ -1428,8 +1428,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="cycb">'+esc(st.price_basis||'')+
       ' · 작은 숫자는 그 칸을 만든 <b>개월 수</b>다. 10개월 미만은 흐리게 칠했다.<br>'+
       '⚠ '+esc(meta.note||'')+'<br>'+
+      // 🚨 '가장 큰 칸' 을 손으로 적지 않는다 — ETF 를 더하면 조용히 틀린 값이 남는다.
+      //   (실제로 10 → 17종으로 늘릴 때 아래 문장이 거짓이 될 뻔했다.)
       '🚨 <b>칸 값이 대부분 ±1%p 안이다.</b> 스타일 ETF 는 국면으로 잘 안 갈린다는 뜻이고, '+
-      '가장 큰 칸(고베타 연착륙 +3.72%p)도 9개월 · 사실상 2020-07~2021-03 한 번이다. '+
+      (function(){
+        var b=null;
+        ks.forEach(function(k){(rows[k]||[]).forEach(function(r){
+          if(!b||Math.abs(r.v)>Math.abs(b.v))b={k:k,v:r.v,n:r.n,ko:r.ko};});});
+        return b?('가장 큰 칸('+esc(b.ko)+' '+esc(koOf[b.k]||b.k)+' '+(b.v>0?'+':'')+b.v+'%p)도 '+
+                  b.n+'개월뿐이다. '):'';
+      })()+
       '이 랩은 이 7국면이 다음 달을 못 가른다는 것을 이미 검정했다 — 이 표는 서술이지 예측이 아니다.</div>';
   }
 
