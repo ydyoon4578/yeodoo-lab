@@ -24,7 +24,7 @@ except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 #   위험 축(risk_bootstrap·BOOT_*)도 여기서 가져온다 — 처음엔 이 파일에 있었는데
 #   ml_backtest 가 못 써서 ML 여섯 줄이 통째로 '판정 불가'였다. 지표는 한 곳에만 둔다.
-from tech_backtest import (ann_stats, tstat, maxdd, curve_pack,  # noqa: E402
+from tech_backtest import (ann_stats, tstat, maxdd, curve_pack, load_index_tr,  # noqa: E402
                            risk_bootstrap, BOOT_N, BOOT_BLOCK)
 import tech_backtest as TB          # noqa: E402  증분 알파 계산기를 다시 구현하지 않는다
 
@@ -402,7 +402,11 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     #   작은 수익 차이가 샤프 몇 단위로 증폭된다(실측: MNA vs SHY에서 Δ샤프 +1.67).
     #   그 경우 Δ샤프를 판정에 쓰지 않고 t만 본다. 화면에도 그 사실을 표시한다.
     unstable = (mb.get("vol") or 0) < 2.0
-    chart = curve_pack(dd, nav, bnav)
+    # 🚨 지수 곡선(S&P 500·NASDAQ 100)을 같이 싣는다. 종목 랩 97종은 전부 싣고 있었는데
+    #   자산 랩 61종은 이 인자를 안 넘겨서 **한 종도 못 싣고 있었다** — 자료가 없어서가
+    #   아니라 배선이 없어서였다(카드의 지수 표에는 같은 지수 수치가 이미 나오고 있었다).
+    #   ⚠ 가격지수(PR)라 배당이 빠져 연 ~2%p 지수가 불리하다. 화면 각주가 그 사실을 적는다.
+    chart = curve_pack(dd, nav, bnav, idx_rets=load_index_tr(dd))
     return {"name": label, "rule": rule, "why": why, "note": note, "chart": chart,
             "start": DTS[start], "end": DTS[-1], "n_days": n - start,
             "metrics": ms, "bench": mb, "bench_label": bench_label, "bench_tickers": bench_tickers,
@@ -792,7 +796,7 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
-                "chart": curve_pack(dd, nav, bn),
+                "chart": curve_pack(dd, nav, bn, idx_rets=load_index_tr(dd)),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("SPY(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
@@ -910,7 +914,7 @@ def build():
         ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 보유 (QQQ 종가→시가)",
-                "chart": curve_pack(dd, nav, bn),
+                "chart": curve_pack(dd, nav, bn, idx_rets=load_index_tr(dd)),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("QQQ(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
@@ -1483,7 +1487,8 @@ def build():
         step = max(1, len(nav) // 220)
         we_, wr_ = wfn(len(months) - 1, months, rs)
         return {"name": name, "rule": rule, "why": why, "note": note,
-                "chart": curve_pack(months, nav, bn),
+                # 이쪽 격자는 월말("YYYY-MM")이다 — load_index_tr 가 그 형식을 알아본다.
+                "chart": curve_pack(months, nav, bn, idx_rets=load_index_tr(months)),
                 "holdings": {"kind": "sleeve", "as_of": months[-1],
                              "weights": [("EPS 리비전 드리프트", round(we_ * 100, 1)),
                                          ("크로스에셋 리스크패리티", round(wr_ * 100, 1))],
