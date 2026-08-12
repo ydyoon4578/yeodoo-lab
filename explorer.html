@@ -1979,6 +1979,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   구성이 다르다). 배포 원장 레코드는 이미 월별(dates='YYYY-MM')이라 다시 재지
       //   않고 그대로 옮기고, 지수 두 계열만 공유 계열(idx_monthly)에서 붙인다.
       (function(){
+        // 공유 지수 계열은 strategy_charts.json 에 있다 — 아직 안 왔으면 받아 오고 다시 그린다
+        // (랩 카드가 곡선을 받는 것과 같은 지연 로드 규약).
+        if(LABC_IDX==null){
+          labCharts(function(){ if(d&&D[state.sel]===d)drawDetail(d); });
+          return '';
+        }
         var C=btMonthly(bt); if(!C)return '';
         var _d={_bl:bt.bench_label||''};
         var modes=[['r','이 전략']];
@@ -2082,6 +2088,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     return null;
   }
+  // 배포 원장 레코드(월별 nav) → 랩 카드와 같은 monthly 모양.
+  // ⚠ 지수 두 계열은 그 레코드에 없다(대조군이 모전략·동일가중인 것도 있다) —
+  //   strategy_charts.json 의 공유 계열에서 **달 키로** 붙인다. 겹치지 않는 달은 비운다.
+  function btMonthly(bt){
+    var d=bt&&bt.dates, a=bt&&bt.nav, b=bt&&bt.bench;
+    if(!d||!a||d.length<8||a.length!==d.length)return null;
+    if(!/^\d{4}-\d{2}$/.test(String(d[0])))return null;      // 월별 격자가 아니면 안 만든다
+    var IM=(LABC_IDX||{}), out=[], i;
+    for(i=1;i<d.length;i++){
+      var row={m:d[i],
+        r:(a[i-1]?round2((a[i]/a[i-1]-1)*100):null),
+        b:((b&&b[i-1])?round2((b[i]/b[i-1]-1)*100):null)};
+      var iv={};
+      [SPXL,NDXL].forEach(function(lab){
+        var v=IM[lab]&&IM[lab][d[i]];
+        if(typeof v==='number')iv[lab]=v;
+      });
+      if(SPXL in iv||NDXL in iv)row.i=iv;
+      out.push(row);
+    }
+    return out.length>=8?{monthly:out}:null;
+  }
+  function round2(v){return Math.round(v*100)/100;}
   function mSeries(C,key,d){
     // key: r=전략 · b=판정 기준 · S&P 500 · NASDAQ 100 · dS/dN=전략−지수
     return (C.monthly||[]).map(function(m){
@@ -2128,9 +2157,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ⚠ 자르는 잣대를 전략이 아니라 **지수**로 둔다. 전략 자신의 낙폭으로 자르면 그 전략이
   //   가장 잘 버틴 창만 골라 놓고 "위기에 강하다"를 증명하는 순환이 된다.
   function episodes(C){
-    var M=C.monthly||[]; if(M.length<12)return [];
-    var lab=SPXL, base=[], i;
-    for(i=0;i<M.length;i++){ if(!M[i].i||M[i].i[lab]==null)return []; }
+    var M0=C.monthly||[], lab=SPXL, base=[], i;
+    // ⚠ 지수가 없는 앞부분은 잘라 낸다(배포 원장 전략은 1999년까지 올라가는데 공유 지수
+    //   계열은 2010-01 부터다). 통째로 포기하면 그 카드만 이 표가 없어진다 — 카드마다
+    //   구성이 달라지는 바로 그 문제다.
+    var M=[];
+    for(i=0;i<M0.length;i++){
+      if(M0[i].i&&M0[i].i[lab]!=null)M.push(M0[i]);
+      else if(M.length)break;                 // 중간에 끊기면 거기서 멈춘다(구멍을 잇지 않는다)
+    }
+    if(M.length<12)return [];
     var lv=100; base.push({m:M[0].m,v:lv});
     for(i=0;i<M.length;i++){ lv*=(1+M[i].i[lab]/100); base.push({m:M[i].m,v:lv}); }
     var out=[], pk=0, i0=0;
@@ -2183,13 +2219,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       cols.map(function(c){return '<th>'+esc(c[1])+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
-  var LABC=null, LABC_ST=0;      // 0=안 받음 1=받는 중 2=받음 3=실패
+  var LABC=null, LABC_IDX=null, LABC_ST=0;      // 0=안 받음 1=받는 중 2=받음 3=실패
   function labCharts(cb){
     if(LABC_ST===2||LABC_ST===3)return cb&&cb();
     if(LABC_ST===1)return;
     LABC_ST=1;
     fetch('data/strategy_charts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-      .then(function(j){LABC=(j&&j.charts)||{};LABC_ST=2;cb&&cb();})
+      .then(function(j){LABC=(j&&j.charts)||{};LABC_IDX=(j&&j.idx_monthly)||{};LABC_ST=2;cb&&cb();})
       ['catch'](function(){LABC_ST=3;cb&&cb();});
   }
 
