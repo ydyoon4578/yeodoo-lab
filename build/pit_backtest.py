@@ -45,6 +45,10 @@ HLCACHE = os.path.join(DATA, "_pit_hl_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 REUSE = os.path.join(DATA, "pit_reuse.json")         # 티커가 다른 법인에 넘어갔는지(SEC 대조)
 OUT = os.path.join(DATA, "pit_strategies.json")
+# CIK 승계로 가격을 해석한 티커(load_prices 가 채운다) — dump_universe 가 명단에 표시한다.
+# 전역으로 두는 이유는 하나뿐이다: 산출물 두 개가 **같은 사실**을 말해야 하는데 함수 인자를
+# 늘리면 이 파일을 사본으로 돌리는 감사 하네스들이 조용히 깨진다.
+CIK_SPLICE_MAP = {}
 
 START = "2021-07-01"
 # 🚨 이 날짜는 **자료의 한계가 아니라 자료의 품질**로 정했다(2026-08-11, 사용자 결정).
@@ -290,7 +294,120 @@ def cutoff_month(t, MEMBER_SPAN, reassigned):
     return hi if t in reassigned else _next_month(hi)
 
 
-def load_prices(need, MEMBER_SPAN):
+def cik_aliases(missing, have, px=None, MEMBER_SPAN=None, tried=None):
+    """결손 티커 → **같은 CIK** 의 다른 티커(가격이 있는 것). 개명만 잇고 인수는 안 잇는다.
+
+    🚨 왜 있는가. 종전에는 가격을 못 받은 티커를 전부 "인수·상폐로 보인다"고 단정했다
+      (fetch_cache 의 마지막 줄 · 전형적인 fail-open 이다). 그런데 그중 상당수는 **개명**이고,
+      승계 티커에 그 회사의 이력이 통째로 남아 있다 — yfinance 는 심볼이 바뀌면 새 심볼
+      아래로 과거를 그대로 준다. 랩은 승계 티커를 한 번도 시도한 적이 없었다.
+      자료는 이미 저장소에 있었다: data/index_history.json 의 cik(티커→CIK)와 cik_hist
+      (CIK→티커목록). 수집해 두고 **가격 해석에는 안 쓰고** 있었을 뿐이다.
+
+    🚨 CIK 가 다르면 절대 잇지 않는다. 다른 CIK = 인수다(실측: DRE 0000783280 ≠ PLD
+      0001045609 · INFO 0001598014 ≠ SPGI 0000064040 · WRK 0001732845 ≠ SW 0002005951).
+      피인수 주주는 프리미엄을 받고 나갔고, 인수기업 가격을 피인수 이력에 얹으면 없는 가격을
+      지어내는 것이다. CIK 로 잇기 때문에 티커 재사용(FB → ProShares ETF)도 자동으로 막힌다 —
+      재사용은 CIK 가 다르다.
+
+    ⚠ 세 갈래를 막는다.
+      · cik_conflicts 에 실린 CIK — 그 파일 스스로 파싱 사고라 적어 두고 '조인에 쓰지 말 것'
+        이라 한 묶음이다(JCI/TYC · CB/ACE · BKNG/PCLN …).
+      · **복수 클래스** — 같은 CIK 라도 같은 달에 함께 멤버인 짝(GOOGL/GOOG, FOX/FOXA)은
+        서로 다른 증권이다. 한쪽 가격을 다른 쪽에 얹는 것은 개명이 아니라 날조다. 판정은
+        refresh_index_history.py 와 같은 기준(같은 달 공존 여부)으로 하고, 공존 판정은
+        창이 아니라 **파일 전체 월**로 본다(넓게 볼수록 안전한 쪽이다).
+      · CIK 이 둘 이상으로 갈리는 티커(VIAC 은 0000813828 과 0001339947 에 함께 나온다) —
+        어느 법인인지 이 자료로 못 정한다. 안 잇는다.
+
+    ⚠ cik_hist 만 보면 안 된다. 그 지도는 '이번 파싱에서 이름을 관측한 CIK' 만 담아서
+      구멍이 있다(실측: cik_hist['0000849399'] = [GEN, SYMC] 인데 NLOK 이 빠져 있다.
+      NLOK 은 cik 지도에는 0000849399 로 제대로 있다). 두 지도를 **합쳐서** 뒤집는다 —
+      한쪽만 봤다면 NLOK·PEAK 2종 48멤버-월을 그냥 놓쳤다.
+
+    ⚠ tried = '가격을 실제로 시도해 본 티커' 집합. 없으면 사유 문장이 '형제에도 가격이 없다'로
+      뭉개지는데, 그것은 이 함수가 없애려는 단정("못 받음 = 없음")의 축소판이다. 실측으로
+      걸렸다: 캐시가 비어 있는 상태에서 LB 의 사유가 '형제 BBWI 에도 가격이 없다' 였는데
+      BBWI 는 그냥 **아직 안 받은** 것이었고, 캐시를 채우자 LB→BBWI 로 정상 승계됐다.
+
+    돌려주는 것: (alias {결손티커: 승계티커}, rows [승계 근거], skip {결손티커: 사유}).
+    """
+    tried = set(tried or ()) | set(have)
+    p = os.path.join(DATA, "index_history.json")
+    if not os.path.exists(p):
+        return {}, [], {}
+    ih = json.load(io.open(p, encoding="utf-8"))
+    conf = {str(x.get("cik")) for x in (ih.get("cik_conflicts") or [])}
+    ck = {t: str(c).zfill(10) for t, c in (ih.get("cik") or {}).items() if c}
+    hist = {str(c).zfill(10): list(ts) for c, ts in (ih.get("cik_hist") or {}).items()}
+    inv, of = {}, {}                       # CIK → 티커집합 · 티커 → CIK집합
+    for t, c in ck.items():
+        inv.setdefault(c, set()).add(t); of.setdefault(t, set()).add(c)
+    for c, ts in hist.items():
+        for t in ts:
+            inv.setdefault(c, set()).add(t); of.setdefault(t, set()).add(c)
+    where = {}                             # 티커 → 등장한 달 집합(복수 클래스 판정용)
+    for mk, rec in (ih.get("months") or {}).items():
+        for t in (rec.get("spx") or []) + (rec.get("ndx") or []):
+            where.setdefault(t, set()).add(mk)
+
+    alias, rows, skip = {}, [], {}
+    for t in sorted(missing):
+        cs = {c for c in of.get(t, set()) if c not in conf}
+        if not cs:
+            skip[t] = "CIK 없음(NDX 표에는 CIK 컬럼이 없다) 또는 cik_conflicts"
+            continue
+        if len(cs) > 1:
+            skip[t] = "CIK 이 %d개로 갈린다(%s) — 어느 법인인지 못 정한다" % (len(cs), ",".join(sorted(cs)))
+            continue
+        c = cs.pop()
+        sib = [a for a in sorted(inv.get(c, set())) if a != t]
+        cand = [a for a in sib if a in have and not (where.get(t, set()) & where.get(a, set()))]
+        if not cand:
+            co = [a for a in sib if a in have]
+            if co:
+                skip[t] = "같은 CIK 형제가 같은 달에 공존한다(복수 클래스) — %s" % ",".join(co)
+            elif not sib:
+                skip[t] = "같은 CIK 에 다른 티커가 없다(형제 없음)"
+            else:
+                # 🚨 '시도했지만 못 받음' 과 '아직 안 받음' 을 가른다. 뭉치면 고칠 수 있는 것이
+                #   고칠 수 없는 것처럼 보인다 — 이 파일이 방금 없앤 단정과 같은 모양이다.
+                _t1 = [a for a in sib if a in tried]
+                _t0 = [a for a in sib if a not in tried]
+                skip[t] = ("같은 CIK 형제에도 가격이 없다 — 시도했지만 못 받음 %s · "
+                           "**아직 안 받음** %s(받아 오면 이어질 수 있다)"
+                           % (",".join(_t1) or "없음", ",".join(_t0) or "없음"))
+            continue
+        # 후보가 둘 이상이면 **멤버 기간을 실제로 덮는 쪽**을 고른다(개명 사슬 SYMC→NLOK→GEN).
+        lo, hi = (MEMBER_SPAN or {}).get(t, (None, None))
+        def _cov(a):
+            if not px or a not in px or not lo:
+                return 0
+            return sum(1 for d in px[a] if lo <= d[:7] <= hi)
+
+        def _covm(a):
+            """멤버 기간 중 **월** 몇 개를 덮나. 거래일 수로만 보면 1일짜리도 승계로 통과한다."""
+            if not px or a not in px or not lo:
+                return 0
+            return len({d[:7] for d in px[a] if lo <= d[:7] <= hi})
+        a = sorted(cand, key=lambda x: (-_cov(x), x))[0]
+        # 창 안 멤버 기간의 월 수(근사: first~last 연속 월). 부분 승계를 드러내는 분모다.
+        _sm = 0
+        if lo:
+            _y0, _m0 = int(lo[:4]), int(lo[5:7])
+            _y1, _m1 = int(hi[:4]), int(hi[5:7])
+            _sm = (_y1 - _y0) * 12 + (_m1 - _m0) + 1
+        alias[t] = a
+        rows.append({"t": t, "via": a, "cik": c, "first": lo, "last": hi,
+                     "n_days_in_span": _cov(a),
+                     # ⚠ 문턱이 n_days_in_span>0 하나뿐이면 계열이 멤버 기간의 앞 10%만 덮어도
+                     #   같은 문구로 통과한다. 덮은 월 비율을 함께 싣고 부르는 쪽이 경고한다.
+                     "months_in_span": _covm(a), "span_months": _sm,
+                     "span_ratio": round(_covm(a) / _sm, 4) if _sm else 0.0})
+    return alias, rows, skip
+
+
+def load_prices(need, MEMBER_SPAN, MEM=None):
     """티커→{날짜:종가}. 오늘의 유니버스는 랩 파일, 편출 종목은 캐시에서."""
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     pdates = st["pxd_dates"]
@@ -332,6 +449,60 @@ def load_prices(need, MEMBER_SPAN):
             if not ser:
                 continue
         px[t] = ser
+    n_cache = len(px) - n_lab
+
+    # ── CIK 승계로 결손 메우기 ─────────────────────────────────────────
+    # 🚨 여기까지 와도 가격이 없는 멤버가 남는다. 종전에는 그것을 전부 '인수·상폐'로 두고
+    #   끝냈는데, 그 안에 **개명**이 섞여 있다(BK→BNY 58개월 · MMC→MRSH 54개월 …).
+    #   개명은 같은 법인이라 승계 티커에 그 회사의 이력이 통째로 있다 — 잇는 것이 맞다.
+    #   인수는 CIK 가 달라 아래 함수가 애초에 후보로 삼지 않는다(자세한 것은 그 주석).
+    _mmc = {}                                   # 티커 → 창 안 멤버-월 수(결손 크기를 가중해서 센다)
+    for _ym, _lst in (MEM or {}).items():
+        for _t in _lst:
+            _mmc[_t] = _mmc.get(_t, 0) + 1
+    alias, arows, askip = cik_aliases(sorted(need - set(px)), set(px), px, MEMBER_SPAN,
+                                      tried=set(cache) | set(px) | set(bad_reuse))
+    spliced, thin = [], []
+    for r in arows:
+        t, a = r["t"], r["via"]
+        # 🚨 승계 티커 자신이 **재배정 티커**면 잇지 않는다. 오늘 그 심볼을 가진 주체가 다른
+        #   법인이라는 뜻이고, 그 계열을 얹는 것은 개명 승계가 아니라 남의 가격이다. 지금
+        #   창에서는 0건이지만 검사가 아예 없었다 — 없는 관문은 아무 신호도 내지 않는다.
+        if a in reassigned:
+            askip[t] = "승계 후보 %s 가 SEC 대조에서 재배정 티커다 — 오늘 그 심볼은 다른 법인이다" % a
+            continue
+        if not r["n_days_in_span"]:
+            # 승계 티커 계열이 그 티커의 멤버 기간을 안 덮으면 이을 것이 없다. 조용히 넘기지
+            # 않고 사유로 남긴다 — '이었는데 아무것도 안 채워졌다' 를 화면이 구별할 수 있어야 한다.
+            askip[t] = "승계 후보 %s 의 계열이 멤버 기간(%s~%s)을 안 덮는다" % (a, r["first"], r["last"])
+            continue
+        # ⚠ 여기서는 재배정 절단을 적용하지 않는다. 재배정 판정(pit_reuse.json)은 '그 티커가
+        #   오늘 남의 것' 이라는 뜻인데, 우리가 쓰는 계열은 **승계 법인의 다른 티커**라 그
+        #   오염 경로가 아니다. 그래서 다른 편출 종목과 같이 월말 리밸런스분 +1개월을 준다
+        #   (이 창에서는 LB→BBWI 1건이 해당한다).
+        cm = cutoff_month(t, MEMBER_SPAN, set())
+        ser = {d: v for d, v in px[a].items() if not cm or d[:7] <= cm}
+        if not ser:
+            askip[t] = "승계 후보 %s 를 마지막 멤버월(%s)에서 자르니 남는 구간이 없다" % (a, cm)
+            continue
+        px[t] = ser
+        r["n_member_months"] = _mmc.get(t, 0)
+        # 부분 승계 — 계열이 멤버 기간을 다 안 덮으면 '이었다' 로 뭉뚱그리지 않는다.
+        if (r.get("span_ratio") or 0) < 0.9:
+            thin.append(r)
+        spliced.append(r)
+    CIK_SPLICE_MAP.update({r["t"]: r["via"] for r in spliced})
+    if thin:
+        print("  ⚠ 부분 승계 %d종(계열이 멤버 기간의 90%% 미만을 덮는다): %s"
+              % (len(thin), ", ".join("%s→%s(%.0f%%)" % (r["t"], r["via"], 100 * r["span_ratio"])
+                                      for r in thin)))
+    if spliced:
+        print("  🔗 CIK 승계로 이은 결손 %d종 · %d멤버-월: %s"
+              % (len(spliced), sum(r.get("n_member_months", 0) for r in spliced),
+                 ", ".join("%s→%s" % (r["t"], r["via"]) for r in spliced)))
+    if askip:
+        print("  · 승계로 못 메운 결손 %d종(사유별 내역은 pit_strategies.json coverage.splice)"
+              % len(askip))
     if bad_reuse:
         print("  ⚠ 티커 재사용 의심 %d종 제외(계열 기간이 멤버 기간과 안 겹침): %s"
               % (len(bad_reuse), ", ".join(sorted(bad_reuse))))
@@ -341,13 +512,29 @@ def load_prices(need, MEMBER_SPAN):
               "재배정 확인 %d종: %s"
               % (len(cut), sum(c[1] for c in cut), len(_re),
                  ", ".join("%s→%s" % (c[0], c[2]) for c in sorted(_re)) or "없음"))
-    print("  가격 %d종 (랩 %d + 편출캐시 %d)" % (len(px), n_lab, len(px) - n_lab))
+    print("  가격 %d종 (랩 %d + 편출캐시 %d + CIK승계 %d)"
+          % (len(px), n_lab, n_cache, len(spliced)))
     return px, {"n_cut": len(cut), "n_reassigned": sum(1 for c in cut if c[3]),
                 "reassigned": sorted(c[0] for c in cut if c[3]),
-                "n_dropped": len(bad_reuse), "dropped": sorted(bad_reuse)}
+                "n_dropped": len(bad_reuse), "dropped": sorted(bad_reuse),
+                # 🚨 이은 구간은 반드시 **명시**한다. 조용히 좋아지면 다음 감사가 이 수치를
+                #   원자료로 오인한다 — 여기 실린 종목의 가격은 그 티커의 계열이 아니라
+                #   같은 CIK 의 승계 티커에서 온 것이다.
+                "cik_splice": {
+                    "n": len(spliced),
+                    "n_member_months": sum(r.get("n_member_months", 0) for r in spliced),
+                    "map": {r["t"]: r["via"] for r in spliced},
+                    "rows": spliced,
+                    "n_partial": len(thin),
+                    "partial": {r["t"]: r["span_ratio"] for r in thin},
+                    "n_unresolved": len(askip), "unresolved": askip,
+                    "note": ("같은 CIK(=같은 법인)의 다른 티커로 결손 가격을 해석한 것. 개명만 "
+                             "잇고 인수는 안 잇는다 — CIK 가 다르면 후보로 삼지 않는다. "
+                             "복수 클래스(같은 달 공존)와 cik_conflicts 도 제외한다."),
+                }}
 
 
-def load_hilo(need, dates, MEMBER_SPAN=None, which=0):
+def load_hilo(need, dates, MEMBER_SPAN=None, which=0, alias=None):
     """티커 → 고가(which=0) 또는 저가(which=1) 배열(dates 와 같은 길이).
 
     🚨 2026-08-11 — 종전 이름은 load_highs 였고 고가만 냈다. 저가를 안 내니
@@ -400,6 +587,13 @@ def load_hilo(need, dates, MEMBER_SPAN=None, which=0):
                 if j is not None and isinstance(v, list) and len(v) > which:
                     arr[j] = v[which]
             hi[t] = arr
+    # CIK 승계 — 종가와 **같은 지도**로 고저가도 잇는다. 한쪽만 이으면 같은 종목이 규칙마다
+    # 다른 이력을 갖게 되고, 그 어긋남은 예외를 안 내고 지나간다(이 파일이 세 번 겪은 유형이다).
+    for t, a in (alias or {}).items():
+        if t in hi or a not in hi:
+            continue
+        cm = cutoff_month(t, MEMBER_SPAN or {}, set())
+        hi[t] = [v if (not cm or dates[j][:7] <= cm) else None for j, v in enumerate(hi[a])]
     return hi, n_lab, len(hi) - n_lab
 
 
@@ -427,6 +621,11 @@ def dump_universe(mem, span, px_map):
                  "불가하므로 제외했다. first/last 는 멤버였던 월이고 티커 재사용 판정에 쓴다."),
         "start": START, "n_today": len(today), "n_union": len(union), "n_gone": len(gone),
         "tickers": {t: {"first": span[t][0], "last": span[t][1]} for t in gone},
+        # ⚠ CIK 승계로 가격을 얻은 티커도 여기 들어온다(그래서 명단이 72 → 87종으로 늘었다).
+        #   러너(build/pit_facts.py)는 index_history 의 '당시 CIK' 를 우선 조회하므로 구 티커라도
+        #   같은 법인의 재무를 받는다 — 오염이 아니다. 다만 **왜 늘었는지**가 파일에 남아야
+        #   다음 사람이 명단 증가를 데이터 사고로 오인하지 않는다.
+        "cik_spliced": {t: a for t, a in sorted((CIK_SPLICE_MAP or {}).items()) if t in set(gone)},
     }
     p = os.path.join(DATA, "pit_universe.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
@@ -445,7 +644,8 @@ def main():
         for t in lst:
             a, b = span.get(t, (ym, ym))
             span[t] = (min(a, ym), max(b, ym))
-    px_map, reuse_rep = load_prices(need, span)
+    px_map, reuse_rep = load_prices(need, span, mem)
+    ALIAS = (reuse_rep.get("cik_splice") or {}).get("map") or {}
     dump_universe(mem, span, px_map)
     if "--universe-only" in sys.argv:
         return 0
@@ -474,6 +674,15 @@ def main():
     # 펀더멘털 규칙을 PIT 로 잴 수 있다. 없으면 그 규칙들은 후보가 생존자로만 좁혀진다.
     _FXP = os.path.join(DATA, "fx_pit")
     _fu = TB.load_fund(extra_dirs=[_FXP] if os.path.isdir(_FXP) else [])
+    # CIK 승계는 **같은 법인**이므로 재무·주식수도 같은 지도로 잇는다. 가격만 이으면 그 종목은
+    # 가격 규칙에서만 후보가 되고 펀더멘털 규칙에서는 여전히 생존자 쪽으로 좁혀진다 —
+    # 반쪽만 이으면 두 규칙군이 서로 다른 유니버스를 보게 된다.
+    _fu_spl = 0
+    for _t, _a in ALIAS.items():
+        if _t not in _fu and _fu.get(_a):
+            _fu[_t] = _fu[_a]; _fu_spl += 1
+    if _fu_spl:
+        print("  🔗 재무도 CIK 승계로 %d종 연결(같은 법인)" % _fu_spl)
     for t in tickers:
         a = (_fu.get(t) or {}).get("sh")
         if a:
@@ -550,7 +759,22 @@ def main():
             if t not in _meta and sg:
                 _meta[t] = {"sector": sg}
                 _nsec2 += 1
-    print("  섹터 %d종 (랩 %d + 편출 %d)" % (len(_meta), len(_meta) - _nsec2, _nsec2))
+    # 🚨 CIK 승계분의 섹터도 **같은 지도로** 잇는다. 가격과 재무만 잇고 섹터를 안 이으면
+    #   ① 섹터로 묶는 규칙(x-indmom·x-valcomp-sn)에서 승계 종목이 통째로 빠지고
+    #   ② 금융업 제외 규칙(x-fscore·x-gpa·x-ocfp·x-aci)의 `sector == 'Financials'` 가
+    #      빈 메타에서 False 라 **은행·보험이 후보로 들어온다**(BK·MMC·RE 실측).
+    #   이 파일이 재무 승계 주석에 적어 둔 '반쪽만 이으면 규칙군마다 다른 유니버스를 본다'가
+    #   섹터에서 그대로 재발했던 자리다. 적대감사가 잡았다(2026-08-12).
+    _nsec3 = 0
+    for _t, _a in ALIAS.items():
+        if _t not in _meta and _meta.get(_a):
+            _meta[_t] = dict(_meta[_a]); _nsec3 += 1
+    _amiss = sorted(t for t in ALIAS if not (_meta.get(t) or {}).get("sector"))
+    print("  섹터 %d종 (랩 %d + 편출 %d + CIK승계 %d)"
+          % (len(_meta), len(_meta) - _nsec2 - _nsec3, _nsec2, _nsec3))
+    if _amiss:
+        print("  ⚠ 승계했는데 섹터가 없는 %d종: %s (섹터 규칙에서 빠지고 금융 제외가 안 걸린다)"
+              % (len(_amiss), ", ".join(_amiss)))
     X = {"FACP": TB.load_factor_proxies(dates), "FU": _fu, "R": R, "dates": dates,
          "hid": {}, "lod": {}, "ixr": ixr, "ixvol": ixvol, "me": me,
          "me_list": sorted(me), "meta": _meta, "px": px, "vlm": vlm,
@@ -565,11 +789,35 @@ def main():
     # 온다. 🚨 종전에는 조건이 `x-52wh 가 제외 목록에 없으면` 이었다. HL 캐시가 있어도
     #   x-52wh 하나의 사정으로 저가·고가 전체가 안 실릴 수 있는 배선이었고, 그 탓에 고저가를
     #   쓰는 다른 규칙은 아예 후보에 오르지도 못했다. 파일이 있으면 싣는다 — 쓰는 쪽이 정한다.
+    # 🚨 이 분기는 **침묵하면 안 된다**(적대감사 2026-08-12). 파일이 없으면 hid/lod 가 빈 채로
+    #   진행하고, 고저가를 쓰는 규칙 4종(x-lshock·x-ongapd·x-hlspread·x-clv)이 5년 내내 한 주도
+    #   보유하지 않은 채 'CAGR 0.00 · 초과 −9.71 · t −1.44' 라는 **측정값으로** 산출물에 실렸다
+    #   (실측: 배포본은 같은 4종이 5.86·4.56·4.85·10.72 다). 커버리지는 종가 채널만 보므로
+    #   ok=true 였다 — 조용한 실패의 교과서다. 이제 사유를 남기고 커버리지를 내린다.
+    # 🚨 채널이 없을 때 **조용히 값이 바뀌는** 규칙도 있다. x-52wh 는 무보유가 되지 않고
+    #   고가 대신 종가 최대로 채점돼 정의가 바뀐 채 계속 돈다(실측 CAGR 9.11 → 8.01, 경고 0줄).
+    #   무보유 관문으로는 절대 못 잡는 유형이라 이름으로 뺀다.
+    #   ⚠ 이 목록은 손으로 유지한다 — 고저가를 쓰는 규칙을 새로 만들면 여기에 적을 것.
+    HL_SIDS = ("x-52wh", "x-lshock", "x-ongapd", "x-hlspread", "x-clv")
+    _hl_warn = None
     if os.path.exists(HLCACHE):
-        X["hid"], _nl, _nx = load_hilo(set(px), dates, span, 0)
-        X["lod"], _nl2, _nx2 = load_hilo(set(px), dates, span, 1)
+        X["hid"], _nl, _nx = load_hilo(set(px), dates, span, 0, ALIAS)
+        X["lod"], _nl2, _nx2 = load_hilo(set(px), dates, span, 1, ALIAS)
         print("  고가 %d종 (랩 %d + 편출캐시 %d) · 저가 %d종 (랩 %d + 편출캐시 %d)"
               % (len(X["hid"]), _nl, _nx, len(X["lod"]), _nl2, _nx2))
+        if not X["hid"] or not X["lod"]:
+            _hl_warn = "고저가 채널이 비어 있다(%s 는 있는데 실린 종목이 0종)" % HLCACHE
+    else:
+        _hl_warn = ("고저가 채널 부재 — %s 가 없다. 고저가를 쓰는 규칙은 전 구간 무보유가 되고, "
+                    "그것은 '측정값 0' 이 아니라 **안 돈 것**이다(`--fetch-cache` 로 받을 것)"
+                    % HLCACHE)
+        print("  🚨 " + _hl_warn)
+    if _hl_warn:
+        for _s in HL_SIDS:
+            EXCLUDED_SIDS.setdefault(
+                _s, "고저가 채널 부재 — 이 규칙은 고가·저가로 채점한다. 없이 돌리면 무보유가 "
+                    "되거나(x-lshock 계열) 종가 최대로 대체돼 정의가 조용히 바뀐다(x-52wh 실측 "
+                    "9.11 → 8.01). 수치를 내지 않는다: `--fetch-cache` 로 %s 를 받을 것." % HLCACHE)
 
     # 편출 종목의 재무 커버리지 — 펀더멘털 규칙의 PIT 가 얼마나 성립하는지의 눈금.
     # 낮으면 그 규칙은 '후보가 생존자로 좁혀진' 쪽이므로 숫자와 함께 적어 둔다.
@@ -595,6 +843,69 @@ def main():
             cov.append(len(m & set(tickers)) / len(m))
     cov_min, cov_med = (min(cov), sorted(cov)[len(cov) // 2]) if cov else (0, 0)
     print("  멤버 대비 가격 보유율: 최저 %.1f%% · 중앙 %.1f%%" % (100 * cov_min, 100 * cov_med))
+
+    # 🚨 결손을 **멤버-월로 가중해서** 센다. 종수로만 세면 1개월짜리와 61개월짜리가 같은
+    #   무게가 된다 — 실측으로 결손 60종 중 상위 10종이 결손의 3분의 1을 차지했다.
+    #   그리고 '어떻게 채워졌나'를 세 갈래로 나눈다. 못 받은 것을 한 덩어리로 두고
+    #   "인수·상폐로 보인다"고 단정하던 것이 이 파일의 fail-open 이었다.
+    _wym = sorted(ym for ym in mem if ym >= dates[i0][:7])
+    mm_tot = mm_direct = mm_spl = 0
+    mm_gap = {}
+    for ym in _wym:
+        for t in mem[ym]:
+            mm_tot += 1
+            if t in ALIAS:
+                mm_spl += 1
+            elif t in px:
+                mm_direct += 1
+            else:
+                mm_gap[t] = mm_gap.get(t, 0) + 1
+    mm_miss = sum(mm_gap.values())
+    COV_MIN_REQ = 0.90        # 사전등록 문턱과 같은 값 — 여기서 흔들지 않는다
+    print("  멤버-월 커버리지 %.2f%% (총 %d · 직접 %d · CIK승계 %d · 결손 %d / %d종)"
+          % (100 * (mm_tot - mm_miss) / max(1, mm_tot), mm_tot, mm_direct, mm_spl,
+             mm_miss, len(mm_gap)))
+    # 수집기 진단(build/pit_backtest.py --fetch-cache 가 남긴다) — 없으면 없다고 적는다.
+    _frp = os.path.join(DATA, "pit_fetch_report.json")
+    _fetch_rep = None
+    if os.path.exists(_frp):
+        try:
+            _fr = json.load(io.open(_frp, encoding="utf-8"))
+            _fetch_rep = {"as_of": _fr.get("as_of"), "n_want": _fr.get("n_want"),
+                          "n_cached": _fr.get("n_cached"),
+                          "batch_fail": (_fr.get("batch_fail") or {}).get("n"),
+                          "missing": (_fr.get("missing") or {}).get("n"),
+                          "short_threshold": (_fr.get("short_threshold") or {}).get("n"),
+                          "zero_rows": len(_fr.get("zero_rows") or []),
+                          "no_column": len(_fr.get("no_column") or [])}
+        except Exception as _e:
+            _fetch_rep = {"error": str(_e)[:80]}
+
+    _cov_warn = []
+    if _fetch_rep and _fetch_rep.get("batch_fail"):
+        # 요청이 죽은 배치가 있었다면 결손 통계는 아직 확정이 아니다 — 조용히 넘기지 않는다.
+        _cov_warn.append("마지막 수집에서 요청이 죽은 배치 %d종 — 결손 통계가 확정이 아니다"
+                         % _fetch_rep["batch_fail"])
+    if cov_min < COV_MIN_REQ:
+        _cov_warn.append("월별 보유율 최저 %.1f%% < %.0f%%" % (100 * cov_min, 100 * COV_MIN_REQ))
+    if mm_tot and (mm_tot - mm_miss) / mm_tot < COV_MIN_REQ:
+        _cov_warn.append("멤버-월 커버리지 %.1f%% < %.0f%%"
+                         % (100 * (mm_tot - mm_miss) / mm_tot, 100 * COV_MIN_REQ))
+    # 커버리지는 종가 채널 밖으로도 나가야 한다 — 채널이 하나 통째로 비면 그 규칙들은
+    # '나쁜 성과' 가 아니라 **안 돈 것**이고, 그 사실이 여기 안 실리면 아무 데도 안 남는다.
+    if _hl_warn:
+        _cov_warn.append(_hl_warn)
+    if (reuse_rep.get("cik_splice") or {}).get("n_partial"):
+        _cov_warn.append("부분 승계 %d종(계열이 멤버 기간의 90%% 미만을 덮는다)"
+                         % reuse_rep["cik_splice"]["n_partial"])
+    if _cov_warn:
+        # 죽이지는 않는다 — 커버리지가 낮아도 '얼마나 낮은지'를 실은 표는 쓸모가 있다.
+        # 대신 조용히 통과시키지 않는다. 로그와 limits 맨 앞에 같은 문장을 박는다.
+        print("\n" + "🚨" * 12)
+        print("🚨 커버리지 문턱 미달 — %s" % " · ".join(_cov_warn))
+        print("🚨 이 표의 후보는 그만큼 '오늘까지 살아남은 종목' 쪽으로 좁혀져 있다. "
+              "`--fetch-cache` 로 편출 가격을 더 받고 다시 돌릴 것.")
+        print("🚨" * 12 + "\n")
 
     # 창 첫달의 **채점 가능성** — 보유율(그날 가격이 있나)과 다른 것이다. 12개월 룩백을
     # 요구하는 규칙이 이 달에 몇 종을 실제로 채점할 수 있나. 캐시가 창 시작에 잘려 있으면
@@ -707,6 +1018,7 @@ def main():
     #   딕셔너리인데 아무 코드도 안 봐서, 목록에 도로 넣어도 막는 것이 없었다.
     _PRICE_SET = set(PRICE_SIDS)
     _retired = []
+    _nohold = {}                 # sid → 사유. 전 구간 무보유는 '측정값' 이 아니다.
     for sid in [s for s in PRICE_SIDS + FUND_SIDS if s not in EXCLUDED_SIDS]:
         S = BY.get(sid)
         if not S:
@@ -717,6 +1029,19 @@ def main():
             continue
         _p = run(S, members_at, ixr, ixvol)          # PIT
         _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
+        # 🚨 **전 구간 무보유를 결과로 내보내지 않는다**(적대감사 2026-08-12). 한 주도 안 들면
+        #   first=None → k=0 → 수익률이 전부 0 이 되고, 그것이 'CAGR 0.00 · 초과 −9.71 · t −1.44'
+        #   라는 측정값으로 t_max·편향 중앙값·판정 표에 섞여 들어간다. 실제로 고저가 캐시가 없는
+        #   실행에서 4종이 그 상태로 실렸다(배포본에서는 같은 규칙이 CAGR 5~11%다).
+        #   '안 돈 것' 은 EXCLUDED_SIDS 와 같은 취급으로, **사유와 함께** 뺀다.
+        if _p["first"] is None or _b["first"] is None:
+            _leg = "PIT" if _p["first"] is None else "소급"
+            _nohold[sid] = ("%s 레그가 전 구간 무보유 — 입력 채널이 비었거나 후보가 커버리지 "
+                            "게이트(%d종)를 한 번도 못 넘겼다. 성과가 나쁜 것이 아니라 **안 돈 것**이라 "
+                            "수치를 싣지 않는다.%s"
+                            % (_leg, TB.XSEC_MIN_POOL, (" " + _hl_warn) if _hl_warn else ""))
+            print("  %-24s ⚠ 전 구간 무보유 — 수치 없이 뺀다(%s)" % (S["name"][:24], _leg))
+            continue
         # 두 레그를 **늦은 쪽** 보유시작에 함께 맞춘다. 각자 맞추면 창이 갈려 편향에 구간 차이가
         # 섞인다(x-season 은 두 레그가 같지만 커버리지 게이트 탓에 갈릴 수 있다).
         _k = max(max(0, (_p["first"] or (i0 + 1)) - 1 - i0),
@@ -756,6 +1081,15 @@ def main():
                  P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
                  B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
 
+    if _nohold:
+        # 무보유로 빠진 것은 커버리지 결함이다 — ok 를 내리고 로그에 크게 남긴다.
+        _cov_warn.append("전 구간 무보유로 뺀 규칙 %d종(%s) — 입력 채널 부재"
+                         % (len(_nohold), ", ".join(sorted(_nohold))))
+        print("\n" + "🚨" * 12)
+        print("🚨 전 구간 무보유 %d종을 표에서 뺐다: %s" % (len(_nohold), ", ".join(sorted(_nohold))))
+        print("🚨 이것은 '성과 0' 이 아니라 **안 돈 것**이다. 사유는 coverage.warn 과 excluded 에 있다.")
+        print("🚨" * 12 + "\n")
+
     # 다중검정 문턱 — 이 표(재측정한 규칙 수)와 랩 족(탐색한 가설 수) 둘 다 도출한다.
     # 랩 족은 TB.STRATS 레지스트리 길이로, tech_backtest 의 N = len(out) 과 같은 수다.
     _NP = len(out)
@@ -773,18 +1107,53 @@ def main():
         "start": dates[i0], "as_of": dates[-1], "n_days": n - i0,
         "span_years": round((n - i0) / 252.0, 1),
         "universe": "SPX ∪ NDX · 매월말 실제 편입(위키백과 과거 리비전 · data/index_history.json) · 가격은 yfinance",
-        "coverage": {"min": round(cov_min, 4), "median": round(cov_med, 4)},
+        # 🚨 커버리지는 **필수 필드**다(빈칸을 허용하지 않는다). 종수가 아니라 멤버-월로
+        #   가중해서 싣고, 결손을 세 갈래로 나눈다: 직접 받은 것 · CIK 승계로 이은 것 ·
+        #   끝내 못 구한 것. 못 구한 것을 한 덩어리로 두고 "인수·상폐로 보인다"고 단정하던
+        #   것이 이 파일의 fail-open 이었고, 그 단정 때문에 개명을 아예 안 찾았다
+        #   (실측 2026-08-12: 그 덩어리 안에 개명 15종·335멤버-월이 있었다).
+        "coverage": {
+            "min": round(cov_min, 4), "median": round(cov_med, 4),
+            "lookback_first_month": round(cov0_look, 4),
+            "threshold": COV_MIN_REQ, "ok": not _cov_warn, "warn": _cov_warn,
+            "member_months": {
+                "total": mm_tot, "direct": mm_direct, "cik_spliced": mm_spl,
+                "missing": mm_miss,
+                "covered_ratio": round((mm_tot - mm_miss) / max(1, mm_tot), 4),
+                "spliced_ratio": round(mm_spl / max(1, mm_tot), 4),
+                "missing_ratio": round(mm_miss / max(1, mm_tot), 4),
+            },
+            "missing_tickers": [{"t": t, "n_member_months": v, "first": span[t][0],
+                                 "last": span[t][1]}
+                                for t, v in sorted(mm_gap.items(), key=lambda kv: (-kv[1], kv[0]))],
+            "splice": reuse_rep.get("cik_splice"),
+            # 수집기가 남긴 진단(있으면). 캐시는 gitignore 라 러너에 없지만 이 요약은 커밋된다 —
+            # '왜 이 종목이 없나' 를 다음 사람이 처음부터 다시 재지 않게.
+            "fetch_report": _fetch_rep,
+            # ⚠ n_gone 은 '가격이 있는' 편출뿐이고 n_gone_union 은 가격 유무를 안 따진
+            #   편출 전체다. 둘을 섞어 적었다가 창을 바꾸자 문장이 거짓이 된 적이 있다.
+            "fund_gone": {"n_gone": len(_gone), "n_with_fund": len(_fx_gone),
+                          "ratio": round(fx_cov, 4), "n_gone_union": len(_gone_all)},
+        },
         # 티커 재사용 방어가 실제로 무엇을 했는지 — 숫자로 남긴다. 방어를 넣고 아무것도
         # 안 걸리는 것과 16종을 잘라 낸 것은 다른 이야기이고, 화면이 그것을 인용할 수 있어야 한다.
         "reuse_guard": reuse_rep,
         # 🚨 PIT 을 **안 도는** 규칙과 그 사유. 화면이 빈칸 대신 사유를 말할 수 있어야 한다 —
         #   빈칸은 '해당 없음' 과 '아직 안 쟀다' 와 '못 잰다' 를 구별하지 못하고, 그 셋을
         #   구별 못 한 탓에 13종이 검사를 안 받은 채 소급 t 로만 판정되고 있었다(2026-08-11).
-        "excluded": dict(EXCLUDED_SIDS),
+        # ⚠ 여기에는 사전에 사유를 적어 뺀 것(EXCLUDED_SIDS)과 **돌려 보니 전 구간 무보유라**
+        #   뺀 것이 함께 들어간다. 뒤쪽은 종전에 0 으로 채워진 측정값으로 실리던 자리다.
+        "excluded": dict(EXCLUDED_SIDS, **_nohold),
+        "excluded_nohold": dict(_nohold),
         "na_timing": ("타이밍·오버레이 규칙은 지수·ETF 를 매매하므로 '그때 지수에 있던 종목' "
                       "이라는 개념 자체가 없다. 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, "
                       "못 재는 것이 아니다."),
-        "limits": [
+        "limits": ([
+            "🚨 커버리지 문턱(%.0f%%) 미달: %s. 이 표의 후보는 그만큼 '오늘까지 살아남은 종목' "
+            "쪽으로 좁혀져 있고, 그 방향은 초과수익을 **키우는** 쪽이다. 수치를 인용하기 전에 "
+            "편출 가격 캐시를 다시 받을 것(--fetch-cache)."
+            % (100 * COV_MIN_REQ, " · ".join(_cov_warn)),
+        ] if _cov_warn else []) + [
             "구간이 %s부터다. 🚨 이건 **자료의 한계가 아니라 품질 문턱**이다 — 세 커버리지"
             "(보유율·252일 룩백 채점가능·재무)가 모두 90%% 이상이고 그 뒤로 다시 안 내려가는 "
             "첫 달로 정했고, 문턱은 결과를 보기 전에 확정했다. 커버리지에 무릎이 없어"
@@ -824,9 +1193,17 @@ def main():
             "중립이 아니다 — 남은 종목은 전부 오늘까지 살아 있고 보유율이 시간에 따라 100%%로 오른다. "
             "누락분을 되돌리면 여기 초과수익은 더 줄어든다(재현 실험상 중앙 1.3%%p). 즉 이 표조차 "
             "생존편향을 완전히 걷어내지 못했고, 남은 방향은 여전히 낙관 쪽이다. "
-            "⚠ 이 결손은 편출 종목이 인수·상폐돼 yfinance 가 아예 안 주는 것이고(이 창의 편출 "
-            "%d종 중 %d종), 캐시를 더 받아서 메울 수 있는 종류가 아니다."
-            % (100 * cov_min, 100 * cov_med, len(_gone_all), len(_gone_all) - len(_gone)),
+            "🚨 결손을 한 덩어리로 두지 않는다 — 종전에는 못 받은 것을 전부 '인수·상폐로 보인다'고 "
+            "단정했고(fail-open), 그 단정 때문에 **개명**을 5년 동안 안 찾았다. 멤버-월 %d 중 "
+            "직접 %d · CIK 승계 %d · 끝내 결손 %d(%.2f%%)다. 승계는 %d종 — 같은 CIK(=같은 법인)의 "
+            "다른 티커에 이력이 온전해 그것으로 해석했고, 그 구간 가격은 그 티커가 아니라 승계 "
+            "티커에서 온 것이다(명단은 coverage.splice.map). ⚠ CIK 가 다르면 잇지 않았다 — "
+            "다른 CIK 는 인수이고(DRE≠PLD · INFO≠SPGI · WRK≠SW), 피인수 주주는 프리미엄을 받고 "
+            "나갔으므로 인수기업 가격을 얹으면 없는 가격을 지어내는 것이다. 같은 달에 함께 멤버인 "
+            "복수 클래스(GOOGL/GOOG)도 잇지 않는다. 남은 결손 %d종은 실제 소멸이거나 승계 티커에도 "
+            "가격이 없는 것이고 사유는 coverage.splice.unresolved 에 종목별로 적었다."
+            % (100 * cov_min, 100 * cov_med, mm_tot, mm_direct, mm_spl, mm_miss,
+               100 * mm_miss / max(1, mm_tot), len(ALIAS), len(mm_gap)),
             "🚨 보유율(그날 가격이 있나)과 **채점 가능성**(룩백이 있나)은 다른 것이다. 창 첫달"
             "(%s)에 12개월 룩백까지 갖춰 채점 가능한 멤버는 %.1f%%다. 2026-08-11 에 편출 가격 "
             "캐시를 창 시작이 아니라 2009-01 부터 받도록 고쳐서 이 값이 보유율과 거의 같아졌다 "
@@ -884,6 +1261,14 @@ def main():
     json.dump(doc, io.open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("\n→ %s · %d종 · %s ~ %s (%s년)"
           % (OUT, len(out), doc["start"], doc["as_of"], doc["span_years"]))
+    # 🚨 경고를 **기계가 읽게** 한다. 종전에는 커버리지 미달이 콘솔과 접힌 <details> 에서
+    #   끝나서, 사람이 로그를 안 보면 아무 일도 없었던 것이 된다(적대감사 2026-08-12).
+    #   산출물은 그대로 쓴다 — '얼마나 낮은지' 를 실은 표는 쓸모가 있다 — 대신 종료코드로
+    #   드러낸다. 이 스크립트는 사람이 손으로 돌리는 것이라 잡을 파이프라인을 안 깨뜨린다.
+    #   (build/validate_site.py 도 커밋된 산출물의 coverage.ok 를 본다.)
+    if _cov_warn:
+        print("🚨 종료코드 2 — 커버리지 경고가 있다: %s" % " · ".join(_cov_warn))
+        return 2
     return 0
 
 
@@ -956,8 +1341,20 @@ def fetch_cache():
     """편출 종목 가격을 yfinance 로 받아 캐시한다 — 저장소에 만드는 코드가 있어야 재현이 된다.
 
     오늘의 랩 유니버스에 없는 과거 멤버만 받는다. 지수에서 '작아져서' 빠진 회사는 대개
-    아직 상장돼 있어 대부분 받아진다. 인수·상폐분은 못 받고, 그 결손의 방향은 limits 에 적는다.
+    아직 상장돼 있어 대부분 받아진다.
+
+    🚨 못 받은 것을 "인수·상폐로 보인다"고 **단정하지 않는다**(2026-08-12). 종전 마지막 줄이
+      그 단정이었고, 그 안에 개명이 섞여 있어 승계 티커를 시도조차 안 하게 만들었다. 지금은
+      받음 / CIK 승계로 해결 가능 / 진짜 못 받음 으로 나눠 종수와 **멤버-월**을 함께 찍는다.
+      200봉 문턱과 '열이 아예 안 온 종목'도 따로 드러낸다 — 둘 다 조용히 버려지던 자리다.
+
+    ⚠ 이 함수는 오늘의 유니버스(data/sd)에 없는 멤버만 받는데, 그 명단은 **가장 최근 달의
+      편출까지** 포함해야 한다. 지수에서 방금 빠진 종목은 data/sd 에서도 지워지므로,
+      --fetch-cache 를 다시 안 돌리면 '오늘의 유니버스에도 없고 캐시에도 없는' 사각지대로
+      떨어진다(실측: EA 는 2026-07 까지 멤버였는데 캐시에 없었다). 멤버십을 갱신하면
+      이것도 같이 돌릴 것.
     """
+    import datetime as _dt
     import time
     import yfinance as yf
     mem = fetch_members()
@@ -973,7 +1370,24 @@ def fetch_cache():
         for t in lst:
             a, b = span.get(t, (ym, ym))
             span[t] = (min(a, ym), max(b, ym))
-    write_reuse(want, span)
+    # 🚨 SEC 호출(write_reuse)은 사내 PC 화이트리스트 밖이라 **기본으로 건너뛴다**(2026-08-12).
+    #   판정은 저장소에 커밋된 data/pit_reuse.json(러너 산출물)을 그대로 쓴다.
+    #   ⚠ 건너뛴 것을 조용히 '재배정 아님' 으로 취급하면 이 파일이 막으려는 사고가 그대로 난다 —
+    #     판정이 **없는** 티커를 반드시 찍는다. 갱신은 러너에서 돌거나 PIT_SEC=1 로 켠다.
+    if os.environ.get("PIT_SEC") == "1":
+        write_reuse(want, span)
+    else:
+        _ru = json.load(io.open(REUSE, encoding="utf-8")) if os.path.exists(REUSE) else {}
+        _known = set()
+        for _k in ("reassigned", "unknown", "match"):
+            _v = _ru.get(_k)
+            _known |= set(_v.keys() if isinstance(_v, dict) else (_v or []))
+        _nov = sorted(t for t in want if t not in _known)
+        print("  SEC 재사용 판정: 건너뜀(PIT_SEC=1 로 켠다) — 기존 pit_reuse.json(as_of %s) 사용"
+              % _ru.get("as_of", "?"))
+        if _nov:
+            print("  ⚠ 재사용 판정이 없는 %d종 — 이 종목은 티커 재배정 검사를 못 받았다: %s"
+                  % (len(_nov), ", ".join(_nov[:12]) + (" …" if len(_nov) > 12 else "")))
     out = json.load(io.open(CACHE, encoding="utf-8")) if os.path.exists(CACHE) else {}
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
     # 🚨 --rebuild 가 필요한 이유. 아래 루프는 '이미 있는 티커는 건너뛴다'가 기본이고
@@ -985,6 +1399,12 @@ def fetch_cache():
     if rebuild:
         print("  --rebuild: 기존 %d종을 %s 부터 다시 받는다(값이 바뀐다)" % (len(out), CACHE_START))
     got = 0
+    # 🚨 조용한 탈락을 드러낸다. 아래 두 자리에서 종목이 말없이 사라진다:
+    #   ① yfinance 가 그 티커 열을 아예 안 준다(스로틀링일 수도, 상폐일 수도 있다)
+    #   ② 열은 왔는데 `len(ser) > 200` 문턱에 걸린다 — 갓 상장·거의 안 거래된 계열
+    #   종전에는 둘 다 '못 받은 N종' 한 덩어리로 뭉쳐졌고, 그 N 을 다시 "인수·상폐로 보인다"고
+    #   단정했다. 세 가지가 한 문장에 뭉쳐 있으면 어느 것도 고칠 수 없다.
+    short, empty, batch_fail = {}, [], {}
     for i in range(0, len(want), 25):
         # 🚨 2026-08-05 — 종전에는 `t not in out`(종가 캐시)만 봤다. 그래서 고가·저가를
         #   같은 배치에 얹었더니 **이미 종가가 있는 147종은 아예 안 받아** HL 캐시가 0종으로
@@ -1000,11 +1420,32 @@ def fetch_cache():
             d = _raw["Close"]
             _hi, _lo = _raw.get("High"), _raw.get("Low")
         except Exception as e:
-            print("  [yf] 배치 실패:", str(e)[:60]); continue
+            # 🚨 여기서 `continue` 만 하면 그 배치의 티커가 아무 버킷에도 안 들어가고, 아래
+            #   분류에서 **'진짜 결손'** 으로 보고된다(스로틀링 전량 실패 실측: '결손 116종/
+            #   3301멤버-월 — 승계로도 못 메운다' + 종료코드 0). 방금 없앤 fail-open 과 같은
+            #   모양이라 같은 자리에서 막는다 — 고칠 수 있는 것(재시도)과 못 고치는 것(소멸)을
+            #   한 덩어리로 두지 않는다.
+            print("  [yf] 배치 실패:", str(e)[:60])
+            for _t in ch:
+                batch_fail[_t] = str(e)[:80]
+            continue
+        # ⚠ 배치가 정확히 1종이면 yfinance 는 열이 없는 **Series** 를 준다. 그대로 두면
+        #   `t not in d` 가 날짜 인덱스 검사가 되어 그 종목이 '열 자체를 안 준' 것으로
+        #   잘못 보고된다(동작은 종전과 같지만 사유가 거짓이 된다).
+        if len(ch) == 1 and getattr(d, "ndim", 2) == 1:
+            d = {ch[0]: d}
+            if _hi is not None and getattr(_hi, "ndim", 2) == 1:
+                _hi = {ch[0]: _hi}
+            if _lo is not None and getattr(_lo, "ndim", 2) == 1:
+                _lo = {ch[0]: _lo}
         for t in ch:
-            if t in d:
+            if t not in d:
+                empty.append(t)
+            else:
                 ser = d[t].dropna()
-                if len(ser) > 200:
+                if len(ser) <= 200:
+                    short[t] = len(ser)
+                else:
                     # 이미 있는 종가는 덮어쓰지 않는다 — 재수집 시점이 달라 값이 미세하게
                     # 흔들리면 그 위에서 잰 PIT 수치가 조용히 바뀐다. (--rebuild 때만 덮는다.)
                     _new = {str(k.date()): round(float(v), 4) for k, v in ser.items()}
@@ -1021,8 +1462,53 @@ def fetch_cache():
                     got += 1
         time.sleep(2)
     json.dump(out, io.open(CACHE, "w", encoding="utf-8"), separators=(",", ":"))
-    print("→ %s · %d종 (이번에 %d종 추가) · 못 받은 %d종은 인수·상폐로 보인다"
-          % (CACHE, len(out), got, sum(1 for t in want if t not in out)))
+
+    # ── 못 받은 것을 **분류한다** (종전에는 "인수·상폐로 보인다" 한 줄이었다) ──────────
+    # 🚨 그 한 줄이 이 파일의 fail-open 이었다. 못 받은 것을 전부 소멸로 단정하니
+    #   ⓐ 개명(같은 CIK 의 다른 티커에 이력이 온전하다) ⓑ 스로틀링·빈 응답 ⓒ 200봉 문턱
+    #   ⓓ 진짜 소멸 이 한 덩어리가 되어, 고칠 수 있는 것과 없는 것이 구별되지 않았다.
+    #   실측으로 그 덩어리 안에 개명이 여럿 있었고 랩은 승계 티커를 시도한 적조차 없었다.
+    _mm = {}                                    # 티커 → 창 안 멤버-월(결손을 가중해서 센다)
+    for _ym, _lst in mem.items():
+        for _t in _lst:
+            _mm[_t] = _mm.get(_t, 0) + 1
+    miss = [t for t in want if t not in out]
+    _alias, _rows, _skip = cik_aliases(miss, set(out) | lab, out, span,
+                                       tried=set(want) - set(batch_fail))
+    _mmw = lambda ts: sum(_mm.get(t, 0) for t in ts)          # noqa: E731
+    _bf = [t for t in miss if t in batch_fail]
+    real = [t for t in miss if t not in _alias and t not in batch_fail]
+    print("→ %s · %d종 (이번에 %d종 추가)" % (CACHE, len(out), got))
+    print("  받음  %4d종 / %5d멤버-월" % (len(want) - len(miss), _mmw(set(want) - set(miss))))
+    print("  승계  %4d종 / %5d멤버-월 — 같은 CIK 의 다른 티커로 해석 가능: %s"
+          % (len(_alias), _mmw(_alias),
+             ", ".join("%s→%s" % (k, v) for k, v in sorted(_alias.items())) or "없음"))
+    if _bf:
+        print("  요청실패 %4d종 / %5d멤버-월 — **배치가 죽어 시도 자체가 안 끝났다**(스로틀링 등). "
+              "결손이 아니다 · 다시 돌리면 메워질 수 있다: %s"
+              % (len(_bf), _mmw(_bf), ", ".join(sorted(_bf)[:20])))
+    print("  결손  %4d종 / %5d멤버-월 — 승계로도 못 메운다(요청실패 제외 · 상위: %s)"
+          % (len(real), _mmw(real),
+             ", ".join("%s(%d개월)" % (t, _mm.get(t, 0))
+                       for t in sorted(real, key=lambda x: -_mm.get(x, 0))[:10]) or "없음"))
+    # 🚨 0봉과 '짧아서 버림'을 **가르지 않으면 안 된다**. yfinance 는 실패한 티커도 열은
+    #   주고 전부 NaN 을 채운다 — 그래서 응답이 아예 없는 것까지 200봉 문턱 탓으로 보인다.
+    #   실측(2026-08-12): 54종이 문턱에 걸린 것처럼 보였지만 53종은 0봉(응답 없음)이고
+    #   문턱이 실제로 버린 것은 SATS 1종(1봉)뿐이었다.
+    _zero = sorted(t for t, v in short.items() if t not in out and not v)
+    _sh_new = {t: v for t, v in short.items() if t not in out and v}
+    if _sh_new:
+        # 이 문턱은 조용히 버린다 — 몇 종이 걸렸는지 반드시 남긴다.
+        print("  ⚠ 200봉 문턱(`len(ser) > 200`)이 실제로 버린 %d종: %s"
+              % (len(_sh_new), ", ".join("%s(%d봉)" % (t, v) for t, v in sorted(_sh_new.items()))))
+    if _zero:
+        print("  ⚠ 응답 0봉 %d종(열은 왔는데 전부 NaN — 상폐일 수도, 스로틀링일 수도 있다. "
+              "⚠ 원인 모른 채 재실행하면 스로틀링을 키운다): %s" % (len(_zero), ", ".join(_zero)))
+    _em_new = sorted(t for t in set(empty) if t not in out)
+    if _em_new:
+        print("  ⚠ yfinance 가 열 자체를 안 준 %d종(상폐일 수도, 스로틀링일 수도 있다 — "
+              "⚠ 원인 모른 채 재실행하면 스로틀링을 키운다): %s"
+              % (len(_em_new), ", ".join(_em_new[:20])))
     if hlout:
         json.dump(hlout, io.open(HLCACHE, "w", encoding="utf-8"), separators=(",", ":"))
         print("→ %s · %d종 — 이 파일이 있어야 고가·저가 규칙(x-52wh 등)의 PIT 레그가 돈다"
@@ -1048,6 +1534,31 @@ def fetch_cache():
         time.sleep(1.5)
     json.dump(sh, io.open(SHCACHE, "w", encoding="utf-8"), separators=(",", ":"))
     print("→ %s · %d종" % (SHCACHE, len(sh)))
+
+    # 🚨 진단을 **파일로 남긴다**. 종전에는 위의 분류가 전부 print 뿐이라 콘솔을 닫으면
+    #   사라졌고, 다음 감사는 '왜 이 종목이 없나' 를 처음부터 다시 재야 했다. 캐시(gitignore)와
+    #   달리 이 파일은 작아서 커밋된다 — 러너와 다음 사람이 같은 것을 본다.
+    rep = {
+        "as_of": _dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "start": START, "cache_start": CACHE_START,
+        "n_want": len(want), "n_cached": len(out), "n_new": got,
+        "batch_fail": {"n": len(_bf), "tickers": sorted(_bf),
+                       "note": "배치 요청이 죽어 시도가 안 끝난 것 — 결손이 아니다. 다시 돌릴 것."},
+        "splice": {"n": len(_alias), "map": _alias},
+        "missing": {"n": len(real), "member_months": _mmw(real),
+                    "top": sorted(real, key=lambda x: -_mm.get(x, 0))[:20]},
+        "short_threshold": {"n": len(_sh_new), "rule": "len(ser) > 200", "tickers": _sh_new},
+        "zero_rows": _zero, "no_column": _em_new,
+        "skip_reasons": _skip,
+    }
+    json.dump(rep, io.open(os.path.join(DATA, "pit_fetch_report.json"), "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
+    print("→ %s" % os.path.join(DATA, "pit_fetch_report.json"))
+    if _bf:
+        # 종료코드로 드러낸다 — 전량 쓰로틀 실패가 exit 0 으로 끝나면 '결손' 으로 굳는다.
+        print("🚨 종료코드 3 — 요청이 죽은 배치가 있다(%d종). 결손 통계를 인용하기 전에 다시 받을 것."
+              % len(_bf))
+        return 3
     return 0
 
 

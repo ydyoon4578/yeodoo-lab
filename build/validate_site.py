@@ -2923,6 +2923,37 @@ try:
 except Exception as _e:
     errors.append("백업 크론 대조가 예외로 죽었다 — %s" % _e)
 
+# ── PIT 산출물의 커버리지 경고를 **기계가 읽는다** ────────────────────────────
+# 🚨 2026-08-12 적대감사. build/pit_backtest.py 는 커버리지 미달·입력 채널 부재를 콘솔과
+#   pit_strategies.json 의 coverage.warn 에 적는데, **그것을 읽는 코드가 저장소에 없었다**
+#   (tech_backtest 는 t_crit·t_max 만 읽고, 화면은 접힌 <details> 한 줄뿐이다). 경고가
+#   아무 데도 도달하지 않으면 없는 것과 같다 — 사람이 로그를 안 보면 그대로 배포된다.
+#   여기서 커밋된 산출물을 본다. 값 자체는 건드리지 않는다: 통과/실패만 말한다.
+try:
+    _pj = os.path.join(ROOT, "data", "pit_strategies.json")
+    if os.path.exists(_pj):
+        _pd = json.load(io.open(_pj, encoding="utf-8"))
+        _cv = _pd.get("coverage") or {}
+        if "ok" not in _cv:
+            # 옛 산출물(coverage 에 min/median 만 있던 시절)이면 검사할 것이 없다 —
+            # 조용히 통과시키되 다음 재생성에서 채워진다는 사실만 남긴다.
+            print("  ~ data/pit_strategies.json 에 coverage.ok 가 없다(옛 산출물) — "
+                  "다음 재생성부터 이 검사가 실제로 작동한다")
+        elif not _cv.get("ok"):
+            errors.append("data/pit_strategies.json 의 coverage.ok=false — %s. 이 표의 수치는 "
+                          "그 경고를 달고 나간다(빠진 규칙은 excluded_nohold 에 있다). "
+                          "build/pit_backtest.py 를 조건 갖춰 다시 돌릴 것"
+                          % " · ".join(_cv.get("warn") or ["사유 미기재"]))
+        # 전 구간 무보유가 **수치로** 실려 있으면(옛 코드의 결과) 그것부터 잡는다.
+        _z = [s["sid"] for s in _pd.get("strategies", [])
+              if abs((s.get("metrics") or {}).get("cagr") or 0) < 1e-9 and (s.get("n_days") or 0) > 0]
+        if _z:
+            errors.append("data/pit_strategies.json 에 CAGR 0 인 규칙 %d종(%s) — 전 구간 무보유가 "
+                          "'측정값 0' 으로 실린 것이다(고저가 캐시 부재 등). 안 돈 것은 수치가 "
+                          "아니라 사유로 나가야 한다" % (len(_z), ", ".join(_z)))
+except Exception as _e:
+    errors.append("PIT 커버리지 검사가 예외로 죽었다 — %s" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
