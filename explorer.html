@@ -92,7 +92,9 @@
   .fchip.v-reject[aria-pressed="true"]{background:var(--rej);border-color:var(--rej)}
 
   /* master-detail */
-  .board{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(0,1.15fr);gap:18px;margin-top:20px;align-items:start}
+  /* 목록은 '고르는' 칸이고 오른쪽이 '보는' 칸이다. 예전 0.95:1.15 는 거의 반반이라
+     성과 표가 늘 좁았다 — 목록을 고정폭에 가깝게 묶고 남는 폭을 전부 오른쪽에 준다. */
+  .board{display:grid;grid-template-columns:minmax(288px,0.62fr) minmax(0,1.75fr);gap:20px;margin-top:20px;align-items:start}
   .listwrap{display:flex;flex-direction:column;gap:7px;max-height:76vh;overflow-y:auto;padding-right:4px}
   .listwrap::-webkit-scrollbar{width:8px}.listwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
   /* 백테스트 컨벤션은 숫자를 보는 자리에 — 홈에 적어두면 정작 성과를 볼 때 안 보인다 */
@@ -120,7 +122,7 @@
   .mk:hover{background:var(--panel-2);color:var(--muted)}
   .mk.on{color:var(--accent)}
   .item.marked{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--panel))}
-  .item{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:2px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
+  .item{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vc,var(--muted));border-radius:2px;padding:11px 14px;cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border-color .12s,background .12s;box-shadow:var(--shadow)}
   .item:hover{border-color:var(--accent)}
   .item[aria-selected="true"]{background:var(--sel);border-color:var(--accent);border-left-color:var(--vc,var(--accent))}
   .item .vdot{width:9px;height:9px;border-radius:50%;background:var(--vc);flex-shrink:0}
@@ -129,7 +131,7 @@
   .item .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   /* 하드코딩 hex는 다크에서 9px 글씨 대비 2.9:1 → 현재 테마 잉크색 기반으로 */
   .atag{font-family:var(--mono);font-size:11px;font-weight:700;padding:1px 6px;border-radius:2px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);white-space:nowrap}
-  .item .metric{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink-2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .item .metric{font-family:var(--mono);font-size:13px;min-width:52px;font-weight:600;color:var(--ink-2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
   .item .metric small{display:block;font-size:11px;font-weight:400;color:var(--muted);letter-spacing:.03em}
   .empty{font-family:var(--mono);font-size:13px;color:var(--muted);padding:30px 6px;text-align:center}
 
@@ -285,6 +287,31 @@
   .crtbl td.cs{font-family:var(--mono);font-weight:700}
   .crtbl td.cb{font-family:var(--mono);font-weight:400;color:var(--ink-2)}
   .crtbl td.out{color:var(--muted);font-weight:400;font-family:var(--sans)}
+  /* 월별 수익 히트맵 — 열이 12개라 폭이 필요하다(위 --w-wide 로 바꾼 이유 중 하나). */
+  .segchips{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0 8px}
+  .segchips button{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:3px 9px;cursor:pointer}
+  .segchips button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+  .mhmwrap{overflow-x:auto}
+  .mhm{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:11px;table-layout:fixed}
+  .mhm th{font-weight:700;color:var(--muted);font-size:10.5px;padding:2px 0;text-align:center}
+  .mhm th.yr{text-align:right;padding-right:7px;width:44px;color:var(--ink-2)}
+  .mhm td{text-align:center;padding:3px 0;border:1px solid var(--panel);font-variant-numeric:tabular-nums;
+    color:var(--ink);white-space:nowrap}
+  .mhm td.na{color:var(--line);}
+  .mhm td.tot{font-weight:800;border-left:2px solid var(--line)}
+  .mhm caption{caption-side:top;text-align:left;font-size:11.5px;color:var(--muted);padding-bottom:5px}
+
+  /* 급등·급락 구간 — 지수 기준으로 자른 창에서 넷을 나란히 */
+  .epi{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+  .epi th,.epi td{padding:5px 7px;border-top:1px solid var(--line-soft);text-align:right;
+    font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .epi th{color:var(--muted);font-size:11px;font-weight:700;border-top:0}
+  .epi td.wl,.epi th.wl{text-align:left;font-family:var(--sans);white-space:normal}
+  .epi tr.up td.wl b{color:var(--deploy)} .epi tr.dn td.wl b{color:var(--hot)}
+  .epi td.best{font-weight:800;color:var(--deploy)}
+  .epi .bar{display:inline-block;height:9px;vertical-align:middle;border-radius:1px}
+
   /* ⑦ 대조군 근거 */
   .bmwrap{margin:16px 0 4px;padding:13px 15px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px}
   .bmwrap h4{margin:0 0 9px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
@@ -754,10 +781,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <li class="navcat" data-cat="ledger">
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
-          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">기준일이 왜 하나가 아닌지 — as-of 정본 · 별도 열람 잠금</span></a>
-          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F 등급은 섹터 백분위 서술이지 예측이 아니다</span></a>
-          <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span><span class="mmd">언제 무엇을 고쳤는가 — 자동 갱신과 사람 작업을 한 줄에</span></a>
-          <a class="mmi" href="kb.html" data-nav="kb.html"><span class="mmn">BK<span class="mmlk">🔒</span></span><span class="mmd">별도 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다</span></a>
+          <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span><span class="mmd">자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금</span></a>
         </div>
       </li>
     </ul>
@@ -1067,6 +1093,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   var el=function(id){return document.getElementById(id);};
   var listEl=el('list'), detailEl=el('detail');
+  // 월별 히트맵 계열 전환 — 상세는 통째로 다시 그려지므로 위임으로 받는다.
+  if(detailEl)detailEl.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest?e.target.closest('[data-mhm]'):null;
+    if(!b)return;
+    MHM=b.getAttribute('data-mhm');
+    if(D&&state.sel!=null&&D[state.sel])drawDetail(D[state.sel]);
+  });
 
   // stat line
   (function(){
@@ -1590,7 +1623,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function fmt(v,strong){if(v==null)return '<td class="pp">—</td>';
       var c=v>=0?'var(--deploy)':'var(--rej)';
       return '<td class="pp'+(strong?' st':'')+'" style="color:'+c+'">'+(v>=0?'+':'')+v.toFixed(1)+'%</td>';}
-    var head='<tr><th scope="col">기간</th><th scope="col" style="color:'+vc+'">전략</th><th scope="col">'+esc(bt.bench_label||'대조군')+'</th>'+(bt.bench2?'<th scope="col">'+(bt.bench2_label||'')+'</th>':'')+'</tr>';
+    var head='<tr><th scope="col">기간</th><th scope="col" style="color:'+vc+'">전략</th><th scope="col">'+esc(bt.bench_label||'기준 없음')+'</th>'+(bt.bench2?'<th scope="col">'+(bt.bench2_label||'')+'</th>':'')+'</tr>';
     var rows=defs.map(function(df){
       var sv=df[1](bt.nav); if(sv==null)return '';
       return '<tr><th scope="row">'+df[0]+'</th>'+fmt(sv,true)+fmt(df[1](bt.bench))+(bt.bench2?fmt(df[1](bt.bench2)):'')+'</tr>';
@@ -1776,7 +1809,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!cr.some(function(c){return c.covered;}))return '';
     var two=!!bt.bench2;
     var head='<thead><tr><th scope="col">위기 구간</th><th scope="col" style="color:'+vc+'">전략</th>'+
-      '<th scope="col">'+esc(bt.bench_label||'대조군')+'</th>'+(two?'<th scope="col">'+esc(bt.bench2_label||'')+'</th>':'')+
+      '<th scope="col">'+esc(bt.bench_label||'기준 없음')+'</th>'+(two?'<th scope="col">'+esc(bt.bench2_label||'')+'</th>':'')+
       '<th scope="col">구간내 낙폭</th></tr></thead>';
     function cell(v,cls){
       if(v==null)return '<td class="'+cls+'">—</td>';
@@ -1864,7 +1897,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   function btSection(bt,vc,d){
-    var m=bt.metrics,bl=bt.bench_label||'대조군';
+    var m=bt.metrics,bl=bt.bench_label||'기준 없음';
     var km=kmeta(kindOf(d));
     var pri=(km&&km.primary)||[];
     var pp=periodPerf(bt,vc);
@@ -1956,6 +1989,128 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ── 랩 전략 차트 지연 로딩 ────────────────────────────────────────────
   // 곡선·낙폭·연도별 자료는 417KB다. 목록만 보는 사람에게 받게 할 이유가 없으므로
   // **전략을 처음 눌렀을 때** 한 번 받는다(홈이 슬림 묶음을 읽는 것과 같은 규약).
+  // ══ 월별 수익 · 급등/급락 구간 ═════════════════════════════════════════
+  // 🚨 월별은 **백테스트가 전체 일간 계열의 월말에서 뽑아 둔 것**(curve_pack.monthly)을
+  //   그대로 쓴다. 화면이 줄인 곡선에서 월을 다시 자르면 달 경계가 며칠 어긋나고,
+  //   그러면 같은 지수와 나란히 놓는 순간 그 어긋남이 성과 차이로 읽힌다.
+  var SPXL='S&P 500', NDXL='NASDAQ 100', MHM='r';   // 히트맵에 그릴 계열
+  // 🚨 종목 전략의 판정 기준은 **S&P 500 그 자체**다(bench_label 'S&P 500(PR) 매수후보유').
+  //   그래서 b 열과 지수 열이 글자 그대로 같은 숫자가 된다 — 같은 계열을 두 번 보여주면
+  //   독자는 서로 다른 둘을 비교하고 있다고 읽는다. 겹치면 b 를 뺀다.
+  function dupIdx(C){
+    var M=C.monthly||[], k, i, labs=[SPXL,NDXL];
+    for(k=0;k<labs.length;k++){
+      var same=true;
+      for(i=0;i<M.length;i++){
+        var v=M[i].i?M[i].i[labs[k]]:null;
+        if(M[i].b==null&&v==null)continue;
+        if(M[i].b==null||v==null||Math.abs(M[i].b-v)>0.005){same=false;break;}
+      }
+      if(same&&M.length)return labs[k];
+    }
+    return null;
+  }
+  function mSeries(C,key,d){
+    // key: r=전략 · b=판정 기준 · S&P 500 · NASDAQ 100 · dS/dN=전략−지수
+    return (C.monthly||[]).map(function(m){
+      if(key==='r')return m.r; if(key==='b')return m.b;
+      if(key==='dS')return (m.r==null||!m.i||m.i[SPXL]==null)?null:m.r-m.i[SPXL];
+      if(key==='dN')return (m.r==null||!m.i||m.i[NDXL]==null)?null:m.r-m.i[NDXL];
+      return (m.i&&m.i[key]!=null)?m.i[key]:null;
+    });
+  }
+  function heatCol(v,scale){
+    if(v==null||v!==v)return '';
+    var a=Math.min(1,Math.abs(v)/scale);
+    return 'background:color-mix(in srgb,var('+(v>=0?'--deploy':'--hot')+') '+(8+a*46).toFixed(0)+'%,transparent)';
+  }
+  function mhmHTML(C,d,mode){
+    var M=C.monthly||[]; if(M.length<6)return '';
+    var vals=mSeries(C,mode,d), yr={}, i, ok=[];
+    for(i=0;i<M.length;i++){
+      var y=M[i].m.slice(0,4), mo=parseInt(M[i].m.slice(5,7),10);
+      if(!yr[y])yr[y]=new Array(12).fill(null);
+      yr[y][mo-1]=vals[i];
+      if(vals[i]!=null)ok.push(Math.abs(vals[i]));
+    }
+    ok.sort(function(a,b){return a-b;});
+    var scale=ok.length?Math.max(2,ok[Math.floor(ok.length*0.9)]):8;   // 90분위로 색을 잡는다
+    var years=Object.keys(yr).sort();
+    var head='<tr><th class="yr"></th>'+['1','2','3','4','5','6','7','8','9','10','11','12']
+      .map(function(m){return '<th>'+m+'</th>';}).join('')+'<th class="tot">연간</th></tr>';
+    var body=years.map(function(y){
+      var row=yr[y], cum=1, any=false;
+      var tds=row.map(function(v){
+        if(v==null)return '<td class="na">·</td>';
+        cum*=(1+v/100); any=true;
+        return '<td style="'+heatCol(v,scale)+'">'+(v>=0?'':'−')+Math.abs(v).toFixed(1)+'</td>';
+      }).join('');
+      var t=any?(cum-1)*100:null;
+      return '<tr><th class="yr">'+y+'</th>'+tds+'<td class="tot" style="'+heatCol(t,scale*2.2)+'">'+
+        (t==null?'·':((t>=0?'':'−')+Math.abs(t).toFixed(1)))+'</td></tr>';
+    }).join('');
+    return '<div class="mhmwrap"><table class="mhm"><caption>단위 % · 색은 이 표 안의 90분위로 맞췄습니다</caption>'+
+      '<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+  }
+  // 지수(S&P 500) 월별로 국면을 자른다 — 고점→저점 10% 이상 하락, 그리고 그 저점에서 신고점까지.
+  // ⚠ 자르는 잣대를 전략이 아니라 **지수**로 둔다. 전략 자신의 낙폭으로 자르면 그 전략이
+  //   가장 잘 버틴 창만 골라 놓고 "위기에 강하다"를 증명하는 순환이 된다.
+  function episodes(C){
+    var M=C.monthly||[]; if(M.length<12)return [];
+    var lab=SPXL, base=[], i;
+    for(i=0;i<M.length;i++){ if(!M[i].i||M[i].i[lab]==null)return []; }
+    var lv=100; base.push({m:M[0].m,v:lv});
+    for(i=0;i<M.length;i++){ lv*=(1+M[i].i[lab]/100); base.push({m:M[i].m,v:lv}); }
+    var out=[], pk=0, i0=0;
+    for(i=1;i<base.length;i++){
+      if(base[i].v>=base[pk].v){
+        // 직전 골이 10% 이상이면 하락구간 + 회복구간을 기록
+        var tr=pk; for(var j=i0;j<=i;j++) if(base[j].v<base[tr].v) tr=j;
+        var dep=(base[tr].v/base[pk].v-1)*100;
+        if(dep<=-10){
+          out.push({k:'dn',a:pk,b:tr,d:dep});
+          out.push({k:'up',a:tr,b:i,d:(base[i].v/base[tr].v-1)*100});
+        }
+        pk=i; i0=i;
+      }
+    }
+    var tr2=pk; for(i=pk;i<base.length;i++) if(base[i].v<base[tr2].v) tr2=i;
+    if((base[tr2].v/base[pk].v-1)*100<=-10) out.push({k:'dn',a:pk,b:tr2,d:(base[tr2].v/base[pk].v-1)*100});
+    out.sort(function(x,y){return Math.abs(y.d)-Math.abs(x.d);});
+    out=out.slice(0,6).sort(function(x,y){return x.a-y.a;});
+    return out.map(function(e){
+      var r={k:e.k, from:base[e.a].m, to:base[e.b].m, n:e.b-e.a};
+      ['r','b',SPXL,NDXL].forEach(function(key){
+        var c=1,ok=false;
+        for(var t=e.a;t<e.b;t++){
+          var m=M[t], v=(key==='r'?m.r:key==='b'?m.b:(m.i?m.i[key]:null));
+          if(v==null)continue; c*=(1+v/100); ok=true;
+        }
+        r[key]=ok?(c-1)*100:null;
+      });
+      return r;
+    }).filter(function(r){return r.n>=2;});
+  }
+  function epiHTML(C,d){
+    var E=episodes(C); if(!E.length)return '';
+    var bl=d._bl||'판정 기준', dup=dupIdx(C);
+    var cols=[['r','이 전략']];
+    if(!dup)cols.push(['b',bl]);
+    cols.push([SPXL,'S&P 500'],[NDXL,'나스닥 100']);
+    var f=function(v){return v==null?'—':((v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%');};
+    var rows=E.map(function(e){
+      var best=null; cols.forEach(function(c){ if(e[c[0]]!=null&&(best==null||e[c[0]]>best))best=e[c[0]]; });
+      return '<tr class="'+e.k+'"><td class="wl"><b>'+(e.k==='dn'?'급락':'급등')+'</b> '+
+        esc(e.from)+' → '+esc(e.to)+' <span style="color:var(--muted)">'+e.n+'개월</span></td>'+
+        cols.map(function(c){
+          var v=e[c[0]];
+          return '<td'+(v!=null&&v===best?' class="best"':'')+'>'+f(v)+'</td>';
+        }).join('')+'</tr>';
+    }).join('');
+    return '<table class="epi"><thead><tr><th class="wl">구간 — S&amp;P 500 기준 10% 이상 등락</th>'+
+      cols.map(function(c){return '<th>'+esc(c[1])+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
   var LABC=null, LABC_ST=0;      // 0=안 받음 1=받는 중 2=받음 3=실패
   function labCharts(cb){
     if(LABC_ST===2||LABC_ST===3)return cb&&cb();
@@ -1986,7 +2141,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         out+='<div class="cmpwarn"><b>대조군과 나란히 두지 않습니다</b>'+
              (d._cmpw?'<span>'+esc(d._cmpw)+'</span>':'')+'</div>';
       }
-      if(d._bl)out+='<div class="benchline"><span>대조군</span><b>'+esc(d._bl)+'</b></div>';
+      if(d._bl)out+='<div class="benchline"><span>판정 기준</span><b>'+esc(d._bl)+'</b></div>';
       // ── 같은 구간 지수(PR) — CAGR 한 줄이 아니라 지표를 통째로 나란히 놓는다 ──────
       // 대조군이 없는 전략이 31개다(타이밍 오버레이·ML 종목선택 …). 그런 전략은 15행 지표표도
       // 안 나온다(d.bt 가 있는 전략이 10개뿐). 그래서 "그래서 좋은 건가"에 답할 눈금이 이 표뿐이라
@@ -2021,13 +2176,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<th scope="col">S&amp;P 500</th><th scope="col">차이</th>'+
           '<th scope="col">나스닥 100</th><th scope="col">차이</th></tr></thead>'+
           '<tbody>'+prb+'</tbody></table></div>'+
-          '<em>지수는 <b>가격지수(PR)</b>라 배당이 빠져 있습니다 — 전략 수익은 배당을 담은 총수익이라 '+
-          '수익 쪽 비교에서 연 2.0%p만큼 전략이 유리해 보입니다(변동성·MDD·샤프는 이 왜곡이 훨씬 작습니다). '+
-          '판정은 대조군이 있는 전략이면 위의 대조군으로 합니다. '+
-          '지수는 이 전략의 지표와 <b>같은 주기·같은 무위험이자율 규약</b>으로 다시 쟀습니다'+
-          (d._prb?' (이 전략은 <b>'+esc(d._prb)+'</b> 기준)':'')+
-          ' — 주기가 다르면 같은 지수라도 샤프가 0.35 대 0.54 로 갈립니다. '+
-          '각 줄은 <b>그 전략 자신의 구간</b>에서 잰 값이라 전략끼리 세로로 비교하지 마십시오.</em></div>';
+          // ⚠ 문구를 한 줄로 줄였다(2026-08-12, 사용자 요청). 지우지는 않는다 —
+          //   PR/TR 격차는 수익 칸을 실제로 왜곡하므로 눈금 옆에 남아 있어야 한다.
+          '<em>지수는 <b>가격지수(PR)</b>라 배당이 빠져 수익 칸에서 전략이 연 약 2%p 유리하게 보입니다'+
+          (d._prb?' · '+esc(d._prb)+' 기준':'')+'.</em></div>';
       }
       // 대조군 판정과 지수 눈금이 반대로 나온 전략 — 초과분의 정체가 갈리는 지점이라 표시한다.
       //   (지수는 PR이라 연 2.0%p 보정한 뒤 비교한다 · 생성 build/strategy_index.py:pr_split)
@@ -2140,7 +2292,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                    '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(bt.dd_b2?_il:'')+'</div>'+
                    svgDD(bt)+
                    ((C.yearly&&C.yearly.length)?'<div class="chartttl">연도별 수익'+lg('var(--accent)',0,'전략')+_il+'</div>'+svgYearly(bt,'var(--accent)')+
-                     '<p class="labnote">첫해와 마지막 해는 부분 연도입니다(구간이 연초·연말에 걸치지 않습니다).</p>':'');
+                     '<p class="labnote">첫해와 마지막 해는 부분 연도입니다(구간이 연초·연말에 걸치지 않습니다).</p>':'')+
+                   (function(){
+                     if(!C.monthly||C.monthly.length<6)return '';
+                     var _dup=dupIdx(C);
+                     var modes=[['r','이 전략']];
+                     if(!_dup)modes.push(['b',bl]);
+                     modes.push([SPXL,'S&P 500'],[NDXL,'나스닥 100'],
+                                ['dS','전략 − S&P 500'],['dN','전략 − 나스닥 100']);
+                     if(MHM==='b'&&_dup)MHM='r';
+                     var chips=modes.map(function(m){
+                       return '<button type="button" data-mhm="'+esc(m[0])+'" aria-pressed="'+
+                         (MHM===m[0]?'true':'false')+'">'+esc(m[1])+'</button>';}).join('');
+                     return '<div class="chartttl">월별 수익</div><div class="segchips">'+chips+'</div>'+
+                            mhmHTML(C,d,MHM)+
+                            '<div class="chartttl">급등·급락 구간 비교</div>'+epiHTML(C,d);
+                   })();
           }
           labCharts(function(){ if(D[state.sel]===d)drawDetail(d); });
           var a=d._nav||[], b2=d._bnav||[];

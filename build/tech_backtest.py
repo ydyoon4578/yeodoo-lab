@@ -510,6 +510,40 @@ def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
             pack["idx_dd"] = idd
             for row in yearly:        # 연도별 막대에도 같은 이름으로 얹는다
                 row["i"] = {lab: iyr[lab].get(row["y"]) for lab in iyr}
+            full_idx = {}
+            for lab, rr in idx_rets.items():
+                seq = [100.0]
+                for i in range(i0 + 1, i0 + n):
+                    seq.append(seq[-1] * (1 + (rr[i] if i < len(rr) else 0.0)))
+                if len(seq) == n:
+                    full_idx[lab] = seq
+        else:
+            full_idx = {}
+    else:
+        full_idx = {}
+
+    # ── 월별 수익률 ──────────────────────────────────────────────────────
+    # 🚨 **줄인 곡선이 아니라 전체 일간 계열의 월말**에서 뽑는다. 주간·격주 계열에서
+    #   '그 달의 마지막 관측'을 쓰면 달 경계가 최대 나흘 어긋나 같은 이름의 다른 격자가
+    #   된다 — 지수와 나란히 놓는 순간 그 어긋남이 그대로 성과 차이로 읽힌다.
+    # ⚠ 첫 달은 월 전체가 아니라 관측 시작일부터다(partial 의 첫 해와 같은 사유).
+    # 화면: explorer.html 의 '월별 수익' 히트맵과 '급등·급락 구간 비교'가 이 값만 읽는다.
+    me = [i for i in range(n) if i == n - 1 or dates[i][:7] != dates[i + 1][:7]]
+    if len(me) >= 2:
+        mon, prev = [], 0
+        for i in me:
+            if i == 0:
+                continue
+            row = {"m": dates[i][:7],
+                   "r": round((nav[i] / nav[prev] - 1) * 100, 2) if nav[prev] else None,
+                   "b": round((bnav[i] / bnav[prev] - 1) * 100, 2) if bnav[prev] else None}
+            iv = {lab: round((seq[i] / seq[prev] - 1) * 100, 2)
+                  for lab, seq in full_idx.items() if seq and seq[prev]}
+            if iv:
+                row["i"] = iv
+            mon.append(row)
+            prev = i
+        pack["monthly"] = mon
     return pack
 
 
