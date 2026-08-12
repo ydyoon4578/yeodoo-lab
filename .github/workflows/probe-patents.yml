@@ -1,0 +1,55 @@
+name: Probe patent coverage (B11, one-off)
+
+# B11 기술 링크 모멘텀의 **자료 관문**만 잰다. 사전등록 build/PREREG-2026-08-12-TECHLINK.md §8.
+#
+# ⚠ **크론이 없다.** 원천(Zenodo record 15783125)이 2024-12-31 에서 얼어붙은 종료 아카이브라
+#   정기 갱신이 성립하지 않는다. 매일 같은 파일을 다시 받을 이유가 없으므로 수동 실행 전용이다.
+#   (그래서 build/validate_site.py 의 '2개 잡 이상이 커밋하는 경로는 재생성 표에' 검사와도
+#    무관하다 — 이 잡만 data/_probe_patent_orgs.json 을 커밋한다.)
+#
+# 왜 러너인가. 사내 PC 는 보안 화이트리스트(yfinance·FRED·Finnhub·사내DB) 밖으로 못 나간다.
+#   SEC 를 러너에서 받는 것과 같은 이유다.
+#
+# 무게 — 두 파일 약 570MB 다운로드 + 실용특허 약 9M행·출원인 약 23M행 파싱.
+#   CPC(321MB)는 **일부러 안 받는다**: G1 을 못 넘으면 받을 이유가 없다(사전등록 §8).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: probe-patents
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install --quiet numpy
+      # 디스크 여유를 먼저 찍는다 — 570MB 인출 + 압축해제가 들어갈 자리가 있는지 눈으로 본다.
+      # 실패하면 사유가 'No space left' 한 줄로 끝나 원인이 안 남는다.
+      - name: Disk before
+        run: df -h /
+      # 체크아웃 직후 기준선을 잰다 — 이 잡과 무관한 기존 결함 때문에 570MB 인출을
+      # 통째로 버리지 않기 위해서다(build/validate_gate.py 의 사유 그대로).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Probe patent coverage
+        run: python build/probe_patents.py
+      - name: Disk after
+        run: df -h /
+      - name: Validate
+        run: python build/validate_gate.py check
+      # 산출물만 커밋한다. 원자료(570MB)는 스크립트가 받은 자리에서 지운다.
+      - name: Commit probe output
+        run: |
+          bash build/ci_push.sh "chore(data): B11 특허 커버리지 프로브 산출(1회성)" \
+            data/_probe_patent_orgs.json
