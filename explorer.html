@@ -126,7 +126,12 @@
   .item:hover{border-color:var(--accent)}
   .item[aria-selected="true"]{background:var(--sel);border-color:var(--accent);border-left-color:var(--vc,var(--accent))}
   .item .vdot{width:9px;height:9px;border-radius:50%;background:var(--vc);flex-shrink:0}
-  .item .body{min-width:0}
+  /* 🚨 2026-08-12 — display 가 없어서 인라인 span 이었다. 인라인 상자에는 min-width·overflow 가
+     안 먹으므로 자식 .nm 의 말줄임(text-overflow:ellipsis)이 **작동하지 않았고**, 긴 이름이
+     격자 칸을 넘쳐 오른쪽 CAGR 숫자 위로 흘렀다(실측: '밸류 컴포지트 상위 10 (섹터 제약 없음)'
+     위에 '22.41%' 가 포개져 둘 다 못 읽었다. 긴 이름 넷이 전부 그랬다).
+     ⚠ 그리드 자식이 줄어들려면 min-width:0 만으로는 부족하다 — 블록 서식 상자여야 한다. */
+  .item .body{min-width:0;display:flex;flex-direction:column;overflow:hidden}
   .item .nm{font-size:14px;font-weight:600;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
   /* 하드코딩 hex는 다크에서 9px 글씨 대비 2.9:1 → 현재 테마 잉크색 기반으로 */
