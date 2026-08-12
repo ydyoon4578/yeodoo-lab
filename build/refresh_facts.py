@@ -2,10 +2,17 @@
 # -*- coding: utf-8 -*-
 """SEC EDGAR companyfacts(XBRL) → 회사별 재무 시계열
 
-메뉴 정본에서 이 소스 하나에 막혀 있던 세 칸을 겨냥한다:
+메뉴 정본에서 이 소스 하나에 막혀 있던 칸을 겨냥한다:
   co.html#fs          재무제표      기간·제출일이 붙은 분기/연간 시계열
-  valuation.html#ddm  DDM          분기별 주당배당금(DPS) 이력이 있어야 성립
-  valuation.html#rim  RIM          기초 자기자본·순이익·배당이 맞물려야 성립
+
+🚨 2026-08-12 — 겨냥 대상이 셋에서 하나로 줄었다. valuation.html(DDM·RIM·지수 역산)과
+  rel-value.html 을 지웠다(사용자 결정 — 쓰이지 않았다. 본문 링크 0). 그 페이지들만 읽던
+  세 산출(clean_surplus · index_fcf · dps_years)과 그것을 만드는 149줄을 같이 걷었다.
+  ⚠ 자료만 지우고 계산을 남기면 매주 아무도 안 읽는 값을 굽는다 — 그 상태를 이 저장소가
+    'DDM/RIM 이 곧 살아난다'는 신호로 오해할 수 있어 계산까지 걷었다.
+  ⚠ 되살릴 때 밟을 함정은 **은퇴 기록에 남겼다**(build/nav_items.json 의 retired) —
+    지수 FCF 를 SEC frames 로 직접 합치면 집합이 어긋나 +80% 부풀려진다는 실측이다.
+  · crosscheck_stat(xcheck)는 co.html 이 읽으므로 그대로 둔다.
 
 ── 왜 지금까지 비어 있었나 ─────────────────────────────────────────────
 빈 탭에 적어 둔 사유가 정확했다: 이 사이트가 가진 재무 숫자는 **오늘 한 점짜리 단면**이라
@@ -374,84 +381,6 @@ def extract(facts: dict):
     return out
 
 
-def index_fcf_stat(tickers, mc_by_t):
-    """지수 단위 FCF 합계 — valuation.html#index가 읽는다.
-
-    ⚠ 이건 '지수의 FCF'가 아니라 **두 다리가 모두 잡히고 최근 회계연도인 회사들의 합계**다.
-    그 사실을 숫자로 같이 내보낸다(커버 종목 수·시총 비중). 실측(2026-07-25):
-
-      · SEC frames API로 직접 합치면 영업현금흐름 488사 대 설비투자 329사로 집합이 어긋난다.
-        무시하고 빼면 FCF가 **+80% 부풀려진다**. 교집합만 쓰면 시총 커버가 60%로 떨어진다.
-      · 반면 이 수집분은 회사별로 후보 태그 중 살아 있는 것을 골라 뒀기 때문에 두 다리가
-        모두 있는 회사가 457사다. 거기서 최근 18개월 안에 끝난 회계연도만 남기면
-        **427사 · 시총 87%**가 된다(2018년에 멈춘 회사가 섞이면 합산이 성립하지 않는다).
-    """
-    cut = (dt.date.today() - dt.timedelta(days=548)).isoformat()   # 약 18개월
-    fcf = 0.0
-    mc = 0.0
-    used, neg = 0, 0
-    # 🚨 이중클래스를 두 번 더하지 않는다(사용자 지적 2026-08-04). 시총 정보원이 회사 전체
-    #   시총을 두 티커에 똑같이 주고, 재무(fx)도 같은 CIK 라 같은 파일 값이다 — 그냥 돌면
-    #   알파벳의 FCF 와 시총이 **둘 다 두 번** 들어가 비율은 안 변하지만 가중치가 두 배가 된다.
-    #   같은 CIK 는 처음 하나만 쓴다(정렬이 고정이라 어느 것을 쓸지도 고정된다).
-    _seen_cik = set()
-    for t in sorted(tickers):
-        try:
-            d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
-        except Exception:
-            continue
-        _c = d.get("cik")
-        if _c:
-            if _c in _seen_cik:
-                continue
-            _seen_cik.add(_c)
-        tg = d.get("tags") or {}
-        cm = {x: y for x, y in ((tg.get("cfo") or {}).get("a") or [])}
-        pm = {x: y for x, y in ((tg.get("capex") or {}).get("a") or [])}
-        common = sorted(set(cm) & set(pm), reverse=True)
-        if not common or common[0] < cut:
-            continue
-        v = cm[common[0]] - pm[common[0]]
-        m = mc_by_t.get(t)
-        if not m:
-            continue
-        fcf += v
-        mc += m
-        used += 1
-        if v < 0:
-            neg += 1
-    # ⚠ 분모는 '시총을 아는 종목'의 합이다 — 시총이 없는 종목은 분자·분모에서 **함께** 빠진다.
-    #   그래서 정보원이 죽어 시총 결손이 늘면 mc_cover 는 오히려 안 떨어진다(분모도 같이 줄어서).
-    #   커버리지 숫자만 보면 안 보이는 열화라, 시총 결손 종목 수를 함께 내보내 드러낸다.
-    #   (2026-07-30 실측: 시총 커버가 79%까지 내려간 날에도 이 지표는 정상으로 보였다.)
-    # ⚠ 분자(mc)를 CIK 로 중복 제거했으므로 분모도 같은 규칙이어야 한다. 안 그러면
-    #   mc_cover 가 이중클래스만큼 낮게 나온다(실측 2023-12 이후 유니버스 합계의 4~6%).
-    _cm, _tseen = load_cik_map()[0], set()
-    tot_mc = 0.0
-    for _t, _v in sorted(mc_by_t.items()):
-        if not _v:
-            continue
-        _k = _cm.get(_t) or ("t:" + _t)
-        if _k in _tseen:
-            continue
-        _tseen.add(_k)
-        tot_mc += _v
-    n_nomc = sum(1 for v in mc_by_t.values() if not v)
-    if n_nomc:
-        print("  ⚠ 시총 결손 %d/%d종목 — mc_cover 의 분모에서도 빠진다(커버가 높게 보인다)"
-              % (n_nomc, len(mc_by_t)))
-    if not used or not mc:
-        return None
-    return {"n": used, "n_uni": len(mc_by_t), "n_neg": neg, "n_nomc": n_nomc,
-            "fcf_musd": round(fcf, 0),                    # 백만 달러
-            "mc_cover": round(mc / tot_mc * 100, 1) if tot_mc else None,
-            # fund.mc는 억$ 단위다 — 백만$로 맞춰 수익률을 낸다
-            "fcfy": round(fcf / (mc * 100) * 100, 3),
-            "window_months": 18,
-            "note": "지수의 FCF가 아니다. 영업현금흐름과 설비투자가 모두 잡히고 최근 18개월 안에 "
-                    "끝난 회계연도가 있는 회사들의 합계다. 커버 종목 수와 시총 비중을 함께 봐야 한다."}
-
-
 def crosscheck_stat(tickers, mc_by_t, fund_by_t):
     """yfinance 단면 지표 vs SEC 원본 — 이 사이트의 펀더멘털 화면이 무엇 위에 서 있는지 재는 값.
 
@@ -493,55 +422,6 @@ def crosscheck_stat(tickers, mc_by_t, fund_by_t):
     out["note"] = ("yfinance 단면 지표와 SEC 원본으로 계산한 값의 차이(%). 화면이 쓰는 재무가 "
                    "원본과 얼마나 맞는지 재는 값이다. IFRS 보고 회사는 제외.")
     return out
-
-
-def clean_surplus_stat(tickers):
-    """장부가 증분이 '이익 − 배당'과 얼마나 어긋나는지 — RIM 전제의 실측.
-
-    두 가지로 잰다:
-      naive = ΔBV − (순이익 − 배당)
-      full  = ΔBV − (순이익 − 배당 − 자사주매입 + 주식발행)
-    분모는 기초 자기자본. 실측(2026-07-25): naive 중앙값 7.9%, full 4.8%.
-    자사주 매입이 가장 큰 누락 항목이지만, 넣어도 4곳 중 1곳은 10%를 넘는다.
-    """
-    naive, full = [], []
-    for t in tickers:
-        try:
-            d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
-        except Exception:
-            continue
-        T = d.get("tags") or {}
-
-        def ann(k):
-            return {x: y for x, y in ((T.get(k) or {}).get("a") or [])}
-        eq = {x: y for x, y in ((T.get("eq") or {}).get("i") or [])}
-        ni, dps, sh, bb, iss = ann("ni"), ann("dps"), ann("sh"), ann("bb"), ann("iss")
-        ds = sorted(set(eq) & set(ni), reverse=True)
-        if len(ds) < 2:
-            continue
-        t1, t0 = ds[0], ds[1]
-        base = abs(eq[t0])
-        if not base:
-            continue
-        dbv, earn = eq[t1] - eq[t0], ni[t1]
-        div = dps.get(t1, 0) * sh.get(t1, 0) if (t1 in dps and t1 in sh) else 0
-        naive.append(abs(dbv - (earn - div)) / base * 100)
-        full.append(abs(dbv - (earn - div - bb.get(t1, 0) + iss.get(t1, 0))) / base * 100)
-    if not naive:
-        return None
-
-    def med(v):
-        v = sorted(v)
-        n = len(v)
-        return round(v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2, 2)
-
-    def within(v, th):
-        return round(sum(1 for x in v if x <= th) / len(v) * 100, 1)
-    return {"n": len(naive),
-            "naive": {"median": med(naive), "w5": within(naive, 5), "w10": within(naive, 10)},
-            "full": {"median": med(full), "w5": within(full, 5), "w10": within(full, 10)},
-            "note": "장부가 증분이 '이익 − 배당'과 어긋나는 정도(기초 자기자본 대비 %). "
-                    "full은 자사주 매입·주식 발행까지 반영한 값. RIM의 전제가 실제로는 성립하지 않는다."}
 
 
 def load_universe():
@@ -697,26 +577,7 @@ def main() -> int:
 
     # ── 클린서플러스 실측 ──────────────────────────────────────────────
     # RIM(잔여이익모형)은 '장부가 증분 = 이익 − 배당'이 성립한다는 전제 위에 선다.
-    # 미국 회계에서 이게 실제로 얼마나 맞는지 재서 남긴다 — 안 재고 모형을 켜면
-    # 내부적으로 모순된 값을 RIM이라고 부르게 된다.
-    cs = clean_surplus_stat(got)
-    idx = index_fcf_stat(got, mc_by_t)
     xc = crosscheck_stat(got, mc_by_t, fund_by_t)
-    # DDM이 쓸 수 있는 범위 — 연간 주당배당금이 몇 년치나 있는가
-    dy = {"n1": 0, "n2": 0, "n4": 0}
-    for t in got:
-        try:
-            d = json.load(io.open(os.path.join(DIR_FX, "%s.json" % t), encoding="utf-8"))
-        except Exception:
-            continue
-        rows = (((d.get("tags") or {}).get("dps") or {}).get("a") or [])
-        if rows:
-            dy["n1"] += 1
-        if len(rows) >= 2:
-            dy["n2"] += 1
-        if len(rows) >= 4:
-            dy["n4"] += 1
-
     summary = {
         "note": "SEC EDGAR companyfacts(XBRL) 수집 요약. 실제 숫자는 종목별 data/fx/<티커>.json에 있다. "
                 "재작성이 있으면 제출일이 가장 늦은 값을 쓴다. 6·9개월 누적 구간은 분기로 세지 않는다.",
@@ -728,10 +589,7 @@ def main() -> int:
         "cov": {k: round(cov[k] / max(1, len(got)) * 100, 1) for k in cov},
         "no_facts": [t for t, _n in empty],
         "miss": miss,
-        "clean_surplus": cs,
-        "index_fcf": idx,
         "xcheck": xc,
-        "dps_years": dy,
         "limits": [
             "숫자는 회사가 XBRL로 태깅해 제출한 값 그대로다 — 랩이 조정하거나 재분류하지 않는다.",
             "회사마다 쓰는 태그가 달라 같은 줄이라도 출처 태그가 다를 수 있다(각 항목에 태그명을 표기한다).",
