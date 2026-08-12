@@ -62,7 +62,7 @@ DATA = os.path.join(ROOT, "data")
 DIR_INS = os.path.join(DATA, "ins")
 OUT = os.path.join(DATA, "home_insider.json")
 
-TOPN = 8            # 홈 카드에 넣을 줄 수
+TOPN = 10           # 홈 카드에 넣을 줄 수
 
 
 ROLES = ("임원", "이사", "10%주주", "기타")

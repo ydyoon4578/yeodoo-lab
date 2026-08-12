@@ -456,6 +456,30 @@ def main() -> int:
             cost_kill=r.get("cost_kill"), cost_sensitive=r.get("cost_sensitive"),
         ))
 
+    # ── ③-b 페어 트레이딩 ── build/pairs_backtest.py · PREREG-2026-08-12-PAIRS.md
+    # 🚨 **대조군이 다른 넷과 다르다.** 앞의 소스는 전부 시장(또는 동일가중 유니버스)과
+    #   겨루는데, 페어는 달러중립 롱숏이라 대조군이 **현금**이고 Δ샤프의 분모가 0 이다.
+    #   그래서 성격은 수익엔진으로 두되(초과수익이 목적이므로 맞다) `bench_unstable` 로
+    #   비교 가능성을 끈다 — 위 comparability() 의 첫 갈래가 정확히 이 경우를 위한 것이다.
+    #   ⚠ 새 성격 어휘를 만들지 않았다. strategy_kinds.json 에 '시장중립'을 더하면
+    #     strategy_report·strategy_book_pdf·validate_site 의 성격 목록까지 같이 움직여야
+    #     하는데, 얻는 것은 라벨 하나이고 잃는 것은 네 파일의 동기화다. 화면이
+    #     "같은 눈금이 아니다"를 말할 수 있으면 그것으로 충분하다.
+    pz = load("pairs_strategies.json") or {}
+    for r in (pz.get("strategies") or []):
+        rows.append(rec(
+            sid=r["sid"], name=r["name"], role=r.get("role") or "수익엔진",
+            grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
+            src="페어 트레이딩", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            pr_hint="D",                      # 일간 계열이다(pairs_backtest 의 ann 통계와 같은 주기)
+            bench_label=r.get("bench_label") or pz.get("bench_label"),
+            bench_unstable=True,
+            start=r.get("start"), end=r.get("end"),
+            metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
+            d_sharpe=r.get("d_sharpe"), t=r.get("t"), beta=r.get("beta"),
+            nav=r.get("nav"), bnav=r.get("bnav"),
+        ))
+
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
     # 성격은 규칙이 하는 일로 정한다(재검 산출물에는 role이 없다).
     RECHK_ROLE = {

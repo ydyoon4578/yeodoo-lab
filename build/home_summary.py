@@ -5,7 +5,7 @@
 않는다. 대신 빌드가 필요한 값만 여기에 구워 1~2KB로 만든다.
 
 담는 것
-  ① 스윙 타점 상위 8+8 — 확정/잠정 지위 포함
+  ① 스윙 타점 상위 10+10 — 확정/잠정 지위 포함
   ② 확정·잠정 **카운트** — '오늘 표시된 16건이 전부 잠정'인데 카드가 "확정 스윙 타점"을 내세우는
      불일치가 실제로 있었다. 숫자를 함께 실어 화면이 스스로 드러내게 한다.
 """
@@ -21,7 +21,7 @@ SECKO = {"Information Technology": "IT", "Health Care": "헬스케어", "Financi
          "Communication Services": "커뮤니케이션", "Energy": "에너지", "Utilities": "유틸리티",
          "Real Estate": "부동산", "Materials": "소재"}
 WIN = 10          # 최근 N거래일 내 타점만 홈에 노출
-TOP = 8
+TOP = 10
 
 
 def _lastmk(s, key):
