@@ -326,6 +326,77 @@ def sector_by_price(reg_json, root):
                  "bench": "같은 달 전체 %d종 동일가중" % nstk}
 
 
+# ── 스타일 ETF × 국면 ───────────────────────────────────────────────────────
+# 사용자 요청 2026-08-13 — 섹터 도표 아래에 같은 축으로 스타일도 본다.
+# 🚨 섹터와 달리 여기서는 **실제 ETF** 를 쓴다. 섹터는 XLC 가 2018 상장이라 ETF 로 11개를
+#   못 채워 랩 518종을 GICS 로 묶었지만, 스타일은 랩 종목으로 재현하면 그게 이 랩의 산식이지
+#   그 상품이 아니다(홈의 '지수 방법론' 줄이 이미 그 역할을 한다). 여기서는 살 수 있는 것을 본다.
+# ⚠ 그래서 **상장일이 제각각**이고 국면마다 표본이 갈린다 — MTUM·QUAL·VLUE·SIZE 는 2013,
+#   USMV·SPHB 는 2011 상장이라 2009 침체를 못 겪었다(침체 n=4 는 2020 코로나 넉 달뿐).
+#   IVE·RPG·SDY·RSP 만 2006 부터라 n=18 이다. 그 수를 셀마다 같이 싣는다.
+STYLES_ETF = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("USMV", "저변동"),
+              ("VLUE", "가치"), ("SIZE", "중소형"), ("IVE", "가치(S&P)"),
+              ("RPG", "성장"), ("SPHB", "고베타"), ("SDY", "배당성장"),
+              ("RSP", "동일가중")]
+STYLE_BENCH = "SPY"
+STYLE_MIN_N = 3
+
+
+def style_by_price(reg_json, root):
+    """국면별 스타일 ETF 상대성과 — 그 국면의 월평균 − 같은 달 SPY(%p).
+
+    🚨 대조군이 섹터 쪽(전체 동일가중)과 다르다. 스타일 ETF 는 대부분 시총가중이라
+      동일가중으로 빼면 '동일가중 대 시총가중' 차이가 스타일 순위에 섞인다. 같은 자를
+      쓰려면 시총가중인 SPY 여야 한다. ⚠ RSP(동일가중)만은 그 차이가 곧 그 상품의 내용이다.
+    ⚠ 월 수익은 data/assets.json 의 배당조정 종가에서 만든다(추가 수집 없음).
+    ⚠ 표본이 STYLE_MIN_N 미만인 칸은 **넣지 않는다** — 없는 것을 지어내지 않는다.
+    """
+    A = json.load(io.open(os.path.join(root, "data", "assets.json"), encoding="utf-8"))
+    dts, px = A.get("dates") or [], A.get("px") or {}
+    me = {}
+    for i, d in enumerate(dts):
+        me[d[:7]] = i                     # 그 달의 마지막 거래일
+    months = sorted(me)
+    reg = {x["dt"][:7]: x["r"] for x in (reg_json.get("history") or [])}
+
+    def mret(tk):
+        a = px.get(tk)
+        if not a:
+            return {}
+        out = {}
+        for j in range(1, len(months)):
+            p0, p1 = a[me[months[j - 1]]], a[me[months[j]]]
+            if p0 and p1:
+                out[months[j]] = (p1 / p0 - 1) * 100.0
+        return out
+
+    bench = mret(STYLE_BENCH)
+    rows, meta = {}, {}
+    per = collections.defaultdict(lambda: collections.defaultdict(list))
+    for tk, ko in STYLES_ETF:
+        r = mret(tk)
+        if not r:
+            continue
+        meta[tk] = {"ko": ko, "start": min(r)}
+        for m, v in r.items():
+            k = reg.get(m)
+            if k and m in bench:
+                per[k][tk].append(v - bench[m])
+    for k, _ko, _p, _d in PHASE:
+        out = []
+        for tk, ko in STYLES_ETF:
+            v = (per.get(k) or {}).get(tk) or []
+            if len(v) >= STYLE_MIN_N:
+                out.append({"t": tk, "ko": ko, "v": round(statistics.mean(v), 2), "n": len(v)})
+        out.sort(key=lambda x: -x["v"])
+        if out:
+            rows[k] = out
+    return rows, {"bench": "같은 달 %s" % STYLE_BENCH, "min_n": STYLE_MIN_N, "etf": meta,
+                  "note": "상장일이 제각각이라 국면마다 표본이 갈린다 — 2009 침체를 겪은 것은 "
+                          "IVE·RPG·SDY·RSP 뿐이고 나머지는 2011~2013 상장이라 침체 표본이 "
+                          "2020 코로나 넉 달뿐이다. 칸마다 n 을 같이 싣는 이유다."}
+
+
 def sector_by_earnings(reg_json, root):
     """실적 기준 — 그 국면에 속한 분기의 섹터 합산 순이익 YoY 중앙값(%).
 
@@ -593,6 +664,7 @@ def main():
 
     by_price, pmeta = sector_by_price(d, ROOT)
     by_earn, emeta = sector_by_earnings(d, ROOT)
+    by_style, smeta = style_by_price(d, ROOT)
 
     # 교과서 도표 ↔ 이 랩 실측 — 겹치는 업종을 센다. 겹침이 적으면 적은 대로 낸다.
     _koN = {k: ko for k, ko, _p, _dd in PHASE}
@@ -674,6 +746,10 @@ def main():
                                   "짝지어진 종목만 · 기저 적자 분기 제외",
                     "price_meta": pmeta,
                     "caveat": SURV_NOTE},
+        # 스타일 ETF × 국면 — 섹터 도표 아래에 같은 축으로 놓는다(사용자 요청 2026-08-13).
+        "styles": {"price": by_style, "price_basis":
+                   "그 국면의 스타일 ETF 월평균 − 같은 달 SPY(%p) · 실제 상품 수익률",
+                   "price_meta": smeta},
         "drift": {
             "trans": trans, "n_months": len(seq),
             "pairs": len(pairs), "pairs_max": max(pairs.values()) if pairs else 0,
