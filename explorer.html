@@ -290,6 +290,20 @@
   .ktile .v{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.05;font-variant-numeric:tabular-nums}
   .ktile .s{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .kindtiles .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
+  /* 국면별 성적 — 표본이 약한 칸을 흐리게 해서 '읽지 말라'를 색으로도 말한다. */
+  .rgwrap{padding:13px 18px 14px;border-bottom:1px solid var(--line-soft)}
+  .rgwrap .kh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .rgrow{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;font-size:12px;padding:3px 0}
+  .rgrow+.rgrow{border-top:1px solid var(--line-soft)}
+  .rgrow.weak{opacity:.55}
+  .rgrow.now .rgn{color:var(--accent);font-weight:700}
+  .rgn{font-size:12px;color:var(--ink-2);white-space:nowrap}
+  .rgv{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  /* ⚠ --up/--dn 은 이 페이지에 없다(홈 것이다). 여기 이미 있는 승패 색을 쓴다 —
+     지수 비교표의 .pw/.pl 이 쓰는 그 둘이라 카드 안에서 색이 갈리지 않는다. */
+  .rgv.up{color:var(--gA)} .rgv.dn{color:var(--rej)} .rgv.z{color:var(--muted)}
+  .rgs{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .rgwrap .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
   /* ⑥ 위기 구간 표 — 대조군 열에는 승패 라벨을 붙이지 않는다. 숫자를 나란히 놓는 것으로 충분하다. */
   .crwrap{overflow-x:auto;margin:4px 0 2px;-webkit-overflow-scrolling:touch}
   .crtbl{border-collapse:collapse;width:100%;font-size:12px;min-width:430px}
@@ -1363,10 +1377,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
           d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           d._mx=x.metrics||null;   // 전략 자신의 지표 — 지수 눈금과 나란히 놓을 왼쪽 열
+          d._rg=x.rg||null;        // 국면별 월평균(build/strategy_index.py:_regime_stats)
           d._prb=x.pr_basis||null; // 그 전략의 지표가 어느 주기로 계산됐나(일간/월말)
           if(!d._hold&&x.holdings)d._hold=x.holdings;
         });
         window.__PRNOTE=ix.pr_note||''; window.__CMPNOTE=ix.cmp_note||'';
+        RGM=ix.rg_meta||null;
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
         if(window.__rebuildChips)window.__rebuildChips();
         render();
@@ -1458,10 +1474,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 기본 정렬은 '샤프 ↓'(사용자 결정 2026-08-12).
   // '성격' 정렬은 목록 단계에서 "성격마다 보는 눈이 다르다"를 가르치고, 세 칸 머리글도 그때만 나온다.
   // '관측개월' 정렬은 "표본이 짧아 판정 못 한 것"과 "길게 봐도 안 되는 것"을 구분해 준다.
-  var SORTS=[['sharpe','샤프'],['kind','성격'],['verdict','등급'],['n','관측개월']];
+  // '지금 국면' 정렬은 RGM 이 온 뒤에만 뜻이 있다 — 라벨을 그때 채운다(아래 rgSortLabel).
+  var SORTS=[['sharpe','샤프'],['rgnow','지금 국면'],['kind','성격'],['verdict','등급'],['n','관측개월']];
   // 샤프 조회 — 자료가 두 모양으로 들어온다. 평평한 metrics.sharpe(랩 94종·인덱스 130종)와
   // v2 의 metrics.s/.vs/.profile(백테스트 9종)이다. 둘 다 훑고, 없으면 **null 을 돌린다**.
   // ⚠ 없는 값을 0 으로 채우지 않는다 — 0 으로 두면 '못 쟀음'이 '샤프 0'인 척하며 중간에 끼어든다.
+  // ── 국면별 성적 ────────────────────────────────────────────────────────
+  // 🚨 **검정이 아니라 서술이다.** 이 랩은 7국면이 다음 달을 못 가른다는 것을 이미 검정했다
+  //   (data/regime.json 의 fwd_note). 그러니 '지금 국면이 회복이니 회복 1등을 사라' 로 읽히면
+  //   안 된다. 그래서 화면은 숫자 옆에 **연속 구간 수**를 늘 같이 적는다 — 과열 26개월은 전부
+  //   한 덩어리(2021-04~2023-05)이고 후기사이클은 4개월 한 덩어리다. 사건 하나짜리 칸을
+  //   26개 관측처럼 보이게 두지 않는 것이 이 표시의 전부다.
+  var RGM=null;
+  function rgNow(){return RGM&&RGM.now;}
+  function rgv(d,k){
+    var e=d&&d._rg&&d._rg[k||rgNow()];
+    return (e&&typeof e.v==='number')?e.v:null;
+  }
+  // 흐리게 할 기준 둘 — **구간이 3개 미만**이거나 **20개월 미만**. 둘 다 봐야 한다:
+  //   과열은 26개월인데 1구간이고(사건 하나), 연착륙은 3구간인데 13개월이며 그중 9개월이
+  //   한 구간(2020-07~2021-03)이다. 어느 한쪽만 보면 둘 중 하나를 놓친다.
+  function rgWeak(k){
+    if(!(RGM&&RGM.runs))return false;
+    return (RGM.runs[k]||0)<3 || ((RGM.n&&RGM.n[k])||0)<20;
+  }
   function shp(d){
     var v=null;
     if(d._m&&d._m.sharpe!=null)v=d._m.sharpe;                        // 랩 레코드(평평)
@@ -1521,6 +1557,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
       }else if(state.sort==="n"){
         var nd=nMonths(b)-nMonths(a); if(nd)return nd;
+      }else if(state.sort==="rgnow"){
+        // 못 잰 것(그 국면 표본이 8개월 미만이거나 계열이 짧은 것)은 항상 맨 뒤.
+        var ga=rgv(a), gb=rgv(b);
+        if(ga==null&&gb!=null)return 1;
+        if(gb==null&&ga!=null)return -1;
+        if(ga!=null&&gb!=null&&ga!==gb)return gb-ga;
       }else if(state.sort==="sharpe"){
         // 내림차순. 못 잰 것(null)은 **항상 맨 뒤**로 보낸다 — 오름/내림에 따라 위로 올라오면
         // 자료가 없는 전략이 1등처럼 보인다.
@@ -1550,6 +1592,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function headM(d){
     // 샤프로 줄 세울 때는 오른쪽 숫자도 샤프로 바꾼다 — 안 그러면 CAGR 이 뒤죽박죽으로 보이는
     // 목록이 되어 "정렬이 깨졌다"로 읽힌다(줄 세운 값이 화면에 없으면 그렇게 읽힌다).
+    if(state.sort==='rgnow'){
+      var gv=rgv(d), gk=rgNow(), ge=d&&d._rg&&d._rg[gk];
+      return '<div class="mv'+(gv==null?' sm':'')+'">'+
+             (gv==null?'—':((gv>0?'+':'')+gv.toFixed(2)+'%'))+'</div><small>'+
+             esc(((RGM&&RGM.ko&&RGM.ko[gk])||'지금')+(ge?' '+ge.n+'개월':' 못 쟀음'))+'</small>';
+    }
     if(state.sort==='sharpe'){
       var sv=shp(d);
       return '<div class="mv'+(sv==null?' sm':'')+'">'+(sv==null?'—':mfmt('sharpe',sv))+
@@ -2395,6 +2443,34 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       return out;
     }
+    // ── 국면별 성적 ─────────────────────────────────────────────────────
+    // 탭으로 나누지 않는 이유를 여기 적어 둔다(2026-08-12 결정). 국면 탭을 만들면 화면이
+    // '지금 국면 탭을 열어 그 안의 1등을 사라'고 말하게 되는데, 그 추론은 이 랩이 이미
+    // 검정해서 기각한 것이다(7국면이 다음 달을 못 가른다 · regime.json fwd_note).
+    // 게다가 여섯 국면 중 셋은 **사건 하나짜리**다 — 과열 26개월이 전부 2021-04~2023-05
+    // 한 덩어리이고, 후기사이클은 4개월 한 덩어리다. 탭 셋이 사건 하나씩을 담게 된다.
+    // 그래서 한 줄짜리 스트립으로 카드 안에 두고, 숫자 **옆에 구간 수를 늘 붙인다.**
+    function rgBlock(d){
+      if(!(RGM&&d&&d._rg))return '';
+      var now=rgNow();
+      var rows=(RGM.order||[]).map(function(k){
+        var e=d._rg[k], w=rgWeak(k), v=(e&&typeof e.v==='number')?e.v:null;
+        var cls=(v==null)?'z':(v>0.005?'up':(v<-0.005?'dn':'z'));
+        return '<div class="rgrow'+(w?' weak':'')+(k===now?' now':'')+'">'+
+          '<span class="rgn">'+esc((RGM.ko&&RGM.ko[k])||k)+(k===now?' <b>← 지금</b>':'')+'</span>'+
+          '<span class="rgv '+cls+'">'+(v==null?'—':((v>0?'+':'')+v.toFixed(2)+'%'))+'</span>'+
+          '<span class="rgs">'+((RGM.n&&RGM.n[k])||0)+'개월 · '+((RGM.runs&&RGM.runs[k])||0)+'구간'+
+          (w?' ⚠':'')+'</span></div>';
+      }).join('');
+      return '<div class="rgwrap"><div class="kh">국면별 월평균 수익 — '+esc(RGM.span||'')+'</div>'+
+        rows+
+        '<p class="knote">🚨 <b>검정이 아니라 서술입니다.</b> 이 랩은 이 7국면이 다음 달 수익을 '+
+        '가르지 못한다는 것을 이미 검정했습니다 — 지금 국면을 보고 전략을 고르라는 뜻이 아닙니다.<br>'+
+        '⚠ 개월 수보다 <b>구간 수</b>를 먼저 보십시오. 과열 26개월은 전부 한 덩어리'+
+        '(2021-04~2023-05)이고 후기사이클은 4개월 한 덩어리입니다 — 그 칸의 숫자는 관측 26개가 '+
+        '아니라 <b>사건 하나</b>에서 나온 것입니다. 구간이 여럿인 것은 골디락스(6)와 회복(6)뿐입니다.<br>'+
+        '⚠ 그 국면 표본이 8개월 미만인 칸은 재지 않고 비웁니다.</p></div>';
+    }
 
     var play='';
     // ── 랩 전략 전용 블록 ── 배포 원장은 플레이북(det)이 있지만 랩 전략은 없다.
@@ -2527,7 +2603,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '<p class="labnote">굵은 선이 이 전략, 흐린 선이 비교 지수('+esc(bb.label||'—')+')입니다. 자세한 곡선을 불러오는 중…</p>';
         })()+
       '</div>';
-      play = perf + cmpBlock(d) + holdHtml +
+      play = perf + cmpBlock(d) + rgBlock(d) + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
           return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">비교 지수가 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+
