@@ -50,11 +50,69 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 DIR_INS = os.path.join(DATA, "ins")
 OUT_SUM = os.path.join(DATA, "insider.json")
+OUT_MON = os.path.join(DATA, "ins_monthly.json")   # 종목×월 장내 합계 — 절단 전 원본에서 만든다
 
 INDEX_URL = "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets"
 QUARTERS = 2          # 최근 몇 분기를 합칠지(2분기 ≈ 6개월)
 KEEP_PER_CO = 40      # 회사별 보관 거래 수
 FORMS = ("4", "4/A", "5", "5/A")   # 거래가 실린 서식. 3은 최초 보유 신고라 거래가 아니다
+
+
+def monthly_agg(by_co, latest):
+    """{티커: [거래…]} → {티커: {월: 합계}}. 🚨 **보관 상한을 적용하기 전** 원본으로 부를 것.
+
+    ⚠ 함수로 떼어 둔 이유: 이 스크립트 본체는 SEC 를 직접 때리므로 사내 PC 에서 못 돌린다.
+      그러면 이 계산은 러너에서 처음 실행되고, 거기서 처음 죽는다(그 잡이 죽으면 그날 수집분이
+      통째로 날아간다). 함수로 있으면 손으로 만든 입력으로 로컬에서 먼저 확인할 수 있다.
+    ⚠ 중복 제거 키·역할 규칙은 home_insider.py 와 같아야 한다 — (거래일·코드·수량·단가).
+    """
+    mon = {}
+    for t, rows in by_co.items():
+        seen = set()
+        for r in rows:
+            if r.get("c") not in ("P", "S"):
+                continue
+            d, fd = r.get("d") or "", r.get("fd") or ""
+            if not d or d > latest or fd > latest:
+                continue
+            sh, px = r.get("sh") or 0, r.get("px") or 0
+            amt = sh * px
+            if amt <= 0:
+                continue
+            k = (d, r["c"], sh, px)
+            if k in seen:
+                continue
+            seen.add(k)
+            m = mon.setdefault(t, {}).setdefault(d[:7], {
+                "b": 0.0, "s": 0.0, "nb": 0, "ns": 0, "who": set(), "roles": {}, "days": set()})
+            role = _role(r.get("rel"))
+            m["roles"][role] = m["roles"].get(role, 0.0) + amt
+            m["days"].add(d)
+            if r["c"] == "P":
+                m["b"] += amt; m["nb"] += 1; m["who"].add(r.get("nm") or "")
+            else:
+                m["s"] += amt; m["ns"] += 1
+    return {t: {mo: {"b": round(v["b"]), "s": round(v["s"]), "nb": v["nb"], "ns": v["ns"],
+                     "who": len([x for x in v["who"] if x]),
+                     "roles": {k2: round(v2) for k2, v2 in v["roles"].items()},
+                     "nd": len(v["days"])}
+                for mo, v in ms.items()}
+            for t, ms in mon.items()}
+
+
+def _role(rel: str) -> str:
+    """SEC 관계 문자열 → 짧은 역할 태그. 🚨 home_insider.py 의 _role 과 라벨이 같아야 한다 —
+    어긋나면 home_insider 가 ins_monthly.json 을 거부하고 죽는다(조용히 틀리지는 않는다).
+    겸직은 임원 쪽으로 접는다: 임원·이사를 겸한 10% 주주의 매매는 지분 정리가 아니라
+    본인 판단일 수 있어서, '10%주주'로 부르면 틀린 말이 된다."""
+    r = rel or ""
+    if "Officer" in r:
+        return "임원"
+    if "Director" in r:
+        return "이사"
+    if "TenPercentOwner" in r:
+        return "10%주주"
+    return "기타"
 
 # Form 4 Table I 거래코드. 출처: SEC Form 4 서식 설명(General Instructions).
 CODE = {
@@ -202,12 +260,37 @@ def main() -> int:
         print("❌ 수집 0건 — 갱신 중단(이전본 유지)")
         return 1
 
+    # ── 월별 집계 — 🚨 **절단 전에** 만든다 ──────────────────────────────
+    # KEEP_PER_CO 는 회사별 최근 N건만 파일에 남긴다. 거래가 잦은 종목은 그 N건이 최신 달
+    # 안에서 끝나 버려, 그 파일만 읽으면 '그 달'이 며칠치가 된다. 실측(2026-06): 21종이
+    # 6월 앞부분을 통째로 잃어 6월 금액의 13.2%가 사라졌고, 홈 순매도 4위 AVGO 는 평일
+    # 22일 중 10일치(6/17~)만 담긴 채 '2026년 6월 한 달 순금액'으로 표시·정렬됐다.
+    # 보정하면 −$261M 이 아니라 −$575M 이고 순위도 4위가 아니라 3위다.
+    # 🚨 행을 다 보관하는 것으로는 못 고친다 — 비절단 P·S 만 16,902건이라 저장소가 3배
+    #   넘게 부풀고, 그 파일들은 매주 다시 쓰여 git 이력까지 같이 부푼다.
+    #   패널이 실제로 쓰는 것은 행이 아니라 **월별 합계**다. 그것만 따로 남긴다(≈수십 KB).
+    # ⚠ 중복 제거 키는 home_insider.py 와 같아야 한다 — (거래일·코드·수량·단가).
+    #   공동보고(한 거래를 여러 보고자가 각자 제출)를 안 걷어내면 금액이 사람 수만큼 뛴다.
+    latest = max((r["d"] for rows in by_co.values() for r in rows), default="")
+    mon_doc = monthly_agg(by_co, latest)
+    io.open(OUT_MON, "w", encoding="utf-8").write(json.dumps(
+        {"note": ("종목×월 장내(P·S) 합계. 🚨 회사별 보관 상한(KEEP_PER_CO) **적용 전** 원본에서 "
+                  "만든 것이라, 상한에 걸린 종목도 그 달이 온전하다. data/ins/*.json 을 직접 "
+                  "합산하면 안 되는 이유가 이것이다."),
+         "as_of": latest, "cap": KEEP_PER_CO, "roles": sorted({r for ms in mon_doc.values()
+                                                               for v in ms.values() for r in v["roles"]}),
+         "by_t": mon_doc}, ensure_ascii=False, separators=(",", ":")) + "\n")
+    print("  월별 합계 → %s (종목 %d)" % (os.path.basename(OUT_MON), len(mon_doc)))
+
     # ── 회사별 파일 ─────────────────────────────────────────────────────
     os.makedirs(DIR_INS, exist_ok=True)
     n_new = n_upd = 0
-    latest, disc_tot, tot = "", 0, 0
+    disc_tot, tot = 0, 0
+    n_cap = 0
     for t, rows in by_co.items():
         rows.sort(key=lambda r: (r["d"], r["fd"]), reverse=True)
+        if len(rows) > KEEP_PER_CO:
+            n_cap += 1
         rows = rows[:KEEP_PER_CO]
         doc = {"t": t, "n": len(rows), "codes": {c: CODE[c] for c in {r["c"] for r in rows} if c in CODE},
                "disc": list(DISCRETIONARY), "tr": rows}
@@ -226,8 +309,8 @@ def main() -> int:
             tot += 1
             if r["c"] in DISCRETIONARY:
                 disc_tot += 1
-            if r["d"] > latest:
-                latest = r["d"]
+        # ⚠ latest 는 위에서 **비절단 원본**으로 이미 구했다. 여기서 다시 구하지 않는다 —
+        #   두 곳에서 같은 값을 만들면 언젠가 갈라진다. (정렬이 최신순이라 값은 어차피 같다.)
 
     n_del = 0
     for fn in os.listdir(DIR_INS):
@@ -282,6 +365,10 @@ def main() -> int:
     sz = sum(os.path.getsize(os.path.join(DIR_INS, f)) for f in os.listdir(DIR_INS)) / 1024
     print("내부자 거래: %d사 · %d건(재량 %d건) · %.0fKB — 신규 %d · 변경 %d · 삭제 %d"
           % (len(by_co), tot, disc_tot, sz, n_new, n_upd, n_del))
+    # 상한에 걸린 회사 수를 매번 찍는다. 이 수가 0 이 아니면 data/ins 를 직접 합산하는 쪽은
+    # 반드시 틀린 답을 낸다 — ins_monthly.json 이 있어야 하는 이유를 눈에 보이게 남긴다.
+    print("보관 상한 %d건에 걸린 회사 %d/%d — 합산은 ins_monthly.json 을 쓸 것"
+          % (KEEP_PER_CO, n_cap, len(by_co)))
     if bad_date:
         print("⚠ 거래일이 제출일보다 뒤인 오타 %d건 제외: %s"
               % (len(bad_date), ", ".join("%s %s(제출 %s)" % b for b in bad_date[:5])))

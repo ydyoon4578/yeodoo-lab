@@ -52,7 +52,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 내부자 거래 자동 갱신" \
-            data/insider.json data/ins data/home_flow.json data/home_insider.json data/asof.json
+            data/insider.json data/ins data/ins_monthly.json data/home_flow.json data/home_insider.json data/asof.json
       # 이 축은 분기에 한 번 움직인다. 실측 지연이 25일이었으므로, 한 분기를 통째로
       # 건너뛴 경우(≈120일)에만 실패하도록 창을 넉넉히 잡는다.
       - name: Verify freshness
