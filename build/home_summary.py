@@ -467,7 +467,48 @@ def _load_px(ts, dates, root):
             continue
         if len(px) == len(dates):
             PX[t] = px
+    _guard_fresh(PX, dates)
     return PX
+
+
+# 최신 거래일 결측이 이 비율을 넘으면 세운다. 2%(518종목이면 10종)로 둔 이유 —
+# 신규 편입·상장 직후 종목이 한둘 비는 것은 정상이고, 원천 부분 응답은 수십 종씩 빈다.
+# 실측: 2026-08-11 사고가 29종(5.6%), 평시는 0종이다. 그 사이에 선이 있다.
+FRESH_MAX = 0.02
+
+
+def _guard_fresh(PX, dates):
+    """🚨 최신 두 거래일의 결측을 세고, 도를 넘으면 **빌드를 세운다**.
+
+    2026-08-12 사고: yfinance 가 08-11 하루를 29종에서 빠뜨렸는데 갱신 잡은 성공으로
+    끝났고, 홈 히트맵의 기본 기간이 '1일 등락'이라 그 29칸이 통째로 색을 잃었다.
+    화면은 "518종목"이라 적으면서 489칸만 칠했다 — **조용히 틀린 것**이 사고의 본체다.
+
+    ⚠ 왜 여기서 세우는가. 히트맵은 한두 종목이 없어도 나머지가 쓸모 있으니 '값 없음 N종'
+      으로 적어 내보내면 된다(write_stocks 참조). 하지만 수십 종이 빈 것은 자료가 아니라
+      **수집 실패**다. 그것을 실어 내보내면 화면이 없는 하락을 그리게 된다. 세우는 편이 낫다.
+      막혔을 때 할 일은 python build/backfill_px.py — 그 칸만 다시 받아 채운다.
+    """
+    if len(dates) < 2 or not PX:
+        return
+    n = len(PX)
+    bad = []
+    for k in (-1, -2):
+        m = sum(1 for a in PX.values() if a[k] is None)
+        if m:
+            bad.append((dates[k], m))
+    if not bad:
+        return
+    worst = max(m for _, m in bad)
+    line = " · ".join("%s %d종(%.1f%%)" % (d, m, m * 100.0 / n) for d, m in bad)
+    if worst <= n * FRESH_MAX:
+        print("  · 최신 종가 결측 %s — 한도(%.0f%%) 안이라 그대로 간다" % (line, FRESH_MAX * 100))
+        return
+    raise SystemExit(
+        "\n🚨 최신 종가가 무더기로 비었다 — %s (전체 %d종, 한도 %.0f%%)\n"
+        "   원천 부분 응답이다. 이대로 구우면 히트맵 1일 등락이 그 수만큼 빈 칸이 된다.\n"
+        "   → python build/backfill_px.py    (빈 칸만 다시 받아 채운다)\n"
+        "   → 그 뒤 python build/home_summary.py 다시" % (line, n, FRESH_MAX * 100))
 
 
 def _fpe(stocks):
@@ -712,10 +753,28 @@ def write_stocks(doc, root):
     rows = iv.get("rows") or []
     deep = [x for x in rows if x.get("st")]
     iv["rows"] = [x for x in rows if not x.get("st")]
+    # 🚨 기간별 결측을 **세어 싣는다**(2026-08-13). 2026-08-11 에 29종의 그날 종가가
+    #   빠졌는데 갱신 잡은 성공으로 끝났고, 홈 히트맵은 "518종목"이라 적으면서 489칸만
+    #   칠했다 — 빈 칸이 회색이라 '안 움직였다'와 구별되지 않았다.
+    #   이 랩의 다른 빌더(market_board)는 결손이면 갱신을 세우는데 여기엔 그 관문이 없었다.
+    # ⚠ 여기서 세우지는 않는다. 히트맵은 한 종목이 없어도 나머지 517칸이 쓸모 있고,
+    #   세우면 화면 전체가 사라진다. 대신 **수를 실어 화면이 스스로 말하게** 한다.
+    hz = [k for k, _ in IND_HOR] + ["YTD"]
+    na = {k: sum(1 for x in deep if (x.get("r") or {}).get(k) is None) for k in hz}
+    na = {k: v for k, v in na.items() if v}
+    if na:
+        print("  ⚠ 히트맵 결측 — " + " · ".join("%s %d종" % (k, v) for k, v in na.items())
+              + " (홈 부제가 이 수를 적는다)")
     p = os.path.join(root, "data", "home_stocks.json")
     json.dump({"as_of": doc.get("as_of"), "note":
                "섹터·산업 트리의 마지막 단(종목). 홈이 3단을 처음 펼칠 때만 받는다 — "
                "data/home_reco.json 에 넣으면 그 파일이 gz 10 → 26KB 가 된다.",
+               # 기간별 '값 없는 종목 수'. 없으면 키가 아예 없다(0 을 싣지 않는다).
+               "na": na,
+               "na_note": ("그 기간의 수익률을 낼 수 없는 종목 수다. 상장이 늦어 과거가 없는 "
+                           "종목과, 그날 원천이 값을 안 준 종목이 섞여 있다 — 화면은 둘을 "
+                           "구별하지 않고 '값 없음'으로만 적는다. 0 으로 채우지 않는다."),
+               "n_rows": len(deep),
                "rows": deep},
               io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     return p, len(deep)

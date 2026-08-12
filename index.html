@@ -284,6 +284,12 @@
   .hmcell .hr{font-family:var(--mono);font-weight:700;opacity:.95;
        text-shadow:0 1px 2px rgba(0,0,0,.55)}
   .hmcell:hover{outline:2px solid #fff;outline-offset:-2px;z-index:5;filter:brightness(1.15)}
+  /* 🚨 값이 없는 칸 — 회색으로만 두면 '0% 였다'와 구별되지 않는다. 2026-08-11 에 29종의
+     종가가 안 들어왔는데 화면은 그 29칸을 중립색으로 칠했고, 누구도 알아채지 못했다.
+     빗금을 넣어 **색이 아니라 무늬로** 다르게 만든다(색맹·저대비 화면에서도 갈린다). */
+  .hmcell.hnv{background-image:repeating-linear-gradient(135deg,
+              rgba(255,255,255,.13) 0 2px,rgba(255,255,255,0) 2px 6px)}
+  .hmcell.hnv .ht,.hmcell.hnv .hr{opacity:.62}
   /* 🚨 시총이 833배 차이라(65 ~ 54,245억$) 작은 칸에는 글자가 물리적으로 안 들어간다.
      518칸 중 이름이 보이는 것은 241개다. 나머지를 '없는 것'으로 두지 않으려고 띄우는 상자를
      둔다 — 브라우저 기본 title 은 1초 지연에 스타일도 못 준다. */
@@ -2793,10 +2799,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 화면이 무엇을 그리고 있는지 말이 된다(전체 518 · SPX 503 · NDX 102).
     // ⚠ 걸렀을 때는 섹터 등락률의 근거가 ETF 에서 화면 종목 시총가중으로 **바뀐다**(sret 참조).
     //   근거가 바뀌었는데 화면이 같은 말을 하면 그것이 거짓이다 — 부제가 적는다.
-    function sublbl(n){
+    // ⚠ 값 없는 종목 수는 **지금 이 화면 기준**으로 센다. 빌더가 실어 보낸 수(na)를 쓰면
+    //   지수를 걸렀을 때 화면에 없는 종목까지 세게 된다 — 그리는 것과 적는 것이 갈린다.
+    function sublbl(n, na){
       var sub=el('hm-sub'); if(!sub) return;
       sub.textContent='· '+(IX==='all'?'':IXKO[IX]+' ')+n+'종목 · 시총 순 · '+
         (PERIODS.filter(function(p){return p[0]===PER;})[0]||['',''])[1]+' 등락'+
+        (na?' · 값 없음 '+na+'종(빗금)':'')+
         (IX==='all'?'':' · 섹터 등락률은 화면 종목 시총가중')+
         (ASOF?' · 기준일 '+ASOF:'');
     }
@@ -2870,11 +2879,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               var mcs = r.mc>=10000 ? ('$'+(r.mc/10000).toFixed(2)+'T')
                         : (r.mc>=10 ? ('$'+(r.mc/10).toFixed(0)+'B') : ('$'+(r.mc*100).toFixed(0)+'M'));
               var vcol = v==null?'var(--muted)':(v>0?'var(--deploy)':(v<0?'var(--hot)':'var(--muted)'));
-              html+='<a class="hmcell" href="stocks.html#t='+esc(r.nm)+
+              html+='<a class="hmcell'+(v==null||v!==v?' hnv':'')+'" href="stocks.html#t='+esc(r.nm)+
                 '" data-tip="'+esc([r.nm,(r.sn||''),fmt(v),vcol,mcs,
                                     (SECKO[r.sec]||r.sec)].join('\u0001'))+
                 '" style="left:'+cb.x+'px;top:'+cb.y+'px;width:'+cb.w+'px;height:'+cb.h+
-                'px;background:'+col(v)+'">'+
+                // ⚠ background 단축이 아니라 background-color 다. 단축을 쓰면 인라인이
+                //   background-image 를 none 으로 되돌려 .hnv 빗금이 통째로 지워진다.
+                'px;background-color:'+col(v)+'">'+
                 (showT?'<span class="ht" style="font-size:'+tf+'px">'+esc(r.nm)+'</span>':'')+
                 (showR?'<span class="hr" style="font-size:'+Math.max(6,Math.round(tf*(tf>=18?0.72:0.7)))+'px">'+fmt(v)+'</span>':'')+
                 '</a>';
@@ -2885,7 +2896,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
       wrap.className='hmtree';
       wrap.innerHTML=html;
-      sublbl(RS.length);
+      sublbl(RS.length, RS.filter(function(r){
+        var v=r.r&&r.r[PER]; return v==null||v!==v; }).length);
       // 🚨 2026-08-10 — 히트맵 설명문을 걷었다(사용자 결정). 칸 크기·색 규약·묶음 구조를
       //   문단으로 다시 말하지 않는다. 남길 것은 부제 한 줄이다.
       //   ⚠ 다만 부제의 '시총 크기'는 **거짓이 된다** — 넓이는 시총이 아니라 시총의
