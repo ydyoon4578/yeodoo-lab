@@ -912,9 +912,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터 히트맵</span><span class="mmb vunv">미검증</span><span class="mmd">11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균</span></a>
           <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
-          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표 열람</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
         </div>
       </li>
@@ -1496,9 +1495,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         t.push((RGKO[rgk]||rgk)+' 국면 월평균 '+(x.rg[rgk]>0?'+':'')+x.rg[rgk].toFixed(2)+'% ('+rgn+'개월)');
       return t.join('\n');
     }
+    // 🚨 이 표는 위쪽 ETF 줄과 **같은 <table>** 이다. 여기서 칸 수를 안 맞추면 12mf PER
+    //   열이 통째로 한 칸씩 밀린다(머리글 12칸 · 이 줄 11칸으로 실제로 어긋나 있었다).
+    //   섹터 줄은 값이 있다(x.t 가 XLK 같은 ETF 티커다). 산업그룹·종목 줄은 '·' 로 둔다 —
+    //   전자는 바스켓 정의가 위 섹터와 겹쳐 두 번 말하게 되고, 후자는 그 값이 홈 자료에 없다.
     function cells(x){return stShp(typeof x.sharpe==='number'?x.sharpe:null)+
       pxCell(x)+
-      ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('');}
+      ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('')+
+      fpeCell(x);}
     // 한 줄. 🚨 펼침은 **자식 줄들을 여는 것**이다 — 예전처럼 숨은 행 하나를 여는 게 아니다.
     //   버튼의 data-open 이 부모 id 이고, 자식 줄은 data-p 로 그 id 를 가리킨다.
     //   aria-controls 는 쓰지 않는다: 가리킬 대상이 하나가 아니라 여러 줄이라 id 하나로
@@ -2014,7 +2018,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var ST_SKIP={IWM:1, SPY:1};
   // ⚠ 3년·5년 은 **누적**이다(연율 아니다) — 옆 칸들과 같은 뜻이어야 한 줄로 읽힌다.
   var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
-             ['12M','1년'],['3Y','3년'],['5Y','5년'],['YTD','YTD']];
+             ['12M','1년'],['3Y','3년'],['YTD','YTD']];
   // 수익률 한 칸의 색과 글자. 위 ETF 표(td)와 아래 구성종목 줄(span) **두 곳**이 쓴다 —
   // 규칙을 두 곳에 적으면 '-0.00' 을 막는 처리가 한쪽에만 남는 날이 온다.
   function stNum(v){
@@ -2037,6 +2041,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return (typeof v==='number')
       ? '<td class="tnum pxc">'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
       : '<td class="tnum pxc mut">·</td>';
+  }
+  // 🚨 12개월 선행 PER 한 칸(사용자 요청 2026-08-12 — YTD 오른쪽). 자료는
+  //   data/home_reco.json 의 fpe 이고 **이 랩이 계산한 값**이다(build/home_summary.py:_fpe).
+  //   ⚠ 후보가 없는 행(다우·러셀2000·스타일 ETF 8종)은 '·' 로 둔다 — 0 이나 전체 평균으로
+  //     채우면 없는 것을 지어내는 것이다. 주가 열과 같은 규약이다.
+  var FPE=null;
+  function fpeCell(x){
+    // 🚨 이 표는 줄마다 티커가 **다른 자리**에 있다. ETF 줄은 x.t 이고, 섹터 줄은 x.sec 다
+    //   (섹터 줄은 산업 트리에서 와서 t 가 없다 — 그래서 11줄이 통째로 비어 있었다).
+    //   ⚠ x.sec 는 **lv 1(섹터) 줄에서만** 쓴다. 종목 줄에도 sec 가 붙어 있어서 그냥 받으면
+    //     종목마다 제 섹터의 PER 이 찍혀 '이 종목의 PER'로 읽힌다.
+    var k=(x&&x.t)||(x&&x.lv===1?x.sec:null);
+    var e=FPE&&k&&FPE[k];
+    if(!e||typeof e.v!=='number')return '<td class="tnum pxc mut">·</td>';
+    return '<td class="tnum pxc" title="'+esc(e.basis+' 조화평균 · '+e.n+'/'+e.of+'종 채점 — '+
+           '이 랩 518종 중 그 바스켓 종목으로 계산한 값이며 그 ETF 가 발표한 값이 아닙니다')+
+           '">'+e.v.toFixed(1)+'</td>';
   }
   // ETF 티커 → 스타일 구성종목(data/style_top.json)의 키. 동일가중(RSP)은 선택 규칙이 아니라
   // 가중 방식이라 상위 10종목이라는 것이 성립하지 않는다 — 매핑에서 뺀다.
@@ -2069,7 +2090,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   였다. 자료(market_board.json)에도 px 가 없어서 두 겹으로 죽어 있었다 —
       //   한쪽만 고치면 여전히 안 나온다. 빌더와 여기를 같이 고쳤다.
       esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+pxCell(x)+
-      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
+      ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+fpeCell(x)+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
   // 그 지수의 실제 편입이 아니다. 그 말을 칩 옆이 아니라 **여기 본문에** 적는다.
@@ -2111,7 +2132,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   ⚠ 구간 라벨이 두 정본에서 다르다 — 12M ↔ '1년' 한 곳뿐이지만 그대로 넘기면 그 칸만 조용히
   //     빈다(—). 나머지 다섯은 이름이 같다.
   var ST_TR={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년',
-             '3Y':'3년','5Y':'5년','YTD':'YTD'};
+             '3Y':'3년','YTD':'YTD'};
   function labOf(t){ var k=ST_PERF[ST_KEY[t]]; return (SLAB&&k)?SLAB[k]:null; }
   // 홈 키(mom·spval·… / sc_*) → 그 줄의 기간별 수익률. 구성종목 줄이 쓴다.
   // ETF 티커를 거치지 않는다 — 아래 줄은 ETF 가 아니라 랩 규칙의 목록이라서다.
@@ -2164,7 +2185,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 랩 전략 줄은 10종목 묶음이라 '주가'라는 단일 숫자가 없다 — 빈 칸을 명시적으로
     //   넣는다. 안 넣으면 열이 하나 밀려 12개월 값이 YTD 칸에 앉는다.
     return '<tr><th scope="row">'+btn+nm+ref+'</th>'+stShp(sharpeOf(k))+pxCell(null)+
-           ST_HZ.map(function(z){return stCell(t?t.v[ST_TR[z[0]]]:null);}).join('')+'</tr>'+
+           ST_HZ.map(function(z){return stCell(t?t.v[ST_TR[z[0]]]:null);}).join('')+
+           '<td class="tnum pxc mut">·</td></tr>'+
            '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+3)+'">'+
            stDetail(s)+'</td></tr>';
   }
@@ -2293,6 +2315,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               '나란히 비교해도 되는 유일한 열이다')+'">샤프</th>'+
           '<th class="pxc" title="'+esc('그 줄이 ETF 인 행만 값이 있다 — 섹터·지수·스타일 ETF 의 최근 종가(배당조정). 산업그룹·랩 전략 행은 살 수 있는 한 종목이 아니라 비운다')+'">주가</th>'+
           ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
+          '<th class="pxc" title="'+esc('12개월 선행 PER — 이 랩 518종 중 그 바스켓 종목의 '+
+              '시총가중 조화평균(Σ시총 ÷ Σ이익)입니다. 이 랩이 계산한 값이지 그 ETF 가 발표한 '+
+              '값이 아닙니다. 편입 명단이 없는 행(다우·러셀2000·스타일 ETF)은 비웁니다')+
+          '">12mf PER</th>'+
           '</tr></thead><tbody>';
     // 🚨 2026-08-12 사용자 요청 — 지수 줄에도 섹터·스타일처럼 묶음 머리줄을 준다.
     //   종전에는 이 넷만 머리줄 없이 표 맨 위에 떠 있어서, 아래 두 묶음은 무엇인지
@@ -2518,9 +2544,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ⚠ 셋은 서로를 참조하지 않는다(각각 STOP·SLAB·표 원본을 채울 뿐). 전에는 3단 직렬이라
   //   합쳐 5.3KB 받는 데 4G 에서 왕복 3회를 썼다. '구성종목이 먼저 와야 한 번만 그린다'는
   //   조건은 Promise.all 이 더 강하게 보장한다 — 셋이 다 온 뒤에 drawStyle 이 한 번 돈다.
-  Promise.all([getj('style_top.json'), getj('style_trails.json'), getj('market_board.json')])
+  // ⚠ home_reco.json 을 여기 같이 넣는다. 12mf PER 열이 그 파일에서 오는데, 아래쪽 종목
+  //   블록이 따로 받는 것에 기대면 **도착 순서에 따라 그 열이 비었다 채워졌다** 한다.
+  //   같은 URL 이라 두 번째 요청은 브라우저 캐시가 받는다 — 렌더는 한 번만 돈다.
+  Promise.all([getj('style_top.json'), getj('style_trails.json'), getj('market_board.json'),
+               getj('home_reco.json')])
     .then(function(a){
       var sj=a[0], tj=a[1];
+      FPE=(a[3]&&a[3].fpe)||null;
       if(sj&&sj.styles){STOP={}; sj.styles.forEach(function(s){STOP[s.key]=s;});}
       if(tj&&tj.styles){
         SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _start5:tj.start5||'', _pit:tj.pit||null,
