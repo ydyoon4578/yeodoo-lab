@@ -21,7 +21,8 @@ const TBL = H.stub(), SUB = H.stub();
 // 이름 붙인 것만 검사에서 들여다보고, **나머지 id 도 그림자를 준다** — 페이지 본문을
 // 통째로 돌리므로 모르는 id 에 null 을 주면 관계없는 곳에서 죽어 렌더러에 닿지도 못한다.
 const CALG = H.stub(), CALS = H.stub();
-const named = { sttbl: TBL, "st-sub": SUB, "wk-cal-grid": CALG, "wk-sub": CALS };
+const RGC = H.stub();
+const named = { sttbl: TBL, "st-sub": SUB, "wk-cal-grid": CALG, "wk-sub": CALS, "rg-card": RGC };
 const spare = {};
 const el = n => named[n] || (spare[n] || (spare[n] = H.stub()));
 
@@ -62,6 +63,46 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   const late = (TBL.innerHTML.match(/tr class="lv1"/g) || []).length;
   console.log("페이지 자체 로드 후: 섹터 %d줄", late);
   if (!late) fail.push("섹터 줄이 0 — 자료 도착 순서 배선이 끊겼다");
+
+  // ⑥-b 국면 카드 — 국면 · 심리 띠 · 압축 사이클 **셋이 다 서는가**(2026-08-12 사용자 요청).
+  // 🚨 셋을 한 카드에 넣었으므로 하나가 조용히 빠져도 카드는 멀쩡해 보인다. 그 조용한
+  //   실패가 이 저장소의 상습 사고다 — 심리는 자료가 홈에 **와 있는데도** 몇 달간
+  //   아무 데도 안 그려지고 있었다(수집 ≠ 배선). 각각을 따로 못 박는다.
+  // ⚠ 심리·사이클은 자료가 없으면 fail-soft 로 빠지는 것이 정상이다. 그래서 '자료가
+  //   있는데 안 그렸다' 만 실패로 센다 — 자료 유무를 여기서 먼저 판정한다.
+  {
+    const rg = RGC.innerHTML || "";
+    const cyj = opt("regime_cycle.json");
+    const hasSn = !!(snj && snj.score != null);
+    const hasCy = !!(cyj && cyj.ref && cyj.now);
+    const okCard = /class="rgcard"/.test(rg);
+    const okSn = /class="rgsn"/.test(rg);
+    const okCy = /class="rgcyc"/.test(rg);
+    console.log("국면 카드: 본체 %s · 심리띠 %s(자료 %s) · 사이클 %s(자료 %s)",
+      okCard ? "✅" : "❌", okSn ? "✅" : "❌", hasSn ? "有" : "無",
+      okCy ? "✅" : "❌", hasCy ? "有" : "無");
+    if (!okCard) fail.push("국면 카드가 안 그려졌다 — home_market.json.regime 배선 확인");
+    if (hasSn && !okSn)
+      fail.push("심리 자료가 있는데 국면 카드에 심리 띠가 없다 — snBlock() 배선 확인");
+    if (hasCy && !okCy)
+      fail.push("사이클 자료가 있는데 국면 카드에 사이클이 없다 — regime_cycle.json 배선 확인");
+    // 심리 띠가 섰다면 눈금 위치가 실제 점수여야 한다. 0% 에 박혀 있으면 배선은 됐는데
+    // 값이 안 흐르는 것이다 — 그 상태도 화면상 '그려진 것'으로 보인다.
+    if (okSn) {
+      const m = rg.match(/class="rgsbar"[\s\S]*?left:([\d.]+)%/);
+      const want = Math.max(0, Math.min(100, snj.score));
+      if (!m) fail.push("심리 띠에 눈금이 없다");
+      else if (Math.abs(parseFloat(m[1]) - want) > 0.05)
+        fail.push("심리 눈금이 점수와 다르다: 눈금 " + m[1] + "% vs 점수 " + want);
+    }
+    // 사이클이 섰다면 자취 점이 trail 개수만큼 있어야 한다(「지금」 표시는 별도).
+    if (okCy && hasCy) {
+      const nDot = (rg.match(/<circle[^>]*><title>/g) || []).length;
+      const wantDot = (cyj.trail || []).length;
+      if (nDot !== wantDot)
+        fail.push("사이클 자취 점 " + nDot + " ≠ trail " + wantDot + "개");
+    }
+  }
 
   // ⑦ 일정 캘린더 — 격자가 그려지고 **기준일이 머리글에 붙는가.**
   //    🚨 2026-08-10 에 시차를 설명하던 격자 아래 세 줄(.calfresh)을 걷어내고 그 날짜만

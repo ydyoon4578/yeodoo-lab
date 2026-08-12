@@ -2828,6 +2828,28 @@ try:
 except FileNotFoundError:
     pass
 
+# ── 사이클 곡선의 바닥 위치를 화면이 손으로 적고 있지 않은가 ────────────────
+# 🚨 2026-08-12. 증시 곡선은 cos(2π(p − mkt_trough)) 이고 그 값(ECO_SHIFT)이 7국면 자리를
+#   **같이** 정한다. 화면에 숫자를 박으면 빌더에서 바꿨을 때 자리는 움직이는데 곡선은
+#   그대로여서 점이 곡선 밖에 뜬다 — 같은 종류의 사고를 이미 한 번 겪었다(Ym vs Ye · 163px).
+#   이제 그리는 화면이 둘이라(regime.html + index.html 압축판) 박아 넣을 자리도 둘이다.
+try:
+    _shift = json.load(io.open(os.path.join(ROOT, "data", "regime_cycle.json"),
+                               encoding="utf-8"))["ref"]["mkt_trough"]
+    for _pg in ("regime.html", "index.html"):
+        _src = io.open(os.path.join(ROOT, _pg), encoding="utf-8").read()
+        # cos 인자 안에서 p 에 상수를 직접 빼는 꼴: (p-0.02) · (p - 0.02 - LEAD)
+        _bad = re.findall(r"\(\s*p\s*-\s*(\d*\.\d+)", _src)
+        if _bad:
+            errors.append("%s 가 사이클 곡선의 바닥 위치를 손으로 적었다(%s) — "
+                          "regime_cycle.json 의 ref.mkt_trough(%s)를 읽을 것. 빌더에서 "
+                          "ECO_SHIFT 를 바꾸면 7국면 자리만 움직이고 곡선은 안 움직인다"
+                          % (_pg, ", ".join(sorted(set(_bad))), _shift))
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    errors.append("사이클 바닥 위치 검사가 예외로 죽었다 — %s" % _e)
+
 # ── 백업 크론 표가 워크플로와 맞는가 ─────────────────────────────────────
 # 🚨 2026-08-12. build/should_refresh.py 의 BACKUP_CRONS 는 **워크플로에 적힌 cron 문자열과
 #   글자 단위로 같아야** 한다. 어긋나면 조용히 정반대가 된다:

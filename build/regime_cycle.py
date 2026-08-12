@@ -656,7 +656,12 @@ def main():
                        % (len(trail), (trail[0]["from"] + "~" + trail[-1]["to"]) if trail else "-",
                           sum(x["months"] for x in trail))),
         # 레퍼런스 도표 원문 — 화면이 그대로 그린다(교과서라고 화면이 말한다).
-        "ref": {"title": REF_TITLE, "lead": REF_LEAD,
+        # 🚨 2026-08-12 — mkt_trough 를 내보낸다. 증시 곡선은 y = cos(2π(p − mkt_trough)) 다.
+        #   이 0.02 가 종전에는 **화면에 손으로 박혀 있었다**(regime.html 의 `p-0.02`).
+        #   여기 ECO_SHIFT 를 바꾸면 7국면 자리는 따라 움직이는데 곡선은 안 움직여서
+        #   점과 곡선이 어긋난다 — 같은 종류의 사고를 08-12 에 한 번 겪었다(Ym vs Ye · 163px).
+        #   홈에도 같은 곡선을 그리게 되면서 박아 넣을 자리가 셋이 됐다. 자료가 정본이다.
+        "ref": {"title": REF_TITLE, "lead": REF_LEAD, "mkt_trough": ECO_SHIFT,
                 "boxes": [{"pos": p2, "stage": st, "ko": ko3, "en": en}
                           for p2, st, ko3, en in REF_BOXES],
                 "mkt": [{"pos": p2, "ko": ko3} for p2, ko3 in REF_MKT],

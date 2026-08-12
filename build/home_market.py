@@ -52,6 +52,23 @@ SN_HIST = 750
 RG_FIELDS = ("label", "emoji", "growth", "inflation", "financial", "desc", "strategy")
 
 
+# 심리 점수 → 구간 키. regime.html 의 BANDS 와 **같은 문턱**이다(0/20/40/60/80).
+# 🚨 문턱을 화면에 두지 않는 이유: 홈과 regime.html 두 곳에 같은 표를 적으면 한쪽만
+#   고쳤을 때 같은 점수가 두 화면에서 다른 색·다른 이름이 된다. 여기가 정본이다.
+# ⚠ 색이 '좋다/나쁘다'가 아니라 '차갑다(공포)/뜨겁다(탐욕)' 축이라는 것도 그쪽 규약 그대로다.
+SN_BANDS = ((20, "xfear"), (40, "fear"), (60, "neut"), (80, "greed"))
+
+
+def _band(score):
+    """0~100 → xfear|fear|neut|greed|xgreed. 점수가 없으면 None(화면이 회색으로 낸다)."""
+    if score is None or not isinstance(score, (int, float)):
+        return None
+    for hi, key in SN_BANDS:
+        if score < hi:
+            return key
+    return "xgreed"
+
+
 def load(name):
     p = os.path.join(DATA, name)
     if not os.path.exists(p):
@@ -113,6 +130,12 @@ def main() -> int:
             # raw 24.9KB, 평면 배열이면 3.9KB 다.
             "hist_start": (tail[0] or {}).get("dt") if tail else None,
             "scores": [x.get("score") for x in tail],
+            # 🚨 2026-08-12 — 구간 키를 **여기서** 정한다. 홈이 점수만 받고 스스로
+            #   0/20/40/60/80 을 나누면 그 문턱표가 regime.html 의 BANDS 와 두 벌이 되고,
+            #   한쪽만 고치면 같은 점수가 두 화면에서 다른 이름으로 불린다.
+            #   ⚠ 이름(label)은 원본 sentiment.json 이 이미 준다 — 여기서 다시 짓지 않는다.
+            #     이건 **색을 고르는 키**일 뿐이다(index.html 의 --sn-* 토큰).
+            "band": _band(sn.get("score")),
         }
 
     # 대표 기준일 — 둘 중 뒤진 쪽. 홈의 지연 경고는 각 카드가 자기 as_of 로 따로 내지만,
