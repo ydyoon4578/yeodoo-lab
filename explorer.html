@@ -929,7 +929,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="q" type="search" placeholder="전략 이름·설명 검색 (예: 상품, RP, 채권, 오버나이트)" aria-label="전략 검색">
       </label>
-      <button class="sortbtn" id="sort">정렬 ↓ 성격</button>
+      <button class="sortbtn" id="sort">정렬 ↓ 샤프</button>
       <button class="fltbtn" id="fltbtn" aria-expanded="true" aria-controls="chipwrap">
         <span class="fcar" aria-hidden="true">▾</span><span id="fltnow">필터</span>
       </button>
@@ -1130,7 +1130,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function bmFull(x){ var n=bmName(x); return n==='비교 지수'?n:(n+' 지수'); }
 
-  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"kind",sel:0};
+  // 기본 정렬 = 샤프 내림차순(사용자 결정 2026-08-12). 전에는 '성격'이었다.
+  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"sharpe",sel:0};
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
   // 9px 글씨에 하드코딩 hex를 쓰면 다크에서 대비 2.9:1 → 색은 테두리·배경 힌트로만 쓰고 글씨는 테마 잉크색
@@ -1422,9 +1423,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var i=rows.indexOf(D[state.sel]);i=e.key==='ArrowDown'?Math.min(rows.length-1,i+1):Math.max(0,i<0?0:i-1);
     select(rows[i]);var it=listEl.querySelector('.item[aria-selected="true"]');if(it)it.scrollIntoView({block:'nearest'});
   });
-  // 기본 정렬은 '성격' — 목록 단계에서 이미 "성격마다 보는 눈이 다르다"를 가르친다.
+  // 기본 정렬은 '샤프 ↓'(사용자 결정 2026-08-12).
+  // '성격' 정렬은 목록 단계에서 "성격마다 보는 눈이 다르다"를 가르치고, 세 칸 머리글도 그때만 나온다.
   // '관측개월' 정렬은 "표본이 짧아 판정 못 한 것"과 "길게 봐도 안 되는 것"을 구분해 준다.
-  var SORTS=[['kind','성격'],['verdict','등급'],['n','관측개월']];
+  var SORTS=[['sharpe','샤프'],['kind','성격'],['verdict','등급'],['n','관측개월']];
+  // 샤프 조회 — 자료가 두 모양으로 들어온다. 평평한 metrics.sharpe(랩 94종·인덱스 130종)와
+  // v2 의 metrics.s/.vs/.profile(백테스트 9종)이다. 둘 다 훑고, 없으면 **null 을 돌린다**.
+  // ⚠ 없는 값을 0 으로 채우지 않는다 — 0 으로 두면 '못 쟀음'이 '샤프 0'인 척하며 중간에 끼어든다.
+  function shp(d){
+    var v=null;
+    if(d._m&&d._m.sharpe!=null)v=d._m.sharpe;                        // 랩 레코드(평평)
+    if(v==null&&d._mx&&d._mx.sharpe!=null)v=d._mx.sharpe;            // strategy_index 병합(평평)
+    if(v==null&&d._mx)v=mget(d._mx,'sharpe');                        // 혹시 v2 모양이면
+    if(v==null&&d.bt&&d.bt.metrics)v=mget(d.bt.metrics,'sharpe');    // 백테스트 v2
+    v=(v==null?null:Number(v));
+    return (v==null||!isFinite(v))?null:v;
+  }
   el('sort').addEventListener('click',function(){
     var i=0; SORTS.forEach(function(s,j){if(s[0]===state.sort)i=j;});
     var nx=SORTS[(i+1)%SORTS.length];
@@ -1471,6 +1485,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
       }else if(state.sort==="n"){
         var nd=nMonths(b)-nMonths(a); if(nd)return nd;
+      }else if(state.sort==="sharpe"){
+        // 내림차순. 못 잰 것(null)은 **항상 맨 뒤**로 보낸다 — 오름/내림에 따라 위로 올라오면
+        // 자료가 없는 전략이 1등처럼 보인다.
+        var xa=shp(a), xb=shp(b);
+        if(xa==null&&xb!=null)return 1;
+        if(xb==null&&xa!=null)return -1;
+        if(xa!=null&&xb!=null&&xa!==xb)return xb-xa;
       }
       return VORDER[a.v]-VORDER[b.v];
     });
@@ -1491,6 +1512,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   NDX 종목선택(연 +25.9%)이 같은 눈금으로 세로로 줄 서서, 방어형은 전부 낙제생으로 읽힌다.
   //   성격별로 헤드라인 지표를 바꿔 "같은 숫자를 세로로 비교하라"는 신호 자체를 없앤다.
   function headM(d){
+    // 샤프로 줄 세울 때는 오른쪽 숫자도 샤프로 바꾼다 — 안 그러면 CAGR 이 뒤죽박죽으로 보이는
+    // 목록이 되어 "정렬이 깨졌다"로 읽힌다(줄 세운 값이 화면에 없으면 그렇게 읽힌다).
+    if(state.sort==='sharpe'){
+      var sv=shp(d);
+      return '<div class="mv'+(sv==null?' sm':'')+'">'+(sv==null?'—':mfmt('sharpe',sv))+
+             '</div><small>'+(sv==null?'샤프 못 쟀음':'샤프')+'</small>';
+    }
     var m=d.bt&&d.bt.metrics;
     if(!(m&&m.s))return '<div class="mv sm">'+esc(d.m||'')+'</div><small>'+esc(d.ml||'')+'</small>';
     var k=kindOf(d), km=kmeta(k);
@@ -1946,7 +1974,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         (bt.dd_b?'<span class="lg"><i style="border-color:var(--muted);border-top-style:dashed"></i>'+esc(bl)+'</span>':'')+
         (bt.dd_b2?'<span class="lg"><i style="border-color:var(--rp);border-top-style:dashed"></i>'+esc(bt.bench2_label||'')+'</span>':'')+'</div>'+svgDD(bt)+
       '<div class="chartttl">연도별 수익 <span class="lg"><i style="border-color:'+vc+'"></i>전략</span><span class="lg"><i style="border-color:var(--muted)"></i>'+esc(bl)+'</span>'+
-        (bt.yearly&&bt.yearly.some(function(y){return y.b2!=null;})?'<span class="lg"><i style="border-color:var(--rp)"></i>'+esc(bt.bench2_label||'')+'</span>':'')+'</div>'+svgYearly(bt,vc);
+        (bt.yearly&&bt.yearly.some(function(y){return y.b2!=null;})?'<span class="lg"><i style="border-color:var(--rp)"></i>'+esc(bt.bench2_label||'')+'</span>':'')+'</div>'+svgYearly(bt,vc)+
+      // 🚨 랩 카드와 **같은 두 블록**을 여기에도 붙인다(사용자 지적 2026-08-12: 전략마다
+      //   구성이 다르다). 배포 원장 레코드는 이미 월별(dates='YYYY-MM')이라 다시 재지
+      //   않고 그대로 옮기고, 지수 두 계열만 공유 계열(idx_monthly)에서 붙인다.
+      (function(){
+        var C=btMonthly(bt); if(!C)return '';
+        var _d={_bl:bt.bench_label||''};
+        var modes=[['r','이 전략']];
+        if(!dupIdx(C))modes.push(['b',bt.bench_label||'판정 기준']);
+        modes.push([SPXL,'S&P 500'],[NDXL,'나스닥 100'],
+                   ['dS','전략 − S&P 500'],['dN','전략 − 나스닥 100']);
+        var chips=modes.map(function(mm){
+          return '<button type="button" data-mhm="'+esc(mm[0])+'" aria-pressed="'+
+            (MHM===mm[0]?'true':'false')+'">'+esc(mm[1])+'</button>';}).join('');
+        return '<div class="chartttl">월별 수익</div><div class="segchips">'+chips+'</div>'+
+               mhmHTML(C,_d,MHM)+
+               '<div class="chartttl">급등·급락 구간 비교</div>'+epiHTML(C,_d);
+      })();
     // ⑨ 전체 지표표는 접어 둔다 — 우위/열위 라벨은 이 안에서만 산다
     var mg=(m&&m.s)?('<details class="mdet"><summary>전체 지표표 (전략과 지수 · 15행 + 관계지표 9행)</summary><div class="mbody">'+
       '<div class="btnote">아래 점추정 비교(＋/－)는 <b>유의성 판정이 아닙니다</b>. 통계검정을 거친 행은 <b>샤프 한 줄뿐</b>입니다. '+
