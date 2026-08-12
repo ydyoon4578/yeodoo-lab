@@ -327,6 +327,13 @@
   .vblock .vmean{font-size:12px;color:var(--ink-2)}
   .vblock .vt{margin:11px 0 0;font-size:13px;line-height:1.65;color:var(--ink-2)}
   .vblock .vt b{color:var(--ink)}
+  /* 근거는 문단이 아니라 항목이다 — 한 줄에 하나, 라벨이 앞. */
+  .vblock .vpts{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+  .vblock .vpts li{font-size:12.5px;line-height:1.55;color:var(--ink-2);
+    padding-left:12px;text-indent:-12px}
+  .vblock .vpts li::before{content:"· ";color:var(--muted)}
+  .vblock .vpts li b{color:var(--ink);font-weight:700}
+  .vblock .vtn{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
   .powerbox{margin-top:12px;padding:11px 13px;border-radius:2px;background:var(--panel);border:1px solid var(--line-soft)}
   .powerbox h5{margin:0 0 7px;font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-2)}
   .powerbox svg{width:100%;height:auto;display:block;max-width:420px;overflow:visible}
@@ -1157,7 +1164,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           var d={
             n:x.name, sid:x.sid, aka:x.aka||[], alias:x.rule||'', c:x.cat||x.src,
             v:(GKEY[x.grade]||'nojudge'), m:null, ml:null, corr:null,
-            t:x.rule||'', vt:(x.why||'')+(x.note?' <em>'+x.note+'</em>':''),
+            // 🚨 vt 는 **한 줄**로 둔다(판정 머리말 + 강조 딱지). 근거 수치는 vp 에 항목으로
+            //   쌓는다 — 전에는 여기에 <em> 문단을 계속 이어 붙여 카드 하나가 20줄 산문이
+            //   됐고, 그러면 무엇이 강조인지 안 보인다(2026-08-12 사용자 지적).
+            t:x.rule||'', vt:(x.why||''), vp:[], vpn:(x.note||''),
             _lab:true, _src:x.src, _hold:x.holdings||null,
             det:{kind:x.role||'미분류'},
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
@@ -1186,14 +1196,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             //   두 레그의 대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 값이 깎이고,
             //   음수가 나와 '소급이 오히려 불리했다' 로 거꾸로 읽힌다(고배당에서 실제로 그랬다).
             if(Pt.bias_cagr!=null&&Pt.bias_cagr>=5)
-              d.vt='<b>유니버스 편향 큼 (CAGR '+f(Pt.retro_cagr)+' → '+f(Pt.cagr)+'%)</b> — '+d.vt;
-            d.vt+=' <em>시점정확(PIT '+esc(Pt.window||'')+') — 같은 창에서 오늘의 유니버스로 재면 '+
-                  'CAGR '+f(Pt.retro_cagr)+'%, 매월말 실제 편입만 후보로 두면 '+f(Pt.cagr)+'% '+
-                  '→ <b>유니버스 편향 '+f(Pt.bias_cagr)+'%p</b>. '+
-                  '각자의 동일가중 유니버스 대비 초과는 '+f(Pt.retro_excess)+'%p(t '+
-                  (Pt.retro_t==null?'—':Pt.retro_t)+') → '+f(Pt.excess_cagr)+'%p(t '+
-                  (Pt.t==null?'—':Pt.t)+') — 대조군도 함께 '+f(Pt.bench_bias_cagr)+'%p 내려가므로 '+
-                  '초과 기준 차이(위 편향과 다르다)는 그만큼 상쇄돼 있다. '+thr+'</em>';
+              d.vt='<b>유니버스 편향 큼</b> — '+d.vt;
+            d.vp.push('<b>시점정확</b> '+esc(Pt.window||'')+' · CAGR '+f(Pt.retro_cagr)+' → '+
+                  f(Pt.cagr)+'% (편향 '+f(Pt.bias_cagr)+'%p) · 초과 t '+
+                  (Pt.retro_t==null?'—':Pt.retro_t)+' → '+(Pt.t==null?'—':Pt.t)+
+                  (Pt.t_crit==null?'':(' · 문턱 |t|≥'+Pt.t_crit+', 넘는 규칙 '+
+                    (Pt.n_over?(Pt.n_over+'종'):'없음'))));
           }
           // 증분 알파 — 가장 닮은 규칙을 이미 들고 있을 때 이 규칙이 더 주는 것.
           // 단독 t 만 실으면 같은 베팅을 여러 번 센 것이 안 보인다(에코 모멘텀 단독 3.80 → 증분 0.85).
@@ -1201,12 +1209,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var ic=x.incr, solo=(x.t==null?null:x.t);
             var absorbed=(Math.abs(ic.t)<2&&solo!=null&&Math.abs(solo)>=2);
             if(absorbed) d.vt='<b>이웃 규칙이 설명함</b> — '+d.vt;
-            d.vt+=' <em>증분 알파 — 가장 닮은 규칙은 <b>'+esc(ic.vs||'')+'</b>(초과수익 상관 '+
-                  ic.corr+'). 그것에 회귀하고 남는 알파는 연 '+(ic.alpha>0?'+':'')+ic.alpha+
-                  '%p(t '+ic.t+')'+(solo==null?'':(', 단독 t 는 '+solo))+'. '+
-                  (absorbed?'즉 이 규칙의 단독 성과는 이웃이 대부분 설명한다 — 둘을 서로 다른 '+
-                            '검증으로 세면 안 된다.'
-                          :'이웃과 구별되는 몫이 남아 있는지를 이 값으로 읽는다.')+'</em>';
+            d.vp.push('<b>증분 알파</b> vs '+esc(ic.vs||'')+' (상관 '+ic.corr+') · 연 '+
+                  (ic.alpha>0?'+':'')+ic.alpha+'%p (t '+ic.t+')'+
+                  (solo==null?'':(' · 단독 t '+solo))+
+                  (absorbed?' — 이웃이 대부분 설명한다':''));
           }
           // 🚨 이웃 **하나**만 통제하면 문턱이 무르다. 실측(2026-08-04, 게시 56종):
           //   증분 t≥2 를 넘던 11종 중 이웃 5개 동시 통제에서도 넘는 것은 7종이다.
@@ -1214,11 +1220,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(x.incr5&&x.incr5.t!=null){
             var i5=x.incr5, one=(x.incr&&x.incr.t!=null)?x.incr.t:null;
             var fell=(one!=null&&Math.abs(one)>=2&&Math.abs(i5.t)<2);
-            d.vt+=' <em>이웃 5개를 <b>동시에</b> 통제하면 증분 알파가 연 '+
-                  (i5.alpha>0?'+':'')+i5.alpha+'%p(t '+i5.t+')다'+
-                  (one==null?'':(' — 이웃 하나만 통제했을 땐 '+one+' 였다'))+'. '+
-                  (fell?'<b>하나만 떼면 남아 보이지만 여럿을 떼면 사라진다</b> — 붐비는 축이라는 뜻이다.'
-                        :'사전등록 게이트는 이쪽 값을 쓴다.')+'</em>';
+            d.vp.push('<b>이웃 5개 통제</b> 연 '+(i5.alpha>0?'+':'')+i5.alpha+'%p (t '+i5.t+')'+
+                  (one==null?'':(' · 하나만 통제 시 '+one))+
+                  (fell?' — <b>붐비는 축</b>(여럿을 떼면 사라진다)':''));
           }
           // 🚨 자기가 실제로 사는 것 대비. 타이밍 규칙은 랩 동일가중 유니버스를 사는데
           //   판정 대조군은 S&P 500(PR)이다 — 두 자산이 다르다. 그래서 노출 1.0 고정의
@@ -1227,12 +1231,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(x.vs_traded&&x.vs_traded.t!=null){
             var vt2=x.vs_traded, dead=(x.role==='타이밍오버레이'&&Math.abs(vt2.t)<1.5);
             if(dead) d.vt='<b>자기가 사는 것과 구별 안 됨</b> — '+d.vt;
-            d.vt+=' <em>매매 대상 대비 — 이 규칙이 실제로 사는 것은 <b>'+esc(vt2.label||'')+
-                  '</b>(CAGR '+(vt2.cagr==null?'—':vt2.cagr)+'%)이고, 판정 대조군은 그와 다른 '+
-                  '자산이다. 자기가 사는 것 대비로는 초과 '+(vt2.excess_cagr>0?'+':'')+
-                  vt2.excess_cagr+'%p · Δ샤프 '+(vt2.d_sharpe>0?'+':'')+vt2.d_sharpe+
-                  ' · t '+vt2.t+(vt2.t_net==null?'':(' (비용 후 '+vt2.t_net+')'))+'. '+
-                  esc(vt2.note||'')+'</em>';
+            d.vp.push('<b>매매 대상 대비</b> '+esc(vt2.label||'')+
+                  ' (CAGR '+(vt2.cagr==null?'—':vt2.cagr)+'%) · 초과 '+
+                  (vt2.excess_cagr>0?'+':'')+vt2.excess_cagr+'%p · Δ샤프 '+
+                  (vt2.d_sharpe>0?'+':'')+vt2.d_sharpe+' · t '+vt2.t+
+                  (vt2.t_net==null?'':(' (비용 후 '+vt2.t_net+')')));
           }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
@@ -1240,14 +1243,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var mn=x.metrics_net, bn=x.bench_net||{};
             if(x.cost_sensitive||x.cost_kill)
               d.vt='<b>비용 민감 (연 −'+x.cost_drag+'%p)</b> — '+d.vt;
-            d.vt+=' <em>비용 후(왕복 '+x.cost_bp+'bp) — CAGR '+
-                  (x.metrics&&x.metrics.cagr!=null?x.metrics.cagr:'—')+'% → '+
+            d.vp.push('<b>비용 후</b> 왕복 '+x.cost_bp+'bp · CAGR '+
+                  (x.metrics&&x.metrics.cagr!=null?x.metrics.cagr:'—')+' → '+
                   (mn.cagr!=null?mn.cagr:'—')+'% · 샤프 '+
                   (x.metrics&&x.metrics.sharpe!=null?x.metrics.sharpe:'—')+' → '+
                   (mn.sharpe!=null?mn.sharpe:'—')+
-                  (bn.sharpe!=null?'(대조군 '+bn.sharpe+')':'')+
-                  ' · 전량교체 한 번당 왕복비용을 그날 수익에서 뗀다. 판정은 기존대로 '+
-                  '무비용 기준이고 이 줄은 참고다.</em>';
+                  (bn.sharpe!=null?' (대조군 '+bn.sharpe+')':''));
             // 🚨 비용 가정 하나로 판정이 흔들리면 그건 판정이 아니라 그 가정이다. 그래서
             //   종목 랩은 편도 5·10·20bp 를 **전부** 재서 싣는다 — 어느 문턱에서 t 가
             //   임계 아래로 내려가는지가 그 규칙이 얼마나 비용에 얹혀 있었나의 답이다.
@@ -1261,11 +1262,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                 var t20=(sn['20']&&sn['20'].t), t0=(x.t==null?null:x.t);
                 var flips=(tc!=null&&t0!=null&&Math.abs(t0)>=tc&&t20!=null&&Math.abs(t20)<tc);
                 if(flips) d.vt='<b>비용에서 뒤집힌다</b> — '+d.vt;
-                d.vt+=' <em>비용 민감도(편도) — t '+(t0==null?'—':t0)+'(무비용) → '+sg.join(' → ')+
-                      ' · 연 매매대금 '+(x.net.traded==null?'—':x.net.traded)+'배(NAV 대비, '+
-                      '족을 넘어 비교할 수 있는 것은 회전율이 아니라 이 값이다). '+
-                      (flips?'<b>편도 20bp 에서 다중검정 임계 아래로 내려간다.</b>'
-                           :'앞으로의 사전등록 게이트는 이 줄을 함께 본다.')+'</em>';
+                d.vp.push('<b>비용 민감도</b> 편도 t '+(t0==null?'—':t0)+'(무비용) → '+sg.join(' → ')+
+                      ' · 연 매매대금 '+(x.net.traded==null?'—':x.net.traded)+'배'+
+                      (flips?' — <b>20bp 에서 임계 아래</b>':''));
               }
             }
           }
@@ -1273,12 +1272,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           // 근거 수치는 뒤에 붙여 펼쳤을 때 읽히게 한다.
           if(x.risk_verdict&&x.risk&&x.risk_verdict!=='판정 불가'){
             var rk=x.risk, fp=function(p){return p<0.0005?'p&lt;0.001':'p='+Number(p).toFixed(3);};
-            d.vt='<b>위험 축 '+x.risk_verdict+'</b> — '+d.vt+
-                 ' <em>위험 축 근거 — 낙폭 '+(rk.d_mdd>0?'+':'')+rk.d_mdd+'%p('+fp(rk.p_mdd)+') · '+
-                 'CVaR5 '+(rk.d_cvar>0?'+':'')+rk.d_cvar+'%p('+fp(rk.p_cvar)+') · '+
-                 '짝지은 순환 블록 부트스트랩 '+rk.n_boot+'회, 블록 '+rk.block+'일. '+
-                 '판정은 CVaR5 로 가른다 — 이 표본에 큰 낙폭 사건이 사실상 하나뿐이라 '+
-                 'MDD 검정은 힘이 없다.</em>';
+            d.vt='<b>위험 축 '+x.risk_verdict+'</b> — '+d.vt;
+            d.vp.push('<b>위험 축</b> 낙폭 '+(rk.d_mdd>0?'+':'')+rk.d_mdd+'%p ('+fp(rk.p_mdd)+') · '+
+                 'CVaR5 '+(rk.d_cvar>0?'+':'')+rk.d_cvar+'%p ('+fp(rk.p_cvar)+') · '+
+                 '블록 부트스트랩 '+rk.n_boot+'회/'+rk.block+'일 · 판정은 CVaR5');
           }
           // 목록 헤드라인 — 성격에 맞는 지표를 고른다(수익엔진=CAGR · 배분기=샤프 · 그 외=MDD)
           var hk=(x.role==='수익엔진')?['cagr','CAGR','%']:
@@ -1437,7 +1434,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(state.kf.size && !state.kf.has(kindOf(d)))return false;
       if(state.mk && !MK.has(d.sid))return false;
       if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")+" "+(d.det.kind||"")+" "+(d.det.identity||"")):"";
-        var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt+extra).toLowerCase();if(hay.indexOf(state.q)<0)return false;}
+        // ⚠ 근거를 vp 로 옮겼으므로 검색 건초더미에도 같이 넣는다 — 안 넣으면 'PIT'·'증분'
+        //   같은 말로 찾던 것이 조용히 안 걸린다.
+        var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt+" "+((d.vp||[]).join(" "))+" "+(d.vpn||"")+extra).toLowerCase();
+        if(hay.indexOf(state.q)<0)return false;}
       return true;
     });
     rows.sort(function(a,b){
@@ -2383,6 +2383,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             (VMETA[d.v].orig!==VMETA[d.v].lab?' <span style="opacity:.75">(원 판정 표기: '+esc(VMETA[d.v].orig)+')</span>':'')+
             '</span></div>'+
           '<p class="vt"><b>판정 근거 —</b> '+d.vt+'</p>'+
+          ((d.vp&&d.vp.length)?'<ul class="vpts">'+d.vp.map(function(s){
+            return '<li>'+s+'</li>';}).join('')+'</ul>':'')+
+          (d.vpn?'<p class="vtn">'+esc(d.vpn)+'</p>':'')+
           ((d.bt&&d.bt.metrics)?powerBox(d.bt.metrics)+multNote(d.bt.metrics):'')+
         '</div>'+
         // ⑨ 전체 지표표(접힘) → ⑩ 한계·장단점 → ⑪ 보유구성
