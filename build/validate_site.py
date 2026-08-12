@@ -398,8 +398,11 @@ if pool:
     try:
         _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
         _want = 0
+        # ⚠ 새 엔진을 붙일 때 **여기에도 더해야 한다.** 안 더하면 목록이 원본보다 많아져
+        #   "재생성을 빠뜨렸다"는 정반대의 오진이 난다(페어 트레이딩 4종, 2026-08-12).
         for _f, _k in (("tech_strategies.json", "strategies"), ("asset_strategies.json", "strategies"),
-                       ("deploy_index.json", "items"), ("archive_backtests.json", "strategies")):
+                       ("deploy_index.json", "items"), ("archive_backtests.json", "strategies"),
+                       ("pairs_strategies.json", "strategies")):
             _p = os.path.join(ROOT, "data", _f)
             if os.path.exists(_p):
                 _v = json.load(io.open(_p, encoding="utf-8")).get(_k) or []
@@ -431,7 +434,8 @@ if pool:
         _idx_name = {(_it.get("name") or "") for _it in (_si.get("items") or [])}
         _idx_name |= {(_h.get("name") or "") for _h in (_si.get("hidden") or []) if isinstance(_h, dict)}
         _lost = []
-        for _f, _k in (("tech_strategies.json", "strategies"), ("asset_strategies.json", "strategies")):
+        for _f, _k in (("tech_strategies.json", "strategies"), ("asset_strategies.json", "strategies"),
+                       ("pairs_strategies.json", "strategies")):
             _p = os.path.join(ROOT, "data", _f)
             if not os.path.exists(_p):
                 continue

@@ -1351,7 +1351,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       function mkList(ck,pk){
         var all=st.filter(function(s){var mi=Math.max(lastMk(s,ck),lastMk(s,pk));return mi>=0&&(N-1-mi)<=WIN;});
         var prov=all.filter(function(s){return lastMk(s,pk)>lastMk(s,ck);}).length;
-        var top=all.slice().sort(function(a,b){return Math.max(lastMk(b,ck),lastMk(b,pk))-Math.max(lastMk(a,ck),lastMk(a,pk));}).slice(0,8)
+        var top=all.slice().sort(function(a,b){return Math.max(lastMk(b,ck),lastMk(b,pk))-Math.max(lastMk(a,ck),lastMk(a,pk));}).slice(0,10)
           .map(function(s){var mc=lastMk(s,ck),mp=lastMk(s,pk),mi=Math.max(mc,mp);
             return {t:s.t,name:(s.name||'').slice(0,16),dt:(dts[mi]||'').slice(5),ago:N-1-mi,sec:SECKO[s.sector]||(s.sector||'').slice(0,6),prov:mp>mc?1:0};});
         return {list:top,n:all.length,conf:all.length-prov,prov:prov};}
