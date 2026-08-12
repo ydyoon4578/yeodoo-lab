@@ -63,6 +63,9 @@ NO_ROW = {
     "validate.yml":          "검증 전용(데이터 산출 없음)",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
+    # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.
+    #   같은 파일을 매일 다시 받을 이유가 없어 크론을 두지 않았다(build/PREREG-2026-08-12-TECHLINK.md §3).
+    "probe-patents.yml":     "B11 기술링크 자료 관문 실측 — 1회성(workflow_dispatch). 원천이 동결돼 주기가 없다",
     "refresh-ml.yml":        "ML 연구 산출물 — refresh-assets 직후 연쇄(workflow_run)라 "
                              "고유 주기가 없다. 백테스트 행이 대표",
 }
