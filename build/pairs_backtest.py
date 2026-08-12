@@ -24,8 +24,8 @@ pit   그때의 SPX∪NDX 멤버 + 편출 가격 캐시
 형성 통계(SSD·반감기·Corwin-Schultz)는 build/probe_pairs.py 에서 import 한다.
 여기서 다시 구현하면 프로브가 고른 페어와 백테스트가 고른 페어가 조용히 갈린다.
 
-  python build/pairs_backtest.py            # 셋 다
-  python build/pairs_backtest.py --no-pit   # 소급 레그만(캐시 없이 빨리)
+  python build/pairs_backtest.py            # 소급 레그(full·sub)
+  python build/pairs_backtest.py --pit      # PIT 레그까지(배관이 남아 있을 때만)
 """
 from __future__ import annotations
 
@@ -400,6 +400,8 @@ def run_leg(tag, dates, ts, MATS, sec, dual, i_from, i_to, mem=None):
                 for k in ("open", "conv", "forced", "dead", "day0"):
                     dg[k] += d[k]
                 dg["worst"] = min(dg["worst"], d["worst"])
+                for k in bx:
+                    bx[k].extend(d["by_exit"][k])
             live = cnt > 0
             if live.sum() < 252:
                 continue
@@ -423,7 +425,12 @@ def run_leg(tag, dates, ts, MATS, sec, dual, i_from, i_to, mem=None):
                 s2, _, _ = stats(gross - lam * costs, dsub)
                 sens[lbl] = {"mo_mean": s2["mo_mean"], "t_nw": s2["t_nw"], "cagr": s2["cagr"]}
             tot = sum(secct.values()) or 1
-            st_.update({"rule": rule, "size": size, "leg": tag,
+            ex_ = {}
+            for k, v in bx.items():
+                ex_[k] = {"n": len(v), "mean": 100.0 * float(np.mean(v)) if v else None,
+                          "sum": 100.0 * float(np.sum(v)) if v else 0.0}
+            st_.update({"by_exit": ex_,
+                        "rule": rule, "size": size, "leg": tag,
                         "n_cohort": len(npair), "pairs_med": float(np.median(npair or [0])),
                         "short_months": nshort, "trades": dg["open"],
                         "conv": dg["conv"], "forced": dg["forced"], "dead": dg["dead"],
@@ -435,9 +442,12 @@ def run_leg(tag, dates, ts, MATS, sec, dual, i_from, i_to, mem=None):
                         "cost_mo": gs["mo_mean"] - st_["mo_mean"], "cost_sens": sens,
                         "util_pct": 100.0 * secct.get("Utilities", 0) / tot,
                         "sectors": dict(sorted(secct.items(), key=lambda x: -x[1])[:6])})
+            nav = list(np.cumprod(1.0 + daily) * 100.0)
             res["%s%d" % (rule, size)] = {"stats": st_, "months": mk,
                                           "rets": [round(float(x), 6) for x in mr],
-                                          "gross": [round(float(x), 6) for x in gr]}
+                                          "gross": [round(float(x), 6) for x in gr],
+                                          "nav": [round(float(x), 2) for x in nav],
+                                          "dates": dsub}
     return res
 
 
@@ -459,6 +469,78 @@ def universe_daily(PX, ts, mem, dates, i0, i1):
     return out
 
 
+# ══ 랩 통합 목록용 레코드 ══════════════════════════════════════════════
+# 🚨 이 랩의 다른 네 소스는 전부 **시장**(또는 동일가중 유니버스)과 겨룬다. 페어는 달러중립
+#   롱숏이라 대조군이 **현금**이고, 그래서 Δ샤프의 분모가 0 이다 — 우열을 나란히 못 놓는다.
+#   `strategy_index.comparability()` 에 이미 그 갈래가 있다(bench_unstable). 새 성격 어휘를
+#   만들지 않고 그 갈래를 탄다: 성격은 초과수익이 목적이므로 **수익엔진**이 맞고,
+#   비교 가능성만 끈다. 화면이 "같은 눈금이 아니다"를 말할 수 있으면 그것으로 충분하다.
+BENCH_LABEL = "현금(무위험) — 달러중립 롱숏이라 대조군이 0이다"
+
+NAMES = {
+    "A": ("p-ggr", "페어 트레이딩 — GGR 거리법",
+          "형성 252일 정규화 경로의 SSD 최소 상위 N페어 · 거래 126일 · ±2σ 진입 → 0교차 청산 "
+          "· 달러중립 · 매월 코호트 시작(6개 중첩)",
+          "Gatev·Goetzmann·Rouwenhorst(2006, RFS 19:797) 의 거리법을 그대로 옮긴 것. "
+          "이중클래스(CIK 동일)만 자료 위생으로 제외했다."),
+    "B": ("p-comb", "페어 트레이딩 — 조합 스크리너",
+          "동일섹터 ∧ 수익률상관 상위1% ∧ SSD 상위1% ∧ 반감기 5~30일 ∧ 형성창 ±2σ 왕복≥2 "
+          "· 나머지 프로토콜은 GGR 과 같다",
+          "🚨 형성 단계 진단을 보고 만든 규칙이다(PREREG §0). 거리 하나로 고르면 유틸리티에 "
+          "쏠리고(26개 창 누적 62%), 거리·공적분·상관 상위20의 교집합이 0/20 이라 기준 하나로는 "
+          "무엇을 고르는지가 정해지지 않는다는 관찰에서 나왔다."),
+}
+
+
+def index_records(legs):
+    """`full` 레그 4종 → data/strategy_index.py 가 읽는 모양.
+
+    ⚠ 등록한 가설은 넷(규칙 2 × 크기 2)이고 목록에도 넷을 싣는다. 기각됐다고 빼지 않는다 —
+      PREREG §4 가 그렇게 적었고, 빼면 다음 배치의 족 임계가 거짓말이 된다.
+    ⚠ PIT 레그는 싣지 않는다. 이 랩이 PIT 배관을 걷어내는 중이라 값이 있다 없다 하면
+      목록이 실행마다 달라진다 — 판정은 ⓐⓑ 에서 이미 갈렸으므로 결론이 바뀌지 않는다.
+    """
+    out = []
+    for rule in ("A", "B"):
+        sid0, nm0, rule_txt, why0 = NAMES[rule]
+        for size in SIZES:
+            r = (legs.get("full") or {}).get("%s%d" % (rule, size))
+            if not r:
+                continue
+            s = r["stats"]
+            sh = s.get("sharpe")
+            n = len(r["nav"])
+            out.append({
+                "sid": "%s-top%d" % (sid0, size),
+                "name": "%s (상위 %d페어)" % (nm0, size),
+                "role": "수익엔진",
+                # 대조군이 현금이라 d_sharpe = 샤프 그대로다. tech_backtest 의 판정 규칙
+                # (d_sharpe ≤ 0 → 열위)을 같은 글자로 적용한다 — 채점 규칙을 새로 만들지 않는다.
+                "verdict": "열위" if (sh is None or sh <= 0) else
+                           ("통과 후보" if abs(s["t_nw"] or 0) >= 3.45 else "구별 불가"),
+                "rule": rule_txt, "why": why0,
+                "bench_label": BENCH_LABEL, "bench_unstable": True,
+                "start": s["from"], "end": s["to"],
+                "metrics": {"cagr": round(s["cagr"] or 0, 2), "vol": round(s["vol"], 2),
+                            "sharpe": round(sh, 3) if sh is not None else None,
+                            "mdd": round(s["mdd"], 2)},
+                "bench": {"cagr": 0.0, "vol": 0.0, "sharpe": 0.0, "mdd": 0.0},
+                "d_sharpe": round(sh, 3) if sh is not None else None,
+                "t": round(s["t_nw"], 2) if s["t_nw"] is not None else None,
+                "beta": round(s["beta"], 3) if s.get("beta") is not None else None,
+                "nav": r["nav"], "bnav": [100.0] * n, "dates": r["dates"],
+                "note": ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — **비용을 넣기 전에 이미 0이다.** "
+                         "수렴 청산 %d건 평균 %+.2f%% 대 기간종료 강제청산 %d건 평균 %+.2f%% 로 "
+                         "둘이 상쇄된다(수렴률 %.0f%%). Corwin-Schultz 유효스프레드를 1/10 로 "
+                         "줄여도 |t| < 0.5 라 비용 가정이 판정을 바꾸지 않는다."
+                         % (s["gross_mo"], s["gross_t_nw"] or 0,
+                            s["by_exit"]["conv"]["n"], s["by_exit"]["conv"]["mean"] or 0,
+                            s["by_exit"]["forced"]["n"], s["by_exit"]["forced"]["mean"] or 0,
+                            s["conv_pct"])),
+            })
+    return out
+
+
 # ══ 본체 ═══════════════════════════════════════════════════════════════
 def main() -> int:
     dates, ts, MATS, sec = lab_matrices()
@@ -477,7 +559,11 @@ def main() -> int:
     print("[sub ] 같은 518종 · PIT 과 같은 창(%s~)" % PIT_START)
     legs["sub"] = run_leg("sub", dates, ts, MATS, sec, dual, i_pit, T)
 
-    if "--no-pit" not in sys.argv:
+    # 🚨 PIT 레그는 **기본에서 뺐다**(2026-08-12). 이 랩이 PIT 배관을 걷어내는 중이라
+    #   있다 없다 하면 통합 목록이 실행마다 달라진다. 판정은 ⓐ(t_NW)·ⓑ(순수익)에서 이미
+    #   갈렸으므로 ⓒ 가 없어도 결론이 안 바뀐다 — 넷 다 기각이고, 근거는 PIT 이 아니었다.
+    #   ⚠ 한 번 잰 값은 PREREG-...-PAIRS-RESULT.md §3 에 남겨 뒀다(편향 ≈ 0.03%p).
+    if "--pit" in sys.argv:
         print("[pit ] 그때의 SPX∪NDX 멤버 + 편출 캐시")
         try:
             pts, pmats, psec, mem = pit_matrices(dates, sec)
@@ -539,6 +625,23 @@ def main() -> int:
                      "%.3f(%.2f)" % (c["x0.5"]["mo_mean"], c["x0.5"]["t_nw"] or 0),
                      "%.3f(%.2f)" % (c["x0.1"]["mo_mean"], c["x0.1"]["t_nw"] or 0)))
 
+    print("\n청산 사유별 거래당 총손익(비용 전 · 다리 $1 기준 %) — 평균회귀가 실재하는가")
+    print("%-6s %-5s %4s %18s %18s %13s"
+          % ("레그", "규칙", "N", "수렴 청산", "기간종료 강제", "총기여%"))
+    for lg in ("full", "sub", "pit"):
+        for key in ("A5", "A20", "B5", "B20"):
+            r = (legs.get(lg) or {}).get(key)
+            if not r:
+                continue
+            e = r["stats"]["by_exit"]
+
+            def f_(k, e=e):
+                return ("%d건 %+.2f" % (e[k]["n"], e[k]["mean"])) if e[k]["n"] else "—"
+            print("%-6s %-5s %4d %18s %18s %13.1f"
+                  % (lg, "GGR" if r["stats"]["rule"] == "A" else "조합", r["stats"]["size"],
+                     f_("conv"), f_("forced"),
+                     e["conv"]["sum"] + e["forced"]["sum"] + e["dead"]["sum"]))
+
     print("\n거래 진단")
     print("%-6s %-5s %4s %7s %7s %7s %7s %8s %8s %8s"
           % ("레그", "규칙", "N", "코호트", "진입", "수렴%", "강제", "첫이틀%", "최악페어%", "후보부족"))
@@ -576,14 +679,18 @@ def main() -> int:
         s = f["stats"]
         ga = (s["t_nw"] or 0) > 3.45
         gb = s["mo_mean"] > 0
-        gc = bool(p) and (p["stats"]["mo_mean"] > 0) == gb
+        # ⚠ PIT 을 안 돌렸으면 ⓒ 는 **미측정**이지 실패가 아니다. ❌ 로 찍으면 "재 봤더니
+        #   틀렸다"로 읽힌다. 게시는 ⓐ~ⓓ 전부를 요구하므로 미측정도 게시는 못 하지만,
+        #   기각 사유에 없는 것을 사유로 적지 않는다.
+        gc = None if not p else ((p["stats"]["mo_mean"] > 0) == gb)
         gd = s.get("beta") is not None and abs(s["beta"]) < 0.2
-        ok = ga and gb and gc and gd
+        ok = bool(ga and gb and gc and gd)
         verdicts[key] = {"a": ga, "b": gb, "c": gc, "d": gd, "pass": ok}
-        print("  %-4s ⓐ%s ⓑ%s ⓒ%s ⓓ%s → **%s**"
-              % (key, "✅" if ga else "❌", "✅" if gb else "❌",
-                 "✅" if gc else "❌", "✅" if gd else "❌",
-                 "게시" if ok else "기각"))
+        mk_ = lambda v: "—" if v is None else ("✅" if v else "❌")
+        print("  %-4s ⓐ%s ⓑ%s ⓒ%s ⓓ%s → **%s**%s"
+              % (key, mk_(ga), mk_(gb), mk_(gc), mk_(gd),
+                 "게시" if ok else "기각",
+                 "" if gc is not None else "  (ⓒ 미측정 — PIT 미실행. ⓐⓑ 에서 이미 갈렸다)"))
 
     doc = {
         "generated": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
@@ -591,6 +698,8 @@ def main() -> int:
         "params": {"form": FORM, "trade": TRADE, "sizes": list(SIZES), "entry_sigma": ENTRY,
                    "hl": [HL_LO, HL_HI], "min_trips": MIN_TRIPS, "borrow_apy": BORROW_APY,
                    "pit_start": PIT_START, "nw_lags": NW_LAGS},
+        "bench_label": BENCH_LABEL,
+        "strategies": index_records(legs),
         "legs": legs, "verdicts": verdicts,
     }
     io.open(OUT, "w", encoding="utf-8").write(

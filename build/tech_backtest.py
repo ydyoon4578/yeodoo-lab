@@ -1031,6 +1031,52 @@ def retained_ratio(f, date, lag=FUND_LAG_DAYS):
     return (re_ / at) if (re_ is not None and at and at > 0) else None
 
 
+ACORR_WIN = 120          # 사전등록 PREREG-2026-08-12-PATH.md §2① — 자기상관 추정 창
+VOLR_S, VOLR_L = 21, 252 # 같은 문서 §2② — 단기·장기 변동성 창
+
+
+def autocorr1(Rt, i, win=ACORR_WIN):
+    """일간 수익률의 1차 자기상관. 사전등록 PREREG-2026-08-12-PATH.md §2①.
+
+    가격이 얼마나 매끄럽게 움직이는가 — 정보가 천천히 스며들면 양수, 호가 튐이 지배하면 음수.
+    ⚠ 유효일이 창의 80% 미만이면 None. 결측은 건너뛰되 **인접 쌍만** 쓴다
+      (건너뛴 자리를 이어 붙이면 없는 하루짜리 관계를 만든다).
+    ⚠ x-fip(프로그인더팬)은 모멘텀 × 경로 매끄러움이고 이것은 **경로만** 본다.
+      x-delay(퇴출)는 시장 정보 반영 지연이라 자기 수익이 아니라 시장에 대한 것이다.
+    """
+    if i < win:
+        return None
+    xs = []
+    for j in range(i - win + 2, i + 1):
+        a, b = Rt[j - 1], Rt[j]
+        if a is None or b is None:
+            continue
+        xs.append((a, b))
+    if len(xs) < win * 0.8:
+        return None
+    n = len(xs)
+    ma = sum(a for a, _b in xs) / n
+    mb = sum(b for _a, b in xs) / n
+    va = sum((a - ma) ** 2 for a, _b in xs)
+    vb = sum((b - mb) ** 2 for _a, b in xs)
+    if va <= 1e-18 or vb <= 1e-18:
+        return None
+    cov = sum((a - ma) * (b - mb) for a, b in xs)
+    return cov / (va ** 0.5) / (vb ** 0.5)
+
+
+def vol_ratio(Rt, i, s_win=VOLR_S, l_win=VOLR_L):
+    """단기 변동성 ÷ 장기 변동성. 사전등록 §2②. 지금 평소보다 얼마나 흔들리나.
+
+    ⚠ x-lowvol 은 변동성 **수준**, x-volvol 은 변동성의 **변동성**이다. 이것은 **비율**이라
+      수준이 서로 다른 종목을 같은 자로 잰다 — 그래서 저변동성과 갈릴 수 있다(그 가정이
+      이 규칙의 질문이다).
+    """
+    sv = vol(Rt, i, s_win)
+    lv = vol(Rt, i, l_win)
+    return (sv / lv) if (sv is not None and lv and lv > 1e-12) else None
+
+
 MACROBETA_WIN = 252      # 사전등록 PREREG-2026-08-12-MACROBETA.md §2 — 베타 추정 창
 
 
@@ -2537,6 +2583,33 @@ def build_strats():
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
 
+    # ── 가격 경로 두 축 ──────────────────────────────────────────────
+    # 사전등록 build/PREREG-2026-08-12-PATH.md. build/tried.py 로 세 목록 115종을 훑었다 —
+    # 자기상관 0건 · 계열상관 0건 · 변동성비 0건.
+    # 🚨 수익성 축(영업이익률)은 **일부러 안 만든다.** 이 랩이 네 형태로 다 시도해 네 번 다
+    #   열위였다(x-roe −0.140 · x-npm −0.141 · x-gpa −0.089 · x-ocfp −0.090 · 전부 퇴출).
+    #   다섯 번째를 얹으면 새 정보 없이 다중검정 족 수만 는다.
+    xsec("x-acorr", "수익률 자기상관 상위 %d" % TOPN,
+         "일간 수익률의 1차 자기상관을 최근 %d거래일에서 재어 가장 큰 %d종목 동일가중, "
+         "월말 리밸런스." % (ACORR_WIN, TOPN),
+         None,
+         "Lo·MacKinlay(1988). 가격이 매끄럽게 움직이면 정보가 천천히 스며든다는 뜻이고, "
+         "그러면 드리프트가 남아 있을 수 있다. "
+         "⚠ x-fip(프로그인더팬)은 모멘텀 × 경로 매끄러움이고 이것은 **경로만** 본다. "
+         "x-delay 는 시장 정보 반영 지연이라 자기 수익이 아니라 시장에 대한 것이고, "
+         "성과가 아니라 운영 비용으로 퇴출됐다(단독 t 1.36 · incr5 0.39) — 이 규칙은 "
+         "종목당 회귀 없이 상관 하나만 재므로 그 비용 문제가 없다. "
+         "실측 후보 중앙 480종 · 램프 없음.")
+    xsec("x-volratio", "변동성비 최하위 %d (단기 ÷ 장기)" % TOPN,
+         "최근 %d거래일 변동성을 최근 %d거래일 변동성으로 나눈 값이 가장 작은 %d종목 "
+         "동일가중, 월말 리밸런스." % (VOLR_S, VOLR_L, TOPN),
+         None,
+         "지금 평소보다 조용한 종목을 산다. "
+         "⚠ x-lowvol 은 변동성 **수준**이고 x-volvol 은 변동성의 **변동성**이다. 이것은 "
+         "**비율**이라 수준이 서로 다른 종목을 같은 자로 잰다 — 저변동성과 갈릴지가 이 "
+         "규칙의 질문이고, 안 갈리면 이웃 통제에서 드러난다. "
+         "실측 후보 중앙 478종 · 램프 없음.")
+
     # ── 거시 요인 둔감 2종 ───────────────────────────────────────────
     # 사전등록 build/PREREG-2026-08-12-MACROBETA.md.
     # 🚨 build/tried.py 로 **세 목록(살아있음 87 · 선반 15 · 퇴출 13)을 전부** 훑었다 —
@@ -3782,6 +3855,12 @@ def xsec_score_at(S, i, X, pool=None):
         # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
         elif sid == "x-sur":
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        # 7차 배치 — PREREG-2026-08-12-PATH.md.
+        elif sid == "x-acorr":
+            v = autocorr1(R[t], i - 1)
+        elif sid == "x-volratio":
+            _vr = vol_ratio(R[t], i - 1)
+            v = (-_vr) if _vr is not None else None      # 최하위 10 → 부호 반전
         # 6차 배치 — PREREG-2026-08-12-MACROBETA.md.
         elif sid in ("x-ratebeta", "x-fxbeta"):
             _mb = macro_beta(R[t], MACD10 if sid == "x-ratebeta" else MACFX, i - 1)
