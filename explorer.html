@@ -290,6 +290,22 @@
   .ktile .v{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.05;font-variant-numeric:tabular-nums}
   .ktile .s{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .kindtiles .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
+  /* 국면 탭 + 그 탭의 표본 고지. 🚨 배너는 장식이 아니라 **탭을 만든 조건**이다
+     (2026-08-12 사용자 결정) — 여섯 국면 중 셋이 사건 하나짜리라, 그 사실을 탭 머리에
+     크게 적는 것을 조건으로 탭을 만들었다. 지우지 말 것. */
+  .rgtabs{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 8px}
+  .rgtabs button{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);
+    background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:5px 11px;cursor:pointer}
+  .rgtabs button:hover{border-color:var(--accent)}
+  .rgtabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+  .rgtabs button .rgc{font-weight:400;opacity:.7;margin-left:5px}
+  .rgtabs button.thin[aria-selected=false]{opacity:.6}
+  .rgbn{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--panel-2);
+    border-radius:2px;padding:10px 13px;margin:0 0 10px;font-size:12px;line-height:1.65;color:var(--ink-2)}
+  .rgbn.warn{border-left-color:var(--rej)}
+  .rgbn b{color:var(--ink)}
+  .rgbn .rgw{display:block;margin-top:5px;color:var(--rej);font-weight:700}
+  .rgbn .rgep{display:block;margin-top:4px;font-family:var(--mono);font-size:11px;color:var(--muted)}
   /* 국면별 성적 — 표본이 약한 칸을 흐리게 해서 '읽지 말라'를 색으로도 말한다. */
   .rgwrap{padding:13px 18px 14px;border-bottom:1px solid var(--line-soft)}
   .rgwrap .kh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
@@ -959,6 +975,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <span class="fcar" aria-hidden="true">▾</span><span id="fltnow">필터</span>
       </button>
     </div>
+    <!-- 국면 탭. 필터 칩과 달리 **한 번에 하나만** 고른다(성격이 축이 아니라 '지금 보는 창'이라
+         여럿을 겹쳐 켤 수가 없다). 그래서 칩줄이 아니라 세그먼트 컨트롤로 둔다. -->
+    <div class="rgtabs" id="rgtabs" role="tablist" aria-label="경기 국면"></div>
+    <div id="rgbanner"></div>
     <div class="chipwrap" id="chipwrap">
       <div class="chiprow" id="bfilters" role="group" aria-label="벤치마크 유형 필터"><span class="fltlab">벤치마크</span></div>
       <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
@@ -1172,7 +1192,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function bmFull(x){ var n=bmName(x); return n==='비교 지수'?n:(n+' 지수'); }
 
   // 기본 정렬 = 샤프 내림차순(사용자 결정 2026-08-12). 전에는 '성격'이었다.
-  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"sharpe",sel:0};
+  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"sharpe",sel:0,
+             rgk:null};   // 국면 탭 — null 이면 '전체'(국면을 안 본다)
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
   // 9px 글씨에 하드코딩 hex를 쓰면 다크에서 대비 2.9:1 → 색은 테두리·배경 힌트로만 쓰고 글씨는 테마 잉크색
@@ -1382,7 +1403,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(!d._hold&&x.holdings)d._hold=x.holdings;
         });
         window.__PRNOTE=ix.pr_note||''; window.__CMPNOTE=ix.cmp_note||'';
-        RGM=ix.rg_meta||null;
+        RGM=ix.rg_meta||null; buildRgTabs();
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
         if(window.__rebuildChips)window.__rebuildChips();
         render();
@@ -1494,6 +1515,51 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 흐리게 할 기준 둘 — **구간이 3개 미만**이거나 **20개월 미만**. 둘 다 봐야 한다:
   //   과열은 26개월인데 1구간이고(사건 하나), 연착륙은 3구간인데 13개월이며 그중 9개월이
   //   한 구간(2020-07~2021-03)이다. 어느 한쪽만 보면 둘 중 하나를 놓친다.
+  // 국면 탭을 그린다. RGM 이 와야 뜻이 있으므로 자료 도착 뒤에 부른다.
+  function buildRgTabs(){
+    var el0=el('rgtabs'); if(!el0)return;
+    if(!RGM){el0.innerHTML='';return;}
+    var mk=function(k,lab,cnt,thin){
+      return '<button type="button" role="tab" data-rg="'+esc(k||'')+'" class="'+(thin?'thin':'')+
+        '" aria-selected="'+((state.rgk||'')===(k||'')?'true':'false')+'">'+esc(lab)+
+        (cnt!=null?'<span class="rgc">'+cnt+'</span>':'')+'</button>';
+    };
+    var h=mk(null,'전체',null,false);
+    (RGM.order||[]).forEach(function(k){
+      var ko=(RGM.ko&&RGM.ko[k])||k;
+      h+=mk(k,ko+((RGM.now===k)?' ·지금':''),(RGM.n&&RGM.n[k])||0,rgWeak(k));
+    });
+    el0.innerHTML=h;
+    [].slice.call(el0.querySelectorAll('button')).forEach(function(b){
+      b.addEventListener('click',function(){
+        var k=b.dataset.rg||null;
+        state.rgk=(state.rgk===k)?null:k;      // 같은 탭을 다시 누르면 전체로 돌아온다
+        buildRgTabs(); rgBanner(); render();
+      });
+    });
+  }
+  // 🚨 탭 머리의 표본 고지. **이것이 탭을 만든 조건이다** — 지우면 화면이 '과열에 강한 전략
+  //   26개월치'라고 말하게 되는데 실제로는 2021-04~2023-05 한 번이다.
+  function rgBanner(){
+    var b=el('rgbanner'); if(!b)return;
+    var k=state.rgk;
+    if(!(k&&RGM)){b.innerHTML='';return;}
+    var ko=(RGM.ko&&RGM.ko[k])||k, mo=(RGM.n&&RGM.n[k])||0, ru=(RGM.runs&&RGM.runs[k])||0;
+    var ep=(RGM.episodes&&RGM.episodes[k])||[];
+    var weak=rgWeak(k);
+    var one=(ru===1);
+    b.innerHTML='<div class="rgbn'+(weak?' warn':'')+'">'+
+      '<b>'+esc(ko)+'</b> 국면에서의 월평균 수익순입니다 — 표본 <b>'+mo+'개월 · '+ru+'구간</b>.'+
+      (weak?('<span class="rgw">⚠ '+(one?
+        ('이 순위는 <u>'+esc(ep.length?ep[0][0]+'~'+ep[0][1]:'')+'</u> <b>한 번</b>에서 나왔습니다. '+
+         '관측 '+mo+'개가 아니라 <b>사건 하나</b>입니다.'):
+        ('구간이 '+ru+'개뿐이거나 표본이 20개월 미만입니다 — 몇 번의 사건이 순위를 정합니다.'))+
+        '</span>'):'')+
+      '<span class="rgep">실제 시기: '+esc(ep.map(function(e){return e[0]+'~'+e[1];}).join(' · ')||'—')+'</span>'+
+      '<span class="rgep">🚨 이 랩은 이 7국면이 <b>다음 달 수익을 못 가른다</b>는 것을 이미 검정했습니다 — '+
+      '이 순위는 과거 서술이지 "지금 이걸 사라"가 아닙니다. 그 국면 표본이 8개월 미만인 전략은 목록에서 빠집니다.</span>'+
+      '</div>';
+  }
   function rgWeak(k){
     if(!(RGM&&RGM.runs))return false;
     return (RGM.runs[k]||0)<3 || ((RGM.n&&RGM.n[k])||0)<20;
@@ -1538,6 +1604,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(state.af.size && !state.af.has((d.det&&d.det.archetype)||'미분류'))return false;
       if(state.kf.size && !state.kf.has(kindOf(d)))return false;
       if(state.mk && !MK.has(d.sid))return false;
+      // 국면 탭이 켜져 있으면 **그 국면을 못 잰 전략은 뺀다.** 남겨 두면 '—' 가 목록의
+      // 절반을 채워 그 탭이 무엇을 보여주는 곳인지가 흐려진다(배너가 그 사실을 적는다).
+      if(state.rgk && rgv(d,state.rgk)==null)return false;
       if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")+" "+(d.det.kind||"")+" "+(d.det.identity||"")):"";
         // ⚠ 근거를 vp 로 옮겼으므로 검색 건초더미에도 같이 넣는다 — 안 넣으면 'PIT'·'증분'
         //   같은 말로 찾던 것이 조용히 안 걸린다.
@@ -1557,6 +1626,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
       }else if(state.sort==="n"){
         var nd=nMonths(b)-nMonths(a); if(nd)return nd;
+      }else if(state.rgk){
+        // 탭이 켜져 있으면 정렬 축을 그 국면으로 **덮어쓴다**. 탭을 눌렀는데 목록이
+        // 샤프순 그대로면 탭이 아무 일도 안 한 것처럼 보인다.
+        var ha=rgv(a,state.rgk), hb=rgv(b,state.rgk);
+        if(ha!=null&&hb!=null&&ha!==hb)return hb-ha;
       }else if(state.sort==="rgnow"){
         // 못 잰 것(그 국면 표본이 8개월 미만이거나 계열이 짧은 것)은 항상 맨 뒤.
         var ga=rgv(a), gb=rgv(b);
@@ -1592,8 +1666,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function headM(d){
     // 샤프로 줄 세울 때는 오른쪽 숫자도 샤프로 바꾼다 — 안 그러면 CAGR 이 뒤죽박죽으로 보이는
     // 목록이 되어 "정렬이 깨졌다"로 읽힌다(줄 세운 값이 화면에 없으면 그렇게 읽힌다).
-    if(state.sort==='rgnow'){
-      var gv=rgv(d), gk=rgNow(), ge=d&&d._rg&&d._rg[gk];
+    if(state.rgk||state.sort==='rgnow'){
+      var gk=state.rgk||rgNow(), gv=rgv(d,gk), ge=d&&d._rg&&d._rg[gk];
       return '<div class="mv'+(gv==null?' sm':'')+'">'+
              (gv==null?'—':((gv>0?'+':'')+gv.toFixed(2)+'%'))+'</div><small>'+
              esc(((RGM&&RGM.ko&&RGM.ko[gk])||'지금')+(ge?' '+ge.n+'개월':' 못 쟀음'))+'</small>';
@@ -1635,7 +1709,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var rows=filtered();
     el('rowcount').textContent=rows.length+"개 표시"+(rows.length<D.length?" / 전체 "+D.length:"");
     listEl.innerHTML="";
-    if(!rows.length){listEl.innerHTML='<div class="empty">조건에 맞는 전략이 없습니다.</div>';drawDetail(null);return;}
+    if(!rows.length){
+      // 국면 탭에서 0건이면 사유가 하나뿐이다 — 그 국면이 너무 짧아 8개월 문턱을 넘는 전략이
+      // 없다. 일반 문구로 두면 '필터를 잘못 걸었나' 로 읽힌다(후기사이클 4개월이 그 경우다).
+      var _rk=state.rgk, _msg='조건에 맞는 전략이 없습니다.';
+      if(_rk&&RGM){
+        var _ko=(RGM.ko&&RGM.ko[_rk])||_rk, _mo=(RGM.n&&RGM.n[_rk])||0;
+        _msg=_ko+' 국면은 이력이 '+_mo+'개월뿐이라 잴 수 있는 전략이 없습니다. '+
+             '이 랩은 그 국면 표본이 8개월 미만이면 값을 만들지 않습니다 — 없는 것을 지어내지 '+
+             '않으려는 것입니다.';
+      }
+      listEl.innerHTML='<div class="empty">'+esc(_msg)+'</div>';drawDetail(null);return;}
     if(rows.indexOf(D[state.sel])<0)state.sel=rows[0]._i;
     var lastK=null, lastS=null;
     rows.forEach(function(d){
