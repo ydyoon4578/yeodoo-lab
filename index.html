@@ -295,7 +295,7 @@
        1200 으로 두면 1200~1320 구간에서 캘린더에 가로 스크롤이 생긴다 — 2열로 만들어 놓고
        스크롤을 만들면 넓게 쓴 것이 아니다. 여유 24px 을 두고 1360 에서 접는다.
      ⚠ align-items:start — 안 주면 짧은 칸이 긴 칸 높이로 늘어나 빈 상자가 생긴다. */
-  /* 🚨 2026-08-12 — 캘린더가 격자에서 **나갔다**(사용자 결정: 히트맵 → 캘린더 순).
+  /* 🚨 2026-08-12 — 캘린더가 격자에서 **나갔다**(사용자 결정). 통짜 폭으로 맨 위에 선다.
      1.55fr 은 오로지 캘린더의 min-width:760px 때문에 있던 값이다. 그것이 통짜 폭으로
      빠졌으니 남은 둘(국면·신호)은 성격이 대등하다 → 1:1 로 되돌린다.
      ⚠ 아래 1360px 접힘도 캘린더가 근거였다. 남은 둘은 625px 에서 넘침 0 이라 더 늦게
@@ -1042,7 +1042,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            · 캘린더 .calgrid 는 min-width 760px — 절반 폭(640)에서 가로 스크롤이 생긴다.
            · 시장 국면·오늘의 신호는 625px 에서 넘침 0.
            · 히트맵(518칸)과 기간별 수익률(10열)은 폭이 곧 정보량이다.
-         🚨 2026-08-12 사용자 결정으로 **순서를 다시 정했다**: 히트맵 → 캘린더 → (국면 |
+         🚨 2026-08-12 사용자 결정으로 **순서를 다시 정했다**: 캘린더 → 히트맵 → (국면 |
             신호) → 기간별 수익률. 폭이 필요한 셋이 위로 올라오면서 격자에는 좁아도 되는
             둘만 남았다 — 그래서 격자가 1.55:1 에서 1:1 이 됐다(위 .hgrid 주석 참조). -->
   <!-- 🚨 .home 은 구획 사이 34px 을 만드는 flex 컨테이너다(.home{gap:34px}).
@@ -1050,17 +1050,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        모든 구획이 간격 0 으로 붙어 있었다 — CSS 는 남아 있었는데 컨테이너가 없었다.
        ⚠ 이런 것은 문법 오류가 안 난다. 화면이 그냥 촘촘해질 뿐이라 눈으로만 잡힌다. -->
   <div class="home">
-    <!-- ① 종목 히트맵 — 2026-08-12 사용자 결정으로 홈 맨 위. 시총 크기 × 등락률 색 ×
-         섹터·산업그룹 묶음. 자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다
-         (518종 · 119KB). 새 수집 잡도, 새 파일도 만들지 않는다.
-         ⚠ 히트맵은 폭이 곧 정보량이라(518칸) 격자에 넣지 않고 통짜로 둔다. -->
-    <section id="s-heat" aria-labelledby="hm-h">
-      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
-      <div class="hmbar" id="hm-bar"></div>
-      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
-    </section>
-
-    <!-- ② 일정 캘린더 — 히트맵 다음(2026-08-12 사용자 결정). 격자에서 빼면서
+    <!-- ① 일정 캘린더 — 홈 맨 위(2026-08-12 사용자 결정). 격자에서 빼면서
          .calgrid 의 min-width:760px 제약이 사라졌다 — 통짜 폭이라 가로 스크롤이 안 난다. -->
     <section id="s-week" aria-labelledby="wk-h">
       <h2 class="lbl" id="wk-h">일정 캘린더 <span class="sub" id="wk-sub"></span><a class="more2" href="calendar.html">전체 일정 →</a></h2>
@@ -1074,6 +1064,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
              범례가 다시 말할 필요가 없다. 남긴 셋은 색으로만 구분되는 것이라 설명이 없으면
              무슨 색인지 알 수 없다 — 그래서 성격이 다르다. -->
       </div>
+    </section>
+
+    <!-- ② 종목 히트맵 — 캘린더 다음(2026-08-12 사용자 결정). 시총 크기 × 등락률 색 ×
+         섹터·산업그룹 묶음. 자료는 홈이 이미 받는 data/home_stocks.json 하나뿐이다
+         (518종 · 119KB). 새 수집 잡도, 새 파일도 만들지 않는다.
+         ⚠ 히트맵은 폭이 곧 정보량이라(518칸) 격자에 넣지 않고 통짜로 둔다. -->
+    <section id="s-heat" aria-labelledby="hm-h">
+      <h2 class="lbl" id="hm-h">종목 히트맵 <span class="sub" id="hm-sub">· 불러오는 중…</span><a class="more2" href="stocks.html">종목 신호 →</a></h2>
+      <div class="hmbar" id="hm-bar"></div>
+      <div class="hmwrap"><div id="hm-tree"><div class="skel2">불러오는 중…</div></div></div>
     </section>
 
     <div class="hgrid">
@@ -1645,9 +1645,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var CYC=null;
   function cycBlock(){
     var cy=CYC; if(!cy||!cy.ref||!cy.now)return '';
-    var R=cy.ref, now=cy.now;
-    var W=560,H=170,PL=14,PR=14,x0=PL,x1=W-PR;
-    var top=26,bot=132,mid=(top+bot)/2,amp=(bot-top)/2*0.9;
+    var R=cy.ref, now=cy.now, BX=R.boxes||[];
+    // 🚨 2026-08-12 — 교과서 선호 업종을 얹으면서 **세로를 늘렸다**(사용자 요청 "조그맣게").
+    //   종전 H=170 은 곡선 위 여유가 26px 뿐이라, 네 줄짜리 업종 묶음(약세장 후반)이
+    //   화면 밖으로 나간다. 글자를 줄이는 대신 자리를 만든다 — 9px 밑으로 내려가면
+    //   좁은 화면에서 못 읽는다.
+    //   BAND = 업종 글자 띠(맨 위) · 그 아래에서 곡선이 시작한다.
+    var BXN=1; BX.forEach(function(b){var n=(b.ko||[]).length; if(n>BXN)BXN=n;});
+    var BAND=14+BXN*10;                       // 단계 이름 한 줄 + 업종 n 줄
+    var W=560,PL=14,PR=14,x0=PL,x1=W-PR;
+    var top=BAND+22,bot=top+106,mid=(top+bot)/2,amp=(bot-top)/2*0.9;
+    var H=bot+40;                             // 「지금」 알약(bot+16 ~ bot+35)까지
     var LEAD=(R.lead==null?0.2:R.lead), T0=(R.mkt_trough==null?0.02:R.mkt_trough);
     var X=function(p){return x0+p*(x1-x0);};
     var Ym=function(p){return mid+amp*Math.cos(2*Math.PI*(p-T0));};
@@ -1656,6 +1664,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function pathOf(fn){var d='';for(var i=0;i<=180;i++){var p=i/180;d+=(i?'L':'M')+f(X(p))+' '+f(fn(p));}return d;}
     var g='<path d="'+pathOf(Ye)+'" fill="none" stroke="var(--accent)" stroke-width="1.8" opacity=".85"/>'+
           '<path d="'+pathOf(Ym)+'" fill="none" stroke="var(--hot)" stroke-width="1.8" opacity=".85"/>';
+    // ── 교과서 선호 업종 (사용자 요청 2026-08-12) ────────────────────────────
+    // 🚨 이것은 **이 랩이 잰 것이 아니다.** 널리 쓰이는 섹터 로테이션 도표의 주장이고,
+    //   이 랩은 국면 기반 규칙을 네 번 검정해 네 번 다 기각했다. 그래서 상자로 감싸지
+    //   않고 옅은 회색 글자로만 둔다 — 「지금」(잉크색)과 곡선보다 뒤로 물러나 보여야 한다.
+    //   범례에도 '교과서'라고 적는다. 안 적으면 이 랩의 추천으로 읽힌다.
+    // ⚠ regime.html 처럼 상자·테두리를 주면 안 된다. 좁은 칸에서 상자가 곡선을 덮고,
+    //   무엇보다 '이 랩이 고른 업종'처럼 무게가 실린다.
+    BX.forEach(function(b){
+      var bx=X(b.pos), ko=b.ko||[];
+      // 양 끝(0.02 · 0.96)은 글자가 화면 밖으로 나간다. 가장 긴 줄로 폭을 잡아 가둔다.
+      var wch=0; ko.concat([b.stage||'']).forEach(function(s){if(s.length>wch)wch=s.length;});
+      var half=wch*4.6+2, tx=Math.max(half+2,Math.min(W-half-2,bx));
+      g+='<line x1="'+f(bx)+'" y1="'+(BAND+4)+'" x2="'+f(bx)+'" y2="'+f(Ym(b.pos)-4)+
+        '" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 3"/>'+
+        '<circle cx="'+f(bx)+'" cy="'+f(Ym(b.pos))+'" r="2.2" fill="var(--muted)"/>'+
+        '<text x="'+f(tx)+'" y="11" text-anchor="middle" font-size="9" font-weight="700" '+
+        'fill="var(--muted)">'+esc(b.stage||'')+'</text>'+
+        ko.map(function(s,i){
+          return '<text x="'+f(tx)+'" y="'+(22+i*10)+'" text-anchor="middle" font-size="9.5" '+
+            'fill="var(--ink-2)">'+esc(s)+'</text>';
+        }).join('');
+    });
     // 🚨 2026-08-12 사용자 결정 — 홈에는 **「지금」만** 그린다. 자취(점·화살표)와
     //   '교과서 순서와 반대' 범례를 뺐다. 자취는 설명을 요구하는 그림이다(왜 되돌아왔나 ·
     //   주황 점선이 무슨 뜻인가 · 겹친 점은 왜 하나로 보이나). 홈은 그 설명을 놓을 자리가
@@ -1681,10 +1711,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="rgcych"><b>경기 사이클</b><span>지금 어디인가</span></div>'+
       '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 — '+
       '증시 곡선이 경기 곡선보다 앞서고, 현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+
-      '개월째다.">'+g+'</svg>'+
+      '개월째다.'+(BX.length?' 위쪽 회색 글자는 교과서가 각 단계에 선호한다고 적은 업종이다.':'')+
+      '">'+g+'</svg>'+
       '<div class="rgcych" style="margin-top:5px">'+
       '<span style="color:var(--hot)">━</span><span>증시</span>'+
       '<span style="color:var(--accent)">━</span><span>경기</span>'+
+      // 🚨 '교과서'라고 반드시 적는다. 이 랩은 국면 기반 규칙을 네 번 검정해 네 번 기각했다 —
+      //   출처를 안 적으면 회색 업종 글자가 이 랩의 추천으로 읽힌다. 그 오독을 막으려고
+      //   이 사이트가 있다.
+      (BX.length?'<span style="color:var(--ink-2)">회색</span>'+
+        '<span>교과서 선호 업종(이 랩의 검정 결과가 아니다)</span>':'')+
       '</div></div>';
   }
 
