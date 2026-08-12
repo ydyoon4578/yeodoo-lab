@@ -17,15 +17,6 @@
      "effort": "M"
     },
     {
-     "name": "섹터 히트맵",
-     "file": "sector.html",
-     "status": "existing",
-     "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M"
-    },
-    {
      "name": "시장 국면",
      "file": "regime.html",
      "status": "existing",
@@ -35,7 +26,7 @@
      "effort": "S"
     },
     {
-     "name": "경제지표 열람",
+     "name": "경제지표",
      "file": "macro.html",
      "status": "existing",
      "desc": "FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭",
@@ -380,6 +371,17 @@
    "retired_on": "2026-08-12",
    "why": "사용자 요청으로 원장 목록에서 뺐다. 페이지(kb.html)와 잠금은 그대로이고 지운 것은 메뉴 칸과 홈 푸터 링크다 — 이제 직접 URL 로만 들어간다.",
    "principle": "⚠ 이 칸은 '무료 자료로 못 만든다'가 아니라 '메뉴에 안 내보낸다'다. 다른 은퇴 항목과 성격이 다르므로 그렇게 적어 둔다. 되살리려면 build/nav_items.json 의 ledger 에 다시 넣고 sync_nav 를 돌리면 된다."
+  },
+  {
+   "name": "섹터 히트맵",
+   "cat": "시장",
+   "was_file": "sector.html",
+   "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
+   "retired_on": "2026-08-12",
+   "why": "메뉴에서 뺐다(사용자 결정) — 이 칸이 무엇에 답하는지가 애매했다. 담긴 것은 11섹터의 오늘 등락과 '지금 국면(Recovery)의 과거 월평균' 둘인데, 앞은 홈의 기간별 수익률 표가 같은 섹터 ETF 수치로 이미 보여 주고 뒤는 시장 국면 페이지의 교과서 선호 업종과 같은 질문이다. 즉 두 화면 사이에 낀 채 어느 쪽도 더 잘 답하지 못했다.",
+   "principle": "쓰임이 겹치는 칸은 남겨 두는 것이 친절이 아니라 부담이다 — 읽는 사람이 '이건 뭘 보라는 칸이지'를 매번 되물어야 한다.",
+   "replaced_by": "섹터 등락은 홈 '기간별 수익률'(섹터 11행) · 국면별 선호 업종은 regime.html 의 경기 사이클.",
+   "file_kept": "sector.html 파일과 빌더는 지우지 않았다. 메뉴 슬롯에서만 뺐다 — 되살리려면 이 항목을 categories 로 되돌리면 된다."
   }
  ]
 }

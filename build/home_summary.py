@@ -470,6 +470,53 @@ def _load_px(ts, dates, root):
     return PX
 
 
+def _fpe(stocks):
+    """ETF 행에 붙일 **12개월 선행 PER** — 홈 '기간별 수익률' 표의 마지막 열(2026-08-12 요청).
+
+    🚨 **평균이 아니라 조화평균이다.** PER 은 비율이라 그냥 평균 내면 PER 1000 짜리 한 종목이
+      바스켓 전체를 끌어올린다(실측: 이 유니버스에 fpe 9605 인 종목이 있다). 옳은 집계는
+      Σ시총 ÷ Σ이익 이고, 이익 = 시총 ÷ PER 이므로 **시총가중 조화평균**과 같다. 그렇게 하면
+      PER 이 큰 종목은 분모에 거의 기여하지 않아 자연히 영향이 작아진다 — 잘라내지 않아도 된다.
+
+    ⚠ **이 랩이 계산한 값이지 그 ETF 가 발표한 값이 아니다.** 후보는 이 랩의 518종이고,
+      XLK 의 실제 편입과 'XLK 로 태그된 우리 종목'은 같지 않다. 화면 각주가 그렇게 적는다.
+    ⚠ 후보를 못 만드는 행은 **넣지 않는다**(DIA·IWM·스타일 ETF 8종). 편입 명단이 없어서다.
+      0 이나 전체 평균으로 채우면 없는 것을 지어내는 것이다 — 화면은 그 칸을 '—' 로 둔다.
+    ⚠ fpe 가 음수·0 인 종목은 뺀다. 적자 예상 기업의 PER 은 뜻이 없다(수를 뒤집으면 오히려
+      바스켓 PER 을 낮춰 싸 보이게 만든다). 몇 종을 뺐는지 n/of 로 같이 싣는다.
+    """
+    def agg(sel, cap_weight=True):
+        num = den = 0.0; n = 0
+        for s in sel:
+            f = s.get("fund") or {}
+            v, mc = f.get("fpe"), f.get("mc")
+            if not (isinstance(v, (int, float)) and v > 0):
+                continue
+            w = float(mc) if (cap_weight and isinstance(mc, (int, float)) and mc > 0) else (
+                None if cap_weight else 1.0)
+            if w is None:
+                continue
+            num += w; den += w / v; n += 1
+        return ({"v": round(num / den, 1), "n": n, "of": len(sel)}
+                if (den > 0 and n >= 5) else None)
+
+    out = {}
+    ix = lambda k: [s for s in stocks if k in (s.get("idx") or [])]
+    for tk, sel, cw in (("SPY", ix("SPX"), True),      # 시총가중 S&P 500
+                        ("QQQ", ix("NDX"), True),      # 시총가중 나스닥 100
+                        ("RSP", ix("SPX"), False)):    # 동일가중 S&P 500 — 가중만 다르다
+        r = agg(sel, cw)
+        if r:
+            r["basis"] = ("시총가중" if cw else "동일가중")
+            out[tk] = r
+    for gics, tk in SEC_ETF.items():
+        r = agg([s for s in stocks if (s.get("sector") or "") == gics], True)
+        if r:
+            r["basis"] = "시총가중"
+            out[tk] = r
+    return out
+
+
 def _segments(stocks, dates, root):
     """홈이 읽는 섹터·산업 한 덩어리. _industry 에 국면 통계를 얹고 내부 필드를 턴다.
 
@@ -649,6 +696,13 @@ def build(stocks, dates, as_of, root):
         "idx_n": _idx_counts(stocks, root),
         # 섹터(11)와 종목(518) 사이 — GICS 산업그룹·서브산업. 홈 산업 카드가 읽는다.
         "industry": _segments(stocks, dates, root),
+        # 홈 '기간별 수익률' 표의 12개월 선행 PER 열. 후보가 있는 행만 담긴다(_fpe 머리말 참조).
+        "fpe": _fpe(stocks),
+        "fpe_note": "12개월 선행 PER — 이 랩 518종 중 그 바스켓에 해당하는 종목의 "
+                    "**시총가중 조화평균**(Σ시총 ÷ Σ이익)이다. ⚠ 이 랩이 계산한 값이지 그 "
+                    "ETF 가 발표한 값이 아니다. 적자 예상(PER ≤ 0) 종목은 뺐다 — 몇 종을 "
+                    "썼는지 각 행에 n/of 로 적는다. 편입 명단이 없는 행(DIA·러셀2000·스타일 "
+                    "ETF)은 칸을 비운다.",
     }
 
 
