@@ -970,8 +970,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   (증분알파·PIT 열) — 끄는 것과 안 재는 것은 다르다.
     //   ⚠ 관문을 다시 켜면 이 문구도 같이 고칠 것. 정본은 build/tech_backtest.py 의 GATE_* 다.
     pass:{lab:"통과 후보",short:"통과 후보",orig:"통과 후보",col:"--deploy",
-          mean:"단독 t 가 다중검정 보정(본페로니) 임계를 넘었다 — 증분알파·시점정확 관문은 "+
-               "현재 꺼져 있고(수치는 상세에 그대로 있다), 배포 결정과도 별개다"},
+          mean:"단독 t 가 관례 임계(|t|>2)를 넘었다 — 다중검정 보정·증분알파·시점정확 "+
+               "관문은 모두 꺼져 있다. 배포 결정과도 별개다"},
     inverse:{lab:"역방향으로 유의",short:"역방향 유의",orig:"역방향 유의",col:"--marg",
              mean:"관례와 반대 방향으로 문턱을 넘었다 — 방향을 결과 보고 정했으므로 가설이다"},
     tie:{lab:"구별 불가",short:"구별 불가",orig:"구별 불가",col:"--muted",

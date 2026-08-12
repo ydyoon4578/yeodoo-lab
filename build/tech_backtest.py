@@ -654,6 +654,22 @@ GATE_DSHARPE = False     # 열위(Δ샤프 ≤ 0) 강등
 GATE_PIT = False         # ⓒ 시점정확 재측정 강등 · 미측정 강등
 GATE_COST = True         # 비용 후(편도 10bp) t ≥ 임계 — 사용자 지시에 없어 그대로 둔다
 
+# 🚨 2026-08-12 추가 — 증분알파(incr5)를 **아예 계산하지 않는다**(사용자 결정 '버려').
+#   위 GATE_INCR5 는 '재되 판정에 안 쓴다'였고 이것은 '재지도 않는다'다. 둘은 다르다.
+#   ⚠ 되살리려면 이 값을 True 로. 계산 코드는 지우지 않았다 — 이 랩이 중복 판정의 잣대라고
+#     못박아 온 검정이라(DATA-FACTS #6·#8), 지우면 왜 그 잣대가 있었는지가 같이 사라진다.
+#   ⚠ 끄면 화면의 '증분알파' 열이 빈다. 그 열이 무엇을 재던 것인지는 DATA-FACTS #8 에 남는다.
+EMIT_INCR5 = False
+
+# 다중검정 보정 — 2026-08-12 사용자 결정으로 **끈다.**
+#   True  : 본페로니 α=0.05/N. 규칙이 늘면 임계가 같이 오른다(94종에서 3.46).
+#   False : 검정이 하나일 때의 관례 |t| > T_CRIT_PLAIN 을 그대로 쓴다.
+#   ⚠ 무엇을 포기하는지 적어 둔다 — 같은 표본에서 94개를 돌리면 그중 최고는 우연히도
+#     좋아 보인다. 보정을 끄면 통과 후보가 17 → 44종이 된다(실측). Harvey·Liu·Zhu(2016)는
+#     발표된 이상현상에 |t|≈3.0 을 권고한다. 그 권고보다 느슨한 자리에 있게 된다.
+BONFERRONI = False
+T_CRIT_PLAIN = 2.0
+
 FUND_LAG_DAYS = 90
 
 
@@ -4840,8 +4856,12 @@ def run():
     # 본페로니(α=0.05/N)로 임계를 올린다 — Harvey·Liu·Zhu(2016)가 발표된 이상현상에
     # 권고한 |t|≈3.0과도 대체로 같은 자리에 온다.
     N = len(out)
-    alpha = 0.05 / max(1, N)
-    tcrit = z_of(alpha)      # 모듈 레벨 함수 — pit_backtest 도 z_crit() 으로 같은 것을 쓴다
+    if BONFERRONI:
+        alpha = 0.05 / max(1, N)
+        tcrit = z_of(alpha)  # 모듈 레벨 함수 — pit_backtest 도 z_crit() 으로 같은 것을 쓴다
+    else:
+        # 사용자 결정(2026-08-12) — 보정을 끈다. 위 BONFERRONI 주석에 무엇을 포기하는지 적었다.
+        alpha, tcrit = 0.05, T_CRIT_PLAIN
     for r in out:
         t = r["t"]
         if r.get("cov_short"):
@@ -5166,7 +5186,8 @@ def run():
             if len(nb) == 5:
                 m5 = _incr_multi(r, [z[2] for z in nb])
                 if m5:
-                    r["incr5"] = dict(m5, vs=[z[1] for z in nb])
+                    if EMIT_INCR5:
+                        r["incr5"] = dict(m5, vs=[z[1] for z in nb])
     # 🚨 '증분 알파 없음'을 그대로 세면 안 된다 — 두 가지가 섞인다.
     #   (a) 이웃이 설명하고 남는 게 없다(진짜 중복)  (b) 애초에 단독으로도 알파가 없다.
     #   이 표는 통과 후보가 0종이라 대부분이 (b)다. 정보가 있는 것은 **단독으로는 세 보이는데
@@ -5353,7 +5374,8 @@ def run():
         #   이 값을 읽어야 한다 — 안 실으면 관문을 껐는데 화면은 계속 "셋을 다 넘었다"고 말한다.
         #   (2026-08-12 에 셋을 끄면서 실제로 그 상태가 됐다.)
         "gates": {"incr5": GATE_INCR5, "d_sharpe": GATE_DSHARPE,
-                  "pit": GATE_PIT, "cost": GATE_COST},
+                  "pit": GATE_PIT, "cost": GATE_COST,
+                  "incr5_measured": EMIT_INCR5, "bonferroni": BONFERRONI},
         "gates_note": ("게시 관문 — 켠 것만 판정을 강등한다. 끈 관문의 수치는 그대로 재서 "
                        "싣는다(끄는 것과 안 재는 것은 다르다). "
                        "지금 켜짐: %s / 꺼짐: %s."
@@ -5365,8 +5387,14 @@ def run():
                                                    ("열위(Δ샤프)", GATE_DSHARPE),
                                                    ("시점정확(PIT)", GATE_PIT),
                                                    ("비용 후 t", GATE_COST)) if not v) or "없음")),
-        "t_crit_note": "규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
-                       "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다." % (N, N),
+        "t_crit_note": ("규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
+                       "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다."
+                       % (N, N)) if BONFERRONI else (
+                       "🚨 다중검정 보정을 끈 상태다(2026-08-12 사용자 결정). 규칙 %d개를 "
+                       "같은 표본에서 돌렸으므로 그중 최고는 우연히도 좋아 보인다 — 지금 임계 "
+                       "%.1f 은 검정이 하나일 때의 관례이고, 본페로니(α=0.05/%d)라면 %.2f 이다. "
+                       "Harvey·Liu·Zhu(2016)는 발표된 이상현상에 |t|≈3.0 을 권고한다."
+                       % (N, T_CRIT_PLAIN, N, z_of(0.05 / max(1, N)))),
         "rf_note": "샤프는 FRED DGS3MO 월평균을 일할로 환산해 차감",
         "limits": [
             # ⚠ 기간을 숫자로 박지 말 것. 예전엔 '3년'이 문장에 박혀 있어 구간을 늘린 뒤에도
