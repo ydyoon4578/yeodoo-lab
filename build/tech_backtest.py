@@ -1009,6 +1009,28 @@ def sue(series, date, lag=FUND_LAG_DAYS, win=8):
     return (cur / sd) if sd > 1e-9 else None
 
 
+def current_ratio(f, date, lag=FUND_LAG_DAYS):
+    """유동비율 — 유동자산 ÷ 유동부채. 사전등록 PREREG-2026-08-12-BALANCE.md §2①.
+
+    ⚠ 잔고 항목이므로 asof_fund(그 시점 값)를 쓴다. ttm(12개월 합)이 아니다 —
+      잔고를 더하면 같은 돈을 네 번 세게 된다.
+    ⚠ 유동부채가 0 이하면 낸다고 하지 않는다.
+    """
+    ca = asof_fund(f.get("ca"), date, lag)
+    cl = asof_fund(f.get("cl"), date, lag)
+    return (ca / cl) if (ca is not None and cl and cl > 0) else None
+
+
+def retained_ratio(f, date, lag=FUND_LAG_DAYS):
+    """이익잉여금 ÷ 총자산. 사전등록 §2②. Altman(1968) Z-score 의 X2 그대로다.
+
+    ⚠ 음수가 정상적으로 나온다(누적 결손). 그것도 정보이므로 자르지 않는다.
+    """
+    re_ = asof_fund(f.get("re"), date, lag)
+    at = asof_fund(f.get("asset"), date, lag)
+    return (re_ / at) if (re_ is not None and at and at > 0) else None
+
+
 EARNVOL_WIN = 8          # 사전등록 PREREG-2026-08-12-POLICY.md §2② — 분기 수
 
 
@@ -2459,6 +2481,28 @@ def build_strats():
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
 
+    # ── 재무상태표 두 축(안 쓰이던 태그) ─────────────────────────────
+    # 사전등록 build/PREREG-2026-08-12-BALANCE.md. ca·cl·re 는 수집돼 있는데 88종 어디에서도
+    # 안 쓰이고 있었다(전문 검색: 유동비율 0건 · 이익잉여금 0건) — 수집 ≠ 배선의 또 한 사례다.
+    xsec("x-currat", "유동비율 상위 %d" % TOPN,
+         "유동자산 ÷ 유동부채가 가장 큰 %d종목 동일가중, 월말 리밸런스. 유동부채가 0 이하면 "
+         "후보에서 뺀다." % TOPN,
+         None,
+         "Ou·Penman(1989)의 재무비율 기반 펀더멘털 분석. 단기 지급능력이라는 축이 이 랩에 "
+         "없었다 — x-lowde 는 총부채 수준이고 x-cash 는 현금 비중이라 둘 다 다른 것을 잰다. "
+         "🚨 은행·보험은 유동자산/유동부채를 구분해 보고하지 않는다 — 커버 84%%이고 빠지는 "
+         "쪽이 무작위가 아니다. 그러니 이 규칙은 '유동비율이 높은 종목'이 아니라 "
+         "'유동/비유동을 구분해 보고하는 업종 안에서' 그런 종목이다(DATA-FACTS #1 과 같은 성질). "
+         "실측 커버 랩 84%% · 편출 84%% — 두 유니버스가 같아 PIT 비교가 성립한다.")
+    xsec("x-reta", "이익잉여금 비율 상위 %d" % TOPN,
+         "이익잉여금 ÷ 총자산이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "Altman(1968) Z-score 의 X2 를 그대로 쓴다. 누적해서 유보한 이익이 자산에서 차지하는 "
+         "비중이라 '얼마나 오래 스스로 벌어 왔나'를 재는 축이고, 이 랩의 수익성 규칙들"
+         "(x-roe·x-npm·x-gpa)이 재는 '지금 얼마나 버나'와 다르다. "
+         "⚠ 음수가 정상적으로 나온다(누적 결손) — 자르지 않는다. 그것도 정보다. "
+         "실측 커버 랩 97%% · 편출 93%%.")
+
     # ── 배당 정책의 변화 · 이익 변동성 2종 ───────────────────────────
     # 사전등록 build/PREREG-2026-08-12-POLICY.md. **이웃 지도를 보고 빈 칸을 골랐다** —
     # 1~3차의 기각은 대부분 '붐비는 칸(가치·복권형·저변동성·모멘텀)에 하나 더 얹었다'였다.
@@ -3681,6 +3725,11 @@ def xsec_score_at(S, i, X, pool=None):
         # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
         elif sid == "x-sur":
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        # 5차 배치 — PREREG-2026-08-12-BALANCE.md.
+        elif sid == "x-currat":
+            v = current_ratio(FU.get(t) or {}, dates[i - 1])
+        elif sid == "x-reta":
+            v = retained_ratio(FU.get(t) or {}, dates[i - 1])
         # 4차 배치 — PREREG-2026-08-12-POLICY.md.
         elif sid == "x-divgrow":
             v = div_growth(FU.get(t) or {}, dates[i - 1])
