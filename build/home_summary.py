@@ -290,6 +290,58 @@ def _industry(stocks, dates, root):
             if _k:
                 _cls_n[_k] = _cls_n.get(_k, 0) + 1
 
+    # ── 산업그룹 경로(홈 시계열 넷째 판, 2026-08-13 사용자 요청) ────────────────
+    # 🚨 아래 agg() 와 **같은 식**이다. agg 는 끝점 하나만 내고 이것은 날짜마다 낸다 —
+    #   그래서 마지막 점이 표의 그 칸과 글자 그대로 같다. 다른 식으로 만들면 그림과 표가
+    #   같은 줄에서 다른 말을 하게 된다(이 저장소가 여러 번 겪은 그 유형이다).
+    # ⚠ 가중치는 **기준일 시총**으로 고정한다(agg 와 같다). 날마다 다시 재면 그건 다른 지수다.
+    IND_MAXPT = 90            # build/home_perf.py 의 MAXPT 와 같은 값 — 판끼리 점 수를 맞춘다
+    ind_paths = {}
+
+    def _thin_ix(lo, hi, cap):
+        m = hi - lo + 1
+        if m <= cap:
+            return list(range(lo, hi + 1))
+        st = (m - 1) / float(cap - 1)
+        out = sorted({lo + int(round(j * st)) for j in range(cap)})
+        out[-1] = hi
+        return out
+
+    def path_of(objs, k):
+        i0 = base.get(k)
+        if i0 is None:
+            return None
+        ws, nok = [], 0
+        for s2 in objs:
+            px = PX.get(s2["t"])
+            if not (px and px[i0] and px[-1] and px[i0] > 0):
+                continue
+            nok += 1
+            w = _w_at(s2, i0)
+            if w:
+                ws.append((w, px, px[i0]))
+        # 🚨 agg() 의 최소관측 규칙을 **그대로** 건다. 안 걸면 표가 '—' 인 줄이 그림에는
+        #   선으로 나온다 — 실제로 그랬다(Real Estate Management & Development 2종:
+        #   표 '—' vs 그림 −32.13). 같은 식이어야 한다는 계약은 문턱까지 같아야 성립한다.
+        need = 1 if len(objs) == 1 else max(3, len(objs) // 2)
+        if nok < need:
+            return None
+        den = sum(w for w, _p, _b in ws)
+        if not (ws and den):
+            return None
+        ix = _thin_ix(i0, len(dates) - 1, IND_MAXPT)
+        out = []
+        for j in ix:
+            num = 0.0
+            for w, px, b in ws:
+                v = px[j]
+                if v is None:
+                    num = None
+                    break
+                num += w * (v / b - 1.0)
+            out.append(None if num is None else round(num / den * 100.0, 2))
+        return {"ix": ix, "v": out}
+
     def _w_at(s2, i0):
         """기준일 i0 의 시가총액 가중치. 못 구하면 None(그 종목은 그 구간에서 빠진다)."""
         v = (s2.get("fund") or {}).get("mc")
@@ -437,6 +489,12 @@ def _industry(stocks, dates, root):
             if len(gs) == 1 and g == ETF_GICS.get(sec):
                 _g["solo"] = 1
             rows.append(_g)
+            # 같은 줄의 경로. solo 줄(섹터와 이름이 같은 것)은 화면이 건너뛰므로 안 만든다.
+            if not _g.get("solo"):
+                for _k in list(base):
+                    _p = path_of(gv, _k)
+                    if _p:
+                        ind_paths.setdefault(_k, {})[g] = _p
             gused.update(s["t"] for s in gv)
             # 🚨 2026-08-05 — 서브산업(4차) 단을 없앴다(사용자 결정). 3차에 이어 4차도 안 쓴다.
             #   남는 것은 섹터(1차) → 산업그룹(2차) 두 단이고, 종목은 산업그룹에 바로 매단다.
@@ -451,7 +509,7 @@ def _industry(stocks, dates, root):
             rows.append(agg(rest, NOM, sec, 2, sec))
             _stocks(rest, sec, sec + "|" + NOM, 3)
     return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX,
-            "tiers": gics_tiers}
+            "tiers": gics_tiers, "ind_paths": ind_paths, "ind_dates": dates}
 
 
 def _load_px(ts, dates, root):
@@ -558,6 +616,9 @@ def _fpe(stocks):
     return out
 
 
+_IND_PATHS = [(None, None)]      # _segments 가 채우고 write() 가 꺼내 쓴다
+
+
 def _segments(stocks, dates, root):
     """홈이 읽는 섹터·산업 한 덩어리. _industry 에 국면 통계를 얹고 내부 필드를 턴다.
 
@@ -570,6 +631,10 @@ def _segments(stocks, dates, root):
     if not d:
         return {}
     PX = d.pop("px")
+    # 🚨 산업그룹 경로는 **여기 안 싣는다.** home_reco.json 은 홈이 첫 화면에 받는 파일이고
+    #   경로 22줄 × 5구간은 그 파일을 배로 만든다 — 이 파일이 생긴 이유가 그 반대다.
+    #   차트가 늦게 받는 별도 파일(data/home_ind_perf.json)로 뺀다.
+    _IND_PATHS[0] = (d.pop("ind_paths", None), d.pop("ind_dates", None))
     # 국면 통계는 섹터·산업 **양쪽**에 붙인다. 표에서 부모 줄에도 툴팁이 뜬다.
     # 국면 통계는 상위 단만 — 종목 한 개의 국면별 월평균은 잡음이고, 417줄에 얹으면
     # 파일이 배로 는다. 표에서도 종목 줄 툴팁에는 안 쓴다.
@@ -786,6 +851,28 @@ def write(stocks, dates, as_of, root):
     if not doc["buy"] and not doc["sell"]:
         raise SystemExit("home_reco: 최근 타점이 하나도 없다 — 마커 산출이 깨졌는지 확인")
     sp, n_deep = write_stocks(doc, root)
+    # 산업그룹 경로 — 홈 시계열 넷째 판. 차트가 늦게 받는 별도 파일이다.
+    _paths, _pdates = _IND_PATHS[0]
+    if _paths and _pdates:
+        _out = {"note": "홈 '기간별 수익률' 위 시계열의 산업그룹 판. 🚨 끝점이 아래 표의 그 칸과 "
+                        "같도록 **표를 만든 그 함수(agg)와 같은 식**으로 날짜마다 잰다 — "
+                        "기준일 시총가중, 가중치는 기준일에 고정. 만든 곳 build/home_summary.py.",
+                "as_of": doc.get("as_of"), "series": {}}
+        for _k, _g in _paths.items():
+            _ix = sorted({i for p in _g.values() for i in p["ix"]})
+            _pos = {i: j for j, i in enumerate(_ix)}
+            _rows = {}
+            for _nm, _p in _g.items():
+                _a = [None] * len(_ix)
+                for _i, _v in zip(_p["ix"], _p["v"]):
+                    _a[_pos[_i]] = _v
+                _rows[_nm] = _a
+            _out["series"][_k] = {"dates": [_pdates[i] for i in _ix], "ind": _rows}
+        _ip = os.path.join(root, "data", "home_ind_perf.json")
+        json.dump(_out, io.open(_ip, "w", encoding="utf-8"), ensure_ascii=False,
+                  separators=(",", ":"))
+        print("  → home_ind_perf.json (산업그룹 %d줄 · 구간 %d)"
+              % (len(next(iter(_out["series"].values()))["ind"]), len(_out["series"])))
     p = os.path.join(root, "data", "home_reco.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("  → %s (종목 %d줄 · 지연 로딩)" % (os.path.basename(sp), n_deep))
