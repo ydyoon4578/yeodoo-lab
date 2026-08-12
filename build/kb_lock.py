@@ -193,7 +193,11 @@ def main() -> int:
             print("  -", b)
         return 1
     io.open(GATE, "w", encoding="utf-8", newline="").write(new)
-    print("기록: kb.html  ct %d chars · ph %s…" % (len(p["ct"]), p["ph"][:12]))
+    # 🚨 2026-08-12 — 여기가 "kb.html" 로 **하드코딩**돼 있었다. --page sources 로 돌리면
+    #   sources.html 에 제대로 기록해 놓고 화면에는 "기록: kb.html" 이라 찍혀서,
+    #   실제로 사용자가 "kb 를 덮어썼나" 하고 놀랐다(실측 2026-08-12). 기록한 곳을 적는다.
+    print("기록: %s  ct %d chars · ph %s…"
+          % (os.path.basename(GATE), len(p["ct"]), p["ph"][:12]))
 
     # 평문 한 장을 다시 만들어 둔다 — validate 의 평문 의존 검사 6종이 그것을 본다.
     #
@@ -202,12 +206,20 @@ def main() -> int:
     #   (한국어 윈도면 cp949)로 디코딩한다. 한글 UTF-8 바이트가 cp949 로 안 풀려
     #   subprocess 리더 스레드가 UnicodeDecodeError 로 죽고 r.stdout 이 None 이 됐다.
     #   그 결과 진짜 사유 대신 '무응답'만 찍혔다. 파이프를 없애면 그 층 자체가 사라진다.
+    # 🚨 2026-08-12 — 자식 모듈을 부를 때 **argv 를 비운다.** 이것들도 argparse 를 쓰는데
+    #   부모의 sys.argv(`--page sources`)를 그대로 읽어 "unrecognized arguments" 로 죽었다.
+    #   그리고 argparse 는 SystemExit 을 던지므로 아래 `except Exception` 에 **안 잡힌다** —
+    #   프로세스가 거기서 끝나 셸·내비 전파와 마지막 안내가 통째로 건너뛰어졌다(실측).
+    _argv0 = sys.argv
+    sys.argv = [_argv0[0]]
     try:
         import importlib.util as _ilu
         _sp = _ilu.spec_from_file_location("_kbplain", os.path.join(ROOT, "build", "kb_plain.py"))
         _kp = _ilu.module_from_spec(_sp)
         _sp.loader.exec_module(_kp)
         rc = _kp.main()
+    except SystemExit as e:
+        rc = e.code if isinstance(e.code, int) else 1
     except Exception as e:
         print("  ⚠ kb_plain.py 를 부르지 못했다 — %s: %s" % (type(e).__name__, e))
         rc = 1
@@ -224,9 +236,14 @@ def main() -> int:
             _s2.loader.exec_module(_m2)
             if hasattr(_m2, "main"):
                 _m2.main()
+        except SystemExit as _e3:
+            if _e3.code not in (0, None):
+                print("  ⚠ %s 전파가 종료코드 %s 로 끝났다 (직접 python build/%s.py 를 돌릴 것)"
+                      % (_lab, _e3.code, _mod))
         except Exception as _e2:
             print("  ⚠ %s 전파 실패 — %s: %s (직접 python build/%s.py 를 돌릴 것)"
                   % (_lab, type(_e2).__name__, _e2, _mod))
+    sys.argv = _argv0
     print("다음: python build/validate_site.py")
     return 0
 
