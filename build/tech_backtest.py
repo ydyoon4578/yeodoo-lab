@@ -1009,6 +1009,55 @@ def sue(series, date, lag=FUND_LAG_DAYS, win=8):
     return (cur / sd) if sd > 1e-9 else None
 
 
+AMIHUD_WIN = 60          # 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2① 에서 확정. 바꾸지 않는다.
+TURN_WIN = 60            # 같은 문서 §2②.
+
+
+def amihud(P, V, i, win=AMIHUD_WIN):
+    """Amihud(2002) 비유동성 — |일간수익률| ÷ 거래대금(달러)의 win 일 평균. 클수록 비유동적.
+
+    사전등록 PREREG-2026-08-12-LIQ-CAL.md §2①.
+    ⚠ 분모는 **거래대금**(거래량 × 종가)이지 거래량이 아니다. 거래량만 쓰면 주가 수준이
+      섞여 들어가 같은 유동성의 고가주가 늘 비유동적으로 나온다.
+    ⚠ 거래대금이 0 인 날은 버린다 — 0 으로 나누면 무한이 된다(실측으로 그런 날이 있다).
+      유효일이 창의 80% 미만이면 None. 이 랩의 sma 규약과 같다.
+    """
+    if i < win:
+        return None
+    xs = []
+    for j in range(i - win + 1, i + 1):
+        a, b, v = P[j - 1], P[j], V[j]
+        if not (a and b and v and a > 0 and v > 0):
+            continue
+        xs.append(abs(b / a - 1.0) / (v * b))
+    return (sum(xs) / len(xs)) if len(xs) >= win * 0.8 else None
+
+
+def turnover(V, sh, i, win=TURN_WIN):
+    """회전율 — 거래량의 win 일 평균 ÷ 발행주식수. 사전등록 §2②. 작을수록 저회전."""
+    if i < win or not sh or sh <= 0:
+        return None
+    xs = [V[j] for j in range(i - win + 1, i + 1) if V[j]]
+    return (sum(xs) / len(xs) / sh) if len(xs) >= win * 0.8 else None
+
+
+def tom_window(dates, me):
+    """월말 효과의 창 — 월 마지막 거래일 + 다음 달 첫 3거래일. [bool] × len(dates).
+
+    사전등록 §2③(McConnell·Xu 2008 의 (−1,+3)).
+    ⚠ 선견이 아니다 — 거래 달력은 미리 공표된다. 가정은 '예정에 없던 휴장이 없다' 하나다.
+      그 가정이 깨진 사례(9·11 · 샌디)는 이 창의 경계를 며칠 옮길 뿐이다.
+    """
+    n = len(dates)
+    win = [False] * n
+    for k in me:
+        win[k] = True
+        for d in range(1, 4):
+            if k + d < n:
+                win[k + d] = True
+    return win
+
+
 def gp_series(f):
     """분기 매출총이익 [(기간종료일, rev − cogs)] — 날짜 내림차순.
 
@@ -2039,6 +2088,17 @@ def build_strats():
            "20일 최고가를 넘으면 편입, 20일 최저가를 깨면 현금.",
            None, "가격 돌파만 쓰는 고전 추세 규칙. 이동평균과 무엇이 다른지 본다.",
            arch="donchian-breakout")
+    # 🚨 이 랩 **최초의 달력 규칙**이다. 타이밍 21종이 전부 추세·변동성·폭·드로다운이었고
+    #   날짜 자체를 신호로 쓰는 규칙이 하나도 없었다. 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2③.
+    timing("t-tom", "월말 효과 (마지막 거래일 + 다음달 첫 3일)",
+           "월의 마지막 거래일과 다음 달 첫 3거래일만 편입, 나머지는 현금. 실측 노출 19.1%.",
+           None,
+           "McConnell·Xu(2008)는 1926~2005 미국 주식의 초과수익이 사실상 이 4일에서만 나왔다고 "
+           "보고한다. 나머지 날의 합이 0 이라는 강한 주장이라 반증이 쉽다. "
+           "🚨 이 랩은 모든 규칙을 매수후보유 대비로 재는데 이 규칙의 노출은 19% 다 — "
+           "따라잡기만 해도 원논문 주장이 재현된 것이다. 초과 CAGR 이 0 근처면 그것은 실패가 "
+           "아니라 같은 수익을 81% 현금으로 냈다는 뜻이고, 샤프에서 드러나야 한다. "
+           "⚠ 선견이 아니다 — 거래 달력은 미리 공표된다. 가정은 '예정에 없던 휴장이 없다' 하나다.")
     timing("t-macd", "MACD 신호선 교차",
            "MACD(12,26)가 신호선(9) 위면 편입, 아래면 현금.",
            None, "이동평균의 변화율을 보는 규칙. 전환이 이동평균보다 빠른 대신 잦다.")
@@ -2309,6 +2369,31 @@ def build_strats():
          "회사)가 위로 몰리는 성질이 있다. 이건 나누지 않으므로, 둘이 같은 결과면 표준화가 "
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
+
+    # ── 유동성 수준 2종 ──────────────────────────────────────────────
+    # 사전등록 build/PREREG-2026-08-12-LIQ-CAL.md 에 **돌리기 전에** 확정해 커밋했다.
+    # 🚨 81종 전문을 훑어 확인한 빈 축이다 — 비유동성 0건·Amihud 0건·회전율 0건·거래대금 0건.
+    #   유동성을 건드리는 넷은 다른 것을 잰다: hlspread·lshock 는 스프레드(비용의 폭),
+    #   volsurge 는 거래량의 급변(수준 아님), small 은 시총(대리변수이지 유동성이 아니다).
+    # 후보 밀도는 build/probe_liq.py 로 **월별 시계열을 먼저 쟀다**(1차 배치의 실패 때문).
+    xsec("x-amihud", "비유동성 상위 %d (Amihud)" % TOPN,
+         "일간 |수익률| 을 그날 거래대금으로 나눈 값의 최근 %d거래일 평균이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스. 거래대금이 0 인 날은 버리고, 유효일이 창의 80%% 미만이면 "
+         "후보에서 뺀다." % (AMIHUD_WIN, TOPN),
+         None,
+         "Amihud(2002). 팔기 어려운 자산은 그 대가로 기대수익이 높아야 한다는 주장이다. "
+         "🚨 이 지표는 시가총액과 강하게 붙는다(작은 회사가 덜 거래된다) — 그래서 판정은 "
+         "단독 t 가 아니라 x-small 을 포함한 이웃 5개를 통제한 뒤의 incr5.t 다. "
+         "실측 후보 중앙 478종 · 문턱 미만 2/211달 · 램프 없음(창 전체를 검정한다). "
+         "⚠ 창 %d일은 이 랩의 다른 규칙과 맞춘 것이지 원논문(연 단위)이 아니다." % AMIHUD_WIN)
+    xsec("x-turn", "저회전율 최하위 %d" % TOPN,
+         "거래량의 최근 %d거래일 평균을 발행주식수로 나눈 값이 가장 작은 %d종목 동일가중, "
+         "월말 리밸런스." % (TURN_WIN, TOPN),
+         None,
+         "Datar·Naik·Radcliffe(1998). 위 x-amihud 와 같은 현상을 다른 자로 잰다 — "
+         "x-amihud 는 '가격이 얼마나 밀리나', 이건 '얼마나 손이 바뀌나'다. 둘이 같은 결과를 "
+         "내면 자가 결과를 만든 게 아니고 갈리면 그 반대다. "
+         "실측 후보 중앙 430종 · 문턱 미만 2/211달 · 램프 1.6배.")
 
     # ── 손익계산서 위쪽 줄의 서프라이즈 3종 ──────────────────────────
     # 사전등록 build/PREREG-2026-08-12-INCOME-LINES.md 에 **돌리기 전에** 확정해 커밋했다.
@@ -3449,6 +3534,14 @@ def xsec_score_at(S, i, X, pool=None):
         # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
         elif sid == "x-sur":
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        # 유동성 수준 2종 — PREREG-2026-08-12-LIQ-CAL.md.
+        elif sid == "x-amihud":
+            v = amihud(P, vlm.get(t) or [], i - 1)
+        elif sid == "x-turn":
+            # 최하위 10 이므로 부호를 뒤집는다(점수가 클수록 뽑힌다).
+            _sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
+            _tv = turnover(vlm.get(t) or [], _sn, i - 1)
+            v = (-_tv) if _tv is not None else None
         elif sid == "x-sugp":
             v = sue(gp_series(FU.get(t) or {}), dates[i - 1])
         elif sid == "x-cdisc":
@@ -3833,6 +3926,9 @@ def run():
     except Exception:
         pass
 
+    # 월말 효과의 창 — 달력만 쓴다. 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2③.
+    TOMW = tom_window(dates, month_ends(dates))
+
     rfd = (sum(rf.values()) / len(rf) / 21) if rf else 0.0
     # 현금 수익은 **그 시점의** 금리로 준다. 상수 하나로 뭉개면 구간이 길수록 거짓말이 커진다 —
     # 10년 구간의 실제 3M 금리는 0.02~5.60% 라 연도별 오차가 -2.86%p(2023)~+2.37%p(2021)다.
@@ -3879,6 +3975,11 @@ def run():
                         elif v > 60:
                             state = 0.0
                     w[i] = state
+                elif sid == "t-tom":
+                    # 🚨 w[i] 는 **i+1 일에 적용된다**(위 `e = w[i-1]`). 그래서 "다음
+                    #   거래일이 창인가"를 묻는 것이 맞다. 오늘을 물으면 창이 하루씩 밀린다.
+                    # ⚠ 달력을 앞서 보는 것은 선견이 아니다 — 거래일 달력은 미리 공표된다.
+                    w[i] = 1.0 if (i + 1 < n and TOMW[i + 1]) else 0.0
                 elif sid == "t-donch":
                     hi = max(ix[i - 20:i]) if i >= 20 else None
                     lo = min(ix[i - 20:i]) if i >= 20 else None
@@ -4434,6 +4535,47 @@ def run():
         print("  [PIT 반영] 통과 후보 → 구별 불가 %d종:" % len(_dg))
         for nm, t0, t1 in _dg:
             print("    · %-28s t %.2f → %.2f" % (nm[:28], t0 or 0, t1))
+
+    # ── 🚨 PIT 을 **못 잰** 규칙은 '통과 후보'를 유지할 수 없다 ─────────────
+    # 2026-08-12 발견. 위 강등은 `PIT_MEASURED.get(sid)` 가 없으면 `continue` 한다 —
+    # 즉 **재서 진 규칙은 강등되고, 아예 못 잰 규칙은 통과한다.** 정확히 거꾸로다:
+    # 못 쟀다는 것은 '모른다'이고, 이 계열의 알려진 사전확률은 강하게 부정적이기 때문이다
+    # (x-small 실측: 소급 t 6.97 → PIT t 0.52 · 생존편향이 초과수익을 +49.67%p 부풀렸다).
+    # 구멍은 오래 있었지만 밟은 규칙이 없어 안 드러났다 — x-amihud(소급 t 6.84)가 처음이다.
+    # ⚠ '구별 불가'로 내리지 않는다. 그것은 **재 봤는데** 못 가렸다는 뜻이라 거짓이 된다.
+    #   '판정 불가'가 맞다 — 잴 수단이 없다는 뜻이다.
+    # ⚠ 수치는 하나도 안 지운다. 등급만 내리고 왜 내렸는지를 적는다(PIT 강등과 같은 방침).
+    # ⚠ 제외 목록은 **정본(build/pit_backtest.py 의 EXCLUDED_SIDS)에서 직접 읽는다.**
+    #   산출물(data/pit_strategies.json)에서 읽으면 그 파일이 다시 구워지기 전까지 새 제외가
+    #   반영되지 않아, 규칙을 제외해 놓고도 '통과 후보'로 게시되는 창이 생긴다 —
+    #   오늘 아침 섹터 ETF 수익률에서 고친 것과 **정확히 같은 순서 결합**이다.
+    #   산출물은 폴백으로만 둔다(pit_backtest 를 못 import 하는 환경 대비).
+    _pit_excl = {}
+    try:
+        import pit_backtest as _PB
+        _pit_excl = dict(_PB.EXCLUDED_SIDS)
+    except Exception:
+        try:
+            _pit_excl = (json.load(io.open(os.path.join(DATA, "pit_strategies.json"),
+                                           encoding="utf-8")).get("excluded") or {})
+        except Exception:
+            pass
+    _ug = []
+    for r in out:
+        if r.get("verdict") == "통과 후보" and r["sid"] in _pit_excl and not (r.get("pit") or {}):
+            _ug.append((r["name"], r.get("t")))
+            r["verdict"] = "판정 불가"
+            # ⚠ 여기 ** 를 쓰지 말 것 — why 는 esc() 를 거쳐 별표가 글자로 찍힌다
+            #   (DATA-FACTS #24). 오늘 두 번째로 같은 함정을 밟았고 가드가 두 번 다 잡았다.
+            r["why"] += (" 🚨 소급 표본에서는 문턱을 넘었지만(t %.2f) 시점정확(PIT) 레그를 "
+                         "잴 수단이 없어 게시하지 않는다 — %s 이 계열의 실측 생존편향이 크므로"
+                         "(x-small: 소급 t 6.97 → PIT t 0.52) 소급 통과만으로 게시하면 편향을 "
+                         "발견으로 인증하게 된다."
+                         % (r.get("t") or 0, _pit_excl[r["sid"]].split("—")[0].strip() + " —"))
+    if _ug:
+        print("  [PIT 미측정] 통과 후보 → 판정 불가 %d종(잴 수단이 없다):" % len(_ug))
+        for nm, t0 in _ug:
+            print("    · %-28s 소급 t %.2f · PIT 레그 없음" % (nm[:28], t0 or 0))
     # ── 타이밍 재판정 — 자기가 사는 것을 못 이기면 그 t 는 대조군 격차다 ──────
     # 🚨 PIT 강등과 같은 자리에 같은 모양으로 건다(2026-08-04). 사유는 DATA-FACTS 12 다 —
     #   타이밍 규칙은 랩 동일가중 유니버스를 사는데 판정 대조군은 S&P 500(PR)이라, 노출을
