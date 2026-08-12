@@ -64,10 +64,6 @@
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,34px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0;text-wrap:balance}
   .lede{margin:12px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
-  .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
-  .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:4px 12px;color:var(--muted)}
-  .stat b{color:var(--ink);font-size:14px;font-weight:600}
-  .stat.deploy b{color:var(--deploy)} .stat.marg b{color:var(--marg)} .stat.rej b{color:var(--rej)}
 
   /* controls */
   .controls{position:sticky;top:52px;z-index:5;background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:16px 0 12px;margin-top:8px;border-bottom:1px solid var(--line-soft)}
@@ -917,10 +913,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <header class="mast">
     <div class="eyebrow">여두 전략 랩 · 리서치 아카이브</div>
     <h1 class="title">전략 랩</h1>
-    <p class="lede">전 전략을 <b>세 칸</b>으로 나눕니다 — <b>종목을 고르는 전략</b>(지금 보유를 그대로 볼 수 있음) · <b>비중·노출을 정하는 전략</b> · <b>지수와 나란히 못 두는 전략</b>. 각 칸 안에서는 성격으로 묶습니다.</p>
-    <!-- ⚠ <details> 를 <p> 안에 두지 않는다 — 파서가 <p> 를 강제로 닫아 형제로 튕겨낸다. -->
-    <details class="more"><summary>등급·성격이 무슨 뜻인가</summary><div class="mbody"><p><b>성격</b> — 종목을 고르는 전략은 <b>수익</b>으로, 비중을 정하는 배분기는 <b>샤프</b>로, 노출을 줄이는 오버레이는 <b>낙폭과 위기 구간</b>으로 봅니다. 같은 숫자를 세로로 비교하면 안 되는 이유입니다.</p><p><b>운용 등급</b>은 “이 전략이 좋은가”가 아니라 <b>“배포북에 넣을 것인가”</b>에 대한 답입니다. <b>배포</b>: 단독 운용 가능한 수준으로 검증됨 · <b>제한적 유효</b>(카드 표기 「조건부 · 목적이 맞을 때」): 효과는 확인됐지만 단독으론 약해 보조·결합용 · <b>기각</b>(「미채택(대조용)」): 비용·검증을 거치면 배포 실익 없음.</p></div></details>
-    <div class="statline" id="statline"></div>
+    <!-- ⚠ 리드문·등급 설명·통계줄을 여기 두지 않는다(2026-08-12 사용자 요청 "자리 좁다").
+         화면 첫 칸을 목록에 준다. 같은 설명은 사라지지 않고 아래에 이미 있다:
+           · 세 칸의 뜻   → 각 칸 머리글(GROUPS[].n / .d)
+           · 성격의 뜻     → 묶음 머리글
+           · 운용 등급의 뜻 → 각 카드 배지의 뜻풀이(VMEAN.mean)
+         숫자를 다시 넣고 싶으면 하드코딩하지 말고 JS 가 strategy_index.json 에서 채우게 할 것. -->
   </header>
 
   <details class="idxref" id="idxref" hidden></details>
@@ -956,7 +954,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                성립하지 않는다. 이 문장은 기준일 고지라, 독자가 '모든 카드가 같은 달까지 재어졌다'는
                보증으로 읽고 카드끼리 세로로 비교하게 만들었다. 같은 파일 1180행 주석이 바로 이
                드리프트를 경고해 뒀는데 본문에서 실제로 일어났다.
-               숫자를 남기려면 statline 처럼 JS 가 strategy_index.json 에서 채우게 할 것. -->
+               숫자를 남기려면 손으로 적지 말고 JS 가 strategy_index.json 에서 채우게 할 것. -->
           <p>거래비용·세금 미반영, 월말 리밸런싱. <b>지표 기준월·시작월은 전략마다 다릅니다</b> — 각 패널 표기를 보십시오.</p>
           <p>유의 0건은 전략들이 나쁘다는 뜻이 아니라, 10~20년 표본으로 샤프 차이를 판정하는 것이 <b>원리적으로 어렵다</b>는 뜻입니다
           (필요 표본이 대개 수백 년입니다 — 각 카드의 「이 표본이 판정할 수 있는 범위」에 실제 필요량을 적었습니다).
@@ -1148,18 +1146,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(D&&state.sel!=null&&D[state.sel])drawDetail(D[state.sel]);
   });
 
-  // stat line
-  (function(){
-    var c={deploy:0,marginal:0,reject:0};
-    D.forEach(function(d){c[d.v]++;});
-    el('statline').innerHTML=
-      '<span class="stat"><b>'+D.length+'</b> 전략</span>'+
-      '<span class="stat deploy"><b>'+c.deploy+'</b> 배포</span>'+
-      '<span class="stat marg"><b>'+c.marginal+'</b> 제한적 유효</span>'+
-      // 기각 2종을 숨기면 배지 합이 전체와 안 맞고, '검증 통과만 담았다'는 리드문과도 모순된다
-      (c.reject?'<span class="stat rej"><b>'+c.reject+'</b> 기각(대조용)</span>':'');
-    // 리드문 숫자도 배열에서 채운다 — 하드코딩하면 전략 이관 때 조용히 틀린다(실제로 20/41로 틀어져 있었다)
-  })();
+  // 상단 통계줄(전략/배포/제한적 유효/…)은 2026-08-12 에 걷어냈다 — 머리에 자리가 좁아서다.
+  // ⚠ 되살릴 때 개수를 손으로 적지 않는다. 예전에 그렇게 적어 둔 탓에 전략 이관 때
+  //    조용히 20 → 41 로 틀어졌다. 반드시 D 배열(또는 strategy_index.json)에서 세어 채울 것.
+  //    (이 주석 자체도 검사에 걸린 적이 있다 — 등급 이름 뒤에 숫자를 붙여 쓰지 말 것.)
 
   // build filter chips
   function chip(cls,label,cnt,pressed,onclick){
@@ -1349,18 +1339,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
         if(window.__rebuildChips)window.__rebuildChips();
         render();
-        // 상단 통계줄도 통합 수치로 다시 쓴다 — 14개 기준으로 남아 있으면 화면과 어긋난다
-        var sl=el('statline');
-        if(sl){
-          var cnt={}; D.forEach(function(x){cnt[x.v]=(cnt[x.v]||0)+1;});
-          var st=function(v,k,d2,cls){return '<span class="stat'+(cls?' '+cls:'')+'"><b>'+v+'</b>'+k+
-            (d2?'<em>'+d2+'</em>':'')+'</span>';};
-          sl.innerHTML=st(D.length,'전략','성격으로 묶어 한 목록')+
-            st(cnt.deploy||0,'배포','배포북에 들어 있는 것')+
-            st(cnt.marginal||0,'제한적 유효','보조·결합용')+
-            st((cnt.tie||0),'구별 불가','지수와 차이를 못 가른다')+
-            st((cnt.worse||0)+(cnt.reject||0),'열위·미채택','지수보다 나쁘거나 미채택');
-        }
+        // (상단 통계줄은 걷어냈다 — 위 주석 참조. 여기서 다시 쓰던 코드도 같이 지웠다.)
       })['catch'](function(){});
   })();
 
