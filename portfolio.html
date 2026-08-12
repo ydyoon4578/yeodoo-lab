@@ -616,6 +616,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       이 랩은 이 값들이 앞으로도 유지되는지 검증한 적이 없습니다.</p>
     <div class="asofrow" id="asofrow"><span>불러오는 중…</span></div>
     <nav class="toc" aria-label="이 페이지 목차">
+      <a href="#target"><b>⓪ 배포 중인 목표 구성</b><em>랩이 '배포'로 판정한 것 하나 — 오늘 무엇을 들어야 하나</em></a>
       <a href="#store"><b>① 어디에 저장되나</b><em>브라우저 localStorage 하나 — 받을 서버가 없다</em></a>
       <a href="#input"><b>② 보유 입력·비중</b><em>추가·편집·삭제 · 내보내기/가져오기</em></a>
       <a href="#dash"><b>③ 대시보드</b><em>신호(컴포짓·플래그·타이밍) + 재무 + 등급</em></a>
@@ -624,6 +625,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <a href="#formula"><b>⑥ 계산식 전문</b><em>수익률 정의·연율화·MDD 정의</em></a>
     </nav>
   </header>
+
+  <!-- ──────────────── ⓪ 배포 중인 목표 구성 ────────────────────────
+       왜 이 구획이 생겼나(2026-08-12). 이 랩은 규칙을 134개 재고 원장에 '배포' 3종을
+       적어 두는데, **그 보유가 화면 어디에서도 조립되지 않았다.** portfolio.html 은
+       '내가 이미 든 것'을 입력받는 화면이고, explorer 는 전략을 한 줄씩 보여줄 뿐이라
+       "그래서 오늘 무엇을 들어야 하나"에 답하는 자리가 없었다.
+       🚨 여기에 올리는 것은 **등급 '배포'** 뿐이다. '통과 후보'(현재 37종)는 게이트 셋이
+          꺼진 상태의 단독 t 하나만 넘은 것이고 PIT 로 다시 재면 3.0 을 넘는 규칙이 0종이다 —
+          연구 목록을 이 화면에 섞으면 이 구획이 생긴 이유가 그대로 사라진다. -->
+  <section id="target" aria-labelledby="target-h">
+    <h2 class="lbl" id="target-h">⓪ 배포 중인 목표 구성 <span class="sub" id="tg-sub">· 불러오는 중…</span></h2>
+    <p class="note" id="tg-lede">이 랩이 <b>배포</b>로 판정한 전략의 최신 리밸런스 구성입니다.
+      슬리브를 최종 티커까지 풀어 한 줄에 하나씩 적고, 아래 ②에 입력한 보유가 있으면 차이를 같이 냅니다.
+      <b>매수 권유가 아닙니다</b> — 이 랩이 검증한 것은 규칙이지 당신의 계좌가 아니고,
+      아래 수치는 전부 무비용·소급 표본에서 나온 지난 창의 실측입니다.</p>
+    <div id="tgwarn"></div>
+    <div id="tgbox"><div class="note">불러오는 중…</div></div>
+  </section>
 
   <!-- ───────────────────────── ① 저장 위치 ───────────────────────── -->
   <section id="store" aria-labelledby="store-h">
@@ -1034,8 +1053,136 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ' · 섹터 '+esc(fx(spct,0))+'%</span>', L:L};
   }
 
+  // ══ ⓪ 배포 중인 목표 구성 ══════════════════════════════════════════════
+  // 🚨 여기서 전략을 고르지 않는다. data/strategy_index.json 의 **등급 '배포'** 를 그대로
+  //   읽고, 그중 다른 배포 전략을 슬리브로 담는 것(통합)이 있으면 그것 하나만 편다.
+  //   화면이 판정에 개입하면 원장과 화면이 갈라진다 — 이 랩이 반복해서 겪은 사고다.
+  // ⚠ 기준일이 슬리브마다 다르다. 합쳐 놓고 한 날짜인 척하면 안 되므로 축마다 적고,
+  //   가장 묵은 축을 경고로 올린다.
+  var TGT=null;
+  function tgWeights(h){
+    if(!h) return [];
+    if(h.weights) return h.weights.map(function(w){return [String(w[0]), Number(w[1])];});
+    if(h.tickers){ var e=100/h.tickers.length; return h.tickers.map(function(t){return [t,e];}); }
+    return [];
+  }
+  function renderTarget(){
+    var box=el('tgbox'), sub=el('tg-sub'), warn=el('tgwarn');
+    if(!box) return;
+    if(!TGT){ box.innerHTML='<div class="note">data/strategy_index.json 을 불러오지 못했습니다. '+
+      '<b>없는 것을 지어내지 않습니다.</b></div>'; if(sub)sub.textContent='· 불러오지 못함'; return; }
+    var dep=TGT.items.filter(function(r){return r.grade==='배포';});
+    if(!dep.length){ box.innerHTML='<div class="note">지금 <b>배포</b> 등급인 전략이 없습니다.</div>';
+      if(sub)sub.textContent='· 배포 0종'; return; }
+    var byName={}; dep.forEach(function(r){byName[r.name]=r;});
+    // 다른 배포 전략을 슬리브로 담는 것(=통합)을 코어로 본다. 없으면 배포 전략 전부를 나열한다.
+    var core=null;
+    dep.forEach(function(r){
+      var w=tgWeights(r.holdings);
+      // ⚠ 자기 자신을 후보에서 뺀다. 통합 이름에 '크로스에셋'이 들어 있어, 안 빼면
+      //   '크로스에셋RP' 가 통합과 RP 둘에 걸려 늘 모호해진다(실측으로 그렇게 났다).
+      if(w.length && w.every(function(x){return !!sleeveOf(x[0], byName, r.name);})) core=r;
+    });
+    var lines=[], axes={}, srcs=[];
+    function push(tk, w, src, asof){
+      lines.push({t:tk, w:w, src:src});
+      if(asof) axes[src]=asof;
+    }
+    if(core){
+      srcs.push(core.name);
+      tgWeights(core.holdings).forEach(function(x){
+        var sl=sleeveOf(x[0], byName, core.name);
+        tgWeights(sl.holdings).forEach(function(y){
+          push(y[0], x[1]*y[1]/100, x[0], (sl.holdings||{}).as_of);
+        });
+      });
+    }else{
+      dep.forEach(function(r){
+        srcs.push(r.name);
+        var w=tgWeights(r.holdings), n=dep.length;
+        w.forEach(function(x){ push(x[0], x[1]/n, r.name, (r.holdings||{}).as_of); });
+      });
+    }
+    var agg={};
+    lines.forEach(function(l){
+      if(!agg[l.t]) agg[l.t]={w:0, src:{}};
+      agg[l.t].w+=l.w; agg[l.t].src[l.src]=1;
+    });
+    var rows=Object.keys(agg).map(function(t){
+      return {t:t, w:agg[t].w, src:Object.keys(agg[t].src).join('+')};
+    }).sort(function(a,b){return b.w-a.w;});
+    var tot=rows.reduce(function(s,r){return s+r.w;},0);
+
+    // 기준일 — 축마다 적고 가장 묵은 것을 경고로
+    var ax=Object.keys(axes).map(function(k){return [k,axes[k]];}).sort(function(a,b){return a[1]<b[1]?-1:1;});
+    if(sub) sub.textContent='· '+(core?core.name:(dep.length+'종'))+' · '+rows.length+'개 항목';
+    if(warn){
+      warn.innerHTML = ax.length
+        ? '<p class="msg warn">⚠ <b>축마다 기준일이 다릅니다.</b> '+
+          ax.map(function(a){return esc(a[0])+' <b>'+esc(a[1])+'</b>';}).join(' · ')+
+          ' — 합쳐 한 표로 냈지만 <b>같은 날의 구성이 아닙니다</b>. 가장 묵은 축이 '+
+          esc(ax[0][1])+' 입니다.</p>'
+        : '';
+    }
+    // 내 보유(②)와의 차이 — 목표에만 있으면 '없음', 나에게만 있으면 '목표 밖'
+    // ⚠ weights() 는 배열이 아니라 {arr,sum} 을 준다. arr 을 안 꺼내면 여기서 예외가 나고,
+    //   그 예외를 fetch 의 catch 가 '자료를 못 받았다'로 위장한다(실측으로 그렇게 났다).
+    var mine={}, W=(weights()||{}).arr||[];
+    W.forEach(function(x){ if(x.w!=null) mine[x.t]=x.w*100; });
+    var haveAny=Object.keys(mine).length>0;
+    var html='<div class="rows">';
+    rows.forEach(function(r){
+      var mw=mine[r.t], d=(mw==null?null:r.w-mw);
+      html+='<div class="row"><span class="rn">'+esc(r.t)+'</span>'+
+        '<span class="rt"><i style="width:'+Math.min(100,r.w/ (rows[0].w||1) *100).toFixed(1)+'%"></i></span>'+
+        '<span class="rv">'+esc(fx(r.w,2))+'%'+
+        (haveAny?('<em>'+(mw==null?'보유 없음':('내 '+esc(fx(mw,2))+'% · '+(d>0?'+':'')+esc(fx(d,2))+'%p'))+'</em>'):
+                 ('<em>'+esc(r.src)+'</em>'))+
+        '</span></div>';
+    });
+    html+='</div>';
+    var extra=Object.keys(mine).filter(function(t){return !agg[t];});
+    if(haveAny&&extra.length){
+      html+='<p class="msg info">내 보유 중 목표에 없는 종목 <b>'+extra.length+'</b>개: '+
+        esc(extra.slice(0,20).join(' '))+(extra.length>20?' …':'')+'</p>';
+    }
+    html+='<p class="note">합계 '+esc(fx(tot,1))+'% · 출처 '+esc(srcs.join(' / '))+
+      '. 비중은 원장의 최신 리밸런스 값이고, 이 화면은 그것을 <b>슬리브까지 풀어 합칠 뿐</b> 다시 계산하지 않습니다.</p>';
+    box.innerHTML=html;
+  }
+  function sleeveOf(label, byName, selfName){
+    // 통합의 슬리브 라벨(예: '크로스에셋RP')을 배포 전략 이름에 잇는다.
+    // 라벨을 한글·라틴 토막으로 쪼개 **3글자 이상 토막이 전부 들어 있는** 이름을 찾는다.
+    //   '크로스에셋RP' → ['크로스에셋'] · 'EPS리비전' → ['EPS','리비전']
+    // 🚨 후보가 둘 이상이면 **잇지 않는다.** 어림짐작으로 이으면 화면이 다른 전략의 보유를
+    //   조용히 섞는다 — 조립 자체가 안 되는 것보다 나쁘다.
+    var toks=(String(label).match(/[가-힣]+|[A-Za-z]+/g)||[]).filter(function(t){return t.length>=3;});
+    if(!toks.length) return null;
+    var hits=Object.keys(byName).filter(function(n){
+      if(selfName && n===selfName) return false;
+      var nk=n.replace(/[\s·()]/g,'').toUpperCase();
+      return toks.every(function(t){return nk.indexOf(t.toUpperCase())>=0;});
+    });
+    return (hits.length===1 && byName[hits[0]].holdings) ? byName[hits[0]] : null;
+  }
+
   // ══ 부팅 ═══════════════════════════════════════════════════════════════
   load();
+  // 🚨 받기 실패와 그리기 실패를 갈라 놓는다. 하나의 catch 로 묶으면 렌더 예외가
+  //   "자료를 못 받았다"로 위장되고, 화면은 멀쩡한 자료를 두고 거짓 사유를 적는다.
+  //   실제로 그 사고를 냈다(weights() 반환형 오해 → 경고줄은 그려지고 표만 실패).
+  fetch('data/strategy_index.json',{cache:'no-cache'})
+    .then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;})
+    .then(function(j){
+      TGT=j;
+      try{ renderTarget(); }
+      catch(e){
+        var b=el('tgbox');
+        if(b) b.innerHTML='<p class="msg warn">목표 구성을 그리다 오류가 났습니다 — <code>'+
+          esc(String(e&&e.message||e))+'</code>. 자료는 받았습니다(받기 실패가 아닙니다).</p>';
+      }
+    });
   txt('lskey', LSKEY);
   txt('anMax', String(MAXH));
 
