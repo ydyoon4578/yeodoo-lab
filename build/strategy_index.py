@@ -458,6 +458,16 @@ def main() -> int:
             # 위험 축 — 수익 축(grade)과 다른 질문에 답한다. 같이 실어야 '덜 벌었지만
             # 덜 깨졌다'가 화면에서 읽힌다. 자산 전략에만 있다(다른 원천은 없음).
             risk_verdict=r.get("risk_verdict"), risk=r.get("risk"),
+            # 판정 축 넷(2026-08-12) — CAPM 알파·포착률·꾸준함·침체 국면.
+            # 🚨 안 넘기면 재 놓고 안 실은 것이 된다. 수익 축 t 하나로 '구별 불가'였던 규칙의
+            #   실제 성격이 여기에만 남아 있다(BAA 균형형: 수익 t 0.06 · 알파 t 3.16).
+            axes=r.get("axes"),
+            # 보조 대조군(2026-08-12) — 판정에는 안 쓴다. 주대조군 하나로는 잣대가 한쪽으로
+            # 기우는 것을 읽는 사람이 알 수 없다(실측: 같은 규칙이 SPY 대비 t −2.10,
+            # 60/40 대비 t +1.02 — 정반대 인상이다).
+            # ⚠ 이름을 bench2 로 두지 않는다. 배포 카드의 bt.bench2 는 **곡선 배열**이라
+            #   같은 이름이 두 모양을 갖게 된다.
+            bench_alt=r.get("bench2"),
             # 비용 후 — 회전이 큰 규칙은 무비용 숫자만 보면 안 된다. gross 를 대체하지 않고 함께 싣는다.
             metrics_net=r.get("metrics_net"), bench_net=r.get("bench_net"),
             cost_bp=r.get("cost_bp"), cost_drag=r.get("cost_drag"),
