@@ -1022,7 +1022,9 @@ try:
     # 🚨 2026-08-10 — index.html 을 --w-base(1200) 에서 --w-wide(1680) 로 옮겼다(사용자 요청).
     #   홈은 읽는 화면이 아니라 자료 화면이라 폭이 곧 정보량이다(히트맵 518칸).
     #   이 표를 같이 안 고치면 이 검사가 '되돌려라'라고 말한다 — 기대값도 결정의 일부다.
-    _want = {"stocks.html": "--w-wide", "index.html": "--w-wide", "explorer.html": "--w-base",
+    # 🚨 2026-08-12 — explorer.html 도 --w-wide 로 옮겼다(사용자 요청 '홈처럼 좌우 넓게').
+    #   같은 사유다 — 왼쪽 130종 목록 · 오른쪽 6열 비교표와 12열 월별 히트맵이라 폭이 정보량이다.
+    _want = {"stocks.html": "--w-wide", "index.html": "--w-wide", "explorer.html": "--w-wide",
              "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
              "sources.html": "--w-read"}
     _want = {k: v for k, v in _want.items() if k not in REDIRECTS}   # 리다이렉트는 본문이 없다
