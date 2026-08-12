@@ -118,6 +118,22 @@
   .reco-stocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px;min-height:330px}
   .rcol{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 16px;box-shadow:var(--shadow)}
   .rcol h4{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:0 0 9px;display:flex;justify-content:space-between;gap:8px}
+  .rcol h4 span{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);opacity:.8}
+  .insrow{display:grid;grid-template-columns:56px 1fr auto 112px;gap:8px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line);font-size:12.5px}
+  .insrole{font-style:normal;font-size:10.5px;border:1px solid var(--line);border-radius:2px;padding:1px 4px;margin-right:5px}
+  .insrole.own{border-color:color-mix(in srgb,var(--rg-gold) 55%,transparent);color:var(--rg-gold)}
+  /* 좁은 화면에서는 회사명을 접는다 — 80px 로 눌리면 어차피 못 읽는다.
+     티커·금액·역할이 남으면 뜻은 온전하다(역할을 지우면 오독이 생기므로 이건 남긴다). */
+  @media(max-width:560px){.insrow{grid-template-columns:56px auto 1fr}.insnm{display:none}.inscnt{text-align:right}}
+  .insrow:first-of-type{border-top:0}
+  .instk{font-family:var(--mono);font-weight:700;text-decoration:none;color:var(--ink)}
+  .instk:hover{text-decoration:underline}
+  .insnm{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .insamt{font-family:var(--mono);font-weight:700;white-space:nowrap}
+  /* ⚠ --good 은 이 페이지에 없다(stocks/explorer 쪽 변수다). 홈의 초록은 --deploy 다 —
+     정의 없는 변수를 쓰면 그 선언이 통째로 무효가 돼 색이 조용히 사라진다(validate 가 잡았다). */
+  .insamt.up{color:var(--deploy)} .insamt.dn{color:var(--hot)}
+  .inscnt{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
   a.rstk{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;text-decoration:none}
   a.rstk.brec{background:color-mix(in srgb,var(--deploy) 9%,transparent);border-bottom:0;border-radius:2px;padding:6px 9px;margin:2px 0}
   a.rstk.srec{background:color-mix(in srgb,var(--hot) 9%,transparent);border-bottom:0;border-radius:2px;padding:6px 9px;margin:2px 0}
@@ -1091,6 +1107,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       </section>
     </div>
 
+    <!-- 내부자 거래 — **신호가 아니라 사실 표시다.** 이 랩은 내부자 매수가 초과수익으로
+         이어지는지 검증한 적이 없다(data/insider.json 의 limits). 점수도 판정도 안 붙인다. -->
+    <section id="s-ins" aria-labelledby="ins-h">
+      <h2 class="lbl" id="ins-h">내부자 거래 <span class="sub" id="ins-sub">· 불러오는 중…</span><a class="more2" href="sources.html">데이터 출처 →</a></h2>
+      <div class="reco-stocks" id="insbox"><div class="rcol"><h4>불러오는 중…</h4></div></div>
+    </section>
+
     <section id="s-style" aria-labelledby="st-h">
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
       <!-- 표 위의 막대 그림. 아래 표와 **같은 배열**을 그린다(계산 없음) — drawStChart() 참조. -->
@@ -1153,6 +1176,46 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return fetch('data/'+name, fresh?{cache:'no-cache'}:undefined)
       .then(function(r){return r.ok?r.json():null;})['catch'](function(){return null;});
   }
+
+  // ── 내부자 거래 ────────────────────────────────────────────────────────
+  // 🚨 순위는 **금액**이다. 건수로 매기면 안 된다 — 실측: TPL 은 장내매수 34건으로 건수 1위인데
+  //   총액이 $15,059 다(1~4주씩, 한 10% 주주가 33건). 건수는 '얼마나 자주'이지 '얼마나 크게'가 아니다.
+  // ⚠ 신호가 아니다. 이 랩은 내부자 매수가 초과수익으로 이어지는지 검증한 적이 없다.
+  function insAmt(v){
+    var a=Math.abs(v);
+    if(a>=1e9) return (v/1e9).toFixed(1)+'B';
+    if(a>=1e6) return (v/1e6).toFixed(0)+'M';
+    if(a>=1e3) return (v/1e3).toFixed(0)+'K';
+    return String(Math.round(v));
+  }
+  // 🚨 역할을 반드시 같이 보인다. 금액 상위는 임원이 아니라 10% 주주가 많다 —
+  //   RSG 는 빌 게이츠의 Cascade, NRG 매도는 PE 펀드의 지분 정리다. 금액만 적으면
+  //   '임원이 샀다'로 읽히는데 지분구조 이벤트와 임원의 판단은 다른 것이다.
+  function insCol(title,sub,rows,buy){
+    var body=(rows||[]).map(function(r){
+      var cnt=buy?r.nb:r.ns;
+      return '<div class="insrow">'+
+        '<a class="instk" href="stocks.html#t='+esc(r.t)+'">'+esc(r.t)+'</a>'+
+        '<span class="insnm">'+esc(r.n||'')+'</span>'+
+        '<b class="insamt '+(buy?'up':'dn')+'">'+(r.net>0?'+':'−')+'$'+insAmt(Math.abs(r.net))+'</b>'+
+        '<span class="inscnt"><i class="insrole'+(r.role==='10%주주'?' own':'')+'">'+esc(r.role||'')+'</i>'+
+          cnt+'건'+(buy&&r.who>1?'·'+r.who+'인':'')+'</span>'+
+      '</div>';
+    }).join('');
+    return '<div class="rcol"><h4>'+title+'<span>'+esc(sub)+'</span></h4>'+
+           (body||'<div class="insrow"><span class="insnm">해당 종목 없음</span></div>')+'</div>';
+  }
+  function drawIns(j){
+    var box=el('insbox'), sub=el('ins-sub');
+    if(!j||!j.buys){ if(box)box.innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>'; return; }
+    if(sub) sub.textContent='· 최근 6개월 장내(P·S) · 기준일 '+(j.as_of||'—')+
+      ' · 공시 지연 '+(j.lag_days!=null?j.lag_days:'—')+'일 · 순매수 '+(j.n_buy_side||0)+
+      '종 vs 순매도 '+(j.n_sell_side||0)+'종 · 신호 아님';
+    box.innerHTML=
+      insCol('🟢 순매수 상위','금액 기준 · 옵션행사·보상 제외', j.buys, true)+
+      insCol('🔴 순매도 상위','금액 기준 · 옵션행사·보상 제외', j.sells, false);
+  }
+  getj('home_insider.json').then(drawIns);
 
   // ── 데이터 신선도: as_of 이후 흐른 영업일. 미 휴장·1회 결측 허용(3영업일부터 경고) ──
   function bdGap(asof){

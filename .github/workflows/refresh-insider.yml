@@ -41,6 +41,10 @@ jobs:
       # 빠뜨리면 홈만 옛 데이터를 말하고 아무도 알려주지 않는다.
       - name: Rebuild home slim bundle
         run: python build/home_flow.py
+      # 홈 '내부자 거래' 구획도 여기서 함께 굽는다. 원본(data/ins)이 바뀌는 유일한 잡이
+      # 이것이라, 여기 없으면 그 구획만 옛 분기를 말한 채 얼어붙는다(랩이 이미 겪은 함정).
+      - name: Rebuild home insider panel
+        run: python build/home_insider.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -48,7 +52,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 내부자 거래 자동 갱신" \
-            data/insider.json data/ins data/home_flow.json data/asof.json
+            data/insider.json data/ins data/home_flow.json data/home_insider.json data/asof.json
       # 이 축은 분기에 한 번 움직인다. 실측 지연이 25일이었으므로, 한 분기를 통째로
       # 건너뛴 경우(≈120일)에만 실패하도록 창을 넉넉히 잡는다.
       - name: Verify freshness
