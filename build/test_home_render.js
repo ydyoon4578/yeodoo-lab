@@ -205,6 +205,28 @@ if (cnt(1) !== D.sectors.length)
   if (secTr.length && empty)
     fail.push("섹터 줄 " + empty + "/" + secTr.length + " 이 수익률 칸이 통째로 비었다 — "
       + "market_board.json 의 sector[].r 배선(index.html mkSegRows)을 확인할 것");
+
+  // 🚨 2026-08-12 — 「주가」 열이 **전 줄에서 비어 있었다.** 열 머리글은 "섹터·지수·스타일
+  //   ETF 행만 값이 있다"고 주장하는데 market_board.json 이 px 를 아예 안 실어서, 열이
+  //   하는 말과 열이 보이는 것이 정반대였다. 사용자 신고가 아니라 화면을 보다 발견했다.
+  //   ⚠ 이런 열은 '원래 저런가 보다' 로 읽혀 아무도 신고하지 않는다 — 그래서 검사가 필요하다.
+  //   ETF 티커가 붙은 줄(지수·섹터·스타일)에는 주가가 있어야 한다. 랩 전략·산업그룹 줄은
+  //   살 수 있는 한 종목이 아니므로 비는 것이 정본이다.
+  //   ⚠ 전체 칸을 세면 안 된다 — 종목 줄 518개가 값을 갖고 있어서 ETF 줄이 전부 비어도
+  //     '숫자 518칸'으로 통과한다(처음 그렇게 썼다가 잡았다). **그 줄들만** 본다.
+  const pxOf = re => (Hh.match(re) || [])
+    .map(tr => ((tr.match(/<td class="tnum pxc[^"]*"[^>]*>([^<]*)</) || [])[1] || ""));
+  const ixPx = pxOf(/<tr class="ix"[\s\S]*?<\/tr>/g);
+  const secPx = pxOf(/<tr class="lv1"[\s\S]*?<\/tr>/g);
+  const nOk = a => a.filter(v => /\d/.test(v)).length;
+  console.log("주가 열: 지수 %d/%d · 섹터 %d/%d",
+    nOk(ixPx), ixPx.length, nOk(secPx), secPx.length);
+  if (ixPx.length && nOk(ixPx) < ixPx.length)
+    fail.push("지수 줄 주가가 " + nOk(ixPx) + "/" + ixPx.length +
+      " 뿐 — 넷 다 ETF 다. market_board.json 의 px 배선을 확인할 것");
+  if (secPx.length && nOk(secPx) < secPx.length)
+    fail.push("섹터 줄 주가가 " + nOk(secPx) + "/" + secPx.length +
+      " 뿐 — 열한 줄 다 SPDR 섹터 ETF 다. market_board.json 의 px 배선을 확인할 것");
 }
 // 산업그룹 줄 — solo(이름이 섹터와 같고 그 섹터의 유일한 2차)는 **빼는 것이 정본이다**.
 //   화면이 스스로 판정하지 않고 home_reco 의 solo 표를 읽으므로, 여기서도 그 표로 기대값을 만든다.

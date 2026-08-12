@@ -126,6 +126,13 @@ def _price_row(px, dates, bidx, tkr, label):
     #   숫자는 나오는데 뜻이 없다(신규 ETF가 늘 고점 근처로 보인다).
     win = [v for v in s[-MIN_52:] if v is not None]
     return {"t": tkr, "n": label, "r": r,
+            # 🚨 2026-08-12 — px 를 싣는다. 홈 표에 「주가」 열이 있고 열 설명이 "섹터·지수·
+            #   스타일 ETF 행만 값이 있다"고 **주장**하는데, 이 파일이 px 를 아예 안 내보내
+            #   전 줄이 '·' 였다. 열이 하는 말과 열이 보이는 것이 정반대였다.
+            #   cur 은 위에서 이미 구해 놓은 값이다 — 새로 계산하는 것이 없다.
+            # ⚠ data/assets.json 의 px 는 배당조정 종가다. 열 설명의 '(배당조정)'과 맞다 —
+            #   원주가로 바꾸려면 열 설명도 같이 고칠 것.
+            "px": round(cur, 2),
             "off52": (round((cur / max(win) - 1) * 100, 1) if len(win) >= MIN_52 else None),
             "rsi": _rsi_wilder(s),
             "n_obs": len([v for v in s if v is not None])}
