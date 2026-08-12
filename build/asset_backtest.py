@@ -474,6 +474,14 @@ ROLE = {
     "sec-52wh": "수익엔진", "sec-rev1m": "수익엔진", "sec-lowcorr": "수익엔진",
     "sec-sma200": "수익엔진", "sec-term": "수익엔진", "sec-vix": "수익엔진",
     "sec-halloween": "수익엔진",
+    # 다단계 TAA·통계·간단 ML 10종(2026-08-12).
+    # ⚠ Keller 계열·국면 스위치·능형회귀는 ‘언제 들어가 있을까’가 아니라 ‘무엇을’도 고른다 — 수익엔진.
+    #   최소분산·위험균형은 비중만 정하므로 배분기다.
+    "taa-vaa-g4": "수익엔진", "taa-daa-g6": "수익엔진",
+    "taa-baa-a": "수익엔진", "taa-baa-b": "수익엔진",
+    "st-hurst": "수익엔진", "st-vratio": "수익엔진",
+    "st-ou": "수익엔진", "ml-ridge": "타이밍오버레이",
+    "st-minvar-lw": "배분기", "st-rp-trend": "배분기",
     "sma200": "타이밍오버레이", "golden-cross": "타이밍오버레이", "abs-mom": "타이밍오버레이",
     "seasonal": "타이밍오버레이", "curve-inv": "타이밍오버레이", "vix-level": "타이밍오버레이",
     "unrate-trend": "타이밍오버레이", "timing-ensemble": "타이밍오버레이",
@@ -1376,6 +1384,401 @@ def build():
          "낮으면 경기민감 6섹터를 동일가중.",
          "⚠ 중앙값은 확장창이다(그 시점까지의 관측만). 전 표본 중앙값을 쓰면 미래를 아는 "
          "문턱이 된다 — 이 랩이 반복해 밟은 자리라 명시한다.")
+
+    # ══ 다단계 TAA · 통계 · 간단 ML 10종 (사전등록 PREREG-2026-08-12-TAA10.md) ══
+    # 🚨 대조군이 **60/40(SPY 60 · AGG 40)** 이다. 이 랩의 다른 타이밍 규칙은 SPY 상시보유가
+    #   대조군이라 **세로로 비교하면 안 된다.** 이 열은 대부분 채권·현금으로 빠지는 규칙이라
+    #   SPY 와 겨루면 '주식이 더 올랐다'만 재게 된다.
+    # 🚨 원문 티커를 이 패널에 있는 것으로 바꿨다(등록 §2): VWO→EEM · VEA→EFA · BIL→SHY ·
+    #   VGK/EWJ→EFA 로 접음. 접은 만큼 원문과 다른 규칙이고, BAA-Balanced 는 12자산이
+    #   아니라 11자산이 된다.
+    TAA_UNI8 = ["SPY", "QQQ", "EFA", "EEM", "TLT", "GLD", "DBC", "VNQ"]
+
+    def _bench6040(i):
+        return {"SPY": 0.6, "AGG": 0.4}
+
+    def _m13612(t, i):
+        """13612W = 12·(p0/p1−1) + 4·(p0/p3−1) + 2·(p0/p6−1) + (p0/p12−1). 월=21거래일."""
+        s = ser(t)
+        if s is None:
+            return None
+        out, W = 0.0, ((21, 12.0), (63, 4.0), (126, 2.0), (252, 1.0))
+        for n, w in W:
+            r = ret(s, i, n)
+            if r is None:
+                return None
+            out += w * r
+        return out
+
+    def _sma_rel(t, i, n=252):
+        """SMA 상대모멘텀 p0 / 평균(p0…p12). BAA 가 공격·방어 선별에 쓰는 척도."""
+        s = ser(t)
+        if s is None or i < n or s[i] is None:
+            return None
+        w = [s[j] for j in range(i - n, i + 1) if s[j] is not None]
+        if len(w) < n // 2:
+            return None
+        m = sum(w) / len(w)
+        return (s[i] / m) if m else None
+
+    def _pick(score, ts, i, n):
+        sc = [(t, score(t, i)) for t in ts]
+        sc = [(t, v) for t, v in sc if v is not None]
+        sc.sort(key=lambda x: -x[1])
+        return [t for t, _ in sc[:n]]
+
+    # ① VAA-G4 — Keller·Keuning (2017) SSRN 3002624
+    VAA_OFF, VAA_DEF = ["SPY", "EFA", "EEM", "AGG"], ["LQD", "IEF", "SHY"]
+
+    def _w_vaa(i):
+        sc = [(t, _m13612(t, i)) for t in VAA_OFF]
+        if any(v is None for _, v in sc):
+            return {"SHY": 1.0}
+        if all(v > 0 for _, v in sc):
+            return {max(sc, key=lambda x: x[1])[0]: 1.0}
+        pick = _pick(_m13612, VAA_DEF, i, 1)
+        return {pick[0]: 1.0} if pick else {"SHY": 1.0}
+    add("taa-vaa-g4", "", lambda: run_weights(
+        _w_vaa, first_common(VAA_OFF + VAA_DEF), "경계형 자산배분 VAA-G4 (Keller 2017)",
+        _bench6040,
+        "월말에 공격 4종(SPY·EFA·EEM·AGG)의 13612W 모멘텀이 전부 양수면 그중 최고 1종에 100%. "
+        "하나라도 음수면 방어 3종(LQD·IEF·SHY) 중 최고 1종에 100%.",
+        "Keller·Keuning(2017). 13612W 는 1·3·6·12개월 수익을 12:4:2:1 로 가중한 빠른 모멘텀이다. "
+        "이 랩의 절대모멘텀·GEM 과 달리 공격 유니버스 전체의 폭(breadth)을 보고 한 번에 방어로 "
+        "넘어간다 — 하나만 나빠도 전량 방어다."))
+
+    # ② DAA — Keller·Keuning (2018) SSRN 3212862
+    DAA_CAN = ["EEM", "AGG"]
+    DAA_OFF = ["SPY", "QQQ", "IWM", "EFA", "EEM", "VNQ", "DBC", "GLD", "TLT", "HYG"]
+    DAA_DEF = ["SHY", "IEF", "LQD"]
+
+    def _w_daa(i):
+        cs = [_m13612(t, i) for t in DAA_CAN]
+        if any(v is None for v in cs):
+            return {"SHY": 1.0}
+        b = sum(1 for v in cs if v <= 0)
+        cf = b / 2.0                                    # 현금비율 = 나쁜 카나리아 수 / 2
+        off = _pick(_m13612, DAA_OFF, i, 6)
+        dfp = _pick(_m13612, DAA_DEF, i, 1)
+        w = {}
+        if off and cf < 1.0:
+            for t in off:
+                w[t] = (1.0 - cf) / len(off)
+        if cf > 0 and dfp:
+            w[dfp[0]] = w.get(dfp[0], 0.0) + cf
+        return w or {"SHY": 1.0}
+    add("taa-daa-g6", "", lambda: run_weights(
+        _w_daa, first_common(DAA_CAN + DAA_OFF + DAA_DEF), "방어형 자산배분 DAA (카나리아 2종)",
+        _bench6040,
+        "월말에 카나리아 2종(EEM·AGG)의 13612W 중 음수인 개수 b 로 현금비율 CF=b/2 를 정한다. "
+        "(1−CF) 는 공격 10자산 중 13612W 상위 6종 동일가중, CF 는 방어 3종(SHY·IEF·LQD) 중 최고 1종.",
+        "Keller·Keuning(2018). VAA 가 방어 전환을 0/1 로 하는 데 비해 DAA 는 비율로 한다 — "
+        "카나리아 하나만 나쁘면 절반만 방어다. 원문 카나리아는 VWO·BND 인데 이 패널의 EEM·AGG 로 "
+        "바꿨다(등록 §2)."))
+
+    # ③④ BAA — Keller (2022) SSRN 4166845
+    BAA_CAN = ["SPY", "EFA", "EEM", "AGG"]
+    BAA_OFF_A = ["QQQ", "EEM", "EFA", "AGG"]
+    BAA_OFF_B = ["SPY", "QQQ", "IWM", "EFA", "EEM", "VNQ", "DBC", "GLD", "TLT", "HYG", "LQD"]
+    BAA_DEF = ["TIP", "DBC", "SHY", "IEF", "TLT", "LQD", "AGG"]
+
+    def _mk_baa(off, n_off):
+        def w(i):
+            cs = [_m13612(t, i) for t in BAA_CAN]
+            if any(v is None for v in cs):
+                return {"SHY": 1.0}
+            if all(v > 0 for v in cs):
+                pick = _pick(_sma_rel, off, i, n_off)
+                return {t: 1.0 / len(pick) for t in pick} if pick else {"SHY": 1.0}
+            # 방어 — 상위 3 중 SHY 척도보다 낮은 것은 그 몫을 SHY 로(듀얼 모멘텀)
+            base = _sma_rel("SHY", i)
+            pick = _pick(_sma_rel, BAA_DEF, i, 3)
+            if not pick:
+                return {"SHY": 1.0}
+            out = {}
+            for t in pick:
+                v = _sma_rel(t, i)
+                k = t if (base is None or (v is not None and v >= base)) else "SHY"
+                out[k] = out.get(k, 0.0) + 1.0 / len(pick)
+            return out
+        return w
+    add("taa-baa-a", "", lambda: run_weights(
+        _mk_baa(BAA_OFF_A, 1), first_common(BAA_CAN + BAA_OFF_A + BAA_DEF),
+        "대담형 자산배분 BAA (공격형 · 1종 집중)", _bench6040,
+        "카나리아 4종(SPY·EFA·EEM·AGG)의 13612W 가 전부 양수면 공격 4종(QQQ·EEM·EFA·AGG) 중 "
+        "SMA 상대모멘텀(p0÷12개월 평균) 최고 1종에 100%. 아니면 방어 7종 중 같은 척도 상위 3을 "
+        "동일가중하되 SHY 보다 낮은 것은 그 몫을 SHY 로 돌린다.",
+        "Keller(2022). 카나리아는 빠른 13612W, 선별은 느린 SMA 상대모멘텀 — 척도가 둘이다. "
+        "빠른 것으로 위험을 끄고 느린 것으로 고른다는 설계다."))
+    add("taa-baa-b", "", lambda: run_weights(
+        _mk_baa(BAA_OFF_B, 6), first_common(BAA_CAN + BAA_OFF_B + BAA_DEF),
+        "대담형 자산배분 BAA (균형형 · 6종 분산)", _bench6040,
+        "③과 같되 공격 유니버스가 11자산이고 SMA 상대모멘텀 상위 6종을 동일가중한다.",
+        "원문은 12자산(VGK·EWJ 포함)인데 이 패널에 지역 분해가 없어 EFA 하나로 접었다 — "
+        "그만큼 원문과 다른 규칙이다(등록 §2)."))
+
+    # ⑤ 허스트 국면 스위치 — R/S 통계량
+    def _hurst(i, n=252):
+        s = ser("SPY")
+        if i < n:
+            return None
+        r = [s[j] / s[j - 1] - 1 for j in range(i - n + 1, i + 1)
+             if s[j] is not None and s[j - 1]]
+        if len(r) < n // 2:
+            return None
+        out = []
+        for m in (16, 32, 64, 128):
+            rs = []
+            for k in range(0, len(r) - m + 1, m):
+                w = r[k:k + m]
+                mu = sum(w) / m
+                dev, lo, hi, c = 0.0, 0.0, 0.0, 0.0
+                for v in w:
+                    c += v - mu
+                    lo, hi = min(lo, c), max(hi, c)
+                sd = math.sqrt(sum((v - mu) * (v - mu) for v in w) / max(1, m - 1))
+                if sd > 0:
+                    rs.append((hi - lo) / sd)
+            if rs:
+                out.append((math.log(m), math.log(sum(rs) / len(rs))))
+        if len(out) < 3:
+            return None
+        mx = sum(x for x, _ in out) / len(out)
+        my = sum(y for _, y in out) / len(out)
+        num = sum((x - mx) * (y - my) for x, y in out)
+        den = sum((x - mx) * (x - mx) for x, _ in out)
+        return (num / den) if den > 0 else None
+
+    def _regime_alloc(trend, i):
+        if trend:
+            sc = [(t, (ret(ser(t), i, 252) or None)) for t in TAA_UNI8]
+            sc = [(t, v) for t, v in sc if v is not None]
+            sc.sort(key=lambda x: -x[1])
+        else:
+            sc = [(t, (ret(ser(t), i, 21) or None)) for t in TAA_UNI8]
+            sc = [(t, v) for t, v in sc if v is not None]
+            sc.sort(key=lambda x: x[1])
+        return {t: 0.5 for t, _ in sc[:2]} if len(sc) >= 2 else {"SHY": 1.0}
+    add("st-hurst", "", lambda: run_weights(
+        lambda i: _regime_alloc((_hurst(i) or 0.5) > 0.5, i),
+        first_common(TAA_UNI8), "허스트 지수 국면 스위치 (추세 ↔ 반전)", _bench6040,
+        "월말에 SPY 일간수익 252일의 R/S 허스트 H 를 잰다. H>0.5 면 8자산 12개월 모멘텀 상위 2, "
+        "H≤0.5 면 같은 8자산 직전 21일 수익 하위 2를 동일가중.",
+        "허스트 H 는 계열이 추세적(H>0.5)인지 평균회귀적(H<0.5)인지를 재는 고전 통계량이다. "
+        "국면을 거시로 판정하지 않고 가격 계열 자신의 성질로 가른다."))
+
+    # ⑥ 분산비 — Lo·MacKinlay (1988) RFS 1(1)
+    def _vratio(i, n=252, q=5):
+        s = ser("SPY")
+        if i < n:
+            return None
+        r = [s[j] / s[j - 1] - 1 for j in range(i - n + 1, i + 1)
+             if s[j] is not None and s[j - 1]]
+        if len(r) < n // 2:
+            return None
+        m1 = sum(r) / len(r)
+        v1 = sum((x - m1) * (x - m1) for x in r) / max(1, len(r) - 1)
+        agg = [sum(r[k:k + q]) for k in range(0, len(r) - q + 1, q)]
+        if len(agg) < 5 or v1 <= 0:
+            return None
+        mq = sum(agg) / len(agg)
+        vq = sum((x - mq) * (x - mq) for x in agg) / max(1, len(agg) - 1)
+        return vq / (q * v1)
+    add("st-vratio", "", lambda: run_weights(
+        lambda i: _regime_alloc((_vratio(i) or 1.0) > 1.0, i),
+        first_common(TAA_UNI8), "분산비(Lo-MacKinlay) 국면 스위치", _bench6040,
+        "월말에 SPY 252일 분산비 VR(5)=Var(5일수익)÷(5·Var(1일수익)) 을 잰다. VR>1 이면 추세 "
+        "국면 배분, VR≤1 이면 반전 국면 배분. 배분 규칙은 허스트판과 글자 그대로 같다.",
+        "Lo·MacKinlay(1988)의 분산비 검정. ⚠ 허스트판과 유니버스·배분이 같고 국면 통계량만 "
+        "다르다 — 둘이 비슷하면 국면 통계량의 선택이 무의미하다는 뜻이고, 그것을 재려고 "
+        "일부러 짝으로 넣었다."))
+
+    # ⑦ OU 평균회귀 z-score
+    def _ou(t, i, n=120):
+        s = ser(t)
+        if i < n or s[i] is None or s[i] <= 0:
+            return None
+        lg = [math.log(s[j]) for j in range(i - n + 1, i + 1) if s[j] and s[j] > 0]
+        if len(lg) < n - 5:
+            return None
+        x = lg[:-1]
+        dy = [lg[k + 1] - lg[k] for k in range(len(lg) - 1)]
+        mx = sum(x) / len(x)
+        my = sum(dy) / len(dy)
+        den = sum((v - mx) * (v - mx) for v in x)
+        if den <= 0:
+            return None
+        beta = sum((v - mx) * (d - my) for v, d in zip(x, dy)) / den
+        k = 1.0 + beta
+        if not (0 < k < 1):
+            return None
+        hl = -math.log(2) / math.log(k)
+        mu = sum(lg) / len(lg)
+        sd = math.sqrt(sum((v - mu) * (v - mu) for v in lg) / max(1, len(lg) - 1))
+        if sd <= 0:
+            return None
+        return hl, (lg[-1] - mu) / sd
+
+    def _w_ou(i):
+        cand = []
+        for t in TAA_UNI8:
+            o = _ou(t, i)
+            if o and 5 <= o[0] <= 120:
+                cand.append((t, o[1]))
+        if len(cand) < 2:
+            return {"SHY": 1.0}
+        cand.sort(key=lambda x: x[1])
+        return {t: 0.5 for t, _ in cand[:2]}
+    add("st-ou", "", lambda: run_weights(
+        _w_ou, first_common(TAA_UNI8), "OU 평균회귀 z-score 하위 2", _bench6040,
+        "8자산 각각의 log가격에 120일 OU 과정을 적합해 반감기와 z-score 를 낸다. 반감기가 "
+        "5~120일인 자산만 후보로 두고 z-score 가 가장 낮은 2종을 동일가중. 후보 2종 미만이면 SHY.",
+        "평균회귀를 '싸 보인다'로만 쓰지 않고 회귀 속도(반감기)가 실제로 있는 자산만 "
+        "후보로 둔다. 반감기 관문이 없으면 추세 자산의 눌림목을 평균회귀로 오인한다."))
+
+    # ⑧ 축소 공분산 최소분산 — Ledoit·Wolf (2004) JMVA 88(2)
+    def _w_minvar(i, n=252, delta=0.3):
+        ts = [t for t in TAA_UNI8 if i >= n and ser(t)[i] is not None]
+        R = {}
+        for t in ts:
+            s = ser(t)
+            r = [s[j] / s[j - 1] - 1 if (s[j] is not None and s[j - 1]) else None
+                 for j in range(i - n + 1, i + 1)]
+            if sum(1 for v in r if v is not None) >= n - 10:
+                R[t] = r
+        ts = [t for t in ts if t in R]
+        if len(ts) < 4:
+            return {"SHY": 1.0}
+        ok = [k for k in range(n) if all(R[t][k] is not None for t in ts)]
+        if len(ok) < n // 2:
+            return {"SHY": 1.0}
+        mu = {t: sum(R[t][k] for k in ok) / len(ok) for t in ts}
+        S = {}
+        for a in ts:
+            for b in ts:
+                S[(a, b)] = sum((R[a][k] - mu[a]) * (R[b][k] - mu[b])
+                                for k in ok) / max(1, len(ok) - 1)
+        sd = {t: math.sqrt(S[(t, t)]) if S[(t, t)] > 0 else 0.0 for t in ts}
+        cs = [S[(a, b)] / (sd[a] * sd[b]) for a in ts for b in ts
+              if a != b and sd[a] > 0 and sd[b] > 0]
+        rbar = sum(cs) / len(cs) if cs else 0.0
+        # 상수상관 목표로 축소. δ 는 0.3 고정 — 최적 δ 추정은 자유도가 된다.
+        C = {}
+        for a in ts:
+            for b in ts:
+                f = S[(a, a)] if a == b else rbar * sd[a] * sd[b]
+                C[(a, b)] = delta * f + (1 - delta) * S[(a, b)]
+        # 롱온리 최소분산 — 역분산에서 출발해 반복 투영
+        w = {t: (1.0 / C[(t, t)] if C[(t, t)] > 0 else 0.0) for t in ts}
+        for _ in range(200):
+            g = {a: sum(C[(a, b)] * w[b] for b in ts) for a in ts}
+            gm = sum(g.values()) / len(ts)
+            step = 0.5 / max(1e-12, max(C[(t, t)] for t in ts))
+            w = {a: max(0.0, w[a] - step * (g[a] - gm)) for a in ts}
+            tot = sum(w.values())
+            if tot <= 0:
+                return {"SHY": 1.0}
+            w = {a: v / tot for a, v in w.items()}
+        return {a: v for a, v in w.items() if v > 1e-4}
+    add("st-minvar-lw", "", lambda: run_weights(
+        _w_minvar, first_common(TAA_UNI8), "축소 공분산 최소분산 (Ledoit-Wolf 목표)", _bench6040,
+        "8자산 252일 표본공분산을 상수상관 목표로 δ=0.3 만큼 축소한 뒤 롱온리 최소분산 비중을 낸다.",
+        "Ledoit·Wolf(2004). 표본공분산은 자산 수가 관측 대비 많아지면 불안정해지고 최소분산이 "
+        "그 잡음을 극대화한다. ⚠ 최적 δ 를 추정하지 않고 0.3 으로 못박았다 — 추정하면 그게 자유도다."))
+
+    # ⑨ 위험균형 × 개별 추세 게이트 (2단)
+    def _w_rptrend(i):
+        w, cash = {}, 0.0
+        for t in TAA_UNI8:
+            v = vol(ser(t), i, 120)
+            if not v or v <= 0:
+                continue
+            iv = 1.0 / v
+            s = ser(t)
+            up = False
+            if i >= 200 and s[i] is not None:
+                win = [s[j] for j in range(i - 199, i + 1) if s[j] is not None]
+                up = bool(win) and s[i] > sum(win) / len(win)
+            if up:
+                w[t] = iv
+            else:
+                cash += iv
+        tot = sum(w.values()) + cash
+        if tot <= 0:
+            return {"SHY": 1.0}
+        out = {t: v / tot for t, v in w.items()}
+        if cash > 0:
+            out["SHY"] = out.get("SHY", 0.0) + cash / tot
+        return out
+    add("st-rp-trend", "", lambda: run_weights(
+        _w_rptrend, first_common(TAA_UNI8), "위험균형 × 개별 추세 게이트 (2단)", _bench6040,
+        "1단 8자산 120일 역변동성 가중. 2단 각 자산이 200일선 아래면 그 몫만 SHY 로 옮긴다.",
+        "이 랩의 rp-* 계열은 게이트가 포트폴리오 전체에 하나 걸려 전량이 들락거린다. "
+        "이쪽은 자산마다 따로 걸어 노출이 연속으로 변한다."))
+
+    # ⑩ 능형회귀 1개월 예측 — 간단 ML(확장창)
+    def _w_ridge(i, lam=1.0):
+        me = month_ends(0, i + 1)
+        if len(me) < 60:
+            return {"SHY": 1.0}
+        rows, ys = [], []
+        for k in range(len(me) - 1):
+            a = me[k]
+            f = _ridge_feat(a)
+            if f is None:
+                continue
+            s = ser("SPY")
+            b = me[k + 1]
+            if s[a] and s[b]:
+                rows.append(f)
+                ys.append(s[b] / s[a] - 1)
+        cur = _ridge_feat(i)
+        if len(rows) < 48 or cur is None:
+            return {"SHY": 1.0}
+        p = len(cur)
+        mu = [sum(r[j] for r in rows) / len(rows) for j in range(p)]
+        sg = [math.sqrt(sum((r[j] - mu[j]) ** 2 for r in rows) / max(1, len(rows) - 1))
+              or 1e-9 for j in range(p)]
+        X = [[(r[j] - mu[j]) / sg[j] for j in range(p)] for r in rows]
+        ym = sum(ys) / len(ys)
+        Y = [v - ym for v in ys]
+        # (XᵀX + λI) β = XᵀY — 가우스 소거
+        A_ = [[sum(X[k][a] * X[k][b] for k in range(len(X))) + (lam if a == b else 0.0)
+               for b in range(p)] + [sum(X[k][a] * Y[k] for k in range(len(X)))]
+              for a in range(p)]
+        for c in range(p):
+            pv = max(range(c, p), key=lambda r_: abs(A_[r_][c]))
+            if abs(A_[pv][c]) < 1e-12:
+                return {"SHY": 1.0}
+            A_[c], A_[pv] = A_[pv], A_[c]
+            for r_ in range(p):
+                if r_ != c:
+                    f = A_[r_][c] / A_[c][c]
+                    for cc in range(c, p + 1):
+                        A_[r_][cc] -= f * A_[c][cc]
+        beta = [A_[j][p] / A_[j][j] for j in range(p)]
+        z = [(cur[j] - mu[j]) / sg[j] for j in range(p)]
+        pred = ym + sum(beta[j] * z[j] for j in range(p))
+        return {"SPY": 1.0} if pred > 0 else {"SHY": 1.0}
+
+    def _ridge_feat(i):
+        m12 = ret(ser("SPY"), i, 252)
+        v60 = vol(ser("SPY"), i, 60)
+        ts_ = macro_asof("T10Y2Y", DTS[i])
+        vx = A["macro"].get("VIXCLS") or {}
+        ks = [k for k in sorted(vx) if k <= DTS[i]][-20:]
+        vv = [vx[k] for k in ks if vx[k] is not None]
+        if m12 is None or v60 is None or ts_ is None or not vv:
+            return None
+        return [m12, v60, ts_, sum(vv) / len(vv)]
+    add("ml-ridge", "", lambda: run_weights(
+        _w_ridge, first_common(["SPY", "SHY"], pad=1600), "능형회귀 1개월 예측 (SPY 롱/현금)",
+        _bench6040,
+        "특징 4개(SPY 12개월 모멘텀·60일 실현변동성·T10Y2Y·VIX 20일평균)로 SPY 다음 달 수익을 "
+        "확장창 능형회귀(λ=1.0 고정, 표준화)로 예측한다. 예측이 양수면 SPY 100%, 아니면 SHY 100%.",
+        "요청대로 가벼운 ML 이다. ⚠ 확장창이다 — 매 월말 그 시점까지의 관측만으로 다시 적합한다. "
+        "⚠ λ 를 교차검증으로 고르지 않는다(고르면 그게 자유도다). 이 랩은 ML 랩을 한 번 삭제한 "
+        "적이 있고(DATA-FACTS #17) 그 사유는 55분을 써서 얻는 것이 없었다는 것이다."))
 
     # ⑩ 핼러윈 — Jacobsen·Visaltanachoti (2009) RFS 22(1)
     _sec("sec-halloween", "핼러윈 섹터 (11~4월 경기민감)",
