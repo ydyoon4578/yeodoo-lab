@@ -85,6 +85,9 @@ PRICE_SIDS = [
              #   사후 선택이므로 **등록과 함께 미리** 넣는다. 둘 다 종가만 쓰므로
              #   편출 종목 종가 캐시로 그대로 돈다(x-amihud 가 막힌 거래량 벽이 없다).
              "x-mommvol", "x-rskew",
+             # 2026-08-12 6차 — PREREG-2026-08-12-MACROBETA.md §4. 거시 계열은 전 종목이
+             #   공유하는 하나의 계열이라 편출 종목에도 그대로 쓴다(종가만 더 있으면 된다).
+             "x-ratebeta", "x-fxbeta",
              "x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",

@@ -1031,6 +1031,62 @@ def retained_ratio(f, date, lag=FUND_LAG_DAYS):
     return (re_ / at) if (re_ is not None and at and at > 0) else None
 
 
+MACROBETA_WIN = 252      # 사전등록 PREREG-2026-08-12-MACROBETA.md §2 — 베타 추정 창
+
+
+def macro_daily(sid, dates):
+    """거시 계열의 **일간 변화**를 랩 날짜 격자에 맞춘다. [None|float] × len(dates).
+
+    사전등록 PREREG-2026-08-12-MACROBETA.md §2.
+    · DGS10 은 %단위 수익률이라 **차분**(%p)을 쓴다 — 비율변화를 쓰면 저금리 구간에서 폭발한다.
+    · DTWEXBGS 는 지수라 **로그수익률**을 쓴다.
+    ⚠ 결측일은 직전 값을 끌고 가지 않고 그날 변화를 None 으로 둔다. 끌고 가면 '움직이지
+      않았다'는 관측을 만들어 베타를 0 쪽으로 당긴다.
+    ⚠ 이 값은 전 종목이 공유하는 하나의 계열이다 — 종목별 자료가 아니므로 편출 종목에도
+      그대로 쓸 수 있다(PIT 가능).
+    """
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception:
+        return [None] * len(dates)
+    m = (A.get("macro") or {}).get(sid) or {}
+    lvl = [m.get(d) for d in dates]
+    out = [None] * len(dates)
+    for i in range(1, len(dates)):
+        a, b = lvl[i - 1], lvl[i]
+        if a is None or b is None:
+            continue
+        if sid.startswith("DGS"):
+            out[i] = b - a                      # %p 차분
+        elif a > 0 and b > 0:
+            out[i] = b / a - 1.0                # 비율변화
+    return out
+
+
+def macro_beta(Rt, mac, i, win=MACROBETA_WIN):
+    """종목 일간수익률의 거시 계열 변화에 대한 베타(단순회귀 기울기). 사전등록 §2.
+
+    ⚠ 두 계열이 **같은 날 모두 있는** 관측만 쓴다. 유효일이 창의 60% 미만이면 None.
+    """
+    if i < win:
+        return None
+    xs, ys = [], []
+    for j in range(i - win + 1, i + 1):
+        a, b = mac[j], Rt[j]
+        if a is None or b is None:
+            continue
+        xs.append(a); ys.append(b)
+    n = len(xs)
+    if n < win * 0.6:
+        return None
+    mx = sum(xs) / n
+    vx = sum((x - mx) ** 2 for x in xs)
+    if vx <= 1e-18:
+        return None
+    my = sum(ys) / n
+    return sum((xs[k] - mx) * (ys[k] - my) for k in range(n)) / vx
+
+
 EARNVOL_WIN = 8          # 사전등록 PREREG-2026-08-12-POLICY.md §2② — 분기 수
 
 
@@ -2481,6 +2537,32 @@ def build_strats():
          "결과를 만든 게 아니고 갈리면 그 반대다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 "
          "더 가까운 측정이기도 하다.")
 
+    # ── 거시 요인 둔감 2종 ───────────────────────────────────────────
+    # 사전등록 build/PREREG-2026-08-12-MACROBETA.md.
+    # 🚨 build/tried.py 로 **세 목록(살아있음 87 · 선반 15 · 퇴출 13)을 전부** 훑었다 —
+    #   금리 0건(x-lowde 의 산문 언급뿐) · 달러 0건 · 인플레 0건 · 거시 0건 · 듀레이션 0건.
+    #   이 랩의 베타 규칙 넷(x-lowbeta·x-lowcorr·x-updown·x-peerlag)은 전부 **시장** 베타다.
+    #   ⚠ 5차까지는 라이브만 훑고 '0건'이라 적었다가 두 번 재등록 사고를 냈다(DATA-FACTS #27).
+    xsec("x-ratebeta", "금리 둔감 최하위 %d (|10년물 베타|)" % TOPN,
+         "일간 수익률을 10년 국채 수익률의 일간 변화(%%p)에 %d거래일 단순회귀한 기울기의 "
+         "절댓값이 가장 작은 %d종목 동일가중, 월말 리밸런스." % (MACROBETA_WIN, TOPN),
+         None,
+         "저베타·저변동성 이례현상(Frazzini·Pedersen 2014 · Baker·Bradley·Wurgler 2011)의 "
+         "논리를 시장 밖 요인으로 넓힌다 — 위험 노출이 낮은 자산이 위험조정 기준으로 더 "
+         "나았다는 것이 그 계열의 주장이고, 금리는 이 랩이 한 번도 요인으로 안 쓴 축이다. "
+         "⚠ 방향은 절댓값 최하위다(오르든 내리든 둔감한 쪽). 부호 있는 최하위(금리 상승에 "
+         "가장 취약한 쪽)를 나중에 시도하지 않는다 — 그건 다른 규칙이다. "
+         "⚠ 금리는 %%단위라 차분(%%p)을 쓴다. 비율변화를 쓰면 저금리 구간에서 폭발한다. "
+         "거시 계열은 전 종목이 공유하므로 편출 종목에도 그대로 쓸 수 있다(PIT 가능).")
+    xsec("x-fxbeta", "달러 둔감 최하위 %d (|광의 달러지수 베타|)" % TOPN,
+         "일간 수익률을 광의 달러지수(DTWEXBGS)의 일간 변화율에 %d거래일 단순회귀한 기울기의 "
+         "절댓값이 가장 작은 %d종목 동일가중, 월말 리밸런스." % (MACROBETA_WIN, TOPN),
+         None,
+         "위 x-ratebeta 와 같은 논리를 다른 거시 요인에 적용한다. 둘이 같은 결과를 내면 "
+         "'거시 둔감'이라는 축이 하나인 것이고, 갈리면 요인마다 다른 것을 재고 있다는 뜻이다 "
+         "(x-sue 와 x-epsacc 를 같이 실은 것과 같은 이유). "
+         "⚠ 달러지수는 지수라 비율변화를 쓴다(금리와 다르다).")
+
     # ── 재무상태표 두 축(안 쓰이던 태그) ─────────────────────────────
     # 사전등록 build/PREREG-2026-08-12-BALANCE.md. ca·cl·re 는 수집돼 있는데 88종 어디에서도
     # 안 쓰이고 있었다(전문 검색: 유동비율 0건 · 이익잉여금 0건) — 수집 ≠ 배선의 또 한 사례다.
@@ -3391,6 +3473,7 @@ def xsec_score_at(S, i, X, pool=None):
     FACP, FU, R = X["FACP"], X["FU"], X["R"]
     dates, hid, lod = X["dates"], X["hid"], X["lod"]
     ixr, ixvol, me, me_list = X["ixr"], X["ixvol"], X["me"], X["me_list"]
+    MACD10, MACFX = X.get("macd10") or [], X.get("macfx") or []
     meta, px, vlm = X["meta"], X["px"], X["vlm"]
     tickers = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool]
     sc = []
@@ -3699,6 +3782,10 @@ def xsec_score_at(S, i, X, pool=None):
         # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
         elif sid == "x-sur":
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        # 6차 배치 — PREREG-2026-08-12-MACROBETA.md.
+        elif sid in ("x-ratebeta", "x-fxbeta"):
+            _mb = macro_beta(R[t], MACD10 if sid == "x-ratebeta" else MACFX, i - 1)
+            v = (-abs(_mb)) if _mb is not None else None   # 절댓값 최하위 → 부호 반전
         # 5차 배치 — PREREG-2026-08-12-BALANCE.md.
         elif sid == "x-currat":
             v = current_ratio(FU.get(t) or {}, dates[i - 1])
@@ -4006,6 +4093,9 @@ def run():
     n = len(dates)
     tickers = sorted(px)
     R = daily_rets(px)
+    # 거시 요인 일간 변화 — 전 종목이 공유하는 계열이라 한 번만 만든다(6차 배치).
+    MACD10 = macro_daily("DGS10", dates)
+    MACFX = macro_daily("DTWEXBGS", dates)
     me_list = month_ends(dates)
     me = set(me_list)
     # 잔차 모멘텀용 팩터 대리변수 — 못 읽으면 빈 dict 이고 그 전략만 후보 0 으로 빠진다.
@@ -4030,7 +4120,10 @@ def run():
     #   다른 값이 나오는 것보다 낫고, 그게 이 묶음을 dict 로 둔 이유다).
     _X = {"FACP": FACP, "FU": FU, "R": R, "dates": dates, "hid": hid, "lod": lod,
           "ixr": ixr, "ixvol": ixvol, "me": me, "me_list": me_list, "meta": meta,
-          "px": px, "vlm": vlm, "tickers": tickers}
+          "px": px, "vlm": vlm, "tickers": tickers,
+          # 거시 요인 일간 변화(6차 배치) — 전 종목 공유 계열이라 컨텍스트에 실어
+          #   채점기가 읽게 한다. run() 지역변수로 두면 모듈 레벨 채점기에서 안 보인다.
+          "macd10": MACD10, "macfx": MACFX}
     # 지수의 200일선 이격 — t-gapcap 이 매 시점 직전 252일치를 다시 만드느라
     # sma(ix, j, 200) 를 i마다 252번(각 200회 덧셈) 돌렸다. 규칙과 무관하게 ix 에만
     # 의존하므로 한 번만 만들어 둔다: 252×200×n → n×200.
