@@ -1419,6 +1419,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     (secs||[]).forEach(function(s2){
       var e=etf[s2.sec];
       if(e&&e.r)s2.r=e.r;      // 못 받았으면 건드리지 않는다(fail-soft — 빈 칸으로 남는다)
+      // 주가도 같은 곳에서 옮긴다 — 이 줄은 그 ETF 자체이므로 살 수 있는 값이 있다.
+      // ⚠ 아래 산업그룹·종목 줄은 그대로 둔다(산업그룹은 살 수 있는 한 종목이 아니다).
+      if(e&&typeof e.px==='number')s2.px=e.px;
     });
     var imk=D.mkt||null, rgk=(MK.rg&&MK.rg.regime&&MK.rg.regime.label)||null;
     var rgn=(D.regime_n&&rgk)?D.regime_n[rgk]:null;
@@ -2018,7 +2021,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var nt=IXNOTE[x.t];
     return '<tr'+(cls?' class="'+cls+'"':'')+
       '><th scope="row"'+(nt?' title="'+esc(nt.replace(/\*\*/g,''))+'"':'')+'>'+
-      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+pxCell(null)+
+      // 🚨 2026-08-12 — 여기가 pxCell(null) 이었다. 「주가」 열 머리글은 "섹터·지수·스타일
+      //   ETF 행만 값이 있다"고 주장하는데 **넘기는 값 자체가 늘 null** 이라 전 줄이 '·'
+      //   였다. 자료(market_board.json)에도 px 가 없어서 두 겹으로 죽어 있었다 —
+      //   한쪽만 고치면 여전히 안 나온다. 빌더와 여기를 같이 고쳤다.
+      esc(x.n)+'<small>'+esc(x.t)+'</small></th>'+stShp(sh)+pxCell(x)+
       ST_HZ.map(function(h){return stCell((x.r||{})[h[0]]);}).join('')+'</tr>';
   }
   // 스타일별 상위 10종목 — 지수 산식을 유니버스 518종목에 적용해 이 랩이 계산한 것이지
