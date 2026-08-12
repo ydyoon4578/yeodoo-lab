@@ -2368,7 +2368,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   RSP·SDY 를 넣은 것과 같은 사유다: 짝이 없다는 것과 볼 필요가 없다는 것은 다르다.
     //   ⚠ SPLV 는 USMV 와 초과수익 상관 +0.915 로 사실상 같은 줄이다(build/market_board.py
     //     의 STYLE 주석에 전 쌍 실측이 있다). 그걸 알고 나란히 두는 것이다.
-    var ETF_KEEP={RSP:1, SDY:1, SPMO:1, IVW:1, RPV:1, SPLV:1, SCHD:1, VYM:1, PKW:1};
+    // 짝(랩 방법론)이 없어도 싣는 ETF. 8종 중 IVE·QUAL 만 짝이 있고 나머지 여섯은 없다.
+    //   ⚠ 여기서 빠지면 그 줄은 표에 **아예 안 나온다**(위 짝 판정 참조).
+    var ETF_KEEP={RSP:1, SDY:1, SPMO:1, IVW:1, SPLV:1, SCHD:1};
     var pair=[], solo=[];
     st.forEach(function(x){ (labOf(x.t)||ETF_KEEP[x.t]?pair:solo).push(x); });
     // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
@@ -2544,8 +2546,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   안 나온다'고 잡힌다. 이름을 바꾸면 그쪽 정규식도 함께 봐야 한다.
   // ⚠ 배열 순서는 **화면 순서가 아니다.** 표는 샤프 내림차순으로 다시 세운다(drawStyle).
   //   여기 순서는 중복 제거 순서일 뿐이라, 새 지수는 끝에 붙이면 된다.
+  // 🚨 2026-08-13 — 여기에 grow·hbeta·size·spval·qual 을 **명시로 넣었다.**
+  //   종전에는 이 다섯이 ST_KEY(ETF→방법론)를 타고 ETF 목록에서 흘러들어 왔다. 그래서
+  //   스타일 ETF 를 8종으로 줄이는 순간 짝이 없어진 방법론 줄 다섯이 **아무 말 없이 같이
+  //   사라졌다**(12 → 7종). 두 목록은 다른 질문이다 — 하나는 '살 수 있는 상품', 하나는
+  //   '공개 산식을 이 유니버스에 적용한 백테스트'. 얽어 두면 한쪽을 건드릴 때 다른 쪽이 샌다.
+  //   ⚠ ST_HIDE 에 든 것은 어차피 아래에서 걸러지므로 여기 있어도 안 뜬다.
   var ST_IDX=['squal','snqual','spmo','qvm','puregrow','purevalue',
-              'div','divlv','buyback','netbuy','fcfy'];
+              'div','divlv','buyback','netbuy','fcfy',
+              'grow','hbeta','size','spval','qual','mom','lowvol'];
   // 중소형은 뺀다(사용자 결정 2026-08-02). 대응 ETF(SIZE)가 짝 판정에서 빠져 표에 원래
   // 없었고, 구성종목 줄에만 혼자 남아 있었다.
   // ⚠ 랩 스크린(sc_*)은 홈에서 통째로 뺐다(사용자 결정 2026-08-02). ST_SCR·ST_EXTRA·
