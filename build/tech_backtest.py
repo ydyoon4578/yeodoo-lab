@@ -2494,14 +2494,6 @@ def build_strats():
          "쪽이 무작위가 아니다. 그러니 이 규칙은 '유동비율이 높은 종목'이 아니라 "
          "'유동/비유동을 구분해 보고하는 업종 안에서' 그런 종목이다(DATA-FACTS #1 과 같은 성질). "
          "실측 커버 랩 84%% · 편출 84%% — 두 유니버스가 같아 PIT 비교가 성립한다.")
-    xsec("x-reta", "이익잉여금 비율 상위 %d" % TOPN,
-         "이익잉여금 ÷ 총자산이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
-         None,
-         "Altman(1968) Z-score 의 X2 를 그대로 쓴다. 누적해서 유보한 이익이 자산에서 차지하는 "
-         "비중이라 '얼마나 오래 스스로 벌어 왔나'를 재는 축이고, 이 랩의 수익성 규칙들"
-         "(x-roe·x-npm·x-gpa)이 재는 '지금 얼마나 버나'와 다르다. "
-         "⚠ 음수가 정상적으로 나온다(누적 결손) — 자르지 않는다. 그것도 정보다. "
-         "실측 커버 랩 97%% · 편출 93%%.")
 
     # ── 배당 정책의 변화 · 이익 변동성 2종 ───────────────────────────
     # 사전등록 build/PREREG-2026-08-12-POLICY.md. **이웃 지도를 보고 빈 칸을 골랐다** —
@@ -2567,24 +2559,6 @@ def build_strats():
     #   유동성을 건드리는 넷은 다른 것을 잰다: hlspread·lshock 는 스프레드(비용의 폭),
     #   volsurge 는 거래량의 급변(수준 아님), small 은 시총(대리변수이지 유동성이 아니다).
     # 후보 밀도는 build/probe_liq.py 로 **월별 시계열을 먼저 쟀다**(1차 배치의 실패 때문).
-    xsec("x-amihud", "비유동성 상위 %d (Amihud)" % TOPN,
-         "일간 |수익률| 을 그날 거래대금으로 나눈 값의 최근 %d거래일 평균이 가장 큰 %d종목 "
-         "동일가중, 월말 리밸런스. 거래대금이 0 인 날은 버리고, 유효일이 창의 80%% 미만이면 "
-         "후보에서 뺀다." % (AMIHUD_WIN, TOPN),
-         None,
-         "Amihud(2002). 팔기 어려운 자산은 그 대가로 기대수익이 높아야 한다는 주장이다. "
-         "🚨 이 지표는 시가총액과 강하게 붙는다(작은 회사가 덜 거래된다) — 그래서 판정은 "
-         "단독 t 가 아니라 x-small 을 포함한 이웃 5개를 통제한 뒤의 incr5.t 다. "
-         "실측 후보 중앙 478종 · 문턱 미만 2/211달 · 램프 없음(창 전체를 검정한다). "
-         "⚠ 창 %d일은 이 랩의 다른 규칙과 맞춘 것이지 원논문(연 단위)이 아니다." % AMIHUD_WIN)
-    xsec("x-turn", "저회전율 최하위 %d" % TOPN,
-         "거래량의 최근 %d거래일 평균을 발행주식수로 나눈 값이 가장 작은 %d종목 동일가중, "
-         "월말 리밸런스." % (TURN_WIN, TOPN),
-         None,
-         "Datar·Naik·Radcliffe(1998). 위 x-amihud 와 같은 현상을 다른 자로 잰다 — "
-         "x-amihud 는 '가격이 얼마나 밀리나', 이건 '얼마나 손이 바뀌나'다. 둘이 같은 결과를 "
-         "내면 자가 결과를 만든 게 아니고 갈리면 그 반대다. "
-         "실측 후보 중앙 430종 · 문턱 미만 2/211달 · 램프 1.6배.")
 
     # ── 손익계산서 위쪽 줄의 서프라이즈 3종 ──────────────────────────
     # 사전등록 build/PREREG-2026-08-12-INCOME-LINES.md 에 **돌리기 전에** 확정해 커밋했다.
@@ -3728,8 +3702,6 @@ def xsec_score_at(S, i, X, pool=None):
         # 5차 배치 — PREREG-2026-08-12-BALANCE.md.
         elif sid == "x-currat":
             v = current_ratio(FU.get(t) or {}, dates[i - 1])
-        elif sid == "x-reta":
-            v = retained_ratio(FU.get(t) or {}, dates[i - 1])
         # 4차 배치 — PREREG-2026-08-12-POLICY.md.
         elif sid == "x-divgrow":
             v = div_growth(FU.get(t) or {}, dates[i - 1])
@@ -3744,13 +3716,6 @@ def xsec_score_at(S, i, X, pool=None):
             _sk = realized_skew(R[t], i - 1)
             v = (-_sk) if _sk is not None else None
         # 유동성 수준 2종 — PREREG-2026-08-12-LIQ-CAL.md.
-        elif sid == "x-amihud":
-            v = amihud(P, vlm.get(t) or [], i - 1)
-        elif sid == "x-turn":
-            # 최하위 10 이므로 부호를 뒤집는다(점수가 클수록 뽑힌다).
-            _sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
-            _tv = turnover(vlm.get(t) or [], _sn, i - 1)
-            v = (-_tv) if _tv is not None else None
         elif sid == "x-sugp":
             v = sue(gp_series(FU.get(t) or {}), dates[i - 1])
         elif sid == "x-cdisc":

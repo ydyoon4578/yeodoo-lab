@@ -2361,6 +2361,26 @@ try:
     _live3 = {r["sid"]: r for r in (_tech3.get("strategies") or [])}
     _retd3 = {r["sid"] for r in (_tech3.get("retired") or [])}
 
+    # ①-b 🚨 2026-08-12 — **sid 만 대조하면 이름을 바꾼 재등록을 못 잡는다.**
+    #   실제로 그날 `x-illiq`(Amihud ILLIQ · 2026-08-04 자료 타당성 기각)을 `x-amihud` 라는
+    #   새 이름으로 다시 등록했고, 이 검사는 sid 가 다르다는 이유로 통과시켰다. 소급 t 6.84 로
+    #   게시 직전까지 갔다가 보유 종목(BF.B·FOX·NWS)이 기각 사유가 지목한 13종과 겹치는 것을
+    #   손으로 보고서야 알았다 — 사람이 조심해서 될 일이 아니라는 이 파일의 전제 그대로다.
+    #   → **arch(규칙의 계보)로도 대조한다.** 같은 arch 면 이름이 달라도 같은 규칙 계열이다.
+    _arch_shelf = {}
+    for _x in (_tn.get("items") or []):
+        if _x.get("arch"):
+            _arch_shelf.setdefault(_x["arch"], []).append(_x["sid"])
+    for _r in (_tech3.get("strategies") or []):
+        _a = _r.get("arch")
+        if not _a or _a not in _arch_shelf or _r["sid"] in _tested:
+            continue
+        errors.append(
+            "'%s'(%s)는 선반의 %s 와 **같은 계보(arch=%s)** 인데 새 sid 로 살아 있다 — "
+            "이름을 바꾼 재등록은 재등록이 아니다. tested_not_published.json 의 그 항목에 "
+            "readmitted{prereg,changed,why_ok} 를 적거나, 이 규칙을 선반으로 옮길 것"
+            % (_r.get("name"), _r["sid"], "·".join(_arch_shelf[_a]), _a))
+
     # ① 살아 있는 규칙이 세 번째 목록에 있으면 readmitted 가 있어야 한다
     for _sid in sorted(set(_tested) & set(_live3)):
         _rm = _tested[_sid].get("readmitted") or {}
