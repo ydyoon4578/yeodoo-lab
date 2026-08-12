@@ -1208,7 +1208,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function drawIns(j){
     var box=el('insbox'), sub=el('ins-sub');
     if(!j||!j.buys){ if(box)box.innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>'; return; }
-    if(sub) sub.textContent='· 최근 6개월 장내(P·S) · 기준일 '+(j.as_of||'—')+
+    // ⚠ 창 길이는 **빌더가 적어 보낸 win_days 에서 뽑는다.** 여기에 '6개월'을 손으로
+    //   박아 두면 build/home_insider.py 의 WIN_DAYS 만 바뀔 때 화면이 조용히 거짓말한다.
+    var wm=j.win_days?Math.max(1,Math.round(j.win_days/30))+'개월':'—';
+    if(sub) sub.textContent='· 최근 '+wm+' 장내(P·S) · 기준일 '+(j.as_of||'—')+
       ' · 공시 지연 '+(j.lag_days!=null?j.lag_days:'—')+'일 · 순매수 '+(j.n_buy_side||0)+
       '종 vs 순매도 '+(j.n_sell_side||0)+'종 · 신호 아님';
     box.innerHTML=
