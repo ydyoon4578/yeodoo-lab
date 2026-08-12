@@ -1245,12 +1245,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
     el('signote').innerHTML='<b>확정</b>(▲▼)=날짜 불변 · <b>잠정</b>(△▽)=아직 이동 가능'+
       (shown&&allProv?' — <b style="color:var(--marg)">오늘 표시된 '+shown+'건은 전부 잠정입니다.</b>':'')+
-      // 한계는 지우지 않되 기본으로 펼쳐두지 않는다 — 눌러서 보게 한다(2026-07-26).
-      // stocks.html이 이미 쓰는 details.more 패턴을 그대로 쓴다.
-      '<details class="more"><summary>이 표식으로 무엇을 알 수 있고, 무엇을 못 하는가</summary>'+
-      '<div class="mbody"><p><b>진입 규율·구조 도구이며 수익 예측력은 확인되지 않았습니다</b> — '+
-      '확정 저점의 약 50%만 이후 20일간 저점을 유지하고, 확정일 매수 수익은 시장 수준'+
-      '(+1.6% vs +1.4%)이었습니다. 고점 표식은 하락 예측력이 없습니다.</p></div></details>';
+      // ⚠ 2026-08-12 — 여기 있던 접이식 한계 설명('이 표식으로 무엇을 알 수 있고, 무엇을
+      //   못 하는가')을 뺐다(사용자 결정).
+      //   🚨 근거를 버린 것이 아니다 — **같은 문장이 stocks.html 에 그대로 있다**
+      //   (확정 저점의 약 50%만 20일 유지 · 확정일 매수 +1.6% vs 시장 +1.4% ·
+      //    고점 표식은 하락 예측력 없음). 이 구획의 '지표별 성적표 →'와 종목 줄 링크가
+      //   둘 다 그쪽으로 간다. 지우기 전에 그 사실을 확인했다.
+      //   ⚠ stocks.html 의 그 문단을 지우면 이 판정이 사이트에서 **완전히** 사라진다.
+      '';
     el('recostocks').innerHTML=
       recoCol('🟢 스윙 저점매수','최근 '+(h.win||10)+'거래일 · 최신순', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
       recoCol('🔴 스윙 고점매도','이익실현·비중축소 참고', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
@@ -1643,7 +1645,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var CYC=null;
   function cycBlock(){
     var cy=CYC; if(!cy||!cy.ref||!cy.now)return '';
-    var R=cy.ref, now=cy.now, TR=cy.trail||[];
+    var R=cy.ref, now=cy.now;
     var W=560,H=170,PL=14,PR=14,x0=PL,x1=W-PR;
     var top=26,bot=132,mid=(top+bot)/2,amp=(bot-top)/2*0.9;
     var LEAD=(R.lead==null?0.2:R.lead), T0=(R.mkt_trough==null?0.02:R.mkt_trough);
@@ -1654,31 +1656,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function pathOf(fn){var d='';for(var i=0;i<=180;i++){var p=i/180;d+=(i?'L':'M')+f(X(p))+' '+f(fn(p));}return d;}
     var g='<path d="'+pathOf(Ye)+'" fill="none" stroke="var(--accent)" stroke-width="1.8" opacity=".85"/>'+
           '<path d="'+pathOf(Ym)+'" fill="none" stroke="var(--hot)" stroke-width="1.8" opacity=".85"/>';
-    // 자취 — 큰 점부터(산출이 준 순서). 같은 국면으로 되돌아오면 한 자리에 포개진다.
-    var ord=cy.trail_z; if(!(ord&&ord.length===TR.length)){ord=[];for(var i2=0;i2<TR.length;i2++)ord.push(i2);}
-    var rad=function(q){return 3.2+Math.min(4.4,q.months/3.4);};
-    for(var t2=1;t2<TR.length;t2++){
-      var a=TR[t2],b0=TR[t2-1];
-      var ax=X(a.pos),ay=Ym(a.pos),bx=X(b0.pos),by=Ym(b0.pos);
-      var sx=bx,sy=by,ex=ax,ey=ay;
-      if(ex<sx){var _t=sx;sx=ex;ex=_t;_t=sy;sy=ey;ey=_t;}
-      var dx=ex-sx,dy=ey-sy,L=Math.sqrt(dx*dx+dy*dy)||1;
-      var bu=(t2%2?-1:1)*Math.min(26,Math.max(10,L*0.16));
-      var cx=(bx+ax)/2+(-dy/L)*bu, cyy=(by+ay)/2+(dx/L)*bu;
-      var vx=ax-cx,vy=ay-cyy,vl=Math.sqrt(vx*vx+vy*vy)||1,pull=rad(a)+5;
-      var back=(a.dir==='back');
-      g+='<path d="M'+f(bx)+' '+f(by)+' Q'+f(cx)+' '+f(cyy)+' '+f(ax-(vx/vl)*pull)+' '+f(ay-(vy/vl)*pull)+
-        '" fill="none" stroke="'+(back?'var(--marg)':'var(--ink)')+'" stroke-width="1.5" opacity=".85" '+
-        'stroke-linecap="round"'+(back?' stroke-dasharray="5 3"':'')+' marker-end="url(#hcar'+(back?'b':'f')+')"/>';
-    }
-    for(var o=0;o<ord.length;o++){
-      var q=TR[ord[o]], qi=ord[o];
-      g+='<circle cx="'+f(X(q.pos))+'" cy="'+f(Ym(q.pos))+'" r="'+f(rad(q))+'" fill="var(--ink)" '+
-        'stroke="var(--panel)" stroke-width="1.4"><title>'+esc((qi+1)+'. '+q.ko+' · '+q.months+
-        '개월 · '+q.from+(q.months>1?(' ~ '+q.to):''))+'</title></circle>';
-    }
+    // 🚨 2026-08-12 사용자 결정 — 홈에는 **「지금」만** 그린다. 자취(점·화살표)와
+    //   '교과서 순서와 반대' 범례를 뺐다. 자취는 설명을 요구하는 그림이다(왜 되돌아왔나 ·
+    //   주황 점선이 무슨 뜻인가 · 겹친 점은 왜 하나로 보이나). 홈은 그 설명을 놓을 자리가
+    //   아니고, 설명 없이 두면 화살표가 예측처럼 읽힌다. regime.html 이 그 화면이다.
+    // ⚠ cy.trail 은 그대로 받아 둔다 — 아래 링크가 가리키는 곳에서 쓰는 자료이고,
+    //   여기서 안 그린다고 산출을 줄이면 그쪽이 같이 죽는다.
     var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ym(np);
-    var lbl=(TR.length?TR.length+'. ':'')+'지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째';
+    var lbl='지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째';
     var lw=lbl.length*6.6+16, lx=Math.max(2,Math.min(W-lw-2,nx-lw/2));
     g+='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="9" fill="var(--ink)" opacity=".16"/>'+
       '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="4.6" fill="var(--ink)" stroke="var(--ground)" stroke-width="1.6"/>'+
@@ -1686,24 +1671,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<rect x="'+f(lx)+'" y="'+(bot+16)+'" width="'+f(lw)+'" height="19" rx="9.5" fill="var(--ink)"/>'+
       '<text x="'+f(lx+lw/2)+'" y="'+(bot+29)+'" text-anchor="middle" font-size="11" font-weight="700" '+
       'fill="var(--ground)">'+esc(lbl)+'</text>';
-    var defs='<defs>'+
-      '<marker id="hcarf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
-        '<path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>'+
-      '<marker id="hcarb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
-        '<path d="M0 0 L10 5 L0 10 z" fill="var(--marg)"/></marker></defs>';
-    // 🚨 무엇을 뺐는지 적는다. 안 적으면 regime.html 의 그림과 달라 보이는 것이
-    //   '자료가 다르다'로 읽힌다 — 같은 자료의 **압축판**이라는 것을 말해야 한다.
+    // ⚠ 화살촉 marker 정의를 같이 걷었다 — 자취가 없으면 쓰는 곳이 없다. 남겨 두면
+    //   다음 사람이 '자취가 있었나' 하고 되살릴 실마리로 읽는다.
+    // 🚨 머리글의 '2023-06 ~ 2026-08 · 최근 5국면'과 오른쪽 링크도 뺐다(사용자 결정).
+    //   앞의 것은 **자취의 창**을 설명하던 문구라 자취가 빠진 지금은 가리키는 대상이 없다.
+    //   구획 제목의 '지표 39개 전체 →'가 이미 같은 곳으로 보낸다 — 한 카드에 같은 링크를
+    //   두 번 두지 않는다.
     return '<div class="rgsep"></div><div class="rgcyc">'+
-      '<div class="rgcych"><b>경기 사이클</b><span>'+
-      (cy.trail_span?esc(cy.trail_span)+' · ':'')+'최근 '+TR.length+'국면'+
-      '</span><a href="regime.html#cycle">교과서 업종·7국면 자리 →</a></div>'+
-      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 압축판 — '+
+      '<div class="rgcych"><b>경기 사이클</b><span>지금 어디인가</span></div>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 — '+
       '증시 곡선이 경기 곡선보다 앞서고, 현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+
-      '개월째다.">'+defs+g+'</svg>'+
+      '개월째다.">'+g+'</svg>'+
       '<div class="rgcych" style="margin-top:5px">'+
       '<span style="color:var(--hot)">━</span><span>증시</span>'+
       '<span style="color:var(--accent)">━</span><span>경기</span>'+
-      '<span style="color:var(--marg)">┅</span><span>교과서 순서와 반대로 간 이동</span>'+
       '</div></div>';
   }
 
@@ -2215,6 +2196,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<th class="pxc" title="'+esc('그 줄이 ETF 인 행만 값이 있다 — 섹터·지수·스타일 ETF 의 최근 종가(배당조정). 산업그룹·랩 전략 행은 살 수 있는 한 종목이 아니라 비운다')+'">주가</th>'+
           ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '</tr></thead><tbody>';
+    // 🚨 2026-08-12 사용자 요청 — 지수 줄에도 섹터·스타일처럼 묶음 머리줄을 준다.
+    //   종전에는 이 넷만 머리줄 없이 표 맨 위에 떠 있어서, 아래 두 묶음은 무엇인지
+    //   적혀 있는데 맨 위 넷만 정체가 안 적힌 상태였다.
+    // ⚠ 정렬을 적지 않는다. 이 순서는 build/market_board.py 의 INDEX 에 손으로 박힌
+    //   관례 순서(SPY·QQQ·DIA·IWM)이지 계산으로 세운 것이 아니다 — 아래 두 묶음은
+    //   샤프순·시총순이라 적을 근거가 있지만 여기엔 없다. 없는 규칙을 적으면 거짓말이다.
+    if(ix.length)
+      h+='<tr class="grp"><th colspan="'+ncol+'" title="'+
+         esc('SPDR·인베스코·아이셰어즈의 실제 상장 ETF 입니다. 아래 섹터·스타일 줄과 '+
+             '같은 열·같은 창이라 나란히 읽어도 됩니다.')+'">'+
+         '지수 ETF '+ix.length+'종 <em>실제 상품의 수익률 — 아래 묶음과 같은 열·같은 창 '+
+         '<span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     ix.forEach(function(x){h+=stRow(x,'ix',etfSharpe(x.t));});
     // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
     // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.

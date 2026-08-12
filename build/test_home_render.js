@@ -95,12 +95,21 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
       else if (Math.abs(parseFloat(m[1]) - want) > 0.05)
         fail.push("심리 눈금이 점수와 다르다: 눈금 " + m[1] + "% vs 점수 " + want);
     }
-    // 사이클이 섰다면 자취 점이 trail 개수만큼 있어야 한다(「지금」 표시는 별도).
+    // 🚨 2026-08-12 사용자 결정 — 홈 사이클은 **「지금」만** 그린다(자취·화살표·범례 제거).
+    //   그래서 여기서 확인할 것이 뒤집혔다: 자취가 '있는가'가 아니라 '없는가'다.
+    //   ⚠ 이 검사가 없으면 다음에 자취를 되살려도 아무도 모른다. 사용자가 빼라고 한
+    //     것을 조용히 되돌리는 일이 실제로 일어난다 — 못 박아 둔다.
     if (okCy && hasCy) {
-      const nDot = (rg.match(/<circle[^>]*><title>/g) || []).length;
-      const wantDot = (cyj.trail || []).length;
-      if (nDot !== wantDot)
-        fail.push("사이클 자취 점 " + nDot + " ≠ trail " + wantDot + "개");
+      const cycSvg = (rg.match(/class="rgcyc"[\s\S]*$/) || [""])[0];
+      const nDot = (cycSvg.match(/<circle[^>]*><title>/g) || []).length;
+      if (nDot) fail.push("홈 사이클에 자취 점이 " + nDot + "개 있다 — 홈은 「지금」만 그린다");
+      if (/marker-end=/.test(cycSvg))
+        fail.push("홈 사이클에 자취 화살표가 있다 — 홈은 「지금」만 그린다");
+      if (/반대로 간/.test(cycSvg))
+        fail.push("홈 사이클에 '교과서 순서와 반대' 범례가 돌아왔다 — 뺀 문구다");
+      // 「지금」 알약은 반드시 있어야 한다 — 이걸 안 보면 '전부 지웠다'도 통과한다.
+      if (!/지금 ·/.test(cycSvg))
+        fail.push("홈 사이클에 「지금」 표시가 없다 — 그 하나가 이 그림의 전부다");
     }
   }
 
