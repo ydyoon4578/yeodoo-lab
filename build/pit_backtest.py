@@ -554,7 +554,13 @@ def main():
     X = {"FACP": TB.load_factor_proxies(dates), "FU": _fu, "R": R, "dates": dates,
          "hid": {}, "lod": {}, "ixr": ixr, "ixvol": ixvol, "me": me,
          "me_list": sorted(me), "meta": _meta, "px": px, "vlm": vlm,
-         "tickers": tickers}
+         "tickers": tickers,
+         # 🚨 거시 요인 일간 변화(6차 배치). **여기 안 실으면 그 규칙들이 조용히 후보 0 이 된다** —
+         #   채점기는 X 에서 읽고, 없으면 빈 리스트라 macro_beta 가 늘 None 을 낸다.
+         #   그러면 PIT 레그가 '돌았는데 아무것도 안 샀다'가 되어 t 가 안 나온다.
+         #   전 종목이 공유하는 계열이라 편출분을 따로 받을 필요가 없다(랩과 같은 값).
+         "macd10": TB.macro_daily("DGS10", dates),
+         "macfx": TB.macro_daily("DTWEXBGS", dates)}
     # 고가·저가 — x-52wh(고가) · x-lshock·x-ongapd(둘 다) 가 쓴다. 편출 종목분은 HLCACHE 에서
     # 온다. 🚨 종전에는 조건이 `x-52wh 가 제외 목록에 없으면` 이었다. HL 캐시가 있어도
     #   x-52wh 하나의 사정으로 저가·고가 전체가 안 실릴 수 있는 배선이었고, 그 탓에 고저가를
