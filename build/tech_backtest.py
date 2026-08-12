@@ -1102,6 +1102,38 @@ def retained_ratio(f, date, lag=FUND_LAG_DAYS):
     return (re_ / at) if (re_ is not None and at and at > 0) else None
 
 
+MCF_SUF = "-mcf"         # 사전등록 PREREG-2026-08-12-MCAPFLOOR.md — 시가총액 하한 변형
+MCF_CUT = 0.30           # 같은 문서 §2 — 그 월말 후보 시총 하위 30% 를 잘라 낸다
+
+
+def mcap_floor(tickers, X, i, cut=MCF_CUT):
+    """그 월말 후보에서 **시가총액 하위 `cut`** 을 잘라 낸 목록.
+
+    시총 = asof_fund(sh, 신호일) × 종가(신호일). x-small 이 쓰는 그 값 그대로다.
+
+    ⚠ 고정 종목수가 아니라 **분위**로 자른다(x-fip 의 모멘텀 컷과 같은 사유) —
+      유니버스가 커버 사정으로 흔들려도 '하위 30%' 라는 규약이 유지된다.
+    🚨 **시총을 모르는 종목은 통과시킨다(안 자른다).** 사전등록 §2.1 에 돌리기 전에
+      적어 둔 결정이다. 시점별 주식수 커버가 편출 74/87(85%) · 랩 507/519(98%) 로
+      13%p 갈리므로, 모르는 것을 자르면 PIT 레그에서만 편출 종목이 더 빠져
+      후보가 생존자로 좁혀진다 — 이 변형이 없애려는 바로 그 효과다.
+      ⚠ 방향: 이 선택은 편출 소형주를 후보에 남기므로 **편향이 덜 줄어드는 쪽**으로 기운다.
+    """
+    FU, px = X["FU"], X["px"]
+    dt_ = X["dates"][i - 1]
+    mc = {}
+    for t in tickers:
+        sn = asof_fund((FU.get(t) or {}).get("sh"), dt_)
+        p0 = (px.get(t) or [None] * (i))[i - 1] if px.get(t) else None
+        if sn and p0 and sn > 0 and p0 > 0:
+            mc[t] = sn * p0
+    if len(mc) < 2:
+        return tickers                       # 잴 수 있는 것이 없으면 자르지 않는다
+    vals = sorted(mc.values())
+    thr = vals[int(len(vals) * cut)]
+    return [t for t in tickers if mc.get(t) is None or mc[t] >= thr]
+
+
 ACORR_WIN = 120          # 사전등록 PREREG-2026-08-12-PATH.md §2① — 자기상관 추정 창
 VOLR_S, VOLR_L = 21, 252 # 같은 문서 §2② — 단기·장기 변동성 창
 
@@ -3420,6 +3452,32 @@ def build_strats():
          "이 랩에는 이미 저변동성 계열이 넷 있어(x-lowvol·x-ivol·x-lowbeta …) 중립화 없이 "
          "쓰면 그 축을 다시 파는 것이 된다. 중첩 롤링창판·고 VoV 롱판은 등록하지 않았다.")
 
+    # ── 시가총액 하한 변형 3종 — PREREG-2026-08-12-MCAPFLOOR.md ─────────────
+    # 🚨 등록 코드를 새로 쓰지 않는다. **밑동 규칙의 레코드를 그대로 복사**하고 sid·이름만
+    #   바꾼다. fn 이 같은 객체이므로 두 규칙의 산식이 어긋날 자리가 없다 — 사본을 손으로
+    #   옮겨 어긋난 사고가 이 파일에 넷 있었다(xsec_score_at 머리말).
+    #   점수 갈래·사전패스도 새로 안 만든다. xsec_score_at 이 후보를 좁힌 뒤 sid 를
+    #   밑동으로 되돌려 부르므로 원본과 한 글자도 다르지 않은 산식이 돈다.
+    for _base in ("x-mom12", "x-dist200", "x-hlspread"):
+        _b = next((s for s in STRATS if s["sid"] == _base), None)
+        if _b is None:      # 밑동이 목록에서 빠지면 변형도 안 만든다(조용히 지나가지 않게 알린다)
+            print("  ⚠ 시총 하한 변형을 못 만들었다 — 밑동 %s 가 STRATS 에 없다" % _base)
+            continue
+        _v = dict(_b)
+        _v["sid"] = _base + MCF_SUF
+        _v["name"] = _b["name"] + " · 시총 하한(하위 %d%% 제외)" % int(MCF_CUT * 100)
+        _v["rule"] = (_b["rule"] + " 단, 그 월말 후보 중 시가총액 하위 %d%% 를 먼저 잘라 낸다. "
+                      "(시총 = 시점별 주식수 × 종가). 그 밖의 산식은 원본과 같다."
+                      % int(MCF_CUT * 100))
+        _v["why"] = ("재검증(build/REVERIFY-2026-08-12.md §3)에서 CAGR↔생존편향 상관이 0.923 "
+                     "으로 나왔다. 편향이 '나중에 지수에서 빠진 작은 종목'을 통해 들어온다면 "
+                     "시총 하한이 편향을 줄여야 한다 — 그 기전을 시험하는 판이다. "
+                     "⚠ 밑동 %s 의 편향이 이 랩에서 가장 큰 축에 든다. "
+                     "⚠ 시총을 모르는 종목은 통과시킨다(사전등록 §2.1) — 자르면 PIT 레그에서 "
+                     "편출 종목만 더 빠져 후보가 생존자로 좁혀진다. 그래서 이 판은 편향이 "
+                     "덜 줄어드는 쪽으로 기운다." % _b["name"])
+        STRATS.append(_v)
+
     # ── 목록에서 뺀 규칙(2026-07-31, 사용자 결정) ───────────────────────────
     # 여기서 걸러진 규칙은 STRATS 에 들어가지 않는다 — 산출물·다중검정 족 수·PIT·화면 어디에도
     # 안 나온다. 정의(위 등록 코드)는 남긴다. 무엇을 시도했는지가 기록이고, 되살리려면 sid 를
@@ -3671,6 +3729,16 @@ def xsec_score_at(S, i, X, pool=None):
     MACD10, MACFX = X.get("macd10") or [], X.get("macfx") or []
     meta, px, vlm = X["meta"], X["px"], X["vlm"]
     tickers = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool]
+    # ── 시가총액 하한 변형(-mcf) — PREREG-2026-08-12-MCAPFLOOR.md ──────────
+    # 🚨 여기서 좁힌다. 아래 사전패스(x-fip 모멘텀 5분위 · x-hlspread 변동성 회귀 ·
+    #   x-clv/x-volvol 잔차 · E30 합성 · 산업 모멘텀)가 전부 tickers 를 훑으므로,
+    #   갈래마다 따로 거르면 '사전패스는 전 종목, 최종 선택만 후보' 가 되어 선견이 된다.
+    #   pool 마스킹과 같은 자리인 것이 요점이다 — 랩과 PIT 이 같은 함수를 부른다.
+    # sid 를 밑동으로 바꿔 둔다. 그러면 아래 갈래·사전패스가 **한 줄도 안 바뀌고**
+    #   원본과 같은 산식을 쓴다(변형이 갈래를 새로 갖지 않는 것이 핵심이다).
+    if S["sid"].endswith(MCF_SUF):
+        tickers = mcap_floor(tickers, X, i, MCF_CUT)
+        S = dict(S, sid=S["sid"][:-len(MCF_SUF)])
     sc = []
     comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
     ind_raw = {}           # 산업 모멘텀 원지표 — 섹터 정렬도 단면이 다 모여야 한다
