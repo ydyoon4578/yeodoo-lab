@@ -633,6 +633,27 @@ def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED)
 #
 # ⚠ 재작성(restatement) 편향은 남는다. refresh_facts.py가 '제출일이 가장 늦은 값'을 저장하므로
 #   당시 처음 보고된 값이 아니라 나중에 고쳐진 값이다. 이건 데이터로는 못 없앤다 — 적어 둔다.
+# ── 게시 관문 스위치 ─────────────────────────────────────────────────────
+# 🚨 2026-08-12 사용자 결정 — 아래 셋을 **껐다.** 끄는 것과 안 재는 것은 다르다:
+#   수치(incr5·d_sharpe·pit)는 **그대로 계산해서 산출물에 싣는다.** 판정을 강등하지 않을 뿐이다.
+#   그래서 나중에 다시 켜면 과거 산출물로 바로 되돌려 볼 수 있다.
+#
+#   실측(2026-08-12 · 91종 · 임계 3.46) — 무엇이 실제로 막고 있었나:
+#       지금(셋 다 켬)        6종 통과
+#       열위만 끔             6종   ← **아무것도 안 막고 있었다**(|t|>3.46 이면서 Δ샤프≤0 인 규칙 0)
+#       incr5 만 끔          16종   ← 실제로 막던 것은 이것 하나다
+#       셋 다 끔(=단독 t 만)   16종
+#
+#   ⚠ 켜져 있을 때 이 관문들이 무엇을 잡았는지 기록으로 남긴다:
+#       incr5  — x-mommvol(단독 t 4.12 · 이웃 다섯이 전부 모멘텀 · incr5 −0.90)
+#                x-currat (단독 t 3.63 · 이웃 1·2위가 x-cash·x-lowde · incr5 −1.29)
+#       PIT    — 14종을 강등. 측정된 생존편향 중앙 4.32%p · 최대 +49.70%p(x-small:
+#                소급 초과 +40.41 → PIT +1.69).
+GATE_INCR5 = False       # ⓑ 증분알파(이웃 5개 동시 통제) ≥ 2.0
+GATE_DSHARPE = False     # 열위(Δ샤프 ≤ 0) 강등
+GATE_PIT = False         # ⓒ 시점정확 재측정 강등 · 미측정 강등
+GATE_COST = True         # 비용 후(편도 10bp) t ≥ 임계 — 사용자 지시에 없어 그대로 둔다
+
 FUND_LAG_DAYS = 90
 
 
@@ -2715,6 +2736,41 @@ def build_strats():
     #   volsurge 는 거래량의 급변(수준 아님), small 은 시총(대리변수이지 유동성이 아니다).
     # 후보 밀도는 build/probe_liq.py 로 **월별 시계열을 먼저 쟀다**(1차 배치의 실패 때문).
 
+    # ── 유동성 수준 2종 (2026-08-12 선반에서 복귀) ────────────────────
+    # 🚨 2026-08-12 저녁 사용자 결정으로 **자료 타당성 관문을 해제**하고 되살렸다.
+    #   기각 사유 자체는 취소되지 않았다 — 아래 why 에 그대로 남긴다. 판정을 막지 않을 뿐이다.
+    xsec("x-amihud", "비유동성 상위 %d (Amihud)" % TOPN,
+         "일간 |수익률| 을 그날 거래대금으로 나눈 값의 최근 %d거래일 평균이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스." % (AMIHUD_WIN, TOPN),
+         None,
+         "Amihud(2002). "
+         "🚨 이 규칙은 2026-08-04 에 x-illiq 이라는 이름으로 이미 돌려 자료 타당성으로 "
+         "기각했던 것과 같은 계보다(arch 동일). 그때 사유: 거래대금은 미국 상장분인데 가격은 "
+         "회사 전체를 따라 움직이므로 이중클래스 B주와 해외 주력상장이 구조적으로 비유동적으로 "
+         "보인다 — 고른 것이 '거래가 어려운 회사'가 아니라 '미국에서 일부만 거래되는 회사'다. "
+         "실측으로 오늘 보유 10종에 BF.B·FOX·NWS 가 들어 있고 셋 다 그때 지목된 13종이다"
+         "(DATA-FACTS #7). 2026-08-12 사용자 결정으로 그 관문을 해제해 다시 실었다 — "
+         "숫자는 문턱을 넘지만 그 숫자가 무엇을 재는지는 위와 같다.")
+    # ⚠ arch 를 라이브 선언에 안 붙인다 — arch 는 archive_index 의 '이전 판정'
+    #   줄과 잇는 키라, 아카이브에 없는 값을 붙이면 그 줄이 조용히 빈다(검증기가 잡는다).
+    #   계보 기록은 build/tested_not_published.json 의 항목에 arch 로 남아 있다.
+    xsec("x-turn", "저회전율 최하위 %d" % TOPN,
+         "거래량의 최근 %d거래일 평균을 발행주식수로 나눈 값이 가장 작은 %d종목 동일가중, "
+         "월말 리밸런스." % (TURN_WIN, TOPN),
+         None,
+         "Datar·Naik·Radcliffe(1998). "
+         "⚠ DATA-FACTS #7 이 '거래대금 나누기 시가총액(회전율) 계열도 이 집단에서 믿을 수 "
+         "없다'고 적어 두었고, 실측 보유에 NWS·PDD·FER·GOOG 가 있다. 2026-08-12 사용자 "
+         "결정으로 자료 타당성 관문을 해제해 다시 실었다.")
+    xsec("x-reta", "이익잉여금 비율 상위 %d" % TOPN,
+         "이익잉여금 ÷ 총자산이 가장 큰 %d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "Altman(1968) Z-score 의 X2. 누적해서 유보한 이익이 자산에서 차지하는 비중이다. "
+         "⚠ 2026-08-04 에 이미 돌려 미달로 선반에 올렸던 규칙이다(그때 t 3.08 · incr5 1.79). "
+         "2026-08-12 사용자 결정으로 재등록 관문을 해제해 되살렸다. "
+         "⚠ 같은 규칙인데 incr5 가 1.79 → 2.42 로 움직였다 — 규칙이 변한 것이 아니라 이웃 "
+         "집합이 바뀐 것이다(족 78 → 91종). 음수가 정상적으로 나온다(누적 결손) — 안 자른다.")
+
     # ── 손익계산서 위쪽 줄의 서프라이즈 3종 ──────────────────────────
     # 사전등록 build/PREREG-2026-08-12-INCOME-LINES.md 에 **돌리기 전에** 확정해 커밋했다.
     # 🚨 x-sue 는 손익계산서 **맨 아랫줄 하나(EPS)**만 본다. 그 위 줄들이 따로 정보를
@@ -3855,6 +3911,14 @@ def xsec_score_at(S, i, X, pool=None):
         # 🚨 x-sue 와 **같은 sue() 를 그대로** 부른다. 계열만 바꾼다.
         elif sid == "x-sur":
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
+        elif sid == "x-amihud":
+            v = amihud(P, vlm.get(t) or [], i - 1)
+        elif sid == "x-turn":
+            _sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
+            _tv = turnover(vlm.get(t) or [], _sn, i - 1)
+            v = (-_tv) if _tv is not None else None
+        elif sid == "x-reta":
+            v = retained_ratio(FU.get(t) or {}, dates[i - 1])
         # 7차 배치 — PREREG-2026-08-12-PATH.md.
         elif sid == "x-acorr":
             v = autocorr1(R[t], i - 1)
@@ -4791,7 +4855,7 @@ def run():
                         % (_inp, r.get("input_cov") or 0))
         elif t is None:
             r["verdict"] = "판정 불가"
-        elif r["d_sharpe"] <= 0:
+        elif GATE_DSHARPE and r["d_sharpe"] <= 0:
             r["verdict"] = "열위"
         elif abs(t) >= tcrit:
             r["verdict"] = "통과 후보"
@@ -4871,7 +4935,7 @@ def run():
                     #   대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 항상 그만큼 깎인다.
                     "retro_excess": prx, "retro_t": prt, "bias_excess": pbias,
                     "retro_cagr": prc, "bias_cagr": pbc, "bench_bias_cagr": pbb}
-        if r["verdict"] == "통과 후보" and abs(pt) < tcrit:
+        if GATE_PIT and r["verdict"] == "통과 후보" and abs(pt) < tcrit:
             _dg.append((r["name"], r["t"], pt))
             r["verdict"] = "구별 불가"
             r["why"] += (" ⚠ 시점정확(PIT) 재측정에서 이 규칙의 t는 %.2f로 다중검정 문턱(%.2f)에 "
@@ -4908,7 +4972,7 @@ def run():
             pass
     _ug = []
     for r in out:
-        if r.get("verdict") == "통과 후보" and r["sid"] in _pit_excl and not (r.get("pit") or {}):
+        if GATE_PIT and r.get("verdict") == "통과 후보" and r["sid"] in _pit_excl and not (r.get("pit") or {}):
             _ug.append((r["name"], r.get("t")))
             r["verdict"] = "판정 불가"
             # ⚠ 여기 ** 를 쓰지 말 것 — why 는 esc() 를 거쳐 별표가 글자로 찍힌다
@@ -5122,9 +5186,9 @@ def run():
         i5 = (r.get("incr5") or {}).get("t")
         nt = ((r.get("net") or {}).get("sens") or {}).get("10", {}).get("t")
         bad = []
-        if i5 is not None and abs(i5) < 2.0:
+        if GATE_INCR5 and i5 is not None and abs(i5) < 2.0:
             bad.append("증분 알파(이웃 5개 동시 통제) t %.2f < 2.0" % i5)
-        if nt is not None and abs(nt) < tcrit:
+        if GATE_COST and nt is not None and abs(nt) < tcrit:
             bad.append("비용 후(편도 10bp) t %.2f < 임계 %.2f" % (nt, tcrit))
         if not bad:
             continue

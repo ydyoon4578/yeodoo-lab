@@ -228,6 +228,41 @@
   .instbl .iw{display:block;font-size:11px;color:var(--muted);font-weight:400;letter-spacing:-.01em}
   .instbl a{color:var(--accent);text-decoration:none} .instbl a:hover{text-decoration:underline}
 
+  /* 페어 — 형성창 최근접 짝 + 스프레드 */
+  .pwarn{border:1px solid var(--line);border-left:3px solid var(--hot);background:var(--panel-2);
+    padding:9px 12px;margin:10px 0 12px;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  .pchips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+  .pchip{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-2);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:4px 9px;cursor:pointer}
+  .pchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+  .pchip em{font-style:normal;font-weight:400;color:var(--muted);margin-left:5px}
+  .pchip[aria-pressed=true] em{color:var(--panel)}
+  .pbadge{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:800;
+    border:1px solid var(--accent);color:var(--accent);border-radius:2px;padding:0 4px;margin-left:4px}
+  /* 선택된 칩은 배경이 accent 라 accent 테두리·글자가 통째로 사라진다(실측). */
+  .pchip[aria-pressed=true] .pbadge{border-color:var(--panel);color:var(--panel)}
+  .plegend svg{width:24px;height:8px;display:inline-block;vertical-align:middle;margin-right:3px;overflow:visible}
+  .pstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);margin:12px 0}
+  .pstat div{background:var(--panel);padding:7px 9px}
+  .pstat span{display:block;font-size:11px;color:var(--muted)}
+  .pstat b{font-family:var(--mono);font-size:14px;font-weight:800}
+  .pchart{margin:14px 0 4px}
+  .pchart h4{font-size:12.5px;font-weight:700;margin:0 0 5px;color:var(--ink-2)}
+  /* 🚨 직계 자식만. 범례 견본도 .pchart 안의 svg 라, 후손 선택자로 두면 24×8 견본이
+     width:100%·block 이 되어 차트 사이가 통째로 벌어진다(실측). */
+  .pchart>svg{width:100%;height:auto;display:block;overflow:visible}
+  .pchart .pcap{font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:5px}
+  .pl-a{stroke:var(--accent);fill:none;stroke-width:1.6}
+  .pl-b{stroke:var(--ink-2);fill:none;stroke-width:1.6;stroke-dasharray:4 3}
+  .pl-s{stroke:var(--ink);fill:none;stroke-width:1.4}
+  .pl-z{stroke:var(--line);stroke-width:1}
+  .pl-band{stroke:var(--hot);stroke-width:1;stroke-dasharray:3 3;fill:none}
+  .pband-fill{fill:var(--panel-2)}
+  .plegend{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+  .plegend b{font-weight:800}
+  .plegend .la{color:var(--accent)} .plegend .lb{color:var(--ink-2)}
+
   /* IR자료실 — 제출 원문 목록 */
   .irlist{display:flex;flex-direction:column;gap:1px;margin-top:8px}
   .irrow{display:grid;grid-template-columns:190px 96px 1fr auto;gap:2px 12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line-soft)}
@@ -376,7 +411,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
-  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘(전략·원장)만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 으로 뒤집었다 — 오른쪽 넘침을 막으려던
+     방어였는데, 막을 넘침이 애초에 없었고 대신 왼쪽으로 삐져나갔다.
+     실측(2026-08-12 · 뷰포트 1442px): 전략 패널이 x=−17px 에서 시작해 뷰포트 밖에서 잘렸다.
+     카테고리는 브랜드 바로 뒤, 즉 바 왼쪽에 몰려 있고 패널 실폭은 min-width 320px 다(내용이
+     그 안에 들어가 max-width 560px 까지 가지 않는다). 왼쪽 정렬일 때 가장 오른쪽 패널(원장)의
+     오른쪽 끝은 x=624 이고 **뷰포트 폭이 변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라
+     폭이 줄면 여백만 사라지고 내용 시작점은 padding 20px 에 고정되기 때문이다.
+     데스크톱 내비 하한 1101px 에서도 여유 477px(1101·1200·1366·1440 네 폭 실측 넘침 0).
+     ⚠ 되살리려거든 먼저 재라. 그리고 위치 선택자로는 하지 마라 — nav_items.json 에 카테고리가
+     하나 늘면 :last-child 가 엉뚱한 걸 집는다. 넘치는 그 패널만 지목해서 다뤄야 한다. */
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
        padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
@@ -465,6 +510,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#ins" data-nav="co.html#ins"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span><span class="mmd">임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님</span></a>
+          <a class="mmi" href="co.html#pair" data-nav="co.html#pair"><span class="mmn">페어</span><span class="mmb vrej">기각</span><span class="mmd">거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">
@@ -619,6 +665,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <a class="tab" href="#fs"  data-tab="fs">재무제표</a>
     <a class="tab" href="#ir"  data-tab="ir">IR자료실</a>
     <a class="tab" href="#ins" data-tab="ins">내부자 거래</a>
+    <a class="tab" href="#pair" data-tab="pair">페어</a>
   </nav>
 
   <!-- ══ #est — 유일하게 살아있는 탭 ══════════════════════════════════════ -->
@@ -669,6 +716,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div id="insbox"><div class="empty">위에서 종목을 고르면 내부자 거래 기록이 여기에 표시됩니다.</div></div>
   </section>
 
+  <!-- ══ #pair — 페어 트레이딩 형성창 진단 ═══════════════════════════════
+       🚨 이 탭은 **신호가 아니다.** 이 랩은 페어 전략 4종을 전부 기각했다(등급 열위,
+          build/PREREG-2026-08-12-PAIRS-RESULT.md). 그런데도 싣는 이유는 그 전략이
+          '무엇을 고르는가'가 자료에 대해 말해 주는 것이 있기 때문이다 — 거리법은
+          수준 근접으로 짝을 짓지 공변으로 짓지 않는다(AAPL 의 최근접 짝이 리츠다).
+       ⚠ 짝과 진단값은 전부 data/pairs_book.json 에서 온다. 화면이 다시 고르지 않는다. -->
+  <section id="pair" class="panel" aria-labelledby="pair-h">
+    <h2 class="lbl" id="pair-h">페어 <span class="sub" id="pair-sub">SSD 최근접 짝 · 형성창 252거래일</span></h2>
+    <details class="more"><summary>무엇이 담기나 · 이 표를 매매에 쓰면 안 되는 이유</summary><div class="mbody">
+      Gatev·Goetzmann·Rouwenhorst(2006)의 거리법이 이 종목과 가장 가까운 짝으로 고르는
+      종목들입니다. 형성창 252거래일의 정규화 누적수익 경로 차이(SSD)가 최소인 순서이고,
+      같이 실린 상관·반감기·σ·왕복 횟수는 <code>build/pairs_backtest.py</code>가 백테스트와
+      <b>같은 함수</b>로 계산해 <code>data/pairs_book.json</code>에 적어 둔 값입니다.
+      <br>🚨 이 랩은 이 전략을 <b>기각했습니다</b> — 상위 5·20페어 네 갈래 모두 총수익
+      기준으로도 0이고(t_NW ≤ 0.77), 비용을 넣으면 음수입니다. 수렴한 거래는 다리당 +4~5%를
+      벌지만 55%가 6개월 안에 돌아오지 않아 −3.5~4%에 강제청산되어 상쇄됩니다.
+      짝 목록은 매매 근거가 아니라 <b>규칙이 무엇을 고르는지</b>를 보이는 것입니다.</div></details>
+    <div id="pairbox"><div class="empty">위에서 종목을 고르면 그 종목의 최근접 짝이 여기에 표시됩니다.</div></div>
+  </section>
+
   <footer>
     <a href="index.html">← 전략 랩 홈</a> · <a href="stocks.html">종목 개요·내러티브</a> ·
     <a href="method.html">등급·판정 규약</a> · <a href="sources.html#s-wont">못 만든 것</a> ·
@@ -717,7 +784,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ── 탭 ────────────────────────────────────────────────────────────────
-  var TABS=['est','fs','ir','ins','defs'];
+  var TABS=['est','fs','ir','ins','pair','defs'];
   function parseHash(){
     var h=(location.hash||'').replace(/^#/,'');
     var tab=h.split('&')[0].split('=')[0];
@@ -739,6 +806,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(state.tab==='ir'&&state.sel){ensureFilings(state.sel);renderIR(state.sel);}
     if(state.tab==='fs'&&state.sel){ensureFacts(state.sel);renderFS(state.sel);}
     if(state.tab==='ins'&&state.sel){ensureIns(state.sel);renderIns(state.sel);}
+    if(state.tab==='pair'&&state.sel){ensurePairs();renderPair(state.sel);}
   }
   function onHash(){
     var p=parseHash();
@@ -845,6 +913,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     renderFS(s);
     ensureIns(s);
     renderIns(s);
+    // ⚠ 페어만 조건부다. pairs_book.json 은 종목별 파일이 아니라 **공용 224KB** 라,
+    //   탭을 한 번도 안 여는 사용자에게까지 받게 하면 다른 탭이 그만큼 늦어진다.
+    //   탭을 나중에 여는 경로는 showTab() 이 받는다.
+    if(state.tab==='pair'){ensurePairs();renderPair(s);}
   }
 
   // ── 내부자 거래: SEC Form 4/5 분기 데이터셋 수집분 ───────────────────────
@@ -1151,6 +1223,130 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // A→B→(A 도착 전)A 재선택 때 재선택이 카운터를 올리지 않아(위 early return) 정상 응답까지
       // 막히고, 카드가 영구히 '불러오는 중…'에 멈춘다.
       if(state.sel===s)renderDetail(s);
+    });
+  }
+
+  // ── 페어 ──────────────────────────────────────────────────────────────
+  // 🚨 짝도 진단값도 여기서 고르지 않는다 — data/pairs_book.json 을 그대로 읽는다.
+  //   화면이 다시 계산하면 백테스트와 다른 페어를 보여줄 수 있고, 그러면 이 탭은
+  //   이 랩의 산출물이 아니라 별개의 계산이 된다(채점기가 두 벌인 사고).
+  // ⚠ 스프레드 곡선만 가격에서 직접 그린다. 정규화가 결정적이라(형성창 첫날 = 1) 재현이
+  //   정확하고, **밴드의 σ 는 json 이 준 값**을 쓴다 — 그래야 그림의 ±2σ 가 백테스트의
+  //   진입 문턱과 같은 숫자가 된다.
+  var PB=null,PBL=0,PXC={};
+  function ensurePairs(){
+    if(PB||PBL)return;
+    PBL=1;
+    getj('data/pairs_book.json').then(function(x){PB=x||{_fail:1};if(state.tab==='pair'&&state.sel)renderPair(state.sel);});
+  }
+  function ensurePx(t,cb){
+    if(PXC[t]){cb(PXC[t]);return;}
+    getj('data/sd/'+encodeURIComponent(t)+'.json').then(function(j){
+      PXC[t]=(j&&j.pxd)?j.pxd:null;cb(PXC[t]);});
+  }
+  function pline(v,x0,w,y0,h,lo,hi){
+    var n=v.length,d='',i,sx=w/(n-1||1),sy=(hi>lo)?h/(hi-lo):0;
+    for(i=0;i<n;i++){
+      if(v[i]==null||v[i]!==v[i])continue;
+      d+=(d?'L':'M')+(x0+i*sx).toFixed(1)+' '+(y0+h-(v[i]-lo)*sy).toFixed(1);
+    }
+    return d;
+  }
+  function renderPair(s){
+    var box=el('pairbox'),sub=el('pair-sub');
+    if(!box)return;
+    if(!s){box.innerHTML='<div class="empty">위에서 종목을 고르면 그 종목의 최근접 짝이 여기에 표시됩니다.</div>';return;}
+    if(!PB){box.innerHTML='<div class="skel">페어 자료(data/pairs_book.json)를 불러오는 중…</div>';return;}
+    if(PB._fail){box.innerHTML='<div class="empty">data/pairs_book.json을 불러오지 못했습니다. '+
+      '<b>없는 것을 지어내지 않습니다.</b></div>';return;}
+    if(sub)sub.textContent='SSD 최근접 짝 · 형성창 '+PB.form_from+'~'+PB.form_to+'('+PB.form_days+'거래일)';
+    var row=(PB.by_t||{})[s.t];
+    if(!row||!row.length){
+      box.innerHTML='<div class="empty">'+esc(s.t)+'은 형성창 '+esc(PB.form_from)+'~'+esc(PB.form_to)+
+        ' 에 종가가 다 차지 않아 짝을 계산하지 못했습니다(상장이 늦은 종목입니다). '+
+        '<b>없는 것을 지어내지 않습니다.</b></div>';return;
+    }
+    if(!s._pairSel||!row.some(function(p){return p.b===s._pairSel;}))s._pairSel=row[0].b;
+    var cur=null,i;
+    for(i=0;i<row.length;i++)if(row[i].b===s._pairSel)cur=row[i];
+    var chips=row.map(function(p){
+      return '<button class="pchip" type="button" data-p="'+esc(p.b)+'" aria-pressed="'+
+        (p.b===s._pairSel?'true':'false')+'">'+esc(p.b)+'<em>SSD '+p.ssd.toFixed(2)+'</em>'+
+        (p['in']&&p['in'].length?'<span class="pbadge">'+esc(p['in'].join(' '))+'</span>':'')+'</button>';
+    }).join('');
+    var warn='<div class="pwarn">🚨 <b>매매 신호가 아닙니다.</b> 이 랩은 페어 전략 네 갈래를 '+
+      '전부 <b>기각</b>했습니다(등급 열위) — 거래비용을 넣기 전에도 총수익이 0입니다. '+
+      '아래 짝은 GGR 거리법이 <b>무엇을 고르는지</b>를 보이는 표입니다.</div>';
+    var stat='<div class="pstat">'+
+      '<div><span>SSD(경로 거리)</span><b>'+cur.ssd.toFixed(3)+'</b></div>'+
+      '<div><span>일간수익 상관</span><b>'+cur.corr.toFixed(2)+'</b></div>'+
+      '<div><span>스프레드 반감기</span><b>'+(cur.hl==null?'—':cur.hl+'일')+'</b></div>'+
+      '<div><span>스프레드 σ</span><b>'+(cur.sd*100).toFixed(2)+'%</b></div>'+
+      '<div><span>지금 z</span><b>'+(cur.z>0?'+':'')+cur.z.toFixed(2)+'σ</b></div>'+
+      '<div><span>형성창 ±2σ 왕복</span><b>'+cur.trips+'회</b></div>'+
+      '</div>';
+    box.innerHTML=warn+'<div class="pchips">'+chips+'</div>'+stat+
+      '<div id="paircharts"><div class="skel">가격 계열을 불러오는 중…</div></div>';
+    Array.prototype.forEach.call(box.querySelectorAll('.pchip'),function(b){
+      b.addEventListener('click',function(){s._pairSel=b.getAttribute('data-p');renderPair(s);});
+    });
+    ensureDetail(s);
+    ensurePx(cur.b,function(pb){
+      if(state.sel!==s||s._pairSel!==cur.b)return;      // 스테일 응답 버림
+      var host=el('paircharts');if(!host)return;
+      var pa=s.pxd,dts=(DATA&&DATA.pxd_dates)||[];
+      if(!pa||!pa.length||!pb||!pb.length||pa.length!==pb.length){
+        host.innerHTML='<div class="empty">가격 계열을 나란히 놓을 수 없습니다('+esc(s.t)+' '+
+          (pa?pa.length:0)+'일 vs '+esc(cur.b)+' '+(pb?pb.length:0)+'일). 격자가 다르면 그리지 않습니다.</div>';
+        return;
+      }
+      var n=PB.form_days,i0=pa.length-n;
+      if(i0<0){host.innerHTML='<div class="empty">형성창만큼의 가격이 없습니다.</div>';return;}
+      var A=[],B=[],SP=[],a0=pa[i0],b0=pb[i0];
+      if(!a0||!b0){host.innerHTML='<div class="empty">형성창 첫날 종가가 없어 정규화할 수 없습니다.</div>';return;}
+      for(i=0;i<n;i++){
+        var va=pa[i0+i],vb=pb[i0+i];
+        A.push(va==null?null:va/a0*100);B.push(vb==null?null:vb/b0*100);
+        SP.push((va==null||vb==null)?null:(va/a0-vb/b0));
+      }
+      var W=680,H=150,PADL=34,PADR=6,PADT=8,PADB=16,iw=W-PADL-PADR,ih=H-PADT-PADB;
+      var fin=function(x){return x!=null&&x===x;};
+      var all=A.concat(B).filter(fin),lo=Math.min.apply(null,all),hi=Math.max.apply(null,all);
+      var pad=(hi-lo)*0.06||1;lo-=pad;hi+=pad;
+      var g1='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="정규화 가격 경로">'+
+        '<line class="pl-z" x1="'+PADL+'" y1="'+(PADT+ih)+'" x2="'+(PADL+iw)+'" y2="'+(PADT+ih)+'"/>'+
+        '<text x="2" y="'+(PADT+8)+'" font-size="10" fill="var(--muted)">'+hi.toFixed(0)+'</text>'+
+        '<text x="2" y="'+(PADT+ih)+'" font-size="10" fill="var(--muted)">'+lo.toFixed(0)+'</text>'+
+        '<path class="pl-a" d="'+pline(A,PADL,iw,PADT,ih,lo,hi)+'"/>'+
+        '<path class="pl-b" d="'+pline(B,PADL,iw,PADT,ih,lo,hi)+'"/></svg>';
+      var sfin=SP.filter(fin),sd=cur.sd,slo=Math.min.apply(null,sfin.concat([-2.4*sd])),
+          shi=Math.max.apply(null,sfin.concat([2.4*sd]));
+      var spad=(shi-slo)*0.08||0.01;slo-=spad;shi+=spad;
+      var yy=function(v){return PADT+ih-(v-slo)/(shi-slo)*ih;};
+      var g2='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="스프레드와 ±2σ 밴드">'+
+        '<rect class="pband-fill" x="'+PADL+'" y="'+yy(2*sd).toFixed(1)+'" width="'+iw+
+          '" height="'+Math.max(0,(yy(-2*sd)-yy(2*sd))).toFixed(1)+'"/>'+
+        '<line class="pl-band" x1="'+PADL+'" y1="'+yy(2*sd).toFixed(1)+'" x2="'+(PADL+iw)+'" y2="'+yy(2*sd).toFixed(1)+'"/>'+
+        '<line class="pl-band" x1="'+PADL+'" y1="'+yy(-2*sd).toFixed(1)+'" x2="'+(PADL+iw)+'" y2="'+yy(-2*sd).toFixed(1)+'"/>'+
+        '<line class="pl-z" x1="'+PADL+'" y1="'+yy(0).toFixed(1)+'" x2="'+(PADL+iw)+'" y2="'+yy(0).toFixed(1)+'"/>'+
+        '<text x="2" y="'+(yy(2*sd)-2).toFixed(1)+'" font-size="10" fill="var(--hot)">+2σ</text>'+
+        '<text x="2" y="'+(yy(-2*sd)+9).toFixed(1)+'" font-size="10" fill="var(--hot)">−2σ</text>'+
+        '<path class="pl-s" d="'+pline(SP,PADL,iw,PADT,ih,slo,shi)+'"/></svg>';
+      host.innerHTML=
+        '<div class="pchart"><h4>정규화 가격 경로 — 형성창 첫날 = 100</h4>'+g1+
+          // 범례 견본은 차트와 **같은 클래스**의 선을 그린다 — 글리프(━ ╌)로 흉내 내면
+          // 실선/점선 구분이 글꼴에 따라 사라진다(실측: 둘 다 점처럼 보였다).
+          '<div class="plegend">'+
+          '<svg width="24" height="8" aria-hidden="true"><path class="pl-a" d="M0 4 L24 4"/></svg><b class="la">'+esc(s.t)+'</b> · '+
+          '<svg width="24" height="8" aria-hidden="true"><path class="pl-b" d="M0 4 L24 4"/></svg><b class="lb">'+esc(cur.b)+'</b> · '+
+          esc(dts[i0]||'')+' ~ '+esc(dts[pa.length-1]||'')+'</div>'+
+          '<div class="pcap">거리법은 이 두 선이 벌어진 넓이(SSD)를 최소화해 짝을 짓습니다. '+
+          '<b>같이 움직이는가(상관)와는 다른 축</b>입니다 — 여기서는 상관이 '+cur.corr.toFixed(2)+'입니다.</div></div>'+
+        '<div class="pchart"><h4>스프레드와 ±2σ 밴드 — 규칙이 실제로 보는 선</h4>'+g2+
+          '<div class="pcap">스프레드가 밴드 밖으로 나가면 싼 쪽을 사고 비싼 쪽을 팔며, '+
+          '0을 교차할 때 청산합니다. 형성창 안에서 그 왕복이 '+cur.trips+'회 있었고, '+
+          '지금은 '+(cur.z>0?'+':'')+cur.z.toFixed(2)+'σ 입니다. '+
+          '🚨 백테스트에서는 이 진입의 <b>55%가 6개월 안에 0으로 돌아오지 않아</b> 손실로 잘렸습니다.</div></div>';
     });
   }
 

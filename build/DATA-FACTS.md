@@ -633,7 +633,7 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 69, "narrow_rules": 22, "incr5_rules": 91}
+ "xsec_rules": 72, "narrow_rules": 22, "incr5_rules": 94}
 -->
 
 ⚠ 2026-08-11 갱신. 횡단면 51 → 57 · 전체 72 → 78 은 **원 전략 바스켓 크기 6종**이다

@@ -306,7 +306,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
-  .navcat:last-child .mmpanel,.navcat:nth-last-child(2) .mmpanel{left:auto;right:0}
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘(전략·원장)만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 으로 뒤집었다 — 오른쪽 넘침을 막으려던
+     방어였는데, 막을 넘침이 애초에 없었고 대신 왼쪽으로 삐져나갔다.
+     실측(2026-08-12 · 뷰포트 1442px): 전략 패널이 x=−17px 에서 시작해 뷰포트 밖에서 잘렸다.
+     카테고리는 브랜드 바로 뒤, 즉 바 왼쪽에 몰려 있고 패널 실폭은 min-width 320px 다(내용이
+     그 안에 들어가 max-width 560px 까지 가지 않는다). 왼쪽 정렬일 때 가장 오른쪽 패널(원장)의
+     오른쪽 끝은 x=624 이고 **뷰포트 폭이 변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라
+     폭이 줄면 여백만 사라지고 내용 시작점은 padding 20px 에 고정되기 때문이다.
+     데스크톱 내비 하한 1101px 에서도 여유 477px(1101·1200·1366·1440 네 폭 실측 넘침 0).
+     ⚠ 되살리려거든 먼저 재라. 그리고 위치 선택자로는 하지 마라 — nav_items.json 에 카테고리가
+     하나 늘면 :last-child 가 엉뚱한 걸 집는다. 넘치는 그 패널만 지목해서 다뤄야 한다. */
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
        padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
@@ -394,6 +404,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
           <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
           <a class="mmi" href="co.html#ins" data-nav="co.html#ins"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span><span class="mmd">임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님</span></a>
+          <a class="mmi" href="co.html#pair" data-nav="co.html#pair"><span class="mmn">페어</span><span class="mmb vrej">기각</span><span class="mmd">거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">

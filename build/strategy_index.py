@@ -83,6 +83,11 @@ def holds_kind(h):
     k = h.get("kind")
     if k == "xsec" and h.get("tickers"):
         return "종목"
+    # 페어 롱숏 — 보유 단위가 종목이 아니라 **쌍**이다. 티커 목록으로 접으면 'AEE 를
+    # 들고 있다'로 읽히는데 실제로 들고 있는 것은 AEE 롱 + CNP 숏이고, 그 방향조차
+    # 형성 시점에는 정해져 있지 않다(스프레드가 ±2σ 벌어질 때 정해진다).
+    if k == "pair" and h.get("weights"):
+        return "페어"
     if k in ("asset", "sleeve") and h.get("weights"):
         return "비중"
     if k == "timing":
@@ -477,6 +482,9 @@ def main() -> int:
             start=r.get("start"), end=r.get("end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), beta=r.get("beta"),
+            # 지금의 페어북 — 보유 단위가 쌍이라 holds 가 '페어'로 잡힌다(holds_kind 참조).
+            # ⚠ 이걸 안 넘기면 목록에 전략만 있고 **무엇을 사는지가 없다.**
+            holdings=r.get("holdings"),
             nav=r.get("nav"), bnav=r.get("bnav"),
         ))
 
@@ -695,7 +703,7 @@ def main() -> int:
         "by_holds": dict(Counter(r["holds"] for r in rows)),
         "by_cmp": {"가능": sum(1 for r in rows if r["cmp_ok"]),
                    "애매": sum(1 for r in rows if not r["cmp_ok"])},
-        "holds_order": ["종목", "비중", "노출", "없음"],
+        "holds_order": ["종목", "비중", "페어", "노출", "없음"],
         "pr_note": "‘같은 구간 지수(PR)’는 판정용이 아니라 세상의 눈금이다. 전략과 같은 함수·같은 "
                    "월말 주기로 재 CAGR·변동성·MDD·샤프를 모두 싣는다. 다만 전략 수익은 배당을 "
                    "재투자한 총수익(TR)인데 지수는 가격지수(PR)라 배당이 빠져 있고, 2006년 이후 "
