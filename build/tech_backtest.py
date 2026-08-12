@@ -1009,6 +1009,47 @@ def sue(series, date, lag=FUND_LAG_DAYS, win=8):
     return (cur / sd) if sd > 1e-9 else None
 
 
+RSKEW_WIN = 60           # 사전등록 PREREG-2026-08-12-MOMENTS.md §2② 에서 확정.
+MOMVOL_VWIN = 126        # 같은 문서 §2① — 모멘텀의 분모(실현변동성) 창.
+
+
+def realized_skew(R, i, win=RSKEW_WIN):
+    """그 종목 자신의 최근 win 일 **실현 왜도**. 사전등록 PREREG-2026-08-12-MOMENTS.md §2②.
+
+    🚨 x-coskew 와 다른 것을 잰다. coskew 는 **시장과의** 공편왜도(체계적 3차 적률)이고
+      이것은 그 종목 자기 수익률 분포의 비대칭이다. 같은 '왜도'라는 말을 쓰지만 축이 다르다.
+    ⚠ 표본왜도(g1)를 쓴다 — 조정계수를 붙이지 않는다. 창이 60이라 조정은 1%p 미만이고,
+      조정 여부로 순위가 바뀌면 그건 신호가 아니라 추정량 선택이 된다.
+    """
+    if i < win:
+        return None
+    xs = [R[j] for j in range(i - win + 1, i + 1) if R[j] is not None]
+    n = len(xs)
+    if n < win * 0.8:
+        return None
+    m = sum(xs) / n
+    m2 = sum((x - m) ** 2 for x in xs) / n
+    if m2 <= 1e-18:
+        return None
+    m3 = sum((x - m) ** 3 for x in xs) / n
+    return m3 / (m2 ** 1.5)
+
+
+def mom_vol_scaled(P, R, i, vwin=MOMVOL_VWIN):
+    """12-1 모멘텀 ÷ 그 종목의 실현변동성. 사전등록 §2①.
+
+    ⚠ 원문(Barroso·Santa-Clara 2015)은 **포트폴리오** 수익을 그 전략의 실현변동성으로
+      나눠 노출을 조절한다. 이것은 그 착상을 **횡단면 순위**로 옮긴 것이라 같은 규칙이
+      아니다 — 그 사실을 규칙 설명에 적는다. 원문 수치를 이 규칙의 기대치로 읽지 않는다.
+    """
+    m = ret(P, i, 252)
+    m1 = ret(P, i, 21)
+    v = vol(R, i, vwin)
+    if m is None or m1 is None or not v or v <= 0:
+        return None
+    return ((1.0 + m) / (1.0 + m1) - 1.0) / v
+
+
 AMIHUD_WIN = 60          # 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2① 에서 확정. 바꾸지 않는다.
 TURN_WIN = 60            # 같은 문서 §2②.
 
