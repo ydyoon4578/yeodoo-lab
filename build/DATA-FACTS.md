@@ -584,7 +584,7 @@ PIT 재판정 코드가 이랬다:
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 62, "narrow_rules": 20, "incr5_rules": 84}
+ "xsec_rules": 64, "narrow_rules": 20, "incr5_rules": 86}
 -->
 
 ⚠ 2026-08-11 갱신. 횡단면 51 → 57 · 전체 72 → 78 은 **원 전략 바스켓 크기 6종**이다
