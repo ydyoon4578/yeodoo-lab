@@ -221,6 +221,90 @@ def pick_basis(bench, both, hint="D"):
     return ("D" if both.get("D") else "M"), False
 
 
+def _regime_months():
+    """월(YYYY-MM) → 국면 키. data/regime.json 의 history 가 단일 출처다."""
+    R = load("regime.json") or {}
+    return {h["dt"][:7]: h["r"] for h in (R.get("history") or []) if h.get("dt") and h.get("r")}
+
+
+def _regime_meta(months):
+    """국면별 표본 크기 — **개월 수와 '연속 구간' 수를 둘 다** 싣는다.
+
+    🚨 이것이 이 표의 핵심이다. 과열은 26개월이지만 **전부 한 덩어리**(2021-04~2023-05)이고
+      후기사이클은 4개월 한 덩어리다. 즉 '과열에 강한 전략'은 26개의 독립 관측이 아니라
+      **사건 하나**에서 좋았던 전략이라는 뜻이다. 개월 수만 적으면 화면이 그 사실을 숨긴다.
+    ⚠ 이 랩은 이미 '7국면이 다음 달을 못 가른다'를 정식으로 검정했다(data/regime.json 의
+      fwd_note). 그러므로 이 표는 **검정이 아니라 서술**이다 — 국면을 보고 전략을 고르라는
+      뜻으로 읽으면 안 된다.
+    """
+    cyc = load("regime_cycle.json") or {}
+    ko = {p["k"]: p.get("ko") or p["k"] for p in (cyc.get("phases") or [])}
+    order = [p["k"] for p in (cyc.get("phases") or [])]
+    n, runs, prev = {}, {}, None
+    for m in sorted(months):
+        k = months[m]
+        n[k] = n.get(k, 0) + 1
+        if k != prev:
+            runs[k] = runs.get(k, 0) + 1
+        prev = k
+    return {"order": [k for k in order if k in n] or sorted(n),
+            "ko": {k: ko.get(k, k) for k in n},
+            "now": (cyc.get("now") or {}).get("r"),
+            "now_ko": (cyc.get("now") or {}).get("ko"),
+            "n": n, "runs": runs,
+            "span": (min(months) + "~" + max(months)) if months else None,
+            "note": "국면별 **월평균 수익**이다. ⚠ 검정이 아니라 서술이다 — 이 랩은 7국면이 "
+                    "다음 달을 못 가른다는 것을 이미 검정했다(regime.json 의 fwd_note). "
+                    "🚨 개월 수보다 **연속 구간 수**를 먼저 보라. 과열 26개월은 전부 한 덩어리"
+                    "(2021-04~2023-05)이고 후기사이클은 4개월 한 덩어리다 — 그 칸의 순위는 "
+                    "관측 26개가 아니라 **사건 하나**에서 나온 것이다. 구간이 여럿인 것은 "
+                    "골디락스(6)와 회복(6)뿐이다."}
+
+
+def _monthly_rets(rec_):
+    """전략 레코드에서 월별 수익(%) 목록 [(YYYY-MM, r)] 을 꺼낸다.
+
+    두 모양을 받는다 — chart.monthly(랩·자산 랩)와 dates+nav(배포 원장). 배포 쪽은 월별
+    수익 배열이 아예 없어서 nav 에서 만든다. ⚠ 여기서 만든 값은 화면에 그리지 않는다.
+    국면 평균을 내는 데만 쓴다(그림은 원본 nav 를 그대로 쓴다).
+    """
+    ch = rec_.get("chart") or {}
+    mo = ch.get("monthly") or rec_.get("monthly")
+    if mo:
+        out = []
+        for row in mo:
+            if not isinstance(row, dict):
+                continue
+            m, r = row.get("m") or row.get("dt"), row.get("r")
+            if m and isinstance(r, (int, float)):
+                out.append((str(m)[:7], float(r)))
+        if out:
+            return out
+    dts, nav = rec_.get("dates") or ch.get("dates"), rec_.get("nav") or ch.get("nav")
+    if dts and nav and len(dts) == len(nav) and len(str(dts[0])) == 7:
+        return [(str(dts[i])[:7], (nav[i] / nav[i - 1] - 1) * 100.0)
+                for i in range(1, len(nav)) if nav[i - 1]]
+    return []
+
+
+def _regime_stats(rets, months, min_n=8):
+    """국면별 월평균. 표본이 min_n 미만인 국면은 **넣지 않는다**(칸이 비고 '—' 로 나간다).
+
+    ⚠ 0 이나 전체 평균으로 채우지 않는다 — 후기사이클(4개월)처럼 못 재는 칸을 숫자로 채우면
+      화면이 없는 것을 지어내게 된다.
+    """
+    g = {}
+    for m, r in rets:
+        k = months.get(m)
+        if k:
+            g.setdefault(k, []).append(r)
+    out = {}
+    for k, v in g.items():
+        if len(v) >= min_n:
+            out[k] = {"v": round(sum(v) / len(v), 2), "n": len(v)}
+    return out or None
+
+
 def rec(**kw):
     for key in ("nav", "bnav"):
         if kw.get(key):
@@ -671,6 +755,26 @@ def main() -> int:
     # ⚠ 이 가드는 'sid 가 바뀌어 제외가 조용히 풀렸나'를 보는 것이다. 그런데 앞의 채권 대조군
     #   필터가 먼저 지운 전략은 rows 에 없어 '못 찾음'으로 오인된다 — 두 제외는 공존해야 한다.
     #   그래서 이미 다른 사유로 빠진 sid 도 찾은 것으로 센다.
+    # ── 국면별 성적 — 사용자 요청 2026-08-12(경기 사이클과 전략을 잇는다) ──────────
+    # 🚨 이름으로 잇는다. 원천마다 sid 접두사가 다른데(t-·a-·r-·접두사 없음) 그 규칙을 여기
+    #   또 적으면 한쪽만 고쳐지는 날이 온다. 이름은 이 파일이 이미 배포 원장 조인에 쓰는 키다.
+    _RGM = _regime_months()
+    if _RGM:
+        _mon = {}
+        for _f in ("tech_strategies.json", "asset_strategies.json", "guru_clone.json",
+                   "pairs_strategies.json"):
+            for _x in ((load(_f) or {}).get("strategies") or []):
+                if isinstance(_x, dict) and _x.get("name"):
+                    _mon.setdefault(_x["name"], _monthly_rets(_x))
+        for _nm, _x in ((load("strategy_backtests.json") or {}).get("strategies") or {}).items():
+            _mon.setdefault(_nm, _monthly_rets(_x))
+        _hit = 0
+        for _r in rows:
+            _st = _regime_stats(_mon.get(_r["name"]) or [], _RGM)
+            if _st:
+                _r["rg"] = _st; _hit += 1
+        print("  국면별 성적 %d/%d종 (%s)" % (_hit, len(rows), _regime_meta(_RGM)["span"]))
+
     _found = ({r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
               | {sid for sid in HIDE_SIDS if sid in _hidden_sids})
     _hid2 = [(r["name"], r["role"]) for r in rows if r["sid"] in HIDE_SIDS]
@@ -738,6 +842,7 @@ def main() -> int:
                     "위험감축은 목표가 낙폭이라 상시보유와 CAGR·샤프로 겨루면 "
                     "지는 것이 정상이고, 대조군이 현금성이면 샤프 분모가 0에 가까워 Δ가 허수가 된다. "
                     "그런 전략은 따로 묶어 낙폭·위기 구간으로 본다.",
+        "rg_meta": _regime_meta(_RGM) if _RGM else None,
         "by_role": dict(Counter(r["role"] for r in rows)),
         "by_grade": dict(Counter(r["grade"] for r in rows)),
         "by_src": dict(Counter(r["src"] for r in rows)),
