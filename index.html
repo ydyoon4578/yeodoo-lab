@@ -456,6 +456,32 @@
   .rgchip b{font-weight:700;color:var(--ink)}
   .rgchip span{color:var(--ink-2)}
   .rgchip.cond{border-style:dashed}
+  /* ── 심리 띠 · 압축 사이클 (2026-08-12 사용자 요청) ─────────────────────────
+     둘 다 국면 카드 **안**에 넣는다. 국면·심리·사이클은 "지금 어디인가" 하나의 질문이라
+     구획을 셋으로 쪼개면 같은 질문이 세 번 나온다. 카드 안에서 옅은 선으로만 가른다. */
+  .rgsep{margin:13px -18px 0;border-top:1px solid var(--line-soft)}
+  .rgsn{padding-top:12px}
+  .rgsnh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .rgsnn{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--snc,var(--ink))}
+  .rgsnn small{font-size:11px;font-weight:500;color:var(--muted);margin-left:1px}
+  .rgsnl{font-size:12.5px;font-weight:700;color:var(--snc,var(--ink-2))}
+  .rgsnp{margin-left:auto;font-size:11px;color:var(--muted)}
+  /* 눈금 띠 — 0~100 을 다섯 구간으로. 색은 '좋다/나쁘다'가 아니라 차갑다/뜨겁다 축이다. */
+  .rgsbar{position:relative;height:6px;border-radius:3px;margin:8px 0 0;
+    background:linear-gradient(90deg,var(--sn-xfear),var(--sn-fear) 25%,var(--sn-neut) 50%,var(--sn-greed) 75%,var(--sn-xgreed))}
+  .rgsbar i{position:absolute;top:-3px;width:2px;height:12px;background:var(--ink);
+    border-radius:1px;box-shadow:0 0 0 2px var(--panel);transform:translateX(-1px)}
+  .rgspark{display:block;width:100%;height:34px;margin:7px 0 0}
+  .rgsprev{margin:7px 0 0;display:flex;flex-wrap:wrap;gap:5px}
+  .rgsprev b{font-size:11px;font-weight:600;background:var(--panel-2);border:1px solid var(--line-soft);
+    border-radius:2px;padding:2px 8px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .rgsprev b i{font-style:normal;color:var(--muted);margin-right:5px}
+  .rgcyc{padding-top:12px}
+  .rgcyc svg{display:block;width:100%;height:auto}
+  .rgcych{display:flex;align-items:baseline;gap:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+  .rgcych b{font-size:12px;font-weight:700;color:var(--ink-2)}
+  .rgcych a{margin-left:auto;font-size:11px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)}
+  .rgcych a:hover{color:var(--ink)}
   .rgwarn{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px}
   .sttbl .pxc{color:var(--ink-2);font-variant-numeric:tabular-nums}
   .sttbl .pxc.mut{color:var(--muted);text-align:center}
@@ -1557,6 +1583,130 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   좋다/나쁘다가 아닌 것). 여건 축은 테두리를 점선으로 두어 성격 차이를 남긴다.
   var RGC={Goldilocks:'--rg-gold',Recovery:'--rg-recov',SoftLanding:'--rg-soft',
            LateCycle:'--rg-late',Overheating:'--rg-over',Stagflation:'--rg-stag',Recession:'--rg-rec'};
+  // ── 심리 띠 ──────────────────────────────────────────────────────────────
+  // 🚨 2026-08-12 사용자 요청. 자료는 **이미 홈에 와 있었다**(home_market.json.sentiment) —
+  //   받아만 놓고 아무 데도 안 그렸다. 새 요청도, 새 파일도 없다. 배선만 잇는다.
+  // ⚠ 문턱표(0/20/40/60/80)를 여기 두지 않는다. build/home_market.py 가 band 키를 준다 —
+  //   화면에 적으면 regime.html 의 BANDS 와 두 벌이 되고 같은 점수가 두 이름으로 불린다.
+  function snBlock(){
+    var s=MK.sn; if(!s||s.score==null||isNaN(s.score))return '';
+    var v=Math.max(0,Math.min(100,s.score));
+    var c=s.band?('var(--sn-'+s.band+')'):'var(--muted)';
+    var pv=s.prev||{};
+    var pl=[['1일 전',pv.d1],['1주 전',pv.w1],['1개월 전',pv.m1]].filter(function(x){return x[1]!=null;});
+    return '<div class="rgsep"></div><div class="rgsn" style="--snc:'+c+'">'+
+      '<div class="rgsnh"><span class="rgsnn">'+s.score.toFixed(1)+'<small>/100</small></span>'+
+      '<span class="rgsnl">'+esc(s.label||'')+'</span>'+
+      '<span class="rgsnp">시장 심리'+(s.score_pctl!=null?
+        ' · 전체 이력 대비 하위 '+(Math.round(s.score_pctl*1000)/10)+'%':'')+'</span></div>'+
+      '<div class="rgsbar" role="img" aria-label="시장 심리 '+s.score.toFixed(1)+
+        '점 · 0은 극단공포 100은 극단탐욕 · 현재 '+esc(s.label||'')+
+        '"><i style="left:'+v+'%"></i></div>'+
+      spark(s.scores,c,s.hist_start)+
+      (pl.length?'<div class="rgsprev">'+pl.map(function(x){
+        var d=s.score-x[1];
+        return '<b><i>'+x[0]+'</i>'+x[1].toFixed(1)+' ('+(d>=0?'+':'')+d.toFixed(1)+')</b>';
+      }).join('')+'</div>':'')+
+      // ⚠ 구성요소 결측 경고는 원본에만 있던 것이 아니다 — 점수가 재정규화된 것이면
+      //   그 사실 없이 숫자만 보이면 안 된다. 홈에서도 같이 낸다.
+      (s.weight_available!=null&&s.weight_available<0.999?
+        '<div class="rgsprev"><b style="color:var(--hot)">⚠ 구성요소 일부 결측 · 가용 가중치 '+
+        Math.round(s.weight_available*100)+'%로 재정규화</b></div>':'')+
+      '</div>';
+  }
+  // 스파크라인 — 최근 750거래일. x 는 등간격 인덱스다(날짜를 안 싣는 대신).
+  function spark(a,c,d0){
+    if(!a||a.length<8)return '';
+    var v=a.filter(function(x){return x!=null;});
+    if(v.length<8)return '';
+    var lo=Math.min.apply(null,v), hi=Math.max.apply(null,v), rg=(hi-lo)||1;
+    var W=300,H=34,P=2, d='', n=a.length, seen=0;
+    for(var i=0;i<n;i++){
+      if(a[i]==null)continue;
+      var x=P+(W-2*P)*i/(n-1), y=P+(H-2*P)*(1-(a[i]-lo)/rg);
+      d+=(seen++?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+    }
+    if(!d)return '';
+    return '<svg class="rgspark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" '+
+      'aria-label="시장 심리 최근 '+n+'거래일'+(d0?'('+esc(d0)+'부터)':'')+' 추이">'+
+      '<path d="'+d+'" fill="none" stroke="'+c+'" stroke-width="1.4" vector-effect="non-scaling-stroke" '+
+      'stroke-linejoin="round"/></svg>';
+  }
+
+  // ── 압축 경기 사이클 ─────────────────────────────────────────────────────
+  // 🚨 regime.html 의 것을 그대로 옮기지 않는다(1200×720 · 교과서 업종상자 + 단계 알약 +
+  //   7국면 띠). 이 칸은 2열 중 한 칸(≈640px)이라 그대로는 안 들어간다.
+  //   여기 남기는 것은 **이 랩이 실제로 잰 것**뿐이다 — 두 곡선 · 「지금」 · 자취.
+  //   교과서 층(업종·단계·7국면 자리)은 regime.html 이 그 화면이다. 링크로 보낸다.
+  // ⚠ 곡선 식의 바닥 위치는 **자료에서 읽는다**(ref.mkt_trough). 여기 0.02 를 박으면
+  //   빌더·regime.html·홈 세 곳이 되고, 빌더에서 바꿨을 때 점과 곡선이 어긋난다.
+  var CYC=null;
+  function cycBlock(){
+    var cy=CYC; if(!cy||!cy.ref||!cy.now)return '';
+    var R=cy.ref, now=cy.now, TR=cy.trail||[];
+    var W=560,H=170,PL=14,PR=14,x0=PL,x1=W-PR;
+    var top=26,bot=132,mid=(top+bot)/2,amp=(bot-top)/2*0.9;
+    var LEAD=(R.lead==null?0.2:R.lead), T0=(R.mkt_trough==null?0.02:R.mkt_trough);
+    var X=function(p){return x0+p*(x1-x0);};
+    var Ym=function(p){return mid+amp*Math.cos(2*Math.PI*(p-T0));};
+    var Ye=function(p){return mid+amp*Math.cos(2*Math.PI*(p-T0-LEAD));};
+    var f=function(v){return v.toFixed(1);};
+    function pathOf(fn){var d='';for(var i=0;i<=180;i++){var p=i/180;d+=(i?'L':'M')+f(X(p))+' '+f(fn(p));}return d;}
+    var g='<path d="'+pathOf(Ye)+'" fill="none" stroke="var(--accent)" stroke-width="1.8" opacity=".85"/>'+
+          '<path d="'+pathOf(Ym)+'" fill="none" stroke="var(--hot)" stroke-width="1.8" opacity=".85"/>';
+    // 자취 — 큰 점부터(산출이 준 순서). 같은 국면으로 되돌아오면 한 자리에 포개진다.
+    var ord=cy.trail_z; if(!(ord&&ord.length===TR.length)){ord=[];for(var i2=0;i2<TR.length;i2++)ord.push(i2);}
+    var rad=function(q){return 3.2+Math.min(4.4,q.months/3.4);};
+    for(var t2=1;t2<TR.length;t2++){
+      var a=TR[t2],b0=TR[t2-1];
+      var ax=X(a.pos),ay=Ym(a.pos),bx=X(b0.pos),by=Ym(b0.pos);
+      var sx=bx,sy=by,ex=ax,ey=ay;
+      if(ex<sx){var _t=sx;sx=ex;ex=_t;_t=sy;sy=ey;ey=_t;}
+      var dx=ex-sx,dy=ey-sy,L=Math.sqrt(dx*dx+dy*dy)||1;
+      var bu=(t2%2?-1:1)*Math.min(26,Math.max(10,L*0.16));
+      var cx=(bx+ax)/2+(-dy/L)*bu, cyy=(by+ay)/2+(dx/L)*bu;
+      var vx=ax-cx,vy=ay-cyy,vl=Math.sqrt(vx*vx+vy*vy)||1,pull=rad(a)+5;
+      var back=(a.dir==='back');
+      g+='<path d="M'+f(bx)+' '+f(by)+' Q'+f(cx)+' '+f(cyy)+' '+f(ax-(vx/vl)*pull)+' '+f(ay-(vy/vl)*pull)+
+        '" fill="none" stroke="'+(back?'var(--marg)':'var(--ink)')+'" stroke-width="1.5" opacity=".85" '+
+        'stroke-linecap="round"'+(back?' stroke-dasharray="5 3"':'')+' marker-end="url(#hcar'+(back?'b':'f')+')"/>';
+    }
+    for(var o=0;o<ord.length;o++){
+      var q=TR[ord[o]], qi=ord[o];
+      g+='<circle cx="'+f(X(q.pos))+'" cy="'+f(Ym(q.pos))+'" r="'+f(rad(q))+'" fill="var(--ink)" '+
+        'stroke="var(--panel)" stroke-width="1.4"><title>'+esc((qi+1)+'. '+q.ko+' · '+q.months+
+        '개월 · '+q.from+(q.months>1?(' ~ '+q.to):''))+'</title></circle>';
+    }
+    var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ym(np);
+    var lbl=(TR.length?TR.length+'. ':'')+'지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째';
+    var lw=lbl.length*6.6+16, lx=Math.max(2,Math.min(W-lw-2,nx-lw/2));
+    g+='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="9" fill="var(--ink)" opacity=".16"/>'+
+      '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="4.6" fill="var(--ink)" stroke="var(--ground)" stroke-width="1.6"/>'+
+      '<line x1="'+f(nx)+'" y1="'+f(ny+7)+'" x2="'+f(nx)+'" y2="'+(bot+14)+'" stroke="var(--ink)" stroke-width="1.1"/>'+
+      '<rect x="'+f(lx)+'" y="'+(bot+16)+'" width="'+f(lw)+'" height="19" rx="9.5" fill="var(--ink)"/>'+
+      '<text x="'+f(lx+lw/2)+'" y="'+(bot+29)+'" text-anchor="middle" font-size="11" font-weight="700" '+
+      'fill="var(--ground)">'+esc(lbl)+'</text>';
+    var defs='<defs>'+
+      '<marker id="hcarf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+        '<path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker>'+
+      '<marker id="hcarb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">'+
+        '<path d="M0 0 L10 5 L0 10 z" fill="var(--marg)"/></marker></defs>';
+    // 🚨 무엇을 뺐는지 적는다. 안 적으면 regime.html 의 그림과 달라 보이는 것이
+    //   '자료가 다르다'로 읽힌다 — 같은 자료의 **압축판**이라는 것을 말해야 한다.
+    return '<div class="rgsep"></div><div class="rgcyc">'+
+      '<div class="rgcych"><b>경기 사이클</b><span>'+
+      (cy.trail_span?esc(cy.trail_span)+' · ':'')+'최근 '+TR.length+'국면'+
+      '</span><a href="regime.html#cycle">교과서 업종·7국면 자리 →</a></div>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 압축판 — '+
+      '증시 곡선이 경기 곡선보다 앞서고, 현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+
+      '개월째다.">'+defs+g+'</svg>'+
+      '<div class="rgcych" style="margin-top:5px">'+
+      '<span style="color:var(--hot)">━</span><span>증시</span>'+
+      '<span style="color:var(--accent)">━</span><span>경기</span>'+
+      '<span style="color:var(--marg)">┅</span><span>교과서 순서와 반대로 간 이동</span>'+
+      '</div></div>';
+  }
+
   function drawRegime(){
     var box=el('rg-card'); if(!box)return;
     var R=MK.rg;
@@ -1577,6 +1727,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // ⚠ 여기 있던 '국면은 상태 표시이지 매매 신호가 아니다 …' 넉 줄을 뺐다(2026-08-10 사용자 결정).
       //   내용이 틀려서가 아니라 카드마다 같은 말을 반복해 화면을 밀어냈기 때문이다.
       //   그 판정(국면 규칙 4회 검정·4회 기각)은 전략 랩과 복제 리포트가 수치로 싣고 있다.
+      snBlock()+cycBlock()+
       '</div>';
     var sub=el('rg-sub');
     if(sub)sub.textContent='· FRED '+(R.n_indicators||0)+'지표 · 기준일 '+(R.as_of||'');
@@ -1584,10 +1735,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   getj('home_market.json').then(function(j){
     MK.rg=(j&&j.regime)||false;
-    drawRegime();
+    // ⚠ 심리를 국면 카드 **안**에 그리므로 drawRegime 보다 먼저 채워야 한다.
+    //   순서를 바꾸면 첫 그림에 심리 띠가 빠지고, 아무도 다시 안 그린다.
     MK.sn=(j&&j.sentiment)||false;
+    drawRegime();
     syncAsof(); staleCheck();
     // FRED 지표 수는 눈썹에서 뺐다(2026-08-10) — regime.html 이 그 화면이다.
+  });
+
+  // 압축 사이클 자료(13KB). **국면 카드와 따로 온다** — 늦게 와도 카드는 이미 서 있고,
+  // 도착하면 다시 그린다. 못 받으면 사이클 부분만 빠진다(fail-soft, 카드는 그대로).
+  getj('regime_cycle.json').then(function(j){
+    if(!j||!j.ref)return;
+    CYC=j;
+    if(MK.rg)drawRegime();
   });
 
 
