@@ -1107,6 +1107,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var m=kmeta(k); return (m&&m.label)||k;
   }
   function alab(a){return (a&&KINDS&&KINDS.archetypes&&KINDS.archetypes[a])||a||'';}
+  // 목록 셋째 딱지(배포 원장·아카이브 원장의 묶음 이름). 'EPS 리비전 강건성'·'RP 강건성'·
+  // '단일팩터·검증' 같은 말이 그대로 나가고 있었다(사용자 요청 2026-08-12).
+  function clab(c){return (c&&KINDS&&KINDS.cat_labels&&KINDS.cat_labels[c])||c||'';}
   function kchip(k){return '<span class="kchip" style="--kc:'+kcol(k)+'">'+esc(klab(k))+'</span>';}
   // 성격별 1차 지표 조회 — metrics.s(단일계열) → metrics.vs(관계) → metrics.profile(보조) 순.
   // ⚠ 못 찾으면 null을 돌려 화면이 '—(미산출)'을 찍는다. 추정치를 만들지 않는 것이 이 사이트의 계약이다.
@@ -1491,7 +1494,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(state.q){var extra=d.det?(" "+(d.det.pros||[]).join(" ")+" "+(d.det.cons||[]).join(" ")+" "+(d.det.applications||[]).join(" ")+" "+(d.det.archetype||"")+" "+(d.det.kind||"")+" "+(d.det.identity||"")):"";
         // ⚠ 근거를 vp 로 옮겼으므로 검색 건초더미에도 같이 넣는다 — 안 넣으면 'PIT'·'증분'
         //   같은 말로 찾던 것이 조용히 안 걸린다.
-        var hay=(d.n+" "+d.t+" "+d.c+" "+d.vt+" "+((d.vp||[]).join(" "))+" "+(d.vpn||"")+extra).toLowerCase();
+        // 🚨 쉬운 이름도 **반드시** 같이 넣는다. 화면에는 '얼마씩 담을까'라고 써 놓고 건초더미에는
+        //   '배분기'만 있으면, 보이는 말을 그대로 쳤을 때 0건이 나온다(실측으로 잡았다).
+        //   옛 이름도 남겨 둔다 — 원장·리포트를 보고 온 사람은 그쪽 말로 찾는다.
+        var lab=" "+klab(kindOf(d))+" "+alab((d.det&&d.det.archetype)||"")+" ";
+        var hay=(d.n+" "+d.t+" "+d.c+" "+clab(d.c)+lab+d.vt+" "+((d.vp||[]).join(" "))+" "+(d.vpn||"")+extra).toLowerCase();
         if(hay.indexOf(state.q)<0)return false;}
       return true;
     });
@@ -1605,7 +1612,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       b.innerHTML='<span class="vdot"></span>'+
         '<span class="body"><span class="nm">'+esc(d.n)+(d.bt?'<span class="btcue" title="백테스트 차트 있음">📊</span>':'')+'</span>'+
         '<span class="sub">'+(state.sort==='kind'?'':'<span class="atag" title="'+esc(kindOf(d))+'" style="border-color:color-mix(in srgb,'+kcol(kindOf(d))+' 45%,transparent)">'+esc(klab(kindOf(d)))+'</span>')+
-        (d.det&&d.det.archetype?atag(d.det.archetype):'')+'<span>'+esc(d.c)+'</span>'+
+        (d.det&&d.det.archetype?atag(d.det.archetype):'')+'<span title="'+esc(d.c)+'">'+esc(clab(d.c))+'</span>'+
         // 년 단위로 적는다 — '199개월' 은 옆 줄의 '70개월' 과 몇 배 차이인지 한눈에 안 온다.
         // 구간이 있으면 그것으로, 없으면 개월수를 나눈다(둘 다 없으면 안 적는다).
         (function(){
@@ -2499,10 +2506,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     detailEl.innerHTML=
       // ① 정체성 헤더 — 판정 배지는 여기 없다(⑧로 이동)
       '<div class="dtop">'+
-        '<div class="dbadges">'+kchip(k)+'<span class="rbadge">'+esc(d.c)+'</span>'+arche+
+        '<div class="dbadges">'+kchip(k)+'<span class="rbadge" title="'+esc(d.c)+'">'+esc(clab(d.c))+'</span>'+arche+
           ((d.bt&&d.bt.is_proxy)?'<span class="pxbadge" title="원자료를 구할 수 없어 근사 구현으로 대체한 계열입니다">프록시 구현</span>':'')+'</div>'+
         '<h2>'+esc(d.n)+'</h2>'+
-        '<div class="dcat">'+esc(d.c)+(d.alias?' · <span class="dalias">'+esc(d.alias)+'</span>':'')+'</div>'+
+        '<div class="dcat" title="'+esc(d.c)+'">'+esc(clab(d.c))+(d.alias?' · <span class="dalias">'+esc(d.alias)+'</span>':'')+'</div>'+
       '</div>'+
       // ② 이 전략은 무엇을 하는가 — 카드에서 가장 먼저 읽히는 본문
       '<div style="padding:17px 24px 15px;border-bottom:1px solid var(--line-soft)">'+
