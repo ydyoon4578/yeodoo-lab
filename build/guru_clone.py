@@ -20,7 +20,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tech_backtest import (ann_stats, tstat, maxdd, curve_pack,  # noqa: E402
+from tech_backtest import (ann_stats, tstat, maxdd, curve_pack, load_index_tr,  # noqa: E402
                            risk_bootstrap)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -194,7 +194,8 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     return {
         "sid": "guru-clone", "arch": "13f-best-ideas-clone",
         # 이 판은 월 단위라 날짜 계열이 months다(다른 판은 일별 DTS를 dd에 담는다)
-        "chart": curve_pack(months[st:], nav, bn),
+        # 지수 곡선도 같이 싣는다(자산 랩과 같은 사유 — 배선이 없어 안 실리고 있었다).
+        "chart": curve_pack(months[st:], nav, bn, idx_rets=load_index_tr(months[st:])),
         "bench_label": "S&P 500(PR) 매수후보유",
         "name": "13F 컨빅션 복제 (상위 %d종목)" % TOPN,
         "rule": "분기말 13F에서 (운용사 포트폴리오 내 비중 합) × (보유 운용사 수)가 높은 %d종목을 "

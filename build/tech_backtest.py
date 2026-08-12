@@ -411,7 +411,18 @@ def load_index_tr(dates):
         print("  [지수곡선] assets.json 없음 — 지수 곡선 생략:", str(e)[:60])
         return {}
     adates = A.get("dates") or []
-    pos = {d: i for i, d in enumerate(adates)}
+    # 🚨 격자가 **월말('YYYY-MM')** 로 들어오기도 한다 — 자산 랩의 슬리브 결합 전략이 그렇다.
+    #   그때 일간 격자로 찾으면 전부 못 찾아 커버 부족으로 조용히 빠지고, 그 카드만 지수 곡선이
+    #   없는 채로 나온다(실측: HRP Sleeve 등 자산 랩 61종 전부가 그 상태였다).
+    #   여기서 한 번에 처리한다 — 같은 일을 하는 함수를 두 벌 두지 않는다.
+    monthly = bool(dates) and all(len(str(d)) == 7 for d in dates)
+    if monthly:
+        last_of = {}
+        for i, d in enumerate(adates):
+            last_of[d[:7]] = i            # 그 달의 **마지막** 거래일 위치
+        pos = last_of
+    else:
+        pos = {d: i for i, d in enumerate(adates)}
     out = {}
     for tk, label in (("^GSPC", "S&P 500"), ("^NDX", "NASDAQ 100"), ("RSP", "동일가중 S&P 500")):
         raw = (A.get("px") or {}).get(tk)
