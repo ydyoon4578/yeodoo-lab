@@ -2363,7 +2363,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   중소형 SIZE 는 그대로 뺀다 — 대응 방법론 size 가 ST_HIDE 라 짝이 반쪽이다.
     // ⚠ 표에서만 거른다. st 배열 자체는 건드리지 않는다 — 아래 지수 방법론 묶음이 이 배열로
     //   순서를 만들므로, 여기서 지우면 그 줄이 경고 없이 사라진다.
-    var ETF_KEEP={RSP:1, SDY:1};
+    // 🚨 2026-08-13 — 7종을 더했다(사용자 요청). 이 줄에 안 넣으면 **표에 안 나온다** —
+    //   위 짝 판정(labOf)이 '랩 방법론과 짝이 있는 것만' 싣는데 이 일곱은 짝이 없다.
+    //   RSP·SDY 를 넣은 것과 같은 사유다: 짝이 없다는 것과 볼 필요가 없다는 것은 다르다.
+    //   ⚠ SPLV 는 USMV 와 초과수익 상관 +0.915 로 사실상 같은 줄이다(build/market_board.py
+    //     의 STYLE 주석에 전 쌍 실측이 있다). 그걸 알고 나란히 두는 것이다.
+    var ETF_KEEP={RSP:1, SDY:1, SPMO:1, IVW:1, RPV:1, SPLV:1, SCHD:1, VYM:1, PKW:1};
     var pair=[], solo=[];
     st.forEach(function(x){ (labOf(x.t)||ETF_KEEP[x.t]?pair:solo).push(x); });
     // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
