@@ -334,6 +334,15 @@
   .vblock .vpts li::before{content:"· ";color:var(--muted)}
   .vblock .vpts li b{color:var(--ink);font-weight:700}
   .vblock .vtn{margin:7px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
+  .vblock .vwhy{margin:5px 0 0}
+  .vblock .vwhy>summary{cursor:pointer;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    list-style:none;display:inline-flex;align-items:center;gap:5px}
+  .vblock .vwhy>summary::-webkit-details-marker{display:none}
+  .vblock .vwhy>summary::before{content:"▸";font-size:10px}
+  .vblock .vwhy[open]>summary::before{content:"▾"}
+  .vblock .vwhy>summary:hover{color:var(--accent)}
+  .vblock .vwb{margin-top:6px;padding-left:11px;border-left:2px solid var(--line-soft);
+    font-size:12.5px;line-height:1.7;color:var(--ink-2)}
   .powerbox{margin-top:12px;padding:11px 13px;border-radius:2px;background:var(--panel);border:1px solid var(--line-soft)}
   .powerbox h5{margin:0 0 7px;font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--ink-2)}
   .powerbox svg{width:100%;height:auto;display:block;max-width:420px;overflow:visible}
@@ -2382,7 +2391,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '<span class="vmean">'+esc(VMETA[d.v].mean)+
             (VMETA[d.v].orig!==VMETA[d.v].lab?' <span style="opacity:.75">(원 판정 표기: '+esc(VMETA[d.v].orig)+')</span>':'')+
             '</span></div>'+
-          '<p class="vt"><b>판정 근거 —</b> '+d.vt+'</p>'+
+          (function(){
+            // 🚨 규칙 자신의 서술(why)은 한 문단이 아니라 **첫 문장 + 접힘**이다. 지우지 않는다 —
+            //   이 랩이 '전제·한계'를 접어 둔 것과 같은 규약이고, 지우면 왜 그 규칙인지가
+            //   화면에서 사라진다. 첫 문장만 남기면 강조 딱지가 맨 앞에 살아남는다.
+            var s=d.vt||'', cut=-1, i=s.indexOf('다. ');
+            if(i>0)cut=i+2; else { i=s.indexOf('. '); if(i>0&&i<220)cut=i+1; }
+            var lead=s, rest='';
+            if(cut>0&&s.length-cut>80){
+              var head=s.slice(0,cut);
+              // 태그 한가운데서 자르지 않는다 — <b> 개수가 안 맞으면 안 자른다.
+              if((head.match(/<b>/g)||[]).length===(head.match(/<\/b>/g)||[]).length){
+                lead=head; rest=s.slice(cut).trim();
+              }
+            }
+            return '<p class="vt"><b>판정 근거 —</b> '+lead+'</p>'+
+              (rest?'<details class="vwhy"><summary>왜 이 규칙인가 · 자세히</summary>'+
+                    '<div class="vwb">'+rest+'</div></details>':'');
+          })()+
           ((d.vp&&d.vp.length)?'<ul class="vpts">'+d.vp.map(function(s){
             return '<li>'+s+'</li>';}).join('')+'</ul>':'')+
           (d.vpn?'<p class="vtn">'+esc(d.vpn)+'</p>':'')+
