@@ -408,17 +408,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
            padding:7px;z-index:70}
   .mmpanel[hidden]{display:none}
-  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘(전략·원장)만
-     `:last-child,:nth-last-child(2){left:auto;right:0}` 으로 뒤집었다 — 오른쪽 넘침을 막으려던
-     방어였는데, 막을 넘침이 애초에 없었고 대신 왼쪽으로 삐져나갔다.
-     실측(2026-08-12 · 뷰포트 1442px): 전략 패널이 x=−17px 에서 시작해 뷰포트 밖에서 잘렸다.
-     카테고리는 브랜드 바로 뒤, 즉 바 왼쪽에 몰려 있고 패널 실폭은 min-width 320px 다(내용이
-     그 안에 들어가 max-width 560px 까지 가지 않는다). 왼쪽 정렬일 때 가장 오른쪽 패널(원장)의
-     오른쪽 끝은 x=624 이고 **뷰포트 폭이 변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라
-     폭이 줄면 여백만 사라지고 내용 시작점은 padding 20px 에 고정되기 때문이다.
-     데스크톱 내비 하한 1101px 에서도 여유 477px(1101·1200·1366·1440 네 폭 실측 넘침 0).
-     ⚠ 되살리려거든 먼저 재라. 그리고 위치 선택자로는 하지 마라 — nav_items.json 에 카테고리가
-     하나 늘면 :last-child 가 엉뚱한 걸 집는다. 넘치는 그 패널만 지목해서 다뤄야 한다. */
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 로 뒤집었다 — 그 규칙은 틀렸던 게
+     아니라 **자기 레이아웃보다 오래 살아남았다**. 메가메뉴는 10칸으로 출발했고(2026-07-25)
+     그때 마지막 두 칸은 바 오른쪽 끝에 있어서 오른쪽 정렬이 실제로 넘침을 막고 있었다.
+     이후 10→6(2026-07-25)→5(748cbf58 공시 탭)→4(741fbe1d 가치 탭, 2026-08-12)로 줄면서
+     버튼이 왼쪽으로 밀려왔는데 규칙은 따라오지 않았다. 위치 선택자가 집는 대상은 그대로인데
+     그 대상이 서 있는 자리가 바뀐 것이다.
+     실측(뷰포트 1442px · 버튼 한 칸 55px): 5칸일 때 전략 패널은 x=38 에서 시작해 멀쩡했다.
+     가치 탭이 빠져 4칸이 되자 딱 한 칸만큼 왼쪽으로 밀려 38−55 = x=−17 — 뷰포트 밖에서 잘렸다.
+     사용자가 "왼쪽이 살짝 잘린다"고 한 그 17px 이고, 오늘 생긴 회귀다.
+     왼쪽 정렬은 안전하다. 패널 실폭은 min-width 320px 로 고정이고(내용이 그 안에 들어가
+     max-width 560px 까지 가지 않는다) 가장 오른쪽 패널의 오른쪽 끝은 x=624 로 **뷰포트 폭이
+     변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라 폭이 줄면 여백만 사라지고 내용
+     시작점은 padding 20px 에 남기 때문이다. 데스크톱 하한 1101px 에서도 여유 477px
+     (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
+     ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
+     또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
   .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
        padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
