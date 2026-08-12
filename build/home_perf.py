@@ -77,6 +77,16 @@ def main():
                "XLU": "유틸리티", "XLRE": "부동산", "XLB": "소재"}
     sdates, spos = adates, apos          # ETF 도 assets.json 격자다 — 지수 줄과 같은 날짜
 
+    # ── 스타일: 표의 '스타일 ETF' 묶음과 **같은 목록**이어야 한다 ────────────
+    # 🚨 최근에 스타일 ETF 를 7종 더 받았지만(SPMO·IVW·RPV·SPLV·SCHD·VYM·PKW) 여기 안 넣는다.
+    #   이 파일의 계약은 "각 선의 끝값이 아래 표의 그 칸과 같다" 이고, 그 표에 없는 줄을
+    #   그리면 곧바로 깨진다. 표(build/market_board.py 의 STYLE)에 들어가는 날 같이 넣을 것.
+    # ⚠ SPY·IWM 은 뺀다 — 화면(index.html 의 ST_SKIP)이 그 둘을 스타일 묶음에서 빼고
+    #   지수 줄로 올린다. 여기서만 넣으면 그림에 있는 선이 표에 없다.
+    STY_ETF = [("MTUM", "모멘텀"), ("QUAL", "퀄리티"), ("IVE", "가치"), ("USMV", "저변동"),
+               ("RPG", "성장"), ("SDY", "배당성장"), ("SPHB", "고베타"), ("SIZE", "중소형"),
+               ("RSP", "동일가중")]
+
     out = {"note": ("홈 '기간별 수익률' 위 시계열. 🚨 끝점이 아래 표의 그 칸과 같도록 "
                     "표와 **같은 정의**로 만든다 — 섹터는 기준일 대비 종목별 비율의 평균이다. "
                     "만든 곳 build/home_perf.py."),
@@ -96,7 +106,7 @@ def main():
             continue
         aidx = thin(list(range(ai, len(adates))), MAXPT)
         sidx = thin(list(range(si, len(sdates))), MAXPT)
-        blk = {"dates": [adates[i] for i in aidx], "ix": {}, "sec": {},
+        blk = {"dates": [adates[i] for i in aidx], "ix": {}, "sec": {}, "sty": {},
                "sec_dates": [sdates[i] for i in sidx]}
         for t, nm in IX:
             a = apx.get(t)
@@ -110,6 +120,14 @@ def main():
                 continue
             blk["sec"][nm] = [None if a[i] is None else round((a[i] / a[si] - 1) * 100, 2)
                               for i in sidx]
+        # 스타일 — 섹터와 같은 격자·같은 기준일. 자료가 기준일에 없으면 그 줄만 뺀다
+        # (0 으로 채우지 않는다 — 상장 전 구간을 '수익 0' 으로 그리게 된다).
+        for _t, nm in STY_ETF:
+            a = apx.get(_t)
+            if not a or a[si] in (None, 0):
+                continue
+            blk["sty"][nm] = [None if a[i] is None else round((a[i] / a[si] - 1) * 100, 2)
+                              for i in sidx]
         out["series"][hz] = blk
 
     io.open(OUT, "w", encoding="utf-8").write(
@@ -120,8 +138,9 @@ def main():
         s2 = out["series"].get(hz)
         if not s2:
             continue
-        print("   %-4s 기준 %s · 점 %d · 지수 %d · 섹터 %d"
-              % (hz, out["base_dates"][hz], len(s2["dates"]), len(s2["ix"]), len(s2["sec"])))
+        print("   %-4s 기준 %s · 점 %d · 지수 %d · 섹터 %d · 스타일 %d"
+              % (hz, out["base_dates"][hz], len(s2["dates"]), len(s2["ix"]),
+                 len(s2["sec"]), len(s2["sty"])))
     return 0
 
 
