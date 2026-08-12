@@ -240,17 +240,24 @@ def _regime_meta(months):
     cyc = load("regime_cycle.json") or {}
     ko = {p["k"]: p.get("ko") or p["k"] for p in (cyc.get("phases") or [])}
     order = [p["k"] for p in (cyc.get("phases") or [])]
-    n, runs, prev = {}, {}, None
+    n, runs, prev, eps = {}, {}, None, {}
     for m in sorted(months):
         k = months[m]
         n[k] = n.get(k, 0) + 1
         if k != prev:
             runs[k] = runs.get(k, 0) + 1
+            eps.setdefault(k, []).append([m, m])
+        else:
+            eps[k][-1][1] = m
         prev = k
     return {"order": [k for k in order if k in n] or sorted(n),
             "ko": {k: ko.get(k, k) for k in n},
             "now": (cyc.get("now") or {}).get("r"),
             "now_ko": (cyc.get("now") or {}).get("ko"),
+            # 🚨 실제 시기를 같이 싣는다. '과열 26개월'만 적으면 26개의 관측처럼 보이는데
+            #   실제로는 2021-04~2023-05 한 덩어리다. 화면이 그 날짜를 그대로 적어야
+            #   읽는 사람이 '아 그 인플레 구간 얘기구나' 하고 제대로 값을 깎아 읽는다.
+            "episodes": eps,
             "n": n, "runs": runs,
             "span": (min(months) + "~" + max(months)) if months else None,
             "note": "국면별 **월평균 수익**이다. ⚠ 검정이 아니라 서술이다 — 이 랩은 7국면이 "
