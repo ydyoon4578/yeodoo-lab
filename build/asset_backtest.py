@@ -465,6 +465,11 @@ ROLE = {
     "guru-clone": "수익엔진",
     # 고전 타이밍 규칙 — 전부 '언제 들어가 있을까'만 정하므로 타이밍오버레이다.
     # 변동성 타깃은 노출을 위로 늘리지 않고 줄이기만 해 성격이 다르다(위험감축).
+    # 섹터 로테이션 10종(2026-08-12) — 어느 섹터를 살지 고르므로 수익엔진이다.
+    "sec-tsmom": "수익엔진", "sec-dual": "수익엔진", "sec-lowvol": "수익엔진",
+    "sec-52wh": "수익엔진", "sec-rev1m": "수익엔진", "sec-lowcorr": "수익엔진",
+    "sec-sma200": "수익엔진", "sec-term": "수익엔진", "sec-vix": "수익엔진",
+    "sec-halloween": "수익엔진",
     "sma200": "타이밍오버레이", "golden-cross": "타이밍오버레이", "abs-mom": "타이밍오버레이",
     "seasonal": "타이밍오버레이", "curve-inv": "타이밍오버레이", "vix-level": "타이밍오버레이",
     "unrate-trend": "타이밍오버레이", "timing-ensemble": "타이밍오버레이",
@@ -1200,6 +1205,181 @@ def build():
                  "하나 더 높게 잡았다(a7-fidelity 대비 증분 t ≥ +2.0). 이 랩엔 낙폭만 줄이는 "
                  "게이트가 이미 여섯이고 전부 구별 불가라, 낙폭 축소는 증거가 아니다.")
     add("a7b-gate-sector", "business-cycle-sector-rotation", s_a7b)
+
+    # ══ 섹터 로테이션 10종 (사전등록 PREREG-2026-08-12-SECROT.md) ══════════
+    # 🚨 기존 섹터 축은 '가중'(섹터RP)과 '국면 판정'(4국면·A7b·Conover) 둘뿐이었고 전부
+    #   구별 불가·열위였다. 그래서 이 열은 국면 판정식을 또 만들지 않는다 — 가격 자체의
+    #   추세·상대강도·변동성·상관·계절성, 그리고 국면을 판정하지 않고 관측치 하나의 부호만
+    #   쓰는 것(곡선·VIX)이다. 국면 판정의 자유도가 세 번 진 자리다.
+    # 🚨 XLC(2018-06)·XLRE(2015-10)는 안 넣는다. 넣으면 구간이 8년으로 잘리거나 앞구간
+    #   후보가 9→11 로 부는 램프가 생긴다(DATA-FACTS #3 과 같은 사고). 그래서 이 열은
+    #   통신·부동산을 영영 못 산다 — 등록 §2 에 그렇게 적었다.
+    # ⚠ 대조군은 전부 같은 9섹터 동일가중이다. SPY 로 두면 '섹터를 골랐다'가 아니라
+    #   '동일가중이 시총가중을 이겼다'를 재게 된다(vs_traded 에서 반복 확인한 것).
+    # ⚠ 화면 문구(rule·why)에 마크다운을 쓰지 않는다 — esc() 를 타므로 별표가 그대로 찍힌다.
+    CYC6 = ["XLK", "XLY", "XLF", "XLI", "XLB", "XLE"]
+    DEF3 = ["XLP", "XLV", "XLU"]
+    S9ST = first_common(SEC9)
+
+    def _s9bench(i):
+        return {t: 1.0 for t in SEC9}
+
+    def _topn(score, i, n=3, rev=False):
+        """그 시점 점수 상위(또는 하위) n섹터 동일가중. 점수가 None 인 섹터는 후보에서 뺀다."""
+        sc = [(t, score(t, i)) for t in SEC9]
+        sc = [(t, v) for t, v in sc if v is not None]
+        if len(sc) < n:
+            return {}
+        sc.sort(key=lambda x: x[1], reverse=not rev)
+        return {t: 1.0 for t, _ in sc[:n]}
+
+    def _sec(sid, label, wfn, rule, why, note=None):
+        # ⚠ arch 는 기각 아카이브의 '이전 판정' 링크다. 이 열은 새 규칙이라 이전 판정이
+        #   없으므로 빈 값으로 둔다 — 기존 항목을 갖다 붙이면 카드가 남의 판정을 자기 것처럼 적는다.
+        add(sid, "", lambda: run_weights(wfn, S9ST, label, _s9bench, rule, why, note=note))
+
+    # ① 시계열 모멘텀 — Moskowitz·Ooi·Pedersen (2012) JFE 104(2)
+    _sec("sec-tsmom", "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
+         lambda i: ({t: 1.0 for t in SEC9 if (ret(ser(t), i, 252) or -1) > 0} or {"SHY": 1.0}),
+         "월말에 직전 252거래일 수익이 양수인 섹터만 동일가중. 하나도 없으면 SHY 100%.",
+         "Moskowitz·Ooi·Pedersen(2012)의 시계열 모멘텀을 섹터에 그대로 적용한 것. "
+         "횡단면 순위가 아니라 각 섹터가 자기 과거만 본다 — 전부 음수면 통째로 현금이 된다.")
+
+    # ② 듀얼 모멘텀 — Antonacci (2014)
+    def _w_dual(i):
+        sh = ret(ser("SHY"), i, 252)
+        sc = []
+        for t in SEC9:
+            m12, m1 = ret(ser(t), i, 252), ret(ser(t), i, 21)
+            if m12 is None or m1 is None:
+                continue
+            if sh is not None and m12 <= sh:        # 절대 모멘텀 관문
+                continue
+            sc.append((t, m12 - m1))
+        if len(sc) < 3:
+            return {"SHY": 1.0}
+        sc.sort(key=lambda x: -x[1])
+        return {t: 1.0 for t, _ in sc[:3]}
+    _sec("sec-dual", "섹터 듀얼 모멘텀 상위 3", _w_dual,
+         "12-1 모멘텀(252일 − 21일) 상위 3섹터. 단 그 섹터의 252일 수익이 SHY 보다 클 때만 "
+         "편입한다(절대 모멘텀 관문). 통과가 3종 미만이면 SHY 100%.",
+         "Antonacci(2014)의 듀얼 모멘텀 — 상대강도로 고르고 절대 모멘텀으로 시장 밖 대피를 "
+         "정한다. 이 랩의 기존 섹터 규칙에는 대피 장치가 없었다.")
+
+    # ③ 저변동 — Blitz·van Vliet (2007) JPM 34(1)
+    _sec("sec-lowvol", "저변동 섹터 상위 3",
+         lambda i: _topn(lambda t, k: vol(ser(t), k, 120), i, 3, rev=True),
+         "월말에 120거래일 실현변동성이 가장 낮은 3섹터를 동일가중.",
+         "Blitz·van Vliet(2007)의 저변동 이상현상을 섹터 수준에 적용. 종목 랩의 저변동 "
+         "규칙과 같은 축이지만 유니버스가 섹터라 분산 효과가 다르다.")
+
+    # ④ 52주 고점 근접 — George·Hwang (2004) JF 59(5)
+    def _p52(t, i):
+        s = ser(t)
+        if i < 252 or s[i] is None:
+            return None
+        w = [s[j] for j in range(i - 251, i + 1) if s[j] is not None]
+        return (s[i] / max(w)) if w and max(w) else None
+    _sec("sec-52wh", "52주 고점 근접 섹터 상위 3",
+         lambda i: _topn(_p52, i, 3),
+         "월말에 252거래일 고점 대비 현재가 비율이 가장 높은 3섹터를 동일가중.",
+         "George·Hwang(2004)은 52주 고점 근접도가 모멘텀보다 강한 예측력을 갖는다고 보고한다. "
+         "모멘텀과 달리 얼마나 올랐나가 아니라 고점에서 얼마나 안 밀렸나를 본다.")
+
+    # ⑤ 단기 반전 — Jegadeesh (1990) JF 45(3)
+    _sec("sec-rev1m", "단기 반전 섹터 하위 3",
+         lambda i: _topn(lambda t, k: ret(ser(t), k, 21), i, 3, rev=True),
+         "월말에 직전 21거래일 수익이 가장 낮은 3섹터를 동일가중.",
+         "Jegadeesh(1990)의 1개월 반전. 섹터 수준에서도 남는지 본다 — 회전율이 이 열에서 "
+         "가장 높을 것이고, 무비용 기준이라 그만큼 유리하게 잡힌다.")
+
+    # ⑥ 시장 저상관 — 문헌 규칙이 아니라 분산 착상이다
+    def _corr_spy(t, i):
+        a, b = ser(t), ser("SPY")
+        if i < 252:
+            return None
+        xs, ys = [], []
+        for j in range(i - 251, i + 1):
+            if a[j] is not None and a[j - 1] and b[j] is not None and b[j - 1]:
+                xs.append(a[j] / a[j - 1] - 1)
+                ys.append(b[j] / b[j - 1] - 1)
+        if len(xs) < 150:
+            return None
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        sxx = sum((x - mx) * (x - mx) for x in xs)
+        syy = sum((y - my) * (y - my) for y in ys)
+        return sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else None
+    _sec("sec-lowcorr", "시장 저상관 섹터 3",
+         lambda i: _topn(_corr_spy, i, 3, rev=True),
+         "월말에 직전 252거래일 일간수익의 SPY 대비 상관이 가장 낮은 3섹터를 동일가중.",
+         "⚠ 문헌 규칙이 아니라 분산 착상이다. 상관이 낮은 섹터를 모으면 지수와 덜 같이 "
+         "움직이지만, 그것이 초과수익으로 이어질 이유는 사전에 없다 — 그래서 재 본다.")
+
+    # ⑦ 섹터별 200일선 게이트 — Faber (2007) JWM 9(4)
+    def _sma_ok(t, i):
+        s = ser(t)
+        if i < 200 or s[i] is None:
+            return False
+        w = [s[j] for j in range(i - 199, i + 1) if s[j] is not None]
+        return bool(w) and s[i] > sum(w) / len(w)
+    _sec("sec-sma200", "섹터별 200일선 게이트",
+         lambda i: ({t: 1.0 for t in SEC9 if _sma_ok(t, i)} or {"SHY": 1.0}),
+         "월말에 종가가 200거래일 단순이동평균 위인 섹터만 동일가중. 하나도 없으면 SHY 100%.",
+         "Faber(2007)의 추세 게이트를 섹터마다 따로 건다. 이 랩의 sma200 은 지수 하나에 "
+         "걸린 것이고, 이쪽은 섹터별로 켜고 꺼 노출이 0~100% 사이에서 연속으로 움직인다.")
+
+    # ⑧ 기간스프레드 방향 — 국면을 판정하지 않고 부호만 본다(자유도 0)
+    _S9ME = None
+
+    def _w_term(i):
+        nonlocal _S9ME
+        if _S9ME is None:
+            _S9ME = month_ends(S9ST, len(DTS))
+        prev = None
+        for k in _S9ME:
+            if k < i:
+                prev = k
+        a = macro_asof("T10Y2Y", DTS[i])
+        b = macro_asof("T10Y2Y", DTS[prev]) if prev is not None else None
+        if a is None or b is None:
+            return {t: 1.0 for t in SEC9}
+        return {t: 1.0 for t in (CYC6 if a > b else DEF3)}
+    _sec("sec-term", "기간스프레드 방향 섹터", _w_term,
+         "월말에 T10Y2Y(10년 − 2년)가 직전 월말보다 확대면 경기민감 6섹터, 축소면 방어 3섹터를 "
+         "동일가중. 값을 못 읽으면 9섹터 동일가중.",
+         "곡선이 가팔라지면 경기민감, 평탄해지면 방어라는 통상의 착상을 관측치 하나의 부호로만 "
+         "옮긴 것이다. 🚨 국면을 판정하지 않는다 — 이 랩의 국면 판정식 3종이 전부 구별 불가·"
+         "열위였고, 그 자유도가 문제였다.")
+
+    # ⑨ 변동성 국면 — 확장창 중앙값(전 표본 중앙값은 룩어헤드다)
+    def _w_vix(i):
+        m = A["macro"].get("VIXCLS") or {}
+        if not m:
+            return {t: 1.0 for t in SEC9}
+        ks = [k for k in sorted(m) if k <= DTS[i]]
+        if len(ks) < 260:
+            return {t: 1.0 for t in SEC9}
+        rec = [m[k] for k in ks[-20:] if m[k] is not None]
+        hist = sorted(m[k] for k in ks if m[k] is not None)
+        if not rec or not hist:
+            return {t: 1.0 for t in SEC9}
+        med = hist[len(hist) // 2]
+        cur = sum(rec) / len(rec)
+        return {t: 1.0 for t in (DEF3 if cur > med else CYC6)}
+    _sec("sec-vix", "변동성 국면 섹터", _w_vix,
+         "월말에 VIX 20일 평균이 그 시점까지의 확장창 중앙값보다 높으면 방어 3섹터, "
+         "낮으면 경기민감 6섹터를 동일가중.",
+         "⚠ 중앙값은 확장창이다(그 시점까지의 관측만). 전 표본 중앙값을 쓰면 미래를 아는 "
+         "문턱이 된다 — 이 랩이 반복해 밟은 자리라 명시한다.")
+
+    # ⑩ 핼러윈 — Jacobsen·Visaltanachoti (2009) RFS 22(1)
+    _sec("sec-halloween", "핼러윈 섹터 (11~4월 경기민감)",
+         lambda i: {t: 1.0 for t in (CYC6 if DTS[i][5:7] in
+                    ("11", "12", "01", "02", "03", "04") else DEF3)},
+         "11~4월에는 경기민감 6섹터, 5~10월에는 방어 3섹터를 동일가중. 월말 전환.",
+         "Jacobsen·Visaltanachoti(2009)는 핼러윈 효과가 경기민감 섹터에 몰려 있다고 보고한다. "
+         "신호에 가격이 전혀 안 들어간다 — 달력만 본다.")
 
     # ── 달러 축: 미국 vs 해외 선진 (사전등록 PREREG-2026-08-06-USDAXIS.md) ──
     # 🚨 이 축을 여기로 데려온 근거는 **아카이브 기각문 둘**이다. 서로 독립인데 같은 것을
