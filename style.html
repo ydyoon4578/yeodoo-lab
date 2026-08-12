@@ -244,12 +244,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
      (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
      ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
      또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
-  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
+  /* 설명 줄을 걷어내 한 줄짜리가 됐다 — 세로 여백을 줄여 목록이 촘촘히 읽히게 한다. */
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;
+       padding:7px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
-  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
   .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
@@ -347,44 +347,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <li class="navcat" data-cat="market">
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
-          <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span><span class="mmd">기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span><span class="mmd">FRED 39지표로 만든 국면 판정 — 미국 단일</span></a>
-          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표</span><span class="mmd">FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭</span></a>
-          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span><span class="mmd">이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음</span></a>
+          <a class="mmi" href="filings.html" data-nav="filings.html" title="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음"><span class="mmn">8-K 공시 피드</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 39지표로 만든 국면 판정 — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html" title="FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭"><span class="mmn">경제지표</span></a>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro" title="이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음"><span class="mmn">발표 일정</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="stocks">
         <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
-          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 신호</span><span class="mmb vunv">미검증</span><span class="mmd">518종목 테크니컬 22지표·컴포짓·타이밍</span></a>
-          <a class="mmi" href="signals.html" data-nav="signals.html"><span class="mmn">지표별 타이밍</span><span class="mmb vrej">기각</span><span class="mmd">테크니컬 신호 32개 성적 + 오늘 발동 종목</span></a>
-          <a class="mmi" href="co.html#est" data-nav="co.html#est"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span><span class="mmd">목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중</span></a>
-          <a class="mmi" href="co.html#fs" data-nav="co.html#fs"><span class="mmn">재무제표</span><span class="mmd">SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로</span></a>
-          <a class="mmi" href="co.html#ir" data-nav="co.html#ir"><span class="mmn">IR자료실</span><span class="mmd">EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다</span></a>
-          <a class="mmi" href="co.html#ins" data-nav="co.html#ins"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span><span class="mmd">임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님</span></a>
-          <a class="mmi" href="co.html#pair" data-nav="co.html#pair"><span class="mmn">페어</span><span class="mmb vrej">기각</span><span class="mmd">거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다</span></a>
+          <a class="mmi" href="stocks.html" data-nav="stocks.html" title="518종목 테크니컬 22지표·컴포짓·타이밍"><span class="mmn">종목 신호</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="signals.html" data-nav="signals.html" title="테크니컬 신호 32개 성적 + 오늘 발동 종목"><span class="mmn">지표별 타이밍</span><span class="mmb vrej">기각</span></a>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est" title="목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="co.html#fs" data-nav="co.html#fs" title="SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로"><span class="mmn">재무제표</span></a>
+          <a class="mmi" href="co.html#ir" data-nav="co.html#ir" title="EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다"><span class="mmn">IR자료실</span></a>
+          <a class="mmi" href="co.html#ins" data-nav="co.html#ins" title="임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="co.html#pair" data-nav="co.html#pair" title="거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다"><span class="mmn">페어</span><span class="mmb vrej">기각</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
-          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span><span class="mmd">원장·돌린 규칙·재현 재점검을 한 곳에서</span></a>
-          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span><span class="mmd">공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과</span></a>
-          <a class="mmi" href="screener.html" data-nav="screener.html"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span><span class="mmd">자유조합 스크린 — 초과수익 확인된 스크린 0종</span></a>
-          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span><span class="mmd">13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다</span></a>
-          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span><span class="mmd">명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다</span></a>
-          <a class="mmi" href="guru17.html" data-nav="guru17.html"><span class="mmn">운용사 복제 진단</span><span class="mmd">따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)</span></a>
-          <a class="mmi" href="report.html" data-nav="report.html"><span class="mmn">복제 리포트</span><span class="mmb vunv">미검증</span><span class="mmd">돌린 규칙 117종을 전략별로 — 판정이 아니라 잰 값 전부</span></a>
-          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span><span class="mmd">전부 외부 출처·미검증 — 랩이 돌린 게 아니다</span></a>
-          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">내 포트폴리오</span><span class="mmd">localStorage 보유 + 일별 실측 상관·변동성·MDD</span></a>
+          <a class="mmi" href="explorer.html" data-nav="explorer.html" title="원장·돌린 규칙·재현 재점검을 한 곳에서"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html" title="공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="screener.html" data-nav="screener.html" title="자유조합 스크린 — 초과수익 확인된 스크린 0종"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span></a>
+          <a class="mmi" href="guru.html" data-nav="guru.html" title="13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다"><span class="mmn">거장 포트폴리오·매매</span></a>
+          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap" title="명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="guru17.html" data-nav="guru17.html" title="따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)"><span class="mmn">운용사 복제 진단</span></a>
+          <a class="mmi" href="report.html" data-nav="report.html" title="돌린 규칙 117종을 전략별로 — 판정이 아니라 잰 값 전부"><span class="mmn">복제 리포트</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html" title="전부 외부 출처·미검증 — 랩이 돌린 게 아니다"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html" title="localStorage 보유 + 일별 실측 상관·변동성·MDD"><span class="mmn">내 포트폴리오</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="ledger">
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
-          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span><span class="mmd">A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다</span></a>
-          <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span><span class="mmd">자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나</span></a>
-          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span><span class="mmd">축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금</span></a>
+          <a class="mmi" href="method.html" data-nav="method.html" title="A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
         </div>
       </li>
     </ul>

@@ -170,12 +170,12 @@ NAV_CSS = """<style>
      (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
      ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
      또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
-  .mmi{display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-       padding:8px 10px;border-radius:2px;text-decoration:none;color:inherit}
+  /* 설명 줄을 걷어내 한 줄짜리가 됐다 — 세로 여백을 줄여 목록이 촘촘히 읽히게 한다. */
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;
+       padding:7px 10px;border-radius:2px;text-decoration:none;color:inherit}
   a.mmi:hover{background:var(--panel-2)}
   a.mmi:hover .mmn{color:var(--accent)}
   .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
-  .mmi .mmd{grid-column:1/-1;font-size:11px;color:var(--muted);line-height:1.45}
   .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
   .mmi[aria-current="page"] .mmn{color:var(--accent)}
   span.mmi{cursor:default}
@@ -263,14 +263,20 @@ def build_body(items: dict) -> str:
                 badge = ""
 
             lk = '<span class="mmlk">🔒</span>' if t.get("locked") else ""
-            inner = ('<span class="mmn">%s%s</span>%s<span class="mmd">%s</span>'
-                     % (esc(name), lk, badge, esc(desc)))
+            # 🚨 설명 줄(.mmd)은 **안 그린다**(2026-08-13 사용자 요청 — "목록 세부설명들
+            #   다 빼, 지저분해"). 모바일 드로어에서 칸마다 두 줄이 되어 메뉴가 글이 됐다.
+            # ⚠ 지우는 것이 아니라 title 로 옮긴다. nav_items.json 의 desc 는 그대로 두고
+            #   (그 파일이 메뉴 정본이고 sources.html 원장이 같은 문장을 읽는다) 화면에서만
+            #   내린다. 데스크톱에서 마우스를 올리면 그대로 나온다.
+            inner = ('<span class="mmn">%s%s</span>%s'
+                     % (esc(name), lk, badge))
             if live:
-                out.append('          <a class="mmi" href="%s" data-nav="%s">%s</a>'
-                           % (esc(href), esc(href), inner))
+                out.append('          <a class="mmi" href="%s" data-nav="%s" title="%s">%s</a>'
+                           % (esc(href), esc(href), esc(desc), inner))
             else:
                 # 없는 파일로 링크하지 않는다 — 404 대신 '준비중'을 보여준다
-                out.append('          <span class="mmi">%s</span>' % inner)
+                out.append('          <span class="mmi" title="%s">%s</span>'
+                           % (esc(desc), inner))
         out.append('        </div>')
         out.append('      </li>')
 
