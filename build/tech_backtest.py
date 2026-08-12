@@ -5349,6 +5349,22 @@ def run():
         "surv_proxy": surv,
         "idx_stats": idx_sh,
         "t_crit": tcrit,
+        # 🚨 게시 관문의 **현재 상태**를 산출물에 싣는다. 화면이 배지 뜻을 스스로 적으려면
+        #   이 값을 읽어야 한다 — 안 실으면 관문을 껐는데 화면은 계속 "셋을 다 넘었다"고 말한다.
+        #   (2026-08-12 에 셋을 끄면서 실제로 그 상태가 됐다.)
+        "gates": {"incr5": GATE_INCR5, "d_sharpe": GATE_DSHARPE,
+                  "pit": GATE_PIT, "cost": GATE_COST},
+        "gates_note": ("게시 관문 — 켠 것만 판정을 강등한다. 끈 관문의 수치는 그대로 재서 "
+                       "싣는다(끄는 것과 안 재는 것은 다르다). "
+                       "지금 켜짐: %s / 꺼짐: %s."
+                       % (", ".join(k for k, v in (("증분알파(이웃5)", GATE_INCR5),
+                                                   ("열위(Δ샤프)", GATE_DSHARPE),
+                                                   ("시점정확(PIT)", GATE_PIT),
+                                                   ("비용 후 t", GATE_COST)) if v) or "없음",
+                          ", ".join(k for k, v in (("증분알파(이웃5)", GATE_INCR5),
+                                                   ("열위(Δ샤프)", GATE_DSHARPE),
+                                                   ("시점정확(PIT)", GATE_PIT),
+                                                   ("비용 후 t", GATE_COST)) if not v) or "없음")),
         "t_crit_note": "규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
                        "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다." % (N, N),
         "rf_note": "샤프는 FRED DGS3MO 월평균을 일할로 환산해 차감",
