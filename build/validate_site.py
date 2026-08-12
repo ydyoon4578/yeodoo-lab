@@ -544,6 +544,17 @@ if pool:
                  for k in ("rule", "why", "name")]
         _txts += [("limits", "limits", t) for t in (_ts0.get("limits") or [])]
         _txts += [("t_crit_note", "note", _ts0.get("t_crit_note") or "")]
+        # 🚨 검사의 범위가 사고의 범위보다 좁으면 안 된다 — 페어 엔진(2026-08-12)도 같은
+        #   esc() 경로를 타고, 실제로 첫 산출에서 note 에 ** 가 들어갔다. holdings.note 는
+        #   중첩이라 위 루프가 안 훑으므로 따로 넣는다.
+        _pz0 = os.path.join(ROOT, "data", "pairs_strategies.json")
+        if os.path.exists(_pz0):
+            _pz0 = json.load(io.open(_pz0, encoding="utf-8"))
+            for _r0 in (_pz0.get("strategies") or []):
+                for _k1 in ("name", "rule", "why", "note", "bench_label"):
+                    _txts.append((_r0.get("name", "?"), "pairs." + _k1, _r0.get(_k1) or ""))
+                _txts.append((_r0.get("name", "?"), "pairs.holdings.note",
+                              (_r0.get("holdings") or {}).get("note") or ""))
         for _nm0, _k0, _v0 in _txts:
             if re.search(r"</?[a-zA-Z][^>]*>", _v0) or re.search(r"\*\*[^*]+\*\*", _v0):
                 errors.append(f"tech_strategies '{_nm0}'.{_k0}: 태그/마크다운 표기 "

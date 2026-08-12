@@ -48,6 +48,7 @@ import probe_pairs as PP            # noqa: E402  형성 통계는 여기 하나
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "pairs_strategies.json")
+OUTBOOK = os.path.join(DATA, "pairs_book.json")   # co.html 페어 탭이 지연 로드한다
 
 FORM, TRADE = 252, 126          # 형성 12개월 → 거래 6개월 (GGR)
 SIZES = (5, 20)                 # 상위 N — 원문의 두 판
@@ -492,7 +493,107 @@ NAMES = {
 }
 
 
-def index_records(legs):
+def current_book(dates, ts, MATS, sec, dual):
+    """가장 최근 형성창에서 각 (규칙,크기)가 고르는 페어 — '지금 무엇을 들고 있나'.
+
+    🚨 이걸 안 실으면 목록에 **전략은 있는데 무엇을 사는지가 없다.** 이 저장소가 반복해 온
+      실패(재 놓고 안 실었다 / 실어 놓고 안 그렸다)와 같은 자리다. 페어 전략의 보유는
+      종목이 아니라 **쌍**이라 티커 목록으로 접으면 안 된다 — 'AEE 를 들고 있다'로 읽히는데
+      실제로는 AEE 롱 + CNP 숏이고, 그 방향조차 형성 시점엔 정해져 있지 않다.
+    """
+    PX, HI, LO = MATS
+    e = len(dates) - 1
+    f0, f1 = e - FORM + 1, e + 1
+    W = PX[f0:f1]
+    ok = np.isfinite(W).all(0) & (W > 0).all(0)
+    idx = np.where(ok)[0]
+    names = [ts[k] for k in idx]
+    out = {}
+    for rule in ("A", "B"):
+        for size in SIZES:
+            got = select(W[:, idx], HI[f0:f1][:, idx], LO[f0:f1][:, idx],
+                         names, sec, dual, rule, size)
+            out["%s%d" % (rule, size)] = [
+                {"a": m["a"], "b": m["b"], "sec": m["sec_a"], "ssd": round(m["ssd"], 3)}
+                for _, _, _, _, m in got]
+    return out, dates[f0], dates[e]
+
+
+def ticker_book(dates, ts, MATS, sec, dual, book, bk_from, bk_to, topk=4):
+    """종목 → 그 종목의 최근접 페어들 → data/pairs_book.json (co.html 의 페어 탭이 읽는다).
+
+    🚨 페어 선택도 진단도 **여기서 새로 만들지 않는다** — 위 select() 와 같은 형성창,
+      같은 SSD 행렬, probe_pairs 의 같은 반감기 함수를 쓴다. 화면이 백테스트와 다른 페어를
+      보여주면 그 화면은 이 랩의 산출물이 아니라 다른 계산이다.
+    ⚠ 화면은 가격에서 스프레드 곡선을 직접 그린다(정규화가 결정적이라 재현이 정확하다).
+      그러나 **밴드의 σ 는 여기서 준 값을 쓴다** — 그래야 그림의 ±2σ 가 백테스트의 진입
+      문턱과 같은 숫자가 된다.
+    """
+    PX, HI, LO = MATS
+    e = len(dates) - 1
+    f0, f1 = e - FORM + 1, e + 1
+    W = PX[f0:f1]
+    ok = np.isfinite(W).all(0) & (W > 0).all(0)
+    idx = np.where(ok)[0]
+    names = [ts[k] for k in idx]
+    Wk = W[:, idx]
+    P = Wk / Wk[0]
+    D = PP.ssd_matrix(P)
+    pos = {t: k for k, t in enumerate(names)}
+    for a, b in dual:
+        if a in pos and b in pos:
+            D[pos[a], pos[b]] = D[pos[b], pos[a]] = np.inf
+    R = np.diff(np.log(Wk), axis=0)
+    Rc = R - R.mean(0)
+    rr = np.sqrt((Rc * Rc).sum(0))
+    rr[rr == 0] = 1e-12
+    CORR = (Rc.T @ Rc) / np.outer(rr, rr)
+
+    inbook = {}
+    for key, lst in (book or {}).items():
+        for p in lst:
+            inbook.setdefault("%s/%s" % (p["a"], p["b"]), []).append(key)
+
+    by_t = {}
+    for a in range(len(names)):
+        order = np.argsort(D[a])[:topk]
+        row = []
+        for b in order:
+            b = int(b)
+            if not np.isfinite(D[a, b]):
+                continue
+            s = P[:, a] - P[:, b]
+            sd = float(s.std(ddof=1))
+            if not (sd > 0):
+                continue
+            hl = PP.half_life(s)
+            k1, k2 = names[a] + "/" + names[b], names[b] + "/" + names[a]
+            row.append({
+                "b": names[b], "sec": sec.get(names[b], "?"),
+                "ssd": round(float(D[a, b]), 3),
+                "corr": round(float(CORR[a, b]), 3),
+                "hl": round(float(hl), 1) if np.isfinite(hl) else None,
+                "sd": round(sd, 5),
+                # 지금 스프레드가 몇 σ 벌어져 있나. |z| ≥ 2 면 이 규칙은 지금 열려 있을 자리다.
+                "z": round(float(s[-1] / sd), 2),
+                "trips": trips_count(s, float(s.mean()), sd),
+                "in": sorted(set(inbook.get(k1, []) + inbook.get(k2, []))),
+            })
+        if row:
+            by_t[names[a]] = row
+    return {
+        "note": ("종목별 최근접 페어 %d개 — 형성창 %s~%s 의 정규화 누적수익 경로 SSD 기준. "
+                 "build/pairs_backtest.py 가 백테스트와 같은 형성 함수로 만든다. "
+                 "이 랩은 페어 전략 4종을 전부 기각했다(등급 열위) — 이 표는 신호가 아니라 "
+                 "그 전략이 무엇을 고르는지를 보여주는 것이다." % (topk, bk_from, bk_to)),
+        "as_of": bk_to, "form_from": bk_from, "form_to": bk_to, "form_days": FORM,
+        "entry_sigma": ENTRY, "n_stocks": len(by_t),
+        "book": {k: ["%s/%s" % (p["a"], p["b"]) for p in v] for k, v in (book or {}).items()},
+        "by_t": by_t,
+    }
+
+
+def index_records(legs, book=None, bk_from=None, bk_to=None):
     """`full` 레그 4종 → data/strategy_index.py 가 읽는 모양.
 
     ⚠ 등록한 가설은 넷(규칙 2 × 크기 2)이고 목록에도 넷을 싣는다. 기각됐다고 빼지 않는다 —
@@ -504,12 +605,28 @@ def index_records(legs):
     for rule in ("A", "B"):
         sid0, nm0, rule_txt, why0 = NAMES[rule]
         for size in SIZES:
-            r = (legs.get("full") or {}).get("%s%d" % (rule, size))
+            key = "%s%d" % (rule, size)
+            r = (legs.get("full") or {}).get(key)
             if not r:
                 continue
             s = r["stats"]
             sh = s.get("sharpe")
             n = len(r["nav"])
+            bk = (book or {}).get(key) or []
+            hold = None
+            if bk:
+                w = round(100.0 / size, 1)     # 투입자본 규약 — N 페어에 1/N 씩
+                hold = {
+                    "kind": "pair", "as_of": bk_to,
+                    "weights": [["%s/%s" % (p["a"], p["b"]), w] for p in bk],
+                    "pairs": bk,
+                    # ⚠ 마크다운을 쓰지 않는다. 이 문자열은 explorer 가 esc() 해서 넣으므로
+                    #   ** 는 굵게가 아니라 별표 그대로 찍힌다(DATA-FACTS #24 와 같은 사고).
+                    "note": ("형성창 %s~%s 로 고른 상위 %d페어. 어느 쪽을 롱/숏 할지는 여기 없다 — "
+                             "스프레드가 ±2σ 벌어질 때 싼 쪽을 사고 비싼 쪽을 판다. "
+                             "비중은 투입자본 1/%d 이고, 벌어지지 않은 페어는 현금으로 남는다."
+                             % (bk_from, bk_to, size, size)),
+                }
             out.append({
                 "sid": "%s-top%d" % (sid0, size),
                 "name": "%s (상위 %d페어)" % (nm0, size),
@@ -529,7 +646,8 @@ def index_records(legs):
                 "t": round(s["t_nw"], 2) if s["t_nw"] is not None else None,
                 "beta": round(s["beta"], 3) if s.get("beta") is not None else None,
                 "nav": r["nav"], "bnav": [100.0] * n, "dates": r["dates"],
-                "note": ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — **비용을 넣기 전에 이미 0이다.** "
+                "holdings": hold,
+                "note": ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — 비용을 넣기 전에 이미 0이다. "
                          "수렴 청산 %d건 평균 %+.2f%% 대 기간종료 강제청산 %d건 평균 %+.2f%% 로 "
                          "둘이 상쇄된다(수렴률 %.0f%%). Corwin-Schultz 유효스프레드를 1/10 로 "
                          "줄여도 |t| < 0.5 라 비용 가정이 판정을 바꾸지 않는다."
@@ -692,6 +810,14 @@ def main() -> int:
                  "게시" if ok else "기각",
                  "" if gc is not None else "  (ⓒ 미측정 — PIT 미실행. ⓐⓑ 에서 이미 갈렸다)"))
 
+    book, bk_from, bk_to = current_book(dates, ts, MATS, sec, dual)
+    print("\n지금의 페어북(형성창 %s ~ %s)" % (bk_from, bk_to))
+    for key in ("A5", "B5", "A20", "B20"):
+        bk = book.get(key) or []
+        print("  %-4s %2d쌍  %s%s"
+              % (key, len(bk), " · ".join("%s/%s" % (p["a"], p["b"]) for p in bk[:8]),
+                 " …" if len(bk) > 8 else ""))
+
     doc = {
         "generated": dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat(),
         "prereg": "build/PREREG-2026-08-12-PAIRS.md",
@@ -699,12 +825,19 @@ def main() -> int:
                    "hl": [HL_LO, HL_HI], "min_trips": MIN_TRIPS, "borrow_apy": BORROW_APY,
                    "pit_start": PIT_START, "nw_lags": NW_LAGS},
         "bench_label": BENCH_LABEL,
-        "strategies": index_records(legs),
+        "book_from": bk_from, "book_to": bk_to, "book": book,
+        "strategies": index_records(legs, book, bk_from, bk_to),
         "legs": legs, "verdicts": verdicts,
     }
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":"), default=float) + "\n")
     print("\n→ %s" % OUT)
+
+    tb = ticker_book(dates, ts, MATS, sec, dual, book, bk_from, bk_to)
+    io.open(OUTBOOK, "w", encoding="utf-8").write(
+        json.dumps(tb, ensure_ascii=False, separators=(",", ":"), default=float) + "\n")
+    print("→ %s (%d종목 × 최근접 4페어 · %dKB)"
+          % (OUTBOOK, tb["n_stocks"], os.path.getsize(OUTBOOK) // 1024))
     return 0
 
 

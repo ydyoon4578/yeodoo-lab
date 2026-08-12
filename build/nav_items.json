@@ -114,6 +114,15 @@
      "src": "raw",
      "verdict": "unverified",
      "effort": "M"
+    },
+    {
+     "name": "페어",
+     "file": "co.html#pair",
+     "status": "existing",
+     "desc": "거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다",
+     "src": "model",
+     "verdict": "rejected",
+     "effort": "M"
     }
    ]
   },
