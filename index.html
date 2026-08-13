@@ -2230,12 +2230,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   ① y 눈금 — 종전에는 0 선 하나뿐이라 **선이 얼마나 벌어졌는지 눈으로 못 쟀다.**
     //   ② x 눈금 — 첫날·끝날만 있었다. 가운데 눈금이 없으면 굴곡이 언제인지 못 짚는다.
     //   ③ 0 아래 옅은 바탕 — 손실 구간을 색으로 한 번 더 말한다(선 색과 겹치지 않게 아주 옅게).
-    function chart(dates, series, title, emph){
+    function chart(dates, series, title, emph, dash){
       var many=series.length>6, lots=series.length>12;
       // 2열 배치라 판이 넓다. 라벨 칸을 이름이 통째로 들어갈 만큼 준다.
-      var W=lots?1000:(many?820:700);
+      var W=lots?1060:(many?820:700);
       var H=lots?400:(many?300:230);
-      var PL=40, PR=lots?270:(many?150:130), TOP=16, BOT=26;
+      // ⚠ 라벨 칸(PR)은 **가장 긴 이름 + 값 + 선 견본**이 다 들어갈 만큼이어야 한다.
+      //   실측으로 두 줄이 1~12 단위 넘쳤다(Pharmaceuticals, Biotechnology & Life Sciences).
+      //   눈으로 맞추지 않고 넉넉히 준다 — 이름은 지수 리밸런스로 바뀔 수 있다.
+      var PL=40, PR=lots?330:(many?150:130), TOP=16, BOT=26;
       var n=dates.length, lo=0, hi=0;
       series.forEach(function(s){s.v.forEach(function(y){if(y==null)return;
         if(y<lo)lo=y; if(y>hi)hi=y;});});
@@ -2283,9 +2286,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           d+=(started?'L':'M')+X(i).toFixed(1)+' '+Y(y).toFixed(1); started=true; last=y; li=i;}
         if(!started)return;
         var col=emph[s.nm]||'var(--muted)';
+        var da=(dash&&dash[s.nm])||'';
         g+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(lots?1.3:1.7)+
-           '" opacity="'+(emph[s.nm]?(lots?0.9:1):0.42)+
-           '" stroke-linejoin="round" stroke-linecap="round"/>';
+           '" opacity="'+(emph[s.nm]?(lots?0.9:1):0.42)+'"'+
+           (da?' stroke-dasharray="'+da+'"':'')+
+           ' stroke-linejoin="round" stroke-linecap="round"/>';
         if(emph[s.nm]||series.length<=4){
           labs.push({nm:s.nm, col:col, x:X(li), y:Y(last), v:last});
           g+='<circle cx="'+X(li).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="'+(lots?1.6:2)+
@@ -2303,8 +2308,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       labs.forEach(function(L){
         g+='<line x1="'+(L.x+2).toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+(RX+7).toFixed(1)+
            '" y2="'+L.ly.toFixed(1)+'" stroke="'+L.col+'" stroke-width="0.7" opacity=".45"/>';
+        // 같은 색이 여럿일 때(산업그룹) 라벨 앞에 그 선의 모양을 짧게 그려 짝을 짓는다
+        var _da=(dash&&dash[L.nm])||'';
+        if(dash)
+          g+='<line x1="'+(RX+9)+'" y1="'+(L.ly).toFixed(1)+'" x2="'+(RX+21)+'" y2="'+
+             (L.ly).toFixed(1)+'" stroke="'+L.col+'" stroke-width="1.6"'+
+             (_da?' stroke-dasharray="'+_da+'"':'')+' stroke-linecap="round"/>';
         // ⚠ 이름을 자르지 않는다(2026-08-13 사용자 요청). 라벨 칸을 그만큼 넓게 잡았다.
-        g+='<text x="'+(RX+10)+'" y="'+(L.ly+3.4).toFixed(1)+'" font-size="'+(lots?10:11)+
+        g+='<text x="'+(RX+(dash?25:10))+'" y="'+(L.ly+3.4).toFixed(1)+'" font-size="'+(lots?10:11)+
            '" font-weight="700" fill="'+L.col+'">'+esc(L.nm)+
            '<tspan font-family="var(--mono)" font-size="'+(lots?9:9.5)+'" opacity=".85"> '+
            (L.v>0?'+':'')+L.v.toFixed(2)+'</tspan></text>';
@@ -2351,8 +2362,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       for(var i=a.length-1;i>=0;i--){if(a[i]!=null){lastv=a[i];break;}}
       return {nm:k, v:a, last:(lastv==null?-1e9:lastv)};
     }).sort(function(a,b){return b.last-a.last;}):[];
-    var CIND={};
-    inds.forEach(function(s,i){CIND[s.nm]=SECPAL[i%SECPAL.length];});
+    // 🚨 산업그룹 색을 **옆 섹터 판과 맞춘다**(사용자 요청 2026-08-13). 반도체가 IT 색,
+    //   은행이 금융 색이 되어 두 판이 같이 읽힌다. 섹터 색은 끝값 순으로 돌아가므로
+    //   고정색이 아니다 — 그래서 자료는 '부모 섹터' 짝만 주고 색은 여기서 CSEC 로 정한다.
+    // ⚠ 한 섹터에 그룹이 여럿이라 색만으로는 안 갈린다. 같은 섹터 안에서는 **선 모양**으로
+    //   가른다(실선 → 파선 → 점선 → 일점쇄선). 색이 소속, 모양이 개체다.
+    var ISEC=(STC_I&&STC_I.sec)||{};
+    var DASH=['', '5 2.5', '2 2', '7 2 1.5 2'];
+    var CIND={}, IDASH={}, _seen={};
+    inds.forEach(function(s,i){
+      var ko=ISEC[s.nm];
+      var c=(ko&&CSEC[ko])||SECPAL[i%SECPAL.length];
+      CIND[s.nm]=c;
+      var k=ko||('_'+i);
+      IDASH[s.nm]=DASH[(_seen[k]=(_seen[k]||0)+1, _seen[k]-1)%DASH.length];
+    });
 
     box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
       // 🚨 2행 배치(사용자 결정 2026-08-13). 위 줄은 **살 수 있는 넓은 것**(지수·스타일),
@@ -2362,7 +2386,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         chart(blk.dates, ixs, '지수', CIX)+
         (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
-        (inds.length?chart(iblk.dates, inds, '산업그룹', CIND):'')+
+        (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
       '</div>'+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
