@@ -441,6 +441,10 @@
      세로선으로 두 블록을 가른다. */
   .sttbl th.shp,.sttbl td.shp{border-right:1px solid var(--line);font-weight:700;color:var(--ink-2)}
   .sttbl thead th.shp{color:var(--muted)}
+  /* 창을 열 이름에 박아 둔다 — 이 열은 5년↔1년을 오간 이력이 있어 숫자만 두면
+     어느 창인지 화면이 말하지 않는다(2026-08-13 사용자 요청 "샤프는 1년 기준으로 명시"). */
+  .sttbl thead th.shp em{font-style:normal;font-weight:600;font-size:10px;opacity:.75;
+    display:block;line-height:1.1}
   .sttbl td.shp.z{color:var(--muted);font-weight:400}
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   /* 묶음 머리 — ETF 원장과 지수 방법론은 성격이 다르다(하나는 실제 상품 수익률, 하나는
@@ -1607,8 +1611,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     })();
     var h='<tr class="grp"><th colspan="'+ncol+'" title="'+esc(_tips.join(' '))+'">'+
        '섹터 '+secs.length+'개 · 산업그룹 '+nG+'개 '+
+       // 🚨 2026-08-13 — '시장 중앙 PER 25.0' 을 걷었다(사용자 결정). 이 줄은 섹터 표가
+       //   무엇을 어떻게 묶는지를 적는 자리고, 시장 전체 밸류는 그 질문과 상관이 없다.
+       //   자료(imk.pe)는 그대로 온다 — 다시 적기로 하면 이 자리에 넣으면 된다.
        '<em><b>시총가중</b>(섹터=SPDR ETF) · 시총 내림차순'+
-       (imk&&imk.pe?' · 시장 중앙 PER '+imk.pe.toFixed(1):'')+
        ' <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     secs.slice().sort(bym).forEach(function(s0){
       var sid='s-'+s0.sec, gs=(GRP[s0.sec]||[]).slice().sort(bym);
@@ -2168,18 +2174,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 샤프 — 지수 방법론 줄은 백테스트에서, ETF·지수 행은 같은 창으로 잰 값에서 온다
   // (build/style_top_pdf.py 가 둘 다 같은 start·end·metrics 로 만든다). 창이 하나라
   // 한 열에 나란히 놓고 비교해도 된다 — 이 표에서 그것이 되는 유일한 열이다.
-  // 홈 샤프 열은 **5년 창**이다(사용자 요청 2026-08-12). 없으면 1년으로 물러선다 —
-  // 자료가 얇은 스타일은 5년을 못 채우고, 그때 칸을 비우는 것보다 있는 것을 적는 편이 낫다.
+  // 🚨 홈 샤프 열은 **1년 창**이다(사용자 요청 2026-08-13). 2026-08-12 에 5년으로 바꿨던
+  //   것을 되돌린다. 없으면 5년으로 물러선다 — 칸을 비우는 것보다 있는 것을 적는 편이 낫다.
+  //   ⚠ 물러섰다는 사실이 화면에 안 적힌다. 지금은 1년 창(style_perf.start)에 전 줄이
+  //     값을 갖고 있어 실제로 물러서는 줄이 없다 — 생기면 그때 표시를 붙여야 한다.
+  //   ⚠ 열 이름에 '(1년)'을 박아 둔다. 숫자만 두면 위 ETF 줄과 아래 방법론 줄이 어느 창인지
+  //     말하지 않게 되고, 5년↔1년을 오간 이력이 있어 더 그렇다.
   function sharpeOf(k){
     var p=ST_PERF[k], s=(SLAB&&p)?SLAB[p]:null;
     if(!s)return null;
-    if(typeof s.sharpe5==='number')return s.sharpe5;
-    return (typeof s.sharpe==='number')?s.sharpe:null;
+    if(typeof s.sharpe==='number')return s.sharpe;
+    return (typeof s.sharpe5==='number')?s.sharpe5:null;
   }
   function etfSharpe(t){
     var m5=SLAB&&SLAB._etf5, m=SLAB&&SLAB._etf;
-    if(m5&&typeof m5[t]==='number')return m5[t];
-    return (m&&typeof m[t]==='number')?m[t]:null;
+    if(m&&typeof m[t]==='number')return m[t];
+    return (m5&&typeof m5[t]==='number')?m5[t]:null;
   }
   // 지수 방법론 한 줄 — 이름(백테스트 링크) · 참조지수 · 기간별 수익률 7칸.
   // 종목 10개는 **바로 아래 접힌 행**으로 내린다(사용자 요청 2026-08-02). 한 스타일이
@@ -2217,7 +2227,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var blk=(STC_P.series||{})[STC_HZ];
     if(!blk){box.innerHTML='';return;}
 
-    var HZL={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'12개월','YTD':'YTD'};
+    // ⚠ '12개월'이 아니라 '1년'이다(사용자 요청 2026-08-13). 위 ST_HZ 는 2026-08-12 에
+    //   이미 바꿨는데 이 차트 탭만 옛 표기로 남아 한 화면에서 같은 기간을 두 이름으로 불렀다.
+    var HZL={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
     var tabs=Object.keys(STC_P.series).map(function(h){
       return '<button class="sctab'+(h===STC_HZ?' on':'')+'" data-h="'+h+'">'+esc(HZL[h]||h)+'</button>';
     }).join('');
@@ -2421,8 +2433,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 샤프를 **구분 바로 옆**에 둔다 — 아래 묶음이 이 값으로 정렬되므로 정렬 기준이
     // 첫 숫자여야 표가 왜 그 순서인지 눈으로 읽힌다.
     var h='<thead><tr><th>구분</th><th class="shp" title="'+
-          esc('연율 샤프 — 최근 5년 · 같은 창·같은 계산. ETF·지수 행과 지수 방법론 행을 '+
-              '나란히 비교해도 되는 유일한 열이다')+'">샤프</th>'+
+          esc('연율 샤프 — 최근 1년('+(SLAB&&SLAB._start?SLAB._start+' 이후':'')+') · 같은 창·'+
+              '같은 계산. ETF·지수 행과 지수 방법론 행을 나란히 비교해도 되는 유일한 열이다')+
+          '">샤프<em>1년</em></th>'+
           '<th class="pxc" title="'+esc('그 줄이 ETF 인 행만 값이 있다 — 섹터·지수·스타일 ETF 의 최근 종가(배당조정). 산업그룹·랩 전략 행은 살 수 있는 한 종목이 아니라 비운다')+'">주가</th>'+
           ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
           '<th class="pxc" title="'+esc('12개월 선행 PER — 이 랩 518종 중 그 바스켓 종목의 '+
@@ -2495,15 +2508,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return (y==null?-Infinity:y)-(x==null?-Infinity:x);
     });
     if(keys.length){
-      // 샤프·3년·5년 칸은 5년 창, 1일~1년 칸은 1년 창에서 나온다. 둘 다 적는다 —
-      // 한 줄만 적으면 옆 칸이 그 창에서 나온 것처럼 읽힌다.
+      // 창을 둘 다 적는다 — 한 줄만 적으면 옆 칸이 그 창에서 나온 것처럼 읽힌다.
+      // 🚨 2026-08-13 — 샤프가 5년 창에서 **1년 창으로 돌아왔다**(사용자 요청). 그래서
+      //   샤프는 이제 3년·5년 칸이 아니라 1일~1년 칸과 같은 창이다. 이 문장을 안 고치면
+      //   화면이 "샤프·3년·5년 창 2021-06-30~" 이라고 계속 적는데 그것이 거짓이 된다.
       var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'', d5=(SLAB&&SLAB._start5)||'';
       h+='<tr class="grp"><th colspan="'+ncol+'">지수 방법론 '+keys.length+'종 '+
          '<em>MSCI · S&amp;P · Nasdaq · Pacer 공개 산식을 이 유니버스에 적용 · '+
          '<b>수익률은 백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
          '상위 10종목 동일가중 · <b>샤프순</b>'+
-         (d5&&d?'(샤프·3년·5년 창 '+esc(d5)+'~'+esc(d)+')':'')+
-         (d0&&d?' · 1일~1년 칸은 '+esc(d0)+'~'+esc(d):'')+
+         (d0&&d?'(샤프·1일~1년 칸은 '+esc(d0)+'~'+esc(d)+' 1년 창)':'')+
+         (d5&&d?' · 3년·5년 칸만 '+esc(d5)+'~'+esc(d):'')+
          ' · 이름을 누르면 <a href="style.html">상세</a>, ▸ 를 누르면 구성종목</em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
@@ -2660,7 +2675,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   곡선도 없어(style_top.py 에만 있고 style_top_pdf.py 에 없었다) 구성종목 줄에만 혼자
   //   남아 있었다. 이번에 양쪽을 다 채웠다 — style_top_pdf 에 sc_size 를 넣어 곡선을 만들고
   //   etf_sharpe 에 SIZE 를 더했다. 숨긴 이유가 사라졌으므로 되살린다.
-  // 🚨 지수 방법론에서 뺀 줄 — 18종 → 12종(사용자 결정 2026-08-13). 자료·빌더는 그대로다.
+  // 🚨 지수 방법론에서 뺀 줄 — 18종 → 8종(사용자 결정 2026-08-13, 두 번에 나눠 뺐다).
+  //   ⚠ 이 수를 손으로 적지 않는다 — 화면은 keys.length 로 센다. 여기 적힌 것은 메모다.
+  //   자료·빌더는 그대로다.
   //   여기 키를 지우면 그 줄이 그대로 돌아온다. **왜 뺐는지를 값에 적어 둔다** — 다음에
   //   되살리려는 사람이 근거를 다시 재지 않아도 되게.
   // ⚠ 뺀 기준 셋. 성적이 낮다는 이유만으로는 안 뺐다(그건 결과지 근거가 아니다):
@@ -2688,7 +2705,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 2026-08-13 사용자 결정 — 퀄리티는 S&P 판(squal) 하나만 남긴다. MSCI 판(qual)은 뺀다.
     //   샤프5 0.60 vs 0.73 으로 S&P 판이 낫고, 퀄리티 축이 셋이나 있을 이유가 없다.
     // ⚠ 이걸 빼야 남은 squal 의 이름에서 '(S&P)' 를 뗄 수 있다 — 안 그러면 '퀄리티'가 둘이 된다.
-    qual: 'S&P 판(퀄리티)만 남긴다 · 샤프5 0.60 < 0.73'
+    qual: 'S&P 판(퀄리티)만 남긴다 · 샤프5 0.60 < 0.73',
+    // 🚨 2026-08-13 사용자 결정 — 자사주·현금흐름 계열 셋을 통째로 뺀다. 12종 → 9종.
+    //   ⚠ 위 세 기준(①상관 0.93↑ ②후보 부족 ③시점정확 열위) 중 어디에도 걸리지 않는다.
+    //     실측 상관은 buyback↔fcfy 0.781 · buyback↔netbuy 0.677 · netbuy↔fcfy 0.588 이고,
+    //     남는 줄과의 최대 상관도 가치(val) 대비 0.60~0.81 이다 — **중복이라 뺀 것이 아니다.**
+    //     근거를 지어내지 않는다. 사용자 결정이고, 되살리려면 여기 세 줄을 지우면 된다.
+    //   ⚠ 자료·빌더는 그대로다(style_top_pdf.py 가 계속 만든다). 홈에서 안 보이는 것과
+    //     재지 않는 것은 다른 얘기다 — style.html 에서는 그대로 산다.
+    buyback: '사용자 결정(2026-08-13) — 자사주·현금흐름 계열 셋을 홈에서 뺐다 · 샤프5 0.70',
+    fcfy: '사용자 결정(2026-08-13) — 자사주·현금흐름 계열 셋을 홈에서 뺐다 · 샤프5 0.71',
+    netbuy: '사용자 결정(2026-08-13) — 자사주·현금흐름 계열 셋을 홈에서 뺐다 · 샤프5 1.15'
   };
   // 구성종목이 먼저 와야 표를 한 번만 그린다(행마다 펼침 여부가 달라진다).
   // style_trails.json 은 **fail-soft** 다 — 못 받으면 SLAB 이 null 로 남고 표는 예전 그대로
