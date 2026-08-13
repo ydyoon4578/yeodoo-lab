@@ -462,6 +462,20 @@ def main() -> int:
                    "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             nav=b.get("nav"), bnav=b.get("bench"),
             bench_label=b.get("bench_label"),
+            # 🚨 2026-08-13 — 보조 대조군을 원장 카드에도 싣는다. 판정선을 지수로 올리면서
+            #   원래 대조군('모전략'·'동일 유니버스 균등'·'SPY 원계열')을 보조로 내렸는데,
+            #   여기서 안 넘기면 그 질문이 '판정 축' 칸에서 사라진다 — 낙폭 차트 범례에만
+            #   남아 있어서는 "이 변형이 원판보다 나은가"를 아무도 못 읽는다.
+            #   ⚠ t 가 아니라 z 를 쓴다. 원장 지표는 월간 계열이라 strategy_metrics 가
+            #     ΔSharpe 의 z 를 이미 냈고, 여기서 t 를 새로 만들면 채점기가 두 벌이 된다.
+            bench_alt=(lambda _v2, _b2: {
+                "label": b.get("bench2_label"), "t": _v2.get("d_sharpe_z"), "tlab": "ΔSharpe z",
+                "d_sharpe": _v2.get("d_sharpe"),
+                "metrics": {"cagr": _b2.get("cagr"), "sharpe": _b2.get("sharpe"),
+                            "vol": _b2.get("vol"), "mdd": _b2.get("mdd")},
+            } if (b.get("bench2_label") and _v2.get("d_sharpe_z") is not None) else None)(
+                ((b.get("metrics") or {}).get("vs2") or {}),
+                ((b.get("metrics") or {}).get("b2") or {})),
             holdings=HOLD_DEP.get(n),
         ))
 
