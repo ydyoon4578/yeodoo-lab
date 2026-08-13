@@ -187,6 +187,11 @@
   .sprev b{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 11px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
   .sprev b i{font-style:normal;color:var(--muted);font-weight:400;margin-right:5px}
   .swarn{margin-top:14px;font-family:var(--mono);font-size:11.5px;color:var(--hot);background:var(--hot-bg);border-radius:2px;padding:8px 11px}
+  /* 결측 사유 한 건. .swarn 안에 들어가므로 색은 물려받고 자간만 잡는다. */
+  .soutage{margin-top:6px;padding-top:6px;border-top:1px solid color-mix(in srgb,currentColor 25%,transparent)}
+  .soutage b{font-weight:700}
+  .soutage span{font-family:var(--mono);font-size:.86em;opacity:.85;margin-left:8px;white-space:nowrap}
+  .soutage em{display:block;font-style:normal;opacity:.9;margin-top:3px;line-height:1.5}
   .sfill{height:6px;border-radius:2px;background:var(--panel-2);margin-top:9px;overflow:hidden;border:1px solid var(--line-soft)}
   .sfill>i{display:block;height:100%;border-radius:2px}
   .smeta{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -615,6 +620,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
           <a class="mmi" href="method.html" data-nav="method.html" title="A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
           <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
         </div>
@@ -1847,9 +1853,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(pl.length)g+='<div class="sprev">'+pl.map(function(x){
       var dv=ok?(s-x[1]):null;
       return '<b><i>'+x[0]+'</i>'+n1(x[1])+(dv==null?'':' ('+(dv>=0?'+':'')+n1(dv)+')')+'</b>';}).join('')+'</div>';
-    if(d.weight_available!=null&&d.weight_available<0.999)
+    if(d.weight_available!=null&&d.weight_available<0.999){
+      // 🚨 2026-08-13 — 종전에는 '가용 가중치 90%' 한 줄뿐이었다. **무엇이 왜 빠졌는지**는
+      //   자료(sentiment.json 의 outages[])에 컴포넌트·마지막 관측·사유·대안까지 다 있는데
+      //   사이트 어느 화면도 그것을 읽지 않았다 — 재 놓고 안 내면 모은 적 없는 것과 같다.
+      //   ⚠ 그 배선을 강제하던 게이트(validate_site)가 삭제된 market.html 을 열다 죽어
+      //     except 에 삼켜져 있었다. 게이트가 초록인 채로 화면이 침묵했다.
+      var _os=d.outages||[];
       g+='<div class="swarn">⚠ 구성요소 일부 결측 — 가용 가중치 '+Math.round(d.weight_available*100)+'%만으로 재정규화한 값입니다'+
-         (d.weight_available<0.5?' (0.5 미만이면 점수를 내지 않습니다)':'')+'.</div>';
+         (d.weight_available<0.5?' (0.5 미만이면 점수를 내지 않습니다)':'')+'.';
+      _os.forEach(function(o){
+        g+='<div class="soutage"><b>'+esc(o.component||'')+'</b>'+
+           (o.last_obs?' <span>마지막 관측 '+esc(o.last_obs)+'</span>':'')+
+           (o.since?' <span>결측 시작 '+esc(o.since)+'</span>':'')+
+           (o.checked?' <span>확인 '+esc(o.checked)+'</span>':'')+
+           (o.reason?'<em>'+esc(o.reason)+'</em>':'')+
+           (o.workaround?'<em>'+esc(o.workaround)+'</em>':'')+'</div>';
+      });
+      g+='</div>';
+    }
     g+='</div>';
 
     // ② 컴포넌트 카드
