@@ -5057,6 +5057,88 @@ def run():
         print("  [무위험] %d/%d일이 rf_monthly 에 없어 구간평균으로 대체" % (_rf_miss, len(dates)))
 
     build_strats()
+    # ── --ic : 횡단면 보상(rank IC) 진단 ─────────────────────────────────────
+    # 🚨 **진단 전용이다.** PREREG-2026-08-13-QUIETIC.md 등록분.
+    #   여기서 산출물을 쓰지 않고 data/_ic_diag.json 하나만 내고 빠져나간다 —
+    #   tech_strategies.json·pit_strategies.json 은 한 바이트도 안 바뀐다(결과에 해시 대조).
+    # ⚠ 채점기를 새로 만들지 않는다. 아래는 run() 이 쓰는 그 xsec_score_at() 을 그대로 부른다.
+    #   sc 는 내림차순이고 규칙이 sc[:TOPN] 을 사므로 **점수가 곧 매수 선호**다 —
+    #   '최하위' 규칙도 채점기 안에서 이미 부호가 뒤집혀 있다. 여기서 다시 뒤집지 않는다.
+    if "--ic" in sys.argv:
+        _me = month_ends(dates)
+        _me = [i for i in _me if i > MIN_HIST]
+        print("[--ic] 월말 %d개 · 규칙 %d종(xsec 만)" % (_me and len(_me) or 0,
+                                                    sum(1 for S in STRATS if S["kind"] == "xsec")))
+        def _spear(xs, ys):
+            """스피어만 — 동점은 평균순위. n<8 이면 None(얇은 횡단면을 수치로 안 만든다)."""
+            n_ = len(xs)
+            if n_ < 8:
+                return None
+            def _rk(v):
+                o = sorted(range(n_), key=lambda k: v[k])
+                r = [0.0] * n_
+                j = 0
+                while j < n_:
+                    k = j
+                    while k + 1 < n_ and v[o[k + 1]] == v[o[j]]:
+                        k += 1
+                    avg = (j + k) / 2.0 + 1
+                    for q in range(j, k + 1):
+                        r[o[q]] = avg
+                    j = k + 1
+                return r
+            a, b = _rk(xs), _rk(ys)
+            ma, mb = sum(a) / n_, sum(b) / n_
+            va = sum((x - ma) ** 2 for x in a)
+            vb = sum((x - mb) ** 2 for x in b)
+            if va <= 0 or vb <= 0:
+                return None
+            return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / math.sqrt(va * vb)
+
+        _icdoc = {"note": "PREREG-2026-08-13-QUIETIC 진단. 월말 점수와 다음 달 수익의 스피어만 "
+                          "rank IC. 점수는 xsec_score_at() 원본이고 부호를 다시 뒤집지 않는다 "
+                          "(sc 내림차순 = 매수 선호). 결측은 0 으로 안 채운다.",
+                  "as_of": dates[-1], "split": "2021-07-30", "min_names": 8, "rules": {}}
+        for S in STRATS:
+            if S["kind"] != "xsec":
+                continue
+            _rows = []
+            for k_, i0 in enumerate(_me[:-1]):
+                i1 = _me[k_ + 1]
+                try:
+                    sc, _ir, _cr = xsec_score_at(S, i0 + 1, _X)
+                except Exception:
+                    continue
+                if len(sc) < 8:
+                    continue
+                xs, ys = [], []
+                for v_, t_ in sc:
+                    p0, p1 = px[t_][i0], px[t_][i1]
+                    if p0 and p1 and p0 > 0:
+                        xs.append(v_); ys.append(p1 / p0 - 1.0)
+                ic = _spear(xs, ys)
+                if ic is None:
+                    continue
+                # 다리 분해 — 상위 N 과 하위 N 이 풀 평균에서 각각 얼마나 떨어지나
+                _N = min(S.get("topn") or TOPN, len(ys) // 3)
+                _ord = sorted(range(len(ys)), key=lambda z: -xs[z])
+                _mu = sum(ys) / len(ys)
+                _hi = sum(ys[z] for z in _ord[:_N]) / _N if _N else None
+                _lo = sum(ys[z] for z in _ord[-_N:]) / _N if _N else None
+                _rows.append({"m": dates[i0][:7], "ic": round(ic, 4), "n": len(ys),
+                              "hi": (None if _hi is None else round((_hi - _mu) * 100, 3)),
+                              "lo": (None if _lo is None else round((_mu - _lo) * 100, 3))})
+            if _rows:
+                _icdoc["rules"][S["sid"]] = {"name": S["name"], "n_months": len(_rows),
+                                             "monthly": _rows}
+                print("  %-16s %3d개월 · IC 평균 %+.4f" % (S["sid"], len(_rows),
+                      sum(r["ic"] for r in _rows) / len(_rows)))
+        _p = os.path.join(DATA, "_ic_diag.json")
+        json.dump(_icdoc, io.open(_p, "w", encoding="utf-8"), ensure_ascii=False,
+                  separators=(",", ":"))
+        print("→ %s (규칙 %d종) · 산출물은 건드리지 않았다" % (_p, len(_icdoc["rules"])))
+        return 0
+
     out = []
     bench_r = ixr[MIN_HIST:]
     IDXR = load_index_tr(dates)      # 같은 구간 지수(PR) — 카드에 나란히 그린다
