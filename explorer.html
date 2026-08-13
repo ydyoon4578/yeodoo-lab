@@ -470,6 +470,8 @@
   .benchline i.prtr{color:var(--hot);font-style:normal;font-weight:700;font-size:11.5px}
   /* 대조군 판정과 지수 눈금이 반대인 전략 — 초과분의 정체가 갈리는 지점이라 눈에 띄게. */
   /* 차트가 어느 레그의 곡선인지 — 그림 바로 위 한 줄. 창을 안 적고 섞으면 그게 더 나쁜 거짓말이다. */
+  .mhm .yr i{font-style:normal;color:var(--hot);font-weight:700;margin-left:1px;cursor:help}
+  .rgrow .rgs i{font-style:normal;opacity:.6;margin-left:3px}
   .chartwin{margin:12px 0 2px;font-size:11.5px;color:var(--muted);line-height:1.5}
   .chartwin b{color:var(--ink-2);font-weight:700}
   .prsplit{margin:8px 0 0;padding:8px 11px;border:1px solid var(--hot);border-radius:2px;
@@ -1309,7 +1311,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
             _pool:x.pool||null, _thin:x.n_thin||0, _bask:x.bask||null,
-            _risk:x.risk||null, _rv:x.risk_verdict||null, _ax:x.axes||null, _b2:x.bench_alt||null,
+            // ⚠ _risk/_rv 는 어디서도 안 읽는다(2026-08-13 확인, 참조 0곳) — 걷었다.
+            //   위험 축은 axes(_ax)가 그린다. 다시 쓸 일이 있으면 x.risk·x.risk_verdict 가
+            //   인덱스에 그대로 있다.
+            _ax:x.axes||null, _b2:x.bench_alt||null,
             // 매매 대상 대비 — 위 '두 잣대' 패널이 쓴다
             _vt:x.vs_traded||null,
             // 시점정확을 못 잰 사유 — 레그 이름표가 이걸 적는다(빌더가 실어 보낸 문장 그대로)
@@ -1644,9 +1649,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '이 순위는 과거 서술이지 "지금 이걸 사라"가 아닙니다. 그 국면 표본이 8개월 미만인 전략은 목록에서 빠집니다.</span>'+
       '</div>';
   }
-  function rgWeak(k){
+  // 🚨 2026-08-13 — 얇음 판정을 **그 전략의 실제 표본**으로 한다. 종전에는 전 기간 수
+  //   (RGM.n)만 봤는데 전략마다 구간이 달라 최대 2.5배까지 벌어진다(골디락스 전 기간
+  //   100개월 vs 어떤 전략 40개월). 전 기간이 100 이라 안 얇다고 판정하면서 정작 그 칸의
+  //   표본은 40 인 상태가 된다.
+  //   ⚠ n 을 안 주면 종전대로 전 기간으로 물러선다(자료가 없을 때 조용히 통과시키지 않는다).
+  function rgWeak(k, n){
     if(!(RGM&&RGM.runs))return false;
-    return (RGM.runs[k]||0)<3 || ((RGM.n&&RGM.n[k])||0)<20;
+    var nn=(n==null)?((RGM.n&&RGM.n[k])||0):n;
+    return (RGM.runs[k]||0)<3 || nn<20;
   }
   function shp(d){
     var v=null;
@@ -2489,11 +2500,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         return '<td style="'+heatCol(v,scale)+'">'+(v>=0?'':'−')+Math.abs(v).toFixed(1)+'</td>';
       }).join('');
       var t=any?(cum-1)*100:null;
-      return '<tr><th class="yr">'+y+'</th>'+tds+'<td class="tot" style="'+heatCol(t,scale*2.2)+'">'+
-        (t==null?'·':((t>=0?'':'−')+Math.abs(t).toFixed(1)))+'</td></tr>';
+      // 🚨 2026-08-13 — **부분 연도에 표식을 단다.** charts[].partial 이 어느 해가 온전치
+      //   않은지 이미 담고 있는데(178/180종) 화면이 한 번도 안 읽었다. 첫 해와 끝 해는
+      //   보통 몇 달뿐인데 '연간' 칸이 온전한 한 해처럼 보인다 — 실측 t-x-amihud 는
+      //   2016·2026 둘 다 부분이다.
+      //   ⚠ 값을 고치지 않는다. 있는 달로 곱한 값 그대로 두고 *만 붙인다.
+      var _pt=(C.partial||[]).indexOf(y)>=0;
+      return '<tr><th class="yr">'+y+(_pt?'<i title="이 해는 몇 달만 있습니다 — 온전한 한 해가 아닙니다">*</i>':'')+
+        '</th>'+tds+'<td class="tot" style="'+heatCol(t,scale*2.2)+'">'+
+        (t==null?'·':((t>=0?'':'−')+Math.abs(t).toFixed(1)+(_pt?'*':'')))+'</td></tr>';
     }).join('');
-    return '<div class="mhmwrap"><table class="mhm"><caption>단위 % · 색은 이 표 안의 90분위로 맞췄습니다</caption>'+
-      '<thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+    var _pn=(C.partial||[]).length;
+    return '<div class="mhmwrap"><table class="mhm"><caption>단위 % · 색은 이 표 안의 90분위로 맞췄습니다'+
+      (_pn?' · <b>*</b> 표시한 '+_pn+'개 해는 몇 달만 있어 연간 칸이 온전한 한 해가 아닙니다':'')+
+      '</caption><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
   }
   // 지수(S&P 500) 월별로 국면을 자른다 — 고점→저점 10% 이상 하락, 그리고 그 저점에서 신고점까지.
   // ⚠ 자르는 잣대를 전략이 아니라 **지수**로 둔다. 전략 자신의 낙폭으로 자르면 그 전략이
@@ -2704,15 +2724,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(!(RGM&&d&&d._rg))return '';
       var now=rgNow();
       var rows=(RGM.order||[]).map(function(k){
-        var e=d._rg[k], w=rgWeak(k), v=(e&&typeof e.v==='number')?e.v:null;
+        var e=d._rg[k], _en=(e&&typeof e.n==='number')?e.n:null;
+        var w=rgWeak(k,_en), v=(e&&typeof e.v==='number')?e.v:null;
         var cls=(v==null)?'z':(v>0.005?'up':(v<-0.005?'dn':'z'));
         return '<div class="rgrow'+(w?' weak':'')+(k===now?' now':'')+'">'+
           '<span class="rgn">'+esc((RGM.ko&&RGM.ko[k])||k)+(k===now?' <b>← 지금</b>':'')+'</span>'+
           '<span class="rgv '+cls+'">'+(v==null?'—':((v>0?'+':'')+v.toFixed(2)+'%'))+'</span>'+
-          '<span class="rgs">'+((RGM.n&&RGM.n[k])||0)+'개월 · '+((RGM.runs&&RGM.runs[k])||0)+'구간'+
+          // ⚠ **이 전략의 표본**을 앞에 적고 전 기간은 괄호로. 종전에는 전 기간만 적어
+          //   화면이 "골디락스 100개월"이라 말하면서 실제로는 40개월을 재고 있었다.
+          '<span class="rgs">'+(_en==null?((RGM.n&&RGM.n[k])||0):_en)+'개월'+
+          ((_en!=null&&RGM.n&&RGM.n[k]&&RGM.n[k]!==_en)?'<i>/전체 '+RGM.n[k]+'</i>':'')+
+          ' · '+((RGM.runs&&RGM.runs[k])||0)+'구간'+
           (w?' ⚠':'')+'</span></div>';
       }).join('');
-      return '<div class="rgwrap"><div class="kh">국면별 월평균 수익 — '+esc(RGM.span||'')+'</div>'+
+      // ⚠ 머리글도 **그 전략의 창**이다. RGM.span 은 전 기간이라 40개월짜리 전략 위에
+      //   전 기간 구간을 적으면 그 표가 그 창을 덮은 것처럼 읽힌다.
+      var _rgw=(d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7);
+      return '<div class="rgwrap"><div class="kh">국면별 월평균 수익 — '+
+        esc(_rgw&&_rgw!=='~'?_rgw:(RGM.span||''))+'</div>'+
         rows+
         '<p class="knote">🚨 <b>검정이 아니라 서술입니다.</b> 이 랩은 이 7국면이 다음 달 수익을 '+
         '가르지 못한다는 것을 이미 검정했습니다 — 지금 국면을 보고 전략을 고르라는 뜻이 아닙니다.<br>'+
