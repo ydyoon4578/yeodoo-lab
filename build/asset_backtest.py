@@ -161,6 +161,20 @@ A = None          # 자산 패널
 DTS = []          # 날짜
 RF = {}
 
+# 🚨 지수 대조군은 **가격지수(PR)** 로 통일한다 — 2026-08-13 사용자 결정.
+#   종전에는 이 랩만 SPY(배당 재투자 = 사실상 TR)를 썼고 종목 랩 98종은 ^GSPC(PR)를 써서,
+#   한 화면에서 "S&P 500(PR)" 옆에 "SPY 상시보유"가 나란히 놓였다. 표기가 갈리면 세로로
+#   못 읽는다는 것이 사용자 지적이다.
+#   ⚠ **이 통일에는 값이 붙는다.** 전략 수익은 전부 TR(조정종가)인데 대조군만 PR이 되므로
+#     대조군이 배당만큼 불리해진다 — 실측 연 2.00%p(2006~2026: SPY 11.19% vs ^GSPC 9.19%).
+#     이 랩 35종 중 13종이 CAGR 열세에서 우위로 뒤집힌다. 전략이 좋아진 것이 아니라
+#     대조군이 배당을 잃은 것이다. 화면(explorer)이 그 사실을 카드마다 적어야 한다.
+#   ⚠ ^GSPC 는 **살 수 없는 계열**이다. 살 수 있는 것과 겨루던 것을 못 사는 것과 겨루게 됐다.
+#   ⚠ 지수형 대조군만 바꾼다. 포트폴리오 대조군(60/40·9자산 동일가중)과 원계열 대조군
+#     ('타이밍 없는 원계열'·'종가→종가')은 그대로다 — 그것들은 PR/TR 표기가 없고,
+#     같은 것을 다르게 굴린 비교라 지수로 바꾸면 비교 자체가 성립하지 않는다.
+IDX_LAB = {"^GSPC": "S&P 500(PR)", "^NDX": "NASDAQ 100(PR)"}
+
 
 # ── 도우미 ──────────────────────────────────────────────────────────────
 def ser(t):
@@ -514,7 +528,10 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
         tot = sum(w0.values()) or 1.0
         parts = sorted(((k, 100 * v / tot) for k, v in w0.items()), key=lambda z: -z[1])
         if len(parts) == 1:
-            return "%s 상시보유" % parts[0][0]
+            t0 = parts[0][0]
+            # 지수는 종목 랩 98종과 **글자까지 같은** 라벨을 쓴다("S&P 500(PR) 매수후보유").
+            # 라벨이 한 글자만 달라도 화면에서 다른 대조군으로 읽힌다.
+            return (IDX_LAB[t0] + " 매수후보유") if t0 in IDX_LAB else ("%s 상시보유" % t0)
         if len(parts) <= 4:
             return " · ".join("%s %d%%" % (k, round(p)) for k, p in parts)
         return "%d자산 동일가중" % len(parts)
@@ -688,7 +705,7 @@ def build():
         st = first_common(ts, pad=20)
         return run_weights(lambda i: {"SPY": 0.95, "VIXY": 0.05}, st,
                            "테일 리스크 헤지 (SPY 95% + VIXY 5%)",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "월말에 SPY 95% · VIXY 5%로 되돌린다(상시 보험).",
                            "상시 비용을 내고 꼬리를 사는 구조. 대조군은 보험을 안 든 SPY 100%다. "
                            "낙폭이 얼마나 줄고 그 대가가 얼마인지가 전부다.")
@@ -798,7 +815,7 @@ def build():
                 return {"SPY": 1.0}
             return {"SPY": 1.0} if (v1[i] / v3[i]) < 1.0 else {"SHY": 1.0}   # 콘탱고면 편입
         return run_weights(w, st, "VIX 기간구조 신호 (VIX/VIX3M)",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "VIX/VIX3M이 1 미만(콘탱고)이면 SPY, 1 이상(백워데이션)이면 SHY. 월말 판정.",
                            "아카이브 사유는 '실현변동성 타깃과 중복 corr 0.988'이었다. "
                            "중복 여부와 별개로 단독 성과는 잰 적이 없어 여기서 잰다.")
@@ -859,9 +876,9 @@ def build():
             k = min(0.05, 0.10 / (v * math.sqrt(252)))   # 목표 연 10% 기여, 상한 5%
             return {"SPY": 1.0 - k, "BTC-USD": k}
         return run_weights(w, st, "디지털자산 변동성 타깃 위성",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "BTC 비중을 60일 실현변동성 기준 목표에 맞춰 0~5%로 조절, 나머지 SPY. 월말.",
-                           "변동성으로 크기를 조인 위성이 본체를 개선하는지. 대조군은 SPY 100%.")
+                           "변동성으로 크기를 조인 위성이 본체를 개선하는지. 대조군은 S&P 500(PR).")
     add("crypto-sat", "crypto-vol-target-satellite", s_crypto)
 
     # 14) 섹터 리스크패리티
@@ -927,7 +944,7 @@ def build():
             med = sorted(hist)[len(hist) // 2]
             return {"SPY": 1.0} if rr >= med else {"SHY": 1.0}
         return run_weights(w, st, "신용 레짐 게이트 (HYG/LQD 프록시)",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "HYG/LQD 가격비가 1년 중앙값 이상이면 SPY, 미만(신용 스트레스)이면 SHY. 월말.",
                            "ICE BofA OAS는 공개 CSV가 3년치뿐이라 장기로는 못 쓴다. "
                            "가격비는 같은 정보를 담고 전 구간이 있어 이걸로 대신한다.",
@@ -1098,7 +1115,7 @@ def build():
         st = first_common(ts, pad=20)
         return run_weights(lambda i: {"SVXY": 0.25, "SHY": 0.75}, st,
                            "변동성 위험프리미엄 숏볼 (SVXY 25%)",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "월말에 SVXY 25% · SHY 75%로 되돌린다(레버리지 없이 숏볼 노출).",
                            "아카이브 사유는 '초과수익=레버리지, 위험조정 0'이었다. 노출을 25%로 "
                            "묶어 레버리지 효과를 뺀 뒤에도 남는 것이 있는지 본다.",
@@ -1145,7 +1162,7 @@ def build():
                 return {"SPY": 1.0}
             return {"SHY": 1.0} if e > 0.3 else {"SPY": 1.0}
         return run_weights(w, st, "초과채권프리미엄(EBP) 리스크선호 게이트",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "연준 EBP가 +0.3을 넘으면(리스크선호 위축) SHY, 아니면 SPY. 월말.",
                            "EBP는 FRED에 없어 '구할 수 없다'로 분류돼 있었는데, 연준이 공개 CSV로 "
                            "낸다. 실제로 받아서 돌린다.",
@@ -1286,11 +1303,11 @@ def build():
             return _ew(DEF if v else CYC)
         return run_weights(
             w, st, "통화조건 섹터 로테이션 (Conover 2008)",
-            lambda i: {"SPY": 1.0},
+            lambda i: {"^GSPC": 1.0},
             "연방기금금리(최신 발표분)가 12개월 전보다 높으면 긴축으로 보아 방어 3섹터"
             "(XLP·XLV·XLU) 동일가중, 낮으면 완화로 보아 경기민감 6섹터"
             "(XLK·XLY·XLF·XLI·XLB·XLE) 동일가중. 월말 판정 · 2개월 연속 확인 후 전환 · "
-            "거시 발표 30일 지연 반영. 대조군은 SPY.",
+            "거시 발표 30일 지연 반영. 대조군은 S&P 500(PR).",
             "Conover·Jensen·Johnson·Mercer(2008, Journal of Investing) — 33년 자료에서 Fed "
             "완화기 경기민감·긴축기 방어 전환이 낮은 리밸런싱 빈도로도 유의한 초과수익을 냈다"
             "(긴축기 방어 로테이션 수익이 벤치마크의 약 2배·리스크는 더 낮음). 그 주장을 이 "
@@ -1311,11 +1328,11 @@ def build():
             return _ew(PHASE_W[v]) if v else _ew(SEC9)
         return run_weights(
             w, st, "4국면 섹터 로테이션 (Fidelity 프레임워크)",
-            lambda i: {"SPY": 1.0},
+            lambda i: {"^GSPC": 1.0},
             "산업생산 12개월 변화와 실업률 12개월 변화의 부호로 4국면을 판정하고 국면별 우위 "
             "섹터를 동일가중으로 든다 — 회복 XLF·XLY / 확장 XLK·XLI / 둔화 XLE·XLB·XLU / "
             "침체 XLP·XLV·XLU. 월말 판정 · 2개월 연속 확인 후 전환 · 거시 발표 30일 지연 반영. "
-            "대조군은 SPY.",
+            "대조군은 S&P 500(PR).",
             "Fidelity 4국면 프레임워크가 1962년 이후 자료에서 문서화한 국면별 상대우위 — "
             "초기엔 금융·경기소비재·부동산, 후기엔 에너지·소재, 침체기엔 필수소비재·헬스케어·"
             "유틸리티. 국면별 섹터 배정을 출처 문장 그대로 옮겨 돌린다.",
@@ -1352,12 +1369,12 @@ def build():
             return _ew(PHASE_W[v]) if v else _ew(SEC9)
         return run_weights(
             w, st, "위험 게이트 + 국면 섹터 (A7b)",
-            lambda i: {"SPY": 1.0},
+            lambda i: {"^GSPC": 1.0},
             "SPY 종가가 200일 단순이동평균 위면 A7 의 국면별 섹터를 동일가중으로 들고"
             "(회복 XLF·XLY / 확장 XLK·XLI / 둔화 XLE·XLB·XLU / 침체 XLP·XLV·XLU), "
             "아래면 IEF 100% 로 주식 밖으로 나간다. 국면 판정은 A7 과 같다 — 산업생산·실업률 "
             "12개월 변화의 2×2 · 발표 30일 지연 · 히스테리시스 2개월. 게이트에는 히스테리시스 "
-            "없음. 월말 판정 · 대조군 SPY.",
+            "없음. 월말 판정 · 대조군 S&P 500(PR).",
             "A7 재현이 실패한 두 기전을 고친 것이다. 국면 신호는 반응에 최소 3개월이 걸려 "
             "코로나 급락 23거래일을 못 잡았고(실측: 침체 배분 전환일이 저점 두 달 뒤), "
             "방어섹터는 방어를 못 했다(완벽한 타이밍도 −40.6 vs SPY −33.7). 그래서 게이트를 "
@@ -1547,11 +1564,14 @@ def build():
     # 🚨 대조군을 둘 다 잰다(2026-08-12 사용자 결정). 어느 쪽으로 두든 한쪽이 유리하다 —
     #   채권으로 빠지는 규칙을 SPY 와 겨루면 '주식이 더 올랐다'를 재고, 60/40 과 겨루면
     #   문턱이 연 3.3%p 낮다(SPY 11.19% vs 60/40 7.93%, 2006~2026 실측).
-    #   주대조군은 SPY 상시보유 — 랩의 다른 타이밍 43종과 같은 잣대라 세로 비교가 되고,
+    #   주대조군은 지수 매수후보유 — 랩의 다른 타이밍 43종과 같은 잣대라 세로 비교가 되고,
     #   채권 대조군 필터(2026-07-28)에도 걸리지 않아 목록에 들어온다.
     #   60/40 은 보조로 병기한다(판정에는 안 쓴다).
+    # 🚨 2026-08-13 — SPY → ^GSPC(PR). 이름은 남기지만 담는 것은 지수다(IDX_LAB 위 주석 참조).
+    #   ⚠ 이름을 _bench_spy 그대로 둔 이유는 35개 호출부를 한꺼번에 건드리지 않으려는 것뿐이다.
+    #     읽을 때 SPY 로 오해하지 않도록 여기 적어 둔다.
     def _bench_spy(i):
-        return {"SPY": 1.0}
+        return {"^GSPC": 1.0}
 
     def _bench6040(i):
         return {"SPY": 0.6, "AGG": 0.4}
@@ -1978,7 +1998,7 @@ def build():
             return {"SPY": 1.0} if uup[i] > m else {"EFA": 1.0}
         return run_weights(
             w, st, "달러 축 — 미국 vs 해외 선진",
-            lambda i: {"SPY": 1.0},
+            lambda i: {"^GSPC": 1.0},
             "달러 ETF(UUP) 종가가 200일 단순이동평균 위면 SPY 100%, 아래면 EFA 100%. "
             "월말 판정 · 신호가 바뀐 달에만 교체 · 히스테리시스 없음.",
             "달러 강세는 해외 자산의 달러환산 수익을 깎고 달러부채를 진 해외 기업의 조달을 "
@@ -1988,7 +2008,7 @@ def build():
             note="자유도를 0 으로 고정했다 — 200일선은 이 저장소가 이미 쓰는 값이고(창을 새로 "
                  "고르면 자유도가 생긴다), EEM 대신 EFA 는 신흥국의 원자재·중국 요인이 달러 축을 "
                  "오염시키기 때문이다. 둘 다 결과와 무관한 사유다. UDN 은 UUP 의 거울상이라 "
-                 "규칙에 안 쓴다. ⚠ 대조군 SPY 는 '달러 신호가 값을 하는가'와 'EFA 가 SPY 를 "
+                 "규칙에 안 쓴다. ⚠ 대조군 지수는 '달러 신호가 값을 하는가'와 'EFA 가 미국을 "
                  "이기는가'를 섞는다 — SPY/EFA 50:50 대비를 진단으로 병기한다(판정에는 안 쓴다).")
     add("usd-us-intl", "usd-axis-rotation", s_usd_axis)
 
@@ -1998,8 +2018,8 @@ def build():
         st = first_common(ts, pad=20)
         return run_weights(lambda i: {"QUAL": 1.0}, st,
                            "퀄리티 틸트 (QUAL, ETF 프록시)",
-                           lambda i: {"SPY": 1.0},
-                           "QUAL(퀄리티 팩터 ETF)을 보유. 대조군은 SPY.",
+                           lambda i: {"^GSPC": 1.0},
+                           "QUAL(퀄리티 팩터 ETF)을 보유. 대조군은 S&P 500(PR).",
                            "원 규칙은 퀄리티 롱 · 정크 숏이지만 무료 데이터로 정크 바스켓을 "
                            "시점정합하게 만들 수 없다. 그래서 '롱 다리'만 프록시로 돌린다.",
                            note="롱숏이 아니라 롱온리 프록시다 — 같은 이름의 다른 규칙임을 명시한다. "
@@ -2191,9 +2211,13 @@ def build():
     # 사람들이 실제로 입에 올리는 규칙이 목록에 없으면 "그건 안 해 봤잖아"라는 말을 못 막는다.
     # 판정이 어떻게 나오든 목록에 있는 것 자체가 답이 된다.
     #
-    # 대조군은 전부 **SPY 상시보유**다. 이 규칙들은 '무엇을 살까'가 아니라 '언제 들어가 있을까'만
-    # 정한다 — 들어가 있을 때 사는 것이 SPY 이므로, 정당한 귀무가설은 '그냥 계속 들고 있기'다.
-    # 전략도 대조군도 같은 SPY 계열이라 TR/PR 표기 차이가 양쪽에서 상쇄된다.
+    # 대조군은 전부 **S&P 500(PR) 매수후보유**다. 이 규칙들은 '무엇을 살까'가 아니라
+    # '언제 들어가 있을까'만 정한다 — 정당한 귀무가설은 '그냥 계속 들고 있기'다.
+    # 🚨 2026-08-13 이전에는 대조군이 SPY 였고, 그때는 여기에 "전략도 대조군도 같은 SPY 계열이라
+    #   TR/PR 표기 차이가 양쪽에서 상쇄된다"고 적혀 있었다. **그 상쇄가 이제 없다.**
+    #   전략은 여전히 SPY 조정종가(TR)를 사는데 대조군만 배당 없는 지수(PR)가 됐다 —
+    #   대조군이 연 2.00%p 불리하다. 이 랩 35종 중 13종이 그 한 가지 때문에 CAGR 열세에서
+    #   우위로 바뀐다. 사용자 결정이고, 화면이 카드마다 그 사실을 적는 것으로 갚는다.
     #
     # 대피처는 SHY(단기국채)로 통일했다. 현금 0%로 두면 '이탈'이 곧 무수익이 되어, 규칙의
     # 값어치가 아니라 그 시기 단기금리의 값어치가 섞여 든다.
@@ -2210,7 +2234,7 @@ def build():
             except Exception:
                 on = True                       # 신호를 못 내면 '가만히 있기'가 기본값이다
             return {"SPY": 1.0} if on is not False else {SAFE: 1.0}
-        add(sid, arch, lambda: run_weights(w, st, label, lambda i: {"SPY": 1.0},
+        add(sid, arch, lambda: run_weights(w, st, label, lambda i: {"^GSPC": 1.0},
                                            rule, why, note))
 
     # 1) 200일 이동평균 — Faber(2007)의 그 규칙
@@ -2301,7 +2325,7 @@ def build():
                 return {"SPY": 1.0}
             k = sum(1 for x in v if x) / len(v)          # 찬성 비율만큼만 노출
             return {"SPY": k, SAFE: 1.0 - k} if 0 < k < 1 else ({"SPY": 1.0} if k else {SAFE: 1.0})
-        return run_weights(w, st, "타이밍 3규칙 다수결", lambda i: {"SPY": 1.0},
+        return run_weights(w, st, "타이밍 3규칙 다수결", lambda i: {"^GSPC": 1.0},
                            "200일선·절대모멘텀·VIX 게이트 셋의 찬성 비율만큼 SPY 를 들고 "
                            "나머지는 SHY. 셋 다 찬성이면 100%, 하나면 33%.",
                            "'규칙 하나하나는 약해도 합치면 낫다'는 흔한 주장을 그대로 검정한다. "
@@ -2327,7 +2351,7 @@ def build():
             k = sum(v) / len(v)
             return {"SPY": k, SAFE: 1.0 - k} if 0 < k < 1 else ({"SPY": 1.0} if k else {SAFE: 1.0})
         return run_weights(w, st, "이동평균 기간 앙상블 (100·150·200·250)",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "네 기간의 이동평균 신호 중 찬성 비율만큼 SPY 를 들고 나머지는 SHY.",
                            "200일이라는 숫자가 특별한지 묻는 줄이다. 네 기간을 고르게 섞은 것이 "
                            "200일 단독과 비슷하면 '200'은 규칙이 아니라 관습이라는 뜻이고, "
@@ -2362,7 +2386,7 @@ def build():
         def w(i):
             return {"SPY": 1.0} if _CF[i] else {SAFE: 1.0}
         return run_weights(w, st, "200일선 + 확인 지연 5일",
-                           lambda i: {"SPY": 1.0},
+                           lambda i: {"^GSPC": 1.0},
                            "200일선 신호가 5거래일 연속 같은 방향일 때만 갈아탄다.",
                            "이동평균 규칙에 늘 따라붙는 반론이 '경계에서 들락거려 비용만 "
                            "든다'는 것이다. 확인 지연을 넣으면 회전이 줄어드는 대신 신호가 "
@@ -2410,7 +2434,7 @@ def build():
             # run_weights 는 fn(i-1) 의 가중으로 i 일 수익을 낸다 — 하루 뒤 상태를 봐야 한다.
             j = min(i + 1, n_ - 1)
             return {"SPY": 1.0} if fl[j] else {SAFE: 1.0}
-        add(sid, None, lambda: run_weights(w, st, label, lambda i: {"SPY": 1.0},
+        add(sid, None, lambda: run_weights(w, st, label, lambda i: {"^GSPC": 1.0},
                                            rule, why, note, cadence="day"))
 
     # 12) 월말 효과 — Ariel(1987) · Lakonishok & Smidt(1988)
