@@ -272,6 +272,10 @@
   .fltlab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
           align-self:center;margin-right:2px;min-width:34px}
   /* ③ 이 전략 자신의 성적 — 비교 열도, 판정색도 없다. 숫자는 잉크색 단일. */
+  /* 머리 지표 — 샤프·최대낙폭 두 칸만 강조하고 지수 대비 차이를 옆에 붙인다. */
+  .labperf .lpg>div.hi b{font-size:1.12em}
+  .labperf .lpg .dlt{font-family:var(--mono);font-size:.8em;font-weight:600;margin-left:4px}
+  .labperf .lpg .dlt.up{color:var(--gA)} .labperf .lpg .dlt.dn{color:var(--rej)}
   .selfperf{padding:15px 18px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
   .selfperf .sph{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;
                  display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
@@ -2075,9 +2079,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var m=bt.metrics; if(!(m&&m.s))return '';
     var S=m.s,b=m.basis||{};
     var eff=(m.overlap&&m.overlap.effective_n_months);
-    var cells=[['연평균 수익',mfmt('cagr',S.cagr)],['최대낙폭',mfmt('mdd',S.mdd)],
-      ['낙폭 회복',S.recovery_m!=null?S.recovery_m+'개월':(S.underwater_m!=null?'미회복':'—')],
-      ['월간 승률',S.hit!=null?Number(S.hit).toFixed(0)+'%':'—']];
+    // 🚨 순서를 바꿨다(2026-08-13 사용자 지시) — 샤프·최대낙폭이 앞, 연평균 수익이 뒤다.
+    //   근거는 위 labperf 와 같다: CAGR ↔ 생존편향 상관 0.923.
+    var cells=[['샤프',mfmt('sharpe',S.sharpe)],['최대낙폭',mfmt('mdd',S.mdd)],
+      ['연평균 수익',mfmt('cagr',S.cagr)],
+      ['낙폭 회복',S.recovery_m!=null?S.recovery_m+'개월':(S.underwater_m!=null?'미회복':'—')]];
     return '<div class="selfperf"><div class="sph"><span>이 전략 자신의 성적 <span style="text-transform:none;letter-spacing:0">(지수와 비교하지 않고)</span></span>'+
       '<span class="nbadge'+(b.sample_warning?' warn':'')+'">'+esc(b.start_month||'')+' ~ '+esc(b.end_month||'')+' · '+b.n_months+'개월'+
       (spanTxt(b.start_month,b.end_month)?' ('+spanTxt(b.start_month,b.end_month)+')':'')+
@@ -2688,12 +2694,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div class="lpg">'+
           '<div><span>구간</span><b>'+esc((d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7))+
             (spanTxt(d._start,d._end)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(d._start,d._end)+'</span>':'')+'</b></div>'+
-          '<div><span>CAGR</span><b>'+f(mm.cagr)+'%</b></div>'+
-          '<div><span>샤프</span><b>'+f(mm.sharpe,3)+'</b></div>'+
-          '<div><span>MDD</span><b>'+f(mm.mdd)+'%</b></div>'+
-          '<div><span>지수 샤프</span><b>'+f(bb.sharpe,3)+'</b></div>'+
-          '<div><span>지수 CAGR</span><b>'+f(bb.cagr)+'%</b></div>'+
-          '<div><span>지수 MDD</span><b>'+f(bb.mdd)+'%</b></div>'+
+          // 🚨 2026-08-13 사용자 지시 — **샤프와 최대낙폭을 앞에 둔다.**
+          //   "일단 샤프랑 mdd, 월별 수익률, 상승하락 구간 비교 이런거에 집중해".
+          //   종전 순서는 CAGR → 샤프 → MDD 였다. CAGR 을 맨 앞에 두면 그 줄이 헤드라인이
+          //   되는데, 이 랩 실측으로 CAGR ↔ 생존편향 상관이 0.923 이다(REVERIFY §3) —
+          //   가장 크게 부풀려지는 값을 가장 먼저 보여 주던 셈이다. 뒤로 옮긴다.
+          // ⚠ 지수 대비 차이를 같은 칸에 적는다. 지수 값을 따로 세 칸 두면 읽는 사람이
+          //   머릿속에서 빼야 했다 — 그 뺄셈을 화면이 한다.
+          '<div class="hi"><span>샤프</span><b>'+f(mm.sharpe,3)+
+            (bb.sharpe!=null&&mm.sharpe!=null?' <span class="dlt '+
+              (mm.sharpe-bb.sharpe>0?'up':'dn')+'">'+(mm.sharpe-bb.sharpe>0?'+':'')+
+              f(mm.sharpe-bb.sharpe,3)+'</span>':'')+'</b></div>'+
+          '<div class="hi"><span>최대낙폭</span><b>'+f(mm.mdd)+'%'+
+            (bb.mdd!=null&&mm.mdd!=null?' <span class="dlt '+
+              (mm.mdd-bb.mdd>0?'up':'dn')+'">'+(mm.mdd-bb.mdd>0?'+':'')+
+              f(mm.mdd-bb.mdd)+'%p</span>':'')+'</b></div>'+
+          '<div><span>CAGR</span><b>'+f(mm.cagr)+'%'+
+            (bb.cagr!=null&&mm.cagr!=null?' <span class="dlt '+
+              (mm.cagr-bb.cagr>0?'up':'dn')+'">'+(mm.cagr-bb.cagr>0?'+':'')+
+              f(mm.cagr-bb.cagr)+'%p</span>':'')+'</b></div>'+
+          '<div><span>지수 샤프 · MDD · CAGR</span><b>'+f(bb.sharpe,3)+' · '+
+            f(bb.mdd)+'% · '+f(bb.cagr)+'%</b></div>'+
         '</div>'+
         (function(){
           // 곡선 자료가 오면 배포 카드와 같은 그림 세 장을 그린다(누적수익 로그축·낙폭·연도별).
