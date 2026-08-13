@@ -613,9 +613,12 @@ def _fpe(stocks):
 
     out = {}
     ix = lambda k: [s for s in stocks if k in (s.get("idx") or [])]
+    # ⚠ 스타일 ETF 는 **한 줄도 안 낸다**(사용자 결정 2026-08-13). 종전에는 RSP 만 값이 있었는데
+    #   (동일가중 S&P 500 이라 후보가 SPX 와 같아서 계산이 됐다), 그 묶음의 나머지 여덟은
+    #   편입 명단이 없어 비어 있었다. **한 줄만 채워진 열은 그 줄이 특별해 보이게 만든다.**
+    #   열 머리글도 '스타일 ETF 는 비운다' 고 적고 있어서 그 문장과도 어긋났다.
     for tk, sel, cw in (("SPY", ix("SPX"), True),      # 시총가중 S&P 500
-                        ("QQQ", ix("NDX"), True),      # 시총가중 나스닥 100
-                        ("RSP", ix("SPX"), False)):    # 동일가중 S&P 500 — 가중만 다르다
+                        ("QQQ", ix("NDX"), True)):     # 시총가중 나스닥 100
         r = agg(sel, cw)
         if r:
             r["basis"] = ("시총가중" if cw else "동일가중")
