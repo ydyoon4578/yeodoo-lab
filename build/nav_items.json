@@ -181,7 +181,7 @@
      "name": "복제 리포트",
      "file": "report.html",
      "status": "existing",
-     "desc": "돌린 규칙 117종을 전략별로 — 판정이 아니라 잰 값 전부",
+     "desc": "돌린 규칙 전부를 전략별로 — 판정이 아니라 잰 값 전부",
      "src": "model",
      "verdict": "unverified",
      "effort": "S"
