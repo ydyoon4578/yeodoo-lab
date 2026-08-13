@@ -290,6 +290,13 @@
   .ktile .v{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.05;font-variant-numeric:tabular-nums}
   .ktile .s{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .kindtiles .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
+  /* 바스켓 크기 표 — 고른 줄을 굵게. */
+  .nselwrap{padding:13px 18px 14px;border-bottom:1px solid var(--line-soft)}
+  .nselwrap .kh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .nseltbl td,.nseltbl th{font-variant-numeric:tabular-nums}
+  .nseltbl tbody tr.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .nseltbl tbody tr.on th,.nseltbl tbody tr.on td{font-weight:700;color:var(--ink)}
+  .nselwrap .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
   /* 국면 탭 + 그 탭의 표본 고지. 🚨 배너는 장식이 아니라 **탭을 만든 조건**이다
      (2026-08-12 사용자 결정) — 여섯 국면 중 셋이 사건 하나짜리라, 그 사실을 탭 머리에
      크게 적는 것을 조건으로 탭을 만들었다. 지우지 말 것. */
@@ -1074,10 +1081,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   임계를 넘었다** 하나뿐이다. 꺼진 관문의 수치는 그대로 재서 각 전략 상세에 싣는다
     //   (증분알파·PIT 열) — 끄는 것과 안 재는 것은 다르다.
     //   ⚠ 관문을 다시 켜면 이 문구도 같이 고칠 것. 정본은 build/tech_backtest.py 의 GATE_* 다.
+    // 🚨 2026-08-13 사용자 결정 — 랩 규칙의 등급을 없앴다. 관문이 하나도 안 켜져 있는데
+    //   '통과 후보' 배지를 달면 화면이 검정하지 않은 것을 검정한 척한다.
+    //   이제 랩 규칙은 전부 '측정만' 이고, 읽는 자리는 샤프·최대낙폭·월별 수익·급등락 구간이다.
+    //   ⚠ 배포 원장의 등급(배포·제한적 유효)은 그쪽 파일이 따로 들고 있어 그대로다.
+    measured:{lab:"측정만",short:"측정만",orig:"측정만",col:"--champ",
+          mean:"등급을 매기지 않습니다. 이 랩은 이 규칙을 돌려 성적을 재 놓았을 뿐이고, "+
+               "'좋다·나쁘다'를 판정하는 관문은 지금 하나도 켜져 있지 않습니다. "+
+               "샤프·최대낙폭·월별 수익·급등락 구간을 직접 보십시오"},
     pass:{lab:"통과 후보",short:"통과 후보",orig:"통과 후보",col:"--deploy",
-          mean:"이 전략 하나만 놓고 보면 비교 지수를 이긴 것이 우연으로 보기 어렵습니다(t>2). "+
-               "⚠ 다만 여러 전략을 한꺼번에 시험한 것·비슷한 전략과 겹치는 것·과거 종목 편향은 "+
-               "지금 안 따집니다. 배포 결정과도 별개입니다"},
+          mean:"옛 등급입니다(관문을 켜 두었을 때 매겨진 것) — 지금은 안 씁니다"},
     inverse:{lab:"역방향으로 유의",short:"역방향 유의",orig:"역방향 유의",col:"--marg",
              mean:"관례와 반대 방향으로 문턱을 넘었다 — 방향을 결과 보고 정했으므로 가설이다"},
     tie:{lab:"구별 불가",short:"구별 불가",orig:"구별 불가",col:"--muted",
@@ -1088,9 +1101,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            mean:"비교 지수보다 나빴습니다"},
     nojudge:{lab:"판정 불가",short:"판정 불가",orig:"판정 불가",col:"--muted",
              mean:"표본이 짧아 실력과 운을 가를 수 없다"}};
-  var VORDER={deploy:0,marginal:1,pass:2,inverse:3,tie:4,few:5,worse:6,reject:7,nojudge:8};
+  // '측정만' 을 배포·제한적 유효 바로 뒤에 둔다 — 랩 규칙 대부분이 여기로 온다.
+  var VORDER={deploy:0,marginal:1,measured:2,pass:3,inverse:4,tie:5,few:6,worse:7,
+              reject:8,nojudge:9};
   // 통합 인덱스의 등급 문자열 → 위 키
-  var GKEY={"배포":"deploy","제한적 유효":"marginal","통과 후보":"pass","역방향 유의":"inverse",
+  var GKEY={"배포":"deploy","제한적 유효":"marginal","측정만":"measured",
+            "통과 후보":"pass","역방향 유의":"inverse",
             "구별 불가":"tie","소수 사건 의존":"few","열위":"worse","미채택":"reject",
             "판정 불가":"nojudge"};
   D.forEach(function(d,i){d._i=i;});
@@ -1287,10 +1303,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var Pt=x.pit, f=function(v){return v==null?'—':((v>0?'+':'')+v);};
             // 문턱·족 수·넘는 규칙 수를 손으로 적지 않는다 — '27종·3.11·랩 51종·3.30' 이 박혀
             // 있었고 실제는 33종·57종이었다. pit_backtest 가 도출해 실어 보낸 값만 쓴다.
-            var thr = (Pt.t_crit==null) ? '' :
-              ('규칙 '+Pt.n_rules+'종 다중검정 문턱은 |t|≥'+Pt.t_crit+'(랩 '+Pt.n_family_lab+
-               '종 족으로는 '+Pt.t_crit_lab+')이고 이 표에서 넘는 규칙은 '+
-               (Pt.n_over?(Pt.n_over+'종'):'없다')+'(최대 |t| '+Pt.t_max+').');
+            // ⚠ 다중검정 문턱 문장은 걷었다(2026-08-13 사용자 결정). 수치는 자료에
+            //   그대로 있고(Pt.t_crit·n_over·t_max) 되살리려면 이 자리에 다시 쓰면 된다.
+            var thr = '';
             // 🚨 편향은 **bias_cagr(전략 CAGR 기준)** 로 적는다. bias_excess 를 쓰면
             //   두 레그의 대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 값이 깎이고,
             //   음수가 나와 '소급이 오히려 불리했다' 로 거꾸로 읽힌다(고배당에서 실제로 그랬다).
@@ -1402,6 +1417,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           d._mx=x.metrics||null;   // 전략 자신의 지표 — 지수 눈금과 나란히 놓을 왼쪽 열
           d._rg=x.rg||null;        // 국면별 월평균(build/strategy_index.py:_regime_stats)
+          d._nsel=x.nsel||null;    // 바스켓 크기 전수 시험의 선택 기록
           d._prb=x.pr_basis||null; // 그 전략의 지표가 어느 주기로 계산됐나(일간/월말)
           // 🚨 2026-08-13 — 보조 대조군을 배포 원장 카드에도 잇는다. 위 add 는 원장을
           //   걸러내므로(이미 D 에 있다) 이 이름 맞춤 고리가 유일한 통로다. 안 이으면
@@ -2014,7 +2030,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var t=fnum(v[k],r[3],r[2]);
       // 알파 p는 다중검정 보정 대상에 들어 있지 않다(보정은 ΔSharpe의 p에만 적용).
       // 보정 없이 노출하면 아래 각주의 BH·Bonferroni 문턱이 이 값에도 적용된 것처럼 읽힌다.
-      if(k==='alpha'&&v.alpha_p!=null)t+='<span class="sub2" title="다중검정 보정을 적용하지 않은 원(raw) p값입니다. 아래 각주의 BH-FDR·Bonferroni 문턱은 샤프 차이의 p에만 적용됩니다. 정규근사 기준이라 표본이 작을수록 실제보다 낙관적일 수 있습니다.">미보정 p='+Number(v.alpha_p).toFixed(3)+'</span>';
+      if(k==='alpha'&&v.alpha_p!=null)t+='<span class="sub2" title="정규근사 기준이라 표본이 작을수록 실제보다 낙관적일 수 있습니다.">p='+Number(v.alpha_p).toFixed(3)+'</span>';
       if(k==='d_sharpe')t+='<span class="mlab" style="color:'+(v.d_sharpe_sig?'var(--ink-2)':'var(--muted)')+'">'+
         (v.d_sharpe_sig?'유의':'구별 불가')+'</span><span class="sub2">'+esc(v.d_sharpe_note||'')+'</span>';
       return '<td class="mv">'+t+'</td>';
@@ -2034,6 +2050,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (b.dropped_incomplete_month?' · 미완결 월 <b>'+esc(b.dropped_incomplete_month)+'</b> 제외':'')+'</span></div>';
   }
   function multNote(m){
+    // 🚨 2026-08-13 사용자 결정 — 다중검정 각주를 화면에서 내렸다("이딴거 다 없애").
+    //   ⚠ 계산과 자료(m.multiplicity)는 그대로다. 되살리려면 아래 return 을 지우면 된다.
+    return '';
+    /* eslint-disable no-unreachable */
     var q=m.multiplicity; if(!q)return '';
     return '<div class="btnote"><b>다중검정 —</b> 이 사이트의 전략 '+q.n_tests+'개를 한 번에 비교하면 문턱이 올라갑니다. '+
       'BH-FDR(q='+q.bh_q+') 순위 '+q.bh_rank+'위 문턱 p≤'+q.bh_threshold+' · Bonferroni p≤'+q.bonferroni_threshold+
@@ -2084,7 +2104,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         if(m.vs.alpha_p!=null){
           var bth=(m.multiplicity||{}).bonferroni_threshold;
           sub+=' · 미보정 p='+Number(m.vs.alpha_p).toFixed(3);
-          if(bth!=null)sub+=(m.vs.alpha_p>bth?' (다중검정 문턱 '+bth+' 미달)':' (문턱 '+bth+')');
+          // 다중검정 문턱 표기는 내렸다(2026-08-13). 원 p 값은 그대로 나온다.
         }
         sub+=' · 비교 지수 '+esc(m.bm_label||'');
       }
@@ -2181,7 +2201,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var mis='';
     if(bt.bench_role==='index'){
       var kn=(d.det&&d.det.kind)||'', nul=(KINDS&&KINDS.kinds&&KINDS.kinds[kn]&&KINDS.kinds[kn].null)||'';
-      mis='<p class="bmmis">⚠ <b>이 전략의 판정(ΔSharpe·p값·다중검정)은 위 시장 지수 대비로 계산됩니다.</b>'+
+      mis='<p class="bmmis">⚠ <b>이 전략의 ΔSharpe 는 위 시장 지수 대비로 계산됩니다.</b>'+
           (nul?' '+esc(kn)+'의 정당한 귀무가설은 <b>'+esc(nul)+'</b>이며, 그 기준으로는 아직 검정하지 않았습니다.':'')+
           ' 성격에 맞지 않는 잣대일 수 있다는 점을 감안해 읽으십시오.</p>';
     }
@@ -2554,6 +2574,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       return out;
     }
+    // ── 바스켓 크기 — 셋 중 골랐다는 사실을 카드가 스스로 말한다 ──────────────
+    // 🚨 이 블록이 PREREG-2026-08-13-NSWEEP.md §4① 이다. 이 시험은 같은 표본에서 셋을
+    //   돌려 최고를 고른 것이라, 그 사실을 안 적으면 그냥 데이터마이닝이다. 셋을 다 보이고
+    //   부풀림(고른 t − 셋의 중앙 t)을 같이 적는다.
+    function nselBlock(d){
+      var q=d&&d._nsel; if(!q||!q.tried||q.tried.length<2)return '';
+      var f=function(v,nd){return (v==null)?'—':Number(v).toFixed(nd==null?2:nd);};
+      var rows=q.tried.map(function(x){
+        var on=(x.n===q.n);
+        return '<tr'+(on?' class="on"':'')+'><th scope="row">'+x.n+'종'+(on?' ←':'')+'</th>'+
+          '<td>'+f(x.sharpe,3)+'</td><td>'+f(x.cagr)+'%</td><td>'+f(x.mdd)+'%</td>'+
+          '<td>'+f(x.turnover)+'</td></tr>';
+      }).join('');
+      return '<div class="nselwrap"><div class="kh">바스켓 크기 — 셋을 돌려 골랐습니다</div>'+
+        '<div class="tblwrap"><table class="cmptbl nseltbl"><thead><tr>'+
+        '<th scope="col">크기</th><th scope="col">샤프</th><th scope="col">CAGR</th>'+
+        '<th scope="col">최대낙폭</th><th scope="col">회전율</th></tr></thead>'+
+        '<tbody>'+rows+'</tbody></table></div>'+
+        '<p class="knote">🚨 <b>샤프가 가장 높은 크기를 골랐습니다</b>(사용자 결정). '+
+        '같은 표본에서 셋을 돌려 최고를 고른 것이므로 <b>이 규칙의 수치는 그만큼 유리하게 '+
+        '잡혀 있습니다</b> — 고른 값과 셋의 중앙값 차이가 <b>'+f(q.inflate,3)+'</b>입니다. '+
+        '⚠ 점수 산식은 셋이 똑같고 다른 것은 상위 몇 종을 담느냐뿐입니다.</p></div>';
+    }
+
     // ── 국면별 성적 ─────────────────────────────────────────────────────
     // 탭으로 나누지 않는 이유를 여기 적어 둔다(2026-08-12 결정). 국면 탭을 만들면 화면이
     // '지금 국면 탭을 열어 그 안의 1등을 사라'고 말하게 되는데, 그 추론은 이 랩이 이미
@@ -2714,7 +2758,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '<p class="labnote">굵은 선이 이 전략, 흐린 선이 비교 지수('+esc(bb.label||'—')+')입니다. 자세한 곡선을 불러오는 중…</p>';
         })()+
       '</div>';
-      play = perf + cmpBlock(d) + rgBlock(d) + holdHtml +
+      play = perf + cmpBlock(d) + nselBlock(d) + rgBlock(d) + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
           return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">비교 지수가 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+

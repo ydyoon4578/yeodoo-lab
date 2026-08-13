@@ -47,6 +47,7 @@ DATA = os.path.join(ROOT, "data")
 DIR_SD = os.path.join(DATA, "sd")
 OUT = os.path.join(DATA, "tech_strategies.json")
 
+NSWEEP_GRID = (10, 20, 30)   # 바스켓 크기 전수 시험 격자 — PREREG-2026-08-13-NSWEEP.md
 TOPN = 10          # 횡단면 전략이 들고 갈 종목 수 — 50이면 '고른' 게 아니라 사실상 지수다
 MIN_HIST = 260     # 신호 계산에 필요한 최소 과거 길이(약 1년)
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
@@ -697,7 +698,14 @@ def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED)
 GATE_INCR5 = False       # ⓑ 증분알파(이웃 5개 동시 통제) ≥ 2.0
 GATE_DSHARPE = False     # 열위(Δ샤프 ≤ 0) 강등
 GATE_PIT = False         # ⓒ 시점정확 재측정 강등 · 미측정 강등
-GATE_COST = True         # 비용 후(편도 10bp) t ≥ 임계 — 사용자 지시에 없어 그대로 둔다
+GATE_COST = False        # 🚨 2026-08-13 사용자 결정 — **마지막 관문도 끈다.**
+#   "다중검정 임계, 본페로니 관문 이딴거 다 없애. t 관련된 것도 다 없애."
+#   이제 켜진 관문이 하나도 없다. 랩 규칙의 등급은 **성적으로 매기지 않는다** —
+#   아래 판정 루프가 전부 "측정만" 을 준다. 배포 원장의 등급(배포·제한적 유효)은
+#   그쪽 파일이 따로 들고 있으므로 영향이 없다.
+# ⚠ t·임계·본페로니는 **계산과 저장은 그대로 둔다.** 화면에서만 내린다 —
+#   이 랩이 "측정 기록은 지우지 않는다" 를 여러 번 못박았고, 지우면 왜 그 잣대가
+#   있었는지가 같이 사라진다. 되살리려면 이 스위치만 True 로 돌리면 된다.
 
 # 🚨 2026-08-12 추가 — 증분알파(incr5)를 **아예 계산하지 않는다**(사용자 결정 '버려').
 #   위 GATE_INCR5 는 '재되 판정에 안 쓴다'였고 이것은 '재지도 않는다'다. 둘은 다르다.
@@ -2507,8 +2515,12 @@ def pick_industry(ind_raw, top_sectors=2):
 
 
 def _BASE_SID(sid):
-    """'-n<숫자>' 접미사를 뗀 sid. 바스켓 크기 변형이 원본과 같은 채점 갈래를 타게 한다."""
-    return re.sub(r"-n\d+$", "", sid)
+    """바스켓 크기 접미사를 뗀 sid. 크기 변형이 원본과 같은 채점 갈래를 타게 한다.
+
+    접미사가 둘이다 — `-n<숫자>`(2026-08-11 원 전략 크기 6종, 목록에 남는 별도 규칙)와
+    `~n<숫자>`(2026-08-13 전수 시험, 승자만 남고 나머지는 사라진다). 둘 다 뗀다.
+    """
+    return re.sub(r"[-~]n\d+$", "", sid)
 
 
 def xsec(sid, name, rule, fn, why, arch=None, topn=None):
@@ -3733,6 +3745,39 @@ def build_strats():
     # ⚠ 뺀 규칙의 기록은 들고 나간다. 셋(x-mom-trend·x-minvar·x-riskbudget)이 아카이브 항목을
     #   '이 규칙으로 재현했다'고 가리키는 arch 태그를 달고 있어, 그냥 지우면 그 아카이브 항목이
     #   화면에서 조용히 사라진다(validate 가 잡아 줬다). 재현은 실제로 했으므로 사실이 아니다.
+    # ── 바스켓 크기 전수 시험 — PREREG-2026-08-13-NSWEEP.md ────────────────────
+    # 🚨 이 랩이 금지해 온 절차를 사용자 결정으로 한 번 한다(등록 §0 에 그 사실을 적었다).
+    #   횡단면 규칙 전부를 N∈{10,20,30} 으로 돌리고 **샤프가 가장 높은 N** 을 쓴다.
+    # ⚠ 점수 함수는 손대지 않는다 — 세 판은 같은 점수에서 상위 N 만 다르게 자른다.
+    #   그래야 '크기만 다른 같은 규칙' 이 된다(밑동 레코드를 복사하므로 fn 도 같은 객체다).
+    # ⚠ 크기가 이미 사전등록으로 정해진 규칙은 **뺀다**. 여기서 다시 쓸면 그 등록이 무의미해진다.
+    NSWEEP = NSWEEP_GRID
+    NSW_SKIP = {
+        "x-updown",                                            # 2026-08-12 사용자 결정으로 20종
+        "x-btp-n155", "x-payout-n50", "x-agrow-n52",           # PREREG-2026-08-11-BASKET
+        "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52",
+        "x-valcomp-sn", "x-revdrift-sn", "x-indmom",           # 바스켓이 N 으로 안 정해진다
+    }
+    # ⚠ 시총 하한 변형(-mcf)도 뺀다. 그쪽은 PREREG-2026-08-12-MCAPFLOOR 로 이미 등록된
+    #   변형족이라, 크기까지 겹쳐 돌리면 '변형의 변형' 이 되고 밑동과의 비교가 흐려진다.
+    NSW_SKIP |= {s["sid"] for s in STRATS if s["sid"].endswith(MCF_SUF)}
+    _base = [s for s in STRATS if s["kind"] == "xsec" and s["sid"] not in NSW_SKIP
+             and not s.get("topn")]
+    for _b in _base:
+        for _n in NSWEEP:
+            if _n == TOPN:
+                continue                                       # 10 은 밑동 그대로가 그 판이다
+            _v = dict(_b)
+            _v["sid"] = "%s~n%d" % (_b["sid"], _n)             # ~ 는 다른 sid 에 안 쓰는 글자다
+            _v["name"] = "%s · %d종" % (_b["name"], _n)
+            _v["topn"] = _n
+            _v["nsw_base"] = _b["sid"]                         # 뒤에서 묶을 때 쓴다
+            STRATS.append(_v)
+    if _base:
+        print("  바스켓 전수 시험 — 횡단면 %d종 × N%s (제외 %d종) → 검정 %d개"
+              % (len(_base), list(NSWEEP), len(NSW_SKIP),
+                 len(_base) * len(NSWEEP) + (len(STRATS) - len(_base) * len(NSWEEP))))
+
     RETIRED_RECS[:] = [{"sid": s["sid"], "name": s["name"], "arch": s.get("arch"),
                         "kind": s["kind"], "why": RETIRED[s["sid"]]}
                        for s in STRATS if s["sid"] in RETIRED]
@@ -3943,6 +3988,14 @@ def xsec_score_at(S, i, X, pool=None):
     #   pool 마스킹과 같은 자리인 것이 요점이다 — 랩과 PIT 이 같은 함수를 부른다.
     # sid 를 밑동으로 바꿔 둔다. 그러면 아래 갈래·사전패스가 **한 줄도 안 바뀌고**
     #   원본과 같은 산식을 쓴다(변형이 갈래를 새로 갖지 않는 것이 핵심이다).
+    # ── 바스켓 크기 변형(~n20 · ~n30) — PREREG-2026-08-13-NSWEEP.md ────────────
+    # 🚨 **접미사를 뗀 순서가 중요하다.** ~n 을 먼저 뗀다 — 나중에 떼면
+    #   'x-hlspread-mcf~n20' 이 endswith('-mcf') 에 안 걸려 시총 하한이 조용히 안 걸리고,
+    #   갈래도 못 찾아 S["fn"](=None 인 2단 규칙)을 부르다 죽는다. 실제로 그렇게 죽었다.
+    #   점수는 밑동과 한 글자도 다르지 않아야 한다 — 다른 것은 상위 몇 종을 자르느냐뿐이고,
+    #   그 자르기는 xsec_pick_at → pick_top(topn) 이 한다.
+    if "~n" in S["sid"]:
+        S = dict(S, sid=S["sid"].split("~n")[0])
     if S["sid"].endswith(MCF_SUF):
         tickers = mcap_floor(tickers, X, i, MCF_CUT)
         S = dict(S, sid=S["sid"][:-len(MCF_SUF)])
@@ -5191,6 +5244,68 @@ def run():
             print("  [%s] 투자의견 캐시 없음 — 판정 보류(build/fetch_ratings.py 를 먼저 돌릴 것)"
                   % S["sid"])
 
+    # 🚨 자리가 중요하다 — 이 블록은 **PIT 병합보다 먼저** 와야 한다.
+    #   병합은 sid 로 짝을 짓는데, 선택 전에는 승자가 아직 'x-hlspread~n30' 이라
+    #   PIT 표(base sid)와 안 맞아 **56종이 통째로 PIT 을 잃었다**(실측으로 잡았다).
+    #   판정 루프보다도 앞이어야 한다 — 버려질 변형에 등급을 매길 이유가 없다.
+    # ── 바스켓 크기 승자 고르기 — PREREG-2026-08-13-NSWEEP.md §2·§4 ──────────
+    # 🚨 셋 중 최고를 고른다. 그 사실을 감추지 않으려고 **셋을 다 레코드에 싣고**
+    #   부풀림(max t − median t)을 재서 같이 싣는다(등록 §4).
+    # ⚠ 동점(샤프 소수 셋째 자리)이면 **작은 N**. 결과 보기 전에 정한 규칙이다 —
+    #   큰 N 이 유리한 방향(편향·회전율)이 있으니 동점에서 그쪽으로 기울면 그것도 선택이다.
+    _NSW_MARK = "~n"
+    _fam = {}
+    for _r in out:
+        _sid = _r["sid"]
+        _b = _sid.split(_NSW_MARK)[0] if _NSW_MARK in _sid else _sid
+        if _b in {x["sid"].split(_NSW_MARK)[0] for x in out if _NSW_MARK in x["sid"]}:
+            _fam.setdefault(_b, []).append(_r)
+    _win, _drop, _infl = {}, set(), []
+    for _b, _rs in _fam.items():
+        if len(_rs) < 2:
+            continue
+        def _n_of(r):
+            return int(r["sid"].split(_NSW_MARK)[1]) if _NSW_MARK in r["sid"] else TOPN
+        def _sh(r):
+            return ((r.get("metrics") or {}).get("sharpe"))
+        _cand = [r for r in _rs if _sh(r) is not None]
+        if not _cand:
+            continue
+        _best = sorted(_cand, key=lambda r: (-round(_sh(r), 3), _n_of(r)))[0]
+        _ts = sorted(abs(r.get("t") or 0) for r in _cand)
+        _med = _ts[len(_ts) // 2] if len(_ts) % 2 else (_ts[len(_ts) // 2 - 1] + _ts[len(_ts) // 2]) / 2
+        _inf = round(max(_ts) - _med, 3)
+        _infl.append(_inf)
+        _best["nsel"] = {
+            "n": _n_of(_best), "grid": list(NSWEEP_GRID),
+            "tried": [{"n": _n_of(r), "sharpe": _sh(r),
+                       "cagr": (r.get("metrics") or {}).get("cagr"),
+                       "mdd": (r.get("metrics") or {}).get("mdd"),
+                       "t": r.get("t"), "turnover": r.get("turnover")}
+                      for r in sorted(_cand, key=_n_of)],
+            "inflate": _inf,
+            "note": "샤프가 가장 높은 N 을 골랐다(사용자 결정 2026-08-13 · "
+                    "PREREG-2026-08-13-NSWEEP.md). ⚠ 셋 중 최고를 고른 값이므로 이 규칙의 t 는 "
+                    "그만큼 부풀려져 있다 — 위 tried 의 세 t 를 같이 보라. 동점이면 작은 N 이다.",
+        }
+        # 승자의 sid·이름은 밑동으로 되돌린다(화면·PIT·조인이 밑동 sid 를 쓴다).
+        _best["sid"] = _b
+        _best["name"] = _best["name"].split(" · ")[0] if " · " in _best["name"] else _best["name"]
+        if _n_of(_best) != TOPN:
+            _best["name"] = "%s (%d종)" % (_best["name"], _n_of(_best))
+        _win[_b] = _best
+        for r in _rs:
+            if r is not _best:
+                _drop.add(id(r))
+    if _fam:
+        out[:] = [r for r in out if id(r) not in _drop]
+        from collections import Counter as _C
+        _cnt = _C(v["nsel"]["n"] for v in _win.values())
+        _infl.sort()
+        print("  바스켓 승자 — %s · 부풀림(max t − median t) 중앙 %.3f · 최대 %.3f"
+              % (" · ".join("N%d %d종" % (k, _cnt[k]) for k in sorted(_cnt)),
+                 _infl[len(_infl) // 2] if _infl else 0.0, max(_infl) if _infl else 0.0))
+
     # ── 다중검정 임계 ────────────────────────────────────────────────
     # 규칙 N개를 같은 표본에서 돌렸다. |t|>2 라는 관례는 검정이 하나일 때 이야기다.
     # 본페로니(α=0.05/N)로 임계를 올린다 — Harvey·Liu·Zhu(2016)가 발표된 이상현상에
@@ -5204,6 +5319,18 @@ def run():
         alpha, tcrit = 0.05, T_CRIT_PLAIN
     for r in out:
         t = r["t"]
+        if not any((GATE_COST, GATE_DSHARPE, GATE_PIT, GATE_INCR5, BONFERRONI)):
+            # 🚨 켜진 관문이 하나도 없다(2026-08-13 사용자 결정). 그러면 등급은 성적을
+            #   말하는 것이 아니라 **아무 말도 안 하는 것**이어야 한다. 't 가 2 를 넘었다'
+            #   같은 배지를 관문 없이 달면 화면이 검정하지 않은 것을 검정한 척하게 된다.
+            #   입력이 구간을 못 덮은 것만 따로 표시한다 — 그건 성적이 아니라 자료 상태다.
+            r["verdict"] = "판정 불가" if r.get("cov_short") or t is None else "측정만"
+            if r.get("cov_short"):
+                _inp = "투자의견 이력" if r["sid"].startswith("x-revdrift") else "심리지수"
+                r["why"] = (r["why"] + " ⚠ 이 구간에서 입력(%s)이 %.1f%%만 존재해 나머지 "
+                            "기간이 자동으로 현금 처리됐다. 여기 성과는 규칙의 실력이 아니다."
+                            % (_inp, r.get("input_cov") or 0))
+            continue
         if r.get("cov_short"):
             # 입력이 구간을 못 덮은 규칙 — 성과 숫자는 싣되 판정은 하지 않는다.
             r["verdict"] = "판정 불가"

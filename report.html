@@ -608,10 +608,11 @@ footer{margin-top:24px;padding-top:12px;font-size:11px;line-height:1.6}
       구간, 성과(전략·대조군 나란히), 비용 후 성과, 회전·노출, 위험, 이웃 대비 증분알파, 매매대상 대비,
       생존편향 보정(PIT), 후보 풀, 지금 보유한 것까지. <b>판정으로 줄 세우지 않는다.</b></p>
     <div class="warn"><b>⚠ 이 화면은 성과를 약속하지 않는다.</b>
-      게시 기준(① |t| ≥ 본페로니 임계 ② Δ샤프 &gt; 0 ③ 이웃 5개 동시 통제 증분알파 t ≥ +2.0 ④ 부호 정합)을
+      게시 기준(🚨 2026-08-13 사용자 결정으로 <b>관문을 전부 껐다</b> — 지금은 등급을 매기지 않고
+      샤프·최대낙폭·월별 수익·급등락 구간을 그대로 싣는다)을
       넘은 규칙은 <b>0종</b>이다. 여기 적는 것은 그 기준의 통과 여부가 아니라 <b>각 규칙을 그대로 돌렸을 때 나온 값 전부</b>다.
       값이 비면 <b>'—'</b>로 두고 왜 없는지 함께 적는다 — 빈칸을 지우면 그 항목을 통과한 것처럼 읽히기 때문이다.
-      랩 전체의 한계(생존편향·구간 성질·다중검정)는 각 리포트 아래가 아니라
+      랩 전체의 한계(생존편향·구간 성질)는 각 리포트 아래가 아니라
       <a href="method.html" style="color:var(--accent)">방법·규약</a>과 페이지 맨 아래 '랩 전체의 한계'에 있다 — 먼저 읽을 것.</div>
     <div class="statline" id="statline"></div>
   </header>
@@ -725,7 +726,7 @@ function incrBlock(i){
     b+='<p class="caveat">통제한 이웃: '+i.five.vs.map(esc).join(' · ')+'</p>';
   }
   if(i.absorbed) b+='<p class="caveat">⚠ 중복 표에서 <b>흡수됨</b>으로 잡혔다 — '+esc(i.absorbed.vs)+
-    ' 와 상관 '+num(i.absorbed.corr,3)+', 단독 t '+num(i.absorbed.t_solo,2)+
+    ' 와 상관 '+num(i.absorbed.corr,3)+
     ' 가 그 이웃을 통제하면 '+num(i.absorbed.t_incr,2)+' 로 내려간다.</p>';
   if(i.note) b+='<p class="caveat">'+mb(i.note)+'</p>';
   return b;
@@ -763,7 +764,7 @@ function pitBlock(p){
   b+=row('t','<td class="n"><b>'+num(a.t,2)+'</b></td><td class="n">'+num(r.t,2)+'</td><td class="n">—</td>');
   b+='</tbody></table></div>';
   b+='<p class="caveat">창 '+esc(p.window||'')+' · '+num(p.n_days)+'거래일 · PIT 회전율 '+num(a.turnover,2)+
-     ' · 이 표의 다중검정 임계 |t| '+num(p.t_crit,2)+' (랩 본편 족으로 보면 '+num(p.t_crit_lab,2)+')<br>'+
+     '<br>'+
      '두 열은 <b>같은 창</b>에서 잰 것이다 — 랩 본편(더 긴 구간)과 직접 빼면 구간 차이가 편향으로 위장한다.<br>'+
      '🚨 편향은 <b>CAGR 줄</b>로 읽을 것. 초과 CAGR 줄의 편향은 두 레그의 대조군이 각자의 동일가중 지수라 '+
      '벤치에 실린 편향(위 표의 대조군 CAGR 편향 '+bz(bi.bench_cagr,2,'%p')+')이 상쇄돼, '+
@@ -869,7 +870,7 @@ function card(x,i){
 
   h+=sec('성과 (비용 0)',perfTable(x.perf)+
     '<p class="caveat">초과 CAGR '+sgn(x.excess_cagr,2,'%p')+' · Δ샤프 '+sgn(x.d_sharpe,3)+
-    ' · <b>t '+num(x.t,2)+'</b> (본페로니 임계 '+num(x.t_crit,2)+')'+
+    ''+
     // 🚨 이 t 는 **오늘의 유니버스를 과거에 소급한** 표본에서 나온 값이다. 생존편향 보정
     //   값이 있으면 여기 나란히 적는다 — 소급 t 만 보고 읽히는 것을 막는 것이 요점이다.
     (x.pit&&x.pit.pit&&x.pit.pit.t!=null
@@ -987,7 +988,7 @@ function smap(){
         '아카이브와 배포 원장은 이 축이 없어 미분류다.')+
     tbl('어떻게 됐나', V, m.by_where_verdict,
         '⚠ <b>배포·제한적 유효는 배포 원장의 판정</b>이고 다른 시기·다른 규약으로 내려진 것이다 — ' +
-        '랩 본편의 게시 기준(본페로니 임계·증분알파·부호 정합)과 <b>같은 잣대가 아니다.</b> ' +
+        '랩 본편은 지금 <b>등급을 매기지 않는다</b>(관문을 전부 껐다). ' +
         '랩 본편에서 그 기준을 넘은 것은 <b>0종</b>이다.')+
     '<p class="caveat">'+mb(m.vocab)+'</p></article>';
 }
@@ -1000,7 +1001,7 @@ function statline(){
     '<span class="stat">자산배분 <b>'+n.asset+'</b></span>'+
     '<span class="stat">종목·타이밍 <b>'+n.tech+'</b></span>'+
     '<span class="stat">PIT 레그 <b>'+n.pit+'</b></span>'+
-    '<span class="stat">임계 |t| <b>'+num(t.asset,2)+' · '+num(t.tech,2)+'</b></span>'+
+    ''+
     '<span class="stat">기준일 <b>'+esc(a.tech||a.asset||'')+'</b></span>';
 }
 function tail(){
@@ -1028,7 +1029,7 @@ function tail(){
     '비교용이 아니라 <b>\'이미 팠다\'는 표시</b>로 읽을 것.</p>'+
     ts.map(function(x){
       var num=[];
-      if(x.t!=null) num.push('단독 t '+num2(x.t));
+      // t 는 화면에서 내렸다(2026-08-13 사용자 결정) — 자료에는 그대로 있다.
       if(x.incr!=null) num.push('증분 t '+num2(x.incr));
       if(x.incr5!=null) num.push('incr5 '+num2(x.incr5));
       if(x.pit_t!=null) num.push('PIT t '+num2(x.pit_t));
