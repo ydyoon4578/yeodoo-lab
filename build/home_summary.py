@@ -297,6 +297,10 @@ def _industry(stocks, dates, root):
     # ⚠ 가중치는 **기준일 시총**으로 고정한다(agg 와 같다). 날마다 다시 재면 그건 다른 지수다.
     IND_MAXPT = 90            # build/home_perf.py 의 MAXPT 와 같은 값 — 판끼리 점 수를 맞춘다
     ind_paths = {}
+    # 산업그룹 → 부모 섹터(한글). 차트가 **섹터 판과 같은 색**을 쓰려면 이 짝이 있어야 한다
+    #   (사용자 요청 2026-08-13). 섹터 색은 끝값 순으로 돌려 쓰므로 고정색이 아니다 —
+    #   그래서 색을 여기서 정하지 않고 **짝만 넘긴다.** 색을 정하는 곳은 한 군데여야 한다.
+    ind_sec = {}
 
     def _thin_ix(lo, hi, cap):
         m = hi - lo + 1
@@ -489,12 +493,19 @@ def _industry(stocks, dates, root):
             if len(gs) == 1 and g == ETF_GICS.get(sec):
                 _g["solo"] = 1
             rows.append(_g)
-            # 같은 줄의 경로. solo 줄(섹터와 이름이 같은 것)은 화면이 건너뛰므로 안 만든다.
-            if not _g.get("solo"):
-                for _k in list(base):
-                    _p = path_of(gv, _k)
-                    if _p:
-                        ind_paths.setdefault(_k, {})[g] = _p
+            # 같은 줄의 경로.
+            # 🚨 solo 줄(섹터와 이름이 같은 것 — Energy·Materials·Utilities)도 **만든다**
+            #   (사용자 지적 2026-08-13). 표에서 그 줄을 건너뛰는 이유는 **트리라서**다 —
+            #   같은 이름이 부모·자식으로 두 번 나오고 층만 하나 는다. 차트는 트리가 아니라
+            #   섹터 판과 산업그룹 판이 따로 있으므로 그 이유가 성립하지 않는다. 빼 두면
+            #   산업그룹 판에서 세 섹터가 통째로 사라진다(에너지·소재·유틸리티).
+            # ⚠ 같은 이름이지만 **같은 값이 아니다.** 섹터 판은 섹터 ETF(XLE…) 실적이고
+            #   이쪽은 랩 종목의 기준일 시총가중이다 — 두 판에 나란히 두면 그 차이가 보인다.
+            ind_sec[g] = SEC_KO.get(sec, sec)
+            for _k in list(base):
+                _p = path_of(gv, _k)
+                if _p:
+                    ind_paths.setdefault(_k, {})[g] = _p
             gused.update(s["t"] for s in gv)
             # 🚨 2026-08-05 — 서브산업(4차) 단을 없앴다(사용자 결정). 3차에 이어 4차도 안 쓴다.
             #   남는 것은 섹터(1차) → 산업그룹(2차) 두 단이고, 종목은 산업그룹에 바로 매단다.
@@ -509,7 +520,8 @@ def _industry(stocks, dates, root):
             rows.append(agg(rest, NOM, sec, 2, sec))
             _stocks(rest, sec, sec + "|" + NOM, 3)
     return {"sectors": sectors, "rows": rows, "mkt": _val(stocks), "px": PX,
-            "tiers": gics_tiers, "ind_paths": ind_paths, "ind_dates": dates}
+            "tiers": gics_tiers, "ind_paths": ind_paths, "ind_dates": dates,
+            "ind_sec": ind_sec}
 
 
 def _load_px(ts, dates, root):
@@ -616,7 +628,7 @@ def _fpe(stocks):
     return out
 
 
-_IND_PATHS = [(None, None)]      # _segments 가 채우고 write() 가 꺼내 쓴다
+_IND_PATHS = [(None, None, None)]   # _segments 가 채우고 write() 가 꺼내 쓴다(경로·날짜·부모섹터)
 
 
 def _segments(stocks, dates, root):
@@ -634,7 +646,7 @@ def _segments(stocks, dates, root):
     # 🚨 산업그룹 경로는 **여기 안 싣는다.** home_reco.json 은 홈이 첫 화면에 받는 파일이고
     #   경로 22줄 × 5구간은 그 파일을 배로 만든다 — 이 파일이 생긴 이유가 그 반대다.
     #   차트가 늦게 받는 별도 파일(data/home_ind_perf.json)로 뺀다.
-    _IND_PATHS[0] = (d.pop("ind_paths", None), d.pop("ind_dates", None))
+    _IND_PATHS[0] = (d.pop("ind_paths", None), d.pop("ind_dates", None), d.pop("ind_sec", None))
     # 국면 통계는 섹터·산업 **양쪽**에 붙인다. 표에서 부모 줄에도 툴팁이 뜬다.
     # 국면 통계는 상위 단만 — 종목 한 개의 국면별 월평균은 잡음이고, 417줄에 얹으면
     # 파일이 배로 는다. 표에서도 종목 줄 툴팁에는 안 쓴다.
@@ -852,11 +864,15 @@ def write(stocks, dates, as_of, root):
         raise SystemExit("home_reco: 최근 타점이 하나도 없다 — 마커 산출이 깨졌는지 확인")
     sp, n_deep = write_stocks(doc, root)
     # 산업그룹 경로 — 홈 시계열 넷째 판. 차트가 늦게 받는 별도 파일이다.
-    _paths, _pdates = _IND_PATHS[0]
+    _paths, _pdates, _psec = _IND_PATHS[0]
     if _paths and _pdates:
         _out = {"note": "홈 '기간별 수익률' 위 시계열의 산업그룹 판. 🚨 끝점이 아래 표의 그 칸과 "
                         "같도록 **표를 만든 그 함수(agg)와 같은 식**으로 날짜마다 잰다 — "
                         "기준일 시총가중, 가중치는 기준일에 고정. 만든 곳 build/home_summary.py.",
+                "sec_note": "sec 는 그 산업그룹의 부모 섹터(한글)다. 화면이 섹터 판과 **같은 색**을 "
+                            "쓰려고 읽는다 — 색 자체는 여기서 정하지 않는다(섹터 색이 끝값 순으로 "
+                            "돌아가므로 정본이 화면 한 곳에만 있어야 한다).",
+                "sec": _psec or {},
                 "as_of": doc.get("as_of"), "series": {}}
         for _k, _g in _paths.items():
             _ix = sorted({i for p in _g.values() for i in p["ix"]})
