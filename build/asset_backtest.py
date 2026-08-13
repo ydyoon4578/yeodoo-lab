@@ -176,6 +176,91 @@ RF = {}
 IDX_LAB = {"^GSPC": "S&P 500(PR)", "^NDX": "NASDAQ 100(PR)"}
 
 
+def blabel(fn, i0, i1):
+    """대조군 가중치 함수 → 화면에 적을 이름. 대조군은 결국 '무엇을 얼마나 드나'가 전부라
+    35개 호출부에 이름을 하나씩 붙이는 대신 가중치에서 뽑는다.
+    시작과 끝의 구성이 다르면 정적 이름이 거짓이 되므로 '동적'이라고 적는다."""
+    try:
+        w0, w1 = fn(i0) or {}, fn(i1) or {}
+    except Exception:
+        return None
+    if not w0:
+        return None
+    if set(w0) != set(w1) or any(abs(w0[k] - w1.get(k, 0)) > 1e-9 for k in w0):
+        return "동적 배분(%d자산)" % len(set(w0) | set(w1))
+    tot = sum(w0.values()) or 1.0
+    parts = sorted(((k, 100 * v / tot) for k, v in w0.items()), key=lambda z: -z[1])
+    if len(parts) == 1:
+        t0 = parts[0][0]
+        # 지수는 종목 랩 98종과 **글자까지 같은** 이름을 쓴다("S&P 500(PR) 매수후보유").
+        # 한 글자만 달라도 화면에서 다른 대조군으로 읽힌다.
+        return (IDX_LAB[t0] + " 매수후보유") if t0 in IDX_LAB else ("%s 상시보유" % t0)
+    if len(parts) <= 4:
+        return " · ".join("%s %d%%" % (k, round(p)) for k, p in parts)
+    return "%d자산 동일가중" % len(parts)
+
+
+# 🚨 판정 대조군은 **예외 없이 지수(PR)** 다 — 2026-08-13 사용자 결정(2차).
+#   1차에서는 지수형 대조군만 PR 로 바꾸고 포트폴리오 대조군(9자산 동일가중 …)은 그대로 뒀는데,
+#   그러면 전략 랩 한 화면에 "S&P 500(PR)" 과 "9자산 동일가중" 이 섞여 세로로 못 읽는다.
+#   → 판정선은 전부 지수로 올리고, **원래 대조군은 보조로 내린다**(버리지 않는다).
+#   ⚠ 그냥 갈아 끼우면 안 되는 이유가 여기 있다. '크로스에셋 RP vs 9자산 동일가중'은
+#     "같은 자산을 굴린 것이 그냥 든 것보다 나은가"를 묻는데, 지수로 바꾸면 그 질문이
+#     통째로 사라지고 "분산 포트폴리오가 미국 주식보다 나은가"라는 다른 질문이 된다.
+#     둘 다 잴 자리가 있으므로(bench2) 둘 다 잰다. 판정은 위, 원래 질문은 아래.
+#   ⚠ 위험감축형이 지수와 CAGR·샤프로 겨루면 지는 것이 정상이다 — strategy_index 의
+#     cmp_note 가 그 사실을 화면에 적는다. 판정이 나빠지는 것과 전략이 나빠지는 것은 다르다.
+def _bench_idx(i):
+    return {"^GSPC": 1.0}
+
+
+def _is_idx(fn, i0):
+    """이미 지수 하나만 드는 대조군인가 — 그러면 내릴 것이 없다."""
+    try:
+        return set((fn(i0) or {})) <= set(IDX_LAB)
+    except Exception:
+        return False
+
+
+def idx_monthly(tk, months):
+    """'YYYY-MM' 격자에서 지수 **월간 수익** 목록. 못 만들면 None.
+
+    슬리브 결합 랩(월간 계열)에도 같은 판정선을 주려고 둔다.
+    🚨 첫 달의 기준은 **그 전달 말**이다. 여기서 0 을 채우면 지수만 한 달치 수익을 잃어
+      대조군이 그만큼 낮게 잡힌다 — 판정선을 몰래 낮추는 짓이라 그럴 바엔 안 만든다.
+    """
+    last = {}
+    for i, d in enumerate(DTS):
+        last[d[:7]] = i
+    keys = sorted(last)
+    m0 = months[0]
+    before = [k for k in keys if k < m0]
+    if not before:
+        return None                      # 전달 말이 없으면 첫 달 수익을 정직하게 못 만든다
+    s = ser(tk)
+    if not s:
+        return None
+    idx = [last[before[-1]]] + [last.get(m) for m in months]
+    if any(i is None or s[i] is None for i in idx):
+        return None
+    return [s[idx[i]] / s[idx[i - 1]] - 1 for i in range(1, len(idx))]
+
+
+def idx_leg(tk, st, n):
+    """지수 매수후보유를 **일간 격자 그대로** 굴린다 → (nav, rets).
+
+    run_weights 를 안 쓰고 손으로 짠 랩(오버나이트 2종)에도 같은 판정선을 주려고 둔다.
+    ⚠ 그 랩들은 일 왕복이라 월말 주기가 성립하지 않는다 — 대조군도 일간이어야 짝이 맞는다.
+    """
+    s = ser(tk)
+    nav, rets = [100.0], []
+    for i in range(st + 1, n):
+        r = (s[i] / s[i - 1] - 1) if (s[i] is not None and s[i - 1]) else 0.0
+        rets.append(r)
+        nav.append(nav[-1] * (1 + r))
+    return nav, rets
+
+
 # ── 도우미 ──────────────────────────────────────────────────────────────
 def ser(t):
     return A["px"].get(t)
@@ -458,6 +543,13 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     ⚠ bench_cadence를 안 주면 대조군도 같은 주기를 쓴다. '주기 변형' 전략에서 이걸 빠뜨리면
       전략과 대조군이 **완전히 같은 계열**이 되어 t가 정의되지 않는다(실제로 그렇게 났다)."""
     n = len(DTS)
+    # 🚨 판정선을 지수로 끌어올리고 원래 대조군을 보조로 내린다(_bench_idx 위 주석 참조).
+    #   보조 자리가 이미 차 있으면(60/40 을 병기한 TAA 10종) 그쪽이 이미 지수 판정이라
+    #   여기 걸리지 않는다 — 걸리면 그때는 보조를 덮어쓰지 않고 그대로 둔다.
+    if not _is_idx(bench_w, start):
+        if bench2_w is None:
+            bench2_w, bench2_label = bench_w, blabel(bench_w, start, n - 1)
+        bench_w = _bench_idx
     def _ends(c):
         if c == "month":
             return set(month_ends(start, n))
@@ -513,29 +605,9 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
                                 - (m2.get("sharpe") or 0), 3),
               "t": tstat(rets, b2rets)}
 
-    # 대조군이 무엇인지 화면에 적으려면 이름이 있어야 한다. 35개 호출부에 인자를 하나씩
-    # 더 붙이는 대신 가중치에서 뽑는다 — 대조군은 결국 '무엇을 얼마나 들고 있나'가 전부다.
-    # 시작과 끝의 구성이 다르면 정적 라벨이 거짓이 되므로 '동적'이라고 적는다.
-    def _blabel(fn):
-        try:
-            w0, w1 = fn(start) or {}, fn(n - 1) or {}
-        except Exception:
-            return None
-        if not w0:
-            return None
-        if set(w0) != set(w1) or any(abs(w0[k] - w1.get(k, 0)) > 1e-9 for k in w0):
-            return "동적 배분(%d자산)" % len(set(w0) | set(w1))
-        tot = sum(w0.values()) or 1.0
-        parts = sorted(((k, 100 * v / tot) for k, v in w0.items()), key=lambda z: -z[1])
-        if len(parts) == 1:
-            t0 = parts[0][0]
-            # 지수는 종목 랩 98종과 **글자까지 같은** 라벨을 쓴다("S&P 500(PR) 매수후보유").
-            # 라벨이 한 글자만 달라도 화면에서 다른 대조군으로 읽힌다.
-            return (IDX_LAB[t0] + " 매수후보유") if t0 in IDX_LAB else ("%s 상시보유" % t0)
-        if len(parts) <= 4:
-            return " · ".join("%s %d%%" % (k, round(p)) for k, p in parts)
-        return "%d자산 동일가중" % len(parts)
-    bench_label = _blabel(bench_w)
+    # 이름 짓기는 module-level blabel() 하나로 통일했다 — 여기 사본이 따로 있던 동안
+    # 보조 대조군은 이름을 못 얻어 "보조 대조군"이라는 빈 말로 나갔다.
+    bench_label = blabel(bench_w, start, n - 1)
 
     # 대조군 구성 티커 — 라벨은 5자산 이상이면 "N자산 동일가중"으로 접혀 티커를 잃는다.
     # 화면·필터가 "이 대조군에 채권이 섞였나" 같은 질문을 하려면 구성을 알아야 하는데,
@@ -968,10 +1040,16 @@ def build():
             br = (c[i] / c[i - 1] - 1) if (c[i] is not None and c[i - 1]) else 0.0
             brs.append(br); bn.append(bn[-1] * (1 + br))
         dd = DTS[st:]
-        ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
+        # 🚨 판정선은 지수(PR)다 — 랩 전체가 그렇다(_bench_idx 위 주석). 종전 대조군이던
+        #   'SPY 종가→종가'는 **버리지 않고 보조로 내린다.** 그것이 이 전략의 원래 질문
+        #   ("밤에만 드는 것이 하루 종일 드는 것보다 나은가")을 재는 유일한 대조군이다.
+        inav, irets = idx_leg("^GSPC", st, n)
+        ms = ann_stats(nav, dd, RF)
+        mb = ann_stats(inav, dd, RF)          # 판정용 — S&P 500(PR)
+        mo = ann_stats(bn, dd, RF)            # 보조 — SPY 종가→종가
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
-                "chart": curve_pack(dd, nav, bn, idx_rets=load_index_tr(dd)),
+                "chart": curve_pack(dd, nav, inav, idx_rets=load_index_tr(dd)),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("SPY(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
@@ -981,12 +1059,15 @@ def build():
                 "note": "일 왕복 252회/년이라 무비용 결과를 그대로 읽으면 안 된다 — "
                         "왕복 2bp만 붙어도 연 5%p가 사라진다.",
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
-                "metrics": ms, "bench": mb, "bench_label": "SPY 상시보유(종가→종가)",
+                "metrics": ms, "bench": mb, "bench_label": "S&P 500(PR) 매수후보유",
+                "bench2": {"label": "SPY 상시보유(종가→종가)", "metrics": mo,
+                           "d_sharpe": round((ms.get("sharpe") or 0) - (mo.get("sharpe") or 0), 3),
+                           "t": tstat(rets, brs)},
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": 252.0,
+                "t": tstat(rets, irets), "risk": risk_bootstrap(rets, irets), "turnover": 252.0,
                 # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
                 #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
-                "dates": (_gt := gthin(dd, nav, bn))[0],
+                "dates": (_gt := gthin(dd, nav, inav))[0],
                 "nav": _gt[1],
                 "bnav": _gt[2]}
     add("overnight", "overnight-drift", s_overnight)
@@ -1086,25 +1167,34 @@ def build():
             br = (c[i] / c[i - 1] - 1) if (c[i] is not None and c[i - 1]) else 0.0
             brs.append(br); bn.append(bn[-1] * (1 + br))
         dd = DTS[st:]
-        ms, mb = ann_stats(nav, dd, RF), ann_stats(bn, dd, RF)
+        # 🚨 판정선은 지수(PR). 여기는 NASDAQ 100 이 짝이다 — 이 규칙이 사는 것이 QQQ 라
+        #   S&P 500 을 대면 '나스닥이 더 올랐다'가 섞여 든다. 종전 대조군이던
+        #   'QQQ 종가→종가'는 버리지 않고 보조로 내린다(이 전략의 원래 질문이다).
+        inav, irets = idx_leg("^NDX", st, n)
+        ms = ann_stats(nav, dd, RF)
+        mb = ann_stats(inav, dd, RF)          # 판정용 — NASDAQ 100(PR)
+        mo = ann_stats(bn, dd, RF)            # 보조 — QQQ 종가→종가
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 보유 (QQQ 종가→시가)",
-                "chart": curve_pack(dd, nav, bn, idx_rets=load_index_tr(dd)),
+                "chart": curve_pack(dd, nav, inav, idx_rets=load_index_tr(dd)),
                 "holdings": {"kind": "asset", "as_of": DTS[-1],
                              "weights": [("QQQ(밤에만)", 100.0)],
                              "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."},
                 "rule": "매 거래일 종가에 QQQ를 사서 다음 날 시가에 판다.",
                 "why": "NASDAQ 100에서 밤사이 수익이 낮에 앉아 있는 것보다 나은지. "
-                       "대조군은 QQQ 상시보유(종가→종가).",
+                       "판정은 NASDAQ 100(PR) 기준이고, 원래 질문인 QQQ 종가→종가 대비는 보조로 병기한다.",
                 "note": "연 252회 왕복이라 무비용 수치를 그대로 읽으면 안 된다.",
                 "start": DTS[st], "end": DTS[-1], "n_days": n - st,
                 "metrics": ms, "bench": mb, "bench_unstable": False,
-                "bench_label": "QQQ 상시보유(종가→종가)",
+                "bench_label": "NASDAQ 100(PR) 매수후보유",
+                "bench2": {"label": "QQQ 상시보유(종가→종가)", "metrics": mo,
+                           "d_sharpe": round((ms.get("sharpe") or 0) - (mo.get("sharpe") or 0), 3),
+                           "t": tstat(rets, brs)},
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, brs), "risk": risk_bootstrap(rets, brs), "turnover": 252.0,
+                "t": tstat(rets, irets), "risk": risk_bootstrap(rets, irets), "turnover": 252.0,
                 # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
                 #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
-                "dates": (_gt := gthin(dd, nav, bn))[0],
+                "dates": (_gt := gthin(dd, nav, inav))[0],
                 "nav": _gt[1],
                 "bnav": _gt[2]}
     add("overnight-ndx", "overnight-holding-ndx", s_overnight_ndx)
@@ -2072,28 +2162,54 @@ def build():
                     "vol": round(sd * math.sqrt(12) * 100, 2),
                     "sharpe": round(mu / sd * math.sqrt(12), 3) if sd > 0 else None,
                     "mdd": round(maxdd(nv) * 100, 2)}
-        ms, mb = mstats(a_, nav), mstats(b_, bn)
-        d = [x - y for x, y in zip(a_, b_)]
+        ms, mo = mstats(a_, nav), mstats(b_, bn)
+        # 🚨 판정선은 지수(PR)다. 이 결합은 EPS 리비전(NDX 유니버스) + 크로스에셋 RP 라
+        #   배포 원장의 Multi-Sleeve Core 와 같은 NASDAQ 100(PR)을 쓴다.
+        #   종전 대조군 '배포 슬리브 둘 50:50 고정'은 버리지 않고 보조로 내린다 —
+        #   이 랩의 원래 질문("가중을 굴린 것이 반반 고정보다 나은가")을 재는 유일한 대조군이다.
+        # ⚠ 지수를 못 만들면 **판정선을 바꾸지 않는다.** 조용히 반반 고정으로 되돌아가는 것이
+        #   아니라, 되돌아갔다는 사실을 라벨이 그대로 말한다(아래 _ilab).
+        _ir = idx_monthly("^NDX", months)
+        if _ir:
+            inav = [100.0]
+            for r in _ir:
+                inav.append(inav[-1] * (1 + r))
+            mb, b_cmp, bnav_out = mstats(_ir, inav), _ir, inav
+            # ⚠ t 를 반드시 싣는다. 화면(explorer '판정 축')은 b2.t 가 있어야 보조 칸을
+            #   그린다 — 없으면 내려놓은 원래 질문이 화면에서 통째로 사라진다.
+            _d2 = [x - y for x, y in zip(a_, b_)]
+            _mu2 = sum(_d2) / len(_d2)
+            _sd2 = math.sqrt(sum((v - _mu2) ** 2 for v in _d2) / max(1, len(_d2) - 1))
+            _ilab, _b2 = "NASDAQ 100(PR) 매수후보유", {
+                "label": "배포 슬리브 둘 50:50 고정", "metrics": mo,
+                "d_sharpe": round((ms.get("sharpe") or 0) - (mo.get("sharpe") or 0), 3),
+                "t": round(_mu2 / (_sd2 / math.sqrt(len(_d2))), 2) if _sd2 > 0 else None}
+        else:
+            print("  ⚠ %s — ^NDX 월간 계열을 못 만들었다. 판정선을 반반 고정으로 둔다." % name)
+            mb, b_cmp, bnav_out = mo, b_, bn
+            _ilab, _b2 = "배포 슬리브 둘 50:50 고정", None
+        d = [x - y for x, y in zip(a_, b_cmp)]
         mu = sum(d) / len(d)
         sd = math.sqrt(sum((v - mu) ** 2 for v in d) / max(1, len(d) - 1))
         step = max(1, len(nav) // 220)
         we_, wr_ = wfn(len(months) - 1, months, rs)
         return {"name": name, "rule": rule, "why": why, "note": note,
                 # 이쪽 격자는 월말("YYYY-MM")이다 — load_index_tr 가 그 형식을 알아본다.
-                "chart": curve_pack(months, nav, bn, idx_rets=load_index_tr(months)),
+                "chart": curve_pack(months, nav, bnav_out, idx_rets=load_index_tr(months)),
                 "holdings": {"kind": "sleeve", "as_of": months[-1],
                              "weights": [("EPS 리비전 드리프트", round(we_ * 100, 1)),
                                          ("크로스에셋 리스크패리티", round(wr_ * 100, 1))],
                              "note": "배포 슬리브 둘의 현재 배분이다."},
                 "start": months[0], "end": months[-1], "n_days": len(months),
                 "metrics": ms, "bench": mb, "bench_unstable": False,
-                "bench_label": "배포 슬리브 둘 50:50 고정",
+                "bench_label": _ilab,
+                **({"bench2": _b2} if _b2 else {}),
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
                 "t": round(mu / (sd / math.sqrt(len(d))), 2) if sd > 0 else None,
                 "turnover": None, "monthly": True,
                 # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
                 #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
-                "dates": (_gt := gthin(months, nav, bn))[0],
+                "dates": (_gt := gthin(months, nav, bnav_out))[0],
                 "nav": _gt[1],
                 "bnav": _gt[2]}
 
