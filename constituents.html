@@ -181,6 +181,38 @@
      background:var(--panel);color:var(--ink);border-radius:2px;min-width:170px;margin-left:auto}
   .mnote{margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65}
 
+  /* 비중순 세로 표 — index_constituents 테이블 양식. 500줄을 훑는 화면이라
+     행 높이를 낮추고 숫자는 tabular-nums 로 자릿수를 맞춘다. */
+  .tw{margin-top:14px;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel)}
+  table.ctbl{width:100%;border-collapse:collapse;font-size:13px}
+  table.ctbl th{position:sticky;top:0;z-index:1;background:var(--panel-2);text-align:left;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.ctbl td{padding:6px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.ctbl tbody tr:hover{background:var(--panel-2)}
+  table.ctbl .c-r{text-align:right}
+  table.ctbl .c-m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  table.ctbl td.c-t{font-family:var(--mono);font-weight:800;white-space:nowrap}
+  table.ctbl td.c-n{color:var(--ink-2);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  table.ctbl td.c-s{color:var(--muted);font-size:12px;white-space:nowrap}
+  table.ctbl td.cum{color:var(--muted)}
+  table.ctbl td.c-g{white-space:nowrap}
+  table.ctbl .cls{color:var(--muted);margin:0 3px;font-weight:400}
+  table.ctbl i.dual{font-style:normal;font-family:var(--mono);font-size:9.5px;font-weight:800;
+    margin-left:5px;padding:1px 4px;border-radius:2px;border:1px solid var(--line);color:var(--muted)}
+  table.ctbl tr.nopx td.c-t{color:var(--hot)}
+  table.ctbl tr.nopx{background:var(--panel-2)}
+  table.ctbl tr.isnew td.c-t{box-shadow:inset 3px 0 0 var(--deploy)}
+  table.ctbl i.tag{display:inline-block;font-style:normal;font-family:var(--mono);font-size:9.5px;
+    font-weight:800;padding:1px 5px;border-radius:2px;background:var(--hot);color:var(--ground)}
+  table.ctbl i.tag.new{background:var(--deploy)}
+  .mdb.sortb{margin-left:4px}
+  .wnote{margin:12px 0 0;font-size:12.5px;color:var(--muted);line-height:1.7}
+  .wnote b{color:var(--ink-2)}
+  @media(max-width:640px){
+    table.ctbl td.c-n{max-width:150px}
+    table.ctbl td.c-s{display:none} table.ctbl th:nth-child(4){display:none}
+  }
   .sgrp{margin-top:16px}
   .sgh{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
        color:var(--muted);font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--line-soft)}
@@ -601,7 +633,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var el=function(id){return document.getElementById(id);};
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
-  var D=null, IX='spx', M=null, MODE='all';
+  var D=null, IX='spx', M=null, MODE='all', SORT='w';   // SORT: 'w' 비중순 · 't' 티커순
   // 랩 전략의 PIT 창이 시작하는 달 — 커버리지 막대에 그 경계를 표시한다.
   // 🚨 손으로 박은 값이 아니라 limits 문구와 같은 출처(pit_backtest 의 START)다.
   //   여기서만 쓰는 표시라 상수로 두되, 바뀌면 아래 문구와 같이 고쳐야 한다.
@@ -749,24 +781,46 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var modes=[['all','전체 '+list.length],['miss','자료 없음 '+(r.miss?r.miss.length:0)],['new','이번 달 편입 '+(r.add?r.add.length:0)]];
     var mh='<div class="modes">'+modes.map(function(x){
       return '<button type="button" class="mdb'+(MODE===x[0]?' on':'')+'" data-mode="'+x[0]+'">'+x[1]+'</button>';
-    }).join('')+'<input id="q" class="q" type="search" placeholder="티커·이름 찾기" autocomplete="off"></div>';
+    }).join('')+
+      '<button type="button" class="mdb sortb" id="sortb">'+(SORT==='w'?'비중순 ↓':'티커순 A→Z')+'</button>'+
+      '<input id="q" class="q" type="search" placeholder="티커·이름 찾기" autocomplete="off"></div>';
 
-    // 섹터로 묶어 보여 준다 — 500종을 한 줄로 흘리면 눈으로 못 읽는다.
-    var bys={};
-    shown.forEach(function(t){ (bys[secOf(t)]=bys[secOf(t)]||[]).push(t); });
-    var secs=Object.keys(bys).sort(function(a,b){
-      if(a===UNK)return 1; if(b===UNK)return -1; return bys[b].length-bys[a].length;});
-    var body='';
-    secs.forEach(function(s){
-      body+='<div class="sgrp"><div class="sgh">'+esc(s)+' <span>'+bys[s].length+'</span></div><div class="tg">';
-      bys[s].forEach(function(t){
-        body+='<div class="tk'+(miss[t]?' nopx':'')+(add[t]?' isnew':'')+'" data-q="'+
-          esc((t+' '+nameOf(t)).toLowerCase())+'"><b>'+esc(t)+'</b>'+
-          (nameOf(t)?'<span>'+esc(nameOf(t))+'</span>':'<span class="unk">이름 없음</span>')+
-          (miss[t]?'<i class="tag">가격 없음</i>':'')+(add[t]?'<i class="tag new">신규</i>':'')+'</div>';
-      });
-      body+='</div></div>';
+    // 🚨 비중순 세로 표 — 사용자 요청(2026-08-13) "index_constituents 테이블 양식처럼
+    //   아래로 쭉, 비중순으로". 종전에는 섹터별 카드 격자였는데 500종을 눈으로 훑기에는
+    //   순서가 없어 읽히지 않았다. 비중이 순서를 준다.
+    // ⚠ w 는 sorted(멤버) 와 같은 순서로 실려 온다. 길이가 어긋나면 **비중을 통째로 버린다** —
+    //   어긋난 채 그리면 종목마다 남의 비중을 달게 되고, 그건 틀린 표를 그럴듯하게 내는 것이다.
+    var W=(r.w&&r.w.length===list.length)?r.w:null;
+    var wOf=function(t){ if(!W)return null; var k=list.indexOf(t); return k<0?null:W[k]; };
+    // 이중 클래스는 회사 시총을 한 번만 셌고 비중이 대표 티커에 몰려 있다 — 한 줄로 합친다.
+    var DU=D.dual||{}, groupOf=function(t){ return DU[t]||t; };
+    var byg={};
+    shown.forEach(function(t){ var g=groupOf(t); (byg[g]=byg[g]||[]).push(t); });
+    var rowsK=Object.keys(byg);
+    if(W&&SORT==='w') rowsK.sort(function(a,b){ return (wOf(a)||0)-(wOf(b)||0)===0 ? (a<b?-1:1) : (wOf(b)||0)-(wOf(a)||0); });
+    else rowsK.sort();
+
+    var cum=0, body='<div class="tw"><table class="ctbl"><thead><tr>'+
+      '<th class="c-r">#</th><th>티커</th><th>종목명</th><th>섹터</th>'+
+      (W?'<th class="c-r">비중</th><th class="c-r">누적</th>':'')+
+      '<th>상태</th></tr></thead><tbody>';
+    rowsK.forEach(function(g,n){
+      var ts=byg[g].slice().sort(), w=wOf(g);
+      if(W&&w!=null)cum+=w;
+      var anyMiss=ts.some(function(t){return miss[t];}), anyNew=ts.some(function(t){return add[t];});
+      body+='<tr class="'+(anyMiss?'nopx':'')+(anyNew?' isnew':'')+'" data-q="'+
+        esc((ts.join(' ')+' '+ts.map(nameOf).join(' ')).toLowerCase())+'">'+
+        '<td class="c-r c-m">'+(n+1)+'</td>'+
+        '<td class="c-t">'+ts.map(esc).join('<span class="cls">·</span>')+
+          (ts.length>1?'<i class="dual" title="같은 회사의 복수 클래스 — 시총을 한 번만 셉니다">합산</i>':'')+'</td>'+
+        '<td class="c-n">'+(nameOf(ts[0])?esc(nameOf(ts[0])):'<span class="unk">이름 없음</span>')+'</td>'+
+        '<td class="c-s">'+esc(secOf(ts[0]))+'</td>'+
+        (W?('<td class="c-r c-m">'+(w==null?'—':(w/100).toFixed(2)+'%')+'</td>'+
+            '<td class="c-r c-m cum">'+(w==null?'—':(cum/100).toFixed(1)+'%')+'</td>'):'')+
+        '<td class="c-g">'+(anyMiss?'<i class="tag">가격 없음</i>':'')+(anyNew?'<i class="tag new">신규</i>':'')+'</td>'+
+      '</tr>';
     });
+    body+='</tbody></table></div>';
     if(!shown.length)body='<div class="note">해당하는 종목이 없습니다.</div>';
 
     var missnote=(r.miss&&r.miss.length)?
@@ -775,19 +829,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        '자료를 더 받아서 메울 수 있는 종류가 아닙니다. 이 결손만큼 PIT 레그도 아직 생존자 쪽으로 기울어 있습니다.</p>'):
       ('<p class="mnote">이 달은 <b>명단 전원의 가격 자료를 갖고 있습니다.</b></p>');
 
-    el('panel').innerHTML=head+chips+mh+missnote+'<div id="grid">'+body+'</div>';
+    var wnote = W ?
+      ('<p class="wnote"><b>비중은 시가총액 추정치입니다</b> — 발행주식수 × 그달 월말 종가로 계산했고, '+
+       '지수의 <b>공식 비중이 아닙니다.</b> S&amp;P·나스닥은 <b>유동주식 조정</b>(내부자·정부·모회사 지분 제외) '+
+       '시총으로 비중을 매기는데 여기에는 그 조정이 없어, 지분이 묶여 있는 종목일수록 실제보다 무겁게 잡힙니다. '+
+       '상위 종목의 <b>순서</b>는 대체로 맞지만 값 자체를 공식 비중으로 인용하면 안 됩니다. '+
+       '비중을 못 잰 종목은 분모에서도 빠지므로 합이 100%가 됩니다 — 몇 %를 못 쟀는지는 위 커버리지가 말합니다.</p>')
+      : '<p class="wnote">이 달은 <b>비중을 계산하지 못했습니다</b>(주식수·종가 자료 부족). 티커순으로 보여 줍니다.</p>';
+
+    el('panel').innerHTML=head+chips+mh+missnote+wnote+'<div id="grid">'+body+'</div>';
+    var sb=el('sortb');
+    if(sb)sb.addEventListener('click',function(){ SORT=(SORT==='w'?'t':'w'); render(); });
     Array.prototype.forEach.call(el('panel').querySelectorAll('.mdb'),function(b){
       b.addEventListener('click',function(){ MODE=b.dataset.mode; render(); });
     });
     var q=el('q');
     if(q)q.addEventListener('input',function(){
       var v=q.value.trim().toLowerCase();
-      Array.prototype.forEach.call(el('grid').querySelectorAll('.tk'),function(n){
+      Array.prototype.forEach.call(el('grid').querySelectorAll('tbody tr'),function(n){
         n.style.display=(!v||n.dataset.q.indexOf(v)>=0)?'':'none';
-      });
-      Array.prototype.forEach.call(el('grid').querySelectorAll('.sgrp'),function(g){
-        var any=Array.prototype.some.call(g.querySelectorAll('.tk'),function(n){return n.style.display!=='none';});
-        g.style.display=any?'':'none';
       });
     });
   }

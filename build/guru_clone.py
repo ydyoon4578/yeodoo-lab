@@ -147,6 +147,11 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     st = mi.get(min(basket))
     if st is None or st >= len(months) - 12:
         return None
+    # 🚨 백테스트 길이 상한 10년 — 사용자 결정 2026-08-13(tech_backtest.MAX_YEARS 와 같은 값).
+    #   이 규칙은 격자가 **월 라벨**이라 asset_backtest 의 cap_start(거래일 인덱스)를 못 쓴다.
+    #   자기 파일에서 따로 걸어야 하고, 실제로 이것만 12.9년으로 남아 있었다(실측).
+    MAX_YEARS = 10
+    st = max(st, len(months) - MAX_YEARS * 12)
 
     # 대조군 = S&P 500(PR) 월수익. 사용자 결정(2026-07-28) — 동일가중 유니버스는 쓰지 않는다.
     SPXM = spx_monthly(months)
