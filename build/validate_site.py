@@ -2991,6 +2991,56 @@ try:
 except Exception as _e:
     errors.append("PIT 커버리지 검사가 예외로 죽었다 — %s" % _e)
 
+# ── 백테스트 길이 상한이 네 파일에서 갈리지 않는가 ─────────────────────────
+# 🚨 사용자 결정(2026-08-13)으로 전 전략 백테스트를 최대 10년으로 자르는데, 격자가
+#   거래일/월말로 갈려 **상수를 한 곳에 못 모았다**. 네 곳이 같은 값을 따로 들고 있고,
+#   한쪽만 고치면 한 화면에 10년짜리와 12년짜리가 나란히 놓인다 — 눈으로는 안 보인다.
+#   그래서 ① 상수가 서로 같은지 ② 산출물이 실제로 그 상한을 지켰는지 둘 다 본다.
+#   ②가 본체다. 상수를 우회해도 잡힌다.
+try:
+    import re as _re
+    _CAPS = [("build/tech_backtest.py",   r"^MAX_YEARS\s*=\s*(\d+)",        1),
+             ("build/asset_backtest.py",  r"^MAX_YEARS\s*=\s*(\d+)",        1),
+             ("build/guru_clone.py",      r"^\s+MAX_YEARS\s*=\s*(\d+)",    1),
+             ("build/strategy_metrics.py", r"^MAX_MONTHS\s*=\s*(\d+)\s*\*\s*12", 1)]
+    _got = {}
+    for _f, _pat, _mul in _CAPS:
+        _m = _re.search(_pat, rd(_f), _re.M)
+        if not _m:
+            errors.append("%s 에서 백테스트 길이 상한 상수를 못 찾았다 — 이름이 바뀌었으면 "
+                          "이 검사도 같이 고칠 것(안 그러면 상한이 조용히 풀린다)" % _f)
+        else:
+            _got[_f] = int(_m.group(1)) * _mul
+    _cap_ok = True
+    if len(set(_got.values())) > 1:
+        _cap_ok = False
+        errors.append("백테스트 길이 상한이 파일마다 다르다 — %s. 네 곳이 같은 값을 따로 들고 "
+                      "있으므로 바꿀 때는 넷 다 바꿔야 한다(격자가 거래일/월말로 갈려 한 곳에 "
+                      "못 모았다)" % " · ".join("%s=%d년" % (k.split("/")[-1], v)
+                                                for k, v in sorted(_got.items())))
+    _cap = max(_got.values()) if _got else 10
+    # ② 산출물 실측 — 게시 목록에서 상한을 넘는 전략이 있으면 상수와 무관하게 잡는다.
+    #    한 달치 여유를 둔다(월말 격자·거래일 반올림으로 10.0 을 살짝 넘길 수 있다).
+    _si = json.loads(rd("data/strategy_index.json"))
+    _over = []
+    for _x in _si.get("items") or []:
+        _s, _e = _x.get("start"), _x.get("end")
+        if not (_s and _e and len(_s) >= 7 and len(_e) >= 7):
+            continue
+        _y = (int(_e[:4]) * 12 + int(_e[5:7]) - int(_s[:4]) * 12 - int(_s[5:7])) / 12.0
+        if _y > _cap + 0.25:
+            _over.append("%s %.1f년" % ((_x.get("name") or _x.get("sid") or "?")[:28], _y))
+    if _over:
+        _cap_ok = False
+        errors.append("백테스트 구간이 상한(%d년)을 넘는 전략 %d종 — %s. 창이 갈리면 카드끼리 "
+                      "세로로 비교할 수 없다. 해당 엔진에 상한이 안 걸린 경로가 있다는 뜻이다"
+                      % (_cap, len(_over), " · ".join(_over[:6])))
+    if _cap_ok and len(_got) == len(_CAPS):
+        print("  ~ 백테스트 길이 상한 검사 통과(%d년 · 상수 %d곳 일치 · 게시 %d종 전부 이내)"
+              % (_cap, len(_got), len(_si.get("items") or [])))
+except Exception as _e:
+    errors.append("백테스트 길이 상한 검사가 예외로 죽었다 — %s" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
