@@ -746,6 +746,25 @@ def main():
     rf = {k: v for k, v in rf.items() if k >= dates[i0][:7]}
 
     TB.build_strats()
+    # 🚨 바스켓 크기 전수 시험(PREREG-2026-08-13-NSWEEP.md)의 변형은 여기서 걷는다.
+    #   랩 본편이 셋 중 하나만 남기고 나머지를 버리므로, PIT 이 그 버려진 것까지 돌면
+    #   화면에 없는 규칙을 재는 셈이다. 그리고 **승자가 쓴 N 을 그대로 적용해야 한다** —
+    #   안 하면 화면은 20종인데 PIT 은 10종을 재고, 그 차이가 '생존편향'으로 잘못 읽힌다.
+    TB.STRATS[:] = [s for s in TB.STRATS if "~n" not in s["sid"]]
+    try:
+        _tech = json.load(io.open(os.path.join(DATA, "tech_strategies.json"), encoding="utf-8"))
+        _nsel = {r["sid"]: (r.get("nsel") or {}).get("n")
+                 for r in (_tech.get("strategies") or []) if r.get("nsel")}
+    except Exception:
+        _nsel = {}
+    _applied = 0
+    for _s in TB.STRATS:
+        _n = _nsel.get(_s["sid"])
+        if _n and _n != TB.TOPN:
+            _s["topn"] = _n; _applied += 1
+    if _nsel:
+        print("  바스켓 승자 N 적용 %d종(10 이 아닌 것) / 전수 시험 %d종"
+              % (_applied, len(_nsel)))
     BY = {s["sid"]: s for s in TB.STRATS}
     # 🚨 완결성 관문 — 랩의 **모든 횡단면 규칙**은 셋 중 하나여야 한다:
     #     ① PRICE_SIDS 나 FUND_SIDS 에 있어 PIT 을 돈다
