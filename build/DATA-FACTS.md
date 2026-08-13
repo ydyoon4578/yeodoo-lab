@@ -658,8 +658,16 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 95, "narrow_rules": 22, "incr5_rules": 0}
+ "xsec_rules": 85, "narrow_rules": 22, "incr5_rules": 0}
 -->
+
+⚠ 2026-08-13 갱신(4). 95 → 85. **은퇴 규칙 10종이 목록에 되살아나 있던 것을 걷었다.**
+바스켓 전수 시험이 만든 변형(`x-roe~n20`)은 `sid not in RETIRED` 검사를 통과했고, 승자 선택이
+그것을 다시 `x-roe` 로 개명했다 — 열위·중복으로 뺀 x-roe·x-npm·x-gpa·x-ocfp·x-minvar·
+x-recency·x-riskbudget·x-mom-trend·x-peerlag·x-delay 가 라이브 목록에 있었다. 은퇴 결정이
+조용히 뒤집힌 것이고, 밑동 sid 로 검사하게 고쳤다(제외 13 → 33종 = 밑동 13 + 변형 20).
+같은 실행에서 **리밸런스 주기**도 규칙마다 갈렸다(PREREG-2026-08-13-REBAL.md) — 주간 8 ·
+분기 24 · 월말 63. 규칙 수는 그것 때문에 바뀌지 않는다.
 
 ⚠ 2026-08-13 갱신(3). 90 → 95. **확률·통계 축 2차 5종**(PREREG-2026-08-13-STAT2.md) — 분포 모양 컴포지트·꼬리지수(Hill)·융-박스 Q·
 변동성 군집(ARCH LM)·허스트+시총하한. 전부 종가만 쓰고 등록과 동시에 PIT 을 받는다.

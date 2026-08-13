@@ -659,6 +659,9 @@ def main() -> int:
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
+            # 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전엔 전 규칙이 월말이라 설명문에
+            # 글자로 박아 두면 됐는데, 주기가 갈린 뒤로는 화면이 자료에서 읽어야 한다.
+            reb=r.get("reb"), reb_label=r.get("reb_label"),
             holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"), dates=r.get("dates"),
             arch=r.get("arch"),
             # 채점 후보 수 — '상위 10종'이 몇 종 중에서 골라진 것인가. 이것도 재 놓고 화면에
