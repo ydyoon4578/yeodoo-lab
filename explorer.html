@@ -1440,6 +1440,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         //   키를 만들면 그 표기를 쓰는 전략이 통째로 안 이어진다 — 배포 원장 4종이 그래서
         //   지수 눈금·구성·비교가능 표시를 못 받고 있었다. 양쪽 표기를 다 키로 둔다.
         var MX={}; ix.items.forEach(function(x){MX[x.name]=x; MX[ixL(x.name)]=x;});
+        // 🚨 2026-08-13 — **인덱스가 정본이다.** 빌더가 HIDE_SIDS 로 목록에서 뺀 전략이
+        //   인라인 D 배열에는 남아 있어 카드만 떠 있었다(이익추정 리비전 — 회전율 밴드).
+        //   숨김이 반쪽이면 "목록에 없는데 카드가 있는" 상태가 되고, 그건 사용자 결정을
+        //   화면이 절반만 따르는 것이다.
+        //   ⚠ 인덱스에 아예 안 실린 배포 원장 항목만 뺀다. 랩 전략은 위 add 로 들어와
+        //     이름이 반드시 맞으므로 여기 걸리지 않는다.
+        //   ⚠ 자료를 못 받았으면(ix.items 비었으면) 아무것도 빼지 않는다 — 위에서 이미
+        //     return 했으므로 여기 도달하면 목록은 있다.
+        (function(){
+          var _gone=D.filter(function(d){return d._lab!==true&&!MX[d.n];});
+          if(_gone.length){
+            var _ids={}; _gone.forEach(function(d){_ids[d._i]=1;});
+            D=D.filter(function(d){return !_ids[d._i];});
+            D.forEach(function(d,i){d._i=i;});
+            if(window.console)console.info('[explorer] 인덱스에 없는 카드 '+_gone.length+
+              '종을 뺀다(빌더 HIDE_SIDS): '+_gone.map(function(d){return d.n;}).join(', '));
+          }
+        })();
         D.forEach(function(d){
           var x=MX[d.n]; if(!x)return;
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
