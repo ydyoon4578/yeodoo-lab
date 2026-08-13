@@ -1306,6 +1306,97 @@ def ret_entropy(Rt, i, win=STAT_WIN, bins=5):
     return h
 
 
+# ── 확률·통계 축 2차 — 사전등록 PREREG-2026-08-13-STAT2.md ────────────────────
+HILL_TAIL = 0.05         # 꼬리지수 추정에 쓸 하위 꼬리 비율 — 252일이면 12관측
+LBQ_LAGS = 12            # 융-박스 Q 시차
+ARCH_LAGS = 5            # ARCH LM 시차
+
+
+def hill_alpha(Rt, i, win=STAT_WIN, q=HILL_TAIL):
+    """꼬리지수 α(Hill). 사전등록 §2 — **높은 것**(꼬리가 얇은 것)을 산다.
+
+    하위 꼬리 |x| 상위 k개를 크기순으로 놓고 α = k / Σ ln(|x_(j)| / |x_(k)|).
+    α 가 클수록 꼬리가 빨리 죽는다(=극단 손실이 덜하다).
+    ⚠ 초과첨도(x-kurt)와 같은 계열이지만 **적률이 아니다** — 첨도는 중심에서 먼 관측
+      전부에 4제곱 가중을 주고, 이것은 **꼬리 표본만** 쓴다. 그 차이가 이 규칙의 질문이다.
+    ⚠ 252일의 하위 5% 는 12관측뿐이라 추정 오차가 크다(등록 §5 에 적어 뒀다).
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    neg = sorted((-x for x in xs if x < 0), reverse=True)   # 손실 크기 내림차순
+    k = int(len(xs) * q)
+    if k < 5 or len(neg) <= k:
+        return None
+    xk = neg[k]
+    if xk <= 0:
+        return None
+    ssum = 0.0
+    for j in range(k):
+        if neg[j] <= 0:
+            return None
+        ssum += math.log(neg[j] / xk)
+    return (k / ssum) if ssum > 0 else None
+
+
+def ljung_box(Rt, i, win=STAT_WIN, lags=LBQ_LAGS):
+    """융-박스 Q. 사전등록 §2 — **높은 것**(자기상관 구조가 있는 것)을 산다.
+
+    Q = n(n+2) Σ ρ_k² / (n−k). 시차 12개를 한꺼번에 본다.
+    ⚠ Q 는 **부호를 안 가린다** — 양의 자기상관도 음의 자기상관도 Q 를 올린다. 그래서
+      x-acorr(1차 자기상관 상위)와 같은 것을 재는 규칙이 아니다. 등록 §3 P2 가 그 질문이다.
+    ⚠ 원래 검정 통계량이지 순위 점수가 아니다. 순위로 쓰는 순간 '유의성' 의 뜻은 사라지고
+      단조 변환된 크기만 남는다 — 알고 쓴다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    n = len(xs)
+    if n <= lags + 10:
+        return None
+    m = sum(xs) / n
+    d = [x - m for x in xs]
+    c0 = sum(v * v for v in d)
+    if c0 <= 0:
+        return None
+    q = 0.0
+    for k in range(1, lags + 1):
+        ck = sum(d[j] * d[j - k] for j in range(k, n))
+        r = ck / c0
+        q += r * r / (n - k)
+    return n * (n + 2) * q
+
+
+def arch_lm(Rt, i, win=STAT_WIN, lags=ARCH_LAGS):
+    """변동성 군집(ARCH LM). 사전등록 §2 — **낮은 것**(군집이 약한 것)을 산다.
+
+    제곱수익을 자기 시차 5개에 회귀한 R² × n. 크면 변동성이 뭉쳐 다닌다는 뜻이다.
+    ⚠ 여기서는 다중회귀를 풀지 않고 **시차별 자기상관의 제곱합**으로 근사한다
+      (설명변수끼리 상관이 있으므로 R² 의 상한이다). 순위만 쓰므로 단조성이면 충분하지만,
+      값 자체를 'LM 통계량' 이라 부르면 안 된다 — 근사다.
+    ⚠ t-volreg(저변동성 국면만 편입)는 **시장 전체의 국면 스위치**이고 이것은 종목별
+      횡단면 점수다. 축이 다르다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    n = len(xs)
+    if n <= lags + 10:
+        return None
+    e = [x * x for x in xs]
+    m = sum(e) / n
+    d = [v - m for v in e]
+    c0 = sum(v * v for v in d)
+    if c0 <= 0:
+        return None
+    r2 = 0.0
+    for k in range(1, lags + 1):
+        ck = sum(d[j] * d[j - k] for j in range(k, n))
+        r = ck / c0
+        r2 += r * r
+    return n * r2
+
+
 ACORR_WIN = 120          # 사전등록 PREREG-2026-08-12-PATH.md §2① — 자기상관 추정 창
 VOLR_S, VOLR_L = 21, 252 # 같은 문서 §2② — 단기·장기 변동성 창
 
@@ -2911,6 +3002,50 @@ def build_strats():
          "⚠ 자기 분위로 나누므로 변동성 크기와 무관하다. 그것이 저변동 계열과 다른 점이다. "
          "⚠ 분위 경계가 표본에서 오므로 고른 분포에 가까울수록 값이 ln5 에 붙어 순위가 잡음에 "
          "흔들린다 — 그 한계는 이 표가 못 없앤다.")
+    # ── 확률·통계 축 2차 — PREREG-2026-08-13-STAT2.md ──────────────────────
+    xsec("x-distshape", "분포 모양 컴포지트 최하위 %d" % TOPN,
+         "왜도·초과첨도·점프비중을 각각 그달 횡단면 z 로 만들어 평균한 값이 가장 낮은 %d종목 "
+         "동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "이 랩은 분포의 세 축을 따로따로 재 놓고 합쳐 본 적이 없다. 성분 셋이 전부 '낮은 쪽' 을 "
+         "사는 규칙이라(x-rskew·x-kurt·x-jump) 합성도 같은 방향으로 둔다. "
+         "⚠ 정의상 그 셋의 평균이므로 1순위 이웃이 셋 중 하나가 아니면 계산이 틀린 것이다 — "
+         "등록 §3 P1 은 예측이라기보다 검산이다. "
+         "⚠ z 는 지표별로 결측 종목이 달라 있는 것만으로 평균한다(0 으로 안 채운다 — z 척도에서 "
+         "0 은 평균이라 자료 없는 종목이 중간 순위를 공짜로 받는다).")
+    xsec("x-hill", "꼬리지수 상위 %d" % TOPN,
+         "하위 %d%% 꼬리의 Hill 추정량이 가장 높은 %d종목 동일가중, 월말 리밸런스."
+         % (int(HILL_TAIL * 100), TOPN),
+         None,
+         "꼬리지수가 크면 극단 손실이 빨리 죽는다는 뜻이다. x-kurt(초과첨도)와 같은 계열이지만 "
+         "적률이 아니라 꼬리 표본만 쓴다 — 첨도는 중심에서 먼 관측 전부에 4제곱 가중을 준다. "
+         "⚠ 252일의 하위 5%는 12관측뿐이라 추정 오차가 크다. 순위만 쓰지만 그 잡음은 남는다.")
+    xsec("x-lbq", "융-박스 Q 상위 %d (%d시차)" % (TOPN, LBQ_LAGS),
+         "일간 수익의 자기상관 %d개를 한꺼번에 본 융-박스 Q 가 가장 높은 %d종목 동일가중, "
+         "월말 리밸런스." % (LBQ_LAGS, TOPN),
+         None,
+         "x-acorr(1차 자기상관)·x-runs(부호 뭉침)와 같은 '구조가 있는 쪽' 이다. "
+         "⚠ 다만 Q 는 부호를 안 가린다 — 양의 자기상관도 음의 자기상관도 Q 를 올린다. "
+         "그래서 x-acorr 와 같은 것을 재는 규칙이 아니고, 그 점이 이 규칙이 묻는 것이다. "
+         "⚠ 원래 검정 통계량이지 순위 점수가 아니다. 순위로 쓰는 순간 '유의성' 의 뜻은 사라진다.")
+    xsec("x-archlm", "변동성 군집 최하위 %d (%d시차)" % (TOPN, ARCH_LAGS),
+         "제곱수익의 시차 %d개 자기상관으로 잰 변동성 군집이 가장 약한 %d종목 동일가중, "
+         "월말 리밸런스." % (ARCH_LAGS, TOPN),
+         None,
+         "군집이 강하면 나쁜 날이 몰려 온다 — 약한 쪽을 산다. "
+         "⚠ 다중회귀를 풀지 않고 시차별 자기상관의 제곱합으로 근사한다(설명변수끼리 상관이 있어 "
+         "R² 의 상한이다). 순위만 쓰므로 단조성이면 충분하지만 값을 'LM 통계량' 이라 부르면 안 된다. "
+         "⚠ t-volreg 는 시장 전체의 국면 스위치이고 이것은 종목별 횡단면 점수다 — 축이 다르다.")
+    xsec("x-hurst-mcf", "허스트 지수 상위 %d · 시총 하한(하위 %d%% 제외)"
+         % (TOPN, int(MCF_CUT * 100)),
+         "x-hurst 와 점수가 같고, 그달 후보에서 시가총액 하위 %d%% 를 먼저 잘라 낸다."
+         % int(MCF_CUT * 100),
+         None,
+         "x-hurst 의 최대낙폭이 −53.48%로 이 랩 통계 계열 15종 중 가장 깊다. 그 원인을 "
+         "'소형 극단' 으로 보고 하한을 건다. ⚠ 이것은 가설이지 진단이 아니다 — 원인을 따로 "
+         "재지 않았다. 낙폭이 줄어도 '소형이 원인이었다' 의 증거는 아니고, 기전과 양립하는 "
+         "결과일 뿐이다. ⚠ -mcf 계열이라 바스켓 전수 시험에서 빠져 10종 고정이다 — 밑동과 "
+         "크기가 같아야 낙폭 비교가 크기 차이로 오염되지 않는다.")
     xsec("x-acorr", "수익률 자기상관 상위 %d" % TOPN,
          "일간 수익률의 1차 자기상관을 최근 %d거래일에서 재어 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % (ACORR_WIN, TOPN),
@@ -4317,6 +4452,25 @@ def xsec_score_at(S, i, X, pool=None):
         elif sid == "x-acorr":
             v = autocorr1(R[t], i - 1)
         # 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md. 부호는 등록 §2 에서 고정했다.
+        # 확률·통계 축 2차 — PREREG-2026-08-13-STAT2.md
+        elif sid == "x-distshape":
+            _sk = realized_skew(R[t], i - 1, STAT_WIN)
+            _ku = excess_kurt(R[t], i - 1)
+            _jp = jump_share(R[t], i - 1)
+            _m = {}
+            if _sk is not None: _m["sk"] = -_sk        # 셋 다 '낮은 쪽' 이므로 부호를 뒤집어
+            if _ku is not None: _m["ku"] = -_ku        #   z 평균이 클수록 좋게 맞춘다
+            if _jp is not None: _m["jp"] = -_jp
+            if _m:
+                comp_raw.setdefault(sid, []).append((t, _m))
+            v = None                                   # 점수는 단면이 모인 뒤에 붙는다
+        elif sid == "x-hill":
+            v = hill_alpha(R[t], i - 1)
+        elif sid == "x-lbq":
+            v = ljung_box(R[t], i - 1)
+        elif sid == "x-archlm":
+            _a = arch_lm(R[t], i - 1)
+            v = (-_a) if _a is not None else None       # 최하위 → 부호 반전
         elif sid == "x-kurt":
             _k = excess_kurt(R[t], i - 1)
             v = (-_k) if _k is not None else None      # 최하위 → 부호 반전

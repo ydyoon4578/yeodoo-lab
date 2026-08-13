@@ -658,8 +658,11 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 90, "narrow_rules": 22, "incr5_rules": 0}
+ "xsec_rules": 95, "narrow_rules": 22, "incr5_rules": 0}
 -->
+
+⚠ 2026-08-13 갱신(3). 90 → 95. **확률·통계 축 2차 5종**(PREREG-2026-08-13-STAT2.md) — 분포 모양 컴포지트·꼬리지수(Hill)·융-박스 Q·
+변동성 군집(ARCH LM)·허스트+시총하한. 전부 종가만 쓰고 등록과 동시에 PIT 을 받는다.
 
 ⚠ 2026-08-13 갱신(2). 80 → 90. **바스켓 크기 전수 시험**(PREREG-2026-08-13-NSWEEP.md)이
 횡단면 77종을 N∈{10,20,30} 으로 돌리면서 검정이 269개가 됐고, 승자만 남긴 뒤 목록은
