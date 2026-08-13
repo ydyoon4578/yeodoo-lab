@@ -2220,7 +2220,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   그 경로는 **아래 표와 같은 정의**로 만들어졌고(섹터 = 기준일 대비 종목별 비율의 평균),
   //   그래서 각 선의 끝점이 아래 표의 그 칸과 글자 그대로 같다(빌드에서 15계열×5구간 대조).
   //   섹터는 **SPDR 섹터 ETF** 다(2026-08-11 사용자 결정으로 동일가중을 걷어냈다).
-  var STC_HZ='12M', STC_P=null, STC_I=null;   // STC_I = 산업그룹 경로(별도 파일)
+  // 첫 화면 기간은 **1개월**이다(사용자 요청 2026-08-13). 탭을 누르면 바뀌지만, 들어왔을 때
+  // 뜨는 것은 이것이다. ⚠ 손으로 안 고르면 Object.keys 순서(=home_perf 가 실은 순서)를
+  // 따르게 되므로, 기본값을 바꾸려면 반드시 이 상수를 고쳐야 한다.
+  var STC_HZ='1M', STC_P=null, STC_I=null;    // STC_I = 산업그룹 경로(별도 파일)
 
   function drawStChart(){
     var box=el('stchart'); if(!box)return;
