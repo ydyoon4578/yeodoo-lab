@@ -122,7 +122,11 @@ PRICE_SIDS = [
               #   결과를 보고 넣으면 사후 선택이므로 **등록과 함께 미리** 넣는다.
               #   가격과 시점별 주식수만 쓰므로 편출 종목 캐시(_pit_px_cache·_pit_sh_cache)로
               #   그대로 돈다. 하한은 랩 함수 xsec_score_at 안에서 걸리므로 이쪽에 배선은 없다.
-              "x-mom12-mcf", "x-dist200-mcf", "x-hlspread-mcf"]
+              "x-mom12-mcf", "x-dist200-mcf", "x-hlspread-mcf",
+              # 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md §4.
+              #   🚨 **등록과 동시에** 넣는다(결과를 보고 넣으면 사후 선택이다). 다섯 다 종가만
+              #   쓰므로 편출 종목 캐시로 그대로 돈다 — 일부러 그런 규칙으로 골랐다.
+              "x-kurt", "x-jump", "x-hurst", "x-runs", "x-entropy"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.

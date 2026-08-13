@@ -1145,6 +1145,159 @@ def mcap_floor(tickers, X, i, cut=MCF_CUT):
     return [t for t in tickers if mc.get(t) is None or mc[t] >= thr]
 
 
+# ── 확률·통계 축 5종 — 사전등록 PREREG-2026-08-13-STAT5.md ────────────────────
+# 🚨 다섯 다 **종가만** 쓴다. 거래량을 쓰면 편출 종목 자료가 없어 PIT 레그가 통째로 막힌다
+#   (x-amihud 가 소급 t 6.84 인 채 영영 검증 못 하는 규칙이 된 이유다).
+# ⚠ 창은 다섯이 **같아야** 한다 — 서로 이웃인지 보려면 같은 자로 재야 한다.
+STAT_WIN = 252
+STAT_MINF = 0.8          # 유효일이 창의 이 비율 미만이면 None(추정을 안 만든다)
+
+
+def _rwin(Rt, i, win=STAT_WIN):
+    """창 안의 유효 일간수익. 부족하면 None — 없는 값을 0 으로 채우지 않는다."""
+    if i < win:
+        return None
+    xs = [Rt[j] for j in range(i - win + 1, i + 1) if Rt[j] is not None]
+    return xs if len(xs) >= win * STAT_MINF else None
+
+
+def excess_kurt(Rt, i, win=STAT_WIN):
+    """초과첨도(4차 표준화 적률 − 3). 사전등록 §2 — **낮은 것**을 산다.
+
+    꼬리가 두꺼운 종목은 복권처럼 사들여 비싸진다는 주장의 4차 모멘트 판이다
+    (x-rskew 가 3차, 이것이 4차). ⚠ 첨도는 표본 극단값 하나에 크게 흔들린다 —
+    그래서 창을 252 로 길게 잡았고, 그래도 남는 불안정성은 이 표가 못 없앤다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    n = len(xs); m = sum(xs) / n
+    v = sum((x - m) ** 2 for x in xs) / n
+    if v <= 0:
+        return None
+    return sum((x - m) ** 4 for x in xs) / n / (v * v) - 3.0
+
+
+def jump_share(Rt, i, win=STAT_WIN):
+    """점프 비중 = 1 − BV/RV. 사전등록 §2 — **낮은 것**을 산다.
+
+    RV(실현분산)는 움직임 전체이고 BV(이변동, Barndorff-Nielsen–Shephard)는 인접 두 날의
+    |수익| 곱을 더한 것이라 **점프에 둔감**하다. 둘의 차이가 점프 몫이다.
+    ⚠ 변동성의 **크기**가 아니라 **구성**을 잰다 — x-ivol·x-volvol 과 축이 다르다(고 본다).
+      실제로 다른지는 증분 알파가 답한다. 등록 §3 P4 에 그 예측을 적어 뒀다.
+    ⚠ BV 는 인접 쌍이 필요하므로 결측을 건너뛰고 이은 쌍은 쓰지 않는다.
+    """
+    if i < win:
+        return None
+    seq = [Rt[j] for j in range(i - win + 1, i + 1)]
+    ok = [x for x in seq if x is not None]
+    if len(ok) < win * STAT_MINF:
+        return None
+    rv = sum(x * x for x in ok)
+    if rv <= 0:
+        return None
+    mu2 = 0.7978845608028654 ** 2          # (2/π)^(1/2) 의 제곱 — BV 의 정규화 상수
+    bv = 0.0
+    for j in range(1, len(seq)):
+        a, b = seq[j - 1], seq[j]
+        if a is None or b is None:
+            continue                        # 이어 붙이지 않는다
+        bv += abs(a) * abs(b)
+    bv /= mu2
+    return max(0.0, 1.0 - bv / rv)
+
+
+def hurst(Rt, i, win=STAT_WIN, scales=(8, 16, 32, 64)):
+    """허스트 지수 — R/S 분석의 로그-로그 기울기. 사전등록 §2 — **높은 것**을 산다.
+
+    0.5 면 무작위, >0.5 면 장기기억(추세가 이어진다), <0.5 면 평균회귀.
+    ⚠ x-acorr 는 **1차** 자기상관 하나이고 이것은 여러 시간척도를 한 번에 본다.
+      둘이 같은 것을 재는지는 증분 알파가 답한다(등록 §3 P2).
+    ⚠ R/S 는 짧은 표본에서 0.5 위로 치우치는 편향이 알려져 있다. 순위만 쓰므로 수준의
+      편향은 문제가 덜하지만, 값 자체를 '장기기억의 크기'로 읽으면 안 된다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    pts = []
+    for w in scales:
+        k = len(xs) // w
+        if k < 2:
+            continue
+        acc = []
+        for b in range(k):
+            seg = xs[b * w:(b + 1) * w]
+            m = sum(seg) / w
+            dev, lo, hi = 0.0, 0.0, 0.0
+            for x in seg:
+                dev += x - m
+                lo = min(lo, dev); hi = max(hi, dev)
+            sd = (sum((x - m) ** 2 for x in seg) / w) ** 0.5
+            if sd > 0 and hi > lo:
+                acc.append((hi - lo) / sd)
+        if acc:
+            pts.append((math.log(w), math.log(sum(acc) / len(acc))))
+    if len(pts) < 3:
+        return None
+    n = len(pts)
+    mx = sum(p[0] for p in pts) / n; my = sum(p[1] for p in pts) / n
+    sxx = sum((p[0] - mx) ** 2 for p in pts)
+    if sxx <= 0:
+        return None
+    return sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
+
+
+def runs_z(Rt, i, win=STAT_WIN):
+    """런 검정 z. 사전등록 §2 — **낮은 것**을 산다(런이 적다 = 같은 부호가 뭉친다).
+
+    부호가 무작위라면 런 수의 기댓값·분산이 알려져 있다(Wald–Wolfowitz). 그 기준에서
+    얼마나 벗어났는지를 z 로 잰다.
+    ⚠ x-cntd 는 오른 날 **개수**이고 이것은 부호의 **배열**이다. 개수가 같아도 배열이 다르면
+      값이 다르다 — 그것이 이 규칙이 새 축이라고 보는 근거다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    sg = [1 if x > 0 else (-1 if x < 0 else 0) for x in xs]
+    sg = [x for x in sg if x]              # 0 은 부호가 없다 — 뺀다
+    n1 = sum(1 for x in sg if x > 0); n2 = len(sg) - n1
+    if n1 < 5 or n2 < 5:
+        return None
+    r = 1 + sum(1 for j in range(1, len(sg)) if sg[j] != sg[j - 1])
+    n = n1 + n2
+    mu = 2.0 * n1 * n2 / n + 1.0
+    var = 2.0 * n1 * n2 * (2.0 * n1 * n2 - n) / (n * n * (n - 1.0))
+    return (r - mu) / (var ** 0.5) if var > 0 else None
+
+
+def ret_entropy(Rt, i, win=STAT_WIN, bins=5):
+    """수익률 엔트로피(섀넌, 5분위). 사전등록 §2 — **낮은 것**을 산다.
+
+    창 안의 수익을 자기 분위로 5칸에 나누고 그 분포의 엔트로피를 낸다. 고르게 흩어지면
+    최대(=ln 5), 한쪽에 몰리면 작다.
+    ⚠ **자기 분위**로 나누므로 변동성 크기와 무관하다 — 그것이 x-lowvol 계열과 다른 점이다.
+      다만 분위 경계가 표본에서 오므로, 완전히 고른 분포에 가까울수록 값이 ln5 에 붙어
+      순위가 잡음에 흔들린다. 그 한계는 이 표가 못 없앤다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    ss = sorted(xs); n = len(ss)
+    cut = [ss[int(n * q / bins)] for q in range(1, bins)]
+    cnt = [0] * bins
+    for x in xs:
+        b = 0
+        while b < bins - 1 and x > cut[b]:
+            b += 1
+        cnt[b] += 1
+    h = 0.0
+    for c in cnt:
+        if c:
+            p = c / n
+            h -= p * math.log(p)
+    return h
+
+
 ACORR_WIN = 120          # 사전등록 PREREG-2026-08-12-PATH.md §2① — 자기상관 추정 창
 VOLR_S, VOLR_L = 21, 252 # 같은 문서 §2② — 단기·장기 변동성 창
 
@@ -2703,6 +2856,49 @@ def build_strats():
     # 🚨 수익성 축(영업이익률)은 **일부러 안 만든다.** 이 랩이 네 형태로 다 시도해 네 번 다
     #   열위였다(x-roe −0.140 · x-npm −0.141 · x-gpa −0.089 · x-ocfp −0.090 · 전부 퇴출).
     #   다섯 번째를 얹으면 새 정보 없이 다중검정 족 수만 는다.
+    # ── 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md ──────────────────────
+    #   전부 종가만 쓰고 창은 STAT_WIN(252)로 같다. 방향은 등록 §2 에서 결과 보기 전에 고정했다.
+    xsec("x-kurt", "초과첨도 최하위 %d" % TOPN,
+         "일간 수익의 초과첨도(4차 표준화 적률 − 3)를 최근 %d거래일에서 재어 가장 낮은 %d종목 "
+         "동일가중, 월말 리밸런스." % (STAT_WIN, TOPN),
+         None,
+         "복권형 선호의 4차 모멘트 판이다 — x-rskew 가 3차(왜도)이고 이것이 4차(꼬리 두께)다. "
+         "꼬리가 두꺼운 종목은 크게 터질 가능성 때문에 사들여져 비싸진다는 것이 방향의 근거이고, "
+         "그 방향은 결과 보기 전에 고정했다. "
+         "⚠ 첨도는 표본 극단값 하나에 크게 흔들린다 — 창을 252 로 길게 잡았지만 그래도 남는다.")
+    xsec("x-jump", "점프 비중 최하위 %d" % TOPN,
+         "실현분산 중 점프 몫(1 − 이변동/실현분산)을 최근 %d거래일에서 재어 가장 낮은 %d종목 "
+         "동일가중, 월말 리밸런스." % (STAT_WIN, TOPN),
+         None,
+         "Barndorff-Nielsen·Shephard 의 이변동(bipower)으로 변동성을 연속 성분과 점프 성분으로 "
+         "가른다. ⚠ 이 규칙이 재는 것은 변동성의 크기가 아니라 구성이다 — x-ivol·x-volvol 과 "
+         "축이 다르다고 보는 근거가 그것이고, 실제로 다른지는 증분 알파가 답한다. "
+         "⚠ 방향은 문헌에 양쪽이 다 있다. 낮은 쪽으로 고정한 근거는 x-kurt 와 같은 계열이라는 "
+         "것뿐이다 — 틀리면 틀린 대로 적는다.")
+    xsec("x-hurst", "허스트 지수 상위 %d" % TOPN,
+         "R/S 분석(창 8·16·32·64일)의 로그-로그 기울기를 최근 %d거래일에서 재어 가장 높은 %d종목 "
+         "동일가중, 월말 리밸런스." % (STAT_WIN, TOPN),
+         None,
+         "0.5 면 무작위, 0.5 보다 크면 장기기억(추세가 이어진다)이다. x-acorr 는 1차 자기상관 "
+         "하나이고 이것은 여러 시간척도를 한 번에 본다 — 둘이 같은 것을 재는지는 증분 알파가 "
+         "답한다. ⚠ R/S 는 짧은 표본에서 0.5 위로 치우치는 편향이 알려져 있다. 순위만 쓰므로 "
+         "수준의 편향은 덜 문제지만, 값 자체를 '장기기억의 크기'로 읽으면 안 된다.")
+    xsec("x-runs", "런 검정 z 최하위 %d" % TOPN,
+         "부호 런 수의 z(Wald–Wolfowitz)를 최근 %d거래일에서 재어 가장 낮은 %d종목 동일가중, "
+         "월말 리밸런스." % (STAT_WIN, TOPN),
+         None,
+         "부호가 무작위라면 런 수의 기댓값과 분산이 알려져 있다. z 가 낮다는 것은 런이 적다는 "
+         "것이고, 같은 부호가 뭉쳐 있다는 뜻이다. "
+         "⚠ x-cntd 는 오른 날의 개수이고 이것은 부호의 배열이다 — 개수가 같아도 배열이 "
+         "다르면 값이 다르다. 그것이 새 축이라고 보는 근거다.")
+    xsec("x-entropy", "수익률 엔트로피 최하위 %d" % TOPN,
+         "창 안 수익을 자기 5분위로 나눈 분포의 섀넌 엔트로피를 최근 %d거래일에서 재어 가장 낮은 "
+         "%d종목 동일가중, 월말 리밸런스." % (STAT_WIN, TOPN),
+         None,
+         "고르게 흩어지면 최대(ln 5), 한쪽에 몰리면 작다 — 경로가 덜 무작위인 쪽을 산다. "
+         "⚠ 자기 분위로 나누므로 변동성 크기와 무관하다. 그것이 저변동 계열과 다른 점이다. "
+         "⚠ 분위 경계가 표본에서 오므로 고른 분포에 가까울수록 값이 ln5 에 붙어 순위가 잡음에 "
+         "흔들린다 — 그 한계는 이 표가 못 없앤다.")
     xsec("x-acorr", "수익률 자기상관 상위 %d" % TOPN,
          "일간 수익률의 1차 자기상관을 최근 %d거래일에서 재어 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % (ACORR_WIN, TOPN),
@@ -4067,6 +4263,21 @@ def xsec_score_at(S, i, X, pool=None):
         # 7차 배치 — PREREG-2026-08-12-PATH.md.
         elif sid == "x-acorr":
             v = autocorr1(R[t], i - 1)
+        # 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md. 부호는 등록 §2 에서 고정했다.
+        elif sid == "x-kurt":
+            _k = excess_kurt(R[t], i - 1)
+            v = (-_k) if _k is not None else None      # 최하위 → 부호 반전
+        elif sid == "x-jump":
+            _j = jump_share(R[t], i - 1)
+            v = (-_j) if _j is not None else None
+        elif sid == "x-hurst":
+            v = hurst(R[t], i - 1)                     # 상위 → 그대로
+        elif sid == "x-runs":
+            _z = runs_z(R[t], i - 1)
+            v = (-_z) if _z is not None else None
+        elif sid == "x-entropy":
+            _e = ret_entropy(R[t], i - 1)
+            v = (-_e) if _e is not None else None
         elif sid == "x-volratio":
             _vr = vol_ratio(R[t], i - 1)
             v = (-_vr) if _vr is not None else None      # 최하위 10 → 부호 반전
