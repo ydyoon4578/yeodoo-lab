@@ -2801,13 +2801,29 @@ except FileNotFoundError:
 # 🚨 2026-08-05 — 대장(data/source_outages.json)에 적힌 결측은 완전성 게이트를 통과한다.
 #   즉 '줄어든 지수'가 게시된다는 뜻이다. 그 사실이 화면에 안 나가면 이 저장소가 여러 번
 #   당한 그것이다 — 재 놓고 안 내면 모은 적 없는 것과 같다. 배선을 강제한다.
+# 🚨 2026-08-13 — **이 게이트가 통째로 죽어 있었다.** 대상이 market.html 이었는데 그 파일은
+#   삭제됐고, 아래 `except FileNotFoundError: pass` 가 그 예외를 삼켰다. 그래서 여기 있는
+#   검사 셋(배선·미기재 결측·대장 썩음)이 08-10 이후 아무것도 검사하지 않았다.
+#   게이트는 초록인데 화면은 침묵했다 — MOVE 결측이 그 상태로 게시되고 있었다.
+# ⚠ 없는 파일을 조용히 넘기지 않는다. 화면이 사라졌으면 그 사실이 곧 결함이다.
+#   FileNotFoundError 를 통째로 삼키는 대신 대상 존재를 **먼저 확인하고 실패시킨다.**
+_OUTAGE_PAGE = "regime.html"      # 결측 사유를 적는 화면. 옮기면 여기도 같이 옮길 것.
 try:
     _og = json.load(io.open(os.path.join(ROOT, "data", "source_outages.json"), encoding="utf-8"))
     _oge = _og.get("outages") or {}
-    _mk = io.open(os.path.join(ROOT, "market.html"), encoding="utf-8").read()
-    if "d.outages" not in _mk:
-        errors.append("market.html 이 sentiment.json 의 outages 를 안 읽는다 — 대장에 적힌 결측이 "
-                      "게이트를 통과해 게시되는데 화면은 그 사유를 말하지 않는다")
+    _mkp = os.path.join(ROOT, _OUTAGE_PAGE)
+    if not os.path.exists(_mkp):
+        errors.append("소스 장애를 적기로 한 화면 %s 이 없다 — 페이지를 옮겼으면 "
+                      "validate_site 의 _OUTAGE_PAGE 도 같이 옮길 것(안 옮기면 이 검사가 "
+                      "조용히 죽는다. 실제로 market.html 삭제 뒤 그렇게 됐다)" % _OUTAGE_PAGE)
+        _mk = ""
+    else:
+        _mk = io.open(_mkp, encoding="utf-8").read()
+    # ⚠ 실제 **자료 접근**만 인정한다. 종전 시험에서 내가 넣은 주석의 'outages' 라는 낱말만으로
+    #   통과해 버렸다 — 배선을 강제하려는 게이트가 낱말 세기로 만족하면 아무것도 안 잡는다.
+    if _oge and "d.outages" not in _mk:
+        errors.append("%s 이 sentiment.json 의 outages 를 안 읽는다 — 대장에 적힌 결측이 "
+                      "게이트를 통과해 게시되는데 화면은 그 사유를 말하지 않는다" % _OUTAGE_PAGE)
     _sj = json.load(io.open(os.path.join(ROOT, "data", "sentiment.json"), encoding="utf-8"))
     _miss = [c.get("key") for c in (_sj.get("components") or []) if c.get("score") is None]
     _undoc = [k for k in _miss if k not in _oge]
