@@ -66,6 +66,11 @@ Say ("저장소 " + $headBefore)
 #     안 돈 사실은 validate_site 가 3영업일부터, rotation.html 이 같은 문턱으로 알린다.
 $dirty0 = @(git status --porcelain)
 if ($dirty0.Count -gt 0) { Say ("[!] 시작 전부터 작업 트리가 더럽다: " + ($dirty0 -join " / ")) }
+# 🚨 2026-08-13 — 시작 전부터 더러웠던 **경로**를 따로 남긴다. 아래 ④(a) 관문이
+#   '사람이 원래 작업 중이던 파일'과 'claude 가 이번에 건드린 파일'을 갈라야 하기 때문이다.
+#   ⚠ 이걸 안 갈랐더니 2026-08-13 에 리서치가 성공하고도 커밋이 통째로 막혔다 —
+#     같은 저장소에서 사람이 작업 중이면 매일 막힌다(_rotation.log 08-13 08:09 참조).
+$before = @($dirty0 | ForEach-Object { ($_ -replace '^..\s+', '').Trim() } | Where-Object { $_ })
 if ($dirty0 | Where-Object { $_ -match "data/rotation_pool\.json" }) {
   Say "[X] data/rotation_pool.json 이 이미 수정돼 있다 - 지난 실행이 실패하고 남긴 것으로 본다."
   Say "    git diff data/rotation_pool.json 으로 확인하고, 쓸 만하면 커밋을, 아니면"
@@ -138,8 +143,21 @@ Say ("보고: " + $doneLine)
 # (a) 고친 파일이 풀 하나뿐인가 — 지시서 규칙 1의 실제 집행 지점이다.
 $changed = @(git status --porcelain | ForEach-Object { ($_ -replace '^..\s+', '').Trim() } | Where-Object { $_ })
 if ($changed.Count -eq 0) { Fail ("아무것도 안 바뀌었다 - claude 가 일을 못 했다(" + $outFile + " 확인)") }
-$unexpected = @($changed | Where-Object { $_ -ne "data/rotation_pool.json" })
-if ($unexpected.Count -gt 0) { Fail ("풀 말고 다른 파일이 바뀌었다: " + ($unexpected -join ", ")) }
+# 🚨 2026-08-13 — 종전에는 '풀 이외의 파일이 하나라도 바뀌면 중단'이었다. 혼자 쓰는
+#   저장소면 맞지만, 같은 저장소에서 사람이 동시에 작업하면 **매일 막힌다.** 실제로
+#   08-13 에 리서치를 다 끝내고(13종 갱신 + 신규 E43) 커밋 직전에 막혔고, 그 작업물은
+#   다른 세션의 autostash 로 치워져 하마터면 사라질 뻔했다.
+#   → 관문이 잡으려던 것은 '사람의 작업물'이 아니라 **claude 가 엉뚱한 파일을 고친 것**이다.
+#     그러니 시작 전부터 더러웠던 경로를 빼고 본다. 그것이 이 관문의 원래 질문이다.
+#   ⚠ 커밋 대상은 아래에서 이미 세 파일로 한정돼 있다(git add ...) — 사람의 작업물이
+#     딸려 들어가지 않는다. 그래서 중단하지 않아도 안전하다.
+$unexpected = @($changed | Where-Object { $_ -ne "data/rotation_pool.json" -and $before -notcontains $_ })
+$carried    = @($changed | Where-Object { $_ -ne "data/rotation_pool.json" -and $before -contains $_ })
+if ($carried.Count -gt 0) {
+  Say ("[i] 시작 전부터 사람이 작업 중이던 파일 " + $carried.Count + "개는 건드리지 않는다: " + ($carried -join ", "))
+}
+if ($unexpected.Count -gt 0) { Fail ("claude 가 풀 말고 다른 파일을 고쳤다: " + ($unexpected -join ", ")) }
+if ($changed -notcontains "data/rotation_pool.json") { Fail "풀이 안 바뀌었다 - claude 가 일을 못 했다" }
 
 # (b) 오늘 화면에 뜰 10선이 전부 오늘 갱신됐는가
 $sel = & $Python (Join-Path $Repo "build\rotation_select.py") 2>&1
