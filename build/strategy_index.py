@@ -172,16 +172,25 @@ def pr_baseline():
         ⚠ ann_stats 는 건네받은 rf **전체**의 평균을 쓴다. 그래서 어디서부터 잘라 주느냐가
           곧 샤프가 된다. 원천마다 규약이 다르다:
             · 종목 전략(tech_backtest)  rf[k] for k >= 패널 시작(2017-08)
-            · 자산배분·ML(asset/ml)     rf 파일 전체(1981-09~ · 연 3.7%)
+            · 자산배분(asset_backtest) rf[k] for k >= 패널 시작 — 산출물의 rf_from 이 그 값이다
+              (2026-08-04 에 그렇게 고쳐졌다. 여기 "파일 전체"라 적혀 있던 것이 낡은 기록이다)
           같은 SPX·같은 구간인데 여기서 다른 규약을 쓰면 대조군 열과 지수 열이 어긋난다
-          (실측 0.627 vs 0.557). series_block 은 달마다 찾아 쓰므로 이 문제가 없다.
+          (실측 0.627 vs 0.557).
+          ⚠ 여기 "series_block 은 달마다 찾아 쓰므로 이 문제가 없다"고 적혀 있었는데
+            **틀렸다**(2026-08-13). 월말 갈래도 rfw 를 써야 한다 — 아래 참조.
         """
         if not (start and end):
             return None
+        # 🚨 2026-08-13 — end 가 **'YYYY-MM'(월 문자열)로 들어오는 원천이 있다**(13F 컨빅션 등
+        #   월간 격자). 일간 날짜와 문자열로 비교하면 '2026-07-31' <= '2026-07' 이 False 라
+        #   그 달이 통째로 빠진다 — 지수 열만 한 달 짧은 창으로 재게 되고, 같은 카드의
+        #   대조군 열과 어긋난다(실측 샤프 0.892 vs 0.741, 차 0.151).
+        #   ⚠ start 는 문제없다 — '2016-08-01' >= '2016-08' 은 True 다. end 만 늘린다.
+        _endD = (end + "-99") if len(str(end)) == 7 else end
         out = {"D": {}, "M": {}}
         rfw = rf if rf_from == "*" else ({k: v for k, v in rf.items() if k >= rf_from} or rf)
         for lab in DAY:
-            sel = [x for x in DAY[lab] if start <= x[0] <= end]
+            sel = [x for x in DAY[lab] if start <= x[0] <= _endD]
             if len(sel) >= 120:                    # 반년도 안 되면 눈금이 못 된다
                 base = sel[0][1]
                 out["D"][lab] = ann_stats([100.0 * x[1] / base for x in sel],
@@ -189,7 +198,12 @@ def pr_baseline():
             sel = [x for x in MON[lab] if start <= x[1] <= end]
             if len(sel) >= 7:
                 base = sel[0][2]
-                b = series_block([100.0 * x[2] / base for x in sel], [x[0] for x in sel], rf)
+                # 🚨 2026-08-13 — 여기가 **rf(파일 전체) 를 넘기고 있었다.** 위 일간 갈래는
+                #   rfw(원천이 쓴 창)를 쓰는데 월말 갈래만 안 썼다. 독스트링이 "series_block 은
+                #   달마다 찾아 쓰므로 이 문제가 없다"고 적어 두었는데 **그게 틀렸다** —
+                #   실측으로 13F 컨빅션의 지수 샤프가 0.892(원천) vs 0.741(여기)로 갈렸고,
+                #   차이 0.151 × 변동성 15.4 ≈ 2.3%p 가 정확히 rf 평균 차(3.72% vs 1.4%)다.
+                b = series_block([100.0 * x[2] / base for x in sel], [x[0] for x in sel], rfw)
                 for k in ("_ex", "_r", "label"):   # 관계지표용 원계열은 직렬화하지 않는다
                     b.pop(k, None)
                 out["M"][lab] = b
@@ -675,7 +689,10 @@ def main() -> int:
             start=r.get("start") or t.get("start"), end=t.get("as_of"),
             # 무위험 규약 — tech_backtest 는 rf 를 **패널 시작부터** 평균 낸다(전략별 구간이
             # 아니라). 지수 눈금도 같은 규약으로 재야 대조군 열과 어긋나지 않는다.
-            rf_from=(t.get("start") or "")[:7] or "*",
+            # ⚠ t["start"] 가 아니라 t["rf_from"] 이다(2026-08-13). tech_backtest 는 rf 를
+            #   **패널 시작**(2009-01)부터 자르는데 start 는 **전략 시작**(2016-08)이다.
+            #   둘을 혼동해 7년치 이자를 더 빼고 있었고, 그만큼 지수 샤프가 갈렸다.
+            rf_from=(t.get("rf_from") or (t.get("start") or "")[:7] or "*"),
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
@@ -761,6 +778,14 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            # 🚨 원천이 쓴 무위험 창을 그대로 넘긴다(2026-08-13). 안 넘기면 "*"(파일 전체
+            #   1981-09~ · 연 3.7%)로 재서, 같은 카드의 대조군 열과 지수 열이 어긋난다.
+            #   ⚠ window() 독스트링이 "자산배분은 rf 파일 전체"라 적고 있었는데 **그게 낡았다** —
+            #     asset_backtest 는 2026-08-04 에 이미 패널 구간으로 자르게 고쳐졌다.
+            # ⚠ **레코드 자신의 값이 파일 머리보다 우선한다.** 자산 랩 파일에는 다른 빌더가
+            #   만든 레코드가 섞여 들어온다(guru_clone 의 13F 컨빅션 — 패널이 2009-01 이라
+            #   자산 랩 2006-01 과 다르다). 파일 머리만 보면 그 한 줄이 어긋난다.
+            rf_from=(r.get("rf_from") or a.get("rf_from") or "*"),
             pr_hint="D",   # asset_backtest/ml_backtest 는 일간 ann_stats 다
 
             bench_label=r.get("bench_label"),
@@ -783,6 +808,13 @@ def main() -> int:
             # ⚠ 이름을 bench2 로 두지 않는다. 배포 카드의 bt.bench2 는 **곡선 배열**이라
             #   같은 이름이 두 모양을 갖게 된다.
             bench_alt=r.get("bench2"),
+            # 🚨 2026-08-13 — 증분 알파를 여기서 **안 넘기고 있었다.** 자산 랩 71종 전부가
+            #   incr·incr5 를 재는데(asset_backtest.attach_incr) 인덱스로 0종이 갔다.
+            #   재 놓고 안 실으면 잰 적 없는 것과 같다 — 종목 랩은 같은 값을 714·718 에서
+            #   넘긴다. 한 화면에서 어떤 카드는 '이웃 대비 증분'이 있고 어떤 카드는 없었다.
+            #   ⚠ 이웃은 같은 랩 안에서만 고른다(attach_incr 규약) — 자산 규칙의 이웃은
+            #     자산 규칙이다. 종목 랩 값과 나란히 놓고 크기를 비교하면 안 된다.
+            incr=r.get("incr"), incr5=r.get("incr5"),
             # 비용 후 — 회전이 큰 규칙은 무비용 숫자만 보면 안 된다. gross 를 대체하지 않고 함께 싣는다.
             metrics_net=r.get("metrics_net"), bench_net=r.get("bench_net"),
             cost_bp=r.get("cost_bp"), cost_drag=r.get("cost_drag"),

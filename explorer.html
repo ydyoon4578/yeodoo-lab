@@ -1452,6 +1452,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           //   걸러내므로(이미 D 에 있다) 이 이름 맞춤 고리가 유일한 통로다. 안 이으면
           //   판정선을 지수로 올리며 보조로 내린 '모전략'·'동일 유니버스 균등'·
           //   'SPY 원계열'이 '판정 축' 칸에서 통째로 사라진다 — 내린 것이 아니라 지운 것이 된다.
+          // 🚨 2026-08-13 — 배포 원장 8종의 '구간' 칸이 **빈 문자열**이었다. 인라인 D 배열에는
+          //   start/end 가 없고, 위 add 는 배포 원장을 걸러내므로 이 이름 맞춤 고리가 유일한
+          //   통로다. 인덱스에는 8종 전부 start/end 가 있다 — 재 놓고 안 실은 자리였다.
+          //   ⚠ D 쪽에 이미 있으면 덮지 않는다(원장 자신의 값이 우선이다).
+          if(!d._src&&x.src)d._src=x.src;   // 목록 레그 딱지가 이걸 본다
+          if(!d._start&&x.start)d._start=x.start;
+          if(!d._end&&x.end)d._end=x.end;
           if(!d._b2&&x.bench_alt)d._b2=x.bench_alt;
           if(!d._ax&&x.axes)d._ax=x.axes;
           if(!d._hold&&x.holdings)d._hold=x.holdings;
@@ -1818,9 +1825,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 년 단위로 적는다 — '199개월' 은 옆 줄의 '70개월' 과 몇 배 차이인지 한눈에 안 온다.
         // 구간이 있으면 그것으로, 없으면 개월수를 나눈다(둘 다 없으면 안 적는다).
         (function(){
+          // 🚨 2026-08-13 — 목록은 **174행 전부 소급 샤프로 정렬**되는데 그중 75종의 카드
+          //   머리는 시점정확(5.1년)이다. 목록에 '소급'이라는 말이 없으면 두 눈금이 같은
+          //   것으로 읽힌다. 창 길이 옆에 레그와 종료월을 적는다.
+          //   ⚠ 정렬을 PIT 로 바꾸지 않는다 — PIT 없는 90종과 창이 갈려 정렬 자체가 거짓이 된다.
           var t=spanTxt(d._start,d._end);
           if(!t&&nMonths(d))t=(Math.round(nMonths(d)/12*10)/10)+'년';
-          return t?'<span title="백테스트 구간 '+esc((d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7))+'">'+esc(t)+'</span>':'';
+          if(!t)return '';
+          var _en=(d._end||'').slice(0,7);
+          var _leg=(d._src==='배포 원장')?'실측':'소급';
+          return '<span title="'+esc(_leg+' 구간 '+(d._start||'').slice(0,7)+'~'+_en+
+                   (d._pit?' · 이 전략은 시점정확 레그도 있다(카드 안에서 본다)':''))+'">'+
+                 esc(t)+' '+esc(_leg)+(_en?' ~'+esc(_en):'')+'</span>';
         })()+'</span></span>'+
         '<span class="metric">'+headM(d)+'</span>';
       b.addEventListener('click',function(){select(d);});

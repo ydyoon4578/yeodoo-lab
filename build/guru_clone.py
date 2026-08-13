@@ -178,15 +178,30 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         nav_c.append(nav_c[-1] * (1 + v - tc))
         brs.append(b); bn.append(bn[-1] * (1 + b))
 
-    def mstats(x, nv):
-        mu = sum(x) / len(x)
-        sd = math.sqrt(sum((v - mu) ** 2 for v in x) / max(1, len(x) - 1))
+    # 🚨 2026-08-13 — 여기 샤프가 **무위험을 안 빼고 있었다**(mu/sd). 이 랩에서 같은 병이
+    #   네 번째다 — style_top_pdf.metrics(2026-08-05) · home_summary.sharpe(2026-08-13) ·
+    #   그리고 여기. 왜곡폭이 rf/vol 이라 저변동일수록 부당하게 유리해진다.
+    #   실측: 이 규칙의 지수 샤프가 0.892(여기) vs 0.741(strategy_index 의 같은 구간 지수)로
+    #   갈려 있었고, 차이 0.151 × 변동성 15.4 ≈ 2.3%p 가 정확히 rf 몫이다.
+    # ⚠ 무위험 창은 이 빌더가 이미 자른 RF 를 그대로 쓴다(main 의 pxd_dates[0] 기준).
+    # ⚠ 무위험을 **달마다** 뺀다(평균 상수가 아니라). 랩 정본이 strategy_metrics.series_block
+    #   이고 그쪽이 달마다 빼기 때문이다 — 평균으로 빼면 같은 구간·같은 지수인데 샤프가
+    #   0.058 갈렸다(실측 0.799 vs 0.741). 창이 아니라 차감 방식의 차이였다.
+    def _ex(x, mons):
+        return [v - (RF.get(m[:7], 0.0) if m else 0.0) for v, m in zip(x, mons)]
+
+    def mstats(x, nv, mons=None):
+        ex = _ex(x, mons) if mons else x
+        mu = sum(ex) / len(ex)
+        sd = math.sqrt(sum((v - (sum(x) / len(x))) ** 2 for v in x) / max(1, len(x) - 1))
         yrs = len(x) / 12
         return {"cagr": round(((nv[-1] / nv[0]) ** (1 / yrs) - 1) * 100, 2),
                 "vol": round(sd * math.sqrt(12) * 100, 2),
                 "sharpe": round(mu / sd * math.sqrt(12), 3) if sd > 0 else None,
                 "mdd": round(maxdd(nv) * 100, 2)}
-    ms, mb = mstats(rets, nav), mstats(brs, bn)
+    # rets/brs 는 months[st+1:] 과 짝이다(위 루프 range(st+1, len(months))).
+    _MONS = months[st + 1:]
+    ms, mb = mstats(rets, nav, _MONS), mstats(brs, bn, _MONS)
     d = [x - y for x, y in zip(rets, brs)]
     mu = sum(d) / len(d)
     sd = math.sqrt(sum((v - mu) ** 2 for v in d) / max(1, len(d) - 1))
@@ -202,6 +217,11 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         # 지수 곡선도 같이 싣는다(자산 랩과 같은 사유 — 배선이 없어 안 실리고 있었다).
         "chart": curve_pack(months[st:], nav, bn, idx_rets=load_index_tr(months[st:])),
         "bench_label": "S&P 500(PR) 매수후보유",
+        # 🚨 2026-08-13 — 이 레코드는 asset_strategies.json 에 실려 나가는데, 무위험 창은
+        #   자산 랩(2006-01)이 아니라 **여기 패널(stocks.json 2009-01)** 이다. 안 적으면
+        #   strategy_index 가 파일 머리의 rf_from 을 물려받아 같은 카드에 S&P 500(PR)
+        #   샤프가 두 값으로 나온다(실측 0.892 vs 0.741).
+        "rf_from": _RF_FROM,
         "name": "13F 컨빅션 복제 (상위 %d종목)" % TOPN,
         "rule": "분기말 13F에서 (운용사 포트폴리오 내 비중 합) × (보유 운용사 수)가 높은 %d종목을 "
                 "동일가중 보유. 분기말 45일 뒤부터 적용하고 분기마다 교체." % TOPN,
@@ -223,7 +243,8 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         "turnover": round(turn / TOPN / max(1e-9, (len(months) - st) / 12), 1),
         # 월별 계열이라 일별용 cost_cols 를 못 쓴다 — 같은 mstats 로 비용 후를 낸다.
         "cost_bp": round(COST_RT_STOCK * 10000, 1),
-        "metrics_net": mstats([nav_c[k + 1] / nav_c[k] - 1 for k in range(len(nav_c) - 1)], nav_c),
+        "metrics_net": mstats([nav_c[k + 1] / nav_c[k] - 1 for k in range(len(nav_c) - 1)],
+                              nav_c, _MONS),
         "cost_drag": round((ms.get("cagr") or 0)
                            - (mstats([nav_c[k + 1] / nav_c[k] - 1
                                       for k in range(len(nav_c) - 1)], nav_c).get("cagr") or 0), 2),
@@ -259,6 +280,9 @@ def spx_monthly(months):
 
 
 
+_RF_FROM = None      # 이 빌더가 실제로 쓴 무위험 창(main 이 채운다)
+
+
 def main() -> int:
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
                            encoding="utf-8")).get("monthly") or {}
@@ -267,6 +291,8 @@ def main() -> int:
     _GRID.update({d: i for i, d in enumerate(st["pxd_dates"])})
     # 무위험은 패널 구간으로 자른다 — 랩 공통 규약(DATA-FACTS 참조).
     RF = {k: v for k, v in RF.items() if k >= st["pxd_dates"][0][:7]}
+    global _RF_FROM
+    _RF_FROM = st["pxd_dates"][0][:7]      # 위 레코드가 싣는다 — 손으로 안 적는다
     r = guru_clone(RF)
     if not r:
         print("❌ 산출 없음(표본 부족)"); return 1
