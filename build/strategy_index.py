@@ -318,7 +318,61 @@ def _regime_stats(rets, months, min_n=8):
     return out or None
 
 
+# ── 최근 구간 수익 ────────────────────────────────────────────────────────
+# 홈 맨 아래 '최근 성과 상위' 목록이 쓴다(2026-08-13 사용자 요청).
+# 🚨 **여기서만 잴 수 있다.** rec() 이 nav 를 60점으로 얇게 만들기 직전이 원해상도가 남아
+#   있는 유일한 자리다(원천은 주간 격자 833~980점). 얇아진 뒤에 재면 한 점이 넉 달을
+#   덮어 '최근 1개월'이 실제로는 한 분기가 된다.
+# ⚠ 기준일을 목표일에 **가장 가까운 실제 관측**으로 잡고, 그 날짜를 함께 싣는다. 주간
+#   격자라 최대 ±7일이 어긋나는데, 그 사실을 안 적으면 화면이 없는 정밀도를 말하게 된다.
+# ⚠ 전략마다 계열이 끝나는 날이 다르다(171종 2026-08-12 · 11종은 6~8주 먼저). 그래서
+#   end 도 같이 싣는다 — 나란히 세우면 안 되는 줄이 어느 것인지 화면이 알아야 한다.
+TR_HOR = [("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
+
+
+def trails_of(dates, nav):
+    """구간별 누적수익(%) 과 그때 실제로 쓴 기준일. 못 재면 그 칸을 안 만든다."""
+    if not dates or not nav or len(dates) != len(nav) or len(nav) < 3:
+        return None, None
+    import datetime as _dt
+    # 🚨 격자가 **월말('YYYY-MM')로 들어오기도 한다** — 배포 원장 8종과 슬리브 결합 3종이
+    #   그렇다. 그걸 일간으로 파싱하면 fromisoformat 이 터져 11종이 조용히 빠진다
+    #   (실제로 그랬다). load_index_tr 이 같은 사유로 같은 분기를 갖고 있다.
+    monthly = all(len(str(d)) == 7 for d in dates)
+    try:
+        d1 = (_dt.date(int(str(dates[-1])[:4]), int(str(dates[-1])[5:7]), 1) if monthly
+              else _dt.date.fromisoformat(str(dates[-1])[:10]))
+    except Exception:
+        return None, None
+    last = nav[-1]
+    if not last:
+        return None, None
+    out, base = {}, {}
+    tgts = [(k, (d1 - _dt.timedelta(days=nd)).isoformat()) for k, nd in TR_HOR]
+    tgts.append(("YTD", "%d-12-31" % (d1.year - 1)))
+    _cut = 7 if monthly else 10
+    for k, tgt in tgts:
+        ks = [i for i, d in enumerate(dates) if str(d)[:_cut] <= tgt[:_cut]]
+        if not ks:
+            continue                      # 구간이 그만큼 안 된다 — 0 으로 채우지 않는다
+        i0 = ks[-1]
+        if not nav[i0]:
+            continue
+        out[k] = round((last / nav[i0] - 1) * 100, 2)
+        base[k] = str(dates[i0])[:10]
+    # ⚠ 월간 격자는 눈금이 굵다 — '최근 1개월'이 실제로는 한 달 전 월말 대비다.
+    #   화면이 기준일을 적으므로 숨겨지지 않는다.
+    return (out or None), (base or None)
+
+
 def rec(**kw):
+    # ⚠ thin() 앞에서 잰다(위 주석). 순서를 바꾸면 조용히 값이 뭉개진다.
+    # ⚠ dates 는 재고 나서 **버린다.** 원해상도(833~980점)로 실으면 파일이 커지고,
+    #   더 나쁘게는 60점으로 얇아진 nav 와 길이가 어긋나 짝이 안 맞는 배열 둘이 남는다.
+    _tr, _trb = trails_of(kw.get("dates"), kw.get("nav"))
+    kw.pop("dates", None)
+    if _tr:
+        kw["trails"], kw["trails_base"] = _tr, _trb
     for key in ("nav", "bnav"):
         if kw.get(key):
             kw[key] = thin(kw[key])
@@ -462,7 +516,7 @@ def main() -> int:
                      "mdd": b.get("mdd_b") and m.get("mdd") or m.get("mdd")},
             bench={"label": b.get("bench_label"), "cagr": bm.get("cagr"),
                    "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
-            nav=b.get("nav"), bnav=b.get("bench"),
+            nav=b.get("nav"), bnav=b.get("bench"), dates=b.get("dates"),
             bench_label=b.get("bench_label"),
             # 🚨 2026-08-13 — 보조 대조군을 원장 카드에도 싣는다. 판정선을 지수로 올리면서
             #   원래 대조군('모전략'·'동일 유니버스 균등'·'SPY 원계열')을 보조로 내렸는데,
@@ -506,7 +560,7 @@ def main() -> int:
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
-            holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
+            holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"), dates=r.get("dates"),
             arch=r.get("arch"),
             # 채점 후보 수 — '상위 10종'이 몇 종 중에서 골라진 것인가. 이것도 재 놓고 화면에
             # 안 내면 모은 적 없는 것과 같다(바로 아래 pit 이 그랬던 것과 같은 유형이라
@@ -583,7 +637,7 @@ def main() -> int:
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
             bench_unstable=r.get("bench_unstable"), beta=r.get("beta"),
-            holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"),
+            holdings=r.get("holdings"), nav=r.get("nav"), bnav=r.get("bnav"), dates=r.get("dates"),
             arch=r.get("arch"),
             # 위험 축 — 수익 축(grade)과 다른 질문에 답한다. 같이 실어야 '덜 벌었지만
             # 덜 깨졌다'가 화면에서 읽힌다. 자산 전략에만 있다(다른 원천은 없음).
@@ -628,7 +682,7 @@ def main() -> int:
             # 지금의 페어북 — 보유 단위가 쌍이라 holds 가 '페어'로 잡힌다(holds_kind 참조).
             # ⚠ 이걸 안 넘기면 목록에 전략만 있고 **무엇을 사는지가 없다.**
             holdings=r.get("holdings"),
-            nav=r.get("nav"), bnav=r.get("bnav"),
+            nav=r.get("nav"), bnav=r.get("bnav"), dates=r.get("dates"),
         ))
 
     # ── ④ 기각 재검 ── 배포하지 않는 것이므로 등급은 '미채택'으로 못 박는다.
@@ -661,7 +715,7 @@ def main() -> int:
                    "sharpe": bm.get("sharpe"), "vol": bm.get("vol"), "mdd": bm.get("mdd")},
             d_sharpe=(round(m["sharpe"] - bm["sharpe"], 3)
                       if m.get("sharpe") is not None and bm.get("sharpe") is not None else None),
-            nav=b.get("nav"), bnav=b.get("bench"),
+            nav=b.get("nav"), bnav=b.get("bench"), dates=b.get("dates"),
         ))
 
     # ── ⑤ 거장 겹침 복제 ──────────────────────────────────────────────────

@@ -225,6 +225,25 @@
      칸 크기 = 시가총액 · 색 = 그 기간 등락률 · 묶음 = 섹터 → 산업그룹.
      ⚠ 색은 **오르내림 두 방향**뿐이다. 다른 화면의 판정색(--deploy/--hot)을 그대로 쓰면
        '통과/기각'과 같은 색이 되어 뜻이 섞인다 — 히트맵 전용 색을 따로 둔다. */
+  /* 최근 성과 상위 — 기간 버튼은 히트맵 바와 같은 생김새를 쓴다(같은 일을 하는 것은
+     같아 보여야 한다). 표는 위 스타일 표(.sttbl)를 그대로 재사용한다. */
+  .tpbar{display:flex;flex-wrap:wrap;gap:0;row-gap:5px;align-items:center;margin:0 0 6px}
+  .tpbar button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
+       background:none;border:0;border-right:1px solid var(--line);padding:2px 10px;cursor:pointer}
+  .tpbar button:first-of-type{padding-left:0}
+  .tpbar button:last-of-type{border-right:0}
+  .tpbar button[aria-pressed="true"]{color:var(--accent)}
+  .sttbl td.tprk{font-family:var(--mono);color:var(--muted);font-weight:700;width:1%;
+       white-space:nowrap;text-align:right}
+  /* ⚠ th 다. 처음에 td 로 잡아 두어 이름과 출처가 붙어 나왔다("…상위 10종목 전략"). */
+  /* ⚠ 이 표는 위 ETF 표(.sttbl)를 재사용한다. 거기 이름 칸은 첫 열이라 왼쪽 정렬이
+     기본인데, 여기는 앞에 순위(#) 칸이 하나 더 있어 둘째 열이 되면서 오른쪽으로 붙었다.
+     명시적으로 왼쪽에 세운다 — 머리글도 같이(안 하면 머리만 오른쪽에 남는다). */
+  .sttbl th.tpsrc,.sttbl th.tpnm{text-align:left}
+  .sttbl th.tpsrc small{color:var(--muted);font-size:11px;margin-left:6px;font-weight:500;
+       white-space:nowrap}
+  /* 지수 줄 — 전략이 아니라 눈금이다. 배경으로 갈라 둔다. */
+  .sttbl tr.tpix td,.sttbl tr.tpix th{background:var(--panel-2);color:var(--ink-2)}
   .hmbar{display:flex;flex-wrap:wrap;gap:0;row-gap:5px;align-items:center;margin:0 0 6px}
   .hmbar button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
        background:none;border:0;border-right:1px solid var(--line);padding:2px 10px;cursor:pointer}
@@ -1163,6 +1182,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
               한 스타일이 한 줄을 쓴다. -->
 
+    </section>
+
+    <!-- ── 최근 성과 상위 (사용자 요청 2026-08-13) ─────────────────────────
+         🚨 이 랩은 등급을 안 매긴다(전부 '측정만'). 그런데 최근 수익률로 줄을 세우면
+           그것이 곧 추천으로 읽힌다 — 이 랩이 가장 경계하는 화면이다.
+           그래서 셋을 화면에 **같이** 싣는다: ① 이건 순위지 판정이 아니라는 말,
+           ② 같은 구간 지수 수익률(고른 것이 그냥 베타인지 보이게), ③ 전체 구간 성적
+           (최근만 좋은 것과 계속 좋은 것을 한눈에 가르게).
+         ⚠ 자료는 strategy_index.json 의 trails 다 — build/strategy_index.py 가
+           얇게 만들기 전 원해상도에서 잰다. 화면은 계산하지 않는다. -->
+    <section class="card" id="top-sec">
+      <h2 class="lbl" id="tp-h">최근 성과 상위 <span class="sub" id="tp-sub">· 불러오는 중…</span><a class="more2" href="explorer.html">전략 랩 전체 →</a></h2>
+      <div class="tpbar" id="tp-bar"></div>
+      <div class="stwrap"><table class="sttbl" id="tptbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
+      <p class="stnote" id="tpnote"></p>
     </section>
   </div>
 
@@ -3108,6 +3142,94 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     window.addEventListener('resize',function(){
       clearTimeout(rt); rt=setTimeout(function(){ if(ROWS)paint(); },180);
     });
+  })();
+
+  // ── 최근 성과 상위 10 ────────────────────────────────────────────────────
+  // 🚨 이 랩은 등급을 안 매긴다(2026-08-13 — 전부 '측정만'). 그런데 최근 수익률로 줄을
+  //   세우면 그것이 곧 추천으로 읽힌다. 그래서 순위 옆에 **반증에 필요한 것**을 같이 둔다:
+  //     ① 같은 구간 지수 줄 — 고른 것이 그냥 베타인지 바로 보인다
+  //     ② 전체 구간 CAGR·샤프 — 최근만 좋은 것과 계속 좋은 것이 갈린다
+  //     ③ 각주에 생존편향 눈금 — 종목 전략은 오늘의 518종을 과거로 소급한 값이다
+  //   ⚠ 계산하지 않는다. strategy_index.json 의 trails 를 그대로 옮긴다.
+  (function(){
+    var TP_HZ='12M', TP=null, TPIX=null, TPMETA=null;
+    var TP_LAB={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
+    var TP_N=10;
+    function el2(id){return document.getElementById(id);}
+
+    function draw(){
+      var tb=el2('tptbl'), bar=el2('tp-bar'), sub=el2('tp-sub'), note=el2('tpnote');
+      if(!tb)return;
+      if(!TP||!TP.length){tb.innerHTML='<tbody><tr><td class="skel2">자료를 받지 못했습니다.</td></tr></tbody>';return;}
+      bar.innerHTML=Object.keys(TP_LAB).map(function(k){
+        return '<button data-h="'+k+'" aria-pressed="'+(k===TP_HZ)+'">'+esc(TP_LAB[k])+'</button>';
+      }).join('');
+      var rows=TP.filter(function(r){var v=r.trails&&r.trails[TP_HZ];return v!=null&&v===v;});
+      rows.sort(function(a,b){return b.trails[TP_HZ]-a.trails[TP_HZ];});
+      var top=rows.slice(0,TP_N);
+      // 기준일 — 줄마다 다를 수 있다(주간 격자 ±7일 · 월간 격자 전략은 더). 가장 흔한 것을
+      // 부제에 적고, 다른 줄은 그 줄에 따로 적는다. 하나로 뭉뚱그리면 그게 거짓이다.
+      var bc={},bmax=null;
+      top.forEach(function(r){var b=(r.trails_base||{})[TP_HZ]; if(!b)return; bc[b]=(bc[b]||0)+1;
+        if(bmax==null||bc[b]>bc[bmax])bmax=b;});
+      sub.textContent='· '+TP_LAB[TP_HZ]+' 누적수익 순 · 전략 '+rows.length+'종 중 상위 '+top.length+
+        (bmax?' · 기준일 '+bmax:'')+' · 무비용';
+      var h='<thead><tr><th class="tprk">#</th><th class="tpnm">전략</th>'+
+        '<th class="shp">'+esc(TP_LAB[TP_HZ])+'</th>'+
+        '<th class="shp">전체 CAGR</th><th class="shp">전체 샤프</th>'+
+        '<th class="shp">최대낙폭</th></tr></thead><tbody>';
+      top.forEach(function(r,i){
+        var m=r.metrics||{}, b=(r.trails_base||{})[TP_HZ];
+        var nm='<a class="stnm" href="explorer.html#s='+encodeURIComponent(r.sid||'')+'">'+esc(r.name)+'</a>'+
+          '<small>'+esc(r.src||'')+(b&&bmax&&b!==bmax?' · 기준일 '+esc(b):'')+'</small>';
+        h+='<tr><td class="tprk">'+(i+1)+'</td><th scope="row" class="tpsrc">'+nm+'</th>'+
+           stCell(r.trails[TP_HZ])+stCell(m.cagr)+
+           '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(3))+'</td>'+
+           stCell(m.mdd)+'</tr>';
+      });
+      // 지수 줄 — 눈금이다. 같은 구간·같은 열에 두어야 "그냥 베타였나"가 바로 읽힌다.
+      if(TPIX&&TPIX.length){
+        h+='<tr class="grp"><th colspan="6">같은 구간 지수 <em>전략이 아니라 눈금이다 — '+
+           '위 줄이 이것을 못 넘으면 순위는 그저 시장이 오른 것이다</em></th></tr>';
+        TPIX.forEach(function(x){
+          var v=(x.r||{})[TP_HZ];
+          h+='<tr class="tpix"><td class="tprk"></td><th scope="row" class="tpsrc">'+esc(x.n)+
+             '<small>'+esc(x.t)+'</small></th>'+stCell(v)+
+             '<td class="shp">—</td><td class="shp">—</td><td class="shp">—</td></tr>';
+        });
+      }
+      tb.innerHTML=h+'</tbody>';
+      var _n=[];
+      _n.push('<b>순위지 판정이 아닙니다.</b> 이 랩은 등급을 매기지 않습니다(전부 ‘측정만’) — '+
+        '최근 수익률로 고르는 것은 이 랩이 가장 경계하는 선택입니다. 순위는 기간을 바꾸면 바뀝니다.');
+      _n.push('무비용(gross)·월말 리밸런스 기준이고 구간·대조군은 전략마다 다릅니다. 전체 CAGR·샤프는 '+
+        '각 전략의 <b>자기 구간 전체</b>에서 잰 값이라 위 최근 수익과 같은 창이 아닙니다.');
+      if(TPMETA&&TPMETA.gap_cagr!=null)
+        _n.push('⚠ 종목 전략은 <b>오늘의 유니버스를 과거로 소급</b>한 값입니다 — 랩 동일가중 '+
+          '대조군이 실제 동일가중 S&amp;P 500(RSP)보다 연 +'+TPMETA.gap_cagr.toFixed(2)+'%p 앞섭니다. '+
+          '생존편향 단독의 상한으로 읽어야 합니다.');
+      note.innerHTML=_n.join(' ');
+      bar.querySelectorAll('button').forEach(function(b2){
+        b2.addEventListener('click',function(){TP_HZ=this.getAttribute('data-h'); draw();});
+      });
+    }
+
+    Promise.all([getj('strategy_index.json'), getj('market_board.json'), getj('tech_strategies.json')])
+      .then(function(a){
+        var ix=a[0];
+        if(!ix||!ix.items){var tb=el2('tptbl'); if(tb)tb.innerHTML=
+          '<tbody><tr><td class="skel2">전략 목록을 받지 못했습니다.</td></tr></tbody>'; return;}
+        TP=ix.items.filter(function(r){return r.trails;});
+        // 지수 눈금은 market_board 에서 온다 — 홈의 다른 표와 **같은 파일·같은 구간표**다.
+        var mb=a[1];
+        TPIX=(mb&&mb.index)?mb.index.slice(0,2):null;   // S&P 500 · 나스닥 100
+        TPMETA=(a[2]&&a[2].surv_proxy)||null;
+        draw();
+      }).catch(function(e){
+        var tb=el2('tptbl'); if(tb)tb.innerHTML=
+          '<tbody><tr><td class="skel2">최근 성과 상위를 그리지 못했습니다.</td></tr></tbody>';
+        if(window.console)console.warn('[top10]',e);
+      });
   })();
 
 })();
