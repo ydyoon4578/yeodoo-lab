@@ -341,7 +341,7 @@ def main() -> int:
     covered = len(set(cmap.values()))
     print("  CUSIP %d개 · 유니버스 커버 %d/%d (%.1f%%)" % (len(cmap), covered, len(uni), covered / len(uni) * 100))
     if covered / len(uni) < 0.9:
-        print("❌ CUSIP 매핑 커버가 90%% 미만 — 갱신 중단(이전본 유지)")
+        print("❌ CUSIP 매핑 커버가 90% 미만 — 갱신 중단(이전본 유지)")
         return 1
 
     # ── 공급원 선택 ────────────────────────────────────────────────────
