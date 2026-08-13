@@ -598,9 +598,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function cls(v){ return v==null?'mut':(v<0?'neg':'pos'); }
   function keyOf(){ var m=/[#&]s=([a-z0-9_]+)/i.exec(location.hash||''); return m?m[1]:null; }
 
+  // 🚨 홈에서 뺀 스타일은 여기서도 뺀다(사용자 요청 2026-08-13). 목록의 **정본은
+  //   자료**다 — build/style_top_pdf.py 의 HOME_HIDE 가 style_perf.json 의 hide 로 온다.
+  //   여기에 키를 손으로 적으면 홈과 이 페이지가 갈린다(그래서 종전에 18 vs 8 이었다).
+  //   ⚠ hide 가 없는 옛 산출물이면 전부 낸다 — 빈 화면보다 낫다.
+  function shown(){
+    var hd=(D&&D.hide)||{};
+    var v=(D.styles||[]).filter(function(s){return !hd[s.key];});
+    return v.length?v:(D.styles||[]);
+  }
+
   function tabs(){
     var box=document.getElementById('tabs');
-    box.innerHTML=D.styles.map(function(s){
+    box.innerHTML=shown().map(function(s){
       return '<a href="#s='+s.key+'"'+(s.key===KEY?' aria-current="page"':'')+'>'+esc(s.label)+'</a>';
     }).join('');
   }
@@ -698,8 +708,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function draw(){
     var s=null;
-    for(var i=0;i<D.styles.length;i++) if(D.styles[i].key===KEY) s=D.styles[i];
-    if(!s){ KEY=D.styles[0].key; s=D.styles[0]; }
+    var _V=shown();
+    for(var i=0;i<_V.length;i++) if(_V[i].key===KEY) s=_V[i];
+    // ⚠ 숨긴 스타일로 들어온 링크는 첫 항목으로 떨군다 — 빈 화면을 내지 않는다.
+    if(!s){ KEY=_V[0].key; s=_V[0]; }
     tabs();
     document.getElementById('sub').textContent=
       D.start+' ~ '+D.as_of+' · 월말 '+s.n_rebal+'회 리밸런스 · 상위 10종목 동일가중 · 비용 0';
@@ -726,14 +738,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       D=j;
       document.getElementById('note').textContent=j.note||'';
       document.getElementById('caveat').textContent=j.caveat||'';
-      if(!KEY) KEY=D.styles[0].key;
+      if(!KEY) KEY=shown()[0].key;
       draw();
     }).catch(function(e){
       document.getElementById('body').innerHTML=
         '<p class="note warn">데이터를 불러오지 못했습니다 — data/style_perf.json ('+esc(e)+')</p>';
     });
   }
-  window.addEventListener('hashchange',function(){ if(!D)return; KEY=keyOf()||D.styles[0].key; draw(); });
+  window.addEventListener('hashchange',function(){ if(!D)return; KEY=keyOf()||shown()[0].key; draw(); });
   if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();
 </script>
