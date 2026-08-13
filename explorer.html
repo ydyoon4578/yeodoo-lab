@@ -469,6 +469,9 @@
      이 비대칭이 **판정 안에** 들어간다 — 라벨만으로는 그 사실이 안 보인다. */
   .benchline i.prtr{color:var(--hot);font-style:normal;font-weight:700;font-size:11.5px}
   /* 대조군 판정과 지수 눈금이 반대인 전략 — 초과분의 정체가 갈리는 지점이라 눈에 띄게. */
+  /* 차트가 어느 레그의 곡선인지 — 그림 바로 위 한 줄. 창을 안 적고 섞으면 그게 더 나쁜 거짓말이다. */
+  .chartwin{margin:12px 0 2px;font-size:11.5px;color:var(--muted);line-height:1.5}
+  .chartwin b{color:var(--ink-2);font-weight:700}
   .prsplit{margin:8px 0 0;padding:8px 11px;border:1px solid var(--hot);border-radius:2px;
     background:color-mix(in srgb,var(--hot) 6%,var(--panel));font-size:12px;line-height:1.5}
   .prsplit b{color:var(--hot);margin-right:8px}
@@ -1309,6 +1312,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _risk:x.risk||null, _rv:x.risk_verdict||null, _ax:x.axes||null, _b2:x.bench_alt||null,
             // 매매 대상 대비 — 위 '두 잣대' 패널이 쓴다
             _vt:x.vs_traded||null,
+            // 시점정확을 못 잰 사유 — 레그 이름표가 이걸 적는다(빌더가 실어 보낸 문장 그대로)
+            _pitna:x.pit_na||null,
             // 카드 머리가 시점정확 레그를 먼저 적는다(2026-08-13). 아래 vp 문단에도 같은
             // 자료가 쓰이지만, 머리 숫자로 쓰려면 이 자리로 넘어와야 한다.
             _pit:x.pit||null,
@@ -2772,7 +2777,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             f(b.mdd)+'% · '+f(b.cagr)+'%</b></div>')+
         '</div>';
       };
-      var perf='<div class="labperf">'+
+      // 🚨 2026-08-13 사용자 지적("전략별로 양식도 좀 다른거같고") — 레그 이름표가
+      //   `Pq` 유무에 통째로 매달려 있어 **90종은 이름 없는 줄 하나**만 나왔다.
+      //   그래서 목록에서 카드 둘을 나란히 열면 하나는 5.1년(PIT), 하나는 10년(소급)
+      //   숫자를 같은 자리에서 보게 된다. 창은 적혀 있었지만 **그 줄이 무엇인지**가 없었다.
+      //   → 레그가 하나뿐인 카드에도 같은 자리에 이름표를 붙인다. 없는 레그를 있는 척하지
+      //     않는다 — 시점정확을 왜 못 쟀는지는 자료에 있으면 그것을 적고, 없으면 그냥 안 적는다.
+      var _naWhy=(d._pitna&&d._pitna.why)||null;
+      var _oneTtl=Pq?'':(
+        '<div class="legttl legretro">랩 본편 소급 — <b>오늘의 유니버스를 과거로</b>'+
+        (_naWhy?' · 시점정확 레그 없음: '+esc(_naWhy):'')+'</div>');
+      var perf='<div class="labperf">'+_oneTtl+
         (Pq?('<div class="legttl legpit">시점정확 — 그때 실제로 지수에 있던 종목만</div>'+
              legRow({sharpe:Pq.sharpe,mdd:Pq.mdd,cagr:Pq.cagr},
                     {sharpe:Pq.bench_sharpe,mdd:Pq.bench_mdd,cagr:Pq.bench_cagr},
@@ -2847,7 +2862,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var lg=function(col,dash,txt){return '<span class="lg"><i style="border-color:'+col+(dash?';border-top-style:dashed':'')+'"></i>'+esc(txt)+'</span>';};
             var _il=(bt.bench2_label?lg('var(--rp)',1,bt.bench2_label):'')+
                     (bt.bench3_label?lg('var(--marg)',1,bt.bench3_label):'');
-            return '<div class="chartttl">누적수익 (로그축)'+lg('var(--accent)',0,'전략')+_il+'</div>'+
+            // 🚨 2026-08-13 사용자 지적("구간은 막 2021년부터 써있는데 차트는 10년이고").
+            //   차트는 **랩 본편 소급** 곡선인데 어느 레그인지 한 글자도 안 적고 있었다.
+            //   카드 머리 첫 줄이 시점정확(5.1년)인 75종에서는 독자가 그 창의 곡선으로 읽는다.
+            //   ⚠ 시점정확 레그의 곡선은 **없다**(pit_backtest 가 nav 를 안 싣는다).
+            //     그러니 없는 것을 있는 척하지 않고, 이 곡선이 무엇인지만 못박는다.
+            var _cw=(d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7);
+            var _cspan=spanTxt(d._start,d._end);
+            var _cbadge='<div class="chartwin">이 아래 그림은 전부 <b>'+
+              (Pq?'랩 본편 소급':'이 전략의 본편')+'</b> 곡선입니다 · '+esc(_cw)+
+              (_cspan?' ('+esc(_cspan)+')':'')+
+              (Pq?' — 위 시점정확 레그의 곡선은 없습니다':'')+'</div>';
+            return _cbadge+
+                   '<div class="chartttl">누적수익 (로그축)'+lg('var(--accent)',0,'전략')+_il+'</div>'+
                    svgEquity(bt,'var(--accent)')+
                    '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(bt.dd_b2?_il:'')+'</div>'+
                    svgDD(bt)+
@@ -2883,7 +2910,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '<p class="labnote">굵은 선이 이 전략, 흐린 선이 비교 지수('+esc(bb.label||'—')+')입니다. 자세한 곡선을 불러오는 중…</p>';
         })()+
       '</div>';
-      play = perf + cmpBlock(d) + nselBlock(d) + rgBlock(d) + holdHtml +
+      // 🚨 2026-08-13 — 여기 있던 cmpBlock(d) 를 뺐다. 아래 공통 조립이 **모든 카드에**
+      //   이미 그리고 있어서, 랩 카드만 같은 지수 비교표가 두 번 나왔다(실측 165종).
+      //   양식이 카드마다 다르다는 지적의 한 갈래가 이것이다.
+      play = perf + nselBlock(d) + rgBlock(d) + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
           return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">비교 지수가 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+

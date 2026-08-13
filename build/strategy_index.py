@@ -445,6 +445,26 @@ def trails_of(dates, nav):
     return (out or None), (base or None)
 
 
+# 시점정확을 못 잰 규칙의 사유 — data/pit_strategies.json 의 excluded 를 그대로 옮긴다.
+# ⚠ 여기서 문장을 짓지 않는다. 원천이 적은 것을 옮기되 t 수치만 뗀다(위 rec 주석 참조).
+_PIT_NA = None
+
+
+def _pit_na(sid):
+    global _PIT_NA
+    if _PIT_NA is None:
+        _PIT_NA = (load("pit_strategies.json") or {}).get("excluded") or {}
+    v = _PIT_NA.get(sid)
+    if not v:
+        return None
+    why = v if isinstance(v, str) else (v.get("why") or v.get("reason") or "")
+    if not why:
+        return None
+    import re as _re
+    why = _re.sub(r"\s*🚨?\s*소급 t [\d.]+ 를[^.]*\.", "", why).strip()
+    return {"sid": sid, "why": why}
+
+
 def rec(**kw):
     # ⚠ thin() 앞에서 잰다(위 주석). 순서를 바꾸면 조용히 값이 뭉개진다.
     # ⚠ dates 는 재고 나서 **버린다.** 원해상도(833~980점)로 실으면 파일이 커지고,
@@ -676,6 +696,15 @@ def main() -> int:
             # ⚠ 전에는 이 값이 판정 강등에만 쓰이고 **화면에는 숫자가 안 나갔다**. 편향을 재
             #   놓고 안 보여주면 독자는 소급 수치만 보게 된다 — 목록에 실어 카드가 적게 한다.
             pit=r.get("pit"),
+            # 🚨 2026-08-13 — **왜 시점정확을 못 쟀는지**도 같이 싣는다(사용자 지적:
+            #   "전략별로 양식도 좀 다른거같고"). 종전에는 pit 이 없으면 카드가 이름표 없는
+            #   줄 하나만 그렸고, 사유는 pit_strategies.json 의 excluded 에만 있었다 —
+            #   재 놓고 안 실으면 잰 적 없는 것과 같다.
+            #   ⚠ 하필 랩 샤프 1위(비유동성 Amihud 1.658)가 그 6종 중 하나다. 그 카드가
+            #     지금 "왜 검증이 없는지"를 한 글자도 안 적는다.
+            #   ⚠ 사유 문장에 박힌 t 수치는 **떼어 낸다.** excluded 에 "소급 t 6.84" 라
+            #     적혀 있는데 현재 인덱스 값은 다르다 — 두 수가 갈리면 화면이 낡은 수를 말한다.
+            pit_na=_pit_na(r.get("sid")),
             # 가장 닮은 규칙 대비 증분 알파 — '이걸 이미 들고 있으면 이게 더 주는 게 있나'.
             # 단독 t 만 보면 같은 베팅을 여러 번 센다(에코 모멘텀 단독 3.80 → 증분 0.85).
             # 바스켓 크기 전수 시험의 선택 기록 — PREREG-2026-08-13-NSWEEP.md §4①.
