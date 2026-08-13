@@ -1534,10 +1534,21 @@ def build():
         sc.sort(key=lambda x: x[1], reverse=not rev)
         return {t: 1.0 for t, _ in sc[:n]}
 
+    # 🚨 2026-08-13 — 이 열이 **11섹터 중 9개만 산다**는 사실이 화면에 한 글자도 없었다.
+    #   위 주석이 "등록 §2 에 그렇게 적었다"고 하는데 등록 문서에만 있고 카드에는 없다 —
+    #   재 놓고 안 실으면 잰 적 없는 것과 같다. 실측: XLC 를 적는 자산 전략 0종이었다.
+    #   ⚠ 한 자리에서만 붙인다(_sec 호출부 10곳에 각각 적으면 한 곳이 빠지는 날이 온다).
+    #   ⚠ 각 규칙 자신의 note 는 지우지 않고 **뒤에 잇는다.**
+    _SEC_NOTE = ("이 열은 11섹터 중 9개만 삽니다 — 커뮤니케이션(XLC 2018-06 상장)과 "
+                 "부동산(XLRE 2015-10)은 넣으면 구간이 8년으로 잘리거나 앞구간 후보가 "
+                 "9→11 로 부는 램프가 생겨 뺐습니다. 그래서 이 규칙들은 통신·부동산을 "
+                 "영영 못 삽니다. 대조군도 같은 9섹터 동일가중입니다.")
+
     def _sec(sid, label, wfn, rule, why, note=None):
         # ⚠ arch 는 기각 아카이브의 '이전 판정' 링크다. 이 열은 새 규칙이라 이전 판정이
         #   없으므로 빈 값으로 둔다 — 기존 항목을 갖다 붙이면 카드가 남의 판정을 자기 것처럼 적는다.
-        add(sid, "", lambda: run_weights(wfn, S9ST, label, _s9bench, rule, why, note=note))
+        _n = (note + " " + _SEC_NOTE) if note else _SEC_NOTE
+        add(sid, "", lambda: run_weights(wfn, S9ST, label, _s9bench, rule, why, note=_n))
 
     # ① 시계열 모멘텀 — Moskowitz·Ooi·Pedersen (2012) JFE 104(2)
     _sec("sec-tsmom", "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
