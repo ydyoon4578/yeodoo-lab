@@ -2358,10 +2358,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   y 순으로 세우고 최소 간격만큼 민다. **선은 안 움직인다** — 민 것은 글자뿐이고,
       //   민 만큼 가는 선으로 이어 어느 선의 라벨인지 잃지 않게 한다.
       labs.sort(function(a,b){return a.y-b.y;});
-      var GAP=lots?13:14, prev=-1e9;
+      // 🚨 2026-08-13 — 여기서 라벨이 **차트 위로 튀어나가 잘렸다**(사용자 지적: 산업그룹
+      //   1주에서 맨 위 라벨이 잘린다). 종전 코드는 아래로 민 뒤 넘치면 뭉치를 통째로
+      //   위로 올렸는데, 산업그룹 24줄 × 간격 13 = 312px 가 쓸 수 있는 세로보다 커서
+      //   맨 위가 음수 y 로 갔다(실측 y=-113.3, viewBox 는 0 부터다).
+      //   ⚠ 값이 촘촘한 구간(1주)일수록 심하다 — 끝값이 다 붙어 있어 전부 밀리기 때문이다.
+      //   → ① 들어갈 자리를 먼저 재고 ② 모자라면 간격을 줄이고 ③ 그래도 넘치면
+      //     위쪽 경계에서 자른다. 순서를 바꾸면 또 밖으로 나간다.
+      var TOPL=TOP+4, BOTL=H-BOT-2, AVAIL=BOTL-TOPL;
+      var GAP=lots?13:14;
+      if(labs.length>1) GAP=Math.max(8.5, Math.min(GAP, AVAIL/(labs.length-1)));
+      var prev=-1e9;
       labs.forEach(function(L){ L.ly=Math.max(L.y, prev+GAP); prev=L.ly; });
-      var over=labs.length?labs[labs.length-1].ly-(H-BOT-2):0;
+      var over=labs.length?labs[labs.length-1].ly-BOTL:0;
       if(over>0) labs.forEach(function(L){ L.ly-=over; });
+      // ③ 위쪽 경계 — 여기서 한 번 더 잡아야 한다. 간격을 줄여도 라벨이 아주 많으면
+      //   여전히 넘칠 수 있고, 그때 잘리느니 겹치는 편이 낫다(겹쳐도 읽히지만 잘리면 없다).
+      if(labs.length && labs[0].ly<TOPL){
+        var up=TOPL-labs[0].ly, room=BOTL-labs[labs.length-1].ly;
+        var mv=Math.min(up, Math.max(0, room));
+        if(mv>0) labs.forEach(function(L){ L.ly+=mv; });
+        labs.forEach(function(L){ if(L.ly<TOPL) L.ly=TOPL; });
+      }
       labs.forEach(function(L){
         g+='<line x1="'+(L.x+2).toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+(RX+7).toFixed(1)+
            '" y2="'+L.ly.toFixed(1)+'" stroke="'+L.col+'" stroke-width="0.7" opacity=".45"/>';
