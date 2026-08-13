@@ -5624,6 +5624,12 @@ def run():
                 if _p in _nm:
                     _nm = _nm.replace(_p, _p.replace(str(TOPN), str(_nwin)))
                     _hit = True
+            # 🚨 접두어 없이 **끝에 크기만 붙은 이름**도 있다("거래량 급증 + 추세 10" ·
+            #   "52주 신고가 근접 10"). 위 셋만 보고 넘기면 뒤에 "(30종)"이 붙어
+            #   "…추세 10 (30종)" 처럼 한 이름에 수가 둘이 된다(점검에서 2종 실측).
+            if not _hit and re.search(r"(?<!\d)%d$" % TOPN, _nm):
+                _nm = re.sub(r"(?<!\d)%d$" % TOPN, str(_nwin), _nm)
+                _hit = True
             # 크기가 안 박힌 이름(예: "에코 모멘텀 (12~7개월 전 구간)")은 뒤에 적는다.
             _best["name"] = _nm if _hit else ("%s (%d종)" % (_nm, _nwin))
         _win[_b] = _best
