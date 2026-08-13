@@ -399,11 +399,10 @@
      ⚠ 2열로 떨어질 때 셋째 판이 혼자 남으므로 마지막 칸은 늘어나게 두지 않는다 —
        한 판만 두 배 폭이면 같은 자로 그린 그림이 다른 크기로 보인다(viewBox 라 왜곡은 없지만
        선 굵기와 라벨이 커져 그 판이 더 중요해 보인다). */
-  /* 판이 넷이 됐다(지수·섹터·스타일·산업그룹, 2026-08-13). 넓은 화면 4열 → 3 → 2 → 1. */
-  .scgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 18px;align-items:start}
-  @media(max-width:1560px){.scgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 18px}}
-  @media(max-width:1180px){.scgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}}
-  @media(max-width:820px){.scgrid{grid-template-columns:1fr;gap:16px}}
+  /* 판 넷을 **2×2** 로 놓는다(2026-08-13 사용자 결정) — 위 지수·스타일, 아래 섹터·산업그룹.
+     4열로 늘어놓으면 판이 좁아 라벨을 잘라야 했다. 2열이면 영문 산업그룹명이 통째로 들어간다. */
+  .scgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px;align-items:start}
+  @media(max-width:900px){.scgrid{grid-template-columns:1fr;gap:16px}}
   .schd{font-size:11px;font-weight:800;color:var(--ink-2);letter-spacing:.04em;margin:0 0 5px}
   .schd span{font-weight:400;letter-spacing:0;color:var(--muted)}
   .scrow{display:grid;grid-template-columns:112px minmax(60px,1fr) 54px;gap:8px;align-items:center;
@@ -2221,14 +2220,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<button class="sctab'+(h===STC_HZ?' on':'')+'" data-h="'+h+'">'+esc(HZL[h]||h)+'</button>';
     }).join('');
 
-    // 한 장 그리기 — series = [{nm, v:[…]}], 강조할 것만 색을 준다
+    // 한 장 그리기 — series = [{nm, v:[…]}], emph = 이름→색.
+    // 🚨 2026-08-13 판 배치를 2×2 로 바꾸면서 다시 그렸다(사용자 요청 "차트 좀 더 퀄리티 있게").
+    //   판이 두 배로 넓어졌으므로 **이름을 더 이상 자르지 않는다** — 영문 GICS 산업그룹명
+    //   (최장 46자)이 그대로 들어간다. 종전에는 15자에서 잘라 '…' 였다.
+    // 더한 것 셋. 전부 '없어서 못 읽던 것' 이지 장식이 아니다:
+    //   ① y 눈금 — 종전에는 0 선 하나뿐이라 **선이 얼마나 벌어졌는지 눈으로 못 쟀다.**
+    //   ② x 눈금 — 첫날·끝날만 있었다. 가운데 눈금이 없으면 굴곡이 언제인지 못 짚는다.
+    //   ③ 0 아래 옅은 바탕 — 손실 구간을 색으로 한 번 더 말한다(선 색과 겹치지 않게 아주 옅게).
     function chart(dates, series, title, emph){
-      // 선이 많으면 세로를 늘리고 라벨 칸도 넓힌다 — 11개를 190px 에 쌓으면 글자가 겹친다.
-      // 🚨 21줄짜리 판이 생기면서(산업그룹) 라벨 칸이 모자라 글자가 판 밖으로 흘렀다.
-      //   줄 수에 따라 세로와 라벨 칸을 같이 늘린다. 이름도 길어서(영문 GICS 그룹명) 자른다.
       var many=series.length>6, lots=series.length>12;
-      var W=520, H=lots?372:(many?264:190), PL=8, PR=lots?150:(many?106:92), TOP=14, BOT=22;
-      var NMAX=lots?15:24;      // 라벨 글자 수 상한 — 넘으면 … 로 자르고 title 로 전체를 준다
+      // 2열 배치라 판이 넓다. 라벨 칸을 이름이 통째로 들어갈 만큼 준다.
+      var W=lots?1000:(many?820:700);
+      var H=lots?400:(many?300:230);
+      var PL=40, PR=lots?270:(many?150:130), TOP=16, BOT=26;
       var n=dates.length, lo=0, hi=0;
       series.forEach(function(s){s.v.forEach(function(y){if(y==null)return;
         if(y<lo)lo=y; if(y>hi)hi=y;});});
@@ -2236,10 +2241,38 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var pad=(hi-lo)*0.08; hi+=pad; lo-=pad;
       var X=function(i){return PL+(n<2?0:i/(n-1))*(W-PL-PR);};
       var Y=function(y){return TOP+(hi-y)/(hi-lo)*(H-TOP-BOT);};
-      var zero=Y(0), g='';
-      g+='<line x1="'+PL+'" y1="'+zero.toFixed(1)+'" x2="'+(W-PR)+'" y2="'+zero.toFixed(1)+
-         '" stroke="var(--line)" stroke-width="1"/>';
-      // 흐린 선을 먼저, 강조선을 나중에 — 겹칠 때 강조가 위로 온다
+      var RX=W-PR, g='';
+
+      // ── y 눈금 — '보기 좋은 간격'을 값에서 고른다(1·2·5·10·20·50 …) ─────────
+      var span=hi-lo, raw=span/5, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10));
+      var st=[1,2,2.5,5,10].reduce(function(a,b){
+        return Math.abs(b*mag-raw)<Math.abs(a*mag-raw)?b:a;},1)*mag;
+      for(var t=Math.ceil(lo/st)*st; t<=hi+1e-9; t+=st){
+        var yy=Y(t), z=Math.abs(t)<1e-9;
+        g+='<line x1="'+PL+'" y1="'+yy.toFixed(1)+'" x2="'+RX+'" y2="'+yy.toFixed(1)+
+           '" stroke="var(--line'+(z?'':'-soft')+')" stroke-width="'+(z?1:0.7)+'"'+
+           (z?'':' opacity=".7"')+'/>'+
+           '<text x="'+(PL-6)+'" y="'+(yy+3.2).toFixed(1)+'" text-anchor="end" font-size="9.5" '+
+           'font-family="var(--mono)" fill="var(--muted)">'+
+           (t>0?'+':'')+(Math.abs(st)<1?t.toFixed(1):Math.round(t))+'</text>';
+      }
+      // ── 0 아래 옅은 바탕 ────────────────────────────────────────────────
+      var zy=Y(0);
+      if(zy<H-BOT)
+        g+='<rect x="'+PL+'" y="'+zy.toFixed(1)+'" width="'+(RX-PL)+'" height="'+
+           (H-BOT-zy).toFixed(1)+'" fill="var(--hot)" opacity=".045"/>';
+      // ── x 눈금 — 월이 바뀌는 날 중 고르게 넷 ─────────────────────────────
+      var mk=[], pm='';
+      for(var i=0;i<n;i++){var m=String(dates[i]).slice(0,7); if(m!==pm){mk.push(i); pm=m;}}
+      var want=Math.min(4, mk.length), pick=[];
+      if(want>0) for(var q=0;q<want;q++) pick.push(mk[Math.round(q*(mk.length-1)/Math.max(1,want-1))]);
+      pick.forEach(function(i){
+        g+='<line x1="'+X(i).toFixed(1)+'" y1="'+TOP+'" x2="'+X(i).toFixed(1)+'" y2="'+
+           (H-BOT)+'" stroke="var(--line-soft)" stroke-width="0.7" opacity=".55"/>'+
+           '<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9.5" '+
+           'font-family="var(--mono)" fill="var(--muted)">'+esc(String(dates[i]).slice(2,7))+'</text>';
+      });
+
       var ord=series.slice().sort(function(a,b){return (emph[a.nm]?1:0)-(emph[b.nm]?1:0);});
       var labs=[];
       ord.forEach(function(s){
@@ -2248,38 +2281,36 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           d+=(started?'L':'M')+X(i).toFixed(1)+' '+Y(y).toFixed(1); started=true; last=y; li=i;}
         if(!started)return;
         var col=emph[s.nm]||'var(--muted)';
-        g+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(emph[s.nm]?2:1.1)+
-           '" opacity="'+(emph[s.nm]?1:0.42)+'" stroke-linejoin="round"/>';
-        if(emph[s.nm]||series.length<=4)
-          labs.push({nm:s.nm, col:col, x:X(li)+5, y:Y(last), v:last});
+        g+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+(lots?1.3:1.7)+
+           '" opacity="'+(emph[s.nm]?(lots?0.9:1):0.42)+
+           '" stroke-linejoin="round" stroke-linecap="round"/>';
+        if(emph[s.nm]||series.length<=4){
+          labs.push({nm:s.nm, col:col, x:X(li), y:Y(last), v:last});
+          g+='<circle cx="'+X(li).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="'+(lots?1.6:2)+
+             '" fill="'+col+'"/>';     // 끝점을 찍어 라벨이 밀렸을 때 원래 자리를 남긴다
+        }
       });
-      // 🚨 라벨 겹침 방지 — 11개를 끝값 자리에 그대로 찍으면 값이 가까운 섹터끼리 포개진다.
-      //   y 순으로 세우고 최소 간격만큼 아래로 민다. **선은 안 움직인다** — 민 것은 글자뿐이고,
+      // 🚨 라벨 겹침 방지 — 끝값 자리에 그대로 찍으면 값이 가까운 줄끼리 포개진다.
+      //   y 순으로 세우고 최소 간격만큼 민다. **선은 안 움직인다** — 민 것은 글자뿐이고,
       //   민 만큼 가는 선으로 이어 어느 선의 라벨인지 잃지 않게 한다.
       labs.sort(function(a,b){return a.y-b.y;});
-      var GAP=11.5, prev=-1e9;
+      var GAP=lots?13:14, prev=-1e9;
       labs.forEach(function(L){ L.ly=Math.max(L.y, prev+GAP); prev=L.ly; });
       var over=labs.length?labs[labs.length-1].ly-(H-BOT-2):0;
       if(over>0) labs.forEach(function(L){ L.ly-=over; });
       labs.forEach(function(L){
-        if(Math.abs(L.ly-L.y)>2)
-          g+='<line x1="'+(L.x-3).toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+L.x.toFixed(1)+
-             '" y2="'+L.ly.toFixed(1)+'" stroke="'+L.col+'" stroke-width="0.8" opacity=".55"/>';
-        // 이름이 길면 자른다(영문 GICS 산업그룹명이 40자를 넘는다). 전체는 title 로 남긴다 —
-        //   자르기만 하고 원문을 안 주면 어느 그룹인지 화면에서 알 길이 없어진다.
-        var _nm=(L.nm.length>NMAX)?(L.nm.slice(0,NMAX-1)+'…'):L.nm;
-        g+='<text x="'+L.x.toFixed(1)+'" y="'+(L.ly+3.5).toFixed(1)+'" font-size="'+
-           (lots?9.5:10.5)+'" font-weight="700" fill="'+L.col+'">'+
-           '<title>'+esc(L.nm)+'</title>'+esc(_nm)+
-           '<tspan font-family="var(--mono)" font-size="'+(lots?8.5:9.5)+'"> '+
+        g+='<line x1="'+(L.x+2).toFixed(1)+'" y1="'+L.y.toFixed(1)+'" x2="'+(RX+7).toFixed(1)+
+           '" y2="'+L.ly.toFixed(1)+'" stroke="'+L.col+'" stroke-width="0.7" opacity=".45"/>';
+        // ⚠ 이름을 자르지 않는다(2026-08-13 사용자 요청). 라벨 칸을 그만큼 넓게 잡았다.
+        g+='<text x="'+(RX+10)+'" y="'+(L.ly+3.4).toFixed(1)+'" font-size="'+(lots?10:11)+
+           '" font-weight="700" fill="'+L.col+'">'+esc(L.nm)+
+           '<tspan font-family="var(--mono)" font-size="'+(lots?9:9.5)+'" opacity=".85"> '+
            (L.v>0?'+':'')+L.v.toFixed(2)+'</tspan></text>';
       });
-      g+='<text x="'+PL+'" y="'+(H-6)+'" font-size="9.5" fill="var(--muted)" '+
-         'font-family="var(--mono)">'+esc(dates[0])+'</text>'+
-         '<text x="'+(W-PR)+'" y="'+(H-6)+'" text-anchor="end" font-size="9.5" fill="var(--muted)" '+
-         'font-family="var(--mono)">'+esc(dates[n-1])+'</text>';
-      return '<div class="sccol"><div class="schd">'+title+'</div>'+
-        '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+' 누적 수익률 추이">'+g+'</svg></div>';
+      return '<div class="sccol"><div class="schd">'+esc(title)+
+        '<span> · '+series.length+'개</span></div>'+
+        '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(title)+' 누적 수익률 추이">'+
+        g+'</svg></div>';
     }
 
     var CIX={'S&P 500':'var(--accent)','나스닥 100':'var(--champ)','다우존스 30':'var(--marg)',
@@ -2322,11 +2353,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     inds.forEach(function(s,i){CIND[s.nm]=SECPAL[i%SECPAL.length];});
 
     box.innerHTML='<div class="sctabs">'+tabs+'</div>'+
+      // 🚨 2행 배치(사용자 결정 2026-08-13). 위 줄은 **살 수 있는 넓은 것**(지수·스타일),
+      //   아래 줄은 **쪼갠 것**(섹터·산업그룹)이다. 위아래가 같은 질문의 두 배율이 되게 놓는다.
+      //   ⚠ 판 이름에서 'ETF'·'21개' 를 뺐다 — 개수는 제목 옆 회색으로 따로 붙는다.
       '<div class="scgrid">'+
         chart(blk.dates, ixs, '지수', CIX)+
+        (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
-        (stys.length?chart(blk.sec_dates, stys, '스타일 ETF', CSTY):'')+
-        (inds.length?chart(iblk.dates, inds, '산업그룹 '+inds.length+'개', CIND):'')+
+        (inds.length?chart(iblk.dates, inds, '산업그룹', CIND):'')+
       '</div>'+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
