@@ -16,7 +16,7 @@
  "limits": {
   "tech": [
    "생존편향 — 오늘의 518종목을 과거 17년에 그대로 적용한다. 그 사이 편출된 종목이 없어 모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다. 구간이 길수록 누락된 편출 종목이 쌓여 이 왜곡은 더 커진다.",
-   "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간(2021-07~2026-08 · 1264거래일)을 다시 돌린 결과다. 대조군 CAGR이 15.29%→9.77%로, 규칙 74종의 CAGR은 중앙값 9.0%p 과대로 나온다. 이 표에서 PIT |t| 가 다중검정 임계 3.40 를 넘는 규칙은 0종이고 최대 |t| 는 2.68(Piotroski F-Score 상위 10)다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 본편보다 짧아 일부는 구간 단축에서 온다. 산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, 가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다.",
+   "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간(2021-07~2026-08 · 1264거래일)을 다시 돌린 결과다. 대조군 CAGR이 15.29%→9.77%로, 규칙 79종의 CAGR은 중앙값 9.0%p 과대로 나온다. 이 표에서 PIT |t| 가 다중검정 임계 3.42 를 넘는 규칙은 0종이고 최대 |t| 는 2.68(Piotroski F-Score 상위 10)다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 본편보다 짧아 일부는 구간 단축에서 온다. 산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, 가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다.",
    "랩 대조군(오늘의 518종목 동일가중을 과거로 소급)이 같은 기간 실제 동일가중 S&P 500(RSP·보수 후)보다 연 +6.26%p 앞선다. 생존편향과 유니버스 틸트(NASDAQ 100 전용 종목 포함)가 함께 만든 격차이며, 생존편향 단독의 상한으로 읽어야 한다. 전략 수익은 그만큼 부푼 세계의 숫자다. ⚠ 대조군을 S&P 500(PR)으로 바꾼 뒤로는 이 편향이 초과수익에서 상쇄되지 않는다 — 예전 대조군(같은 유니버스 동일가중)은 같은 편향을 태우고 있어 대체로 상쇄됐지만, 지수는 그렇지 않다. 즉 여기 초과수익·ΔSharpe·t 는 실제보다 좋게 나온 값이다.",
    "⚠ 대조군을 바꿨다(2026-07-28 사용자 결정) — 예전에는 같은 유니버스 동일가중 매수후보유였고 지금은 S&P 500(PR)이다. 동일가중 유니버스는 오늘 명단을 과거로 소급한 것이라 실제 동일가중 S&P 500(RSP)보다 연 +6.26%p 높았다. 즉 예전 문턱이 그만큼 높았다. 같은 규칙인데 ΔSharpe 가 전반적으로 올라간 것은 규칙이 좋아져서가 아니라 문턱이 내려갔기 때문이다. 예전 판정과 나란히 놓고 비교하지 말 것.",
    "표본이 17년(4169거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다.",
@@ -15005,8 +15005,8 @@
      "sharpe": 1.175,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AOS",
      "ARE",
@@ -15413,8 +15413,8 @@
      "sharpe": 0.577,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AMD",
      "AVGO",
@@ -15671,8 +15671,8 @@
      "sharpe": 0.903,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ABNB",
      "ADM",
@@ -15958,8 +15958,8 @@
      "sharpe": 0.763,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AMD",
      "DDOG",
@@ -16178,8 +16178,8 @@
      "sharpe": 0.534,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALB",
      "AMAT",
@@ -16435,8 +16435,8 @@
      "sharpe": 0.459,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ABNB",
      "ADSK",
@@ -16692,7 +16692,7 @@
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
-    "window": null,
+    "window": "2021-07~2026-08",
     "start": "2021-07-30",
     "n_days": 1264,
     "pit": {
@@ -16719,8 +16719,8 @@
      "sharpe": 0.389,
      "bench_cagr": 5.52
     },
-    "t_crit": null,
-    "t_crit_lab": null,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALGN",
      "ALLE",
@@ -16999,8 +16999,8 @@
      "sharpe": 0.558,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "ARM",
@@ -17279,8 +17279,8 @@
      "sharpe": 0.701,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "CIEN",
      "INTC",
@@ -18104,8 +18104,8 @@
      "sharpe": 0.568,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALB",
      "ARE",
@@ -18616,8 +18616,8 @@
      "sharpe": 0.401,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "AMD",
@@ -18836,8 +18836,8 @@
      "sharpe": 0.301,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "CPRT",
@@ -19065,8 +19065,8 @@
      "sharpe": 0.43,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "CIEN",
      "INTC",
@@ -19285,8 +19285,8 @@
      "sharpe": 0.506,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "CIEN",
      "ECHO",
@@ -19505,8 +19505,8 @@
      "sharpe": 0.666,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AES",
      "AIZ",
@@ -19785,8 +19785,8 @@
      "sharpe": 0.476,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALNY",
      "BG",
@@ -20012,8 +20012,8 @@
      "sharpe": 0.576,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AEP",
      "BKR",
@@ -20232,8 +20232,8 @@
      "sharpe": 0.529,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AIG",
      "CHTR",
@@ -20468,8 +20468,8 @@
      "sharpe": 0.461,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AFL",
      "ALB",
@@ -20818,8 +20818,8 @@
      "sharpe": 0.443,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADM",
      "AJG",
@@ -21068,8 +21068,8 @@
      "sharpe": 0.381,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "EA",
      "FISV",
@@ -21318,8 +21318,8 @@
      "sharpe": 0.646,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADM",
      "CVNA",
@@ -21538,8 +21538,8 @@
      "sharpe": 0.301,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADP",
      "ADSK",
@@ -21798,7 +21798,7 @@
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
-    "window": null,
+    "window": "2021-07~2026-08",
     "start": "2021-07-30",
     "n_days": 1264,
     "pit": {
@@ -21825,8 +21825,8 @@
      "sharpe": 0.537,
      "bench_cagr": 5.52
     },
-    "t_crit": null,
-    "t_crit_lab": null,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "BDX",
      "BLDR",
@@ -22045,8 +22045,8 @@
      "sharpe": 0.134,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADBE",
      "AMAT",
@@ -22295,8 +22295,8 @@
      "sharpe": 0.363,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALB",
      "CBOE",
@@ -22556,8 +22556,8 @@
      "sharpe": 0.348,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "BG",
      "CAH",
@@ -22984,8 +22984,8 @@
      "sharpe": 0.526,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "ANET",
@@ -23271,8 +23271,8 @@
      "sharpe": 0.32,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALB",
      "AMAT",
@@ -23759,8 +23759,8 @@
      "sharpe": 0.305,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "COF",
      "CRWD",
@@ -23996,8 +23996,8 @@
      "sharpe": 0.109,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "DELL",
      "EXE",
@@ -24253,8 +24253,8 @@
      "sharpe": 0.478,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "APD",
      "ARE",
@@ -24725,8 +24725,8 @@
      "sharpe": 0.401,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "ALNY",
@@ -25210,8 +25210,8 @@
      "sharpe": 0.354,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AEP",
      "ARM",
@@ -25490,8 +25490,8 @@
      "sharpe": 0.175,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "APH",
      "CME",
@@ -25710,8 +25710,8 @@
      "sharpe": 0.4,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ARE",
      "CHTR",
@@ -25941,8 +25941,8 @@
      "sharpe": 0.2,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "ALL",
@@ -26195,8 +26195,8 @@
      "sharpe": 0.371,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ABT",
      "ACN",
@@ -26457,8 +26457,8 @@
      "sharpe": 0.213,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "ADBE",
@@ -26718,8 +26718,8 @@
      "sharpe": 0.601,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADBE",
      "ALB",
@@ -26979,8 +26979,8 @@
      "sharpe": 0.269,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AIZ",
      "AMAT",
@@ -27266,8 +27266,8 @@
      "sharpe": 0.228,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADI",
      "ALB",
@@ -27516,8 +27516,8 @@
      "sharpe": 0.647,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALNY",
      "APP",
@@ -27743,8 +27743,8 @@
      "sharpe": 0.37,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ARE",
      "CHTR",
@@ -27979,8 +27979,8 @@
      "sharpe": 0.151,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "ACN",
@@ -28328,8 +28328,8 @@
      "sharpe": 0.324,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALAB",
      "ALNY",
@@ -28837,8 +28837,8 @@
      "sharpe": 0.284,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AIZ",
      "AMAT",
@@ -29124,8 +29124,8 @@
      "sharpe": 0.082,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALNY",
      "BSX",
@@ -29591,8 +29591,8 @@
      "sharpe": 0.422,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AAPL",
      "ACN",
@@ -30091,8 +30091,8 @@
      "sharpe": 0.292,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ARE",
      "CHTR",
@@ -30325,8 +30325,8 @@
      "sharpe": 0.454,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AMP",
      "AXON",
@@ -30605,8 +30605,8 @@
      "sharpe": 0.048,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADI",
      "AXON",
@@ -30825,8 +30825,8 @@
      "sharpe": 0.48,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ARM",
      "CSCO",
@@ -31052,8 +31052,8 @@
      "sharpe": 0.113,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AMZN",
      "APA",
@@ -31526,8 +31526,8 @@
      "sharpe": 0.315,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADBE",
      "ADP",
@@ -32028,8 +32028,8 @@
      "sharpe": 0.242,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "ADM",
@@ -32891,8 +32891,8 @@
      "sharpe": 0.147,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AFL",
      "ASML",
@@ -33171,8 +33171,8 @@
      "sharpe": 0.865,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "CBOE",
      "CF",
@@ -33398,8 +33398,8 @@
      "sharpe": 0.237,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "ALL",
@@ -33860,8 +33860,8 @@
      "sharpe": 0.244,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "AES",
@@ -34121,8 +34121,8 @@
      "sharpe": 0.077,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADBE",
      "AFL",
@@ -34344,7 +34344,7 @@
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
-    "window": null,
+    "window": "2021-07~2026-08",
     "start": "2021-07-30",
     "n_days": 1264,
     "pit": {
@@ -34371,8 +34371,8 @@
      "sharpe": 0.709,
      "bench_cagr": 5.52
     },
-    "t_crit": null,
-    "t_crit_lab": null,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADP",
      "AES",
@@ -34621,8 +34621,8 @@
      "sharpe": 0.284,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACN",
      "AFL",
@@ -34901,8 +34901,8 @@
      "sharpe": 0.481,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ALB",
      "ALGN",
@@ -35158,8 +35158,8 @@
      "sharpe": 0.235,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "LHX",
      "LMT",
@@ -35381,7 +35381,7 @@
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
-    "window": null,
+    "window": "2021-07~2026-08",
     "start": "2021-07-30",
     "n_days": 1264,
     "pit": {
@@ -35408,8 +35408,8 @@
      "sharpe": 0.085,
      "bench_cagr": 5.52
     },
-    "t_crit": null,
-    "t_crit_lab": null,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "BXP",
      "CINF",
@@ -35628,8 +35628,8 @@
      "sharpe": 0.145,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AFL",
      "ATO",
@@ -35915,8 +35915,8 @@
      "sharpe": 0.347,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADBE",
      "ADP",
@@ -36195,8 +36195,8 @@
      "sharpe": 0.381,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AES",
      "AIZ",
@@ -36549,7 +36549,7 @@
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
-    "window": null,
+    "window": "2021-07~2026-08",
     "start": "2021-07-30",
     "n_days": 1264,
     "pit": {
@@ -36576,8 +36576,8 @@
      "sharpe": -0.037,
      "bench_cagr": 5.52
     },
-    "t_crit": null,
-    "t_crit_lab": null,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADI",
      "AXON",
@@ -36796,8 +36796,8 @@
      "sharpe": 0.169,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AEE",
      "AEP",
@@ -37142,8 +37142,8 @@
      "sharpe": 0.255,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AES",
      "EA",
@@ -37516,8 +37516,8 @@
      "sharpe": 0.713,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "APA",
      "CF",
@@ -37743,8 +37743,8 @@
      "sharpe": 0.158,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AEE",
      "AES",
@@ -38243,8 +38243,8 @@
      "sharpe": 0.083,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ACGL",
      "AEE",
@@ -38733,8 +38733,8 @@
      "sharpe": 0.141,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AES",
      "AFL",
@@ -39187,8 +39187,8 @@
      "sharpe": 0.191,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AFL",
      "AIZ",
@@ -40377,8 +40377,8 @@
      "sharpe": 0.079,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "AME",
      "AOS",
@@ -41740,8 +41740,8 @@
      "sharpe": 0.277,
      "bench_cagr": 5.52
     },
-    "t_crit": 3.4,
-    "t_crit_lab": 3.49,
+    "t_crit": 3.42,
+    "t_crit_lab": 3.5,
     "holdings": [
      "ADM",
      "AMZN",

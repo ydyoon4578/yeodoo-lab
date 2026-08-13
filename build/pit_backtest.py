@@ -126,7 +126,12 @@ PRICE_SIDS = [
               # 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md §4.
               #   🚨 **등록과 동시에** 넣는다(결과를 보고 넣으면 사후 선택이다). 다섯 다 종가만
               #   쓰므로 편출 종목 캐시로 그대로 돈다 — 일부러 그런 규칙으로 골랐다.
-              "x-kurt", "x-jump", "x-hurst", "x-runs", "x-entropy"]
+              "x-kurt", "x-jump", "x-hurst", "x-runs", "x-entropy",
+              # 2차 배치 — PREREG-2026-08-13-STAT2.md §4. 등록과 동시에 넣는다.
+              #   다섯 다 종가만 쓰므로 편출 종목 캐시로 그대로 돈다.
+              #   ⚠ x-distshape 는 횡단면 z 합성이라 2단이지만, 랩 함수를 그대로 부르는
+              #     구조라(2026-08-11 개편) 사전패스가 같이 따라온다.
+              "x-distshape", "x-hill", "x-lbq", "x-archlm", "x-hurst-mcf"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
