@@ -603,6 +603,21 @@ def main():
             _d0 = b["dates"][0]
             b["start"] = (_d0 + "-01") if len(_d0) == 7 else _d0
             b["capped_years"] = MAX_MONTHS // 12
+        # 🚨 2026-08-13 — **연도별 막대를 계열 창으로 떨어낸다.** 아래 주석이 "기존 yearly 는
+        #   덮지 않는다"고 적어 두었는데, 덮는 것과 자르는 것은 다르다. 안 자르니 지표는
+        #   10년(2016-07~)인데 막대는 최대 17년(1999~)을 그렸다 — 한 카드가 두 창을 말한다.
+        #   실측 4종: 섹터 모멘텀(1999~) · 200-DMA(2006~) · 크로스에셋 RP 변형(2007~) ·
+        #   크로스에셋 RP(2010~).
+        # ⚠ **자르기 블록 밖에 둔다.** 저장 계열은 이미 잘려 있어 lo==0 으로 들어오는데,
+        #   그 안에 두면 한 번도 안 돈다(처음에 그렇게 넣었다가 안 잘렸다).
+        # ⚠ 값을 다시 만들지 않는다 — 창 밖 연도를 떨어내기만 한다.
+        if isinstance(b.get("yearly"), list) and b.get("dates"):
+            _y0, _y1 = str(b["dates"][0])[:4], str(b["dates"][-1])[:4]
+            _n0 = len(b["yearly"])
+            b["yearly"] = [y for y in b["yearly"] if _y0 <= str(y.get("y")) <= _y1]
+            if len(b["yearly"]) != _n0:
+                b["yearly_capped"] = {"from": _n0, "to": len(b["yearly"]),
+                                      "window": _y0 + "~" + _y1}
         b["metrics"] = m
         # 낙폭 곡선을 지표와 **같은 계열**로 통일한다(구 dd는 일별 낙폭의 월말 샘플이라 카드값과 어긋났다)
         b["dd"] = [round(x * 100, 1) for x in dd_series(b["nav"])]
