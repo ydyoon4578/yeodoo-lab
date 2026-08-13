@@ -161,6 +161,20 @@ A = None          # 자산 패널
 DTS = []          # 날짜
 RF = {}
 
+# 🚨 백테스트 길이 상한 — 사용자 결정 2026-08-13. tech_backtest.py 의 MAX_YEARS 와 같은 값이다.
+#   "전략은 최근일자부터 최대 10년. 어떤건 14.4년, 16.6년 등 더 길게 비교한 것도 있더라."
+#   실측으로 이 파일의 62종은 창이 7.2~20.5년으로 흩어져 있었다 — 창이 다르면 전략끼리
+#   비교가 성립하지 않는다. 종목 랩만 자르고 여기를 두면 한 화면에서 10년짜리와 20년짜리가
+#   같은 표에 놓인다.
+#   ⚠ 이 상한은 **성과 측정 구간**만 자른다. 신호 계산은 그 앞의 가격을 그대로 쓴다.
+#   ⚠ 두 파일이 같은 값을 따로 들고 있다. 한쪽만 고치면 조용히 갈리므로, 바꿀 때는 둘 다.
+MAX_YEARS = 10
+
+
+def cap_start(st):
+    """측정 시작점에 10년 상한을 건다. 자산이 늦게 생긴 전략은 원래 시작점을 그대로 쓴다."""
+    return max(st, len(DTS) - int(MAX_YEARS * 252))
+
 # 🚨 지수 대조군은 **가격지수(PR)** 로 통일한다 — 2026-08-13 사용자 결정.
 #   종전에는 이 랩만 SPY(배당 재투자 = 사실상 TR)를 썼고 종목 랩 98종은 ^GSPC(PR)를 써서,
 #   한 화면에서 "S&P 500(PR)" 옆에 "SPY 상시보유"가 나란히 놓였다. 표기가 갈리면 세로로
@@ -557,6 +571,10 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     ⚠ bench_cadence를 안 주면 대조군도 같은 주기를 쓴다. '주기 변형' 전략에서 이걸 빠뜨리면
       전략과 대조군이 **완전히 같은 계열**이 되어 t가 정의되지 않는다(실제로 그렇게 났다)."""
     n = len(DTS)
+    # 🚨 10년 상한을 **여기 한 곳**에서 건다(MAX_YEARS 주석 참조). 일간 전략 50종이 전부
+    #   이 함수를 지나므로, 호출부 50곳에 흩어 놓지 않는다 — 흩으면 반드시 빠뜨린다.
+    #   ⚠ start 는 이 아래에서 대조군 라벨·회귀 구간에도 쓰이므로 맨 앞에서 덮어야 한다.
+    start = cap_start(start)
     # 🚨 판정선을 지수로 끌어올리고 원래 대조군을 보조로 내린다(_bench_idx 위 주석 참조).
     #   보조 자리가 이미 차 있으면(60/40 을 병기한 TAA 10종) 그쪽이 이미 지수 판정이라
     #   여기 걸리지 않는다 — 걸리면 그때는 보조를 덮어쓰지 않고 그대로 둔다.
@@ -1039,7 +1057,7 @@ def build():
 
     # 18) 오버나이트 드리프트 (종가 매수 → 시가 매도)
     def s_overnight():
-        st = 260
+        st = cap_start(260)          # 10년 상한 — run_weights 를 안 지나는 경로다
         c, o = ser("SPY"), (A.get("open") or {}).get("SPY")
         if not o:
             return None
@@ -1169,7 +1187,7 @@ def build():
 
     # ── 오버나이트 보유(NDX) ──
     def s_overnight_ndx():
-        st = 260
+        st = cap_start(260)          # 10년 상한 — 위 s_overnight 과 같은 사유
         c, o = ser("QQQ"), (A.get("open") or {}).get("QQQ")
         if not o:
             return None
@@ -2152,6 +2170,9 @@ def build():
             nav, dts = v["nav"], v["dates"]
             rs[key] = {dts[i]: nav[i] / nav[i - 1] - 1 for i in range(1, len(nav)) if nav[i - 1]}
         months = sorted(set(rs["eps"]) & set(rs["rp"]))
+        # 🚨 10년 상한(MAX_YEARS). 이 경로만 격자가 **월말 문자열**이라 인덱스로 못 자른다 —
+        #   개월 수로 자른다. run_weights 를 안 지나므로 여기서 따로 걸어야 한다.
+        months = months[-int(MAX_YEARS * 12):] if len(months) > int(MAX_YEARS * 12) else months
         return months, rs
 
     def _sleeve_run(name, wfn, bwfn, rule, why, note=None):

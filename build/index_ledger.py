@@ -56,6 +56,57 @@ def month_end_index(dates):
     return last
 
 
+def mcap_tools():
+    """시가총액을 재는 도구 셋 — (주식수 집기, 종가 집기). 못 만들면 (None, None).
+
+    주식수·종가는 랩 본편과 **같은 함수**로 집는다(TB.load_fund + TB.asof_fund).
+    사본을 두면 시총 정의가 두 벌이 되고, 이 저장소는 그 유형의 사고를 되풀이해 밟았다.
+    편출 종목은 로컬 캐시(_pit_sh_cache · _pit_px_cache)로 메운다 — 없으면 그 종목은
+    비중이 안 잡히고, 화면은 그것을 '자료 없음' 으로 이미 표시하고 있다.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import tech_backtest as TB
+    except Exception as e:
+        print("  [주의] tech_backtest 를 못 읽었다(%s) - 비중 없이 만든다." % str(e)[:50])
+        return None, None
+    FU = TB.load_fund()
+    SHC = _load("_pit_sh_cache.json") or {}
+    PXC = _load("_pit_px_cache.json") or {}
+    PXD = {}
+    sd = os.path.join(DATA, "sd")
+    if os.path.isdir(sd):
+        for fn in os.listdir(sd):
+            if not fn.endswith(".json"):
+                continue
+            try:
+                j = json.load(io.open(os.path.join(sd, fn), encoding="utf-8"))
+            except Exception:
+                continue
+            PXD[j.get("t") or fn[:-5]] = j.get("pxd") or []
+
+    def _last_at(ser, d):
+        """{날짜: 값} 에서 d 이하의 마지막 관측. 잔고·가격 둘 다 시점을 집으면 된다."""
+        if not isinstance(ser, dict):
+            return None
+        best = None
+        for k, v in ser.items():
+            if k <= d and v is not None and (best is None or k > best[0]):
+                best = (k, v)
+        return best[1] if best else None
+
+    def shares_at(t, d):
+        return TB.asof_fund((FU.get(t) or {}).get("sh"), d) or _last_at(SHC.get(t), d)
+
+    def close_at(t, d, i):
+        p = PXD.get(t)
+        if p and i < len(p) and p[i] is not None:
+            return p[i]
+        return _last_at(PXC.get(t), d)
+
+    return shares_at, close_at
+
+
 def px_months():
     """티커 → 가격이 실제로 있는 달의 집합.
 
@@ -118,6 +169,64 @@ def main():
         if t not in meta:
             meta[t] = ["", s or ""]
 
+    # ── 추정 비중 ────────────────────────────────────────────────────────
+    # 🚨 공식 비중이 아니다. S&P·나스닥은 **유동주식 조정**(float-adjusted) 시총으로
+    #   비중을 매기는데 여기 시총은 발행주식수 × 종가다. 내부자·정부·모회사 지분이 큰
+    #   종목은 실제보다 무겁게 잡히고, 다중 클래스(GOOG/GOOGL 등)는 공식 지수가 합산하는
+    #   것을 여기서는 따로 센다. 화면이 그 사실을 반드시 같이 적는다.
+    # ⚠ 그래도 싣는 이유: 알파벳순 500줄은 눈으로 읽을 수 없고, **상위 종목의 순서**는
+    #   유동주식 조정과 무관하게 대체로 맞는다. 못 하는 것을 하는 척하지 않되,
+    #   할 수 있는 근사는 이름을 붙여서 낸다.
+    mend = month_end_index(dates)
+    sh_at, px_at = mcap_tools()
+
+    # 🚨 이중 클래스 — 같은 CIK 를 쓰는 티커 묶음(FOX/FOXA · GOOG/GOOGL · NWS/NWSA).
+    #   SEC 의 주식수(sh)는 **회사 전체**라 클래스마다 그 값을 쓰면 시총을 두 번 센다.
+    #   실측으로 알파벳이 GOOGL 5.60% + GOOG 5.58% = 11.18% 로 잡혔다(실제 지수는 합산 ~4%).
+    #   → 묶음의 시총을 **한 번만** 세고, 대표 클래스에 몰아 준 뒤 나머지는 0 으로 둔다.
+    #     화면은 묶음을 한 줄로 합쳐 적는다. 클래스별로 쪼개는 것은 클래스별 주식수가
+    #     있어야 하는데 SEC 원자료가 그걸 안 준다 — 못 하는 것을 지어내지 않는다.
+    _cik = (_load("cik_map.json") or {}).get("co") or {}
+    _bycik = {}
+    for _t, _k in _cik.items():
+        _bycik.setdefault(_k, []).append(_t)
+    DUAL = {}                      # 티커 → 대표 티커(묶음의 첫 티커)
+    for _k, _ts in _bycik.items():
+        if len(_ts) > 1:
+            _ts = sorted(_ts)
+            for _t in _ts:
+                DUAL[_t] = _ts[0]
+
+    def wbp(tickers, m):
+        """그달 멤버의 비중(bp, 만분율). 시총을 모르는 종목은 0 이고 분모에서도 빠진다.
+
+        🚨 분모를 '전체 멤버' 로 두면 자료가 없는 종목만큼 비중 합이 100% 에 못 미쳐
+          상위 종목이 실제보다 가볍게 보인다. **잰 것들 안에서의 비중**으로 두고,
+          몇 %를 못 쟀는지는 커버리지가 따로 말한다.
+        """
+        i = mend.get(m)
+        if i is None or sh_at is None:
+            return None
+        mc = {}
+        d = dates[i]
+        _done = set()
+        for t in tickers:
+            rep = DUAL.get(t)
+            if rep is not None:
+                if rep in _done:
+                    continue           # 같은 회사를 이미 셌다
+                _done.add(rep)
+            s = sh_at(t, d)
+            p = px_at(t, d, i)
+            if s and p and s > 0 and p > 0:
+                mc[rep if rep is not None else t] = s * p
+        tot = sum(mc.values())
+        if not tot:
+            return None
+        # 산출물 크기를 위해 만분율 정수로 둔다(0.01% 단위). 147개월 × 600종이라
+        # 소수 문자열로 실으면 파일이 세 배가 된다.
+        return [int(round(10000.0 * mc.get(t, 0) / tot)) for t in tickers]
+
     out = {}
     seen = set()
     for key, label, wiki in IDX:
@@ -129,6 +238,12 @@ def main():
             cur = sorted(cur)
             seen.update(cur)
             rec = {"n": len(cur), "rev": hist["months"][m].get(key + "_rev")}
+            # ⚠ w 는 **sorted(cur) 와 같은 순서**다. 화면이 명단을 base+증감으로 되짚어
+            #   만들고 같은 정렬을 쓰므로 짝이 맞는다. 길이가 어긋나면 화면이 비중을
+            #   버리게 해 둔다 — 어긋난 채 그리면 종목마다 남의 비중을 달게 된다.
+            _w = wbp(cur, m)
+            if _w:
+                rec["w"] = _w
             if prev is None:
                 base = {"month": m, "t": cur}
             else:
@@ -156,6 +271,8 @@ def main():
         "meta": {t: meta[t] for t in sorted(seen) if t in meta},
         "n_seen": len(seen),
         "n_nometa": n_nometa,
+        # 이중 클래스 묶음 — 화면이 한 줄로 합쳐 적는다(비중은 대표 티커에 몰려 있다).
+        "dual": {t: r for t, r in DUAL.items() if t in seen},
         "note": "매월말 지수 편입 종목과, 그 시점 가격 자료를 몇 %나 갖고 있는지. "
                 "멤버십은 위키백과 지수 목록 문서의 과거 리비전(data/index_history.json)이고 "
                 "달마다 리비전 번호를 같이 실어 원문을 확인할 수 있게 했다.",

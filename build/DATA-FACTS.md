@@ -658,8 +658,15 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 85, "narrow_rules": 22, "incr5_rules": 0}
+ "xsec_rules": 85, "narrow_rules": 10, "incr5_rules": 0}
 -->
+
+⚠ 2026-08-13 갱신(5). `narrow_rules` 22 → 10. **백테스트 길이 상한 10년**(사용자 결정)을
+전 전략에 걸면서 측정 구간이 2016-08 부터가 됐다. '평소보다 얇은 달'은 앞구간에 몰려 있었고
+— 후보 풀 커버리지가 2009년에 82.2%, 2016년에 92.5% 였다 — 그 구간이 창 밖으로 나가면서
+절반 넘게 사라졌다. 규칙이 좋아진 것이 아니라 **얇던 구간을 안 보게 된 것**이다.
+⚠ 이 상한은 네 파일이 각자 들고 있다(tech_backtest.MAX_YEARS · asset_backtest.MAX_YEARS ·
+strategy_metrics.MAX_MONTHS · guru_clone). 격자가 거래일/월말로 갈려 한 곳에 못 모았다.
 
 ⚠ 2026-08-13 갱신(4). 95 → 85. **은퇴 규칙 10종이 목록에 되살아나 있던 것을 걷었다.**
 바스켓 전수 시험이 만든 변형(`x-roe~n20`)은 `sid not in RETIRED` 검사를 통과했고, 승자 선택이

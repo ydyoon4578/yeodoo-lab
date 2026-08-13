@@ -54,7 +54,18 @@ NSWEEP_GRID = (10, 20, 30)   # 바스켓 크기 전수 시험 격자 — PREREG-
 #   sid 를 다루는 자리는 반드시 이 표식으로 밑동을 먼저 구할 것.
 _NSW_MARK_B = "~n"
 TOPN = 10          # 횡단면 전략이 들고 갈 종목 수 — 50이면 '고른' 게 아니라 사실상 지수다
-MIN_HIST = 260     # 신호 계산에 필요한 최소 과거 길이(약 1년)
+WARM0 = 260        # 신호 계산에 필요한 최소 과거 길이(약 1년). **측정 시작점이 아니다.**
+MIN_HIST = 260     # 성과를 재기 시작하는 지점. run() 이 MAX_YEARS 로 다시 정한다(아래).
+# 🚨 백테스트 길이 상한 — 사용자 결정 2026-08-13.
+#   "전략은 최근일자부터 최대 10년. 어떤건 14.4년, 16.6년 등 더 길게 비교한 것도 있더라."
+#   실제로 창이 6.1~16.5년으로 흩어져 있었고, 창이 다르면 전략끼리 비교가 성립하지 않는다.
+#   그리고 앞구간일수록 표본이 생존자 쪽으로 기운다 — 오늘의 518종 중 그 해 말에 가격이
+#   있는 것이 2009년 426종(82.2%)인데 2016년은 479종(92.5%)이다(실측).
+#   ⚠ 대가: 관측이 16.5년 → 10년으로 준다. 2011 유럽위기·2015~16 중국/유가·2018Q4 가
+#     창 밖으로 나간다. 2020 코로나와 2022 약세장은 안에 남는다.
+#   ⚠ 이 상한은 **성과 측정 구간**만 자른다. 신호 계산은 그 앞의 가격을 그대로 쓴다 —
+#     안 그러면 252일·5년 창을 쓰는 규칙이 창 초반에 신호를 못 만든다.
+MAX_YEARS = 10
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
                            # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
                            # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
@@ -4918,6 +4929,15 @@ def run():
     _RAT = load_ratings()     # 티커 → 투자의견 이력. 없으면 빈 dict 이고 revdrift 3종만 후보 0
     print("투자의견 이력 %d종 · %d건" % (len(_RAT), sum(len(v[0]) for v in _RAT.values())))
     n = len(dates)
+    # 🚨 측정 시작점을 여기서 정한다(사용자 결정 2026-08-13 · 위 MAX_YEARS 주석).
+    #   MIN_HIST 는 이 파일에서 35곳이 '성과를 재기 시작하는 지점'으로 읽는다. 값 하나를
+    #   올리면 전 전략·전 지표에 한 번에 걸린다 — 35곳을 손으로 고치면 반드시 빠뜨린다.
+    #   ⚠ 신호 쪽은 안 건드린다. xsec_score_at 등은 인덱스 i 에서 전체 배열을 되돌아보므로
+    #     창 앞의 가격을 그대로 쓴다. 룩백 하한이 필요한 자리는 WARM0 를 쓴다.
+    global MIN_HIST
+    MIN_HIST = max(WARM0, n - int(MAX_YEARS * 252))
+    print("  측정 구간 상한 %d년 — %s 부터 %d거래일 (격자는 %s 부터 그대로 쓴다)"
+          % (MAX_YEARS, dates[MIN_HIST], n - MIN_HIST, dates[0]))
     tickers = sorted(px)
     R = daily_rets(px)
     # 거시 요인 일간 변화 — 전 종목이 공유하는 계열이라 한 번만 만든다(6차 배치).
@@ -5181,7 +5201,10 @@ def run():
                 elif sid == "t-gapcap":
                     gap = ixgap[i]
                     if gap is not None:
-                        hist = sorted(g for g in ixgap[max(MIN_HIST, i - 252):i] if g is not None)
+                        # 룩백 하한은 WARM0 다. MIN_HIST(측정 시작)를 쓰면 창을 10년으로
+                        # 자른 뒤 구간 초반의 분위 계산이 며칠짜리 표본으로 줄어든다 —
+                        # 그 가격은 실제로 있으므로 안 쓸 이유가 없다.
+                        hist = sorted(g for g in ixgap[max(WARM0, i - 252):i] if g is not None)
                         cap = hist[int(len(hist) * 0.9)] if hist else None
                         w[i] = 0.0 if gap <= 0 else (0.5 if (cap is not None and gap > cap) else 1.0)
                 elif sid == "t-sentgate":

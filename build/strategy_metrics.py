@@ -46,6 +46,10 @@ CASHLIKE_VOL_PCT = 1.0           # 연변동성이 이 미만이면 회귀 기�
 MIN_CAPTURE_MONTHS = 6           # 상승/하락 포착률 최소 표본
 MIN_CAPTURE_DENOM = 1e-4         # 벤치 기하평균 |값|이 이 미만이면 포착률 분모 붕괴 → 생략
 N_REQ_CAP_MONTHS = 1200          # 필요 표본이 100년을 넘으면 숫자 대신 '실질적으로 판정 불가'
+# 🚨 백테스트 길이 상한 — 사용자 결정 2026-08-13. tech_backtest.MAX_YEARS(10) 와 같은 값이고,
+#   이 원장만 격자가 월말이라 개월 수로 들고 있다. 세 파일이 같은 값을 따로 갖는다 —
+#   바꿀 때는 tech_backtest.MAX_YEARS · asset_backtest.MAX_YEARS · 여기 셋 다.
+MAX_MONTHS = 10 * 12
 
 # ── 위기 구간 (월 경계. from = 진입 기준점이 되는 직전 월말, to = 구간 종료월) ──────
 #    성격이 '위험방어·타이밍'인 전략은 CAGR이 아니라 여기서 판단해야 한다.
@@ -505,11 +509,22 @@ def compute_strategy(bt, rf_m):
     cut = complete_upto(dates, bt.get("end"))
     if cut < 2: raise ValueError("완결 월이 너무 적다")
     dropped = dates[cut + 1] if cut < len(dates) - 1 else None
-    mo = dates[:cut + 1]
+    # 🚨 백테스트 길이 상한 10년 — 사용자 결정 2026-08-13("모든 전략 다 적용해 남김없이").
+    #   tech_backtest.MAX_YEARS · asset_backtest.MAX_YEARS 와 같은 값이다. 이 원장은 격자가
+    #   **월말**이라 개월 수로 자른다. 실측으로 여기 넷이 10년을 넘겼다 —
+    #   섹터 모멘텀 26.6년 · 200일선 타이밍 19.7년 · RP 변동성창 19.5년 · 크로스에셋 RP 16.5년.
+    #   ⚠ 전략·대조군·보조 대조군과 **차트를 같은 자리에서** 자른다. 지표만 자르면 26년짜리
+    #     곡선 옆에 10년짜리 샤프가 놓여 한 화면이 두 구간을 말하게 된다.
+    #   ⚠ 대가: 이 넷은 배포·아카이브 원장이라 긴 기록 자체가 근거였다. 그 근거가 짧아진다.
+    lo = max(0, (cut + 1) - MAX_MONTHS)
+    mo = dates[lo:cut + 1]
 
-    S = series_block(nav[:cut + 1], mo, rf_m, "전략")
-    B = series_block(bt["bench"][:cut + 1], mo, rf_m, bt.get("bench_label") or "벤치")
-    B2 = series_block(bt["bench2"][:cut + 1], mo, rf_m, bt.get("bench2_label")) if bt.get("bench2") else None
+    def _cut(seq):
+        return seq[lo:cut + 1]
+
+    S = series_block(_cut(nav), mo, rf_m, "전략")
+    B = series_block(_cut(bt["bench"]), mo, rf_m, bt.get("bench_label") or "벤치")
+    B2 = series_block(_cut(bt["bench2"]), mo, rf_m, bt.get("bench2_label")) if bt.get("bench2") else None
 
     vs = vs_block(S, B)
     vs2 = vs_block(S, B2) if B2 else None
@@ -553,7 +568,7 @@ def compute_strategy(bt, rf_m):
         # 전 구간 N으로는 표본 경고가 안 뜨지만 유효 N은 짧을 수 있다 — 경고 판정을 유효 N으로 한다
         m["basis"]["effective_n_months"] = m["overlap"]["effective_n_months"]
         if m["overlap"]["effective_n_months"] < 60: m["basis"]["sample_warning"] = True
-    return m, cut, dropped
+    return m, cut, dropped, lo
 
 
 def main():
@@ -575,7 +590,19 @@ def main():
 
     rows, pend = [], []
     for name, b in S.items():
-        m, cut, dropped = compute_strategy(b, rf_m)
+        m, cut, dropped, lo = compute_strategy(b, rf_m)
+        # 🚨 저장 계열도 같은 자리에서 자른다. 지표만 자르면 26년짜리 곡선 옆에 10년짜리
+        #   샤프가 놓여 한 화면이 두 구간을 말하게 된다(차트는 이 dates/nav 를 그대로 그린다).
+        if lo:
+            for _k in ("dates", "nav", "bench", "bench2"):
+                if isinstance(b.get(_k), list):
+                    b[_k] = b[_k][lo:]
+            # 🚨 dates 는 **월 라벨**("2016-07")인데 start 는 완전 날짜다("2016-01-04").
+            #   그대로 옮기면 검사기가 "날짜 파싱 불가"로 막는다(실측 8건). 원본 관례가
+            #   '첫 달의 시작일'이므로 같은 관례로 만든다.
+            _d0 = b["dates"][0]
+            b["start"] = (_d0 + "-01") if len(_d0) == 7 else _d0
+            b["capped_years"] = MAX_MONTHS // 12
         b["metrics"] = m
         # 낙폭 곡선을 지표와 **같은 계열**로 통일한다(구 dd는 일별 낙폭의 월말 샘플이라 카드값과 어긋났다)
         b["dd"] = [round(x * 100, 1) for x in dd_series(b["nav"])]
@@ -623,7 +650,15 @@ def main():
                               ensure_ascii=False, sort_keys=True)
         arows, apend = [], []
         for sid, b in (ab.get("strategies") or {}).items():
-            m, cut, dropped = compute_strategy(b, rf_m)
+            m, cut, dropped, lo = compute_strategy(b, rf_m)
+            # 기각 재검 원장도 같은 상한을 받는다 — 한 화면에 배포 원장과 나란히 놓인다.
+            if lo:
+                for _k in ("dates", "nav", "bench", "bench2"):
+                    if isinstance(b.get(_k), list):
+                        b[_k] = b[_k][lo:]
+                _d0 = b["dates"][0]
+                b["start"] = (_d0 + "-01") if len(_d0) == 7 else _d0
+                b["capped_years"] = MAX_MONTHS // 12
             b["metrics"] = m
             b["dd"] = [round(x * 100, 1) for x in dd_series(b["nav"])]
             b["dd_b"] = [round(x * 100, 1) for x in dd_series(b["bench"])]
