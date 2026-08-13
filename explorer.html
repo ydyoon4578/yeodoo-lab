@@ -1881,8 +1881,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var _a=a||{};
     var al=_a.alpha||{}, cp=_a.capture||{}, rl=_a.roll||{}, rg=_a.regime||{};
     var h='';
+    // 🚨 판정은 **배당 보정 후**(alpha_adj) 값으로 한다 — 대조군이 배당 없는 PR 지수라
+    //   원값에 연 2%p 가 공짜로 얹혀 있다. 보정 없이 문턱을 두면 배당만 받아도 '알파 확인'이
+    //   되고, 실측으로 66종 중 48종이 그랬다. 화면은 **원값을 크게, 보정값을 옆에** 적는다 —
+    //   원값은 회귀가 낸 값이라 지우면 안 되고, 판정 근거는 보정값이라 숨기면 안 된다.
     h+=cell('alpha','CAPM 알파 (연율)', (al.alpha!=null?((al.alpha>0?'+':'')+f(al.alpha)+'%'):null),
-            (al.t!=null?('t '+f(al.t)+' · β '+f(al.beta,3)):''), al.v, ['알파 확인']);
+            ((al.alpha_adj!=null?('배당 보정 '+(al.alpha_adj>0?'+':'')+f(al.alpha_adj)+'%p · '):'')
+             +(al.t!=null?('t '+f(al.t)+' · β '+f(al.beta,3)):'')), al.v, ['알파 확인']);
     h+=cell('capture','하락 포착률', f(cp.down,2),
             (cp.up!=null?('상승 포착 '+f(cp.up,2)+' · 하락일 '+cp.n_dn+'일'):''), cp.v, ['하락 방어']);
     h+=cell('roll','12개월 초과 승률', (rl.win12!=null?f(rl.win12,1)+'%':null),
