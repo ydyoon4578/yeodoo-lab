@@ -327,7 +327,12 @@ def _regime_stats(rets, months, min_n=8):
 #   격자라 최대 ±7일이 어긋나는데, 그 사실을 안 적으면 화면이 없는 정밀도를 말하게 된다.
 # ⚠ 전략마다 계열이 끝나는 날이 다르다(171종 2026-08-12 · 11종은 6~8주 먼저). 그래서
 #   end 도 같이 싣는다 — 나란히 세우면 안 되는 줄이 어느 것인지 화면이 알아야 한다.
-TR_HOR = [("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
+# ⚠ home_perf.HZ 와 **같은 목록**이어야 한다 — 홈의 두 블록이 같은 기간 버튼을 쓴다.
+TR_HOR = [("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
+# 🚨 월간 격자(배포 원장 8종 + 슬리브 3종)에서는 이보다 짧은 구간을 만들지 않는다.
+#   한 점이 한 달이라 "최근 1주"를 물으면 전달 말 대비가 나온다 — 1주가 아니라 한 달이고,
+#   그 줄이 주간 격자 전략들과 같은 열에 앉으면 순위가 통째로 거짓이 된다.
+MONTHLY_MIN_DAYS = 28
 
 
 def trails_of(dates, nav):
@@ -352,10 +357,27 @@ def trails_of(dates, nav):
     tgts.append(("YTD", "%d-12-31" % (d1.year - 1)))
     _cut = 7 if monthly else 10
     for k, tgt in tgts:
+        if monthly and k != "YTD" and dict(TR_HOR).get(k, 999) < MONTHLY_MIN_DAYS:
+            continue                      # 월간 격자에 1주 칸을 만들지 않는다(위 주석)
         ks = [i for i, d in enumerate(dates) if str(d)[:_cut] <= tgt[:_cut]]
         if not ks:
             continue                      # 구간이 그만큼 안 된다 — 0 으로 채우지 않는다
         i0 = ks[-1]
+        # 🚨 **가장 가까운 관측**을 쓴다. '목표일 이하의 마지막' 만 보면 주간 격자에서
+        #   기준일이 최대 한 주 더 뒤로 밀린다 — 실측으로 '1주' 칸이 12일(07-31~08-12)을
+        #   재고 있었다. 라벨이 1주인데 12일을 재면 그것이 거짓이다.
+        #   ⚠ 미래참조가 아니다. 뒤 후보(i0+1)도 기준일이지 수익 끝점이 아니고, 언제나
+        #     오늘보다 과거다. 창이 짧아질 뿐 없는 정보를 쓰지 않는다.
+        if k != "YTD" and i0 + 1 < len(dates) - 1:
+            _t = _dt.date.fromisoformat(tgt) if not monthly else None
+            if _t is not None:
+                try:
+                    _a = abs((_dt.date.fromisoformat(str(dates[i0])[:10]) - _t).days)
+                    _b = abs((_dt.date.fromisoformat(str(dates[i0 + 1])[:10]) - _t).days)
+                    if _b < _a:
+                        i0 = i0 + 1
+                except Exception:
+                    pass
         if not nav[i0]:
             continue
         out[k] = round((last / nav[i0] - 1) * 100, 2)
