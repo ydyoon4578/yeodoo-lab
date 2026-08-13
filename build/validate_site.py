@@ -586,6 +586,14 @@ if pool:
             if isinstance(_v1, str) and (re.search(r"</?[a-zA-Z][^>]*>", _v1)
                                          or re.search(r"\*\*[^*]+\*\*", _v1)):
                 errors.append(f"signal_lab '{_n1}'.{_k1}: 태그/마크다운 표기 — 화면에 기호가 그대로 찍힌다")
+            # 🚨 `%%` 도 같은 계열이다 — 파이썬 % 서식의 이스케이프인데, 그 문자열에
+            #   % 연산자가 안 붙으면 **`5%%` 가 화면에 그대로 찍힌다.** 실측으로
+            #   protocol 에 '상위 5%%' 가 그 상태로 나가 있었고, 위 두 정규식은 이걸
+            #   못 잡는다(2026-08-14 CI 가 ** 를 잡은 김에 옆에서 발견했다).
+            if isinstance(_v1, str) and "%%" in _v1:
+                errors.append(f"signal_lab '{_n1}'.{_k1}: '%%' 가 그대로 남았다 — % 서식의 "
+                              f"이스케이프인데 이 문자열에는 % 연산자가 안 붙는다. "
+                              f"화면에 '%%' 로 찍힌다")
     except FileNotFoundError:
         pass
 
