@@ -8,7 +8,7 @@
  },
  "t_crit": {
   "tech": 2.0,
-  "asset": 2.0,
+  "asset": null,
   "pit": 3.4,
   "pit_lab": 3.49
  },
@@ -55,7 +55,7 @@
    "월말 리밸런스·무비용(gross). 이 랩의 기본 규약 그대로다.",
    "대조군은 전략마다 다르다 — 절대수익형에 지수를 붙이면 '벤치 부정합' 기각이 되는데 그건 전략이 아니라 비교의 잘못이다(아카이브에 그 사고가 있다).",
    "구간은 전략마다 다르다. 쓰는 ETF의 상장일에 묶이기 때문이며, 그건 데이터 결손이 아니라 그 전략의 실제 제약이다.",
-   "🚨 다중검정 보정을 껐다(사용자 결정 2026-08-12). 임계는 관례값 |t|≥2.0 이고, 전략 71개를 같은 표본에서 돌렸으므로 영가설에서도 약 4종이 그 임계를 넘는다 — '통과 후보'는 다중검정을 넘었다는 뜻이 아니다(본페로니 임계는 3.39 였다).",
+   "🚨 t 문턱을 전부 없앴다(사용자 결정 2026-08-13). 그래서 이 랩은 수익 축에 **등급을 매기지 않는다** — 전부 '측정만'이다. t·Δ샤프·알파는 그대로 재서 싣되, 그 수치가 어떤 선을 넘었다고 말하지 않는다. 관문이 없는데 배지를 달면 화면이 검정하지 않은 것을 검정한 척하게 되기 때문이다(종목 랩이 같은 날 같은 결론에 도달했고 이제 두 랩이 한 관례를 쓴다). 참고로 전략 71개를 같은 표본에서 돌렸으므로 본페로니 임계였다면 |t|≥3.39 였고, 관례값 |t|≥2.0 을 쓰면 영가설에서도 약 4종이 그것을 넘는다 — 그 수를 여기 적어 두는 것으로 다중검정을 포기한 대가를 대신한다.",
    "대조군이 현금성(연변동성 2%% 미만)인 전략은 샤프 차이가 허수가 된다 — 분모가 0에 가까워 작은 수익 차이가 몇 단위로 증폭된다. 그런 행은 Δ샤프를 판정에 쓰지 않고 t만 보며, 화면에 '대조군 현금성'으로 표시한다."
   ]
  },
@@ -437,14 +437,10 @@
   },
   "by_where_verdict": {
    "화면에 있음": {
-    "측정만": 112,
-    "통과": 1,
-    "구별 불가": 41,
-    "열위": 20
+    "측정만": 174
    },
    "화면에서 뺌": {
-    "구별 불가": 6,
-    "열위": 3
+    "측정만": 9
    },
    "퇴출": {
     "퇴출": 13
@@ -1361,7 +1357,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "통과",
+    "verdict": "측정만",
     "name": "디지털자산 변동성 타깃 위성",
     "sid": "crypto-sat",
     "lab": "자산배분"
@@ -1369,7 +1365,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "13F 컨빅션 복제 (상위 10종목)",
     "sid": "guru-clone",
     "lab": "자산배분"
@@ -1377,7 +1373,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "인플레이션 국면 실물자산 배분",
     "sid": "infl-real",
     "lab": "자산배분"
@@ -1385,7 +1381,7 @@
    {
     "where": "화면에서 뺌",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "퀄리티 틸트 (QUAL, ETF 프록시)",
     "sid": "quality-tilt",
     "lab": "자산배분"
@@ -1393,7 +1389,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "4국면 섹터 로테이션 (Fidelity 프레임워크)",
     "sid": "a7-fidelity",
     "lab": "자산배분"
@@ -1401,7 +1397,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "핼러윈 섹터 (11~4월 경기민감)",
     "sid": "sec-halloween",
     "lab": "자산배분"
@@ -1409,7 +1405,7 @@
    {
     "where": "화면에서 뺌",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "섹터 리스크패리티",
     "sid": "sector-rp",
     "lab": "자산배분"
@@ -1417,7 +1413,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "통화조건 섹터 로테이션 (Conover 2008)",
     "sid": "a7-conover",
     "lab": "자산배분"
@@ -1425,7 +1421,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "절대 모멘텀 (SPY 12-1)",
     "sid": "abs-mom",
     "lab": "자산배분"
@@ -1433,7 +1429,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "52주 고점 근접 섹터 상위 3",
     "sid": "sec-52wh",
     "lab": "자산배분"
@@ -1441,7 +1437,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "VIX 기간구조 신호 (VIX/VIX3M)",
     "sid": "vix-ts",
     "lab": "자산배분"
@@ -1449,7 +1445,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "대담형 자산배분 BAA (공격형 · 1종 집중)",
     "sid": "taa-baa-a",
     "lab": "자산배분"
@@ -1457,7 +1453,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "섹터 듀얼 모멘텀 상위 3",
     "sid": "sec-dual",
     "lab": "자산배분"
@@ -1465,7 +1461,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "초과채권프리미엄(EBP) 리스크선호 게이트",
     "sid": "ebp-gate",
     "lab": "자산배분"
@@ -1473,7 +1469,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
     "sid": "rel-mom3",
     "lab": "자산배분"
@@ -1481,7 +1477,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "기간스프레드 방향 섹터",
     "sid": "sec-term",
     "lab": "자산배분"
@@ -1489,7 +1485,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
     "sid": "sec-tsmom",
     "lab": "자산배분"
@@ -1497,7 +1493,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "위험 게이트 + 국면 섹터 (A7b)",
     "sid": "a7b-gate-sector",
     "lab": "자산배분"
@@ -1505,15 +1501,23 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "저변동 섹터 상위 3",
     "sid": "sec-lowvol",
     "lab": "자산배분"
    },
    {
     "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "측정만",
+    "name": "국면 연동 팩터 로테이션 (A2)",
+    "sid": "a2-factor-rot",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "경계형 자산배분 VAA-G4 (Keller 2017)",
     "sid": "taa-vaa-g4",
     "lab": "자산배분"
@@ -1521,23 +1525,15 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "레짐 조건부 슬리브 스위칭",
     "sid": "regime-switch",
     "lab": "자산배분"
    },
    {
     "where": "화면에 있음",
-    "role": "배분기",
-    "verdict": "열위",
-    "name": "국면 연동 팩터 로테이션 (A2)",
-    "sid": "a2-factor-rot",
-    "lab": "자산배분"
-   },
-   {
-    "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "실업률 추세 게이트 (Sahm)",
     "sid": "unrate-trend",
     "lab": "자산배분"
@@ -1545,7 +1541,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "골든크로스 (50/200)",
     "sid": "golden-cross",
     "lab": "자산배분"
@@ -1553,7 +1549,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "200일선 + 확인 지연 5일",
     "sid": "sma200-confirm",
     "lab": "자산배분"
@@ -1561,7 +1557,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "200일 이동평균 (Faber)",
     "sid": "sma200",
     "lab": "자산배분"
@@ -1569,7 +1565,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "수익률곡선 역전 게이트",
     "sid": "curve-inv",
     "lab": "자산배분"
@@ -1577,7 +1573,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "타이밍 3규칙 다수결",
     "sid": "timing-ensemble",
     "lab": "자산배분"
@@ -1585,7 +1581,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "이동평균 기간 앙상블 (100·150·200·250)",
     "sid": "sma-grid",
     "lab": "자산배분"
@@ -1593,7 +1589,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "단기 반전 섹터 하위 3",
     "sid": "sec-rev1m",
     "lab": "자산배분"
@@ -1601,7 +1597,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "크로스에셋 RP — 추세 게이트 6개월",
     "sid": "rp-horizon",
     "lab": "자산배분"
@@ -1609,7 +1605,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "섹터별 200일선 게이트",
     "sid": "sec-sma200",
     "lab": "자산배분"
@@ -1617,7 +1613,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "FOMC 사이클 짝수 주",
     "sid": "fomc-even",
     "lab": "자산배분"
@@ -1625,7 +1621,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
     "sid": "st-hurst",
     "lab": "자산배분"
@@ -1633,7 +1629,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "방어형 자산배분 DAA (카나리아 2종)",
     "sid": "taa-daa-g6",
     "lab": "자산배분"
@@ -1641,7 +1637,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "대담형 자산배분 BAA (균형형 · 6종 분산)",
     "sid": "taa-baa-b",
     "lab": "자산배분"
@@ -1649,7 +1645,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "상품 커브 캐리 (GLD/DBC)",
     "sid": "curve-carry",
     "lab": "자산배분"
@@ -1657,7 +1653,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "시장 저상관 섹터 3",
     "sid": "sec-lowcorr",
     "lab": "자산배분"
@@ -1665,7 +1661,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "VIX 수준 게이트 (25)",
     "sid": "vix-level",
     "lab": "자산배분"
@@ -1673,7 +1669,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "변동성 국면 섹터",
     "sid": "sec-vix",
     "lab": "자산배분"
@@ -1681,7 +1677,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "달러 축 — 미국 vs 해외 선진",
     "sid": "usd-us-intl",
     "lab": "자산배분"
@@ -1689,7 +1685,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "신용 레짐 게이트 (HYG/LQD 프록시)",
     "sid": "credit-gate",
     "lab": "자산배분"
@@ -1697,7 +1693,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "글로벌 듀얼 모멘텀 (GEM)",
     "sid": "gem",
     "lab": "자산배분"
@@ -1705,7 +1701,7 @@
    {
     "where": "화면에서 뺌",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
     "sid": "overnight",
     "lab": "자산배분"
@@ -1713,7 +1709,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "매크로 레짐 안전자산 로테이션",
     "sid": "macro-rot",
     "lab": "자산배분"
@@ -1721,7 +1717,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "크로스에셋 RP — 분기 리밸런스",
     "sid": "rp-cadence",
     "lab": "자산배분"
@@ -1729,7 +1725,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
     "sid": "st-minvar-lw",
     "lab": "자산배분"
@@ -1737,7 +1733,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "최소 CVaR 최적화 (4자산)",
     "sid": "min-cvar",
     "lab": "자산배분"
@@ -1745,7 +1741,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "위험균형 × 개별 추세 게이트 (2단)",
     "sid": "st-rp-trend",
     "lab": "자산배분"
@@ -1753,7 +1749,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "분산비(Lo-MacKinlay) 국면 스위치",
     "sid": "st-vratio",
     "lab": "자산배분"
@@ -1761,7 +1757,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "계절성 (11~4월만 보유)",
     "sid": "seasonal",
     "lab": "자산배분"
@@ -1769,7 +1765,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "OU 평균회귀 z-score 하위 2",
     "sid": "st-ou",
     "lab": "자산배분"
@@ -1777,7 +1773,7 @@
    {
     "where": "화면에서 뺌",
     "role": "위험방어",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "변동성 기간구조 롤 (VXZ 보유)",
     "sid": "vol-roll",
     "lab": "자산배분"
@@ -1785,7 +1781,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "시계열 모멘텀 — 멀티에셋 (CTA)",
     "sid": "tsmom-multi",
     "lab": "자산배분"
@@ -1793,7 +1789,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "능형회귀 1개월 예측 (SPY 롱/현금)",
     "sid": "ml-ridge",
     "lab": "자산배분"
@@ -1801,7 +1797,7 @@
    {
     "where": "화면에서 뺌",
     "role": "위험방어",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "테일 리스크 헤지 (SPY 95% + VIXY 5%)",
     "sid": "tail-hedge",
     "lab": "자산배분"
@@ -1809,7 +1805,7 @@
    {
     "where": "화면에서 뺌",
     "role": "수익엔진",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "오버나이트 보유 (QQQ 종가→시가)",
     "sid": "overnight-ndx",
     "lab": "자산배분"
@@ -1817,7 +1813,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "실질금리 레짐 오버레이 (DFII10)",
     "sid": "real-yield",
     "lab": "자산배분"
@@ -1825,7 +1821,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "계층적 리스크패리티 결합가중 (HRP Sleeve)",
     "sid": "hrp-sleeve",
     "lab": "자산배분"
@@ -1833,7 +1829,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "계층적 리스크패리티 배분 (역분산판)",
     "sid": "hrp-alloc",
     "lab": "자산배분"
@@ -1841,7 +1837,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "매니지드 퓨처스 위성 배분 (DBMF 20%)",
     "sid": "mf-satellite",
     "lab": "자산배분"
@@ -1849,7 +1845,7 @@
    {
     "where": "화면에서 뺌",
     "role": "위험방어",
-    "verdict": "구별 불가",
+    "verdict": "측정만",
     "name": "크로스에셋 RP — 목표변동성 8%",
     "sid": "rp-voltarget",
     "lab": "자산배분"
@@ -1857,7 +1853,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "채권 슬리브 신용 게이트",
     "sid": "credit-bond-gate",
     "lab": "자산배분"
@@ -1865,7 +1861,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "월말 효과 (마지막날 −1 ~ +3)",
     "sid": "tom",
     "lab": "자산배분"
@@ -1873,7 +1869,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "채권 추세 게이트 — 4자산",
     "sid": "bond-trend",
     "lab": "자산배분"
@@ -1881,7 +1877,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "원자재 시계열 모멘텀",
     "sid": "commod-tsmom",
     "lab": "자산배분"
@@ -1889,7 +1885,7 @@
    {
     "where": "화면에서 뺌",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "변동성 위험프리미엄 숏볼 (SVXY 25%)",
     "sid": "vrp-shortvol",
     "lab": "자산배분"
@@ -1897,7 +1893,7 @@
    {
     "where": "화면에 있음",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "크로스에셋 캐리 (분배수익률 상위 4)",
     "sid": "carry",
     "lab": "자산배분"
@@ -1905,7 +1901,7 @@
    {
     "where": "화면에 있음",
     "role": "타이밍오버레이",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "옵션 만기 주간",
     "sid": "opex",
     "lab": "자산배분"
@@ -1913,7 +1909,7 @@
    {
     "where": "화면에 있음",
     "role": "배분기",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "크로스에셋 RP — 자산군 확장 (TIP·EMB·SLV)",
     "sid": "rp-extended",
     "lab": "자산배분"
@@ -1921,7 +1917,7 @@
    {
     "where": "화면에서 뺌",
     "role": "수익엔진",
-    "verdict": "열위",
+    "verdict": "측정만",
     "name": "합병차익거래 (MNA ETF)",
     "sid": "merger-arb",
     "lab": "자산배분"
@@ -2382,7 +2378,7 @@
    "excess_cagr": 4.89,
    "d_sharpe": 0.239,
    "t": 4.37,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -2473,7 +2469,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "통과 후보",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -2512,7 +2508,7 @@
    "kind": null,
    "arch": "13f-best-ideas-clone",
    "rule": "분기말 13F에서 (운용사 포트폴리오 내 비중 합) × (보유 운용사 수)가 높은 10종목을 동일가중 보유. 분기말 45일 뒤부터 적용하고 분기마다 교체.",
-   "why": "'SEC 벌크 데이터셋이 분기당 180MB라 무거워서 못 한다'가 미뤄둔 이유였다. 운용사별 EDGAR 제출을 직접 읽으면 제출당 44KB라 100배 가볍다 — 그 길로 돌렸다. ⚠ 이웃 5개를 동시에 통제하면 증분 알파 t가 1.91로 게이트(2.0)에 못 미친다(이웃: 섹터 리스크패리티 · 시장 저상관 섹터 3 · 섹터 시계열 모멘텀 (절대 모멘텀 게이트) · 계층적 리스크패리티 결합가중 (HRP Sleeve) · 저변동 섹터 상위 3). 단독 t 2.39만 보면 문턱을 넘지만, 이 랩의 중복 판정 잣대는 보유 겹침이 아니라 초과수익 상관이고 이웃 하나가 아니라 다섯이다.",
+   "why": "'SEC 벌크 데이터셋이 분기당 180MB라 무거워서 못 한다'가 미뤄둔 이유였다. 운용사별 EDGAR 제출을 직접 읽으면 제출당 44KB라 100배 가볍다 — 그 길로 돌렸다.",
    "note": "제출 마감 45일 지연을 반영했다. 대조군은 같은 종목 풀 동일가중이라 '고르기'의 값어치만 남는다. 13F는 롱 미국주식만 담아 실제 포트폴리오가 아니다. 베타 1.21 (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치).",
    "repro": {
     "src": "13F 컨빅션 복제 (13F Best-Ideas Clone)",
@@ -2559,7 +2555,7 @@
    "excess_cagr": 7.31,
    "d_sharpe": 0.1,
    "t": 2.39,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -2642,7 +2638,7 @@
     "exposure_now": null,
     "note": "가장 최근 분기 13F(제출 마감 45일 지연 반영)로 고른 10종목을 동일가중 보유 중이다."
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -2735,7 +2731,7 @@
    "excess_cagr": 3.89,
    "d_sharpe": 0.227,
    "t": 1.54,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -2822,7 +2818,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -2884,9 +2880,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 14.03,
+     "s": 14.02,
      "b": 12.58,
-     "d": 1.45
+     "d": 1.44
     },
     {
      "k": "변동성",
@@ -2896,9 +2892,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.754,
+     "s": 0.753,
      "b": 0.679,
-     "d": 0.075
+     "d": 0.074
     },
     {
      "k": "최대낙폭",
@@ -2907,18 +2903,18 @@
      "d": -0.14
     }
    ],
-   "excess_cagr": 1.45,
-   "d_sharpe": 0.075,
-   "t": 1.4,
-   "t_crit": 2.0,
+   "excess_cagr": 1.44,
+   "d_sharpe": 0.074,
+   "t": 1.39,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 14.02,
+      "cagr": 14.01,
       "sharpe": 0.753,
-      "excess": 1.44,
+      "excess": 1.43,
       "t": null,
       "main": true
      }
@@ -2936,8 +2932,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 0.23,
-      "p": 0.527
+      "v": 0.22,
+      "p": 0.5275
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -2947,7 +2943,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": 0.052,
-      "p": 0.093
+      "p": 0.0938
      }
     ],
     "n_boot": 4000,
@@ -2997,7 +2993,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -3085,7 +3081,7 @@
    "excess_cagr": 2.56,
    "d_sharpe": 0.137,
    "t": 1.06,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -3204,7 +3200,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -3287,7 +3283,7 @@
    "excess_cagr": 2.08,
    "d_sharpe": 0.111,
    "t": 0.86,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -3382,7 +3378,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -3463,7 +3459,7 @@
    "excess_cagr": 1.31,
    "d_sharpe": 0.098,
    "t": 0.71,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -3582,7 +3578,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -3665,7 +3661,7 @@
    "excess_cagr": 0.78,
    "d_sharpe": 0.022,
    "t": 0.51,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -3784,7 +3780,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -3867,7 +3863,7 @@
    "excess_cagr": 2.4,
    "d_sharpe": 0.221,
    "t": 0.49,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -3954,7 +3950,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -4037,7 +4033,7 @@
    "excess_cagr": 1.68,
    "d_sharpe": 0.14,
    "t": 0.45,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4132,7 +4128,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -4213,7 +4209,7 @@
    "excess_cagr": 2.51,
    "d_sharpe": 0.261,
    "t": 0.43,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4300,7 +4296,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -4383,7 +4379,7 @@
    "excess_cagr": 3.15,
    "d_sharpe": 0.305,
    "t": 0.4,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4425,7 +4421,7 @@
     ],
     "n_boot": 4000,
     "block": 63,
-    "verdict": "구별 불가"
+    "verdict": "위험감축 확인"
    },
    "incr": {
     "one": {
@@ -4474,7 +4470,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -4550,7 +4546,7 @@
    "excess_cagr": 1.82,
    "d_sharpe": 0.15,
    "t": 0.35,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4592,7 +4588,7 @@
     ],
     "n_boot": 4000,
     "block": 63,
-    "verdict": "구별 불가"
+    "verdict": "위험감축 확인"
    },
    "incr": {
     "one": {
@@ -4645,7 +4641,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -4726,7 +4722,7 @@
    "excess_cagr": 1.84,
    "d_sharpe": 0.178,
    "t": 0.34,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4813,7 +4809,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -4896,7 +4892,7 @@
    "excess_cagr": 2.5,
    "d_sharpe": 0.156,
    "t": 0.34,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -4983,7 +4979,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -5066,7 +5062,7 @@
    "excess_cagr": 0.56,
    "d_sharpe": 0.036,
    "t": 0.18,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -5173,7 +5169,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -5249,7 +5245,7 @@
    "excess_cagr": 1.11,
    "d_sharpe": 0.124,
    "t": 0.16,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -5368,7 +5364,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -5444,7 +5440,7 @@
    "excess_cagr": 1.66,
    "d_sharpe": 0.238,
    "t": 0.14,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -5563,7 +5559,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -5646,7 +5642,7 @@
    "excess_cagr": 1.15,
    "d_sharpe": 0.155,
    "t": 0.1,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -5741,7 +5737,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -5760,6 +5756,185 @@
     ],
     "no_paper": true,
     "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
+   ]
+  },
+  {
+   "sid": "a2-factor-rot",
+   "name": "국면 연동 팩터 로테이션 (A2)",
+   "family": "자산배분",
+   "role": "배분기",
+   "kind": null,
+   "arch": "regime-factor-rotation",
+   "rule": "SPY 종가가 200일선 위이고 VIX<20 이면 MTUM50+RPG50, 200일선 위이고 VIX 20~28 이면 QUAL50+나머지 팩터 4종 각 12.5%, 200일선 아래이거나 VIX>28 이면 USMV+QUAL 을 추적 252일 베타로 포트 베타 0.80 이하가 되게 섞는다(그래도 넘으면 IEF 희석). 월말 판정·월 1회 전환. 대조군은 같은 팩터 5종 동일가중.",
+   "why": "【문헌】팩터 프리미엄이 변동성·추세 국면에 따라 순환한다는 주장. 【실측】이 랩은 '정적 팩터 대비 낙폭 축소'를 158개월 팩터 구간에서 한 번도 재본 적이 없다 — quality-tilt 한 행이 전부다. 그 한 문장만 검정한다.",
+   "note": "🚨 수익 축은 판정에 쓰지 않는다 — 프록시 13매핑이 이미 돌아 결과를 봤다(사전등록 §0). 게시 기준은 Calmar 와 팩터 5종 EW 대조군이다. ⚠ 국면2 는 158개월 중 15개월(에피소드 12·중앙 1개월)뿐이라 이 버킷 단독 주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다.",
+   "repro": {
+    "src": "국면 연동 팩터 로테이션 (Regime-Conditional Factor Rotation · A2)",
+    "cat": "결합 최적화",
+    "status": "돌림",
+    "why": "🚨 수익 축은 판정에 쓰지 않는다 — 프록시 13매핑이 이미 돌아 결과를 봤다(사전등록 §0). 게시 기준은 Calmar 와 팩터 5종 EW 대조군이다. ⚠ 국면2 는 158개월 중 15개월(에피소드 12·중앙 1개월)뿐이라 이 버킷 단독 주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다."
+   },
+   "window": {
+    "start": "2014-07-30",
+    "end": "2026-08-12",
+    "n_days": 3027,
+    "n_thin": null,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": false,
+    "bench_tickers": [
+     "^GSPC"
+    ],
+    "bench_unstable": false
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 11.99,
+     "b": 12.05,
+     "d": -0.06
+    },
+    {
+     "k": "변동성",
+     "s": 18.66,
+     "b": 17.56,
+     "d": 1.1
+    },
+    {
+     "k": "샤프",
+     "s": 0.61,
+     "b": 0.639,
+     "d": -0.029
+    },
+    {
+     "k": "최대낙폭",
+     "s": -33.36,
+     "b": -33.92,
+     "d": 0.56
+    }
+   ],
+   "excess_cagr": -0.06,
+   "d_sharpe": -0.029,
+   "t": 0.07,
+   "t_crit": null,
+   "cost": {
+    "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
+    "rows": [
+     {
+      "rt": 5.0,
+      "cagr": 11.82,
+      "sharpe": 0.601,
+      "excess": -0.23,
+      "t": null,
+      "main": true
+     }
+    ],
+    "drag": 0.17,
+    "traded": null,
+    "kill": false,
+    "sensitive": false,
+    "bench_pays": true,
+    "note": "대조군도 같은 비용을 문다(리밸런싱한다)"
+   },
+   "turnover": 3.2,
+   "exposure": null,
+   "risk": {
+    "rows": [
+     {
+      "k": "최대낙폭 개선(%p)",
+      "v": -0.16,
+      "p": 0.4495
+     },
+     {
+      "k": "꼬리위험 CVaR 개선",
+      "v": -0.218,
+      "p": 0.9365
+     },
+     {
+      "k": "낙폭조정수익 Calmar 개선",
+      "v": -0.012,
+      "p": 0.5092
+     }
+    ],
+    "n_boot": 4000,
+    "block": 63,
+    "verdict": "위험 악화"
+   },
+   "incr": {
+    "one": {
+     "vs": "섹터 듀얼 모멘텀 상위 3",
+     "corr": 0.297,
+     "alpha": 0.51,
+     "t": 0.24,
+     "beta": 0.242
+    },
+    "five": {
+     "alpha": 1.11,
+     "t": 0.52,
+     "n": 604,
+     "vs": [
+      "섹터 듀얼 모멘텀 상위 3",
+      "대담형 자산배분 BAA (공격형 · 1종 집중)",
+      "글로벌 듀얼 모멘텀 (GEM)",
+      "200일 이동평균 (Faber)",
+      "타이밍 3규칙 다수결"
+     ]
+    },
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": null,
+   "pit": {
+    "na": "자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "asset",
+    "as_of": "2026-08-12",
+    "n": null,
+    "tickers": null,
+    "names": null,
+    "weights": [
+     [
+      "MTUM",
+      50.0
+     ],
+     [
+      "RPG",
+      50.0
+     ]
+    ],
+    "exposure_now": null,
+    "note": null
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [
+     {
+      "a": "Hodges·Hogan·Peterson·Ang",
+      "y": 2017,
+      "t": "Factor timing with cross-sectional and time-series predictors",
+      "j": "Journal of Portfolio Management 44"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
@@ -5817,7 +5992,7 @@
    "excess_cagr": 1.35,
    "d_sharpe": 0.204,
    "t": 0.06,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -5859,7 +6034,7 @@
     ],
     "n_boot": 4000,
     "block": 63,
-    "verdict": "구별 불가"
+    "verdict": "위험감축 확인"
    },
    "incr": {
     "one": {
@@ -5904,7 +6079,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -5983,7 +6158,7 @@
    "excess_cagr": 0.48,
    "d_sharpe": 0.059,
    "t": 0.06,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": null,
    "turnover": null,
    "exposure": null,
@@ -6035,7 +6210,7 @@
     "exposure_now": null,
     "note": "배포 슬리브 둘의 현재 배분이다."
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -6059,185 +6234,6 @@
     "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다.",
     "위험 부트스트랩 — 이 규칙에서 산출에 실패했다",
     "비용 후 성과 — 이 규칙에서 비용 레그가 안 돌았다"
-   ]
-  },
-  {
-   "sid": "a2-factor-rot",
-   "name": "국면 연동 팩터 로테이션 (A2)",
-   "family": "자산배분",
-   "role": "배분기",
-   "kind": null,
-   "arch": "regime-factor-rotation",
-   "rule": "SPY 종가가 200일선 위이고 VIX<20 이면 MTUM50+RPG50, 200일선 위이고 VIX 20~28 이면 QUAL50+나머지 팩터 4종 각 12.5%, 200일선 아래이거나 VIX>28 이면 USMV+QUAL 을 추적 252일 베타로 포트 베타 0.80 이하가 되게 섞는다(그래도 넘으면 IEF 희석). 월말 판정·월 1회 전환. 대조군은 같은 팩터 5종 동일가중.",
-   "why": "【문헌】팩터 프리미엄이 변동성·추세 국면에 따라 순환한다는 주장. 【실측】이 랩은 '정적 팩터 대비 낙폭 축소'를 158개월 팩터 구간에서 한 번도 재본 적이 없다 — quality-tilt 한 행이 전부다. 그 한 문장만 검정한다.",
-   "note": "🚨 수익 축은 판정에 쓰지 않는다 — 프록시 13매핑이 이미 돌아 결과를 봤다(사전등록 §0). 게시 기준은 Calmar 와 팩터 5종 EW 대조군이다. ⚠ 국면2 는 158개월 중 15개월(에피소드 12·중앙 1개월)뿐이라 이 버킷 단독 주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다.",
-   "repro": {
-    "src": "국면 연동 팩터 로테이션 (Regime-Conditional Factor Rotation · A2)",
-    "cat": "결합 최적화",
-    "status": "돌림",
-    "why": "🚨 수익 축은 판정에 쓰지 않는다 — 프록시 13매핑이 이미 돌아 결과를 봤다(사전등록 §0). 게시 기준은 Calmar 와 팩터 5종 EW 대조군이다. ⚠ 국면2 는 158개월 중 15개월(에피소드 12·중앙 1개월)뿐이라 이 버킷 단독 주장은 하지 않는다. 시간의 73%가 국면1 이라 성과 대부분이 거기서 나온다."
-   },
-   "window": {
-    "start": "2014-07-30",
-    "end": "2026-08-12",
-    "n_days": 3027,
-    "n_thin": null,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": false,
-    "bench_tickers": [
-     "^GSPC"
-    ],
-    "bench_unstable": false
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 11.88,
-     "b": 12.05,
-     "d": -0.17
-    },
-    {
-     "k": "변동성",
-     "s": 18.66,
-     "b": 17.56,
-     "d": 1.1
-    },
-    {
-     "k": "샤프",
-     "s": 0.604,
-     "b": 0.639,
-     "d": -0.035
-    },
-    {
-     "k": "최대낙폭",
-     "s": -33.36,
-     "b": -33.92,
-     "d": 0.56
-    }
-   ],
-   "excess_cagr": -0.17,
-   "d_sharpe": -0.035,
-   "t": 0.02,
-   "t_crit": 2.0,
-   "cost": {
-    "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
-    "rows": [
-     {
-      "rt": 5.0,
-      "cagr": 11.7,
-      "sharpe": 0.596,
-      "excess": -0.35,
-      "t": null,
-      "main": true
-     }
-    ],
-    "drag": 0.18,
-    "traded": null,
-    "kill": false,
-    "sensitive": false,
-    "bench_pays": true,
-    "note": "대조군도 같은 비용을 문다(리밸런싱한다)"
-   },
-   "turnover": 3.2,
-   "exposure": null,
-   "risk": {
-    "rows": [
-     {
-      "k": "최대낙폭 개선(%p)",
-      "v": -0.23,
-      "p": 0.456
-     },
-     {
-      "k": "꼬리위험 CVaR 개선",
-      "v": -0.218,
-      "p": 0.9365
-     },
-     {
-      "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.016,
-      "p": 0.5272
-     }
-    ],
-    "n_boot": 4000,
-    "block": 63,
-    "verdict": "위험 악화"
-   },
-   "incr": {
-    "one": {
-     "vs": "섹터 듀얼 모멘텀 상위 3",
-     "corr": 0.297,
-     "alpha": 0.51,
-     "t": 0.24,
-     "beta": 0.242
-    },
-    "five": {
-     "alpha": 1.11,
-     "t": 0.52,
-     "n": 604,
-     "vs": [
-      "섹터 듀얼 모멘텀 상위 3",
-      "대담형 자산배분 BAA (공격형 · 1종 집중)",
-      "글로벌 듀얼 모멘텀 (GEM)",
-      "200일 이동평균 (Faber)",
-      "타이밍 3규칙 다수결"
-     ]
-    },
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": null,
-   "pit": {
-    "na": "자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
-   },
-   "pool": null,
-   "holdings": {
-    "kind": "asset",
-    "as_of": "2026-08-12",
-    "n": null,
-    "tickers": null,
-    "names": null,
-    "weights": [
-     [
-      "MTUM",
-      50.0
-     ],
-     [
-      "RPG",
-      50.0
-     ]
-    ],
-    "exposure_now": null,
-    "note": null
-   },
-   "verdict": "열위",
-   "refs": {
-    "papers": [
-     {
-      "a": "Hodges·Hogan·Peterson·Ang",
-      "y": 2017,
-      "t": "Factor timing with cross-sectional and time-series predictors",
-      "j": "Journal of Portfolio Management 44"
-     }
-    ],
-    "src": [
-     {
-      "k": "가격",
-      "v": "yfinance — ETF·지수 종가"
-     },
-     {
-      "k": "거시",
-      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": false,
-    "note": null
-   },
-   "missing": [
-    "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
    ]
   },
   {
@@ -6292,7 +6288,7 @@
    "excess_cagr": 0.84,
    "d_sharpe": 0.13,
    "t": 0.02,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -6379,7 +6375,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -6462,7 +6458,7 @@
    "excess_cagr": 1.0,
    "d_sharpe": 0.172,
    "t": -0.0,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -6549,7 +6545,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -6625,7 +6621,7 @@
    "excess_cagr": 1.05,
    "d_sharpe": 0.2,
    "t": -0.02,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -6712,7 +6708,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -6795,7 +6791,7 @@
    "excess_cagr": 0.97,
    "d_sharpe": 0.237,
    "t": -0.07,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -6882,7 +6878,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -6965,7 +6961,7 @@
    "excess_cagr": 0.07,
    "d_sharpe": 0.016,
    "t": -0.08,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7052,7 +7048,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -7135,7 +7131,7 @@
    "excess_cagr": 1.03,
    "d_sharpe": 0.246,
    "t": -0.08,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7222,7 +7218,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -7298,7 +7294,7 @@
    "excess_cagr": 0.78,
    "d_sharpe": 0.25,
    "t": -0.15,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7385,7 +7381,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -7468,7 +7464,7 @@
    "excess_cagr": -1.02,
    "d_sharpe": -0.071,
    "t": -0.18,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7563,7 +7559,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -7644,7 +7640,7 @@
    "excess_cagr": 0.28,
    "d_sharpe": 0.194,
    "t": -0.2,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7735,7 +7731,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -7818,7 +7814,7 @@
    "excess_cagr": 0.06,
    "d_sharpe": 0.062,
    "t": -0.22,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -7933,7 +7929,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -8009,7 +8005,7 @@
    "excess_cagr": 0.14,
    "d_sharpe": 0.106,
    "t": -0.24,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8096,7 +8092,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -8179,7 +8175,7 @@
    "excess_cagr": -1.52,
    "d_sharpe": -0.076,
    "t": -0.33,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8270,7 +8266,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -8346,7 +8342,7 @@
    "excess_cagr": -0.13,
    "d_sharpe": 0.277,
    "t": -0.41,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8457,7 +8453,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -8533,7 +8529,7 @@
    "excess_cagr": -0.79,
    "d_sharpe": 0.259,
    "t": -0.47,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8624,7 +8620,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -8705,7 +8701,7 @@
    "excess_cagr": -1.79,
    "d_sharpe": -0.026,
    "t": -0.48,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8747,7 +8743,7 @@
     ],
     "n_boot": 4000,
     "block": 63,
-    "verdict": "구별 불가"
+    "verdict": "위험감축 확인"
    },
    "incr": {
     "one": {
@@ -8796,7 +8792,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -8879,7 +8875,7 @@
    "excess_cagr": -1.16,
    "d_sharpe": -0.045,
    "t": -0.49,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -8974,7 +8970,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -9050,7 +9046,7 @@
    "excess_cagr": -0.67,
    "d_sharpe": 0.104,
    "t": -0.51,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -9137,7 +9133,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -9213,7 +9209,7 @@
    "excess_cagr": -0.66,
    "d_sharpe": 0.019,
    "t": -0.55,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -9320,7 +9316,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -9401,7 +9397,7 @@
    "excess_cagr": -1.06,
    "d_sharpe": -0.058,
    "t": -0.56,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -9488,7 +9484,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -9576,7 +9572,7 @@
    "excess_cagr": -1.05,
    "d_sharpe": 0.123,
    "t": -0.58,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -9663,7 +9659,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -9751,7 +9747,7 @@
    "excess_cagr": -1.58,
    "d_sharpe": -0.018,
    "t": -0.67,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -9793,7 +9789,7 @@
     ],
     "n_boot": 4000,
     "block": 63,
-    "verdict": "구별 불가"
+    "verdict": "위험감축 확인"
    },
    "incr": {
     "one": {
@@ -9838,7 +9834,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -9924,7 +9920,7 @@
    "excess_cagr": -1.19,
    "d_sharpe": 0.1,
    "t": -0.67,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": null,
    "turnover": 252.0,
    "exposure": null,
@@ -9993,7 +9989,7 @@
     "exposure_now": null,
     "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -10082,7 +10078,7 @@
    "excess_cagr": -2.57,
    "d_sharpe": -0.086,
    "t": -0.72,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -10169,7 +10165,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -10250,7 +10246,7 @@
    "excess_cagr": -1.49,
    "d_sharpe": 0.179,
    "t": -0.76,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -10349,7 +10345,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -10432,7 +10428,7 @@
    "excess_cagr": -1.46,
    "d_sharpe": 0.214,
    "t": -0.76,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -10535,7 +10531,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -10616,7 +10612,7 @@
    "excess_cagr": -1.68,
    "d_sharpe": 0.186,
    "t": -0.76,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -10711,7 +10707,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -10794,7 +10790,7 @@
    "excess_cagr": -1.56,
    "d_sharpe": 0.25,
    "t": -0.8,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -10905,7 +10901,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -10981,7 +10977,7 @@
    "excess_cagr": -3.57,
    "d_sharpe": -0.175,
    "t": -0.82,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -11072,7 +11068,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -11148,7 +11144,7 @@
    "excess_cagr": -1.69,
    "d_sharpe": -0.001,
    "t": -0.82,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -11235,7 +11231,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -11318,7 +11314,7 @@
    "excess_cagr": -3.25,
    "d_sharpe": -0.159,
    "t": -0.85,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -11409,7 +11405,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -11464,9 +11460,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": -5.53,
+     "s": -5.66,
      "b": 13.03,
-     "d": -18.56
+     "d": -18.69
     },
     {
      "k": "변동성",
@@ -11476,9 +11472,9 @@
     },
     {
      "k": "샤프",
-     "s": -0.063,
+     "s": -0.067,
      "b": 0.646,
-     "d": -0.709
+     "d": -0.713
     },
     {
      "k": "최대낙폭",
@@ -11487,18 +11483,18 @@
      "d": -35.08
     }
    ],
-   "excess_cagr": -18.56,
-   "d_sharpe": -0.709,
-   "t": -0.87,
-   "t_crit": 2.0,
+   "excess_cagr": -18.69,
+   "d_sharpe": -0.713,
+   "t": -0.88,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": -5.53,
-      "sharpe": -0.063,
-      "excess": -18.56,
+      "cagr": -5.66,
+      "sharpe": -0.067,
+      "excess": -18.69,
       "t": null,
       "main": true
      }
@@ -11516,8 +11512,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": -36.1,
-      "p": 0.976
+      "v": -36.3,
+      "p": 0.977
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -11526,8 +11522,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.522,
-      "p": 0.9058
+      "v": -0.524,
+      "p": 0.9067
      }
     ],
     "n_boot": 4000,
@@ -11577,7 +11573,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -11665,7 +11661,7 @@
    "excess_cagr": -2.34,
    "d_sharpe": 0.016,
    "t": -0.89,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -11776,7 +11772,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -11859,7 +11855,7 @@
    "excess_cagr": -1.65,
    "d_sharpe": -0.052,
    "t": -1.02,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -11946,7 +11942,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [],
     "src": [
@@ -12027,7 +12023,7 @@
    "excess_cagr": -0.66,
    "d_sharpe": 0.087,
    "t": -1.03,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -12118,7 +12114,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -12204,7 +12200,7 @@
    "excess_cagr": -3.63,
    "d_sharpe": 0.117,
    "t": -1.18,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": null,
    "turnover": 252.0,
    "exposure": null,
@@ -12273,7 +12269,7 @@
     "exposure_now": null,
     "note": "매일 종가에 사서 다음 시가에 판다 — 낮에는 아무것도 안 들고 있다."
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -12362,7 +12358,7 @@
    "excess_cagr": -4.59,
    "d_sharpe": -0.217,
    "t": -1.23,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -12449,7 +12445,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -12535,7 +12531,7 @@
    "excess_cagr": -3.73,
    "d_sharpe": 0.209,
    "t": -1.29,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": null,
    "turnover": null,
    "exposure": null,
@@ -12587,7 +12583,7 @@
     "exposure_now": null,
     "note": "배포 슬리브 둘의 현재 배분이다."
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -12677,7 +12673,7 @@
    "excess_cagr": -3.15,
    "d_sharpe": 0.076,
    "t": -1.32,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -12796,7 +12792,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -12858,9 +12854,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 10.95,
+     "s": 10.96,
      "b": 14.97,
-     "d": -4.02
+     "d": -4.01
     },
     {
      "k": "변동성",
@@ -12870,9 +12866,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.849,
+     "s": 0.85,
      "b": 0.718,
-     "d": 0.131
+     "d": 0.132
     },
     {
      "k": "최대낙폭",
@@ -12881,18 +12877,18 @@
      "d": 14.45
     }
    ],
-   "excess_cagr": -4.02,
-   "d_sharpe": 0.131,
+   "excess_cagr": -4.01,
+   "d_sharpe": 0.132,
    "t": -1.37,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 10.95,
-      "sharpe": 0.849,
-      "excess": -4.02,
+      "cagr": 10.96,
+      "sharpe": 0.85,
+      "excess": -4.01,
       "t": null,
       "main": true
      }
@@ -12979,7 +12975,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13067,7 +13063,7 @@
    "excess_cagr": -4.06,
    "d_sharpe": 0.186,
    "t": -1.37,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -13170,7 +13166,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "구별 불가",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13258,7 +13254,7 @@
    "excess_cagr": -5.4,
    "d_sharpe": -0.044,
    "t": -1.4,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -13349,7 +13345,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13432,7 +13428,7 @@
    "excess_cagr": -4.3,
    "d_sharpe": -0.078,
    "t": -1.42,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -13519,7 +13515,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13607,7 +13603,7 @@
    "excess_cagr": -5.84,
    "d_sharpe": -0.135,
    "t": -1.43,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -13702,7 +13698,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13790,7 +13786,7 @@
    "excess_cagr": -10.9,
    "d_sharpe": -0.486,
    "t": -1.47,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -13889,7 +13885,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -13977,7 +13973,7 @@
    "excess_cagr": -5.3,
    "d_sharpe": -0.215,
    "t": -1.53,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -14068,7 +14064,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -14156,7 +14152,7 @@
    "excess_cagr": -5.14,
    "d_sharpe": -0.054,
    "t": -1.85,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -14255,7 +14251,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -14338,7 +14334,7 @@
    "excess_cagr": -6.25,
    "d_sharpe": -0.289,
    "t": -1.92,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -14425,7 +14421,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -14513,7 +14509,7 @@
    "excess_cagr": -6.93,
    "d_sharpe": -0.077,
    "t": -2.01,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -14624,7 +14620,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
@@ -14712,7 +14708,7 @@
    "excess_cagr": -9.72,
    "d_sharpe": -0.506,
    "t": -2.73,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
@@ -14799,7 +14795,7 @@
     "exposure_now": null,
     "note": null
    },
-   "verdict": "열위",
+   "verdict": "측정만",
    "refs": {
     "papers": [
      {
