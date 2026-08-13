@@ -1123,7 +1123,14 @@ except Exception as e:
 #   한 번이라도 언급하면 통과한다. 그래도 '아예 아무 데도 없는' 필드는 확실히 잡힌다.
 try:
     _si = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
-    _ex = io.open(os.path.join(ROOT, "explorer.html"), encoding="utf-8").read()
+    # 🚨 2026-08-13 — 읽는 화면이 explorer 하나가 아니다. 홈이 strategy_index.json 을
+    #   직접 받아 '최근 성과 상위'를 그리면서 trails·trails_base 를 쓰는데, 여기서
+    #   explorer 만 보고 있어 **그리고 있는 필드를 고아로 잡았다.**
+    #   ⚠ 면제 목록(_IDX_ORPHAN_OK)에 넣지 않는다. 그건 "안 그린다"는 뜻인데 실제로는
+    #     그리고 있다 — 검사 범위를 넓히는 것이 맞고, 면제로 덮으면 진짜 고아가 생겨도
+    #     같은 자리에 숨는다.
+    _ex = "".join(io.open(os.path.join(ROOT, _f), encoding="utf-8").read()
+                  for _f in ("explorer.html", "index.html"))
     _IDX_ORPHAN_OK = set()      # 일부러 안 그리는 필드가 생기면 여기 사유와 함께 적을 것
     _seen = set()
     for _row in (_si.get("items") or []):
