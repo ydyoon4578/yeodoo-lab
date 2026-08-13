@@ -218,25 +218,53 @@ def _industry(stocks, dates, root):
     # 샤프 — 스타일 표와 **같은 창**으로 잰다(2026-08-03 사용자 요청으로 두 표가 합쳐졌다).
     # data/style_trails.json 의 start 를 그대로 읽는다. 창을 여기서 따로 정하면 같은 열의
     # 두 숫자가 다른 기간이 되고, 합친 표의 존재 이유가 사라진다.
-    # ⚠ 정의는 같지만(일간 초과 없는 평균÷표준편차×√252) **리밸런스가 다르다** —
-    #   스타일 줄은 월말 리밸런스 백테스트고 이 줄은 동일가중 바스켓이다. 화면에 적는다.
+    #
+    # 🚨 2026-08-13 사고 — 사용자가 "섹터 샤프는 다 1도 안 되는데 왜 지수들 샤프는 다 1이
+    #   넘어" 라고 물어서 드러났다. 한 열에 **두 잣대**가 섞여 있었다:
+    #     섹터 줄(이 함수)  5년 창 · 무위험 미차감 → XLK 0.88 · XLE 0.89 · XLRE 0.27
+    #     지수·방법론 줄     1년 창 · 무위험 차감  → SPY 1.34 · QQQ 1.21 · RSP 1.33
+    #   실측으로 화면 11칸이 '5년·rf미차감' 과 11/11 일치하고 '1년·rf차감' 과는 0/11 이었다.
+    #   ① 창 — 2026-08-12 에 열을 5년으로 옮기며 여기도 start5 로 맞췄는데, 08-13 에 열을
+    #     1년으로 되돌리면서(사용자 요청) index.html 만 고치고 이 파일을 안 고쳤다.
+    #     ⚠ 아래 코드가 창을 **스스로 정하지 않게** 둔다. style_trails 의 start 하나만 본다.
+    #   ② 무위험 — style_top_pdf.metrics() 는 2026-08-05 에 rf 차감으로 고쳐졌는데
+    #     이 함수는 안 고쳐졌다(그 파일 _rfd() 독스트링이 "한쪽만 고쳐진 두 벌" 이라 적는다).
+    #     같은 병이 같은 열에서 두 번 났다.
+    # ⚠ 창과 rf 를 맞춰도 **리밸런스는 여전히 다르다** — 방법론 줄은 월말 리밸런스 백테스트고
+    #   이 줄은 ETF 일간 매수후보유다. 화면 툴팁이 그 사실을 적는다(index.html 샤프 열).
     i_sh = None
     try:
         _st = json.load(io.open(os.path.join(root, "data", "style_trails.json"), encoding="utf-8"))
-        # 🚨 홈 샤프 열은 **5년 창**이다(2026-08-12 사용자 요청). start5 를 읽는다 —
-        #   여기만 1년(start)으로 두면 지수·스타일 줄은 5년, 섹터 줄만 1년이 되어
-        #   한 열에 두 창이 섞인다. 이 열의 존재 이유가 바로 그것을 막는 것이다.
-        #   ⚠ start5 가 없으면(옛 산출물) 1년으로 물러선다 — 그때는 열 전체가 1년이다.
-        _d0 = _st.get("start5") or _st.get("start") or ""
-        _ks = [i for i, d in enumerate(dates) if d <= _d0]
+        # ⚠ start5 로 물러서지 않는다. 물러서면 이 줄만 5년이 되어 사고가 그대로 재발한다 —
+        #   창을 못 정하면 차라리 샤프를 안 낸다(i_sh=None → sharpe() 가 None 을 돌려준다).
+        _d0 = _st.get("start") or ""
+        if not _d0:
+            print("  ⚠ style_trails.json 에 start 가 없다 — 섹터 샤프를 내지 않는다"
+                  " (5년 창으로 물러서면 지수 줄과 잣대가 갈린다)")
+        _ks = [i for i, d in enumerate(dates) if d <= _d0] if _d0 else []
         i_sh = _ks[-1] if _ks else None
     except Exception:
         pass
+
+    # 무위험 일할 — **정본은 build/style_top_pdf.py 의 _rfd() 다.** 글자 그대로 같은 식이어야
+    # 한다(rf_monthly.json 의 monthly 평균 ÷ 21). 여기서 다르게 재면 같은 열의 두 숫자가
+    # 다시 갈린다. ⚠ import 로 공유하지 않는 이유는 그 파일이 numpy·matplotlib 를 끌고
+    #   오기 때문이다 — 홈 묶음은 그 의존을 지면 안 된다. 대신 식을 여기 못박고 출처를 적는다.
+    _RFD = 0.0
+    try:
+        _m = (json.load(io.open(os.path.join(root, "data", "rf_monthly.json"),
+                                encoding="utf-8")).get("monthly") or {})
+        _RFD = (sum(_m.values()) / len(_m) / 21) if _m else 0.0
+    except Exception:
+        print("  ⚠ rf_monthly.json 을 못 읽었다 — 섹터 샤프가 초과수익 기준이 아니게 된다")
 
     def sharpe(objs, etf=None):
         # 🚨 2026-08-11 — 수익률을 시총가중으로 바꾸면서 여기도 같이 바꿨다. 한 줄의 수익률은
         #   시총가중인데 샤프만 동일가중이면 같은 줄의 두 숫자가 다른 바스켓을 가리킨다.
         #   창 시작 시점 시총으로 고정 가중한다(매수후보유 바스켓).
+        # 🚨 2026-08-13 — **초과수익 기준이다**(위 _RFD 주석 참조). 종전에는 m/sd 로 rf 를
+        #   안 뺐고, 같은 열의 지수·방법론 줄은 빼고 있었다. 왜곡폭이 rf/vol 이라 저변동
+        #   줄일수록 부당하게 유리해진다 — 실측으로 XLP 0.54→0.27, XLK 0.88→0.73 이었다.
         if i_sh is None or i_sh >= len(dates) - 30:
             return None
         rs = []
@@ -270,7 +298,7 @@ def _industry(stocks, dates, root):
         m = sum(rs) / len(rs)
         v = sum((x - m) ** 2 for x in rs) / (len(rs) - 1)
         sd = v ** 0.5
-        return round(m / sd * (252 ** 0.5), 2) if sd > 0 else None
+        return round((m - _RFD) / sd * (252 ** 0.5), 2) if sd > 0 else None
 
     # ⚠ 예전엔 인자로 sic(=SIC 이름표)을 하나 더 받아 줄마다 실었는데, GICS 로 갈아탄 뒤
     #   그 값이 label 과 글자 그대로 같아졌다(실측 95줄 전부 일치, 나머지는 null).
