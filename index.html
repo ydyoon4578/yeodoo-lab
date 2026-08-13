@@ -242,11 +242,12 @@
   .sttbl th.tpsrc,.sttbl th.tpnm{text-align:left}
   .sttbl th.tpsrc small{color:var(--muted);font-size:11px;margin-left:6px;font-weight:500;
        white-space:nowrap}
-  /* 전략 한 줄 설명. 한 줄로 자르고 전문은 title 에 둔다 — 두 줄이 되면 표가 성기어진다. */
+  /* 전략 설명 — **자르지 않는다**(사용자 요청 2026-08-13 "웬만하면 다 작성해").
+     종전엔 52ch 에서 … 로 끊었는데 칸이 넓은데도 조금만 길면 끊겼다. 줄바꿈을 허용하고
+     상한만 넉넉히 둔다(무제한으로 두면 긴 설명 하나가 표 폭을 밀어낸다). */
   .sttbl th.tpsrc .tprule{display:block;font-weight:400;font-size:11.5px;color:var(--muted);
-       margin-top:2px;max-width:52ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* 지수 줄 — 전략이 아니라 눈금이다. 배경으로 갈라 둔다. */
-  .sttbl tr.tpix td,.sttbl tr.tpix th{background:var(--panel-2);color:var(--ink-2)}
+       margin-top:2px;max-width:74ch;white-space:normal;line-height:1.45;
+       overflow-wrap:break-word}
   .hmbar{display:flex;flex-wrap:wrap;gap:0;row-gap:5px;align-items:center;margin:0 0 6px}
   .hmbar button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
        background:none;border:0;border-right:1px solid var(--line);padding:2px 10px;cursor:pointer}
@@ -3167,7 +3168,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //     ③ 각주에 생존편향 눈금 — 종목 전략은 오늘의 518종을 과거로 소급한 값이다
   //   ⚠ 계산하지 않는다. strategy_index.json 의 trails 를 그대로 옮긴다.
   (function(){
-    var TP_HZ='12M', TP=null, TPIX=null, TPMETA=null;
+    var TP_HZ='12M', TP=null, TPMETA=null;
     // ⚠ 위 HZL 과 **글자까지 같아야 한다** — 한 화면에 같은 기간 버튼이 두 벌 있다.
     var TP_LAB={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var TP_N=10;
@@ -3201,8 +3202,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       sub.textContent='· '+TP_LAB[TP_HZ]+' 누적수익 순 · 전략 '+rows.length+'종 중 상위 '+top.length+
         (_out>0?' · 이 구간을 못 재는 '+_out+'종 제외(월간 계열)':'')+
         (bmax?' · '+bmax.replace('~',' ~ '):'')+' · 무비용';
+      // 🚨 '같은 구간 지수' 줄을 걷고 **vs 열 둘**로 바꿨다(사용자 요청 2026-08-13).
+      //   줄로 두면 눈이 표 아래까지 내려가야 비교가 되는데, 열로 두면 그 자리에서 읽힌다.
+      //   ⚠ 이 vs 는 **그 전략의 창 그대로** 잰 것이다(strategy_index.trails_ix).
+      //     market_board 의 고정 기준일을 빼면 창 차이를 초과수익이라 부르게 된다.
       var h='<thead><tr><th class="tprk">#</th><th class="tpnm">전략</th>'+
         '<th class="shp">'+esc(TP_LAB[TP_HZ])+'</th>'+
+        '<th class="shp" title="같은 창에서 잰 S&amp;P 500(PR) 대비 초과분입니다">vs S&amp;P 500</th>'+
+        '<th class="shp" title="같은 창에서 잰 NASDAQ 100(PR) 대비 초과분입니다">vs 나스닥 100</th>'+
         '<th class="shp">전체 CAGR</th><th class="shp">전체 샤프</th>'+
         '<th class="shp">최대낙폭</th></tr></thead><tbody>';
       top.forEach(function(r,i){
@@ -3216,25 +3223,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 화면은 한 줄로 자르고 전문은 title 로 남긴다(자른 사실이 … 로 보인다).
         var ru=(r.rule||'').replace(/^쉽게 말해\s*—\s*/,'');
         if(ru)nm+='<span class="tprule" title="'+esc(r.rule)+'">'+esc(ru)+'</span>';
+        var ix=(r.trails_ix||{})[TP_HZ]||{}, tv=r.trails[TP_HZ];
+        var dv=function(k){return (ix[k]==null||tv==null)?null:(tv-ix[k]);};
         h+='<tr><td class="tprk">'+(i+1)+'</td><th scope="row" class="tpsrc">'+nm+'</th>'+
-           stCell(r.trails[TP_HZ])+stCell(m.cagr)+
+           stCell(tv)+stCell(dv('spx'))+stCell(dv('ndx'))+stCell(m.cagr)+
            '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(3))+'</td>'+
            stCell(m.mdd)+'</tr>';
       });
-      // 지수 줄 — 눈금이다. 같은 구간·같은 열에 두어야 "그냥 베타였나"가 바로 읽힌다.
-      if(TPIX&&TPIX.length){
-        // ⚠ 나도 같은 규약을 지킨다 — 화면엔 이름만, 뜻은 툴팁으로.
-        h+='<tr class="grp"><th colspan="6" title="'+
-           esc('전략이 아니라 눈금입니다. 위 줄이 이 수치를 못 넘으면 그 순위는 전략의 '+
-               '실력이 아니라 시장이 오른 것입니다.')+
-           '">같은 구간 지수 <em><span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
-        TPIX.forEach(function(x){
-          var v=(x.r||{})[TP_HZ];
-          h+='<tr class="tpix"><td class="tprk"></td><th scope="row" class="tpsrc">'+esc(x.n)+
-             '<small>'+esc(x.t)+'</small></th>'+stCell(v)+
-             '<td class="shp">—</td><td class="shp">—</td><td class="shp">—</td></tr>';
-        });
-      }
       tb.innerHTML=h+'</tbody>';
       // ⚠ 각주도 줄였다(2026-08-13 사용자 요청 "설명 주절주절 빼"). 다만 셋은 못 뺀다 —
       //   순위를 판정으로 읽는 것 · 무비용을 실현수익으로 읽는 것 · 소급 유니버스를 실적으로
@@ -3251,16 +3246,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
     }
 
-    Promise.all([getj('strategy_index.json'), getj('market_board.json'), getj('tech_strategies.json')])
+    // ⚠ market_board 는 더 이상 안 받는다. 지수 수치를 화면에서 빼지 않고 **빌더가
+    //   전략의 창 그대로 재서 실어 보내기 때문**이다(strategy_index.trails_ix).
+    //   여기서 다른 파일의 고정 기준일 수치를 빼면 창 차이를 초과수익이라 부르게 된다.
+    Promise.all([getj('strategy_index.json'), getj('tech_strategies.json')])
       .then(function(a){
         var ix=a[0];
         if(!ix||!ix.items){var tb=el2('tptbl'); if(tb)tb.innerHTML=
           '<tbody><tr><td class="skel2">전략 목록을 받지 못했습니다.</td></tr></tbody>'; return;}
         TP=ix.items.filter(function(r){return r.trails;});
-        // 지수 눈금은 market_board 에서 온다 — 홈의 다른 표와 **같은 파일·같은 구간표**다.
-        var mb=a[1];
-        TPIX=(mb&&mb.index)?mb.index.slice(0,2):null;   // S&P 500 · 나스닥 100
-        TPMETA=(a[2]&&a[2].surv_proxy)||null;
+        TPMETA=(a[1]&&a[1].surv_proxy)||null;
         draw();
       }).catch(function(e){
         var tb=el2('tptbl'); if(tb)tb.innerHTML=
