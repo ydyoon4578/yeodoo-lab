@@ -242,6 +242,9 @@
   .sttbl th.tpsrc,.sttbl th.tpnm{text-align:left}
   .sttbl th.tpsrc small{color:var(--muted);font-size:11px;margin-left:6px;font-weight:500;
        white-space:nowrap}
+  /* 전략 한 줄 설명. 한 줄로 자르고 전문은 title 에 둔다 — 두 줄이 되면 표가 성기어진다. */
+  .sttbl th.tpsrc .tprule{display:block;font-weight:400;font-size:11.5px;color:var(--muted);
+       margin-top:2px;max-width:52ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 지수 줄 — 전략이 아니라 눈금이다. 배경으로 갈라 둔다. */
   .sttbl tr.tpix td,.sttbl tr.tpix th{background:var(--panel-2);color:var(--ink-2)}
   .hmbar{display:flex;flex-wrap:wrap;gap:0;row-gap:5px;align-items:center;margin:0 0 6px}
@@ -1184,7 +1187,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     </section>
 
-    <!-- ── 최근 성과 상위 (사용자 요청 2026-08-13) ─────────────────────────
+    <!-- ── 전략별 성과 (사용자 요청 2026-08-13) ───────────────────────────
          🚨 이 랩은 등급을 안 매긴다(전부 '측정만'). 그런데 최근 수익률로 줄을 세우면
            그것이 곧 추천으로 읽힌다 — 이 랩이 가장 경계하는 화면이다.
            그래서 셋을 화면에 **같이** 싣는다: ① 이건 순위지 판정이 아니라는 말,
@@ -1193,7 +1196,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          ⚠ 자료는 strategy_index.json 의 trails 다 — build/strategy_index.py 가
            얇게 만들기 전 원해상도에서 잰다. 화면은 계산하지 않는다. -->
     <section class="card" id="top-sec">
-      <h2 class="lbl" id="tp-h">최근 성과 상위 <span class="sub" id="tp-sub">· 불러오는 중…</span><a class="more2" href="explorer.html">전략 랩 전체 →</a></h2>
+      <h2 class="lbl" id="tp-h">전략별 성과 <span class="sub" id="tp-sub">· 불러오는 중…</span><a class="more2" href="explorer.html">전략 랩 전체 →</a></h2>
       <div class="tpbar" id="tp-bar"></div>
       <div class="stwrap"><table class="sttbl" id="tptbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <p class="stnote" id="tpnote"></p>
@@ -1648,8 +1651,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        // 🚨 2026-08-13 — '시장 중앙 PER 25.0' 을 걷었다(사용자 결정). 이 줄은 섹터 표가
        //   무엇을 어떻게 묶는지를 적는 자리고, 시장 전체 밸류는 그 질문과 상관이 없다.
        //   자료(imk.pe)는 그대로 온다 — 다시 적기로 하면 이 자리에 넣으면 된다.
-       '<em><b>시총가중</b>(섹터=SPDR ETF) · 시총 내림차순'+
-       ' <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
+       // 🚨 2026-08-13 — '시총가중(섹터=SPDR ETF) · 시총 내림차순'을 걷었다(사용자 요청).
+       //   지운 것이 아니라 ⓘ 툴팁으로 내렸다(_tips 가 이미 같은 말을 더 자세히 한다).
+       //   숫자를 오독하게 만드는 말이 아니라 표가 어떻게 만들어졌나를 적던 말이다.
+       '<em><span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     secs.slice().sort(bym).forEach(function(s0){
       var sid='s-'+s0.sec, gs=(GRP[s0.sec]||[]).slice().sort(bym);
       var solo=(gs.length===1&&gs[0].solo);
@@ -2265,9 +2270,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var blk=(STC_P.series||{})[STC_HZ];
     if(!blk){box.innerHTML='';return;}
 
-    // ⚠ '12개월'이 아니라 '1년'이다(사용자 요청 2026-08-13). 위 ST_HZ 는 2026-08-12 에
-    //   이미 바꿨는데 이 차트 탭만 옛 표기로 남아 한 화면에서 같은 기간을 두 이름으로 불렀다.
-    var HZL={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'YTD'};
+    // ⚠ 홈의 두 블록이 **같은 구간 목록·같은 이름**을 쓴다(사용자 요청 2026-08-13 —
+    //   "어떤건 1주가 없고 어떤건 YTD로 적혀있고 그러니깐 별로야"). 아래 TP_LAB 과 짝이다.
+    //   ⓘ 'YTD' 를 '올해'로 바꾼 이유도 같다 — 한 화면에서 같은 것을 두 이름으로 부르지 않는다.
+    var HZL={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var tabs=Object.keys(STC_P.series).map(function(h){
       return '<button class="sctab'+(h===STC_HZ?' on':'')+'" data-h="'+h+'">'+esc(HZL[h]||h)+'</button>';
     }).join('');
@@ -2493,8 +2499,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       h+='<tr class="grp"><th colspan="'+ncol+'" title="'+
          esc('SPDR·인베스코·아이셰어즈의 실제 상장 ETF 입니다. 아래 섹터·스타일 줄과 '+
              '같은 열·같은 창이라 나란히 읽어도 됩니다.')+'">'+
-         '지수 ETF '+ix.length+'종 <em>실제 상품의 수익률 — 아래 묶음과 같은 열·같은 창 '+
-         '<span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
+         // ⚠ 설명문을 걷고 ⓘ 만 남긴다 — 바로 위 title 이 같은 말을 이미 하고 있었다.
+         '지수 ETF '+ix.length+'종 <em><span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     ix.forEach(function(x){h+=stRow(x,'ix',etfSharpe(x.t));});
     // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
     // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.
@@ -2523,8 +2529,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 랩 자료를 못 받았으면(fail-soft) 짝 판정이 전부 실패한다. 그때 solo 를 숨기면 표에
     // 지수 두 줄만 남으므로 있는 것을 다 낸다.
     var show=pair.length?pair:solo;
-    h+='<tr class="grp"><th colspan="'+ncol+'">스타일 ETF <em>실제 상품의 수익률 — '+
-       '아래 묶음과 같은 잣대로 읽어도 되는 유일한 행이다 · 샤프순</em></th></tr>';
+    // ⚠ 이 줄엔 title 이 없었다. 문구를 걷기 전에 **먼저 툴팁을 만들어** 옮긴다 —
+    //   그냥 지우면 "아래 백테스트 줄과 나란히 읽어도 되는 유일한 행"이라는 사실이 사라진다.
+    h+='<tr class="grp"><th colspan="'+ncol+'" title="'+
+       esc('실제 상장 ETF 의 수익률입니다. 아래 지수 방법론 줄은 백테스트라, 살 수 있는 '+
+           '상품의 성적과 나란히 읽어도 되는 것은 이 묶음뿐입니다. 샤프 순으로 놓았습니다.')+
+       '">스타일 ETF <em><span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
     // 아래 묶음과 같은 기준으로 세운다. 한 열이 정렬 기준인데 위아래가 다른 순서면
     // 그 열이 무엇을 뜻하는지 화면이 두 번 말하게 된다.
     show.slice().sort(function(a,b){
@@ -2553,13 +2563,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   샤프는 이제 3년·5년 칸이 아니라 1일~1년 칸과 같은 창이다. 이 문장을 안 고치면
       //   화면이 "샤프·3년·5년 창 2021-06-30~" 이라고 계속 적는데 그것이 거짓이 된다.
       var d=(SLAB&&SLAB._as_of)||'', d0=(SLAB&&SLAB._start)||'', d5=(SLAB&&SLAB._start5)||'';
-      h+='<tr class="grp"><th colspan="'+ncol+'">지수 방법론 '+keys.length+'종 '+
-         '<em>MSCI · S&amp;P · Nasdaq · Pacer 공개 산식을 이 유니버스에 적용 · '+
-         '<b>수익률은 백테스트</b>입니다 — 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · '+
-         '상위 10종목 동일가중 · <b>샤프순</b>'+
-         (d0&&d?'(샤프·1일~1년 칸은 '+esc(d0)+'~'+esc(d)+' 1년 창)':'')+
-         (d5&&d?' · 3년·5년 칸만 '+esc(d5)+'~'+esc(d):'')+
-         ' · 이름을 누르면 <a href="style.html">상세</a>, ▸ 를 누르면 구성종목</em></th></tr>';
+      // 🚨 여기서 화면에 남기는 것은 **'백테스트'** 하나뿐이다(2026-08-13 사용자 요청).
+      //   그 말이 없으면 위 ETF 줄(실제 상품)과 같은 것으로 읽힌다 — 숫자의 뜻이 바뀐다.
+      //   산식 출처·리밸런스·바스켓 크기·창 날짜·조작법은 전부 툴팁으로 내렸다.
+      h+='<tr class="grp"><th colspan="'+ncol+'" title="'+
+         esc('MSCI · S&P · Nasdaq · Pacer 공개 산식을 이 랩의 유니버스에 적용해 계산한 '+
+             '백테스트입니다. 오늘 유니버스 소급 · 비용 0 · 월말 리밸런스 · 상위 10종목 '+
+             '동일가중 · 샤프 순. '+
+             (d0&&d?('샤프와 1일~1년 칸은 '+d0+'~'+d+' 1년 창, '):'')+
+             (d5&&d?('3년·5년 칸만 '+d5+'~'+d+'. '):'')+
+             '이름을 누르면 상세, ▸ 를 누르면 구성종목이 나옵니다.')+
+         '">지수 방법론 '+keys.length+'종 '+
+         '<em><b>수익률은 백테스트</b> <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
     box.innerHTML=h+'</tbody>';
@@ -3144,7 +3159,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     });
   })();
 
-  // ── 최근 성과 상위 10 ────────────────────────────────────────────────────
+  // ── 전략별 성과 (최근 구간 상위 10) ─────────────────────────────────────
   // 🚨 이 랩은 등급을 안 매긴다(2026-08-13 — 전부 '측정만'). 그런데 최근 수익률로 줄을
   //   세우면 그것이 곧 추천으로 읽힌다. 그래서 순위 옆에 **반증에 필요한 것**을 같이 둔다:
   //     ① 같은 구간 지수 줄 — 고른 것이 그냥 베타인지 바로 보인다
@@ -3153,7 +3168,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   ⚠ 계산하지 않는다. strategy_index.json 의 trails 를 그대로 옮긴다.
   (function(){
     var TP_HZ='12M', TP=null, TPIX=null, TPMETA=null;
-    var TP_LAB={'1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
+    // ⚠ 위 HZL 과 **글자까지 같아야 한다** — 한 화면에 같은 기간 버튼이 두 벌 있다.
+    var TP_LAB={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var TP_N=10;
     function el2(id){return document.getElementById(id);}
 
@@ -3169,19 +3185,37 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var top=rows.slice(0,TP_N);
       // 기준일 — 줄마다 다를 수 있다(주간 격자 ±7일 · 월간 격자 전략은 더). 가장 흔한 것을
       // 부제에 적고, 다른 줄은 그 줄에 따로 적는다. 하나로 뭉뚱그리면 그게 거짓이다.
+      // 🚨 창은 [기준일 ~ 계열 끝]이고 **둘 다 전략마다 다르다.** 계열이 08-12 에 끝나는
+      //   것과 08-07·06-30 에 끝나는 것이 섞여 있어, 짧은 구간일수록 서로 다른 주(週)를
+      //   비교하게 된다. 가장 흔한 창을 부제에 적고, **다른 줄은 그 줄에 창을 통째로**
+      //   적는다(기준일만 적으면 끝이 다른 것이 안 보인다).
       var bc={},bmax=null;
-      top.forEach(function(r){var b=(r.trails_base||{})[TP_HZ]; if(!b)return; bc[b]=(bc[b]||0)+1;
-        if(bmax==null||bc[b]>bc[bmax])bmax=b;});
+      top.forEach(function(r){
+        var b=(r.trails_base||{})[TP_HZ]; if(!b)return;
+        var w=b+'~'+(r.end||''); bc[w]=(bc[w]||0)+1;
+        if(bmax==null||bc[w]>bc[bmax])bmax=w;});
+      // ⚠ 이 구간을 못 재는 전략이 있으면 **몇 종이 빠졌는지 적는다.** 월간 격자 11종은
+      //   1주 칸을 만들지 않는다(한 점이 한 달이라 전달 말 대비가 나온다). 안 적으면
+      //   같은 화면에서 모수가 187 → 176 으로 조용히 줄어든다.
+      var _out=TP.length-rows.length;
       sub.textContent='· '+TP_LAB[TP_HZ]+' 누적수익 순 · 전략 '+rows.length+'종 중 상위 '+top.length+
-        (bmax?' · 기준일 '+bmax:'')+' · 무비용';
+        (_out>0?' · 이 구간을 못 재는 '+_out+'종 제외(월간 계열)':'')+
+        (bmax?' · '+bmax.replace('~',' ~ '):'')+' · 무비용';
       var h='<thead><tr><th class="tprk">#</th><th class="tpnm">전략</th>'+
         '<th class="shp">'+esc(TP_LAB[TP_HZ])+'</th>'+
         '<th class="shp">전체 CAGR</th><th class="shp">전체 샤프</th>'+
         '<th class="shp">최대낙폭</th></tr></thead><tbody>';
       top.forEach(function(r,i){
         var m=r.metrics||{}, b=(r.trails_base||{})[TP_HZ];
-        var nm='<a class="stnm" href="explorer.html#s='+encodeURIComponent(r.sid||'')+'">'+esc(r.name)+'</a>'+
-          '<small>'+esc(r.src||'')+(b&&bmax&&b!==bmax?' · 기준일 '+esc(b):'')+'</small>';
+        // 🚨 딥링크는 **#s-<sid>** 다(explorer 의 _fromHash 규약). 처음에 '#s=' 로 써서
+        //   눌러도 첫 카드만 열렸다. 형식이 한 글자 다르면 링크가 조용히 엉뚱한 데로 간다.
+        var _w=(b||'')+'~'+(r.end||'');
+        var nm='<a class="stnm" href="explorer.html#s-'+encodeURIComponent(r.sid||'')+'">'+esc(r.name)+'</a>'+
+          '<small>'+esc(r.src||'')+(b&&bmax&&_w!==bmax?' · '+esc(_w.replace('~',' ~ ')):'')+'</small>';
+        // 한 줄 설명(사용자 요청). rule 은 중앙 53자·최대 259자라 그대로 두면 표가 무너진다 —
+        // 화면은 한 줄로 자르고 전문은 title 로 남긴다(자른 사실이 … 로 보인다).
+        var ru=(r.rule||'').replace(/^쉽게 말해\s*—\s*/,'');
+        if(ru)nm+='<span class="tprule" title="'+esc(r.rule)+'">'+esc(ru)+'</span>';
         h+='<tr><td class="tprk">'+(i+1)+'</td><th scope="row" class="tpsrc">'+nm+'</th>'+
            stCell(r.trails[TP_HZ])+stCell(m.cagr)+
            '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(3))+'</td>'+
@@ -3189,8 +3223,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
       // 지수 줄 — 눈금이다. 같은 구간·같은 열에 두어야 "그냥 베타였나"가 바로 읽힌다.
       if(TPIX&&TPIX.length){
-        h+='<tr class="grp"><th colspan="6">같은 구간 지수 <em>전략이 아니라 눈금이다 — '+
-           '위 줄이 이것을 못 넘으면 순위는 그저 시장이 오른 것이다</em></th></tr>';
+        // ⚠ 나도 같은 규약을 지킨다 — 화면엔 이름만, 뜻은 툴팁으로.
+        h+='<tr class="grp"><th colspan="6" title="'+
+           esc('전략이 아니라 눈금입니다. 위 줄이 이 수치를 못 넘으면 그 순위는 전략의 '+
+               '실력이 아니라 시장이 오른 것입니다.')+
+           '">같은 구간 지수 <em><span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
         TPIX.forEach(function(x){
           var v=(x.r||{})[TP_HZ];
           h+='<tr class="tpix"><td class="tprk"></td><th scope="row" class="tpsrc">'+esc(x.n)+
@@ -3199,15 +3236,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         });
       }
       tb.innerHTML=h+'</tbody>';
-      var _n=[];
-      _n.push('<b>순위지 판정이 아닙니다.</b> 이 랩은 등급을 매기지 않습니다(전부 ‘측정만’) — '+
-        '최근 수익률로 고르는 것은 이 랩이 가장 경계하는 선택입니다. 순위는 기간을 바꾸면 바뀝니다.');
-      _n.push('무비용(gross)·월말 리밸런스 기준이고 구간·대조군은 전략마다 다릅니다. 전체 CAGR·샤프는 '+
-        '각 전략의 <b>자기 구간 전체</b>에서 잰 값이라 위 최근 수익과 같은 창이 아닙니다.');
+      // ⚠ 각주도 줄였다(2026-08-13 사용자 요청 "설명 주절주절 빼"). 다만 셋은 못 뺀다 —
+      //   순위를 판정으로 읽는 것 · 무비용을 실현수익으로 읽는 것 · 소급 유니버스를 실적으로
+      //   읽는 것. 셋 다 **숫자의 뜻이 바뀌는 오독**이라 화면에 없으면 거짓이 된다.
+      //   길게 설명하지 않고 한 줄씩만 적는다.
+      var _n=['<b>순위지 판정이 아닙니다</b> — 이 랩은 등급을 매기지 않습니다. 기간을 바꾸면 순위가 바뀝니다.',
+              '무비용(gross) 기준. 전체 CAGR·샤프는 각 전략의 자기 구간 전체라 위 수익과 다른 창입니다.'];
       if(TPMETA&&TPMETA.gap_cagr!=null)
-        _n.push('⚠ 종목 전략은 <b>오늘의 유니버스를 과거로 소급</b>한 값입니다 — 랩 동일가중 '+
-          '대조군이 실제 동일가중 S&amp;P 500(RSP)보다 연 +'+TPMETA.gap_cagr.toFixed(2)+'%p 앞섭니다. '+
-          '생존편향 단독의 상한으로 읽어야 합니다.');
+        _n.push('종목 전략은 오늘의 유니버스를 과거로 소급한 값입니다(생존편향 상한 연 +'+
+          TPMETA.gap_cagr.toFixed(2)+'%p).');
       note.innerHTML=_n.join(' ');
       bar.querySelectorAll('button').forEach(function(b2){
         b2.addEventListener('click',function(){TP_HZ=this.getAttribute('data-h'); draw();});

@@ -1436,6 +1436,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 필터 칩은 D를 세어 만들었으므로 다시 만든다
         if(window.__rebuildChips)window.__rebuildChips();
         render();
+        // 🚨 딥링크를 **여기서 다시 태운다**(2026-08-13). _fromHash 는 로드 때 한 번 도는데,
+        //   그때 D 에는 배포 원장 8건뿐이고 랩 전략 174종은 이 fetch 가 끝나야 들어온다.
+        //   그래서 explorer.html#s-t-x-dist200 같은 링크가 **조용히 첫 카드를 열었다**
+        //   (홈의 '전략별 성과'에서 눌러 보고 알았다). 한 줄이면 되는데 없었다.
+        if(location.hash.indexOf('#s-')===0)_fromHash();
         // (상단 통계줄은 걷어냈다 — 위 주석 참조. 여기서 다시 쓰던 코드도 같이 지웠다.)
       })['catch'](function(){});
   })();
