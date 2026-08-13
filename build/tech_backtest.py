@@ -6274,6 +6274,13 @@ def run():
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": n - MIN_HIST,
+        # 🚨 2026-08-13 — **무위험을 어디부터 평균 냈는지**를 싣는다. load() 가 rf 를
+        #   `dates[0][:7]`(패널 시작 2009-01)로 자르는데, strategy_index 는 그동안
+        #   `start`(전략 시작 2016-08)를 넘기고 있었다. 그래서 같은 카드에 S&P 500(PR)
+        #   샤프가 두 값으로 나왔다(실측 103종 중앙 0.055 차이).
+        #   ⚠ 손으로 적지 않는다 — 자른 그 값을 그대로 내보내 갈릴 자리를 없앤다.
+        #   ⚠ start(전략 시작)와 **다른 값이다.** 헷갈리지 말 것.
+        "rf_from": dates[0][:7],
         "n_stocks": len(tickers), "topn": TOPN,
         "bench_label": "S&P 500(PR) 매수후보유",
         "span_years": round((n - MIN_HIST) / 252.0, 1),
