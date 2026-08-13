@@ -1670,11 +1670,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var d=s.score-x[1];
         return '<b><i>'+x[0]+'</i>'+x[1].toFixed(1)+' ('+(d>=0?'+':'')+d.toFixed(1)+')</b>';
       }).join('')+'</div>':'')+
-      // ⚠ 구성요소 결측 경고는 원본에만 있던 것이 아니다 — 점수가 재정규화된 것이면
-      //   그 사실 없이 숫자만 보이면 안 된다. 홈에서도 같이 낸다.
-      (s.weight_available!=null&&s.weight_available<0.999?
-        '<div class="rgsprev"><b style="color:var(--hot)">⚠ 구성요소 일부 결측 · 가용 가중치 '+
-        Math.round(s.weight_available*100)+'%로 재정규화</b></div>':'')+
+      // 🚨 2026-08-13 — 구성요소 결측 경고를 **홈에서만** 걷었다(사용자 결정).
+      //   홈은 요약이고 이 경고는 상시로 떠 있어(가용 가중치가 1.00 인 날이 드물다) 경고가
+      //   아니라 배경이 됐다. 지우는 것이 아니라 **자리를 옮기는 것**이다 —
+      //   regime.html 이 같은 사실을 제 화면에서 계속 말한다(swarn, 0.5 미만 산출불가까지).
+      //   ⚠ 홈에 다시 넣을 일이 있으면 그때는 '상시로 뜨지 않게' 문턱을 먼저 정해야 한다.
       '</div>';
   }
   // 스파크라인 — 최근 750거래일. x 는 등간격 인덱스다(날짜를 안 싣는 대신).
@@ -1769,7 +1769,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   구획 제목의 '지표 39개 전체 →'가 이미 같은 곳으로 보낸다 — 한 카드에 같은 링크를
     //   두 번 두지 않는다.
     return '<div class="rgsep"></div><div class="rgcyc">'+
-      '<div class="rgcych"><b>경기 사이클</b><span>지금 어디인가</span></div>'+
+      '<div class="rgcych"><b>경기 사이클</b></div>'+
       '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="경기 사이클 — '+
       '증시 곡선이 경기 곡선보다 앞서고, 현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+
       '개월째다.'+(BX.length?' 위쪽 회색 글자는 교과서가 각 단계에 선호한다고 적은 업종이다.':'')+
@@ -1777,11 +1777,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="rgcych" style="margin-top:5px">'+
       '<span style="color:var(--hot)">━</span><span>증시</span>'+
       '<span style="color:var(--accent)">━</span><span>경기</span>'+
-      // 🚨 '교과서'라고 반드시 적는다. 이 랩은 국면 기반 규칙을 네 번 검정해 네 번 기각했다 —
-      //   출처를 안 적으면 회색 업종 글자가 이 랩의 추천으로 읽힌다. 그 오독을 막으려고
-      //   이 사이트가 있다.
+      // 🚨 '교과서'라는 말은 반드시 남긴다. 이 랩은 국면 기반 규칙을 네 번 검정해 네 번
+      //   기각했다 — 출처를 안 적으면 회색 업종 글자가 이 랩의 추천으로 읽힌다.
+      //   2026-08-13 에 뒤의 괄호 '(이 랩의 검정 결과가 아니다)'만 걷었다(사용자 결정).
+      //   '교과서 선호 업종'이 이미 출처를 말하고 있어 괄호는 같은 말을 두 번 한 것이다.
+      //   ⚠ '교과서'까지 지우면 그 방어가 사라진다. 여기서 더 줄이지 않는다.
       (BX.length?'<span style="color:var(--ink-2)">회색</span>'+
-        '<span>교과서 선호 업종(이 랩의 검정 결과가 아니다)</span>':'')+
+        '<span>교과서 선호 업종</span>':'')+
       '</div></div>';
   }
 
