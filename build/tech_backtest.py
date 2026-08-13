@@ -48,6 +48,11 @@ DIR_SD = os.path.join(DATA, "sd")
 OUT = os.path.join(DATA, "tech_strategies.json")
 
 NSWEEP_GRID = (10, 20, 30)   # 바스켓 크기 전수 시험 격자 — PREREG-2026-08-13-NSWEEP.md
+# 바스켓 변형 sid 의 표식. `x-roe~n20` 처럼 붙는다.
+# 🚨 이 글자를 모르는 코드가 변형을 **다른 규칙으로 착각**한다. 실제로 은퇴 필터가
+#   `sid not in RETIRED` 로 검사해 은퇴한 10종이 변형을 통해 되살아나 있었다(2026-08-13).
+#   sid 를 다루는 자리는 반드시 이 표식으로 밑동을 먼저 구할 것.
+_NSW_MARK_B = "~n"
 TOPN = 10          # 횡단면 전략이 들고 갈 종목 수 — 50이면 '고른' 게 아니라 사실상 지수다
 MIN_HIST = 260     # 신호 계산에 필요한 최소 과거 길이(약 1년)
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
@@ -2435,6 +2440,50 @@ def month_ends(dates):
     return idx
 
 
+def week_ends(dates):
+    """주간 리밸 인덱스 — 그 주의 마지막 거래일.
+
+    ⚠ ISO 주가 아니라 **날짜가 뒤로 안 가면 같은 주**로 잡는다. 달력 라이브러리 없이
+      거래일 격자만으로 판정해야 하므로, 다음 거래일의 요일 번호가 오늘보다 크지 않으면
+      주가 넘어간 것으로 본다(월<화<…<금). 휴일로 4일 주가 생겨도 마지막 거래일은 맞다.
+    """
+    def _dow(s):
+        y, m, d = int(s[:4]), int(s[5:7]), int(s[8:10])
+        # Sakamoto — 0=일요일. 외부 의존 없이 요일을 구한다(이 저장소는 무의존 규약이다).
+        t = (0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4)
+        if m < 3:
+            y -= 1
+        return (y + y // 4 - y // 100 + y // 400 + t[m - 1] + d) % 7
+    idx = []
+    for i in range(len(dates) - 1):
+        if _dow(dates[i + 1]) <= _dow(dates[i]):
+            idx.append(i)
+    return idx
+
+
+def quarter_ends(dates):
+    """분기 리밸 인덱스 — 3·6·9·12월의 마지막 거래일."""
+    return [i for i in month_ends(dates) if int(dates[i][5:7]) % 3 == 0]
+
+
+# 리밸런스 주기 — 사전등록 PREREG-2026-08-13-REBAL.md.
+# 🚨 종전에는 주기를 줄 자리가 아예 없었다(`if (i - 1) in me:` 하나). 월말은 **설계가 아니라
+#   엔진 기본값**이었고, 그래서 1개월 반전 규칙이 한 달에 한 번만 갈아타고 분기 재무 규칙이
+#   매달 갈아타는 어긋남이 생겼다(사용자 지적 2026-08-13).
+# ⚠ 이 축은 **전수 시험하지 않는다.** 규칙의 성격이 정하는 값을 등록에 못박고 그대로 쓴다 —
+#   셋을 다 돌려 좋은 것을 고르면 그게 또 하나의 선택 부풀림이 된다(NSWEEP 은 사용자 결정으로
+#   그렇게 했고 부풀림을 재서 실었다. 이쪽은 그 갈래를 안 탄다).
+REB_KINDS = {"we": "주간", "me": "월말", "qe": "분기"}
+REB_DEFAULT = "me"
+
+
+def reb_index(kind, dates):
+    """주기 이름 → 리밸 시점 인덱스 리스트. 모르는 이름은 **조용히 월말로 떨어지지 않는다**."""
+    if kind not in REB_KINDS:
+        raise ValueError("모르는 리밸 주기 %r — REB_KINDS 는 %s" % (kind, sorted(REB_KINDS)))
+    return {"we": week_ends, "me": month_ends, "qe": quarter_ends}[kind](dates)
+
+
 # ── 전략 정의 ───────────────────────────────────────────────────────────
 # 각 전략은 (시점 i, 상태) → 목표 비중을 준다.
 #   kind='timing'  : 시장(동일가중 유니버스) 노출 0~1 — 매매 대상은 동일가중, 판정 대조군은 SPX
@@ -2614,7 +2663,7 @@ def _BASE_SID(sid):
     return re.sub(r"[-~]n\d+$", "", sid)
 
 
-def xsec(sid, name, rule, fn, why, arch=None, topn=None):
+def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
     """횡단면 규칙 등록. topn 을 주면 그 규칙만 바스켓 크기가 달라진다(기본은 TOPN=10).
 
     🚨 2026-08-11 추가. 이 랩의 횡단면 51종은 전부 상위 10종인데, 흉내 내려는 원 전략은
@@ -2622,9 +2671,15 @@ def xsec(sid, name, rule, fn, why, arch=None, topn=None):
       10종은 유니버스의 2% 라 '집중도 검정'이지 모방이 아니다.
       사전등록 PREREG-2026-08-11-BASKET.md 참조.
     ⚠ topn 을 안 주면 종전과 완전히 같다. 기존 51종의 수치는 이 변경으로 바뀌지 않는다.
+
+    reb 는 리밸런스 주기('we' 주간 · 'me' 월말 · 'qe' 분기). 사전등록
+    PREREG-2026-08-13-REBAL.md 가 규칙마다 값을 못박아 두었다 — 여기서 결과를 보고
+    바꾸면 그 등록이 무의미해진다.
     """
+    if reb not in REB_KINDS:
+        raise ValueError("%s: 모르는 리밸 주기 %r" % (sid, reb))
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why,
-                   "fn": fn, "arch": arch, "topn": topn})
+                   "fn": fn, "arch": arch, "topn": topn, "reb": reb})
 
 
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
@@ -3886,6 +3941,63 @@ def build_strats():
     # ⚠ 점수 함수는 손대지 않는다 — 세 판은 같은 점수에서 상위 N 만 다르게 자른다.
     #   그래야 '크기만 다른 같은 규칙' 이 된다(밑동 레코드를 복사하므로 fn 도 같은 객체다).
     # ⚠ 크기가 이미 사전등록으로 정해진 규칙은 **뺀다**. 여기서 다시 쓸면 그 등록이 무의미해진다.
+    # ── 리밸런스 주기 배정 — PREREG-2026-08-13-REBAL.md §3 ────────────────
+    # 🚨 호출부마다 reb= 를 흩어 놓지 않고 **한 표**로 둔다. 등록 문서와 코드를 한눈에
+    #   대조할 수 있어야 '결과 보고 옮기지 않았다'가 확인 가능한 주장이 된다.
+    # ⚠ 이 표는 결과를 보기 전에 확정했다. 돌린 뒤 특정 규칙만 옮기면 그 순간 이것은
+    #   전수 시험이 되고, 등록 §2 의 '부풀림 없음' 이 거짓이 된다.
+    # ⚠ 여기는 NSWEEP 보다 **앞**이어야 한다 — 변형(~n)이 dict(밑동) 복사로 만들어지므로
+    #   뒤에 두면 변형이 밑동의 주기를 못 물려받는다.
+    REB_WE = {                              # 주간 — 신호 수명이 한 달보다 짧다
+        "x-rev1m", "x-maxlow", "x-max5low", "x-maxlow-n52", "x-max5low-n52",
+        "x-clv", "x-lshock", "x-volratio",
+    }
+    REB_QE = {                              # 분기 — 입력이 분기에 한 번만 바뀐다
+        "x-ep", "x-sp", "x-btp", "x-fcfy", "x-dy",
+        "x-roe", "x-npm", "x-gpa", "x-ocfp", "x-poacc",
+        "x-rgrow", "x-agrow", "x-lowde", "x-cash", "x-shiss", "x-payout",
+        "x-aci", "x-fscore", "x-debtiss",
+        "x-valcomp", "x-valcomp-sn", "x-btp-n155", "x-payout-n50", "x-agrow-n52",
+    }
+    # ⚠ 서프라이즈 넷(x-sue·x-sur·x-sugp·x-epsacc)은 재무를 쓰지만 **발표 시점**이 신호라
+    #   분기 격자에 맞추면 발표 직후를 놓친다. x-custconc 는 연차보고 기반이지만 후보가
+    #   적어 분기 리밸이 무보유 구간을 만들 위험이 있어 이번엔 안 건드린다. 등록 §3 참조.
+    # 🚨 설명문의 '월말' 을 같이 고친다. 이 파일에는 "…동일가중, 월말 리밸런스." 가 92곳
+    #   박혀 있는데, 주기를 옮기고 글자를 안 고치면 **화면이 거짓말을 한다.** 손으로 31곳을
+    #   고치면 반드시 빠뜨리므로 등록 시점에 기계로 바꾼다(등록 §4).
+    def _reb_text(s, lab):
+        for a in ("월말 리밸런스", "월말리밸런스", "월말 리밸", "월말마다", "매 월말", "매월말"):
+            s = s.replace(a, lab + " 리밸런스" if a.endswith(("리밸런스", "리밸")) else lab + "마다")
+        # 리밸 말고 **채점 시점**을 가리키는 '월말' 도 있다(x-clv 의 "월말 종가 $5 이상",
+        # x-valcomp 의 "월말 단면 z-점수"). 채점은 리밸 날에 하므로 주기를 옮기면 이쪽도
+        # 같이 틀린 말이 된다 — 주기에 안 매이는 표현으로 바꾼다.
+        for a, b in (("월말 종가", "리밸 시점 종가"), ("월말 단면", "리밸 시점 단면"),
+                     ("월말 시점", "리밸 시점"), ("그 달 후보", "그 시점 후보")):
+            s = s.replace(a, b)
+        return s
+
+    _reb_seen = set()
+    for _s in STRATS:
+        if _s["kind"] != "xsec":
+            continue
+        _k = "we" if _s["sid"] in REB_WE else ("qe" if _s["sid"] in REB_QE else None)
+        if not _k:
+            continue
+        _s["reb"] = _k
+        _reb_seen.add(_s["sid"])
+        _lab = REB_KINDS[_k]
+        _s["rule"] = _reb_text(_s["rule"], _lab)
+        _s["why"] = _reb_text(_s["why"], _lab)
+    # 🚨 표에 있는데 목록에 없는 sid 를 **조용히 넘기지 않는다.** 오타 하나면 그 규칙이
+    #   월말인 채로 남고, 등록 문서만 옮겼다고 말하게 된다(이 저장소가 되풀이 밟은 유형이다).
+    _reb_ghost = sorted((REB_WE | REB_QE) - _reb_seen)
+    if _reb_ghost:
+        raise SystemExit("리밸 주기 표에 있으나 전략 목록에 없는 sid: %s — "
+                         "PREREG-2026-08-13-REBAL.md 와 맞출 것" % ", ".join(_reb_ghost))
+    print("  리밸 주기 — 주간 %d종 · 분기 %d종 · 월말 %d종 (PREREG-2026-08-13-REBAL)"
+          % (len(REB_WE), len(REB_QE),
+             sum(1 for s in STRATS if s["kind"] == "xsec" and (s.get("reb") or "me") == "me")))
+
     NSWEEP = NSWEEP_GRID
     NSW_SKIP = {
         "x-updown",                                            # 2026-08-12 사용자 결정으로 20종
@@ -3917,10 +4029,19 @@ def build_strats():
                         "kind": s["kind"], "why": RETIRED[s["sid"]]}
                        for s in STRATS if s["sid"] in RETIRED]
     _before = len(STRATS)
-    STRATS[:] = [s for s in STRATS if s["sid"] not in RETIRED]
+    # 🚨 2026-08-13 — 여기가 `s["sid"] not in RETIRED` 였다. 바스켓 전수 시험이 만든
+    #   변형(`x-roe~n20`)은 그 검사를 **통과**하고, 승자 선택이 그것을 다시 `x-roe` 로
+    #   개명한다. 그래서 열위·중복으로 뺀 10종(x-roe·x-npm·x-gpa·x-ocfp·x-minvar·
+    #   x-recency·x-riskbudget·x-mom-trend·x-peerlag·x-delay)이 **목록에 되살아나 있었다**.
+    #   은퇴 결정이 조용히 뒤집힌 것이고, 실측으로 잡았다. 밑동 sid 로 검사한다.
+    STRATS[:] = [s for s in STRATS
+                 if s["sid"].split(_NSW_MARK_B)[0] not in RETIRED]
     if _before != len(STRATS):
-        print("  목록 제외 %d종(중복 2 · 열위 9 · 운영비용 2) — %d → %d종  ⚠ 임계 %.2f → %.2f"
-              % (_before - len(STRATS), _before, len(STRATS),
+        # 내역을 손으로 적지 않는다 — 변형까지 세게 되면서 '중복 2 · 열위 9 · 운영비용 2'
+        # 가 합계와 안 맞았다(13 이라 적어 두었는데 실제로는 33 이 빠진다).
+        print("  목록 제외 %d종(밑동 %d + 바스켓 변형 %d) — %d → %d종  ⚠ 임계 %.2f → %.2f"
+              % (_before - len(STRATS), len(RETIRED),
+                 (_before - len(STRATS)) - len(RETIRED), _before, len(STRATS),
                  z_crit(_before), z_crit(len(STRATS))))
 
 
@@ -4804,6 +4925,9 @@ def run():
     MACFX = macro_daily("DTWEXBGS", dates)
     me_list = month_ends(dates)
     me = set(me_list)
+    # 규칙별 리밸 주기(PREREG-2026-08-13-REBAL.md). me 는 월수익·계절성·커버리지 집계가
+    # 계속 쓰므로 그대로 두고, **리밸 시점만** 규칙마다 갈라 준다.
+    REB_SET = {k: set(reb_index(k, dates)) for k in REB_KINDS}
     # 잔차 모멘텀용 팩터 대리변수 — 못 읽으면 빈 dict 이고 그 전략만 후보 0 으로 빠진다.
     FACP = load_factor_proxies(dates)
 
@@ -5123,13 +5247,17 @@ def run():
             bask_hist = []
             first_i = None       # 실제로 무언가를 보유하기 시작한 시점
             _tr = 0.0            # 그날 오간 금액(리밸런스 날에만 0 이 아니다)
+            # 규칙이 스스로 내건 주기(PREREG-2026-08-13-REBAL.md). 없으면 월말이다.
+            # ⚠ `.get(..., "me")` 로 조용히 떨어지지 않게 REB_SET 에서 KeyError 를 내게 둔다 —
+            #   등록에 없는 주기 이름이 들어오면 그 자리에서 죽는 편이 낫다.
+            _rebset = REB_SET[S.get("reb") or REB_DEFAULT]
             for i in range(MIN_HIST + 1, n):
-                # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 월말까지 기다리지 않고
-                # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 '월말 리밸런스'를 어기는
+                # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 리밸까지 기다리지 않고
+                # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 리밸 주기를 어기는
                 # 데다, 펀더멘털이 늦게 채워지는 전략(x-roe 등)은 초기 수년간 매일 재채점해
-                # 10년 구간에서 899회(월말이면 106회) 돌았다. 규약대로 월말에만 다시 뽑는다.
-                # 결과: 첫 월말 전까지는 후보가 없으므로 현금이다(선견 없이 정직한 상태다).
-                if (i - 1) in me:
+                # 10년 구간에서 899회(월말이면 106회) 돌았다. 규약대로 리밸 날에만 다시 뽑는다.
+                # 결과: 첫 리밸 전까지는 후보가 없으므로 현금이다(선견 없이 정직한 상태다).
+                if (i - 1) in _rebset:
                     sc, ind_raw, comp_raw = xsec_score_at(S, i, _X)
                     pool_hist.append((dates[i - 1], len(sc)))
                     new, new_w = xsec_pick_at(S, i, _X, sc, ind_raw)
@@ -5326,6 +5454,11 @@ def run():
             #   net.t 는 편도 10bp 기준이고, net.sens 에 5·10·20bp 를 전부 싣는다.
             "net": net, **cost_extra, "vs_traded": vs_traded,
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
+            # 리밸런스 주기 — 화면이 '월말'을 손으로 적지 않게 규칙에서 실어 보낸다.
+            # 🚨 종전에는 전 규칙이 월말이라 설명문에 글자로 박혀 있었다. 주기가 갈린 뒤로는
+            #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).
+            "reb": (S.get("reb") or REB_DEFAULT) if S["kind"] == "xsec" else None,
+            "reb_label": (REB_KINDS[S.get("reb") or REB_DEFAULT] if S["kind"] == "xsec" else None),
             "start": d2[0], "n_days": len(d2),
             # 커버리지 게이트가 무보유로 둔 월말 수. 0 이 아니면 그 규칙의 표본은 화면에 적힌
             # 기간보다 짧다 — 시작일(start)이 이미 재기준돼 있으므로 여기서는 사유만 남긴다.
@@ -5442,11 +5575,34 @@ def run():
                     "PREREG-2026-08-13-NSWEEP.md). ⚠ 셋 중 최고를 고른 값이므로 이 규칙의 t 는 "
                     "그만큼 부풀려져 있다 — 위 tried 의 세 t 를 같이 보라. 동점이면 작은 N 이다.",
         }
+        # 🚨 고른 N 을 **sid 를 되돌리기 전에** 잡아 둔다. `_n_of()` 는 sid 에서 읽는데
+        #   아래에서 sid 를 밑동으로 바꿔 버리므로, 그 뒤에 부르면 언제나 TOPN 이 나온다.
+        #   그 탓에 이름에 크기를 붙이는 줄이 **한 번도 안 걸렸고**, 실제로 20·30종을 드는
+        #   56종이 화면에 "상위 10" 이라고 적혀 나갔다(2026-08-13 실측).
+        _nwin = _n_of(_best)
         # 승자의 sid·이름은 밑동으로 되돌린다(화면·PIT·조인이 밑동 sid 를 쓴다).
         _best["sid"] = _b
-        _best["name"] = _best["name"].split(" · ")[0] if " · " in _best["name"] else _best["name"]
-        if _n_of(_best) != TOPN:
-            _best["name"] = "%s (%d종)" % (_best["name"], _n_of(_best))
+        # 🚨 2026-08-13 — 종전에는 `name.split(" · ")[0]` 이었다. 변형 이름을
+        #   "밑동 · 20종" 으로 짓고 그 역을 자름으로 구했는데, **밑동 이름 자체에
+        #   ' · ' 가 있으면 그 뒤가 통째로 날아간다.** 실제로 x-clv 가
+        #   "종가 위치 상위 10 (마감 압력 · 1개월 수익 중립)" → "종가 위치 상위 10 (마감 압력"
+        #   으로 나가 괄호도 안 닫힌 채 화면에 실렸다(사용자가 발견).
+        #   구분자를 되짚지 않고 **밑동 레코드의 이름을 그대로 가져온다** — 같은 족에
+        #   밑동(접미사 없는 sid)이 이미 들어 있다.
+        _basename = next((r["name"] for r in _rs if _NSW_MARK not in r["sid"]), None)
+        if _basename:
+            _best["name"] = _basename
+        if _nwin != TOPN:
+            # 밑동 이름은 등록 때 "…상위 10" / "…최하위 10" 처럼 **TOPN 이 글자로 박혀서**
+            # 만들어진다(`% TOPN`). 뒤에 "(30종)" 을 붙이면 "상위 10 (30종)" 이 되어 두 수가
+            # 서로 부딪친다 — 박힌 수를 **고른 N 으로 바꿔** 준다.
+            _nm, _hit = _best["name"], False
+            for _p in ("상위 %d" % TOPN, "최하위 %d" % TOPN, "최저 %d" % TOPN):
+                if _p in _nm:
+                    _nm = _nm.replace(_p, _p.replace(str(TOPN), str(_nwin)))
+                    _hit = True
+            # 크기가 안 박힌 이름(예: "에코 모멘텀 (12~7개월 전 구간)")은 뒤에 적는다.
+            _best["name"] = _nm if _hit else ("%s (%d종)" % (_nm, _nwin))
         _win[_b] = _best
         for r in _rs:
             if r is not _best:
@@ -5530,16 +5686,27 @@ def run():
             # retro = **같은 창의 소급 레그**. 이것과의 차이가 유니버스 편향이다 —
             # 랩 본편(더 긴 창)과 직접 빼면 구간 차이가 섞여 편향이 아니게 된다.
             _rt = _r.get("retro") or {}
-            PIT_MEASURED[_r["sid"]] = (_m.get("cagr"), _m.get("sharpe"), _r.get("t"),
-                                       _r.get("bias_excess"), _rt.get("excess_cagr"),
-                                       _rt.get("t"), _r.get("bias_cagr"),
-                                       (_rt.get("metrics") or {}).get("cagr"),
-                                       _r.get("bench_bias_cagr"),
-                                       # 🚨 대조군·창을 전략별로 받는다. 전에는 마지막 전략의
-                                       #   bench 를 전 규칙 공통으로 썼는데, 보유시작 재기준으로
-                                       #   창이 갈리는 규칙(x-season 은 231거래일 늦게 시작)에서
-                                       #   초과수익이 이중으로 어긋났다(적대감사).
-                                       _b.get("cagr"), _r.get("start"), _r.get("n_days"))
+            _rm = _rt.get("metrics") or {}
+            # 🚨 2026-08-13 — 12칸 튜플이었다. 여기에 값을 하나 더 붙이려면 저 아래 언팩과
+            #   자릿수를 손으로 맞춰야 했고, 그런 어긋남은 예외를 안 내고 조용히 지나간다
+            #   (이 파일에서 이미 한 번 겪었다 — load() 반환 자릿수가 밀려 섹터가 전부 None).
+            #   이름으로 꺼내게 딕셔너리로 바꾼다.
+            PIT_MEASURED[_r["sid"]] = {
+                "cagr": _m.get("cagr"), "sharpe": _m.get("sharpe"), "mdd": _m.get("mdd"),
+                "vol": _m.get("vol"), "t": _r.get("t"),
+                "bias_excess": _r.get("bias_excess"), "bias_cagr": _r.get("bias_cagr"),
+                "bias_sharpe": _r.get("bias_sharpe"),
+                "retro_excess": _rt.get("excess_cagr"), "retro_t": _rt.get("t"),
+                "retro_cagr": _rm.get("cagr"), "retro_sharpe": _rm.get("sharpe"),
+                "retro_mdd": _rm.get("mdd"),
+                "bench_bias_cagr": _r.get("bench_bias_cagr"),
+                # 🚨 대조군·창을 전략별로 받는다. 전에는 마지막 전략의 bench 를 전 규칙
+                #   공통으로 썼는데, 보유시작 재기준으로 창이 갈리는 규칙(x-season 은
+                #   231거래일 늦게 시작)에서 초과수익이 이중으로 어긋났다(적대감사).
+                "bench_cagr": _b.get("cagr"), "bench_sharpe": _b.get("sharpe"),
+                "bench_mdd": _b.get("mdd"),
+                "start": _r.get("start"), "n_days": _r.get("n_days"),
+            }
             PIT_BENCH = _b.get("cagr")
         print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
               % ("pit_strategies.json", len(PIT_MEASURED), PIT_WINDOW, PIT_BENCH or 0))
@@ -5554,28 +5721,39 @@ def run():
         m = PIT_MEASURED.get(r["sid"])
         if not m:
             continue
-        pc, ps, pt, pbias, prx, prt, pbc, prc, pbb, pbn, pst, pnd = m
+        pt, pst = m["t"], m["start"]
         if pt is None:
             continue
-        _bn = pbn if pbn is not None else PIT_BENCH
+        _bn = m["bench_cagr"] if m["bench_cagr"] is not None else PIT_BENCH
         _win = ("%s~%s" % (pst[:7], PIT_ASOF[:7])) if (pst and PIT_ASOF) else PIT_WINDOW
-        r["pit"] = {"window": _win, "cagr": pc, "sharpe": ps, "t": pt,
-                    "n_days": pnd,
+        r["pit"] = {"window": _win, "cagr": m["cagr"], "sharpe": m["sharpe"],
+                    "mdd": m["mdd"], "vol": m["vol"], "t": pt,
+                    "n_days": m["n_days"],
                     # 다중검정 문턱은 화면이 손으로 적지 않게 여기서 실어 보낸다 — explorer 에
                     # '27종·3.11·랩 51종·3.30' 이 박혀 있었고 실제(33·57)와 어긋났다.
                     "n_rules": len(PIT_MEASURED), "t_crit": PIT_DOC.get("t_crit"),
                     "n_family_lab": PIT_DOC.get("n_family_lab"),
                     "t_crit_lab": PIT_DOC.get("t_crit_lab"),
                     "n_over": sum(1 for _v in PIT_MEASURED.values()
-                                  if _v[2] is not None
-                                  and abs(_v[2]) >= (PIT_DOC.get("t_crit_lab") or 99)),
+                                  if _v["t"] is not None
+                                  and abs(_v["t"]) >= (PIT_DOC.get("t_crit_lab") or 99)),
                     "t_max": PIT_DOC.get("t_max"),
-                    "bench_cagr": _bn, "excess_cagr": round(pc - _bn, 2),
+                    "bench_cagr": _bn, "excess_cagr": round(m["cagr"] - _bn, 2),
+                    # 대조군도 두 축을 다 싣는다 — 화면이 PIT 레그를 머리로 올릴 때
+                    # 소급 레그와 같은 방식으로 '지수 대비 차이'를 적을 수 있어야 한다.
+                    "bench_sharpe": m["bench_sharpe"], "bench_mdd": m["bench_mdd"],
                     # 같은 창의 소급 레그와 그 차이 — 화면이 '편향이 얼마였나'를 적을 수 있게.
                     # 🚨 bias_cagr(전략 CAGR 기준)가 편향의 본체다. bias_excess 는 두 레그의
                     #   대조군이 각자의 동일가중 지수라 벤치 편향이 상쇄돼 항상 그만큼 깎인다.
-                    "retro_excess": prx, "retro_t": prt, "bias_excess": pbias,
-                    "retro_cagr": prc, "bias_cagr": pbc, "bench_bias_cagr": pbb}
+                    "retro_excess": m["retro_excess"], "retro_t": m["retro_t"],
+                    "bias_excess": m["bias_excess"],
+                    "retro_cagr": m["retro_cagr"], "bias_cagr": m["bias_cagr"],
+                    # 🚨 샤프·MDD 의 소급 레그도 싣는다(2026-08-13 사용자 지시 "가능하면
+                    #   시점정확 레그를 사용"). 종전에는 PIT 이 CAGR 만 실려 있어, 화면이
+                    #   PIT 을 머리로 올리려 해도 샤프·최대낙폭은 소급값밖에 없었다.
+                    "retro_sharpe": m["retro_sharpe"], "retro_mdd": m["retro_mdd"],
+                    "bias_sharpe": m["bias_sharpe"],
+                    "bench_bias_cagr": m["bench_bias_cagr"]}
         if GATE_PIT and r["verdict"] == "통과 후보" and abs(pt) < tcrit:
             _dg.append((r["name"], r["t"], pt))
             r["verdict"] = "구별 불가"

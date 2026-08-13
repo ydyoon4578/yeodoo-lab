@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "978409ebd6702236",
+ "generated_from": "27d891c5573a7506",
  "categories": [
   {
    "name": "시장",
@@ -238,6 +238,16 @@
      "desc": "A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다",
      "verdict": "na",
      "src": "none",
+     "effort": "M",
+     "live": true
+    },
+    {
+     "name": "지수 편입 원장",
+     "file": "constituents.html",
+     "status": "existing",
+     "desc": "S&P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지",
+     "verdict": "na",
+     "src": "raw",
      "effort": "M",
      "live": true
     },

@@ -276,6 +276,11 @@
   .labperf .lpg>div.hi b{font-size:1.12em}
   .labperf .lpg .dlt{font-family:var(--mono);font-size:.8em;font-weight:600;margin-left:4px}
   .labperf .lpg .dlt.up{color:var(--gA)} .labperf .lpg .dlt.dn{color:var(--rej)}
+  /* 두 레그(시점정확·소급)에 이름표를 붙인다 — 창이 다르므로 어느 쪽 숫자인지가 보여야 한다. */
+  .labperf .legttl{font-family:var(--mono);font-size:11px;letter-spacing:.05em;font-weight:700;
+                   padding:7px 10px 6px;border-left:3px solid var(--line)}
+  .labperf .legttl.legpit{color:var(--gA);border-left-color:var(--gA)}
+  .labperf .legttl.legretro{color:var(--muted);border-left-color:var(--line);margin-top:10px}
   .selfperf{padding:15px 18px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
   .selfperf .sph{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;
                  display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
@@ -866,6 +871,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
           <a class="mmi" href="method.html" data-nav="method.html" title="A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
           <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
         </div>
@@ -1293,7 +1299,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
             _pool:x.pool||null, _thin:x.n_thin||0, _bask:x.bask||null,
-            _risk:x.risk||null, _rv:x.risk_verdict||null, _ax:x.axes||null, _b2:x.bench_alt||null
+            _risk:x.risk||null, _rv:x.risk_verdict||null, _ax:x.axes||null, _b2:x.bench_alt||null,
+            // 카드 머리가 시점정확 레그를 먼저 적는다(2026-08-13). 아래 vp 문단에도 같은
+            // 자료가 쓰이지만, 머리 숫자로 쓰려면 이 자리로 넘어와야 한다.
+            _pit:x.pit||null,
+            // 리밸런스 주기 — 규칙마다 다르다(PREREG-2026-08-13-REBAL).
+            _reb:x.reb_label||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
@@ -2652,6 +2663,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(d._t!=null)labRows.push(['t값',Number(d._t).toFixed(2)]);
       if(d._beta!=null)labRows.push(['실측 베타',Number(d._beta).toFixed(2)]);
       if(d._turn!=null)labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회']);
+      // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
+      //   글자로 박아 두면 됐다. 주기가 갈린 뒤로는 그 글자가 곧 거짓말이 될 수 있어
+      //   자료에서 읽어 적는다. 연 회전 바로 밑에 둔다 — 둘은 같이 읽어야 하는 값이다.
+      if(d._reb)labRows.push(['리밸런스', d._reb+
+        (d._reb==='월말'?'':' — 신호 수명에 맞춰 이 규칙만 옮겼습니다(주기는 규칙 성격이 정하고, 성적을 보고 고르지 않았습니다)')]);
       // 🚨 채점 후보 수 — '상위 10종'이 몇 종중에서 골람 것인지를 적는다.
       //   모으기만 하고 화면에 안 내면 모은 적 없는 것과 같다 — n_thin 이 오래 그 상태였다.
       if(d._pool){
@@ -2695,7 +2711,43 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       var mm=d._m||{}, bb=d._b||{};
       var f=function(v,k){return (v==null||v!==v)?'—':Number(v).toFixed(k==null?2:k);};
+      // 🚨 2026-08-13 사용자 지시 — "가능하면 시점정확 레그를 사용하는 게 중요해".
+      //   아래 lpg 는 **소급 레그**다(오늘의 유니버스를 과거로 소급). 그 위에 시점정확(PIT)
+      //   레그를 같은 모양으로 한 줄 더 놓고, 두 레그에 이름을 붙인다. 종전에는 PIT 이
+      //   '확인할 것' 문단에 CAGR 한 줄로만 나가서, 카드 머리 숫자는 전부 소급이었다.
+      //   ⚠ 창이 다르다(PIT 5.0년 · 소급 16.6년). 그래서 대체가 아니라 병기다 — 두 줄
+      //     각각에 자기 구간을 적는다. 창을 안 적고 섞으면 그게 더 나쁜 거짓말이다.
+      var Pq=d._pit||null;
+      var legRow=function(m,b,lab,st,en,note){
+        return '<div class="lpg">'+
+          '<div><span>'+lab+'</span><b>'+esc((st||'').slice(0,7)+'~'+(en||'').slice(0,7))+
+            (spanTxt(st,en)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(st,en)+'</span>':'')+
+            (note?'<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">'+note+'</span>':'')+'</b></div>'+
+          '<div class="hi"><span>샤프</span><b>'+f(m.sharpe,3)+
+            (b.sharpe!=null&&m.sharpe!=null?' <span class="dlt '+
+              (m.sharpe-b.sharpe>0?'up':'dn')+'">'+(m.sharpe-b.sharpe>0?'+':'')+
+              f(m.sharpe-b.sharpe,3)+'</span>':'')+'</b></div>'+
+          '<div class="hi"><span>최대낙폭</span><b>'+f(m.mdd)+'%'+
+            (b.mdd!=null&&m.mdd!=null?' <span class="dlt '+
+              (m.mdd-b.mdd>0?'up':'dn')+'">'+(m.mdd-b.mdd>0?'+':'')+
+              f(m.mdd-b.mdd)+'%p</span>':'')+'</b></div>'+
+          '<div><span>CAGR</span><b>'+f(m.cagr)+'%'+
+            (b.cagr!=null&&m.cagr!=null?' <span class="dlt '+
+              (m.cagr-b.cagr>0?'up':'dn')+'">'+(m.cagr-b.cagr>0?'+':'')+
+              f(m.cagr-b.cagr)+'%p</span>':'')+'</b></div>'+
+          '<div><span>지수 샤프 · MDD · CAGR</span><b>'+f(b.sharpe,3)+' · '+
+            f(b.mdd)+'% · '+f(b.cagr)+'%</b></div>'+
+        '</div>';
+      };
       var perf='<div class="labperf">'+
+        (Pq?('<div class="legttl legpit">시점정확 — 그때 실제로 지수에 있던 종목만</div>'+
+             legRow({sharpe:Pq.sharpe,mdd:Pq.mdd,cagr:Pq.cagr},
+                    {sharpe:Pq.bench_sharpe,mdd:Pq.bench_mdd,cagr:Pq.bench_cagr},
+                    '구간', (Pq.window||'').split('~')[0], (Pq.window||'').split('~')[1],
+                    '같은 창 소급 대비 편향 '+(Pq.bias_cagr==null?'—':((Pq.bias_cagr>0?'+':'')+Pq.bias_cagr+'%p CAGR'))+
+                    (Pq.bias_sharpe==null?'':(' · '+(Pq.bias_sharpe>0?'+':'')+Number(Pq.bias_sharpe).toFixed(3)+' 샤프')))+
+             '<div class="legttl legretro">소급 — 오늘의 유니버스를 과거에 적용 (부풀려져 있다)</div>')
+           :'')+
         '<div class="lpg">'+
           '<div><span>구간</span><b>'+esc((d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7))+
             (spanTxt(d._start,d._end)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(d._start,d._end)+'</span>':'')+'</b></div>'+

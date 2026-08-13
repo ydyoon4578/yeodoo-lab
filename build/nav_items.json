@@ -221,6 +221,15 @@
      "effort": "M"
     },
     {
+     "name": "지수 편입 원장",
+     "file": "constituents.html",
+     "status": "existing",
+     "desc": "S&P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지",
+     "src": "raw",
+     "verdict": "na",
+     "effort": "M"
+    },
+    {
      "name": "갱신 기록",
      "file": "updates.html",
      "status": "existing",
