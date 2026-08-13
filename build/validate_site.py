@@ -3049,6 +3049,48 @@ try:
 except Exception as _e:
     errors.append("백테스트 길이 상한 검사가 예외로 죽었다 — %s" % _e)
 
+# ── `%%` 가 산출물에 남았는가 — 전 파일 훑기 ────────────────────────────
+# 🚨 2026-08-14. CI 가 signal_lab 의 마크다운 `**` 를 잡았고, 그 옆에서 `상위 5%%` 를
+#   발견했다. `%%` 는 파이썬 % 서식의 이스케이프인데 그 문자열에 % 연산자가 안 붙으면
+#   **화면에 `5%%` 로 그대로 찍힌다.** 기존 누출 검사는 파일 넷(signal_lab·tech·pairs·
+#   asset)의 지정 필드만 봐서, 같은 병이 다른 파일·다른 필드에 6곳 더 살아 있었다
+#   (x-updown·x-currat·x-custconc·x-ratebeta·x-aci 의 why 와 자산 랩 규약).
+#   → 파일을 고르지 않고 **data/ 전부**를 훑는다. `%%` 는 어떤 렌더러도 되돌리지 않으므로
+#     의도된 표기일 수가 없다(마크다운 `**` 와 달리 예외가 없다).
+# ⚠ _ 로 시작하는 로컬 캐시는 화면에 안 나가므로 제외한다.
+try:
+    _pcthits = []
+
+    def _pctwalk(o, path, fn):
+        if isinstance(o, str):
+            if "%%" in o:
+                _pcthits.append((fn, path, o[:60]))
+        elif isinstance(o, dict):
+            for _k, _v in o.items():
+                _pctwalk(_v, path + "." + str(_k), fn)
+        elif isinstance(o, list):
+            for _i, _v in enumerate(o):
+                _pctwalk(_v, path + "[%d]" % _i, fn)
+
+    for _fn in sorted(os.listdir(os.path.join(ROOT, "data"))):
+        if not _fn.endswith(".json") or _fn.startswith("_"):
+            continue
+        try:
+            _pctwalk(json.load(io.open(os.path.join(ROOT, "data", _fn), encoding="utf-8")), "", _fn)
+        except Exception:
+            continue
+    if _pcthits:
+        _u = sorted({h[2] for h in _pcthits})
+        errors.append("산출물에 '%%%%' 가 남았다 %d곳(고유 문구 %d개) — %s. 파이썬 %% 서식의 "
+                      "이스케이프인데 그 문자열에 %% 연산자가 안 붙어 화면에 그대로 찍힌다. "
+                      "빌더 소스에서 고칠 것"
+                      % (len(_pcthits), len(_u),
+                         " / ".join("%s %s" % (h[0], h[1][:26]) for h in _pcthits[:4])))
+    else:
+        print("  ~ '%%' 누출 검사 통과(data/ 전 파일)")
+except Exception as _e:
+    errors.append("'%%' 누출 검사가 예외로 죽었다 — %s" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
