@@ -335,6 +335,64 @@ TR_HOR = [("1W", 7), ("1M", 30), ("3M", 91), ("6M", 181), ("12M", 365)]
 MONTHLY_MIN_DAYS = 28
 
 
+# 지수 일간 계열 — trails 와 **같은 창**에서 재려고 여기 한 번만 만든다.
+# 🚨 market_board 의 구간 수익을 가져다 쓰면 안 된다. 그쪽 기준일은 고정인데 전략의 창은
+#   줄마다 다르다(기준일 08-07/07-31 · 끝 08-12/08-07/06-30 …). 다른 창의 두 수를 빼면
+#   그 차이는 초과수익이 아니라 창 차이다 — 짧은 구간일수록 통째로 그것만 잰다.
+_IXPX = None
+
+
+def _ix_load():
+    global _IXPX
+    if _IXPX is not None:
+        return _IXPX
+    A = load("assets.json") or {}
+    d, px = A.get("dates") or [], A.get("px") or {}
+    _IXPX = {"d": d, "spx": px.get("^GSPC"), "ndx": px.get("^NDX"),
+             "pos": {x: i for i, x in enumerate(d)},
+             "last": {}}
+    for i, x in enumerate(d):
+        _IXPX["last"][x[:7]] = i            # 그 달의 마지막 거래일(월간 격자용)
+    return _IXPX
+
+
+def _ix_at(ix, day):
+    """그 날짜(또는 그 이전 마지막 거래일)의 위치. 'YYYY-MM' 이면 그 달 말."""
+    s_ = str(day)[:10]
+    if len(s_) == 7:
+        return ix["last"].get(s_)
+    i = ix["pos"].get(s_)
+    if i is not None:
+        return i
+    ks = [j for j, x in enumerate(ix["d"]) if x <= s_]
+    return ks[-1] if ks else None
+
+
+def trails_ix_of(base, end):
+    """전략의 각 구간 [기준일 ~ 계열 끝] 에서 지수 수익(%). 못 재면 그 칸을 안 만든다."""
+    if not base or not end:
+        return None
+    ix = _ix_load()
+    if not ix["d"]:
+        return None
+    i1 = _ix_at(ix, end)
+    if i1 is None:
+        return None
+    out = {}
+    for k, d0 in base.items():
+        i0 = _ix_at(ix, d0)
+        if i0 is None or i0 >= i1:
+            continue
+        cell = {}
+        for lab in ("spx", "ndx"):
+            a = ix.get(lab)
+            if a and a[i0] and a[i1]:
+                cell[lab] = round((a[i1] / a[i0] - 1) * 100, 2)
+        if cell:
+            out[k] = cell
+    return out or None
+
+
 def trails_of(dates, nav):
     """구간별 누적수익(%) 과 그때 실제로 쓴 기준일. 못 재면 그 칸을 안 만든다."""
     if not dates or not nav or len(dates) != len(nav) or len(nav) < 3:
@@ -395,6 +453,10 @@ def rec(**kw):
     kw.pop("dates", None)
     if _tr:
         kw["trails"], kw["trails_base"] = _tr, _trb
+        # 같은 창의 지수 수익 — 화면이 'vs S&P 500' 열을 만들 수 있게(위 _ix_load 주석).
+        _ti = trails_ix_of(_trb, kw.get("end"))
+        if _ti:
+            kw["trails_ix"] = _ti
     for key in ("nav", "bnav"):
         if kw.get(key):
             kw[key] = thin(kw[key])
