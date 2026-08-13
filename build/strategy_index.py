@@ -625,7 +625,22 @@ def main() -> int:
     # 종목 전략은 전부 목록에 싣는다 — 판정(등급)이 이미 그 정보를 담고 있고, 목록에서까지
     # 빼면 '무엇을 재고 무엇을 버렸나'가 화면에서 사라진다.
     _hidden, _hidden_bond, _hidden_sids = [], [], set()
+    # 🚨 시가총액 하한 변형 4종을 **목록에서 뺀다**(사용자 결정 2026-08-13).
+    #   사용자 사유는 "필터 없는 전략보다 성과가 별로"였고, 나는 그 사유가 뒤집혀 있다고
+    #   실측으로 알렸다 — 이 넷은 성과를 노린 전략이 아니라 **생존편향을 재려고 등록한
+    #   진단**이고(PREREG-2026-08-12-MCAPFLOOR), CAGR 이 낮은 것은 성적이 나빠서가 아니라
+    #   편향이 절반 빠졌기 때문이다(45.24→20.99 · 43.74→17.42 · 31.01→12.59 %p).
+    #   즉 39% 쪽이 53% 쪽보다 진짜에 가깝다. 그 설명을 듣고 사용자가 제거를 재확인했다.
+    # ⚠ **빌더는 계속 잰다.** tech_backtest 에서 지우지 않는 이유가 둘이다 —
+    #   ① MCAPFLOOR 사전등록 결과(편향 반토막·PIT 불변)가 재현 불가가 되면 안 된다.
+    #   ② 이 랩의 규약이 "끄는 것과 안 재는 것은 다르다"이다.
+    #   되살리려면 이 집합을 비우면 된다.
+    MCF_HIDE = {"x-dist200-mcf", "x-mom12-mcf", "x-hlspread-mcf", "x-hurst-mcf"}
+    _mcf = []
     for r in (t.get("strategies") or []):
+        if r.get("sid") in MCF_HIDE:
+            _mcf.append(r["name"])
+            continue
         rows.append(rec(
             sid="t-" + r["sid"], name=r["name"], role=r.get("role") or "미분류",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
@@ -992,9 +1007,19 @@ def main() -> int:
         "n": len(rows),
         # 의도적으로 목록에서 뺀 것들. validate 의 '원본 합계와 맞나' 가드가 이 수를 더해
         # 검사하므로, 여기 기록하지 않으면 낡은 목록 검출이 무력해진다.
-        "n_hidden": len(_hidden) + len(_hid2),
+        "n_hidden": len(_hidden) + len(_hid2) + len(_mcf),
         "hidden": ([{"name": _n, "sharpe": _s} for _n, _s in sorted(_hidden, key=lambda x: -x[1])]
-                   + [{"name": _n, "role": _r} for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0]))]),
+                   + [{"name": _n, "role": _r} for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0]))]
+                   + [{"name": _n, "why": "시총 하한 변형"} for _n in sorted(_mcf)]),
+        # ⚠ 이 문구를 반드시 남긴다. 넷이 화면에서 사라지면 다음 사람은 밑동의 CAGR 53% 만
+        #   보게 되는데, 그 값의 44%p 가 생존편향이라는 사실이 이 줄에만 남는다.
+        "hidden_note_mcf": (
+            "시가총액 하한 변형 %d종을 목록에서 뺐다(사용자 결정 2026-08-13). "
+            "⚠ 성적이 나빠서가 아니다 — 이 넷은 생존편향을 재려고 등록한 진단이고"
+            "(PREREG-2026-08-12-MCAPFLOOR), 편향이 절반 빠진 만큼 CAGR 이 낮게 나온다"
+            "(45.24→20.99 · 43.74→17.42 · 31.01→12.59 %%p). 즉 밑동보다 진짜에 가까운 "
+            "숫자다. 측정은 계속한다 — tech_strategies.json 에 그대로 있고 다중검정 N 도 "
+            "줄이지 않는다." % len(_mcf)) if _mcf else None,
         "hidden_note_defensive": (
             "위험감축·방어보험·합병차익·섹터RP·거장겹침·수익엔진 %d종을 목록에서 뺐다(사용자 결정). "
             "이 계열들을 이 랩에서 다루지 않기로 한 **운용 결정**이지 성과 판정이 아니다 — "
