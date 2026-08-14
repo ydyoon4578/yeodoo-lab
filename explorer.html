@@ -999,7 +999,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <input id="q" type="search" placeholder="전략 이름·설명 검색 (예: 상품, RP, 채권, 오버나이트)" aria-label="전략 검색">
       </label>
       <button class="sortbtn" id="sort">정렬 ↓ 샤프</button>
-      <button class="fltbtn" id="fltbtn" aria-expanded="true" aria-controls="chipwrap">
+      <button class="fltbtn" id="fltbtn" aria-expanded="false" aria-controls="chipwrap">
         <span class="fcar" aria-hidden="true">▾</span><span id="fltnow">필터</span>
       </button>
     </div>
@@ -1007,7 +1007,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          여럿을 겹쳐 켤 수가 없다). 그래서 칩줄이 아니라 세그먼트 컨트롤로 둔다. -->
     <div class="rgtabs" id="rgtabs" role="tablist" aria-label="경기 국면"></div>
     <div id="rgbanner"></div>
-    <div class="chipwrap" id="chipwrap">
+    <!-- ⚠ hidden 을 마크업에서 건다. 스크립트(setFlt)만으로 접으면 그 전에 한 번 그려져
+         칩 줄 넷이 번쩍했다가 사라진다(첫 화면에서 목록이 밀렸다 올라온다). -->
+    <div class="chipwrap" id="chipwrap" hidden>
       <div class="chiprow" id="bfilters" role="group" aria-label="벤치마크 유형 필터"><span class="fltlab">벤치마크</span></div>
       <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
       <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"><span class="fltlab">용도</span></div>
@@ -1820,12 +1822,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   (function(){
     var b=el('fltbtn'); if(!b)return;
     b.addEventListener('click',function(){setFlt(el('chipwrap').hidden);});
-    // **항상 펼친 채 시작한다**(사용자 결정 2026-07-30). 전에는 넓은 화면에서도 접고
-    // 시작했는데 — 칩 줄 넷이 200px 을 먹어 목록 첫 줄이 밀린다는 이유였다 — 정작 어떤 축으로
-    // 걸러 볼 수 있는지가 화면에 안 보였다. 접는 것은 버튼으로 언제든 되므로 기본값을 뒤집는다.
-    //   ⚠ 화면 폭으로 분기하지 않는다. 그렇게 두면 창이 760px 아래인 사람에게는 여전히
-    //     닫혀 보인다(실측: 이 프리뷰 창이 715px 이라 분기판에서 접혀 있었다).
-    setFlt(true);
+    // 🚨 **항상 접은 채 시작한다**(사용자 지시 2026-08-14: "전략 랩에서 필터는 기본적으로
+    //   닫아줘"). 종전 기본값은 '펼침' 이었다(2026-07-30) — 어떤 축으로 걸러 볼 수 있는지가
+    //   화면에 안 보인다는 사유였다. 그 사유를 지우지 않고 기록으로 남긴다: 칩 줄 넷이
+    //   200px 을 먹어 목록 첫 줄이 밀리는 쪽이 더 큰 값으로 판정된 것이다.
+    //   ⚠ 접혀 있어도 **걸린 필터 개수는 버튼에 찍힌다**(fltLabel — '필터 · 3개 적용').
+    //     그게 없으면 접힌 상태에서 왜 목록이 짧은지 알 길이 없다.
+    //   ⚠ 화면 폭으로 분기하지 않는다(종전 주석의 사유 그대로). 폭으로 갈라 두면 사람마다
+    //     첫 화면이 달라져 "왜 내 것만 다르냐" 가 된다.
+    setFlt(false);
   })();
   function render(){
     var rows=filtered();
