@@ -473,6 +473,58 @@ def mdd_ix_of(dates, nav):
     return out if ("spx" in out or "ndx" in out) else None
 
 
+def _pit_dist():
+    """게시 중이면서 시점정확(PIT) 레그를 받은 규칙의 **생존편향 분포**.
+
+    소급 초과 − PIT 초과 = 그 규칙의 초과수익 중 생존편향이 만든 몫이다.
+    ⚠ 등급을 매기지 않는다 — 세는 것뿐이다. 이 랩은 2026-08-13 에 성적 문턱을 없앴고,
+      PIT 초과가 음수인 것은 성적이지 타당성 실패가 아니다(게시 규칙의 42%가 그렇다).
+    ⚠ 화면은 이 값을 **전사만** 한다. 화면이 다시 세면 두 곳이 갈린다.
+    """
+    T = load("tech_strategies.json") or {}
+    P = load("pit_strategies.json") or {}
+    live = {x["sid"] for x in (T.get("strategies") or [])}
+    rows = [x for x in (P.get("strategies") or []) if x.get("sid") in live]
+    if not rows:
+        return None
+    neg = bias = ok = 0
+    bs = []
+    worst = None
+    for x in rows:
+        pe = x.get("excess_cagr")
+        be = x.get("bias_excess") or 0.0
+        if pe is None:
+            continue
+        bs.append(be)
+        if worst is None or be > worst[1]:
+            worst = (x["sid"], be, x.get("name"))
+        if pe <= 0:
+            neg += 1
+        elif (pe + be) / pe >= 2.0:
+            bias += 1
+        else:
+            ok += 1
+    n = neg + bias + ok
+    if not n:
+        return None
+    bs.sort()
+    return {
+        "n": n, "n_lab": len(live),
+        "neg": neg, "bias": bias, "ok": ok,
+        "pct_neg": round(100.0 * neg / n, 1),
+        "pct_bias": round(100.0 * bias / n, 1),
+        "pct_ok": round(100.0 * ok / n, 1),
+        "bias_median": round(bs[len(bs) // 2], 2),
+        "bias_max": round(worst[1], 2) if worst else None,
+        "bias_max_sid": worst[0] if worst else None,
+        "bias_max_name": worst[2] if worst else None,
+        "note": ("게시 중이면서 시점정확 레그를 받은 %d종을 센 것이다. '부호 반전'은 "
+                 "생존편향을 걷으면 대조군에 진다는 뜻이고, '편향 우세'는 초과의 절반 "
+                 "이상이 편향이라는 뜻이다(문턱 2.0 은 PREREG-2026-08-14-FLOW 의 F2 와 "
+                 "같은 값). 등급이 아니라 계수다." % n),
+    }
+
+
 def winrate_of(dates, nav):
     """월간 승률 — S&P 500 을 이긴 달의 비율(%)과 그 표본 개월수.
 
@@ -1253,6 +1305,16 @@ def main() -> int:
                     "위험감축은 목표가 낙폭이라 상시보유와 CAGR·샤프로 겨루면 "
                     "지는 것이 정상이고, 대조군이 현금성이면 샤프 분모가 0에 가까워 Δ가 허수가 된다. "
                     "그런 전략은 따로 묶어 낙폭·위기 구간으로 본다.",
+        # 🚨 2026-08-14 감사(AUDIT-2026-08-14-VOLUME §6) — 랩 전체의 생존편향 분포.
+        #   왜 필요한가: 화면이 이 사실을 **규칙마다 따로만** 적고 전체로는 안 적었다.
+        #   그래서 홈 각주가 "종목 전략은 오늘의 유니버스를 과거로 소급한 값입니다
+        #   (생존편향 상한 연 +6.60%p)" 라고 썼는데, 그 6.60 은 tech_backtest 의
+        #   surv_proxy.gap_cagr 이고 **대조군(유니버스) 자신의 편향**이지 규칙별 편향이
+        #   아니다. 규칙은 그 유니버스에서 상위 10종을 고르므로 편향이 농축된다 —
+        #   실측 최대 +53.79%p(x-amihud)로 그 '상한'의 8배다. 상한이 아닌 것을 상한이라
+        #   적으면 읽는 사람이 자기 위험을 8분의 1로 본다.
+        # ⚠ 여기서 세는 것뿐이다. 판정도 등급도 매기지 않는다(랩은 성적 문턱을 안 쓴다).
+        "pit_dist": _pit_dist(),
         "rg_meta": _regime_meta(_RGM) if _RGM else None,
         "by_role": dict(Counter(r["role"] for r in rows)),
         "by_grade": dict(Counter(r["grade"] for r in rows)),

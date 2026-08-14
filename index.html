@@ -3189,7 +3189,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //     ③ 각주에 생존편향 눈금 — 종목 전략은 오늘의 518종을 과거로 소급한 값이다
   //   ⚠ 계산하지 않는다. strategy_index.json 의 trails 를 그대로 옮긴다.
   (function(){
-    var TP_HZ='12M', TP=null, TPMETA=null;
+    var TP_HZ='12M', TP=null, PITD=null;
     // ⚠ 위 HZL 과 **글자까지 같아야 한다** — 한 화면에 같은 기간 버튼이 두 벌 있다.
     var TP_LAB={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var TP_N=10;
@@ -3330,9 +3330,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               '수익률·최대낙폭 칸의 작은 두 수는 <b>같은 창에서 잰 S&P 500 / 나스닥 100</b>입니다(초과분이 아니라 지수 자신의 값).',
               // 이 한 줄이 없으면 게이트형이 30%대로 나오는 것이 고장으로 읽힌다.
               '월간 승률은 <b>배당을 얹은 지수</b>와 비교한 것이라, 지수를 그대로 따라간 달은 이긴 달로 세지 않습니다.'];
-      if(TPMETA&&TPMETA.gap_cagr!=null)
-        _n.push('종목 전략은 오늘의 유니버스를 과거로 소급한 값입니다(생존편향 상한 연 +'+
-          TPMETA.gap_cagr.toFixed(2)+'%p).');
+      // 🚨 2026-08-14 — 여기가 "생존편향 **상한** 연 +6.60%p" 라고 적고 있었다. 그 6.60 은
+      //   tech_backtest 의 surv_proxy.gap_cagr 이고 **대조군(유니버스) 자신의 편향**이지
+      //   규칙별 편향이 아니다. 규칙은 그 유니버스에서 상위 10종을 고르므로 편향이
+      //   농축된다 — 실측 최대 +53.79%p(x-amihud)로 그 '상한'의 8배다.
+      //   상한이 아닌 것을 상한이라 적으면 읽는 사람이 자기 위험을 8분의 1로 본다.
+      // ⚠ 화면이 다시 세지 않는다. strategy_index 가 구운 pit_dist 를 전사한다.
+      if(PITD&&PITD.n)
+        _n.push('🚨 이 수치는 <b>오늘의 유니버스를 과거로 소급</b>한 것입니다. 시점정확'+
+          '(그달 실제 편입 종목만)으로 다시 재면 게시 '+PITD.n+'종 중 <b>'+PITD.neg+'종('+
+          PITD.pct_neg+'%)이 대조군에 지고</b>, '+PITD.bias+'종('+PITD.pct_bias+
+          '%)은 초과의 절반 이상이 생존편향입니다. 편향 중앙 +'+PITD.bias_median.toFixed(2)+
+          '%p · 최대 +'+PITD.bias_max.toFixed(2)+'%p('+esc(PITD.bias_max_name||'')+').');
       note.innerHTML=_n.join(' ');
       bar.querySelectorAll('button').forEach(function(b2){
         b2.addEventListener('click',function(){TP_HZ=this.getAttribute('data-h'); draw();});
@@ -3342,13 +3351,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ market_board 는 더 이상 안 받는다. 지수 수치를 화면에서 빼지 않고 **빌더가
     //   전략의 창 그대로 재서 실어 보내기 때문**이다(strategy_index.trails_ix).
     //   여기서 다른 파일의 고정 기준일 수치를 빼면 창 차이를 초과수익이라 부르게 된다.
-    Promise.all([getj('strategy_index.json'), getj('tech_strategies.json')])
-      .then(function(a){
-        var ix=a[0];
+    // ⚠ tech_strategies.json 은 더 이상 안 받는다. 여기서 쓰던 것은 surv_proxy 하나였고,
+    //   그 값이 '규칙별 생존편향 상한'으로 오독되던 자리라 pit_dist(실측 분포)로 갈았다.
+    //   각주 한 줄 때문에 4MB 파일을 받고 있었다.
+    getj('strategy_index.json')
+      .then(function(ix){
         if(!ix||!ix.items){var tb=el2('tptbl'); if(tb)tb.innerHTML=
           '<tbody><tr><td class="skel2">전략 목록을 받지 못했습니다.</td></tr></tbody>'; return;}
         TP=ix.items.filter(function(r){return r.trails;});
-        TPMETA=(a[1]&&a[1].surv_proxy)||null;
+        PITD=ix.pit_dist||null;      // 랩 전체 생존편향 분포(빌더가 구운 것)
         draw();
       }).catch(function(e){
         var tb=el2('tptbl'); if(tb)tb.innerHTML=
