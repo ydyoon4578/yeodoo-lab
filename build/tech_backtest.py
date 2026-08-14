@@ -1416,6 +1416,160 @@ def arch_lm(Rt, i, win=STAT_WIN, lags=ARCH_LAGS):
 ACORR_WIN = 120          # 사전등록 PREREG-2026-08-12-PATH.md §2① — 자기상관 추정 창
 VOLR_S, VOLR_L = 21, 252 # 같은 문서 §2② — 단기·장기 변동성 창
 
+# 수급 축 5종 — 사전등록 PREREG-2026-08-14-FLOW.md §2 · §5.
+# 🚨 전부 각 지표의 관례값이고 **결과를 보고 안 바꾼다**(등록 §5 가 창 재최적화를 배제했다).
+MFI_WIN = 21             # 자금흐름지수 창(관례 14 의 월 단위 대응 — 한 달 거래일)
+TCHG_S, TCHG_L = 20, 252 # 회전율 변화의 단기·장기 창
+AD_WIN = 60              # 매집·분산선 기울기 창
+VC_WIN, VC_TOP = 60, 5   # 거래량 편중 — 창 60일 중 상위 5일의 비중
+F13_LAG = 45             # 13F 공시 마감(분기말 +45일). 이보다 짧게 쓰면 공시 전 정보다
+
+
+def _dollar_avg(P, V, i, n):
+    """최근 n거래일 평균 **거래대금**(종가×거래량). 주(株)수가 아니라 금액으로 본다 —
+    액면분할 이력이 있는 종목은 주수 계열에 계단이 생기는데 금액에는 안 생긴다."""
+    a = 0.0
+    k = 0
+    for j in range(max(0, i - n + 1), i + 1):
+        p, v = (P[j] if j < len(P) else None), (V[j] if j < len(V) else None)
+        if p and v and p > 0 and v > 0:
+            a += p * v
+            k += 1
+    return (a / k) if k >= n * 0.8 else None
+
+
+def mfi_of(P, H, L, V, i, win=MFI_WIN):
+    """자금흐름지수 — 전형가 방향으로 거래대금을 갈라 양/음 비를 낸다(사전등록 FLOW §2).
+
+    ⚠ 고·저가가 없는 종목은 채점하지 않는다. 종가로 전형가를 대신하면 그것은 MFI 가
+      아니라 x-clv 의 거래량 가중판이 되어, 등록이 갈라 두겠다고 한 두 규칙이 합쳐진다.
+    """
+    if not H or not L or len(H) != len(P) or len(L) != len(P):
+        return None
+    lo_, hi_ = max(1, i - win + 1), i
+    if lo_ > hi_:
+        return None
+    pos = neg = 0.0
+    k = 0
+    prev = None
+    for j in range(lo_ - 1, hi_ + 1):
+        h, l, c, v = H[j], L[j], P[j], (V[j] if j < len(V) else None)
+        if not (h and l and c and v) or v <= 0:
+            prev = None
+            continue
+        tp = (h + l + c) / 3.0
+        if prev is not None and j >= lo_:
+            if tp > prev:
+                pos += tp * v
+            else:
+                neg += tp * v
+            k += 1
+        prev = tp
+    if k < win * 0.8 or (pos + neg) <= 0:
+        return None
+    # 0~100 이 아니라 원 비율을 쓴다 — 순위만 쓰므로 단조변환이고, 100 포화가 안 생긴다.
+    return pos / neg if neg > 0 else float("inf")
+
+
+def ad_slope(P, H, L, V, i, win=AD_WIN):
+    """매집·분산선(A/D) 의 회귀 기울기 ÷ 평균 거래량 — 규모로 나눠 종목 간 비교가 되게 한다."""
+    if not H or not L or len(H) != len(P) or len(L) != len(P):
+        return None
+    lo_, hi_ = max(0, i - win + 1), i
+    ad = 0.0
+    xs, ys, vs = [], [], []
+    for j in range(lo_, hi_ + 1):
+        h, l, c, v = H[j], L[j], P[j], (V[j] if j < len(V) else None)
+        if not (h and l and c and v) or v <= 0 or h <= l:
+            continue
+        ad += (((c - l) - (h - c)) / (h - l)) * v
+        xs.append(len(xs))
+        ys.append(ad)
+        vs.append(v)
+    n = len(xs)
+    if n < win * 0.8:
+        return None
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    den = sum((x - mx) ** 2 for x in xs)
+    if den <= 0:
+        return None
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / den
+    mv = sum(vs) / n
+    return (b / mv) if mv > 0 else None
+
+
+def vol_conc(V, i, win=VC_WIN, top=VC_TOP):
+    """창 안 거래량 상위 top일이 전체에서 차지하는 비중(0~1). 클수록 이벤트에 몰린 것."""
+    w = [x for x in V[max(0, i - win + 1):i + 1] if x is not None and x > 0]
+    if len(w) < win * 0.8:
+        return None
+    s = sum(w)
+    if s <= 0:
+        return None
+    return sum(sorted(w, reverse=True)[:top]) / s
+
+
+# 13F 거장 순매집 — guru_history.json 을 한 번만 읽어 {날짜 → {티커: 증가율}} 로 굽는다.
+# 🚨 분기말 +45일(F13_LAG) 이후에만 그 분기 값을 쓴다. 공시 마감이 그날이라 그전에 쓰면
+#   **아직 공개되지 않은 포지션**을 쓰는 것이 된다(등록 §2 · F5 가 이 지연을 검정한다).
+_GACC = None
+
+
+def _guru_load():
+    global _GACC
+    if _GACC is not None:
+        return _GACC
+    _GACC = []
+    p = os.path.join(DATA, "guru_history.json")
+    if not os.path.exists(p):
+        return _GACC
+    try:
+        g = json.load(io.open(p, encoding="utf-8"))
+    except Exception:
+        return _GACC
+    Q, H = g.get("quarters") or [], g.get("holdings") or {}
+    import datetime as _dt
+    prev = None
+    for q in Q:
+        cur = {}
+        for _m, pos in (H.get(q) or {}).items():
+            if isinstance(pos, dict):
+                for t, val in pos.items():
+                    if val:
+                        cur[t] = cur.get(t, 0.0) + float(val)
+        if prev:
+            chg = {}
+            for t, v in cur.items():
+                p0 = prev.get(t)
+                # 신규 편입은 증가율이 무한이라 뺀다 — 순위가 신규로만 채워진다.
+                if p0 and p0 > 0 and v > 0:
+                    chg[t] = v / p0 - 1.0
+            if chg:
+                try:
+                    avail = (_dt.date.fromisoformat(q) + _dt.timedelta(days=F13_LAG)).isoformat()
+                    _GACC.append((avail, chg))
+                except Exception:
+                    pass
+        prev = cur
+    _GACC.sort(key=lambda z: z[0])
+    return _GACC
+
+
+def guru_acc(t, day):
+    """그날 시점에서 **이미 공시된** 가장 최근 분기의 보유금액 증가율."""
+    tb = _guru_load()
+    if not tb:
+        return None
+    d = str(day)[:10]
+    cur = None
+    for avail, chg in tb:
+        if avail <= d:
+            cur = chg
+        else:
+            break
+    return None if cur is None else cur.get(t)
+
 
 def autocorr1(Rt, i, win=ACORR_WIN):
     """일간 수익률의 1차 자기상관. 사전등록 PREREG-2026-08-12-PATH.md §2①.
@@ -2870,6 +3024,57 @@ def build_strats():
     xsec("x-volsurge", "거래량 급증 + 추세 %d" % TOPN,
          "20일 평균거래량이 60일 평균 대비 가장 크게 늘고 200일선 위인 %d종목, 월말 리밸런스." % TOPN,
          None, "가격에 거래량을 더한다. 거래량이 정보 유입의 대리변수라는 가정을 시험한다.")
+
+    # ── 수급 축 확장 5종 · 사전등록 build/PREREG-2026-08-14-FLOW.md (돌리기 전 커밋 acfe0a2a) ──
+    # 왜: KR5 Initiative 가 명시한 세 축 중 수급이 제일 얇았다(11종 중 잣대 넷 통과 1종).
+    # ⚠ 축이 비었다는 것은 후보를 만들 이유이지 통과시킬 이유가 아니다. 등록 §4 의 사망
+    #   조건 여섯(F1~F6)으로 가른다. 기각된 것도 사유와 함께 남긴다.
+    # 🚨 공매도잔량은 후보에서 뺐다 — FINRA 는 현재 스냅샷만 저장돼 있어 이력이 없다.
+    #   COT 도 뺐다(지수 단위라 횡단면 점수가 안 나온다). 없는 자료로 규칙을 만들지 않는다.
+    # 🚨 2026-08-14 — 아래 넷은 **등록을 내린다**(게시된 적이 없으므로 RETIRED 가 아니라
+    #   세 번째 목록이 정본이다 — build/tested_not_published.json · validate_site 가 대조한다).
+    #   판정: x-volconc 는 F1 사망(랩 동일가중 대비 −3.60%p), 나머지 셋은 **판정 보류**다 —
+    #   편출 종목 거래량이 없어 시점정확(PIT) 레그를 못 돌기 때문이고, 소급 t(3.68·2.40·2.28)는
+    #   생존편향 검사를 못 받은 수다. 사유 전문·여섯 조건 대조는 PREREG-2026-08-14-FLOW-RESULT.md.
+    #   ⚠ 채점기 갈래와 도우미(mfi_of·_dollar_avg·ad_slope·vol_conc)는 **남겨 둔다.**
+    #     편출 종목 거래량을 받아 오면 이 주석만 풀면 셋이 한꺼번에 검증을 받는다.
+#    xsec("x-mfi", "자금흐름지수 상위 %d" % TOPN,
+#         "전형가(고+저+종)/3 의 전일 대비 방향으로 거래대금을 갈라, 최근 %d거래일 "
+#         "양(+)의 거래대금 합 ÷ 음(−)의 거래대금 합이 가장 큰 %d종목 동일가중, 월말 리밸런스."
+#         % (MFI_WIN, TOPN),
+#         None,
+#         "x-clv(종가 위치)는 거래량을 **안 쓴다** — 같은 종가 위치라도 100주에 만들어진 것과 "
+#         "100만주에 만들어진 것이 같은 점수를 받는다. 여기서는 거래대금으로 가중한다. "
+#         "둘의 월별 초과수익 상관이 0.80 을 넘으면 새 규칙이 아니므로 기각한다(등록 F4).")
+#    xsec("x-turnchg", "회전율 급증 상위 %d" % TOPN,
+#         "최근 %d거래일 평균 거래대금 ÷ 최근 %d거래일 평균 거래대금이 가장 큰 %d종목 "
+#         "동일가중, 월말 리밸런스." % (TCHG_S, TCHG_L, TOPN),
+#         None,
+#         "x-turn 은 회전율의 **수준**이고 이건 **변화**다. x-volsurge 는 주(株)수 20/60일에 "
+#         "200일선 필터를 얹은 것이라 추세 규칙에 가깝다 — 이건 가격 조건 없이 거래대금만 본다. "
+#         "⚠ 규모의 대리변수일 가능성이 제일 높은 후보다(등록 F3 의 주 표적).")
+#    xsec("x-adslope", "매집·분산선 기울기 상위 %d" % TOPN,
+#         "종가위치((종−저)−(고−종))/(고−저) 에 거래량을 곱해 누적한 A/D 선의 최근 "
+#         "%d거래일 회귀 기울기를 평균 거래량으로 나눈 값이 가장 큰 %d종목 동일가중, 월말 리밸런스."
+#         % (AD_WIN, TOPN),
+#         None,
+#         "위 셋이 전부 '창 안 비율'인 데 반해 이건 **누적**이다. 매집이 며칠에 몰렸는지가 "
+#         "아니라 꾸준히 쌓였는지를 기울기가 잡는다는 가정을 시험한다.")
+#    xsec("x-volconc", "거래량 편중 최하위 %d" % TOPN,
+#         "최근 %d거래일 중 거래량 상위 %d일이 그 창 전체 거래량에서 차지하는 비중이 가장 "
+#         "작은 %d종목 동일가중, 월말 리밸런스." % (VC_WIN, VC_TOP, TOPN),
+#         None,
+#         "x-volsurge 의 정반대다 — 급증이 아니라 **꾸준함**을 고른다. 이벤트 하루에 만들어진 "
+#         "거래량과 매일 쌓인 거래량은 다른 것이라는 가정. 둘 다 통과하면 그 자체가 정보다.")
+    xsec("x-guruacc", "거장 순매집 상위 %d" % TOPN,
+         "13F 공시 18인의 합산 보유금액이 직전 분기 대비 가장 크게 늘어난 %d종목 동일가중, "
+         "월말 리밸런스. 분기말 +%d일(공시 마감) 이후 첫 월말부터 쓴다." % (TOPN, F13_LAG),
+         None,
+         "t-13f-clone 은 보유 수준(많이 든 것)을 복제하고 이건 변화(더 담은 것)를 본다. "
+         "🚨 이름에 '기관'을 쓰지 않았다 — 18인은 기관 수급이 아니라 거장 포지셔닝이고, "
+         "이름이 자료보다 크면 그 자체가 거짓말이다. "
+         "⚠ 보유 매니저 수는 순위로 쓰지 않는다. 18인뿐이라 서로 다른 값이 얇다"
+         "(한 분기 437종 중 243종이 매니저 1인). 금액 변화율만 쓴다.")
 
     # ── 기각 아카이브에 있던 규칙들 — 결론만 있고 숫자가 없던 것을 여기서 돌린다 ──
     # arch: archive.html의 sid와 잇는다. 이 저장소의 데이터(주식 종가·거래량)로 만들 수 있는 것만.
@@ -4874,6 +5079,25 @@ def xsec_score_at(S, i, X, pool=None):
                 a = sma(V, i - 1, 20)
                 b = sma(V, i - 1, 60)
                 v = (a / b) if (a and b and b > 0) else None
+        # ── 수급 축 5종 (사전등록 FLOW §2) ────────────────────────────────
+        #   넷은 거래량을 쓰므로 vol_resolved 게이트를 그대로 건다(끄지 않는다 — 등록 §1).
+        elif sid in ("x-mfi", "x-turnchg", "x-adslope", "x-volconc"):
+            V = vlm[t]
+            if not V or not vol_resolved(V, i - 1):
+                v = None
+            elif sid == "x-mfi":
+                v = mfi_of(P, hid.get(t), lod.get(t), V, i - 1)
+            elif sid == "x-turnchg":
+                a = _dollar_avg(P, V, i - 1, TCHG_S)
+                b = _dollar_avg(P, V, i - 1, TCHG_L)
+                v = (a / b) if (a and b and b > 0) else None
+            elif sid == "x-adslope":
+                v = ad_slope(P, hid.get(t), lod.get(t), V, i - 1)
+            else:
+                v = vol_conc(V, i - 1)
+                v = None if v is None else -v      # '편중 최하위' 라 부호를 뒤집는다
+        elif sid == "x-guruacc":
+            v = guru_acc(t, dates[i - 1])
         else:
             v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
         if v is not None and v == v:
@@ -5064,6 +5288,99 @@ def run():
     # ⚠ 채점기를 새로 만들지 않는다. 아래는 run() 이 쓰는 그 xsec_score_at() 을 그대로 부른다.
     #   sc 는 내림차순이고 규칙이 sc[:TOPN] 을 사므로 **점수가 곧 매수 선호**다 —
     #   '최하위' 규칙도 채점기 안에서 이미 부호가 뒤집혀 있다. 여기서 다시 뒤집지 않는다.
+    # ── --flowdiag : 수급 축 F3·F5 진단 ────────────────────────────────────────
+    # 🚨 **진단 전용이다.** PREREG-2026-08-14-FLOW.md 의 F3(시총 5분위 중립화)·F5(공시
+    #   지연 민감도)를 재려고 만든 것이고, 산출물을 한 바이트도 안 쓰고 빠져나간다.
+    # ⚠ 채점기를 새로 만들지 않는다 — 점수는 xsec_score_at() 을 그대로 부르고
+    #   **바스켓을 짜는 법만** 바꾼다. 그것이 F3 이 묻는 바로 그 차이다.
+    # ⚠ F3 의 분위 나누는 법은 등록 §4 에 미리 못박아 뒀다(그달 후보의 20/40/60/80 백분위 ·
+    #   각 분위에서 N/5, 나머지는 큰 분위부터). 여기서 바꾸지 않는다.
+    if "--flowdiag" in sys.argv:
+        _me = [i for i in month_ends(dates) if i > MIN_HIST]
+        _SIDS = ["x-guruacc", "x-mfi", "x-turnchg", "x-adslope", "x-volconc"]
+        print("[--flowdiag] 월말 %d개 · 대상 %d종" % (len(_me), len(_SIDS)))
+
+        def _mcap_at(t, i):
+            # mcap_floor 와 **같은 산식**을 쓴다(시점별 주식수 × 그날 종가).
+            # 다른 산식을 쓰면 F3 이 재는 것이 '중립화 효과'가 아니라 '시총 정의 차이'가 된다.
+            sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i])
+            p = (px.get(t) or [None])[i] if px.get(t) and i < len(px[t]) else None
+            return (p * sn) if (p and sn) else None
+
+        def _fwd(sel, i0, i1):
+            """[i0 → i1] 동일가중 바스켓 수익."""
+            rs = []
+            for t in sel:
+                a, b = px[t][i0], px[t][i1]
+                if a and b and a > 0:
+                    rs.append(b / a - 1.0)
+            return (sum(rs) / len(rs)) if rs else None
+
+        def _leg(S, neutral):
+            """월별 바스켓 수익 계열. neutral=True 면 시총 5분위에서 고르게 뽑는다.
+
+            🚨 원본 다리는 **정본 선택기 xsec_pick_at() 을 그대로 부른다.** 여기서 sc[:N] 을
+              손으로 자르면 그것이 두 번째 선택기가 되고, 가중 바스켓 규칙에서 원본과
+              중립판이 서로 다른 이유로 갈린다(랩이 PIT 사본에서 이미 겪은 사고다).
+              중립판만 등록 §4 가 정한 방식으로 다시 뽑는다 — 그 차이가 F3 이 묻는 것이다.
+            """
+            out = []
+            for a, b in zip(_me, _me[1:]):
+                sc, ind_raw, _cr = xsec_score_at(S, a + 1, _X)
+                if not sc or len(sc) < XSEC_MIN_POOL:
+                    continue
+                if not neutral:
+                    sel, _w = xsec_pick_at(S, a + 1, _X, sc, ind_raw)
+                else:
+                    sc = sorted(sc, key=lambda z: -z[0])
+                    nsel = S.get("n") or TOPN
+                    order = {t: k for k, (_v, t) in enumerate(sc)}
+                    mc = [(t, _mcap_at(t, a)) for _v, t in sc]
+                    mc = [(t, m) for t, m in mc if m]
+                    if len(mc) < XSEC_MIN_POOL:
+                        continue
+                    vals = sorted(m for _t, m in mc)
+                    cut = [vals[int(len(vals) * q)] for q in (0.2, 0.4, 0.6, 0.8)]
+                    bins = {0: [], 1: [], 2: [], 3: [], 4: []}
+                    for t, m in mc:
+                        bins[sum(1 for c in cut if m > c)].append(t)
+                    for k in bins:
+                        bins[k].sort(key=lambda t: order.get(t, 1 << 30))
+                    per, rem = divmod(nsel, 5)
+                    sel = []
+                    for k in (4, 3, 2, 1, 0):          # 나머지는 큰 분위부터(등록 §4)
+                        take = per + (1 if rem > 0 else 0)
+                        if rem > 0:
+                            rem -= 1
+                        sel += bins[k][:take]
+                r = _fwd(sel, a, b)
+                if r is not None:
+                    out.append(r)
+            return out
+
+        def _cagr(rs):
+            if not rs:
+                return None
+            g = 1.0
+            for r in rs:
+                g *= (1 + r)
+            return (g ** (12.0 / len(rs)) - 1) * 100
+
+        _bench = None
+        for S in STRATS:
+            if S["kind"] != "xsec" or S["sid"] not in _SIDS:
+                continue
+            base = _leg(S, False)
+            neut = _leg(S, True)
+            cb, cn = _cagr(base), _cagr(neut)
+            print("  %-11s 원본 CAGR %7s · 시총중립 %7s · 비 %s"
+                  % (S["sid"],
+                     "%.2f" % cb if cb is not None else "—",
+                     "%.2f" % cn if cn is not None else "—",
+                     ("%.2f" % (cn / cb)) if (cb and cn and cb > 0) else "—"))
+        print("[--flowdiag] 산출물 안 씀. F5(지연 민감도)는 F13_LAG 를 30 으로 두고 다시 돌린다.")
+        return 0
+
     if "--ic" in sys.argv:
         _me = month_ends(dates)
         _me = [i for i in _me if i > MIN_HIST]
