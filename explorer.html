@@ -1291,9 +1291,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // '어느 파일에서 나왔는가'를 따른 것이었다 — 보는 사람에겐 같은 것을 네 번 보여주는 셈이다.
   // 성격(수익엔진·배분기·위험방어·타이밍오버레이)을 첫 축으로 삼아 한 목록에 넣는다.
   (function(){
+    // strategy_index.json 의 문서 수준 값(학술검색 base 등). 카드 렌더러가 나중에 쓴다 —
+    // 아래 then 의 지역 ix 로는 못 보므로 밖에 둔다. ⚠ 선언이 사용보다 **앞**이어야 한다.
+    window.IXDOC = window.IXDOC || null;
     fetch('data/strategy_index.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
       .then(function(ix){
         if(!ix||!ix.items)return;
+        // 문서 수준 값(학술검색 base 등)은 카드 렌더러가 나중에 쓴다 — 지역 ix 로는
+        // 못 보므로 여기서 넘겨 둔다. 화면에 주소를 박지 않기 위한 자리다.
+        window.IXDOC = ix;
         var add=ix.items.filter(function(x){return x.src!=='배포 원장';});
         add.forEach(function(x){
           var m=x.metrics||{}, b=x.bench||{};
@@ -1324,7 +1330,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             // 자료가 쓰이지만, 머리 숫자로 쓰려면 이 자리로 넘어와야 한다.
             _pit:x.pit||null,
             // 리밸런스 주기 — 규칙마다 다르다(PREREG-2026-08-13-REBAL).
-            _reb:x.reb_label||null
+            _reb:x.reb_label||null,
+            // 원 논문 — build/strategy_refs.json 에서 온다. 없으면 null 이고 카드는
+            // 그 줄을 아예 안 그린다(없는 것을 지어 채우지 않는다).
+            _papers:x.papers||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
@@ -2764,6 +2773,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
       //   글자로 박아 두면 됐다. 주기가 갈린 뒤로는 그 글자가 곧 거짓말이 될 수 있어
       //   자료에서 읽어 적는다. 연 회전 바로 밑에 둔다 — 둘은 같이 읽어야 하는 값이다.
+      // 🚨 원 논문 — 자료는 진작 있었는데(build/strategy_refs.json · 97종) 리포트만 쓰고
+      //   전략 랩은 안 읽고 있었다. 사용자 지적으로 잡았다(2026-08-14).
+      //   URL 을 지어내지 않는다 — 제목으로 학술검색 질의를 만들어 건다. base 는 자료가
+      //   실어 보낸다(DATA.refs_search). 화면에 주소를 박으면 그때부터 두 벌이 된다.
+      if(d._papers&&d._papers.length){
+        var _sb=(window.IXDOC&&window.IXDOC.refs_search)||'https://scholar.google.com/scholar?q=';
+        labRows.push(['원 논문', d._papers.map(function(p){
+          return '<a href="'+esc(_sb+encodeURIComponent(p.t||''))+'" target="_blank" '+
+                 'rel="noopener noreferrer">'+esc(p.t||'')+'</a>'+
+                 '<span style="color:var(--muted)"> — '+esc(p.a||'')+
+                 (p.y?' '+esc(p.y):'')+(p.j?' · '+esc(p.j):'')+'</span>';
+        }).join('<br>'), true]);   // ← true: 위 렌더러가 이 값을 HTML 로 그린다
+      }
       if(d._reb)labRows.push(['리밸런스', d._reb+
         (d._reb==='월말'?'':' — 신호 수명에 맞춰 이 규칙만 옮겼습니다(주기는 규칙 성격이 정하고, 성적을 보고 고르지 않았습니다)')]);
       // 🚨 채점 후보 수 — '상위 10종'이 몇 종중에서 골람 것인지를 적는다.
@@ -2979,7 +3001,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   양식이 카드마다 다르다는 지적의 한 갈래가 이것이다.
       play = perf + nselBlock(d) + rgBlock(d) + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
-          return '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>';}).join('')+
+          // 🚨 값은 기본이 esc 다. **세 번째 원소가 true 인 줄만** 이미 만들어진 HTML 로
+          //   본다(지금은 원 논문 링크 하나뿐이다). 이 문을 열어 두는 대신, 넣는 쪽에서
+          //   각 조각을 반드시 esc 로 감싼다 — 그러지 않으면 자료가 화면을 그리게 된다.
+          return '<tr><td>'+esc(r[0])+'</td><td>'+(r[2]?r[1]:esc(r[1]))+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">비교 지수가 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+
           '</div>':'') +
         '<p class="labnote">출처: '+esc(d._src||'')+' · 이 전략은 배포북에 들어 있지 않습니다. '+
