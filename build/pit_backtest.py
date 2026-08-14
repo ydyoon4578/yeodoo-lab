@@ -777,7 +777,9 @@ def main():
 
     # 거래일 격자 — 랩과 같은 격자를 쓴다(랩이 이미 yfinance 거래일로 만들어 둔 것).
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
-    dates = [d for d in st["pxd_dates"]]
+    # 🚨 랩 본편과 **같은 자리에서** 자른다(TB.asof_cut · 전월말 기준). 여기만 안 자르면
+    #   두 레그의 창이 며칠 어긋나고, 그 어긋남이 곧 '생존편향' 으로 적혀 나간다.
+    dates = [d for d in st["pxd_dates"]][:TB.asof_cut(st["pxd_dates"])]
     n = len(dates)
     tickers = sorted(px_map)
     px = {t: [px_map[t].get(d) for d in dates] for t in tickers}
@@ -1158,6 +1160,10 @@ def main():
         return {"nav": nav, "bnav": bnav, "srets": srets, "turns": turns,
                 "first": first, "hold": sorted(hold), "IXR": IXR}
 
+    # 지수(S&P 500·NASDAQ 100 PR) 곡선 — 카드 그림에 '살 수 있는 대안' 으로 같이 깐다.
+    # ⚠ 판정 대조군이 아니다. 판정은 위의 동일가중 PIT 지수(bench)로 한다.
+    _IXPR = TB.load_index_tr(dates)
+
     def fin(raw, k):
         """🚨 보유시작 재기준 — 소급 레그(tech_backtest)에는 있는데 여기엔 없었다.
 
@@ -1186,6 +1192,13 @@ def main():
             "turnover": round(raw["turns"] / max(1, (n - i0 - k) / 252), 2),
             "start": d2[0], "n_days": len(d2),
             "hold": raw["hold"],
+            # 🚨 2026-08-14 — **곡선을 여기서 만든다.** 화면이 소급 레그만 그리고 있었다:
+            #   카드 머리 숫자는 PIT 인데 그 밑 그림(누적수익·낙폭·연도별)은 랩 본편 소급
+            #   곡선이라, 한 카드 안에서 숫자와 그림이 다른 유니버스를 말하고 있었다.
+            # ⚠ 낙폭은 **줄이기 전 전체 계열에서** 재야 한다. 그래서 randomly 줄인 월말
+            #   계열을 넘기지 않고 tech_backtest.curve_pack 에 일계열을 그대로 넘긴다 —
+            #   랩 곡선과 같은 함수를 써야 두 그림의 눈금이 같다.
+            "chart": TB.curve_pack(d2, nav, bnav, idx_rets=_IXPR, i0=i0 + k),
         }
 
     out = []
@@ -1250,6 +1263,8 @@ def main():
                                  - (P_["metrics"].get("sharpe") or 0), 3),
             "holdings": {"kind": "xsec", "as_of": dates[-1],
                          "n": len(P_["hold"]), "tickers": P_["hold"]},
+            # 시점정확 곡선. 소급 곡선(B_)은 싣지 않는다 — 화면에서 걷은 레그다.
+            "chart": P_["chart"],
         })
         print("  %-24s CAGR 소급 %+7.2f → PIT %+7.2f (편향 %+6.2f) · 초과 %+7.2f → %+7.2f "
               "(t %5.2f → %5.2f)"
@@ -1324,9 +1339,24 @@ def main():
         #   뺀 것이 함께 들어간다. 뒤쪽은 종전에 0 으로 채워진 측정값으로 실리던 자리다.
         "excluded": dict(EXCLUDED_SIDS, **_nohold),
         "excluded_nohold": dict(_nohold),
-        "na_timing": ("타이밍·오버레이 규칙은 지수·ETF 를 매매하므로 '그때 지수에 있던 종목' "
-                      "이라는 개념 자체가 없다. 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, "
-                      "못 재는 것이 아니다."),
+        # 🚨 2026-08-14 — **이 문장이 틀렸었다.** 종전 문구: "타이밍·오버레이 규칙은
+        #   지수·ETF 를 매매하므로 '그때 지수에 있던 종목' 이라는 개념 자체가 없다.
+        #   생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
+        #   실측으로 거짓이다. 랩 타이밍 규칙이 매매하는 것은 지수도 ETF 도 아니라
+        #   **오늘의 518종 동일가중 바스켓**이다(tech_backtest 의 ixr — 그 자리 주석이
+        #   "타이밍 전략이 실제로 매매하는 대상" 이라고 스스로 적어 두었다).
+        #   그 바스켓은 이 랩이 재 놓은 대로 실제 동일가중 S&P 500(RSP)보다 연 +6.58%p
+        #   앞선다 — 즉 타이밍 규칙 22종은 **생존편향이 정면으로 걸리는 자리**이고,
+        #   평균 노출만큼 그 편향을 그대로 태우고 있다.
+        # ⚠ 그러므로 "해당 없음" 이 아니라 **"아직 안 쟀다"** 다. 셋(해당 없음 / 안 쟀다 /
+        #   못 잰다)을 구별하려고 만든 칸에 셋 중 틀린 것을 적어 두었던 셈이다.
+        #   ⚠ 재려면 run() 에 타이밍 분기를 이식해야 한다(지금 run 은 횡단면 전용이다).
+        #     PIT 동일가중 지수는 이미 여기서 만들고 있으므로 재료는 갖춰져 있다.
+        "na_timing": ("🚨 아직 안 쟀다 — '해당 없음' 이 아니다. 랩 타이밍 규칙이 매매하는 것은 "
+                      "지수나 ETF 가 아니라 오늘의 518종 동일가중 바스켓이고(tech_backtest 의 "
+                      "ixr), 그 바스켓은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 즉 "
+                      "생존편향이 정면으로 걸리는 자리이며 평균 노출만큼 그대로 실린다. "
+                      "이 표의 run() 이 횡단면 전용이라 아직 못 돌린 것뿐이다."),
         "limits": ([
             "🚨 커버리지 문턱(%.0f%%) 미달: %s. 이 표의 후보는 그만큼 '오늘까지 살아남은 종목' "
             "쪽으로 좁혀져 있고, 그 방향은 초과수익을 **키우는** 쪽이다. 수치를 인용하기 전에 "

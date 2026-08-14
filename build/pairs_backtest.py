@@ -44,6 +44,7 @@ except Exception:
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import probe_pairs as PP            # noqa: E402  형성 통계는 여기 하나뿐
+import tech_backtest as TB          # noqa: E402  성과 기준일(asof_cut)을 공유한다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -64,7 +65,12 @@ NW_LAGS = 3
 def lab_matrices():
     """오늘의 518종 — 종가·고가·저가(T×N) + 섹터·이름."""
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
-    dates = st["pxd_dates"]
+    # 🚨 성과 기준일 = 전월말(2026-08-14 사용자 지시). 랩 본편과 **같은 함수**로 자른다.
+    #   ⚠ 계열 길이 검사는 자르기 전 길이(n_raw)로 해야 한다 — 자른 길이로 재면 전 종목이
+    #     '길이 안 맞음' 으로 탈락해 페어 유니버스가 통째로 빈다.
+    _raw = st["pxd_dates"]
+    n_raw = len(_raw)
+    dates = _raw[:TB.asof_cut(_raw)]
     n = len(dates)
     ts, px, hi, lo, sec = [], [], [], [], {}
     for s in st["stocks"]:
@@ -73,8 +79,9 @@ def lab_matrices():
             continue
         j = json.load(io.open(p, encoding="utf-8"))
         a, h, l = j.get("pxd") or [], j.get("hd") or [], j.get("ld") or []
-        if not (len(a) == len(h) == len(l) == n):
+        if not (len(a) == len(h) == len(l) == n_raw):
             continue
+        a, h, l = a[:n], h[:n], l[:n]
         ts.append(s["t"])
         px.append([np.nan if v is None else v for v in a])
         hi.append([np.nan if v is None else v for v in h])

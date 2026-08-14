@@ -281,7 +281,8 @@
                    padding:7px 10px 6px;border-left:3px solid var(--line)}
   .labperf .legttl.legpit{color:var(--gA);border-left-color:var(--gA)}
   .labperf .legttl.legretro{color:var(--muted);border-left-color:var(--line);margin-top:10px}
-  .labperf .legttl.legsame{color:var(--marg);border-left-color:var(--marg);margin-top:10px}
+  /* .legsame(같은 창 소급)은 2026-08-14 에 화면에서 걷었다 — 규칙도 같이 지운다.
+     쓰는 곳 없는 규칙을 남겨 두면 다음 사람이 '아직 그리는 줄이 있나' 하고 찾게 된다. */
   .selfperf{padding:15px 18px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
   .selfperf .sph{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;
                  display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
@@ -1671,7 +1672,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function shp(d){
     var v=null;
-    if(d._m&&d._m.sharpe!=null)v=d._m.sharpe;                        // 랩 레코드(평평)
+    // 🚨 2026-08-14 사용자 지시 — **시점정확이 있으면 그것으로 줄 세운다.**
+    //   "모든 전략에서 같은 창 소급·랩 본편 소급은 다 없애고 싶어. 시점정확 pit만 쓰고 싶어."
+    //   종전에는 목록이 소급 샤프로 정렬·표시되는데 카드 머리는 시점정확이었다. 같은
+    //   전략이 목록과 카드에서 **다른 샤프**를 말한 셈이고, 이 저장소가 되풀이 밟은
+    //   '채점기가 두 벌' 사고다.
+    //   ⚠ 예전 주석은 "정렬을 PIT 로 바꾸지 않는다 — 창이 갈려 정렬이 거짓이 된다"였다.
+    //     그 근거는 **PIT 5.1년 · 소급 10년**이었는데, 오늘 PIT 창을 랩 10년에 맞춰
+    //     내렸으므로 그 전제가 사라졌다. 이제 두 레그가 같은 10년이다.
+    //   ⚠ 그래도 섞이는 것은 남는다 — PIT 이 없는 전략은 소급 숫자로 줄에 선다. 소급은
+    //     계통적으로 부풀려져 있으므로(편향 중앙값 +7.9%p CAGR) 그 행은 실제보다 위에
+    //     선다. 그래서 **행마다 어느 레그인지 적는다**(아래 목록 렌더러). 숨기지 않는다.
+    if(d._pit&&d._pit.sharpe!=null)v=d._pit.sharpe;                  // 시점정확 우선
+    if(v==null&&d._m&&d._m.sharpe!=null)v=d._m.sharpe;               // 랩 레코드(평평)
     if(v==null&&d._mx&&d._mx.sharpe!=null)v=d._mx.sharpe;            // strategy_index 병합(평평)
     if(v==null&&d._mx)v=mget(d._mx,'sharpe');                        // 혹시 v2 모양이면
     if(v==null&&d.bt&&d.bt.metrics)v=mget(d.bt.metrics,'sharpe');    // 백테스트 v2
@@ -1782,6 +1795,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<div class="mv'+(sv==null?' sm':'')+'">'+(sv==null?'—':mfmt('sharpe',sv))+
              '</div><small>'+(sv==null?'샤프 못 쟀음':'샤프')+'</small>';
     }
+    // 시점정확이 있으면 CAGR 도 그쪽을 적는다 — 위 shp() 와 같은 규약이다(레그를 섞지 않는다).
+    if(d._pit&&d._pit.cagr!=null&&(!state.rgk)){
+      return '<div class="mv">'+mfmt('cagr',d._pit.cagr)+'</div><small>CAGR 시점정확</small>';
+    }
     var m=d.bt&&d.bt.metrics;
     if(!(m&&m.s))return '<div class="mv sm">'+esc(d.m||'')+'</div><small>'+esc(d.ml||'')+'</small>';
     var k=kindOf(d), km=kmeta(k);
@@ -1872,9 +1889,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(!t&&nMonths(d))t=(Math.round(nMonths(d)/12*10)/10)+'년';
           if(!t)return '';
           var _en=(d._end||'').slice(0,7);
-          var _leg=(d._src==='배포 원장')?'실측':'소급';
+          // 🚨 레그를 **행마다** 적는다. 종전에는 배포 원장이 아니면 전부 '소급'이라
+          //   찍었는데, 그중 83종은 카드가 시점정확을 보여 준다 — 목록과 카드가 다른
+          //   말을 하고 있었다.
+          var _leg=(d._src==='배포 원장')?'실측':(d._pit?'시점정확':'소급');
           return '<span title="'+esc(_leg+' 구간 '+(d._start||'').slice(0,7)+'~'+_en+
-                   (d._pit?' · 이 전략은 시점정확 레그도 있다(카드 안에서 본다)':''))+'">'+
+                   (d._pit?' · 그때 실제로 지수에 있던 종목만으로 다시 잰 값이다'
+                         :' · 시점정확으로 재지 못해 오늘의 유니버스를 과거로 소급한 값이다 '+
+                          '— 계통적으로 부풀려져 있다'))+'">'+
                  esc(t)+' '+esc(_leg)+(_en?' ~'+esc(_en):'')+'</span>';
         })()+'</span></span>'+
         '<span class="metric">'+headM(d)+'</span>';
@@ -2765,9 +2787,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ── 랩 전략 전용 블록 ── 배포 원장은 플레이북(det)이 있지만 랩 전략은 없다.
     // 대신 이쪽에만 있는 것을 보인다 — 대조군 대비 차이·t값·회전율·지금 보유.
     if(d._lab){
+      // 🚨 2026-08-14 — **"지금 보유" 라고 부를 수 있는 것과 아닌 것을 가른다.**
+      //   성과 기준일을 전월말로 내리면서(사용자 지시) 보유 명단도 그 날짜에서 끊긴다.
+      //   월말 리밸 규칙은 그 명단이 곧 지금 드는 것이 맞다 — 다음 리밸이 이달 말이다.
+      //   그런데 **주간 리밸 규칙은 그 사이에 이미 여러 번 갈아탔다.** 그것을 "지금 보유"
+      //   라고 적으면 화면이 최대 한 달 묵은 명단을 현재로 말하게 된다.
+      //   → 리밸 주기를 보고 이름표를 가른다. 자료를 지어내지 않고 **부르는 이름만** 맞춘다.
+      function _holdLbl(d,h){
+        var rb=(d&&d._reb)||'';
+        return /주간|주 1회|weekly/i.test(rb) ? '전월말 보유' : '지금 보유';
+      }
       var labRows=[];
-      if(d._d!=null)labRows.push(['Δ샤프 (지수 대비)',(d._d>0?'+':'')+Number(d._d).toFixed(3)]);
-      if(d._t!=null)labRows.push(['t값',Number(d._t).toFixed(2)]);
+      // Δ샤프·t 도 카드 머리와 **같은 레그**에서 뽑는다. 종전에는 이 둘만 소급으로 남아
+      // 한 카드 안에서 숫자는 시점정확, 검정통계량은 소급이었다.
+      var _q=d._pit||null;
+      var _qD=(_q&&_q.sharpe!=null&&_q.bench_sharpe!=null)?(_q.sharpe-_q.bench_sharpe):d._d;
+      var _qT=(_q&&_q.t!=null)?_q.t:d._t;
+      if(_qD!=null)labRows.push(['Δ샤프 (지수 대비)',(_qD>0?'+':'')+Number(_qD).toFixed(3)]);
+      if(_qT!=null)labRows.push(['t값',Number(_qT).toFixed(2)]);
       if(d._beta!=null)labRows.push(['실측 베타',Number(d._beta).toFixed(2)]);
       if(d._turn!=null)labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회']);
       // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
@@ -2812,88 +2849,83 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var h=d._hold, holdHtml='';
       if(h){
         if(h.kind==='timing'){
-          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><b>노출 '+Number(h.exposure_now||0).toFixed(1)+'%</b>'+
             (h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }else if(h.weights){
-          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><div class="lhs">'+h.weights.map(function(w){
               return '<span class="lhw">'+esc(w[0])+'<b>'+Number(w[1]).toFixed(1)+'%</b></span>';}).join('')+
             '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }else if(h.tickers){
           var nm=h.names||{};
-          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><b>'+h.tickers.length+'종목</b><div class="lhs">'+h.tickers.map(function(t){
               return '<a class="lhw" href="co.html?t='+encodeURIComponent(t)+'"'+
                      (nm[t]?' data-nm="'+esc(nm[t])+'"':'')+'>'+esc(t)+'</a>';}).join('')+
             '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }
       }
-      var mm=d._m||{}, bb=d._b||{};
       var f=function(v,k){return (v==null||v!==v)?'—':Number(v).toFixed(k==null?2:k);};
+      // 🚨 2026-08-14 사용자 지시 — "모든 전략에서 같은 창 소급·랩 본편 소급은 다 없애고
+      //   싶어. 시점정확 pit만 쓰고 싶어."
+      // 종전에는 카드 머리 숫자(lpg)가 **소급 레그**였고 시점정확은 그 위에 한 줄 더 붙는
+      // 손님이었다. 이제 **PIT 이 있으면 PIT 이 그 카드의 성적**이다 — 소급은 화면에서
+      // 걷는다. 다만 편향(bias_cagr)은 숫자로 남긴다(아래 note): 레그를 지운다고 이 랩이
+      // 재 놓은 편향까지 지우면 재지 않은 것과 같아진다.
+      // ⚠ PIT 이 없는 전략(투자의견 이력 부재 3종 · 자산배분 · 배포 원장)은 소급밖에 없다.
+      //   그건 **소급이라고 이름을 적어** 내보낸다 — 없는 레그를 있는 척하지 않는다.
+      var Pq=d._pit||null;
+      var mm=(Pq?{sharpe:Pq.sharpe,mdd:Pq.mdd,cagr:Pq.cagr}:(d._m||{}));
+      var bb=(Pq?{sharpe:Pq.bench_sharpe,mdd:Pq.bench_mdd,cagr:Pq.bench_cagr,
+                  label:(d._b||{}).label}:(d._b||{}));
+      // 구간·t·Δ샤프도 같은 레그에서 뽑는다. 종전에는 이 셋만 소급으로 남아 카드 안에서
+      // 레그가 섞였다(숫자는 PIT, t 는 소급).
+      var _pst=(Pq?(Pq.window||'').split('~')[0]:d._start);
+      var _pen=(Pq?(Pq.window||'').split('~')[1]:d._end);
       // 🚨 2026-08-13 사용자 지시 — "가능하면 시점정확 레그를 사용하는 게 중요해".
       //   아래 lpg 는 **소급 레그**다(오늘의 유니버스를 과거로 소급). 그 위에 시점정확(PIT)
       //   레그를 같은 모양으로 한 줄 더 놓고, 두 레그에 이름을 붙인다. 종전에는 PIT 이
       //   '확인할 것' 문단에 CAGR 한 줄로만 나가서, 카드 머리 숫자는 전부 소급이었다.
       //   ⚠ 창이 다르다(PIT 5.0년 · 소급 10년 상한). 그래서 대체가 아니라 병기다 — 두 줄
       //     각각에 자기 구간을 적는다. 창을 안 적고 섞으면 그게 더 나쁜 거짓말이다.
-      var Pq=d._pit||null;
-      var legRow=function(m,b,lab,st,en,note){
-        return '<div class="lpg">'+
-          '<div><span>'+lab+'</span><b>'+esc((st||'').slice(0,7)+'~'+(en||'').slice(0,7))+
-            (spanTxt(st,en)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(st,en)+'</span>':'')+
-            (note?'<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10.5px">'+note+'</span>':'')+'</b></div>'+
-          '<div class="hi"><span>샤프</span><b>'+f(m.sharpe,3)+
-            (b.sharpe!=null&&m.sharpe!=null?' <span class="dlt '+
-              (m.sharpe-b.sharpe>0?'up':'dn')+'">'+(m.sharpe-b.sharpe>0?'+':'')+
-              f(m.sharpe-b.sharpe,3)+'</span>':'')+'</b></div>'+
-          '<div class="hi"><span>최대낙폭</span><b>'+f(m.mdd)+'%'+
-            (b.mdd!=null&&m.mdd!=null?' <span class="dlt '+
-              (m.mdd-b.mdd>0?'up':'dn')+'">'+(m.mdd-b.mdd>0?'+':'')+
-              f(m.mdd-b.mdd)+'%p</span>':'')+'</b></div>'+
-          '<div><span>CAGR</span><b>'+f(m.cagr)+'%'+
-            (b.cagr!=null&&m.cagr!=null?' <span class="dlt '+
-              (m.cagr-b.cagr>0?'up':'dn')+'">'+(m.cagr-b.cagr>0?'+':'')+
-              f(m.cagr-b.cagr)+'%p</span>':'')+'</b></div>'+
-          // 대조군을 안 주는 줄(같은 창 소급)은 이 칸을 **그리지 않는다**. 종전에는
-          // '— · —% · —%' 가 나가서 '지수를 못 쟀다'로 읽혔는데, 실제로는 이 줄이
-          // 편향의 짝일 뿐 지수 비교가 필요 없는 자리다.
-          ((b.sharpe==null&&b.mdd==null&&b.cagr==null)?'':
-            '<div><span>지수 샤프 · MDD · CAGR</span><b>'+f(b.sharpe,3)+' · '+
-            f(b.mdd)+'% · '+f(b.cagr)+'%</b></div>')+
-        '</div>';
-      };
-      // 🚨 2026-08-13 사용자 지적("전략별로 양식도 좀 다른거같고") — 레그 이름표가
-      //   `Pq` 유무에 통째로 매달려 있어 **90종은 이름 없는 줄 하나**만 나왔다.
-      //   그래서 목록에서 카드 둘을 나란히 열면 하나는 5.1년(PIT), 하나는 10년(소급)
-      //   숫자를 같은 자리에서 보게 된다. 창은 적혀 있었지만 **그 줄이 무엇인지**가 없었다.
-      //   → 레그가 하나뿐인 카드에도 같은 자리에 이름표를 붙인다. 없는 레그를 있는 척하지
-      //     않는다 — 시점정확을 왜 못 쟀는지는 자료에 있으면 그것을 적고, 없으면 그냥 안 적는다.
+      // 사유 앞머리의 🚨 는 뗀다 — 이름표가 이미 하나를 달고 있어 두 개가 겹쳐 찍힌다.
       var _naWhy=(d._pitna&&d._pitna.why)||null;
-      var _oneTtl=Pq?'':(
-        '<div class="legttl legretro">랩 본편 소급 — <b>오늘의 유니버스를 과거로</b>'+
-        (_naWhy?' · 시점정확 레그 없음: '+esc(_naWhy):'')+'</div>');
-      var perf='<div class="labperf">'+_oneTtl+
-        (Pq?('<div class="legttl legpit">시점정확 — 그때 실제로 지수에 있던 종목만</div>'+
-             legRow({sharpe:Pq.sharpe,mdd:Pq.mdd,cagr:Pq.cagr},
-                    {sharpe:Pq.bench_sharpe,mdd:Pq.bench_mdd,cagr:Pq.bench_cagr},
-                    '구간', (Pq.window||'').split('~')[0], (Pq.window||'').split('~')[1],
-                    '같은 창 소급 대비 편향 '+(Pq.bias_cagr==null?'—':((Pq.bias_cagr>0?'+':'')+Pq.bias_cagr+'%p CAGR'))+
-                    (Pq.bias_sharpe==null?'':(' · '+(Pq.bias_sharpe>0?'+':'')+Number(Pq.bias_sharpe).toFixed(3)+' 샤프')))+
-             // 🚨 **같은 창 소급을 바로 밑에 놓는다.** 점검(2026-08-13)에서 잡은 오독이다 —
-             //   위 시점정확(5.1년) 아래에 랩 본편 소급(10년)만 있으면 독자가 그 둘의 샤프 차
-             //   (0.751 vs 1.192 = 0.441)를 편향으로 읽는다. 실제 편향은 같은 창 대비
-             //   0.109 다. 이 랩이 되풀이 경고해 온 '편향 + 구간 차이' 를 화면이 그대로
-             //   유도하고 있었다. 짝이 되는 줄을 붙여 놓는다.
-             '<div class="legttl legsame">같은 창 소급 — 위와 <b>같은 구간</b>을 오늘의 유니버스로 (이 둘의 차이가 편향이다)</div>'+
-             legRow({sharpe:Pq.retro_sharpe,mdd:Pq.retro_mdd,cagr:Pq.retro_cagr},
-                    {sharpe:null,mdd:null,cagr:null},
-                    '구간', (Pq.window||'').split('~')[0], (Pq.window||'').split('~')[1], null)+
-             '<div class="legttl legretro">랩 본편 소급 — <b>구간이 다르다</b>(위 두 줄과 직접 빼면 편향이 아니라 «편향 + 구간 차이»가 된다)</div>')
-           :'')+
+      if(_naWhy)_naWhy=_naWhy.replace(/^\s*🚨\s*/,'');
+      // 🚨 레그를 하나로 줄였다(2026-08-14). 종전에는 시점정확·같은 창 소급·랩 본편 소급
+      //   세 줄이 같은 모양으로 쌓여 있었고, 독자가 위아래를 빼서 편향을 직접 계산했다.
+      //   이제 표는 **한 벌**이고 그 위 이름표가 그것이 어느 레그인지 말한다.
+      // ⚠ PIT 이 없으면 이름표에 그렇게 적는다. 이름표를 안 붙이면 소급 숫자가 시점정확인
+      //   척하게 되는데, 그게 이 랩이 되풀이 밟은 사고다.
+      var _legTtl=(Pq
+        ?('<div class="legttl legpit">시점정확 — 그때 실제로 지수에 있던 종목만'+
+          (Pq.bias_cagr==null?'':
+            ' <span style="font-weight:400;text-transform:none;letter-spacing:0">· 오늘의 유니버스로 '+
+            '소급하면 CAGR 이 '+((Pq.bias_cagr>0?'+':'')+Pq.bias_cagr)+'%p'+
+            (Pq.bias_sharpe==null?'':(' · 샤프가 '+(Pq.bias_sharpe>0?'+':'')+
+              Number(Pq.bias_sharpe).toFixed(3)))+' 만큼 부풀려진다(생존편향)</span>')+
+          '</div>')
+        // ⚠ "재지 못했다" 라고 단정하지 않는다. 사유가 셋으로 갈린다 — 자료가 없어서
+        //   **못 재는 것**(투자의견 이력 3종) · 아직 **안 잰 것**(타이밍 22종) · 애초에
+        //   해당이 없는 것. 화면이 그 셋을 하나로 뭉치면 원천이 애써 구별해 둔 것을
+        //   화면에서 도로 지우는 셈이다. 이름표는 '없다' 까지만 말하고 사유를 그대로 옮긴다.
+        // 🚨 그리고 **출처마다 다른 말을 해야 한다.** 처음에 PIT 없는 전략 전부에
+        //   "🚨 소급 — 오늘의 유니버스를 과거로" 를 붙였는데, 그건 종목 전략에만 맞는
+        //   말이다. 배포 원장 8종은 실제로 운용한 기록(실측)이고 — 목록도 그렇게 적는다 —
+        //   자산배분 62종은 고른 것이 종목이 아니라 ETF 목록이라 '지수에 있던 종목' 이라는
+        //   축 자체가 다르다. 그 70종에 빨간 경고를 찍으면 없는 결함을 있다고 말하게 된다.
+        :(d._src==='배포 원장'
+          ?'<div class="legttl legretro">실측 — <b>배포 원장</b> · 실제로 운용한 기록이다</div>'
+          :(d._src==='자산배분'
+            ?('<div class="legttl legretro">소급 — <b>오늘의 자산 목록을 과거로</b>'+
+              ' · 종목이 아니라 ETF·자산군을 들므로 «그때 지수에 있던 종목» 축이 없다'+
+              (_naWhy?' · '+esc(_naWhy):'')+'</div>')
+            :('<div class="legttl legretro">🚨 소급 — <b>오늘의 유니버스를 과거로</b>'+
+              ' · 시점정확 레그가 없다'+(_naWhy?': '+esc(_naWhy):'')+'</div>'))));
+      var perf='<div class="labperf">'+_legTtl+
         '<div class="lpg">'+
-          '<div><span>구간</span><b>'+esc((d._start||'').slice(0,7)+'~'+(d._end||'').slice(0,7))+
-            (spanTxt(d._start,d._end)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(d._start,d._end)+'</span>':'')+'</b></div>'+
+          '<div><span>구간</span><b>'+esc((_pst||'').slice(0,7)+'~'+(_pen||'').slice(0,7))+
+            (spanTxt(_pst,_pen)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(_pst,_pen)+'</span>':'')+'</b></div>'+
           // 🚨 2026-08-13 사용자 지시 — **샤프와 최대낙폭을 앞에 둔다.**
           //   "일단 샤프랑 mdd, 월별 수익률, 상승하락 구간 비교 이런거에 집중해".
           //   종전 순서는 CAGR → 샤프 → MDD 였다. CAGR 을 맨 앞에 두면 그 줄이 헤드라인이

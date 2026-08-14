@@ -21,7 +21,7 @@ except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import (ann_stats, tstat, maxdd, curve_pack, load_index_tr,  # noqa: E402
-                           risk_bootstrap)
+                           risk_bootstrap, asof_cut)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -287,6 +287,9 @@ def main() -> int:
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
                            encoding="utf-8")).get("monthly") or {}
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    # 🚨 성과 기준일 = 전월말(2026-08-14 사용자 지시). 랩 본편과 **같은 함수**로 자른다.
+    #   이 빌더만 안 자르면 13F 복제 한 종만 창이 며칠 길어져 같은 표에서 비교가 어긋난다.
+    st["pxd_dates"] = st["pxd_dates"][:asof_cut(st["pxd_dates"])]
     _GRID.clear()
     _GRID.update({d: i for i, d in enumerate(st["pxd_dates"])})
     # 무위험은 패널 구간으로 자른다 — 랩 공통 규약(DATA-FACTS 참조).

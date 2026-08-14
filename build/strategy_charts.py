@@ -36,6 +36,30 @@ def load(fn):
         return None
 
 
+def slim(c):
+    """브라우저가 받는 묶음에서 **안 그리는 계열을 뺀다.** 값은 고치지 않는다.
+
+    원본은 지수를 셋 들고 있는데(S&P 500 · NASDAQ 100 · 동일가중 S&P 500) 마지막 것은
+    생존편향 눈금 전용이라 화면에 선으로 그리지 않는다(tech_backtest.load_index_tr 머리말).
+    안 빼면 안 그리는 계열이 차트마다 실려 브라우저가 그만큼 더 받는다(월별을 넣자
+    2.0 → 3.0MB 가 됐다).
+    """
+    keep = ("S&P 500", "NASDAQ 100")
+    m = c.get("monthly")
+    if m:
+        c = dict(c, monthly=[
+            (dict(row, i={k: v for k, v in row["i"].items() if k in keep})
+             if row.get("i") else row) for row in m])
+    for _k in ("idx", "idx_dd"):
+        if isinstance(c.get(_k), dict):
+            c = dict(c, **{_k: {k2: v2 for k2, v2 in c[_k].items() if k2 in keep}})
+    if c.get("yearly"):
+        c = dict(c, yearly=[
+            (dict(y, i={k2: v2 for k2, v2 in y["i"].items() if k2 in keep})
+             if isinstance(y.get("i"), dict) else y) for y in c["yearly"]])
+    return c
+
+
 def main() -> int:
     out, src = {}, {}
 
@@ -47,28 +71,23 @@ def main() -> int:
         for r in (d.get(key) or []):
             c = r.get("chart")
             if c:
-                # ⚠ 월별의 지수 칸은 **화면이 쓰는 둘만** 남긴다. 원본(tech_strategies.json)은
-                #   셋을 다 들고 있고 여기서 값을 고치지도 않는다 — 브라우저가 받는 묶음에서
-                #   안 그리는 계열을 빼는 것뿐이다(월별을 넣자 2.0 → 3.0MB 가 됐다).
-                keep = ("S&P 500", "NASDAQ 100")
-                m = c.get("monthly")
-                if m:
-                    c = dict(c, monthly=[
-                        (dict(row, i={k: v for k, v in row["i"].items() if k in keep})
-                         if row.get("i") else row) for row in m])
-                # 곡선·낙폭·연도별의 지수 칸도 같은 이유로 둘만 남긴다.
-                #   원본은 '동일가중 S&P 500'(RSP)도 들고 있는데 그것은 생존편향 눈금 전용이라
-                #   화면에 선으로 그리지 않는다(tech_backtest.load_index_tr 머리말). 안 빼면
-                #   안 그리는 계열이 157개 차트에 실려 브라우저가 그만큼 더 받는다.
-                for _k in ("idx", "idx_dd"):
-                    if isinstance(c.get(_k), dict):
-                        c = dict(c, **{_k: {k2: v2 for k2, v2 in c[_k].items() if k2 in keep}})
-                if c.get("yearly"):
-                    c = dict(c, yearly=[
-                        (dict(y, i={k2: v2 for k2, v2 in y["i"].items() if k2 in keep})
-                         if isinstance(y.get("i"), dict) else y) for y in c["yearly"]])
+                c = slim(c)
                 out[pre + r["sid"]] = c
                 src[pre + r["sid"]] = fn
+
+    # 🚨 2026-08-14 — **시점정확 곡선이 있으면 그것으로 덮는다.**
+    #   사용자 지시("소급은 다 없애고 시점정확 pit만"). 종전에는 카드 머리 숫자만 PIT 으로
+    #   바뀌고 그 밑 그림은 소급 곡선이 남아, 한 카드 안에서 숫자와 그림이 **다른 유니버스**를
+    #   말했다. 편입 종목이 갈리므로 두 곡선은 실제로 다르다(x-amihud 는 CAGR 이 44.82%p).
+    # ⚠ 다시 계산하지 않는다. pit_backtest 가 랩과 **같은 curve_pack** 으로 만든 것을 옮긴다.
+    _pit = (load("pit_strategies.json") or {}).get("strategies") or []
+    _npit = 0
+    for r in _pit:
+        c = r.get("chart")
+        if c and c.get("dates"):
+            out["t-" + r["sid"]] = slim(c)
+            src["t-" + r["sid"]] = "pit_strategies.json"
+            _npit += 1
 
     # 기각 재검은 배포 원장과 같은 스키마(dates·nav·bench·dd·yearly)를 이미 갖고 있다.
     ab = (load("archive_backtests.json") or {}).get("strategies") or {}
@@ -109,7 +128,8 @@ def main() -> int:
     ix = load("strategy_index.json") or {}
     miss = [r["sid"] for r in (ix.get("items") or [])
             if r["sid"] not in out and r.get("src") != "배포 원장"]
-    print("랩 차트 %d개 · %.0fKB" % (len(out), os.path.getsize(OUT) / 1024))
+    print("랩 차트 %d개(그중 시점정확 곡선 %d개) · %.0fKB"
+          % (len(out), _npit, os.path.getsize(OUT) / 1024))
     if miss:
         print("  ⚠ 차트 없는 랩 전략 %d건: %s" % (len(miss), ", ".join(miss[:8])))
     return 0

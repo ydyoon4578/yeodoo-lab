@@ -2543,6 +2543,78 @@ def asof_fund(series, date, lag=FUND_LAG_DAYS):
 
 
 # ── 데이터 ──────────────────────────────────────────────────────────────
+# ── 성과 기준일 = **전월말** ───────────────────────────────────────────────────
+# 🚨 2026-08-14 사용자 지시 — "성과는 전월말까지로 하고 월 1회 자동 업데이트 하는 식으로".
+#   종전에는 격자 마지막 날(= 어제)까지 재서, 매일 도는 잡이 돌 때마다 모든 전략의 CAGR·
+#   샤프·MDD 가 조금씩 흔들렸다. 달 중간의 며칠은 신호가 아니라 잡음인데 그것이 판정 문턱
+#   (t 2.0 · 샤프 등급)을 넘나들게 만들었다 — 같은 전략이 어제는 통과, 오늘은 탈락이 된다.
+#   기준을 **완료된 달의 마지막 거래일**에 고정하면 한 달 동안 숫자가 움직이지 않는다.
+# ⚠ 가격 수집은 계속 매일 돈다. 자르는 것은 이 엔진이 **읽는 격자**다.
+# 🚨 그래서 '지금 보유' 도 같이 전월말에서 끊긴다. 처음에 이 자리에 "현재 시점 정보는
+#   절단과 무관하다" 고 적었는데 **틀렸다** — hold_now 는 dates[-1] 에서 나오고 그것이
+#   곧 전월말이다. 월말 리밸 규칙은 그 명단이 지금 드는 것과 같지만(다음 리밸이 이달
+#   말이다), **주간 리밸 8종은 그 사이 이미 여러 번 갈아탔다.** 그 8종을 "지금 보유" 라
+#   부르면 화면이 최대 한 달 묵은 명단을 현재로 말한다 — explorer 가 리밸 주기를 보고
+#   이름표를 "전월말 보유" 로 가른다(_holdLbl).
+#   ⚠ 진짜 현재 명단을 실으려면 신호를 **안 자른 격자**에서 한 번 더 돌려야 한다.
+#     경로가 둘로 갈리는 변경이라 지시 없이 하지 않았다.
+# ⚠ LAB_ASOF 환경변수(YYYY-MM)로 덮어쓸 수 있다 — 과거 시점 재현·회귀 검사용이다.
+#   설정하면 그 달을 '현재 달'로 보고 그 **직전 달 말**까지 자른다.
+def asof_month():
+    """성과를 재는 마지막 달(YYYY-MM) — 오늘이 속한 달의 직전 달."""
+    v = (os.environ.get("LAB_ASOF") or "").strip()
+    if v:
+        if not re.match(r"^\d{4}-\d{2}$", v):
+            raise SystemExit("LAB_ASOF 는 YYYY-MM 이어야 한다 — 받은 값: %r" % v)
+        y, m = int(v[:4]), int(v[5:7])
+    else:
+        t = dt.date.today()
+        y, m = t.year, t.month
+    return "%04d-%02d" % (y - 1, 12) if m == 1 else "%04d-%02d" % (y, m - 1)
+
+
+def asof_cut(dates):
+    """격자를 전월말까지 자를 위치(길이)를 돌려준다.
+
+    ⚠ 자료가 이미 그보다 짧으면 **그대로 둔다**(자르지 않는다). 그때는 격자가 밀린 것이지
+      기준이 잘못된 것이 아니고, 그 사실은 asof.json·validate_site 의 신선도 검사가 말한다.
+    """
+    lim = asof_month()
+    k = 0
+    for d in dates:
+        if d[:7] > lim:
+            break
+        k += 1
+    if k < 260:
+        raise SystemExit("전월말(%s)까지 자르면 %d일밖에 안 남는다 — 격자가 이상하다" % (lim, k))
+    return k
+
+
+def _surv_note(n_tick, gap, bmax):
+    """생존편향 눈금 문장. 🚨 **조각마다 서식을 따로 넣는다.**
+
+    처음에 이어붙인 문자열 전체에 `%` 를 한 번 걸었더니, 앞 조각이 이미 만들어 낸
+    "…+46.94%p(x-small)…" 의 `%p` 를 바깥 `%` 가 변환 지시자로 다시 읽어 통째로 죽었다.
+    ⚠ 마크다운 `**` 를 쓰지 않는다 — 이 문장은 esc() 를 타고 화면에 나가므로 별 두 개가
+      글자로 찍힌다(검사기가 실제로 잡았다).
+    ⚠ 최댓값은 **재서** 넣는다. 종전에는 "+53.79%p(x-amihud)" 가 손으로 적혀 있었고,
+      창을 10년으로 내린 뒤 실제 최대가 x-small +46.94%p 로 바뀌었는데 문장은 그대로였다.
+      자료가 없으면 그 문장을 아예 안 만든다 — 없는 수를 지어 넣지 않는다.
+    """
+    out = ("랩 대조군(오늘의 %d종목 동일가중을 과거로 소급)이 같은 기간 실제 동일가중 "
+           "S&P 500(RSP·보수 후)보다 연 %+.2f%%p 앞선다. 생존편향과 유니버스 "
+           "틸트(NASDAQ 100 전용 종목 포함)가 함께 만든 격차이며, 생존편향 단독의 "
+           "상한으로 읽어야 한다. "
+           "🚨 이것은 «대조군(유니버스) 자신의 편향»이지 규칙별 편향이 아니다. "
+           "규칙은 이 유니버스에서 상위 10종을 고르므로 편향이 농축된다. " % (n_tick, gap))
+    if bmax:
+        out += ("실측 최대 %+.2f%%p(%s)로 이 값의 %.1f배다. "
+                % (bmax[1], bmax[0], bmax[1] / max(1e-9, gap)))
+    return out + ("규칙별 분포는 strategy_index.json 의 pit_dist 에 있다. "
+                  "(2026-08-14: 홈 각주가 이 수를 '종목 전략의 생존편향 상한'이라 적고 "
+                  "있었다 — 그 오독을 막으려고 여기 적는다.)")
+
+
 def load():
     """일봉을 읽는다 → dates, 종가, 거래량, **고가·저가**, 메타, 무위험이자율.
 
@@ -2558,6 +2630,8 @@ def load():
     with io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8") as f:
         st = json.load(f)
     dates = st["pxd_dates"]
+    n_raw = len(dates)
+    dates = dates[:asof_cut(dates)]
     n = len(dates)
     px, vlm, hi, lo, meta = {}, {}, {}, {}, {}
     for s in st["stocks"]:
@@ -2569,16 +2643,18 @@ def load():
             d = json.load(io.open(p, encoding="utf-8"))
         except Exception:
             continue
+        # ⚠ 길이 검사는 **자르기 전 격자 길이(n_raw)** 로 한다. 자른 길이로 재면
+        #   모든 종목이 '길이 안 맞음' 으로 탈락해 유니버스가 통째로 비어 버린다.
         a, v = d.get("pxd"), d.get("vd")
-        if not isinstance(a, list) or len(a) != n:
+        if not isinstance(a, list) or len(a) != n_raw:
             continue
-        px[t] = a
-        vlm[t] = v if isinstance(v, list) and len(v) == n else None
+        px[t] = a[:n]
+        vlm[t] = v[:n] if isinstance(v, list) and len(v) == n_raw else None
         # 길이가 안 맞으면 None 으로 둔다 — 짧은 계열을 그대로 태우면 날짜가 밀린 채
         # 조용히 다른 날의 범위를 읽는다(종가와 달리 이건 눈에 안 띈다).
         _h, _l = d.get("hd"), d.get("ld")
-        hi[t] = _h if isinstance(_h, list) and len(_h) == n else None
-        lo[t] = _l if isinstance(_l, list) and len(_l) == n else None
+        hi[t] = _h[:n] if isinstance(_h, list) and len(_h) == n_raw else None
+        lo[t] = _l[:n] if isinstance(_l, list) and len(_l) == n_raw else None
         meta[t] = {"name": s.get("name") or "", "sector": s.get("sector") or ""}
     rf = json.load(io.open(os.path.join(DATA, "rf_monthly.json"), encoding="utf-8")).get("monthly") or {}
     rf = {k: v for k, v in rf.items() if k >= dates[0][:7]}
@@ -6582,21 +6658,21 @@ def run():
         _rs = ann_stats(_nv, dates[MIN_HIST:], rf)
         _bs = ann_stats(ewnav_ref, dates[MIN_HIST:], rf) if ewnav_ref else {}
         if _rs.get("cagr") is not None and _bs.get("cagr") is not None:
+            # 규칙별 편향의 최댓값 — PIT 산출물에서 **재서** 가져온다(손으로 안 적는다).
+            # 자료가 없으면 그 문장을 아예 안 만든다. 없는 수를 지어 넣지 않는다.
+            _bmax = max(((k, v.get("bias_cagr")) for k, v in PIT_MEASURED.items()
+                         if v.get("bias_cagr") is not None),
+                        key=lambda kv: kv[1], default=None)
             surv = {
                 "lab_bench_cagr": _bs["cagr"], "rsp_cagr": _rs["cagr"],
                 "gap_cagr": round(_bs["cagr"] - _rs["cagr"], 2),
                 "lab_bench_sharpe": _bs.get("sharpe"), "rsp_sharpe": _rs.get("sharpe"),
-                "note": "랩 대조군(오늘의 %d종목 동일가중을 과거로 소급)이 같은 기간 실제 "
-                        "동일가중 S&P 500(RSP·보수 후)보다 연 %+.2f%%p 앞선다. 생존편향과 "
-                        "유니버스 틸트(NASDAQ 100 전용 종목 포함)가 함께 만든 격차이며, "
-                        "생존편향 단독의 상한으로 읽어야 한다. "
-                        "🚨 이것은 **대조군(유니버스) 자신의 편향**이지 규칙별 편향이 아니다. "
-                        "규칙은 이 유니버스에서 상위 10종을 고르므로 편향이 농축된다 — "
-                        "실측 최대 +53.79%%p(x-amihud)로 이 값의 8배다. "
-                        "규칙별 분포는 strategy_index.json 의 pit_dist 에 있다. "
-                        "(2026-08-14: 홈 각주가 이 수를 '종목 전략의 생존편향 상한'이라 "
-                        "적고 있었다 — 그 오독을 막으려고 여기 적는다.)"
-                        % (len(tickers), _bs["cagr"] - _rs["cagr"]),
+                # 🚨 2026-08-14 — 이 문장의 "최대 +53.79%p(x-amihud)" 가 **손으로 적힌 수**였다.
+                #   창을 10년으로 내리고 거래량 캐시를 이으면서 실제 최대는 x-small +46.94%p 로
+                #   바뀌었는데 문장은 그대로였다. 손으로 적은 수는 조용히 낡는다 — 재서 적는다.
+                #   ⚠ 마크다운 `**` 도 같이 걷었다. 이 문자열은 esc() 를 타고 화면에 나가므로
+                #     별 두 개가 글자로 찍힌다(검사기가 잡았다).
+                "note": _surv_note(len(tickers), _bs["cagr"] - _rs["cagr"], _bmax),
             }
             print("  [생존편향 눈금] 랩 동일가중 유니버스 %.2f%% vs RSP %.2f%% → 격차 %+.2f%%p"
                   % (_bs["cagr"], _rs["cagr"], _bs["cagr"] - _rs["cagr"]))
