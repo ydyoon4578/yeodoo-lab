@@ -469,6 +469,15 @@
   .sttbl thead th.shp em{font-style:normal;font-weight:600;font-size:10px;opacity:.75;
     display:block;line-height:1.1}
   .sttbl td.shp.z{color:var(--muted);font-weight:400}
+  /* 월간 승률 — 여기는 색을 준다. 샤프와 달리 **뜻이 있는 눈금이 하나 있기 때문**이다:
+     50% 는 '지수와 비겼다'다. 위(465줄)에서 샤프에 색을 안 칠한 사유는 그 열엔 그런 선이
+     없어서였다. 특이도를 .shp 보다 높여 둔다(td.wr.up = 0,3,1). */
+  .sttbl td.wr{border-right:1px solid var(--line);font-weight:700;color:var(--ink-2)}
+  .sttbl td.wr.up{color:var(--deploy)} .sttbl td.wr.dn{color:var(--hot)}
+  /* 표본 개월수 — 승률 숫자에 딸린 단위처럼 붙인다. 96개월과 118개월이 같은 열에 서므로
+     이 수가 없으면 둘이 같은 무게로 읽힌다. */
+  .sttbl td.wr em.wrn{font-style:normal;font-weight:500;font-size:10px;opacity:.6;
+    display:block;line-height:1.1;color:var(--muted)}
   .sttbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   /* 묶음 머리 — ETF 원장과 지수 방법론은 성격이 다르다(하나는 실제 상품 수익률, 하나는
      이 랩의 백테스트). 한 표에 넣은 이상 선 하나로는 부족해 글자로 가른다. */
@@ -951,7 +960,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="filings.html" data-nav="filings.html" title="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음"><span class="mmn">8-K 공시 피드</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 39지표로 만든 국면 판정 — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html" title="FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭"><span class="mmn">경제지표</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro" title="이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음"><span class="mmn">발표 일정</span></a>
         </div>
@@ -989,6 +998,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
           <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="ok.html" data-nav="ok.html" title="개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금"><span class="mmn">OK<span class="mmlk">🔒</span></span></a>
         </div>
       </li>
     </ul>
@@ -1708,7 +1718,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="rgsnh"><span class="rgsnn">'+s.score.toFixed(1)+'<small>/100</small></span>'+
       '<span class="rgsnl">'+esc(s.label||'')+'</span>'+
       '<span class="rgsnp">시장 심리'+(s.score_pctl!=null?
-        ' · 전체 이력 대비 하위 '+(Math.round(s.score_pctl*1000)/10)+'%':'')+'</span></div>'+
+        ' · 전체 이력의 '+(Math.round(s.score_pctl*1000)/10)+'%보다 높다':'')+'</span></div>'+
       '<div class="rgsbar" role="img" aria-label="시장 심리 '+s.score.toFixed(1)+
         '점 · 0은 극단공포 100은 극단탐욕 · 현재 '+esc(s.label||'')+
         '"><i style="left:'+v+'%"></i></div>'+
@@ -2079,7 +2089,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var ST_SKIP={IWM:1, SPY:1};
   // ⚠ 3년·5년 은 **누적**이다(연율 아니다) — 옆 칸들과 같은 뜻이어야 한 줄로 읽힌다.
   var ST_HZ=[['1D','1일'],['1W','1주'],['1M','1개월'],['3M','3개월'],['6M','6개월'],
-             ['12M','1년'],['3Y','3년'],['YTD','YTD']];
+             ['12M','1년'],['3Y','3년'],['YTD','올해']];
+  // 표 전체 열 수. **머리열을 만들 때 거기서 센다** — 손으로 세던 것이 두 곳에 있었고
+  // 둘 다 뒤에 붙은 열(주가·12mf PER)을 놓쳐 묶음 머리줄과 펼침 줄이 짧았다(2026-08-14).
+  var ST_NCOL=0;
   // 수익률 한 칸의 색과 글자. 위 ETF 표(td)와 아래 구성종목 줄(span) **두 곳**이 쓴다 —
   // 규칙을 두 곳에 적으면 '-0.00' 을 막는 처리가 한쪽에만 남는 날이 온다.
   function stNum(v){
@@ -2253,7 +2266,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return '<tr><th scope="row">'+btn+nm+ref+'</th>'+stShp(sharpeOf(k))+pxCell(null)+
            ST_HZ.map(function(z){return stCell(t?t.v[ST_TR[z[0]]]:null);}).join('')+
            '<td class="tnum pxc mut">·</td></tr>'+
-           '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+(ST_HZ.length+3)+'">'+
+           '<tr class="hold" id="h-'+esc(k)+'" hidden><td colspan="'+ST_NCOL+'">'+
            stDetail(s)+'</td></tr>';
   }
   // ── 기간별 수익률 — 표 위의 시계열 ──────────────────────────────────
@@ -2493,10 +2506,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!j||!j.style){
       box.innerHTML='<tbody><tr><td class="skel2">스타일 성과를 불러오지 못했습니다.</td></tr></tbody>';return;}
     var ix=(j.index||[]), st=(j.style||[]).filter(function(x){return !ST_SKIP[x.t];});
-    var ncol=ST_HZ.length+2;                     // 구분 + 샤프 + 구간 7칸
     // 샤프를 **구분 바로 옆**에 둔다 — 아래 묶음이 이 값으로 정렬되므로 정렬 기준이
     // 첫 숫자여야 표가 왜 그 순서인지 눈으로 읽힌다.
-    var h='<thead><tr><th>구분</th><th class="shp" title="'+
+    var head='<thead><tr><th>구분</th><th class="shp" title="'+
           esc('연율 샤프 — 최근 1년('+(SLAB&&SLAB._start?SLAB._start+' 이후':'')+') · 무위험(3개월물) '+
               '차감 초과수익 기준 · 모든 행이 같은 창·같은 산식입니다. '+
               '⚠ 다만 바스켓을 굴리는 방식은 다릅니다 — ETF·지수·섹터 행은 그 상품을 그냥 '+
@@ -2509,6 +2521,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               '값이 아닙니다. 편입 명단이 없는 행(다우·러셀2000·스타일 ETF)은 비웁니다')+
           '">12mf PER</th>'+
           '</tr></thead><tbody>';
+    // 🚨 2026-08-14 — 묶음 머리줄의 colspan 을 **손으로 세지 않는다.**
+    //   종전 `ST_HZ.length+2` 는 구분·샤프·구간만 셌고 뒤에 붙은 주가·12mf PER 두 열을
+    //   놓쳐 10 이었다(실제 12). 그래서 지수·섹터·스타일·지수방법론 네 머리줄이 표 오른쪽
+    //   두 칸을 안 덮어 그 자리가 뜯긴 채로 보였다. 열은 앞으로도 늘 텐데 세는 자리가
+    //   따로 있으면 또 어긋난다 — 방금 만든 머리열에서 직접 받아온다.
+    var ncol=ST_NCOL=(head.match(/<th\b/g)||[]).length;
+    var h=head;
     // 🚨 2026-08-12 사용자 요청 — 지수 줄에도 섹터·스타일처럼 묶음 머리줄을 준다.
     //   종전에는 이 넷만 머리줄 없이 표 맨 위에 떠 있어서, 아래 두 묶음은 무엇인지
     //   적혀 있는데 맨 위 넷만 정체가 안 적힌 상태였다.
@@ -3168,6 +3187,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var TP_LAB={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var TP_N=10;
     function el2(id){return document.getElementById(id);}
+    // 승률 한 칸. **표본 개월수를 같이 적는다** — 96개월짜리와 118개월짜리가 같은 열에
+    // 서는데 그 수를 안 적으면 둘이 같은 무게로 읽힌다(이 표에 실제로 둘 다 있다).
+    // ⚠ 색을 50% 기준으로 준다. 그 선이 '지수와 비긴 것'이라 뜻이 있는 유일한 눈금이다.
+    function wrCell(w){
+      if(!w||w.win==null)return '<td class="wr z">—</td>';
+      var c=w.win>50?'up':(w.win<50?'dn':'');
+      return '<td class="wr '+c+'">'+w.win.toFixed(1)+'%'+
+             '<em class="wrn">'+w.n+'개월</em></td>';
+    }
 
     function draw(){
       var tb=el2('tptbl'), bar=el2('tp-bar'), sub=el2('tp-sub'), note=el2('tpnote');
@@ -3206,7 +3234,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<th class="shp" title="같은 창에서 잰 S&amp;P 500(PR) 대비 초과분입니다">vs S&amp;P 500</th>'+
         '<th class="shp" title="같은 창에서 잰 NASDAQ 100(PR) 대비 초과분입니다">vs 나스닥 100</th>'+
         '<th class="shp">전체 CAGR</th><th class="shp">전체 샤프</th>'+
-        '<th class="shp">최대낙폭</th></tr></thead><tbody>';
+        '<th class="shp">최대낙폭</th>'+
+        // 🚨 승률의 잣대는 **배당을 얹은 S&P 500** 이다. 안 얹으면 이 열은 전략이 아니라
+        //   배당을 잰다 — SPY 를 대부분 들고 있는 게이트형은 원본 승률이 88% 인데 배당분
+        //   (월 0.165%p)을 빼면 31% 다(실측 2026-08-14 · 낙차 최대 57%p).
+        //   그래서 지수를 그대로 복제하는 달은 '진 달'로 센다. 그 사실을 툴팁이 적는다.
+        '<th class="shp" title="'+esc('그 전략이 S&P 500 을 이긴 달의 비율입니다 — 전략의 '+
+            '구간 전체를 월 단위로 세었고, 표본 개월수를 함께 적습니다. '+
+            '지수에 배당(연 2.00%p, 이 랩 실측)을 얹은 뒤 비교합니다. 안 얹으면 지수를 그냥 '+
+            '복제하는 전략이 배당만큼 매달 이긴 것으로 세어져, 이 열이 전략이 아니라 배당을 '+
+            '재게 됩니다. 그래서 지수를 그대로 따라간 달은 이긴 달로 세지 않습니다 — '+
+            '현금 게이트류가 50% 아래로 나오는 것은 고장이 아니라 그 뜻입니다.')+
+          '">월간 승률<em>vs 지수</em></th>'+
+        // 회전율 — 위 수익이 전부 무비용(gross)이라, 그 숫자를 얼마나 깎아 읽어야 하는지가
+        // 이 열에만 있다. 랩 중앙 2.70회인데 최대 83.4회까지 있어 줄마다 뜻이 크게 다르다.
+        '<th class="shp" title="'+esc('연 회전율 — 1.0 이면 한 해에 포트폴리오를 한 번 '+
+            '갈아치운다는 뜻입니다. 위 수익률은 전부 무비용이라, 회전이 높은 줄일수록 실제로 '+
+            '손에 남는 것은 그보다 적습니다. 이 랩 173종의 중앙값은 2.70회입니다.')+
+          '">회전율<em>연</em></th>'+
+        '</tr></thead><tbody>';
       top.forEach(function(r,i){
         var m=r.metrics||{}, b=(r.trails_base||{})[TP_HZ];
         // 🚨 딥링크는 **#s-<sid>** 다(explorer 의 _fromHash 규약). 처음에 '#s=' 로 써서
@@ -3222,8 +3268,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var dv=function(k){return (ix[k]==null||tv==null)?null:(tv-ix[k]);};
         h+='<tr><td class="tprk">'+(i+1)+'</td><th scope="row" class="tpsrc">'+nm+'</th>'+
            stCell(tv)+stCell(dv('spx'))+stCell(dv('ndx'))+stCell(m.cagr)+
-           '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(3))+'</td>'+
-           stCell(m.mdd)+'</tr>';
+           // 샤프는 소수 둘째 자리(사용자 요청 2026-08-14). 위 기간별 수익률 표의 샤프 열도
+           // 두 자리라 같은 값을 두 표가 다른 정밀도로 적던 것이 없어진다.
+           '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(2))+'</td>'+
+           stCell(m.mdd)+wrCell(r.winrate)+
+           '<td class="shp">'+(r.turnover==null?'—':Number(r.turnover).toFixed(2)+'회')+'</td>'+
+           '</tr>';
       });
       tb.innerHTML=h+'</tbody>';
       // ⚠ 각주도 줄였다(2026-08-13 사용자 요청 "설명 주절주절 빼"). 다만 셋은 못 뺀다 —
@@ -3231,7 +3281,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   읽는 것. 셋 다 **숫자의 뜻이 바뀌는 오독**이라 화면에 없으면 거짓이 된다.
       //   길게 설명하지 않고 한 줄씩만 적는다.
       var _n=['<b>순위지 판정이 아닙니다</b> — 이 랩은 등급을 매기지 않습니다. 기간을 바꾸면 순위가 바뀝니다.',
-              '무비용(gross) 기준. 전체 CAGR·샤프는 각 전략의 자기 구간 전체라 위 수익과 다른 창입니다.'];
+              '무비용(gross) 기준. 전체 CAGR·샤프·승률은 각 전략의 자기 구간 전체라 위 수익과 다른 창입니다.',
+              // 이 한 줄이 없으면 게이트형이 30%대로 나오는 것이 고장으로 읽힌다.
+              '월간 승률은 <b>배당을 얹은 지수</b>와 비교한 것이라, 지수를 그대로 따라간 달은 이긴 달로 세지 않습니다.'];
       if(TPMETA&&TPMETA.gap_cagr!=null)
         _n.push('종목 전략은 오늘의 유니버스를 과거로 소급한 값입니다(생존편향 상한 연 +'+
           TPMETA.gap_cagr.toFixed(2)+'%p).');
