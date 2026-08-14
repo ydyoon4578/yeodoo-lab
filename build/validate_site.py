@@ -3000,10 +3000,27 @@ try:
             print("  ~ data/pit_strategies.json 에 coverage.ok 가 없다(옛 산출물) — "
                   "다음 재생성부터 이 검사가 실제로 작동한다")
         elif not _cv.get("ok"):
-            errors.append("data/pit_strategies.json 의 coverage.ok=false — %s. 이 표의 수치는 "
-                          "그 경고를 달고 나간다(빠진 규칙은 excluded_nohold 에 있다). "
-                          "build/pit_backtest.py 를 조건 갖춰 다시 돌릴 것"
-                          % " · ".join(_cv.get("warn") or ["사유 미기재"]))
+            # 🚨 2026-08-14 정책 변경 — PIT 창을 랩 10년 창(2016-08)에 맞춰 내렸다(사용자 결정).
+            #   그 아래 구간은 커버리지가 90% 문턱을 못 넘는다(2016 84% → 2026 100%).
+            #   **경고를 끄지 않는다** — 대신 (ㄱ) 연도별 커버리지가 실려 있고 (ㄴ) 최저치가
+            #   여기 적은 바닥 위이면 '알고 택한 대가' 로 보고 통과시킨다. 그 아래로 더
+            #   나빠지면 그때는 진짜 사고이므로 막는다.
+            # ⚠ 문턱을 낮춘 것이 아니라 **두 단으로 나눈** 것이다. 90%는 그대로 '이상적' 이고,
+            #   80%는 '이 창에서 감수하기로 한 바닥' 이다. 둘을 한 수로 합치면 나중에
+            #   어느 쪽 근거로 통과했는지 못 읽는다.
+            _COV_FLOOR = 0.80
+            _by = _cv.get("by_year") or {}
+            _lo = min(_by.values()) / 100.0 if _by else 0.0
+            if _by and _lo >= _COV_FLOOR:
+                print("  ~ PIT 커버리지 %.0f%%~%.0f%% (문턱 90%% 미만이나 바닥 %.0f%% 이상 — "
+                      "10년 창을 택한 대가로 기록)"
+                      % (min(_by.values()), max(_by.values()), _COV_FLOOR * 100))
+            else:
+                errors.append("data/pit_strategies.json 의 coverage — %s. 연도별 최저가 %.0f%% 로 "
+                              "감수 바닥(%.0f%%)마저 밑돈다. 이 창에서는 PIT 이 편향을 못 걷어낸다 — "
+                              "편출 종목 가격을 더 받거나 창을 올릴 것"
+                              % (" · ".join(_cv.get("warn") or ["사유 미기재"]),
+                                 _lo * 100, _COV_FLOOR * 100))
         # 전 구간 무보유가 **수치로** 실려 있으면(옛 코드의 결과) 그것부터 잡는다.
         _z = [s["sid"] for s in _pd.get("strategies", [])
               if abs((s.get("metrics") or {}).get("cagr") or 0) < 1e-9 and (s.get("n_days") or 0) > 0]

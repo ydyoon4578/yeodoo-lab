@@ -59,8 +59,19 @@ OUT = os.path.join(DATA, "pit_strategies.json")
 # 늘리면 이 파일을 사본으로 돌리는 감사 하네스들이 조용히 깨진다.
 CIK_SPLICE_MAP = {}
 
-START = "2021-07-01"
-# 🚨 이 날짜는 **자료의 한계가 아니라 자료의 품질**로 정했다(2026-08-11, 사용자 결정).
+START = "2016-08-01"
+# 🚨 2026-08-14 사용자 결정 — **랩 10년 창(MAX_YEARS)에 맞춰 2021-07 에서 내렸다.**
+#   요청은 "같은 창 소급·랩 본편 소급을 다 없애고 PIT 만 쓰고, 기간은 10년으로 통일" 이다.
+#   그 둘은 지금 자료로 **동시에 성립하지 않는다** — 실측 커버리지가 이렇다:
+#       2016 76.9%   2018 83.1%   2020 88.4%   2021 90.3%   2024 97.0%   2026 99.7%
+#   ⚠ 그래서 앞구간(2016~2020)은 후보의 12~23%가 빠진 채로 고른다. **편향을 없애려는
+#     레그가 그만큼 편향을 갖는다.** 그 사실을 감추지 않고 산출물에 구간별 커버리지로
+#     실어 화면이 말하게 한다(cov_by_year). 사용자가 그 대가를 알고 택한 갈래다.
+#   ⚠ 근본 해결은 **편출 종목 가격을 더 받는 것**이다(결손의 대부분이 그것이다).
+#     EODHD EOD 플랜이 그 자리이고, 그러면 이 문턱을 도로 올릴 수 있다.
+#
+# 아래는 2021-07 을 골랐던 당시의 근거다 — 지웠다가 다시 필요해질 값이라 남긴다.
+# 🚨 그 날짜는 **자료의 한계가 아니라 자료의 품질**로 정했다(2026-08-11, 사용자 결정).
 #   자료 한계는 2014-06 이다 — 위키 표에 CIK 컬럼이 생긴 첫 달이고, 그 아래는 티커로만
 #   조인하게 되어 개명·재사용을 구별할 수 없다(근거는 fetch_members 주석과
 #   build/refresh_index_history.py 머리말). data/index_history.json 은 그대로 2014-06 부터
@@ -1004,6 +1015,24 @@ def main():
             else:
                 mm_gap[t] = mm_gap.get(t, 0) + 1
     mm_miss = sum(mm_gap.values())
+    # 🚨 연도별 커버리지 — 2026-08-14 에 창을 10년으로 내리면서 **앞구간이 얇아졌다.**
+    #   전체 한 숫자로만 내면 "96%" 처럼 보이지만 2016년은 77% 다. 구간별로 실어
+    #   화면이 "앞구간은 이만큼 빠진 채로 골랐다" 를 말하게 한다.
+    cov_by_year = {}
+    for _mk in sorted(mem):
+        if _mk < START[:7]:
+            continue
+        _ms = set(mem.get(_mk) or [])
+        if not _ms:
+            continue
+        _y = _mk[:4]
+        _a, _b = cov_by_year.get(_y, (0, 0))
+        _have = sum(1 for _t in _ms if _t in px)
+        cov_by_year[_y] = (_a + len(_ms), _b + _have)
+    cov_by_year = {y: round(100.0 * h / max(1, n), 1) for y, (n, h) in cov_by_year.items()}
+    if cov_by_year:
+        print("  연도별 후보 커버리지 " + " · ".join(
+            "%s %.0f%%" % (y, v) for y, v in sorted(cov_by_year.items())))
     COV_MIN_REQ = 0.90        # 사전등록 문턱과 같은 값 — 여기서 흔들지 않는다
     print("  멤버-월 커버리지 %.2f%% (총 %d · 직접 %d · CIK승계 %d · 결손 %d / %d종)"
           % (100 * (mm_tot - mm_miss) / max(1, mm_tot), mm_tot, mm_direct, mm_spl,
@@ -1263,6 +1292,9 @@ def main():
             "min": round(cov_min, 4), "median": round(cov_med, 4),
             "lookback_first_month": round(cov0_look, 4),
             "threshold": COV_MIN_REQ, "ok": not _cov_warn, "warn": _cov_warn,
+            # 연도별 후보 커버리지(%). 앞구간이 얇다는 사실을 화면이 그대로 적게 한다 —
+            # 전체 한 숫자로 내면 2016년의 77% 가 최근의 99% 에 묻힌다.
+            "by_year": cov_by_year,
             "member_months": {
                 "total": mm_tot, "direct": mm_direct, "cik_spliced": mm_spl,
                 "missing": mm_miss,
