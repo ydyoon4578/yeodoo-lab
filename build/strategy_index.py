@@ -412,6 +412,47 @@ PR_GAP = 2.00
 PR_GAP_M = (1 + PR_GAP / 100.0) ** (1 / 12.0) - 1
 
 
+def mdd_ix_of(dates, nav):
+    """그 전략의 창에서 지수 최대낙폭(%). 화면이 전략 낙폭 옆에 나란히 놓는다.
+
+    🚨 **전략과 같은 창·같은 산식**으로 잰다. market_board 의 고정 창 낙폭을 가져다 놓으면
+       옆자리의 두 수가 다른 기간이 되어, 깊고 얕음이 아니라 기간 차이를 비교하게 된다.
+    ⚠ 격자도 맞춘다. strategy_charts 의 idx_dd 는 115점으로 얇아진 격자라 같은 계열에서도
+      값이 다르게 나온다(실측: 전략 낙폭 일간 −33.57 vs 얇은 격자 −34.40). 여기서는
+      일간 종가로 다시 잰다.
+    🚨 여기서 전략 낙폭을 다시 재지 않는다. rec() 가 받는 nav 는 **주간 격자**(833~980점)라
+       장중·주중 저점을 놓쳐 낙폭이 얕게 나온다 — 실측 2026-08-14: 같은 전략을 주간으로
+       재면 157종 중 156종이 얕아지고 중앙 1.52%p 차이가 났다(200일선 이격도 −38.07 →
+       −35.52). 화면이 쓰는 전략 낙폭은 원 빌더가 **일간**으로 낸 metrics.mdd 이고,
+       여기서 내는 지수 낙폭도 assets.json 의 **일간** 종가로 잰다. 두 수가 같은 잣대다.
+    """
+    if not dates or not nav or len(dates) != len(nav) or len(nav) < 3:
+        return None
+    ix = _ix_load()
+    if not ix["d"]:
+        return None
+    i0, i1 = _ix_at(ix, str(dates[0])[:10]), _ix_at(ix, str(dates[-1])[:10])
+    if i0 is None or i1 is None or i1 <= i0:
+        return None
+
+    def _mdd(seq):
+        pk = None
+        wo = 0.0
+        for v in seq:
+            if not v:
+                continue
+            pk = v if (pk is None or v > pk) else pk
+            wo = min(wo, v / pk - 1.0)
+        return round(wo * 100, 2)
+
+    out = {}
+    for lab in ("spx", "ndx"):
+        a = ix.get(lab)
+        if a:
+            out[lab] = _mdd(a[i0:i1 + 1])
+    return out if ("spx" in out or "ndx" in out) else None
+
+
 def winrate_of(dates, nav):
     """월간 승률 — S&P 500 을 이긴 달의 비율(%)과 그 표본 개월수.
 
@@ -545,6 +586,9 @@ def rec(**kw):
     _wr = winrate_of(kw.get("dates"), kw.get("nav"))
     if _wr:
         kw["winrate"] = _wr
+    _mi = mdd_ix_of(kw.get("dates"), kw.get("nav"))
+    if _mi:
+        kw["mdd_ix"] = _mi
     kw.pop("dates", None)
     if _tr:
         kw["trails"], kw["trails_base"] = _tr, _trb
