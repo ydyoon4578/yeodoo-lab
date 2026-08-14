@@ -2787,16 +2787,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ── 랩 전략 전용 블록 ── 배포 원장은 플레이북(det)이 있지만 랩 전략은 없다.
     // 대신 이쪽에만 있는 것을 보인다 — 대조군 대비 차이·t값·회전율·지금 보유.
     if(d._lab){
-      // 🚨 2026-08-14 — **"지금 보유" 라고 부를 수 있는 것과 아닌 것을 가른다.**
-      //   성과 기준일을 전월말로 내리면서(사용자 지시) 보유 명단도 그 날짜에서 끊긴다.
-      //   월말 리밸 규칙은 그 명단이 곧 지금 드는 것이 맞다 — 다음 리밸이 이달 말이다.
-      //   그런데 **주간 리밸 규칙은 그 사이에 이미 여러 번 갈아탔다.** 그것을 "지금 보유"
-      //   라고 적으면 화면이 최대 한 달 묵은 명단을 현재로 말하게 된다.
-      //   → 리밸 주기를 보고 이름표를 가른다. 자료를 지어내지 않고 **부르는 이름만** 맞춘다.
-      function _holdLbl(d,h){
-        var rb=(d&&d._reb)||'';
-        return /주간|주 1회|weekly/i.test(rb) ? '전월말 보유' : '지금 보유';
-      }
+      // 🚨 2026-08-14 — 보유 명단은 **오늘 격자**에서 다시 뽑는다(tech_backtest 의
+      //   current_holdings). 성과는 전월말까지 재지만 보유는 오늘 것이어야 하기 때문이다.
+      //   그래서 이름표는 「지금 보유」 하나로 족하다.
+      // ⚠ 한때 주간 리밸 8종만 「전월말 보유」로 갈라 놓았었다. 그건 격자를 자르면서
+      //   보유까지 전월말에서 끊긴 것을 **이름으로 덮은 임시방편**이었고, 지금은 자료
+      //   쪽을 고쳤으므로 되돌린다. 실측으로 확인한 각 규칙의 마지막 리밸:
+      //     주간 2026-08-07 · 월말 2026-07-31 · 분기 2026-06-30 · 타이밍 2026-08-13.
+      // ⚠ 다시 뽑기가 실패한 규칙은 전월말 명단이 그대로 남는데, 그 카드는 as_of 를
+      //   함께 찍으므로 화면이 스스로 그 사실을 말한다(날짜를 늘 같이 적는 이유다).
       var labRows=[];
       // Δ샤프·t 도 카드 머리와 **같은 레그**에서 뽑는다. 종전에는 이 둘만 소급으로 남아
       // 한 카드 안에서 숫자는 시점정확, 검정통계량은 소급이었다.
@@ -2849,17 +2848,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var h=d._hold, holdHtml='';
       if(h){
         if(h.kind==='timing'){
-          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><b>노출 '+Number(h.exposure_now||0).toFixed(1)+'%</b>'+
             (h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }else if(h.weights){
-          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><div class="lhs">'+h.weights.map(function(w){
               return '<span class="lhw">'+esc(w[0])+'<b>'+Number(w[1]).toFixed(1)+'%</b></span>';}).join('')+
             '</div>'+(h.note?'<em>'+esc(h.note)+'</em>':'')+'</div>';
         }else if(h.tickers){
           var nm=h.names||{};
-          holdHtml='<div class="labhold"><span class="lh">'+_holdLbl(d,h)+(h.as_of?' · '+esc(h.as_of):'')+
+          holdHtml='<div class="labhold"><span class="lh">지금 보유'+(h.as_of?' · '+esc(h.as_of):'')+
             '</span><b>'+h.tickers.length+'종목</b><div class="lhs">'+h.tickers.map(function(t){
               return '<a class="lhw" href="co.html?t='+encodeURIComponent(t)+'"'+
                      (nm[t]?' data-nm="'+esc(nm[t])+'"':'')+'>'+esc(t)+'</a>';}).join('')+
@@ -2905,10 +2904,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             (Pq.bias_sharpe==null?'':(' · 샤프가 '+(Pq.bias_sharpe>0?'+':'')+
               Number(Pq.bias_sharpe).toFixed(3)))+' 만큼 부풀려진다(생존편향)</span>')+
           '</div>')
-        // ⚠ "재지 못했다" 라고 단정하지 않는다. 사유가 셋으로 갈린다 — 자료가 없어서
-        //   **못 재는 것**(투자의견 이력 3종) · 아직 **안 잰 것**(타이밍 22종) · 애초에
-        //   해당이 없는 것. 화면이 그 셋을 하나로 뭉치면 원천이 애써 구별해 둔 것을
-        //   화면에서 도로 지우는 셈이다. 이름표는 '없다' 까지만 말하고 사유를 그대로 옮긴다.
+        // ⚠ "재지 못했다" 라고 단정하지 않는다. 사유가 갈린다 — 자료가 없어서 **못 재는
+        //   것**(편출 종목 투자의견 이력 부재 3종)과 애초에 축이 다른 것. 화면이 둘을
+        //   뭉치면 원천이 애써 구별해 둔 것을 화면에서 도로 지우는 셈이다. 이름표는
+        //   '없다' 까지만 말하고 사유는 자료에 있는 문장을 그대로 옮긴다.
+        // 🚨 한때 여기 '아직 안 잰 것(타이밍 22종)' 이 있었다. 2026-08-14 에 **실제로
+        //   쟀고**(pit_backtest 의 TIMING_SIDS) 22종 전부 편향이 양수로 나왔다 —
+        //   중앙값 +4.60%p · t 는 22종 모두 음수. 남은 것은 종목 전략 3종뿐이다.
         // 🚨 그리고 **출처마다 다른 말을 해야 한다.** 처음에 PIT 없는 전략 전부에
         //   "🚨 소급 — 오늘의 유니버스를 과거로" 를 붙였는데, 그건 종목 전략에만 맞는
         //   말이다. 배포 원장 8종은 실제로 운용한 기록(실측)이고 — 목록도 그렇게 적는다 —
