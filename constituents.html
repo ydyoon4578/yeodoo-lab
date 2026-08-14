@@ -738,7 +738,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SECKO={"Information Technology":"IT","Health Care":"헬스케어","Financials":"금융",
     "Consumer Discretionary":"경기소비","Consumer Staples":"필수소비","Industrials":"산업재",
     "Communication Services":"커뮤니케이션","Energy":"에너지","Utilities":"유틸리티",
-    "Real Estate":"부동산","Materials":"소재"};
+    "Real Estate":"부동산","Materials":"소재",
+    // 🚨 2018-09 GICS 개편 전 이름. 그때 표에 그렇게 적혀 있어 자료에 그대로 남겼고,
+    //   화면에서만 옮겨 적는다 — '커뮤니케이션' 으로 합치지 않는다. 개편 전후는 담는
+    //   업종이 달라서(미디어·인터넷이 그때 넘어왔다) 같은 칸으로 세면 그 사실이 사라진다.
+    "Telecommunication Services":"통신서비스(2018 개편 전)"};
   // 🚨 섹터를 모르는 종목을 '—' 한 글자로 묶으면 그 뭉치가 무엇인지 화면에서 알 수가 없다.
   //   오래된 달에서는 이 뭉치가 500종 중 169종까지 간다 — 이름을 붙여 준다.
   var UNK='섹터 미상 — 오늘 유니버스에 없는 옛 종목';

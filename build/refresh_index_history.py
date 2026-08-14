@@ -102,6 +102,19 @@ CIK = re.compile(r"\d{7,10}")
 # 표 파서로는 0종이 나온다(실제로 그렇게 49개월이 실패했다).
 LISTED = re.compile(r"^#\s*\[\[[^\]]*\]\][^(\n]*\(([A-Z][A-Z.\-]{0,5})\)", re.M)
 
+# GICS 섹터 — SPX 목록 문서에 'GICS Sector' 열이 있다. 🚨 **열 위치로 집지 않는다.**
+#   이 표는 2014~2026 사이에 열 구성이 여러 번 바뀌었고 파서가 그 때문에 세 번 틀렸다
+#   (머리말 참조). 위치로 집으면 그 변화를 조용히 따라간다 — 값 자체가 닫힌 집합이므로
+#   값으로 찾는다.
+# ⚠ 'Telecommunication Services' 는 2018-09 GICS 개편으로 'Communication Services' 가
+#   됐다. 옛 이름을 그대로 둔다 — 그때 표에 그렇게 적혀 있었고, 오늘 이름으로 덮으면
+#   그 시점 분류가 아니게 된다. 옮겨 적을 일이 있으면 화면에서 할 일이다.
+GICS = {
+    "Information Technology", "Health Care", "Financials", "Consumer Discretionary",
+    "Consumer Staples", "Industrials", "Communication Services", "Energy",
+    "Utilities", "Real Estate", "Materials", "Telecommunication Services",
+}
+
 
 def _get(url: str) -> str:
     for i in range(5):
@@ -186,14 +199,23 @@ def parse(wt: str):
         comp = _section(wt, "Components")
         if comp:
             # 값 모양을 표 경로와 맞춘다 — (CIK, 회사명). 이 형식엔 CIK 컬럼이 없다.
-            tk = {t.upper().replace("-", "."): (None, "") for t in LISTED.findall(comp)}
+            # 3튜플로 맞춘다 — 길이가 갈리면 소비부 언패킹에서 죽는다. 이 형식엔 CIK 도
+            # 섹터도 없다(번호 목록에는 회사명과 티커뿐이다).
+            tk = {t.upper().replace("-", "."): (None, "", "") for t in LISTED.findall(comp)}
             if tk:
                 return tk, "Components 번호목록"
         return {}, how or "표 없음"
     out = {}
     for row in re.split(r"\n\|-", seg):
         cells = []
-        for line in re.split(r"\n\s*\|(?!\|)", row)[1:]:
+        # 🚨 2026-08-14 — 네 번째 파서 파손이다(머리말의 셋에 이어). SPX 표가
+        #   `| MMM` 에서 **`|| {{NyseSymbol|MMM}}`** 로 바뀌었다 — 셀마다 줄머리가
+        #   파이프 **둘**이다. 종전 정규식은 `\n|` 뒤에 `|` 가 오면 안 쪼개도록
+        #   막아 두어서(인라인 `||` 를 지키려던 것) 행 전체가 한 덩이가 되고,
+        #   `[1:]` 가 그것을 통째로 버려 **500종이 0종**이 됐다.
+        #   → 줄머리 파이프는 하나든 둘이든 쪼갠다. 인라인 `||` 는 아래 split 이 맡는다
+        #     (그쪽은 앞에 `\n\s*` 가 없으므로 이 정규식에 안 걸린다).
+        for line in re.split(r"\n\s*\|\|?", row)[1:]:
             cells += line.split("||")          # NDX 는 `|회사||티커` 인라인이다
         cells = [_clean(x) for x in cells]
         t = None
@@ -208,9 +230,27 @@ def parse(wt: str):
         # 실제로 HBI(Hanesbrands)가 AVY(Avery Dennison)의 CIK 로 한 번 붙었는데,
         # 이름을 안 들고 있으면 그 오염을 알아챌 방법이 없다. 잘못된 CIK 묶음은
         # 서로 다른 두 회사를 한 회사로 합쳐 버리므로 이 파일에서 가장 위험한 오류다.
-        nm = next((x for x in cells[1:4] if len(x) > 3 and not CIK.fullmatch(x)
-                   and not TICK.fullmatch(x)), None)
-        out[t] = (ck, (nm or "")[:60])
+        # GICS 섹터 — 닫힌 집합(GICS)에 드는 셀을 찾는다. 위 GICS 주석 참조.
+        sc = next((x for x in cells if x in GICS), "")
+        # 🚨 회사명은 **티커 바로 옆칸**에서 집는다. 종전에는 cells[1:4] 를 훑었는데,
+        #   표 형식마다 티커 자리가 달라서(구형식 `이름|티커|…` · 신형식 `티커|이름|…`)
+        #   구형식에서는 그 창이 이름을 지나쳐 **섹터를 이름으로 저장**했다.
+        #   실측으로 IBM='Information Technology' · MMM='Industrials' · IQV='Health Care'
+        #   3건이 그 상태로 파일에 들어가 있었다. 옆칸으로 좁히면 형식과 무관해진다.
+        ti = cells.index(t) if t in cells else None
+        nm = None
+        for j in ([ti - 1, ti + 1] if ti is not None else []):
+            if 0 <= j < len(cells):
+                x = cells[j]
+                # ⚠ 길이 문턱을 2 로 둔다. 3 이면 '3M'·'CME' 같은 짧은 회사명이 통째로
+                #   버려진다(실측: 신형식에서 MMM 의 이름이 비었다). 대신 티커로 오인하지
+                #   않도록 TICK 검사를 그대로 둔다 — 옆칸이라 티커일 리는 없지만
+                #   이중 클래스 행(`BRK.B`)에서 안전판이 된다.
+                if len(x) > 1 and x != sc and x not in GICS \
+                        and not CIK.fullmatch(x) and not TICK.fullmatch(x):
+                    nm = x
+                    break
+        out[t] = (ck, (nm or "")[:60], sc)
     return out, how
 
 
@@ -250,6 +290,9 @@ def main() -> int:
             doc = {}
     months = doc.get("months") or {}
     cik = doc.get("cik") or {}
+    # 티커 → GICS 섹터. cik 과 같은 규약으로 **파일에서 읽어 이어 쓴다** — 증분 갱신이
+    # 이번 달 것만 담고 나머지를 날리는 사고를 cik_names 에서 이미 한 번 겪었다(아래 주석).
+    sect = doc.get("sector") or {}
     # 지난 실행의 판정. 아래에서 **바닥으로 깐다** — 버리지 않는다(이유는 names 주석).
     prev_hist = doc.get("cik_hist") or {}
     prev_conf = list(doc.get("cik_conflicts") or [])
@@ -258,6 +301,34 @@ def main() -> int:
     end = "%04d-%02d" % (today.year, today.month)
     want = list(month_ends(START, end))
     todo = [(mk, iso) for mk, iso in want if mk not in months]
+    # 🚨 --sectors — 섹터가 비어 있는 티커를 덮는 **최소한의 달만** 다시 받는다.
+    #   섹터 열은 2026-08-14 에 파서에 추가했다. 이미 받아 둔 147개월에는 그 값이 없는데,
+    #   --rebuild 로 전부 다시 받으면 위키 요청 294회·20분이다. 실측으로 **15개월이면
+    #   섹터 없는 262종을 전부 덮는다** — 한 종목이 여러 해 멤버였기 때문이다.
+    #   ⚠ 덮개는 여기서 풀지 않는다. 어느 달이 필요한지는 멤버십을 알아야 정하는데
+    #     그것을 이 스크립트가 다시 계산하면 원장 빌더와 두 벌이 된다. 이미 받아 둔
+    #     months 를 그대로 훑어 '섹터 없는 티커가 가장 많이 든 달' 부터 고른다.
+    if "--sectors" in sys.argv:
+        _need = set()
+        for _mk, _r in months.items():
+            for _i in ("spx", "ndx"):
+                for _t in (_r.get(_i) or []):
+                    if _t not in sect:
+                        _need.add(_t)
+        _pick, _left = [], set(_need)
+        while _left:
+            _best, _hit = None, 0
+            for _mk, _r in months.items():
+                _c = len(_left & (set(_r.get("spx") or []) | set(_r.get("ndx") or [])))
+                if _c > _hit:
+                    _best, _hit = _mk, _c
+            if not _best:
+                break
+            _pick.append(_best)
+            _left -= (set(months[_best].get("spx") or []) | set(months[_best].get("ndx") or []))
+        todo = [(mk, iso) for mk, iso in want if mk in set(_pick)]
+        print("  [섹터] 섹터 없는 티커 %d종 → 다시 받을 달 %d개 (남는 %d종은 그 달들에 없다)"
+              % (len(_need), len(todo), len(_left)))
     # 이번 달은 아직 안 끝났으므로 매번 다시 받는다(리비전이 늘어난다).
     cur = "%04d-%02d" % (today.year, today.month)
     if cur in months and (cur, None) not in todo:
@@ -297,7 +368,12 @@ def main() -> int:
                 continue
             rec[idx] = sorted(tk)
             rec[idx + "_rev"] = meta["rev"]
-            for t, (c, nm) in tk.items():
+            for t, (c, nm, sc) in tk.items():
+                # 🚨 섹터는 CIK 유무와 무관하게 담는다. 아래 `if not c: continue` 안에
+                #   두면 CIK 열이 없는 NDX 표에서 섹터가 통째로 사라진다 — 그 조합이
+                #   실제로 이 파일에서 가장 흔한 형태다.
+                if sc:
+                    sect[t] = sc
                 if not c:
                     continue
                 cik[t] = c
@@ -396,6 +472,10 @@ def main() -> int:
         # 이것이 없으면 증분 갱신이 이번 달 이름만 보고 판정을 다시 만든다(names 주석 참조).
         # 조인에 쓰라고 두는 것이 아니다. 40KB 쯤 늘지만 그 값으로 개명 지도가 유지된다.
         "cik_names": {c: dict(sorted(v.items())) for c, v in sorted(names.items())},
+        # 티커 → GICS 섹터(그 시점 표기). 편출 종목 섹터의 유일한 공개 출처다 —
+        # yfinance 는 사라진 심볼에 아무것도 안 주고, GICS 자체는 라이선스 자료라
+        # 다른 데서 받아올 수 없다. 위키 표는 CC BY-SA 라 재배포가 된다.
+        "sector": dict(sorted(sect.items())),
     }
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
