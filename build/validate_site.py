@@ -3149,6 +3149,33 @@ try:
         else:
             print("  ~ 가격 격자 구멍 검사 통과(%d거래일 · 한 날 최대 결측 %d종)"
                   % (_n, max(_hole) if _hole else 0))
+        # 🚨 산출물이 **지금 입력으로 구워진 것인가.** index_ledger 의 커버리지는 빌드 때
+        #   세어 파일에 박는 값이라(화면이 11MB 가격 캐시를 읽지 않게 하려고 그렇게 뒀다)
+        #   원본이 바뀌어도 표는 옛 수를 그대로 들고 있다 — 조용히 틀린다.
+        #   2026-08-14 에 실제로 그랬다: 가격 구멍 497칸을 메우고 이 파일을 안 구워
+        #   7월이 77.7% 인 채로 남았고, 사용자가 화면을 보고 물어서야 알았다.
+        #   → 원장이 실어 둔 입력 지문을 여기서 **다시 세어** 대조한다.
+        # ⚠ 같은 유형이 오늘만 두 번이다(소스 고치고 signal_lab.json 안 구움 · 가격 고치고
+        #   여기). 산출물에 미리 박는 수치는 전부 이 검사가 필요한 자리다.
+        _lg = json.loads(rd("data/index_ledger.json"))
+        _fp = _lg.get("src_fp")
+        if not _fp:
+            print("  ~ index_ledger 에 src_fp 가 없다(옛 산출물) — 다음 재생성부터 대조한다")
+        else:
+            _now = {"grid_days": _n, "px_nulls": sum(_hole),
+                    "hist_months": len(json.loads(rd("data/index_history.json")).get("months") or {}),
+                    "hist_as_of": json.loads(rd("data/index_history.json")).get("as_of")}
+            _dif = [k for k in _now if _fp.get(k) != _now[k]]
+            if _dif:
+                errors.append("data/index_ledger.json 이 **지금 입력으로 구워진 것이 아니다** — "
+                              "%s. 원장의 커버리지는 빌드 때 세어 박는 값이라 원본이 바뀌면 "
+                              "표가 조용히 옛 수를 들고 있다. python build/index_ledger.py 를 "
+                              "다시 돌릴 것"
+                              % " · ".join("%s 산출물 %s ≠ 실측 %s" % (k, _fp.get(k), _now[k])
+                                           for k in _dif))
+            else:
+                print("  ~ index_ledger 입력 지문 일치(격자 %d일 · 결측 %d · 이력 %d개월)"
+                      % (_now["grid_days"], _now["px_nulls"], _now["hist_months"]))
 except Exception as _e:
     errors.append("가격 격자 구멍 검사가 예외로 죽었다 — %s" % _e)
 
