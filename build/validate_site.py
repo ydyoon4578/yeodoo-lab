@@ -183,7 +183,12 @@ for p in PAGES:
 #   validate가 로컬 평문 사본과 대조해 '낡은 사본으로 초록불'(타 PC 재잠금 후 드리프트)을 기계적으로 잡는다.
 GATE_PLAIN = {"kb.html": "kb_content.html",
               # 2026-08-11 — 두 번째 잠금 페이지. 본문(렌더러 포함)만 조각으로 뽑아 암호화한다.
-              "sources.html": "sources_content.html"}
+              "sources.html": "sources_content.html",
+              # 🚨 2026-08-14 — 세 번째. 여기 안 적으면 get(_gp, _gp) 의 기본값이 페이지 이름
+              #   자체가 되어 **조각이 아니라 평문 페이지 한 장**을 해시한다. 그러면 ph 는
+              #   영원히 안 맞고 "다른 PC에서 재잠금됐다"는 엉뚱한 사유가 뜬다(실제로 떴다).
+              #   기본값이 조용히 틀리는 자리라, 잠금 페이지를 늘릴 때 같이 늘려야 한다.
+              "ok.html": "ok_content.html"}
 import base64 as _b64
 import hashlib as _hl
 # kb.html 은 이미 PAGES 안에 있다(루트의 '_' 로 시작하지 않는 모든 .html). 그냥 이어 붙이면
@@ -2571,6 +2576,16 @@ try:
         "sid", "kind", "why", "rule", "name", "verdict",   # 인덱스가 이름을 바꿔 싣는다
         "dates", "chart", "exposure", "incr", "n_days", "role", "n_stocks",
         "excess_cagr", "bench",                            # metrics/bench 로 접혀 들어간다
+        # 🚨 입력 커버리지 플래그 — **효과가 이미 화면에 가 있다.** 이 둘이 켜지면
+        #   tech_backtest 가 verdict 를 '판정 불가' 로 내리고 why 뒤에 사유를 붙인다:
+        #   "입력(투자의견 이력)이 0.0%만 존재해 나머지 기간이 자동으로 현금 처리됐다.
+        #    여기 성과는 규칙의 실력이 아니다." — 커버리지 수치까지 그 문장에 들어간다.
+        #   verdict·why 는 인덱스로 넘어가므로 원시 플래그를 또 보내면 같은 말이 두 벌이 된다.
+        # ⚠ 이 둘은 **정상 빌드에서는 아예 안 생긴다.** gitignore 된 로컬 캐시
+        #   (_ratings_cache.json 등)가 없는 환경에서 돌릴 때만 켜진다. 실제로 워크트리에서
+        #   캐시 없이 돌렸다가 7규칙이 이 상태로 나왔고(2026-08-14), 그때 이 검사가 잡았다 —
+        #   결과적으로 '캐시 없이 빌드했다' 를 알려 준 셈이라 검사 자체는 값을 했다.
+        "cov_short", "input_cov",
     }
     _by = {}
     for _it in (_si.get("items") or []):
