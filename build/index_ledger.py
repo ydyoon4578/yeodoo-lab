@@ -168,6 +168,43 @@ def main():
     for t, s in ((_load("pit_sector.json") or {}).get("sector") or {}).items():
         if t not in meta:
             meta[t] = ["", s or ""]
+    # 🚨 편출 종목 이름 — **이미 받아 둔 것을 안 읽고 있었다.** index_history.json 은
+    #   위키 표의 CIK 열에서 티커→CIK(795종)와 CIK→{티커: 그때 이름}(692종)을 같이 모아
+    #   두는데, 원장은 members.json(오늘의 518종)과 pit_sector.json(PIT 창 편출 87종)만
+    #   봤다. 그래서 그 앞 구간 편출 종목이 통째로 '이름 없음' 이었다(실측 262종).
+    # ⚠ 여기서 붙는 이름은 **그때의 이름**이다 — AA 는 'Alcoa Inc'(지금 그 CIK 는
+    #   Howmet Aerospace 다), ABC 는 'AmerisourceBergen Corp'(지금은 Cencora).
+    #   오늘 이름으로 덮으면 그 달의 명단을 오늘 회사로 바꿔 읽게 된다. 티커 키로 집는다.
+    # ⚠ 이름을 _ihcik 로 둔다. 아래 이중클래스 블록이 cik_map.json 을 _cik 에 다시 담는데,
+    #   같은 이름을 쓰면 순서가 바뀌는 날 조용히 엉뚱한 표를 읽는다(이 저장소가 되풀이 밟은 유형).
+    _ih = _load("index_history.json") or {}
+    _ihcik, _cnm = _ih.get("cik") or {}, _ih.get("cik_names") or {}
+    # 섹터도 같은 파일에서 온다(위키 표의 GICS Sector 열, 2026-08-14 에 파서가 잡기 시작).
+    # 🚨 편출 종목 섹터의 **유일한 공개 출처**다 — yfinance 는 사라진 심볼에 아무것도 안 주고
+    #   GICS 자체는 라이선스 자료다. pit_sector.json 은 PIT 창(2021-07~) 편출 87종뿐이고
+    #   그것도 '오늘 기준' 분류라, 그 앞 구간은 이쪽이 아니면 채울 길이 없었다.
+    # ⚠ 여기 값은 **그때의 표기**다. 'Telecommunication Services' 는 2018-09 GICS 개편 전
+    #   이름이고 그대로 둔다 — 오늘 이름으로 덮으면 그 시점 분류가 아니게 된다.
+    _isec = _ih.get("sector") or {}
+    _sected = 0
+    for t, sc in _isec.items():
+        if t not in meta:
+            meta[t] = ["", sc]
+            _sected += 1
+        elif not meta[t][1]:
+            meta[t][1] = sc
+            _sected += 1
+    _named = 0
+    for t, k in _ihcik.items():
+        nm = (_cnm.get(k) or {}).get(t)
+        if not nm:
+            continue
+        if t not in meta:
+            meta[t] = [nm, ""]
+            _named += 1
+        elif not meta[t][0]:
+            meta[t][0] = nm
+            _named += 1
 
     # ── 추정 비중 ────────────────────────────────────────────────────────
     # 🚨 공식 비중이 아니다. S&P·나스닥은 **유동주식 조정**(float-adjusted) 시총으로
@@ -262,6 +299,10 @@ def main():
 
     # 한 번이라도 멤버였던 티커 중 메타가 없는 것 — 지어내지 않고 개수만 적는다.
     n_nometa = len([t for t in seen if t not in meta])
+    n_noname = len([t for t in seen if not (meta.get(t) or ["", ""])[0]])
+    n_nosec = len([t for t in seen if not (meta.get(t) or ["", ""])[1]])
+    print("   위키에서 이름 %d종 · 섹터 %d종 보충 → 남은 이름 없음 %d · 섹터 미상 %d"
+          % (_named, _sected, n_noname, n_nosec))
 
     doc = {
         "as_of": hist.get("as_of"),
@@ -271,12 +312,24 @@ def main():
         "meta": {t: meta[t] for t in sorted(seen) if t in meta},
         "n_seen": len(seen),
         "n_nometa": n_nometa,
+        # 이름과 섹터를 따로 센다 — 화면이 "무엇이 없는지" 를 구별해 적을 수 있게.
+        # 이름은 위키 CIK 열로 대부분 메웠고, 섹터는 아직 출처가 없다(아래 limits 참조).
+        "n_noname": n_noname, "n_nosec": n_nosec,
         # 이중 클래스 묶음 — 화면이 한 줄로 합쳐 적는다(비중은 대표 티커에 몰려 있다).
         "dual": {t: r for t, r in DUAL.items() if t in seen},
         "note": "매월말 지수 편입 종목과, 그 시점 가격 자료를 몇 %나 갖고 있는지. "
                 "멤버십은 위키백과 지수 목록 문서의 과거 리비전(data/index_history.json)이고 "
                 "달마다 리비전 번호를 같이 실어 원문을 확인할 수 있게 했다.",
         "limits": [
+            "이름·섹터는 위키백과 지수 목록 문서의 그 시점 표에서 가져왔다 — 오늘 이름이 "
+            "아니라 **그때 이름**이다(AA=Alcoa Inc, 오늘 그 CIK 는 Howmet Aerospace다). "
+            "섹터도 그때 표기라 2018-09 GICS 개편 전 'Telecommunication Services' 가 그대로 "
+            "남아 있다. 오늘 분류로 덮으면 그 달의 명단을 오늘 기준으로 바꿔 읽게 된다.",
+            "🚨 섹터가 아직 없는 23종은 **나스닥 100 전용 종목**이다(Liberty Media 계열 · "
+            "Ctrip · BioMarin · Shire · 21세기폭스 · Vodafone 등). 나스닥 목록 문서는 GICS 가 "
+            "아니라 **ICB(Industry Classification Benchmark)** 로 분류한다 — 다른 분류 체계다. "
+            "한 열에 두 체계를 섞으면 'Technology'(ICB)와 'Information Technology'(GICS)가 "
+            "서로 다른 묶음으로 앉는다. **빈칸보다 나쁜 오류**라 채우지 않고 비워 둔다.",
             "🚨 커버리지 100%가 '자료가 완전하다'는 뜻은 아니다. 여기서 세는 것은 **그달 "
             "월말에 종가가 있는 멤버의 비율**이고, 종가는 (ㄱ) 오늘의 유니버스 518종과 "
             "(ㄴ) 편출 종목 캐시에서 온다. (ㄴ)은 yfinance 가 주는 것뿐이라 M&A·상장폐지로 "
