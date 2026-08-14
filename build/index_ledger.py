@@ -118,6 +118,7 @@ def px_months():
     dates = st.get("pxd_dates") or []
     mend = month_end_index(dates)
     have = {}
+    nulls = [0]          # 리스트로 두는 것은 아래 루프에서 더하기 위함이다
     sd = os.path.join(DATA, "sd")
     if os.path.isdir(sd):
         for fn in os.listdir(sd):
@@ -136,6 +137,15 @@ def px_months():
                     ms.add(m)
             if ms:
                 have[t] = ms
+            # 🚨 입력 지문용 — **상장 후** 생긴 결측만 센다(상장 전 None 은 결측이 아니다).
+            #   이 수가 산출물에 박히고, 검증기가 다시 세어 대조한다. 가격을 고쳐 놓고
+            #   원장을 안 구우면 두 수가 갈려 바로 잡힌다(2026-08-14 에 실제로 그랬다).
+            _seen = False
+            for _v in pxd:
+                if _v is not None:
+                    _seen = True
+                elif _seen:
+                    nulls[0] += 1
     # 편출 종목 캐시 — {티커: {날짜: 종가}}. 로컬에만 있다.
     cache = _load("_pit_px_cache.json") or {}
     for t, ser in cache.items():
@@ -146,7 +156,7 @@ def px_months():
         # 하나라도 있으면 '자료를 갖고 있다' 로 센다 — 후보로 세울 수 있다는 뜻이다.
         for d in ser:
             ms.add(d[:7])
-    return have, dates
+    return have, dates, nulls[0]
 
 
 def main():
@@ -154,7 +164,7 @@ def main():
     if not hist:
         raise SystemExit("data/index_history.json 이 없다 — build/refresh_index_history.py 를 먼저 돌릴 것.")
     months = sorted(hist["months"])
-    have, dates = px_months()
+    have, dates, px_nulls = px_months()
     if not have:
         raise SystemExit("가격 자료를 하나도 못 읽었다 — data/sd 와 data/stocks.json 을 확인할 것.")
     grid = set(d[:7] for d in dates)
@@ -310,6 +320,14 @@ def main():
         "months": [m for m in months if any(m in out[k]["m"] for k, _l, _w in IDX)],
         "idx": out,
         "meta": {t: meta[t] for t in sorted(seen) if t in meta},
+        # 🚨 입력 지문 — 이 표를 만든 **입력이 그 뒤로 바뀌었는지** 검증기가 알아채는 자리다.
+        #   커버리지는 빌드 때 세어 여기 박는 값이라(화면이 11MB 가격 캐시를 읽지 않게 하려고
+        #   그렇게 뒀다) 원본이 바뀌어도 표는 옛 수를 그대로 들고 있다. 2026-08-14 에
+        #   가격 구멍 497칸을 메우고 이 파일을 안 구워서 7월이 77.7% 인 채로 남았다.
+        #   validate_site 가 세 값을 다시 세어 대조한다.
+        "src_fp": {"grid_days": len(dates), "px_nulls": px_nulls,
+                   "hist_months": len(hist.get("months") or {}),
+                   "hist_as_of": hist.get("as_of")},
         "n_seen": len(seen),
         "n_nometa": n_nometa,
         # 이름과 섹터를 따로 센다 — 화면이 "무엇이 없는지" 를 구별해 적을 수 있게.
