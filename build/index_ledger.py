@@ -204,17 +204,47 @@ def main():
         elif not meta[t][1]:
             meta[t][1] = sc
             _sected += 1
-    _named = 0
-    for t, k in _ihcik.items():
-        nm = (_cnm.get(k) or {}).get(t)
+    # 위키 CIK 열로도 안 채워지는 이름 — 나스닥 전용 종목(Liberty 계열·Qurate·Trip.com 등)은
+    # NDX 표에 CIK 열이 없어 끝까지 남는다. EODHD 편출 명단이 그 자리를 메운다.
+    # ⚠ 이름만이다. 그 명단에는 섹터가 없다(Code·Name·Country·Exchange·Currency·Type·Isin).
+    #   섹터 미상 23종은 이걸로 안 줄어든다 — 줄어든 척하지 않는다.
+    # ⚠ **이미 아는 이름을 이 출처로 덮지 않는다.** 위키가 준 '그때 이름' 이 더 정확하다
+    #   (AA=Alcoa Inc). EODHD 는 오늘 기준 표기라 개명 후 이름이 올 수 있다.
+    _dn = (_load("delisted_names.json") or {}).get("names") or {}
+    _dnamed = 0
+    for t, r in _dn.items():
+        nm = (r or {}).get("name")
         if not nm:
             continue
         if t not in meta:
             meta[t] = [nm, ""]
-            _named += 1
+            _dnamed += 1
         elif not meta[t][0]:
             meta[t][0] = nm
-            _named += 1
+            _dnamed += 1
+    _named = 0
+
+    def _put_name(t, nm):
+        """이름을 채운다 — **이미 있으면 안 덮는다.** 먼저 온 출처가 더 정확하다."""
+        if not nm:
+            return 0
+        if t not in meta:
+            meta[t] = [nm, ""]
+            return 1
+        if not meta[t][0]:
+            meta[t][0] = nm
+            return 1
+        return 0
+
+    # ① CIK 키 이름(SPX 표) — 그 CIK 가 그때 쓰던 티커의 이름이다.
+    for t, k in _ihcik.items():
+        _named += _put_name(t, (_cnm.get(k) or {}).get(t))
+    # ② 티커 키 이름 — NDX 표는 CIK 열이 없어 ①로는 못 담긴다.
+    #    🚨 그래서 지금도 상장 중인 BIDU·JD·NTES·SIRI 가 '이름 없음' 이었다.
+    #      파싱은 되고 저장만 안 되던 것이다 — 오늘 같은 유형 세 번째다
+    #      (섹터 · 편출 이름 · 이것). 받아 놓고 안 담는 자리를 계속 찾게 된다.
+    for t, nm in (_ih.get("name") or {}).items():
+        _named += _put_name(t, nm)
 
     # ── 추정 비중 ────────────────────────────────────────────────────────
     # 🚨 공식 비중이 아니다. S&P·나스닥은 **유동주식 조정**(float-adjusted) 시총으로
@@ -311,8 +341,8 @@ def main():
     n_nometa = len([t for t in seen if t not in meta])
     n_noname = len([t for t in seen if not (meta.get(t) or ["", ""])[0]])
     n_nosec = len([t for t in seen if not (meta.get(t) or ["", ""])[1]])
-    print("   위키에서 이름 %d종 · 섹터 %d종 보충 → 남은 이름 없음 %d · 섹터 미상 %d"
-          % (_named, _sected, n_noname, n_nosec))
+    print("   위키 이름 %d · 섹터 %d · EODHD 이름 %d → 남은 이름 없음 %d · 섹터 미상 %d"
+          % (_named, _sected, _dnamed, n_noname, n_nosec))
 
     doc = {
         "as_of": hist.get("as_of"),
