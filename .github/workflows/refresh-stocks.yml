@@ -111,6 +111,11 @@ jobs:
       #   + target_history.json·fund_history.json(누적 이력 — 커밋 안 하면 매 실행 fresh checkout이라 영구 유실)
       #   하나라도 빠지면 해당 화면이 낡은 채 고착된다(home_reco 누락 사고의 교훈).
       #   빠뜨림은 ci_push.sh의 누락 가드가 data/ 전체를 훑어 잡는다.
+      # 🚨 2026-08-14 — home_ind_perf.json 이 빠져 있어 **이 잡이 이틀 죽었다.**
+      #   refresh_stocks.py 가 home_summary.write() 를 부르는데 그 산출물이 둘이다
+      #   (home_stocks.json + home_ind_perf.json). 목록에 하나만 있어서 누락 가드가 물었고,
+      #   가드는 커밋 스텝 전체를 세우므로 stocks.json·sd/ 518종까지 **하나도 안 올라갔다**.
+      #   화면이 08-12 에 고착된 것이 그 결과다. 부르는 빌더가 내는 파일을 다 적을 것.
       # 🚨 2026-08-05 추가 — 이 잡만 Validate 단계가 없었다. 봇 커밋에는 CI 가 안 돌므로
       #   이 잡의 산출물(stocks.json·data/sd/ 518종·home_reco 등 랩 입력 전부)은 아무도
       #   검증하지 않은 채 배포되고 있었다. validate_site 에 그것을 잡는 가드가 있었는데,
@@ -122,6 +127,7 @@ jobs:
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
+            data/home_ind_perf.json \
             data/strategy_index.json data/strategy_charts.json data/asof.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
