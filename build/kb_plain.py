@@ -35,6 +35,9 @@ PLAINDIR = os.path.join(ROOT, "_build", "pages")
 PAGES = {
     "kb":      ("kb.html",      "kb_content.html",      '<main id="content" hidden></main>', "main"),
     "sources": ("sources.html", "sources_content.html", '<div id="content" hidden></div>',   "div"),
+    # 2026-08-14 — 개인 OKR·KPI 원장. 게이트 셸을 sources.html 에서 떠서 만들었으므로
+    # 본문 슬롯도 sources 와 같은 <div> 다.
+    "ok":      ("ok.html",      "ok_content.html",      '<div id="content" hidden></div>',   "div"),
 }
 
 

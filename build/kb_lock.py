@@ -51,6 +51,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAGES = {
     "kb":      ("kb.html",      "kb_content.html"),
     "sources": ("sources.html", "sources_content.html"),
+    # 2026-08-14 — 개인 OKR·KPI 원장. 게이트 셸은 sources.html 에서 그대로 떠서 만들었다
+    # (규약을 손으로 다시 쓰면 그 순간 두 벌이 된다 — 이 파일 첫머리가 경계하는 구조다).
+    "ok":      ("ok.html",      "ok_content.html"),
 }
 GATE = FRAG = None      # main() 이 --page 로 정한다
 
