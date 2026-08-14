@@ -503,6 +503,29 @@ def apply_multiplicity(entries, q=0.10, m_override=None, source=None):
     return out
 
 
+def rebase100(b):
+    """수준 계열(nav·bench·bench2)을 창 첫날 100 으로 다시 세운다.
+
+    🚨 2026-08-14 사용자 지적 — "차트 수익률 시작점이 달라서 전략 성과가 과대계상되어 보인다."
+      10년 상한으로 계열 앞을 자를 때 값은 원래 계열 그대로 남았다. 그래서 창 첫날의 전략
+      NAV 와 대조군 NAV 가 서로 달랐고(실측 9종 중 8종), 차트는 그 두 수를 그대로 그린다 —
+      한쪽 선이 처음부터 위에서 출발한다.
+        · 섹터 모멘텀        전략 398.6 vs 대조군 156.5 → 선이 2.5배 위에서 시작한다.
+          실제 10년 배수는 3.99 vs 3.45 로 붙어 있는데 그림은 압승처럼 보였다.
+        · Multi-Sleeve Core 전략 135.0 vs 대조군 110.5 인데 **실제로는 대조군이 이겼다**
+          (5.22배 vs 6.05배 · CAGR 18.44 vs 20.59). 그림이 승패를 거꾸로 말했다.
+    ⚠ 지표는 처음부터 옳았다 — series_block 이 비율로 재기 때문이다. 틀린 것이 **그림
+      하나**여서 기존 검사 어디에도 안 걸렸다. validate_site 에 대조를 넣어 뒀다.
+    ⚠ 자르기(if lo) 밖에서 부른다. 저장 계열은 이미 잘려 있어 다음 실행부터 lo==0 으로
+      들어오는데, 안에서 부르면 이미 어긋난 것을 영영 못 고친다. 100 으로 세우는 것은
+      여러 번 해도 같은 결과다(멱등).
+    """
+    for k in ("nav", "bench", "bench2"):
+        v = b.get(k)
+        if isinstance(v, list) and v and v[0]:
+            b[k] = [round(x / v[0] * 100, 4) if x is not None else None for x in v]
+
+
 # ── 전략 1건 처리 ─────────────────────────────────────────────
 def compute_strategy(bt, rf_m):
     dates, nav = bt["dates"], bt["nav"]
@@ -603,6 +626,7 @@ def main():
             _d0 = b["dates"][0]
             b["start"] = (_d0 + "-01") if len(_d0) == 7 else _d0
             b["capped_years"] = MAX_MONTHS // 12
+        rebase100(b)      # 곡선 출발점을 맞춘다(위 함수 머리말 참조)
         # 🚨 2026-08-13 — **연도별 막대를 계열 창으로 떨어낸다.** 아래 주석이 "기존 yearly 는
         #   덮지 않는다"고 적어 두었는데, 덮는 것과 자르는 것은 다르다. 안 자르니 지표는
         #   10년(2016-07~)인데 막대는 최대 17년(1999~)을 그렸다 — 한 카드가 두 창을 말한다.
@@ -674,6 +698,9 @@ def main():
                 _d0 = b["dates"][0]
                 b["start"] = (_d0 + "-01") if len(_d0) == 7 else _d0
                 b["capped_years"] = MAX_MONTHS // 12
+            # 🚨 배포 원장과 **같은 자**를 쓴다. 이쪽만 빠뜨려서 tail-risk-hedge(194.99 vs
+            #   154.34) · low-beta-weight-tilt(120.75 vs 125.54) 두 곡선이 어긋나 있었다.
+            rebase100(b)
             b["metrics"] = m
             b["dd"] = [round(x * 100, 1) for x in dd_series(b["nav"])]
             b["dd_b"] = [round(x * 100, 1) for x in dd_series(b["bench"])]

@@ -633,14 +633,26 @@ def trails_of(dates, nav):
 # 시점정확을 못 잰 규칙의 사유 — data/pit_strategies.json 의 excluded 를 그대로 옮긴다.
 # ⚠ 여기서 문장을 짓지 않는다. 원천이 적은 것을 옮기되 t 수치만 뗀다(위 rec 주석 참조).
 _PIT_NA = None
+_PIT_NA_TIMING = None
 
 
-def _pit_na(sid):
-    global _PIT_NA
+def _pit_na(sid, kind=None):
+    """시점정확을 못/안 잰 사유. **없으면 None 이고 카드는 그 줄을 안 그린다.**
+
+    🚨 2026-08-14 — 타이밍 규칙 22종이 사유 없이 빈칸으로 나가고 있었다. 화면에는
+      "시점정확으로 재지 못했다" 만 찍히고 왜인지가 없었다 — 빈칸은 '해당 없음' 과
+      '아직 안 쟀다' 를 구별하지 못한다. 원천(pit_strategies.json)의 na_timing 을
+      그 줄에 잇는다. ⚠ 여기서 문장을 짓지 않는다. 원천이 적은 것을 옮길 뿐이다.
+    """
+    global _PIT_NA, _PIT_NA_TIMING
     if _PIT_NA is None:
-        _PIT_NA = (load("pit_strategies.json") or {}).get("excluded") or {}
+        _doc = load("pit_strategies.json") or {}
+        _PIT_NA = _doc.get("excluded") or {}
+        _PIT_NA_TIMING = _doc.get("na_timing") or ""
     v = _PIT_NA.get(sid)
     if not v:
+        if kind == "timing" and _PIT_NA_TIMING:
+            return {"sid": sid, "why": _PIT_NA_TIMING}
         return None
     why = v if isinstance(v, str) else (v.get("why") or v.get("reason") or "")
     if not why:
@@ -901,7 +913,9 @@ def main() -> int:
             #     지금 "왜 검증이 없는지"를 한 글자도 안 적는다.
             #   ⚠ 사유 문장에 박힌 t 수치는 **떼어 낸다.** excluded 에 "소급 t 6.84" 라
             #     적혀 있는데 현재 인덱스 값은 다르다 — 두 수가 갈리면 화면이 낡은 수를 말한다.
-            pit_na=_pit_na(r.get("sid")),
+            #   ⚠ kind 를 같이 넘긴다 — 타이밍 규칙 22종은 excluded 에 없어서
+            #     사유가 빈칸으로 나갔다(원천의 na_timing 이 그 자리다).
+            pit_na=_pit_na(r.get("sid"), r.get("kind")),
             # 가장 닮은 규칙 대비 증분 알파 — '이걸 이미 들고 있으면 이게 더 주는 게 있나'.
             # 단독 t 만 보면 같은 베팅을 여러 번 센다(에코 모멘텀 단독 3.80 → 증분 0.85).
             # 바스켓 크기 전수 시험의 선택 기록 — PREREG-2026-08-13-NSWEEP.md §4①.

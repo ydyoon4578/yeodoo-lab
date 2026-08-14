@@ -884,6 +884,26 @@ try:
         # N은 화면에 반드시 노출돼야 한다(전략별 3배 차이) — 값이 비면 표가 거짓말을 한다
         if not _ba.get("n_months") or _ba["n_months"] != _m["s"].get("n_months"):
             errors.append(f"{_nm}: basis.n_months 결측/불일치")
+        # 🚨 2026-08-14 사용자 지적 — **곡선의 출발점이 같아야 한다.**
+        #   "차트 수익률 시작점이 달라서 전략 성과가 과대계상되어 보인다."
+        #   10년 상한으로 계열 앞을 자를 때 값을 다시 세우지 않아, 창 첫날의 전략 NAV 와
+        #   대조군 NAV 가 서로 달랐다(실측 9종 중 8종). 차트는 그 두 수를 그대로 그리므로
+        #   한쪽 선이 처음부터 위에서 출발한다 — Multi-Sleeve Core 는 **대조군이 이겼는데**
+        #   그림에서는 전략 선이 위에 있었다(전략 135.0 vs 대조군 110.5 출발).
+        #   ⚠ 이 결함은 **지표를 하나도 안 건드린다**(전부 비율로 재기 때문이다). 그래서
+        #     기존 검사 어디에도 안 걸렸다. 틀린 것이 그림뿐이면 눈으로만 잡히는데,
+        #     눈은 8종을 놓쳤다. 자리를 만들어 둔다.
+        for _k, _lab in (("bench", "대조군"), ("bench2", "보조 대조군")):
+            _v0 = (_b.get(_k) or [None])[0]
+            _n0 = (_b.get("nav") or [None])[0]
+            if _v0 is None or _n0 is None:
+                continue
+            if abs(_v0 - _n0) > 0.01:
+                errors.append(
+                    f"{_nm}: 곡선 출발점이 어긋남 — 전략 {_n0} vs {_lab} {_v0}. "
+                    "차트가 두 선을 그대로 그리므로 한쪽이 처음부터 위에서 출발한다"
+                    "(지표는 비율이라 멀쩡해서 눈에만 보인다). "
+                    "build/strategy_metrics.py 의 100 재기준 블록을 확인할 것")
     _rf = os.path.join(ROOT, "data", "rf_monthly.json")
     if not os.path.exists(_rf):
         errors.append("data/rf_monthly.json 없음 — 무위험금리 캐시가 커밋되지 않았다(FRED 장애 시 폴백 불가)")
@@ -3080,6 +3100,75 @@ try:
               % (_cap, len(_got), len(_si.get("items") or [])))
 except Exception as _e:
     errors.append("백테스트 길이 상한 검사가 예외로 죽었다 — %s" % _e)
+
+# ── 화면의 시점정확 수치가 **원천과 같은가** ──────────────────────────────
+# 🚨 2026-08-14 실측 3종(x-sur 13.90 vs 11.85 · x-volratio 10.41 vs 9.03 · x-agrow).
+#   경로가 둘이라 생긴다: pit_strategies.json → tech_backtest 가 병합 → tech_strategies.json
+#   → strategy_index.json(화면). 중간의 tech 를 다시 안 구우면 화면은 **옛 PIT** 을 들고
+#   있는데, 곡선(strategy_charts)은 pit_strategies 에서 곧장 오므로 최신이다.
+#   그러면 한 카드 안에서 **머리 숫자와 그 밑 곡선이 다른 값**을 말한다.
+# ⚠ 이 어긋남은 둘 다 '그럴듯한 수' 라 눈으로 안 잡힌다. 두 파일을 직접 맞대야 보인다.
+try:
+    _pj = json.loads(rd("data/pit_strategies.json"))
+    _psrc = {r["sid"]: r for r in (_pj.get("strategies") or [])}
+    _ix3 = json.loads(rd("data/strategy_index.json"))
+    _drift = []
+    for _x in _ix3.get("items") or []:
+        _p = _x.get("pit")
+        if not _p or not str(_x.get("sid", "")).startswith("t-"):
+            continue
+        _q = _psrc.get(_x["sid"][2:])
+        if not _q:
+            continue
+        _a, _b = _p.get("cagr"), (_q.get("metrics") or {}).get("cagr")
+        if _a is not None and _b is not None and abs(_a - _b) > 0.01:
+            _drift.append("%s 화면 %.2f vs 원천 %.2f" % (_x["sid"], _a, _b))
+    if _drift:
+        errors.append(
+            "시점정확 수치가 원천과 어긋난 전략 %d종 — %s. tech_strategies.json 이 옛 "
+            "pit_strategies.json 을 병합한 채로 남아 있다는 뜻이다(곡선은 원천에서 곧장 오므로 "
+            "한 카드 안에서 머리 숫자와 곡선이 갈린다). python build/tech_backtest.py 를 다시 "
+            "돌린 뒤 strategy_index·strategy_charts 를 같이 구울 것"
+            % (len(_drift), " · ".join(_drift[:5])))
+    else:
+        print("  ~ 시점정확 원천 대조 통과(%d종 · 화면 = pit_strategies.json)"
+              % sum(1 for _x in (_ix3.get("items") or []) if _x.get("pit")))
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    errors.append("시점정확 원천 대조가 예외로 죽었다 — %s" % _e)
+
+# ── 성과 기준일이 **전월말**인가 ────────────────────────────────────────
+# 🚨 2026-08-14 사용자 지시 — "성과는 전월말까지로 하고 월 1회 자동 업데이트".
+#   백테스트가 격자를 전월말에서 끊는다(tech_backtest.asof_cut). 그런데 그 절단은 빌더
+#   **다섯 곳**(tech·pit·asset·guru·pairs)에 각각 배선돼 있어서, 한 곳만 안 자르면 그
+#   랩의 전략만 며칠 더 긴 창을 갖고 같은 표에 놓인다. 그건 숫자로만 보이고 아무도 안 막는다.
+# ⚠ 자료가 아직 그 달을 다 못 채운 경우(수집 지연)는 **넘긴다** — 그건 기준이 틀린 것이
+#   아니라 격자가 밀린 것이고, 그쪽은 asof/신선도 검사가 말한다. 여기서 잡는 것은 반대
+#   방향, 즉 **현재 달까지 재 버린** 경우 하나다.
+try:
+    import datetime as _dt2
+    _now_m = _dt2.date.today().strftime("%Y-%m")
+    _si2 = json.loads(rd("data/strategy_index.json"))
+    _late = []
+    for _x in _si2.get("items") or []:
+        _e = _x.get("end")
+        if _e and len(_e) >= 7 and _e[:7] >= _now_m:
+            _late.append("%s %s" % ((_x.get("name") or _x.get("sid") or "?")[:26], _e))
+    if _late:
+        errors.append(
+            "성과 구간이 **이번 달(%s)까지** 걸친 전략 %d종 — %s. 기준일은 전월말이어야 "
+            "한다(사용자 지시 2026-08-14). 절단이 빌더 다섯 곳에 각각 배선돼 있으므로 "
+            "어느 하나가 asof_cut 을 안 부르고 있다는 뜻이다"
+            % (_now_m, len(_late), " · ".join(_late[:6])))
+    else:
+        _ends = sorted({(_x.get("end") or "")[:7] for _x in (_si2.get("items") or [])
+                        if _x.get("end")})
+        print("  ~ 성과 기준일 검사 통과(전월말 · 게시 %d종의 종료월 %s)"
+              % (len(_si2.get("items") or []),
+                 (_ends[-1] if len(_ends) == 1 else "%s~%s" % (_ends[0], _ends[-1]))))
+except Exception as _e:
+    errors.append("성과 기준일 검사가 예외로 죽었다 — %s" % _e)
 
 # ── `%%` 가 산출물에 남았는가 — 전 파일 훑기 ────────────────────────────
 # 🚨 2026-08-14. CI 가 signal_lab 의 마크다운 `**` 를 잡았고, 그 옆에서 `상위 5%%` 를

@@ -2731,7 +2731,29 @@ def main() -> int:
     if not os.path.exists(p):
         print("❌ data/assets.json 없음 — python build/refresh_assets.py 먼저 실행"); return 1
     A = json.load(io.open(p, encoding="utf-8"))
-    DTS = A["dates"]
+    # 🚨 성과 기준일 = **전월말**(2026-08-14 사용자 지시). 종목 랩과 **같은 함수**로 자른다 —
+    #   자를 자리를 따로 쓰면 두 랩의 마지막 날이 갈리고, 그러면 한 화면에서 창이 다른 두
+    #   수치가 나란히 놓인다(이 저장소가 MAX_YEARS 로 이미 한 번 겪은 사고다).
+    # ⚠ 여기 격자는 자산 패널(assets.json)이라 종목 격자와 거래일이 다를 수 있다. 자르는
+    #   기준은 '전월말' 이라는 **달**이지 특정 날짜가 아니므로 그 차이는 문제되지 않는다.
+    import tech_backtest as _TB
+    _dts_raw = A["dates"]
+    _keep = _TB.asof_cut(_dts_raw)
+    DTS = _dts_raw[:_keep]
+    _cutn = len(_dts_raw) - _keep
+    if _cutn:
+        # ⚠ **패널 계열까지 같이 자른다.** DTS 만 자르면 px[t] 는 여전히 길어서, 어딘가
+        #   `px[t][-1]` 로 마지막 값을 읽는 코드가 잘린 뒤의 날을 집는다 — 인덱스로 읽는
+        #   자리는 멀쩡한데 꼬리로 읽는 자리만 조용히 미래를 본다. 그 종류의 어긋남은
+        #   예외를 안 내고 지나가므로 자료 쪽에서 잘라 아예 없앤다.
+        #   ⚠ 월별 매크로(macro)는 날짜 키 딕셔너리라 격자와 무관하다 — 안 건드린다.
+        for _blk in ("px", "open"):
+            for _t, _v in list((A.get(_blk) or {}).items()):
+                if isinstance(_v, list) and len(_v) > _keep:
+                    A[_blk][_t] = _v[:_keep]
+        print("  성과 기준일 전월말(%s) — 격자 %d일 잘랐다(%s → %s)"
+              % (_TB.asof_month(), _cutn, _dts_raw[-1], DTS[-1]))
+    A["dates"] = DTS
     _GRID.clear()
     _GRID.update({d: i for i, d in enumerate(DTS)})   # gthin 이 쓰는 절대 위치표
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
