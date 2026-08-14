@@ -80,7 +80,8 @@ data/style_trails.json|build/style_top_pdf.py --json
 data/home_flow.json|build/home_flow.py
 data/style_top.json|build/style_top.py
 data/home_market.json|build/home_market.py
-data/asof.json|build/asof_index.py"
+data/asof.json|build/asof_index.py
+data/tech_strategies.json|build/refresh_holdings_now.py"
 
 # 경로 → 생성명령 (없으면 빈 문자열). bash 3.2(macOS)에도 도는 방식으로 연관배열을 피한다.
 # ⚠ 파이프라인(`printf | while`)으로 쓰면 안 된다 — 마지막 read 가 EOF 에서 1을 내고

@@ -108,6 +108,18 @@ jobs:
         run: python build/style_top.py
       # 전 전략 통합 목록 — 원본(tech·asset·archive·deploy)이 바뀌면 같이 다시 굽는다.
       # 빠뜨리면 전략 랩만 옛 목록을 보여주고 아무도 알려주지 않는다.
+      # 🚨 2026-08-15 — **'지금 보유' 는 매일 낡는다.** 성과는 전월말 기준이라 한 달 안에서
+      #   안 바뀌지만(asof_cut) 보유 명단은 다르다 — 타이밍 22종은 매일, 주간 리밸 8종은
+      #   매주 갈아탄다. 랩 본편(tech_backtest)은 주 1회·월 1회만 돌므로 그 사이 화면이
+      #   최대 한 달 묵은 명단을 '지금 보유' 라고 말하게 된다.
+      #   랩 본편은 20분이지만 보유만 다시 뽑는 것은 **12초**다(실측) — 주기가 다른 두 가지를
+      #   한 잡에 묶어 두었던 것이 문제였다. 성과는 월 1회, 보유는 매일.
+      # ⚠ holdings 칸만 덮는다. metrics·nav·chart 는 안 건드린다(그건 전월말 기준이다).
+      # ⚠ **strategy_index 앞에 둔다.** 그 빌더가 tech_strategies.json 의 holdings 를
+      #   읽어 화면 페이로드로 옮긴다 — 뒤에 두면 화면은 옛 명단을 그대로 받는다.
+      - name: Refresh current holdings
+        run: python build/refresh_holdings_now.py
+        continue-on-error: true
       - name: Rebuild unified strategy index
         run: python build/strategy_index.py
       # 랩 상세 차트는 목록과 분리된 지연 로딩 파일이다 — 목록만 다시 굽고 이걸 빠뜨리면
@@ -146,7 +158,7 @@ jobs:
             data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
-            data/strategy_index.json data/strategy_charts.json data/asof.json             data/index_ledger.json
+            data/strategy_index.json data/strategy_charts.json data/asof.json             data/index_ledger.json data/tech_strategies.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
