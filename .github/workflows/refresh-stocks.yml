@@ -65,6 +65,18 @@ jobs:
         run: python build/validate_gate.py baseline
       - name: Compute technical signals
         run: python build/refresh_stocks.py
+      # 🚨 2026-08-15 — **받은 자리에서 바로 구멍을 메운다.** 이 잡이 CI 에서 막힌 사유가
+      #   이것이다: 배치 다운로드가 조용히 행을 빠뜨려 한 날짜에 29종이 비었고(정상일은
+      #   0~1종), 관문이 "수집 실패" 로 잡아 그날 받은 자료를 통째로 버렸다. 메우는
+      #   스크립트는 진작 있었는데(2026-08-14) **이 워크플로가 안 부르고 있었다** —
+      #   이 저장소가 되풀이 밟는 '수집했는데 배선 안 함' 이다.
+      # ⚠ None 인 칸만 채운다(patch_px_holes 머리말). 값이 있는 칸은 안 덮으므로 두 번째
+      #   가격 원천이 되지 않는다.
+      # ⚠ 실패해도 잡을 세우지 않는다. 못 메우면 아래 관문이 어차피 막는다 — 여기서 죽으면
+      #   그날 받은 나머지(분할·주식수·시그널)까지 같이 버린다.
+      - name: Fill price-grid holes
+        run: python build/patch_px_holes.py
+        continue-on-error: true
       # 주식분할 이력 — 전략 랩이 '당시 보고 주식수 → 오늘 기준'으로 되맞추는 데 쓴다
       # (build/tech_backtest.py 의 _rebase). 여기가 제자리다: 같은 yfinance 세션이고,
       # 전략 랩 잡(토 07:50)보다 먼저 도는 잡이라 그 입력이 늘 최신이다.
@@ -102,6 +114,12 @@ jobs:
       # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
       - name: Rebuild lab charts
         run: python build/strategy_charts.py
+      # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
+      #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
+      #   실제로 CI 가 여기서 걸렸다(grid_days 4430 ≠ 4431 · px_nulls 2 ≠ 31).
+      #   가격을 만지는 잡이면 원장도 같이 구워야 한다 — 그게 지문 검사를 넣은 이유다.
+      - name: Rebuild index membership ledger
+        run: python build/index_ledger.py
       - name: Rebuild as-of index
         # 기준일 정본(data/asof.json)은 원본이 바뀔 때마다 다시 구워야 한다.
         # 안 그러면 전 페이지 내비 칩이 어제 날짜를 말하고, validate_site.py의
@@ -128,7 +146,7 @@ jobs:
             data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
-            data/strategy_index.json data/strategy_charts.json data/asof.json
+            data/strategy_index.json data/strategy_charts.json data/asof.json             data/index_ledger.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
