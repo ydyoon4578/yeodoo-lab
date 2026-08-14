@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — 개인 OKR·KPI 원장(잠금).">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<title>여두 · OK</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/ok.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/ok.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · OK">
+<meta property="og:description" content="개인 OKR·KPI 원장 — 목표수준(S/D/P/N)과 수행결과·실적을 한 줄에서 본다. 열람 잠금.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · OK">
+<meta name="twitter:description" content="개인 OKR·KPI 원장 — 목표수준(S/D/P/N)과 수행결과·실적을 한 줄에서 본다. 열람 잠금.">
+<!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    --good:#0E8A54;--marg:#A35510;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;
+    --good:#38D083;--marg:#F0863C;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--good:#0E8A54;--marg:#A35510;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--good:#38D083;--marg:#F0863C;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
+  /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
+  /* 폭 토큰은 셸이 보장한다(build/sync_shell.py) — 페이지 사본은 2026-08-10 에 걷어냈다.
+     사본이 1440 으로 남아 있었는데 셸은 1680 이었다. 지금은 셸이 뒤에 와서 셸이 이기지만,
+     CSS 순서가 바뀌면 조용히 뒤집힌다. 같은 값을 두 곳에 두지 않는다. */
+  *,*::before,*::after{box-sizing:border-box}
+  /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
+     떨어졌고, 영문만 Segoe UI로 갈렸다 — 한 글꼴로 통일한다. 숫자·차트 라벨은 고정폭(--mono)
+     유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
+     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
+     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
+  .wrap{max-width:var(--w-read);margin:0 auto;padding:0 20px 70px}
+  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
+  a.home:hover{border-color:var(--accent);color:var(--ink)}
+  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
+  header.mast{padding:64px 0 16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
+  .lede{margin:12px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)} .lede b{color:var(--ink)}
+
+  .policy{margin:18px 0 0;padding:13px 16px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:13px;color:var(--ink-2);line-height:1.7}
+  .policy b{color:var(--ink)}
+
+  .lbl{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:30px 0 12px}
+
+  .srcwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow)}
+  .srctbl{border-collapse:collapse;width:100%;min-width:640px;font-size:12.5px}
+  .srctbl th,.srctbl td{padding:10px 14px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}
+  .srctbl thead th{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .srctbl tbody tr:last-child th,.srctbl tbody tr:last-child td{border-bottom:none}
+  .srctbl tbody th{font-weight:600;white-space:nowrap}
+  .srctbl tbody th a{color:var(--ink);text-decoration:none}
+  .srctbl tbody th a:hover{color:var(--accent)}
+  .srctbl td{color:var(--ink-2)}
+  .srctbl .dt{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+  .srctbl .stale{display:inline-block;margin-left:6px;font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--hot);background:color-mix(in srgb,var(--hot) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--hot) 40%,transparent);border-radius:2px;padding:1px 5px;white-space:nowrap}
+  .srctbl .dbrow{background:color-mix(in srgb,var(--marg) 6%,transparent)}
+  .dbtag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--marg);border:1px solid color-mix(in srgb,var(--marg) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
+  .freetag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--good);border:1px solid color-mix(in srgb,var(--good) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:16px 19px;margin-bottom:12px}
+  .card h3{margin:0;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3 a{color:var(--ink);text-decoration:none} .card h3 a:hover{color:var(--accent)}
+  .card p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65}
+  .card .meta{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:11.5px}
+  .card .meta span{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:2px 8px;color:var(--ink-2)}
+  .card .meta b{color:var(--muted);font-weight:600;margin-right:5px}
+  .card .meta i{font-style:normal}
+  /* .card .meta span 은 칩 스타일인데 자손 선택자라 **칩 안의 값 span까지** 잡아
+     배경·테두리·패딩이 이중으로 걸렸다(값이 상자 안 상자로 보이고 칩이 불필요하게 넓어진다).
+     값은 평평하게 — 갱신 시각을 넣은 <i>와 생김새를 맞춘다. */
+  .card .meta span span{background:none;border:0;padding:0}
+
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
+  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
+  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+
+  /* ── 열람 잠금 게이트(2026-08-11) — kb.html 의 .gate 규칙을 그대로 옮겼다 ────────
+     같은 셸 토큰(--panel·--line·--accent)을 쓰므로 값이 아니라 규칙만 복사하면 된다. */
+  .gate{max-width:520px;margin:80px auto;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:34px 32px;box-shadow:var(--shadow)}
+  .gate h2{margin:0 0 6px;font-size:19px;font-family:var(--mono)}
+  .gate p{margin:0 0 20px;color:var(--muted);font-size:14px}
+  .gate label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:7px;font-weight:600}
+  .gate input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:2px;background:var(--panel-2);color:var(--ink);font-size:15px;font-family:var(--mono)}
+  .gate input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .gate button{margin-top:14px;width:100%;padding:11px;border:none;border-radius:2px;background:var(--accent);color:var(--ground);font-weight:700;font-size:15px;cursor:pointer;font-family:var(--sans)}
+  /* ⚠ kb.html 은 --accent-2 를 쓰지만 그건 kb 가 셸 밖에서 자기 토큰을 따로 두기 때문이다.
+     공통 셸에는 그 토큰이 없다 — 그대로 옮겼다가 '정의 없는 CSS 변수'로 걸렸다.
+     토큰을 셸에 새로 넣으면 24장이 다 바뀌므로, 여기서는 밝기만 조절한다. */
+  .gate button:hover{filter:brightness(.92)}
+  .gate button:disabled{opacity:.55;cursor:default}
+  .gerr{margin-top:11px;font-size:13px;color:var(--hot);min-height:18px}
+  .ghint{margin-top:18px;padding-top:15px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .ghint code{font-family:var(--mono);font-size:11px}
+/* SHELL:BEGIN */
+/* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
+   23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
+   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다.
+   ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰면 안 된다 — HTML 파서는 주석 안이든
+      아니든 그 지점에서 style 요소를 끝내버린다(실제로 한 번 밟았다). */
+
+/* ① 글꼴 — Pretendard.
+   기존 스택 첫 후보는 "Malgun Gothic"이었다. 윈도 기본 한글 글꼴이라 굵기가 사실상 400/700
+   두 단계뿐이고 맥에서는 Apple SD Gothic Neo로 떨어져, 같은 화면이 OS마다 다른 글꼴로 보였다.
+   Pretendard는 100~900 가변에 라틴·숫자가 Inter 계열이라 한글과 숫자가 한 글꼴로 붙는다.
+   --mono의 한글 후보도 Pretendard로 바꾼다 — 고정폭이 필요한 건 숫자뿐인데, 한글까지 고정폭
+   스택으로 떨어뜨리면 본문과 다른 글꼴이 한 줄 안에서 섞인다. */
+:root{
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
+  /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
+     stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다.
+     🚨 2026-08-10 — --w-wide 를 1440 → 1680 으로 올렸다(사용자 요청 '화면을 최대한 넓게').
+       홈은 자료 화면이다. 종목 히트맵이 518칸을 그리는데 폭이 곧 읽히는 종목 수다 —
+       1200px 에서는 가장 작은 칸이 7×10px 라 글자가 안 들어갔다.
+       ⚠ 내비(.topnav .nvin)도 이 토큰을 쓴다. 본문만 넓히면 내비보다 본문이 넓어져
+         화면이 어긋나 보인다 — 그래서 페이지가 아니라 여기서 바꾼다.
+       ⚠ --w-read(980)는 그대로다. 글이 주인 화면은 한 줄이 길어지면 읽기 나빠진다 —
+         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다. */
+  --w-wide:1680px;--w-base:1200px;--w-read:980px;
+}
+
+/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
+   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
+   ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
+:root{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+@media(prefers-color-scheme:dark){:root{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}}
+:root[data-theme="light"]{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+:root[data-theme="dark"]{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}
+
+/* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
+   한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
+   음절을 벌려 읽기를 방해한다. 실제로 이 규칙 때문에 통계량 |t|가 화면에서 |T|로 찍힌 적이 있다. */
+body{font-family:var(--sans);letter-spacing:-.003em}
+h1,h2,h3,h4{letter-spacing:-.02em}
+h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-height:1.14}
+/* 큰 제목은 본문 글꼴로. 고정폭 스택에서 한글은 Pretendard로, 라틴·숫자는 SF Mono로 떨어져
+   한 제목 안에 두 글꼴이 섞인다("… RP 통합 (Multi-Sleeve Core)"가 그렇게 보였다).
+   작은 머리글(h4 등)은 라틴 약어가 대부분이라 그대로 둔다.
+   :not(._)은 특이도를 페이지 규칙(.dtop h2 같은 것)과 맞추려고 붙였다 — 요소 선택자만으로는
+   페이지 쪽이 이긴다. !important를 쓰지 않으려는 최소 장치다. */
+:is(h1,h2):not(._){font-family:var(--sans);letter-spacing:-.025em}
+.eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em}
+.lbl{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.012em;text-transform:none;color:var(--ink)}
+.lbl::before{height:16px}
+.lbl .sub{font-size:12.5px;font-weight:500}
+.card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
+
+/* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
+.tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
+
+/* ⑤ 표 — 머리글은 한글이라 고정폭을 벗기고, 행에 hover를 준다(어느 줄을 읽는지 잃지 않게). */
+.tbl{font-variant-numeric:tabular-nums}
+.tbl thead th{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
+.tbl tbody th{font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+.tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+
+/* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+
+/* ⑦ 장식 걷기 (2026-08-09) — 사용자 지적 "클로드 특유의 인터페이스 구성방식".
+   그 인상의 정체는 색만이 아니다. **떠 있는 둥근 카드**와 **알약 배지**가 나머지 몫이다.
+   팔레트는 위에서 바꿨고 여기서 형태를 걷는다.
+
+   🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
+     입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
+       · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+   ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
+     셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
+:where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
+       .asoftbl,.asofrow,.calgrid,.calcell,.chiprow,.statline){box-shadow:none}
+:where(.card,.scard,.rep,.panel,.box,.tile,.asoftbl,.calgrid,details.toc){border-radius:3px}
+/* SHELL:END */
+</style>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:800;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:11px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 로 뒤집었다 — 그 규칙은 틀렸던 게
+     아니라 **자기 레이아웃보다 오래 살아남았다**. 메가메뉴는 10칸으로 출발했고(2026-07-25)
+     그때 마지막 두 칸은 바 오른쪽 끝에 있어서 오른쪽 정렬이 실제로 넘침을 막고 있었다.
+     이후 10→6(2026-07-25)→5(748cbf58 공시 탭)→4(741fbe1d 가치 탭, 2026-08-12)로 줄면서
+     버튼이 왼쪽으로 밀려왔는데 규칙은 따라오지 않았다. 위치 선택자가 집는 대상은 그대로인데
+     그 대상이 서 있는 자리가 바뀐 것이다.
+     실측(뷰포트 1442px · 버튼 한 칸 55px): 5칸일 때 전략 패널은 x=38 에서 시작해 멀쩡했다.
+     가치 탭이 빠져 4칸이 되자 딱 한 칸만큼 왼쪽으로 밀려 38−55 = x=−17 — 뷰포트 밖에서 잘렸다.
+     사용자가 "왼쪽이 살짝 잘린다"고 한 그 17px 이고, 오늘 생긴 회귀다.
+     왼쪽 정렬은 안전하다. 패널 실폭은 min-width 320px 로 고정이고(내용이 그 안에 들어가
+     max-width 560px 까지 가지 않는다) 가장 오른쪽 패널의 오른쪽 끝은 x=624 로 **뷰포트 폭이
+     변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라 폭이 줄면 여백만 사라지고 내용
+     시작점은 padding 20px 에 남기 때문이다. 데스크톱 하한 1101px 에서도 여유 477px
+     (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
+     ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
+     또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
+  /* 설명 줄을 걷어내 한 줄짜리가 됐다 — 세로 여백을 줄여 목록이 촘촘히 읽히게 한다. */
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;
+       padding:7px 10px;border-radius:2px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--sans);font-size:11px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:11px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    /* ⚠ backdrop-filter를 반드시 끈다 — 장식이 아니라 **레이아웃 버그의 원인**이다.
+       filter·backdrop-filter·transform이 걸린 요소는 자손 position:fixed의 컨테이닝 블록이
+       된다(뷰포트가 아니라). 아래 .navcats는 fixed 드로어인데 .topnav(높이 52px)가 기준이 되면
+       top:52px·bottom:0이 52px짜리 상자 안에서 계산돼 **드로어 높이가 0이 된다**.
+       실측(2026-07-25): 필터 있음 0px · 제거 859px. 화면에는 첫 카테고리만 삐져나와
+       "모바일에서 시장밖에 안 보인다"로 나타났다.
+       블러를 끄는 대신 배경을 불투명하게 만들어 스티키 바 가독성을 지킨다. */
+    .topnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel)}
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="ok.html">
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 전략 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
+          <a class="mmi" href="filings.html" data-nav="filings.html" title="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음"><span class="mmn">8-K 공시 피드</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html" title="FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭"><span class="mmn">경제지표</span></a>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro" title="이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음"><span class="mmn">발표 일정</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="stocks">
+        <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html" title="518종목 테크니컬 22지표·컴포짓·타이밍"><span class="mmn">종목 신호</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="signals.html" data-nav="signals.html" title="테크니컬 신호 32개 성적 + 오늘 발동 종목"><span class="mmn">지표별 타이밍</span><span class="mmb vrej">기각</span></a>
+          <a class="mmi" href="co.html#est" data-nav="co.html#est" title="목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="co.html#fs" data-nav="co.html#fs" title="SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로"><span class="mmn">재무제표</span></a>
+          <a class="mmi" href="co.html#ir" data-nav="co.html#ir" title="EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다"><span class="mmn">IR자료실</span></a>
+          <a class="mmi" href="co.html#ins" data-nav="co.html#ins" title="임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="co.html#pair" data-nav="co.html#pair" title="거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다"><span class="mmn">페어</span><span class="mmb vrej">기각</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="strategy">
+        <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
+          <a class="mmi" href="explorer.html" data-nav="explorer.html" title="원장·돌린 규칙·재현 재점검을 한 곳에서"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html" title="공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="screener.html" data-nav="screener.html" title="자유조합 스크린 — 초과수익 확인된 스크린 0종"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span></a>
+          <a class="mmi" href="guru.html" data-nav="guru.html" title="13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다"><span class="mmn">거장 포트폴리오·매매</span></a>
+          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap" title="명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="guru17.html" data-nav="guru17.html" title="따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)"><span class="mmn">운용사 복제 진단</span></a>
+          <a class="mmi" href="report.html" data-nav="report.html" title="돌린 규칙 전부를 전략별로 — 판정이 아니라 잰 값 전부"><span class="mmn">복제 리포트</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html" title="전부 외부 출처·미검증 — 랩이 돌린 게 아니다"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html" title="localStorage 보유 + 일별 실측 상관·변동성·MDD"><span class="mmn">내 포트폴리오</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="method.html" data-nav="method.html" title="A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
+          <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="ok.html" data-nav="ok.html" title="개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금"><span class="mmn">OK<span class="mmlk">🔒</span></span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+<div class="wrap" id="gatewrap">
+  <header class="mast">
+    <div class="eyebrow">Yeodoo Quant Strategy Lab — Objectives &amp; Key Results</div>
+    <h1 class="title">OK</h1>
+  </header>
+  <div class="gate" id="gate">
+    <h2>잠긴 문서</h2>
+    <p>열람 암호가 필요합니다.</p>
+    <label for="pw">암호</label>
+    <input type="password" id="pw" autocomplete="current-password" autofocus>
+    <button id="go">열기</button>
+    <div class="gerr" id="err"></div>
+    <div class="ghint">
+      이 페이지의 본문은 <b>AES-256-GCM</b>으로 암호화되어 있습니다.
+      암호 없이는 소스를 봐도 복호할 수 없고, 암호는 브라우저 밖으로 나가지 않습니다.
+      <br><br>
+      ⚠ 여기 적는 <b>수행결과·실적은 브라우저에만 저장됩니다</b>(localStorage).
+      저장소에도 서버에도 올라가지 않으므로, 다른 PC·다른 브라우저에서는 빈 칸으로 열립니다.
+      옮기려면 표 위의 <b>TSV 복사</b>로 떠서 붙여 넣으십시오.
+    </div>
+  </div>
+</div>
+
+<div id="content" hidden></div>
+
+<script>
+(function(){
+  var PAYLOAD={salt:"I/5mdjRg+9oPbhWayqjjZw==",iv:"5daxjIBrUrkCk4bm",ct:"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",iter:310000,ph:"d2bdf0cd89236d74408ab687781cf7af635f655f3d16959a2ab907fe4ba8e1b6"};
+
+  var gate=document.getElementById('gate'), gw=document.getElementById('gatewrap'),
+      content=document.getElementById('content'), pw=document.getElementById('pw'),
+      go=document.getElementById('go'), err=document.getElementById('err');
+
+  function b642buf(b){var s=atob(b),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
+
+  // 🚨 kb.html 과 결정적으로 다른 점 — 이 페이지의 본문에는 script 태그 가 들어 있다.
+  //   innerHTML 로 넣은 script 는 **실행되지 않는다**(HTML 규약). kb.html 은 정적 본문이라
+  //   이 문제가 없었지만 여기 본문은 data/*.json 을 받아 그리는 렌더러가 본체다.
+  //   그대로 두면 암호를 맞게 넣어도 표가 전부 '불러오는 중…' 에서 멈춘다.
+  //   → 넣은 뒤 script 노드를 새로 만들어 갈아 끼운다. 순서를 지켜 동기 실행시킨다.
+  function runScripts(root){
+    var ss=root.querySelectorAll('script');
+    for(var i=0;i<ss.length;i++){
+      var old=ss[i], s=document.createElement('script');
+      for(var j=0;j<old.attributes.length;j++)
+        s.setAttribute(old.attributes[j].name, old.attributes[j].value);
+      s.textContent=old.textContent;
+      old.parentNode.replaceChild(s, old);
+    }
+  }
+
+  async function unlock(){
+    var p=pw.value; if(!p){err.textContent='암호를 입력하세요.';return;}
+    if(!PAYLOAD.ct){err.textContent='이 페이지는 아직 잠기지 않았습니다 — build/kb_lock.py --page ok 를 돌려야 합니다.';return;}
+    go.disabled=true; err.textContent='복호 중…';
+    try{
+      var enc=new TextEncoder();
+      var km=await crypto.subtle.importKey('raw',enc.encode(p),'PBKDF2',false,['deriveKey']);
+      var key=await crypto.subtle.deriveKey(
+        {name:'PBKDF2',salt:b642buf(PAYLOAD.salt),iterations:PAYLOAD.iter,hash:'SHA-256'},
+        km,{name:'AES-GCM',length:256},false,['decrypt']);
+      var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b642buf(PAYLOAD.iv)},key,b642buf(PAYLOAD.ct));
+      content.innerHTML=new TextDecoder().decode(pt);
+      err.textContent=''; pw.value='';
+      gw.hidden=true; content.hidden=false;
+      runScripts(content);
+    }catch(e){
+      err.textContent='암호가 올바르지 않습니다.'; go.disabled=false; pw.select();
+    }
+  }
+  go.addEventListener('click',unlock);
+  pw.addEventListener('keydown',function(e){if(e.key==='Enter')unlock();});
+  if(!(crypto&&crypto.subtle)){err.textContent='이 브라우저는 WebCrypto를 지원하지 않습니다 (HTTPS 필요).';go.disabled=true;}
+  if(!PAYLOAD.ct){err.textContent='아직 잠기지 않았습니다 — build/kb_lock.py --page ok 를 돌리세요.';go.disabled=true;}
+})();
+</script>
+</body>
+</html>
