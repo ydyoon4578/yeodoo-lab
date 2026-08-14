@@ -220,7 +220,13 @@ def main() -> int:
         _sp = _ilu.spec_from_file_location("_kbplain", os.path.join(ROOT, "build", "kb_plain.py"))
         _kp = _ilu.module_from_spec(_sp)
         _sp.loader.exec_module(_kp)
-        rc = _kp.main()
+        # 🚨 2026-08-14 — 여기가 `_kp.main()` 이었다. kb_plain.main 의 기본값이 "kb" 라,
+        #   `--page ok` 로 잠근 직후에도 **kb 조각을 찾다가 실패**했다("없음:
+        #   _build/pages/kb_content.html"). 방금 잠근 페이지의 평문은 만들어지지 않은 채
+        #   "평문 의존 검사 6종은 계속 SKIP" 만 찍혀, 사람이 kb_plain 을 손으로 한 번 더
+        #   돌려야 했다. 2026-08-11 에 sources 를 추가할 때 kb_plain 안에서 고친 것과
+        #   **같은 사고가 부르는 쪽에 한 벌 더 있었다.** 잠근 페이지를 그대로 넘긴다.
+        rc = _kp.main(a.page)
     except SystemExit as e:
         rc = e.code if isinstance(e.code, int) else 1
     except Exception as e:
