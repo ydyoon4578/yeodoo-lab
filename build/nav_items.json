@@ -20,7 +20,7 @@
      "name": "시장 국면",
      "file": "regime.html",
      "status": "existing",
-     "desc": "FRED 39지표로 만든 국면 판정 — 미국 단일",
+     "desc": "FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일",
      "src": "model",
      "verdict": "unverified",
      "effort": "S"
@@ -246,6 +246,16 @@
      "src": "raw",
      "verdict": "na",
      "effort": "M",
+     "locked": true
+    },
+    {
+     "name": "OK",
+     "file": "ok.html",
+     "status": "existing",
+     "desc": "개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금",
+     "src": "none",
+     "verdict": "na",
+     "effort": "S",
      "locked": true
     }
    ]

@@ -13,10 +13,10 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
 <meta property="og:title" content="여두 · 시장 국면">
-<meta property="og:description" content="FRED 무료 매크로 39지표(성장·노동·물가·금융·금리·주택)로 판별하는 시장 국면 + 직전·추세 대비 서프라이즈.">
+<meta property="og:description" content="국면 판정은 FRED 8지표(고용·CFNAI·삼 룰·실업률·CPI·NFCI·하이일드·VIX)로 한다. 39지표는 같은 화면에서 함께 본다 + 직전·추세 대비 서프라이즈.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="여두 · 시장 국면">
-<meta name="twitter:description" content="FRED 무료 매크로 39지표(성장·노동·물가·금융·금리·주택)로 판별하는 시장 국면 + 직전·추세 대비 서프라이즈.">
+<meta name="twitter:description" content="국면 판정은 FRED 8지표(고용·CFNAI·삼 룰·실업률·CPI·NFCI·하이일드·VIX)로 한다. 39지표는 같은 화면에서 함께 본다 + 직전·추세 대비 서프라이즈.">
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
   :root{
@@ -585,7 +585,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
           <a class="mmi" href="filings.html" data-nav="filings.html" title="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음"><span class="mmn">8-K 공시 피드</span></a>
-          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 39지표로 만든 국면 판정 — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일"><span class="mmn">시장 국면</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="macro.html" data-nav="macro.html" title="FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭"><span class="mmn">경제지표</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro" title="이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음"><span class="mmn">발표 일정</span></a>
         </div>
@@ -623,6 +623,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
           <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
           <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="ok.html" data-nav="ok.html" title="개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금"><span class="mmn">OK<span class="mmlk">🔒</span></span></a>
         </div>
       </li>
     </ul>
@@ -1349,8 +1350,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<th scope="col">원 도표 단계</th><th scope="col">이 랩 국면</th><th scope="col">교과서 선호 업종</th>'+
       '<th scope="col">실측 상위3 · 주가</th><th scope="col">실측 상위3 · 실적</th><th scope="col">겹침</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      // 🚨 2026-08-13 — 여기 산식이 **손으로 적혀 있었고 그 내용이 거짓이었다.**
+      //   "SPY 월평균"이라 적었는데 빌더가 빼는 것은 같은 달 전체 518종 동일가중이다
+      //   (regime_cycle.py:315). 더 나쁘게는 바로 다음 문단(아래 price_meta 전사)이
+      //   "대조군은 같은 달 전체 518종 동일가중"이라 반대로 적어, 인접한 두 문장이
+      //   서로를 부정하고 있었다.
+      //   ⚠ 이제 **빌더가 구운 문장을 전사한다.** 화면이 산식을 다시 적지 않는다 —
+      //     적으면 또 갈린다(같은 오기가 세 벌이었다).
+      //   ⚠ earn_basis 의 "짝지어진 종목만 · 기저 적자 분기 제외" 단서가 종전 문장에는
+      //     통째로 빠져 있었다. 전사하면 그것도 같이 온다.
       '<div class="cycb">진하게 칠한 칩이 교과서와 겹친 업종이다. '+
-      '주가 = 그 국면의 섹터 월평균 − 같은 국면의 SPY 월평균 · 실적 = 그 국면 분기의 섹터 합산 순이익 YoY 중앙값.</div>';
+      '주가 = '+esc((cy.sectors||{}).price_basis||'')+
+      ' · 실적 = '+esc((cy.sectors||{}).earn_basis||'')+'</div>';
 
     host.innerHTML='<div class="cycwrap">'+svg+
       '<div class="cycb"><b>이 그림은 두 층이다.</b> '+
@@ -1850,7 +1861,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="sghead"><div class="sgnum">'+(ok?n1(s):'—')+'<small>/100</small></div>'+
       '<div class="sglab">'+lab+'</div>'+
       '<div class="sgpc">기준일 '+esc(d.as_of||'—')+'<br>'+
-        (d.score_pctl!=null?'전체 이력 대비 하위 '+pct(d.score_pctl):'&nbsp;')+'</div></div>'+
+        (d.score_pctl!=null?'전체 이력의 '+pct(d.score_pctl)+'보다 높다':'&nbsp;')+'</div></div>'+
       '<div class="sbar">'+(ok?'<div class="smark" style="left:'+Math.max(0,Math.min(100,s))+'%"></div>':'')+'</div>'+
       '<div class="sticks">'+BANDS.map(function(x){
         return '<span class="'+(ok&&x===b?'on':'')+'">'+x.ko+'<br>'+x.lo+'–'+x.hi+'</span>';}).join('')+'</div>';

@@ -407,6 +407,64 @@ def trails_ix_of(base, end):
     return out or None
 
 
+# 지수(PR)에 얹는 배당분. 연 2.00%p 는 이 랩의 실측이고 asset_backtest.PR_GAP 과 같은 수다.
+PR_GAP = 2.00
+PR_GAP_M = (1 + PR_GAP / 100.0) ** (1 / 12.0) - 1
+
+
+def winrate_of(dates, nav):
+    """월간 승률 — S&P 500 을 이긴 달의 비율(%)과 그 표본 개월수.
+
+    🚨 잣대를 **S&P 500 하나로 고정한다.** 전략마다 대조군이 다른데 승률만 자기 대조군으로
+       재면, 바로 옆 'vs S&P 500' 열과 다른 자를 쓰는 두 숫자가 한 줄에 앉는다.
+       (이 랩이 그 사고를 이미 두 번 냈다 — 섹터 샤프 · 지수 샤프.)
+
+    🚨 지수에 **배당을 얹고 나서 비교한다.** 안 그러면 이 열은 전략이 아니라 배당을 잰다 —
+       2026-08-14 실측: 보정 전후로 승률이 갈리는 달이 전체 21,309개월 중 10.6% 이고,
+       SPY 를 대부분 들고 있는 게이트형 52종은 낙차가 **최대 57%p**(a-ebp-gate 88.4%→31.4%)
+       였다. 그런 전략의 월간 초과는 배당분(월 0.165%p)뿐이라 원본 승률은 '지수를 이겼다'가
+       아니라 '지수에 배당이 없다'를 세고 있었다. 격차 2.00%p/년은 이 랩이 SPY 11.19% vs
+       ^GSPC 9.19%(2006~2026)로 잰 값이고 asset_backtest 의 alpha_adj 가 쓰는 것과 같다.
+    ⚠ 그래서 이 열은 **엄격한 쪽으로 틀린다** — 지수를 그대로 복제하는 달은 '진 달'로 센다.
+      게이트형이 30%대로 나오는 것은 고장이 아니라 그 전략이 대부분의 달에 지수 그 자체라는
+      뜻이다. 그 전략의 값어치는 이 열이 아니라 최대낙폭 열에 있다.
+    ⚠ 두 계열을 **같은 두 날짜**로 잰다. 전략의 월말 관측일에 지수를 맞추므로 창이 안 어긋난다.
+    ⚠ 달을 건너뛴 구간은 세지 않는다. 인접한 달끼리만 짝지어야 '한 달'이 한 달이다.
+    """
+    if not dates or not nav or len(dates) != len(nav) or len(nav) < 3:
+        return None
+    ix = _ix_load()
+    spx = ix.get("spx")
+    if not ix["d"] or not spx:
+        return None
+    ends = {}
+    for i, d in enumerate(dates):
+        ends[str(d)[:7]] = i                  # 그 달의 마지막 관측
+    ms = sorted(ends)
+    if len(ms) < 14:
+        return None                           # 12달을 못 채우면 안 싣는다(0 으로 안 채운다)
+
+    def _nxt(m):
+        y, mo = int(m[:4]), int(m[5:7])
+        return "%04d-%02d" % ((y + 1, 1) if mo == 12 else (y, mo + 1))
+
+    win = n = 0
+    # 첫 달은 건너뛴다 — 전략 시작일이 월 중이면 그 달의 '마지막 관측'이 월말이 아니다.
+    for a, b in zip(ms[1:], ms[2:]):
+        if b != _nxt(a):
+            continue
+        i0, i1 = ends[a], ends[b]
+        j0, j1 = _ix_at(ix, str(dates[i0])[:10]), _ix_at(ix, str(dates[i1])[:10])
+        if j0 is None or j1 is None or not nav[i0] or not spx[j0] or not spx[j1]:
+            continue
+        n += 1
+        if (nav[i1] / nav[i0]) > (spx[j1] / spx[j0]) * (1 + PR_GAP_M):
+            win += 1
+    if n < 12:
+        return None
+    return {"win": round(win * 100.0 / n, 1), "n": n, "pr_gap": PR_GAP}
+
+
 def trails_of(dates, nav):
     """구간별 누적수익(%) 과 그때 실제로 쓴 기준일. 못 재면 그 칸을 안 만든다."""
     if not dates or not nav or len(dates) != len(nav) or len(nav) < 3:
@@ -484,6 +542,9 @@ def rec(**kw):
     # ⚠ dates 는 재고 나서 **버린다.** 원해상도(833~980점)로 실으면 파일이 커지고,
     #   더 나쁘게는 60점으로 얇아진 nav 와 길이가 어긋나 짝이 안 맞는 배열 둘이 남는다.
     _tr, _trb = trails_of(kw.get("dates"), kw.get("nav"))
+    _wr = winrate_of(kw.get("dates"), kw.get("nav"))
+    if _wr:
+        kw["winrate"] = _wr
     kw.pop("dates", None)
     if _tr:
         kw["trails"], kw["trails_base"] = _tr, _trb

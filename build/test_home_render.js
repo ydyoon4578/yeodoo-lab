@@ -179,9 +179,35 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
   //    서브산업(4차)은 여전히 안 낸다 — 그쪽은 industry.html 전담이라 lv4 가 나오면 실패다.
   const Hh = TBL.innerHTML;
 const cnt = n => (Hh.match(new RegExp('tr class="lv' + n + '"', "g")) || []).length;
+// ⚠ `<thead>` 자체가 '<th' 로 시작한다 — split("<th") 로 세면 늘 하나가 더 나왔다(12→13).
+//   열 수를 틀리게 적는 검사가 열 수 사고를 잡을 리 없다. \b 를 붙여 진짜 셀만 센다.
+const NCOL = ((Hh.match(/<thead>[\s\S]*?<\/thead>/) || [""])[0].match(/<th\b/g) || []).length;
 console.log("표: 묶음 %d · 섹터 %d · 하위단 %d · 열 %d",
-  (Hh.match(/tr class="grp"/g) || []).length, cnt(1), cnt(2) + cnt(3) + cnt(4),
-  ((Hh.match(/<thead>[\s\S]*?<\/thead>/) || [""])[0].split("<th").length - 1));
+  (Hh.match(/tr class="grp"/g) || []).length, cnt(1), cnt(2) + cnt(3) + cnt(4), NCOL);
+
+// 🚨 2026-08-14 — **행마다 열 수를 맞춘다.** 묶음 머리줄의 colspan 이 손으로 센 수
+//   (ST_HZ.length+2 = 10)라 뒤에 붙은 두 열(주가·12mf PER)을 놓쳐, 네 머리줄이 표
+//   오른쪽 두 칸을 안 덮은 채로 배포됐다(사용자가 눈으로 신고). 위 검사는 초록불이었다 —
+//   머리 열만 세고 몸통 행은 안 셌기 때문이다. 열은 앞으로도 늘 텐데, 늘 때마다 손으로
+//   센 자리를 같이 고쳐야 한다는 규약은 지켜지지 않는다. 그래서 여기서 잰다.
+{
+  const body = (Hh.match(/<tbody>[\s\S]*<\/tbody>/) || [""])[0];
+  const trs = body.match(/<tr\b[\s\S]*?<\/tr>/g) || [];
+  const bad = [];
+  trs.forEach((tr, i) => {
+    const cells = tr.match(/<t[hd]\b[^>]*>/g) || [];
+    if (!cells.length) return;
+    const span = cells.reduce((s, c) => {
+      const m = c.match(/colspan="(\d+)"/i);
+      return s + (m ? Number(m[1]) : 1);
+    }, 0);
+    if (span !== NCOL) bad.push((i + 1) + "행 " + span + "칸");
+  });
+  if (bad.length)
+    fail.push("표 몸통에서 열 수가 안 맞는 행 " + bad.length + "개(머리 " + NCOL +
+              "열) — " + bad.slice(0, 4).join(" · ") + ". colspan 을 손으로 세지 말 것");
+  else console.log("  ~ 행별 열 수 대조 통과(%d행 전부 %d칸)", trs.length, NCOL);
+}
 
 // ③ 섹터는 GICS 기준 그대로여야 하고, 하위 단이 다시 새어 나오면 안 된다
 const D = hr.industry;
