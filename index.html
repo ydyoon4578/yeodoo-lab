@@ -469,6 +469,13 @@
   .sttbl thead th.shp em{font-style:normal;font-weight:600;font-size:10px;opacity:.75;
     display:block;line-height:1.1}
   .sttbl td.shp.z{color:var(--muted);font-weight:400}
+  /* 한 칸에 셋(전략 / S&P500 / 나스닥100). 전략 값이 주인공이라 그것만 크고 색이 있다.
+     지수 둘은 같은 칸 아래에 작게 — 눈이 좌우로 안 움직여도 비교가 끝난다. */
+  .sttbl td.tri{text-align:right;white-space:nowrap}
+  .sttbl td.tri b{font-weight:700;font-size:13px;display:block;line-height:1.15}
+  .sttbl td.tri em.trix{font-style:normal;font-weight:500;font-size:10.5px;opacity:.62;
+    display:block;line-height:1.15;color:var(--muted)}
+  .sttbl thead th.shp em{white-space:nowrap}
   /* 월간 승률 — 여기는 색을 준다. 샤프와 달리 **뜻이 있는 눈금이 하나 있기 때문**이다:
      50% 는 '지수와 비겼다'다. 위(465줄)에서 샤프에 색을 안 칠한 사유는 그 열엔 그런 선이
      없어서였다. 특이도를 .shp 보다 높여 둔다(td.wr.up = 0,3,1). */
@@ -3190,6 +3197,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 승률 한 칸. **표본 개월수를 같이 적는다** — 96개월짜리와 118개월짜리가 같은 열에
     // 서는데 그 수를 안 적으면 둘이 같은 무게로 읽힌다(이 표에 실제로 둘 다 있다).
     // ⚠ 색을 50% 기준으로 준다. 그 선이 '지수와 비긴 것'이라 뜻이 있는 유일한 눈금이다.
+    // 한 칸에 셋 — 그 전략 / S&P500 / 나스닥100. 전략 값만 크게 두고 지수 둘은 작게 붙인다.
+    // ⚠ 색은 **전략 값에만** 준다. 지수 둘까지 칠하면 어느 것이 주인공인지 사라지고,
+    //   같은 색 셋이 나란히 있으면 오히려 비교가 안 된다.
+    // ⚠ 지수 값이 없으면 그 자리를 '—' 로 둔다. 0 으로 채우면 '지수가 0% 였다'가 된다.
+    function triCell(v, a, b){
+      var x=stNum(v);
+      var s=function(z){return (z==null||z!==z)?'—':((z>0?'+':'')+z.toFixed(1));};
+      return '<td class="tri '+x.c+'"><b>'+x.s+'</b>'+
+             '<em class="trix">'+s(a)+' / '+s(b)+'</em></td>';
+    }
+    // CAGR 한 칸 — 값 아래에 **그 값을 잰 기간**을 적는다. '전체'가 전략마다 다르기 때문이다.
+    // ⚠ 날짜를 다 적으면 칸이 무너진다. 길이(년)만 적고 정확한 두 날짜는 title 로 남긴다.
+    function spanCell(v, s, e){
+      var x=stNum(v), yr=null;
+      if(s&&e){
+        var d=(new Date(String(e).slice(0,10))-new Date(String(s).slice(0,10)))/86400000;
+        if(d>0)yr=(d/365.25).toFixed(1);
+      }
+      return '<td class="tri '+x.c+'"'+(s&&e?' title="'+esc(s+' ~ '+e)+'"':'')+
+             '><b>'+x.s+'</b><em class="trix">'+(yr?yr+'년':'—')+'</em></td>';
+    }
     function wrCell(w){
       if(!w||w.win==null)return '<td class="wr z">—</td>';
       var c=w.win>50?'up':(w.win<50?'dn':'');
@@ -3229,12 +3257,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   줄로 두면 눈이 표 아래까지 내려가야 비교가 되는데, 열로 두면 그 자리에서 읽힌다.
       //   ⚠ 이 vs 는 **그 전략의 창 그대로** 잰 것이다(strategy_index.trails_ix).
       //     market_board 의 고정 기준일을 빼면 창 차이를 초과수익이라 부르게 된다.
+      // 🚨 2026-08-14 사용자 요청 — vs 열 둘을 걷고 **수익률 한 칸 안에** 슬래시로 넣는다.
+      //   열이 셋이면 눈이 좌우로 움직여야 비교가 되는데, 한 칸에 나란히 두면 그 자리에서
+      //   읽힌다. 낙폭도 같은 꼴로 지수 둘을 붙인다.
+      //   ⚠ 셋 다 **실제 값**이다(초과분이 아니다). 머리글이 'S&P500' 이라 적혀 있으면
+      //     그 자리 숫자는 S&P500 의 것이어야 한다 — 거기에 초과분을 놓으면 이름과 값이
+      //     다른 것을 가리킨다. 초과분은 빼면 나온다.
+      //   ⚠ 세 수가 **같은 창**이다. 지수 쪽은 그 전략의 창 그대로 다시 잰 것이고
+      //     (strategy_index.trails_ix · mdd_ix), 고정 기준일 수치를 가져다 쓰지 않는다.
       var h='<thead><tr><th class="tprk">#</th><th class="tpnm">전략</th>'+
-        '<th class="shp">'+esc(TP_LAB[TP_HZ])+'</th>'+
-        '<th class="shp" title="같은 창에서 잰 S&amp;P 500(PR) 대비 초과분입니다">vs S&amp;P 500</th>'+
-        '<th class="shp" title="같은 창에서 잰 NASDAQ 100(PR) 대비 초과분입니다">vs 나스닥 100</th>'+
-        '<th class="shp">전체 CAGR</th><th class="shp">전체 샤프</th>'+
-        '<th class="shp">최대낙폭</th>'+
+        '<th class="shp" title="'+esc('왼쪽부터 그 전략 · S&P 500(PR) · NASDAQ 100(PR) 의 '+
+            TP_LAB[TP_HZ]+' 누적수익률입니다. 셋 다 같은 창에서 쟀습니다(지수는 그 전략의 '+
+            '창 그대로 다시 잰 값이지 고정 기준일 수치가 아닙니다).')+'">'+
+          esc(TP_LAB[TP_HZ])+'<em>S&amp;P500 / 나스닥100</em></th>'+
+        // 🚨 '전체'가 전략마다 다른 기간이다 — 랩 173종의 창이 **14가지**이고 상한은 10년이다
+        //   (실측 2026-08-14: 상위 10 중 아홉은 2016-08~2026-08 인데 비용규율만 2018-06~).
+        //   그 수를 안 적으면 같은 열의 두 CAGR 이 서로 다른 기간의 값이 된다. 줄마다 적는다.
+        '<th class="shp" title="'+esc('그 전략의 자기 구간 전체입니다 — 시작이 전략마다 달라 '+
+            '값 아래에 그 길이를 적었습니다(상한 10년). 위 수익률 칸과는 다른 창입니다.')+
+          '">전체 CAGR<em>구간 전체</em></th>'+
+        '<th class="shp" title="'+esc('연율 샤프 — 왼쪽 CAGR 과 같은 창(그 전략의 구간 전체)입니다.')+
+          '">전체 샤프</th>'+
+        '<th class="shp" title="'+esc('왼쪽부터 그 전략 · S&P 500 · NASDAQ 100 의 최대낙폭입니다. '+
+            '셋 다 그 전략의 전체 구간에서 일간 종가로 쟀습니다. 더 깊게 내려간 쪽이 큰 음수입니다.')+
+          '">최대낙폭<em>S&amp;P500 / 나스닥100</em></th>'+
         // 🚨 승률의 잣대는 **배당을 얹은 S&P 500** 이다. 안 얹으면 이 열은 전략이 아니라
         //   배당을 잰다 — SPY 를 대부분 들고 있는 게이트형은 원본 승률이 88% 인데 배당분
         //   (월 0.165%p)을 빼면 31% 다(실측 2026-08-14 · 낙차 최대 57%p).
@@ -3264,14 +3310,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 화면은 한 줄로 자르고 전문은 title 로 남긴다(자른 사실이 … 로 보인다).
         var ru=(r.rule||'').replace(/^쉽게 말해\s*—\s*/,'');
         if(ru)nm+='<span class="tprule" title="'+esc(r.rule)+'">'+esc(ru)+'</span>';
-        var ix=(r.trails_ix||{})[TP_HZ]||{}, tv=r.trails[TP_HZ];
-        var dv=function(k){return (ix[k]==null||tv==null)?null:(tv-ix[k]);};
+        var ix=(r.trails_ix||{})[TP_HZ]||{}, tv=r.trails[TP_HZ], mi=r.mdd_ix||{};
         h+='<tr><td class="tprk">'+(i+1)+'</td><th scope="row" class="tpsrc">'+nm+'</th>'+
-           stCell(tv)+stCell(dv('spx'))+stCell(dv('ndx'))+stCell(m.cagr)+
+           triCell(tv,ix.spx,ix.ndx)+spanCell(m.cagr,r.start,r.end)+
            // 샤프는 소수 둘째 자리(사용자 요청 2026-08-14). 위 기간별 수익률 표의 샤프 열도
            // 두 자리라 같은 값을 두 표가 다른 정밀도로 적던 것이 없어진다.
            '<td class="shp">'+(m.sharpe==null?'—':Number(m.sharpe).toFixed(2))+'</td>'+
-           stCell(m.mdd)+wrCell(r.winrate)+
+           triCell(m.mdd,mi.spx,mi.ndx)+wrCell(r.winrate)+
            '<td class="shp">'+(r.turnover==null?'—':Number(r.turnover).toFixed(2)+'회')+'</td>'+
            '</tr>';
       });
@@ -3281,7 +3326,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   읽는 것. 셋 다 **숫자의 뜻이 바뀌는 오독**이라 화면에 없으면 거짓이 된다.
       //   길게 설명하지 않고 한 줄씩만 적는다.
       var _n=['<b>순위지 판정이 아닙니다</b> — 이 랩은 등급을 매기지 않습니다. 기간을 바꾸면 순위가 바뀝니다.',
-              '무비용(gross) 기준. 전체 CAGR·샤프·승률은 각 전략의 자기 구간 전체라 위 수익과 다른 창입니다.',
+              '무비용(gross) 기준. 전체 CAGR·샤프·낙폭·승률은 각 전략의 자기 구간 전체라 왼쪽 수익률과 다른 창입니다 — 그 길이를 CAGR 아래에 적었습니다.',
+              '수익률·최대낙폭 칸의 작은 두 수는 <b>같은 창에서 잰 S&P 500 / 나스닥 100</b>입니다(초과분이 아니라 지수 자신의 값).',
               // 이 한 줄이 없으면 게이트형이 30%대로 나오는 것이 고장으로 읽힌다.
               '월간 승률은 <b>배당을 얹은 지수</b>와 비교한 것이라, 지수를 그대로 따라간 달은 이긴 달로 세지 않습니다.'];
       if(TPMETA&&TPMETA.gap_cagr!=null)
