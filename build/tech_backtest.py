@@ -828,7 +828,13 @@ def cs_spread(H, L, tk=""):
     ⚠ 음수 추정치는 0 으로 둔다 — 이것도 원논문 규약이다(스프레드는 음수일 수 없고,
       2일창 추정은 잡음으로 음수가 자주 나온다).
     """
-    key = tk or id(H)
+    # 🚨 2026-08-14 — 캐시 키에 **계열 길이**를 넣는다. 종전에는 티커 하나였고, 그 탓에
+    #   자른 격자(전월말 4421일)로 채운 캐시가 안 자른 격자(오늘 4430일) 호출에 그대로
+    #   돌아왔다 — 길이가 9일 짧은 계열을 받아 IndexError 로 죽었다('지금 보유' 를 오늘
+    #   격자에서 다시 뽑는 경로에서 실제로 터졌다).
+    #   ⚠ 더 나쁜 경우는 안 죽는 쪽이다. 길이가 우연히 맞으면 **다른 격자의 값**을 조용히
+    #     쓰게 된다. 길이를 키에 넣어 그 가능성을 없앤다.
+    key = (tk or id(H), len(H))
     if key in _CS_CACHE:
         return _CS_CACHE[key]
     n_ = len(H)
@@ -864,8 +870,9 @@ def clv_daily(H, L, C, tk=""):
     +1 이면 그날 고가에 마감, −1 이면 저가에 마감이다. '그날의 마지막 힘이 어느 쪽이었나'를
     재는 값이고, 종가만으로는 만들 수 없다 — 2026-08-04 에 고가·저가를 배선하고서야 생겼다.
     """
-    if tk and tk in _CLV_CACHE:
-        return _CLV_CACHE[tk]
+    _k = (tk, len(C))
+    if tk and _k in _CLV_CACHE:
+        return _CLV_CACHE[_k]
     out = [None] * len(C)
     for i in range(len(C)):
         h, l, c = H[i], L[i], C[i]
@@ -873,7 +880,7 @@ def clv_daily(H, L, C, tk=""):
             continue
         out[i] = (2.0 * c - h - l) / (h - l)
     if tk:
-        _CLV_CACHE[tk] = out
+        _CLV_CACHE[_k] = out
     return out
 
 
@@ -884,8 +891,9 @@ def gap_daily(H, L, C, tk=""):
     TR = max(H, C₋₁) − min(L, C₋₁) 는 전일종가를 포함한 실질범위이고,
     gap = TR − (H − L) 은 **오늘 범위 밖에 놓인 부분** = 장이 닫혀 있는 동안 벌어진 이동이다.
     """
-    if tk and tk in _GAP_CACHE:
-        return _GAP_CACHE[tk]
+    _k = (tk, len(C))
+    if tk and _k in _GAP_CACHE:
+        return _GAP_CACHE[_k]
     out = [None] * len(C)
     for i in range(1, len(C)):
         h, l, c0 = H[i], L[i], C[i - 1]
@@ -896,7 +904,7 @@ def gap_daily(H, L, C, tk=""):
             continue
         out[i] = (tr - (h - l), tr)
     if tk:
-        _GAP_CACHE[tk] = out
+        _GAP_CACHE[_k] = out
     return out
 
 
@@ -2615,7 +2623,279 @@ def _surv_note(n_tick, gap, bmax):
                   "있었다 — 그 오독을 막으려고 여기 적는다.)")
 
 
-def load():
+def timing_ctx(dates, R, px, hid, lod, ixr, ixvol, tickers, members_at=None,
+               sent_path=None, ix=None):
+    """타이밍 신호가 읽는 계열 묶음. 랩과 PIT 이 **이 함수 하나**를 같이 쓴다.
+
+    🚨 2026-08-14 — disp·mclv·brd 는 **유니버스에 딸린 값**이다. 랩은 오늘의 518종으로,
+      PIT 은 그때 지수에 있던 명단으로 만들어야 한다. 종전에는 이 계열들이 랩 루프 안에
+      인라인이라 pit_backtest 가 만들 길이 없었고, 그래서 **타이밍 22종이 통째로 PIT 을
+      못 돌았다.** 그 사정이 산출물에는 "타이밍은 지수·ETF 를 매매하므로 생존편향이 걸리는
+      자리가 아니다" 라고 적혀 있었는데 사실이 아니다 — 타이밍이 매매하는 것은 ixr, 곧
+      동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다.
+    ⚠ members_at 이 None 이면 **전 종목**이다(= 종전 랩 동작 그대로). 일반화가 종전
+      동작으로 정확히 되돌아가야 리팩터라고 부를 수 있어서, 옮긴 뒤 랩을 다시 돌려
+      22종의 수치가 소수점까지 같은 것을 확인한다.
+    ⚠ 본문은 옮기면서 유니버스 필터(_in) 말고는 손대지 않았다.
+    """
+    n = len(dates)
+    tick = sorted(px)
+    _in = (lambda i: None) if members_at is None else members_at
+    if ix is None:                    # 랩은 ixr 과 같은 루프에서 이미 만들어 넘긴다
+        ix = [100.0]
+        for i in range(1, n):
+            ix.append(ix[-1] * (1 + (ixr[i] or 0.0)))
+    ixgap = [((ix[i] / _m - 1) if (_m := sma(ix, i, 200)) else None) for i in range(n)]
+
+    # 횡단면 분산도 — 그날 종목 수익률의 표준편차(국면 대리변수)
+    disp = [None] * n
+    for i in range(1, n):
+        _s = _in(i)
+        rs = [R[t][i] for t in tick
+              if R.get(t) and R[t][i] is not None and (_s is None or t in _s)]
+        if len(rs) > 50:
+            m = sum(rs) / len(rs)
+            disp[i] = math.sqrt(sum((x - m) ** 2 for x in rs) / (len(rs) - 1))
+    # 시장 마감압력 — 그날 전 종목의 종가위치(CLV)를 동일가중 평균한 것. 사전등록 t-clvgate.
+    # 같은 지수 '가격'에서 **일중 어디에 마감했나**만 뽑아낸다 — 수준·추세와 축이 다르다.
+    # 2026-08-04 에 고가·저가를 배선하고서야 만들 수 있게 된 계열이다.
+    mclv = [None] * n
+    _clvs = {t: clv_daily(hid[t], lod[t], px[t], t)
+             for t in tick if hid.get(t) and lod.get(t)}
+    for i in range(n):
+        _s = _in(i)
+        vs = [c[i] for t, c in _clvs.items()
+              if c[i] is not None and (_s is None or t in _s)]
+        if len(vs) > 50:
+            mclv[i] = sum(vs) / len(vs)
+
+    # 시장 폭 — 그날 '자기 200일선 위'인 종목의 비율. 지수 가격에는 안 보이는 내부 상태다.
+    # 종목마다 200일 이동평균을 매일 다시 더하면 O(종목×일×200)이라 느리다 → 누적합으로 O(1).
+    brd = [None] * n
+    above = [0] * n
+    cnt = [0] * n
+    for t in tick:
+        a = px[t]
+        # 결측일(거래정지·상장 전)이 섞여 있다. 이동평균은 직전 유효가를 끌어와 계산하되,
+        # **그날 값이 없는 종목은 그날의 분모에서 뺀다** — 없는 종목을 '200일선 아래'로
+        # 세면 폭이 실제보다 나빠 보인다.
+        f = [None] * n
+        last = None
+        for i in range(n):
+            if a[i] is not None:
+                last = a[i]
+            f[i] = last
+        st_ = next((i for i in range(n) if f[i] is not None), None)
+        if st_ is None:
+            continue
+        c = [0.0] * (n + 1)          # c[k] = f[0..k-1] 합(결측 채운 값)
+        for i in range(n):
+            c[i + 1] = c[i] + (f[i] if f[i] is not None else 0.0)
+        for i in range(max(200, st_ + 200), n):
+            if a[i] is None:
+                continue
+            _s = _in(i)
+            if _s is not None and t not in _s:
+                continue
+            m200 = (c[i] - c[i - 200]) / 200.0     # 당일 제외 200일 평균(선견 없음)
+            cnt[i] += 1
+            if a[i] > m200:
+                above[i] += 1
+    for i in range(n):
+        if cnt[i] > 50:
+            brd[i] = above[i] / cnt[i]
+
+    # 심리 지수 — 이 사이트가 따로 굽는 유일한 '가격 밖' 입력(VIX·기간구조·MOVE 합성).
+    # 날짜로 맞춰 붙이고, 없는 날은 직전 값을 끌고 간다(발표 지연을 앞당겨 쓰지 않는다).
+    sent = [None] * n
+    try:
+        _sh = json.load(io.open(sent_path or os.path.join(DATA, "sentiment.json"),
+                                encoding="utf-8")).get("history") or []
+        _sm = {r["dt"]: r["score"] for r in _sh if r.get("score") is not None}
+        _last = None
+        for i, d_ in enumerate(dates):
+            if d_ in _sm:
+                _last = _sm[d_]
+            sent[i] = _last
+    except Exception:
+        pass
+
+    # 월말 효과의 창 — 달력만 쓴다. 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2③.
+    TOMW = tom_window(dates, month_ends(dates))
+
+    return {"ix": ix, "ixr": ixr, "ixvol": ixvol, "ixgap": ixgap, "disp": disp,
+            "mclv": mclv, "brd": brd, "sent": sent, "TOMW": TOMW, "R": R}
+
+
+def timing_weights(S, C, MIN_HIST, n):
+    """타이밍 규칙의 **일별 노출 w[]**. 랩과 PIT 이 이 함수 하나를 같이 쓴다.
+
+    ⚠ **사본을 만들지 않는다.** 두 레그의 차이가 '생존편향' 이려면 신호를 만드는 코드가
+      한 벌이어야 한다. 이 저장소는 사본 탓에 하루에 넷을 틀렸고(x-52wh·ttm2·편향 문장·
+      x-debtiss 선견), pit_backtest 가 자기 채점기를 지운 것도 같은 이유다.
+    ⚠ 본문은 옮기면서 **한 글자도 바꾸지 않았다.** 바꿨다면 리팩터가 아니라 다른 전략이
+      되고 과거 수치와의 비교가 끊긴다.
+    """
+    ix, ixr, ixvol = C["ix"], C["ixr"], C["ixvol"]
+    ixgap, disp, mclv, brd = C["ixgap"], C["disp"], C["mclv"], C["brd"]
+    sent, TOMW, R = C["sent"], C["TOMW"], C["R"]
+    w = [0.0] * n
+    state = 0.0
+    peak = 0.0          # 샹들리에: 진입 후 고점
+    kama_prev = None    # 적응형 이동평균: 직전 값(재귀식이라 이어져야 한다)
+    macd_sig = None     # MACD 신호선(9기간 EMA): 같은 사유로 상태를 이어 간다
+    ddpk = None         # t-ddgate: MIN_HIST 이후 지수 고점(러닝 맥스 — 아래 설명)
+    for i in range(n):
+        if i < MIN_HIST:
+            continue
+        sid = S["sid"]
+        if sid == "t-rsi":
+            v = rsi(ix, i)
+            if v is not None:
+                if v < 30:
+                    state = 1.0
+                elif v > 60:
+                    state = 0.0
+            w[i] = state
+        elif sid == "t-tom":
+            # 🚨 w[i] 는 **i+1 일에 적용된다**(위 `e = w[i-1]`). 그래서 "다음
+            #   거래일이 창인가"를 묻는 것이 맞다. 오늘을 물으면 창이 하루씩 밀린다.
+            # ⚠ 달력을 앞서 보는 것은 선견이 아니다 — 거래일 달력은 미리 공표된다.
+            w[i] = 1.0 if (i + 1 < n and TOMW[i + 1]) else 0.0
+        elif sid == "t-donch":
+            hi = max(ix[i - 20:i]) if i >= 20 else None
+            lo = min(ix[i - 20:i]) if i >= 20 else None
+            if hi and ix[i] > hi:
+                state = 1.0
+            elif lo and ix[i] < lo:
+                state = 0.0
+            w[i] = state
+        elif sid == "t-macd":
+            def ema(xs, i, n_, cache={}):
+                k = 2 / (n_ + 1)
+                e = xs[max(0, i - n_ * 3)]
+                for j in range(max(0, i - n_ * 3) + 1, i + 1):
+                    e = xs[j] * k + e * (1 - k)
+                return e
+            # 🚨 2026-08-04 버그 수정. 종전 `sig = m*0.2 + prev*0.8` 의 prev 는
+            #   전날의 **신호선**이 아니라 전날의 **MACD** 였다. 그러면
+            #     m > sig ⟺ 0.8·m > 0.8·prev ⟺ m > prev
+            #   가 되어, 9기간 EMA 교차가 아니라 **MACD 의 1일 차분 부호**를 본다.
+            #   화면 카드에 적힌 규칙("MACD(12,26)가 신호선(9) 위면 편입")과 실제로
+            #   돌린 규칙이 달랐고, 그 차이가 성적에 그대로 나왔다 — 종전 구현의
+            #   연회전율 54.9 는 규칙의 성질이 아니라 이 버그의 산물이다(정본은 21 안팎).
+            #   신호선은 누적이므로 매 시점 다시 만들 수 없다. 상태로 이어 간다.
+            m = ema(ix, i, 12) - ema(ix, i, 26)
+            if macd_sig is None:
+                macd_sig = m
+            else:
+                macd_sig = m * (2 / 10.0) + macd_sig * (1 - 2 / 10.0)   # 9기간 EMA
+            w[i] = 1.0 if m > macd_sig else 0.0
+        elif sid == "t-disp":
+            hist = [x for x in disp[max(0, i - 252):i] if x]
+            cur = disp[i]
+            if cur and hist:
+                med = sorted(hist)[len(hist) // 2]
+                w[i] = 1.0 if cur < med else 0.0
+        elif sid == "t-kelly":
+            win = [x for x in ixr[max(0, i - 120):i + 1] if x is not None]
+            if len(win) > 30:
+                m = sum(win) / len(win)
+                v2 = sum((x - m) ** 2 for x in win) / max(1, len(win) - 1)
+                w[i] = max(0.0, min(1.0, m / v2)) if v2 > 0 else 0.0
+        elif sid == "t-mavote":
+            ms = [sma(ix, i, k) for k in (20, 50, 100, 200)]
+            ok = [m for m in ms if m is not None]
+            w[i] = (sum(1 for m in ok if ix[i] > m) / len(ok)) if ok else 0.0
+        elif sid == "t-tsmomc":
+            m = (ret(ix, i, 252) or -1) - (ret(ix, i, 21) or 0)
+            w[i] = max(0.0, min(1.0, m / 0.20))     # 0~20% 구간을 0~1로
+        elif sid == "t-mhvote":
+            rs = [ret(ix, i, k) for k in (21, 63, 126, 252)]
+            ok = [x for x in rs if x is not None]
+            w[i] = (sum(1 for x in ok if x > 0) / len(ok)) if ok else 0.0
+        elif sid == "t-breadth":
+            b = brd[i]
+            w[i] = 1.0 if (b is not None and b > 0.5) else 0.0
+        elif sid == "t-breadthc":
+            b = brd[i]
+            w[i] = (b if (b is not None and b >= 0.30) else 0.0)
+        elif sid == "t-ddgate":
+            # i 는 단조 증가하고 고점은 줄지 않는다 → 매번 구간 전체를 훑을 이유가 없다.
+            # 이 랩에서 유일한 진짜 O(n²)였다(3년에선 안 보였고 10년에서 드러났다).
+            # 러닝 맥스는 max(ix[MIN_HIST:i+1]) 과 값이 정확히 같다.
+            ddpk = ix[i] if ddpk is None else max(ddpk, ix[i])
+            dd = ix[i] / ddpk - 1
+            if dd < -0.10:
+                state = 0.0
+            elif dd > -0.03:
+                state = 1.0
+            w[i] = state
+        elif sid == "t-chand":
+            # 진입 뒤 고점을 따라다니는 손절선. 폭은 그때의 변동성(20일)으로 잡는다.
+            v = ixvol[i]
+            if state > 0:
+                peak = max(peak, ix[i])
+                if v and ix[i] < peak * (1 - 3 * v * math.sqrt(20)):
+                    state = 0.0
+            else:
+                m50 = sma(ix, i, 50)
+                if m50 is not None and ix[i] > m50:
+                    state = 1.0
+                    peak = ix[i]
+            w[i] = state
+        elif sid == "t-chan":
+            win = ix[max(0, i - 252):i + 1]
+            hi, lo = max(win), min(win)
+            w[i] = ((ix[i] - lo) / (hi - lo)) if hi > lo else 0.0
+        elif sid == "t-kama":
+            if i >= 30:
+                chg = abs(ix[i] - ix[i - 10])
+                vol_ = sum(abs(ix[j] - ix[j - 1]) for j in range(i - 9, i + 1))
+                er = (chg / vol_) if vol_ > 0 else 0.0
+                sc = (er * (2 / 3 - 2 / 31) + 2 / 31) ** 2      # 효율성 → 평활상수
+                kama = kama_prev if kama_prev is not None else ix[i - 1]
+                kama = kama + sc * (ix[i] - kama)
+                kama_prev = kama
+                w[i] = 1.0 if ix[i] > kama else 0.0
+        elif sid == "t-semivol":
+            win = [x for x in ixr[max(0, i - 60):i + 1] if x is not None and x < 0]
+            if len(win) > 5:
+                dv = math.sqrt(sum(x * x for x in win) / len(win))
+                w[i] = min(1.0, 0.09 / (dv * math.sqrt(252))) if dv > 0 else 0.0
+        elif sid == "t-gapcap":
+            gap = ixgap[i]
+            if gap is not None:
+                # 룩백 하한은 WARM0 다. MIN_HIST(측정 시작)를 쓰면 창을 10년으로
+                # 자른 뒤 구간 초반의 분위 계산이 며칠짜리 표본으로 줄어든다 —
+                # 그 가격은 실제로 있으므로 안 쓸 이유가 없다.
+                hist = sorted(g for g in ixgap[max(WARM0, i - 252):i] if g is not None)
+                cap = hist[int(len(hist) * 0.9)] if hist else None
+                w[i] = 0.0 if gap <= 0 else (0.5 if (cap is not None and gap > cap) else 1.0)
+        elif sid == "t-sentgate":
+            hist = [x for x in sent[max(0, i - 252):i] if x is not None]
+            cur = sent[i]
+            if cur is not None and hist:
+                med = sorted(hist)[len(hist) // 2]
+                w[i] = 1.0 if cur < med else 0.0
+        elif sid == "t-clvgate":
+            # 문턱 0 은 '종가가 그날 범위 한가운데 = 순 마감압력 없음'이라는 정의상의
+            # 값이다(사전등록에 그렇게 못박았다 — 조정하지 않는다).
+            win = [x for x in mclv[max(0, i - 19):i + 1] if x is not None]
+            if len(win) >= 10:
+                w[i] = 1.0 if (sum(win) / len(win)) > 0 else 0.0
+        elif sid == "t-volreg":
+            hist = [v for v in ixvol[max(0, i - 252):i] if v]
+            cur = ixvol[i]
+            if cur and hist:
+                med = sorted(hist)[len(hist) // 2]
+                w[i] = 1.0 if cur < med else 0.0
+        else:
+            w[i] = S["fn"](ix, i, R, ixvol[i])
+    return w
+
+
+def load(full=False):
     """일봉을 읽는다 → dates, 종가, 거래량, **고가·저가**, 메타, 무위험이자율.
 
     🚨 고가(hd)·저가(ld)는 2026-08-04 까지 **읽는 쪽이 없었다.** refresh_stocks.py:1693 이
@@ -2631,7 +2911,9 @@ def load():
         st = json.load(f)
     dates = st["pxd_dates"]
     n_raw = len(dates)
-    dates = dates[:asof_cut(dates)]
+    # full=True 면 **안 자른다.** '지금 보유' 를 오늘 격자에서 다시 뽑는 경로가 쓴다
+    # (성과는 전월말까지지만 보유 명단은 오늘 것이어야 한다 — asof_cut 머리말 참조).
+    dates = dates if full else dates[:asof_cut(dates)]
     n = len(dates)
     px, vlm, hi, lo, meta = {}, {}, {}, {}, {}
     for s in st["stocks"]:
@@ -5230,6 +5512,81 @@ def xsec_pick_at(S, i, X, sc, ind_raw):
     return pick_top(sc, S["sid"], S.get("topn")), None
 
 
+def current_holdings(strats):
+    """**오늘 격자**에서 '지금 보유' 를 다시 뽑는다 → {sid: hold_now}
+
+    🚨 2026-08-14 — 성과 기준일을 전월말로 내리면서(asof_cut) 보유 명단도 거기서 끊겼다.
+      월말 리밸 규칙은 그래도 맞다(다음 리밸이 이달 말이다). 그런데 **주간 리밸 8종과
+      타이밍 22종은 그 뒤로 이미 여러 번 갈아탔다** — 그 명단을 "지금 보유" 라고 적으면
+      화면이 최대 한 달 묵은 것을 현재로 말한다.
+    ⚠ 이 함수는 **보유만** 만든다. 성과 수치는 한 글자도 안 건드린다 — 자른 격자에서 재고,
+      여기서 나온 것은 holdings 칸에만 들어간다. 두 가지를 한 경로에서 처리하면 '전월말
+      성과' 라는 결정이 조용히 풀린다.
+    ⚠ 횡단면 규칙의 선택(xsec_pick_at)은 상태가 없다 — 마지막 리밸 시점의 점수만 있으면
+      된다. 반면 타이밍의 노출은 **상태를 이어 간다**(샹들리에 고점·KAMA·MACD 신호선)
+      므로 전 구간을 한 번 돌려야 한다. 그래서 둘을 나눠 처리한다.
+    """
+    dates, px, vlm, hid, lod, meta, rf = load(full=True)
+    n = len(dates)
+    tickers = sorted(px)
+    R = daily_rets(px)
+    me_list = month_ends(dates)
+    me = set(me_list)
+    ixr, ix = [None], [100.0]
+    for i in range(1, n):
+        rs = [R[t][i] for t in tickers if R[t][i] is not None]
+        r = sum(rs) / len(rs) if rs else 0.0
+        ixr.append(r)
+        ix.append(ix[-1] * (1 + r))
+    ixvol = [vol(ixr, i, 20) for i in range(n)]
+    X = {"FACP": load_factor_proxies(dates), "FU": load_fund(), "R": R, "dates": dates,
+         "hid": hid, "lod": lod, "ixr": ixr, "ixvol": ixvol, "me": me,
+         "me_list": me_list, "meta": meta, "px": px, "vlm": vlm, "tickers": tickers,
+         "macd10": macro_daily("DGS10", dates), "macfx": macro_daily("DTWEXBGS", dates)}
+    TC = timing_ctx(dates, R, px, hid, lod, ixr, ixvol, tickers, ix=ix)
+    REB = {k: set(reb_index(k, dates)) for k in REB_KINDS}
+    _mh = MIN_HIST                       # 자른 격자 기준값 — 복원해야 한다
+    globals()["MIN_HIST"] = max(WARM0, n - int(MAX_YEARS * 252))
+    out = {}
+    try:
+        for S in strats:
+            sid = S["sid"]
+            try:
+                if S["kind"] == "timing":
+                    w = timing_weights(S, TC, MIN_HIST, n)
+                    out[sid] = {"kind": "timing", "as_of": dates[-1],
+                                "exposure_now": round(w[n - 1] * 100, 1),
+                                "note": "노출 %d%%는 동일가중 유니버스 전체를 그 비율로 "
+                                        "보유한다는 뜻이다. 나머지는 무위험(현금)."
+                                        % round(w[n - 1] * 100)}
+                    continue
+                # 마지막 리밸 시점 — 그 규칙이 스스로 내건 주기로 찾는다.
+                _rs = REB[S.get("reb") or REB_DEFAULT]
+                j = max((i for i in _rs if i <= n - 2), default=None)
+                if j is None:
+                    continue
+                sc, ind_raw, _cr = xsec_score_at(S, j + 1, X, None)
+                if len(sc) < XSEC_MIN_POOL:
+                    continue
+                hold, hw = xsec_pick_at(S, j + 1, X, sc, ind_raw)
+                if not hold:
+                    continue
+                out[sid] = {"kind": "xsec", "as_of": dates[j], "n": len(hold),
+                            "tickers": sorted(hold),
+                            "names": {t: (meta.get(t) or {}).get("name") or t
+                                      for t in sorted(hold)},
+                            "note": "%s 리밸런스(%s)에서 고른 %d종목을 보유 중이다."
+                                    % (REB_KINDS.get(S.get("reb") or REB_DEFAULT, "월말"),
+                                       dates[j], len(hold))}
+            except Exception as e:
+                # 한 규칙이 실패해도 나머지는 살린다 — 다만 조용히 넘기지 않는다.
+                print("  ⚠ [지금보유] %-16s %s: %s" % (sid, type(e).__name__, str(e)[:60]))
+    finally:
+        globals()["MIN_HIST"] = _mh
+    print("  [지금보유] 오늘 격자(%s)에서 %d종 다시 뽑았다" % (dates[-1], len(out)))
+    return out
+
+
 def run():
     dates, px, vlm, hid, lod, meta, rf = load()
     FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
@@ -5285,74 +5642,13 @@ def run():
     # 지수의 200일선 이격 — t-gapcap 이 매 시점 직전 252일치를 다시 만드느라
     # sma(ix, j, 200) 를 i마다 252번(각 200회 덧셈) 돌렸다. 규칙과 무관하게 ix 에만
     # 의존하므로 한 번만 만들어 둔다: 252×200×n → n×200.
-    ixgap = [((ix[i] / _m - 1) if (_m := sma(ix, i, 200)) else None) for i in range(n)]
-
-    # 횡단면 분산도 — 그날 종목 수익률의 표준편차(국면 대리변수)
-    disp = [None] * n
-    for i in range(1, n):
-        rs = [R[t][i] for t in tickers if R[t][i] is not None]
-        if len(rs) > 50:
-            m = sum(rs) / len(rs)
-            disp[i] = math.sqrt(sum((x - m) ** 2 for x in rs) / (len(rs) - 1))
-    # 시장 마감압력 — 그날 전 종목의 종가위치(CLV)를 동일가중 평균한 것. 사전등록 t-clvgate.
-    # 같은 지수 '가격'에서 **일중 어디에 마감했나**만 뽑아낸다 — 수준·추세와 축이 다르다.
-    # 2026-08-04 에 고가·저가를 배선하고서야 만들 수 있게 된 계열이다.
-    mclv = [None] * n
-    _clvs = {t: clv_daily(hid[t], lod[t], px[t], t) for t in tickers if hid.get(t) and lod.get(t)}
-    for i in range(n):
-        vs = [c[i] for c in _clvs.values() if c[i] is not None]
-        if len(vs) > 50:
-            mclv[i] = sum(vs) / len(vs)
-
-    # 시장 폭 — 그날 '자기 200일선 위'인 종목의 비율. 지수 가격에는 안 보이는 내부 상태다.
-    # 종목마다 200일 이동평균을 매일 다시 더하면 O(종목×일×200)이라 느리다 → 누적합으로 O(1).
-    brd = [None] * n
-    above = [0] * n
-    cnt = [0] * n
-    for t in tickers:
-        a = px[t]
-        # 결측일(거래정지·상장 전)이 섞여 있다. 이동평균은 직전 유효가를 끌어와 계산하되,
-        # **그날 값이 없는 종목은 그날의 분모에서 뺀다** — 없는 종목을 '200일선 아래'로
-        # 세면 폭이 실제보다 나빠 보인다.
-        f = [None] * n
-        last = None
-        for i in range(n):
-            if a[i] is not None:
-                last = a[i]
-            f[i] = last
-        st_ = next((i for i in range(n) if f[i] is not None), None)
-        if st_ is None:
-            continue
-        c = [0.0] * (n + 1)          # c[k] = f[0..k-1] 합(결측 채운 값)
-        for i in range(n):
-            c[i + 1] = c[i] + (f[i] if f[i] is not None else 0.0)
-        for i in range(max(200, st_ + 200), n):
-            if a[i] is None:
-                continue
-            m200 = (c[i] - c[i - 200]) / 200.0     # 당일 제외 200일 평균(선견 없음)
-            cnt[i] += 1
-            if a[i] > m200:
-                above[i] += 1
-    for i in range(n):
-        if cnt[i] > 50:
-            brd[i] = above[i] / cnt[i]
-
-    # 심리 지수 — 이 사이트가 따로 굽는 유일한 '가격 밖' 입력(VIX·기간구조·MOVE 합성).
-    # 날짜로 맞춰 붙이고, 없는 날은 직전 값을 끌고 간다(발표 지연을 앞당겨 쓰지 않는다).
-    sent = [None] * n
-    try:
-        _sh = json.load(io.open(os.path.join(DATA, "sentiment.json"), encoding="utf-8")).get("history") or []
-        _sm = {r["dt"]: r["score"] for r in _sh if r.get("score") is not None}
-        _last = None
-        for i, d_ in enumerate(dates):
-            if d_ in _sm:
-                _last = _sm[d_]
-            sent[i] = _last
-    except Exception:
-        pass
-
-    # 월말 효과의 창 — 달력만 쓴다. 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2③.
-    TOMW = tom_window(dates, month_ends(dates))
+    # 🚨 타이밍 계열을 **한 곳에서** 만든다(timing_ctx). 종전에는 여기 인라인이라
+    #   pit_backtest 가 같은 계열을 만들 길이 없었고, 그 탓에 타이밍 22종이 통째로
+    #   PIT 을 못 돌았다. PIT 쪽에서 같은 함수를 **그때 명단**으로 부른다.
+    # ⚠ 랩은 members_at 을 안 준다 = 전 종목(종전 동작 그대로).
+    _TC = timing_ctx(dates, R, px, hid, lod, ixr, ixvol, tickers, ix=ix)
+    ixgap, disp, mclv, brd = _TC["ixgap"], _TC["disp"], _TC["mclv"], _TC["brd"]
+    sent, TOMW = _TC["sent"], _TC["TOMW"]
 
     rfd = (sum(rf.values()) / len(rf) / 21) if rf else 0.0
     # 현금 수익은 **그 시점의** 금리로 준다. 상수 하나로 뭉개면 구간이 길수록 거짓말이 커진다 —
@@ -5556,160 +5852,9 @@ def run():
     for _i in range(MIN_HIST + 1, n):
         ewnav_ref.append(ewnav_ref[-1] * (1 + ixr[_i]))
     for S in STRATS:
-        w = [0.0] * n
+        w = (timing_weights(S, _TC, MIN_HIST, n)
+             if S["kind"] == "timing" else [0.0] * n)
         if S["kind"] == "timing":
-            state = 0.0
-            peak = 0.0          # 샹들리에: 진입 후 고점
-            kama_prev = None    # 적응형 이동평균: 직전 값(재귀식이라 이어져야 한다)
-            macd_sig = None     # MACD 신호선(9기간 EMA): 같은 사유로 상태를 이어 간다
-            ddpk = None         # t-ddgate: MIN_HIST 이후 지수 고점(러닝 맥스 — 아래 설명)
-            for i in range(n):
-                if i < MIN_HIST:
-                    continue
-                sid = S["sid"]
-                if sid == "t-rsi":
-                    v = rsi(ix, i)
-                    if v is not None:
-                        if v < 30:
-                            state = 1.0
-                        elif v > 60:
-                            state = 0.0
-                    w[i] = state
-                elif sid == "t-tom":
-                    # 🚨 w[i] 는 **i+1 일에 적용된다**(위 `e = w[i-1]`). 그래서 "다음
-                    #   거래일이 창인가"를 묻는 것이 맞다. 오늘을 물으면 창이 하루씩 밀린다.
-                    # ⚠ 달력을 앞서 보는 것은 선견이 아니다 — 거래일 달력은 미리 공표된다.
-                    w[i] = 1.0 if (i + 1 < n and TOMW[i + 1]) else 0.0
-                elif sid == "t-donch":
-                    hi = max(ix[i - 20:i]) if i >= 20 else None
-                    lo = min(ix[i - 20:i]) if i >= 20 else None
-                    if hi and ix[i] > hi:
-                        state = 1.0
-                    elif lo and ix[i] < lo:
-                        state = 0.0
-                    w[i] = state
-                elif sid == "t-macd":
-                    def ema(xs, i, n_, cache={}):
-                        k = 2 / (n_ + 1)
-                        e = xs[max(0, i - n_ * 3)]
-                        for j in range(max(0, i - n_ * 3) + 1, i + 1):
-                            e = xs[j] * k + e * (1 - k)
-                        return e
-                    # 🚨 2026-08-04 버그 수정. 종전 `sig = m*0.2 + prev*0.8` 의 prev 는
-                    #   전날의 **신호선**이 아니라 전날의 **MACD** 였다. 그러면
-                    #     m > sig ⟺ 0.8·m > 0.8·prev ⟺ m > prev
-                    #   가 되어, 9기간 EMA 교차가 아니라 **MACD 의 1일 차분 부호**를 본다.
-                    #   화면 카드에 적힌 규칙("MACD(12,26)가 신호선(9) 위면 편입")과 실제로
-                    #   돌린 규칙이 달랐고, 그 차이가 성적에 그대로 나왔다 — 종전 구현의
-                    #   연회전율 54.9 는 규칙의 성질이 아니라 이 버그의 산물이다(정본은 21 안팎).
-                    #   신호선은 누적이므로 매 시점 다시 만들 수 없다. 상태로 이어 간다.
-                    m = ema(ix, i, 12) - ema(ix, i, 26)
-                    if macd_sig is None:
-                        macd_sig = m
-                    else:
-                        macd_sig = m * (2 / 10.0) + macd_sig * (1 - 2 / 10.0)   # 9기간 EMA
-                    w[i] = 1.0 if m > macd_sig else 0.0
-                elif sid == "t-disp":
-                    hist = [x for x in disp[max(0, i - 252):i] if x]
-                    cur = disp[i]
-                    if cur and hist:
-                        med = sorted(hist)[len(hist) // 2]
-                        w[i] = 1.0 if cur < med else 0.0
-                elif sid == "t-kelly":
-                    win = [x for x in ixr[max(0, i - 120):i + 1] if x is not None]
-                    if len(win) > 30:
-                        m = sum(win) / len(win)
-                        v2 = sum((x - m) ** 2 for x in win) / max(1, len(win) - 1)
-                        w[i] = max(0.0, min(1.0, m / v2)) if v2 > 0 else 0.0
-                elif sid == "t-mavote":
-                    ms = [sma(ix, i, k) for k in (20, 50, 100, 200)]
-                    ok = [m for m in ms if m is not None]
-                    w[i] = (sum(1 for m in ok if ix[i] > m) / len(ok)) if ok else 0.0
-                elif sid == "t-tsmomc":
-                    m = (ret(ix, i, 252) or -1) - (ret(ix, i, 21) or 0)
-                    w[i] = max(0.0, min(1.0, m / 0.20))     # 0~20% 구간을 0~1로
-                elif sid == "t-mhvote":
-                    rs = [ret(ix, i, k) for k in (21, 63, 126, 252)]
-                    ok = [x for x in rs if x is not None]
-                    w[i] = (sum(1 for x in ok if x > 0) / len(ok)) if ok else 0.0
-                elif sid == "t-breadth":
-                    b = brd[i]
-                    w[i] = 1.0 if (b is not None and b > 0.5) else 0.0
-                elif sid == "t-breadthc":
-                    b = brd[i]
-                    w[i] = (b if (b is not None and b >= 0.30) else 0.0)
-                elif sid == "t-ddgate":
-                    # i 는 단조 증가하고 고점은 줄지 않는다 → 매번 구간 전체를 훑을 이유가 없다.
-                    # 이 랩에서 유일한 진짜 O(n²)였다(3년에선 안 보였고 10년에서 드러났다).
-                    # 러닝 맥스는 max(ix[MIN_HIST:i+1]) 과 값이 정확히 같다.
-                    ddpk = ix[i] if ddpk is None else max(ddpk, ix[i])
-                    dd = ix[i] / ddpk - 1
-                    if dd < -0.10:
-                        state = 0.0
-                    elif dd > -0.03:
-                        state = 1.0
-                    w[i] = state
-                elif sid == "t-chand":
-                    # 진입 뒤 고점을 따라다니는 손절선. 폭은 그때의 변동성(20일)으로 잡는다.
-                    v = ixvol[i]
-                    if state > 0:
-                        peak = max(peak, ix[i])
-                        if v and ix[i] < peak * (1 - 3 * v * math.sqrt(20)):
-                            state = 0.0
-                    else:
-                        m50 = sma(ix, i, 50)
-                        if m50 is not None and ix[i] > m50:
-                            state = 1.0
-                            peak = ix[i]
-                    w[i] = state
-                elif sid == "t-chan":
-                    win = ix[max(0, i - 252):i + 1]
-                    hi, lo = max(win), min(win)
-                    w[i] = ((ix[i] - lo) / (hi - lo)) if hi > lo else 0.0
-                elif sid == "t-kama":
-                    if i >= 30:
-                        chg = abs(ix[i] - ix[i - 10])
-                        vol_ = sum(abs(ix[j] - ix[j - 1]) for j in range(i - 9, i + 1))
-                        er = (chg / vol_) if vol_ > 0 else 0.0
-                        sc = (er * (2 / 3 - 2 / 31) + 2 / 31) ** 2      # 효율성 → 평활상수
-                        kama = kama_prev if kama_prev is not None else ix[i - 1]
-                        kama = kama + sc * (ix[i] - kama)
-                        kama_prev = kama
-                        w[i] = 1.0 if ix[i] > kama else 0.0
-                elif sid == "t-semivol":
-                    win = [x for x in ixr[max(0, i - 60):i + 1] if x is not None and x < 0]
-                    if len(win) > 5:
-                        dv = math.sqrt(sum(x * x for x in win) / len(win))
-                        w[i] = min(1.0, 0.09 / (dv * math.sqrt(252))) if dv > 0 else 0.0
-                elif sid == "t-gapcap":
-                    gap = ixgap[i]
-                    if gap is not None:
-                        # 룩백 하한은 WARM0 다. MIN_HIST(측정 시작)를 쓰면 창을 10년으로
-                        # 자른 뒤 구간 초반의 분위 계산이 며칠짜리 표본으로 줄어든다 —
-                        # 그 가격은 실제로 있으므로 안 쓸 이유가 없다.
-                        hist = sorted(g for g in ixgap[max(WARM0, i - 252):i] if g is not None)
-                        cap = hist[int(len(hist) * 0.9)] if hist else None
-                        w[i] = 0.0 if gap <= 0 else (0.5 if (cap is not None and gap > cap) else 1.0)
-                elif sid == "t-sentgate":
-                    hist = [x for x in sent[max(0, i - 252):i] if x is not None]
-                    cur = sent[i]
-                    if cur is not None and hist:
-                        med = sorted(hist)[len(hist) // 2]
-                        w[i] = 1.0 if cur < med else 0.0
-                elif sid == "t-clvgate":
-                    # 문턱 0 은 '종가가 그날 범위 한가운데 = 순 마감압력 없음'이라는 정의상의
-                    # 값이다(사전등록에 그렇게 못박았다 — 조정하지 않는다).
-                    win = [x for x in mclv[max(0, i - 19):i + 1] if x is not None]
-                    if len(win) >= 10:
-                        w[i] = 1.0 if (sum(win) / len(win)) > 0 else 0.0
-                elif sid == "t-volreg":
-                    hist = [v for v in ixvol[max(0, i - 252):i] if v]
-                    cur = ixvol[i]
-                    if cur and hist:
-                        med = sorted(hist)[len(hist) // 2]
-                        w[i] = 1.0 if cur < med else 0.0
-                else:
-                    w[i] = S["fn"](ix, i, R, ixvol[i])
             # 신호는 당일 종가로 계산 → 다음 날부터 적용(선견 방지)
             nav = [100.0]
             srets = []
@@ -6676,6 +6821,25 @@ def run():
             }
             print("  [생존편향 눈금] 랩 동일가중 유니버스 %.2f%% vs RSP %.2f%% → 격차 %+.2f%%p"
                   % (_bs["cagr"], _rs["cagr"], _bs["cagr"] - _rs["cagr"]))
+
+    # 🚨 '지금 보유' 를 **오늘 격자**에서 다시 뽑아 덮는다(2026-08-14). 위 성과는 전월말까지
+    #   재지만 보유 명단은 오늘 것이어야 한다 — 주간 리밸 8종과 타이밍 22종은 그 사이 이미
+    #   갈아탔다. current_holdings 는 holdings 칸만 만들고 성과는 안 건드린다.
+    # ⚠ 실패한 규칙은 **덮지 않는다.** 그러면 전월말 명단이 그대로 남고, 그 카드에는
+    #   as_of 가 전월말로 찍혀 화면이 스스로 그 사실을 말한다.
+    try:
+        _nowh = current_holdings(STRATS)
+        _nh = 0
+        for _r in out:
+            _h = _nowh.get(_r["sid"])
+            if _h:
+                _r["holdings"] = _h
+                _nh += 1
+        print("  [지금보유] %d/%d종 오늘 명단으로 덮었다" % (_nh, len(out)))
+    except Exception as _e:
+        # 조용히 넘기지 않는다 — 넘어가면 화면이 전월말 명단을 '지금' 이라 말한다.
+        print("🚨 [지금보유] 다시 뽑기 실패(%s: %s) — 전월말 명단이 그대로 나간다"
+              % (type(_e).__name__, str(_e)[:80]))
 
     doc = {
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",

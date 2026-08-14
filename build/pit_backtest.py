@@ -209,6 +209,22 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              #   실측 커버리지: 편출 71/75(95%) · 랩 502/519(97%) 로 거의 같다 —
              #   후보가 생존자로 좁혀지지 않으므로 두 레그 비교가 성립한다(x-currat 과 같은 기준).
              "x-reta"]
+
+# ── 타이밍·오버레이 22종 ────────────────────────────────────────────────────
+# 🚨 2026-08-14 — **이제 잰다.** 종전에는 산출물의 na_timing 이 "타이밍 규칙은 지수·ETF 를
+#   매매하므로 생존편향이 걸리는 자리가 아니다" 라고 적고 이 표에서 통째로 빠져 있었다.
+#   그 문장이 사실이 아니다 — 타이밍이 매매하는 것은 ixr, 곧 **동일가중 바스켓**이고
+#   (tech_backtest 가 그 자리에 "타이밍 전략이 실제로 매매하는 대상" 이라고 적어 두었다)
+#   랩 유니버스로 만든 그 바스켓은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 즉
+#   생존편향이 정면으로 걸리고, 평균 노출만큼 그대로 실린다.
+# ⚠ 이 규칙들은 종목을 안 고르므로 후보 커버리지 게이트(XSEC_MIN_POOL)와 무관하다.
+#   대신 **계열이 유니버스에 딸린다** — disp·mclv·brd·ixr 을 그때 명단으로 만들어야 하고,
+#   그것을 TB.timing_ctx 가 members_at 을 받아 처리한다.
+TIMING_SIDS = ["t-sma200", "t-cross", "t-chan", "t-macd", "t-gapcap", "t-mhvote",
+               "t-donch", "t-ddgate", "t-chand", "t-voltgt", "t-clvgate",
+               "t-breadth", "t-breadthc", "t-tom", "t-mavote", "t-volreg",
+               "t-kama", "t-tsmom", "t-tsmom6", "t-kelly", "t-semivol", "t-disp"]
+
 # x-volsurge 는 뺐다. 거래량이 랩 파일(오늘의 유니버스)에만 있어 편출 85종의 채점률이 정확히
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
@@ -1110,6 +1126,51 @@ def main():
         ixr_lab[i] = sum(rs) / len(rs) if rs else 0.0
     ixvol_lab = [TB.vol(ixr_lab, i, 20) for i in range(n)]
 
+    # ── 타이밍 계열 두 벌 ──────────────────────────────────────────────────
+    # 🚨 2026-08-14 — 타이밍 규칙이 읽는 계열(disp·mclv·brd·ixgap)은 **유니버스에 딸린다.**
+    #   그래서 레그마다 따로 만든다. 랩 본편과 **같은 함수**(TB.timing_ctx)를 쓰되
+    #   PIT 은 members_at 을, 소급은 오늘 명단(lab_uni)을 준다.
+    # ⚠ 둘을 한 벌로 공유하면 반쪽만 PIT 이 된다 — 이 파일이 ixr 을 레그별로 나눠 둔 것과
+    #   똑같은 사유다(x-ivol·x-lowbeta·x-minvar 에서 이미 겪었다).
+    # 현금 몫의 무위험 — **랩 본편과 같은 식**이다(tech_backtest 의 rfd_d).
+    # ⚠ 상수 하나로 뭉개지 않는다. 10년 구간의 실제 3M 금리는 0.02~5.60% 라, 현금을 쥐는
+    #   방어형 규칙이 구간 초반에 가공의 이자를 받게 된다. 랩이 이미 그 이유로 월별을 쓴다 —
+    #   여기만 상수를 쓰면 그 차이가 고스란히 '생존편향' 으로 찍힌다.
+    _rfd0 = (sum(rf.values()) / len(rf) / 21) if rf else 0.0
+    _rfd_d = [((rf.get(d[:7]) / 21) if rf.get(d[:7]) is not None else _rfd0) for d in dates]
+
+    _lab_set = set(lab_uni)
+    _TC_PIT = TB.timing_ctx(dates, R, px, X["hid"], X["lod"], ixr, ixvol, tickers,
+                            members_at=lambda i: members_at(i) & set(tickers))
+    _TC_LAB = TB.timing_ctx(dates, R, px, X["hid"], X["lod"], ixr_lab, ixvol_lab,
+                            tickers, members_at=lambda i: _lab_set)
+
+    def run_timing(S, TC, IXR):
+        """타이밍 규칙 한 종. **노출 계산은 랩과 같은 함수**(TB.timing_weights)다.
+
+        ⚠ 여기서 신호를 다시 구현하지 않는다. 두 레그의 차이가 '생존편향' 이려면 신호가
+          한 벌이어야 하고, 이 파일이 채점기 사본을 지운 것과 같은 규약이다.
+        ⚠ 랩 본편(tech_backtest)의 수익 식을 그대로 옮긴다:
+              r = e·ixr + (1−e)·rf   (e = 전날 노출 — 선견 없음)
+          현금 몫에 그 시점 무위험을 주는 것까지 같다. 한쪽만 상수 rf 를 쓰면 방어형
+          규칙이 레그마다 다른 이자를 받아 그 차이가 '편향' 으로 찍힌다.
+        """
+        w = TB.timing_weights(S, TC, i0, n)
+        nav, srets, turns = [100.0], [], 0
+        for i in range(i0 + 1, n):
+            e = w[i - 1]
+            r = e * (IXR[i] or 0.0) + (1 - e) * _rfd_d[i]
+            srets.append(r)
+            nav.append(nav[-1] * (1 + r))
+        bnav = [100.0]
+        for i in range(i0 + 1, n):
+            bnav.append(bnav[-1] * (1 + (IXR[i] or 0.0)))
+        turns = sum(abs(w[i] - w[i - 1]) for i in range(i0 + 1, n))
+        # 타이밍은 첫날부터 '무언가를 한다'(노출 0 도 규칙의 답이다) — 보유시작 지연이 없다.
+        return {"nav": nav, "bnav": bnav, "srets": srets, "turns": turns,
+                "first": i0 + 1, "hold": [], "IXR": IXR,
+                "expo": sum(w[i0:]) / max(1, n - i0), "w_now": w[n - 1]}
+
     def run(S, pool_at, IXR, IXVOL):
         """한 전략을 한 유니버스로 돌린다. pool_at 이 None 이면 제한 없음(소급)."""
         # 🚨 2026-08-11 — 이 파일이 갖고 있던 **두 번째 채점기**(score())를 지웠다.
@@ -1208,7 +1269,10 @@ def main():
     _PRICE_SET = set(PRICE_SIDS)
     _retired = []
     _nohold = {}                 # sid → 사유. 전 구간 무보유는 '측정값' 이 아니다.
-    for sid in [s for s in PRICE_SIDS + FUND_SIDS if s not in EXCLUDED_SIDS]:
+    # 🚨 타이밍 22종을 **같은 표에 넣는다**(2026-08-14). 종전에는 이 목록에 없어서
+    #   "해당 없음" 으로 빠져 있었고, 그 사유가 사실이 아니었다(TIMING_SIDS 머리말).
+    for sid in [s for s in PRICE_SIDS + FUND_SIDS + TIMING_SIDS
+                if s not in EXCLUDED_SIDS]:
         S = BY.get(sid)
         if not S:
             # 🚨 조용히 넘어가지 않는다. 랩 본편에서 은퇴한 규칙은 BY 에 없어 여기서 빠지는데,
@@ -1216,8 +1280,13 @@ def main():
             #   목록에 이름이 남아 있는 한 아무도 안 돈 줄 모른다.
             _retired.append(sid)
             continue
-        _p = run(S, members_at, ixr, ixvol)          # PIT
-        _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
+        if S.get("kind") == "timing":
+            # 타이밍은 종목을 안 고른다 — 노출을 계산하고, 계열만 레그별로 다르다.
+            _p = run_timing(S, _TC_PIT, ixr)         # PIT
+            _b = run_timing(S, _TC_LAB, ixr_lab)     # 같은 창·소급 유니버스
+        else:
+            _p = run(S, members_at, ixr, ixvol)          # PIT
+            _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
         # 🚨 **전 구간 무보유를 결과로 내보내지 않는다**(적대감사 2026-08-12). 한 주도 안 들면
         #   first=None → k=0 → 수익률이 전부 0 이 되고, 그것이 'CAGR 0.00 · 초과 −9.71 · t −1.44'
         #   라는 측정값으로 t_max·편향 중앙값·판정 표에 섞여 들어간다. 실제로 고저가 캐시가 없는
@@ -1261,8 +1330,17 @@ def main():
             "bias_excess": round(B_["excess_cagr"] - P_["excess_cagr"], 2),
             "bias_sharpe": round((B_["metrics"].get("sharpe") or 0)
                                  - (P_["metrics"].get("sharpe") or 0), 3),
-            "holdings": {"kind": "xsec", "as_of": dates[-1],
-                         "n": len(P_["hold"]), "tickers": P_["hold"]},
+            # 타이밍은 '무엇을 들었나' 가 아니라 '얼마나 들었나' 가 구성이다 —
+            # 랩 본편(hold_now)과 같은 모양으로 낸다. 종목 목록을 빈 채로 내보내면
+            # 화면이 '보유 0종' 으로 읽어 규칙이 안 돈 것처럼 보인다.
+            "holdings": ({"kind": "timing", "as_of": dates[-1],
+                          "exposure_now": round(_p["w_now"] * 100, 1),
+                          "note": "노출 %d%%는 그때 지수에 있던 종목 전체를 그 비율로 "
+                                  "보유한다는 뜻이다. 나머지는 무위험(현금)."
+                                  % round(_p["w_now"] * 100)}
+                         if S.get("kind") == "timing" else
+                         {"kind": "xsec", "as_of": dates[-1],
+                          "n": len(P_["hold"]), "tickers": P_["hold"]}),
             # 시점정확 곡선. 소급 곡선(B_)은 싣지 않는다 — 화면에서 걷은 레그다.
             "chart": P_["chart"],
         })
@@ -1339,24 +1417,22 @@ def main():
         #   뺀 것이 함께 들어간다. 뒤쪽은 종전에 0 으로 채워진 측정값으로 실리던 자리다.
         "excluded": dict(EXCLUDED_SIDS, **_nohold),
         "excluded_nohold": dict(_nohold),
-        # 🚨 2026-08-14 — **이 문장이 틀렸었다.** 종전 문구: "타이밍·오버레이 규칙은
-        #   지수·ETF 를 매매하므로 '그때 지수에 있던 종목' 이라는 개념 자체가 없다.
-        #   생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
-        #   실측으로 거짓이다. 랩 타이밍 규칙이 매매하는 것은 지수도 ETF 도 아니라
-        #   **오늘의 518종 동일가중 바스켓**이다(tech_backtest 의 ixr — 그 자리 주석이
-        #   "타이밍 전략이 실제로 매매하는 대상" 이라고 스스로 적어 두었다).
-        #   그 바스켓은 이 랩이 재 놓은 대로 실제 동일가중 S&P 500(RSP)보다 연 +6.58%p
-        #   앞선다 — 즉 타이밍 규칙 22종은 **생존편향이 정면으로 걸리는 자리**이고,
-        #   평균 노출만큼 그 편향을 그대로 태우고 있다.
-        # ⚠ 그러므로 "해당 없음" 이 아니라 **"아직 안 쟀다"** 다. 셋(해당 없음 / 안 쟀다 /
-        #   못 잰다)을 구별하려고 만든 칸에 셋 중 틀린 것을 적어 두었던 셈이다.
-        #   ⚠ 재려면 run() 에 타이밍 분기를 이식해야 한다(지금 run 은 횡단면 전용이다).
-        #     PIT 동일가중 지수는 이미 여기서 만들고 있으므로 재료는 갖춰져 있다.
-        "na_timing": ("🚨 아직 안 쟀다 — '해당 없음' 이 아니다. 랩 타이밍 규칙이 매매하는 것은 "
-                      "지수나 ETF 가 아니라 오늘의 518종 동일가중 바스켓이고(tech_backtest 의 "
-                      "ixr), 그 바스켓은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 즉 "
-                      "생존편향이 정면으로 걸리는 자리이며 평균 노출만큼 그대로 실린다. "
-                      "이 표의 run() 이 횡단면 전용이라 아직 못 돌린 것뿐이다."),
+        # 🚨 2026-08-14 — 이 칸은 두 번 고쳤다. 기록을 남긴다.
+        #   ① 종전 문구: "타이밍·오버레이 규칙은 지수·ETF 를 매매하므로 '그때 지수에 있던
+        #      종목' 이라는 개념 자체가 없다. 생존편향이 걸리는 자리가 아니라서 안 재는
+        #      것이고, 못 재는 것이 아니다." — **거짓이었다.** 타이밍이 매매하는 것은 ixr,
+        #      곧 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다.
+        #   ② 그래서 "아직 안 쟀다" 로 고쳤다가, 같은 날 **실제로 쟀다**(TIMING_SIDS).
+        #      랩의 timing_ctx·timing_weights 를 그대로 부르므로 신호는 한 벌이고,
+        #      레그 차이는 계열을 만든 유니버스뿐이다.
+        # ⚠ 이 칸을 지우지 않고 남긴다 — 화면·문서가 아직 이 키를 읽을 수 있고, 무엇보다
+        #   "해당 없음" 이라고 적혀 있던 기간이 있었다는 사실 자체가 기록할 값어치가 있다.
+        "na_timing": ("타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 "
+                      "'지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 "
+                      "있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 "
+                      "그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 "
+                      "본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 "
+                      "그 계열을 만든 유니버스뿐이다."),
         "limits": ([
             "🚨 커버리지 문턱(%.0f%%) 미달: %s. 이 표의 후보는 그만큼 '오늘까지 살아남은 종목' "
             "쪽으로 좁혀져 있고, 그 방향은 초과수익을 **키우는** 쪽이다. 수치를 인용하기 전에 "
