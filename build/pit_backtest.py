@@ -42,6 +42,15 @@ CACHE = os.path.join(DATA, "_pit_px_cache.json")
 #   형식을 바꾸면 전량 재수집이 필요하고, 그 사이 PIT 이 통째로 못 돈다. 없으면 없는 대로
 #   돌아가고(고가가 필요한 규칙만 빠진다) 받아 두면 그때부터 그 규칙들이 살아난다.
 HLCACHE = os.path.join(DATA, "_pit_hl_cache.json")
+# 🚨 거래량 캐시(2026-08-14). 고가·저가와 **같은 사유로 별 파일**이다.
+#   왜 이제야 만드나: yf.download 응답에 Volume 이 처음부터 같이 왔는데 코드가 Close·High·Low
+#   세 열만 꺼내 쓰고 거래량을 버리고 있었다. 그 한 줄 때문에 거래량 규칙 7종이
+#   (x-volsurge · x-amihud · x-turn · x-turnchg · x-mfi · x-adslope · x-volconc)
+#   "편출 종목 거래량 부재"로 시점정확 검증을 못 받았다 — 새 데이터 소스가 아니라
+#   이미 받아 놓고 안 쓰던 열이다.
+# ⚠ auto_adjust=True 라 분할 조정이 종가와 같은 기준으로 걸린다(거래량도 함께 조정된다).
+#   랩의 vd 규약과 같은 축이다.
+VOLCACHE = os.path.join(DATA, "_pit_vol_cache.json")
 SHCACHE = os.path.join(DATA, "_pit_sh_cache.json")   # 편출 종목의 시점별 주식수(yfinance)
 REUSE = os.path.join(DATA, "pit_reuse.json")         # 티커가 다른 법인에 넘어갔는지(SEC 대조)
 OUT = os.path.join(DATA, "pit_strategies.json")
@@ -98,6 +107,9 @@ PRICE_SIDS = [
              #   매니저가 그때 들고 있던 종목을 그대로 담고 있어 편출 종목도 들어 있다.
              #   ⚠ 결과를 보고 넣은 것이 아니다. 등록과 함께 넣는다.
              "x-guruacc",
+             # 2026-08-14 오후 — 거래량 벽이 풀려(멤버-월 커버 96.91%, 가격과 동일)
+             #   같은 배치의 셋도 여기로 온다. x-volsurge 도 EXCLUDED 에서 나갔다.
+             "x-mfi", "x-turnchg", "x-adslope", "x-volsurge",
              "x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
@@ -181,24 +193,23 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
 EXCLUDED_SIDS = {
-    # 🚨 2026-08-14 수급 축 배치(PREREG-2026-08-14-FLOW) — 거래량 4종이 **같은 벽**에 걸렸다.
-    #   편출 종목 캐시(_pit_px_cache · _pit_hl_cache)에는 종가와 고·저가만 있고 거래량이
-    #   없다(실측: AA 2009-01-02 → px 24.901 · hl [25.58, 23.34], vol 없음).
-    #   ⚠ x-volsurge(2026-08-11) · x-amihud/x-turn(2026-08-12)과 정확히 같은 사유이고,
-    #     그때 기록이 "등록할 때 이 제약을 못 봤다 — 후보 밀도는 월별로 쟀는데 PIT 가능
-    #     여부를 안 쟀다" 였다. **2026-08-14 에 같은 실수를 한 벌 더 했다.** 지우지 않는다.
-    #   → 그래서 넷은 랩 등록 자체를 내렸다(tech_backtest 의 주석 블록 · 세 번째 목록이
-    #     정본이다). 여기 EXCLUDED_SIDS 에는 **안 적는다** — 등록되지 않은 규칙을 적으면
-    #     "랩에 있는데 PIT 을 안 돈다"는 뜻이 되어 이 관문이 재는 것이 달라진다.
-    #   편출 종목 거래량을 받아 오면 넷이 한꺼번에 풀린다.
+    # 🚨 2026-08-14 오후 — **거래량 벽이 풀렸다.** yf.download 응답의 Volume 열을 안 꺼내
+    #   쓰고 있었을 뿐이고, 꺼내 _pit_vol_cache.json 으로 저장하니 PIT 창 멤버-월 커버가
+    #   가격·고저가와 **정확히 같은 96.91%** 가 됐다(36226/37382 · 셋이 같은 수다).
+    #   그래서 x-volsurge 를 여기서 뺀다 — 제외 사유("편출 종목 거래량 부재")가
+    #   사실이 아니게 됐기 때문이다. 남은 3.09% 는 최근 상폐로 yfinance 가 더는 주지
+    #   않는 41종이고, 그 결손은 **가격 규칙도 똑같이** 안고 있다.
+    # ⚠ x-amihud · x-turn 은 여기서 되살리지 않는다. 그 둘이 걷힌 사유는 거래량 부재가
+    #   아니라 **자료 타당성**이었다(거래대금은 미국 상장분인데 가격은 회사 전체를 따라
+    #   움직인다 — 고른 것이 「거래가 어려운 회사」가 아니라 「미국에서 일부만 거래되는
+    #   회사」였다). 벽이 하나 풀렸다고 다른 사유까지 풀린 것처럼 쓰지 않는다.
     # 🚨 2026-08-11 — 여기 13종이 더 있었다. 사유는 둘이었고 **둘 다 사라졌다**:
     #   · '횡단면 사전패스 필요' 7종 — 이 파일이 채점기 사본을 갖고 있어서 2단 규칙을
     #     표현하지 못한 것이었다. 사본을 지우고 랩 함수를 부르니 그대로 돈다.
     #   · '편출 종목 섹터 부재' 3종 — data/pit_sector.json 으로 메웠다(72/72).
-    #   남는 것은 **자료 원천이 생존자만 주는** 넷뿐이다. 이쪽은 코드로 못 푼다.
-    "x-volsurge": "편출 종목 거래량 부재 — 랩 파일(오늘의 유니버스)에만 있어 후보가 100% "
-                  "생존자로 좁혀지는데 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다. "
-                  "편출 종목 거래량을 받아 오면 풀린다.",
+    #   남는 것은 **자료 원천이 생존자만 주는** 것들이었는데, 2026-08-14 에 거래량이
+    #   풀리면서 x-volsurge 도 나갔다(아래 블록). '코드로 못 푼다'가 셋 중 하나는
+    #   틀렸던 셈이다 — 못 푸는 것과 안 푼 것은 다르다.
     # 🚨 2026-08-12 — 사전등록 PREREG-2026-08-12-LIQ-CAL.md 의 두 규칙. x-volsurge 와
     #   **정확히 같은 사유**다(거래량이 오늘의 유니버스에만 있다). 등록할 때 이 제약을
     #   못 봤다 — 후보 밀도는 월별로 쟀는데 PIT 가능 여부를 안 쟀다.
@@ -638,6 +649,66 @@ def load_hilo(need, dates, MEMBER_SPAN=None, which=0, alias=None):
     return hi, n_lab, len(hi) - n_lab
 
 
+def load_vol(need, dates, MEMBER_SPAN=None, alias=None):
+    """티커 → 거래량 배열(dates 와 같은 길이). load_hilo 와 **한 글자도 다르지 않은 규약**이다.
+
+    🚨 2026-08-14 추가. 그 전에는 편출 종목 거래량이 아예 없어서 거래량 규칙 7종
+      (x-volsurge · x-amihud · x-turn · x-turnchg · x-mfi · x-adslope · x-volconc)이
+      EXCLUDED_SIDS 로 빠져 있었다. 자료가 없어서가 아니라 **yf.download 응답의 Volume 열을
+      안 꺼내 쓰고 있었다** — load_hilo 첫머리가 적은 것과 같은 유형이다(HL 캐시는 값을
+      갖고 있었는데 배선이 없었다).
+    ⚠ 꼬리 절단(cutoff_month)과 CIK 승계(alias)를 **여기서도 똑같이** 한다. 한쪽만 하면
+      같은 종목이 규칙마다 다른 이력을 갖고, 그 어긋남은 예외를 안 내고 지나간다.
+    ⚠ 단위는 천주 — 랩 vd 와 같다(fetch_cache 가 1000 으로 나눠 저장한다). 축이 다르면
+      vol_resolved 해상도 게이트가 편출 종목에서만 다르게 물어 후보가 조용히 갈린다.
+    """
+    vl = {}
+    st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    pd_ = st["pxd_dates"]
+    pos = {d: i for i, d in enumerate(dates)}
+    for s_ in st["stocks"]:
+        t = s_["t"]
+        if t not in need:
+            continue
+        fp = os.path.join(DATA, "sd", t + ".json")
+        if not os.path.exists(fp):
+            continue
+        a = json.load(io.open(fp, encoding="utf-8")).get("vd") or []
+        if len(a) != len(pd_):
+            continue
+        arr = [None] * len(dates)
+        for k, d in enumerate(pd_):
+            j = pos.get(d)
+            if j is not None:
+                arr[j] = a[k]
+        vl[t] = arr
+    n_lab = len(vl)
+    if os.path.exists(VOLCACHE):
+        try:
+            vc = json.load(io.open(VOLCACHE, encoding="utf-8"))
+        except Exception:
+            vc = {}
+        reassigned = load_reuse()
+        for t, ser in vc.items():
+            if t not in need or t in vl or not ser:
+                continue
+            cm = cutoff_month(t, MEMBER_SPAN or {}, reassigned)
+            arr = [None] * len(dates)
+            for d, v in ser.items():
+                if cm and d[:7] > cm:
+                    continue
+                j = pos.get(d)
+                if j is not None:
+                    arr[j] = v
+            vl[t] = arr
+    for t, a in (alias or {}).items():
+        if t in vl or a not in vl:
+            continue
+        cm = cutoff_month(t, MEMBER_SPAN or {}, set())
+        vl[t] = [v if (not cm or dates[j][:7] <= cm) else None for j, v in enumerate(vl[a])]
+    return vl, n_lab, len(vl) - n_lab
+
+
 def dump_universe(mem, span, px_map):
     """편출 종목 명단을 data/pit_universe.json 으로 — **러너가 읽는 유일한 경로**.
 
@@ -697,14 +768,19 @@ def main():
     n = len(dates)
     tickers = sorted(px_map)
     px = {t: [px_map[t].get(d) for d in dates] for t in tickers}
-    vlm = {}
-    for t in tickers:                              # 거래량은 랩 파일에만 있다(편출분은 없음)
-        p = os.path.join(DATA, "sd", t + ".json")
-        if os.path.exists(p):
-            v = json.load(io.open(p, encoding="utf-8")).get("vd")
-            vlm[t] = v if isinstance(v, list) and len(v) == n else None
-        else:
-            vlm[t] = None
+    # 거래량 — 랩 유니버스는 data/sd, **편출 종목은 _pit_vol_cache.json**(2026-08-14 추가).
+    # 🚨 종전에는 편출분이 아예 없어서 거래량 규칙 7종이 EXCLUDED 였다. 후보가 100%
+    #   생존자로 좁혀지는데 대조군에는 편출 종목이 들어가 비교가 성립하지 않았기 때문이다.
+    # 🚨 **load_hilo 와 같은 규약으로 잇는다.** 처음에 여기서 캐시를 그냥 읽었더니
+    #   ⓐ 멤버 종료 뒤 꼬리를 안 자르고 ⓑ CIK 승계(BK→BNY · MMC→MRSH)를 안 따라가서,
+    #   PIT 창 멤버-월 커버가 95.8% 에서 멈추고 그 결손 51종이 하필 **지수에서 빠진
+    #   종목들**에 몰렸다(BK 58개월 · MMC 54개월 …). 결손이 편출 쪽에 몰리면 그것이
+    #   바로 이 레그가 없애려던 생존편향이다. 고가·저가가 이미 푼 문제를 다시 풀지 않는다.
+    # ⚠ 두 출처의 단위를 맞춘다 — 랩 vd 는 천주이고 캐시도 천주로 저장한다(fetch_cache).
+    vlm, _v_lab, _v_pit = load_vol(set(px), dates, span, ALIAS)
+    print("  거래량 %d종 (랩 %d + 편출캐시·승계 %d)" % (len(vlm), _v_lab, _v_pit))
+    for t in tickers:
+        vlm.setdefault(t, None)
 
     # ── 시점별 주식수(x-small 용) ──────────────────────────────────────
     # 오늘의 유니버스는 랩이 SEC XBRL 로 이미 갖고 있고(data/fx), 편출 종목만 yfinance 캐시에서.
@@ -1459,6 +1535,7 @@ def fetch_cache():
                   % (len(_nov), ", ".join(_nov[:12]) + (" …" if len(_nov) > 12 else "")))
     out = json.load(io.open(CACHE, encoding="utf-8")) if os.path.exists(CACHE) else {}
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
+    vlout = json.load(io.open(VOLCACHE, encoding="utf-8")) if os.path.exists(VOLCACHE) else {}
     # 🚨 --rebuild 가 필요한 이유. 아래 루프는 '이미 있는 티커는 건너뛴다'가 기본이고
     #   저장도 setdefault 다 — 재수집 시점이 달라 값이 미세하게 흔들리면 그 위에서 잰 PIT
     #   수치가 조용히 바뀌기 때문이다. 그런데 그 보호가 **창을 앞으로 늘릴 때는 정반대로
@@ -1479,8 +1556,13 @@ def fetch_cache():
         #   같은 배치에 얹었더니 **이미 종가가 있는 147종은 아예 안 받아** HL 캐시가 0종으로
         #   남았다(실행은 성공으로 끝났다 — 전형적인 '조용한 미수집'이다).
         #   둘 중 하나라도 없으면 받는다.
+        # 🚨 2026-08-14 — 거래량 캐시를 더하면서 **같은 자리에 vlout 도 넣는다.** 안 넣으면
+        #   이미 종가·고저가가 있는 종목은 배치에서 통째로 빠져 거래량 캐시가 0종으로 남고,
+        #   실행은 성공으로 끝난다 — 08-05 에 HL 이 겪은 그 '조용한 미수집'이 그대로 재현된다.
+        #   조건을 세 벌로 늘리는 것이 이 주석이 경계하던 바로 그 일의 유일한 예방이다.
         ch = want[i:i + 25] if rebuild else [t for t in want[i:i + 25]
-                                             if t not in out or t not in hlout]
+                                             if t not in out or t not in hlout
+                                             or t not in vlout]
         if not ch:
             continue
         try:
@@ -1488,6 +1570,7 @@ def fetch_cache():
                                threads=False)
             d = _raw["Close"]
             _hi, _lo = _raw.get("High"), _raw.get("Low")
+            _vo = _raw.get("Volume")
         except Exception as e:
             # 🚨 여기서 `continue` 만 하면 그 배치의 티커가 아무 버킷에도 안 들어가고, 아래
             #   분류에서 **'진짜 결손'** 으로 보고된다(스로틀링 전량 실패 실측: '결손 116종/
@@ -1507,6 +1590,8 @@ def fetch_cache():
                 _hi = {ch[0]: _hi}
             if _lo is not None and getattr(_lo, "ndim", 2) == 1:
                 _lo = {ch[0]: _lo}
+            if _vo is not None and getattr(_vo, "ndim", 2) == 1:
+                _vo = {ch[0]: _vo}
         for t in ch:
             if t not in d:
                 empty.append(t)
@@ -1528,6 +1613,13 @@ def fetch_cache():
                         _h, _l = _hi[t].dropna(), _lo[t].dropna()
                         hlout[t] = {str(k.date()): [round(float(_h[k]), 4), round(float(_l[k]), 4)]
                                     for k in ser.index if k in _h.index and k in _l.index}
+                    # 거래량 — 랩의 vd 와 같은 **천주** 단위로 맞춘다(랩은 2026-08-04 에
+                    # 백만주 정수에서 천주로 고쳤다. 두 축이 다르면 vol_resolved 해상도
+                    # 게이트가 편출 종목에서만 다르게 물어 후보가 조용히 갈린다).
+                    if _vo is not None and t in _vo:
+                        _v = _vo[t].dropna()
+                        vlout[t] = {str(k.date()): round(float(_v[k]) / 1000.0, 3)
+                                    for k in ser.index if k in _v.index and _v[k] > 0}
                     got += 1
         time.sleep(2)
     json.dump(out, io.open(CACHE, "w", encoding="utf-8"), separators=(",", ":"))
@@ -1582,6 +1674,10 @@ def fetch_cache():
         json.dump(hlout, io.open(HLCACHE, "w", encoding="utf-8"), separators=(",", ":"))
         print("→ %s · %d종 — 이 파일이 있어야 고가·저가 규칙(x-52wh 등)의 PIT 레그가 돈다"
               % (HLCACHE, len(hlout)))
+    if vlout:
+        json.dump(vlout, io.open(VOLCACHE, "w", encoding="utf-8"), separators=(",", ":"))
+        print("→ %s · %d종 — 이 파일이 있어야 거래량 규칙 7종의 PIT 레그가 돈다"
+              % (VOLCACHE, len(vlout)))
 
     # 시점별 주식수 — x-small(시가총액) 을 PIT 로 재려면 필요하다.
     # 오늘의 유니버스는 랩이 SEC XBRL 로 이미 갖고 있고(data/fx), 편출 종목만 여기서 받는다.

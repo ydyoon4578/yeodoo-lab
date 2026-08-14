@@ -293,6 +293,9 @@ def main() -> int:
     # 티커 → GICS 섹터. cik 과 같은 규약으로 **파일에서 읽어 이어 쓴다** — 증분 갱신이
     # 이번 달 것만 담고 나머지를 날리는 사고를 cik_names 에서 이미 한 번 겪었다(아래 주석).
     sect = doc.get("sector") or {}
+    # 티커 → 회사명(그때 표기). cik_names 는 CIK 키라 CIK 열이 없는 NDX 표의 이름을
+    # 담지 못한다 — 그쪽을 위한 자리다. sect 와 같은 규약으로 파일에서 이어 쓴다.
+    tnm = doc.get("name") or {}
     # 지난 실행의 판정. 아래에서 **바닥으로 깐다** — 버리지 않는다(이유는 names 주석).
     prev_hist = doc.get("cik_hist") or {}
     prev_conf = list(doc.get("cik_conflicts") or [])
@@ -313,7 +316,8 @@ def main() -> int:
         for _mk, _r in months.items():
             for _i in ("spx", "ndx"):
                 for _t in (_r.get(_i) or []):
-                    if _t not in sect:
+                    # 섹터든 이름이든 하나라도 없으면 그 티커를 덮개 대상에 넣는다.
+                    if _t not in sect or _t not in tnm:
                         _need.add(_t)
         _pick, _left = [], set(_need)
         while _left:
@@ -327,7 +331,7 @@ def main() -> int:
             _pick.append(_best)
             _left -= (set(months[_best].get("spx") or []) | set(months[_best].get("ndx") or []))
         todo = [(mk, iso) for mk, iso in want if mk in set(_pick)]
-        print("  [섹터] 섹터 없는 티커 %d종 → 다시 받을 달 %d개 (남는 %d종은 그 달들에 없다)"
+        print("  [보충] 섹터·이름 결손 티커 %d종 → 다시 받을 달 %d개 (남는 %d종은 그 달들에 없다)"
               % (len(_need), len(todo), len(_left)))
     # 이번 달은 아직 안 끝났으므로 매번 다시 받는다(리비전이 늘어난다).
     cur = "%04d-%02d" % (today.year, today.month)
@@ -369,11 +373,17 @@ def main() -> int:
             rec[idx] = sorted(tk)
             rec[idx + "_rev"] = meta["rev"]
             for t, (c, nm, sc) in tk.items():
-                # 🚨 섹터는 CIK 유무와 무관하게 담는다. 아래 `if not c: continue` 안에
-                #   두면 CIK 열이 없는 NDX 표에서 섹터가 통째로 사라진다 — 그 조합이
-                #   실제로 이 파일에서 가장 흔한 형태다.
+                # 🚨 섹터·이름은 CIK 유무와 무관하게 담는다. 아래 `if not c: continue` 안에
+                #   두면 CIK 열이 없는 NDX 표에서 통째로 사라진다 — 그 조합이 실제로
+                #   이 파일에서 가장 흔한 형태다.
                 if sc:
                     sect[t] = sc
+                # 🚨 2026-08-14 — 이름이 cik_names(CIK 키) 에만 담겨서, **NDX 표의 회사명이
+                #   파싱은 되고 저장은 안 되고 있었다.** 그래서 지금도 상장 중인 BIDU·JD·
+                #   NTES·VOD 가 편입 원장에서 '이름 없음' 이었다. 티커 키로도 담는다.
+                # ⚠ 덮어쓰지 않는다(setdefault) — 먼저 본 달의 표기가 '그때 이름' 이다.
+                if nm:
+                    tnm.setdefault(t, nm)
                 if not c:
                     continue
                 cik[t] = c
@@ -476,6 +486,8 @@ def main() -> int:
         # yfinance 는 사라진 심볼에 아무것도 안 주고, GICS 자체는 라이선스 자료라
         # 다른 데서 받아올 수 없다. 위키 표는 CC BY-SA 라 재배포가 된다.
         "sector": dict(sorted(sect.items())),
+        # 티커 → 회사명(그때 표기). NDX 표는 CIK 열이 없어 cik_names 로는 못 담는다.
+        "name": dict(sorted(tnm.items())),
     }
     with io.open(OUT, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
