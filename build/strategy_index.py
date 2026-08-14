@@ -33,6 +33,26 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# 논문 참고 — build/strategy_refs.json 을 **리포트와 같은 파일에서** 읽는다.
+# 🚨 사본을 만들지 않는다. 같은 사실을 두 곳에 두면 한쪽만 고쳐진다(이 저장소가
+#   되풀이 밟은 유형이다). 리포트(strategy_report.py)가 이미 이 파일로 논문 표를 그리는데
+#   전략 랩(explorer)만 안 읽고 있었다 — 자료는 있고 그 화면에만 안 실렸다.
+# ⚠ URL 은 지어내지 않는다. 저장소가 가진 링크가 아니면 화면이 **제목으로 학술검색
+#   질의**를 만들어 건다(결정적이고 항상 열린다). 그 규약은 이 파일의 policy 에 적혀 있고
+#   base 주소도 거기서 온다 — 화면에 주소를 박지 않는다.
+def _load_refs():
+    try:
+        return json.load(io.open(os.path.join(ROOT, "build", "strategy_refs.json"),
+                                 encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+REFS = _load_refs()
+REF_PAPERS = REFS.get("papers") or {}
+REF_SEARCH = ((REFS.get("search") or {}).get("base")
+              or "https://scholar.google.com/scholar?q=")
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "strategy_index.json")
 
@@ -784,6 +804,9 @@ def main() -> int:
             sid="t-" + r["sid"], name=r["name"], role=r.get("role") or "미분류",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="종목 전략", rule=r.get("rule"), why=r.get("why"),
+            # 원 논문 — 없으면 **비운다.** 지어 채우면 독자가 원문을 못 찾고 그 사실조차
+            # 모른다(strategy_refs.json 의 policy 가 그 규약이다).
+            papers=REF_PAPERS.get(r["sid"]) or None,
             # 대조군 이름은 파일 머리에 하나로 있다(종목 전략은 전부 같은 대조군을 쓴다).
             # 레코드로 안 옮기면 화면이 '무엇과 겨뤘나'를 못 적는다.
             bench_label=t.get("bench_label"),
@@ -883,6 +906,7 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            papers=REF_PAPERS.get(r.get("sid")) or None,
             # 🚨 원천이 쓴 무위험 창을 그대로 넘긴다(2026-08-13). 안 넘기면 "*"(파일 전체
             #   1981-09~ · 연 3.7%)로 재서, 같은 카드의 대조군 열과 지수 열이 어긋난다.
             #   ⚠ window() 독스트링이 "자산배분은 rf 파일 전체"라 적고 있었는데 **그게 낡았다** —
@@ -1206,6 +1230,11 @@ def main() -> int:
                         "원본 파일은 전부 그대로이고, 다중검정 N 도 줄이지 않는다."
                         % len(_hidden)) if _hidden else None,
         "role_order": ROLE_ORDER, "grade_order": GRADE_ORDER,
+        # 학술검색 base — 화면이 주소를 박지 않게 여기서 실어 보낸다(리포트와 같은 규약).
+        # 🚨 논문 URL 을 직접 적지 않는다. 저장소가 가진 링크가 아니면 **제목으로 질의**를
+        #   만들어 건다 — 결정적이고 항상 열리며, 없는 주소를 지어내지 않는다.
+        "refs_search": REF_SEARCH,
+        "refs_note": (REFS.get("policy") or "")[:400] or None,
         "by_holds": dict(Counter(r["holds"] for r in rows)),
         "by_cmp": {"가능": sum(1 for r in rows if r["cmp_ok"]),
                    "애매": sum(1 for r in rows if not r["cmp_ok"])},
