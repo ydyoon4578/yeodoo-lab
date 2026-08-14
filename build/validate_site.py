@@ -3106,6 +3106,52 @@ try:
 except Exception as _e:
     errors.append("'%%' 누출 검사가 예외로 죽었다 — %s" % _e)
 
+# ── 가격 격자에 구멍이 있는가 ─────────────────────────────────────────
+# 🚨 2026-08-14 실측. data/sd/*.json 의 pxd 에서 세 날이 통째로 비어 있었다 —
+#   2026-07-21·22 각 192종 / 2026-07-31 113종 (전체 518종 중). 17.6년 격자에서 그 셋뿐이고
+#   전후 거래일은 멀쩡했다. yfinance 를 개별로 받으면 그 봉이 **있다** — 원천 공백이
+#   아니라 120종 배치 다운로드가 조용히 행을 빠뜨린 것이다.
+#   그냥 두면 안 되는 이유: **2026-07-31 은 월말이자 주간 리밸런스 날**이라 그날 전
+#   횡단면 전략이 518종이 아니라 405종에서 골랐다. 후보 게이트(30종)는 한참 위라
+#   아무 경고도 안 났다 — 성과가 조용히 78% 유니버스에서 나왔다.
+#   → 날짜별로 '상장 후 결측' 을 세어 임계를 넘으면 막는다. 고치는 법은
+#     build/patch_px_holes.py (None 인 칸만 채운다).
+# ⚠ 상장 전 None 은 결측이 아니다(아직 없는 것이다). 첫 유효값 뒤의 None 만 센다.
+try:
+    _st = json.loads(rd("data/stocks.json"))
+    _dts = _st.get("pxd_dates") or []
+    _sdd = os.path.join(ROOT, "data", "sd")
+    if _dts and os.path.isdir(_sdd):
+        _n = len(_dts)
+        _hole = [0] * _n
+        for _f in os.listdir(_sdd):
+            if not _f.endswith(".json"):
+                continue
+            try:
+                _px = (json.load(io.open(os.path.join(_sdd, _f), encoding="utf-8"))
+                       or {}).get("pxd") or []
+            except Exception:
+                continue
+            _seen = False
+            for _i in range(min(_n, len(_px))):
+                if _px[_i] is not None:
+                    _seen = True
+                elif _seen:
+                    _hole[_i] += 1
+        # 임계 20종 — 정상일의 상장 후 결측은 실측으로 0~1종이다(거래정지·상폐 개별 건).
+        _bad = [(_dts[_i], _hole[_i]) for _i in range(_n) if _hole[_i] >= 20]
+        if _bad:
+            errors.append("가격 격자에 구멍 %d일 — %s. 한 날짜에 20종 넘게 비는 것은 개별 "
+                          "거래정지가 아니라 **수집 실패**다(정상일은 0~1종). 그 날이 리밸런스 "
+                          "날이면 전 전략이 좁아진 유니버스에서 고르는데 후보 게이트는 그 정도로 "
+                          "안 걸린다. build/patch_px_holes.py 로 None 인 칸만 채울 것"
+                          % (len(_bad), " · ".join("%s %d종" % b for b in _bad[:5])))
+        else:
+            print("  ~ 가격 격자 구멍 검사 통과(%d거래일 · 한 날 최대 결측 %d종)"
+                  % (_n, max(_hole) if _hole else 0))
+except Exception as _e:
+    errors.append("가격 격자 구멍 검사가 예외로 죽었다 — %s" % _e)
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
