@@ -1279,6 +1279,199 @@ def hurst(Rt, i, win=STAT_WIN, scales=(8, 16, 32, 64)):
     return sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
 
 
+# ── 사전등록 PREREG-2026-08-15-STATS.md 통계량 여섯 ──────────────────────────
+# 🚨 창·시차는 등록서에서 못박은 값이다. 결과를 보고 바꾸지 않는다 — 바꾸는 순간 그 등록이
+#   전수 시험이 되고, 이 랩은 그 유형의 사고를 이미 겪었다.
+NW_LAG = 5               # 드리프트 t값의 뉴이–웨스트 시차(등록 §2①)
+VR_Q = 5                 # 분산비의 집계 배수(등록 §2②)
+PCA_K = 3                # 제거할 주성분 수(등록 §2③)
+PCA_LOOK = 21            # 잔차 누적 창(등록 §2③)
+PE_EMB = 3               # 순열 엔트로피 임베딩 차원(등록 §2④)
+
+
+# 🚨 x-pcaresid 하나만 numpy 를 쓴다. 리밸마다 500종 × 252일 행렬을 분해해야 하는데
+#   순수 파이썬으로는 리밸 120회 × 수천만 곱셈이라 감당이 안 된다(이 파일의 나머지는
+#   표준 라이브러리로만 돈다는 규약이고, 그 규약을 이 규칙 하나 때문에 깨지 않는다).
+# ⚠ 없으면 **조용히 비지 않는다.** 후보 0 으로 넘어가면 화면에 'CAGR 0.00' 같은 측정값이
+#   실리고, 그건 '나쁘다' 가 아니라 '안 돌았다' 인데 아무도 모른다 — 이 저장소가 실제로
+#   겪은 사고다. 아래 pca_resid 가 사유와 함께 None 을 내고, 규칙은 후보 없음으로 빠지되
+#   run() 이 그 사유를 로그에 크게 남긴다.
+try:
+    import numpy as _np                                              # noqa: N812
+except Exception:                                                    # pragma: no cover
+    _np = None
+_PCA_WARNED = []
+
+
+def pca_resid(i, tickers, R, k=PCA_K, win=STAT_WIN, look=PCA_LOOK, _cache={}):
+    """유니버스 수익 행렬에서 주성분 k개를 뺀 잔차의 최근 look일 누적. 등록 §2③.
+
+    돌려주는 것: {티커: 잔차누적}. **낮은 것**을 산다(반전).
+    ⚠ x-residmom 은 팩터 **대리변수**(FACP) 회귀 잔차다. 이건 자료가 스스로 만든 축을
+      뺀다 — 대리변수가 못 잡는 공통 변동까지 제거하고, 방향도 반대(모멘텀 vs 반전)다.
+    ⚠ 그 시점까지의 자료로만 적합한다(선견 없음). 리밸 시점마다 다시 분해하므로 캐시는
+      **인덱스 i 로** 건다 — 한 리밸에 여러 규칙이 부르면 한 번만 계산한다.
+    """
+    if _np is None:
+        if not _PCA_WARNED:
+            _PCA_WARNED.append(1)
+        return None
+    if i in _cache:
+        return _cache[i]
+    if i < win:
+        return None
+    rows, names = [], []
+    for t in tickers:
+        Rt = R.get(t)
+        if not Rt:
+            continue
+        seg = Rt[i - win + 1:i + 1]
+        if len(seg) != win or sum(1 for v in seg if v is None) > win * (1 - STAT_MINF):
+            continue
+        rows.append([(0.0 if v is None else v) for v in seg])
+        names.append(t)
+    if len(names) < 50:
+        return None
+    X = _np.asarray(rows, dtype=float)
+    X = X - X.mean(axis=1, keepdims=True)          # 종목별 평균 제거
+    # 시간축 그람 행렬(252×252)로 분해한다 — 종목축(500×500)보다 훨씬 작다.
+    try:
+        _u, _s, vt = _np.linalg.svd(X, full_matrices=False)
+    except Exception:
+        return None
+    kk = min(k, vt.shape[0])
+    E = X - (X @ vt[:kk].T) @ vt[:kk]              # 주성분 kk개 제거한 잔차
+    tail = E[:, -look:].sum(axis=1)
+    out = {names[j]: float(tail[j]) for j in range(len(names))}
+    _cache.clear()                                 # 리밸 하나치만 들고 있는다(메모리)
+    _cache[i] = out
+    return out
+
+
+def drift_t(Rt, i, win=STAT_WIN, lag=NW_LAG):
+    """평균 일간수익의 t값 — 표준오차를 **뉴이–웨스트**로 잡는다. 등록 §2① — 높은 것을 산다.
+
+    왜 단순 t 가 아닌가. 일간수익은 자기상관과 이분산이 있어 단순 표준오차가 작게 나온다.
+    그러면 t 가 부풀고, 부푼 정도가 종목마다 달라 **순위 자체가 왜곡된다.**
+    ⚠ 순위 점수로 쓰는 순간 '유의성' 의 뜻은 사라진다(x-lbq 머리말과 같은 경고).
+      그래도 싣는 이유는 그 순위가 크기 기준 모멘텀과 **다른 것을 고르는지**가 질문이라서다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    n = len(xs)
+    m = sum(xs) / n
+    e = [x - m for x in xs]
+    g0 = sum(v * v for v in e) / n
+    if g0 <= 0:
+        return None
+    lrv = g0
+    for L in range(1, min(lag, n - 1) + 1):
+        gl = sum(e[j] * e[j - L] for j in range(L, n)) / n
+        lrv += 2.0 * (1.0 - L / (lag + 1.0)) * gl       # 바틀렛 가중
+    if lrv <= 0:
+        return None
+    return m / math.sqrt(lrv / n)
+
+
+def var_ratio(Rt, i, win=STAT_WIN, q=VR_Q):
+    """분산비 VR(q) = Var(q일 합) / (q · Var(1일)). 등록 §2② — **낮은 것**을 산다.
+
+    1 이면 무작위보행, <1 이면 평균회귀, >1 이면 추세.
+    ⚠ x-hurst 도 추세/회귀를 재지만 R/S 통계량이다. VR 은 **분산의 시간 스케일링**이라
+      단기 시차에 민감하고, 같은 계열에서 둘이 다른 답을 내는 일이 흔하다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs or len(xs) < q * 4:
+        return None
+    n = len(xs)
+    m = sum(xs) / n
+    v1 = sum((x - m) ** 2 for x in xs) / (n - 1)
+    if v1 <= 0:
+        return None
+    agg = [sum(xs[j:j + q]) for j in range(0, n - q + 1)]
+    ma = sum(agg) / len(agg)
+    vq = sum((a - ma) ** 2 for a in agg) / (len(agg) - 1)
+    return vq / (q * v1)
+
+
+def perm_entropy(Rt, i, win=STAT_WIN, emb=PE_EMB):
+    """순열 엔트로피 — 이웃한 emb 개 값의 **순서 패턴** 분포의 정규화 엔트로피.
+
+    등록 §2④ — **낮은 것**을 산다(패턴이 규칙적이다).
+    ⚠ 자기상관·허스트는 **선형** 의존을 본다. 이건 순서의 비선형 규칙성이라, 자기상관이
+      0 인데 엔트로피가 낮은 계열이 실제로 있다 — 그 점이 새 축이라고 보는 근거다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs or len(xs) < emb + 10:
+        return None
+    cnt = {}
+    for j in range(len(xs) - emb + 1):
+        seg = xs[j:j + emb]
+        pat = tuple(sorted(range(emb), key=lambda k: seg[k]))
+        cnt[pat] = cnt.get(pat, 0) + 1
+    tot = sum(cnt.values())
+    if tot <= 1:
+        return None
+    h = -sum((c / tot) * math.log(c / tot) for c in cnt.values())
+    hmax = math.log(math.factorial(emb))
+    return (h / hmax) if hmax > 0 else None
+
+
+def cusum_stat(Rt, i, win=STAT_WIN):
+    """구조변화 CUSUM — 표준화 수익 누적합의 최대 절대값 ÷ √n. 등록 §2⑤.
+
+    **낮은 것**을 산다(= 최근 1년에 수익 생성과정이 가장 덜 바뀌었다).
+    ⚠ 변동성 규칙들은 **수준**을 보지 **변화**를 안 본다. 이 랩에 '그 종목의 과정이
+      바뀌었나' 를 묻는 규칙이 없었다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs:
+        return None
+    n = len(xs)
+    m = sum(xs) / n
+    sd = (sum((x - m) ** 2 for x in xs) / (n - 1)) ** 0.5
+    if sd <= 0:
+        return None
+    acc, mx = 0.0, 0.0
+    for x in xs:
+        acc += (x - m) / sd
+        mx = max(mx, abs(acc))
+    return mx / math.sqrt(n)
+
+
+def ecm_gap(Rt, i, IXR, win=STAT_WIN):
+    """지수 대비 오차수정 괴리 — 로그가격을 지수 로그가격에 회귀한 잔차. 등록 §2⑥.
+
+    **낮은 것**(장기 관계 대비 저평가)을 산다.
+    ⚠ 가격 수준이 아니라 **누적 로그수익**으로 만든다 — 창 안에서만 비교하므로 기준점이
+      상쇄되고, 액면분할 같은 수준 사건에 흔들리지 않는다.
+    ⚠ 페어 규칙(pairs_backtest)은 종목쌍 공적분이고 이건 종목–지수 관계다.
+    """
+    xs = _rwin(Rt, i, win)
+    if not xs or i < win:
+        return None
+    ys, zs, a, b = [], [], 0.0, 0.0
+    for j in range(i - win + 1, i + 1):
+        rj, ij = Rt[j], (IXR[j] if j < len(IXR) else None)
+        if rj is None or ij is None:
+            continue
+        a += rj; b += ij
+        ys.append(a); zs.append(b)
+    n = len(ys)
+    if n < win * STAT_MINF:
+        return None
+    mz = sum(zs) / n; my = sum(ys) / n
+    szz = sum((z - mz) ** 2 for z in zs)
+    if szz <= 0:
+        return None
+    beta = sum((zs[k] - mz) * (ys[k] - my) for k in range(n)) / szz
+    alpha = my - beta * mz
+    resid = ys[-1] - (alpha + beta * zs[-1])
+    sd = (sum((ys[k] - alpha - beta * zs[k]) ** 2 for k in range(n)) / max(1, n - 2)) ** 0.5
+    return (resid / sd) if sd > 0 else None
+
+
 def runs_z(Rt, i, win=STAT_WIN):
     """런 검정 z. 사전등록 §2 — **낮은 것**을 산다(런이 적다 = 같은 부호가 뭉친다).
 
@@ -3665,6 +3858,56 @@ def build_strats():
          "⚠ 다만 Q 는 부호를 안 가린다 — 양의 자기상관도 음의 자기상관도 Q 를 올린다. "
          "그래서 x-acorr 와 같은 것을 재는 규칙이 아니고, 그 점이 이 규칙이 묻는 것이다. "
          "⚠ 원래 검정 통계량이지 순위 점수가 아니다. 순위로 쓰는 순간 '유의성' 의 뜻은 사라진다.")
+    # ── 사전등록 PREREG-2026-08-15-STATS.md 여섯 ────────────────────────────
+    # 🚨 이 배치는 기존 통계 규칙 30종이 **안 쓰는** 통계량만 고른 것이다. 등록서 §1 에
+    #   무엇이 이미 덮여 있는지 표로 적어 뒀다 — 겹치는 것을 또 만들면 전략 수만 늘고
+    #   아는 것은 안 는다.
+    xsec("x-drift-t", "드리프트 t값 상위 %d (뉴이–웨스트)" % TOPN,
+         "평균 일간수익을 뉴이–웨스트(시차 %d) 표준오차로 나눈 t값이 가장 큰 %d종목 "
+         "동일가중, 월말 리밸런스." % (NW_LAG, TOPN),
+         None,
+         "이 랩의 모멘텀 규칙은 전부 수익의 «크기»로 줄을 세운다. 이건 추세의 "
+         "«통계적 유의성»으로 세운다 — 같은 12%라도 흔들리며 온 것과 꾸준히 온 것을 가른다. "
+         "⚠ x-mommvol(변동성 조정 모멘텀)과 가까워 보이지만 그쪽은 단순 수익÷변동성이고 "
+         "이쪽은 자기상관을 보정한 표준오차를 쓴다. "
+         "⚠ t값을 순위 점수로 쓰는 순간 '유의성' 의 뜻은 사라진다 — 그래도 싣는 이유는 "
+         "그 순위가 크기 기준과 «다른 것을 고르는지»가 이 검정의 질문이기 때문이다.")
+    xsec("x-varratio", "분산비 최하위 %d (VR %d일)" % (TOPN, VR_Q),
+         "%d일 수익 분산 ÷ (%d × 1일 수익 분산)이 가장 작은 %d종목 동일가중, 월말 리밸런스."
+         % (VR_Q, VR_Q, TOPN),
+         None,
+         "1이면 무작위보행, 1보다 작으면 평균회귀다. 가장 작은 쪽(회귀가 강한 쪽)을 산다. "
+         "⚠ x-hurst 도 추세/회귀를 재지만 R/S 통계량이다. VR 은 «분산의 시간 스케일링»이라 "
+         "단기 시차에 민감하고, 같은 계열에서 둘이 다른 답을 내는 일이 흔하다.")
+    xsec("x-pcaresid", "주성분 잔차 반전 최하위 %d (PC %d개 제거)" % (TOPN, PCA_K),
+         "유니버스 수익 행렬에서 주성분 %d개를 뺀 잔차의 최근 %d일 누적이 가장 낮은 "
+         "%d종목 동일가중, 월말 리밸런스." % (PCA_K, PCA_LOOK, TOPN),
+         None,
+         "x-residmom 은 팩터 «대리변수»(시장·규모·가치 프록시) 회귀 잔차다. 이건 자료가 "
+         "스스로 만든 축(주성분)을 뺀다 — 대리변수가 못 잡는 공통 변동까지 제거한다. "
+         "방향도 반대다(residmom 은 모멘텀, 이건 반전). "
+         "⚠ 그 시점까지의 자료로만 적합한다(선견 없음).")
+    xsec("x-permen", "순열 엔트로피 최하위 %d (임베딩 %d)" % (TOPN, PE_EMB),
+         "이웃한 %d개 수익의 순서 패턴 분포로 잰 정규화 엔트로피가 가장 낮은 %d종목 "
+         "동일가중, 월말 리밸런스." % (PE_EMB, TOPN),
+         None,
+         "자기상관·허스트는 «선형» 의존을 본다. 순열 엔트로피는 순서 패턴의 «비선형» "
+         "규칙성을 본다 — 자기상관이 0인데 엔트로피가 낮은 계열이 실제로 있다. "
+         "⚠ 낮다 = 패턴이 규칙적이다. 그것이 수익으로 이어지는지는 이 검정이 묻는 것이다.")
+    xsec("x-cusum", "구조변화 없음 상위 %d (CUSUM 최하위)" % TOPN,
+         "표준화 수익 누적합의 최대 절대값(÷√n)이 가장 작은 %d종목 동일가중, 월말 리밸런스."
+         % TOPN,
+         None,
+         "최근 1년에 수익 생성과정이 가장 덜 바뀐 종목이다. "
+         "⚠ 이 랩의 변동성 규칙들은 «수준»을 보지 «변화»를 안 본다 — "
+         "'그 종목의 과정이 바뀌었나' 를 묻는 규칙이 없었다.")
+    xsec("x-ecm", "지수 대비 오차수정 괴리 최하위 %d" % TOPN,
+         "누적 로그수익을 지수 누적 로그수익에 회귀한 장기 관계의 잔차가 가장 음(저평가)인 "
+         "%d종목 동일가중, 월말 리밸런스." % TOPN,
+         None,
+         "페어 규칙(pairs_backtest)은 «종목쌍» 공적분이고 이건 종목–지수 관계다. "
+         "⚠ 가격 수준이 아니라 누적 로그수익으로 만든다 — 창 안에서만 비교하므로 기준점이 "
+         "상쇄되고 액면분할 같은 수준 사건에 안 흔들린다.")
     xsec("x-archlm", "변동성 군집 최하위 %d (%d시차)" % (TOPN, ARCH_LAGS),
          "제곱수익의 시차 %d개 자기상관으로 잰 변동성 군집이 가장 약한 %d종목 동일가중, "
          "월말 리밸런스." % (ARCH_LAGS, TOPN),
@@ -5101,6 +5344,25 @@ def xsec_score_at(S, i, X, pool=None):
                     bd, bu = _beta(dn), _beta(up)
                     den = (abs(bd) + abs(bu)) if (bd is not None and bu is not None) else None
                     v = ((bd - bu) / den) if (den and den >= 0.2) else None
+        elif sid == "x-drift-t":
+            v = drift_t(R[t], i - 1)
+        elif sid == "x-varratio":
+            _v = var_ratio(R[t], i - 1)
+            v = (-_v) if _v is not None else None       # 최하위 → 부호 반전
+        elif sid == "x-permen":
+            _p = perm_entropy(R[t], i - 1)
+            v = (-_p) if _p is not None else None       # 최하위 → 부호 반전
+        elif sid == "x-cusum":
+            _c = cusum_stat(R[t], i - 1)
+            v = (-_c) if _c is not None else None       # 최하위 → 부호 반전
+        elif sid == "x-ecm":
+            _e = ecm_gap(R[t], i - 1, X["ixr"])
+            v = (-_e) if _e is not None else None       # 최하위(저평가) → 부호 반전
+        elif sid == "x-pcaresid":
+            # 횡단면 통계라 종목 하나만 보고는 못 만든다 — 리밸 시점 전체를 한 번에 푼다.
+            _pr = pca_resid(i - 1, X["tickers"], R)
+            _q = _pr.get(t) if _pr else None
+            v = (-_q) if _q is not None else None       # 최하위(반전) → 부호 반전
         elif sid == "x-dist200":
             m = sma(P, i - 1, 200)
             v = (P[i - 1] / m - 1) if (m and P[i - 1]) else None
