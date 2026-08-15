@@ -7220,7 +7220,14 @@ def run():
                  " · ".join("%s %d" % (k, v) for k, v in _tp)))
     else:
         print("이중클래스 배제: 0회 — data/cik_map.json 이 없거나 겹친 적이 없다")
-    print("다중검정 임계 |t| ≥ %.2f (본페로니 α=0.05/%d)" % (tcrit, N))
+    # 🚨 2026-08-15 — 이 줄이 **BONFERRONI 가 꺼져 있어도 "본페로니" 라고 찍고 있었다.**
+    #   보정이 꺼진 지금 tcrit 은 T_CRIT_PLAIN(2.0) 이고 α 는 0.05 다 — 114 로 나눈 적이
+    #   없는데 "α=0.05/114" 라고 적혀 나갔다. 로그만 보면 보정을 한 줄 안다.
+    #   (실제로 이 로그를 읽고 "게시 기준 본페로니 2.00" 이라고 잘못 옮긴 일이 있었다.)
+    print("다중검정 임계 |t| ≥ %.2f (%s)"
+          % (tcrit, ("본페로니 α=0.05/%d" % N) if BONFERRONI
+             else "보정 끔 — 검정 하나 관례값. 이 표본에서 돌린 %d개를 보정하면 |t| ≥ %.2f 가 된다"
+                  % (N, z_of(0.05 / max(1, N)))))
     import collections as _c
     print("판정:", dict(_c.Counter(r["verdict"] for r in out)))
     print("전략 %d개 · %s ~ %s (%d거래일) · %d종목 · %.0fKB"

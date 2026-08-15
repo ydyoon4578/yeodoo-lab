@@ -473,6 +473,31 @@ def mdd_ix_of(dates, nav):
     return out if ("spx" in out or "ndx" in out) else None
 
 
+_K4 = None
+
+
+def _k4_of(name):
+    """국면 라벨 재배열 검정 결과(data/regime_k4.json)를 그 전략에 붙인다.
+
+    🚨 화면이 이름으로 다시 맞추지 않게 **여기서** 붙인다. 화면이 맞추면 이름이 한 글자
+      바뀌는 날 조용히 안 붙고, 그 사실이 아무 데도 안 남는다.
+    ⚠ 이것은 성적 판정이 아니다 — '광고하는 기전이 작동하는가'를 잰 것이다. 등급이 낮아도
+      CAGR 은 높을 수 있고, 그때 버는 것은 국면이 아니라 배분·자산 선택이다.
+    ⚠ 한 번 잰 값이다(2026-08-15). 재계산이 비싸(전략당 재배열 1000회) 매 빌드에 안 돈다.
+      그래서 파일에 measured_at 을 박아 두고 화면이 그 날짜를 함께 적는다.
+    """
+    global _K4
+    if _K4 is None:
+        d = load("regime_k4.json") or {}
+        _K4 = {x["name"]: x for x in (d.get("items") or [])}
+        _K4["__meta__"] = {k: d.get(k) for k in ("measured_at", "n_shuffle", "protocol",
+                                                 "grade_note", "window")}
+    x = _K4.get(name)
+    if not x or not x.get("grade"):
+        return None
+    return dict(x, **{k: v for k, v in (_K4.get("__meta__") or {}).items() if v})
+
+
 def _pit_dist():
     """게시 중이면서 시점정확(PIT) 레그를 받은 규칙의 **생존편향 분포**.
 
@@ -683,6 +708,10 @@ def rec(**kw):
     for key in ("nav", "bnav"):
         if kw.get(key):
             kw[key] = thin(kw[key])
+    # 국면 라벨 재배열 검정 — 해당되는 전략에만 붙는다(2026-08-15 감사).
+    _k4 = _k4_of(kw.get("name") or "")
+    if _k4:
+        kw["k4"] = _k4
     kw.setdefault("role", "미분류")
     kw.setdefault("grade", "판정 불가")
     # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
