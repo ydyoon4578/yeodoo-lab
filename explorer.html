@@ -281,6 +281,12 @@
                    padding:7px 10px 6px;border-left:3px solid var(--line)}
   .labperf .legttl.legpit{color:var(--gA);border-left-color:var(--gA)}
   .labperf .legttl.legretro{color:var(--muted);border-left-color:var(--line);margin-top:10px}
+  /* 국면 기전 검정(K4) — 레그 이름표와 같은 꼴로 그 아래 한 줄. 색은 등급이 아니라
+     **읽는 방향**이다: 초록은 "국면이 일한다", 빨강은 "섞는 게 낫다".
+     ⚠ 성적색과 헷갈리지 않게 배경을 깔지 않는다. 이 랩에서 성적은 색을 안 쓴다. */
+  .labperf .legttl.k4a{color:var(--gA);border-left-color:var(--gA);margin-top:6px}
+  .labperf .legttl.k4b{color:var(--gC);border-left-color:var(--gC);margin-top:6px}
+  .labperf .legttl.k4c{color:var(--hot);border-left-color:var(--hot);margin-top:6px}
   /* .legsame(같은 창 소급)은 2026-08-14 에 화면에서 걷었다 — 규칙도 같이 지운다.
      쓰는 곳 없는 규칙을 남겨 두면 다음 사람이 '아직 그리는 줄이 있나' 하고 찾게 된다. */
   .selfperf{padding:15px 18px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
@@ -1336,7 +1342,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _reb:x.reb_label||null,
             // 원 논문 — build/strategy_refs.json 에서 온다. 없으면 null 이고 카드는
             // 그 줄을 아예 안 그린다(없는 것을 지어 채우지 않는다).
-            _papers:x.papers||null
+            _papers:x.papers||null,
+            // 국면 라벨 재배열 검정(2026-08-15 감사 · data/regime_k4.json). 국면 전략에만 붙는다.
+            //   🚨 이것은 성적이 아니라 **기전 검정**이다 — '광고하는 대로 국면이 일을 하는가'.
+            //   빌더가 전략마다 붙여 보낸다(strategy_index._k4_of). 화면이 이름으로 다시
+            //   맞추지 않는다 — 맞추면 이름 한 글자 바뀌는 날 조용히 안 붙는다.
+            _k4:x.k4||null
           };
           // 위험 축 — 수익 축(등급)과 **다른 질문**에 답한다. 등급은 '더 벌었나'이고
           // 이쪽은 '덜 깨졌나'다. 타이밍 규칙은 설계상 수익을 내주고 위험을 사므로
@@ -2929,7 +2940,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
               (_naWhy?' · '+esc(_naWhy):'')+'</div>')
             :('<div class="legttl legretro">🚨 소급 — <b>오늘의 유니버스를 과거로</b>'+
               ' · 시점정확 레그가 없다'+(_naWhy?': '+esc(_naWhy):'')+'</div>'))));
-      var perf='<div class="labperf">'+_legTtl+
+      // 🚨 국면 라벨 재배열 검정(2026-08-15 감사 · AUDIT-2026-08-14-REGIME-K4).
+      //   국면 전략에만 붙는다. **성적이 아니라 기전 검정**이다 — 그 전략의 월별 비중
+      //   계열을 구간으로 자르고 순서만 섞어(길이 보존) 다시 돌린 뒤, 실제 초과가 그
+      //   분포 어디에 있는지 본다. 섞은 쪽이 더 나으면 국면 판별이 일을 안 한 것이다.
+      //   ⚠ 등급이 낮아도 CAGR 은 높을 수 있다. 그때 버는 것은 국면이 아니라 배분이다.
+      //   ⚠ 한 번 잰 값이라 날짜를 함께 적는다(재계산이 전략당 1000회라 매 빌드에 안 돈다).
+      var K4=d._k4, _k4h='';
+      if(K4&&K4.grade){
+        var _g={'강함':'k4a','유의':'k4a','미약':'k4b','무의미':'k4c'}[K4.grade]||'k4b';
+        var _em={'강함':'🟢','유의':'✅','미약':'🟠','무의미':'🔴'}[K4.grade]||'';
+        _k4h='<div class="legttl '+_g+'" title="'+esc(
+              '국면 라벨을 구간 길이를 보존한 채 '+(K4.n_shuffle||1000)+'회 무작위 재배열하고 '+
+              '같은 엔진으로 다시 돌린 분포다. 실제 초과 '+K4.real+'%p 는 그 분포의 상위 '+
+              K4.top_pct+'%(중앙 '+K4.median+'%p · 95번째 '+K4.p95+'%p)에 있다. '+
+              '구간 '+K4.nseg+'개 · 측정 '+(K4.measured_at||'')+' · '+(K4.window||'')+'. '+
+              '성적 판정이 아니라 기전 검정이다 — 등급이 낮아도 CAGR 은 높을 수 있고, '+
+              '그때 버는 것은 국면이 아니라 배분·자산 선택이다.')+'">'+
+              _em+' 국면 기전 '+esc(K4.grade)+
+              ' <span style="font-weight:400;text-transform:none;letter-spacing:0">· 라벨을 '+
+              '무작위로 섞으면 초과 중앙 '+(K4.median>0?'+':'')+K4.median+'%p'+
+              ' vs 실제 '+(K4.real>0?'+':'')+K4.real+'%p (상위 '+K4.top_pct+'%)</span></div>';
+      }
+      var perf='<div class="labperf">'+_legTtl+_k4h+
         '<div class="lpg">'+
           '<div><span>구간</span><b>'+esc((_pst||'').slice(0,7)+'~'+(_pen||'').slice(0,7))+
             (spanTxt(_pst,_pen)?' <span style="font-weight:400;color:var(--muted)">'+spanTxt(_pst,_pen)+'</span>':'')+'</b></div>'+
