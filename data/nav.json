@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "075779adcb16d4b6",
+ "generated_from": "f235b8dd785ba87f",
  "categories": [
   {
    "name": "시장",
@@ -83,16 +83,6 @@
      "verdict": "rejected",
      "src": "model",
      "effort": "M",
-     "live": true
-    },
-    {
-     "name": "Williams %R",
-     "file": "williams.html",
-     "status": "existing",
-     "desc": "과매도·과매수 두 신호의 17년 성적과 오늘 발동 종목 — 사는 쪽은 근거가 약하고 피하는 쪽이 일관된다",
-     "verdict": "marginal",
-     "src": "model",
-     "effort": "S",
      "live": true
     }
    ]
@@ -393,6 +383,16 @@
    "retired_on": "2026-08-16",
    "why": "사용자 지시 — 사실상 종목 정보 안에 있는 것이라 상위 메뉴에 또 둘 이유가 없었다. 실적·재무·IR·내부자도 같은 사유로 '종목 정보' 한 칸으로 접었다.",
    "principle": "한 화면은 한 자리에서만 들어간다."
+  },
+  {
+   "name": "Williams %R",
+   "cat": "종목",
+   "was_file": "williams.html",
+   "desc": "메뉴에서 뺐다 — 페이지는 살아 있다(URL 직접 접근 가능)",
+   "retired_on": "2026-08-16",
+   "why": "사용자: \"신호가 너무 많아서 못 쓰겠다\". 실측 그대로다 — 과매도 122종·과매수 274종으로 518종 중 396종(76%)이 어느 한쪽에 걸린다. 그만큼 걸리면 거르는 일을 안 하는 것과 같다.",
+   "principle": "페이지를 지우지는 않는다. 매수 쪽 중앙값 −0.079%·승률 49.5%, 매도 쪽 t −3.15 라는 17년 실측이 이 랩의 기록이고, 메뉴에서 뺐다고 그 기록을 지울 이유는 없다. 안 되는 것을 재서 안 된다고 적은 자리를 남기는 것이 이 랩의 규약이다.",
+   "replaced_by": "stocks.html 의 스윙 타점(▲저점매수·▼고점매도) — 147종·64종으로 훨씬 좁게 걸린다."
   }
  ]
 }

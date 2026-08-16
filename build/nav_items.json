@@ -1,386 +1,387 @@
 {
- "note": "내비 정본. build/sync_nav.py가 이 파일만 읽어 nav_block.html을 만들고 전 HTML의 NAV:BEGIN~END를 치환한다. 여기 외의 곳에서 메뉴를 손으로 고치지 말 것 — CI가 해시로 막는다. ⚠ 2026-08-16 사용자 지시로 공통 보유종목·운용사 복제 진단·복제 리포트를 이 메뉴에서 걷었다 — 공통 보유종목은 거장 포트폴리오 안에 탭으로 있고, 나머지 둘은 페이지가 그대로 남아 있다(푸터·직접 주소). 링크만 뺀 것이지 지운 것이 아니다.",
- "axis_note": "src=출처(raw 원문/agg 집계/model 모델/est 추정/ext 외부). verdict=판정(pass/marginal/unverified/rejected/na). 메뉴 배지는 verdict만 표시하고 verdicts.json과 대조된다.",
- "categories": [
-  {
-   "name": "시장",
-   "slug": "market",
-   "short": "시장",
-   "tools": [
+  "note": "내비 정본. build/sync_nav.py가 이 파일만 읽어 nav_block.html을 만들고 전 HTML의 NAV:BEGIN~END를 치환한다. 여기 외의 곳에서 메뉴를 손으로 고치지 말 것 — CI가 해시로 막는다. ⚠ 2026-08-16 사용자 지시로 공통 보유종목·운용사 복제 진단·복제 리포트를 이 메뉴에서 걷었다 — 공통 보유종목은 거장 포트폴리오 안에 탭으로 있고, 나머지 둘은 페이지가 그대로 남아 있다(푸터·직접 주소). 링크만 뺀 것이지 지운 것이 아니다.",
+  "axis_note": "src=출처(raw 원문/agg 집계/model 모델/est 추정/ext 외부). verdict=판정(pass/marginal/unverified/rejected/na). 메뉴 배지는 verdict만 표시하고 verdicts.json과 대조된다.",
+  "categories": [
     {
-     "name": "8-K 공시 피드",
-     "file": "filings.html",
-     "status": "existing",
-     "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
+      "name": "시장",
+      "slug": "market",
+      "short": "시장",
+      "tools": [
+        {
+          "name": "8-K 공시 피드",
+          "file": "filings.html",
+          "status": "existing",
+          "desc": "기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "시장 국면",
+          "file": "regime.html",
+          "status": "existing",
+          "desc": "FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일",
+          "src": "model",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "경제지표",
+          "file": "macro.html",
+          "status": "existing",
+          "desc": "FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "발표 일정",
+          "file": "calendar.html#macro",
+          "status": "existing",
+          "desc": "이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M",
+          "anchor": "static"
+        }
+      ]
     },
     {
-     "name": "시장 국면",
-     "file": "regime.html",
-     "status": "existing",
-     "desc": "FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일",
-     "src": "model",
-     "verdict": "unverified",
-     "effort": "S"
+      "name": "종목",
+      "slug": "stocks",
+      "short": "종목",
+      "tools": [
+        {
+          "name": "종목 신호",
+          "file": "stocks.html",
+          "status": "existing",
+          "desc": "518종목 테크니컬 22지표·컴포짓·타이밍",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "종목 정보",
+          "file": "co.html",
+          "status": "existing",
+          "desc": "실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)",
+          "src": "agg",
+          "verdict": "unverified",
+          "effort": "M"
+        },
+        {
+          "name": "지표별 타이밍",
+          "file": "signals.html",
+          "status": "existing",
+          "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
+          "src": "model",
+          "verdict": "rejected",
+          "effort": "M"
+        }
+      ]
     },
     {
-     "name": "경제지표",
-     "file": "macro.html",
-     "status": "existing",
-     "desc": "FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
+      "name": "전략",
+      "slug": "strategy",
+      "short": "전략",
+      "tools": [
+        {
+          "name": "전략 랩",
+          "file": "explorer.html",
+          "status": "existing",
+          "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
+          "src": "model",
+          "verdict": "pass",
+          "effort": "S"
+        },
+        {
+          "name": "스타일 전략",
+          "file": "style.html",
+          "status": "existing",
+          "desc": "공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과",
+          "src": "model",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "거장 포트폴리오·매매",
+          "file": "guru.html",
+          "status": "existing",
+          "desc": "13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "L"
+        },
+        {
+          "name": "전략 탐색 풀",
+          "file": "rotation.html",
+          "status": "existing",
+          "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
+          "src": "ext",
+          "verdict": "unverified",
+          "effort": "S"
+        },
+        {
+          "name": "내 포트폴리오",
+          "file": "portfolio.html",
+          "status": "existing",
+          "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "L"
+        }
+      ]
     },
     {
-     "name": "발표 일정",
-     "file": "calendar.html#macro",
-     "status": "existing",
-     "desc": "이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M",
-     "anchor": "static"
+      "name": "랩 원장",
+      "slug": "ledger",
+      "short": "원장",
+      "tools": [
+        {
+          "name": "등급·판정 규약",
+          "file": "method.html",
+          "status": "existing",
+          "desc": "A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다",
+          "src": "none",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "지수 편입 원장",
+          "file": "constituents.html",
+          "status": "existing",
+          "desc": "S&P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
+          "name": "갱신 기록",
+          "file": "updates.html",
+          "status": "existing",
+          "desc": "자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "S"
+        },
+        {
+          "name": "데이터 출처·기준일",
+          "file": "sources.html",
+          "status": "existing",
+          "desc": "축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M",
+          "locked": true
+        },
+        {
+          "name": "OK",
+          "file": "ok.html",
+          "status": "existing",
+          "desc": "개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금",
+          "src": "none",
+          "verdict": "na",
+          "effort": "S",
+          "locked": true
+        }
+      ]
     }
-   ]
-  },
-  {
-   "name": "종목",
-   "slug": "stocks",
-   "short": "종목",
-   "tools": [
+  ],
+  "status_note": "new-now=이번에 만든다 / existing=기존 / new-later=다음 / needs-source=소스 대기 / wont-build=만들지 않기로 확정(사유는 roadmap.html)",
+  "grade_note": "A~F 등급은 종목·지표 화면에서 섹터 내 백분위를 나타내는 서술적 표기다. 수익 예측 등급이 아니며, 메뉴의 판정 배지(verdict)와는 별개 축이다.",
+  "locked_note": "locked=true면 메뉴 이름 옆에 🔒를 붙인다. 잠금 여부는 페이지의 AES 게이트 유무로 판정하며 build/validate_site.py가 대조한다.",
+  "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
+  "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
+  "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
+  "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 메뉴 슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
+  "retired": [
     {
-     "name": "종목 신호",
-     "file": "stocks.html",
-     "status": "existing",
-     "desc": "518종목 테크니컬 22지표·컴포짓·타이밍",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "S"
+      "name": "실시간 내러티브",
+      "cat": "공시룸 (뉴스룸)",
+      "was_file": "sources.html#narrative",
+      "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
+      "retired_on": "2026-07-25",
+      "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
+      "principle": "LLM으로 요약해 채우는 길은 있지만, 이 랩의 \"해설을 붙이지 않는다\" 원칙과 정면으로 충돌한다. 원칙을 꺾느니 칸을 뺀다.",
+      "paid_path": "유료 라이선스 피드(Dow Jones·Benzinga·Refinitiv) 계약. 연 단위 비용이 든다.",
+      "replaced_by": "filings.html — 8-K 원문 피드. 회사가 스스로 단 Item 코드로 분류하고 해설을 붙이지 않는다."
     },
     {
-     "name": "종목 정보",
-     "file": "co.html",
-     "status": "existing",
-     "desc": "실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)",
-     "src": "agg",
-     "verdict": "unverified",
-     "effort": "M"
+      "name": "프리미엄 뉴스",
+      "cat": "공시룸 (뉴스룸)",
+      "was_file": "sources.html#news",
+      "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
+      "retired_on": "2026-07-25",
+      "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
+      "principle": "유료 뉴스를 사더라도 요약 없이 링크만 나열하면 EDGAR 원문 링크와 다를 바가 없다.",
+      "paid_path": "위와 동일.",
+      "replaced_by": "co.html#ir — 회사별 EDGAR 제출 원문 링크."
     },
     {
-     "name": "지표별 타이밍",
-     "file": "signals.html",
-     "status": "existing",
-     "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
-     "src": "model",
-     "verdict": "rejected",
-     "effort": "M"
+      "name": "밸류체인",
+      "cat": "산업 분석",
+      "was_file": "sources.html#value-chain",
+      "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
+      "retired_on": "2026-07-25",
+      "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
+      "principle": "유일한 구조화 실마리였던 고객집중도 공시(ASC 280, 매출 10% 이상 고객)는 XBRL 차원(dimension)에 실려 있어 companyfacts API로는 나오지 않는다 — AAPL·NVDA·AVGO·WDC 실측에서 집중도 태그 0개(2026-07-25). 10-K 본문을 NLP로 파싱하는 길은 남지만 그건 랩이 읽고 해석한 결과다.",
+      "paid_path": "유료 공급망 데이터셋(FactSet Revere·Bloomberg SPLC).",
+      "replaced_by": null
     },
     {
-     "name": "Williams %R",
-     "file": "williams.html",
-     "status": "existing",
-     "desc": "과매도·과매수 두 신호의 17년 성적과 오늘 발동 종목 — 사는 쪽은 근거가 약하고 피하는 쪽이 일관된다",
-     "src": "model",
-     "verdict": "marginal",
-     "effort": "S"
+      "name": "RIM",
+      "cat": "종목 가치평가",
+      "was_file": "valuation.html#rim",
+      "desc": "잔여이익 모델 — 자기자본 시계열이 있어야 성립",
+      "retired_on": "2026-07-25",
+      "why": "데이터가 없어서가 아니다. 필요한 시계열을 전부 확보한 뒤 모형의 전제(클린 서플러스)를 재무를 수집한 510사 전수로 쟀고, 성립하지 않았다 — 장부가 증분이 이익−배당과 중앙값 7.92% 어긋난다.",
+      "principle": "가장 큰 누락 항목은 OCI가 아니라 자사주 매입이었다. 자사주·신주 발행을 모두 반영해도 중앙값 4.75%, 4곳 중 1곳은 10%를 넘는다. 전제가 깨진 채 잔여이익을 미래로 늘려 만든 값을 RIM이라고 부를 수 없다. 측정은 build/refresh_facts.py의 clean_surplus_stat()에 남겼다.",
+      "paid_path": "자기자본 변동표를 항목별로 분해한 데이터(주식보상·OCI·자사주). XBRL 차원에 실려 companyfacts API로는 나오지 않는다 — 유료 재무 데이터셋이면 가능하다.",
+      "replaced_by": "valuation.html#rim 섹션 자체는 남는다 — 이제 모형이 아니라 그 전제를 잰 결과를 싣는다."
+    },
+    {
+      "name": "실적 발표 일정",
+      "cat": "종목",
+      "was_file": "calendar.html#earnings",
+      "desc": "실적 발표 예정일",
+      "retired_on": "2026-07-25",
+      "why": "실적 발표 **예정일**은 무료 공개 데이터에 없다. SEC는 이미 일어난 발표만 안다 — 8-K Item 2.02로 제출된 뒤에야 기록이 생기고, 그건 공시 피드에 이미 있다. 앞으로의 일정은 회사 IR 공지나 데이터 벤더의 상품이지 SEC 제출 대상이 아니다.",
+      "principle": "남은 길인 yfinance는 비공식 API라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 실제로 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀 종목 갱신이 사흘 멈춘 전례가 있다. 한 칸을 위해 그 위험을 상시로 안지 않는다.",
+      "paid_path": "Finnhub 무료 등급(공식 API)에 실적 캘린더가 있다. 키만 받으면 붙일 수 있다 — 비용이 아니라 계정 문제다.",
+      "replaced_by": "filings.html — 이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있다."
+    },
+    {
+      "name": "산업 탐색",
+      "cat": "공시·산업",
+      "was_file": "industry.html",
+      "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+      "retired_on": "2026-08-06",
+      "why": "홈의 '기간별 수익률' 표가 섹터 → 산업그룹 → 종목을 이미 같은 열·같은 창으로 편다. 2026-08-05 에 GICS 3·4차를 안 쓰기로 하면서 이 페이지가 홈 표와 같은 두 단을 그리게 됐고, 그 순간 같은 것을 두 곳에서 말하게 됐다. 한 곳으로 줄인다.",
+      "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
+    },
+    {
+      "name": "관전 포인트",
+      "cat": "공시·산업",
+      "was_file": "industry.html#watch",
+      "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+      "retired_on": "2026-08-06",
+      "why": "산업 탐색 안의 탭이었다. 그 페이지를 빼면서 함께 빠진다. '산업 단위로 눈에 띄는 어긋남'이었는데 검증된 신호가 아니라 관찰이라 랩의 판정 체계에 실을 자리가 없었다.",
+      "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
+    },
+    {
+      "name": "만들지 않은 것",
+      "cat": "랩 원장",
+      "was_file": "roadmap.html",
+      "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
+      "retired_on": "2026-08-06",
+      "why": "이 페이지가 그리던 두 블록('소스 대기'·'메뉴에서 뺀 칸')을 데이터 출처 화면 (sources.html#s-wont)으로 옮겼다. '무엇을 어디서 받는가' 옆자리가 '무엇을 못 받는가'라, 두 화면으로 나눌 이유가 없었다.",
+      "principle": "탭을 지울 때 그 탭이 유일하게 그리던 것을 함께 지우면, 자료는 남고 화면에서만 사라진다 — 이 저장소가 '재 놓고 안 내면 모은 적 없는 것과 같다'고 부르는 그것이다.",
+      "replaced_by": "sources.html#s-wont"
+    },
+    {
+      "name": "시장 폭·동향",
+      "cat": "시장 (마켓)",
+      "was_file": "market.html",
+      "desc": "삭제 — 쓸모가 없다고 판단(사용자 결정 2026-08-10)",
+      "retired_on": "2026-08-10",
+      "why": "여섯 절(200일선 위 비율·플래그 전수 분포·타이밍 구간 분포·컴포짓 백분위 분포·섹터별 폭·시장 심리)이 전부 '지금 몇 종목이 어느 상태인가'를 여러 각도로 다시 세는 것이었다. 매매 근거로 쓸 수 없다는 것은 이 랩이 이미 검정했다 — 시장 폭 게이트(t-breadth)와 시장 폭 비례 노출(t-breadthc) 둘 다 구별 불가다.",
+      "principle": "화면 하나가 같은 사실을 여섯 번 다시 세는 것은 정보가 아니라 부피다.",
+      "kept": "시장 심리 지수는 regime.html 의 '시장 심리(0~100)' 단락에 그대로 있다. ⚠ 정정(2026-08-10) — 처음 이 기록에 '200일선 위 비율은 홈 시장 폭 카드에 남는다'고 적었으나 사실이 아니다. 홈의 폭 카드는 2026-08-03 에 이미 빠졌다(index.html 주석 '그 카드가 빠졌으므로'). 지금 홈이 쓰는 것은 breadth.n(종목 수 518)뿐이고 그것은 폭 수치가 아니라 눈썹 줄의 커버 종목 수다. 즉 200일선 위 비율은 이 삭제로 사이트에서 완전히 사라진다.",
+      "replaced_by": "regime.html (국면·심리). 폭 축을 대신하는 화면은 없다 — 없어지는 것이 맞다."
+    },
+    {
+      "name": "상대가치평가",
+      "cat": "가치평가",
+      "was_file": "rel-value.html",
+      "desc": "지웠다 — 쓰이지 않았다(들어오는 본문 링크 0)",
+      "retired_on": "2026-08-12",
+      "why": "쓰이지 않았다. 본문에서 이 두 페이지를 가리키는 링크가 사이트 전체에 0개였고 — 들어오는 경로가 공통 내비 탭 하나뿐이었다 — 유지 비용만 남았다(HTML 221KB · facts.json 의 index_fcf 를 매주 계산해 이 페이지 하나에만 실었다).",
+      "principle": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다는 규칙은 살아 있다 — 같은 규칙을 stocks.html 의 백분위가 쓴다. 규칙이 아니라 화면을 지운 것이다."
+    },
+    {
+      "name": "밸류에이션 모델 · 지수 역산",
+      "cat": "가치평가",
+      "was_file": "valuation.html",
+      "desc": "지웠다 — 쓰이지 않았다(들어오는 본문 링크 0)",
+      "retired_on": "2026-08-12",
+      "why": "쓰이지 않았다. 본문에서 이 두 페이지를 가리키는 링크가 사이트 전체에 0개였고 — 들어오는 경로가 공통 내비 탭 하나뿐이었다 — 유지 비용만 남았다(HTML 221KB · facts.json 의 index_fcf 를 매주 계산해 이 페이지 하나에만 실었다).",
+      "principle": "적정주가를 한 숫자로 주지 않는 것이 이 랩의 방침이라, 세 화면 다 '미검증' 배지를 단 계산기였다. 검정을 통과한 판정이 아니라 도구였고 아무도 안 썼다면 지우는 것이 맞다. 🚨 다만 다시 만들 때 같은 함정을 밟지 않도록 실측을 남긴다 — 지수 단위 FCF 를 SEC frames 로 직접 합치면 영업현금흐름 488사 대 설비투자 329사로 집합이 어긋나 FCF 가 +80% 부풀려진다. 두 다리가 모두 잡힌 427사(시총 87%)만 써야 성립한다."
+    },
+    {
+      "name": "BK",
+      "cat": "랩 원장",
+      "was_file": "kb.html",
+      "arch": null,
+      "desc": "메뉴에서 뺐다 — 페이지는 그대로 있다",
+      "retired_on": "2026-08-12",
+      "why": "사용자 요청으로 원장 목록에서 뺐다. 페이지(kb.html)와 잠금은 그대로이고 지운 것은 메뉴 칸과 홈 푸터 링크다 — 이제 직접 URL 로만 들어간다.",
+      "principle": "⚠ 이 칸은 '무료 자료로 못 만든다'가 아니라 '메뉴에 안 내보낸다'다. 다른 은퇴 항목과 성격이 다르므로 그렇게 적어 둔다. 되살리려면 build/nav_items.json 의 ledger 에 다시 넣고 sync_nav 를 돌리면 된다."
+    },
+    {
+      "name": "섹터 히트맵",
+      "cat": "시장",
+      "was_file": "sector.html",
+      "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
+      "retired_on": "2026-08-12",
+      "why": "메뉴에서 뺐다(사용자 결정) — 이 칸이 무엇에 답하는지가 애매했다. 담긴 것은 11섹터의 오늘 등락과 '지금 국면(Recovery)의 과거 월평균' 둘인데, 앞은 홈의 기간별 수익률 표가 같은 섹터 ETF 수치로 이미 보여 주고 뒤는 시장 국면 페이지의 교과서 선호 업종과 같은 질문이다. 즉 두 화면 사이에 낀 채 어느 쪽도 더 잘 답하지 못했다.",
+      "principle": "쓰임이 겹치는 칸은 남겨 두는 것이 친절이 아니라 부담이다 — 읽는 사람이 '이건 뭘 보라는 칸이지'를 매번 되물어야 한다.",
+      "replaced_by": "섹터 등락은 홈 '기간별 수익률'(섹터 11행) · 국면별 선호 업종은 regime.html 의 경기 사이클.",
+      "file_kept": "sector.html 파일과 빌더는 지우지 않았다. 메뉴 슬롯에서만 뺐다 — 되살리려면 이 항목을 categories 로 되돌리면 된다."
+    },
+    {
+      "name": "운용사 복제 진단",
+      "cat": "전략",
+      "was_file": "guru17.html",
+      "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+      "retired_on": "2026-08-16",
+      "why": "사용자 지시로 전략 메뉴에서 걷었다. 진단물(전략이 아님)이라 전략 메뉴에 두면 '따라 살 것' 목록으로 읽힌다. 페이지·자료·링크(푸터)는 손대지 않았다.",
+      "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
+    },
+    {
+      "name": "복제 리포트",
+      "cat": "전략",
+      "was_file": "report.html",
+      "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+      "retired_on": "2026-08-16",
+      "why": "사용자 지시로 전략 메뉴에서 걷었다. 전략 랩과 같은 자료를 다른 모양으로 보여 주는 화면이라 메뉴에 둘이 나란히 있을 이유가 옅었다. 페이지는 직접 주소로 열린다.",
+      "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
+    },
+    {
+      "name": "공통 보유종목",
+      "cat": "전략",
+      "was_file": "guru.html#overlap",
+      "desc": "거장 포트폴리오 안의 탭으로 그대로 있다",
+      "retired_on": "2026-08-16",
+      "why": "사용자 지시. 같은 것이 메뉴와 탭 두 자리에 있던 셈이라 메뉴 쪽을 걷었다.",
+      "principle": "한 화면은 한 자리에서만 들어간다."
+    },
+    {
+      "name": "스크리너",
+      "cat": "전략",
+      "was_file": "screener.html",
+      "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+      "retired_on": "2026-08-16",
+      "why": "사용자 지시 — '별 쓸모가 없는 것 같다'. 자유조합 스크린으로 초과수익이 확인된 것이 0종이라 메뉴에서 자리를 차지할 값어치가 옅었다. 페이지·자료는 손대지 않았다.",
+      "principle": "메뉴에서 내리는 것과 지우는 것은 다르다."
+    },
+    {
+      "name": "페어",
+      "cat": "종목",
+      "was_file": "co.html#pair",
+      "desc": "종목 정보 안의 탭으로 그대로 있다",
+      "retired_on": "2026-08-16",
+      "why": "사용자 지시 — 사실상 종목 정보 안에 있는 것이라 상위 메뉴에 또 둘 이유가 없었다. 실적·재무·IR·내부자도 같은 사유로 '종목 정보' 한 칸으로 접었다.",
+      "principle": "한 화면은 한 자리에서만 들어간다."
+    },
+    {
+      "name": "Williams %R",
+      "cat": "종목",
+      "was_file": "williams.html",
+      "desc": "메뉴에서 뺐다 — 페이지는 살아 있다(URL 직접 접근 가능)",
+      "retired_on": "2026-08-16",
+      "why": "사용자: \"신호가 너무 많아서 못 쓰겠다\". 실측 그대로다 — 과매도 122종·과매수 274종으로 518종 중 396종(76%)이 어느 한쪽에 걸린다. 그만큼 걸리면 거르는 일을 안 하는 것과 같다.",
+      "principle": "페이지를 지우지는 않는다. 매수 쪽 중앙값 −0.079%·승률 49.5%, 매도 쪽 t −3.15 라는 17년 실측이 이 랩의 기록이고, 메뉴에서 뺐다고 그 기록을 지울 이유는 없다. 안 되는 것을 재서 안 된다고 적은 자리를 남기는 것이 이 랩의 규약이다.",
+      "replaced_by": "stocks.html 의 스윙 타점(▲저점매수·▼고점매도) — 147종·64종으로 훨씬 좁게 걸린다."
     }
-   ]
-  },
-  {
-   "name": "전략",
-   "slug": "strategy",
-   "short": "전략",
-   "tools": [
-    {
-     "name": "전략 랩",
-     "file": "explorer.html",
-     "status": "existing",
-     "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
-     "src": "model",
-     "verdict": "pass",
-     "effort": "S"
-    },
-    {
-     "name": "스타일 전략",
-     "file": "style.html",
-     "status": "existing",
-     "desc": "공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과",
-     "src": "model",
-     "verdict": "unverified",
-     "effort": "S"
-    },
-    {
-     "name": "거장 포트폴리오·매매",
-     "file": "guru.html",
-     "status": "existing",
-     "desc": "13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "L"
-    },
-    {
-     "name": "전략 탐색 풀",
-     "file": "rotation.html",
-     "status": "existing",
-     "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
-     "src": "ext",
-     "verdict": "unverified",
-     "effort": "S"
-    },
-    {
-     "name": "내 포트폴리오",
-     "file": "portfolio.html",
-     "status": "existing",
-     "desc": "localStorage 보유 + 일별 실측 상관·변동성·MDD",
-     "src": "agg",
-     "verdict": "na",
-     "effort": "L"
-    }
-   ]
-  },
-  {
-   "name": "랩 원장",
-   "slug": "ledger",
-   "short": "원장",
-   "tools": [
-    {
-     "name": "등급·판정 규약",
-     "file": "method.html",
-     "status": "existing",
-     "desc": "A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다",
-     "src": "none",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "지수 편입 원장",
-     "file": "constituents.html",
-     "status": "existing",
-     "desc": "S&P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M"
-    },
-    {
-     "name": "갱신 기록",
-     "file": "updates.html",
-     "status": "existing",
-     "desc": "자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나",
-     "src": "agg",
-     "verdict": "na",
-     "effort": "S"
-    },
-    {
-     "name": "데이터 출처·기준일",
-     "file": "sources.html",
-     "status": "existing",
-     "desc": "축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금",
-     "src": "raw",
-     "verdict": "na",
-     "effort": "M",
-     "locked": true
-    },
-    {
-     "name": "OK",
-     "file": "ok.html",
-     "status": "existing",
-     "desc": "개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금",
-     "src": "none",
-     "verdict": "na",
-     "effort": "S",
-     "locked": true
-    }
-   ]
-  }
- ],
- "status_note": "new-now=이번에 만든다 / existing=기존 / new-later=다음 / needs-source=소스 대기 / wont-build=만들지 않기로 확정(사유는 roadmap.html)",
- "grade_note": "A~F 등급은 종목·지표 화면에서 섹터 내 백분위를 나타내는 서술적 표기다. 수익 예측 등급이 아니며, 메뉴의 판정 배지(verdict)와는 별개 축이다.",
- "locked_note": "locked=true면 메뉴 이름 옆에 🔒를 붙인다. 잠금 여부는 페이지의 AES 게이트 유무로 판정하며 build/validate_site.py가 대조한다.",
- "roadmap_note": "blocked_by/blocked_why는 roadmap.html이 그대로 게시한다. pipeline은 어느 데이터 소스가 몇 번째로 붙는지(0=영구 미제작, 99=후순위). 한 소스가 여러 칸을 동시에 켜는 지점이 보이게 한다.",
- "anchor_note": "앵커 종류. route=JS 해시 라우터가 처리(예: stocks.html#p=up), runtime=JS가 렌더 시 만드는 id, static=HTML에 id가 실제로 있어야 함. sync_nav.py는 static만 존재를 요구하고 나머지는 파일 존재로 판정한다.",
- "placeholder_note": "placeholder=true 는 앵커·탭은 있지만 내용이 \"왜 비었는지\"뿐인 칸이다. sync_nav의 tool_live가 false로 보아 동작 수에 넣지 않는다 — 앵커가 있다는 이유로 동작으로 세면 홈의 계수 줄이 거짓이 된다.",
- "retired_note": "메뉴에서 뺀 칸. 무료 공개 데이터로는 만들 수 없다고 확정한 것들이라 메뉴 슬롯에서 제외했다. 지웠다고 없던 일로 하지 않는다 — 왜 못 만드는지와 무엇이 대신하는지를 여기 남긴다.",
- "retired": [
-  {
-   "name": "실시간 내러티브",
-   "cat": "공시룸 (뉴스룸)",
-   "was_file": "sources.html#narrative",
-   "desc": "만들지 않는다 — 라이선스 없음, 사유만 게시",
-   "retired_on": "2026-07-25",
-   "why": "뉴스 본문은 라이선스 자산이다. 무료 API는 재배포를 금지하거나 헤드라인만 준다. 기술이 아니라 비용이 막는다.",
-   "principle": "LLM으로 요약해 채우는 길은 있지만, 이 랩의 \"해설을 붙이지 않는다\" 원칙과 정면으로 충돌한다. 원칙을 꺾느니 칸을 뺀다.",
-   "paid_path": "유료 라이선스 피드(Dow Jones·Benzinga·Refinitiv) 계약. 연 단위 비용이 든다.",
-   "replaced_by": "filings.html — 8-K 원문 피드. 회사가 스스로 단 Item 코드로 분류하고 해설을 붙이지 않는다."
-  },
-  {
-   "name": "프리미엄 뉴스",
-   "cat": "공시룸 (뉴스룸)",
-   "was_file": "sources.html#news",
-   "desc": "만들지 않는다 — 대체는 EDGAR 원문 직행",
-   "retired_on": "2026-07-25",
-   "why": "위와 같은 이유. 별도 칸으로 둘 근거가 없다.",
-   "principle": "유료 뉴스를 사더라도 요약 없이 링크만 나열하면 EDGAR 원문 링크와 다를 바가 없다.",
-   "paid_path": "위와 동일.",
-   "replaced_by": "co.html#ir — 회사별 EDGAR 제출 원문 링크."
-  },
-  {
-   "name": "밸류체인",
-   "cat": "산업 분석",
-   "was_file": "sources.html#value-chain",
-   "desc": "만들지 않는다 — 공급망 데이터가 없다, 사유만 게시",
-   "retired_on": "2026-07-25",
-   "why": "무료 공개 데이터에 기업 간 공급·판매 관계를 담은 구조화 소스가 없다. SIC는 회사를 분류할 뿐 관계를 말하지 않는다.",
-   "principle": "유일한 구조화 실마리였던 고객집중도 공시(ASC 280, 매출 10% 이상 고객)는 XBRL 차원(dimension)에 실려 있어 companyfacts API로는 나오지 않는다 — AAPL·NVDA·AVGO·WDC 실측에서 집중도 태그 0개(2026-07-25). 10-K 본문을 NLP로 파싱하는 길은 남지만 그건 랩이 읽고 해석한 결과다.",
-   "paid_path": "유료 공급망 데이터셋(FactSet Revere·Bloomberg SPLC).",
-   "replaced_by": null
-  },
-  {
-   "name": "RIM",
-   "cat": "종목 가치평가",
-   "was_file": "valuation.html#rim",
-   "desc": "잔여이익 모델 — 자기자본 시계열이 있어야 성립",
-   "retired_on": "2026-07-25",
-   "why": "데이터가 없어서가 아니다. 필요한 시계열을 전부 확보한 뒤 모형의 전제(클린 서플러스)를 재무를 수집한 510사 전수로 쟀고, 성립하지 않았다 — 장부가 증분이 이익−배당과 중앙값 7.92% 어긋난다.",
-   "principle": "가장 큰 누락 항목은 OCI가 아니라 자사주 매입이었다. 자사주·신주 발행을 모두 반영해도 중앙값 4.75%, 4곳 중 1곳은 10%를 넘는다. 전제가 깨진 채 잔여이익을 미래로 늘려 만든 값을 RIM이라고 부를 수 없다. 측정은 build/refresh_facts.py의 clean_surplus_stat()에 남겼다.",
-   "paid_path": "자기자본 변동표를 항목별로 분해한 데이터(주식보상·OCI·자사주). XBRL 차원에 실려 companyfacts API로는 나오지 않는다 — 유료 재무 데이터셋이면 가능하다.",
-   "replaced_by": "valuation.html#rim 섹션 자체는 남는다 — 이제 모형이 아니라 그 전제를 잰 결과를 싣는다."
-  },
-  {
-   "name": "실적 발표 일정",
-   "cat": "종목",
-   "was_file": "calendar.html#earnings",
-   "desc": "실적 발표 예정일",
-   "retired_on": "2026-07-25",
-   "why": "실적 발표 **예정일**은 무료 공개 데이터에 없다. SEC는 이미 일어난 발표만 안다 — 8-K Item 2.02로 제출된 뒤에야 기록이 생기고, 그건 공시 피드에 이미 있다. 앞으로의 일정은 회사 IR 공지나 데이터 벤더의 상품이지 SEC 제출 대상이 아니다.",
-   "principle": "남은 길인 yfinance는 비공식 API라 끊기면 이 칸이 같이 죽는다 — 2026-07-25에 실제로 GitHub Actions 러너가 Yahoo에 401(Invalid Crumb)로 막혀 종목 갱신이 사흘 멈춘 전례가 있다. 한 칸을 위해 그 위험을 상시로 안지 않는다.",
-   "paid_path": "Finnhub 무료 등급(공식 API)에 실적 캘린더가 있다. 키만 받으면 붙일 수 있다 — 비용이 아니라 계정 문제다.",
-   "replaced_by": "filings.html — 이미 나온 실적 발표는 8-K Item 2.02로 공시 피드에서 볼 수 있다."
-  },
-  {
-   "name": "산업 탐색",
-   "cat": "공시·산업",
-   "was_file": "industry.html",
-   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
-   "retired_on": "2026-08-06",
-   "why": "홈의 '기간별 수익률' 표가 섹터 → 산업그룹 → 종목을 이미 같은 열·같은 창으로 편다. 2026-08-05 에 GICS 3·4차를 안 쓰기로 하면서 이 페이지가 홈 표와 같은 두 단을 그리게 됐고, 그 순간 같은 것을 두 곳에서 말하게 됐다. 한 곳으로 줄인다.",
-   "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
-  },
-  {
-   "name": "관전 포인트",
-   "cat": "공시·산업",
-   "was_file": "industry.html#watch",
-   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
-   "retired_on": "2026-08-06",
-   "why": "산업 탐색 안의 탭이었다. 그 페이지를 빼면서 함께 빠진다. '산업 단위로 눈에 띄는 어긋남'이었는데 검증된 신호가 아니라 관찰이라 랩의 판정 체계에 실을 자리가 없었다.",
-   "principle": "같은 것을 두 화면이 말하면 언젠가 둘이 다른 말을 한다. 그때 어느 쪽이 맞는지 아무도 모른다."
-  },
-  {
-   "name": "만들지 않은 것",
-   "cat": "랩 원장",
-   "was_file": "roadmap.html",
-   "desc": "메뉴에서 뺐다(사용자 결정 2026-08-06)",
-   "retired_on": "2026-08-06",
-   "why": "이 페이지가 그리던 두 블록('소스 대기'·'메뉴에서 뺀 칸')을 데이터 출처 화면 (sources.html#s-wont)으로 옮겼다. '무엇을 어디서 받는가' 옆자리가 '무엇을 못 받는가'라, 두 화면으로 나눌 이유가 없었다.",
-   "principle": "탭을 지울 때 그 탭이 유일하게 그리던 것을 함께 지우면, 자료는 남고 화면에서만 사라진다 — 이 저장소가 '재 놓고 안 내면 모은 적 없는 것과 같다'고 부르는 그것이다.",
-   "replaced_by": "sources.html#s-wont"
-  },
-  {
-   "name": "시장 폭·동향",
-   "cat": "시장 (마켓)",
-   "was_file": "market.html",
-   "desc": "삭제 — 쓸모가 없다고 판단(사용자 결정 2026-08-10)",
-   "retired_on": "2026-08-10",
-   "why": "여섯 절(200일선 위 비율·플래그 전수 분포·타이밍 구간 분포·컴포짓 백분위 분포·섹터별 폭·시장 심리)이 전부 '지금 몇 종목이 어느 상태인가'를 여러 각도로 다시 세는 것이었다. 매매 근거로 쓸 수 없다는 것은 이 랩이 이미 검정했다 — 시장 폭 게이트(t-breadth)와 시장 폭 비례 노출(t-breadthc) 둘 다 구별 불가다.",
-   "principle": "화면 하나가 같은 사실을 여섯 번 다시 세는 것은 정보가 아니라 부피다.",
-   "kept": "시장 심리 지수는 regime.html 의 '시장 심리(0~100)' 단락에 그대로 있다. ⚠ 정정(2026-08-10) — 처음 이 기록에 '200일선 위 비율은 홈 시장 폭 카드에 남는다'고 적었으나 사실이 아니다. 홈의 폭 카드는 2026-08-03 에 이미 빠졌다(index.html 주석 '그 카드가 빠졌으므로'). 지금 홈이 쓰는 것은 breadth.n(종목 수 518)뿐이고 그것은 폭 수치가 아니라 눈썹 줄의 커버 종목 수다. 즉 200일선 위 비율은 이 삭제로 사이트에서 완전히 사라진다.",
-   "replaced_by": "regime.html (국면·심리). 폭 축을 대신하는 화면은 없다 — 없어지는 것이 맞다."
-  },
-  {
-   "name": "상대가치평가",
-   "cat": "가치평가",
-   "was_file": "rel-value.html",
-   "desc": "지웠다 — 쓰이지 않았다(들어오는 본문 링크 0)",
-   "retired_on": "2026-08-12",
-   "why": "쓰이지 않았다. 본문에서 이 두 페이지를 가리키는 링크가 사이트 전체에 0개였고 — 들어오는 경로가 공통 내비 탭 하나뿐이었다 — 유지 비용만 남았다(HTML 221KB · facts.json 의 index_fcf 를 매주 계산해 이 페이지 하나에만 실었다).",
-   "principle": "섹터 표본 15 미만이면 섹터 백분위를 아예 주지 않는다는 규칙은 살아 있다 — 같은 규칙을 stocks.html 의 백분위가 쓴다. 규칙이 아니라 화면을 지운 것이다."
-  },
-  {
-   "name": "밸류에이션 모델 · 지수 역산",
-   "cat": "가치평가",
-   "was_file": "valuation.html",
-   "desc": "지웠다 — 쓰이지 않았다(들어오는 본문 링크 0)",
-   "retired_on": "2026-08-12",
-   "why": "쓰이지 않았다. 본문에서 이 두 페이지를 가리키는 링크가 사이트 전체에 0개였고 — 들어오는 경로가 공통 내비 탭 하나뿐이었다 — 유지 비용만 남았다(HTML 221KB · facts.json 의 index_fcf 를 매주 계산해 이 페이지 하나에만 실었다).",
-   "principle": "적정주가를 한 숫자로 주지 않는 것이 이 랩의 방침이라, 세 화면 다 '미검증' 배지를 단 계산기였다. 검정을 통과한 판정이 아니라 도구였고 아무도 안 썼다면 지우는 것이 맞다. 🚨 다만 다시 만들 때 같은 함정을 밟지 않도록 실측을 남긴다 — 지수 단위 FCF 를 SEC frames 로 직접 합치면 영업현금흐름 488사 대 설비투자 329사로 집합이 어긋나 FCF 가 +80% 부풀려진다. 두 다리가 모두 잡힌 427사(시총 87%)만 써야 성립한다."
-  },
-  {
-   "name": "BK",
-   "cat": "랩 원장",
-   "was_file": "kb.html",
-   "arch": null,
-   "desc": "메뉴에서 뺐다 — 페이지는 그대로 있다",
-   "retired_on": "2026-08-12",
-   "why": "사용자 요청으로 원장 목록에서 뺐다. 페이지(kb.html)와 잠금은 그대로이고 지운 것은 메뉴 칸과 홈 푸터 링크다 — 이제 직접 URL 로만 들어간다.",
-   "principle": "⚠ 이 칸은 '무료 자료로 못 만든다'가 아니라 '메뉴에 안 내보낸다'다. 다른 은퇴 항목과 성격이 다르므로 그렇게 적어 둔다. 되살리려면 build/nav_items.json 의 ledger 에 다시 넣고 sync_nav 를 돌리면 된다."
-  },
-  {
-   "name": "섹터 히트맵",
-   "cat": "시장",
-   "was_file": "sector.html",
-   "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
-   "retired_on": "2026-08-12",
-   "why": "메뉴에서 뺐다(사용자 결정) — 이 칸이 무엇에 답하는지가 애매했다. 담긴 것은 11섹터의 오늘 등락과 '지금 국면(Recovery)의 과거 월평균' 둘인데, 앞은 홈의 기간별 수익률 표가 같은 섹터 ETF 수치로 이미 보여 주고 뒤는 시장 국면 페이지의 교과서 선호 업종과 같은 질문이다. 즉 두 화면 사이에 낀 채 어느 쪽도 더 잘 답하지 못했다.",
-   "principle": "쓰임이 겹치는 칸은 남겨 두는 것이 친절이 아니라 부담이다 — 읽는 사람이 '이건 뭘 보라는 칸이지'를 매번 되물어야 한다.",
-   "replaced_by": "섹터 등락은 홈 '기간별 수익률'(섹터 11행) · 국면별 선호 업종은 regime.html 의 경기 사이클.",
-   "file_kept": "sector.html 파일과 빌더는 지우지 않았다. 메뉴 슬롯에서만 뺐다 — 되살리려면 이 항목을 categories 로 되돌리면 된다."
-  },
-  {
-   "name": "운용사 복제 진단",
-   "cat": "전략",
-   "was_file": "guru17.html",
-   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
-   "retired_on": "2026-08-16",
-   "why": "사용자 지시로 전략 메뉴에서 걷었다. 진단물(전략이 아님)이라 전략 메뉴에 두면 '따라 살 것' 목록으로 읽힌다. 페이지·자료·링크(푸터)는 손대지 않았다.",
-   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
-  },
-  {
-   "name": "복제 리포트",
-   "cat": "전략",
-   "was_file": "report.html",
-   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
-   "retired_on": "2026-08-16",
-   "why": "사용자 지시로 전략 메뉴에서 걷었다. 전략 랩과 같은 자료를 다른 모양으로 보여 주는 화면이라 메뉴에 둘이 나란히 있을 이유가 옅었다. 페이지는 직접 주소로 열린다.",
-   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
-  },
-  {
-   "name": "공통 보유종목",
-   "cat": "전략",
-   "was_file": "guru.html#overlap",
-   "desc": "거장 포트폴리오 안의 탭으로 그대로 있다",
-   "retired_on": "2026-08-16",
-   "why": "사용자 지시. 같은 것이 메뉴와 탭 두 자리에 있던 셈이라 메뉴 쪽을 걷었다.",
-   "principle": "한 화면은 한 자리에서만 들어간다."
-  },
-  {
-   "name": "스크리너",
-   "cat": "전략",
-   "was_file": "screener.html",
-   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
-   "retired_on": "2026-08-16",
-   "why": "사용자 지시 — '별 쓸모가 없는 것 같다'. 자유조합 스크린으로 초과수익이 확인된 것이 0종이라 메뉴에서 자리를 차지할 값어치가 옅었다. 페이지·자료는 손대지 않았다.",
-   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다."
-  },
-  {
-   "name": "페어",
-   "cat": "종목",
-   "was_file": "co.html#pair",
-   "desc": "종목 정보 안의 탭으로 그대로 있다",
-   "retired_on": "2026-08-16",
-   "why": "사용자 지시 — 사실상 종목 정보 안에 있는 것이라 상위 메뉴에 또 둘 이유가 없었다. 실적·재무·IR·내부자도 같은 사유로 '종목 정보' 한 칸으로 접었다.",
-   "principle": "한 화면은 한 자리에서만 들어간다."
-  }
- ]
+  ]
 }
