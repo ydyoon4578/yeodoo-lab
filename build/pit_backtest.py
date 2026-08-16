@@ -115,6 +115,13 @@ PRICE_SIDS = [
              #     PIT 레그는 그달 편입 종목만으로, 소급 레그는 오늘 명단으로. 그게 맞다:
              #     주성분은 '그때 시장이 무엇이었나' 이므로 유니버스가 다르면 축도 달라야 한다.
              "x-drift-t", "x-varratio", "x-pcaresid", "x-permen", "x-cusum", "x-ecm",
+             # 2026-08-16 ML6 — PREREG-2026-08-16-ML6.md §5. **등록과 함께 미리** 넣는다
+             #   (결과를 보고 넣으면 사후 선택이다). 특징 12개가 전부 가격·거래량이라
+             #   편출 종목 캐시로 그대로 돈다 — 일부러 그런 특징만 골랐다.
+             # 🚨 여섯은 학습 행도 그달 풀로 거른다(ml_strats._train_rows). 그러지 않으면
+             #   과거 학습이 «오늘까지 살아남은 종목» 만 보게 되어, 재려던 생존편향이
+             #   모형 안으로 숨어 들어간다 — 이 레그가 그 숨은 편향까지 잡으라고 있는 것이다.
+             "m-ridge", "m-ridge-w", "m-logit", "m-erc", "m-clust", "m-tree",
              # 2026-08-12 6차 — PREREG-2026-08-12-MACROBETA.md §4. 거시 계열은 전 종목이
              #   공유하는 하나의 계열이라 편출 종목에도 그대로 쓴다(종가만 더 있으면 된다).
              "x-ratebeta", "x-fxbeta",
@@ -1291,7 +1298,12 @@ def main():
             _p = run_timing(S, _TC_PIT, ixr)         # PIT
             _b = run_timing(S, _TC_LAB, ixr_lab)     # 같은 창·소급 유니버스
         else:
+            # 🚨 ML6 은 «과거 학습 행을 어느 풀로 거를 것인가» 가 레그를 가른다.
+            #   ⚠ 바깥 X 에 실어야 한다. run() 이 XX = dict(X, …) 로 **복사본**을 만들므로
+            #     XX 를 여기서 건드리면 이름이 없어 죽는다(실제로 NameError 로 죽었다).
+            X["ml_leg"], X["pool_at"] = "pit", members_at
             _p = run(S, members_at, ixr, ixvol)          # PIT
+            X["ml_leg"], X["pool_at"] = "retro", None
             _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
         # 🚨 **전 구간 무보유를 결과로 내보내지 않는다**(적대감사 2026-08-12). 한 주도 안 들면
         #   first=None → k=0 → 수익률이 전부 0 이 되고, 그것이 'CAGR 0.00 · 초과 −9.71 · t −1.44'
