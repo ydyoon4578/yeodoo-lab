@@ -663,7 +663,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(!arr.length){h+='<div class="mvnone">없음</div></div>';return;}
       arr.slice(0,CUT).forEach(function(x){
         var pct=(x.pct==null)?'':((x.pct>0?'+':'')+x.pct+'%');
-        var tk=x.off?('<span class="tkoff">'+esc(x.t)+'</span>')
+        // 🚨 2026-08-16 — 매매 요약이 CUSIP 을 날것으로 찍고 있었다(#842587ED5 처럼).
+        //   티커를 못 붙인 것은 FTD 파일에 그 CUSIP 이 없어서이고, **회사명은 13F 원문에
+        //   100% 있다**(실측 346건 전부). 읽을 수 있는 것을 두고 못 읽을 것을 보였다.
+        //   ⚠ 그중 298건이 채권(CUSIP 7~8자리가 문자)이다 — 이름을 보이면 최소한 무엇인지
+        //     알 수 있다. CUSIP 은 툴팁에 남긴다(원장과 대조할 때 필요하다).
+        var _cu=x.t.charAt(0)==='#';
+        var _lab=_cu?((x.nm||x.t).slice(0,14)):x.t;
+        var tk=(x.off||_cu)?('<span class="tkoff"'+(_cu?' title="'+esc('CUSIP '+x.t.slice(1))+'"':'')+'>'+esc(_lab)+'</span>')
                     :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
         h+='<div class="mvrow" title="'+esc((x.nm||'')+' · 주식수 '+
              (x.psh==null?'—':nf(x.psh))+' → '+nf(x.sh))+'">'+
@@ -711,7 +718,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   그것을 '종목'이라 적고 액면을 '주식 수' 열에 넣으면 화면이 거짓을 말한다.
       // ⚠ 발행사 주식으로 링크를 걸지 않는다. 같은 회사여도 청구권 순위·의결권이 다르다.
       var tk=r.debt?('<span class="tkoff" title="'+esc(r.t.replace('#','CUSIP '))+'">'+esc((r.nm||r.t).slice(0,18))+'</span><span class="dbtb" title="회사채·전환사채입니다(CUSIP 7~8자리가 문자). 주식이 아니므로 아래 «주식 수»는 액면 단위이고, 발행사 주식 화면으로 링크하지 않습니다 — 청구권 순위와 의결권이 다릅니다.">채권</span>')
-             :r.off?('<span class="tkoff">'+esc(r.t)+'</span><span class="offb" title="이 랩의 유니버스(S&P 500 ∪ NASDAQ 100) 밖 종목입니다. 무엇을 들고 있는지만 보여줍니다.">밖</span>')
+             // 🚨 2026-08-16 — CUSIP 을 날것으로 찍고 있었다(#410867105 처럼). 그 CUSIP 은
+             //   FTD 파일에 없어 티커를 못 붙인 것뿐이고, **회사명은 13F 원문에 100% 있다**
+             //   (실측 346건 전부). 사람이 읽을 수 있는 것을 두고 못 읽을 것을 보이고 있었다.
+             //   → 티커를 못 찾았으면 회사명을 쓴다. CUSIP 은 툴팁으로 내린다(대조용).
+             :r.off?('<span class="tkoff"'+(r.t.charAt(0)==='#'?' title="'+esc('CUSIP '+r.t.slice(1))+'"':'')+'>'+
+                     esc(r.t.charAt(0)==='#'?((r.nm||r.t).slice(0,18)):r.t)+'</span>'+
+                     '<span class="offb" title="이 랩의 유니버스(S&P 500 ∪ NASDAQ 100) 밖 종목입니다. 무엇을 들고 있는지만 보여줍니다.">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(r.t)+'">'+esc(r.t)+'</a>');
       h+='<tr'+(r.off?' class="offrow"':'')+'><th scope="row">'+tk+
          '<span class="sub">'+esc((r.nm||'').slice(0,26))+'</span></th>'+
