@@ -12,6 +12,10 @@
   ④ 회전율 21일 > 63일                                      ← 백테스트 산출에서 읽는다
   ⑤ 섹터중립판의 보유 섹터가 서로 다를 것
   ⑥ 상위10 신호가 대부분 양수 — 전 종목 음수인 달의 비율을 적는다
+
+  python build/check_revdrift.py               # 하나라도 실패하면 종료코드 1
+  python build/check_revdrift.py --registered  # **등록된 실패(③)만** 남았으면 0, 새 실패면 1
+                                               # ← CI 는 이쪽을 쓴다(아래 REGISTERED 참조)
 """
 import io
 import json
@@ -29,11 +33,24 @@ import tech_backtest as TB
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(os.path.dirname(HERE), "data")
 ok_all = True
+FAILED = []          # 실패한 검산 번호 — 어떤 것이 실패했는지가 판정의 근거다
+
+# 🚨 «등록된 실패» — 결과를 보고 문턱을 고치지 않기로 한 자리다.
+#   PREREG-2026-08-10-REVDRIFT-RESULT.md §6: 검산③(동점으로 채워진 자리 0)이 29자리로
+#   실패했고, 「그래도 문턱을 고쳐 '통과'로 만들지 않는다. 결과를 보고 기준을 움직이면
+#   그 검정은 무효다」 라고 적어 실패로 남겼다. 원인도 적혀 있다 — 분자가 이산인 신호에서
+#   동점이 정확히 0 이 되는 일은 없는데 프로브의 **중앙값**을 보고 문턱을 0 으로 적었다.
+# ⚠ 그래서 --registered 는 «③만 실패하면 통과» 로 판정한다. 문턱을 고친 것이 아니다 —
+#   기준은 그대로 두고, 이미 기록된 실패인지 **새로 생긴 실패인지**를 가르는 것뿐이다.
+#   ③ 말고 하나라도 더 실패하면 그때는 구현이 바뀐 것이므로 막는다.
+REGISTERED = {"③"}
 
 
 def say(no, ok, msg):
     global ok_all
     ok_all = ok_all and ok
+    if not ok:
+        FAILED.append(no)
     print("  %s 검산%s %s" % ("통과" if ok else "실패", no, msg))
 
 
@@ -123,9 +140,24 @@ def main():
         say("⑤", len(set(secs)) == len(secs),
             "섹터중립판 보유 %d종 · 서로 다른 섹터 %d개" % (len(secs), len(set(secs))))
     print()
-    print("→ %s" % ("검산 전부 통과 — 결과를 읽어도 된다."
-                    if ok_all else "🚨 검산 실패 — 구현 오류다. 결과를 읽지 말고 다시 짠다."))
-    return 0 if ok_all else 1
+    if ok_all:
+        print("→ 검산 전부 통과 — 결과를 읽어도 된다.")
+        return 0
+    fs = sorted(set(FAILED))
+    if "--registered" in sys.argv and set(fs) <= REGISTERED:
+        print("→ ⚠ 등록된 실패만 남아 있다(검산%s) — PREREG-2026-08-10-REVDRIFT-RESULT.md §6 에 "
+              "«완화하지 않는다» 로 적어 둔 자리다. 새 실패가 아니므로 막지 않는다."
+              % "·".join(fs))
+        print("  🚨 통과라는 뜻이 아니다. x-revdrift 3종은 이 실패를 안은 채로 게시돼 있고, "
+              "셋 다 t 가 문턱에 한참 못 미쳐 판정을 못 만든다는 것이 같이 기록돼 있다.")
+        return 0
+    print("🚨 검산 실패(검산%s) — 구현 오류다. 결과를 읽지 말고 다시 짠다." % "·".join(fs))
+    if "--registered" in sys.argv:
+        new = sorted(set(fs) - REGISTERED)
+        if new:
+            print("  🚨 등록에 없는 **새 실패**: 검산%s. 엔진이 규약에서 벗어났다."
+                  % "·".join(new))
+    return 1
 
 
 if __name__ == "__main__":
