@@ -7,16 +7,16 @@
   "pit": "2026-07-31"
  },
  "t_crit": {
-  "tech": 2.0,
+  "tech": null,
   "asset": null,
-  "pit": 3.51,
-  "pit_lab": 3.52
+  "pit": null,
+  "pit_lab": null
  },
  "gate": "게시 기준 — ① |t| ≥ 본페로니 임계 ② Δ샤프 > 0 ③ 이웃 5개 동시 통제 증분알파 t ≥ +2.0 ④ 부호 정합. 이 리포트는 그 기준으로 줄 세우지 않는다.",
  "limits": {
   "tech": [
    "생존편향 — 오늘의 518종목을 과거 10년에 그대로 적용한다. 그 사이 편출된 종목이 없어 모든 수치가 실제보다 좋게 나온다. 이 저장소에 시점별 편입 이력이 없어 보정할 수 없다. 구간이 길수록 누락된 편출 종목이 쌓여 이 왜곡은 더 커진다.",
-   "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간(2016-08~2026-07 · 2492거래일)을 다시 돌린 결과다. 대조군 CAGR이 18.42%→12.98%로, 규칙 111종의 CAGR은 중앙값 6.7%p 과대로 나온다. 이 표에서 PIT |t| 가 다중검정 임계 3.51 를 넘는 규칙은 0종이고 최대 |t| 는 2.76(시장 마감압력 게이트 (지수 CLV))다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 본편보다 짧아 일부는 구간 단축에서 온다. 산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, 가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다.",
+   "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간(2016-08~2026-07 · 2492거래일)을 다시 돌린 결과다. 대조군 CAGR이 18.42%→12.98%로, 규칙 111종의 CAGR은 중앙값 6.7%p 과대로 나온다. 이 표의 PIT |t| 최대는 2.76(시장 마감압력 게이트 (지수 CLV))다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 본편보다 짧아 일부는 구간 단축에서 온다. 산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, 가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다.",
    "랩 대조군(오늘의 518종목 동일가중을 과거로 소급)이 같은 기간 실제 동일가중 S&P 500(RSP·보수 후)보다 연 +6.58%p 앞선다. 생존편향과 유니버스 틸트(NASDAQ 100 전용 종목 포함)가 함께 만든 격차이며, 생존편향 단독의 상한으로 읽어야 한다. 🚨 이것은 «대조군(유니버스) 자신의 편향»이지 규칙별 편향이 아니다. 규칙은 이 유니버스에서 상위 10종을 고르므로 편향이 농축된다. 실측 최대 +46.94%p(x-small)로 이 값의 7.1배다. 규칙별 분포는 strategy_index.json 의 pit_dist 에 있다. (2026-08-14: 홈 각주가 이 수를 '종목 전략의 생존편향 상한'이라 적고 있었다 — 그 오독을 막으려고 여기 적는다.) 전략 수익은 그만큼 부푼 세계의 숫자다. ⚠ 대조군을 S&P 500(PR)으로 바꾼 뒤로는 이 편향이 초과수익에서 상쇄되지 않는다 — 예전 대조군(같은 유니버스 동일가중)은 같은 편향을 태우고 있어 대체로 상쇄됐지만, 지수는 그렇지 않다. 즉 여기 초과수익·ΔSharpe·t 는 실제보다 좋게 나온 값이다.",
    "⚠ 대조군을 바꿨다(2026-07-28 사용자 결정) — 예전에는 같은 유니버스 동일가중 매수후보유였고 지금은 S&P 500(PR)이다. 동일가중 유니버스는 오늘 명단을 과거로 소급한 것이라 실제 동일가중 S&P 500(RSP)보다 연 +6.58%p 높았다. 즉 예전 문턱이 그만큼 높았다. 같은 규칙인데 ΔSharpe 가 전반적으로 올라간 것은 규칙이 좋아져서가 아니라 문턱이 내려갔기 때문이다. 예전 판정과 나란히 놓고 비교하지 말 것.",
    "표본이 10년(2520거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다.",
@@ -46,7 +46,7 @@
    "🚨 보유율(그날 가격이 있나)과 **채점 가능성**(룩백이 있나)은 다른 것이다. 창 첫달(2016-08-31)에 12개월 룩백까지 갖춰 채점 가능한 멤버는 81.3%다. 2026-08-11 에 편출 가격 캐시를 창 시작이 아니라 2009-01 부터 받도록 고쳐서 이 값이 보유율과 거의 같아졌다 — 고치기 전 2014-06 창에서는 첫달 채점가능이 58.8%뿐인데 보유율은 72.0%여서, 그 차이만큼 창 앞머리의 후보가 조용히 오늘의 518종으로 좁혀져 있었다.",
    "'거래량 급증' 규칙은 아예 뺐다 — 거래량이 오늘의 유니버스에만 있어 후보가 100% 생존자로 좁혀지는데, 대조군에는 편출 종목이 들어가 비교가 성립하지 않는다.",
    "🚨 **편향은 bias_cagr(전략 CAGR 기준)로 읽을 것.** bias_excess 는 초과수익 기준인데, 두 레그의 대조군이 각자의 동일가중 지수라 벤치에 실린 편향(실측 5.44%p)이 **상쇄된다** — 그래서 bias_excess 는 항상 bias_cagr 에서 그만큼 깎이고 하한이 음수가 된다. 즉 '편향 없음' 과 'PIT 가 유리' 를 구별하지 못한다. 실제로 그 탓에 고배당을 'PIT 로 오히려 좋아진다' 고 잘못 읽었다(bias_excess −4.51 이었지만 bias_cagr 는 +1.18 로 소급이 부풀려진 쪽이었다).",
-   "t 는 이 표본(2492거래일·규칙 111종)에서 계산한 값이다. **규칙 111종을 한 표에서 재므로 다중검정이다** — 본페로니 5%면 |t|≥3.51 가 필요하다(랩 본편 114종 족으로 보면 |t|≥3.52). 검정족은 재측정한 수가 아니라 탐색한 가설 수여야 하므로 후자가 맞고, 이 표에서 그 문턱을 넘는 규칙은 **0종**이다(최대 |t| = 2.76). 문턱을 넘고 말고보다 '소급 대비 t 가 얼마나 무너지는가'로 읽는 것이 안전하다.",
+   "t 는 이 표본(2492거래일)에서 계산한 값이다. 이 랩은 같은 자료로 규칙 114종을 돌렸으므로 그중 최고는 우연히도 좋아 보인다 — t 하나만 떼어 읽으면 안 된다. 이 표는 넘고 말고를 가르지 않는다. '소급 대비 t 가 얼마나 무너지는가' 로 읽는 것이 이 표를 만든 이유다.",
    "🚨 주당지표 분할 기준 — 주가는 분할조정본인데 SEC 주당지표(eps·dps)와 주식수는 당시 보고치라 한 계열에 분할 전·후 기준이 섞인다(실측: CMG sh 1387.37 옆에 27.79). 그대로 두면 나중에 분할한 종목의 이익수익률·배당수익률이 분할비만큼 부풀어 **선견**이 된다 — tech_backtest.split_trim() 이 기준 불일치 관측을 잘라낸다(89종). 자르기 전에는 저PER t 2.63·저PSR 2.49·고배당 2.94 로 문턱을 넘는 것처럼 보였다.",
    "규칙 111종(가격·거래량 59 + 펀더멘털 52). 소형주(시가총액)는 시점별 주식수를 랩의 SEC XBRL 과 yfinance(편출분)로 합쳐 재현했다 — 두 출처가 0.3~2.3% 차이 나지만 시총이 자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. 펀더멘털 규칙은 2026-07-30 에 추가했다 — 편출 종목 재무를 SEC 에서 받아(build/pit_facts.py, 러너) data/fx_pit 에 넣은 뒤 가능해졌다. 편출 162종 중 재무가 있는 것은 157종(97%)이고, 없는 5종(폐지·개명 티커라 SEC 현행 목록에 없다)만큼 그 규칙들의 후보는 여전히 생존자 쪽으로 좁혀져 있다.",
    "비용 0(gross) · 신호는 당일 종가로 계산해 다음 거래일부터 적용(선견 없음).",
@@ -677,14 +677,6 @@
    },
    {
     "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "측정만",
-    "name": "거장 순매집 상위 10",
-    "sid": "x-guruacc",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
     "role": "타이밍오버레이",
     "verdict": "측정만",
     "name": "변동성 타깃팅 (연 12%)",
@@ -801,6 +793,14 @@
     "verdict": "측정만",
     "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
     "sid": "x-poacc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "거장 순매집 상위 10",
+    "sid": "x-guruacc",
     "lab": "종목·타이밍"
    },
    {
@@ -14961,7 +14961,7 @@
    "excess_cagr": 36.39,
    "d_sharpe": 0.955,
    "t": 5.65,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -15050,8 +15050,8 @@
      "sharpe": 1.387,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "BF.B",
@@ -15181,7 +15181,7 @@
    "excess_cagr": 47.79,
    "d_sharpe": 0.917,
    "t": 5.53,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -15270,8 +15270,8 @@
      "sharpe": 1.084,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AOS",
      "ARE",
@@ -15412,7 +15412,7 @@
    "excess_cagr": 54.6,
    "d_sharpe": 0.911,
    "t": 4.88,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -15501,8 +15501,8 @@
      "sharpe": 0.784,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "AMAT",
@@ -15632,7 +15632,7 @@
    "excess_cagr": 29.02,
    "d_sharpe": 0.579,
    "t": 4.18,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -15726,8 +15726,8 @@
      "sharpe": 0.521,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "ALB",
@@ -15874,7 +15874,7 @@
    "excess_cagr": 44.72,
    "d_sharpe": 0.63,
    "t": 4.1,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -15963,8 +15963,8 @@
      "sharpe": 0.58,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "CIEN",
@@ -16101,7 +16101,7 @@
    "excess_cagr": 11.43,
    "d_sharpe": 0.509,
    "t": 3.99,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -16190,8 +16190,8 @@
      "sharpe": 0.359,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "ALGN",
@@ -16341,7 +16341,7 @@
    "excess_cagr": 15.33,
    "d_sharpe": 0.426,
    "t": 3.81,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -16430,8 +16430,8 @@
      "sharpe": 0.506,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "APP",
@@ -16581,7 +16581,7 @@
    "excess_cagr": 10.31,
    "d_sharpe": 0.414,
    "t": 3.72,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -16670,8 +16670,8 @@
      "sharpe": 0.359,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AMD",
      "AVGO",
@@ -16819,7 +16819,7 @@
    "excess_cagr": 26.89,
    "d_sharpe": 0.538,
    "t": 3.66,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -16908,8 +16908,8 @@
      "sharpe": 0.945,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADM",
      "COHR",
@@ -17046,7 +17046,7 @@
    "excess_cagr": 34.59,
    "d_sharpe": 0.586,
    "t": 3.61,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -17135,8 +17135,8 @@
      "sharpe": 0.434,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "AMAT",
@@ -17266,7 +17266,7 @@
    "excess_cagr": 19.99,
    "d_sharpe": 0.485,
    "t": 3.48,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -17355,8 +17355,8 @@
      "sharpe": 0.677,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "APP",
      "BKNG",
@@ -17490,7 +17490,7 @@
    "excess_cagr": 16.96,
    "d_sharpe": 0.372,
    "t": 3.31,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -17579,8 +17579,8 @@
      "sharpe": 0.465,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "CPRT",
@@ -17714,7 +17714,7 @@
    "excess_cagr": 31.02,
    "d_sharpe": 0.425,
    "t": 3.28,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -17803,8 +17803,8 @@
      "sharpe": 0.408,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "CIEN",
@@ -17934,7 +17934,7 @@
    "excess_cagr": 8.48,
    "d_sharpe": 0.356,
    "t": 3.06,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -18136,7 +18136,7 @@
    "excess_cagr": 12.27,
    "d_sharpe": 0.395,
    "t": 3.0,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -18225,8 +18225,8 @@
      "sharpe": 0.453,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AJG",
      "ARM",
@@ -18366,7 +18366,7 @@
    "excess_cagr": 12.57,
    "d_sharpe": 0.391,
    "t": 3.0,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -18455,8 +18455,8 @@
      "sharpe": 0.423,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AIG",
      "CHTR",
@@ -18597,7 +18597,7 @@
    "excess_cagr": 17.88,
    "d_sharpe": 0.423,
    "t": 2.97,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -18686,8 +18686,8 @@
      "sharpe": 0.28,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "CIEN",
@@ -18824,7 +18824,7 @@
    "excess_cagr": 22.45,
    "d_sharpe": 0.461,
    "t": 2.96,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -18918,8 +18918,8 @@
      "sharpe": 0.418,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "CAT",
      "CIEN",
@@ -19049,7 +19049,7 @@
    "excess_cagr": 22.29,
    "d_sharpe": 0.399,
    "t": 2.93,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -19143,8 +19143,8 @@
      "sharpe": 0.411,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "CIEN",
      "EA",
@@ -19225,226 +19225,6 @@
    ]
   },
   {
-   "sid": "x-guruacc",
-   "name": "거장 순매집 상위 10",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "13F 공시 18인의 합산 보유금액이 직전 분기 대비 가장 크게 늘어난 10종목 동일가중, 월말 리밸런스. 분기말 +45일(공시 마감) 이후 첫 월말부터 쓴다.",
-   "why": "t-13f-clone 은 보유 수준(많이 든 것)을 복제하고 이건 변화(더 담은 것)를 본다. 🚨 이름에 '기관'을 쓰지 않았다 — 18인은 기관 수급이 아니라 거장 포지셔닝이고, 이름이 자료보다 크면 그 자체가 거짓말이다. ⚠ 보유 매니저 수는 순위로 쓰지 않는다. 18인뿐이라 서로 다른 값이 얇다(한 분기 437종 중 243종이 매니저 1인). 금액 변화율만 쓴다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-07-29",
-    "end": "2026-07-31",
-    "n_days": 2515,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 25.06,
-     "b": 13.16,
-     "d": 11.9
-    },
-    {
-     "k": "변동성",
-     "s": 21.91,
-     "b": 18.07,
-     "d": 3.84
-    },
-    {
-     "k": "샤프",
-     "s": 1.069,
-     "b": 0.698,
-     "d": 0.371
-    },
-    {
-     "k": "최대낙폭",
-     "s": -43.49,
-     "b": -33.92,
-     "d": -9.57
-    }
-   ],
-   "excess_cagr": 11.9,
-   "d_sharpe": 0.371,
-   "t": 2.86,
-   "t_crit": 2.0,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 24.56,
-      "sharpe": 1.051,
-      "excess": 11.4,
-      "t": 2.76,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 24.07,
-      "sharpe": 1.032,
-      "excess": 10.91,
-      "t": 2.65,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 23.08,
-      "sharpe": 0.996,
-      "excess": 9.92,
-      "t": 2.43,
-      "main": false
-     }
-    ],
-    "drag": 0.99,
-    "traded": 7.98,
-    "kill": false,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 4.03,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "장부가 대비 저평가 — 상위 30% (155종)",
-     "corr": 0.431,
-     "alpha": 9.12,
-     "t": 2.71,
-     "beta": 0.448
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.35,
-    "sharpe": 0.924,
-    "excess": 6.71,
-    "d_sharpe": 0.145,
-    "t": 1.82,
-    "t_net": 1.58,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "window": "2016-08~2026-07",
-    "start": "2016-08-31",
-    "n_days": 2492,
-    "pit": {
-     "cagr": 21.68,
-     "sharpe": 0.905,
-     "mdd": -45.73,
-     "bench_cagr": 12.98,
-     "excess": 8.7,
-     "t": 2.38,
-     "d_sharpe": 0.288,
-     "turnover": 3.96
-    },
-    "retro": {
-     "cagr": 25.46,
-     "sharpe": 1.035,
-     "mdd": -43.49,
-     "bench_cagr": 18.42,
-     "excess": 7.04,
-     "t": 1.88
-    },
-    "bias": {
-     "cagr": 3.78,
-     "excess": -1.66,
-     "sharpe": 0.13,
-     "bench_cagr": 5.44
-    },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
-    "holdings": [
-     "AME",
-     "CBOE",
-     "DAL",
-     "ECHO",
-     "EQIX",
-     "EW",
-     "INTC",
-     "LITE",
-     "LULU",
-     "MMM"
-    ]
-   },
-   "pool": {
-    "first": 201,
-    "last": 403,
-    "min": 193,
-    "med": 284,
-    "narrow": 0,
-    "n": 120,
-    "d0": "2016-07-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-07-31",
-    "n": 10,
-    "tickers": [
-     "AME",
-     "CBOE",
-     "DAL",
-     "ECHO",
-     "EQIX",
-     "EW",
-     "INTC",
-     "LITE",
-     "LULU",
-     "MMM"
-    ],
-    "names": {
-     "AME": "AMETEK INC",
-     "CBOE": "CBOE GLOBAL MARKETS INC",
-     "DAL": "DELTA AIR LINES INC",
-     "ECHO": "ECHOSTAR CORP-A",
-     "EQIX": "EQUINIX INC",
-     "EW": "EDWARDS LIFESCIENCES CORP",
-     "INTC": "INTEL CORP",
-     "LITE": "LUMENTUM HOLDINGS INC",
-     "LULU": "LULULEMON ATHLETICA INC",
-     "MMM": "3M CO"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "지수 편입 이력",
-      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
    "sid": "x-sp",
    "name": "저PSR (매출수익률 상위 10)",
    "family": "종목·타이밍",
@@ -19494,7 +19274,7 @@
    "excess_cagr": 16.5,
    "d_sharpe": 0.496,
    "t": 2.79,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -19583,8 +19363,8 @@
      "sharpe": 0.332,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "BG",
      "CAH",
@@ -19725,7 +19505,7 @@
    "excess_cagr": 13.04,
    "d_sharpe": 0.32,
    "t": 2.79,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -19814,8 +19594,8 @@
      "sharpe": 0.207,
      "bench_cagr": 5.31
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADI",
      "ALB",
@@ -19955,7 +19735,7 @@
    "excess_cagr": 20.52,
    "d_sharpe": 0.301,
    "t": 2.78,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -20044,8 +19824,8 @@
      "sharpe": 0.462,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "APO",
@@ -20182,7 +19962,7 @@
    "excess_cagr": 15.12,
    "d_sharpe": 0.41,
    "t": 2.74,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -20276,8 +20056,8 @@
      "sharpe": 0.534,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "DD",
      "DLTR",
@@ -20418,7 +20198,7 @@
    "excess_cagr": 13.09,
    "d_sharpe": 0.315,
    "t": 2.7,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -20507,8 +20287,8 @@
      "sharpe": 0.237,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "COF",
      "CRL",
@@ -20655,7 +20435,7 @@
    "excess_cagr": 9.62,
    "d_sharpe": 0.353,
    "t": 2.64,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -20744,8 +20524,8 @@
      "sharpe": 0.425,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ABT",
      "APD",
@@ -20895,7 +20675,7 @@
    "excess_cagr": 9.45,
    "d_sharpe": 0.258,
    "t": 2.62,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -20984,8 +20764,8 @@
      "sharpe": 0.405,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADBE",
      "ALB",
@@ -21136,7 +20916,7 @@
    "excess_cagr": 10.88,
    "d_sharpe": 0.226,
    "t": 2.61,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -21225,8 +21005,8 @@
      "sharpe": 0.494,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARES",
      "BLDR",
@@ -21383,7 +21163,7 @@
    "excess_cagr": 8.51,
    "d_sharpe": 0.349,
    "t": 2.6,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -21472,8 +21252,8 @@
      "sharpe": 0.394,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADI",
      "AEP",
@@ -21623,7 +21403,7 @@
    "excess_cagr": 12.82,
    "d_sharpe": 0.228,
    "t": 2.53,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -21712,8 +21492,8 @@
      "sharpe": 0.272,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACN",
      "AKAM",
@@ -21853,7 +21633,7 @@
    "excess_cagr": 14.13,
    "d_sharpe": 0.286,
    "t": 2.52,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -21942,8 +21722,8 @@
      "sharpe": 0.215,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACGL",
      "AMP",
@@ -22077,7 +21857,7 @@
    "excess_cagr": 6.8,
    "d_sharpe": 0.322,
    "t": 2.51,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -22166,8 +21946,8 @@
      "sharpe": 0.276,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AME",
      "APO",
@@ -22317,7 +22097,7 @@
    "excess_cagr": 11.76,
    "d_sharpe": 0.468,
    "t": 2.43,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -22406,8 +22186,8 @@
      "sharpe": 0.407,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "HPE",
      "IBM",
@@ -22574,7 +22354,7 @@
    "excess_cagr": 10.79,
    "d_sharpe": 0.293,
    "t": 2.42,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -22663,8 +22443,8 @@
      "sharpe": 0.553,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AMT",
      "BG",
@@ -22745,6 +22525,226 @@
    ]
   },
   {
+   "sid": "x-guruacc",
+   "name": "거장 순매집 상위 10",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "13F 공시 18인의 합산 보유금액이 직전 분기 대비 가장 크게 늘어난 10종목 동일가중, 월말 리밸런스. 분기말 +45일(공시 마감) 이후 첫 월말부터 쓴다.",
+   "why": "t-13f-clone 은 보유 수준(많이 든 것)을 복제하고 이건 변화(더 담은 것)를 본다. 🚨 이름에 '기관'을 쓰지 않았다 — 18인은 기관 수급이 아니라 거장 포지셔닝이고, 이름이 자료보다 크면 그 자체가 거짓말이다. ⚠ 보유 매니저 수는 순위로 쓰지 않는다. 18인뿐이라 서로 다른 값이 얇다(한 분기 437종 중 243종이 매니저 1인). 금액 변화율만 쓴다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-29",
+    "end": "2026-07-31",
+    "n_days": 2515,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 22.86,
+     "b": 13.16,
+     "d": 9.7
+    },
+    {
+     "k": "변동성",
+     "s": 21.54,
+     "b": 18.07,
+     "d": 3.47
+    },
+    {
+     "k": "샤프",
+     "s": 1.001,
+     "b": 0.698,
+     "d": 0.303
+    },
+    {
+     "k": "최대낙폭",
+     "s": -43.49,
+     "b": -33.92,
+     "d": -9.57
+    }
+   ],
+   "excess_cagr": 9.7,
+   "d_sharpe": 0.303,
+   "t": 2.36,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 22.37,
+      "sharpe": 0.982,
+      "excess": 9.21,
+      "t": 2.25,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 21.89,
+      "sharpe": 0.964,
+      "excess": 8.73,
+      "t": 2.15,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 20.91,
+      "sharpe": 0.926,
+      "excess": 7.75,
+      "t": 1.93,
+      "main": false
+     }
+    ],
+    "drag": 0.97,
+    "traded": 8.02,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 4.05,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "장부가 대비 저평가 — 상위 30% (155종)",
+     "corr": 0.425,
+     "alpha": 7.3,
+     "t": 2.15,
+     "beta": 0.444
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.35,
+    "sharpe": 0.924,
+    "excess": 4.51,
+    "d_sharpe": 0.077,
+    "t": 1.29,
+    "t_net": 1.05,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "window": "2016-08~2026-07",
+    "start": "2016-08-31",
+    "n_days": 2492,
+    "pit": {
+     "cagr": 18.55,
+     "sharpe": 0.794,
+     "mdd": -45.73,
+     "bench_cagr": 12.98,
+     "excess": 5.57,
+     "t": 1.6,
+     "d_sharpe": 0.177,
+     "turnover": 3.98
+    },
+    "retro": {
+     "cagr": 23.25,
+     "sharpe": 0.967,
+     "mdd": -43.49,
+     "bench_cagr": 18.42,
+     "excess": 4.83,
+     "t": 1.35
+    },
+    "bias": {
+     "cagr": 4.7,
+     "excess": -0.74,
+     "sharpe": 0.173,
+     "bench_cagr": 5.44
+    },
+    "t_crit": null,
+    "t_crit_lab": null,
+    "holdings": [
+     "AME",
+     "CBOE",
+     "DAL",
+     "EQIX",
+     "EW",
+     "INTC",
+     "LITE",
+     "LULU",
+     "MMM",
+     "PPL"
+    ]
+   },
+   "pool": {
+    "first": 202,
+    "last": 406,
+    "min": 194,
+    "med": 285,
+    "narrow": 0,
+    "n": 120,
+    "d0": "2016-07-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-07-31",
+    "n": 10,
+    "tickers": [
+     "AME",
+     "CBOE",
+     "DAL",
+     "EQIX",
+     "EW",
+     "INTC",
+     "LITE",
+     "LULU",
+     "MMM",
+     "PPL"
+    ],
+    "names": {
+     "AME": "AMETEK INC",
+     "CBOE": "CBOE GLOBAL MARKETS INC",
+     "DAL": "DELTA AIR LINES INC",
+     "EQIX": "EQUINIX INC",
+     "EW": "EDWARDS LIFESCIENCES CORP",
+     "INTC": "INTEL CORP",
+     "LITE": "LUMENTUM HOLDINGS INC",
+     "LULU": "LULULEMON ATHLETICA INC",
+     "MMM": "3M CO",
+     "PPL": "PPL CORP"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "t-chand",
    "name": "변동성 추격 손절 (샹들리에)",
    "family": "종목·타이밍",
@@ -22794,7 +22794,7 @@
    "excess_cagr": 4.86,
    "d_sharpe": 0.212,
    "t": 2.36,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -22883,8 +22883,8 @@
      "sharpe": 0.335,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -22980,7 +22980,7 @@
    "excess_cagr": 8.13,
    "d_sharpe": 0.283,
    "t": 2.34,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -23069,8 +23069,8 @@
      "sharpe": 0.262,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AMZN",
      "COR",
@@ -23207,7 +23207,7 @@
    "excess_cagr": 7.55,
    "d_sharpe": 0.281,
    "t": 2.33,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -23296,8 +23296,8 @@
      "sharpe": 0.371,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AFL",
      "ALB",
@@ -23557,7 +23557,7 @@
    "excess_cagr": 10.2,
    "d_sharpe": 0.167,
    "t": 2.33,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -23646,8 +23646,8 @@
      "sharpe": 0.325,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "ALNY",
@@ -23801,7 +23801,7 @@
    "excess_cagr": 14.14,
    "d_sharpe": 0.237,
    "t": 2.28,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -23895,8 +23895,8 @@
      "sharpe": 0.66,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADM",
      "ALNY",
@@ -24026,7 +24026,7 @@
    "excess_cagr": 11.79,
    "d_sharpe": 0.283,
    "t": 2.26,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -24120,8 +24120,8 @@
      "sharpe": 0.308,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADBE",
      "AIG",
@@ -24262,7 +24262,7 @@
    "excess_cagr": 9.29,
    "d_sharpe": 0.273,
    "t": 2.24,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -24351,8 +24351,8 @@
      "sharpe": 0.369,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "APD",
      "ARE",
@@ -24492,7 +24492,7 @@
    "excess_cagr": 5.79,
    "d_sharpe": 0.22,
    "t": 2.15,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -24581,8 +24581,8 @@
      "sharpe": 0.081,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADBE",
      "AMAT",
@@ -24722,7 +24722,7 @@
    "excess_cagr": 12.3,
    "d_sharpe": 0.138,
    "t": 2.11,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -24816,8 +24816,8 @@
      "sharpe": 0.184,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "ALB",
@@ -24974,7 +24974,7 @@
    "excess_cagr": 11.14,
    "d_sharpe": 0.235,
    "t": 2.1,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -25063,8 +25063,8 @@
      "sharpe": 0.453,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALAB",
      "APA",
@@ -25201,7 +25201,7 @@
    "excess_cagr": 6.66,
    "d_sharpe": 0.196,
    "t": 2.09,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -25290,8 +25290,8 @@
      "sharpe": 0.29,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "CBOE",
@@ -25442,7 +25442,7 @@
    "excess_cagr": 8.61,
    "d_sharpe": 0.221,
    "t": 2.08,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -25531,8 +25531,8 @@
      "sharpe": 0.091,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "APH",
      "CME",
@@ -25662,7 +25662,7 @@
    "excess_cagr": 11.11,
    "d_sharpe": 0.205,
    "t": 2.04,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -25751,8 +25751,8 @@
      "sharpe": 0.381,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "CHTR",
@@ -25896,7 +25896,7 @@
    "excess_cagr": 11.42,
    "d_sharpe": 0.174,
    "t": 2.0,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -25990,8 +25990,8 @@
      "sharpe": 0.311,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "CHTR",
@@ -26132,7 +26132,7 @@
    "excess_cagr": 10.76,
    "d_sharpe": 0.191,
    "t": 1.99,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -26221,8 +26221,8 @@
      "sharpe": 0.454,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "CHTR",
@@ -26363,7 +26363,7 @@
    "excess_cagr": 5.9,
    "d_sharpe": 0.198,
    "t": 1.87,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -26565,7 +26565,7 @@
    "excess_cagr": 7.1,
    "d_sharpe": 0.342,
    "t": 1.85,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -26654,8 +26654,8 @@
      "sharpe": 0.548,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "AIZ",
@@ -26795,7 +26795,7 @@
    "excess_cagr": 6.55,
    "d_sharpe": 0.214,
    "t": 1.81,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -26884,8 +26884,8 @@
      "sharpe": 0.381,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AAPL",
      "ACN",
@@ -27291,7 +27291,7 @@
    "excess_cagr": 5.89,
    "d_sharpe": 0.126,
    "t": 1.75,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -27380,8 +27380,8 @@
      "sharpe": 0.357,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "A",
      "ADBE",
@@ -27538,7 +27538,7 @@
    "excess_cagr": 6.79,
    "d_sharpe": 0.344,
    "t": 1.69,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -27627,8 +27627,8 @@
      "sharpe": 0.296,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "CBOE",
      "CHRW",
@@ -27768,7 +27768,7 @@
    "excess_cagr": 4.92,
    "d_sharpe": 0.232,
    "t": 1.65,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -27857,8 +27857,8 @@
      "sharpe": 0.336,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "FE",
      "FISV",
@@ -28008,7 +28008,7 @@
    "excess_cagr": 6.71,
    "d_sharpe": 0.165,
    "t": 1.6,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -28097,8 +28097,8 @@
      "sharpe": 0.184,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACGL",
      "ACN",
@@ -28352,7 +28352,7 @@
    "excess_cagr": 5.82,
    "d_sharpe": 0.17,
    "t": 1.54,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -28441,8 +28441,8 @@
      "sharpe": 0.178,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AMZN",
      "APA",
@@ -28589,7 +28589,7 @@
    "excess_cagr": 6.02,
    "d_sharpe": 0.123,
    "t": 1.51,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -28678,8 +28678,8 @@
      "sharpe": 0.193,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "AMAT",
@@ -28836,7 +28836,7 @@
    "excess_cagr": 5.04,
    "d_sharpe": 0.196,
    "t": 1.5,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -28925,8 +28925,8 @@
      "sharpe": 0.26,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADM",
      "AKAM",
@@ -29076,7 +29076,7 @@
    "excess_cagr": 5.18,
    "d_sharpe": 0.19,
    "t": 1.38,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -29165,8 +29165,8 @@
      "sharpe": 0.256,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AFL",
      "AWK",
@@ -29316,7 +29316,7 @@
    "excess_cagr": 5.2,
    "d_sharpe": 0.279,
    "t": 1.35,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -29405,8 +29405,8 @@
      "sharpe": 0.374,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "AME",
@@ -29536,7 +29536,7 @@
    "excess_cagr": 4.31,
    "d_sharpe": 0.32,
    "t": 1.28,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -29625,8 +29625,8 @@
      "sharpe": 0.372,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AAPL",
      "ABBV",
@@ -29766,7 +29766,7 @@
    "excess_cagr": 4.77,
    "d_sharpe": 0.138,
    "t": 1.27,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -29855,8 +29855,8 @@
      "sharpe": 0.208,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AIZ",
      "AMAT",
@@ -30013,7 +30013,7 @@
    "excess_cagr": 6.14,
    "d_sharpe": 0.366,
    "t": 1.21,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -30102,8 +30102,8 @@
      "sharpe": 0.33,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "BRK.B",
@@ -30240,7 +30240,7 @@
    "excess_cagr": 3.17,
    "d_sharpe": 0.069,
    "t": 1.21,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -30329,8 +30329,8 @@
      "sharpe": 0.211,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADBE",
      "ADP",
@@ -30480,7 +30480,7 @@
    "excess_cagr": 4.56,
    "d_sharpe": 0.039,
    "t": 1.14,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -30684,7 +30684,7 @@
    "excess_cagr": 4.98,
    "d_sharpe": 0.019,
    "t": 1.14,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -30773,8 +30773,8 @@
      "sharpe": 0.413,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "ALGN",
@@ -30921,7 +30921,7 @@
    "excess_cagr": 5.02,
    "d_sharpe": 0.006,
    "t": 1.14,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -31010,8 +31010,8 @@
      "sharpe": 0.164,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ALB",
      "CBOE",
@@ -31141,7 +31141,7 @@
    "excess_cagr": 5.02,
    "d_sharpe": 0.015,
    "t": 1.13,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -31230,8 +31230,8 @@
      "sharpe": 0.224,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACGL",
      "ALL",
@@ -31382,7 +31382,7 @@
    "excess_cagr": 4.25,
    "d_sharpe": -0.008,
    "t": 1.12,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -31471,8 +31471,8 @@
      "sharpe": 0.237,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "ARM",
@@ -31619,7 +31619,7 @@
    "excess_cagr": 4.49,
    "d_sharpe": 0.037,
    "t": 1.09,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -31708,8 +31708,8 @@
      "sharpe": 0.121,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADI",
      "CHTR",
@@ -31839,7 +31839,7 @@
    "excess_cagr": 3.78,
    "d_sharpe": 0.102,
    "t": 1.07,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -31928,8 +31928,8 @@
      "sharpe": 0.207,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACGL",
      "ACN",
@@ -32498,7 +32498,7 @@
    "excess_cagr": 5.77,
    "d_sharpe": 0.045,
    "t": 1.07,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -32587,8 +32587,8 @@
      "sharpe": 0.208,
      "bench_cagr": 5.45
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARE",
      "CCI",
@@ -32729,7 +32729,7 @@
    "excess_cagr": 3.56,
    "d_sharpe": 0.024,
    "t": 0.98,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -32818,8 +32818,8 @@
      "sharpe": 0.3,
      "bench_cagr": 5.16
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADBE",
      "ADP",
@@ -32969,7 +32969,7 @@
    "excess_cagr": 2.76,
    "d_sharpe": 0.015,
    "t": 0.9,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -33058,8 +33058,8 @@
      "sharpe": 0.318,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ARM",
      "AXON",
@@ -33209,7 +33209,7 @@
    "excess_cagr": 3.78,
    "d_sharpe": 0.248,
    "t": 0.76,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -33298,8 +33298,8 @@
      "sharpe": 0.23,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "AFL",
@@ -33436,7 +33436,7 @@
    "excess_cagr": 3.76,
    "d_sharpe": 0.289,
    "t": 0.74,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -33525,8 +33525,8 @@
      "sharpe": 0.335,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AIZ",
      "AWK",
@@ -33676,7 +33676,7 @@
    "excess_cagr": 2.38,
    "d_sharpe": 0.071,
    "t": 0.7,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -33765,8 +33765,8 @@
      "sharpe": 0.265,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACN",
      "CDW",
@@ -33906,7 +33906,7 @@
    "excess_cagr": 2.47,
    "d_sharpe": 0.065,
    "t": 0.67,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -33995,8 +33995,8 @@
      "sharpe": 0.165,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "BNY",
      "BXP",
@@ -34126,7 +34126,7 @@
    "excess_cagr": 4.53,
    "d_sharpe": 0.355,
    "t": 0.61,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -34215,8 +34215,8 @@
      "sharpe": 0.883,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "CBOE",
      "CF",
@@ -34353,7 +34353,7 @@
    "excess_cagr": 1.58,
    "d_sharpe": 0.107,
    "t": 0.42,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -34442,8 +34442,8 @@
      "sharpe": 0.181,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AFL",
      "ATO",
@@ -34590,7 +34590,7 @@
    "excess_cagr": 1.93,
    "d_sharpe": 0.188,
    "t": 0.38,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -34679,8 +34679,8 @@
      "sharpe": 0.456,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -34769,7 +34769,7 @@
    "excess_cagr": 0.67,
    "d_sharpe": -0.024,
    "t": 0.32,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -34858,8 +34858,8 @@
      "sharpe": 0.425,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "CMS",
@@ -34999,7 +34999,7 @@
    "excess_cagr": 0.4,
    "d_sharpe": 0.005,
    "t": 0.16,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -35088,8 +35088,8 @@
      "sharpe": 0.334,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AEE",
      "AIG",
@@ -35229,7 +35229,7 @@
    "excess_cagr": 0.91,
    "d_sharpe": 0.12,
    "t": 0.14,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -35318,8 +35318,8 @@
      "sharpe": 0.208,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AEP",
      "AES",
@@ -35575,7 +35575,7 @@
    "excess_cagr": 0.23,
    "d_sharpe": 0.046,
    "t": 0.01,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -35664,8 +35664,8 @@
      "sharpe": 0.327,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -35761,7 +35761,7 @@
    "excess_cagr": -0.36,
    "d_sharpe": -0.057,
    "t": -0.01,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -35850,8 +35850,8 @@
      "sharpe": 0.243,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "EIX",
      "EQR",
@@ -35991,7 +35991,7 @@
    "excess_cagr": 0.91,
    "d_sharpe": 0.355,
    "t": -0.03,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -36080,8 +36080,8 @@
      "sharpe": 0.324,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -36170,7 +36170,7 @@
    "excess_cagr": 0.24,
    "d_sharpe": 0.081,
    "t": -0.04,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -36259,8 +36259,8 @@
      "sharpe": 0.18,
      "bench_cagr": 5.41
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "AFL",
@@ -36516,7 +36516,7 @@
    "excess_cagr": 0.54,
    "d_sharpe": 0.247,
    "t": -0.07,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -36605,8 +36605,8 @@
      "sharpe": 0.405,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -36702,7 +36702,7 @@
    "excess_cagr": 0.4,
    "d_sharpe": 0.173,
    "t": -0.07,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -36791,8 +36791,8 @@
      "sharpe": 0.094,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AES",
      "AFL",
@@ -36949,7 +36949,7 @@
    "excess_cagr": 0.75,
    "d_sharpe": 0.37,
    "t": -0.09,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -37038,8 +37038,8 @@
      "sharpe": 0.341,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -37135,7 +37135,7 @@
    "excess_cagr": 0.45,
    "d_sharpe": 0.252,
    "t": -0.09,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -37224,8 +37224,8 @@
      "sharpe": 0.437,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -37321,7 +37321,7 @@
    "excess_cagr": 0.05,
    "d_sharpe": 0.08,
    "t": -0.1,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -37410,8 +37410,8 @@
      "sharpe": 0.127,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AIZ",
      "AMD",
@@ -37568,7 +37568,7 @@
    "excess_cagr": 0.56,
    "d_sharpe": 0.41,
    "t": -0.13,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -37657,8 +37657,8 @@
      "sharpe": 0.397,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -37747,7 +37747,7 @@
    "excess_cagr": 0.21,
    "d_sharpe": 0.345,
    "t": -0.17,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -37836,8 +37836,8 @@
      "sharpe": 0.279,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -37933,7 +37933,7 @@
    "excess_cagr": -0.74,
    "d_sharpe": 0.061,
    "t": -0.2,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -38022,8 +38022,8 @@
      "sharpe": 0.492,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "APA",
      "CF",
@@ -38160,7 +38160,7 @@
    "excess_cagr": -0.15,
    "d_sharpe": 0.254,
    "t": -0.23,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -38249,8 +38249,8 @@
      "sharpe": 0.399,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -38339,7 +38339,7 @@
    "excess_cagr": -2.54,
    "d_sharpe": -0.212,
    "t": -0.25,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -38428,8 +38428,8 @@
      "sharpe": 0.036,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADI",
      "HCA",
@@ -38559,7 +38559,7 @@
    "excess_cagr": -0.45,
    "d_sharpe": 0.208,
    "t": -0.29,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -38648,8 +38648,8 @@
      "sharpe": 0.428,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -38745,7 +38745,7 @@
    "excess_cagr": -0.63,
    "d_sharpe": 0.087,
    "t": -0.33,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -38834,8 +38834,8 @@
      "sharpe": 0.063,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ACGL",
      "AEE",
@@ -39235,7 +39235,7 @@
    "excess_cagr": -0.98,
    "d_sharpe": 0.232,
    "t": -0.39,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -39324,8 +39324,8 @@
      "sharpe": 0.366,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -39421,7 +39421,7 @@
    "excess_cagr": -0.78,
    "d_sharpe": 0.257,
    "t": -0.42,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -39510,8 +39510,8 @@
      "sharpe": 0.277,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -39600,7 +39600,7 @@
    "excess_cagr": -1.35,
    "d_sharpe": -0.077,
    "t": -0.42,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -39689,8 +39689,8 @@
      "sharpe": 0.03,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "AME",
      "AOS",
@@ -39840,7 +39840,7 @@
    "excess_cagr": -1.47,
    "d_sharpe": 0.163,
    "t": -0.49,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -39929,8 +39929,8 @@
      "sharpe": 0.339,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -40019,7 +40019,7 @@
    "excess_cagr": -3.74,
    "d_sharpe": -0.246,
    "t": -0.51,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -40108,8 +40108,8 @@
      "sharpe": 0.272,
      "bench_cagr": 5.43
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": [
      "ADM",
      "AMCR",
@@ -40270,7 +40270,7 @@
    "excess_cagr": -1.78,
    "d_sharpe": 0.154,
    "t": -0.55,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -40359,8 +40359,8 @@
      "sharpe": 0.246,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -40449,7 +40449,7 @@
    "excess_cagr": -2.4,
    "d_sharpe": 0.167,
    "t": -0.66,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -40538,8 +40538,8 @@
      "sharpe": 0.24,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -40635,7 +40635,7 @@
    "excess_cagr": -2.64,
    "d_sharpe": 0.275,
    "t": -0.71,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -40724,8 +40724,8 @@
      "sharpe": 0.256,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -40814,7 +40814,7 @@
    "excess_cagr": -2.23,
    "d_sharpe": 0.315,
    "t": -0.87,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -40903,8 +40903,8 @@
      "sharpe": 0.337,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -41000,7 +41000,7 @@
    "excess_cagr": -2.69,
    "d_sharpe": 0.28,
    "t": -0.89,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -41089,8 +41089,8 @@
      "sharpe": 0.33,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -41179,7 +41179,7 @@
    "excess_cagr": -4.46,
    "d_sharpe": 0.11,
    "t": -1.02,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -41268,8 +41268,8 @@
      "sharpe": 0.194,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -41358,7 +41358,7 @@
    "excess_cagr": -7.76,
    "d_sharpe": -0.146,
    "t": -1.61,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -41447,8 +41447,8 @@
      "sharpe": 0.143,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,
@@ -41537,7 +41537,7 @@
    "excess_cagr": -7.53,
    "d_sharpe": -0.331,
    "t": -1.85,
-   "t_crit": 2.0,
+   "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
@@ -41626,8 +41626,8 @@
      "sharpe": 0.291,
      "bench_cagr": 5.44
     },
-    "t_crit": 3.51,
-    "t_crit_lab": 3.52,
+    "t_crit": null,
+    "t_crit_lab": null,
     "holdings": null
    },
    "pool": null,

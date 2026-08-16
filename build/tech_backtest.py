@@ -711,10 +711,10 @@ def risk_bootstrap(rets, brets, n_boot=BOOT_N, block=BOOT_BLOCK, seed=BOOT_SEED)
 #                x-currat (단독 t 3.63 · 이웃 1·2위가 x-cash·x-lowde · incr5 −1.29)
 #       PIT    — 14종을 강등. 측정된 생존편향 중앙 4.32%p · 최대 +49.70%p(x-small:
 #                소급 초과 +40.41 → PIT +1.69).
-GATE_INCR5 = False       # ⓑ 증분알파(이웃 5개 동시 통제) ≥ 2.0
-GATE_DSHARPE = False     # 열위(Δ샤프 ≤ 0) 강등
-GATE_PIT = False         # ⓒ 시점정확 재측정 강등 · 미측정 강등
-GATE_COST = False        # 🚨 2026-08-13 사용자 결정 — **마지막 관문도 끈다.**
+# 🚨 GATE_* 스위치를 없앴다(2026-08-16 사용자 지시 "관문, 문턱 다 없애").
+#   2026-08-13 에 전부 False 로 껐고, 이번에 분기 코드까지 걷었다. 스위치만 남기면
+#   "되살리려면 True 로" 라는 길이 남는데, 그 길이 곧 관문이 있다는 뜻이 된다.
+#   되살릴 일이 있으면 이 커밋을 되돌리면 된다 — git 이 그 기록을 들고 있다.
 #   "다중검정 임계, 본페로니 관문 이딴거 다 없애. t 관련된 것도 다 없애."
 #   이제 켜진 관문이 하나도 없다. 랩 규칙의 등급은 **성적으로 매기지 않는다** —
 #   아래 판정 루프가 전부 "측정만" 을 준다. 배포 원장의 등급(배포·제한적 유효)은
@@ -730,14 +730,14 @@ GATE_COST = False        # 🚨 2026-08-13 사용자 결정 — **마지막 관�
 #   ⚠ 끄면 화면의 '증분알파' 열이 빈다. 그 열이 무엇을 재던 것인지는 DATA-FACTS #8 에 남는다.
 EMIT_INCR5 = False
 
-# 다중검정 보정 — 2026-08-12 사용자 결정으로 **끈다.**
-#   True  : 본페로니 α=0.05/N. 규칙이 늘면 임계가 같이 오른다(94종에서 3.46).
-#   False : 검정이 하나일 때의 관례 |t| > T_CRIT_PLAIN 을 그대로 쓴다.
-#   ⚠ 무엇을 포기하는지 적어 둔다 — 같은 표본에서 94개를 돌리면 그중 최고는 우연히도
-#     좋아 보인다. 보정을 끄면 통과 후보가 17 → 44종이 된다(실측). Harvey·Liu·Zhu(2016)는
-#     발표된 이상현상에 |t|≈3.0 을 권고한다. 그 권고보다 느슨한 자리에 있게 된다.
-BONFERRONI = False
-T_CRIT_PLAIN = 2.0
+# 🚨 다중검정 보정·임계 상수는 **없앴다**(2026-08-16 사용자 지시 "관문, 문턱 다 없애").
+#   종전에는 BONFERRONI 스위치와 T_CRIT_PLAIN=2.0 이 있었고, 꺼진 채로도 '2.00' 이라는
+#   숫자가 산출물과 로그에 실려 넘어야 할 바처럼 읽혔다. 로그는 심지어 보정이 꺼져 있는데도
+#   "본페로니 α=0.05/N" 이라고 찍고 있었다(2026-08-15 발견 — 그 문구를 그대로 옮겨 적는
+#   사고가 실제로 났다).
+# ⚠ 무엇을 포기하는지 적어 둔다. 같은 표본에서 270개를 돌리면 그중 최고는 우연히도 좋아
+#   보인다. 보정 없이 t 를 읽으면 그 사실이 화면에 없다. Harvey·Liu·Zhu(2016)는 발표된
+#   이상현상에 |t|≈3.0 을 권고한다 — 이 랩은 이제 어떤 선도 긋지 않는다.
 
 FUND_LAG_DAYS = 90
 
@@ -6535,48 +6535,27 @@ def run():
               % (" · ".join("N%d %d종" % (k, _cnt[k]) for k in sorted(_cnt)),
                  _infl[len(_infl) // 2] if _infl else 0.0, max(_infl) if _infl else 0.0))
 
-    # ── 다중검정 임계 ────────────────────────────────────────────────
-    # 규칙 N개를 같은 표본에서 돌렸다. |t|>2 라는 관례는 검정이 하나일 때 이야기다.
-    # 본페로니(α=0.05/N)로 임계를 올린다 — Harvey·Liu·Zhu(2016)가 발표된 이상현상에
-    # 권고한 |t|≈3.0과도 대체로 같은 자리에 온다.
+    # ── 다중검정 임계 — 걷었다(2026-08-16 사용자 지시 "관문, 문턱 다 없애") ──────
+    # 종전에는 여기서 tcrit 을 만들어 산출물(t_crit)과 로그에 실었다. 관문은 이미
+    # 2026-08-13 에 전부 껐고, 남아 있던 것은 **넘어야 할 바처럼 보이는 숫자**뿐이었다.
+    # ⚠ t 값 자체는 그대로 잰다. 지운 것은 '얼마를 넘어야 한다' 는 **선**이다 —
+    #   선이 없으면 t 는 성적이 아니라 그냥 잰 값이 된다. 그것이 이 결정의 뜻이다.
     N = len(out)
-    if BONFERRONI:
-        alpha = 0.05 / max(1, N)
-        tcrit = z_of(alpha)  # 모듈 레벨 함수 — pit_backtest 도 z_crit() 으로 같은 것을 쓴다
-    else:
-        # 사용자 결정(2026-08-12) — 보정을 끈다. 위 BONFERRONI 주석에 무엇을 포기하는지 적었다.
-        alpha, tcrit = 0.05, T_CRIT_PLAIN
+    # 🚨 판정 루프 — 관문 분기를 걷었다(2026-08-16 "관문, 문턱 다 없애").
+    #   종전에는 GATE_* 가 꺼져 있어도 '통과 후보 / 구별 불가 / 열위' 로 갈리는 코드가
+    #   남아 있었다. 켜진 관문이 없는데 갈래만 남아 있으면 언젠가 되살아난다.
+    # ⚠ 이 랩은 이제 **등급을 매기지 않는다.** 전부 "측정만" 이다.
+    #   다만 '판정 불가' 는 남긴다 — 그건 성적이 아니라 **자료 상태**다(입력이 구간을
+    #   못 덮어 나머지가 현금 처리된 규칙). 그 사실까지 지우면 화면이 안 돈 것을 돈 것처럼
+    #   말하게 된다.
     for r in out:
         t = r["t"]
-        if not any((GATE_COST, GATE_DSHARPE, GATE_PIT, GATE_INCR5, BONFERRONI)):
-            # 🚨 켜진 관문이 하나도 없다(2026-08-13 사용자 결정). 그러면 등급은 성적을
-            #   말하는 것이 아니라 **아무 말도 안 하는 것**이어야 한다. 't 가 2 를 넘었다'
-            #   같은 배지를 관문 없이 달면 화면이 검정하지 않은 것을 검정한 척하게 된다.
-            #   입력이 구간을 못 덮은 것만 따로 표시한다 — 그건 성적이 아니라 자료 상태다.
-            r["verdict"] = "판정 불가" if r.get("cov_short") or t is None else "측정만"
-            if r.get("cov_short"):
-                _inp = "투자의견 이력" if r["sid"].startswith("x-revdrift") else "심리지수"
-                r["why"] = (r["why"] + " ⚠ 이 구간에서 입력(%s)이 %.1f%%만 존재해 나머지 "
-                            "기간이 자동으로 현금 처리됐다. 여기 성과는 규칙의 실력이 아니다."
-                            % (_inp, r.get("input_cov") or 0))
-            continue
+        r["verdict"] = "판정 불가" if (r.get("cov_short") or t is None) else "측정만"
         if r.get("cov_short"):
-            # 입력이 구간을 못 덮은 규칙 — 성과 숫자는 싣되 판정은 하지 않는다.
-            r["verdict"] = "판정 불가"
-            # 입력 이름을 규칙에 맞춰 적는다 — 전에는 '심리지수'로 박혀 있어, 다른 규칙이
-            # 같은 경로를 타면 화면이 엉뚱한 자료를 지목했다.
             _inp = "투자의견 이력" if r["sid"].startswith("x-revdrift") else "심리지수"
-            r["why"] = (r["why"] + " ⚠ 이 구간에서 입력(%s)이 %.1f%%만 존재해 "
-                        "나머지 기간이 자동으로 현금 처리됐다. 여기 성과는 규칙의 실력이 아니다."
+            r["why"] = (r["why"] + " ⚠ 이 구간에서 입력(%s)이 %.1f%%만 존재해 나머지 "
+                        "기간이 자동으로 현금 처리됐다. 여기 성과는 규칙의 실력이 아니다."
                         % (_inp, r.get("input_cov") or 0))
-        elif t is None:
-            r["verdict"] = "판정 불가"
-        elif GATE_DSHARPE and r["d_sharpe"] <= 0:
-            r["verdict"] = "열위"
-        elif abs(t) >= tcrit:
-            r["verdict"] = "통과 후보"
-        else:
-            r["verdict"] = "구별 불가"
 
     # ── 생존편향 실측 반영 ──────────────────────────────────────────────
     # 위 판정은 전부 '오늘의 유니버스를 과거로 소급한' 표본에서 나온다. 2026-07-27 에
@@ -6648,15 +6627,10 @@ def run():
         r["pit"] = {"window": _win, "cagr": m["cagr"], "sharpe": m["sharpe"],
                     "mdd": m["mdd"], "vol": m["vol"], "t": pt,
                     "n_days": m["n_days"],
-                    # 다중검정 문턱은 화면이 손으로 적지 않게 여기서 실어 보낸다 — explorer 에
-                    # '27종·3.11·랩 51종·3.30' 이 박혀 있었고 실제(33·57)와 어긋났다.
-                    "n_rules": len(PIT_MEASURED), "t_crit": PIT_DOC.get("t_crit"),
-                    "n_family_lab": PIT_DOC.get("n_family_lab"),
-                    "t_crit_lab": PIT_DOC.get("t_crit_lab"),
-                    "n_over": sum(1 for _v in PIT_MEASURED.values()
-                                  if _v["t"] is not None
-                                  and abs(_v["t"]) >= (PIT_DOC.get("t_crit_lab") or 99)),
-                    "t_max": PIT_DOC.get("t_max"),
+                    # 🚨 문턱(t_crit·t_crit_lab·t_max·n_over)은 걷었다(2026-08-16
+                    #   "관문, 문턱 다 없애"). 몇 종을 쟀는지는 남긴다 — 그건 선이 아니라
+                    #   **표본 크기**이고, 없으면 이 수치가 몇 개 중 하나인지 알 길이 없다.
+                    "n_rules": len(PIT_MEASURED),
                     "bench_cagr": _bn, "excess_cagr": round(m["cagr"] - _bn, 2),
                     # 대조군도 두 축을 다 싣는다 — 화면이 PIT 레그를 머리로 올릴 때
                     # 소급 레그와 같은 방식으로 '지수 대비 차이'를 적을 수 있어야 한다.
@@ -6673,12 +6647,6 @@ def run():
                     "retro_sharpe": m["retro_sharpe"], "retro_mdd": m["retro_mdd"],
                     "bias_sharpe": m["bias_sharpe"],
                     "bench_bias_cagr": m["bench_bias_cagr"]}
-        if GATE_PIT and r["verdict"] == "통과 후보" and abs(pt) < tcrit:
-            _dg.append((r["name"], r["t"], pt))
-            r["verdict"] = "구별 불가"
-            r["why"] += (" ⚠ 시점정확(PIT) 재측정에서 이 규칙의 t는 %.2f로 다중검정 문턱(%.2f)에 "
-                         "한참 못 미친다(소급 표본에서는 %.2f였다). 소급 표본의 통과는 편향이 만든 "
-                         "것으로 보아 판정을 내렸다." % (pt, tcrit, r["t"] or 0))
     if _dg:
         print("  [PIT 반영] 통과 후보 → 구별 불가 %d종:" % len(_dg))
         for nm, t0, t1 in _dg:
@@ -6708,22 +6676,9 @@ def run():
                                            encoding="utf-8")).get("excluded") or {})
         except Exception:
             pass
-    _ug = []
-    for r in out:
-        if GATE_PIT and r.get("verdict") == "통과 후보" and r["sid"] in _pit_excl and not (r.get("pit") or {}):
-            _ug.append((r["name"], r.get("t")))
-            r["verdict"] = "판정 불가"
-            # ⚠ 여기 ** 를 쓰지 말 것 — why 는 esc() 를 거쳐 별표가 글자로 찍힌다
-            #   (DATA-FACTS #24). 오늘 두 번째로 같은 함정을 밟았고 가드가 두 번 다 잡았다.
-            r["why"] += (" 🚨 소급 표본에서는 문턱을 넘었지만(t %.2f) 시점정확(PIT) 레그를 "
-                         "잴 수단이 없어 게시하지 않는다 — %s 이 계열의 실측 생존편향이 크므로"
-                         "(x-small: 소급 t 6.97 → PIT t 0.52) 소급 통과만으로 게시하면 편향을 "
-                         "발견으로 인증하게 된다."
-                         % (r.get("t") or 0, _pit_excl[r["sid"]].split("—")[0].strip() + " —"))
-    if _ug:
-        print("  [PIT 미측정] 통과 후보 → 판정 불가 %d종(잴 수단이 없다):" % len(_ug))
-        for nm, t0 in _ug:
-            print("    · %-28s 소급 t %.2f · PIT 레그 없음" % (nm[:28], t0 or 0))
+    # 🚨 'PIT 을 못 잰 통과 후보를 강등' 하던 블록을 걷었다(2026-08-16). 이제 '통과
+    #   후보' 라는 등급 자체가 없으므로 강등할 대상이 없다 — 죽은 분기를 남기면 언젠가
+    #   되살아난다. 시점정확을 왜 못 쟀는지는 pit_na 로 카드가 그대로 말한다.
     # ── 타이밍 재판정 — 자기가 사는 것을 못 이기면 그 t 는 대조군 격차다 ──────
     # 🚨 PIT 강등과 같은 자리에 같은 모양으로 건다(2026-08-04). 사유는 DATA-FACTS 12 다 —
     #   타이밍 규칙은 랩 동일가중 유니버스를 사는데 판정 대조군은 S&P 500(PR)이라, 노출을
@@ -6918,29 +6873,9 @@ def run():
     #   문서와 표가 갈리면 읽는 사람은 표를 믿는다. 게이트를 판정기에 그대로 건다.
     #   ⚠ 강등만 한다. 게이트를 넘었다고 등급을 올리지는 않는다 — 올리는 판단에는 PIT 레그와
     #     사전등록 여부가 더 필요하고, 그건 사람이 문서로 한다.
-    _pg = []
-    for r in out:
-        if r["verdict"] != "통과 후보":
-            continue
-        i5 = (r.get("incr5") or {}).get("t")
-        nt = ((r.get("net") or {}).get("sens") or {}).get("10", {}).get("t")
-        bad = []
-        if GATE_INCR5 and i5 is not None and abs(i5) < 2.0:
-            bad.append("증분 알파(이웃 5개 동시 통제) t %.2f < 2.0" % i5)
-        if GATE_COST and nt is not None and abs(nt) < tcrit:
-            bad.append("비용 후(편도 10bp) t %.2f < 임계 %.2f" % (nt, tcrit))
-        if not bad:
-            continue
-        _pg.append((r["name"], r["t"], "; ".join(bad)))
-        r["verdict"] = "구별 불가"
-        r["why"] += (" ⚠ 사전등록 게이트 미달로 판정을 내렸다 — %s. 단독 t %.2f 만 보면 문턱을 "
-                     "넘지만, 이 랩의 게시 기준은 셋을 전부 넘을 것을 요구한다."
-                     % (" · ".join(bad), r["t"] or 0))
-    if _pg:
-        print("  [사전등록 게이트] 통과 후보 → 구별 불가 %d종:" % len(_pg))
-        for nm, t0, why in _pg:
-            print("    · %-28s t %.2f — %s" % (nm[:28], t0 or 0, why))
-
+    # 🚨 증분알파·비용 관문 블록도 걷었다(2026-08-16). 같은 사유다 — 거를 등급이 없다.
+    #   증분알파는 애초에 계산도 안 한다(EMIT_INCR5=False). 비용 후 수치는 그대로 싣는다,
+    #   다만 그것으로 **거르지 않는다**.
     # 🚨 이 블록은 **증분 알파(incr5) 계산 뒤**에 있어야 한다. 처음에 판정 직후에 뒀다가
     #   incr5 가 아직 None 이라 그 조건이 통째로 건너뛰어졌다(x-hlspread incr5 1.11 이
     #   그대로 통과 후보로 남았다). 판정 순서가 곧 게이트의 유효 범위다.
@@ -7015,16 +6950,14 @@ def run():
         _pit_limit = (
             "생존편향의 크기(실측) — 매월말 그때 실제로 지수에 있던 종목만 후보로 두고 같은 구간"
             "(%s · %d거래일)을 다시 돌린 결과다. 대조군 CAGR이 %s%.2f%%로, 규칙 %d종의 CAGR은 "
-            "중앙값 %.1f%%p 과대로 나온다. 이 표에서 PIT |t| 가 다중검정 임계 %.2f 를 넘는 규칙은 "
-            "%d종이고 최대 |t| 는 %.2f(%s)다. ⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 "
+            "중앙값 %.1f%%p 과대로 나온다. 이 표의 PIT |t| 최대는 %.2f(%s)다. "
+            "⚠ t 하락분 전부가 편향은 아니다 — PIT 표본이 랩 "
             "본편보다 짧아 일부는 구간 단축에서 온다. "
             "산출: build/pit_backtest.py (멤버십은 위키백과 과거 리비전 data/index_history.json, "
             "가격은 yfinance). 🚨 이 줄의 수치는 다시 재지 않고 그 산출물에서 옮긴 것이다."
             % (PIT_WINDOW, PIT_DOC.get("n_days") or 0,
                ("%.2f%%→" % _lab_bench) if _lab_bench else "",
                PIT_BENCH, len(_rows), _med if _med is not None else 0,
-               PIT_DOC.get("t_crit") or 0,
-               sum(1 for _r in _rows if abs(_r.get("t") or 0) >= (PIT_DOC.get("t_crit") or 99)),
                _pt[-1][0] if _pt else 0, _pt[-1][1] if _pt else "—"))
 
     # 표본 길이를 사람이 읽는 말로 — 문장에 '3년'을 박아 두면 구간을 바꿀 때마다 거짓말이 된다.
@@ -7119,32 +7052,9 @@ def run():
         "span_years": round((n - MIN_HIST) / 252.0, 1),
         "surv_proxy": surv,
         "idx_stats": idx_sh,
-        "t_crit": tcrit,
-        # 🚨 게시 관문의 **현재 상태**를 산출물에 싣는다. 화면이 배지 뜻을 스스로 적으려면
-        #   이 값을 읽어야 한다 — 안 실으면 관문을 껐는데 화면은 계속 "셋을 다 넘었다"고 말한다.
-        #   (2026-08-12 에 셋을 끄면서 실제로 그 상태가 됐다.)
-        "gates": {"incr5": GATE_INCR5, "d_sharpe": GATE_DSHARPE,
-                  "pit": GATE_PIT, "cost": GATE_COST,
-                  "incr5_measured": EMIT_INCR5, "bonferroni": BONFERRONI},
-        "gates_note": ("게시 관문 — 켠 것만 판정을 강등한다. 끈 관문의 수치는 그대로 재서 "
-                       "싣는다(끄는 것과 안 재는 것은 다르다). "
-                       "지금 켜짐: %s / 꺼짐: %s."
-                       % (", ".join(k for k, v in (("증분알파(이웃5)", GATE_INCR5),
-                                                   ("열위(Δ샤프)", GATE_DSHARPE),
-                                                   ("시점정확(PIT)", GATE_PIT),
-                                                   ("비용 후 t", GATE_COST)) if v) or "없음",
-                          ", ".join(k for k, v in (("증분알파(이웃5)", GATE_INCR5),
-                                                   ("열위(Δ샤프)", GATE_DSHARPE),
-                                                   ("시점정확(PIT)", GATE_PIT),
-                                                   ("비용 후 t", GATE_COST)) if not v) or "없음")),
-        "t_crit_note": ("규칙 %d개를 같은 표본에서 돌렸으므로 본페로니(α=0.05/%d)로 임계를 올렸다. "
-                       "검정이 하나일 때의 관례 |t|>2 를 그대로 쓰면 우연을 발견으로 읽는다."
-                       % (N, N)) if BONFERRONI else (
-                       "🚨 다중검정 보정을 끈 상태다(2026-08-12 사용자 결정). 규칙 %d개를 "
-                       "같은 표본에서 돌렸으므로 그중 최고는 우연히도 좋아 보인다 — 지금 임계 "
-                       "%.1f 은 검정이 하나일 때의 관례이고, 본페로니(α=0.05/%d)라면 %.2f 이다. "
-                       "Harvey·Liu·Zhu(2016)는 발표된 이상현상에 |t|≈3.0 을 권고한다."
-                       % (N, T_CRIT_PLAIN, N, z_of(0.05 / max(1, N)))),
+        # 🚨 t_crit·gates·t_crit_note 를 걷었다(2026-08-16 "관문, 문턱 다 없애").
+        #   관문이 없으니 그 상태를 실을 것도 없고, 임계는 애초에 선이라 지운다.
+        #   ⚠ 무엇을 포기하는지는 파일 머리(BONFERRONI 자리 주석)에 적어 뒀다.
         "rf_note": "샤프는 FRED DGS3MO 월평균을 일할로 환산해 차감",
         "limits": [
             # ⚠ 기간을 숫자로 박지 말 것. 예전엔 '3년'이 문장에 박혀 있어 구간을 늘린 뒤에도
@@ -7220,14 +7130,10 @@ def run():
                  " · ".join("%s %d" % (k, v) for k, v in _tp)))
     else:
         print("이중클래스 배제: 0회 — data/cik_map.json 이 없거나 겹친 적이 없다")
-    # 🚨 2026-08-15 — 이 줄이 **BONFERRONI 가 꺼져 있어도 "본페로니" 라고 찍고 있었다.**
-    #   보정이 꺼진 지금 tcrit 은 T_CRIT_PLAIN(2.0) 이고 α 는 0.05 다 — 114 로 나눈 적이
-    #   없는데 "α=0.05/114" 라고 적혀 나갔다. 로그만 보면 보정을 한 줄 안다.
-    #   (실제로 이 로그를 읽고 "게시 기준 본페로니 2.00" 이라고 잘못 옮긴 일이 있었다.)
-    print("다중검정 임계 |t| ≥ %.2f (%s)"
-          % (tcrit, ("본페로니 α=0.05/%d" % N) if BONFERRONI
-             else "보정 끔 — 검정 하나 관례값. 이 표본에서 돌린 %d개를 보정하면 |t| ≥ %.2f 가 된다"
-                  % (N, z_of(0.05 / max(1, N)))))
+    # 🚨 '다중검정 임계' 출력 줄을 걷었다(2026-08-16 "관문, 문턱 다 없애").
+    #   이 줄은 BONFERRONI 가 꺼져 있어도 "본페로니 α=0.05/N" 이라고 찍는 결함까지
+    #   있었다(2026-08-15 발견 — 그 문구를 그대로 옮겨 적는 사고가 실제로 났다).
+    #   선을 안 그으므로 출력할 것도 없다. 규칙 수는 아래 '전략 N개' 줄이 그대로 말한다.
     import collections as _c
     print("판정:", dict(_c.Counter(r["verdict"] for r in out)))
     print("전략 %d개 · %s ~ %s (%d거래일) · %d종목 · %.0fKB"
