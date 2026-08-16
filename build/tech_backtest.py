@@ -3398,6 +3398,10 @@ def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
                    "fn": fn, "arch": arch, "topn": topn, "reb": reb})
 
 
+# ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md. 여섯 다 가격·거래량 특징만 쓴다 ──
+ML_SIDS = {"m-ridge", "m-ridge-w", "m-logit", "m-erc", "m-clust", "m-tree"}
+
+
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
 FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-…-CUSTCONC.md)
              "x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
@@ -3518,6 +3522,38 @@ def build_strats():
                  "시장 단위에서 외부 공포 게이지로는 다른 답이 나오는지 확인한다. "
                  "아카이브의 'VIX 기간구조'와는 다른 규칙이다 — 그쪽은 기간구조 단독, 이쪽은 "
                  "VIX 수준·기간구조·MOVE 합성이라 이전 판정을 그대로 가져다 붙이지 않는다.")
+
+    # ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md §4. 초매개변수는 ml_core.py 상수와
+    #   일대일로 대응한다(라이브러리 기본값이 판정에 섞이지 않게 numpy 로 직접 짰다).
+    xsec("m-ridge", "능형회귀 조합 예측 상위 %d" % TOPN,
+         "가격·거래량 특징 12개를 월말마다 z-점수로 맞추고, 확장창(최소 36개월) 능형회귀"
+         "(λ=10)로 다음 달 횡단면 초과수익을 예측해 상위 %d종 동일가중." % TOPN,
+         None, "이 랩의 88개 횡단면 규칙은 전부 지표 하나로 줄을 세운다. 신호를 «합치면» "
+         "무엇이 되는지를 이 랩이 한 번도 안 물었다 — 그 질문의 기준선이다.")
+    xsec("m-ridge-w", "능형회귀 조합 — 예측 비례 가중",
+         "m-ridge 와 «선택이 완전히 같고» 비중만 다르다. w ∝ (예측값 − 10위 예측값), 합 1.",
+         None, "선택을 고정했으므로 m-ridge 와의 차이가 곧 «가중이 값어치가 있나» 다. "
+         "이 랩은 전 규칙이 동일가중이라 그 질문을 잴 자리가 없었다.")
+    xsec("m-logit", "로지스틱 분류 확률 상위 %d" % TOPN,
+         "같은 특징 12개로 «다음 달 수익이 후보 상위 20%%인가»를 L2 로지스틱(λ=10)으로 "
+         "분류하고 확률 상위 %d종 동일가중." % TOPN,
+         None, "m-ridge 는 제곱오차라 꼬리에 끌린다. 순위 문제로 바꾸면 같은 특징에서도 "
+         "다른 종목이 나오는지 — 손실함수의 몫을 가른다.")
+    xsec("m-erc", "12-1 모멘텀 상위 %d — 동일위험기여 가중" % TOPN,
+         "선택은 x-mom12 와 «한 종목도 다르지 않다». 60일 공분산을 대각 방향 0.2 축소하고 "
+         "곱셈 갱신 200회로 각 종목의 위험기여를 같게 맞춘다.",
+         None, "위 셋은 선택을 바꾼다. 이건 선택을 안 바꾸고 비중만 바꾼다 — x-mom12 와의 "
+         "차이가 순수하게 가중의 효과다.")
+    xsec("m-clust", "상관 클러스터 %d개 × 각 1종" % TOPN,
+         "상위 120종의 60일 상관을 거리 √(2(1−ρ))로 바꿔 평균연결 계층군집으로 %d개로 "
+         "자르고, 각 군집에서 12-1 모멘텀 1위 1종을 담는다." % TOPN,
+         None, "상위 10은 같은 업종·같은 요인으로 쏠린다. 이건 분산을 «설계로» 확보한다 — "
+         "모멘텀이 같으므로 차이는 상관 구조뿐이다.")
+    xsec("m-tree", "배깅 회귀트리 예측 상위 %d" % TOPN,
+         "같은 특징 12개로 깊이 3 회귀트리 50그루(잎 최소 50표본·분기마다 특징 4개 임의추출·"
+         "행 부트스트랩)를 배깅해 예측 상위 %d종 동일가중." % TOPN,
+         None, "m-ridge·m-logit 은 선형이다. 비선형과 상호작용이 있다면 여기서만 잡힌다 — "
+         "동시에 자유도가 여섯 중 가장 커서 과최적화 표식을 보는 자리이기도 하다.")
 
     # ── 횡단면: 상위 TOPN 동일가중, 월말 리밸런스 ──
     xsec("x-mom12", "12-1 모멘텀 상위 %d" % TOPN,
@@ -4830,6 +4866,12 @@ def build_strats():
         "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52",
         "x-valcomp-sn", "x-revdrift-sn", "x-indmom",           # 바스켓이 N 으로 안 정해진다
     }
+    # 🚨 ML6 을 스윕에서 뺀다 — **돌리기 전 결정**(PREREG-2026-08-16-ML6.md §5 가 바스켓 10 을
+    #   못박았다). 2026-08-15 통계 배치는 이 장치에 덮여 «바스켓을 쓸어 본 이상 게시 기준
+    #   임계는 못 쓴다» 를 결과에 적어야 했다. 같은 일을 되풀이하지 않는다.
+    # ⚠ 게다가 m-ridge-w·m-erc 는 **상위 10 바스켓 위에 정의된 비중**이라 N 을 바꾸면
+    #   규칙 자체가 달라진다(변형이 아니라 다른 규칙이 된다).
+    NSW_SKIP |= set(ML_SIDS)
     # ⚠ 시총 하한 변형(-mcf)도 뺀다. 그쪽은 PREREG-2026-08-12-MCAPFLOOR 로 이미 등록된
     #   변형족이라, 크기까지 겹쳐 돌리면 '변형의 변형' 이 되고 밑동과의 비교가 흐려진다.
     NSW_SKIP |= {s["sid"] for s in STRATS if s["sid"].endswith(MCF_SUF)}
@@ -5062,6 +5104,19 @@ def xsec_score_at(S, i, X, pool=None):
     MACD10, MACFX = X.get("macd10") or [], X.get("macfx") or []
     meta, px, vlm = X["meta"], X["px"], X["vlm"]
     tickers = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool]
+    # ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md ────────────────────────────
+    # 🚨 **종목 루프보다 앞**이어야 한다. 여섯은 fn 이 None(모형이 단면 전체를 봐야 하므로
+    #   종목당 람다로 못 쓴다)이라, 루프에 들어가면 fn(None) 을 불러 죽는다. 실제로 그랬다.
+    # 🚨 특징 12개는 **이 함수를 다시 부르는 것**으로 얻는다(12개 중 8개는 fn 이 None 이고
+    #   아래 갈래로 계산된다 — 산식을 옮겨 적으면 채점기가 두 벌이 되고, 이 파일 머리말이
+    #   기록한 사고가 정확히 그것이다).
+    # ⚠ pool 을 그대로 물려준다. 소급은 None, 시점정확은 그달 편입명단이며 **학습 행도 같은
+    #   풀로 거른다** — 안 그러면 재려던 생존편향이 모형 안으로 숨는다.
+    if S["sid"] in ML_SIDS:
+        import ml_strats as _MLS
+        return (_MLS.score(sys.modules[__name__], S, i, X, tickers, pool,
+                           X.get("pool_at")), {}, {})
+
     # ── 시가총액 하한 변형(-mcf) — PREREG-2026-08-12-MCAPFLOOR.md ──────────
     # 🚨 여기서 좁힌다. 아래 사전패스(x-fip 모멘텀 5분위 · x-hlspread 변동성 회귀 ·
     #   x-clv/x-volvol 잔차 · E30 합성 · 산업 모멘텀)가 전부 tickers 를 훑으므로,
@@ -5771,6 +5826,17 @@ def xsec_pick_at(S, i, X, sc, ind_raw):
     if S["sid"] == "x-indmom":
         _pw = pick_industry(ind_raw, top_sectors=2)
         return [t for t, _w in _pw], {t: w for t, w in _pw}
+    # ── ML6 의 선택·비중 ──────────────────────────────────────────────
+    if S["sid"] in ML_SIDS:
+        import ml_strats as _MLS
+        _tb = sys.modules[__name__]
+        _pool = X.get("_pool_now")
+        if S["sid"] == "m-clust":
+            _h = _MLS.cluster_pick(_tb, S, i, X, sc, S.get("topn") or TOPN)
+            return _h, None
+        _h = pick_top(sc, S["sid"], S.get("topn"))
+        _w = _MLS.weights(_tb, S, i, X, _h, _pool, X.get("pool_at"))
+        return _h, _w
     return pick_top(sc, S["sid"], S.get("topn")), None
 
 
