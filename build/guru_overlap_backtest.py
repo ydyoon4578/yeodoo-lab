@@ -32,6 +32,7 @@ from __future__ import annotations
 import datetime as dt
 import io, json, os, re, sys
 
+import math
 import numpy as np
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
@@ -264,6 +265,25 @@ def build_topn(counts, k, n, rank, SH, P, mi, months, ISS):
     return W, turn, nhold, last, skipped, dropped
 
 
+# ── 곡선 (2026-08-16 사용자 요청: "차트랑 해서 더 잘 볼 수 있게") ──────────────
+# 🚨 화면이 월별 수익률로 곡선을 다시 만들지 않게 **여기서 굽는다.** 화면이 만들면
+#   기준점(100 시작)을 화면이 정하게 되고, 그러면 전략과 대조군이 다른 높이에서
+#   출발하는 사고가 난다 — 이 저장소가 2026-08-14 에 그것으로 그림이 승패를 거꾸로
+#   말하고 있었다(자산 랩 9종 중 8종).
+# ⚠ 세 계열을 **같은 달 목록**으로 만든다. 하나라도 달이 다르면 같은 그림에 못 올린다.
+# ⚠ 점이 많으면 파일이 커진다 — 월 격자라 154개월이면 그대로 실어도 작다(얇게 안 만든다).
+def curve(ms, series):
+    """{이름: {달: 수익률}} → {"m": [...], "s": {이름: [100 기준 지수]}}"""
+    out = {}
+    for nm, d in series.items():
+        v, acc = [], 100.0
+        for m in ms:
+            acc *= (1.0 + float(d.get(m, 0.0)))
+            v.append(round(acc, 2))
+        out[nm] = v
+    return {"m": list(ms), "s": out}
+
+
 def monthly_returns(W, P, mi, months):
     """비중 시계열 → 월 수익률. 비중은 그 달 말에 정해지고 다음 달 수익을 받는다."""
     out = {}
@@ -327,6 +347,8 @@ def main() -> int:
             a, beta, t, _ = capm(r, b, rf)
             row[name] = {"metrics": ann_from_monthly(b, rf),
                          "alpha": a, "beta": beta, "t": t}
+        # 곡선 — 셋을 같은 달 목록으로 굽는다(위 curve() 주석 참조)
+        row["curve"] = curve(ms, {"s": rets, "pool": pool, "spy": spy})
         variants.append(row)
         pvals.append(None)
         print("  K=%d  %d개월 · CAGR %6.2f%% (풀 %5.2f · SPY %5.2f) · 샤프 %.2f (%.2f · %.2f) "
@@ -368,6 +390,7 @@ def main() -> int:
             b = np.array([bs.get(m, 0.0) for m in ms])
             a, beta, t, _ = capm(r, b, rf)
             row[name] = {"metrics": ann_from_monthly(b, rf), "alpha": a, "beta": beta, "t": t}
+        row["curve"] = curve(ms, {"s": rets, "pool": pool, "spy": spy})
         tops.append(row)
         print("  상위%d(%s) %s~%s %d개월 · CAGR %6.2f%% (풀 %5.2f · SPY %5.2f) · 샤프 %.2f "
               "(%.2f · %.2f) · MDD %6.2f%% · 회전 %.0f%%"
@@ -383,12 +406,53 @@ def main() -> int:
 
     # 다중검정 — 문턱 4개 + 좁힌 판 2개 = 6개를 쟀다. 그중 하나를 골라 보이면 그것이
     # 사후 선택이다. K 변형만 세고 좁힌 판을 빼면 분모가 거짓말을 한다.
-    from scipy import stats
+    # 🚨 scipy 를 안 쓴다. 쓰던 것은 t분포 양측 p 하나뿐인데, 그것 때문에 이 빌더가
+    #   scipy 없는 곳에서 **산출 직전에 죽었다**(2026-08-16 실측 — 곡선까지 다 계산해
+    #   놓고 마지막 줄에서 ModuleNotFoundError). 무거운 의존성을 수식 하나에 걸지 않는다.
+    # ⚠ 불완전베타로 정확히 같은 값을 낸다(연분수 전개). scipy.stats.t.cdf 와 대조해
+    #   소수 6자리까지 일치를 확인했다.
+    def _betacf(a_, b_, x):
+        MAXIT, EPS, FPMIN = 200, 3e-16, 1e-300
+        qab, qap, qam = a_ + b_, a_ + 1.0, a_ - 1.0
+        c, d = 1.0, 1.0 - qab * x / qap
+        if abs(d) < FPMIN: d = FPMIN
+        d = 1.0 / d; h = d
+        for m in range(1, MAXIT + 1):
+            m2 = 2 * m
+            aa = m * (b_ - m) * x / ((qam + m2) * (a_ + m2))
+            d = 1.0 + aa * d
+            if abs(d) < FPMIN: d = FPMIN
+            c = 1.0 + aa / c
+            if abs(c) < FPMIN: c = FPMIN
+            d = 1.0 / d; h *= d * c
+            aa = -(a_ + m) * (qab + m) * x / ((a_ + m2) * (qap + m2))
+            d = 1.0 + aa * d
+            if abs(d) < FPMIN: d = FPMIN
+            c = 1.0 + aa / c
+            if abs(c) < FPMIN: c = FPMIN
+            d = 1.0 / d; de = d * c; h *= de
+            if abs(de - 1.0) < EPS: break
+        return h
+
+    def _betai(a_, b_, x):
+        if x <= 0: return 0.0
+        if x >= 1: return 1.0
+        lb = (math.lgamma(a_ + b_) - math.lgamma(a_) - math.lgamma(b_)
+              + a_ * math.log(x) + b_ * math.log(1.0 - x))
+        bt = math.exp(lb)
+        if x < (a_ + 1.0) / (a_ + b_ + 2.0):
+            return bt * _betacf(a_, b_, x) / a_
+        return 1.0 - bt * _betacf(b_, a_, 1.0 - x) / b_
+
+    def _t_two_sided(t, df):
+        if df <= 0: return None
+        return float(_betai(0.5 * df, 0.5, df / (df + t * t)))
+
     tested = variants + tops
     pv = []
     for v in tested:
         t, n = (v.get("spy") or {}).get("t"), v.get("n_months")
-        pv.append(None if t is None or not n else float(2 * (1 - stats.t.cdf(abs(t), n - 2))))
+        pv.append(None if t is None or not n else _t_two_sided(abs(t), n - 2))
     for v, p in zip(tested, pv):
         if p is not None:
             v["p_spy"] = round(p, 4)
