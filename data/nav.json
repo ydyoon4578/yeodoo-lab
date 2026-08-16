@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "239e5ac29807102d",
+ "generated_from": "8f2526cda0dfe804",
  "categories": [
   {
    "name": "시장",
@@ -66,61 +66,20 @@
      "live": true
     },
     {
+     "name": "종목 정보",
+     "file": "co.html",
+     "status": "existing",
+     "desc": "실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
+     "live": true
+    },
+    {
      "name": "지표별 타이밍",
      "file": "signals.html",
      "status": "existing",
      "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
-     "verdict": "rejected",
-     "src": "model",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "실적 및 전망",
-     "file": "co.html#est",
-     "status": "existing",
-     "desc": "목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중",
-     "verdict": "unverified",
-     "src": "est",
-     "effort": "M",
-     "anchor": "static",
-     "live": true
-    },
-    {
-     "name": "재무제표",
-     "file": "co.html#fs",
-     "status": "existing",
-     "desc": "SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "L",
-     "live": true
-    },
-    {
-     "name": "IR자료실",
-     "file": "co.html#ir",
-     "status": "existing",
-     "desc": "EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "내부자 거래",
-     "file": "co.html#ins",
-     "status": "existing",
-     "desc": "임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님",
-     "verdict": "unverified",
-     "src": "raw",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "페어",
-     "file": "co.html#pair",
-     "status": "existing",
-     "desc": "거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다",
      "verdict": "rejected",
      "src": "model",
      "effort": "M",
@@ -151,16 +110,6 @@
      "verdict": "unverified",
      "src": "model",
      "effort": "S",
-     "live": true
-    },
-    {
-     "name": "스크리너",
-     "file": "screener.html",
-     "status": "existing",
-     "desc": "자유조합 스크린 — 초과수익 확인된 스크린 0종",
-     "verdict": "rejected",
-     "src": "model",
-     "effort": "L",
      "live": true
     },
     {
@@ -415,6 +364,24 @@
    "desc": "거장 포트폴리오 안의 탭으로 그대로 있다",
    "retired_on": "2026-08-16",
    "why": "사용자 지시. 같은 것이 메뉴와 탭 두 자리에 있던 셈이라 메뉴 쪽을 걷었다.",
+   "principle": "한 화면은 한 자리에서만 들어간다."
+  },
+  {
+   "name": "스크리너",
+   "cat": "전략",
+   "was_file": "screener.html",
+   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+   "retired_on": "2026-08-16",
+   "why": "사용자 지시 — '별 쓸모가 없는 것 같다'. 자유조합 스크린으로 초과수익이 확인된 것이 0종이라 메뉴에서 자리를 차지할 값어치가 옅었다. 페이지·자료는 손대지 않았다.",
+   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다."
+  },
+  {
+   "name": "페어",
+   "cat": "종목",
+   "was_file": "co.html#pair",
+   "desc": "종목 정보 안의 탭으로 그대로 있다",
+   "retired_on": "2026-08-16",
+   "why": "사용자 지시 — 사실상 종목 정보 안에 있는 것이라 상위 메뉴에 또 둘 이유가 없었다. 실적·재무·IR·내부자도 같은 사유로 '종목 정보' 한 칸으로 접었다.",
    "principle": "한 화면은 한 자리에서만 들어간다."
   }
  ]
