@@ -81,6 +81,16 @@
   .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
 
   .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:13px}
+  /* 주가 차트 — 기간 버튼과 등락률. 등락률은 그 기간의 것이지 전체가 아니다. */
+  .pxctl{display:flex;align-items:center;gap:5px;margin:8px 0 4px}
+  .pxb{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);
+       background:var(--panel-2);border:1px solid var(--line);border-radius:2px;
+       padding:4px 10px;cursor:pointer}
+  .pxb:hover{border-color:var(--accent);color:var(--ink-2)}
+  .pxb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pxchg{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700}
+  .pxchg.up{color:var(--deploy)} .pxchg.dn{color:var(--hot)}
+  .pxsvg{width:100%;height:auto;display:block;margin-top:4px}
   @media(max-width:640px){.card{padding:15px 14px}}
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:12.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .card h3 .hn{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:auto}
@@ -510,12 +520,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
           <a class="mmi" href="stocks.html" data-nav="stocks.html" title="518종목 테크니컬 22지표·컴포짓·타이밍"><span class="mmn">종목 신호</span><span class="mmb vunv">미검증</span></a>
+          <a class="mmi" href="co.html" data-nav="co.html" title="실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)"><span class="mmn">종목 정보</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="signals.html" data-nav="signals.html" title="테크니컬 신호 32개 성적 + 오늘 발동 종목"><span class="mmn">지표별 타이밍</span><span class="mmb vrej">기각</span></a>
-          <a class="mmi" href="co.html#est" data-nav="co.html#est" title="목표주가는 매수 근거로 쓰지 말 것 — 검증용으로 쌓는 중"><span class="mmn">실적 및 전망</span><span class="mmb vunv">미검증</span></a>
-          <a class="mmi" href="co.html#fs" data-nav="co.html#fs" title="SEC XBRL 분기·연간 시계열 — 회사가 태깅한 값 그대로"><span class="mmn">재무제표</span></a>
-          <a class="mmi" href="co.html#ir" data-nav="co.html#ir" title="EDGAR 원문 링크만 — 회사 IR 주소는 SEC가 안 준다"><span class="mmn">IR자료실</span></a>
-          <a class="mmi" href="co.html#ins" data-nav="co.html#ins" title="임원·이사·10% 주주 매매 — 재량 거래(P·S)를 따로 센다 · 실시간 아님"><span class="mmn">내부자 거래</span><span class="mmb vunv">미검증</span></a>
-          <a class="mmi" href="co.html#pair" data-nav="co.html#pair" title="거리법이 고르는 최근접 짝 + 스프레드 ±σ — 전략은 기각됨, 신호 아니다"><span class="mmn">페어</span><span class="mmb vrej">기각</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">
@@ -523,7 +529,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html" title="원장·돌린 규칙·재현 재점검을 한 곳에서"><span class="mmn">전략 랩</span><span class="mmb vpass">통과</span></a>
           <a class="mmi" href="style.html" data-nav="style.html" title="공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span></a>
-          <a class="mmi" href="screener.html" data-nav="screener.html" title="자유조합 스크린 — 초과수익 확인된 스크린 0종"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html" title="13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다"><span class="mmn">거장 포트폴리오·매매</span></a>
           <a class="mmi" href="rotation.html" data-nav="rotation.html" title="전부 외부 출처·미검증 — 랩이 돌린 게 아니다"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="portfolio.html" data-nav="portfolio.html" title="localStorage 보유 + 일별 실측 상관·변동성·MDD"><span class="mmn">내 포트폴리오</span></a>
@@ -1745,6 +1750,57 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return (chips?'<div class="snapchips">'+chips+'</div>':'')+body;
   }
 
+  // ── 주가 차트 (2026-08-16 사용자 요청 "종목 정보탭에 주가 차트도 같이 나오면") ──────
+  // 🚨 **로그 눈금**을 쓴다. 10년 넘는 곡선을 선형으로 그리면 뒤쪽 몇 해가 화면을 다 먹고
+  //   앞쪽 등락이 납작해져, 같은 배수의 하락이 시기에 따라 다른 크기로 보인다.
+  // 🚨 자료는 이미 받아 둔 것을 쓴다(data/sd/<티커>.json 의 pxd · 격자는 DATA.pxd_dates).
+  //   새로 받지 않으므로 이 차트 때문에 느려지지 않는다.
+  // ⚠ 분할조정 종가다. 배당은 안 들어 있다 — 총수익이 아니라 가격이다. 그 사실을 적는다.
+  var PXR=[['1y',252,'1년'],['3y',756,'3년'],['10y',2520,'10년'],['max',0,'전체']];
+  var PXSEL='3y';
+  function pxChart(s){
+    var dts=(DATA&&DATA.pxd_dates)||[], px=(s&&s.pxd)||[];
+    if(!dts.length||!px.length)return '';
+    var n=Math.min(dts.length,px.length);
+    var want=(PXR.filter(function(r){return r[0]===PXSEL;})[0]||PXR[1])[1];
+    var st=want?Math.max(0,n-want):0;
+    // 결측을 건너뛴 (인덱스, 값) 쌍만 그린다 — 0 으로 메우면 없는 폭락이 생긴다.
+    var pts=[];
+    for(var i=st;i<n;i++){ if(px[i]!=null&&px[i]>0)pts.push([i,px[i]]); }
+    if(pts.length<3)return '';
+    var lo=pts[0][1],hi=pts[0][1];
+    pts.forEach(function(q){ if(q[1]<lo)lo=q[1]; if(q[1]>hi)hi=q[1]; });
+    if(!(hi>0&&lo>0))return '';
+    var W=760,H=190,PL=46,PRr=10,PT=10,PB=18;
+    var L=Math.log(lo*0.97), Hh=Math.log(hi*1.03);
+    var x=function(i){return PL+(i-st)/Math.max(1,(n-1-st))*(W-PL-PRr);};
+    var y=function(v){return PT+(Hh-Math.log(v))/Math.max(1e-9,(Hh-L))*(H-PT-PB);};
+    var g='';
+    // 눈금 — 사람이 읽는 자리(1·2·5×10^k)에만 긋는다
+    var pw=Math.pow(10,Math.floor(Math.log(lo)/Math.LN10));
+    for(var mul=1;mul<=1000;mul*=10){
+      [1,2,5].forEach(function(f){
+        var v=pw*mul*f/1; if(v<lo*0.97||v>hi*1.03)return;
+        g+='<line x1="'+PL+'" y1="'+y(v).toFixed(1)+'" x2="'+(W-PRr)+'" y2="'+y(v).toFixed(1)+
+           '" stroke="var(--line-soft)" stroke-width="1"/>'+
+           '<text x="'+(PL-5)+'" y="'+(y(v)+3.5).toFixed(1)+'" text-anchor="end" font-size="9.5" '+
+           'fill="var(--muted)">'+(v>=1000?(v/1000).toFixed(v>=10000?0:1)+'k':v.toFixed(v<10?1:0))+'</text>';
+      });
+    }
+    var d=pts.map(function(q,k){return (k?'L':'M')+x(q[0]).toFixed(1)+' '+y(q[1]).toFixed(1);}).join(' ');
+    g+='<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="1.6"/>';
+    var first=pts[0][1], last=pts[pts.length-1][1], chg=(last/first-1)*100;
+    var btns=PXR.map(function(r){
+      return '<button type="button" class="pxb'+(r[0]===PXSEL?' on':'')+'" data-px="'+r[0]+'">'+r[2]+'</button>';
+    }).join('');
+    return '<div class="card"><h3>주가<span class="hn">'+esc(dts[pts[0][0]])+' ~ '+
+      esc(dts[pts[pts.length-1][0]])+' · 로그 눈금 · 분할조정 종가(배당 제외)</span></h3>'+
+      '<div class="pxctl">'+btns+'<span class="pxchg '+(chg>=0?'up':'dn')+'">'+
+      (chg>=0?'+':'')+chg.toFixed(1)+'%</span></div>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" class="pxsvg" role="img" aria-label="'+
+      esc((s.t||'')+' 주가 곡선')+'">'+g+'</svg></div>';
+  }
+
   function snapBlock(s){
     var fu=s.fund||{},fx=DATA.fundx_defs||{},cells='',i,cur=lastPx(s);
     for(i=0;i<SNAPKEYS.length;i++){
@@ -1777,11 +1833,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!s){el('detail').innerHTML='<div class="empty">위에서 종목을 고르면 실적·전망과 목표주가가 여기에 표시됩니다.</div>';return;}
     // 할인율 맥락(선행 이익수익률 vs 금리)은 뺐다 — 종목별로 달라지는 건 이익수익률 하나뿐이고
     // 금리 쪽은 전 종목 공통이라, 종목 화면에서 매번 같은 표를 다시 읽게 하는 값이 없었다.
-    var h=snapBlock(s)+epsBlock(s)+tpBlock(s)+
+    var h=snapBlock(s)+pxChart(s)+epsBlock(s)+tpBlock(s)+
        '<div class="card"><h3>실적<span class="hn">SEC XBRL 보고값 · 발표일 = 100</span></h3>'+
        '<h4>분기 추이</h4><div id="fxout"><div class="skel">불러오는 중…</div></div>'+
        '<h4>발표 이후 주가</h4><div id="padout"><div class="skel">불러오는 중…</div></div></div>';
     el('detail').innerHTML=h;
+    // 주가 차트의 기간 버튼 — 자료는 이미 있으므로 다시 받지 않고 다시 그리기만 한다.
+    var _pc=el('detail').querySelector('.pxctl');
+    if(_pc)_pc.addEventListener('click',function(e){
+      var b=e.target.closest('button[data-px]'); if(!b)return;
+      PXSEL=b.getAttribute('data-px');
+      if(state.sel===s)renderDetail(s);
+    });
     fxBlock(s.t); padBlock(s);
     // 한국어 소개는 별도 파일이라 늦게 온다 — 도착하면 카드만 다시 그린다
     if(PKO===null)pkoLoad(function(){if(state.sel===s)renderDetail(s);});  // 도착 후엔 PKO가 차서 재귀하지 않는다
