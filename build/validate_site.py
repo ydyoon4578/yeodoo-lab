@@ -1542,13 +1542,17 @@ try:
         if _sn.tool_live(_t) and ('data-nav="%s"' % _t["file"]) not in _ix:
             errors.append(f"내비: {_t['file']}는 열리는데 메뉴가 '준비중'이다 — build/sync_nav.py를 다시 돌릴 것")
 
-    # ② 판정 배지는 원장(verdicts.json)에서 자동 산출된 숫자와 모순되면 안 된다.
-    #    '통과'로 표시한 슬롯이 있는데 배포 전략이 0건이면 메뉴가 거짓말을 하는 것이다.
+    # ② nav_items.json 의 verdict 는 원장(verdicts.json)과 모순되면 안 된다.
+    #    ⚠ 2026-08-16 부터 이 값을 **화면에 안 그린다**(사용자 지시로 판정 배지를 걷었다).
+    #      그래도 검사는 남긴다 — 값이 자료로 남아 있고, 낡으면 나중에 되살릴 때 조용히
+    #      거짓을 말하게 된다. 지금은 '화면의 거짓' 이 아니라 '자료의 낡음' 을 잡는다.
     _vd = json.load(io.open(os.path.join(ROOT, "data", "verdicts.json"), encoding="utf-8"))
     if any(t.get("verdict") == "pass" for t in _tools) and not _vd.get("deploy_n"):
-        errors.append("내비: '통과' 배지가 있는데 verdicts.json deploy_n=0 — 원장과 메뉴가 어긋남")
+        errors.append("내비: nav_items 에 verdict=pass 인 슬롯이 있는데 verdicts.json deploy_n=0 "
+                      "— 원장과 정본이 어긋남(화면에는 안 그리지만 값이 낡았다)")
     if any(t.get("verdict") == "rejected" for t in _tools) and not _vd.get("reject_total"):
-        errors.append("내비: '기각' 배지가 있는데 verdicts.json reject_total=0 — 원장과 메뉴가 어긋남")
+        errors.append("내비: nav_items 에 verdict=rejected 인 슬롯이 있는데 verdicts.json "
+                      "reject_total=0 — 원장과 정본이 어긋남")
 
     # ③ 모든 배포 HTML은 자기가 어느 슬롯인지 밝혀야 한다(현재위치 강조의 유일한 입력).
     # 홈은 도구가 아니라 도구들의 관문이라 슬롯 목록에 없다 — 유효한 data-tool로 인정한다

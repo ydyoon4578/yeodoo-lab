@@ -253,12 +253,17 @@ def build_body(items: dict) -> str:
             live = tool_live(t)
             lab, cls = VERDICT_LABEL.get(t.get("verdict") or "na", (None, None))
 
+            # 🚨 2026-08-16 사용자 지시 — **판정 배지(통과·제한적 유효·미검증·기각)를 걷는다.**
+            #   이 랩은 2026-08-16 에 관문·문턱을 전부 없앴다. 등급을 안 매기기로 해 놓고
+            #   메뉴에만 '통과/기각' 딱지를 달아 두면 화면이 검정하지 않은 것을 검정한 척한다.
+            # ⚠ '준비중·미제작' 은 남긴다. 그건 판정이 아니라 **그 화면이 아직 없다**는
+            #   사실이고, 없애면 눌러 봐야 없는 줄 알게 된다.
+            # ⚠ nav_items.json 의 verdict 값은 **지우지 않았다.** validate_site 가 그 값을
+            #   verdicts.json 과 대조해 원장 어긋남을 잡는다 — 화면에서 안 그릴 뿐이다.
             if t["status"] == "wont-build":
                 badge = '<span class="mmb wont">미제작</span>'
             elif not live:
                 badge = '<span class="mmb soon">준비중</span>'
-            elif lab:
-                badge = '<span class="mmb %s">%s</span>' % (cls, lab)
             else:
                 badge = ""
 
