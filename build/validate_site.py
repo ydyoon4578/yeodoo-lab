@@ -3293,6 +3293,51 @@ try:
 except Exception as _e:
     errors.append("가격 격자 구멍 검사가 예외로 죽었다 — %s" % _e)
 
+# ── 갱신 피드가 사람 작업을 담고 있나 ────────────────────────────────
+# 🚨 2026-08-16 점검에서 찾았다. 2026-08-12~08-16 닷새에 비-chore 커밋이 122건인데
+#   data/updates.json 의 사람 작업 기록은 **0건**이었다(자동 잡만 자기 기록을 남겼다).
+#   그래서 갱신 기록 화면이 «마지막 변경 2026-08-11» 로 보였다 — 그 화면이 막겠다고
+#   적어 둔 상태(«데이터는 매일 도는데 사이트는 몇 달째 그대로»)의 정확한 거울상이다.
+# 원인은 build/log_update.py 가 **사람이 기억해서 불러야** 하는 도구라는 것이다. 같은 일이
+#   2026-07-23~25 에도 있었다(log_update.py 머리말). 기억에 기대는 고리는 또 끊어진다.
+#   → 여기서 세어 막고, build/log_from_git.py 로 채운다.
+# ⚠ CI 체크아웃이 얕으면(fetch-depth=1) git log 가 비어 이 검사가 **조용히 통과**한다.
+#   그건 통과가 아니라 미검증이므로 그렇게 찍는다.
+try:
+    import subprocess as _sp
+    _gl = _sp.run(["git", "log", "--since", "14 days ago", "--pretty=%ad|%s",
+                   "--date=format-local:%Y-%m-%d"],
+                  cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    _lines = [l for l in (_gl.stdout or "").splitlines() if "|" in l]
+    _human = [l.split("|", 1) for l in _lines
+              if not l.split("|", 1)[1].startswith(("chore(", "Merge ", "merge:"))]
+    if _gl.returncode != 0 or len(_lines) < 2:
+        print("  ~ 갱신 피드 대조 건너뜀 — git 이력을 못 읽었다(얕은 체크아웃?). "
+              "통과가 아니라 미검증이다")
+    elif not _human:
+        print("  ~ 갱신 피드 대조: 최근 14일 사람 커밋이 없다 — 셀 것이 없다")
+    else:
+        # 🚨 커밋 1:1 을 요구하지 않는다. 이 피드는 원래 **추린 기록**이다(2026-08-11 은
+        #   커밋 40여 건에 항목 21건). 1:1 로 세면 늘 실패해서 아무도 안 보게 된다.
+        #   잡는 것은 «일한 날인데 한 줄도 없는 날» 이다 — 실제로 난 사고가 그 모양이었다.
+        _cnt = {}
+        for d, t in _human:
+            _cnt[d] = _cnt.get(d, 0) + 1
+        _ev = json.loads(rd("data/updates.json")).get("events") or []
+        _days = {e.get("dt") for e in _ev}
+        _blank = sorted(d for d, n in _cnt.items() if n >= 3 and d not in _days)
+        if _blank:
+            errors.append("갱신 피드에 **통째로 빠진 날 %d일**(%s) — 그날 사람 커밋이 각각 "
+                          "3건 이상인데 기록이 한 줄도 없다. 자동 잡만 남으면 화면이 "
+                          "«사이트가 멈췄다»고 말한다. python build/log_from_git.py --since %s "
+                          "로 채우거나 build/log_update.py 로 그날치를 적을 것"
+                          % (len(_blank), " · ".join(_blank[:6]), _blank[0]))
+        else:
+            print("  ~ 갱신 피드 대조 통과(최근 14일 사람 커밋 %d건 · 기록 없는 날 0일)"
+                  % len(_human))
+except Exception as _e:
+    print("  ~ 갱신 피드 대조가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
