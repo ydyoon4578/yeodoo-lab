@@ -653,6 +653,47 @@ def main() -> int:
             # 찍혀 **유니버스 안 종목으로 둔갑한다**(브리지워터의 유니버스 밖 830종목이 그렇다).
             if r.get("off") and r.get("nm"):
                 OFFNM.setdefault(r["t"], r["nm"])
+    # ── 이번 분기 합의 — 여러 곳이 **동시에** 같은 방향으로 움직인 종목 ────────────
+    # 🚨 공통 보유(overlap)와 다른 것이다. 저쪽은 '누가 들고 있나'(수준), 이쪽은
+    #   '누가 이번에 움직였나'(변화)다. 한 화면에 두면 반드시 섞여 읽히므로 이름을 가른다.
+    # ⚠ 곳수만 세면 1억$ 움직임과 100만$ 움직임이 같은 무게가 된다. 그래서 금액도 같이
+    #   낸다 — 늘림 쪽은 이번 평가액, 줄임 쪽은 줄인 주식수를 직전 평가액 비율로 환산한다.
+    # ⚠ 한 곳뿐이면 합의가 아니다. n>=2 만 싣는다.
+    # 🚨 이것은 매매 신호가 아니다. 13F 는 분기 스냅샷이고 마감이 분기말+45일이라,
+    #   이 화면이 말하는 것은 **이미 45일 이상 지난 포지션 변화**다.
+    def _consensus(mgrs):
+        acc, dis = {}, {}
+        for m in mgrs:
+            mv = m.get("moves") or {}
+            for k, bag in (("add", acc), ("new", acc), ("cut", dis), ("exit", dis)):
+                for x in (mv.get(k) or []):
+                    e = bag.setdefault(x["t"], {"t": x["t"], "nm": x.get("nm") or "",
+                                                "n": 0, "who": [], "v": 0.0,
+                                                "off": x.get("off") or 0})
+                    e["n"] += 1
+                    e["who"].append({"cik": m["cik"], "label": m["label"],
+                                     "kind": {"add": "늘림", "new": "신규",
+                                              "cut": "줄임", "exit": "전량매도"}[k],
+                                     "pct": x.get("pct")})
+                    e["v"] += (x.get("v") or 0)
+        def _fin(bag):
+            out = [e for e in bag.values() if e["n"] >= 2]
+            # 곳수 먼저, 같으면 금액 — 곳수가 이 화면의 주인공이다
+            out.sort(key=lambda e: (-e["n"], -e["v"]))
+            for e in out:
+                e["v"] = round(e["v"], 0)
+            return out[:40]
+        A, Dd = _fin(acc), _fin(dis)
+        both = sorted(set(x["t"] for x in A) & set(x["t"] for x in Dd))
+        return {"acc": A, "dis": Dd, "split": both,
+                "note": "여러 곳이 같은 분기에 같은 방향으로 움직인 종목이다. "
+                        "🚨 매매 신호가 아니다 — 13F 는 분기 스냅샷이고 제출 마감이 "
+                        "분기말+45일이라, 여기 보이는 것은 이미 45일 이상 지난 변화다. "
+                        "곳수만 세면 큰 움직임과 작은 움직임이 같은 무게가 되므로 금액을 "
+                        "함께 적는다. 한 곳뿐인 것은 합의가 아니라 싣지 않는다(n≥2). "
+                        "split 은 같은 분기에 **한쪽은 늘리고 한쪽은 줄인** 종목이다 — "
+                        "합의가 아니라 이견이고, 그 사실이 정보다."}
+
     ov = [{"t": t, "n": len(v), "ciks": sorted(v),
            "nm": names.get(t) or OFFNM.get(t, ""), "off": 1 if t in OFFNM else 0}
           for t, v in overlap.items()]
@@ -708,6 +749,7 @@ def main() -> int:
                     "이름은 13F 원문(nameOfIssuer)에서, 티커는 SEC 공매도 미결제 파일에서 "
                     "찾은 것이라 티커가 없으면 CUSIP을 그대로 적는다. 이 사이트에는 그 종목의 "
                     "가격·재무 화면이 없다 — 무엇을 들고 있는지만 보여준다.",
+        "consensus": _consensus(managers),
         "managers": managers,
         "overlap": ov,
         "limits": [

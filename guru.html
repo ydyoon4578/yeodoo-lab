@@ -122,6 +122,18 @@
   .mvp{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;
     min-width:44px;text-align:right;color:var(--ink-2)}
   .mvnone,.mvmore{font-size:11px;color:var(--muted);padding:3px 0}
+  /* 이번 분기 합의 — 두 갈래라 변화 판(4갈래)보다 칸이 넓다. */
+  .cnsgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:640px){.cnsgrid{grid-template-columns:1fr}}
+  .cnscol{min-width:0}
+  .cnsttl{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.05em;
+    padding:0 0 5px;border-bottom:2px solid var(--line);margin-bottom:6px;
+    display:flex;justify-content:space-between;align-items:baseline}
+  .cnsttl b{font-size:13px}
+  .cnsttl.mvup{color:var(--champ);border-bottom-color:var(--champ)}
+  .cnsttl.mvdn{color:var(--marg);border-bottom-color:var(--marg)}
+  /* 이견 표시 — 색을 따로 준다. 늘림/줄임 어느 쪽 색도 아니어야 한다. */
+  .cnsx{color:var(--hot);font-weight:700;margin-left:4px;cursor:help}
   /* 유니버스 밖 — 지우지 않고 표시한다. 버리면 그 운용사 포트폴리오의 절반이 사라지고
      남은 절반의 비중이 실제보다 커 보인다. 대신 이 사이트에 종목 화면이 없어 링크는 뺀다. */
   .tkoff{color:var(--ink-2)}
@@ -693,10 +705,48 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     host.innerHTML=h;
   }
 
+  // ── 이번 분기 합의 — 여러 곳이 동시에 같은 방향으로 움직인 종목 ──────────────
+  // 🚨 아래 '공통 보유'와 다른 것이다. 저쪽은 **수준**(누가 들고 있나), 이쪽은
+  //   **변화**(누가 이번에 움직였나)다. 같은 화면에 두되 제목으로 확실히 가른다.
+  // ⚠ 곳수를 주인공으로 두되 금액을 함께 적는다 — 곳수만 세면 1억$와 100만$가 같아진다.
+  function cnsBlock(){
+    var C=D.consensus;
+    if(!C||(!C.acc.length&&!C.dis.length))return '';
+    var SPL={}; (C.split||[]).forEach(function(t){SPL[t]=1;});
+    function col(arr,ttl,cls){
+      var h='<div class="cnscol"><div class="cnsttl '+cls+'">'+ttl+'<b>'+arr.length+'</b></div>';
+      if(!arr.length)return h+'<div class="mvnone">없음</div></div>';
+      arr.slice(0,12).forEach(function(x){
+        var tk=x.off?('<span class="tkoff">'+esc(x.t)+'</span>')
+                    :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
+        // 누가 어떻게 움직였는지 전부 title 에 넣는다 — 화면이 좁아 다 못 적지만
+        // 곳수만 보이고 누구인지 못 보면 그 수를 확인할 길이 없다.
+        var who=(x.who||[]).map(function(w){
+          return w.label+' '+w.kind+(w.pct==null?'':' '+(w.pct>0?'+':'')+w.pct+'%');}).join(' · ');
+        h+='<div class="mvrow" title="'+esc(who)+'">'+
+           '<span class="mvt">'+tk+(SPL[x.t]?'<span class="cnsx" title="같은 분기에 한쪽은 늘리고 한쪽은 줄였다 — 합의가 아니라 이견이다">↕</span>':'')+'</span>'+
+           '<span class="mvv">'+(x.v?usd(x.v):'')+'</span>'+
+           '<span class="mvp">'+x.n+'곳</span></div>';
+      });
+      if(arr.length>12)h+='<div class="mvmore">외 '+(arr.length-12)+'종</div>';
+      return h+'</div>';
+    }
+    return '<div class="card"><h3>이번 분기 합의 — 여러 곳이 같이 움직인 종목'+
+      '<span class="hn">'+esc(D.prev_as_of||'')+' → '+esc(D.as_of||'')+'</span></h3>'+
+      '<p class="lblnote" style="margin:6px 0 12px">'+
+      '🚨 <b>매매 신호가 아닙니다.</b> 13F 는 분기 스냅샷이고 제출 마감이 분기말+45일이라, '+
+      '여기 보이는 것은 <b>이미 45일 이상 지난 변화</b>입니다. 한 곳뿐인 것은 합의가 아니라 '+
+      '싣지 않습니다(2곳 이상). <span class="cnsx">↕</span> 는 같은 분기에 한쪽은 늘리고 '+
+      '한쪽은 줄인 종목 — 합의가 아니라 <b>이견</b>이고 그 사실이 정보입니다. '+
+      '종목에 마우스를 올리면 어느 곳이 어떻게 움직였는지 나옵니다.</p>'+
+      '<div class="cnsgrid">'+col(C.acc,'여러 곳이 늘렸다','mvup')+
+      col(C.dis,'여러 곳이 줄였다','mvdn')+'</div></div>';
+  }
+
   function renderOv(){
     var byCik={}; D.managers.forEach(function(m){byCik[m.cik]=m.label;});
     var rows=D.overlap.filter(function(x){return x.n>=2;});
-    var h='<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>';
+    var h=cnsBlock()+'<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>';
     rows.slice(0,80).forEach(function(x){
       var ot=x.off?('<span class="tkoff">'+esc(x.t)+'</span><span class="offb">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
