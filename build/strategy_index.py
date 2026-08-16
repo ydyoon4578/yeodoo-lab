@@ -498,6 +498,30 @@ def _k4_of(name):
     return dict(x, **{k: v for k, v in (_K4.get("__meta__") or {}).items() if v})
 
 
+_TK4 = None
+
+
+def _tk4_of(sid):
+    """타이밍 규칙의 노출 재배열 검정(data/timing_k4.json). 1부(_k4_of)와 같은 성격이다.
+
+    ⚠ 1부는 이름으로 붙였는데 이쪽은 **sid** 로 붙인다 — 종목 랩은 sid 가 정본이고
+      이름은 바뀔 수 있다. 붙이는 키는 그 파일이 정한 것을 그대로 쓴다.
+    ⚠ 성적이 아니라 기전 검정이다. 22종 전부 초과가 음수이므로(상시보유를 못 이긴다)
+      등급이 높다는 것은 '벌었다'가 아니라 **'재배열 대비 덜 잃었다'** 는 뜻이다.
+      화면이 그 말을 그대로 적어야 한다.
+    """
+    global _TK4
+    if _TK4 is None:
+        d = load("timing_k4.json") or {}
+        _TK4 = {x["sid"]: x for x in (d.get("items") or [])}
+        _TK4["__meta__"] = {k: d.get(k) for k in ("measured_at", "n_shuffle", "bench",
+                                                  "bench_cagr", "protocol")}
+    x = _TK4.get(sid)
+    if not x or not x.get("grade"):
+        return None
+    return dict(x, **{k: v for k, v in (_TK4.get("__meta__") or {}).items() if v})
+
+
 def _pit_dist():
     """게시 중이면서 시점정확(PIT) 레그를 받은 규칙의 **생존편향 분포**.
 
@@ -712,6 +736,14 @@ def rec(**kw):
     _k4 = _k4_of(kw.get("name") or "")
     if _k4:
         kw["k4"] = _k4
+    if not _k4:
+        # 🚨 종목 전략은 인덱스 sid 가 tech 원본 앞에 "t-" 를 덧붙인 것이다
+        #   (t-kelly → t-t-kelly). 감사 파일은 **원본 sid** 를 쓰므로 벗겨서 맞춘다.
+        #   ⚠ 이걸 안 하면 조용히 하나도 안 붙는다 — 실제로 그랬다(붙은 것 0종).
+        _sid0 = kw.get("sid") or ""
+        _t4 = _tk4_of(_sid0) or (_tk4_of(_sid0[2:]) if _sid0.startswith("t-") else None)
+        if _t4:
+            kw["k4"] = _t4
     kw.setdefault("role", "미분류")
     kw.setdefault("grade", "판정 불가")
     # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
