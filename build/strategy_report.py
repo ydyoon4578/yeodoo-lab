@@ -443,8 +443,13 @@ def main():
         "as_of": {"tech": tech.get("as_of"), "asset": asset.get("as_of"), "pit": pit.get("as_of")},
         "t_crit": {"tech": tech.get("t_crit"), "asset": asset.get("t_crit"),
                    "pit": pit.get("t_crit"), "pit_lab": pit.get("t_crit_lab")},
-        "gate": "게시 기준 — ① |t| ≥ 본페로니 임계 ② Δ샤프 > 0 ③ 이웃 5개 동시 통제 증분알파 "
-                "t ≥ +2.0 ④ 부호 정합. 이 리포트는 그 기준으로 줄 세우지 않는다.",
+        # 🚨 2026-08-16~17 사용자 지시로 관문·문턱을 다 걷었다. 그런데 이 문구만 남아
+        #   «게시 기준 — ① |t| ≥ 본페로니 임계 … ③ 증분알파 t ≥ +2.0» 이라고 **없는 기준을
+        #   설명하고 있었다.** 화면이 사실과 다른 말을 하는 자리라 고친다(같은 유형을
+        #   이 저장소에서 여러 번 잡았다 — 손으로 적은 문구가 코드보다 늦게 낡는다).
+        "gate": "게시 기준이 없다 — 이 랩은 t 나 샤프에 선을 긋지 않는다(2026-08-16 결정). "
+                "잰 값을 전부 싣고 줄 세우지 않는다. 시점정확 레그도 같다: 임계를 두지 않고 "
+                "소급과 나란히 적어, 생존편향의 크기를 읽는 사람이 직접 보게 한다.",
         "limits": {"tech": tech.get("limits") or [], "asset": asset.get("limits") or [],
                    "pit": pit.get("limits") or [], "protocol": asset.get("protocol") or []},
         "retired": {"tech": tech.get("retired") or []},
