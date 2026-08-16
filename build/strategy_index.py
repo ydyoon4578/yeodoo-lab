@@ -1158,7 +1158,13 @@ def main() -> int:
     ovd = load("guru_overlap.json") or {}
     _ovn = 0
     for v in ((ovd.get("variants") or []) + (ovd.get("tops") or [])):
-        m, pl = v.get("metrics") or {}, v.get("pool") or {}
+        # 🚨 2026-08-16 — 대조군을 S&P 500·나스닥 100 으로 바꾸면서 `pool`(풀 동일가중)이
+        #   없어졌다. 그런데 이 루프가 pool 을 읽고 있어 **겹침 판이 하나도 안 만들어졌고**,
+        #   그러자 아래 제외 검사가 sid 를 못 찾아 strategy_index 가 종료코드 1 로 죽었다.
+        #   (파일은 옛것이 남아 '왜 안 바뀌지' 로 보였다 — 관문의 합계 검사가 그것을 잡았다.)
+        # ⚠ 판정 잣대는 **S&P 500** 으로 둔다. 이 랩의 다른 표와 같은 대조군이라야 세로로
+        #   비교가 된다(나스닥 100 은 산출물에 같이 실려 화면이 나란히 보여 준다).
+        m, pl = v.get("metrics") or {}, v.get("spx") or {}
         bm = pl.get("metrics") or {}
         if not m or not bm:
             continue                     # 표본 부족으로 성과가 없는 변형은 싣지 않는다
@@ -1172,10 +1178,17 @@ def main() -> int:
                      "그중 %s만 남겨 같은 비중으로 담는다. 같은 회사의 다른 클래스는 하나만 "
                      "담고 밀려난 자리는 다음 순위가 채운다." % (_nm, v.get("label")))
         else:
-            sid = "g-overlap-k%d" % v["k"]
-            name = "거장 겹침 %d곳 이상 (동일가중)" % v["k"]
-            _rule = ("쉽게 말해 — 13F 명단 %d곳 중 %d곳 이상이 같이 들고 있는 종목을 전부 "
-                     "같은 비중으로 담는다." % (_nm, v["k"]))
+            # 🚨 2026-08-16 — sid 에 **담는 법(mode)** 을 넣는다. 판이 K 넷에서 여덟으로
+            #   늘면서(동일가중·겹침수 가중·신규 합의만) K 만으로는 sid 가 겹쳤다.
+            #   겹치면 뒤엣것이 앞엣것을 덮어 판 하나가 조용히 사라진다.
+            _mode = v.get("mode") or "eq"
+            sid = "g-overlap-k%d" % v["k"] if _mode == "eq" else                   "g-overlap-k%d-%s" % (v["k"], _mode)
+            name = "거장 겹침 %d곳 이상 (%s)" % (v["k"], v.get("mode_label") or "동일가중")
+            _rule = ("쉽게 말해 — 13F 명단 %d곳 중 %d곳 이상이 같이 들고 있는 종목을 %s."
+                     % (_nm, v["k"],
+                        {"eq": "전부 같은 비중으로 담는다",
+                         "conv": "담되 여러 곳이 겹칠수록 더 많이 담는다",
+                         "new": "그 분기에 처음 넘긴 것만 담는다"}.get(_mode, "담는다")))
         rows.append(rec(
             sid=sid, name=name, role="수익엔진", grade=_ov_grade(ds, pl.get("t")),
             src="거장 겹침", cat="13F 복제",
@@ -1258,6 +1271,10 @@ def main() -> int:
         #   여섯 중 넷이 '구별 불가', 둘이 '열위'로 통과가 하나도 없다.
         #   ⚠ data/guru_overlap.json 은 손대지 않는다. guru.html#overlap 과 진단물은 그대로다.
         "g-overlap-k2", "g-overlap-k3", "g-overlap-k4", "g-overlap-k5",
+        # 2026-08-16 — 담는 법 축을 넓히면서 판이 넷 더 늘었다. 같은 사유로 함께 뺀다
+        # (explorer 에서 다루지 않기로 한 규칙이지 성과 판정이 아니다).
+        "g-overlap-k2-conv", "g-overlap-k3-conv",
+        "g-overlap-k2-new", "g-overlap-k3-new",
         "g-overlap-top10-ov", "g-overlap-top10-mc",                            # 거장 겹침
         # 수익엔진 다섯(2026-07-29 추가, 사용자 결정). 판정은 이미 갈려 있었다 —
         #   회전율 밴드 '제한적 유효' · 오버나이트 보유 '구별 불가' · 나머지 셋 '열위'.

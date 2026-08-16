@@ -417,8 +417,12 @@ if pool:
         _gp = os.path.join(ROOT, "data", "guru_overlap.json")
         if os.path.exists(_gp):
             _gv = json.load(io.open(_gp, encoding="utf-8"))
+            # 🚨 2026-08-16 — 종전에는 `pool`(풀 동일가중) 키가 있는 것만 셌다. 그날 대조군을
+            #   S&P 500·나스닥 100 으로 바꾸면서 pool 이 없어졌고, 그러자 이 조건이 **항상
+            #   거짓**이 되어 겹침 판이 하나도 안 세어졌다(원본 합계가 10 모자랐다).
+            #   대조군 키에 기대지 말고 '성과가 나온 판' 으로 센다 — 원장이 세는 기준과 같다.
             _want += sum(1 for _x in ((_gv.get("variants") or []) + (_gv.get("tops") or []))
-                         if (_x.get("metrics") and (_x.get("pool") or {}).get("metrics")))
+                         if _x.get("metrics"))
         # 의도적으로 목록에서 뺀 것(n_hidden)은 더해서 센다 — 그래야 '낡은 목록' 검출이
         # 살아 있으면서 의도적 제외를 오탐하지 않는다. 제외를 숨은 채로 두면 이 가드가 죽는다.
         _got = (_si.get("n") or 0) + (_si.get("n_hidden") or 0)
