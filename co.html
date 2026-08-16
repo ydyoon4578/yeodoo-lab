@@ -122,7 +122,17 @@
   .cols{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;margin-top:16px;align-items:start}
   .side{position:sticky;top:12px}
   .side .pick{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:12px}
-  .side .plist{max-height:calc(100vh - 190px);margin-top:8px}
+  .side .plist{max-height:calc(100vh - 240px);margin-top:8px}
+  /* 정렬 줄 — 검색칸 바로 아래. 목록이 무슨 순서인지가 목록 위에 있어야 한다. */
+  .sortbar{display:flex;align-items:center;gap:6px;margin-top:8px}
+  .sortbar .srtl{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+       text-transform:uppercase;color:var(--muted);font-weight:700;flex:none}
+  .sortbar select{flex:1;min-width:0;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+       background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:5px 6px}
+  .sortbar .srtd{flex:none;font-family:var(--mono);font-size:12px;font-weight:700;
+       color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);
+       border-radius:2px;padding:4px 9px;cursor:pointer}
+  .sortbar .srtd:hover{border-color:var(--accent);color:var(--accent)}
   .side-main{min-width:0}
   @media(max-width:900px){
     .cols{grid-template-columns:1fr;gap:12px}
@@ -701,6 +711,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="pick">
       <label for="q">종목 <span id="qn" style="font-weight:400;text-transform:none;letter-spacing:0"></span></label>
       <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="티커 · 회사명 · 섹터" aria-controls="plist">
+      <!-- 🚨 2026-08-16 사용자 요청 — PBR·PSR·FCF 등 지표순으로 종목을 세워 본다.
+           스크리너(별 화면)와 달리 여기서는 고르면 **바로 오른쪽에** 그 종목의 지표·주가가
+           뜬다. 목록을 이미 옆에 세워 뒀으므로 화면이 하나 더 늘지 않는다. -->
+      <div class="sortbar">
+        <label for="sk" class="srtl">정렬</label>
+        <select id="sk" aria-label="정렬 기준"></select>
+        <button type="button" id="sd" class="srtd" aria-label="정렬 방향 뒤집기" title="오름/내림 뒤집기">↓</button>
+      </div>
       <div class="plist" id="plist" role="listbox" aria-label="종목 목록"><div class="skel" style="padding:14px">불러오는 중…</div></div>
     </div>
    </aside>
@@ -825,7 +843,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var SECT_MIN=15;   // 섹터 표본이 이 미만이면 등급 대신 '표본 부족'(method.html 규약)
 
   var DATA=null,HIST=null;
-  var state={tab:'est',sel:null,q:''};
+  // sk = 정렬 기준(fundx_defs 키 또는 't'), sd = 방향(-1 내림 · 1 오름)
+  var state={tab:'est',sel:null,q:'',sk:'mc',sd:-1};
 
   function getj(u){
     return fetch(u,{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
@@ -877,7 +896,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       el('plist').innerHTML='<div class="empty">불러오지 못했습니다.</div>';
       return;
     }
-    renderStat();renderList();
+    renderStat();buildSort();renderList();
     var p=parseHash(); if(p.t)selectByTicker(p.t);
   });
 
@@ -906,16 +925,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             if(hay.indexOf(q)<0)continue;}
       out.push(s[i]);
     }
-    // 🚨 2026-08-16 사용자 요청 — **시총 내림차순**. 종전에는 티커 알파벳순이라 A로
-    //   시작하는 회사가 늘 위에 있었고, 그건 이름의 성질이지 회사의 성질이 아니다.
-    // ⚠ 시총이 없는 종목은 **뒤로 보내되 지우지 않는다**(자료 결손이지 작은 회사가
-    //   아니다). 그 안에서는 티커순으로 둬 순서가 실행마다 흔들리지 않게 한다.
+    // 🚨 2026-08-16 — 정렬 기준을 고를 수 있다(기본 시총 내림차순). 종전에는 티커
+    //   알파벳순이라 A로 시작하는 회사가 늘 위에 있었고, 그건 이름의 성질이지 회사의
+    //   성질이 아니다.
+    // ⚠ 값이 없는 종목은 **방향과 무관하게 언제나 뒤로** 보낸다. 오름차순일 때 결측을
+    //   맨 앞에 두면 'PBR 이 가장 싼 종목' 자리에 자료가 없는 회사가 앉는다 — 그건
+    //   싼 것이 아니라 모르는 것이다. 지우지도 않는다(자료 결손이지 탈락이 아니다).
+    // ⚠ 동점은 티커순으로 깬다. 안 그러면 순서가 실행마다 흔들린다.
+    // 🚨 **음수 배수는 «싼 것»이 아니다.** PBR −226.91 은 자본이 음수(자본잠식)라는 뜻이고,
+    //   선행 PER 음수는 적자 예상이라는 뜻이다. 오름차순으로 세우면 그것들이 «가장 싼 종목»
+    //   자리를 통째로 차지한다 — 실측으로 PBR 오름차순 상위 4종이 전부 음수였다(DELL
+    //   −226.91 · HPQ −191.78 · MCD −188.68 · ABBV −74.27).
+    //   그래서 low_cheap 계열(PER·PBR·PSR·EV/EBITDA·PEG)의 음수는 **결측과 같이 뒤로** 보낸다.
+    //   ⚠ 지우지 않는다. 내림차순으로 보면 그대로 나오고, 값도 그대로 찍힌다.
+    //   ⚠ 수익성·성장률의 음수는 건드리지 않는다 — 적자·역성장은 «모르는 것»이 아니라
+    //     그 회사의 사실이고, 그것을 뒤로 밀면 화면이 나쁜 소식을 감추게 된다.
+    var _k=state.sk, _d=state.sd;
+    var _dd=((DATA&&DATA.fundx_defs&&DATA.fundx_defs[_k])||{}).dir||'';
+    var _negBad=(_dd==='low_cheap');
     out.sort(function(a,b){
-      var x=(a.fund&&a.fund.mc), y=(b.fund&&b.fund.mc);
+      if(_k==='t')return (a.t<b.t?-1:(a.t>b.t?1:0))*(_d<0?-1:1);
+      var x=(a.fund&&a.fund[_k]), y=(b.fund&&b.fund[_k]);
+      x=(x==null||x!==x)?null:x; y=(y==null||y!==y)?null:y;
+      if(_negBad){ if(x!=null&&x<0)x=null; if(y!=null&&y<0)y=null; }
       if(x==null&&y==null)return a.t<b.t?-1:(a.t>b.t?1:0);
-      if(x==null)return 1;
+      if(x==null)return 1;              // 결측은 늘 뒤
       if(y==null)return -1;
-      if(y!==x)return y-x;
+      if(x!==y)return _d<0?(y-x):(x-y);
       return a.t<b.t?-1:(a.t>b.t?1:0);
     });
     return out;
@@ -930,18 +966,49 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(v==null)return '';
     return v>=10000?(v/10000).toFixed(2)+'조':(v>=1?Math.round(v)+'억':'—');
   }
+  // 정렬 기준으로 고를 수 있는 지표. fundx_defs 에 있는 것만 쓴다 — 화면이 목록을 지어내면
+  // 원장에 없는 지표가 생긴다. 순서는 사람이 찾는 순서(규모 → 밸류 → 수익성 → 성장 → 재무).
+  var SORTKEYS=['mc','t','tpe','fpe','pb','ps','eveb','peg','fcfy','dy','po',
+                'roe','roa','pm','om','gm','rg','eg','gr','cr','de','nde','beta'];
+  // dir 이 low_* 인 지표는 **오름차순이 기본**이다(싼 것부터). 그러지 않으면 PBR 을 골랐을 때
+  // 가장 비싼 회사가 맨 위에 서고, 그건 대개 보려던 것이 아니다.
+  function defDir(k){
+    if(k==='t')return 1;
+    var d=((DATA&&DATA.fundx_defs&&DATA.fundx_defs[k])||{}).dir||'';
+    return d.indexOf('low')===0?1:-1;
+  }
+  function sortVal(s){
+    var k=state.sk;
+    if(k==='t')return secKo(s.sector)?'':'';
+    var v=(s.fund&&s.fund[k]);
+    if(v==null||v!==v)return '—';
+    if(k==='mc')return mcTxt(v);
+    var D=(DATA&&DATA.fundx_defs&&DATA.fundx_defs[k])||{};
+    var nd=D.nd==null?1:D.nd;
+    return fmt(v,nd)+(D.unit==='%'?'%':(D.unit==='배'?'배':''));
+  }
+  function buildSort(){
+    var sel=el('sk'); if(!sel||!DATA)return;
+    var fx=DATA.fundx_defs||{};
+    sel.innerHTML=SORTKEYS.filter(function(k){return k==='t'||fx[k];}).map(function(k){
+      var lab=k==='t'?'티커':(fx[k].label||k);
+      return '<option value="'+esc(k)+'"'+(k===state.sk?' selected':'')+'>'+esc(lab)+'</option>';
+    }).join('');
+    el('sd').textContent=state.sd<0?'↓':'↑';
+    el('sd').title=(state.sd<0?'내림차순(큰 것부터)':'오름차순(작은 것부터)')+' — 눌러서 뒤집기';
+  }
   function renderList(){
     var rows=filtered(),h='';
     el('qn').textContent='— '+rows.length+' / '+nAll()+'종목';
     if(!rows.length){el('plist').innerHTML='<div class="empty">일치하는 종목이 없습니다.</div>';return;}
     for(var i=0;i<Math.min(rows.length,CAP);i++){
       var s=rows[i];
-      // 시총을 같이 적는다 — 시총순으로 세웠는데 그 수가 안 보이면 왜 이 순서인지 모른다.
-      var _mc=(s.fund&&s.fund.mc);
+      // 🚨 **지금 줄 세운 그 값**을 적는다. 시총으로 고정하면 PBR 순으로 봐도 시총이 찍혀
+      //   왜 이 순서인지 알 수 없다 — 정렬 기준과 화면에 뜨는 수가 같아야 한다.
       h+='<button type="button" class="pit" role="option" data-t="'+esc(s.t)+'" aria-selected="'+(state.sel===s)+'">'+
          '<span class="tk">'+esc(s.t)+'</span><span class="nm">'+esc(s.name||'')+'</span>'+
          '<span class="sc">'+esc(secKo(s.sector))+
-         (_mc!=null?'<b class="mcv">'+mcTxt(_mc)+'</b>':'')+'</span></button>';
+         '<b class="mcv">'+esc(sortVal(s))+'</b></span></button>';
     }
     if(rows.length>CAP)h+='<div class="pmore">…외 '+(rows.length-CAP)+'종목 — 검색어를 좁히세요</div>';
     el('plist').innerHTML=h;
@@ -955,6 +1022,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var b=e.target.closest?e.target.closest('.pit'):null;
     if(!b)return;
     selectByTicker(b.getAttribute('data-t'));
+  });
+  // 정렬 기준을 바꾸면 **방향도 그 지표의 기본으로 되돌린다** — PBR 을 골랐는데 직전에
+  // 보던 시총의 '내림차순' 이 남아 있으면 가장 비싼 회사가 맨 위에 선다.
+  el('sk').addEventListener('change',function(e){
+    state.sk=e.target.value; state.sd=defDir(state.sk);
+    buildSort(); renderList();
+  });
+  el('sd').addEventListener('click',function(){
+    state.sd=-state.sd; buildSort(); renderList();
   });
   var _qt;
   // 빈 검색어면 **전체 목록**을 보인다(종전에는 아무것도 안 보였다 — 옆에 세운 목록이
