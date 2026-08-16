@@ -72,7 +72,6 @@ GURUS = {
     1061165: "론파인 캐피털 (맨델)",
     1103804: "바이킹 글로벌 (핼버슨)",
     1135730: "코튜 매니지먼트 (라퐁)",
-    1412093: "아이칸 캐피털 (아이칸)",
     1029160: "소로스 펀드 (소로스)",
     1709323: "히말라야 캐피털 (리루)",
     1350694: "브리지워터 (달리오)",
@@ -81,6 +80,43 @@ GURUS = {
     1166559: "게이츠 재단 신탁",
     1096343: "마클 그룹",
 }
+
+# 🚨 명단에서 뺀 곳 — 지우지 않고 사유와 함께 남긴다(2026-08-16 사용자 결정).
+#   "네 분기 넘게 안 낸 곳이다 — 곧 나올 것이 아니라 사실상 제출을 멈춘 것이다."
+#   화면의 '제출 대기' 줄에 61분기째 떠 있으면서 매 분기 "곧 나온다"처럼 읽혔다.
+# ⚠ 되살리려면 여기서 GURUS 로 옮기면 된다. 왜 뺐는지가 안 남으면 다음 사람이
+#   "이 사람은 왜 없지" 하고 다시 넣는다.
+DROPPED = {
+    1412093: ("아이칸 캐피털 (아이칸)",
+              "장기 미제출 — 최신 보고가 2011-03-31 로 61분기 뒤졌다. 제출을 멈춘 것으로 "
+              "보고 2026-08-16 에 명단에서 뺐다. 다시 내기 시작하면 되살린다."),
+}
+
+
+
+# ── 같은 회사의 복수 클래스 합산 (2026-08-16 사용자 요청) ──────────────────────
+# 🚨 **티커를 손으로 짝지어 적는다.** 이름으로 묶으면 안 된다 — 실측(2026-08-16)에서
+#   이름 기준 묶음 21건 중 절반이 합치면 안 되는 것이었다:
+#     · ISHARES TR      → IVV·MBB·LQD   (S&P500·MBS·회사채. 완전히 다른 ETF다)
+#     · HTZ + HTZWW     → 주식 + **워런트**
+#     · AUR + AUROW     → 주식 + 워런트
+#     · #55024UAF6 등   → **전환사채**(CUSIP 미해결분)
+#   합치면 "이 사람이 이만큼 들고 있다"가 거짓이 된다. 이름은 사람이 읽는 것이고
+#   합산은 기계가 하는 것이라, 기계에는 명시적인 표를 준다.
+# ⚠ 워런트(…W)·우선주·CUSIP(#…)은 여기 절대 넣지 않는다. 의결권·권리가 다르다.
+# ⚠ 대표 티커는 **거래가 많은 쪽**으로 둔다(GOOGL·FOXA — 의결권 있는 클래스).
+SHARE_CLASS = {
+    "GOOG": "GOOGL", "GOOGM": "GOOGL", "GOOGN": "GOOGL",   # 알파벳 — 의결권만 다르다
+    "ZG": "Z",                                              # 질로우 A/C
+    "FOX": "FOXA",                                          # 폭스 A/B
+    "LLYVK": "LLYVA",                                       # 리버티 라이브 A/C
+    "BRK.B": "BRK.A", "BRKB": "BRK.A",                      # 버크셔 A/B
+}
+
+
+def fold_class(t):
+    """복수 클래스를 대표 티커로 접는다. 표에 없으면 그대로 둔다."""
+    return SHARE_CLASS.get(t, t)
 
 
 def fetch(url: str, timeout: int = 300) -> bytes:
@@ -230,6 +266,11 @@ def edgar_quarters(cmap: dict):
                     # 티커는 FTD 전체 지도에서 찾고(없으면 CUSIP), 이름은 13F 원문에서 온다.
                     t = full.get(cu) or ("#" + cu)
                     off = True
+                # 🚨 복수 클래스 접기 — **두 공급원 모두**에 걸어야 한다(EDGAR 직접 ·
+                #   벌크). 한쪽만 고치면 공급원이 바뀌는 날 조용히 갈린다. 실제로
+                #   2026-08-16 에 벌크 쪽만 고치고 돌렸다가 GOOGL·GOOG 가 그대로 둘로
+                #   남았다 — 쓰이는 경로가 EDGAR 였다.
+                t = fold_class(t)
                 h = holds.setdefault(t, {"v": 0.0, "sh": 0.0, "off": off, "nm": nm})
                 h["v"] += val; h["sh"] += sh
                 if nm and not h.get("nm"):
@@ -314,6 +355,10 @@ def read_quarter(url: str, cmap: dict):
             if not t:
                 t = getattr(cusip_map, "full", {}).get(cu) or ("#" + cu)
                 off = True
+            # 🚨 복수 클래스를 **여기서** 접는다(SHARE_CLASS 주석 참조). 이 한 곳이
+            #   이번 분기와 직전 분기를 다 지나므로, 접기가 한 벌이면 변동 판정이
+            #   저절로 맞는다. 화면에서 접으면 psh(직전 주식수)와 어긋난다.
+            t = fold_class(t)
             h = out[cik]["holds"].setdefault(
                 t, {"v": 0.0, "sh": 0.0, "off": off,
                     "nm": (row.get("NAMEOFISSUER") or "").strip()})
@@ -513,6 +558,36 @@ def main() -> int:
         print("❌ 제출 단위 정규화 실패: %s — 갱신 중단(이전본 유지)" % e)
         return 1
 
+    # ── 분기 변화 요약 (2026-08-16 사용자 요청) ─────────────────────────────
+    # "3월말 → 6월말 변화를 한눈에 · 거장들이 각각 어느 종목을 늘렸고 줄였는지"
+    # 🚨 **주식 수로만 판정한다.** 평가액은 안 팔아도 주가로 움직인다 — 위 chg 판정과
+    #   같은 규약이고, 여기서 다시 정하지 않는다(두 곳에서 정하면 언젠가 갈린다).
+    # ⚠ 화면이 다시 세지 않게 여기서 굽는다. 정렬 기준도 여기서 정한다 —
+    #   화면이 정하면 목록과 카드가 다른 순서를 말하는 날이 온다.
+    # ⚠ '전량매도'는 직전 주식수를 그대로 싣는다(v=0 이라 평가액으로는 못 잰다).
+    def _moves(rows):
+        out = {"add": [], "cut": [], "new": [], "exit": []}
+        for r in rows:
+            c = r.get("chg")
+            if c not in ("증가", "감소", "신규", "전량매도"):
+                continue
+            psh, sh = r.get("psh"), r.get("sh") or 0
+            d_sh = (sh - psh) if psh is not None else None
+            pct = (100.0 * d_sh / psh) if (psh and d_sh is not None) else None
+            it = {"t": r["t"], "nm": r.get("nm") or "", "v": r.get("v") or 0,
+                  "sh": sh, "psh": psh, "d_sh": d_sh,
+                  "pct": (round(pct, 1) if pct is not None else None),
+                  "off": r.get("off") or 0}
+            out[{"증가": "add", "감소": "cut", "신규": "new", "전량매도": "exit"}[c]].append(it)
+        # 늘림·신규는 **평가액** 큰 순(지금 얼마나 크게 들고 있나),
+        # 줄임·전량매도는 **줄인 주식 수** 큰 순(얼마나 크게 뺐나).
+        out["add"].sort(key=lambda x: -(x["v"] or 0))
+        out["new"].sort(key=lambda x: -(x["v"] or 0))
+        out["cut"].sort(key=lambda x: (x["d_sh"] if x["d_sh"] is not None else 0))
+        out["exit"].sort(key=lambda x: -((x["psh"] or 0)))
+        out["n"] = {k: len(v) for k, v in out.items() if isinstance(v, list)}
+        return out
+
     managers, overlap, OFFNM = [], {}, {}
     for cik, d in sorted(cur.items(), key=lambda kv: -sum(h["v"] for h in kv[1]["holds"].values())):
         p = (prev.get(cik) or {}).get("holds") or {}
@@ -560,6 +635,10 @@ def main() -> int:
             #   일부만 새 분기를 내는 구간이 반드시 생기고, 그때 전역 as_of 하나만 있으면
             #   화면이 **모두 같은 분기인 것처럼** 말하게 된다.
             "period": _iso(cur_per),
+            # 🚨 변화 요약은 **자르기 전 전체(full)** 로 만든다. rows 는 화면용으로
+            #   90종에서 잘려 있어서, 그걸 쓰면 크게 줄인 종목이 목록 밖이라는
+            #   이유로 "안 줄였다"가 된다. 이 파일이 겹침에서 이미 한 번 밟은 자리다.
+            "moves": _moves(full),
         })
         # ⚠ full 을 돈다. 위 주석대로 '자르기 전 전체'로 세야 하는데 이 루프만 rows(잘린 것)를
         #   돌고 있었다 — uni_val·off_n 만 고쳐 두고 정작 겹침은 그대로였다(2026-07-28 발견).

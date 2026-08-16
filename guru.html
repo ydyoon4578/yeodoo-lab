@@ -94,6 +94,34 @@
   .chg.감소{border-color:var(--marg);color:var(--marg)}
   .chg.전량매도{border-color:var(--hot);color:var(--hot)}
   .chg.유지{color:var(--muted)}
+  /* ── 분기 변화 판 ────────────────────────────────────────────────────
+     네 갈래를 나란히 둔다. 색은 방향만 말한다 — 늘림/신규가 좋고 줄임이 나쁘다는
+     뜻이 아니다(그 판단은 이 사이트가 하지 않는다). */
+  .mvwrap{border:1px solid var(--line);border-radius:2px;background:var(--panel-2);
+    padding:12px 14px;margin:0 0 14px}
+  .mvhd{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;
+    color:var(--ink-2);margin-bottom:10px}
+  .mvhd .mvsub{font-weight:400;color:var(--muted);letter-spacing:0;margin-left:8px}
+  .mvgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:900px){.mvgrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.mvgrid{grid-template-columns:1fr}}
+  .mvcol{min-width:0}
+  .mvttl{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.05em;
+    padding:0 0 5px;border-bottom:2px solid var(--line);margin-bottom:6px;
+    display:flex;justify-content:space-between;align-items:baseline}
+  .mvttl b{font-size:13px}
+  .mvttl.mvup{color:var(--champ);border-bottom-color:var(--champ)}
+  .mvttl.mvnew{color:var(--deploy);border-bottom-color:var(--deploy)}
+  .mvttl.mvdn{color:var(--marg);border-bottom-color:var(--marg)}
+  .mvttl.mvex{color:var(--hot);border-bottom-color:var(--hot)}
+  .mvrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:baseline;
+    padding:2.5px 0;font-size:12px;border-bottom:1px solid var(--line-soft)}
+  .mvrow:last-child{border-bottom:0}
+  .mvt{font-family:var(--mono);font-weight:700;overflow:hidden;text-overflow:ellipsis}
+  .mvv{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}
+  .mvp{font-family:var(--mono);font-size:11px;font-weight:700;white-space:nowrap;
+    min-width:44px;text-align:right;color:var(--ink-2)}
+  .mvnone,.mvmore{font-size:11px;color:var(--muted);padding:3px 0}
   /* 유니버스 밖 — 지우지 않고 표시한다. 버리면 그 운용사 포트폴리오의 절반이 사라지고
      남은 절반의 비중이 실제보다 커 보인다. 대신 이 사이트에 종목 화면이 없어 링크는 뺀다. */
   .tkoff{color:var(--ink-2)}
@@ -584,6 +612,42 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }).join('');
   }
 
+  // ── 분기 변화 판 ─────────────────────────────────────────────────────────
+  //   네 갈래(늘림·신규·줄임·전량매도)를 한 판에 놓는다. 빌더가 구운 moves 를 전사만 한다.
+  // ⚠ 변화율은 **주식 수** 기준이다(빌더와 같은 규약). 평가액은 안 팔아도 주가로 움직인다.
+  // ⚠ 전량매도는 v=0 이라 평가액을 못 적는다 — 직전 주식수를 적는다.
+  function mvBlock(m){
+    var MV=m.moves;
+    if(!MV||!MV.n)return '';
+    var CUT=8;                       // 갈래마다 상위 8개. 더 있으면 '외 N종'으로 적는다.
+    var COL=[['add','늘림','mvup'],['new','신규','mvnew'],
+             ['cut','줄임','mvdn'],['exit','전량매도','mvex']];
+    var any=COL.some(function(c){return (MV[c[0]]||[]).length;});
+    if(!any)return '<p class="lblnote" style="margin:10px 0">직전 분기 대비 <b>변동 없음</b>입니다.</p>';
+    var h='<div class="mvwrap"><div class="mvhd">'+
+      esc(D.prev_as_of||'직전')+' → '+esc(m.period||D.as_of||'')+' 변화'+
+      '<span class="mvsub">주식 수 기준 · 2% 이내는 유지로 본다</span></div><div class="mvgrid">';
+    COL.forEach(function(c){
+      var arr=MV[c[0]]||[];
+      h+='<div class="mvcol"><div class="mvttl '+c[2]+'">'+c[1]+
+         '<b>'+arr.length+'</b></div>';
+      if(!arr.length){h+='<div class="mvnone">없음</div></div>';return;}
+      arr.slice(0,CUT).forEach(function(x){
+        var pct=(x.pct==null)?'':((x.pct>0?'+':'')+x.pct+'%');
+        var tk=x.off?('<span class="tkoff">'+esc(x.t)+'</span>')
+                    :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
+        h+='<div class="mvrow" title="'+esc((x.nm||'')+' · 주식수 '+
+             (x.psh==null?'—':nf(x.psh))+' → '+nf(x.sh))+'">'+
+           '<span class="mvt">'+tk+'</span>'+
+           '<span class="mvv">'+(x.v?usd(x.v):(x.psh?'—':''))+'</span>'+
+           '<span class="mvp">'+esc(pct)+'</span></div>';
+      });
+      if(arr.length>CUT)h+='<div class="mvmore">외 '+(arr.length-CUT)+'종</div>';
+      h+='</div>';
+    });
+    return h+'</div></div>';
+  }
+
   function renderPf(){
     var m=D.managers[cur], host=el('pfout');
     if(!m){host.innerHTML='<div class="skel">운용사를 고르세요.</div>';return;}
@@ -600,6 +664,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<span class="offb">밖</span>으로 표시합니다 — 이름은 13F 원문에서, 티커는 SEC 공매도 미결제 '+
       '파일에서 찾은 것이라 티커를 못 찾으면 CUSIP을 그대로 적습니다. 이 사이트에는 그 종목의 '+
       '가격·재무 화면이 없어 링크를 걸지 않습니다.</p>'+
+      // ── 분기 변화 판 (2026-08-16 사용자 요청) ───────────────────────────────
+      //   "3월말 → 6월말 변화를 한눈에 · 어느 종목을 늘렸고 줄였는지"
+      // 🚨 화면이 세지 않는다. 빌더(refresh_13f._moves)가 구운 것을 전사만 한다 —
+      //   정렬 기준도 거기서 정했다(늘림·신규는 평가액 큰 순, 줄임·전량매도는 줄인
+      //   주식 수 큰 순). 화면이 정하면 이 판과 아래 표가 다른 순서를 말하는 날이 온다.
+      // ⚠ 이 판은 **자르기 전 전체**로 만든 것이라 아래 보유표(90종 상한)에 없는 종목도
+      //   나온다. 그게 맞다 — 크게 줄인 종목이 목록 밖이라는 이유로 안 보이면 안 된다.
+      mvBlock(m)+
       '<div class="fswrap"><table class="tbl"><thead><tr>'+
       '<th scope="col">종목</th><th scope="col">평가액</th><th scope="col">주식 수</th>'+
       '<th scope="col">직전 분기</th><th scope="col" class="l">변동</th></tr></thead><tbody>';
