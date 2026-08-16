@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "dfe9bbf236133af2",
+ "generated_from": "239e5ac29807102d",
  "categories": [
   {
    "name": "시장",
@@ -171,37 +171,6 @@
      "verdict": "na",
      "src": "raw",
      "effort": "L",
-     "live": true
-    },
-    {
-     "name": "공통 보유종목",
-     "file": "guru.html#overlap",
-     "status": "existing",
-     "desc": "명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다",
-     "verdict": "unverified",
-     "src": "agg",
-     "effort": "M",
-     "anchor": "route",
-     "live": true
-    },
-    {
-     "name": "운용사 복제 진단",
-     "file": "guru17.html",
-     "status": "existing",
-     "desc": "따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)",
-     "verdict": "na",
-     "src": "agg",
-     "effort": "M",
-     "live": true
-    },
-    {
-     "name": "복제 리포트",
-     "file": "report.html",
-     "status": "existing",
-     "desc": "돌린 규칙 전부를 전략별로 — 판정이 아니라 잰 값 전부",
-     "verdict": "unverified",
-     "src": "model",
-     "effort": "S",
      "live": true
     },
     {
@@ -420,6 +389,33 @@
    "principle": "쓰임이 겹치는 칸은 남겨 두는 것이 친절이 아니라 부담이다 — 읽는 사람이 '이건 뭘 보라는 칸이지'를 매번 되물어야 한다.",
    "replaced_by": "섹터 등락은 홈 '기간별 수익률'(섹터 11행) · 국면별 선호 업종은 regime.html 의 경기 사이클.",
    "file_kept": "sector.html 파일과 빌더는 지우지 않았다. 메뉴 슬롯에서만 뺐다 — 되살리려면 이 항목을 categories 로 되돌리면 된다."
+  },
+  {
+   "name": "운용사 복제 진단",
+   "cat": "전략",
+   "was_file": "guru17.html",
+   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+   "retired_on": "2026-08-16",
+   "why": "사용자 지시로 전략 메뉴에서 걷었다. 진단물(전략이 아님)이라 전략 메뉴에 두면 '따라 살 것' 목록으로 읽힌다. 페이지·자료·링크(푸터)는 손대지 않았다.",
+   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
+  },
+  {
+   "name": "복제 리포트",
+   "cat": "전략",
+   "was_file": "report.html",
+   "desc": "페이지는 그대로 산다 — 메뉴에서만 내렸다",
+   "retired_on": "2026-08-16",
+   "why": "사용자 지시로 전략 메뉴에서 걷었다. 전략 랩과 같은 자료를 다른 모양으로 보여 주는 화면이라 메뉴에 둘이 나란히 있을 이유가 옅었다. 페이지는 직접 주소로 열린다.",
+   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다."
+  },
+  {
+   "name": "공통 보유종목",
+   "cat": "전략",
+   "was_file": "guru.html#overlap",
+   "desc": "거장 포트폴리오 안의 탭으로 그대로 있다",
+   "retired_on": "2026-08-16",
+   "why": "사용자 지시. 같은 것이 메뉴와 탭 두 자리에 있던 셈이라 메뉴 쪽을 걷었다.",
+   "principle": "한 화면은 한 자리에서만 들어간다."
   }
  ]
 }

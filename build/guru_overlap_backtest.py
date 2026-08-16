@@ -14,9 +14,10 @@
   선정   분기말 13F 기준, K곳 이상이 보유(수량>0)한 유니버스 종목
   룩어헤드 공시일(13F filed)이 체결일보다 뒤인 운용사는 그 분기 세지 않는다
   체결   분기말 + 2개월의 월말 (3/31→5/31 · 6/30→8/31 · 9/30→11/30 · 12/31→2/28)
-  비중   동일가중. 리밸런스 사이는 표류(매수후보유)
-  대조군 ① 같은 풀 동일가중(월 리밸) — '풀이 좋았을 뿐'인지 가른다
-         ② SPY 총수익 — 실제로 대신 살 수 있었던 것
+  비중   동일가중 · 겹침수 가중 · 신규 합의만 셋(2026-08-16 확장)
+  대조군 S&P 500(PR) · 나스닥 100(PR) 둘. 풀 동일가중·SPY 는 걷었다(사용자 지시).
+         🚨 나스닥 100 을 같이 두는 것이 이 표의 핵심이다 — 명단 운용사의 겹침은
+         대형 성장주로 쏠리므로, S&P 500 만 대면 그 쏠림이 알파로 보인다.
 
 한계 — 이 스크립트가 상쇄하지 못하는 것.
   · 명단 17곳이 사후 선택이다. 2026년 시점의 유명세로 고른 곳들이고 폐업·청산은 0곳이다.
@@ -54,10 +55,19 @@ TOPN = 10                # 좁힌 판의 종목 수(요청)
 SH_COVER = 0.80          # 시총 순위를 매기려면 그 분기 후보의 이 비율 이상에 주식수가 있어야 한다
 
 
-def spy_monthly(months):
-    """assets.json 조정종가에서 월말 SPY 총수익 월수익률. 조정종가라 배당이 이미 들어 있다."""
+def idx_monthly(months, tk):
+    """assets.json 종가에서 월말 지수 월수익률. tk 는 ^GSPC(S&P 500) · ^NDX(나스닥 100).
+
+    🚨 2026-08-16 사용자 지시 — 대조군을 **S&P 500 · 나스닥 100 둘**로 바꿨다.
+      종전에는 ① 같은 풀 동일가중 ② SPY 였다.
+      · 풀 동일가중은 걷었다(사용자 지시). '풀이 좋았을 뿐인가' 를 가르던 자리인데,
+        그 질문은 이 표가 답할 것이 아니라고 정리됐다.
+      · SPY(총수익) 대신 지수(PR)를 쓴다 — 이 랩의 다른 표가 전부 S&P 500(PR)을 판정
+        대조군으로 쓰므로 눈금을 맞춘다. ⚠ PR 이라 배당이 빠져 지수가 연 ~2%p 불리하다.
+        그 사실은 산출물 limits 에 적는다.
+    """
     a = load("assets.json") or {}
-    dates, px = a.get("dates") or [], (a.get("px") or {}).get("SPY") or []
+    dates, px = a.get("dates") or [], (a.get("px") or {}).get(tk) or []
     last = {}
     for d, p in zip(dates, px):
         if p is not None:
@@ -104,9 +114,28 @@ def counts_by_quarter(G, mi, P, months):
     return out, diag
 
 
-def build_weights(counts, k, P, mi, months):
-    """K곳 이상 종목을 동일가중으로. 리밸런스 사이는 표류. 반환 (월별비중, 회전율, 종목수, 최근편입)."""
+def build_weights(counts, k, P, mi, months, mode="eq", prev_counts=None):
+    """K곳 이상 종목을 담는다. 리밸런스 사이는 표류. 반환 (월별비중, 회전율, 종목수, 최근편입).
+
+    🚨 2026-08-16 사용자 지시("전략을 좀 다양하게") — mode 를 받는다. 종전에는 K 만 바뀌어
+      **선택 규칙 하나만 네 번** 돌린 셈이었다. 축을 셋으로 넓힌다:
+        eq    동일가중            — 기준. 겹침 자체를 산다.
+        conv  겹침수 가중          — 여러 곳이 겹칠수록 더 담는다(합의의 세기를 비중으로).
+        new   신규 합의만          — 그 분기에 **처음** K곳을 넘긴 종목만. 회전이 크고
+                                    '새로 합의된 것' 이 먹히는지를 따로 묻는다.
+    ⚠ 셋 다 같은 후보집합에서 나온다 — 다른 자료를 쓰는 것이 아니라 **같은 자료를 다르게
+      담는** 것이다. 그래서 서로 상관이 높고, 그 사실은 다중검정 보정으로 다룬다.
+    ⚠ mode 를 늘리는 것은 검정을 늘리는 것이다. 결과를 보고 mode 를 더 만들지 않는다.
+    """
     plan = {m: sorted(t for t, c in cnt.items() if c >= k) for m, cnt in counts.items()}
+    if mode == "new" and prev_counts is not None:
+        # '처음 넘긴' = 이번엔 K 이상인데 직전 리밸에는 K 미만(또는 없던) 종목.
+        ms_sorted = sorted(plan)
+        fresh = {}
+        for j, m in enumerate(ms_sorted):
+            before = counts.get(ms_sorted[j - 1], {}) if j else {}
+            fresh[m] = [t for t in plan[m] if before.get(t, 0) < k]
+        plan = fresh
     plan = {m: ts for m, ts in plan.items() if len(ts) >= MIN_HOLD}
     if not plan:
         return {}, [], [], None
@@ -115,7 +144,12 @@ def build_weights(counts, k, P, mi, months):
     for i in range(start, len(months)):
         m = months[i]
         if m in plan:
-            new = {t: 1.0 / len(plan[m]) for t in plan[m]}
+            if mode == "conv":
+                _w = {t: float(counts[m].get(t, 0)) for t in plan[m]}
+                _s = sum(_w.values())
+                new = {t: v / _s for t, v in _w.items()} if _s > 0 else                       {t: 1.0 / len(plan[m]) for t in plan[m]}
+            else:
+                new = {t: 1.0 / len(plan[m]) for t in plan[m]}
             if cur:
                 # 회전율 = 편도. 표류한 비중에서 새 비중으로 옮기는 데 든 거래량이다.
                 keys = set(cur) | set(new)
@@ -312,55 +346,64 @@ def main() -> int:
     P = {t: v[:len(months)] for t, v in P.items()}
     mi = {m: i for i, m in enumerate(months)}
 
-    # 대조군 ① 같은 풀 동일가중(월 리밸)
-    pool = {}
-    for i in range(1, len(months)):
-        rs = [P[t][i] / P[t][i - 1] - 1.0 for t in P
-              if P[t][i] is not None and P[t][i - 1] not in (None, 0)]
-        if rs:
-            pool[months[i]] = float(np.mean(rs))
-    spy = spy_monthly(months)                         # 대조군 ②
+    # 대조군 — S&P 500(PR) · 나스닥 100(PR) 둘. 풀 동일가중은 걷었다(idx_monthly 머리말).
+    spx = idx_monthly(months, "^GSPC")
+    ndx = idx_monthly(months, "^NDX")
+    if not spx or not ndx:
+        raise SystemExit("대조군 지수를 못 읽었다(^GSPC/^NDX) — data/assets.json 을 먼저 갱신할 것")
 
     counts, qdiag = counts_by_quarter(G, mi, P, months)
     print("분기 %d개 · 첫 체결 %s" % (len(counts), min(counts) if counts else "-"))
 
+    # 🚨 판 목록 — K(문턱) × mode(담는 법). 2026-08-16 사용자 지시로 넓혔다.
+    #   종전에는 K 넷뿐이라 '선택 규칙 하나를 네 번' 돌린 것에 가까웠다.
+    # ⚠ 결과를 보고 조합을 더 만들지 않는다. 여기 목록이 곧 검정 수이고, 아래 다중검정
+    #   보정이 그 수를 그대로 쓴다.
+    PLANS = ([(k, "eq") for k in KS]
+             + [(2, "conv"), (3, "conv")]      # 겹침수 가중 — 합의의 '세기' 를 비중으로
+             + [(2, "new"), (3, "new")])       # 신규 합의만 — 회전이 크다
+    MODE_LAB = {"eq": "동일가중", "conv": "겹침수 가중", "new": "신규 합의만"}
     variants, pvals = [], []
-    for k in KS:
-        W, turn, nhold, last = build_weights(counts, k, P, mi, months)
+    for k, mode in PLANS:
+        W, turn, nhold, last = build_weights(counts, k, P, mi, months, mode=mode,
+                                             prev_counts=counts if mode == "new" else None)
         rets = monthly_returns(W, P, mi, months)
         if len(rets) < MIN_MONTHS:
-            variants.append({"k": k, "n_months": len(rets), "verdict": "표본 부족"})
+            variants.append({"k": k, "mode": mode, "mode_label": MODE_LAB[mode],
+                             "n_months": len(rets), "verdict": "표본 부족"})
             pvals.append(None)
             continue
         ms = sorted(rets)
         r = np.array([rets[m] for m in ms])
         rf = np.array([RF.get(m, 0.0) for m in ms])
-        row = {"k": k, "start": ms[0], "end": ms[-1], "n_months": len(ms),
+        row = {"k": k, "mode": mode, "mode_label": MODE_LAB[mode],
+               "label": "K≥%d · %s" % (k, MODE_LAB[mode]),
+               "start": ms[0], "end": ms[-1], "n_months": len(ms),
                "metrics": ann_from_monthly(r, rf),
                "holds": {"min": min(x["n"] for x in nhold), "max": max(x["n"] for x in nhold),
                          "last": nhold[-1]["n"], "series": nhold},
                "turnover": {"mean": round(float(np.mean([x["v"] for x in turn])), 1) if turn else None,
                             "series": turn},
                "latest": last}
-        for name, bs in (("pool", pool), ("spy", spy)):
+        for name, bs in (("spx", spx), ("ndx", ndx)):
             b = np.array([bs.get(m, 0.0) for m in ms])
             a, beta, t, _ = capm(r, b, rf)
             row[name] = {"metrics": ann_from_monthly(b, rf),
                          "alpha": a, "beta": beta, "t": t}
         # 곡선 — 셋을 같은 달 목록으로 굽는다(위 curve() 주석 참조)
-        row["curve"] = curve(ms, {"s": rets, "pool": pool, "spy": spy})
+        row["curve"] = curve(ms, {"s": rets, "spx": spx, "ndx": ndx})
         variants.append(row)
         pvals.append(None)
-        print("  K=%d  %d개월 · CAGR %6.2f%% (풀 %5.2f · SPY %5.2f) · 샤프 %.2f (%.2f · %.2f) "
+        print("  K≥%d %-8s %d개월 · CAGR %6.2f%% (SPX %5.2f · NDX %5.2f) · 샤프 %.2f (%.2f · %.2f) "
               "· MDD %6.2f%% · 종목 %d~%d · 회전 %.0f%%"
-              % (k, len(ms), row["metrics"]["cagr"], row["pool"]["metrics"]["cagr"],
-                 row["spy"]["metrics"]["cagr"], row["metrics"]["sharpe"],
-                 row["pool"]["metrics"]["sharpe"], row["spy"]["metrics"]["sharpe"],
+              % (k, MODE_LAB[mode], len(ms), row["metrics"]["cagr"], row["spx"]["metrics"]["cagr"],
+                 row["ndx"]["metrics"]["cagr"], row["metrics"]["sharpe"],
+                 row["spx"]["metrics"]["sharpe"], row["ndx"]["metrics"]["sharpe"],
                  row["metrics"]["mdd"], row["holds"]["min"], row["holds"]["max"],
                  row["turnover"]["mean"] or 0))
-        print("        알파 vs 풀 %+.2f%%/yr (t %+.2f · β %.2f) · vs SPY %+.2f%%/yr (t %+.2f · β %.2f)"
-              % (row["pool"]["alpha"] or 0, row["pool"]["t"] or 0, row["pool"]["beta"] or 0,
-                 row["spy"]["alpha"] or 0, row["spy"]["t"] or 0, row["spy"]["beta"] or 0))
+        print("        알파 vs SPX %+.2f%%/yr (t %+.2f · β %.2f) · vs NDX %+.2f%%/yr (t %+.2f · β %.2f)"
+              % (row["spx"]["alpha"] or 0, row["spx"]["t"] or 0, row["spx"]["beta"] or 0,
+                 row["ndx"]["alpha"] or 0, row["ndx"]["t"] or 0, row["ndx"]["beta"] or 0))
 
     # ── 상위 10종목으로 좁힌 판 ──────────────────────────────────────────
     # 요청은 '시총 상위 10'이다. 그런데 시점별 주식수가 2019~2020년부터라 그 규칙은 13년을
@@ -386,22 +429,22 @@ def main() -> int:
                "metrics": ann_from_monthly(r, rf),
                "turnover": {"mean": round(float(np.mean([x["v"] for x in turn])), 1) if turn else None},
                "latest": last}
-        for name, bs in (("pool", pool), ("spy", spy)):
+        for name, bs in (("spx", spx), ("ndx", ndx)):
             b = np.array([bs.get(m, 0.0) for m in ms])
             a, beta, t, _ = capm(r, b, rf)
             row[name] = {"metrics": ann_from_monthly(b, rf), "alpha": a, "beta": beta, "t": t}
-        row["curve"] = curve(ms, {"s": rets, "pool": pool, "spy": spy})
+        row["curve"] = curve(ms, {"s": rets, "spx": spx, "ndx": ndx})
         tops.append(row)
-        print("  상위%d(%s) %s~%s %d개월 · CAGR %6.2f%% (풀 %5.2f · SPY %5.2f) · 샤프 %.2f "
+        print("  상위%d(%s) %s~%s %d개월 · CAGR %6.2f%% (SPX %5.2f · NDX %5.2f) · 샤프 %.2f "
               "(%.2f · %.2f) · MDD %6.2f%% · 회전 %.0f%%"
               % (TOPN, rank, row["start"], row["end"], len(ms), row["metrics"]["cagr"],
-                 row["pool"]["metrics"]["cagr"], row["spy"]["metrics"]["cagr"],
-                 row["metrics"]["sharpe"], row["pool"]["metrics"]["sharpe"],
-                 row["spy"]["metrics"]["sharpe"], row["metrics"]["mdd"],
+                 row["spx"]["metrics"]["cagr"], row["ndx"]["metrics"]["cagr"],
+                 row["metrics"]["sharpe"], row["spx"]["metrics"]["sharpe"],
+                 row["ndx"]["metrics"]["sharpe"], row["metrics"]["mdd"],
                  row["turnover"]["mean"] or 0))
-        print("        알파 vs 풀 %+.2f%%/yr (t %+.2f) · vs SPY %+.2f%%/yr (t %+.2f · β %.2f)"
-              % (row["pool"]["alpha"] or 0, row["pool"]["t"] or 0,
-                 row["spy"]["alpha"] or 0, row["spy"]["t"] or 0, row["spy"]["beta"] or 0))
+        print("        알파 vs SPX %+.2f%%/yr (t %+.2f) · vs NDX %+.2f%%/yr (t %+.2f · β %.2f)"
+              % (row["spx"]["alpha"] or 0, row["spx"]["t"] or 0,
+                 row["ndx"]["alpha"] or 0, row["ndx"]["t"] or 0, row["ndx"]["beta"] or 0))
         print("        지금 담는 것: %s" % ", ".join(last["tickers"]))
 
     # 다중검정 — 문턱 4개 + 좁힌 판 2개 = 6개를 쟀다. 그중 하나를 골라 보이면 그것이
@@ -451,11 +494,12 @@ def main() -> int:
     tested = variants + tops
     pv = []
     for v in tested:
-        t, n = (v.get("spy") or {}).get("t"), v.get("n_months")
+        # 다중검정은 **S&P 500 대비 알파 t** 로 센다(대조군 교체 2026-08-16).
+        t, n = (v.get("spx") or {}).get("t"), v.get("n_months")
         pv.append(None if t is None or not n else _t_two_sided(abs(t), n - 2))
     for v, p in zip(tested, pv):
         if p is not None:
-            v["p_spy"] = round(p, 4)
+            v["p_spx"] = round(p, 4)
     mult = holm_bh(pv)
 
     doc = {
@@ -466,9 +510,11 @@ def main() -> int:
             "select": "분기말 13F에서 K곳 이상이 보유(수량>0)한 유니버스 종목",
             "lookahead_guard": "공시일(13F filed)이 체결일보다 뒤인 운용사는 그 분기 세지 않는다",
             "rebalance": "분기말 + 2개월의 월말 (3/31→5/31 · 6/30→8/31 · 9/30→11/30 · 12/31→2/28)",
-            "weights": "동일가중. 리밸런스 사이는 표류(매수후보유)",
-            "bench_pool": "같은 풀(유니버스) 동일가중 · 월 리밸 — 풀이 좋았을 뿐인지 가른다",
-            "bench_spy": "SPY 총수익(조정종가) — 실제로 대신 살 수 있었던 것",
+            "weights": "동일가중 · 겹침수 가중 · 신규 합의만 — 리밸런스 사이는 표류(매수후보유)",
+            "bench_spx": "S&P 500 가격지수(^GSPC) — 이 랩의 공통 판정 대조군",
+            "bench_ndx": "나스닥 100 가격지수(^NDX) — 겹침이 대형 성장주로 쏠리므로 함께 본다",
+            "bench_note": "⚠ 둘 다 가격지수(PR)라 배당이 빠져 지수가 연 ~2%p 불리하다. "
+                          "알파를 그만큼 깎아서 읽어야 한다.",
             "rf": "FRED DGS3MO 월율, 샤프·알파는 초과수익 기준",
             "costs": "거래비용·세금 0. 회전율을 함께 실어 크기를 가늠하게 한다",
         },

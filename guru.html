@@ -156,6 +156,15 @@
   .ovrow.offrow{background:color-mix(in srgb,var(--muted) 5%,transparent)}
   /* 겹침 전략 — 현재 편입 종목 칩. 200종목 가까이 되므로 표가 아니라 칩으로 눕힌다. */
   .ovwrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  /* 대조군 줄 — 전략 줄과 섞이면 안 된다. 눈금이 같은 표에 있되 성격이 다르다는 것을
+     배경으로 말한다(판마다 대조군 문장을 반복하던 것을 이 한 줄로 대신한다). */
+  .tbl tr.benchrow td{background:var(--panel-2);color:var(--muted);border-top:1px solid var(--line)}
+  .tbl tr.benchrow td.l{font-weight:700;color:var(--ink-2)}
+  /* 규칙·한계는 접어 둔다 — 지우지 않되 첫 화면을 글로 덮지도 않는다. */
+  details.note summary{cursor:pointer;list-style:none}
+  details.note summary::-webkit-details-marker{display:none}
+  details.note summary::before{content:'▸ ';color:var(--muted)}
+  details.note[open] summary::before{content:'▾ '}
   .stk{display:inline-flex;align-items:baseline;gap:4px;font-family:var(--mono);font-size:11.5px;
        font-weight:700;background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:2px 7px}
   .stk[hidden]{display:none}
@@ -421,9 +430,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="style.html" data-nav="style.html" title="공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과"><span class="mmn">스타일 전략</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="screener.html" data-nav="screener.html" title="자유조합 스크린 — 초과수익 확인된 스크린 0종"><span class="mmn">스크리너</span><span class="mmb vrej">기각</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html" title="13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다"><span class="mmn">거장 포트폴리오·매매</span></a>
-          <a class="mmi" href="guru.html#overlap" data-nav="guru.html#overlap" title="명단 중 몇 곳이 같이 들고 있나 — 겹침이 좋다는 뜻은 아니다"><span class="mmn">공통 보유종목</span><span class="mmb vunv">미검증</span></a>
-          <a class="mmi" href="guru17.html" data-nav="guru17.html" title="따라 사면 되는가 — 결합검정·지속성·사전규칙으로 답한 진단물(전략 아님)"><span class="mmn">운용사 복제 진단</span></a>
-          <a class="mmi" href="report.html" data-nav="report.html" title="돌린 규칙 전부를 전략별로 — 판정이 아니라 잰 값 전부"><span class="mmn">복제 리포트</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="rotation.html" data-nav="rotation.html" title="전부 외부 출처·미검증 — 랩이 돌린 게 아니다"><span class="mmn">전략 탐색 풀</span><span class="mmb vunv">미검증</span></a>
           <a class="mmi" href="portfolio.html" data-nav="portfolio.html" title="localStorage 보유 + 일별 실측 상관·변동성·MDD"><span class="mmn">내 포트폴리오</span></a>
         </div>
@@ -580,11 +586,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="strat" aria-labelledby="s-h" hidden>
-    <h2 class="lbl" id="s-h">겹침 전략 — K곳 이상이 들고 있는 종목 동일가중</h2>
-    <p class="lblnote">위 표를 <b>규칙으로 바꿔</b> 돌린 것입니다. 분기말 13F에서 K곳 이상이 보유한 종목을
-      동일가중으로 담고, 공시일이 체결일보다 뒤인 운용사는 그 분기 세지 않습니다(룩어헤드 차단).
-      유니버스가 S&amp;P 500 ∪ NASDAQ 100 이라 <b>지수 편입 종목만</b>이라는 조건은 규칙에 내장돼 있습니다.
-      <b>요청값은 K=2</b>이고 3~5는 민감도입니다 — 넷 중 좋은 것을 고르면 그게 사후 선택이라 전부 싣습니다.</p>
+    <h2 class="lbl" id="s-h">겹침 전략</h2>
+    <p class="lblnote">분기말 13F에서 <b>K곳 이상이 들고 있는 종목</b>을 담고 분기마다 다시 고릅니다.
+      담는 법을 셋(동일가중 · 겹침수 가중 · 신규 합의만)으로 나눠 돌렸습니다.
+      <b>좋은 판만 고르지 않고 전부 싣습니다</b> — 자세한 규칙과 한계는 표 아래에 접어 두었습니다.</p>
     <div id="stout"><div class="skel">불러오는 중…</div></div>
   </section>
 
@@ -795,8 +800,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function curveSvg(C,ttl){
     if(!C||!C.m||!C.m.length)return '';
     var W=760,H=200,PL=44,PR=8,PT=10,PB=18;
-    var KEY=[['s','전략','var(--accent)'],['pool','풀 동일가중','var(--muted)'],
-             ['spy','S&P 500','var(--ink-2)']];
+    // 🚨 대조군 교체(2026-08-16) — 풀 동일가중을 걷고 지수 둘을 놓는다.
+    //   나스닥 100 을 같이 두는 것이 핵심이다: 겹침은 대형 성장주로 쏠리므로 S&P 500 만
+    //   대면 그 쏠림이 알파로 보인다.
+    var KEY=[['s','겹침 전략','var(--accent)'],['spx','S&P 500','var(--ink-2)'],
+             ['ndx','나스닥 100','var(--muted)']];
     var all=[];KEY.forEach(function(k){(C.s[k[0]]||[]).forEach(function(v){if(v>0)all.push(v);});});
     if(!all.length)return '';
     var lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
@@ -831,98 +839,69 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function renderStrat(S){
     if(!S||!S.variants){el('stout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
       '<code>data/guru_overlap.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
+    // 🚨 2026-08-16 전면 개편(사용자 지시 "글들이 주절주절 많은데 차트와 테이블로 딱딱").
+    //   종전에는 판마다 카드 + 설명 문단이 붙어 열 개면 화면이 글로 덮였다.
+    //   이제 **판정표 한 장 + 곡선**이고, 문장은 표가 못 말하는 것만 남긴다.
     var base=null;
-    S.variants.forEach(function(v){if(v.k===S.k_requested)base=v;});
-    // K=2 기본판 곡선도 같이 — 좁힌 판과 나란히 놓아야 «좁혀서 나아졌나»가 읽힌다.
-    var baseCv=(base&&base.curve)?curveSvg(base.curve,'K='+S.k_requested+' (요청값) — 겹침 전체'):'';
+    S.variants.forEach(function(v){if(v.k===S.k_requested&&v.mode==='eq')base=v;});
+    var ALL=(S.variants||[]).concat(S.tops||[]).filter(function(v){return v.metrics;});
+    // 샤프 내림차순. 줄 세우기는 판정이 아니다 — 아래 각주가 그렇게 적는다.
+    ALL.sort(function(a,b){return (b.metrics.sharpe||0)-(a.metrics.sharpe||0);});
+    var nm=function(v){return v.label||('K≥'+v.k+' · '+(v.mode_label||'동일가중'));};
     var h='';
-    // ── 상위 10종목으로 좁힌 판 ── 요청이라 맨 위에 둔다. 두 잣대를 나란히 두는 이유는
-    //    시총 순위가 주식수 이력 때문에 2020-06 부터만 매겨져서다(구간이 규칙을 가린다).
-    (S.tops||[]).length&&(function(){
-      h+='<div class="card"><h3>상위 '+(S.topn||10)+'종목으로 좁힌 판<span class="hn">K=2 에서 다시 고른다</span></h3>'+
-        '<p class="lblnote" style="margin:2px 0 8px">같은 회사의 다른 클래스는 하나만 담습니다 — '+
-        '10종목 중 둘이 알파벳이면 분산이 아니라 착시입니다. 밀려난 자리는 다음 순위가 채웁니다.</p>'+
-        '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">잣대</th><th class="l">구간</th>'+
-        '<th>개월</th><th>CAGR %</th><th>샤프</th><th>MDD %</th><th>회전 %</th>'+
-        '<th>α vs 풀</th><th>α vs SPY</th><th>t (SPY)</th></tr></thead><tbody>';
-      S.tops.forEach(function(v){
-        if(!v.metrics){h+='<tr><td class="l">'+esc(v.label)+'</td><td colspan="9">'+esc(v.verdict||'—')+'</td></tr>';return;}
-        h+='<tr><td class="l">'+esc(v.label)+'</td><td class="l">'+esc(v.start)+'~'+esc(v.end)+'</td>'+
-           '<td>'+v.n_months+'</td><td>'+nf(v.metrics.cagr,2)+'</td><td>'+nf(v.metrics.sharpe,2)+'</td>'+
-           '<td>'+nf(v.metrics.mdd,2)+'</td><td>'+nf(v.turnover.mean,0)+'</td>'+
-           '<td>'+pc(v.pool.alpha)+'</td><td>'+pc(v.spy.alpha)+'</td><td>'+pc(v.spy.t)+'</td></tr>'+
-           '<tr><td class="l" colspan="10"><span class="sub">대조군 같은 구간 — 풀 CAGR '+
-           nf(v.pool.metrics.cagr,2)+'% · 샤프 '+nf(v.pool.metrics.sharpe,2)+' / SPY CAGR '+
-           nf(v.spy.metrics.cagr,2)+'% · 샤프 '+nf(v.spy.metrics.sharpe,2)+'</span></td></tr>';
-      });
-      h+='</tbody></table></div>';
-      // 곡선 — 표 바로 아래. 숫자만 있으면 '언제 벌었나'가 안 보인다.
-      S.tops.forEach(function(v){ if(v.curve)h+=curveSvg(v.curve, v.label); });
-      S.tops.forEach(function(v){
-        if(!v.latest)return;
-        var dq=(v.latest.dropped||[]).length?' · <b>'+v.latest.dropped.map(esc).join('·')+
-               '</b> 는 같은 발행사의 다른 클래스라 빼고 다음 순위로 채웠습니다':'';
-        h+='<p class="lblnote" style="margin:10px 0 2px"><b>'+esc(v.label)+'</b> — '+esc(v.latest.rebal)+
-           ' 리밸런스 기준 지금 담는 '+v.latest.n+'종목(각 '+(100/v.latest.n).toFixed(0)+'%)'+dq+
-           '</p><div class="ovwrap">'+
-           v.latest.tickers.map(function(t){
-             return '<span class="stk"><a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+
-                    '</a><i>'+(v.latest.counts[t]||0)+'</i></span>';}).join('')+'</div>';
-      });
-      h+='</div>';
-    })();
-    if(base&&base.metrics){
-      var m=base.metrics, p=base.pool, sp=base.spy;
-      h+='<div class="card"><h3>K='+base.k+' (요청값)<span class="hn">'+esc(base.start)+' ~ '+esc(base.end)+
-         ' · '+base.n_months+'개월 · 현재 '+base.latest.n+'종목</span></h3>'+
-         '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">지표</th><th>전략</th>'+
-         '<th>같은 풀 동일가중</th><th>SPY 총수익</th></tr></thead><tbody>'+
-         [['CAGR %','cagr'],['변동성 %','vol'],['샤프','sharpe'],['MDD %','mdd']].map(function(x){
-           return '<tr><td class="l">'+x[0]+'</td><td>'+nf(m[x[1]],2)+'</td><td>'+
-                  nf(p.metrics[x[1]],2)+'</td><td>'+nf(sp.metrics[x[1]],2)+'</td></tr>';}).join('')+
-         '<tr><td class="l">알파 %/yr (t)</td><td>—</td><td>'+pc(p.alpha)+' ('+pc(p.t)+')</td>'+
-         '<td>'+pc(sp.alpha)+' ('+pc(sp.t)+')</td></tr>'+
-         '<tr><td class="l">베타</td><td>—</td><td>'+nf(p.beta,2)+'</td><td>'+nf(sp.beta,2)+'</td></tr>'+
-         '</tbody></table></div>'+
-         baseCv+
-         '<p class="lblnote" style="margin:10px 0 0">분기 회전율 평균 <b>'+nf(base.turnover.mean,0)+'%</b>(편도) · '+
-         '거래비용 0으로 잰 값이라 실제 수익은 이보다 낮습니다.</p></div>';
-    }
-    h+='<div class="card"><h3>문턱 K 민감도<span class="hn">넷을 전부 싣는다</span></h3>'+
-       '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">K</th><th>종목</th><th>CAGR %</th>'+
-       '<th>샤프</th><th>MDD %</th><th>회전 %</th><th>α vs 풀</th><th>α vs SPY</th><th>t (SPY)</th>'+
-       '<th>미보정 p</th></tr></thead><tbody>';
-    S.variants.forEach(function(v){
-      if(!v.metrics){h+='<tr><td class="l">'+v.k+'</td><td colspan="9">'+esc(v.verdict||'—')+'</td></tr>';return;}
-      h+='<tr><td class="l">'+v.k+(v.k===S.k_requested?' <span class="on">요청</span>':'')+'</td>'+
-         '<td>'+v.holds.min+'~'+v.holds.max+'</td><td>'+nf(v.metrics.cagr,2)+'</td>'+
-         '<td>'+nf(v.metrics.sharpe,2)+'</td><td>'+nf(v.metrics.mdd,2)+'</td>'+
-         '<td>'+nf(v.turnover.mean,0)+'</td><td>'+pc(v.pool.alpha)+'</td><td>'+pc(v.spy.alpha)+'</td>'+
-         '<td>'+pc(v.spy.t)+'</td><td>'+nf(v.p_spy,4)+'</td></tr>';
-    });
-    var mm=S.multiplicity||{};
-    h+='</tbody></table></div><p class="lblnote" style="margin:10px 0 0">문턱 4개와 좁힌 판 2개, '+
-       '<b>모두 '+(mm.m||0)+'개 변형</b>을 쟀으므로 미보정 p 를 그대로 유의성으로 읽으면 안 됩니다 — Bonferroni '+(mm.bonferroni||0)+
-       '건 · Holm '+(mm.holm||0)+'건 · BH(q=.10) '+(mm.bh10||0)+'건 통과.</p></div>';
 
+    // ── ① 판정표 한 장 ────────────────────────────────────────────────
+    h+='<div class="card"><h3>겹침 전략 '+ALL.length+'판<span class="hn">샤프 내림차순 · '+
+       '대조군은 S&amp;P 500 · 나스닥 100 (둘 다 가격지수)</span></h3>'+
+       '<div class="fswrap"><table class="tbl"><thead><tr>'+
+       '<th class="l">판</th><th>종목</th><th>CAGR %</th><th>샤프</th><th>MDD %</th><th>회전 %</th>'+
+       '<th>α vs SPX</th><th>t</th><th>α vs NDX</th><th>t</th></tr></thead><tbody>';
+    ALL.forEach(function(v){
+      var hold=v.holds?(v.holds.min+'~'+v.holds.max):(v.top||'—');
+      h+='<tr><td class="l">'+esc(nm(v))+(v===base?' <span class="on">요청</span>':'')+'</td>'+
+         '<td>'+hold+'</td><td>'+nf(v.metrics.cagr,2)+'</td><td>'+nf(v.metrics.sharpe,2)+'</td>'+
+         '<td>'+nf(v.metrics.mdd,2)+'</td><td>'+nf(v.turnover&&v.turnover.mean,0)+'</td>'+
+         '<td>'+pc(v.spx&&v.spx.alpha)+'</td><td>'+pc(v.spx&&v.spx.t)+'</td>'+
+         '<td>'+pc(v.ndx&&v.ndx.alpha)+'</td><td>'+pc(v.ndx&&v.ndx.t)+'</td></tr>';
+    });
+    // 대조군은 표 안에 한 줄로 — 판마다 반복하면 그게 곧 주절주절이 된다.
+    var _b0=ALL[0]||{};
+    if(_b0.spx&&_b0.ndx)
+      h+='<tr class="benchrow"><td class="l">대조군</td><td>—</td>'+
+         '<td>'+nf(_b0.spx.metrics.cagr,2)+' / '+nf(_b0.ndx.metrics.cagr,2)+'</td>'+
+         '<td>'+nf(_b0.spx.metrics.sharpe,2)+' / '+nf(_b0.ndx.metrics.sharpe,2)+'</td>'+
+         '<td>'+nf(_b0.spx.metrics.mdd,2)+' / '+nf(_b0.ndx.metrics.mdd,2)+'</td>'+
+         '<td colspan="5">S&amp;P 500 / 나스닥 100</td></tr>';
+    h+='</tbody></table></div>';
+    var mm=S.multiplicity||{};
+    h+='<p class="lblnote" style="margin:9px 0 0">🚨 <b>나스닥 100 과 견주면 알파가 거의 사라집니다.</b> '+
+       '겹침은 대형 성장주로 쏠리므로 S&amp;P 500 만 대면 그 쏠림이 알파로 보입니다. '+
+       '판 '+(mm.m||ALL.length)+'개를 한 표본에서 쟀으므로 t 를 그대로 유의성으로 읽으면 안 됩니다 — '+
+       'Bonferroni '+(mm.bonferroni||0)+'건 · Holm '+(mm.holm||0)+'건 · BH(q=.10) '+(mm.bh10||0)+'건.</p></div>';
+
+    // ── ② 곡선 — 요청판 + 샤프 1위. 열 장을 다 그리면 그림이 글만큼 길어진다. ──
+    var CV=[base].concat(ALL.slice(0,2)).filter(function(v,i,a){
+      return v&&v.curve&&a.indexOf(v)===i;}).slice(0,3);
+    CV.forEach(function(v){ h+='<div class="card">'+curveSvg(v.curve,nm(v))+'</div>'; });
+
+    // ── ③ 지금 담는 것 — 요청판 하나만. 판마다 칩을 깔면 200종이 세 번 나온다. ──
     if(base&&base.latest){
       var L=base.latest, TOP=40;
-      h+='<div class="card"><h3>지금 담는 것 (K='+base.k+')<span class="hn">'+esc(L.rebal)+
-         ' 리밸런스 · '+L.n+'종목 동일가중</span></h3><div class="ovwrap">';
+      h+='<div class="card"><h3>지금 담는 것<span class="hn">'+esc(nm(base))+' · '+esc(L.rebal)+
+         ' 리밸런스 · '+L.n+'종목 · 숫자는 들고 있는 운용사 수</span></h3><div class="ovwrap">';
       L.tickers.forEach(function(t,i){
         h+='<span class="stk'+(i>=TOP?' stx':'')+'"'+(i>=TOP?' hidden':'')+'>'+
            '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a><i>'+L.counts[t]+'</i></span>';
       });
       h+='</div>'+(L.n>TOP?'<button type="button" class="cnt2" id="stmore" aria-expanded="false">'+
-         '나머지 '+(L.n-TOP)+'종목 펼치기</button>':'')+
-         '<p class="lblnote" style="margin:10px 0 0">숫자는 그 종목을 들고 있는 운용사 수입니다. '+
-         '전부 같은 비중(1/'+L.n+')으로 담습니다.</p></div>';
+         '나머지 '+(L.n-TOP)+'종목 펼치기</button>':'')+'</div>';
     }
-    h+='<div class="note"><b>규칙</b><br>· '+Object.keys(S.spec||{}).map(function(k){
-         return esc(S.spec[k]);}).join('<br>· ')+'</div>';
-    h+='<div class="note hard"><b>이 숫자를 성과로 읽기 전에</b><br>· '+
-       (S.limits||[]).map(function(s){return esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+
-       '</div>';
+    // 규칙·한계는 접어 둔다 — 필요한 사람만 펴 본다(지우지는 않는다).
+    h+='<details class="note"><summary><b>규칙과 한계</b> — 이 숫자를 성과로 읽기 전에</summary>'+
+       '<div style="margin-top:8px">· '+Object.keys(S.spec||{}).map(function(k){
+         return esc(S.spec[k]);}).join('<br>· ')+'</div>'+
+       '<div style="margin-top:8px">· '+(S.limits||[]).map(function(x){
+         return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div></details>';
     el('stout').innerHTML=h;
     var b=el('stmore');
     if(b)b.addEventListener('click',function(){
