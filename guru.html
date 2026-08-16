@@ -156,6 +156,15 @@
   .ovrow.offrow{background:color-mix(in srgb,var(--muted) 5%,transparent)}
   /* 겹침 전략 — 현재 편입 종목 칩. 200종목 가까이 되므로 표가 아니라 칩으로 눕힌다. */
   .ovwrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  /* 분기 성과 — 보유 표 위에 놓되 시각적으로 한 덩어리로 묶는다. */
+  .qpwrap{margin:12px 0 14px;padding:11px 12px;border:1px solid var(--line);border-radius:3px;
+          background:var(--panel-2)}
+  .qphd{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+  .qphd .qpsub{display:block;font-weight:400;font-size:10.5px;color:var(--muted);margin-top:2px}
+  /* 🚨 사후 성과를 매매 가능한 성과로 읽는 것을 막는 줄이다. 눈에 띄어야 한다. */
+  .qpwarn{margin:0 0 9px;font-size:11px;line-height:1.6;color:var(--ink-2);
+          border-left:3px solid var(--marg);padding:6px 0 6px 9px;background:var(--panel)}
+  .tbl td.up{color:var(--deploy)} .tbl td.dn{color:var(--hot)}
   /* 대조군 줄 — 전략 줄과 섞이면 안 된다. 눈금이 같은 표에 있되 성격이 다르다는 것을
      배경으로 말한다(판마다 대조군 문장을 반복하던 것을 이 한 줄로 대신한다). */
   .tbl tr.benchrow td{background:var(--panel-2);color:var(--muted);border-top:1px solid var(--line)}
@@ -684,6 +693,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return h+'</div></div>';
   }
 
+  // ── 운용사 분기 성과 (2026-08-16 사용자 지시) ────────────────────────────────
+  // "3월 말일자 포트 기준으로 3월말~6월말 3개월 성과를, 벤치는 S&P500·나스닥100"
+  // 🚨 **이것은 따라 살 수 있었던 성과가 아니다.** 13F 는 분기말 45일 뒤에 공시되므로
+  //   3월 31일 포트폴리오를 3월 31일에 알 방법이 없다. 이 표가 답하는 것은
+  //   «그들이 그 분기에 들고 있던 것이 어떻게 됐나» 이지 «따라 샀으면 얼마를 벌었나» 가
+  //   아니다. 뒤쪽은 겹침 전략(공시 지연을 태운다)이 답한다 — 그 문장을 표 위에 적는다.
+  // ⚠ 화면이 계산하지 않는다. build/guru_quarter_perf.py 가 구운 것을 전사만 한다.
+  function qpBlock(m){
+    if(!QP||!QP.by_manager)return '';
+    var rs=QP.by_manager[String(m.cik)];
+    if(!rs||!rs.length)return '';
+    var sum=(QP.summary||[]).filter(function(x){return String(x.cik)===String(m.cik);})[0];
+    var last=rs.slice(-12).reverse();       // 최근 3년치만 — 전부 깔면 표가 화면을 먹는다
+    var h='<div class="qpwrap"><div class="qphd">분기 성과 '+
+      '<span class="qpsub">신고 포트폴리오가 다음 분기말까지 — '+
+      (sum?('최근 '+sum.n_q+'분기 · S&P 500 대비 평균 '+(sum.avg_vs_spx>0?'+':'')+
+            sum.avg_vs_spx.toFixed(2)+'%p(승률 '+sum.win_spx.toFixed(0)+'%) · 나스닥 100 대비 '+
+            (sum.avg_vs_ndx>0?'+':'')+sum.avg_vs_ndx.toFixed(2)+'%p'):'')+'</span></div>'+
+      '<p class="qpwarn">🚨 <b>따라 살 수 있었던 성과가 아닙니다.</b> 13F 는 분기말 45일 뒤에 '+
+      '공시되므로 3월 31일 포트폴리오를 3월 31일에 알 수 없습니다. 이 표는 <b>그들이 그 분기에 '+
+      '들고 있던 것이 어떻게 됐나</b>를 보여줍니다 — 따라 산 결과는 «겹침 전략» 탭이 답합니다.</p>'+
+      '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">분기</th>'+
+      '<th>포트 %</th><th>S&amp;P 500 %</th><th>나스닥 100 %</th><th>vs SPX</th><th>vs NDX</th>'+
+      '<th>커버</th></tr></thead><tbody>';
+    last.forEach(function(r){
+      h+='<tr><td class="l">'+esc(r.q.slice(0,7))+' → '+esc(r.to.slice(0,7))+'</td>'+
+         '<td><b>'+nf(r.ret,2)+'</b></td><td>'+nf(r.spx,2)+'</td><td>'+nf(r.ndx,2)+'</td>'+
+         '<td class="'+((r.vs_spx||0)>0?'up':'dn')+'">'+pc(r.vs_spx)+'</td>'+
+         '<td class="'+((r.vs_ndx||0)>0?'up':'dn')+'">'+pc(r.vs_ndx)+'</td>'+
+         '<td class="sub">'+nf(r.cov,0)+'%</td></tr>';
+    });
+    h+='</tbody></table></div>'+
+       '<p class="lblnote" style="margin:8px 0 0">비중은 신고 가치 비례이고 분기 사이는 '+
+       '표류(매수후보유)로 둡니다 — 분기 중 매매는 안 보입니다. 「커버」는 가격을 찾은 비중이며 '+
+       '나머지는 빼고 재정규화했습니다. 두 지수 다 가격지수라 배당이 빠집니다.</p></div>';
+    return h;
+  }
+
   function renderPf(){
     var m=D.managers[cur], host=el('pfout');
     if(!m){host.innerHTML='<div class="skel">운용사를 고르세요.</div>';return;}
@@ -707,6 +754,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   주식 수 큰 순). 화면이 정하면 이 판과 아래 표가 다른 순서를 말하는 날이 온다.
       // ⚠ 이 판은 **자르기 전 전체**로 만든 것이라 아래 보유표(90종 상한)에 없는 종목도
       //   나온다. 그게 맞다 — 크게 줄인 종목이 목록 밖이라는 이유로 안 보이면 안 된다.
+      qpBlock(m)+
       mvBlock(m)+
       '<div class="fswrap"><table class="tbl"><thead><tr>'+
       '<th scope="col">종목</th><th scope="col">평가액</th><th scope="col">주식 수</th>'+
@@ -852,79 +900,111 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function renderStrat(S){
     if(!S||!S.variants){el('stout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
       '<code>data/guru_overlap.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
-    // 🚨 2026-08-16 전면 개편(사용자 지시 "글들이 주절주절 많은데 차트와 테이블로 딱딱").
-    //   종전에는 판마다 카드 + 설명 문단이 붙어 열 개면 화면이 글로 덮였다.
-    //   이제 **판정표 한 장 + 곡선**이고, 문장은 표가 못 말하는 것만 남긴다.
-    var base=null;
-    S.variants.forEach(function(v){if(v.k===S.k_requested&&v.mode==='eq')base=v;});
+    // 🚨 2026-08-16 — **한 판만 보인다**(사용자 지시). 종전에는 10판을 표로 깔았는데,
+    //   판을 여럿 늘어놓으면 읽는 사람이 그중 좋은 것을 고르게 된다 — 그게 사후 선택이다.
+    //   요청받은 「겹친 운용사 수 상위 10」 하나를 랩 본편 카드처럼 검증해 싣는다.
+    // ⚠ 나머지 9판은 **지우지 않았다.** 산출물에 그대로 있고 맨 아래 접은 표에 둔다 —
+    //   "한 판만 보인다" 와 "한 판만 쟀다" 는 다르고, 뒤엣것으로 읽히면 거짓이 된다.
+    var MAIN=(S.tops||[]).filter(function(v){return v.rank==='ov'&&v.metrics;})[0];
     var ALL=(S.variants||[]).concat(S.tops||[]).filter(function(v){return v.metrics;});
-    // 샤프 내림차순. 줄 세우기는 판정이 아니다 — 아래 각주가 그렇게 적는다.
-    ALL.sort(function(a,b){return (b.metrics.sharpe||0)-(a.metrics.sharpe||0);});
     var nm=function(v){return v.label||('K≥'+v.k+' · '+(v.mode_label||'동일가중'));};
     var h='';
+    if(!MAIN){ el('stout').innerHTML='<div class="note hard">주 판을 못 읽었습니다.</div>'; return; }
 
-    // ── ① 판정표 한 장 ────────────────────────────────────────────────
-    h+='<div class="card"><h3>겹침 전략 '+ALL.length+'판<span class="hn">샤프 내림차순 · '+
-       '대조군은 S&amp;P 500 · 나스닥 100 (둘 다 가격지수)</span></h3>'+
-       '<div class="fswrap"><table class="tbl"><thead><tr>'+
-       '<th class="l">판</th><th>종목</th><th>CAGR %</th><th>샤프</th><th>MDD %</th><th>회전 %</th>'+
-       '<th>α vs SPX</th><th>t</th><th>α vs NDX</th><th>t</th></tr></thead><tbody>';
+    // ── ① 성과 요약 — 전략과 대조군 둘을 같은 표에 ──────────────────────
+    var M=MAIN.metrics, SX=MAIN.spx, ND=MAIN.ndx;
+    h+='<div class="card"><h3>'+esc(nm(MAIN))+'<span class="hn">'+esc(MAIN.start)+' ~ '+
+       esc(MAIN.end)+' · '+MAIN.n_months+'개월 · 분기 리밸 · 무비용</span></h3>'+
+       '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">지표</th>'+
+       '<th>겹침 전략</th><th>S&amp;P 500</th><th>나스닥 100</th></tr></thead><tbody>'+
+       [['CAGR %','cagr'],['변동성 %','vol'],['샤프','sharpe'],['MDD %','mdd']].map(function(x){
+         return '<tr><td class="l">'+x[0]+'</td><td><b>'+nf(M[x[1]],2)+'</b></td><td>'+
+                nf(SX.metrics[x[1]],2)+'</td><td>'+nf(ND.metrics[x[1]],2)+'</td></tr>';}).join('')+
+       '<tr><td class="l">알파 %/yr (t)</td><td>—</td><td>'+pc(SX.alpha)+' ('+pc(SX.t)+')</td>'+
+       '<td>'+pc(ND.alpha)+' ('+pc(ND.t)+')</td></tr>'+
+       '<tr><td class="l">베타</td><td>—</td><td>'+nf(SX.beta,2)+'</td><td>'+nf(ND.beta,2)+'</td></tr>'+
+       (MAIN.win?'<tr><td class="l">월간 승률 %</td><td>—</td><td>'+
+         nf(MAIN.win.spx&&MAIN.win.spx.pct,1)+'</td><td>'+nf(MAIN.win.ndx&&MAIN.win.ndx.pct,1)+
+         '</td></tr>':'')+
+       '</tbody></table></div>'+
+       '<p class="lblnote" style="margin:9px 0 0">🚨 <b>나스닥 100 과 견주면 알파가 거의 사라집니다</b>'+
+       (ND.t!=null?'(t '+pc(ND.t)+')':'')+'. 겹침은 대형 성장주로 쏠리므로 S&amp;P 500 만 대면 '+
+       '그 쏠림이 알파로 보입니다. 두 지수 다 <b>가격지수</b>라 배당이 빠져 연 ~2%p 불리합니다.</p></div>';
+
+    // ── ② 곡선 ──────────────────────────────────────────────────────
+    if(MAIN.curve) h+='<div class="card">'+curveSvg(MAIN.curve,nm(MAIN))+'</div>';
+
+    // ── ③ 연도별 — 막대 대신 표. 어느 해에 벌고 잃었나가 곡선보다 정확히 읽힌다 ──
+    if(MAIN.yearly&&MAIN.yearly.length){
+      h+='<div class="card"><h3>연도별 수익<span class="hn">%는 그해 누적 · 부분 연도는 개월 수 표시</span></h3>'+
+         '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">연도</th>'+
+         '<th>전략 %</th><th>S&amp;P 500 %</th><th>나스닥 100 %</th><th>vs SPX</th><th>vs NDX</th>'+
+         '</tr></thead><tbody>';
+      MAIN.yearly.forEach(function(y){
+        var d1=y.r-y.spx, d2=y.r-y.ndx;
+        h+='<tr><td class="l">'+esc(y.y)+(y.months<12?' <span class="sub">'+y.months+'개월</span>':'')+
+           '</td><td>'+nf(y.r,2)+'</td><td>'+nf(y.spx,2)+'</td><td>'+nf(y.ndx,2)+'</td>'+
+           '<td class="'+(d1>0?'up':'dn')+'">'+pc(d1)+'</td>'+
+           '<td class="'+(d2>0?'up':'dn')+'">'+pc(d2)+'</td></tr>';
+      });
+      h+='</tbody></table></div></div>';
+    }
+
+    // ── ④ 비용 후 — 회전이 큰 규칙이라 이것 없이는 반쪽이다 ──────────────
+    if(MAIN.net){
+      h+='<div class="card"><h3>비용을 태우면<span class="hn">리밸 달에만 회전율 × 왕복비용 · 분기 회전 '+
+         nf(MAIN.turnover&&MAIN.turnover.mean,0)+'%</span></h3>'+
+         '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">왕복 비용</th>'+
+         '<th>CAGR %</th><th>샤프</th></tr></thead><tbody>'+
+         '<tr><td class="l">0 (무비용)</td><td>'+nf(M.cagr,2)+'</td><td>'+nf(M.sharpe,2)+'</td></tr>'+
+         ['10','20','40'].map(function(b){
+           var x=MAIN.net[b]; if(!x)return '';
+           return '<tr><td class="l">'+b+'bp</td><td>'+nf(x.cagr,2)+'</td><td>'+nf(x.sharpe,2)+'</td></tr>';
+         }).join('')+'</tbody></table></div></div>';
+    }
+
+    // ── ⑤ 지금 담는 것 ──────────────────────────────────────────────
+    if(MAIN.latest){
+      var L=MAIN.latest;
+      h+='<div class="card"><h3>지금 담는 것<span class="hn">'+esc(L.rebal)+' 리밸런스 · '+
+         L.n+'종목 동일가중 · 숫자는 들고 있는 운용사 수</span></h3><div class="ovwrap">'+
+         L.tickers.map(function(t){
+           return '<span class="stk"><a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+
+                  '</a><i>'+(L.counts[t]||0)+'</i></span>';}).join('')+'</div></div>';
+    }
+
+    // ── ⑥ 나머지 판 — 접어 둔다. 안 보이는 것과 안 잰 것은 다르다 ────────
+    var mm=S.multiplicity||{};
+    h+='<details class="note"><summary><b>같이 돌린 나머지 '+(ALL.length-1)+'판</b> — '+
+       '보이지 않을 뿐 지우지 않았다</summary><div class="fswrap" style="margin-top:8px">'+
+       '<table class="tbl"><thead><tr><th class="l">판</th><th>CAGR %</th><th>샤프</th>'+
+       '<th>MDD %</th><th>α vs SPX</th><th>t</th><th>α vs NDX</th><th>t</th></tr></thead><tbody>';
     ALL.forEach(function(v){
-      var hold=v.holds?(v.holds.min+'~'+v.holds.max):(v.top||'—');
-      h+='<tr><td class="l">'+esc(nm(v))+(v===base?' <span class="on">요청</span>':'')+'</td>'+
-         '<td>'+hold+'</td><td>'+nf(v.metrics.cagr,2)+'</td><td>'+nf(v.metrics.sharpe,2)+'</td>'+
-         '<td>'+nf(v.metrics.mdd,2)+'</td><td>'+nf(v.turnover&&v.turnover.mean,0)+'</td>'+
+      if(v===MAIN)return;
+      h+='<tr><td class="l">'+esc(nm(v))+'</td><td>'+nf(v.metrics.cagr,2)+'</td>'+
+         '<td>'+nf(v.metrics.sharpe,2)+'</td><td>'+nf(v.metrics.mdd,2)+'</td>'+
          '<td>'+pc(v.spx&&v.spx.alpha)+'</td><td>'+pc(v.spx&&v.spx.t)+'</td>'+
          '<td>'+pc(v.ndx&&v.ndx.alpha)+'</td><td>'+pc(v.ndx&&v.ndx.t)+'</td></tr>';
     });
-    // 대조군은 표 안에 한 줄로 — 판마다 반복하면 그게 곧 주절주절이 된다.
-    var _b0=ALL[0]||{};
-    if(_b0.spx&&_b0.ndx)
-      h+='<tr class="benchrow"><td class="l">대조군</td><td>—</td>'+
-         '<td>'+nf(_b0.spx.metrics.cagr,2)+' / '+nf(_b0.ndx.metrics.cagr,2)+'</td>'+
-         '<td>'+nf(_b0.spx.metrics.sharpe,2)+' / '+nf(_b0.ndx.metrics.sharpe,2)+'</td>'+
-         '<td>'+nf(_b0.spx.metrics.mdd,2)+' / '+nf(_b0.ndx.metrics.mdd,2)+'</td>'+
-         '<td colspan="5">S&amp;P 500 / 나스닥 100</td></tr>';
-    h+='</tbody></table></div>';
-    var mm=S.multiplicity||{};
-    h+='<p class="lblnote" style="margin:9px 0 0">🚨 <b>나스닥 100 과 견주면 알파가 거의 사라집니다.</b> '+
-       '겹침은 대형 성장주로 쏠리므로 S&amp;P 500 만 대면 그 쏠림이 알파로 보입니다. '+
-       '판 '+(mm.m||ALL.length)+'개를 한 표본에서 쟀으므로 t 를 그대로 유의성으로 읽으면 안 됩니다 — '+
-       'Bonferroni '+(mm.bonferroni||0)+'건 · Holm '+(mm.holm||0)+'건 · BH(q=.10) '+(mm.bh10||0)+'건.</p></div>';
-
-    // ── ② 곡선 — 요청판 + 샤프 1위. 열 장을 다 그리면 그림이 글만큼 길어진다. ──
-    var CV=[base].concat(ALL.slice(0,2)).filter(function(v,i,a){
-      return v&&v.curve&&a.indexOf(v)===i;}).slice(0,3);
-    CV.forEach(function(v){ h+='<div class="card">'+curveSvg(v.curve,nm(v))+'</div>'; });
-
-    // ── ③ 지금 담는 것 — 요청판 하나만. 판마다 칩을 깔면 200종이 세 번 나온다. ──
-    if(base&&base.latest){
-      var L=base.latest, TOP=40;
-      h+='<div class="card"><h3>지금 담는 것<span class="hn">'+esc(nm(base))+' · '+esc(L.rebal)+
-         ' 리밸런스 · '+L.n+'종목 · 숫자는 들고 있는 운용사 수</span></h3><div class="ovwrap">';
-      L.tickers.forEach(function(t,i){
-        h+='<span class="stk'+(i>=TOP?' stx':'')+'"'+(i>=TOP?' hidden':'')+'>'+
-           '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a><i>'+L.counts[t]+'</i></span>';
-      });
-      h+='</div>'+(L.n>TOP?'<button type="button" class="cnt2" id="stmore" aria-expanded="false">'+
-         '나머지 '+(L.n-TOP)+'종목 펼치기</button>':'')+'</div>';
-    }
-    // 규칙·한계는 접어 둔다 — 필요한 사람만 펴 본다(지우지는 않는다).
+    h+='</tbody></table></div><p class="lblnote" style="margin:8px 0 0">판 '+(mm.m||ALL.length)+
+       '개를 한 표본에서 쟀습니다 — Bonferroni '+(mm.bonferroni||0)+'건 · Holm '+(mm.holm||0)+
+       '건 · BH(q=.10) '+(mm.bh10||0)+'건. 위 한 판만 보이는 것은 <b>요청이지 선별이 아닙니다</b>.</p></details>';
     h+='<details class="note"><summary><b>규칙과 한계</b> — 이 숫자를 성과로 읽기 전에</summary>'+
        '<div style="margin-top:8px">· '+Object.keys(S.spec||{}).map(function(k){
          return esc(S.spec[k]);}).join('<br>· ')+'</div>'+
        '<div style="margin-top:8px">· '+(S.limits||[]).map(function(x){
          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div></details>';
     el('stout').innerHTML=h;
-    var b=el('stmore');
-    if(b)b.addEventListener('click',function(){
-      var open=b.getAttribute('aria-expanded')!=='true';
-      Array.prototype.forEach.call(el('stout').querySelectorAll('.stx'),function(x){
-        if(open)x.removeAttribute('hidden'); else x.setAttribute('hidden','');});
-      b.setAttribute('aria-expanded',open?'true':'false');
-      b.textContent=open?'접기':'나머지 '+(base.latest.n-40)+'종목 펼치기';
-    });
+    // 🚨 stmore('나머지 N종목 펼치기') 핸들러를 걷었다(2026-08-16). 겹침 화면을 상위 10
+    //   한 판으로 좁히면서 보유가 10종이라 접을 것이 없어졌고, 버튼도 안 그린다.
+    //   ⚠ 그 핸들러는 사라진 변수 base 를 참조하고 있었다 — 눌렸으면 그 줄에서 죽었다.
+    //   관문의 el() 배선 검사가 잡았다.
   }
+  // 🚨 운용사별 분기 성과(2026-08-16 사용자 지시). 분기말 신고 포트가 다음 분기말까지
+  //   어떻게 됐나 — build/guru_quarter_perf.py 가 굽는다.
+  var QP=null;
+  fetch('data/guru_qperf.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); }catch(e){} })['catch'](function(){});
   fetch('data/guru_overlap.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     ['catch'](function(){return null;}).then(renderStrat);
 

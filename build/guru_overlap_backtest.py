@@ -306,6 +306,62 @@ def build_topn(counts, k, n, rank, SH, P, mi, months, ISS):
 #   말하고 있었다(자산 랩 9종 중 8종).
 # ⚠ 세 계열을 **같은 달 목록**으로 만든다. 하나라도 달이 다르면 같은 그림에 못 올린다.
 # ⚠ 점이 많으면 파일이 커진다 — 월 격자라 154개월이면 그대로 실어도 작다(얇게 안 만든다).
+# ── 성과 검증 보강(2026-08-16 사용자 지시 "전략 랩처럼 성과 검증 진행해") ──────────
+# 랩 본편 카드가 싣는 것 중 이 표에 없던 넷을 더한다: 연도별·낙폭 곡선·월간 승률·비용 후.
+# ⚠ 새 판을 만드는 것이 아니다. **같은 판을 더 여러 각도로 재는** 것이라 검정 수는 안 는다.
+def yearly_block(ms, rets, spx, ndx):
+    """연도별 수익 — 전략·대조군 둘. 그해 첫 달부터 마지막 달까지 누적."""
+    yr = {}
+    for m in ms:
+        y = m[:4]
+        d = yr.setdefault(y, {"s": 1.0, "spx": 1.0, "ndx": 1.0, "n": 0})
+        d["s"] *= (1.0 + (rets.get(m) or 0.0))
+        d["spx"] *= (1.0 + (spx.get(m) or 0.0))
+        d["ndx"] *= (1.0 + (ndx.get(m) or 0.0))
+        d["n"] += 1
+    return [{"y": y, "r": round((v["s"] - 1) * 100, 2),
+             "spx": round((v["spx"] - 1) * 100, 2), "ndx": round((v["ndx"] - 1) * 100, 2),
+             "months": v["n"]} for y, v in sorted(yr.items())]
+
+
+def dd_block(ms, rets):
+    """낙폭 계열 — 월말 기준. 최대 낙폭이 **언제** 났는지가 숫자 하나보다 많은 것을 말한다."""
+    acc, pk, out, worst = 100.0, 100.0, [], (0.0, None)
+    for m in ms:
+        acc *= (1.0 + (rets.get(m) or 0.0))
+        pk = max(pk, acc)
+        d = (acc / pk - 1.0) * 100
+        out.append(round(d, 2))
+        if d < worst[0]:
+            worst = (d, m)
+    return {"m": list(ms), "dd": out,
+            "worst": round(worst[0], 2), "worst_m": worst[1]}
+
+
+def winrate(ms, rets, bench):
+    """월간 승률 — 대조군을 이긴 달의 비율. 같은 달을 따라간 것은 이긴 것으로 안 센다."""
+    w = n = 0
+    for m in ms:
+        b = bench.get(m)
+        if b is None:
+            continue
+        n += 1
+        if (rets.get(m) or 0.0) > b:
+            w += 1
+    return None if not n else {"pct": round(100.0 * w / n, 1), "n": n}
+
+
+def net_of_cost(ms, rets, turn_series, rf, bps):
+    """비용 후 — 리밸 달에만 회전율×왕복비용을 뺀다. 회전은 편도(%)라 그대로 곱한다."""
+    tmap = {x["m"]: (x["v"] or 0.0) / 100.0 for x in (turn_series or [])}
+    out = {}
+    for m in ms:
+        c = tmap.get(m, 0.0) * (bps / 10000.0)
+        out[m] = (rets.get(m) or 0.0) - c
+    r = np.array([out[m] for m in ms])
+    return ann_from_monthly(r, rf)
+
+
 def curve(ms, series):
     """{이름: {달: 수익률}} → {"m": [...], "s": {이름: [100 기준 지수]}}"""
     out = {}
@@ -392,6 +448,12 @@ def main() -> int:
                          "alpha": a, "beta": beta, "t": t}
         # 곡선 — 셋을 같은 달 목록으로 굽는다(위 curve() 주석 참조)
         row["curve"] = curve(ms, {"s": rets, "spx": spx, "ndx": ndx})
+        # 성과 검증 — 랩 본편 카드와 같은 축(2026-08-16). 판을 늘리는 것이 아니라
+        # 같은 판을 더 여러 각도로 재는 것이라 다중검정 수는 그대로다.
+        row["yearly"] = yearly_block(ms, rets, spx, ndx)
+        row["dd"] = dd_block(ms, rets)
+        row["win"] = {"spx": winrate(ms, rets, spx), "ndx": winrate(ms, rets, ndx)}
+        row["net"] = {str(b): net_of_cost(ms, rets, turn, rf, b) for b in (10, 20, 40)}
         variants.append(row)
         pvals.append(None)
         print("  K≥%d %-8s %d개월 · CAGR %6.2f%% (SPX %5.2f · NDX %5.2f) · 샤프 %.2f (%.2f · %.2f) "
@@ -434,6 +496,10 @@ def main() -> int:
             a, beta, t, _ = capm(r, b, rf)
             row[name] = {"metrics": ann_from_monthly(b, rf), "alpha": a, "beta": beta, "t": t}
         row["curve"] = curve(ms, {"s": rets, "spx": spx, "ndx": ndx})
+        row["yearly"] = yearly_block(ms, rets, spx, ndx)
+        row["dd"] = dd_block(ms, rets)
+        row["win"] = {"spx": winrate(ms, rets, spx), "ndx": winrate(ms, rets, ndx)}
+        row["net"] = {str(b): net_of_cost(ms, rets, turn, rf, b) for b in (10, 20, 40)}
         tops.append(row)
         print("  상위%d(%s) %s~%s %d개월 · CAGR %6.2f%% (SPX %5.2f · NDX %5.2f) · 샤프 %.2f "
               "(%.2f · %.2f) · MDD %6.2f%% · 회전 %.0f%%"
