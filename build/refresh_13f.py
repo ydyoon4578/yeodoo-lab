@@ -114,6 +114,19 @@ SHARE_CLASS = {
 }
 
 
+# ── 주식이 아닌 것(채권·전환사채) 판정 ────────────────────────────────────────
+# 🚨 CUSIP 7~8번째 자리가 종류를 말한다. 보통주는 **숫자**(037833100 애플 → "10"),
+#   채권은 **문자**(AA·AK·AG…). 오크트리(크레딧 운용사)는 보유 90건 중 52건(58%)이
+#   그쪽이다 — 그것을 "종목"이라 적고 액면을 "주식 수" 열에 넣으면 화면이 거짓을 말한다.
+# ⚠ 티커로 풀린 것은 건드리지 않는다. 이 판정은 **CUSIP 으로 남은 것**에만 건다.
+#   (티커가 있다는 것은 지도가 그것을 보통주로 확인했다는 뜻이다.)
+# ⚠ 발행사 주식과 합치지 않는다. 채권과 주식은 청구권 순위·의결권이 다르다.
+#   화면이 같은 회사임을 보여 주는 것과, 수치를 합치는 것은 다른 일이다.
+def is_debt(cusip: str) -> bool:
+    c = (cusip or "").strip()
+    return len(c) >= 8 and c[6].isalpha() and c[7].isalpha()
+
+
 def fold_class(t):
     """복수 클래스를 대표 티커로 접는다. 표에 없으면 그대로 둔다."""
     return SHARE_CLASS.get(t, t)
@@ -241,7 +254,13 @@ def edgar_quarters(cmap: dict):
             EDGAR_LATEST[cik] = max(best)      # 이 운용사가 낸 것 중 가장 최근 분기
     if not periods:
         return None, None
-    want = sorted(periods)[-2:][::-1]      # 최신, 그다음
+    # 🚨 세 분기를 읽는다(2026-08-16 사용자 요청). 종전에는 최신 두 분기만 읽어서,
+    #   이번 분기를 아직 안 낸 곳(마감 직후엔 반드시 생긴다)이 화면에서 **통째로
+    #   사라졌다** — 퍼싱스퀘어가 그랬다. "3월말 자료가 있으면 3월말을 보여주면 되잖아"가
+    #   맞는 말이고, 그러려면 그 앞 분기(12월말)도 있어야 변화를 잰다.
+    # ⚠ 운용사마다 **자기 최신 두 분기**를 쓴다. 전역 한 쌍으로 맞추면 늦게 내는 곳은
+    #   영영 안 보인다. 대신 카드마다 자기 기준분기를 적는다(period 필드 · 이미 있다).
+    want = sorted(periods)[-3:][::-1]      # 최신, 그다음, 그 앞
     out = []
     for per in want:
         got = {}
@@ -271,7 +290,8 @@ def edgar_quarters(cmap: dict):
                 #   2026-08-16 에 벌크 쪽만 고치고 돌렸다가 GOOGL·GOOG 가 그대로 둘로
                 #   남았다 — 쓰이는 경로가 EDGAR 였다.
                 t = fold_class(t)
-                h = holds.setdefault(t, {"v": 0.0, "sh": 0.0, "off": off, "nm": nm})
+                h = holds.setdefault(t, {"v": 0.0, "sh": 0.0, "off": off, "nm": nm,
+                                         "debt": 1 if (off and is_debt(cu)) else 0})
                 h["v"] += val; h["sh"] += sh
                 if nm and not h.get("nm"):
                     h["nm"] = nm
@@ -279,11 +299,31 @@ def edgar_quarters(cmap: dict):
                 got[cik] = {"name": GURUS[cik], "total_val": tot_v,
                             "total_n": tot_n, "holds": holds}
         out.append((per, got))
-    while len(out) < 2:
+    while len(out) < 3:
         out.append((None, {}))
-    print("EDGAR 직접 수집 — %s %d곳 · %s %d곳"
-          % (out[0][0], len(out[0][1]), out[1][0], len(out[1][1])))
-    return out[0], out[1]
+
+    # 🚨 **운용사마다 자기 최신 두 분기를 쓴다.** 전역 한 쌍으로 맞추면 이번 분기를
+    #   아직 안 낸 곳이 화면에서 통째로 사라진다(퍼싱스퀘어가 그랬다).
+    #   여기서 out[0]/out[1] 두 통에 재배치한다 — 반환 계약(두 분기)은 그대로 두고
+    #   내용만 '그 운용사의 최신·직전'으로 채운다. 부르는 쪽을 안 고쳐도 된다.
+    # ⚠ 그래서 out[0] 안의 운용사들이 **서로 다른 분기**일 수 있다. 그 사실은
+    #   managers[].period 가 카드마다 적고, 화면이 "(다름)"으로 표시한다(이미 있다).
+    cur_b, prev_b = {}, {}
+    seq = [(q, g) for q, g in out if q]          # 최신 → 과거 순
+    for cik in GURUS:
+        mine = [(q, g[cik]) for q, g in seq if cik in g]
+        if not mine:
+            continue
+        cur_b[cik] = mine[0][1]
+        if len(mine) > 1:
+            prev_b[cik] = mine[1][1]
+    _lag = sorted(set(q for q, g in seq for c in g if c in cur_b
+                      and cur_b[c] is g.get(c) and q != seq[0][0]))
+    print("EDGAR 직접 수집 — 창 %s · 운용사별 최신 %d곳(직전 있는 곳 %d)"
+          % (" / ".join(q for q, _g in seq), len(cur_b), len(prev_b)))
+    if _lag:
+        print("  ⚠ 최신 분기를 안 낸 곳은 자기 마지막 분기로 싣는다: " + ", ".join(_lag))
+    return (out[0][0], cur_b), (out[1][0], prev_b)
 
 
 def read_quarter(url: str, cmap: dict):
@@ -361,6 +401,7 @@ def read_quarter(url: str, cmap: dict):
             t = fold_class(t)
             h = out[cik]["holds"].setdefault(
                 t, {"v": 0.0, "sh": 0.0, "off": off,
+                    "debt": 1 if (off and is_debt(cu)) else 0,
                     "nm": (row.get("NAMEOFISSUER") or "").strip()})
             h["v"] += _f(row.get("VALUE"))
             h["sh"] += _f(row.get("SSHPRNAMT"))
@@ -606,6 +647,7 @@ def main() -> int:
                          "v": round(h["v"], 0),
                          "sh": round(h["sh"], 0), "chg": chg,
                          "off": 1 if h.get("off") else 0,
+                         "debt": 1 if h.get("debt") else 0,
                          "psh": round(before["sh"], 0) if before else None})
         # 전량 매도 — 직전에 있었는데 이번에 없는 것
         if prev.get(cik):
@@ -613,6 +655,7 @@ def main() -> int:
                 if t not in d["holds"]:
                     rows.append({"t": t, "nm": names.get(t) or h.get("nm") or "", "v": 0, "sh": 0,
                                  "chg": "전량매도", "off": 1 if h.get("off") else 0,
+                                 "debt": 1 if h.get("debt") else 0,
                                  "psh": round(h["sh"], 0)})
         rows.sort(key=lambda r: -r["v"])
         # ⚠ 겹침은 **자르기 전 전체**로 센다. 예전엔 rows[:KEEP_HOLD] 뒤에 합산했는데,
