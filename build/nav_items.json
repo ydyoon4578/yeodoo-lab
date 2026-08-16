@@ -77,6 +77,15 @@
      "src": "model",
      "verdict": "rejected",
      "effort": "M"
+    },
+    {
+     "name": "Williams %R",
+     "file": "williams.html",
+     "status": "existing",
+     "desc": "과매도·과매수 두 신호의 17년 성적과 오늘 발동 종목 — 사는 쪽은 근거가 약하고 피하는 쪽이 일관된다",
+     "src": "model",
+     "verdict": "marginal",
+     "effort": "S"
     }
    ]
   },

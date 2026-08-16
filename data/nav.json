@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "f235b8dd785ba87f",
+ "generated_from": "075779adcb16d4b6",
  "categories": [
   {
    "name": "시장",
@@ -83,6 +83,16 @@
      "verdict": "rejected",
      "src": "model",
      "effort": "M",
+     "live": true
+    },
+    {
+     "name": "Williams %R",
+     "file": "williams.html",
+     "status": "existing",
+     "desc": "과매도·과매수 두 신호의 17년 성적과 오늘 발동 종목 — 사는 쪽은 근거가 약하고 피하는 쪽이 일관된다",
+     "verdict": "marginal",
+     "src": "model",
+     "effort": "S",
      "live": true
     }
    ]
