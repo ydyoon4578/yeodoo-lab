@@ -1016,10 +1016,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <!-- ⚠ hidden 을 마크업에서 건다. 스크립트(setFlt)만으로 접으면 그 전에 한 번 그려져
          칩 줄 넷이 번쩍했다가 사라진다(첫 화면에서 목록이 밀렸다 올라온다). -->
     <div class="chipwrap" id="chipwrap" hidden>
-      <div class="chiprow" id="bfilters" role="group" aria-label="벤치마크 유형 필터"><span class="fltlab">벤치마크</span></div>
+      <!-- 🚨 2026-08-16 사용자 지시 — 벤치마크·용도·등급 줄을 걷었다.
+             · 등급: 관문을 없앤 뒤 랩 180종이 전부 '측정만' 이라 칩이 사실상 하나였다.
+             · 용도: 아키타입이 180종 전부 비어 있어 '아직 안 나눔' 칩 하나가 전체를 담았다.
+                     — 나누지도 않은 축으로 거르게 두면 필터가 있는 척만 한다.
+             · 벤치마크: 두 칸(지수 대비/독립형)뿐이고 성격과 거의 같은 방향으로 갈렸다.
+           대신 성격을 두 줄로 넓힌다 — 아래 '무엇을 고르나' 참조. -->
       <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
-      <div class="chiprow" id="afilters" role="group" aria-label="활용 아키타입 필터"><span class="fltlab">용도</span></div>
-      <div class="chiprow" id="vfilters" role="group" aria-label="운용 등급 필터"><span class="fltlab">등급</span></div>
+      <div class="chiprow" id="hfilters" role="group" aria-label="무엇을 고르는 전략인지 필터"><span class="fltlab">고르는 것</span></div>
       <div class="chiprow" id="mfilters" role="group" aria-label="마킹 필터"><span class="fltlab">내 표시</span></div>
     </div>
   </div>
@@ -1152,7 +1156,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 벤치마크 2분할 — 판정 기준이 시장 지수(SPX/NDX)인 전략과, 지수 없이 모전략·기초자산·
   //   자기 유니버스(1/N)로 판정하는 독립형. bench_role=='index'가 곧 '지수 대비'다(단일 출처는 bt).
   var BENCH_ORDER=['지수 대비','독립형'];
-  function benchGroup(d){return (d.bt&&d.bt.bench_role==='index')?'지수 대비':'독립형';}
+  // benchGroup() 은 벤치마크 필터 전용이었다 — 그 필터를 걷으면서 같이 지웠다(2026-08-16).
   var KIND_COLOR={'수익엔진':'#0E8A54','배분기':'#2C6E8F','위험방어':'#8256B8','타이밍오버레이':'#B9770E','미분류':'#9A9A9A'};
   // 지수 표기 — 약어보다 이름이 읽기 쉽다는 요청. 전략 이름·설명은 사내 원장 키이기도 해서
   // 데이터의 값은 그대로 두고 **화면에 나가는 문자열만** 바꾼다(sid·arch는 소문자라 안 걸린다).
@@ -1246,7 +1250,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function bmFull(x){ var n=bmName(x); return n==='비교 지수'?n:(n+' 지수'); }
 
   // 기본 정렬 = 샤프 내림차순(사용자 결정 2026-08-12). 전에는 '성격'이었다.
-  var state={q:"",vf:new Set(),af:new Set(),kf:new Set(),bf:new Set(),mk:false,sort:"sharpe",sel:0,
+  var state={q:"",kf:new Set(),hf:new Set(),mk:false,sort:"sharpe",sel:0,
              rgk:null};   // 국면 탭 — null 이면 '전체'(국면을 안 본다)
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
@@ -1278,25 +1282,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     b.innerHTML=esc(label)+(cnt!=null?' <span class="cnt">'+cnt+'</span>':'');
     b.addEventListener('click',onclick); return b;
   }
-  function buildVChips(){
-    var vf=el('vfilters'); if(!vf)return;
-    // 랩 전략이 나중에 붙으면 개수가 달라진다 — 통째로 다시 만든다(칩이 옛 개수를 말하면 안 된다)
-    [].slice.call(vf.querySelectorAll('.fchip')).forEach(function(x){x.remove();});
-    Object.keys(VORDER).sort(function(a,b){return VORDER[a]-VORDER[b];}).forEach(function(v){
-      var cnt=D.filter(function(d){return d.v===v;}).length;
-      if(!cnt)return; // 개수 0인 판정은 칩 생성 안 함 — 죽은 필터 방지
-      vf.appendChild(chip('v-'+v,VMETA[v].short,cnt,state.vf.has(v),function(){toggle(state.vf,v);render();syncPressed();fltLabel();}));
-    });
-  }
+  // 🚨 buildVChips(등급 칩)를 걷었다(2026-08-16). 관문을 없앤 뒤 랩 180종이 전부
+  //   '측정만' 이라 칩이 사실상 하나였고, 하나짜리 필터는 거르는 일을 안 한다.
+  //   ⚠ VMETA/VORDER 는 남긴다 — 카드가 등급 뜻풀이를 그리는 데 계속 쓴다(배포 원장 3종).
   window.__rebuildChips=function(){
-    buildVChips();
-    // 성격·용도·벤치 칩도 개수가 달라지므로 다시 만든다
+    // 랩 전략이 나중에 붙으면 개수가 달라진다 — 칩이 옛 개수를 말하면 안 되므로 다시 만든다.
     try{ if(typeof buildKindFilter==='function')buildKindFilter(); }catch(e){}
-    try{ if(typeof buildArchetypeFilter==='function')buildArchetypeFilter(); }catch(e){}
-    try{ if(typeof buildBenchFilter==='function')buildBenchFilter(); }catch(e){}
+    try{ if(typeof buildHoldsFilter==='function')buildHoldsFilter(); }catch(e){}
     try{ syncPressed(); }catch(e){}
   };
-  buildVChips();
+
 
   // ── 통합 ── 배포 원장 14건 옆에 랩 전략 75건을 같은 목록으로 붙인다(2026-07-26).
   // 예전엔 탭 4개로 나눠져 있었는데, 그 나눔은 '전략이 무엇을 하는가'가 아니라
@@ -1325,6 +1320,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             //   됐고, 그러면 무엇이 강조인지 안 보인다(2026-08-12 사용자 지적).
             t:x.rule||'', vt:(x.why||''), vp:[], vpn:(x.note||''),
             _lab:true, _src:x.src, _hold:x.holdings||null,
+            // '고르는 것' 필터가 읽는다. 아래 MX 병합에서도 채우지만 그건 이름으로
+            // 조인하는 경로라, 이름이 어긋나면 조용히 빈다 — 여기서 직접 싣는다.
+            _holds:x.holds||null,
             det:{kind:x.role||'미분류'},
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
             _start:x.start, _end:x.end,
@@ -1493,6 +1491,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         D.forEach(function(d){
           var x=MX[d.n]; if(!x)return;
           d._holds=x.holds; d._cmp=x.cmp_ok; d._cmpw=x.cmp_why||null;
+          // 🚨 성격이 비면 인덱스의 role 로 채운다(2026-08-16). 배포 원장 행의 성격은
+          //   플레이북 맵(det)에서만 왔는데 8종 중 2종이 그 맵에 없어 '아직 안 나눔' 으로
+          //   나갔다 — dfcf-yield-spx · eps-revision-drift-ndx. 둘 다 인덱스에는
+          //   role=수익엔진 이 멀쩡히 있었다. **화면이 안 읽은 것이지 안 나뉜 것이 아니다.**
+          // ⚠ 여기서 성격을 지어내지 않는다. 빌더가 정한 role 을 그대로 옮길 뿐이고,
+          //   role 도 없으면 '아직 안 나눔' 으로 남는다 — 그건 사실이므로 덮지 않는다.
+          if(x.role && !(d.det&&d.det.kind))
+            d.det=Object.assign({},d.det||{},{kind:x.role});
           d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           d._mx=x.metrics||null;   // 전략 자신의 지표 — 지수 눈금과 나란히 놓을 왼쪽 열
           d._rg=x.rg||null;        // 국면별 월평균(build/strategy_index.py:_regime_stats)
@@ -1529,41 +1535,42 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function toggle(set,k){set.has(k)?set.delete(k):set.add(k);}
   function syncPressed(){
-    document.querySelectorAll('#vfilters .fchip').forEach(function(b){
-      var v=b.className.match(/v-(\w+)/)[1]; b.setAttribute('aria-pressed',state.vf.has(v));});
     var K=function(b){return b.dataset.key||b.textContent.replace(/\s+\d+$/,'').trim();};
-    document.querySelectorAll('#bfilters .fchip').forEach(function(b){
-      b.setAttribute('aria-pressed',state.bf.has(K(b)));});
-    document.querySelectorAll('#afilters .fchip').forEach(function(b){
-      b.setAttribute('aria-pressed',state.af.has(K(b)));});
     document.querySelectorAll('#kfilters .fchip').forEach(function(b){
       b.setAttribute('aria-pressed',state.kf.has(K(b)));});
+    document.querySelectorAll('#hfilters .fchip').forEach(function(b){
+      b.setAttribute('aria-pressed',state.hf.has(K(b)));});
   }
-  function buildArchetypeFilter(){
-    var af=el('afilters'); if(!af)return;
-    af.innerHTML='<span class="fltlab">용도</span>';
-    // 플레이북(det)이 없는 전략도 '미분류'로 세어 노출한다 — 안 그러면 칩 합계가 전체와 안 맞고 해당 전략이 사라진다
-    var counts={}; D.forEach(function(d){var a=(d.det&&d.det.archetype)||'미분류'; counts[a]=(counts[a]||0)+1;});
-    ARCHE_ORDER.concat(['미분류']).forEach(function(a){
-      if(!counts[a])return;
-      var ab=chip('a',(a==='미분류'?((KINDS&&KINDS.unclassified_label)||a):alab(a)),counts[a],false,
-        function(){toggle(state.af,a);render();syncPressed();fltLabel();},a);
-      ab.title=a;   // 원래 이름은 마우스를 올리면 나온다(원장과 대조할 때 필요하다)
-      af.appendChild(ab);
+  // 🚨 buildArchetypeFilter(용도) · buildBenchFilter(벤치마크) 를 걷었다(2026-08-16).
+  //   사유는 마크업의 같은 날짜 주석에 있다. 여기 남기지 않는 이유는, 안 부르는 빌더가
+  //   남아 있으면 다음 사람이 "왜 안 뜨지" 하고 그 함수부터 고치려 들기 때문이다.
+
+  // ── 고르는 것(holds) — 성격을 보강하는 두 번째 줄 ──────────────────────
+  // 🚨 왜 넣나. 성격은 세 칸인데 180종 중 110종이 '수익엔진' 한 칸에 몰려 있어 눌러도
+  //   거의 안 좁혀진다. holds 는 이미 빌더가 재 놓은 축이고(종목 91·비중 63·노출 22·없음 4)
+  //   분포가 고르다. 성격이 '무엇을 노리나' 라면 이것은 '무엇을 고르나' 라 축이 겹치지 않는다.
+  // ⚠ 새로 만든 분류가 아니다. strategy_index 의 holds 를 그대로 옮긴다 — 화면이 스스로
+  //   나누기 시작하면 원장과 갈린다.
+  var HOLDS_ORDER=['종목','비중','페어','노출','없음'];
+  var HOLDS_TIP={
+    '종목':'개별 종목을 골라 담는다 — 무엇을 사는지가 곧 전략이다',
+    '비중':'자산군 비중을 정한다 — 무엇을 사느냐보다 얼마씩 담느냐가 전략이다',
+    '페어':'두 종목의 벌어짐을 산다 — 방향이 아니라 관계에 건다',
+    '노출':'같은 바구니를 얼마나 들지만 정한다(0~100%) — 고르지 않고 켜고 끈다',
+    '없음':'보유 구성이 따로 없다 — 신호·참고용'};
+  function buildHoldsFilter(){
+    var hf=el('hfilters'); if(!hf)return;
+    hf.innerHTML='<span class="fltlab">고르는 것</span>';
+    var counts={}; D.forEach(function(d){var h=d._holds; if(h)counts[h]=(counts[h]||0)+1;});
+    HOLDS_ORDER.forEach(function(h){
+      if(!counts[h])return;          // 0인 칸은 칩을 안 만든다 — 죽은 필터 방지
+      var b=chip('h',h,counts[h],false,
+        function(){toggle(state.hf,h);render();syncPressed();fltLabel();},h);
+      b.title=HOLDS_TIP[h]||h;
+      hf.appendChild(b);
     });
   }
-  function buildBenchFilter(){
-    var bf=el('bfilters'); if(!bf)return;
-    bf.innerHTML='<span class="fltlab">벤치마크</span>';
-    var counts={}; D.forEach(function(d){var g=benchGroup(d); counts[g]=(counts[g]||0)+1;});
-    var TIP={'지수 대비':'판정 기준이 시장 지수(S&P 500·NASDAQ 100)인 전략 — 지수를 이겼는지로 봅니다',
-             '독립형':'지수가 아니라 모전략·기초자산·같은 풀 1/N으로 판정하는 전략(배분·오버레이 등)'};
-    BENCH_ORDER.forEach(function(g){
-      if(!counts[g])return;
-      var b=chip('b',g,counts[g],false,function(){toggle(state.bf,g);render();syncPressed();fltLabel();});
-      b.title=TIP[g]||''; bf.appendChild(b);
-    });
-  }
+
   function markChip(){
     var mf=el('mfilters'); if(!mf)return;
     mf.innerHTML='<span class="fltlab">내 표시</span>';
@@ -1733,9 +1740,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function filtered(){
     var rows=D.filter(function(d){
-      if(state.vf.size && !state.vf.has(d.v))return false;
-      if(state.bf.size && !state.bf.has(benchGroup(d)))return false;
-      if(state.af.size && !state.af.has((d.det&&d.det.archetype)||'미분류'))return false;
+      if(state.hf.size && !state.hf.has(d._holds))return false;
       if(state.kf.size && !state.kf.has(kindOf(d)))return false;
       if(state.mk && !MK.has(d.sid))return false;
       // 국면 탭이 켜져 있으면 **그 국면을 못 잰 전략은 뺀다.** 남겨 두면 '—' 가 목록의
@@ -1826,7 +1831,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function fltLabel(){
     var b=el('fltnow'); if(!b)return;
-    var n=state.vf.size+state.af.size+state.kf.size+state.bf.size+(state.mk?1:0), w=el('chipwrap');
+    var n=state.kf.size+state.hf.size+(state.mk?1:0), w=el('chipwrap');
     b.textContent=(w&&w.hidden)?('필터'+(n?' · '+n+'개 적용':'')):'필터 접기';
   }
   function setFlt(open){
@@ -3192,15 +3197,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var keep=(d.det&&d.det.kind)||null;
       d.det=map[d.n];
       if(keep&&!d.det.kind)d.det=Object.assign({},d.det,{kind:keep});
-    }); buildArchetypeFilter(); if(window.__rebuildChips)window.__rebuildChips(); render(); }
+    }); if(window.__rebuildChips)window.__rebuildChips(); render(); }
     buildKindFilter();
+    buildHoldsFilter();
     markChip();
     // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
     if(bt&&bt.strategies){ D.forEach(function(d){
       if(bt.strategies[d.n]){ d.bt=bt.strategies[d.n]; return; }
       for(var kk in bt.strategies){ if(bt.strategies[kk].sid&&bt.strategies[kk].sid===d.sid){ d.bt=bt.strategies[kk]; return; } }
     }); }
-    buildBenchFilter();   // bench_role은 bt에 있으므로 bt 조인 뒤에 세운다(그 전엔 전부 '독립형'으로 셈)
     // 무료 데이터 상세(우선) + 사내 DB 파생 공개요약(종목 비공개) 병합
     [hd,hdb].forEach(function(src){ if(src&&src.strategies)D.forEach(function(d){ if(!d.hold&&src.strategies[d.n]) d.hold=src.strategies[d.n]; }); });
     render();
