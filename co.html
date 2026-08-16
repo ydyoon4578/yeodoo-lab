@@ -110,12 +110,36 @@
   .pick input{width:100%;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--panel-2);
               border:1px solid var(--line);border-radius:2px;padding:10px 13px}
   .pick input:focus{outline:2px solid var(--accent);outline-offset:1px}
-  .plist{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line-soft);border-radius:2px}
+  .plist{overflow-y:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line-soft);border-radius:2px}
+  /* ── 2단 레이아웃 (2026-08-16) ────────────────────────────────────────
+     왼쪽 종목 목록은 **붙어서 따라온다**(sticky). 스크롤을 내려도 종목을 바꿀 수 있어야
+     한다 — 그러지 않으면 목록을 옆에 둔 값이 절반만 난다.
+     ⚠ 좁은 화면에서는 1단으로 떨어뜨리고 목록 높이를 줄인다. 세로로 쌓일 때 518종이
+       본문을 밀어내는 것이 종전 구조의 문제였고, 그대로 되풀이하면 안 된다. */
+  .cols{display:grid;grid-template-columns:236px minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+  .side{position:sticky;top:12px}
+  .side .pick{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:12px}
+  .side .plist{max-height:calc(100vh - 190px);margin-top:8px}
+  .side-main{min-width:0}
+  @media(max-width:900px){
+    .cols{grid-template-columns:1fr;gap:12px}
+    .side{position:static}
+    .side .plist{max-height:230px}
+  }
   .pit{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;width:100%;
        background:none;border:0;border-top:1px solid var(--line-soft);cursor:pointer;text-align:left;
        padding:8px 12px;color:inherit;font-family:inherit}
   .pit:first-child{border-top:0}
   .pit:hover{background:var(--panel-2)}
+  /* 왼쪽 칸(236px)에서는 세 칸이 다 안 들어간다 — 티커/이름을 위에, 섹터를 아래에 둔다.
+     그리고 **고른 종목을 표시한다**(aria-selected). 목록이 늘 보이므로 지금 무엇을 보고
+     있는지가 목록에서도 읽혀야 한다. */
+  .side .pit{grid-template-columns:auto minmax(0,1fr);padding:7px 10px}
+  .side .pit .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side .pit .sc{grid-column:1/-1;font-size:10px;color:var(--muted)}
+  .side .pit[aria-selected="true"]{background:var(--panel-2);
+       box-shadow:inset 3px 0 0 var(--accent)}
+  .side .pit[aria-selected="true"] .tk{color:var(--accent)}
   /* 종목 선택기 — 탭 위에 고정. 어느 탭에서 보든 같은 자리에서 종목을 바꾼다. */
   .pickbar{margin:16px 0 0}
   .pickbar .pick{background:var(--panel);border:1px solid var(--line);border-radius:2px;
@@ -659,17 +683,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="statline" id="statline"><span class="stat">데이터를 불러오는 중…</span></div>
   </header>
 
-  <!-- 종목 선택기 — 탭 위. 전에는 '실적 및 전망' 탭 안에만 있어서 재무제표·IR·내부자 탭에서
-       종목을 바꾸려면 탭을 되돌아가야 했다. 어느 탭에서 보든 같은 자리에서 고른다. -->
-  <div class="pickbar">
+  <!-- 🚨 2026-08-16 사용자 요청 — "종목 일일이 쳐야 하는 게 귀찮다. 왼쪽에 목록 만들어서
+       선택하게" → 2단으로 바꾼다. 왼쪽은 **늘 펼쳐진** 종목 목록, 오른쪽이 내용이다.
+       ⚠ 종전에는 목록이 본문 위에 접혀 있었다(검색칸을 눌러야 열리고 고르면 닫혔다).
+         그 구조는 '518종목이 본문을 밀어낸다' 를 피하려던 것인데, 옆으로 세우면 그
+         문제가 애초에 없다 — 세로로 쌓지 않기 때문이다.
+       ⚠ 검색칸은 남긴다. 518종에서 눈으로 찾는 것보다 두 글자 치는 것이 빠른 때가 있다. -->
+  <div class="cols">
+   <aside class="side" aria-label="종목 선택">
     <div class="pick">
       <label for="q">종목 <span id="qn" style="font-weight:400;text-transform:none;letter-spacing:0"></span></label>
-      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="티커 · 회사명 · 섹터로 검색 (예: AAPL, 에너지)" aria-controls="plist">
-      <!-- 목록은 접어 둔다 — 518종목 리스트가 늘 펼쳐져 있어 그 아래 종목 내용을 밀어냈다.
-           검색칸을 누르거나 글자를 넣으면 열리고, 종목을 고르면 닫힌다. -->
-      <div class="plist" id="plist" role="listbox" aria-label="종목 목록" hidden><div class="skel" style="padding:14px">불러오는 중…</div></div>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="티커 · 회사명 · 섹터" aria-controls="plist">
+      <div class="plist" id="plist" role="listbox" aria-label="종목 목록"><div class="skel" style="padding:14px">불러오는 중…</div></div>
     </div>
-  </div>
+   </aside>
+   <div class="side-main">
 
   <nav class="tabs" id="tabs" aria-label="종목 정보 탭">
     <a class="tab" href="#est" data-tab="est">실적 및 전망</a>
@@ -746,6 +774,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       짝 목록은 매매 근거가 아니라 <b>규칙이 무엇을 고르는지</b>를 보이는 것입니다.</div></details>
     <div id="pairbox"><div class="empty">위에서 종목을 고르면 그 종목의 최근접 짝이 여기에 표시됩니다.</div></div>
   </section>
+
+   </div><!-- /.side-main -->
+  </div><!-- /.cols -->
 
   <footer>
     <a href="index.html">← 전략 랩 홈</a> · <a href="stocks.html">종목 개요·내러티브</a> ·
@@ -871,7 +902,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     out.sort(function(a,b){return a.t<b.t?-1:(a.t>b.t?1:0);});
     return out;
   }
-  var CAP=60;
+  // 🚨 2026-08-16 — 상한을 걷었다. 종전 60종 + "검색어를 좁히세요" 는 목록이 **본문 위에
+  //   접혀 있던** 시절의 규약이다(펼치면 본문을 밀어냈다). 왼쪽에 세운 지금은 스크롤하면
+  //   되므로 자를 이유가 없다 — 자르면 "고르라" 고 해 놓고 못 고르게 하는 셈이다.
+  //   ⚠ 518개 버튼은 한 번만 그린다(검색어가 바뀔 때만 다시 그린다). 실측으로 체감 없다.
+  var CAP=99999;
   function renderList(){
     var rows=filtered(),h='';
     el('qn').textContent='— '+rows.length+' / '+nAll()+'종목';
@@ -885,29 +920,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(rows.length>CAP)h+='<div class="pmore">…외 '+(rows.length-CAP)+'종목 — 검색어를 좁히세요</div>';
     el('plist').innerHTML=h;
   }
-  function closeList(){el('plist').hidden=true;}
+  // 🚨 2026-08-16 — 목록은 **늘 펼쳐져 있다**(사용자 요청으로 왼쪽 상시 목록이 됐다).
+  //   종전에는 검색칸에 글자를 넣어야 열리고 고르면 닫혔는데, 옆에 세운 뒤로는 닫을
+  //   이유가 없다. closeList 는 남기되 아무것도 안 하게 둔다 — 아래 세 곳이 여전히
+  //   부르고 있고, 지우면 그 줄들이 죽는다(el 배선 검사가 그것을 잡는다).
+  function closeList(){}
   el('plist').addEventListener('click',function(e){
     var b=e.target.closest?e.target.closest('.pit'):null;
     if(!b)return;
     selectByTicker(b.getAttribute('data-t'));
-    closeList();
   });
-  // blur 즉시 닫으면 목록 클릭이 먹지 않는다 — 클릭이 처리될 틈을 준다
-  el('q').addEventListener('blur',function(){setTimeout(closeList,180);});
   var _qt;
-  // 클릭만으로는 열지 않는다 — 글자를 넣어야 후보가 뜬다(빈 검색어에 518종목을 펼치지 않는다)
+  // 빈 검색어면 **전체 목록**을 보인다(종전에는 아무것도 안 보였다 — 옆에 세운 목록이
+  // 비어 있으면 '고르라' 는 말이 무색해진다).
   el('q').addEventListener('input',function(e){
     var v=String(e.target.value||'').toLowerCase().trim();
-    if(!v){state.q='';closeList();clearTimeout(_qt);return;}
-    el('plist').hidden=false;
-    clearTimeout(_qt);_qt=setTimeout(function(){if(v===state.q)return;state.q=v;renderList();},150);
+    clearTimeout(_qt);
+    _qt=setTimeout(function(){if(v===state.q)return;state.q=v;renderList();},150);
   });
   el('q').addEventListener('keydown',function(e){
-    if(e.key==='Escape'){closeList();e.target.blur();return;}
+    if(e.key==='Escape'){e.target.value='';state.q='';renderList();e.target.blur();return;}
     if(e.key!=='Enter'||!DATA)return;                // Enter → 첫 일치 종목 선택(키보드 접근성)
     e.preventDefault();
     state.q=String(e.target.value||'').toLowerCase().trim();
-    var rows=filtered(); if(rows.length){selectByTicker(rows[0].t);closeList();} else renderList();
+    var rows=filtered(); if(rows.length){selectByTicker(rows[0].t);} else renderList();
   });
 
   function selectByTicker(t){
