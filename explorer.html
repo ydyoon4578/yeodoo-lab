@@ -2959,15 +2959,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var _g={'강함':'k4a','유의':'k4a','미약':'k4b','무의미':'k4c'}[K4.grade]||'k4b';
         var _em={'강함':'🟢','유의':'✅','미약':'🟠','무의미':'🔴'}[K4.grade]||'';
         _k4h='<div class="legttl '+_g+'" title="'+esc(
-              '국면 라벨을 구간 길이를 보존한 채 '+(K4.n_shuffle||1000)+'회 무작위 재배열하고 '+
+              (K4.bench?'그 규칙의 일별 노출 계열을':'국면 라벨을')+
+              ' 구간 길이를 보존한 채 '+(K4.n_shuffle||1000)+'회 무작위 재배열하고 '+
               '같은 엔진으로 다시 돌린 분포다. 실제 초과 '+K4.real+'%p 는 그 분포의 상위 '+
               K4.top_pct+'%(중앙 '+K4.median+'%p · 95번째 '+K4.p95+'%p)에 있다. '+
-              '구간 '+K4.nseg+'개 · 측정 '+(K4.measured_at||'')+' · '+(K4.window||'')+'. '+
+              '구간 '+K4.nseg+'개 · 측정 '+(K4.measured_at||'')+' · '+
+              (K4.bench?('대조군 '+K4.bench+(K4.bench_cagr!=null?' CAGR '+K4.bench_cagr+'%':'')):(K4.window||''))+'. '+
               '성적 판정이 아니라 기전 검정이다 — 등급이 낮아도 CAGR 은 높을 수 있고, '+
-              '그때 버는 것은 국면이 아니라 배분·자산 선택이다.')+'">'+
-              _em+' 국면 기전 '+esc(K4.grade)+
-              ' <span style="font-weight:400;text-transform:none;letter-spacing:0">· 라벨을 '+
-              '무작위로 섞으면 초과 중앙 '+(K4.median>0?'+':'')+K4.median+'%p'+
+              '그때 버는 것은 '+(K4.bench?'타이밍이 아니라 그냥 시장에 있었던 것이다. ⚠ 이 랩의 타이밍 22종은 전부 초과가 음수라, 등급이 높다는 것은 「벌었다」가 아니라 「재배열 대비 덜 잃었다」는 뜻이다.':'국면이 아니라 배분·자산 선택이다.'))+'">'+
+              // 🚨 두 감사가 한 필드를 쓴다 — 국면(자산배분 10종)과 타이밍(종목 랩 19종).
+              //   구별은 bench 유무로 한다(타이밍 쪽만 대조군이 '상시보유'다).
+              //   ⚠ 타이밍은 **22종 전부 초과가 음수**라 등급이 높아도 '벌었다'가
+              //     아니다. 재배열 대비 **덜 잃었다**는 뜻이고, 그 말을 그대로 적는다.
+              _em+' '+(K4.bench?'타이밍':'국면')+' 기전 '+esc(K4.grade)+
+              ' <span style="font-weight:400;text-transform:none;letter-spacing:0">· '+(K4.bench?'노출 계열을 ':'라벨을 ')+
+              (K4.bench?'무작위로 섞으면 '+(K4.median>0?'+':'')+K4.median+'%p':'무작위로 섞으면 초과 중앙 '+(K4.median>0?'+':'')+K4.median+'%p')+
               ' vs 실제 '+(K4.real>0?'+':'')+K4.real+'%p (상위 '+K4.top_pct+'%)</span></div>';
       }
       var perf='<div class="labperf">'+_legTtl+_k4h+
