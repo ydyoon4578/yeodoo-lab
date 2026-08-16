@@ -15,7 +15,10 @@
 주말 제외). 해외(미국) 데이터는 해외=국내 T-1이라 정상 일일 갱신의 기준일이 '어제'가 되어 n=1이고,
 2영업일 이상(n>=2)은 갱신이 최소 한 번 이상 누락됐다는 뜻이다.
 
-  python build/check_freshness.py <json_path> <label> [max_biz_days=2]
+  python build/check_freshness.py <json_path> <label> [max_biz_days=2] [--key 필드명]
+
+  --key 는 «실행 시점을 나타내는 필드» 를 고른다(기본 as_of). 랩 산출물은 as_of 가
+  성과 기준일(전월말)이라 실행 시점이 아니어서 generated 를 봐야 하는 것들이 있다.
 """
 from __future__ import annotations
 
@@ -50,15 +53,29 @@ def main() -> int:
         print(__doc__)
         return 2
     path, label = sys.argv[1], sys.argv[2]
-    max_biz = int(sys.argv[3]) if len(sys.argv) > 3 else 2
+    # 🚨 --key 를 나중에 더했다(2026-08-16). 처음에는 as_of 만 봤는데, 랩 산출물의 as_of 는
+    #   **성과 기준일(전월말)** 이라 실행 시점이 아니다. tech_strategies.json 의 as_of 는
+    #   2026-07-31 이고 generated 가 2026-08-16 이다 — as_of 로 주간 문턱을 걸면 잡이
+    #   정상으로 돌아도 매번 실패한다. 그래서 «무엇이 실행을 나타내는 키인가» 를 호출부가
+    #   정하게 한다. 기본값은 그대로 as_of 라 기존 호출 10곳은 하나도 안 바뀐다.
+    argv = list(sys.argv[3:])
+    key = "as_of"
+    if "--key" in argv:
+        i = argv.index("--key")
+        key = argv[i + 1]
+        del argv[i:i + 2]
+    max_biz = int(argv[0]) if argv else 2
     try:
         doc = json.load(io.open(path, encoding="utf-8"))
     except Exception as e:
         print(f"::error::[{label}] {path} 읽기 실패: {e}")
         return 1
-    as_of = doc.get("as_of")
+    as_of = doc.get(key)
     if not as_of:
-        print(f"::error::[{label}] as_of 없음 — 산출물이 비었거나 스키마가 바뀌었다")
+        # ⚠ 키가 없으면 **통과시키지 않는다.** 스키마가 바뀌어 키가 사라졌을 때 조용히
+        #   넘어가면, 그 순간부터 이 잡은 영원히 검사받지 않는다.
+        print(f"::error::[{label}] '{key}' 없음 — 산출물이 비었거나 스키마가 바뀌었다 "
+              f"(가진 키: {', '.join(sorted(doc)[:8])})")
         return 1
     today = datetime.now(KST).date()
     n = biz_days_behind(as_of, today)

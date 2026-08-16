@@ -67,3 +67,9 @@ jobs:
           # data/ 전체를 보므로, 수기 변경이 남아 있으면 잡이 실패해 사람이 먼저 커밋하게 된다.
           bash build/ci_push.sh "chore(data): 전략 성과지표 v2 재계산(rf 갱신)" \
             data/strategy_backtests.json data/archive_backtests.json data/rf_monthly.json
+      # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
+      #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
+      #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.
+      #   매주 토 + 매월 1일. 주간 간격 5영업일 기준으로 8 을 문턱으로 둔다.
+      - name: Verify freshness
+        run: python build/check_freshness.py data/strategy_backtests.json "전략 성과지표" 8 --key generated

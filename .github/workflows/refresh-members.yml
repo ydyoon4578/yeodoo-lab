@@ -46,3 +46,9 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 지수 편입 명단 자동 갱신" \
             data/members.json data/asof.json
+      # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
+      #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
+      #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.
+      #   매주 토 1회라 5영업일이 정상 간격이다. 8 이면 두 주가 빈 것이다.
+      - name: Verify freshness
+        run: python build/check_freshness.py data/members.json "지수 편입 명단" 8 --key as_of_members

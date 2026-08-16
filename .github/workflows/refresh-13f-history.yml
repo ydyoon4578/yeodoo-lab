@@ -58,3 +58,9 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 13F 보유 이력·복제 진단 자동 갱신" \
             data/guru_history.json data/guru17.json
+      # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
+      #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
+      #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.
+      #   13F 는 분기말 45일 뒤 공시라 기준일이 최대 한 분기 뒤처진다. refresh-13f 와 같은 150 을 쓴다.
+      - name: Verify freshness
+        run: python build/check_freshness.py data/guru_history.json "13F 보유 이력" 150

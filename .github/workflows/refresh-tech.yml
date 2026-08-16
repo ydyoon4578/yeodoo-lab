@@ -77,9 +77,31 @@ jobs:
         run: python build/strategy_report.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
+      # 🚨 2026-08-16 점검에서 찾았다 — 이 셋은 **어느 워크플로에도 없었다.** 도구는 있는데
+      #   사람이 기억해야 돌아가는 상태였고, 이 저장소에서 그 고리는 이미 두 번 끊어졌다
+      #   (갱신 피드 여드레 공백 · log_update 머리말의 2026-07-23~25).
+      #   여기 두는 이유: 셋 다 **방금 이 잡이 다시 구운 엔진**의 산출물을 검사한다.
+      #   합쳐 15초라 잡 시간에 영향이 없다.
+      - name: Verify pre-registered implementations (batch12)
+        run: python build/check_prereg_20260808.py
+      # ⚠ --registered 다. 검산③(동점)은 PREREG-2026-08-10-REVDRIFT-RESULT.md §6 에
+      #   «완화하지 않는다» 로 적어 실패로 남긴 자리라 그것만으로는 안 막고,
+      #   **등록에 없는 새 실패**가 하나라도 생기면 막는다. 문턱을 고친 것이 아니다.
+      - name: Verify pre-registered implementations (revdrift)
+        run: python build/check_revdrift.py --registered
+      # 리포트다 — 막지 않는다(이 스크립트에는 실패 경로가 없다). 자릿수 분포를 로그에
+      # 남겨 두면 산출물과 화면의 반올림이 갈리기 시작할 때 눈에 띈다.
+      - name: Precision report (does not block)
+        run: python build/audit_precision.py
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 기술적 전략 백테스트 자동 갱신" \
             data/tech_strategies.json data/verdicts.json data/strategy_index.json data/strategy_charts.json data/strategy_report.json data/asof.json
+      # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
+      #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
+      #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.
+      #   매주 토 + 매월 1일. 🚨 as_of 가 아니라 generated 를 본다 — 이 파일의 as_of 는 성과 기준일(전월말)이라 잡이 정상으로 돌아도 안 움직인다.
+      - name: Verify freshness
+        run: python build/check_freshness.py data/tech_strategies.json "기술적 전략 백테스트" 8 --key generated
