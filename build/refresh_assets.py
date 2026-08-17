@@ -235,6 +235,53 @@ def main() -> int:
     grid = close.index[close["SPY"].notna()]
     close = close.loc[grid]
     opens = opens.loc[grid]
+    # ── 🚨 야후의 VIX 지수군 결측을 발표 주체(CBOE)에서 메운다 ────────────────
+    # 실측(2026-08-17 · CI 로그): ^VIX3M·^VIX9D 가 «재시도 2회 실패 → 유효일 1 → 제외» 로
+    #   떨어지고, 그 다음 가드(«직전 빌드에 있던 티커가 사라졌다»)가 잡을 중단시켰다.
+    #   그래서 **refresh-assets 가 2026-08-13 이후 나흘째 안 돌고 있었다** — 홈의
+    #   「랩 스타일 3영업일 지연」 경고가 그 결과였다.
+    # 🚨 상장폐지가 아니다. 야후가 이 심볼군의 이력을 2026-07-17 에서 끊었다 —
+    #   data/source_outages.json 이 2026-08-04 에 이미 그 사실을 적어 두었고, 거기 적힌
+    #   워크어라운드가 «CBOE 자체 CDN 에서 직접 받아 복구» 다.
+    # ⚠ 그 길이 refresh_sentiment.py 에만 있고 여기엔 없었다. **같은 원천·같은 장애인데
+    #   한 잡은 살고 한 잡은 죽는** 상태였다 — 대장에 적힌 처방을 두 잡이 같이 써야 한다.
+    # ⚠ 지수라 배당·분할이 없어 CBOE 종가와 야후 조정종가가 같은 것을 재는 값이다.
+    #   그래도 **출처가 바뀐 것은 메타에 적는다**(src='cboe') — 조용히 바꾸지 않는다.
+    _CBOE = {"^VIX": "VIX", "^VIX3M": "VIX3M", "^VIX9D": "VIX9D", "^VIX6M": "VIX6M"}
+    _cboe_used = {}
+    for _t, _nm in _CBOE.items():
+        if _t not in TICK:
+            continue
+        # 🚨 **개수가 아니라 최신성으로 가른다.** 처음에 «100일 이상이면 손대지 않는다» 로
+        #   짰다가 폴백이 아예 안 걸렸다 — 야후는 이력을 4,000일 넘게 주면서 **끝이
+        #   2026-07-17 에 멈춰 있다.** 개수로 보면 멀쩡하고 최신성으로 봐야 끊긴 것이 보인다.
+        #   그 상태를 두면 잡은 초록불인데 기간구조가 **한 달 묵은 값**으로 계산된다 —
+        #   실패보다 나쁘다(조용하기 때문이다).
+        _col = close[_t] if _t in close.columns else None
+        _have = int(_col.notna().sum()) if _col is not None else 0
+        _last = _col.dropna().index.max() if _have else None
+        _stale = (_last is None) or ((close.index.max() - _last).days > 5)
+        if _have >= 100 and not _stale:
+            continue                      # 야후가 멀쩡하면 손대지 않는다
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from refresh_sentiment import cboe_close
+            _s = cboe_close(_nm, tries=3, pause=2.0)
+        except Exception as _e:
+            print("  ⚠ CBOE %s 시도 실패: %s" % (_nm, str(_e)[:60]))
+            continue
+        if _s is None or not len(_s):
+            continue
+        _al = _s.reindex(close.index)     # 자산 패널 격자에 맞춘다
+        if int(_al.notna().sum()) < 100:
+            continue
+        if _t not in close.columns:
+            close[_t] = _al
+        else:
+            close[_t] = close[_t].fillna(_al) if _have else _al
+        _cboe_used[_t] = int(_al.notna().sum())
+        print("  ↻ %s 야후 %d일 → CBOE %s 로 메움(%d일)" % (_t, _have, _nm, _cboe_used[_t]))
+
     dates = [d.strftime("%Y-%m-%d") for d in close.index]
 
     px, op, meta = {}, {}, {}
@@ -249,6 +296,9 @@ def main() -> int:
         px[t] = [None if x != x else round(float(x), 4) for x in s.tolist()]
         v = s.dropna()
         meta[t] = {"cat": TICK[t][0], "desc": TICK[t][1],
+                   # 출처가 야후가 아니면 적는다 — 조용히 바뀌면 다음 감사가 이 계열을
+                   # 야후 값으로 오인한다(같은 지수라도 어디서 왔는지는 사실이다).
+                   **({"src": "cboe"} if t in _cboe_used else {}),
                    "start": str(v.index[0].date()), "end": str(v.index[-1].date()),
                    "n": int(len(v))}
         if t in NEED_OPEN and t in opens.columns:
