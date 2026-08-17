@@ -21,7 +21,7 @@ except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tech_backtest import (ann_stats, tstat, maxdd, curve_pack, load_index_tr,  # noqa: E402
-                           risk_bootstrap, asof_cut)
+                           risk_bootstrap, asof_cut, months_cut)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -108,9 +108,15 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
               json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))["stocks"]}
     except Exception:
         NM = {}
-    months, mpx = G.get("months") or [], G.get("mpx") or {}
-    if not months or not mpx:
+    months_all, mpx = G.get("months") or [], G.get("mpx") or {}
+    if not months_all or not mpx:
         return None
+    # 🚨 성과 기준일 = 전월말. main() 의 asof_cut 은 **일별 격자만** 자르고 이 월 계열은
+    #   안 잘랐다 — 그래서 이 규칙의 성과만 이번 달까지 걸쳤다(2026-08-18 CI 관문이 잡음).
+    # ⚠ 앞에서부터 자르므로(접두) 아래 P·mi 의 색인이 그대로 유효하다. 뒤에서 자르거나
+    #   가운데를 빼면 색인이 통째로 어긋난다.
+    # ⚠ months_all 은 **보유 명단**을 뽑을 때만 쓴다(성과는 전월말, 명단은 오늘 — 랩 규약).
+    months = months_all[:months_cut(months_all)]
     mi = {m: i for i, m in enumerate(months)}
     tick = sorted(mpx)
     P = {t: np.array([np.nan if v is None else v for v in mpx[t]], float) for t in tick}
@@ -210,6 +216,19 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
     bvar = sum((v - bmu) ** 2 for v in brs) / max(1, len(brs) - 1)
     beta = (sum((x - mu - 0) * (y - bmu) for x, y in zip(rets, brs)) /
             max(1, len(rets) - 1) / bvar) if bvar > 0 else None
+    # ── 보유 명단은 **오늘 것** ────────────────────────────────────────────
+    # 성과는 전월말에서 끊지만 «지금 무엇을 들고 있나»는 최신 분기 13F 로 답해야 한다.
+    # 잘라 낸 달을 같은 규칙으로 이어 돌려 명단만 앞으로 굴린다(수익은 안 센다).
+    # ⚠ 백테스트 루프는 «m−1 의 신호를 m 에 적용»이라 마지막 바스켓을 못 쓴다(적용할 다음
+    #   달이 아직 없어서다). 명단은 그 제약을 받지 않는다 — 최신 분기 13F 는 오늘 쓸 수 있다.
+    #   그래서 months_all 을 훑어 **가격이 있는 마지막 바스켓 달**을 잡는다.
+    hold_now, hold_m = hold, months[-1]
+    for _i, _m in enumerate(months_all):
+        if _m not in basket:
+            continue
+        _new = [t for t in basket[_m] if np.isfinite(P[t][_i])]
+        if _new:
+            hold_now, hold_m = _new, _m
     step = max(1, len(nav) // 220)
     return {
         "sid": "guru-clone", "arch": "13f-best-ideas-clone",
@@ -231,10 +250,14 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
                 "'고르기'의 값어치만 남는다. 13F는 롱 미국주식만 담아 실제 포트폴리오가 아니다. "
                 "베타 %s (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치)."
                 % ("%.2f" % beta if beta else "—"),
-        "holdings": {"kind": "xsec", "as_of": months[-1], "n": len(hold),
-                     "tickers": sorted(hold), "names": {t: NM.get(t, t) for t in sorted(hold)},
+        # ⚠ as_of 가 start/end 와 다를 수 있다 — 일부러다. 성과는 전월말까지, 명단은 오늘.
+        "holdings": {"kind": "xsec", "as_of": hold_m, "n": len(hold_now),
+                     "tickers": sorted(hold_now),
+                     "names": {t: NM.get(t, t) for t in sorted(hold_now)},
                      "note": "가장 최근 분기 13F(제출 마감 45일 지연 반영)로 고른 %d종목을 "
-                             "동일가중 보유 중이다." % len(hold)},
+                             "동일가중 보유 중이다. 성과는 전월말(%s)까지 재지만 이 명단은 "
+                             "%s 기준이다 — 두 질문이 다르기 때문이다."
+                             % (len(hold_now), months[-1], hold_m)},
         "start": months[st], "end": months[-1], "n_days": (len(months) - st) * 21,
         "n_months": len(months) - st,
         "metrics": ms, "bench": mb, "bench_unstable": False, "beta": round(beta, 2) if beta else None,

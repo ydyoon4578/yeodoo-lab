@@ -2791,6 +2791,32 @@ def asof_cut(dates):
     return k
 
 
+def months_cut(months):
+    """월 라벨 계열(YYYY-MM)을 전월말까지 자를 위치(길이)를 돌려준다 — asof_cut 의 월 판.
+
+    🚨 왜 따로 필요한가(2026-08-18). asof_cut 은 **일별 격자**(pxd_dates)를 자른다. 그런데
+      guru_history.json 의 months 는 분기 13F 를 월 격자에 얹은 것이라 **이번 달 라벨을
+      이미 갖고 있다**. 그래서 일별을 잘라도 월 계열은 그대로였고, guru_clone 의 성과만
+      이번 달까지 걸쳤다 — CI 관문이 실제로 잡았다(2026-08-18 · "13F 컨빅션 복제 2026-08").
+      절단이 빌더마다 배선돼 있다는 사실을 아는 랩이, 정작 **월 격자용 절단 함수 자체가
+      없어서** 한 곳이 못 자르고 있었다.
+    ⚠ 성과만 자른다. **보유 명단은 오늘 것**이어야 한다(랩 규약 — asof_cut 머리말과
+      refresh_holdings_now.py 참조). 부르는 쪽이 그 둘을 나눠 쓴다.
+    ⚠ 자료가 이미 그보다 짧으면 그대로 둔다 — 그때는 격자가 밀린 것이지 기준이 틀린 것이
+      아니고, 신선도 검사가 말한다.
+    """
+    lim = asof_month()
+    k = 0
+    for m in months:
+        if str(m)[:7] > lim:
+            break
+        k += 1
+    if k < 24:
+        raise SystemExit("전월말(%s)까지 자르면 %d개월밖에 안 남는다 — 월 격자가 이상하다"
+                         % (lim, k))
+    return k
+
+
 def _surv_note(n_tick, gap, bmax):
     """생존편향 눈금 문장. 🚨 **조각마다 서식을 따로 넣는다.**
 
