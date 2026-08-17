@@ -1090,7 +1090,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         rows.map(function(r){
           var c=function(v){return '<td style="color:var('+((v||0)>=0?'--good':'--hot')+')">'+sgn(v,3)+'</td>';};
           return '<tr><td class="l">'+esc(r.name)+'</td>'+
-            '<td>'+(r.kind==='same'?'당일':'익일')+'</td><td>'+r.n_days+'</td>'+
+            '<td>'+({same:'당일 10:00',gap:'당일 시가',next:'익일 시가'}[r.kind]||'—')+'</td><td>'+r.n_days+'</td>'+
             c(r.excess)+'<td>'+nf(r.t,2)+'</td><td>'+nf(r.win,1)+'%</td>'+
             '<td>'+nf(r.turnover,2)+'</td>'+
             c(r.net['5'].mean)+c(r.net['10'].mean)+c(r.net['20'].mean)+'</tr>';
