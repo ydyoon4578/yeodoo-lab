@@ -661,6 +661,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <section id="detail"></section>
   </div>
 
+  <section id="strat" style="margin-top:22px"></section>
+
   <details class="note" style="margin-top:14px">
     <summary><b>무엇을 보고 있나 · 한계</b></summary>
     <div id="limits" class="lim"></div>
@@ -804,6 +806,37 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   el('q').addEventListener('input',function(e){
     state.q=(e.target.value||'').trim().toLowerCase(); state.sel=null; drawList(); drawDetail();});
   window.addEventListener('resize',function(){ if(state.sel&&BARS[state.sel])paint(BARS[state.sel]); });
+
+  // ── 장중 규칙 6종 — 사전등록 PREREG-2026-08-17-INTRADAY6.md ──────────
+  // 🚨 「통과/유효」를 안 쓴다(등록서 §0). 표본이 60거래일이라 판정을 만들 수 없고,
+  //   그 사실을 표 머리에 먼저 적는다. 비용 열을 무비용과 **나란히** 둔다 —
+  //   일간 회전이라 무비용만 보이면 그 표는 거짓말에 가깝다.
+  fetch('data/intraday_strategies.json',{cache:'no-cache'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){
+      if(!j||!j.strategies||!j.strategies.length)return;
+      var rows=j.strategies.slice().sort(function(a,b){return b.excess-a.excess;});
+      el('strat').innerHTML=
+        '<h2 style="font-size:16px;margin:0 0 8px">장중 규칙 '+j.n+'종 — 잰 값</h2>'+
+        '<div class="hardnote" style="margin:0 0 10px">🚨 <b>표본 '+j.n_days_avail+'거래일</b>'+
+        '('+esc(j.as_of)+'까지)입니다. 이 랩은 10년짜리에도 「판정 불가」를 적어 왔습니다 — '+
+        '<b>60일로 무엇이 통했다고 말할 수 없습니다.</b> 이 표는 「지금 답」이 아니라 '+
+        '「나중에 답하려고 규칙을 미리 못박아 둔 것」입니다. 매일 쌓이므로 반년 뒤 120일로 '+
+        '다시 재면 그때는 사후 선택이 아닙니다.</div>'+
+        '<div class="fswrap"><table class="tbl"><thead><tr>'+
+        '<th class="l">규칙</th><th>매매</th><th>일수</th><th>초과 %/일</th><th>t</th>'+
+        '<th>승률</th><th>회전</th><th>5bp</th><th>10bp</th><th>20bp</th></tr></thead><tbody>'+
+        rows.map(function(r){
+          var c=function(v){return '<td style="color:var('+((v||0)>=0?'--good':'--hot')+')">'+sgn(v,3)+'</td>';};
+          return '<tr><td class="l">'+esc(r.name)+'</td>'+
+            '<td>'+(r.kind==='same'?'당일':'익일')+'</td><td>'+r.n_days+'</td>'+
+            c(r.excess)+'<td>'+nf(r.t,2)+'</td><td>'+nf(r.win,1)+'%</td>'+
+            '<td>'+nf(r.turnover,2)+'</td>'+
+            c(r.net['5'].mean)+c(r.net['10'].mean)+c(r.net['20'].mean)+'</tr>';
+        }).join('')+'</tbody></table></div>'+
+        '<div class="lim" style="margin-top:8px">· '+(j.limits||[]).map(function(x){
+          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div>';
+    }).catch(function(){});
 
   fetch('data/intraday.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     .then(function(j){
