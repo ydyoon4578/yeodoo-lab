@@ -105,6 +105,14 @@
     "매주 토 07:13 KST"
    ]
   },
+  "refresh-intraday.yml": {
+   "cron": [
+    "35 22 * * 1-6"
+   ],
+   "label": [
+    "매일(일·화·수·목·금·토) 07:35 KST"
+   ]
+  },
   "refresh-members.yml": {
    "cron": [
     "45 21 * * 5"
