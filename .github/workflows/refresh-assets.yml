@@ -172,12 +172,18 @@ jobs:
         run: python build/validate_gate.py check
       - name: Commit collected & display outputs
         run: |
+          # 🚨 verdicts.json 을 더한다(2026-08-18 전수 감사). 이 잡이 129줄에서
+          #   verdicts_gen.py 를 돌려 그 파일을 **쓰는데** 목록에 없었다.
+          #   ⚠ 지금까지 안 터진 이유는 그 파일이 매번 바뀌지는 않아서다 —
+          #     판정 원장이 실제로 바뀌는 날에만 ci_push 가드가 잡을 죽인다.
+          #     «될 때는 되다가 정작 자료가 바뀌는 날 죽는» 형태라 더 나쁘다.
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·스타일 성과 자동 갱신" \
             data/assets.json data/asset_strategies.json data/guru_clone.json \
             data/bench_px.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_report.json \
             data/market_board.json data/home_perf.json data/style_perf.json data/style_trails.json \
-            data/home_flow.json data/asof.json
+            data/home_flow.json data/asof.json \
+            data/verdicts.json
       # 신선도는 커밋 직후에 본다 — 뒤가 죽어도 '패널이 낡았나'는 답이 나와야 한다.
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10
