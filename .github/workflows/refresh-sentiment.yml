@@ -53,8 +53,14 @@ jobs:
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
+          # 🚨 source_outages.json 을 같이 커밋한다. 2026-08-17 에 refresh_sentiment 가
+          #   대장을 자동 갱신하게 바꿨는데(_touch_outage) 여기 목록에 안 넣어서, 다음
+          #   실행에서 ci_push 의 «산출물이 커밋 목록에서 빠졌다» 가드가 잡을 통째로
+          #   실패시켰다. 가드가 옳다 — 안 넣으면 대장이 러너에서만 갱신되고 저장소에는
+          #   옛 checked 날짜가 영원히 남는다(자동 갱신을 만든 뜻이 없어진다).
           bash build/ci_push.sh "chore(data): 시장 심리 지수 자동 갱신" \
-            data/sentiment.json data/home_market.json data/asof.json
+            data/sentiment.json data/home_market.json data/asof.json \
+            data/source_outages.json
       # '돌았는데 낡은 데이터'면 잡 실패 → GitHub 기본 실패 알림 메일. '안 뜬' 케이스는 sources.html 배지가 드러낸다.
       - name: Verify freshness
         run: python build/check_freshness.py data/sentiment.json "시장 심리" 2
