@@ -2631,13 +2631,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   var LABC=null, LABC_IDX=null, LABC_ST=0;      // 0=안 받음 1=받는 중 2=받음 3=실패
+  // 🚨 2026-08-18 — 종전에는 «로딩 중이면 콜백을 버렸다»(if(LABC_ST===1)return).
+  //   그래서 자료가 오는 동안 다른 전략을 누르면 **그 카드는 영원히 「자세한 곡선을
+  //   불러오는 중…」 으로 남았다.** 먼저 건 콜백은 state.sel 이 바뀌어 무시되고, 나중
+  //   카드는 콜백을 걸지도 못했기 때문이다. 로컬에서는 417KB 가 순식간이라 안 보이고
+  //   **실제 회선에서만** 난다 — 그래서 오래 안 드러났다(사용자 지적으로 찾았다).
+  // → 콜백을 **대기열**에 쌓고 완료 때 전부 부른다. 어느 것을 다시 그릴지는 각 콜백 안의
+  //   `D[state.sel]===d` 가 정한다(지금 보고 있는 카드만 다시 그린다).
+  var LABC_Q=[];
+  function _labFlush(){
+    var q=LABC_Q; LABC_Q=[];
+    q.forEach(function(f){ try{ f(); }catch(e){} });   // 하나가 죽어도 나머지는 부른다
+  }
   function labCharts(cb){
     if(LABC_ST===2||LABC_ST===3)return cb&&cb();
-    if(LABC_ST===1)return;
+    if(cb)LABC_Q.push(cb);
+    if(LABC_ST===1)return;                 // 이미 받는 중 — 위에서 대기열에 넣었다
     LABC_ST=1;
     fetch('data/strategy_charts.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-      .then(function(j){LABC=(j&&j.charts)||{};LABC_IDX=(j&&j.idx_monthly)||{};LABC_ST=2;cb&&cb();})
-      ['catch'](function(){LABC_ST=3;cb&&cb();});
+      .then(function(j){LABC=(j&&j.charts)||{};LABC_IDX=(j&&j.idx_monthly)||{};LABC_ST=2;_labFlush();})
+      ['catch'](function(){LABC_ST=3;_labFlush();});
   }
 
   function drawDetail(d){
