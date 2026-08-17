@@ -649,6 +649,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            프리셋 정의(chandbuy·chandsell·chlose·chnear)도 함께 지웠다 — 칩만 숨기면
            #p=chandbuy 같은 URL 로 계속 닿아서, 화면에서 지운 것과 없는 것이 달라진다.
            차트의 마름모(◆)는 남는다. 그쪽 범례가 '구별 불가'를 계속 적는다. -->
+      <div class="chiprow"><span class="fchip lbl" title="그 기간 등락률 내림차순 — 위 10종이 상위 10">수익률</span><span id="presetsr" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl" title="지금 어디로 가고 있나">추세</span><span id="presets2" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl" title="얼마나 밀렸나 / 올랐나">되돌림</span><span id="presets2b" style="display:contents"></span></div>
       <div class="chiprow"><span class="fchip lbl" title="누가 사고파나 · 참고 표기">수급·기타</span><span id="presets2c" style="display:contents"></span></div>
@@ -726,6 +727,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   실측: 518종 중 517종이 스윙 타점을 하나라도 갖고 있는데(MU 는 매수 109·매도 98개),
     //   목록에 뜨는 것은 147+64 종뿐이다. 나머지는 자료가 있는데 화면에 길이 없었다.
     //   → 거르지 않는 판을 같은 줄에 둔다. 시가총액순이라 찾던 종목을 바로 집을 수 있다.
+    // 🚨 2026-08-17 사용자 요청 «종목 수익률 top10 볼수있는것도 만들어».
+    //   자료는 **data/home_stocks.json 하나만** 쓴다 — 홈의 «최근 성과 상위» 가 이미 그
+    //   파일로 같은 것을 그린다. 여기서 다시 계산하면 같은 수를 두 벌로 두는 것이고,
+    //   이 저장소는 그 유형으로 여러 번 사고를 냈다(채점기 두 벌 · 화면과 곡선이 갈림).
+    //   ⚠ 홈은 표만 보여 준다. 여기 두는 값어치는 **누르면 그 종목 차트로 이어진다**는 것이다.
+    ["ret1D","1일",null,false,null,null,"p"],
+    ["ret1W","1주",null,false,null,null,"p"],
+    ["ret1M","1개월",null,false,null,null,"p"],
+    ["ret3M","3개월",null,false,null,null,"p"],
+    ["ret6M","6개월",null,false,null,null,"p"],
+    ["ret12M","12개월",null,false,null,null,"p"],
+    ["retYTD","연초 이후",null,false,null,null,"p"],
     ["swingall",'<span style="color:var(--good)">▲</span><span style="color:var(--hot)">▼</span> 스윙 타점 전체',null,false,null,null,"r"],
     // 🚨 2026-08-16 — Williams %R 프리셋 둘을 **같은 날 걷었다**(사용자: "신호가 너무 많아서
     //   못 쓰겠다"). 과매도 122종 · 과매수 274종이라 518종 중 절반 가까이가 걸렸고, 그만큼
@@ -757,6 +770,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     garp:"성장하되 밸류에이션 과하지 않은 종목(GARP). 미검증 스크리닝",
     lowvol:"베타 낮고 이익률 받쳐주는 방어형 — 하락장 방어·강세장 열위. 미검증 스크리닝",
     swingbuy:"차트 스윙 저점 매수 타점(확정 ▲ + 잠정 △)이 최근 발생한 종목 — 최신 타점순. '강'=다이버전스·거래량 확인이 동반된 타점(확인 유무 표기·검증된 우위 아님). 잠정=미확정이라 날짜 이동 가능",
+    ret1D:"어제 종가 대비 등락률 내림차순 — 맨 위 10종이 상위 10이다. 누르면 그 종목 차트로 이어진다.",
+    ret1W:"1주 등락률 내림차순.", ret1M:"1개월 등락률 내림차순.",
+    ret3M:"3개월 등락률 내림차순.", ret6M:"6개월 등락률 내림차순.",
+    ret12M:"12개월 등락률 내림차순.", retYTD:"연초 이후 등락률 내림차순.",
     swingall:"거르지 않고 518종 전부 — 시가총액순. 저점매수·고점매도 두 목록은 최근 10일 안에 타점이 난 종목만 담아서, 마지막 타점이 그보다 오래된 종목(예: MU — 12일 전)은 어디에도 안 뜬다. 여기서는 그 종목도 골라 차트에서 ▲▼ 를 볼 수 있다. 지표 칸은 마지막 타점 날짜다.",
     swingsell:"차트 스윙 고점 매도 타점(확정 ▼ + 잠정 ▽)이 최근 발생한 종목 — 최신 타점순. '강'=다이버전스·거래량 확인이 동반된 타점(확인 유무 표기·검증된 우위 아님). 잠정=미확정이라 날짜 이동 가능",
     buy:"상승추세(200일선 위) 종목 중 종합점수(과열도·추세·모멘텀·변동성, 섹터 상대) 내림차순 — 매수 후보 1차 기준",
@@ -841,6 +858,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 🚨 2026-08-05 — 샹들리에 프리셋을 뺐으므로(사용자 요청) 이 기계는 다시 스윙 전용이다.
   //   프리셋을 지우면서 isCh/mkWin/CH_WIN 도 함께 걷었다 — 닿지 않는 분기를 남겨 두면
   //   다음 사람이 '샹들리에도 되는구나'로 읽는다.
+  // ── 수익률 자료 ─────────────────────────────────────────────────────
+  // data/home_stocks.json 은 홈이 3단을 펼칠 때 받는 파일이다(518종 × 7기간).
+  // 여기서는 **수익률 칩을 처음 누를 때** 한 번만 받는다 — 목록만 보는 사람에게
+  // 109KB 를 미리 받게 할 이유가 없다.
+  var RET=null, RET_ERR=null, RET_ASOF=null, RET_NA=null;
+  var RKEY={ret1D:'1D',ret1W:'1W',ret1M:'1M',ret3M:'3M',ret6M:'6M',ret12M:'12M',retYTD:'YTD'};
+  function retOf(s,pk){ var k=RKEY[pk]; if(!k||!RET)return null;
+    var r=RET[s.t]; var v=r&&r[k]; return (v===undefined||v===null)?null:v; }
+  function loadRet(then){
+    if(RET||RET_ERR){then();return;}
+    fetch('data/home_stocks.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(j){
+        if(!j||!j.rows){RET_ERR='파일을 읽지 못했습니다';then();return;}
+        // 🚨 기준일이 다르면 섞인다. 종목 표는 stocks.json 기준일로 그려지는데 수익률만
+        //   다른 날짜면, 한 화면이 두 날을 말하면서 그 사실을 안 적는 것이 된다.
+        RET_ASOF=j.as_of||null; RET_NA=j.na||null;
+        RET={}; j.rows.forEach(function(x){ if(x&&x.nm) RET[x.nm]=x.r||{}; });
+        then();
+      }).catch(function(){RET_ERR='파일을 읽지 못했습니다';then();});
+  }
   function swKeys(pk){return pk==='swingbuy'?['bms','bmw']:pk==='swingsell'?['sms','smw']:null;}   // 잠정(bmw/smw) 포함 — 최신 타점이 잠정이면 리스트에 '잠정' 태그로 구분
   function lastMkP(s,pk){var ci=lastMk(s,[pk==='swingbuy'?'bms':'sms']),pi=lastMk(s,[pk==='swingbuy'?'bmw':'smw']);return pi>ci?{i:pi,prov:true}:{i:ci,prov:false};}
   function swFresh(s,sk,pk){var mi=lastMk(s,sk),N=(DATA.pxd_dates||[]).length;return mi>=0 && (N-1-mi)<=SW_WIN;}
@@ -921,6 +958,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         var d=(mcOf(b)||-1)-(mcOf(a)||-1); return d||a.t.localeCompare(b.t);});
       return {rows:sa,comp:'swingall',total:sa.length,swingall:true};
     }
+    // 수익률 — 그 기간 등락률 내림차순. 값이 없는 종목은 **빼고 센다**(0 으로 채우면
+    // 자료가 없는 종목이 중간 순위를 공짜로 받는다).
+    if(p[6]==='p'){
+      var rr=DATA.stocks.filter(keepQI).filter(function(x){return retOf(x,p[0])!==null;});
+      rr.sort(function(a,b){var d=retOf(b,p[0])-retOf(a,p[0]); return d||a.t.localeCompare(b.t);});
+      return {rows:rr,comp:'ret',total:rr.length,ret:p[0]};
+    }
     if(p[6]==='f'){                     // 펀더멘털 스크리닝 — 자격조건 통과분을 점수순으로
       var fr=screenRows(p[0]).filter(keepQI);
       return {rows:fr,comp:'screen',total:fr.length,screen:p[0]};
@@ -988,6 +1032,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     el('rowcount').innerHTML=esc(rows.length+"종목")+(f.screen?esc(" · 적합도순"):"")+(f.total>rows.length?esc(" / 전체 "+f.total+" · 종합점수 상위"):"")+esc(" · ")+curP()[1]+
       // 상승여력 내림차순은 구조적으로 '최근 급락 종목' 목록이 된다 — 실측 근거를 리스트 상단에 상시 노출
+      (curP()[6]==='p'?'<div style="margin-top:5px;font-size:11.5px;line-height:1.5;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400">'+
+        (RET_ERR?'⚠ 수익률 자료를 불러오지 못했습니다 — 추정치로 채우지 않습니다.'
+         :'출처 <code>data/home_stocks.json</code>(홈의 「최근 성과 상위」와 같은 파일 · 기준일 '+esc(RET_ASOF||'—')+')'+
+          ((RET_ASOF&&DATA.as_of&&RET_ASOF!==DATA.as_of)?' <b style="color:var(--hot)">⚠ 이 표의 기준일('+esc(DATA.as_of)+')과 다릅니다 — 한 화면이 두 날을 말하고 있습니다.</b>':'')+
+          ' · 그 기간 값이 없는 종목은 <b>순위에서 빼고</b> 셉니다(0으로 채우면 자료 없는 종목이 중간 순위를 공짜로 받습니다).')+'</div>':'')+
       (state.preset==='tgt'?'<div style="margin-top:5px;font-size:11.5px;line-height:1.5;color:var(--watch);text-transform:none;letter-spacing:0;font-weight:400">'+
         '⚠ 상승여력 높은 순 — 상승여력의 <b>64%는 최근 하락의 기계적 반영</b>(목표가는 1~3개월 시차로 주가를 따라옴)이라 이 정렬은 사실상 <b>급락 종목 순</b>입니다. '+
         '검증 시점 상위 20종목의 <b>90%가 200일선 아래</b>였고, 예측력은 확인되지 않았습니다(5분위 최상−최하 60일 초과 +0.83%p, t=0.89). 컨센서스 정보일 뿐 랩의 신호가 아닙니다.</div>':'');
@@ -998,7 +1047,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 문자열 1회 빌드(리플로우 1회) + 이벤트 위임(리스너 1개) — 512행 성능
     listEl.innerHTML=rows.map(function(s){
       var v=s.comp[comp]||0, fl=(s.flags||[]).slice(0,2).map(flagHtml).join(''), metric;
-      if(state.preset==='swingall'){
+      if(f.ret){
+        var rv=retOf(s,f.ret), rk2=++rk;
+        // 상위 10 은 번호를 진하게 — «top10» 이 어디까지인지 눈으로 끊긴다.
+        metric='<span class="metric"><div class="mv" style="font-size:13px;color:var('+(rv>=0?'--good':'--hot')+')">'+
+          (rv>=0?'+':'')+rv.toFixed(2)+'%</div><div class="nm" style="text-align:right;margin-top:2px">'+
+          (rk2<=10?'<b style="color:var(--accent)">'+rk2+'위</b>':rk2+'위')+'</div></span>';
+      }else if(state.preset==='swingall'){
         // 매수·매도 중 **더 최근** 것을 적는다. 색이 어느 쪽인지 말한다.
         var bi=lastMk(s,['bms','bmw']), si=lastMk(s,['sms','smw']), mi2=Math.max(bi,si);
         if(mi2<0){ metric='<span class="metric"><div class="mv" style="font-size:12px;color:var(--muted)">타점 없음</div><div class="nm" style="text-align:right;margin-top:2px">이 종목 자료 전체</div></span>'; }
@@ -1450,21 +1505,39 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       el('asof').textContent = '기준일 ' + (d.as_of||'—') + ' (전 지표 동일, yfinance 최신 거래일)';
     }
     var sia=el('siasof');if(sia&&SI_ASOF)sia.textContent='기준일 '+SI_ASOF;
-    var pf=el('presets'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');SHOWN=[];PRESETS.forEach(function(p){
+    // 🚨 칩 만들기를 함수로 들어낸다. 수익률 자료가 늦게 오면 **칩 개수를 다시 붙여야**
+    //   하는데, 인라인이면 그때 부를 것이 없다(개수가 빈 채로 남는다).
+    // ⚠ window 에 걸고 맨이름으로 부르면 ReferenceError 다(이 페이지 스크립트는 IIFE 안이라
+    //   window 프로퍼티가 스코프에 안 들어온다). 지역 var 로 둔다 — 실제로 그렇게 죽었고
+    //   build/test_stocks_render.js 머리말이 같은 사고를 이미 기록해 두었다.
+    var buildPresets=function(){
+    var pf=el('presets'),pfr=el('presetsr'),pf2=el('presets2'),pf2b=el('presets2b'),pf2c=el('presets2c'),pf3=el('presets3'),pfa=el('presetall');
+    [pf,pfr,pf2,pf2b,pf2c,pf3,pfa].forEach(function(c){if(c)c.innerHTML='';});
+    SHOWN=[];PRESETS.forEach(function(p){
       var cnt=null,sk=swKeys(p[0]);
       if(p[6]==='a')cnt=d.stocks.length;   // 전체 — 필터를 걸지 않은 커버 종목 전부
       if(p[0]==='swingall')cnt=d.stocks.length;   // 스윙 전체 — 거르지 않는다
+      // 수익률 칩 — 자료가 아직 안 왔으면 개수를 비워 둔다(0 으로 적으면 «없다» 로 읽힌다).
+      if(p[6]==='p')cnt=RET?d.stocks.filter(function(s){return retOf(s,p[0])!==null;}).length:null;
       if(p[6]==='f')cnt=screenRows(p[0]).length;   // 펀더멘털 스크리닝 — 자격 통과 종목 수
       else if(sk)cnt=d.stocks.filter(function(s){return swFresh(s,sk,p[0]);}).length;
       else if(p[4])cnt=d.stocks.filter(function(s){return (s.flags||[]).indexOf(p[4])>=0;}).length;
       else if(p[5])cnt=d.stocks.filter(function(s){return p[5].indexOf(s.timing)>=0;}).length;
       if(cnt===0)return;  // 데이터 없는 프리셋 제거
       SHOWN.push(p);
-      ({a:pfa,f:pf3,s1:pf2,s2:pf2b,s3:pf2c}[p[6]]||pf).appendChild(chip(p[1],cnt,function(){state.preset=p[0];state.sel=null;syncP();render();if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
+      ({a:pfa,f:pf3,p:pfr,s1:pf2,s2:pf2b,s3:pf2c}[p[6]]||pf).appendChild(chip(p[1],cnt,function(){
+        state.preset=p[0];state.sel=null;syncP();
+        // 수익률은 자료가 늦게 온다 — 받은 뒤에 그린다(칩 개수도 그때 다시 붙는다).
+        if(p[6]==='p'&&!RET&&!RET_ERR){loadRet(function(){buildPresets();render();});}
+        else render();
+        if(matchMedia(NARROW).matches)setFlt(false);},TIPS[p[0]],p[0]));
     });
     // 데이터가 없어 칩이 전부 사라진 축은 라벨만 남아 빈 줄이 된다 — 줄째 감춘다
+    // ⚠ 수익률 줄은 예외다. 자료가 늦게 올 뿐 «없는» 것이 아니므로 감추면 안 된다.
     [['presets2'],['presets2b'],['presets2c'],['presets3']].forEach(function(x){
       var c=el(x[0]); if(c&&!c.querySelector('.fchip'))c.parentNode.hidden=true;});
+    };
+    buildPresets();
     if(SHOWN.length && !SHOWN.some(function(p){return p[0]===state.preset;}))state.preset=SHOWN[0][0];
     // 딥링크: 홈 추천 종목 클릭 → #t=티커&p=탭 으로 진입, 해당 탭·종목 자동 선택
     try{

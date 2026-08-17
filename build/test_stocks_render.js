@@ -25,7 +25,10 @@ const fail = [];
 //   않는다 — 오늘 낸 회귀(pfch ReferenceError)가 정확히 그 모양이었다.
 function counted() { const o = H.stub(); o._n = 0; o.appendChild = function () { this._n++; }; return o; }
 const named = { presets: counted(), presets2: counted(), presets2b: counted(),
-                presets2c: counted(), presets3: counted(), presetall: counted() };
+                presets2c: counted(), presets3: counted(), presetall: counted(),
+                // 🚨 2026-08-17 수익률 줄. 이 칸을 안 넣으면 counted() 가 아니라 일반 stub 이
+                //   잡혀 칩이 붙어도 안 세어진다 — «칩 0개» 로 잘못 실패한다(실제로 그랬다).
+                presetsr: counted() };
 const spare = {};
 const el = n => named[n] || (spare[n] || (spare[n] = H.stub()));
 
@@ -71,7 +74,7 @@ if (!Array.isArray(P) || P.length < 10) {
 } else {
   // 그룹 코드가 디스패치 맵과 맞는가. 맵에 없는 그룹은 `||pf` 로 흘러 **스윙 줄에 섞인다** —
   // 조용히 잘못된 줄에 붙으므로 눈으로 보기 전에는 안 드러난다.
-  const KNOWN = new Set(["a", "r", "f", "s1", "s2", "s3", "s2b"]);
+  const KNOWN = new Set(["a", "r", "p", "f", "s1", "s2", "s3", "s2b"]);   // p = 수익률(2026-08-17)
   const bad = [...new Set(P.map(p => p[6]).filter(g => !KNOWN.has(g)))];
   if (bad.length) {
     fail.push("PRESETS 에 디스패치 맵이 모르는 그룹 코드 " + JSON.stringify(bad) +
