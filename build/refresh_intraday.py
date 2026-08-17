@@ -225,6 +225,46 @@ def main() -> int:
         __import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     H["as_of"] = max(H["days"]) if H["days"] else None
     H["n_days"] = len(H["days"])
+    # ── 🚨 분해 검산 — 밤샘 × 장중 = 일간 이어야 한다 ───────────────────
+    # 2026-08-18 에 이것이 **안 맞는 것을 뒤늦게 찾았다**(연 21%p 가 샜다). 원인은
+    # 일봉이 배당·분할로 소급 조정되는데 분봉은 그날 실제가라 두 계열의 수준이 종목마다
+    # 상수배로 어긋나는 것이다. 그 상수가 gap 에 매일 들어간다.
+    # ⚠ 자료를 고칠 방법이 지금은 없다(미조정 일봉이 없다). 그래서 **막지 않고 잰다** —
+    #   대신 그 크기를 산출물에 실어, 이 수를 쓰는 쪽이 오차를 알고 쓰게 한다.
+    #   조용히 지나가는 것만은 막는다.
+    try:
+        _pairs = []
+        for _d, _rows in H["days"].items():
+            _i = next((k for k, x in enumerate(DGRID) if x == _d), None)
+            if _i is None or _i == 0:
+                continue
+            for _t, _v in _rows.items():
+                if len(_v) < 7 or _v[6] is None or _v[0] is None:
+                    continue
+                _a = DCLOSE.get(_t) or []
+                if _i >= len(_a) or not _a[_i] or not _a[_i - 1]:
+                    continue
+                _pairs.append(((1 + _v[6] / 100.0) * (1 + _v[0] / 100.0) - 1) * 100.0
+                              - (_a[_i] / _a[_i - 1] - 1) * 100.0)
+        if _pairs:
+            _n = len(_pairs)
+            _mean = sum(_pairs) / _n
+            _srt = sorted(_pairs)
+            _med = _srt[_n // 2]
+            H["reconcile"] = {"n": _n, "mean_pp": round(_mean, 4),
+                              "median_pp": round(_med, 4),
+                              "ann_pp": round(_mean * 252, 1),
+                              "note": "밤샘×장중 − 일간(%p/일). 0 이어야 한다. 0 이 아닌 것은 "
+                                      "일봉(조정가)과 분봉(실제가)의 기준이 달라서다 — "
+                                      "PREREG-2026-08-18-OVN5-RESULT.md §1."}
+            print("  [분해검산] 밤샘×장중 − 일간 = %+.4f%%p/일 (중앙 %+.4f · 연 %+.1f%%p · 짝 %d)"
+                  % (_mean, _med, _mean * 252, _n))
+            if abs(_mean) > 0.02:
+                print("  🚨 분해가 %.4f%%p/일 어긋난다 — 밤샘을 «수익» 으로 쓰면 안 된다"
+                      % _mean)
+    except Exception as _e:
+        print("  ⚠ 분해 검산 실패: %s" % str(_e)[:60])
+
     io.open(HIST, "w", encoding="utf-8").write(
         json.dumps(H, ensure_ascii=False, separators=(",", ":")) + "\n")
     print("  → intraday_hist.json · 일자 %d(이번 회차 %d일) · 관측 %d · %.0fKB"

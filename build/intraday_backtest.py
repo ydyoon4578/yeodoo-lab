@@ -76,6 +76,11 @@ def day_ret(row, kind):
         if r is None or ro is None or (1 + ro / 100.0) == 0:
             return None
         return ((1 + r / 100.0) / (1 + ro / 100.0) - 1) * 100.0
+    if kind == "ovn":
+        # 🚨 밤샘 = 전일 종가 → 그날 시가. 그 값이 곧 gap 이다.
+        #   ⚠ 여기서 gap 은 **신호가 아니라 수익**이다 — 조정 불일치가 곧 수익 오차가 된다
+        #     (등록서 §2). 거르지 않고, 결과서가 이상치 수를 적는다.
+        return fv(row, "gap")
     return r          # 익일형·갭형은 그날 시가→종가
 
 
@@ -88,6 +93,12 @@ def run_rule(H, days, sid, spec):
         # 신호를 어느 날에서 읽나 — 당일형은 오늘, 익일형은 어제
         if kind in ("same", "gap"):
             sig_day, trade_day = d, d
+        elif kind == "ovn":
+            # 🚨 밤샘 — 신호도 전일, 진입도 전일 종가, 청산은 그날 시가.
+            #   수익(gap)은 «그날» 행에 있으므로 trade_day 는 오늘이다. 선견이 없다.
+            if i == 0:
+                continue
+            sig_day, trade_day = days[i - 1], d
         else:
             if i == 0:
                 continue
@@ -166,6 +177,13 @@ def build_specs():
         v = fv(sr, "v")
         return None if (not mv or not v or v <= mv) else g
 
+    def s_openabs(t, sr, S, days, i, H):
+        v = fv(sr, "r_open")
+        return None if v is None else abs(v)
+
+    def s_r(t, sr, S, days, i, H):
+        return fv(sr, "r")
+
     def s_absgap(t, sr, S, days, i, H):
         g = fv(sr, "gap")
         return None if g is None else abs(g)
@@ -197,6 +215,36 @@ def build_specs():
                     "name": "갭 절대값 하위 %d" % TOPN,
                     "rule": "|갭| 이 가장 작은 %d종." % TOPN,
                     "why": "④의 반대 끝. 「조용한 종목이 낫다」가 이 표본에서 서는지 본다."}),
+        # ── 밤샘·개장변동 5종 — 사전등록 PREREG-2026-08-18-OVN5.md §3 ────────
+        ("d-openabs", {"kind": "same", "score": s_openabs, "desc": True,
+                       "name": "개장 30분 절대변동 상위 %d" % TOPN,
+                       "rule": "방향을 안 보고 개장 30분 |수익| 이 큰 %d종을 10:00 에 사서 "
+                               "종가에 판다." % TOPN,
+                       "why": "🚨 INTRADAY6 이 «새로 등록해서 재야 한다» 며 미룬 검정이다. "
+                              "GAP5 ④는 같은 가설을 «갭» 축에서 쟀고 반대가 나왔다 — 이것이 "
+                              "그 «원래 축» 이다."}),
+        ("d-openquiet", {"kind": "same", "score": s_openabs, "desc": False,
+                         "name": "개장 30분 절대변동 하위 %d" % TOPN,
+                         "rule": "개장 30분 |수익| 이 가장 작은 %d종을 10:00 에 사서 종가에 판다."
+                                 % TOPN,
+                         "why": "①의 반대 끝. 한쪽만 재면 부호를 결과 보고 정하게 된다."}),
+        ("o-mom", {"kind": "ovn", "score": s_r, "desc": True,
+                   "name": "전일 세션 강세 상위 %d — 밤샘" % TOPN,
+                   "rule": "전일 시가→종가 수익 상위 %d종을 **전일 종가에 사서 다음 날 "
+                           "시가에 판다**(밤샘만 보유)." % TOPN,
+                   "why": "「낮에 강했던 것이 밤에도 오르나」. 이 랩 186종이 전부 종가 대 "
+                          "종가라 이 질문이 나온 적이 없다."}),
+        ("o-rev", {"kind": "ovn", "score": s_r, "desc": False,
+                   "name": "전일 세션 약세 하위 %d — 밤샘" % TOPN,
+                   "rule": "전일 시가→종가 수익 하위 %d종을 전일 종가에 사서 다음 날 시가에 판다."
+                           % TOPN,
+                   "why": "③의 반대 끝."}),
+        ("o-clv", {"kind": "ovn", "score": s_clv, "desc": True,
+                   "name": "전일 종가 위치 상위 %d — 밤샘" % TOPN,
+                   "rule": "전일 종가가 그날 범위 위쪽에 놓인 상위 %d종을 전일 종가에 사서 "
+                           "다음 날 시가에 판다." % TOPN,
+                   "why": "③과 다른 점 — r 은 «하루 전체가 올랐나», clv 는 «끝날 때 세게 "
+                          "끝났나» 다. 마감 압력이 밤샘으로 이어지는지는 종가 위치가 답한다."}),
         ("d-openmom", {"kind": "same", "score": s_open, "desc": True,
                        "name": "개장 30분 강세 상위 %d" % TOPN,
                        "rule": "개장 30분 수익 상위 %d종을 10:00 에 사서 종가에 판다. 동일가중." % TOPN,
