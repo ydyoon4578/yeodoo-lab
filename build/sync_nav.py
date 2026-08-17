@@ -249,6 +249,9 @@ def build_body(items: dict) -> str:
         out.append('        <div class="mmpanel" id="%s" hidden role="group" aria-label="%s">'
                    % (pid, esc(c["name"])))
         for t in c["tools"]:
+            # desc 는 이제 메뉴 화면에 안 나간다(줄도 title 도 없앴다). 그래도 여기서
+            # 꺼내는 이유는 **desc 없는 항목을 KeyError 로 잡기 위해서**다 —
+            # sources.html 원장이 이 값을 읽으므로 비면 그쪽이 빈칸이 된다.
             href, name, desc = t["file"], t["name"], t["desc"]
             live = tool_live(t)
             lab, cls = VERDICT_LABEL.get(t.get("verdict") or "na", (None, None))
@@ -270,18 +273,21 @@ def build_body(items: dict) -> str:
             lk = '<span class="mmlk">🔒</span>' if t.get("locked") else ""
             # 🚨 설명 줄(.mmd)은 **안 그린다**(2026-08-13 사용자 요청 — "목록 세부설명들
             #   다 빼, 지저분해"). 모바일 드로어에서 칸마다 두 줄이 되어 메뉴가 글이 됐다.
-            # ⚠ 지우는 것이 아니라 title 로 옮긴다. nav_items.json 의 desc 는 그대로 두고
-            #   (그 파일이 메뉴 정본이고 sources.html 원장이 같은 문장을 읽는다) 화면에서만
-            #   내린다. 데스크톱에서 마우스를 올리면 그대로 나온다.
+            # 🚨 2026-08-18 사용자 지시 — **title 도 뺀다.** 2026-08-13 에 설명 줄을 내리면서
+            #   «지우는 것이 아니라 title 로 옮긴다» 고 했는데, 그러면 메뉴에 마우스를 올릴
+            #   때마다 «테크니컬 신호 32개 설정 + 오늘 발동 종목» 같은 말풍선이 뜬다.
+            #   메뉴를 훑는 동작에서 그것이 계속 끼어든다 — 줄을 내린 이유와 같은 이유로 뺀다.
+            # ⚠ nav_items.json 의 desc 는 **그대로 둔다.** 그 파일이 메뉴 정본이고
+            #   sources.html 원장이 같은 문장을 읽는다 — 지우면 그쪽이 빈다.
+            #   즉 없앤 것은 «마우스 올렸을 때 뜨는 것» 하나뿐이다.
             inner = ('<span class="mmn">%s%s</span>%s'
                      % (esc(name), lk, badge))
             if live:
-                out.append('          <a class="mmi" href="%s" data-nav="%s" title="%s">%s</a>'
-                           % (esc(href), esc(href), esc(desc), inner))
+                out.append('          <a class="mmi" href="%s" data-nav="%s">%s</a>'
+                           % (esc(href), esc(href), inner))
             else:
                 # 없는 파일로 링크하지 않는다 — 404 대신 '준비중'을 보여준다
-                out.append('          <span class="mmi" title="%s">%s</span>'
-                           % (esc(desc), inner))
+                out.append('          <span class="mmi">%s</span>' % inner)
         out.append('        </div>')
         out.append('      </li>')
 
