@@ -766,7 +766,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div id="anbox"></div>
   </section>
 
-  <section id="target" aria-labelledby="target-h">
+  <!-- ⚠ 접는다(2026-08-17). 이것은 **내 포트폴리오가 아니라 랩이 배포로 판정한
+       전략의 목표 비중**이다. 참고로 볼 것이라 접어 두되 지우지 않는다 —
+       "그래서 오늘 무엇을 들어야 하나"에 답하는 자리가 여기밖에 없다. -->
+  <details class="fold" id="target">
+    <summary>랩이 «배포»로 판정한 전략의 목표 구성 <span style="font-weight:400;color:var(--muted)">· 내 보유가 아니다</span></summary>
+    <div class="foldin">
     <h2 class="lbl" id="target-h">배포 중인 목표 구성 <span class="sub" id="tg-sub">· 불러오는 중…</span></h2>
     <p class="note" id="tg-lede">이 랩이 <b>배포</b>로 판정한 전략의 최신 리밸런스 구성입니다.
       슬리브를 최종 티커까지 풀어 한 줄에 하나씩 적고, 아래 ②에 입력한 보유가 있으면 차이를 같이 냅니다.
@@ -774,7 +779,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       아래 수치는 전부 무비용·소급 표본에서 나온 지난 창의 실측입니다.</p>
     <div id="tgwarn"></div>
     <div id="tgbox"><div class="note">불러오는 중…</div></div>
-  </section>
+    </div>
+  </details>
 
   <details class="fold" id="store">
     <summary>① 이 데이터는 어디에 저장되나</summary>
@@ -1681,6 +1687,84 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ══ ⑤ 계산 ═════════════════════════════════════════════════════════════
+  // ── 성과 vs 벤치마크 (2026-08-17) ─────────────────────────────────────────
+  // 🚨 이 화면에 없던 것이다. 「내 포트가 어땠나」를 말하면서 무엇 대비인지가 없었다.
+  // ⚠ analyze() 와 **같은 창·같은 비중**을 쓴다. 다른 창을 쓰면 이 블록과 아래 위험
+  //   블록이 같은 포트폴리오를 두 기간으로 말하게 된다.
+  // ⚠ 벤치마크는 지수 PR 이다(랩 규약 2026-08-13). 보유 종가는 배당조정이라 견주는
+  //   것만으로 연 2.00%p 를 공짜로 얻는다 — 그 사실을 화면이 먼저 적는다.
+  var BENCH=null, BENCH_TRIED=false;
+  function loadBench(cb){
+    if(BENCH||BENCH_TRIED) return cb(BENCH);
+    BENCH_TRIED=true;
+    fetch('data/bench_px.json',{cache:'no-cache'})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(j){ BENCH=j; cb(BENCH); })
+      .catch(function(){ cb(null); });
+  }
+
+  function renderPerf(){
+    var host=document.getElementById('perfbox');
+    if(!host) return;
+    // ⚠ analyze() 를 다시 부르지 않는다. recompute() 가 만든 AN 을 쓴다 —
+    //   다시 부르면 같은 계산을 두 번 하고, 그 사이 입력이 바뀌면 두 블록이 갈린다.
+    var A=AN;
+    if(!A||!A.keep||A.keep.length<20){
+      host.innerHTML='<div class="note">보유를 입력하고 <b>위험</b> 구획에서 시계열을 '+
+        '내려받으면 여기에 나옵니다.</div>';
+      return;
+    }
+    loadBench(function(B){
+      if(!B||!B.series){
+        host.innerHTML='<div class="note hard"><b>벤치마크를 받지 못했습니다</b> — '+
+          '<code>data/bench_px.json</code>이 없습니다. 추정치로 채우지 않습니다.</div>';
+        return;
+      }
+      var dates=DATA.pxd_dates||[];
+      // analyze 가 낸 창을 그대로 쓴다(di 기준). keep 첫끝과 다를 수 있다.
+      var d0=A.d0||dates[A.keep[0]], d1=A.d1||dates[A.keep[A.keep.length-1]];
+      // 벤치마크 격자는 자산 패널(5186일)이고 보유 격자는 종목 패널(4431일)이라 다르다.
+      // 날짜 문자열로 맞춘다 — 인덱스로 맞추면 조용히 다른 날을 읽는다.
+      var bpos={}; for(var i=0;i<B.dates.length;i++) bpos[B.dates[i]]=i;
+      var i0=bpos[d0], i1=bpos[d1];
+      if(i0==null||i1==null||!(i1>i0)){
+        host.innerHTML='<div class="note hard">보유 창('+esc(d0)+'~'+esc(d1)+')이 '+
+          '벤치마크 격자에 없습니다 — 같은 날로 못 맞추면 비교하지 않습니다.</div>';
+        return;
+      }
+      var yrs=(A.n||A.keep.length)/252;
+      function cagr(a,b){ return (Math.pow(b/a,1/yrs)-1)*100; }
+      // analyze().cagr 는 **소수**다(0.12 = 12%). 백분율로 맞춘다 — 안 맞추면
+      // 내 포트만 0.12 로 찍히고 지수는 12.3 으로 찍혀 100배 차이가 난다.
+      var mine=(A.cagr!=null)?A.cagr*100:null;
+      var rows=[];
+      ['spx','ndx'].forEach(function(k){
+        var s=B.series[k]; if(!s) return;
+        var a=s.px[i0], b=s.px[i1];
+        if(!a||!b) return;
+        rows.push({k:k, label:s.label, cagr:cagr(a,b)});
+      });
+      var gap=B.pr_gap||2.0;
+      var h='<div class="fswrap"><table class="tbl"><thead><tr>'+
+        '<th class="l">구분</th><th>CAGR %</th><th>차이 %p</th></tr></thead><tbody>'+
+        '<tr><th scope="row" class="l">내 포트폴리오</th><td class="tnum"><b>'+
+        (mine==null?'—':fx(mine,2))+'</b></td><td class="tnum">—</td></tr>';
+      rows.forEach(function(r){
+        var d=(mine==null)?null:(mine-r.cagr);
+        h+='<tr><th scope="row" class="l">'+esc(r.label)+'</th><td class="tnum">'+fx(r.cagr,2)+
+           '</td><td class="tnum">'+(d==null?'—':((d>0?'+':'')+fx(d,2)))+'</td></tr>';
+      });
+      h+='</tbody></table></div>'+
+        '<p class="capn">창 <b>'+esc(d0)+' ~ '+esc(d1)+'</b> ('+fx(yrs,1)+'년 · '+
+        A.keep.length+'거래일) — 보유 전 종목이 값을 가진 날만 씁니다. '+
+        '분석에 들어간 비중은 <b>'+fx((A.wshare||0)*100,1)+'%</b>입니다.</p>'+
+        '<p class="capn">🚨 벤치마크는 <b>가격지수(PR)</b>라 배당이 빠져 있습니다. '+
+        '보유 종가는 배당조정이므로, 견주는 것만으로 연 <b>'+fx(gap,2)+'%p</b>를 '+
+        '공짜로 얻습니다(이 랩 실측). 위 «차이»에서 그만큼 빼고 읽으십시오.</p>';
+      host.innerHTML=h;
+    });
+  }
+
   function analyze(){
     var W=weights(), i, j, k;
     var ts=[], ws=[], dropped=[];
@@ -1808,6 +1892,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function recompute(){
     AN=analyze();
     renderAn();
+    renderPerf();
   }
 
   // ══ 차트 ═══════════════════════════════════════════════════════════════

@@ -160,6 +160,10 @@ jobs:
       # 언제나 어제 자 assets 로 만들어졌고, 달력에서 가장 강조되는 칸(기준일)의 등락률만
       # 매일 비어 있었다 — 과거 칸엔 뜨는데 오늘 칸만 빈다. assets 를 새로 만든 **이 자리에서**
       # 다시 구워야 그 칸이 채워진다. ⚠ asof_index 보다 앞이어야 한다(as_of 를 읽어 간다).
+      # 벤치마크 얇은 계열 — 내 포트폴리오 화면이 이것만 받는다(assets.json 은 5MB 다).
+      # ⚠ assets.json 을 새로 만든 **이 자리에서** 같이 구워야 격자가 어긋나지 않는다.
+      - name: Rebuild benchmark slim series
+        run: python build/bench_px.py
       - name: Rebuild home flow (calendar day returns)
         run: python build/home_flow.py
       - name: Rebuild as-of index
@@ -170,6 +174,7 @@ jobs:
         run: |
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·스타일 성과 자동 갱신" \
             data/assets.json data/asset_strategies.json data/guru_clone.json \
+            data/bench_px.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_report.json \
             data/market_board.json data/home_perf.json data/style_perf.json data/style_trails.json \
             data/home_flow.json data/asof.json
