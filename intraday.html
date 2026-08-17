@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — 직전 거래일 1분봉과 거래량 · VWAP — 지금 시세가 아니다. 갱신은 장 마감 뒤 하루 한 번.">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<title>여두 · 장중 분봉</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/intraday.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/intraday.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · 장중 분봉">
+<meta property="og:description" content="직전 거래일 1분봉과 거래량 · VWAP — 지금 시세가 아니다. 갱신은 장 마감 뒤 하루 한 번.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · 장중 분봉">
+<meta name="twitter:description" content="직전 거래일 1분봉과 거래량 · VWAP — 지금 시세가 아니다. 갱신은 장 마감 뒤 하루 한 번.">
+<!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rej:#A64B3B;--rej-bg:#f3e0db;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rej:#E5806A;--rej-bg:#2c1815;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--rej:#A64B3B;--rej-bg:#f3e0db;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--rej:#E5806A;--rej-bg:#2c1815;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
+  /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
+  /* 폭 토큰은 셸이 보장한다(build/sync_shell.py) — 페이지 사본은 2026-08-10 에 걷어냈다.
+     사본이 1440 으로 남아 있었는데 셸은 1680 이었다. 지금은 셸이 뒤에 와서 셸이 이기지만,
+     CSS 순서가 바뀌면 조용히 뒤집힌다. 같은 값을 두 곳에 두지 않는다. */
+  *,*::before,*::after{box-sizing:border-box}
+  /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
+     떨어졌고, 영문만 Segoe UI로 갈렸다 — 한 글꼴로 통일한다. 숫자·차트 라벨은 고정폭(--mono)
+     유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
+     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
+     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
+  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
+  header.mast{padding:64px 0 18px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
+  .lede{margin:12px 0 0;max-width:76ch;font-size:15px;color:var(--ink-2)} .lede b{color:var(--ink)}
+  .statline{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;font-family:var(--mono);font-size:12px}
+  .stat{display:inline-flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:4px 12px;color:var(--muted)}
+  .stat b{color:var(--ink);font-size:14px;font-weight:600}
+  .rej.hl{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 26%,transparent)}
+  .rej{scroll-margin-top:24px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--rej);border-radius:2px;padding:11px 15px;margin-bottom:8px;box-shadow:var(--shadow)}
+  .rej .rn{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ink);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .rej .xb{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--rej);background:var(--rej-bg);border-radius:2px;padding:1px 6px}
+  .rej .rr{margin-top:5px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
+  /* 재검 부기 — 기각 항목 안에 접혀 있고, 배포 전략 카드(탐색기)와 색·틀이 겹치지 않게 무채색으로 둔다.
+     강조색을 쓰면 '살아난 전략'으로 읽히므로 --accent 계열은 여기서 쓰지 않는다. */
+  .ab{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px}
+  .ab summary{cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--muted);list-style:none;padding:2px 0}
+  .ab summary::-webkit-details-marker{display:none}
+  .ab summary::before{content:"▸ ";color:var(--muted)}
+  .ab[open] summary::before{content:"▾ "}
+  .ab summary b{color:var(--rej)}
+  a.home,button.theme{position:fixed;top:14px;z-index:50;height:38px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);box-shadow:var(--shadow);border-radius:2px;cursor:pointer}
+  button.theme{right:14px;width:38px;font-size:16px}
+  a.home:hover,button.theme:hover{border-color:var(--accent)}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
+  footer a{color:var(--accent);text-decoration:none}
+  /*a11y-fixes*/
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{color:var(--ground)}}
+  :root[data-theme="dark"] .fchip[aria-pressed="true"]{color:var(--ground)}
+  a:focus-visible,button:focus-visible,input:focus-visible,[role="option"]:focus-visible,.fchip:focus-visible,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /*touch-targets*/
+  @media(pointer:coarse){.fchip,.cbtn,.sortbtn,.item,.cbtn,.pill{min-height:40px}.fchip{padding-top:8px;padding-bottom:8px}}
+  /*reduced-motion*/
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+
+  /* ── 전략 실험실(2026-07-25 재구성) ─────────────────────────────── */
+  .statline{margin:20px 0 0;display:flex;gap:9px;flex-wrap:wrap}
+  .statline .stat{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--line);
+    border-radius:2px;padding:10px 14px;min-width:118px;box-shadow:var(--shadow)}
+  .statline .stat b{display:block;font-family:var(--mono);font-size:21px;font-weight:800;line-height:1.1}
+  .statline .stat em{display:block;margin-top:4px;font-style:normal;font-size:11.5px;color:var(--muted)}
+  .statline .stat{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  /* 값은 대문자화에서 뺀다 — |t|(t통계량)가 |T|로 바뀌면 다른 기호가 된다 */
+  .statline .stat b{text-transform:none}
+  .statline .stat.ok{border-top-color:var(--good,#0E8A54)}
+  .statline .stat.zero{border-top-color:var(--hot)}
+  /* 상단 내비·테마 토글 CSS는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다.
+     여기서 중복 정의하면 23장이 서로 어긋난다 — 이 페이지에서는 건드리지 않는다. */
+  .dupbox{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;
+          padding:13px 15px;margin:0 0 18px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .dupbox b{color:var(--ink)}
+  .dupbox table{width:100%;border-collapse:collapse;margin-top:9px;font-family:var(--mono);font-size:11.5px}
+  .dupbox td{padding:4px 6px;border-top:1px solid var(--line-soft);vertical-align:top}
+  .dupbox td.c{width:56px;color:var(--hot);font-weight:700;white-space:nowrap}
+  .dupbox .dn{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.55}
+  .hardnote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--hot);
+    border-radius:2px;padding:13px 17px;margin:20px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.75}
+  .hardnote b{color:var(--ink)}
+  .sech{font-family:var(--mono);font-size:13px;font-weight:800;margin:38px 0 4px;display:flex;align-items:baseline;gap:9px}
+  .sech span{font-size:11px;font-weight:600;color:var(--muted)}
+  .sechn{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .frow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+  .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);
+    border-radius:2px;background:var(--ground);color:var(--ink-2);cursor:pointer}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFF}
+  @media(prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#131820}}
+  :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
+  .chip .cn{font-weight:500;opacity:.7;margin-left:5px}
+
+  .rcard{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
+    padding:15px 18px;margin-bottom:12px}
+  .rtop{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .rtop h3{margin:0;font-size:14.5px;font-weight:700;flex:1}
+  .rkind{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);
+    border:1px solid var(--line);border-radius:2px;padding:1px 6px}
+  .rv{font-family:var(--mono);font-size:11px;font-weight:800;border-radius:2px;padding:2px 8px;border:1px solid}
+  .rv.vpass{color:var(--good,#0E8A54);border-color:currentColor}
+  .rv.vunv{color:var(--muted);border-color:var(--line)}
+  .rv.vrej{color:var(--hot);border-color:currentColor}
+  .rrule{margin:9px 0 0;font-size:12.5px;color:var(--ink);line-height:1.65}
+  .rwhy{margin:5px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
+  /* 🚨 격자선은 자식의 테두리로 그린다(2026-08-11). 종전에는 gap:1px 이 부모 배경을
+     비추게 했는데, dpr 이 1 이 아니면(브라우저 90% 확대 등) 그 간격이 0.89 device px 가
+     되고 양쪽 자식이 바깥으로 스냅되면 선이 **통째로 사라진다**. 일정 캘린더에서 실제로
+     그랬다 — 바깥 테두리만 남고 안쪽 격자가 군데군데 비었다.
+     컨테이너는 왼쪽·위만, 자식은 오른쪽·아래만 — 열 수가 동적이어도(auto-fit) 겹치지 않는다. */
+  .rgrid{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));
+    border-left:1px solid var(--line-soft);border-top:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  .rgrid>*{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .rc{background:var(--panel);padding:7px 10px}
+  .rc span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .rc.tstat span{text-transform:none}   /* 위와 같은 이유 — t통계량 라벨은 소문자여야 한다 */
+  .rc b{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:800}
+  .rc.up b{color:var(--good,#0E8A54)} .rc.dn b{color:var(--hot)}
+  .spark{display:block;width:100%;height:44px;margin:11px 0 0}
+  .rbench{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .rarch{margin:9px 0 0;padding-top:9px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);line-height:1.6}
+  .rarch b{color:var(--ink-2)}
+  .ncard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--muted);
+    border-radius:2px;padding:12px 16px;margin-bottom:9px}
+  .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
+  .ncard h4{margin:0;font-size:13px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .rcard.hit,.ncard.hit{outline:2px solid var(--accent);outline-offset:3px}
+  .ncard h4 span{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);margin-left:auto}
+  .ncard p{margin:6px 0 0;font-size:12px;color:var(--muted);line-height:1.65}
+  /* ── 지표별 타이밍 신호 ─────────────────────────────────────────────── */
+  header.mast h1{margin:8px 0 0;font-size:clamp(30px,4.6vw,50px);line-height:1.12;letter-spacing:-.02em;font-weight:800}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .lede{margin:14px 0 0;max-width:var(--w-read);color:var(--ink-2);font-size:15.5px}
+  .statline{margin:20px 0 0;display:flex;gap:9px;flex-wrap:wrap}
+  .stat{display:inline-flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);
+        border-radius:2px;padding:10px 14px;min-width:112px;box-shadow:var(--shadow);
+        font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .stat b{text-transform:none;font-size:21px;color:var(--ink);letter-spacing:-.01em;line-height:1.2}
+  .stat em{text-transform:none;letter-spacing:0;font-style:normal;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
+  .stat.ok b{color:var(--gA)} .stat.zero b{color:var(--rej)}
+  .hardnote{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--rej);
+            border-radius:2px;padding:13px 16px;margin:22px 0 0;font-size:13px;line-height:1.68;color:var(--ink-2)}
+  .hardnote b{color:var(--ink)}
+  .sech{margin:44px 0 0;font-size:19px;font-weight:800;letter-spacing:-.01em;
+        padding-left:11px;border-left:3px solid var(--accent)}
+  .sech span{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);margin-left:8px}
+  .sechn{margin:9px 0 0;max-width:var(--w-read);font-size:13px;color:var(--muted);line-height:1.65}
+
+  /* 포트폴리오 카드 */
+  .pfgrid{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .pfc{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:15px 16px;box-shadow:var(--shadow)}
+  .pfc h3{margin:0;font-size:14.5px;font-weight:800;letter-spacing:-.01em}
+  .pfc .pfr{margin:7px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.6}
+  .pfc .pfw{margin:7px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6}
+  /* 🚨 격자선은 자식의 테두리로 그린다(2026-08-11). 종전에는 gap:1px 이 부모 배경을
+     비추게 했는데, dpr 이 1 이 아니면(브라우저 90% 확대 등) 그 간격이 0.89 device px 가
+     되고 양쪽 자식이 바깥으로 스냅되면 선이 **통째로 사라진다**. 일정 캘린더에서 실제로
+     그랬다 — 바깥 테두리만 남고 안쪽 격자가 군데군데 비었다.
+     컨테이너는 왼쪽·위만, 자식은 오른쪽·아래만 — 열 수가 동적이어도(auto-fit) 겹치지 않는다. */
+  .pfg{margin:12px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));
+       border-left:1px solid var(--line-soft);border-top:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  .pfg>div{border-right:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+  .pfg>div{background:var(--panel);padding:7px 9px}
+  .pfg span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .pfg b{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--ink)}
+  .pfg .up b{color:var(--gA)} .pfg .dn b{color:var(--rej)}
+  .pfg .tcell span{text-transform:none}
+  .spark{display:block;width:100%;height:44px;margin:11px 0 0}
+  .pfb{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+  /* 신호 표 */
+  .frow{margin:14px 0 0;display:flex;gap:7px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);background:var(--panel);
+        border:1px solid var(--line);border-radius:2px;padding:5px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .chip .cn{font-size:11px;color:var(--muted)}
+  .tblwrap{margin:13px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel)}
+  .sigt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:840px}
+  .sigt.narrow{min-width:460px}
+  .sigt th{position:sticky;top:0;background:var(--panel-2);color:var(--muted);font-size:11px;font-weight:700;
+           letter-spacing:.04em;text-transform:uppercase;padding:9px 8px;text-align:right;white-space:nowrap;
+           border-bottom:1px solid var(--line)}
+  .sigt th.l,.sigt td.l{text-align:left}
+  .sigt td{padding:8px;text-align:right;border-top:1px solid var(--line-soft);white-space:nowrap;color:var(--ink-2)}
+  .sigt tr.r{cursor:pointer}
+  .sigt tr.r:hover td{background:var(--panel-2)}
+  .sigt td.nm{font-family:var(--sans);font-size:12.5px;color:var(--ink);font-weight:600;white-space:normal;min-width:190px}
+  .sigt td.up{color:var(--gA);font-weight:700} .sigt td.dn{color:var(--rej);font-weight:700}
+  .sigt td.big{font-weight:800;color:var(--ink)}
+  .vb{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:2px 7px;white-space:nowrap;
+      border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 42%,transparent);
+      background:color-mix(in srgb,var(--vc,var(--muted)) 12%,transparent);color:var(--vc,var(--muted))}
+  .vb.ok{--vc:var(--gA)} .vb.inv{--vc:var(--accent)} .vb.few{--vc:var(--gD)} .vb.no{--vc:var(--muted)}
+  .sigt th .thb{display:block;font-size:11px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;margin-top:2px}
+  .sigt td .vb2{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:1px}
+  .dirb{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted)}
+  .dirb.b{color:var(--gA)} .dirb.s{color:var(--rej)}
+  tr.det td{background:var(--panel-2);white-space:normal;text-align:left;font-family:var(--sans);
+            font-size:12.5px;line-height:1.68;color:var(--ink-2);padding:13px 14px}
+  tr.det b{color:var(--ink)}
+  .tks{margin:9px 0 0;display:flex;flex-wrap:wrap;gap:5px}
+  .tk{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-2);background:var(--panel);
+      border:1px solid var(--line);border-radius:2px;padding:3px 7px;text-decoration:none;display:inline-block}
+  .tk:hover{border-color:var(--accent);color:var(--accent)}
+  .tk em{font-style:normal;color:var(--muted);font-weight:400;font-size:11px;margin-left:4px}
+
+  /* 오늘 목록 */
+  .todaygrid{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .tcol{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 15px;box-shadow:var(--shadow)}
+  .tcol h3{margin:0 0 9px;font-size:13px;font-weight:800}
+  .tcol h3 span{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600;margin-left:5px}
+
+  /* 중복도 */
+  .dupbox{margin:13px 0 0;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;
+          padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .dupbox b{color:var(--ink)}
+  .dupbox table{width:100%;border-collapse:collapse;margin-top:9px;font-family:var(--mono);font-size:11.5px}
+  .dupbox td{padding:4px 6px;border-top:1px solid var(--line-soft);vertical-align:top}
+  .dupbox td.c{width:52px;color:var(--accent);font-weight:700;white-space:nowrap}
+  .skel{padding:16px;color:var(--muted);font-size:13px}
+  .foot{margin:52px 0 0;padding:18px 0 0;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .foot a{color:var(--ink-2)} .foot code{font-family:var(--mono);font-size:11px}
+  /* 설명·한계는 기본으로 숨기고 눌러서 본다(전 페이지 공통 패턴) */
+  details.more{margin-top:7px}
+  details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:12.5px}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary::before{content:'\25B8';font-size:11px}
+  details.more[open]>summary::before{content:'\25BE'}
+  details.more>summary:hover{color:var(--accent)}
+  details.more .mbody{margin-top:7px}
+  details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
+
+/* SHELL:BEGIN */
+/* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
+   23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
+   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다.
+   ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰면 안 된다 — HTML 파서는 주석 안이든
+      아니든 그 지점에서 style 요소를 끝내버린다(실제로 한 번 밟았다). */
+
+/* ① 글꼴 — Pretendard.
+   기존 스택 첫 후보는 "Malgun Gothic"이었다. 윈도 기본 한글 글꼴이라 굵기가 사실상 400/700
+   두 단계뿐이고 맥에서는 Apple SD Gothic Neo로 떨어져, 같은 화면이 OS마다 다른 글꼴로 보였다.
+   Pretendard는 100~900 가변에 라틴·숫자가 Inter 계열이라 한글과 숫자가 한 글꼴로 붙는다.
+   --mono의 한글 후보도 Pretendard로 바꾼다 — 고정폭이 필요한 건 숫자뿐인데, 한글까지 고정폭
+   스택으로 떨어뜨리면 본문과 다른 글꼴이 한 줄 안에서 섞인다. */
+:root{
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
+  /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
+     stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다.
+     🚨 2026-08-10 — --w-wide 를 1440 → 1680 으로 올렸다(사용자 요청 '화면을 최대한 넓게').
+       홈은 자료 화면이다. 종목 히트맵이 518칸을 그리는데 폭이 곧 읽히는 종목 수다 —
+       1200px 에서는 가장 작은 칸이 7×10px 라 글자가 안 들어갔다.
+       ⚠ 내비(.topnav .nvin)도 이 토큰을 쓴다. 본문만 넓히면 내비보다 본문이 넓어져
+         화면이 어긋나 보인다 — 그래서 페이지가 아니라 여기서 바꾼다.
+       ⚠ --w-read(980)는 그대로다. 글이 주인 화면은 한 줄이 길어지면 읽기 나빠진다 —
+         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다. */
+  --w-wide:1680px;--w-base:1200px;--w-read:980px;
+}
+
+/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
+   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
+   ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
+:root{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+@media(prefers-color-scheme:dark){:root{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}}
+:root[data-theme="light"]{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+:root[data-theme="dark"]{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}
+
+/* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
+   한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
+   음절을 벌려 읽기를 방해한다. 실제로 이 규칙 때문에 통계량 |t|가 화면에서 |T|로 찍힌 적이 있다. */
+body{font-family:var(--sans);letter-spacing:-.003em}
+h1,h2,h3,h4{letter-spacing:-.02em}
+h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-height:1.14}
+/* 큰 제목은 본문 글꼴로. 고정폭 스택에서 한글은 Pretendard로, 라틴·숫자는 SF Mono로 떨어져
+   한 제목 안에 두 글꼴이 섞인다("… RP 통합 (Multi-Sleeve Core)"가 그렇게 보였다).
+   작은 머리글(h4 등)은 라틴 약어가 대부분이라 그대로 둔다.
+   :not(._)은 특이도를 페이지 규칙(.dtop h2 같은 것)과 맞추려고 붙였다 — 요소 선택자만으로는
+   페이지 쪽이 이긴다. !important를 쓰지 않으려는 최소 장치다. */
+:is(h1,h2):not(._){font-family:var(--sans);letter-spacing:-.025em}
+.eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em}
+.lbl{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.012em;text-transform:none;color:var(--ink)}
+.lbl::before{height:16px}
+.lbl .sub{font-size:12.5px;font-weight:500}
+.card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
+
+/* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
+.tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
+
+/* ⑤ 표 — 머리글은 한글이라 고정폭을 벗기고, 행에 hover를 준다(어느 줄을 읽는지 잃지 않게). */
+.tbl{font-variant-numeric:tabular-nums}
+.tbl thead th{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
+.tbl tbody th{font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+.tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+
+/* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+
+/* ⑦ 장식 걷기 (2026-08-09) — 사용자 지적 "클로드 특유의 인터페이스 구성방식".
+   그 인상의 정체는 색만이 아니다. **떠 있는 둥근 카드**와 **알약 배지**가 나머지 몫이다.
+   팔레트는 위에서 바꿨고 여기서 형태를 걷는다.
+
+   🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
+     입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
+       · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+   ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
+     셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
+:where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
+       .asoftbl,.asofrow,.calgrid,.calcell,.chiprow,.statline){box-shadow:none}
+:where(.card,.scard,.rep,.panel,.box,.tile,.asoftbl,.calgrid,details.toc){border-radius:3px}
+/* SHELL:END */
+
+  /* ── 2단 배치 ─────────────────────────────────────────────────────────
+     왼쪽 목록 · 오른쪽 상세. co.html·stocks.html 과 같은 폭(290px)을 쓴다 —
+     같은 일을 하는 화면은 같아 보여야 한다. 좁은 화면에서는 위아래로 접는다. */
+  .cols{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;margin-top:14px;align-items:start}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}.side{position:static}}
+  .side{position:sticky;top:12px}
+  .sidehd{margin-bottom:6px}
+  .sidehd input{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:12.5px;
+    padding:7px 9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:2px}
+  .listwrap{max-height:70vh;overflow:auto;border:1px solid var(--line);background:var(--panel)}
+  .listwrap .item{display:flex;justify-content:space-between;gap:10px;width:100%;
+    text-align:left;background:none;border:0;border-bottom:1px solid var(--line);
+    padding:8px 10px;cursor:pointer;color:var(--ink);font-family:inherit}
+  .listwrap .item:last-child{border-bottom:0}
+  .listwrap .item:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  .listwrap .item[aria-selected="true"]{background:color-mix(in srgb,var(--accent) 14%,transparent);
+    box-shadow:inset 2px 0 0 var(--accent)}
+  .listwrap .item > span:first-child{min-width:0}
+  .tkline{display:flex;align-items:baseline;gap:6px}
+  .rk{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:22px}
+  .tk{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent)}
+  .nm{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .metric{flex:0 0 auto;text-align:right}
+  .mv{font-family:var(--mono);font-size:13px;font-weight:700}
+  .empty{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:26px 0;text-align:center}
+  .chiprow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .fchip{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
+    background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:4px 9px;cursor:pointer}
+  .fchip[aria-pressed="true"]{color:var(--panel);background:var(--accent);border-color:var(--accent)}
+  .fchip.lbl{background:none;border:0;cursor:default;padding-left:0}
+  .wrap.wide{max-width:var(--w-wide,1680px)}
+  /* 카드 머리 — 이름은 제목 오른쪽에 작게. 없으면 티커와 회사명이 붙어 한 낱말로 읽힌다. */
+  .card{border:1px solid var(--line);background:var(--panel);padding:12px 14px;margin:0 0 14px}
+  .card h3{margin:0 0 10px;font-size:14px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+  .card h3 .hn{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--muted)}
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tbl td{padding:5px 8px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+  .tbl td.l{color:var(--muted);font-family:inherit;width:52%}
+  .tbl tr:last-child td{border-bottom:0}
+  .fswrap{overflow-x:auto}
+  .lim{font-size:12px;line-height:1.75;color:var(--muted)}
+</style>
+<body data-tool="intraday.html">
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:800;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:11px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 로 뒤집었다 — 그 규칙은 틀렸던 게
+     아니라 **자기 레이아웃보다 오래 살아남았다**. 메가메뉴는 10칸으로 출발했고(2026-07-25)
+     그때 마지막 두 칸은 바 오른쪽 끝에 있어서 오른쪽 정렬이 실제로 넘침을 막고 있었다.
+     이후 10→6(2026-07-25)→5(748cbf58 공시 탭)→4(741fbe1d 가치 탭, 2026-08-12)로 줄면서
+     버튼이 왼쪽으로 밀려왔는데 규칙은 따라오지 않았다. 위치 선택자가 집는 대상은 그대로인데
+     그 대상이 서 있는 자리가 바뀐 것이다.
+     실측(뷰포트 1442px · 버튼 한 칸 55px): 5칸일 때 전략 패널은 x=38 에서 시작해 멀쩡했다.
+     가치 탭이 빠져 4칸이 되자 딱 한 칸만큼 왼쪽으로 밀려 38−55 = x=−17 — 뷰포트 밖에서 잘렸다.
+     사용자가 "왼쪽이 살짝 잘린다"고 한 그 17px 이고, 오늘 생긴 회귀다.
+     왼쪽 정렬은 안전하다. 패널 실폭은 min-width 320px 로 고정이고(내용이 그 안에 들어가
+     max-width 560px 까지 가지 않는다) 가장 오른쪽 패널의 오른쪽 끝은 x=624 로 **뷰포트 폭이
+     변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라 폭이 줄면 여백만 사라지고 내용
+     시작점은 padding 20px 에 남기 때문이다. 데스크톱 하한 1101px 에서도 여유 477px
+     (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
+     ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
+     또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
+  /* 설명 줄을 걷어내 한 줄짜리가 됐다 — 세로 여백을 줄여 목록이 촘촘히 읽히게 한다. */
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;
+       padding:7px 10px;border-radius:2px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--sans);font-size:11px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:11px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    /* ⚠ backdrop-filter를 반드시 끈다 — 장식이 아니라 **레이아웃 버그의 원인**이다.
+       filter·backdrop-filter·transform이 걸린 요소는 자손 position:fixed의 컨테이닝 블록이
+       된다(뷰포트가 아니라). 아래 .navcats는 fixed 드로어인데 .topnav(높이 52px)가 기준이 되면
+       top:52px·bottom:0이 52px짜리 상자 안에서 계산돼 **드로어 높이가 0이 된다**.
+       실측(2026-07-25): 필터 있음 0px · 제거 859px. 화면에는 첫 카테고리만 삐져나와
+       "모바일에서 시장밖에 안 보인다"로 나타났다.
+       블러를 끄는 대신 배경을 불투명하게 만들어 스티키 바 가독성을 지킨다. */
+    .topnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel)}
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+</head>
+<body data-tool="signals.html">
+<a class="skiplink" href="#main">본문으로 건너뛰기</a>
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 전략 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
+          <a class="mmi" href="filings.html" data-nav="filings.html" title="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음"><span class="mmn">8-K 공시 피드</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html" title="FRED 8지표로 만든 국면 판정(39지표는 함께 보기용) — 미국 단일"><span class="mmn">시장 국면</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html" title="FRED 39지표 현재값·전기대비·z, 사이클·자산군·밸류에이션 탭"><span class="mmn">경제지표</span></a>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro" title="이 랩이 쓰는 지표가 언제 나오는지 — 예상치 없음"><span class="mmn">발표 일정</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="stocks">
+        <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html" title="518종목 테크니컬 22지표·컴포짓·타이밍"><span class="mmn">종목 신호</span></a>
+          <a class="mmi" href="co.html" data-nav="co.html" title="실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)"><span class="mmn">종목 정보</span></a>
+          <a class="mmi" href="signals.html" data-nav="signals.html" title="테크니컬 신호 32개 성적 + 오늘 발동 종목"><span class="mmn">지표별 타이밍</span></a>
+          <a class="mmi" href="intraday.html" data-nav="intraday.html" title="직전 거래일 1분봉과 거래량 — 지금 시세가 아니다(마감 뒤 하루 한 번 갱신)"><span class="mmn">장중 분봉</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="strategy">
+        <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
+          <a class="mmi" href="explorer.html" data-nav="explorer.html" title="원장·돌린 규칙·재현 재점검을 한 곳에서"><span class="mmn">전략 랩</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html" title="공개 산식 스타일을 과거로 되돌려 매월 다시 고른 성과"><span class="mmn">스타일 전략</span></a>
+          <a class="mmi" href="guru.html" data-nav="guru.html" title="13F 원문 — 롱온리·분기말·45일 지연을 먼저 적는다"><span class="mmn">거장 포트폴리오·매매</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html" title="전부 외부 출처·미검증 — 랩이 돌린 게 아니다"><span class="mmn">전략 탐색 풀</span></a>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html" title="localStorage 보유 + 일별 실측 상관·변동성·MDD"><span class="mmn">내 포트폴리오</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="method.html" data-nav="method.html" title="A~F는 섹터 내 백분위 서술 · 배지는 검증 여부 — 둘 다 예측이 아니다"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="constituents.html" data-nav="constituents.html" title="S&amp;P 500·나스닥 100의 매월말 실제 편입 종목과 그 시점 자료 커버리지"><span class="mmn">지수 편입 원장</span></a>
+          <a class="mmi" href="updates.html" data-nav="updates.html" title="자동 갱신과 사람 작업을 한 줄에 — 언제 무엇이 바뀌었나"><span class="mmn">갱신 기록</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html" title="축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="ok.html" data-nav="ok.html" title="개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금"><span class="mmn">OK<span class="mmlk">🔒</span></span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<main class="wrap wide" id="main">
+  <nav class="crumb" aria-label="위치"><a href="index.html">여두 전략 랩</a> · 장중 분봉</nav>
+  <h1>장중 분봉 · 거래량</h1>
+
+  <div class="hardnote" id="sessnote">불러오는 중…</div>
+
+  <div class="chiprow" style="margin:10px 0 6px">
+    <span class="fchip lbl">정렬</span><span id="sorts" style="display:contents"></span>
+  </div>
+
+  <div class="cols">
+    <aside class="side">
+      <div class="sidehd"><input id="q" type="search" placeholder="티커·회사명 검색" aria-label="종목 검색"></div>
+      <div id="list" class="listwrap" role="listbox" aria-label="종목 목록"></div>
+    </aside>
+    <section id="detail"></section>
+  </div>
+
+  <details class="note" style="margin-top:14px">
+    <summary><b>무엇을 보고 있나 · 한계</b></summary>
+    <div id="limits" class="lim"></div>
+  </details>
+</main>
+<script>
+(function(){
+  var el=function(id){return document.getElementById(id);};
+  var esc=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var nf=function(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);};
+  var sgn=function(v,d){return v==null?'—':(v>=0?'+':'')+nf(v,d);};
+  var vfmt=function(v){ if(v==null)return '—';
+    if(v>=1e9)return (v/1e9).toFixed(2)+'B'; if(v>=1e6)return (v/1e6).toFixed(1)+'M';
+    if(v>=1e3)return (v/1e3).toFixed(0)+'K'; return String(v);};
+
+  var D=null, BARS={}, state={sel:null,sort:'v',q:''};
+  // 정렬 축 — 전부 그 세션 안에서 잰 값이다. 「좋다/나쁘다」를 매기지 않는다.
+  var SORTS=[['v','거래량','그 세션 총 거래량'],
+             ['r','시가→종가','세션 수익률'],
+             ['r_open','오전 30분','장 시작 30분 수익률'],
+             ['r_close','마감 30분','마감 30분 수익률'],
+             ['clv','종가 위치','0=저가 1=고가 — 마감 압력'],
+             ['vs_vwap','VWAP 대비','종가가 그날 평균 체결가보다 얼마나 위인가']];
+
+  function lab(k){ for(var i=0;i<SORTS.length;i++) if(SORTS[i][0]===k) return SORTS[i][1]; return k; }
+
+  function rows(){
+    var a=(D&&D.rows||[]).filter(function(r){
+      if(!state.q)return true;
+      return (r.t+' '+(r.nm||'')).toLowerCase().indexOf(state.q)>=0;});
+    var k=state.sort;
+    return a.slice().sort(function(x,y){
+      var a1=x[k], b1=y[k];
+      if(a1==null&&b1==null)return x.t.localeCompare(y.t);
+      if(a1==null)return 1; if(b1==null)return -1;
+      return (b1-a1)||x.t.localeCompare(y.t);});
+  }
+
+  function drawList(){
+    var a=rows(), L=el('list');
+    if(!a.length){L.innerHTML='<div class="empty">해당 종목 없음</div>';return;}
+    if(!state.sel||!a.some(function(r){return r.t===state.sel;}))state.sel=a[0].t;
+    var k=state.sort;
+    L.innerHTML=a.map(function(r,i){
+      var v=r[k], txt=(k==='v')?vfmt(v):(k==='clv'?nf(v,2):sgn(v,2)+'%');
+      var col=(k==='v'||k==='clv')?'--ink':((v||0)>=0?'--good':'--hot');
+      return '<button class="item" role="option" data-t="'+esc(r.t)+'" aria-selected="'+(r.t===state.sel)+'">'+
+        '<span><span class="tkline"><span class="rk">'+(i+1)+'</span><span class="tk">'+esc(r.t)+'</span></span>'+
+        '<div class="nm">'+esc(r.nm||'')+'</div></span>'+
+        '<span class="metric"><div class="mv" style="color:var('+col+')">'+txt+'</div>'+
+        '<div class="nm" style="text-align:right;margin-top:2px">'+esc(lab(k))+'</div></span></button>';
+    }).join('');
+  }
+
+  function drawDetail(){
+    var r=null, a=(D&&D.rows)||[];
+    for(var i=0;i<a.length;i++) if(a[i].t===state.sel) r=a[i];
+    if(!r){el('detail').innerHTML='';return;}
+    var tb=[['시가',nf(r.o,2)],['종가',nf(r.c,2)],['고가',nf(r.h,2)],['저가',nf(r.l,2)],
+            ['VWAP',nf(r.vwap,2)],['거래량',vfmt(r.v)],
+            ['시가→종가',sgn(r.r,2)+'%'],['오전 30분',sgn(r.r_open,2)+'%'],
+            ['마감 30분',sgn(r.r_close,2)+'%'],
+            ['종가 위치(0=저 1=고)',nf(r.clv,2)],['VWAP 대비',sgn(r.vs_vwap,2)+'%'],
+            ['분봉 수',r.n]];
+    el('detail').innerHTML=
+      '<div class="card"><h3>'+esc(r.t)+'<span class="hn">'+esc(r.nm||'')+' · '+esc(D.as_of)+' 세션</span></h3>'+
+      '<div class="fswrap"><table class="tbl"><tbody>'+
+      tb.map(function(x){return '<tr><td class="l">'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('')+
+      '</tbody></table></div></div>'+
+      '<div class="card"><h3>1분봉<span class="hn" id="bhint">불러오는 중…</span></h3>'+
+      '<canvas id="ic" height="260" style="width:100%"></canvas></div>';
+    loadBars(r.t);
+  }
+
+  function loadBars(t){
+    if(BARS.hasOwnProperty(t)){paint(BARS[t]);return;}
+    fetch('data/id/'+encodeURIComponent(t)+'.json',{cache:'no-cache'})
+      .then(function(x){return x.ok?x.json():null;})
+      .then(function(j){BARS[t]=j||false; if(state.sel===t)paint(BARS[t]);})
+      .catch(function(){BARS[t]=false; if(state.sel===t)paint(false);});
+  }
+
+  function paint(b){
+    var h=el('bhint'), cv=el('ic');
+    if(!b||!b.c||!b.c.length){ if(h)h.textContent='분봉을 못 불러왔습니다 — 추정치로 채우지 않습니다.'; return; }
+    if(h)h.textContent=b.d+' · '+b.c.length+'분봉 · '+(b.t0||'')+' 시작';
+    if(!cv)return;
+    var W=cv.clientWidth||900, H=260, dpr=window.devicePixelRatio||1;
+    cv.width=W*dpr; cv.height=H*dpr;
+    var x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+    var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';};
+    var c=b.c, v=b.v||[], n=c.length;
+    var lo=Math.min.apply(null,c), hi=Math.max.apply(null,c);
+    if(!(hi>lo)){hi=lo+1;}
+    var PT=10, PB=54, PL=46, PR=52;
+    var X=function(i){return PL+(W-PL-PR)*(n<2?0:i/(n-1));};
+    var Y=function(p){return PT+(H-PT-PB)*(1-(p-lo)/(hi-lo));};
+    // 거래량 — 아래 38px. 색은 직전 분봉 대비 방향이다.
+    var vm=1; for(var z=0;z<v.length;z++) if(v[z]>vm) vm=v[z];
+    x.globalAlpha=.35;
+    for(var i=0;i<n;i++){
+      var bh=(v[i]||0)/vm*38;
+      x.fillStyle=css(i>0&&c[i]<c[i-1]?'--hot':'--good');
+      x.fillRect(X(i)-1,H-14-bh,2,bh);
+    }
+    x.globalAlpha=1;
+    // VWAP — 그날 봉만으로 누적한다(전일을 섞으면 다른 질문이 된다)
+    var tv=0,pv=0,vw=[];
+    for(var k=0;k<n;k++){tv+=(v[k]||0);pv+=c[k]*(v[k]||0);vw.push(tv>0?pv/tv:c[k]);}
+    x.strokeStyle=css('--watch'); x.setLineDash([4,3]); x.lineWidth=1; x.beginPath();
+    for(var m=0;m<n;m++){ if(m)x.lineTo(X(m),Y(vw[m])); else x.moveTo(X(m),Y(vw[m])); }
+    x.stroke(); x.setLineDash([]);
+    // 종가선
+    x.strokeStyle=css(c[n-1]>=c[0]?'--good':'--hot'); x.lineWidth=1.6; x.beginPath();
+    for(var q=0;q<n;q++){ if(q)x.lineTo(X(q),Y(c[q])); else x.moveTo(X(q),Y(c[q])); }
+    x.stroke();
+    // 축 라벨
+    x.fillStyle=css('--muted'); x.font='11px ui-monospace,monospace';
+    x.fillText(nf(hi,2),4,Y(hi)+4); x.fillText(nf(lo,2),4,Y(lo)+4);
+    x.fillText('VWAP', W-PR+4, Y(vw[n-1])+4);
+    x.fillText('거래량', 4, H-6);
+    cv.setAttribute('aria-label', b.t+' '+b.d+' 1분봉 '+n+'개, 시가 '+nf(c[0],2)+' 종가 '+nf(c[n-1],2));
+  }
+
+  function chips(){
+    var w=el('sorts'); w.innerHTML='';
+    SORTS.forEach(function(sd){
+      var btn=document.createElement('button');
+      btn.className='fchip'; btn.type='button'; btn.title=sd[2];
+      btn.setAttribute('aria-pressed', String(state.sort===sd[0]));
+      btn.textContent=sd[1];
+      btn.onclick=function(){state.sort=sd[0];state.sel=null;chips();drawList();drawDetail();};
+      w.appendChild(btn);
+    });
+  }
+
+  el('list').addEventListener('click',function(e){
+    var b=e.target.closest ? e.target.closest('button.item') : null; if(!b)return;
+    state.sel=b.getAttribute('data-t'); drawList(); drawDetail();});
+  el('q').addEventListener('input',function(e){
+    state.q=(e.target.value||'').trim().toLowerCase(); state.sel=null; drawList(); drawDetail();});
+  window.addEventListener('resize',function(){ if(state.sel&&BARS[state.sel])paint(BARS[state.sel]); });
+
+  fetch('data/intraday.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(j){
+      if(!j||!j.rows){el('sessnote').innerHTML='<b>불러오지 못했습니다</b> — <code>data/intraday.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.';return;}
+      D=j;
+      // 🚨 「지금」이 아니라는 것을 맨 위에 크게 적는다. 갱신이 장 마감 뒤 하루 한 번이라
+      //   장중에 이 화면을 보면 직전 거래일 것이다 — 모르고 보면 오해가 아니라 오독이다.
+      el('sessnote').innerHTML='<b>'+esc(j.as_of)+' 세션</b>입니다 — <b>지금 시세가 아닙니다.</b> '+
+        '갱신 잡이 장 마감 뒤 하루 한 번 돌기 때문에 장중에 보면 직전 거래일 것입니다. '+
+        '종목 '+j.n+'종 · 1분봉 · 거래량 많은 순.';
+      el('limits').innerHTML='· '+(j.limits||[]).map(function(x){
+        return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ');
+      chips(); drawList(); drawDetail();
+    })
+    .catch(function(){el('sessnote').innerHTML='<b>불러오지 못했습니다</b> — 네트워크 오류.';});
+})();
+
+</script>
+</body>
+</html>
