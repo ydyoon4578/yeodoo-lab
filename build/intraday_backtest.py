@@ -32,7 +32,15 @@ VOL_WIN = 20        # 등록서 §2⑤ — 거래량 중앙값 창
 COSTS = [0, 5, 10, 20]   # 등록서 §4 — 왕복 bp
 MIN_POOL = 100      # 후보가 이보다 적은 날은 그 규칙을 쉰다
 
-F = {"r": 0, "r_open": 1, "r_close": 2, "clv": 3, "vs_vwap": 4, "v": 5}
+# ⚠ gap 은 2026-08-18 에 **끝에** 붙였다. 옛 행은 6칸이라 길이로 가른다 —
+#   자리로만 읽으면 6칸 행에서 IndexError 가 나거나(운이 좋으면) 조용히 다른 값을 집는다.
+F = {"r": 0, "r_open": 1, "r_close": 2, "clv": 3, "vs_vwap": 4, "v": 5, "gap": 6}
+
+
+def fv(row, key):
+    """행에서 필드 하나. 그 행에 그 칸이 없으면 None(옛 스키마 대비)."""
+    i = F[key]
+    return row[i] if (row is not None and len(row) > i) else None
 
 
 def med(a):
@@ -68,7 +76,7 @@ def day_ret(row, kind):
         if r is None or ro is None or (1 + ro / 100.0) == 0:
             return None
         return ((1 + r / 100.0) / (1 + ro / 100.0) - 1) * 100.0
-    return r          # 익일형은 그날 시가→종가
+    return r          # 익일형·갭형은 그날 시가→종가
 
 
 def run_rule(H, days, sid, spec):
@@ -78,7 +86,7 @@ def run_rule(H, days, sid, spec):
     for i, d in enumerate(days):
         D = H["days"][d]
         # 신호를 어느 날에서 읽나 — 당일형은 오늘, 익일형은 어제
-        if kind == "same":
+        if kind in ("same", "gap"):
             sig_day, trade_day = d, d
         else:
             if i == 0:
@@ -143,7 +151,52 @@ def build_specs():
             return None
         return sr[F["r_open"]]
 
+    # ── 갭 5종 — 사전등록 PREREG-2026-08-18-GAP5.md §3 ────────────────
+    # 매매는 전부 «그날 시가 진입 · 종가 청산» 이라 수익이 곧 r 이다 → kind="same" 이
+    # 아니라 별도 갈래가 필요하다: 신호도 그날, 수익도 그날 r(10:00→종가가 아니다).
+    def s_gap(t, sr, S, days, i, H):
+        return fv(sr, "gap")
+
+    def s_gapvol(t, sr, S, days, i, H):
+        g = fv(sr, "gap")
+        if g is None:
+            return None
+        vs = [fv(x, "v") for x in S.values() if fv(x, "v")]
+        mv = med(vs)
+        v = fv(sr, "v")
+        return None if (not mv or not v or v <= mv) else g
+
+    def s_absgap(t, sr, S, days, i, H):
+        g = fv(sr, "gap")
+        return None if g is None else abs(g)
+
     return [
+        ("g-up", {"kind": "gap", "score": s_gap, "desc": True,
+                  "name": "갭 상승 상위 %d" % TOPN,
+                  "rule": "전일 종가 대비 시가가 가장 높은 %d종을 그날 시가에 사서 종가에 "
+                          "판다. 동일가중." % TOPN,
+                  "why": "「갭은 이어진다(gap-and-go)」는 실무 통념. 이 랩이 검증한 적 없다."}),
+        ("g-down", {"kind": "gap", "score": s_gap, "desc": False,
+                    "name": "갭 하락 하위 %d" % TOPN,
+                    "rule": "전일 종가 대비 시가가 가장 낮은 %d종을 그날 시가에 사서 종가에 "
+                            "판다." % TOPN,
+                    "why": "①의 반대 끝. 한쪽만 재면 부호를 결과 보고 정하게 된다. "
+                           "「갭 메우기」 통념이 맞다면 이쪽이 낫다."}),
+        ("g-up-vol", {"kind": "gap", "score": s_gapvol, "desc": True,
+                      "name": "갭 상승 상위 %d (거래량 확인)" % TOPN,
+                      "rule": "그날 거래량이 단면 중앙값 위인 종목만 후보로 두고 갭 상위 %d종."
+                              % TOPN,
+                      "why": "「거래량 없는 갭은 못 믿는다」는 통념. ①과의 차이가 곧 그 값어치다."}),
+        ("g-fade", {"kind": "gap", "score": s_absgap, "desc": True,
+                    "name": "갭 절대값 상위 %d" % TOPN,
+                    "rule": "방향을 안 보고 |갭| 이 가장 큰 %d종." % TOPN,
+                    "why": "🚨 앞 배치(INTRADAY6)에서 깨진 예측을 정면으로 잰다 — 개장 30분 "
+                           "강세·약세가 «둘 다» 졌고 「진 것은 방향이 아니라 변동성 자체」라는 "
+                           "가설이 나왔다. 이것도 지면 가설이 서고, 이것만 이기면 깨진다."}),
+        ("g-none", {"kind": "gap", "score": s_absgap, "desc": False,
+                    "name": "갭 절대값 하위 %d" % TOPN,
+                    "rule": "|갭| 이 가장 작은 %d종." % TOPN,
+                    "why": "④의 반대 끝. 「조용한 종목이 낫다」가 이 표본에서 서는지 본다."}),
         ("d-openmom", {"kind": "same", "score": s_open, "desc": True,
                        "name": "개장 30분 강세 상위 %d" % TOPN,
                        "rule": "개장 30분 수익 상위 %d종을 10:00 에 사서 종가에 판다. 동일가중." % TOPN,

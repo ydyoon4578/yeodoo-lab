@@ -165,7 +165,9 @@ def load_hist():
             pass
     return {"note": "일자×종목 장중 요약 누적. 봉은 안 쌓는다(크기) — 요약만 쌓아야 "
                     "야후의 60일 창보다 긴 표본을 언젠가 갖는다.",
-            "fields": ["r", "r_open", "r_close", "clv", "vs_vwap", "v"],
+            # ⚠ 2026-08-18 에 gap 을 끝에 더했다. **끝에 붙인다** — 가운데 넣으면 이미
+            #   쌓인 날의 자리 뜻이 통째로 밀린다(옛 행은 6칸이라 읽는 쪽이 길이로 가른다).
+            "fields": ["r", "r_open", "r_close", "clv", "vs_vwap", "v", "gap"],
             "days": {}}
 
 
@@ -177,6 +179,30 @@ def main() -> int:
     ts, NM = load_universe(lim)
     print("유니버스 %d종" % len(ts))
 
+    # 일봉 종가 지도 — 각 세션의 «전일 종가» 를 찾는 데 쓴다(갭 계산).
+    # ⚠ 새로 받지 않는다. data/sd(랩 일봉)가 정본이고 여기서는 읽기만 한다.
+    DGRID, DCLOSE = [], {}
+    try:
+        _st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+        DGRID = _st["pxd_dates"]
+        for _t in ts:
+            _p = os.path.join(DATA, "sd", "%s.json" % _t)
+            if os.path.exists(_p):
+                DCLOSE[_t] = (json.load(io.open(_p, encoding="utf-8")) or {}).get("pxd") or []
+        print("  [일봉] 격자 %d일 · 종가 %d종" % (len(DGRID), len(DCLOSE)))
+    except Exception as _e:
+        print("  ⚠ 일봉 준비 실패: %s — 갭이 전부 빈다" % str(_e)[:60])
+
+    def prev_close(t, day):
+        """day 직전 거래일의 종가. 없으면 None — 갭 칸만 빈다."""
+        if not DGRID or t not in DCLOSE:
+            return None
+        i = max((k for k, d in enumerate(DGRID) if d < day), default=None)
+        if i is None:
+            return None
+        a = DCLOSE[t]
+        return a[i] if i < len(a) and a[i] else None
+
     H = load_hist()
     # ── ① 5분봉 60일 → 일자별 요약 누적 ────────────────────────────────
     print("  5분봉 60거래일 받는 중(측정·이력용)…")
@@ -187,8 +213,12 @@ def main() -> int:
             f = day_feats(g)
             if not f:
                 continue
+            # 🚨 갭을 이력에 같이 쌓는다. 없으면 «갭 뒤 장중» 을 60일로 못 재는데,
+            #   그건 이 자료로만 답할 수 있는 질문이다(일봉에는 시가가 조정돼 들어온다).
+            _pc = prev_close(t, day)
+            _gap = round((f["o"] / _pc - 1) * 100, 3) if (_pc and f.get("o")) else None
             H["days"].setdefault(day, {})[t] = [f["r"], f["r_open"], f["r_close"],
-                                                f["clv"], f["vs_vwap"], f["v"]]
+                                                f["clv"], f["vs_vwap"], f["v"], _gap]
             day_seen.add(day)
             added += 1
     H["generated"] = __import__("datetime").datetime.now(
