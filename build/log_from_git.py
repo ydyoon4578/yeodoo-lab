@@ -33,6 +33,7 @@ import os
 import re
 import subprocess
 import sys
+import datetime as _dt
 
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
@@ -83,9 +84,20 @@ def main() -> int:
     if not since:
         print("❌ --since <YYYY-MM-DD> 가 필요하다 — 어디부터 채울지 정하지 않으면 이력 전체를 긁는다")
         return 1
+    # 🚨 하루 앞에서부터 긁는다. git 의 --since 는 **UTC 로 해석**되는데 커밋 시각은
+    #   로컬(KST)이라, 새벽~오전 커밋이 «어제 UTC» 로 밀려 통째로 빠진다.
+    #   실측(2026-08-18): 07:58 KST 커밋이 --since 2026-08-18 에 안 잡혔다 —
+    #   그래서 **validate_site 는 «08-18 을 채우라» 는데 이 도구는 «채울 것이 없다»** 고 했다.
+    #   검사와 채우는 도구가 서로 다른 말을 하면 둘 다 못 믿게 된다.
+    # ⚠ 넓게 긁어도 안전하다 — 아래 have 로 중복을 거른다(여러 번 돌려도 안 늘어난다).
+    try:
+        _y, _m, _d = (int(x) for x in since.split("-"))
+        since_q = (_dt.date(_y, _m, _d) - _dt.timedelta(days=1)).isoformat()
+    except Exception:
+        since_q = since
     try:
         out = subprocess.run(
-            ["git", "log", "--since", since, "--pretty=%ad|%s",
+            ["git", "log", "--since", since_q, "--pretty=%ad|%s",
              "--date=format-local:%Y-%m-%d|%H:%M"],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=True).stdout
     except Exception as e:
@@ -112,6 +124,8 @@ def main() -> int:
         #   기계적으로 하나로 줄인다. 문장 뜻은 그대로고(퍼센트가 잘못 보였다는 말), 사람이
         #   제목마다 판단하지 않아도 된다 — 판단을 넣는 순간 이 도구도 기억에 기대게 된다.
         title = title.replace("%%", "%")
+        if dt < since:
+            continue                      # 넓게 긁되 요청 범위 밖은 버린다
         tgt = pick(title)
         key = (dt, tgt, title)
         if key in have:
