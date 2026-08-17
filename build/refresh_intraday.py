@@ -207,6 +207,62 @@ def main() -> int:
     if not last:
         print("🚨 세션 날짜를 못 정했다")
         return 1
+    # ── 🚨 시장 전체의 «하루 모양» ──────────────────────────────────────
+    # 518종 분봉을 갖고도 화면은 한 종목씩만 보여 주고 있었다. 그런데 «오늘 시장이 어떤
+    # 모양이었나»(개장에 몰렸나 · 되밀렸나 · 마감에 랠리했나)는 **분봉이 있어야만 답하는
+    # 질문**이고, 그것을 못 보면 이 자료를 절반만 쓰는 것이다.
+    # 🚨 봉을 브라우저로 보내서 브라우저가 평균 내게 하면 안 된다 — 518파일 3.7MB 다.
+    #   여기서 계산해 **배열 셋**(각 390)만 싣는다. 5KB 다.
+    # ⚠ 시각으로 맞춘다(인덱스 아님). 거래정지·지연상장 종목은 봉 수가 달라서, 자리로
+    #   맞추면 서로 다른 시각이 같은 칸에 겹친다.
+    prof_r, prof_b, prof_v, prof_n, prof_t0 = [], [], [], [], None
+    try:
+        import pandas as _pd
+        _idx = None
+        _ser = {}
+        for t, sub in d1.items():
+            g = dict(sessions_of(sub)).get(last)
+            if g is None or len(g) < MIN_BARS:
+                continue
+            c = g["Close"].dropna()
+            if len(c) < MIN_BARS or not c.iloc[0]:
+                continue
+            _ser[t] = (c / float(c.iloc[0]) - 1.0) * 100.0
+            _idx = c.index if _idx is None else _idx.union(c.index)
+        if _idx is not None and _ser:
+            M = _pd.DataFrame({t: v.reindex(_idx) for t, v in _ser.items()})
+            V = _pd.DataFrame({t: (dict(sessions_of(d1[t])).get(last)["Volume"]
+                                   .reindex(_idx)) for t in _ser})
+            prof_r = [None if x != x else round(float(x), 4) for x in M.mean(axis=1)]
+            prof_b = [None if x != x else round(float(x), 2)
+                      for x in (M.gt(0).sum(axis=1) / M.notna().sum(axis=1) * 100.0)]
+            prof_v = [int(x) if x == x else 0 for x in V.sum(axis=1)]
+            prof_n = [int(x) for x in M.notna().sum(axis=1)]
+            prof_t0 = str(_idx.min())[11:16]
+            print("  [프로파일] 분 %d · 종목 최대 %d · 마지막 평균 %+.3f%% · 상승비율 %.1f%%"
+                  % (len(prof_r), max(prof_n or [0]),
+                     prof_r[-1] if prof_r else 0, prof_b[-1] if prof_b else 0))
+    except Exception as _e:
+        print("  ⚠ 시장 프로파일 계산 실패: %s — 그 칸만 빈다" % str(_e)[:70])
+
+    # 전일 종가 — 랩 일봉 격자에서 «세션 날짜 직전 거래일» 의 종가를 꺼낸다.
+    PREV = {}
+    try:
+        _st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+        _dt_all = _st["pxd_dates"]
+        _pi = max((i for i, d in enumerate(_dt_all) if d < last), default=None)
+        if _pi is not None:
+            for _t in ts:
+                _p = os.path.join(DATA, "sd", "%s.json" % _t)
+                if not os.path.exists(_p):
+                    continue
+                _a = (json.load(io.open(_p, encoding="utf-8")) or {}).get("pxd") or []
+                if _pi < len(_a) and _a[_pi]:
+                    PREV[_t] = round(float(_a[_pi]), 4)
+            print("  [전일종가] %s 기준 %d종" % (_dt_all[_pi], len(PREV)))
+    except Exception as _e:
+        print("  ⚠ 전일 종가 준비 실패: %s — 차트의 갭 선만 빠진다" % str(_e)[:60])
+
     rows, n_id = [], 0
     for t, sub in d1.items():
         ses = dict(sessions_of(sub))
@@ -217,8 +273,13 @@ def main() -> int:
         c = [round(x, 4) for x in g["Close"].tolist()]
         v = [int(x) for x in g["Volume"].fillna(0).tolist()] if "Volume" in g else [0] * len(c)
         io.open(os.path.join(DIR_ID, "%s.json" % t), "w", encoding="utf-8").write(
+            # 🚨 전일 종가(pc)를 같이 싣는다. 없으면 화면이 **갭을 못 그린다** —
+            #   「오늘 어디서 시작했나」는 시가 자체가 아니라 «어제 대비 어디서 열었나» 이고
+            #   그게 그날 성격을 절반 정한다.
+            # ⚠ 새로 받지 않는다. data/sd(랩 일봉)에서 꺼낸다 — 두 벌이 되면 어느 쪽이
+            #   맞는지 다투게 된다.
             json.dumps({"t": t, "d": last, "t0": str(g.index[0])[11:16],
-                        "c": c, "v": v}, separators=(",", ":")) + "\n")
+                        "pc": PREV.get(t), "c": c, "v": v}, separators=(",", ":")) + "\n")
         n_id += 1
         rows.append(dict(f, t=t, nm=NM.get(t) or ""))
     doc = {
@@ -236,6 +297,9 @@ def main() -> int:
             "재는 일은 5분봉(60거래일) 쪽 요약 이력이 맡는다.",
             "⚠ 봉 %d개 미만인 종목은 반쪽 세션으로 보고 싣지 않는다." % MIN_BARS,
         ],
+        # 시장 전체 분당 프로파일 — 동일가중 평균수익 · 상승 종목 비율 · 거래량
+        "profile": {"t0": (prof_t0 if prof_r else None), "n_min": len(prof_r), "ret": prof_r,
+                    "breadth": prof_b, "vol": prof_v, "n_stock": prof_n},
         "n": len(rows),
         "rows": sorted(rows, key=lambda r: -(r["v"] or 0)),
     }
