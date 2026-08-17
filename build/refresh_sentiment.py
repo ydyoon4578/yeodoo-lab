@@ -293,6 +293,49 @@ def main():
     VIX   = yf_close("^VIX")
     VIX3M = yf_close("^VIX3M")
     MOVE  = yf_close("^MOVE")
+    # ── 🚨 소스 장애 대장을 **자동으로** 갱신한다 ──────────────────────────
+    # 왜. 대장(data/source_outages.json)에는 checked·last_obs 칸이 있는데 **사람이 손으로
+    #   적게 돼 있었다.** 2026-08-17 실측: checked 가 08-05 에서 12일째 멈춰 있었다.
+    #   이 저장소가 오늘만 두 번 고친 그 유형이다 — 사람 기억에 기대는 고리는 끊어진다.
+    #   그리고 더 나쁜 쪽이 있다: **야후가 ^MOVE 를 되살려도 아무도 대장을 안 지우면
+    #   가용가중이 영원히 0.90 에 머문다.** 손실이 회복돼도 화면은 계속 손실을 말한다.
+    # 무엇을 하나. 이 잡은 어차피 매 실행 ^MOVE 를 두드린다 — 그 결과를 그대로 적는다.
+    #   · last_obs·checked 를 실측으로 덮는다(오늘 확인했다는 것이 사실이다).
+    #   · 마지막 관측이 최근이면 **항목을 지운다** → 가용가중이 저절로 1.00 으로 돌아온다.
+    # ⚠ 판정은 «개수» 가 아니라 «최신성» 이다. 야후는 이력을 105봉 주면서 끝이 07-17 에
+    #   멈춰 있다 — 오늘 refresh_assets 에서 같은 함정에 빠졌다(그 커밋 참조).
+    def _touch_outage(key, ser, days_ok=7):
+        try:
+            _o = json.load(open(OUTAGES, encoding="utf-8"))
+        except Exception:
+            return
+        ent = (_o.get("outages") or {}).get(key)
+        if not ent:
+            return
+        today = dt.date.today().isoformat()
+        last = str(ser.dropna().index.max().date()) if (ser is not None and len(ser.dropna())) else None
+        gap = None
+        if last:
+            gap = (dt.date.today() - dt.date.fromisoformat(last)).days
+        ent["checked"] = today
+        if last:
+            ent["last_obs"] = last
+        if gap is not None and gap <= days_ok:
+            del _o["outages"][key]
+            print("  ✅ 소스 장애 해소 — %s 가 %s 까지 돌아왔다. 대장에서 지운다"
+                  "(가용가중이 저절로 회복된다)" % (key, last))
+        else:
+            ent["days_missing"] = gap
+            print("  ⚠ 소스 장애 지속 — %s 마지막 관측 %s (%s일째). 대장 checked=%s 로 갱신"
+                  % (key, last or "없음", gap if gap is not None else "?", today))
+        try:
+            _io.open(OUTAGES, "w", encoding="utf-8").write(
+                json.dumps(_o, ensure_ascii=False, indent=1) + chr(10))
+        except Exception as _e:
+            print("  ⚠ 대장 기록 실패: %s" % str(_e)[:60])
+
+    _touch_outage("move", MOVE)
+
     SPY   = yf_close("SPY")
     HYG   = yf_close("HYG")
     IEF   = yf_close("IEF")

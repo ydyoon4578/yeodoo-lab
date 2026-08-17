@@ -2881,10 +2881,28 @@ try:
     if _undoc:
         errors.append("시장 심리 컴포넌트 %s 가 결측인데 대장에 없다 — data/source_outages.json 에 "
                       "사유를 적거나, 일시 장애면 갱신이 막힌 상태 그대로 두어야 한다" % ", ".join(_undoc))
+    # 🚨 종전에는 «checked 가 있기만 하면» 통과했다. 그래서 2026-08-05 에 적힌 날짜가
+    #   08-17 까지 12일째 그대로였는데 게이트는 초록이었다 — 대장이 썩는 것을 막겠다던
+    #   검사가 정작 썩음을 못 봤다. **날짜가 있느냐가 아니라 최근이냐**를 본다.
+    # ⚠ 문턱 10일: refresh_sentiment 가 매 실행 대장을 자동 갱신하므로(그 파일의
+    #   _touch_outage) 정상 상태면 0~1일이다. 10일이면 그 잡이 며칠째 안 돈 것이고,
+    #   그러면 «장애가 아직 있는지» 자체를 아무도 확인하지 않고 있다는 뜻이다.
     _stale = [k for k, v in _oge.items() if (v.get("checked") or "") < "2000-01-01"]
     if _stale:
         errors.append("소스 장애 대장에 checked 날짜가 없는 항목 %s — 대장은 썩는다. 확인한 날을 적을 것"
                       % ", ".join(_stale))
+    try:
+        import datetime as _dtm
+        _cut = (_dtm.date.today() - _dtm.timedelta(days=10)).isoformat()
+        _old = [(k, v.get("checked")) for k, v in _oge.items()
+                if (v.get("checked") or "9999") >= "2000-01-01" and v.get("checked") < _cut]
+        if _old:
+            errors.append("소스 장애 대장이 %d일 넘게 확인되지 않았다: %s — 장애가 아직 있는지 "
+                          "아무도 안 보고 있다는 뜻이다. build/refresh_sentiment.py 가 매 실행 "
+                          "자동 갱신하므로, 이 오류는 그 잡이 며칠째 안 돌았다는 신호다"
+                          % (10, " · ".join("%s(checked %s)" % x for x in _old)))
+    except Exception:
+        pass
 except FileNotFoundError:
     pass
 
