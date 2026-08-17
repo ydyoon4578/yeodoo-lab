@@ -65,7 +65,12 @@ def load_universe(limit=None):
     무슨 회사인지 못 말하기 때문이다 — 목록 화면은 이름이 있어야 쓸모가 있다."""
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
     ts = [s["t"] for s in st["stocks"]]
-    nm = {s["t"]: (s.get("name") or "") for s in st["stocks"]}
+    # 이름·지수·섹터를 여기서 같이 꺼낸다 — 화면이 티커만으로는 무슨 회사인지 못 말하고,
+    # 지수·섹터가 없으면 목록을 좁힐 수가 없다(정렬만 되고 필터가 안 된다).
+    # ⚠ 새로 만들지 않는다. stocks.json 이 정본이고 여기서는 옮기기만 한다.
+    nm = {s["t"]: {"nm": s.get("name") or "",
+                   "idx": s.get("idx") or [],
+                   "sec": s.get("sector") or ""} for s in st["stocks"]}
     return (ts[:limit] if limit else ts), nm
 
 
@@ -281,7 +286,16 @@ def main() -> int:
             json.dumps({"t": t, "d": last, "t0": str(g.index[0])[11:16],
                         "pc": PREV.get(t), "c": c, "v": v}, separators=(",", ":")) + "\n")
         n_id += 1
-        rows.append(dict(f, t=t, nm=NM.get(t) or ""))
+        # 🚨 갭 = 시가 ÷ 전일 종가 − 1. 전일 종가를 이미 싣게 됐으니(pc) 여기서 같이 낸다.
+        #   갭은 «장중 이전에 이미 일어난 일» 이라 장중 지표와 성격이 다르다 — 그래서
+        #   따로 적고, 화면도 축을 따로 둔다.
+        _pc = PREV.get(t)
+        _gap = None
+        if _pc and f.get("o"):
+            _gap = round((f["o"] / _pc - 1) * 100, 3)
+        _m = NM.get(t) or {}
+        rows.append(dict(f, t=t, nm=_m.get("nm") or "", idx=_m.get("idx") or [],
+                         sec=_m.get("sec") or "", pc=_pc, gap=_gap))
     doc = {
         "note": "그 세션의 종목별 장중 요약. 봉은 data/id/<티커>.json 에 따로 있고 "
                 "화면이 종목을 고를 때 받는다.",
