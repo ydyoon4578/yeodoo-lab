@@ -670,7 +670,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function nf(v,d){return (v==null||v!==v)?'—':Number(v).toFixed(d==null?2:d);}
   function sgn(v,d){return (v==null||v!==v)?'—':((v>0?'+':'')+Number(v).toFixed(d==null?2:d));}
 
-  var VC={'관례대로 유효':'ok','관례와 반대로 유의':'inv','소수 사건 의존':'few','구별 불가':'no','표본 부족':'no'};
+  // 🚨 2026-08-17 — |t| 임계 2.0 을 걷으면서 분류 이름이 바뀌었다(build/signal_lab.py).
+  //   «유효/유의» 라는 말을 안 쓴다 — 어느 크기부터 유효인지 정하지 않기로 했으므로
+  //   그 말이 남아 있으면 화면이 없는 선을 있는 것처럼 말한다.
+  var VC={'관례 방향':'ok','관례 반대 방향':'inv','관례 방향 · 꼬리 의존':'few','표본 부족':'no'};
   var D=null, sel={}, open={};
 
   // NAV 스파크라인 — 전략 랩과 같은 그림(viewBox라 폭에 따라 늘어난다)
@@ -751,7 +754,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
   function chips(){
     var c={}; D.signals.forEach(function(r){c[r.verdict]=(c[r.verdict]||0)+1;});
-    var order=['관례대로 유효','관례와 반대로 유의','소수 사건 의존','구별 불가','표본 부족'];
+    var order=['관례 방향','관례 방향 · 꼬리 의존','관례 반대 방향','표본 부족'];
     el('fchips').innerHTML=order.filter(function(k){return c[k];}).map(function(k){
       return '<button class="chip" type="button" data-k="'+esc(k)+'" aria-pressed="false">'+esc(k)+'<span class="cn">'+c[k]+'</span></button>';
     }).join('');
@@ -780,22 +783,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var B=d.baseline||{};
     var tb=el('thbase'); if(tb&&B.ex_top5!=null) tb.textContent='귀무 '+sgn(B.ex_top5,2);
     var c={}; d.signals.forEach(function(r){c[r.verdict]=(c[r.verdict]||0)+1;});
-    var ok=c['관례대로 유효']||0, inv=c['관례와 반대로 유의']||0;
+    var ok=c['관례 방향']||0, inv=c['관례 반대 방향']||0, few=c['관례 방향 · 꼬리 의존']||0;
+    // 🚨 임계 배지를 **잰 값**으로 바꿨다. 선을 지웠으니 «판정 임계» 칸이 남아 있으면
+    //   화면이 없는 선을 말한다. 대신 |t| 최대를 적어 크기의 눈금을 준다.
+    var tmax=0; d.signals.forEach(function(r){var m=r['h'+(d.primary||20)];
+      if(m&&m.t!=null&&Math.abs(m.t)>tmax)tmax=Math.abs(m.t);});
     el('statline').innerHTML=
-      '<span class="stat'+(ok?' ok':' zero')+'"><b>'+ok+'</b>관례대로 유효<em>교과서 방향으로 문턱 통과</em></span>'+
-      '<span class="stat"><b>'+inv+'</b>관례와 반대로 유의<em>뒤집으면 쓸 수 있다는 가설</em></span>'+
-      '<span class="stat"><b>'+(c['구별 불가']||0)+'</b>구별 불가<em>귀무와 못 가른다</em></span>'+
+      '<span class="stat'+(ok?' ok':' zero')+'"><b>'+ok+'</b>관례 방향<em>부호가 교과서와 같고 꼬리를 빼도 남는다</em></span>'+
+      '<span class="stat"><b>'+few+'</b>꼬리 의존<em>상위 5%를 빼면 안 남는다</em></span>'+
+      '<span class="stat"><b>'+inv+'</b>관례 반대 방향<em>뒤집으면 쓸 수 있다는 가설</em></span>'+
       '<span class="stat"><b>'+d.signals.length+'</b>잰 신호<em>전부 싣는다</em></span>'+
-      '<span class="stat"><b>|t|≥'+nf(d.t_crit,2)+'</b>판정 임계<em>본페로니 보정</em></span>';
+      '<span class="stat"><b>|t| ≤ '+nf(tmax,2)+'</b>이 표의 최대<em>임계는 두지 않는다 — 크기는 t·p 칸으로</em></span>';
 
     var worst=d.portfolios&&d.portfolios.length?d.portfolios.reduce(function(a,b){
       return (a.d_sharpe<=b.d_sharpe)?a:b;}):null;
     el('verdictbox').innerHTML='<b>한 줄 결론</b> — 교과서 매수 신호를 그대로 따라 담으면 이 표본에서는 '+
       '벤치마크에 <b>크게 집니다</b>'+(worst?' (「'+esc(worst.name)+'」 연 '+nf(worst.metrics.cagr)+'% vs 벤치마크 '+
       nf(worst.bench.cagr)+'% · Δ샤프 '+sgn(worst.d_sharpe,3)+' · t '+nf(worst.t,2)+')':'')+'. '+
-      '개별 신호 '+d.signals.length+'개 중 관례 방향으로 문턱을 넘은 것은 <b>'+ok+'개</b>이고, '+
-      '반대 방향으로 넘은 것이 <b>'+inv+'개</b>입니다. 다만 반대 방향은 <b>결과를 보고 정한 방향</b>이라 '+
-      '발견이 아니라 가설입니다 — 표를 뒤집어 쓰기 전에 서브기간 열(전반·후반)의 부호가 같은지 먼저 보십시오.';
+      '개별 신호 '+d.signals.length+'개 중 부호가 교과서 방향이고 꼬리를 빼도 남는 것은 <b>'+ok+'개</b>, '+
+      '부호가 반대인 것이 <b>'+inv+'개</b>입니다. 이 표는 <b>어느 크기부터 유효인지 정하지 않습니다</b> '+
+      '— t·p 칸을 직접 보십시오. 반대 방향은 <b>결과를 보고 정한 방향</b>이라 발견이 아니라 가설입니다 '+
+      '— 뒤집어 쓰기 전에 서브기간 열(전반·후반)의 부호가 같은지 먼저 보십시오.';
 
     ports(); chips(); render();
 
