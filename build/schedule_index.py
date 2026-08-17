@@ -61,6 +61,13 @@ NO_ROW = {
     "refresh-tech.yml":      "종목 전략 재계산 — 백테스트 행이 대표",
     "refresh-assets.yml":    "자산배분 전략 재계산 — 백테스트 행이 대표",
     "validate.yml":          "검증 전용(데이터 산출 없음)",
+    # 🚨 장중 분봉은 «표에 실을 값어치가 없어서» 가 아니라 **sources.html 이 잠금 페이지라
+    #   행을 못 넣어서** 여기 있다. 행 하나를 더하려면 평문(_build/pages/sources_content.html)을
+    #   고치고 다시 잠가야 하는데 그건 사용자만 할 수 있다(kb_lock.py 가 암호를 묻는다).
+    #   → 다음에 그 페이지를 열 때 src-intra 행을 만들고 이 줄을 ROWS 로 옮길 것.
+    #   ⚠ 그때까지 이 잡의 기준일은 sources 표에 안 나온다. 대신 intraday.html 맨 위가
+    #     세션 날짜를 크게 찍으므로 «언제 것인지 모르는 채로 보는» 일은 없다.
+    "refresh-intraday.yml":  "장중 분봉 — sources 표가 잠금 페이지라 행을 못 넣었다(사유는 코드 주석)",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
     # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.
