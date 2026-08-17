@@ -381,6 +381,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .tbl tr:last-child td{border-bottom:0}
   .fswrap{overflow-x:auto}
   .lim{font-size:12px;line-height:1.75;color:var(--muted)}
+  /* 차트 커서 — 캔버스를 다시 그리지 않고 위에 겹친다(390봉 재렌더는 낭비다) */
+  .xtip{position:absolute;display:none;pointer-events:none;z-index:5;white-space:nowrap;
+    font-family:var(--mono);font-size:11.5px;padding:3px 7px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink)}
+  .xline{position:absolute;display:none;pointer-events:none;z-index:4;width:1px;
+    background:var(--muted);opacity:.5}
 </style>
 <body data-tool="intraday.html">
 <!-- NAVCSS:BEGIN -->
@@ -654,6 +660,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <div class="chiprow" style="margin:10px 0 6px">
     <span class="fchip lbl">정렬</span><span id="sorts" style="display:contents"></span>
   </div>
+  <div class="chiprow" style="margin:0 0 6px">
+    <span class="fchip lbl">좁히기</span><span id="filts" style="display:contents"></span>
+  </div>
 
   <div class="cols">
     <aside class="side">
@@ -681,9 +690,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(v>=1e9)return (v/1e9).toFixed(2)+'B'; if(v>=1e6)return (v/1e6).toFixed(1)+'M';
     if(v>=1e3)return (v/1e3).toFixed(0)+'K'; return String(v);};
 
-  var D=null, BARS={}, state={sel:null,sort:'v',q:''};
+  var D=null, BARS={}, state={sel:null,sort:'v',q:'',idx:'',sec:''};
   // 정렬 축 — 전부 그 세션 안에서 잰 값이다. 「좋다/나쁘다」를 매기지 않는다.
+  // 🚨 갭은 «장중 이전에 이미 일어난 일» 이라 나머지 축과 성격이 다르다 — 따로 둔다.
+  //   그리고 «갭 뒤 장중» 을 같이 두는 것이 요점이다: 갭이 이어지나 되메워지나는
+  //   갭 자체가 아니라 그 뒤 움직임이 답한다(두 축을 나란히 봐야 읽힌다).
   var SORTS=[['v','거래량','그 세션 총 거래량'],
+             ['gap','갭','전일 종가 대비 시가 — 장이 열리기 전에 이미 난 차이'],
              ['r','시가→종가','세션 수익률'],
              ['r_open','오전 30분','장 시작 30분 수익률'],
              ['r_close','마감 30분','마감 30분 수익률'],
@@ -694,6 +707,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function rows(){
     var a=(D&&D.rows||[]).filter(function(r){
+      // 지수·섹터로 좁힌다. 종전에는 정렬만 되고 좁히기가 없어서, 「나스닥 100 중에」
+      // 같은 아주 흔한 질문에 답할 수가 없었다.
+      if(state.idx && (r.idx||[]).indexOf(state.idx)<0)return false;
+      if(state.sec && (r.sec||'')!==state.sec)return false;
       if(!state.q)return true;
       return (r.t+' '+(r.nm||'')).toLowerCase().indexOf(state.q)>=0;});
     var k=state.sort;
@@ -891,6 +908,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       x.fillStyle=css('--muted'); x.fillText(lab, gx-14, H-PB+18);
     }
     cv.setAttribute('aria-label', b.t+' '+b.d+' 1분봉 '+n+'개, 시가 '+nf(c[0],2)+' 종가 '+nf(c[n-1],2));
+    // 🚨 커서 — 분봉 차트에서 «저 튀어오른 자리가 몇 시 얼마였나» 를 못 읽으면 그림일 뿐이다.
+    //   캔버스를 다시 그리지 않고 위에 겹친 div 로 표시한다(390봉 재렌더는 낭비다).
+    wireCursor(cv, function(i){
+      var mm=m0+i, hh=String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0');
+      var chg=b.pc?((c[i]/b.pc-1)*100):((c[i]/c[0]-1)*100);
+      return hh+' · '+nf(c[i],2)+' ('+sgn(chg,2)+'%'+(b.pc?' 전일대비':' 시가대비')+') · 거래량 '+vfmt(v[i]);
+    }, n, PL, W-PR);
   }
 
   // ── 시장 전체의 하루 모양 ────────────────────────────────────────────
@@ -964,6 +988,65 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     x.fillText(sgn(hi,2)+'%',4,Y(hi)+4); x.fillText(sgn(lo,2)+'%',4,Y(lo)+4);
     x.fillText('50%',W-PR+4,YB(50)+4);
     cv.setAttribute('aria-label','시장 전체 분당 평균수익 곡선, 마지막 '+nf(r[n-1],2)+'%');
+    wireCursor(cv, function(i){
+      var mm=m0+i, hh=String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0');
+      return hh+' · 평균 '+sgn(r[i],3)+'% · 오른 종목 '+nf((P.breadth||[])[i],1)+'% · 종목 '+((P.n_stock||[])[i]||0);
+    }, n, PL, W-PR);
+  }
+
+  function filts(){
+    var w=el('filts'); if(!w)return; w.innerHTML='';
+    var all=(D&&D.rows)||[];
+    var mk=function(lab,on,fn,tip){
+      var b=document.createElement('button'); b.className='fchip'; b.type='button';
+      b.setAttribute('aria-pressed',String(!!on)); b.textContent=lab;
+      if(tip)b.title=tip; b.onclick=fn; w.appendChild(b);};
+    mk('전체', !state.idx&&!state.sec, function(){state.idx='';state.sec='';state.sel=null;
+       filts();drawList();drawDetail();}, '좁히지 않는다');
+    [['SPX','S&P 500'],['NDX','NASDAQ 100']].forEach(function(x){
+      var n=all.filter(function(r){return (r.idx||[]).indexOf(x[0])>=0;}).length;
+      if(!n)return;
+      mk(x[1]+' '+n, state.idx===x[0], function(){
+        state.idx=(state.idx===x[0]?'':x[0]); state.sel=null; filts();drawList();drawDetail();});
+    });
+    // 섹터 — 종목이 있는 것만, 많은 순
+    var c={}; all.forEach(function(r){ if(r.sec)c[r.sec]=(c[r.sec]||0)+1; });
+    Object.keys(c).sort(function(a,b){return c[b]-c[a];}).forEach(function(k){
+      mk(secKo(k)+' '+c[k], state.sec===k, function(){
+        state.sec=(state.sec===k?'':k); state.sel=null; filts();drawList();drawDetail();}, k);
+    });
+  }
+  // 섹터 한글 — 랩의 다른 화면과 같은 말을 쓴다(같은 것을 다르게 부르면 안 된다).
+  var SECKO={'Information Technology':'IT','Health Care':'헬스케어','Financials':'금융',
+    'Consumer Discretionary':'경기소비','Communication Services':'커뮤니케이션',
+    'Industrials':'산업재','Consumer Staples':'필수소비','Energy':'에너지',
+    'Utilities':'유틸리티','Real Estate':'부동산','Materials':'소재'};
+  function secKo(x){return SECKO[x]||x;}
+
+  // 커서 한 벌 — 두 차트가 같은 것을 쓴다(두 벌 두면 한쪽만 고쳐진다).
+  function wireCursor(cv, fmt, n, xl, xr){
+    var wrap=cv.parentNode;
+    if(getComputedStyle(wrap).position==='static')wrap.style.position='relative';
+    var tip=wrap.querySelector('.xtip');
+    if(!tip){ tip=document.createElement('div'); tip.className='xtip'; wrap.appendChild(tip); }
+    var line=wrap.querySelector('.xline');
+    if(!line){ line=document.createElement('i'); line.className='xline'; wrap.appendChild(line); }
+    cv.onmousemove=function(e){
+      var b=cv.getBoundingClientRect();
+      var px=e.clientX-b.left;
+      if(px<xl||px>xr){tip.style.display='none';line.style.display='none';return;}
+      var i=Math.round((px-xl)/Math.max(1,(xr-xl))*(n-1));
+      i=Math.max(0,Math.min(n-1,i));
+      tip.textContent=fmt(i);
+      tip.style.display='block'; line.style.display='block';
+      var wb=wrap.getBoundingClientRect();
+      var lx=b.left-wb.left+xl+(xr-xl)*(n<2?0:i/(n-1));
+      line.style.left=lx+'px'; line.style.top=(b.top-wb.top)+'px'; line.style.height=b.height+'px';
+      var tw=tip.offsetWidth||180;
+      tip.style.left=Math.min(Math.max(lx-tw/2,0), wb.width-tw)+'px';
+      tip.style.top=(b.top-wb.top+4)+'px';
+    };
+    cv.onmouseleave=function(){tip.style.display='none';line.style.display='none';};
   }
 
   function chips(){
@@ -1027,7 +1110,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '종목 '+j.n+'종 · 1분봉 · 거래량 많은 순.';
       el('limits').innerHTML='· '+(j.limits||[]).map(function(x){
         return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ');
-      chips(); drawMkt(); drawList(); drawDetail();
+      chips(); filts(); drawMkt(); drawList(); drawDetail();
     })
     .catch(function(){el('sessnote').innerHTML='<b>불러오지 못했습니다</b> — 네트워크 오류.';});
 })();
