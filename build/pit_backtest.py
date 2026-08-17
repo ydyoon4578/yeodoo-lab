@@ -524,7 +524,7 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
                  "먼저 받을 것. 없이 돌리면 생존자 전용 결과에 PIT 라벨이 붙는다." % CACHE)
     cache = json.load(io.open(CACHE, encoding="utf-8"))
     reassigned = load_reuse()
-    bad_reuse, cut = [], []
+    bad_reuse, cut, bad_scale = [], [], []
     for t, ser in cache.items():
         if t not in need or t in px or not ser:
             continue
@@ -542,6 +542,22 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
             cut.append((t, n0 - len(ser), cm, t in reassigned))
             if not ser:
                 continue
+        # ③ 🚨 **크기 검사** — ①②를 다 통과하고도 값 자체가 다른 상장물인 계열이 있다.
+        #   실측(2026-08-17): PARA 는 멤버 기간(2022-02~2025-07) 안에서 57.80 ~ 113,900 으로
+        #   **1,971배** 움직인다. ①은 기간이 겹쳐서 통과하고, ②는 꼬리가 아니라 전 구간이라
+        #   못 자른다. 그 상태로 2024년 12개월 수익률이 **−98.4%** 로 계산됐다(실제
+        #   파라마운트는 −40% 안팎). 되돌림·손실주 계열 규칙이 이것을 «싼 종목» 으로 집으면
+        #   그 달의 PIT 수익이 통째로 거짓이 된다 — 생존편향을 재려고 만든 레그가 다른
+        #   오염으로 흔들리는 것이라 조용히 두면 안 된다.
+        # ⚠ 문턱 100배는 «주식이 그럴 수 있는 범위» 가 아니라 «자료 사고를 가르는 선» 이다.
+        #   10년에 100배는 NVDA 급이고 그마저 이 캐시엔 없다(편출 종목이므로). 실측으로
+        #   100배를 넘는 계열은 PARA 하나뿐이다 — 문턱이 실제로 무엇을 자르는지 세어 봤다.
+        _mv = [v for d, v in ser.items()
+               if v and v > 0 and MEMBER_SPAN.get(t, ("9999", "0000"))[0] <= d[:7]
+               <= MEMBER_SPAN.get(t, ("9999", "0000"))[1]]
+        if len(_mv) >= 30 and max(_mv) / min(_mv) > 100.0:
+            bad_scale.append((t, min(_mv), max(_mv), max(_mv) / min(_mv)))
+            continue
         px[t] = ser
     n_cache = len(px) - n_lab
 
@@ -600,6 +616,11 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
     if bad_reuse:
         print("  ⚠ 티커 재사용 의심 %d종 제외(계열 기간이 멤버 기간과 안 겹침): %s"
               % (len(bad_reuse), ", ".join(sorted(bad_reuse))))
+    if bad_scale:
+        # 조용히 버리지 않는다 — 몇 배였는지까지 찍어야 «문턱이 무엇을 잘랐나» 를 볼 수 있다.
+        print("  🚨 크기 검사 탈락 %d종(멤버 기간 안 최고/최저 100배 초과 — 다른 상장물로 본다): %s"
+              % (len(bad_scale),
+                 ", ".join("%s %.2f~%.0f(×%.0f)" % x for x in sorted(bad_scale))))
     if cut:
         _re = [c for c in cut if c[3]]
         print("  ✂ 편출 계열 꼬리 절단 %d종(멤버 종료 뒤 구간 %d거래일) · 그중 SEC 대조로 "
@@ -611,6 +632,10 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
     return px, {"n_cut": len(cut), "n_reassigned": sum(1 for c in cut if c[3]),
                 "reassigned": sorted(c[0] for c in cut if c[3]),
                 "n_dropped": len(bad_reuse), "dropped": sorted(bad_reuse),
+                # 크기 검사 탈락 — 산출물에 남겨야 다음 감사가 «왜 이 종목이 없나» 를 안다.
+                "n_bad_scale": len(bad_scale),
+                "bad_scale": [{"t": x[0], "lo": round(x[1], 2), "hi": round(x[2]), "x": round(x[3])}
+                              for x in sorted(bad_scale)],
                 # 🚨 이은 구간은 반드시 **명시**한다. 조용히 좋아지면 다음 감사가 이 수치를
                 #   원자료로 오인한다 — 여기 실린 종목의 가격은 그 티커의 계열이 아니라
                 #   같은 CIK 의 승계 티커에서 온 것이다.
@@ -1455,7 +1480,17 @@ def main():
             "쪽으로 좁혀져 있고, 그 방향은 초과수익을 **키우는** 쪽이다. 수치를 인용하기 전에 "
             "편출 가격 캐시를 다시 받을 것(--fetch-cache)."
             % (100 * COV_MIN_REQ, " · ".join(_cov_warn)),
-        ] if _cov_warn else []) + [
+        ] if _cov_warn else []) + ([
+            # 🚨 버린 계열을 화면이 말하게 한다. 잰 것을 산출물에만 넣고 화면에 안 이으면
+            #   이 저장소의 되풀이 결함 1번(수집만 하고 안 배선)이 그대로 된다.
+            "🚨 편출 가격 캐시에서 %d종을 **다른 상장물로 보고 버렸다** — %s. 멤버 기간 안에서 "
+            "최고/최저가 100배를 넘는 계열이라 그 티커의 주가일 수 없다. 실측 사례: PARA 는 "
+            "2021~2023 내내 10만 달러 근처에 있다가 1달러대로 끝나는데, 그대로 두면 2024년 "
+            "12개월 수익률이 −98%% 로 계산돼 되돌림 계열 규칙이 «싼 종목» 으로 집는다. "
+            "⚠ 버린 만큼 그 달의 후보가 줄어든다 — 커버리지 수치에 이미 반영돼 있다."
+            % (reuse_rep["n_bad_scale"], " · ".join("%s(×%d)" % (x["t"], x["x"])
+                                              for x in reuse_rep["bad_scale"])),
+        ] if reuse_rep.get("n_bad_scale") else []) + [
             "구간이 %s부터다. 🚨 이건 **자료의 한계가 아니라 품질 문턱**이다 — 세 커버리지"
             "(보유율·252일 룩백 채점가능·재무)가 모두 90%% 이상이고 그 뒤로 다시 안 내려가는 "
             "첫 달로 정했고, 문턱은 결과를 보기 전에 확정했다. 커버리지에 무릎이 없어"

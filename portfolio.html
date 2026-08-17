@@ -70,6 +70,17 @@
   h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,3.8vw,34px);line-height:1.14;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
   .lede{margin:14px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)}
   .lede b{color:var(--ink)}
+  /* 접은 설명 — 이 랩의 고지는 접어도 되지만 없애면 안 된다(생존편향·무비용·검증 안 함).
+     그래서 지우지 않고 <details> 로 내렸다. 기본은 닫힘이다. */
+  .fold{border:1px solid var(--line);border-radius:2px;background:var(--panel);margin:14px 0}
+  .fold>summary{cursor:pointer;padding:11px 14px;font-family:var(--mono);font-size:12px;
+    font-weight:700;color:var(--ink-2);letter-spacing:.02em;list-style:none}
+  .fold>summary::-webkit-details-marker{display:none}
+  .fold>summary::before{content:"▸ ";color:var(--muted)}
+  .fold[open]>summary::before{content:"▾ "}
+  .fold>summary:hover{color:var(--accent)}
+  .foldin{padding:0 14px 14px;border-top:1px solid var(--line-soft)}
+  .foldin h2{display:none}   /* 안쪽 제목은 summary 가 대신한다 */
   .asofrow{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
   .asofrow span{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line);
                 border-radius:2px;padding:3px 8px;background:var(--panel)}
@@ -481,6 +492,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="stocks.html" data-nav="stocks.html" title="518종목 테크니컬 22지표·컴포짓·타이밍"><span class="mmn">종목 신호</span></a>
           <a class="mmi" href="co.html" data-nav="co.html" title="실적·전망 · 재무제표 · IR자료실 · 내부자 거래 · 페어를 한 화면에서 (페이지 안 탭)"><span class="mmn">종목 정보</span></a>
           <a class="mmi" href="signals.html" data-nav="signals.html" title="테크니컬 신호 32개 성적 + 오늘 발동 종목"><span class="mmn">지표별 타이밍</span></a>
+          <a class="mmi" href="intraday.html" data-nav="intraday.html" title="직전 거래일 1분봉과 거래량 — 지금 시세가 아니다(마감 뒤 하루 한 번 갱신)"><span class="mmn">장중 분봉</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">
@@ -599,26 +611,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAV:END -->
 
 <div class="wrap" id="main">
+  <!-- 🚨 2026-08-17 개편(사용자 요청: "글만 너무 많고 복잡 · 깔끔하게").
+       종전 구조의 병 셋을 고친다.
+        ① 보유가 0인데 화면의 90%가 자기 설명이었다(7,211자 중 계산식 전문만 2,334자).
+           → 설명은 전부 접고, 보유가 없으면 **입력 한 칸**이 첫 화면이 된다.
+        ② 입력이 여섯 번째 구획이었다. 이 화면에서 사용자가 할 일은 입력 하나인데,
+           그 앞에 남의 전략 비중(⓪)과 저장 안내(①)가 서 있었다.
+        ③ **벤치마크가 없었다.** 「내 포트가 어땠나」를 말하면서 무엇 대비인지가 화면
+           어디에도 없었다(SPY·^GSPC 언급 1회). 이제 S&P 500·나스닥 100 이 축이다.
+       ⚠ 걷은 문장은 지운 것이 아니라 «자세히»로 접었다. 이 랩의 고지는 접어도 되지만
+         없애면 안 되는 것들이다(생존편향·무비용·검증 안 함). -->
   <header class="mast">
-    <div class="eyebrow">Portfolio · 보유 관리</div>
-    <h1 class="title">보유 종목을 붙여 보되<br>없는 확신은 붙이지 않는다</h1>
-    <p class="lede">보유 종목을 <b>이 브라우저에만</b> 저장하고, 랩이 커버하는 종목의 신호·재무를 옆에 붙여 보는 화면입니다.
-      아래쪽 <a href="#analysis" style="color:var(--accent)">포트폴리오 분석</a>은 요청할 때만 종목별 종가 시계열을 내려받아
-      상관·변동성·최대낙폭을 <b>브라우저 안에서</b> 계산합니다. 전부 <b>지난 창의 실측</b>이며,
-      이 랩은 이 값들이 앞으로도 유지되는지 검증한 적이 없습니다.</p>
+    <div class="eyebrow">Portfolio · 내 포트폴리오</div>
+    <h1 class="title">내 것이<br>지수를 이겼나</h1>
+    <p class="lede">보유 종목을 <b>이 브라우저에만</b> 저장하고,
+      <b>S&amp;P 500</b>·<b>나스닥 100</b>과 나란히 놓고 봅니다.
+      계산은 전부 브라우저 안에서 합니다 — 받을 서버가 없습니다.</p>
     <div class="asofrow" id="asofrow"><span>불러오는 중…</span></div>
-    <nav class="toc" aria-label="이 페이지 목차">
-      <a href="#target"><b>⓪ 배포 중인 목표 구성</b><em>랩이 '배포'로 판정한 것 하나 — 오늘 무엇을 들어야 하나</em></a>
-      <a href="#store"><b>① 어디에 저장되나</b><em>브라우저 localStorage 하나 — 받을 서버가 없다</em></a>
-      <a href="#input"><b>② 보유 입력·비중</b><em>추가·편집·삭제 · 내보내기/가져오기</em></a>
-      <a href="#dash"><b>③ 대시보드</b><em>신호(컴포짓·플래그·타이밍) + 재무 + 등급</em></a>
-      <a href="#mix"><b>④ 구성 집계</b><em>섹터·타이밍·지수 비중 · 분모 표기</em></a>
-      <a href="#analysis"><b>⑤ 포트폴리오 분석</b><em>상관·변동성·MDD — 선택 로드</em></a>
-      <a href="#formula"><b>⑥ 계산식 전문</b><em>수익률 정의·연율화·MDD 정의</em></a>
-    </nav>
   </header>
 
-  <!-- ──────────────── ⓪ 배포 중인 목표 구성 ────────────────────────
+  <!-- ──────────────── 배포 중인 목표 구성 ────────────────────────
        왜 이 구획이 생겼나(2026-08-12). 이 랩은 규칙을 134개 재고 원장에 '배포' 3종을
        적어 두는데, **그 보유가 화면 어디에서도 조립되지 않았다.** portfolio.html 은
        '내가 이미 든 것'을 입력받는 화면이고, explorer 는 전략을 한 줄씩 보여줄 뿐이라
@@ -626,47 +638,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        🚨 여기에 올리는 것은 **등급 '배포'** 뿐이다. '통과 후보'(현재 37종)는 게이트 셋이
           꺼진 상태의 단독 t 하나만 넘은 것이고 PIT 로 다시 재면 3.0 을 넘는 규칙이 0종이다 —
           연구 목록을 이 화면에 섞으면 이 구획이 생긴 이유가 그대로 사라진다. -->
-  <section id="target" aria-labelledby="target-h">
-    <h2 class="lbl" id="target-h">⓪ 배포 중인 목표 구성 <span class="sub" id="tg-sub">· 불러오는 중…</span></h2>
-    <p class="note" id="tg-lede">이 랩이 <b>배포</b>로 판정한 전략의 최신 리밸런스 구성입니다.
-      슬리브를 최종 티커까지 풀어 한 줄에 하나씩 적고, 아래 ②에 입력한 보유가 있으면 차이를 같이 냅니다.
-      <b>매수 권유가 아닙니다</b> — 이 랩이 검증한 것은 규칙이지 당신의 계좌가 아니고,
-      아래 수치는 전부 무비용·소급 표본에서 나온 지난 창의 실측입니다.</p>
-    <div id="tgwarn"></div>
-    <div id="tgbox"><div class="note">불러오는 중…</div></div>
-  </section>
-
-  <!-- ───────────────────────── ① 저장 위치 ───────────────────────── -->
-  <section id="store" aria-labelledby="store-h">
-    <h2 class="lbl" id="store-h">① 이 데이터는 어디에 저장되나 <span class="sub">· 먼저 읽을 것</span></h2>
-    <div class="warn">
-      <h3>브라우저에만 저장됩니다 — 전송할 서버가 아예 없습니다</h3>
-      <p>이 사이트는 정적 파일만 올려둔 GitHub Pages입니다. <b>보유 내역을 받을 백엔드가 존재하지 않습니다.</b>
-        입력한 티커·수량·비중은 이 브라우저의 <code>localStorage</code> 키
-        <code id="lskey">—</code> 한 곳에만 저장되고, 네트워크로 나가는 요청은
-        <code>data/asof.json</code>(내비 기준일 칩)·<code>data/stocks.json</code>·<code>data/screens.json</code>·<code>data/sd/&lt;티커&gt;.json</code>을
-        <b>내려받는</b> 것뿐입니다.</p>
-      <p><b>다만 요청 URL은 그대로 서버 로그에 남습니다 — 정확히 적습니다.</b>
-        요청 본문에는 아무것도 실리지 않지만, ⑤에서 시계열을 불러오면 보유 티커마다
-        <code>data/sd/&lt;티커&gt;.json</code>을 한 번씩 받으므로 <b>보유 티커 목록이 요청 URL로</b>
-        호스팅(GitHub Pages)·CDN 접근 로그에 남습니다. <b>수량·비중·보유 순서는 나가지 않습니다</b> —
-        어느 티커를 조회했는지까지입니다. 시계열을 불러오지 않으면 이 요청 자체가 발생하지 않습니다.</p>
-      <p><b>그래서 다음 한계가 그대로 따라옵니다.</b> 편리함이 아니라 제약입니다.</p>
-      <ul>
-        <li><b>다른 기기·다른 브라우저에서는 보이지 않습니다.</b> 동기화 수단이 없습니다.</li>
-        <li><b>브라우저 캐시·사이트 데이터를 지우면 같이 사라집니다.</b> 휴지통도 복구도 없습니다.</li>
-        <li><b>시크릿/프라이빗 창에서는 창을 닫는 순간 사라집니다.</b></li>
-        <li>브라우저가 저장 용량을 회수할 때 <b>예고 없이 삭제될 수 있습니다</b>(iOS Safari는 7일 미사용 시 지우는 정책을 씁니다).</li>
-        <li>같은 기기를 쓰는 다른 사람이 이 페이지를 열면 <b>그대로 보입니다.</b> 암호가 걸려 있지 않습니다.</li>
-      </ul>
-      <p>백업은 <b>직접</b> 하셔야 합니다 — 아래 ②의 <b>내보내기</b>로 JSON 텍스트를 복사해 두시고,
-        복원은 <b>가져오기</b>에 붙여 넣으면 됩니다.</p>
-    </div>
-  </section>
-
-  <!-- ───────────────────────── ② 보유 입력 ───────────────────────── -->
+  <!-- ───────────────────────── 보유 ───────────────────────── -->
   <section id="input" aria-labelledby="input-h">
-    <h2 class="lbl" id="input-h">② 보유 입력 <span class="sub">· 티커 + 수량 또는 비중</span></h2>
+    <h2 class="lbl" id="input-h">보유 <span class="sub">· 티커 + 수량 또는 비중</span></h2>
     <p class="lblnote">랩이 커버하는 종목만 넣을 수 있습니다(커버 유니버스는 위 기준일 칩에 적힌 종목 수).
       <b>그 밖의 종목 — 해외주식·ETF·채권·현금·비상장 — 은 이 페이지가 다루지 못합니다.</b>
       따라서 아래 모든 비중·집계·상관은 "커버되는 종목들만 놓고 본" 값이며, 실제 계좌 전체의 값이 아닙니다.</p>
@@ -715,9 +689,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="note" id="holdnote" hidden></div>
   </section>
 
-  <!-- ───────────────────────── ③ 대시보드 ───────────────────────── -->
+  <!-- ── 성과 vs 벤치마크 ────────────────────────────────────────────────
+       🚨 이 화면에 없던 것이다. 「내 포트가 어땠나」를 말하면서 **무엇 대비인지**가
+          화면 어디에도 없었다. 이 랩은 2026-08-13 에 벤치마크를 지수 PR 로 통일했고,
+          여기서도 S&P 500(PR)·NASDAQ 100(PR) 둘을 쓴다.
+       ⚠ 배당 격차를 화면이 먼저 적는다. 보유 종가는 배당조정인데 지수는 PR 이라,
+         견주는 것만으로 연 2.00%p 를 공짜로 얻는다(이 랩 실측). 그 말을 안 적으면
+         「내가 지수를 이겼다」가 배당을 이긴 것이 된다.
+       ⚠ 계열은 data/bench_px.json(159KB)에서 받는다 — assets.json 은 5MB 다. -->
+  <section id="perf" aria-labelledby="perf-h">
+    <h2 class="lbl" id="perf-h">성과 <span class="sub">· S&amp;P 500 · 나스닥 100 대비</span></h2>
+    <div id="perfbox"><div class="note">보유를 입력하면 여기에 나옵니다.</div></div>
+  </section>
+
+
+  <!-- ───────────────────────── 대시보드 ───────────────────────── -->
   <section id="dash" aria-labelledby="dash-h">
-    <h2 class="lbl" id="dash-h">③ 대시보드 <span class="sub">· 보유 종목에 랩의 신호·재무를 붙인다</span></h2>
+    <h2 class="lbl" id="dash-h">대시보드 <span class="sub">· 보유 종목에 랩의 신호·재무를 붙인다</span></h2>
     <p class="lblnote">아래 값은 전부 <b>기준일 하루의 단면</b>입니다. 플래그는 조건식의 결과이고, 컴포짓은 커버 종목 안에서의
       횡단면 백분위 평균이며, 타이밍은 200일선 위치와 최근 트리거로 나눈 구간입니다.
       <b>어느 것도 수익 예측이 아니고, 어느 것도 매수·매도 권유가 아닙니다.</b></p>
@@ -742,9 +730,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div id="gradebox"><div class="skel">⑤의 &lsquo;시계열 불러오기&rsquo;를 누르면 여기에 등급이 채워집니다.</div></div>
   </section>
 
-  <!-- ───────────────────────── ④ 구성 집계 ───────────────────────── -->
+  <!-- ───────────────────────── 구성 ───────────────────────── -->
   <section id="mix" aria-labelledby="mix-h">
-    <h2 class="lbl" id="mix-h">④ 구성 집계 <span class="sub">· 분모를 항상 적는다</span></h2>
+    <h2 class="lbl" id="mix-h">구성 <span class="sub">· 분모를 항상 적는다</span></h2>
     <p class="lblnote">비중 기준 집계입니다. 값이 결측인 종목은 분모에서 빼고, 그 사실을 각 블록에 적습니다.
       <b>어떤 구성이 좋은 구성인지 이 화면은 말하지 않습니다.</b> 집중되어 있다/분산되어 있다는 사실만 셉니다.
       아래 막대는 전부 <b>0~100% 고정 눈금</b>입니다 — 최대 항목에 맞춰 늘리지 않습니다(⑤의 상관 막대와 같은 규칙).</p>
@@ -753,7 +741,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <!-- ───────────────────────── ⑤ 분석 ───────────────────────── -->
   <section id="analysis" aria-labelledby="an-h">
-    <h2 class="lbl" id="an-h">⑤ 포트폴리오 분석 <span class="sub">· 상관 · 변동성 · 최대낙폭</span></h2>
+    <h2 class="lbl" id="an-h">위험 <span class="sub">· 상관 · 변동성 · 최대낙폭</span></h2>
 
     <div class="warn">
       <h3>창은 <span id="wyr">—</span>년입니다 — 그 이전 데이터가 이 사이트에 없습니다</h3>
@@ -778,8 +766,51 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div id="anbox"></div>
   </section>
 
+  <section id="target" aria-labelledby="target-h">
+    <h2 class="lbl" id="target-h">배포 중인 목표 구성 <span class="sub" id="tg-sub">· 불러오는 중…</span></h2>
+    <p class="note" id="tg-lede">이 랩이 <b>배포</b>로 판정한 전략의 최신 리밸런스 구성입니다.
+      슬리브를 최종 티커까지 풀어 한 줄에 하나씩 적고, 아래 ②에 입력한 보유가 있으면 차이를 같이 냅니다.
+      <b>매수 권유가 아닙니다</b> — 이 랩이 검증한 것은 규칙이지 당신의 계좌가 아니고,
+      아래 수치는 전부 무비용·소급 표본에서 나온 지난 창의 실측입니다.</p>
+    <div id="tgwarn"></div>
+    <div id="tgbox"><div class="note">불러오는 중…</div></div>
+  </section>
+
+  <details class="fold" id="store">
+    <summary>① 이 데이터는 어디에 저장되나</summary>
+    <div class="foldin">
+  <!-- ───────────────────────── ① 저장 위치 ───────────────────────── -->
+    <h2 class="lbl" id="store-h">① 이 데이터는 어디에 저장되나 <span class="sub">· 먼저 읽을 것</span></h2>
+    <div class="warn">
+      <h3>브라우저에만 저장됩니다 — 전송할 서버가 아예 없습니다</h3>
+      <p>이 사이트는 정적 파일만 올려둔 GitHub Pages입니다. <b>보유 내역을 받을 백엔드가 존재하지 않습니다.</b>
+        입력한 티커·수량·비중은 이 브라우저의 <code>localStorage</code> 키
+        <code id="lskey">—</code> 한 곳에만 저장되고, 네트워크로 나가는 요청은
+        <code>data/asof.json</code>(내비 기준일 칩)·<code>data/stocks.json</code>·<code>data/screens.json</code>·<code>data/sd/&lt;티커&gt;.json</code>을
+        <b>내려받는</b> 것뿐입니다.</p>
+      <p><b>다만 요청 URL은 그대로 서버 로그에 남습니다 — 정확히 적습니다.</b>
+        요청 본문에는 아무것도 실리지 않지만, ⑤에서 시계열을 불러오면 보유 티커마다
+        <code>data/sd/&lt;티커&gt;.json</code>을 한 번씩 받으므로 <b>보유 티커 목록이 요청 URL로</b>
+        호스팅(GitHub Pages)·CDN 접근 로그에 남습니다. <b>수량·비중·보유 순서는 나가지 않습니다</b> —
+        어느 티커를 조회했는지까지입니다. 시계열을 불러오지 않으면 이 요청 자체가 발생하지 않습니다.</p>
+      <p><b>그래서 다음 한계가 그대로 따라옵니다.</b> 편리함이 아니라 제약입니다.</p>
+      <ul>
+        <li><b>다른 기기·다른 브라우저에서는 보이지 않습니다.</b> 동기화 수단이 없습니다.</li>
+        <li><b>브라우저 캐시·사이트 데이터를 지우면 같이 사라집니다.</b> 휴지통도 복구도 없습니다.</li>
+        <li><b>시크릿/프라이빗 창에서는 창을 닫는 순간 사라집니다.</b></li>
+        <li>브라우저가 저장 용량을 회수할 때 <b>예고 없이 삭제될 수 있습니다</b>(iOS Safari는 7일 미사용 시 지우는 정책을 씁니다).</li>
+        <li>같은 기기를 쓰는 다른 사람이 이 페이지를 열면 <b>그대로 보입니다.</b> 암호가 걸려 있지 않습니다.</li>
+      </ul>
+      <p>백업은 <b>직접</b> 하셔야 합니다 — 아래 ②의 <b>내보내기</b>로 JSON 텍스트를 복사해 두시고,
+        복원은 <b>가져오기</b>에 붙여 넣으면 됩니다.</p>
+    </div>
+    </div>
+  </details>
+
+  <details class="fold" id="formula">
+    <summary>② 계산식 전문 — 화면의 모든 숫자가 어떻게 나왔는가</summary>
+    <div class="foldin">
   <!-- ───────────────────────── ⑥ 계산식 ───────────────────────── -->
-  <section id="formula" aria-labelledby="fm-h">
     <h2 class="lbl" id="fm-h">⑥ 계산식 전문 <span class="sub">· 화면의 모든 숫자가 어떻게 나왔는가</span></h2>
     <p class="lblnote">⑤의 값들은 브라우저 안에서 아래 식으로만 계산됩니다. 서버 계산도, 저장된 결과도 없습니다.
       정의가 갈릴 수 있는 지점(로그수익률/단순수익률, 연율화 계수, 리밸런싱 가정, 결측 처리)을 전부 적습니다.</p>
@@ -841,7 +872,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <b>등급은 수익 예측이 아닙니다.</b> 등급을 평균 내 종합 점수를 만들지도 않습니다 —
           평균에 뜻이 있으려면 각 지표의 예측력이 먼저 검증돼야 하는데, 검증된 적이 없습니다.</em></dd></div>
     </dl>
-  </section>
+    </div>
+  </details>
+
 
   <div class="note" id="closing">
     <b>이 화면이 하지 않는 것</b>
@@ -1045,7 +1078,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ' · 섹터 '+esc(fx(spct,0))+'%</span>', L:L};
   }
 
-  // ══ ⓪ 배포 중인 목표 구성 ══════════════════════════════════════════════
+  // ══ 배포 중인 목표 구성 ══════════════════════════════════════════════
   // 🚨 여기서 전략을 고르지 않는다. data/strategy_index.json 의 **등급 '배포'** 를 그대로
   //   읽고, 그중 다른 배포 전략을 슬리브로 담는 것(통합)이 있으면 그것 하나만 편다.
   //   화면이 판정에 개입하면 원장과 화면이 갈라진다 — 이 랩이 반복해서 겪은 사고다.
@@ -1474,7 +1507,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '구간과 방향 변환은 ⑥ 계산식에 적어 두었습니다.');
   }
 
-  // ══ ④ 구성 집계 ════════════════════════════════════════════════════════
+  // ══ 구성 ════════════════════════════════════════════════════════
   // 막대는 0~100% 고정 눈금이다. 최대 항목에 맞춰 늘리면 45%인 섹터가 트랙을 꽉 채워
   // '거의 전부'처럼 보인다 — ⑤의 상관 막대와 같은 규칙(자동 확대 없음)으로 통일한다.
   function barRows(pairs, denom, unit){

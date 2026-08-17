@@ -77,6 +77,15 @@
           "src": "model",
           "verdict": "rejected",
           "effort": "M"
+        },
+        {
+          "name": "장중 분봉",
+          "file": "intraday.html",
+          "status": "existing",
+          "desc": "직전 거래일 1분봉과 거래량 — 지금 시세가 아니다(마감 뒤 하루 한 번 갱신)",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "S"
         }
       ]
     },
