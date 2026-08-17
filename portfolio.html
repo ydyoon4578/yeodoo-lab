@@ -80,6 +80,24 @@
   .fold[open]>summary::before{content:"▾ "}
   .fold>summary:hover{color:var(--accent)}
   .foldin{padding:0 14px 14px;border-top:1px solid var(--line-soft)}
+  /* 기간 탭 — 창을 못 채우는 탭은 **끈다**(줄여서 그리지 않는다). 왜 꺼졌는지는 title 에. */
+  .hzbar{display:flex;gap:6px;margin:0 0 10px}
+  .hzbar button{padding:5px 12px;border:1px solid var(--line);border-radius:2px;
+    background:var(--panel);color:var(--ink-2);font-size:12px;font-weight:600;cursor:pointer;
+    font-family:var(--mono)}
+  .hzbar button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);
+    background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  .hzbar button[disabled]{opacity:.4;cursor:not-allowed}
+  /* 누적 곡선 — 로그 눈금(guru.html 겹침 곡선과 같은 규약). */
+  .cvwrap{border:1px solid var(--line);border-radius:2px;background:var(--panel);
+    padding:10px 12px;margin:12px 0}
+  .cvttl{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+  .cvttl .cvsub{font-weight:400;color:var(--muted);margin-left:8px}
+  .cvsvg{width:100%;height:auto;display:block}
+  .cvlg{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted)}
+  .cvk{display:inline-flex;align-items:center;gap:5px}
+  .cvk i{width:14px;height:2.5px;border-radius:2px;display:inline-block}
+  .cvk b{color:var(--ink-2);font-family:var(--mono)}
   .foldin h2{display:none}   /* 안쪽 제목은 summary 가 대신한다 */
   .asofrow{margin:16px 0 0;display:flex;flex-wrap:wrap;gap:7px}
   .asofrow span{font-family:var(--mono);font-size:11.5px;color:var(--muted);border:1px solid var(--line);
@@ -1703,13 +1721,49 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       .catch(function(){ cb(null); });
   }
 
+  // 기간 탭 — 화면 상태. 창을 못 채우면 그 탭을 **끄고 사유를 적는다**(줄여서 그리지 않는다).
+  var PERF_HZ='all';
+  var PERF_TABS=[['1y','1년',252],['3y','3년',756],['all','전체',null]];
+
+  // 로그 눈금 곡선. 배수를 비교하는 그림이라 선형이면 앞쪽 낙폭이 납작해진다
+  // (guru.html 의 겹침 곡선과 같은 사유·같은 규약).
+  function perfSvg(ms, S){
+    var W=760,H=210,PL=46,PR=8,PT=10,PB=18;
+    var all=[]; S.forEach(function(k){k.v.forEach(function(v){if(v>0)all.push(v);});});
+    if(!all.length) return '';
+    var lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
+    var l0=Math.log(lo), l1=Math.log(hi), n=ms.length;
+    var x=function(i){return PL+(W-PL-PR)*(n<2?0:i/(n-1));};
+    var y=function(v){return PT+(H-PT-PB)*(1-(Math.log(Math.max(v,1e-9))-l0)/((l1-l0)||1));};
+    var g='';
+    [0.5,0.7,1,1.5,2,3,5,10].forEach(function(mul){
+      var v=100*mul; if(v<lo*0.98||v>hi*1.02) return;
+      g+='<line x1="'+PL+'" y1="'+y(v).toFixed(1)+'" x2="'+(W-PR)+'" y2="'+y(v).toFixed(1)+
+         '" stroke="var(--line-soft)" stroke-width="1"/>'+
+         '<text x="'+(PL-5)+'" y="'+(y(v)+3.5).toFixed(1)+'" text-anchor="end" '+
+         'font-size="9.5" fill="var(--muted)">'+(mul===1?'시작':mul+'배')+'</text>';
+    });
+    S.forEach(function(k){
+      var d=k.v.map(function(v,i){return (i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1);}).join(' ');
+      g+='<path d="'+d+'" fill="none" stroke="'+k.c+'" stroke-width="'+(k.me?2.2:1.2)+
+         '" opacity="'+(k.me?1:.75)+'"/>';
+    });
+    var lg=S.map(function(k){
+      return '<span class="cvk"><i style="background:'+k.c+'"></i>'+esc(k.n)+
+             ' <b>'+(k.v[k.v.length-1]/100).toFixed(2)+'배</b></span>';}).join('');
+    return '<div class="cvwrap"><div class="cvttl">누적 곡선'+
+      '<span class="cvsub">'+esc(ms[0])+' ~ '+esc(ms[n-1])+' · 시작 100 · 로그 눈금 · 무비용</span></div>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" class="cvsvg" role="img" aria-label="누적 곡선">'+g+
+      '</svg><div class="cvlg">'+lg+'</div></div>';
+  }
+
   function renderPerf(){
     var host=document.getElementById('perfbox');
     if(!host) return;
     // ⚠ analyze() 를 다시 부르지 않는다. recompute() 가 만든 AN 을 쓴다 —
     //   다시 부르면 같은 계산을 두 번 하고, 그 사이 입력이 바뀌면 두 블록이 갈린다.
     var A=AN;
-    if(!A||!A.keep||A.keep.length<20){
+    if(!A||!A.di||!A.eq||A.n<20){
       host.innerHTML='<div class="note">보유를 입력하고 <b>위험</b> 구획에서 시계열을 '+
         '내려받으면 여기에 나옵니다.</div>';
       return;
@@ -1720,48 +1774,88 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '<code>data/bench_px.json</code>이 없습니다. 추정치로 채우지 않습니다.</div>';
         return;
       }
-      var dates=DATA.pxd_dates||[];
-      // analyze 가 낸 창을 그대로 쓴다(di 기준). keep 첫끝과 다를 수 있다.
-      var d0=A.d0||dates[A.keep[0]], d1=A.d1||dates[A.keep[A.keep.length-1]];
-      // 벤치마크 격자는 자산 패널(5186일)이고 보유 격자는 종목 패널(4431일)이라 다르다.
-      // 날짜 문자열로 맞춘다 — 인덱스로 맞추면 조용히 다른 날을 읽는다.
+      var dates=A.dates||[], di=A.di, n=A.n;
+      // 벤치 격자(자산 패널 5186일)와 보유 격자(종목 패널 4431일)가 다르다.
+      // **날짜 문자열로** 맞춘다 — 인덱스로 맞추면 조용히 다른 날을 읽는다.
       var bpos={}; for(var i=0;i<B.dates.length;i++) bpos[B.dates[i]]=i;
-      var i0=bpos[d0], i1=bpos[d1];
-      if(i0==null||i1==null||!(i1>i0)){
-        host.innerHTML='<div class="note hard">보유 창('+esc(d0)+'~'+esc(d1)+')이 '+
-          '벤치마크 격자에 없습니다 — 같은 날로 못 맞추면 비교하지 않습니다.</div>';
+
+      // 기간 자르기 — 뒤에서 k개. 창이 모자라면 그 탭은 못 쓴다(줄여서 그리지 않는다).
+      var need=null;
+      PERF_TABS.forEach(function(t){ if(t[0]===PERF_HZ) need=t[2]; });
+      var s0=(need==null)?0:Math.max(0,n-need);
+      var short=(need!=null&&n<need);
+
+      var ms=[], mine=[], bs={spx:[],ndx:[]}, miss=0;
+      var base=A.eq[s0]/(1+(A.rp[s0]||0));    // 구간 시작 직전 값 = 100 기준
+      for(i=s0;i<n;i++){
+        var d=dates[di[i]], bi=bpos[d];
+        if(bi==null){ miss++; continue; }
+        ms.push(d);
+        mine.push(A.eq[i]/base*100);
+        ['spx','ndx'].forEach(function(k){
+          var S=B.series[k]; bs[k].push(S?S.px[bi]:null);
+        });
+      }
+      if(ms.length<10){
+        host.innerHTML='<div class="note hard">이 기간에서 벤치마크와 겹치는 날이 '+
+          ms.length+'일뿐입니다 — 비교하지 않습니다.</div>';
         return;
       }
-      var yrs=(A.n||A.keep.length)/252;
-      function cagr(a,b){ return (Math.pow(b/a,1/yrs)-1)*100; }
-      // analyze().cagr 는 **소수**다(0.12 = 12%). 백분율로 맞춘다 — 안 맞추면
-      // 내 포트만 0.12 로 찍히고 지수는 12.3 으로 찍혀 100배 차이가 난다.
-      var mine=(A.cagr!=null)?A.cagr*100:null;
-      var rows=[];
+      // 벤치는 구간 첫날을 100 으로
+      var SER=[{n:'내 포트폴리오', c:'var(--accent)', me:1, v:mine}];
+      var LB={spx:'S&P 500(PR)', ndx:'NASDAQ 100(PR)'};
+      var CL={spx:'var(--muted)', ndx:'var(--ink-2)'};
+      var cag={};
+      var yrs=ms.length/252;
       ['spx','ndx'].forEach(function(k){
-        var s=B.series[k]; if(!s) return;
-        var a=s.px[i0], b=s.px[i1];
-        if(!a||!b) return;
-        rows.push({k:k, label:s.label, cagr:cagr(a,b)});
+        var a=bs[k], a0=a[0];
+        if(!a0) return;
+        var v=a.map(function(x){return x==null?null:x/a0*100;});
+        if(v.indexOf(null)>=0) return;
+        SER.push({n:LB[k], c:CL[k], me:0, v:v});
+        cag[k]=(Math.pow(v[v.length-1]/100,1/yrs)-1)*100;
       });
+      var myc=(Math.pow(mine[mine.length-1]/100,1/yrs)-1)*100;
+
+      var tabs=PERF_TABS.map(function(t){
+        var off=(t[2]!=null&&n<t[2]);
+        return '<button data-hz="'+t[0]+'"'+(off?' disabled title="창이 '+
+          (n/252).toFixed(1)+'년뿐이라 이 기간을 못 채웁니다 — 줄여서 그리지 않습니다"':'')+
+          ' aria-pressed="'+(t[0]===PERF_HZ)+'">'+t[1]+'</button>';}).join('');
+
       var gap=B.pr_gap||2.0;
-      var h='<div class="fswrap"><table class="tbl"><thead><tr>'+
-        '<th class="l">구분</th><th>CAGR %</th><th>차이 %p</th></tr></thead><tbody>'+
-        '<tr><th scope="row" class="l">내 포트폴리오</th><td class="tnum"><b>'+
-        (mine==null?'—':fx(mine,2))+'</b></td><td class="tnum">—</td></tr>';
-      rows.forEach(function(r){
-        var d=(mine==null)?null:(mine-r.cagr);
-        h+='<tr><th scope="row" class="l">'+esc(r.label)+'</th><td class="tnum">'+fx(r.cagr,2)+
-           '</td><td class="tnum">'+(d==null?'—':((d>0?'+':'')+fx(d,2)))+'</td></tr>';
+      var h='<div class="hzbar" id="perfbar">'+tabs+'</div>'+
+        (short?'<div class="note hard">창이 '+(n/252).toFixed(1)+'년뿐이라 이 기간을 '+
+               '못 채웁니다 — 있는 만큼만 그리지 않고 전체로 되돌립니다.</div>':'')+
+        '<div class="fswrap"><table class="tbl"><thead><tr>'+
+        '<th class="l">구분</th><th>CAGR %</th><th>차이 %p</th><th>배수</th></tr></thead><tbody>'+
+        '<tr><th scope="row" class="l">내 포트폴리오</th><td class="tnum"><b>'+fx(myc,2)+
+        '</b></td><td class="tnum">—</td><td class="tnum">'+
+        (mine[mine.length-1]/100).toFixed(2)+'배</td></tr>';
+      ['spx','ndx'].forEach(function(k){
+        if(cag[k]==null) return;
+        var d=myc-cag[k], sr=null;
+        SER.forEach(function(x){ if(x.n===LB[k]) sr=x; });
+        h+='<tr><th scope="row" class="l">'+esc(LB[k])+'</th><td class="tnum">'+fx(cag[k],2)+
+           '</td><td class="tnum">'+((d>0?'+':'')+fx(d,2))+'</td><td class="tnum">'+
+           (sr?(sr.v[sr.v.length-1]/100).toFixed(2)+'배':'—')+'</td></tr>';
       });
-      h+='</tbody></table></div>'+
-        '<p class="capn">창 <b>'+esc(d0)+' ~ '+esc(d1)+'</b> ('+fx(yrs,1)+'년 · '+
-        A.keep.length+'거래일) — 보유 전 종목이 값을 가진 날만 씁니다. '+
-        '분석에 들어간 비중은 <b>'+fx((A.wshare||0)*100,1)+'%</b>입니다.</p>'+
+      h+='</tbody></table></div>'+perfSvg(ms,SER)+
+        '<p class="capn">창 <b>'+esc(ms[0])+' ~ '+esc(ms[ms.length-1])+'</b> ('+
+        fx(yrs,1)+'년 · '+ms.length+'거래일) — 보유 전 종목이 값을 가진 날만 씁니다. '+
+        '분석에 들어간 비중은 <b>'+fx((A.wshare||0)*100,1)+'%</b>입니다.'+
+        (miss?' 벤치마크에 없는 날 '+miss+'일은 뺐습니다.':'')+'</p>'+
         '<p class="capn">🚨 벤치마크는 <b>가격지수(PR)</b>라 배당이 빠져 있습니다. '+
         '보유 종가는 배당조정이므로, 견주는 것만으로 연 <b>'+fx(gap,2)+'%p</b>를 '+
         '공짜로 얻습니다(이 랩 실측). 위 «차이»에서 그만큼 빼고 읽으십시오.</p>';
       host.innerHTML=h;
+      var bar=document.getElementById('perfbar');
+      if(bar) bar.querySelectorAll('button').forEach(function(b){
+        b.addEventListener('click',function(){
+          if(this.disabled) return;
+          PERF_HZ=this.getAttribute('data-hz'); renderPerf();
+        });
+      });
     });
   }
 
