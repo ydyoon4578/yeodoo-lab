@@ -42,4 +42,4 @@ jobs:
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json
+          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json data/rates_overlay.json

@@ -263,6 +263,83 @@ def sensitivity(dates, y10):
     return rows, spike
 
 
+# ── 겹쳐 볼 자산 — data/rates_overlay.json ──────────────────────────────────
+# 왜 따로 파나(2026-08-19 사용자 요청 · "금리 차트랑 S&P500·나스닥100·섹터 ETF 를 같이").
+#   화면이 금리 위에 자산을 겹치려면 자산 일간 계열이 필요한데, 그것이 지금
+#   assets.json(4.6MB) 안에만 있다. 각주 한 줄 때문에 4MB 를 받던 홈의 사고(2026-08-14)와
+#   같은 자리라, 화면이 통째로 받게 두지 않는다. rates.json 에 넣지 않는 이유도 같다 —
+#   그 파일은 금리 이력이고 312KB 인데 여기에 13계열을 더하면 두 배가 된다.
+#
+# 🚨 기준을 하나로 맞춘다 — **전부 ETF 수정종가**(SPY·QQQ·XL*)다.
+#   랩의 벤치마크 정본은 지수 PR(^GSPC·^NDX)이지만, 여기서 그것을 쓰면 섹터 ETF(배당
+#   재투자 반영)와 지수 PR(배당 없음)을 한 그림에 겹치게 된다 — 연 2%p 짜리 가짜 격차가
+#   섹터 쪽에 붙어 «섹터가 지수를 이겼다» 처럼 보인다. 이 화면은 전략을 채점하는 곳이
+#   아니라 서로 견주는 곳이므로, 한 바구니 안에서 기준을 통일하는 쪽이 옳다.
+#   ⚠ 그 사실을 화면이 적어야 한다(rates.html 겹쳐보기 각주).
+# ⚠ XLRE 는 2015-10, XLC 는 2018-06 부터다. 없는 구간은 None 으로 두고 화면이
+#   그 구간을 안 그린다 — 0 이나 앞값으로 메우면 «그때도 있었다» 는 거짓이 된다.
+OVERLAY = [
+    ("SPY",  "S&P 500",      "지수"),
+    ("QQQ",  "나스닥 100",    "지수"),
+    ("XLK",  "기술",          "섹터"),
+    ("XLC",  "커뮤니케이션",   "섹터"),
+    ("XLY",  "경기소비",      "섹터"),
+    ("XLP",  "필수소비",      "섹터"),
+    ("XLE",  "에너지",        "섹터"),
+    ("XLF",  "금융",          "섹터"),
+    ("XLV",  "헬스케어",      "섹터"),
+    ("XLI",  "산업재",        "섹터"),
+    ("XLB",  "소재",          "섹터"),
+    ("XLRE", "부동산",        "섹터"),
+    ("XLU",  "유틸리티",      "섹터"),
+]
+OVL_OUT = os.path.join(DATA, "rates_overlay.json")
+
+
+def write_overlay(dates):
+    """금리 격자에 맞춘 자산 종가를 얇게 뽑는다 → data/rates_overlay.json.
+
+    ⚠ **금리 격자 위로 옮긴다.** 화면이 두 격자를 맞추게 두면 맞추는 규약이 두 곳이 되고,
+      이 랩은 그 유형의 사고를 여러 번 밟았다. 자산에 그 날짜가 없으면 None 이다.
+    """
+    p = os.path.join(DATA, "assets.json")
+    if not os.path.exists(p):
+        print("  ⚠ assets.json 없음 — 겹쳐보기 계열을 건너뛴다(이전본 유지)")
+        return
+    A = json.load(io.open(p, encoding="utf-8"))
+    ai = {d: i for i, d in enumerate(A["dates"])}
+    apx = A["px"]
+    out, miss = {}, []
+    for t, nm, cat in OVERLAY:
+        a = apx.get(t)
+        if not a:
+            miss.append(t)
+            continue
+        arr = []
+        for d in dates:
+            j = ai.get(d)
+            v = None if j is None else a[j]
+            arr.append(None if v is None else round(float(v), 2))
+        first = next((dates[i] for i, v in enumerate(arr) if v is not None), None)
+        out[t] = {"nm": nm, "cat": cat, "first": first,
+                  "n": sum(1 for v in arr if v is not None), "px": arr}
+    if miss:
+        print("  ⚠ 겹쳐보기에서 빠진 티커: %s" % " · ".join(miss))
+    doc = {
+        "note": "금리 화면이 금리 위에 겹쳐 그리는 자산 종가. 금리 격자(rates.json.dates)에 "
+                "맞춰 옮겨 담았다 — 화면이 격자를 맞추지 않게 하려고.",
+        "basis": "전부 ETF 수정종가(배당 재투자 반영). 랩 벤치마크 정본인 지수 PR"
+                 "(^GSPC·^NDX)과 다른 계열이다 — 섹터 ETF 와 한 그림에 겹치므로 "
+                 "바구니 안에서 기준을 통일했다.",
+        "as_of": dates[-1], "start": dates[0], "n": len(dates),
+        "series": out,
+    }
+    io.open(OVL_OUT, "w", encoding="utf-8", newline="").write(
+        json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + chr(10))
+    print("  → %s · %d계열 · %.0fKB"
+          % (os.path.relpath(OVL_OUT, ROOT), len(out), os.path.getsize(OVL_OUT) / 1024))
+
+
 def main() -> int:
     print("FRED 공개 CSV %d계열 받는 중…" % len(CODES))
     S = {}
@@ -295,6 +372,7 @@ def main() -> int:
     curve = {"now": curve_at(0), "m1": curve_at(30), "m3": curve_at(91), "y1": curve_at(365)}
 
     sens, spike = sensitivity(dates, cols[FACTOR])
+    write_overlay(dates)
 
     doc = {
         "note": "금리 이력과 금리 민감도. FRED 공개 CSV(키 불필요) + data/assets.json. "
