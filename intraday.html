@@ -764,12 +764,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             ['종가 위치(0=저 1=고)',nf(r.clv,2)],['VWAP 대비',sgn(r.vs_vwap,2)+'%'],
             ['분봉 수',r.n]];
     el('detail').innerHTML=
-      '<div class="card"><h3>'+esc(r.t)+'<span class="hn">'+esc(r.nm||'')+' · '+esc(D.as_of)+' 세션</span></h3>'+
-      '<div class="fswrap"><table class="tbl"><tbody>'+
+      // 차트를 맨 위에 둔다(2026-08-19 사용자 요청). 숫자표는 그 아래.
+      '<div class="card"><h3>'+esc(r.t)+'<span class="hn">'+esc(r.nm||'')+' · '+
+      esc(D.as_of)+' · <span id="bhint">…</span></span></h3>'+
+      '<canvas id="ic" height="260" style="width:100%"></canvas>'+
+      '<div class="fswrap" style="margin-top:8px"><table class="tbl"><tbody>'+
       tb.map(function(x){return '<tr><td class="l">'+x[0]+'</td><td>'+x[1]+'</td></tr>';}).join('')+
       '</tbody></table></div></div>'+
-      '<div class="card"><h3>1분봉<span class="hn" id="bhint">불러오는 중…</span></h3>'+
-      '<canvas id="ic" height="260" style="width:100%"></canvas></div>'+
       '<div id="hist"></div>';
     loadBars(r.t);
     loadHist(function(){ if(state.sel===r.t) histCard(r.t); });
@@ -847,9 +848,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<tr><td class="l">누적(장중만)</td><td style="color:var('+(curve[n-1]>=0?'--deploy':'--hot')+')">'+
       sgn(curve[n-1],2)+'%</td><td style="color:var(--muted)">—</td></tr>'+
       '</tbody></table></div>'+
-      '<div class="lim" style="margin-top:6px">🚨 <b>밤샘 수익이 빠져 있다.</b> 매일 시가에 사서 '+
-      '종가에 파는 것만 이어 붙인 곡선이라, 실제 보유수익과 다르다 — 갭이 큰 종목일수록 크게 갈린다.<br>'+
-      '⚠ 표본 '+n+'일 · 한 국면이다. 이 수로 무엇이 낫다고 말할 수 없다.</div></div>';
+      '<div class="lim" style="margin-top:6px">⚠ <b>장중만</b>(밤샘 제외) · 표본 '+n+'일 한 국면</div></div>';
     // 스파크라인
     var cv=el('hc'); if(!cv)return;
     var W=cv.clientWidth||600,H=120,dpr=window.devicePixelRatio||1;
@@ -886,7 +885,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function paint(b){
     var h=el('bhint'), cv=el('ic');
     if(!b||!b.c||!b.c.length){ if(h)h.textContent='분봉을 못 불러왔습니다 — 추정치로 채우지 않습니다.'; return; }
-    if(h)h.textContent=b.d+' · '+b.c.length+'분봉 · '+(b.t0||'')+' 시작';
+    // 날짜는 바로 앞 h3 가 이미 말한다 — 여기서 또 찍지 않는다(2026-08-19).
+    if(h)h.textContent=b.c.length+'분봉 · '+(b.t0||'')+'~';
     if(!cv)return;
     var W=cv.clientWidth||900, H=260, dpr=window.devicePixelRatio||1;
     cv.width=W*dpr; cv.height=H*dpr;
@@ -979,12 +979,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var ttl=(key==='ALL')?'시장 전체의 하루'
            :(IDXNM[key]?IDXNM[key]:secKo(key))+'의 하루';
     var both=(state.sec&&state.idx)?
-      '<div class="lim" style="margin:0 0 6px">⚠ 목록은 <b>'+esc(IDXNM[state.idx]||state.idx)+
-      ' ∩ '+esc(secKo(state.sec))+'</b> 로 좁혔지만, 아래 그림은 <b>'+esc(secKo(state.sec))+
-      ' 전체</b>다(지수 필터를 안 탄다).</div>':'';
+      '<div class="lim" style="margin:0 0 6px">⚠ 그림은 <b>'+esc(secKo(state.sec))+
+      ' 전체</b> — 목록만 '+esc(IDXNM[state.idx]||state.idx)+'로 좁혔다.</div>':'';
     el('mkt').innerHTML=
       '<div class="card"><h3>'+esc(ttl)+'<span class="hn">'+esc(D.as_of)+' · '+
       (IM?esc(IM.src)+' · ':'')+nst+'종 폭 · 분당</span></h3>'+both+
+      '<canvas id="mc" height="200" style="width:100%"></canvas>'+
+      '<div class="lim" style="margin:4px 0 8px">'+
+      (IM?'선='+esc(IM.nm)+' · ':'')+'점선=오른 종목 비율(50%) · 막대=거래량'+
+      (key==='ALL'?' · <b>대응 지수 없음</b>':'')+'</div>'+
       '<div class="fswrap"><table class="tbl"><tbody>'+
       (IM?('<tr><td class="l">'+esc(IM.nm)+' 시가 대비 종가</td>'+
            '<td style="color:var('+((IM.r_open||0)>=0?'--deploy':'--hot')+')">'+sgn(IM.r_open,3)+'%</td></tr>'+
@@ -993,20 +996,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            '<tr><td class="l">최고/최저 시점</td><td>'+peakTxt(P.t0,idxSeries(IM))+'</td></tr>')
         :'<tr><td class="l">대응 계열</td><td style="color:var(--muted)">없음 — 폭만 그린다</td></tr>')+
       '<tr><td class="l">오른 종목 비율(마감)</td><td>'+nf(bl,1)+'%</td></tr>'+
-      '</tbody></table></div>'+
-      '<canvas id="mc" height="200" style="width:100%"></canvas>'+
-      '<div class="lim" style="margin-top:6px">'+
-      (IM?'<b>선</b>='+esc(IM.nm)+' 시가 대비 %(시총가중, 실제 '+esc(IM.src)+') · ':'')+
-      '<b>점선</b>=그 묶음에서 오른 종목 비율(50% 기준선) · <b>막대</b>=분당 거래량.<br>'+
-      (IM&&IM.sector?
-        '⚠ 섹터 계열은 <b>S&amp;P 500 섹터 지수</b>를 따르는 ETF 다. 이 랩 유니버스는 '+
-        'S&amp;P 500 ∪ 나스닥 100 이라 <b>나스닥 전용 종목은 ETF 에 없다</b> — 선과 점선의 '+
-        '모집단이 정확히 같지는 않다. ':'')+
-      (key==='ALL'?
-        '⚠ 「전체」는 두 지수의 합집합이라 대응하는 계열이 없다. 폭과 거래량만 그린다 — '+
-        '선을 보려면 위에서 지수나 섹터를 고를 것. ':'')+
-      '⚠ 계열의 마지막 봉은 15:59 이고 <b>공식 종가가 아니다</b>(종가는 그 뒤 단일가로 정해진다).'+
-      '</div></div>';
+      '</tbody></table></div></div>';
     paintMkt(P, IM);
   }
   function idxSeries(IM){
@@ -1165,10 +1155,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       el('strat').innerHTML=
         '<h2 style="font-size:16px;margin:0 0 8px">장중 규칙 '+j.n+'종 — 잰 값</h2>'+
         '<div class="hardnote" style="margin:0 0 10px">🚨 <b>표본 '+j.n_days_avail+'거래일</b>'+
-        '('+esc(j.as_of)+'까지)입니다. 이 랩은 10년짜리에도 「판정 불가」를 적어 왔습니다 — '+
-        '<b>60일로 무엇이 통했다고 말할 수 없습니다.</b> 이 표는 「지금 답」이 아니라 '+
-        '「나중에 답하려고 규칙을 미리 못박아 둔 것」입니다. 매일 쌓이므로 반년 뒤 120일로 '+
-        '다시 재면 그때는 사후 선택이 아닙니다.</div>'+
+        ' — <b>판정 불가.</b> 미리 못박아 둔 규칙일 뿐이다.</div>'+
         '<div class="fswrap"><table class="tbl"><thead><tr>'+
         '<th class="l">규칙</th><th>매매</th><th>일수</th><th>초과 %/일</th><th>t</th>'+
         '<th>승률</th><th>회전</th><th>5bp</th><th>10bp</th><th>20bp</th></tr></thead><tbody>'+
@@ -1180,8 +1167,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             '<td>'+nf(r.turnover,2)+'</td>'+
             c(r.net['5'].mean)+c(r.net['10'].mean)+c(r.net['20'].mean)+'</tr>';
         }).join('')+'</tbody></table></div>'+
-        '<div class="lim" style="margin-top:8px">· '+(j.limits||[]).map(function(x){
-          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div>';
+        '<details class="note" style="margin-top:8px"><summary>이 표의 한계</summary>'+
+        '<div class="lim">· '+(j.limits||[]).map(function(x){
+          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div></details>';
     }).catch(function(){});
 
   fetch('data/intraday.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
@@ -1190,10 +1178,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       D=j;
       // 🚨 「지금」이 아니라는 것을 맨 위에 크게 적는다. 갱신이 장 마감 뒤 하루 한 번이라
       //   장중에 이 화면을 보면 직전 거래일 것이다 — 모르고 보면 오해가 아니라 오독이다.
-      el('sessnote').innerHTML='<b>'+esc(j.as_of)+' 세션</b>입니다 — <b>지금 시세가 아닙니다.</b> '+
-        '갱신 잡이 장 마감 뒤 하루 한 번 돌기 때문에 장중에 보면 직전 거래일 것입니다. '+
-        '종목 '+j.n+'종 · 1분봉 · 거래량 많은 순.';
-      el('limits').innerHTML='· '+(j.limits||[]).map(function(x){
+      // 문구를 줄였다(2026-08-19 사용자 요청). 지운 설명은 아래 «한계» 접힘에 있다 —
+      // 짧게 쓰되 근거를 없애지 않는다.
+      el('sessnote').innerHTML='<b>'+esc(j.as_of)+' 세션</b> · <b>지금 시세 아님</b>'+
+        '<span style="color:var(--muted)"> · '+j.n+'종 · 1분봉</span>';
+      // 🚨 2026-08-19 — 화면 문구를 줄이면서 걷어낸 문장들을 **여기에 심는다.**
+      //   짧게 만드는 것과 근거를 없애는 것은 다르다. 위에서 안 보이는 것은 전부 여기 있다.
+      var MOVED=[
+        '이 화면은 갱신 잡이 장 마감 뒤 하루 한 번 도는 결과라, **장중에 보면 직전 거래일** 것이다.',
+        '지수·섹터 선은 **시총가중 실제 계열**이다(^GSPC·^NDX·SPDR 섹터 ETF). '+
+        '점선은 그 묶음 안에서 오른 종목 비율, 막대는 분당 거래량이다.',
+        '섹터 계열은 **S&P 500 섹터 지수**를 따르는 ETF 다. 이 랩 유니버스는 S&P 500 ∪ 나스닥 100 이라 '+
+        '**나스닥 전용 종목은 ETF 에 없다** — 선과 점선의 모집단이 정확히 같지는 않다.',
+        '「전체」는 두 지수의 합집합이라 대응하는 계열이 없다. 폭과 거래량만 그린다.',
+        '계열의 마지막 봉은 15:59 이고 **공식 종가가 아니다**(종가는 그 뒤 단일가로 정해진다). '+
+        '랩 일봉과 0.02%p 안팎이 남는다.',
+        '종목 카드의 60일 곡선은 **장중만**(시가→종가) 이어 붙인 것이라 밤샘 수익이 빠져 있다 — '+
+        '실제 보유수익과 다르고, 갭이 큰 종목일수록 크게 갈린다.'
+      ];
+      el('limits').innerHTML='· '+MOVED.concat(j.limits||[]).map(function(x){
         return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ');
       chips(); filts(); drawMkt(); drawList(); drawDetail();
     })
