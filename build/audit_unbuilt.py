@@ -55,9 +55,28 @@ KNOWN = {
         "페이지 공통 셸. HTML 을 읽어 만들며 data/ 입력이 아니다.",
     "_pit_vol_cache.json":
         "PIT 거래량 캐시. 산출물이 아니라 재실행 비용을 줄이는 캐시다.",
+    "index_drop_rank.json":
+        "편출 종목 가격 캐시(data/_pit_px_cache.json)가 있어야 돈다 — gitignore 라 "
+        "러너에 없다(PIT 랩과 같은 사유). 결과는 constituents.html «편출은 어디서 "
+        "일어나나» 구획이 읽는다(2026-08-18 배선).",
+    "index_add.json":
+        "한 번 재고 **얼린** 사전등록 측정이다(PREREG-2026-08-14-INDEXADD). 자동으로 다시 "
+        "구우면 얼린 기록이 조용히 바뀐다 — 그러면 안 되는 종류의 파일이다.",
     "delisted_names.json":
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
+}
+
+# ── ②(읽는 곳이 없다) 전용 사유 ────────────────────────────────────────────
+# 🚨 ①의 KNOWN 을 여기 재활용하지 않는다. ①의 사유는 «왜 잡에 못 붙이나» 이고
+#   ②가 묻는 것은 «왜 아무도 안 읽나» 다 — 다른 질문이다. 한 번 합쳐 놨다가
+#   pit_fetch_report·pit_reuse 가 «러너에 캐시가 없다» 는 상관없는 이유로 조용해졌다.
+#   감사기가 상관없는 이유로 발견을 덮으면 그때부터 거짓말을 하는 것이다.
+KNOWN_UNREAD = {
+    "index_add.json":
+        "결과가 build/tested_not_published.json 의 e-spxadd1/3/6 · e-ndxadd1/3/6 여섯 "
+        "줄로 실렸고 report.html «돌렸지만 게시 안 함» 에 나온다(2026-08-18). 원본 JSON 은 "
+        "그 얼린 기록을 만든 작업 산출물이다.",
 }
 
 # PIT 랩은 통째로 로컬에서 돈다(가격 캐시가 있는 PC). 파일마다 같은 말을 적지 않는다.
@@ -196,7 +215,11 @@ def main() -> int:
             for f in owner:
                 if f in body and rel != os.path.join("build", (owner[f][0])):
                     mentions.setdefault(f, set()).add(rel)
-    unread = sorted(f for f in owner if f in tracked and not mentions.get(f))
+    # ⚠ ①과 같은 KNOWN 을 여기에도 건다. 이유를 적어 둔 것까지 계속 손가락질하면
+    #   목록이 소음이 되고, 소음이 되면 아무도 안 본다 — 그게 이 감사가 죽는 길이다.
+    unread = sorted(f for f in owner
+                    if f in tracked and not mentions.get(f)
+                    and f not in KNOWN_UNREAD)
     if unread:
         print()
         print("🚨 구워는 놓았는데 **읽는 곳이 없는** 산출물 %d개:" % len(unread))
