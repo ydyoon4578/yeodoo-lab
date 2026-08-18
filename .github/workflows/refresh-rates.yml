@@ -1,0 +1,45 @@
+name: Refresh rates (daily)
+
+# 금리 이력 + 금리 민감도(data/rates.json).
+#
+# 🚨 FRED **공개 CSV** 를 쓴다 — API 키가 필요 없다. refresh-regime 은 fredapi(키)로
+#   같은 계열을 받는데, 두 경로가 갈리면 한 사이트가 두 숫자를 말한다.
+#   그래서 빌더가 매 실행마다 regime.json 과 **같은 날짜의 값**을 대조하고 다르면 멈춘다.
+#   ⚠ regime 이 하루 뒤진 값을 싣는 것은 버그가 아니다(그 잡이 도는 06:56 KST 에는 당일
+#     H.15 가 아직 안 나와 있다). 그래서 «최신값» 이 아니라 «같은 날짜» 로 댄다.
+#
+# 주기 — refresh-regime(06:56 KST) **뒤**에 둔다. 대조 상대가 그날 것이어야 한다.
+
+on:
+  schedule:
+    - cron: '10 22 * * 0-5'    # 매일(월~토) 07:10 KST — 시장 국면(06:56) 뒤
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-rates
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 🚨 기준선 — 일을 시작하기 전 저장소가 이미 몇 건 깨져 있었는지 잰다.
+      #   없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는 결함 때문에
+      #   방금 받은 자료를 통째로 버린다.
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Fetch rates
+        run: python build/refresh_rates.py
+      - name: Validate
+        run: python build/validate_gate.py check
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json

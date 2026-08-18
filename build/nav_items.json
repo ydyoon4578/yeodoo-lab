@@ -35,6 +35,15 @@
           "effort": "M"
         },
         {
+          "name": "금리 분석",
+          "file": "rates.html",
+          "status": "existing",
+          "desc": "국채 곡선·실질금리 이력과 자산 65종의 금리 민감도 — 서술 통계, 예측 없음",
+          "src": "raw",
+          "verdict": "na",
+          "effort": "M"
+        },
+        {
           "name": "발표 일정",
           "file": "calendar.html#macro",
           "status": "existing",
