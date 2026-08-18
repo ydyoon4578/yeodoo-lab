@@ -193,6 +193,18 @@ def build_specs():
         g = fv(sr, "gap")
         return None if g is None else abs(g)
 
+    # ── 등록서 PREREG-2026-08-18-SHAPE6 §2 의 세 축 ─────────────────────
+    # ⚠ 여기서 새로 계산하지 않는다. 수집기가 5분 격자로 고정해 낸 값을 읽기만 한다 —
+    #   화면과 이 표가 다른 잣대를 쓰면 한 화면이 두 이야기를 한다.
+    def s_rvol(t, sr, S, days, i, H):
+        return fv(sr, "rvol")
+
+    def s_er(t, sr, S, days, i, H):
+        return fv(sr, "er")
+
+    def s_cvol(t, sr, S, days, i, H):
+        return fv(sr, "cvol")
+
     return [
         ("g-up", {"kind": "gap", "score": s_gap, "desc": True,
                   "name": "갭 상승 상위 %d" % TOPN,
@@ -278,6 +290,42 @@ def build_specs():
                                 "시가에 사서 종가에 판다." % (VOL_WIN, TOPN),
                         "why": "이 배치에서 유일하게 가격이 아닌 축이다. ⚠ 중앙값 창 때문에 "
                                "이 규칙만 표본이 짧다."}),
+        # ── PREREG-2026-08-18-SHAPE6 §4 의 여섯. 순서를 바꾸지 않는다 ────────
+        # 🚨 여섯 다 kind="next" 다. 이 세 축은 **세션이 끝나야 값이 나오므로**
+        #   당일형으로 만들면 그 자체가 선견이다(등록서 §3).
+        ("d-quiet", {"kind": "next", "score": s_rvol, "desc": False,
+                     "name": "일중 변동성 하위 %d" % TOPN,
+                     "rule": "전일 일중 실현변동성이 낮은 하위 %d종을 다음 날 시가에 사서 "
+                             "종가에 판다. 동일가중." % TOPN,
+                     "why": "저변동 이상현상은 월간·연간에서 널리 보고됐다. 이 랩은 그것을 "
+                            "«하루 안의 변동성» 으로는 한 번도 안 봤다."}),
+        ("d-wild", {"kind": "next", "score": s_rvol, "desc": True,
+                    "name": "일중 변동성 상위 %d" % TOPN,
+                    "rule": "전일 일중 실현변동성이 높은 상위 %d종을 다음 날 시가에 사서 "
+                            "종가에 판다. 동일가중." % TOPN,
+                    "why": "①의 반대 끝. 한쪽만 재면 부호를 결과 보고 정하게 된다."}),
+        ("d-trend", {"kind": "next", "score": s_er, "desc": True,
+                     "name": "추세 효율 상위 %d" % TOPN,
+                     "rule": "전일 |종가−시가| ÷ 오르내린 거리 합이 큰 상위 %d종을 다음 날 "
+                             "시가에 사서 종가에 판다." % TOPN,
+                     "why": "이 랩의 모멘텀은 전부 «얼마나 올랐나» 다. «어떻게 올랐나»(한 "
+                            "방향이었나 톱니였나)를 쓴 규칙이 없다."}),
+        ("d-chop", {"kind": "next", "score": s_er, "desc": False,
+                    "name": "추세 효율 하위 %d" % TOPN,
+                    "rule": "전일 추세 효율이 낮은 하위 %d종을 다음 날 시가에 사서 종가에 "
+                            "판다." % TOPN,
+                    "why": "③의 반대 끝. 같은 폭을 톱니로 오간 종목."}),
+        ("d-closerush", {"kind": "next", "score": s_cvol, "desc": True,
+                         "name": "마감 거래 쏠림 상위 %d" % TOPN,
+                         "rule": "전일 마감 30분 거래량 비중이 큰 상위 %d종을 다음 날 시가에 "
+                                 "사서 종가에 판다." % TOPN,
+                         "why": "마감 쏠림은 대개 지수 리밸런스·기관 물량이다. 그것이 다음 날 "
+                                "이어지나 되돌리나. 가격이 아니라 참여를 보는 축이다."}),
+        ("d-closecalm", {"kind": "next", "score": s_cvol, "desc": False,
+                         "name": "마감 거래 쏠림 하위 %d" % TOPN,
+                         "rule": "전일 마감 30분 거래량 비중이 작은 하위 %d종을 다음 날 시가에 "
+                                 "사서 종가에 판다." % TOPN,
+                         "why": "⑤의 반대 끝."}),
         ("d-openmom-vol", {"kind": "same", "score": s_openvol, "desc": True,
                            "name": "개장 30분 강세 상위 %d (거래량 확인)" % TOPN,
                            "rule": "그날 거래량이 단면 중앙값 위인 종목만 후보로 두고 개장 "
