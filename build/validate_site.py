@@ -2489,6 +2489,37 @@ try:
         errors.append("세 번째 목록 개수 불일치 — 정본 %d종 vs 산출 %d종. "
                       "build/tech_backtest.py 재실행 필요"
                       % (len(_tested), len(_tech3["tested"])))
+    # ⑤ 🚨 풀 카드의 **산문 안에 글자로 박힌 sid** 를 훑는다. ①~④ 는 전부 sid *필드* 로
+    #   대조하는데 data/rotation_pool.json 에는 sid 필드가 없다 — 카드 본문이 규칙 이름을
+    #   문장으로 인용할 뿐이다. 그래서 규칙을 삭제하거나 선반으로 옮겨도 그 카드는
+    #   '지금은 없는 규칙' 을 있는 것처럼 계속 말한다(이 검사 없이는 아무도 못 잡는다).
+    try:
+        _pool5 = json.load(io.open(os.path.join(ROOT, "data", "rotation_pool.json"),
+                                   encoding="utf-8"))
+        _arch5 = {x.get("sid") for x in AREC if x.get("sid")}
+        _known5 = set(_live3) | _retd3 | set(_tested) | _arch5
+        # ⚠ 오탐 방지: 영문 하이픈 단어가 sid 처럼 보이는 것을 거른다. 알려진 sid 합집합에
+        #   없는 토큰만 걸되, 아래 허용목록은 사람이 판단해 늘린다.
+        _ok5 = {"e-mail", "t-test", "x-axis", "t-stat"}
+        for _s5 in (_pool5.get("strategies") or []):
+            _lab5 = _s5.get("lab") or {}
+            _txt5 = " ".join(str(_lab5.get(k) or "") for k in ("v", "why", "t"))
+            for _tok in sorted(set(re.findall(r"(?<![A-Za-z0-9_-])[xte]-[a-z0-9]+(?![A-Za-z0-9_-])", _txt5))):
+                if _tok in _ok5:
+                    continue
+                if _tok in _tested and _tok not in _live3:
+                    if "tested_not_published" not in _txt5:
+                        errors.append(
+                            "rotation_pool %s: lab 산문이 '%s' 를 인용하는데 그 규칙은 세 번째 "
+                            "목록(돌렸지만 게시 안 함)에 있다 — build/tested_not_published.json "
+                            "을 함께 가리키거나 문장을 고칠 것" % (_s5.get("id"), _tok))
+                elif _tok not in _known5:
+                    errors.append(
+                        "rotation_pool %s: lab 산문이 '%s' 를 인용하는데 살아 있는 규칙·퇴출·"
+                        "선반·아카이브 어디에도 없다 — 낡은 참조다" % (_s5.get("id"), _tok))
+    except Exception as _e5:
+        errors.append("rotation_pool 산문 sid 검사가 예외로 죽었다 — %s" % _e5)
+
     # 🚨 '통과' 는 이 블록이 오류를 **하나도** 안 냈을 때만 찍는다. 종전에는 ④만 보고
     #   찍어서, ①이 실패한 판에서도 "대조 통과" 가 함께 나왔다 — 실패하면서 통과라고
     #   말하는 출력이다(자체 시험에서 잡았다).
@@ -3076,6 +3107,90 @@ try:
                           "아니라 사유로 나가야 한다" % (len(_z), ", ".join(_z)))
 except Exception as _e:
     errors.append("PIT 커버리지 검사가 예외로 죽었다 — %s" % _e)
+
+# ── 종목 랩에도 'CAGR 이 정확히 0' 검사 ────────────────────────────────────
+# 🚨 같은 검사가 PIT 쪽에만 있었다. 전 구간 무보유가 '측정값 0' 으로 실리면 안 되는 것은
+#   두 랩이 같다 — 대칭으로 건다. cov_short(판정 보류)인 규칙은 이미 '안 잰 것' 이라고
+#   말하고 있으므로 예외로 둔다.
+try:
+    _td = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"),
+                            encoding="utf-8"))
+    _z2 = [s["sid"] for s in _td.get("strategies", [])
+           if abs((s.get("metrics") or {}).get("cagr") or 0) < 1e-9
+           and (s.get("n_days") or 0) > 0 and not s.get("cov_short")]
+    if _z2:
+        errors.append("data/tech_strategies.json 에 CAGR 0 인 규칙 %d종(%s) — 전 구간 무보유가 "
+                      "'측정값 0' 으로 실린 것이다(입력 캐시 부재 등). 안 돈 것은 수치가 아니라 "
+                      "사유로 나가야 한다(cov_short)" % (len(_z2), ", ".join(_z2)))
+except Exception as _e:
+    errors.append("종목 랩 CAGR 0 검사가 예외로 죽었다 — %s" % _e)
+
+# ── `_shift(…, 음수)` 정적 금지 ────────────────────────────────────────────
+# 🚨 이 저장소의 `_shift(d, days)` 는 `d - days` 다. 음수를 넘기면 **미래** 기준일이 되고,
+#   asof_fund/ttm2 가 `d <= cut` 으로 고르므로 미래 재무를 집는다 — 순수 선견이다.
+#   2026-08-11 에 x-debtiss 한 줄을 고치면서 "이 한 줄만 부호가 반대였다" 고 단언했는데
+#   그 단언이 틀렸고, 그 문장이 재발 점검을 막아 tech_backtest 의 `_fscore` 일곱 줄과
+#   probe_newrules 의 네 줄이 2026-08-18 까지 살아남았다. 사람이 조심해서 될 일이 아니다.
+#   → 기계가 센다. 정말 미래를 봐야 하는 자리면 같은 줄에 `# shift-future-ok` 를 붙일 것.
+# ⚠ 대상 파일을 손으로 적지 않는다 — 손으로 적은 목록은 이 저장소에서 반복해 낡았다.
+try:
+    import glob as _glob3
+    _sf_pat = re.compile(r"_shift\s*\([^,()]*,\s*-")
+    _sf_hits = []
+    for _fp in sorted(_glob3.glob(os.path.join(ROOT, "build", "*.py"))):
+        if os.path.basename(_fp) == "validate_site.py":
+            continue
+        for _ln, _line in enumerate(io.open(_fp, encoding="utf-8"), 1):
+            # 주석 줄은 건너뛴다 — 이 오류를 **설명하는** 주석이 스스로 걸린다.
+            if _line.lstrip().startswith("#"):
+                continue
+            if _sf_pat.search(_line) and "shift-future-ok" not in _line:
+                _sf_hits.append("%s:%d" % (os.path.basename(_fp), _ln))
+    if _sf_hits:
+        errors.append("`_shift(…, 음수)` %d곳 — _shift 는 빼는 함수라 음수 인자는 1년 '뒤'를 "
+                      "준다(미래 재무 = 선견). %s. 부호를 뒤집거나, 정말 미래를 봐야 하면 "
+                      "그 줄에 `# shift-future-ok` 를 붙일 것"
+                      % (len(_sf_hits), " · ".join(_sf_hits[:12])))
+    else:
+        print("  ~ _shift 음수 인자 없음(선견 정적 검사 통과)")
+except Exception as _e:
+    errors.append("_shift 부호 정적 검사가 예외로 죽었다 — %s" % _e)
+
+# ── PIT 코드 판 표식이 두 파일에서 갈리지 않는가 ───────────────────────────
+# 🚨 2026-08-18 신설. data/pit_strategies.json 을 굽는 워크플로가 **하나도 없어서**(전수
+#   확인) 그 파일은 손으로 돌릴 때만 갱신된다. 그래서 채점 함수를 고치면 랩 열만 새 코드가
+#   되고 PIT 열은 옛 코드 값인 채 남는데, 화면에서 그 차이가 '생존편향'으로 읽힌다.
+#   tech_backtest 가 pit_strategies 의 code_rev 를 제 상수와 대조해 캐비엇을 띄우게 해
+#   뒀는데, **두 리터럴이 갈리면 그 장치 자체가 조용히 죽는다** — 한쪽만 올리면 캐비엇이
+#   영영 뜨거나 영영 안 뜬다. 그래서 여기서 두 상수를 대조한다.
+try:
+    _pcr = {}
+    for _f, _k in ((os.path.join(ROOT, "build", "tech_backtest.py"), "PIT_CODE_REV"),
+                   (os.path.join(ROOT, "build", "pit_backtest.py"), "CODE_REV")):
+        _m = re.search(r"^%s\s*=\s*[\"']([^\"']+)[\"']" % _k,
+                       io.open(_f, encoding="utf-8").read(), re.M)
+        _pcr[_k] = _m.group(1) if _m else None
+    if None in _pcr.values():
+        errors.append("PIT 코드 판 상수를 못 찾았다 — %s. tech_backtest.PIT_CODE_REV 와 "
+                      "pit_backtest.CODE_REV 는 둘 다 모듈 최상단 리터럴이어야 한다"
+                      % _pcr)
+    elif _pcr["PIT_CODE_REV"] != _pcr["CODE_REV"]:
+        errors.append("PIT 코드 판이 갈렸다 — tech_backtest.PIT_CODE_REV=%s vs "
+                      "pit_backtest.CODE_REV=%s. 한쪽만 올리면 'PIT 열이 옛 코드' 캐비엇이 "
+                      "영영 뜨거나 영영 안 뜬다 — 둘을 같이 올릴 것"
+                      % (_pcr["PIT_CODE_REV"], _pcr["CODE_REV"]))
+    else:
+        _pj_rev = None
+        try:
+            _pj_rev = json.load(io.open(os.path.join(ROOT, "data", "pit_strategies.json"),
+                                        encoding="utf-8")).get("code_rev")
+        except Exception:
+            pass
+        print("  ~ PIT 코드 판 %s (산출물 %s%s)"
+              % (_pcr["CODE_REV"], _pj_rev or "표시 없음",
+                 "" if _pj_rev == _pcr["CODE_REV"] else " — 캐비엇 표시 중"))
+except Exception as _e:
+    errors.append("PIT 코드 판 대조가 예외로 죽었다 — %s" % _e)
 
 # ── 백테스트 길이 상한이 네 파일에서 갈리지 않는가 ─────────────────────────
 # 🚨 사용자 결정(2026-08-13)으로 전 전략 백테스트를 최대 10년으로 자르는데, 격자가

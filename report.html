@@ -1019,9 +1019,14 @@ function tail(){
   if(ts.length) h+='<details class="toc" style="margin-top:12px"><summary>돌렸지만 게시하지 않은 규칙 — '+ts.length+'종</summary>'+
     '<div style="padding:2px 18px 16px;font-size:13px;color:var(--ink-2);line-height:1.68">'+
     '<p class="caveat" style="margin-bottom:10px">위 목록에도 \'뺀 규칙\'에도 없지만 <b>한 번 돌아간</b> 것들이다. '+
-    '게시 기준을 못 넘었거나(대부분) 숫자는 넘었는데 그 숫자가 재려던 것이 아니어서 게시하지 않았다. '+
+    '게시 기준을 못 넘었거나(대부분), 숫자는 넘었는데 그 숫자가 재려던 것이 아니어서, '+
+    '또는 <b>사용자 결정으로 목록에서 내려서</b> 게시하지 않았다 — 사유는 항목마다 다르니 '+
+    '한 가지로 읽지 말 것. '+
     '⚠ 아래 t 는 <b>그때 그 표본</b>의 값이라 지금 값과 다르다 — 다시 재지 않는다(재려면 새 사전등록이다). '+
     '비교용이 아니라 <b>\'이미 팠다\'는 표시</b>로 읽을 것.</p>'+
+    // 🚨 2026-08-18 — blocked_by 라벨이 '막힌 이유' 고정이라, 자료가 막은 것이 아니라
+    //   사용자 결정으로 내린 항목에서 '막힌 이유 — 막힌 것은 없다…' 로 찍혔다.
+    //   사유 유형이 항목마다 다르므로 라벨을 중립('게시하지 않은 사정')으로 둔다.
     ts.map(function(x){
       var num=[];
       // t 는 화면에서 내렸다(2026-08-13 사용자 결정) — 자료에는 그대로 있다.
@@ -1034,7 +1039,7 @@ function tail(){
         (num.length?'<br><span class="tt" style="font-family:var(--mono);font-size:11.5px">'+num.join(' · ')+
           ' <span style="color:var(--muted)">('+esc(x.when||'')+')</span></span>':'')+
         '<br>'+mb(x.why||'')+
-        (x.blocked_by?'<br><span class="caveat">막힌 이유 — '+mb(x.blocked_by)+'</span>':'')+
+        (x.blocked_by?'<br><span class="caveat">게시하지 않은 사정 — '+mb(x.blocked_by)+'</span>':'')+
         (x.readmitted?'<br><span style="color:var(--accent)">↻ '+esc(x.readmitted.when)+' 재등록 — '+
           mb(x.readmitted.changed)+' <b>결과:</b> '+esc(x.readmitted.result||'')+'</span>':'')+
         '</p>';
