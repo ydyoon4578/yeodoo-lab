@@ -51,13 +51,20 @@ jobs:
       # 운용사별 복제 진단물 — 입력이 guru_history.json 뿐이라 같이 굽는다(네트워크 없음).
       - name: Rebuild guru replication diagnostic
         run: python build/guru17_backtest.py
+      # 🚨 2026-08-18 — 이 둘도 입력이 guru_history.json 뿐인데 **어느 워크플로에도 없었다.**
+      #   이력은 매주 토 갱신되는데 이 산출물만 손으로 굽던 것이라, 갱신 때마다 조용히
+      #   낡았다(랩이 되풀이하는 «수집만 하고 배선 안 함»). 같은 잡에 붙여 한 번에 굽는다.
+      - name: Rebuild guru overlap backtest
+        run: python build/guru_overlap_backtest.py
+      - name: Rebuild guru quarterly performance
+        run: python build/guru_quarter_perf.py
       - name: Validate
         run: python build/validate_gate.py check
       # 이 잡은 asof 축을 건드리지 않는다(guru 축은 guru.json 이 대표다) — asof.json 을 넘기지 않는다.
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 13F 보유 이력·복제 진단 자동 갱신" \
-            data/guru_history.json data/guru17.json
+            data/guru_history.json data/guru17.json data/guru_overlap.json data/guru_qperf.json
       # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
       #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
       #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.

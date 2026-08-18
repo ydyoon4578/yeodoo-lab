@@ -18,7 +18,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from refresh_13f import GURUS, cusip_map  # noqa: E402  명단·매핑을 복제하지 않는다
+from refresh_13f import GURUS, cusip_map, fold_class  # noqa: E402  명단·매핑·클래스표를 복제하지 않는다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -137,6 +137,7 @@ def main() -> int:
 
     hist = {}          # {분기: {cik: {티커: 가치}}}
     shs = {}           # {분기: {cik: {티커: 주식수}}} — 제출 단위 판정에만 쓰고 파일에는 안 넣는다
+    vraw = {}          # {분기: {cik: {티커: 가치}}} — **클래스 접기 전** 값. 단위 판정 전용.
     fdates = {}        # {분기: {cik: 공시일}} — 리밸런스 시점에 공개돼 있었는지 판정용
     names = {}
     # 운용사별 커버리지를 남긴다 — 명단에 이름이 있는데 데이터가 0인 것을 조용히 넘기면,
@@ -176,16 +177,27 @@ def main() -> int:
             time.sleep(SLEEP)
             if not hs:
                 continue
-            m, msh = {}, {}
+            # 🚨 복수 클래스를 여기서 접는다(2026-08-18). 화면 경로(refresh_13f.py)는
+            #   2026-08-16 부터 접는데 **이력 경로만 안 접고 있었다** — 같은 «경로가 둘이라
+            #   갈린다» 자리다. 그래서 13F 컨빅션 복제의 상위 10칸 중 2칸을 GOOG·GOOGL 이
+            #   같은 회사로 썼다: 「10종목 동일가중」이 실제로는 9개 회사이고 알파벳이 20%였다.
+            #   ⚠ 표는 refresh_13f.SHARE_CLASS 한 곳에만 있다. 여기 복사하지 않는다.
+            # ⚠ 단위 판정(아래 rat)은 **접기 전** 값으로 한다. 접으면 (가치/주식수)/가격 이
+            #   무너진다 — BRK.A 와 BRK.B 는 주당 가격이 1500배 다르다. 알파벳처럼 가격이
+            #   거의 같은 짝은 무해하지만, 무해한 짝만 있다고 가정하지 않는다.
+            m, msh, mraw = {}, {}, {}
             for cu, val, _sh, _nm in hs:
-                t = cmap.get(cu)
-                if t:
-                    m[t] = m.get(t, 0.0) + val
-                    msh[t] = msh.get(t, 0.0) + _sh
+                t0 = cmap.get(cu)
+                if t0:
+                    t = fold_class(t0)
+                    m[t] = m.get(t, 0.0) + val            # 출력 — 접은 것
+                    mraw[t0] = mraw.get(t0, 0.0) + val    # 단위 판정 — 접기 전
+                    msh[t0] = msh.get(t0, 0.0) + _sh
             if m:
                 hist.setdefault(rd, {})[str(cik)] = m
                 # 주식수는 저장하지 않는다 — 아래 단위 정규화에만 쓰고 버린다.
                 shs.setdefault(rd, {})[str(cik)] = msh
+                vraw.setdefault(rd, {})[str(cik)] = mraw
                 fdates.setdefault(rd, {})[str(cik)] = filed.get(rd) or ""
                 got += 1
         names[str(cik)] = label
@@ -246,8 +258,9 @@ def main() -> int:
                     _px[t] = float(arr[_i])
         for cik, m in per_cik.items():
             sh = (shs.get(rd) or {}).get(cik) or {}
-            rat = [(m[t] / sh[t]) / _px[t] for t in m
-                   if sh.get(t) and m.get(t) and _px.get(t)]
+            vr = (vraw.get(rd) or {}).get(cik) or {}
+            rat = [(vr[t] / sh[t]) / _px[t] for t in vr
+                   if sh.get(t) and vr.get(t) and _px.get(t)]
             if len(rat) >= 3:
                 med = statistics.median(rat)
             elif sum(m.values()) < 1e8:      # 13F 는 13F증권 1억$ 이상일 때 내는 보고다
