@@ -63,9 +63,17 @@ def main() -> int:
         if not wf.endswith(".yml"):
             continue
         src = io.open(os.path.join(WF, wf), encoding="utf-8").read()
-        m = re.search(r'ci_push\.sh\s+"[^"]*"([\s\S]*?)\n\s*(?:#|-\s|\w+:)', src)
+        # 🚨 2026-08-19 — 종결자를 못 찾으면 그 잡이 **표에 나오지도 않았다.**
+        #   refresh-rates.yml 은 ci_push 줄이 파일의 마지막이라(뒤에 스텝이 없다)
+        #   여기서 조용히 걸러졌고, 그래서 그 잡의 산출물은 이 감사의 시야 밖이었다.
+        #   감사기가 «없다» 와 «안 봤다» 를 구별 못 하면 그것은 거짓 안심이다.
+        #   → 파일 끝에 보초(_eof:)를 붙여 종결자가 항상 있게 하고, 그래도 ci_push 가
+        #     없으면 «커밋 안 함» 으로 **표에 적는다**(건너뛰지 않는다).
+        m = re.search(r'ci_push\.sh\s+"[^"]*"([\s\S]*?)\n\s*(?:#|-\s|\w+:)',
+                      src + chr(10) + '_eof:')
         if not m:
-            continue        # 커밋하지 않는 잡(검증 전용 등)
+            print("%-30s %-6s %-6s %-8s %s" % (wf, "-", "-", "-", "커밋 안 함(ci_push 없음)"))
+            continue
         listed = {x.rstrip("/") for x in re.findall(r'data/([A-Za-z_0-9]+(?:\.json)?)', m.group(1))}
         w, un = set(), 0
         for sc in re.findall(r'run:\s*python\s+(build/[a-z_0-9]+\.py)', src):
