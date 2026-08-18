@@ -3356,6 +3356,44 @@ try:
 except Exception as _e:
     print("  ~ 갱신 피드 대조가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 배선 감사 둘을 여기서 돌린다 ────────────────────────────────────────────
+# 🚨 2026-08-18 — build/audit_commit_lists.py 도 build/audit_unbuilt.py 도
+#   **어디서도 안 불리고 있었다.** 안 배선된 것을 찾는 감사기가 자기도 안 배선돼 있었다.
+#   손으로 부를 때만 도는 검사는, 부를 생각을 한 사람이 이미 문제를 아는 날에만 돈다.
+# ⚠ 두 감사는 정적 분석이라 «이상 없음» 을 증명하지 못한다(각 머리말 참조). 그래서
+#   여기서도 **수가 늘 때만** 막는다. 지금 남은 것을 0 으로 만들 수 없으니 기준선을
+#   코드에 박고, 그보다 늘면 «이 변경이 늘렸다» 고 말한다 — 랩이 이미 쓰는 관문 방식이다.
+# ⚠ 기준선을 줄이는 것은 좋은 일이다. 줄었으면 이 수를 낮춰 적을 것(안 낮추면 다음
+#   퇴행을 못 잡는다). 그 안내를 화면에 같이 찍는다.
+BASE_UNBUILT, BASE_UNREAD = 3, 4
+try:
+    import importlib, contextlib
+    _au = importlib.import_module("audit_unbuilt")
+    _buf = io.StringIO()
+    with contextlib.redirect_stdout(_buf):
+        _au.main()
+    _txt = _buf.getvalue()
+    def _n(pat):
+        m = re.search(pat, _txt)
+        return int(m.group(1)) if m else 0
+    _ub = _n(r"굽는 잡이 없는\*\* 산출물 (\d+)개")
+    _ur = _n(r"읽는 곳이 없는\*\* 산출물 (\d+)개")
+    if _ub > BASE_UNBUILT or _ur > BASE_UNREAD:
+        errors.append(
+            "배선 감사 퇴행 — 굽는 잡 없는 산출물 %d개(기준 %d) · 읽는 곳 없는 산출물 "
+            "%d개(기준 %d). 새로 만든 산출물을 잡에 안 붙였거나 화면에 안 실었다는 뜻이다. "
+            "python build/audit_unbuilt.py 로 어느 것인지 볼 것"
+            % (_ub, BASE_UNBUILT, _ur, BASE_UNREAD))
+    elif _ub < BASE_UNBUILT or _ur < BASE_UNREAD:
+        print("  ~ 배선 감사: 줄었다(굽는 잡 없음 %d≤%d · 읽는 곳 없음 %d≤%d) — "
+              "build/validate_site.py 의 BASE_UNBUILT/BASE_UNREAD 를 이 수로 낮출 것"
+              % (_ub, BASE_UNBUILT, _ur, BASE_UNREAD))
+    else:
+        print("  ~ 배선 감사 통과(굽는 잡 없음 %d · 읽는 곳 없음 %d — 기준선과 같음)"
+              % (_ub, _ur))
+except Exception as _e:
+    print("  ~ 배선 감사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
