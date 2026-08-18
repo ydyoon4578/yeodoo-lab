@@ -55,6 +55,15 @@ OPEN_MIN = 30       # 「오전 30분」 구간
 CLOSE_MIN = 30      # 「마감 30분」 구간
 MIN_BARS = 40       # 이보다 적은 봉이면 그날 그 종목은 요약하지 않는다(반쪽 세션)
 
+# 🚨 지수 자체의 분봉. 화면이 오래 «동일가중 평균» 만 그렸고, 그 패널이 스스로
+#   «지수가 아니라 동일가중이라 대형주 쏠림이 빠진다» 고 경고하고 있었다 —
+#   경고를 적어 둘 게 아니라 **지수를 같이 받아 나란히 그리면 되는 일**이다.
+#   두 선의 벌어짐이 곧 그날의 «대형주가 끌었나 vs 폭이 넓었나» 다.
+# ⚠ 파일명에 ^ 를 쓰지 않는다(URL 인코딩이 필요해지고 정적 호스팅에서 사고가 난다).
+#   키(SPX·NDX)는 stocks.json 의 idx 표기와 **같은 글자**를 쓴다 — 화면이 그 값으로
+#   종목을 좁히므로, 여기서 다른 글자를 쓰면 두 벌이 된다.
+INDEXES = [("SPX", "^GSPC", "S&P 500"), ("NDX", "^NDX", "나스닥 100")]
+
 
 def _yf(t):
     return t.replace(".", "-")
@@ -290,11 +299,14 @@ def main() -> int:
     #   여기서 계산해 **배열 셋**(각 390)만 싣는다. 5KB 다.
     # ⚠ 시각으로 맞춘다(인덱스 아님). 거래정지·지연상장 종목은 봉 수가 달라서, 자리로
     #   맞추면 서로 다른 시각이 같은 칸에 겹친다.
-    prof_r, prof_b, prof_v, prof_n, prof_t0 = [], [], [], [], None
+    # 🚨 2026-08-18 — 프로파일을 **묶음별로** 낸다(사용자 요청: S&P 500·나스닥 100 각각).
+    #   전에는 518종 하나뿐이라 「오늘 시장」이 한 덩어리였다. 두 지수는 구성이 크게 달라
+    #   (나스닥 100 은 기술주 쏠림) 한 곡선으로 덮으면 갈리는 날을 못 본다.
+    # ⚠ 겹치는 종목이 있다(양쪽에 다 든 종목). 묶음을 배타적으로 자르지 않는다 —
+    #   «S&P 500 의 하루» 는 그 지수 편입 종목 전부이지, 나스닥과 안 겹치는 것만이 아니다.
+    _ser_all, _vol_all, _idx_all = {}, {}, None
     try:
         import pandas as _pd
-        _idx = None
-        _ser = {}
         for t, sub in d1.items():
             g = dict(sessions_of(sub)).get(last)
             if g is None or len(g) < MIN_BARS:
@@ -302,23 +314,42 @@ def main() -> int:
             c = g["Close"].dropna()
             if len(c) < MIN_BARS or not c.iloc[0]:
                 continue
-            _ser[t] = (c / float(c.iloc[0]) - 1.0) * 100.0
-            _idx = c.index if _idx is None else _idx.union(c.index)
-        if _idx is not None and _ser:
-            M = _pd.DataFrame({t: v.reindex(_idx) for t, v in _ser.items()})
-            V = _pd.DataFrame({t: (dict(sessions_of(d1[t])).get(last)["Volume"]
-                                   .reindex(_idx)) for t in _ser})
-            prof_r = [None if x != x else round(float(x), 4) for x in M.mean(axis=1)]
-            prof_b = [None if x != x else round(float(x), 2)
-                      for x in (M.gt(0).sum(axis=1) / M.notna().sum(axis=1) * 100.0)]
-            prof_v = [int(x) if x == x else 0 for x in V.sum(axis=1)]
-            prof_n = [int(x) for x in M.notna().sum(axis=1)]
-            prof_t0 = str(_idx.min())[11:16]
-            print("  [프로파일] 분 %d · 종목 최대 %d · 마지막 평균 %+.3f%% · 상승비율 %.1f%%"
-                  % (len(prof_r), max(prof_n or [0]),
-                     prof_r[-1] if prof_r else 0, prof_b[-1] if prof_b else 0))
+            _ser_all[t] = (c / float(c.iloc[0]) - 1.0) * 100.0
+            _vol_all[t] = g["Volume"]
+            _idx_all = c.index if _idx_all is None else _idx_all.union(c.index)
     except Exception as _e:
-        print("  ⚠ 시장 프로파일 계산 실패: %s — 그 칸만 빈다" % str(_e)[:70])
+        print("  ⚠ 프로파일 계열 준비 실패: %s" % str(_e)[:70])
+
+    def _profile(keep):
+        """keep(티커 집합)에 대한 분당 프로파일. 비면 빈 칸을 돌려준다."""
+        if _idx_all is None or not keep:
+            return {"t0": None, "n_min": 0, "ret": [], "breadth": [], "vol": [], "n_stock": []}
+        import pandas as _pd
+        M = _pd.DataFrame({t: _ser_all[t].reindex(_idx_all) for t in keep})
+        V = _pd.DataFrame({t: _vol_all[t].reindex(_idx_all) for t in keep})
+        _cnt = M.notna().sum(axis=1)
+        return {
+            "t0": str(_idx_all.min())[11:16],
+            "n_min": len(_idx_all),
+            "ret": [None if x != x else round(float(x), 4) for x in M.mean(axis=1)],
+            # ⚠ 분모는 «그 분에 봉이 있는 종목» 이다. 전체 종목 수로 나누면 지연상장·
+            #   거래정지가 상승비율을 조용히 끌어내린다.
+            "breadth": [None if x != x else round(float(x), 2)
+                        for x in (M.gt(0).sum(axis=1) / _cnt.replace(0, float("nan")) * 100.0)],
+            "vol": [int(x) if x == x else 0 for x in V.sum(axis=1)],
+            "n_stock": [int(x) for x in _cnt],
+        }
+
+    _in = lambda t, k: k in ((NM.get(t) or {}).get("idx") or [])
+    profiles = {
+        "ALL": _profile(sorted(_ser_all)),
+        "SPX": _profile(sorted(t for t in _ser_all if _in(t, "SPX"))),
+        "NDX": _profile(sorted(t for t in _ser_all if _in(t, "NDX"))),
+    }
+    for _k, _p in profiles.items():
+        print("  [프로파일:%s] 분 %d · 종목 최대 %d · 마지막 평균 %+.3f%% · 상승비율 %.1f%%"
+              % (_k, _p["n_min"], max(_p["n_stock"] or [0]),
+                 (_p["ret"] or [0])[-1] or 0, (_p["breadth"] or [0])[-1] or 0))
 
     # 전일 종가 — 랩 일봉 격자에서 «세션 날짜 직전 거래일» 의 종가를 꺼낸다.
     PREV = {}
@@ -366,9 +397,56 @@ def main() -> int:
         _m = NM.get(t) or {}
         rows.append(dict(f, t=t, nm=_m.get("nm") or "", idx=_m.get("idx") or [],
                          sec=_m.get("sec") or "", pc=_pc, gap=_gap))
+    # ── 지수 자체의 분봉 ────────────────────────────────────────────────
+    # 종목과 같은 모양(t·d·t0·pc·c·v)으로 써서 화면이 **같은 그리기 함수**를 쓰게 한다.
+    # 두 벌을 만들면 한쪽만 고쳐지는 일이 생긴다(이 랩이 여러 번 겪었다).
+    index_meta = {}
+    try:
+        _iraw = fetch([x[1] for x in INDEXES], "5d", "1m")
+        # 전일 종가는 **일봉에서** 꺼낸다. 분봉 마지막 값으로 대신하면 그 봉이
+        # 공식 종가와 미세하게 다르고, 갭이 그 차이만큼 틀어진다.
+        _iprev = {}
+        try:
+            import yfinance as _yf2
+            _dd = _yf2.download([x[1] for x in INDEXES], period="10d", interval="1d",
+                                auto_adjust=False, progress=False, group_by="ticker")
+            for _k, _src, _nm in INDEXES:
+                _col = _dd[_src]["Close"].dropna() if (_src, "Close") in _dd.columns else None
+                if _col is None or _col.empty:
+                    continue
+                _before = _col[[str(i)[:10] < last for i in _col.index]]
+                if len(_before):
+                    _iprev[_src] = round(float(_before.iloc[-1]), 4)
+        except Exception as _e:
+            print("  ⚠ 지수 전일종가 실패: %s — 갭 없이 시가 대비로만 그린다" % str(_e)[:60])
+        for _k, _src, _nm in INDEXES:
+            _g = dict(sessions_of(_iraw[_src])).get(last) if _src in _iraw else None
+            if _g is None or len(_g) < MIN_BARS:
+                print("  ⚠ 지수 %s(%s) 세션 %s 봉 부족 — 이번 회차에서 빠진다" % (_nm, _src, last))
+                continue
+            _c = [round(float(x), 4) for x in _g["Close"].tolist()]
+            _v = [int(x) if x == x else 0 for x in _g["Volume"].fillna(0).tolist()]
+            io.open(os.path.join(DIR_ID, "_%s.json" % _k), "w", encoding="utf-8").write(
+                json.dumps({"t": _src, "d": last, "t0": str(_g.index[0])[11:16],
+                            "pc": _iprev.get(_src), "c": _c, "v": _v},
+                           separators=(",", ":")) + "\n")
+            _pc = _iprev.get(_src)
+            index_meta[_k] = {
+                "src": _src, "nm": _nm, "file": "_%s" % _k, "n_min": len(_c),
+                "t0": str(_g.index[0])[11:16], "pc": _pc,
+                # 시가 대비 · 전일 대비를 둘 다 싣는다. 화면이 계산하면 어느 쪽인지
+                # 화면마다 달라진다(«전일대비» 라 적고 시가대비를 그린 사고가 있었다).
+                "r_open": round((_c[-1] / _c[0] - 1) * 100, 4) if _c[0] else None,
+                "r_prev": (round((_c[-1] / _pc - 1) * 100, 4) if _pc else None),
+            }
+            print("  [지수] %s(%s) 봉 %d · 시가대비 %+.3f%%"
+                  % (_nm, _src, len(_c), index_meta[_k]["r_open"] or 0))
+    except Exception as _e:
+        print("  ⚠ 지수 분봉 수집 실패: %s — 그 패널만 빈다" % str(_e)[:80])
+
     doc = {
         "note": "그 세션의 종목별 장중 요약. 봉은 data/id/<티커>.json 에 따로 있고 "
-                "화면이 종목을 고를 때 받는다.",
+                "화면이 종목을 고를 때 받는다. 지수 자체 분봉은 data/id/_SPX·_NDX.json 이다.",
         "as_of": last,
         "generated": H["generated"],
         "interval": "1m",
@@ -381,9 +459,11 @@ def main() -> int:
             "재는 일은 5분봉(60거래일) 쪽 요약 이력이 맡는다.",
             "⚠ 봉 %d개 미만인 종목은 반쪽 세션으로 보고 싣지 않는다." % MIN_BARS,
         ],
-        # 시장 전체 분당 프로파일 — 동일가중 평균수익 · 상승 종목 비율 · 거래량
-        "profile": {"t0": (prof_t0 if prof_r else None), "n_min": len(prof_r), "ret": prof_r,
-                    "breadth": prof_b, "vol": prof_v, "n_stock": prof_n},
+        # 분당 프로파일 — 묶음(ALL·SPX·NDX)별 동일가중 평균수익 · 상승 종목 비율 · 거래량.
+        # ⚠ 여기 수는 전부 **동일가중**이다. 시총가중 지수는 index 쪽(실제 ^GSPC·^NDX)이고
+        #   둘은 다른 값이다 — 화면이 둘을 겹쳐 그려 차이를 보이게 한다.
+        "profiles": profiles,
+        "index": index_meta,
         "n": len(rows),
         "rows": sorted(rows, key=lambda r: -(r["v"] or 0)),
     }
