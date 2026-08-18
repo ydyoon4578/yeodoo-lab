@@ -90,7 +90,7 @@
   .statline .stat{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   /* 값은 대문자화에서 뺀다 — |t|(t통계량)가 |T|로 바뀌면 다른 기호가 된다 */
   .statline .stat b{text-transform:none}
-  .statline .stat.ok{border-top-color:var(--good,#0E8A54)}
+  .statline .stat.ok{border-top-color:var(--deploy)}
   .statline .stat.zero{border-top-color:var(--hot)}
   /* 상단 내비·테마 토글 CSS는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다.
      여기서 중복 정의하면 23장이 서로 어긋난다 — 이 페이지에서는 건드리지 않는다. */
@@ -123,7 +123,7 @@
   .rkind{font-family:var(--mono);font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);
     border:1px solid var(--line);border-radius:2px;padding:1px 6px}
   .rv{font-family:var(--mono);font-size:11px;font-weight:800;border-radius:2px;padding:2px 8px;border:1px solid}
-  .rv.vpass{color:var(--good,#0E8A54);border-color:currentColor}
+  .rv.vpass{color:var(--deploy);border-color:currentColor}
   .rv.vunv{color:var(--muted);border-color:var(--line)}
   .rv.vrej{color:var(--hot);border-color:currentColor}
   .rrule{margin:9px 0 0;font-size:12.5px;color:var(--ink);line-height:1.65}
@@ -140,7 +140,7 @@
   .rc span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .rc.tstat span{text-transform:none}   /* 위와 같은 이유 — t통계량 라벨은 소문자여야 한다 */
   .rc b{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;font-weight:800}
-  .rc.up b{color:var(--good,#0E8A54)} .rc.dn b{color:var(--hot)}
+  .rc.up b{color:var(--deploy)} .rc.dn b{color:var(--hot)}
   .spark{display:block;width:100%;height:44px;margin:11px 0 0}
   .rbench{margin:6px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
   .rarch{margin:9px 0 0;padding-top:9px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);line-height:1.6}
@@ -728,7 +728,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var k=state.sort;
     L.innerHTML=a.map(function(r,i){
       var v=r[k], txt=(k==='v')?vfmt(v):(k==='clv'?nf(v,2):sgn(v,2)+'%');
-      var col=(k==='v'||k==='clv')?'--ink':((v||0)>=0?'--good':'--hot');
+      var col=(k==='v'||k==='clv')?'--ink':((v||0)>=0?'--deploy':'--hot');
       return '<button class="item" role="option" data-t="'+esc(r.t)+'" aria-selected="'+(r.t===state.sel)+'">'+
         '<span><span class="tkline"><span class="rk">'+(i+1)+'</span><span class="tk">'+esc(r.t)+'</span></span>'+
         '<div class="nm">'+esc(r.nm||'')+'</div></span>'+
@@ -809,7 +809,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       row('종가 위치 평균', sum.clv/n, base.clv/n, 3)+
       '<tr><td class="l">오른 날 비율</td><td>'+nf(100*sum.win/n,1)+'%</td>'+
       '<td style="color:var(--muted)">—</td></tr>'+
-      '<tr><td class="l">누적(장중만)</td><td style="color:var('+(curve[n-1]>=0?'--good':'--hot')+')">'+
+      '<tr><td class="l">누적(장중만)</td><td style="color:var('+(curve[n-1]>=0?'--deploy':'--hot')+')">'+
       sgn(curve[n-1],2)+'%</td><td style="color:var(--muted)">—</td></tr>'+
       '</tbody></table></div>'+
       '<div class="lim" style="margin-top:6px">🚨 <b>밤샘 수익이 빠져 있다.</b> 매일 시가에 사서 '+
@@ -828,7 +828,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var Y=function(v){return PT+(H-PT-PB)*(1-(v-lo)/(hi-lo));};
     x.strokeStyle=css('--line');x.setLineDash([2,3]);x.beginPath();
     x.moveTo(PL,Y(0));x.lineTo(W-PR,Y(0));x.stroke();x.setLineDash([]);
-    x.strokeStyle=css(curve[n-1]>=0?'--good':'--hot');x.lineWidth=1.6;x.beginPath();
+    x.strokeStyle=css(curve[n-1]>=0?'--deploy':'--hot');x.lineWidth=1.6;x.beginPath();
     curve.forEach(function(v,i){if(i)x.lineTo(X(i),Y(v));else x.moveTo(X(i),Y(v));});
     x.stroke();
     x.fillStyle=css('--muted');x.font='11px ui-monospace,monospace';
@@ -837,13 +837,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     cv.setAttribute('aria-label',t+' 최근 '+n+'일 장중 누적 '+nf(curve[n-1],2)+'%');
   }
 
-  function loadBars(t){
-    if(BARS.hasOwnProperty(t)){paint(BARS[t]);return;}
-    fetch('data/id/'+encodeURIComponent(t)+'.json',{cache:'no-cache'})
+  // 분봉 파일 하나를 받아 캐시한다. 종목(<티커>.json)과 지수(_SPX·_NDX.json)가 **같은
+  // 모양**이라 같은 함수로 받는다 — 두 벌을 만들면 한쪽만 고쳐진다(이 랩이 여러 번 겪었다).
+  function getBars(name){
+    if(BARS.hasOwnProperty(name))return Promise.resolve(BARS[name]);
+    return fetch('data/id/'+encodeURIComponent(name)+'.json',{cache:'no-cache'})
       .then(function(x){return x.ok?x.json():null;})
-      .then(function(j){BARS[t]=j||false; if(state.sel===t)paint(BARS[t]);})
-      .catch(function(){BARS[t]=false; if(state.sel===t)paint(false);});
+      .then(function(j){BARS[name]=j||false; return BARS[name];})
+      ['catch'](function(){BARS[name]=false; return false;});
   }
+  function loadBars(t){ getBars(t).then(function(bb){ if(state.sel===t)paint(bb); }); }
 
   function paint(b){
     var h=el('bhint'), cv=el('ic');
@@ -865,18 +868,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     x.globalAlpha=.35;
     for(var i=0;i<n;i++){
       var bh=(v[i]||0)/vm*38;
-      x.fillStyle=css(i>0&&c[i]<c[i-1]?'--hot':'--good');
+      x.fillStyle=css(i>0&&c[i]<c[i-1]?'--hot':'--deploy');
       x.fillRect(X(i)-1,H-14-bh,2,bh);
     }
     x.globalAlpha=1;
     // VWAP — 그날 봉만으로 누적한다(전일을 섞으면 다른 질문이 된다)
     var tv=0,pv=0,vw=[];
     for(var k=0;k<n;k++){tv+=(v[k]||0);pv+=c[k]*(v[k]||0);vw.push(tv>0?pv/tv:c[k]);}
-    x.strokeStyle=css('--watch'); x.setLineDash([4,3]); x.lineWidth=1; x.beginPath();
+    x.strokeStyle=css('--marg'); x.setLineDash([4,3]); x.lineWidth=1; x.beginPath();
     for(var m=0;m<n;m++){ if(m)x.lineTo(X(m),Y(vw[m])); else x.moveTo(X(m),Y(vw[m])); }
     x.stroke(); x.setLineDash([]);
     // 종가선
-    x.strokeStyle=css(c[n-1]>=c[0]?'--good':'--hot'); x.lineWidth=1.6; x.beginPath();
+    x.strokeStyle=css(c[n-1]>=c[0]?'--deploy':'--hot'); x.lineWidth=1.6; x.beginPath();
     for(var q=0;q<n;q++){ if(q)x.lineTo(X(q),Y(c[q])); else x.moveTo(X(q),Y(c[q])); }
     x.stroke();
     // 🚨 전일 종가선 — 없으면 **갭을 못 본다.** 분봉 차트에서 「오늘 어디서 시작했나」는
@@ -922,23 +925,56 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   **518종을 분 단위로 합쳐 「오늘 시장이 어떤 모양이었나」를 보이는 것**은
   //   이 자료를 다 갖고 있어야만 할 수 있다.
   // ⚠ 봉을 브라우저가 평균 내지 않는다(518파일 3.7MB). 빌드가 계산해 배열 셋만 온다.
+  // 🚨 2026-08-18 — 이 패널이 오래 «동일가중 평균» 하나만 그렸고, 스스로 «지수가 아니라
+  //   동일가중이라 대형주 쏠림이 빠진다» 고 경고를 달고 있었다. 경고를 적어 둘 일이
+  //   아니라 **지수를 같이 받아 나란히 그리면 되는 일**이었다(수집기에 ^GSPC·^NDX 추가).
+  //   두 선이 벌어진 크기가 곧 그날의 「대형주가 끌었나 vs 폭이 넓었나」다.
+  // ⚠ 「전체」에는 겹칠 지수가 없다(518종은 두 지수의 합집합이라 대응하는 지수가 없다).
+  //   그때는 동일가중 한 선만 그리고, 그 사실을 화면이 말한다.
+  var IDXNM={SPX:'S&P 500',NDX:'나스닥 100'};
   function drawMkt(){
-    var P=D&&D.profile;
+    var key=state.idx||'ALL';
+    var P=D&&D.profiles&&D.profiles[key];
     if(!P||!P.ret||!P.ret.length){el('mkt').innerHTML='';return;}
+    var IM=(D.index||{})[key]||null;
+    // 지수 봉이 아직 없으면 받아 온 뒤 **다시 그린다.** 그동안은 동일가중 한 선만 나온다
+    // (빈 화면을 두지 않는다). ⚠ 늦게 도착했을 때 사용자가 이미 다른 칩을 눌렀을 수
+    //   있으므로 그때의 key 와 지금 key 를 견주고 다르면 버린다 — 전략 랩에서 겪은
+    //   «늦게 온 응답이 다른 화면을 덮는» 사고를 여기서 되풀이하지 않는다.
+    if(IM && !BARS.hasOwnProperty(IM.file)){
+      getBars(IM.file).then(function(){ if((state.idx||'ALL')===key) drawMkt(); });
+    }
     var n=P.ret.length, last=P.ret[n-1], bl=P.breadth[n-1];
+    var nst=Math.max.apply(null,P.n_stock||[0]);
+    var ttl=(key==='ALL')?'시장 전체의 하루':IDXNM[key]+'의 하루';
+    var head=esc(D.as_of)+' · '+nst+'종 동일가중'+(IM?' + 지수':'')+' · 분당';
     el('mkt').innerHTML=
-      '<div class="card"><h3>시장 전체의 하루<span class="hn">'+esc(D.as_of)+
-      ' · 518종 동일가중 · 분당</span></h3>'+
+      '<div class="card"><h3>'+esc(ttl)+'<span class="hn">'+head+'</span></h3>'+
       '<div class="fswrap"><table class="tbl"><tbody>'+
-      '<tr><td class="l">시가 대비 종가(동일가중)</td><td style="color:var('+((last||0)>=0?'--good':'--hot')+')">'+sgn(last,3)+'%</td></tr>'+
+      (IM?('<tr><td class="l">'+esc(IM.nm)+' 지수(시총가중) 시가 대비</td>'+
+           '<td style="color:var('+((IM.r_open||0)>=0?'--deploy':'--hot')+')">'+sgn(IM.r_open,3)+'%</td></tr>'+
+           (IM.r_prev!=null?'<tr><td class="l">같은 지수 — 전일 종가 대비</td><td>'+sgn(IM.r_prev,3)+'%</td></tr>':'')):'')+
+      '<tr><td class="l">편입 종목 동일가중 시가 대비</td><td style="color:var('+((last||0)>=0?'--deploy':'--hot')+')">'+sgn(last,3)+'%</td></tr>'+
+      (IM&&IM.r_open!=null&&last!=null?
+        ('<tr><td class="l">차이(동일가중 − 지수)</td><td>'+sgn(last-IM.r_open,3)+'%p'+
+         '<span class="sub"> · 양수면 작은 종목이 더 올랐다</span></td></tr>'):'')+
       '<tr><td class="l">오른 종목 비율(마감)</td><td>'+nf(bl,1)+'%</td></tr>'+
-      '<tr><td class="l">최고/최저 시점</td><td>'+peakTxt(P)+'</td></tr>'+
+      '<tr><td class="l">최고/최저 시점(동일가중)</td><td>'+peakTxt(P)+'</td></tr>'+
       '</tbody></table></div>'+
       '<canvas id="mc" height="200" style="width:100%"></canvas>'+
-      '<div class="lim" style="margin-top:6px">선=동일가중 평균 수익(시가 대비) · '+
-      '점선=오른 종목 비율(50% 기준선) · 막대=분당 거래량. '+
-      '⚠ 지수가 아니라 <b>동일가중</b>이라 대형주 쏠림이 빠진다 — 지수와 다르게 움직인다.</div></div>';
-    paintMkt(P);
+      '<div class="lim" style="margin-top:6px">'+
+      (IM?'<b>굵은 선</b>=<b>'+esc(IM.nm)+' 지수</b>(시총가중, 실제 '+esc(IM.src)+') · 가는 선':'선')+
+      '=편입 종목 <b>동일가중</b> 평균(시가 대비) · 점선=오른 종목 비율(50% 기준선) · 막대=분당 거래량. '+
+      (IM?'⚠ 두 선은 <b>다른 수</b>다. 지수는 시가총액으로, 가는 선은 종목을 똑같이 센다 — '+
+          '벌어지면 대형주와 나머지가 갈린 날이다. ':
+          '⚠ 「전체」는 두 지수의 합집합이라 대응하는 지수가 없다. 동일가중 한 선만 그린다 — '+
+          '지수와 견주려면 위에서 S&P 500 이나 나스닥 100 을 고를 것. ')+
+      '⚠ 두 계열의 봉 수가 다를 수 있어 <b>세션 전체를 같은 폭에 펴서</b> 겹친다(자리로 맞추지 않는다). '+
+      (IM?'⚠ 지수의 마지막 봉은 15:59 이고 <b>공식 종가가 아니다</b>(종가는 그 뒤 단일가로 정해진다) — '+
+          '랩 일봉과 맞대면 <b>0.02%p 안팎</b>이 남는다(2026-08-17 실측: S&P 500 +0.014%p · 나스닥 100 +0.023%p). '+
+          '방향을 보는 데는 지장이 없고, 정확한 종가는 일봉 쪽을 볼 것.':'')+
+      '</div></div>';
+    paintMkt(P, IM);
   }
   function peakTxt(P){
     var t0=(P.t0||'09:30').split(':'), m0=(+t0[0])*60+(+t0[1]);
@@ -948,14 +984,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var fmt=function(i){var mm=m0+i;return String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0');};
     return '고 '+fmt(hi_i)+' ('+sgn(hi,2)+'%) · 저 '+fmt(lo_i)+' ('+sgn(lo,2)+'%)';
   }
-  function paintMkt(P){
+  function paintMkt(P, IM){
     var cv=el('mc'); if(!cv)return;
+    // 지수 계열(시가 대비 %). 봉 수가 동일가중과 달라도 되게 **자기 길이로** 편다.
+    var ib=IM?BARS[IM.file]:null, IR=null;
+    if(ib&&ib.c&&ib.c.length&&ib.c[0]){
+      IR=ib.c.map(function(x){return (x/ib.c[0]-1)*100;});
+    }
     var W=cv.clientWidth||900,H=200,dpr=window.devicePixelRatio||1;
     cv.width=W*dpr;cv.height=H*dpr;
     var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
     var css=function(nm){return getComputedStyle(document.documentElement).getPropertyValue(nm).trim()||'#888';};
     var r=P.ret,n=r.length,PT=10,PB=46,PL=48,PR=44;
     var vv=r.filter(function(v){return v!=null;});
+    // 🚨 두 선이 한 축을 쓰므로 범위에 **둘 다** 넣는다. 동일가중만으로 범위를 잡으면
+    //   지수 선이 판 밖으로 나가 잘린 채 그려진다(그리고 잘렸다는 표시가 없다).
+    if(IR)vv=vv.concat(IR);
     var lo=Math.min.apply(null,vv),hi=Math.max.apply(null,vv);
     if(!(hi>lo)){hi=lo+0.1;}
     var X=function(i){return PL+(W-PL-PR)*(n<2?0:i/(n-1));};
@@ -970,14 +1014,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       x.moveTo(PL,Y(0));x.lineTo(W-PR,Y(0));x.stroke();x.setLineDash([]);}
     // 상승비율(오른쪽 축 0~100)
     var YB=function(v){return PT+(H-PT-PB)*(1-v/100);};
-    x.strokeStyle=css('--watch');x.setLineDash([3,3]);x.lineWidth=1;x.beginPath();
+    x.strokeStyle=css('--marg');x.setLineDash([3,3]);x.lineWidth=1;x.beginPath();
     (P.breadth||[]).forEach(function(v,i){if(v==null)return;
       if(i)x.lineTo(X(i),YB(v));else x.moveTo(X(i),YB(v));});
     x.stroke();x.setLineDash([]);
-    // 평균수익
-    x.strokeStyle=css((r[n-1]||0)>=0?'--good':'--hot');x.lineWidth=1.8;x.beginPath();
+    // 동일가중 평균 — 지수가 같이 그려질 때는 가늘게(굵은 쪽이 지수다)
+    x.strokeStyle=css((r[n-1]||0)>=0?'--deploy':'--hot');x.lineWidth=IR?1.1:1.8;
+    if(IR)x.globalAlpha=.75;
+    x.beginPath();
     r.forEach(function(v,i){if(v==null)return; if(i)x.lineTo(X(i),Y(v));else x.moveTo(X(i),Y(v));});
-    x.stroke();
+    x.stroke(); x.globalAlpha=1;
+    // 지수(시총가중) — 굵게. 자기 길이로 펴서 같은 폭에 얹는다(자리로 맞추지 않는다).
+    if(IR){
+      var m=IR.length, XI=function(i){return PL+(W-PL-PR)*(m<2?0:i/(m-1));};
+      x.strokeStyle=css('--accent'); x.lineWidth=2.2; x.beginPath();
+      IR.forEach(function(v,i){ if(i)x.lineTo(XI(i),Y(v)); else x.moveTo(XI(i),Y(v)); });
+      x.stroke();
+    }
     // 시간 눈금
     var t0=(P.t0||'09:30').split(':'),m0=(+t0[0])*60+(+t0[1]);
     x.fillStyle=css('--muted');x.font='11px ui-monospace,monospace';
@@ -990,7 +1043,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     cv.setAttribute('aria-label','시장 전체 분당 평균수익 곡선, 마지막 '+nf(r[n-1],2)+'%');
     wireCursor(cv, function(i){
       var mm=m0+i, hh=String(Math.floor(mm/60)).padStart(2,'0')+':'+String(mm%60).padStart(2,'0');
-      return hh+' · 평균 '+sgn(r[i],3)+'% · 오른 종목 '+nf((P.breadth||[])[i],1)+'% · 종목 '+((P.n_stock||[])[i]||0);
+      // 지수는 자리를 비례로 되돌려 읽는다(길이가 다를 수 있어 i 를 그대로 못 쓴다)
+      var it='';
+      // ⚠ 여기는 esc 를 태우지 않는다 — wireCursor 가 textContent 로 넣기 때문에
+      //   escape 하면 «S&amp;P 500» 이 글자 그대로 보인다(실제로 그렇게 나왔다).
+      if(IR){ var k2=Math.round((n<2?0:i/(n-1))*(IR.length-1));
+              it=' · '+IM.nm+' '+sgn(IR[k2],3)+'%'; }
+      return hh+it+' · 동일가중 '+sgn(r[i],3)+'% · 오른 종목 '+nf((P.breadth||[])[i],1)+'% · 종목 '+((P.n_stock||[])[i]||0);
     }, n, PL, W-PR);
   }
 
@@ -1001,13 +1060,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var b=document.createElement('button'); b.className='fchip'; b.type='button';
       b.setAttribute('aria-pressed',String(!!on)); b.textContent=lab;
       if(tip)b.title=tip; b.onclick=fn; w.appendChild(b);};
+    // 🚨 2026-08-18 — 이 칩이 이제 **목록과 «하루 모양» 패널을 함께** 움직인다.
+    //   사용자 요청은 「S&P 500·나스닥 100 각각 보기」였는데, 그것을 위해 패널에 별도
+    //   선택기를 다는 것은 같은 것을 고르는 손잡이를 둘 두는 일이다 — 둘이 어긋나면
+    //   목록은 나스닥인데 그림은 S&P 인 화면이 나온다. 손잡이는 하나로 둔다.
     mk('전체', !state.idx&&!state.sec, function(){state.idx='';state.sec='';state.sel=null;
-       filts();drawList();drawDetail();}, '좁히지 않는다');
+       filts();drawList();drawDetail();drawMkt();}, '좁히지 않는다');
     [['SPX','S&P 500'],['NDX','NASDAQ 100']].forEach(function(x){
       var n=all.filter(function(r){return (r.idx||[]).indexOf(x[0])>=0;}).length;
       if(!n)return;
       mk(x[1]+' '+n, state.idx===x[0], function(){
-        state.idx=(state.idx===x[0]?'':x[0]); state.sel=null; filts();drawList();drawDetail();});
+        state.idx=(state.idx===x[0]?'':x[0]); state.sel=null;
+        filts();drawList();drawDetail();drawMkt();});
     });
     // 섹터 — 종목이 있는 것만, 많은 순
     var c={}; all.forEach(function(r){ if(r.sec)c[r.sec]=(c[r.sec]||0)+1; });
@@ -1088,7 +1152,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<th class="l">규칙</th><th>매매</th><th>일수</th><th>초과 %/일</th><th>t</th>'+
         '<th>승률</th><th>회전</th><th>5bp</th><th>10bp</th><th>20bp</th></tr></thead><tbody>'+
         rows.map(function(r){
-          var c=function(v){return '<td style="color:var('+((v||0)>=0?'--good':'--hot')+')">'+sgn(v,3)+'</td>';};
+          var c=function(v){return '<td style="color:var('+((v||0)>=0?'--deploy':'--hot')+')">'+sgn(v,3)+'</td>';};
           return '<tr><td class="l">'+esc(r.name)+'</td>'+
             '<td>'+({same:'당일 10:00',gap:'당일 시가',next:'익일 시가'}[r.kind]||'—')+'</td><td>'+r.n_days+'</td>'+
             c(r.excess)+'<td>'+nf(r.t,2)+'</td><td>'+nf(r.win,1)+'%</td>'+
