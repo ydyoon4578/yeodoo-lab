@@ -690,18 +690,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(v>=1e9)return (v/1e9).toFixed(2)+'B'; if(v>=1e6)return (v/1e6).toFixed(1)+'M';
     if(v>=1e3)return (v/1e3).toFixed(0)+'K'; return String(v);};
 
-  var D=null, BARS={}, state={sel:null,sort:'v',q:'',idx:'',sec:''};
+  var D=null, BARS={}, HF={}, state={sel:null,sort:'v',q:'',idx:'',sec:''};
   // 정렬 축 — 전부 그 세션 안에서 잰 값이다. 「좋다/나쁘다」를 매기지 않는다.
   // 🚨 갭은 «장중 이전에 이미 일어난 일» 이라 나머지 축과 성격이 다르다 — 따로 둔다.
   //   그리고 «갭 뒤 장중» 을 같이 두는 것이 요점이다: 갭이 이어지나 되메워지나는
   //   갭 자체가 아니라 그 뒤 움직임이 답한다(두 축을 나란히 봐야 읽힌다).
+  // 🚨 2026-08-18 — 'VWAP 대비'를 축에서 뺐다(사용자 물음: 「vwap이 굳이 필요한가」).
+  //   **재고 뺐다.** 그날 안에서 나머지 6축으로 회귀하면 R² = 0.893(60일 평균)이다 —
+  //   이 축으로 정렬해도 종가 위치·마감 30분으로 정렬한 것과 거의 같은 줄이 나온다.
+  //   ⚠ 자료(intraday_hist)에는 남긴다. 사전등록 INTRADAY6 ⑤가 그 값을 쓰므로
+  //     지우면 등록된 규칙을 재현할 수 없다. 화면 축에서만 내린다.
+  //   ⚠ 한 종목 차트의 VWAP **선**은 남긴다 — 위 R² 은 «횡단면 정렬» 얘기이고,
+  //     선은 「그날 평균 체결가가 어디였나」라는 다른 질문에 답한다.
+  //   빈자리는 후보 넷을 같은 방식으로 재서 채웠다(기존 7축에 대한 R²):
+  //     rvol 0.146 · er 0.235 · cvol 0.283 · mdd 0.559(탈락 — r 과 0.69 로 닮았다)
   var SORTS=[['v','거래량','그 세션 총 거래량'],
              ['gap','갭','전일 종가 대비 시가 — 장이 열리기 전에 이미 난 차이'],
              ['r','시가→종가','세션 수익률'],
              ['r_open','오전 30분','장 시작 30분 수익률'],
              ['r_close','마감 30분','마감 30분 수익률'],
              ['clv','종가 위치','0=저가 1=고가 — 마감 압력'],
-             ['vs_vwap','VWAP 대비','종가가 그날 평균 체결가보다 얼마나 위인가']];
+             ['rvol','일중 변동성','봉간 수익의 표준편차를 세션 전체로 환산 — 방향이 아니라 흔들린 크기'],
+             ['er','추세 효율','|종가−시가| ÷ 오르내린 거리 합. 1에 가까우면 한 방향, 0에 가까우면 톱니'],
+             ['cvol','마감 거래 쏠림','마감 30분 거래량이 그날 거래량의 몇 %인가 — 가격이 아니라 참여를 잰다']];
 
   function lab(k){ for(var i=0;i<SORTS.length;i++) if(SORTS[i][0]===k) return SORTS[i][1]; return k; }
 
@@ -727,8 +738,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!state.sel||!a.some(function(r){return r.t===state.sel;}))state.sel=a[0].t;
     var k=state.sort;
     L.innerHTML=a.map(function(r,i){
-      var v=r[k], txt=(k==='v')?vfmt(v):(k==='clv'?nf(v,2):sgn(v,2)+'%');
-      var col=(k==='v'||k==='clv')?'--ink':((v||0)>=0?'--deploy':'--hot');
+      // ⚠ 부호 없는 축(변동성·효율·거래 쏠림)에 +를 붙이지 않는다. 「+1.23% 변동성」은
+      //   오르내림처럼 읽히는데 그 축은 방향이 없다. 색도 초록/빨강을 쓰지 않는다 —
+      //   전부 양수라 모두 초록이 되어 «다 좋다» 처럼 보인다.
+      var UNS={rvol:1,cvol:1}, RAT={clv:1,er:1};
+      var v=r[k];
+      var txt=(k==='v')?vfmt(v):(RAT[k]?nf(v,2):(UNS[k]?nf(v,2)+'%':sgn(v,2)+'%'));
+      var col=(k==='v'||RAT[k]||UNS[k])?'--ink':((v||0)>=0?'--deploy':'--hot');
       return '<button class="item" role="option" data-t="'+esc(r.t)+'" aria-selected="'+(r.t===state.sel)+'">'+
         '<span><span class="tkline"><span class="rk">'+(i+1)+'</span><span class="tk">'+esc(r.t)+'</span></span>'+
         '<div class="nm">'+esc(r.nm||'')+'</div></span>'+
@@ -771,13 +787,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       .then(function(j){
         if(!j||!j.days){HIST_ERR=1;then();return;}
         HIST=j;
-        // 기준선 — 날짜별 전 종목 평균(세션수익·오전30분·종가위치)
+        // 🚨 자리 번호를 손으로 적지 않는다. 수집기가 새 축을 **끝에 붙이며** 자라는
+        //   파일이라, 여기 0·1·3 을 박아 두면 다음에 축이 늘 때 조용히 어긋난다.
+        //   fields 를 읽어 이름→자리 지도를 만든다(정본은 파일이 들고 온다).
+        HF={}; (j.fields||[]).forEach(function(f,i){HF[f]=i;});
+        var AX=['r','r_open','clv','rvol','er','cvol'];
         HBASE={};
         Object.keys(j.days).forEach(function(d){
-          var rows=j.days[d], n=0, a0=0,a1=0,a3=0;
+          var rows=j.days[d], n=0, a={};
+          AX.forEach(function(k){a[k]=0;});
           for(var t in rows){var v=rows[t];
-            if(v[0]==null)continue; n++; a0+=v[0]; a1+=(v[1]||0); a3+=(v[3]||0);}
-          if(n)HBASE[d]={r:a0/n, r_open:a1/n, clv:a3/n, n:n};
+            if(v[HF.r]==null)continue; n++;
+            AX.forEach(function(k){ var i=HF[k]; a[k]+=(i!=null&&v[i]!=null?v[i]:0); });}
+          if(n){var o={n:n}; AX.forEach(function(k){o[k]=a[k]/n;}); HBASE[d]=o;}
         });
         then();
       }).catch(function(){HIST_ERR=1;then();});
@@ -785,28 +807,41 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function histCard(t){
     var box=el('hist'); if(!box)return;
     if(HIST_ERR||!HIST){box.innerHTML='<div class="card"><div class="lim">60일 이력을 못 불러왔습니다 — 추정치로 채우지 않습니다.</div></div>';return;}
-    var ds=Object.keys(HIST.days).sort(), pts=[], sum={r:0,ro:0,clv:0,win:0,n:0}, base={r:0,ro:0,clv:0};
+    var AX=['r','r_open','clv','rvol','er','cvol'];
+    var ds=Object.keys(HIST.days).sort(), pts=[], sum={win:0,n:0}, base={}, bn=0;
+    AX.forEach(function(k){sum[k]=0; base[k]=0;});
     ds.forEach(function(d){
-      var v=(HIST.days[d]||{})[t]; if(!v||v[0]==null)return;
-      pts.push({d:d, r:v[0], ro:v[1], clv:v[3]});
-      sum.r+=v[0]; sum.ro+=(v[1]||0); sum.clv+=(v[3]||0); sum.n++;
-      if(v[0]>0)sum.win++;
-      var b=HBASE[d]; if(b){base.r+=b.r; base.ro+=b.r_open; base.clv+=b.clv;}
+      var v=(HIST.days[d]||{})[t]; if(!v||v[HF.r]==null)return;
+      pts.push({d:d, r:v[HF.r]});
+      AX.forEach(function(k){ var i=HF[k]; sum[k]+=(i!=null&&v[i]!=null?v[i]:0); });
+      sum.n++;
+      if(v[HF.r]>0)sum.win++;
+      var b=HBASE[d]; if(b){ AX.forEach(function(k){base[k]+=(b[k]||0);}); bn++; }
     });
     if(!sum.n){box.innerHTML='<div class="card"><div class="lim">이 종목의 60일 이력이 없습니다.</div></div>';return;}
     var n=sum.n, cum=1, curve=pts.map(function(p){cum*=(1+p.r/100);return (cum-1)*100;});
     var row=function(lab,a,b,dg){
       return '<tr><td class="l">'+lab+'</td><td>'+sgn(a,dg==null?2:dg)+'</td>'+
              '<td style="color:var(--muted)">'+sgn(b,dg==null?2:dg)+'</td></tr>';};
+    // 부호 없는 축(변동성·효율·쏠림)은 + 를 붙이지 않는다 — 방향이 없는 값이다
+    var urow=function(lab,a,b,dg){
+      return '<tr><td class="l">'+lab+'</td><td>'+nf(a,dg==null?2:dg)+'</td>'+
+             '<td style="color:var(--muted)">'+nf(b,dg==null?2:dg)+'</td></tr>';};
     box.innerHTML='<div class="card"><h3>최근 '+n+'일 장중<span class="hn">'+
       esc(pts[0].d)+' ~ '+esc(pts[n-1].d)+' · 시가→종가만</span></h3>'+
       '<canvas id="hc" height="120" style="width:100%"></canvas>'+
       '<div class="fswrap" style="margin-top:8px"><table class="tbl"><thead><tr>'+
       '<th class="l">지표</th><th>'+esc(t)+'</th><th style="color:var(--muted)">전 종목 평균</th>'+
       '</tr></thead><tbody>'+
-      row('세션 수익 평균 %/일', sum.r/n, base.r/n, 3)+
-      row('오전 30분 평균 %', sum.ro/n, base.ro/n, 3)+
-      row('종가 위치 평균', sum.clv/n, base.clv/n, 3)+
+      row('세션 수익 평균 %/일', sum.r/n, base.r/(bn||1), 3)+
+      row('오전 30분 평균 %', sum.r_open/n, base.r_open/(bn||1), 3)+
+      row('종가 위치 평균', sum.clv/n, base.clv/(bn||1), 3)+
+      // 🚨 2026-08-18 에 더한 셋. 「VWAP 대비」를 뺀 자리를 메운 축들이고, 이 카드도
+      //   같은 축을 말해야 한다 — 목록은 새 축으로 정렬되는데 카드는 옛 축만 말하면
+      //   한 화면이 두 이야기를 한다.
+      urow('일중 변동성 평균 %', sum.rvol/n, base.rvol/(bn||1), 3)+
+      urow('추세 효율 평균', sum.er/n, base.er/(bn||1), 3)+
+      urow('마감 거래 쏠림 평균 %', sum.cvol/n, base.cvol/(bn||1), 2)+
       '<tr><td class="l">오른 날 비율</td><td>'+nf(100*sum.win/n,1)+'%</td>'+
       '<td style="color:var(--muted)">—</td></tr>'+
       '<tr><td class="l">누적(장중만)</td><td style="color:var('+(curve[n-1]>=0?'--deploy':'--hot')+')">'+

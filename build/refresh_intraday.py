@@ -52,8 +52,23 @@ HIST = os.path.join(DATA, "intraday_hist.json")
 
 CHUNK = 60          # 실측 3초/60종. 더 키우면 야후가 조인다
 OPEN_MIN = 30       # 「오전 30분」 구간
+# 🚨 변동성·효율은 **표본 간격에 민감하다.** 봉이 촘촘할수록 경로가 길어져 효율비는
+#   작아지고, 미시구조 잡음 때문에 실현변동성은 커진다. 실측(2026-08-17, 514종 중앙):
+#       er   5분/1분 = 2.33 배   ← 같은 이름이 두 배 넘게 다른 값이 된다
+#       rvol 5분/1분 = 0.87 배
+#   화면은 1분봉, 이력은 5분봉이라 그대로 두면 목록과 이력 카드가 «추세 효율» 을
+#   서로 다른 잣대로 말한다. → 입력 간격과 무관하게 **5분 격자로 다시 뽑아** 잰다.
+GRID_MIN = 5        # rvol·er 을 재는 고정 격자(분)
 CLOSE_MIN = 30      # 「마감 30분」 구간
 MIN_BARS = 40       # 이보다 적은 봉이면 그날 그 종목은 요약하지 않는다(반쪽 세션)
+
+# 🚨 이력 행의 «칸 뜻» 정본. 여기 한 곳에서만 정한다.
+#   2026-08-18 실패에서 배운 것: fields 를 load_hist() 의 **기본값**에만 적었더니,
+#   파일이 이미 있는 경우 옛 fields(7칸)를 그대로 들고 오면서 행만 10칸이 됐다.
+#   머리와 몸이 다른 말을 하는 파일이 만들어졌다 — 읽는 쪽은 그걸 알 방법이 없다.
+# ⚠ 새 축은 **끝에만** 붙인다. 가운데 넣으면 이미 쌓인 날의 뜻이 통째로 밀린다.
+HFIELDS = ["r", "r_open", "r_close", "clv", "vs_vwap", "v", "gap",
+           "rvol", "er", "cvol"]
 
 # 🚨 지수 자체의 분봉. 화면이 오래 «동일가중 평균» 만 그렸고, 그 패널이 스스로
 #   «지수가 아니라 동일가중이라 대형주 쏠림이 빠진다» 고 경고하고 있었다 —
@@ -136,8 +151,16 @@ def day_feats(sub):
     tv = sum(v)
     vwap = (sum(x * y for x, y in zip(c, v)) / tv) if tv > 0 else None
     n = len(c)
-    k_o = min(OPEN_MIN, n - 1)
-    k_c = min(CLOSE_MIN, n - 1)
+    # 🚨 2026-08-18 — **여기 버그가 있었다.** OPEN_MIN/CLOSE_MIN 을 «분» 이라 이름 붙여
+    #   놓고 **봉 개수**로 썼다(c[30]). 1분봉에서는 우연히 맞았지만(30봉=30분),
+    #   이력을 만드는 **5분봉에서는 30봉 = 150분**이었다. 즉 지금까지 이력의
+    #   `r_open` 은 「개장 30분」이 아니라 **「개장 150분」** 이었고, `r_close` 도
+    #   마감 150분이었다. 화면(1분봉)과 이력(5분봉)이 같은 이름으로 다른 것을 재고
+    #   있었다 — 이 랩이 늘 경계하는 «경로가 둘» 이다.
+    # → 봉 간격을 지표에서 **재서** 분을 봉으로 환산한다. 간격이 바뀌어도 뜻이 안 변한다.
+    step = _step_min(sub)
+    k_o = max(1, min(int(round(OPEN_MIN / step)), n - 1))
+    k_c = max(1, min(int(round(CLOSE_MIN / step)), n - 1))
     return {
         "o": round(o, 4), "c": round(cl, 4), "h": round(hi, 4), "l": round(lo, 4),
         "v": int(tv),
@@ -149,10 +172,77 @@ def day_feats(sub):
         # 종가가 그날 범위 어디에 놓였나(0=저가, 1=고가). 마감 압력의 표준 지표.
         "clv": round((cl - lo) / (hi - lo), 4) if hi > lo else None,
         "vwap": None if vwap is None else round(vwap, 4),
-        # 종가가 VWAP 위인가 — 그날 평균 체결가보다 세게 끝났나
+        # 🚨 vs_vwap 은 **화면 정렬 축에서 뺐다**(2026-08-18). 자료에는 남긴다 —
+        #   사전등록 INTRADAY6 ⑤가 이 값을 쓰므로 지우면 그 등록을 재현할 수 없다.
+        #   왜 뺐나: 그날 안에서 나머지 6축으로 회귀하면 **R² 0.893**(60일 평균)이다.
+        #   즉 이 축으로 정렬해도 clv·r_close 로 정렬한 것과 거의 같은 줄이 나온다.
         "vs_vwap": None if not vwap else round((cl / vwap - 1) * 100, 3),
+        # ── 아래 셋은 그 빈자리를 메우려고 **잰 뒤에** 고른 것들이다 ──────────
+        # 후보 넷을 오늘 세션 517종으로 시험해 기존 7축에 대한 R² 를 재고, 낮은 셋만 남겼다:
+        #   rvol 0.146 · er 0.235 · cvol 0.283 · (mdd 0.559 — 탈락, r 과 0.69 로 닮았다)
+        # ⚠ «좋은 지표» 라서가 아니라 **다른 것을 재기 때문에** 고른 것이다. 수익을
+        #   예측한다는 말이 아니다 — 그건 사전등록해서 따로 재야 한다.
+        #
+        # 일중 실현변동성 — 봉간 로그수익의 표준편차를 세션 전체로 환산(%).
+        # 「얼마나 흔들렸나」. 방향과 무관해서 r 계열 어디와도 안 닮는다.
+        "rvol": round(_rvol(_grid(c, step)) * 100, 3) if len(c) > 2 else None,
+        # 효율비(0~1) — |종가−시가| ÷ Σ|봉간 변화|. 1 에 가까우면 한 방향으로 갔고,
+        # 0 에 가까우면 같은 폭을 톱니로 오갔다. 「추세였나 톱니였나」.
+        "er": _eff(_grid(c, step)),
+        # 마감 30분 거래량 비중(%) — 「거래가 마감에 몰렸나」. 가격이 아니라 참여를 잰다.
+        "cvol": (round(sum(v[n - 1 - k_c:]) / tv * 100, 3) if tv > 0 else None),
         "n": n,
     }
+
+
+def _step_min(sub):
+    """봉 간격(분). 지표에서 중앙값으로 잰다 — 결측 한두 개에 흔들리지 않게.
+
+    ⚠ 못 재면 1 을 돌려준다. 그러면 «분» 이 «봉» 과 같아져 옛 동작이 되는데,
+      그건 조용한 오답이므로 그 사실을 부르는 쪽이 아니라 여기서 찍는다.
+    """
+    try:
+        idx = sub.index
+        if len(idx) < 3:
+            return 1.0
+        d = [(idx[i] - idx[i - 1]).total_seconds() / 60.0 for i in range(1, min(len(idx), 40))]
+        d = sorted(x for x in d if x > 0)
+        return float(d[len(d) // 2]) if d else 1.0
+    except Exception:
+        print("  ⚠ 봉 간격을 못 쟀다 — 1분으로 본다(구간 길이가 틀어질 수 있다)")
+        return 1.0
+
+
+def _grid(c, step):
+    """입력 봉을 GRID_MIN 격자로 성글게 한다 — 간격이 달라도 같은 수가 나오게.
+
+    ⚠ 마지막 봉은 반드시 남긴다. 그냥 k 간격으로 자르면 세션 끝이 잘려
+      「종가」가 종가가 아니게 된다(효율비의 분자가 |끝−처음| 이라 바로 틀어진다).
+    """
+    k = max(1, int(round(GRID_MIN / max(step, 0.001))))
+    if k <= 1 or len(c) <= 2:
+        return c
+    out = c[::k]
+    if out[-1] != c[-1]:
+        out = out + [c[-1]]
+    return out
+
+
+def _rvol(c):
+    """봉간 로그수익 표준편차 × √봉수 — 그 세션의 실현변동성(비율)."""
+    import math
+    lr = [math.log(c[i] / c[i - 1]) for i in range(1, len(c)) if c[i] > 0 and c[i - 1] > 0]
+    if len(lr) < 2:
+        return 0.0
+    m = sum(lr) / len(lr)
+    var = sum((x - m) ** 2 for x in lr) / (len(lr) - 1)
+    return (var ** 0.5) * (len(lr) ** 0.5)
+
+
+def _eff(c):
+    """효율비 — |끝−처음| ÷ 경로길이. 경로가 0이면 잴 수 없다(None)."""
+    path = sum(abs(c[i] - c[i - 1]) for i in range(1, len(c)))
+    return round(abs(c[-1] - c[0]) / path, 4) if path > 0 else None
 
 
 def sessions_of(sub):
@@ -169,14 +259,31 @@ def sessions_of(sub):
 def load_hist():
     if os.path.exists(HIST):
         try:
-            return json.load(io.open(HIST, encoding="utf-8"))
+            H = json.load(io.open(HIST, encoding="utf-8"))
+            old = list(H.get("fields") or [])
+            if old != HFIELDS:
+                # 🚨 앞부분이 정본과 같을 때만 «끝에 붙은 것» 으로 보고 늘린다.
+                #   어긋나면 자리 뜻이 밀린 것이므로 **고치지 않고 멈춘다** —
+                #   조용히 맞춰 버리면 쌓인 60일이 통째로 잘못 읽힌다.
+                if HFIELDS[:len(old)] != old:
+                    raise SystemExit(
+                        "🚨 intraday_hist 의 fields 가 정본과 어긋난다. "
+                        "파일=%s · 정본=%s · "
+                        "끝에 붙이는 것만 허용한다 — 손으로 확인할 것."
+                        % (old, HFIELDS))
+                print("  [이력] fields %d칸 → %d칸으로 늘림(%s)"
+                      % (len(old), len(HFIELDS), ", ".join(HFIELDS[len(old):])))
+                H["fields"] = list(HFIELDS)
+            return H
+        except SystemExit:
+            raise
         except Exception:
             pass
     return {"note": "일자×종목 장중 요약 누적. 봉은 안 쌓는다(크기) — 요약만 쌓아야 "
                     "야후의 60일 창보다 긴 표본을 언젠가 갖는다.",
             # ⚠ 2026-08-18 에 gap 을 끝에 더했다. **끝에 붙인다** — 가운데 넣으면 이미
             #   쌓인 날의 자리 뜻이 통째로 밀린다(옛 행은 6칸이라 읽는 쪽이 길이로 가른다).
-            "fields": ["r", "r_open", "r_close", "clv", "vs_vwap", "v", "gap"],
+            "fields": list(HFIELDS),
             "days": {}}
 
 
@@ -227,7 +334,8 @@ def main() -> int:
             _pc = prev_close(t, day)
             _gap = round((f["o"] / _pc - 1) * 100, 3) if (_pc and f.get("o")) else None
             H["days"].setdefault(day, {})[t] = [f["r"], f["r_open"], f["r_close"],
-                                                f["clv"], f["vs_vwap"], f["v"], _gap]
+                                                f["clv"], f["vs_vwap"], f["v"], _gap,
+                                                f.get("rvol"), f.get("er"), f.get("cvol")]
             day_seen.add(day)
             added += 1
     H["generated"] = __import__("datetime").datetime.now(
