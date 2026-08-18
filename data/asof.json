@@ -1,6 +1,6 @@
 {
  "note": "기준일 정본. build/asof_index.py가 만들고, 전 페이지 내비 칩·홈·sources.html이 이 파일만 읽는다. 페이지에 날짜를 직접 적지 말 것.",
- "generated": "2026-08-18T04:57:28Z",
+ "generated": "2026-08-18T22:04:27Z",
  "primary": "2026-08-17",
  "unified": false,
  "axes": [
@@ -119,6 +119,7 @@
    "as_of": "2026-08-17",
    "cadence": "매일",
    "note": "예정일은 회사가 바꾼다 — 조회 시점의 예정일이며 확정이 아니다",
+   "collected": "2026-08-18",
    "sched": "월~토 06:53 KST",
    "lag_days": 0
   },
