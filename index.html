@@ -2314,7 +2314,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 홈의 두 블록이 **같은 구간 목록·같은 이름**을 쓴다(사용자 요청 2026-08-13 —
     //   "어떤건 1주가 없고 어떤건 YTD로 적혀있고 그러니깐 별로야"). 아래 TP_LAB 과 짝이다.
     //   ⓘ 'YTD' 를 '올해'로 바꾼 이유도 같다 — 한 화면에서 같은 것을 두 이름으로 부르지 않는다.
-    var HZL={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
+    // 🚨 '1D' 는 원천이 다르다 — 분봉 경로다(일간 종가로는 점이 둘이라 선이 안 된다).
+    //   build/home_perf.py 가 그 칸을 만들 수 있을 때만 실어 보내므로, 여기서는
+    //   series 에 있으면 탭이 나고 없으면 안 난다(장중 잡 전 아침에는 없다).
+    var HZL={'1D':'1일','1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var tabs=Object.keys(STC_P.series).map(function(h){
       return '<button class="sctab'+(h===STC_HZ?' on':'')+'" data-h="'+h+'">'+esc(HZL[h]||h)+'</button>';
     }).join('');
@@ -2364,15 +2367,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         g+='<rect x="'+PL+'" y="'+zy.toFixed(1)+'" width="'+(RX-PL)+'" height="'+
            (H-BOT-zy).toFixed(1)+'" fill="var(--hot)" opacity=".045"/>';
       // ── x 눈금 — 월이 바뀌는 날 중 고르게 넷 ─────────────────────────────
+      // 1일 칸은 x 가 날짜가 아니라 **시각**(09:30…)이다. 월로 묶으면 90개가 다 눈금이 된다.
+      var isT=n>0&&/^\d\d:\d\d$/.test(String(dates[0]));
       var mk=[], pm='';
-      for(var i=0;i<n;i++){var m=String(dates[i]).slice(0,7); if(m!==pm){mk.push(i); pm=m;}}
+      for(var i=0;i<n;i++){var m=isT?String(dates[i]).slice(0,2):String(dates[i]).slice(0,7);
+        if(m!==pm){mk.push(i); pm=m;}}
       var want=Math.min(4, mk.length), pick=[];
       if(want>0) for(var q=0;q<want;q++) pick.push(mk[Math.round(q*(mk.length-1)/Math.max(1,want-1))]);
       pick.forEach(function(i){
         g+='<line x1="'+X(i).toFixed(1)+'" y1="'+TOP+'" x2="'+X(i).toFixed(1)+'" y2="'+
            (H-BOT)+'" stroke="var(--line-soft)" stroke-width="0.7" opacity=".55"/>'+
            '<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9.5" '+
-           'font-family="var(--mono)" fill="var(--muted)">'+esc(String(dates[i]).slice(2,7))+'</text>';
+           'font-family="var(--mono)" fill="var(--muted)">'+
+           esc(isT?String(dates[i]):String(dates[i]).slice(2,7))+'</text>';
       });
 
       var ord=series.slice().sort(function(a,b){return (emph[a.nm]?1:0)-(emph[b.nm]?1:0);});
@@ -2472,6 +2479,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   한 판에 33선이라 라벨이 엉킨다(사용자와 그렇게 정했다).
     // ⚠ 자료가 없으면 판을 안 낸다(별도 파일이라 늦게 오거나 아예 없을 수 있다).
     var iblk=STC_I&&(STC_I.series||{})[STC_HZ];
+    // 🚨 2026-08-19 — 1일 칸에서 지수·섹터·스타일은 **분봉 경로**인데 산업 파일은
+    //   일간 2점이다(그 빌더는 아직 분봉을 안 쓴다). 축이 다른 판을 같은 화면에 놓으면
+    //   한 그림이 두 잣대로 말한다 — 그럴 때는 그 판을 **빼고**, 왜 없는지 아래 각주가 말한다.
+    var iSkip=!!(iblk && (!!blk.intraday !== !!iblk.intraday));
+    if(iSkip)iblk=null;
     var inds=iblk?Object.keys(iblk.ind||{}).map(function(k){
       var a=iblk.ind[k], lastv=null;
       for(var i=a.length-1;i>=0;i--){if(a[i]!=null){lastv=a[i];break;}}
@@ -2503,6 +2515,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
       '</div>'+
+      (iSkip?'<p class="stnote">⚠ 1일은 <b>분봉 경로</b>다(일간 종가로는 점이 둘이라 선이 '+
+        '안 된다). 산업그룹은 아직 분봉으로 안 굽기 때문에 이 칸에서만 판을 뺐다 — '+
+        '다른 축을 같은 화면에 나란히 놓지 않는다.</p>':'')+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.</div>';
 

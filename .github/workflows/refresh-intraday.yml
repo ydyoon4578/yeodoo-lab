@@ -51,12 +51,20 @@ jobs:
       # 두 날을 말한다. 입력이 방금 구운 intraday_hist.json 하나뿐이라 네트워크가 없다.
       - name: Recompute intraday rules
         run: python build/intraday_backtest.py
+      # 🚨 홈 「기간별 수익률」 차트의 1일 칸은 **분봉으로만** 만들 수 있다(일간 종가로는
+      #   점이 둘이라 선이 안 된다). 그 칸을 굽는 build/home_perf.py 는 refresh-stocks
+      #   (06:50 KST)에서도 돌지만 그때는 오늘 분봉이 아직 없다 — 여기서 다시 굽는다.
+      #   ⚠ 같은 빌더다. 정의가 갈리지 않는다. 06:50~07:35 사이에는 1일 탭이 없는데,
+      #     그건 빌더가 «분봉 세션 ≠ 일간 기준일» 이면 그 칸을 아예 안 만들기 때문이다
+      #     (어제 것을 오늘이라 말하느니 탭이 잠깐 없는 편이 낫다).
+      - name: Rebuild home period chart (adds 1D)
+        run: python build/home_perf.py
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 장중 분봉·장중 규칙 자동 갱신" \
-            data/intraday.json data/intraday_hist.json data/intraday_strategies.json data/id
+            data/intraday.json data/intraday_hist.json data/intraday_strategies.json data/id             data/home_perf.json
       # '돌았는데 낡은 데이터'면 잡을 실패시킨다. as_of 는 **세션 날짜**(직전 거래일)이므로
       # 정상 실행이면 0~1영업일이다. 3이면 최소 하루를 통째로 걸렀다는 뜻이고, 그날 장중은
       # 영원히 못 받으므로 조용히 넘기면 안 된다.
