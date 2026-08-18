@@ -35,9 +35,17 @@ import tech_backtest as T
 
 
 def _pct(series, dt, back_days):
-    """dt 시점 값과 그보다 back_days 앞선 시점 값을 함께 준다(둘 다 공시지연 반영)."""
+    """dt 시점 값과 그보다 back_days 앞선 시점 값을 함께 준다(둘 다 공시지연 반영).
+
+    🚨 `T._shift(d, days)` 는 **빼는** 함수다. 여기에 음수를 넘기면 back_days 만큼
+      **뒤**의 기준일이 되고, asof_fund 가 `d <= cut` 으로 고르므로 미래 재무를 집는다.
+      2026-08-18 까지 이 파일의 네 자리가 전부 음수였다 — 이 파일은 수익률이 아니라
+      후보 종목 수·시작 가능 시점만 내지만, 그 값으로 뽑아 문서에 적은 커버리지는
+      미래 재무로 나온 것이다(build/PREREG-2026-08-08-WEBRESEARCH5.md §실측).
+      같은 모양의 오류를 build/validate_site.py 가 이제 정적으로 막는다.
+    """
     a = T.asof_fund(series, dt)
-    b = T.asof_fund(series, T._shift(dt, -back_days))
+    b = T.asof_fund(series, T._shift(dt, back_days))
     return a, b
 
 
@@ -76,11 +84,11 @@ def main():
             cl, cl0 = _pct(f.get("cl"), dt, 365)
             sh, sh0 = _pct(f.get("sh"), dt, 365)
             rv = T.ttm2(f.get("rev"), f.get("rev_a"), dt)
-            rv0 = T.ttm2(f.get("rev"), f.get("rev_a"), T._shift(dt, -365))
+            rv0 = T.ttm2(f.get("rev"), f.get("rev_a"), T._shift(dt, 365))
             gp = T.ttm2(f.get("gp"), f.get("gp_a"), dt)
-            gp0 = T.ttm2(f.get("gp"), f.get("gp_a"), T._shift(dt, -365))
+            gp0 = T.ttm2(f.get("gp"), f.get("gp_a"), T._shift(dt, 365))
             ni_t = T.ttm2(f.get("ni"), f.get("ni_a"), dt)
-            ni_t0 = T.ttm2(f.get("ni"), f.get("ni_a"), T._shift(dt, -365))
+            ni_t0 = T.ttm2(f.get("ni"), f.get("ni_a"), T._shift(dt, 365))
             ok_f = all(x is not None for x in
                        (ni_t, ni_t0, cf, at, at0, db, db0, ca, ca0, cl, cl0,
                         sh, sh0, rv, rv0, gp, gp0)) and at0 and at and cl and cl0 and rv and rv0

@@ -355,10 +355,30 @@ def _strategy_map(tech, asset, archive, index, deploy):
         add(w, r.get("role"), r.get("verdict"), r.get("name"), r.get("sid"), "자산배분")
     for r in (tech.get("retired") or []):
         add("퇴출", _canon_role(None, r.get("kind")), "퇴출", r.get("name"), r.get("sid"), "종목·타이밍")
+    # 🚨 세 번째 목록의 판정을 **여기서 지어내면 안 된다.** 종전에는 t 가 있으면 무조건
+    #   '열위' 라고 찍었는데, 같은 산출물의 gate 가 '게시 기준 둘 다 통과' 라고 적은 항목이
+    #   그 안에 있었다(x-illiq t 5.31 · x-amihud 6.84 · x-dato 3.61) — 지도가 원장을
+    #   반박했다. 판정은 정본(build/tested_not_published.json)의 gate 에서 읽는다.
+    # ⚠ substring 분기는 우선순위가 있어야 한다. '게시 기준 미달' 처럼 두 단어가 함께
+    #   들어간 문자열이 있고, blocked_by(자료가 막힘)는 미달과 **함께** 달리기도 한다
+    #   (e-spxadd/ndxadd 6종) — blocked_by 를 우선 키로 쓰면 미달이 보류로 뒤집힌다.
+    # ⚠ 2026-08-13 t 문턱 폐지 이후의 gate 어휘('사망 조건 F1~F6 …')에는 '통과' 도
+    #   '미달' 도 없다. 그건 본편과 같은 '측정만' 이지 '판정 전' 이 아니다.
+    def _tested_verdict(x):
+        if x.get("t") is None:
+            return "측정 불가"
+        g = str(x.get("gate") or "")
+        if "미달" in g:
+            return "구별 불가"
+        if "통과" in g:
+            return "게시 보류"
+        if g.strip():
+            return "측정만"
+        return "판정 전"
+
     for r in (tech.get("tested") or []):
         add("돌렸지만 게시 안 함", _canon_role(None, r.get("kind")),
-            "측정 불가" if r.get("t") is None else "열위",
-            r.get("name"), r.get("sid"), "종목·타이밍")
+            _tested_verdict(r), r.get("name"), r.get("sid"), "종목·타이밍")
     for it in (archive.get("items") or []):
         if it.get("n") in reproduced:
             continue                      # 자산 랩에서 이미 세었다
@@ -374,8 +394,21 @@ def _strategy_map(tech, asset, archive, index, deploy):
     axes = {"where": ["화면에 있음", "화면에서 뺌", "퇴출", "돌렸지만 게시 안 함",
                       "재현 안 함", "배포 원장"],
             "role": ["수익엔진", "타이밍오버레이", "배분기", "위험방어", "미분류"],
-            "verdict": ["배포", "제한적 유효", "통과", "구별 불가", "열위",
-                        "측정 불가", "퇴출", "미채택", "판정 전"]}
+            # 🚨 이 축은 report.html 의 smap() 이 열을 고르는 필터다 — 축에 없는 판정값을
+            #   가진 행은 **표에서 조용히 사라진다.** 2026-08-16 관문 해제로 tech·asset 의
+            #   verdict 가 전부 '측정만' 으로 바뀌었는데 이 목록이 안 따라와, '어떻게 됐나'
+            #   표에서 '화면에 있음'·'화면에서 뺌' 두 행이 통째로 없어져 있었다.
+            #   순서는 배포원장 → 본편 → 선반 → 기타.
+            "verdict": ["배포", "제한적 유효", "통과", "측정만", "게시 보류",
+                        "구별 불가", "열위", "측정 불가", "판정 불가",
+                        "퇴출", "미채택", "판정 전"]}
+    # 🚨 손으로 적은 목록이 또 낡지 않게 기계가 센다. 축에 없는 판정값이 생기면
+    #   화면에서 조용히 없어지므로, 조용히 두지 않고 오류로 만든다.
+    _miss_v = sorted({r["verdict"] for r in rows} - set(axes["verdict"]))
+    if _miss_v:
+        raise SystemExit("strategy_report: axes['verdict'] 에 없는 판정값 %s — "
+                         "report.html 의 smap() 이 이 행들을 표에서 버린다. "
+                         "축에 추가하거나 판정 어휘를 맞출 것" % ", ".join(_miss_v))
     grid = {}
     for r in rows:
         grid.setdefault(r["where"], {}).setdefault(r["role"], 0)
@@ -388,7 +421,7 @@ def _strategy_map(tech, asset, archive, index, deploy):
         "n": len(rows), "axes": axes, "by_where_role": grid, "by_where_verdict": vgrid,
         "rows": rows,
         "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · "
-                "어떻게 됐나. 목록을 그냥 더하면 216 이 나오지만 겹침을 걷으면 %d 다"
+                "어떻게 됐나. 목록을 그냥 더한 수가 아니라 겹침을 걷은 %d 다"
                 "(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다)." % len(rows),
         "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, "
                  "각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. "
@@ -454,8 +487,10 @@ def main():
                    "pit": pit.get("limits") or [], "protocol": asset.get("protocol") or []},
         "retired": {"tech": tech.get("retired") or []},
         # 🚨 세 번째 목록 — 돌렸지만 게시된 적 없는 규칙. 이 리포트가 '전 전략'을 낸다고
-        #   말하는 이상 이것도 내야 한다. 안 내면 독자는 이 랩이 69종만 팠다고 읽는데
-        #   실제로는 95종(69 + 퇴출 13 + 이 13)을 팠다. 그 차이가 다중검정의 크기다.
+        #   말하는 이상 이것도 내야 한다. 안 내면 독자는 이 랩이 화면의 규칙 수만큼만
+        #   팠다고 읽는데, 실제로는 거기에 퇴출과 이 목록이 더해진다. 그 차이가
+        #   다중검정의 크기다. ⚠ 개수는 여기 적지 않는다 — 매 실행 산출물이 세게 둔다
+        #   (종전에 '69 · 95' 라고 적혀 있었고 지금 기준으로는 완전히 다른 값이다).
         "tested": {"tech": tech.get("tested") or []},
         # 전략 지도 — 축 셋으로 접은 한 장(위 _strategy_map 머리말 참조)
         "map": _strategy_map(tech, asset, archive, index, deploy),

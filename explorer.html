@@ -2840,7 +2840,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
       //   글자로 박아 두면 됐다. 주기가 갈린 뒤로는 그 글자가 곧 거짓말이 될 수 있어
       //   자료에서 읽어 적는다. 연 회전 바로 밑에 둔다 — 둘은 같이 읽어야 하는 값이다.
-      // 🚨 원 논문 — 자료는 진작 있었는데(build/strategy_refs.json · 97종) 리포트만 쓰고
+      // 🚨 원 논문 — 자료는 진작 있었는데(build/strategy_refs.json) 리포트만 쓰고
       //   전략 랩은 안 읽고 있었다. 사용자 지적으로 잡았다(2026-08-14).
       //   URL 을 지어내지 않는다 — 제목으로 학술검색 질의를 만들어 건다. base 는 자료가
       //   실어 보낸다(DATA.refs_search). 화면에 주소를 박으면 그때부터 두 벌이 된다.
@@ -2868,7 +2868,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   구별해야 한다. 목표를 못 채운 달은 고른 것이 아니라 있는 것 전부다.
       if(d._bask){
         var BK=d._bask;
-        var bkTxt=BK.avg+'종(평균) · 목표 '+BK.tgt+'종';
+        // 🚨 목표 N 이 null 인 규칙이 있다(WEIGHTED_SIDS — 섹터별 1위 1종씩·승자 산업
+        //   전 종목은 바스켓 크기가 규칙으로 정해지지 않는다). 종전에는 그럴 때도 TOPN 을
+        //   목표로 찍어서, 같은 카드가 '실제 11종 · 목표 10종' 처럼 자기 규칙문과
+        //   모순됐다(x-indmom 은 평균 98.8종인데 목표 10종이었다). 없으면 생략한다.
+        var bkTxt=BK.avg+'종(평균)'+(BK.tgt?' · 목표 '+BK.tgt+'종':'');
         if(BK.min!==BK.max) bkTxt+=' · '+BK.min+'~'+BK.max+'종';
         labRows.push(['실제 보유 수', bkTxt]);
         if(BK.short) labRows.push(['목표를 못 채운 달',
