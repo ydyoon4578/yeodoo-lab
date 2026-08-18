@@ -139,6 +139,19 @@
   .cvlg i{width:10px;height:10px;border-radius:2px;display:inline-block}
   .cvlg i.c-hi{background:var(--deploy)} .cvlg i.c-md{background:var(--marg)}
   .cvlg i.c-lo{background:var(--hot)} .cvlg i.c-win{background:transparent;border:1px solid var(--accent);border-bottom-width:3px}
+  /* ── 편출은 어디서 일어나나 (2026-08-18) ─────────────────────────────
+     data/index_drop_rank.json 을 싣는다. 2026-08-16 에 재 놓고 아무 화면도 안 읽던
+     파일이다 — 이 랩은 «재 놓고 안 실으면 잰 적 없는 것» 이라 적어 두었다. */
+  .drk{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px;margin:14px 0 0}
+  .drb{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
+  .drb h4{margin:0 0 9px;font-family:var(--mono);font-size:11px;letter-spacing:.05em;
+          text-transform:uppercase;color:var(--muted);font-weight:700}
+  .drrow{display:flex;align-items:center;gap:8px;margin:0 0 5px;font-size:12px}
+  .drrow span:first-child{flex:0 0 66px;font-family:var(--mono);color:var(--ink-2)}
+  .drbarw{flex:1;height:13px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+  .drbar{height:100%;background:var(--hot)}
+  .drbar.zero{background:transparent;border-left:2px solid var(--line)}
+  .drrow b{flex:0 0 34px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--ink)}
   .covbar{display:flex;gap:1px;align-items:flex-end;height:72px;background:var(--panel);
           border:1px solid var(--line);border-radius:2px;padding:8px 8px 0;overflow-x:auto}
   .cb{flex:1 0 4px;min-width:4px;height:100%;border:0;background:transparent;padding:0 0 6px;
@@ -612,6 +625,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="covbar" id="covbar"></div>
   </section>
 
+  <section class="sec" id="dropsec" hidden>
+    <h2 class="lbl">편출은 어디서 일어나나 <span class="sub" id="drksub"></span></h2>
+    <p class="lblnote">이 랩의 모든 백테스트는 «오늘 지수에 있는 종목»으로 돌면 생존편향이 낍니다.
+      편향의 <b>크기</b>는 편출이 어디서 일어나는지에 달렸습니다 — 꼬리만 잘려 나간다면 대형주만 쓰는
+      규칙은 덜 노출되고, 상위 절반에서도 빠져나간다면 어떤 규칙도 안전하지 않습니다.
+      아래는 <b>편출 직전 달의 시총 순위</b>로 그 질문에 답한 것입니다.</p>
+    <div class="drk" id="drk"></div>
+    <div class="note hard" id="drkwarn"></div>
+    <details class="more"><summary>무엇을 못 재나</summary><div class="mbody" id="drklim"></div></details>
+  </section>
+
   <section class="sec" id="panel"></section>
 
   <section class="sec">
@@ -855,6 +879,68 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(i<0)return; i+=d; if(i<0||i>=ms.length)return;
     M=ms[i]; buildSel(); syncCov(); render();
   }
+
+  // ── 편출은 어디서 일어나나 ────────────────────────────────────────────
+  // 🚨 2026-08-16 에 잰 data/index_drop_rank.json 을 화면이 아무도 안 읽고 있었다.
+  //   랩 격언 «재 놓고 안 실으면 잰 적 없는 것» 의 실제 사례라 여기에 싣는다.
+  // ⚠ 이 파일은 index_ledger 와 **다른 잡이 굽는다**(로컬). 없으면 구획을 통째로 숨긴다 —
+  //   빈 표를 그려 «편출이 없었다» 처럼 보이게 두지 않는다.
+  var DRK=null;
+  var DRKB=['상위 10%','10~25%','25~50%','50~75%','하위 25%'];
+  function renderDrop(){
+    var host=document.getElementById('dropsec');
+    if(!host) return;
+    if(!DRK||!DRK.idx){ host.hidden=true; return; }
+    host.hidden=false;
+    var keys=Object.keys(DRK.idx);
+    document.getElementById('drksub').textContent=
+      '· 편출 직전 달 시총 순위 · '+(DRK.idx[keys[0]].months||[]).join(' ~ ');
+    document.getElementById('drk').innerHTML=keys.map(function(k){
+      var v=DRK.idx[k], bk=v.last_pct_buckets||{};
+      var tot=DRKB.reduce(function(a,b){return a+(bk[b]||0);},0);
+      var rows=DRKB.map(function(b){
+        var n=bk[b]||0, w=tot?(100*n/tot):0;
+        return '<div class="drrow"><span>'+esc(b)+'</span><span class="drbarw">'+
+          '<i class="drbar'+(n?'':' zero')+'" style="width:'+w.toFixed(1)+'%;display:block"></i>'+
+          '</span><b>'+n+'</b></div>';
+      }).join('');
+      // 🚨 «순위를 매길 수 있었던 편출» 과 «전체 편출» 을 같은 크기로 적는다.
+      //   앞의 수만 적으면 94% 라는 깔끔한 결론이 실제보다 단단해 보인다.
+      return '<div class="drb"><h4>'+esc(v.label)+'</h4>'+rows+
+        '<p class="lim" style="margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6">'+
+        '순위를 매길 수 있었던 편출 <b>'+v.n_gone+'</b>건 · 순위를 못 매긴 편출 <b>'+
+        v.n_gone_unranked+'</b>건 (전체 '+v.n_gone_total+'건)<br>'+
+        '한 번이라도 상위 50% 에 들었던 '+v.n_ever_top50+'곳 중 편출된 곳 <b>'+
+        v.n_ever_top50_gone+'</b>곳 ('+v.pct_ever_top50_gone+'%)</p></div>';
+    }).join('');
+
+    // 결론과 그 결론을 흔드는 사실을 **한 상자 안에** 둔다.
+    var sp=DRK.idx.spx;
+    var msg='';
+    if(sp){
+      var bk=sp.last_pct_buckets||{}, tot=DRKB.reduce(function(a,b){return a+(bk[b]||0);},0);
+      var lo=bk['하위 25%']||0;
+      msg='<b>읽히는 것:</b> 순위를 매길 수 있었던 S&amp;P 500 편출 '+tot+'건 중 <b>'+lo+
+        '건('+(tot?(100*lo/tot).toFixed(0):0)+'%)</b>이 편출 직전 달에 <b>하위 25%</b>였고, '+
+        '상위 10% 에서는 <b>'+(bk['상위 10%']||0)+'건</b>이었습니다. '+
+        '<br><b>그런데 이것을 결론으로 읽으면 안 됩니다.</b> 전체 편출 '+sp.n_gone_total+
+        '건 중 <b>'+sp.n_gone_unranked+'건('+
+        (100*sp.n_gone_unranked/sp.n_gone_total).toFixed(0)+'%)은 가격·주식수가 없어 순위를 '+
+        '못 매겼고, 그 결측은 <b>편출된 쪽에 몰려 있습니다</b> — 인수·상장폐지된 회사일수록 '+
+        '자료가 없기 때문입니다. 즉 위 분포는 «자료가 남아 있는 편출» 의 분포이지 '+
+        '«편출 전체» 의 분포가 아닙니다.';
+    }
+    document.getElementById('drkwarn').innerHTML=msg;
+    document.getElementById('drklim').innerHTML=
+      '<p class="lim">'+esc(DRK.note||'')+'</p>'+
+      (DRK.limits||[]).map(function(x){return '<p class="lim">'+esc(x)+'</p>';}).join('')+
+      (DRK.selfcheck?('<p class="lim">자체검산: 표본 '+DRK.selfcheck.n+'건 · 시총 오차 중앙 '+
+        DRK.selfcheck.median_err+'% · 최대 '+DRK.selfcheck.max_err+'%</p>'):'');
+  }
+  fetch('data/index_drop_rank.json',{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ DRK=j; renderDrop(); })
+    ['catch'](function(){ DRK=null; renderDrop(); });
 
   fetch('data/index_ledger.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
     D=j; var ms=monthsOf(IX); M=ms[ms.length-1];
