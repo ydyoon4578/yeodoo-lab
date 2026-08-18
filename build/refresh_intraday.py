@@ -100,6 +100,25 @@ SECTOR_ETF = [
     ("Materials",              "XLB", "소재"),
 ]
 
+# 🚨 홈 「기간별 수익률」 차트의 1일 칸(2026-08-19 사용자 요청)을 위해 같이 받는다.
+#   일간 종가로는 1일이 **점 두 개**라 선이 안 된다 — 분봉 경로만이 하루를 그릴 수 있다.
+#   ⚠ 이 넷은 장중 탭의 묶음(지수·섹터)이 아니다. 그 패널은 D.index[key] 로 찾는데
+#     그 키가 ALL·SPX·NDX·GICS 섹터명뿐이라 여기 넷은 안 걸린다.
+HOME_ETF = [
+    ("SPY", "SPY", "S&P 500"),
+    ("QQQ", "QQQ", "나스닥 100"),
+    ("DIA", "DIA", "다우존스 30"),
+    ("IWM", "IWM", "러셀 2000"),
+]
+# 홈 차트는 판이 넷(지수·섹터·스타일·산업)이다. 스타일 판이 1일에서만 비면 안 되므로
+# 그 여덟도 같이 받는다. ⚠ build/home_perf.py 의 STY_ETF 와 **같은 목록**이어야 한다 —
+# 다르면 1일 판에만 있는 선이 생긴다.
+STYLE_ETF = [
+    ("SPMO", "SPMO", "모멘텀"), ("IVW", "IVW", "성장"), ("IVE", "IVE", "가치"),
+    ("QUAL", "QUAL", "퀄리티"), ("SPLV", "SPLV", "저변동"), ("SCHD", "SCHD", "고배당"),
+    ("SDY", "SDY", "배당성장"), ("RSP", "RSP", "동일가중"),
+]
+
 
 def _yf(t):
     return t.replace(".", "-")
@@ -542,7 +561,9 @@ def main() -> int:
     # ⚠ 파일이름은 **심볼**로 짓는다. 묶음키를 그대로 쓰면 «_Information Technology.json»
     #   처럼 공백이 든 파일명이 나오고 정적 호스팅에서 사고가 난다.
     _SERIES = ([(k, src, nm, k, False) for k, src, nm in INDEXES]
-               + [(g, etf, ko, etf, True) for g, etf, ko in SECTOR_ETF])
+               + [(g, etf, ko, etf, True) for g, etf, ko in SECTOR_ETF]
+               + [(k, src, nm, k, False) for k, src, nm in HOME_ETF]
+               + [(k, src, nm, k, False) for k, src, nm in STYLE_ETF])
     try:
         _iraw = fetch([x[1] for x in _SERIES], "5d", "1m")
         # 전일 종가는 **일봉에서** 꺼낸다. 분봉 마지막 값으로 대신하면 그 봉이

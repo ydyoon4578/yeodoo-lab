@@ -60,6 +60,73 @@ def thin(idx, n):
     return sorted(set(out))
 
 
+def _idbars(key):
+    p = os.path.join(DATA, "id", "_%s.json" % key)
+    if not os.path.exists(p):
+        return None
+    try:
+        j = json.load(io.open(p, encoding="utf-8"))
+    except Exception:
+        return None
+    return j if (j.get("c") and j.get("pc")) else None
+
+
+def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
+    """그 세션의 분당 경로(전일 종가 대비 %). 못 만들면 None — 0 으로 채우지 않는다."""
+    probe = _idbars("SPY")
+    if not probe:
+        print("   1D: data/id/_SPY.json 없음 — 1일 칸을 만들지 않는다")
+        return None
+    if probe.get("d") != as_of:
+        print("   1D: 분봉 세션 %s ≠ 일간 기준일 %s — 1일 칸을 만들지 않는다"
+              % (probe.get("d"), as_of))
+        return None
+    n = len(probe["c"])
+    t0 = probe.get("t0") or "09:30"
+    h0, m0 = int(t0[:2]), int(t0[3:5])
+    idx = thin(list(range(n)), MAXPT)
+    def hhmm(i):
+        mm = h0 * 60 + m0 + i
+        return "%02d:%02d" % (mm // 60, mm % 60)
+    # ⚠ 화면은 지수 판에 dates 를, 섹터·스타일 판에 **sec_dates** 를 쓴다. 1일은 셋이
+    #   같은 격자(같은 분봉)라 같은 배열을 둘 다 넣는다 — 없으면 그 두 판이 터진다(실측).
+    _t = [hhmm(i) for i in idx]
+    blk = {"dates": _t, "sec_dates": _t, "ix": {}, "sec": {}, "sty": {}, "intraday": True}
+    # 표의 1일 칸과 얼마나 어긋나는지 잰다 — 일간 종가로 만든 진짜 1일 수익과 견준다.
+    apos = {d: i for i, d in enumerate(adates)}
+    ai = apos.get(as_of)
+    gaps = []
+    def put(bucket, key, nm):
+        b = _idbars(key)
+        if not b or len(b["c"]) < 30 or not b.get("pc"):
+            return
+        pc = float(b["pc"])
+        c = b["c"]
+        v = [round((c[min(i, len(c) - 1)] / pc - 1) * 100, 3) for i in idx]
+        bucket[nm] = v
+        a = apx.get(key)
+        if ai and a and ai > 0 and a[ai] and a[ai - 1]:
+            gaps.append(abs(v[-1] - (a[ai] / a[ai - 1] - 1) * 100))
+    for t, nm in (("SPY", "S&P 500"), ("QQQ", "나스닥 100"),
+                  ("DIA", "다우존스 30"), ("IWM", "러셀 2000")):
+        put(blk["ix"], t, nm)
+    for t, nm in sec_etf.items():
+        put(blk["sec"], t, nm)
+    for t, nm in sty_etf:
+        put(blk["sty"], t, nm)
+    if not blk["ix"]:
+        print("   1D: 지수 계열을 하나도 못 만들었다 — 1일 칸을 만들지 않는다")
+        return None
+    mx = max(gaps) if gaps else 0.0
+    print("   1D: 점 %d · 지수 %d · 섹터 %d · 스타일 %d · 표와의 최대 차 %.3f%%p"
+          % (len(idx), len(blk["ix"]), len(blk["sec"]), len(blk["sty"]), mx))
+    if mx > 0.15:
+        print("   🚨 1D: 표와 %.3f%%p 어긋난다 — 싣지 않는다(조용히 어긋나게 두지 않는다)" % mx)
+        return None
+    blk["gap_max"] = round(mx, 3)
+    return blk
+
+
 def main():
     mbp = os.path.join(DATA, "market_board.json")
     for p in (mbp, os.path.join(DATA, "assets.json"), os.path.join(DATA, "stocks.json")):
@@ -95,6 +162,20 @@ def main():
            "as_of": mb.get("as_of"), "maxpt": MAXPT,
            "base_dates": {k: bases.get(k) for k in HZ},
            "series": {}}
+
+    # ── 🚨 1일 — 여기만 원천이 다르다(2026-08-19 사용자 요청) ──────────────
+    #   일간 종가로 「1일」을 그리면 **점이 둘**이라 선이 아니라 직선 한 도막이다.
+    #   하루를 그리려면 분봉뿐이다 → build/refresh_intraday.py 가 받아 둔
+    #   data/id/_SPY.json 같은 계열을 쓴다(전일 종가 대비 %).
+    # ⚠ 그래서 이 칸의 끝점은 표의 1일 칸과 **정확히 같지 않다.** 분봉의 마지막 봉은
+    #   15:59 이고 공식 종가는 그 뒤 단일가로 정해지기 때문이다. 아래에서 그 차이를
+    #   재서 찍고, 크면(0.15%p 초과) 아예 안 싣는다 — 조용히 어긋나게 두지 않는다.
+    # ⚠ 세션 날짜가 일간 기준일과 다르면(장중 잡이 아직 안 돈 아침) **1일 칸을 안 만든다.**
+    #   탭이 잠깐 사라지는 편이, 어제 것을 오늘이라 말하는 것보다 낫다.
+    d1 = _intraday_block(out["as_of"], adates, apx, SEC_ETF, STY_ETF)
+    if d1:
+        out["series"]["1D"] = d1            # 🚨 먼저 넣는다 — 화면 탭 순서가 이 순서다
+        out["base_dates"]["1D"] = d1["dates"][0]
 
     for hz in HZ:
         b = bases.get(hz)
