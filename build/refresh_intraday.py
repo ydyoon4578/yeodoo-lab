@@ -79,6 +79,27 @@ HFIELDS = ["r", "r_open", "r_close", "clv", "vs_vwap", "v", "gap",
 #   종목을 좁히므로, 여기서 다른 글자를 쓰면 두 벌이 된다.
 INDEXES = [("SPX", "^GSPC", "S&P 500"), ("NDX", "^NDX", "나스닥 100")]
 
+# 🚨 섹터도 **실제 시총가중 계열**로 받는다(2026-08-18, 사용자 요청).
+#   섹터를 «편입 종목 동일가중» 으로 만들면 대형주 쏠림이 빠져 지수와 다르게 움직이고,
+#   그 차이를 화면이 설명할 방법이 없다. SPDR 섹터 ETF 는 1분봉이 390봉 다 온다(실측).
+# ⚠ 키는 stocks.json 의 GICS 섹터 **영문 이름 그대로**다. 화면이 그 값으로 종목을
+#   좁히므로 여기서 다른 글자를 쓰면 두 벌이 된다.
+# 🚨 한계: 이 ETF 들은 **S&P 500 섹터 지수**를 따른다. 이 랩 유니버스는 SPX∪NDX 라
+#   나스닥 전용 종목은 ETF 에 안 들어 있다. 화면이 이 사실을 적는다.
+SECTOR_ETF = [
+    ("Information Technology", "XLK", "IT"),
+    ("Health Care",            "XLV", "헬스케어"),
+    ("Financials",             "XLF", "금융"),
+    ("Consumer Discretionary", "XLY", "경기소비"),
+    ("Consumer Staples",       "XLP", "필수소비"),
+    ("Industrials",            "XLI", "산업재"),
+    ("Communication Services", "XLC", "커뮤니케이션"),
+    ("Energy",                 "XLE", "에너지"),
+    ("Utilities",              "XLU", "유틸리티"),
+    ("Real Estate",            "XLRE", "부동산"),
+    ("Materials",              "XLB", "소재"),
+]
+
 
 def _yf(t):
     return t.replace(".", "-")
@@ -431,7 +452,7 @@ def main() -> int:
     def _profile(keep):
         """keep(티커 집합)에 대한 분당 프로파일. 비면 빈 칸을 돌려준다."""
         if _idx_all is None or not keep:
-            return {"t0": None, "n_min": 0, "ret": [], "breadth": [], "vol": [], "n_stock": []}
+            return {"t0": None, "n_min": 0, "breadth": [], "vol": [], "n_stock": []}
         import pandas as _pd
         M = _pd.DataFrame({t: _ser_all[t].reindex(_idx_all) for t in keep})
         V = _pd.DataFrame({t: _vol_all[t].reindex(_idx_all) for t in keep})
@@ -439,7 +460,10 @@ def main() -> int:
         return {
             "t0": str(_idx_all.min())[11:16],
             "n_min": len(_idx_all),
-            "ret": [None if x != x else round(float(x), 4) for x in M.mean(axis=1)],
+            # 🚨 2026-08-18 — «동일가중 평균수익»(ret)을 뺐다(사용자 요청). 지수·섹터를
+            #   실제 시총가중 계열로 받게 됐으니, 그 옆에 동일가중 선을 하나 더 그리면
+            #   같은 그림이 두 잣대로 말한다. ⚠ «폭» 정보를 잃는 것은 아니다 —
+            #   아래 breadth(오른 종목 비율)가 그것을 더 직접적으로 말한다.
             # ⚠ 분모는 «그 분에 봉이 있는 종목» 이다. 전체 종목 수로 나누면 지연상장·
             #   거래정지가 상승비율을 조용히 끌어내린다.
             "breadth": [None if x != x else round(float(x), 2)
@@ -449,15 +473,20 @@ def main() -> int:
         }
 
     _in = lambda t, k: k in ((NM.get(t) or {}).get("idx") or [])
+    _sec = lambda t: (NM.get(t) or {}).get("sec") or ""
     profiles = {
         "ALL": _profile(sorted(_ser_all)),
         "SPX": _profile(sorted(t for t in _ser_all if _in(t, "SPX"))),
         "NDX": _profile(sorted(t for t in _ser_all if _in(t, "NDX"))),
     }
+    # 섹터 묶음 — 키는 GICS 영문 이름 그대로(화면의 state.sec 과 같은 글자)
+    for _g, _etf, _ko in SECTOR_ETF:
+        _keep = sorted(t for t in _ser_all if _sec(t) == _g)
+        if _keep:
+            profiles[_g] = _profile(_keep)
     for _k, _p in profiles.items():
-        print("  [프로파일:%s] 분 %d · 종목 최대 %d · 마지막 평균 %+.3f%% · 상승비율 %.1f%%"
-              % (_k, _p["n_min"], max(_p["n_stock"] or [0]),
-                 (_p["ret"] or [0])[-1] or 0, (_p["breadth"] or [0])[-1] or 0))
+        print("  [프로파일:%-24s] 분 %d · 종목 최대 %3d · 상승비율 %.1f%%"
+              % (_k, _p["n_min"], max(_p["n_stock"] or [0]), (_p["breadth"] or [0])[-1] or 0))
 
     # 전일 종가 — 랩 일봉 격자에서 «세션 날짜 직전 거래일» 의 종가를 꺼낸다.
     PREV = {}
@@ -509,16 +538,21 @@ def main() -> int:
     # 종목과 같은 모양(t·d·t0·pc·c·v)으로 써서 화면이 **같은 그리기 함수**를 쓰게 한다.
     # 두 벌을 만들면 한쪽만 고쳐지는 일이 생긴다(이 랩이 여러 번 겪었다).
     index_meta = {}
+    # (묶음키, 야후심볼, 표시이름, 파일이름, 섹터인가)
+    # ⚠ 파일이름은 **심볼**로 짓는다. 묶음키를 그대로 쓰면 «_Information Technology.json»
+    #   처럼 공백이 든 파일명이 나오고 정적 호스팅에서 사고가 난다.
+    _SERIES = ([(k, src, nm, k, False) for k, src, nm in INDEXES]
+               + [(g, etf, ko, etf, True) for g, etf, ko in SECTOR_ETF])
     try:
-        _iraw = fetch([x[1] for x in INDEXES], "5d", "1m")
+        _iraw = fetch([x[1] for x in _SERIES], "5d", "1m")
         # 전일 종가는 **일봉에서** 꺼낸다. 분봉 마지막 값으로 대신하면 그 봉이
         # 공식 종가와 미세하게 다르고, 갭이 그 차이만큼 틀어진다.
         _iprev = {}
         try:
             import yfinance as _yf2
-            _dd = _yf2.download([x[1] for x in INDEXES], period="10d", interval="1d",
+            _dd = _yf2.download([x[1] for x in _SERIES], period="10d", interval="1d",
                                 auto_adjust=False, progress=False, group_by="ticker")
-            for _k, _src, _nm in INDEXES:
+            for _k, _src, _nm, _fn, _issec in _SERIES:
                 _col = _dd[_src]["Close"].dropna() if (_src, "Close") in _dd.columns else None
                 if _col is None or _col.empty:
                     continue
@@ -527,30 +561,32 @@ def main() -> int:
                     _iprev[_src] = round(float(_before.iloc[-1]), 4)
         except Exception as _e:
             print("  ⚠ 지수 전일종가 실패: %s — 갭 없이 시가 대비로만 그린다" % str(_e)[:60])
-        for _k, _src, _nm in INDEXES:
+        for _k, _src, _nm, _fn, _issec in _SERIES:
             _g = dict(sessions_of(_iraw[_src])).get(last) if _src in _iraw else None
             if _g is None or len(_g) < MIN_BARS:
-                print("  ⚠ 지수 %s(%s) 세션 %s 봉 부족 — 이번 회차에서 빠진다" % (_nm, _src, last))
+                print("  ⚠ 계열 %s(%s) 세션 %s 봉 부족 — 이번 회차에서 빠진다" % (_nm, _src, last))
                 continue
             _c = [round(float(x), 4) for x in _g["Close"].tolist()]
             _v = [int(x) if x == x else 0 for x in _g["Volume"].fillna(0).tolist()]
-            io.open(os.path.join(DIR_ID, "_%s.json" % _k), "w", encoding="utf-8").write(
+            io.open(os.path.join(DIR_ID, "_%s.json" % _fn), "w", encoding="utf-8").write(
                 json.dumps({"t": _src, "d": last, "t0": str(_g.index[0])[11:16],
                             "pc": _iprev.get(_src), "c": _c, "v": _v},
                            separators=(",", ":")) + "\n")
             _pc = _iprev.get(_src)
             index_meta[_k] = {
-                "src": _src, "nm": _nm, "file": "_%s" % _k, "n_min": len(_c),
+                "src": _src, "nm": _nm, "file": "_%s" % _fn, "n_min": len(_c),
+                "sector": _issec,
                 "t0": str(_g.index[0])[11:16], "pc": _pc,
                 # 시가 대비 · 전일 대비를 둘 다 싣는다. 화면이 계산하면 어느 쪽인지
                 # 화면마다 달라진다(«전일대비» 라 적고 시가대비를 그린 사고가 있었다).
                 "r_open": round((_c[-1] / _c[0] - 1) * 100, 4) if _c[0] else None,
                 "r_prev": (round((_c[-1] / _pc - 1) * 100, 4) if _pc else None),
             }
-            print("  [지수] %s(%s) 봉 %d · 시가대비 %+.3f%%"
-                  % (_nm, _src, len(_c), index_meta[_k]["r_open"] or 0))
+            print("  [%s] %-14s(%-5s) 봉 %d · 시가대비 %+.3f%%"
+                  % ("섹터" if _issec else "지수", _nm, _src, len(_c),
+                     index_meta[_k]["r_open"] or 0))
     except Exception as _e:
-        print("  ⚠ 지수 분봉 수집 실패: %s — 그 패널만 빈다" % str(_e)[:80])
+        print("  ⚠ 지수·섹터 분봉 수집 실패: %s — 그 패널만 빈다" % str(_e)[:80])
 
     doc = {
         "note": "그 세션의 종목별 장중 요약. 봉은 data/id/<티커>.json 에 따로 있고 "
