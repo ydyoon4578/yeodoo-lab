@@ -248,10 +248,23 @@
        1200px 에서는 가장 작은 칸이 7×10px 라 글자가 안 들어갔다.
        ⚠ 내비(.topnav .nvin)도 이 토큰을 쓴다. 본문만 넓히면 내비보다 본문이 넓어져
          화면이 어긋나 보인다 — 그래서 페이지가 아니라 여기서 바꾼다.
-       ⚠ --w-read(980)는 그대로다. 글이 주인 화면은 한 줄이 길어지면 읽기 나빠진다 —
-         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다. */
-  --w-wide:1680px;--w-base:1200px;--w-read:980px;
+       ⚠ --w-read 는 글이 주인 화면이다. 한 줄이 길어지면 읽기 나빠지므로 가장 덜 늘린다 —
+         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다.
+     🚨 2026-08-19 — **고정 px 를 걷고 화면에 맞춘다**(사용자 지적 "사이트 전체에서 빈공간이
+       절반이야, 내 화면 기준"). 종전에는 상한이 1680/1200/980 고정이라 2560px 화면에서
+       본문이 각각 66%/47%/38% 만 썼다. 남는 절반은 배경이었다.
+       → min(뷰포트 비율, 상한) 으로 바꾼다. 좁은 화면에서는 vw 가 이겨 종전과 같고,
+         넓은 화면에서만 상한까지 늘어난다. 세 층 구조는 그대로 둔다 —
+         층을 없애면 «글 화면» 이 표 화면만큼 넓어져 읽기가 나빠진다.
+       ⚠ 상한을 무한히 두지 않는 이유: 표·차트는 넓을수록 낫지만 글줄은 아니고,
+         내비(.topnav .nvin)도 같은 토큰을 쓰기 때문에 통째로 늘어난다. */
+  --w-wide:min(96vw,2240px);--w-base:min(94vw,1600px);--w-read:min(92vw,1120px);
 }
+/* 넓은 층 한 벌 — 종전에는 intraday·rates 가 **각자** 이 한 줄을 갖고 있었다.
+   그래서 다른 페이지를 넓은 층으로 올리려면 CSS 를 또 복사해야 했고, 실제로 guru 를
+   올렸더니 class 만 붙고 아무 일도 안 일어났다(2026-08-19 실측). 셸이 보장한다.
+   ⚠ 대체값(fallback)을 두지 않는다 — 토큰은 바로 위에서 셸이 반드시 정의한다. */
+.wrap.wide{max-width:var(--w-wide)}
 
 /* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
    손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
@@ -569,7 +582,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 </script>
 <!-- NAV:END -->
 
-<div class="wrap" id="main">
+<!-- 🚨 2026-08-19 — 좁은 층(w-base)에서 넓은 층(w-wide)으로 올린다. 이 화면이 27곳
+     목록 + 상세 두 칸 구조가 되면서 explorer·stocks 와 같은 성격이 됐다. -->
+<div class="wrap wide" id="main">
   <header class="mast">
     <div class="eyebrow">13F · 거장 포트폴리오</div>
     <h1 class="title">13F로 볼 수 있는 것과<br>없는 것</h1>
@@ -765,7 +780,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   ⚠ 새 수를 만들지 않는다 — by_manager 의 ret·spx 를 곱해 잇기만 한다.
       '<canvas class="qpc" data-cik="'+esc(String(m.cik))+'" height="190" style="width:100%;margin:2px 0 10px"></canvas>'+
       '<div class="qplgd"><i style="background:var(--accent)"></i>'+esc(m.label)+
-      '<i style="background:var(--muted)"></i>S&amp;P 500</div>'+
+      '<i style="background:var(--muted)"></i>S&amp;P 500'+
+      '<i style="background:var(--marg)"></i>나스닥 100</div>'+
       '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">분기</th>'+
       '<th>포트 %</th><th>S&amp;P 500 %</th><th>나스닥 100 %</th><th>vs SPX</th><th>vs NDX</th>'+
       '<th>커버</th></tr></thead><tbody>';
@@ -787,17 +803,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function paintQP(){
     var cv=document.querySelector('.qpc'); if(!cv||!QP||!QP.by_manager)return;
     var rs=QP.by_manager[cv.getAttribute('data-cik')]; if(!rs||rs.length<2)return;
-    var a=[1], b=[1];
+    // 🚨 벤치마크는 **둘 다** 그린다(2026-08-19 사용자 지시). 표는 처음부터 SPX·NDX 를
+    //   나란히 적고 있었는데 곡선만 SPX 하나였다 — 한 화면이 두 기준을 쓰면 안 된다.
+    var a=[1], b=[1], c=[1];
     rs.forEach(function(r){
       a.push(a[a.length-1]*(1+(r.ret||0)/100));
       b.push(b[b.length-1]*(1+(r.spx||0)/100));
+      c.push(c[c.length-1]*(1+(r.ndx||0)/100));
     });
     var W=cv.clientWidth||700,H=190,dpr=window.devicePixelRatio||1;
     cv.width=W*dpr;cv.height=H*dpr;
     var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
     var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';};
     var PL=48,PR=10,PT=10,PB=22,n=a.length;
-    var all=a.concat(b), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
+    var all=a.concat(b).concat(c), lo=Math.min.apply(null,all), hi=Math.max.apply(null,all);
     // 배수 축이라 로그로 본다 — 13년이면 몇 배씩 벌어져 선형은 앞이 눌린다
     var L=function(v){return Math.log(Math.max(v,1e-6));};
     var lo2=L(lo), hi2=L(hi); if(!(hi2>lo2))hi2=lo2+0.1;
@@ -815,11 +834,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         x.strokeStyle=css('--line');x.globalAlpha=.5;x.beginPath();
         x.moveTo(X(i+1),PT);x.lineTo(X(i+1),H-PB+3);x.stroke();x.globalAlpha=1;
         x.fillStyle=css('--muted');x.fillText(y,X(i+1)-12,H-6);} });
-    [[b,'--muted',1.3],[a,'--accent',2.2]].forEach(function(g){
+    [[c,'--marg',1.3],[b,'--muted',1.3],[a,'--accent',2.2]].forEach(function(g){
       x.strokeStyle=css(g[1]);x.lineWidth=g[2];x.beginPath();
       g[0].forEach(function(v,i){ if(i)x.lineTo(X(i),Y(v)); else x.moveTo(X(i),Y(v)); });
       x.stroke();});
-    cv.setAttribute('aria-label','누적 성과 곡선 — 최종 '+a[a.length-1].toFixed(2)+'배 대 S&P 500 '+b[b.length-1].toFixed(2)+'배');
+    cv.setAttribute('aria-label','누적 성과 곡선 — 최종 '+a[a.length-1].toFixed(2)+'배 · S&P 500 '+
+      b[b.length-1].toFixed(2)+'배 · 나스닥 100 '+c[c.length-1].toFixed(2)+'배');
   }
 
   function renderPf(){
