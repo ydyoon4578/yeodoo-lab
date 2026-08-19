@@ -231,13 +231,26 @@
   .card h3{margin:0 0 4px;font-family:var(--mono);font-size:13.5px;font-weight:700;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .card h3 .hn{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--muted)}
 
-  .ovrow{display:grid;grid-template-columns:96px 60px 1fr;gap:3px 13px;align-items:baseline;padding:9px 2px;border-top:1px solid var(--line-soft)}
+  /* 🚨 2026-08-19 가독성 — 티커 칸이 96px 이라 회사명이 «TAIWAN / SEMICONDUCTOR / M» 처럼
+     세 줄로 쪼개졌고, 그만큼 행 높이가 들쭉날쭉해 눈이 세로로 못 내려갔다.
+     칸을 넓히고 이름을 한 줄로 자른다(전체 이름은 툴팁에 남긴다). */
+  .ovrow{display:grid;grid-template-columns:164px 52px 1fr;gap:3px 14px;align-items:baseline;padding:9px 4px;border-top:1px solid var(--line-soft)}
+  .ovrow:nth-child(even){background:color-mix(in srgb,var(--ink) 2.5%,transparent)}
   .ovrow .ot{font-family:var(--mono);font-size:13px;font-weight:800}
   .ovrow .ot a{text-decoration:none} .ovrow .ot a:hover{color:var(--accent)}
-  .ovrow .ot small{display:block;font-family:var(--sans);font-size:11px;font-weight:400;color:var(--muted)}
-  .ovrow .on{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)}
+  .ovrow .ot small{display:block;font-family:var(--sans);font-size:11px;font-weight:400;color:var(--muted);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* «몇 곳»이 이 표의 신호다 — 칩 벽에 묻히지 않게 키운다. */
+  .ovrow .on{font-family:var(--mono);font-size:14px;font-weight:800;color:var(--accent);text-align:right}
   .ovrow .om{display:flex;gap:5px;flex-wrap:wrap}
   .ovrow .om span{font-size:11.5px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 6px}
+  /* «외 N곳» — 접어 두되 지우지 않는다. 펼치면 나머지 칩이 같은 줄에 이어 붙는다. */
+  .ovmore{display:contents}
+  .ovmore>summary{font-size:11.5px;color:var(--muted);cursor:pointer;list-style:none;
+    border:1px dashed var(--line);border-radius:2px;padding:1px 6px;white-space:nowrap}
+  .ovmore>summary::-webkit-details-marker{display:none}
+  .ovmore>summary:hover{color:var(--accent);border-color:var(--accent)}
+  .ovmore[open]>summary{color:var(--accent)}
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
   footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
@@ -635,7 +648,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <nav class="views" id="views" aria-label="보기 전환">
     <a class="vtab" href="#pf" data-v="pf">운용사별 보유</a>
     <a class="vtab" href="#overlap" data-v="overlap">공통 보유종목</a>
-    <a class="vtab" href="#strat" data-v="strat">겹침 전략</a>
+    <a class="vtab" href="#strat" data-v="strat">전략</a>
   </nav>
 
   <section id="pf" aria-labelledby="p-h">
@@ -662,10 +675,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   </section>
 
   <section id="strat" aria-labelledby="s-h" hidden>
-    <h2 class="lbl" id="s-h">겹침 전략</h2>
-    <p class="lblnote">분기말 13F에서 <b>K곳 이상이 들고 있는 종목</b>을 담고 분기마다 다시 고릅니다.
-      담는 법을 셋(동일가중 · 겹침수 가중 · 신규 합의만)으로 나눠 돌렸습니다.
-      <b>좋은 판만 고르지 않고 전부 싣습니다</b> — 자세한 규칙과 한계는 표 아래에 접어 두었습니다.</p>
+    <h2 class="lbl" id="s-h">전략 <span class="sub">· 13F 로 만들 수 있는 것들</span></h2>
+    <p class="lblnote">이 랩이 13F 자료로 <b>실제로 돌려 본</b> 전략을 한자리에 놓습니다.
+      셋 다 <b>공시 지연 45일을 태웁니다</b> — 분기말 포트폴리오는 그로부터 45일 뒤에야 알 수 있으므로,
+      그 시점부터 담습니다(«운용사별 보유»의 분기 성과표와 다른 점이 그것입니다).
+      <b>좋은 판만 고르지 않습니다</b> — 돌린 것을 전부 싣고, 규칙과 한계는 각 판 아래에 접어 두었습니다.</p>
+    <div class="stnav" id="stnav"></div>
     <div id="stout"><div class="skel">불러오는 중…</div></div>
   </section>
 
@@ -993,10 +1008,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     rows.slice(0,80).forEach(function(x){
       var ot=x.off?('<span class="tkoff">'+esc(x.t)+'</span><span class="offb">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
+      // 🚨 2026-08-19 가독성 — 운용사 이름 칩이 벽처럼 깔려(GOOGL 15칩 2줄) 행을 세로로
+      //   훑을 수가 없었다. 이 표의 신호는 «몇 곳» 이고 «누구» 는 그다음이다.
+      //   → 앞 CHIP 곳만 보이고 나머지는 «외 N곳» 을 눌러 펼친다. 지우지 않는다.
+      var CHIP=8, ms=x.ciks.map(function(c){return esc(byCik[c]||c);});
+      var head=ms.slice(0,CHIP).map(function(t){return '<span>'+t+'</span>';}).join('');
+      var rest=ms.slice(CHIP);
+      var more=rest.length?('<details class="ovmore"><summary>외 '+rest.length+'곳</summary>'+
+               rest.map(function(t){return '<span>'+t+'</span>';}).join('')+'</details>'):'';
       h+='<div class="ovrow'+(x.off?' offrow':'')+'"><span class="ot">'+ot+
-         '<small>'+esc((x.nm||'').slice(0,22))+'</small></span>'+
+         '<small title="'+esc(x.nm||'')+'">'+esc(x.nm||'')+'</small></span>'+
          '<span class="on">'+x.n+'곳</span>'+
-         '<span class="om">'+x.ciks.map(function(c){return '<span>'+esc(byCik[c]||c)+'</span>';}).join('')+'</span></div>';
+         '<span class="om">'+head+more+'</span></div>';
     });
     h+='</div>';
     var solo=D.overlap.filter(function(x){return x.n===1;}).length;
@@ -1154,6 +1177,67 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          return esc(S.spec[k]);}).join('<br>· ')+'</div>'+
        '<div style="margin-top:8px">· '+(S.limits||[]).map(function(x){
          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div></details>';
+    // ══ ② 13F 컨빅션 복제 ═══════════════════════════════════════════════
+    // ⚠ 랩 자산 백테스트(build/guru_clone.py)가 구운 것을 전사만 한다. 여기서 재지 않는다.
+    (function(){
+      var C=(((STRAT.clone||{}).strategies)||[])[0];
+      if(!C||!C.metrics) return;
+      var M=C.metrics, B=C.bench||{};
+      h+='<div class="card" style="margin-top:16px"><h3>'+esc(C.name)+
+         '<span class="hn">'+esc(C.start)+' ~ '+esc(C.end)+' · '+(C.n_months||0)+'개월 · 분기 리밸</span></h3>'+
+         '<p class="lblnote" style="margin:0 0 10px">'+esc(C.rule||'')+'</p>'+
+         '<div class="fswrap"><table class="tbl gtbl"><thead><tr><th class="l">지표</th>'+
+         '<th>이 전략</th><th class="grp">'+esc(C.bench_label||'대조군')+'</th></tr></thead><tbody>'+
+         [['CAGR %','cagr'],['변동성 %','vol'],['샤프','sharpe'],['MDD %','mdd']].map(function(x){
+           var a2=M[x[1]], b2=B[x[1]];
+           return '<tr><td class="l">'+x[0]+'</td><td><b>'+nf(a2,2)+'</b></td>'+
+                  '<td class="grp">'+nf(b2,2)+'</td></tr>';
+         }).join('')+
+         '<tr><td class="l">초과 t</td><td><b>'+nf(C.t,2)+'</b></td><td class="grp">—</td></tr>'+
+         '</tbody></table></div>'+
+         '<p class="lblnote" style="margin:8px 0 0">지금 담는 것 — '+
+         ((((C.holdings||{}).tickers)||[]).map(function(t){
+            return '<a href="stocks.html#t='+encodeURIComponent(t)+'">'+esc(t)+'</a>';
+          }).join(' · ')||'—')+
+         ' <span style="color:var(--muted)">('+esc((C.holdings||{}).as_of||'')+' 기준)</span></p>'+
+         '<details class="more"><summary>규칙과 한계</summary><div class="mbody">'+
+         '<p>'+esc(C.why||'')+'</p><p>'+esc(C.note||'')+'</p></div></details></div>';
+    })();
+
+    // ══ ③ 운용사별 복제 ═════════════════════════════════════════════════
+    // 🚨 «누가 잘했나» 로 읽히기 쉬운 표다. 그래서 랩이 이미 재 둔 GRS·지속성을 **표 위에**
+    //   적는다 — 17곳을 한 줄에 세우면 눈은 1등을 고르는데, 그 1등이 다음 기간에도
+    //   1등이라는 근거는 이 자료에 없다(지속성 스피어만 −0.363 · p 0.22).
+    (function(){
+      var G=STRAT.g17;
+      if(!G||!G.managers||!G.managers.length) return;
+      var HL=G.headline||{}, gr=HL.grs||{}, ps=HL.persistence||{};
+      var rows=G.managers.slice(0).filter(function(m){return m.metrics;});
+      rows.sort(function(x,y){return (y.metrics.cagr||0)-(x.metrics.cagr||0);});
+      h+='<div class="card" style="margin-top:16px"><h3>운용사별 복제'+
+         '<span class="hn">'+rows.length+'곳 · 공시 45일 뒤부터 · 월 리밸</span></h3>'+
+         '<p class="lblnote" style="margin:0 0 10px">각 운용사의 13F 를 그대로 따라 담았을 때. '+
+         '🚨 <b>«누가 잘했나» 표가 아닙니다.</b> 열일곱을 한 줄에 세우면 눈이 1등을 고르는데, '+
+         '그 1등이 다음 기간에도 1등이라는 근거가 이 자료에 없습니다 — '+
+         '앞뒤 기간 순위 상관 <b>'+nf(ps.spearman,3)+'</b>(p '+nf(ps.spearman_p,2)+')로 '+
+         '오히려 음수이고, 전체가 동시에 초과수익 0 이라는 가설도 못 버립니다'+
+         '(GRS F '+nf(gr.F,2)+' · p '+nf(gr.p,3)+').</p>'+
+         '<div class="fswrap"><table class="tbl gtbl"><thead><tr><th class="l">운용사</th>'+
+         '<th>CAGR %</th><th>변동성 %</th><th>샤프</th><th>MDD %</th>'+
+         '<th class="grp">대조군 CAGR</th><th>차이 %p</th></tr></thead><tbody>'+
+         rows.map(function(m){
+           var M=m.metrics, B=m.bench||{}, d=(M.cagr||0)-(B.cagr||0);
+           return '<tr><td class="l">'+esc(m.name)+'<span class="sub">'+esc(m.start)+' ~ '+
+                  esc(m.end)+' · '+(m.n_months||0)+'개월</span></td>'+
+                  '<td><b>'+nf(M.cagr,2)+'</b></td><td>'+nf(M.vol,2)+'</td>'+
+                  '<td>'+nf(M.sharpe,3)+'</td><td>'+nf(M.mdd,2)+'</td>'+
+                  '<td class="grp">'+nf(B.cagr,2)+'</td>'+
+                  '<td class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+nf(d,2)+'</td></tr>';
+         }).join('')+'</tbody></table></div>'+
+         '<p class="lblnote" style="margin:8px 0 0">자세한 규약·다중검정 보정은 '+
+         '<a href="guru17.html">운용사별 복제 화면</a>에 있습니다.</p></div>';
+    })();
+
     el('stout').innerHTML=h;
     // 🚨 stmore('나머지 N종목 펼치기') 핸들러를 걷었다(2026-08-16). 겹침 화면을 상위 10
     //   한 판으로 좁히면서 보유가 10종이라 접을 것이 없어졌고, 버튼도 안 그린다.
@@ -1165,8 +1249,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var QP=null;
   fetch('data/guru_qperf.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); }catch(e){} })['catch'](function(){});
+  // 🚨 2026-08-19 — 탭 이름을 «겹침 전략» → «전략» 으로 바꾸며 셋을 한자리에 모은다.
+  //   겹침(guru_overlap) · 컨빅션 복제(guru_clone) · 운용사별 복제(guru17).
+  //   ⚠ 새 백테스트를 여기서 만들지 않는다 — 셋 다 빌더가 이미 구운 것을 전사만 한다.
+  //     화면이 다시 계산하면 채점기가 두 벌이 된다.
+  var STRAT={ov:null, clone:null, g17:null, n:0};
+  function _got(k, j){
+    STRAT[k]=j; STRAT.n++;
+    if(STRAT.n>=3) renderStrat(STRAT.ov);
+  }
   fetch('data/guru_overlap.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    ['catch'](function(){return null;}).then(renderStrat);
+    ['catch'](function(){return null;}).then(function(j){_got('ov',j);});
+  fetch('data/guru_clone.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;}).then(function(j){_got('clone',j);});
+  fetch('data/guru17.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    ['catch'](function(){return null;}).then(function(j){_got('g17',j);});
 
   fetch('data/guru.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     if(!j||!j.managers){
