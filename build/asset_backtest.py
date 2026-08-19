@@ -742,7 +742,40 @@ ROLE = {
 }
 
 
+# 🚨 2026-08-19 사용자 결정 — **샤프 0.5 미만 삭제.**
+#   explorer.html 에서 「샤프 0.5 미만 전략들은 전부 삭제」 요청. 걸린 것 17종 중
+#   16종이 여기(자산배분)이고 1종이 종목 전략(t-clvgate)이다.
+#   ⚠ 등급은 17종 다 «측정만» 이었다 — 배포·제한적 유효는 하나도 안 걸렸다.
+# 🚨 이것은 **판정이 아니라 사용자 결정**이다. 이 랩은 2026-08-13·16 에 t 문턱을
+#   폐지했고 게시 기준을 두지 않는다. 그러니 «샤프 0.5» 도 랩의 기준이 아니다 —
+#   남은 규칙의 문턱을 낮추지도, 새 문턱을 세우지도 않는다.
+# ⚠ 그리고 이 삭제는 **남은 목록을 실제보다 좋아 보이게 만든다**(생존 선택).
+#   그래서 삭제 직전 분포를 build/tested_not_published.json 에 통째로 적어 두었다.
+# ⚠ 정의를 지우지 않고 여기서 거른다 — 코드를 들어내면 공용 스코어러가 딸려 나가
+#   남은 규칙이 조용히 달라질 수 있다. 사유가 사라지지 않게 목록으로 남긴다.
+DROPPED = {
+    "opex",
+    "bond-trend",
+    "credit-bond-gate",
+    "commod-tsmom",
+    "carry",
+    "tsmom-multi",
+    "st-ou",
+    "curve-carry",
+    "fomc-even",
+    "st-vratio",
+    "macro-rot",
+    "seasonal",
+    "hrp-alloc",
+    "gem",
+    "sec-lowcorr",
+    "sec-rev1m",
+}
+
+
 def add(sid, arch, fn):
+    if sid in DROPPED:
+        return
     OUT_ROWS.append((sid, arch, fn))
 
 
