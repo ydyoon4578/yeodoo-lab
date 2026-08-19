@@ -160,6 +160,14 @@ jobs:
       # --json 은 matplotlib·한글 폰트 없이 도는 경로다 — 러너에 폰트를 얹지 않으려는 것.
       - name: Rebuild lab style performance
         run: python build/style_top_pdf.py --json
+      # 🚨 편출 종목 가격을 **자동으로** 이어 붙인다(2026-08-19). 전날 이 기록을 커밋하며
+      #   «편출 가격은 안 바뀌니 새 이름이 생길 때만 손으로» 라고 적었는데 전제가 틀렸다 —
+      #   154종 중 143종이 «지수에서 빠졌을 뿐 지금도 거래되는» 회사라 매일 낡는다.
+      #   그리고 이 이름들은 랩의 어느 일간 피드에도 없다(stocks·assets·sd 전부 0종).
+      # ⚠ style_pit **앞에** 둔다 — 그 빌더가 이 기록을 읽는다.
+      - name: Top up delisted price record
+        run: python build/pit_px_refresh.py
+        continue-on-error: true
       # 🚨 2026-08-19 — style_pit 을 러너로 들여왔다. 종전에는 «가격 캐시가 gitignore 라
       #   러너가 못 굽는다» 며 손으로만 돌렸고, 그래서 stocks 가 갱신된 날마다 style.html
       #   캐비엇의 «보정 전» 수치가 같은 화면의 표와 다른 날을 가리켰다(검사기가 만성 경고).
@@ -197,7 +205,7 @@ jobs:
             data/assets.json data/asset_strategies.json data/guru_clone.json \
             data/bench_px.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_report.json \
-            data/market_board.json data/home_perf.json data/style_perf.json data/style_trails.json data/style_pit.json \
+            data/market_board.json data/home_perf.json data/style_perf.json data/style_trails.json data/style_pit.json data/pit_px.json \
             data/home_flow.json data/asof.json \
             data/verdicts.json
       # 신선도는 커밋 직후에 본다 — 뒤가 죽어도 '패널이 낡았나'는 답이 나와야 한다.
