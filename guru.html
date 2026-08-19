@@ -555,18 +555,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
   </header>
 
+  <!-- 🚨 2026-08-19 — 네 문단 약 460자를 네 줄로 줄였다(사용자 요청). 근거는 지운 것이
+       아니라 «자세히» 접힘으로 옮겼다 — 짧게 쓰는 것과 안 적는 것은 다르다. -->
   <div class="note hard">
-    <b>13F에 안 들어 있는 것</b> — 공매도 · 현금 · 채권 · 해외 상장주식 · 파생상품 원본.
-    <b>롱온리 미국 상장주식만</b> 담깁니다. 어떤 운용사가 주식을 팔고 현금을 쌓았는지, 무엇을 공매도했는지는
-    이 서류로 알 수 없습니다.
-    <br><br><b>얼마나 묵었나</b> — 분기말 기준으로 <b>45일 뒤</b>에 냅니다. 지금 보시는 숫자는 기준일
-    <b id="g-asof">—</b> 시점의 잔고이고, 오늘 기준 <b id="g-lag">—</b>일 전입니다. 수집을 매일 해도 줄지 않습니다.
-    <br><br><b>변동은 매매 기록이 아닙니다</b> — 분기말 잔고의 차이일 뿐입니다. 분기 중에 샀다 판 것은 아예 안 보이고,
-    반대로 한 주도 안 팔았는데 주가가 내려도 평가액은 줄어듭니다. 그래서 이 화면은 <b>주식 수</b>로 비교합니다.
-    <br><br><b>명단은 이 랩이 골랐습니다</b> — 널리 알려졌다는 뜻이지 <b>잘한다는 뜻이 아닙니다</b>.
-    이 랩은 이들의 성과를 검증한 적이 없고, 따라 사라고 말하지 않습니다.
-    참고로 13F 보고총액 1위는 BlackRock(5.7조$)·Vanguard·State Street 같은 <b>인덱스·수탁사</b>입니다 —
-    규모를 기준으로 삼으면 '거장'이 아니라 수탁고 순위가 됩니다.
+    <b>롱온리 미국 상장주식만</b> — 공매도·현금·채권·해외주식은 안 담깁니다.<br>
+    <b><span id="g-lag">—</span>일 묵었습니다</b> — 기준일 <b id="g-asof">—</b> 잔고. 매일 수집해도 안 줄어듭니다.<br>
+    <b>변동 = 잔고 차이</b>, 매매 기록이 아닙니다. 그래서 <b>주식 수</b>로 비교합니다.<br>
+    <b>명단은 이 랩이 골랐습니다</b> — 유명하다는 뜻이지 잘한다는 뜻이 아닙니다.
+    <a href="#" class="gmore" id="gmore">자세히 →</a>
+  </div>
+  <div class="note" id="gdet" hidden>
+    분기 중에 샀다 판 것은 아예 안 보이고, 한 주도 안 팔았는데 주가가 내려도 평가액은 줄어듭니다 —
+    그래서 평가액이 아니라 주식 수로 봅니다.<br>
+    13F 는 분기말 기준 <b>45일 뒤</b>에 제출합니다. 이 지연은 제도에서 오는 것이라 수집 주기로 줄일 수 없습니다.<br>
+    이 랩은 이들의 성과를 검증한 적이 없고 따라 사라고 말하지 않습니다. 참고로 13F 보고총액 1위는
+    BlackRock(5.7조$)·Vanguard·State Street 같은 <b>인덱스·수탁사</b>입니다 — 규모로 고르면
+    '거장'이 아니라 수탁고 순위가 됩니다.
   </div>
 
   <nav class="views" id="views" aria-label="보기 전환">
@@ -1055,6 +1059,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('pfout').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
   });
   // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
+})();
+</script>
+<script>
+/* «자세히» 접힘 — 위 요약 네 줄이 짧아진 대신 근거를 여기 둔다(2026-08-19). */
+(function(){
+  var a=document.getElementById('gmore'), d=document.getElementById('gdet');
+  if(!a||!d)return;
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    var open=d.hasAttribute('hidden');
+    if(open)d.removeAttribute('hidden'); else d.setAttribute('hidden','');
+    a.textContent=open?'접기 ←':'자세히 →';
+  });
 })();
 </script>
 </body>
