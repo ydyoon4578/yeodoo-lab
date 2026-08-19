@@ -60,8 +60,10 @@ def thin(idx, n):
     return sorted(set(out))
 
 
-def _idbars(key):
-    p = os.path.join(DATA, "id", "_%s.json" % key)
+def _idbars(key, stock=False):
+    """분봉 파일. ⚠ 지수·ETF 는 «_SPY.json» 이고 **종목은 접두사가 없다**(«AAPL.json»).
+    한 함수로 둘 다 읽되 어느 쪽인지 부르는 곳이 말한다 — 접두사를 섞으면 조용히 다 빈다."""
+    p = os.path.join(DATA, "id", ("%s.json" if stock else "_%s.json") % key)
     if not os.path.exists(p):
         return None
     try:
@@ -69,6 +71,54 @@ def _idbars(key):
     except Exception:
         return None
     return j if (j.get("c") and j.get("pc")) else None
+
+
+# 홈 섹터 판과 같은 한글 이름 — home_summary.SEC_ETF 와 짝이다(다르면 색이 안 맞는다).
+_SEC_KO = {"Information Technology": "IT", "Financials": "금융", "Health Care": "헬스케어",
+           "Consumer Discretionary": "경기소비", "Communication Services": "커뮤니케이션",
+           "Industrials": "산업재", "Consumer Staples": "필수소비", "Energy": "에너지",
+           "Utilities": "유틸리티", "Real Estate": "부동산", "Materials": "소재"}
+
+
+def _intraday_ind(idx):
+    """(그룹→경로, 그룹→부모섹터한글). 재료가 없으면 ({}, {})."""
+    mp = os.path.join(DATA, "members.json")
+    sp = os.path.join(DATA, "stocks.json")
+    if not (os.path.exists(mp) and os.path.exists(sp)):
+        return {}, {}
+    try:
+        mem = (json.load(io.open(mp, encoding="utf-8")) or {}).get("members") or {}
+        st = json.load(io.open(sp, encoding="utf-8"))["stocks"]
+    except Exception:
+        return {}, {}
+    grp, gsec = {}, {}
+    for x in st:
+        t = x["t"]
+        g = ((mem.get(t) or {}).get("grp") or "").strip()
+        ko = _SEC_KO.get(x.get("sector") or "")
+        mc = (x.get("fund") or {}).get("mc")
+        if not g or not ko or not mc or mc <= 0:
+            continue          # ⚠ 추측으로 채우지 않는다 — 못 넣는 종목은 그냥 빠진다
+        grp.setdefault(g, []).append((t, float(mc)))
+        gsec[g] = ko
+    out, secs = {}, {}
+    for g, mem_l in grp.items():
+        num = [0.0] * len(idx)
+        wsum = 0.0
+        for t, mc in mem_l:
+            b = _idbars(t, stock=True)
+            if not b or not b.get("pc") or len(b["c"]) < 30:
+                continue
+            pc, c = float(b["pc"]), b["c"]
+            for k, i in enumerate(idx):
+                num[k] += mc * (c[min(i, len(c) - 1)] / pc - 1) * 100.0
+            wsum += mc
+        # 3종 미만이 담긴 그룹은 만들지 않는다 — 일간 판과 같은 취급이다
+        if wsum <= 0 or sum(1 for t, _m in mem_l if _idbars(t, stock=True)) < 3:
+            continue
+        out[g] = [round(v / wsum, 3) for v in num]
+        secs[g] = gsec[g]
+    return out, secs
 
 
 def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
@@ -117,6 +167,13 @@ def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
     if not blk["ix"]:
         print("   1D: 지수 계열을 하나도 못 만들었다 — 1일 칸을 만들지 않는다")
         return None
+    # 산업그룹 — 종목 분봉을 **산업그룹 시총가중**으로 합친다(2026-08-19 사용자 요청).
+    # 🚨 일간 판(build/home_summary._industry)과 **같은 식**이다: 기준일 시총가중,
+    #   가중치는 기준일에 고정. 다른 식으로 만들면 같은 이름의 선이 구간마다 다른 뜻이 된다.
+    # ⚠ 분류는 GICS 산업그룹(data/members.json 의 grp) — 그 판이 쓰는 바로 그 값이다.
+    blk["ind"], blk["ind_sec"] = _intraday_ind(idx)
+    if blk["ind"]:
+        print("   1D: 산업그룹 %d줄(종목 분봉 시총가중)" % len(blk["ind"]))
     mx = max(gaps) if gaps else 0.0
     print("   1D: 점 %d · 지수 %d · 섹터 %d · 스타일 %d · 표와의 최대 차 %.3f%%p"
           % (len(idx), len(blk["ix"]), len(blk["sec"]), len(blk["sty"]), mx))

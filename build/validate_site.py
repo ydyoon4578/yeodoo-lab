@@ -3480,7 +3480,9 @@ except Exception as _e:
 #   코드에 박고, 그보다 늘면 «이 변경이 늘렸다» 고 말한다 — 랩이 이미 쓰는 관문 방식이다.
 # ⚠ 기준선을 줄이는 것은 좋은 일이다. 줄었으면 이 수를 낮춰 적을 것(안 낮추면 다음
 #   퇴행을 못 잡는다). 그 안내를 화면에 같이 찍는다.
-BASE_UNBUILT, BASE_UNREAD = 1, 2
+# 2026-08-19 — 1→0. data/home_perf.json 을 refresh-intraday 도 굽게 되면서 «굽는 잡이
+#   없는 산출물» 이 사라졌다. 래칫이므로 줄면 바로 낮춘다 — 안 낮추면 다시 늘어도 안 걸린다.
+BASE_UNBUILT, BASE_UNREAD = 0, 2
 try:
     import importlib, contextlib
     _au = importlib.import_module("audit_unbuilt")
