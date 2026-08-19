@@ -72,7 +72,12 @@ NO_ROW = {
     #   ⚠ 그때까지 이 잡의 기준일은 sources 표에 안 나온다. 대신 rates.html 맨 위가
     #     FRED 기준일을, 수준 표가 **계열마다 자기 기준일**을 찍는다 — 계열별 발표
      #     주기가 달라(모기지는 주 1회) 한 날짜로 뭉뚱그리면 그게 더 틀린다.
-    "refresh-rates.yml":     "금리 분석 — sources 표가 잠금 페이지라 행을 못 넣었다(intraday 와 같은 사정)",
+    "refresh-rates.yml":     "금리 분석 — sources 표가 잠금 페이지라 행을 못 넣었다(intraday 와 같은 사정)",
+    # 🚨 2026-08-19 신설. 화면에 실린 규칙 x-custconc 가 읽는 자료인데 어느 잡에도 없었다
+    #   (audit_unbuilt 가 찾았다). 행을 못 넣는 사정은 위 refresh-rates 와 같다 —
+    #   sources.html 이 잠금 페이지라 평문을 고치고 다시 잠가야 하는데 그건 사용자만 한다.
+    #   → 그 페이지를 다음에 열 때 행을 만들고 이 줄을 ROWS 로 옮길 것.
+    "refresh-custconc.yml":  "고객 집중도 — sources 표가 잠금 페이지라 행을 못 넣었다(rates 와 같은 사정)",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
     # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.
