@@ -412,6 +412,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표</span></a>
           <a class="mmi" href="rates.html" data-nav="rates.html"><span class="mmn">금리 분석</span></a>
           <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span></a>
+          <a class="mmi" href="sector.html" data-nav="sector.html"><span class="mmn">섹터·세부섹터</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="stocks">
@@ -546,6 +547,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       두 블록은 <b>서로 다른 모집단</b>이고, 둘 다 <b>집계일 뿐 예측이 아닙니다</b>.</p>
     <div class="asofline" id="asofline"><span>기준일 불러오는 중…</span></div>
   </header>
+
+  <!-- ⓪ 섹터 · 세부섹터 한눈에 (2026-08-19 사용자 지시) ─────────────────
+       🚨 이 화면은 2026-08-12 에 «홈의 기간별 수익률과 겹친다» 는 사유로 메뉴에서
+         빠졌던 칸이다. 같은 것을 다시 만들지 않으려고 **세부단**을 축으로 놓는다 —
+         섹터를 열면 그 안의 GICS 산업그룹이 펴진다. 홈은 섹터 한 줄로 끝난다.
+       ⚠ 두 단의 계산이 다르다. 섹터는 섹터 ETF(홈이 쓰는 그 수치를 그대로 옮긴다),
+         산업그룹은 유니버스 종목의 기준일 시총가중이다 — 산업그룹에는 ETF 가 없다.
+         그래서 합쳐도 정확히 같아지지 않는다. 그 사실을 표 아래에 적는다. -->
+  <section aria-labelledby="sp-h">
+    <h2 class="lbl" id="sp-h">섹터 · 세부섹터 <span class="sub">· 섹터를 누르면 그 안이 펴집니다</span></h2>
+    <p class="lblnote">GICS <b>11섹터</b>와 그 안의 <b>산업그룹 24개</b>를 한 표에 둡니다.
+      홈의 «기간별 수익률»은 섹터 한 줄로 끝나지만, 여기서는 <b>섹터 안 어디가 끌고 어디가 끌리는지</b>를 봅니다.</p>
+    <div class="chiprow" style="margin:10px 0 8px">
+      <span class="fchip lbl">기간</span><span id="sphz" style="display:contents"></span>
+    </div>
+    <div id="spout"><div class="skel">불러오는 중…</div></div>
+  </section>
 
   <!-- ① 표본 먼저 ─────────────────────────────────────────────────── -->
   <section aria-labelledby="samp-h">
@@ -1138,6 +1156,102 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     mh+='</tbody></table>';
     el('maptbl').innerHTML=mh;
   }).catch(function(){ fail('데이터를 불러오지 못했습니다.'); });
+})();
+</script>
+<style>
+  /* 섹터·세부섹터 한눈에 */
+  .sprow{display:grid;grid-template-columns:1fr 92px 66px;gap:10px;align-items:center;
+    padding:9px 10px;border-top:1px solid var(--line-soft);cursor:pointer;background:none;
+    border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;font:inherit}
+  .sprow:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+  .sprow .spn{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .sprow .spc{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+  .sprow .spv{font-family:var(--mono);font-size:14px;font-weight:800;text-align:right;
+    font-variant-numeric:tabular-nums}
+  .sprow .spb{height:9px;border-radius:2px;background:var(--panel-2);position:relative;overflow:hidden}
+  .sprow .spb i{position:absolute;top:0;bottom:0;display:block}
+  .spup{color:var(--deploy)} .spdn{color:var(--hot)}
+  .spsub{background:var(--panel-2);border-top:1px solid var(--line-soft)}
+  .spsub .sprow{padding-left:26px;border-top:1px solid var(--line-soft)}
+  .spsub .sprow .spn{font-weight:600;font-size:12.5px}
+  .spsub .sprow .spv{font-size:12.5px;font-weight:700}
+  .spcard{background:var(--panel);border:1px solid var(--line);border-radius:2px;
+    box-shadow:var(--shadow);overflow:hidden}
+  .sphd{display:grid;grid-template-columns:1fr 92px 66px;gap:10px;padding:8px 10px;
+    font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:700;
+    background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .sphd span:nth-child(3){text-align:right}
+</style>
+<script>
+(function(){
+  var el=function(i){return document.getElementById(i);};
+  var esc=function(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var nf=function(v,d){return (v==null||v!==v)?'—':(v>0?'+':'')+Number(v).toFixed(d==null?2:d);};
+  var SP=null, HZ='1M', OPEN={};
+  function draw(){
+    if(!SP){el('spout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
+      '<code>data/sector_panel.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
+    var hzs=SP.hz||[];
+    el('sphz').innerHTML=hzs.map(function(h){
+      return '<button class="fchip" type="button" data-h="'+esc(h)+'" aria-pressed="'+(h===HZ)+'">'+esc(h)+'</button>';}).join('');
+    el('sphz').querySelectorAll('.fchip').forEach(function(b){
+      b.onclick=function(){HZ=b.getAttribute('data-h');draw();};});
+
+    var SEC=(SP.sec||{})[HZ]||{}, IND=((SP.ind||{})[HZ]||{});
+    var grp=IND.grp||{};
+    var bySec={};
+    Object.keys(grp).forEach(function(g){
+      var k=grp[g].sec||'—'; (bySec[k]=bySec[k]||[]).push({g:g, v:grp[g].ret, n:grp[g].n});});
+    Object.keys(bySec).forEach(function(k){bySec[k].sort(function(a,b){return b.v-a.v;});});
+    // 섹터 정렬 — 수익률 내림차순. 섹터 수치가 없으면 산업그룹 평균으로 대신 세우지 않는다
+    // (⚠ 두 단은 계산이 달라, 없는 것을 다른 것으로 채우면 표가 거짓이 된다). 뒤로 보낸다.
+    var secs=Object.keys(bySec).map(function(k){return {k:k, v:(SEC[k]==null?null:SEC[k])};});
+    secs.sort(function(a,b){
+      if(a.v==null&&b.v==null)return 0; if(a.v==null)return 1; if(b.v==null)return -1;
+      return b.v-a.v;});
+    // 막대 눈금 — 섹터·산업그룹을 통틀어 절대값 최대에 맞춘다(둘을 같은 자로 읽게)
+    var mx=0;
+    secs.forEach(function(o){ if(o.v!=null) mx=Math.max(mx,Math.abs(o.v));
+      (bySec[o.k]||[]).forEach(function(x){ mx=Math.max(mx,Math.abs(x.v)); }); });
+    if(!(mx>0)) mx=1;
+    function bar(v){
+      if(v==null) return '<span class="spb"></span>';
+      var w=Math.min(50,Math.abs(v)/mx*50);
+      var c=(v>=0?'var(--deploy)':'var(--hot)');
+      return '<span class="spb"><i style="background:'+c+';'+
+        (v>=0?('left:50%;width:'+w+'%'):('right:50%;width:'+w+'%'))+'"></i></span>';
+    }
+    var h='<div class="spcard"><div class="sphd"><span>섹터 · 산업그룹</span><span>0 기준</span><span>%</span></div>';
+    secs.forEach(function(o){
+      var subs=bySec[o.k]||[], on=!!OPEN[o.k];
+      h+='<button class="sprow" type="button" data-k="'+esc(o.k)+'" aria-expanded="'+on+'">'+
+         '<span class="spn">'+(on?'\u25BE':'\u25B8')+' '+esc(o.k)+
+         '<span class="spc">산업그룹 '+subs.length+'</span></span>'+
+         bar(o.v)+
+         '<span class="spv '+(o.v==null?'':(o.v>=0?'spup':'spdn'))+'">'+nf(o.v)+'</span></button>';
+      if(on){
+        h+='<div class="spsub">'+subs.map(function(x){
+          return '<div class="sprow" style="cursor:default"><span class="spn">'+esc(x.g)+
+                 '<span class="spc">'+x.n+'종</span></span>'+bar(x.v)+
+                 '<span class="spv '+(x.v>=0?'spup':'spdn')+'">'+nf(x.v)+'</span></div>';
+        }).join('')+'</div>';
+      }
+    });
+    h+='</div>';
+    h+='<p class="lblnote" style="margin:10px 0 0">기준일 <b>'+esc(IND.base||'—')+'</b> ~ '+
+       esc(SP.as_of||'')+' · 산업그룹은 유니버스 '+(SP.n_stocks||0)+'종의 <b>기준일 시총가중</b>이고 '+
+       '3종 미만 그룹은 만들지 않습니다.<br>'+
+       '🚨 <b>두 단은 계산이 다릅니다.</b> 섹터 줄은 <b>섹터 ETF</b>의 가격 수익률이고(홈 «기간별 수익률»이 '+
+       '쓰는 바로 그 수치를 옮겼습니다 — 여기서 따로 계산하면 같은 섹터가 두 화면에서 다른 수가 됩니다), '+
+       '산업그룹은 시총가중입니다. 산업그룹에는 ETF 가 없어 달리 만들 방법이 없습니다. '+
+       '그래서 <b>산업그룹을 합쳐도 그 섹터 수치와 정확히 같아지지 않습니다</b> — ETF 는 부동주 가중이고 편입 종목도 다릅니다.</p>';
+    el('spout').innerHTML=h;
+    el('spout').querySelectorAll('button.sprow').forEach(function(b){
+      b.onclick=function(){var k=b.getAttribute('data-k');OPEN[k]=!OPEN[k];draw();};});
+  }
+  fetch('data/sector_panel.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+    .then(function(j){SP=j;draw();})['catch'](function(){SP=null;draw();});
 })();
 </script>
 </body>

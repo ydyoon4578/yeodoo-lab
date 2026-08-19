@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "feaf93852f1ec13a",
+ "generated_from": "9d460251d5219d99",
  "categories": [
   {
    "name": "시장",
@@ -56,6 +56,16 @@
      "src": "raw",
      "effort": "M",
      "anchor": "static",
+     "live": true
+    },
+    {
+     "name": "섹터·세부섹터",
+     "file": "sector.html",
+     "status": "existing",
+     "desc": "GICS 11섹터와 그 안의 산업그룹 24개를 한 표에 — 섹터 안 어디가 끌고 끌리는지",
+     "verdict": "na",
+     "src": "agg",
+     "effort": "M",
      "live": true
     }
    ]
@@ -339,17 +349,6 @@
    "principle": "⚠ 이 칸은 '무료 자료로 못 만든다'가 아니라 '메뉴에 안 내보낸다'다. 다른 은퇴 항목과 성격이 다르므로 그렇게 적어 둔다. 되살리려면 build/nav_items.json 의 ledger 에 다시 넣고 sync_nav 를 돌리면 된다."
   },
   {
-   "name": "섹터 히트맵",
-   "cat": "시장",
-   "was_file": "sector.html",
-   "desc": "11섹터 오늘 상태 + 현 레짐(Recovery) 과거 월평균",
-   "retired_on": "2026-08-12",
-   "why": "메뉴에서 뺐다(사용자 결정) — 이 칸이 무엇에 답하는지가 애매했다. 담긴 것은 11섹터의 오늘 등락과 '지금 국면(Recovery)의 과거 월평균' 둘인데, 앞은 홈의 기간별 수익률 표가 같은 섹터 ETF 수치로 이미 보여 주고 뒤는 시장 국면 페이지의 교과서 선호 업종과 같은 질문이다. 즉 두 화면 사이에 낀 채 어느 쪽도 더 잘 답하지 못했다.",
-   "principle": "쓰임이 겹치는 칸은 남겨 두는 것이 친절이 아니라 부담이다 — 읽는 사람이 '이건 뭘 보라는 칸이지'를 매번 되물어야 한다.",
-   "replaced_by": "섹터 등락은 홈 '기간별 수익률'(섹터 11행) · 국면별 선호 업종은 regime.html 의 경기 사이클.",
-   "file_kept": "sector.html 파일과 빌더는 지우지 않았다. 메뉴 슬롯에서만 뺐다 — 되살리려면 이 항목을 categories 로 되돌리면 된다."
-  },
-  {
    "name": "운용사 복제 진단",
    "cat": "전략",
    "was_file": "guru17.html",
@@ -414,6 +413,16 @@
    "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다 — intraday.html 과 data/intraday.json·data/id/ 는 그대로이고 잡도 계속 돈다.",
    "replaced_by": "stocks.html — 차트 기간 «1일» 이 분봉으로 그려진다.",
    "file_kept": "intraday.html 파일·빌더·워크플로를 지우지 않았다. 메뉴 슬롯에서만 뺐다."
+  },
+  {
+   "name": "섹터 히트맵(옛 판)",
+   "cat": "시장",
+   "was_file": "sector.html",
+   "desc": "2026-08-12 에 «홈과 겹친다» 로 내렸다가 2026-08-19 에 **세부단을 축으로 다시 올렸다**",
+   "retired_on": "2026-08-12",
+   "readmitted_on": "2026-08-19",
+   "why": "내렸던 사유는 «11섹터의 오늘 등락은 홈의 기간별 수익률이 이미 보여 준다» 였고 그것은 지금도 맞다.",
+   "principle": "그래서 같은 것을 다시 만들지 않았다. 되올린 칸의 축은 **세부단**이다 — 섹터를 열면 GICS 산업그룹 24개가 펴진다. 홈은 섹터 한 줄로 끝난다. 겹치는 칸을 되살리려면 «무엇이 달라졌는지» 를 먼저 말할 수 있어야 한다."
   }
  ]
 }
