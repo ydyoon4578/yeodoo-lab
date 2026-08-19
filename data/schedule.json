@@ -57,6 +57,14 @@
     "매주 토 07:13 KST"
    ]
   },
+  "refresh-custconc.yml": {
+   "cron": [
+    "20 21 * * 5"
+   ],
+   "label": [
+    "매주 토 06:20 KST"
+   ]
+  },
   "refresh-earnings.yml": {
    "cron": [
     "53 21 * * 0-5"

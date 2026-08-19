@@ -241,12 +241,27 @@ def main() -> int:
         uni = pick + rest[:: max(1, len(rest) // max(1, a.sample // 3))][: max(0, a.sample - len(pick))]
         print("표본 %d종 — 문장을 눈으로 검산한다(저장 안 함)\n" % len(uni))
 
+    # ── 재개 상태 ─────────────────────────────────────────────────────
+    # 🚨 2026-08-19 — 종전에는 재개 상태가 data/_custconc_raw.json 에만 있었다. 그런데 그
+    #   파일은 gitignore 라 **러너에는 없다** — 잡으로 돌리면 매주 517종을 처음부터 다시
+    #   훑는다(문서 8천 건). 그래서 재개 상태를 **커밋되는 산출물 자신**(OUT)으로 옮긴다.
+    # 🚨 그리고 종전 조건은 `if t in res: continue` 였다 — 한 번 훑은 종목은 **영영 다시
+    #   안 본다.** 그 상태로 크론을 걸면 첫 완주 뒤로는 아무 일도 안 하면서 초록으로만
+    #   돌고, 새 10-K 가 나와도 화면은 옛 값을 그대로 쓴다. 그래서 «마지막으로 훑은
+    #   제출일»을 적어 두고 그보다 새 제출만 받는다.
+    # ⚠ RAW 는 «한 번의 실행 안에서» 끊겼을 때를 위한 로컬 체크포인트로만 남긴다.
+    prev_co, scan = {}, {}
+    if not a.sample and os.path.exists(OUT):
+        _o = json.load(io.open(OUT, encoding="utf-8"))
+        prev_co = {t: [{"d": r[0], "pct": r[1], "s": r[2] if len(r) > 2 else ""} for r in v]
+                   for t, v in (_o.get("co") or {}).items()}
+        scan = dict(_o.get("scan") or {})
     res = {}
     if not a.sample and os.path.exists(RAW):
         res = json.load(io.open(RAW, encoding="utf-8"))
     if a.pit:
         res = {k: v for k, v in res.items() if k in uni}   # 편출분만 재개 대상으로 본다
-    n_doc = 0
+    n_doc = n_skip = n_new = 0
     for k, t in enumerate(uni, 1):
         if t in res:
             continue
@@ -256,6 +271,19 @@ def main() -> int:
         except Exception as e:
             res[t] = {"err": str(e)[:50], "rows": []}
             continue
+        # 증분 — 마지막으로 훑은 제출일보다 새 것만 받는다.
+        # ⚠ 최신 제출이 그때와 같으면 문서를 **한 건도** 안 받는다(제출목록 1콜뿐).
+        last = scan.get(t) or ""
+        newest = max([f["d"] for f in fl], default="")
+        if last and newest and newest <= last:
+            res[t] = {"rows": [{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
+                               for r in prev_co.get(t, [])], "keep": True}
+            n_skip += 1
+            continue
+        fl = [f for f in fl if not last or f["d"] > last]
+        n_new += len(fl)
+        rows = [{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
+                for r in prev_co.get(t, [])]          # 이미 뽑아 둔 값은 그대로 들고 간다
         for f in fl:
             url = "https://www.sec.gov/Archives/edgar/data/%d/%s/%s" % (int(cik[t]), f["a"], f["p"])
             try:
@@ -266,6 +294,10 @@ def main() -> int:
             if v is not None:
                 rows.append({"d": f["d"], "pe": f["pe"], "pct": v, "s": ss[0] if ss else ""})
         res[t] = {"rows": rows}
+        if not a.sample and newest:
+            # ⚠ 제출이 아예 없는 종목(외국 발행사·최근 상장)은 적지 않는다. 빈 값을 넣으면
+            #   파일만 부풀고 뜻이 없다 — 다음 실행에서 제출목록 1콜로 다시 확인하면 된다.
+            scan[t] = newest
         if a.sample:
             print("%-6s 10-K %2d건 · 집중도 잡힘 %2d건" % (t, len(fl), len(rows)))
             for r in rows[-2:]:
@@ -286,12 +318,15 @@ def main() -> int:
     if not a.pit:
         json.dump(res, io.open(RAW, "w", encoding="utf-8"), ensure_ascii=False)
     co = {t: sorted(v["rows"], key=lambda r: r["d"]) for t, v in res.items() if v.get("rows")}
-    if a.pit and os.path.exists(OUT):
-        old = (json.load(io.open(OUT, encoding="utf-8")).get("co") or {})
-        merged = {t: [{"d": r[0], "pct": r[1], "s": r[2] if len(r) > 2 else ""} for r in v]
-                  for t, v in old.items()}
-        merged.update(co)                                  # 편출분을 보탠다(기존은 그대로)
-        co = merged
+    # 🚨 **언제나 병합한다**(2026-08-19). 종전에는 --pit 일 때만 기존 파일과 합쳤다.
+    #   그래서 평범한 실행이 완주하면 co 가 «현재 유니버스»만으로 다시 만들어지고 OUT 을
+    #   병합 없이 덮었다 — 편출·상폐 35종이 그대로 사라진다. 그 35종은 PIT 레그가
+    #   공정하려면 반드시 있어야 하는 것들이다(생존자만 남으면 편향을 재려는 표가
+    #   그 편향을 갖는다). 한 레그가 다른 레그의 자료를 지울 수 있는 구조를 없앤다.
+    n_kept = len(set(prev_co) - set(co))
+    merged = dict(prev_co)
+    merged.update(co)
+    co = merged
     n_obs = sum(len(v) for v in co.values())
     doc = {
         "note": ("10-K·20-F 원문에서 뽑은 **단일 고객** 매출 집중도(%). 값은 제출일(d)부터 "
@@ -300,11 +335,17 @@ def main() -> int:
                  "s 는 그 값을 뽑은 원문 문장이다 — 사람이 검산할 수 있어야 한다."),
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "since": SINCE, "n_co": len(co), "n": n_obs,
+        # 🚨 재개·증분의 정본. 이것이 있어야 러너가 이어서 돈다(RAW 는 gitignore).
+        #   {티커: 마지막으로 훑은 제출일}. 다음 실행은 이보다 새 제출만 받는다.
+        "scan": scan, "n_scan": len(scan),
         "co": {t: [[r["d"], r["pct"], r["s"][:200]] for r in v] for t, v in co.items()},
     }
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n")
-    print("\n고객 집중도: %d사 · %d관측 · %.0fKB" % (len(co), n_obs, os.path.getsize(OUT) / 1024))
+    print("\n고객 집중도: %d사 · %d관측 · %.0fKB (훑음 %d종 · 새 문서 %d건 · "
+          "변화 없어 건너뜀 %d종 · 이번에 안 본 채 보존 %d종)"
+          % (len(co), n_obs, os.path.getsize(OUT) / 1024, len(scan), n_new,
+             n_skip, n_kept))
     yrs = {}
     for v in co.values():
         for r in v:
