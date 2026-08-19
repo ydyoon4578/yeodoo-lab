@@ -37,6 +37,31 @@ IDX = [("spx", "S&P 500", "List_of_S%26P_500_companies"),
        ("ndx", "나스닥 100", "Nasdaq-100")]
 
 
+def _pitpx():
+    """편출 종목 가격 — 커밋된 기록(pit_px.json) + 로컬 캐시(_pit_px_cache.json) 합집합.
+
+    🚨 2026-08-19 — 종전에는 로컬 캐시만 읽었다. 그 파일은 gitignore 라 러너에는 없고,
+      그래서 러너가 이 원장을 구우면 편출 종목이 통째로 «자료 없음» 이 된다.
+      이제 커밋되는 data/pit_px.json 이 있으므로 그것을 먼저 읽는다.
+    ⚠ 둘 다 있으면 합친다 — 로컬 캐시가 더 신선할 수 있고, 기록이 더 넓을 수 있다
+      (사내 DB 로 메운 76종은 기록에만 있다).
+    """
+    out = {}
+    try:
+        sl = _load("pit_px.json") or {}
+        ds = sl.get("dates") or []
+        for t, v in (sl.get("px") or {}).items():
+            i0 = v.get("i0") or 0
+            out[t] = {ds[i0 + k]: p for k, p in enumerate(v.get("p") or [])
+                      if p is not None and i0 + k < len(ds)}
+    except Exception as e:
+        print("  [주의] pit_px.json 을 못 읽었다(%s)" % str(e)[:50])
+    for t, ser in (_load("_pit_px_cache.json") or {}).items():
+        if isinstance(ser, dict):
+            out.setdefault(t, {}).update(ser)
+    return out
+
+
 def _load(name, default=None):
     try:
         return json.load(io.open(os.path.join(DATA, name), encoding="utf-8"))
@@ -72,7 +97,7 @@ def mcap_tools():
         return None, None
     FU = TB.load_fund()
     SHC = _load("_pit_sh_cache.json") or {}
-    PXC = _load("_pit_px_cache.json") or {}
+    PXC = _pitpx()
     PXD = {}
     sd = os.path.join(DATA, "sd")
     if os.path.isdir(sd):
@@ -146,8 +171,8 @@ def px_months():
                     _seen = True
                 elif _seen:
                     nulls[0] += 1
-    # 편출 종목 캐시 — {티커: {날짜: 종가}}. 로컬에만 있다.
-    cache = _load("_pit_px_cache.json") or {}
+    # 편출 종목 가격 — 커밋된 기록 + 로컬 캐시(합집합). 러너도 읽을 수 있다.
+    cache = _pitpx()
     for t, ser in cache.items():
         if not isinstance(ser, dict):
             continue
