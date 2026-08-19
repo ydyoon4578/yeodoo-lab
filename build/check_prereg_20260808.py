@@ -120,10 +120,18 @@ def main():
     # ── ⑤ 회전율 ────────────────────────────────────────────────────────
     d = json.load(io.open(os.path.join(T.DATA, "tech_strategies.json"), encoding="utf-8"))
     by = {r["sid"]: r for r in d["strategies"]}
-    print("\n⑤ 회전율 — %s" % " · ".join(
-        "%s %.2f" % (s, by[s]["turnover"]) for s in ("x-fscore", "x-debtiss", "x-indmom")))
-    print("   (참고) x-valcomp-sn 회전율 %.2f — 분모 정정(20→22)이 반영된 값"
-          % by["x-valcomp-sn"]["turnover"])
+    # ⚠ 2026-08-19 — 게시 목록에서 내려간 규칙(사용자 결정 삭제·세 번째 목록 이동)은
+    #   KeyError 로 잡을 통째로 죽이지 않고 «목록에서 내려감» 으로 적는다. 이 검사의 일은
+    #   «구현이 등록과 같은가» 이지 «규칙이 아직 게시 중인가» 가 아니다 — 뒤엣것은
+    #   validate_site 의 세 번째 목록 대조가 본다.
+    def _tv(sid):
+        r = by.get(sid)
+        return ("%.2f" % r["turnover"]) if r else "목록에서 내려감"
+    print(chr(10) + "⑤ 회전율 — %s" % " · ".join(
+        "%s %s" % (s, _tv(s)) for s in ("x-fscore", "x-debtiss", "x-indmom")))
+    if by.get("x-valcomp-sn"):
+        print("   (참고) x-valcomp-sn 회전율 %.2f — 분모 정정(20→22)이 반영된 값"
+              % by["x-valcomp-sn"]["turnover"])
 
     print()
     if fail:
