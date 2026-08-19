@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-08-18"
+CODE_REV = "2026-08-19"
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -272,11 +272,36 @@ EXCLUDED_SIDS = {
     #   검증할 유일한 수단이 바로 여기서 막혀 있다.
     # ⚠ 2026-08-12 저녁 — x-amihud·x-turn 은 라이브 목록에서 **걷혔다**(자료 타당성 기각 ·
     #   build/tested_not_published.json). 아래 사유는 그때의 기록으로 남긴다.
+    # ⚠ 아래 세 줄은 2026-08-19 부터 **화면에 안 나간다.** 세 규칙은 부분 시점정확으로
+    #   실제로 재고 있고(PARTIAL_PIT_SIDS · 바로 아래), 잰 것은 excluded 에서 뺀다.
+    #   문장은 지우지 않고 남긴다 — 「생존 채널이 왜 막혔나」는 여전히 사실이고,
+    #   그 사실이 부분 레그의 이름(«완전» 이 아닌 이유)을 설명하는 근거다.
     "x-revdrift": "편출 종목 투자의견 이력 부재 — yfinance 의 upgrades_downgrades 는 지금 "
-                  "상장돼 있는 종목만 준다. 나중에 받아 채울 수 있는 종류가 아니다(보완 불가).",
-    "x-revdrift-q": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(보완 불가)",
-    "x-revdrift-sn": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(보완 불가)",
+                  "상장돼 있는 종목만 준다. 나중에 받아 채울 수 있는 종류가 아니다(보완 불가). "
+                  "🚨 단 이것은 **생존 채널만** 막는다 — 선견은 2026-08-19 부터 보정한다.",
+    "x-revdrift-q": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(생존 채널 보완 불가). "
+                    "선견 채널은 2026-08-19 부터 보정한다.",
+    "x-revdrift-sn": "편출 종목 투자의견 이력 부재 — 자료 원천이 생존자만 준다(생존 채널 보완 불가). "
+                     "선견 채널은 2026-08-19 부터 보정한다.",
 }
+
+# 🚨 2026-08-19 사용자 지적 — 「보완 불가」는 **절반만 맞다.**
+#   이 랩은 유니버스 편향을 두 채널로 나눠 놓았다(build/style_pit.py 머리말):
+#       선견(lookahead)   그때 지수에 없던 종목을 오늘 명단으로 미리 고른 것
+#       생존(survivorship) 그 뒤 편출된 종목이 오늘 명단에서 빠져 있는 것
+#   위 세 규칙이 막힌 것은 **생존 채널뿐**이다(편출 종목의 투자의견을 원천이 안 준다 —
+#   ATVI·TWTR·XLNX·CERN·DISCA 를 직접 받아 보면 404 에 0건이다). 그런데 **선견 채널은
+#   막혀 있지 않다** — 그때 지수에 없던 종목을 «빼는» 것뿐이라 사라진 종목의 자료가
+#   전혀 필요 없고, 편입 이력(data/index_history.json · 147개월)은 이미 있다.
+#   크기: 오늘 518종 중 2016-08 에 지수에 없던 것이 179종(35%)이다. 즉 소급 레그는
+#   후보의 3분의 1을 미리 알고 골랐다.
+# → 그래서 세 번째 레그를 만든다: 후보를 «그때 편입 ∩ 오늘 유니버스» 로 제한한다.
+#   선견은 사라지고 생존은 남는다. 그래서 이름이 «부분 시점정확» 이다 — 완전 PIT 이라
+#   부르면 안 되는 것을, 소급이라 부르고 마는 것도 틀리다.
+#   ⚠ 새로 지어낸 구성이 아니다. 스타일 랩이 이미 같은 것을 «mask» 레그로 쓰고 있다
+#     (build/style_pit.py: "mask … 선정 시점 멤버 ∩ 오늘 → base 대비 차이가 선견").
+#     같은 구성에 두 이름을 붙이지 않도록 여기 그 대응을 적어 둔다 — 채점기 한 벌 규약.
+PARTIAL_PIT_SIDS = {"x-revdrift", "x-revdrift-q", "x-revdrift-sn"}
 # 고가·저가 캐시를 받아 두면 그 사유가 사라진다. 손으로 지우게 두지 않고 **파일 유무로 정한다** —
 # 사람이 지우는 것을 잊으면 규칙이 영영 검정을 안 받고, 그건 오늘 하루 내내 잡은 사고 유형이다.
 if os.path.exists(HLCACHE):
@@ -950,6 +975,17 @@ def main():
         print("  바스켓 승자 N 적용 %d종(10 이 아닌 것) / 전수 시험 %d종"
               % (_applied, len(_nsel)))
     BY = {s["sid"]: s for s in TB.STRATS}
+    # 🚨 투자의견 이력을 **이 프로세스에도 올린다.** 랩 본편은 run() 안에서 load_ratings()
+    #   를 부르는데(TB._RAT), 이 파일은 TB.STRATS 만 빌려 쓰고 그 초기화를 안 거친다.
+    #   안 올리면 revdrift 3종은 점수가 0종이라 매달 무보유가 되고, 그 평평한 곡선이
+    #   «성적» 인 척 실린다 — 「못 쟀다」와 「못했다」가 뒤바뀌는 자리다.
+    if getattr(TB, "_RAT", None) is None:
+        TB._RAT = TB.load_ratings()
+        print("  투자의견 이력 %d종 · %d건 (부분 시점정확 레그용)"
+              % (len(TB._RAT), sum(len(v[0]) for v in TB._RAT.values())))
+        if not TB._RAT:
+            sys.exit("투자의견 캐시(data/_ratings_cache.json)가 없다 — revdrift 3종의 부분 "
+                     "시점정확 레그가 조용히 무보유로 실린다. build/fetch_ratings.py 를 먼저 돌릴 것.")
     # 🚨 완결성 관문 — 랩의 **모든 횡단면 규칙**은 셋 중 하나여야 한다:
     #     ① PRICE_SIDS 나 FUND_SIDS 에 있어 PIT 을 돈다
     #     ② EXCLUDED_SIDS 에 **사유와 함께** 있다
@@ -1177,6 +1213,25 @@ def main():
         ixr_lab[i] = sum(rs) / len(rs) if rs else 0.0
     ixvol_lab = [TB.vol(ixr_lab, i, 20) for i in range(n)]
 
+    # ── 부분 시점정확(선견만 보정) 전용 대조군 ────────────────────────────
+    # 🚨 이 파일이 바로 위에서 «대조군과 ixr 은 유니버스에 딸린 값이라 레그별로 따로
+    #   만든다» 고 적어 놓았다. 부분 레그는 **세 번째 유니버스**(그때 편입 ∩ 오늘)를 쓰므로
+    #   대조군도 세 번째가 있어야 한다. 처음에 ixr(완전 PIT 대조군)을 그대로 붙였는데,
+    #   그러면 전략은 생존자만 들고 대조군은 편출까지 드는 짝이 되어 «반쪽만 소급» 이
+    #   된다 — 초과수익이 전략의 생존편향만큼 공짜로 부풀어 오른다.
+    #   ⚠ 이 자리는 돌리기 전에 잡았다. 잡지 못했으면 세 규칙의 초과수익이 그만큼 틀린 채로
+    #     게시됐을 것이다.
+    ixr_par = [None] * n
+    _cur_par = (members_at(i0) & set(tickers) & _today)
+    for i in range(1, n):
+        if (i - 1) in me:
+            _m = members_at(i - 1) & set(tickers) & _today
+            if _m:
+                _cur_par = _m
+        _rs = [R[t][i] for t in _cur_par if R[t][i] is not None]
+        ixr_par[i] = sum(_rs) / len(_rs) if _rs else 0.0
+    ixvol_par = [TB.vol(ixr_par, i, 20) for i in range(n)]
+
     # ── 타이밍 계열 두 벌 ──────────────────────────────────────────────────
     # 🚨 2026-08-14 — 타이밍 규칙이 읽는 계열(disp·mclv·brd·ixgap)은 **유니버스에 딸린다.**
     #   그래서 레그마다 따로 만든다. 랩 본편과 **같은 함수**(TB.timing_ctx)를 쓰되
@@ -1326,8 +1381,13 @@ def main():
     _nohold = {}                 # sid → 사유. 전 구간 무보유는 '측정값' 이 아니다.
     # 🚨 타이밍 22종을 **같은 표에 넣는다**(2026-08-14). 종전에는 이 목록에 없어서
     #   "해당 없음" 으로 빠져 있었고, 그 사유가 사실이 아니었다(TIMING_SIDS 머리말).
-    for sid in [s for s in PRICE_SIDS + FUND_SIDS + TIMING_SIDS
-                if s not in EXCLUDED_SIDS]:
+    # 부분 시점정확 대상은 EXCLUDED 에 있어도 **돌린다**(선견만 보정 · 위 PARTIAL_PIT_SIDS 주석).
+    # 🚨 부분 시점정확 대상은 **어느 목록에도 없다** — 처음부터 EXCLUDED_SIDS 에만 있었다.
+    #   그래서 `not in EXCLUDED_SIDS or in PARTIAL` 만으로는 루프가 이름을 볼 일이 없다.
+    #   (첫 시도가 그렇게 조용히 아무것도 안 돌았다. 없는 이름은 아무 신호도 안 낸다 —
+    #    이 파일 985줄의 완결성 관문이 막으려던 바로 그 실패 모양이다.)
+    for sid in [s for s in PRICE_SIDS + FUND_SIDS + TIMING_SIDS + sorted(PARTIAL_PIT_SIDS)
+                if s not in EXCLUDED_SIDS or s in PARTIAL_PIT_SIDS]:
         S = BY.get(sid)
         if not S:
             # 🚨 조용히 넘어가지 않는다. 랩 본편에서 은퇴한 규칙은 BY 에 없어 여기서 빠지는데,
@@ -1343,8 +1403,16 @@ def main():
             # 🚨 ML6 은 «과거 학습 행을 어느 풀로 거를 것인가» 가 레그를 가른다.
             #   ⚠ 바깥 X 에 실어야 한다. run() 이 XX = dict(X, …) 로 **복사본**을 만들므로
             #     XX 를 여기서 건드리면 이름이 없어 죽는다(실제로 NameError 로 죽었다).
-            X["ml_leg"], X["pool_at"] = "pit", members_at
-            _p = run(S, members_at, ixr, ixvol)          # PIT
+            # 🚨 부분 시점정확 — 후보를 «그때 편입 ∩ 오늘 유니버스» 로 제한한다.
+            #   완전 PIT(members_at)은 편출 종목까지 후보로 두는데, 이 규칙들은 그 종목의
+            #   투자의견이 원천에 없어 어차피 점수가 안 난다. 그래서 «오늘 갖고 있는 종목만»
+            #   으로 좁히되 **그때 지수에 있었는지는 지킨다** — 선견은 사라지고 생존은 남는다.
+            _partial = sid in PARTIAL_PIT_SIDS
+            _pool_fn = (lambda i, _m=members_at: _m(i) & _today) if _partial else members_at
+            # 대조군도 같은 유니버스여야 한다(바로 위 ixr_par 주석).
+            _IXR, _IXV = (ixr_par, ixvol_par) if _partial else (ixr, ixvol)
+            X["ml_leg"], X["pool_at"] = "pit", _pool_fn
+            _p = run(S, _pool_fn, _IXR, _IXV)          # PIT(부분이면 선견만 보정)
             X["ml_leg"], X["pool_at"] = "retro", None
             _b = run(S, None, ixr_lab, ixvol_lab)        # 같은 창·소급 유니버스
         # 🚨 **전 구간 무보유를 결과로 내보내지 않는다**(적대감사 2026-08-12). 한 주도 안 들면
@@ -1367,6 +1435,13 @@ def main():
         P_, B_ = fin(_p, _k), fin(_b, _k)
         out.append({
             "sid": sid, "name": S["name"],
+            # 레그 성격 — 화면이 «완전» 과 «부분» 을 같은 말로 부르지 않게 한다
+            "pit_kind": ("partial" if sid in PARTIAL_PIT_SIDS else "full"),
+            # ⚠ 이 문장은 화면이 esc() 로 그릴 수 있는 자리다 — 마크다운 굵게(**)를 쓰지 않는다.
+            "pit_kind_note": (("선견만 보정한 「부분 시점정확」이다 — 그때 지수에 있던 종목만 "
+                               "후보로 뒀지만, 그 뒤 편출된 종목은 여전히 빠져 있다"
+                               "(투자의견 원천이 생존자만 준다). 완전 시점정확이 아니다.")
+                              if sid in PARTIAL_PIT_SIDS else None),
             "metrics": P_["metrics"], "bench": P_["bench"],
             "excess_cagr": P_["excess_cagr"], "d_sharpe": P_["d_sharpe"],
             "t": P_["t"], "turnover": P_["turnover"],
@@ -1484,7 +1559,10 @@ def main():
         #   구별 못 한 탓에 13종이 검사를 안 받은 채 소급 t 로만 판정되고 있었다(2026-08-11).
         # ⚠ 여기에는 사전에 사유를 적어 뺀 것(EXCLUDED_SIDS)과 **돌려 보니 전 구간 무보유라**
         #   뺀 것이 함께 들어간다. 뒤쪽은 종전에 0 으로 채워진 측정값으로 실리던 자리다.
-        "excluded": dict(EXCLUDED_SIDS, **_nohold),
+        # 🚨 부분 시점정확으로 «잰» 규칙은 excluded 에서 뺀다. 안 빼면 카드가 숫자를 띄우면서
+        #   동시에 «못 쟀다» 는 줄도 그린다 — 한 카드가 두 말을 하게 된다.
+        "excluded": dict({k: v for k, v in EXCLUDED_SIDS.items()
+                          if k not in {r["sid"] for r in out}}, **_nohold),
         "excluded_nohold": dict(_nohold),
         # 🚨 2026-08-14 — 이 칸은 두 번 고쳤다. 기록을 남긴다.
         #   ① 종전 문구: "타이밍·오버레이 규칙은 지수·ETF 를 매매하므로 '그때 지수에 있던
