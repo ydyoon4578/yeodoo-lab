@@ -2,25 +2,15 @@
  "note": "explorer.html·archive.html의 전략 배열에서 파싱한 집계. 홈은 이 파일만 읽고 숫자를 적지 않는다.",
  "deploy": [
   {
-   "n": "이익추정 리비전 · 크로스에셋 RP 통합 (Multi-Sleeve Core)",
-   "slug": "multi-sleeve-core",
-   "alias": "검증 통과 2개 슬리브의 위험균등 결합 + 목표변동성 13%"
-  },
-  {
-   "n": "이익추정 리비전 드리프트 (EPS Revision Drift · NDX 100)",
-   "slug": "eps-revision-drift-ndx",
-   "alias": "PEAD 계열 · 12M 선행 EPS 컨센서스 1M·3M 변화율"
-  },
-  {
    "n": "크로스에셋 리스크패리티 (Cross-Asset Risk Parity · 12자산)",
    "slug": "cross-asset-rp-12",
    "alias": "역변동성 가중 + 추세게이트 + 목표변동성 10%"
   }
  ],
- "marginal_n": 6,
- "deploy_n": 3,
+ "marginal_n": 3,
+ "deploy_n": 1,
  "reject_compare_n": 0,
- "explorer_n": 9,
+ "explorer_n": 4,
  "archive_n": 48,
  "archive_cats": 10,
  "reject_total": 48,
