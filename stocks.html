@@ -878,8 +878,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     (function(){
       var t0=String(ID.t0||'09:30'), hh=+t0.slice(0,2), mm=+t0.slice(3,5);
       if(!(hh>=0)||!(mm>=0)) return;
-      var base=hh*60+mm;
-      var lab=function(i){ var v=(base+i)%1440;
+      var base=hh*60+mm, TM=ID.tm;
+      // 🚨 봉 간격을 1분으로 **가정하지 않는다**(2026-08-19 고침). 거래가 없는 분은 봉이
+      //   아예 없다 — 실측 543종 중 390봉인 것이 196종뿐이고 ERIE 는 127봉이다.
+      //   가정으로 찍으면 64%의 종목에서 «09:30 ~ 11:37» 같은 거짓 눈금이 나온다.
+      //   빌더가 봉마다 분 오프셋(tm)을 싣는다 — 그것이 있을 때만 시각을 찍는다.
+      // ⚠ 없으면(옛 파일) **눈금을 안 찍는다.** 틀린 시각을 찍느니 안 찍는 것이 낫다.
+      if(!TM||TM.length!==c.length) return;
+      var lab=function(i){ var v=(base+(TM[i]||0))%1440;
         return ('0'+Math.floor(v/60)).slice(-2)+':'+('0'+(v%60)).slice(-2); };
       // 눈금 수는 폭에 맞춘다 — 좁은 화면에서 글자가 겹치면 안 읽는 것만 못하다.
       var NT=Math.max(2,Math.min(7,Math.floor(W/95)));
