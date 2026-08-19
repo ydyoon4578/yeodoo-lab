@@ -57,9 +57,11 @@ def load_px():
                 a[i] = p
         px[t] = a
     B = json.load(io.open(os.path.join(DATA, "bench_px.json"), encoding="utf-8"))
-    bmap = dict(zip(B["dates"], B["series"]["spx"]["px"]))
-    spx = [bmap.get(d) for d in dts]
-    return dts, px, spx
+    bench = {}
+    for k in ("spx", "ndx"):
+        bmap = dict(zip(B["dates"], B["series"][k]["px"]))
+        bench[k] = [bmap.get(d) for d in dts]
+    return dts, px, bench
 
 
 def at(a, i):
@@ -89,27 +91,11 @@ def stats(xs):
             "top2ex": round(sum(ex) / len(ex), 2)}
 
 
-def main() -> int:
-    E = json.load(io.open(os.path.join(BUILD, "e12_events.json"), encoding="utf-8"))
-    dts, px, spx = load_px()
+def run_index(tag, events_file, bench_key, dts, px, bench, gi, MA):
+    """한 지수의 두 갈래 — §3 규칙 그대로. 대조군만 지수별(§6)."""
+    E = json.load(io.open(os.path.join(BUILD, events_file), encoding="utf-8"))
+    spx = bench[bench_key]
     n = len(dts)
-    print("이벤트 %d건 · 격자 %d일 · 가격 계열 %d개" % (len(E), n, len(px)))
-
-    def gi(d):
-        """실효일 → 격자 색인(그 날 또는 다음 거래일)."""
-        lo, hi = 0, n - 1
-        while lo < hi:
-            mid = (lo + hi) // 2
-            if dts[mid] < d:
-                lo = mid + 1
-            else:
-                hi = mid
-        return lo if dts[lo] >= d else None
-
-    import re
-    MA = re.compile(r"acquir|merg|purchas|bought|taken private|bankrupt|chapter|delist|spun|spin", re.I)
-
-    # ── 갈래 A · 압력 ────────────────────────────────────────────────────
     press = []
     for e in E:
         t = e.get("add")
@@ -121,7 +107,7 @@ def main() -> int:
         row = {"t": t, "d": e["d"]}
         ok = False
         for lag, key in [(AD_LAG, "x"), (AD_SENS[0], "x3"), (AD_SENS[1], "x7")]:
-            i0 = i - (lag - 1)              # AD = i−lag → AD+1 = i−lag+1 종가
+            i0 = i - (lag - 1)
             r = win_ret(px.get(t), i0, i)
             b = win_ret(spx, i0, i)
             if r is None or b is None:
@@ -134,22 +120,21 @@ def main() -> int:
         if ok:
             press.append(row)
     press_all = stats([r["x"] for r in press])
-    press_era = {}
-    for lab, lo, hi in ERAS:
-        press_era[lab] = stats([r["x"] for r in press if lo <= r["d"][:4] < hi])
+    press_era = {lab: stats([r["x"] for r in press if lo <= r["d"][:4] < hi])
+                 for lab, lo, hi in ERAS}
     press_sens = {
         "ad3": stats([r["x3"] for r in press]),
         "ad7": stats([r["x7"] for r in press]),
         "cost10": stats([(r["gross"] - 0.20) for r in press if r.get("gross") is not None]),
         "cost20": stats([(r["gross"] - 0.40) for r in press if r.get("gross") is not None]),
     }
-    print("갈래 A · 압력 — %d건 · 평균 %s%%p · t %s" % (press_all["n"], press_all["mean"], press_all["t"]))
+    print("[%s] 갈래 A · 압력 — %d건 · 평균 %s%%p · t %s" % (tag, press_all["n"], press_all["mean"], press_all["t"]))
     for lab, _l, _h in ERAS:
-        s = press_era[lab]
+        st2 = press_era[lab]
         print("   %s  n=%-3s 평균 %s · 중앙 %s · 상위2제외 %s · t %s"
-              % (lab, s["n"], s["mean"], s["med"], s["top2ex"], s["t"]))
+              % (lab, st2["n"], st2["mean"], st2["med"], st2["top2ex"], st2["t"]))
+    print("   민감도: AD-3 %s · AD-7 %s" % (press_sens["ad3"]["mean"], press_sens["ad7"]["mean"]))
 
-    # ── 갈래 B · 리버설 ──────────────────────────────────────────────────
     ENTRY, HOLD = 21, 252
     rev_add, rev_del = [], []
     for e in E:
@@ -158,7 +143,7 @@ def main() -> int:
             continue
         i0, i1 = i + ENTRY, i + ENTRY + HOLD
         if i1 >= n:
-            continue                       # 자료 끝을 넘는 이벤트는 버린다(§3)
+            continue
         b = win_ret(spx, i0, i1)
         if b is None:
             continue
@@ -174,8 +159,34 @@ def main() -> int:
     sa, sdel = stats([r["x"] for r in rev_add]), stats([r["x"] for r in rev_del])
     spread = (None if (sa["mean"] is None or sdel["mean"] is None)
               else round(sdel["mean"] - sa["mean"], 2))
-    print("갈래 B · 리버설 — 편입 %d건 평균 %s%%p · 재량 제외 %d건 평균 %s%%p · 스프레드 %s%%p"
-          % (sa["n"], sa["mean"], sdel["n"], sdel["mean"], spread))
+    print("[%s] 갈래 B · 리버설 — 편입 %d건 평균 %s · 재량 제외 %d건 평균 %s · 스프레드 %s"
+          % (tag, sa["n"], sa["mean"], sdel["n"], sdel["mean"], spread))
+    return {"press": {"all": press_all, "era": press_era, "sens": press_sens, "rows": press},
+            "rev": {"add": sa, "del": sdel, "spread": spread,
+                    "rows_add": rev_add, "rows_del": rev_del,
+                    "entry_td": ENTRY, "hold_td": HOLD}}
+
+
+def main() -> int:
+    dts, px, bench = load_px()
+    n = len(dts)
+    print("격자 %d일 · 가격 계열 %d개" % (n, len(px)))
+
+    def gi(d):
+        """실효일 → 격자 색인(그 날 또는 다음 거래일)."""
+        lo, hi = 0, n - 1
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if dts[mid] < d:
+                lo = mid + 1
+            else:
+                hi = mid
+        return lo if dts[lo] >= d else None
+
+    import re
+    MA = re.compile(r"acquir|merg|purchas|bought|taken private|bankrupt|chapter|delist|spun|spin", re.I)
+    spx_res = run_index("SPX", "e12_events.json", "spx", dts, px, bench, gi, MA)
+    ndx_res = run_index("NDX", "e12_events_ndx.json", "ndx", dts, px, bench, gi, MA)
 
     doc = {
         "note": "E12 지수 편입·제외 이벤트 백테스트. 규칙·예측은 PREREG-2026-08-19-E12.md 에 "
@@ -184,11 +195,10 @@ def main() -> int:
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "grid": {"start": dts[0], "end": dts[-1], "n": n},
         "cost_bp_oneway": COST_BP, "ad_lag": AD_LAG,
-        "press": {"all": press_all, "era": press_era, "sens": press_sens,
-                  "rows": press},
-        "rev": {"add": sa, "del": sdel, "spread": spread,
-                "rows_add": rev_add, "rows_del": rev_del,
-                "entry_td": ENTRY, "hold_td": HOLD},
+        # §6 부칙 — 두 지수를 같은 규칙으로. 대조군만 지수별(^GSPC / ^NDX).
+        "spx": spx_res, "ndx": ndx_res,
+        # 하위호환 — 종전 소비자가 press/rev 를 읽는다면 SPX 것을 그대로 둔다.
+        "press": spx_res["press"], "rev": spx_res["rev"],
         "limits": [
             "🚨 발표일(AD)은 자료에 없어 ED−5거래일로 근사했다(민감도 −3·−7). 실제 발표가 "
             "이보다 이르면 창이 어긋난다 — 이 근사가 최대 한계다.",
