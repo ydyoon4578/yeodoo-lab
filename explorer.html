@@ -1035,6 +1035,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="chiprow" id="kfilters" role="group" aria-label="전략 성격 필터"><span class="fltlab">성격</span></div>
       <div class="chiprow" id="hfilters" role="group" aria-label="무엇을 고르는 전략인지 필터"><span class="fltlab">고르는 것</span></div>
       <div class="chiprow" id="mfilters" role="group" aria-label="마킹 필터"><span class="fltlab">내 표시</span></div>
+      <!-- 🚨 숨기는 손잡이는 «무엇을 숨겼는지» 를 같이 말해야 한다. 안 그러면 목록이
+           짧아진 이유를 화면 어디서도 못 읽는다. -->
+      <p class="lblnote" id="legnote" hidden>시점정확 레그가 있는 전략만 보고 있습니다 —
+        나머지는 오늘의 유니버스를 과거로 소급한 값이라 계통적으로 부풀려져 있어 숨겼습니다.
+        <b>지운 것이 아닙니다</b>(칩을 다시 누르면 나옵니다).</p>
     </div>
   </div>
 
@@ -1281,6 +1286,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // 기본 정렬 = 샤프 내림차순(사용자 결정 2026-08-12). 전에는 '성격'이었다.
   var state={q:"",kf:new Set(),hf:new Set(),mk:false,sort:"sharpe",sel:0,
+             pitonly:false,   // 「시점정확만」 — 소급밖에 없는 전략을 목록에서 숨긴다
              rgk:null};   // 국면 탭 — null 이면 '전체'(국면을 안 본다)
   var ARCHE_ORDER=['배포코어','저상관분산','위기방어','인플레·실물헤지','레짐·리스크오버레이','저비용틸트','실행타이밍','모니터링시그널','학술적참고','중복·무용'];
   var ARCH_COLOR={'배포코어':'#0E8A54','저상관분산':'#2C6E8F','위기방어':'#C0392B','인플레·실물헤지':'#B9770E','레짐·리스크오버레이':'#8256B8','저비용틸트':'#1E8A80','실행타이밍':'#3E7CB1','모니터링시그널':'#4E8A6B','학술적참고':'#8A7A5C','중복·무용':'#9A9A9A'};
@@ -1570,6 +1576,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       b.setAttribute('aria-pressed',state.kf.has(K(b)));});
     document.querySelectorAll('#hfilters .fchip').forEach(function(b){
       b.setAttribute('aria-pressed',state.hf.has(K(b)));});
+    document.querySelectorAll('#kfilters .fchip[data-key=pit]').forEach(function(b){
+      b.setAttribute('aria-pressed',!!state.pitonly);});
   }
   // 🚨 buildArchetypeFilter(용도) · buildBenchFilter(벤치마크) 를 걷었다(2026-08-16).
   //   사유는 마크업의 같은 날짜 주석에 있다. 여기 남기지 않는 이유는, 안 부르는 빌더가
@@ -1623,6 +1631,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
       mf.appendChild(c);
     }
+  }
+
+  // 「시점정확만」 손잡이 — 성격 필터 줄 끝에 붙인다(별도 줄을 만들면 줄만 늘어난다).
+  function buildLegFilter(){
+    var kf=el('kfilters'); if(!kf)return;
+    var n=D.filter(function(d){return d._pit;}).length;
+    if(!n||n===D.length)return;          // 가를 것이 없으면 손잡이도 안 낸다
+    var b=chip('leg','시점정확만',n,!!state.pitonly,function(){
+      state.pitonly=!state.pitonly; render(); syncPressed(); fltLabel();
+      var e=el('legnote'); if(e)e.hidden=!state.pitonly;
+    },'pit');
+    b.title='그때 실제로 지수에 있던 종목만으로 다시 잰 전략만 보인다. '+
+            '나머지는 오늘의 유니버스를 과거로 소급한 값이라 계통적으로 부풀려져 있다.';
+    kf.appendChild(b);
   }
 
   function buildKindFilter(){
@@ -1773,6 +1795,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(state.hf.size && !state.hf.has(d._holds))return false;
       if(state.kf.size && !state.kf.has(kindOf(d)))return false;
       if(state.mk && !MK.has(d.sid))return false;
+      // 🚨 2026-08-19 사용자 지시 «소급을 굳이 보고싶진 않아». 지우지 않고 **숨긴다** —
+      //   소급밖에 없는 전략도 잰 값은 잰 값이라 목록에서 없애 버리면 기록이 사라진다.
+      //   ⚠ 이 랩의 소급은 계통적으로 부풀려져 있다(생존편향). 그래서 «시점정확만» 이
+      //     기본이 아니라 **누르는 것**이다 — 기본값이 무엇을 숨기는지 사용자가 알아야 한다.
+      if(state.pitonly && !d._pit)return false;
       // 국면 탭이 켜져 있으면 **그 국면을 못 잰 전략은 뺀다.** 남겨 두면 '—' 가 목록의
       // 절반을 채워 그 탭이 무엇을 보여주는 곳인지가 흐려진다(배너가 그 사실을 적는다).
       if(state.rgk && rgv(d,state.rgk)==null)return false;
@@ -3274,7 +3301,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       d.det=map[_k];
       if(keep&&!d.det.kind)d.det=Object.assign({},d.det,{kind:keep});
     }); if(window.__rebuildChips)window.__rebuildChips(); render(); }
-    buildKindFilter();
+    buildKindFilter(); buildLegFilter();
     buildHoldsFilter();
     markChip();
     // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
