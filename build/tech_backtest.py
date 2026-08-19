@@ -715,7 +715,7 @@ TTM_STALE_DAYS = 550
 #   (validate_site 가 두 리터럴을 대조한다 — 손으로 한쪽만 올리면 캐비엇이 영영 뜨거나
 #    영영 안 뜬다). data/pit_strategies.json 의 code_rev 가 이 값과 다르면 PIT 열이 옛
 #   코드로 잰 값이라는 뜻이고, 그 사실을 limits 에 적는다.
-PIT_CODE_REV = "2026-08-18"
+PIT_CODE_REV = "2026-08-19"
 
 # 바스켓 크기가 **규칙으로 정해지지 않는** 규칙들. 섹터별 1위 1종씩(-sn)이나 승자 산업
 # 전 종목처럼, 보유 종목 수가 그달 자료에서 나오지, 규칙이 정해 주는 값이 아니다.
@@ -3316,6 +3316,11 @@ DROPPED = {"t-clvgate",
            "x-valcomp-sn",
            "x-volratio",
            "x-volvol",
+           # 2026-08-19 추가 — 위 배선을 고치고 다시 재자 선 아래로 내려온 셋.
+           #   그때는 시점정확 레그가 없어 소급 샤프로 줄에 서 있었다.
+           "m-ridge-w",         # 시점정확 샤프 0.430 (소급 1.058 짝)
+           "x-clv",             # 시점정확 샤프 0.487
+           "x-small",           # 시점정확 샤프 0.498
            }
 
 
@@ -3522,6 +3527,17 @@ def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
     """
     if reb not in REB_KINDS:
         raise ValueError("%s: 모르는 리밸 주기 %r" % (sid, reb))
+    # 🚨 2026-08-19 — **이 두 줄이 없었다.** DROPPED 은 timing() 에서만 읽히고 있었고,
+    #   그래서 사용자가 「샤프 0.5 미만 전략은 다 없애라」고 한 35종 중 **타이밍 10종만
+    #   실제로 사라졌다.** 나머지 25종(x-* 22 · m-* 3)은 목록에 이름을 적어 두었을 뿐
+    #   그대로 등록되고 있었다.
+    #   그런데도 화면에서는 안 보였다 — 그 25종에 **시점정확 레그가 없어서** 소급 샤프
+    #   (0.64~1.66)로 줄에 섰기 때문이다. 즉 「지웠다」가 아니라 「안 재서 안 걸렸다」였다.
+    #   레그를 채우자마자 27종이 한꺼번에 선 아래로 내려왔고, 그래서 이 자리가 드러났다.
+    # ⚠ 이 저장소가 되풀이하는 «수집만 하고 안 배선» 의 사촌이다 — **적어만 두고 안 지킴.**
+    #   목록을 만들었으면 그 목록을 읽는 코드가 등록 경로마다 있어야 한다.
+    if sid in DROPPED:
+        return
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why,
                    "fn": fn, "arch": arch, "topn": topn, "reb": reb})
 
@@ -5034,7 +5050,10 @@ def build_strats():
         _s["why"] = _reb_text(_s["why"], _lab)
     # 🚨 표에 있는데 목록에 없는 sid 를 **조용히 넘기지 않는다.** 오타 하나면 그 규칙이
     #   월말인 채로 남고, 등록 문서만 옮겼다고 말하게 된다(이 저장소가 되풀이 밟은 유형이다).
-    _reb_ghost = sorted((REB_WE | REB_QE) - _reb_seen)
+    # ⚠ **걷힌 규칙은 유령이 아니다**(2026-08-19). DROPPED 에 이름이 있으면 등록 목록에
+    #   없는 것이 정상이다 — 그것까지 막으면 규칙을 지울 때마다 사전등록 문서를 고쳐야 하고,
+    #   그러면 «돌리기 전에 못박은 표» 라는 성질이 사라진다. 표는 그대로 두고 여기서 뺀다.
+    _reb_ghost = sorted((REB_WE | REB_QE) - _reb_seen - DROPPED)
     if _reb_ghost:
         raise SystemExit("리밸 주기 표에 있으나 전략 목록에 없는 sid: %s — "
                          "PREREG-2026-08-13-REBAL.md 와 맞출 것" % ", ".join(_reb_ghost))
@@ -6991,6 +7010,8 @@ def run():
                 "bench_cagr": _b.get("cagr"), "bench_sharpe": _b.get("sharpe"),
                 "bench_mdd": _b.get("mdd"),
                 "start": _r.get("start"), "n_days": _r.get("n_days"),
+                # 레그 성격 — «완전 시점정확» 과 «부분(선견만 보정)» 을 구별한다.
+                "pit_kind": _r.get("pit_kind"), "pit_kind_note": _r.get("pit_kind_note"),
             }
             PIT_BENCH = _b.get("cagr")
         print("  [PIT] %s 에서 %d종 읽음 (%s · 대조군 CAGR %.2f%%)"
@@ -7012,6 +7033,10 @@ def run():
         _bn = m["bench_cagr"] if m["bench_cagr"] is not None else PIT_BENCH
         _win = ("%s~%s" % (pst[:7], PIT_ASOF[:7])) if (pst and PIT_ASOF) else PIT_WINDOW
         r["pit"] = {"window": _win, "cagr": m["cagr"], "sharpe": m["sharpe"],
+                    # 🚨 «완전» 과 «부분» 을 화면이 같은 말로 부르지 않게 그대로 나른다.
+                    #   부분(선견만 보정 · 생존은 남음)은 원천이 pit_kind='partial' 로 표시한다.
+                    "kind": m.get("pit_kind") or "full",
+                    "kind_note": m.get("pit_kind_note"),
                     "mdd": m["mdd"], "vol": m["vol"], "t": pt,
                     "n_days": m["n_days"],
                     # 🚨 문턱(t_crit·t_crit_lab·t_max·n_over)은 걷었다(2026-08-16
