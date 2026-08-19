@@ -120,6 +120,22 @@ STYLE_ETF = [
 ]
 
 
+def _tm(idx):
+    """봉마다의 **장중 분 오프셋**(첫 봉 = 0). 화면이 시간 눈금을 찍는 데 쓴다.
+
+    🚨 왜 필요한가(2026-08-19). 종전에는 t0(첫 봉 시각)와 종가 배열만 실었고, 화면이
+      «봉 간격 1분» 을 가정해 눈금을 찍었다. 그런데 **거래가 없는 분은 봉이 아예 없다** —
+      실측 543종 중 390봉인 것이 196종뿐이고 ERIE 는 127봉이다. 그 가정으로 찍으면
+      64%의 종목에서 «09:30 ~ 11:37» 같은 거짓 눈금이 나온다.
+    ⚠ 시각 문자열을 봉마다 싣지 않고 분 오프셋(정수)만 싣는다 — 같은 정보인데 훨씬 작다.
+      화면이 t0 + 오프셋으로 되돌린다.
+    """
+    if idx is None or not len(idx):
+        return []
+    b0 = idx[0]
+    return [int(round((x - b0).total_seconds() / 60.0)) for x in idx]
+
+
 def _yf(t):
     return t.replace(".", "-")
 
@@ -541,7 +557,8 @@ def main() -> int:
             # ⚠ 새로 받지 않는다. data/sd(랩 일봉)에서 꺼낸다 — 두 벌이 되면 어느 쪽이
             #   맞는지 다투게 된다.
             json.dumps({"t": t, "d": last, "t0": str(g.index[0])[11:16],
-                        "pc": PREV.get(t), "c": c, "v": v}, separators=(",", ":")) + "\n")
+                        "pc": PREV.get(t), "c": c, "v": v,
+                        "tm": _tm(g.index)}, separators=(",", ":")) + "\n")
         n_id += 1
         # 🚨 갭 = 시가 ÷ 전일 종가 − 1. 전일 종가를 이미 싣게 됐으니(pc) 여기서 같이 낸다.
         #   갭은 «장중 이전에 이미 일어난 일» 이라 장중 지표와 성격이 다르다 — 그래서
@@ -591,7 +608,8 @@ def main() -> int:
             _v = [int(x) if x == x else 0 for x in _g["Volume"].fillna(0).tolist()]
             io.open(os.path.join(DIR_ID, "_%s.json" % _fn), "w", encoding="utf-8").write(
                 json.dumps({"t": _src, "d": last, "t0": str(_g.index[0])[11:16],
-                            "pc": _iprev.get(_src), "c": _c, "v": _v},
+                            "pc": _iprev.get(_src), "c": _c, "v": _v,
+                            "tm": _tm(_g.index)},
                            separators=(",", ":")) + "\n")
             _pc = _iprev.get(_src)
             index_meta[_k] = {
