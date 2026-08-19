@@ -54,6 +54,9 @@ PAGES = {
     # 2026-08-14 — 개인 OKR·KPI 원장. 게이트 셸은 sources.html 에서 그대로 떠서 만들었다
     # (규약을 손으로 다시 쓰면 그 순간 두 벌이 된다 — 이 파일 첫머리가 경계하는 구조다).
     "ok":      ("ok.html",      "ok_content.html"),
+    # 2026-08-20 — 운용 포트폴리오(실펀드 보유·매매·성과 기여). 조각은 build/portfolio_fund.py 가
+    # 사내 export(NAV·환율·해외)와 사내 DB 에서 굽는다 — 실펀드 수치라 평문 게시 불가.
+    "portfolio": ("portfolio.html", "portfolio_content.html"),
 }
 GATE = FRAG = None      # main() 이 --page 로 정한다
 
