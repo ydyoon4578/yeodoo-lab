@@ -74,6 +74,15 @@
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
 
   .mgrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:9px;margin:0 0 18px}
+  .axhd{margin:14px 0 5px;font-size:11.5px;letter-spacing:.02em}
+  .axhd:first-child{margin-top:0}
+  .axhd b{color:var(--ink)}
+  .axhd span{color:var(--muted)}
+  .axhd .axoff{font-style:normal;margin-left:6px;font-size:10.5px;color:var(--marg);
+    border:1px solid var(--marg);border-radius:2px;padding:0 4px}
+  .axtag{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--line);
+    border-radius:2px;padding:1px 6px;margin:2px 0 0}
+  .axtag.off{color:var(--marg);border-color:var(--marg)}
   .mg{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:10px 13px;cursor:pointer;text-align:left;font:inherit;box-shadow:var(--shadow)}
   .mg:hover{border-color:var(--accent)}
   .mg[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
@@ -643,12 +652,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return '$'+nf(v,0);
   }
 
+  // 🚨 2026-08-19 — 명단을 **축으로 묶는다**(사용자 결정 «축에 따라 다르게 관리»).
+  //   27곳을 한 줄로 세우면 성격이 안 보인다. 축 정의(이름·설명·겹침 포함 여부)는
+  //   빌더가 실어 보낸 D.axes 하나만 읽는다 — 화면이 자기 목록을 또 적지 않는다.
   function renderMgrs(){
-    el('mgrs').innerHTML=D.managers.map(function(m,i){
-      return '<button class="mg" type="button" data-i="'+i+'" aria-pressed="'+(i===cur?'true':'false')+'">'+
-        '<b>'+esc(m.label)+'</b><span>'+usd(m.total_val)+' · 전체 '+nf(m.total_n)+'종목 · 유니버스 '+
-        (m.uni_pct==null?'—':nf(m.uni_pct,1)+'%')+'</span></button>';
+    var AX=D.axes||[];
+    if(!AX.length){   // 옛 자료 대비 — 축이 없으면 종전처럼 한 줄로
+      el('mgrs').innerHTML=D.managers.map(function(m,i){return mgBtn(m,i);}).join('');
+      return;
+    }
+    var idx={}; D.managers.forEach(function(m,i){ (idx[m.axis]=idx[m.axis]||[]).push(i); });
+    el('mgrs').innerHTML=AX.filter(function(a){return (idx[a.k]||[]).length;}).map(function(a){
+      return '<div class="axhd"><b>'+esc(a.label)+'</b> <span>'+(idx[a.k].length)+'곳 · '+esc(a.desc)+'</span>'+
+        (a.overlap?'':'<i class="axoff" title="수천 종목을 들어 겹침 수를 통째로 밀어 올린다 — 카드는 그대로 보이고 계산에서만 뺀다">겹침 제외</i>')+
+        '</div>'+idx[a.k].map(function(i){return mgBtn(D.managers[i],i);}).join('');
     }).join('');
+  }
+  function mgBtn(m,i){
+    return '<button class="mg" type="button" data-i="'+i+'" aria-pressed="'+(i===cur?'true':'false')+'">'+
+      '<b>'+esc(m.label)+'</b><span>'+usd(m.total_val)+' · 전체 '+nf(m.total_n)+'종목 · 유니버스 '+
+      (m.uni_pct==null?'—':nf(m.uni_pct,1)+'%')+'</span></button>';
   }
 
   // ── 분기 변화 판 ─────────────────────────────────────────────────────────
@@ -742,6 +765,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   곳이 섞이는데, 전역 as_of 하나로 적으면 화면이 모두 같은 분기라고 말하게 된다.
       ((m.period&&D.as_of&&m.period!==D.as_of)?' <b style="color:var(--marg)">(다름)</b>':'')+
       '</span></h3>'+
+      (function(){
+        var a=(D.axes||[]).filter(function(x){return x.k===m.axis;})[0];
+        var t='';
+        if(a)t+='<span class="axtag'+(a.overlap?'':' off')+'">'+esc(a.label)+
+                (a.overlap?'':' · 겹침 제외')+'</span>';
+        // 법인 승계 — «신규 13종» 이라 적지 않는 이유를 카드가 직접 말한다
+        if(m.succ_note)t+='<p class="lblnote" style="margin:6px 0 0;color:var(--marg)">⚠ '+esc(m.succ_note)+'</p>';
+        return t;
+      })()+
       '<p class="lblnote" style="margin:6px 0 10px">13F 보고총액 <b>'+usd(m.total_val)+'</b>('+nf(m.total_n)+'종목) 중 '+
       '이 랩 유니버스와 겹치는 것이 <b>'+usd(m.uni_val)+'</b>('+(m.uni_pct==null?'—':nf(m.uni_pct,1)+'%')+')입니다. '+
       '평가액 상위 '+m.n+'종목을 싣고, 그중 <b>'+(m.n_off||0)+'종목</b>은 유니버스 밖이라 '+
