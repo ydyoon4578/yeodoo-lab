@@ -58,3 +58,6 @@ build/_probe_ratings.json
 #   python build/tech_backtest.py --ic
 # data/_* 는 이 저장소에서 로컬 산출물 관례다(커밋된 것이 하나도 없다).
 data/_ic_diag.json
+# 2026-08-20 NDX 벤더 비중(주말 스냅샷). DB 자격 필요 + 비중 원자료는 커밋 금지
+#   (사용자 규약 2026-08-19 — DB 에서 커밋 가능한 것은 지수 재적일의 종가뿐).
+data/_ndx_weights_cache.json
