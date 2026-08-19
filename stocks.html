@@ -834,8 +834,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var cd=el('chgd');
     if(cd)cd.innerHTML='<span class="px">'+(last!=null?last.toLocaleString():'—')+'</span>'+
       (chg!=null?'<span class="chg" style="color:'+(chg>=0?'var(--good)':'var(--hot)')+'">'+(chg>=0?'+':'')+chg.toFixed(2)+'%</span>':'')+
+      // ⚠ «직전 거래일» 이라고 못 박지 않는다. 벤더가 그 종목의 분봉을 안 주면 옛 파일이
+      //   그대로 남는다 — 실측 AVB(08-14) · EQR(08-17) 이 그 상태다. 랩 기준일과 다르면
+      //   며칠 전 것인지 적는다. 낡은 것을 «직전» 이라 부르면 그 한마디가 거짓이 된다.
       '<span class="rng">'+esc(ID.d||'')+' 1분봉 · '+c.length+'개 · 전일종가 대비'+
-      ' <b title="마감 뒤 하루 한 번 갱신됩니다 — 지금 시세가 아닙니다">직전 거래일</b></span>';
+      ((ID.d&&DATA.as_of&&ID.d<DATA.as_of)
+        ? (' <b class="stale" title="이 종목의 분봉을 원천이 주지 않아 옛 파일이 남아 있습니다.'+
+           ' 랩 기준일은 '+esc(DATA.as_of)+' 입니다.">기준일보다 옛것</b>')
+        : ' <b title="마감 뒤 하루 한 번 갱신됩니다 — 지금 시세가 아닙니다">직전 거래일</b>')+
+      '</span>';
     var cv=el('pxc'); if(!cv) return;
     var W=cv.clientWidth||600,H=150,dpr=window.devicePixelRatio||1;
     cv.width=W*dpr;cv.height=H*dpr;
@@ -1471,8 +1478,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         IDC[_t]=null;
         fetch('data/id/'+encodeURIComponent(_t)+'.json',{cache:'no-cache'})
           .then(function(r){return r.ok?r.json():false;})
-          .then(function(j){ IDC[_t]=j||false; if(state.period===INTRA) renderChart(s); })
-          ['catch'](function(){ IDC[_t]=false; if(state.period===INTRA) renderChart(s); });
+          // 🚨 **여전히 그 종목을 보고 있을 때만** 다시 그린다(2026-08-19 사고).
+          //   종전에는 state.sel 을 안 봤다. 분봉을 받는 동안 다른 종목을 고르면 늦게
+          //   도착한 응답이 **옛 종목으로 화면을 덮었다** — MNST 를 열었는데 AVB 의
+          //   «184.08 · 373봉 · 2026-08-14» 이 떠 있었다(사용자가 «분할이 반영 안 됐나»로 발견).
+          //   ⚠ 바로 옆 1233행의 종목 상세 로딩이 이미 «최신 요청 + 여전히 선택 중일 때만»
+          //     이라고 적어 두고 그렇게 하고 있었다. 같은 파일 안의 규약을 안 따른 것이다.
+          .then(function(j){ IDC[_t]=j||false;
+            if(state.sel===s && state.period===INTRA) renderChart(s); })
+          ['catch'](function(){ IDC[_t]=false;
+            if(state.sel===s && state.period===INTRA) renderChart(s); });
       }
       var _id=IDC[_t];
       if(_id===null){
