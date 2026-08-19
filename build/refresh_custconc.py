@@ -250,18 +250,19 @@ def main() -> int:
     #   돌고, 새 10-K 가 나와도 화면은 옛 값을 그대로 쓴다. 그래서 «마지막으로 훑은
     #   제출일»을 적어 두고 그보다 새 제출만 받는다.
     # ⚠ RAW 는 «한 번의 실행 안에서» 끊겼을 때를 위한 로컬 체크포인트로만 남긴다.
-    prev_co, scan = {}, {}
+    prev_co, seen = {}, {}
     if not a.sample and os.path.exists(OUT):
         _o = json.load(io.open(OUT, encoding="utf-8"))
         prev_co = {t: [{"d": r[0], "pct": r[1], "s": r[2] if len(r) > 2 else ""} for r in v]
                    for t, v in (_o.get("co") or {}).items()}
-        scan = dict(_o.get("scan") or {})
+        seen = dict(_o.get("scan") or {})
     res = {}
     if not a.sample and os.path.exists(RAW):
         res = json.load(io.open(RAW, encoding="utf-8"))
     if a.pit:
         res = {k: v for k, v in res.items() if k in uni}   # 편출분만 재개 대상으로 본다
-    n_doc = n_skip = n_new = 0
+    n_doc = n_skip = n_new = n_err = 0
+    err1 = None          # 첫 예외 — 조용히 삼키지 않고 한 번은 적는다
     for k, t in enumerate(uni, 1):
         if t in res:
             continue
@@ -273,7 +274,7 @@ def main() -> int:
             continue
         # 증분 — 마지막으로 훑은 제출일보다 새 것만 받는다.
         # ⚠ 최신 제출이 그때와 같으면 문서를 **한 건도** 안 받는다(제출목록 1콜뿐).
-        last = scan.get(t) or ""
+        last = seen.get(t) or ""
         newest = max([f["d"] for f in fl], default="")
         if last and newest and newest <= last:
             res[t] = {"rows": [{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
@@ -288,7 +289,15 @@ def main() -> int:
             url = "https://www.sec.gov/Archives/edgar/data/%d/%s/%s" % (int(cik[t]), f["a"], f["p"])
             try:
                 v, ss = scan(fetch(url))
-            except Exception:
+            except Exception as _e:
+                # 🚨 여기 `except Exception: continue` 가 **아무 말도 안 하고** 있었다.
+                #   2026-08-19 에 재개용 dict 이름을 scan 으로 지어 scan() 함수를 가렸는데,
+                #   그 TypeError 를 이 줄이 문서 11,028건 내내 삼켰다. CI 는 초록이었고
+                #   산출물은 (이전 값을 이어받아) 멀쩡해 보였다 — 잡이 돌았는데 아무 일도
+                #   안 한 상태가 완벽히 숨었다. 세고, 첫 것은 적는다.
+                n_err += 1
+                if err1 is None:
+                    err1 = "%s: %s" % (type(_e).__name__, str(_e)[:80])
                 continue
             n_doc += 1
             if v is not None:
@@ -297,7 +306,7 @@ def main() -> int:
         if not a.sample and newest:
             # ⚠ 제출이 아예 없는 종목(외국 발행사·최근 상장)은 적지 않는다. 빈 값을 넣으면
             #   파일만 부풀고 뜻이 없다 — 다음 실행에서 제출목록 1콜로 다시 확인하면 된다.
-            scan[t] = newest
+            seen[t] = newest
         if a.sample:
             print("%-6s 10-K %2d건 · 집중도 잡힘 %2d건" % (t, len(fl), len(rows)))
             for r in rows[-2:]:
@@ -315,6 +324,14 @@ def main() -> int:
     if a.sample:
         return 0
 
+    # 🚨 «고른 문서는 있는데 읽은 것이 0» 은 건강한 실행에서 나올 수 없다. 죽는다.
+    #   산출물은 병합이라 겉보기에 멀쩡하므로, 여기서 안 막으면 아무도 모른다.
+    if n_new > 0 and n_doc == 0:
+        raise SystemExit("❌ 문서 %d건을 골랐는데 **한 건도 읽지 못했다**(예외 %d건). "
+                         "첫 예외: %s — 산출물을 쓰지 않고 멈춘다."
+                         % (n_new, n_err, err1 or "없음"))
+    if n_err:
+        print("⚠ 문서 예외 %d건 (읽음 %d건) · 첫 예외 %s" % (n_err, n_doc, err1))
     if not a.pit:
         json.dump(res, io.open(RAW, "w", encoding="utf-8"), ensure_ascii=False)
     co = {t: sorted(v["rows"], key=lambda r: r["d"]) for t, v in res.items() if v.get("rows")}
@@ -337,14 +354,14 @@ def main() -> int:
         "since": SINCE, "n_co": len(co), "n": n_obs,
         # 🚨 재개·증분의 정본. 이것이 있어야 러너가 이어서 돈다(RAW 는 gitignore).
         #   {티커: 마지막으로 훑은 제출일}. 다음 실행은 이보다 새 제출만 받는다.
-        "scan": scan, "n_scan": len(scan),
+        "scan": seen, "n_scan": len(seen),
         "co": {t: [[r["d"], r["pct"], r["s"][:200]] for r in v] for t, v in co.items()},
     }
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":"), sort_keys=True) + "\n")
     print("\n고객 집중도: %d사 · %d관측 · %.0fKB (훑음 %d종 · 새 문서 %d건 · "
           "변화 없어 건너뜀 %d종 · 이번에 안 본 채 보존 %d종)"
-          % (len(co), n_obs, os.path.getsize(OUT) / 1024, len(scan), n_new,
+          % (len(co), n_obs, os.path.getsize(OUT) / 1024, len(seen), n_new,
              n_skip, n_kept))
     yrs = {}
     for v in co.values():
