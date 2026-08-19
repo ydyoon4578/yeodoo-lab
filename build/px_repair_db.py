@@ -46,7 +46,11 @@ SD = os.path.join(DATA, "sd")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-DARK_MIN = 3          # 이만큼 연속으로 비면 «깨졌다» 로 본다(거래일)
+DARK_MIN = 1          # 이만큼 연속으로 비면 메울 대상으로 본다(거래일)
+# ⚠ 1일 구멍까지 보되 **최근 구간만** 본다(2026-08-19). 17.6년 격자 전체를 대상으로 하면
+#   수백 칸을 건드리게 되고, 과거로 갈수록 분할·배당이 끼어 기준 맞춤이 위태롭다.
+#   최근이면 DB 커버가 있고(SPX 2020-09~ · NDX 2014-06~) 그 사이 분할 확률도 낮다.
+SINCE = "2025-01-01"
 # 🚨 창을 짧게 잡는다(2026-08-19). 처음에 30거래일을 봤더니 EQR(리츠)의 비율이 2.9%
 #   흔들려 관문에 걸렸다 — 그 창에 **배당락**이 끼었기 때문이다. auto_adjust 의 조정계수는
 #   배당 사이에는 상수이고 배당락마다 계단으로 바뀐다. 그래서 «끊기기 직전 며칠» 만 본다.
@@ -102,11 +106,11 @@ def main() -> int:
         if not os.path.exists(p):
             continue
         pxd = (json.load(io.open(p, encoding="utf-8")) or {}).get("pxd") or []
-        g = gaps(pxd, n)
+        g = [(i, k) for i, k in gaps(pxd, n) if dts[i + k - 1] >= SINCE]
         if g:
             broken[t] = g
-    print("깨진 종목 %d개 (유니버스 %d · %d거래일 이상 연속 결측)"
-          % (len(broken), len(uni), DARK_MIN))
+    print("메울 대상 %d종목 (유니버스 %d · %d거래일 이상 연속 결측 · %s 이후)"
+          % (len(broken), len(uni), DARK_MIN, SINCE))
     for t, g in broken.items():
         print("   %-6s %s" % (t, " · ".join("%s~%s(%d일)" % (dts[i], dts[i + k - 1], k)
                                             for i, k in g)))

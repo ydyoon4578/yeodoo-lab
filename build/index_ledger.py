@@ -62,6 +62,23 @@ def _pitpx():
     return out
 
 
+def _alias():
+    """옛 티커 → 같은 CIK 의 다른 티커들. data/index_history.json 의 cik_hist 로 만든다.
+
+    ⚠ 손으로 적지 않는다. 개명은 계속 생기고, 손으로 적은 표는 반드시 낡는다.
+      cik_hist 는 위키 리비전의 CIK 열에서 나온 것이라 저장소 안에서 검증된다.
+    """
+    out = {}
+    try:
+        ch = (_load("index_history.json") or {}).get("cik_hist") or {}
+    except Exception:
+        return out
+    for _cik, ts in ch.items():
+        for t in ts:
+            out.setdefault(t, set()).update(x for x in ts if x != t)
+    return out
+
+
 def _load(name, default=None):
     try:
         return json.load(io.open(os.path.join(DATA, name), encoding="utf-8"))
@@ -143,6 +160,7 @@ def px_months():
     dates = st.get("pxd_dates") or []
     mend = month_end_index(dates)
     have = {}
+    have = {}
     nulls = [0]          # 리스트로 두는 것은 아래 루프에서 더하기 위함이다
     sd = os.path.join(DATA, "sd")
     if os.path.isdir(sd):
@@ -185,6 +203,7 @@ def px_months():
 
 
 def main():
+    ALIAS = _alias()          # 옛 티커 → 같은 CIK 의 다른 티커(개명 해소)
     hist = _load("index_history.json")
     if not hist:
         raise SystemExit("data/index_history.json 이 없다 — build/refresh_index_history.py 를 먼저 돌릴 것.")
@@ -354,7 +373,15 @@ def main():
             # 커버리지 — 그달 월말에 가격이 있는 멤버 수.
             # ⚠ 격자에 없는 달(오늘 이후·거래일 없음)은 '0%' 가 아니라 **못 잼**이다.
             if m in grid:
-                miss = [t for t in cur if m not in have.get(t, ())]
+                # 🚨 개명을 푼다(2026-08-19). 위키 리비전의 멤버 티커는 **그때의 이름**이라,
+                #   회사가 개명하면 랩이 새 티커로 갖고 있어도 «자료 없음» 으로 세었다.
+                #   실측: BK→BNY · FI→FISV · MMC→MRSH · SATS→ECHO 넷이 그 상태였고,
+                #   S&P 500 최근 12개월 커버리지를 최대 1.6%p 깎고 있었다.
+                #   별칭은 손으로 적지 않는다 — 이 랩의 index_history.json 이 CIK 별
+                #   티커 이력(cik_hist)을 이미 커밋해 두고 있어서 그것으로 푼다.
+                miss = [t for t in cur
+                        if m not in have.get(t, ())
+                        and not any(m in have.get(a, ()) for a in ALIAS.get(t, ()))]
                 rec["px"] = len(cur) - len(miss)
                 rec["pct"] = round(100.0 * rec["px"] / len(cur), 1)
                 rec["miss"] = miss
