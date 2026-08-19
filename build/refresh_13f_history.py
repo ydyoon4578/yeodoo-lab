@@ -18,7 +18,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from refresh_13f import GURUS, cusip_map, fold_class  # noqa: E402  명단·매핑·클래스표를 복제하지 않는다
+from refresh_13f import GURUS, PREDECESSOR, cusip_map, fold_class  # noqa: E402  명단·매핑·클래스표를 복제하지 않는다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -143,7 +143,16 @@ def main() -> int:
     # 운용사별 커버리지를 남긴다 — 명단에 이름이 있는데 데이터가 0인 것을 조용히 넘기면,
     # '18명을 봤다'고 적고 실제로는 17명만 본 상태가 된다(현행 guru.json이 그랬다).
     cover = {}
-    for cik, label in GURUS.items():
+    # 🚨 법인이 바뀐 곳은 **옛 법인도 같이 받아** 새 CIK 자리에 이어 붙인다.
+    #   안 그러면 이력이 통째로 끊긴다 — 실측(2026-08-19): 퍼싱스퀘어가 새 법인으로
+    #   갈아타면서 13년 성과가 사라지고 «성과 없음» 이 됐다.
+    #   ⚠ 여기는 분기별로 담기만 하는 자리라 이어 붙여도 기준 분기 선택을 흔들지 않는다
+    #     (refresh_13f 의 최신분기 선택에 넣었다가 27곳이 한 분기 밀린 사고와 다른 자리다).
+    _roster = dict(GURUS)
+    for _succ, _pred in PREDECESSOR.items():
+        if _pred not in _roster:
+            _roster[_pred] = GURUS.get(_succ, "승계 전 법인")
+    for cik, label in _roster.items():
         try:
             fl = filings(cik)
         except Exception as e:
@@ -200,6 +209,28 @@ def main() -> int:
                 vraw.setdefault(rd, {})[str(cik)] = mraw
                 fdates.setdefault(rd, {})[str(cik)] = filed.get(rd) or ""
                 got += 1
+        # 승계 전 법인의 분기는 **새 CIK 자리로 옮긴다**(같은 운용사이므로).
+        _dst = None
+        for _succ, _pred in PREDECESSOR.items():
+            if cik == _pred:
+                _dst = str(_succ)
+                break
+        if _dst:
+            # ⚠ 정본은 hist 다(vraw 는 단위 판정용 사본). 한쪽만 옮기면 산출물이 안 바뀐다 —
+            #   실측으로 vraw 만 옮겼더니 최종 파일에 옛 CIK 가 52분기 그대로 남았다.
+            _moved = 0
+            for _rd in list(hist):
+                if str(cik) in hist[_rd] and _dst not in hist[_rd]:
+                    hist[_rd][_dst] = hist[_rd].pop(str(cik))
+                    if str(cik) in (vraw.get(_rd) or {}):
+                        vraw[_rd][_dst] = vraw[_rd].pop(str(cik))
+                    fdates.setdefault(_rd, {})[_dst] = fdates.get(_rd, {}).pop(str(cik), "")
+                    _moved += 1
+                else:
+                    hist[_rd].pop(str(cik), None)
+                    (vraw.get(_rd) or {}).pop(str(cik), None)
+            print("  [승계] 옛 법인 CIK %d 의 %d분기를 %s 자리로 옮김" % (cik, _moved, _dst))
+            continue
         names[str(cik)] = label
         cover[str(cik)] = {"name": label, "n_q": got, "n_filings": len(best),
                            "n_amend_skipped": n_amend,
