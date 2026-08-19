@@ -3484,6 +3484,46 @@ try:
 except Exception as _e:
     print("  ~ 갱신 피드 대조가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 한 종목이 며칠째 비었나 ──────────────────────────────────────────────
+# 🚨 2026-08-19 — EQR(현역 S&P 500 편입 종목)이 data/sd/EQR.json 에서 **22거래일째**
+#   비어 있었는데 아무 검사도 안 걸렸다. 격자 구멍 검사는 «하루에 몇 종이 비었나» 만 보고
+#   (문턱 20종) «한 종목이 며칠째 비었나» 는 안 본다. 그 사이 이 랩의 전 횡단면 전략이
+#   그 종목 없이 돌았고, 화면도 조용했다.
+#   ⚠ 두 검사는 서로를 대신하지 못한다 — 하나는 «넓고 얕은» 결손, 하나는 «좁고 깊은» 결손이다.
+try:
+    _sdd = os.path.join(ROOT, "data", "sd")
+    _stk = json.loads(rd("data/stocks.json"))
+    _n = len(_stk.get("pxd_dates") or [])
+    _uni = {x.get("t") for x in (_stk.get("stocks") or []) if x.get("t")}
+    _dark = []
+    for _t in sorted(_uni):
+        _p = os.path.join(_sdd, "%s.json" % _t)
+        if not os.path.exists(_p):
+            continue
+        _o = json.load(io.open(_p, encoding="utf-8"))
+        _px = _o.get("pxd") or []
+        _rep = _o.get("px_repair") or {}
+        _k = 0
+        for _i in range(min(_n, len(_px)) - 1, -1, -1):
+            if _px[_i] is None:
+                _k += 1
+            else:
+                break
+        if _k >= 5:
+            _dark.append((_k, _t, len(_rep)))
+    _dark.sort(reverse=True)
+    if _dark:
+        errors.append(
+            "종목 계열이 **끊긴 채** 있다 — %s. 하루 단위 구멍 검사(문턱 20종)는 이것을 "
+            "못 잡는다: 한 종목이 며칠째 비는 것은 «좁고 깊은» 결손이라 매일 1종씩만 세이기 "
+            "때문이다. 벤더가 그 종목을 안 주는 것이면 build/px_repair_db.py 로 메울 것"
+            % " · ".join("%s %d거래일" % (t, k) for k, t, _r in _dark[:6]))
+    else:
+        print("  ~ 종목 계열 연속 결손 검사 통과(유니버스 %d종 · 5거래일 이상 끊긴 종목 0)"
+              % len(_uni))
+except Exception as _e:
+    print("  ~ 종목 계열 연속 결손 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 # ── 배선 감사 둘을 여기서 돌린다 ────────────────────────────────────────────
 # 🚨 2026-08-18 — build/audit_commit_lists.py 도 build/audit_unbuilt.py 도
 #   **어디서도 안 불리고 있었다.** 안 배선된 것을 찾는 감사기가 자기도 안 배선돼 있었다.
