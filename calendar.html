@@ -670,7 +670,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var n=daysFrom(d);
     return n===0?'오늘':n===1?'내일':n===-1?'어제':(n>0?n+'일 뒤':(-n)+'일 전');
   }
-  var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)','이벤트':'var(--hot)'};
+  var KCOLOR={'매일':'var(--muted)','주간':'var(--champ)','격주':'var(--rp)','월간':'var(--accent)','분기':'var(--marg)','부정기':'var(--muted)','이벤트':'var(--hot)','휴장':'var(--hot)','조기폐장':'var(--marg)'};
 
   // ── 중요도(★)와 FOMC — 정본은 data/events.json ─────────────────────────────
   //   FRED는 FOMC 일정도 주목도도 주지 않는다. 그 둘만 build/refresh_events.py가 한 곳에서
@@ -693,6 +693,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var rid='FOMC_'+f.d;
       D.releases[rid]={name:f.name||'FOMC 금리결정',kind:'이벤트',series:[]};
       D.dates.push({d:f.d,rid:rid});
+    });
+    D.dates.sort(function(a,b){return a.d<b.d?-1:(a.d>b.d?1:starOf(b)-starOf(a));});
+  }
+
+  // 휴장·조기폐장 — 홈 캘린더와 **같은 파일**을 읽는다(data/events.json).
+  // 🚨 두 화면이 각자 판단하면 반드시 갈린다. 홈이 «휴장» 이라 적은 날을 이 표가
+  //   조용히 넘기면 «전체 일정» 이 홈보다 덜 아는 표가 된다.
+  // ⚠ src('관측'|'규칙')를 이름에 적는다 — 미래는 NYSE 규칙으로 계산한 예정이고,
+  //   그 규칙은 이 랩에서 이미 두 번 틀렸다(build/refresh_events.py 머리주석).
+  function injectMarket(){
+    var mk=(EV&&EV.market)||null; if(!mk)return;
+    var lo=(D.window&&D.window.from)||'', hi=(D.window&&D.window.to)||'';
+    // ⚠ 갈래를 둘로 둔다. 하나로 묶으면 줄머리가 «휴장» 인데 내용이 «13:00 조기폐장» 인
+    //   줄이 생긴다 — 장이 안 서는 날과 일찍 닫는 날은 다른 사실이다.
+    //   색도 홈 캘린더와 맞춘다(휴장 --hot · 조기폐장 --marg).
+    [['closed','휴장'],['half','조기폐장']].forEach(function(g){
+      (mk[g[0]]||[]).forEach(function(r){
+        if(!r||!r.d)return;
+        if(lo&&r.d<lo)return; if(hi&&r.d>hi)return;
+        var rid='MKT_'+r.d+'_'+g[0];
+        D.releases[rid]={name:r.n+(r.src==='규칙'?' (예정)':''),kind:g[1],series:[]};
+        D.dates.push({d:r.d,rid:rid});
+      });
     });
     D.dates.sort(function(a,b){return a.d<b.d?-1:(a.d>b.d?1:starOf(b)-starOf(a));});
   }
@@ -745,7 +768,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var rel=D.releases[String(r.rid)]; if(!rel)return;
       c[rel.kind]=(c[rel.kind]||0)+1;
     });
-    var order=['이벤트','월간','분기','격주','주간','매일','부정기'];
+    // ⚠ '휴장' 을 여기 안 넣으면 칩이 안 생기고, 칩이 없으면 sel 에도 안 들어가
+    //   match() 가 그 줄을 통째로 거른다 — 자료는 있는데 화면에 없는 상태가 된다.
+    var order=['이벤트','휴장','조기폐장','월간','분기','격주','주간','매일','부정기'];
     var ks=order.filter(function(k){return c[k];}), h='';
     ks.forEach(function(k){
       // 기본값: 매일 나오는 릴리스는 꺼 둔다. 금리·VIX가 캘린더를 뒤덮으면 '이벤트'가 안 보인다.
@@ -786,6 +811,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     D=j;
     injectFomc();                       // FRED에 없는 FOMC를 표시 단계에서 얹는다
+    injectMarket();                     // 휴장·조기폐장도 같은 자리에서(FRED가 안 준다)
     var nrel=Object.keys(j.releases||{}).length;
     var nxt=j.dates.filter(function(r){return daysFrom(r.d)>=0;});
     // '다음 지표 발표'는 말 그대로 지표 — FOMC(이벤트)는 세지 않는다
