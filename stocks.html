@@ -845,7 +845,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(pc){lo=Math.min(lo,pc);hi=Math.max(hi,pc);}       // 전일종가 선이 잘리지 않게
     if(!(hi>lo))hi=lo+1;
     var pad=(hi-lo)*0.1; lo-=pad; hi+=pad;
-    var PL=4,PR=4,PT=6,PB=6;
+    // 🚨 아래에 시간 눈금을 그리므로 그만큼 자리를 남긴다(2026-08-19 사용자 요청).
+    //   PB 를 그대로 두고 글자를 그리면 마지막 분봉 위에 겹쳐 찍힌다.
+    var PL=4,PR=4,PT=6,PB=17;
     var X=function(i){return PL+(W-PL-PR)*i/(c.length-1);};
     var Y=function(v){return PT+(H-PT-PB)*(1-(v-lo)/(hi-lo));};
     // 🚨 전일종가 기준선 — 분봉은 «오늘 얼마나 움직였나» 를 보는 것이라 이 선이 없으면
@@ -869,7 +871,34 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var ml2=el('marklg');
     if(ml2) ml2.innerHTML='<span style="color:var(--muted)">┄전일종가</span>'+
       ' <span style="color:var(--muted)">· 1분봉 · 이동평균·타점은 일봉 기간에서 나옵니다</span>';
-    cv.setAttribute('aria-label',(ID.d||'')+' 1분봉 '+c.length+'개. 전일종가 '+
+    // ── 시간 눈금 ────────────────────────────────────────────────────
+    // ⚠ 봉 간격을 1분으로 **가정하지 않는다.** t0(첫 봉 시각)에서 시작해 봉 수만큼 더한다 —
+    //   중간에 빠진 분이 있으면 실제 마감 시각과 어긋날 수 있고, 그때는 눈금이 아니라
+    //   «몇 번째 봉인가» 를 보여 주는 것이 된다. 그 사실을 aria-label 에 적는다.
+    (function(){
+      var t0=String(ID.t0||'09:30'), hh=+t0.slice(0,2), mm=+t0.slice(3,5);
+      if(!(hh>=0)||!(mm>=0)) return;
+      var base=hh*60+mm;
+      var lab=function(i){ var v=(base+i)%1440;
+        return ('0'+Math.floor(v/60)).slice(-2)+':'+('0'+(v%60)).slice(-2); };
+      // 눈금 수는 폭에 맞춘다 — 좁은 화면에서 글자가 겹치면 안 읽는 것만 못하다.
+      var NT=Math.max(2,Math.min(7,Math.floor(W/95)));
+      x.font='10px ui-monospace,monospace';
+      x.textAlign='center';
+      for(var k=0;k<NT;k++){
+        var i2=Math.round((c.length-1)*k/(NT-1));
+        var xx=X(i2);
+        if(k===0) x.textAlign='left', xx=PL;
+        else if(k===NT-1) x.textAlign='right', xx=W-PR;
+        else x.textAlign='center';
+        x.strokeStyle=css('--line');x.globalAlpha=.5;
+        x.beginPath();x.moveTo(X(i2),PT);x.lineTo(X(i2),H-PB);x.stroke();x.globalAlpha=1;
+        x.fillStyle=css('--muted');
+        x.fillText(lab(i2), xx, H-4);
+      }
+      x.textAlign='left';
+    })();
+    cv.setAttribute('aria-label',(ID.d||'')+' 1분봉 '+c.length+'개('+esc(String(ID.t0||''))+' 시작). 전일종가 '+
       (pc==null?'—':pc)+' 대비 '+(chg==null?'—':chg.toFixed(2)+'%')+'. 값은 아래 표에도 있습니다.');
   }
 
