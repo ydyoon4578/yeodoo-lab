@@ -3268,7 +3268,18 @@ def reb_index(kind, dates):
 STRATS = []
 
 
+# 🚨 2026-08-19 사용자 결정 — 「샤프 0.5 미만 전략들은 전부 삭제」. 이 파일에서 걸린 것은
+#   t-clvgate 하나다(샤프 0.38 · 등급 «측정만»). 나머지 16종은 자산배분 쪽이다.
+# 🚨 **판정이 아니라 사용자 결정**이다. 이 랩은 2026-08-13·16 에 t 문턱을 폐지했고 게시
+#   기준을 두지 않는다 — «샤프 0.5» 도 랩의 기준이 아니고, 남은 규칙의 문턱을 바꾸지 않는다.
+# ⚠ 정의를 지우지 않고 여기서 거른다. t-clvgate 의 스코어러(mclv)는 PIT 레그와 공용이라
+#   코드를 들어내면 남은 규칙이 조용히 달라질 수 있다. 사유는 tested_not_published.json 에.
+DROPPED = {"t-clvgate"}
+
+
 def timing(sid, name, rule, fn, why, arch=None):
+    if sid in DROPPED:
+        return
     STRATS.append({"sid": sid, "name": name, "kind": "timing", "rule": rule, "why": why, "fn": fn, "arch": arch})
 
 
