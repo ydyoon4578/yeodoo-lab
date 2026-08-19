@@ -544,6 +544,9 @@
      되살리되 한 칸에 몰아 세지 않는다 — 그 안에는 '기각된 전략'과 '배포 전략의 설정을
      흔들어 본 실험'과 '규약상 판정 자체가 안 되는 것'이 섞여 있다(data/archive_index.json의 k). */
   .alwrap{margin-top:40px}
+  .kmore{font-size:11.5px;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .kdet{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--ink-2);
+        border-left:2px solid var(--line);padding:2px 0 2px 10px}
   .algrp{margin-top:20px}
   .algrp:first-of-type{margin-top:12px}
   .alhd{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding-bottom:7px;
@@ -1162,10 +1165,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   (function(){
     // D는 인라인 배열이라 여기서 한 번만 훑는다. 나중에 합쳐지는 랩 전략은 병합 지점에서 바꾼다.
     D.forEach(function(d){
+      // 🚨 2026-08-19 — **d.n 은 자료 join 키다.** 여기서 덮어쓰면 이름이 바뀌는 전략은
+      //   data 쪽 키와 안 맞아 조용히 빈다. 실측으로 두 전략(ΔFCF Yield · SPX Top 10,
+      //   EPS Revision Drift · NDX 100)이 **플레이북·보유 종목·백테스트 세 파일 모두**
+      //   못 찾고 있었다 — 사용자가 「종목 리스트를 왜 안 보여주냐」로 알아챘다.
+      //   → 바꾸기 전 이름을 n0 로 남기고, join 은 전부 n0 로 한다(화면만 바뀐 이름을 쓴다).
+      d.n0=d.n;
       ['n','c','alias','t','vt','m','ml'].forEach(function(k){ if(typeof d[k]==='string')d[k]=ixL(d[k]); });
       if(Array.isArray(d.aka))d.aka=d.aka.map(ixL);
     });
   })();
+
+  // 각주 접힘 한 벌 — «왜 →» 를 누르면 그 옆 .kdet 이 열린다. 위임이라 다시 그려도 산다.
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('.kmore'); if(!a)return;
+    e.preventDefault();
+    // ⚠ .kdet 은 링크의 **형제**다(같은 문단 안이 아니다). 자손에서만 찾으면 못 만난다 —
+    //   실측으로 클릭해도 안 열렸다. 조상을 거슬러 올라가며 찾는다.
+    var sel='.kdet[data-k="'+a.getAttribute('data-k')+'"]', box=null;
+    for(var n=a.parentElement;n&&!box;n=n.parentElement) box=n.querySelector(sel);
+    if(!box)return;
+    var open=box.hasAttribute('hidden');
+    if(open)box.removeAttribute('hidden'); else box.setAttribute('hidden','');
+    a.textContent=open?'접기 ←':'왜 →';
+  });
 
   function kindOf(d){return (d.det&&d.det.kind)||'미분류';}
 
@@ -2036,11 +2059,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     if(!h)return '';
     return '<div class="chartttl" style="margin-top:12px">판정 축</div><div class="axg">'+h+'</div>'+
-      '<p class="axnote">수익 축(t)과 별개다 — 각 축은 자기 질문에만 답하고 서로 덮어쓰지 않는다. '+
-      '하락 포착률은 대조군이 내린 날 전략이 그 몇 배를 따라갔나이며 1보다 작을수록 덜 내려갔다는 뜻이다. '+
-      '⚠ 침체 구간은 NBER 의 <b>사후 확정</b> 판정이라 매매 규칙으로 쓸 수 없다 — 성격을 읽는 칸이다.'+
-      (d._b2?' 🚨 <b>보조 대조군은 판정에 안 쓴다.</b> 대조군을 무엇으로 두느냐로 t 가 크게 움직이므로 '+
-            '(실측: 같은 규칙이 한쪽에서 −2.10, 다른 쪽에서 +1.02) 둘을 나란히 둔 것이다.':'')+'</p>';
+      // 🚨 2026-08-19 — 259자를 한 줄로. 같은 이유다.
+      '<p class="axnote">수익 축(t)과 별개입니다 · 하락 포착률은 1보다 작을수록 덜 내려간 것 '+
+      '<a href="#" class="kmore" data-k="ax">왜 →</a></p>'+
+      '<div class="kdet" data-k="ax" hidden>각 축은 자기 질문에만 답하고 서로 덮어쓰지 않습니다. '+
+      '하락 포착률은 대조군이 내린 날 전략이 그 몇 배를 따라갔나입니다. '+
+      '⚠ 침체 구간은 NBER 의 사후 확정 판정이라 매매 규칙으로 쓸 수 없습니다 — 성격을 읽는 칸입니다.'+
+      (d._b2?' 🚨 보조 대조군은 판정에 안 씁니다. 대조군을 무엇으로 두느냐로 t 가 크게 움직입니다 '+
+            '(실측: 같은 규칙이 한쪽에서 −2.10, 다른 쪽에서 +1.02).':'')+'</div>';
   }
 
   function svgYearly(bt,vc){
@@ -2277,13 +2303,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }).join('');
     return '<div class="chartttl">위기 구간 성과 <span class="lg" style="text-transform:none;letter-spacing:0">월말 NAV 기준 · 구간 전체 수익</span></div>'+
       '<div class="crwrap"><table class="crtbl"><caption class="vh">위기 구간별 전략·지수 수익</caption>'+head+'<tbody>'+body+'</tbody></table></div>'+
-      '<div class="btnote">이 다섯 구간이 최근 20년의 <b>큰 급락 사건</b>입니다 — '+
-      '<b>2008 금융위기</b>(리먼 파산·주택시장 붕괴) · <b>2018Q4 긴축 발작</b>(연준 금리인상 우려) · '+
-      '<b>2020Q1 코로나</b>(팬데믹 선언 후 한 달 만에 −34%) · <b>2022 인플레·금리급등</b>(물가 9%·연준 급속 인상) · '+
-      '<b>2025 관세 충격</b>. 시장이 무너질 때 이 전략이 같이 무너졌는지를 보는 자리입니다. '+
-      '구간은 전 전략 공통 고정이며 수익은 시계열에서 계산합니다(손으로 적지 않습니다). '+
-      '부분만 걸치는 구간은 <b>계산하지 않고</b> 「구간 밖」으로 둡니다 — 잘라 낸 위기 수익률은 거짓말이 되기 때문입니다. '+
-      '지수 열에는 승패 라벨을 붙이지 않았습니다 — 숫자를 나란히 놓는 것으로 충분합니다.</div>';
+      // 🚨 2026-08-19 — 356자를 한 줄로(사용자 요청). 카드마다 되풀이되던 붙박이 문구다.
+      //   지운 것이 아니라 접었다 — 근거는 «왜 →» 안에 그대로 있다.
+      '<div class="btnote">시장이 무너질 때 같이 무너졌는지 보는 자리입니다 '+
+      '<a href="#" class="kmore" data-k="bt">왜 →</a></div>'+
+      '<div class="kdet" data-k="bt" hidden>다섯 구간은 최근 20년의 큰 급락 사건입니다 — '+
+      '2008 금융위기 · 2018Q4 긴축 발작 · 2020Q1 코로나 · 2022 인플레·금리급등 · 2025 관세 충격. '+
+      '구간은 전 전략 공통 고정이고 수익은 시계열에서 계산합니다(손으로 적지 않습니다). '+
+      '부분만 걸치는 구간은 계산하지 않고 「구간 밖」으로 둡니다 — 잘라 낸 위기 수익률은 '+
+      '거짓말이 되기 때문입니다.</div>';
   }
 
   // ── ⑧ 이 표본이 판정할 수 있는 범위 ──────────────────────────────
@@ -2806,12 +2834,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<div class="rgwrap"><div class="kh">국면별 월평균 수익 — '+
         esc(_rgw&&_rgw!=='~'?_rgw:(RGM.span||''))+'</div>'+
         rows+
-        '<p class="knote">🚨 <b>검정이 아니라 서술입니다.</b> 이 랩은 이 7국면이 다음 달 수익을 '+
-        '가르지 못한다는 것을 이미 검정했습니다 — 지금 국면을 보고 전략을 고르라는 뜻이 아닙니다.<br>'+
-        '⚠ 개월 수보다 <b>구간 수</b>를 먼저 보십시오. 과열 26개월은 전부 한 덩어리'+
-        '(2021-04~2023-05)이고 후기사이클은 4개월 한 덩어리입니다 — 그 칸의 숫자는 관측 26개가 '+
-        '아니라 <b>사건 하나</b>에서 나온 것입니다. 구간이 여럿인 것은 골디락스(6)와 회복(6)뿐입니다.<br>'+
-        '⚠ 그 국면 표본이 8개월 미만인 칸은 재지 않고 비웁니다.</p></div>';
+        // 🚨 2026-08-19 — 세 문단(약 230자)을 한 줄로 줄였다(사용자 요청 «주절주절 쓰지마»).
+        //   근거를 없앤 것이 아니라 접힘으로 옮겼다 — 짧게 쓰는 것과 안 적는 것은 다르다.
+        '<p class="knote">🚨 <b>서술이지 검정이 아닙니다</b> · 개월 수보다 <b>구간 수</b>를 보십시오'+
+        ' <a href="#" class="kmore" data-k="rg">왜 →</a></p>'+
+        '<div class="kdet" data-k="rg" hidden>이 랩은 7국면이 다음 달 수익을 가르지 못한다는 것을 '+
+        '이미 검정했습니다 — 국면을 보고 전략을 고르라는 뜻이 아닙니다. 과열 26개월은 전부 한 '+
+        '덩어리(2021-04~2023-05)이고 후기사이클은 4개월 한 덩어리라, 그 칸은 관측 26개가 아니라 '+
+        '<b>사건 하나</b>에서 나온 수입니다(구간이 여럿인 것은 골디락스 6·회복 6뿐). '+
+        '표본 8개월 미만인 칸은 재지 않고 비웁니다.</div></div>';
     }
 
     var play='';
@@ -3207,12 +3238,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var map=res[0],bt=res[1],hd=res[2],hdb=res[3];
     KINDS=res[4]||null;      // 성격 축 정의(라벨·1차지표·대조군 역할 문구)의 단일 출처
     if(map){ D.forEach(function(d){
-      if(!map[d.n])return;
+      var _k=d.n0||d.n;
+      if(!map[_k])return;
       // ⚠ strategy_detail.json에는 kind가 비어 있는 항목이 있다(기각 재검 5건). 통째로 덮어쓰면
       //   통합 인덱스가 정한 성격이 지워져 '미분류'로 떨어진다 — 실제로 그렇게 났다.
       //   플레이북은 받되 성격은 인덱스 값을 우선한다.
       var keep=(d.det&&d.det.kind)||null;
-      d.det=map[d.n];
+      d.det=map[_k];
       if(keep&&!d.det.kind)d.det=Object.assign({},d.det,{kind:keep});
     }); if(window.__rebuildChips)window.__rebuildChips(); render(); }
     buildKindFilter();
@@ -3220,11 +3252,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     markChip();
     // 백테스트가 sid로도 조인되게 한다 — 표시명을 고치는 순간 차트가 통째로 사라지던 사고 방지
     if(bt&&bt.strategies){ D.forEach(function(d){
-      if(bt.strategies[d.n]){ d.bt=bt.strategies[d.n]; return; }
+      var _k=d.n0||d.n;
+      if(bt.strategies[_k]){ d.bt=bt.strategies[_k]; return; }
       for(var kk in bt.strategies){ if(bt.strategies[kk].sid&&bt.strategies[kk].sid===d.sid){ d.bt=bt.strategies[kk]; return; } }
     }); }
     // 무료 데이터 상세(우선) + 사내 DB 파생 공개요약(종목 비공개) 병합
-    [hd,hdb].forEach(function(src){ if(src&&src.strategies)D.forEach(function(d){ if(!d.hold&&src.strategies[d.n]) d.hold=src.strategies[d.n]; }); });
+    [hd,hdb].forEach(function(src){ if(src&&src.strategies)D.forEach(function(d){
+      var _k=d.n0||d.n;
+      if(!d.hold&&src.strategies[_k]) d.hold=src.strategies[_k]; }); });
     render();
   });
 })();
