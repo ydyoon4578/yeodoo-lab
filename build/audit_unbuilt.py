@@ -62,6 +62,11 @@ KNOWN = {
     "index_add.json":
         "한 번 재고 **얼린** 사전등록 측정이다(PREREG-2026-08-14-INDEXADD). 자동으로 다시 "
         "구우면 얼린 기록이 조용히 바뀐다 — 그러면 안 되는 종류의 파일이다.",
+    "e12.json":
+        "한 번 재고 **얼린** 사전등록 측정이다(PREREG-2026-08-19-E12 · SPX/NDX 편입·제외 "
+        "이벤트). 자동으로 다시 구우면 얼린 기록이 조용히 바뀐다. 결과는 "
+        "PREREG-2026-08-19-E12-RESULT.md 와 tested_not_published.json 의 e-e12press · "
+        "e-e12rev 두 줄로 실렸다.",
     "delisted_names.json":
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
