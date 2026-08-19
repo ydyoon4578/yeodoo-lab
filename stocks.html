@@ -522,7 +522,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 신호</span></a>
           <a class="mmi" href="co.html" data-nav="co.html"><span class="mmn">종목 정보</span></a>
           <a class="mmi" href="signals.html" data-nav="signals.html"><span class="mmn">지표별 타이밍</span></a>
-          <a class="mmi" href="intraday.html" data-nav="intraday.html"><span class="mmn">장중 분봉</span></a>
         </div>
       </li>
       <li class="navcat" data-cat="strategy">
@@ -814,7 +813,68 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   2026-08-03 에 가격 패널이 2009-01 고정 시작으로 바뀌면서(refresh_stocks.PX_START)
   //   그 숫자가 패널보다 짧아졌다 — 손으로 적은 길이는 패널이 자라는 순간 낡는다.
   //   1e9 를 두면 슬라이스가 언제나 전 구간이 되고, 다시 고칠 일이 없다.
-  var PERIODS=[["1일",2],["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252],["3년",756],["10년",2514],["전체",1e9]];
+  // 🚨 2026-08-19 — «1일» 은 일봉 2점이라 선이 안 그려졌다(사용자 지시로 장중 분봉 탭을
+  //   걷으면서, 분봉이 필요한 자리는 여기 하나라는 것이 분명해졌다).
+  //   → «1일» 을 고르면 data/id/<티커>.json 의 **1분봉**으로 그린다. 값 1 을 표지로 쓴다.
+  //   ⚠ 분봉은 **직전 거래일** 것이다(마감 뒤 하루 한 번 갱신). 지금 시세가 아니다 —
+  //     그 사실을 차트 위 날짜 줄에 적는다.
+  // ── 분봉 그리기 ────────────────────────────────────────────────────────
+  // ⚠ 일봉 차트를 고쳐 쓰지 않고 따로 그린다. 일봉은 마커·이동평균·거래량 규약이 얹혀
+  //   있는데 그 규약이 분봉에서는 뜻이 다르다(20분 이동평균은 20일 이동평균이 아니다).
+  //   섞으면 같은 선이 두 가지를 뜻하게 된다.
+  function drawIntraday(s,ID,avail){
+    var bts=el('chartbtns');
+    if(bts){bts.innerHTML=avail.map(function(p){return '<button class="cbtn'+(state.period===p[1]?' on':'')+'" data-d="'+p[1]+'">'+p[0]+'</button>';}).join('');
+      bts.querySelectorAll('.cbtn').forEach(function(b){b.addEventListener('click',function(){
+        state.period=+b.getAttribute('data-d'); renderChart(s);});});}
+    var c=(ID.c||[]).filter(function(x){return x!=null;});
+    var pc=ID.pc, last=c[c.length-1];
+    var chg=(pc&&last)?((last/pc-1)*100):null;
+    var cd=el('chgd');
+    if(cd)cd.innerHTML='<span class="px">'+(last!=null?last.toLocaleString():'—')+'</span>'+
+      (chg!=null?'<span class="chg" style="color:'+(chg>=0?'var(--good)':'var(--hot)')+'">'+(chg>=0?'+':'')+chg.toFixed(2)+'%</span>':'')+
+      '<span class="rng">'+esc(ID.d||'')+' 1분봉 · '+c.length+'개 · 전일종가 대비'+
+      ' <b title="마감 뒤 하루 한 번 갱신됩니다 — 지금 시세가 아닙니다">직전 거래일</b></span>';
+    var cv=el('pxc'); if(!cv) return;
+    var W=cv.clientWidth||600,H=150,dpr=window.devicePixelRatio||1;
+    cv.width=W*dpr;cv.height=H*dpr;
+    var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+    if(c.length<2) return;
+    var lo=Math.min.apply(null,c), hi=Math.max.apply(null,c);
+    if(pc){lo=Math.min(lo,pc);hi=Math.max(hi,pc);}       // 전일종가 선이 잘리지 않게
+    if(!(hi>lo))hi=lo+1;
+    var pad=(hi-lo)*0.1; lo-=pad; hi+=pad;
+    var PL=4,PR=4,PT=6,PB=6;
+    var X=function(i){return PL+(W-PL-PR)*i/(c.length-1);};
+    var Y=function(v){return PT+(H-PT-PB)*(1-(v-lo)/(hi-lo));};
+    // 🚨 전일종가 기준선 — 분봉은 «오늘 얼마나 움직였나» 를 보는 것이라 이 선이 없으면
+    //   위아래를 판단할 수 없다. 점선으로 두어 가격선과 구별한다.
+    if(pc){
+      x.setLineDash([3,3]);x.strokeStyle=css('--line');x.lineWidth=1;
+      x.beginPath();x.moveTo(PL,Y(pc));x.lineTo(W-PR,Y(pc));x.stroke();x.setLineDash([]);
+    }
+    var up=(chg==null||chg>=0);
+    var col=css(up?'--good':'--hot');
+    // 면 — 전일종가 위/아래를 색으로 말한다
+    x.beginPath();x.moveTo(X(0),Y(pc||c[0]));
+    for(var i=0;i<c.length;i++)x.lineTo(X(i),Y(c[i]));
+    x.lineTo(X(c.length-1),Y(pc||c[0]));x.closePath();
+    x.globalAlpha=.12;x.fillStyle=col;x.fill();x.globalAlpha=1;
+    x.strokeStyle=col;x.lineWidth=1.5;x.beginPath();
+    for(i=0;i<c.length;i++){ if(i)x.lineTo(X(i),Y(c[i])); else x.moveTo(X(i),Y(c[i])); }
+    x.stroke();
+    // ⚠ 범례를 분봉용으로 갈아 끼운다. 일봉 범례(MA20·MA60·거래량·스윙 타점)는 여기서
+    //   뜻이 없다 — 20분 이동평균은 20일 이동평균이 아니고, 스윙 타점은 일봉 좌표계다.
+    var ml2=el('marklg');
+    if(ml2) ml2.innerHTML='<span style="color:var(--muted)">┄전일종가</span>'+
+      ' <span style="color:var(--muted)">· 1분봉 · 이동평균·타점은 일봉 기간에서 나옵니다</span>';
+    cv.setAttribute('aria-label',(ID.d||'')+' 1분봉 '+c.length+'개. 전일종가 '+
+      (pc==null?'—':pc)+' 대비 '+(chg==null?'—':chg.toFixed(2)+'%')+'. 값은 아래 표에도 있습니다.');
+  }
+
+  var PERIODS=[["1일",1],["1주",5],["1개월",21],["3개월",63],["6개월",126],["1년",252],["3년",756],["10년",2514],["전체",1e9]];
+  var INTRA=1;                       // state.period 가 이 값이면 분봉 모드
+  var IDC={};                        // 티커 → 분봉(캐시). 한 번 받으면 다시 안 받는다.
   function perAvail(s,p){
     var n=(s.pxd||[]).length;
     return n>=Math.min(p[1],20);   // 이력이 짧은 종목은 긴 구간 칩을 내지 않는다(빈 차트 방지)
@@ -1366,6 +1426,40 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var avail=PERIODS.filter(function(p){return perAvail(s,p);});
     if(!avail.some(function(p){return p[1]===state.period;})){
       var last=avail[avail.length-1]||PERIODS[0]; state.period=last[1];
+    }
+    // ── 분봉 모드 ────────────────────────────────────────────────────
+    // 받아 두지 않았으면 받아 오고, 그동안은 일봉으로 그리지 않는다(빈 화면 대신 «불러오는 중»).
+    if(state.period===INTRA){
+      var _t=s.t;
+      if(IDC[_t]===undefined){
+        IDC[_t]=null;
+        fetch('data/id/'+encodeURIComponent(_t)+'.json',{cache:'no-cache'})
+          .then(function(r){return r.ok?r.json():false;})
+          .then(function(j){ IDC[_t]=j||false; if(state.period===INTRA) renderChart(s); })
+          ['catch'](function(){ IDC[_t]=false; if(state.period===INTRA) renderChart(s); });
+      }
+      var _id=IDC[_t];
+      if(_id===null){
+        var _bt=el('chartbtns');
+        if(_bt) _bt.innerHTML=avail.map(function(p){return '<button class="cbtn'+(state.period===p[1]?' on':'')+'" data-d="'+p[1]+'">'+p[0]+'</button>';}).join(''),
+          _bt.querySelectorAll('.cbtn').forEach(function(b){b.addEventListener('click',function(){
+            state.period=+b.getAttribute('data-d'); renderChart(s);});});
+        var _cv=el('pxc'); if(_cv) _cv.getContext('2d').clearRect(0,0,_cv.width,_cv.height);
+        var _cd0=el('chgd'); if(_cd0) _cd0.innerHTML='<span class="rng">분봉을 불러오는 중…</span>';
+        return;
+      }
+      if(_id===false){
+        // ⚠ 없는 것을 일봉으로 슬쩍 바꿔 그리지 않는다 — 무엇을 보고 있는지가 달라진다.
+        var _bt2=el('chartbtns');
+        if(_bt2) _bt2.innerHTML=avail.map(function(p){return '<button class="cbtn'+(state.period===p[1]?' on':'')+'" data-d="'+p[1]+'">'+p[0]+'</button>';}).join(''),
+          _bt2.querySelectorAll('.cbtn').forEach(function(b){b.addEventListener('click',function(){
+            state.period=+b.getAttribute('data-d'); renderChart(s);});});
+        var _cv2=el('pxc'); if(_cv2) _cv2.getContext('2d').clearRect(0,0,_cv2.width,_cv2.height);
+        var _cd2=el('chgd');
+        if(_cd2) _cd2.innerHTML='<span class="rng">이 종목은 분봉이 없습니다 — 다른 기간을 고르세요.</span>';
+        return;
+      }
+      return drawIntraday(s,_id,avail);
     }
     var pxd=s.pxd||[], dates=DATA.pxd_dates||[];
     var n=Math.min(state.period, pxd.length);

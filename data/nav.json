@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "04fc4400a6aced85",
+ "generated_from": "feaf93852f1ec13a",
  "categories": [
   {
    "name": "시장",
@@ -93,16 +93,6 @@
      "verdict": "rejected",
      "src": "model",
      "effort": "M",
-     "live": true
-    },
-    {
-     "name": "장중 분봉",
-     "file": "intraday.html",
-     "status": "existing",
-     "desc": "직전 거래일 1분봉과 거래량 — 지금 시세가 아니다(마감 뒤 하루 한 번 갱신)",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "S",
      "live": true
     }
    ]
@@ -413,6 +403,17 @@
    "why": "사용자: \"신호가 너무 많아서 못 쓰겠다\". 실측 그대로다 — 과매도 122종·과매수 274종으로 518종 중 396종(76%)이 어느 한쪽에 걸린다. 그만큼 걸리면 거르는 일을 안 하는 것과 같다.",
    "principle": "페이지를 지우지는 않는다. 매수 쪽 중앙값 −0.079%·승률 49.5%, 매도 쪽 t −3.15 라는 17년 실측이 이 랩의 기록이고, 메뉴에서 뺐다고 그 기록을 지울 이유는 없다. 안 되는 것을 재서 안 된다고 적은 자리를 남기는 것이 이 랩의 규약이다.",
    "replaced_by": "stocks.html 의 스윙 타점(▲저점매수·▼고점매도) — 147종·64종으로 훨씬 좁게 걸린다."
+  },
+  {
+   "name": "장중 분봉",
+   "cat": "종목",
+   "was_file": "intraday.html",
+   "desc": "메뉴에서 뺐다 — 페이지는 그대로 있다(사용자 결정 2026-08-19)",
+   "retired_on": "2026-08-19",
+   "why": "분봉을 보려고 별도 화면으로 들어가는 일이 없었다. 필요한 자리는 «종목 신호에서 1일 차트를 볼 때» 하나인데, 그건 그 화면 안에서 되게 하는 것이 맞다 — 탭을 옮겨 다니게 하는 것이 아니라.",
+   "principle": "메뉴에서 내리는 것과 지우는 것은 다르다. 잰 것은 남긴다 — intraday.html 과 data/intraday.json·data/id/ 는 그대로이고 잡도 계속 돈다.",
+   "replaced_by": "stocks.html — 차트 기간 «1일» 이 분봉으로 그려진다.",
+   "file_kept": "intraday.html 파일·빌더·워크플로를 지우지 않았다. 메뉴 슬롯에서만 뺐다."
   }
  ]
 }
