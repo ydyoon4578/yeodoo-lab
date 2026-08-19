@@ -52,6 +52,11 @@ sys.path.insert(0, HERE)
 IDX = ("SPX Index", "NDX Index")
 
 
+def _daydiff(a, b):
+    import datetime as _d
+    return abs((_d.date.fromisoformat(a) - _d.date.fromisoformat(b)).days)
+
+
 def sig(x, n=6):
     if x is None:
         return None
@@ -98,36 +103,90 @@ def main() -> int:
 
     conn = psycopg2.connect(**db_load._conn_params())
     cur = conn.cursor()
+    # 🚨 통화·국가로 거른다. 전체 106만행 중 6.5만행이 crncy/country 가 NULL 인데
+    #   (2014~2018 옛 행들), 그것을 그대로 실으면 어느 통화인지 모르는 값을 섞게 된다.
+    #   USD/US 만 쓴다 — 이 랩의 가격은 전부 USD 다.
     cur.execute("""select split_part(ticker,' ',1) as t, dt, local_price
                      from public.index_constituents
                     where index = any(%s) and local_price is not null
+                      and crncy = 'USD' and country = 'US'
                     order by 1, 2""", (list(IDX),))
     rows = cur.fetchall()
     print("DB 조회 %d행 (%s)" % (len(rows), " · ".join(IDX)))
 
-    add_t, add_p, seen = set(), 0, set()
+    # 🚨 기준을 맞춘다(2026-08-19). DB 의 local_price 는 **원종가**이고 이 기록의 값은
+    #   yfinance auto_adjust(배당조정)다. 그대로 이어 붙이면 이어진 자리에 계단이 생긴다 —
+    #   실측 CAG 5.74% · CPB 5.05% · ZS 7.95%. 배당수익률이 높을수록, 과거로 갈수록 커진다.
+    #   → 두 원천이 **같은 날 값을 가진 날**로 비율 r = 기록/DB 를 만들고, 채울 날짜에서
+    #     가장 가까운 겹침일의 r 을 곱한다. 조정계수는 배당 사이에 상수라 최근접이 맞다.
+    #   ⚠ 겹치는 날이 MIN_OVL 미만이면 그 티커는 **건너뛴다** — 기준을 못 맞추면 안 넣는다.
+    MIN_OVL = 20
+    by_t = {}
+    seen = set()
     for t, dt, p in rows:
         seen.add(t)
         if t in today or t not in need:
-            continue                      # 랩이 매일 받는 종목·랩이 모르는 이름은 건드리지 않는다
-        d = str(dt)[:10]
-        v = sig(p)
-        if v is None:
             continue
+        v = sig(p)
+        if v is not None:
+            by_t.setdefault(t, {})[str(dt)[:10]] = v
+
+    add_t, add_p, skip_ovl, raw_t = set(), 0, [], set()
+    for t, db in by_t.items():
         cur_d = flat.setdefault(t, {})
-        if d in cur_d:
-            continue                      # 🚨 이미 있는 값은 **안 덮는다** — 원천을 섞지 않는다
-        cur_d[d] = v
-        add_t.add(t)
-        add_p += 1
-    print("DB 티커 %d종 · 오늘 유니버스 제외 후 보탤 대상 %d종 · 새 관측 %d건"
-          % (len(seen), len(add_t), add_p))
+        ovl = sorted(d for d in db if d in cur_d)
+        if cur_d and len(ovl) < MIN_OVL:
+            skip_ovl.append(t)             # 기존 값이 있는데 기준을 맞출 겹침이 모자란다
+            continue
+        if not cur_d:
+            raw_t.add(t)                   # 기존 값이 없다 → DB 단독 계열(원종가 기준)
+        ratios = [(d, cur_d[d] / db[d]) for d in ovl if db[d]]
+        for d, v in sorted(db.items()):
+            if d in cur_d:
+                continue                   # 이미 있는 값은 안 덮는다
+            if ratios:
+                # 가장 가까운 겹침일의 비율
+                r = min(ratios, key=lambda x: abs((x[0] > d) - 0.5) if False else _daydiff(x[0], d))[1]
+                v = sig(v * r)
+            cur_d[d] = v
+            add_t.add(t)
+            add_p += 1
+    print("DB 티커 %d종(USD/US) · 보탤 대상 %d종 · 새 관측 %d건 "
+          "· 기준 못 맞춰 건너뛴 %d종 · DB 단독(원종가) %d종"
+          % (len(seen), len(add_t), add_p, len(skip_ovl), len(raw_t)))
+    if skip_ovl:
+        print("  · 겹침 %d일 미만이라 건너뜀: %s" % (MIN_OVL, " ".join(sorted(skip_ovl)[:12])))
     if not add_p:
         print("보탤 것이 없다 — 그대로 둔다")
         return 0
     if dry:
         print("  (--dry-run) 보탤 티커:", " ".join(sorted(add_t)[:20]))
         return 0
+
+    # 🚨 관문 — 이어 붙인 자리에 계단이 생겼나(2026-08-19). 첫 판에서 이 검사가 없어
+    #   원종가를 배당조정 계열에 그대로 붙였고, CAG 5.7% · ZS 8.0% 짜리 가짜 하루 변동이
+    #   기록에 들어갔다. 산출물은 겉보기에 멀쩡했다 — 검사가 없으면 아무도 모른다.
+    # ⚠ **인접 거래일**만 본다. 계열이 몇 년 비어 있다가 이어지는 것은 계단이 아니라 공백이다
+    #   (첫 판에서 그것을 494% 계단으로 잘못 읽었다 — SPLS 2015 → 2026).
+    JUMP_MAX, JUMP_GAP = 12.0, 5          # %  ·  며칠 이내를 «인접» 으로 볼 것인가
+    bad = []
+    for t in sorted(add_t):
+        ds = sorted(flat[t])
+        for i in range(1, len(ds)):
+            if _daydiff(ds[i - 1], ds[i]) > JUMP_GAP:
+                continue
+            p0, p1 = flat[t][ds[i - 1]], flat[t][ds[i]]
+            if not p0:
+                continue
+            mv = abs(p1 / p0 - 1) * 100
+            if mv > JUMP_MAX:
+                bad.append((mv, t, ds[i - 1], ds[i]))
+    bad.sort(reverse=True)
+    if bad:
+        for mv, t, d0, d1 in bad[:10]:
+            print("  🚨 %-6s %s → %s  %.1f%%" % (t, d0, d1, mv))
+        raise SystemExit("❌ 인접 거래일 %.0f%% 초과 변동 %d건 — 기준이 안 맞은 것이다. "
+                         "기록을 쓰지 않고 멈춘다." % (JUMP_MAX, len(bad)))
 
     alld = sorted({d for v in flat.values() for d in v})
     idx = {d: i for i, d in enumerate(alld)}
