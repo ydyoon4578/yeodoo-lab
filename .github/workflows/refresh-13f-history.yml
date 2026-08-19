@@ -40,7 +40,12 @@ jobs:
           python-version: '3.12'
       # yfinance 는 복제용 월봉(mpx)을 받는 데 쓴다. pandas·numpy 는 그 의존이다.
       - name: Install deps
-        run: pip install --quiet pandas numpy scipy yfinance
+        # 🚨 2026-08-19 — --prefer-binary. lxml 6.1.2 가 wheel 없이 올라와
+        #   pip 이 소스 빌드로 넘어갔고 러너에 libxml2-dev 가 없어 죽었다
+        #   (yfinance 의 전이 의존이라 우리가 부르지도 않는 패키지다).
+        #   ⚠ 판을 손으로 박지 않는다 — 박은 수는 낡는다. wheel 이 있는 최신 판을
+        #     고르게 두면 벤더가 wheel 을 올리는 대로 저절로 따라간다.
+        run: pip install --prefer-binary --quiet pandas numpy scipy yfinance
       # 🚨 2026-08-05 — 기준선. 일을 시작하기 **전** 저장소가 이미 몇 건 깨져 있었는지
       #   잰다. 이게 없으면 아래 Validate 가 절대 기준이 되어, 이 잡과 상관없는
       #   결함 때문에 방금 받은 자료를 통째로 버린다(실제로 네 잡이 그랬다).

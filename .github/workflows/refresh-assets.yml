@@ -98,7 +98,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install deps
-        run: pip install --quiet pandas numpy yfinance
+        # 🚨 2026-08-19 — --prefer-binary. lxml 6.1.2 가 wheel 없이 올라와
+        #   pip 이 소스 빌드로 넘어갔고 러너에 libxml2-dev 가 없어 죽었다
+        #   (yfinance 의 전이 의존이라 우리가 부르지도 않는 패키지다).
+        #   ⚠ 판을 손으로 박지 않는다 — 박은 수는 낡는다. wheel 이 있는 최신 판을
+        #     고르게 두면 벤더가 wheel 을 올리는 대로 저절로 따라간다.
+        run: pip install --prefer-binary --quiet pandas numpy yfinance
 
       # ══ 수집·표시 (실측 2~3분) ═══════════════════════════════════════════
       # (2026-08-03 까지 '1부'였다. 2부는 refresh-ml.yml 로 나갔다 — 아래 꼬리말 참조.)
