@@ -2720,9 +2720,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   빠지므로 수익 칸에서 전략이 연 약 2%p 유리하다 — 자산 랩 35종 중 13종이 그 한 가지
       //   때문에 CAGR 열세에서 우위로 바뀌었다. 라벨 밑이 아니라 **라벨 옆**에 붙여야
       //   Δ를 읽는 순간 같이 읽힌다.
-      if(d._bl)out+='<div class="benchline"><span>판정 기준</span><b>'+esc(d._bl)+'</b>'+
-        (/\(PR\)/.test(d._bl)?'<i class="prtr">배당 없는 지수 · 전략은 배당 포함이라 수익 칸이 연 약 2%p 유리</i>':'')+
-        '</div>';
+      // 🚨 2026-08-19 사용자 결정 — «판정 기준» 줄을 뺀다. 대조군 이름은 바로 아래
+      //   지표표의 열 이름(지수 샤프·MDD·CAGR)과 차트 범례가 이미 말한다.
+      //   ⚠ PR/TR 비대칭 설명은 아래 «같은 구간 지수» 표의 각주로 옮겨져 있다 — 지운 것이
+      //     아니라 한 번만 적는다.
       // ── 같은 구간 지수(PR) — CAGR 한 줄이 아니라 지표를 통째로 나란히 놓는다 ──────
       // 대조군이 없는 전략이 31개다(타이밍 오버레이·ML 종목선택 …). 그런 전략은 15행 지표표도
       // 안 나온다(d.bt 가 있는 전략이 10개뿐). 그래서 "그래서 좋은 건가"에 답할 눈금이 이 표뿐이라
@@ -2997,9 +2998,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         //   축 자체가 다르다. 그 70종에 빨간 경고를 찍으면 없는 결함을 있다고 말하게 된다.
         :(d._src==='배포 원장'
           ?'<div class="legttl legretro">실측 — <b>배포 원장</b> · 실제로 운용한 기록이다</div>'
+          // 🚨 2026-08-19 — 자산배분의 «소급» 설명을 한 마디로 줄인다(사용자 지적).
+          //   ⚠ 아래 지표(구간·샤프·MDD·CAGR)는 **지우지 않는다.** 이 전략들은 시점정확
+          //     레그가 원리상 없어서(ETF·자산군을 든다) 그 표가 유일한 성과다 —
+          //     지우면 카드에 성과가 통째로 사라진다.
           :(d._src==='자산배분'
-            ?('<div class="legttl legretro">소급 — <b>오늘의 자산 목록을 과거로</b>'+
-              ' · 종목이 아니라 ETF·자산군을 들므로 «그때 지수에 있던 종목» 축이 없다'+
+            ?('<div class="legttl legretro">소급'+
               (_naWhy?' · '+esc(_naWhy):'')+'</div>')
             :('<div class="legttl legretro">🚨 소급 — <b>오늘의 유니버스를 과거로</b>'+
               ' · 시점정확 레그가 없다'+(_naWhy?': '+esc(_naWhy):'')+'</div>'))));
@@ -3106,7 +3110,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                    '<div class="chartttl">낙폭 (drawdown)'+lg('var(--accent)',0,'전략')+(bt.dd_b2?_il:'')+'</div>'+
                    svgDD(bt)+
                    ((C.yearly&&C.yearly.length)?'<div class="chartttl">연도별 수익'+lg('var(--accent)',0,'전략')+_il+'</div>'+svgYearly(bt,'var(--accent)')+
-                     '<p class="labnote">첫해와 마지막 해는 부분 연도입니다(구간이 연초·연말에 걸치지 않습니다).</p>':'')+
+                     '':'')+   /* 2026-08-19 — 부분 연도 문구 삭제(사용자 결정). 표식(빗금)은 그대로다 */
                    (function(){
                      if(!C.monthly||C.monthly.length<6)return '';
                      var _dup=dupIdx(C);
@@ -3148,8 +3152,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           return '<tr><td>'+esc(r[0])+'</td><td>'+(r[2]?r[1]:esc(r[1]))+'</td></tr>';}).join('')+
           '</tbody></table>'+(d._unst?'<p class="labnote">비교 지수가 현금성이라 Δ샤프는 허수입니다 — t만 보십시오.</p>':'')+
           '</div>':'') +
-        '<p class="labnote">출처: '+esc(d._src||'')+' · 이 전략은 배포북에 들어 있지 않습니다. '+
-        '숫자는 그 전략의 비교 지수와의 비교이며, 구간이 전략마다 달라 세로로 비교하면 안 됩니다.</p>';
+        // 🚨 2026-08-19 사용자 결정 — 출처·배포북 문구 삭제. 출처는 목록 줄이 이미 적고,
+        //   «배포북에 없다» 는 이제 전 전략에 해당한다(배포 원장을 걷었다) — 모두에게
+        //   같은 말이면 그건 정보가 아니다.
+        '';
     }
     if(det && !d._lab){
       var sec=function(cls,title,arr){return (arr&&arr.length)?'<div class="play '+cls+'"><h4>'+title+'</h4><ul>'+arr.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>':'';};
@@ -3178,7 +3184,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         '<div class="dbadges">'+kchip(k)+'<span class="rbadge" title="'+esc(d.c)+'">'+esc(clab(d.c))+'</span>'+arche+
           ((d.bt&&d.bt.is_proxy)?'<span class="pxbadge" title="원자료를 구할 수 없어 근사 구현으로 대체한 계열입니다">프록시 구현</span>':'')+'</div>'+
         '<h2>'+esc(d.n)+'</h2>'+
-        '<div class="dcat" title="'+esc(d.c)+'">'+esc(clab(d.c))+(d.alias?' · <span class="dalias">'+esc(d.alias)+'</span>':'')+'</div>'+
+        // 🚨 2026-08-19 — 머리의 alias 를 뺐다(사용자 지적 «설명에 똑같은 내용이 두 번»).
+        //   랩 전략은 alias 가 곧 rule 이고, 아래 «이 전략은 무엇을 하는가» 가 같은 문장을
+        //   다시 적는다. 정본은 본문 쪽 하나로 둔다 — 같은 글을 두 번 읽히지 않는다.
+        //   ⚠ 본문과 **다른** alias(배포 원장의 계열 설명 등)만 남긴다.
+        '<div class="dcat" title="'+esc(d.c)+'">'+esc(clab(d.c))+
+          ((d.alias&&String(d.alias).trim()!==String(identity).trim())
+            ?' · <span class="dalias">'+esc(d.alias)+'</span>':'')+'</div>'+
       '</div>'+
       // ② 이 전략은 무엇을 하는가 — 카드에서 가장 먼저 읽히는 본문
       '<div style="padding:17px 24px 15px;border-bottom:1px solid var(--line-soft)">'+
@@ -3223,7 +3235,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           ((d.vp&&d.vp.length)?'<ul class="vpts">'+d.vp.map(function(s){
             return '<li>'+s+'</li>';}).join('')+'</ul>':'')+
           axesBlock(d)+
-          (d.vpn?'<p class="vtn">'+esc(d.vpn)+'</p>':'')+
+          // 🚨 2026-08-19 사용자 결정 — 전략별 꼬리 문구(vpn)를 화면에서 뺀다.
+          //   자료(asset_strategies 의 note)는 그대로 둔다 — 화면에서만 내린다.
+          ''+
           ((d.bt&&d.bt.metrics)?powerBox(d.bt.metrics)+multNote(d.bt.metrics):'')+
         '</div>'+
         // ⑨ 전체 지표표(접힘) → ⑩ 한계·장단점 → ⑪ 보유구성
