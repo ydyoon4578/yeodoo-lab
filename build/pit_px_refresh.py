@@ -62,6 +62,12 @@ def sig(x, n=6):
 #   **더 나쁘다** — 고칠 수 없는 경고가 매일 뜨면 사람이 경고 전체를 안 믿게 된다.
 #   그래서 포기한 날을 적어 두고 RETRY_DAYS 마다 한 번만 다시 물어본다.
 RETRY_DAYS = 30
+# 🚨 한 번 실패를 «영영» 으로 적지 않는다(2026-08-19 실측). 334종을 한 번에 훑은 직후
+#   BK·MMC·FI 같은 **세계 최대 대형주**에도 야후가 "possibly delisted" 를 돌려줬다 —
+#   상장폐지가 아니라 **쓰로틀**이다. 그것을 «영영 못 받는 이름» 으로 적으면 멀쩡한
+#   종목이 30일간 기록에서 빠지고, 그 사이 PIT 후보가 조용히 좁아진다.
+#   → 연속 FAIL_STREAK 번 실패해야 «영영» 으로 본다. 한 번이라도 받아지면 0 으로 되돌린다.
+FAIL_STREAK = 3
 
 
 def wanted():
@@ -73,7 +79,9 @@ def wanted():
     if os.path.exists(OUT):
         _o = json.load(io.open(OUT, encoding="utf-8"))
         have = set(_o.get("px") or {})
-        never = dict(_o.get("never") or {})
+        # never[t] = {"since": 포기한 날, "n": 연속 실패 횟수}. 옛 판(문자열)도 읽는다.
+        for t, v in (_o.get("never") or {}).items():
+            never[t] = v if isinstance(v, dict) else {"since": str(v), "n": FAIL_STREAK}
     today = set()
     try:
         st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
@@ -96,8 +104,10 @@ def wanted():
     for t, d in never.items():
         if t in have:
             continue                       # 기록이 있으면 계속 받아 본다(오늘 값이 필요하다)
+        if (d.get("n") or 0) < FAIL_STREAK:
+            continue                       # 아직 «영영» 이라 부를 근거가 모자란다 — 또 물어본다
         try:
-            if (today - _dt.date.fromisoformat(d[:10])).days < RETRY_DAYS:
+            if (today - _dt.date.fromisoformat(str(d.get("since"))[:10])).days < RETRY_DAYS:
                 skip.add(t)
         except Exception:
             pass
@@ -162,9 +172,12 @@ def main() -> int:
     import datetime as _dt2
     _stamp = _dt2.date.today().isoformat()
     for t in miss:
-        never.setdefault(t, _stamp)
+        e = never.get(t) or {"since": _stamp, "n": 0}
+        e["n"] = (e.get("n") or 0) + 1
+        e["since"] = _stamp
+        never[t] = e
     for t in flat:
-        never.pop(t, None)                 # 받아졌으면 «영영» 목록에서 뺀다
+        never.pop(t, None)                 # 한 번이라도 받아졌으면 «영영» 목록에서 뺀다
     alld = sorted({d for v in flat.values() for d in v})
     idx = {d: i for i, d in enumerate(alld)}
     out, n_pts = {}, 0
@@ -214,8 +227,10 @@ def main() -> int:
         print("  ⚠ 기록이 있는데 오늘 못 받은 이름 %d종(기록은 유지): %s"
               % (len(warn), " ".join(sorted(warn)[:12])))
     if lost:
-        print("  · 자료 원천이 더는 주지 않는 옛 이름 %d종 — %d일 뒤 한 번만 다시 묻는다"
-              % (len(lost), RETRY_DAYS))
+        firm = [t for t in lost if (never.get(t, {}).get("n") or 0) >= FAIL_STREAK]
+        print("  · 못 받은 옛 이름 %d종(그중 %d종은 %d회 연속 실패 — %d일 뒤 다시 묻는다). "
+              "나머지는 쓰로틀일 수 있어 내일 또 물어본다"
+              % (len(lost), len(firm), FAIL_STREAK, RETRY_DAYS))
     return 0
 
 
