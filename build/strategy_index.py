@@ -700,6 +700,14 @@ def _pit_na(sid, kind=None):
         _PIT_NA_TIMING = _doc.get("na_timing") or ""
     v = _PIT_NA.get(sid)
     if not v:
+        # 🚨 2026-08-19 — 원본이 스스로 사유를 실어 보내면 그것을 쓴다(guru_clone 이 첫 사례).
+        #   종전에는 사유가 없으면 화면이 «자산배분이라 종목 축이 없다» 는 **일반론을 지어냈고**,
+        #   그것이 13F 복제처럼 개별 종목을 사는 규칙에는 거짓이었다.
+        for _f in ("guru_clone.json", "asset_strategies.json"):
+            _d = load(_f) or {}
+            for _r in (_d.get("strategies") or []):
+                if isinstance(_r, dict) and _r.get("sid") == sid and _r.get("pit_na"):
+                    return {"sid": sid, "why": _r["pit_na"]}
         if kind == "timing" and _PIT_NA_TIMING:
             return {"sid": sid, "why": _PIT_NA_TIMING}
         return None
@@ -1033,6 +1041,10 @@ def main() -> int:
             sid="a-" + r["sid"], name=r["name"], role=r.get("role") or "배분기",
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="자산배분", rule=r.get("rule"), why=r.get("why"), note=r.get("note"),
+            # 🚨 2026-08-19 — 자산배분 자리에는 pit_na 를 안 넘기고 있었다(종목 전략 자리에만
+            #   있었다). 그래서 화면이 사유를 못 읽고 «자산배분이라 종목 축이 없다» 는
+            #   일반론을 지어냈고, 13F 복제처럼 개별 종목을 사는 규칙에는 그게 거짓이었다.
+            pit_na=_pit_na(r.get("sid"), r.get("kind")),
             papers=REF_PAPERS.get(r.get("sid")) or None,
             # 🚨 원천이 쓴 무위험 창을 그대로 넘긴다(2026-08-13). 안 넘기면 "*"(파일 전체
             #   1981-09~ · 연 3.7%)로 재서, 같은 카드의 대조군 열과 지수 열이 어긋난다.
