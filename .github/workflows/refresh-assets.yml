@@ -73,8 +73,14 @@ jobs:
           fetch-depth: 50
       - id: decide
         run: |
+          # 🚨 --behind 는 «내 산출물이 내 입력보다 뒤처졌나» 다(2026-08-19).
+          #   이 잡의 뒷단계(style_top_pdf·market_board·home_perf)는 stocks.json 을
+          #   읽는데 게이트는 assets.json 만 봤다. 08-19 에 refresh-stocks 가 실패→재시도
+          #   하는 사이 이 잡이 먼저 돌아 08-17 격자로 스타일을 계산했고, 백업 슬롯은
+          #   «오늘 이미 갱신됐다» 며 건너뛰어 스타일만 하루 뒤처진 채 굳었다.
           python build/should_refresh.py data/assets.json \
-            "${{ github.event_name }}" "${{ github.event.schedule }}" >> "$GITHUB_OUTPUT"
+            "${{ github.event_name }}" "${{ github.event.schedule }}" \
+            --behind=data/style_perf.json:data/stocks.json >> "$GITHUB_OUTPUT"
 
   refresh:
     needs: gate

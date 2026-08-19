@@ -30,6 +30,7 @@ stocks 만 이 보호를 받고 있었다. assets 는 백업 슬롯이 없어 **
 """
 from __future__ import annotations
 
+import io
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -69,10 +70,51 @@ def last_commit_kst_date(path: str) -> str | None:
         return None
 
 
+def _latest(path):
+    """그 파일이 «어느 날짜까지의 자료인가». as_of 를 먼저 보고, 없으면 격자의 마지막 날."""
+    import json
+    try:
+        d = json.load(io.open(path, encoding="utf-8"))
+    except Exception:
+        return None
+    v = d.get("as_of")
+    if isinstance(v, str) and len(v) >= 10:
+        return v[:10]
+    for k in ("pxd_dates", "dates"):
+        a = d.get(k)
+        if isinstance(a, list) and a:
+            return str(a[-1])[:10]
+    return None
+
+
+def behind(pairs):
+    """«산출물이 입력보다 뒤처졌나» — 뒤처진 첫 쌍을 돌려준다.
+
+    🚨 왜 필요한가(2026-08-19 사용자 지적: "스타일 전략은 왜 아직 8월 17일이 최신인교").
+      refresh-assets 의 게이트는 assets.json 이 오늘 갱신됐는지만 본다. 그런데 그 잡의
+      뒷단계(style_top_pdf·market_board·home_perf)는 **stocks.json** 을 읽는다.
+      실측 08-19: refresh-stocks 가 06:58 에 실패했고(가격 격자 구멍) 재시도가 07:56 에야
+      성공했는데, 그 사이 07:54 에 refresh-assets 가 돌아 **08-17 격자**로 스타일을 계산했다.
+      그 뒤 백업 슬롯은 «assets.json 이 오늘 갱신됐다» 며 건너뛰었고, 스타일만 하루 뒤처진
+      채로 굳었다. 게이트가 자기 입력만 보고 **자기 산출물은 안 봤기 때문**이다.
+    ⚠ 이 판정은 «한 번 더 도는 비용 < 하루를 잃는 비용» 쪽으로 기운다 — 읽지 못하면 안 민다.
+    """
+    for spec in pairs:
+        if ":" not in spec:
+            continue
+        out_p, in_p = spec.split(":", 1)
+        o, i = _latest(out_p), _latest(in_p)
+        if o and i and o < i:
+            return (out_p, o, in_p, i)
+    return None
+
+
 def main() -> int:
-    path = sys.argv[1] if len(sys.argv) > 1 else "data/stocks.json"
-    event = sys.argv[2] if len(sys.argv) > 2 else ""
-    cron = sys.argv[3] if len(sys.argv) > 3 else ""
+    argv = [x for x in sys.argv[1:] if not x.startswith("--behind=")]
+    pairs = [x.split("=", 1)[1] for x in sys.argv[1:] if x.startswith("--behind=")]
+    path = argv[0] if len(argv) > 0 else "data/stocks.json"
+    event = argv[1] if len(argv) > 1 else ""
+    cron = argv[2] if len(argv) > 2 else ""
 
     # 수동 실행은 사람이 일부러 누른 것이다 — 건너뛰면 안 된다.
     if event != "schedule":
@@ -86,6 +128,14 @@ def main() -> int:
         return 0
 
     today = datetime.now(KST).strftime("%Y-%m-%d")
+    # 🚨 산출물이 입력보다 뒤처져 있으면 «오늘 이미 돌았다» 여도 돈다.
+    b = behind(pairs)
+    if b:
+        print("run=true")
+        print("::notice::백업 슬롯 — %s 가 %s 까지인데 입력 %s 는 %s 다. "
+              "산출물이 입력보다 뒤처졌으므로 다시 돈다" % (b[0], b[1], b[2], b[3]),
+              file=sys.stderr)
+        return 0
     last = last_commit_kst_date(path)
     if last == today:
         print("run=false")
