@@ -283,8 +283,14 @@ def main() -> int:
             continue
         fl = [f for f in fl if not last or f["d"] > last]
         n_new += len(fl)
-        rows = [{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
-                for r in prev_co.get(t, [])]          # 이미 뽑아 둔 값은 그대로 들고 간다
+        # 🚨 **증분일 때만** 기존 값을 이어받는다(2026-08-19).
+        #   last 가 비면 아래 루프가 그 종목의 **모든** 제출을 다시 훑는다 — 그때 기존 값을
+        #   같이 들고 가면 같은 관측이 두 번 들어간다. 실측: scan 을 비우고 전수로 돌렸더니
+        #   1,224관측이 2,421로 늘었고 그중 1,190건(49%)이 중복이었다.
+        #   증분(last 있음)일 때는 새 제출만 받으므로 반드시 이어받아야 한다 — 두 경우가
+        #   정반대라 한쪽 규칙을 양쪽에 쓰면 어느 쪽이든 틀린다.
+        rows = ([{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
+                 for r in prev_co.get(t, [])] if last else [])
         ok_t = err_t = 0
         for f in fl:
             url = "https://www.sec.gov/Archives/edgar/data/%d/%s/%s" % (int(cik[t]), f["a"], f["p"])
@@ -341,7 +347,14 @@ def main() -> int:
         print("⚠ 문서 예외 %d건 (읽음 %d건) · 첫 예외 %s" % (n_err, n_doc, err1))
     if not a.pit:
         json.dump(res, io.open(RAW, "w", encoding="utf-8"), ensure_ascii=False)
-    co = {t: sorted(v["rows"], key=lambda r: r["d"]) for t, v in res.items() if v.get("rows")}
+    # ⚠ 안전망 — 같은 제출일이 두 번 들어오면 뒤엣것만 남긴다. 위 규칙이 맞으면 걸릴 일이
+    #   없지만, 걸릴 일이 없다고 믿고 안 두었다가 49%를 중복시켰다.
+    def _dedup(rows):
+        by = {}
+        for r in sorted(rows, key=lambda r: r["d"]):
+            by[r["d"]] = r
+        return [by[d] for d in sorted(by)]
+    co = {t: _dedup(v["rows"]) for t, v in res.items() if v.get("rows")}
     # 🚨 **언제나 병합한다**(2026-08-19). 종전에는 --pit 일 때만 기존 파일과 합쳤다.
     #   그래서 평범한 실행이 완주하면 co 가 «현재 유니버스»만으로 다시 만들어지고 OUT 을
     #   병합 없이 덮었다 — 편출·상폐 35종이 그대로 사라진다. 그 35종은 PIT 레그가
