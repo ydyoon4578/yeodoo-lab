@@ -127,7 +127,13 @@ DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "style_pit.json")
 # ⚠ pit_members.json(사내 DB 산출) 은 2026-08-03 에 걷어냈다 — 멤버십은 index_members 가
 #   data/index_history.json(위키 과거 리비전)에서 읽는다. 그 파일은 저장소에 커밋된다.
-CACHE = os.path.join(DATA, "_pit_px_cache.json")
+CACHE = os.path.join(DATA, "_pit_px_cache.json")     # 뚱뚱한 로컬 캐시(gitignore)
+# 🚨 2026-08-19 — 러너가 이 파일을 굽게 하려고 **커밋되는 얇은 기록**을 만들었다.
+#   같은 자료를 날짜 배열 한 벌 + 티커별 구간 배열로 담은 것이다(10.6MB → 3.5MB).
+#   build/pit_px_emit.py 가 캐시가 있는 PC 에서 만든다.
+#   ⚠ 벤더에서 다시 받지 않는다 — 편출 종목을 yfinance 가 오늘 준다는 보장이 없고,
+#     이름 하나가 사라지면 «생존편향을 재는 표» 가 스스로 생존편향을 갖는다.
+SLIM = os.path.join(DATA, "pit_px.json")
 
 sys.path.insert(0, HERE)
 import style_top_pdf as ST
@@ -245,7 +251,18 @@ def main() -> int:
     mem, _carried = index_members.load()
     for _ym, _ix, _n in _carried:
         print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (_ym, _ix.upper(), _n))
-    cache = need(CACHE, "편출 종목 가격 캐시")
+    # 로컬에 뚱뚱한 캐시가 있으면 그것을 쓰고(가장 신선하다), 없으면 커밋된 기록을 편다.
+    if os.path.exists(CACHE):
+        cache = json.load(io.open(CACHE, encoding="utf-8"))
+        print("  가격 원천: %s(로컬 캐시)" % os.path.basename(CACHE))
+    else:
+        _sl = need(SLIM, "편출 종목 가격 기록")
+        _ds = _sl["dates"]
+        cache = {t: {_ds[v["i0"] + k]: p for k, p in enumerate(v["p"]) if p is not None}
+                 for t, v in _sl["px"].items()}
+        _cv = _sl.get("coverage") or {}
+        print("  가격 원천: %s(커밋된 기록) · 티커 %s · ~%s"
+              % (os.path.basename(SLIM), _cv.get("n_tickers"), _cv.get("end")))
     P = ST.Panel()
     end = len(P.dates) - 1
     start = next((i for i in P.me if i >= max(0, end - ST.WINDOW)), max(0, end - ST.WINDOW))
