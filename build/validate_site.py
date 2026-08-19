@@ -3484,6 +3484,48 @@ try:
 except Exception as _e:
     print("  ~ 갱신 피드 대조가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 벤더가 소급 안 한 분할이 남아 있나 ──────────────────────────────────
+# 🚨 2026-08-19 — MNST 가 2026-08-11 에 2:1 분할했는데 야후가 **가격 이력을 소급
+#   조정하지 않았다**(분할 이력에는 있다). 랩은 받은 대로 실었고, 화면과 모든 전략이
+#   가짜 −50% 하루를 보았다. 사용자가 차트를 보고 찾았다.
+# ⚠ 일간 변동 검사로는 절대 못 잡는다 — 분할일이 결측이라 «어제 대비 오늘» 이 끊긴다.
+#   그래서 **결측을 건너뛴 인접 관측**으로 본다. build/split_fix.py 와 같은 규칙이다.
+try:
+    _sp = (json.loads(rd("data/splits.json")) or {}).get("co") or {}
+    _stk2 = json.loads(rd("data/stocks.json"))
+    _dts2 = _stk2.get("pxd_dates") or []
+    _di2 = {d: k for k, d in enumerate(_dts2)}
+    _n2 = len(_dts2)
+    _sdd2 = os.path.join(ROOT, "data", "sd")
+    _raw = []
+    for _t2, _evs in _sp.items():
+        _p2 = os.path.join(_sdd2, "%s.json" % _t2)
+        if not os.path.exists(_p2):
+            continue
+        _px2 = (json.load(io.open(_p2, encoding="utf-8")) or {}).get("pxd") or []
+        _px2 = _px2 + [None] * (_n2 - len(_px2))
+        for _d0, _r0 in _evs:
+            _i2 = _di2.get(_d0)
+            if _i2 is None or not _r0 or _r0 <= 1:
+                continue
+            _lo = next((_px2[k] for k in range(_i2 - 1, max(-1, _i2 - 7), -1)
+                        if k >= 0 and _px2[k] is not None), None)
+            _hi = next((_px2[k] for k in range(_i2, min(_n2, _i2 + 6))
+                        if _px2[k] is not None), None)
+            if not _lo or not _hi:
+                continue
+            if abs(_hi / _lo - 1.0 / _r0) <= 0.12 / _r0:
+                _raw.append("%s %s %.0f:1" % (_t2, _d0, _r0))
+    if _raw:
+        errors.append(
+            "벤더가 **소급 적용하지 않은 분할**이 가격 계열에 남아 있다 — %s. 그대로 두면 "
+            "그 날 하루가 가짜 −%d%% 로 잡히고 화면·전략이 전부 그것을 본다. "
+            "python build/split_fix.py 로 고칠 것" % (" · ".join(_raw[:5]), 50))
+    else:
+        print("  ~ 분할 소급 검사 통과(분할 이력 %d종 · 소급 안 된 것 0건)" % len(_sp))
+except Exception as _e:
+    print("  ~ 분할 소급 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 # ── 한 종목이 며칠째 비었나 ──────────────────────────────────────────────
 # 🚨 2026-08-19 — EQR(현역 S&P 500 편입 종목)이 data/sd/EQR.json 에서 **22거래일째**
 #   비어 있었는데 아무 검사도 안 걸렸다. 격자 구멍 검사는 «하루에 몇 종이 비었나» 만 보고

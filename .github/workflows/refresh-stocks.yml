@@ -81,6 +81,13 @@ jobs:
       #   그날 받은 나머지(분할·주식수·시그널)까지 같이 버린다.
       - name: Fill price-grid holes
         run: python build/patch_px_holes.py
+      # 🚨 2026-08-19 — 벤더가 **소급 적용하지 않은 분할**을 고친다(사용자가 MNST 에서 발견).
+      #   야후의 분할 이력에는 2026-08-11 2:1 이 있는데 가격 이력을 소급 조정하지 않아,
+      #   화면과 모든 전략이 가짜 −50% 하루를 보았다. 랩은 받은 대로 실었을 뿐이다.
+      # ⚠ **매번 돌려야 한다.** 이 잡이 매일 yfinance 를 다시 받으므로, 한 번 고쳐도
+      #   다음 날 원래대로 돌아온다. 보정은 산출물이 아니라 **수집 직후의 한 단계**다.
+      - name: Fix splits the vendor did not back-apply
+        run: python build/split_fix.py
         continue-on-error: true
       # 주식분할 이력 — 전략 랩이 '당시 보고 주식수 → 오늘 기준'으로 되맞추는 데 쓴다
       # (build/tech_backtest.py 의 _rebase). 여기가 제자리다: 같은 yfinance 세션이고,
