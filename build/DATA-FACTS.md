@@ -662,8 +662,13 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 98, "narrow_rules": 10, "incr5_rules": 0}
+ "xsec_rules": 71, "narrow_rules": 10, "incr5_rules": 0}
 -->
+
+🚨 2026-08-19 갱신. 98 → **71**. 사용자 결정으로 **샤프 0.5 미만 34종을 게시 목록에서
+뺐다**(build/tech_backtest.py 의 DROPPED · 사유는 build/tested_not_published.json).
+⚠ 규칙이 사라진 것이 아니라 **게시에서 뺀 것**이다 — 측정 기록은 세 번째 목록에 남는다.
+  그래서 다중검정 N 을 이 수로 줄여 읽으면 안 된다. 아래 08-16 기록은 그대로 둔다.
 
 ⚠ 2026-08-16 갱신(7). 91 → 98. **기계학습·가중 최적화 6종**(PREREG-2026-08-16-ML6.md) —
 능형회귀 조합 · 능형 예측비례 가중 · 로지스틱 분류 · 동일위험기여(ERC) 가중 ·

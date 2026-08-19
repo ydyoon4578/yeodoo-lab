@@ -3274,7 +3274,49 @@ STRATS = []
 #   기준을 두지 않는다 — «샤프 0.5» 도 랩의 기준이 아니고, 남은 규칙의 문턱을 바꾸지 않는다.
 # ⚠ 정의를 지우지 않고 여기서 거른다. t-clvgate 의 스코어러(mclv)는 PIT 레그와 공용이라
 #   코드를 들어내면 남은 규칙이 조용히 달라질 수 있다. 사유는 tested_not_published.json 에.
-DROPPED = {"t-clvgate"}
+# 🚨 2026-08-19(2차) — 사용자 지적 「샤프 0.5 미만은 다 없애라고 했을텐데」.
+#   맞다. 1차(같은 날)에 **내가 틀린 칸으로 걸렀다** — strategy_index 의 소급 샤프로
+#   걸렀는데 화면이 찍는 것은 **시점정확(PIT) 샤프**다(explorer.html 이 PIT 우선).
+#   같은 전략이 소급 1.134 · PIT 0.489 인 식이라, 화면에는 0.5 미만이 34종 남아 있었다.
+#   → 화면이 쓰는 값으로 다시 걸렀다. 소급은 생존편향으로 부풀려진 쪽이라
+#     PIT 으로 거르는 것이 애초에 맞다.
+# ⚠ 이것도 판정이 아니라 사용자 결정이다. 이 랩은 게시 문턱을 두지 않는다.
+DROPPED = {"t-clvgate",
+           "m-logit",
+           "m-ridge",
+           "m-tree",
+           "t-breadth",
+           "t-cross",
+           "t-donch",
+           "t-gapcap",
+           "t-kelly",
+           "t-sma200",
+           "t-tom",
+           "t-tsmom",
+           "t-tsmom6",
+           "x-acorr",
+           "x-amihud",
+           "x-cash",
+           "x-cusum",
+           "x-ep",
+           "x-fscore",
+           "x-hill",
+           "x-hlspread",
+           "x-indmom",
+           "x-jump",
+           "x-lbq",
+           "x-lowbeta",
+           "x-lowcorr",
+           "x-ltrev",
+           "x-ongapd",
+           "x-pcaresid",
+           "x-rskew",
+           "x-season",
+           "x-valcomp",
+           "x-valcomp-sn",
+           "x-volratio",
+           "x-volvol",
+           }
 
 
 def timing(sid, name, rule, fn, why, arch=None):
