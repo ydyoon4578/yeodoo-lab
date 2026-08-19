@@ -117,7 +117,7 @@
      "file": "explorer.html",
      "status": "existing",
      "desc": "원장·돌린 규칙·재현 재점검을 한 곳에서",
-     "verdict": "pass",
+     "verdict": "unverified",
      "src": "model",
      "effort": "S",
      "live": true

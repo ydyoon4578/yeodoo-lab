@@ -101,8 +101,13 @@ def build(root: str = ROOT) -> dict:
         c = r.get("c") or ""
         if c and c not in cats:
             cats.append(c)
-    if not deploy or not ar:
-        raise SystemExit("판정 원장 파싱 실패 — 배열 구조가 바뀌었는지 확인")
+    # 🚨 2026-08-19 — 종전에는 «배포가 하나도 없으면 파싱 실패» 로 봤다. 그 전제가 깨졌다:
+    #   배포 원장(수동 반출 곡선)을 통째로 걷으면서 explorer 의 D 배열이 비었고, 지금 랩에는
+    #   배포 등급이 **0종**이다(같은 규칙을 랩이 매일 굽되 등급은 «측정만» 이다 — 이 랩은
+    #   문턱을 두지 않는다). 즉 deploy 가 비는 것은 이제 **정상 상태**다.
+    # ⚠ 파싱이 진짜로 깨졌는지는 아카이브(ar)로 본다 — 그쪽은 비면 안 되는 배열이다.
+    if not ar:
+        raise SystemExit("판정 원장 파싱 실패 — archive.html 배열 구조가 바뀌었는지 확인")
     return {
         "note": "explorer.html·archive.html의 전략 배열에서 파싱한 집계. 홈은 이 파일만 읽고 숫자를 적지 않는다.",
         "deploy": deploy, "marginal_n": len(marginal), "deploy_n": len(deploy),

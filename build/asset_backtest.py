@@ -1167,6 +1167,64 @@ def build():
                            note="원 규칙의 '격자 탐색'은 다중검정 그 자체다 — 여기선 한 점(8%)만 건다.")
     add("rp-voltarget", "cross-asset-rp-voltarget-grid", s_rpgrid)
 
+    # ── 🚨 2026-08-19 — 배포 원장의 수동 곡선을 랩 안으로 들여온다(사용자 결정 «수동은
+    #   없게 만들어»). 종전에는 이 규칙의 성과 곡선이 data/strategy_backtests.json 에
+    #   **손으로 반출한 파일**로 들어 있었다(generated 가 한 날짜에 멈춰 있었다).
+    #   규칙 자체는 build/refresh_holdings.py 가 이미 무료 yfinance 로 매일 재현하고
+    #   있었으므로(보유 구성), 여기서 **같은 규칙의 곡선**을 매일 굽는다.
+    # ⚠ 같은 규칙을 두 곳에 적는 것이 아니다 — refresh_holdings 는 «지금 비중» 하나를,
+    #   여기는 «과거 곡선» 을 낸다. 규칙 문구를 아래에 그대로 적어 둬 어긋나면 눈에 띈다.
+    RP12 = ["SPY", "QQQ", "EFA", "EEM", "TLT", "IEF", "GLD", "DBC", "UUP", "HYG", "LQD", "VNQ"]
+    RP12_RISKY = {"SPY", "QQQ", "EFA", "EEM", "HYG", "VNQ", "DBC"}
+
+    def _rp12(volwin, target, label, rule, why, note=None):
+        st = first_common(RP12)
+        def base(i):
+            o = {}
+            for t in RP12:
+                v = vol(ser(t), i, volwin)
+                if v and v > 0:
+                    # 위험자산은 12개월 추세가 양수일 때만 담는다(추세 게이트)
+                    if t in RP12_RISKY and (ret(ser(t), i, 252) or -1) <= 0:
+                        continue
+                    o[t] = 1.0 / v
+            return o
+        def w(i):
+            raw = base(i)
+            if not raw:
+                return {"SHY": 1.0}
+            tot = sum(raw.values())
+            wts = {t: v / tot for t, v in raw.items()}
+            # 목표 변동성 스케일 — 30일 실현변동성 기준, 레버 0.3~2.5배(원 규칙과 같다)
+            pv = 0.0
+            for t, wt in wts.items():
+                v = vol(ser(t), i, 30)
+                if v:
+                    pv += wt * v * math.sqrt(252)
+            k = 1.0 if not pv else max(0.3, min(2.5, target / pv))
+            out = {t: wt * k for t, wt in wts.items()}
+            if k < 1.0:
+                out["SHY"] = out.get("SHY", 0.0) + (1.0 - k)
+            return out
+        return run_weights(w, st, label, base, rule, why, note=note)
+
+    _RP12_NOTE = ("🚨 이 곡선은 2026-08-19 부터 랩이 매일 굽는다. 그 전에는 사내 정본에서 "
+                  "손으로 반출한 파일이었다 — 규칙은 같고 가격만 무료 yfinance 다. "
+                  "그래서 사내 정본과 소수점에서 다를 수 있다(build/refresh_holdings.py 와 같은 사유).")
+    add("rp12", "",
+        lambda: _rp12(60, 0.10, "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
+                      "월말에 12개 ETF 를 60일 실현변동성의 역수로 가중한다. 위험자산은 12개월 "
+                      "추세가 양수일 때만 담고, 전체 연변동성이 10%가 되게 노출을 0.3~2.5배로 "
+                      "조절한다(남는 몫은 SHY).",
+                      "이 랩의 배포 전략이던 규칙이다. 종전에는 곡선이 수동 반출물이라 자동으로 "
+                      "갱신되지 않았다 — 같은 규칙을 랩 안에서 다시 재 자동 갱신되게 한다.",
+                      note=_RP12_NOTE))
+    add("rp12-vw", "",
+        lambda: _rp12(90, 0.10, "크로스에셋 RP 12자산 — 변동성 추정창 90일",
+                      "위와 같되 역변동성 추정창을 60일 대신 90일로 둔다.",
+                      "추정창 하나만 바꾼 강건성 변형. 창 선택이 결과를 만들었는지 본다.",
+                      note=_RP12_NOTE))
+
     def s_rpcadence():
         st = first_common(RP4)
         return run_weights(_iv(RP4), st, "크로스에셋 RP — 분기 리밸런스",
@@ -1588,6 +1646,20 @@ def build():
          "정한다. 이 랩의 기존 섹터 규칙에는 대피 장치가 없었다.")
 
     # ③ 저변동 — Blitz·van Vliet (2007) JPM 34(1)
+    # 🚨 2026-08-19 — 배포 원장의 «섹터 모멘텀 로테이션 (Top 4)» 를 랩 안으로 들여온다.
+    #   그 곡선도 수동 반출물이었다. 랩에 이미 상위 3 규칙이 둘 있지만(sec-dual·sec-52wh)
+    #   N 이 달라 같은 전략이 아니다 — 원장이 쓰던 N=4 를 그대로 건다.
+    _sec("sec-mom4", "섹터 모멘텀 로테이션 (12-1 상위 4)",
+         lambda i: ({t: 1.0 for t in sorted(
+             [x for x in SEC9 if ret(ser(x), i, 252) is not None],
+             key=lambda x: -((ret(ser(x), i, 252) or 0) - (ret(ser(x), i, 21) or 0)))[:4]}
+             or {"SHY": 1.0}),
+         "월말에 12-1 모멘텀(252일 − 21일)이 높은 상위 4섹터를 동일가중.",
+         "배포 원장에 있던 규칙이다. 곡선이 수동 반출물이라 자동 갱신되지 않았다 — "
+         "같은 규칙을 랩 안에서 다시 재 매일 갱신되게 한다.",
+         note="⚠ 랩의 sec-dual(상위 3)과 N 만 다르다. 둘을 나란히 두면 N 선택이 결과를 "
+              "만들었는지 보인다.")
+
     _sec("sec-lowvol", "저변동 섹터 상위 3",
          lambda i: _topn(lambda t, k: vol(ser(t), k, 120), i, 3, rev=True),
          "월말에 120거래일 실현변동성이 가장 낮은 3섹터를 동일가중.",

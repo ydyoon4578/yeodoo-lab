@@ -330,8 +330,21 @@ if pool:
         if not os.path.exists(os.path.join(ROOT, page)):
             errors.append(f"rotation_pool {s['id']}: lab.href 대상 파일 없음 ({page})"); continue
         if (anames if page == "archive.html" else enames) is None: continue   # 잠금 평문 없음(SKIP 기록됨)
-        if L["t"] not in (anames if page == "archive.html" else enames):
-            errors.append(f"rotation_pool {s['id']}: lab.t \"{L['t']}\"가 {page}에 없음(링크 깨짐)"); continue
+        # 🚨 2026-08-19 — explorer 는 이제 **전략 이름을 소스에 안 갖고 있다.** 수동 배포
+        #   원장(D 배열)을 비웠고, 랩 전략은 data/strategy_index.json 에서 실행시에 붙는다.
+        #   종전 검사는 «이름이 explorer.html 안에 있나» 만 봐서, D 를 비운 순간 모든 랩
+        #   전략 링크가 깨진 것으로 나왔다(실측). 정본을 하나 더 본다.
+        _pool = set(anames if page == "archive.html" else (enames or set()))
+        if page == "explorer.html":
+            try:
+                _pool |= {r.get("name") for r in json.load(io.open(
+                    os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))["items"]}
+            except Exception:
+                pass
+        if L["t"] not in _pool:
+            errors.append(f"rotation_pool {s['id']}: lab.t \"{L['t']}\"가 {page}·strategy_index 어디에도 없음(링크 깨짐)"); continue
+        if page == "explorer.html" and L["t"] not in (enames or set()):
+            continue      # 랩 전략은 실행시에 붙으므로 아래 앵커 대조(소스 기준)를 건너뛴다
         pre, res = ("a-", ARES) if page == "archive.html" else ("s-", ERES)
         if not frag:
             errors.append(f"rotation_pool {s['id']}: lab.href에 앵커(#)가 없음 ({href})"); continue
