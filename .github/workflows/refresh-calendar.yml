@@ -38,6 +38,13 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python build/refresh_calendar.py
+      # 🚨 2026-08-20 — events.json 이 **자동으로 움직이는 입력을 갖게 됐다.** 휴장일을
+      #   거래일 격자(data/stocks.json)에서 관측하기 때문이다. 종전에는 FOMC 를 손으로
+      #   적는 고정 파일이라 잡이 없어도 됐는데, 이제 격자가 자라면 «관측» 구간도 자라야
+      #   한다. 안 붙이면 지난 휴장일이 영영 «규칙(예정)» 으로 남는다.
+      #   (build/audit_unbuilt.py 가 이 자리를 잡아냈다.)
+      - name: Rebuild calendar events (FOMC · 휴장)
+        run: python build/refresh_events.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -45,7 +52,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 경제지표 발표 일정 자동 갱신" \
-            data/calendar.json data/asof.json
+            data/calendar.json data/events.json data/asof.json
       # as_of는 '수집한 날'이다(다른 축과 달리 발표일이 아니다) — 주 1회 도니 10영업일이면 넉넉하다
       - name: Verify freshness
         run: python build/check_freshness.py data/calendar.json "발표 일정" 10
