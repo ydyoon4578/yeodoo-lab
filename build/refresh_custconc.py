@@ -285,6 +285,7 @@ def main() -> int:
         n_new += len(fl)
         rows = [{"d": r["d"], "pe": "", "pct": r["pct"], "s": r["s"]}
                 for r in prev_co.get(t, [])]          # 이미 뽑아 둔 값은 그대로 들고 간다
+        ok_t = err_t = 0
         for f in fl:
             url = "https://www.sec.gov/Archives/edgar/data/%d/%s/%s" % (int(cik[t]), f["a"], f["p"])
             try:
@@ -296,16 +297,22 @@ def main() -> int:
                 #   산출물은 (이전 값을 이어받아) 멀쩡해 보였다 — 잡이 돌았는데 아무 일도
                 #   안 한 상태가 완벽히 숨었다. 세고, 첫 것은 적는다.
                 n_err += 1
+                err_t += 1
                 if err1 is None:
                     err1 = "%s: %s" % (type(_e).__name__, str(_e)[:80])
                 continue
             n_doc += 1
+            ok_t += 1
             if v is not None:
                 rows.append({"d": f["d"], "pe": f["pe"], "pct": v, "s": ss[0] if ss else ""})
         res[t] = {"rows": rows}
-        if not a.sample and newest:
-            # ⚠ 제출이 아예 없는 종목(외국 발행사·최근 상장)은 적지 않는다. 빈 값을 넣으면
-            #   파일만 부풀고 뜻이 없다 — 다음 실행에서 제출목록 1콜로 다시 확인하면 된다.
+        # 🚨 «훑었다» 는 기록은 **실제로 읽었을 때만** 남긴다(2026-08-19).
+        #   깨진 실행이 문서를 한 건도 못 읽고도 이 기록을 628종에 남겼고, 그 다음 실행은
+        #   그것을 믿고 전부 건너뛰었다 — 일하지 않고 «일했다» 고 적은 기록이 다음 실행의
+        #   눈을 가린다. 체크포인트는 «시도했다» 가 아니라 «해냈다» 일 때만 적는 것이다.
+        # ⚠ 받을 문서가 애초에 없던 종목(fl 이 비었다)은 읽을 것이 없으므로 기록해도 된다.
+        if not a.sample and newest and (ok_t > 0 or not fl):
+            # ⚠ 제출이 아예 없는 종목(외국 발행사·최근 상장)은 적지 않는다 — newest 가 빈다.
             seen[t] = newest
         if a.sample:
             print("%-6s 10-K %2d건 · 집중도 잡힘 %2d건" % (t, len(fl), len(rows)))
