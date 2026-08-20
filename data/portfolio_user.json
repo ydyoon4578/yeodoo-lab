@@ -1,1 +1,1 @@
-{"v":1,"empty":true,"note":"웹 원장 초기 상태 — portfolio.html 웹 앱의 첫 저장이 AES-256-GCM 봉투로 대체한다"}
+{"v":1,"fmt":"aesgcm","iter":310000,"salt":"yrEJPgMFBgsO844ehv559Q==","iv":"PcjWASUyaOPVueKm","ct":"fT4cp25MkMLMOQso+5mivnxV8fJIyjmyB3ybRLm2d+NRdk1QDDLjorUzqJvDbVntvY5dS3HDkyoOPZUhlOzNyCBB4fk3tH95uPSbOYWjZVak6qATmxbQzoZIzy3Tj8hD+LAi6G8pV16sDHlMhGM3xp+x/pXKmD8qgbSJML4IEQy4E/XDfb2rMXv9rm3ekrey8F0q+/zGEcWQFayXEHe6lWoQRmyzYltwZ+I7sdN4y5HfUuSvJyXhVlCBjCsuIT2PJOWdw+2IcuqybYRmxuwOM16ECHzHgvQWe/Ym1S+qgUohaeQb9qiiGwscdPKK47dZ4YjooPyJ","updated":"2026-08-20T05:26:36.323Z"}
