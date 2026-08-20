@@ -244,38 +244,63 @@
   }
 
   // ── SVG 라인차트(파이썬 svg_lines 의 JS 판) ────────────────────────────────
+  // 🚨 파이썬 svg_lines 와 **같은 마크업**을 낸다 — .chwrap[data-ch] + .ichart. 호버 배선은
+  //   조각 스크립트(window.PFCHARTS)가 한 벌로 하므로, 여기서 툴팁을 또 만들면 두 벌이 된다.
+  //   눈금·여백 규약도 그쪽과 맞춘다(안 맞으면 같은 화면에서 두 그림의 눈이 달라진다).
   function svgLines(series, labels, w, h) {
-    w = w || 760; h = h || 210;
-    var pad = 40;
+    w = w || 760; h = h || 232;
+    var pad = 46;
     var ys = [];
-    series.forEach(function (s) { s[1].forEach(function (p) { ys.push(p[1]); }); });
+    series.forEach(function (t) { t[1].forEach(function (p) { ys.push(p[1]); }); });
     if (!ys.length) return '';
     var lo = Math.min.apply(null, ys), hi = Math.max.apply(null, ys);
     if (hi - lo < 1e-9) hi = lo + 1;
-    var n = Math.max.apply(null, series.map(function (s) { return s[1].length; }));
-    var colors = ['var(--accent)', 'var(--champ)', 'var(--rp)', 'var(--hot)', 'var(--deploy)'];
-    function X(i) { return pad + (w - pad - 10) * (i / Math.max(1, n - 1)); }
-    function Y(v) { return (h - 24) - (h - 44) * ((v - lo) / (hi - lo)); }
-    var out = ['<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" style="width:100%;height:auto">'];
-    if (lo < 0 && 0 < hi)
-      out.push('<line x1="' + pad + '" y1="' + Y(0).toFixed(1) + '" x2="' + (w - 10) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line)" stroke-dasharray="3 3"/>');
-    series.forEach(function (s, k) {
-      var d = s[1].map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join(' ');
-      out.push('<path d="' + d + '" fill="none" stroke="' + colors[k % colors.length] + '" stroke-width="1.8"/>');
+    var span = hi - lo; lo -= span * 0.06; hi += span * 0.06;
+    var xi = {}, labs = [];
+    series.forEach(function (t) {
+      t[1].forEach(function (p) { if (!(p[0] in xi)) { xi[p[0]] = labs.length; labs.push(p[0]); } });
     });
-    out.push('<text x="2" y="14" font-size="10" fill="var(--muted)" font-family="var(--mono)">' + hi.toFixed(1) + '</text>');
-    out.push('<text x="2" y="' + (h - 24) + '" font-size="10" fill="var(--muted)" font-family="var(--mono)">' + lo.toFixed(1) + '</text>');
-    var x0 = series[0][1].length ? series[0][1][0][0] : '', x1 = series[0][1].length ? series[0][1][series[0][1].length - 1][0] : '';
-    out.push('<text x="' + pad + '" y="' + (h - 10) + '" font-size="10" fill="var(--muted)" font-family="var(--mono)">' + esc(x0) + ' → ' + esc(x1) + '</text>');
-    if (labels) {
-      var lx = pad + 170;
-      labels.forEach(function (lb, k) {
-        out.push('<text x="' + lx + '" y="' + (h - 10) + '" font-size="11" fill="' + colors[k % colors.length] + '" font-family="var(--mono)">━ ' + esc(lb) + '</text>');
-        lx += 11 * lb.length + 44;
-      });
+    var n = labs.length;
+    var colors = ['var(--accent)', 'var(--champ)', 'var(--rp)', 'var(--hot)', 'var(--deploy)'];
+    function X(i) { return pad + (w - pad - 12) * (i / Math.max(1, n - 1)); }
+    function Y(v) { return (h - 26) - (h - 46) * ((v - lo) / (hi - lo)); }
+    var o = ['<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" class="ichart" preserveAspectRatio="none" style="width:100%;height:auto">'];
+    for (var k = 0; k <= 4; k++) {
+      var v = lo + (hi - lo) * k / 4, yy = Y(v);
+      o.push('<line x1="' + pad + '" y1="' + yy.toFixed(1) + '" x2="' + (w - 12) + '" y2="' + yy.toFixed(1) + '" stroke="var(--line-soft)" stroke-width="1"/>');
+      o.push('<text x="' + (pad - 5) + '" y="' + (yy + 3.5).toFixed(1) + '" font-size="10" text-anchor="end" fill="var(--muted)" font-family="var(--mono)">' + v.toFixed(1) + '</text>');
     }
-    out.push('</svg>');
-    return out.join('');
+    if (lo < 0 && 0 < hi)
+      o.push('<line x1="' + pad + '" y1="' + Y(0).toFixed(1) + '" x2="' + (w - 12) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line)" stroke-dasharray="3 3"/>');
+    var pm = '';
+    labs.forEach(function (lb, i) {
+      var mm = String(lb).slice(0, 7);
+      if (mm !== pm && i) {
+        pm = mm;
+        o.push('<line x1="' + X(i).toFixed(1) + '" y1="12" x2="' + X(i).toFixed(1) + '" y2="' + (h - 26) + '" stroke="var(--line-soft)" stroke-width="1"/>');
+        o.push('<text x="' + X(i).toFixed(1) + '" y="' + (h - 12) + '" font-size="9.5" text-anchor="middle" fill="var(--muted)" font-family="var(--mono)">' + esc(mm.slice(5) + '월') + '</text>');
+      } else if (!i) pm = mm;
+    });
+    series.forEach(function (t, k) {
+      var color = t[2] || colors[k % colors.length];
+      var d = t[1].map(function (p, i) { return (i ? 'L' : 'M') + X(xi[p[0]]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join(' ');
+      o.push('<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.8" stroke-linejoin="round"' + (t[3] ? ' stroke-dasharray="4 3"' : '') + '/>');
+    });
+    o.push('<line class="chguide" x1="0" y1="12" x2="0" y2="' + (h - 26) + '" stroke="var(--muted)" stroke-width="1" opacity="0"/>');
+    series.forEach(function (t, k) { o.push('<circle class="chdot" r="3.2" fill="' + (t[2] || colors[k % colors.length]) + '" opacity="0"/>'); });
+    o.push('</svg>');
+    if (labels) o.push('<div class="chlgd">' + labels.map(function (lb, k) {
+      return '<span><i style="background:' + colors[k % colors.length] + '"></i>' + esc(lb) + '</span>';
+    }).join('') + '</div>');
+    var meta = {
+      pad: pad, w: w, h: h, lo: lo, hi: hi, labs: labs,
+      s: series.map(function (t, k) {
+        return { n: t[0], c: t[2] || colors[k % colors.length],
+                 v: t[1].map(function (p) { return [p[0], Math.round(p[1] * 1e4) / 1e4]; }) };
+      })
+    };
+    return '<div class="chwrap" data-ch="' + esc(JSON.stringify(meta)) + '">' + o.join('') +
+           '<div class="chtip" hidden></div></div>';
   }
 
   // ── 암복호 ──────────────────────────────────────────────────────────────
@@ -572,6 +597,24 @@
     var asofI = dLe(F.asof_us);
     var h = [];
 
+    // 입력 폼
+    h.push('<form class="tradeform" id="tf-' + slug + '" autocomplete="off">');
+    h.push('<b>+ 매매 입력</b> ');
+    h.push('<input type="date" name="dt" value="' + esc(today()) + '" required>');
+    h.push('<input name="s" list="dl-s-' + slug + '" placeholder="전략" required>');
+    h.push('<datalist id="dl-s-' + slug + '">' + strategyNames(slug).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>');
+    h.push('<input name="t" list="dl-t-' + slug + '" placeholder="티커 (예: NVDA US)" required>');
+    h.push('<datalist id="dl-t-' + slug + '">' + Object.keys(F.cons).sort().map(function (t) {
+      return '<option value="' + esc(t) + '">' + esc(F.cons[t][1]) + '</option>';
+    }).join('') + '</datalist>');
+    h.push('<input name="q" type="number" step="any" placeholder="수량(매도는 −)" required>');
+    h.push('<input name="p" type="number" step="any" placeholder="가격(비우면 그날 종가)">');
+    h.push('<input name="note" placeholder="메모(선택)">');
+    h.push('<input type="hidden" name="editid">');
+    h.push('<button class="sb primary" type="submit">추가</button>');
+    h.push('<span class="perr" id="tferr-' + slug + '"></span>');
+    h.push('</form>');
+
     if (trs.length) {
       // 진입 시점별 묶음(2026-08-20 사용자 지시 «DB 형태 말고 진입 시점별로 딱 보기 좋게»).
       // 같은 날 매매를 한 묶음으로 — 머리에 날짜·건수·투입금액·현재 평가손익 합.
@@ -611,24 +654,6 @@
         h.push('</tbody></table></div></div>');
       });
     } else h.push('<p>매매가 없다 — 아래에서 첫 매매를 입력하세요.</p>');
-
-    // 입력 폼
-    h.push('<form class="tradeform" id="tf-' + slug + '" autocomplete="off">');
-    h.push('<b>+ 매매 입력</b> ');
-    h.push('<input type="date" name="dt" value="' + esc(today()) + '" required>');
-    h.push('<input name="s" list="dl-s-' + slug + '" placeholder="전략" required>');
-    h.push('<datalist id="dl-s-' + slug + '">' + strategyNames(slug).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>');
-    h.push('<input name="t" list="dl-t-' + slug + '" placeholder="티커 (예: NVDA US)" required>');
-    h.push('<datalist id="dl-t-' + slug + '">' + Object.keys(F.cons).sort().map(function (t) {
-      return '<option value="' + esc(t) + '">' + esc(F.cons[t][1]) + '</option>';
-    }).join('') + '</datalist>');
-    h.push('<input name="q" type="number" step="any" placeholder="수량(매도는 −)" required>');
-    h.push('<input name="p" type="number" step="any" placeholder="가격(비우면 그날 종가)">');
-    h.push('<input name="note" placeholder="메모(선택)">');
-    h.push('<input type="hidden" name="editid">');
-    h.push('<button class="sb primary" type="submit">추가</button>');
-    h.push('<span class="perr" id="tferr-' + slug + '"></span>');
-    h.push('</form>');
 
     // 전략 메모/상태
     var names = strategyNames(slug);
@@ -942,6 +967,9 @@
     renderSync();
     Object.keys(PF.funds).forEach(renderFund);
     renderBT();
+    // 앱이 그린 차트에도 조각 스크립트의 호버 배선을 건다 — 배선이 한 벌이어야
+    // 두 곳의 툴팁이 같은 규약으로 움직인다(이미 걸린 것은 dataset.wired 로 건너뛴다).
+    try { if (window.PFCHARTS) window.PFCHARTS(document); } catch (e) {}
   }
 
   window.addEventListener('beforeunload', function (e) {

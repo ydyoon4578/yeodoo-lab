@@ -139,6 +139,19 @@
 .cv{font-family:var(--mono);font-size:21px;font-weight:600;margin:5px 0 3px}
 .cs{font-size:12px;color:var(--muted)}
 .chart{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;margin:0 0 16px}
+/* 차트 — 격자·눈금·호버 툴팁 */
+.chwrap{position:relative}
+.ichart{display:block;overflow:visible}
+.chlgd{display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.chlgd span{display:inline-flex;align-items:center;gap:5px}
+.chlgd i,.chtip i{width:9px;height:2.5px;border-radius:1px;display:inline-block}
+.chtip{position:absolute;top:6px;pointer-events:none;z-index:3;background:var(--panel);
+  border:1px solid var(--line);border-radius:3px;padding:6px 9px;box-shadow:var(--shadow);
+  font-family:var(--mono);font-size:11.5px;line-height:1.7;white-space:nowrap}
+.chtip .chtd{color:var(--muted);font-size:10.5px;margin-bottom:2px}
+.chtip div{display:flex;align-items:center;gap:6px}
+.chtip b{margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums}
+.chart{cursor:crosshair}
 /* 매매 원장 — 진입 시점별 묶음 */
 .ledgrp{margin:0 0 14px}
 .ledhd{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;

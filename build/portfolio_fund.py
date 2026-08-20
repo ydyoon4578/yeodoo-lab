@@ -369,58 +369,89 @@ def strat_perf(trades, px, lvl_idx, asof_us):
 
 
 # ── 4) SVG (파이썬에서 그린다 — 조각은 스크립트를 못 싣는다) ─────────────────
-def svg_lines(series, labels=None, w=760, h=210, pad=40):
-    """series = [(이름, [(x라벨, y)…])…]. y 눈금 상하한 + 0선만 — 장식은 셸 CSS 가 한다."""
+def svg_lines(series, labels=None, w=760, h=232, pad=46):
+    """series = [(이름, [(x라벨, y)…][, 색[, 점선]])…] → 마우스 대응 가능한 SVG.
+
+    🚨 그림은 파이썬이 그리고 **호버는 JS 가 얹는다**(FRAG_SCRIPT.chart 배선). 그래서 점
+      좌표·라벨을 data-ch 에 JSON 으로 함께 싣는다 — JS 가 화면에서 다시 계산하면 선과
+      툴팁이 서로 다른 수를 말하는 날이 온다(이 저장소가 되풀이 밟은 «경로가 둘» 유형).
+    ⚠ x 도메인은 전 계열 라벨의 합집합이다. 첫 계열만 세면 짧은 계열(예상 꼬리)이 캔버스
+      밖으로 나간다 — 실측 868>760.
+    """
     if not series or not series[0][1]:
         return ""
-    # 계열 = (이름, 점들[, 색[, 점선여부]]). 색을 안 주면 기본 팔레트 순서.
     series = [(t + (None, False)[len(t) - 2:]) if len(t) < 4 else t for t in series]
     ys = [y for t in series for _x, y in t[1]]
     lo, hi = min(ys), max(ys)
     if hi - lo < 1e-9:
         hi = lo + 1.0
-    # x 도메인 = 모든 계열의 라벨 합집합(첫 계열 순서 우선, 새 라벨은 뒤에 덧붙임).
-    # 첫 계열만 세면 예상 꼬리(첫 계열에 없는 날짜)가 캔버스 밖으로 나간다 — 실측 868>760.
+    span = hi - lo
+    lo, hi = lo - span * 0.06, hi + span * 0.06        # 위아래 여백 — 선이 테두리에 붙지 않게
     xi = {}
     for t in series:
         for lb, _v in t[1]:
             if lb not in xi:
                 xi[lb] = len(xi)
     n = len(xi)
+    labs = [lb for lb, _i in sorted(xi.items(), key=lambda kv: kv[1])]
     colors = ["var(--accent)", "var(--champ)", "var(--rp)", "var(--hot)", "var(--deploy)"]
 
     def X(i):
-        return pad + (w - pad - 10) * (i / max(1, n - 1))
+        return pad + (w - pad - 12) * (i / max(1, n - 1))
 
     def Y(v):
-        return (h - 24) - (h - 44) * ((v - lo) / (hi - lo))
+        return (h - 26) - (h - 46) * ((v - lo) / (hi - lo))
 
-    parts = ['<svg viewBox="0 0 %d %d" role="img" style="width:100%%;height:auto">' % (w, h)]
-    if lo < 0 < hi:
-        parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="var(--line)" stroke-dasharray="3 3"/>'
-                     % (pad, Y(0), w - 10, Y(0)))
-    # 모든 점을 라벨의 도메인 위치에 놓는다 — 인덱스로 놓으면 짧은 계열(예상 꼬리 2점)이
-    # 왼쪽 끝에 그려진다.
+    parts = ['<svg viewBox="0 0 %d %d" role="img" class="ichart" preserveAspectRatio="none" '
+             'style="width:100%%;height:auto">' % (w, h)]
+    # 가로 격자 4줄 + 값 라벨 — 눈금이 없으면 곡선의 기울기를 눈으로만 재게 된다
+    for k in range(5):
+        v = lo + (hi - lo) * k / 4.0
+        yy = Y(v)
+        parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="var(--line-soft)" stroke-width="1"/>'
+                     % (pad, yy, w - 12, yy))
+        parts.append('<text x="%d" y="%.1f" font-size="10" text-anchor="end" fill="var(--muted)" '
+                     'font-family="var(--mono)">%.1f</text>' % (pad - 5, yy + 3.5, v))
+    if lo < 100 < hi:      # 기준선(=100) 은 굵게 — 연초 후 그림에서 손익분기다
+        parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="var(--line)" '
+                     'stroke-dasharray="3 3"/>' % (pad, Y(100), w - 12, Y(100)))
+    # 세로 눈금 — 월이 바뀌는 자리에만(날짜를 다 적으면 겹친다)
+    _pm = ""
+    for i, lb in enumerate(labs):
+        mm = str(lb)[:7]
+        if mm != _pm and i:
+            _pm = mm
+            parts.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%.1f" stroke="var(--line-soft)" '
+                         'stroke-width="1"/>' % (X(i), 12, X(i), h - 26))
+            parts.append('<text x="%.1f" y="%d" font-size="9.5" text-anchor="middle" fill="var(--muted)" '
+                         'font-family="var(--mono)">%s</text>' % (X(i), h - 12, esc(mm[5:] + "월")))
+        elif not i:
+            _pm = mm
     for k, t in enumerate(series):
         _name, pts, color, dash = t[0], t[1], t[2] or colors[k % len(colors)], t[3]
         d = " ".join("%s%.1f,%.1f" % ("M" if i == 0 else "L", X(xi[lb]), Y(v))
                      for i, (lb, v) in enumerate(pts))
-        parts.append('<path d="%s" fill="none" stroke="%s" stroke-width="1.8"%s/>'
+        parts.append('<path d="%s" fill="none" stroke="%s" stroke-width="1.8" stroke-linejoin="round"%s/>'
                      % (d, color, ' stroke-dasharray="4 3"' if dash else ''))
-    parts.append('<text x="2" y="14" font-size="10" fill="var(--muted)" font-family="var(--mono)">%.1f</text>' % hi)
-    parts.append('<text x="2" y="%d" font-size="10" fill="var(--muted)" font-family="var(--mono)">%.1f</text>' % (h - 24, lo))
-    x0 = series[0][1][0][0] if series[0][1] else ""
-    x1 = series[0][1][-1][0] if series[0][1] else ""
-    parts.append('<text x="%d" y="%d" font-size="10" fill="var(--muted)" font-family="var(--mono)">%s → %s</text>'
-                 % (pad, h - 10, esc(x0), esc(x1)))
+    # 호버 장치 — 세로 안내선과 점은 JS 가 움직인다(처음엔 숨김)
+    parts.append('<line class="chguide" x1="0" y1="12" x2="0" y2="%d" stroke="var(--muted)" '
+                 'stroke-width="1" opacity="0"/>' % (h - 26))
+    for k, t in enumerate(series):
+        parts.append('<circle class="chdot" r="3.2" fill="%s" opacity="0"/>'
+                     % (t[2] or colors[k % len(colors)]))
+    parts.append('</svg>')
     if labels:
-        lx = pad + 170
-        for k, lb in enumerate(labels):
-            parts.append('<text x="%d" y="%d" font-size="11" fill="%s" font-family="var(--mono)">━ %s</text>'
-                         % (lx, h - 10, colors[k % len(colors)], esc(lb)))
-            lx += 11 * len(lb) + 44
-    parts.append("</svg>")
-    return "".join(parts)
+        parts.append('<div class="chlgd">' + "".join(
+            '<span><i style="background:%s"></i>%s</span>' % (colors[k % len(colors)], esc(lb))
+            for k, lb in enumerate(labels)) + "</div>")
+    # JS 가 읽는 자료 — 라벨 목록 · 계열별 (이름, 색, 라벨→값)
+    import json as _json
+    meta = {"pad": pad, "w": w, "h": h, "lo": lo, "hi": hi, "labs": labs,
+            "s": [{"n": t[0], "c": (t[2] or colors[k % len(colors)]),
+                   "v": [[lb, round(v, 4)] for lb, v in t[1]]}
+                  for k, t in enumerate(series)]}
+    return ('<div class="chwrap" data-ch="%s">%s<div class="chtip" hidden></div></div>'
+            % (esc(_json.dumps(meta, ensure_ascii=False, separators=(",", ":"))), "".join(parts)))
 
 
 # ── 5) 렌더 ──────────────────────────────────────────────────────────────────
@@ -505,6 +536,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
             est_b = [bm_pts[-1], (_ed, (_ev * fx_v) / (i0 * f0) * 100)]
     ytd_f = fund_pts[-1][1] / 100 - 1 if fund_pts else None
     ytd_b = bm_pts[-1][1] / 100 - 1 if bm_pts else None
+    _e_f = (est_f[1][1] / 100 - 1) if est_f else None
+    _e_b = (est_b[1][1] / 100 - 1) if est_b else None
 
     cons_d, cmap = cons[idx]
     my_trades = [t for t in trades if t["index"] == idx]
@@ -525,10 +558,20 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     H.append('<h3>① 펀드 개요</h3><div class="cards">')
     cards = [
         ("순자산(NAV)", "%s억원" % num(nav_v / 1e8, 0), "기준가 " + num(base_p), 0),
-        ("연초 후(기준가)", pct(ytd_f, 2, True), "지수(원화환산) " + pct(ytd_b, 2, True), ytd_f or 0),
+        # 예상 반영값을 **부제에** 같이 적는다(2026-08-21 사용자 지시 «근사치 반영된 것도»).
+        #   머리 숫자는 여전히 확정값이다 — 예상을 머리에 올리면 확정과 구별이 사라진다.
+        ("연초 후(기준가)", pct(ytd_f, 2, True),
+         ("지수 " + pct(ytd_b, 2, True) +
+          ((" · 예상 " + pct(_e_f, 2, True)) if _e_f is not None else "")), ytd_f or 0),
         ("연초 후 초과", pct((ytd_f - ytd_b) if None not in (ytd_f, ytd_b) else None, 2, True),
-         "기준가 − 지수·원화", (ytd_f - ytd_b) if None not in (ytd_f, ytd_b) else 0),
-        ("전략 NAV 기여", ("%+.1f bp" % tot_bp) if perf else "—", "매매 시점 일치 BM 대비", tot_bp),
+         ("기준가 − 지수·원화" +
+          ((" · 예상 " + pct(_e_f - _e_b, 2, True)) if None not in (_e_f, _e_b) else "")),
+         (ytd_f - ytd_b) if None not in (ytd_f, ytd_b) else 0),
+        # 🚨 전략 기여의 분자(초과손익)는 이미 **최신 미국 종가**로 잰다 — 기준가보다 하루
+        #   앞선다. 분모(NAV·환율)만 시트 값이라, 이 카드는 이미 «근사치 반영»된 수다.
+        #   그 사실을 부제가 말한다(종전에는 안 적어 확정값처럼 읽혔다).
+        ("전략 NAV 기여", ("%+.1f bp" % tot_bp) if perf else "—",
+         ("미국 %s 종가 기준 · NAV 는 %s" % (asof_us, nav_d)) if perf else "매매 없음", tot_bp),
     ]
     for ci, (k, v, sub, sign) in enumerate(cards):
         # cv/cs 의 id 는 남긴다 — 지금은 읽는 곳이 없지만 자리 표식이고, 있어도 해가 없다.
@@ -734,16 +777,21 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     _h1 = pane.index('<h3>① 펀드 개요')
     _h2 = pane.index('<h3>② 보유 vs 지수')
     _h3 = pane.index('<h3>③ 매매 원장')
+    _h4 = pane.index('<h3>④ 전략 성과·기여')
     _tail = pane.rindex('</section>')
-    head, sec1, sec2, sec34 = pane[:_h1], pane[_h1:_h2], pane[_h2:_h3], pane[_h3:_tail]
+    head, sec1, sec2 = pane[:_h1], pane[_h1:_h2], pane[_h2:_h3]
+    sec_led, sec_perf = pane[_h3:_h4], pane[_h4:_tail]
     # ①에서 차트만 떼어 머리 바로 뒤로 — 자산구성 표는 개요에 남긴다
     _m = _re.search(r'<div class="chart" id="ytd-[^"]+">.*?</div>', sec1, _re.S)
     chart, sec1 = _m.group(0), sec1[:_m.start()] + sec1[_m.end():]
     # 번호는 표시 순서를 따른다 — 안 바꾸면 ①③④② 로 읽혀 빠진 줄이 있는 줄 안다
-    sec34 = sec34.replace('<h3>③ 매매 원장', '<h3>② 매매 원장', 1)
-    sec34 = sec34.replace('<h3>④ 전략 성과·기여', '<h3>③ 전략 성과·기여', 1)
-    sec2 = sec2.replace('<h3>② 보유 vs 지수', '<h3>④ 보유 vs 지수', 1)
-    pane = head + chart + sec1 + sec34 + sec2 + pane[_tail:]
+    # 2026-08-21 사용자 지시 «매매원장을 가장 아래로» — 표시 순서:
+    #   차트 → ① 개요 → ② 성과·기여 → ③ 보유 vs 지수 → ④ 매매 원장
+    # ⚠ 정적 스냅샷(<details>)은 성과 절 끝에 붙어 있어 함께 따라간다 — 그게 맞다.
+    sec_perf = sec_perf.replace('<h3>④ 전략 성과·기여', '<h3>② 전략 성과·기여', 1)
+    sec2 = sec2.replace('<h3>② 보유 vs 지수', '<h3>③ 보유 vs 지수', 1)
+    sec_led = sec_led.replace('<h3>③ 매매 원장', '<h3>④ 매매 원장', 1)
+    pane = head + chart + sec1 + sec_perf + sec2 + sec_led + pane[_tail:]
     return pane, dict(fund=fund, asof=asof, nav_d=nav_d, sleeve_ratio=w_stk,
                               n_stocks=len(held), n_match=n_match, n_cons=len(cmap), meta=fmeta)
 
@@ -757,6 +805,44 @@ FRAG_SCRIPT = """<script>
     document.querySelectorAll('#content .tabpane').forEach(function(pn){pn.hidden=(pn.id!=='pane-'+id);});
   }
   tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab);});});
+  // 차트 호버 — 정적 SVG 위에 안내선·점·툴팁을 얹는다. 좌표는 그릴 때 실은 data-ch 를
+  // 그대로 쓴다(화면이 다시 계산하면 선과 툴팁이 다른 수를 말한다).
+  function wireCharts(root){
+    (root || document).querySelectorAll('.chwrap[data-ch]').forEach(function(wrap){
+      if(wrap.dataset.wired) return; wrap.dataset.wired='1';
+      var M; try{ M=JSON.parse(wrap.getAttribute('data-ch')); }catch(e){ return; }
+      var svg=wrap.querySelector('svg'), tip=wrap.querySelector('.chtip');
+      var guide=wrap.querySelector('.chguide'), dots=wrap.querySelectorAll('.chdot');
+      var n=M.labs.length, X=function(i){return M.pad+(M.w-M.pad-12)*(i/Math.max(1,n-1));};
+      var Y=function(v){return (M.h-26)-(M.h-46)*((v-M.lo)/(M.hi-M.lo));};
+      var byLab=M.s.map(function(se){var m={};se.v.forEach(function(p){m[p[0]]=p[1];});return m;});
+      function hide(){ tip.hidden=true; guide.setAttribute('opacity','0');
+        dots.forEach(function(d){d.setAttribute('opacity','0');}); }
+      svg.addEventListener('mousemove',function(ev){
+        var r=svg.getBoundingClientRect();
+        var vx=(ev.clientX-r.left)/r.width*M.w;            // viewBox 좌표로 되돌린다
+        var i=Math.round((vx-M.pad)/((M.w-M.pad-12)/Math.max(1,n-1)));
+        i=Math.max(0,Math.min(n-1,i));
+        var lab=M.labs[i];
+        guide.setAttribute('x1',X(i)); guide.setAttribute('x2',X(i)); guide.setAttribute('opacity','.5');
+        var rows='';
+        M.s.forEach(function(se,k){
+          var v=byLab[k][lab];
+          if(v==null){ dots[k].setAttribute('opacity','0'); return; }
+          dots[k].setAttribute('cx',X(i)); dots[k].setAttribute('cy',Y(v)); dots[k].setAttribute('opacity','1');
+          rows+='<div><i style="background:'+se.c+'"></i>'+se.n+'<b>'+v.toFixed(2)+'</b></div>';
+        });
+        if(!rows){ hide(); return; }
+        tip.innerHTML='<div class="chtd">'+lab+'</div>'+rows;
+        tip.hidden=false;
+        var px=(X(i)/M.w)*r.width;                          // 화면 픽셀로
+        tip.style.left=Math.max(0,Math.min(r.width-tip.offsetWidth-2,px+10))+'px';
+      });
+      svg.addEventListener('mouseleave',hide);
+    });
+  }
+  wireCharts();
+  window.PFCHARTS = wireCharts;     // 웹 앱이 그린 차트도 같은 배선을 쓴다
   document.querySelectorAll('#content .rowfilter').forEach(function(inp){
     inp.addEventListener('input',function(){
       var q=inp.value.trim().toUpperCase();
