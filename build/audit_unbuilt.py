@@ -105,6 +105,9 @@ KNOWN = {
     "web.json":
         "얼린 사전등록 측정(PREREG-2026-08-20-WEB · 주 판정 셀 ① — 계열 최초). "
         "기준 비중이 DB(커밋 금지)라 러너 재생산 불가 — tilt 계열과 같은 사유.",
+    "tripod_pit.json":
+        "얼린 관문 측정(삼각대 차단 관문 해소 · 혼합 PIT t 2.56 — PREREG-2026-08-19-TRIPOD). "
+        "재료(pit_strategies chart.monthly)가 갱신되면 --refreeze 로만 다시 잰다.",
     "delisted_names.json":
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
