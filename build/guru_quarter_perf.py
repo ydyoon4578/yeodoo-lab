@@ -245,6 +245,41 @@ def main() -> int:
         if _tv and _uv is not None:
             _uni_pct[str(_g.get("cik"))] = round(100.0 * _uv / _tv, 1)
 
+    # 분기 계열의 연율 지표 — 랩 본편(tech_backtest.ann_stats)과 같은 정의를 분기 격자에
+    # 옮긴 것이다: 샤프는 무위험(rf_monthly) 차감 · MDD 는 곡선의 최고점 대비.
+    # ⚠ 관측이 분기말뿐이라 **분기 안에서 겪은 낙폭은 안 보인다** — MDD 는 하한이 아니라
+    #   «분기말 기준» 이다. limits 에 그렇게 적는다.
+    _rfm = (load("rf_monthly.json") or {}).get("monthly") or {}
+
+    def _q_rf(m_from, m_to):
+        """m_from(제외)~m_to(포함) 구간의 무위험 수익 — 월별 값을 복리로 잇는다."""
+        i0, i1 = mi.get(m_from), mi.get(m_to)
+        if i0 is None or i1 is None:
+            return 0.0
+        acc = 1.0
+        for j in range(i0 + 1, i1 + 1):
+            acc *= 1.0 + (_rfm.get(months[j]) or 0.0)
+        return acc - 1.0
+
+    def _qstats(rs_pct, rf_pairs, navs):
+        """분기수익(%) 목록 → 연율 변동성·샤프·분기말 MDD."""
+        import math
+        rs = [x / 100.0 for x in rs_pct]
+        n = len(rs)
+        if n < 4:
+            return {}
+        m = sum(rs) / n
+        sd = math.sqrt(sum((x - m) ** 2 for x in rs) / (n - 1))
+        rf = sum(rf_pairs) / n
+        peak, mdd = navs[0], 0.0
+        for v in navs:
+            peak = max(peak, v)
+            if peak > 0:
+                mdd = min(mdd, v / peak - 1.0)
+        return {"vol": round(sd * 2 * 100, 2),                      # √4 = 2 (분기 → 연)
+                "sharpe": round((m - rf) / sd * 2, 3) if sd > 0 else None,
+                "mdd": round(mdd * 100, 2)}
+
     lag_summary, lag_curve = [], {}
     for cik, rs in lag_mgr.items():
         nav = bs_ = bn_ = 100.0
@@ -257,6 +292,10 @@ def main() -> int:
                         "spx": round(bs_, 2), "ndx": round(bn_, 2)})
         lag_curve[cik] = pts
         n = len(rs)
+        _rfq = [_q_rf(x["buy"] if i == 0 else rs[i - 1]["to"], x["to"]) for i, x in enumerate(rs)]
+        _st_p = _qstats([x["ret"] or 0 for x in rs], _rfq, [q["nav"] for q in pts])
+        _st_s = _qstats([x["spx"] or 0 for x in rs], _rfq, [q["spx"] for q in pts])
+        _st_n = _qstats([x["ndx"] or 0 for x in rs], _rfq, [q["ndx"] for q in pts])
         yrs = n / 4.0
         def _cagr(v):
             return round(((v / 100.0) ** (1.0 / yrs) - 1.0) * 100, 2) if yrs > 0 and v > 0 else None
@@ -271,6 +310,10 @@ def main() -> int:
             "avg_vs_ndx": round(sum(x.get("vs_ndx") or 0 for x in rs) / n, 2),
             "carried": sum(1 for x in rs if x["carried"] > 0),
             "uni_pct": _uni_pct.get(str(cik)),
+            # 연율 지표 — 자기 것과 같은 창의 두 지수 것을 나란히(비교표가 쓴다)
+            "vol": _st_p.get("vol"), "sharpe": _st_p.get("sharpe"), "mdd": _st_p.get("mdd"),
+            "sharpe_spx": _st_s.get("sharpe"), "mdd_spx": _st_s.get("mdd"),
+            "sharpe_ndx": _st_n.get("sharpe"), "mdd_ndx": _st_n.get("mdd"),
         })
     # 🚨 정렬은 CAGR 이 아니라 **이름** 으로 둔다. 27곳을 성적순으로 늘어놓으면 그 자체가
     #   «위에서부터 고르라» 는 말이 된다 — 이 표는 고르라고 있는 것이 아니다.
@@ -325,6 +368,9 @@ def main() -> int:
                 "있고 그러면 수치가 달라진다 — 월 격자만 갖고 있어 그 이상 못 쪼갠다.",
                 "⚠ 대조군은 가격지수(PR)라 배당이 빠진다 — 지수가 연 ~2%p 불리하다.",
                 "⚠ 마지막 한두 분기는 창이 아직 안 끝나 빠져 있다(결손이 아니라 미래다).",
+                "⚠ 변동성·샤프·MDD 는 **분기 관측**에서 냈다. 분기 안에서 겪은 낙폭은 안 "
+                "보이므로 MDD 는 실제보다 얕게 나온다 — 일간으로 재는 랩 본편과 눈금이 다르다. "
+                "샤프는 무위험(rf_monthly) 차감 · 연율화 ×2(√4).",
             ],
             "n_rows": len(lag_rows), "n_managers": len(lag_mgr),
             "summary": lag_summary, "by_manager": lag_mgr, "curve": lag_curve,

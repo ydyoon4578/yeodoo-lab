@@ -671,6 +671,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <i style="background:var(--accent)"></i><span id="allqp-cur">선택한 운용사</span>
         <span style="margin-left:8px">나머지 줄은 회색 — <b>선 위에 마우스</b>를 올리면 이름이,
         누르면 그 운용사 카드가 열립니다</span></div>
+      <!-- 비교표 (2026-08-20 사용자 요청) — 「샤프라던지 mdd라던지」.
+           🚨 화면이 계산하지 않는다. tradeable.summary 를 전사만 하고, 열 머리를 누르면
+             그 열로 줄 세운다. 기본은 이름순이다 — 이 표는 고르라고 있는 것이 아니라서
+             성적순을 기본값으로 두지 않는다(빌더의 정렬 주석과 같은 이유).
+           ⚠ 구간이 다른 운용사가 섞여 있다(2013~ 와 2020~). 그래서 벤치 열은 전역 한 값이
+             아니라 **각자 자기 구간의 지수**다 — vs 열이 그 차이를 이미 담고 있다. -->
+      <div class="fswrap" style="margin-top:10px"><table class="tbl" id="alltbl"><thead></thead><tbody></tbody></table></div>
+      <p class="lblnote" style="margin:8px 0 0" id="alltbl-note"></p>
     </div>
     <div class="gboard">
       <aside class="gside">
@@ -978,6 +986,73 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                  Math.min(X(mi[lastp.d])+4,W-150),Y(lastp.nav/100)-4);});
     AQ._geom={X:X,Y:Y,ciks:ciks,names:names};
   }
+  // ── 비교표 — 열 머리 클릭으로 정렬 ──────────────────────────────────────
+  var ATS={k:null, desc:true};          // 정렬 상태(k=null 이면 이름순)
+  function renderAllTbl(){
+    var tb=el('alltbl'); if(!tb)return;
+    var T=QP&&QP.tradeable; if(!T||!T.summary||!T.summary.length){tb.style.display='none';return;}
+    var COLS=[
+      ['name','운용사',0],['from','시작',0],['n_q','분기',1],
+      ['cagr','연CAGR%',1],['avg_vs_spx','vsSPX%p',1],['avg_vs_ndx','vsNDX%p',1],
+      ['vol','변동성%',1],['sharpe','샤프',1],['mdd','MDD%',1],
+      ['win_spx','SPX승률%',1],['uni_pct','유니버스내%',1]];
+    var rows=T.summary.slice();
+    if(ATS.k){
+      rows.sort(function(a,b){
+        var x=a[ATS.k],y=b[ATS.k];
+        if(x==null)return 1; if(y==null)return -1;
+        if(typeof x==='string')return ATS.desc?String(y).localeCompare(x):String(x).localeCompare(y);
+        return ATS.desc?y-x:x-y;});
+    }
+    var h='<tr>';
+    COLS.forEach(function(c){
+      var on=(ATS.k===c[0]);
+      h+='<th class="'+(c[2]?'':'l')+'" data-k="'+c[0]+'" style="cursor:pointer;white-space:nowrap"'+
+         ' title="누르면 이 열로 정렬">'+c[1]+(on?(ATS.desc?' ▾':' ▴'):'')+'</th>';});
+    tb.querySelector('thead').innerHTML=h+'</tr>';
+    var curCik=(D&&D.managers[cur])?String(D.managers[cur].cik):null;
+    var b='';
+    rows.forEach(function(x){
+      var em=(String(x.cik)===curCik);
+      b+='<tr data-cik="'+esc(String(x.cik))+'" style="cursor:pointer'+(em?';background:color-mix(in srgb,var(--accent) 9%,transparent)':'')+'">'+
+        '<td class="l"'+(em?' style="font-weight:700"':'')+'>'+esc(x.name)+
+          (x.carried?' <span class="sub" title="신고가 빠져 직전 명단을 그대로 든 분기가 있다">⚠'+x.carried+'</span>':'')+'</td>'+
+        '<td class="l sub">'+esc((x.from||'').slice(0,7))+'</td>'+
+        '<td>'+x.n_q+'</td>'+
+        '<td><b>'+nf(x.cagr,2)+'</b></td>'+
+        '<td class="'+((x.avg_vs_spx||0)>0?'up':'dn')+'">'+pc(x.avg_vs_spx)+'</td>'+
+        '<td class="'+((x.avg_vs_ndx||0)>0?'up':'dn')+'">'+pc(x.avg_vs_ndx)+'</td>'+
+        '<td>'+nf(x.vol,1)+'</td>'+
+        '<td><b>'+nf(x.sharpe,2)+'</b><span class="sub"> /'+nf(x.sharpe_spx,2)+'</span></td>'+
+        '<td>'+nf(x.mdd,1)+'<span class="sub"> /'+nf(x.mdd_spx,1)+'</span></td>'+
+        '<td>'+nf(x.win_spx,0)+'</td>'+
+        '<td>'+(x.uni_pct==null?'—':nf(x.uni_pct,0))+'</td></tr>';});
+    tb.querySelector('tbody').innerHTML=b;
+    var note=el('alltbl-note');
+    if(note)note.innerHTML='따라 사기(공시 2개월 뒤 매수) · 무비용. <b>vsSPX·vsNDX</b> 는 분기평균 '+
+      '초과(각자 자기 구간의 지수 대비)입니다 — 시작이 다른 운용사끼리 CAGR 을 바로 견주면 구간 '+
+      '차이가 섞입니다. <b>샤프·MDD</b> 는 «자기 값 / 같은 구간 S&amp;P 500» 이고 분기 관측이라 '+
+      '분기 안 낙폭은 안 보입니다 — 일간으로 재는 랩 본편보다 얕게 나옵니다. '+
+      '<b>유니버스내%</b> 는 신고총액 중 이 랩 유니버스와 겹치는 비율(현재 분기) — 낮으면 그 '+
+      '운용사가 아니라 그 운용사의 대형주 조각을 따라 산 것입니다.';
+  }
+  (function(){
+    var tb=el('alltbl'); if(!tb)return;
+    tb.addEventListener('click',function(e){
+      var th=e.target.closest('th');
+      if(th){var k=th.getAttribute('data-k');
+        if(ATS.k===k)ATS.desc=!ATS.desc; else {ATS.k=k;ATS.desc=(k!=='name'&&k!=='from');}
+        renderAllTbl();return;}
+      var tr=e.target.closest('tr[data-cik]'); if(!tr||!D)return;
+      var cik=tr.getAttribute('data-cik');
+      var i=D.managers.findIndex(function(m){return String(m.cik)===cik;});
+      if(i>=0){cur=i;renderPf();
+        Array.prototype.forEach.call(el('mgrs').querySelectorAll('.mg'),function(x,j){
+          x.setAttribute('aria-pressed',j===cur?'true':'false');});
+        var lbl=el('allqp-cur'); if(lbl)lbl.textContent=D.managers[i].label;
+        paintAllQP();renderAllTbl();}});
+  })();
+
   (function(){
     var cv=el('allqp'); if(!cv)return;
     function near(ev){
@@ -1003,7 +1078,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         Array.prototype.forEach.call(el('mgrs').querySelectorAll('.mg'),function(x,j){
           x.setAttribute('aria-pressed',j===cur?'true':'false');});
         var lbl=el('allqp-cur'); if(lbl)lbl.textContent=D.managers[i].label;
-        paintAllQP();}});
+        paintAllQP();renderAllTbl();}});
   })();
 
   // 누적 곡선 — 분기 수익을 이어 붙인다(1 에서 시작). 캔버스 하나짜리라 여기 둔다.
@@ -1411,7 +1486,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   어떻게 됐나 — build/guru_quarter_perf.py 가 굽는다.
   var QP=null;
   fetch('data/guru_qperf.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); paintAllQP(); }catch(e){} })['catch'](function(){});
+    .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); paintAllQP(); renderAllTbl(); }catch(e){} })['catch'](function(){});
   // 🚨 2026-08-19 — 탭 이름을 «겹침 전략» → «전략» 으로 바꾸며 셋을 한자리에 모은다.
   //   겹침(guru_overlap) · 컨빅션 복제(guru_clone) · 운용사별 복제(guru17).
   //   ⚠ 새 백테스트를 여기서 만들지 않는다 — 셋 다 빌더가 이미 구운 것을 전사만 한다.
@@ -1488,7 +1563,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       renderPf();
       // 전체 판의 강조 줄도 따라간다 — 목록과 그림이 다른 운용사를 가리키면 안 된다
       try{var lbl=el('allqp-cur'); if(lbl&&D.managers[cur])lbl.textContent=D.managers[cur].label;
-          paintAllQP();}catch(e){}
+          paintAllQP();renderAllTbl();}catch(e){}
     });
   })['catch'](function(){
     el('pfout').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
