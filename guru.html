@@ -74,6 +74,13 @@
   .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
 
   .gboard{display:grid;grid-template-columns:288px 1fr;gap:16px;align-items:start}
+  /* 겹침 수 필터 — 홈 히트맵 기간 버튼과 같은 생김새(같은 일을 하는 것은 같아 보여야 한다) */
+  .tpbar{display:flex;flex-wrap:wrap;gap:0;row-gap:5px;align-items:center}
+  .tpbar button{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--muted);
+       background:none;border:0;border-right:1px solid var(--line);padding:2px 10px;cursor:pointer}
+  .tpbar button:last-child{border-right:0}
+  .tpbar button[aria-pressed="true"]{color:var(--accent)}
+  .tpbar .cn{opacity:.65;font-weight:400}
   .gside{position:sticky;top:12px}
   .gside input{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);
     border-radius:2px;padding:7px 10px;font:inherit;font-size:12.5px;color:var(--ink);margin:0 0 8px}
@@ -703,8 +710,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       셋 다 <b>공시 지연 45일을 태웁니다</b> — 분기말 포트폴리오는 그로부터 45일 뒤에야 알 수 있으므로,
       그 시점부터 담습니다(«운용사별 보유»의 분기 성과표와 다른 점이 그것입니다).
       <b>좋은 판만 고르지 않습니다</b> — 돌린 것을 전부 싣고, 규칙과 한계는 각 판 아래에 접어 두었습니다.</p>
-    <div class="stnav" id="stnav"></div>
-    <div id="stout"><div class="skel">불러오는 중…</div></div>
+    <!-- 2026-08-20 사용자 지시 — «왼쪽에 전략 리스트를 두고 오른쪽에 성과 깔끔하게.
+         전략 랩 포맷처럼». 운용사별 보유와 같은 뼈대(.gboard)를 그대로 쓴다. -->
+    <div class="gboard">
+      <aside class="gside"><div class="mgrs" id="stlist" role="listbox" aria-label="전략 목록"></div></aside>
+      <div id="stout"><div class="skel">불러오는 중…</div></div>
+    </div>
   </section>
 
   <div class="note" id="limits"></div>
@@ -824,56 +835,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   아니다. 뒤쪽은 겹침 전략(공시 지연을 태운다)이 답한다 — 그 문장을 표 위에 적는다.
   // ⚠ 화면이 계산하지 않는다. build/guru_quarter_perf.py 가 구운 것을 전사만 한다.
   function qpBlock(m){
-    if(!QP||!QP.by_manager)return '';
-    var rs=QP.by_manager[String(m.cik)];
-    if(!rs||!rs.length)return '';
-    var sum=(QP.summary||[]).filter(function(x){return String(x.cik)===String(m.cik);})[0];
-    var last=rs.slice(-12).reverse();       // 최근 3년치만 — 전부 깔면 표가 화면을 먹는다
-    // ⚠ 「커버」가 보이는 행 전부 100% 면 열을 걷는다 — 같은 값이 12번 반복되는 열은
-    //   정보가 아니라 소음이고, 그만큼 옆 숫자들이 좁아진다. 100% 가 아닌 행이 하나라도
-    //   있으면 열을 그대로 두고 그 행만 남긴다(사실을 숨기지 않는다).
-    var allcov=last.every(function(r){return Math.round(r.cov||0)>=100;});
-    var h='<div class="qpwrap"><div class="qphd">분기 성과 '+
-      '<span class="qpsub">신고 포트폴리오가 다음 분기말까지 — '+
-      (sum?('최근 '+sum.n_q+'분기 · S&P 500 대비 평균 '+(sum.avg_vs_spx>0?'+':'')+
-            sum.avg_vs_spx.toFixed(2)+'%p(승률 '+sum.win_spx.toFixed(0)+'%) · 나스닥 100 대비 '+
-            (sum.avg_vs_ndx>0?'+':'')+sum.avg_vs_ndx.toFixed(2)+'%p'):'')+'</span></div>'+
-      '<p class="qpwarn">🚨 <b>따라 살 수 있었던 성과가 아닙니다.</b> 13F 는 분기말 45일 뒤에 '+
-      '공시되므로 3월 31일 포트폴리오를 3월 31일에 알 수 없습니다. 이 표는 <b>그들이 그 분기에 '+
-      '들고 있던 것이 어떻게 됐나</b>를 보여줍니다 — 따라 산 결과는 «겹침 전략» 탭이 답합니다.</p>'+
-      // 🚨 2026-08-19 — 표 위에 **누적 곡선**을 얹는다(사용자 요청). 분기 수익을 이어
-      //   붙인 것이고, 같은 창의 S&P 500 을 나란히 둔다.
-      //   ⚠ 새 수를 만들지 않는다 — by_manager 의 ret·spx 를 곱해 잇기만 한다.
-      '<canvas class="qpc" data-cik="'+esc(String(m.cik))+'" height="190" style="width:100%;margin:2px 0 10px"></canvas>'+
-      '<div class="qplgd"><i style="background:var(--accent)"></i>'+esc(m.label)+
-      '<i style="background:var(--muted)"></i>S&amp;P 500'+
-      '<i style="background:var(--marg)"></i>나스닥 100</div>'+
-      '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">분기</th>'+
-      '<th>포트 %</th><th>S&amp;P 500 %</th><th>나스닥 100 %</th>'+
-      '<th class="grp">vs SPX</th><th>vs NDX</th>'+
-      (allcov?'':'<th class="grp">커버</th>')+'</tr></thead><tbody>';
-    last.forEach(function(r){
-      // 같은 해면 뒤 연도를 지운다 — «2026-03 → 06» 이 «2026-03 → 2026-06» 보다 읽힌다.
-      var q0=r.q.slice(0,7), q1=r.to.slice(0,7);
-      var lab=q0+' → '+(q0.slice(0,4)===q1.slice(0,4)?q1.slice(5):q1);
-      h+='<tr><td class="l">'+esc(lab)+'</td>'+
-         '<td><b>'+nf(r.ret,2)+'</b></td><td>'+nf(r.spx,2)+'</td><td>'+nf(r.ndx,2)+'</td>'+
-         '<td class="grp '+((r.vs_spx||0)>0?'up':'dn')+'">'+pc(r.vs_spx)+'</td>'+
-         '<td class="'+((r.vs_ndx||0)>0?'up':'dn')+'">'+pc(r.vs_ndx)+'</td>'+
-         (allcov?'':('<td class="grp sub">'+nf(r.cov,0)+'%</td>'))+'</tr>';
-    });
-    h+='</tbody></table></div>'+
-       '<p class="lblnote" style="margin:8px 0 0">비중은 신고 가치 비례이고 분기 사이는 '+
-       '표류(매수후보유)로 둡니다 — 분기 중 매매는 안 보입니다. '+
-       (allcov?'보이는 분기는 <b>가격 커버 100%</b>라 커버 열을 걷었습니다. '
-              :'「커버」는 가격을 찾은 비중이며 나머지는 빼고 재정규화했습니다. ')+
-       '두 지수 다 가격지수라 배당이 빠집니다.</p></div>';
-    // ── 따라 사기(공시 2개월 뒤 매수) — 2026-08-20 사용자 지시 ──────────────
-    // 「2개월 뒤에 샀다는 가정하에 백테스트. 3월 말 포트는 5월 말에 사는걸로.」
-    // ⚠ 화면이 계산하지 않는다 — guru_quarter_perf.py 의 tradeable 레그를 전사만 한다.
-    //   실행 가능성은 빌더가 접수일 1,325건으로 검증했다(최대 지연 49일 < 2개월).
-    h+=qpTradeBlock(m);
-    return h;
+    // 🚨 2026-08-20 사용자 지시 — as-of 분기 성과(신고 분기말부터 잰 것)를 화면에서 걷었다:
+    //   «이부분들은 다 빼. 어차피 내가 살수 없는 거니까. 따라 사기 기준 차트랑 성과만.»
+    //   자료(guru_qperf.by_manager)는 그대로 있다 — 화면만 안 그린다. 경고문이 가리키던
+    //   «겹침 전략» 탭도 이미 «전략» 으로 바뀌어 그 문장 자체가 낡아 있었다.
+    return qpTradeBlock(m);
   }
 
   function qpTradeBlock(m){
@@ -887,7 +853,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         (sum.cagr>0?'+':'')+(sum.cagr==null?'—':sum.cagr.toFixed(2))+'% vs S&P 500 '+
         (sum.cagr_spx>0?'+':'')+(sum.cagr_spx==null?'—':sum.cagr_spx.toFixed(2))+'% · 나스닥 100 '+
         (sum.cagr_ndx>0?'+':'')+(sum.cagr_ndx==null?'—':sum.cagr_ndx.toFixed(2))+'%'):'')+'</span></div>'+
-      '<p class="qpwarn" style="border-left-color:var(--deploy)">✅ <b>이쪽은 따라 살 수 있었던 '+
+      '<p class="qpwarn" style="border-left-color:var(--deploy)">✅ <b>따라 살 수 있었던 '+
       '성과입니다.</b> 3월 말 신고분을 5월 말에 사는 식으로 공시 지연을 태웠습니다 — 접수일 '+
       '1,325건 실측에서 최대 지연이 49일이라 이 규칙은 전 구간에서 실행 가능했습니다. '+
       '단 <b>신고 포트폴리오 전체가 아니라</b> 이 랩 유니버스(오늘의 S&amp;P 500 ∪ 나스닥 100) 안 '+
@@ -1083,8 +1049,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // 누적 곡선 — 분기 수익을 이어 붙인다(1 에서 시작). 캔버스 하나짜리라 여기 둔다.
   function paintQP(){
-    // 두 곡선(as-of · 따라 사기)을 같은 페인터로 — 사본을 만들면 한쪽만 고쳐진다.
-    paintQPone('.qpc', QP&&QP.by_manager);
+    // as-of 곡선(.qpc)은 2026-08-20 에 걷었다 — 따라 사기 하나만 남는다.
     paintQPone('.qpc2', QP&&QP.tradeable&&QP.tradeable.by_manager);
   }
   function paintQPone(selq, BY){
@@ -1239,10 +1204,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       col(C.dis,'여러 곳이 줄였다','mvdn')+'</div></div>';
   }
 
+  var OVMIN=2;                     // 겹침 필터 — «몇 곳 이상» 만 보인다
   function renderOv(){
     var byCik={}; D.managers.forEach(function(m){byCik[m.cik]=m.label;});
-    var rows=D.overlap.filter(function(x){return x.n>=2;});
-    var h=cnsBlock()+'<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>';
+    var rows=D.overlap.filter(function(x){return x.n>=OVMIN;});
+    // 겹침 수 필터(2026-08-20 «조금만 더 깔끔하게») — 80행을 다 훑지 않고 진한 겹침만
+    // 남길 수 있게 한다. 지우는 것이 아니라 좁히는 것이다.
+    var bar='<div class="tpbar" style="margin:0 0 8px">'+[2,3,5,8].map(function(k){
+      var c=D.overlap.filter(function(x){return x.n>=k;}).length;
+      return '<button type="button" data-k="'+k+'" aria-pressed="'+(OVMIN===k?'true':'false')+
+             '" style="'+(OVMIN===k?'color:var(--accent)':'')+'">'+k+'곳 이상 <span class="cn">'+c+'</span></button>';
+    }).join('')+'</div>';
+    var h=cnsBlock()+'<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>'+bar;
     rows.slice(0,80).forEach(function(x){
       var ot=x.off?('<span class="tkoff">'+esc(x.t)+'</span><span class="offb">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
@@ -1264,6 +1237,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+='<div class="note">한 곳만 들고 있는 종목이 <b>'+solo+'</b>개입니다 — 위 목록에는 안 나옵니다. '+
        '겹치는 종목만 보면 "다들 같은 걸 산다"로 읽히기 쉬워, 겹치지 않는 쪽의 수도 같이 적습니다.</div>';
     el('ovout').innerHTML=h;
+    var bar2=el('ovout').querySelector('.tpbar');
+    if(bar2)bar2.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b)return;
+      OVMIN=parseInt(b.getAttribute('data-k'),10)||2; renderOv();});
   }
 
   // ── 겹침 전략 ── 위 표를 규칙으로 바꿔 돌린 결과(build/guru_overlap_backtest.py).
@@ -1318,20 +1295,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       esc((ttl||'')+' 누적 곡선')+'">'+g+'</svg><div class="cvlg">'+lg+'</div></div>';
   }
 
-  function renderStrat(S){
-    if(!S||!S.variants){el('stout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
-      '<code>data/guru_overlap.json</code>이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
-    // 🚨 2026-08-16 — **한 판만 보인다**(사용자 지시). 종전에는 10판을 표로 깔았는데,
-    //   판을 여럿 늘어놓으면 읽는 사람이 그중 좋은 것을 고르게 된다 — 그게 사후 선택이다.
-    //   요청받은 「겹친 운용사 수 상위 10」 하나를 랩 본편 카드처럼 검증해 싣는다.
-    // ⚠ 나머지 9판은 **지우지 않았다.** 산출물에 그대로 있고 맨 아래 접은 표에 둔다 —
-    //   "한 판만 보인다" 와 "한 판만 쟀다" 는 다르고, 뒤엣것으로 읽히면 거짓이 된다.
-    var MAIN=(S.tops||[]).filter(function(v){return v.rank==='ov'&&v.metrics;})[0];
-    var ALL=(S.variants||[]).concat(S.tops||[]).filter(function(v){return v.metrics;});
-    var nm=function(v){return v.label||('K≥'+v.k+' · '+(v.mode_label||'동일가중'));};
+  // ── 전략 탭 — 왼쪽 목록 · 오른쪽 상세 (2026-08-20 사용자 지시 · 전략 랩 포맷) ──
+  // ⚠ 내용물은 종전 한 페이지짜리에서 **그대로 옮겼다**(재계산 없음). 바뀐 것은 배치뿐이다.
+  var STSEL=0;
+  function stItems(){
+    var S=STRAT.ov||{};
+    var MAIN=((S.tops)||[]).filter(function(v){return v.rank==='ov'&&v.metrics;})[0];
+    var C=(((STRAT.clone||{}).strategies)||[])[0];
+    var G=STRAT.g17;
+    var out=[];
+    if(MAIN)out.push({k:'ov', name:MAIN.label||'거장 겹침 상위 10',
+      sub:'샤프 '+nf(MAIN.metrics.sharpe,2)+' · CAGR '+nf(MAIN.metrics.cagr,1)+'% · '+esc(MAIN.start||'')});
+    if(C&&C.metrics)out.push({k:'clone', name:C.name||'13F 컨빅션 복제',
+      sub:'샤프 '+nf(C.metrics.sharpe,2)+' · CAGR '+nf(C.metrics.cagr,1)+'% · '+esc(C.start||'')});
+    if(G&&G.managers&&G.managers.length)out.push({k:'g17', name:'운용사별 복제',
+      sub:G.managers.filter(function(m){return m.metrics;}).length+'곳 · 공시 45일 뒤 · 월 리밸'});
+    return out;
+  }
+  function renderStratList(){
+    var box=el('stlist'); if(!box)return;
+    var it=stItems();
+    box.innerHTML=it.map(function(x,i){
+      return '<button class="mg" data-i="'+i+'" aria-pressed="'+(i===STSEL?'true':'false')+'">'+
+        '<b>'+esc(x.name)+'</b><span class="sub">'+x.sub+'</span></button>';}).join('');
+  }
+  function renderStrat(){
+    var S=STRAT.ov;
+    var it=stItems();
+    if(!it.length){el('stout').innerHTML='<div class="note hard"><b>불러오지 못했습니다</b> — '+
+      '전략 산출물이 아직 없습니다. 추정치로 채우지 않습니다.</div>';return;}
+    renderStratList();
+    var kind=it[Math.min(STSEL,it.length-1)].k;
     var h='';
-    if(!MAIN){ el('stout').innerHTML='<div class="note hard">주 판을 못 읽었습니다.</div>'; return; }
-
+    if(kind==='ov'){
+      if(!S||!S.variants){el('stout').innerHTML='<div class="note hard">guru_overlap.json 없음.</div>';return;}
+      var MAIN=(S.tops||[]).filter(function(v){return v.rank==='ov'&&v.metrics;})[0];
+      var ALL=(S.variants||[]).concat(S.tops||[]).filter(function(v){return v.metrics;});
+      var nm=function(v){return v.label||('K≥'+v.k+' · '+(v.mode_label||'동일가중'));};
+      if(!MAIN){ el('stout').innerHTML='<div class="note hard">주 판을 못 읽었습니다.</div>'; return; }
     // ── ① 성과 요약 — 전략과 대조군 둘을 같은 표에 ──────────────────────
     var M=MAIN.metrics, SX=MAIN.spx, ND=MAIN.ndx;
     h+='<div class="card"><h3>'+esc(nm(MAIN))+'<span class="hn">'+esc(MAIN.start)+' ~ '+
@@ -1415,13 +1416,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          return esc(S.spec[k]);}).join('<br>· ')+'</div>'+
        '<div style="margin-top:8px">· '+(S.limits||[]).map(function(x){
          return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');}).join('<br>· ')+'</div></details>';
+    }
+    if(kind==='clone'){
     // ══ ② 13F 컨빅션 복제 ═══════════════════════════════════════════════
     // ⚠ 랩 자산 백테스트(build/guru_clone.py)가 구운 것을 전사만 한다. 여기서 재지 않는다.
     (function(){
       var C=(((STRAT.clone||{}).strategies)||[])[0];
       if(!C||!C.metrics) return;
       var M=C.metrics, B=C.bench||{};
-      h+='<div class="card" style="margin-top:16px"><h3>'+esc(C.name)+
+      h+='<div class="card"><h3>'+esc(C.name)+
          '<span class="hn">'+esc(C.start)+' ~ '+esc(C.end)+' · '+(C.n_months||0)+'개월 · 분기 리밸</span></h3>'+
          '<p class="lblnote" style="margin:0 0 10px">'+esc(C.rule||'')+'</p>'+
          '<div class="fswrap"><table class="tbl gtbl"><thead><tr><th class="l">지표</th>'+
@@ -1442,6 +1445,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<p>'+esc(C.why||'')+'</p><p>'+esc(C.note||'')+'</p></div></details></div>';
     })();
 
+    }
+    if(kind==='g17'){
     // ══ ③ 운용사별 복제 ═════════════════════════════════════════════════
     // 🚨 «누가 잘했나» 로 읽히기 쉬운 표다. 그래서 랩이 이미 재 둔 GRS·지속성을 **표 위에**
     //   적는다 — 17곳을 한 줄에 세우면 눈은 1등을 고르는데, 그 1등이 다음 기간에도
@@ -1452,7 +1457,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var HL=G.headline||{}, gr=HL.grs||{}, ps=HL.persistence||{};
       var rows=G.managers.slice(0).filter(function(m){return m.metrics;});
       rows.sort(function(x,y){return (y.metrics.cagr||0)-(x.metrics.cagr||0);});
-      h+='<div class="card" style="margin-top:16px"><h3>운용사별 복제'+
+      h+='<div class="card"><h3>운용사별 복제'+
          '<span class="hn">'+rows.length+'곳 · 공시 45일 뒤부터 · 월 리밸</span></h3>'+
          '<p class="lblnote" style="margin:0 0 10px">각 운용사의 13F 를 그대로 따라 담았을 때. '+
          '🚨 <b>«누가 잘했나» 표가 아닙니다.</b> 열일곱을 한 줄에 세우면 눈이 1등을 고르는데, '+
@@ -1476,12 +1481,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<a href="guru17.html">운용사별 복제 화면</a>에 있습니다.</p></div>';
     })();
 
+    }
     el('stout').innerHTML=h;
-    // 🚨 stmore('나머지 N종목 펼치기') 핸들러를 걷었다(2026-08-16). 겹침 화면을 상위 10
-    //   한 판으로 좁히면서 보유가 10종이라 접을 것이 없어졌고, 버튼도 안 그린다.
-    //   ⚠ 그 핸들러는 사라진 변수 base 를 참조하고 있었다 — 눌렸으면 그 줄에서 죽었다.
-    //   관문의 el() 배선 검사가 잡았다.
   }
+  (function(){
+    var box=el('stlist'); if(!box)return;
+    box.addEventListener('click',function(e){
+      var b=e.target.closest('.mg'); if(!b)return;
+      STSEL=parseInt(b.getAttribute('data-i'),10)||0;
+      renderStrat();});
+  })();
   // 🚨 운용사별 분기 성과(2026-08-16 사용자 지시). 분기말 신고 포트가 다음 분기말까지
   //   어떻게 됐나 — build/guru_quarter_perf.py 가 굽는다.
   var QP=null;
@@ -1494,7 +1503,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var STRAT={ov:null, clone:null, g17:null, n:0};
   function _got(k, j){
     STRAT[k]=j; STRAT.n++;
-    if(STRAT.n>=3) renderStrat(STRAT.ov);
+    if(STRAT.n>=3) renderStrat();
   }
   fetch('data/guru_overlap.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     ['catch'](function(){return null;}).then(function(j){_got('ov',j);});
