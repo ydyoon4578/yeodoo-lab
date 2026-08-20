@@ -127,6 +127,18 @@ def cls_sign(v):
     return "pos" if (v or 0) > 0 else ("neg" if (v or 0) < 0 else "")
 
 
+def norm_tk(t):
+    """티커 정규화 — 클래스주 구분자를 점으로 통일한다(BRK/B → BRK.B · BF/B → BF.B).
+
+    🚨 2026-08-20 사용자 발견: 펀드가 들고 있는 BRK/B(사내 시트 · 블룸버그식 슬래시)가
+      지수 구성종목의 BRK.B(팩트셋식 점)와 안 맞아, 보유 중인데 «지수에 있는데 미보유»
+      목록에 나오고 표의 지수비중은 0 이었다. BF/B 도 같다.
+    모든 입구(시트·지수구성·매매원장·종가)가 이 함수를 지나므로 어느 원천이 어느 표기를
+    쓰든 안에서는 한 이름이다. 종가 조회만은 DB 표기를 모르니 **두 표기를 다 물어보고**
+    돌아온 것을 정규화해 담는다(load_db 참조)."""
+    return (t or "").strip().replace("/", ".")
+
+
 # ── 1) 사내 export 읽기 ──────────────────────────────────────────────────────
 def load_xlsm():
     # mtime 동률(같은 저장을 양쪽에 복사한 경우)이면 네트워크 정본을 이긴다
@@ -161,7 +173,7 @@ def load_xlsm():
         if not r[0]:
             break
         hold.setdefault(str(r[0]).strip(), {}).setdefault(d10(r[4]), []).append({
-            "ticker": (str(r[2]).strip() if r[2] else ""),
+            "ticker": (norm_tk(str(r[2])) if r[2] else ""),
             "name": (str(r[3]).strip() if r[3] else ""),
             "qty": float(r[7] or 0), "val_usd": float(r[10] or 0),
             "val_krw": float(r[11] or 0), "asset": str(r[13]).strip(),
@@ -188,11 +200,11 @@ def load_db(asof_by_fund, held_tickers):
                     'WHERE "index"=%s AND dt=%s', (idx, d))
         rows = cur.fetchall()
         tot = sum(float(w or 0) for _t, w, _n, _g in rows) or 1.0
-        cons[idx] = (str(d), {t: (float(w or 0) / tot, n, g) for t, w, n, g in rows})
+        cons[idx] = (str(d), {norm_tk(t): (float(w or 0) / tot, n, g) for t, w, n, g in rows})
 
     cur.execute('SELECT "index", dt, strategy, ticker, trade_qty, trade_price '
                 'FROM mp.strategy_trade ORDER BY dt, strategy, ticker')
-    trades = [dict(index=i, dt=str(d), strategy=s, ticker=t, qty=float(q), px=float(p or 0))
+    trades = [dict(index=i, dt=str(d), strategy=s, ticker=norm_tk(t), qty=float(q), px=float(p or 0))
               for i, d, s, t, q, p in cur.fetchall()]
 
     # 지수 레벨 — 패널 창(2년) 전체.
@@ -219,12 +231,16 @@ def load_db(asof_by_fund, held_tickers):
     for _d, cmap in cons.values():
         uni |= set(cmap)
     px = {}           # ticker → {date: close}
+    # 클래스주(BRK.B 류)는 DB 가 점·슬래시 어느 쪽인지 모른다 — 두 표기를 다 묻는다.
+    #   uni 는 이미 점 표기로 정규화돼 있으므로 슬래시판을 덧붙이고, 돌아온 티커를
+    #   norm_tk 로 담으면 어느 쪽이 맞았든 안에서는 한 이름이다.
+    _ask = sorted({v for t in uni for v in (t, t.replace(".", "/"))})
     cur.execute("SELECT ticker, dt, value FROM market.ohlcv_factset "
                 "WHERE value_type='c' AND dt>=%s AND ticker = ANY(%s) ORDER BY ticker, dt",
-                (axis[0], [t + " EQUITY" for t in sorted(uni)]))
+                (axis[0], [t + " EQUITY" for t in _ask]))
     for tk, d, v in cur.fetchall():
         if v is not None:
-            px.setdefault(tk[:-7], {})[str(d)] = float(v)
+            px.setdefault(norm_tk(tk[:-7]), {})[str(d)] = float(v)
     cn.close()
     return cons, trades, px, lvl, axis
 
@@ -519,11 +535,14 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 1e4,
                         qty=h["qty"], pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
-    only_idx = sorted(((t, v[0], v[1]) for t, v in cmap.items() if t not in held and v[0] > 0.0005),
+    # 문턱 없음(2026-08-20 사용자 지시 «비중 상관없이») — 지수에 있는데 안 든 것 전부.
+    only_idx = sorted(((t, v[0], v[1]) for t, v in cmap.items() if t not in held),
                       key=lambda x: -x[1])
+    off_idx = [r for r in tbl if r["t"] not in cmap]     # 보유 중인데 지수에 없는 것
 
-    H.append('<h3>② 보유 vs 지수 <span class="hnote">주식 슬리브 %d종 · 지수 %d종</span></h3>'
-             % (len(held), len(cmap)))
+    H.append('<h3>② 보유 vs 지수 <span class="hnote">주식 슬리브 %d종 · 지수 %d종%s</span></h3>'
+             % (len(held), len(cmap),
+                (' · <b>지수 밖 보유 %d종</b>' % len(off_idx)) if off_idx else ''))
     H.append('<div class="filterbar"><input type="search" class="rowfilter" data-target="tb-%s" '
              'placeholder="티커·이름으로 거르기" aria-label="표 필터"></div>' % slug)
     H.append('<div class="tblwrap tall"><table class="big" id="tb-%s"><thead><tr>'
@@ -531,7 +550,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              '<th class="tnum">차이(bp)</th><th class="tnum">수량</th><th class="tnum">패시브수량</th><th class="tnum">괴리</th>'
              '</tr></thead><tbody>' % slug)
     for r in tbl:
-        H.append('<tr><td class="tk">%s</td><td>%s</td><td class="sec">%s</td>'
+        # 지수 밖 보유(2026-08-20 사용자 지시) — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는
+        # «아주 작다» 와 «지수에 없다» 가 안 갈린다. 배지로 말한다.
+        _off = ' <span class="offb" title="지수 구성종목이 아니다">밖</span>' if r["t"] not in cmap else ''
+        H.append('<tr><td class="tk">%s'+_off+'</td><td>%s</td><td class="sec">%s</td>'
                  '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%+.0f</td>'
                  '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["t"]), esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
@@ -539,10 +561,17 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     num(r["qty"], 0), num(r["pq"], 0) if r["pq"] is not None else "—",
                     cls_sign(r["dq"] or 0), ("%+d" % round(r["dq"])) if r["dq"] is not None else "—"))
     H.append("</tbody></table></div>")
+    if off_idx:
+        H.append('<details open><summary>보유 중인데 지수에 없는 %d종 — 편출 뒤 잔존 등</summary>'
+                 '<div class="tblwrap"><table class="mini"><tbody>' % len(off_idx))
+        for r in off_idx:
+            H.append('<tr><td class="tk">%s</td><td>%s</td><td class="tnum">%s</td></tr>'
+                     % (esc(r["t"]), esc(r["name"][:30]), pct(r["wf"], 2)))
+        H.append("</tbody></table></div></details>")
     if only_idx:
-        H.append('<details><summary>지수에 있는데 미보유 %d종 (지수비중 0.05%% 이상)</summary>'
+        H.append('<details><summary>지수에 있는데 미보유 %d종 — 전부(문턱 없음)</summary>'
                  '<div class="tblwrap"><table class="mini"><tbody>' % len(only_idx))
-        for t, w, nm in only_idx[:80]:
+        for t, w, nm in only_idx:
             H.append('<tr><td class="tk">%s</td><td>%s</td><td class="tnum">%s</td></tr>'
                      % (esc(t), esc((nm or "")[:30]), pct(w, 2)))
         H.append("</tbody></table></div></details>")
