@@ -395,7 +395,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .pfhead{margin:0 0 12px}
   .tb{font-size:12px;padding:6px 11px}
   .gen{font-size:10px}
-  #content{margin-top:18px}
+  /* 🚨 본문이 .wrap 밖이다(sources.html 구조 유산) — 컨테이너를 여기서 직접 건다.
+     안 걸면 넓은 화면에서 전폭으로 퍼지고, width:100% SVG 가 뷰박스째 확대돼
+     차트 속 글자까지 거대해진다(좁은 패널 검증으로는 안 보여 두 번 놓쳤다). */
+  #content{max-width:880px;margin:18px auto 0;padding:0 16px;box-sizing:border-box}
+  .chart svg{max-width:760px;display:block;margin:0 auto}
   #content h3{font-size:13.5px;margin:24px 0 9px;padding-top:12px}
   .hnote{font-size:.72em}
   .cards{grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin:0 0 12px}
