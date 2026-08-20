@@ -292,13 +292,11 @@ for (let i = 1; i < dom.length; i++) if (mcOf[dom[i - 1]] < mcOf[dom[i]]) fail.p
 //       → 세는 것으로는 부족하다. 리스너를 실제로 눌러 본다.
 const holdIds = [...Hh.matchAll(/<tr class="hold" id="([^"]+)"/g)].map(m => m[1]);
 const btnIds = [...Hh.matchAll(/<button[^>]*class="htg" data-hold="([^"]+)"/g)].map(m => m[1]);
-// 🚨 2026-08-20 사용자 결정 — 홈 표에서 스타일 두 묶음(상장 스타일 ETF·지수 방법론)을
-//   뺐다(index.html HOME_STYLE_ROWS=false · 표 절반 폭 + 오른쪽 전략별 성과).
-//   그래서 이 검사는 **반대로** 선다: 그 묶음이 다시 그려지면(플래그가 조용히 켜지면) 잡는다.
-//   ⚠ 되살리기로 하면 이 두 검사를 원래(버튼 ≥1 요구)로 함께 되돌릴 것 — 한쪽만 바꾸면
-//     사양과 검사가 서로 다른 말을 한다.
-if (btnIds.length) fail.push("지수 방법론 ▸ 버튼이 " + btnIds.length + "개 — 홈에서 뺀 묶음이 다시 그려졌다(HOME_STYLE_ROWS 확인)");
-if (/>스타일 ETF </.test(Hh)) fail.push("'스타일 ETF' 묶음 머리줄이 홈 표에 있다 — 2026-08-20 사용자 결정과 어긋난다");
+// 🚨 2026-08-20 사용자 결정(2차) — 홈 표에서 **상장 스타일 ETF 묶음만** 뺀다.
+//   지수 방법론(10종목 폴드)은 남는다 — 처음에 둘 다 걷었다가 사용자 지적으로 되돌렸다.
+//   그래서 검사는 양방향: ▸ 버튼은 있어야 하고, '스타일 ETF' 머리줄은 없어야 한다.
+if (!btnIds.length) fail.push("지수 방법론 ▸ 버튼이 0개 — 묶음이 안 그려졌다");
+if (/>스타일 ETF </.test(Hh)) fail.push("'스타일 ETF' 묶음 머리줄이 홈 표에 있다 — 2026-08-20 사용자 결정(상장 ETF 줄만 제거)과 어긋난다");
 btnIds.forEach(id => { if (holdIds.indexOf(id) < 0) fail.push("▸ " + id + " 가 가리키는 구성종목 행이 없다"); });
 
 // sttbl 의 위임 리스너는 지금 **하나**다(구성종목 펼침). 섹터 트리가 나가면서

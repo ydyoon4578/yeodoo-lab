@@ -2659,11 +2659,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
     // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.
     h+=mkSegRows(ncol);
-    // 🚨 2026-08-20 사용자 요청 — 스타일 두 묶음(상장 스타일 ETF · 지수 방법론 백테스트)을
-    //   홈 표에서 뺀다. 표가 절반 폭이 되면서 지수·섹터·산업만 남긴다.
-    //   ⚠ 지운 것이 아니다 — 위 막대 그림의 스타일 판은 그대로고, 전체 표는 macro.html,
-    //     방법론 상세는 style.html 에 있다(메뉴에서 내리는 것 ≠ 지우는 것).
-    //   되살리려면 이 플래그만 켜면 된다 — 아래 두 묶음 코드는 그대로 있다.
+    // 🚨 2026-08-20 사용자 요청 — **상장 스타일 ETF 줄만** 홈 표에서 뺀다.
+    //   처음엔 지수 방법론(상위 10종목 폴드) 묶음까지 같이 걷었다가 사용자 지적으로
+    //   그 묶음은 되살렸다(«세부섹터 ETF만 없애랬지») — 플래그는 ETF 묶음에만 걸린다.
+    //   ⚠ 지운 것이 아니다 — 전체 표는 macro.html 에 그대로 있다.
     var HOME_STYLE_ROWS=false;
     if(HOME_STYLE_ROWS){
     // ⚠ 어느 ETF 를 싣는지는 짝 판정(labOf)이 정한다 — 랩 방법론과 짝이 있는 것만 싣는다.
@@ -2702,6 +2701,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var x=etfSharpe(a.t), y=etfSharpe(b.t);
       return (y==null?-Infinity:y)-(x==null?-Infinity:x);
     }).forEach(function(x){ h+=stRow(x,'',etfSharpe(x.t)); });
+    }// HOME_STYLE_ROWS — 여기까지가 상장 ETF 묶음. 아래 지수 방법론(10종목 폴드)은 항상 그린다.
     // 지수 방법론 — 공개 산식을 이 유니버스에 적용한 이 랩의 백테스트.
     // 경고를 숫자와 같은 표에 둔다. 위 ETF 행과 열이 맞아 버렸으므로, 안 적으면 두 종류가
     // 한 잣대로 읽힌다 — 이 랩이 스스로 잰 것 중 가장 큰 것이 생존편향이다(오늘의 518종목
@@ -2738,7 +2738,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<em><b>수익률은 백테스트</b> <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
-    }// HOME_STYLE_ROWS
     box.innerHTML=h+'</tbody>';
     // 펼침 — 표를 다시 그려도 리스너가 쌓이지 않게 **위임으로 한 번만** 건다.
     // 행마다 걸면 innerHTML 을 갈아 끼울 때 옛 리스너가 남아 같은 클릭이 두 번 처리된다.
