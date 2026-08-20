@@ -95,9 +95,10 @@ def _db_params():
     raise SystemExit("DB 접속 정보 없음 — 연구 repo util/variables.py(YEOUIDO_REPO) 또는 "
                      "환경변수 YEOUIDO_DB_HOST/USER/PASS 를 준비할 것")
 
+# 탭 순서 = 이 목록 순서. 2026-08-20 사용자 지시 — «S&P500을 왼쪽에, 나스닥100을 오른쪽에».
 FUNDS = [
-    ("2Z30", "NDX Index", "ndx", "나스닥100"),
     ("2A81", "SPX Index", "spx", "S&P500"),
+    ("2Z30", "NDX Index", "ndx", "나스닥100"),
 ]
 SPLIT_GUARD = 0.40      # 매매 구간 일수익 절대값이 이걸 넘으면 분할 의심 ⚠
 
@@ -447,7 +448,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     tot_exc = sum(s["last"]["pnl"] - s["last"]["bm"] for s in perf.values() if s.get("last"))
     tot_bp = tot_exc * fx_v / nav_v * 1e4 if perf else 0.0
 
-    H.append('<section class="tabpane" id="pane-%s"%s>' % (slug, "" if slug == "ndx" else " hidden"))
+    # 첫 탭이 보인다 — 순서를 FUNDS 가 정하므로 여기 이름을 박으면 순서를 바꿀 때 둘이 갈린다.
+    H.append('<section class="tabpane" id="pane-%s"%s>' % (slug, "" if slug == FUNDS[0][2] else " hidden"))
     H.append('<div class="fhead"><h2>%s <span class="fcode">%s · %s</span></h2>'
              '<div class="asofline">보유 %s · NAV·기준가 %s · 환율 %s (%s) · 미국 종가 %s · 지수비중 %s'
              '<br>기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 — 최신 종가와 짝은 최신 기준가</div></div>'
@@ -463,13 +465,35 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
          "기준가 − 지수·원화", (ytd_f - ytd_b) if None not in (ytd_f, ytd_b) else 0),
         ("전략 NAV 기여", ("%+.1f bp" % tot_bp) if perf else "—", "매매 시점 일치 BM 대비", tot_bp),
     ]
-    for k, v, sub, sign in cards:
-        H.append('<div class="card"><div class="ck">%s</div><div class="cv %s">%s</div><div class="cs">%s</div></div>'
-                 % (esc(k), cls_sign(sign), esc(v), esc(sub)))
+    for ci, (k, v, sub, sign) in enumerate(cards):
+        # cv/cs 에 id — 웹 앱의 «최신 기준가 반영»이 카드 0~2(NAV·연초후·초과)를 갱신한다.
+        H.append('<div class="card"><div class="ck">%s</div><div class="cv %s" id="cv-%s-%d">%s</div>'
+                 '<div class="cs" id="cs-%s-%d">%s</div></div>'
+                 % (esc(k), cls_sign(sign), slug, ci, esc(v), slug, ci, esc(sub)))
     H.append("</div>")
-    H.append('<div class="chart">%s</div>' % svg_lines(
+    # ── 최신 기준가 반영 (2026-08-20 사용자 지시) ────────────────────────────
+    # «내가 최신 NAV랑 환율을 넣고 업데이트 버튼을 클릭하면 그때 D-1 성과까지 보여주면 돼.»
+    # 시트가 하루 낡아도(기준가 D → 미국 D−1) 사용자가 오늘 기준가·환율을 손으로 넣으면
+    # 차트·연초후 카드가 하루 더 나아간다. 지수 쪽 짝은 동봉된 지수 레벨(PF.lvl · 최신
+    # 미국 종가까지 있다)에서 last_lt 로 찾으므로 **새 자료가 필요 없다.**
+    # 입력은 웹 원장(doc.navs)에 실려 «GitHub에 저장»으로 같이 저장된다 — 계산은 웹 앱
+    # (js/portfolio_app.js · renderNavUpd)이 한다. 여기는 자리만 만든다.
+    H.append(
+        '<div class="navupd" id="navupd-%s" data-slug="%s">'
+        '<span class="nuk">최신 기준가 반영</span>'
+        '<label>기준일 <input type="date" id="nu-d-%s"></label>'
+        '<label>기준가 <input type="number" step="0.01" min="0" placeholder="%s" id="nu-bp-%s"></label>'
+        '<label>NAV(억) <input type="number" step="0.1" min="0" placeholder="%s" id="nu-nav-%s"></label>'
+        '<label>USD/KRW <input type="number" step="0.01" min="0" placeholder="%s" id="nu-fx-%s"></label>'
+        '<button type="button" class="sb" id="nu-go-%s">업데이트</button>'
+        '<button type="button" class="sb" id="nu-clr-%s" title="입력분을 지우고 시트 값으로 되돌린다">되돌리기</button>'
+        '<span class="nust" id="nu-st-%s"></span>'
+        '<span class="nunote">기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 · 지수 짝은 동봉 종가에서 자동 · '
+        '«GitHub에 저장»을 누르면 웹 원장에 함께 저장됩니다</span></div>'
+        % (slug, slug, slug, num(base_p), slug, num(nav_v / 1e8, 0), slug, num(fx_v), slug, slug, slug, slug))
+    H.append('<div class="chart" id="ytd-%s">%s</div>' % (slug, svg_lines(
         [("펀드", fund_pts), ("지수", bm_pts)],
-        labels=["펀드 기준가", "%s 원화환산" % idx.split()[0]]))
+        labels=["펀드 기준가", "%s 원화환산" % idx.split()[0]])))
     H.append('<table class="mini"><thead><tr><th>자산 구성</th><th class="tnum">NAV 대비</th></tr></thead><tbody>')
     for lbl2, w in (("개별주식", w_stk), ("지수 ETF", w_etf), ("현금·증거금", w_cash)):
         H.append('<tr><td>%s</td><td class="tnum">%s</td></tr>' % (esc(lbl2), pct(w, 1)))
@@ -606,6 +630,13 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                   for sname, s in perf.items() if s.get("last")}
     fmeta = dict(fund=fund, idx=idx, label=label, asof=asof, asof_us=asof_us,
                  nav=nav_v, base=base_p, fx=fx_v, sleeve=round(sleeve, 0), cons_d=cons_d,
+                 # 연초 후 곡선 원자료 — 웹 앱의 «최신 기준가 반영»이 여기에 사용자 입력
+                 # 점을 이어 붙여 다시 그린다(빌더 곡선과 같은 축·같은 기준 100).
+                 # bp0 = 첫 기준가 · ib0 = 첫 (지수 last_lt × 환율 last_leq) 곱.
+                 ytd=dict(f=[[d, round(v, 4)] for d, v in fund_pts],
+                          b=[[d, round(v, 4)] for d, v in bm_pts],
+                          bp0=bp0, ib0=round((i0 or 0) * (f0 or 0), 6),
+                          nav_d=nav_d, chart_labels=["펀드 기준가", idx.split()[0] + " 원화환산"]),
                  check=perf_check,
                  cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
                  held={t: round(h["qty"], 2) for t, h in held.items()})
@@ -644,6 +675,7 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 <li><b>배당 미반영</b> — 종가는 수정주가가 아니다. 보유 기간이 짧아 왜곡은 작지만 0이 아니다.</li>
 <li>매매~기준일 사이 하루 ±40%를 넘는 가격변동이 있으면 <b>분할 의심 ⚠</b>를 단다 — 벤더가 분할을 소급 반영하지 않은 사고가 실측된 바 있다.</li>
 <li>입력: 사내 시스템 export(NAV·환율·보유)와 사내 매매 원장. 갱신은 수동이다 — 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
+<li><b>최신 기준가 반영</b>은 시트보다 새 기준가·환율을 손으로 넣어 차트·연초후 카드를 하루 앞당기는 것이다. 지수 짝은 동봉된 미국 종가에서 자동으로 찾고(T-1 규약 동일), 입력분은 웹 원장에 저장된다. <b>다음 export 반영 뒤에는 «되돌리기»로 지우는 것이 맞다</b> — 시트 값이 정본이다.</li>
 <li><b>웹 원장</b>은 이 페이지에서 입력한 전략·매매다. 저장하면 열람 암호로 AES-256-GCM 암호화되어 저장소의 <span class="tk">data/portfolio_user.json</span> 에 커밋된다 — 평문은 저장소·서버 어디에도 남지 않고, git 이력이 곧 버전 관리라 언제든 과거 버전으로 되돌릴 수 있다. 쓰기 토큰은 이 기기 브라우저에만 저장된다.</li>
 <li><b>웹 백테스트는 진단용이다.</b> 유니버스가 «현재» 구성종목이라 <b>생존편향</b>이 있고(랩 실측: 스타일에 따라 수~수십%p 부풀림), 지수는 PR·종가는 무배당이며, 창이 단일(패널 @PANEL@거래일)이라 통계적 유의성을 말할 수 없다. 배포 판단은 랩의 PIT 백테스트로만 한다.</li>
 </ul></div>""".replace("@PANEL@", str(PANEL_DAYS))

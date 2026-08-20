@@ -351,23 +351,23 @@
     catch (e) { S.loadErr = e.message; renderSync(); return; }
     // ⚠ 404/empty 경로에서 S.doc 을 «반드시» 초기화한다 — 안 하면 복원·리로드가 직전
     //   메모리 상태를 들고 «동기화됨»을 사칭한다(적대감사 확정: restoreRev→loadLedger 경로).
-    if (!f) { S.base = { sha: null, updated: null }; S.doc = { v: 1, strategies: {}, trades: [] }; return; }
+    if (!f) { S.base = { sha: null, updated: null }; S.doc = { v: 1, strategies: {}, trades: [], navs: {} }; return; }
     S.base = { sha: f.sha, updated: null };
     var env;
     try { env = JSON.parse(new TextDecoder().decode(b64d(f.content))); }
     catch (e) { S.loadErr = '원장 JSON 파싱 실패 — 파일이 손상됐다. 이력에서 복원하세요.'; renderSync(); return; }
-    if (env.empty) { S.doc = { v: 1, strategies: {}, trades: [] }; return; }   // 초기 상태 — 빈 원장
+    if (env.empty) { S.doc = { v: 1, strategies: {}, trades: [], navs: {} }; return; }   // 초기 상태 — 빈 원장
     S.base.updated = env.updated || null;
     try {
       var doc = await decDoc(env);
-      S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [] };
+      S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], navs: doc.navs || {} };
     } catch (e) {
       // 페이지 재잠금 암호가 바뀐 경우 — 봉투는 옛 암호다. 화면에서 옛 암호를 따로 받는다.
       S.loadErr = 'PWMISMATCH';
     }
   }
   async function saveLedger(force) {
-    var doc = { v: 1, strategies: S.doc.strategies, trades: S.doc.trades, saved: new Date().toISOString() };
+    var doc = { v: 1, strategies: S.doc.strategies, trades: S.doc.trades, navs: S.doc.navs || {}, saved: new Date().toISOString() };
     var env = await encDoc(doc);
     var b64 = b64e(new TextEncoder().encode(JSON.stringify(env)));
     var msg = 'portfolio: 웹 원장 (전략 ' + Object.keys(S.doc.strategies).length +
@@ -453,7 +453,7 @@
         var f = await ghGetFile();
         var env = JSON.parse(new TextDecoder().decode(b64d(f.content)));
         var doc = await decDoc(env, km);
-        S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [] };
+        S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], navs: doc.navs || {} };
         S.base = { sha: f.sha, updated: env.updated || null };
         S.loadErr = null;
         S.dirty = true;                             // 현재 암호로 재저장 유도
@@ -911,8 +911,96 @@
     out.innerHTML = h.join('');
   }
 
+  // ── 최신 기준가 반영 (2026-08-20 사용자 지시) ────────────────────────────
+  // «내가 최신 NAV랑 환율을 넣고 업데이트 버튼을 클릭하면 그때 D-1 성과까지 보여주면 돼.»
+  // 계산은 빌더(portfolio_fund.render_fund)와 같은 규약이다:
+  //   펀드 점  = 기준가 ÷ bp0 × 100
+  //   지수 점  = (지수 last_lt(D) × 입력 환율) ÷ ib0 × 100   ← T-1 짝맞춤 그대로
+  // 지수 레벨은 동봉 PF.lvl(최신 미국 종가까지)에서 찾으므로 새 자료가 필요 없다.
+  // 입력은 S.doc.navs[slug] 에 실려 «GitHub에 저장»으로 봉투에 같이 들어간다.
+  function lvlLtDate(slug, d) {
+    // PF.dates(미국 거래일 축)에서 d **미만**의 마지막 날 — 빌더의 last_lt 와 같은 뜻.
+    var i = -1;
+    for (var k = 0; k < PF.dates.length; k++) { if (PF.dates[k] < d) i = k; else break; }
+    if (i < 0) return null;
+    var v = lvlLeI(PF.lvl[slug], i);
+    return v == null ? null : { d: PF.dates[i], v: v };
+  }
+  function navRows(slug) {
+    var meta = PF.funds[slug], y = meta && meta.ytd;
+    if (!y) return [];
+    return ((S.doc.navs || {})[slug] || [])
+      .filter(function (r) { return r && r.d && r.d > y.nav_d && r.bp > 0 && r.fx > 0; })
+      .sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+  }
+  function redrawYtd(slug) {
+    var meta = PF.funds[slug], y = meta && meta.ytd;
+    var box = el('ytd-' + slug);
+    if (!y || !box) return;
+    var rows = navRows(slug);
+    var f = y.f.slice(), b = y.b.slice(), bad = null;
+    rows.forEach(function (r) {
+      var lv = lvlLtDate(slug, r.d);
+      if (!lv) { bad = r.d + ' 이전 지수 종가가 동봉 자료에 없습니다'; return; }
+      f.push([r.d, r.bp / y.bp0 * 100]);
+      b.push([r.d, (lv.v * r.fx) / y.ib0 * 100]);
+    });
+    box.innerHTML = svgLines([['펀드', f], ['지수', b]], y.chart_labels);
+    // 카드 0(NAV)·1(연초후)·2(초과) — 빌더가 심은 id 자리만 갈아 끼운다
+    var ytdF = f.length ? f[f.length - 1][1] / 100 - 1 : null;
+    var ytdB = b.length ? b[b.length - 1][1] / 100 - 1 : null;
+    var last = rows.length ? rows[rows.length - 1] : null;
+    function setCard(ci, v, sub, sign) {
+      var cv = el('cv-' + slug + '-' + ci), cs = el('cs-' + slug + '-' + ci);
+      if (cv) { cv.textContent = v; cv.className = 'cv ' + sgn(sign); }
+      if (cs && sub != null) cs.textContent = sub;
+    }
+    if (last && last.nav > 0) setCard(0, num(last.nav, 0) + '억원', '기준가 ' + num(last.bp), 0);
+    else if (!last) setCard(0, num(meta.nav / 1e8, 0) + '억원', '기준가 ' + num(meta.base), 0);
+    setCard(1, pct(ytdF, 2, true), '지수(원화환산) ' + pct(ytdB, 2, true), ytdF || 0);
+    var ex = (ytdF == null || ytdB == null) ? null : ytdF - ytdB;
+    setCard(2, pct(ex, 2, true), null, ex || 0);
+    return bad;
+  }
+  function renderNavUpd(slug) {
+    var wrap = el('navupd-' + slug);
+    if (!wrap) return;                              // 조각이 아직 옛 판이면 폼 자체가 없다
+    redrawYtd(slug);                                // 저장돼 있던 입력분을 곡선에 반영
+    if (wrap.dataset.wired) return;                 // 리스너는 한 번만 — 조각은 재렌더되지 않는다
+    wrap.dataset.wired = '1';
+    var st = el('nu-st-' + slug);
+    function say(m, ok) { if (st) { st.textContent = m || ''; st.className = 'nust' + (ok ? ' ok' : ''); } }
+    el('nu-go-' + slug).addEventListener('click', function () {
+      var y = (PF.funds[slug] || {}).ytd;
+      if (!y) { say('이 조각에는 곡선 원자료가 없습니다 — 조각을 다시 생성할 것'); return; }
+      var d = (el('nu-d-' + slug).value || '').trim();
+      var bp = parseFloat(el('nu-bp-' + slug).value);
+      var nav = parseFloat(el('nu-nav-' + slug).value);   // 억원 — 비워도 된다(카드만 못 바꾼다)
+      var fx = parseFloat(el('nu-fx-' + slug).value);
+      if (!d) { say('기준일을 넣으세요'); return; }
+      if (d <= y.nav_d) { say('시트가 이미 ' + y.nav_d + ' 기준입니다 — 그 뒤 날짜만 받습니다'); return; }
+      if (!(bp > 0)) { say('기준가를 넣으세요'); return; }
+      if (!(fx > 0)) { say('환율을 넣으세요'); return; }
+      if (!lvlLtDate(slug, d)) { say('그 기준일과 짝지을 지수 종가가 동봉 자료에 없습니다'); return; }
+      S.doc.navs = S.doc.navs || {};
+      var arr = (S.doc.navs[slug] || []).filter(function (r) { return r.d !== d; });
+      arr.push({ d: d, bp: bp, nav: (nav > 0 ? nav : null), fx: fx });
+      S.doc.navs[slug] = arr;
+      S.dirty = true; renderSync();
+      var bad = redrawYtd(slug);
+      say(bad || (d + ' 반영 — 미국 ' + lvlLtDate(slug, d).d + ' 종가와 짝지었습니다. 저장하려면 «GitHub에 저장»'), !bad);
+    });
+    el('nu-clr-' + slug).addEventListener('click', function () {
+      if (!((S.doc.navs || {})[slug] || []).length) { say('지울 입력분이 없습니다'); return; }
+      delete S.doc.navs[slug];
+      S.dirty = true; renderSync();
+      redrawYtd(slug);
+      say('입력분을 지웠습니다 — 시트 값으로 되돌림. 저장하려면 «GitHub에 저장»', true);
+    });
+  }
+
   // ── 조립 ────────────────────────────────────────────────────────────────
-  function renderFund(slug) { renderLedger(slug); renderPerf(slug); }
+  function renderFund(slug) { renderLedger(slug); renderPerf(slug); renderNavUpd(slug); }
   function renderAll() {
     renderSync();
     Object.keys(PF.funds).forEach(renderFund);
