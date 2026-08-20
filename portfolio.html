@@ -131,7 +131,7 @@
 .asofline{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px}
 #content h3{font-family:var(--mono);font-size:15.5px;margin:34px 0 12px;padding-top:18px;border-top:1px solid var(--line-soft)}
 .hnote{font-size:.75em;color:var(--muted);font-weight:400;margin-left:8px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:0 0 16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:13px 15px}
 .ck{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .cv{font-family:var(--mono);font-size:21px;font-weight:600;margin:5px 0 3px}
@@ -140,9 +140,18 @@
 .chtitle{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px}
 .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--panel);margin:0 0 14px}
 .tblwrap.tall{max-height:560px;overflow-y:auto}
-#content table{border-collapse:collapse;width:100%;font-size:13.5px}
-#content thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-#content tbody td{padding:6px 10px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+#content table{border-collapse:collapse;width:100%;font-size:12.5px}
+#content thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+#content tbody td{padding:5px 7px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+/* 글줄 셀(이름·전략·섹터)은 폭을 잡아먹는 주범이다 — 말줄임으로 상한. 숫자(.tnum)·티커(.tk)는 그대로 */
+#content table.big td:not(.tnum):not(.tk){max-width:150px;overflow:hidden;text-overflow:ellipsis}
+/* 좁은 창: 보유표(.tall)의 섹터(3열)·패시브수량(8열)을 접는다 — 티커·비중·차이·괴리가 본체다 */
+@media(max-width:760px){
+  #content tbody td{padding:4px 6px}
+  #content table.big td:not(.tnum):not(.tk){max-width:105px}
+  .tall table th:nth-child(3),.tall table td:nth-child(3),
+  .tall table th:nth-child(8),.tall table td:nth-child(8){display:none}
+}
 #content table.mini{width:auto;min-width:340px;margin:0 0 16px}
 .tnum{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tk{font-family:var(--mono);font-weight:600}
