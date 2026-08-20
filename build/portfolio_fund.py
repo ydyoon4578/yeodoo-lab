@@ -531,7 +531,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         ("전략 NAV 기여", ("%+.1f bp" % tot_bp) if perf else "—", "매매 시점 일치 BM 대비", tot_bp),
     ]
     for ci, (k, v, sub, sign) in enumerate(cards):
-        # cv/cs 에 id — 웹 앱의 «최신 기준가 반영»이 카드 0~2(NAV·연초후·초과)를 갱신한다.
+        # cv/cs 의 id 는 남긴다 — 지금은 읽는 곳이 없지만 자리 표식이고, 있어도 해가 없다.
         H.append('<div class="card"><div class="ck">%s</div><div class="cv %s" id="cv-%s-%d">%s</div>'
                  '<div class="cs" id="cs-%s-%d">%s</div></div>'
                  % (esc(k), cls_sign(sign), slug, ci, esc(v), slug, ci, esc(sub)))
@@ -776,7 +776,6 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 <li><b>배당 미반영</b> — 종가는 수정주가가 아니다. 보유 기간이 짧아 왜곡은 작지만 0이 아니다.</li>
 <li>매매~기준일 사이 하루 ±40%를 넘는 가격변동이 있으면 <b>분할 의심 ⚠</b>를 단다 — 벤더가 분할을 소급 반영하지 않은 사고가 실측된 바 있다.</li>
 <li>입력: 사내 시스템 export(NAV·환율·보유)와 사내 매매 원장. 갱신은 수동이다 — 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
-<li><b>최신 기준가 반영</b>은 시트보다 새 기준가·환율을 손으로 넣어 차트·연초후 카드를 하루 앞당기는 것이다. 지수 짝은 동봉된 미국 종가에서 자동으로 찾고(T-1 규약 동일), 입력분은 웹 원장에 저장된다. <b>다음 export 반영 뒤에는 «되돌리기»로 지우는 것이 맞다</b> — 시트 값이 정본이다.</li>
 <li><b>웹 원장</b>은 이 페이지에서 입력한 전략·매매다. 저장하면 열람 암호로 AES-256-GCM 암호화되어 저장소의 <span class="tk">data/portfolio_user.json</span> 에 커밋된다 — 평문은 저장소·서버 어디에도 남지 않고, git 이력이 곧 버전 관리라 언제든 과거 버전으로 되돌릴 수 있다. 쓰기 토큰은 이 기기 브라우저에만 저장된다.</li>
 <li><b>웹 백테스트는 진단용이다.</b> 유니버스가 «현재» 구성종목이라 <b>생존편향</b>이 있고(랩 실측: 스타일에 따라 수~수십%p 부풀림), 지수는 PR·종가는 무배당이며, 창이 단일(패널 @PANEL@거래일)이라 통계적 유의성을 말할 수 없다. 배포 판단은 랩의 PIT 백테스트로만 한다.</li>
 </ul></div>""".replace("@PANEL@", str(PANEL_DAYS))

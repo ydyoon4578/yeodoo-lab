@@ -58,6 +58,10 @@ PAGES = {
     # 사내 export(NAV·환율·해외)와 사내 DB 에서 굽는다 — 실펀드 수치라 평문 게시 불가.
     "portfolio": ("portfolio.html", "portfolio_content.html"),
 }
+# 조각 → 그것을 굽는 빌더. 조각이 빌더보다 낡았으면 잠그기 전에 막는다(아래 가드).
+BUILDERS = {
+    "portfolio": "portfolio_fund.py",
+}
 GATE = FRAG = None      # main() 이 --page 로 정한다
 
 ITER = 310000          # 게이트에 박힌 값과 같아야 한다
@@ -138,6 +142,8 @@ def main() -> int:
                     help="잠글 페이지(기본 kb — 종전 동작 그대로)")
     ap.add_argument("--check", action="store_true",
                     help="기록된 ph 와 조각 평문이 맞는지만 확인하고 끝낸다")
+    ap.add_argument("--stale-ok", action="store_true",
+                    help="조각이 빌더보다 낡아도 잠근다(낡은 조각 가드 우회)")
     a = ap.parse_args()
 
     global GATE, FRAG
@@ -162,6 +168,21 @@ def main() -> int:
         return 1
     frag = read_exact(FRAG)
     ph_now = fingerprint(frag)
+
+    # 🚨 낡은 조각 가드(2026-08-21). 같은 사고가 이틀에 두 번 났다 — 빌더를 고쳐 푸시했는데
+    #   사내 PC 에서 «조각 재생성 없이» kb_lock 만 돌려, 옛 조각(걷어낸 입력 폼 포함)이
+    #   그대로 다시 잠겨 배포됐다. 잠근 쪽에서는 성공으로 보여서 화면을 열기 전까지 모른다.
+    #   git pull 이 빌더 파일의 mtime 을 지금으로 만드니, «조각이 빌더보다 오래됨» 은
+    #   정확히 그 실수의 지문이다. --stale-ok 로만 뚫을 수 있다.
+    _bld = BUILDERS.get(a.page)
+    if _bld and not a.stale_ok:
+        _bp = os.path.join(ROOT, "build", _bld)
+        if os.path.exists(_bp) and os.path.getmtime(FRAG) < os.path.getmtime(_bp):
+            print("🚨 조각이 빌더보다 낡았다 — build/%s 가 조각 생성 이후에 바뀌었다." % _bld)
+            print("   이대로 잠그면 옛 화면이 다시 배포된다. 먼저:")
+            print("   python build/%s" % _bld)
+            print("   (알고 그러는 것이면 --stale-ok 를 붙일 것)")
+            return 1
 
     if a.check:
         cur = dict(re.findall(r'(\w+):"([^"]*)"', m.group(0))).get("ph")
