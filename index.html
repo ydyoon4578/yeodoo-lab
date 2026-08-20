@@ -431,6 +431,11 @@
   /* 스타일 성과표 — 지수 2행을 위에, 스타일 9행을 아래에. 두 묶음의 경계를 선으로 못 박는다
      (같은 표에 있다고 같은 것이 아니다 — 위는 '무엇 대비인가'이고 아래가 본문이다). */
   .stwrap{margin:10px 0 0;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel);min-height:460px}
+  /* 기간별 수익률 표를 절반 폭으로 줄이고 오른쪽에 전략별 성과 표를 나란히(사용자 요청 2026-08-20).
+     minmax(0,1fr) 이어야 한다 — 1fr 만 쓰면 안의 표(min-width:500px)가 칸을 밀어 격자가 터진다.
+     좁은 화면에선 위아래로 — half 폭에 표 두 개를 우겨 넣으면 둘 다 못 읽는다. */
+  .perfcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+  @media(max-width:1150px){.perfcols{grid-template-columns:1fr}}
   /* ── 기간별 수익률 막대 그림(2026-08-11) — 아래 표와 같은 자료를 그림으로 ──────
      ⚠ 색은 이 표의 규칙을 그대로 따른다(.up=--deploy · .dn=--hot). 표와 그림이 같은
        숫자를 다른 색으로 말하면 안 된다. */
@@ -1207,18 +1212,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <h2 class="lbl" id="st-h">기간별 수익률 <span class="sub" id="st-sub">· 불러오는 중…</span><a class="more2" href="macro.html#nowperf-h">전체 표 →</a></h2>
       <!-- 표 위의 막대 그림. 아래 표와 **같은 배열**을 그린다(계산 없음) — drawStChart() 참조. -->
       <div id="stchart"></div>
+      <!-- 2026-08-20 사용자 요청 — 표를 절반 폭으로, 오른쪽엔 전략별 성과 표.
+           전략별 성과 섹션(#top-sec)을 통째로 이 오른 칸으로 옮겼다(아이디·JS 는 그대로). -->
+      <div class="perfcols">
+      <div>
       <div class="stwrap"><table class="sttbl" id="sttbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <!-- 각주는 JS가 채운다 — 랩 행이 실제로 그려졌을 때만 나온다(style_trails.json 이 없으면 빈다). -->
       <p class="stnote" id="stnote"></p>
-      <!-- ⚠ 여기 있던 구성종목 블록(#stmore)을 없앴다(사용자 요청 2026-08-02).
-           ① 랩 스크린 묶음은 홈에서 통째로 뺐다 — screener.html 이 그 화면이다.
-           ② 지수 방법론은 **위 표 안으로 들어갔다.** 따로 두면 수익률 7칸이 위 ETF 표와
-              열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
-              한 스타일이 한 줄을 쓴다. -->
-
-    </section>
-
-    <!-- ── 전략별 성과 (사용자 요청 2026-08-13) ───────────────────────────
+      </div>
+      <div>
+    <!-- ── 전략별 성과 (사용자 요청 2026-08-13 · 2026-08-20 기간별 수익률 오른 칸으로 이동) ──
          🚨 이 랩은 등급을 안 매긴다(전부 '측정만'). 그런데 최근 수익률로 줄을 세우면
            그것이 곧 추천으로 읽힌다 — 이 랩이 가장 경계하는 화면이다.
            그래서 셋을 화면에 **같이** 싣는다: ① 이건 순위지 판정이 아니라는 말,
@@ -1232,6 +1235,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       <div class="stwrap"><table class="sttbl" id="tptbl"><tbody><tr><td class="skel2">불러오는 중…</td></tr></tbody></table></div>
       <p class="stnote" id="tpnote"></p>
     </section>
+      </div>
+      </div>
+      <!-- ⚠ 여기 있던 구성종목 블록(#stmore)을 없앴다(사용자 요청 2026-08-02).
+           ① 랩 스크린 묶음은 홈에서 통째로 뺐다 — screener.html 이 그 화면이다.
+           ② 지수 방법론은 **위 표 안으로 들어갔다.** 따로 두면 수익률 7칸이 위 ETF 표와
+              열이 안 맞는다. 같은 표에 넣으면 정렬은 공짜고, 종목 10개는 접힌 행으로 내려
+              한 스타일이 한 줄을 쓴다. -->
+
+    </section>
+
 
     <!-- 🚨 2026-08-19 사용자 요청 — 시장 국면·오늘의 신호를 **맨 아래로** 내렸다.
          위쪽은 «오늘 무슨 일이 있었나»(히트맵·기간별 수익률·전략별 성과)이고,
@@ -2647,6 +2660,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 섹터·산업 — **지수 아래, 스타일 ETF 위**(사용자 요청 2026-08-03). 시장을 넓은 것에서
     // 좁은 것으로 읽는 순서이고, 셋 다 같은 열·같은 창이라 한 표에 설 수 있다.
     h+=mkSegRows(ncol);
+    // 🚨 2026-08-20 사용자 요청 — 스타일 두 묶음(상장 스타일 ETF · 지수 방법론 백테스트)을
+    //   홈 표에서 뺀다. 표가 절반 폭이 되면서 지수·섹터·산업만 남긴다.
+    //   ⚠ 지운 것이 아니다 — 위 막대 그림의 스타일 판은 그대로고, 전체 표는 macro.html,
+    //     방법론 상세는 style.html 에 있다(메뉴에서 내리는 것 ≠ 지우는 것).
+    //   되살리려면 이 플래그만 켜면 된다 — 아래 두 묶음 코드는 그대로 있다.
+    var HOME_STYLE_ROWS=false;
+    if(HOME_STYLE_ROWS){
     // ⚠ 어느 ETF 를 싣는지는 짝 판정(labOf)이 정한다 — 랩 방법론과 짝이 있는 것만 싣는다.
     // 🚨 2026-08-10 — 짝이 없어도 싣는 둘을 두었다(사용자 결정). 짝이 없다는 것과 볼 필요가
     //   없다는 것은 다르다.
@@ -2719,6 +2739,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<em><b>수익률은 백테스트</b> <span class="hint" style="cursor:help">ⓘ</span></em></th></tr>';
       keys.forEach(function(k){ h+=stIdxRow(k); });
     }
+    }// HOME_STYLE_ROWS
     box.innerHTML=h+'</tbody>';
     // 펼침 — 표를 다시 그려도 리스너가 쌓이지 않게 **위임으로 한 번만** 건다.
     // 행마다 걸면 innerHTML 을 갈아 끼울 때 옛 리스너가 남아 같은 클릭이 두 번 처리된다.
@@ -2791,7 +2812,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   그것만 남긴다(사용자 요청). 세부 개수는 macro.html '전체 표 →' 가 계속 낸다.
       s.textContent=(j.as_of?'· 기준일 '+j.as_of:'');
     }
-    drawStNote(pair.length?SLAB:null, pair.length?solo:[]);
+    // ⚠ pair·solo 는 HOME_STYLE_ROWS 블록 안 선언이라 꺼진 지금은 undefined 다 —
+    //   가드 없이 .length 를 읽으면 홈 렌더 검사가 죽는다(2026-08-20 실제로 잡았다).
+    drawStNote((typeof pair!=='undefined'&&pair&&pair.length)?SLAB:null,
+               (typeof pair!=='undefined'&&pair&&pair.length)?solo:[]);
   }
   // 유니버스 편향 실측 한 줄 — style_trails.json 의 pit 블록에서 만든다(build/style_pit.py 산출).
   // 값이 없으면 빈 문자열을 돌려 정성 문구만 남는다. **수치를 손으로 적지 않는다.**
