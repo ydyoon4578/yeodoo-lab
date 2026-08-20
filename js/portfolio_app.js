@@ -401,6 +401,12 @@
   function renderSync() {
     var box = el('pfsync');
     if (!box) return;
+    // 🚨 2026-08-20 사용자 지시 — «이력·되돌리기·토큰등록 이런거 다 안보이게. 필요하면 말할게».
+    //   평소에는 바를 통째로 숨긴다. 단 **숨겨서 잃으면 안 되는 상태**에서는 나온다:
+    //   저장 안 된 편집(S.dirty — 안 보이면 저장할 길이 없다) · 원장 로드 실패 ·
+    //   충돌/이력 패널이 열려 있을 때. 조용한 초록불만 숨기는 것이다.
+    var _panelOpen = el('pfpanel') && !el('pfpanel').hidden;
+    box.style.display = (S.dirty || S.loadErr || _panelOpen) ? '' : 'none';
     if (!el('pfrow')) {
       box.innerHTML = '<div id="pfrow"></div><div class="syncpanel" id="pfpanel" hidden></div>';
       el('pfrow').addEventListener('click', function (e) {

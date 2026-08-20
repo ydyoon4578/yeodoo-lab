@@ -640,7 +640,28 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                  check=perf_check,
                  cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
                  held={t: round(h["qty"], 2) for t, h in held.items()})
-    return "\n".join(H), dict(fund=fund, asof=asof, nav_d=nav_d, sleeve_ratio=w_stk,
+    # ── 배치 재정렬 (2026-08-20 사용자 지시) ─────────────────────────────────
+    # «차트가 위쪽에 배치되게 하고 보유 vs 지수 이런 큰 테이블은 아래쪽에.»
+    # 위 코드는 계산 의존 순서(개요 수치 → 표)대로 쌓는다 — 그 순서는 유지하고,
+    # **표시 순서만** 여기서 바꾼다: 차트 → ①개요 → 매매 → 성과 → 보유 vs 지수.
+    # 조립 코드를 통째로 재배열하지 않는 이유: 수치 계산이 문서 순서에 끼어 있어
+    # 옮기다 참조가 깨진다(fund_pts 를 카드가 먼저 쓴다). 문자열 재배열이 안전하다.
+    pane = "\n".join(H)
+    import re as _re
+    _h1 = pane.index('<h3>① 펀드 개요')
+    _h2 = pane.index('<h3>② 보유 vs 지수')
+    _h3 = pane.index('<h3>③ 매매 원장')
+    _tail = pane.rindex('</section>')
+    head, sec1, sec2, sec34 = pane[:_h1], pane[_h1:_h2], pane[_h2:_h3], pane[_h3:_tail]
+    # ①에서 차트만 떼어 머리 바로 뒤로 — 자산구성 표는 개요에 남긴다
+    _m = _re.search(r'<div class="chart" id="ytd-[^"]+">.*?</div>', sec1, _re.S)
+    chart, sec1 = _m.group(0), sec1[:_m.start()] + sec1[_m.end():]
+    # 번호는 표시 순서를 따른다 — 안 바꾸면 ①③④② 로 읽혀 빠진 줄이 있는 줄 안다
+    sec34 = sec34.replace('<h3>③ 매매 원장', '<h3>② 매매 원장', 1)
+    sec34 = sec34.replace('<h3>④ 전략 성과·기여', '<h3>③ 전략 성과·기여', 1)
+    sec2 = sec2.replace('<h3>② 보유 vs 지수', '<h3>④ 보유 vs 지수', 1)
+    pane = head + chart + sec1 + sec34 + sec2 + pane[_tail:]
+    return pane, dict(fund=fund, asof=asof, nav_d=nav_d, sleeve_ratio=w_stk,
                               n_stocks=len(held), n_match=n_match, n_cons=len(cmap), meta=fmeta)
 
 
