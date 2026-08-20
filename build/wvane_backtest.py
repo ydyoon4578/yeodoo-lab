@@ -110,7 +110,8 @@ def build_weeks(dts, px, W, AL, we_idx, bsig):
             skipped.append([d0, "비중 결측"])
             continue
         port, drop = [], 0.0
-        for t, w in rows:
+        for row in rows:                     # v2 캐시(gics 3원소)·v1(2원소) 모두 허용
+            t, w = row[0], row[1]
             key = None
             if px.get(t) and px[t][i0] and px[t][i1]:
                 key = t
