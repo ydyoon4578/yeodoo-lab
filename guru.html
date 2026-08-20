@@ -657,6 +657,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       각 운용사의 <b>보고 총액 대비 비중</b>을 함께 적습니다 — 비중이 낮으면 그만큼 안 보이는 것입니다.</p>
     <!-- 🚨 2026-08-19 — 27곳이 되면서 격자 목록이 안 읽혔다(사용자 요청).
          explorer·stocks 와 같은 뼈대로 바꾼다: 왼쪽 검색+목록 · 오른쪽 상세. -->
+    <!-- 전체 성과 한 판 (2026-08-20 사용자 요청) — «SPX·NDX·모든 거장을 시계열로».
+         🚨 레그는 «따라 사기»(공시 2개월 뒤 매수) 다 — as-of 는 따라 살 수 없던 성과라
+           27줄을 한 판에 깔면 그 그림 전체가 매매 불가능한 것이 된다.
+         ⚠ 늦게 합류한 운용사(엘리엇 2020 등)는 자기 시작월에 1.0 에서 출발한다 — 남들이
+           3배일 때 1.0 에서 시작하는 것이 맞고, 그걸 지수 시작점으로 당겨 붙이면 거짓이다. -->
+    <div class="card" style="margin:0 0 14px;padding:14px 16px">
+      <div class="qphd">전체 성과 한 판 <span class="qpsub" id="allqp-sub">따라 사기(공시 2개월 뒤 매수) ·
+        각 줄은 자기 첫 매수월에 1.0 에서 출발 · 로그축 · 무비용</span></div>
+      <canvas id="allqp" height="300" style="width:100%;display:block;cursor:crosshair"></canvas>
+      <div class="qplgd" id="allqp-lgd"><i style="background:var(--muted)"></i>S&amp;P 500
+        <i style="background:var(--marg)"></i>나스닥 100
+        <i style="background:var(--accent)"></i><span id="allqp-cur">선택한 운용사</span>
+        <span style="margin-left:8px">나머지 줄은 회색 — <b>선 위에 마우스</b>를 올리면 이름이,
+        누르면 그 운용사 카드가 열립니다</span></div>
+    </div>
     <div class="gboard">
       <aside class="gside">
         <input id="gq" type="search" placeholder="운용사 검색" aria-label="운용사 검색">
@@ -891,6 +906,105 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        '두 지수 다 가격지수라 배당이 빠집니다.</p></div>';
     return h;
   }
+
+  // ── 전체 성과 한 판 — 27곳 + SPX + NDX 를 한 캔버스에 ─────────────────────
+  // 🚨 새 수를 만들지 않는다. guru_quarter_perf 의 tradeable.curve(월 라벨·배수)를 그대로
+  //   그린다. 벤치는 **가장 긴 구간 운용사의 spx·ndx 계열**을 쓴다 — 같은 파일 안 값이라
+  //   창이 어긋날 자리가 없다.
+  var AQ={hover:null, hit:[]};        // hover=운용사 인덱스 · hit=선분 판정용 캐시
+  function paintAllQP(){
+    var cv=el('allqp'); if(!cv)return;
+    var T=QP&&QP.tradeable; if(!T||!T.curve){cv.style.display='none';return;}
+    var names={}; (T.summary||[]).forEach(function(x){names[String(x.cik)]=x.name;});
+    var ciks=Object.keys(T.curve).filter(function(c){return (T.curve[c]||[]).length>1;});
+    if(!ciks.length){cv.style.display='none';return;}
+    // 월 라벨 격자 — 모든 곡선의 d 를 모아 정렬(같은 파일이라 서로 부분집합이다)
+    var mset={}; ciks.forEach(function(c){T.curve[c].forEach(function(q){mset[q.d]=1;});});
+    var M=Object.keys(mset).sort(), mi={}; M.forEach(function(m,i){mi[m]=i;});
+    // 벤치 — 제일 긴 곡선에서
+    var longest=ciks.reduce(function(a,b){return T.curve[a].length>=T.curve[b].length?a:b;});
+    var W=cv.clientWidth||900,H=300,dpr=window.devicePixelRatio||1;
+    cv.width=W*dpr;cv.height=H*dpr;
+    var x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+    var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';};
+    var PL=44,PR=10,PT=8,PB=20;
+    var lo=1e9,hi=-1e9;
+    ciks.forEach(function(c){T.curve[c].forEach(function(q){
+      var v=q.nav/100; if(v<lo)lo=v; if(v>hi)hi=v;});});
+    T.curve[longest].forEach(function(q){[q.spx/100,q.ndx/100].forEach(function(v){
+      if(v<lo)lo=v; if(v>hi)hi=v;});});
+    var L=function(v){return Math.log(Math.max(v,1e-6));};
+    var lo2=L(lo),hi2=L(hi); if(!(hi2>lo2))hi2=lo2+.1;
+    var X=function(i){return PL+(W-PL-PR)*(M.length<2?0:i/(M.length-1));};
+    var Y=function(v){return PT+(H-PT-PB)*(1-(L(v)-lo2)/(hi2-lo2));};
+    x.font='11px ui-monospace,monospace';
+    // 눈금 — 1·2·4·8…배
+    for(var g=1;g<=hi;g*=2){
+      if(g<lo&&g*2<lo)continue;
+      x.strokeStyle=css('--line');x.globalAlpha=.55;x.beginPath();
+      x.moveTo(PL,Y(g));x.lineTo(W-PR,Y(g));x.stroke();x.globalAlpha=1;
+      x.fillStyle=css('--muted');x.fillText(g+'배',4,Y(g)+4);}
+    var yr='';
+    M.forEach(function(m,i){var y=m.slice(0,4);
+      if(y!==yr&&(+y)%3===0){yr=y;
+        x.strokeStyle=css('--line');x.globalAlpha=.4;x.beginPath();
+        x.moveTo(X(i),PT);x.lineTo(X(i),H-PB+3);x.stroke();x.globalAlpha=1;
+        x.fillStyle=css('--muted');x.fillText(y,X(i)-12,H-6);}});
+    // 줄 그리기 + 선분 캐시(hover 판정용)
+    AQ.hit=[];
+    function line(pts,val,color,wd,alpha,tag){
+      x.strokeStyle=color;x.lineWidth=wd;x.globalAlpha=alpha;x.beginPath();
+      var prev=null;
+      pts.forEach(function(q){
+        var px=X(mi[q.d]),py=Y(val(q));
+        if(prev)x.lineTo(px,py); else x.moveTo(px,py);
+        if(prev&&tag!=null)AQ.hit.push([prev[0],prev[1],px,py,tag]);
+        prev=[px,py];});
+      x.stroke();x.globalAlpha=1;}
+    var curCik=(D&&D.managers[cur])?String(D.managers[cur].cik):null;
+    ciks.forEach(function(c,ci){
+      if(c===curCik||ci===AQ.hover)return;           // 강조 줄은 맨 위에 다시
+      line(T.curve[c],function(q){return q.nav/100;},css('--muted'),1,.28,ci);});
+    line(T.curve[longest],function(q){return q.spx/100;},css('--muted'),2,.9,null);
+    line(T.curve[longest],function(q){return q.ndx/100;},css('--marg'),2,.9,null);
+    ciks.forEach(function(c,ci){
+      var em=(c===curCik),hv=(ci===AQ.hover);
+      if(!em&&!hv)return;
+      line(T.curve[c],function(q){return q.nav/100;},css('--accent'),em?2.4:1.8,hv&&!em?.85:1,ci);
+      // 줄 끝에 이름 — 강조된 것에만. 27개 다 적으면 오른쪽이 글자로 덮인다.
+      var pts=T.curve[c],lastp=pts[pts.length-1];
+      x.fillStyle=css('--accent');
+      x.fillText((names[c]||c)+' '+(lastp.nav/100).toFixed(1)+'배',
+                 Math.min(X(mi[lastp.d])+4,W-150),Y(lastp.nav/100)-4);});
+    AQ._geom={X:X,Y:Y,ciks:ciks,names:names};
+  }
+  (function(){
+    var cv=el('allqp'); if(!cv)return;
+    function near(ev){
+      var r=cv.getBoundingClientRect(),mx=ev.clientX-r.left,my=ev.clientY-r.top;
+      var best=null,bd=64;                            // 8px 이내만 잡는다(제곱)
+      AQ.hit.forEach(function(sg){
+        var x0=sg[0],y0=sg[1],x1=sg[2],y1=sg[3];
+        var dx=x1-x0,dy=y1-y0,len2=dx*dx+dy*dy||1;
+        var t=Math.max(0,Math.min(1,((mx-x0)*dx+(my-y0)*dy)/len2));
+        var qx=x0+t*dx-mx,qy=y0+t*dy-my,d2=qx*qx+qy*qy;
+        if(d2<bd){bd=d2;best=sg[4];}});
+      return best;}
+    cv.addEventListener('mousemove',function(ev){
+      var h=near(ev);
+      if(h!==AQ.hover){AQ.hover=h;paintAllQP();
+        cv.title=(h==null)?'':((AQ._geom&&AQ._geom.names[AQ._geom.ciks[h]])||'');}});
+    cv.addEventListener('mouseleave',function(){if(AQ.hover!=null){AQ.hover=null;paintAllQP();}});
+    cv.addEventListener('click',function(ev){
+      var h=near(ev); if(h==null||!D)return;
+      var cik=AQ._geom.ciks[h];
+      var i=D.managers.findIndex(function(m){return String(m.cik)===cik;});
+      if(i>=0){cur=i;renderPf();
+        Array.prototype.forEach.call(el('mgrs').querySelectorAll('.mg'),function(x,j){
+          x.setAttribute('aria-pressed',j===cur?'true':'false');});
+        var lbl=el('allqp-cur'); if(lbl)lbl.textContent=D.managers[i].label;
+        paintAllQP();}});
+  })();
 
   // 누적 곡선 — 분기 수익을 이어 붙인다(1 에서 시작). 캔버스 하나짜리라 여기 둔다.
   function paintQP(){
@@ -1297,7 +1411,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   어떻게 됐나 — build/guru_quarter_perf.py 가 굽는다.
   var QP=null;
   fetch('data/guru_qperf.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
-    .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); }catch(e){} })['catch'](function(){});
+    .then(function(j){ QP=j; try{ if(D&&D.managers)renderPf(); paintAllQP(); }catch(e){} })['catch'](function(){});
   // 🚨 2026-08-19 — 탭 이름을 «겹침 전략» → «전략» 으로 바꾸며 셋을 한자리에 모은다.
   //   겹침(guru_overlap) · 컨빅션 복제(guru_clone) · 운용사별 복제(guru17).
   //   ⚠ 새 백테스트를 여기서 만들지 않는다 — 셋 다 빌더가 이미 구운 것을 전사만 한다.
@@ -1365,13 +1479,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           if(n.classList.contains('mg')&&n.style.display!=='none'){any=true;break;}
         hd.style.display=any?'':'none';});
     });
-    window.addEventListener('resize',function(){ try{paintQP();}catch(e){} });
+    window.addEventListener('resize',function(){ try{paintQP();paintAllQP();}catch(e){} });
     el('mgrs').addEventListener('click',function(e){
       var b=e.target.closest('.mg'); if(!b)return;
       cur=parseInt(b.getAttribute('data-i'),10);
       Array.prototype.forEach.call(el('mgrs').querySelectorAll('.mg'),function(x,i){
         x.setAttribute('aria-pressed',i===cur?'true':'false');});
       renderPf();
+      // 전체 판의 강조 줄도 따라간다 — 목록과 그림이 다른 운용사를 가리키면 안 된다
+      try{var lbl=el('allqp-cur'); if(lbl&&D.managers[cur])lbl.textContent=D.managers[cur].label;
+          paintAllQP();}catch(e){}
     });
   })['catch'](function(){
     el('pfout').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
