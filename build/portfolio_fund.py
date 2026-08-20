@@ -373,11 +373,20 @@ def svg_lines(series, labels=None, w=760, h=210, pad=40):
     """series = [(이름, [(x라벨, y)…])…]. y 눈금 상하한 + 0선만 — 장식은 셸 CSS 가 한다."""
     if not series or not series[0][1]:
         return ""
-    ys = [y for _n, pts in series for _x, y in pts]
+    # 계열 = (이름, 점들[, 색[, 점선여부]]). 색을 안 주면 기본 팔레트 순서.
+    series = [(t + (None, False)[len(t) - 2:]) if len(t) < 4 else t for t in series]
+    ys = [y for t in series for _x, y in t[1]]
     lo, hi = min(ys), max(ys)
     if hi - lo < 1e-9:
         hi = lo + 1.0
-    n = max(len(p) for _n, p in series)
+    # x 도메인 = 모든 계열의 라벨 합집합(첫 계열 순서 우선, 새 라벨은 뒤에 덧붙임).
+    # 첫 계열만 세면 예상 꼬리(첫 계열에 없는 날짜)가 캔버스 밖으로 나간다 — 실측 868>760.
+    xi = {}
+    for t in series:
+        for lb, _v in t[1]:
+            if lb not in xi:
+                xi[lb] = len(xi)
+    n = len(xi)
     colors = ["var(--accent)", "var(--champ)", "var(--rp)", "var(--hot)", "var(--deploy)"]
 
     def X(i):
@@ -390,9 +399,14 @@ def svg_lines(series, labels=None, w=760, h=210, pad=40):
     if lo < 0 < hi:
         parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="var(--line)" stroke-dasharray="3 3"/>'
                      % (pad, Y(0), w - 10, Y(0)))
-    for k, (_name, pts) in enumerate(series):
-        d = " ".join("%s%.1f,%.1f" % ("M" if i == 0 else "L", X(i), Y(v)) for i, (_x, v) in enumerate(pts))
-        parts.append('<path d="%s" fill="none" stroke="%s" stroke-width="1.8"/>' % (d, colors[k % len(colors)]))
+    # 모든 점을 라벨의 도메인 위치에 놓는다 — 인덱스로 놓으면 짧은 계열(예상 꼬리 2점)이
+    # 왼쪽 끝에 그려진다.
+    for k, t in enumerate(series):
+        _name, pts, color, dash = t[0], t[1], t[2] or colors[k % len(colors)], t[3]
+        d = " ".join("%s%.1f,%.1f" % ("M" if i == 0 else "L", X(xi[lb]), Y(v))
+                     for i, (lb, v) in enumerate(pts))
+        parts.append('<path d="%s" fill="none" stroke="%s" stroke-width="1.8"%s/>'
+                     % (d, color, ' stroke-dasharray="4 3"' if dash else ''))
     parts.append('<text x="2" y="14" font-size="10" fill="var(--muted)" font-family="var(--mono)">%.1f</text>' % hi)
     parts.append('<text x="2" y="%d" font-size="10" fill="var(--muted)" font-family="var(--mono)">%.1f</text>' % (h - 24, lo))
     x0 = series[0][1][0][0] if series[0][1] else ""
@@ -453,11 +467,27 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         if iv and fv and i0 and f0:
             fund_pts.append((d, bp / bp0 * 100))
             bm_pts.append((d, (iv * fv) / (i0 * f0) * 100))
+    # ── 예상 꼬리 (2026-08-20 사용자 지시) ──────────────────────────────────
+    # «차트 최근 1일(아직 NAV 에 반영 안 된 부분)은 빨간색으로 표시해줘. 예상이라는 의미로.»
+    # 마지막 기준가가 담은 미국 종가(paired)보다 새 미국 종가(asof_us 쪽)가 있으면,
+    # 그 구간의 지수 수익률을 기준가에 얹어 **추정** 점을 만든다 — 펀드는 지수를 복제하므로
+    # 근사가 서지만, 전략 틸트·비용이 빠진 값이라 «예상» 이라 부르고 점선·빨강으로 가른다.
+    # ⚠ 환율은 최신 시트 값(fx_v)을 그대로 쓴다 — 다음 날 한국마감 환율은 아직 없다.
+    est_f, est_b = [], []
+    if fund_pts:
+        _paired_d, _paired_lvl = last_lt(lvl_i, nav_ser[-1][0])
+        _new = [(d2, v2) for d2, v2 in sorted(lvl_i.items())
+                if d2 > _paired_d and v2 is not None and v2 != _paired_lvl]
+        # 패딩(전일 복제) 행은 값이 같아 걸러진다 — 남는 것이 진짜 새 종가다
+        if _new and _paired_lvl:
+            _ed, _ev = _new[-1]
+            _fxr = fx_v / (last_leq(fx, nav_ser[-1][0])[1] or fx_v)
+            est_f = [fund_pts[-1], (_ed, fund_pts[-1][1] * (_ev / _paired_lvl) * _fxr)]
+            est_b = [bm_pts[-1], (_ed, (_ev * fx_v) / (i0 * f0) * 100)]
     ytd_f = fund_pts[-1][1] / 100 - 1 if fund_pts else None
     ytd_b = bm_pts[-1][1] / 100 - 1 if bm_pts else None
 
     cons_d, cmap = cons[idx]
-
     my_trades = [t for t in trades if t["index"] == idx]
     asof_us = axis[-1]      # 최신 미국 거래일(패딩 제외 축의 끝) — 매매 평가·성과의 기준
     perf = strat_perf(my_trades, px, lvl_i, asof_us) if my_trades else {}
@@ -487,29 +517,19 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                  '<div class="cs" id="cs-%s-%d">%s</div></div>'
                  % (esc(k), cls_sign(sign), slug, ci, esc(v), slug, ci, esc(sub)))
     H.append("</div>")
-    # ── 최신 기준가 반영 (2026-08-20 사용자 지시) ────────────────────────────
-    # «내가 최신 NAV랑 환율을 넣고 업데이트 버튼을 클릭하면 그때 D-1 성과까지 보여주면 돼.»
-    # 시트가 하루 낡아도(기준가 D → 미국 D−1) 사용자가 오늘 기준가·환율을 손으로 넣으면
-    # 차트·연초후 카드가 하루 더 나아간다. 지수 쪽 짝은 동봉된 지수 레벨(PF.lvl · 최신
-    # 미국 종가까지 있다)에서 last_lt 로 찾으므로 **새 자료가 필요 없다.**
-    # 입력은 웹 원장(doc.navs)에 실려 «GitHub에 저장»으로 같이 저장된다 — 계산은 웹 앱
-    # (js/portfolio_app.js · renderNavUpd)이 한다. 여기는 자리만 만든다.
-    H.append(
-        '<div class="navupd" id="navupd-%s" data-slug="%s">'
-        '<span class="nuk">최신 기준가 반영</span>'
-        '<label>기준일 <input type="date" id="nu-d-%s"></label>'
-        '<label>기준가 <input type="number" step="0.01" min="0" placeholder="%s" id="nu-bp-%s"></label>'
-        '<label>NAV(억) <input type="number" step="0.1" min="0" placeholder="%s" id="nu-nav-%s"></label>'
-        '<label>USD/KRW <input type="number" step="0.01" min="0" placeholder="%s" id="nu-fx-%s"></label>'
-        '<button type="button" class="sb" id="nu-go-%s">업데이트</button>'
-        '<button type="button" class="sb" id="nu-clr-%s" title="입력분을 지우고 시트 값으로 되돌린다">되돌리기</button>'
-        '<span class="nust" id="nu-st-%s"></span>'
-        '<span class="nunote">기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 · 지수 짝은 동봉 종가에서 자동 · '
-        '«GitHub에 저장»을 누르면 웹 원장에 함께 저장됩니다</span></div>'
-        % (slug, slug, slug, num(base_p), slug, num(nav_v / 1e8, 0), slug, num(fx_v), slug, slug, slug, slug))
-    H.append('<div class="chart" id="ytd-%s">%s</div>' % (slug, svg_lines(
-        [("펀드", fund_pts), ("지수", bm_pts)],
-        labels=["펀드 기준가", "%s 원화환산" % idx.split()[0]])))
+    # (2026-08-20 저녁) «최신 기준가 반영» 수동 입력 폼은 반나절 만에 걷었다 —
+    #   사용자: «기준가·NAV·환율 넣는 건 다 빼줘. 번거로운 일이야.»
+    #   대신 아래 차트가 **미반영 최근 거래일을 지수로 추정해** 빨간 선으로 자동 연장한다.
+    _ser = [("펀드", fund_pts), ("지수", bm_pts)]
+    # 예상 꼬리는 **별도 계열**로 얹는다 — 본 계열에 섞으면 색으로 가를 수 없다.
+    if est_f:
+        _ser.append(("펀드 예상", est_f, "var(--hot)", True))
+        _ser.append(("지수 예상", est_b, "var(--hot)", True))
+    H.append('<div class="chart" id="ytd-%s">%s%s</div>' % (slug, svg_lines(
+        _ser, labels=["펀드 기준가", "%s 원화환산" % idx.split()[0]]),
+        ('<p class="pnote" style="margin:6px 0 0;color:var(--hot)">— 빨간 점선 = 아직 기준가에 '
+         '반영 안 된 미국 %s 종가를 지수 수익률로 얹은 <b>예상</b>입니다(환율은 최신 시트 값 고정). '
+         '전략 틸트·비용이 빠진 근사치입니다.</p>' % esc(est_f[1][0])) if est_f else ''))
     H.append('<table class="mini"><thead><tr><th>자산 구성</th><th class="tnum">NAV 대비</th></tr></thead><tbody>')
     for lbl2, w in (("개별주식", w_stk), ("지수 ETF", w_etf), ("현금·증거금", w_cash)):
         H.append('<tr><td>%s</td><td class="tnum">%s</td></tr>' % (esc(lbl2), pct(w, 1)))
@@ -523,6 +543,12 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         h = held.setdefault(r["ticker"], {"qty": 0.0, "val": 0.0, "px": r["px"], "name": r["name"]})
         h["qty"] += r["qty"]
         h["val"] += r["val_krw"]
+    # 전략 매매의 종목별 순수량 — «펀드비중 = 패시브 복제 + 전략 틸트» 를 가르는 열쇠다.
+    # 전략비중 = 순수량 × 원장 종가(USD) × 보유일 환율 ÷ 슬리브. 원장 내부 눈금(fx_hold)과
+    # 같은 환율을 쓴다 — 최신 환율을 섞으면 패시브 = 펀드 − 전략 이 안 맞아떨어진다.
+    strat_q = {}
+    for t in my_trades:
+        strat_q[t["ticker"]] = strat_q.get(t["ticker"], 0.0) + t["qty"]
     n_match = sum(1 for t in held if t in cmap)
     tbl = []
     for t, h in held.items():
@@ -532,7 +558,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         # 패시브 수량 검산은 원장 «내부» 눈금으로 — 원장 평가액(원화)이 원장 종가×보유일 환율로
         # 만들어졌으니, 최신 환율을 섞으면 자기모순이 된다(수량 괴리가 환율 차이로 오염).
         p_qty = (w_i * sleeve / (h["px"] * fx_hold)) if (h["px"] and fx_hold) else None
-        tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 1e4,
+        _sq = strat_q.get(t, 0.0)
+        w_s = (_sq * h["px"] * fx_hold / sleeve) if (h["px"] and fx_hold and _sq) else 0.0
+        tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 100,
+                        ws=w_s, wp=w_f - w_s,
                         qty=h["qty"], pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
     # 문턱 없음(2026-08-20 사용자 지시 «비중 상관없이») — 지수에 있는데 안 든 것 전부.
@@ -547,17 +576,27 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              'placeholder="티커·이름으로 거르기" aria-label="표 필터"></div>' % slug)
     H.append('<div class="tblwrap tall"><table class="big" id="tb-%s"><thead><tr>'
              '<th>티커</th><th>이름</th><th>섹터</th><th class="tnum">지수비중</th><th class="tnum">펀드비중</th>'
-             '<th class="tnum">차이(bp)</th><th class="tnum">수량</th><th class="tnum">패시브수량</th><th class="tnum">괴리</th>'
+             '<th class="tnum">패시브</th><th class="tnum">전략</th>'
+             '<th class="tnum">차이(%%p)</th><th class="tnum">수량</th><th class="tnum">패시브수량</th><th class="tnum">괴리</th>'
              '</tr></thead><tbody>' % slug)
     for r in tbl:
-        # 지수 밖 보유(2026-08-20 사용자 지시) — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는
-        # «아주 작다» 와 «지수에 없다» 가 안 갈린다. 배지로 말한다.
+        # 지수 밖 보유 — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는 «아주 작다» 와
+        # «지수에 없다» 가 안 갈린다. 배지로 말한다.
         _off = ' <span class="offb" title="지수 구성종목이 아니다">밖</span>' if r["t"] not in cmap else ''
-        H.append('<tr><td class="tk">%s'+_off+'</td><td>%s</td><td class="sec">%s</td>'
-                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%+.0f</td>'
-                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>'
+        # 펀드비중 칸 음영 — 초록 = 오버웨이트 · 빨강 = 언더웨이트. 진하기는 |차이| 에 비례
+        # (0.5%p 에서 상한 30%). 색만으로 안 가르고 차이 열이 수치를 그대로 말한다.
+        _shade = min(30.0, abs(r["d"]) * 60.0)
+        _bg = (' style="background:color-mix(in srgb,var(--%s) %.0f%%,transparent)"'
+               % ("good" if r["d"] > 0 else "hot", _shade)) if abs(r["d"]) >= 0.005 else ''
+        H.append(('<tr><td class="tk">%s' + _off + '</td><td>%s</td><td class="sec">%s</td>'
+                 '<td class="tnum">%s</td><td class="tnum"' + _bg + '>%s</td>'
+                 '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
+                 '<td class="tnum %s">%+.2f</td>'
+                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>')
                  % (esc(r["t"]), esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
-                    pct(r["wi"], 2), pct(r["wf"], 2), cls_sign(r["d"]), r["d"],
+                    pct(r["wi"], 2), pct(r["wf"], 2),
+                    pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
+                    cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq"], 0) if r["pq"] is not None else "—",
                     cls_sign(r["dq"] or 0), ("%+d" % round(r["dq"])) if r["dq"] is not None else "—"))
     H.append("</tbody></table></div>")
@@ -659,13 +698,6 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                   for sname, s in perf.items() if s.get("last")}
     fmeta = dict(fund=fund, idx=idx, label=label, asof=asof, asof_us=asof_us,
                  nav=nav_v, base=base_p, fx=fx_v, sleeve=round(sleeve, 0), cons_d=cons_d,
-                 # 연초 후 곡선 원자료 — 웹 앱의 «최신 기준가 반영»이 여기에 사용자 입력
-                 # 점을 이어 붙여 다시 그린다(빌더 곡선과 같은 축·같은 기준 100).
-                 # bp0 = 첫 기준가 · ib0 = 첫 (지수 last_lt × 환율 last_leq) 곱.
-                 ytd=dict(f=[[d, round(v, 4)] for d, v in fund_pts],
-                          b=[[d, round(v, 4)] for d, v in bm_pts],
-                          bp0=bp0, ib0=round((i0 or 0) * (f0 or 0), 6),
-                          nav_d=nav_d, chart_labels=["펀드 기준가", idx.split()[0] + " 원화환산"]),
                  check=perf_check,
                  cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
                  held={t: round(h["qty"], 2) for t, h in held.items()})

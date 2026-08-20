@@ -47,7 +47,9 @@
   /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
      (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
      가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
-  .wrap{max-width:var(--w-read);margin:0 auto;padding:0 20px 70px}
+  /* 2026-08-20 사용자 지시 «좌우 너비가 더 넓은게 좋겠어» — 읽기폭(1120) → 본문폭(1600).
+     보유 vs 지수 11열 표가 읽기폭에서는 이름이 6자에서 잘렸다. */
+  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
   a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
   a.home:hover{border-color:var(--accent);color:var(--ink)}
   button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
@@ -137,20 +139,13 @@
 .cv{font-family:var(--mono);font-size:21px;font-weight:600;margin:5px 0 3px}
 .cs{font-size:12px;color:var(--muted)}
 .chart{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;margin:0 0 16px}
-/* 최신 기준가 반영 — ① 카드 밑 한 줄 폼. 입력은 웹 원장에 실린다(portfolio_app.js) */
-.navupd{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 14px;padding:10px 12px;
-  background:var(--panel-2);border:1px solid var(--line-soft);border-radius:3px;font-size:12.5px}
-.navupd .nuk{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em}
-.navupd label{display:inline-flex;align-items:center;gap:5px;color:var(--ink-2);font-family:var(--mono);font-size:11.5px}
-.navupd input{width:108px;background:var(--panel);border:1px solid var(--line);border-radius:2px;
-  color:var(--ink);font-family:var(--mono);font-size:12px;padding:4px 7px}
-.navupd input[type=date]{width:138px}
-.navupd .sb{font-family:var(--mono);font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer;
-  background:var(--panel);border:1px solid var(--line);border-radius:2px;color:var(--ink)}
-.navupd .sb:hover{border-color:var(--accent)}
-.navupd .nust{font-family:var(--mono);font-size:11.5px;color:var(--hot)}
-.navupd .nust.ok{color:var(--good)}
-.navupd .nunote{flex-basis:100%;color:var(--muted);font-size:11.5px;line-height:1.5}
+/* 매매 원장 — 진입 시점별 묶음 */
+.ledgrp{margin:0 0 14px}
+.ledhd{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;
+  padding:7px 10px;background:var(--panel-2);border:1px solid var(--line-soft);border-bottom:0;border-radius:3px 3px 0 0}
+.ledhd b{font-size:13.5px;color:var(--ink)}
+.ledhd span{color:var(--muted)} .ledhd .pos{color:var(--good)} .ledhd .neg{color:var(--hot)}
+.ledgrp .tblwrap{margin:0}
 /* 지수 밖 보유 배지 — 보유표에서 «비중이 아주 작다» 와 «지수에 없다» 를 가른다 */
 .offb{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--marg);
   border:1px solid var(--marg);border-radius:2px;padding:0 4px;margin-left:5px;vertical-align:1px}
