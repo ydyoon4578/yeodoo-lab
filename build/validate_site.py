@@ -2573,6 +2573,30 @@ try:
     # 🚨 '통과' 는 이 블록이 오류를 **하나도** 안 냈을 때만 찍는다. 종전에는 ④만 보고
     #   찍어서, ①이 실패한 판에서도 "대조 통과" 가 함께 나왔다 — 실패하면서 통과라고
     #   말하는 출력이다(자체 시험에서 잡았다).
+    # ①-e 🚨 2026-08-21 사용자 신고 «1개월 차트에 ETF 3개밖에 안 보임» — home_perf 의 구간
+    #   판은 기준일에 값이 없는 계열을 통째로 뺀다(0 으로 채우지 않는 것은 옳다). 그래서
+    #   상류 assets 의 **하루 구멍**이 그 날을 기준일로 쓰는 판 하나만 조용히 반토막 낸다.
+    #   실측: 7-21 수집 실패 → 1M 판이 스타일 3/8·섹터 7/11. 판마다 계열 수가 같은지 본다.
+    try:
+        _hp = json.load(io.open(os.path.join(ROOT, "data", "home_perf.json"), encoding="utf-8"))
+        _ser = _hp.get("series") or {}
+        _cnt = {h: {k: len((b or {}).get(k) or {}) for k in ("ix", "sec", "sty")}
+                for h, b in _ser.items()}
+        for _k in ("ix", "sec", "sty"):
+            _vals = {h: c[_k] for h, c in _cnt.items() if c.get(_k)}
+            if not _vals:
+                continue
+            _mx = max(_vals.values())
+            _short = {h: v for h, v in _vals.items() if v < _mx}
+            if _short:
+                errors.append("home_perf 구간판 계열 수 불균일(%s) — 최대 %d인데 %s. "
+                              "대개 상류 assets 의 그 기준일 결측이다(기준일: %s)"
+                              % (_k, _mx, ", ".join("%s %d" % kv for kv in sorted(_short.items())),
+                                 ", ".join("%s=%s" % (h, (_hp.get("base_dates") or {}).get(h))
+                                           for h in sorted(_short))))
+    except Exception as _e8:
+        errors.append("home_perf 구간판 대조 실패 — %s" % _e8)
+
     # ①-d 🚨 2026-08-21 — 가족(family) 지도 완전성. explorer 큰 칸이 «팩터·테크니컬·타이밍·
     #   자산배분» 축으로 바뀌면서(사용자 요청) 종목 수익엔진은 strategy_kinds.family_of 손
     #   지도로 갈린다. 지도에 없는 sid 가 생기면 화면이 '미분류' 칸을 만든다 — 손 지도의

@@ -322,6 +322,31 @@ def main() -> int:
         print("❌ 직전 빌드에 있던 티커의 시가가 100일 미만으로 얇다: %s" % ", ".join(_op_thin))
         print("   시가가 비면 오버나이트 계열이 '수익률 0%' 곡선을 낸다 — 중단한다.")
         return 1
+    # 🚨 2026-08-21 — **과거 날짜의 구멍은 티커 소실 가드가 못 잡는다.** 실측: 2026-07-21·22
+    #   두 날에 37·35종이 통째로 비었고(수집 실패), 그 구멍이 하류로 번져 ① bench_px 가
+    #   같은 날 null 이 되어 얼린 백테스트 재실행이 죽었고(2026-08-20 복구) ② home_perf 의
+    #   1개월 판은 기준일이 7-21 이라 그날 값이 없는 ETF 5종이 통째로 빠져 화면에 3종만
+    #   나왔다(사용자 신고). 과거 종가는 확정치라 null 로의 후퇴는 언제나 수집 실패다 —
+    #   이전 판이 갖고 있던 값을 되살린다(bench_px.py 와 같은 규약).
+    try:
+        _prev = json.load(io.open(OUT, encoding="utf-8"))
+        _pdi = {d: i for i, d in enumerate(_prev.get("dates") or [])}
+        _ppx = _prev.get("px") or {}
+        _healed, _hd = 0, set()
+        for _t, _a in px.items():
+            _pv = _ppx.get(_t) or []
+            for _i, _d in enumerate(dates):
+                _j = _pdi.get(_d)
+                if _a[_i] is None and _j is not None and _j < len(_pv) and _pv[_j] is not None:
+                    _a[_i] = _pv[_j]
+                    _healed += 1
+                    _hd.add(_d)
+        if _healed:
+            print("⚠ 상류 결측 %d칸(%d일: %s)을 이전 판 값으로 보존했다 — 수집 실패는 정정이 아니다"
+                  % (_healed, len(_hd), ", ".join(sorted(_hd)[:5])))
+    except Exception as _e:
+        print("  (이전 판 보존 건너뜀: %s)" % str(_e)[:60])
+
     _gone = sorted(prev_tickers() - set(px))
     if _gone:
         print("❌ 직전 빌드에 있던 티커가 사라졌다: %s" % ", ".join(_gone))
