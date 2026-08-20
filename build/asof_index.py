@@ -114,16 +114,28 @@ DOW = ["월", "화", "수", "목", "금", "토", "일"]
 
 
 def sched_of(wf: str) -> str | None:
-    """워크플로의 첫 크론(UTC) → 한국시간 문구. 백업 슬롯은 무시하고 본 슬롯만 쓴다."""
+    """워크플로의 크론(UTC) → 한국시간 문구. 백업 슬롯은 무시하고 본 슬롯만 쓴다.
+
+    🚨 2026-08-20 점검 — 종전엔 **첫 크론만** 읽었다. refresh-tech 은 크론이 둘(매월 1일 +
+      매주 토)이라 화면이 월간 것만 말했다 — 전부 읽어 « · » 로 잇는다."""
     if not wf:
         return None          # 워크플로가 매핑 안 된 축(수시·외부 갱신) — 예정 시각이 없는 게 맞다
     p = os.path.join(ROOT, ".github", "workflows", wf)
     if not os.path.isfile(p):
         return None
-    m = re.search(r"cron:\s*'([^']+)'", io.open(p, encoding="utf-8").read())
-    if not m:
+    ms = re.findall(r"cron:\s*'([^']+)'", io.open(p, encoding="utf-8").read())
+    if not ms:
         return None
-    f = m.group(1).split()
+    outs = []
+    for cexp in ms[:2]:                      # 본 슬롯 최대 둘 — 백업 슬롯은 대개 셋째 이후
+        one = _sched_one(cexp)
+        if one and one not in outs:
+            outs.append(one)
+    return " · ".join(outs) if outs else None
+
+
+def _sched_one(cexp: str) -> str | None:
+    f = cexp.split()
     if len(f) != 5:
         return None
     mi, hh, dom, mon, dow = f

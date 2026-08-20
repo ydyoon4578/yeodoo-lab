@@ -6,7 +6,7 @@
 
   · period_returns: 1M/3M/6M/1Y/3Y/YTD/설정후(연환산)
   · monthly_matrix: 연×월 수익률 표(히트맵 셀 배경)
-  · risk_table: 연변동성·샤프·MDD·추적오차·IR·월간 승률
+  · risk_stats: 연수익·연변동성·샤프·MDD·추적오차·IR·연초과
   · draw_cum_dd: 누적(로그)+낙폭 2단 차트
 """
 from __future__ import annotations
@@ -89,7 +89,6 @@ def risk_stats(daily_d, daily_v, wk_ret, wk_bench):
     sde = math.sqrt(sum((x - me) ** 2 for x in ex) / (len(ex) - 1))
     te = sde * math.sqrt(52) * 100
     ir = (me * 52) / (sde * math.sqrt(52)) if sde > 0 else None
-    # 월간 승률 vs 벤치
     return {"cagr": cagr, "vol": vol, "sharpe": sharpe, "mdd": mdd * 100,
             "te": te, "ir": ir, "ann_ex": me * 52 * 100}
 
@@ -150,10 +149,13 @@ def draw_monthly_heat(fig, x, y, mat, yr, width=.86, title="월간 수익률(%)"
 
 
 def _blend(hex_col, alpha):
-    """PAPER 위에 alpha 로 얹은 색을 미리 섞는다(투명 박스 대신)."""
+    """PAPER 위에 alpha 로 얹은 색을 미리 섞는다(투명 박스 대신).
+
+    ⚠ 바탕색은 ST.PAPER 에서 파싱 — 손 RGB 를 박으면 팔레트가 바뀔 때 소리 없이 갈린다."""
     h = hex_col.lstrip("#")
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    pr, pg, pb = 0xFF, 0xFD, 0xF5
+    ph = PAPER.lstrip("#")
+    pr, pg, pb = int(ph[0:2], 16), int(ph[2:4], 16), int(ph[4:6], 16)
     f = lambda c, p: int(p + (c - p) * alpha)
     return "#%02X%02X%02X" % (f(r, pr), f(g, pg), f(b, pb))
 

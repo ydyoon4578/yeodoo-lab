@@ -2573,6 +2573,18 @@ try:
     # 🚨 '통과' 는 이 블록이 오류를 **하나도** 안 냈을 때만 찍는다. 종전에는 ④만 보고
     #   찍어서, ①이 실패한 판에서도 "대조 통과" 가 함께 나왔다 — 실패하면서 통과라고
     #   말하는 출력이다(자체 시험에서 잡았다).
+    # ①-c 🚨 2026-08-20 — 세 번째 목록의 **셋째 사본**(data/strategy_report.json tested.tech)
+    #   도 대조한다. 당일 측정 세션이 정본·tech 사본만 늘리면 report.html 이 옛 수(98종)를
+    #   하루 창 동안 보여 줬는데, 이 검사가 없어 «전항 통과»로 보였다(점검 패널 실측).
+    try:
+        _sr = json.load(io.open(os.path.join(ROOT, "data", "strategy_report.json"),
+                                encoding="utf-8"))
+        _srt = ((_sr.get("tested") or {}).get("tech")) or []
+        if len(_srt) != len(_tested):
+            errors.append("세 번째 목록 사본 어긋남 — 정본 %d종 vs strategy_report %d종. "
+                          "python build/strategy_report.py 재실행 필요" % (len(_tested), len(_srt)))
+    except Exception as _e6:
+        errors.append("strategy_report 세 번째 목록 대조 실패 — %s" % _e6)
     if len(errors) == _n_err0:
         print("  ~ 세 번째 목록 대조 통과(돌렸지만 게시 안 함 %d종 · 재등록 %d종)"
               % (len(_tested), sum(1 for x in _tested.values() if x.get("readmitted"))))

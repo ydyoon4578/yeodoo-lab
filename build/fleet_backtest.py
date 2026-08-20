@@ -31,7 +31,8 @@ sys.path.insert(0, HERE)
 from aegis_backtest import load_px, week_ends, Sig, metrics, tstat         # noqa: E402
 from tilt_backtest import load_weights, alias_map                          # noqa: E402
 from aegis3_backtest import load_rf                                        # noqa: E402
-from wvane_backtest import RetSig, rf_weekly, build_weeks                  # noqa: E402
+from wvane_backtest import (RetSig, rf_weekly, build_weeks,               # noqa: E402
+                            MIN_PAIRS, ZERO_FRAC_MAX, JUMP_MAX)
 
 K_TILT = 0.3
 Z_CLIP = 2.0
@@ -190,14 +191,13 @@ def build_panel(dts, px, weeks, sig, vsig, hsig):
         row = {ax: {} for ax in AXES}
         fb = 0
         for t in w["base"]:
-            ok_ent = vsig.sigma(t, i0) is not None or True   # 자리표시 — 아래서 정식 게이트
             # 공통 엔터티 게이트: RetSig 위생(페어·0%·점프) — sigma 가 None 인 사유가
-            # 게이트인지 창 부족인지 구분해야 하므로 직접 검사한다
+            # 게이트인지 창 부족인지 구분해야 하므로 직접 검사한다. 상수는 wvane 정본.
             s1, s2, pc, zc, jc = vsig._pref(t)
             lo = max(0, i0 + 1 - 252)
             np_ = pc[i0 + 1] - pc[lo]
-            ent_ok = (np_ >= 160 and (zc[i0 + 1] - zc[lo]) <= 0.30 * max(1, np_)
-                      and (jc[i0 + 1] - jc[lo]) <= 2)
+            ent_ok = (np_ >= MIN_PAIRS and (zc[i0 + 1] - zc[lo]) <= ZERO_FRAC_MAX * max(1, np_)
+                      and (jc[i0 + 1] - jc[lo]) <= JUMP_MAX)
             if not ent_ok:
                 continue                                    # 전 축 무효(§1 공통 선행)
             d = sig.dist(t, i0)
@@ -324,6 +324,10 @@ def ir_of(vd, yrs):
 
 
 def main() -> int:
+    # 🚨 동결 가드(2026-08-20 점검) — 얼린 사전등록 산출물을 무심코 덮지 못하게 한다.
+    #   재동결은 자료 정정 등 사유가 있을 때 --refreeze 로만, 사유는 커밋 메시지·장부에.
+    if os.path.exists(OUT) and "--refreeze" not in sys.argv:
+        raise SystemExit("%s 가 이미 있다 — 얼린 측정이다. 재동결은 --refreeze 로만." % OUT)
     dts, px, bench = load_px()
     W = load_weights()
     AL = alias_map()
@@ -509,6 +513,10 @@ def main() -> int:
         "span": [DD[0], DD[-1]], "weeks": len(weeks),
         "identity_checks": idc, "axis_dead_weeks": dead, "w52h_close_fallback": fb,
         "axes": {k: stats[k] for k in AXES}, "ens": stats["ENS"], "anchor_mom_rawz": stats["ANCHOR"],
+        # 2026-08-20 점검 — R(순복제)·주요 판의 절대 지표를 저장한다. 종전엔 콘솔에만 있어
+        #   web 의 교차 항등(I1)이 열쇠 부재로 공허 통과했다.
+        "decomp": {"R": metrics(V["R"]["daily_d"], V["R"]["dv"], V["R"]["wk"]["ret"]),
+                   "ENS": metrics(V["ENS"]["daily_d"], V["ENS"]["dv"], V["ENS"]["wk"]["ret"])},
         "main": {"d_ir": round(d_ir, 3), "boot_p": round(p_hat, 3), "t_ens": round(t_ens, 2),
                  "cell": cell, "verdict": verdict},
         "loo": loo, "predictions": pred, "sens": sens,

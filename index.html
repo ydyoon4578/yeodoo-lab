@@ -2216,6 +2216,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   data/home_reco.json 의 fpe 이고 **이 랩이 계산한 값**이다(build/home_summary.py:_fpe).
   //   ⚠ 후보가 없는 행(다우·러셀2000·스타일 ETF 8종)은 '·' 로 둔다 — 0 이나 전체 평균으로
   //     채우면 없는 것을 지어내는 것이다. 주가 열과 같은 규약이다.
+  // 2026-08-20 점검 — 회전율 툴팁의 «173종·2.70회» 손숫자가 목록 축소(122종) 후에도
+  //   남아 있었다. 수는 strategy_index.json 에서 렌더 시 계산한다(손으로 적은 수는 낡는다).
+  var TP_TURN_NOTE='';
   var FPE=null;
   function fpeCell(x){
     // 🚨 이 표는 줄마다 티커가 **다른 자리**에 있다. ETF 줄은 x.t 이고, 섹터 줄은 x.sec 다
@@ -3414,7 +3417,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // 이 열에만 있다. 랩 중앙 2.70회인데 최대 83.4회까지 있어 줄마다 뜻이 크게 다르다.
         '<th class="shp" title="'+esc('연 회전율 — 1.0 이면 한 해에 포트폴리오를 한 번 '+
             '갈아치운다는 뜻입니다. 위 수익률은 전부 무비용이라, 회전이 높은 줄일수록 실제로 '+
-            '손에 남는 것은 그보다 적습니다. 이 랩 173종의 중앙값은 2.70회입니다.')+
+            '손에 남는 것은 그보다 적습니다. ' + TP_TURN_NOTE + '.')+
           '">회전율<em>연</em></th>'+
         '</tr></thead><tbody>';
       top.forEach(function(r,i){
@@ -3461,6 +3464,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       .then(function(ix){
         if(!ix||!ix.items){var tb=el2('tptbl'); if(tb)tb.innerHTML=
           '<tbody><tr><td class="skel2">전략 목록을 받지 못했습니다.</td></tr></tbody>'; return;}
+        // 회전율 각주 수치 — 데이터에서 계산(2026-08-20, 손숫자 낡음 교정)
+        try{var _tv=ix.items.map(function(x){return x.turnover;})
+          .filter(function(v){return typeof v==='number';}).sort(function(a,b){return a-b;});
+        if(_tv.length)TP_TURN_NOTE='이 랩 '+ix.items.length+'종의 중앙값은 '
+          +_tv[Math.floor(_tv.length/2)].toFixed(2)+'회입니다';}catch(_e){}
         TP=ix.items.filter(function(r){return r.trails;});
         PITD=ix.pit_dist||null;      // 랩 전체 생존편향 분포(빌더가 구운 것)
         draw();

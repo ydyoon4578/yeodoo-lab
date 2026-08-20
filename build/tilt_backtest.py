@@ -171,6 +171,10 @@ def run(dts, px, sig, W, AL, we_idx, k_tilt=K_TILT, cost=COST, monthly=False):
 
 
 def main() -> int:
+    # 🚨 동결 가드(2026-08-20 점검) — 얼린 사전등록 산출물을 무심코 덮지 못하게 한다.
+    #   재동결은 자료 정정 등 사유가 있을 때 --refreeze 로만, 사유는 커밋 메시지·장부에.
+    if os.path.exists(OUT) and "--refreeze" not in sys.argv:
+        raise SystemExit("%s 가 이미 있다 — 얼린 측정이다. 재동결은 --refreeze 로만." % OUT)
     dts, px, bench = load_px()
     W = load_weights()
     AL = alias_map()

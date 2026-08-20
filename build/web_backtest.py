@@ -30,7 +30,9 @@ sys.path.insert(0, HERE)
 from aegis_backtest import load_px, week_ends, Sig, metrics, tstat          # noqa: E402
 from tilt_backtest import load_weights, alias_map                           # noqa: E402
 from aegis3_backtest import load_rf                                          # noqa: E402
-from wvane_backtest import RetSig, rf_weekly, build_weeks                    # noqa: E402
+from wvane_backtest import (RetSig, rf_weekly, build_weeks,                 # noqa: E402
+                            MIN_PAIRS as WV_MIN_PAIRS, ZERO_FRAC_MAX as WV_ZERO_FRAC,
+                            JUMP_MAX as WV_JUMP_MAX)
 
 K_SEC, K_STK = 0.15, 0.3
 SIG_TGT, SIG_WIN = 0.20, 63
@@ -124,8 +126,8 @@ def build_signals(dts, px, weeks, sig, vsig, resolve):
             s1, s2, pc, zc, jc = vsig._pref(t)
             lo = max(0, i0 + 1 - 252)
             np_ = pc[i0 + 1] - pc[lo]
-            ok = (np_ >= 160 and (zc[i0 + 1] - zc[lo]) <= 0.30 * max(1, np_)
-                  and (jc[i0 + 1] - jc[lo]) <= 2)
+            ok = (np_ >= WV_MIN_PAIRS and (zc[i0 + 1] - zc[lo]) <= WV_ZERO_FRAC * max(1, np_)
+                  and (jc[i0 + 1] - jc[lo]) <= WV_JUMP_MAX)   # 상수는 wvane 정본(이원화 금지)
             gate[t] = ok
             d_ = sig.dist(t, i0) if ok else None
             dist[t] = d_
@@ -165,9 +167,9 @@ def build_signals(dts, px, weeks, sig, vsig, resolve):
 
 def run(dts, px, weeks, P, lam, rf, last_ym,
         use_s=False, k_mode="off", use_lambda=False, band=False,
-        k_sec=K_SEC, k_stk=K_STK, cost=COST, monthly=False,
-        static_sec=None):
-    """단일 경로 실행. k_mode: off | neutral | global. static_sec: {섹터배율} 고정판(§4)."""
+        k_sec=K_SEC, k_stk=K_STK, cost=COST, monthly=False):
+    """단일 경로 실행. k_mode: off | neutral | global. (§4 정적판은 main 의 Ps 패널로 구현 —
+    static_sec 파라미터·t_sector 스텁은 미사용 죽은 코드라 걷었다. 2026-08-20 점검 패널.)"""
     nav = 100.0
     prev_w, prev_p0, prev_e, prev_fin = None, None, 0.0, 0.0
     held = None
@@ -187,8 +189,6 @@ def run(dts, px, weeks, P, lam, rf, last_ym,
             if use_s:
                 zs = P[j]["z_sec"].get(t, 0.0)
                 m_ *= (1 + k_sec * lm * zs)
-            if static_sec is not None:
-                m_ *= static_sec.get(t_sector(P, j, t), 1.0) if False else 1.0
             if k_mode == "neutral":
                 m_ *= (1 + k_stk * lm * P[j]["z_kn"].get(t, 0.0))
             elif k_mode == "global":
@@ -233,10 +233,6 @@ def run(dts, px, weeks, P, lam, rf, last_ym,
     return {"daily_d": daily_d, "dv": dv, "wk": wk}
 
 
-def t_sector(P, j, t):
-    return None
-
-
 def ir_of(vd, yrs):
     m = sum(vd) / len(vd)
     sd = math.sqrt(sum((x - m) ** 2 for x in vd) / (len(vd) - 1))
@@ -254,6 +250,10 @@ def vstats(r, R, yrs):
 
 
 def main() -> int:
+    # 🚨 동결 가드(2026-08-20 점검) — 얼린 사전등록 산출물을 무심코 덮지 못하게 한다.
+    #   재동결은 자료 정정 등 사유가 있을 때 --refreeze 로만, 사유는 커밋 메시지·장부에.
+    if os.path.exists(OUT) and "--refreeze" not in sys.argv:
+        raise SystemExit("%s 가 이미 있다 — 얼린 측정이다. 재동결은 --refreeze 로만." % OUT)
     dts, px, bench = load_px()
     W = load_weights()
     AL = alias_map()
@@ -296,9 +296,13 @@ def main() -> int:
                                        b_only["wk"]["ret"])["cagr"]
                                - FJ["decomp"]["B"]["cagr"]) < 0.05
     FL = json.load(io.open(os.path.join(DATA, "fleet.json"), encoding="utf-8"))
-    idc["I1_R_vs_fleet"] = abs(metrics(A["R"]["daily_d"], A["R"]["dv"],
-                                       A["R"]["wk"]["ret"])["cagr"]
-                               - FL["decomp"]["R"]["cagr"]) < 0.05 if "decomp" in FL else True
+    # 🚨 2026-08-20 점검 — fleet.json 에 decomp 키가 없어 종전 else True 폴백이
+    #   공허 통과였다(얼린 web.json 의 I1=true 는 비교 없이 기록된 값 — e-web 에 병기).
+    #   교차 열쇠가 없으면 이제 실패로 처리한다.
+    fl_r = ((FL.get("decomp") or {}).get("R") or {}).get("cagr")
+    idc["I1_R_vs_fleet"] = (abs(metrics(A["R"]["daily_d"], A["R"]["dv"],
+                                        A["R"]["wk"]["ret"])["cagr"] - fl_r) < 0.05
+                            if fl_r is not None else False)
     # I4 — 단일 의사섹터 ⇒ 섹터중립 = 전역
     P1s = []
     for p in P:

@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 2026-08-20 점검 — 철거 페이지(sector·market 등)가 남고 신설(rates·portfolio 등)이
+     빠진 채 방치돼 있었다. 디스크의 *.html 과 동기화. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/archive.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/co.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/explorer.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/index.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/macro.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/market.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/method.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/portfolio.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/regime.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/rel-value.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/roadmap.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/rotation.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/screener.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/sector.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/sources.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/stocks.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/valuation.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/filings.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/industry.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/updates.html</loc><lastmod>2026-07-25</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/calendar.html</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/guru.html</loc><lastmod>2026-07-25</lastmod><changefreq>monthly</changefreq></url>
-  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/guru17.html</loc><lastmod>2026-07-28</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/calendar.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/co.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/constituents.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/explorer.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/filings.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/guru.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/guru17.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/index.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/intraday.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/kb.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/macro.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/method.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/ok.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/portfolio.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/rates.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/regime.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/report.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/rotation.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/screener.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/signals.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/sources.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/stocks.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/style.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/updates.html</loc><lastmod>2026-08-20</lastmod></url>
+  <url><loc>https://ydyoon4578.github.io/yeodoo-lab/williams.html</loc><lastmod>2026-08-20</lastmod></url>
 </urlset>

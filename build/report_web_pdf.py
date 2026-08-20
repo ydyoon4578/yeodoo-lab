@@ -46,12 +46,16 @@ C_W, C_N, C_B = POS, MARG, RP
 TOTAL = 4
 
 
+FOOT_T = None  # main() 이 정본 t 를 채운다 — 하드코딩 금지(2026-08-20 점검)
+
+
 def footer(fig, page):
     hline(fig, X0, X1, .034, LINE, .6)
     tx(fig, X0, .027, "거미줄(WEB) 전략 보고서 · 사전등록 PREREG-2026-08-20-WEB(계산 전 커밋 · 적대 검토 2렌즈) · "
                       "기준 비중 벤더 정본(DB · 원자료 커밋 금지) · 비용 5bp 순액식 · 조달 실측 rf",
        fontsize=6.4, color=MUTED)
-    tx(fig, X0, .019, "과거 시험(백테스트) — 가족 라벨 «유망하나 선택과 구별 불가»(t 2.19 < 가족 보정 3.0) · 전방 기록 0건",
+    tx(fig, X0, .019, "과거 시험(백테스트) — 가족 라벨 «유망하나 선택과 구별 불가»(t %s < 가족 보정 3.0) · 전방 기록 0건"
+       % (FOOT_T if FOOT_T is not None else "?"),
        fontsize=6.0, color=NEG)
     tx(fig, X1, .027, "%d / %d · %s" % (page, TOTAL, dt.date.today().isoformat()),
        fontsize=6.4, color=MUTED, ha="right")
@@ -111,6 +115,8 @@ def main() -> int:
     if s0 is not None:
         off_spans.append((s0, weeks[-1]["d0"]))
     L = J["ladder"]; MAIN = J["main"]
+    global FOOT_T
+    FOOT_T = MAIN["t_web"]
 
     with PdfPages(OUT) as pdf:
         # ── 1쪽 — 팩트시트 ─────────────────────────────────────────────
@@ -119,8 +125,9 @@ def main() -> int:
         tx(fig, X0, .938, "나스닥100 계층 틸트 — 섹터중립 모멘텀 x 변동성 관리 x 편입비 밴드",
            fontsize=9, color=INK2)
         box(fig, X0 + .60, .938, .28, .030, GROUND, ec=POS, lw=1.0)
-        tx(fig, X0 + .612, .962, "사전등록 주 판정: 셀 ① 통과", fontsize=8.2,
-           fontweight="bold", color=POS)
+        _cell_ok = str(MAIN.get("cell", "")).startswith("①")
+        tx(fig, X0 + .612, .962, "사전등록 주 판정: " + ("셀 ① 통과" if _cell_ok else str(MAIN.get("cell", ""))[:14]),
+           fontsize=8.2, fontweight="bold", color=(POS if _cell_ok else NEG))
         tx(fig, X0 + .612, .947, "(가족 라벨: 유망 · 선택과 구별 불가)", fontsize=6.2, color=MUTED)
         hline(fig, X0, X1, .928, RULE, 1.0)
         tx(fig, X0, .920, "유형 NDX 인핸스드 인덱스 · 기간 2017-04 ~ 2026-08 (9.4년 · 주간) · 종목 ~100 · "
@@ -198,7 +205,7 @@ def main() -> int:
         box(fig, X0, .540, X1 - X0, .068, GROUND, ec=LINE, lw=.8)
         tx(fig, X0 + .012, .598, "ΔIR(거미줄 - 챔피언) = %+.3f  ·  블록 부트스트랩 p = %.2f (기준 ≥0.90)  ·  t(V_WEB) = %.2f (기준 ≥2)"
            % (MAIN["d_ir"], MAIN["boot_p"], MAIN["t_web"]), fontsize=8.6, fontweight="bold")
-        tx(fig, X0 + .012, .578, "→ 해석 셀 ① «거미줄 이득 후보» — 이 계열 8번의 등록에서 처음으로 주 판정을 통과했습니다.",
+        tx(fig, X0 + .012, .578, "→ 해석 " + str(MAIN.get("cell", "")) + " — 이 계열 8번의 등록에서 처음으로 주 판정을 통과했습니다.",
            fontsize=8.2, color=POS, fontweight="bold")
         tx(fig, X0 + .012, .560, "등록 전 몬테카를로: 이 관문의 우연 통과율은 2.7%(무정보 세계) — 통과는 강한 증거, 실패는 정보 아님이라고 미리 적어 두었습니다.",
            fontsize=7.0, color=MUTED)
@@ -310,7 +317,7 @@ def main() -> int:
             "  선택과 구별 불가»이고, 이 라벨은 결과가 아무리 좋아도 등록 규칙상 바꿀 수 없습니다.",
             "· 섹터 라벨은 오늘 기준 소급(2018-09 GICS 개편 이전 ~74주는 반사실 분류) · 지수 대비 초과에는",
             "  배당 기저 +0.8%p 와 생존 틸트 ~+0.9%p 가 업혀 있습니다(복제 대비 비교에서는 상쇄).",
-            "· 확정은 단 하나 — 전방 기록입니다. 주간 시계열이 data/web.json 에 쌓이기 시작했습니다.",
+            "· 확정은 단 하나 — 전방 기록입니다. 아직 0건이며, 주간 절차는 build/RUNBOOK-FORWARD.md 에 있습니다.",
         ]):
             tx(fig, X0, .582 - j * .0148, s, fontsize=7.4, color=INK2)
 

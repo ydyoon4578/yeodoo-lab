@@ -52,6 +52,26 @@ def main() -> int:
             return 1
         out[key] = {"ticker": tk, "label": label + "(PR)", "px": a}
 
+    # 🚨 2026-08-20 — 상류(assets.json) 수집이 멀쩡하던 과거 날짜를 null 로 되돌린 사고.
+    #   b04945f0 이 2026-07-21/22/31 세 날을 null 로 덮었고, 그 날들이 얼린 백테스트 정본
+    #   구간 안이라 aegis 계열 재실행·보고서 재빌드가 죽었다(점검 패널 실측).
+    #   → 이전 판이 값을 갖고 있던 날짜는 새 fetch 가 null 이어도 이전 값을 보존한다.
+    #   과거 종가는 확정치라 null 로의 후퇴는 언제나 수집 실패지 정정이 아니다.
+    try:
+        prev = json.load(io.open(OUT, encoding="utf-8"))
+        pdi = {d: i for i, d in enumerate(prev.get("dates") or [])}
+        healed = 0
+        for k, v_ in out.items():
+            pv = (prev.get("series") or {}).get(k, {}).get("px") or []
+            for i, d in enumerate(dates):
+                j = pdi.get(d)
+                if v_["px"][i] is None and j is not None and j < len(pv) and pv[j] is not None:
+                    v_["px"][i] = pv[j]
+                    healed += 1
+        if healed:
+            print("⚠ 상류 null %d칸을 이전 판 값으로 보존 — 수집 실패는 정정이 아니다" % healed)
+    except Exception:
+        pass
     # 🚨 결측을 세어 적는다. 조용히 None 이 섞이면 화면이 그 날을 건너뛰며 그리는데,
     #   건너뛴 것과 값이 0 인 것을 눈으로 구별할 수 없다.
     holes = {k: sum(1 for v in v_["px"] if v is None) for k, v_ in out.items()}
