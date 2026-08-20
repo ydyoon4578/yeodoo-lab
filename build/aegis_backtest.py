@@ -170,8 +170,11 @@ def engine(dts, px, bench, months, we, sig, bsig,
                 daily_d.append(dts[d]); daily_v.append(nav0 * s / len(hold))
         elif on:
             b = bench[hold_key]
+            last_b = b[i0]
             for d in range(i0 + 1, i1 + 1):
-                daily_d.append(dts[d]); daily_v.append(nav0 * b[d] / b[i0])
+                if b[d] is not None:                     # 결측일 carry — 상류 null 방어(2026-08-20)
+                    last_b = b[d]
+                daily_d.append(dts[d]); daily_v.append(nav0 * last_b / b[i0])
         else:
             cr = cash_rate if (cash_rate and (cash_from is None or dts[i0] >= cash_from)) else 0.0
             for j, d in enumerate(range(i0 + 1, i1 + 1), 1):
@@ -206,7 +209,8 @@ def metrics(daily_d, daily_v, wk_ret):
         if dd < mdd:
             mdd = dd
     return {"cagr": round(cagr * 100, 2), "vol": round(vol * 100, 2),
-            "sharpe": round(sharpe, 2), "mdd": round(mdd * 100, 2)}
+            "sharpe": (None if sharpe is None else round(sharpe, 2)),
+            "mdd": round(mdd * 100, 2)}
 
 
 def bench_track(dts, bench, key, daily_d, we):
@@ -214,7 +218,13 @@ def bench_track(dts, bench, key, daily_d, we):
     i_first, i_last = d2i[daily_d[0]], d2i[daily_d[-1]]
     b = bench[key]
     dd = [dts[i] for i in range(i_first, i_last + 1)]
-    dv = [100.0 * b[i] / b[i_first] for i in range(i_first, i_last + 1)]
+    bf, last = [], None                                   # 전방 채움 — 상류 null 방어(2026-08-20)
+    for i in range(i_first, i_last + 1):
+        if b[i] is not None:
+            last = b[i]
+        bf.append(last)
+    dv = [100.0 * v / bf[0] for v in bf]
+    b = [None] * i_first + bf                             # 주간 계산도 채운 값을 쓴다
     wk = [b[we[k + 1]] / b[we[k]] - 1 for k in range(len(we) - 1)
           if we[k] >= i_first and we[k + 1] <= i_last]
     return dd, dv, wk
@@ -250,6 +260,10 @@ def off_periods(wk_d, wk_on):
 
 
 def main() -> int:
+    # 🚨 동결 가드(2026-08-20 점검) — 얼린 사전등록 산출물을 무심코 덮지 못하게 한다.
+    #   재동결은 자료 정정 등 사유가 있을 때 --refreeze 로만, 사유는 커밋 메시지·장부에.
+    if os.path.exists(OUT) and "--refreeze" not in sys.argv:
+        raise SystemExit("%s 가 이미 있다 — 얼린 측정이다. 재동결은 --refreeze 로만." % OUT)
     dts, px, bench = load_px()
     H = json.load(io.open(os.path.join(DATA, "index_history.json"), encoding="utf-8"))
     months = H["months"]

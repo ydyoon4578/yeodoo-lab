@@ -238,6 +238,10 @@ def ann(dd, xs_weekly_diff):
 
 
 def main() -> int:
+    # 🚨 동결 가드(2026-08-20 점검) — 얼린 사전등록 산출물을 무심코 덮지 못하게 한다.
+    #   재동결은 자료 정정 등 사유가 있을 때 --refreeze 로만, 사유는 커밋 메시지·장부에.
+    if os.path.exists(OUT) and "--refreeze" not in sys.argv:
+        raise SystemExit("%s 가 이미 있다 — 얼린 측정이다. 재동결은 --refreeze 로만." % OUT)
     dts, px, bench = load_px()
     W = load_weights()
     AL = alias_map()
@@ -260,8 +264,14 @@ def main() -> int:
     idc["k0_eq_B"] = max(abs(a - b) for a, b in zip(c_k0["dv"], V["B"]["dv"])) < 1e-9
     c_nb = run(dts, px, weeks, sig, vsig, rf, last_ym, mode="C", band=False, fin_on=False)
     idc["noband_eq_A"] = max(abs(a - b) for a, b in zip(c_nb["dv"], V["A"]["dv"])) < 1e-9
-    sens_nb = run(dts, px, weeks, sig, vsig, rf, last_ym, mode="C", band=False, fin_on=False)
-    idc["sens_noband_eq_A"] = max(abs(a - b) for a, b in zip(sens_nb["dv"], V["A"]["dv"])) < 1e-9
+    # 🚨 2026-08-20 점검 — 종전 셋째 검증은 둘째와 인자까지 같은 호출의 중복이라 실질
+    #   2종이었다. R 항등(틸트 0·밴드 없음 ⇒ 순복제)으로 교체한다. 얼린 wvane.json 의
+    #   identity_checks 는 그 시절 기록 그대로 둔다(기록은 기록).
+    r_off = run(dts, px, weeks, sig, vsig, rf, last_ym, mode="C", k_tilt=0.0,
+                band=False, fin_on=False)
+    r_ref = run(dts, px, weeks, sig, vsig, rf, last_ym, mode="R", k_tilt=0.0,
+                band=False, fin_on=False)
+    idc["alloff_eq_R"] = max(abs(a - b) for a, b in zip(r_off["dv"], r_ref["dv"])) < 1e-9
     if not all(idc.values()):
         raise SystemExit("항등 검증 실패 %s — 산출물을 쓰지 않는다(§2)" % idc)
 
