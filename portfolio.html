@@ -385,22 +385,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
      사용자 지적(2026-08-20): 글씨가 다 크고 좌우가 너무 넓다. 자료 화면이라 밀도가 정보량이다.
      ⚠ 마커 블록(SHELL/NAVCSS) 안을 고치면 정본 드리프트로 CI 가 잡는다 — 그래서 밖에 얹는다. -->
 <style id="pf-compact">
-  .wrap{max-width:880px;padding:0 16px 56px}
+  /* 밀도 우선 — 사용자 지적(2026-08-20): 자료 화면이라 밀도가 정보량이다. */
+  .wrap{max-width:1520px;padding:0 18px 40px}
   body{font-size:13.5px;line-height:1.55}
   h1.title{font-size:clamp(18px,2.6vw,24px);margin:10px 0 0}
   .eyebrow{font-size:10px}
   .fhead h2{font-size:clamp(15px,2vw,19px)}
   .fcode{font-size:.68em}
   .asofline{font-size:10.5px;margin-top:4px}
-  .pfhead{margin:0 0 12px}
+  .pfhead{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
   .tb{font-size:12px;padding:6px 11px}
-  .gen{font-size:10px}
+  .gen{font-size:10px;margin-left:auto}
   /* 🚨 본문이 .wrap 밖이다(sources.html 구조 유산) — 컨테이너를 여기서 직접 건다.
      안 걸면 넓은 화면에서 전폭으로 퍼지고, width:100% SVG 가 뷰박스째 확대돼
      차트 속 글자까지 거대해진다(좁은 패널 검증으로는 안 보여 두 번 놓쳤다). */
-  #content{max-width:880px;margin:18px auto 0;padding:0 16px;box-sizing:border-box}
+  #content{max-width:1520px;margin:14px auto 0;padding:0 18px;box-sizing:border-box}
   .chart svg{max-width:760px;display:block;margin:0 auto}
-  #content h3{font-size:13.5px;margin:24px 0 9px;padding-top:12px}
+  #content h3{font-size:13.5px;margin:22px 0 9px;padding-top:10px}
+  #content h4{font-size:12px;margin:14px 0 6px}
   .hnote{font-size:.72em}
   .cards{grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin:0 0 12px}
   .card{padding:9px 11px}
@@ -412,16 +414,72 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   #content table{font-size:11.5px}
   #content thead th{font-size:10px;padding:6px 8px}
   #content tbody td{padding:4px 6px}
-  #content table.big td:not(.tnum):not(.tk){max-width:130px}
-  .tblwrap{margin:0 0 11px}
-  .tblwrap.tall{max-height:460px}
+  #content table.big td:not(.tnum):not(.tk){max-width:130px;overflow:hidden;text-overflow:ellipsis}
+  .tblwrap{margin:0 0 11px;overflow-x:auto}
+  .tblwrap.tall{max-height:420px}
   .sec{font-size:11px}
   .rowfilter{font-size:11.5px;padding:5px 8px;width:min(260px,100%)}
   .warn{font-size:11.5px}
   .notes{margin-top:28px;padding-top:12px}
   .notes ul{font-size:11.5px}
-  details summary{font-size:11.5px}
+  details summary{font-size:11.5px;cursor:pointer}
+  /* ── 2열 — 넓은 화면에서 두 펀드를 나란히 «한눈에». 탭은 좁은 화면 전용이 된다.
+     탭 JS 가 pane 에 hidden 을 걸어도 여기서는 둘 다 편다([hidden] display 복원). */
+  .fundgrid{display:block}
+  @media(min-width:1200px){
+    .fundgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 30px;align-items:start}
+    .fundgrid>.tabpane[hidden]{display:block}
+    .fundgrid>.tabpane{border-left:1px solid var(--line);padding-left:26px}
+    .fundgrid>.tabpane:first-child{border-left:none;padding-left:0}
+    #pane-bt[hidden]{display:block}
+    /* ⚠ :has 가드 — 탭 숨김은 «새 조각(.fundgrid 있음)» 일 때만. 셸 푸시~재잠금 사이의
+       옛 조각은 탭이 유일한 전환 수단이라, 무조건 숨기면 그 사이 SPX 를 못 본다. */
+    #content:has(>.fundgrid) .tabs{display:none}
+    .chart svg{max-width:680px}
+  }
+  /* ── 웹 앱 UI ─────────────────────────────────────────── */
+  .pfsync{flex:1 1 320px;min-width:260px}
+  .syncrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11.5px}
+  .syncst{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+  .dot.ok{background:var(--deploy,#2e9e5b)}
+  .dot.warn{background:var(--hot,#d07617)}
+  .syncmeta{color:var(--muted);font-size:10.5px}
+  .syncbtns{display:inline-flex;gap:6px;margin-left:auto}
+  .sb{font-size:11px;padding:4px 9px;border:1px solid var(--line);background:var(--panel);
+      color:var(--ink);border-radius:6px;cursor:pointer}
+  .sb:hover{border-color:var(--accent)}
+  .sb:disabled{opacity:.45;cursor:default}
+  .sb.primary{border-color:var(--accent);color:var(--accent);font-weight:600}
+  .sb.warn{border-color:var(--hot,#d07617);color:var(--hot,#d07617)}
+  .syncpanel{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+             font-size:11.5px;background:var(--panel)}
+  .syncpanel input{font-size:11.5px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;
+                   background:transparent;color:var(--ink);width:min(340px,100%);font-family:var(--mono)}
+  .pnote{color:var(--muted);font-size:10.5px}
+  .perr{color:var(--hot,#c0392b);font-size:11px}
+  .ccok{color:var(--deploy,#2e9e5b);font-size:11px}
+  .badge{font-size:9px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+  .badge.web{border-color:var(--accent);color:var(--accent)}
+  .rowops .sb{padding:1px 6px;font-size:10px}
+  .noterow td{color:var(--muted);font-size:10.5px;border-top:none;padding-top:0}
+  .closedrow td{opacity:.55}
+  .totrow td{border-top:2px solid var(--line)}
+  .tradeform,.btform{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;
+    padding:9px 11px;border:1px dashed var(--line);border-radius:8px;font-size:11.5px}
+  .tradeform input,.tradeform select,.btform input,.btform select,.smeta input,.smeta select{
+    font-size:11.5px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;
+    background:transparent;color:var(--ink)}
+  .tradeform input[name=q],.tradeform input[name=p]{width:110px}
+  .tradeform input[name=note]{width:150px}
+  .tradeform input[name=s]{width:120px}
+  .tradeform input[name=t]{width:130px;font-family:var(--mono)}
+  .smeta input.smemo{width:min(320px,60vw)}
+  .appbox{min-height:24px}
+  .jswait{color:var(--muted);font-size:11px}
+  .dbstatic{margin:14px 0 4px;opacity:.85}
 </style>
+<script defer src="js/portfolio_app.js"></script>
 </head>
 <body data-tool="portfolio.html">
 <!-- NAV:BEGIN -->
@@ -629,6 +687,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       err.textContent=''; pw.value='';
       gw.hidden=true; content.hidden=false;
       runScripts(content);
+      // 웹 앱(js/portfolio_app.js)에 키 재료를 넘긴다 — 웹 원장(data/portfolio_user.json,
+      // AES-GCM 봉투)을 같은 암호로 여닫기 위해서다. 암호 문자열이 아니라 PBKDF2 키 재료
+      // (추출 불가 CryptoKey)만 남긴다. runScripts 뒤에 불러야 window.PF 가 존재한다.
+      window.__pfKM=km; if(window.PFAPP&&window.PFAPP.init)window.PFAPP.init();
     }catch(e){
       err.textContent='암호가 올바르지 않습니다.'; go.disabled=false; pw.select();
     }

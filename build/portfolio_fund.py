@@ -14,12 +14,13 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
    실펀드 NAV·보유 수량·매매 내역이라 공개 사이트에 평문으로 나가면 안 된다.
 
 입력 셋 — 전부 이 사내 PC 에서만 접근 가능하다(러너 이식 불가, 로컬 수동 잡).
-  · 사내 export(엑셀): C:\HANSSAK\SecureGate\download\2Z30_MP_*.xlsm 중 최신
-      NAV(날짜·펀드코드·NAV·좌수·기준가) · 환율(기준일자·통화·환율) · 해외(보유 원장)
+  · 사내 export(엑셀): 경로는 _build/portfolio_local.json 의 xlsm_globs (gitignore — 내부
+      파일서버 경로라 공개 저장소에 안 적는다). NAV·환율·해외(보유 원장) 시트를 읽는다.
       ⚠ 시트 이름·컬럼이 사내 시스템 export 규격이다. 바뀌면 여기가 아니라 규격이 바뀐 것.
-  · 사내 DB(10.206.103.174): public.index_constituents(지수 비중·GICS) ·
-      market.ohlcv_factset(종목 종가) · public.price_major_index(지수 레벨) ·
-      mp.strategy_trade(전략 매매 원장 — MP 엑셀 VBA 가 쓴다)
+  · 사내 DB — 자격증명·호스트는 연구 repo util/variables.py 가 단일 출처다(아래 _db_params.
+      🚨 이 저장소는 공개라 여기에 절대 적지 않는다 — 2026-08-20 적대감사가 평문 노출을 잡았다).
+      public.index_constituents(지수 비중·GICS) · market.ohlcv_factset(종목 종가) ·
+      public.price_major_index(지수 레벨) · mp.strategy_trade(전략 매매 원장 — MP 엑셀 VBA 가 쓴다)
 
 자산구분 코드(해외 시트, 실측 2026-08-18): 1=개별주식 · 3=지수 ETF · 4=지수선물(평가액=노셔널)
   · 5=예금 · B=증거금. 선물 노셔널은 NAV 에 없고 노출에만 더한다 — 섞으면 합이 100%를 넘는다.
@@ -56,16 +57,40 @@ except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_build", "pages", "portfolio_content.html")
-# 입력 파일 탐색 — 두 곳을 다 보고 mtime 최신을 쓴다.
-#   2026-08-20 부터 정본은 네트워크 공유의 데이터 셔틀(사용자가 "업데이트" 탭 버튼으로 갱신·저장).
-#   SecureGate 다운로드는 예전 경로 호환으로 남긴다. ~$ 잠금 파일은 글롭에 안 걸린다.
-XLSM_GLOBS = [
-    # 슬래시형 UNC — 역슬래시형은 편집 도구를 거치며 이스케이프가 깨진 전력이 있다(2026-08-20 실측).
-    "//10.206.101.81/09_idx/윤여두/(주간) 자동화/2Z30*.xlsm",
-    "C:/HANSSAK/SecureGate/download/2Z30_MP_*.xlsm",
-]
-DB = dict(host="10.206.103.174", port=5432, dbname="postgres",
-          user="postgres", password="kbam", connect_timeout=12)
+LOCAL_CFG = os.path.join(ROOT, "_build", "portfolio_local.json")
+
+
+def _local_cfg():
+    """gitignore 된 로컬 설정(_build/portfolio_local.json) — 내부 파일서버 경로 등
+    공개 저장소에 적으면 안 되는 값을 담는다. xlsm_globs 는 슬래시형 UNC 로 적을 것
+    (역슬래시형은 편집 도구를 거치며 이스케이프가 깨진 전력이 있다 — 2026-08-20 실측)."""
+    import json
+    if not os.path.exists(LOCAL_CFG):
+        raise SystemExit("로컬 설정 없음: %s — {\"xlsm_globs\": [...]} 형태로 만들 것"
+                         "(내부 경로라 저장소에 안 들어간다)" % LOCAL_CFG)
+    return json.load(io.open(LOCAL_CFG, encoding="utf-8"))
+
+
+def _db_params():
+    """DB 자격증명 — 연구 repo util/variables.py 가 단일 출처(호스트 포함). 이 파일에 상수로
+    두지 않는다: 이 저장소는 공개이고, 실제로 평문 노출 사고가 있었다(2026-08-20 적대감사,
+    그 전 이력에는 남아 있어 별도 조치 대상). build/db_load.py 와 같은 사유·비슷한 순서다."""
+    repo = os.path.expanduser(os.getenv("YEOUIDO_REPO") or "C:/Projects/Yeouido")
+    if os.path.exists(os.path.join(repo, "util", "variables.py")):
+        sys.path.insert(0, repo)
+        try:
+            import util.variables as V
+            return dict(host=V.host, port=5432, dbname=V.database,
+                        user=V.user, password=V.password, connect_timeout=12)
+        finally:
+            sys.path.remove(repo)
+    env = {k: os.environ.get("YEOUIDO_DB_" + k) for k in ("HOST", "PORT", "NAME", "USER", "PASS")}
+    if env["HOST"] and env["USER"] and env["PASS"]:
+        return dict(host=env["HOST"], port=int(env["PORT"] or 5432),
+                    dbname=env["NAME"] or "postgres", user=env["USER"],
+                    password=env["PASS"], connect_timeout=12)
+    raise SystemExit("DB 접속 정보 없음 — 연구 repo util/variables.py(YEOUIDO_REPO) 또는 "
+                     "환경변수 YEOUIDO_DB_HOST/USER/PASS 를 준비할 것")
 
 FUNDS = [
     ("2Z30", "NDX Index", "ndx", "나스닥100"),
@@ -101,7 +126,7 @@ def cls_sign(v):
 # ── 1) 사내 export 읽기 ──────────────────────────────────────────────────────
 def load_xlsm():
     # mtime 동률(같은 저장을 양쪽에 복사한 경우)이면 네트워크 정본을 이긴다
-    files = sorted((f for g in XLSM_GLOBS for f in glob.glob(g)),
+    files = sorted((f for g in _local_cfg()["xlsm_globs"] for f in glob.glob(g)),
                    key=lambda f: (os.path.getmtime(f), f.replace(chr(92), '/').startswith('//')))
     if not files:
         raise SystemExit("사내 export 없음 — 네트워크 공유((주간) 자동화 2Z30*.xlsm) 또는 " "SecureGate 다운로드에 파일을 둘 것")
@@ -142,9 +167,12 @@ def load_xlsm():
 
 
 # ── 2) 사내 DB 읽기 ──────────────────────────────────────────────────────────
-def load_db(asof_by_fund):
+PANEL_DAYS = 504    # 웹 앱에 동봉하는 종가 패널 길이(거래일 ≈ 2년). 웹 백테스트·성과 재계산의 창.
+
+
+def load_db(asof_by_fund, held_tickers):
     import psycopg2
-    cn = psycopg2.connect(**DB)
+    cn = psycopg2.connect(**_db_params())
     cur = cn.cursor()
 
     cons = {}         # index → (dt, {ticker: (정규화 비중, 이름, GICS)})
@@ -163,26 +191,67 @@ def load_db(asof_by_fund):
     trades = [dict(index=i, dt=str(d), strategy=s, ticker=t, qty=float(q), px=float(p or 0))
               for i, d, s, t, q, p in cur.fetchall()]
 
-    px = {}           # ticker → {date: close}
-    tickers = sorted({t["ticker"] for t in trades})
-    if tickers:
-        t0 = min(t["dt"] for t in trades)
-        cur.execute("SELECT ticker, dt, value FROM market.ohlcv_factset "
-                    "WHERE value_type='c' AND dt>=%s AND ticker = ANY(%s) ORDER BY ticker, dt",
-                    (t0, [t + " EQUITY" for t in tickers]))
-        for tk, d, v in cur.fetchall():
-            if v is not None:
-                px.setdefault(tk[:-7], {})[str(d)] = float(v)
-
+    # 지수 레벨 — 패널 창(2년) 전체. ⚠ ohlcv 와 달리 여기가 거래일 달력의 정본이다:
+    #   ohlcv_factset 에는 주말 행이 섞여 있어(랩 실측) 그대로 축을 만들면 200일 창이 깨진다.
     lvl = {}          # index → {date: level}
     cur.execute("SELECT ticker, dt, value FROM public.price_major_index "
                 "WHERE ticker IN ('NDX Index','SPX Index') AND value_type='price' "
-                "AND dt>='2025-12-30' ORDER BY dt")
+                "AND dt>=%s ORDER BY dt",
+                ((dt.date.today() - dt.timedelta(days=int(PANEL_DAYS * 1.55) + 30)).isoformat(),))
     for tk, d, v in cur.fetchall():
         if v is not None:
             lvl.setdefault(tk, {})[str(d)] = float(v)
+
+    # 종가 — 웹 앱이 성과 재계산·백테스트를 하도록 유니버스 전체를 패널 창만큼 싣는다.
+    #   유니버스 = 두 지수 구성종목 ∪ 원장 티커 ∪ 보유 티커(편출 후 잔존 보유 대비).
+    asof_g = max(asof_by_fund.values())
+    axis = sorted(d for d in lvl["NDX Index"] if d <= asof_g)[-PANEL_DAYS:]
+    uni = set(held_tickers) | {t["ticker"] for t in trades}
+    for _d, cmap in cons.values():
+        uni |= set(cmap)
+    px = {}           # ticker → {date: close}
+    cur.execute("SELECT ticker, dt, value FROM market.ohlcv_factset "
+                "WHERE value_type='c' AND dt>=%s AND ticker = ANY(%s) ORDER BY ticker, dt",
+                (axis[0], [t + " EQUITY" for t in sorted(uni)]))
+    for tk, d, v in cur.fetchall():
+        if v is not None:
+            px.setdefault(tk[:-7], {})[str(d)] = float(v)
     cn.close()
-    return cons, trades, px, lvl
+    return cons, trades, px, lvl, axis
+
+
+def encode_panel(px, axis):
+    """종가 패널 → 웹 앱용 압축 인코딩.
+
+    한 종목의 종가를 «첫 유효 종가 p0 대비 비율 × 종목별 scale» 의 uint16 으로 담는다.
+    0 은 결측 예약. scale 은 65000/최대비율로 종목마다 정하므로 2년에 10배 오른 종목도
+    포화 없이 담기고, 해상도는 최악 0.015% — 성과·백테스트 눈금(1bp 단위)에 충분하다.
+    float32 대비 절반 크기다 — 이 패널은 AES 암호문에 통째로 들어가 페이지 무게가 된다.
+    바이트 순서는 리틀엔디언(x86 tobytes) — JS 의 Uint16Array 디코드와 같다.
+    """
+    import base64
+    from array import array
+    idx_of = {d: i for i, d in enumerate(axis)}
+    # v>0 필터 — 벤더 0.0 종가가 섞이면 p0=0 으로 ZeroDivisionError(빌드 사망) 또는 결측
+    # 예약값(0)과 충돌한다(적대감사 16). 0 종가는 가격이 아니라 결측이다.
+    tickers = sorted(t for t, ser in px.items()
+                     if any(d in idx_of and v > 0 for d, v in ser.items()))
+    nd = len(axis)
+    buf = array("H", bytes(2 * len(tickers) * nd))
+    p0s, scales = [], []
+    for k, t in enumerate(tickers):
+        ser = [(idx_of[d], v) for d, v in px[t].items() if d in idx_of and v > 0]
+        ser.sort()
+        p0 = ser[0][1]
+        mx = max(v for _i, v in ser)
+        sc = min(8000.0, 65000.0 * p0 / mx)
+        p0s.append(round(p0, 4))
+        scales.append(round(sc, 4))
+        base = k * nd
+        for i, v in ser:
+            buf[base + i] = max(1, min(65535, int(round(v / p0 * sc))))
+    return {"tickers": tickers, "p0": p0s, "scale": scales, "nd": nd,
+            "u16": base64.b64encode(buf.tobytes()).decode()}
 
 
 def last_leq(series_dict, date):
@@ -422,8 +491,17 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
                      % (esc(t), esc((nm or "")[:30]), pct(w, 2)))
         H.append("</tbody></table></div></details>")
 
-    # ③ 매매 내역
-    H.append('<h3>③ 전략 매매 내역 <span class="hnote">mp.strategy_trade 원장 · 체결가 = 당시 종가(실제 체결가 아님)</span></h3>')
+    # ③④ 는 웹 앱(js/portfolio_app.js)이 그린다 — DB 원장 + 웹 입력 원장을 합쳐 라이브로
+    #   계산해야 하기 때문이다(웹 입력은 이 생성기가 돌 때 존재하지 않는다). 파이썬 계산은
+    #   아래 <details> 정적 스냅샷으로 남겨 두 엔진의 교차검증 대상이 된다 — PF.check 에도
+    #   수치를 실어 앱이 기계 대조한다(불일치면 화면에 ⚠).
+    H.append('<h3>③ 매매 원장 <span class="hnote">DB(mp)+웹 입력 통합 · 체결가 = 당시 종가(실제 체결가 아님)</span></h3>')
+    H.append('<div class="appbox" id="ledger-%s"><p class="jswait">웹 앱이 그립니다 — 이 문구가 남아 있으면 js/portfolio_app.js 로드 실패</p></div>' % slug)
+    H.append('<h3>④ 전략 성과·기여 <span class="hnote">라이브 계산 · BM = 같은 날 같은 금액을 지수에(매매 시점 일치)</span></h3>')
+    H.append('<div class="appbox" id="perf-%s"><p class="jswait">웹 앱이 그립니다…</p></div>' % slug)
+
+    H.append('<details class="dbstatic"><summary>정적 스냅샷 — 생성 시점 파이썬 계산(교차검증용)</summary>')
+    H.append('<h4>매매 내역(DB 원장만)</h4>')
     if my_trades:
         H.append('<div class="tblwrap"><table class="big"><thead><tr><th>일자</th><th>전략</th><th>티커</th>'
                  '<th class="tnum">수량</th><th class="tnum">체결가</th><th class="tnum">금액(USD)</th>'
@@ -445,8 +523,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
     else:
         H.append("<p>이 지수에는 아직 전략 매매가 없다.</p>")
 
-    # ④ 성과·기여
-    H.append('<h3>④ 전략 성과·기여 <span class="hnote">BM = 같은 날 같은 금액을 지수에(매매 시점 일치)</span></h3>')
+    # ④ 성과·기여 — 정적 스냅샷 쪽
+    H.append('<h4>전략 성과·기여(DB 원장만)</h4>')
     if perf:
         H.append('<div class="tblwrap"><table class="big"><thead><tr><th>전략</th><th class="tnum">매수원금(USD)</th>'
                  '<th class="tnum">손익</th><th class="tnum">수익률</th><th class="tnum">BM</th>'
@@ -486,10 +564,21 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
             H.append("</tbody></table></div></details>")
     else:
         H.append("<p>전략 매매가 없어 성과를 계산할 것이 없다.</p>")
+    H.append("</details>")
 
     H.append("</section>")
+    # 웹 앱 교차검증용 — 파이썬이 계산한 전략별 (매수원금, 손익, BM손익). JS 엔진이 같은
+    # 원장(DB분)으로 같은 수를 내는지 화면에서 기계 대조한다.
+    perf_check = {sname: {"inv": round(s["last"]["inv"], 2), "pnl": round(s["last"]["pnl"], 2),
+                          "bm": round(s["last"]["bm"], 2)}
+                  for sname, s in perf.items() if s.get("last")}
+    fmeta = dict(fund=fund, idx=idx, label=label, asof=asof, asof_us=asof_us,
+                 nav=nav_v, base=base_p, fx=fx_v, sleeve=round(sleeve, 0), cons_d=cons_d,
+                 check=perf_check,
+                 cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
+                 held={t: round(h["qty"], 2) for t, h in held.items()})
     return "\n".join(H), dict(fund=fund, asof=asof, nav_d=nav_d, sleeve_ratio=w_stk,
-                              n_stocks=len(held), n_match=n_match, n_cons=len(cmap))
+                              n_stocks=len(held), n_match=n_match, n_cons=len(cmap), meta=fmeta)
 
 
 
@@ -522,7 +611,9 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 <li><b>배당 미반영</b> — 종가는 수정주가가 아니다. 보유 기간이 짧아 왜곡은 작지만 0이 아니다.</li>
 <li>매매~기준일 사이 하루 ±40%를 넘는 가격변동이 있으면 <b>분할 의심 ⚠</b>를 단다 — 벤더가 분할을 소급 반영하지 않은 사고가 실측된 바 있다.</li>
 <li>입력: 사내 시스템 export(NAV·환율·보유)와 사내 매매 원장. 갱신은 수동이다 — 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
-</ul></div>"""
+<li><b>웹 원장</b>은 이 페이지에서 입력한 전략·매매다. 저장하면 열람 암호로 AES-256-GCM 암호화되어 저장소의 <span class="tk">data/portfolio_user.json</span> 에 커밋된다 — 평문은 저장소·서버 어디에도 남지 않고, git 이력이 곧 버전 관리라 언제든 과거 버전으로 되돌릴 수 있다. 쓰기 토큰은 이 기기 브라우저에만 저장된다.</li>
+<li><b>웹 백테스트는 진단용이다.</b> 유니버스가 «현재» 구성종목이라 <b>생존편향</b>이 있고(랩 실측: 스타일에 따라 수~수십%p 부풀림), 지수는 PR·종가는 무배당이며, 창이 단일(패널 @PANEL@거래일)이라 통계적 유의성을 말할 수 없다. 배포 판단은 랩의 PIT 백테스트로만 한다.</li>
+</ul></div>""".replace("@PANEL@", str(PANEL_DAYS))
 
 
 def main() -> int:
@@ -534,7 +625,9 @@ def main() -> int:
         if f not in nav:
             raise SystemExit("NAV 시트에 펀드 %s 가 없다" % f)
     asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in FUNDS}
-    cons, trades, px, lvl = load_db(asof_by_fund)
+    held_tk = {r["ticker"] for f, _i, _s, _l in FUNDS
+               for r in hold[f][max(hold[f])] if r["asset"] == "1" and r["ticker"]}
+    cons, trades, px, lvl, axis = load_db(asof_by_fund, held_tk)
 
     panes, checks = [], []
     for f, idx, slug, label in FUNDS:
@@ -556,10 +649,43 @@ def main() -> int:
     tabs = "".join('<button class="tb" data-tab="%s" aria-selected="%s">%s · %s</button>'
                    % (slug, "true" if k == 0 else "false", label, f)
                    for k, (f, _i, slug, label) in enumerate(FUNDS))
+    tabs += '<button class="tb" data-tab="bt" aria-selected="false">웹 백테스트</button>'
+
+    # 웹 앱 데이터 블롭 — 원장 편집·성과 재계산·백테스트가 전부 이걸 먹는다.
+    #   조각(=암호문) 안에만 들어간다. 실펀드 수치라 평문 JSON 으로 따로 두면 안 된다.
+    import json
+    panel = encode_panel(px, axis)
+    asof_g = max(asof_by_fund.values())
+    lvl_arr = {}
+    for idx_name, key in (("NDX Index", "ndx"), ("SPX Index", "spx")):
+        ser = lvl[idx_name]
+        last = last_leq(ser, axis[0])[1]
+        out = []
+        for d in axis:
+            last = ser.get(d, last)
+            out.append(round(last, 2) if last is not None else None)
+        lvl_arr[key] = out
+    pf = {"gen": gen, "asof": asof_g, "dates": axis, "panel": panel, "lvl": lvl_arr,
+          "funds": {slug: checks[k]["meta"] for k, (_f, _i, slug, _l) in enumerate(FUNDS)},
+          "mp": [{"idx": t["index"], "dt": t["dt"], "s": t["strategy"],
+                  "t": t["ticker"], "q": t["qty"], "p": t["px"]} for t in trades],
+          "guard": SPLIT_GUARD}
+    # "</script>" 조기 종결 방지 — JSON 문자열 값 안의 "</" 를 이스케이프한다.
+    pf_json = json.dumps(pf, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+
     frag = ['<div class="pfhead"><div class="tabs" role="tablist">%s</div>'
+            '<div id="pfsync" class="pfsync"></div>'
             '<div class="gen">생성 %s · 입력 %s</div></div>' % (tabs, esc(gen), esc(os.path.basename(path)))]
+    frag.append('<div class="fundgrid">')
     frag += panes
+    frag.append('</div>')
+    frag.append('<section class="tabpane btpane" id="pane-bt" hidden>'
+                '<h3>⑤ 웹 백테스트 <span class="hnote">동봉 종가 패널 %d거래일(%s~%s) · '
+                '유니버스 = 현재 구성종목 — 생존편향 있음(아래 한계)</span></h3>'
+                '<div class="appbox" id="btbox"><p class="jswait">웹 앱이 그립니다…</p></div>'
+                '</section>' % (len(axis), esc(axis[0]), esc(axis[-1])))
     frag.append(NOTES)
+    frag.append('<script>window.PF=%s;</script>' % pf_json)
     frag.append(FRAG_SCRIPT)
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

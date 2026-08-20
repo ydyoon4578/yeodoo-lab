@@ -177,6 +177,41 @@ for p in PAGES:
         _pt = plain(p, "인라인 JS 괄호·미정의 호출(평문)")  # 잠금 해제 후 실제 렌더되는 본문
         if _pt is not None: js_checks(p + "(평문)", _pt)
 
+# ── 독립 JS 파일 문법 검사 — 인라인 <script> 만 보면 js/ 의 앱 본체(45KB)가 통째로
+#    사각지대다(2026-08-20 적대감사 확정: portfolio_app.js 를 아무 검사도 안 받고 있었다).
+#    괄호 세기는 생략 — 문자열·정규식 리터럴 오탐 전력이 있어, 파일 단위는 node 파서가 정답.
+_jsdir = os.path.join(ROOT, "js")
+for _jf in (sorted(os.listdir(_jsdir)) if os.path.isdir(_jsdir) else []):
+    if not _jf.endswith(".js"):
+        continue
+    _jlab = "js/" + _jf
+    if NODE:
+        _jr = _sp0.run([NODE, "--check", os.path.join(_jsdir, _jf)],
+                       capture_output=True, text=True, encoding="utf-8")
+        if _jr.returncode != 0:
+            _jfirst = next((l.strip() for l in (_jr.stderr or "").split("\n")
+                            if l.strip() and "SyntaxError" in l), (_jr.stderr or "")[:120])
+            errors.append(f"{_jlab}: JS 문법 오류 — 이 파일 전체가 실행되지 않는다. {_jfirst}")
+    elif os.getenv("CI"):
+        errors.append(f"{_jlab}: JS 문법 검사를 돌릴 node가 없다 — CI에서는 건너뛰지 않는다")
+    else:
+        tool_skips.append(f"{_jlab}: JS 문법 검사(node 없음)")
+
+# ── 자격증명 평문 게이트 — 2026-08-20 build/portfolio_fund.py 의 DB 암호가 평문으로
+#    origin/main 까지 나간 사고의 재발 방지. 리터럴만 잡는다(환경변수·모듈 참조는 통과).
+#    이 저장소는 공개다 — 사내망 IP·암호는 어떤 추적 파일에도 못 들어간다.
+for _cf in sorted(os.listdir(os.path.join(ROOT, "build"))):
+    if not _cf.endswith(".py"):
+        continue
+    try:
+        _cs = io.open(os.path.join(ROOT, "build", _cf), encoding="utf-8", errors="replace").read()
+    except Exception:
+        continue
+    if re.search(r'password\s*=\s*["\'][^"\']{2,}["\']', _cs):
+        errors.append(f"build/{_cf}: 암호 리터럴 의심 — 자격증명은 저장소 밖(util/variables.py·환경변수)에 둘 것")
+    if re.search(r"\b10\.2\d\d\.\d{1,3}\.\d{1,3}\b", _cs):
+        errors.append(f"build/{_cf}: 사내망 IP 리터럴 — 공개 저장소에 내부 주소를 적지 않는다")
+
 # ── 잠금 게이트 무결성: 암호문 sanity + 평문 지문(ph) 대조 ──────────────────
 #   ct 손상은 괄호 균형 검사로는 안 잡히고(실증: ct 400자 치환 → 통과), 페이지가 영구 복호불가가 된다.
 #   ph = sha256(평문 utf-8 바이트). 잠금(재암호화) 도구가 반드시 함께 기록해야 하는 계약 —
