@@ -26,6 +26,9 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
   · 5=예금 · B=증거금. 선물 노셔널은 NAV 에 없고 노출에만 더한다 — 섞으면 합이 100%를 넘는다.
 
 정의(화면 각주와 같아야 한다 — 렌더가 이 문서를 그대로 옮긴다):
+  · 시점 규약(T-1, 실측 검증 2026-08-20): 기준가(D) = 미국 D−1(직전 거래일) 종가 × D일
+    한국마감 환율. NAV·환율은 보유일로 자르지 않고 시트 최신 행을 쓰고, 연초 후 차트는
+    지수를 last_lt(하루 밀기)로 짝 맞춘다. 같은날 짝은 벤치가 하루 앞서 달리는 오류다.
   · 펀드비중 = 종목 평가액(원화) ÷ 개별주식 슬리브 합. 지수비중과 같은 눈금이 되도록
     주식 슬리브 안에서 정규화한다(펀드는 주식+ETF+선물로 지수를 복제하므로 NAV 분모로는
     전 종목이 일괄 언더웨이트로 보인다 — 그건 틸트가 아니라 구조다).
@@ -191,9 +194,12 @@ def load_db(asof_by_fund, held_tickers):
     trades = [dict(index=i, dt=str(d), strategy=s, ticker=t, qty=float(q), px=float(p or 0))
               for i, d, s, t, q, p in cur.fetchall()]
 
-    # 지수 레벨 — 패널 창(2년) 전체. ⚠ ohlcv 와 달리 여기가 거래일 달력의 정본이다:
-    #   ohlcv_factset 에는 주말 행이 섞여 있어(랩 실측) 그대로 축을 만들면 200일 창이 깨진다.
-    lvl = {}          # index → {date: level}
+    # 지수 레벨 — 패널 창(2년) 전체.
+    # 🚨 price_major_index 도 달력일 패딩이 있다(실측 2026-08-20: 08-15 토·08-16 일 행이
+    #   금요일 값 그대로 존재). 처음엔 여기를 거래일 정본으로 믿고 축을 만들어 패널 504행이
+    #   달력일이 됐다 — «6개월 모멘텀(126거래일)»이 실제로는 4.2개월이던 결함. 지수 레벨이
+    #   직전 행과 «정확히» 같으면 패딩으로 보고 걷어낸다(부동소수 지수가 진짜로 같을 확률≈0).
+    lvl = {}          # index → {date: level}  (패딩 포함 — ffill 용도로는 그대로 유용하다)
     cur.execute("SELECT ticker, dt, value FROM public.price_major_index "
                 "WHERE ticker IN ('NDX Index','SPX Index') AND value_type='price' "
                 "AND dt>=%s ORDER BY dt",
@@ -205,7 +211,9 @@ def load_db(asof_by_fund, held_tickers):
     # 종가 — 웹 앱이 성과 재계산·백테스트를 하도록 유니버스 전체를 패널 창만큼 싣는다.
     #   유니버스 = 두 지수 구성종목 ∪ 원장 티커 ∪ 보유 티커(편출 후 잔존 보유 대비).
     asof_g = max(asof_by_fund.values())
-    axis = sorted(d for d in lvl["NDX Index"] if d <= asof_g)[-PANEL_DAYS:]
+    _ser = sorted(lvl["NDX Index"].items())
+    trading = [d for k, (d, v) in enumerate(_ser) if k == 0 or v != _ser[k - 1][1]]
+    axis = [d for d in trading if d <= asof_g][-PANEL_DAYS:]
     uni = set(held_tickers) | {t["ticker"] for t in trades}
     for _d, cmap in cons.values():
         uni |= set(cmap)
@@ -259,6 +267,15 @@ def last_leq(series_dict, date):
     best = None
     for d in series_dict:
         if d <= date and (best is None or d > best):
+            best = d
+    return (best, series_dict[best]) if best else (None, None)
+
+
+def last_lt(series_dict, date):
+    """date «미만» 마지막 (date, v) — T-1 짝맞춤용. 기준가(D)는 직전 미국 거래일 종가를 담는다."""
+    best = None
+    for d in series_dict:
+        if d < date and (best is None or d > best):
             best = d
     return (best, series_dict[best]) if best else (None, None)
 
@@ -376,13 +393,19 @@ def svg_lines(series, labels=None, w=760, h=210, pad=40):
 
 
 # ── 5) 렌더 ──────────────────────────────────────────────────────────────────
-def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
+def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, axis):
     H = []
     asof = max(hold[fund])
     rows = hold[fund][asof]
-    nav_d, nav_pair = last_leq(nav[fund], asof)
-    nav_v, base_p = nav_pair
-    _fx_d, fx_v = last_leq(fx, asof)
+    # 시점 규약(사용자 확인 + 실측 검증 2026-08-20): 기준가(D) = 미국 D-1(직전 거래일) 종가
+    # × D일 한국마감 환율. 그래서 NAV·환율은 보유 기준일로 «자르지 않고» 시트의 최신 행을
+    # 쓴다 — 화면의 미국 종가(최신)와 짝이 맞는 것은 최신 NAV 다. 종전에는 last_leq(보유일)로
+    # 잘라 하루 낡은 NAV 를 최신 종가 옆에 붙였다.
+    nav_d = max(nav[fund])
+    nav_v, base_p = nav[fund][nav_d]
+    fx_d = max(fx)
+    fx_v = fx[fx_d]
+    _fxh_d, fx_hold = last_leq(fx, asof)   # 보유 원장과 같은 날 환율 — 원장 평가액과의 검산용
 
     by_asset = {}
     for r in rows:
@@ -394,16 +417,21 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
     w_fut = by_asset.get("4", 0) / nav_v          # 노셔널 — NAV 구성이 아니라 노출
     w_cash = (by_asset.get("5", 0) + by_asset.get("B", 0)) / nav_v
 
-    # 연초 후 — 기준가 vs 지수(원화환산), 시작일 = 100
+    # 연초 후 — 기준가 vs 지수(원화환산), 시작일 = 100.
+    # 🚨 지수는 last_lt(엄격히 이전 날) — T-1 짝맞춤이다. 실측(2026-08-20): 기준가 일수익이
+    #   같은날 지수와는 크게 어긋나고(08-19: −2.85% vs −1.22%) 전일 지수와 맞는다(−2.66%).
+    #   last_leq 로 짝지으면 벤치 곡선이 펀드보다 하루 앞서 달려 꼬리에서 가짜 괴리가 생긴다.
+    #   주말·휴일의 lvl 패딩(전일 값 복제)이 last_lt 와 만나면 자연스럽게 «직전 미국 거래일
+    #   종가»가 된다 — 월요일 기준가(D)의 짝은 일요일 패딩 = 금요일 종가.
     lvl_i = lvl[idx]
     nav_ser = sorted(nav[fund].items())
     d0 = nav_ser[0][0]
     bp0 = nav[fund][d0][1]
-    _i0d, i0 = last_leq(lvl_i, d0)
+    _i0d, i0 = last_lt(lvl_i, d0)
     _f0d, f0 = last_leq(fx, d0)
     fund_pts, bm_pts = [], []
     for d, (_n, bp) in nav_ser:
-        _id, iv = last_leq(lvl_i, d)
+        _id, iv = last_lt(lvl_i, d)
         _fd, fv = last_leq(fx, d)
         if iv and fv and i0 and f0:
             fund_pts.append((d, bp / bp0 * 100))
@@ -414,15 +442,17 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
     cons_d, cmap = cons[idx]
 
     my_trades = [t for t in trades if t["index"] == idx]
-    asof_us = max((d for d in lvl_i if d <= asof), default=asof)
+    asof_us = axis[-1]      # 최신 미국 거래일(패딩 제외 축의 끝) — 매매 평가·성과의 기준
     perf = strat_perf(my_trades, px, lvl_i, asof_us) if my_trades else {}
     tot_exc = sum(s["last"]["pnl"] - s["last"]["bm"] for s in perf.values() if s.get("last"))
     tot_bp = tot_exc * fx_v / nav_v * 1e4 if perf else 0.0
 
     H.append('<section class="tabpane" id="pane-%s"%s>' % (slug, "" if slug == "ndx" else " hidden"))
     H.append('<div class="fhead"><h2>%s <span class="fcode">%s · %s</span></h2>'
-             '<div class="asofline">보유·NAV·환율 %s · 지수비중 %s · 미국 종가 %s · USD %s</div></div>'
-             % (esc(label), esc(fund), esc(idx), esc(asof), esc(cons_d), esc(asof_us), num(fx_v)))
+             '<div class="asofline">보유 %s · NAV·기준가 %s · 환율 %s (%s) · 미국 종가 %s · 지수비중 %s'
+             '<br>기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 — 최신 종가와 짝은 최신 기준가</div></div>'
+             % (esc(label), esc(fund), esc(idx), esc(asof), esc(nav_d), esc(fx_d), num(fx_v),
+                esc(asof_us), esc(cons_d)))
 
     # ① 개요
     H.append('<h3>① 펀드 개요</h3><div class="cards">')
@@ -459,7 +489,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl):
         w_f = h["val"] / sleeve
         w_i = cmap.get(t, (0.0, None, None))[0]
         gics = cmap.get(t, (None, None, ""))[2] or ""
-        p_qty = (w_i * sleeve / (h["px"] * fx_v)) if (h["px"] and fx_v) else None
+        # 패시브 수량 검산은 원장 «내부» 눈금으로 — 원장 평가액(원화)이 원장 종가×보유일 환율로
+        # 만들어졌으니, 최신 환율을 섞으면 자기모순이 된다(수량 괴리가 환율 차이로 오염).
+        p_qty = (w_i * sleeve / (h["px"] * fx_hold)) if (h["px"] and fx_hold) else None
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 1e4,
                         qty=h["qty"], pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
@@ -604,6 +636,7 @@ FRAG_SCRIPT = """<script>
 </script>"""
 
 NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
+<li><b>시점 규약</b> — 기준가(D)는 «미국 D−1(직전 거래일) 종가 × D일 한국마감 환율»을 담는다(실측 검증: 기준가 일수익은 전일 지수와 맞는다). 그래서 화면은 NAV·환율을 시트의 최신 행으로, 미국 종가를 최신 거래일로 각각 표시하고, 연초 후 차트는 지수를 하루 밀어(T-1) 기준가와 짝을 맞춘다.</li>
 <li><b>펀드비중</b>은 종목 평가액(원화)을 개별주식 슬리브 합으로 나눈 것이다 — 지수비중과 같은 눈금이 되도록 주식 안에서 정규화했다. 펀드는 주식+ETF+선물로 지수를 복제하므로 NAV 분모로 보면 전 종목이 일괄 언더웨이트로 보인다.</li>
 <li><b>패시브 수량</b> = 지수비중 × 주식슬리브(원) ÷ (종가 × USD환율). 괴리 = 실제 − 패시브. 액티브 틸트의 수량 표현이다.</li>
 <li><b>체결가는 당시 종가다</b> — 실제 체결가가 아니다(원장을 쓰는 MP 엑셀이 종가를 박는다). 수익률·기여는 그만큼 근사치다.</li>
@@ -631,7 +664,7 @@ def main() -> int:
 
     panes, checks = [], []
     for f, idx, slug, label in FUNDS:
-        pane, chk = render_fund(f, idx, slug, label, nav, fx, hold, cons, trades, px, lvl)
+        pane, chk = render_fund(f, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, axis)
         panes.append(pane)
         checks.append(chk)
 
