@@ -108,6 +108,9 @@ KNOWN = {
     "tripod_pit.json":
         "얼린 관문 측정(삼각대 차단 관문 해소 · 혼합 PIT t 2.56 — PREREG-2026-08-19-TRIPOD). "
         "재료(pit_strategies chart.monthly)가 갱신되면 --refreeze 로만 다시 잰다.",
+    "strategy_forward.json":
+        "틸트 계열 전방 주간 기록(append-only · build/forward_weekly.py). 입력이 DB 비중 "
+        "캐시라 로컬 주간 절차로만 자란다(RUNBOOK-FORWARD.md) — 러너 잡이 없는 것이 정상.",
     "delisted_names.json":
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
@@ -119,6 +122,14 @@ KNOWN = {
 #   pit_fetch_report·pit_reuse 가 «러너에 캐시가 없다» 는 상관없는 이유로 조용해졌다.
 #   감사기가 상관없는 이유로 발견을 덮으면 그때부터 거짓말을 하는 것이다.
 KNOWN_UNREAD = {
+    "tripod_pit.json":
+        "결과가 build/tested_not_published.json 의 e-tripod 한 줄(관문 해소 · 혼합 PIT t 2.56)로 "
+        "실렸고 report.html «돌렸지만 게시 안 함» 에 나온다 — index_add.json 과 같은 패턴. "
+        "원본 JSON 은 그 얼린 기록을 만든 작업 산출물이다.",
+    "strategy_forward.json":
+        "전방 주간 기록의 원장(append-only) — 지금 0행이라 읽을 화면이 아직 없다. "
+        "20주쯤 쌓이면 백테스트와의 첫 대조 화면이 이것을 읽는다(RUNBOOK-FORWARD.md). "
+        "그때 이 줄을 지우고 독자를 붙일 것.",
     "index_add.json":
         "결과가 build/tested_not_published.json 의 e-spxadd1/3/6 · e-ndxadd1/3/6 여섯 "
         "줄로 실렸고 report.html «돌렸지만 게시 안 함» 에 나온다(2026-08-18). 원본 JSON 은 "
