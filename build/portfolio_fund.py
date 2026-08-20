@@ -604,16 +604,19 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         _off = ' <span class="offb" title="지수 구성종목이 아니다">밖</span>' if r["t"] not in cmap else ''
         # 펀드비중 칸 음영 — 초록 = 오버웨이트 · 빨강 = 언더웨이트. 진하기는 |차이| 에 비례
         # (0.5%p 에서 상한 30%). 색만으로 안 가르고 차이 열이 수치를 그대로 말한다.
+        # 🚨 완성된 조각(_off·_bg)을 **포맷 문자열에 이어 붙이지 않는다.** 붙였다가
+        #   color-mix 의 «30%,» 가 서식 문자로 읽혀 빌드가 죽었다(ValueError, 2026-08-21).
+        #   조각은 값으로만 넘긴다 — 그러면 그 안에 무엇이 들어 있든 안전하다.
         _shade = min(30.0, abs(r["d"]) * 60.0)
-        _bg = (' style="background:color-mix(in srgb,var(--%s) %.0f%%,transparent)"'
-               % ("good" if r["d"] > 0 else "hot", _shade)) if abs(r["d"]) >= 0.005 else ''
-        H.append(('<tr><td class="tk">%s' + _off + '</td><td>%s</td><td class="sec">%s</td>'
-                 '<td class="tnum">%s</td><td class="tnum"' + _bg + '>%s</td>'
+        _bg = (' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
+               % ("good" if r["d"] > 0 else "hot", round(_shade))) if abs(r["d"]) >= 0.005 else ''
+        H.append('<tr><td class="tk">%s%s</td><td>%s</td><td class="sec">%s</td>'
+                 '<td class="tnum">%s</td><td class="tnum"%s>%s</td>'
                  '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
-                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>')
-                 % (esc(r["t"]), esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
-                    pct(r["wi"], 2), pct(r["wf"], 2),
+                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>'
+                 % (esc(r["t"]), _off, esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
+                    pct(r["wi"], 2), _bg, pct(r["wf"], 2),
                     pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq"], 0) if r["pq"] is not None else "—",
