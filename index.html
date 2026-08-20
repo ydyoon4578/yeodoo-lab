@@ -2111,9 +2111,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var _sub=el('wk-sub');
     if(_sub){
       var _lag=_last?bdGap(_last):0;
+      // 🚨 2026-08-21 사용자 신고 «왜 아직도 지연이야» — 이 라벨이 매일 아침 거짓 경보를
+      //   냈다. 미국장 D일 종가는 KST D+1 새벽 5시에 확정되고 수집 잡은 07:34~08:20 에
+      //   돈다. 자정~아침 잡 완료 사이엔 bdGap 이 항상 2 — 밀린 게 아니라 주기 안이다.
+      //   문턱을 시각 인지형으로: 09시(KST·독자 로컬) 전엔 3부터, 후엔 2부터가 '걸렀다'.
+      var _thr=(new Date().getHours()<9)?3:2;
       _sub.textContent = !_last ? '· 지수 등락률 미수신'
-        : (_lag>=2 ? ('· 지수 등락률 '+_last+'까지 · '+_lag+'영업일 지연') : '');
-      _sub.className = 'sub' + ((!_last||_lag>=2)?' wsub':'');
+        : (_lag>=_thr ? ('· 지수 등락률 '+_last+'까지 · '+_lag+'영업일 지연') : '');
+      _sub.className = 'sub' + ((!_last||_lag>=_thr)?' wsub':'');
     }
     box.innerHTML='<div class="calgrid">'+h+'</div>';
     // 제목 옆 부제(구간·건수·기준일)는 뺐다 — 격자가 그 구간을 이미 보이고 있다
