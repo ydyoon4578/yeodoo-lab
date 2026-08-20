@@ -12,6 +12,10 @@
 from __future__ import annotations
 import datetime as dt
 import math
+import sys
+
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
 
 import style_top_pdf as ST
 from style_top_pdf import tx, hline, box
@@ -123,7 +127,7 @@ def draw_monthly_heat(fig, x, y, mat, yr, width=.86, title="월간 수익률(%)"
     for m in range(1, 13):
         tx(fig, x + cw * m + cw * .5, y, "%d" % m, fontsize=6.2, color=MUTED, ha="center")
     tx(fig, x + cw * 13 + cw * .5, y, "연간", fontsize=6.2, color=MUTED, ha="center")
-    y -= .004
+    y -= .008
     for yr_s in years:
         y -= rh
         tx(fig, x + .004, y + rh - .003, yr_s, fontsize=6.6)
@@ -133,11 +137,7 @@ def draw_monthly_heat(fig, x, y, mat, yr, width=.86, title="월간 수익률(%)"
             if v is not None:
                 a = min(1.0, abs(v) / 8.0)
                 col = POS if v >= 0 else NEG
-                box(fig, cx, y, cw * .96, rh * .92, col, z=0)
-                box(fig, cx, y, cw * .96, rh * .92, PAPER, z=0)  # 바탕 되살림
-                # 투명도 흉내 — 밝은 배경 위 옅은 칠
-                box(fig, cx, y, cw * .96, rh * .92,
-                    _blend(col, a * .45), z=1)
+                box(fig, cx, y, cw * .96, rh * .92, _blend(col, a * .45), z=1)
                 tx(fig, cx + cw * .48, y + rh - .003, "%+.1f" % v, fontsize=5.8,
                    ha="center", color=INK, zorder=3)
         v = yr.get(yr_s)
