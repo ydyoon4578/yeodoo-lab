@@ -56,7 +56,14 @@ except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_build", "pages", "portfolio_content.html")
-XLSM_GLOB = r"C:\HANSSAK\SecureGate\download\2Z30_MP_*.xlsm"
+# 입력 파일 탐색 — 두 곳을 다 보고 mtime 최신을 쓴다.
+#   2026-08-20 부터 정본은 네트워크 공유의 데이터 셔틀(사용자가 "업데이트" 탭 버튼으로 갱신·저장).
+#   SecureGate 다운로드는 예전 경로 호환으로 남긴다. ~$ 잠금 파일은 글롭에 안 걸린다.
+XLSM_GLOBS = [
+    # 슬래시형 UNC — 역슬래시형은 편집 도구를 거치며 이스케이프가 깨진 전력이 있다(2026-08-20 실측).
+    "//10.206.101.81/09_idx/윤여두/(주간) 자동화/2Z30*.xlsm",
+    "C:/HANSSAK/SecureGate/download/2Z30_MP_*.xlsm",
+]
 DB = dict(host="10.206.103.174", port=5432, dbname="postgres",
           user="postgres", password="kbam", connect_timeout=12)
 
@@ -93,9 +100,11 @@ def cls_sign(v):
 
 # ── 1) 사내 export 읽기 ──────────────────────────────────────────────────────
 def load_xlsm():
-    files = sorted(glob.glob(XLSM_GLOB), key=os.path.getmtime)
+    # mtime 동률(같은 저장을 양쪽에 복사한 경우)이면 네트워크 정본을 이긴다
+    files = sorted((f for g in XLSM_GLOBS for f in glob.glob(g)),
+                   key=lambda f: (os.path.getmtime(f), f.replace(chr(92), '/').startswith('//')))
     if not files:
-        raise SystemExit("사내 export 없음 — %s 에 2Z30_MP_*.xlsm 을 내려받을 것" % os.path.dirname(XLSM_GLOB))
+        raise SystemExit("사내 export 없음 — 네트워크 공유((주간) 자동화 2Z30*.xlsm) 또는 " "SecureGate 다운로드에 파일을 둘 것")
     path = files[-1]
     import openpyxl
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
