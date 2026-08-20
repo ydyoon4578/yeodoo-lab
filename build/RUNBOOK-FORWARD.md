@@ -17,12 +17,11 @@
 1. **비중 캐시 갱신** — YEOUIDO_REPO 자격으로 NDX 주말 스냅샷을 다시 받는다
    (v2 형식: [티커, 비중, gics]). 세션 기록 2026-08-20 참조 — 쿼리는
    index_constituents 에서 주말 날짜 목록으로. 산출: data/_ndx_weights_cache.json(gitignore).
-2. **전방 파일에 잇기** — ⚠ 얼린 정본(data/{tilt,wvane,fleet,web}.json)은 건드리지
-   않는다(빌더에 동결 가드 있음 — --refreeze 는 자료 정정 전용). 전방 주간 수익은
-   **별도 파일**(data/strategy_forward.json)로 받아야 하며, 그 이어붙임 스크립트는
-   **아직 미구현**이다 — 구현 전까지 전방 기록 공식 상태는 0건이다.
-   설계 요건(점검 패널 ③-b): 기존 행 불변(append-only) · 재계산이 기존 행과 어긋나면
-   경고 · 얼린 span 이후의 주만 추가.
+2. **전방 파일에 잇기** — `python build/forward_weekly.py` (2026-08-21 구현).
+   얼린 정본은 건드리지 않고 data/strategy_forward.json 에 append-only 로 쌓는다:
+   기존 행 불변 · 재계산이 기존 행과 어긋나면 경고만(원 기록 유지) · 얼린 span 이후의
+   주만 추가. 트랙: web(거미줄·챔피언·복제) + tilt(모멘텀 틸트·복제).
+   삼각대 전방은 pit_backtest 월간 갱신이 자동으로 잇는다(같은 시계열 — 별도 절차 불요).
 3. **대조 시점** — 20주 쌓이면 백테스트와 첫 대조(틸트 보고서 ④).
 
 ## 관련 파일

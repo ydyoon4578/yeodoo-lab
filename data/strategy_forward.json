@@ -1,0 +1,1 @@
+{"note":"틸트 계열 전방 주간 기록 — append-only. 얼린 정본과 분리(런북 참조). 기록된 주는 불변 — 재계산이 어긋나면 경고만 내고 원 기록을 지킨다.","runbook":"build/RUNBOOK-FORWARD.md","tracks":{"web":{"frozen_end":"2026-08-19","rows":[],"n":0},"tilt":{"frozen_end":"2026-08-19","rows":[],"n":0}},"last_run":"2026-08-20T22:10:46Z"}
