@@ -91,7 +91,8 @@ def run(dts, px, sig, W, AL, we_idx, k_tilt=K_TILT, cost=COST, monthly=False):
         # 티커 → 랩 가격 키(개명은 cik_hist 별칭으로)
         port = []
         drop = 0.0
-        for t, w in rows:
+        for row in rows:                     # v2 캐시(gics 3원소)·v1(2원소) 모두 허용
+            t, w = row[0], row[1]
             key = None
             if px.get(t) and px[t][i0] and px[t][i1]:
                 key = t
