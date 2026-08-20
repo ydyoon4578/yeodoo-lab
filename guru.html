@@ -845,13 +845,62 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        (allcov?'보이는 분기는 <b>가격 커버 100%</b>라 커버 열을 걷었습니다. '
               :'「커버」는 가격을 찾은 비중이며 나머지는 빼고 재정규화했습니다. ')+
        '두 지수 다 가격지수라 배당이 빠집니다.</p></div>';
+    // ── 따라 사기(공시 2개월 뒤 매수) — 2026-08-20 사용자 지시 ──────────────
+    // 「2개월 뒤에 샀다는 가정하에 백테스트. 3월 말 포트는 5월 말에 사는걸로.」
+    // ⚠ 화면이 계산하지 않는다 — guru_quarter_perf.py 의 tradeable 레그를 전사만 한다.
+    //   실행 가능성은 빌더가 접수일 1,325건으로 검증했다(최대 지연 49일 < 2개월).
+    h+=qpTradeBlock(m);
+    return h;
+  }
+
+  function qpTradeBlock(m){
+    var T=QP&&QP.tradeable; if(!T||!T.by_manager)return '';
+    var rs=T.by_manager[String(m.cik)]; if(!rs||!rs.length)return '';
+    var sum=(T.summary||[]).filter(function(x){return String(x.cik)===String(m.cik);})[0]||{};
+    var last=rs.slice(-12).reverse();
+    var h='<div class="qpwrap" style="margin-top:14px"><div class="qphd">따라 사기 — 공시 뒤 매수 '+
+      '<span class="qpsub">신고 2개월 뒤 월말에 사서 다음 신고분으로 교체 · '+
+      (sum.n_q?('누적 '+sum.n_q+'분기('+esc(sum.from||'')+'~'+esc(sum.to||'')+') · 연 '+
+        (sum.cagr>0?'+':'')+(sum.cagr==null?'—':sum.cagr.toFixed(2))+'% vs S&P 500 '+
+        (sum.cagr_spx>0?'+':'')+(sum.cagr_spx==null?'—':sum.cagr_spx.toFixed(2))+'% · 나스닥 100 '+
+        (sum.cagr_ndx>0?'+':'')+(sum.cagr_ndx==null?'—':sum.cagr_ndx.toFixed(2))+'%'):'')+'</span></div>'+
+      '<p class="qpwarn" style="border-left-color:var(--deploy)">✅ <b>이쪽은 따라 살 수 있었던 '+
+      '성과입니다.</b> 3월 말 신고분을 5월 말에 사는 식으로 공시 지연을 태웠습니다 — 접수일 '+
+      '1,325건 실측에서 최대 지연이 49일이라 이 규칙은 전 구간에서 실행 가능했습니다. '+
+      '단 <b>신고 포트폴리오 전체가 아니라</b> 이 랩 유니버스(오늘의 S&amp;P 500 ∪ 나스닥 100) 안 '+
+      '조각'+(sum.uni_pct!=null?('(현재 값 기준 <b>'+nf(sum.uni_pct,0)+'%</b>)'):'')+
+      '만 따라 산 것이고, 유니버스가 오늘 구성이라 생존편향으로 부풀려진 방향입니다.</p>'+
+      '<canvas class="qpc2" data-cik="'+esc(String(m.cik))+'" height="190" style="width:100%;margin:2px 0 10px"></canvas>'+
+      '<div class="qplgd"><i style="background:var(--accent)"></i>따라 사기'+
+      '<i style="background:var(--muted)"></i>S&amp;P 500'+
+      '<i style="background:var(--marg)"></i>나스닥 100</div>'+
+      '<div class="fswrap"><table class="tbl"><thead><tr><th class="l">신고 → 매수</th>'+
+      '<th>보유 %</th><th>S&amp;P 500 %</th><th>나스닥 100 %</th>'+
+      '<th class="grp">vs SPX</th><th>vs NDX</th></tr></thead><tbody>';
+    last.forEach(function(r){
+      var lab=r.q.slice(0,7)+' → '+r.buy.slice(2)+' 매수';
+      h+='<tr><td class="l">'+esc(lab)+(r.carried?' <span class="sub" title="이 분기 신고가 없어 직전 명단을 그대로 들었다">⚠직전</span>':'')+'</td>'+
+         '<td><b>'+nf(r.ret,2)+'</b></td><td>'+nf(r.spx,2)+'</td><td>'+nf(r.ndx,2)+'</td>'+
+         '<td class="grp '+((r.vs_spx||0)>0?'up':'dn')+'">'+pc(r.vs_spx)+'</td>'+
+         '<td class="'+((r.vs_ndx||0)>0?'up':'dn')+'">'+pc(r.vs_ndx)+'</td></tr>';
+    });
+    h+='</tbody></table></div>'+
+       '<p class="lblnote" style="margin:8px 0 0">매수·교체 다 <b>월말 종가</b>고 무비용입니다. '+
+       '신고가 빠진 분기는 직전 명단을 그대로 듭니다'+
+       (sum.carried?(' (이 운용사 '+sum.carried+'분기)'):'')+'. '+
+       '두 지수 다 가격지수라 배당이 빠집니다.</p></div>';
     return h;
   }
 
   // 누적 곡선 — 분기 수익을 이어 붙인다(1 에서 시작). 캔버스 하나짜리라 여기 둔다.
   function paintQP(){
-    var cv=document.querySelector('.qpc'); if(!cv||!QP||!QP.by_manager)return;
-    var rs=QP.by_manager[cv.getAttribute('data-cik')]; if(!rs||rs.length<2)return;
+    // 두 곡선(as-of · 따라 사기)을 같은 페인터로 — 사본을 만들면 한쪽만 고쳐진다.
+    paintQPone('.qpc', QP&&QP.by_manager);
+    paintQPone('.qpc2', QP&&QP.tradeable&&QP.tradeable.by_manager);
+  }
+  function paintQPone(selq, BY){
+    var cv=document.querySelector(selq); if(!cv||!BY)return;
+    var rs=BY[cv.getAttribute('data-cik')]; if(!rs||rs.length<2)return;
     // 🚨 벤치마크는 **둘 다** 그린다(2026-08-19 사용자 지시). 표는 처음부터 SPX·NDX 를
     //   나란히 적고 있었는데 곡선만 SPX 하나였다 — 한 화면이 두 기준을 쓰면 안 된다.
     var a=[1], b=[1], c=[1];
