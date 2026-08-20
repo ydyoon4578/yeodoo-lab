@@ -395,6 +395,13 @@
   .vblock .vt{margin:11px 0 0;font-size:13px;line-height:1.65;color:var(--ink-2)}
   .vblock .vt b{color:var(--ink)}
   /* 근거는 문단이 아니라 항목이다 — 한 줄에 하나, 라벨이 앞. */
+  /* 2026-08-21 카드 다이어트 — 검증 요약 한 줄 + 강조 딱지 칩(산문은 접힘으로) */
+  .vsum{margin:7px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7}
+  .vsum i{font-style:normal;opacity:.75}
+  .vsum .vsep{opacity:.55}
+  .vflags{margin:6px 0 0;display:flex;flex-wrap:wrap;gap:4px}
+  .vflag{font-style:normal;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:2px;
+         border:1px solid color-mix(in srgb,var(--hot) 45%,transparent);color:var(--hot)}
   .vblock .vpts{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
   .vblock .vpts li{font-size:12.5px;line-height:1.55;color:var(--ink-2);
     padding-left:12px;text-indent:-12px}
@@ -1216,18 +1223,38 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   ② 배분형  — 무엇을 얼마나, 또는 얼마나 들어갈지를 정한다
   //   ③ 비교 보류 — 대조군과 목표가 달라(낙폭·보험) 또는 표본이 짧아 우열을 말할 수 없다
   // ③은 ①②보다 우선한다. 비교할 수 없다는 사실이 그 전략을 읽는 방법을 통째로 바꾸기 때문이다.
+  // 🚨 2026-08-21 사용자 요청 — 큰 칸을 «팩터·테크니컬·타이밍·자산배분» 가족 축으로 교체.
+  //   가족 지도의 정본은 data/strategy_kinds.json 의 family_of(종목 전략 64종 · 손 지도) +
+  //   규칙(자산배분 src/배분기→자산배분 · 타이밍오버레이/위험방어→타이밍·방어)이고,
+  //   지도에 없는 종목 수익엔진은 '미분류'로 떠서 validate_site 가 잡는다(낡음 방지).
+  //   비교 보류(nocmp)는 가족보다 우선한다 — 그 사실이 읽는 법을 통째로 바꾸는 건 종전과 같다.
   var SEC=[
-    {k:'stock', n:'종목을 고르는 전략',
-     d:'지금 들고 있는 종목을 그대로 볼 수 있습니다 — 대부분 10종목입니다.'},
-    {k:'alloc', n:'비중·노출을 정하는 전략',
-     d:'무엇을 얼마나 담을지, 또는 얼마나 들어가 있을지를 정합니다.'},
+    {k:'factor', n:'팩터 전략',
+     d:'재무·공시·애널리스트·13F 등 가격 밖 정보로 종목을 고릅니다.'},
+    {k:'tech', n:'테크니컬 전략',
+     d:'가격·거래량·시계열 통계만으로 종목을 고릅니다.'},
+    {k:'timing', n:'타이밍·방어 전략',
+     d:'노출을 조절하거나(들어갈까/얼마나) 낙폭 자체를 막는 것이 목적입니다.'},
+    {k:'alloc', n:'자산배분 전략',
+     d:'자산군 사이의 비중·구성을 정합니다.'},
     {k:'nocmp', n:'지수와 나란히 못 두는 전략',
-     d:'목표가 수익이 아니거나(낙폭 줄이기·보험) 기간이 짧아, 지수와 같은 잣대로 우열을 말할 수 없습니다. 낙폭과 위기 구간으로 봅니다.'}
+     d:'목표가 수익이 아니거나(낙폭 줄이기·보험) 기간이 짧아, 지수와 같은 잣대로 우열을 말할 수 없습니다. 낙폭과 위기 구간으로 봅니다.'},
+    {k:'unk', n:'미분류',
+     d:'가족 지도(strategy_kinds.json family_of)에 아직 없는 전략 — 검사가 잡습니다.'}
   ];
-  var SECN={stock:SEC[0],alloc:SEC[1],nocmp:SEC[2]};
+  var SECN={}; SEC.forEach(function(x){SECN[x.k]=x;});
+  var SEC_ORDER=SEC.map(function(x){return x.k;});
   function secOf(d){
     if(d._cmp===false)return 'nocmp';
-    return (d._holds==='종목')?'stock':'alloc';
+    var fo=(KINDS&&KINDS.family_of)||{};
+    var f=d.sid&&fo[d.sid];
+    if(f==='팩터')return 'factor';
+    if(f==='테크니컬')return 'tech';
+    var k=kindOf(d);
+    if(k==='타이밍오버레이'||k==='위험방어')return 'timing';
+    if(k==='배분기')return 'alloc';
+    if(d._src==='자산배분')return 'alloc';
+    return d.sid?'unk':'alloc';   // 인라인(배포 원장·자산 랩) 잔여는 자산 성격
   }
   function kmeta(k){return (KINDS&&KINDS.kinds&&KINDS.kinds[k])||null;}
   function kcol(k){return KIND_COLOR[k]||'#9A9A9A';}
@@ -1352,7 +1379,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             // 🚨 vt 는 **한 줄**로 둔다(판정 머리말 + 강조 딱지). 근거 수치는 vp 에 항목으로
             //   쌓는다 — 전에는 여기에 <em> 문단을 계속 이어 붙여 카드 하나가 20줄 산문이
             //   됐고, 그러면 무엇이 강조인지 안 보인다(2026-08-12 사용자 지적).
-            t:x.rule||'', vt:(x.why||''), vp:[], vpn:(x.note||''),
+            t:x.rule||'', vt:(x.why||''), vp:[], vs:[], vpn:(x.note||''),
             _lab:true, _src:x.src, _hold:x.holdings||null,
             // '고르는 것' 필터가 읽는다. 아래 MX 병합에서도 채우지만 그건 이름으로
             // 조인하는 경로라, 이름이 어긋나면 조용히 빈다 — 여기서 직접 싣는다.
@@ -1409,6 +1436,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   '연 수익 '+f(Pt.retro_cagr)+'% 가 '+f(Pt.cagr)+'% 로 바뀝니다. '+
                   '차이 '+f(Pt.bias_cagr)+'%p 는 <b>지금 살아남은 종목만 골라 과거에 적용한 몫</b>입니다 — '+
                   '실력이 아니라 자료가 만든 수익입니다.');
+            d.vs.push('시점정확 '+f(Pt.cagr)+'% <i>(소급 '+f(Pt.retro_cagr)+'%)</i>');
           }
           // 증분 알파 — 가장 닮은 규칙을 이미 들고 있을 때 이 규칙이 더 주는 것.
           // 단독 t 만 실으면 같은 베팅을 여러 번 센 것이 안 보인다(에코 모멘텀 단독 3.80 → 증분 0.85).
@@ -1421,6 +1449,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (ic.alpha>0?'+':'')+ic.alpha+'%p</b> 뿐입니다'+
                   (solo==null?'':(' — 혼자 재면 좋아 보이지만(t '+solo+') 겹치는 부분을 빼면 t '+ic.t+' 입니다'))+
                   (absorbed?'. <b>즉 새로운 것이 거의 없습니다.</b>':'.'));
+            d.vs.push('중복 vs '+esc(ic.vs||'')+' t '+(solo==null?'—':solo)+'→'+ic.t);
           }
           // 🚨 이웃 **하나**만 통제하면 문턱이 무르다. 실측(2026-08-04, 게시 56종):
           //   증분 t≥2 를 넘던 11종 중 이웃 5개 동시 통제에서도 넘는 것은 7종이다.
@@ -1445,6 +1474,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (vt2.excess_cagr>0?'+':'')+vt2.excess_cagr+'%p · Δ샤프 '+
                   (vt2.d_sharpe>0?'+':'')+vt2.d_sharpe+' · t '+vt2.t+
                   (vt2.t_net==null?'':(' (비용 후 '+vt2.t_net+')')));
+            d.vs.push('vs 매매풀 t '+vt2.t+(vt2.t_net==null?'':' <i>(비용후 '+vt2.t_net+')</i>'));
           }
           // 비용 후 — 회전이 큰 규칙은 무비용 숫자를 그대로 읽으면 안 된다.
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
@@ -1458,6 +1488,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   (x.metrics&&x.metrics.sharpe!=null?x.metrics.sharpe:'—')+' → '+
                   (mn.sharpe!=null?mn.sharpe:'—')+
                   (bn.sharpe!=null?(' 입니다. 같은 기간 '+bmName(x)+' 의 샤프는 '+bn.sharpe+' 입니다.'):' 입니다.'));
+            d.vs.push('비용후 샤프 '+(mn.sharpe!=null?mn.sharpe:'—'));
             // 🚨 비용 가정 하나로 판정이 흔들리면 그건 판정이 아니라 그 가정이다. 그래서
             //   종목 랩은 편도 5·10·20bp 를 **전부** 재서 싣는다 — 어느 문턱에서 t 가
             //   임계 아래로 내려가는지가 그 규칙이 얼마나 비용에 얹혀 있었나의 답이다.
@@ -1476,6 +1507,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                 d.vp.push('<b>비용을 더 비싸게 잡아 보면</b> — 비용이 0일 때 t '+(t0==null?'—':t0)+
                       ', 비용을 올릴수록 '+sg.join(' → ')+' 로 바뀝니다. '+
                       '이 전략은 1년에 자산의 '+(x.net.traded==null?'—':x.net.traded)+'배를 사고팝니다.');
+                d.vs.push('회전 '+(x.net.traded==null?'—':x.net.traded)+'x/yr'+
+                      ((sn['20']&&sn['20'].t!=null)?' · t@20bp '+sn['20'].t:''));
               }
             }
           }
@@ -1793,7 +1826,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     });
     rows.sort(function(a,b){
       if(state.sort==="kind"){
-        var sa=['stock','alloc','nocmp'].indexOf(secOf(a)),sb=['stock','alloc','nocmp'].indexOf(secOf(b));
+        var sa=SEC_ORDER.indexOf(secOf(a)),sb=SEC_ORDER.indexOf(secOf(b));
         if(sa!==sb)return sa-sb;
         var ka=KIND_ORDER.indexOf(kindOf(a)),kb=KIND_ORDER.indexOf(kindOf(b));
         var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
@@ -3236,30 +3269,30 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         // ⑧ 판정과 통계 — 카드에서 여기 처음 등장한다
         '<div class="vblock" style="--vbg:'+vbg+'">'+
           '<div class="vbh">운용 등급 (배포 여부)</div>'+
-          '<div class="vbr"><span class="vbadge '+d.v+'">'+esc(VMETA[d.v].lab)+'</span>'+
-            '<span class="vmean">'+esc(VMETA[d.v].mean)+
-            (VMETA[d.v].orig!==VMETA[d.v].lab?' <span style="opacity:.75">(원 판정 표기: '+esc(VMETA[d.v].orig)+')</span>':'')+
-            '</span></div>'+
+          // 2026-08-21 사용자 요청 «정신없다» — 뜻풀이 문단을 걷고 배지 툴팁으로 내린다.
+          //   문구 자체는 VMETA.mean 그대로다(내리는 것 ≠ 지우는 것).
+          '<div class="vbr"><span class="vbadge '+d.v+'" title="'+esc(VMETA[d.v].mean)+
+            (VMETA[d.v].orig!==VMETA[d.v].lab?' (원 판정 표기: '+esc(VMETA[d.v].orig)+')':'')+
+            '">'+esc(VMETA[d.v].lab)+'</span></div>'+
           (function(){
             // 🚨 규칙 자신의 서술(why)은 한 문단이 아니라 **첫 문장 + 접힘**이다. 지우지 않는다 —
             //   이 랩이 '전제·한계'를 접어 둔 것과 같은 규약이고, 지우면 왜 그 규칙인지가
             //   화면에서 사라진다. 첫 문장만 남기면 강조 딱지가 맨 앞에 살아남는다.
-            var s=d.vt||'', cut=-1, i=s.indexOf('다. ');
-            if(i>0)cut=i+2; else { i=s.indexOf('. '); if(i>0&&i<220)cut=i+1; }
-            var lead=s, rest='';
-            if(cut>0&&s.length-cut>80){
-              var head=s.slice(0,cut);
-              // 태그 한가운데서 자르지 않는다 — <b> 개수가 안 맞으면 안 자른다.
-              if((head.match(/<b>/g)||[]).length===(head.match(/<\/b>/g)||[]).length){
-                lead=head; rest=s.slice(cut).trim();
-              }
-            }
-            return '<p class="vt"><b>판정 근거 —</b> '+lead+'</p>'+
-              (rest?'<details class="vwhy"><summary>왜 이 규칙인가 · 자세히</summary>'+
-                    '<div class="vwb">'+rest+'</div></details>':'');
+            // 🚨 2026-08-21 사용자 요청 «너무 정신없다 · 전체 적용» — 산문은 전부 접고
+            //   강조 딱지(비용 민감·유니버스 편향 큼 …)만 칩으로 남긴다. 문구는 접힘 안에
+            //   그대로다(내리는 것 ≠ 지우는 것).
+            var s=d.vt||''; if(!s)return '';
+            var flags=[], re=/<b>([^<]{2,40})<\/b>/g, mm;
+            while((mm=re.exec(s))&&flags.length<4)flags.push(mm[1]);
+            var chips=flags.length?'<p class="vflags">'+flags.map(function(x){
+              return '<em class="vflag">'+esc(x)+'</em>';}).join('')+'</p>':'';
+            return chips+'<details class="vwhy"><summary>판정 근거 · 왜 이 규칙인가</summary>'+
+              '<div class="vwb"><p class="vt">'+s+'</p></div></details>';
           })()+
-          ((d.vp&&d.vp.length)?'<ul class="vpts">'+d.vp.map(function(s){
-            return '<li>'+s+'</li>';}).join('')+'</ul>':'')+
+          ((d.vs&&d.vs.length)?'<p class="vsum">'+d.vs.join('<span class="vsep"> · </span>')+'</p>':'')+
+          ((d.vp&&d.vp.length)?'<details class="vwhy"><summary>검증 상세 — 시점정확·중복·비용·위험 ('+
+            d.vp.length+'항목)</summary><ul class="vpts">'+d.vp.map(function(s){
+            return '<li>'+s+'</li>';}).join('')+'</ul></details>':'')+
           axesBlock(d)+
           // 🚨 2026-08-19 사용자 결정 — 전략별 꼬리 문구(vpn)를 화면에서 뺀다.
           //   자료(asset_strategies 의 note)는 그대로 둔다 — 화면에서만 내린다.

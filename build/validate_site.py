@@ -2573,6 +2573,25 @@ try:
     # 🚨 '통과' 는 이 블록이 오류를 **하나도** 안 냈을 때만 찍는다. 종전에는 ④만 보고
     #   찍어서, ①이 실패한 판에서도 "대조 통과" 가 함께 나왔다 — 실패하면서 통과라고
     #   말하는 출력이다(자체 시험에서 잡았다).
+    # ①-d 🚨 2026-08-21 — 가족(family) 지도 완전성. explorer 큰 칸이 «팩터·테크니컬·타이밍·
+    #   자산배분» 축으로 바뀌면서(사용자 요청) 종목 수익엔진은 strategy_kinds.family_of 손
+    #   지도로 갈린다. 지도에 없는 sid 가 생기면 화면이 '미분류' 칸을 만든다 — 손 지도의
+    #   낡음을 사람이 아니라 여기서 잡는다(화면 famOf 규칙과 동일 규칙).
+    try:
+        _kd = json.load(io.open(os.path.join(ROOT, "data", "strategy_kinds.json"),
+                                encoding="utf-8"))
+        _fo = _kd.get("family_of") or {}
+        _six = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"),
+                                 encoding="utf-8"))
+        _unk = [x.get("sid") for x in (_six.get("items") or [])
+                if x.get("src") == "종목 전략" and x.get("role") == "수익엔진"
+                and x.get("sid") not in _fo]
+        if _unk:
+            errors.append("가족 지도에 없는 종목 수익엔진 %d종 — strategy_kinds.family_of 에 "
+                          "팩터/테크니컬로 등재할 것: %s" % (len(_unk), ", ".join(_unk[:8])))
+    except Exception as _e7:
+        errors.append("가족 지도 대조 실패 — %s" % _e7)
+
     # ①-c 🚨 2026-08-20 — 세 번째 목록의 **셋째 사본**(data/strategy_report.json tested.tech)
     #   도 대조한다. 당일 측정 세션이 정본·tech 사본만 늘리면 report.html 이 옛 수(98종)를
     #   하루 창 동안 보여 줬는데, 이 검사가 없어 «전항 통과»로 보였다(점검 패널 실측).
