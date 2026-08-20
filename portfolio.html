@@ -381,6 +381,43 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
 </style>
 <!-- NAVCSS:END -->
+<!-- 운용 포트폴리오 컴팩트 오버라이드 — 셸·NAVCSS 정본 뒤에 둬서 캐스케이드로 이긴다.
+     사용자 지적(2026-08-20): 글씨가 다 크고 좌우가 너무 넓다. 자료 화면이라 밀도가 정보량이다.
+     ⚠ 마커 블록(SHELL/NAVCSS) 안을 고치면 정본 드리프트로 CI 가 잡는다 — 그래서 밖에 얹는다. -->
+<style id="pf-compact">
+  .wrap{max-width:880px;padding:0 16px 56px}
+  body{font-size:13.5px;line-height:1.55}
+  h1.title{font-size:clamp(18px,2.6vw,24px);margin:10px 0 0}
+  .eyebrow{font-size:10px}
+  .fhead h2{font-size:clamp(15px,2vw,19px)}
+  .fcode{font-size:.68em}
+  .asofline{font-size:10.5px;margin-top:4px}
+  .pfhead{margin:0 0 12px}
+  .tb{font-size:12px;padding:6px 11px}
+  .gen{font-size:10px}
+  #content{margin-top:18px}
+  #content h3{font-size:13.5px;margin:24px 0 9px;padding-top:12px}
+  .hnote{font-size:.72em}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;margin:0 0 12px}
+  .card{padding:9px 11px}
+  .ck{font-size:9.5px}
+  .cv{font-size:16px;margin:4px 0 2px}
+  .cs{font-size:10.5px}
+  .chart{padding:9px;margin:0 0 12px}
+  .chtitle{font-size:10.5px}
+  #content table{font-size:11.5px}
+  #content thead th{font-size:10px;padding:6px 8px}
+  #content tbody td{padding:4px 6px}
+  #content table.big td:not(.tnum):not(.tk){max-width:130px}
+  .tblwrap{margin:0 0 11px}
+  .tblwrap.tall{max-height:460px}
+  .sec{font-size:11px}
+  .rowfilter{font-size:11.5px;padding:5px 8px;width:min(260px,100%)}
+  .warn{font-size:11.5px}
+  .notes{margin-top:28px;padding-top:12px}
+  .notes ul{font-size:11.5px}
+  details summary{font-size:11.5px}
+</style>
 </head>
 <body data-tool="portfolio.html">
 <!-- NAV:BEGIN -->
