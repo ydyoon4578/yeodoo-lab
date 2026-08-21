@@ -276,7 +276,7 @@
   // 🚨 파이썬 svg_lines 와 **같은 마크업**을 낸다 — .chwrap[data-ch] + .ichart. 호버 배선은
   //   조각 스크립트(window.PFCHARTS)가 한 벌로 하므로, 여기서 툴팁을 또 만들면 두 벌이 된다.
   //   눈금·여백 규약도 그쪽과 맞춘다(안 맞으면 같은 화면에서 두 그림의 눈이 달라진다).
-  function svgLines(series, labels, w, h) {
+  function svgLines(series, labels, w, h, zero) {
     w = w || 760; h = h || 232;
     var pad = 46;
     var ys = [];
@@ -300,7 +300,9 @@
       o.push('<text x="' + (pad - 5) + '" y="' + (yy + 3.5).toFixed(1) + '" font-size="10" text-anchor="end" fill="var(--muted)" font-family="var(--mono)">' + v.toFixed(1) + '</text>');
     }
     if (lo < 0 && 0 < hi)
-      o.push('<line x1="' + pad + '" y1="' + Y(0).toFixed(1) + '" x2="' + (w - 12) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line)" stroke-dasharray="3 3"/>');
+      // 초과수익 그림에서는 0선이 곧 벤치마크다 — zero 를 받으면 벤치 색으로 긋는다.
+      o.push('<line x1="' + pad + '" y1="' + Y(0).toFixed(1) + '" x2="' + (w - 12) + '" y2="' + Y(0).toFixed(1) +
+             '" stroke="' + (zero || 'var(--line)') + '" stroke-width="' + (zero ? 1.4 : 1) + '" stroke-dasharray="' + (zero ? '5 3' : '3 3') + '"/>');
     var pm = '';
     labs.forEach(function (lb, i) {
       var mm = String(lb).slice(0, 7);
@@ -908,8 +910,9 @@
       if (pts.length) series.push([sname, pts]);
     });
     if (series.length)
-      h.push('<div class="chart"><div class="chtitle">전략별 누적 초과수익(%, 매수원금 대비)</div>' +
-        svgLines(series, series.map(function (s) { return s[0].slice(0, 16); })) + '</div>');
+      h.push('<div class="chart"><div class="chtitle">전략별 누적 초과수익(%, 매수원금 대비)' +
+        '<span class="hnote">빨간 0선 = 지수와 같은 성과</span></div>' +
+        svgLines(series, series.map(function (s) { return s[0].slice(0, 16); }), null, null, 'var(--hot)') + '</div>');
 
     Object.keys(perf).sort().forEach(function (sname) {
       var rows = perf[sname].rows;
@@ -1056,7 +1059,8 @@
     var h = [];
     h.push('<div class="chart"><div class="chtitle">전략 vs ' + esc(F.idx.split(' ')[0]) + ' (시작=100 · ' +
       esc(PF.dates[i0]) + '~' + esc(PF.dates[ND - 1]) + ')</div>' +
-      svgLines([['전략', curve], ['지수', bmCurve]], ['전략', '지수(PR)']) + '</div>');
+      // 벤치마크는 빨강 — 화면 전체 규약(연초 후 차트와 같다).
+      svgLines([['전략', curve, 'var(--accent)'], ['지수', bmCurve, 'var(--hot)']], ['전략', '지수(PR)']) + '</div>');
     h.push('<table class="mini"><tbody>' +
       '<tr><td>기간수익 전략 / 지수 / 초과</td><td class="tnum">' + pct(totR, 1, true) + ' / ' + pct(bmR, 1, true) +
       ' / <b class="' + sgn(totR - bmR) + '">' + pct(totR - bmR, 1, true) + '</b></td></tr>' +

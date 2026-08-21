@@ -446,7 +446,7 @@ def strat_perf(trades, px, lvl_idx, asof_us):
 
 
 # ── 4) SVG (파이썬에서 그린다 — 조각은 스크립트를 못 싣는다) ─────────────────
-def svg_lines(series, labels=None, w=760, h=232, pad=46):
+def svg_lines(series, labels=None, w=760, h=232, pad=46, zero=None):
     """series = [(이름, [(x라벨, y)…][, 색[, 점선]])…] → 마우스 대응 가능한 SVG.
 
     🚨 그림은 파이썬이 그리고 **호버는 JS 가 얹는다**(FRAG_SCRIPT.chart 배선). 그래서 점
@@ -492,6 +492,13 @@ def svg_lines(series, labels=None, w=760, h=232, pad=46):
     if lo < 100 < hi:      # 기준선(=100) 은 굵게 — 연초 후 그림에서 손익분기다
         parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="var(--line)" '
                      'stroke-dasharray="3 3"/>' % (pad, Y(100), w - 12, Y(100)))
+    # 🚨 초과수익 그림에서는 **0선이 곧 벤치마크**다(0 = 지수와 같음). 그래서 벤치마크와
+    #   같은 색으로 긋는다(2026-08-21 사용자 지시 «전략 차트에도 마찬가지로 빨간색»).
+    #   ⚠ 연초 후 그림의 100선은 시작점일 뿐 벤치가 아니라서 이 색을 안 준다 — 그래서
+    #     자동으로 칠하지 않고 부르는 쪽이 zero 를 넘길 때만 칠한다.
+    if zero and lo < 0 < hi:
+        parts.append('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" stroke-width="1.4" '
+                     'stroke-dasharray="5 3"/>' % (pad, Y(0), w - 12, Y(0), zero))
     # 세로 눈금 — 월이 바뀌는 자리에만(날짜를 다 적으면 겹친다)
     _pm = ""
     for i, lb in enumerate(labs):
@@ -834,8 +841,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
             if pts:
                 series.append((sname, pts))
         if series:
-            H.append('<div class="chart"><div class="chtitle">전략별 누적 초과수익(%%, 매수원금 대비)</div>%s</div>'
-                     % svg_lines(series, labels=[n[:16] for n, _p in series]))
+            H.append('<div class="chart"><div class="chtitle">전략별 누적 초과수익(%%, 매수원금 대비)'
+                     '<span class="hnote">빨간 0선 = 지수와 같은 성과</span></div>%s</div>'
+                     % svg_lines(series, labels=[n[:16] for n, _p in series], zero="var(--hot)"))
         for sname, s in sorted(perf.items()):
             if not s.get("rows"):
                 continue
