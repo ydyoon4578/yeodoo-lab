@@ -31,7 +31,7 @@
   var S = {
     km: null,             // PBKDF2 키 재료 — 게이트가 준다. 메모리에만 있다.
     base: null,           // 마지막으로 불러온 원격 {sha, updated}
-    doc: { v: 1, strategies: {}, trades: [] },
+    doc: { v: 1, strategies: {}, trades: [], migrated: false },
     dirty: false,
     ready: false,
     loadErr: null
@@ -112,7 +112,9 @@
   function mergedTrades(slug) {
     var idx = PF.funds[slug].idx;
     var out = [];
-    PF.mp.forEach(function (t) {
+    // 🚨 이전이 끝났으면 DB 씨앗(PF.mp)을 **완전히 무시한다.** 안 그러면 같은 매매가
+    //   웹 원장과 씨앗 양쪽에 있어 수량·손익이 두 배로 센다. migrated 플래그가 그 스위치다.
+    if (!S.doc.migrated) PF.mp.forEach(function (t) {
       if (t.idx === idx) out.push({ src: 'db', dt: t.dt, s: t.s, t: t.t, q: t.q, p: t.p, note: '' });
     });
     S.doc.trades.forEach(function (t) {
@@ -376,23 +378,23 @@
     catch (e) { S.loadErr = e.message; renderSync(); return; }
     // ⚠ 404/empty 경로에서 S.doc 을 «반드시» 초기화한다 — 안 하면 복원·리로드가 직전
     //   메모리 상태를 들고 «동기화됨»을 사칭한다(적대감사 확정: restoreRev→loadLedger 경로).
-    if (!f) { S.base = { sha: null, updated: null }; S.doc = { v: 1, strategies: {}, trades: [], navs: {} }; return; }
+    if (!f) { S.base = { sha: null, updated: null }; S.doc = { v: 1, strategies: {}, trades: [], migrated: false }; return; }
     S.base = { sha: f.sha, updated: null };
     var env;
     try { env = JSON.parse(new TextDecoder().decode(b64d(f.content))); }
     catch (e) { S.loadErr = '원장 JSON 파싱 실패 — 파일이 손상됐다. 이력에서 복원하세요.'; renderSync(); return; }
-    if (env.empty) { S.doc = { v: 1, strategies: {}, trades: [], navs: {} }; return; }   // 초기 상태 — 빈 원장
+    if (env.empty) { S.doc = { v: 1, strategies: {}, trades: [], migrated: false }; return; }   // 초기 상태 — 빈 원장
     S.base.updated = env.updated || null;
     try {
       var doc = await decDoc(env);
-      S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], navs: doc.navs || {} };
+      S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], migrated: !!doc.migrated };
     } catch (e) {
       // 페이지 재잠금 암호가 바뀐 경우 — 봉투는 옛 암호다. 화면에서 옛 암호를 따로 받는다.
       S.loadErr = 'PWMISMATCH';
     }
   }
   async function saveLedger(force) {
-    var doc = { v: 1, strategies: S.doc.strategies, trades: S.doc.trades, navs: S.doc.navs || {}, saved: new Date().toISOString() };
+    var doc = { v: 1, strategies: S.doc.strategies, trades: S.doc.trades, migrated: !!S.doc.migrated, saved: new Date().toISOString() };
     var env = await encDoc(doc);
     var b64 = b64e(new TextEncoder().encode(JSON.stringify(env)));
     var msg = 'portfolio: 웹 원장 (전략 ' + Object.keys(S.doc.strategies).length +
@@ -484,7 +486,7 @@
         var f = await ghGetFile();
         var env = JSON.parse(new TextDecoder().decode(b64d(f.content)));
         var doc = await decDoc(env, km);
-        S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], navs: doc.navs || {} };
+        S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], migrated: !!doc.migrated };
         S.base = { sha: f.sha, updated: env.updated || null };
         S.loadErr = null;
         S.dirty = true;                             // 현재 암호로 재저장 유도
@@ -597,6 +599,20 @@
     var asofI = dLe(F.asof_us);
     var h = [];
 
+    // ── DB 원장 → 웹 원장 이전 (2026-08-21 사용자 결정) ──────────────────
+    // «mp.strategy_trade 도 안 쓰고 웹 입력으로만. 지금 있는 데이터 웹에 올리고 통일하자.»
+    // 씨앗(PF.mp)은 조각을 구울 때 DB 에서 한 번 읽어 온 것이다. 여기서 웹 원장으로
+    // 옮기고 저장하면 그 뒤로는 씨앗을 안 본다(migrated).
+    // ⚠ 체결가는 빌더가 **분할 소급 기준으로 되맞춘 값**이다(split_factor) — 랩 종가가
+    //   조정본이라 원장도 같은 눈금이어야 한다. 옮길 때 다시 손대지 않는다.
+    if (!S.doc.migrated && PF.mp && PF.mp.length) {
+      var _n = PF.mp.filter(function (t) { return t.idx === F.idx; }).length;
+      h.push('<div class="migbox"><b>DB 원장 ' + _n + '건</b>이 아직 웹 원장 밖에 있습니다 — ' +
+        '옮기면 이 화면이 웹 원장 하나로 굴러갑니다(사내 DB 의존이 사라집니다). ' +
+        '<button class="sb primary" id="mig-' + slug + '">웹 원장으로 가져오기</button>' +
+        '<span class="pnote">두 펀드 전체가 한 번에 옮겨집니다. 옮긴 뒤 «GitHub에 저장»을 눌러야 확정됩니다.</span></div>');
+    }
+
     // 입력 폼
     h.push('<form class="tradeform" id="tf-' + slug + '" autocomplete="off">');
     h.push('<b>+ 매매 입력</b> ');
@@ -673,6 +689,25 @@
     box.innerHTML = h.join('');
 
     // 배선
+    var _mig = el('mig-' + slug);
+    if (_mig) _mig.addEventListener('click', function () {
+      // 두 펀드를 한 번에 — 펀드마다 따로 누르면 절반만 옮겨진 상태가 생긴다.
+      var byIdx = {};
+      Object.keys(PF.funds).forEach(function (sg) { byIdx[PF.funds[sg].idx] = sg; });
+      var add = 0;
+      PF.mp.forEach(function (t) {
+        var sg = byIdx[t.idx];
+        if (!sg) return;
+        S.doc.trades.push({ id: uid(), fund: sg, dt: t.dt, s: t.s, t: t.t, q: t.q, p: t.p,
+                            note: 'DB 원장에서 이전' });
+        add++;
+      });
+      S.doc.migrated = true;
+      S.dirty = true;
+      renderAll();
+      alert(add + '건을 웹 원장으로 옮겼습니다.\n\n«GitHub에 저장»을 눌러야 확정됩니다. ' +
+            '저장 전에 새로고침하면 되돌아갑니다.');
+    });
     var form = el('tf-' + slug);
     form.addEventListener('submit', function (e) {
       e.preventDefault();

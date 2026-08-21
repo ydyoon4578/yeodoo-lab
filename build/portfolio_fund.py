@@ -4,7 +4,7 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
 무엇을 만드나. 실펀드 2종(2Z30=나스닥100 · 2A81=S&P500)의
   ① 펀드 개요 — NAV·기준가, 연초 후 기준가 vs 지수(원화환산), 자산 구성
   ② 보유 vs 지수 — 종목별 지수비중/펀드비중/액티브 틸트, 패시브 대비 수량 괴리
-  ③ 전략 매매 내역 — mp.strategy_trade 원장 그대로 + 현재가 평가
+  ③ 전략 매매 내역 — 웹 원장(+이전 전이면 DB 씨앗) + 현재가 평가
   ④ 전략 성과·기여 — 매매 시점 일치 BM 대비 초과손익과 NAV 기여(bp)
 를 렌더 완료된 HTML 조각으로 _build/pages/portfolio_content.html 에 쓴다.
 
@@ -19,8 +19,13 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
       ⚠ 시트 이름·컬럼이 사내 시스템 export 규격이다. 바뀌면 여기가 아니라 규격이 바뀐 것.
   · 사내 DB — 자격증명·호스트는 연구 repo util/variables.py 가 단일 출처다(아래 _db_params.
       🚨 이 저장소는 공개라 여기에 절대 적지 않는다 — 2026-08-20 적대감사가 평문 노출을 잡았다).
-      public.index_constituents(지수 비중·GICS) · market.ohlcv_factset(종목 종가) ·
-      public.price_major_index(지수 레벨) · mp.strategy_trade(전략 매매 원장 — MP 엑셀 VBA 가 쓴다)
+      **public.index_constituents(지수 비중·GICS) 하나만 쓴다**(2026-08-21 사용자 결정).
+      나머지 셋은 이 랩의 웹 자료로 옮겼다 — 아래 «자료 원천» 참조.
+  · 이 랩의 웹 자료(yfinance · CI 가 매일 굽는다 · 사내망 불필요):
+      data/sd/<티커>.json  종목 종가(분할 소급 조정) · data/assets.json  ^GSPC·^NDX 지수 레벨
+      data/splits.json     분할 이력 — 원장 체결가를 오늘 기준으로 되맞추는 데 쓴다
+  · 웹 원장 data/portfolio_user.json — 전략 매매(AES-256-GCM). mp.strategy_trade 는
+      이전용 씨앗으로만 한 번 더 읽고, 화면에서 옮기면 그 뒤로는 안 본다.
 
 자산구분 코드(해외 시트, 실측 2026-08-18): 1=개별주식 · 3=지수 ETF · 4=지수선물(평가액=노셔널)
   · 5=예금 · B=증거금. 선물 노셔널은 NAV 에 없고 노출에만 더한다 — 섞으면 합이 100%를 넘는다.
@@ -39,9 +44,13 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
   · NAV 기여(bp) = 초과손익(USD) × 기준일 환율 ÷ 기준일 NAV × 10,000.
 
 한계(화면에 싣는다):
-  · 배당 미반영 — ohlcv 종가는 수정주가가 아니다. 보유 2개월 내외라 왜곡은 작지만 0이 아니다.
-  · 분할 가드 — 매매~기준일 사이 일수익 |40%| 초과가 있으면 해당 종목·전략에 ⚠를 단다
-    (벤더가 분할을 소급 안 하는 사고를 랩이 실측했다: MNST 2026-08-11).
+  · 배당 미반영 — 종가는 배당을 안 담는다. 보유 2개월 내외라 왜곡은 작지만 0이 아니다.
+  · 분할은 **소급 조정된 랩 종가**를 쓰고, 원장 체결가는 split_factor() 로 같은 눈금에
+    맞춘다(가격÷f · 수량×f — 금액 불변). 종전 사내 종가는 분할을 소급 안 해서 그 자체가
+    틀린 값이었다(사용자 지적 2026-08-21 · 랩 실측 사고 MNST 2026-08-11).
+  · 분할 가드(일수익 |40%| 초과 ⚠)는 남긴다 — 되맞춤이 빗나가는 경우를 잡는 이중 방어다.
+  · 지수 밖 보유는 랩 유니버스에 없어 가격이 빠진다. 사용자 판단: «편출 예정이거나 합병
+    등으로 일시적으로 생긴 것이라 가격 없어도 상관없음».
 
 사용:  python build/portfolio_fund.py            # 조각 생성
        python build/kb_lock.py --page portfolio  # 잠가서 portfolio.html 에 기록(암호 입력)
@@ -52,6 +61,7 @@ import datetime as dt
 import glob
 import html
 import io
+import json
 import os
 import sys
 
@@ -59,6 +69,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")          # 랩 웹 자료(종가·지수·분할) — 사내 DB 대체분
 OUT = os.path.join(ROOT, "_build", "pages", "portfolio_content.html")
 LOCAL_CFG = os.path.join(ROOT, "_build", "portfolio_local.json")
 
@@ -67,7 +78,6 @@ def _local_cfg():
     """gitignore 된 로컬 설정(_build/portfolio_local.json) — 내부 파일서버 경로 등
     공개 저장소에 적으면 안 되는 값을 담는다. xlsm_globs 는 슬래시형 UNC 로 적을 것
     (역슬래시형은 편집 도구를 거치며 이스케이프가 깨진 전력이 있다 — 2026-08-20 실측)."""
-    import json
     if not os.path.exists(LOCAL_CFG):
         raise SystemExit("로컬 설정 없음: %s — {\"xlsm_globs\": [...]} 형태로 만들 것"
                          "(내부 경로라 저장소에 안 들어간다)" % LOCAL_CFG)
@@ -139,6 +149,16 @@ def norm_tk(t):
     return (t or "").strip().replace("/", ".")
 
 
+def lab_tk(t):
+    """사내 표기 → 이 랩의 종목 파일 이름. «NVDA US» → «NVDA» · «BRK/B US» → «BRK.B».
+
+    랩은 data/sd/<티커>.json 이고 클래스주를 점으로 쓴다(실측: BRK.B.json · BF.B.json) —
+    norm_tk 가 이미 슬래시를 점으로 바꿔 두므로 여기서는 거래소 접미사만 뗀다.
+    ⚠ 미국 상장분만 뗀다. 다른 접미사(« LN» 등)는 랩 유니버스에 없어 어차피 못 찾는다."""
+    t = norm_tk(t)
+    return t[:-3] if t.endswith(" US") else t
+
+
 # ── 1) 사내 export 읽기 ──────────────────────────────────────────────────────
 def load_xlsm():
     # mtime 동률(같은 저장을 양쪽에 복사한 경우)이면 네트워크 정본을 이긴다
@@ -187,6 +207,20 @@ PANEL_DAYS = 504    # 웹 앱에 동봉하는 종가 패널 길이(거래일 ≈
 
 
 def load_db(asof_by_fund, held_tickers):
+    """지수 구성종목(비중·이름·GICS) — **이것만 사내 DB에서 온다.**
+
+    🚨 2026-08-21 사용자 결정으로 나머지 셋은 웹(yfinance) 자료로 옮겼다:
+        market.ohlcv_factset      → data/sd/<티커>.json      (랩이 매일 굽는 종가)
+        public.price_major_index  → data/assets.json         (^GSPC · ^NDX)
+        mp.strategy_trade         → 웹 원장(data/portfolio_user.json)
+      사용자 판단 근거를 그대로 적어 둔다 —
+        · 지수 밖 보유는 «편출 예정이거나 합병 등으로 일시적으로 생긴 것»이라 가격이 없어도 된다.
+        · **사내 원장의 가격이 오히려 틀리다** — 분할을 소급 반영하지 않는다. 랩 자료는
+          분할 소급이 검사로 보장된다(validate_site 의 «분할 소급 검사»).
+      지수 비중만은 웹에 대체 자료가 없다(랩은 시총·유동주식수를 안 들고 있다). 그래서 남긴다.
+    ⚠ mp.strategy_trade 는 **이전용으로만** 한 번 더 읽는다(아래 seed) — 웹 원장으로 옮기고
+      나면 이 읽기도 지운다. 옮기기 전까지 화면이 비면 안 되니까 남겨 둔 다리다.
+    """
     import psycopg2
     cn = psycopg2.connect(**_db_params())
     cur = cn.cursor()
@@ -202,47 +236,90 @@ def load_db(asof_by_fund, held_tickers):
         tot = sum(float(w or 0) for _t, w, _n, _g in rows) or 1.0
         cons[idx] = (str(d), {norm_tk(t): (float(w or 0) / tot, n, g) for t, w, n, g in rows})
 
-    cur.execute('SELECT "index", dt, strategy, ticker, trade_qty, trade_price '
-                'FROM mp.strategy_trade ORDER BY dt, strategy, ticker')
-    trades = [dict(index=i, dt=str(d), strategy=s, ticker=norm_tk(t), qty=float(q), px=float(p or 0))
-              for i, d, s, t, q, p in cur.fetchall()]
-
-    # 지수 레벨 — 패널 창(2년) 전체.
-    # 🚨 price_major_index 도 달력일 패딩이 있다(실측 2026-08-20: 08-15 토·08-16 일 행이
-    #   금요일 값 그대로 존재). 처음엔 여기를 거래일 정본으로 믿고 축을 만들어 패널 504행이
-    #   달력일이 됐다 — «6개월 모멘텀(126거래일)»이 실제로는 4.2개월이던 결함. 지수 레벨이
-    #   직전 행과 «정확히» 같으면 패딩으로 보고 걷어낸다(부동소수 지수가 진짜로 같을 확률≈0).
-    lvl = {}          # index → {date: level}  (패딩 포함 — ffill 용도로는 그대로 유용하다)
-    cur.execute("SELECT ticker, dt, value FROM public.price_major_index "
-                "WHERE ticker IN ('NDX Index','SPX Index') AND value_type='price' "
-                "AND dt>=%s ORDER BY dt",
-                ((dt.date.today() - dt.timedelta(days=int(PANEL_DAYS * 1.55) + 30)).isoformat(),))
-    for tk, d, v in cur.fetchall():
-        if v is not None:
-            lvl.setdefault(tk, {})[str(d)] = float(v)
-
-    # 종가 — 웹 앱이 성과 재계산·백테스트를 하도록 유니버스 전체를 패널 창만큼 싣는다.
-    #   유니버스 = 두 지수 구성종목 ∪ 원장 티커 ∪ 보유 티커(편출 후 잔존 보유 대비).
-    asof_g = max(asof_by_fund.values())
-    _ser = sorted(lvl["NDX Index"].items())
-    trading = [d for k, (d, v) in enumerate(_ser) if k == 0 or v != _ser[k - 1][1]]
-    axis = [d for d in trading if d <= asof_g][-PANEL_DAYS:]
-    uni = set(held_tickers) | {t["ticker"] for t in trades}
-    for _d, cmap in cons.values():
-        uni |= set(cmap)
-    px = {}           # ticker → {date: close}
-    # 클래스주(BRK.B 류)는 DB 가 점·슬래시 어느 쪽인지 모른다 — 두 표기를 다 묻는다.
-    #   uni 는 이미 점 표기로 정규화돼 있으므로 슬래시판을 덧붙이고, 돌아온 티커를
-    #   norm_tk 로 담으면 어느 쪽이 맞았든 안에서는 한 이름이다.
-    _ask = sorted({v for t in uni for v in (t, t.replace(".", "/"))})
-    cur.execute("SELECT ticker, dt, value FROM market.ohlcv_factset "
-                "WHERE value_type='c' AND dt>=%s AND ticker = ANY(%s) ORDER BY ticker, dt",
-                (axis[0], [t + " EQUITY" for t in _ask]))
-    for tk, d, v in cur.fetchall():
-        if v is not None:
-            px.setdefault(norm_tk(tk[:-7]), {})[str(d)] = float(v)
+    # 이전용 씨앗 — 웹 원장으로 한 번 옮기고 나면 이 블록을 지운다.
+    seed = []
+    try:
+        cur.execute('SELECT "index", dt, strategy, ticker, trade_qty, trade_price '
+                    'FROM mp.strategy_trade ORDER BY dt, strategy, ticker')
+        seed = [dict(index=i, dt=str(d), strategy=s2, ticker=norm_tk(t),
+                     qty=float(q), px=float(p or 0)) for i, d, s2, t, q, p in cur.fetchall()]
+    except Exception as _e:
+        print("  ⚠ mp.strategy_trade 를 못 읽었다(%s) — 웹 원장만 쓴다." % str(_e)[:60])
     cn.close()
-    return cons, trades, px, lvl, axis
+    return cons, seed
+
+
+def load_web(uni_tickers):
+    """종가·지수 레벨을 **랩의 웹 자료**에서 읽는다(사내 DB 대체).
+
+    · 거래일 축 = data/stocks.json 의 pxd_dates (랩 정본 격자 · 패딩 없음)
+    · 종목 종가 = data/sd/<티커>.json 의 pxd (그 격자에 정렬돼 있다)
+    · 지수 레벨 = data/assets.json 의 ^GSPC · ^NDX
+    ⚠ 랩 종가는 **분할 소급 조정**됐다. 사내 원장의 체결가는 무조정이라, 매매 이후 분할한
+      종목은 둘을 그대로 빼면 안 된다 — split_factor() 가 원장 체결가를 오늘 기준으로
+      되맞춘다(그쪽 주석 참조). 이 차이가 이 교체의 유일한 위험 지점이다.
+    """
+    st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
+    grid = st["pxd_dates"]
+    axis = grid[-PANEL_DAYS:]
+    gi = {d: i for i, d in enumerate(grid)}
+
+    px, miss = {}, []
+    for t in sorted(uni_tickers):
+        f = os.path.join(DATA, "sd", lab_tk(t) + ".json")
+        if not os.path.exists(f):
+            miss.append(t)
+            continue
+        arr = (json.load(io.open(f, encoding="utf-8")) or {}).get("pxd") or []
+        ser = {}
+        for d in axis:
+            k = gi.get(d)
+            if k is not None and k < len(arr) and arr[k]:
+                ser[d] = float(arr[k])
+        if ser:
+            px[t] = ser
+
+    A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    ad, ap = A["dates"], A["px"]
+    lvl = {}
+    for idx_name, sym in (("SPX Index", "^GSPC"), ("NDX Index", "^NDX")):
+        arr = ap.get(sym) or []
+        lvl[idx_name] = {d: float(v) for d, v in zip(ad, arr) if v}
+    for idx_name in ("SPX Index", "NDX Index"):
+        if not lvl.get(idx_name):
+            raise SystemExit("지수 레벨을 못 읽었다(%s) — data/assets.json 을 먼저 갱신할 것" % idx_name)
+    print("  웹 자료: 종가 %d종(축 %d일 %s~%s) · 지수 2종 · 못 찾은 티커 %d종%s"
+          % (len(px), len(axis), axis[0], axis[-1], len(miss),
+             (" (" + ", ".join(miss[:8]) + (" …" if len(miss) > 8 else "") + ")") if miss else ""))
+    return px, lvl, axis
+
+
+def split_factor(t, trade_dt):
+    """체결일 이후의 분할비 곱 — 원장 체결가·수량을 **오늘 기준**으로 되맞추는 계수.
+
+    🚨 왜 필요한가. 랩 종가는 분할 소급 조정본이고 사내 원장의 체결가는 그날의 무조정
+      가격이다. 그대로 빼면 2:1 분할 종목의 수익률이 −50%로 찍힌다 — 이 랩이 실제로
+      겪은 사고다(MNST 2026-08-11). 체결가 ÷ f · 수량 × f 로 되맞춘다(금액은 불변).
+    반환 f: 체결일 «이후»에 일어난 분할들의 곱. 없으면 1.0.
+    """
+    ev = (_SPLITS or {}).get(lab_tk(t)) or []
+    f = 1.0
+    for d, r in ev:
+        if d > trade_dt and r:
+            f *= float(r)
+    return f
+
+
+_SPLITS = None
+
+
+def load_splits():
+    global _SPLITS
+    try:
+        _SPLITS = (json.load(io.open(os.path.join(DATA, "splits.json"), encoding="utf-8")) or {}).get("co") or {}
+    except Exception:
+        _SPLITS = {}
+    return _SPLITS
 
 
 def encode_panel(px, axis):
@@ -864,7 +941,9 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 <li><b>BM 대조</b>는 같은 날 같은 금액을 지수에 넣었을 때의 손익이다(매매 시점 일치). 초과 = 전략 손익 − BM 손익. <b>NAV 기여(bp)</b> = 초과(USD) × 기준일 환율 ÷ NAV × 10,000.</li>
 <li><b>배당 미반영</b> — 종가는 수정주가가 아니다. 보유 기간이 짧아 왜곡은 작지만 0이 아니다.</li>
 <li>매매~기준일 사이 하루 ±40%를 넘는 가격변동이 있으면 <b>분할 의심 ⚠</b>를 단다 — 벤더가 분할을 소급 반영하지 않은 사고가 실측된 바 있다.</li>
-<li>입력: 사내 시스템 export(NAV·환율·보유)와 사내 매매 원장. 갱신은 수동이다 — 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
+<li><b>자료 원천</b>(2026-08-21 개편) — ① 사내 export 엑셀: NAV·환율·보유 원장. ② 사내 DB: <b>지수 구성종목·비중·GICS 하나만</b>. ③ 이 랩의 웹 자료(yfinance·매일 자동): 종목 종가·지수 레벨·분할 이력. ④ 웹 원장: 전략 매매. 갱신은 수동이고 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
+<li><b>분할 눈금</b> — 종가는 분할 소급 조정본이고, 원장 체결가도 같은 눈금으로 되맞춘다(가격÷분할비·수량×분할비, 금액 불변). 사내 종가는 분할을 소급하지 않아 그 자체가 틀린 값이었다.</li>
+<li><b>지수 밖 보유</b>는 이 랩 유니버스(오늘의 S&amp;P 500 ∪ 나스닥 100)에 없어 가격이 빠진다 — 편출 예정이거나 합병 등으로 일시적으로 생긴 자리라 성과 계산에서 제외한다.</li>
 <li><b>웹 원장</b>은 이 페이지에서 입력한 전략·매매다. 저장하면 열람 암호로 AES-256-GCM 암호화되어 저장소의 <span class="tk">data/portfolio_user.json</span> 에 커밋된다 — 평문은 저장소·서버 어디에도 남지 않고, git 이력이 곧 버전 관리라 언제든 과거 버전으로 되돌릴 수 있다. 쓰기 토큰은 이 기기 브라우저에만 저장된다.</li>
 <li><b>웹 백테스트는 진단용이다.</b> 유니버스가 «현재» 구성종목이라 <b>생존편향</b>이 있고(랩 실측: 스타일에 따라 수~수십%p 부풀림), 지수는 PR·종가는 무배당이며, 창이 단일(패널 @PANEL@거래일)이라 통계적 유의성을 말할 수 없다. 배포 판단은 랩의 PIT 백테스트로만 한다.</li>
 </ul></div>""".replace("@PANEL@", str(PANEL_DAYS))
@@ -881,7 +960,24 @@ def main() -> int:
     asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in FUNDS}
     held_tk = {r["ticker"] for f, _i, _s, _l in FUNDS
                for r in hold[f][max(hold[f])] if r["asset"] == "1" and r["ticker"]}
-    cons, trades, px, lvl, axis = load_db(asof_by_fund, held_tk)
+    cons, seed = load_db(asof_by_fund, held_tk)
+    load_splits()
+    # 유니버스 = 보유 ∪ 지수 구성 ∪ 씨앗 원장 티커
+    uni = set(held_tk) | {t["ticker"] for t in seed}
+    for _d, _cmap in cons.values():
+        uni |= set(_cmap)
+    px, lvl, axis = load_web(uni)
+    # 🚨 씨앗 원장의 체결가를 **분할 소급 기준으로 되맞춘다.** 랩 종가가 조정본이라
+    #   그대로 두면 분할 종목의 손익이 분할비만큼 틀린다(금액은 불변: 가격÷f · 수량×f).
+    trades, _adj = [], []
+    for t in seed:
+        f = split_factor(t["ticker"], t["dt"])
+        if f != 1.0:
+            _adj.append("%s %s ×%.4g" % (t["ticker"], t["dt"], f))
+            t = dict(t, px=t["px"] / f, qty=t["qty"] * f)
+        trades.append(t)
+    if _adj:
+        print("  분할 되맞춤 %d건: %s" % (len(_adj), " · ".join(_adj[:6])))
 
     panes, checks = [], []
     for f, idx, slug, label in FUNDS:
@@ -907,7 +1003,6 @@ def main() -> int:
 
     # 웹 앱 데이터 블롭 — 원장 편집·성과 재계산·백테스트가 전부 이걸 먹는다.
     #   조각(=암호문) 안에만 들어간다. 실펀드 수치라 평문 JSON 으로 따로 두면 안 된다.
-    import json
     panel = encode_panel(px, axis)
     asof_g = max(asof_by_fund.values())
     lvl_arr = {}
