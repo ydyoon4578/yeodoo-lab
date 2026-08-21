@@ -659,15 +659,18 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     # (2026-08-20 저녁) «최신 기준가 반영» 수동 입력 폼은 반나절 만에 걷었다 —
     #   사용자: «기준가·NAV·환율 넣는 건 다 빼줘. 번거로운 일이야.»
     #   대신 아래 차트가 **미반영 최근 거래일을 지수로 추정해** 빨간 선으로 자동 연장한다.
-    _ser = [("펀드", fund_pts), ("지수", bm_pts)]
-    # 예상 꼬리는 **별도 계열**로 얹는다 — 본 계열에 섞으면 색으로 가를 수 없다.
+    # 🚨 2026-08-21 사용자 지시 «벤치마크 지수는 빨간색». 그래서 예상 꼬리를 빨강으로
+    #   구별하던 방식은 못 쓴다 — 예상은 **각 계열 제 색 + 점선**으로만 가른다.
+    #   (색은 «무엇의 선인가», 점선은 «확정인가 예상인가» — 축을 둘로 나누는 편이 옳다.)
+    C_FUND, C_BM = "var(--accent)", "var(--hot)"
+    _ser = [("펀드", fund_pts, C_FUND, False), ("지수", bm_pts, C_BM, False)]
     if est_f:
-        _ser.append(("펀드 예상", est_f, "var(--hot)", True))
-        _ser.append(("지수 예상", est_b, "var(--hot)", True))
+        _ser.append(("펀드 예상", est_f, C_FUND, True))
+        _ser.append(("지수 예상", est_b, C_BM, True))
     H.append('<div class="chart" id="ytd-%s">%s%s</div>' % (slug, svg_lines(
         _ser, labels=["펀드 기준가", "%s 원화환산" % idx.split()[0]]),
-        ('<p class="pnote" style="margin:6px 0 0;color:var(--hot)">— 빨간 점선 = 아직 기준가에 '
-         '반영 안 된 미국 %s 종가를 지수 수익률로 얹은 <b>예상</b>입니다(환율은 최신 시트 값 고정). '
+        ('<p class="pnote" style="margin:6px 0 0">— <b>점선</b> = 아직 기준가에 반영 안 된 '
+         '미국 %s 종가를 지수 수익률로 얹은 <b>예상</b>입니다(환율은 최신 시트 값 고정). '
          '전략 틸트·비용이 빠진 근사치입니다.</p>' % esc(est_f[1][0])) if est_f else ''))
     H.append('<table class="mini"><thead><tr><th>자산 구성</th><th class="tnum">NAV 대비</th></tr></thead><tbody>')
     for lbl2, w in (("개별주식", w_stk), ("지수 ETF", w_etf), ("현금·증거금", w_cash)):
@@ -697,11 +700,18 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         # 패시브 수량 검산은 원장 «내부» 눈금으로 — 원장 평가액(원화)이 원장 종가×보유일 환율로
         # 만들어졌으니, 최신 환율을 섞으면 자기모순이 된다(수량 괴리가 환율 차이로 오염).
         p_qty = (w_i * sleeve / (h["px"] * fx_hold)) if (h["px"] and fx_hold) else None
+        # 🚨 2026-08-21 사용자 지적 «보유 수량 = 패시브 수량 + 전략 수량인데 숫자가 이상해».
+        #   맞다 — 종전 「패시브수량」은 **지수비중으로 역산한 이론값**(p_qty)이라 보유수량과
+        #   애초에 합이 안 맞는 다른 개념이었다. 항등식이 서려면 패시브를 «보유 − 전략» 으로
+        #   도출해야 한다. 비중 열(wp = wf − ws)은 이미 그렇게 돼 있어 맞았고, 수량만 어긋나
+        #   있었다 — 같은 표에서 두 열이 다른 정의를 쓰고 있었던 셈이다.
+        #   이론값은 «지수기준» 이라는 제 이름으로 옮기고 괴리 계산에만 쓴다.
         _sq = strat_q.get(t, 0.0)
         w_s = (_sq * h["px"] * fx_hold / sleeve) if (h["px"] and fx_hold and _sq) else 0.0
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 100,
                         ws=w_s, wp=w_f - w_s,
-                        qty=h["qty"], pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
+                        qty=h["qty"], sq=_sq, pq_real=h["qty"] - _sq,
+                        pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
     # 문턱 없음(2026-08-20 사용자 지시 «비중 상관없이») — 지수에 있는데 안 든 것 전부.
     only_idx = sorted(((t, v[0], v[1]) for t, v in cmap.items() if t not in held),
@@ -716,7 +726,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     H.append('<div class="tblwrap tall"><table class="big" id="tb-%s"><thead><tr>'
              '<th>티커</th><th>이름</th><th>섹터</th><th class="tnum">지수비중</th><th class="tnum">펀드비중</th>'
              '<th class="tnum">패시브</th><th class="tnum">전략</th>'
-             '<th class="tnum">차이(%%p)</th><th class="tnum">수량</th><th class="tnum">패시브수량</th><th class="tnum">괴리</th>'
+             '<th class="tnum">차이(%%p)</th>'
+             '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
+             '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
              '</tr></thead><tbody>' % slug)
     for r in tbl:
         # 지수 밖 보유 — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는 «아주 작다» 와
@@ -734,14 +746,23 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                  '<td class="tnum">%s</td><td class="tnum"%s>%s</td>'
                  '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
-                 '<td class="tnum">%s</td><td class="tnum">%s</td><td class="tnum %s">%s</td></tr>'
+                 '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
+                 '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["t"]), _off, esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
                     pct(r["wi"], 2), _bg, pct(r["wf"], 2),
                     pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
-                    num(r["qty"], 0), num(r["pq"], 0) if r["pq"] is not None else "—",
+                    num(r["qty"], 0), num(r["pq_real"], 0),
+                    ("tk" if r["sq"] else ""), (num(r["sq"], 0) if r["sq"] else "—"),
+                    num(r["pq"], 0) if r["pq"] is not None else "—",
                     cls_sign(r["dq"] or 0), ("%+d" % round(r["dq"])) if r["dq"] is not None else "—"))
     H.append("</tbody></table></div>")
+    H.append('<p class="pnote" style="margin:6px 0 12px">'
+             '<b>보유 수량 = 패시브 수량 + 전략 수량</b>입니다 — 전략 수량은 매매 원장의 종목별 '
+             '순수량이고, 패시브는 그 나머지(지수 복제분)입니다. 비중 열도 같은 분해입니다. '
+             '<b>지수기준</b>은 «지수비중 × 주식슬리브 ÷ (종가×환율)» 로 역산한 이론 수량이고, '
+             '<b>괴리</b> = 보유 − 지수기준 입니다 — 액티브 틸트의 수량 표현이라 위 분해와는 '
+             '다른 질문에 답합니다.</p>')
     if off_idx:
         H.append('<details open><summary>보유 중인데 지수에 없는 %d종 — 편출 뒤 잔존 등</summary>'
                  '<div class="tblwrap"><table class="mini"><tbody>' % len(off_idx))
