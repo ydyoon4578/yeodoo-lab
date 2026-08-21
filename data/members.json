@@ -1,14 +1,20 @@
 {
- "as_of_members": "2026-08-14",
+ "as_of_members": "2026-08-21",
  "note": "지수 편입 명단. 출처 — S&P 500: 위키백과 목록 + SSGA SPY 보유내역 교차 확인, NASDAQ-100: 위키백과 목록. 오늘 스냅샷이며 과거 편입 이력이 아니다(백테스트의 생존편향은 각 결과 화면에 별도 명시).",
  "gates": {
   "spx_n": 503,
   "ndx_n": 102,
-  "added": [],
-  "removed": [],
+  "added": [
+   "RDDT",
+   "VMRK"
+  ],
+  "removed": [
+   "AVB",
+   "EQR"
+  ],
   "cross_check": "SPY 보유내역 대조",
   "sector_changed": [],
-  "name_style_kept": 517,
+  "name_style_kept": 515,
   "ndx_caveat": "NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존한다"
  },
  "members": {
@@ -503,16 +509,6 @@
    "sub": "Gas Utilities",
    "grp": "Utilities",
    "ind": "Gas Utilities"
-  },
-  "AVB": {
-   "name": "AVALONBAY COMMUNITIES INC",
-   "sector": "Real Estate",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Multi-Family Residential REITs",
-   "grp": "Equity Real Estate Investment Trusts (REITs)",
-   "ind": "Residential REITs"
   },
   "AVGO": {
    "name": "BROADCOM INC",
@@ -1739,16 +1735,6 @@
    "sub": "Data Center REITs",
    "grp": "Equity Real Estate Investment Trusts (REITs)",
    "ind": "Specialized REITs"
-  },
-  "EQR": {
-   "name": "EQUITY RESIDENTIAL",
-   "sector": "Real Estate",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Multi-Family Residential REITs",
-   "grp": "Equity Real Estate Investment Trusts (REITs)",
-   "ind": "Residential REITs"
   },
   "EQT": {
    "name": "EQT CORP",
@@ -4061,6 +4047,16 @@
    "grp": "Consumer Services",
    "ind": "Hotels, Restaurants & Leisure"
   },
+  "RDDT": {
+   "name": "Reddit",
+   "sector": "Communication Services",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Interactive Media & Services",
+   "grp": "Media & Entertainment",
+   "ind": "Interactive Media & Services"
+  },
   "REG": {
    "name": "REGENCY CENTERS CORP",
    "sector": "Real Estate",
@@ -4942,6 +4938,16 @@
    "sub": "Construction Materials",
    "grp": "Materials",
    "ind": "Construction Materials"
+  },
+  "VMRK": {
+   "name": "Vivmark Residential",
+   "sector": "Real Estate",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Multi-Family Residential REITs",
+   "grp": "Equity Real Estate Investment Trusts (REITs)",
+   "ind": "Residential REITs"
   },
   "VRSK": {
    "name": "VERISK ANALYTICS INC",
