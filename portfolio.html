@@ -139,6 +139,23 @@
 .cv{font-family:var(--mono);font-size:21px;font-weight:600;margin:5px 0 3px}
 .cs{font-size:12px;color:var(--muted)}
 .chart{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;margin:0 0 16px}
+/* 저장 상태 — 미저장 변경이 있을 때만 나오고, 나오면 화면 위에 붙어 따라온다.
+   «반영됐나?» 를 없애려면 상태가 스크롤 밖으로 사라지면 안 된다(2026-08-21 사용자 지시). */
+.pfsync{position:sticky;top:0;z-index:9;background:var(--ground);padding:6px 0}
+.pendlist{margin:6px 0 0;padding:8px 12px;border:1px solid var(--line-soft);border-radius:3px;
+  background:var(--panel);font-size:12.5px}
+.pendlist b{font-size:11.5px;font-family:var(--mono);color:var(--marg)}
+.pendlist ol{margin:4px 0 0;padding-left:20px;color:var(--ink-2);line-height:1.65}
+.sb.warn{border-color:var(--hot);color:var(--hot)}
+.sb.warn:hover:not(:disabled){background:color-mix(in srgb,var(--hot) 10%,transparent)}
+/* 방금 무엇이 반영됐는지 — 잠깐 떴다 사라진다 */
+.pfflash{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);z-index:60;
+  background:var(--marg);color:#fff;font-family:var(--mono);font-size:12.5px;font-weight:600;
+  padding:9px 16px;border-radius:3px;box-shadow:var(--shadow);opacity:0;pointer-events:none;
+  transition:opacity .16s,transform .16s}
+.pfflash.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.pfflash.ok{background:var(--good)}
+@media(prefers-reduced-motion:reduce){.pfflash{transition:none}}
 /* DB 원장 → 웹 원장 이전 안내 */
 .migbox{margin:0 0 12px;padding:10px 13px;border:1px solid var(--marg);border-left-width:3px;
   border-radius:3px;background:color-mix(in srgb,var(--marg) 7%,transparent);font-size:13px;

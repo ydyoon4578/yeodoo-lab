@@ -32,6 +32,10 @@
     km: null,             // PBKDF2 키 재료 — 게이트가 준다. 메모리에만 있다.
     base: null,           // 마지막으로 불러온 원격 {sha, updated}
     doc: { v: 1, strategies: {}, trades: [], migrated: false },
+    // 🚨 2026-08-21 사용자 지시 — «반영이 된 건지 안 된 건지 명확히».
+    //   S.dirty 만으로는 «무엇이» 안 저장됐는지 알 수 없다. 편집마다 한 줄씩 쌓아
+    //   상태바가 그 목록을 그대로 보여준다. 저장·취소하면 비운다.
+    pending: [],
     dirty: false,
     ready: false,
     loadErr: null
@@ -75,6 +79,29 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function uid() { return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  // 편집 하나를 «미저장» 으로 등록한다. 화면 갱신까지 여기서 한 번에 — 호출부가
+  // S.dirty 를 손으로 세우고 renderSync 를 빼먹는 사고를 없앤다.
+  function mark(desc, slug) {
+    S.pending.push(desc);
+    S.dirty = true;
+    if (slug) renderFund(slug);
+    renderSync();
+    flash(desc);
+  }
+  // 방금 무엇이 반영됐는지 잠깐 띄운다 — 목록이 길어져도 «지금 누른 것»이 보인다.
+  var _flashT = null;
+  function flash(msg) {
+    var b = el('pfflash');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'pfflash'; b.className = 'pfflash';
+      document.body.appendChild(b);
+    }
+    b.textContent = '반영됨 — ' + msg + ' (저장 필요)';
+    b.classList.add('on');
+    clearTimeout(_flashT);
+    _flashT = setTimeout(function () { b.classList.remove('on'); }, 2600);
+  }
 
   // ── 패널 접근 ───────────────────────────────────────────────────────────
   function boot() {
@@ -420,6 +447,29 @@
     S.dirty = false;
   }
 
+  // 변경 취소 — 저장 안 된 편집을 버리고 **원격 원장을 다시 읽는다**. 메모리만 되돌리면
+  // 직전 저장 시점과 어긋난 상태가 남는다(그게 «반영됐나?» 의 원인이다).
+  async function onUndo() {
+    if (!S.dirty) return;
+    if (!confirm('저장 안 된 변경 ' + S.pending.length + '건을 버리고 마지막 저장 상태로 되돌립니다.\n계속할까요?')) return;
+    try {
+      await loadLedger();
+      S.pending = []; S.dirty = false;
+      renderAll();
+      flashOk('마지막 저장 상태로 되돌렸습니다.');
+    } catch (e) {
+      panel('<b class="perr">되돌리기 실패</b><p class="pnote">' + esc(e.message) + '</p>');
+    }
+  }
+  function flashOk(msg) {
+    var b = el('pfflash');
+    if (!b) { b = document.createElement('div'); b.id = 'pfflash'; b.className = 'pfflash'; document.body.appendChild(b); }
+    b.textContent = msg;
+    b.classList.add('on', 'ok');
+    clearTimeout(_flashT);
+    _flashT = setTimeout(function () { b.classList.remove('on', 'ok'); }, 2600);
+  }
+
   // ── 렌더: 동기화 바 ─────────────────────────────────────────────────────
   // 🚨 골격(상태줄 #pfrow / 패널 #pfpanel)은 한 번만 만들고, 갱신은 #pfrow 만 다시 쓴다.
   //    처음엔 renderSync 가 통째로 innerHTML 을 갈았는데, 그러면 panel() 이 그린 다이얼로그의
@@ -440,6 +490,7 @@
         var b = e.target.closest('button');
         if (!b) return;
         if (b.id === 'pfsave') onSave();
+        else if (b.id === 'pfundo') onUndo();
         else if (b.id === 'pfhist') onHist();
         else if (b.id === 'pfcfg') onCfg();
       });
@@ -450,17 +501,26 @@
     if (S.loadErr === 'PWMISMATCH') st = '<span class="dot warn"></span>원장 암호가 페이지와 다름';
     else if (S.loadErr) st = '<span class="dot warn"></span>' + esc(S.loadErr);
     else if (!S.base) st = '<span class="dot"></span>불러오는 중…';
-    else if (S.dirty) st = '<span class="dot warn"></span>변경 미저장';
-    else st = '<span class="dot ok"></span>동기화됨';
+    else if (S.dirty) st = '<span class="dot warn"></span><b>저장 안 됨</b> — 변경 ' + S.pending.length + '건';
+    else st = '<span class="dot ok"></span>저장됨';
     h.push('<div class="syncrow">');
     h.push('<span class="syncst">' + st + '</span>');
     h.push('<span class="syncmeta">웹 원장 전략 ' + nS + ' · 매매 ' + nW + '건' +
-      (S.base && S.base.updated ? ' · 저장 ' + esc(String(S.base.updated).slice(0, 16).replace('T', ' ')) + 'Z' : '') + '</span>');
+      (S.base && S.base.updated ? ' · 마지막 저장 ' + esc(String(S.base.updated).slice(0, 16).replace('T', ' ')) + 'Z' : '') + '</span>');
     h.push('<span class="syncbtns">');
-    h.push('<button class="sb primary" id="pfsave"' + (S.dirty ? '' : ' disabled') + '>GitHub에 저장</button>');
+    // 🚨 저장·취소를 **한 쌍으로** 둔다. 취소가 없으면 잘못 누른 편집을 되돌릴 길이
+    //   새로고침(경고창)뿐이고, 그건 «반영됐나?» 를 더 헷갈리게 한다.
+    h.push('<button class="sb primary" id="pfsave"' + (S.dirty ? '' : ' disabled') + '>저장</button>');
+    h.push('<button class="sb warn" id="pfundo"' + (S.dirty ? '' : ' disabled') + '>변경 취소</button>');
     h.push('<button class="sb" id="pfhist">이력·되돌리기</button>');
     h.push('<button class="sb" id="pfcfg">' + (token() ? '⚙ 토큰' : '⚙ 토큰 등록 필요') + '</button>');
     h.push('</span></div>');
+    if (S.dirty && S.pending.length) {
+      h.push('<div class="pendlist"><b>저장하면 반영될 변경</b><ol>' +
+        S.pending.slice(-12).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') +
+        '</ol>' + (S.pending.length > 12 ? '<span class="pnote">외 ' + (S.pending.length - 12) + '건</span>' : '') +
+        '</div>');
+    }
     el('pfrow').innerHTML = h.join('');
     if (S.loadErr === 'PWMISMATCH' && el('pfpanel').hidden) showPwPrompt();
   }
@@ -510,7 +570,9 @@
     b.disabled = true; b.textContent = '저장 중…';
     try {
       var sha = await saveLedger(false);
+      S.pending = [];                    // 저장됐으니 «미저장» 목록을 비운다
       renderAll();
+      flashOk('저장 완료 — 커밋 ' + sha.slice(0, 7));
       panel('저장됨 — 커밋 <span class="tk">' + esc(sha.slice(0, 7)) + '</span>. git 이력에 남아 언제든 되돌릴 수 있습니다.');
     } catch (e) {
       renderAll();
@@ -519,9 +581,9 @@
         panel('<b>충돌</b> — 다른 기기에서 먼저 저장했습니다.<br>' +
           '<button class="sb" id="pfreload">원격을 불러오기(내 미저장 변경 폐기)</button> ' +
           '<button class="sb warn" id="pfforce">내 것으로 덮어쓰기(이전 버전은 이력에 남음)</button>');
-        el('pfreload').addEventListener('click', async function () { await loadLedger(); S.dirty = false; renderAll(); panel('원격 상태를 불러왔습니다.'); });
+        el('pfreload').addEventListener('click', async function () { await loadLedger(); S.dirty = false; S.pending = []; renderAll(); panel('원격 상태를 불러왔습니다.'); });
         el('pfforce').addEventListener('click', async function () {
-          try { var s2 = await saveLedger(true); renderAll(); panel('덮어씀 — 커밋 ' + esc(s2.slice(0, 7))); }
+          try { var s2 = await saveLedger(true); S.pending = []; renderAll(); panel('덮어씀 — 커밋 ' + esc(s2.slice(0, 7))); }
           catch (e2) { panel('<span class="perr">' + esc(e2.message) + '</span>'); }
         });
       } else panel('<span class="perr">' + esc(e.message) + '</span>');
@@ -628,6 +690,8 @@
     h.push('<input name="note" placeholder="메모(선택)">');
     h.push('<input type="hidden" name="editid">');
     h.push('<button class="sb primary" type="submit">추가</button>');
+    // 수정 모드일 때만 보인다 — 폼을 비우고 «추가» 로 돌아간다(원장은 안 건드린다).
+    h.push('<button class="sb" type="button" id="tfcancel-' + slug + '" hidden>수정 취소</button>');
     h.push('<span class="perr" id="tferr-' + slug + '"></span>');
     h.push('</form>');
 
@@ -703,12 +767,17 @@
         add++;
       });
       S.doc.migrated = true;
-      S.dirty = true;
+      mark('DB 원장 ' + add + '건을 웹 원장으로 이전');
       renderAll();
-      alert(add + '건을 웹 원장으로 옮겼습니다.\n\n«GitHub에 저장»을 눌러야 확정됩니다. ' +
-            '저장 전에 새로고침하면 되돌아갑니다.');
     });
     var form = el('tf-' + slug);
+    var _cx = el('tfcancel-' + slug);
+    if (_cx) _cx.addEventListener('click', function () {
+      form.reset(); form.dt.value = today(); form.editid.value = '';
+      form.querySelector('button[type=submit]').textContent = '추가';
+      el('tferr-' + slug).textContent = '';
+      _cx.hidden = true;
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var fd = new FormData(form);
@@ -735,15 +804,18 @@
         S.doc.trades.push({ id: uid(), fund: slug, dt: dt0, s: String(fd.get('s')).trim(),
                             t: t, q: q, p: p, note: String(fd.get('note') || '').trim() });
       }
-      S.dirty = true;
-      renderFund(slug); renderSync();
+      mark((editId ? '매매 수정' : '매매 추가') + ' — ' + dt0 + ' ' + t + ' ' + q + '주 @' + p, slug);
+      form.reset(); form.dt.value = today(); form.editid.value = '';
+      form.querySelector('button[type=submit]').textContent = '추가';
+      var _c0 = el('tfcancel-' + slug); if (_c0) _c0.hidden = true;
     });
     box.querySelectorAll('button[data-del]').forEach(function (b) {
       b.addEventListener('click', function () {
-        if (!confirm('이 매매를 지울까요? (저장 전이면 흔적 없음, 저장 후엔 이력에 남음)')) return;
+        var _t = S.doc.trades.find(function (x) { return x.id === b.dataset.del; }) || {};
+        if (!confirm('이 매매를 지울까요?\n\n' + (_t.dt || '') + ' ' + (_t.t || '') + ' ' + (_t.q || '') + '주\n' +
+                     '(«저장»을 누르기 전에는 «변경 취소»로 되돌릴 수 있습니다)')) return;
         S.doc.trades = S.doc.trades.filter(function (x) { return x.id !== b.dataset.del; });
-        S.dirty = true;
-        renderFund(slug); renderSync();
+        mark('매매 삭제 — ' + (_t.dt || '') + ' ' + (_t.t || '') + ' ' + (_t.q || '') + '주', slug);
       });
     });
     box.querySelectorAll('button[data-edit]').forEach(function (b) {
@@ -753,7 +825,8 @@
         form.dt.value = tr.dt; form.s.value = tr.s; form.t.value = tr.t;
         form.q.value = tr.q; form.p.value = tr.p; form.note.value = tr.note || '';
         form.editid.value = tr.id;
-        form.querySelector('button[type=submit]').textContent = '수정 저장';
+        form.querySelector('button[type=submit]').textContent = '수정 반영';
+        var _c1 = el('tfcancel-' + slug); if (_c1) _c1.hidden = false;
         form.scrollIntoView({ block: 'center' });
       });
     });
@@ -761,14 +834,14 @@
       inp.addEventListener('change', function () {
         var m = S.doc.strategies[inp.dataset.s] = S.doc.strategies[inp.dataset.s] || {};
         m.memo = inp.value.trim();
-        S.dirty = true; renderSync();
+        mark('전략 메모 — ' + inp.dataset.s);
       });
     });
     box.querySelectorAll('.sstat').forEach(function (sel) {
       sel.addEventListener('change', function () {
         var m = S.doc.strategies[sel.dataset.s] = S.doc.strategies[sel.dataset.s] || {};
         m.status = sel.value;
-        S.dirty = true; renderSync();
+        mark('전략 상태 — ' + sel.dataset.s + ' → ' + (sel.value === 'closed' ? '종료' : '운용중'));
       });
     });
   }
