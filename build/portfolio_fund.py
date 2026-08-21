@@ -632,11 +632,20 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
 
     # 첫 탭이 보인다 — 순서를 FUNDS 가 정하므로 여기 이름을 박으면 순서를 바꿀 때 둘이 갈린다.
     H.append('<section class="tabpane" id="pane-%s"%s>' % (slug, "" if slug == FUNDS[0][2] else " hidden"))
+    # 🚨 2026-08-21 사용자 지시 «난잡하니까 기준일만 딱». 다섯 축이 **거의 항상 같은 날**이라
+    #   전부 적으면 같은 날짜가 다섯 번 반복된다 — 그건 정보가 아니라 소음이다.
+    #   → 같으면 하나로 적고, **어긋난 축만** 뒤에 덧붙인다. 어긋남이 곧 알려야 할 사실이다.
+    #   시점 규약 문장은 접이(title)로 옮긴다 — 매번 읽을 문장이 아니라 한 번 확인할 정의다.
+    _ax = [("보유", asof), ("NAV", nav_d), ("환율", fx_d), ("미국 종가", asof_us), ("지수비중", cons_d)]
+    _main = max(d for _n, d in _ax)
+    _off_ax = [(n, d) for n, d in _ax if d != _main]
     H.append('<div class="fhead"><h2>%s <span class="fcode">%s · %s</span></h2>'
-             '<div class="asofline">보유 %s · NAV·기준가 %s · 환율 %s (%s) · 미국 종가 %s · 지수비중 %s'
-             '<br>기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 — 최신 종가와 짝은 최신 기준가</div></div>'
-             % (esc(label), esc(fund), esc(idx), esc(asof), esc(nav_d), esc(fx_d), num(fx_v),
-                esc(asof_us), esc(cons_d)))
+             '<div class="asofline" title="기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 — '
+             '최신 종가와 짝은 최신 기준가">기준일 <b>%s</b>%s</div></div>'
+             % (esc(label), esc(fund), esc(idx), esc(_main),
+                ("" if not _off_ax else
+                 ' <span class="axoff">· ' +
+                 " · ".join("%s %s" % (esc(n), esc(d)) for n, d in _off_ax) + '</span>')))
 
     # ① 개요
     H.append('<h3>① 펀드 개요</h3><div class="cards">')
