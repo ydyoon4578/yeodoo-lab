@@ -49,7 +49,8 @@
      가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
   /* 2026-08-20 사용자 지시 «좌우 너비가 더 넓은게 좋겠어» — 읽기폭(1120) → 본문폭(1600).
      보유 vs 지수 11열 표가 읽기폭에서는 이름이 6자에서 잘렸다. */
-  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
+  /* 2열 배치(2026-08-21) — 펀드 둘을 나란히 두므로 가장 넓은 폭을 쓴다. */
+  .wrap{max-width:var(--w-wide);margin:0 auto;padding:0 20px 70px}
   a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
   a.home:hover{border-color:var(--accent);color:var(--ink)}
   button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
@@ -123,7 +124,24 @@
 
 /* ── 운용 포트폴리오 전용(복호 후 본문) ── */
 #content{margin-top:26px}
-.pfhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 18px}
+.pfhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 14px}
+/* ── 두 펀드를 나란히 · 가운데 굵은 선 ─────────────────────────────────────
+   🚨 선은 «가운데» 하나뿐이다. 열마다 테두리를 두르면 칸이 넷으로 보여 더 정신없어진다.
+   ⚠ 넓은 표(보유 vs 지수 13열)는 열 안에서 가로 스크롤한다(.tblwrap) — 페이지 전체가
+     가로로 밀리지 않게. 좁은 화면에서는 1열로 접고, 그때 가운데 선은 위쪽 선이 된다. */
+.fundgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
+.fundcol{min-width:0;padding:0 26px}
+.fundcol:first-child{padding-left:0}
+.fundcol:last-child{padding-right:0;border-left:3px solid var(--line)}
+@media(max-width:1280px){
+  .fundgrid{grid-template-columns:1fr}
+  .fundcol{padding:0}
+  .fundcol:last-child{border-left:0;border-top:3px solid var(--line);margin-top:26px;padding-top:22px}
+}
+/* 웹 백테스트 — 전폭 접이 */
+.btwrap{margin:26px 0 0;border-top:1px solid var(--line);padding-top:14px}
+.btwrap>summary{cursor:pointer;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--ink)}
+.btwrap>summary .hnote{font-weight:400}
 .tabs{display:flex;gap:8px}
 .tb{font-family:var(--mono);font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;border-radius:2px}
 .tb[aria-selected="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
@@ -473,20 +491,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .notes{margin-top:28px;padding-top:12px}
   .notes ul{font-size:11.5px}
   details summary{font-size:11.5px;cursor:pointer}
-  /* ── 2열 — 넓은 화면에서 두 펀드를 나란히 «한눈에». 탭은 좁은 화면 전용이 된다.
-     탭 JS 가 pane 에 hidden 을 걸어도 여기서는 둘 다 편다([hidden] display 복원). */
-  .fundgrid{display:block}
-  @media(min-width:1200px){
-    .fundgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 30px;align-items:start}
-    .fundgrid>.tabpane[hidden]{display:block}
-    .fundgrid>.tabpane{border-left:1px solid var(--line);padding-left:26px}
-    .fundgrid>.tabpane:first-child{border-left:none;padding-left:0}
-    #pane-bt[hidden]{display:block}
-    /* ⚠ :has 가드 — 탭 숨김은 «새 조각(.fundgrid 있음)» 일 때만. 셸 푸시~재잠금 사이의
-       옛 조각은 탭이 유일한 전환 수단이라, 무조건 숨기면 그 사이 SPX 를 못 본다. */
-    #content:has(>.fundgrid) .tabs{display:none}
-    .chart svg{max-width:680px}
-  }
+  /* ⚠ 옛 2열 규칙(탭 + :has 가드 + [hidden] 복원)은 2026-08-21 에 걷었다 — 탭 자체가
+     사라져 «탭을 숨기고 판을 펴는» 장치가 통째로 필요 없어졌다. 새 규칙은 위쪽
+     .fundgrid/.fundcol 블록 하나뿐이다. 같은 일을 하는 규칙을 두 곳에 두지 않는다.
+     ⚠ 좁은 화면 접힘도 그쪽 @media(max-width:1280px) 이 맡는다. */
+  .chart svg{max-width:none}
   /* ── 웹 앱 UI ─────────────────────────────────────────── */
   .pfsync{flex:1 1 320px;min-width:260px}
   .syncrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11.5px}

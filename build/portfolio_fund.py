@@ -630,8 +630,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     tot_exc = sum(s["last"]["pnl"] - s["last"]["bm"] for s in perf.values() if s.get("last"))
     tot_bp = tot_exc * fx_v / nav_v * 1e4 if perf else 0.0
 
-    # 첫 탭이 보인다 — 순서를 FUNDS 가 정하므로 여기 이름을 박으면 순서를 바꿀 때 둘이 갈린다.
-    H.append('<section class="tabpane" id="pane-%s"%s>' % (slug, "" if slug == FUNDS[0][2] else " hidden"))
+    # 두 펀드를 나란히 그린다(2열) — 숨기지 않는다. 순서는 FUNDS 가 정한다.
+    H.append('<section class="fundcol" id="pane-%s">' % slug)
     # 🚨 2026-08-21 사용자 지시 «난잡하니까 기준일만 딱». 다섯 축이 **거의 항상 같은 날**이라
     #   전부 적으면 같은 날짜가 다섯 번 반복된다 — 그건 정보가 아니라 소음이다.
     #   → 같으면 하나로 적고, **어긋난 축만** 뒤에 덧붙인다. 어긋남이 곧 알려야 할 사실이다.
@@ -639,10 +639,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     _ax = [("보유", asof), ("NAV", nav_d), ("환율", fx_d), ("미국 종가", asof_us), ("지수비중", cons_d)]
     _main = max(d for _n, d in _ax)
     _off_ax = [(n, d) for n, d in _ax if d != _main]
-    H.append('<div class="fhead"><h2>%s <span class="fcode">%s · %s</span></h2>'
+    H.append('<div class="fhead"><h2>%s <span class="fcode">%s</span></h2>'
              '<div class="asofline" title="기준가(D) = 미국 D−1 종가 × D일 한국마감 환율 — '
              '최신 종가와 짝은 최신 기준가">기준일 <b>%s</b>%s</div></div>'
-             % (esc(label), esc(fund), esc(idx), esc(_main),
+             % (esc(label), esc(fund), esc(_main),
                 ("" if not _off_ax else
                  ' <span class="axoff">· ' +
                  " · ".join("%s %s" % (esc(n), esc(d)) for n, d in _off_ax) + '</span>')))
@@ -914,12 +914,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
 
 FRAG_SCRIPT = """<script>
 (function(){
-  var tabs=document.querySelectorAll('#content .tb');
-  function show(id){
-    tabs.forEach(function(x){x.setAttribute('aria-selected', x.dataset.tab===id?'true':'false');});
-    document.querySelectorAll('#content .tabpane').forEach(function(pn){pn.hidden=(pn.id!=='pane-'+id);});
-  }
-  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab);});});
+  // 펀드 탭은 2열 배치로 바뀌면서 사라졌다(2026-08-21). 남아 있던 배선도 함께 걷는다 —
+  // 없는 요소를 찾는 코드는 조용히 아무 일도 안 해서, 남겨 두면 다음 사람이 «탭이 있나»
+  // 하고 찾게 된다.
   // 차트 호버 — 정적 SVG 위에 안내선·점·툴팁을 얹는다. 좌표는 그릴 때 실은 data-ch 를
   // 그대로 쓴다(화면이 다시 계산하면 선과 툴팁이 다른 수를 말한다).
   function wireCharts(root){
@@ -1034,10 +1031,11 @@ def main() -> int:
             print("⚠ %s NAV 기준일(%s) ≠ 보유 기준일(%s) — 이하 최근값으로 대체" % (c["fund"], c["nav_d"], c["asof"]))
 
     gen = dt.datetime.now().strftime("%Y-%m-%d %H:%M KST")
-    tabs = "".join('<button class="tb" data-tab="%s" aria-selected="%s">%s · %s</button>'
-                   % (slug, "true" if k == 0 else "false", label, f)
-                   for k, (f, _i, slug, label) in enumerate(FUNDS))
-    tabs += '<button class="tb" data-tab="bt" aria-selected="false">웹 백테스트</button>'
+    # 🚨 2026-08-21 사용자 지시 «지수별로 2열씩 · 두 지수 사이 가운데는 굵은 선».
+    #   펀드 탭을 걷는다 — 두 펀드를 나란히 두면 탭이 할 일이 없고, 오히려 «지금 어느
+    #   펀드를 보는 중인가» 를 계속 기억해야 해서 화면이 정신없어진다.
+    #   ⚠ 웹 백테스트는 전폭이 필요해서(패널·표가 넓다) 아래 별도 접이로 내린다 —
+    #     평소에 안 펼쳐지므로 첫 화면이 그만큼 조용해진다.
 
     # 웹 앱 데이터 블롭 — 원장 편집·성과 재계산·백테스트가 전부 이걸 먹는다.
     #   조각(=암호문) 안에만 들어간다. 실펀드 수치라 평문 JSON 으로 따로 두면 안 된다.
@@ -1060,17 +1058,18 @@ def main() -> int:
     # "</script>" 조기 종결 방지 — JSON 문자열 값 안의 "</" 를 이스케이프한다.
     pf_json = json.dumps(pf, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
-    frag = ['<div class="pfhead"><div class="tabs" role="tablist">%s</div>'
+    frag = ['<div class="pfhead">'
             '<div id="pfsync" class="pfsync"></div>'
-            '<div class="gen">생성 %s · 입력 %s</div></div>' % (tabs, esc(gen), esc(os.path.basename(path)))]
+            '<div class="gen">생성 %s · 입력 %s</div></div>' % (esc(gen), esc(os.path.basename(path)))]
     frag.append('<div class="fundgrid">')
     frag += panes
     frag.append('</div>')
-    frag.append('<section class="tabpane btpane" id="pane-bt" hidden>'
-                '<h3>⑤ 웹 백테스트 <span class="hnote">동봉 종가 패널 %d거래일(%s~%s) · '
-                '유니버스 = 현재 구성종목 — 생존편향 있음(아래 한계)</span></h3>'
+    # 웹 백테스트 — 전폭이 필요하고 매번 보는 것이 아니라 접어 둔다.
+    frag.append('<details class="btwrap"><summary>웹 백테스트 '
+                '<span class="hnote">동봉 종가 패널 %d거래일(%s~%s) · '
+                '유니버스 = 현재 구성종목이라 생존편향 있음 — 진단용</span></summary>'
                 '<div class="appbox" id="btbox"><p class="jswait">웹 앱이 그립니다…</p></div>'
-                '</section>' % (len(axis), esc(axis[0]), esc(axis[-1])))
+                '</details>' % (len(axis), esc(axis[0]), esc(axis[-1])))
     frag.append(NOTES)
     frag.append('<script>window.PF=%s;</script>' % pf_json)
     frag.append(FRAG_SCRIPT)
