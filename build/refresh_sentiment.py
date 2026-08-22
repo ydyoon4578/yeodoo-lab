@@ -507,6 +507,44 @@ def main():
     if len(hist) < 480:
         raise SystemExit(f"history {len(hist)}일 — 최소 2년 미달, 갱신 중단(이전본 유지)")
 
+    # ── 사후 수정(revision) 감지 — 2026-08-22 사용자 질문에서 나왔다 ──────────
+    # 🚨 이 지수는 **과거 점수가 조용히 바뀐다.** 커밋 이력 실측(2026-08-22):
+    #     08-18 이 71.4 → 64.0 → 71.3 → 64.0 으로 오갔고, 최근 10일이 한때 −6~−8점씩
+    #     통째로 내려갔다가 돌아왔다. 원인 하나는 확인됐다 — **MOVE 결측**(가용가중 1.0↔0.9,
+    #     08-14 에 69.58 이 있다가 다음 실행에서 None). 다만 MOVE 는 가중 0.10 이라 그것만으로
+    #     0.8점 차이고, 남은 진폭은 아직 설명되지 않았다.
+    # → 원인을 다 모르는 채로는 «값이 바뀐 사실» 만이라도 기록에 남겨야 한다. 안 남기면
+    #   화면은 매일 새 값을 보여주면서 그것이 수정본이라는 사실을 말하지 않는다.
+    #   ⚠ 이 블록은 **아무것도 고치지 않는다.** 재발을 세고 드러낼 뿐이다 — 고치려면
+    #     원인을 먼저 알아야 하고, 모른 채 덮으면 그게 더 나쁘다.
+    revisions, rev_note = [], None
+    try:
+        _old = json.load(io.open(OUT, encoding="utf-8"))
+        _oh = {x["dt"]: x["score"] for x in (_old.get("history") or [])}
+        for _i, _v in sd.items():
+            _d = _i.date().isoformat()
+            _o = _oh.get(_d)
+            if _o is not None and abs(float(_v) - float(_o)) > 0.05:
+                revisions.append({"dt": _d, "was": round(float(_o), 1),
+                                  "now": round(float(_v), 1),
+                                  "delta": round(float(_v) - float(_o), 1)})
+        if revisions:
+            _mx = max(revisions, key=lambda r: abs(r["delta"]))
+            rev_note = ("직전본 대비 과거 점수 %d일이 바뀌었다(최대 %+.1f점 · %s). "
+                        "원인 일부는 구성요소 결측·복구(MOVE)로 확인됐고 나머지는 미확인이다 — "
+                        "그래서 이 지수의 과거값은 확정치가 아니다."
+                        % (len(revisions), _mx["delta"], _mx["dt"]))
+            print("🚨 사후 수정 %d일 — 최대 %+.1f점(%s)"
+                  % (len(revisions), _mx["delta"], _mx["dt"]))
+            for _r in sorted(revisions, key=lambda r: abs(r["delta"]), reverse=True)[:6]:
+                print("     %s  %.1f → %.1f  (%+.1f)" % (_r["dt"], _r["was"], _r["now"], _r["delta"]))
+        else:
+            print("사후 수정 없음(직전본과 과거값 일치)")
+    except FileNotFoundError:
+        pass
+    except Exception as _e:
+        print("⚠ 사후 수정 대조 실패(%s) — 이번 판은 대조 없이 나간다" % str(_e)[:60])
+
     prev = {"d1": rnd(sd.iloc[-2]) if len(sd) > 1 else None,
             "w1": rnd(sd.iloc[-6]) if len(sd) > 5 else None,
             "m1": rnd(sd.iloc[-22]) if len(sd) > 21 else None}
@@ -516,6 +554,8 @@ def main():
         "as_of": ld,
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "score": rnd(cur, 1), "score_pctl": rnd(spc, 3),
+        # 직전본 대비 과거값이 바뀐 날들 — 화면이 «오늘 수치는 수정본» 임을 말할 수 있게.
+        "revisions": revisions[-40:], "revision_note": rev_note,
         "label": lab, "label_en": lab_en,
         "prev": prev,
         "weights_used": dict(W),

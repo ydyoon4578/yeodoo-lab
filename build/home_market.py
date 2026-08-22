@@ -136,6 +136,16 @@ def main() -> int:
             #   ⚠ 이름(label)은 원본 sentiment.json 이 이미 준다 — 여기서 다시 짓지 않는다.
             #     이건 **색을 고르는 키**일 뿐이다(index.html 의 --sn-* 토큰).
             "band": _band(sn.get("score")),
+            # 🚨 2026-08-22 사용자 «최근 며칠 동안의 변화를 보는 게 중요해».
+            #   스파크라인은 750일이라 최근 며칠을 못 읽는다(1픽셀도 안 된다). 날짜를 단
+            #   최근 10거래일을 따로 싣는다 — 크기는 10점이라 무시할 만하다.
+            "recent": [{"d": x.get("dt"), "s": x.get("score")} for x in h[-10:]],
+            # 이 지수는 과거 점수가 사후에 바뀐다(refresh_sentiment 의 revisions 참조).
+            #   화면이 «오늘 값은 수정본» 이라고 말할 수 있어야 한다 — 개수와 최대 폭만 나른다.
+            "rev_n": len(sn.get("revisions") or []),
+            "rev_max": (max(((r.get("delta") or 0) for r in sn["revisions"]),
+                            key=abs) if sn.get("revisions") else None),
+            "rev_note": sn.get("revision_note"),
         }
 
     # 대표 기준일 — 둘 중 뒤진 쪽. 홈의 지연 경고는 각 카드가 자기 as_of 로 따로 내지만,
