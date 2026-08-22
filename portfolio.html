@@ -538,6 +538,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .jswait{color:var(--muted);font-size:11px}
   .dbstatic{margin:14px 0 4px;opacity:.85}
 </style>
+<script>
+/* 배치 판 대조 — 셸(이 파일)과 조각(암호문)이 따로 배포되기 때문이다. 자세한 사유는
+   build/portfolio_fund.py 의 LAYOUT_REV 주석. 두 수가 다르면 화면 배치가 어긋나 있으니
+   조용히 두지 않고 배너로 말한다 — 실제로 «오른쪽 절반이 빈 채» 하루를 보냈다. */
+window.PF_LAYOUT_REV = 3;
+window.addEventListener('pf:content', function () {
+  var f = window.PF_FRAG_REV || 0;
+  if (f === window.PF_LAYOUT_REV) return;
+  var c = document.getElementById('content'); if (!c) return;
+  var b = document.createElement('div');
+  b.className = 'note hard';
+  b.style.margin = '0 0 14px';
+  b.innerHTML = '<b>화면 배치가 어긋나 있습니다</b> — 이 페이지의 셸은 판 ' +
+    window.PF_LAYOUT_REV + ' 인데 본문 조각은 판 ' + (f || '(도장 없음)') + ' 입니다. ' +
+    '사내 PC 에서 <span class="tk">pf</span> 를 한 번 돌리면 맞춰집니다(조각 재생성 → 재잠금).';
+  c.insertBefore(b, c.firstChild);
+});
+</script>
 <script defer src="js/portfolio_app.js"></script>
 </head>
 <body data-tool="portfolio.html">
@@ -749,6 +767,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // AES-GCM 봉투)을 같은 암호로 여닫기 위해서다. 암호 문자열이 아니라 PBKDF2 키 재료
       // (추출 불가 CryptoKey)만 남긴다. runScripts 뒤에 불러야 window.PF 가 존재한다.
       window.__pfKM=km; if(window.PFAPP&&window.PFAPP.init)window.PFAPP.init();
+      // 조각이 들어오고 그 안의 script 가 실행된 뒤에 쏜다 — 그래야 PF_FRAG_REV 가 있다.
+      window.dispatchEvent(new Event('pf:content'));
     }catch(e){
       err.textContent='암호가 올바르지 않습니다.'; go.disabled=false; pw.select();
     }

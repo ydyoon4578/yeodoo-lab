@@ -70,6 +70,13 @@ except Exception: pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")          # 랩 웹 자료(종가·지수·분할) — 사내 DB 대체분
+# 🚨 배치 판 도장(2026-08-22). 이 페이지는 **셸(portfolio.html · 공개)과 조각(암호문)이
+#   따로 배포된다.** 셸을 push 하면 즉시 나가지만 조각은 사내 PC 에서 pf 를 돌려야 바뀐다.
+#   그래서 «CSS 는 새 판, 조각은 옛 판» 이 되는 순간이 생기고, 실제로 그것 때문에 2열 배치가
+#   왼쪽 반만 채워진 채 배포됐다(옛 조각의 hidden 을 풀어 주던 규칙이 새 CSS 에는 없다).
+#   → 조각과 셸에 같은 판 번호를 박고, 화면이 다르면 **눈에 보이게** 말한다. 배치를 바꿀
+#     때마다 이 수를 올리고 portfolio.html 의 PF_LAYOUT_REV 도 같이 올린다.
+LAYOUT_REV = 3
 OUT = os.path.join(ROOT, "_build", "pages", "portfolio_content.html")
 LOCAL_CFG = os.path.join(ROOT, "_build", "portfolio_local.json")
 
@@ -1071,6 +1078,7 @@ def main() -> int:
                 '<div class="appbox" id="btbox"><p class="jswait">웹 앱이 그립니다…</p></div>'
                 '</details>' % (len(axis), esc(axis[0]), esc(axis[-1])))
     frag.append(NOTES)
+    frag.append('<script>window.PF_FRAG_REV=%d;</script>' % LAYOUT_REV)
     frag.append('<script>window.PF=%s;</script>' % pf_json)
     frag.append(FRAG_SCRIPT)
 
