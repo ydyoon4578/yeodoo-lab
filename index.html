@@ -558,6 +558,32 @@
   /* ── 심리 띠 · 압축 사이클 (2026-08-12 사용자 요청) ─────────────────────────
      둘 다 국면 카드 **안**에 넣는다. 국면·심리·사이클은 "지금 어디인가" 하나의 질문이라
      구획을 셋으로 쪼개면 같은 질문이 세 번 나온다. 카드 안에서 옅은 선으로만 가른다. */
+  /* ── 금리(국면 카드 안) — 심리 자리를 대신한다 ──────────────────────── */
+  .rgrt{margin:11px 0 0}
+  .rgrth{display:flex;align-items:baseline;gap:8px;font-family:var(--mono);font-size:12px;font-weight:700}
+  .rgrtd{color:var(--muted);font-weight:400;font-size:10.5px}
+  .rgrta{margin-left:auto;font-size:10.5px;font-weight:600;color:var(--accent);text-decoration:none}
+  .rgrta:hover{text-decoration:underline}
+  .rgrtw{position:relative;margin:6px 0 2px}
+  /* 높이를 고정한다 — 폭을 꽉 채우면 세로도 같이 늘어나 카드 하나를 곡선이 먹는다(실측 203px) */
+  .rgrtc{width:100%;height:66px;display:block}
+  .rgrtx{position:relative;height:12px}
+  .rgrtx span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:9px;
+    color:var(--muted);white-space:nowrap}
+  .rgrtl{display:flex;gap:10px;font-family:var(--mono);font-size:9.5px;color:var(--muted);margin:0 0 6px}
+  .rgrtl span{display:inline-flex;align-items:center;gap:4px}
+  .rgrtl i{width:9px;height:2px;border-radius:1px;display:inline-block}
+  .rgrtb{display:flex;flex-direction:column;gap:2px}
+  .rgrtr{display:grid;grid-template-columns:1fr auto auto auto;gap:9px;align-items:baseline;
+    font-family:var(--mono);font-size:11.5px}
+  .rgrtr i{font-style:normal;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rgrtr b{font-weight:700;font-variant-numeric:tabular-nums}
+  .rgrtr b small{font-weight:400;color:var(--muted);font-size:9px}
+  .rgrtr em{font-style:normal;font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px;text-align:right}
+  .rgrtr em.up{color:var(--hot)} .rgrtr em.dn{color:var(--deploy)}
+  .rgrtr u{text-decoration:none;font-variant-numeric:tabular-nums;color:var(--muted);opacity:.7;
+    min-width:44px;text-align:right;font-size:10.5px}
+  .rgrtn{margin:5px 0 0;font-size:10px;color:var(--muted);line-height:1.5}
   .rgsep{margin:13px -18px 0;border-top:1px solid var(--line-soft)}
   .rgsn{padding-top:12px}
   .rgsnh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
@@ -1834,6 +1860,73 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   ⚠ 홈에 다시 넣을 일이 있으면 그때는 '상시로 뜨지 않게' 문턱을 먼저 정해야 한다.
       '</div>';
   }
+  // ── 금리 (2026-08-22 사용자 요청 «메인 페이지에 금리 내용을 추가») ──────────
+  // ⚠ 화면이 계산하지 않는다. build/home_market.py 가 rates.json(312KB)에서 골라 실어
+  //   보낸 발췌(2KB)를 전사만 한다 — 전체는 rates.html 이 원본을 읽는다.
+  function rtBlock(){
+    var R=MK.rt; if(!R||!R.levels||!R.levels.length)return '';
+    // 홈에 넉 줄만 — 정책(연방기금)·장기(10년)·기울기 재료(2년)·기대인플레.
+    //   아홉 개를 다 깔면 카드가 표 하나로 변하고, 그건 rates.html 이 할 일이다.
+    // 키는 FRED 코드다(실측: DFF·DGS2·DGS10·T10YIE). 처음에 FEDFUNDS 라 잘못 적어
+    //   정책금리가 조용히 빠지고 fallback 이 첫 넷을 깔았다 — 이름을 짐작하지 말 것.
+    var pick=['DFF','DGS2','DGS10','T10YIE'];
+    var by={}; R.levels.forEach(function(x){by[x.k]=x;});
+    var rows=pick.map(function(k){return by[k];}).filter(Boolean);
+    if(!rows.length)rows=R.levels.slice(0,4);
+    var f=function(v){return v==null?'—':((v>0?'+':'')+v.toFixed(2));};
+    return '<div class="rgsep"></div><div class="rgrt">'+
+      '<div class="rgrth">금리<span class="rgrtd">'+esc(R.as_of||'')+'</span>'+
+      '<a class="rgrta" href="rates.html">금리 분석 →</a></div>'+
+      rtCurve(R.curve)+
+      '<div class="rgrtb">'+rows.map(function(x){
+        // 색은 **1개월 변화**에 준다 — 금리는 «지금 수준» 보다 «어느 쪽으로 가는가» 가
+        // 이 카드의 질문이고, 1년 변화는 그 옆에 수치로만 둔다.
+        var up=(x.m1||0)>0;
+        return '<div class="rgrtr"><i>'+esc(x.nm)+'</i>'+
+          '<b>'+(x.v==null?'—':x.v.toFixed(2))+'<small>%</small></b>'+
+          '<em class="'+((x.m1||0)===0?'':(up?'up':'dn'))+'">'+f(x.m1)+'</em>'+
+          '<u>'+f(x.y1)+'</u></div>';
+      }).join('')+'</div>'+
+      '<div class="rgrtn">가운데는 <b>1개월</b> 변화(%p) · 오른쪽은 1년. 곡선은 만기별 금리.</div>'+
+      '</div>';
+  }
+  // 수익률 곡선 — 지금·3개월 전·1년 전 세 줄. x 는 만기(로그), y 는 금리.
+  //   ⚠ 만기를 등간격으로 두면 3개월과 2년이 10년~30년과 같은 폭을 먹어 곡선 모양이
+  //     실제와 달라진다. 로그 축이 만기 곡선의 관례다.
+  function rtCurve(cv){
+    if(!cv||!cv.now||cv.now.length<3)return '';
+    var KEY=[['y1','1년 전','var(--muted)'],['m3','3개월 전','var(--marg)'],['now','지금','var(--accent)']];
+    var pts=[],all=[];
+    KEY.forEach(function(k){
+      var a=cv[k[0]]; if(!a)return;
+      a.forEach(function(p){all.push(p.v);});
+      pts.push([k, a]);
+    });
+    if(!pts.length)return '';
+    var lo=Math.min.apply(null,all), hi=Math.max.apply(null,all), rg=(hi-lo)||1;
+    lo-=rg*0.12; hi+=rg*0.12; rg=hi-lo;
+    var W=300,H=64,PL=4,PR=4,PT=6,PB=13;
+    var L=function(y){return Math.log(y);};
+    var x0=L(0.25), x1=L(30);
+    var X=function(y){return PL+(W-PL-PR)*(L(y)-x0)/(x1-x0);};
+    var Y=function(v){return PT+(H-PT-PB)*(1-(v-lo)/rg);};
+    var g='';
+    pts.forEach(function(q){
+      var d=q[1].map(function(p,i){return (i?'L':'M')+X(p.yrs).toFixed(1)+' '+Y(p.v).toFixed(1);}).join(' ');
+      g+='<path d="'+d+'" fill="none" stroke="'+q[0][2]+'" stroke-width="'+(q[0][0]==='now'?1.8:1.1)+
+         '" stroke-linejoin="round" opacity="'+(q[0][0]==='now'?1:.7)+'"/>';
+    });
+    // 🚨 만기 라벨을 **SVG 밖**에 둔다. 이 그림은 preserveAspectRatio="none" 로 폭을 꽉
+    //   채우는데(950×203 실측), 그러면 가로 3.2배·세로 1.2배로 비균등 확대돼 SVG 안 글자가
+    //   찌그러진다. HTML 로 빼고 왼쪽 위치만 %로 준다 — 글자는 안 늘어난다.
+    var lab='<div class="rgrtx">'+[[0.25,'3M'],[2,'2Y'],[10,'10Y'],[30,'30Y']].map(function(t){
+      return '<span style="left:'+(100*X(t[0])/W).toFixed(1)+'%">'+t[1]+'</span>';
+    }).join('')+'</div>';
+    return '<div class="rgrtw"><svg class="rgrtc" viewBox="0 0 '+W+' '+(H-PB)+'" preserveAspectRatio="none" role="img" '+
+      'aria-label="수익률 곡선 — 지금·3개월 전·1년 전">'+g+'</svg>'+lab+'</div>'+
+      '<div class="rgrtl">'+KEY.slice().reverse().map(function(k){
+        return '<span><i style="background:'+k[2]+'"></i>'+k[1]+'</span>';}).join('')+'</div>';
+  }
   // 최근 10거래일 — 날짜를 단 막대. 값 자체보다 **어제 대비 방향**이 눈에 들어와야 한다.
   //   ⚠ 눈금은 0~100 고정이 아니라 그 열흘의 최소~최대로 잡는다 — 60~80 사이 움직임을
   //     0~100 눈금에 그리면 거의 평평해져서 «변화를 본다» 는 목적을 못 이룬다.
@@ -1986,7 +2079,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // ⚠ 여기 있던 '국면은 상태 표시이지 매매 신호가 아니다 …' 넉 줄을 뺐다(2026-08-10 사용자 결정).
       //   내용이 틀려서가 아니라 카드마다 같은 말을 반복해 화면을 밀어냈기 때문이다.
       //   그 판정(국면 규칙 4회 검정·4회 기각)은 전략 랩과 복제 리포트가 수치로 싣고 있다.
-      snBlock()+cycBlock()+
+      // 🚨 2026-08-22 사용자 결정 «시장 국면에서 심리 부분은 빼자. 별 도움이 안 되는 것 같아».
+      //   snBlock()·spark()·snRecent() 는 **지우지 않고 남긴다** — regime.html 이 같은
+      //   자료를 제 화면에서 계속 쓰고, 되살릴 때 다시 짜지 않으려는 것이다.
+      //   빠진 자리에 금리를 넣는다(같은 날 요청) — 레이아웃이 흔들리지 않는다.
+      rtBlock()+cycBlock()+
       '</div>';
     var sub=el('rg-sub');
     if(sub)sub.textContent='· FRED '+(R.n_indicators||0)+'지표 · 기준일 '+(R.as_of||'');
@@ -1997,6 +2094,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 심리를 국면 카드 **안**에 그리므로 drawRegime 보다 먼저 채워야 한다.
     //   순서를 바꾸면 첫 그림에 심리 띠가 빠지고, 아무도 다시 안 그린다.
     MK.sn=(j&&j.sentiment)||false;
+    MK.rt=(j&&j.rates)||false;      // 금리 발췌(home_market.py) — 국면 카드가 그린다
     drawRegime();
     syncAsof(); staleCheck();
     // FRED 지표 수는 눈썹에서 뺐다(2026-08-10) — regime.html 이 그 화면이다.
