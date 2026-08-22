@@ -353,25 +353,9 @@ def main() -> int:
     print("  격자 %d일 (%s ~ %s)" % (len(dates), dates[0], dates[-1]))
 
     # ── 수준·변화 ──────────────────────────────────────────────────────
-    levels = []
-    for code, nm, g in CODES:
-        d0, v0 = last_at(dates, cols[code])
-        row = {"k": code, "nm": nm, "g": g, "v": v0, "d": d0}
-        for lab, nd in (("m1", 30), ("m3", 91), ("y1", 365), ("y3", 1095)):
-            _d, _v = back(dates, cols[code], nd)
-            row[lab] = (None if (_v is None or v0 is None) else round(v0 - _v, 3))
-        levels.append(row)
-
-    # ── 곡선(현재·1개월·1년 전) ─────────────────────────────────────────
-    def curve_at(nd):
-        out = []
-        for code, yrs in CURVE_PTS:
-            _d, _v = (last_at(dates, cols[code]) if nd == 0 else back(dates, cols[code], nd))
-            out.append({"k": code, "yrs": yrs, "v": _v, "d": _d})
-        return out
-    curve = {"now": curve_at(0), "m1": curve_at(30), "m3": curve_at(91), "y1": curve_at(365)}
-
-    sens, spike = sensitivity(dates, cols[FACTOR])
+    # ⚠ 여기 있던 levels(9계열 × 변화율)·curve(만기별 4판) 조립은 2026-08-22 에 걷었다.
+    #   화면(rates.html)이 FedWatch 로 바뀌면서 읽는 곳이 없어졌다 — 값을 만들어 놓고
+    #   아무도 안 보는 코드는 다음 사람에게 «쓰이는 줄» 알게 한다. 되살리려면 git 이력에서.
     write_overlay(dates)
 
     doc = {
@@ -390,10 +374,8 @@ def main() -> int:
                    "n": len(S[c])} for c, n, g in CODES],
         "dates": dates,
         "series": {c: cols[c] for c, _n, _g in CODES},
-        "levels": levels,
-        "curve": curve,
-        "sens": sens,
-        "spike": spike,
+        # levels·curve·sens·spike 는 2026-08-22 에 걷었다(위 주석). 계열만 남긴다 —
+        # 파일이 312KB → 40KB 대로 줄고, 홈 배경선이 쓰는 것은 dates·series 뿐이다.
         "limits": [
             "🚨 여기 수는 **서술 통계**다. 베타는 「과거에 같이 움직인 정도」이지 "
             "「금리가 오르면 이만큼 빠진다」가 아니다. 인과를 말하지 않는다.",

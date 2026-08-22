@@ -39,13 +39,16 @@ jobs:
       - name: Fetch rates
         run: python build/refresh_rates.py
       - name: Validate
-      # 🚨 홈 카드가 금리를 그린다(2026-08-22) — rates.json 은 312KB 라 홈이 통째로 못 받고
-      #   home_market.json 발췌를 읽는다. 그 발췌를 여기서도 다시 구워야 금리가 갱신된 날
-      #   홈이 같은 날 값을 보여준다. 안 붙이면 홈 금리만 하루 뒤진다.
-      - name: Rebuild home slim (rates excerpt)
-        run: python build/home_market.py
+      # 🚨 FedWatch(2026-08-22) — 연방기금 선물이 말하는 목표범위 확률. 이 빌더는 CME 가
+      #   공표한 표로 **스스로 검산**하고 어긋나면 파일을 안 쓰고 멈춘다(refresh_fedwatch.py).
+      - name: FOMC probabilities (fed funds futures)
+        run: python build/refresh_fedwatch.py
+      # 홈의 «기간별 수익률» 지수 차트가 10년 금리를 배경선으로 쓴다 — 금리가 갱신된 날
+      #   같이 다시 구워야 홈만 하루 뒤지지 않는다.
+      - name: Rebuild home perf (rates background line)
+        run: python build/home_perf.py
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json data/rates_overlay.json data/home_market.json
+          bash build/ci_push.sh "chore(data): 금리·FOMC 확률 자동 갱신" data/rates.json data/rates_overlay.json data/fedwatch.json data/home_perf.json
