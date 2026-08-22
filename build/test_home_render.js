@@ -77,23 +77,37 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
     const hasCy = !!(cyj && cyj.ref && cyj.now);
     const okCard = /class="rgcard"/.test(rg);
     const okSn = /class="rgsn"/.test(rg);
+    // 🚨 2026-08-22 사용자 결정 — 국면 카드에서 **심리 띠를 걷었다**(«별 도움이 안 되는
+    //   것 같아»). 그 자리에 금리가 들어갔다. 그래서 이 검사의 방향이 뒤집힌다:
+    //   종전 «자료가 있는데 안 그렸으면 실패» → 이제 «그렸으면 실패»(되살아난 것이다).
+    //   ⚠ snBlock() 함수와 자료는 남겨 뒀다(regime.html 이 같은 자료를 쓴다) — 그래서
+    //     실수로 다시 배선될 수 있고, 이 검사가 그것을 잡는다.
+    const _mk = opt("home_market.json") || {};
+    const rtj = (_mk.rates && _mk.rates.levels && _mk.rates.levels.length) ? _mk.rates : null;
+    const okRt = /class="rgrt"/.test(rg);
     const okCy = /class="rgcyc"/.test(rg);
-    console.log("국면 카드: 본체 %s · 심리띠 %s(자료 %s) · 사이클 %s(자료 %s)",
-      okCard ? "✅" : "❌", okSn ? "✅" : "❌", hasSn ? "有" : "無",
-      okCy ? "✅" : "❌", hasCy ? "有" : "無");
+    console.log("국면 카드: 본체 %s · 금리 %s(자료 %s) · 사이클 %s(자료 %s) · 심리띠 %s",
+      okCard ? "✅" : "❌", okRt ? "✅" : "❌", rtj ? "有" : "無",
+      okCy ? "✅" : "❌", hasCy ? "有" : "無", okSn ? "🚨되살아남" : "없음(정상)");
     if (!okCard) fail.push("국면 카드가 안 그려졌다 — home_market.json.regime 배선 확인");
-    if (hasSn && !okSn)
-      fail.push("심리 자료가 있는데 국면 카드에 심리 띠가 없다 — snBlock() 배선 확인");
+    if (okSn)
+      fail.push("국면 카드에 심리 띠가 다시 그려졌다 — 2026-08-22 에 걷기로 한 것이다(rtBlock 이 그 자리다)");
+    if (rtj && !okRt)
+      fail.push("금리 자료가 있는데 국면 카드에 금리가 없다 — rtBlock() 배선 확인");
     if (hasCy && !okCy)
       fail.push("사이클 자료가 있는데 국면 카드에 사이클이 없다 — regime_cycle.json 배선 확인");
-    // 심리 띠가 섰다면 눈금 위치가 실제 점수여야 한다. 0% 에 박혀 있으면 배선은 됐는데
-    // 값이 안 흐르는 것이다 — 그 상태도 화면상 '그려진 것'으로 보인다.
-    if (okSn) {
-      const m = rg.match(/class="rgsbar"[\s\S]*?left:([\d.]+)%/);
-      const want = Math.max(0, Math.min(100, snj.score));
-      if (!m) fail.push("심리 띠에 눈금이 없다");
-      else if (Math.abs(parseFloat(m[1]) - want) > 0.05)
-        fail.push("심리 눈금이 점수와 다르다: 눈금 " + m[1] + "% vs 점수 " + want);
+    // ⚠ 여기 있던 «심리 띠 눈금이 실제 점수인가» 검사는 걷었다 — 띠 자체가 없어져
+    //   도달할 수 없는 검사가 됐다. 심리를 되살리면 이 검사도 같이 되살릴 것
+    //   (git 이력: 2026-08-22 이전 판).
+    // 금리는 그린 다음 «값이 흐르는가» 를 본다 — 배선만 되고 값이 0 인 상태도 화면에는
+    //   그려진 것으로 보인다. 10년 금리가 발췌와 같은 수로 찍혔는지 대조한다.
+    if (okRt && rtj) {
+      const t10 = (rtj.levels || []).filter((x) => x.k === "DGS10")[0];
+      if (t10 && t10.v != null) {
+        const want = t10.v.toFixed(2);
+        if (rg.indexOf(want) < 0)
+          fail.push("금리 블록에 10년 금리 " + want + " 가 없다 — 값이 안 흐른다");
+      }
     }
     // 🚨 2026-08-12 사용자 결정 — 홈 사이클은 **「지금」만** 그린다(자취·화살표·범례 제거).
     //   그래서 여기서 확인할 것이 뒤집혔다: 자취가 '있는가'가 아니라 '없는가'다.

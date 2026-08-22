@@ -83,6 +83,7 @@ def load(name):
 def main() -> int:
     rg = load("regime.json")
     sn = load("sentiment.json")
+    rt = load("rates.json")
     if not rg and not sn:
         print("❌ regime.json·sentiment.json 둘 다 없다 — 쓰지 않는다")
         return 1
@@ -148,9 +149,28 @@ def main() -> int:
             "rev_note": sn.get("revision_note"),
         }
 
+    # ── 금리 (2026-08-22 사용자 요청 «메인에 금리 내용을 추가») ─────────────
+    # 🚨 data/rates.json 은 312KB 다 — 홈이 통째로 받으면 안 된다. 5,163일 이력과 65종
+    #   민감도 회귀가 그 대부분이고 홈은 한 줄도 안 쓴다. **홈이 그리는 것만** 발췌한다:
+    #   레벨 9개(현재·1개월·1년 변화) + 커브 3판(지금·3개월 전·1년 전) → 2KB 남짓.
+    # ⚠ 전체(만기별 이력·자산별 민감도·급등일 분석)는 rates.html 이 원본을 읽는다.
+    #   여기서 수를 새로 만들지 않는다 — 고르기만 한다.
+    if rt:
+        _cv = rt.get("curve") or {}
+        doc["rates"] = {
+            "as_of": rt.get("as_of"),
+            "levels": [{k: x.get(k) for k in ("k", "nm", "g", "v", "m1", "y1")}
+                       for x in (rt.get("levels") or [])],
+            # 커브는 «지금 vs 3개월 전 vs 1년 전» 셋만. 1개월 전은 지금과 거의 겹쳐
+            # 선이 하나 더 늘 뿐이고, 홈에서 읽히는 것은 «기울기가 어떻게 변했나» 다.
+            "curve": {k: [{"yrs": p2.get("yrs"), "v": p2.get("v")} for p2 in (_cv.get(k) or [])]
+                      for k in ("now", "m3", "y1") if _cv.get(k)},
+        }
+
     # 대표 기준일 — 둘 중 뒤진 쪽. 홈의 지연 경고는 각 카드가 자기 as_of 로 따로 내지만,
     # 이 파일 자체의 신선도를 물으면(check_freshness) 더 낡은 쪽이 답이어야 한다.
-    axes = [d.get("as_of") for d in (doc.get("regime"), doc.get("sentiment")) if d and d.get("as_of")]
+    axes = [d.get("as_of") for d in (doc.get("regime"), doc.get("sentiment"), doc.get("rates"))
+            if d and d.get("as_of")]
     doc["as_of"] = min(axes) if axes else None
 
     with io.open(OUT, "w", encoding="utf-8") as f:

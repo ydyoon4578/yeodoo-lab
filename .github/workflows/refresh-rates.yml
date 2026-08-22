@@ -39,7 +39,13 @@ jobs:
       - name: Fetch rates
         run: python build/refresh_rates.py
       - name: Validate
+      # 🚨 홈 카드가 금리를 그린다(2026-08-22) — rates.json 은 312KB 라 홈이 통째로 못 받고
+      #   home_market.json 발췌를 읽는다. 그 발췌를 여기서도 다시 구워야 금리가 갱신된 날
+      #   홈이 같은 날 값을 보여준다. 안 붙이면 홈 금리만 하루 뒤진다.
+      - name: Rebuild home slim (rates excerpt)
+        run: python build/home_market.py
+      - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json data/rates_overlay.json
+          bash build/ci_push.sh "chore(data): 금리 자료 자동 갱신" data/rates.json data/rates_overlay.json data/home_market.json
