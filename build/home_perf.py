@@ -231,8 +231,37 @@ def main():
     #   탭이 잠깐 사라지는 편이, 어제 것을 오늘이라 말하는 것보다 낫다.
     d1 = _intraday_block(out["as_of"], adates, apx, SEC_ETF, STY_ETF)
     if d1:
+        # 1일 구간은 분봉이라 금리(일간)로는 배경선을 못 만든다 — 안 싣는다.
+        #   억지로 하루 한 점을 그리면 «움직임» 이 아니라 수평선이 된다.
         out["series"]["1D"] = d1            # 🚨 먼저 넣는다 — 화면 탭 순서가 이 순서다
         out["base_dates"]["1D"] = d1["dates"][0]
+
+    # ── 금리 배경선 (2026-08-22 사용자 요청) ────────────────────────────────
+    # «지수 차트 오른쪽 축에 금리를 넣고, 선은 연하게 배경처럼. 움직임 정도만 참고».
+    # 🚨 **수익률(%)과 금리(%)는 같은 % 라도 다른 축이다.** 왼쪽은 기준일 대비 누적수익,
+    #   오른쪽은 금리 레벨이다. 한 축에 그리면 «10년물 4.69%» 와 «수익 4.69%» 가 같은
+    #   높이에 놓여 거짓을 말한다. 그래서 값만 실어 보내고 축은 화면이 따로 잡는다.
+    # ⚠ 여기서 금리를 **다시 계산하지 않는다** — data/rates.json 의 DGS10 계열을 이 차트의
+    #   날짜 격자에 맞춰 고르기만 한다. 그 날 값이 없으면(FRED 휴일) 직전 값을 끌어온다.
+    _rt = {}
+    try:
+        _rj = json.load(io.open(os.path.join(DATA, "rates.json"), encoding="utf-8"))
+        _rd, _rs = _rj.get("dates") or [], (_rj.get("series") or {}).get("DGS10") or []
+        _rt = {d: v for d, v in zip(_rd, _rs) if v is not None}
+    except Exception as _e:
+        print("  ⚠ 금리 배경선 생략(%s)" % str(_e)[:50])
+
+    def rt_on(days):
+        """날짜 목록에 맞춘 10년 금리. 앞이 비면 None(억지로 채우지 않는다)."""
+        if not _rt:
+            return None
+        keys = sorted(_rt)
+        out2, last, k = [], None, 0
+        for d in days:
+            while k < len(keys) and keys[k] <= d:
+                last = _rt[keys[k]]; k += 1
+            out2.append(last)
+        return out2 if any(v is not None for v in out2) else None
 
     for hz in HZ:
         b = bases.get(hz)
@@ -268,6 +297,9 @@ def main():
                 continue
             blk["sty"][nm] = [None if a[i] is None else round((a[i] / a[si] - 1) * 100, 2)
                               for i in sidx]
+        _r = rt_on(blk["dates"])
+        if _r:
+            blk["rt"] = [None if v is None else round(v, 2) for v in _r]
         out["series"][hz] = blk
 
     io.open(OUT, "w", encoding="utf-8").write(
