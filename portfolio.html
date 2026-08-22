@@ -140,6 +140,8 @@
 }
 /* 웹 백테스트 — 전폭 접이 */
 .btwrap{margin:26px 0 0;border-top:1px solid var(--line);padding-top:14px}
+/* 옛 조각의 백테스트 절 — 접이가 없으므로 전폭으로 펴 둔다(셸 어댑터가 붙인다) */
+.btlegacy{display:block;margin:26px 0 0;border-top:1px solid var(--line);padding-top:14px}
 .btwrap>summary{cursor:pointer;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--ink)}
 .btwrap>summary .hnote{font-weight:400}
 .tabs{display:flex;gap:8px}
@@ -539,20 +541,49 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .dbstatic{margin:14px 0 4px;opacity:.85}
 </style>
 <script>
-/* 배치 판 대조 — 셸(이 파일)과 조각(암호문)이 따로 배포되기 때문이다. 자세한 사유는
-   build/portfolio_fund.py 의 LAYOUT_REV 주석. 두 수가 다르면 화면 배치가 어긋나 있으니
-   조용히 두지 않고 배너로 말한다 — 실제로 «오른쪽 절반이 빈 채» 하루를 보냈다. */
-window.PF_LAYOUT_REV = 3;
+/* ── 배치 어댑터 (2026-08-22) ─────────────────────────────────────────────
+   🚨 사용자 지적: «화면 구조만 바꾸는 건데 굳이 사내 PC 를 쓸 필요 있나». 맞다 —
+     설계가 잘못돼 있었다. 배치는 이 셸(공개 · push 즉시 배포)에 있는데, 조각이 내보내는
+     **class 이름과 hidden 속성**에 묶여 있어 배치를 바꿀 때마다 조각 재생성이 필요했다.
+     실제로 그 탓에 «오른쪽 절반이 빈» 판이 배포됐다(셸은 2열, 조각은 옛 탭 구조).
+   → 셸이 조각을 **알아서 맞춘다.** 조각이 어느 판이든 펀드 판의 id(pane-spx · pane-ndx)는
+     그대로이므로, 그 id 를 기준으로 격자·클래스·hidden 을 셸이 정리한다.
+     이제 «배치»는 push 만으로 바뀌고, 조각 재생성은 «수치·계산»이 바뀔 때만 필요하다.
+   ⚠ 새 조각에도 그대로 돌아야 한다(멱등) — 이미 맞는 것은 건드리지 않는다. */
+window.pfNormalizeLayout = function (root) {
+  var c = root || document.getElementById('content');
+  if (!c) return { ok: false, why: '#content 없음' };
+  var panes = [].slice.call(c.querySelectorAll('section[id^="pane-"]'))
+                .filter(function (s) { return s.id !== 'pane-bt'; });
+  if (!panes.length) return { ok: false, why: '펀드 판을 못 찾음' };
+  panes.forEach(function (s) {
+    s.classList.add('fundcol');
+    s.classList.remove('tabpane');   // 옛 판의 이름 — 남겨 두면 옛 규칙이 다시 물린다
+    s.hidden = false;                // 옛 조각은 첫 판 말고 전부 hidden 이었다
+  });
+  var grid = c.querySelector('.fundgrid');
+  if (!grid) {                       // 옛 조각엔 격자가 없다 — 셸이 만들어 감싼다
+    grid = document.createElement('div');
+    grid.className = 'fundgrid';
+    panes[0].parentNode.insertBefore(grid, panes[0]);
+    panes.forEach(function (s) { grid.appendChild(s); });
+  }
+  var tabs = c.querySelector('.tabs');
+  if (tabs) tabs.hidden = true;      // 2열이면 펀드 탭은 할 일이 없다
+  var bt = c.querySelector('#pane-bt');
+  if (bt && !c.querySelector('.btwrap')) { bt.hidden = false; bt.classList.add('btlegacy'); }
+  return { ok: true, n: panes.length };
+};
 window.addEventListener('pf:content', function () {
-  var f = window.PF_FRAG_REV || 0;
-  if (f === window.PF_LAYOUT_REV) return;
+  var r;
+  try { r = window.pfNormalizeLayout(); } catch (e) { r = { ok: false, why: e.message }; }
+  if (r && r.ok) return;
+  // 맞추지 못했을 때만 말한다 — 맞춰 놓고 «어긋났다» 고 하면 그게 소음이다.
   var c = document.getElementById('content'); if (!c) return;
   var b = document.createElement('div');
-  b.className = 'note hard';
-  b.style.margin = '0 0 14px';
-  b.innerHTML = '<b>화면 배치가 어긋나 있습니다</b> — 이 페이지의 셸은 판 ' +
-    window.PF_LAYOUT_REV + ' 인데 본문 조각은 판 ' + (f || '(도장 없음)') + ' 입니다. ' +
-    '사내 PC 에서 <span class="tk">pf</span> 를 한 번 돌리면 맞춰집니다(조각 재생성 → 재잠금).';
+  b.className = 'note hard'; b.style.margin = '0 0 14px';
+  b.innerHTML = '<b>화면 배치를 맞추지 못했습니다</b> — ' + ((r && r.why) || '알 수 없는 사유') +
+    '. 사내 PC 에서 <span class="tk">pf</span> 를 돌리면 조각이 새 판으로 바뀝니다.';
   c.insertBefore(b, c.firstChild);
 });
 </script>
