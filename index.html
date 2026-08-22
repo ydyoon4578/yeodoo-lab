@@ -2083,7 +2083,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   snBlock()·spark()·snRecent() 는 **지우지 않고 남긴다** — regime.html 이 같은
       //   자료를 제 화면에서 계속 쓰고, 되살릴 때 다시 짜지 않으려는 것이다.
       //   빠진 자리에 금리를 넣는다(같은 날 요청) — 레이아웃이 흔들리지 않는다.
-      rtBlock()+cycBlock()+
+      // 🚨 2026-08-22(같은 날 두 번째) — 국면 카드에서 금리도 걷었다(«별로 도움 안 되는 것
+      //   같아»). 심리를 뺀 자리에 넣었던 것인데, 금리는 «기간별 수익률» 차트의 배경선으로
+      //   옮겼다 — 거기서는 지수 움직임과 나란히 읽히기 때문이다.
+      //   ⚠ rtBlock()·rtCurve() 는 남겨 둔다(되살릴 때 다시 짜지 않으려는 것) — 대신
+      //     렌더 검사가 «다시 그려지면 실패» 로 잡는다.
+      cycBlock()+
       '</div>';
     var sub=el('rg-sub');
     if(sub)sub.textContent='· FRED '+(R.n_indicators||0)+'지표 · 기준일 '+(R.as_of||'');
@@ -2551,7 +2556,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   ① y 눈금 — 종전에는 0 선 하나뿐이라 **선이 얼마나 벌어졌는지 눈으로 못 쟀다.**
     //   ② x 눈금 — 첫날·끝날만 있었다. 가운데 눈금이 없으면 굴곡이 언제인지 못 짚는다.
     //   ③ 0 아래 옅은 바탕 — 손실 구간을 색으로 한 번 더 말한다(선 색과 겹치지 않게 아주 옅게).
-    function chart(dates, series, title, emph, dash){
+    //   ④ 금리 배경선(2026-08-22 사용자 요청) — bg 를 주면 **오른쪽 축**에 아주 옅게 깐다.
+    //     🚨 왼쪽은 «기준일 대비 누적수익(%)», 오른쪽은 «금리 레벨(%)» 이다. 같은 % 라도
+    //       다른 축이라, 한 축에 그리면 «10년물 4.69%» 와 «수익 4.69%» 가 같은 높이에
+    //       놓여 거짓을 말한다. 축을 따로 잡고 눈금도 오른쪽에 따로 적는다.
+    //     ⚠ 배경이므로 라벨·끝점·툴팁을 안 준다. 사용자 표현대로 «움직임 정도만 참고».
+    function chart(dates, series, title, emph, dash, bg){
       var many=series.length>6, lots=series.length>12;
       // 2열 배치라 판이 넓다. 라벨 칸을 이름이 통째로 들어갈 만큼 준다.
       var W=lots?1060:(many?820:700);
@@ -2568,6 +2578,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var X=function(i){return PL+(n<2?0:i/(n-1))*(W-PL-PR);};
       var Y=function(y){return TOP+(hi-y)/(hi-lo)*(H-TOP-BOT);};
       var RX=W-PR, g='';
+      // 금리 축 — 값이 있는 구간만으로 상하한을 잡는다(없으면 배경선을 안 그린다)
+      var bgv=(bg&&bg.v)||null, bLo=0, bHi=0, bOk=false;
+      if(bgv){
+        var _b=bgv.filter(function(v){return v!=null;});
+        if(_b.length>1){
+          bLo=Math.min.apply(null,_b); bHi=Math.max.apply(null,_b);
+          if(bHi-bLo<0.05){bHi+=0.05;bLo-=0.05;}
+          var bp=(bHi-bLo)*0.35; bHi+=bp; bLo-=bp;   // 여백을 넉넉히 — 배경선이 수익선과 안 엉키게
+          bOk=true;
+        }
+      }
+      var BY=function(v){return TOP+(bHi-v)/(bHi-bLo)*(H-TOP-BOT);};
 
       // ── y 눈금 — '보기 좋은 간격'을 값에서 고른다(1·2·5·10·20·50 …) ─────────
       var span=hi-lo, raw=span/5, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10));
@@ -2587,6 +2609,24 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(zy<H-BOT)
         g+='<rect x="'+PL+'" y="'+zy.toFixed(1)+'" width="'+(RX-PL)+'" height="'+
            (H-BOT-zy).toFixed(1)+'" fill="var(--hot)" opacity=".045"/>';
+      // ── 금리 배경선 — **가장 먼저** 그린다(뒤에 깔려야 배경이다) ──────────
+      if(bOk){
+        var bd='',bs=false;
+        for(var bi=0;bi<n;bi++){var bv=bgv[bi]; if(bv==null)continue;
+          bd+=(bs?'L':'M')+X(bi).toFixed(1)+' '+BY(bv).toFixed(1); bs=true;}
+        if(bd){
+          g+='<path d="'+bd+'" fill="none" stroke="var(--marg)" stroke-width="1.4" '+
+             'opacity=".22" stroke-linejoin="round"/>';
+          // 오른쪽 축 눈금 셋 — 위·가운데·아래. 배경선이 어느 높이인지 못 읽으면
+          //   «움직임 참고» 도 못 한다(선만 있고 눈금이 없으면 진폭을 못 잰다).
+          [bHi-(bHi-bLo)*0.12, (bHi+bLo)/2, bLo+(bHi-bLo)*0.12].forEach(function(t2){
+            g+='<text x="'+(RX+5)+'" y="'+(BY(t2)+3.2).toFixed(1)+'" font-size="9" '+
+               'font-family="var(--mono)" fill="var(--marg)" opacity=".55">'+t2.toFixed(2)+'</text>';
+          });
+          g+='<text x="'+(RX+5)+'" y="'+(TOP-5)+'" font-size="9" font-family="var(--mono)" '+
+             'fill="var(--marg)" opacity=".65">'+esc(bg.nm||'10년 금리')+'</text>';
+        }
+      }
       // ── x 눈금 — 월이 바뀌는 날 중 고르게 넷 ─────────────────────────────
       // 1일 칸은 x 가 날짜가 아니라 **시각**(09:30…)이다. 월로 묶으면 90개가 다 눈금이 된다.
       var isT=n>0&&/^\d\d:\d\d$/.test(String(dates[0]));
@@ -2735,7 +2775,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   아래 줄은 **쪼갠 것**(섹터·산업그룹)이다. 위아래가 같은 질문의 두 배율이 되게 놓는다.
       //   ⚠ 판 이름에서 'ETF'·'21개' 를 뺐다 — 개수는 제목 옆 회색으로 따로 붙는다.
       '<div class="scgrid">'+
-        chart(blk.dates, ixs, '지수', CIX)+
+        // 금리 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 금리로 덮인다.
+        chart(blk.dates, ixs, '지수', CIX, null,
+              (blk.rt&&blk.rt.length===blk.dates.length)?{v:blk.rt, nm:'10년 금리(우)'}:null)+
         (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+

@@ -92,8 +92,11 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
     if (!okCard) fail.push("국면 카드가 안 그려졌다 — home_market.json.regime 배선 확인");
     if (okSn)
       fail.push("국면 카드에 심리 띠가 다시 그려졌다 — 2026-08-22 에 걷기로 한 것이다(rtBlock 이 그 자리다)");
-    if (rtj && !okRt)
-      fail.push("금리 자료가 있는데 국면 카드에 금리가 없다 — rtBlock() 배선 확인");
+    // 🚨 2026-08-22(같은 날 두 번째) — 금리도 국면 카드에서 걷었다(«별로 도움 안 되는 것
+    //   같아»). 지금 금리가 사는 곳은 «기간별 수익률» 지수 차트의 배경선이다.
+    //   심리와 같은 이유로 방향을 뒤집는다 — rtBlock() 이 남아 있어 되살아날 수 있다.
+    if (okRt)
+      fail.push("국면 카드에 금리가 다시 그려졌다 — 2026-08-22 에 걷기로 한 것이다(차트 배경선이 그 자리다)");
     if (hasCy && !okCy)
       fail.push("사이클 자료가 있는데 국면 카드에 사이클이 없다 — regime_cycle.json 배선 확인");
     // ⚠ 여기 있던 «심리 띠 눈금이 실제 점수인가» 검사는 걷었다 — 띠 자체가 없어져
@@ -101,13 +104,19 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
     //   (git 이력: 2026-08-22 이전 판).
     // 금리는 그린 다음 «값이 흐르는가» 를 본다 — 배선만 되고 값이 0 인 상태도 화면에는
     //   그려진 것으로 보인다. 10년 금리가 발췌와 같은 수로 찍혔는지 대조한다.
-    if (okRt && rtj) {
-      const t10 = (rtj.levels || []).filter((x) => x.k === "DGS10")[0];
-      if (t10 && t10.v != null) {
-        const want = t10.v.toFixed(2);
-        if (rg.indexOf(want) < 0)
-          fail.push("금리 블록에 10년 금리 " + want + " 가 없다 — 값이 안 흐른다");
-      }
+    // 금리는 이제 «기간별 수익률» 지수 차트의 배경선이다.
+    //   ⚠ 이 하네스는 그 절을 stub 하지 않는다(TBL·RGC 등만 띄운다) — DOM 으로 확인하려
+    //     하면 **공허 통과**가 된다(조건이 늘 거짓이라 아무것도 안 잡는다). 그건 검사가
+    //     없는 것보다 나쁘다(있다고 믿게 되니까). 그래서 **배선을 원본에서** 확인한다:
+    //     자료(home_perf.series.*.rt)가 있는데 index.html 이 지수 판에 bg 를 안 넘기면 실패.
+    {
+      const hp = opt("home_perf.json") || {};
+      const anyRt = Object.keys(hp.series || {}).some((k) => (hp.series[k] || {}).rt);
+      // ⚠ index.html 원본을 직접 읽는다 — Hh(TBL.innerHTML)는 이 블록보다 뒤에 정의되고
+      //   애초에 표 조각이라 배선을 담고 있지 않다.
+      const _src = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+      if (anyRt && !/chart\(blk\.dates, ixs, '지수', CIX, null,[\s\S]{0,200}?blk\.rt/.test(_src))
+        fail.push("기간별 수익률 지수 차트에 금리 배경선 배선이 없다 — chart(...,bg) 확인");
     }
     // 🚨 2026-08-12 사용자 결정 — 홈 사이클은 **「지금」만** 그린다(자취·화살표·범례 제거).
     //   그래서 여기서 확인할 것이 뒤집혔다: 자취가 '있는가'가 아니라 '없는가'다.
