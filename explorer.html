@@ -390,6 +390,19 @@
   /* ⑧ 판정과 통계 — 카드에서 여기 처음 나온다 */
   .vblock{margin:18px 0 4px;padding:14px 16px;border-radius:2px;border:1px solid var(--line-soft);background:var(--vbg)}
   .vblock .vbh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  /* 측정 잣대 딱지 — 머리글과 같은 줄에 두되 무게는 낮춘다(판정이 아니라 사실이다) */
+  .vblock .vbt{font-style:normal;font-weight:600;font-size:11px;letter-spacing:0;
+    text-transform:none;color:var(--accent);margin-left:7px}
+  /* 기각 원장 — 재활용 후보와 접어 둔 나머지 */
+  .alitem.rev>summary{background:color-mix(in srgb,var(--deploy) 7%,transparent)}
+  .alc.rvyes{color:var(--deploy);border-color:var(--deploy)}
+  .alc.rvweak{color:var(--marg);border-color:var(--marg)}
+  .alrev{margin:0 0 8px;padding:8px 10px;border-left:3px solid var(--deploy);
+    background:color-mix(in srgb,var(--deploy) 5%,transparent);font-size:13px;line-height:1.65}
+  .alold{color:var(--muted);font-size:12.5px;line-height:1.6}
+  .alrest{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .alrest>summary{cursor:pointer;font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .alrest>summary span{margin-left:6px;opacity:.75}
   .vblock .vbr{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
   .vblock .vmean{font-size:12px;color:var(--ink-2)}
   .vblock .vt{margin:11px 0 0;font-size:13px;line-height:1.65;color:var(--ink-2)}
@@ -1400,6 +1413,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             // 카드 머리가 시점정확 레그를 먼저 적는다(2026-08-13). 아래 vp 문단에도 같은
             // 자료가 쓰이지만, 머리 숫자로 쓰려면 이 자리로 넘어와야 한다.
             _pit:x.pit||null,
+            // 측정 잣대(빌더가 정한다 — 화면이 다시 판정하지 않는다)
+            tier:x.tier||null,
             // 리밸런스 주기 — 규칙마다 다르다(PREREG-2026-08-13-REBAL).
             _reb:x.reb_label||null,
             // 원 논문 — build/strategy_refs.json 에서 온다. 없으면 null 이고 카드는
@@ -3268,7 +3283,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         (d.bt?provBlock(d.bt):'')+
         // ⑧ 판정과 통계 — 카드에서 여기 처음 등장한다
         '<div class="vblock" style="--vbg:'+vbg+'">'+
-          '<div class="vbh">운용 등급 (배포 여부)</div>'+
+          // 🚨 2026-08-23 사용자 지적 «운용 등급 써놓고 구분이 없다». 머리글이 «배포 여부»
+          //   라고 말하는데 배포 원장은 비어 있고(0종), 문턱을 걷은 뒤로 등급은 전 종목이
+          //   «측정만» 한 글자였다 — 아무것도 안 가르는 칸이었다.
+          //   → 머리글을 사실대로 «어떤 잣대로 쟀나» 로 바꾸고, 빌더가 실어 보낸 tier 를
+          //     함께 적는다(시점정확 측정 75 · 측정만 46 · 판정 불가 1).
+          '<div class="vbh">측정 잣대'+(d.tier?' <em class="vbt">'+esc(d.tier)+'</em>':'')+'</div>'+
           // 2026-08-21 사용자 요청 «정신없다» — 뜻풀이 문단을 걷고 배지 툴팁으로 내린다.
           //   문구 자체는 VMETA.mean 그대로다(내리는 것 ≠ 지우는 것).
           '<div class="vbr"><span class="vbadge '+d.v+'" title="'+esc(VMETA[d.v].mean)+
@@ -3394,10 +3414,39 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .then(function(d){
     var items=(d&&d.items)||[], kinds=(d&&d.kinds)||{};
     if(!items.length){box.innerHTML='<div class="empty">원장을 불러오지 못했습니다.</div>';return;}
-    var g={}; items.forEach(function(x){var k=x.k||'reject';(g[k]=g[k]||[]).push(x);});
+    // 🚨 2026-08-23 사용자 지시 «다시 활용할 수 있는 전략 확인해주고, 나머지는 화면에서
+    //   지저분하니까 지워». **화면에서만** 내린다 — data/archive_index.json 은 그대로다.
+    //   이 랩은 «돌린 것을 지우지 않는다»(지우면 다중검정 족 수가 줄어 남은 규칙이 쉽게
+    //   통과한다). 그래서 지우는 것이 아니라 접는다.
+    //   ⚠ 어느 것이 재활용 후보인지는 **원천이 정한다**(x.revive). 화면이 이름으로 다시
+    //     고르면 원천과 화면이 갈리고, 그건 이 저장소가 되풀이 밟은 사고다.
+    var rev=items.filter(function(x){return x.revive;});
+    var rest=items.filter(function(x){return !x.revive;});
     var n=document.getElementById('al-n');
-    if(n)n.textContent='· 총 '+items.length+'종';
-    box.innerHTML=ORDER.filter(function(k){return (g[k]||[]).length;}).map(function(k){
+    if(n)n.textContent='· 재활용 후보 '+rev.length+'종 · 접어 둔 '+rest.length+'종';
+
+    var RV={yes:'재활용 후보', weak:'약한 후보'};
+    var head='';
+    if(rev.length){
+      head='<div class="algrp" style="--ac:var(--deploy)">'+
+        '<div class="alhd"><span class="an"><i></i>다시 살릴 수 있는 것</span>'+
+        '<span class="ac">'+rev.length+'종</span>'+
+        '<span class="ad">기각 사유가 <b>낡았거나</b> 이 랩이 그 사이에 축을 새로 갖춘 것들이다. '+
+        '«성과가 좋다» 는 뜻이 아니라 «그 사유로는 더 이상 못 자른다» 는 뜻이다.</span></div>'+
+        rev.sort(function(a,b){return (a.revive==='yes'?0:1)-(b.revive==='yes'?0:1);}).map(function(x){
+          return '<details class="alitem rev" id="a-'+esc(x.sid)+'" open>'+
+            '<summary><span class="aln">'+esc(x.n)+'</span>'+
+            '<span class="alc rv'+esc(x.revive)+'">'+esc(RV[x.revive]||x.revive)+'</span></summary>'+
+            '<div class="albody"><div class="alrev"><b>왜 다시 볼 만한가</b> — '+esc(x.revive_why||'')+'</div>'+
+            '<div class="alold"><b>원 기각 사유</b> — '+esc(x.r||'')+'</div>'+
+            '</div></details>';
+        }).join('')+'</div>';
+    }
+    // 나머지는 통째로 접는다 — 목록이 화면을 먹지 않게 하되 기록은 남는다.
+    var g={}; rest.forEach(function(x){var k=x.k||'reject';(g[k]=g[k]||[]).push(x);});
+    box.innerHTML=head+'<details class="alrest"><summary>나머지 '+rest.length+
+      '종 — 사유가 실질적이라 접어 둡니다<span>(기록은 지우지 않았습니다)</span></summary>'+
+      ORDER.filter(function(k){return (g[k]||[]).length;}).map(function(k){
       var meta=kinds[k]||{}, arr=g[k].slice().sort(function(a,b){
         return (a.c||'').localeCompare(b.c||'')||(a.n||'').localeCompare(b.n||'');});
       return '<div class="algrp" style="--ac:'+COL[k]+'">'+
@@ -3412,7 +3461,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             (x.kw?'<div class="alwhy"><b>이 묶음에 둔 이유</b> — '+esc(x.kw)+'</div>':'')+
             '</div></details>';
         }).join('')+'</div>';
-    }).join('');
+    }).join('')+'</details>';
     // 딥링크 — 옛 archive.html의 #s-<슬러그>로 들어오면 그 항목을 열고 보여준다.
     //   슬러그는 sid일 수도 있고 **옛 이름 기반 슬러그(aka)**일 수도 있다. 이름을 고쳐도
     //   링크가 살아 있어야 하므로 aka→sid 표(ALIAS)를 만들어 두 경로를 다 받는다.
@@ -3423,8 +3472,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function openBy(slug){
       var t=document.getElementById('a-'+slug)||
             (ALIAS[slug]?document.getElementById('a-'+ALIAS[slug]):null);
-      if(t){t.open=true;t.scrollIntoView({block:'center'});return true;}
-      return false;
+      if(!t)return false;
+      // ⚠ 접어 둔 묶음 안에 있으면 조상 <details> 를 먼저 열어야 한다 — 안 그러면
+      //   링크는 «열렸는데» 화면에는 안 보인다(옛 딥링크가 그렇게 죽은 적이 있다).
+      for(var a=t.parentElement;a;a=a.parentElement)
+        if(a.tagName==='DETAILS')a.open=true;
+      t.open=true; t.scrollIntoView({block:'center'}); return true;
     }
     function fromHash(){
       var h=(location.hash||'').replace(/^#/,'');

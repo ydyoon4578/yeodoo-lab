@@ -87,6 +87,17 @@ ROLE_ORDER = ["수익엔진", "배분기", "위험방어", "타이밍오버레�
 CMP_OFF_ROLE = {"위험방어", "위험감축", "방어보험"}   # 뒤 둘은 옛 어휘(호환용)
 
 
+def tier_of(grade, pit, holds):
+    """운용 등급 — «어떤 잣대로 쟀나». 문턱이 아니라 잣대의 종류다(위 rec 주석 참조)."""
+    if grade == "판정 불가":
+        return "판정 불가"
+    if pit:
+        return "시점정확 측정"
+    if holds == "비중":
+        return "측정만 (ETF·자산군)"
+    return "측정만"
+
+
 def comparability(role, grade, unstable, n_days=None):
     if unstable:
         return False, "대조군이 현금성이라 샤프 분모가 0에 가깝다 — Δ샤프가 허수가 된다(t만 본다)."
@@ -754,6 +765,14 @@ def rec(**kw):
             kw["k4"] = _t4
     kw.setdefault("role", "미분류")
     kw.setdefault("grade", "판정 불가")
+    # 🚨 2026-08-23 사용자 지적 «운용 등급 써놓고 구분이 없다». 맞다 — 2026-08-16 에
+    #   t·문턱을 전부 걷으면서 랩 규칙이 전부 «측정만» 한 칸에 들어갔고, 그 뒤로 이 칸은
+    #   아무것도 안 갈랐다(121종 중 121종이 같은 글자).
+    #   ⚠ 문턱을 되살리지 않는다 — 사용자가 없앤 것이고 이 랩은 선을 긋지 않기로 했다.
+    #     대신 **«어떤 잣대로 쟀나»** 로 가른다. 그건 판정이 아니라 사실이고, 화면이 그것을
+    #     말해야 독자가 서로 다른 눈금의 두 수를 나란히 놓고 안 읽는다.
+    #   ⚠ 한 곳에서만 정한다 — 호출부마다 적으면 언젠가 갈린다.
+    kw["tier"] = tier_of(kw["grade"], bool(kw.get("pit")), kw.get("holds"))
     # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
     # 다른 칸에 들어가는 일이 생긴다.
     kw["holds"] = holds_kind(kw.get("holdings"))
