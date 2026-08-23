@@ -203,6 +203,8 @@
   "t-x-realsw": "팩터",
   "t-x-curvebank": "팩터",
   "t-x-ratehot": "테크니컬",
-  "t-x-fxweak": "테크니컬"
+  "t-x-fxweak": "테크니컬",
+  "t-x-subls": "테크니컬",
+  "t-x-subom": "팩터"
  }
 }
