@@ -128,11 +128,9 @@ def main():
     # ── 축3: 금융여건(스트레스) ──
     nfci, hy, vix, curve = last(S["NFCI"]), last(S["BAMLH0A0HYM2"]), last(S["VIXCLS"]), last(S["T10Y2Y"])
     hy_z = last(zscore(S["BAMLH0A0HYM2"], 756))
-    fin_score = 0
-    if nfci is not None: fin_score += 2 if nfci > 0.3 else (1 if nfci > 0 else 0)
-    if hy_z is not None: fin_score += 2 if hy_z > 1.5 else (1 if hy_z > 0.75 else 0)
-    if vix is not None: fin_score += 1 if vix > 25 else 0
-    financial = "STRESSED" if fin_score >= 4 else ("ELEVATED" if fin_score >= 2 else ("EASY" if (nfci or 0) < -0.2 else "NEUTRAL"))
+    # ⚠ 위 fin_score/fin_label 을 쓴다 — 과거 재구성(build_history)과 **같은 함수**다.
+    _fs = fin_score(nfci, hy_z, vix)
+    financial = fin_label(_fs, nfci)
 
     # ── 성장×물가 매트릭스 → 명명 레짐 ──
     MATRIX = {
@@ -253,7 +251,18 @@ def main():
                "note": "1개월만 나타난 라벨을 직전 라벨로 이었다. 미래를 보는 필터라 "
                        "마지막 달에는 적용하지 않는다(prov:true). 사전등록 "
                        "PREREG-2026-08-11-REGIME.md §1."},
-           "asset_perf": perf["macro"], "sector_perf": perf["sector"], "factor_perf": perf["factor"]}
+           "asset_perf": perf["macro"], "sector_perf": perf["sector"], "factor_perf": perf["factor"],
+           # 국면 × 금융여건(2026-08-23 사용자 결정 «더 세밀하게»). 칸마다 n 을 같이 싣는다.
+           "asset_perf_fin": perf.get("macro_fin") or {},
+           "fin_note": ("국면 이름(성장×물가) 옆에 **금융여건**을 두 번째 좌표로 둔 것이다. "
+                        "이름을 7 → 14 로 늘리지 않은 이유는 색·범례·소비처를 다시 쓰지 않고 "
+                        "기존 이력의 연속성을 지키기 위해서다 — 보는 쪽이 (이름, 금융) 짝으로 "
+                        "묶으면 해상도는 같다. 🚨 금융 축은 NFCI·하이일드 z·VIX 로 매달 이미 "
+                        "재고 있던 값인데 라벨에만 안 들어가 있었다(새 자료가 아니다). "
+                        "⚠ 통계는 완화/긴장 둘로만 접는다 — 네 단계로 나누면 STRESSED 가 한 "
+                        "자릿수로 떨어진다. ⚠ 표본 8개월 미만인 칸은 아예 싣지 않는다. "
+                        "⚠ 금융 축에는 최소지속 필터를 안 걸었다. 금융여건은 실제로 한 달 만에 "
+                        "조였다 풀리는 값이라 그 필터가 사건을 지운다(2020-03 같은 달).")}
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"→ {OUT} · 레짐 {emoji}{lab} (성장 {growth}·물가 {inflation}·금융 {financial}) · 기준일 {asof}")
 
@@ -294,6 +303,45 @@ def censor_runs(seq, min_run=MIN_RUN):
     return out, changed
 
 
+# ── 금융여건 축 — **한 벌만 만든다** ─────────────────────────────────────────
+# 🚨 2026-08-23 사용자 결정 «지금의 7개 국면보다 더 세밀하게». 고른 길은 «칸을 더
+#   쪼개는 것» 이 아니라 **이미 매달 재고 있는데 라벨에 안 쓰던 축을 쓰는 것**이다.
+#   종전 상태: main() 이 nfci·hy_z·vix 로 financial 을 계산해 놓고 화면 문장에만 썼고,
+#   과거 재구성은 아예 classify_month(g, inf, **None**) — 인자를 받기만 하고 안 썼다.
+#   즉 축은 있는데 이력이 없어서 조건부 통계를 낼 수가 없었다.
+# ⚠ 왜 이름을 7 → 14 로 안 늘렸나. 이름을 늘리면 색·범례·소비처(홈 카드·리본·전략
+#   국면통계·macro)를 전부 다시 써야 하고 **기존 이력의 연속성이 끊긴다.** 이름은 7개로
+#   두고 금융을 **두 번째 좌표**로 싣는다 — 보는 쪽이 (이름, 금융) 짝으로 묶으면 12~14칸이
+#   되고, 안 쓰는 쪽은 종전과 똑같이 읽힌다.
+# 🚨 살아 있는 계산과 과거 재구성이 **이 함수 하나**를 쓴다. 두 벌로 두면 오늘의 금융여건과
+#   이력의 마지막 달이 조용히 갈리는데, 그건 이 저장소가 되풀이 밟은 사고다.
+def fin_score(nfci, hy_z, vix):
+    """금융 스트레스 점수(0~5). 재료가 없으면 그 항목은 0점 — 없는 것을 나쁘게 읽지 않는다."""
+    fs = 0
+    if nfci is not None:
+        fs += 2 if nfci > 0.3 else (1 if nfci > 0 else 0)
+    if hy_z is not None:
+        fs += 2 if hy_z > 1.5 else (1 if hy_z > 0.75 else 0)
+    if vix is not None:
+        fs += 1 if vix > 25 else 0
+    return fs
+
+
+def fin_label(fs, nfci):
+    return ("STRESSED" if fs >= 4 else
+            ("ELEVATED" if fs >= 2 else
+             ("EASY" if (nfci or 0) < -0.2 else "NEUTRAL")))
+
+
+# 조건부 통계에서 칸을 둘로만 가른다 — 네 단계로 나누면 STRESSED 가 한 자릿수로 떨어진다.
+# ⚠ 화면은 네 단계를 그대로 보여 준다. 여기서 둘로 접는 것은 **통계용** 이다.
+FIN_TIGHT = ("ELEVATED", "STRESSED")
+
+
+def fin2(f):
+    return "긴장" if f in FIN_TIGHT else "완화"
+
+
 def classify_month(g, i, fin):
     M = {("EXPANSION","LOW"):"Goldilocks",("EXPANSION","MODERATE"):"Recovery",("EXPANSION","HIGH"):"Overheating",
          ("SLOWING","LOW"):"SoftLanding",("SLOWING","MODERATE"):"LateCycle",("SLOWING","HIGH"):"Stagflation",
@@ -311,7 +359,11 @@ def build_history(S, cpi_yoy, asof=None):
     dU = S["UNRATE"] - S["UNRATE"].rolling(12).min()
     def asof(s, d):
         s2 = s.dropna(); s2 = s2[s2.index <= d]; return float(s2.iloc[-1]) if len(s2) else None
-    labels = {}
+    # 🚨 금융여건도 **달마다 되돌려 잰다**(2026-08-23). 종전에는 여기 None 을 넘겨
+    #   이력에 이 축이 아예 없었다 — 축은 재고 있는데 조건부 통계를 못 내던 이유다.
+    #   ⚠ 살아 있는 계산과 같은 함수(fin_score·fin_label)를 쓴다. 재료도 같다.
+    hyz_s = zscore(S["BAMLH0A0HYM2"], 756)
+    labels, fins = {}, {}
     for d in idx:
         nfp, cf, sh, du, cp = asof(nfp3,d), asof(S["CFNAIMA3"],d), asof(S["SAHMREALTIME"],d), asof(dU,d), asof(cpi_yoy,d)
         gs = 0
@@ -321,15 +373,22 @@ def build_history(S, cpi_yoy, asof=None):
         if du is not None: gs += -1 if du>=0.5 else 0
         g = "EXPANSION" if gs>=1 else ("CONTRACTION" if gs<=-2 else "SLOWING")
         inf = "HIGH" if (cp or 0)>=4 else ("MODERATE" if (cp or 0)>=2.5 else "LOW")
-        labels[d] = classify_month(g, inf, None)
+        _nf, _hz, _vx = asof(S["NFCI"],d), asof(hyz_s,d), asof(S["VIXCLS"],d)
+        fins[d] = fin_label(fin_score(_nf, _hz, _vx), _nf)
+        labels[d] = classify_month(g, inf, fins[d])
     raw = [labels[d] for d in idx]
     cen, n_ch = censor_runs(raw)
     # 필터본을 정본으로 쓴다 — 리본·조건부 성과·사이클 차트가 전부 이걸 읽는다.
     # 원본을 지우지 않는다(history_raw). 무엇이 바뀌었는지 셀 수 있어야 한다.
     for d, r2 in zip(idx, cen):
         labels[d] = r2
-    hist = [{"dt": d.date().isoformat(), "r": r2} for d, r2 in zip(idx, cen)]
-    hist_raw = [{"dt": d.date().isoformat(), "r": r2} for d, r2 in zip(idx, raw)]
+    # ⚠ 금융 축은 **최소지속 필터를 안 건다.** 그 필터는 «국면 이름이 한 달만 떴다 사라지는
+    #   것» 을 막으려는 것이고, 금융여건은 실제로 한 달 만에 조였다 풀리는 값이다. 여기에
+    #   같은 필터를 걸면 2020-03 같은 달이 지워진다 — 그건 잡음이 아니라 사건이다.
+    hist = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d]}
+            for d, r2 in zip(idx, cen)]
+    hist_raw = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d]}
+                for d, r2 in zip(idx, raw)]
     if hist:
         hist[-1]["prov"] = True     # 마지막 달은 지속 여부를 모른다 — 잠정
     print("  [최소지속 %d개월] 라벨 %d달 정정 · 마지막 달은 잠정" % (MIN_RUN, n_ch))
@@ -341,11 +400,19 @@ def build_history(S, cpi_yoy, asof=None):
         "sector": ["XLK","XLF","XLE","XLV","XLI","XLY","XLP","XLU","XLB","XLRE","XLC"],
         "factor": ["MTUM","QUAL","USMV","VLUE","SIZE"],
     }
-    perf = {"macro": {}, "sector": {}, "factor": {}}
+    perf = {"macro": {}, "sector": {}, "factor": {}, "macro_fin": {}}
     try:
         allt = sorted(set(t for v in GROUPS.values() for t in v))
         px = yf.download(allt, start="2008-12-01", auto_adjust=True, progress=False)["Close"]
         mret = px.resample("ME").last().pct_change()*100
+        # 🚨 2026-08-23 — 국면 **× 금융여건** 한 판을 더 낸다(사용자 결정 «더 세밀하게»).
+        #   이름을 안 늘리고 해상도를 얻는 자리가 여기다. 칸이 둘로 갈리므로 표본이 절반이
+        #   되는데, **몇 개월로 잰 값인지 같이 싣는다** — 안 적으면 4개월짜리와 60개월짜리가
+        #   같은 무게로 읽힌다(이 저장소의 국면 통계가 이미 그 함정을 겪었다).
+        #   ⚠ 문턱을 8개월로 둔다. 종전 3개월은 «한 달 수익이 칸을 지배» 하는 크기다.
+        FIN_MIN = 8
+        fin_s = pd.Series({d: fin2(f) for d, f in fins.items()})
+        perf["macro_fin"] = {}
         for grp, tks in GROUPS.items():
             for a in tks:
                 if a not in mret: continue
@@ -353,6 +420,17 @@ def build_history(S, cpi_yoy, asof=None):
                 dd = {rg: round(float(r[lab_s==rg].mean()), 2) for rg in set(labels.values())
                       if (lab_s==rg).sum() >= 3 and pd.notna(r[lab_s==rg].mean())}
                 if dd: perf[grp][a] = dd
+                if grp != "macro":
+                    continue
+                cell = {}
+                for rg in set(labels.values()):
+                    for fv in ("완화", "긴장"):
+                        m = (lab_s == rg) & (fin_s == fv)
+                        n = int(m.sum())
+                        if n < FIN_MIN or not pd.notna(r[m].mean()):
+                            continue
+                        cell["%s|%s" % (rg, fv)] = {"v": round(float(r[m].mean()), 2), "n": n}
+                if cell: perf["macro_fin"][a] = cell
     except Exception as e:
         print("  자산성과 실패", e)
     # yfinance가 통째로 실패하면 조건부 성과 섹션이 빈 dict로 덮어써져 페이지에서 조용히 사라진다.
