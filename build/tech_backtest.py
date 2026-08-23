@@ -75,6 +75,15 @@ MAX_YEARS = 10
 #   재게 되므로, 이 집합의 규칙은 **무위험(현금)** 을 대조군으로 쓴다.
 SHORT_SIDS = {"x-ratehot"}
 
+# 롱숏(시장중립) 규칙 — 비중에 **음수**가 들어간다(사전등록 PREREG-2026-08-23-NARRATIVE B1·B2).
+# 🚨 기존 가중 경로는 Σw 로 되정규화한다. 롱숏은 Σw = 0 이라 그 식이 0 으로 나눈다 —
+#   그래서 **다리별로** 되정규화한다(각 다리 합 1 · 총 노출 롱100/숏100).
+# ⚠ 이 집합 밖의 121종은 계산이 한 줄도 안 바뀐다. 회귀로 확인한다.
+LONGSHORT_SIDS = {"x-subls", "x-subom"}
+SUB_TOPK = 5          # 상·하위 서브산업 수
+SUB_PER = 5           # 서브산업당 시총 상위 몇 종
+SUB_MIN_N = 3         # 소속 종목이 이보다 적은 서브산업은 제외
+
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
                            # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
                            # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
@@ -4272,6 +4281,32 @@ def build_strats():
          "쓴다(두 벌로 만들지 않는다). 그쪽은 절댓값 최하위 롱이고 이쪽은 최상위 × 과열 숏이라 "
          "방향이 반대다. ⚠ 대조군은 현금이다 — 지수를 대조군으로 두면 «숏이 지수보다 못하다» "
          "는 당연한 말을 재게 된다.")
+    # ── 서브산업 롱숏 2종 (B1·B2) — 이 랩 최초의 롱숏이다 ─────────────
+    # 🚨 게시 123종이 전부 롱온리였다. 스토리(메모리 병목·정제마진·리쇼어링)는 종목이
+    #   아니라 서브산업에 실리는데, 랩은 섹터(11)·산업그룹(25)까지만 쓰고 서브산업(128)을
+    #   한 번도 안 썼다. 두 규칙을 쌍으로 등록하는 이유는 하나가 가격을 보고 하나가
+    #   손익계산서를 보기 때문이다 — 같이 움직이면 스토리가 맞는 것이고 갈리면 하나는 거짓이다.
+    xsec("x-subls", "서브산업 모멘텀 롱숏 (상하위 %d)" % SUB_TOPK,
+         "매 월말 GICS 서브산업(소속 %d종 이상)마다 시총가중 6개월 수익을 구해 상위 %d "
+         "서브산업을 롱, 하위 %d 를 숏 한다. 서브산업 안에서는 시총 상위 %d종만 담고, "
+         "두 다리 각각 합이 1 이 되게 되정규화한다(롱100/숏100 시장중립)."
+         % (SUB_MIN_N, SUB_TOPK, SUB_TOPK, SUB_PER),
+         None,
+         "산업 모멘텀(Moskowitz·Grinblatt 1999)의 논리를 이 랩이 안 쓰던 단위로 내린다. "
+         "실측으로 같은 「AI」 안에서 메모리·장비와 GPU·설계가 갈리고 같은 「에너지」 안에서 "
+         "정제와 탐사가 갈렸다 — 섹터로 묶으면 그 갈림이 상쇄된다. "
+         "⚠ 차입비용·대차수수료를 안 문다(랩 전체가 무비용). 숏 다리의 실제 비용은 크므로 "
+         "이 수치는 그만큼 낙관 쪽이다. "
+         "⚠ 한쪽 다리가 통째로 결측인 날은 0 으로 둔다 — 반쪽만 들고 중립이라 부르지 않는다.")
+    xsec("x-subom", "서브산업 영업이익률 롱숏 (상하위 %d)" % SUB_TOPK,
+         "위 서브산업 모멘텀과 모든 것이 같고 정렬 축만 서브산업별 영업이익률(TTM 영업이익 "
+         "÷ TTM 매출) 중앙값으로 바꾼다.",
+         None,
+         "위가 가격을 본다면 이것은 원인을 본다 — 병목을 쥔 쪽이 마진을 가져간다는 가설이다. "
+         "둘이 같이 움직이면 서브산업 축이 진짜인 것이고, 갈리면 가격과 손익 중 하나는 "
+         "다른 것을 재고 있다. 그 대조가 쌍으로 등록한 이유다. "
+         "⚠ 흐름 항목이라 TTM 으로 읽는다 — 분기만 보면 계절이 섞인다.")
+
     xsec("x-fxweak", "달러 약세 국면 달러민감 %d" % (TOPN * 2),
          "광의 달러지수(DTWEXBGS)의 63거래일 변화가 음이면 켜고 양이면 무보유(현금). "
          "켜졌을 때 일간 수익률을 달러지수 변화율에 %d거래일 회귀한 기울기가 가장 음수인 "
@@ -5179,7 +5214,9 @@ def build_strats():
         "x-updown",                                            # 2026-08-12 사용자 결정으로 20종
         "x-btp-n155", "x-payout-n50", "x-agrow-n52",           # PREREG-2026-08-11-BASKET
         "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52",
-    } | set(WEIGHTED_SIDS)                                     # 바스켓이 N 으로 안 정해진다
+    } | set(WEIGHTED_SIDS) | set(LONGSHORT_SIDS)               # 바스켓이 N 으로 안 정해진다
+    # ⚠ 롱숏 둘은 선택 단위가 **서브산업**이라 «상위 N 종목» 이라는 것이 없다. N 전수 시험을
+    #   돌리면 같은 규칙이 세 번 세어져 다중검정 족만 부풀린다.
     # 🚨 ML6 을 스윕에서 뺀다 — **돌리기 전 결정**(PREREG-2026-08-16-ML6.md §5 가 바스켓 10 을
     #   못박았다). 2026-08-15 통계 배치는 이 장치에 덮여 «바스켓을 쓸어 본 이상 게시 기준
     #   임계는 못 쓴다» 를 결과에 적어야 했다. 같은 일을 되풀이하지 않는다.
@@ -5902,6 +5939,12 @@ def xsec_score_at(S, i, X, pool=None):
             v = None
             if _mb is not None and _RATEHOT_CUT[0] is not None and abs(_mb) >= _RATEHOT_CUT[0]:
                 v = ret(P, i - 1, 252)          # 관문 통과분 중 12개월 수익 상위
+        elif sid in LONGSHORT_SIDS:
+            # 🚨 이 둘은 채점 단위가 종목이 아니라 **서브산업**이다. 선택은 xsec_pick_at 의
+            #   sub_baskets 가 통째로 하고, 여기서는 «후보 자격» 만 만든다 —
+            #   서브산업이 붙은 종목이면 0 점. 이렇게 둬야 후보 수 관문(XSEC_MIN_POOL)과
+            #   PIT 마스킹이 다른 규칙과 **같은 자리**에서 걸린다(사본을 만들지 않는다).
+            v = 0.0 if ((meta.get(t) or {}).get("sub")) else None
         elif sid == "x-fxweak":
             # 게이트가 꺼진 달은 **후보를 안 만든다** → 무보유(현금). 0 수익이 아니다.
             if _GATE_ON[0]:
@@ -6235,6 +6278,77 @@ def xsec_score_at(S, i, X, pool=None):
     return sc, ind_raw, comp_raw
 
 
+def sub_baskets(X, i, axis, tickers=None):
+    """서브산업 상·하위 K → (롱 [(티커,비중)], 숏 [(티커,비중)]).
+
+    axis — "mom"(시총가중 6개월 수익) | "om"(영업이익률 중앙값)
+    ⚠ 소속 SUB_MIN_N 종 미만인 서브산업은 뺀다. 두셋짜리 칸의 중앙값은 그 서브산업이
+      아니라 그 두셋을 재는 것이다.
+    ⚠ 서브산업 안에서는 **시총 상위 SUB_PER 종**만 담는다. 전 종목을 담으면 소형주 효과가
+      섞여 «서브산업을 골랐나» 를 못 읽는다.
+    """
+    dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    tick = tickers if tickers is not None else X["tickers"]
+    grp = {}
+    mcap = {}
+    for t in tick:
+        sub = (meta.get(t) or {}).get("sub") or ""
+        if not sub:
+            continue
+        a = px.get(t)
+        if not a or i - 1 < 0 or a[i - 1] is None or a[i - 1] <= 0:
+            continue
+        _f = FU.get(t) or {}
+        _sn = asof_fund(_f.get("sh"), dates[i - 1])
+        m = (_sn * a[i - 1]) if (_sn and _sn > 0) else None
+        if not m:
+            continue
+        mcap[t] = m
+        grp.setdefault(sub, []).append(t)
+    grp = {k: v for k, v in grp.items() if len(v) >= SUB_MIN_N}
+    if len(grp) < SUB_TOPK * 3:
+        return None, None, len(grp)
+    score = {}
+    for sub, ts in grp.items():
+        if axis == "mom":
+            # 시총가중 6개월 수익
+            num = den = 0.0
+            for t in ts:
+                a = px[t]
+                j = i - 1 - 126
+                if j < 0 or a[j] is None or a[j] <= 0 or a[i - 1] is None:
+                    continue
+                num += mcap[t] * (a[i - 1] / a[j] - 1.0); den += mcap[t]
+            if den > 0:
+                score[sub] = num / den
+        else:
+            # 영업이익률 중앙값 — 흐름 항목이라 ttm2 로 읽는다(분기만 보면 계절이 섞인다)
+            vs = []
+            for t in ts:
+                _f = FU.get(t) or {}
+                oi = ttm2(_f.get("opinc"), _f.get("opinc_a"), dates[i - 1])
+                rv = ttm2(_f.get("rev"), _f.get("rev_a"), dates[i - 1])
+                if oi is not None and rv and rv > 0:
+                    vs.append(oi / rv)
+            if len(vs) >= SUB_MIN_N:
+                vs.sort(); score[sub] = vs[len(vs) // 2]
+    if len(score) < SUB_TOPK * 3:
+        return None, None, len(score)
+    order = sorted(score, key=lambda k: -score[k])
+    top, bot = order[:SUB_TOPK], order[-SUB_TOPK:]
+
+    def leg(subs, sign):
+        out = []
+        for sub in subs:
+            ts = sorted(grp[sub], key=lambda t: -mcap[t])[:SUB_PER]
+            if not ts:
+                continue
+            w = sign / (len(subs) * len(ts))
+            out += [(t, w) for t in ts]
+        return out
+    return leg(top, 1.0), leg(bot, -1.0), len(score)
+
+
 def xsec_pick_at(S, i, X, sc, ind_raw):
     """점수 sc 에서 그달 바스켓을 고른다 — **선택도 한 벌**이어야 한다.
 
@@ -6260,6 +6374,17 @@ def xsec_pick_at(S, i, X, sc, ind_raw):
         return [t for t, _w in _pw], {t: w for t, w in _pw}
     if S["sid"] == "x-indmom":
         _pw = pick_industry(ind_raw, top_sectors=2)
+        return [t for t, _w in _pw], {t: w for t, w in _pw}
+    if _BASE_SID(S["sid"]) in LONGSHORT_SIDS:
+        # 사전등록 PREREG-2026-08-23-NARRATIVE B1·B2. 채점(sc)을 안 쓴다 —
+        #   선택 단위가 종목이 아니라 **서브산업**이라 여기서 통째로 만든다.
+        # ⚠ 후보를 **sc 에서** 받는다. X["tickers"] 를 그대로 쓰면 PIT 마스킹을 우회해
+        #   그때 지수에 없던 종목이 서브산업 집계에 들어간다(선견).
+        _lg, _sh, _n = sub_baskets(X, i, "mom" if _BASE_SID(S["sid"]) == "x-subls" else "om",
+                                   tickers=[t for _v, t in sc])
+        if not _lg or not _sh:
+            return [], None
+        _pw = _lg + _sh
         return [t for t, _w in _pw], {t: w for t, w in _pw}
     # ── ML6 의 선택·비중 ──────────────────────────────────────────────
     if S["sid"] in ML_SIDS:
@@ -6774,8 +6899,23 @@ def run():
                     # 가중 바스켓. 결측 종목은 빼고 남은 비중을 되정규화한다 —
                     # 0 으로 두면 그날 현금을 든 것이 되어 섹터 중립이 조용히 깨진다.
                     _pairs = [(hw[t], R[t][i]) for t in hold if R[t][i] is not None and t in hw]
-                    _sw = sum(w for w, _x in _pairs)
-                    r = (sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0
+                    if _BASE_SID(S["sid"]) in LONGSHORT_SIDS:
+                        # 🚨 롱숏은 Σw = 0 이라 위 식이 0 으로 나눈다. **다리별로** 되정규화해
+                        #   각 다리 합을 1 로 되돌린다(롱100/숏100 중립). 한쪽 다리가 통째로
+                        #   결측이면 그날은 남은 한 다리만 든 것이 되므로 0 으로 둔다 —
+                        #   반쪽만 들고 «중립» 이라 부르지 않는다.
+                        _lp = [(w, x) for w, x in _pairs if w > 0]
+                        _sp = [(w, x) for w, x in _pairs if w < 0]
+                        _lw = sum(w for w, _x in _lp)
+                        _sw2 = -sum(w for w, _x in _sp)
+                        if _lw > 0 and _sw2 > 0:
+                            r = (sum(w * x for w, x in _lp) / _lw
+                                 + sum(w * x for w, x in _sp) / _sw2)
+                        else:
+                            r = 0.0
+                    else:
+                        _sw = sum(w for w, _x in _pairs)
+                        r = (sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0
                 else:
                     rs = [R[t][i] for t in hold if R[t][i] is not None]
                     r = sum(rs) / len(rs) if rs else 0.0
