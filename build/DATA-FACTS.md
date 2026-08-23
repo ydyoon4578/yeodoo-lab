@@ -662,11 +662,14 @@ PIT 레그가 60종으로 늘면서 처음으로 **분포**를 볼 수 있게 �
 
 <!-- DATA-FACTS-CHECK
 {"gp_cov_pct": 38.3, "rev_q_oldest_med": "2017-03", "dual_pairs": 3,
- "xsec_rules": 67, "narrow_rules": 10, "incr5_rules": 0}
+ "xsec_rules": 71, "narrow_rules": 10, "incr5_rules": 0}
 -->
 
-🚨 2026-08-19 갱신. 98 → 71 → **67**. 사용자 결정으로 **샤프 0.5 미만 규칙을 게시 목록에서
-뺐다**(build/tech_backtest.py 의 DROPPED · 사유는 build/tested_not_published.json).
+🚨 2026-08-24 갱신. 98 → 71 → 67 → **71**. 2026-08-19 에 사용자 결정으로 샤프 0.5 미만을
+게시 목록에서 뺐고(98→67), 2026-08-23 사전등록(PREREG-…-NARRATIVE)으로 국면 서술형 네 규칙을
+더해 67→71 이 됐다(그중 x-ratehot 은 같은 «샤프 0.5» 결정으로 화면에서 내렸다 — 규칙 수는
+«돌린 것» 을 세므로 줄지 않는다).
+사유는 build/tech_backtest.py 의 DROPPED 와 build/tested_not_published.json 에 있다.
 ⚠ 규칙이 사라진 것이 아니라 **게시에서 뺀 것**이다 — 측정 기록은 세 번째 목록에 남는다.
   그래서 다중검정 N 을 이 수로 줄여 읽으면 안 된다. 아래 08-16 기록은 그대로 둔다.
 

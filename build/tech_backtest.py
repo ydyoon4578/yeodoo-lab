@@ -70,6 +70,11 @@ MIN_HIST = 260     # 성과를 재기 시작하는 지점. run() 이 MAX_YEARS �
 #   ⚠ 이 상한은 **성과 측정 구간**만 자른다. 신호 계산은 그 앞의 가격을 그대로 쓴다 —
 #     안 그러면 252일·5년 창을 쓰는 규칙이 창 초반에 신호를 못 만든다.
 MAX_YEARS = 10
+# 공매도로 담는 규칙 — 수익 부호를 뒤집는다(사전등록 PREREG-2026-08-23-NARRATIVE).
+# ⚠ 대조군도 갈아야 한다. 지수를 대조군으로 두면 «숏이 지수보다 못하다» 는 당연한 말을
+#   재게 되므로, 이 집합의 규칙은 **무위험(현금)** 을 대조군으로 쓴다.
+SHORT_SIDS = {"x-ratehot"}
+
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
                            # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
                            # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
@@ -1822,6 +1827,49 @@ def macro_daily(sid, dates):
     return out
 
 
+def macro_level(sid, dates):
+    """거시 계열의 **수준**을 날짜 격자에 맞춘다(변화가 아니다). 결측은 직전 값을 끈다.
+
+    사전등록 build/PREREG-2026-08-23-NARRATIVE.md — A1·A2·C2 의 게이트가 쓴다.
+    ⚠ macro_daily 는 **변화**를 주고 결측을 안 끈다(베타 회귀용이라 그래야 한다).
+      게이트는 «오늘 수준이 어디쯤인가» 를 묻는 것이라 규약이 다르다 — 그래서 함수를 나눈다.
+      한 함수에 둘을 다 시키면 어느 쪽 규약인지 부르는 곳마다 헷갈린다.
+    """
+    try:
+        A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+    except Exception:
+        return [None] * len(dates)
+    m = (A.get("macro") or {}).get(sid) or {}
+    out, last = [], None
+    for d in dates:
+        v = m.get(d)
+        if v is not None:
+            last = float(v)
+        out.append(last)
+    return out
+
+
+def macro_z(lvl, i, win=252):
+    """수준 계열의 그 시점 z. 창이 안 차거나 표준편차가 0 이면 None."""
+    if i < win:
+        return None
+    w = [x for x in lvl[i - win + 1:i + 1] if x is not None]
+    if len(w) < win * 0.6:
+        return None
+    m = sum(w) / len(w)
+    sd = (sum((x - m) ** 2 for x in w) / max(1, len(w) - 1)) ** 0.5
+    if sd <= 1e-12 or lvl[i] is None:
+        return None
+    return (lvl[i] - m) / sd
+
+
+def macro_chg(lvl, i, back=63):
+    """수준 계열의 back 거래일 변화(차분). 못 구하면 None."""
+    if i < back or lvl[i] is None or lvl[i - back] is None:
+        return None
+    return lvl[i] - lvl[i - back]
+
+
 def macro_beta(Rt, mac, i, win=MACROBETA_WIN):
     """종목 일간수익률의 거시 계열 변화에 대한 베타(단순회귀 기울기). 사전등록 §2.
 
@@ -3192,6 +3240,21 @@ def load(full=False):
         hi[t] = _h[:n] if isinstance(_h, list) and len(_h) == n_raw else None
         lo[t] = _l[:n] if isinstance(_l, list) and len(_l) == n_raw else None
         meta[t] = {"name": s.get("name") or "", "sector": s.get("sector") or ""}
+    # GICS 서브산업(128개) — 2026-08-23 사전등록 NARRATIVE 의 A2·B1·B2 가 쓴다.
+    # ⚠ 정본은 members.json 이다(stocks.json 에는 sub 가 없다). 없으면 그 종목은 서브산업
+    #   규칙의 후보가 아니다 — 섹터로 대신 채우지 않는다(다른 단위를 같은 이름으로 쓰면
+    #   «서브산업 규칙» 이 조용히 «섹터 규칙» 이 된다).
+    try:
+        _mm = (json.load(io.open(os.path.join(DATA, "members.json"), encoding="utf-8"))
+               or {}).get("members") or {}
+        _ns = 0
+        for t in meta:
+            _sub = ((_mm.get(t) or {}).get("sub") or "").strip()
+            if _sub:
+                meta[t]["sub"] = _sub; _ns += 1
+        print("  GICS 서브산업 %d/%d종" % (_ns, len(meta)))
+    except Exception as _e:
+        print("  ⚠ 서브산업 불러오기 실패(%s) — sub 규칙은 후보 0 이 된다" % str(_e)[:50])
     rf = json.load(io.open(os.path.join(DATA, "rf_monthly.json"), encoding="utf-8")).get("monthly") or {}
     rf = {k: v for k, v in rf.items() if k >= dates[0][:7]}
     return dates, px, vlm, hi, lo, meta, rf
@@ -3552,6 +3615,10 @@ FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-
              # E30 밸류 컴포지트 둘 — 사전등록 PREREG-2026-08-06-E30VALUE.md
              "x-valcomp", "x-valcomp-sn",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
+             # 2026-08-23 국면 서술형 — PREREG-2026-08-23-NARRATIVE.md.
+             #   ⚠ 둘 다 fn=None 이라 **여기 없으면 람다 갈래로 떨어져 죽는다**(실측).
+             #     x-ratehot·x-fxweak 는 가격·거시만 쓰므로 이 집합이 아니다.
+             "x-realsw", "x-curvebank",
              # 2026-07-30 추가 — 전부 총액 항목(달러)만 쓰므로 분할과 무관하다.
              "x-agrow", "x-shiss", "x-cash",
              # 2026-07-31 추가 — 흐름 항목은 반드시 ttm2(q, a) 로 읽는다(ttm 독스트링 참조).
@@ -4167,6 +4234,52 @@ def build_strats():
          "'거시 둔감'이라는 축이 하나인 것이고, 갈리면 요인마다 다른 것을 재고 있다는 뜻이다 "
          "(x-sue 와 x-epsacc 를 같이 실은 것과 같은 이유). "
          "⚠ 달러지수는 지수라 비율변화를 쓴다(금리와 다르다).")
+
+    # ── 국면 서술형 4종 — 사전등록 PREREG-2026-08-23-NARRATIVE.md ────
+    # 🚨 이 넷은 **오늘 시장을 보고 지었다.** 사전등록 문서가 그 사실과 판정 규약
+    #   (표본 밖에서만 판정)을 못박고 있다. 표본 안 성적을 보고 배포 목록에 올리지 않는다.
+    # ⚠ 게시 123종 전수 조사에서 나온 빈 자리다 — 거시를 쓰는 22종은 전부 «거시 → 섹터/ETF
+    #   배분» 이거나 «on/off 게이트» 이고, **거시가 종목 채점축 자체를 바꾸는** 규칙은 없었다.
+    xsec("x-realsw", "실질금리 국면 채점축 전환 (잉여현금흐름 ↔ 매출성장)",
+         "매 월말 10년 실질금리(DFII10)의 252거래일 z 를 본다. z>+0.5 면 잉여현금흐름 "
+         "수익률 상위 %d, z<-0.5 면 매출성장 상위 %d 를 동일가중으로 담고, 그 사이면 직전 "
+         "보유를 유지한다(밴드가 없으면 경계에서 매달 뒤집힌다)." % (TOPN * 2, TOPN * 2),
+         None,
+         "실질금리가 오르면 먼 미래 현금흐름의 할인이 커져 성장이 벌받고 가까운 현금흐름이 "
+         "낫다는 것이 듀레이션 논리다. 🚨 두 다리가 각각 이미 랩에 단독으로 있다"
+         "(x-fcfy · x-rgrow). 그래서 이 규칙의 판정은 «전환이 두 다리 각각보다 나은가» 이고 "
+         "그것이 더 엄한 잣대다 — 단독보다 못하면 국면을 잘못 읽었다는 뜻이다. "
+         "⚠ 사전등록에는 성장 다리를 선행 EPS 성장으로 적었다가 돌리기 전에 매출성장으로 "
+         "고쳤다. 선행치는 오늘 스냅샷이라 과거가 없다(정정 절에 사유를 남겼다).")
+    xsec("x-curvebank", "곡선 확대 국면 은행·보험 저PBR %d" % (TOPN + 5),
+         "T10Y2Y(10년-2년)의 63거래일 변화가 양이면 켜고 음이면 무보유(현금). 켜졌을 때 "
+         "GICS 서브산업이 은행·보험·자본시장 계열인 종목 중 주가순자산배수 하위 %d 동일가중, "
+         "월말 리밸런스." % (TOPN + 5),
+         None,
+         "장단기 스프레드가 벌어지면 예대마진·재투자수익률이 개선된다는 것이 은행 수익의 "
+         "교과서적 구조다. ⚠ 랩에 이미 a-sec-term(기간스프레드 방향 섹터)이 있는데 그것은 "
+         "섹터(금융) 단위다. 금융 섹터 안에는 은행·보험·자산운용이 섞여 있고 곡선 "
+         "민감도가 서로 다르다 — 서브산업으로 좁히는 것이 이 규칙의 증분이다. "
+         "⚠ 서브산업 이름을 손으로 나열하지 않는다(낡는다). members.json 의 sub 를 "
+         "패턴으로 고른다.")
+    xsec("x-ratehot", "금리민감 과열 %d 숏" % (TOPN + 5),
+         "일간 수익률을 10년 국채 수익률 일간 변화(%%p)에 %d거래일 회귀한 기울기의 절댓값 "
+         "상위 %d(=금리민감) 중에서 12개월 수익 상위 %d 를 공매도한다(동일가중, 월말). "
+         "롱 다리는 없다." % (MACROBETA_WIN, TOPN * 3, TOPN + 5),
+         None,
+         "수요 스토리가 맞아도 할인율이 이길 수 있다 — 금리에 민감한데 이미 많이 오른 종목은 "
+         "그 취약함이 가격에 안 실려 있다는 가설이다. 🚨 x-ratebeta 와 같은 베타 계산을 "
+         "쓴다(두 벌로 만들지 않는다). 그쪽은 절댓값 최하위 롱이고 이쪽은 최상위 × 과열 숏이라 "
+         "방향이 반대다. ⚠ 대조군은 현금이다 — 지수를 대조군으로 두면 «숏이 지수보다 못하다» "
+         "는 당연한 말을 재게 된다.")
+    xsec("x-fxweak", "달러 약세 국면 달러민감 %d" % (TOPN * 2),
+         "광의 달러지수(DTWEXBGS)의 63거래일 변화가 음이면 켜고 양이면 무보유(현금). "
+         "켜졌을 때 일간 수익률을 달러지수 변화율에 %d거래일 회귀한 기울기가 가장 음수인 "
+         "%d종목 동일가중, 월말 리밸런스." % (MACROBETA_WIN, TOPN * 2),
+         None,
+         "달러가 약해지면 해외매출·실물자산 노출이 큰 쪽이 수혜다. ⚠ x-fxbeta 는 둔감을 "
+         "고르는데(절댓값 최하위) 이것은 방향성 있는 민감을 국면 조건부로 고른다 — 같은 "
+         "베타를 쓰되 묻는 것이 다르다. 둘이 같은 결과를 내면 그 축이 하나인 것이다.")
 
     # ── 재무상태표 두 축(안 쓰이던 태그) ─────────────────────────────
     # 사전등록 build/PREREG-2026-08-12-BALANCE.md. ca·cl·re 는 수집돼 있는데 88종 어디에서도
@@ -5278,6 +5391,75 @@ def incr1(a, b):
 
 # ── 실행 ────────────────────────────────────────────────────────────────
 
+# ── 국면 서술형 규칙의 «그 시점 상태» ──────────────────────────────────────
+# 사전등록 build/PREREG-2026-08-23-NARRATIVE.md.
+# 🚨 왜 전역 한 칸인가. 채점 람다는 종목 하나만 받으므로 «오늘 게이트가 켜졌나» 를 스스로
+#   못 본다. xsec_score_at 이 종목 루프에 들어가기 **직전에** 그 시점 값으로 채우고,
+#   갈래들이 읽기만 한다. 날짜별로 매번 다시 채우므로 상태가 이월되지 않는다.
+# ⚠ PIT 경로도 같은 함수를 부르므로 자동으로 같은 값을 쓴다 — 두 벌이 될 자리가 없다.
+_GATE_ON = [True]        # A2·C2 의 거시 게이트
+_REALSW_LEG = [None]     # A1 이 그날 쓸 채점축: "fcfy" | "rgrow" | None
+_RATEHOT_CUT = [None]    # C1 의 |금리베타| 관문값(상위 3N 의 경계)
+
+# 은행·보험·자본시장 서브산업 — **이름을 손으로 나열하지 않는다**(지수 리밸런스로 낡는다).
+#   GICS 서브산업 128개 중 아래 낱말을 포함하는 것을 고른다.
+_BANK_WORDS = ("Bank", "Insurance", "Capital Markets", "Asset Management",
+               "Investment Banking", "Financial Exchanges", "Consumer Finance")
+
+
+def _BANKISH(sub):
+    return bool(sub) and any(w in sub for w in _BANK_WORDS)
+
+
+def _narrative_state(sid, i, X):
+    """국면 서술형 규칙의 그 시점 상태를 채운다. 그 외 규칙이면 아무것도 안 한다.
+
+    🚨 **밑동 sid 로 비교한다.** 바스켓 전수 시험이 x-fxweak-n20 같은 변형을 만드는데,
+      원문 sid 로 비교했더니 변형이 이 함수를 **한 번도 안 타서 게이트가 늘 켜진 채**
+      돌았다(실측: 무보유월 0). 사전등록의 실패 조건(«게이트 켜진 달을 싣는다»)을
+      확인하다 잡았다 — 안 적어 뒀으면 «게이트 규칙» 이 아닌 것을 그렇게 부를 뻔했다.
+    """
+    sid = _BASE_SID(sid)
+    _GATE_ON[0] = True
+    _REALSW_LEG[0] = None
+    _RATEHOT_CUT[0] = None
+    if sid not in ("x-realsw", "x-curvebank", "x-ratehot", "x-fxweak"):
+        return
+    dates = X["dates"]
+    if sid == "x-realsw":
+        lvl = X.get("mac_real") or []
+        # 🚨 밴드 안이면 «직전에 밖이었던 쪽» 을 쓴다. 상태를 들고 다니지 않고 **되돌아봐서**
+        #   정한다 — 경로의존을 없애면 PIT 과 소급이 같은 답을 내고, 재실행도 재현된다.
+        for j in range(i, max(0, i - 756) - 1, -1):
+            z = macro_z(lvl, j)
+            if z is None:
+                continue
+            if z > 0.5:
+                _REALSW_LEG[0] = "fcfy"; return
+            if z < -0.5:
+                _REALSW_LEG[0] = "rgrow"; return
+        return                                   # 한 번도 밖에 안 나갔다 — 무보유
+    if sid == "x-curvebank":
+        c = macro_chg(X.get("mac_curve") or [], i, 63)
+        _GATE_ON[0] = bool(c is not None and c > 0)
+        return
+    if sid == "x-fxweak":
+        c = macro_chg(X.get("mac_usd") or [], i, 63)
+        _GATE_ON[0] = bool(c is not None and c < 0)
+        return
+    if sid == "x-ratehot":
+        # 금리민감 관문 — 그 시점 전 종목의 |베타| 상위 3N 경계값을 먼저 구한다.
+        bs = []
+        for t in (X["tickers"] if X.get("_pool") is None else
+                  [t for t in X["tickers"] if t in X["_pool"]]):
+            mb = macro_beta(X["R"][t], X.get("macd10") or [], i)
+            if mb is not None:
+                bs.append(abs(mb))
+        if len(bs) >= TOPN * 3:
+            bs.sort(reverse=True)
+            _RATEHOT_CUT[0] = bs[TOPN * 3 - 1]
+
+
 def xsec_score_at(S, i, X, pool=None):
     """월말 신호일 i-1 에서 (점수, 티커) 목록을 낸다 — **이 랩의 유일한 횡단면 채점기**.
 
@@ -5307,6 +5489,9 @@ def xsec_score_at(S, i, X, pool=None):
     MACD10, MACFX = X.get("macd10") or [], X.get("macfx") or []
     meta, px, vlm = X["meta"], X["px"], X["vlm"]
     tickers = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool]
+    # 국면 서술형 규칙의 그 시점 상태를 여기서 채운다(종목 루프 **직전**).
+    X["_pool"] = pool
+    _narrative_state(S["sid"], i - 1, X)
     # ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md ────────────────────────────
     # 🚨 **종목 루프보다 앞**이어야 한다. 여섯은 fn 이 None(모형이 단면 전체를 봐야 하므로
     #   종목당 람다로 못 쓴다)이라, 루프에 들어가면 fn(None) 을 불러 죽는다. 실제로 그랬다.
@@ -5709,6 +5894,21 @@ def xsec_score_at(S, i, X, pool=None):
         elif sid in ("x-ratebeta", "x-fxbeta"):
             _mb = macro_beta(R[t], MACD10 if sid == "x-ratebeta" else MACFX, i - 1)
             v = (-abs(_mb)) if _mb is not None else None   # 절댓값 최하위 → 부호 반전
+        # 국면 서술형 — PREREG-2026-08-23-NARRATIVE.md.
+        elif sid == "x-ratehot":
+            # 금리민감(절댓값 상위) × 12개월 과열. 두 조건을 곱이 아니라 **관문 + 순위**로
+            #   쓴다 — 곱하면 단위가 다른 둘이 섞여 어느 쪽이 골랐는지 알 수 없다.
+            _mb = macro_beta(R[t], MACD10, i - 1)
+            v = None
+            if _mb is not None and _RATEHOT_CUT[0] is not None and abs(_mb) >= _RATEHOT_CUT[0]:
+                v = ret(P, i - 1, 252)          # 관문 통과분 중 12개월 수익 상위
+        elif sid == "x-fxweak":
+            # 게이트가 꺼진 달은 **후보를 안 만든다** → 무보유(현금). 0 수익이 아니다.
+            if _GATE_ON[0]:
+                _mb = macro_beta(R[t], MACFX, i - 1)
+                v = (-_mb) if _mb is not None else None    # 가장 음수 → 부호 반전해 상위로
+            else:
+                v = None
         # 5차 배치 — PREREG-2026-08-12-BALANCE.md.
         elif sid == "x-currat":
             v = current_ratio(FU.get(t) or {}, dates[i - 1])
@@ -5896,6 +6096,26 @@ def xsec_score_at(S, i, X, pool=None):
             elif sid == "x-npm":
                 nn, rv = ttm2(f.get("ni"), f.get("ni_a"), dt_), ttm2(f.get("rev"), f.get("rev_a"), dt_)
                 v = (nn / rv) if (nn is not None and rv and rv > 0) else None
+            elif sid == "x-realsw":
+                # 실질금리 국면에 따라 **채점축 자체**를 바꾼다. 어느 축인지는 _REALSW_LEG 가
+                #   그 시점에 정해 둔다(밴드 안이면 직전에 밖이었던 쪽을 그대로 쓴다).
+                if _REALSW_LEG[0] == "fcfy":
+                    fc = ttm2(f.get("fcf"), f.get("fcf_a"), dt_)
+                    v = (fc / mcap) if (fc is not None and mcap) else None
+                elif _REALSW_LEG[0] == "rgrow":
+                    a1, a0 = (ttm2(f.get("rev"), f.get("rev_a"), dt_),
+                              ttm2(f.get("rev"), f.get("rev_a"), _shift(dt_, 365)))
+                    v = (a1 / a0 - 1) if (a1 is not None and a0 and a0 > 0) else None
+                else:
+                    v = None            # 창이 안 차 z 를 못 구한 초기 구간 — 무보유
+            elif sid == "x-curvebank":
+                # 곡선 게이트 + 서브산업 관문 + 저PBR. 게이트가 꺼지면 후보 0 = 무보유.
+                _sub = (meta.get(t) or {}).get("sub") or ""
+                if not _GATE_ON[0] or not _BANKISH(_sub):
+                    v = None
+                else:
+                    eqv = asof_fund(f.get("eq"), dt_)
+                    v = (-(mcap / eqv)) if (eqv and eqv > 0 and mcap) else None  # 하위 → 반전
             elif sid == "x-rgrow":
                 a1, a0 = (ttm2(f.get("rev"), f.get("rev_a"), dt_),
                           ttm2(f.get("rev"), f.get("rev_a"), _shift(dt_, 365)))
@@ -6085,7 +6305,12 @@ def current_holdings(strats):
     X = {"FACP": load_factor_proxies(dates), "FU": load_fund(), "R": R, "dates": dates,
          "hid": hid, "lod": lod, "ixr": ixr, "ixvol": ixvol, "me": me,
          "me_list": me_list, "meta": meta, "px": px, "vlm": vlm, "tickers": tickers,
-         "macd10": macro_daily("DGS10", dates), "macfx": macro_daily("DTWEXBGS", dates)}
+         "macd10": macro_daily("DGS10", dates), "macfx": macro_daily("DTWEXBGS", dates),
+         # 국면 서술형(PREREG-2026-08-23-NARRATIVE) 게이트가 쓰는 **수준** 계열.
+         #   ⚠ 위 macd10/macfx 는 «변화» 다(베타 회귀용). 게이트는 수준을 봐야 해서 따로 둔다.
+         "mac_real": macro_level("DFII10", dates),
+         "mac_curve": macro_level("T10Y2Y", dates),
+         "mac_usd": macro_level("DTWEXBGS", dates)}
     TC = timing_ctx(dates, R, px, hid, lod, ixr, ixvol, tickers, ix=ix)
     REB = {k: set(reb_index(k, dates)) for k in REB_KINDS}
     _mh = MIN_HIST                       # 자른 격자 기준값 — 복원해야 한다
@@ -6214,7 +6439,12 @@ def run():
           "px": px, "vlm": vlm, "tickers": tickers,
           # 거시 요인 일간 변화(6차 배치) — 전 종목 공유 계열이라 컨텍스트에 실어
           #   채점기가 읽게 한다. run() 지역변수로 두면 모듈 레벨 채점기에서 안 보인다.
-          "macd10": MACD10, "macfx": MACFX}
+          "macd10": MACD10, "macfx": MACFX,
+         # 국면 서술형(PREREG-2026-08-23-NARRATIVE) 게이트가 쓰는 **수준** 계열.
+         #   ⚠ 위 macd10/macfx 는 «변화» 다(베타 회귀용). 게이트는 수준을 봐야 해서 따로 둔다.
+          "mac_real": macro_level("DFII10", dates),
+          "mac_curve": macro_level("T10Y2Y", dates),
+          "mac_usd": macro_level("DTWEXBGS", dates)}
     # 지수의 200일선 이격 — t-gapcap 이 매 시점 직전 252일치를 다시 만드느라
     # sma(ix, j, 200) 를 i마다 252번(각 200회 덧셈) 돌렸다. 규칙과 무관하게 ix 에만
     # 의존하므로 한 번만 만들어 둔다: 252×200×n → n×200.
@@ -6549,6 +6779,18 @@ def run():
                 else:
                     rs = [R[t][i] for t in hold if R[t][i] is not None]
                     r = sum(rs) / len(rs) if rs else 0.0
+                # 🚨 숏 다리(2026-08-23 · PREREG-…-NARRATIVE C1). 이 랩의 123종은 전부
+                #   롱온리였다. 숏 바스켓의 수익은 롱 바스켓의 **부호 반전**이다.
+                #   ⚠ 여기 한 줄 말고는 아무것도 안 바꾼다 — 회전율·보유수·후보수는 전부
+                #     같은 뜻이다(무엇을 담았나는 같고, 어느 방향으로 담았나만 다르다).
+                #   ⚠ 차입비용·대차수수료는 **안 문다**. 랩 전체가 무비용(gross)이라
+                #     한 규칙만 비용을 물리면 같은 표에서 잣대가 갈린다. 숏은 실제로 그
+                #     비용이 크므로, 이 수치는 그만큼 낙관 쪽이다 — 규칙 설명에 적는다.
+                # 🚨 **밑동 sid 로 본다.** 바스켓 변형(x-ratehot-n30)이 SHORT_SIDS 에 안
+                #   걸려 «숏» 이라 적힌 규칙이 롱으로 돌았다(실측: CAGR −31 이 +28 로 뒤집혀
+                #   나왔다). 라벨과 계산이 갈리는 종류라 성적이 좋을수록 위험하다.
+                if _BASE_SID(S["sid"]) in SHORT_SIDS:
+                    r = -r
                 srets.append(r)
                 traded.append(_tr)
                 _tr = 0.0
@@ -6567,9 +6809,14 @@ def run():
                         "note": "마지막 월말 리밸런스에서 고른 %d종목을 동일가중으로 보유 중이다. "
                                 "다음 월말에 다시 뽑는다." % len(hold)}
 
+        # 🚨 숏 규칙의 대조군은 **현금(무위험)** 이다(SHORT_SIDS 주석 참조). 지수를 대조군으로
+        #   두면 «숏이 지수보다 못하다» 는, 정의상 참인 말을 재게 된다.
+        _isshort = _BASE_SID(S["sid"]) in SHORT_SIDS
+        _bxr = ([(rfd_d[i] if i < len(rfd_d) and rfd_d[i] is not None else 0.0)
+                 for i in range(n)] if _isshort else bxr)
         bnav = [100.0]
         for i in range(MIN_HIST + 1, n):
-            bnav.append(bnav[-1] * (1 + bxr[i]))
+            bnav.append(bnav[-1] * (1 + _bxr[i]))
         d2 = dates[MIN_HIST:]
 
         # ── 실제 시작일에 맞춰 전부 다시 세운다 ────────────────────────────
@@ -6602,7 +6849,7 @@ def run():
         # 대조군은 매수후보유라 비용이 사실상 없다 — 그래서 비용은 전략에만 붙는다.
         # ⚠ 비용 후 지표도 같은 창에서 잰다 — 여기만 전 격자로 두면 같은 카드 안에서
         #   «비용 전 샤프» 와 «비용 후 샤프» 의 기준일이 갈린다.
-        _bx = bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]
+        _bx = _bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]
         _yrs = max(1e-9, len(_sretsM) / 252.0)
         net_sens, _mstats = {}, None
         for _bps in COST_BPS:
@@ -6704,7 +6951,7 @@ def run():
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": tstat(_sretsM, bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]),
+            "t": tstat(_sretsM, _bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]),
             # 🚨 비용 뒤 성적. 위 t·excess_cagr 는 전부 **무비용(gross)** 이다 —
             #   이 랩이 회전율을 싣기만 하고 안 태우던 것을 2026-08-04 에 태우기 시작했다.
             #   net.t 는 편도 10bp 기준이고, net.sens 에 5·10·20bp 를 전부 싣는다.
