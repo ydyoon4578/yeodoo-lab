@@ -734,6 +734,11 @@ def rec(**kw):
     # ⚠ thin() 앞에서 잰다(위 주석). 순서를 바꾸면 조용히 값이 뭉개진다.
     # ⚠ dates 는 재고 나서 **버린다.** 원해상도(833~980점)로 실으면 파일이 커지고,
     #   더 나쁘게는 60점으로 얇아진 nav 와 길이가 어긋나 짝이 안 맞는 배열 둘이 남는다.
+    # 🚨 구간수익(trails)은 **계열의 끝**에서 잰다 — 그 끝은 2026-08-23 부터 지표 기준일
+    #   (전월말)보다 뒤일 수 있다(곡선은 오늘까지 간다). 그래서 아래 지수 대조도 같은
+    #   끝을 써야 한다. end(지표 기준일)를 쓰면 «다른 창 둘의 차» 를 초과수익이라 부르게
+    #   되는데, 짧은 구간일수록 그 차이만 재게 된다.
+    _pxend = kw.get("px_end") or (kw.get("dates") or [None])[-1] or kw.get("end")
     _tr, _trb = trails_of(kw.get("dates"), kw.get("nav"))
     _wr = winrate_of(kw.get("dates"), kw.get("nav"))
     if _wr:
@@ -745,7 +750,7 @@ def rec(**kw):
     if _tr:
         kw["trails"], kw["trails_base"] = _tr, _trb
         # 같은 창의 지수 수익 — 화면이 'vs S&P 500' 열을 만들 수 있게(위 _ix_load 주석).
-        _ti = trails_ix_of(_trb, kw.get("end"))
+        _ti = trails_ix_of(_trb, _pxend)
         if _ti:
             kw["trails_ix"] = _ti
     for key in ("nav", "bnav"):
@@ -905,6 +910,8 @@ def main() -> int:
 
             rule=x.get("t"), why=x.get("vt"),
             start=b.get("start"), end=b.get("end"),
+            # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
+            px_end=b.get("px_end"),
             # 변동성·MDD 도 옮긴다 — 원천(series_block)에 다 있는데 셋만 옮기고 있었다.
             # 화면의 지수 비교표가 '연변동성 —' 로 비고, 주기 판정도 근거를 잃는다.
             metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"), "vol": m.get("vol"),
@@ -966,7 +973,12 @@ def main() -> int:
             #   실제 시작이 늦다(고ROE 2021-01, 장부가대비저평가 2020-03). 문서 전체 start 를
             #   쓰면 화면이 "2017-08 부터 쟀다"고 잘못 말하고, 같은 표에 놓인 다른 전략과
             #   같은 구간인 것처럼 보인다.
-            start=r.get("start") or t.get("start"), end=t.get("as_of"),
+            # 🚨 «end» 는 **지표를 잰 마지막 날**이다(2026-08-23 이후 곡선은 더 간다).
+            #   perf_end(규칙별) → perf_as_of(문서) → as_of(옛 판) 순으로 찾는다.
+            #   여기에 as_of 를 먼저 쓰면 «10년 성과» 라 적고 안 잰 3주를 포함해 말한다.
+            start=r.get("start") or t.get("start"),
+            end=(r.get("perf_end") or t.get("perf_as_of") or t.get("as_of")),
+            px_end=(r.get("px_end") or t.get("as_of")),
             # 무위험 규약 — tech_backtest 는 rf 를 **패널 시작부터** 평균 낸다(전략별 구간이
             # 아니라). 지수 눈금도 같은 규약으로 재야 대조군 열과 어긋나지 않는다.
             # ⚠ t["start"] 가 아니라 t["rf_from"] 이다(2026-08-13). tech_backtest 는 rf 를
@@ -1077,6 +1089,8 @@ def main() -> int:
 
             bench_label=r.get("bench_label"),
             start=r.get("start"), end=r.get("end"),
+            # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
+            px_end=r.get("px_end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
             bench_unstable=r.get("bench_unstable"), beta=r.get("beta"),
@@ -1127,6 +1141,8 @@ def main() -> int:
             bench_label=r.get("bench_label") or pz.get("bench_label"),
             bench_unstable=True,
             start=r.get("start"), end=r.get("end"),
+            # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
+            px_end=r.get("px_end"),
             metrics=r.get("metrics") or {}, bench=r.get("bench") or {},
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), beta=r.get("beta"),
             # 지금의 페어북 — 보유 단위가 쌍이라 holds 가 '페어'로 잡힌다(holds_kind 참조).
@@ -1159,6 +1175,8 @@ def main() -> int:
                  "'배포 포트폴리오에 얹으면 개선이 없다'는 상대 판정이었기 때문이다.",
             why=x.get("r"),
             start=b.get("start"), end=b.get("end"),
+            # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
+            px_end=b.get("px_end"),
             metrics={"cagr": m.get("cagr"), "sharpe": m.get("sharpe"),
                      "vol": m.get("vol"), "mdd": m.get("mdd")},
             bench={"label": b.get("bench_label") or (bm.get("label")), "cagr": bm.get("cagr"),
@@ -1240,6 +1258,8 @@ def main() -> int:
                  % ((ovd.get("multiplicity") or {}).get("m") or 6),
             bench_label="같은 풀 동일가중(월 리밸)",
             start=v.get("start"), end=v.get("end"),
+            # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
+            px_end=v.get("px_end"),
             metrics=m, bench=dict(bm, label="같은 풀 동일가중(월 리밸)"),
             d_sharpe=ds, t=pl.get("t"), beta=pl.get("beta"),
             turnover=(v.get("turnover") or {}).get("mean"),
