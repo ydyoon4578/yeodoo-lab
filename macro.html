@@ -901,7 +901,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="note"><b>판정이 이만큼 흔들립니다</b><ul>'+
         '<li>'+W+'개월이 <b>'+R.length+'개 구간</b>으로 쪼개집니다. 그중 <b>'+one+'구간은 단 1개월</b>짜리입니다 — 한 달 만에 라벨이 바뀌었다가 되돌아온 경우입니다.</li>'+
         '<li>최근 '+recent.length+'개월만 떼어 보면 구간이 <b>'+rr.length+'개</b>입니다 — 그 사이 라벨이 <b>'+(rr.length-1)+'번</b> 바뀌었다는 뜻입니다. 레짐 라벨을 매매 신호로 쓰면 안 되는 이유를 이 숫자가 대신 말합니다.</li>'+
-        '<li>레짐 이름은 <b>성장 × 물가 2축</b>으로만 정해집니다. 금융여건 축은 이름에 들어가지 않습니다(참고 문장에만 붙습니다). '+
+        '<li>레짐 이름은 <b>성장 × 물가 2축</b>으로만 정해집니다. 금융여건 축은 <b>이름에는 안 들어가되</b>, '+
+          '2026-08-23 부터 <b>두 번째 좌표로 이력에 실립니다</b> — 아래 「국면 × 금융여건」 표가 그것입니다. '+
+          '이름을 14개로 늘리는 대신 좌표를 하나 더 둔 것이라, 이름만 읽으면 종전과 똑같습니다. '+
           '성장은 고용증감 3개월평균·시카고활동지수·Sahm룰·실업률 저점대비 4개를 ±1점으로 합산해 <code>≥1 확장 / ≤−2 수축 / 그 외 둔화</code>, '+
           '물가는 CPI 전년비 <code>≥4% HIGH / ≥2.5% MODERATE / 그 외 LOW</code>입니다. 임계값은 랩이 고정한 값이고 검증된 것이 아닙니다.</li>'+
         '<li><b>과거 라벨은 개정된(revised) 시계열로 다시 계산한 것</b>입니다. 발표 시차도 반영하지 않습니다 — 어떤 달의 라벨은 그 달에는 알 수 없었던 값으로 매겨졌습니다. 실시간으로 이 라벨을 얻을 수 있었다는 뜻이 아닙니다.</li>'+
@@ -988,6 +990,59 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           }).join('')+'</tr>';
       }).join('')+'</tbody></table></div>';
   }
+  // ── 국면 × 금융여건 (2026-08-23 사용자 요청 «7개 국면보다 더 세밀하게») ──────
+  // 🚨 이름을 7 → 14 로 늘리지 않았다. 금융여건은 랩이 **이미 매달 재던 축**인데 라벨에만
+  //   안 들어가 있었다(refresh_regime 의 classify_month 가 fin 인자를 받고도 안 썼다).
+  //   그래서 새 자료 없이 해상도가 두 배가 된다 — 대신 표본이 반으로 갈리므로 **칸마다
+  //   개월수를 같이 적는다.** 8개월 미만인 칸은 원천이 아예 안 싣는다.
+  // ⚠ 이 표가 말하는 것은 «같은 이름의 달이 금융여건에 따라 갈렸다» 이지 «금융여건을 보고
+  //   사고팔라» 가 아니다. 라벨도 금융도 그 달이 끝난 뒤에 붙는다.
+  function finTable(){
+    var P=RG.asset_perf_fin||{}, assets=[];
+    for(var a in P)if(P.hasOwnProperty(a))assets.push(a);
+    if(!assets.length)return '';
+    var keys={};
+    assets.forEach(function(a){for(var k in P[a])if(P[a].hasOwnProperty(k))keys[k]=1;});
+    // 국면 순서는 위 표(RORDER)와 같게 두고, 그 안에서 완화 → 긴장
+    var rows=[];
+    RORDER.forEach(function(r){
+      ['완화','긴장'].forEach(function(f){
+        var k=r+'|'+f; if(keys[k])rows.push([r,f,k]);});});
+    if(!rows.length)return '';
+    var mx=0;
+    rows.forEach(function(x){assets.forEach(function(a){
+      var c=P[a][x[2]]; if(c&&Math.abs(c.v)>mx)mx=Math.abs(c.v);});});
+    if(!mx)mx=1;
+    return '<h3 class="grph">국면 × 금융여건 <span>같은 이름도 신용이 조이면 다른 달입니다</span></h3>'+
+      '<p class="capn">국면 이름은 <b>성장 × 물가</b>로만 정해집니다. 금융여건(NFCI · 하이일드 z · VIX)은 '+
+      '랩이 매달 재면서도 이름에는 안 넣던 축인데, 여기서 <b>두 번째 좌표</b>로 씁니다 — 새로 모은 자료가 아닙니다. '+
+      '「완화」는 EASY·NEUTRAL, 「긴장」은 ELEVATED·STRESSED 입니다. '+
+      '<b>표본 8개월 미만인 칸은 아예 싣지 않습니다</b>(한 달 수익이 칸을 지배하는 크기라서입니다). '+
+      '막대 눈금은 이 표의 최대 절대값(|'+mx.toFixed(2)+'|%)입니다.</p>'+
+      '<div class="tblwrap"><table>'+
+      '<thead><tr><th scope="col" class="l">레짐 · 금융</th><th scope="col">표본</th>'+
+      assets.map(function(a){return '<th scope="col">'+esc(NM[a]||a)+
+        '<span style="display:block;font-weight:400;font-size:11px;color:var(--muted)">'+esc(a)+'</span></th>';}).join('')+
+      '</tr></thead><tbody>'+
+      rows.map(function(x){
+        var ns=[];
+        assets.forEach(function(a){var c=P[a][x[2]]; if(c)ns.push(c.n);});
+        var nlab=ns.length?(Math.min.apply(null,ns)===Math.max.apply(null,ns)
+                  ? ns[0]+'개월' : Math.min.apply(null,ns)+'~'+Math.max.apply(null,ns)+'개월'):'—';
+        return '<tr><th scope="row" class="l">'+esc(RKO[x[0]]||x[0])+
+          ' <span class="muted" style="font-size:11px">· 금융 '+esc(x[1])+'</span></th>'+
+          '<td>'+nlab+'</td>'+
+          assets.map(function(a){
+            var c=P[a][x[2]];
+            if(!c)return '<td class="muted">—</td>';
+            var w=Math.min(50,Math.abs(c.v)/mx*50);
+            return '<td><span class="pv">'+(c.v>0?'+':'')+c.v.toFixed(2)+'</span>'+
+              '<div class="bar"><u></u><i style="'+(c.v>=0?'left:50%':'left:'+(50-w)+'%')+
+              ';width:'+w.toFixed(1)+'%"></i></div></td>';
+          }).join('')+'</tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+
   function renderAssets(){
     var h=(RG.history||[]).filter(function(x){return x&&x.r;});
     var mon={},i;
@@ -998,6 +1053,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('astwrap').innerHTML=
       '<p class="capn">출처 '+esc(RG.source||'—')+' — 레짐 라벨은 FRED 지표로 만들고, 아래 월수익률은 yfinance 조정종가로 계산했습니다. 기준일 '+esc(RG.as_of||'—')+'.</p>'+
       (t1?'<h3 class="grph">자산 <span>SPY · QQQ · TLT · GLD · DBC</span></h3>'+t1:'')+
+      finTable()+
       (t2?'<h3 class="grph">팩터 <span>MTUM · QUAL · USMV · VLUE · SIZE</span></h3>'+t2:'')+
       (t1||t2?'':'<div class="skel">조건부 성과 블록이 없습니다.</div>')+
       '<div class="note"><b>이 표가 말하지 않는 것</b><ul>'+
