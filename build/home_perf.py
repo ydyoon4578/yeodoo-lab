@@ -150,12 +150,25 @@ def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
         b = _idbars(key)
         if not b or len(b["c"]) < 30 or not b.get("pc"):
             return
-        pc = float(b["pc"])
         c = b["c"]
+        a = apx.get(key)
+        # 🚨 **전일 종가는 표와 같은 것을 쓴다.** refresh_intraday 가 실은 pc 는 야후
+        #   raw 종가이고, assets.json 은 배당·분할을 소급 반영한 계열이다. 평소엔 둘이
+        #   같지만 **배당락 당일에는 배당만큼 갈린다** — 실측 2026-08-21 DIA 가 그랬다
+        #   (분봉 pc 527.51 vs 표 527.07 · 차 0.44원 = 그 달 배당). 그러면 같은 «1일»
+        #   인데 그림은 +0.89%, 표는 +0.98% 가 되어 화면 안에서 두 수가 싸운다.
+        #   (SPY·QQQ·IWM 은 그날 배당락이 아니라 소수점까지 같았다 — 그래서 이 사고는
+        #    배당락을 만날 때만 나타나고, 평소 검사에는 안 걸린다.)
+        # ⚠ raw 오늘값 ÷ 소급된 전일값이 **맞는 식**이다. 소급 전일값은 이미 (raw 전일 −
+        #   배당) 이라, 이 나눗셈이 곧 배당을 포함한 하루 수익이 된다. 표가 쓰는 식과 같다.
+        pc = None
+        if a and ai is not None and ai > 0 and a[ai - 1]:
+            pc = float(a[ai - 1])
+        if pc is None:
+            pc = float(b["pc"])          # 패널에 없는 종목만 분봉 pc 로 물러선다
         v = [round((c[min(i, len(c) - 1)] / pc - 1) * 100, 3) for i in idx]
         bucket[nm] = v
-        a = apx.get(key)
-        if ai and a and ai > 0 and a[ai] and a[ai - 1]:
+        if a and ai is not None and ai > 0 and a[ai] and a[ai - 1]:
             gaps.append(abs(v[-1] - (a[ai] / a[ai - 1] - 1) * 100))
     for t, nm in (("SPY", "S&P 500"), ("QQQ", "나스닥 100"),
                   ("DIA", "다우존스 30"), ("IWM", "러셀 2000")):
@@ -231,34 +244,36 @@ def main():
     #   탭이 잠깐 사라지는 편이, 어제 것을 오늘이라 말하는 것보다 낫다.
     d1 = _intraday_block(out["as_of"], adates, apx, SEC_ETF, STY_ETF)
     if d1:
-        # 1일 구간은 분봉이라 금리(일간)로는 배경선을 못 만든다 — 안 싣는다.
+        # 1일 구간은 분봉이라 환율(일간 종가)로는 배경선을 못 만든다 — 안 싣는다.
+        # ⚠ 일간 환율 한 점을 90분봉에 늘여 그으면 «환율이 하루 종일 안 움직였다» 는
+        #   거짓 직선이 된다. 없는 것은 없는 대로 둔다.
         #   억지로 하루 한 점을 그리면 «움직임» 이 아니라 수평선이 된다.
         out["series"]["1D"] = d1            # 🚨 먼저 넣는다 — 화면 탭 순서가 이 순서다
         out["base_dates"]["1D"] = d1["dates"][0]
 
-    # ── 금리 배경선 (2026-08-22 사용자 요청) ────────────────────────────────
-    # «지수 차트 오른쪽 축에 금리를 넣고, 선은 연하게 배경처럼. 움직임 정도만 참고».
-    # 🚨 **수익률(%)과 금리(%)는 같은 % 라도 다른 축이다.** 왼쪽은 기준일 대비 누적수익,
-    #   오른쪽은 금리 레벨이다. 한 축에 그리면 «10년물 4.69%» 와 «수익 4.69%» 가 같은
-    #   높이에 놓여 거짓을 말한다. 그래서 값만 실어 보내고 축은 화면이 따로 잡는다.
-    # ⚠ 여기서 금리를 **다시 계산하지 않는다** — data/rates.json 의 DGS10 계열을 이 차트의
-    #   날짜 격자에 맞춰 고르기만 한다. 그 날 값이 없으면(FRED 휴일) 직전 값을 끌어온다.
-    # 2026-08-23 사용자 요청 — 10년물만이 아니라 **2·10·30년 셋 다** 배경선으로.
-    #   셋은 같은 «금리 레벨» 이라 오른쪽 축 하나를 같이 쓴다(따로 잡으면 곡선의 벌어짐이
-    #   축 차이로 사라져 «장단기 차이» 를 못 읽는다 — 이 셋을 같이 보는 이유가 그건데).
-    RT_KEYS = [("DGS2", "2년"), ("DGS10", "10년"), ("DGS30", "30년")]
-    _rt = {}
+    # ── 환율 배경선 (2026-08-23 사용자 요청) ────────────────────────────────
+    # «금리는 빼고 원달러 환율로 대체». 종전(2026-08-22)에는 국채 2·10·30년이 이 자리에
+    # 있었다. 지운 것은 배경선이지 자료가 아니다 — data/rates.json 은 그대로 있고
+    # macro.html 이 쓴다.
+    # 🚨 **이 차트의 수익률은 전부 달러 기준이다.** 한국에서 그 지수를 사면 원화 수익은
+    #   달러 수익 × 환율 변화라, 환율을 같이 놓아야 «내가 실제로 얼마 벌었나» 가 읽힌다.
+    #   금리는 «남의 사정» 이었지만 환율은 이 곡선에 **직접 곱해지는 수**다.
+    # 🚨 수익률(%)과 환율(원)은 단위가 아예 다르다 — 값만 실어 보내고 축은 화면이 따로
+    #   오른쪽에 잡는다. 한 축에 그리면 1,390 이 화면 밖으로 나가 곡선이 납작해진다.
+    # ⚠ 여기서 환율을 **다시 계산하지 않는다** — data/assets.json 의 KRW=X 를 이 차트의
+    #   날짜 격자에 맞춰 고르기만 한다. 그 날 값이 없으면 직전 값을 끌어온다.
+    FX_KEY, FX_LAB = "KRW=X", "원/달러"
+    _fx = {}
     try:
-        _rj = json.load(io.open(os.path.join(DATA, "rates.json"), encoding="utf-8"))
-        _rd, _ser = _rj.get("dates") or [], (_rj.get("series") or {})
-        for _k, _lab in RT_KEYS:
-            _a = _ser.get(_k) or []
-            _rt[_k] = {d: v for d, v in zip(_rd, _a) if v is not None}
+        _a = apx.get(FX_KEY) or []
+        _fx = {d: v for d, v in zip(adates, _a) if v}
+        if not _fx:
+            print("  ⚠ 환율 배경선 생략(assets.json 에 %s 가 없다)" % FX_KEY)
     except Exception as _e:
-        print("  ⚠ 금리 배경선 생략(%s)" % str(_e)[:50])
+        print("  ⚠ 환율 배경선 생략(%s)" % str(_e)[:50])
 
     def _fill(src, days):
-        """그 날 값이 없으면(FRED 휴일) 직전 값을 끌어온다. 앞이 비면 None."""
+        """그 날 값이 없으면(휴일) 직전 값을 끌어온다. 앞이 비면 None."""
         keys = sorted(src)
         out2, last, k = [], None, 0
         for d in days:
@@ -267,14 +282,12 @@ def main():
             out2.append(last)
         return out2 if any(v is not None for v in out2) else None
 
-    def rt_on(days):
-        """날짜 목록에 맞춘 만기별 금리 → {라벨: [값…]}. 하나도 못 채우면 None."""
-        out2 = {}
-        for _k, _lab in RT_KEYS:
-            a = _fill(_rt.get(_k) or {}, days)
-            if a:
-                out2[_lab] = [None if v is None else round(v, 2) for v in a]
-        return out2 or None
+    def fx_on(days):
+        """날짜 목록에 맞춘 원/달러 → [값…]. 못 채우면 None."""
+        a = _fill(_fx, days)
+        if not a:
+            return None
+        return [None if v is None else round(v, 2) for v in a]
 
     for hz in HZ:
         b = bases.get(hz)
@@ -310,9 +323,9 @@ def main():
                 continue
             blk["sty"][nm] = [None if a[i] is None else round((a[i] / a[si] - 1) * 100, 2)
                               for i in sidx]
-        _r = rt_on(blk["dates"])
-        if _r:
-            blk["rt"] = _r
+        _f = fx_on(blk["dates"])
+        if _f:
+            blk["fx"] = _f
         out["series"][hz] = blk
 
     io.open(OUT, "w", encoding="utf-8").write(
