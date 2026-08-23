@@ -80,7 +80,35 @@ _SEC_KO = {"Information Technology": "IT", "Financials": "금융", "Health Care"
            "Utilities": "유틸리티", "Real Estate": "부동산", "Materials": "소재"}
 
 
-def _intraday_ind(idx):
+# ── 분봉을 **시각으로** 맞춘다 ────────────────────────────────────────────────
+# 🚨 2026-08-23 사용자 지적 «1일 스타일 수익률 차트 제대로 안 나오는 게 있네».
+#   원인: 봉을 **위치(i번째 봉)** 로 읽고 있었다. 거래가 촘촘한 SPY 는 390봉이라 i번째
+#   봉 = 개장 i분 뒤가 맞지만, 거래가 뜸한 ETF 는 **거래가 없는 분의 봉이 아예 없다**
+#   (실측 2026-08-21: SDY 207봉 · IVE 329 · QUAL/SPLV 364 / 390분).
+#   그러면 207개 봉이 앞쪽 207분에 몰려 그려지고, 뒤 183분은 `c[min(i, len-1)]` 이
+#   마지막 값을 되풀이해 **평평한 직선**이 된다. 화면에 「11시부터 장 마감까지 한 번도
+#   안 움직였다」고 적히는데, 실제로는 그 시간에도 거래가 있었고 값도 움직였다.
+#   ⚠ 없는 것을 지어내는 쪽이 비는 것보다 나쁘다 — 이 랩이 되풀이 적어 온 규약이다.
+# 해결: 파일이 이미 **tm(개장 후 분 오프셋)** 을 싣고 있다. 그걸로 «그 분까지의 마지막
+#   체결가» 를 고른다. 거래가 없던 분을 직전 체결가로 잇는 것은 지어내는 것이 아니라
+#   그 시각의 실제 호가 상태다(계단 함수). 봉이 정말로 없는 앞머리만 None 으로 남는다.
+def _at_minutes(b, gtm):
+    """봉 파일 b 를 격자 분 오프셋 gtm 에 맞춘 종가 배열. tm 이 없으면 위치로 물러선다."""
+    c = b["c"]
+    tm = b.get("tm")
+    if not (tm and len(tm) == len(c)):
+        # 옛 판 파일 — 위치로 읽는다(이 경로가 곧 위 버그다. 남기되 티가 나게 둔다).
+        return [c[min(i, len(c) - 1)] for i in range(len(gtm))]
+    out, j, last = [], 0, None
+    for m in gtm:
+        while j < len(tm) and tm[j] <= m:
+            last = c[j]
+            j += 1
+        out.append(last)
+    return out
+
+
+def _intraday_ind(idx, gtm):
     """(그룹→경로, 그룹→부모섹터한글). 재료가 없으면 ({}, {})."""
     mp = os.path.join(DATA, "members.json")
     sp = os.path.join(DATA, "stocks.json")
@@ -109,9 +137,12 @@ def _intraday_ind(idx):
             b = _idbars(t, stock=True)
             if not b or not b.get("pc") or len(b["c"]) < 30:
                 continue
-            pc, c = float(b["pc"]), b["c"]
-            for k, i in enumerate(idx):
-                num[k] += mc * (c[min(i, len(c) - 1)] / pc - 1) * 100.0
+            pc = float(b["pc"])
+            _cc = _at_minutes(b, gtm)
+            if any(x is None for x in _cc):
+                continue          # 앞머리가 비는 종목은 그룹에 안 넣는다(0 으로 안 채운다)
+            for k in range(len(idx)):
+                num[k] += mc * (_cc[k] / pc - 1) * 100.0
             wsum += mc
         # 3종 미만이 담긴 그룹은 만들지 않는다 — 일간 판과 같은 취급이다
         if wsum <= 0 or sum(1 for t, _m in mem_l if _idbars(t, stock=True)) < 3:
@@ -135,12 +166,18 @@ def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
     t0 = probe.get("t0") or "09:30"
     h0, m0 = int(t0[:2]), int(t0[3:5])
     idx = thin(list(range(n)), MAXPT)
+    # 격자의 **분 오프셋** — 기준 종목(SPY)의 tm 을 그대로 쓴다. 위치가 아니라 이것이
+    #   x 축의 진짜 좌표이고, 다른 종목은 이 분에 맞춰 값을 고른다(_at_minutes).
+    _ptm = probe.get("tm")
+    if not (_ptm and len(_ptm) == n):
+        _ptm = list(range(n))          # 옛 판 파일 — 위치가 곧 분이라고 본다
+    _gtm = [_ptm[i] for i in idx]
     def hhmm(i):
         mm = h0 * 60 + m0 + i
         return "%02d:%02d" % (mm // 60, mm % 60)
     # ⚠ 화면은 지수 판에 dates 를, 섹터·스타일 판에 **sec_dates** 를 쓴다. 1일은 셋이
     #   같은 격자(같은 분봉)라 같은 배열을 둘 다 넣는다 — 없으면 그 두 판이 터진다(실측).
-    _t = [hhmm(i) for i in idx]
+    _t = [hhmm(m) for m in _gtm]
     blk = {"dates": _t, "sec_dates": _t, "ix": {}, "sec": {}, "sty": {}, "intraday": True}
     # 표의 1일 칸과 얼마나 어긋나는지 잰다 — 일간 종가로 만든 진짜 1일 수익과 견준다.
     apos = {d: i for i, d in enumerate(adates)}
@@ -166,7 +203,11 @@ def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
             pc = float(a[ai - 1])
         if pc is None:
             pc = float(b["pc"])          # 패널에 없는 종목만 분봉 pc 로 물러선다
-        v = [round((c[min(i, len(c) - 1)] / pc - 1) * 100, 3) for i in idx]
+        _cc = _at_minutes(b, _gtm)
+        if _cc[-1] is None:
+            print("   ⚠ 1D %s(%s) 분봉이 격자를 못 덮는다 — 이 줄을 빼다" % (nm, key))
+            return
+        v = [None if x is None else round((x / pc - 1) * 100, 3) for x in _cc]
         bucket[nm] = v
         if a and ai is not None and ai > 0 and a[ai] and a[ai - 1]:
             gaps.append(abs(v[-1] - (a[ai] / a[ai - 1] - 1) * 100))
@@ -184,7 +225,7 @@ def _intraday_block(as_of, adates, apx, sec_etf, sty_etf):
     # 🚨 일간 판(build/home_summary._industry)과 **같은 식**이다: 기준일 시총가중,
     #   가중치는 기준일에 고정. 다른 식으로 만들면 같은 이름의 선이 구간마다 다른 뜻이 된다.
     # ⚠ 분류는 GICS 산업그룹(data/members.json 의 grp) — 그 판이 쓰는 바로 그 값이다.
-    blk["ind"], blk["ind_sec"] = _intraday_ind(idx)
+    blk["ind"], blk["ind_sec"] = _intraday_ind(idx, _gtm)
     if blk["ind"]:
         print("   1D: 산업그룹 %d줄(종목 분봉 시총가중)" % len(blk["ind"]))
     mx = max(gaps) if gaps else 0.0

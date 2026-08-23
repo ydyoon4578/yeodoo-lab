@@ -3457,6 +3457,45 @@ try:
 except Exception as _e:
     errors.append("샤프 하한 대조가 예외로 죽었다 — %s" % _e)
 
+# ── 1일 분봉 판에 **평평한 꼬리**가 있는가 ──────────────────────────────────
+# 🚨 2026-08-23 사용자 지적 «1일 스타일 수익률 차트 제대로 안 나오는 게 있네».
+#   원인은 봉을 시각이 아니라 **위치**로 읽은 것이었다. 거래가 뜸한 ETF 는 거래 없는
+#   분의 봉이 아예 없어서(실측 SDY 207봉/390분), 207개가 앞쪽에 몰려 그려지고 뒤
+#   183분이 마지막 값 되풀이로 **평평한 직선**이 됐다. 화면은 「11시부터 마감까지 한
+#   번도 안 움직였다」고 말하는데 사실이 아니다.
+# ⚠ 이 검사가 없으면 다음에 종목이 늘거나 유동성이 낮은 ETF 가 들어올 때 조용히 재발한다.
+#   자료를 보고 «말이 되나» 를 묻는 검사라, 배선 검사로는 못 잡는다.
+# ⚠ 진짜로 안 움직인 구간도 있을 수 있으므로 문턱을 넉넉히 둔다 — 격자의 15% 를 넘는
+#   연속 동일값만 잡는다(SDY 사고는 47% 였다).
+try:
+    _hp = json.loads(rd("data/home_perf.json"))
+    _d1 = (_hp.get("series") or {}).get("1D") or {}
+    _npt = len(_d1.get("dates") or [])
+    _flat = []
+    if _npt >= 20:
+        for _pane in ("ix", "sec", "sty", "ind"):
+            for _nm, _v in (_d1.get(_pane) or {}).items():
+                if not _v or len(_v) != _npt:
+                    continue
+                _run = 0
+                for _i in range(len(_v) - 1, 0, -1):
+                    if _v[_i] is not None and _v[_i] == _v[_i - 1]:
+                        _run += 1
+                    else:
+                        break
+                if _run > _npt * 0.15:
+                    _flat.append("%s/%s(끝 %d칸 = %.0f%%)"
+                                 % (_pane, _nm, _run, 100.0 * _run / _npt))
+    if _flat:
+        errors.append(
+            "1일 분봉 판에 **평평한 꼬리**가 있는 줄 %d개: %s — 봉을 시각(tm)이 아니라 "
+            "위치로 읽으면 거래가 뜸한 종목이 이렇게 된다. build/home_perf._at_minutes "
+            "가 tm 으로 맞추고 있는지 확인할 것" % (len(_flat), " · ".join(_flat[:6])))
+    elif _npt:
+        print("  ~ 1일 분봉 평평꼬리 검사 통과(격자 %d칸 · 네 판 전부)" % _npt)
+except Exception as _e:
+    errors.append("1일 분봉 평평꼬리 검사가 예외로 죽었다 — %s" % _e)
+
 # ── `%%` 가 산출물에 남았는가 — 전 파일 훑기 ────────────────────────────
 # 🚨 2026-08-14. CI 가 signal_lab 의 마크다운 `**` 를 잡았고, 그 옆에서 `상위 5%%` 를
 #   발견했다. `%%` 는 파이썬 % 서식의 이스케이프인데 그 문자열에 % 연산자가 안 붙으면
