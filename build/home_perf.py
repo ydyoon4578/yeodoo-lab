@@ -243,25 +243,38 @@ def main():
     #   높이에 놓여 거짓을 말한다. 그래서 값만 실어 보내고 축은 화면이 따로 잡는다.
     # ⚠ 여기서 금리를 **다시 계산하지 않는다** — data/rates.json 의 DGS10 계열을 이 차트의
     #   날짜 격자에 맞춰 고르기만 한다. 그 날 값이 없으면(FRED 휴일) 직전 값을 끌어온다.
+    # 2026-08-23 사용자 요청 — 10년물만이 아니라 **2·10·30년 셋 다** 배경선으로.
+    #   셋은 같은 «금리 레벨» 이라 오른쪽 축 하나를 같이 쓴다(따로 잡으면 곡선의 벌어짐이
+    #   축 차이로 사라져 «장단기 차이» 를 못 읽는다 — 이 셋을 같이 보는 이유가 그건데).
+    RT_KEYS = [("DGS2", "2년"), ("DGS10", "10년"), ("DGS30", "30년")]
     _rt = {}
     try:
         _rj = json.load(io.open(os.path.join(DATA, "rates.json"), encoding="utf-8"))
-        _rd, _rs = _rj.get("dates") or [], (_rj.get("series") or {}).get("DGS10") or []
-        _rt = {d: v for d, v in zip(_rd, _rs) if v is not None}
+        _rd, _ser = _rj.get("dates") or [], (_rj.get("series") or {})
+        for _k, _lab in RT_KEYS:
+            _a = _ser.get(_k) or []
+            _rt[_k] = {d: v for d, v in zip(_rd, _a) if v is not None}
     except Exception as _e:
         print("  ⚠ 금리 배경선 생략(%s)" % str(_e)[:50])
 
-    def rt_on(days):
-        """날짜 목록에 맞춘 10년 금리. 앞이 비면 None(억지로 채우지 않는다)."""
-        if not _rt:
-            return None
-        keys = sorted(_rt)
+    def _fill(src, days):
+        """그 날 값이 없으면(FRED 휴일) 직전 값을 끌어온다. 앞이 비면 None."""
+        keys = sorted(src)
         out2, last, k = [], None, 0
         for d in days:
             while k < len(keys) and keys[k] <= d:
-                last = _rt[keys[k]]; k += 1
+                last = src[keys[k]]; k += 1
             out2.append(last)
         return out2 if any(v is not None for v in out2) else None
+
+    def rt_on(days):
+        """날짜 목록에 맞춘 만기별 금리 → {라벨: [값…]}. 하나도 못 채우면 None."""
+        out2 = {}
+        for _k, _lab in RT_KEYS:
+            a = _fill(_rt.get(_k) or {}, days)
+            if a:
+                out2[_lab] = [None if v is None else round(v, 2) for v in a]
+        return out2 or None
 
     for hz in HZ:
         b = bases.get(hz)
@@ -299,7 +312,7 @@ def main():
                               for i in sidx]
         _r = rt_on(blk["dates"])
         if _r:
-            blk["rt"] = [None if v is None else round(v, 2) for v in _r]
+            blk["rt"] = _r
         out["series"][hz] = blk
 
     io.open(OUT, "w", encoding="utf-8").write(
