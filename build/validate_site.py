@@ -3416,6 +3416,42 @@ try:
 except Exception as _e:
     errors.append("성과 기준일 검사가 예외로 죽었다 — %s" % _e)
 
+# ── 「샤프 0.5 미만은 남기지 않는다」 — **사용자 결정** 대조 ──────────────────
+# 🚨 이것은 랩의 문턱이 **아니다.** 이 랩은 2026-08-13·16 에 t 문턱과 다중검정 임계를
+#   폐지했고 게시 기준을 두지 않는다. 여기서 하는 일은 «사용자가 두 번 내린 결정»
+#   (2026-08-19 일괄 17종 · 2026-08-23 테일 헤지 Long-Vol)에 걸리는 종이 목록에
+#   들어왔는지 알리는 것뿐이다. 규칙을 판정하지 않고, 자동으로 자르지도 않는다.
+# ⚠ 이 검사가 왜 필요했나 — 2026-08-23 에 숨겨 뒀던 테일 헤지 둘을 되살리면서 그 잣대를
+#   다시 대지 않았다. 한 종(샤프 0.111)이 그대로 화면에 올라갔고 **사용자가 잡았다.**
+#   숨김을 푸는 것은 새로 싣는 것과 같은데, 그때 통과해야 할 결정을 안 본 것이다.
+#   사람이 기억해야만 지켜지는 규약은 언젠가 깨진다 — 그래서 여기 못 박는다.
+# ⚠ 잣대를 바꾸려면 이 상수만 고치는 것이 아니라 build/tested_not_published.json 의
+#   삭제 기록도 같이 손봐야 한다(무엇을 왜 뺐는지가 그 목록에 있다).
+_SH_CUT = 0.5
+try:
+    _si4 = json.loads(rd("data/strategy_index.json"))
+    _bad4 = []
+    for _x in _si4.get("items") or []:
+        _sh = (_x.get("metrics") or {}).get("sharpe")
+        if isinstance(_sh, (int, float)) and _sh < _SH_CUT:
+            _bad4.append("%s %s(샤프 %.3f)"
+                         % (_x.get("sid"), (_x.get("name") or "")[:24], _sh))
+    if _bad4:
+        errors.append(
+            "샤프 %.1f 미만인데 목록에 남아 있는 전략 %d종 — %s. 이것은 랩의 문턱이 "
+            "아니라 **사용자 결정**(2026-08-19 · 08-23)이다. 빼려면 "
+            "build/strategy_index.py 의 HIDE_SIDS 에 sid 를 넣고 "
+            "build/tested_not_published.json 에 사유를 함께 적을 것 — 기록을 지우지 "
+            "않는 것이 이 랩의 규약이다"
+            % (_SH_CUT, len(_bad4), " · ".join(_bad4[:6])))
+    else:
+        _shs = sorted((_x.get("metrics") or {}).get("sharpe") for _x in (_si4.get("items") or [])
+                      if isinstance((_x.get("metrics") or {}).get("sharpe"), (int, float)))
+        print("  ~ 샤프 하한 대조 통과(사용자 결정 %.1f · 게시 %d종 최저 %.3f)"
+              % (_SH_CUT, len(_si4.get("items") or []), _shs[0] if _shs else float("nan")))
+except Exception as _e:
+    errors.append("샤프 하한 대조가 예외로 죽었다 — %s" % _e)
+
 # ── `%%` 가 산출물에 남았는가 — 전 파일 훑기 ────────────────────────────
 # 🚨 2026-08-14. CI 가 signal_lab 의 마크다운 `**` 를 잡았고, 그 옆에서 `상위 5%%` 를
 #   발견했다. `%%` 는 파이썬 % 서식의 이스케이프인데 그 문자열에 % 연산자가 안 붙으면
