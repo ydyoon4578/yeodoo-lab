@@ -355,8 +355,13 @@
   @media(max-width:1360px){.hgrid{grid-template-columns:1fr;gap:0}}
 
   .calwrap{margin:10px 0 0;overflow-x:auto;min-height:660px}
-  /* 캘린더 높이는 데이터에 거의 안 흔들린다(창이 늘 4주 × 5일이다) — 좁은 화면에서는
-     범례가 접혀 더 커지므로 그만큼 더 잡는다. 실측 1280px 669 / 500px 762. */
+  /* min-height 는 **자리 예약**이다 — 자료가 늦게 와도 아래 구획이 튀어 오르지 않게 한다.
+     ⚠ 그런데 그리고 나서도 남아 있으면 격자보다 큰 만큼이 통째로 빈 공간이 된다
+       (2026-08-23 사용자 지적 · 실측 1920px 에서 격자 547 vs 예약 660 = **113px 공백**).
+       위 수치(1280px 669 / 500px 762)는 좁은 화면 실측이라 넓은 화면에서 과하게 잡혔다.
+     → 다 그린 뒤에는 예약을 푼다. renderCal 이 .rendered 를 붙인다 — 예약의 목적(로딩 중
+       레이아웃 안정)은 지키고, 목적이 끝나면 놓아 준다. */
+  .calwrap.rendered{min-height:0}
   @media(max-width:900px){.calwrap{min-height:770px}}
   /* 🚨 격자선은 자식의 테두리로 그린다(2026-08-11). 종전에는 gap:1px 이 부모 배경을
      비추게 했는데, dpr 이 1 이 아니면(브라우저 90% 확대 등) 그 간격이 0.89 device px 가
@@ -2142,6 +2147,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   function renderCal(){
     var box=el('wk-cal-grid'); if(!box)return;
+    // 자리 예약을 푼다(위 .calwrap 주석) — 실패로 끝나는 경로에서도 풀어야 한다.
+    //   못 그렸는데 660px 를 잡고 있으면 «빈 상자» 가 남는다.
+    var _cw=box.closest('.calwrap'); if(_cw)_cw.classList.add('rendered');
     var e=CAL.e, c=CAL.c;
     if(!e&&!c){box.innerHTML='<div class="skel2">일정을 불러오지 못했습니다.</div>';return;}
     var base=(e&&e.as_of)||(c&&c.as_of)||MK.main;
