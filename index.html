@@ -2534,10 +2534,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   그 경로는 **아래 표와 같은 정의**로 만들어졌고(섹터 = 기준일 대비 종목별 비율의 평균),
   //   그래서 각 선의 끝점이 아래 표의 그 칸과 글자 그대로 같다(빌드에서 15계열×5구간 대조).
   //   섹터는 **SPDR 섹터 ETF** 다(2026-08-11 사용자 결정으로 동일가중을 걷어냈다).
-  // 첫 화면 기간은 **1개월**이다(사용자 요청 2026-08-13). 탭을 누르면 바뀌지만, 들어왔을 때
+  // 첫 화면 기간은 **1일**이다(사용자 요청 2026-08-23 · 종전 1개월은 2026-08-13 요청).
   // 뜨는 것은 이것이다. ⚠ 손으로 안 고르면 Object.keys 순서(=home_perf 가 실은 순서)를
   // 따르게 되므로, 기본값을 바꾸려면 반드시 이 상수를 고쳐야 한다.
-  var STC_HZ='1M', STC_P=null, STC_I=null;    // STC_I = 산업그룹 경로(별도 파일)
+  // ⚠ 1일 칸에는 **환율 배경선이 없다** — 분봉 경로라서다. 일간 종가 한 점을 90개 분봉에
+  //   늘여 그으면 «환율이 하루 종일 안 움직였다» 는 거짓 직선이 된다. 배경선은 1주부터다.
+  var STC_HZ='1D', STC_P=null, STC_I=null;    // STC_I = 산업그룹 경로(별도 파일)
 
   function drawStChart(){
     var box=el('stchart'); if(!box)return;
@@ -2564,10 +2566,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   ① y 눈금 — 종전에는 0 선 하나뿐이라 **선이 얼마나 벌어졌는지 눈으로 못 쟀다.**
     //   ② x 눈금 — 첫날·끝날만 있었다. 가운데 눈금이 없으면 굴곡이 언제인지 못 짚는다.
     //   ③ 0 아래 옅은 바탕 — 손실 구간을 색으로 한 번 더 말한다(선 색과 겹치지 않게 아주 옅게).
-    //   ④ 금리 배경선(2026-08-22 사용자 요청) — bg 를 주면 **오른쪽 축**에 아주 옅게 깐다.
-    //     🚨 왼쪽은 «기준일 대비 누적수익(%)», 오른쪽은 «금리 레벨(%)» 이다. 같은 % 라도
-    //       다른 축이라, 한 축에 그리면 «10년물 4.69%» 와 «수익 4.69%» 가 같은 높이에
-    //       놓여 거짓을 말한다. 축을 따로 잡고 눈금도 오른쪽에 따로 적는다.
+    //   ④ 환율 배경선(2026-08-23 사용자 요청 «금리는 빼고 원달러 환율로 대체») —
+    //     bg 에 값 배열을 주면 **오른쪽 축**에 아주 옅게 깐다.
+    //     🚨 왼쪽은 «기준일 대비 누적수익(%)», 오른쪽은 «원/달러(원)» 이다. 단위가 아예
+    //       달라 한 축에 그리면 1,390 이 화면 밖으로 나가고 수익 곡선이 납작해진다.
+    //     🚨 이 차트의 수익은 전부 **달러 기준**이다. 한국에서 그 지수를 사면 원화 수익은
+    //       달러 수익 × 환율 변화라, 이 배경선은 «남의 사정» 이 아니라 위 곡선에 직접
+    //       곱해지는 수다. 종전 금리 배경선(2026-08-22)과 다른 점이 그것이다.
     //     ⚠ 배경이므로 라벨·끝점·툴팁을 안 준다. 사용자 표현대로 «움직임 정도만 참고».
     function chart(dates, series, title, emph, dash, bg){
       var many=series.length>6, lots=series.length>12;
@@ -2586,16 +2591,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var X=function(i){return PL+(n<2?0:i/(n-1))*(W-PL-PR);};
       var Y=function(y){return TOP+(hi-y)/(hi-lo)*(H-TOP-BOT);};
       var RX=W-PR, g='';
-      // 금리 축 — 만기 셋(2·10·30년)이 **한 축을 같이 쓴다.** 따로 잡으면 곡선이 벌어진
-      //   정도가 축 차이로 사라져 «장단기 차이» 를 못 읽는다 — 셋을 같이 보는 이유가 그건데.
-      //   ⚠ 값이 있는 구간만으로 상하한을 잡는다(없으면 배경선을 안 그린다).
-      var bgs=(bg&&bg.s)||null, bLo=0, bHi=0, bOk=false;
-      if(bgs){
-        var _b=[];
-        bgs.forEach(function(q){ q.v.forEach(function(v){ if(v!=null)_b.push(v); }); });
+      // 환율 축 — 값이 있는 구간만으로 상하한을 잡는다(없으면 배경선을 안 그린다).
+      //   ⚠ 원/달러는 레벨이 1,300~1,500 대라 «0 부터» 잡으면 움직임이 전부 뭉개진다.
+      //     이 축은 절대 수준이 아니라 **움직임**을 보라고 있는 것이므로 실제 범위로 잡는다.
+      var bgv=(bg&&bg.v)||null, bLo=0, bHi=0, bOk=false;
+      if(bgv){
+        var _b=bgv.filter(function(v){return v!=null;});
         if(_b.length>1){
           bLo=Math.min.apply(null,_b); bHi=Math.max.apply(null,_b);
-          if(bHi-bLo<0.05){bHi+=0.05;bLo-=0.05;}
+          if(bHi-bLo<1){bHi+=1;bLo-=1;}
           var bp=(bHi-bLo)*0.30; bHi+=bp; bLo-=bp;   // 여백 — 배경선이 수익선과 안 엉키게
           bOk=true;
         }
@@ -2620,31 +2624,26 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(zy<H-BOT)
         g+='<rect x="'+PL+'" y="'+zy.toFixed(1)+'" width="'+(RX-PL)+'" height="'+
            (H-BOT-zy).toFixed(1)+'" fill="var(--hot)" opacity=".045"/>';
-      // ── 금리 배경선 — **가장 먼저** 그린다(뒤에 깔려야 배경이다) ──────────
+      // ── 환율 배경선 — **가장 먼저** 그린다(뒤에 깔려야 배경이다) ──────────
       if(bOk){
-        // 셋 다 같은 색(--marg)으로 두고 **점선 모양**으로 가른다. 색을 셋으로 나누면
-        //   배경이 아니라 또 하나의 주인공이 된다 — 사용자 표현대로 «움직임 정도만 참고».
-        var BD={'2년':'2 3','10년':'','30년':'6 3'};
-        bgs.forEach(function(q){
-          var bd='',st2=false,lastI=-1,lastV=null;
-          for(var bi=0;bi<n;bi++){var bv=q.v[bi]; if(bv==null)continue;
-            bd+=(st2?'L':'M')+X(bi).toFixed(1)+' '+BY(bv).toFixed(1); st2=true; lastI=bi; lastV=bv;}
-          if(!bd)return;
-          var da=BD[q.nm]||'';
-          g+='<path d="'+bd+'" fill="none" stroke="var(--marg)" stroke-width="1.3" '+
-             'opacity=".24" stroke-linejoin="round"'+(da?' stroke-dasharray="'+da+'"':'')+'/>';
-          // 선 끝에 만기 이름 — 셋이 겹쳐 있으면 어느 선이 어느 만기인지 알 수 없다.
-          if(lastV!=null)
-            g+='<text x="'+(RX+4)+'" y="'+(BY(lastV)+3.2).toFixed(1)+'" font-size="8.5" '+
-               'font-family="var(--mono)" fill="var(--marg)" opacity=".7">'+esc(q.nm)+'</text>';
-        });
-        // 오른쪽 축 눈금 — 위·아래 둘만. 셋을 적으면 만기 이름표와 겹친다.
+        var bd='',st2=false;
+        for(var bi=0;bi<n;bi++){var bv=bgv[bi]; if(bv==null)continue;
+          bd+=(st2?'L':'M')+X(bi).toFixed(1)+' '+BY(bv).toFixed(1); st2=true;}
+        // 🚨 색은 **CIX 넷 중 어느 것도 아닌 것**을 쓴다. 지수 넷이 accent·champ·marg·
+        //   deploy 를 이미 쓰고 있어, 그중 하나를 옅게 깔면 «저 지수의 흐린 판» 으로
+        //   읽힌다(실측으로 champ 를 썼다가 나스닥 선과 같은 색이 됐다). --rp 는 이
+        //   차트에서 아무도 안 쓴다.
+        if(bd)
+          g+='<path d="'+bd+'" fill="none" stroke="var(--rp)" stroke-width="1.4" '+
+             'opacity=".3" stroke-linejoin="round"/>';
+        // 오른쪽 축 눈금 — 위·아래 둘만. 원 단위라 소수점을 안 찍는다.
         [bHi-(bHi-bLo)*0.06, bLo+(bHi-bLo)*0.06].forEach(function(t2){
           g+='<text x="'+(RX+4)+'" y="'+(BY(t2)+3.2).toFixed(1)+'" font-size="9" '+
-             'font-family="var(--mono)" fill="var(--marg)" opacity=".45">'+t2.toFixed(2)+'</text>';
+             'font-family="var(--mono)" fill="var(--rp)" opacity=".55">'+
+             Math.round(t2).toLocaleString()+'</text>';
         });
         g+='<text x="'+(RX+4)+'" y="'+(TOP-5)+'" font-size="9" font-family="var(--mono)" '+
-           'fill="var(--marg)" opacity=".65">국채금리(우)</text>';
+           'fill="var(--rp)" opacity=".75">원/달러(우)</text>';
       }
       // ── x 눈금 — 월이 바뀌는 날 중 고르게 넷 ─────────────────────────────
       // 1일 칸은 x 가 날짜가 아니라 **시각**(09:30…)이다. 월로 묶으면 90개가 다 눈금이 된다.
@@ -2794,17 +2793,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   아래 줄은 **쪼갠 것**(섹터·산업그룹)이다. 위아래가 같은 질문의 두 배율이 되게 놓는다.
       //   ⚠ 판 이름에서 'ETF'·'21개' 를 뺐다 — 개수는 제목 옆 회색으로 따로 붙는다.
       '<div class="scgrid">'+
-        // 금리 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 금리로 덮인다.
-        // 금리 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 금리로 덮인다.
-        //   blk.rt 는 {만기: [값…]} 이다(2026-08-23 부터 2·10·30년 셋).
-        chart(blk.dates, ixs, '지수', CIX, null, (function(){
-          var R=blk.rt; if(!R)return null;
-          var out=[];
-          ['2년','10년','30년'].forEach(function(k){
-            if(R[k]&&R[k].length===blk.dates.length)out.push({nm:k, v:R[k]});
-          });
-          return out.length?{s:out}:null;
-        })())+
+        // 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 배경선으로 덮인다.
+        chart(blk.dates, ixs, '지수', CIX, null,
+          // 배경선 = 원/달러(2026-08-23 사용자 요청). blk.fx 는 이 판의 날짜 격자에
+          //   **이미 맞춰져** 온다(build/home_perf.py). 길이가 다르면 안 그린다 —
+          //   길이가 다른 두 배열을 같은 x 로 그리면 날짜가 조용히 어긋난다.
+          (blk.fx&&blk.fx.length===blk.dates.length)?{v:blk.fx}:null)+
         (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
@@ -3527,7 +3521,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //     ③ 각주에 생존편향 눈금 — 종목 전략은 오늘의 518종을 과거로 소급한 값이다
   //   ⚠ 계산하지 않는다. strategy_index.json 의 trails 를 그대로 옮긴다.
   (function(){
-    var TP_HZ='12M', TP=null, PITD=null;
+    // 첫 화면 기간 — 2026-08-23 사용자 요청 «기본을 1년이 아니라 1일로».
+    // 🚨 **여기에 1일 칸은 만들 수 없다.** 위 «기간별 수익률» 과 달리 이 표의 자료는
+    //   전략 백테스트 계열이고, 그 격자는 **주간(7일)** 이다(data/tech_strategies.json
+    //   79종 전부 마지막 간격 7일 · 나머지는 월말·분기). 일간 점이 하나도 없다.
+    //   그 위에 «1일» 이라 적은 칸을 만들면 실제로는 한 주를 재고서 하루라고 말하게 된다 —
+    //   build/strategy_index.py 의 MONTHLY_MIN_DAYS 가 같은 사유로 월간 격자에 1주 칸을
+    //   금지하고 있다. 같은 잘못을 여기서 저지르지 않는다.
+    //   ⚠ 게다가 이 계열의 기준일은 2026-07-31 이다(위 차트는 2026-08-21). 하루를 재도
+    //     «3주 전의 어느 하루» 다.
+    //   → 그래서 **있는 것 중 가장 짧은 칸**인 1주를 기본으로 둔다. 사용자가 원한 «짧은
+    //     구간을 먼저 보여 달라» 는 뜻은 이것으로 지키되, 없는 정밀도를 지어내지 않는다.
+    var TP_HZ='1W', TP=null, PITD=null;
     // ⚠ 위 HZL 과 **글자까지 같아야 한다** — 한 화면에 같은 기간 버튼이 두 벌 있다.
     var TP_LAB={'1W':'1주','1M':'1개월','3M':'3개월','6M':'6개월','12M':'1년','YTD':'올해'};
     var TP_N=10;
