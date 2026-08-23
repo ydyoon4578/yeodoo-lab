@@ -2586,14 +2586,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var X=function(i){return PL+(n<2?0:i/(n-1))*(W-PL-PR);};
       var Y=function(y){return TOP+(hi-y)/(hi-lo)*(H-TOP-BOT);};
       var RX=W-PR, g='';
-      // 금리 축 — 값이 있는 구간만으로 상하한을 잡는다(없으면 배경선을 안 그린다)
-      var bgv=(bg&&bg.v)||null, bLo=0, bHi=0, bOk=false;
-      if(bgv){
-        var _b=bgv.filter(function(v){return v!=null;});
+      // 금리 축 — 만기 셋(2·10·30년)이 **한 축을 같이 쓴다.** 따로 잡으면 곡선이 벌어진
+      //   정도가 축 차이로 사라져 «장단기 차이» 를 못 읽는다 — 셋을 같이 보는 이유가 그건데.
+      //   ⚠ 값이 있는 구간만으로 상하한을 잡는다(없으면 배경선을 안 그린다).
+      var bgs=(bg&&bg.s)||null, bLo=0, bHi=0, bOk=false;
+      if(bgs){
+        var _b=[];
+        bgs.forEach(function(q){ q.v.forEach(function(v){ if(v!=null)_b.push(v); }); });
         if(_b.length>1){
           bLo=Math.min.apply(null,_b); bHi=Math.max.apply(null,_b);
           if(bHi-bLo<0.05){bHi+=0.05;bLo-=0.05;}
-          var bp=(bHi-bLo)*0.35; bHi+=bp; bLo-=bp;   // 여백을 넉넉히 — 배경선이 수익선과 안 엉키게
+          var bp=(bHi-bLo)*0.30; bHi+=bp; bLo-=bp;   // 여백 — 배경선이 수익선과 안 엉키게
           bOk=true;
         }
       }
@@ -2619,21 +2622,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
            (H-BOT-zy).toFixed(1)+'" fill="var(--hot)" opacity=".045"/>';
       // ── 금리 배경선 — **가장 먼저** 그린다(뒤에 깔려야 배경이다) ──────────
       if(bOk){
-        var bd='',bs=false;
-        for(var bi=0;bi<n;bi++){var bv=bgv[bi]; if(bv==null)continue;
-          bd+=(bs?'L':'M')+X(bi).toFixed(1)+' '+BY(bv).toFixed(1); bs=true;}
-        if(bd){
-          g+='<path d="'+bd+'" fill="none" stroke="var(--marg)" stroke-width="1.4" '+
-             'opacity=".22" stroke-linejoin="round"/>';
-          // 오른쪽 축 눈금 셋 — 위·가운데·아래. 배경선이 어느 높이인지 못 읽으면
-          //   «움직임 참고» 도 못 한다(선만 있고 눈금이 없으면 진폭을 못 잰다).
-          [bHi-(bHi-bLo)*0.12, (bHi+bLo)/2, bLo+(bHi-bLo)*0.12].forEach(function(t2){
-            g+='<text x="'+(RX+5)+'" y="'+(BY(t2)+3.2).toFixed(1)+'" font-size="9" '+
-               'font-family="var(--mono)" fill="var(--marg)" opacity=".55">'+t2.toFixed(2)+'</text>';
-          });
-          g+='<text x="'+(RX+5)+'" y="'+(TOP-5)+'" font-size="9" font-family="var(--mono)" '+
-             'fill="var(--marg)" opacity=".65">'+esc(bg.nm||'10년 금리')+'</text>';
-        }
+        // 셋 다 같은 색(--marg)으로 두고 **점선 모양**으로 가른다. 색을 셋으로 나누면
+        //   배경이 아니라 또 하나의 주인공이 된다 — 사용자 표현대로 «움직임 정도만 참고».
+        var BD={'2년':'2 3','10년':'','30년':'6 3'};
+        bgs.forEach(function(q){
+          var bd='',st2=false,lastI=-1,lastV=null;
+          for(var bi=0;bi<n;bi++){var bv=q.v[bi]; if(bv==null)continue;
+            bd+=(st2?'L':'M')+X(bi).toFixed(1)+' '+BY(bv).toFixed(1); st2=true; lastI=bi; lastV=bv;}
+          if(!bd)return;
+          var da=BD[q.nm]||'';
+          g+='<path d="'+bd+'" fill="none" stroke="var(--marg)" stroke-width="1.3" '+
+             'opacity=".24" stroke-linejoin="round"'+(da?' stroke-dasharray="'+da+'"':'')+'/>';
+          // 선 끝에 만기 이름 — 셋이 겹쳐 있으면 어느 선이 어느 만기인지 알 수 없다.
+          if(lastV!=null)
+            g+='<text x="'+(RX+4)+'" y="'+(BY(lastV)+3.2).toFixed(1)+'" font-size="8.5" '+
+               'font-family="var(--mono)" fill="var(--marg)" opacity=".7">'+esc(q.nm)+'</text>';
+        });
+        // 오른쪽 축 눈금 — 위·아래 둘만. 셋을 적으면 만기 이름표와 겹친다.
+        [bHi-(bHi-bLo)*0.06, bLo+(bHi-bLo)*0.06].forEach(function(t2){
+          g+='<text x="'+(RX+4)+'" y="'+(BY(t2)+3.2).toFixed(1)+'" font-size="9" '+
+             'font-family="var(--mono)" fill="var(--marg)" opacity=".45">'+t2.toFixed(2)+'</text>';
+        });
+        g+='<text x="'+(RX+4)+'" y="'+(TOP-5)+'" font-size="9" font-family="var(--mono)" '+
+           'fill="var(--marg)" opacity=".65">국채금리(우)</text>';
       }
       // ── x 눈금 — 월이 바뀌는 날 중 고르게 넷 ─────────────────────────────
       // 1일 칸은 x 가 날짜가 아니라 **시각**(09:30…)이다. 월로 묶으면 90개가 다 눈금이 된다.
@@ -2784,8 +2795,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   ⚠ 판 이름에서 'ETF'·'21개' 를 뺐다 — 개수는 제목 옆 회색으로 따로 붙는다.
       '<div class="scgrid">'+
         // 금리 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 금리로 덮인다.
-        chart(blk.dates, ixs, '지수', CIX, null,
-              (blk.rt&&blk.rt.length===blk.dates.length)?{v:blk.rt, nm:'10년 금리(우)'}:null)+
+        // 금리 배경선은 **지수 판에만** 준다 — 섹터·스타일·산업까지 깔면 화면이 금리로 덮인다.
+        //   blk.rt 는 {만기: [값…]} 이다(2026-08-23 부터 2·10·30년 셋).
+        chart(blk.dates, ixs, '지수', CIX, null, (function(){
+          var R=blk.rt; if(!R)return null;
+          var out=[];
+          ['2년','10년','30년'].forEach(function(k){
+            if(R[k]&&R[k].length===blk.dates.length)out.push({nm:k, v:R[k]});
+          });
+          return out.length?{s:out}:null;
+        })())+
         (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
