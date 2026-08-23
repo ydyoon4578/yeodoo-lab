@@ -259,8 +259,16 @@ def main():
                         "기존 이력의 연속성을 지키기 위해서다 — 보는 쪽이 (이름, 금융) 짝으로 "
                         "묶으면 해상도는 같다. 🚨 금융 축은 NFCI·하이일드 z·VIX 로 매달 이미 "
                         "재고 있던 값인데 라벨에만 안 들어가 있었다(새 자료가 아니다). "
-                        "⚠ 통계는 완화/긴장 둘로만 접는다 — 네 단계로 나누면 STRESSED 가 한 "
-                        "자릿수로 떨어진다. ⚠ 표본 8개월 미만인 칸은 아예 싣지 않는다. "
+                        "🚨 달마다 두 값을 싣는다. fin 은 **절대** 기준(EASY/NEUTRAL/ELEVATED/"
+                        "STRESSED)이고 화면의 «오늘 금융여건» 이 이것이다. finr 은 **표본 안 "
+                        "상대 순위**(세 지표의 백분위 평균 상위 1/3 = 긴장)이고 조건부 통계가 "
+                        "이것을 쓴다. 왜 둘인가 — 절대 기준으로 212개월을 갈랐더니 EASY 가 "
+                        "186개월(88%%)이라 Goldilocks·Recovery·Overheating 이 한 칸도 안 "
+                        "갈렸다. 그 문턱은 «오늘이 위기인가» 를 묻는 눈금이라 조건부 통계에는 "
+                        "너무 굵다. ⚠ 상대 순위는 표본 전체를 봐야 나오므로 **그 달에 실시간으로 "
+                        "알 수 있었던 값이 아니다** — 국면 라벨이 개정 시계열로 사후에 매겨지는 "
+                        "것과 같은 한계이고, 매매 신호가 아니다. "
+                        "⚠ 표본 8개월 미만인 칸은 아예 싣지 않는다. "
                         "⚠ 금융 축에는 최소지속 필터를 안 걸었다. 금융여건은 실제로 한 달 만에 "
                         "조였다 풀리는 값이라 그 필터가 사건을 지운다(2020-03 같은 달).")}
     json.dump(out, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
@@ -333,13 +341,50 @@ def fin_label(fs, nfci):
              ("EASY" if (nfci or 0) < -0.2 else "NEUTRAL")))
 
 
-# 조건부 통계에서 칸을 둘로만 가른다 — 네 단계로 나누면 STRESSED 가 한 자릿수로 떨어진다.
-# ⚠ 화면은 네 단계를 그대로 보여 준다. 여기서 둘로 접는 것은 **통계용** 이다.
+# 조건부 통계에서 칸을 둘로만 가른다.
+# 🚨 2026-08-23 1차 시도가 **실패했다** — 위 절대 문턱(NFCI>0 · HY z>0.75 · VIX>25)으로
+#   212개월을 갈랐더니 EASY 186 · NEUTRAL 14 · ELEVATED 12 · STRESSED 0 이었다.
+#   즉 «긴장» 12개월이 전부 Recession 에 몰려, Goldilocks·Recovery·Overheating 은
+#   **한 칸도 안 갈렸다.** 해상도를 얻으려던 변경이 아무것도 안 한 것이다.
+#   원인은 분명하다: 이 문턱들은 «위기인가» 를 묻는 절대 기준이고, 2009~2026 은 대부분
+#   그 기준에서 완화였다. 절대 기준은 라벨(오늘이 위기인가)에는 맞지만 **조건부 통계**
+#   (이 국면 안에서 상대적으로 조였을 때 어땠나)에는 눈금이 너무 굵다.
+# → 통계용으로는 **표본 안 상대 순위**를 쓴다. 세 지표를 각각 표본 내 백분위로 바꿔
+#   평균한 스트레스 점수이고, 상위 1/3 을 «긴장» 으로 본다.
+#   ⚠ 이것은 **사후 서술 통계**다. 표본 전체를 봐야 백분위가 나오므로 그 달에 실시간으로
+#     알 수 있었던 값이 아니다 — 이 페이지가 국면 라벨에 대해 이미 적어 둔 한계와 같다
+#     (라벨도 개정된 시계열로 사후에 매긴다). 매매 신호가 아니다.
+#   ⚠ 화면의 «금융여건» 네 단계(fin)는 그대로 둔다. 그건 오늘을 절대 기준으로 말하는
+#     값이라 뜻이 다르다 — 두 수를 같은 이름으로 부르지 않는다(fin vs fin_rel).
 FIN_TIGHT = ("ELEVATED", "STRESSED")
+FIN_REL_CUT = 2.0 / 3.0        # 상위 1/3 을 긴장으로 본다
 
 
 def fin2(f):
+    """절대 기준 접기 — 화면 문장용."""
     return "긴장" if f in FIN_TIGHT else "완화"
+
+
+def pctile_map(vals):
+    """{키: 값} → {키: 표본 내 백분위(0~1)}. 값이 없는 키는 빠진다."""
+    ks = [k for k, v in vals.items() if v is not None]
+    if len(ks) < 12:
+        return {}
+    order = sorted(ks, key=lambda k: vals[k])
+    n = len(order)
+    return {k: (i + 0.5) / n for i, k in enumerate(order)}
+
+
+def fin_rel(nfci_m, hyz_m, vix_m):
+    """세 지표의 표본 내 백분위 평균 → {달: 상대 스트레스(0~1)}. 재료가 하나도 없으면 빈 dict."""
+    ps = [pctile_map(x) for x in (nfci_m, hyz_m, vix_m)]
+    ps = [x for x in ps if x]
+    if not ps:
+        return {}
+    keys = set(ps[0])
+    for x in ps[1:]:
+        keys &= set(x)
+    return {k: sum(x[k] for x in ps) / len(ps) for k in keys}
 
 
 def classify_month(g, i, fin):
@@ -347,6 +392,12 @@ def classify_month(g, i, fin):
          ("SLOWING","LOW"):"SoftLanding",("SLOWING","MODERATE"):"LateCycle",("SLOWING","HIGH"):"Stagflation",
          ("CONTRACTION","LOW"):"Recession",("CONTRACTION","MODERATE"):"Recession",("CONTRACTION","HIGH"):"Stagflation"}
     return M[(g,i)]
+
+
+def _c_(vals):
+    """작은 도우미 — 로그에 분포를 적기 위한 것."""
+    import collections as _cl
+    return dict(_cl.Counter(vals))
 
 
 def build_history(S, cpi_yoy, asof=None):
@@ -364,6 +415,7 @@ def build_history(S, cpi_yoy, asof=None):
     #   ⚠ 살아 있는 계산과 같은 함수(fin_score·fin_label)를 쓴다. 재료도 같다.
     hyz_s = zscore(S["BAMLH0A0HYM2"], 756)
     labels, fins = {}, {}
+    raw_nf, raw_hz, raw_vx = {}, {}, {}
     for d in idx:
         nfp, cf, sh, du, cp = asof(nfp3,d), asof(S["CFNAIMA3"],d), asof(S["SAHMREALTIME"],d), asof(dU,d), asof(cpi_yoy,d)
         gs = 0
@@ -375,7 +427,14 @@ def build_history(S, cpi_yoy, asof=None):
         inf = "HIGH" if (cp or 0)>=4 else ("MODERATE" if (cp or 0)>=2.5 else "LOW")
         _nf, _hz, _vx = asof(S["NFCI"],d), asof(hyz_s,d), asof(S["VIXCLS"],d)
         fins[d] = fin_label(fin_score(_nf, _hz, _vx), _nf)
+        raw_nf[d], raw_hz[d], raw_vx[d] = _nf, _hz, _vx
         labels[d] = classify_month(g, inf, fins[d])
+    # 상대 스트레스 — 절대 문턱이 이 표본에서 거의 안 걸려서 따로 둔다(FIN_REL_CUT 주석).
+    rel = fin_rel(raw_nf, raw_hz, raw_vx)
+    fin_r = {d: ("긴장" if rel.get(d, 0.0) >= FIN_REL_CUT else "완화") for d in idx}
+    _nt = sum(1 for d in idx if fin_r[d] == "긴장")
+    print("  [금융여건] 절대 %s · 상대(상위1/3) 긴장 %d개월 / %d"
+          % (dict(_c_(fins.values())), _nt, len(idx)))
     raw = [labels[d] for d in idx]
     cen, n_ch = censor_runs(raw)
     # 필터본을 정본으로 쓴다 — 리본·조건부 성과·사이클 차트가 전부 이걸 읽는다.
@@ -385,9 +444,9 @@ def build_history(S, cpi_yoy, asof=None):
     # ⚠ 금융 축은 **최소지속 필터를 안 건다.** 그 필터는 «국면 이름이 한 달만 떴다 사라지는
     #   것» 을 막으려는 것이고, 금융여건은 실제로 한 달 만에 조였다 풀리는 값이다. 여기에
     #   같은 필터를 걸면 2020-03 같은 달이 지워진다 — 그건 잡음이 아니라 사건이다.
-    hist = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d]}
+    hist = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d], "finr": fin_r[d]}
             for d, r2 in zip(idx, cen)]
-    hist_raw = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d]}
+    hist_raw = [{"dt": d.date().isoformat(), "r": r2, "fin": fins[d], "finr": fin_r[d]}
                 for d, r2 in zip(idx, raw)]
     if hist:
         hist[-1]["prov"] = True     # 마지막 달은 지속 여부를 모른다 — 잠정
@@ -411,7 +470,8 @@ def build_history(S, cpi_yoy, asof=None):
         #   같은 무게로 읽힌다(이 저장소의 국면 통계가 이미 그 함정을 겪었다).
         #   ⚠ 문턱을 8개월로 둔다. 종전 3개월은 «한 달 수익이 칸을 지배» 하는 크기다.
         FIN_MIN = 8
-        fin_s = pd.Series({d: fin2(f) for d, f in fins.items()})
+        # ⚠ 조건부 통계는 **상대** 축을 쓴다(절대 축은 이 표본에서 88%가 EASY 라 안 갈린다).
+        fin_s = pd.Series(fin_r)
         perf["macro_fin"] = {}
         for grp, tks in GROUPS.items():
             for a in tks:
