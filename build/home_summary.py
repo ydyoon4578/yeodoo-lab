@@ -199,6 +199,7 @@ def _industry(stocks, dates, root):
                   "manual_grp": _man,
                   "dual": sorted(_dual_t), "dual_mc": round(_dual_mc) or 0}
     PX = _load_px([s["t"] for v in bysec.values() for s in v], dates, root)
+    _fpe12_build(PX, root)
     # 🚨 2026-08-11 — 섹터 줄은 **섹터 ETF 그 자체**를 쓴다(사용자 결정). 종전에는 유니버스
     #   종목의 동일가중이었고, 그래서 같은 화면이 한 섹터에 두 숫자를 말했다(이 표는 동일가중,
     #   시장 보드는 ETF). 어느 쪽이 맞다기보다 **한 화면에 한 정의**여야 한다.
@@ -471,8 +472,13 @@ def _industry(stocks, dates, root):
             #   비트: 1=SPX · 2=NDX · 3=둘 다. 실측 2026-08-10 — 416 / 15 / 87.
             _ix = set((mem.get(label) or {}).get("idx") or [])
             _ixb = (1 if "SPX" in _ix else 0) + (2 if "NDX" in _ix else 0)
+            # 12개월 선행 PER(2026-08-23 사용자 요청 «종목별 12mf per 도 나오면 좋겠어»).
+            # ⚠ 섹터 줄의 같은 열과 **같은 수에서** 나온다 — 섹터 값은 이 종목값들의
+            #   시총가중 조화평균이다(_fpe). 두 벌로 계산하면 «합이 안 맞는» 열이 된다.
+            _fp = (_FPE12[0] or {}).get(label)
             return {"nm": label, "sn": sub, "st": 1, "sec": sec, "n": 1, "mc": mc,
                     **({"px": round(float(_last), 2)} if _last else {}),
+                    **({"fpe": _fp} if _fp is not None else {}),
                     **({"ix": _ixb} if _ixb else {}),
                     # 🚨 2026-08-10 — 1자리에서 2자리로. 화면은 이 값을 **2자리로 그리는데**
                     #   (toFixed(2)) 1자리로 저장하고 있었다. 그래서 종목 줄의 둘째 자리는
@@ -609,6 +615,46 @@ def _guard_fresh(PX, dates):
         "   → 그 뒤 python build/home_summary.py 다시" % (line, n, FRESH_MAX * 100))
 
 
+# ── 12개월 선행 PER — **한 벌만 만든다** ──────────────────────────────────────
+# 🚨 이 열은 두 곳에 나온다(섹터·ETF 줄 · 종목 줄). 두 곳이 각자 계산하면 언젠가 갈린다 —
+#   이 저장소가 되풀이 밟은 사고다. 그래서 종목별 PER 을 여기서 한 번 만들고, 섹터 값은
+#   그것을 **시총가중 조화평균**으로 접는다(_fpe). 화면은 읽기만 한다.
+# ⚠ EPS 는 data/estimates.json 의 fe12 다 — FY0·FY1 컨센서스를 회계연도 잔여기간으로
+#   가중한 12개월 선행치다(build/refresh_estimates.blend12). 야후 forwardPE 를 쓰지
+#   않는 이유가 그 함수 머리말에 있다(회사마다 12~24개월로 시점이 다르다).
+# ⚠ 주가는 **이 표가 그리는 바로 그 값**(배당조정 계열의 마지막 값)이다. 다른 데서 원주가를
+#   가져오면 같은 줄의 두 숫자가 서로 다른 것을 가리킨다 — 주가 열이 이미 같은 규약이다.
+_FPE12 = [None]
+
+
+def _fpe12_build(PX, root):
+    """{티커: 12개월 선행 PER}. 못 만들면 빈 지도 — 화면은 그 칸을 '·' 로 둔다."""
+    out = {}
+    try:
+        e = json.load(io.open(os.path.join(root, "data", "estimates.json"), encoding="utf-8"))
+        rows = e.get("rows") or {}
+    except Exception as _x:
+        print("  ⚠ 12mf PER 생략(estimates.json %s)" % str(_x)[:50])
+        _FPE12[0] = {}
+        return {}
+    n_neg = n_no = 0
+    for t, r in rows.items():
+        f = r.get("fe12")
+        a = PX.get(t)
+        px = a[-1] if (a and a[-1]) else None
+        if f is None or px is None:
+            n_no += 1
+            continue
+        if f <= 0:
+            # 적자 예상 — PER 이 음수가 되면 '가장 싼 종목'으로 둔갑한다. 값을 안 낸다.
+            n_neg += 1
+            continue
+        out[t] = round(px / f, 1)
+    print("  12mf PER %d종 (적자예상 제외 %d · 자료없음 %d)" % (len(out), n_neg, n_no))
+    _FPE12[0] = out
+    return out
+
+
 def _fpe(stocks):
     """ETF 행에 붙일 **12개월 선행 PER** — 홈 '기간별 수익률' 표의 마지막 열(2026-08-12 요청).
 
@@ -624,11 +670,16 @@ def _fpe(stocks):
     ⚠ fpe 가 음수·0 인 종목은 뺀다. 적자 예상 기업의 PER 은 뜻이 없다(수를 뒤집으면 오히려
       바스켓 PER 을 낮춰 싸 보이게 만든다). 몇 종을 뺐는지 n/of 로 같이 싣는다.
     """
+    _M = _FPE12[0] or {}
     def agg(sel, cap_weight=True):
         num = den = 0.0; n = 0
         for s in sel:
             f = s.get("fund") or {}
-            v, mc = f.get("fpe"), f.get("mc")
+            # 🚨 2026-08-23 — 종전에는 f["fpe"](야후 forwardPE)를 썼다. 그건 **다음 회계연도**
+            #   PER 이라 회사가 회계연도 어디쯤에 있느냐에 따라 12~24개월 앞을 제각각 본다
+            #   (실측: MSFT 20.5 → 23.8 +16% · AAPL 32.4 → 32.7 +1%). 서로 다른 시점을 한
+            #   바스켓으로 평균하던 셈이다. 이제 12개월 선행(blend12)으로 통일한다.
+            v, mc = _M.get(s.get("t")), f.get("mc")
             if not (isinstance(v, (int, float)) and v > 0):
                 continue
             w = float(mc) if (cap_weight and isinstance(mc, (int, float)) and mc > 0) else (
@@ -847,11 +898,17 @@ def build(stocks, dates, as_of, root):
         "industry": _segments(stocks, dates, root),
         # 홈 '기간별 수익률' 표의 12개월 선행 PER 열. 후보가 있는 행만 담긴다(_fpe 머리말 참조).
         "fpe": _fpe(stocks),
-        "fpe_note": "12개월 선행 PER — 이 랩 518종 중 그 바스켓에 해당하는 종목의 "
-                    "**시총가중 조화평균**(Σ시총 ÷ Σ이익)이다. ⚠ 이 랩이 계산한 값이지 그 "
-                    "ETF 가 발표한 값이 아니다. 적자 예상(PER ≤ 0) 종목은 뺐다 — 몇 종을 "
-                    "썼는지 각 행에 n/of 로 적는다. 편입 명단이 없는 행(DIA·러셀2000·스타일 "
-                    "ETF)은 칸을 비운다.",
+        "fpe_note": "12개월 선행 PER = 주가 ÷ 12개월 선행 EPS. EPS 는 진행 중인 회계연도"
+                    "(FY0)와 다음 회계연도(FY1)의 컨센서스를 FY0 잔여기간으로 가중한 값이다"
+                    "(build/refresh_estimates.blend12). 🚨 야후 forwardPE 를 쓰지 않는다 — 그건 "
+                    "FY+1 PER 이라 회사가 회계연도 어디쯤에 있느냐에 따라 12~24개월 앞을 제각각 "
+                    "보고, 그 값들을 한 바스켓으로 평균하면 서로 다른 시점을 섞게 된다"
+                    "(실측 2026-08-23: MSFT 20.5→23.8 +16% · AAPL 32.4→32.7 +1%). "
+                    "⚠ 종목 줄은 그 종목의 값이고(data/home_stocks.json 의 fpe), 여기 담긴 "
+                    "섹터·지수 줄은 그 종목값들의 시총가중 조화평균(Σ시총 ÷ Σ이익)이다 — 두 단이 "
+                    "같은 수에서 나온다. ⚠ 이 랩이 계산한 값이지 그 ETF 가 발표한 값이 아니다. "
+                    "적자 예상(선행 EPS ≤ 0) 종목은 뺐다 — 몇 종을 썼는지 각 행에 n/of 로 적는다. "
+                    "편입 명단이 없는 행(DIA·러셀2000·스타일 ETF)은 칸을 비운다.",
     }
 
 

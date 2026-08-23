@@ -1684,8 +1684,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     // 🚨 이 표는 위쪽 ETF 줄과 **같은 <table>** 이다. 여기서 칸 수를 안 맞추면 12mf PER
     //   열이 통째로 한 칸씩 밀린다(머리글 12칸 · 이 줄 11칸으로 실제로 어긋나 있었다).
-    //   섹터 줄은 값이 있다(x.t 가 XLK 같은 ETF 티커다). 산업그룹·종목 줄은 '·' 로 둔다 —
-    //   전자는 바스켓 정의가 위 섹터와 겹쳐 두 번 말하게 되고, 후자는 그 값이 홈 자료에 없다.
+    //   섹터 줄은 값이 있다(x.t 가 XLK 같은 ETF 티커다).
+    //   ⚠ 2026-08-23 — **종목 줄도 값이 있다**(사용자 요청). 종전 주석은 «그 값이 홈 자료에
+    //     없다» 였는데, 그 뒤 home_stocks.json 이 줄마다 fpe 를 싣는다(build/home_summary).
+    //   산업그룹 줄만 '·' 로 남는다 — 바스켓 정의가 위 섹터와 겹쳐 같은 것을 두 번 말한다.
     function cells(x){return stShp(typeof x.sharpe==='number'?x.sharpe:null)+
       pxCell(x)+
       ST_HZ.map(function(z){return stCell((x.r||{})[z[0]]);}).join('')+
@@ -2386,6 +2388,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   (섹터 줄은 산업 트리에서 와서 t 가 없다 — 그래서 11줄이 통째로 비어 있었다).
     //   ⚠ x.sec 는 **lv 1(섹터) 줄에서만** 쓴다. 종목 줄에도 sec 가 붙어 있어서 그냥 받으면
     //     종목마다 제 섹터의 PER 이 찍혀 '이 종목의 PER'로 읽힌다.
+    // 종목 줄(2026-08-23 사용자 요청 «종목별 12mf per 도») — **제 값이 줄에 실려 온다**
+    //   (home_stocks.json 의 fpe). 섹터 값을 물려받지 않는다. 위 섹터·ETF 줄의 값은
+    //   바로 이 종목값들의 시총가중 조화평균이라, 두 단이 같은 수에서 나온다.
+    //   ⚠ 적자 예상(12개월 선행 EPS ≤ 0)이면 원천이 값을 안 싣는다 — '·' 로 남는다.
+    //     음수 PER 을 그리면 그 종목이 목록에서 '가장 싼 것'으로 둔갑한다.
+    if(x&&typeof x.fpe==='number')
+      return '<td class="tnum pxc" title="'+esc('12개월 선행 PER — 주가 ÷ 12개월 선행 EPS '+
+             '(FY0·FY1 컨센서스를 회계연도 잔여기간으로 가중). 애널리스트 추정이라 '+
+             '실현치가 아닙니다')+'">'+x.fpe.toFixed(1)+'</td>';
     var k=(x&&x.t)||(x&&x.lv===1?x.sec:null);
     var e=FPE&&k&&FPE[k];
     if(!e||typeof e.v!=='number')return '<td class="tnum pxc mut">·</td>';
@@ -2845,9 +2856,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           '">샤프<em>1년</em></th>'+
           '<th class="pxc" title="'+esc('그 줄이 ETF 인 행만 값이 있다 — 섹터·지수·스타일 ETF 의 최근 종가(배당조정). 산업그룹·랩 전략 행은 살 수 있는 한 종목이 아니라 비운다')+'">주가</th>'+
           ST_HZ.map(function(x){return '<th>'+esc(x[1])+'</th>';}).join('')+
-          '<th class="pxc" title="'+esc('12개월 선행 PER — 이 랩 518종 중 그 바스켓 종목의 '+
-              '시총가중 조화평균(Σ시총 ÷ Σ이익)입니다. 이 랩이 계산한 값이지 그 ETF 가 발표한 '+
-              '값이 아닙니다. 편입 명단이 없는 행(다우·러셀2000·스타일 ETF)은 비웁니다')+
+          '<th class="pxc" title="'+esc('12개월 선행 PER = 주가 ÷ 12개월 선행 EPS. '+
+              'EPS 는 진행 중인 회계연도(FY0)와 다음 회계연도(FY1)의 애널리스트 컨센서스를 '+
+              'FY0 잔여기간으로 가중한 값입니다 — 회사마다 회계연도가 달라도 같은 12개월을 '+
+              '보게 하려는 표준 방식입니다. 종목 줄은 그 종목의 값이고, 섹터·지수 줄은 '+
+              '그 종목값들의 시총가중 조화평균(Σ시총 ÷ Σ이익)입니다. 이 랩이 계산한 값이지 '+
+              '그 ETF 가 발표한 값이 아닙니다. 적자 예상 종목과 편입 명단이 없는 행'+
+              '(다우·러셀2000·스타일 ETF·산업그룹)은 비웁니다')+
           '">12mf PER</th>'+
           '</tr></thead><tbody>';
     // 🚨 2026-08-14 — 묶음 머리줄의 colspan 을 **손으로 세지 않는다.**
