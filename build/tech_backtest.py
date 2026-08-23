@@ -6130,8 +6130,37 @@ def current_holdings(strats):
     return out
 
 
+# 성과를 재는 마지막 위치(전월말) — run() 이 채우고 지표 자르기가 읽는다.
+# 🚨 2026-08-23 사용자 결정 — «전략별 성과도 매일매일 업데이트 되어야 하는데 7월말이
+#   끝이네». 종전에는 load() 가 격자를 전월말에서 **잘라 버려서** 곡선도 구간수익도
+#   거기서 멈췄다. 이제 격자는 오늘까지 그대로 쓰고, **지표만** 여기서 자른다.
+#   · 기간별 수익률(trails)·곡선·지금 보유 → 오늘까지 (매일 움직인다)
+#   · CAGR·샤프·MDD·t·전체구간 → 전월말에 고정 (한 달 동안 안 움직인다)
+#   왜 지표만 고정하나: 달 중간의 며칠은 신호가 아니라 잡음인데, 그것이 장기 통계를
+#   매일 흔들면 어제 본 샤프와 오늘 샤프가 달라진다(2026-08-14 사용자 지시의 취지).
+# 🚨 **측정 창의 시작점도 절단점에 건다.** MIN_HIST 는 «격자 끝에서 10년» 인데, 격자가
+#   길어지면 시작일이 같이 밀려 지표가 통째로 바뀐다. 절단점 기준으로 잡아야 이 변경이
+#   지표를 **한 자리도 안 건드린다** — 그것이 이 설계가 성립하는 조건이고, 실측으로
+#   확인했다(아래 커밋 메시지 참조).
+ASOF_N = [None]
+
+
+def mcut(d2):
+    """지표용 길이 — d2(성과 격자) 중 전월말 이하인 칸 수. 절단이 없으면 전체 길이."""
+    if not d2:
+        return 0
+    lim = asof_month()
+    k = 0
+    for d in d2:
+        if str(d)[:7] > lim:
+            break
+        k += 1
+    return k or len(d2)
+
+
 def run():
-    dates, px, vlm, hid, lod, meta, rf = load()
+    # full=True — 격자를 안 자른다(위 ASOF_N 머리말). 지표는 mcut 으로 자른다.
+    dates, px, vlm, hid, lod, meta, rf = load(full=True)
     FU = load_fund()          # 티커 → eq·sh·fcf 분기 시계열(시점 정합은 asof_fund가 맡는다)
     global _RAT
     _RAT = load_ratings()     # 티커 → 투자의견 이력. 없으면 빈 dict 이고 revdrift 3종만 후보 0
@@ -6143,9 +6172,13 @@ def run():
     #   ⚠ 신호 쪽은 안 건드린다. xsec_score_at 등은 인덱스 i 에서 전체 배열을 되돌아보므로
     #     창 앞의 가격을 그대로 쓴다. 룩백 하한이 필요한 자리는 WARM0 를 쓴다.
     global MIN_HIST
-    MIN_HIST = max(WARM0, n - int(MAX_YEARS * 252))
-    print("  측정 구간 상한 %d년 — %s 부터 %d거래일 (격자는 %s 부터 그대로 쓴다)"
-          % (MAX_YEARS, dates[MIN_HIST], n - MIN_HIST, dates[0]))
+    # ⚠ n(오늘까지)이 아니라 **절단점(전월말)** 에서 10년을 센다 — 그래야 격자를 늘려도
+    #   측정 창이 안 밀린다. 이걸 n 으로 두면 매일 시작일이 하루씩 밀려 지표가 매일 바뀐다.
+    ASOF_N[0] = _cn = asof_cut(dates)
+    MIN_HIST = max(WARM0, _cn - int(MAX_YEARS * 252))
+    print("  측정 구간 상한 %d년 — %s ~ %s (%d거래일) · 격자는 %s ~ %s (%d일 · 곡선은 여기까지)"
+          % (MAX_YEARS, dates[MIN_HIST], dates[_cn - 1], _cn - MIN_HIST,
+             dates[0], dates[-1], n - MIN_HIST))
     tickers = sorted(px)
     R = daily_rets(px)
     # 거시 요인 일간 변화 — 전 종목이 공유하는 계열이라 한 번만 만든다(6차 배치).
@@ -6410,8 +6443,12 @@ def run():
                 # 매매한다. 첫날은 무에서 e 만큼 사는 것이므로 e 그대로다.
                 traded.append(abs(e - w[i - 2]) if i - 2 >= MIN_HIST else abs(e))
                 nav.append(nav[-1] * (1 + r))
-            turn = sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, n)) / max(1, (n - MIN_HIST) / 252)
-            expo = sum(w[MIN_HIST:]) / max(1, n - MIN_HIST)
+            # ⚠ 회전율·노출도 **전월말까지**로 센다(ASOF_N). n(오늘)으로 세면 이 두 수가
+            #   매일 조금씩 움직여, 같은 카드 안에서 샤프는 고정인데 회전율만 흔들린다.
+            _cn = ASOF_N[0] or n
+            turn = (sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, _cn))
+                    / max(1, (_cn - MIN_HIST) / 252))
+            expo = sum(w[MIN_HIST:_cn]) / max(1, _cn - MIN_HIST)
             # 지금 이 규칙이 어떤 상태인지 — 타이밍은 '얼마나 들고 있나'가 곧 구성이다
             start_i = MIN_HIST + 1
             hold_now = {"kind": "timing", "as_of": dates[-1],
@@ -6445,7 +6482,14 @@ def run():
             # ⚠ `.get(..., "me")` 로 조용히 떨어지지 않게 REB_SET 에서 KeyError 를 내게 둔다 —
             #   등록에 없는 주기 이름이 들어오면 그 자리에서 죽는 편이 낫다.
             _rebset = REB_SET[S.get("reb") or REB_DEFAULT]
+            # 회전율은 전월말까지만 센다 — 절단점을 지나는 순간의 turns 를 찍어 둔다.
+            #   ⚠ 분모(_cn − MIN_HIST)만 고정하고 분자를 안 멈추면, 절단 뒤 리밸이 한 번
+            #     더 있을 때 회전율이 튄다.
+            _cn_t = ASOF_N[0] or n
+            turns_cut = None
             for i in range(MIN_HIST + 1, n):
+                if turns_cut is None and i >= _cn_t:
+                    turns_cut = turns
                 # `or not hold` 를 붙여 두었었다. 후보가 비면 다음 리밸까지 기다리지 않고
                 # 매일 전 종목을 다시 채점한다 — 규칙이 스스로 내건 리밸 주기를 어기는
                 # 데다, 펀더멘털이 늦게 채워지는 전략(x-roe 등)은 초기 수년간 매일 재채점해
@@ -6509,7 +6553,11 @@ def run():
                 traded.append(_tr)
                 _tr = 0.0
                 nav.append(nav[-1] * (1 + r))
-            turn = turns / max(1, (n - MIN_HIST) / 252)
+            # ⚠ 위와 같은 사유로 전월말 기준(ASOF_N). turns 는 리밸 때만 쌓이는데, 절단
+            #   뒤에 리밸이 한 번 더 있으면 분자만 늘어 회전율이 튄다.
+            _cn = ASOF_N[0] or n
+            turn = ((turns if turns_cut is None else turns_cut)
+                    / max(1, (_cn - MIN_HIST) / 252))
             expo = 1.0
             start_i = first_i
             hold_now = {"kind": "xsec", "as_of": dates[-1], "n": len(hold),
@@ -6536,22 +6584,34 @@ def run():
             srets = srets[_k:]
             traded = traded[_k:]
             d2 = d2[_k:]
-        st = ann_stats(nav, d2, rf)
-        bs = ann_stats(bnav, d2, rf)
+        # ── 지표는 여기서 자른다(전월말) ───────────────────────────────────
+        # 🚨 곡선·구간수익은 오늘까지 가고 **지표만** 전월말이다(ASOF_N 머리말 참조).
+        #   나눠 두지 않으면 둘 중 하나를 포기해야 한다 — 사용자는 둘 다 원했고,
+        #   둘은 서로 다른 것을 묻는 수라 같은 기준일을 쓸 이유가 없다.
+        # ⚠ 길이 규약: d2[i] ↔ nav[i] 이고 srets 는 하루 짧다(nav 는 100 에서 시작).
+        #   그래서 수익률 계열은 _mc-1 로 자른다. 여기를 헷갈리면 마지막 하루가 빠지거나
+        #   하루가 더 들어가는데, 둘 다 조용히 틀린다.
+        _mc = mcut(d2)
+        _navM, _bnavM, _d2M = nav[:_mc], bnav[:_mc], d2[:_mc]
+        _sretsM, _tradedM = srets[:max(0, _mc - 1)], traded[:max(0, _mc - 1)]
+        st = ann_stats(_navM, _d2M, rf)
+        bs = ann_stats(_bnavM, _d2M, rf)
 
         # ── 비용을 태운다 ──────────────────────────────────────────────────
         # 회전율을 싣기만 하고 한 번도 안 태우던 것을 여기서 태운다(COST_BPS 주석 참조).
         # 대조군은 매수후보유라 비용이 사실상 없다 — 그래서 비용은 전략에만 붙는다.
-        _bx = bxr[(start_i or (MIN_HIST + 1)):]
-        _yrs = max(1e-9, len(srets) / 252.0)
+        # ⚠ 비용 후 지표도 같은 창에서 잰다 — 여기만 전 격자로 두면 같은 카드 안에서
+        #   «비용 전 샤프» 와 «비용 후 샤프» 의 기준일이 갈린다.
+        _bx = bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]
+        _yrs = max(1e-9, len(_sretsM) / 252.0)
         net_sens, _mstats = {}, None
         for _bps in COST_BPS:
             _c = _bps / 10000.0
-            _sn = [srets[i] - _c * traded[i] for i in range(len(srets))]
+            _sn = [_sretsM[i] - _c * _tradedM[i] for i in range(len(_sretsM))]
             _nv = [100.0]
             for _r in _sn:
                 _nv.append(_nv[-1] * (1 + _r))
-            _ns = ann_stats(_nv, d2[:len(_nv)], rf)
+            _ns = ann_stats(_nv, _d2M[:len(_nv)], rf)
             net_sens[str(_bps)] = {
                 "cagr": _ns.get("cagr"), "sharpe": _ns.get("sharpe"),
                 "excess_cagr": round((_ns.get("cagr", 0) - bs.get("cagr", 0)), 2),
@@ -6565,7 +6625,7 @@ def run():
                    # 연 매매대금(NAV 배). turnover 와 달리 **두 족이 같은 눈금**이다 —
                    # 종목선택의 turnover 는 '바스켓 교체 횟수'(대칭차÷2·TOPN)이고
                    # 타이밍의 turnover 는 Σ|Δw| 라 같은 매매량이 2배 다르게 찍혀 있었다.
-                   traded=round(sum(traded) / _yrs, 2),
+                   traded=round(sum(_tradedM) / _yrs, 2),
                    drag=round((st.get("cagr", 0) - (_main.get("cagr") or 0)), 2),
                    sens=net_sens)
         # 자산 랩·ML 랩과 **같은 필드 이름**으로도 낸다. 셋이 같은 표(strategy_index)로 들어가는데
@@ -6614,19 +6674,21 @@ def run():
         # 것 대비** 값을 나란히 싣는다 — 이 열에서 0 근처면 그 규칙은 아무 일도 안 한 것이다.
         # ⚠ 종목선택 규칙에도 같이 싣는다. 이쪽에서는 이것이 **예전 대조군**(같은 유니버스
         #   동일가중)이라, 문턱이 내려가기 전의 잣대로 다시 읽는 열이 된다.
-        _ewx = ixr[(start_i or (MIN_HIST + 1)):]
+        # ⚠ 이 대조군도 **같은 창**에서 잰다(_mc). 대조군만 오늘까지 가면 초과수익이
+        #   «다른 기간 둘의 차» 가 된다 — 짧은 구간일수록 그것만 재게 된다.
+        _ewx = ixr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]
         _ewnav = [100.0]
         for _r in _ewx:
             _ewnav.append(_ewnav[-1] * (1 + (_r or 0.0)))
-        _ews = ann_stats(_ewnav, d2[:len(_ewnav)], rf)
+        _ews = ann_stats(_ewnav, _d2M[:len(_ewnav)], rf)
         vs_traded = {
             "label": "랩 동일가중 유니버스 매수후보유",
             "cagr": _ews.get("cagr"), "sharpe": _ews.get("sharpe"),
             "excess_cagr": round((st.get("cagr", 0) - _ews.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (_ews.get("sharpe") or 0), 3),
-            "t": tstat(srets, [(x or 0.0) for x in _ewx]),
-            "t_net": tstat([srets[i] - (COST_BPS_MAIN / 10000.0) * traded[i]
-                            for i in range(len(srets))], [(x or 0.0) for x in _ewx]),
+            "t": tstat(_sretsM, [(x or 0.0) for x in _ewx]),
+            "t_net": tstat([_sretsM[i] - (COST_BPS_MAIN / 10000.0) * _tradedM[i]
+                            for i in range(len(_sretsM))], [(x or 0.0) for x in _ewx]),
             "note": ("타이밍 규칙이 실제로 매매하는 대상이다. 판정 대조군(S&P 500 PR)과 다른 자산이라, "
                      "여기 t 가 0 근처면 그 규칙은 대조군 격차를 재고 있었던 것이다."
                      if S["kind"] == "timing" else
@@ -6642,7 +6704,7 @@ def run():
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
             "d_sharpe": round((st.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": tstat(srets, bxr[(start_i or (MIN_HIST + 1)):]),
+            "t": tstat(_sretsM, bxr[(start_i or (MIN_HIST + 1)):][:max(0, _mc - 1)]),
             # 🚨 비용 뒤 성적. 위 t·excess_cagr 는 전부 **무비용(gross)** 이다 —
             #   이 랩이 회전율을 싣기만 하고 안 태우던 것을 2026-08-04 에 태우기 시작했다.
             #   net.t 는 편도 10bp 기준이고, net.sens 에 5·10·20bp 를 전부 싣는다.
@@ -6653,7 +6715,13 @@ def run():
             #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).
             "reb": (S.get("reb") or REB_DEFAULT) if S["kind"] == "xsec" else None,
             "reb_label": (REB_KINDS[S.get("reb") or REB_DEFAULT] if S["kind"] == "xsec" else None),
-            "start": d2[0], "n_days": len(d2),
+            "start": d2[0], "n_days": len(_d2M),
+            # 🚨 기준일이 **둘**이다(2026-08-23 사용자 결정). 화면이 둘을 각각 적어야 한다 —
+            #   한 날짜만 적으면 어느 쪽 얘긴지 알 수 없다.
+            #     perf_end  지표(CAGR·샤프·MDD·t·회전율)를 잰 마지막 날 = 전월말. 한 달 고정.
+            #     px_end    곡선·구간수익이 닿는 마지막 날 = 오늘. 매일 움직인다.
+            "perf_end": (_d2M[-1] if _d2M else None),
+            "px_end": (d2[-1] if d2 else None),
             # 커버리지 게이트가 무보유로 둔 월말 수. 0 이 아니면 그 규칙의 표본은 화면에 적힌
             # 기간보다 짧다 — 시작일(start)이 이미 재기준돼 있으므로 여기서는 사유만 남긴다.
             "n_thin": (thin if S["kind"] == "xsec" else 0),
@@ -7451,7 +7519,14 @@ def run():
     doc = {
         "note": "테크니컬 규칙을 실제로 돌린 결과. 좋은 것만 고르지 않고 돌린 규칙을 전부 싣는다.",
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "as_of": dates[-1], "start": dates[MIN_HIST], "n_days": n - MIN_HIST,
+        # 🚨 기준일이 둘이다(2026-08-23 · 위 ASOF_N 머리말).
+        #   as_of      곡선·구간수익이 닿는 마지막 날(오늘). 매일 움직인다.
+        #   perf_as_of 지표를 잰 마지막 날(전월말). 한 달 동안 고정이다.
+        #   ⚠ 화면·후속 빌더는 «성과 기간» 을 말할 때 반드시 perf_as_of 를 써야 한다.
+        #     as_of 를 쓰면 «10년 성과» 라 적고 실제로는 안 잰 3주를 포함해 말하게 된다.
+        "as_of": dates[-1], "perf_as_of": dates[(ASOF_N[0] or n) - 1],
+        "start": dates[MIN_HIST], "n_days": (ASOF_N[0] or n) - MIN_HIST,
+        "n_days_px": n - MIN_HIST,
         # 🚨 2026-08-13 — **무위험을 어디부터 평균 냈는지**를 싣는다. load() 가 rf 를
         #   `dates[0][:7]`(패널 시작 2009-01)로 자르는데, strategy_index 는 그동안
         #   `start`(전략 시작 2016-08)를 넘기고 있었다. 그래서 같은 카드에 S&P 500(PR)

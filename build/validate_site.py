@@ -2739,6 +2739,11 @@ try:
     _IDX_SKIP = {
         "sid", "kind", "why", "rule", "name", "verdict",   # 인덱스가 이름을 바꿔 싣는다
         "dates", "chart", "exposure", "incr", "n_days", "role", "n_stocks",
+        # 🚨 perf_end 는 인덱스에서 **이름을 바꿔 실린다** — rec(end=...) 가 이 값을 받아
+        #   "end" 로 넣는다(strategy_index 의 rec 호출부). 같은 수가 두 이름으로 가면
+        #   화면이 어느 쪽을 믿을지 고르게 되고, 그 선택이 파일마다 갈린다.
+        #   ⚠ 짝인 px_end 는 이름 그대로 넘어간다(구간수익의 지수 대조가 그걸 쓴다).
+        "perf_end",
         "excess_cagr", "bench",                            # metrics/bench 로 접혀 들어간다
         # 🚨 입력 커버리지 플래그 — **효과가 이미 화면에 가 있다.** 이 둘이 켜지면
         #   tech_backtest 가 verdict 를 '판정 불가' 로 내리고 why 뒤에 사유를 붙인다:

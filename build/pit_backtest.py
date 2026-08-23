@@ -869,9 +869,10 @@ def main():
 
     # 거래일 격자 — 랩과 같은 격자를 쓴다(랩이 이미 yfinance 거래일로 만들어 둔 것).
     st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
-    # 🚨 랩 본편과 **같은 자리에서** 자른다(TB.asof_cut · 전월말 기준). 여기만 안 자르면
-    #   두 레그의 창이 며칠 어긋나고, 그 어긋남이 곧 '생존편향' 으로 적혀 나간다.
-    dates = [d for d in st["pxd_dates"]][:TB.asof_cut(st["pxd_dates"])]
+    # 🚨 2026-08-23 — 랩 본편과 **같은 설계**로 바꿨다(TB.ASOF_N 머리말). 격자는 오늘까지
+    #   그대로 쓰고 **지표만** 전월말에서 자른다. 두 레그의 창은 여전히 같아야 한다 —
+    #   어긋나면 그 어긋남이 곧 '생존편향' 으로 적혀 나가므로, 자르는 자리도 같은 함수다.
+    dates = [d for d in st["pxd_dates"]]
     n = len(dates)
     tickers = sorted(px_map)
     px = {t: [px_map[t].get(d) for d in dates] for t in tickers}
@@ -1354,14 +1355,25 @@ def main():
             nav = [x / nav[k] * 100 for x in nav[k:]]
             bnav = [x / bnav[k] * 100 for x in bnav[k:]]
             srets, d2 = srets[k:], d2[k:]
-        stt, bs = TB.ann_stats(nav, d2, rf), TB.ann_stats(bnav, d2, rf)
+        # 지표는 전월말까지 · 곡선은 오늘까지(TB.ASOF_N 머리말)
+        _mc = TB.mcut(d2)
+        _d2M, _navM, _bnavM = d2[:_mc], nav[:_mc], bnav[:_mc]
+        _sretsM = srets[:max(0, _mc - 1)]
+        stt, bs = TB.ann_stats(_navM, _d2M, rf), TB.ann_stats(_bnavM, _d2M, rf)
         return {
             "metrics": stt, "bench": bs,
             "excess_cagr": round(stt.get("cagr", 0) - bs.get("cagr", 0), 2),
             "d_sharpe": round((stt.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
-            "t": TB.tstat(srets, raw["IXR"][i0 + 1 + k:]),
-            "turnover": round(raw["turns"] / max(1, (n - i0 - k) / 252), 2),
-            "start": d2[0], "n_days": len(d2),
+            "t": TB.tstat(_sretsM, raw["IXR"][i0 + 1 + k:][:max(0, _mc - 1)]),
+            # ⚠ 회전율은 분모만 창에 맞춘다. 분자(turns)는 전 구간 누적이라 절단 뒤 리밸이
+            #   한 번 더 있으면 그만큼 높게 나온다 — 랩 본편은 스냅샷으로 막았는데 여기는
+            #   raw 가 이미 접혀 온 뒤라 못 막는다. **PIT 회전율은 판정에 안 쓰는 진단값**
+            #   이라 이대로 두되, 값이 살짝 높을 수 있다는 사실을 여기 적어 둔다.
+            "turnover": round(raw["turns"] / max(1, (_mc - 1) / 252), 2),
+            "start": d2[0], "n_days": len(_d2M),
+            # 기준일 둘 — perf_end 는 지표, px_end 는 곡선(랩 본편과 같은 이름 규약).
+            "perf_end": (_d2M[-1] if _d2M else None),
+            "px_end": (d2[-1] if d2 else None),
             "hold": raw["hold"],
             # 🚨 2026-08-14 — **곡선을 여기서 만든다.** 화면이 소급 레그만 그리고 있었다:
             #   카드 머리 숫자는 PIT 인데 그 밑 그림(누적수익·낙폭·연도별)은 랩 본편 소급

@@ -146,9 +146,26 @@ RF = {}
 MAX_YEARS = 10
 
 
+# 성과를 재는 마지막 위치(전월말). main() 이 채우고 cap_start·지표 자르기가 읽는다.
+# 🚨 2026-08-23 사용자 결정 — 곡선·구간수익은 오늘까지, 지표는 전월말. 종목 랩
+#   (tech_backtest.ASOF_N)과 **같은 설계**다. 두 랩이 같은 표로 들어가므로 여기만
+#   다르게 두면 한 열에 기준일 둘이 섞인다.
+ASOF_N = [None]
+
+
+def _mcut(dd):
+    """지표용 길이 — dd 중 전월말 이하인 칸 수. 절단할 것이 없으면 전체 길이."""
+    import tech_backtest as _TB
+    return _TB.mcut(dd)
+
+
 def cap_start(st):
-    """측정 시작점에 10년 상한을 건다. 자산이 늦게 생긴 전략은 원래 시작점을 그대로 쓴다."""
-    return max(st, len(DTS) - int(MAX_YEARS * 252))
+    """측정 시작점에 10년 상한을 건다. 자산이 늦게 생긴 전략은 원래 시작점을 그대로 쓴다.
+
+    ⚠ 상한을 **절단점(전월말)** 에서 센다. len(DTS)(오늘)로 세면 격자가 하루 길어질 때마다
+      시작일이 하루씩 밀려 지표가 매일 바뀐다 — 고정하려던 것이 도로 풀린다.
+    """
+    return max(st, (ASOF_N[0] or len(DTS)) - int(MAX_YEARS * 252))
 
 # 🚨 지수 대조군은 **가격지수(PR)** 로 통일한다 — 2026-08-13 사용자 결정.
 #   종전에는 이 랩만 SPY(배당 재투자 = 사실상 TR)를 썼고 종목 랩 98종은 ^GSPC(PR)를 써서,
@@ -606,12 +623,16 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     b2 = None
     if bench2_w is not None:
         b2nav, b2rets, _ = walk(bench2_w, _ends(bench_cadence or cadence))
-        m2 = ann_stats(b2nav, DTS[start:], RF)
+        # ⚠ 보조 대조군도 **같은 창**에서 잰다 — 여기만 오늘까지 두면 Δ샤프가 «다른 기간
+        #   둘의 차» 가 된다. 아래 _mc 는 이 블록보다 뒤에서 정의되므로 여기서 다시 잡는다.
+        _b2d = DTS[start:]
+        _b2c = _mcut(_b2d)
+        m2 = ann_stats(b2nav[:_b2c], _b2d[:_b2c], RF)
         b2 = {"label": bench2_label or "보조 대조군",
               "metrics": m2,
-              "d_sharpe": round((ann_stats(nav, DTS[start:], RF).get("sharpe") or 0)
+              "d_sharpe": round((ann_stats(nav[:_b2c], _b2d[:_b2c], RF).get("sharpe") or 0)
                                 - (m2.get("sharpe") or 0), 3),
-              "t": tstat(rets, b2rets)}
+              "t": tstat(rets[:max(0, _b2c - 1)], b2rets[:max(0, _b2c - 1)])}
 
     # 이름 짓기는 module-level blabel() 하나로 통일했다 — 여기 사본이 따로 있던 동안
     # 보조 대조군은 이름을 못 얻어 "보조 대조군"이라는 빈 말로 나갔다.
@@ -636,9 +657,17 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     except Exception:
         hold_now = None
     dd = DTS[start:]
-    ms, mb = ann_stats(nav, dd, RF), ann_stats(bnav, dd, RF)
-    msc, mbc = ann_stats(nav_c, dd, RF), ann_stats(bnav_c, dd, RF)   # 비용 후
-    yrs = max(1e-9, (n - start) / 252)
+    # ── 지표는 전월말까지만 ────────────────────────────────────────────────
+    # 🚨 곡선(chart·dates·nav)은 오늘까지 가고 지표만 여기서 자른다(ASOF_N 머리말).
+    # ⚠ 길이 규약: dd[i] ↔ nav[i] 이고 rets 는 하루 짧다(nav 는 100 에서 시작).
+    _mc = _mcut(dd)
+    _ddM = dd[:_mc]
+    _navM, _bnavM = nav[:_mc], bnav[:_mc]
+    _navcM, _bnavcM = nav_c[:_mc], bnav_c[:_mc]
+    _retsM, _bretsM = rets[:max(0, _mc - 1)], brets[:max(0, _mc - 1)]
+    ms, mb = ann_stats(_navM, _ddM, RF), ann_stats(_bnavM, _ddM, RF)
+    msc, mbc = ann_stats(_navcM, _ddM, RF), ann_stats(_bnavcM, _ddM, RF)   # 비용 후
+    yrs = max(1e-9, (_mc - 1) / 252)
     step = max(1, len(nav) // 220)
     # ⚠ 대조군이 현금성(변동성 ~0)이면 샤프 차이가 허수가 된다 — 분모가 0에 가까워
     #   작은 수익 차이가 샤프 몇 단위로 증폭된다(실측: MNA vs SHY에서 Δ샤프 +1.67).
@@ -650,13 +679,16 @@ def run_weights(wfn, start, label, bench_w, rule, why, note=None,
     #   ⚠ 가격지수(PR)라 배당이 빠져 연 ~2%p 지수가 불리하다. 화면 각주가 그 사실을 적는다.
     chart = curve_pack(dd, nav, bnav, idx_rets=load_index_tr(dd))
     return {"name": label, "rule": rule, "why": why, "note": note, "chart": chart,
-            "start": DTS[start], "end": DTS[-1], "n_days": n - start,
+            # 🚨 기준일이 둘이다 — end 는 지표를 잰 마지막 날(전월말), px_end 는 곡선이
+            #   닿는 날(오늘). 종목 랩의 perf_end/px_end 와 같은 이름 규약이다.
+            "start": DTS[start], "end": (_ddM[-1] if _ddM else DTS[-1]),
+            "px_end": DTS[-1], "n_days": _mc,
             "metrics": ms, "bench": mb, "bench_label": bench_label, "bench_tickers": bench_tickers,
             "bench_unstable": unstable, "holdings": hold_now,
             "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-            "t": tstat(rets, brets), "risk": risk_bootstrap(rets, brets),
+            "t": tstat(_retsM, _bretsM), "risk": risk_bootstrap(_retsM, _bretsM),
             # 판정 축을 늘린다(2026-08-12 사용자 지시) — 알파·포착률·꾸준함·국면.
-            "axes": axes_pack(rets, brets, nav, bnav, dd),
+            "axes": axes_pack(_retsM, _bretsM, _navM, _bnavM, _ddM),
             # 보조 대조군 — 판정에는 안 쓴다. 주대조군 하나로는 잣대가 한쪽으로 기우는 것을
             # 읽는 사람이 알 수 없어서 나란히 둔다.
             "bench2": b2,
@@ -1085,9 +1117,13 @@ def build():
         #   'SPY 종가→종가'는 **버리지 않고 보조로 내린다.** 그것이 이 전략의 원래 질문
         #   ("밤에만 드는 것이 하루 종일 드는 것보다 나은가")을 재는 유일한 대조군이다.
         inav, irets = idx_leg("^GSPC", st, n)
-        ms = ann_stats(nav, dd, RF)
-        mb = ann_stats(inav, dd, RF)          # 판정용 — S&P 500(PR)
-        mo = ann_stats(bn, dd, RF)            # 보조 — SPY 종가→종가
+        # 지표는 전월말까지(ASOF_N 머리말) · 곡선은 오늘까지
+        _mc = _mcut(dd); _ddM = dd[:_mc]
+        _retsM, _iretsM, _brsM = (rets[:max(0, _mc - 1)], irets[:max(0, _mc - 1)],
+                                  brs[:max(0, _mc - 1)])
+        ms = ann_stats(nav[:_mc], _ddM, RF)
+        mb = ann_stats(inav[:_mc], _ddM, RF)          # 판정용 — S&P 500(PR)
+        mo = ann_stats(bn[:_mc], _ddM, RF)            # 보조 — SPY 종가→종가
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
                 "chart": curve_pack(dd, nav, inav, idx_rets=load_index_tr(dd)),
@@ -1099,13 +1135,15 @@ def build():
                        "규약과 안 맞는 것과 성과가 없는 것은 다른 말이므로, 성과 자체를 잰다.",
                 "note": "일 왕복 252회/년이라 무비용 결과를 그대로 읽으면 안 된다 — "
                         "왕복 2bp만 붙어도 연 5%p가 사라진다.",
-                "start": DTS[st], "end": DTS[-1], "n_days": n - st,
+                "start": DTS[st], "end": (_ddM[-1] if _ddM else DTS[-1]),
+                "px_end": DTS[-1], "n_days": _mc,
                 "metrics": ms, "bench": mb, "bench_label": "S&P 500(PR) 매수후보유",
                 "bench2": {"label": "SPY 상시보유(종가→종가)", "metrics": mo,
                            "d_sharpe": round((ms.get("sharpe") or 0) - (mo.get("sharpe") or 0), 3),
-                           "t": tstat(rets, brs)},
+                           "t": tstat(_retsM, _brsM)},
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, irets), "risk": risk_bootstrap(rets, irets), "turnover": 252.0,
+                "t": tstat(_retsM, _iretsM), "risk": risk_bootstrap(_retsM, _iretsM),
+                "turnover": 252.0,
                 # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
                 #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
                 "dates": (_gt := gthin(dd, nav, inav))[0],
@@ -1270,9 +1308,13 @@ def build():
         #   S&P 500 을 대면 '나스닥이 더 올랐다'가 섞여 든다. 종전 대조군이던
         #   'QQQ 종가→종가'는 버리지 않고 보조로 내린다(이 전략의 원래 질문이다).
         inav, irets = idx_leg("^NDX", st, n)
-        ms = ann_stats(nav, dd, RF)
-        mb = ann_stats(inav, dd, RF)          # 판정용 — NASDAQ 100(PR)
-        mo = ann_stats(bn, dd, RF)            # 보조 — QQQ 종가→종가
+        # 지표는 전월말까지(ASOF_N 머리말) · 곡선은 오늘까지
+        _mc = _mcut(dd); _ddM = dd[:_mc]
+        _retsM, _iretsM, _brsM = (rets[:max(0, _mc - 1)], irets[:max(0, _mc - 1)],
+                                  brs[:max(0, _mc - 1)])
+        ms = ann_stats(nav[:_mc], _ddM, RF)
+        mb = ann_stats(inav[:_mc], _ddM, RF)          # 판정용 — NASDAQ 100(PR)
+        mo = ann_stats(bn[:_mc], _ddM, RF)            # 보조 — QQQ 종가→종가
         step = max(1, len(nav) // 220)
         return {"name": "오버나이트 보유 (QQQ 종가→시가)",
                 "chart": curve_pack(dd, nav, inav, idx_rets=load_index_tr(dd)),
@@ -1283,14 +1325,16 @@ def build():
                 "why": "NASDAQ 100에서 밤사이 수익이 낮에 앉아 있는 것보다 나은지. "
                        "판정은 NASDAQ 100(PR) 기준이고, 원래 질문인 QQQ 종가→종가 대비는 보조로 병기한다.",
                 "note": "연 252회 왕복이라 무비용 수치를 그대로 읽으면 안 된다.",
-                "start": DTS[st], "end": DTS[-1], "n_days": n - st,
+                "start": DTS[st], "end": (_ddM[-1] if _ddM else DTS[-1]),
+                "px_end": DTS[-1], "n_days": _mc,
                 "metrics": ms, "bench": mb, "bench_unstable": False,
                 "bench_label": "NASDAQ 100(PR) 매수후보유",
                 "bench2": {"label": "QQQ 상시보유(종가→종가)", "metrics": mo,
                            "d_sharpe": round((ms.get("sharpe") or 0) - (mo.get("sharpe") or 0), 3),
-                           "t": tstat(rets, brs)},
+                           "t": tstat(_retsM, _brsM)},
                 "d_sharpe": round((ms.get("sharpe") or 0) - (mb.get("sharpe") or 0), 3),
-                "t": tstat(rets, irets), "risk": risk_bootstrap(rets, irets), "turnover": 252.0,
+                "t": tstat(_retsM, _iretsM), "risk": risk_bootstrap(_retsM, _iretsM),
+                "turnover": 252.0,
                 # 🚨 2026-08-05 추가. 증분 알파(incr/incr5)는 **날짜 정합** 회귀라 dates 가 없으면
                 #   아예 못 돈다. 종전에는 nav·bnav 만 실어 이 랩들이 그 검정을 한 번도 못 받았다.
                 "dates": (_gt := gthin(dd, nav, inav))[0],
@@ -2818,23 +2862,17 @@ def main() -> int:
     # ⚠ 여기 격자는 자산 패널(assets.json)이라 종목 격자와 거래일이 다를 수 있다. 자르는
     #   기준은 '전월말' 이라는 **달**이지 특정 날짜가 아니므로 그 차이는 문제되지 않는다.
     import tech_backtest as _TB
-    _dts_raw = A["dates"]
-    _keep = _TB.asof_cut(_dts_raw)
-    DTS = _dts_raw[:_keep]
-    _cutn = len(_dts_raw) - _keep
-    if _cutn:
-        # ⚠ **패널 계열까지 같이 자른다.** DTS 만 자르면 px[t] 는 여전히 길어서, 어딘가
-        #   `px[t][-1]` 로 마지막 값을 읽는 코드가 잘린 뒤의 날을 집는다 — 인덱스로 읽는
-        #   자리는 멀쩡한데 꼬리로 읽는 자리만 조용히 미래를 본다. 그 종류의 어긋남은
-        #   예외를 안 내고 지나가므로 자료 쪽에서 잘라 아예 없앤다.
-        #   ⚠ 월별 매크로(macro)는 날짜 키 딕셔너리라 격자와 무관하다 — 안 건드린다.
-        for _blk in ("px", "open"):
-            for _t, _v in list((A.get(_blk) or {}).items()):
-                if isinstance(_v, list) and len(_v) > _keep:
-                    A[_blk][_t] = _v[:_keep]
-        print("  성과 기준일 전월말(%s) — 격자 %d일 잘랐다(%s → %s)"
-              % (_TB.asof_month(), _cutn, _dts_raw[-1], DTS[-1]))
-    A["dates"] = DTS
+    # 🚨 2026-08-23 — **격자를 더 이상 안 자른다.** 종전에는 여기서 전월말로 잘라 곡선도
+    #   구간수익도 거기서 멈췄다(사용자 지적 «전략별 성과도 매일 갱신돼야 하는데 7월말이
+    #   끝이네»). 이제 격자는 오늘까지 그대로 두고 **지표만** mcut 으로 자른다.
+    #   ⚠ 종전 주석은 «패널을 같이 안 자르면 px[t][-1] 이 미래를 본다» 였다. 안 자르는
+    #     지금은 격자의 끝이 곧 오늘이라 **볼 미래가 없다** — 그 위험은 절단이 있을 때만
+    #     생기던 것이다. 꼬리로 읽는 자리(hold_now 의 as_of 등)는 이제 오늘을 집는 것이
+    #     맞고, 그게 «지금 보유» 가 원래 말하려던 것이다.
+    DTS = A["dates"]
+    ASOF_N[0] = _TB.asof_cut(DTS)
+    print("  격자 %s ~ %s (%d일) · 지표는 전월말 %s 까지(%d일)"
+          % (DTS[0], DTS[-1], len(DTS), DTS[ASOF_N[0] - 1], ASOF_N[0]))
     _GRID.clear()
     _GRID.update({d: i for i, d in enumerate(DTS)})   # gthin 이 쓰는 절대 위치표
     RF = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),

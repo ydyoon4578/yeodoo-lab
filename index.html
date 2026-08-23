@@ -3602,7 +3602,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var bc={},bmax=null;
       top.forEach(function(r){
         var b=(r.trails_base||{})[TP_HZ]; if(!b)return;
-        var w=b+'~'+(r.end||''); bc[w]=(bc[w]||0)+1;
+        // 🚨 2026-08-23 — 창의 끝은 **px_end**(곡선이 닿는 날)다. end 는 지표를 잰 날
+        //   (전월말)이라 이제 다르다. 여기에 end 를 쓰면 «1주» 칸이 08-14~08-21 을 재고서
+        //   화면에는 08-14~07-31 이라 적는다 — 끝이 시작보다 앞선 창이 찍힌다.
+        var w=b+'~'+(r.px_end||r.end||''); bc[w]=(bc[w]||0)+1;
         if(bmax==null||bc[w]>bc[bmax])bmax=w;});
       // ⚠ 이 구간을 못 재는 전략이 있으면 **몇 종이 빠졌는지 적는다.** 월간 격자 11종은
       //   1주 칸을 만들지 않는다(한 점이 한 달이라 전달 말 대비가 나온다). 안 적으면
@@ -3610,7 +3613,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var _out=TP.length-rows.length;
       sub.textContent='· '+TP_LAB[TP_HZ]+' 누적수익 순 · 전략 '+rows.length+'종 중 상위 '+top.length+
         (_out>0?' · 이 구간을 못 재는 '+_out+'종 제외(월간 계열)':'')+
-        (bmax?' · '+bmax.replace('~',' ~ '):'')+' · 무비용';
+        (bmax?' · '+bmax.replace('~',' ~ '):'')+' · 무비용'+
+        // 🚨 이 표에는 기준일이 **둘**이다(2026-08-23 사용자 결정 «기간별 수익률만 매일»).
+        //   위 구간수익은 매일 갱신되고, 오른쪽 샤프·CAGR 열은 전월말에 고정이다.
+        //   안 적으면 같은 표의 두 열이 다른 날을 말하는데 독자가 알 길이 없다.
+        (function(){var e=(top[0]||{}).end; return e?' · 샤프·CAGR 은 '+e+' 고정':'';})();
       // 🚨 '같은 구간 지수' 줄을 걷고 **vs 열 둘**로 바꿨다(사용자 요청 2026-08-13).
       //   줄로 두면 눈이 표 아래까지 내려가야 비교가 되는데, 열로 두면 그 자리에서 읽힌다.
       //   ⚠ 이 vs 는 **그 전략의 창 그대로** 잰 것이다(strategy_index.trails_ix).
