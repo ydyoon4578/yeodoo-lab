@@ -53,6 +53,67 @@ def _pct(v):
     return None if v is None else round(v * 100.0, 3)
 
 
+# ── 회계연도 끝 — **망을 안 쓴다** ────────────────────────────────────────────
+# 🚨 12개월 선행 EPS 를 만들려면 «지금 회계연도가 언제 끝나나» 를 알아야 한다. yfinance
+#   info 의 nextFiscalYearEnd 가 그 값을 주지만 그건 종목당 **요청이 한 번 더**다(518종).
+#   이 저장소는 그 날짜를 이미 갖고 있다 — data/fx/<T>.json 의 XBRL 연간 계열(tags.*.a)
+#   첫 칸이 «가장 최근에 끝난 회계연도의 마지막 날»이다. 회사가 SEC 에 제출한 실제 값이라
+#   벤더 추정보다 낫고, 공짜다.
+# ⚠ 태그 하나만 보지 않는다 — 회사마다 채우는 태그가 달라서(rev 가 없고 ni 만 있는 곳이
+#   있다) **모든 태그의 연간 끝날짜 중 가장 늦은 것**을 쓴다.
+# 실측(2026-08-23): 518종 중 512종 도출 성공 · 실패 6종(XOM·PSKY 등 XBRL 캐시 없음).
+#   FY 종료월 분포는 12월 383종 · 1월 24 · 6월 24 · 9월 22 로 달력연도가 다수다.
+_FY_CACHE = {}
+
+
+def fy0_end(t, today):
+    """진행 중인 회계연도(FY0)가 끝나는 날. 못 구하면 None."""
+    if t in _FY_CACHE:
+        return _FY_CACHE[t]
+    out = None
+    try:
+        p = os.path.join(DATA, "fx", "%s.json" % t)
+        d = json.load(io.open(p, encoding="utf-8"))
+        ends = [pair[0] for tag in (d.get("tags") or {}).values()
+                for pair in (tag.get("a") or []) if pair and pair[0]]
+        if ends:
+            ld = dt.date.fromisoformat(max(ends))
+            try:
+                e0 = ld.replace(year=ld.year + 1)
+            except ValueError:              # 2/29 로 끝나는 회계연도
+                e0 = ld.replace(year=ld.year + 1, day=28)
+            # 제출이 늦어 «가장 최근 연간»이 이미 한 해 넘게 묵었으면 앞으로 굴린다
+            while e0 < today:
+                e0 = e0.replace(year=e0.year + 1)
+            out = e0
+    except Exception:
+        out = None
+    _FY_CACHE[t] = out
+    return out
+
+
+def blend12(f0, f1, e0, today):
+    """12개월 선행 EPS — FY0 와 FY1 을 **남은 기간으로 가중**한다.
+
+    🚨 왜 필요한가. yfinance 의 forwardPE 는 «다음 회계연도(FY+1)» EPS 를 쓴다. 그러면
+      실제로 몇 개월 앞을 보는지가 회사마다 12~24개월로 제각각이고, 회계연도가 넘어가는
+      순간 뚝 끊긴다. 그 값들을 한 섹터로 모으면 **서로 다른 시점을 평균**하는 것이 된다.
+      12개월 선행은 그 시차를 없애려고 쓰는 표준(IBES·FactSet 의 BF12M)이다.
+    ⚠ w = FY0 가 끝날 때까지 남은 햇수. 오늘이 회계연도 초면 w≈1 이라 FY0 가 거의 전부고,
+      끝물이면 w≈0 이라 FY1 이 거의 전부다. 그 사이를 선형으로 잇는다.
+    ⚠ 적자(음수) 전망은 여기서 거르지 않는다 — 거르는 자리는 화면 쪽 집계다(_fpe).
+      여기서 미리 지우면 «왜 없나» 를 원천에서 알 수 없게 된다.
+    """
+    if f0 is None or f1 is None or e0 is None:
+        return None
+    w = (e0 - today).days / 365.0
+    if w < 0.0:
+        w = 0.0
+    elif w > 1.0:
+        w = 1.0
+    return round(w * f0 + (1.0 - w) * f1, 5)
+
+
 def pull(t, yf):
     """한 종목의 선행 지표. 네 모듈을 **같은 Ticker 객체**에서 꺼낸다(요청 1회)."""
     tk = yf.Ticker(t)
@@ -62,6 +123,8 @@ def pull(t, yf):
     rv = tk.eps_revisions
 
     cur = _cell(tr, "+1y", "current")
+    # 같은 표에서 «진행 중인 회계연도(0y)» EPS 도 꺼낸다 — 요청이 늘지 않는다(같은 응답).
+    cur0 = _cell(tr, "0y", "current")
 
     def revpct(days):
         old = _cell(tr, "+1y", days)
@@ -85,7 +148,14 @@ def pull(t, yf):
         "eg": _pct(_cell(ee, "+1y", "growth")),      # 선행 EPS 성장률(%)
         "rg": _pct(_cell(re_, "+1y", "growth")),     # 선행 매출 성장률(%)
         "nan": _cell(ee, "0y", "numberOfAnalysts"),
+        "f0": cur0,                                  # 진행 중인 회계연도 EPS 컨센서스
     }
+    # 12개월 선행 EPS — 화면의 «12mf PER» 이 이 값을 쓴다(주가 ÷ fe12).
+    _t0 = dt.date.today()
+    _e0 = fy0_end(t, _t0)
+    rec["fe12"] = blend12(cur0, cur, _e0, _t0)
+    if _e0:
+        rec["fy0"] = _e0.isoformat()
     return rec if any(v is not None for v in rec.values()) else None
 
 
@@ -157,7 +227,11 @@ def main() -> int:
                 "earnings_estimate·revenue_estimate)에서 받는다. 오늘 시점 스냅샷이라 "
                 "백테스트는 못 돌린다 — snaps에 매일 쌓아 두고, 표본이 차면 그때 검정한다.",
         "fields": {
-            "fe": "다음 회계연도 EPS 컨센서스", "r90": "90일 전 대비 EPS 컨센서스 변화율(%)",
+            "fe": "다음 회계연도 EPS 컨센서스",
+            "f0": "진행 중인 회계연도 EPS 컨센서스",
+            "fe12": "12개월 선행 EPS — f0 와 fe 를 FY0 잔여기간으로 가중(blend12 참조)",
+            "fy0": "진행 중인 회계연도가 끝나는 날(SEC XBRL 연간 계열에서 도출)",
+            "r90": "90일 전 대비 EPS 컨센서스 변화율(%)",
             "r30": "30일 전 대비(%)", "r7": "7일 전 대비(%)",
             "rp90": "90일간 컨센서스 변화 ÷ 주가(%p) — 순위는 이 값으로 매긴다",
             "rp30": "30일간 · 주가 대비(%p)", "rp7": "7일간 · 주가 대비(%p)",
