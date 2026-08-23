@@ -974,6 +974,21 @@ def is_class_a(P, t):
     return bool(__import__("re").search(r"-\s*(CL|CLASS)?\s*A\b|\bCLASS A\b", n))
 
 
+def bt(P, fn, **kw):
+    """배포용 백테스트 — **언제나 PIT** 다(2026-08-23 사용자 지시).
+
+    P._pit_at 가 붙어 있으면 그 시점 멤버로 pool 과 **채점 모집단**을 같이 좁힌다.
+    ⚠ 안 붙어 있으면 죽는다. 조용히 소급으로 되돌아가는 것이 이 변경이 막으려던 바로
+      그 실패다 — 'PIT' 라고 적힌 생존자 백테스트를 내보내지 않는다.
+    """
+    at = getattr(P, "_pit_at", None)
+    if at is None:
+        raise SystemExit("P._pit_at 가 없다 — PIT 패널을 준비하지 않고 배포 백테스트를 "
+                         "부르고 있다(build/style_pit_panel.prepare/inject 를 먼저 부를 것)")
+    import style_pit_panel as SPP               # noqa: E402
+    return backtest(P, SPP.narrowed(fn, at), pool_of=at, **kw)
+
+
 def backtest(P, fn, pool_of=None):
     """최근 1년. 월말 리밸런스 · 상위 10 동일가중 · 사이에는 표류.
 
@@ -1633,11 +1648,31 @@ def main() -> int:
     print("유니버스 %d · 일별 %d일(%s~%s) · 월말 %d회"
           % (len(P.uni), len(P.dates), P.dates[0], P.dates[-1], len(P.me)))
 
+    # ── 시점정확(PIT) 패널 ──────────────────────────────────────────────────
+    # 🚨 2026-08-23 사용자 지시 «스타일 전략들도 pit 으로. 전략 랩처럼 — 그때 실제로
+    #   지수에 있던 종목만». 종전 이 파일의 백테스트는 **오늘의 518종을 과거로 소급**해
+    #   골랐다. 랩은 그 편향을 build/style_pit.py 로 재고 있었으면서(모멘텀 +88.77%p ·
+    #   고베타 +123.55%p) 배포하는 곡선은 소급 그대로였다 — 재 놓고 안 고친 셈이다.
+    # ⚠ 준비 코드는 style_pit_panel 한 곳에 있다. 편향을 재는 쪽과 배포하는 쪽이 **같은
+    #   함수**를 써야 차이가 곧 편향이고, 두 벌이면 어느 쪽이 틀렸는지 알 수 없다.
+    # ⚠ 창은 5년 레그까지 덮어야 한다(WINDOW5). 1년 창으로 준비하면 5년 레그가 창 밖
+    #   구간에서 마스크 없이 돌아 조용히 소급으로 되돌아간다.
+    import style_pit_panel as SPP                 # noqa: E402  같은 build/ 안
+    _prep = SPP.prepare(P=P, ST=sys.modules[__name__], window=max(WINDOW, WINDOW5))
+    SPP.inject(_prep)
+    PIT_AT = _prep["members_at"]
+    print("  [PIT] 편출 %d종 주입 · 그때 지수에 있던 종목만 고른다" % len(_prep["inject"]))
+
+    # 🚨 풀을 **패널에 붙인다.** dump_json 같은 다른 함수도 같은 규약으로 불러야 하는데,
+    #   main 안의 지역 함수로 두면 그쪽이 조용히 소급으로 되돌아간다(실제로 그랬다 —
+    #   5년 레그가 NameError 로 죽어서 드러났고, 죽지 않았다면 못 봤을 종류다).
+    P._pit_at = PIT_AT
+
     res, order = {}, []
     _SKIPPED.clear()
     for S in STYLES:
         key, label = S[0], S[1]
-        R = backtest(P, S[3])
+        R = bt(P, S[3])
         if not R:
             # 🚨 2026-08-05 — 종전에는 그냥 continue 였다. 그러면 그 스타일이 산출물에서
             #   통째로 사라지고, index.html 이 가리키는 랩 키가 매달린 채 그 줄이 화면에서
@@ -1717,7 +1752,7 @@ def vm_weights(P):
     global WINDOW
     old, WINDOW = WINDOW, len(P.dates) - 800
     try:
-        R = backtest(P, sc_mom)
+        R = bt(P, sc_mom)
     finally:
         WINDOW = old
     if not R:
@@ -1896,7 +1931,7 @@ def dump_json(P, res, detail):
     try:
         _s5, _e5, _tr5, _R5 = {}, {}, {}, None
         for _S in STYLES:
-            _r = backtest(P, _S[3])
+            _r = bt(P, _S[3])
             if not _r:
                 continue
             if _R5 is None:

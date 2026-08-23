@@ -247,82 +247,24 @@ def ew_nav(P, pool_at, start, end):
 def main() -> int:
     # ⚠ 2026-08-03: 사내 DB 산출(pit_members.json) → 위키 과거 리비전(index_history.json).
     #   그 파일은 저장소에 커밋되므로 이 스크립트가 더 이상 사내망 PC 에 묶이지 않는다.
-    import index_members                          # noqa: E402  같은 build/ 안
-    mem, _carried = index_members.load()
-    for _ym, _ix, _n in _carried:
-        print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (_ym, _ix.upper(), _n))
-    # 로컬에 뚱뚱한 캐시가 있으면 그것을 쓰고(가장 신선하다), 없으면 커밋된 기록을 편다.
-    if os.path.exists(CACHE):
-        cache = json.load(io.open(CACHE, encoding="utf-8"))
-        print("  가격 원천: %s(로컬 캐시)" % os.path.basename(CACHE))
-    else:
-        _sl = need(SLIM, "편출 종목 가격 기록")
-        _ds = _sl["dates"]
-        cache = {t: {_ds[v["i0"] + k]: p for k, p in enumerate(v["p"]) if p is not None}
-                 for t, v in _sl["px"].items()}
-        _cv = _sl.get("coverage") or {}
-        print("  가격 원천: %s(커밋된 기록) · 티커 %s · ~%s"
-              % (os.path.basename(SLIM), _cv.get("n_tickers"), _cv.get("end")))
-    P = ST.Panel()
-    end = len(P.dates) - 1
-    start = next((i for i in P.me if i >= max(0, end - ST.WINDOW)), max(0, end - ST.WINDOW))
-    di = {d: k for k, d in enumerate(P.dates)}
-    today = set(P.uni)
-
-    def members_at(i):
-        """그 달 멤버 — pit_backtest.py:197 과 같은 정의(월 키 조회)."""
-        return set(mem.get(P.dates[i][:7]) or [])
-
-    # 멤버십이 창을 덮는지 먼저 본다. 한 달이라도 비면 그 달은 마스크가 통째로 풀려
-    # 조용히 생존자 백테스트로 되돌아간다 — 그것이 이 파일이 막아야 할 실패다.
-    gapless = [i for i in P.me if start - 252 * 3 <= i <= end and not members_at(i)]
-    if gapless:
-        raise SystemExit("멤버십이 빈 월말 %d개(%s …) — 마스크가 풀려 PIT 이 성립하지 않는다"
-                         % (len(gapless), P.dates[gapless[0]]))
-
-    # 창 안에서 한 번이라도 멤버였던 것 중 오늘 유니버스에 없는 것 = 주입 대상.
-    #   ⚠ 3년(모멘텀 창) 합집합으로 넓히면 안 된다. 창 전에 이미 빠진 종목은 창 안에서
-    #     **후보였던 적이 없다**. 넣으면 후보는 안 늘고 z 표준화 모집단만 바뀌어 규칙 자체가
-    #     달라진다(실측: 그렇게 했더니 survivor 가 배포 수치 137.31 대신 126.47 이 나왔다).
-    #     후보의 3년 이력은 그 후보 자신의 캐시로 충분하다.
-    win_me = [j for j in P.me if start <= j <= end]
-    union = set()
-    for i in win_me:
-        union |= members_at(i)
-    gone = sorted(union - today)
-    # 거울 수치 — **이쪽이 편향의 지배 채널이다.** 창 시작 시점에 아직 멤버가 아니었던
-    # 오늘 종목들. 지수는 많이 오른 종목을 편입하므로 이 종목들을 소급으로 고를 수 있다는 것은
-    # '오를 것'을 미리 아는 것과 같다. 편출(gone)만 세어 적으면 작은 채널만 계량하게 된다.
-    m0 = members_at(start)
-    not_yet = sorted(today - m0)
-
-    def load_series(t):
-        c = cache.get(t) or {}
-        a = np.full(len(P.dates), np.nan)
-        n = 0
-        for d, v in c.items():
-            j = di.get(d)
-            if j is not None and v is not None:
-                a[j] = float(v); n += 1
-        return (a, n)
-
-    inject, missing, gap = {}, [], []
-    for t in gone:
-        a, n = load_series(t)
-        if n < 200:                      # 채점 자체가 안 되는 조각은 넣지 않는다
-            missing.append(t); continue
-        # 티커 재사용 가드 — **일간 점프로 판정하면 안 된다.** 실측: ±80% 규칙이 First
-        # Republic 파산(-90.5%)과 Insmed 임상 발표(+118.5%)를 잡아냈다. 둘 다 진짜 사건이고,
-        # 특히 파산은 생존편향이 감추는 바로 그 사건이라 버리면 편향을 과소평가한다.
-        # 재사용의 실제 지문은 **긴 공백 뒤 재개**다(상장폐지 후 티커가 남에게 넘어간다).
-        idx = np.flatnonzero(~np.isnan(a))
-        if len(idx) > 1 and int(np.max(np.diff(idx))) >= 60:
-            gap.append(t); continue
-        inject[t] = a
-    print("창 편출 %d종 · 주입 가능 %d종 · 가격 부재 %d종: %s"
-          % (len(gone), len(inject), len(missing), missing))
-    if gap:
-        print("  ⚠ 60거래일 이상 공백 뒤 재개(티커 재사용 의심) 제외: %s" % gap)
+    # 🚨 2026-08-23 — 패널 준비를 build/style_pit_panel.py 로 떼어냈다. **배포 경로
+    #   (style_top_pdf)가 같은 함수를 쓰기 위해서다.** 종전에는 이 코드가 여기에만 있어,
+    #   랩은 PIT 로 돌릴 줄 알면서 배포하는 곡선은 소급이었다. 두 벌로 짜면 «편향을 재는
+    #   쪽» 과 «배포하는 쪽» 중 어느 것이 틀렸는지 알 수 없게 된다.
+    import style_pit_panel as SPP               # noqa: E402  같은 build/ 안
+    # 🚨 창을 배포 경로와 **똑같이** 잡는다(max(WINDOW, WINDOW5)). 배포는 5년 샤프 레그가
+    #   있어 5년치 편출 종목까지 주입하는데, 여기만 1년으로 잡으면 주입 명단이 달라져
+    #   pit 레그가 배포 수치와 1~3%p 어긋난다(실측: 모멘텀 81.73 vs 배포 78.74).
+    #   같은 함수를 쓰면서 인자만 달라도 두 벌이 된다 — 인자까지 같아야 한 벌이다.
+    prep = SPP.prepare(ST, window=max(ST.WINDOW, ST.WINDOW5))
+    P = prep["P"]
+    members_at, today = prep["members_at"], prep["today"]
+    start, end, win_me = prep["start"], prep["end"], prep["win_me"]
+    inject, missing = prep["inject"], prep["missing"]
+    not_yet = prep["not_yet"]
+    mem = prep["mem"]
+    m0 = prep["m0"]
+    gone, gap = prep["gone"], prep["gap"]
 
     # ── ① 앵커 레그 — **주입 전** 깨끗한 518 패널 ───────────────────────────
     #   published 는 배포 수치를 그대로 재현해야 한다. 그것이 이 측정의 앵커다 —
@@ -355,45 +297,9 @@ def main() -> int:
     #   마스크 없이 재면 137.31 이 아니라 131.75). sc_lowvol·sc_hbeta 는 zs 를 쓰지 않아
     #   이 효과가 정확히 0 이다 — 그래서 모멘텀에만 생겼고 눈에 잘 안 띄었다.
     #   고침: 편향은 **패널을 고정하고** base(마스크 없음) 대비로 잰다. published 는 앵커 전용.
-    for t, a in inject.items():
-        P.px[t] = a
-    # 재무 — data/fx 와 data/fx_pit 를 함께 훑어 다시 만든다(load_fund 이 한 벌이라 어긋날 일 없다).
-    if os.path.isdir(FX_PIT):
-        import importlib.util
-        _sp = importlib.util.spec_from_file_location("_tb2", os.path.join(HERE, "tech_backtest.py"))
-        _tb = importlib.util.module_from_spec(_sp); _sp.loader.exec_module(_tb)
-        P.fx = _tb.load_fund(extra_dirs=[FX_PIT])
-        n_fx = len([t for t in inject if t in P.fx])
-        print("편출 재무 주입 %d/%d종(data/fx_pit %d개)"
-              % (n_fx, len(inject), len(os.listdir(FX_PIT))))
-    else:
-        n_fx = 0
-        print("⚠ data/fx_pit 없음 — 퀄리티·가치·성장은 편출 후보 없이 측정된다"
-              "(러너에서 pit-facts 워크플로를 돌릴 것)")
-    # 명부 — 뒤 셋이 순회하는 축. 이름은 재무 파일에서 가져오고 없으면 티커로 둔다
-    # (이름은 build_issuer 의 발행사 키에 쓰인다 — 없으면 티커가 곧 발행사가 된다).
-    nm = {}
-    if os.path.isdir(FX_PIT):
-        for f in os.listdir(FX_PIT):
-            try:
-                d = json.load(io.open(os.path.join(FX_PIT, f), encoding="utf-8"))
-                nm[d.get("t") or f[:-5]] = d.get("nm") or ""
-            except Exception:
-                pass
-    for t in inject:
-        if t not in P.uni:
-            P.uni[t] = {"t": t, "name": nm.get(t) or t, "idx": []}
-    # 🚨 발행사 맵은 P._iss 에 **캐시된다**(iss_of). 앵커 레그에서 이미 채워졌으므로 지워야
-    #   새 명부가 반영된다. 안 지우면 주입 종목이 발행사 중복제거에서 조용히 빠진다.
-    if hasattr(P, "_iss"):
-        del P._iss
-    cov = []
-    for i in win_me:
-        m = members_at(i)
-        if m:
-            cov.append(len([t for t in m if t in P.px]) / len(m))
-    print("멤버 대비 가격 보유율: 최저 %.1f%% · 중앙 %.1f%%"
-          % (100 * min(cov), 100 * sorted(cov)[len(cov) // 2]))
+    SPP.inject(prep)
+    n_fx = prep.get("n_fx", 0)
+    cov = prep.get("cov") or []
 
     # 주입 종목이 스타일별로 **실제 채점되는지** 센다. 이것 없이 '편출 기여 0' 을 적으면
     # 자료가 없어서 0 인지 진짜 0 인지 구별이 안 된다(적대감사가 짚은 함정).
@@ -473,16 +379,27 @@ def main() -> int:
         if key in failed:
             anchor[key] = {"measured": None, "published": want, "unmeasured": True}
             continue
-        got = (res.get(key, {}).get("published") or {}).get("ret")
-        anchor[key] = {"measured": None if got is None else round(got, 2), "published": want}
+        # 🚨 2026-08-23 — 앵커가 **pit 레그로 바뀌었다.** 배포 곡선이 그날부터 PIT 이기
+        #   때문이다(사용자 지시 «스타일도 시점정확으로»). 종전에는 base(소급)가 배포와
+        #   같아야 했다 — 그 등식이 곧 «배포는 소급이다» 라는 뜻이었고, 이제 아니다.
+        #   ⚠ base 레그는 지운 것이 아니다. 그것이 «PIT 로 바꿔서 얼마가 사라졌나» 의
+        #     기준선이고, 아래 bias·channel 이 그 차이를 그대로 싣는다.
+        got = (res.get(key, {}).get("pit") or {}).get("ret")
+        anchor[key] = {"measured": None if got is None else round(got, 2), "published": want,
+                       "leg": "pit"}
         if got is None or want is None or abs(got - want) > 0.02:
-            bad.append("%s 측정 %s vs 배포 %s" % (label, got, want))
+            bad.append("%s PIT %s vs 배포 %s" % (label, got, want))
     if bad:
-        raise SystemExit("앵커 불일치 — 배포 수치를 재현하지 못했다(%s). "
-                         "차이는 편향이 아니라 계산 변경이다. style_perf.json 을 먼저 "
-                         "다시 만들었는지 확인할 것." % " · ".join(bad))
-    print("앵커 확인 — 배포 수치와 일치(%s)"
-          % ", ".join("%s %.2f%%" % (k, v["published"]) for k, v in anchor.items()))
+        raise SystemExit("앵커 불일치 — 배포 수치가 PIT 레그와 다르다(%s). "
+                         "배포 곡선은 2026-08-23 부터 PIT 이어야 한다 — style_top_pdf 가 "
+                         "bt()(=PIT)를 쓰는지, style_perf.json 을 먼저 다시 만들었는지 "
+                         "확인할 것. 차이는 편향이 아니라 계산 변경이다." % " · ".join(bad))
+    # ⚠ 못 잰 스타일은 published 가 None 이다 — 그 자리를 '—' 로 적는다.
+    #   여기서 죽으면 앞서 잰 열여섯이 통째로 버려진다(2026-08-10 에 같은 사고가 있었다).
+    print("앵커 확인 — 배포 곡선 = PIT 레그(%s)"
+          % ", ".join("%s %s" % (k, ("%.2f%%" % v["published"])
+                                   if isinstance(v.get("published"), (int, float)) else "—")
+                      for k, v in anchor.items()))
 
     # ── 대조군 ─────────────────────────────────────────────────────────────
     # 동일가중은 z 표준화를 쓰지 않으므로 패널 확장 효과가 없다 — base 와 published 가 같다.
