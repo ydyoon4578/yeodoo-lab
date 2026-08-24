@@ -739,7 +739,9 @@ PIT_CODE_REV = "2026-08-19"
 #     2026-08-18: x-indmom 은 규칙문이 '승자 2섹터 전 종목'인데 tgt 10 · 실제 평균 98.8종
 #     (44~162), x-valcomp-sn·x-revdrift-sn 은 규칙문이 '섹터별 1위 1종씩'인데 tgt 10 ·
 #     실제 11.0종 고정이다. short(목표 미달 달)도 같은 tgt 을 쓰므로 셋 다 구조적으로 0 이다.
-WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom")
+WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom",
+                 # 비중상한 6종 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
+                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx")
 
 # 월말의 이 비율을 넘게 통째로 비우는 규칙은 '측정만' 이 아니라 '판정 불가' 로 둔다.
 # ⚠ 사전등록 없이 고른 자유 파라미터다 — 아래 감지 코드의 주석에 고른 근거를 적어 뒀다.
@@ -1860,7 +1862,7 @@ def macro_level(sid, dates):
 
 def macro_z(lvl, i, win=252):
     """수준 계열의 그 시점 z. 창이 안 차거나 표준편차가 0 이면 None."""
-    if i < win:
+    if not lvl or i < win or i >= len(lvl):
         return None
     w = [x for x in lvl[i - win + 1:i + 1] if x is not None]
     if len(w) < win * 0.6:
@@ -1873,8 +1875,13 @@ def macro_z(lvl, i, win=252):
 
 
 def macro_chg(lvl, i, back=63):
-    """수준 계열의 back 거래일 변화(차분). 못 구하면 None."""
-    if i < back or lvl[i] is None or lvl[i - back] is None:
+    """수준 계열의 back 거래일 변화(차분). 못 구하면 None.
+
+    ⚠ 계열이 비었거나 짧으면 None 이다. 예외로 죽지 않는 것이 맞다 — 다만 **부르는 쪽이
+      계열을 안 실었을 때**는 조용히 «게이트가 늘 꺼짐» 이 되어 규칙이 딴것이 된다.
+      그래서 _narrative_state 가 계열 부재를 따로 확인한다(여기서는 값만 본다).
+    """
+    if not lvl or i < back or i >= len(lvl) or lvl[i] is None or lvl[i - back] is None:
         return None
     return lvl[i] - lvl[i - back]
 
@@ -2394,6 +2401,143 @@ def load_classmates():
                 for t in ts:
                     _CLASSMATE[t] = set(ts)
     return _CLASSMATE
+
+
+# ── 지수 비중상한(Capped-Weight) — PREREG-2026-08-24-CAPWEIGHT.md ────────────
+# 🚨 랩에 없던 축이다. 게시 112종은 «무엇을 담을지»(선택)를 112가지로 재면서 «얼마씩
+#   담을지»(가중)는 한 가지(동일가중)만 쟀다. 이 계열은 **선택을 안 하고 가중만 바꾼다** —
+#   그달 편입 명단 전부를 담되 개별 비중에 상한을 두고 초과분을 시총 비례로 재배분한다.
+# ⚠ 부동주 조정이 아니라 **발행주식수 기준**이다. 실제 S&P·나스닥 지수는 부동주를 쓰므로
+#   이 재현은 근사다. 그래서 판정 기준선을 ^GSPC 가 아니라 **같은 방식으로 만든 상한 없는
+#   시총가중(W0)** 으로 둔다 — 두 근사의 차이를 «상한 효과» 로 읽지 않기 위해서다.
+CAP_SIDS = {"x-cap10": 0.10, "x-cap5": 0.05, "x-cap45": 0.045, "x-cap3": 0.03}
+CAP_ALL = set(CAP_SIDS) | {"x-capw", "x-capndx"}
+NDX_TRIG_CUT = 0.045      # 이 비중을 넘는 종목들을
+NDX_TRIG_SUM = 0.48       # 합계가 이만큼을 넘으면
+NDX_TRIG_TO = 0.40        # 합계를 이만큼으로 줄인다 (나스닥 실제 룰)
+
+
+def cap_weights(mc, cap, iters=50):
+    """시총 비중에 개별 상한을 걸고 초과분을 나머지에 시총 비례로 재배분 — 수렴할 때까지.
+
+    ⚠ 한 번만 자르면 안 된다. 초과분을 나눠 받은 종목이 새로 상한을 넘을 수 있다.
+      실제 지수 산출기관도 반복 수렴을 쓴다.
+    ⚠ 상한 × 종목수 < 1 이면 수학적으로 불가능하다(예: 상한 3% 에 종목 20개). 그때는
+      전부 동일가중으로 둔다 — 조용히 상한을 어기지 않는다.
+    """
+    tot = sum(mc.values())
+    if tot <= 0:
+        return {}
+    if cap is None:
+        return {t: v / tot for t, v in mc.items()}
+    if cap * len(mc) <= 1.0:
+        return {t: 1.0 / len(mc) for t in mc}
+    w = {t: v / tot for t, v in mc.items()}
+    for _ in range(iters):
+        over = {t: x for t, x in w.items() if x > cap + 1e-12}
+        if not over:
+            break
+        excess = sum(x - cap for x in over.values())
+        rest = {t: x for t, x in w.items() if t not in over}
+        rsum = sum(rest.values())
+        for t in over:
+            w[t] = cap
+        if rsum <= 0:
+            break
+        for t in rest:
+            w[t] = rest[t] + excess * rest[t] / rsum
+    return w
+
+
+def ndx_special(mc):
+    """나스닥 특별 리밸런스 복제 — 4.5% 초과 종목 합계가 48% 를 넘을 때만 40% 로 줄인다.
+
+    돌려주는 것: (비중, 발동했나). 발동 횟수를 세야 «규칙» 인지 «사건 하나» 인지 갈린다.
+    """
+    tot = sum(mc.values())
+    if tot <= 0:
+        return {}, False
+    w = {t: v / tot for t, v in mc.items()}
+    big = {t: x for t, x in w.items() if x > NDX_TRIG_CUT}
+    bsum = sum(big.values())
+    if bsum <= NDX_TRIG_SUM or not big:
+        return w, False
+    # 큰 종목들을 비례 축소해 합계를 40% 로 맞추고, 줄인 만큼을 나머지에 비례 재배분한다.
+    k = NDX_TRIG_TO / bsum
+    freed = bsum - NDX_TRIG_TO
+    rest = {t: x for t, x in w.items() if t not in big}
+    rsum = sum(rest.values())
+    out = {t: x * k for t, x in big.items()}
+    for t, x in rest.items():
+        out[t] = x + (freed * x / rsum if rsum > 0 else 0.0)
+    return out, True
+
+
+_NDX_FIRED = {}          # sid → 발동 횟수
+
+
+def cap_pick(S, i, X):
+    """그 시점 편입 명단 전체의 상한 적용 비중 → [(티커, 비중)…]."""
+    dates, px, FU = X["dates"], X["px"], X["FU"]
+    pool = X.get("_pool_now")
+    ts = [t for t in X["tickers"] if (pool is None or t in pool)]
+    mc = {}
+    for t in ts:
+        a = px.get(t)
+        if not a or a[i - 1] is None or a[i - 1] <= 0:
+            continue
+        sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
+        if sn and sn > 0:
+            mc[t] = sn * a[i - 1]
+    if len(mc) < 50:
+        return []
+    sid = _BASE_SID(S["sid"])
+    if sid == "x-capndx":
+        w, fired = ndx_special(mc)
+        if fired:
+            _NDX_FIRED[sid] = _NDX_FIRED.get(sid, 0) + 1
+    else:
+        w = cap_weights(mc, CAP_SIDS.get(sid))       # x-capw 는 None → 상한 없음
+    return sorted(w.items(), key=lambda kv: -kv[1])
+
+
+# ── 저회전 변형(밴드 보유) — PREREG-2026-08-24-LOWTURN.md ────────────────────
+# 🚨 사는 문턱과 파는 문턱을 다르게 둔다(이력현상). 지금 규칙은 «상위 N 밖이면 판다» 라
+#   순위가 N 언저리에서 흔들리는 종목이 매달 들락거리며 회전을 만든다 — 그 대부분은 점수가
+#   나빠져서가 아니라 **경계에 있어서** 오간다.
+#     산다 — 상위 N 안에 들어올 때
+#     판다 — 상위 BAND×N 밖으로 나갈 때
+# ⚠ «좋은 종목을 더 오래 든다» 가 아니다. **나쁜 종목도 더 오래 든다.** 회전이 주는 만큼
+#   반응이 느려지는 맞바꿈이고, 그 맞바꿈이 이득인지가 이 변형이 묻는 것이다.
+# ⚠ BAND 는 **하나만** 둔다. 여러 값을 돌려 좋은 것을 고르면 그것이 곧 최적화다.
+BAND = 2.0
+_BAND_SUF = "-band"
+
+
+def is_band(sid):
+    return str(sid).endswith(_BAND_SUF)
+
+
+def band_base(sid):
+    return sid[:-len(_BAND_SUF)] if is_band(sid) else sid
+
+
+def pick_band(sc, sid, topn, held):
+    """밴드 보유 — held(직전 보유)를 받아 이력현상을 적용한 명단.
+
+    ⚠ pick_top 을 두 번 불러 만든다. 산식을 옮겨 적으면 «한 회사 한 번» 규약이 두 벌이
+      되고, 이 파일 머리말이 기록한 사고가 정확히 그것이다.
+    """
+    n = TOPN if topn is None else topn
+    buy = pick_top(sc, sid, n)                       # 사는 문턱
+    keep_pool = set(pick_top(sc, sid, int(round(n * BAND))))   # 파는 문턱
+    out = [t for t in (held or []) if t in keep_pool]          # 밴드 안이면 계속 든다
+    for t in buy:                                    # 빈자리를 상위 N 에서 채운다
+        if len(out) >= n:
+            break
+        if t not in out:
+            out.append(t)
+    return out[:n]
 
 
 def pick_top(sc, sid="", topn=None):
@@ -3424,7 +3568,36 @@ def load_earn():
     return _EARN[0]
 
 
-def event(sid, name, rule, why, enter=1, hold=60, pick=None, gap=None, arch=None):
+def info_disc(Rt, i, win=231, lag=21):
+    """정보이산성(ID) — Da·Gurun·Warachka(2014). 낮을수록 «정보가 잘게 나뉘어 왔다».
+
+    형성창 [i−251, i−21] 에서
+        PRET = 누적수익 · %pos·%neg = 일간수익 양/음인 날의 비율
+        ID   = sign(PRET) × (%neg − %pos)
+    ⚠ 유효일이 창의 60% 미만이면 None(랩의 다른 창 함수와 같은 규약).
+    🚨 원 함수는 x-fip 을 지우면서 소스에서 함께 사라졌다. 정의는 사전등록
+      PREREG-2026-08-24-FIPHOLD.md 에 다시 못박아 두었고 여기 옮긴 것이다.
+    """
+    hi = i - lag
+    lo = hi - win + 1
+    if lo < 0:
+        return None
+    vs = [Rt[j] for j in range(lo, hi + 1) if Rt[j] is not None]
+    if len(vs) < win * 0.6:
+        return None
+    cum = 1.0
+    for v in vs:
+        cum *= (1.0 + v)
+    pret = cum - 1.0
+    if pret == 0:
+        return None
+    pos = sum(1 for v in vs if v > 0) / len(vs)
+    neg = sum(1 for v in vs if v < 0) / len(vs)
+    return (1.0 if pret > 0 else -1.0) * (neg - pos)
+
+
+def event(sid, name, rule, why, enter=1, hold=60, pick=None, gap=None, arch=None,
+          src="earn", topn=None):
     """이벤트 규칙 등록.
 
     enter — 발표일로부터 몇 거래일 뒤에 진입하나(1 = 다음 거래일)
@@ -3436,7 +3609,7 @@ def event(sid, name, rule, why, enter=1, hold=60, pick=None, gap=None, arch=None
         return
     STRATS.append({"sid": sid, "name": name, "kind": "event", "rule": rule, "why": why,
                    "fn": None, "arch": arch, "enter": enter, "hold": hold,
-                   "pick": pick, "gap": gap})
+                   "pick": pick, "gap": gap, "src": src, "topn": topn})
 
 
 def event_weights(S, dates, tickers, X, lo, n, pool_at=None):
@@ -3445,9 +3618,22 @@ def event_weights(S, dates, tickers, X, lo, n, pool_at=None):
     ⚠ 후보는 **그달 실제 편입 명단**으로 거른다(pool_at). 안 거르면 그때 지수에 없던
       종목의 실적 이벤트를 담게 되어 선견이다 — 다른 규칙과 같은 마스크다.
     """
-    E = load_earn()
     pos = [dict() for _ in range(n)]          # i일 → {티커: 1}
     di = {d: i for i, d in enumerate(dates)}
+    if S.get("src") == "me":
+        # 🚨 월말 진입 — 이벤트가 «실적 발표» 가 아니라 «리밸런스 날» 인 경우다.
+        #   선택은 pick(그날 담을 티커 목록)이 통째로 하고, 보유기간만 hold 로 정해진다.
+        #   랩의 다른 규칙은 «다음 리밸까지» 드는데 이것은 **hold 만큼** 든다 —
+        #   보유기간을 규칙이 스스로 정하는 첫 구조다(PREREG-…-FIPHOLD).
+        for j in X.get("me_list") or []:
+            if j + 1 >= n or j + 1 + int(S["hold"]) <= lo:
+                continue
+            picks = S["pick"](j, X) if S.get("pick") else []
+            for t in picks:
+                for i in range(max(j + 1, lo), min(j + 1 + int(S["hold"]), n)):
+                    pos[i][t] = 1
+        return pos
+    E = load_earn()
     if S.get("gap") is not None:
         # E4 — «마지막 발표 후 gap 거래일 넘김» 인 날만 담는다. 발표일은 과거만 보므로 causal.
         g = int(S["gap"])
@@ -3654,12 +3840,19 @@ def pick_industry(ind_raw, top_sectors=2):
 
 
 def _BASE_SID(sid):
-    """바스켓 크기 접미사를 뗀 sid. 크기 변형이 원본과 같은 채점 갈래를 타게 한다.
+    """변형 접미사를 뗀 sid. 변형이 원본과 같은 채점 갈래를 타게 한다.
 
-    접미사가 둘이다 — `-n<숫자>`(2026-08-11 원 전략 크기 6종, 목록에 남는 별도 규칙)와
-    `~n<숫자>`(2026-08-13 전수 시험, 승자만 남고 나머지는 사라진다). 둘 다 뗀다.
+    접미사가 셋이다 —
+      `-n<숫자>`  2026-08-11 원 전략 크기 6종(목록에 남는 별도 규칙)
+      `~n<숫자>`  2026-08-13 전수 시험(승자만 남고 나머지는 사라진다)
+      `-band`     2026-08-24 저회전 변형(PREREG-…-LOWTURN). **채점은 원 규칙과 같고
+                  파는 문턱만 다르다** — 그래서 여기서 떼야 같은 갈래를 탄다.
+    🚨 `-band` 를 안 떼서 12종이 람다 갈래로 떨어져 죽었다(실측). 이 파일에서 같은 유형의
+      사고가 이번 주에만 세 번째다(게이트·숏 부호·밴드) — 변형 접미사를 더할 때마다
+      **밑동 비교가 필요한 자리를 전부 훑어야 한다**는 뜻이다.
+    ⚠ 순서가 있다. band 를 먼저 떼야 `x-maxlow-n52-band` 가 `x-maxlow` 까지 벗겨진다.
     """
-    return re.sub(r"[-~]n\d+$", "", sid)
+    return re.sub(r"[-~]n\d+$", "", re.sub(r"-band$", "", sid))
 
 
 def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
@@ -3702,6 +3895,8 @@ FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-
              # E30 밸류 컴포지트 둘 — 사전등록 PREREG-2026-08-06-E30VALUE.md
              "x-valcomp", "x-valcomp-sn",
              "x-rgrow", "x-lowde", "x-dy", "x-small",
+             # 2026-08-24 비중상한 6종 — PREREG-2026-08-24-CAPWEIGHT.md(주식수를 쓴다).
+             "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
              # 2026-08-23 국면 서술형 — PREREG-2026-08-23-NARRATIVE.md.
              #   ⚠ 둘 다 fn=None 이라 **여기 없으면 람다 갈래로 떨어져 죽는다**(실측).
              #     x-ratehot·x-fxweak 는 가격·거시만 쓰므로 이 집합이 아니다.
@@ -4359,6 +4554,125 @@ def build_strats():
          "쓴다(두 벌로 만들지 않는다). 그쪽은 절댓값 최하위 롱이고 이쪽은 최상위 × 과열 숏이라 "
          "방향이 반대다. ⚠ 대조군은 현금이다 — 지수를 대조군으로 두면 «숏이 지수보다 못하다» "
          "는 당연한 말을 재게 된다.")
+    # ── 프로그인더팬 보유기간 3종 (F1~F3) — PREREG-2026-08-24-FIPHOLD.md ─
+    # 🚨 원 규칙(x-fip)은 재고 뺐다 — 초과 5.90%p 중 5.71%p 가 생존편향이고 PIT t 0.35 였다.
+    #   되살리지 않는다. 이 셋이 재는 것은 논문의 **두 번째 주장**이다:
+    #     ⑴ ID 가 낮은 종목이 더 오른다        ← x-fip 이 잰 것. 기각됐다.
+    #     ⑵ ID 가 낮으면 모멘텀이 더 늦게 반전한다 ← 아무도 안 잰 것. 이것을 잰다.
+    #   ⑴은 «무엇을 살지» 이고 ⑵는 «얼마나 오래 들지» 다.
+    # 🚨 F3(거울)이 핵심이다. 없으면 «ID 효과» 와 «6개월 보유 효과» 를 못 가른다.
+    def _mom_top(j, X, half=None, mcf=False):
+        """그 월말 12-1 모멘텀 상위 30 → 필요하면 그 안에서 ID 절반만.
+
+        mcf — 사전등록 PREREG-2026-08-24-FIPMCF. 모멘텀 상위를 고르기 **전에** 그달 후보에서
+          시총 하위 30% 를 잘라 낸다. 랩 기존 -mcf 와 **같은 함수**(mcap_floor)를 쓴다 —
+          사본을 만들면 같은 이름의 두 하한이 조용히 달라진다.
+        """
+        R, dates = X["R"], X["dates"]
+        pool = X.get("pool_at")
+        ts = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool(j)]
+        if mcf:
+            ts = mcap_floor(ts, X, j + 1)
+        sc = []
+        for t in ts:
+            m = ret(X["px"].get(t), j, 252, skip=21) if False else None
+            a = X["px"].get(t)
+            if not a or j - 251 < 0 or a[j - 21] is None or a[j - 251] is None:
+                continue
+            if a[j - 251] <= 0 or a[j - 21] <= 0:
+                continue
+            sc.append((a[j - 21] / a[j - 251] - 1.0, t))
+        if len(sc) < XSEC_MIN_POOL:
+            return []
+        sc.sort(reverse=True)
+        top = pick_top(sc, "x-fiphold", 30)
+        if half is None:
+            return top
+        ids = [(info_disc(R[t], j), t) for t in top]
+        ids = [(v, t) for v, t in ids if v is not None]
+        if len(ids) < 10:
+            return []
+        ids.sort()                                   # ID 오름차순 = 연속적인 쪽이 앞
+        k = len(ids) // 2
+        return [t for _v, t in (ids[:k] if half == "low" else ids[k:])]
+
+    event("x-fip-base", "모멘텀 상위 30 · 1개월 보유 (기준선)",
+          "매 월말 12-1 모멘텀 상위 30종을 동일가중으로 담고 1개월(21거래일) 보유한다.",
+          "아래 두 규칙의 «오래 들어서 좋아졌나» 를 말하려면 같은 선택·같은 크기의 "
+          "1개월 보유가 있어야 한다. 랩의 x-mom12 는 상위 10이라 크기가 달라 대조가 안 된다.",
+          enter=1, hold=21, src="me", pick=lambda j, X: _mom_top(j, X))
+    event("x-fip-cont", "연속정보 모멘텀 · 6개월 보유",
+          "매 월말 12-1 모멘텀 상위 30 중 정보이산성(ID) 하위 절반(연속적으로 정보가 온 쪽)을 "
+          "동일가중으로 담고 6개월(126거래일) 보유한다.",
+          "Da·Gurun·Warachka(2014)의 두 번째 주장 — 정보가 잘게 나뉘어 온 종목은 시장이 "
+          "천천히 반응해 모멘텀이 더 늦게 반전한다. 그 주장은 «무엇을 살지» 가 아니라 "
+          "«얼마나 오래 들지» 에 관한 것이라, 보유기간을 규칙마다 고정해 온 이 랩에서는 "
+          "구조적으로 잴 수가 없었다. "
+          "⚠ 원 규칙(x-fip)은 ID 를 선택 축으로 써서 PIT t 0.35 로 죽었다. 이것은 그 "
+          "규칙이 아니고, 소급 수치가 좋아도 PIT 이 답이다.",
+          enter=1, hold=126, src="me", pick=lambda j, X: _mom_top(j, X, "low"))
+    # 시총 하한 변형 3종 — 사전등록 PREREG-2026-08-24-FIPMCF.md.
+    #   🚨 기대하는 것은 «편향 감소» 이지 «알파» 가 아니다. 랩 기존 -mcf 3쌍에서 편향은
+    #     32~75% 줄었는데 PIT t 는 거의 안 움직였다(편향이 주는 만큼 소급도 내려간다).
+    #     t 가 크게 오르면 오히려 의심해야 한다 — 등록 문서에 그렇게 적어 뒀다.
+    for _bs, _lab, _half in (("x-fip-base", "모멘텀 상위 30 · 1개월 보유", None),
+                             ("x-fip-cont", "연속정보 모멘텀 · 6개월 보유", "low"),
+                             ("x-fip-disc", "이산정보 모멘텀 · 6개월 보유", "high")):
+        event(_bs + MCF_SUF, _lab + " · 시총 하한",
+              "위와 같고, 모멘텀 상위를 고르기 전에 그달 후보에서 시총 하위 %d%% 를 "
+              "잘라 낸다." % int(MCF_CUT * 100),
+              "사용자 제안(2026-08-24) — 편출이 소형에 몰리므로 하한을 걸면 소급과 시점정확의 "
+              "차이가 줄 것이다. 자료가 그 전제를 지지한다: S&P 500 편출 82종 중 마지막 시총 "
+              "하위 25%가 77종(94%)이고 상위 10%는 0종이다. "
+              "⚠ 기대하는 것은 편향 감소이지 알파가 아니다 — 랩 기존 시총 하한 3쌍에서 편향은 "
+              "32~75% 줄었는데 PIT t 는 거의 안 움직였다. 편향이 주는 만큼 소급 수치도 같이 "
+              "내려가기 때문이다.",
+              enter=1, hold=(21 if _bs == "x-fip-base" else 126), src="me",
+              pick=(lambda j, X, _h=_half: _mom_top(j, X, _h, mcf=True)))
+
+    event("x-fip-disc", "이산정보 모멘텀 · 6개월 보유 (거울)",
+          "위와 같고 ID 상위 절반(이산적으로 정보가 온 쪽)을 담는다.",
+          "🚨 이것이 이 짝의 핵심이다. 논문이 맞다면 연속정보 쪽이 이쪽보다 나아야 한다. "
+          "둘이 비슷하면 ID 는 지속성을 재는 것이 아니고, 그때는 연속정보 쪽이 기준선보다 "
+          "좋아도 그것은 ID 가 아니라 «6개월 보유» 가 한 일이다. 거울 없이 한쪽만 등록하면 "
+          "그 둘을 영원히 못 가른다.",
+          enter=1, hold=126, src="me", pick=lambda j, X: _mom_top(j, X, "high"))
+
+    # ── 지수 비중상한 6종 (W0~W5) — PREREG-2026-08-24-CAPWEIGHT.md ────
+    # 🚨 랩에 없던 «가중» 축이다. 게시 112종은 전부 «상위 N 동일가중» 이라, 랩은 무엇을
+    #   담을지는 112가지로 재면서 얼마씩 담을지는 한 가지만 쟀다. 이 여섯은 선택을 안 하고
+    #   그달 편입 명단 전부를 담되 개별 비중에만 상한을 건다.
+    # ⚠ 상한 네 수준을 전부 등록하고 전부 싣는다. 좋은 것을 고르면 그것이 최적화다.
+    # ⚠ 결과가 나쁠 것을 예상하고 등록했다 — 이 랩 창(2016-07~)이 «집중이 심해진 구간» 과
+    #   겹치고 비중상한은 본질적으로 메가캡 언더웨이트 베팅이다(등록 문서에 근거를 적었다).
+    _CAPWHY = ("시총가중은 «큰 기업에 더 많이» 라는 순위 정보를 지키는 대신 강세장이 "
+               "길어지면 소수 메가캡이 지수를 지배한다. 동일가중은 집중을 없애지만 회전율과 "
+               "추적오차를 크게 문다. 비중상한은 그 사이다 — 순위 정보는 남기고 실질 분산"
+               "(유효 종목 수)만 올린다. 나스닥100 과 미국 펀드 분산 규제가 실제로 쓰는 "
+               "장치라 운용 이식성이 있다. "
+               "🚨 성과만으로 읽지 말 것 — 이 카드의 본론은 회전율·추적오차·유효 종목 수다. "
+               "⚠ 부동주 조정이 아니라 발행주식수 기준이라 실제 지수의 재현이 아니다. 그래서 "
+               "기준선을 지수가 아니라 같은 방식으로 만든 상한 없는 시총가중으로 둔다. "
+               "⚠ 이 랩 창(2016-07~)은 집중이 심해진 구간이라 메가캡 언더웨이트가 불리하다 — "
+               "알고 등록했고, 나쁘게 나왔다고 창이나 상한을 조정하지 않는다.")
+    xsec("x-capw", "시총가중 (상한 없음 · 기준선)",
+         "그달 편입 명단 전부를 발행주식수 기준 시총가중으로 담는다. 상한이 없다. "
+         "월말 리밸런스.", None, _CAPWHY)
+    for _sid, _cap in (("x-cap10", "10"), ("x-cap5", "5"),
+                       ("x-cap45", "4.5"), ("x-cap3", "3")):
+        xsec(_sid, "시총가중 · 개별 상한 " + _cap + "%",
+             "그달 편입 명단 전부를 시총가중으로 담되 개별 종목 비중을 " + _cap + "%로 "
+             "제한하고, 초과분은 상한에 안 걸린 종목에 시총 비례로 재배분한다. 새로 상한을 "
+             "넘는 종목이 없어질 때까지 반복 수렴한다. 월말 리밸런스.", None, _CAPWHY)
+    xsec("x-capndx", "NASDAQ 100 특별 리밸런스 복제 (트리거형)",
+         "그달 편입 명단 전부를 시총가중으로 담되, 비중 4.5%를 넘는 종목들의 합계가 48%를 "
+         "넘을 때만 그 합계를 40%로 줄이고 줄인 만큼을 나머지에 비례 재배분한다. 안 넘으면 "
+         "시총가중 그대로다. 월말 판정.", None,
+         "나스닥이 실제로 운용하는 룰이고 1998·2011·2023 세 번 발동됐다. 상시 캡과 달리 "
+         "«평소에는 아무것도 안 하다가 쏠림이 임계를 넘을 때만 개입» 하는 구조다. "
+         "🚨 이 랩 창(2016-07~)에는 2023 한 번만 들어온다 — 발동 횟수를 반드시 읽을 것. "
+         "한 번이면 그것은 «규칙» 이 아니라 «사건 하나» 다.")
+
     # ── 실적 이벤트 3종 (E1·E2·E4) — PREREG-2026-08-24-EVENT.md ───────
     # 🚨 랩의 세 번째 구조다. 게시 127종은 전부 달력 기반(월말·주간·분기)인데 이 셋은
     #   종목마다 다른 날 들어가고 나온다. 자료는 SEC 8-K Item 2.02 접수일 54,125건
@@ -5342,12 +5656,202 @@ def build_strats():
           % (len(REB_WE), len(REB_QE),
              sum(1 for s in STRATS if s["kind"] == "xsec" and (s.get("reb") or "me") == "me")))
 
+    # ── 저회전 변형(밴드) — PREREG-2026-08-24-LOWTURN.md ──────────────────
+    # 🚨 원 규칙은 **한 글자도 안 건드린다.** 사는 문턱(상위 N)과 파는 문턱(상위 BAND×N)만
+    #   다르게 둔 사본을 별개 sid 로 더한다. 회전율을 보고 원 규칙을 고치면 사후선택이다.
+    # ⚠ 대상은 «연 회전 10배 초과로 목록에서 내려간 것 중 횡단면 규칙» 12종이다.
+    #   타이밍·이벤트는 «상위 N» 구조가 아니라 밴드가 정의되지 않는다.
+    # ⚠ 이 목록을 손으로 적는다. 회전율을 그때그때 읽어 자동으로 고르면, 자료가 조금
+    #   움직일 때마다 등록된 규칙 집합이 바뀌어 사전등록이 무의미해진다.
+    BAND_BASE = ["x-max5low", "x-maxlow", "x-rev1m", "x-max5low-n52", "x-maxlow-n52",
+                 "x-lshock", "x-rev1w", "x-revdrift-sn", "x-snapback", "x-volsurge",
+                 "x-revdrift", "x-ecm"]
+    _bmap = {s["sid"]: s for s in STRATS}
+    _nb = 0
+    for _bs in BAND_BASE:
+        _o = _bmap.get(_bs)
+        if _o is None or _o["sid"] + _BAND_SUF in _bmap:
+            continue
+        _v = dict(_o)
+        _v["sid"] = _o["sid"] + _BAND_SUF
+        _v["name"] = _o["name"] + " · 밴드 보유"
+        _v["rule"] = (_o["rule"] + " ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 %d 안에 "
+                      "들면 사고, 상위 %d 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 "
+                      "계속 들고, 안 들고 있던 것은 안 산다."
+                      % ((_o.get("topn") or TOPN), int(round((_o.get("topn") or TOPN) * BAND))))
+        # ⚠ 원 규칙의 why 를 이어 붙이므로 **여기서 마크다운을 쓰면 안 된다** — 밑동의 why 에
+        #   ** 가 없어도 이 문장이 화면에 기호를 그대로 찍는다(검증기가 잡았다).
+        STRATS.append(_v)
+
+    # ── 목록에서 뺀 규칙(2026-07-31, 사용자 결정) ───────────────────────────
+    # 여기서 걸러진 규칙은 STRATS 에 들어가지 않는다 — 산출물·다중검정 족 수·PIT·화면 어디에도
+    # 안 나온다. 정의(위 등록 코드)는 남긴다. 무엇을 시도했는지가 기록이고, 되살리려면 sid 를
+    # 이 집합에서 빼면 된다.
+    #
+    # 사유는 둘이고 성격이 다르다 — 섞어 읽지 말 것.
+    #   ① 중복 — 족 수를 **바로잡는다.** 애초에 독립 검정이 아니었으므로 빼는 것이 정확하다.
+    #      · x-riskbudget(역변동성) = x-lowvol(저변동성)  초과수익 상관 **1.000**.
+    #        동일가중 상위10을 뽑는 순간 역변동성 가중이 사라져 같은 바스켓이 된다.
+    #        PIT 레그에서도 수치가 완전히 같았다(소급 +9.51 → PIT +9.57).
+    #      · x-mom-trend(대형주 모멘텀+200일선) ≈ x-mom12  상관 **0.997** · 증분 알파 t −0.38.
+    #   ② 열위 — 대조군보다 나빴던 규칙(Δ샤프 전부 음수). 이쪽은 성과를 보고 빼는 것이다.
+    #      🚨 2026-08-18 정정 — 여기 있던 논증('목록을 줄이면 t_crit 이 3.36 → 3.31 로
+    #        내려간다 · 32종까지 줄이면 3.16 이 되어 잉여현금흐름이 통과로 바뀐다')을
+    #        걷어냈다. **이 랩에는 이제 어떤 임계도 없다** — 2026-08-16 에 BONFERRONI ·
+    #        T_CRIT_PLAIN 상수와 임계 출력이 통째로 삭제됐다(위 정책 주석 참조).
+    #        그러니 목록을 줄이는 것이 무엇의 판정도 바꾸지 않는다. 문턱이 사라졌으니
+    #        '자기에게 유리한 방향' 이라는 논증 자체가 성립하지 않는다.
+    #      ⚠ 그래도 무엇을 왜 뺐는지는 남긴다. 문턱이 없어졌다고 목록에서 조용히 지워도
+    #        되는 것이 아니다 — 남는 위험은 임계가 아니라 **file drawer**(진 것을 안 보이게
+    #        치우는 것)이고, 그 대책은 사유를 아래 딕트에 적고 채점 없이 돌린 것은
+    #        build/tested_not_published.json 에 남기는 것이다.
+    #      ⚠ x-gpa·x-ocfp 는 어제 JKP 빈 칸(Quality·Profitability 현금축)을 메우려고 넣은 것인데
+    #        열위로 빠지면서 그 칸이 다시 빈다. 축이 비었다는 사실과 그 축이 이 표본에서
+    #        졌다는 사실은 둘 다 참이다.
+    RETIRED = {
+        "x-riskbudget": "저변동성과 초과수익 상관 1.000 — 같은 규칙이다(①중복)",
+        "x-mom-trend": "12-1 모멘텀과 상관 0.997 · 증분 알파 t −0.38(①중복)",
+        "t-rsi": "열위 — Δ샤프 −0.046",
+        "x-recency": "열위 — Δ샤프 −0.053",
+        "t-tsmomc": "열위 — Δ샤프 −0.055",
+        "x-gpa": "열위 — Δ샤프 −0.089",
+        "x-ocfp": "열위 — Δ샤프 −0.090",
+        # 🚨 사유 정정(2026-08-18) — 종전에 '저변동성과 상관 0.934' 라고만 적었는데
+        #   그것은 결과이지 원인이 아니다. 원인은 코드만 읽어도 나온다: 축소항
+        #   mv = ixvol[i-1] 이 그달 **전 종목에 같은 스칼라**라 순위를 못 바꾼다 —
+        #   그래서 이 규칙의 정렬은 vol(120) 정렬과 같아진다. 이 문자열은
+        #   RETIRED_RECS 를 타고 화면에 나가므로 기제로 적는다.
+        "x-minvar": "열위 — Δ샤프 −0.095. 축소항이 그달 전 종목에 같은 상수라 "
+                    "순위가 저변동성(vol 120일) 정렬과 같아진다(사실상 같은 규칙)",
+        "x-roe": "열위 — Δ샤프 −0.140",
+        "x-npm": "열위 — Δ샤프 −0.141",
+        "t-sentgate": "열위 — Δ샤프 −0.169",
+        # ③ 운영 비용 — 이 사유는 위 둘과 성격이 다르다(2026-08-04 사용자 결정).
+        #   성적을 보고 뺀 것이 아니라 **계산 시간**을 보고 뺐다. x-peerlag 은 이 랩에서
+        #   유일하게 종목쌍(상관행렬)을 보는 규칙이고, 무의존 규약(refresh-tech.yml 에
+        #   pip install 이 없다) 때문에 131,328쌍 × 199개 월말을 순수 파이썬으로 돈다 —
+        #   실측으로 전체 실행이 1분 40초 → 7분 16초가 됐다.
+        #   ⚠ 그래도 임계는 내려간다(66 → 65종). 성과 기반이 아니어도 남은 규칙에 유리한
+        #     방향인 것은 같으므로, 그 크기를 재서 아래 출력에 남긴다.
+        #   ⚠ 정의(등록 코드·사전 패스)는 지우지 않는다. 되살리려면 이 줄만 빼면 된다.
+        "x-peerlag": "운영 비용 — 상관행렬로 전체 실행이 1m40s → 7m16s (성과 사유 아님. "
+                     "단독 t 1.54 · incr5 0.24)",
+        "x-delay": "운영 비용 — 종목당 5회귀 × 199개월로 약 2분 (성과 사유 아님. "
+                   "단독 t 1.36 · incr5 0.39)",
+    }
+    # ⚠ 뺀 규칙의 기록은 들고 나간다. 셋(x-mom-trend·x-minvar·x-riskbudget)이 아카이브 항목을
+    #   '이 규칙으로 재현했다'고 가리키는 arch 태그를 달고 있어, 그냥 지우면 그 아카이브 항목이
+    #   화면에서 조용히 사라진다(validate 가 잡아 줬다). 재현은 실제로 했으므로 사실이 아니다.
+    # ── 바스켓 크기 전수 시험 — PREREG-2026-08-13-NSWEEP.md ────────────────────
+    # 🚨 이 랩이 금지해 온 절차를 사용자 결정으로 한 번 한다(등록 §0 에 그 사실을 적었다).
+    #   횡단면 규칙 전부를 N∈{10,20,30} 으로 돌리고 **샤프가 가장 높은 N** 을 쓴다.
+    # ⚠ 점수 함수는 손대지 않는다 — 세 판은 같은 점수에서 상위 N 만 다르게 자른다.
+    #   그래야 '크기만 다른 같은 규칙' 이 된다(밑동 레코드를 복사하므로 fn 도 같은 객체다).
+    # ⚠ 크기가 이미 사전등록으로 정해진 규칙은 **뺀다**. 여기서 다시 쓸면 그 등록이 무의미해진다.
+    # ── 리밸런스 주기 배정 — PREREG-2026-08-13-REBAL.md §3 ────────────────
+    # 🚨 호출부마다 reb= 를 흩어 놓지 않고 **한 표**로 둔다. 등록 문서와 코드를 한눈에
+    #   대조할 수 있어야 '결과 보고 옮기지 않았다'가 확인 가능한 주장이 된다.
+    # ⚠ 이 표는 결과를 보기 전에 확정했다. 돌린 뒤 특정 규칙만 옮기면 그 순간 이것은
+    #   전수 시험이 되고, 등록 §2 의 '부풀림 없음' 이 거짓이 된다.
+    # ⚠ 여기는 NSWEEP 보다 **앞**이어야 한다 — 변형(~n)이 dict(밑동) 복사로 만들어지므로
+    #   뒤에 두면 변형이 밑동의 주기를 못 물려받는다.
+    REB_WE = {                              # 주간 — 신호 수명이 한 달보다 짧다
+        "x-rev1m", "x-maxlow", "x-max5low", "x-maxlow-n52", "x-max5low-n52",
+        "x-clv", "x-lshock", "x-volratio",
+    }
+    REB_QE = {                              # 분기 — 입력이 분기에 한 번만 바뀐다
+        "x-ep", "x-sp", "x-btp", "x-fcfy", "x-dy",
+        "x-roe", "x-npm", "x-gpa", "x-ocfp", "x-poacc",
+        "x-rgrow", "x-agrow", "x-lowde", "x-cash", "x-shiss", "x-payout",
+        "x-aci", "x-fscore", "x-debtiss",
+        "x-valcomp", "x-valcomp-sn", "x-btp-n155", "x-payout-n50", "x-agrow-n52",
+    }
+    # ⚠ 서프라이즈 넷(x-sue·x-sur·x-sugp·x-epsacc)은 재무를 쓰지만 **발표 시점**이 신호라
+    #   분기 격자에 맞추면 발표 직후를 놓친다. x-custconc 는 연차보고 기반이지만 후보가
+    #   적어 분기 리밸이 무보유 구간을 만들 위험이 있어 이번엔 안 건드린다. 등록 §3 참조.
+    # 🚨 설명문의 '월말' 을 같이 고친다. 이 파일에는 "…동일가중, 월말 리밸런스." 가 92곳
+    #   박혀 있는데, 주기를 옮기고 글자를 안 고치면 **화면이 거짓말을 한다.** 손으로 31곳을
+    #   고치면 반드시 빠뜨리므로 등록 시점에 기계로 바꾼다(등록 §4).
+    def _reb_text(s, lab):
+        for a in ("월말 리밸런스", "월말리밸런스", "월말 리밸", "월말마다", "매 월말", "매월말"):
+            s = s.replace(a, lab + " 리밸런스" if a.endswith(("리밸런스", "리밸")) else lab + "마다")
+        # 리밸 말고 **채점 시점**을 가리키는 '월말' 도 있다(x-clv 의 "월말 종가 $5 이상",
+        # x-valcomp 의 "월말 단면 z-점수"). 채점은 리밸 날에 하므로 주기를 옮기면 이쪽도
+        # 같이 틀린 말이 된다 — 주기에 안 매이는 표현으로 바꾼다.
+        for a, b in (("월말 종가", "리밸 시점 종가"), ("월말 단면", "리밸 시점 단면"),
+                     ("월말 시점", "리밸 시점"), ("그 달 후보", "그 시점 후보")):
+            s = s.replace(a, b)
+        return s
+
+    _reb_seen = set()
+    for _s in STRATS:
+        if _s["kind"] != "xsec":
+            continue
+        _k = "we" if _s["sid"] in REB_WE else ("qe" if _s["sid"] in REB_QE else None)
+        if not _k:
+            continue
+        _s["reb"] = _k
+        _reb_seen.add(_s["sid"])
+        _lab = REB_KINDS[_k]
+        _s["rule"] = _reb_text(_s["rule"], _lab)
+        _s["why"] = _reb_text(_s["why"], _lab)
+    # 🚨 표에 있는데 목록에 없는 sid 를 **조용히 넘기지 않는다.** 오타 하나면 그 규칙이
+    #   월말인 채로 남고, 등록 문서만 옮겼다고 말하게 된다(이 저장소가 되풀이 밟은 유형이다).
+    # ⚠ **걷힌 규칙은 유령이 아니다**(2026-08-19). DROPPED 에 이름이 있으면 등록 목록에
+    #   없는 것이 정상이다 — 그것까지 막으면 규칙을 지울 때마다 사전등록 문서를 고쳐야 하고,
+    #   그러면 «돌리기 전에 못박은 표» 라는 성질이 사라진다. 표는 그대로 두고 여기서 뺀다.
+    _reb_ghost = sorted((REB_WE | REB_QE) - _reb_seen - DROPPED)
+    if _reb_ghost:
+        raise SystemExit("리밸 주기 표에 있으나 전략 목록에 없는 sid: %s — "
+                         "PREREG-2026-08-13-REBAL.md 와 맞출 것" % ", ".join(_reb_ghost))
+    print("  리밸 주기 — 주간 %d종 · 분기 %d종 · 월말 %d종 (PREREG-2026-08-13-REBAL)"
+          % (len(REB_WE), len(REB_QE),
+             sum(1 for s in STRATS if s["kind"] == "xsec" and (s.get("reb") or "me") == "me")))
+
+    # ── 저회전 변형(밴드) — PREREG-2026-08-24-LOWTURN.md ──────────────────
+    # 🚨 원 규칙은 **한 글자도 안 건드린다.** 사는 문턱(상위 N)과 파는 문턱(상위 BAND×N)만
+    #   다르게 둔 사본을 별개 sid 로 더한다. 회전율을 보고 원 규칙을 고치면 사후선택이다.
+    # ⚠ 대상은 «연 회전 10배 초과로 목록에서 내려간 것 중 횡단면 규칙» 12종이다.
+    #   타이밍·이벤트는 «상위 N» 구조가 아니라 밴드가 정의되지 않는다.
+    # ⚠ 이 목록을 손으로 적는다. 회전율을 그때그때 읽어 자동으로 고르면, 자료가 조금
+    #   움직일 때마다 등록된 규칙 집합이 바뀌어 사전등록이 무의미해진다.
+    BAND_BASE = ["x-max5low", "x-maxlow", "x-rev1m", "x-max5low-n52", "x-maxlow-n52",
+                 "x-lshock", "x-rev1w", "x-revdrift-sn", "x-snapback", "x-volsurge",
+                 "x-revdrift", "x-ecm"]
+    _bmap = {s["sid"]: s for s in STRATS}
+    _nb = 0
+    for _bs in BAND_BASE:
+        _o = _bmap.get(_bs)
+        if _o is None or _o["sid"] + _BAND_SUF in _bmap:
+            continue
+        _v = dict(_o)
+        _v["sid"] = _o["sid"] + _BAND_SUF
+        _v["name"] = _o["name"] + " · 밴드 보유"
+        _v["rule"] = (_o["rule"] + " ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 %d 안에 "
+                      "들면 사고, 상위 %d 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 "
+                      "계속 들고, 안 들고 있던 것은 안 산다."
+                      % ((_o.get("topn") or TOPN), int(round((_o.get("topn") or TOPN) * BAND))))
+        # ⚠ 원 규칙의 why 를 이어 붙이므로 **여기서 마크다운을 쓰면 안 된다** — 밑동의 why 에
+        #   ** 가 없어도 이 문장이 화면에 기호를 그대로 찍는다(검증기가 잡았다).
+        _v["why"] = ("원 규칙과 채점 산식·리밸 주기·바스켓 크기·대조군이 모두 같고 파는 "
+                     "문턱만 다르다. 순위가 경계에서 흔들리는 종목이 매달 들락거리는 것을 "
+                     "막는 이력현상이다. ⚠ 좋은 종목을 더 오래 드는 것이 아니라 나쁜 종목도 "
+                     "더 오래 든다 — 회전이 주는 만큼 반응이 느려지는 맞바꿈이고, 그 맞바꿈이 "
+                     "이득인지가 이 변형이 묻는 것이다. ⚠ 밴드 폭은 하나만 돌렸다(2.0) — "
+                     "여러 값을 돌려 좋은 것을 고르면 그것이 곧 최적화다. 원 규칙: " + _o["name"])
+        STRATS.append(_v); _nb += 1
+    if _nb:
+        print("  저회전 변형(밴드 %.1f) %d종 등록 — 원 규칙은 안 건드린다" % (BAND, _nb))
+
     NSWEEP = NSWEEP_GRID
     NSW_SKIP = {
         "x-updown",                                            # 2026-08-12 사용자 결정으로 20종
         "x-btp-n155", "x-payout-n50", "x-agrow-n52",           # PREREG-2026-08-11-BASKET
         "x-lowvol-n100", "x-maxlow-n52", "x-max5low-n52",
-    } | set(WEIGHTED_SIDS) | set(LONGSHORT_SIDS)               # 바스켓이 N 으로 안 정해진다
+    } | set(WEIGHTED_SIDS) | set(LONGSHORT_SIDS) | CAP_ALL     # 바스켓이 N 으로 안 정해진다
+    # ⚠ 밴드 변형도 N 스윕에서 뺀다 — 이미 «원 규칙의 변형» 이라 크기까지 겹쳐 돌리면
+    #   «변형의 변형» 이 되고 원 규칙과의 비교가 흐려진다(-mcf 와 같은 사유).
+    NSW_SKIP |= {s["sid"] for s in STRATS if is_band(s["sid"])}
     # ⚠ 롱숏 둘은 선택 단위가 **서브산업**이라 «상위 N 종목» 이라는 것이 없다. N 전수 시험을
     #   돌리면 같은 규칙이 세 번 세어져 다중검정 족만 부풀린다.
     # 🚨 ML6 을 스윕에서 뺀다 — **돌리기 전 결정**(PREREG-2026-08-16-ML6.md §5 가 바스켓 10 을
@@ -5596,6 +6100,16 @@ def _narrative_state(sid, i, X):
     if sid not in ("x-realsw", "x-curvebank", "x-ratehot", "x-fxweak"):
         return
     dates = X["dates"]
+    # 🚨 계열이 아예 안 실렸으면 **죽는다.** 조용히 «게이트가 늘 꺼짐» 으로 넘어가면
+    #   그 규칙은 이름만 같고 다른 것이 된다 — 오늘 그 사고를 두 번 겪었다(변형 sid 가
+    #   게이트를 안 타던 것 · 숏 부호를 안 타던 것). 부르는 쪽이 X 를 만들 때 빠뜨렸다는
+    #   뜻이므로 그 자리에서 알려야 한다(실제로 pit_backtest 의 X 에 없어서 잡혔다).
+    for _k in ("mac_real", "mac_curve", "mac_usd"):
+        if not X.get(_k):
+            raise SystemExit(
+                "%s: X 에 %s 가 없다 — 국면 서술형 규칙의 게이트가 통째로 풀린다. "
+                "부르는 쪽에서 macro_level(...) 을 실을 것(tech_backtest.run 과 "
+                "pit_backtest.main 두 곳 다 필요하다)." % (sid, _k))
     if sid == "x-realsw":
         lvl = X.get("mac_real") or []
         # 🚨 밴드 안이면 «직전에 밖이었던 쪽» 을 쓴다. 상태를 들고 다니지 않고 **되돌아봐서**
@@ -6272,6 +6786,12 @@ def xsec_score_at(S, i, X, pool=None):
             elif sid == "x-npm":
                 nn, rv = ttm2(f.get("ni"), f.get("ni_a"), dt_), ttm2(f.get("rev"), f.get("rev_a"), dt_)
                 v = (nn / rv) if (nn is not None and rv and rv > 0) else None
+            elif sid in CAP_ALL:
+                # 🚨 이 계열은 **선택을 안 한다.** 그달 편입 명단 전부를 담고 가중만 바꾼다.
+                #   여기서는 «후보 자격» 만 만들고(시총을 만들 수 있으면 0점), 비중은
+                #   xsec_pick_at 의 cap_pick 이 통째로 정한다.
+                _sn = asof_fund(f.get("sh"), dt_)
+                v = 0.0 if (_sn and _sn > 0 and mcap) else None
             elif sid == "x-realsw":
                 # 실질금리 국면에 따라 **채점축 자체**를 바꾼다. 어느 축인지는 _REALSW_LEG 가
                 #   그 시점에 정해 둔다(밴드 안이면 직전에 밖이었던 쪽을 그대로 쓴다).
@@ -6482,7 +7002,7 @@ def sub_baskets(X, i, axis, tickers=None):
     return leg(top, 1.0), leg(bot, -1.0), len(score)
 
 
-def xsec_pick_at(S, i, X, sc, ind_raw):
+def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     """점수 sc 에서 그달 바스켓을 고른다 — **선택도 한 벌**이어야 한다.
 
     🚨 채점만 한 벌로 합치고 선택을 두 벌로 두면 소용이 없다. 실제로 그랬다:
@@ -6508,6 +7028,12 @@ def xsec_pick_at(S, i, X, sc, ind_raw):
     if S["sid"] == "x-indmom":
         _pw = pick_industry(ind_raw, top_sectors=2)
         return [t for t, _w in _pw], {t: w for t, w in _pw}
+    if _BASE_SID(S["sid"]) in CAP_ALL:
+        # 사전등록 PREREG-2026-08-24-CAPWEIGHT. 선택을 안 하고 **가중만** 정한다.
+        _pw = cap_pick(S, i, X)
+        if not _pw:
+            return [], None
+        return [t for t, _w in _pw], {t: w for t, w in _pw}
     if _BASE_SID(S["sid"]) in LONGSHORT_SIDS:
         # 사전등록 PREREG-2026-08-23-NARRATIVE B1·B2. 채점(sc)을 안 쓴다 —
         #   선택 단위가 종목이 아니라 **서브산업**이라 여기서 통째로 만든다.
@@ -6530,6 +7056,9 @@ def xsec_pick_at(S, i, X, sc, ind_raw):
         _h = pick_top(sc, S["sid"], S.get("topn"))
         _w = _MLS.weights(_tb, S, i, X, _h, _pool, X.get("pool_at"))
         return _h, _w
+    # 밴드 변형이면 이력현상을 적용한다(PREREG-2026-08-24-LOWTURN). 그 외는 종전 그대로다.
+    if is_band(S["sid"]):
+        return pick_band(sc, S["sid"], S.get("topn"), held), None
     return pick_top(sc, S["sid"], S.get("topn")), None
 
 
@@ -7025,7 +7554,11 @@ def run():
                 if (i - 1) in _rebset:
                     sc, ind_raw, comp_raw = xsec_score_at(S, i, _X)
                     pool_hist.append((dates[i - 1], len(sc)))
-                    new, new_w = xsec_pick_at(S, i, _X, sc, ind_raw)
+                    # 밴드 변형은 **직전 보유**를 알아야 이력현상이 성립한다.
+                    #   ⚠ 다른 규칙에는 안 넘긴다(기본값 None) — 넘기면 그 규칙들의 선택이
+                    #     경로의존이 되어 재실행 결과가 달라진다.
+                    new, new_w = xsec_pick_at(S, i, _X, sc, ind_raw,
+                                              held=(hold if is_band(S["sid"]) else None))
                     if len(sc) < XSEC_MIN_POOL:
                         # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
                         #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
@@ -7527,7 +8060,14 @@ def run():
         _tg = (r.get("bask") or {}).get("tgt")
         if not _tg or _tg == TOPN:
             continue
-        if _XREF.search(r["sid"]):                 # ① 밑동판 상호참조 계열은 손대지 않는다
+        # ⚠ 밴드 변형도 여기서 뺀다. x-maxlow-n52-band 는 접미사가 둘이라 원문 sid 가
+        #   크기 변형 정규식에 안 걸려 상호참조 계열인데도 치환 패스를 탔고, 치환할
+        #   대상이 없어 «치환 실패» 로 죽었다(실측 2026-08-25).
+        #   🚨 그렇다고 _BASE_SID 로 바꾸면 안 된다 — 그러면 크기 변형 밑동들(x-maxlow-n52
+        #     등 5종)까지 상호참조 판정에서 풀려 반대쪽으로 죽는다(그렇게 한 번 더 죽었다).
+        #     원문 sid 로 보되 밴드만 따로 빼는 것이 맞다. 이번 주에 접미사 관련 사고가
+        #     네 번째다 — 접미사를 더할 때는 밑동 비교가 필요한 자리를 전부 훑어야 한다.
+        if _XREF.search(r["sid"]) or is_band(r["sid"]):   # ① 상호참조 계열은 안 건드린다
             continue
         _k = 0
         for _f in ("rule", "why"):
