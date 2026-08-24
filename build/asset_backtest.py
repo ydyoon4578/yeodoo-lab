@@ -752,6 +752,12 @@ ROLE = {
     "sec-tsmom": "수익엔진", "sec-dual": "수익엔진", "sec-lowvol": "수익엔진",
     "sec-52wh": "수익엔진", "sec-rev1m": "수익엔진", "sec-lowcorr": "수익엔진",
     "sec-sma200": "수익엔진", "sec-term": "수익엔진", "sec-vix": "수익엔진",
+    # 거시 축 팩터 전환 4종 — PREREG-2026-08-24-FACTORSWITCH.md.
+    #   ⚠ «타이밍오버레이» 가 아니라 «수익엔진» 이다. 위험을 켰다 껐다 하는 것이 아니라
+    #     **항상 100% 투자하되 어느 팩터인지**를 바꾼다(현금으로 안 빠진다).
+    # ⚠ 이 지도의 키는 **sid** 다(arch 가 아니다). arch=None 이라 sid 로 적는다.
+    "fx-factorsw": "수익엔진", "fx-factorsw-mom": "수익엔진",
+    "fx-trend-gate": "수익엔진", "curve-factorsw": "수익엔진",
     "sec-halloween": "수익엔진",
     # 다단계 TAA·통계·간단 ML 10종(2026-08-12).
     # ⚠ Keller 계열·국면 스위치·능형회귀는 ‘언제 들어가 있을까’가 아니라 ‘무엇을’도 고른다 — 수익엔진.
@@ -1074,6 +1080,107 @@ def build():
     add("mf-satellite", "managed-futures-satellite", s_mf)
 
     # 17) 신용 스프레드 게이트(HYG/LQD 프록시)
+    # ── 거시 축 팩터 전환 4종 (D1~D4) — PREREG-2026-08-24-FACTORSWITCH.md ──
+    # 🚨 앞선 A1(x-realsw · 종목 20개 바스켓 전환)이 실패한 뒤의 후속이다. 두 교훈을 반영했다:
+    #   ① 축이 틀렸었다 — 실질금리는 성장/가치를 못 가른다(ETF 대리 재측정: 전환 0.742 <
+    #      성장 단독 0.836). 갈리는 짝을 735조합 훑기로 다시 골랐다.
+    #   ② 종목 바스켓을 52번 갈아타면 마찰이 이득을 먹는다. **ETF 전환은 거래 2건**이라
+    #      여기(자산 랩)에 둔다.
+    # ⚠ 후보를 검색으로 골랐으므로 표본 안 성적은 낙관 쪽이다. 등록 문서가 «표본 밖에서만
+    #   판정» 을 못박고 있다.
+    # ⚠ 창이 2011~ 이다(USMV·SPHB 상장). 이 넷은 **GFC 를 한 번도 안 본다** — 2006 부터
+    #   도는 다른 자산 규칙과 같은 표에서 샤프를 비교하면 안 된다.
+    def _usd_chg(i, back=63):
+        """광의 달러지수의 back 거래일 변화(지수라 비율). 못 구하면 None."""
+        d0, d1 = DTS[max(0, i - back)], DTS[i]
+        a0, a1 = macro_asof("DTWEXBGS", d0), macro_asof("DTWEXBGS", d1)
+        return (a1 / a0 - 1.0) if (a0 and a1 and a0 > 0) else None
+
+    def _curve_chg(i, back=63):
+        """10년−2년 스프레드의 back 거래일 변화(%p 차분)."""
+        d0, d1 = DTS[max(0, i - back)], DTS[i]
+        a0, a1 = macro_asof("T10Y2Y", d0), macro_asof("T10Y2Y", d1)
+        return (a1 - a0) if (a0 is not None and a1 is not None) else None
+
+    def _switch(hi, lo, cond, label, rule, why, note=None):
+        """상태가 참이면 hi, 아니면 lo 를 100% — 두 다리 ETF 전환의 공통 뼈대.
+
+        ⚠ 뼈대를 하나로 두는 이유는 넷이 **상태만 다르기** 때문이다. 넷을 각자 쓰면
+          다리 처리나 결측 규약이 조용히 갈린다.
+        ⚠ 상태를 못 구하는 날(창 앞머리·거시 결측)은 **저변동 다리**로 둔다. 임의 선택이
+          아니라 «모르면 방어» 라는 한 방향을 미리 정해 둔 것이다 — 결과를 보고 정하면
+          그 선택 자체가 자유도가 된다.
+        """
+        ts = [hi, lo, "SPY"]
+        st = first_common(ts)
+
+        def w(i):
+            c = cond(i)
+            return {hi: 1.0} if c else {lo: 1.0}
+        return run_weights(w, st, label, lambda i: {"^GSPC": 1.0}, rule, why, note=note)
+
+    def s_fxsw():
+        return _switch("SPHB", "USMV",
+                       lambda i: (_usd_chg(i) or 0.0) < 0,
+                       "달러 축 팩터 전환 (고베타 ↔ 저변동)",
+                       "광의 달러지수(DTWEXBGS)의 63거래일 변화가 음이면 S&P500 고베타(SPHB) "
+                       "100%, 아니면 최소변동성(USMV) 100%. 월말 판정.",
+                       "달러 약세는 해외매출·실물자산·위험선호가 함께 도는 구간이라 고베타가 "
+                       "낫고, 강세면 반대라는 가설이다. 추세를 통제해도 갈림이 남는 것을 "
+                       "확인했다 — SPY 가 200일선 위인 152개월만 떼어도 달러약세 69개월 "
+                       "고베타-저변동 +2.36%p, 강세 83개월 -0.02%p 였다. "
+                       "⚠ 상장이 2011 이라 이 규칙은 금융위기를 한 번도 안 본다.",
+                       note="후보를 735조합 훑기로 골랐다 — 표본 안 성적은 낙관 쪽이다.")
+
+    def s_fxsw_mom():
+        return _switch("MTUM", "USMV",
+                       lambda i: (_usd_chg(i) or 0.0) < 0,
+                       "달러 축 팩터 전환 (모멘텀 ↔ 저변동)",
+                       "위와 같은 상태, 다리만 모멘텀(MTUM) ↔ 최소변동성(USMV).",
+                       "위가 «베타를 켰다 껐다» 라면 이것은 «어느 팩터인가» 다. 두 다리의 "
+                       "단독 샤프가 비슷해(0.960·0.947) 전환이 더하는 것이 순수하게 상태 "
+                       "정보인지 보기에 낫다 — 고베타 짝은 저변동이 원래 더 좋아서 «약한 "
+                       "다리를 덜 드는 것» 만으로도 좋아 보일 수 있다.",
+                       note="후보를 735조합 훑기로 골랐다 — 표본 안 성적은 낙관 쪽이다.")
+
+    def s_fxsw_gate():
+        def _c(i):
+            if (_usd_chg(i) or 0.0) >= 0:
+                return False
+            sp = ser("SPY")
+            m = sma(sp, i, 200)
+            return bool(m is not None and sp[i] is not None and sp[i] > m)
+        return _switch("SPHB", "USMV", _c,
+                       "달러 ∧ 추세 이중관문 (고베타 ↔ 저변동)",
+                       "달러지수 63거래일 변화가 음이고 동시에 SPY 종가가 200일 "
+                       "이동평균 위일 때만 고베타(SPHB), 아니면 저변동(USMV). 월말 판정.",
+                       "랩에 이미 200일선 기반 팩터 로테이션(a-a2-factor-rot)이 있다. 그 "
+                       "위에 달러가 무엇을 더하는지 보는 규칙이다 — 추세만 쓰면 고베타 다리를 "
+                       "85% 의 달에 드는데, 달러를 겹치면 그 절반으로 준다. "
+                       "⚠ 관문 둘을 곱하면 «덜 전환해서» 좋아졌는지 «덜 틀려서» 좋아졌는지 "
+                       "가 섞인다. 전환수와 다리 비중을 같이 봐야 갈린다(등록 문서 실패 조건).",
+                       note="후보를 735조합 훑기로 골랐다 — 표본 안 성적은 낙관 쪽이다.")
+
+    def s_curvesw():
+        return _switch("SPHB", "USMV",
+                       lambda i: (_curve_chg(i) or 0.0) > 0,
+                       "곡선 축 팩터 전환 (고베타 ↔ 저변동)",
+                       "10년-2년 스프레드의 63거래일 변화가 양(곡선 확대)이면 고베타(SPHB), "
+                       "아니면 저변동(USMV). 월말 판정.",
+                       "달러 축(위)과 같은 다리를 다른 상태로 가른다. 둘이 거의 같은 곡선을 "
+                       "내면 축이 하나인 것이고, 갈리면 서로 다른 것을 재고 있다는 뜻이다 — "
+                       "랩이 x-ratebeta 와 x-fxbeta 를 쌍으로 둔 것과 같은 이유다. "
+                       "⚠ 둘의 상관이 0.95 를 넘으면 별개 검정으로 세면 안 된다(등록 문서).",
+                       note="후보를 735조합 훑기로 골랐다 — 표본 안 성적은 낙관 쪽이다.")
+
+    # ⚠ arch=None 이다. arch 는 **기각 원장(archive_index)의 sid 를 가리키는 링크**이고,
+    #   이 넷은 아카이브에서 되살린 것이 아니라 새로 등록한 규칙이라 가리킬 곳이 없다.
+    #   없는 sid 를 적으면 화면 카드가 빈다(검증기가 그렇게 잡았다).
+    add("fx-factorsw", None, s_fxsw)
+    add("fx-factorsw-mom", None, s_fxsw_mom)
+    add("fx-trend-gate", None, s_fxsw_gate)
+    add("curve-factorsw", None, s_curvesw)
+
     def s_credit():
         ts = ["HYG", "LQD", "SPY", "SHY"]
         st = first_common(ts)
