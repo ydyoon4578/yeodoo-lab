@@ -3457,6 +3457,37 @@ try:
 except Exception as _e:
     errors.append("샤프 하한 대조가 예외로 죽었다 — %s" % _e)
 
+# ── 「연 회전율 10배 초과는 남기지 않는다」 — **사용자 결정** 대조 ─────────────
+# 🚨 랩의 문턱이 아니다. 2026-08-24 사용자 결정이고, 바깥 잣대가 근거다 — 국내 공모펀드
+#   평균 매매회전율 약 2.4배(금융투자협회 2023-06 · 47개 운용사 243.80%), 국내 최고
+#   운용사 약 20배, 국제적으로는 2배만 넘어도 투기적으로 본다.
+# 🚨 이 잣대는 성적이 아니라 **행동**을 자른다. 실제로 걸린 21종 중 여럿은 비용 후에도
+#   샤프 0.9 대였고(이동평균 합의 0.984 · 주간 반전 0.932), 그래서 이 삭제는 남은 목록을
+#   **더 나쁘게** 만들었다(중앙 0.839 → 0.811). 보통의 생존 선택과 반대다.
+# ⚠ 회전율이 없는 규칙(자산 랩 일부)은 대조 대상이 아니다 — «없음» 을 «작음» 으로 읽지 않는다.
+_TURN_CAP = 10.0
+try:
+    _si5 = json.loads(rd("data/strategy_index.json"))
+    _bad5 = []
+    for _x in _si5.get("items") or []:
+        _tv = _x.get("turnover")
+        if isinstance(_tv, (int, float)) and _tv > _TURN_CAP:
+            _bad5.append("%s %s(연 %.1f회)"
+                         % (_x.get("sid"), (_x.get("name") or "")[:22], _tv))
+    if _bad5:
+        errors.append(
+            "연 회전율 %.0f배 초과인데 목록에 남아 있는 전략 %d종 — %s. 이것은 랩의 문턱이 "
+            "아니라 **사용자 결정**(2026-08-24)이다. 빼려면 build/strategy_index.py 의 "
+            "HIDE_SIDS 에 sid 를 넣고 build/tested_not_published.json 에 사유를 함께 적을 것"
+            % (_TURN_CAP, len(_bad5), " · ".join(_bad5[:6])))
+    else:
+        _tv2 = sorted((_x.get("turnover") for _x in (_si5.get("items") or [])
+                       if isinstance(_x.get("turnover"), (int, float))), reverse=True)
+        print("  ~ 회전율 상한 대조 통과(사용자 결정 %.0f배 · 게시 %d종 최고 %.1f회)"
+              % (_TURN_CAP, len(_si5.get("items") or []), _tv2[0] if _tv2 else 0.0))
+except Exception as _e:
+    errors.append("회전율 상한 대조가 예외로 죽었다 — %s" % _e)
+
 # ── 1일 분봉 판에 **평평한 꼬리**가 있는가 ──────────────────────────────────
 # 🚨 2026-08-23 사용자 지적 «1일 스타일 수익률 차트 제대로 안 나오는 게 있네».
 #   원인은 봉을 시각이 아니라 **위치**로 읽은 것이었다. 거래가 뜸한 ETF 는 거래 없는

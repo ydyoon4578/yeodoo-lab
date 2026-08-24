@@ -1498,7 +1498,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           // 앞에 표시를 달아 목록에서 잘려도 살아남게 하고, 수치는 뒤에 붙인다.
           if(x.metrics_net&&x.cost_drag!=null){
             var mn=x.metrics_net, bn=x.bench_net||{};
-            if(x.cost_sensitive||x.cost_kill)
+            // 🚨 2026-08-24 — 문턱을 낮췄다. 종전에는 cost_sensitive·cost_kill 일 때만
+            //   «비용 민감» 을 앞에 달았는데, 그 판정은 «비용 때문에 대조군 대비 우열이
+            //   뒤집혔나» 라 **드래그가 커도 원래 크게 이기면 안 달렸다.** 실측으로 실적
+            //   공백기가 연 −14.11%p 를 먹고도 표시가 없었다(CAGR 23.6 → 9.5).
+            //   드래그가 연 3%p 를 넘으면 그 자체로 적는다 — 독자가 무비용 숫자를 그대로
+            //   읽지 않게 하는 것이 목적이고, 우열이 안 뒤집혀도 그 목적은 같다.
+            if(x.cost_sensitive||x.cost_kill||Number(x.cost_drag)>=3)
               d.vt='<b>비용 민감 (연 −'+x.cost_drag+'%p)</b> — '+d.vt;
             d.vp.push('<b>사고팔 때 드는 비용을 빼면</b> (한 번 오갈 때 '+x.cost_bp+'bp) — '+
                   '연 수익 '+(x.metrics&&x.metrics.cagr!=null?x.metrics.cagr:'—')+'% → '+
@@ -2945,7 +2951,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(_qD!=null)labRows.push(['Δ샤프 (지수 대비)',(_qD>0?'+':'')+Number(_qD).toFixed(3)]);
       if(_qT!=null)labRows.push(['t값',Number(_qT).toFixed(2)]);
       if(d._beta!=null)labRows.push(['실측 베타',Number(d._beta).toFixed(2)]);
-      if(d._turn!=null)labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회']);
+      // 🚨 2026-08-24 — 연 회전에 **바깥 잣대**를 붙인다. 종전에는 «연 122.7회» 라고만
+      //   적었는데, 그 수가 큰지 작은지 독자가 알 길이 없었다. 국내 공모펀드 평균
+      //   매매회전율은 2.44배(금융투자협회 집계 2023-06 기준 47개 운용사 243.80%)이고,
+      //   국내에서 가장 높은 운용사가 20.2배다. 국제적으로는 2배만 넘어도 투기적으로 본다.
+      //   ⚠ 랩 수치와 공시 회전율은 눈금이 완전히 같지 않다(랩은 연 매매대금 ÷ NAV).
+      //     그래서 «대략 어디쯤인가» 로만 적고 등호를 쓰지 않는다.
+      if(d._turn!=null){
+        var _tv=Number(d._turn), _tn='';
+        if(_tv>20.2)      _tn=' — 국내 최고 회전 운용사(약 20배)보다 높습니다';
+        else if(_tv>10)   _tn=' — 국내 공모펀드 평균(약 2.4배)의 4배 이상입니다';
+        else if(_tv>2.44) _tn=' — 국내 공모펀드 평균(약 2.4배)보다 높습니다';
+        labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회'+_tn]);
+      }
       // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
       //   글자로 박아 두면 됐다. 주기가 갈린 뒤로는 그 글자가 곧 거짓말이 될 수 있어
       //   자료에서 읽어 적는다. 연 회전 바로 밑에 둔다 — 둘은 같이 읽어야 하는 값이다.
