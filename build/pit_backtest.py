@@ -238,6 +238,24 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
 # ⚠ 이 규칙들은 종목을 안 고르므로 후보 커버리지 게이트(XSEC_MIN_POOL)와 무관하다.
 #   대신 **계열이 유니버스에 딸린다** — disp·mclv·brd·ixr 을 그때 명단으로 만들어야 하고,
 #   그것을 TB.timing_ctx 가 members_at 을 받아 처리한다.
+# 이벤트 규칙 6종(kind="event") — 2026-08-24. 관문(_orphan)이 이제 이쪽도 본다.
+# ⚠ 이 여섯은 «상위 N 바스켓» 이 아니라 종목마다 진입·청산일이 다르다. run() 의
+#   이벤트 갈래가 랩 본편 event_weights 를 그대로 불러 두 레그를 만든다.
+# 🚨 실적 3종은 발표일(8-K 접수 도장)이 그 자체로 시점정확이라 **완전 PIT** 이 된다 —
+#   편출 종목의 발표일도 CIK 로 남아 있다. FIP 3종은 가격만 쓰므로 역시 완전 PIT 이다.
+EVENT_SIDS = ["x-pead", "x-pead-sue", "x-earngap",
+              "x-fip-base", "x-fip-cont", "x-fip-disc",
+              # 시총 하한 변형 — PREREG-2026-08-24-FIPMCF. 편향이 줄어드는지 재려면
+              #   이쪽도 PIT 을 돌아야 한다(그게 이 변형의 존재 이유다).
+              "x-fip-base-mcf", "x-fip-cont-mcf", "x-fip-disc-mcf"]
+
+# 2026-08-24 신규 횡단면 — 관문(_orphan)이 잡아서 배선했다.
+#   가격·거시만 쓰는 둘은 편출 종목에도 그대로 적용된다(거시 계열은 전 종목 공유).
+NEW_PRICE_SIDS = ["x-ratehot", "x-fxweak"]
+#   재무를 쓰는 일곱. 편출분은 data/fx_pit(재무)·_pit_sh_cache(주식수)로 덮인다.
+NEW_FUND_SIDS = ["x-realsw",
+                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx"]
+
 TIMING_SIDS = ["t-sma200", "t-cross", "t-chan", "t-macd", "t-gapcap", "t-mhvote",
                "t-donch", "t-ddgate", "t-chand", "t-voltgt", "t-clvgate",
                "t-breadth", "t-breadthc", "t-tom", "t-mavote", "t-volreg",
@@ -247,6 +265,22 @@ TIMING_SIDS = ["t-sma200", "t-cross", "t-chan", "t-macd", "t-gapcap", "t-mhvote"
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
 EXCLUDED_SIDS = {
+    # ── 2026-08-24 GICS 서브산업 기반 3종 — **자료가 없어 완전 PIT 이 불가능하다** ────
+    # 🚨 실측: 창 안 편출 종목 336종 중 GICS 서브산업(members.json 의 sub)이 있는 것이
+    #   **0종**이다. members.json 은 오늘 명단만 담고, 편출 종목의 산업 분류는 랩 어디에도
+    #   없다(가격은 pit_px, 재무는 fx_pit 로 덮었지만 분류는 원천이 다르다).
+    #   그래서 이 셋을 PIT 로 돌리면 편출분이 후보에서 통째로 빠져 **«PIT» 이라 적힌
+    #   생존자 백테스트**가 된다 — 그것이 이 파일이 막아야 할 실패다.
+    # ⚠ 「자료가 없어 PIT 을 못 잰다」는 대개 절반만 맞다(선견은 자료 없이 보정된다).
+    #   그런데 이 셋은 **선택 단위가 서브산업**이라, 편출 종목이 빠지면 서브산업의 구성
+    #   자체가 달라진다 — 선견만 보정하는 부분 PIT 도 뜻이 없다.
+    #   → 분류 이력을 모으면(그때는 새 수집기가 필요하다) 그때 여기서 뺀다.
+    "x-subls": "편출 종목의 GICS 서브산업이 랩에 없다(336종 중 0종) — 선택 단위가 "
+               "서브산업이라 편출분이 빠지면 구성 자체가 달라져 부분 PIT 도 뜻이 없다",
+    "x-subom": "위와 같다(x-subls 참조)",
+    "x-curvebank": "은행·보험 서브산업으로 후보를 좁히는데 편출 종목의 서브산업이 없다 — "
+                   "그 창의 편출 은행이 통째로 빠진다",
+
     # 🚨 2026-08-14 오후 — **거래량 벽이 풀렸다.** yf.download 응답의 Volume 열을 안 꺼내
     #   쓰고 있었을 뿐이고, 꺼내 _pit_vol_cache.json 으로 저장하니 PIT 창 멤버-월 커버가
     #   가격·고저가와 **정확히 같은 96.91%** 가 됐다(36226/37382 · 셋이 같은 수다).
@@ -995,9 +1029,15 @@ def main():
     #   그렇게 13종이 생존편향 검사를 한 번도 안 받은 채 소급 t 로만 판정되고 있었다
     #   (그중 x-hlspread 는 소급 t 5.00 이었다). 목록에 없다는 것은 아무 신호도 안 낸다 —
     #   그래서 사람이 알아챌 방법이 없었고, 그것이 이 관문이 막는 것이다.
-    _listed = set(PRICE_SIDS) | set(FUND_SIDS) | set(EXCLUDED_SIDS)
+    _listed = (set(PRICE_SIDS) | set(NEW_PRICE_SIDS) | set(FUND_SIDS) | set(NEW_FUND_SIDS)
+               | set(EVENT_SIDS) | set(EXCLUDED_SIDS))
+    # 🚨 2026-08-24 — 관문을 **이벤트 규칙까지** 넓혔다. 종전에는 kind=="xsec" 만 봐서
+    #   새로 만든 event 규칙 6종이 이 관문 **밖**에 있었다 — 목록에 없어도 아무 신호가 안
+    #   나므로, 그 여섯이 생존편향 검사를 한 번도 안 받은 채 소급 t 로만 판정될 뻔했다.
+    #   이 관문이 막으려던 실패 모양 그대로이고, 관문 자체가 낡아서 놓칠 뻔한 것이다.
     _orphan = sorted(s["sid"] for s in TB.STRATS
-                     if s.get("kind") == "xsec" and TB._BASE_SID(s["sid"]) not in _listed
+                     if s.get("kind") in ("xsec", "event")
+                     and TB._BASE_SID(s["sid"]) not in _listed
                      and s["sid"] not in _listed)
     if _orphan:
         sys.exit(
@@ -1044,7 +1084,16 @@ def main():
          #   그러면 PIT 레그가 '돌았는데 아무것도 안 샀다'가 되어 t 가 안 나온다.
          #   전 종목이 공유하는 계열이라 편출분을 따로 받을 필요가 없다(랩과 같은 값).
          "macd10": TB.macro_daily("DGS10", dates),
-         "macfx": TB.macro_daily("DTWEXBGS", dates)}
+         "macfx": TB.macro_daily("DTWEXBGS", dates),
+         # 🚨 국면 서술형 규칙의 게이트가 쓰는 **수준** 계열. 랩 본편에만 싣고 여기 빠뜨렸다가
+         #   PIT 이 죽었다(2026-08-24). 위 macd10/macfx 는 «변화» 라 게이트에 못 쓴다.
+         #   ⚠ 이 셋이 없으면 _narrative_state 가 죽는다 — 조용히 «게이트 늘 꺼짐» 으로
+         #     넘어가지 않게 그렇게 만들어 뒀다.
+         "mac_real": TB.macro_level("DFII10", dates),
+         "mac_curve": TB.macro_level("T10Y2Y", dates),
+         "mac_usd": TB.macro_level("DTWEXBGS", dates),
+         # 이벤트 규칙(src="me")이 진입일로 쓰는 월말 격자.
+         "me_list": TB.month_ends(dates)}
     # 고가·저가 — x-52wh(고가) · x-lshock·x-ongapd(둘 다) 가 쓴다. 편출 종목분은 HLCACHE 에서
     # 온다. 🚨 종전에는 조건이 `x-52wh 가 제외 목록에 없으면` 이었다. HL 캐시가 있어도
     #   x-52wh 하나의 사정으로 저가·고가 전체가 안 실릴 수 있는 배선이었고, 그 탓에 고저가를
@@ -1286,6 +1335,38 @@ def main():
         #   하루에 넷을 그렇게 잡았다(x-52wh · ttm2 · 편향 문장 · x-debtiss 선견).
         #   그리고 사본으로 옮기기 어려운 2단 규칙 7종이 아예 PIT 을 못 돌고 있었다.
         XX = dict(X, ixr=IXR, ixvol=IXVOL)
+        # ── 이벤트 규칙(kind="event") — 2026-08-24 ────────────────────────────
+        # 🚨 랩 본편의 event_weights 를 **그대로** 부른다. 사본을 만들면 두 레그의 차이가
+        #   생존편향이 아니라 구현 차이가 된다 — 이 파일이 2026-08-11 에 두 번째 채점기를
+        #   지운 것과 같은 이유다.
+        # ⚠ 종목마다 진입·청산일이 달라 «리밸 날 바스켓 교체» 가 없다. 회전율도 Σ|Δw| 로
+        #   센다(랩 본편과 같은 눈금).
+        if S.get("kind") == "event":
+            XX["pool_at"] = pool_at
+            _pos = TB.event_weights(S, dates, tickers, XX, i0, n, pool_at)
+            nav, srets, turns = [100.0], [], 0.0
+            first, prev = None, set()
+            for i in range(i0 + 1, n):
+                cur = set(_pos[i - 1])
+                if pool_at is not None:
+                    cur &= pool_at(i - 1)
+                else:
+                    cur &= _today
+                if cur and first is None:
+                    first = i
+                rs = [R[t][i] for t in cur if R[t][i] is not None]
+                srets.append(sum(rs) / len(rs) if rs else 0.0)
+                _a = (1.0 / len(cur)) if cur else 0.0
+                _b = (1.0 / len(prev)) if prev else 0.0
+                turns += sum(abs((_a if t in cur else 0.0) - (_b if t in prev else 0.0))
+                             for t in (cur | prev))
+                nav.append(nav[-1] * (1 + srets[-1]))
+                prev = cur
+            bnav = [100.0]
+            for i in range(i0 + 1, n):
+                bnav.append(bnav[-1] * (1 + (IXR[i] or 0.0)))
+            return {"nav": nav, "bnav": bnav, "srets": srets, "turns": turns,
+                    "first": first, "hold": sorted(prev), "IXR": IXR}
         hold, hw, nav, srets, turns = [], None, [100.0], [], 0
         first = None                       # 실제로 무언가를 보유하기 시작한 시점
         # 🚨 규칙이 스스로 내건 리밸 주기를 그대로 쓴다(PREREG-2026-08-13-REBAL).
@@ -1398,7 +1479,8 @@ def main():
     #   그래서 `not in EXCLUDED_SIDS or in PARTIAL` 만으로는 루프가 이름을 볼 일이 없다.
     #   (첫 시도가 그렇게 조용히 아무것도 안 돌았다. 없는 이름은 아무 신호도 안 낸다 —
     #    이 파일 985줄의 완결성 관문이 막으려던 바로 그 실패 모양이다.)
-    for sid in [s for s in PRICE_SIDS + FUND_SIDS + TIMING_SIDS + sorted(PARTIAL_PIT_SIDS)
+    for sid in [s for s in PRICE_SIDS + NEW_PRICE_SIDS + FUND_SIDS + NEW_FUND_SIDS
+                + EVENT_SIDS + TIMING_SIDS + sorted(PARTIAL_PIT_SIDS)
                 if s not in EXCLUDED_SIDS or s in PARTIAL_PIT_SIDS]:
         S = BY.get(sid)
         if not S:
