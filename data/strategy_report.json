@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-08-21",
-  "asset": "2026-08-21",
+  "asset": "2026-08-24",
   "pit": "2026-08-21"
  },
  "t_crit": {
@@ -4959,7 +4959,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -5307,7 +5307,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -5475,7 +5475,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -5650,7 +5650,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -5832,7 +5832,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -5995,7 +5995,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -6170,7 +6170,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -6352,7 +6352,7 @@
     },
     "five": {
      "alpha": 1.74,
-     "t": 0.65,
+     "t": 0.66,
      "n": 506,
      "vs": [
       "저변동 섹터 상위 3",
@@ -6372,7 +6372,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -6498,7 +6498,7 @@
      {
       "k": "꼬리위험 CVaR 개선",
       "v": 0.076,
-      "p": 0.0485
+      "p": 0.0483
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
@@ -6540,7 +6540,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -6689,7 +6689,7 @@
      "beta": 0.87
     },
     "five": {
-     "alpha": 6.24,
+     "alpha": 6.23,
      "t": 1.79,
      "n": 506,
      "vs": [
@@ -6710,7 +6710,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -6885,7 +6885,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7060,7 +7060,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7230,7 +7230,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7405,7 +7405,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7415,7 +7415,7 @@
       33.4
      ],
      [
-      "XLE",
+      "XLF",
       33.3
      ],
      [
@@ -7576,7 +7576,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7739,7 +7739,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -7939,7 +7939,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -8109,7 +8109,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -8277,7 +8277,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -8451,7 +8451,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -8653,7 +8653,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -8824,34 +8824,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "XLB",
-      16.7
+      "XLP",
+      33.4
      ],
      [
-      "XLE",
-      16.7
+      "XLU",
+      33.3
      ],
      [
-      "XLF",
-      16.7
-     ],
-     [
-      "XLI",
-      16.7
-     ],
-     [
-      "XLK",
-      16.6
-     ],
-     [
-      "XLY",
-      16.6
+      "XLV",
+      33.3
      ]
     ],
     "exposure_now": null,
@@ -9007,7 +8995,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9179,22 +9167,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLF",
-      15.4
+      15.2
      ],
      [
       "XLP",
-      13.2
+      13.1
      ],
      [
       "XLU",
-      12.9
+      12.8
      ],
      [
       "XLV",
@@ -9202,15 +9190,15 @@
      ],
      [
       "XLB",
-      10.8
+      11.0
      ],
      [
       "XLI",
-      10.6
+      10.7
      ],
      [
       "XLY",
-      9.7
+      9.8
      ],
      [
       "XLE",
@@ -9386,7 +9374,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9556,7 +9544,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9726,7 +9714,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9882,7 +9870,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10058,7 +10046,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10237,7 +10225,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10407,7 +10395,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10578,7 +10566,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10741,7 +10729,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10900,7 +10888,7 @@
      "corr": 0.754,
      "alpha": -0.22,
      "t": -0.12,
-     "beta": 0.628
+     "beta": 0.629
     },
     "five": {
      "alpha": 0.42,
@@ -10924,7 +10912,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11067,7 +11055,7 @@
     },
     "five": {
      "alpha": 0.79,
-     "t": 1.23,
+     "t": 1.22,
      "n": 506,
      "vs": [
       "200일 이동평균 (Faber)",
@@ -11087,7 +11075,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11220,7 +11208,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.098,
-      "p": 0.663
+      "p": 0.6633
      }
     ],
     "n_boot": 4000,
@@ -11257,7 +11245,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11459,7 +11447,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11650,7 +11638,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11813,13 +11801,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "EFA",
+      "EEM",
       100.0
      ]
     ],
@@ -11981,18 +11969,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SPY",
-      62.2
+      62.4
      ],
      [
       "DBC",
-      37.8
+      37.6
      ]
     ],
     "exposure_now": null,
@@ -12155,7 +12143,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12318,7 +12306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12488,7 +12476,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12663,26 +12651,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      40.5
+      40.2
      ],
      [
       "SPY",
-      27.9
+      28.0
      ],
      [
       "DBC",
-      17.0
+      16.8
      ],
      [
       "GLD",
-      14.6
+      15.0
      ]
     ],
     "exposure_now": null,
@@ -12810,7 +12798,7 @@
     },
     "five": {
      "alpha": -2.5,
-     "t": -1.23,
+     "t": -1.22,
      "n": 506,
      "vs": [
       "오버나이트 드리프트 (종가 매수 → 시가 매도)",
@@ -12830,7 +12818,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13001,7 +12989,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13184,14 +13172,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      22.9
+      22.6
      ],
      [
       "SPY",
@@ -13199,27 +13187,27 @@
      ],
      [
       "VNQ",
-      14.9
+      14.8
      ],
      [
       "EFA",
-      11.7
+      12.0
      ],
      [
       "QQQ",
-      9.8
+      9.7
      ],
      [
       "DBC",
-      9.6
+      9.5
      ],
      [
       "GLD",
-      8.3
+      8.4
      ],
      [
       "EEM",
-      7.0
+      7.2
      ]
     ],
     "exposure_now": null,
@@ -13380,7 +13368,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13558,7 +13546,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13741,7 +13729,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13751,12 +13739,12 @@
       42.9
      ],
      [
-      "DBC",
-      19.0
+      "SPY",
+      19.1
      ],
      [
-      "SPY",
-      19.0
+      "DBC",
+      18.9
      ],
      [
       "VNQ",
@@ -13896,10 +13884,10 @@
      "corr": 0.467,
      "alpha": -2.5,
      "t": -1.52,
-     "beta": 0.73
+     "beta": 0.729
     },
     "five": {
-     "alpha": -2.6,
+     "alpha": -2.61,
      "t": -1.2,
      "n": 362,
      "vs": [
@@ -13920,7 +13908,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14095,7 +14083,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14245,20 +14233,20 @@
    },
    "incr": {
     "one": {
-     "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
+     "vs": "크로스에셋 RP — 목표변동성 8%",
      "corr": 0.833,
-     "alpha": 1.04,
-     "t": 0.4,
-     "beta": 0.927
+     "alpha": 0.15,
+     "t": 0.06,
+     "beta": 0.897
     },
     "five": {
-     "alpha": 0.07,
-     "t": 0.02,
+     "alpha": 0.19,
+     "t": 0.06,
      "n": 362,
      "vs": [
-      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
       "크로스에셋 RP — 목표변동성 8%",
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
+      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
       "위험균형 × 개별 추세 게이트 (2단)"
      ]
@@ -14273,7 +14261,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14448,22 +14436,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TIP",
-      40.1
+      39.9
      ],
      [
       "EMB",
-      20.5
+      20.6
      ],
      [
       "TLT",
-      14.8
+      14.7
      ],
      [
       "SPY",
@@ -14471,15 +14459,15 @@
      ],
      [
       "DBC",
-      6.2
+      6.1
      ],
      [
       "GLD",
-      5.3
+      5.5
      ],
      [
       "SLV",
-      2.9
+      3.0
      ]
     ],
     "exposure_now": null,
@@ -14647,14 +14635,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      50.0
+      49.8
      ],
      [
       "TLT",
@@ -14670,7 +14658,7 @@
      ],
      [
       "GLD",
-      7.3
+      7.5
      ]
     ],
     "exposure_now": null,
@@ -14838,7 +14826,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15012,7 +15000,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15219,7 +15207,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15238,7 +15226,7 @@
      ],
      [
       "LQD",
-      13.8
+      13.7
      ],
      [
       "TLT",
@@ -15254,7 +15242,7 @@
      ],
      [
       "EFA",
-      4.5
+      4.6
      ],
      [
       "DBC",
@@ -15410,7 +15398,7 @@
      "beta": 1.669
     },
     "five": {
-     "alpha": -4.35,
+     "alpha": -4.36,
      "t": -1.93,
      "n": 362,
      "vs": [
@@ -15431,7 +15419,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -22715,7 +22703,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -24213,35 +24201,35 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 10,
     "tickers": [
-     "ALNY",
      "APP",
-     "APTV",
      "CHRW",
-     "DECK",
      "DVA",
-     "HONA",
      "LII",
-     "ROL",
-     "TTD"
+     "NRG",
+     "NXPI",
+     "ON",
+     "TTD",
+     "VST",
+     "WDC"
     ],
     "names": {
-     "ALNY": "ALNYLAM PHARMACEUTICALS INC",
      "APP": "APPLOVIN CORP-CLASS A",
-     "APTV": "APTIV PLC",
      "CHRW": "C.H. ROBINSON WORLDWIDE INC",
-     "DECK": "DECKERS OUTDOOR CORP",
      "DVA": "DAVITA INC",
-     "HONA": "HONEYWELL AEROSPACE INC",
      "LII": "LENNOX INTERNATIONAL INC",
-     "ROL": "ROLLINS INC",
-     "TTD": "TRADE DESK INC/THE -CLASS A"
+     "NRG": "NRG ENERGY INC",
+     "NXPI": "NXP SEMICONDUCTORS NV",
+     "ON": "ON SEMICONDUCTOR",
+     "TTD": "TRADE DESK INC/THE -CLASS A",
+     "VST": "VISTRA CORP",
+     "WDC": "WESTERN DIGITAL CORP"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 10종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 10종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -28602,35 +28590,35 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 10,
     "tickers": [
+     "AEP",
      "AES",
      "ATO",
-     "FRT",
-     "L",
-     "O",
-     "PNC",
-     "PNW",
+     "CNP",
+     "ED",
+     "NEE",
+     "PEG",
      "REG",
-     "ROL",
+     "SO",
      "TECH"
     ],
     "names": {
+     "AEP": "AMERICAN ELECTRIC POWER",
      "AES": "AES CORP",
      "ATO": "ATMOS ENERGY CORP",
-     "FRT": "FEDERAL REALTY INVS TRUST",
-     "L": "LOEWS CORP",
-     "O": "REALTY INCOME CORP",
-     "PNC": "PNC FINANCIAL SERVICES GROUP",
-     "PNW": "PINNACLE WEST CAPITAL",
+     "CNP": "CENTERPOINT ENERGY INC",
+     "ED": "CONSOLIDATED EDISON INC",
+     "NEE": "NEXTERA ENERGY INC",
+     "PEG": "PUBLIC SERVICE ENTERPRISE GP",
      "REG": "REGENCY CENTERS CORP",
-     "ROL": "ROLLINS INC",
+     "SO": "SOUTHERN CO/THE",
      "TECH": "BIO-TECHNE CORP"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 10종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 10종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -29069,35 +29057,35 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 10,
     "tickers": [
+     "AAPL",
+     "ARM",
+     "CASY",
      "CSCO",
      "DASH",
-     "ECHO",
      "PANW",
      "PPL",
      "QCOM",
      "TDY",
-     "TEL",
-     "TSCO",
-     "TXT"
+     "TEL"
     ],
     "names": {
+     "AAPL": "APPLE INC",
+     "ARM": "ARM HOLDINGS PLC-ADR",
+     "CASY": "Casey's General Stores Inc",
      "CSCO": "CISCO SYSTEMS INC",
      "DASH": "DOORDASH INC - A",
-     "ECHO": "ECHOSTAR CORP-A",
      "PANW": "PALO ALTO NETWORKS INC",
      "PPL": "PPL CORP",
      "QCOM": "QUALCOMM INC",
      "TDY": "TELEDYNE TECHNOLOGIES INC",
-     "TEL": "TE CONNECTIVITY PLC",
-     "TSCO": "TRACTOR SUPPLY COMPANY",
-     "TXT": "TEXTRON INC"
+     "TEL": "TE CONNECTIVITY PLC"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 10종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 10종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -31354,35 +31342,35 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 10,
     "tickers": [
+     "AEP",
      "AES",
-     "BAC",
-     "DOC",
-     "FRT",
-     "KIM",
-     "LIN",
-     "O",
-     "PNC",
+     "ATO",
+     "CMS",
+     "CNP",
+     "EXC",
+     "PEG",
      "PNW",
+     "SO",
      "TECH"
     ],
     "names": {
+     "AEP": "AMERICAN ELECTRIC POWER",
      "AES": "AES CORP",
-     "BAC": "BANK OF AMERICA CORP",
-     "DOC": "HEALTHPEAK PROPERTIES INC",
-     "FRT": "FEDERAL REALTY INVS TRUST",
-     "KIM": "KIMCO REALTY CORP",
-     "LIN": "LINDE PLC",
-     "O": "REALTY INCOME CORP",
-     "PNC": "PNC FINANCIAL SERVICES GROUP",
+     "ATO": "ATMOS ENERGY CORP",
+     "CMS": "CMS ENERGY CORP",
+     "CNP": "CENTERPOINT ENERGY INC",
+     "EXC": "EXELON CORP",
+     "PEG": "PUBLIC SERVICE ENTERPRISE GP",
      "PNW": "PINNACLE WEST CAPITAL",
+     "SO": "SOUTHERN CO/THE",
      "TECH": "BIO-TECHNE CORP"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 10종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 10종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32320,34 +32308,35 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 52,
     "tickers": [
      "AEE",
      "AEP",
      "AES",
      "AFL",
+     "AIG",
      "ATO",
      "BAC",
+     "CB",
+     "CINF",
      "CMS",
      "CNP",
-     "COST",
+     "CSX",
      "D",
-     "DOC",
      "DTE",
      "DUK",
+     "DVA",
      "ED",
      "ES",
-     "ESS",
      "ETR",
      "EVRG",
      "EXC",
      "FE",
      "FITB",
      "FRT",
-     "HBAN",
-     "HRL",
-     "KEY",
+     "GD",
+     "JPM",
      "KIM",
      "L",
      "LIN",
@@ -32361,19 +32350,18 @@
      "PLD",
      "PNC",
      "PNW",
+     "PPL",
      "REG",
      "RF",
-     "ROL",
-     "RSG",
      "SO",
-     "SPG",
      "SRE",
      "TECH",
      "TFC",
-     "UDR",
      "USB",
      "VICI",
+     "WEC",
      "WM",
+     "WRB",
      "XEL"
     ],
     "names": {
@@ -32381,27 +32369,28 @@
      "AEP": "AMERICAN ELECTRIC POWER",
      "AES": "AES CORP",
      "AFL": "AFLAC INC",
+     "AIG": "AMERICAN INTERNATIONAL GROUP",
      "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
+     "CB": "CHUBB LTD",
+     "CINF": "CINCINNATI FINANCIAL CORP",
      "CMS": "CMS ENERGY CORP",
      "CNP": "CENTERPOINT ENERGY INC",
-     "COST": "COSTCO WHOLESALE CORP",
+     "CSX": "CSX CORP",
      "D": "DOMINION ENERGY INC",
-     "DOC": "HEALTHPEAK PROPERTIES INC",
      "DTE": "DTE ENERGY COMPANY",
      "DUK": "DUKE ENERGY CORP",
+     "DVA": "DAVITA INC",
      "ED": "CONSOLIDATED EDISON INC",
      "ES": "EVERSOURCE ENERGY",
-     "ESS": "ESSEX PROPERTY TRUST INC",
      "ETR": "ENTERGY CORP",
      "EVRG": "EVERGY INC",
      "EXC": "EXELON CORP",
      "FE": "FIRSTENERGY CORP",
      "FITB": "FIFTH THIRD BANCORP",
      "FRT": "FEDERAL REALTY INVS TRUST",
-     "HBAN": "HUNTINGTON BANCSHARES INC",
-     "HRL": "HORMEL FOODS CORP",
-     "KEY": "KEYCORP",
+     "GD": "GENERAL DYNAMICS CORP",
+     "JPM": "JPMORGAN CHASE & CO",
      "KIM": "KIMCO REALTY CORP",
      "L": "LOEWS CORP",
      "LIN": "LINDE PLC",
@@ -32415,24 +32404,23 @@
      "PLD": "PROLOGIS INC",
      "PNC": "PNC FINANCIAL SERVICES GROUP",
      "PNW": "PINNACLE WEST CAPITAL",
+     "PPL": "PPL CORP",
      "REG": "REGENCY CENTERS CORP",
      "RF": "REGIONS FINANCIAL CORP",
-     "ROL": "ROLLINS INC",
-     "RSG": "REPUBLIC SERVICES INC",
      "SO": "SOUTHERN CO/THE",
-     "SPG": "SIMON PROPERTY GROUP INC",
      "SRE": "SEMPRA",
      "TECH": "BIO-TECHNE CORP",
      "TFC": "TRUIST FINANCIAL CORP",
-     "UDR": "UDR INC",
      "USB": "US BANCORP",
      "VICI": "VICI PROPERTIES INC",
+     "WEC": "WEC ENERGY GROUP INC",
      "WM": "WASTE MANAGEMENT INC",
+     "WRB": "WR BERKLEY CORP",
      "XEL": "XCEL ENERGY INC"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 52종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 52종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32605,12 +32593,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 97.0,
+    "exposure_now": 97.3,
     "note": "노출 97%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -32845,50 +32833,50 @@
    },
    "holdings": {
     "kind": "xsec",
-    "as_of": "2026-08-14",
+    "as_of": "2026-08-21",
     "n": 52,
     "tickers": [
      "AEE",
      "AEP",
      "AES",
      "AMP",
-     "APD",
      "ATO",
      "BAC",
+     "CB",
+     "CINF",
      "CMS",
+     "CNP",
      "COST",
-     "CPT",
      "D",
-     "DOC",
+     "DTE",
      "DUK",
      "DVA",
      "ED",
      "ES",
+     "ETR",
      "EVRG",
      "EXC",
      "FE",
      "FITB",
      "FRT",
-     "GWW",
+     "GD",
      "HBAN",
-     "JNJ",
      "JPM",
      "KEY",
      "KIM",
-     "L",
      "LIN",
      "MAA",
      "MTB",
      "NEE",
+     "NI",
      "O",
-     "OTIS",
+     "PEG",
      "PLD",
      "PNC",
      "PNW",
      "PRU",
      "REG",
      "RF",
-     "SBUX",
      "SO",
      "SYY",
      "TECH",
@@ -32897,8 +32885,8 @@
      "USB",
      "V",
      "VICI",
+     "WAB",
      "WFC",
-     "WST",
      "XEL"
     ],
     "names": {
@@ -32906,43 +32894,43 @@
      "AEP": "AMERICAN ELECTRIC POWER",
      "AES": "AES CORP",
      "AMP": "AMERIPRISE FINANCIAL INC",
-     "APD": "AIR PRODUCTS & CHEMICALS INC",
      "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
+     "CB": "CHUBB LTD",
+     "CINF": "CINCINNATI FINANCIAL CORP",
      "CMS": "CMS ENERGY CORP",
+     "CNP": "CENTERPOINT ENERGY INC",
      "COST": "COSTCO WHOLESALE CORP",
-     "CPT": "CAMDEN PROPERTY TRUST",
      "D": "DOMINION ENERGY INC",
-     "DOC": "HEALTHPEAK PROPERTIES INC",
+     "DTE": "DTE ENERGY COMPANY",
      "DUK": "DUKE ENERGY CORP",
      "DVA": "DAVITA INC",
      "ED": "CONSOLIDATED EDISON INC",
      "ES": "EVERSOURCE ENERGY",
+     "ETR": "ENTERGY CORP",
      "EVRG": "EVERGY INC",
      "EXC": "EXELON CORP",
      "FE": "FIRSTENERGY CORP",
      "FITB": "FIFTH THIRD BANCORP",
      "FRT": "FEDERAL REALTY INVS TRUST",
-     "GWW": "WW GRAINGER INC",
+     "GD": "GENERAL DYNAMICS CORP",
      "HBAN": "HUNTINGTON BANCSHARES INC",
-     "JNJ": "JOHNSON & JOHNSON",
      "JPM": "JPMORGAN CHASE & CO",
      "KEY": "KEYCORP",
      "KIM": "KIMCO REALTY CORP",
-     "L": "LOEWS CORP",
      "LIN": "LINDE PLC",
      "MAA": "MID-AMERICA APARTMENT COMM",
      "MTB": "M & T BANK CORP",
      "NEE": "NEXTERA ENERGY INC",
+     "NI": "NISOURCE INC",
      "O": "REALTY INCOME CORP",
-     "OTIS": "OTIS WORLDWIDE CORP",
+     "PEG": "PUBLIC SERVICE ENTERPRISE GP",
      "PLD": "PROLOGIS INC",
      "PNC": "PNC FINANCIAL SERVICES GROUP",
      "PNW": "PINNACLE WEST CAPITAL",
      "PRU": "PRUDENTIAL FINANCIAL INC",
      "REG": "REGENCY CENTERS CORP",
      "RF": "REGIONS FINANCIAL CORP",
-     "SBUX": "STARBUCKS CORP",
      "SO": "SOUTHERN CO/THE",
      "SYY": "SYSCO CORP",
      "TECH": "BIO-TECHNE CORP",
@@ -32951,13 +32939,13 @@
      "USB": "US BANCORP",
      "V": "VISA INC-CLASS A SHARES",
      "VICI": "VICI PROPERTIES INC",
+     "WAB": "WABTEC CORP",
      "WFC": "WELLS FARGO & CO",
-     "WST": "WEST PHARMACEUTICAL SERVICES",
      "XEL": "XCEL ENERGY INC"
     },
     "weights": null,
     "exposure_now": null,
-    "note": "주간 리밸런스(2026-08-14)에서 고른 52종목을 보유 중이다."
+    "note": "주간 리밸런스(2026-08-21)에서 고른 52종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -33444,7 +33432,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -33877,7 +33865,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -34523,7 +34511,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -35439,7 +35427,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -35618,7 +35606,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -35797,7 +35785,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -35983,7 +35971,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
@@ -36162,13 +36150,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 88.9,
-    "note": "노출 89%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 87.3,
+    "note": "노출 87%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -36348,13 +36336,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 72.4,
-    "note": "노출 72%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 74.0,
+    "note": "노출 74%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -36527,13 +36515,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-08-21",
+    "as_of": "2026-08-24",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 0.0,
-    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 100.0,
+    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
