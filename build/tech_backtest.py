@@ -3402,6 +3402,84 @@ def timing(sid, name, rule, fn, why, arch=None):
     STRATS.append({"sid": sid, "name": name, "kind": "timing", "rule": rule, "why": why, "fn": fn, "arch": arch})
 
 
+# ── 실적 이벤트 엔진 (kind="event") — PREREG-2026-08-24-EVENT.md ──────────────
+# 🚨 이 랩의 세 번째 구조다. xsec 은 «리밸 날에 명단을 통째로 교체», timing 은 «지수 노출을
+#   0~1 로 조절» 인데, 이벤트는 **종목마다 다른 날 들어가고 다른 날 나온다.** 보유 종목 수가
+#   날마다 다르고(실적 시즌 수십, 비수기 0) «이번 달 상위 10» 이라는 개념이 없다.
+# ⚠ 기존 127종의 계산은 한 줄도 안 바뀌어야 한다 — 이 갈래는 kind=="event" 일 때만 탄다.
+_EARN = [None]
+_SUE_CUT = {}          # 날짜별 상위 1/5 문턱 캐시 — 같은 날 518번 다시 세우지 않는다
+
+
+def load_earn():
+    """{티커: [발표일…]} — SEC 8-K Item 2.02 접수일. 접수 도장이라 그 자체가 시점정확이다."""
+    if _EARN[0] is not None:
+        return _EARN[0]
+    try:
+        d = json.load(io.open(os.path.join(DATA, "earn_dates.json"), encoding="utf-8"))
+        _EARN[0] = {t: sorted(v) for t, v in (d.get("co") or {}).items() if v}
+    except Exception as e:
+        print("  ⚠ earn_dates.json 없음(%s) — 이벤트 규칙은 후보 0 이 된다" % str(e)[:40])
+        _EARN[0] = {}
+    return _EARN[0]
+
+
+def event(sid, name, rule, why, enter=1, hold=60, pick=None, gap=None, arch=None):
+    """이벤트 규칙 등록.
+
+    enter — 발표일로부터 몇 거래일 뒤에 진입하나(1 = 다음 거래일)
+    hold  — 며칠 보유하나
+    pick  — None 이면 무조건. 함수를 주면 (t, 발표일 인덱스, X) → bool 로 걸러 낸다.
+    gap   — 주면 «마지막 발표 후 이 일수를 넘긴» 종목만 담는다(E4 의 거울 구조).
+    """
+    if sid in DROPPED:
+        return
+    STRATS.append({"sid": sid, "name": name, "kind": "event", "rule": rule, "why": why,
+                   "fn": None, "arch": arch, "enter": enter, "hold": hold,
+                   "pick": pick, "gap": gap})
+
+
+def event_weights(S, dates, tickers, X, lo, n, pool_at=None):
+    """[{티커: 비중}] × n — 그날 열려 있는 포지션의 동일가중. 없으면 빈 dict(=현금).
+
+    ⚠ 후보는 **그달 실제 편입 명단**으로 거른다(pool_at). 안 거르면 그때 지수에 없던
+      종목의 실적 이벤트를 담게 되어 선견이다 — 다른 규칙과 같은 마스크다.
+    """
+    E = load_earn()
+    pos = [dict() for _ in range(n)]          # i일 → {티커: 1}
+    di = {d: i for i, d in enumerate(dates)}
+    if S.get("gap") is not None:
+        # E4 — «마지막 발표 후 gap 거래일 넘김» 인 날만 담는다. 발표일은 과거만 보므로 causal.
+        g = int(S["gap"])
+        for t in tickers:
+            ds = E.get(t) or []
+            idx = sorted(di[d] for d in ds if d in di)
+            if not idx:
+                continue
+            k = 0
+            for i in range(lo, n):
+                while k < len(idx) and idx[k] <= i:
+                    k += 1
+                last = idx[k - 1] if k else None
+                if last is not None and i - last > g:
+                    pos[i][t] = 1
+        return pos
+    for t in tickers:
+        for d in (E.get(t) or []):
+            j = di.get(d)
+            if j is None:
+                continue
+            a = j + int(S["enter"])
+            b = a + int(S["hold"])
+            if a >= n or b <= lo:
+                continue
+            if S.get("pick") is not None and not S["pick"](t, j, X):
+                continue
+            for i in range(max(a, lo), min(b, n)):
+                pos[i][t] = 1
+    return pos
+
+
 def z_composite(rows):
     """월말 단면 z-점수 컴포지트 — rows=[(티커, {지표명: 값})…] → {티커: 평균 z}.
 
@@ -4281,6 +4359,61 @@ def build_strats():
          "쓴다(두 벌로 만들지 않는다). 그쪽은 절댓값 최하위 롱이고 이쪽은 최상위 × 과열 숏이라 "
          "방향이 반대다. ⚠ 대조군은 현금이다 — 지수를 대조군으로 두면 «숏이 지수보다 못하다» "
          "는 당연한 말을 재게 된다.")
+    # ── 실적 이벤트 3종 (E1·E2·E4) — PREREG-2026-08-24-EVENT.md ───────
+    # 🚨 랩의 세 번째 구조다. 게시 127종은 전부 달력 기반(월말·주간·분기)인데 이 셋은
+    #   종목마다 다른 날 들어가고 나온다. 자료는 SEC 8-K Item 2.02 접수일 54,125건
+    #   (795사·2008~·유니버스 501/518종) — 랩이 모아 놓고 전략이 한 번도 안 쓰던 것이다.
+    def _sue_hi(t, j, X):
+        """그 발표일 시점 sue 가 유니버스 상위 1/5 인가 — E2 의 관문.
+
+        🚨 sue 를 **lag=0** 으로 부른다. 발표일 D 의 8-K 가 그 분기를 공개한 사건이므로
+          «기간말 ≤ D 인 분기» 는 D 시점에 공개된 것이다. 기본 lag 90 을 쓰면 직전 분기가
+          아니라 그 전 분기를 재게 된다(실측: 발표일 − 분기말 중앙 29일) — 그러면 PEAD 가 아니다.
+        ⚠ 랩의 EPS 는 8-K 본문이 아니라 10-Q 의 XBRL 값이라 «D 에 발표된 수» 의 근사다.
+          등록 문서가 이 한계를 적어 두었다.
+        """
+        d = X["dates"][j]
+        v = sue((X["FU"].get(t) or {}).get("eps") or [], d, lag=0)
+        if v is None:
+            return False
+        cut = _SUE_CUT.get(d)
+        if cut is None:
+            vs = []
+            for t2 in X["tickers"]:
+                x = sue((X["FU"].get(t2) or {}).get("eps") or [], d, lag=0)
+                if x is not None:
+                    vs.append(x)
+            if len(vs) < 50:
+                _SUE_CUT[d] = -1e18
+                return False
+            vs.sort(reverse=True)
+            cut = _SUE_CUT[d] = vs[max(0, len(vs) // 5 - 1)]
+        return v >= cut
+
+    event("x-pead", "실적 후 드리프트 (발표 다음날 진입 · 60일 보유)",
+          "SEC 8-K Item 2.02 접수일 다음 거래일에 진입해 60거래일 보유한다. 방향 조건이 "
+          "없다 — 그날 창이 열려 있는 종목 전부를 동일가중으로 담고, 하나도 없으면 현금이다.",
+          "「방금 발표했다」는 사실 자체가 프리미엄을 갖는가를 재는 기준선이다. 서프라이즈를 "
+          "안 가르므로 여기서 아무것도 안 나오면, 아래 서프라이즈 판의 어떤 결과도 "
+          "«서프라이즈» 가 아니라 창 선택의 산물로 의심해야 한다. "
+          "⚠ 노출을 반드시 같이 읽을 것 — 이벤트 전략은 구조적으로 현금 비중이 크고, "
+          "항상 투자된 지수와 비교하는 것이라 그 사실을 빼면 잣대가 어긋난다.",
+          enter=1, hold=60)
+    event("x-pead-sue", "서프라이즈 드리프트 (상위 1/5 · 60일 보유)",
+          "위와 같은 진입·보유인데, 발표 시점 표준화 이익 서프라이즈(SUE)가 그날 유니버스 "
+          "상위 1/5 인 종목만 담는다.",
+          "실적 후 드리프트(PEAD)의 원래 형태다 — 좋은 서프라이즈가 며칠에 걸쳐 반영된다는 "
+          "가설. 랩에 이미 x-sue 가 있지만 그것은 «월말에 다시 뽑는 횡단면» 이지 이벤트 창이 "
+          "아니다. 같은 sue() 를 쓰되 묻는 것이 다르다.",
+          enter=1, hold=60, pick=_sue_hi)
+    event("x-earngap", "실적 공백기 (발표 후 60일 지난 종목만)",
+          "마지막 발표로부터 60거래일이 지난 종목만 동일가중으로 담는다. 발표 직후 60일을 "
+          "피한다 — 위 실적 후 드리프트의 거울이다.",
+          "이벤트 구간의 변동성 프리미엄을 피하는 쪽이 위험조정으로 낫다는 가설이다. "
+          "⚠ 이것과 실적 후 드리프트가 둘 다 지수를 이기면 그것은 규칙이 아니라 «주식은 "
+          "오른다» 를 두 번 잰 것이다. 둘의 노출과 방향을 같이 읽어야 한다.",
+          gap=60)
+
     # ── 서브산업 롱숏 2종 (B1·B2) — 이 랩 최초의 롱숏이다 ─────────────
     # 🚨 게시 123종이 전부 롱온리였다. 스토리(메모리 병목·정제마진·리쇼어링)는 종목이
     #   아니라 서브산업에 실리는데, 랩은 섹터(11)·산업그룹(25)까지만 쓰고 서브산업(128)을
@@ -6785,7 +6918,46 @@ def run():
     for S in STRATS:
         w = (timing_weights(S, _TC, MIN_HIST, n)
              if S["kind"] == "timing" else [0.0] * n)
-        if S["kind"] == "timing":
+        if S["kind"] == "event":
+            # ── 실적 이벤트 (PREREG-2026-08-24-EVENT.md) ────────────────────
+            # 그날 열려 있는 포지션 동일가중. 하나도 없으면 무위험(현금) — 0 수익이 아니다.
+            _pool_fn = _X.get("pool_at")
+            _pos = event_weights(S, dates, tickers, _X, MIN_HIST, n, _pool_fn)
+            nav, srets, traded = [100.0], [], []
+            _prev = set()
+            _nopen, _expo = [], []
+            for i in range(MIN_HIST + 1, n):
+                cur = set(_pos[i - 1])          # 전날 종가 기준으로 정해진 보유가 오늘 적용된다
+                if _pool_fn is not None:
+                    cur &= _pool_fn(i - 1)
+                rs = [R[t][i] for t in cur if R[t][i] is not None]
+                e = 1.0 if rs else 0.0
+                r = (sum(rs) / len(rs)) if rs else rfd_d[i]
+                srets.append(r)
+                # 회전율은 Σ|Δw| — 이 구조엔 «바스켓 교체» 가 없다(등록 문서 규약).
+                _a = (1.0 / len(cur)) if cur else 0.0
+                _b = (1.0 / len(_prev)) if _prev else 0.0
+                traded.append(sum(abs((_a if t in cur else 0.0) - (_b if t in _prev else 0.0))
+                                  for t in (cur | _prev)))
+                nav.append(nav[-1] * (1 + r))
+                _nopen.append(len(cur)); _expo.append(e)
+                _prev = cur
+            turn = sum(traded) / max(1, (ASOF_N[0] or n) - MIN_HIST) * 252
+            expo = (sum(_expo) / len(_expo)) if _expo else 0.0
+            start_i = MIN_HIST + 1
+            _med = sorted(_nopen)[len(_nopen) // 2] if _nopen else 0
+            hold_now = {"kind": "event", "as_of": dates[-1], "n": len(_prev),
+                        "tickers": sorted(_prev),
+                        "names": {t: (meta.get(t) or {}).get("name") or t for t in sorted(_prev)},
+                        "note": "실적 발표 뒤 창이 열려 있는 %d종목을 동일가중으로 보유 중이다. "
+                                "종목마다 진입·청산일이 다르다(달력 리밸런스가 아니다)."
+                                % len(_prev)}
+            thin = sum(1 for x in _nopen if x == 0)      # 무보유(현금) 날 수
+            bask_hist = _nopen
+            pool_hist = []
+            print("   [이벤트] %-28s 열린 포지션 중앙 %d · 무보유 %d일(%.0f%%) · 노출 %.0f%%"
+                  % (S["name"][:26], _med, thin, 100 * thin / max(1, len(_nopen)), 100 * expo))
+        elif S["kind"] == "timing":
             # 신호는 당일 종가로 계산 → 다음 날부터 적용(선견 방지)
             nav = [100.0]
             srets = []
@@ -7086,7 +7258,9 @@ def run():
             "sid": S["sid"], "name": S["name"], "kind": S["kind"], "arch": S.get("arch"),
             # 성격 — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
             # 파일 출처가 아니라 역할로 나눠야 읽는 사람이 비교할 수 있다.
-            "role": ("수익엔진" if S["kind"] == "xsec" else "타이밍오버레이"),
+            # 이벤트는 «어느 종목을 살지» 를 고르므로 수익엔진이다(노출을 켰다 껐다 하는
+            #   타이밍이 아니다 — 현금이 되는 것은 그날 열린 창이 없어서일 뿐이다).
+            "role": ("수익엔진" if S["kind"] in ("xsec", "event") else "타이밍오버레이"),
             "rule": S["rule"], "why": S["why"],
             "metrics": st, "bench": bs,
             "excess_cagr": round((st.get("cagr", 0) - bs.get("cagr", 0)), 2),
