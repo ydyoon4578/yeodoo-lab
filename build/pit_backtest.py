@@ -139,6 +139,18 @@ PRICE_SIDS = [
              # 2026-08-14 오후 — 거래량 벽이 풀려(멤버-월 커버 96.91%, 가격과 동일)
              #   같은 배치의 셋도 여기로 온다. x-volsurge 도 EXCLUDED 에서 나갔다.
              "x-volsurge",
+             # ── 밴드 변형 12종 — 2026-08-25 ──────────────────────────────────
+             # 🚨 이것들은 그동안 **관문을 이름으로 통과하고 실제로는 안 돌았다.**
+             #   완결성 관문이 _BASE_SID 로도 봐 줬는데, 밑동이 목록에 있으면 변형까지
+             #   통과시킨다 — 그런데 PIT 루프는 목록의 sid 만 도므로 변형은 레그가 안
+             #   생겼다. 관문은 «통과» 라 적고 화면은 소급 수를 머리 숫자로 썼다.
+             #   전형적인 **공허 통과**다(조건이 늘 참이라 아무것도 안 막는다).
+             #   → 아래에서 관문의 _BASE_SID 봐주기를 걷었다. 그래서 여기에 다 적는다.
+             # ⚠ 밴드는 이력현상이라 **직전 보유가 있어야** 뜻이 있다. 위 run() 이
+             #   held 를 넘기도록 같이 고쳤다 — 둘 중 하나만 하면 조용히 상위 N 이 된다.
+             "x-ecm-band", "x-lshock-band", "x-max5low-band", "x-max5low-n52-band",
+             "x-maxlow-band", "x-maxlow-n52-band", "x-rev1m-band", "x-rev1w-band",
+             "x-snapback-band", "x-volsurge-band",
              # 🚨 2026-08-14 감사(AUDIT-2026-08-14-VOLUME) — 이 둘은 **게시 중인데 PIT 을
              #   한 번도 안 받은 상태**였다. 제외 사유가 "편출 종목 거래량 부재" 였고
              #   그 항목에 "받아 오면 풀린다"고 적혀 있었는데, 오늘 그 거래량을 받았다.
@@ -178,7 +190,8 @@ PRICE_SIDS = [
               #   결과를 보고 넣으면 사후 선택이므로 **등록과 함께 미리** 넣는다.
               #   가격과 시점별 주식수만 쓰므로 편출 종목 캐시(_pit_px_cache·_pit_sh_cache)로
               #   그대로 돈다. 하한은 랩 함수 xsec_score_at 안에서 걸리므로 이쪽에 배선은 없다.
-              "x-mom12-mcf", "x-dist200-mcf", "x-hlspread-mcf",
+              # 2026-08-25 — -mcf 변형 등록을 그만뒀다(시총 하한이 기본이 됐다).
+              #   PREREG-2026-08-25-DEFAULT-PIT.md 참조.
               # 확률·통계 축 5종 — PREREG-2026-08-13-STAT5.md §4.
               #   🚨 **등록과 동시에** 넣는다(결과를 보고 넣으면 사후 선택이다). 다섯 다 종가만
               #   쓰므로 편출 종목 캐시로 그대로 돈다 — 일부러 그런 규칙으로 골랐다.
@@ -187,7 +200,7 @@ PRICE_SIDS = [
               #   다섯 다 종가만 쓰므로 편출 종목 캐시로 그대로 돈다.
               #   ⚠ x-distshape 는 횡단면 z 합성이라 2단이지만, 랩 함수를 그대로 부르는
               #     구조라(2026-08-11 개편) 사전패스가 같이 따라온다.
-              "x-distshape", "x-hill", "x-lbq", "x-archlm", "x-hurst-mcf"]
+              "x-distshape", "x-hill", "x-lbq", "x-archlm"]
 
 # 펀더멘털 규칙 — 2026-07-30 추가. 편출 종목 재무를 data/fx_pit 로 받고 나서 가능해졌다
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
@@ -245,16 +258,19 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
 #   편출 종목의 발표일도 CIK 로 남아 있다. FIP 3종은 가격만 쓰므로 역시 완전 PIT 이다.
 EVENT_SIDS = ["x-pead", "x-pead-sue", "x-earngap",
               "x-fip-base", "x-fip-cont", "x-fip-disc",
-              # 시총 하한 변형 — PREREG-2026-08-24-FIPMCF. 편향이 줄어드는지 재려면
-              #   이쪽도 PIT 을 돌아야 한다(그게 이 변형의 존재 이유다).
-              "x-fip-base-mcf", "x-fip-cont-mcf", "x-fip-disc-mcf"]
+]
+# ⚠ 2026-08-25 — FIP 의 -mcf 3종은 등록을 그만뒀다(시총 하한이 기본이 됐다).
+#   PREREG-2026-08-25-DEFAULT-PIT.md 참조. 측정 기록은 FIPMCF-RESULT.md 에 남는다.
 
 # 2026-08-24 신규 횡단면 — 관문(_orphan)이 잡아서 배선했다.
 #   가격·거시만 쓰는 둘은 편출 종목에도 그대로 적용된다(거시 계열은 전 종목 공유).
 NEW_PRICE_SIDS = ["x-ratehot", "x-fxweak"]
 #   재무를 쓰는 일곱. 편출분은 data/fx_pit(재무)·_pit_sh_cache(주식수)로 덮인다.
 NEW_FUND_SIDS = ["x-realsw",
-                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx"]
+                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
+                 # NDX 전용 5종 — PREREG-2026-08-25-NDXONLY. 유니버스만 좁혔을 뿐
+                 #   자료 요구는 같으므로 PIT 이 그대로 돈다.
+                 "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx"]
 
 TIMING_SIDS = ["t-sma200", "t-cross", "t-chan", "t-macd", "t-gapcap", "t-mhvote",
                "t-donch", "t-ddgate", "t-chand", "t-voltgt", "t-clvgate",
@@ -265,6 +281,11 @@ TIMING_SIDS = ["t-sma200", "t-cross", "t-chan", "t-macd", "t-gapcap", "t-mhvote"
 # 0%다 — 후보가 100% 생존자인 채로 편출종목을 포함한 대조군과 겨루게 되어, 이 파일이 없애려는
 # 바로 그 선견이 규칙 하나에만 남는다. 거래량을 편출종목까지 받으면 되살릴 수 있다.
 EXCLUDED_SIDS = {
+    # ── 밴드 변형 둘 — 밑동과 **같은 사유**로 빠진다(2026-08-25) ──────────────
+    #   밑동(x-revdrift · x-revdrift-sn)이 아래에서 제외된 그 사유가 변형에도 그대로
+    #   적용된다. 변형만 돌리면 밑동과 다른 유니버스를 보게 되어 둘을 못 나란히 놓는다.
+    "x-revdrift-band": "밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
+    "x-revdrift-sn-band": "밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조",
     # ── 2026-08-24 GICS 서브산업 기반 3종 — **자료가 없어 완전 PIT 이 불가능하다** ────
     # 🚨 실측: 창 안 편출 종목 336종 중 GICS 서브산업(members.json 의 sub)이 있는 것이
     #   **0종**이다. members.json 은 오늘 명단만 담고, 편출 종목의 산업 분류는 랩 어디에도
@@ -1037,8 +1058,13 @@ def main():
     #   이 관문이 막으려던 실패 모양 그대로이고, 관문 자체가 낡아서 놓칠 뻔한 것이다.
     _orphan = sorted(s["sid"] for s in TB.STRATS
                      if s.get("kind") in ("xsec", "event")
-                     and TB._BASE_SID(s["sid"]) not in _listed
-                     and s["sid"] not in _listed)
+                     # 🚨 2026-08-25 — _BASE_SID 봐주기를 걷었다. 밑동이 목록에 있으면
+                     #   변형까지 통과시켰는데, PIT 루프는 목록의 sid 만 돈다 — 그래서
+                     #   밴드 12종이 «통과» 라 적힌 채 레그 없이 게시되고 있었다.
+                     #   ⚠ 이 검사는 일부러 부숴서 확인했다: 밴드 하나를 목록에서 빼면
+                     #     이제 죽는다(전에는 조용히 통과했다).
+                     and s["sid"] not in _listed
+                     and "~n" not in s["sid"])
     if _orphan:
         sys.exit(
             "PIT 목록에 없는 횡단면 규칙 %d종: %s\n"
@@ -1387,7 +1413,10 @@ def main():
                 if len(sc) < TB.XSEC_MIN_POOL:                  # 소급 레그와 같은 커버리지 게이트
                     hold, hw = [], None
                 else:
-                    new, new_w = TB.xsec_pick_at(S, i, XX, sc, ind_raw)
+                    # 🚨 held 를 넘긴다(2026-08-25). 안 넘기면 밴드 변형이 매달 held=None
+                    #   으로 들어가 **이력현상 없는 그냥 상위 N** 이 된다 — 「밴드」라 적힌
+                    #   레그가 밴드가 아닌 것이라, 성적이 틀린 것보다 나쁘다.
+                    new, new_w = TB.xsec_pick_at(S, i, XX, sc, ind_raw, held=hold)
                     if new:
                         # 분모도 바스켓 크기로 일반화한다(랩 본편 2026-08-08 과 같은 식).
                         turns += (len(set(new) ^ set(hold)) / (len(new) + len(hold))) if hold else 1.0

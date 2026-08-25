@@ -1456,6 +1456,34 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   '실력이 아니라 자료가 만든 수익입니다.');
             d.vs.push('시점정확 '+f(Pt.cagr)+'% <i>(소급 '+f(Pt.retro_cagr)+'%)</i>');
           }
+          // 🚨 2026-08-25 — **머리 숫자가 무엇으로 잰 값인지**를 화면이 말한다.
+          //   이 날부터 빌더가 PIT 레그가 있는 규칙의 metrics 를 시점정확 값으로 갈아 끼우고
+          //   옛 소급 값을 *_retro 로 옮겼다(사용자 지시 «시점정확 + 상위 80% 로 전부 구성»).
+          //   ⚠ 그 사실을 화면이 안 적으면 독자는 위쪽 카드의 CAGR·샤프를 여전히 소급으로
+          //     읽는다 — 같은 자리에 다른 잣대의 수가 들어앉는 것이라 더 위험하다.
+          //   ⚠ 여기 소급 값은 **랩 본편 창**(더 길다)이고, 바로 위 PIT 문단의 '소급'은
+          //     **같은 창** 소급이다. 두 수가 다른 것이 정상이라, 이름을 달리 적는다.
+          d._basis=x.basis||null;
+          if(x.basis==='pit'&&x.metrics_retro){
+            var mr=x.metrics_retro, mp=x.metrics||{};
+            var g=function(v,u){return v==null?'—':(v.toFixed(u===1?2:3)+(u===1?'%':''));};
+            d.vp.push('<b>이 카드의 수는 시점정확입니다</b> — 그때 실제로 지수에 있던 종목만으로 '+
+                  '다시 잰 값입니다. 오늘 유니버스를 과거로 되돌려 재던 옛 수는 '+
+                  '연 수익 '+g(mr.cagr,1)+' · 샤프 '+g(mr.sharpe)+' 였고, '+
+                  '시점정확으로는 '+g(mp.cagr,1)+' · 샤프 '+g(mp.sharpe)+' 입니다'+
+                  (x.t_retro!=null&&x.t!=null?(' (t '+x.t_retro+'→'+x.t+')'):'')+
+                  '. 그 차이는 <b>실력이 아니라 자료가 만든 몫</b>입니다.'+
+                  (x.excess_cagr_retro!=null&&x.excess_cagr!=null?
+                    (' 대조군 대비 초과도 '+(x.excess_cagr_retro>0?'+':'')+x.excess_cagr_retro+
+                     '%p → '+(x.excess_cagr>0?'+':'')+x.excess_cagr+'%p 로 바뀝니다'+
+                     (x.bench_retro&&x.bench&&x.bench_retro.label&&x.bench.label&&
+                      x.bench_retro.label!==x.bench.label?
+                       ' (대조군도 「'+esc(x.bench_retro.label)+'」→「'+esc(x.bench.label)+'」로 바뀝니다)':'')+
+                     '.'):'')+
+                  (x.d_sharpe_retro!=null&&x.d_sharpe!=null?
+                    (' Δ샤프 '+(x.d_sharpe_retro>0?'+':'')+x.d_sharpe_retro+
+                     ' → '+(x.d_sharpe>0?'+':'')+x.d_sharpe+'.'):''));
+          }
           // 증분 알파 — 가장 닮은 규칙을 이미 들고 있을 때 이 규칙이 더 주는 것.
           // 단독 t 만 실으면 같은 베팅을 여러 번 센 것이 안 보인다(에코 모멘텀 단독 3.80 → 증분 0.85).
           if(x.incr&&x.incr.t!=null){
@@ -2013,7 +2041,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           //   그 질문 자체가 없다. 그래서 그쪽은 **글자를 안 적고 구간만 적는다.**
           //   (holds 가 '비중' 이 아닌데 시점정확이 없으면 그때는 «소급» 이 다시 나온다.)
           var _pkl=(d._pit&&d._pit.kind==='partial');
-          var _leg=d._pit?'시점정확':(d._holds==='비중'?'':'소급');
+          // ⚠ 레그는 **빌더가 정한 basis** 를 먼저 본다(2026-08-25). PIT 레그가 붙어 있어도
+          //   머리 숫자를 갈아 끼웠는지는 빌더가 결정하는데, 화면이 _pit 유무로만 판정하면
+          //   그 둘이 갈리는 날 목록 글자와 실제 숫자가 어긋난다.
+          var _leg=(d._basis==='pit'||d._pit)?'시점정확':(d._holds==='비중'?'':'소급');
           return '<span title="'+esc((_leg||'구간')+' '+(d._start||'').slice(0,7)+'~'+_en+
                    (d._pit?(' · 그때 실제로 지수에 있던 종목만으로 다시 잰 값이다'+
                             (_pkl?' (상장폐지된 종목은 투자의견 자료가 없어 빠졌다)':''))

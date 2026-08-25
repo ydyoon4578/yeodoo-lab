@@ -753,7 +753,9 @@ function pitBlock(p){
   // 🚨 빈칸으로 두지 않는다. '해당 없음' 과 '아직 안 쟀다' 와 '못 잰다' 는 다른 것이고,
   //   셋을 다 빈칸으로 두면 독자가 구별할 수 없다 — 실제로 그 탓에 횡단면 13종이
   //   생존편향 검사를 한 번도 안 받은 채 소급 t 로만 판정되고 있었다(2026-08-11).
-  if(p.na) return '<p class="caveat">이 규칙에는 PIT 레그가 없다 — '+esc(p.na)+'</p>';
+  // ⚠ mb() 를 태운다 — 원천이 이 칸에도 굵게 표시를 쓴다(«**안 돈 것**»). esc() 만
+  //   태우면 별표가 화면에 그대로 찍힌다. 이 저장소가 되풀이 밟은 사고다.
+  if(p.na) return '<p class="caveat">이 규칙에는 PIT 레그가 없다 — '+mb(esc(p.na))+'</p>';
   var a=p.pit||{}, r=p.retro||{}, bi=p.bias||{};
   // 🚨 편향 열에는 색을 주지 않는다. 초록은 '좋다'로 읽히는데 편향이 크다는 것은
   //   소급 수치가 그만큼 부풀어 있었다는 뜻이다 — 나쁜 소식이지 좋은 소식이 아니다.
@@ -899,7 +901,8 @@ function card(x,i){
 
   h+=sec('참고 — 논문·자료',refsBlock(x.refs));
   if(x.missing&&x.missing.length)
-    h+='<div class="miss"><b>못 잰 것</b> — '+x.missing.map(esc).join(' / ')+
+    // ⚠ 여기도 mb() 를 태운다 — 원천이 «**안 돈 것**» 처럼 굵게를 쓴다(위 PIT 칸과 같은 사유).
+    h+='<div class="miss"><b>못 잰 것</b> — '+x.missing.map(function(m){return mb(esc(m));}).join(' / ')+
        '<br>비어 있는 것은 "재 봤더니 안 나왔다"가 아니라 대개 "그 족에 그 측정이 아예 없다"이다.</div>';
   return h+'</article>';
 }

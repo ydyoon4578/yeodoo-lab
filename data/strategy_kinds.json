@@ -1,6 +1,6 @@
 {
  "schema": "kinds-v1",
- "updated": "2026-08-12",
+ "updated": "2026-08-25",
  "why": "전략마다 '무엇으로 판단해야 하는가'가 다르다. 낙폭을 줄이려고 만든 오버레이를 시총가중 지수와 CAGR로 겨루면 렌즈가 어긋나 전부 실패로 읽힌다. 이 파일은 그 렌즈(성격 축)의 단일 출처다. 기존 archetype(용도 축, '어디에 쓰나')과 병존한다.",
  "metric_source": "primary/secondary 키는 build/strategy_metrics.py 산출의 metrics.s / metrics.vs / metrics.profile 에서 조회한다. 조회 실패는 빈칸이 아니라 '—(미산출)'로 렌더한다 — 추정치를 만들지 않는다.",
  "kinds": {
@@ -232,6 +232,11 @@
   "t-x-ecm-band": "테크니컬",
   "t-x-snapback-band": "테크니컬",
   "t-x-revdrift-sn-band": "팩터",
-  "t-x-revdrift-band": "팩터"
+  "t-x-revdrift-band": "팩터",
+  "t-x-ncapw": "팩터",
+  "t-x-ncap10": "팩터",
+  "t-x-ncap5": "팩터",
+  "t-x-ncap45": "팩터",
+  "t-x-ncapndx": "팩터"
  }
 }

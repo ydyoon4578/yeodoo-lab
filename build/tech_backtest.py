@@ -740,8 +740,9 @@ PIT_CODE_REV = "2026-08-19"
 #     (44~162), x-valcomp-sn·x-revdrift-sn 은 규칙문이 '섹터별 1위 1종씩'인데 tgt 10 ·
 #     실제 11.0종 고정이다. short(목표 미달 달)도 같은 tgt 을 쓰므로 셋 다 구조적으로 0 이다.
 WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom",
-                 # 비중상한 6종 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
-                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx")
+                 # 비중상한 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
+                 "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
+                 "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx")
 
 # 월말의 이 비율을 넘게 통째로 비우는 규칙은 '측정만' 이 아니라 '판정 불가' 로 둔다.
 # ⚠ 사전등록 없이 고른 자유 파라미터다 — 아래 감지 코드의 주석에 고른 근거를 적어 뒀다.
@@ -1136,8 +1137,21 @@ def retained_ratio(f, date, lag=FUND_LAG_DAYS):
     return (re_ / at) if (re_ is not None and at and at > 0) else None
 
 
-MCF_SUF = "-mcf"         # 사전등록 PREREG-2026-08-12-MCAPFLOOR.md — 시가총액 하한 변형
-MCF_CUT = 0.30           # 같은 문서 §2 — 그 월말 후보 시총 하위 30% 를 잘라 낸다
+MCF_SUF = "-mcf"         # (남겨 둔다 — 옛 산출물·기록이 이 접미사를 참조한다)
+# 🚨 2026-08-25 사용자 결정 — 시총 하한이 **변형이 아니라 기본**이 됐다.
+#   «스크리닝은 다 빼고, 시점정확 + 상위 80% 종목으로 전략들을 구성해. 모든 전략에 적용».
+#   결정 기록: build/PREREG-2026-08-25-DEFAULT-PIT.md
+#   근거는 자료다 — S&P 500 편출 82종 중 마지막 시총 하위 25% 가 77종(94%)이고 상위 10% 는
+#   0종이다. 편출은 꼬리에 몰려 있고, 꼬리를 자르면 생존편향이 준다(기존 3쌍에서 32~75% 감소).
+#   ⚠ 수준을 여러 개 돌려 고르지 않았다. 0.20 하나만 쓴다.
+MCF_CUT = 0.20           # 하위 20% 절단 = **시총 상위 80% 보유**(사용자 결정 2026-08-25)
+
+# 하한을 **안 거는** 규칙. 비중상한 계열은 «그달 편입 명단 전부를 담되 비중만 제한한다» 가
+#   정의라, 하한을 걸면 «지수를 담는다» 가 아니게 되어 규칙 자체가 달라진다.
+MCF_EXEMPT = {"x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
+              "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx",
+              # 서브산업 롱숏은 선택 단위가 서브산업이라 종목 하한이 그 구성을 바꾼다.
+              "x-subls", "x-subom"}
 
 
 def mcap_floor(tickers, X, i, cut=MCF_CUT):
@@ -2410,8 +2424,37 @@ def load_classmates():
 # ⚠ 부동주 조정이 아니라 **발행주식수 기준**이다. 실제 S&P·나스닥 지수는 부동주를 쓰므로
 #   이 재현은 근사다. 그래서 판정 기준선을 ^GSPC 가 아니라 **같은 방식으로 만든 상한 없는
 #   시총가중(W0)** 으로 둔다 — 두 근사의 차이를 «상한 효과» 로 읽지 않기 위해서다.
-CAP_SIDS = {"x-cap10": 0.10, "x-cap5": 0.05, "x-cap45": 0.045, "x-cap3": 0.03}
-CAP_ALL = set(CAP_SIDS) | {"x-capw", "x-capndx"}
+CAP_SIDS = {"x-cap10": 0.10, "x-cap5": 0.05, "x-cap45": 0.045, "x-cap3": 0.03,
+            # NDX 전용 — PREREG-2026-08-25-NDXONLY.md
+            "x-ncap10": 0.10, "x-ncap5": 0.05, "x-ncap45": 0.045}
+CAP_ALL = set(CAP_SIDS) | {"x-capw", "x-capndx", "x-ncapw", "x-ncapndx"}
+# 🚨 유니버스를 그달 NDX 편입 명단으로 좁히는 규칙들. 2026-08-24 판에서 상한 10% 와 NDX
+#   트리거가 **아무 일도 안 했는데**(추적오차 0.00% · 발동 0회), 원인이 유니버스였다 —
+#   SPX∪NDX 500여 종에서는 개별 비중이 희석돼 나스닥 100 의 쏠림이 안 보인다.
+CAP_NDX_ONLY = {"x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx"}
+_NDX_MEM = [None]
+
+
+def ndx_members(ym):
+    """그달 NASDAQ 100 편입 명단. index_members.load() 는 합집합만 주므로 원천을 직접 읽는다.
+
+    ⚠ 결손 달은 **직전 달을 이월**한다 — index_members 와 같은 규약이다. 이월했다는 사실은
+      커버리지로 싣는다(빈 달을 «편입 0종» 으로 두면 그 달이 통째로 무보유가 된다).
+    """
+    if _NDX_MEM[0] is None:
+        try:
+            d = json.load(io.open(os.path.join(DATA, "index_history.json"), encoding="utf-8"))
+            mm, prev, out = (d.get("months") or {}), [], {}
+            for k in sorted(mm):
+                v = (mm[k] or {}).get("ndx") or []
+                if v:
+                    prev = v
+                out[k] = set(prev)
+            _NDX_MEM[0] = out
+        except Exception as e:
+            print("  ⚠ NDX 명단 로드 실패(%s) — NDX 전용 규칙은 후보 0 이 된다" % str(e)[:40])
+            _NDX_MEM[0] = {}
+    return _NDX_MEM[0].get(ym) or set()
 NDX_TRIG_CUT = 0.045      # 이 비중을 넘는 종목들을
 NDX_TRIG_SUM = 0.48       # 합계가 이만큼을 넘으면
 NDX_TRIG_TO = 0.40        # 합계를 이만큼으로 줄인다 (나스닥 실제 룰)
@@ -2481,6 +2524,12 @@ def cap_pick(S, i, X):
     dates, px, FU = X["dates"], X["px"], X["FU"]
     pool = X.get("_pool_now")
     ts = [t for t in X["tickers"] if (pool is None or t in pool)]
+    if _BASE_SID(S["sid"]) in CAP_NDX_ONLY:
+        # 유니버스를 그달 NDX 명단으로 좁힌다. ⚠ PIT 마스크(pool)와 **같이** 건다 —
+        #   둘 중 하나만 걸면 그때 지수에 없던 종목이 들어오거나(선견) 편출분이 통째로
+        #   빠진다(생존). 순서가 아니라 교집합이어야 한다.
+        _nm = ndx_members(dates[i - 1][:7])
+        ts = [t for t in ts if t in _nm]
     mc = {}
     for t in ts:
         a = px.get(t)
@@ -2489,15 +2538,15 @@ def cap_pick(S, i, X):
         sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
         if sn and sn > 0:
             mc[t] = sn * a[i - 1]
-    if len(mc) < 50:
+    if len(mc) < (40 if _BASE_SID(S["sid"]) in CAP_NDX_ONLY else 50):
         return []
     sid = _BASE_SID(S["sid"])
-    if sid == "x-capndx":
+    if sid in ("x-capndx", "x-ncapndx"):
         w, fired = ndx_special(mc)
         if fired:
             _NDX_FIRED[sid] = _NDX_FIRED.get(sid, 0) + 1
     else:
-        w = cap_weights(mc, CAP_SIDS.get(sid))       # x-capw 는 None → 상한 없음
+        w = cap_weights(mc, CAP_SIDS.get(sid))       # x-capw·x-ncapw 는 None → 상한 없음
     return sorted(w.items(), key=lambda kv: -kv[1])
 
 
@@ -3897,6 +3946,8 @@ FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-
              "x-rgrow", "x-lowde", "x-dy", "x-small",
              # 2026-08-24 비중상한 6종 — PREREG-2026-08-24-CAPWEIGHT.md(주식수를 쓴다).
              "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
+             # 2026-08-25 NDX 전용 5종 — PREREG-2026-08-25-NDXONLY.md.
+             "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx",
              # 2026-08-23 국면 서술형 — PREREG-2026-08-23-NARRATIVE.md.
              #   ⚠ 둘 다 fn=None 이라 **여기 없으면 람다 갈래로 떨어져 죽는다**(실측).
              #     x-ratehot·x-fxweak 는 가격·거시만 쓰므로 이 집합이 아니다.
@@ -4461,16 +4512,11 @@ def build_strats():
          "⚠ 다중회귀를 풀지 않고 시차별 자기상관의 제곱합으로 근사한다(설명변수끼리 상관이 있어 "
          "R² 의 상한이다). 순위만 쓰므로 단조성이면 충분하지만 값을 'LM 통계량' 이라 부르면 안 된다. "
          "⚠ t-volreg 는 시장 전체의 국면 스위치이고 이것은 종목별 횡단면 점수다 — 축이 다르다.")
-    xsec("x-hurst-mcf", "허스트 지수 상위 %d · 시총 하한(하위 %d%% 제외)"
-         % (TOPN, int(MCF_CUT * 100)),
-         "x-hurst 와 점수가 같고, 그달 후보에서 시가총액 하위 %d%% 를 먼저 잘라 낸다."
-         % int(MCF_CUT * 100),
-         None,
-         "x-hurst 의 최대낙폭이 −53.48%로 이 랩 통계 계열 15종 중 가장 깊다. 그 원인을 "
-         "'소형 극단' 으로 보고 하한을 건다. ⚠ 이것은 가설이지 진단이 아니다 — 원인을 따로 "
-         "재지 않았다. 낙폭이 줄어도 '소형이 원인이었다' 의 증거는 아니고, 기전과 양립하는 "
-         "결과일 뿐이다. ⚠ -mcf 계열이라 바스켓 전수 시험에서 빠져 10종 고정이다 — 밑동과 "
-         "크기가 같아야 낙폭 비교가 크기 차이로 오염되지 않는다.")
+    # 2026-08-25 — x-hurst-mcf 등록을 그만둔다. 시총 하한이 기본이 되면서 밑동(x-hurst)과
+    #   같은 것이 됐다(MCF_CUT 머리말 · PREREG-2026-08-25-DEFAULT-PIT).
+    #   그 측정 기록은 PREREG-2026-08-12-MCAPFLOOR 계열 문서에 남는다 —
+    #   편향 4.01 → 1.00%p(-75%)였고 PIT t 는 0.39 → -0.58 이었다.
+
     xsec("x-acorr", "수익률 자기상관 상위 %d" % TOPN,
          "일간 수익률의 1차 자기상관을 최근 %d거래일에서 재어 가장 큰 %d종목 동일가중, "
          "월말 리밸런스." % (ACORR_WIN, TOPN),
@@ -4611,24 +4657,13 @@ def build_strats():
           "⚠ 원 규칙(x-fip)은 ID 를 선택 축으로 써서 PIT t 0.35 로 죽었다. 이것은 그 "
           "규칙이 아니고, 소급 수치가 좋아도 PIT 이 답이다.",
           enter=1, hold=126, src="me", pick=lambda j, X: _mom_top(j, X, "low"))
-    # 시총 하한 변형 3종 — 사전등록 PREREG-2026-08-24-FIPMCF.md.
-    #   🚨 기대하는 것은 «편향 감소» 이지 «알파» 가 아니다. 랩 기존 -mcf 3쌍에서 편향은
-    #     32~75% 줄었는데 PIT t 는 거의 안 움직였다(편향이 주는 만큼 소급도 내려간다).
-    #     t 가 크게 오르면 오히려 의심해야 한다 — 등록 문서에 그렇게 적어 뒀다.
-    for _bs, _lab, _half in (("x-fip-base", "모멘텀 상위 30 · 1개월 보유", None),
-                             ("x-fip-cont", "연속정보 모멘텀 · 6개월 보유", "low"),
-                             ("x-fip-disc", "이산정보 모멘텀 · 6개월 보유", "high")):
-        event(_bs + MCF_SUF, _lab + " · 시총 하한",
-              "위와 같고, 모멘텀 상위를 고르기 전에 그달 후보에서 시총 하위 %d%% 를 "
-              "잘라 낸다." % int(MCF_CUT * 100),
-              "사용자 제안(2026-08-24) — 편출이 소형에 몰리므로 하한을 걸면 소급과 시점정확의 "
-              "차이가 줄 것이다. 자료가 그 전제를 지지한다: S&P 500 편출 82종 중 마지막 시총 "
-              "하위 25%가 77종(94%)이고 상위 10%는 0종이다. "
-              "⚠ 기대하는 것은 편향 감소이지 알파가 아니다 — 랩 기존 시총 하한 3쌍에서 편향은 "
-              "32~75% 줄었는데 PIT t 는 거의 안 움직였다. 편향이 주는 만큼 소급 수치도 같이 "
-              "내려가기 때문이다.",
-              enter=1, hold=(21 if _bs == "x-fip-base" else 126), src="me",
-              pick=(lambda j, X, _h=_half: _mom_top(j, X, _h, mcf=True)))
+    # 🚨 2026-08-25 — FIP 의 시총 하한 변형 3종도 등록을 그만둔다. 하한이 기본이 되면서
+    #   밑동과 같은 것이 됐기 때문이다(MCF_CUT 머리말 · PREREG-2026-08-25-DEFAULT-PIT).
+    #   ⚠ 그 측정은 build/PREREG-2026-08-24-FIPMCF-RESULT.md 에 그대로 남는다 —
+    #     편향 24.02→11.98 · 13.60→6.51 · 20.85→11.88%p 로 절반 가까이 줄었고,
+    #     PIT t 는 0.58→0.57 · 0.60→0.89 · 1.21→1.12 로 제자리였다.
+    #   ⚠ 다만 하한 수준이 다르다 — 그때는 30%, 지금 기본은 20% 다. 그래서 «같은 것» 이
+    #     정확히 맞지는 않고, 밑동이 그때의 -mcf 판보다 후보가 조금 넓다.
 
     event("x-fip-disc", "이산정보 모멘텀 · 6개월 보유 (거울)",
           "위와 같고 ID 상위 절반(이산적으로 정보가 온 쪽)을 담는다.",
@@ -4664,6 +4699,36 @@ def build_strats():
              "그달 편입 명단 전부를 시총가중으로 담되 개별 종목 비중을 " + _cap + "%로 "
              "제한하고, 초과분은 상한에 안 걸린 종목에 시총 비례로 재배분한다. 새로 상한을 "
              "넘는 종목이 없어질 때까지 반복 수렴한다. 월말 리밸런스.", None, _CAPWHY)
+    # ── NDX 전용 비중상한 5종 — PREREG-2026-08-25-NDXONLY.md ──────────
+    # 🚨 2026-08-24 판에서 상한 10% 와 NDX 트리거가 **아무 일도 안 했다**(추적오차 0.00% ·
+    #   발동 0회). 원인은 유니버스였다 — SPX∪NDX 500여 종에서는 개별 비중이 희석돼 나스닥
+    #   100(102종)의 쏠림이 안 보인다. 규칙을 원래 살던 곳으로 옮긴 것이다.
+    # ⚠ 상한 3%는 등록하지 않는다 — 102종에 3%면 최소 34종이 걸려 사실상 동일가중이 된다.
+    _NCAPWHY = ("2026-08-24 판과 산식이 같고 유니버스만 그달 NASDAQ 100 편입 명단으로 좁힌다. "
+                "그 판에서 상한 10%와 특별 리밸런스가 한 번도 발동하지 않았는데, 500여 종에 "
+                "희석돼 나스닥 100 의 쏠림이 안 보였기 때문이다 — 규칙이 사는 곳이 아닌 데서 "
+                "쟀던 것이다. "
+                "⚠ 대조군은 랩 규약대로 S&P 500(PR)이다. 여기만 NASDAQ 100 으로 바꾸면 같은 "
+                "표에서 잣대가 갈린다. "
+                "⚠ 이 창(2016-07~)은 메가캡이 이긴 구간이고 상한은 메가캡 언더웨이트 베팅이라 "
+                "성과는 기대하지 않는다 — 알고 등록했다.")
+    xsec("x-ncapw", "NDX 시총가중 (상한 없음 · 기준선)",
+         "그달 NASDAQ 100 편입 명단 전부를 발행주식수 기준 시총가중으로 담는다. 상한이 "
+         "없다. 월말 리밸런스.", None, _NCAPWHY)
+    for _sid, _cap in (("x-ncap10", "10"), ("x-ncap5", "5"), ("x-ncap45", "4.5")):
+        xsec(_sid, "NDX 시총가중 · 개별 상한 " + _cap + "%",
+             "그달 NASDAQ 100 편입 명단 전부를 시총가중으로 담되 개별 종목 비중을 " + _cap +
+             "%로 제한하고, 초과분은 상한에 안 걸린 종목에 시총 비례로 재배분한다. 새로 "
+             "상한을 넘는 종목이 없어질 때까지 반복 수렴한다. 월말 리밸런스.", None, _NCAPWHY)
+    xsec("x-ncapndx", "NDX 특별 리밸런스 복제 (NDX 유니버스)",
+         "그달 NASDAQ 100 편입 명단을 시총가중으로 담되, 비중 4.5%를 넘는 종목들의 합계가 "
+         "48%를 넘을 때만 그 합계를 40%로 줄이고 줄인 만큼을 나머지에 비례 재배분한다. "
+         "월말 판정.",
+         None,
+         "나스닥이 실제로 운용하는 룰을 그 지수의 유니버스에서 재현한다. 실제 발동은 "
+         "1998·2011·2023 세 번이고 그중 2023 이 이 랩 창 안에 있다 — 재현되면 구현이 맞다는 "
+         "증거이고, 안 되면 성적을 읽기 전에 구현부터 의심해야 한다. " + _NCAPWHY)
+
     xsec("x-capndx", "NASDAQ 100 특별 리밸런스 복제 (트리거형)",
          "그달 편입 명단 전부를 시총가중으로 담되, 비중 4.5%를 넘는 종목들의 합계가 48%를 "
          "넘을 때만 그 합계를 40%로 줄이고 줄인 만큼을 나머지에 비례 재배분한다. 안 넘으면 "
@@ -5511,7 +5576,11 @@ def build_strats():
     #   옮겨 어긋난 사고가 이 파일에 넷 있었다(xsec_score_at 머리말).
     #   점수 갈래·사전패스도 새로 안 만든다. xsec_score_at 이 후보를 좁힌 뒤 sid 를
     #   밑동으로 되돌려 부르므로 원본과 한 글자도 다르지 않은 산식이 돈다.
-    for _base in ("x-mom12", "x-dist200", "x-hlspread"):
+    # 🚨 2026-08-25 — 시총 하한이 기본이 되면서 이 변형족은 **밑동과 같은 것**이 됐다.
+    #   같은 규칙을 두 번 세면 다중검정 족만 부푼다. 등록을 그만둔다.
+    #   ⚠ 지우는 것은 등록이지 기록이 아니다 — 그동안의 측정은
+    #     build/PREREG-2026-08-12-MCAPFLOOR.md 와 그 결과 문서에 그대로 남는다.
+    for _base in ():
         _b = next((s for s in STRATS if s["sid"] == _base), None)
         if _b is None:      # 밑동이 목록에서 빠지면 변형도 안 만든다(조용히 지나가지 않게 알린다)
             print("  ⚠ 시총 하한 변형을 못 만들었다 — 밑동 %s 가 STRATS 에 없다" % _base)
@@ -5842,6 +5911,9 @@ def build_strats():
         STRATS.append(_v); _nb += 1
     if _nb:
         print("  저회전 변형(밴드 %.1f) %d종 등록 — 원 규칙은 안 건드린다" % (BAND, _nb))
+    # 🚨 트리거 발동 횟수를 반드시 로그에 남긴다(등록 문서의 실패 조건). 0 이면 «규칙» 이
+    #   아니라 구현 의심이고, 1~2 면 «사건 하나» 다.
+    _NDX_FIRED.clear()
 
     NSWEEP = NSWEEP_GRID
     NSW_SKIP = {
@@ -6204,8 +6276,14 @@ def xsec_score_at(S, i, X, pool=None):
     #   그 자르기는 xsec_pick_at → pick_top(topn) 이 한다.
     if "~n" in S["sid"]:
         S = dict(S, sid=S["sid"].split("~n")[0])
-    if S["sid"].endswith(MCF_SUF):
+    # 🚨 2026-08-25 — 시총 하한이 **기본**이다(사용자 결정 · MCF_CUT 머리말 참조).
+    #   종전에는 '-mcf' 접미사가 붙은 변형에만 걸었다. 이제 면제 목록 밖의 모든 횡단면
+    #   규칙에 건다 — 그것이 «모든 전략에 적용» 의 뜻이다.
+    #   ⚠ 여기 한 자리에서만 건다. 갈래마다 따로 거르면 사전패스는 전 종목을 보게 되어
+    #     선견이 된다(pool 마스킹과 같은 자리인 것이 요점이다).
+    if _BASE_SID(S["sid"]) not in MCF_EXEMPT:
         tickers = mcap_floor(tickers, X, i, MCF_CUT)
+    if S["sid"].endswith(MCF_SUF):        # 옛 변형이 남아 있으면 밑동으로 되돌린다
         S = dict(S, sid=S["sid"][:-len(MCF_SUF)])
     sc = []
     comp_raw = {}          # E30 컴포지트 원지표 — 단면이 다 모여야 z 를 낸다
@@ -8008,7 +8086,15 @@ def run():
         from collections import Counter as _C
         _cnt = _C(v["nsel"]["n"] for v in _win.values())
         _infl.sort()
-        print("  바스켓 승자 — %s · 부풀림(max t − median t) 중앙 %.3f · 최대 %.3f"
+        # 🚨 NDX 특별 리밸런스 발동 횟수 — 등록 문서(PREREG-2026-08-25-NDXONLY)의 실패 조건이다.
+    #   0 이면 «규칙이 안 통한다» 가 아니라 **구현이 나스닥 룰과 다르다**는 뜻이므로,
+    #   성적을 읽기 전에 그것부터 본다. 1~2 면 «사건 하나» 로 적는다.
+    if _NDX_FIRED:
+        print("  [NDX 트리거] 발동 " + " · ".join("%s %d회" % (k, v)
+              for k, v in sorted(_NDX_FIRED.items())))
+    else:
+        print("  [NDX 트리거] 발동 0회 — 구현이 나스닥 룰과 다른지 먼저 볼 것")
+    print("  바스켓 승자 — %s · 부풀림(max t − median t) 중앙 %.3f · 최대 %.3f"
               % (" · ".join("N%d %d종" % (k, _cnt[k]) for k in sorted(_cnt)),
                  _infl[len(_infl) // 2] if _infl else 0.0, max(_infl) if _infl else 0.0))
 
