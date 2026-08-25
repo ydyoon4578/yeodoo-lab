@@ -1490,7 +1490,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             var ic=x.incr, solo=(x.t==null?null:x.t);
             var absorbed=(Math.abs(ic.t)<2&&solo!=null&&Math.abs(solo)>=2);
             if(absorbed) d.vt='<b>이웃 규칙이 설명함</b> — '+d.vt;
-            d.vp.push('<b>비슷한 전략을 이미 갖고 있다면</b> — 「'+esc(ic.vs||'')+'」와 많이 닮았습니다'+
+            // ⚠ 이웃이 목록에 없을 수 있다(빌더가 vs_unlisted 로 알려 준다). 그 사실을 안 적으면
+            //   독자가 찾을 수 없는 이름을 좇는다 — 상한 계열 11종을 내린 2026-08-25 에 그랬다.
+            d.vp.push('<b>비슷한 전략을 이미 갖고 있다면</b> — 「'+esc(ic.vs||'')+'」'+
+                  (ic.vs_unlisted?'<span class="sub2">(지금은 목록에 없는 규칙입니다 — 겹침은 '+
+                                   '게시 여부와 상관없이 실재하므로 그대로 적습니다)</span>':'')+
+                  '와 많이 닮았습니다'+
                   '(닮은 정도 '+ic.corr+'). 그 전략에 이것을 <b>더해서 늘어나는 몫은 연 '+
                   (ic.alpha>0?'+':'')+ic.alpha+'%p</b> 뿐입니다'+
                   (solo==null?'':(' — 혼자 재면 좋아 보이지만(t '+solo+') 겹치는 부분을 빼면 t '+ic.t+' 입니다'))+
