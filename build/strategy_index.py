@@ -778,6 +778,37 @@ def rec(**kw):
     #     말해야 독자가 서로 다른 눈금의 두 수를 나란히 놓고 안 읽는다.
     #   ⚠ 한 곳에서만 정한다 — 호출부마다 적으면 언젠가 갈린다.
     kw["tier"] = tier_of(kw["grade"], bool(kw.get("pit")), kw.get("holds"))
+    # ── 2026-08-25 — 머리 숫자를 시점정확으로 돌린다 ──────────────────────────
+    #   사용자 결정(build/PREREG-2026-08-25-DEFAULT-PIT.md) — «시점정확 + 상위 80% 종목으로
+    #   전략들을 구성해. 모든 전략에 적용».
+    #   종전에는 metrics 가 소급(오늘 518종을 과거로 소급)이고 시점정확은 pit 블록에 따로
+    #   있었다. 그 배치가 «소급이 정상이고 시점정확은 참고» 라고 말했는데 측정은 반대였다 —
+    #   프로그인더팬은 초과수익의 90%가 편향이었고 12-1 모멘텀도 편향 34.4%p 다.
+    #   소급을 지우지 않는다. metrics_retro 로 남긴다 — 기록을 지우지 않는 것이 이 랩의
+    #   규약이고, 편향의 크기는 두 수가 다 있어야 읽힌다.
+    #   PIT 레그가 없는 규칙(자산배분 ETF·서브산업 3종)은 손대지 않는다. 그쪽은 «종목 편입»
+    #   개념이 없거나 자료가 없어 시점정확이 성립하지 않는다.
+    _p = kw.get("pit") or {}
+    if _p.get("cagr") is not None and _p.get("sharpe") is not None:
+        kw["metrics_retro"] = kw.get("metrics")
+        kw["metrics"] = {"cagr": _p.get("cagr"), "vol": _p.get("vol"),
+                         "sharpe": _p.get("sharpe"), "mdd": _p.get("mdd")}
+        if _p.get("bench_cagr") is not None:
+            kw["bench_retro"] = kw.get("bench")
+            kw["bench"] = {"cagr": _p.get("bench_cagr"), "sharpe": _p.get("bench_sharpe"),
+                           "mdd": _p.get("bench_mdd")}
+        if _p.get("excess_cagr") is not None:
+            kw["excess_cagr_retro"] = kw.get("excess_cagr")
+            kw["excess_cagr"] = _p.get("excess_cagr")
+        if _p.get("t") is not None:
+            kw["t_retro"] = kw.get("t")
+            kw["t"] = _p.get("t")
+        if _p.get("bench_sharpe") is not None:
+            kw["d_sharpe_retro"] = kw.get("d_sharpe")
+            kw["d_sharpe"] = round(_p["sharpe"] - _p["bench_sharpe"], 3)
+        kw["basis"] = "pit"
+    else:
+        kw["basis"] = "retro"
     # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
     # 다른 칸에 들어가는 일이 생긴다.
     kw["holds"] = holds_kind(kw.get("holdings"))
@@ -1303,6 +1334,16 @@ def main() -> int:
     #    그럼에도 목록에서 빼는 것은 "이 랩에서 이 계열을 다루지 않는다"는 운용 결정이지
     #    "성과가 나쁘다"는 측정 결과가 아니다. 되살리려면 이 집합에서 sid 를 빼면 된다.
     HIDE_SIDS = {
+        # 🚨 2026-08-25 — 머리 숫자를 시점정확(PIT)으로 바꾸자 **새로 세 종이 걸렸다**
+        #   (사용자 결정 «샤프 0.5 미만은 남기면 안 돼», 2026-08-19 · 08-23).
+        #     t-x-aci    소급 0.793 → PIT 0.427
+        #     t-x-hurst  소급 0.543 → PIT 0.361
+        #     t-x-fxweak 소급 0.500 → PIT 0.219
+        #   ⚠ 성적이 나빠진 것이 아니라 잣대가 바뀐 것이다 — 셋 다 **소급에서만** 0.5 선을
+        #     넘고 있었다. 소급은 오늘 지수에 있는 종목만 과거로 되돌려 고르므로 그 사이
+        #     편출된 종목의 부진이 곡선에 안 담긴다. 그 몫이 정확히 이만큼이었다.
+        #   사유 전문은 build/tested_not_published.json · PREREG-2026-08-25-DEFAULT-PIT.md.
+        "t-x-aci", "t-x-hurst", "t-x-fxweak",
         # (배포 원장의 위험감축 3종은 2026-07-30 에 원본째로 삭제 — 위 주석 참조)
         "a-rp-voltarget", "a-vol-roll",                                        # 자산배분
         "r-low-beta-weight-tilt",                                              # 기각 재검
@@ -1367,7 +1408,8 @@ def main() -> int:
         "t-x-maxlow-band",                                           # 회전 21.9배
         "t-x-max5low-band",                                          # 회전 20.7배
         "t-x-rev1m-band",                                            # 회전 20.1배
-        "t-x-fip-base-mcf",                                          # 회전 13.8배
+        # ⚠ t-x-fip-base-mcf 는 2026-08-25 에 등록을 그만뒀다(시총 하한이 기본이 됐다) —
+        #   목록에 남겨 두면 «삭제 목록 sid 를 산출물에서 못 찾았다» 경고가 매번 뜬다.
         "t-x-fip-base",                                              # 회전 13.4배
         "t-x-maxlow-n52-band",                                       # 회전 11.5배
         "t-x-snapback-band",                                         # 회전 11.4배
