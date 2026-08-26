@@ -125,18 +125,29 @@
 /* ── 운용 포트폴리오 전용(복호 후 본문) ── */
 #content{margin-top:26px}
 .pfhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 14px}
-/* ── 두 펀드를 나란히 · 가운데 굵은 선 ─────────────────────────────────────
-   🚨 선은 «가운데» 하나뿐이다. 열마다 테두리를 두르면 칸이 넷으로 보여 더 정신없어진다.
-   ⚠ 넓은 표(보유 vs 지수 13열)는 열 안에서 가로 스크롤한다(.tblwrap) — 페이지 전체가
-     가로로 밀리지 않게. 좁은 화면에서는 1열로 접고, 그때 가운데 선은 위쪽 선이 된다. */
-.fundgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:start}
-.fundcol{min-width:0;padding:0 26px}
-.fundcol:first-child{padding-left:0}
-.fundcol:last-child{padding-right:0;border-left:3px solid var(--line)}
+/* ── 펀드마다 한 판 · 판 안에서 2열 ────────────────────────────────────────
+   🚨 2026-08-26 사용자 지시 «S&P500, 나스닥100 각각 페이지별로 2열씩. 오른쪽 열에는
+     전략 중심. 왼쪽에는 차트랑 나머지».
+     종전(2026-08-21)에는 **두 펀드가** 좌우 2열이었다. 그러면 한 펀드가 반쪽 폭을 쓰는데
+     보유 vs 지수는 13열짜리 표라, 늘 열 안에서 가로 스크롤을 해야 했다.
+   → 펀드는 탭으로 가르고(한 번에 한 판), 그 판 안을 2열로 쓴다.
+   ⚠ 왼쪽이 더 넓다(1.4 : 1). 왼쪽에 그 13열 표가 있고 오른쪽 전략 칸은 표가 좁다 —
+     반반으로 두면 넓은 쪽이 여전히 모자라고 좁은 쪽이 남는다.
+   ⚠ 선은 **가운데 하나**뿐이다. 열마다 두르면 칸이 넷으로 보인다(종전 판의 교훈).
+   ⚠ 좁은 화면에서는 1열로 접고, 그때 가운데 선은 위쪽 선이 된다. */
+.fundgrid{display:grid;grid-template-columns:1fr;gap:0;align-items:start}
+.fundcol{min-width:0;padding:0}
+.pftabs{margin:0 0 18px}
+.fsplit{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:0;align-items:start}
+.fcol{min-width:0}
+.fcolL{padding-right:26px}
+.fcolR{padding-left:26px;border-left:3px solid var(--line)}
+/* 각 열의 첫 h3 는 위 여백을 줄인다 — 두 열이 나란히 시작하는데 한쪽만 밀리면 어긋나 보인다 */
+.fcol>h3:first-child{margin-top:0;padding-top:0;border-top:0}
 @media(max-width:1280px){
-  .fundgrid{grid-template-columns:1fr}
-  .fundcol{padding:0}
-  .fundcol:last-child{border-left:0;border-top:3px solid var(--line);margin-top:26px;padding-top:22px}
+  .fsplit{grid-template-columns:1fr}
+  .fcolL{padding-right:0}
+  .fcolR{padding-left:0;border-left:0;border-top:3px solid var(--line);margin-top:26px;padding-top:22px}
 }
 /* 웹 백테스트 — 전폭 접이 */
 .btwrap{margin:26px 0 0;border-top:1px solid var(--line);padding-top:14px}
@@ -559,7 +570,6 @@ window.pfNormalizeLayout = function (root) {
   panes.forEach(function (s) {
     s.classList.add('fundcol');
     s.classList.remove('tabpane');   // 옛 판의 이름 — 남겨 두면 옛 규칙이 다시 물린다
-    s.hidden = false;                // 옛 조각은 첫 판 말고 전부 hidden 이었다
   });
   var grid = c.querySelector('.fundgrid');
   if (!grid) {                       // 옛 조각엔 격자가 없다 — 셸이 만들어 감싼다
@@ -568,8 +578,88 @@ window.pfNormalizeLayout = function (root) {
     panes[0].parentNode.insertBefore(grid, panes[0]);
     panes.forEach(function (s) { grid.appendChild(s); });
   }
-  var tabs = c.querySelector('.tabs');
-  if (tabs) tabs.hidden = true;      // 2열이면 펀드 탭은 할 일이 없다
+
+  /* ── 판 안을 2열로 가른다 (2026-08-26) ────────────────────────────────
+     오른쪽 = 전략(성과·기여 + 매매 원장) · 왼쪽 = 차트와 나머지(개요 · 보유 vs 지수).
+     ⚠ 절의 **번호나 제목 글자로 가르지 않는다.** 조각 생성기가 표시 순서에 맞춰 번호를
+       다시 매기므로(①③④② 로 읽히지 않게), 번호는 판마다·판올림마다 달라진다.
+       가르는 기준은 «그 절이 무엇을 담고 있나» 여야 한다 — 웹 앱이 그리는 상자의 id
+       (perf-* · ledger-*)는 slug 로만 만들어져 안정적이다.
+     ⚠ 멱등이어야 한다. pf:content 가 여러 번 뜨거나 앱이 다시 그린 뒤에도 이 함수가
+       또 돌 수 있다 — 이미 갈라 놓았으면 그대로 둔다. */
+  panes.forEach(function (s) {
+    if (s.querySelector(':scope > .fsplit')) return;      // 이미 갈랐다
+    var kids = [].slice.call(s.children);
+    var head = [], blocks = [], cur = null;
+    kids.forEach(function (el) {
+      if (el.classList && el.classList.contains('fhead')) { head.push(el); return; }
+      if (el.tagName === 'H3') { cur = [el]; blocks.push(cur); return; }
+      if (cur) { cur.push(el); return; }
+      // 첫 h3 앞에 오는 것(차트) — 한 덩이로 모아 왼쪽 맨 위에 둔다
+      if (!blocks.length) blocks.push([]);
+      blocks[0].push(el);
+    });
+    if (!blocks.length) return;
+    var split = document.createElement('div'); split.className = 'fsplit';
+    var L = document.createElement('div'); L.className = 'fcol fcolL';
+    var R = document.createElement('div'); R.className = 'fcol fcolR';
+    split.appendChild(L); split.appendChild(R);
+    blocks.forEach(function (blk) {
+      var strat = blk.some(function (el) {
+        if (!el.querySelector) return false;
+        if (el.id && /^(perf|ledger)-/.test(el.id)) return true;
+        return !!el.querySelector('[id^="perf-"],[id^="ledger-"]');
+      });
+      var into = strat ? R : L;
+      blk.forEach(function (el) { into.appendChild(el); });
+    });
+    s.appendChild(split);
+  });
+
+  /* ── 펀드 탭 — 한 번에 한 판 ──────────────────────────────────────────
+     ⚠ 조각은 탭을 안 내보낸다(2026-08-21 에 사라졌다). 셸이 만든다 — 그래야 배치가
+       push 만으로 바뀌고 사내 PC 조각 재생성이 필요 없다(이 어댑터의 존재 이유).
+     ⚠ 고른 탭을 sessionStorage 에 남긴다. 이 페이지는 암호를 풀 때마다 조각을 다시
+       그리는데, 그때마다 첫 판으로 돌아가면 보던 자리를 잃는다. */
+  var tabs = c.querySelector('.pftabs');
+  if (!tabs) {
+    tabs = document.createElement('div');
+    tabs.className = 'tabs pftabs';
+    tabs.setAttribute('role', 'tablist');
+    grid.parentNode.insertBefore(tabs, grid);
+  }
+  var KEY = 'pf.fundtab';
+  function label(s) {
+    var h2 = s.querySelector('.fhead h2');
+    if (!h2) return s.id.replace('pane-', '');
+    var t = '';
+    [].slice.call(h2.childNodes).forEach(function (n) {
+      if (n.nodeType === 3) t += n.nodeValue;        // 펀드코드(.fcode)는 뺀다
+    });
+    return t.trim() || h2.textContent.trim();
+  }
+  function show(id) {
+    panes.forEach(function (s) { s.hidden = (s.id !== id); });
+    [].slice.call(tabs.children).forEach(function (b) {
+      b.setAttribute('aria-selected', b.dataset.pane === id ? 'true' : 'false');
+    });
+    try { sessionStorage.setItem(KEY, id); } catch (e) {}
+  }
+  if (!tabs.children.length) {
+    panes.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'tb'; b.setAttribute('role', 'tab');
+      b.dataset.pane = s.id; b.textContent = label(s);
+      b.addEventListener('click', function () { show(s.id); });
+      tabs.appendChild(b);
+    });
+  }
+  tabs.hidden = false;
+  var want = null;
+  try { want = sessionStorage.getItem(KEY); } catch (e) {}
+  if (!panes.some(function (s) { return s.id === want; })) want = panes[0].id;
+  show(want);
+
   var bt = c.querySelector('#pane-bt');
   if (bt && !c.querySelector('.btwrap')) { bt.hidden = false; bt.classList.add('btlegacy'); }
   return { ok: true, n: panes.length };
