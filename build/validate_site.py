@@ -2084,27 +2084,51 @@ try:
     #   나흘간 금리·FedWatch 가 08-20 에 고착했다. 푸시마다 빨간불이 떴지만 문구가
     #   «workflow file issue» 뿐이라 자료 고착과 연결되지 않았고, 잡 로그도 비어 있었다.
     #   ⚠ 사람이 눈으로 못 잡는다 — 정상 step 과 한 글자 차이(다음 줄이 run 이냐 주석이냐)다.
-    try:
-        import yaml as _yaml
-        for _fn in sorted(os.listdir(_wf_dir)):
-            if not _fn.endswith((".yml", ".yaml")): continue
-            try:
-                _wd = _yaml.safe_load(io.open(os.path.join(_wf_dir, _fn), encoding="utf-8"))
-            except Exception as _ye:
-                errors.append(".github/workflows/%s: YAML 파싱 실패 — %s" % (_fn, _ye))
+    #   ⚠ PyYAML 을 쓰지 않는다. 이 잡은 «표준 라이브러리만 · 설치 단계 없음» 이 설계이고
+    #     (validate.yml 의 step 이름에 그렇게 적혀 있다), 여기 한 줄 때문에 설치를 붙이면
+    #     그 설계가 이 검사 하나에 끌려 무너진다. 필요한 것은 «steps: 아래 각 항목에
+    #     run 이나 uses 가 있나» 뿐이라 줄 단위로 충분하다.
+    for _fn in sorted(os.listdir(_wf_dir)):
+        if not _fn.endswith((".yml", ".yaml")): continue
+        _lines = io.open(os.path.join(_wf_dir, _fn), encoding="utf-8").read().splitlines()
+        _steps_ind = None          # steps: 의 들여쓰기(None 이면 지금 steps 블록 밖)
+        _item_ind = None           # 그 아래 «- » 항목의 들여쓰기
+        _cur = None                # (이름, 줄번호, run/uses 봤나)
+        def _close(_c, _f=_fn):
+            if _c and not _c[2]:
+                errors.append(
+                    ".github/workflows/%s: %d번째 줄 step «%s» 에 run 도 uses 도 없다 — "
+                    "GitHub 이 파일을 못 읽어 이 잡의 schedule 이 통째로 안 돈다"
+                    "(자료가 조용히 고착한다)" % (_f, _c[1], _c[0]))
+        for _ln, _raw in enumerate(_lines, 1):
+            if not _raw.strip() or _raw.lstrip().startswith("#"):
                 continue
-            for _jn, _j in ((_wd or {}).get("jobs") or {}).items():
-                for _i, _st in enumerate(_j.get("steps") or []):
-                    if not isinstance(_st, dict) or not (_st.get("run") or _st.get("uses")):
-                        errors.append(
-                            ".github/workflows/%s: %s 의 %d번째 step «%s» 에 run 도 uses 도 "
-                            "없다 — GitHub 이 파일을 못 읽어 이 잡의 schedule 이 통째로 "
-                            "안 돈다(자료가 조용히 고착한다)"
-                            % (_fn, _jn, _i + 1,
-                               (_st or {}).get("name") if isinstance(_st, dict) else _st))
-    except ImportError:
-        # ⚠ 통과시키지 않는다. yaml 이 없으면 이 검사는 «안 돈 것» 이고, 그것을 적는다.
-        errors.append("PyYAML 이 없어 워크플로 step 검사를 못 했다 — pip install pyyaml")
+            _ind = len(_raw) - len(_raw.lstrip())
+            if _steps_ind is None:
+                if re.match(r"^\s*steps:\s*(#.*)?$", _raw):
+                    _steps_ind, _item_ind, _cur = _ind, None, None
+                continue
+            # steps 블록을 벗어났나 — 같거나 얕은 들여쓰기의 키가 나오면 끝이다.
+            if _ind <= _steps_ind:
+                _close(_cur); _cur = None
+                _steps_ind = _item_ind = None
+                if re.match(r"^\s*steps:\s*(#.*)?$", _raw):
+                    _steps_ind, _item_ind = _ind, None
+                continue
+            _body = _raw.lstrip()
+            if _body.startswith("- "):
+                if _item_ind is None:
+                    _item_ind = _ind
+                if _ind == _item_ind:
+                    _close(_cur)
+                    _in = _body[2:]
+                    _nm = re.match(r"name:\s*(.+?)\s*$", _in)
+                    _cur = [(_nm.group(1) if _nm else _in[:40]), _ln,
+                            bool(re.match(r"(run|uses):", _in))]
+                    continue
+            if _cur and re.match(r"^(run|uses):", _body):
+                _cur[2] = True
+        _close(_cur)
 
     _staged = {}
     for _fn in sorted(os.listdir(_wf_dir)):
