@@ -273,6 +273,44 @@
   }
 
   // ── SVG 라인차트(파이썬 svg_lines 의 JS 판) ────────────────────────────────
+  /* ── 가로 막대 (2026-08-26) ────────────────────────────────────────────────
+     🚨 사용자 «구성종목별 등락률이나 기여도도 차트로 딱 볼 수 있게». 종전에는 그 수가
+       전략마다 접힌 <details> 안 표에만 있었다 — 펴야 보이고, 펴도 어느 종목이 큰지는
+       숫자를 눈으로 훑어야 했다.
+     ⚠ 선 그래프(svgLines)를 쓰지 않는다. 저건 «시간에 따라» 를 말하는 그림이고 여기는
+       «종목끼리 크기 비교» 다. 축이 다른 것을 같은 그림에 담으면 둘 다 안 읽힌다.
+     ⚠ 툴팁 배선(PFCHARTS)을 안 태운다 — 그 배선은 시계열 좌표(data-ch)를 전제한다.
+       막대는 값이 바로 옆에 찍히므로 툴팁이 필요 없다. */
+  function svgBars(items, unit, nd) {
+    if (!items.length) return '';
+    var rowH = 21, padT = 8, padB = 8, labW = 66, valW = 74, w = 760;
+    var h = padT + padB + rowH * items.length;
+    var mx = 0;
+    items.forEach(function (it) { mx = Math.max(mx, Math.abs(it.v)); });
+    if (!(mx > 0)) mx = 1;
+    var barL = labW + 6, barR = w - valW - 6, mid = (barL + barR) / 2;
+    var half = (barR - barL) / 2;
+    var o = ['<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" class="ichart bars" ' +
+             'preserveAspectRatio="none" style="width:100%;height:' + h + 'px">'];
+    o.push('<line x1="' + mid + '" y1="' + padT + '" x2="' + mid + '" y2="' + (h - padB) +
+           '" stroke="var(--line)" stroke-width="1"/>');
+    items.forEach(function (it, i) {
+      var y = padT + rowH * i, cy = y + rowH / 2;
+      var len = Math.abs(it.v) / mx * half;
+      var pos = it.v >= 0;
+      var col = pos ? 'var(--deploy)' : 'var(--hot)';
+      o.push('<text x="' + labW + '" y="' + (cy + 3.6) + '" text-anchor="end" ' +
+             'font-size="11" font-family="var(--mono)" fill="var(--ink-2)">' + esc(it.k) + '</text>');
+      o.push('<rect x="' + (pos ? mid : mid - len) + '" y="' + (y + 3.5) + '" width="' +
+             Math.max(len, 0.6) + '" height="' + (rowH - 7) + '" fill="' + col + '" opacity=".78"/>');
+      o.push('<text x="' + (w - 4) + '" y="' + (cy + 3.6) + '" text-anchor="end" ' +
+             'font-size="11" font-family="var(--mono)" fill="' + col + '">' +
+             (it.v > 0 ? '+' : '') + num(it.v, nd) + esc(unit) + '</text>');
+    });
+    o.push('</svg>');
+    return '<div class="barwrap">' + o.join('') + '</div>';
+  }
+
   // 🚨 파이썬 svg_lines 와 **같은 마크업**을 낸다 — .chwrap[data-ch] + .ichart. 호버 배선은
   //   조각 스크립트(window.PFCHARTS)가 한 벌로 하므로, 여기서 툴팁을 또 만들면 두 벌이 된다.
   //   눈금·여백 규약도 그쪽과 맞춘다(안 맞으면 같은 화면에서 두 그림의 눈이 달라진다).
@@ -855,6 +893,9 @@
     var F = PF.funds[slug];
     var trs = mergedTrades(slug);
     var h = [];
+    // ⚠ 지난 렌더의 막대 자료를 지운다. 이 속성은 DOM 요소에 남으므로, 안 지우면 이번에
+    //   그릴 것이 없을 때 **옛 막대를 다시 그린다**(원장을 비운 직후가 그 자리다).
+    box._pfBars = null;
     if (!trs.length) { box.innerHTML = '<p>매매가 없어 성과를 계산할 것이 없다.</p>'; return; }
     var asofI = dLe(F.asof_us);
     var cp = calcPerf(slug, trs, asofI);
@@ -914,6 +955,55 @@
         '<span class="hnote">빨간 0선 = 지수와 같은 성과</span></div>' +
         svgLines(series, series.map(function (s) { return s[0].slice(0, 16); }), null, null, 'var(--hot)') + '</div>');
 
+    /* ── 종목별 등락률·기여도 (2026-08-26) ────────────────────────────────
+       🚨 사용자 «구성종목별 등락률이나 기여도도 차트로 딱 볼 수 있게». 접이 밖에 둔다 —
+         펴야 보이면 «딱 볼 수 있게» 가 아니다.
+       ⚠ **종목 기준으로 합친다.** 한 종목이 여러 전략에 들어 있으면 rows 에 따로 뜨는데,
+         그대로 그리면 같은 티커 막대가 둘 나와 어느 쪽이 그 종목의 성적인지 안 보인다.
+         손익·초과·원금은 더하고, 등락률은 원금 가중으로 다시 낸다(단순 평균은 큰 자리와
+         작은 자리를 같게 세어 거짓이 된다).
+       ⚠ 세 눈금은 서로 다른 질문에 답한다 — 한 그림에 겹치지 않고 단추로 가른다:
+         등락률 = «얼마나 올랐나» · 기여 = «펀드에 얼마를 보탰나»(크기까지 담는다) ·
+         초과 = «지수 대비». 등락률만 보면 작은 자리가 크게 보인다. */
+    var agg = {};
+    Object.keys(perf).forEach(function (sname) {
+      (perf[sname].rows || []).forEach(function (r) {
+        var a2 = agg[r.t] || (agg[r.t] = { t: r.t, inv: 0, pnl: 0, exc: 0, n: 0 });
+        a2.inv += (r.inv != null ? r.inv : 0);
+        a2.pnl += (r.pnl || 0); a2.exc += (r.exc || 0); a2.n++;
+      });
+    });
+    var aggL = Object.keys(agg).map(function (t) { return agg[t]; });
+    if (aggL.length) {
+      var VIEWS = {
+        bp:  { lab: 'NAV 기여(bp)', unit: 'bp', nd: 1,
+               f: function (a2) { return a2.exc * F.fx / F.nav * 1e4; },
+               note: '초과손익을 펀드 순자산으로 나눈 것 — 종목 크기까지 담는다' },
+        ret: { lab: '등락률(%)', unit: '%', nd: 2,
+               f: function (a2) { return a2.inv > 0 ? a2.pnl / a2.inv * 100 : null; },
+               note: '매수원금 대비 손익 — 자리 크기와 무관한 순수 등락' },
+        exc: { lab: '초과손익(USD)', unit: '', nd: 0,
+               f: function (a2) { return a2.exc; },
+               note: '같은 날 같은 금액을 지수에 넣었을 때 대비' }
+      };
+      h.push('<div class="chart barchart" id="bars-' + slug + '">');
+      h.push('<div class="chtitle">종목별 <span class="barbtns">' +
+        Object.keys(VIEWS).map(function (k) {
+          return '<button type="button" class="bbt" data-v="' + k + '"' +
+                 (k === 'bp' ? ' aria-pressed="true"' : '') + '>' + esc(VIEWS[k].lab) + '</button>';
+        }).join('') + '</span><span class="hnote barnote">' + esc(VIEWS.bp.note) + '</span></div>');
+      h.push('<div class="barbody"></div></div>');
+      // 그리기는 DOM 이 붙은 뒤에 한다 — 아래 box.innerHTML 다음에서 배선한다
+      var _mk = function (k) {
+        var V = VIEWS[k];
+        var items = aggL.map(function (a2) { return { k: a2.t, v: V.f(a2) }; })
+                        .filter(function (x) { return x.v != null && isFinite(x.v); })
+                        .sort(function (x, y) { return y.v - x.v; });
+        return { html: svgBars(items, V.unit, V.nd), note: V.note, n: items.length };
+      };
+      box._pfBars = { mk: _mk, def: 'bp' };
+    }
+
     Object.keys(perf).sort().forEach(function (sname) {
       var rows = perf[sname].rows;
       if (!rows.length) return;
@@ -929,7 +1019,32 @@
       });
       h.push('</tbody></table></div></details>');
     });
+    var _bars = box._pfBars;
     box.innerHTML = h.join('');
+    // ⚠ 배선은 innerHTML **뒤에** 한다. 앞에서 하면 방금 그린 노드가 통째로 갈아치워져
+    //   단추가 조용히 죽는다(이 저장소가 다른 화면에서 밟은 자리다).
+    if (_bars) {
+      var wrap = el('bars-' + slug);
+      var body = wrap && wrap.querySelector('.barbody');
+      var note = wrap && wrap.querySelector('.barnote');
+      var draw = function (k) {
+        var r = _bars.mk(k);
+        body.innerHTML = r.n ? r.html : '<p class="pnote">이 눈금으로 그릴 종목이 없습니다.</p>';
+        if (note) note.textContent = r.note;
+        [].slice.call(wrap.querySelectorAll('.bbt')).forEach(function (b2) {
+          b2.setAttribute('aria-pressed', b2.dataset.v === k ? 'true' : 'false');
+        });
+        try { sessionStorage.setItem('pf.barview', k); } catch (e) {}
+      };
+      [].slice.call(wrap.querySelectorAll('.bbt')).forEach(function (b2) {
+        b2.addEventListener('click', function () { draw(b2.dataset.v); });
+      });
+      var want = null;
+      try { want = sessionStorage.getItem('pf.barview'); } catch (e) {}
+      // ⚠ 저장값을 그대로 믿지 않는다 — 눈금 이름이 바뀌면 없는 키로 그리다 죽는다.
+      //   실제로 단추가 있는 값일 때만 쓴다.
+      draw(want && wrap.querySelector('.bbt[data-v="' + want + '"]') ? want : _bars.def);
+    }
   }
 
   // ── 렌더: 백테스트(⑤) ───────────────────────────────────────────────────
