@@ -79,7 +79,27 @@ SHORT_SIDS = {"x-ratehot"}
 # 🚨 기존 가중 경로는 Σw 로 되정규화한다. 롱숏은 Σw = 0 이라 그 식이 0 으로 나눈다 —
 #   그래서 **다리별로** 되정규화한다(각 다리 합 1 · 총 노출 롱100/숏100).
 # ⚠ 이 집합 밖의 121종은 계산이 한 줄도 안 바뀐다. 회귀로 확인한다.
+# 프로그인더팬 롱숏 4종 — 사전등록 PREREG-2026-08-26-FIPSN.md.
+# 🚨 앞선 세 등록(x-fip · FIPHOLD · FIPMCF)이 전부 **롱온리**였다. Da·Gurun·Warachka(2014)
+#   Table 2 Panel A 의 헤드라인 5.95%(t 5.13)는 승자매수−패자매도의 롱숏이고, 다리별로는
+#   승자 +2.70% · 패자 +3.25% 로 **효과의 절반 이상이 패자 쪽**이다. 셋은 구조적으로
+#   2.70% 만 잡을 수 있는 설계였다 — 논문의 주장을 아직 안 재 봤다.
+FIP_LS_SIDS = {"x-fipq-cont", "x-fipq-disc", "x-fipq-cont-sn", "x-fipq-disc-sn"}
 LONGSHORT_SIDS = {"x-subls", "x-subom"}
+# ⚠ FIP 롱숏 4종은 여기 안 넣는다. 이 집합의 분기는 전부 xsec 경로인데 그 넷은
+#   event(src="me", hold=126) 로 등록해 **겹치는 6개월 포트폴리오**를 만든다
+#   (논문 구조가 그렇다). 대조군만 CASH_BENCH_SIDS 로 공유한다.
+
+# 대조군을 **현금(무위험)** 으로 쓰는 규칙. 순노출 0 인 시장중립을 지수와 견주면
+# «시장중립이 시장보다 못하다» 는 정의상 참인 말을 재게 된다.
+# ⚠ SHORT_SIDS 와 달리 수익 **부호는 안 뒤집는다**. 둘은 다른 축이다.
+# ⚠ x-subls·x-subom 은 일부러 안 넣는다 — 이미 게시된 수치가 지수 대조군으로 나갔고,
+#   지금 바꾸면 그 둘의 과거 판정이 조용히 달라진다. 새 규칙만 이 규약으로 간다.
+CASH_BENCH_SIDS = set(FIP_LS_SIDS)
+
+# 프로그인더팬 이중정렬 규약 — 논문 Table 2 Panel A 그대로. 스윕하지 않는다(등록 §하지 않을 것).
+FIP_Q = 5             # PRET 5분위 → 그 안에서 ID 5분위
+FIP_SEC_MIN = 3       # 업종중립: 같은 분위·같은 섹터 칸이 이보다 적으면 그 종목은 뺀다
 SUB_TOPK = 5          # 상·하위 서브산업 수
 SUB_PER = 5           # 서브산업당 시총 상위 몇 종
 SUB_MIN_N = 3         # 소속 종목이 이보다 적은 서브산업은 제외
@@ -3678,6 +3698,15 @@ def event_weights(S, dates, tickers, X, lo, n, pool_at=None):
             if j + 1 >= n or j + 1 + int(S["hold"]) <= lo:
                 continue
             picks = S["pick"](j, X) if S.get("pick") else []
+            if _BASE_SID(S["sid"]) in FIP_LS_SIDS:
+                # 🚨 롱숏 — picks 가 (티커, 부호있는 비중) 다. 겹치는 코호트가 6개월치
+                #   쌓이므로 여기서는 **더하기만** 하고, 되정규화는 수익 계산에서 다리별로
+                #   한다(그래야 매달 다리 노출이 롱100/숏100 으로 고정된다).
+                # ⚠ 기존 이벤트 6종은 이 갈래를 안 탄다 — pos[i][t] = 1 그대로다.
+                for t, w in picks:
+                    for i in range(max(j + 1, lo), min(j + 1 + int(S["hold"]), n)):
+                        pos[i][t] = pos[i].get(t, 0.0) + w
+                continue
             for t in picks:
                 for i in range(max(j + 1, lo), min(j + 1 + int(S["hold"]), n)):
                     pos[i][t] = 1
@@ -4664,6 +4693,53 @@ def build_strats():
     #     PIT t 는 0.58→0.57 · 0.60→0.89 · 1.21→1.12 로 제자리였다.
     #   ⚠ 다만 하한 수준이 다르다 — 그때는 30%, 지금 기본은 20% 다. 그래서 «같은 것» 이
     #     정확히 맞지는 않고, 밑동이 그때의 -mcf 판보다 후보가 조금 넓다.
+
+    # ── 프로그인더팬 롱숏 4종 (G1~G4) — PREREG-2026-08-26-FIPSN.md ────
+    # 🚨 위 셋(x-fip-base/cont/disc)이 전부 **롱온리**였다. 논문 헤드라인 5.95%(t 5.13)는
+    #   승자매수−패자매도의 롱숏이고 다리별로 승자 +2.70% · 패자 +3.25% 라, 셋은 구조적으로
+    #   효과의 절반 이하만 잡을 수 있는 설계였다. 논문의 주장을 이제야 재는 것이다.
+    # ⚠ 재는 것은 규칙 하나의 성적이 아니라 (G1−G2) vs (G3−G4) 다.
+    _FIPR = ("매 월말 형성창[j-251,j-21]에서 PRET(누적수익)과 정보이산성 "
+             "ID=sign(PRET)x(neg비율-pos비율)를 구해 PRET 5분위로 가르고, 그 안에서 ID 5분위로 "
+             "다시 가른다. PRET 최상위 5분위의 해당 ID 분위를 롱, PRET 최하위 5분위의 같은 ID "
+             "분위를 숏 한다. 다리 안 동일가중, 다리별 합 1(롱100/숏100 시장중립), 형성과 보유 "
+             "사이 1개월 건너뜀, 126거래일(6개월) 보유. ")
+    _FIPW = ("⚠ 차입비용·대차수수료를 안 문다(랩 전체가 무비용) — 숏 다리의 실제 비용은 크므로 "
+             "이 수치는 그만큼 낙관 쪽이다. 대형주라 작을 것이라는 변명은 적지 않는다. "
+             "⚠ 대조군은 지수가 아니라 현금이다. 순노출 0 인 시장중립을 지수와 견주면 "
+             "정의상 참인 말을 재게 된다.")
+    event("x-fipq-cont", "연속정보 모멘텀 롱숏 (ID 최하위 5분위)",
+          _FIPR + "ID 최하위 5분위(연속적으로 정보가 온 쪽)을 담는다.",
+          "Da·Gurun·Warachka(2014) Table 2 Panel A 의 재현이다. 논문은 6개월 보유에서 "
+          "저ID 8.86% · 고ID 2.91% · 차이 5.95%(t 5.13)를 보고했다. " + _FIPW,
+          enter=1, hold=126, src="me",
+          pick=lambda j, X: fip_baskets(j, X, "low", False))
+    event("x-fipq-disc", "이산정보 모멘텀 롱숏 (거울)",
+          _FIPR + "ID 최상위 5분위(이산적으로 정보가 온 쪽)을 담는다.",
+          "🚨 거울이다. 논문이 맞다면 연속 쪽이 이쪽보다 나아야 한다. 둘이 비슷하면 ID 는 "
+          "아무것도 안 가른 것이고, 그때는 연속 쪽이 좋아도 그것은 ID 가 아니라 "
+          "«PRET 양끝 롱숏» 이 한 일이다. "
+          "⚠ 롱온리로 쟀을 때는 부호가 반대였다(PIT t 연속 0.60 vs 이산 1.21). 롱숏으로 "
+          "패자 다리가 들어오면 부호가 논문 쪽으로 돌아설지가 이 등록의 도박이다.",
+          enter=1, hold=126, src="me",
+          pick=lambda j, X: fip_baskets(j, X, "high", False))
+    event("x-fipq-cont-sn", "연속정보 모멘텀 롱숏 · 업종중립",
+          _FIPR + "ID 최하위 5분위를 담되, ID 를 같은 PRET 분위·같은 섹터 평균으로 뺀 잔차로 "
+                  "5분위를 만든다(섹터 칸 3종 미만이면 제외).",
+          "🚨 ID 정렬이 업종을 쏠리게 한다 — 등록 전 실측(월말 198개): 승자 바스켓에서 20종을 "
+          "뽑을 때 최대 업종 비중이 무작위 29.1% · 연속 33.5% · 이산 30.9% 였다. "
+          "연속−무작위 +4.5%p, 연속−이산 +2.6%p. 즉 «연속정보 종목» 이 «그 시기 잘 나간 "
+          "업종» 의 다른 이름일 수 있다. 논문은 CRSP 전종목이라 희석되지만 이 랩은 518종이다. "
+          "⚠ 중립은 ID 축에만 건다. PRET 까지 중립화하면 무엇이 바뀌었는지 못 가린다.",
+          enter=1, hold=126, src="me",
+          pick=lambda j, X: fip_baskets(j, X, "low", True))
+    event("x-fipq-disc-sn", "이산정보 모멘텀 롱숏 · 업종중립 (거울)",
+          _FIPR + "위와 같고 ID 잔차 최상위 5분위를 담는다.",
+          "🚨 이 넷의 답은 (연속−이산)이 업종중립 뒤에도 남는가 하나다. 남으면 ID 효과는 "
+          "업종이 아니고, 절반 미만으로 줄면 절반 이상이 업종이었다. 거울 둘이 다 있어야 "
+          "그 뺄셈이 성립한다.",
+          enter=1, hold=126, src="me",
+          pick=lambda j, X: fip_baskets(j, X, "high", True))
 
     event("x-fip-disc", "이산정보 모멘텀 · 6개월 보유 (거울)",
           "위와 같고 ID 상위 절반(이산적으로 정보가 온 쪽)을 담는다.",
@@ -7009,6 +7085,80 @@ def xsec_score_at(S, i, X, pool=None):
     return sc, ind_raw, comp_raw
 
 
+def fip_baskets(j, X, half, sn):
+    """프로그인더팬 이중정렬 → [(티커, 부호있는 비중)] · 롱 합 +1 · 숏 합 −1.
+
+    사전등록 PREREG-2026-08-26-FIPSN.md. 논문(Da·Gurun·Warachka 2014) Table 2 Panel A 의
+    **순차 이중정렬**을 그대로 옮긴다. j 는 월말 인덱스이고 신호는 j 종가까지만 본다.
+        형성창 [j−251, j−21] · PRET = 그 창 누적수익 · ID = sign(PRET)×(%neg−%pos)
+        PRET 5분위 → 그 안에서 ID 5분위
+        롱 = PRET 최상위 5분위 ∩ 해당 ID 분위 · 숏 = PRET 최하위 5분위 ∩ 해당 ID 분위
+    half — "low"(연속정보) | "high"(이산정보)
+    sn   — True 면 업종중립. **ID 축에만** 건다(등록 §업종중립의 정의).
+
+    🚨 두 다리를 다 만든다. 앞선 세 등록이 승자 다리만 담아 논문 효과의 절반 이하만 잡을 수
+      있는 설계였다(승자 +2.70% · 패자 +3.25%).
+    ⚠ 후보는 pool_at(그달 실제 편입명단)으로 먼저 거른다 — 안 거르면 그때 지수에 없던
+      종목이 분위 계산에 들어가 선견이 된다. 시총 하한도 여기서 건다(등록 문서가 밑동 기본
+      하한을 전제했는데 event 갈래는 xsec 의 그 자리를 안 지난다 — 사본이 아니라 같은
+      함수 mcap_floor 를 부른다).
+    ⚠ 한쪽 다리가 비면 빈 목록을 준다 — 반쪽만 들고 «중립» 이라 부르지 않는다.
+    """
+    R, meta = X["R"], X["meta"]
+    pool = X.get("pool_at")
+    ts = X["tickers"] if pool is None else [t for t in X["tickers"] if t in pool(j)]
+    ts = mcap_floor(ts, X, j + 1)
+    rows = []
+    for t in ts:
+        Rt = R.get(t)
+        if not Rt:
+            continue
+        idv = info_disc(Rt, j)
+        if idv is None:
+            continue
+        a = X["px"].get(t)
+        if not a or j - 251 < 0 or a[j - 21] is None or a[j - 251] is None:
+            continue
+        if a[j - 251] <= 0 or a[j - 21] <= 0:
+            continue
+        sec = ((meta.get(t) or {}).get("sector") or "").strip()
+        if sn and not sec:
+            continue        # 섹터를 모르면 중립이 정의 안 된다 — «기타» 칸을 만들지 않는다
+        rows.append([t, a[j - 21] / a[j - 251] - 1.0, idv, sec])
+    if len(rows) < XSEC_MIN_POOL or len(rows) < FIP_Q * FIP_Q * 2:
+        return []
+    rows.sort(key=lambda r: -r[1])                 # PRET 내림차순
+    q = len(rows) // FIP_Q
+    if q < FIP_Q:
+        return []
+    out = []
+    for side, grp in (("long", rows[:q]), ("short", rows[-q:])):
+        use = grp
+        if sn:
+            # 업종중립 — 같은 **PRET 분위 안**에서 섹터 평균 ID 를 뺀다. 분위를 넘겨
+            # 섹터평균을 내면 PRET 축까지 섞여, 무엇이 중립화됐는지 못 가린다.
+            by = {}
+            for r in grp:
+                by.setdefault(r[3], []).append(r)
+            use = []
+            for _g, cell in by.items():
+                if len(cell) < FIP_SEC_MIN:
+                    continue       # 두셋짜리 칸의 평균은 그 섹터가 아니라 그 두셋을 재는 것이다
+                m = sum(r[2] for r in cell) / len(cell)
+                for r in cell:
+                    use.append([r[0], r[1], r[2] - m, r[3]])
+            if len(use) < FIP_Q:
+                return []
+        use.sort(key=lambda r: r[2])               # ID 오름차순 = 연속적인 쪽이 앞
+        k = max(1, len(use) // FIP_Q)
+        pick = use[:k] if half == "low" else use[-k:]
+        if not pick:
+            return []
+        w = 1.0 / len(pick)
+        out += [(r[0], w if side == "long" else -w) for r in pick]
+    return out
+
+
 def sub_baskets(X, i, axis, tickers=None):
     """서브산업 상·하위 K → (롱 [(티커,비중)], 숏 [(티커,비중)]).
 
@@ -7537,6 +7687,30 @@ def run():
                 cur = set(_pos[i - 1])          # 전날 종가 기준으로 정해진 보유가 오늘 적용된다
                 if _pool_fn is not None:
                     cur &= _pool_fn(i - 1)
+                if _BASE_SID(S["sid"]) in FIP_LS_SIDS:
+                    # 🚨 롱숏은 Σw = 0 이라 동일가중 식을 못 쓴다. **다리별로** 되정규화해
+                    #   각 다리 합을 1 로 되돌린다(롱100/숏100 시장중립). 한쪽 다리가 통째로
+                    #   결측이면 그날은 반쪽만 든 것이 되므로 현금으로 둔다 —
+                    #   반쪽을 들고 «중립» 이라 부르지 않는다.
+                    _w = _pos[i - 1]
+                    _lp = [(_w[t], R[t][i]) for t in cur if R[t][i] is not None and _w.get(t, 0) > 0]
+                    _sp = [(_w[t], R[t][i]) for t in cur if R[t][i] is not None and _w.get(t, 0) < 0]
+                    _lw = sum(w for w, _x in _lp)
+                    _sw = -sum(w for w, _x in _sp)
+                    if _lw > 0 and _sw > 0:
+                        r = (sum(w * x for w, x in _lp) / _lw
+                             - sum(-w * x for w, x in _sp) / _sw)
+                        e = 1.0
+                    else:
+                        r, e = rfd_d[i], 0.0
+                    srets.append(r)
+                    nav.append(nav[-1] * (1 + r))
+                    _a = 1.0 / max(1, len(cur))
+                    _b = 1.0 / max(1, len(_prev))
+                    traded.append(sum(abs((_a if t in cur else 0.0) - (_b if t in _prev else 0.0))
+                                      for t in (cur | _prev)))
+                    _nopen.append(len(cur)); _expo.append(e); _prev = cur
+                    continue
                 rs = [R[t][i] for t in cur if R[t][i] is not None]
                 e = 1.0 if rs else 0.0
                 r = (sum(rs) / len(rs)) if rs else rfd_d[i]
@@ -7735,8 +7909,9 @@ def run():
         # 🚨 숏 규칙의 대조군은 **현금(무위험)** 이다(SHORT_SIDS 주석 참조). 지수를 대조군으로
         #   두면 «숏이 지수보다 못하다» 는, 정의상 참인 말을 재게 된다.
         _isshort = _BASE_SID(S["sid"]) in SHORT_SIDS
+        _iscash = _isshort or _BASE_SID(S["sid"]) in CASH_BENCH_SIDS
         _bxr = ([(rfd_d[i] if i < len(rfd_d) and rfd_d[i] is not None else 0.0)
-                 for i in range(n)] if _isshort else bxr)
+                 for i in range(n)] if _iscash else bxr)
         bnav = [100.0]
         for i in range(MIN_HIST + 1, n):
             bnav.append(bnav[-1] * (1 + _bxr[i]))

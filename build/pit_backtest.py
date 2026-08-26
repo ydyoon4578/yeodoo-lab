@@ -258,6 +258,13 @@ FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
 #   편출 종목의 발표일도 CIK 로 남아 있다. FIP 3종은 가격만 쓰므로 역시 완전 PIT 이다.
 EVENT_SIDS = ["x-pead", "x-pead-sue", "x-earngap",
               "x-fip-base", "x-fip-cont", "x-fip-disc",
+              # 프로그인더팬 롱숏 4종 — PREREG-2026-08-26-FIPSN.md.
+              # 🚨 x-subls·x-subom 이 PIT 에서 빠진 사유는 **서브산업** 부재였다(편출 336종 중
+              #   0종). 이 넷은 서브산업을 안 쓰고 **섹터**만 쓰는데, 편출 종목의 섹터는
+              #   data/pit_sector.json 으로 이미 메워져 있다(72/72). 그래서 완전 PIT 이 된다.
+              # ⚠ 업종중립 둘은 섹터가 없으면 후보에서 스스로 빠진다(fip_baskets) — 편출
+              #   종목의 섹터가 비면 그 종목이 조용히 사라지므로, 결과에 섹터 커버를 싣는다.
+              "x-fipq-cont", "x-fipq-disc", "x-fipq-cont-sn", "x-fipq-disc-sn",
 ]
 # ⚠ 2026-08-25 — FIP 의 -mcf 3종은 등록을 그만뒀다(시총 하한이 기본이 됐다).
 #   PREREG-2026-08-25-DEFAULT-PIT.md 참조. 측정 기록은 FIPMCF-RESULT.md 에 남는다.

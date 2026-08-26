@@ -22,7 +22,7 @@
    "표본이 10년(2537거래일)이다. 이 구간이 겪은 국면이 결과를 지배할 수 있어, 좋은 샤프가 실력인지 구간인지 가리려면 구간 밖 검증이 따로 필요하다.",
    "비용 0(gross). 회전율이 높은 규칙일수록 실제와 벌어지므로 연 회전율을 함께 싣는다.",
    "차트의 S&P 500·NASDAQ 100 은 가격지수다 — 배당이 빠져 있다. 전략 수익은 배당을 재투자한 기준이라, 지수가 연 약 2%p 불리하게 잡힌다. 지수와의 격차는 그만큼 과장된 값이므로 '지수를 이겼다'를 그대로 읽지 말 것.",
-   "다중검정 — 규칙 386개를 돌렸다(이번 실행에 등록된 227개 + 돌렸다가 목록에서 내린 159개. 화면의 111종은 그중 바스켓 크기 승자만 남긴 것이고, 다중검정에서 세야 하는 것은 돌린 전부다). 그중 최고는 우연히도 좋아 보인다. 🚨 그리고 같은 표본이 아니다 — 규칙별 표본이 1529~2520거래일(중앙 2515)로 갈린다. t 를 나란히 놓고 크기만 비교하지 말 것. 하나도 빼지 않고 전부 싣는다.",
+   "다중검정 — 규칙 390개를 돌렸다(이번 실행에 등록된 231개 + 돌렸다가 목록에서 내린 159개. 화면의 115종은 그중 바스켓 크기 승자만 남긴 것이고, 다중검정에서 세야 하는 것은 돌린 전부다). 그중 최고는 우연히도 좋아 보인다. 🚨 그리고 같은 표본이 아니다 — 규칙별 표본이 1529~2520거래일(중앙 2515)로 갈린다. t 를 나란히 놓고 크기만 비교하지 말 것. 하나도 빼지 않고 전부 싣는다.",
    "신호는 당일 종가로 계산해 다음 거래일부터 적용한다(선견 없음). 횡단면은 월말 리밸런스.",
    "종목 전략은 상위 10종목만 들고 간다. 50종목은 사실상 지수라 규칙이 고르는 게 없다시피 하고, 화면에서 '지금 무엇을 들고 있나'도 읽히지 않는다. 대신 10종목은 표본이 얇아 결과가 더 시끄럽다 — 개별 성과보다 판정(구별 가능한가)을 먼저 볼 것.",
    "표본 구간에서 지수가 200일선 위에 있던 날이 88%(2537일 중 2227일)이고, 고점 대비 -10%를 밑돈 국면은 8번뿐이었다. 현금을 쥐는 규칙은 이런 구간에서 구조적으로 진다 — 여기 '열위'가 많은 것은 규칙의 실력만이 아니라 구간의 성질이기도 하다. 반대로 이 표본은 하락 방어 능력을 사실상 검증하지 못한다.",
@@ -2726,7 +2726,7 @@
   ]
  },
  "map": {
-  "n": 366,
+  "n": 370,
   "axes": {
    "where": [
     "화면에 있음",
@@ -2760,7 +2760,7 @@
   },
   "by_where_role": {
    "화면에 있음": {
-    "수익엔진": 116,
+    "수익엔진": 120,
     "타이밍오버레이": 29,
     "배분기": 14,
     "위험방어": 1
@@ -2786,7 +2786,7 @@
   },
   "by_where_verdict": {
    "화면에 있음": {
-    "측정만": 156,
+    "측정만": 160,
     "판정 불가": 4
    },
    "화면에서 뺌": {
@@ -3394,6 +3394,22 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
+    "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+    "sid": "x-revdrift-sn-band",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+    "sid": "x-revdrift-band",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
     "name": "비정상 자본투자 회피 (설비투자 급증 회피)",
     "sid": "x-aci",
     "lab": "종목·타이밍"
@@ -3450,22 +3466,6 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
-    "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-    "sid": "x-revdrift-sn-band",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "측정만",
-    "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
-    "sid": "x-revdrift-band",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "측정만",
     "name": "저변동성 상위 100 (원 전략 크기)",
     "sid": "x-lowvol-n100",
     "lab": "종목·타이밍"
@@ -3514,16 +3514,16 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
-    "name": "투자의견 리비전 드리프트 (63일) (30종)",
-    "sid": "x-revdrift-q",
+    "name": "복권형 회피 — MAX 최하위 52 (십분위) · 밴드 보유",
+    "sid": "x-maxlow-n52-band",
     "lab": "종목·타이밍"
    },
    {
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
-    "name": "복권형 회피 — MAX 최하위 52 (십분위) · 밴드 보유",
-    "sid": "x-maxlow-n52-band",
+    "name": "투자의견 리비전 드리프트 (63일) (30종)",
+    "sid": "x-revdrift-q",
     "lab": "종목·타이밍"
    },
    {
@@ -3586,14 +3586,6 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
-    "name": "투자의견 리비전 드리프트 (21일 · 섹터중립)",
-    "sid": "x-revdrift-sn",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "측정만",
     "name": "52주 신고가 근접 30",
     "sid": "x-52wh",
     "lab": "종목·타이밍"
@@ -3612,6 +3604,14 @@
     "verdict": "측정만",
     "name": "매출 서프라이즈 (SUR 상위 20)",
     "sid": "x-sur",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "투자의견 리비전 드리프트 (21일 · 섹터중립)",
+    "sid": "x-revdrift-sn",
     "lab": "종목·타이밍"
    },
    {
@@ -3684,6 +3684,38 @@
     "verdict": "측정만",
     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
     "sid": "x-subom",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "이산정보 모멘텀 롱숏 (거울)",
+    "sid": "x-fipq-disc",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "이산정보 모멘텀 롱숏 · 업종중립 (거울)",
+    "sid": "x-fipq-disc-sn",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "연속정보 모멘텀 롱숏 (ID 최하위 5분위)",
+    "sid": "x-fipq-cont",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "연속정보 모멘텀 롱숏 · 업종중립",
+    "sid": "x-fipq-cont-sn",
     "lab": "종목·타이밍"
    },
    {
@@ -5735,7 +5767,7 @@
     "lab": "아카이브"
    }
   ],
-  "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더한 수가 아니라 겹침을 걷은 366 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
+  "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더한 수가 아니라 겹침을 걷은 370 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
   "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, 각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. 합치기 전에는 그 셋이 전부 화면에서 빠져 있어 집계에 아예 안 나왔다."
  },
  "refs_policy": "🚨 **URL 을 지어내지 않는다.** 이 저장소가 실제로 가진 링크가 아니면 직접 URL 을 적지 않고, 화면이 제목으로 학술검색 질의를 만들어 건다(결정적이고 항상 열린다). 저자·연도·학술지는 그 규칙을 등록할 때 코드 주석에 적어 둔 것과 같아야 한다 — 다르면 둘 중 하나가 틀린 것이다. 확실하지 않은 규칙은 **비워 둔다.** 없는 것을 지어 채우면 독자가 원문을 못 찾고, 그 사실도 모른다.",
@@ -34566,6 +34598,271 @@
    ]
   },
   {
+   "sid": "x-revdrift",
+   "name": "투자의견 리비전 드리프트 (21일) (30종)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "증권사별 최신 투자의견을 5→1 척도로 이어 붙여 컨센서스 평균을 만들고, 30일 전 평균과의 차에 √증권사수를 곱한 값이 가장 큰 30종목 동일가중, 월말 리밸런스. 한 증권사의 의견은 마지막 발표일로부터 365일까지만 유효하다.",
+   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-29",
+    "end": "2026-08-25",
+    "n_days": 2515,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 18.25,
+     "b": 13.16,
+     "d": 5.09
+    },
+    {
+     "k": "변동성",
+     "s": 18.51,
+     "b": 18.07,
+     "d": 0.44
+    },
+    {
+     "k": "샤프",
+     "s": 0.924,
+     "b": 0.698,
+     "d": 0.226
+    },
+    {
+     "k": "최대낙폭",
+     "s": -35.66,
+     "b": -33.92,
+     "d": -1.74
+    }
+   ],
+   "excess_cagr": 5.09,
+   "d_sharpe": 0.226,
+   "t": 2.08,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 17.0,
+      "sharpe": 0.867,
+      "excess": 3.84,
+      "t": 1.59,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 15.76,
+      "sharpe": 0.809,
+      "excess": 2.6,
+      "t": 1.09,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 13.32,
+      "sharpe": 0.693,
+      "excess": 0.16,
+      "t": 0.1,
+      "main": false
+     }
+    ],
+    "drag": 2.49,
+    "traded": 21.33,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 10.69,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+     "corr": 0.705,
+     "alpha": 2.99,
+     "t": 1.95,
+     "beta": 0.449
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.926,
+    "excess": -0.15,
+    "d_sharpe": -0.002,
+    "t": -0.09,
+    "t_net": -1.32,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "window": "2016-08~2026-08",
+    "start": "2016-08-31",
+    "n_days": 2492,
+    "pit": {
+     "cagr": 15.23,
+     "sharpe": 0.737,
+     "mdd": -36.9,
+     "bench_cagr": 15.48,
+     "excess": -0.25,
+     "t": -0.16,
+     "d_sharpe": -0.007,
+     "turnover": 10.7
+    },
+    "retro": {
+     "cagr": 18.2,
+     "sharpe": 0.865,
+     "mdd": -35.66,
+     "bench_cagr": 18.46,
+     "excess": -0.26,
+     "t": -0.14
+    },
+    "bias": {
+     "cagr": 2.97,
+     "excess": -0.01,
+     "sharpe": 0.128,
+     "bench_cagr": 2.98
+    },
+    "t_crit": null,
+    "t_crit_lab": null,
+    "holdings": [
+     "ABT",
+     "ACN",
+     "ADBE",
+     "AJG",
+     "ATO",
+     "BMY",
+     "CRWV",
+     "CTAS",
+     "DLTR",
+     "ECHO",
+     "EXPD",
+     "F",
+     "FAST",
+     "FITB",
+     "GS",
+     "HAL",
+     "HONA",
+     "HUM",
+     "IP",
+     "MO",
+     "ODFL",
+     "OTIS",
+     "OXY",
+     "PNC",
+     "RJF",
+     "SHOP",
+     "SNA",
+     "SPCX",
+     "TSLA",
+     "VLTO"
+    ]
+   },
+   "pool": {
+    "first": 337,
+    "last": 409,
+    "min": 337,
+    "med": 376,
+    "narrow": 0,
+    "n": 121,
+    "d0": "2016-07-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-07-31",
+    "n": 10,
+    "tickers": [
+     "ATO",
+     "DLTR",
+     "ECHO",
+     "EXPD",
+     "HAL",
+     "OXY",
+     "PNC",
+     "SNA",
+     "SPCX",
+     "TSLA"
+    ],
+    "names": {
+     "ATO": "ATMOS ENERGY CORP",
+     "DLTR": "DOLLAR TREE INC",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EXPD": "EXPEDITORS INTL WASH INC",
+     "HAL": "HALLIBURTON CO",
+     "OXY": "OCCIDENTAL PETROLEUM CORP",
+     "PNC": "PNC FINANCIAL SERVICES GROUP",
+     "SNA": "SNAP-ON INC",
+     "SPCX": "SPACE EXPLORATION TECHN-CL A",
+     "TSLA": "TESLA INC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [
+     {
+      "a": "Womack",
+      "y": 1996,
+      "t": "Do brokerage analysts' recommendations have investment value?",
+      "j": "Journal of Finance 51"
+     },
+     {
+      "a": "Barber·Lehavy·McNichols·Trueman",
+      "y": 2001,
+      "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+      "j": "Journal of Finance 56"
+     },
+     {
+      "a": "Jegadeesh·Kim·Krische·Lee",
+      "y": 2004,
+      "t": "Analyzing the analysts: When do recommendations add value?",
+      "j": "Journal of Finance 59"
+     },
+     {
+      "a": "Loh·Stulz",
+      "y": 2011,
+      "t": "When are analyst recommendation changes influential?",
+      "j": "Review of Financial Studies 24"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
+   "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "x-shiss",
    "name": "순주식발행 회피 (희석주식수 증가 최저) (30종)",
    "family": "종목·타이밍",
@@ -35153,10 +35450,10 @@
    "incr": {
     "one": {
      "vs": "투자의견 리비전 드리프트 (63일) (30종)",
-     "corr": 0.476,
-     "alpha": 7.11,
-     "t": 1.93,
-     "beta": 0.739
+     "corr": 0.48,
+     "alpha": 7.16,
+     "t": 1.95,
+     "beta": 0.746
     },
     "five": null,
     "absorbed": null,
@@ -35275,271 +35572,6 @@
     ],
     "no_paper": true,
     "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
-   "sid": "x-revdrift",
-   "name": "투자의견 리비전 드리프트 (21일) (30종)",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "증권사별 최신 투자의견을 5→1 척도로 이어 붙여 컨센서스 평균을 만들고, 30일 전 평균과의 차에 √증권사수를 곱한 값이 가장 큰 30종목 동일가중, 월말 리밸런스. 한 증권사의 의견은 마지막 발표일로부터 365일까지만 유효하다.",
-   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-07-29",
-    "end": "2026-08-25",
-    "n_days": 2515,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 18.07,
-     "b": 13.16,
-     "d": 4.91
-    },
-    {
-     "k": "변동성",
-     "s": 18.54,
-     "b": 18.07,
-     "d": 0.47
-    },
-    {
-     "k": "샤프",
-     "s": 0.915,
-     "b": 0.698,
-     "d": 0.217
-    },
-    {
-     "k": "최대낙폭",
-     "s": -35.66,
-     "b": -33.92,
-     "d": -1.74
-    }
-   ],
-   "excess_cagr": 4.91,
-   "d_sharpe": 0.217,
-   "t": 2.01,
-   "t_crit": null,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 16.82,
-      "sharpe": 0.857,
-      "excess": 3.66,
-      "t": 1.52,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 15.58,
-      "sharpe": 0.799,
-      "excess": 2.42,
-      "t": 1.02,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 13.14,
-      "sharpe": 0.683,
-      "excess": -0.02,
-      "t": 0.03,
-      "main": false
-     }
-    ],
-    "drag": 2.49,
-    "traded": 21.37,
-    "kill": false,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 10.71,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-     "corr": 0.7,
-     "alpha": 3.12,
-     "t": 2.02,
-     "beta": 0.443
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.4,
-    "sharpe": 0.926,
-    "excess": -0.33,
-    "d_sharpe": -0.011,
-    "t": -0.17,
-    "t_net": -1.4,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "window": "2016-08~2026-08",
-    "start": "2016-08-31",
-    "n_days": 2492,
-    "pit": {
-     "cagr": 15.23,
-     "sharpe": 0.737,
-     "mdd": -36.9,
-     "bench_cagr": 15.48,
-     "excess": -0.25,
-     "t": -0.16,
-     "d_sharpe": -0.007,
-     "turnover": 10.7
-    },
-    "retro": {
-     "cagr": 18.2,
-     "sharpe": 0.865,
-     "mdd": -35.66,
-     "bench_cagr": 18.46,
-     "excess": -0.26,
-     "t": -0.14
-    },
-    "bias": {
-     "cagr": 2.97,
-     "excess": -0.01,
-     "sharpe": 0.128,
-     "bench_cagr": 2.98
-    },
-    "t_crit": null,
-    "t_crit_lab": null,
-    "holdings": [
-     "ABT",
-     "ACN",
-     "ADBE",
-     "AJG",
-     "ATO",
-     "BMY",
-     "CRWV",
-     "CTAS",
-     "DLTR",
-     "ECHO",
-     "EXPD",
-     "F",
-     "FAST",
-     "FITB",
-     "GS",
-     "HAL",
-     "HONA",
-     "HUM",
-     "IP",
-     "MO",
-     "ODFL",
-     "OTIS",
-     "OXY",
-     "PNC",
-     "RJF",
-     "SHOP",
-     "SNA",
-     "SPCX",
-     "TSLA",
-     "VLTO"
-    ]
-   },
-   "pool": {
-    "first": 339,
-    "last": 409,
-    "min": 339,
-    "med": 378,
-    "narrow": 0,
-    "n": 121,
-    "d0": "2016-07-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-07-31",
-    "n": 10,
-    "tickers": [
-     "ATO",
-     "DLTR",
-     "ECHO",
-     "EXPD",
-     "HAL",
-     "OXY",
-     "PNC",
-     "SNA",
-     "SPCX",
-     "TSLA"
-    ],
-    "names": {
-     "ATO": "ATMOS ENERGY CORP",
-     "DLTR": "DOLLAR TREE INC",
-     "ECHO": "ECHOSTAR CORP-A",
-     "EXPD": "EXPEDITORS INTL WASH INC",
-     "HAL": "HALLIBURTON CO",
-     "OXY": "OCCIDENTAL PETROLEUM CORP",
-     "PNC": "PNC FINANCIAL SERVICES GROUP",
-     "SNA": "SNAP-ON INC",
-     "SPCX": "SPACE EXPLORATION TECHN-CL A",
-     "TSLA": "TESLA INC"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [
-     {
-      "a": "Womack",
-      "y": 1996,
-      "t": "Do brokerage analysts' recommendations have investment value?",
-      "j": "Journal of Finance 51"
-     },
-     {
-      "a": "Barber·Lehavy·McNichols·Trueman",
-      "y": 2001,
-      "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
-      "j": "Journal of Finance 56"
-     },
-     {
-      "a": "Jegadeesh·Kim·Krische·Lee",
-      "y": 2004,
-      "t": "Analyzing the analysts: When do recommendations add value?",
-      "j": "Journal of Finance 59"
-     },
-     {
-      "a": "Loh·Stulz",
-      "y": 2011,
-      "t": "When are analyst recommendation changes influential?",
-      "j": "Review of Financial Studies 24"
-     }
-    ],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "지수 편입 이력",
-      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": false,
-    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -41561,6 +41593,337 @@
    ]
   },
   {
+   "sid": "x-fipq-disc",
+   "name": "이산정보 모멘텀 롱숏 (거울)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "event",
+   "arch": null,
+   "rule": "매 월말 형성창[j-251,j-21]에서 PRET(누적수익)과 정보이산성 ID=sign(PRET)x(neg비율-pos비율)를 구해 PRET 5분위로 가르고, 그 안에서 ID 5분위로 다시 가른다. PRET 최상위 5분위의 해당 ID 분위를 롱, PRET 최하위 5분위의 같은 ID 분위를 숏 한다. 다리 안 동일가중, 다리별 합 1(롱100/숏100 시장중립), 형성과 보유 사이 1개월 건너뜀, 126거래일(6개월) 보유. ID 최상위 5분위(이산적으로 정보가 온 쪽)을 담는다.",
+   "why": "🚨 거울이다. 논문이 맞다면 연속 쪽이 이쪽보다 나아야 한다. 둘이 비슷하면 ID 는 아무것도 안 가른 것이고, 그때는 연속 쪽이 좋아도 그것은 ID 가 아니라 «PRET 양끝 롱숏» 이 한 일이다. ⚠ 롱온리로 쟀을 때는 부호가 반대였다(PIT t 연속 0.60 vs 이산 1.21). 롱숏으로 패자 다리가 들어오면 부호가 논문 쪽으로 돌아설지가 이 등록의 도박이다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-22",
+    "end": "2026-08-25",
+    "n_days": 2520,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 7.27,
+     "b": 2.42,
+     "d": 4.85
+    },
+    {
+     "k": "변동성",
+     "s": 18.17,
+     "b": 0.12,
+     "d": 18.05
+    },
+    {
+     "k": "샤프",
+     "s": 0.4,
+     "b": 8.214,
+     "d": -7.814
+    },
+    {
+     "k": "최대낙폭",
+     "s": -22.66,
+     "b": 0.0,
+     "d": -22.66
+    }
+   ],
+   "excess_cagr": 4.85,
+   "d_sharpe": -7.814,
+   "t": 1.1,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 7.02,
+      "sharpe": 0.387,
+      "excess": 4.6,
+      "t": 1.05,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 6.76,
+      "sharpe": 0.374,
+      "excess": 4.34,
+      "t": 1.01,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 6.26,
+      "sharpe": 0.348,
+      "excess": 3.84,
+      "t": 0.93,
+      "main": false
+     }
+    ],
+    "drag": 0.51,
+    "traded": 4.76,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 4.8,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": null,
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.927,
+    "excess": -11.13,
+    "d_sharpe": -0.527,
+    "t": -1.26,
+    "t_net": -1.32,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "event",
+    "as_of": "2026-08-25",
+    "n": 94,
+    "tickers": [
+     "ADI",
+     "ADM",
+     "ADSK",
+     "AIG",
+     "AJG",
+     "ALNY",
+     "AMD",
+     "AMP",
+     "AMT",
+     "AON",
+     "APO",
+     "ARM",
+     "AXON",
+     "BG",
+     "BIIB",
+     "BKNG",
+     "CASY",
+     "CCI",
+     "CEG",
+     "CHD",
+     "CME",
+     "CNC",
+     "CRWV",
+     "CTSH",
+     "DAL",
+     "DASH",
+     "DD",
+     "DDOG",
+     "DELL",
+     "DG",
+     "DXCM",
+     "EL",
+     "ELV",
+     "EXPE",
+     "F",
+     "FANG",
+     "FERG",
+     "FICO",
+     "FSLR",
+     "FTNT",
+     "GEHC",
+     "GEV",
+     "GOOG",
+     "GRMN",
+     "HUM",
+     "HWM",
+     "IBM",
+     "IDXX",
+     "INTC",
+     "JBHT",
+     "KDP",
+     "KHC",
+     "KVUE",
+     "LUV",
+     "LYB",
+     "MA",
+     "MCHP",
+     "MET",
+     "META",
+     "MRK",
+     "MRNA",
+     "MRVL",
+     "MSFT",
+     "NBIS",
+     "NDAQ",
+     "NRG",
+     "NTAP",
+     "NXPI",
+     "OKE",
+     "ON",
+     "OTIS",
+     "PANW",
+     "PDD",
+     "PLTR",
+     "PRU",
+     "QCOM",
+     "ROP",
+     "RSG",
+     "SLB",
+     "SPGI",
+     "TDG",
+     "TER",
+     "TGT",
+     "TPL",
+     "TSLA",
+     "TXN",
+     "UAL",
+     "ULTA",
+     "UNH",
+     "VRSN",
+     "WBD",
+     "WDAY",
+     "WRB",
+     "WTW"
+    ],
+    "names": {
+     "ADI": "ANALOG DEVICES INC",
+     "ADM": "ARCHER-DANIELS-MIDLAND CO",
+     "ADSK": "AUTODESK INC",
+     "AIG": "AMERICAN INTERNATIONAL GROUP",
+     "AJG": "ARTHUR J GALLAGHER & CO",
+     "ALNY": "ALNYLAM PHARMACEUTICALS INC",
+     "AMD": "ADVANCED MICRO DEVICES",
+     "AMP": "AMERIPRISE FINANCIAL INC",
+     "AMT": "AMERICAN TOWER CORP",
+     "AON": "AON PLC-CLASS A",
+     "APO": "APOLLO GLOBAL MANAGEMENT INC",
+     "ARM": "ARM HOLDINGS PLC-ADR",
+     "AXON": "AXON ENTERPRISE INC",
+     "BG": "BUNGE GLOBAL SA",
+     "BIIB": "BIOGEN INC",
+     "BKNG": "BOOKING HOLDINGS INC",
+     "CASY": "Casey's General Stores Inc",
+     "CCI": "CROWN CASTLE INC",
+     "CEG": "CONSTELLATION ENERGY",
+     "CHD": "CHURCH & DWIGHT CO INC",
+     "CME": "CME GROUP INC",
+     "CNC": "CENTENE CORP",
+     "CRWV": "COREWEAVE INC-CL A",
+     "CTSH": "COGNIZANT TECH SOLUTIONS-A",
+     "DAL": "DELTA AIR LINES INC",
+     "DASH": "DOORDASH INC - A",
+     "DD": "DUPONT DE NEMOURS INC",
+     "DDOG": "DATADOG INC - CLASS A",
+     "DELL": "DELL TECHNOLOGIES -C",
+     "DG": "DOLLAR GENERAL CORP",
+     "DXCM": "DEXCOM INC",
+     "EL": "ESTEE LAUDER COMPANIES-CL A",
+     "ELV": "ELEVANCE HEALTH INC",
+     "EXPE": "EXPEDIA GROUP INC",
+     "F": "FORD MOTOR CO",
+     "FANG": "DIAMONDBACK ENERGY INC",
+     "FERG": "Ferguson Enterprises",
+     "FICO": "FAIR ISAAC CORP",
+     "FSLR": "FIRST SOLAR INC",
+     "FTNT": "FORTINET INC",
+     "GEHC": "GE HEALTHCARE TECHNOLOGY",
+     "GEV": "GE VERNOVA INC",
+     "GOOG": "ALPHABET INC-CL C",
+     "GRMN": "GARMIN LTD",
+     "HUM": "HUMANA INC",
+     "HWM": "HOWMET AEROSPACE INC",
+     "IBM": "INTL BUSINESS MACHINES CORP",
+     "IDXX": "IDEXX LABORATORIES INC",
+     "INTC": "INTEL CORP",
+     "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
+     "KDP": "KEURIG DR PEPPER INC",
+     "KHC": "KRAFT HEINZ CO/THE",
+     "KVUE": "KENVUE INC",
+     "LUV": "SOUTHWEST AIRLINES CO",
+     "LYB": "LYONDELLBASELL INDU-CL A",
+     "MA": "MASTERCARD INC - A",
+     "MCHP": "MICROCHIP TECHNOLOGY INC",
+     "MET": "METLIFE INC",
+     "META": "META PLATFORMS INC-CLASS A",
+     "MRK": "MERCK & CO. INC.",
+     "MRNA": "MODERNA INC",
+     "MRVL": "MARVELL TECHNOLOGY INC",
+     "MSFT": "MICROSOFT CORP",
+     "NBIS": "NEBIUS GROUP NV",
+     "NDAQ": "NASDAQ INC",
+     "NRG": "NRG ENERGY INC",
+     "NTAP": "NETAPP INC",
+     "NXPI": "NXP SEMICONDUCTORS NV",
+     "OKE": "ONEOK INC",
+     "ON": "ON SEMICONDUCTOR",
+     "OTIS": "OTIS WORLDWIDE CORP",
+     "PANW": "PALO ALTO NETWORKS INC",
+     "PDD": "PDD HOLDINGS INC",
+     "PLTR": "PALANTIR TECHNOLOGIES INC-A",
+     "PRU": "PRUDENTIAL FINANCIAL INC",
+     "QCOM": "QUALCOMM INC",
+     "ROP": "ROPER TECHNOLOGIES INC",
+     "RSG": "REPUBLIC SERVICES INC",
+     "SLB": "SCHLUMBERGER LTD",
+     "SPGI": "S&P GLOBAL INC",
+     "TDG": "TRANSDIGM GROUP INC",
+     "TER": "TERADYNE INC",
+     "TGT": "TARGET CORP",
+     "TPL": "TEXAS PACIFIC LAND CORP",
+     "TSLA": "TESLA INC",
+     "TXN": "TEXAS INSTRUMENTS INC",
+     "UAL": "UNITED AIRLINES HOLDINGS INC",
+     "ULTA": "ULTA BEAUTY INC",
+     "UNH": "UNITEDHEALTH GROUP INC",
+     "VRSN": "VERISIGN INC",
+     "WBD": "WARNER BROS DISCOVERY INC",
+     "WDAY": "WORKDAY INC-CLASS A",
+     "WRB": "WR BERKLEY CORP",
+     "WTW": "WILLIS TOWERS WATSON PLC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "실적 발표 뒤 창이 열려 있는 94종목을 동일가중으로 보유 중이다. 종목마다 진입·청산일이 다르다(달력 리밸런스가 아니다)."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다.",
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "x-payout",
    "name": "총주주환원수익률 (배당 + 자사주매입) (20종)",
    "family": "종목·타이밍",
@@ -41797,6 +42160,360 @@
     "note": null
    },
    "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
+   "sid": "x-revdrift-sn-band",
+   "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "21일판과 같은 점수로 각 섹터에서 1종씩 뽑고, 섹터 비중은 유니버스 섹터 시총 비중을 따른다. 월말 리밸런스. ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 10 안에 들면 사고, 상위 20 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 계속 들고, 안 들고 있던 것은 안 산다.",
+   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다. 애널리스트 리비전은 섹터로 몰려 온다(업황이 돌면 그 섹터가 통째로 상향된다). 중립화하지 않으면 이 규칙은 리비전이 아니라 섹터 베팅일 수 있다 — 21일판과 크게 갈리면 그쪽 성적은 섹터 배분에서 나온 것이다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-29",
+    "end": "2026-08-25",
+    "n_days": 2515,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 16.69,
+     "b": 13.16,
+     "d": 3.53
+    },
+    {
+     "k": "변동성",
+     "s": 20.24,
+     "b": 18.07,
+     "d": 2.17
+    },
+    {
+     "k": "샤프",
+     "s": 0.796,
+     "b": 0.698,
+     "d": 0.098
+    },
+    {
+     "k": "최대낙폭",
+     "s": -42.55,
+     "b": -33.92,
+     "d": -8.63
+    }
+   ],
+   "excess_cagr": 3.53,
+   "d_sharpe": 0.098,
+   "t": 1.04,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 15.43,
+      "sharpe": 0.742,
+      "excess": 2.27,
+      "t": 0.72,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 14.19,
+      "sharpe": 0.689,
+      "excess": 1.03,
+      "t": 0.39,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 11.74,
+      "sharpe": 0.581,
+      "excess": -1.42,
+      "t": -0.25,
+      "main": false
+     }
+    ],
+    "drag": 2.5,
+    "traded": 21.73,
+    "kill": true,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 10.89,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+     "corr": 1.0,
+     "alpha": 0.0,
+     "t": null,
+     "beta": 1.0
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.926,
+    "excess": -1.71,
+    "d_sharpe": -0.13,
+    "t": -0.39,
+    "t_net": -1.12,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조"
+   },
+   "pool": {
+    "first": 337,
+    "last": 409,
+    "min": 337,
+    "med": 376,
+    "narrow": 0,
+    "n": 121,
+    "d0": "2016-07-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-07-31",
+    "n": 10,
+    "tickers": [
+     "ATO",
+     "DLTR",
+     "ECHO",
+     "EXPD",
+     "HAL",
+     "OXY",
+     "PNC",
+     "SNA",
+     "SPCX",
+     "TSLA"
+    ],
+    "names": {
+     "ATO": "ATMOS ENERGY CORP",
+     "DLTR": "DOLLAR TREE INC",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EXPD": "EXPEDITORS INTL WASH INC",
+     "HAL": "HALLIBURTON CO",
+     "OXY": "OCCIDENTAL PETROLEUM CORP",
+     "PNC": "PNC FINANCIAL SERVICES GROUP",
+     "SNA": "SNAP-ON INC",
+     "SPCX": "SPACE EXPLORATION TECHN-CL A",
+     "TSLA": "TESLA INC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조",
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
+   "sid": "x-revdrift-band",
+   "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "증권사별 최신 투자의견을 5→1 척도로 이어 붙여 컨센서스 평균을 만들고, 30일 전 평균과의 차에 √증권사수를 곱한 값이 가장 큰 10종목 동일가중, 월말 리밸런스. 한 증권사의 의견은 마지막 발표일로부터 365일까지만 유효하다. ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 10 안에 들면 사고, 상위 20 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 계속 들고, 안 들고 있던 것은 안 산다.",
+   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-29",
+    "end": "2026-08-25",
+    "n_days": 2515,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 16.69,
+     "b": 13.16,
+     "d": 3.53
+    },
+    {
+     "k": "변동성",
+     "s": 20.24,
+     "b": 18.07,
+     "d": 2.17
+    },
+    {
+     "k": "샤프",
+     "s": 0.796,
+     "b": 0.698,
+     "d": 0.098
+    },
+    {
+     "k": "최대낙폭",
+     "s": -42.55,
+     "b": -33.92,
+     "d": -8.63
+    }
+   ],
+   "excess_cagr": 3.53,
+   "d_sharpe": 0.098,
+   "t": 1.04,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 15.43,
+      "sharpe": 0.742,
+      "excess": 2.27,
+      "t": 0.72,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 14.19,
+      "sharpe": 0.689,
+      "excess": 1.03,
+      "t": 0.39,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 11.74,
+      "sharpe": 0.581,
+      "excess": -1.42,
+      "t": -0.25,
+      "main": false
+     }
+    ],
+    "drag": 2.5,
+    "traded": 21.73,
+    "kill": true,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 10.89,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+     "corr": 1.0,
+     "alpha": 0.0,
+     "t": null,
+     "beta": 1.0
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.926,
+    "excess": -1.71,
+    "d_sharpe": -0.13,
+    "t": -0.39,
+    "t_net": -1.12,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "밑동 x-revdrift 와 같은 사유 — 아래 항목 참조"
+   },
+   "pool": {
+    "first": 337,
+    "last": 409,
+    "min": 337,
+    "med": 376,
+    "narrow": 0,
+    "n": 121,
+    "d0": "2016-07-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-07-31",
+    "n": 10,
+    "tickers": [
+     "ATO",
+     "DLTR",
+     "ECHO",
+     "EXPD",
+     "HAL",
+     "OXY",
+     "PNC",
+     "SNA",
+     "SPCX",
+     "TSLA"
+    ],
+    "names": {
+     "ATO": "ATMOS ENERGY CORP",
+     "DLTR": "DOLLAR TREE INC",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EXPD": "EXPEDITORS INTL WASH INC",
+     "HAL": "HALLIBURTON CO",
+     "OXY": "OCCIDENTAL PETROLEUM CORP",
+     "PNC": "PNC FINANCIAL SERVICES GROUP",
+     "SNA": "SNAP-ON INC",
+     "SPCX": "SPACE EXPLORATION TECHN-CL A",
+     "TSLA": "TESLA INC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
     "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
    ]
@@ -42935,360 +43652,6 @@
     "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
    },
    "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
-   "sid": "x-revdrift-sn-band",
-   "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "21일판과 같은 점수로 각 섹터에서 1종씩 뽑고, 섹터 비중은 유니버스 섹터 시총 비중을 따른다. 월말 리밸런스. ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 10 안에 들면 사고, 상위 20 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 계속 들고, 안 들고 있던 것은 안 산다.",
-   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다. 애널리스트 리비전은 섹터로 몰려 온다(업황이 돌면 그 섹터가 통째로 상향된다). 중립화하지 않으면 이 규칙은 리비전이 아니라 섹터 베팅일 수 있다 — 21일판과 크게 갈리면 그쪽 성적은 섹터 배분에서 나온 것이다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-07-29",
-    "end": "2026-08-25",
-    "n_days": 2515,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 16.02,
-     "b": 13.16,
-     "d": 2.86
-    },
-    {
-     "k": "변동성",
-     "s": 20.18,
-     "b": 18.07,
-     "d": 2.11
-    },
-    {
-     "k": "샤프",
-     "s": 0.769,
-     "b": 0.698,
-     "d": 0.071
-    },
-    {
-     "k": "최대낙폭",
-     "s": -42.55,
-     "b": -33.92,
-     "d": -8.63
-    }
-   ],
-   "excess_cagr": 2.86,
-   "d_sharpe": 0.071,
-   "t": 0.87,
-   "t_crit": null,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 14.77,
-      "sharpe": 0.715,
-      "excess": 1.61,
-      "t": 0.54,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 13.53,
-      "sharpe": 0.661,
-      "excess": 0.37,
-      "t": 0.22,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 11.09,
-      "sharpe": 0.553,
-      "excess": -2.07,
-      "t": -0.43,
-      "main": false
-     }
-    ],
-    "drag": 2.49,
-    "traded": 21.75,
-    "kill": true,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 10.9,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
-     "corr": 1.0,
-     "alpha": 0.0,
-     "t": null,
-     "beta": 1.0
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.4,
-    "sharpe": 0.926,
-    "excess": -2.38,
-    "d_sharpe": -0.157,
-    "t": -0.59,
-    "t_net": -1.32,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "na": "밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조"
-   },
-   "pool": {
-    "first": 339,
-    "last": 409,
-    "min": 339,
-    "med": 378,
-    "narrow": 0,
-    "n": 121,
-    "d0": "2016-07-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-07-31",
-    "n": 10,
-    "tickers": [
-     "ATO",
-     "DLTR",
-     "ECHO",
-     "EXPD",
-     "HAL",
-     "OXY",
-     "PNC",
-     "SNA",
-     "SPCX",
-     "TSLA"
-    ],
-    "names": {
-     "ATO": "ATMOS ENERGY CORP",
-     "DLTR": "DOLLAR TREE INC",
-     "ECHO": "ECHOSTAR CORP-A",
-     "EXPD": "EXPEDITORS INTL WASH INC",
-     "HAL": "HALLIBURTON CO",
-     "OXY": "OCCIDENTAL PETROLEUM CORP",
-     "PNC": "PNC FINANCIAL SERVICES GROUP",
-     "SNA": "SNAP-ON INC",
-     "SPCX": "SPACE EXPLORATION TECHN-CL A",
-     "TSLA": "TESLA INC"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "PIT(생존편향 보정) — 밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조",
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
-   "sid": "x-revdrift-band",
-   "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "증권사별 최신 투자의견을 5→1 척도로 이어 붙여 컨센서스 평균을 만들고, 30일 전 평균과의 차에 √증권사수를 곱한 값이 가장 큰 10종목 동일가중, 월말 리밸런스. 한 증권사의 의견은 마지막 발표일로부터 365일까지만 유효하다. ⟨저회전 변형⟩ 파는 문턱만 달리한다 — 상위 10 안에 들면 사고, 상위 20 밖으로 나갈 때만 판다. 그 사이면 들고 있던 것은 계속 들고, 안 들고 있던 것은 안 산다.",
-   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-07-29",
-    "end": "2026-08-25",
-    "n_days": 2515,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 16.02,
-     "b": 13.16,
-     "d": 2.86
-    },
-    {
-     "k": "변동성",
-     "s": 20.18,
-     "b": 18.07,
-     "d": 2.11
-    },
-    {
-     "k": "샤프",
-     "s": 0.769,
-     "b": 0.698,
-     "d": 0.071
-    },
-    {
-     "k": "최대낙폭",
-     "s": -42.55,
-     "b": -33.92,
-     "d": -8.63
-    }
-   ],
-   "excess_cagr": 2.86,
-   "d_sharpe": 0.071,
-   "t": 0.87,
-   "t_crit": null,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 14.77,
-      "sharpe": 0.715,
-      "excess": 1.61,
-      "t": 0.54,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 13.53,
-      "sharpe": 0.661,
-      "excess": 0.37,
-      "t": 0.22,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 11.09,
-      "sharpe": 0.553,
-      "excess": -2.07,
-      "t": -0.43,
-      "main": false
-     }
-    ],
-    "drag": 2.49,
-    "traded": 21.75,
-    "kill": true,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 10.9,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-     "corr": 1.0,
-     "alpha": 0.0,
-     "t": null,
-     "beta": 1.0
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.4,
-    "sharpe": 0.926,
-    "excess": -2.38,
-    "d_sharpe": -0.157,
-    "t": -0.59,
-    "t_net": -1.32,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "na": "밑동 x-revdrift 와 같은 사유 — 아래 항목 참조"
-   },
-   "pool": {
-    "first": 339,
-    "last": 409,
-    "min": 339,
-    "med": 378,
-    "narrow": 0,
-    "n": 121,
-    "d0": "2016-07-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-07-31",
-    "n": 10,
-    "tickers": [
-     "ATO",
-     "DLTR",
-     "ECHO",
-     "EXPD",
-     "HAL",
-     "OXY",
-     "PNC",
-     "SNA",
-     "SPCX",
-     "TSLA"
-    ],
-    "names": {
-     "ATO": "ATMOS ENERGY CORP",
-     "DLTR": "DOLLAR TREE INC",
-     "ECHO": "ECHOSTAR CORP-A",
-     "EXPD": "EXPEDITORS INTL WASH INC",
-     "HAL": "HALLIBURTON CO",
-     "OXY": "OCCIDENTAL PETROLEUM CORP",
-     "PNC": "PNC FINANCIAL SERVICES GROUP",
-     "SNA": "SNAP-ON INC",
-     "SPCX": "SPACE EXPLORATION TECHN-CL A",
-     "TSLA": "TESLA INC"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "PIT(생존편향 보정) — 밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
     "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
    ]
@@ -44678,58 +45041,58 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 15.42,
+     "s": 15.31,
      "b": 13.16,
-     "d": 2.26
+     "d": 2.15
     },
     {
      "k": "변동성",
-     "s": 23.0,
+     "s": 22.96,
      "b": 18.07,
-     "d": 4.93
+     "d": 4.89
     },
     {
      "k": "샤프",
-     "s": 0.679,
+     "s": 0.675,
      "b": 0.698,
-     "d": -0.019
+     "d": -0.023
     },
     {
      "k": "최대낙폭",
-     "s": -41.7,
+     "s": -41.76,
      "b": -33.92,
-     "d": -7.78
+     "d": -7.84
     }
    ],
-   "excess_cagr": 2.26,
-   "d_sharpe": -0.019,
-   "t": 0.72,
+   "excess_cagr": 2.15,
+   "d_sharpe": -0.023,
+   "t": 0.7,
    "t_crit": null,
    "cost": {
     "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
     "rows": [
      {
       "rt": 10,
-      "cagr": 14.13,
-      "sharpe": 0.63,
-      "excess": 0.97,
-      "t": 0.45,
+      "cagr": 14.02,
+      "sharpe": 0.626,
+      "excess": 0.86,
+      "t": 0.42,
       "main": false
      },
      {
       "rt": 20,
-      "cagr": 12.86,
-      "sharpe": 0.581,
-      "excess": -0.3,
-      "t": 0.18,
+      "cagr": 12.75,
+      "sharpe": 0.577,
+      "excess": -0.41,
+      "t": 0.15,
       "main": true
      },
      {
       "rt": 40,
-      "cagr": 10.35,
-      "sharpe": 0.483,
-      "excess": -2.81,
-      "t": -0.36,
+      "cagr": 10.24,
+      "sharpe": 0.479,
+      "excess": -2.92,
+      "t": -0.39,
       "main": false
      }
     ],
@@ -44746,10 +45109,10 @@
    "incr": {
     "one": {
      "vs": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-     "corr": 0.569,
-     "alpha": 1.47,
-     "t": 0.41,
-     "beta": 0.734
+     "corr": 0.562,
+     "alpha": 0.96,
+     "t": 0.26,
+     "beta": 0.727
     },
     "five": null,
     "absorbed": null,
@@ -44759,10 +45122,10 @@
     "label": "랩 동일가중 유니버스 매수후보유",
     "cagr": 18.4,
     "sharpe": 0.926,
-    "excess": -2.98,
-    "d_sharpe": -0.247,
-    "t": -0.4,
-    "t_net": -0.94,
+    "excess": -3.09,
+    "d_sharpe": -0.251,
+    "t": -0.42,
+    "t_net": -0.96,
     "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
    },
    "pit": {
@@ -44810,10 +45173,10 @@
     ]
    },
    "pool": {
-    "first": 339,
+    "first": 337,
     "last": 409,
-    "min": 339,
-    "med": 378,
+    "min": 337,
+    "med": 376,
     "narrow": 0,
     "n": 121,
     "d0": "2016-07-29"
@@ -44851,271 +45214,6 @@
     "weights": null,
     "exposure_now": null,
     "note": "월말 리밸런스(2026-07-31)에서 고른 11종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [
-     {
-      "a": "Womack",
-      "y": 1996,
-      "t": "Do brokerage analysts' recommendations have investment value?",
-      "j": "Journal of Finance 51"
-     },
-     {
-      "a": "Barber·Lehavy·McNichols·Trueman",
-      "y": 2001,
-      "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
-      "j": "Journal of Finance 56"
-     },
-     {
-      "a": "Jegadeesh·Kim·Krische·Lee",
-      "y": 2004,
-      "t": "Analyzing the analysts: When do recommendations add value?",
-      "j": "Journal of Finance 59"
-     },
-     {
-      "a": "Loh·Stulz",
-      "y": 2011,
-      "t": "When are analyst recommendation changes influential?",
-      "j": "Review of Financial Studies 24"
-     }
-    ],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "지수 편입 이력",
-      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": false,
-    "note": null
-   },
-   "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
-   "sid": "x-revdrift-q",
-   "name": "투자의견 리비전 드리프트 (63일) (30종)",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "위와 같되 비교 시점이 30일 전이 아니라 91일 전이다.",
-   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다. 창을 하나만 걸면 결과가 창의 성질인지 신호의 성질인지 갈리지 않아 21일판과 같이 싣는다. 이 랩은 같은 이유로 x-maxlow/x-max5low 를 같이 실었고 둘의 샤프가 0.79 대 0.19 로 갈리자 '둘 다 신뢰할 수 없다'고 읽었다. 여기서도 같게 읽는다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-07-29",
-    "end": "2026-08-25",
-    "n_days": 2515,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 14.71,
-     "b": 13.16,
-     "d": 1.55
-    },
-    {
-     "k": "변동성",
-     "s": 19.46,
-     "b": 18.07,
-     "d": 1.39
-    },
-    {
-     "k": "샤프",
-     "s": 0.732,
-     "b": 0.698,
-     "d": 0.034
-    },
-    {
-     "k": "최대낙폭",
-     "s": -42.03,
-     "b": -33.92,
-     "d": -8.11
-    }
-   ],
-   "excess_cagr": 1.55,
-   "d_sharpe": 0.034,
-   "t": 0.67,
-   "t_crit": null,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 14.03,
-      "sharpe": 0.701,
-      "excess": 0.87,
-      "t": 0.42,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 13.35,
-      "sharpe": 0.671,
-      "excess": 0.19,
-      "t": 0.18,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 12.01,
-      "sharpe": 0.609,
-      "excess": -1.15,
-      "t": -0.31,
-      "main": false
-     }
-    ],
-    "drag": 1.36,
-    "traded": 11.94,
-    "kill": true,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 6.01,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "장부가 대비 저평가 — 상위 30% (155종)",
-     "corr": 0.672,
-     "alpha": 1.44,
-     "t": 0.71,
-     "beta": 0.611
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.4,
-    "sharpe": 0.926,
-    "excess": -3.69,
-    "d_sharpe": -0.194,
-    "t": -1.66,
-    "t_net": -2.32,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "window": "2016-08~2026-08",
-    "start": "2016-08-31",
-    "n_days": 2492,
-    "pit": {
-     "cagr": 13.35,
-     "sharpe": 0.631,
-     "mdd": -40.36,
-     "bench_cagr": 15.48,
-     "excess": -2.13,
-     "t": -1.02,
-     "d_sharpe": -0.113,
-     "turnover": 5.97
-    },
-    "retro": {
-     "cagr": 14.65,
-     "sharpe": 0.676,
-     "mdd": -42.03,
-     "bench_cagr": 18.46,
-     "excess": -3.81,
-     "t": -1.7
-    },
-    "bias": {
-     "cagr": 1.3,
-     "excess": -1.68,
-     "sharpe": 0.045,
-     "bench_cagr": 2.98
-    },
-    "t_crit": null,
-    "t_crit_lab": null,
-    "holdings": [
-     "ABT",
-     "AEE",
-     "AJG",
-     "AMT",
-     "ATO",
-     "CASY",
-     "CTAS",
-     "ECHO",
-     "EXPD",
-     "F",
-     "HAL",
-     "HOOD",
-     "HPE",
-     "INTC",
-     "IP",
-     "ISRG",
-     "MCD",
-     "MDT",
-     "MO",
-     "OTIS",
-     "OXY",
-     "PKG",
-     "PNC",
-     "RJF",
-     "RTX",
-     "SNA",
-     "TSLA",
-     "UNH",
-     "WEC",
-     "WST"
-    ]
-   },
-   "pool": {
-    "first": 339,
-    "last": 406,
-    "min": 336,
-    "med": 376,
-    "narrow": 0,
-    "n": 121,
-    "d0": "2016-07-29"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-07-31",
-    "n": 10,
-    "tickers": [
-     "AEE",
-     "AJG",
-     "ATO",
-     "ECHO",
-     "EXPD",
-     "HAL",
-     "HPE",
-     "IP",
-     "SNA",
-     "TSLA"
-    ],
-    "names": {
-     "AEE": "AMEREN CORPORATION",
-     "AJG": "ARTHUR J GALLAGHER & CO",
-     "ATO": "ATMOS ENERGY CORP",
-     "ECHO": "ECHOSTAR CORP-A",
-     "EXPD": "EXPEDITORS INTL WASH INC",
-     "HAL": "HALLIBURTON CO",
-     "HPE": "HEWLETT PACKARD ENTERPRISE",
-     "IP": "INTERNATIONAL PAPER CO",
-     "SNA": "SNAP-ON INC",
-     "TSLA": "TESLA INC"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -45618,6 +45716,271 @@
    ]
   },
   {
+   "sid": "x-revdrift-q",
+   "name": "투자의견 리비전 드리프트 (63일) (30종)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "위와 같되 비교 시점이 30일 전이 아니라 91일 전이다.",
+   "why": "Womack(1996). 애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 신호는 증권사별 최신 등급을 이어 붙인 컨센서스(5→1 척도)의 변화에 √증권사수를 곱한 값이다. √n 을 곱하는 이유는 성적이 아니라 측정 대상이다 — n개의 평균은 흩어짐이 1/√n 이라 곱하지 않으면 상위 10의 60~70%가 커버 최하위 25% 종목이 된다(중립 25%). 곱하면 30%로 내려온다. ⚠ 이 규칙은 PIT 레그를 돌 수 없다 — 편출 종목의 등급 이력을 구할 수 없다. 생존편향이 얼마인지 이 랩의 다른 종목 규칙과 달리 측정되지 않았다. 창을 하나만 걸면 결과가 창의 성질인지 신호의 성질인지 갈리지 않아 21일판과 같이 싣는다. 이 랩은 같은 이유로 x-maxlow/x-max5low 를 같이 실었고 둘의 샤프가 0.79 대 0.19 로 갈리자 '둘 다 신뢰할 수 없다'고 읽었다. 여기서도 같게 읽는다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-29",
+    "end": "2026-08-25",
+    "n_days": 2515,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 14.61,
+     "b": 13.16,
+     "d": 1.45
+    },
+    {
+     "k": "변동성",
+     "s": 19.46,
+     "b": 18.07,
+     "d": 1.39
+    },
+    {
+     "k": "샤프",
+     "s": 0.728,
+     "b": 0.698,
+     "d": 0.03
+    },
+    {
+     "k": "최대낙폭",
+     "s": -42.03,
+     "b": -33.92,
+     "d": -8.11
+    }
+   ],
+   "excess_cagr": 1.45,
+   "d_sharpe": 0.03,
+   "t": 0.63,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 13.93,
+      "sharpe": 0.697,
+      "excess": 0.77,
+      "t": 0.39,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 13.25,
+      "sharpe": 0.666,
+      "excess": 0.09,
+      "t": 0.14,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 11.91,
+      "sharpe": 0.605,
+      "excess": -1.25,
+      "t": -0.35,
+      "main": false
+     }
+    ],
+    "drag": 1.36,
+    "traded": 11.93,
+    "kill": true,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 6.0,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "장부가 대비 저평가 — 상위 30% (155종)",
+     "corr": 0.672,
+     "alpha": 1.35,
+     "t": 0.67,
+     "beta": 0.612
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.926,
+    "excess": -3.79,
+    "d_sharpe": -0.198,
+    "t": -1.71,
+    "t_net": -2.37,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "window": "2016-08~2026-08",
+    "start": "2016-08-31",
+    "n_days": 2492,
+    "pit": {
+     "cagr": 13.35,
+     "sharpe": 0.631,
+     "mdd": -40.36,
+     "bench_cagr": 15.48,
+     "excess": -2.13,
+     "t": -1.02,
+     "d_sharpe": -0.113,
+     "turnover": 5.97
+    },
+    "retro": {
+     "cagr": 14.65,
+     "sharpe": 0.676,
+     "mdd": -42.03,
+     "bench_cagr": 18.46,
+     "excess": -3.81,
+     "t": -1.7
+    },
+    "bias": {
+     "cagr": 1.3,
+     "excess": -1.68,
+     "sharpe": 0.045,
+     "bench_cagr": 2.98
+    },
+    "t_crit": null,
+    "t_crit_lab": null,
+    "holdings": [
+     "ABT",
+     "AEE",
+     "AJG",
+     "AMT",
+     "ATO",
+     "CASY",
+     "CTAS",
+     "ECHO",
+     "EXPD",
+     "F",
+     "HAL",
+     "HOOD",
+     "HPE",
+     "INTC",
+     "IP",
+     "ISRG",
+     "MCD",
+     "MDT",
+     "MO",
+     "OTIS",
+     "OXY",
+     "PKG",
+     "PNC",
+     "RJF",
+     "RTX",
+     "SNA",
+     "TSLA",
+     "UNH",
+     "WEC",
+     "WST"
+    ]
+   },
+   "pool": {
+    "first": 337,
+    "last": 406,
+    "min": 334,
+    "med": 374,
+    "narrow": 0,
+    "n": 121,
+    "d0": "2016-07-29"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-07-31",
+    "n": 10,
+    "tickers": [
+     "AEE",
+     "AJG",
+     "ATO",
+     "ECHO",
+     "EXPD",
+     "HAL",
+     "HPE",
+     "IP",
+     "SNA",
+     "TSLA"
+    ],
+    "names": {
+     "AEE": "AMEREN CORPORATION",
+     "AJG": "ARTHUR J GALLAGHER & CO",
+     "ATO": "ATMOS ENERGY CORP",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EXPD": "EXPEDITORS INTL WASH INC",
+     "HAL": "HALLIBURTON CO",
+     "HPE": "HEWLETT PACKARD ENTERPRISE",
+     "IP": "INTERNATIONAL PAPER CO",
+     "SNA": "SNAP-ON INC",
+     "TSLA": "TESLA INC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-07-31)에서 고른 10종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [
+     {
+      "a": "Womack",
+      "y": 1996,
+      "t": "Do brokerage analysts' recommendations have investment value?",
+      "j": "Journal of Finance 51"
+     },
+     {
+      "a": "Barber·Lehavy·McNichols·Trueman",
+      "y": 2001,
+      "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+      "j": "Journal of Finance 56"
+     },
+     {
+      "a": "Jegadeesh·Kim·Krische·Lee",
+      "y": 2004,
+      "t": "Analyzing the analysts: When do recommendations add value?",
+      "j": "Journal of Finance 59"
+     },
+     {
+      "a": "Loh·Stulz",
+      "y": 2011,
+      "t": "When are analyst recommendation changes influential?",
+      "j": "Review of Financial Studies 24"
+     }
+    ],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
+   "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "x-entropy",
    "name": "수익률 엔트로피 최하위 20",
    "family": "종목·타이밍",
@@ -45843,6 +46206,339 @@
     "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
    },
    "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
+   "sid": "x-fipq-disc-sn",
+   "name": "이산정보 모멘텀 롱숏 · 업종중립 (거울)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "event",
+   "arch": null,
+   "rule": "매 월말 형성창[j-251,j-21]에서 PRET(누적수익)과 정보이산성 ID=sign(PRET)x(neg비율-pos비율)를 구해 PRET 5분위로 가르고, 그 안에서 ID 5분위로 다시 가른다. PRET 최상위 5분위의 해당 ID 분위를 롱, PRET 최하위 5분위의 같은 ID 분위를 숏 한다. 다리 안 동일가중, 다리별 합 1(롱100/숏100 시장중립), 형성과 보유 사이 1개월 건너뜀, 126거래일(6개월) 보유. 위와 같고 ID 잔차 최상위 5분위를 담는다.",
+   "why": "🚨 이 넷의 답은 (연속−이산)이 업종중립 뒤에도 남는가 하나다. 남으면 ID 효과는 업종이 아니고, 절반 미만으로 줄면 절반 이상이 업종이었다. 거울 둘이 다 있어야 그 뺄셈이 성립한다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-22",
+    "end": "2026-08-25",
+    "n_days": 2520,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 4.32,
+     "b": 2.42,
+     "d": 1.9
+    },
+    {
+     "k": "변동성",
+     "s": 18.69,
+     "b": 0.12,
+     "d": 18.57
+    },
+    {
+     "k": "샤프",
+     "s": 0.245,
+     "b": 8.214,
+     "d": -7.969
+    },
+    {
+     "k": "최대낙폭",
+     "s": -34.82,
+     "b": 0.0,
+     "d": -34.82
+    }
+   ],
+   "excess_cagr": 1.9,
+   "d_sharpe": -7.969,
+   "t": 0.61,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 4.06,
+      "sharpe": 0.232,
+      "excess": 1.64,
+      "t": 0.57,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 3.8,
+      "sharpe": 0.218,
+      "excess": 1.38,
+      "t": 0.53,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 3.29,
+      "sharpe": 0.192,
+      "excess": 0.87,
+      "t": 0.44,
+      "main": false
+     }
+    ],
+    "drag": 0.52,
+    "traded": 4.92,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 4.96,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": null,
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.927,
+    "excess": -14.08,
+    "d_sharpe": -0.682,
+    "t": -1.56,
+    "t_net": -1.62,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "event",
+    "as_of": "2026-08-25",
+    "n": 95,
+    "tickers": [
+     "ADI",
+     "ADM",
+     "ADSK",
+     "AIG",
+     "AJG",
+     "ALAB",
+     "ALNY",
+     "AMCR",
+     "AMD",
+     "AMP",
+     "AMT",
+     "APD",
+     "APO",
+     "ARM",
+     "AXON",
+     "BG",
+     "BIIB",
+     "BKNG",
+     "CCI",
+     "CHD",
+     "CME",
+     "CNC",
+     "CRWV",
+     "DAL",
+     "DASH",
+     "DDOG",
+     "DELL",
+     "DXCM",
+     "EL",
+     "ELV",
+     "EXPE",
+     "F",
+     "FANG",
+     "FERG",
+     "FICO",
+     "FSLR",
+     "FTNT",
+     "GEHC",
+     "GEV",
+     "GRMN",
+     "HOOD",
+     "HUM",
+     "HWM",
+     "IBKR",
+     "IBM",
+     "IDXX",
+     "INTC",
+     "JBHT",
+     "KDP",
+     "KHC",
+     "KVUE",
+     "LUV",
+     "LYB",
+     "MA",
+     "MCHP",
+     "MET",
+     "META",
+     "MPWR",
+     "MRNA",
+     "MRVL",
+     "MSFT",
+     "NBIS",
+     "NDAQ",
+     "NRG",
+     "NTAP",
+     "NTRS",
+     "NVDA",
+     "NXPI",
+     "OKE",
+     "ON",
+     "OTIS",
+     "PANW",
+     "PDD",
+     "PLTR",
+     "PRU",
+     "RL",
+     "ROP",
+     "RSG",
+     "SLB",
+     "SPGI",
+     "STLD",
+     "TDG",
+     "TER",
+     "TGT",
+     "TMUS",
+     "TSCO",
+     "TSLA",
+     "TXN",
+     "UAL",
+     "ULTA",
+     "VRSN",
+     "WBD",
+     "WDAY",
+     "WRB",
+     "XYL"
+    ],
+    "names": {
+     "ADI": "ANALOG DEVICES INC",
+     "ADM": "ARCHER-DANIELS-MIDLAND CO",
+     "ADSK": "AUTODESK INC",
+     "AIG": "AMERICAN INTERNATIONAL GROUP",
+     "AJG": "ARTHUR J GALLAGHER & CO",
+     "ALAB": "ASTERA LABS INC",
+     "ALNY": "ALNYLAM PHARMACEUTICALS INC",
+     "AMCR": "AMCOR PLC",
+     "AMD": "ADVANCED MICRO DEVICES",
+     "AMP": "AMERIPRISE FINANCIAL INC",
+     "AMT": "AMERICAN TOWER CORP",
+     "APD": "AIR PRODUCTS & CHEMICALS INC",
+     "APO": "APOLLO GLOBAL MANAGEMENT INC",
+     "ARM": "ARM HOLDINGS PLC-ADR",
+     "AXON": "AXON ENTERPRISE INC",
+     "BG": "BUNGE GLOBAL SA",
+     "BIIB": "BIOGEN INC",
+     "BKNG": "BOOKING HOLDINGS INC",
+     "CCI": "CROWN CASTLE INC",
+     "CHD": "CHURCH & DWIGHT CO INC",
+     "CME": "CME GROUP INC",
+     "CNC": "CENTENE CORP",
+     "CRWV": "COREWEAVE INC-CL A",
+     "DAL": "DELTA AIR LINES INC",
+     "DASH": "DOORDASH INC - A",
+     "DDOG": "DATADOG INC - CLASS A",
+     "DELL": "DELL TECHNOLOGIES -C",
+     "DXCM": "DEXCOM INC",
+     "EL": "ESTEE LAUDER COMPANIES-CL A",
+     "ELV": "ELEVANCE HEALTH INC",
+     "EXPE": "EXPEDIA GROUP INC",
+     "F": "FORD MOTOR CO",
+     "FANG": "DIAMONDBACK ENERGY INC",
+     "FERG": "Ferguson Enterprises",
+     "FICO": "FAIR ISAAC CORP",
+     "FSLR": "FIRST SOLAR INC",
+     "FTNT": "FORTINET INC",
+     "GEHC": "GE HEALTHCARE TECHNOLOGY",
+     "GEV": "GE VERNOVA INC",
+     "GRMN": "GARMIN LTD",
+     "HOOD": "ROBINHOOD MARKETS INC - A",
+     "HUM": "HUMANA INC",
+     "HWM": "HOWMET AEROSPACE INC",
+     "IBKR": "INTERACTIVE BROKERS GRO-CL A",
+     "IBM": "INTL BUSINESS MACHINES CORP",
+     "IDXX": "IDEXX LABORATORIES INC",
+     "INTC": "INTEL CORP",
+     "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
+     "KDP": "KEURIG DR PEPPER INC",
+     "KHC": "KRAFT HEINZ CO/THE",
+     "KVUE": "KENVUE INC",
+     "LUV": "SOUTHWEST AIRLINES CO",
+     "LYB": "LYONDELLBASELL INDU-CL A",
+     "MA": "MASTERCARD INC - A",
+     "MCHP": "MICROCHIP TECHNOLOGY INC",
+     "MET": "METLIFE INC",
+     "META": "META PLATFORMS INC-CLASS A",
+     "MPWR": "MONOLITHIC POWER SYSTEMS INC",
+     "MRNA": "MODERNA INC",
+     "MRVL": "MARVELL TECHNOLOGY INC",
+     "MSFT": "MICROSOFT CORP",
+     "NBIS": "NEBIUS GROUP NV",
+     "NDAQ": "NASDAQ INC",
+     "NRG": "NRG ENERGY INC",
+     "NTAP": "NETAPP INC",
+     "NTRS": "NORTHERN TRUST CORP",
+     "NVDA": "NVIDIA CORP",
+     "NXPI": "NXP SEMICONDUCTORS NV",
+     "OKE": "ONEOK INC",
+     "ON": "ON SEMICONDUCTOR",
+     "OTIS": "OTIS WORLDWIDE CORP",
+     "PANW": "PALO ALTO NETWORKS INC",
+     "PDD": "PDD HOLDINGS INC",
+     "PLTR": "PALANTIR TECHNOLOGIES INC-A",
+     "PRU": "PRUDENTIAL FINANCIAL INC",
+     "RL": "RALPH LAUREN CORP",
+     "ROP": "ROPER TECHNOLOGIES INC",
+     "RSG": "REPUBLIC SERVICES INC",
+     "SLB": "SCHLUMBERGER LTD",
+     "SPGI": "S&P GLOBAL INC",
+     "STLD": "STEEL DYNAMICS INC",
+     "TDG": "TRANSDIGM GROUP INC",
+     "TER": "TERADYNE INC",
+     "TGT": "TARGET CORP",
+     "TMUS": "T-MOBILE US INC",
+     "TSCO": "TRACTOR SUPPLY COMPANY",
+     "TSLA": "TESLA INC",
+     "TXN": "TEXAS INSTRUMENTS INC",
+     "UAL": "UNITED AIRLINES HOLDINGS INC",
+     "ULTA": "ULTA BEAUTY INC",
+     "VRSN": "VERISIGN INC",
+     "WBD": "WARNER BROS DISCOVERY INC",
+     "WDAY": "WORKDAY INC-CLASS A",
+     "WRB": "WR BERKLEY CORP",
+     "XYL": "XYLEM INC"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "실적 발표 뒤 창이 열려 있는 95종목을 동일가중으로 보유 중이다. 종목마다 진입·청산일이 다르다(달력 리밸런스가 아니다)."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다.",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
     "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
    ]
@@ -49031,6 +49727,299 @@
    ]
   },
   {
+   "sid": "x-fipq-cont",
+   "name": "연속정보 모멘텀 롱숏 (ID 최하위 5분위)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "event",
+   "arch": null,
+   "rule": "매 월말 형성창[j-251,j-21]에서 PRET(누적수익)과 정보이산성 ID=sign(PRET)x(neg비율-pos비율)를 구해 PRET 5분위로 가르고, 그 안에서 ID 5분위로 다시 가른다. PRET 최상위 5분위의 해당 ID 분위를 롱, PRET 최하위 5분위의 같은 ID 분위를 숏 한다. 다리 안 동일가중, 다리별 합 1(롱100/숏100 시장중립), 형성과 보유 사이 1개월 건너뜀, 126거래일(6개월) 보유. ID 최하위 5분위(연속적으로 정보가 온 쪽)을 담는다.",
+   "why": "Da·Gurun·Warachka(2014) Table 2 Panel A 의 재현이다. 논문은 6개월 보유에서 저ID 8.86% · 고ID 2.91% · 차이 5.95%(t 5.13)를 보고했다. ⚠ 차입비용·대차수수료를 안 문다(랩 전체가 무비용) — 숏 다리의 실제 비용은 크므로 이 수치는 그만큼 낙관 쪽이다. 대형주라 작을 것이라는 변명은 적지 않는다. ⚠ 대조군은 지수가 아니라 현금이다. 순노출 0 인 시장중립을 지수와 견주면 정의상 참인 말을 재게 된다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-22",
+    "end": "2026-08-25",
+    "n_days": 2520,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": -0.63,
+     "b": 2.42,
+     "d": -3.05
+    },
+    {
+     "k": "변동성",
+     "s": 22.46,
+     "b": 0.12,
+     "d": 22.34
+    },
+    {
+     "k": "샤프",
+     "s": 0.022,
+     "b": 8.214,
+     "d": -8.192
+    },
+    {
+     "k": "최대낙폭",
+     "s": -50.86,
+     "b": 0.0,
+     "d": -50.86
+    }
+   ],
+   "excess_cagr": -3.05,
+   "d_sharpe": -8.192,
+   "t": -0.07,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": -0.87,
+      "sharpe": 0.011,
+      "excess": -3.29,
+      "t": -0.1,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": -1.11,
+      "sharpe": 0.0,
+      "excess": -3.53,
+      "t": -0.14,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": -1.58,
+      "sharpe": -0.021,
+      "excess": -4.0,
+      "t": -0.2,
+      "main": false
+     }
+    ],
+    "drag": 0.48,
+    "traded": 4.8,
+    "kill": false,
+    "sensitive": false,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 4.83,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": null,
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.927,
+    "excess": -19.03,
+    "d_sharpe": -0.905,
+    "t": -1.73,
+    "t_net": -1.78,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "event",
+    "as_of": "2026-08-25",
+    "n": 75,
+    "tickers": [
+     "ABT",
+     "ACN",
+     "AMAT",
+     "APD",
+     "APH",
+     "BNY",
+     "BRO",
+     "BSX",
+     "BX",
+     "CAH",
+     "CARR",
+     "CHTR",
+     "CIEN",
+     "CMG",
+     "COHR",
+     "COIN",
+     "CPRT",
+     "CVNA",
+     "CVS",
+     "DIS",
+     "DOW",
+     "FIS",
+     "FIX",
+     "GE",
+     "GIS",
+     "GLW",
+     "GS",
+     "HCA",
+     "HPQ",
+     "HUM",
+     "IBKR",
+     "INTU",
+     "JCI",
+     "KEYS",
+     "KKR",
+     "KLAC",
+     "KMB",
+     "LEN",
+     "LITE",
+     "LRCX",
+     "LYB",
+     "MDT",
+     "MNST",
+     "MPC",
+     "MS",
+     "MSTR",
+     "MU",
+     "NEM",
+     "NFLX",
+     "NKE",
+     "NOW",
+     "ORCL",
+     "PAYX",
+     "PGR",
+     "PSKY",
+     "PYPL",
+     "ROST",
+     "RTX",
+     "SBAC",
+     "SHW",
+     "SMCI",
+     "SNDK",
+     "STT",
+     "STX",
+     "STZ",
+     "SYK",
+     "TEL",
+     "TER",
+     "TPR",
+     "TRI",
+     "VICI",
+     "VLTO",
+     "VRSK",
+     "WDC",
+     "XOM"
+    ],
+    "names": {
+     "ABT": "ABBOTT LABORATORIES",
+     "ACN": "ACCENTURE PLC-CL A",
+     "AMAT": "APPLIED MATERIALS INC",
+     "APD": "AIR PRODUCTS & CHEMICALS INC",
+     "APH": "AMPHENOL CORP-CL A",
+     "BNY": "BANK OF NEW YORK MELLON CORP",
+     "BRO": "BROWN & BROWN INC",
+     "BSX": "BOSTON SCIENTIFIC CORP",
+     "BX": "BLACKSTONE INC",
+     "CAH": "CARDINAL HEALTH INC",
+     "CARR": "CARRIER GLOBAL CORP",
+     "CHTR": "CHARTER COMMUNICATIONS INC-A",
+     "CIEN": "CIENA CORP",
+     "CMG": "CHIPOTLE MEXICAN GRILL INC",
+     "COHR": "COHERENT CORP",
+     "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "CPRT": "COPART INC",
+     "CVNA": "CARVANA CO",
+     "CVS": "CVS HEALTH CORP",
+     "DIS": "WALT DISNEY CO/THE",
+     "DOW": "DOW INC",
+     "FIS": "FIDELITY NATIONAL INFO SERV",
+     "FIX": "COMFORT SYSTEMS USA INC",
+     "GE": "GENERAL ELECTRIC",
+     "GIS": "GENERAL MILLS INC",
+     "GLW": "CORNING INC",
+     "GS": "GOLDMAN SACHS GROUP INC",
+     "HCA": "HCA HEALTHCARE INC",
+     "HPQ": "HP INC",
+     "HUM": "HUMANA INC",
+     "IBKR": "INTERACTIVE BROKERS GRO-CL A",
+     "INTU": "INTUIT INC",
+     "JCI": "JOHNSON CONTROLS INTERNATION",
+     "KEYS": "KEYSIGHT TECHNOLOGIES IN",
+     "KKR": "KKR & CO INC",
+     "KLAC": "KLA CORP",
+     "KMB": "KIMBERLY-CLARK CORP",
+     "LEN": "LENNAR CORP-A",
+     "LITE": "LUMENTUM HOLDINGS INC",
+     "LRCX": "LAM RESEARCH CORP",
+     "LYB": "LYONDELLBASELL INDU-CL A",
+     "MDT": "MEDTRONIC PLC",
+     "MNST": "MONSTER BEVERAGE CORP",
+     "MPC": "MARATHON PETROLEUM CORP",
+     "MS": "MORGAN STANLEY",
+     "MSTR": "MICROSTRATEGY INC-CL A",
+     "MU": "MICRON TECHNOLOGY INC",
+     "NEM": "NEWMONT CORP",
+     "NFLX": "NETFLIX INC",
+     "NKE": "NIKE INC -CL B",
+     "NOW": "SERVICENOW INC",
+     "ORCL": "ORACLE CORP",
+     "PAYX": "PAYCHEX INC",
+     "PGR": "PROGRESSIVE CORP",
+     "PSKY": "PARAMOUNT SKYDANCE CL B",
+     "PYPL": "PAYPAL HOLDINGS INC",
+     "ROST": "ROSS STORES INC",
+     "RTX": "RTX CORP",
+     "SBAC": "SBA COMMUNICATIONS CORP",
+     "SHW": "SHERWIN-WILLIAMS CO/THE",
+     "SMCI": "SUPER MICRO COMPUTER INC",
+     "SNDK": "SANDISK CORP",
+     "STT": "STATE STREET CORP",
+     "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
+     "SYK": "STRYKER CORP",
+     "TEL": "TE CONNECTIVITY PLC",
+     "TER": "TERADYNE INC",
+     "TPR": "TAPESTRY INC",
+     "TRI": "THOMSON REUTERS CORP",
+     "VICI": "VICI PROPERTIES INC",
+     "VLTO": "VERALTO CORP",
+     "VRSK": "VERISK ANALYTICS INC",
+     "WDC": "WESTERN DIGITAL CORP",
+     "XOM": "EXXON MOBIL CORP"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "실적 발표 뒤 창이 열려 있는 75종목을 동일가중으로 보유 중이다. 종목마다 진입·청산일이 다르다(달력 리밸런스가 아니다)."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다.",
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
    "sid": "t-voltgt",
    "name": "변동성 타깃팅 (연 12%)",
    "family": "종목·타이밍",
@@ -49896,6 +50885,297 @@
    },
    "missing": [
     "PIT(생존편향 보정) — 은행·보험 서브산업으로 후보를 좁히는데 편출 종목의 서브산업이 없다 — 그 창의 편출 은행이 통째로 빠진다",
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
+   "sid": "x-fipq-cont-sn",
+   "name": "연속정보 모멘텀 롱숏 · 업종중립",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "event",
+   "arch": null,
+   "rule": "매 월말 형성창[j-251,j-21]에서 PRET(누적수익)과 정보이산성 ID=sign(PRET)x(neg비율-pos비율)를 구해 PRET 5분위로 가르고, 그 안에서 ID 5분위로 다시 가른다. PRET 최상위 5분위의 해당 ID 분위를 롱, PRET 최하위 5분위의 같은 ID 분위를 숏 한다. 다리 안 동일가중, 다리별 합 1(롱100/숏100 시장중립), 형성과 보유 사이 1개월 건너뜀, 126거래일(6개월) 보유. ID 최하위 5분위를 담되, ID 를 같은 PRET 분위·같은 섹터 평균으로 뺀 잔차로 5분위를 만든다(섹터 칸 3종 미만이면 제외).",
+   "why": "🚨 ID 정렬이 업종을 쏠리게 한다 — 등록 전 실측(월말 198개): 승자 바스켓에서 20종을 뽑을 때 최대 업종 비중이 무작위 29.1% · 연속 33.5% · 이산 30.9% 였다. 연속−무작위 +4.5%p, 연속−이산 +2.6%p. 즉 «연속정보 종목» 이 «그 시기 잘 나간 업종» 의 다른 이름일 수 있다. 논문은 CRSP 전종목이라 희석되지만 이 랩은 518종이다. ⚠ 중립은 ID 축에만 건다. PRET 까지 중립화하면 무엇이 바뀌었는지 못 가린다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-07-22",
+    "end": "2026-08-25",
+    "n_days": 2520,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": -1.12,
+     "b": 2.42,
+     "d": -3.54
+    },
+    {
+     "k": "변동성",
+     "s": 21.84,
+     "b": 0.12,
+     "d": 21.72
+    },
+    {
+     "k": "샤프",
+     "s": -0.006,
+     "b": 8.214,
+     "d": -8.22
+    },
+    {
+     "k": "최대낙폭",
+     "s": -51.06,
+     "b": 0.0,
+     "d": -51.06
+    }
+   ],
+   "excess_cagr": -3.54,
+   "d_sharpe": -8.22,
+   "t": -0.16,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": -1.35,
+      "sharpe": -0.017,
+      "excess": -3.77,
+      "t": -0.2,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": -1.59,
+      "sharpe": -0.028,
+      "excess": -4.01,
+      "t": -0.23,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": -2.06,
+      "sharpe": -0.051,
+      "excess": -4.48,
+      "t": -0.3,
+      "main": false
+     }
+    ],
+    "drag": 0.47,
+    "traded": 4.82,
+    "kill": false,
+    "sensitive": false,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 4.85,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": null,
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.4,
+    "sharpe": 0.927,
+    "excess": -19.52,
+    "d_sharpe": -0.933,
+    "t": -1.84,
+    "t_net": -1.89,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "na": "타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "event",
+    "as_of": "2026-08-25",
+    "n": 74,
+    "tickers": [
+     "ABT",
+     "ACN",
+     "AMAT",
+     "APH",
+     "BDX",
+     "BKR",
+     "BRO",
+     "BSX",
+     "BX",
+     "CARR",
+     "CASY",
+     "CAT",
+     "CHTR",
+     "CIEN",
+     "CMG",
+     "CMI",
+     "COHR",
+     "COIN",
+     "CPRT",
+     "CVNA",
+     "CVS",
+     "DIS",
+     "DOW",
+     "ECHO",
+     "EME",
+     "EOG",
+     "FDX",
+     "FIS",
+     "FIX",
+     "GE",
+     "GIS",
+     "GLW",
+     "HCA",
+     "HPQ",
+     "HUM",
+     "ICE",
+     "INTU",
+     "JCI",
+     "KEYS",
+     "KKR",
+     "KLAC",
+     "KMB",
+     "LITE",
+     "LRCX",
+     "MDT",
+     "MNST",
+     "MPC",
+     "MSTR",
+     "MU",
+     "NEM",
+     "NKE",
+     "NOW",
+     "ORCL",
+     "PAYX",
+     "PGR",
+     "PSKY",
+     "PYPL",
+     "ROST",
+     "RTX",
+     "SBAC",
+     "SMCI",
+     "SNDK",
+     "STT",
+     "STZ",
+     "SYK",
+     "TEL",
+     "TER",
+     "TPR",
+     "TRI",
+     "VICI",
+     "VLTO",
+     "VRSK",
+     "WDC",
+     "XOM"
+    ],
+    "names": {
+     "ABT": "ABBOTT LABORATORIES",
+     "ACN": "ACCENTURE PLC-CL A",
+     "AMAT": "APPLIED MATERIALS INC",
+     "APH": "AMPHENOL CORP-CL A",
+     "BDX": "BECTON DICKINSON AND CO",
+     "BKR": "BAKER HUGHES CO",
+     "BRO": "BROWN & BROWN INC",
+     "BSX": "BOSTON SCIENTIFIC CORP",
+     "BX": "BLACKSTONE INC",
+     "CARR": "CARRIER GLOBAL CORP",
+     "CASY": "Casey's General Stores Inc",
+     "CAT": "CATERPILLAR INC",
+     "CHTR": "CHARTER COMMUNICATIONS INC-A",
+     "CIEN": "CIENA CORP",
+     "CMG": "CHIPOTLE MEXICAN GRILL INC",
+     "CMI": "CUMMINS INC",
+     "COHR": "COHERENT CORP",
+     "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "CPRT": "COPART INC",
+     "CVNA": "CARVANA CO",
+     "CVS": "CVS HEALTH CORP",
+     "DIS": "WALT DISNEY CO/THE",
+     "DOW": "DOW INC",
+     "ECHO": "ECHOSTAR CORP-A",
+     "EME": "EMCOR GROUP INC",
+     "EOG": "EOG RESOURCES INC",
+     "FDX": "FEDEX CORP",
+     "FIS": "FIDELITY NATIONAL INFO SERV",
+     "FIX": "COMFORT SYSTEMS USA INC",
+     "GE": "GENERAL ELECTRIC",
+     "GIS": "GENERAL MILLS INC",
+     "GLW": "CORNING INC",
+     "HCA": "HCA HEALTHCARE INC",
+     "HPQ": "HP INC",
+     "HUM": "HUMANA INC",
+     "ICE": "INTERCONTINENTAL EXCHANGE IN",
+     "INTU": "INTUIT INC",
+     "JCI": "JOHNSON CONTROLS INTERNATION",
+     "KEYS": "KEYSIGHT TECHNOLOGIES IN",
+     "KKR": "KKR & CO INC",
+     "KLAC": "KLA CORP",
+     "KMB": "KIMBERLY-CLARK CORP",
+     "LITE": "LUMENTUM HOLDINGS INC",
+     "LRCX": "LAM RESEARCH CORP",
+     "MDT": "MEDTRONIC PLC",
+     "MNST": "MONSTER BEVERAGE CORP",
+     "MPC": "MARATHON PETROLEUM CORP",
+     "MSTR": "MICROSTRATEGY INC-CL A",
+     "MU": "MICRON TECHNOLOGY INC",
+     "NEM": "NEWMONT CORP",
+     "NKE": "NIKE INC -CL B",
+     "NOW": "SERVICENOW INC",
+     "ORCL": "ORACLE CORP",
+     "PAYX": "PAYCHEX INC",
+     "PGR": "PROGRESSIVE CORP",
+     "PSKY": "PARAMOUNT SKYDANCE CL B",
+     "PYPL": "PAYPAL HOLDINGS INC",
+     "ROST": "ROSS STORES INC",
+     "RTX": "RTX CORP",
+     "SBAC": "SBA COMMUNICATIONS CORP",
+     "SMCI": "SUPER MICRO COMPUTER INC",
+     "SNDK": "SANDISK CORP",
+     "STT": "STATE STREET CORP",
+     "STZ": "CONSTELLATION BRANDS INC-A",
+     "SYK": "STRYKER CORP",
+     "TEL": "TE CONNECTIVITY PLC",
+     "TER": "TERADYNE INC",
+     "TPR": "TAPESTRY INC",
+     "TRI": "THOMSON REUTERS CORP",
+     "VICI": "VICI PROPERTIES INC",
+     "VLTO": "VERALTO CORP",
+     "VRSK": "VERISK ANALYTICS INC",
+     "WDC": "WESTERN DIGITAL CORP",
+     "XOM": "EXXON MOBIL CORP"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "실적 발표 뒤 창이 열려 있는 74종목을 동일가중으로 보유 중이다. 종목마다 진입·청산일이 다르다(달력 리밸런스가 아니다)."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 타이밍 22종도 시점정확으로 잰다(2026-08-14부터). 그전에는 이 칸에 '지수·ETF 를 매매하므로 생존편향이 걸리는 자리가 아니다' 라고 적혀 있었는데 사실이 아니었다 — 타이밍이 매매하는 것은 동일가중 바스켓이고 그것은 실제 동일가중 S&P 500 보다 연 +6.58%p 앞선다. 신호 계산은 랩 본편과 같은 함수(timing_ctx·timing_weights)를 쓰고, 두 레그의 차이는 그 계열을 만든 유니버스뿐이다.",
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
     "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
    ]
@@ -54666,8 +55946,8 @@
  ],
  "n": {
   "asset": 60,
-  "tech": 111,
+  "tech": 115,
   "pit": 105,
-  "total": 171
+  "total": 175
  }
 }
