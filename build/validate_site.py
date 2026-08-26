@@ -2076,6 +2076,36 @@ except Exception as e:
 #   (target_history·fund_history)까지 함께 잃는다.
 try:
     _wf_dir = os.path.join(ROOT, ".github", "workflows")
+
+    # ①-w 🚨 2026-08-26 — **run 도 uses 도 없는 빈 step.** YAML 로는 멀쩡해서 파이썬
+    #   파서도 통과하는데 GitHub 의 워크플로 스키마는 그것을 못 읽는다. 그러면 파일
+    #   전체가 무효가 되어 **그 잡의 schedule 이 아예 발화하지 않는다.**
+    #   실측: refresh-rates.yml 에 «- name: Validate» 만 있고 run 이 없어 08-22~08-26
+    #   나흘간 금리·FedWatch 가 08-20 에 고착했다. 푸시마다 빨간불이 떴지만 문구가
+    #   «workflow file issue» 뿐이라 자료 고착과 연결되지 않았고, 잡 로그도 비어 있었다.
+    #   ⚠ 사람이 눈으로 못 잡는다 — 정상 step 과 한 글자 차이(다음 줄이 run 이냐 주석이냐)다.
+    try:
+        import yaml as _yaml
+        for _fn in sorted(os.listdir(_wf_dir)):
+            if not _fn.endswith((".yml", ".yaml")): continue
+            try:
+                _wd = _yaml.safe_load(io.open(os.path.join(_wf_dir, _fn), encoding="utf-8"))
+            except Exception as _ye:
+                errors.append(".github/workflows/%s: YAML 파싱 실패 — %s" % (_fn, _ye))
+                continue
+            for _jn, _j in ((_wd or {}).get("jobs") or {}).items():
+                for _i, _st in enumerate(_j.get("steps") or []):
+                    if not isinstance(_st, dict) or not (_st.get("run") or _st.get("uses")):
+                        errors.append(
+                            ".github/workflows/%s: %s 의 %d번째 step «%s» 에 run 도 uses 도 "
+                            "없다 — GitHub 이 파일을 못 읽어 이 잡의 schedule 이 통째로 "
+                            "안 돈다(자료가 조용히 고착한다)"
+                            % (_fn, _jn, _i + 1,
+                               (_st or {}).get("name") if isinstance(_st, dict) else _st))
+    except ImportError:
+        # ⚠ 통과시키지 않는다. yaml 이 없으면 이 검사는 «안 돈 것» 이고, 그것을 적는다.
+        errors.append("PyYAML 이 없어 워크플로 step 검사를 못 했다 — pip install pyyaml")
+
     _staged = {}
     for _fn in sorted(os.listdir(_wf_dir)):
         if not _fn.endswith(".yml"): continue

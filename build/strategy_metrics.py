@@ -676,7 +676,18 @@ def main():
     # '변경 없음 — 스킵' 분기가 영영 도달 불가해지고 무의미한 커밋이 매주 쌓인다.
     _body = json.dumps({k: v for k, v in bt.items() if k != "generated"},
                        ensure_ascii=False, sort_keys=True)
-    bt["generated"] = _prev_gen if (_body == _prev_body and _prev_gen) else dt.date.today().isoformat()
+    # 🚨 2026-08-26 — **원장이 비면 이 규칙이 게이트를 죽인다.**
+    #   배포 원장의 strategies 가 0종이 되면(사내 DB 파생 5종 삭제 · 수동 반출 곡선 폐지)
+    #   본문이 영영 안 바뀐다 → generated 가 한 날에 고착 → refresh-metrics 의 신선도
+    #   검사가 **매 실행 실패**한다. 실제로 2026-08-14 에 멈춰 08-26 에 8영업일을 넘겼다.
+    #   ⚠ 검사를 건너뛰게 고치지 않는다 — 그러면 원장이 다시 찼을 때도 안 보게 되고,
+    #     그것이 이 저장소가 되풀이 밟은 «공허 통과» 다.
+    #   → 잴 내용이 아예 없을 때만 **실행 날짜**로 찍는다. 그때는 그것이 이 파일이 말할 수
+    #     있는 유일한 사실이다(«오늘 돌렸고 원장은 비어 있다»). 원장이 차면 아래 조건이
+    #     거짓이 되어 종전 규칙(내용이 같으면 날짜를 안 덮는다)으로 그대로 돌아간다.
+    _empty = not (bt.get("strategies") or {})
+    bt["generated"] = (_prev_gen if (_body == _prev_body and _prev_gen and not _empty)
+                       else dt.date.today().isoformat())
 
     # ── 기각 아카이브 재검 부기 — 같은 엔진·같은 rf·같은 규약으로 계산 ──────────
     #    전건 '기각 유지'다. 전략으로 게시하는 것이 아니라 기각 사유의 근거로 붙는다.
