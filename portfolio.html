@@ -143,8 +143,14 @@
    오른쪽 전략 표(7열)는 1.1:1 에서 가로 스크롤 없이 들어간다. */
 .fsplit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;align-items:start}
 .fcol{min-width:0}
-.fcolL{padding-right:12px}
-.fcolR{padding-left:12px;border-left:3px solid var(--line)}
+/* 2026-08-26 사용자 지시 — 열 사이에서 마지막으로 짜낸다: 12+3+12=27px → 6+1+6=13px.
+   ⚠ 선을 없애지는 않는다. 두 열이 붙으면 오른쪽 표의 첫 열이 왼쪽 표의 마지막 열처럼
+     읽힌다 — 숫자 표 둘이 나란한 화면에서 그 착각이 가장 비싸다.
+   ⚠ 3px → 1px 이라 선이 옅어진다. 그래서 색을 --line-soft 가 아니라 --line 그대로 두고,
+     양쪽 6px 여백으로 «선 + 빈 곳» 이 한 덩이로 보이게 한다. 여백을 0 으로 두면 1px 선이
+     표 테두리와 붙어 «표의 한 줄» 로 보인다. */
+.fcolL{padding-right:6px}
+.fcolR{padding-left:6px;border-left:1px solid var(--line)}
 /* 각 열의 첫 h3 는 위 여백을 줄인다 — 두 열이 나란히 시작하는데 한쪽만 밀리면 어긋나 보인다 */
 .fcol>h3:first-child{margin-top:0;padding-top:0;border-top:0}
 @media(max-width:1280px){
