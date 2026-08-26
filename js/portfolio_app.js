@@ -81,6 +81,20 @@
   function uid() { return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   // 편집 하나를 «미저장» 으로 등록한다. 화면 갱신까지 여기서 한 번에 — 호출부가
   // S.dirty 를 손으로 세우고 renderSync 를 빼먹는 사고를 없앤다.
+  /* 원장 봉투 → 메모리 문서. **두 경로(첫 로드 · 옛 암호 복구)가 같은 함수를 쓴다** —
+     사본을 두면 한쪽만 고쳐진다(이 저장소가 되풀이 밟은 자리다).
+     ⚠ 2026-08-26 — 옛 이전 메모('DB 원장에서 이전')를 여기서 걷는다. 전 건에 같은 글이
+       붙어 아무것도 안 가르는데 원장 표에서 줄마다 한 줄씩 더 차지했다(사용자 지시).
+       ⚠ dirty 로 표시하지 않는다. 화면에서는 곧바로 사라지고, 저장된 값은 다음에 무언가를
+         저장할 때 같이 정리된다 — 화면 정리 때문에 사용자가 안 누른 저장이 일어나면 안 된다. */
+  var LEGACY_NOTE = 'DB 원장에서 이전';
+  function adoptDoc(doc) {
+    var trades = (doc.trades || []).map(function (t) {
+      return (t.note === LEGACY_NOTE) ? Object.assign({}, t, { note: '' }) : t;
+    });
+    return { v: 1, strategies: doc.strategies || {}, trades: trades, migrated: !!doc.migrated };
+  }
+
   function mark(desc, slug) {
     S.pending.push(desc);
     S.dirty = true;
@@ -454,7 +468,7 @@
     S.base.updated = env.updated || null;
     try {
       var doc = await decDoc(env);
-      S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], migrated: !!doc.migrated };
+      S.doc = adoptDoc(doc);
     } catch (e) {
       // 페이지 재잠금 암호가 바뀐 경우 — 봉투는 옛 암호다. 화면에서 옛 암호를 따로 받는다.
       S.loadErr = 'PWMISMATCH';
@@ -586,7 +600,7 @@
         var f = await ghGetFile();
         var env = JSON.parse(new TextDecoder().decode(b64d(f.content)));
         var doc = await decDoc(env, km);
-        S.doc = { v: 1, strategies: doc.strategies || {}, trades: doc.trades || [], migrated: !!doc.migrated };
+        S.doc = adoptDoc(doc);
         S.base = { sha: f.sha, updated: env.updated || null };
         S.loadErr = null;
         S.dirty = true;                             // 현재 암호로 재저장 유도
@@ -823,8 +837,11 @@
       PF.mp.forEach(function (t) {
         var sg = byIdx[t.idx];
         if (!sg) return;
+        // ⚠ 2026-08-26 사용자 «DB 원장에서 이전 글 써있는거 다 없애줘» — 옮겼다는 표시를
+        //   매매마다 메모로 달지 않는다. 어차피 전 건에 같은 글이 붙어 아무것도 안 가르고,
+        //   원장 표에서 줄마다 한 줄씩 더 차지했다. «옮겼나» 는 S.doc.migrated 가 갖는다.
         S.doc.trades.push({ id: uid(), fund: sg, dt: t.dt, s: t.s, t: t.t, q: t.q, p: t.p,
-                            note: 'DB 원장에서 이전' });
+                            note: '' });
         add++;
       });
       S.doc.migrated = true;
