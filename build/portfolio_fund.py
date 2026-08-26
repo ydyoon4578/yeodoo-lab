@@ -3,7 +3,8 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
 
 무엇을 만드나. 실펀드 2종(2Z30=나스닥100 · 2A81=S&P500)의
   ① 펀드 개요 — NAV·기준가, 연초 후 기준가 vs 지수(원화환산), 자산 구성
-  ② 보유 vs 지수 — 종목별 지수비중/펀드비중/액티브 틸트, 패시브 대비 수량 괴리
+  ② 포트폴리오 — 종목별 지수비중/펀드비중/액티브 틸트, 패시브 대비 수량 괴리
+      (2026-08-26 사용자 지시로 «보유 vs 지수» → «포트폴리오» 로 개칭)
   ③ 전략 매매 내역 — 웹 원장(+이전 전이면 DB 씨앗) + 현재가 평가
   ④ 전략 성과·기여 — 매매 시점 일치 BM 대비 초과손익과 NAV 기여(bp)
 를 렌더 완료된 HTML 조각으로 _build/pages/portfolio_content.html 에 쓴다.
@@ -702,7 +703,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     H.append('<tr><td><b>총 지수 노출</b></td><td class="tnum"><b>%s</b></td></tr>' % pct(w_stk + w_etf + w_fut, 1))
     H.append("</tbody></table>")
 
-    # ② 보유 vs 지수
+    # ② 포트폴리오(옛 «보유 vs 지수»)
     held = {}
     for r in stocks:
         h = held.setdefault(r["ticker"], {"qty": 0.0, "val": 0.0, "px": r["px"], "name": r["name"]})
@@ -741,7 +742,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                       key=lambda x: -x[1])
     off_idx = [r for r in tbl if r["t"] not in cmap]     # 보유 중인데 지수에 없는 것
 
-    H.append('<h3>② 보유 vs 지수 <span class="hnote">주식 슬리브 %d종 · 지수 %d종%s</span></h3>'
+    H.append('<h3>② 포트폴리오 <span class="hnote">주식 슬리브 %d종 · 지수 %d종%s</span></h3>'
              % (len(held), len(cmap),
                 (' · <b>지수 밖 보유 %d종</b>' % len(off_idx)) if off_idx else ''))
     H.append('<div class="filterbar"><input type="search" class="rowfilter" data-target="tb-%s" '
@@ -752,7 +753,66 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              '<th class="tnum">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
              '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
-             '</tr></thead><tbody>' % slug)
+             '</tr>' % slug)
+
+    # 🚨 2026-08-26 사용자 지시 — «맨 위 열에는 합계를 적어줘. 비중 열에만. 패시브 열 비중
+    #   합계를 더하고 지수비중과 비교해서 패시브 열 따로 차이 보여줘. 전략열도 마찬가지».
+    #   왜 필요한가(사용자 말): «전략을 제외한 패시브는 지수 비중에 최대한 맞추고, 전략은
+    #   지수 대비 오버/언더인지 깔끔하게 보고싶음». 종목 500줄을 눈으로 더할 수는 없다.
+    #
+    # ⚠ **두 «차이» 는 서로 다른 것을 잰다.** 이걸 안 적으면 같은 낱말이 두 뜻으로 읽힌다:
+    #     · 패시브 차이 = Σ패시브 − Σ지수(표 전체). «복제가 지수를 얼마나 못 따라가나».
+    #     · 전략 차이   = Σ(펀드 − 지수) **전략 보유 종목만**. «전략 때문에 그 종목에서
+    #                     지수보다 더 들고 있나/덜 들고 있나» = 차이(%p) 열의 부분합.
+    #   🚨 전략 «합계» 를 그 종목들의 지수비중과 직접 빼지 않는다. 전략은 패시브 **위에
+    #     얹는 틸트**라 그 뺄셈은 뜻이 없다 — 실측으로 «전략 2.50% vs 지수 17.00% =
+    #     −14.50%p» 같은 수가 나오는데, 패시브가 이미 그 17%를 들고 있으므로 «14.5%p
+    #     언더웨이트» 가 전혀 아니다. 알고 싶은 것은 펀드 전체가 지수 대비 어디에 있느냐다.
+    #   그래서 밑동을 칸 안에 작은 글씨로 같이 적는다.
+    # ⚠ 합계 행은 <thead> 안에 th 로 넣는다 — 그래야 sticky 규칙(.tall thead th)이 걸려
+    #   500줄을 내려가도 합계가 화면에 남는다. tbody 로 넣으면 스크롤과 함께 사라진다.
+    # ⚠ 수량 열에는 아무것도 안 적는다(사용자 «비중 열에만»). 수량 합계는 단위가 섞인
+    #   숫자라 더해도 뜻이 없다 — 1주가 470달러인 종목과 180달러인 종목이 같이 세어진다.
+    _swi = sum(r["wi"] for r in tbl)
+    _swf = sum(r["wf"] for r in tbl)
+    _swp = sum(r["wp"] for r in tbl)
+    _sws = sum(r["ws"] for r in tbl)
+    _srows = [r for r in tbl if abs(r["ws"]) > 1e-12]      # 전략이 실제로 들고 있는 종목
+    _swi_s = sum(r["wi"] for r in _srows)
+    _swf_s = sum(r["wf"] for r in _srows)
+    _wi_out = sum(w for _t, w, _n in only_idx)             # 지수에 있는데 안 든 몫
+    _dp = (_swp - _swi) * 100                              # 패시브 − 지수(전체)
+    _ds = (_swf_s - _swi_s) * 100                          # 펀드 − 지수(전략 보유 종목만)
+
+    def _tot(v, diff=None, base=None, tip=None):
+        """합계 칸 — 값 + (차이) + (그 차이가 무엇의 차이인지). diff 가 None 이면 값만."""
+        cell = '<b>%s</b>' % pct(v, 2)
+        if diff is not None:
+            cell += ('<span class="totd %s">%+.2f%%p</span>'
+                     % ("pos" if diff > 0 else ("neg" if diff < 0 else ""), diff))
+        if base:
+            cell += '<span class="totb">%s</span>' % base
+        return '<th class="tnum"%s>%s</th>' % ((' title="%s"' % tip) if tip else '', cell)
+
+    H.append('<tr class="totrow">'
+             '<th>합계</th><th></th><th></th>'
+             # ⚠ 지수비중 합계는 100%가 아니다 — 이 표는 **보유 종목만** 담는다.
+             #   모자란 몫이 곧 «지수에 있는데 안 든 것» 이라, 그 사실을 칸에 적는다.
+             #   안 적으면 «지수 합이 왜 98%지» 가 매번 다시 물어진다.
+             + _tot(_swi, base=("미보유 %d종 %s" % (len(only_idx), pct(_wi_out, 2))
+                                if only_idx else None),
+                    tip="이 표는 보유 종목만 담는다. 나머지 %s 는 지수에 있는데 안 든 %d종이다."
+                        % (pct(_wi_out, 2), len(only_idx)))
+             + _tot(_swf)                                   # 펀드비중
+             + _tot(_swp, _dp, "지수 %s 대비" % pct(_swi, 2),
+                    "패시브 합계 − 지수 합계. 0 에 가까울수록 복제가 지수를 잘 따라간다.")
+             + _tot(_sws, _ds, "그 %d종 지수 대비" % len(_srows),
+                    "전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s. "
+                    "전략 합계에서 지수를 직접 빼지 않는다 — 전략은 패시브 위에 얹는 틸트다."
+                    % (len(_srows), pct(_swf_s, 2), pct(_swi_s, 2)))
+             + '<th class="tnum"><b>%+.2f</b></th>' % ((_swf - _swi) * 100)
+             + '<th></th><th></th><th></th><th></th><th></th>'
+             '</tr></thead><tbody>')
     for r in tbl:
         # 지수 밖 보유 — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는 «아주 작다» 와
         # «지수에 없다» 가 안 갈린다. 배지로 말한다.
@@ -896,15 +956,15 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                  cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
                  held={t: round(h["qty"], 2) for t, h in held.items()})
     # ── 배치 재정렬 (2026-08-20 사용자 지시) ─────────────────────────────────
-    # «차트가 위쪽에 배치되게 하고 보유 vs 지수 이런 큰 테이블은 아래쪽에.»
+    # «차트가 위쪽에 배치되게 하고 포트폴리오 이런 큰 테이블은 아래쪽에.»
     # 위 코드는 계산 의존 순서(개요 수치 → 표)대로 쌓는다 — 그 순서는 유지하고,
-    # **표시 순서만** 여기서 바꾼다: 차트 → ①개요 → 매매 → 성과 → 보유 vs 지수.
+    # **표시 순서만** 여기서 바꾼다: 차트 → ①개요 → 매매 → 성과 → 포트폴리오.
     # 조립 코드를 통째로 재배열하지 않는 이유: 수치 계산이 문서 순서에 끼어 있어
     # 옮기다 참조가 깨진다(fund_pts 를 카드가 먼저 쓴다). 문자열 재배열이 안전하다.
     pane = "\n".join(H)
     import re as _re
     _h1 = pane.index('<h3>① 펀드 개요')
-    _h2 = pane.index('<h3>② 보유 vs 지수')
+    _h2 = pane.index('<h3>② 포트폴리오')
     _h3 = pane.index('<h3>③ 매매 원장')
     _h4 = pane.index('<h3>④ 전략 성과·기여')
     _tail = pane.rindex('</section>')
@@ -915,10 +975,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     chart, sec1 = _m.group(0), sec1[:_m.start()] + sec1[_m.end():]
     # 번호는 표시 순서를 따른다 — 안 바꾸면 ①③④② 로 읽혀 빠진 줄이 있는 줄 안다
     # 2026-08-21 사용자 지시 «매매원장을 가장 아래로» — 표시 순서:
-    #   차트 → ① 개요 → ② 성과·기여 → ③ 보유 vs 지수 → ④ 매매 원장
+    #   차트 → ① 개요 → ② 성과·기여 → ③ 포트폴리오 → ④ 매매 원장
     # ⚠ 정적 스냅샷(<details>)은 성과 절 끝에 붙어 있어 함께 따라간다 — 그게 맞다.
     sec_perf = sec_perf.replace('<h3>④ 전략 성과·기여', '<h3>② 전략 성과·기여', 1)
-    sec2 = sec2.replace('<h3>② 보유 vs 지수', '<h3>③ 보유 vs 지수', 1)
+    sec2 = sec2.replace('<h3>② 포트폴리오', '<h3>③ 포트폴리오', 1)
     sec_led = sec_led.replace('<h3>③ 매매 원장', '<h3>④ 매매 원장', 1)
     pane = head + chart + sec1 + sec_perf + sec2 + sec_led + pane[_tail:]
     return pane, dict(fund=fund, asof=asof, nav_d=nav_d, sleeve_ratio=w_stk,
