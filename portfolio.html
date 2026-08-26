@@ -563,14 +563,39 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .totrow td{border-top:2px solid var(--line)}
   .tradeform,.btform{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 12px;
     padding:9px 11px;border:1px dashed var(--line);border-radius:8px;font-size:11.5px}
-  .tradeform input,.tradeform select,.btform input,.btform select,.smeta input,.smeta select{
+  .tradeform input,.tradeform select,.tradeform textarea,.btform input,.btform select{
     font-size:11.5px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;
-    background:transparent;color:var(--ink)}
-  .tradeform input[name=q],.tradeform input[name=p]{width:110px}
-  .tradeform input[name=note]{width:150px}
-  .tradeform input[name=s]{width:120px}
-  .tradeform input[name=t]{width:130px;font-family:var(--mono)}
-  .smeta input.smemo{width:min(320px,60vw)}
+    background:transparent;color:var(--ink);font-family:inherit}
+  .btform input,.btform select{width:auto}
+  /* ── 일괄 입력 폼 (2026-08-26) ───────────────────────────────────────────
+     🚨 종전에는 입력 여덟 칸이 한 줄에 흘러넘쳐 어느 칸이 무엇인지 placeholder 로만
+       알 수 있었다(«가독성이 너무 떨어져»). 칸마다 이름표를 세로로 붙이고 줄을 나눈다. */
+  .tradeform.batch{display:block}
+  .tradeform.batch .tfrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:9px}
+  .tradeform.batch label{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:10.5px}
+  .tradeform.batch label>input,.tradeform.batch label>select,.tradeform.batch label>textarea{
+    color:var(--ink);font-size:12px}
+  .tradeform.batch .tfmain{align-items:stretch}
+  .tradeform.batch .tfgrow{flex:1 1 260px}
+  .tradeform.batch .tfgrow textarea{width:100%;min-height:76px;resize:vertical;
+    font-family:var(--mono);line-height:1.5}
+  .tradeform.batch .tfside{flex:0 1 210px;display:flex;flex-direction:column;gap:7px;justify-content:flex-start}
+  .tradeform.batch .tfside .pnote{margin:0;font-size:10.5px;line-height:1.5}
+  .tradeform.batch input[name=s]{width:150px}
+  .tradeform.batch input[name=p],.tradeform.batch input[name=q],.tradeform.batch input[name=amt]{width:100%}
+  .tradeform.batch .tfrow>label:not(.tfgrow)>input[name=p]{width:150px}
+  /* 미리보기 — 반영 전에 «무엇이 들어가나» 를 그대로 보여 준다 */
+  .tfprev:empty{display:none}
+  .tfprev{margin:0 0 9px}
+  .prevtbl tfoot td{border-top:1px solid var(--line);padding-top:5px}
+  .prevtbl tr.badrow td{opacity:.55}
+  .prevwhy{font-size:10.5px;color:var(--marg)}
+  .tradeform.batch button[disabled]{opacity:.45;cursor:not-allowed}
+  /* 전략 상태 단추 — 성과 표 안(보는 자리에서 바꾼다) */
+  .sstat{font-family:var(--mono);font-size:10px;padding:1px 6px;margin-left:6px;
+    border:1px solid var(--line);border-radius:9px;background:transparent;
+    color:var(--deploy);cursor:pointer}
+  .sstat.off{color:var(--muted)}
   .appbox{min-height:24px}
   .jswait{color:var(--muted);font-size:11px}
   .dbstatic{margin:14px 0 4px;opacity:.85}

@@ -715,24 +715,51 @@
         '<span class="pnote">두 펀드 전체가 한 번에 옮겨집니다. 옮긴 뒤 «GitHub에 저장»을 눌러야 확정됩니다.</span></div>');
     }
 
-    // 입력 폼
-    h.push('<form class="tradeform" id="tf-' + slug + '" autocomplete="off">');
-    h.push('<b>+ 매매 입력</b> ');
-    h.push('<input type="date" name="dt" value="' + esc(today()) + '" required>');
-    h.push('<input name="s" list="dl-s-' + slug + '" placeholder="전략" required>');
-    h.push('<datalist id="dl-s-' + slug + '">' + strategyNames(slug).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>');
-    h.push('<input name="t" list="dl-t-' + slug + '" placeholder="티커 (예: NVDA US)" required>');
+    /* ── 일괄 입력 폼 (2026-08-26) ────────────────────────────────────────
+       🚨 사용자 «하나의 전략을 추가하면서 다수 종목을 넣기 편하게. 빼는 것도 마찬가지.
+         날짜 하나 전략 하나 종목 다수 하고 편입 편출 하면 딱딱 반영되게».
+       종전에는 한 줄에 한 종목이었다 — 10종목 바스켓이면 같은 날짜·전략을 열 번 다시 쳤다.
+       ⚠ «편입/편출» 을 고르게 하고 부호는 기계가 붙인다. 종전에는 매도를 «수량에 −» 로
+         쳐야 했는데, 그건 사람이 틀리는 자리다(한 번 빠뜨리면 매도가 매수로 들어간다).
+       ⚠ 편출은 수량을 비우면 **그 전략이 들고 있는 전량**이다 — «빼는 것도 마찬가지로
+         편하게» 의 핵심이다. 순보유가 0 이면 미리보기가 막는다.
+       ⚠ 티커에 공백이 들어간다(«NVDA US»). 그래서 «티커 수량» 을 **뒤에서** 가른다 —
+         마지막 토막이 숫자면 그것이 수량이고 앞이 통째로 티커다. 앞에서 자르면
+         «NVDA US 100» 이 티커 «NVDA» 로 잘린다. */
+    var _held = {};                       // 전략|티커 → 순보유 수량(편출 전량 계산용)
+    trs.forEach(function (t) { var k = t.s + '\u0000' + t.t; _held[k] = (_held[k] || 0) + t.q; });
+
+    h.push('<form class="tradeform batch" id="tf-' + slug + '" autocomplete="off">');
+    h.push('<div class="tfrow">' +
+      '<label>날짜<input type="date" name="dt" value="' + esc(today()) + '" required></label>' +
+      '<label>전략<input name="s" list="dl-s-' + slug + '" placeholder="전략 이름" required></label>' +
+      '<label>구분<select name="dir"><option value="in">편입(매수)</option>' +
+      '<option value="out">편출(매도)</option></select></label>' +
+      '<label>가격<input name="p" type="number" step="any" placeholder="비우면 그날 종가"></label>' +
+      '</div>');
+    h.push('<datalist id="dl-s-' + slug + '">' + strategyNames(slug).map(function (n) {
+      return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>');
+    h.push('<div class="tfrow tfmain">' +
+      '<label class="tfgrow">종목<textarea name="tks" rows="4" required ' +
+      'placeholder="한 줄에 하나 (쉼표도 됩니다)&#10;NVDA US 100&#10;AAPL US 50&#10;— 수량을 안 적으면 오른쪽 값을 씁니다"></textarea></label>' +
+      '<div class="tfside">' +
+      // ⚠ 티커 자동완성을 여기서 살린다. textarea 에는 datalist 를 못 붙이는데, 종목을
+      //   여러 개 칠수록 오히려 더 필요한 자리다 — 골라서 위 칸에 **덧붙이는** 입구를 둔다.
+      '<label>구성종목에서 찾기<input name="pick" list="dl-t-' + slug + '" ' +
+      'placeholder="치고 Enter — 위에 줄로 붙습니다"></label>' +
+      '<label>수량(공통)<input name="q" type="number" step="any" placeholder="종목마다 같은 수량"></label>' +
+      '<label>또는 종목당 금액<input name="amt" type="number" step="any" placeholder="USD — 종가로 나눔"></label>' +
+      '<p class="pnote">편출은 <b>비우면 전량</b>입니다.<br>금액은 정수 주식으로 <b>내림</b>합니다.</p>' +
+      '</div></div>');
     h.push('<datalist id="dl-t-' + slug + '">' + Object.keys(F.cons).sort().map(function (t) {
       return '<option value="' + esc(t) + '">' + esc(F.cons[t][1]) + '</option>';
     }).join('') + '</datalist>');
-    h.push('<input name="q" type="number" step="any" placeholder="수량(매도는 −)" required>');
-    h.push('<input name="p" type="number" step="any" placeholder="가격(비우면 그날 종가)">');
-    h.push('<input name="note" placeholder="메모(선택)">');
+    h.push('<div class="tfprev" id="tfprev-' + slug + '"></div>');
     h.push('<input type="hidden" name="editid">');
-    h.push('<button class="sb primary" type="submit">추가</button>');
-    // 수정 모드일 때만 보인다 — 폼을 비우고 «추가» 로 돌아간다(원장은 안 건드린다).
-    h.push('<button class="sb" type="button" id="tfcancel-' + slug + '" hidden>수정 취소</button>');
-    h.push('<span class="perr" id="tferr-' + slug + '"></span>');
+    h.push('<div class="tfrow">' +
+      '<button class="sb primary" type="submit" id="tfgo-' + slug + '">반영</button>' +
+      '<button class="sb" type="button" id="tfcancel-' + slug + '" hidden>수정 취소</button>' +
+      '<span class="perr" id="tferr-' + slug + '"></span></div>');
     h.push('</form>');
 
     if (trs.length) {
@@ -775,21 +802,15 @@
       });
     } else h.push('<p>매매가 없다 — 아래에서 첫 매매를 입력하세요.</p>');
 
-    // 전략 메모/상태
-    var names = strategyNames(slug);
-    if (names.length) {
-      h.push('<details class="smeta"><summary>전략 메모·상태 (' + names.length + ')</summary><table class="mini"><tbody>');
-      names.forEach(function (n) {
-        var m = S.doc.strategies[n] || {};
-        h.push('<tr><td class="tk">' + esc(n) + '</td>' +
-          '<td><input class="smemo" data-s="' + esc(n) + '" value="' + esc(m.memo || '') + '" placeholder="메모"></td>' +
-          '<td><select class="sstat" data-s="' + esc(n) + '">' +
-          '<option value="active"' + (m.status !== 'closed' ? ' selected' : '') + '>운용중</option>' +
-          '<option value="closed"' + (m.status === 'closed' ? ' selected' : '') + '>종료</option>' +
-          '</select></td></tr>');
-      });
-      h.push('</tbody></table></details>');
-    }
+    /* 🚨 2026-08-26 사용자 «전략 메모 상태 이런 불필요한 부분은 줄이고» —
+         이 자리에 있던 «전략 메모·상태» 접이를 걷었다.
+       · **메모**: 넣는 칸만 있고 **어디에도 안 나온다**(적어 보고 확인함 — 화면·표·성과
+         어디서도 안 읽는다). 쓰는 곳 없는 입력은 칸만 먹고 «어딘가 쓰이겠지» 로 읽힌다.
+         ⚠ 저장된 값은 **안 지운다.** S.doc.strategies[*].memo 는 그대로 두고 입구만 없앤다
+           — 기록을 지우지 않는 것이 이 랩의 규약이고, 되살리려면 이 칸만 다시 그리면 된다.
+       · **상태**: 쓰인다(성과 표의 «종료» 배지·흐린 줄). 그래서 없애지 않고 **쓰이는
+         자리로 옮겼다** — 성과 표의 전략 이름 옆 작은 단추. 상태를 보는 곳과 바꾸는 곳이
+         같아야 «지금 무엇이 종료인지» 를 두 군데서 안 찾는다. */
     box.innerHTML = h.join('');
 
     // 배선
@@ -814,40 +835,95 @@
     var _cx = el('tfcancel-' + slug);
     if (_cx) _cx.addEventListener('click', function () {
       form.reset(); form.dt.value = today(); form.editid.value = '';
-      form.querySelector('button[type=submit]').textContent = '추가';
       el('tferr-' + slug).textContent = '';
       _cx.hidden = true;
+      refresh();                       // 단추 글자·미리보기를 한 곳에서 되돌린다
     });
+    /* ── 미리보기 · 반영 (2026-08-26) ─────────────────────────────────────
+       ⚠ 미리보기와 반영이 **같은 buildBatch 를 부른다.** 두 벌로 두면 «본 것과 다른 것이
+         들어가는» 사고가 난다 — 이 저장소가 되풀이 밟은 종류다. */
+    var prev = el('tfprev-' + slug), goBtn = el('tfgo-' + slug);
+    function refresh() {
+      var B = buildBatch(form, slug, _held);
+      var editing = !!form.editid.value;
+      if (!B.rows.length) {
+        prev.innerHTML = '';
+        goBtn.textContent = editing ? '수정 반영' : '반영';
+        goBtn.disabled = true;
+        return B;
+      }
+      var warnP = (!B.pFix && false);
+      var ph = ['<div class="tblwrap"><table class="mini prevtbl"><thead><tr><th>티커</th>' +
+        '<th class="tnum">수량</th><th class="tnum">가격</th><th class="tnum">금액(USD)</th>' +
+        '<th>비고</th></tr></thead><tbody>'];
+      var tot = 0;
+      B.rows.forEach(function (r) {
+        if (r.ok) tot += r.q * r.p;
+        ph.push('<tr class="' + (r.ok ? '' : 'badrow') + '"><td class="tk">' + esc(r.t) + '</td>' +
+          '<td class="tnum ' + (r.q < 0 ? 'neg' : '') + '">' + (r.q != null ? num(r.q, 0) : '—') + '</td>' +
+          '<td class="tnum">' + (r.p != null ? num(r.p) : '—') + '</td>' +
+          '<td class="tnum">' + (r.ok ? num(r.q * r.p, 0) : '—') + '</td>' +
+          '<td class="prevwhy">' + esc(r.why) + '</td></tr>');
+      });
+      ph.push('</tbody><tfoot><tr><td><b>' + B.rows.length + '종</b></td><td class="tnum"></td>' +
+        '<td class="tnum"></td><td class="tnum"><b>' + num(tot, 0) + '</b></td>' +
+        '<td>' + (B.n === B.rows.length ? '' : '<span class="perr">' +
+          (B.rows.length - B.n) + '종은 반영되지 않습니다</span>') + '</td></tr></tfoot></table></div>');
+      if (B.pFix != null && B.rows.length > 1)
+        ph.push('<p class="warn">⚠ 가격을 직접 넣으면 <b>모든 종목에 같은 값</b>이 들어갑니다 — ' +
+                '여러 종목이면 비워 두고 그날 종가를 쓰세요.</p>');
+      prev.innerHTML = ph.join('');
+      goBtn.textContent = editing ? '수정 반영' : (B.n ? B.n + '건 반영' : '반영');
+      goBtn.disabled = !B.n;
+      return B;
+    }
+    ['input', 'change'].forEach(function (ev) { form.addEventListener(ev, refresh); });
+    // 「구성종목에서 찾기」 — 고른 것을 종목 칸에 줄로 덧붙인다.
+    // ⚠ Enter 를 가로챈다. 폼 안의 input 에서 Enter 는 제출이라, 안 막으면 종목 하나를
+    //   고를 때마다 원장에 들어간다.
+    var pick = form.pick;
+    function addPick() {
+      var v = String(pick.value || '').trim().toUpperCase();
+      if (!v) return;
+      var cur = form.tks.value.replace(/\s+$/, '');
+      form.tks.value = (cur ? cur + '\n' : '') + v;
+      pick.value = '';
+      refresh();
+    }
+    if (pick) {
+      pick.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); addPick(); }
+      });
+      // 목록에서 마우스로 고르면 keydown 이 안 온다 — change 로도 받는다.
+      pick.addEventListener('change', function () { if (pick.value) addPick(); });
+    }
+    refresh();
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var fd = new FormData(form);
       var errEl = el('tferr-' + slug);
       errEl.textContent = '';
-      var t = String(fd.get('t')).trim().toUpperCase();
-      var dt0 = String(fd.get('dt'));
-      var q = parseFloat(fd.get('q'));
-      var p = fd.get('p') ? parseFloat(fd.get('p')) : null;
-      if (!q) { errEl.textContent = '수량이 0 입니다.'; return; }
-      if (p == null) {
-        var i = dLe(dt0);
-        p = i >= 0 ? pxAt(t, i) : null;
-        if (p == null) { errEl.textContent = '그 날짜의 종가가 패널에 없습니다 — 가격을 직접 넣으세요.'; return; }
-        p = Math.round(p * 100) / 100;
-      }
-      if (!(p > 0)) { errEl.textContent = '가격이 유효하지 않습니다.'; return; }
-      if (TKI[t] == null) errEl.textContent = '⚠ 패널에 없는 티커 — 등록은 되지만 평가·성과에 가격이 없습니다.';
-      var editId = String(fd.get('editid') || '');
+      var B = buildBatch(form, slug, _held);
+      if (!B.s) { errEl.textContent = '전략 이름이 비었습니다.'; return; }
+      var ok = B.rows.filter(function (r) { return r.ok; });
+      if (!ok.length) { errEl.textContent = '반영할 종목이 없습니다 — 위 비고를 확인하세요.'; return; }
+      var editId = String(form.editid.value || '');
       if (editId) {
+        // ⚠ 수정은 한 줄짜리다. 여러 줄을 친 채 «수정 반영» 을 누르면 첫 줄만 반영되고
+        //   나머지가 조용히 사라진다 — 그래서 막고 말한다.
+        if (ok.length > 1) { errEl.textContent = '수정은 한 종목만 됩니다 — 종목 칸을 한 줄로 줄이세요.'; return; }
         var tr = S.doc.trades.find(function (x) { return x.id === editId; });
-        if (tr) { tr.dt = dt0; tr.s = String(fd.get('s')).trim(); tr.t = t; tr.q = q; tr.p = p; tr.note = String(fd.get('note') || '').trim(); }
-      } else {
-        S.doc.trades.push({ id: uid(), fund: slug, dt: dt0, s: String(fd.get('s')).trim(),
-                            t: t, q: q, p: p, note: String(fd.get('note') || '').trim() });
+        if (tr) { tr.dt = B.dt; tr.s = B.s; tr.t = ok[0].t; tr.q = ok[0].q; tr.p = ok[0].p; }
+        mark('매매 수정 — ' + B.dt + ' ' + ok[0].t + ' ' + num(ok[0].q, 0) + '주 @' + num(ok[0].p), slug);
+        return;
       }
-      mark((editId ? '매매 수정' : '매매 추가') + ' — ' + dt0 + ' ' + t + ' ' + q + '주 @' + p, slug);
-      form.reset(); form.dt.value = today(); form.editid.value = '';
-      form.querySelector('button[type=submit]').textContent = '추가';
-      var _c0 = el('tfcancel-' + slug); if (_c0) _c0.hidden = true;
+      ok.forEach(function (r) {
+        S.doc.trades.push({ id: uid(), fund: slug, dt: B.dt, s: B.s,
+                            t: r.t, q: r.q, p: r.p, note: '' });
+      });
+      mark((B.out ? '편출' : '편입') + ' ' + ok.length + '종 — ' + B.dt + ' 「' + B.s + '」 ' +
+           ok.slice(0, 4).map(function (r) { return r.t; }).join(' · ') +
+           (ok.length > 4 ? ' 외 ' + (ok.length - 4) + '종' : ''), slug);
     });
     box.querySelectorAll('button[data-del]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -862,28 +938,72 @@
       b.addEventListener('click', function () {
         var tr = S.doc.trades.find(function (x) { return x.id === b.dataset.edit; });
         if (!tr) return;
-        form.dt.value = tr.dt; form.s.value = tr.s; form.t.value = tr.t;
-        form.q.value = tr.q; form.p.value = tr.p; form.note.value = tr.note || '';
+        // 일괄 폼으로 되돌린다 — 부호는 «구분» 이 갖고 수량은 절대값으로 넣는다.
+        //   그래야 화면이 말하는 것(편입/편출)과 저장되는 부호가 한 벌이다.
+        form.dt.value = tr.dt; form.s.value = tr.s;
+        form.tks.value = tr.t;
+        form.dir.value = tr.q < 0 ? 'out' : 'in';
+        form.q.value = Math.abs(tr.q); form.amt.value = ''; form.p.value = tr.p;
         form.editid.value = tr.id;
-        form.querySelector('button[type=submit]').textContent = '수정 반영';
         var _c1 = el('tfcancel-' + slug); if (_c1) _c1.hidden = false;
+        refresh();
         form.scrollIntoView({ block: 'center' });
       });
     });
-    box.querySelectorAll('.smemo').forEach(function (inp) {
-      inp.addEventListener('change', function () {
-        var m = S.doc.strategies[inp.dataset.s] = S.doc.strategies[inp.dataset.s] || {};
-        m.memo = inp.value.trim();
-        mark('전략 메모 — ' + inp.dataset.s);
+  }
+
+  /* ── 일괄 입력 해석 (2026-08-26) ──────────────────────────────────────────
+     한 줄(또는 쉼표 한 토막) = 한 종목. «티커» 또는 «티커 수량».
+     ⚠ 뒤에서 가른다 — 티커에 공백이 있다(«NVDA US»). 마지막 토막이 숫자일 때만 수량으로
+       본다. 앞에서 자르면 «NVDA US 100» 의 티커가 «NVDA» 가 된다. */
+  function parseTickerLines(text) {
+    return String(text || '').split(/[\n;,]+/).map(function (x) { return x.trim(); })
+      .filter(Boolean).map(function (line) {
+        var m = line.match(/^(.*\S)\s+(-?\d+(?:\.\d+)?)$/);
+        return m ? { t: m[1].trim().toUpperCase(), q: parseFloat(m[2]) }
+                 : { t: line.toUpperCase(), q: null };
       });
+  }
+
+  /* 미리보기 줄을 만든다 — 반영과 **같은 함수**를 쓴다. 두 벌이면 «미리보기와 다른 것이
+     들어가는» 사고가 난다(이 저장소가 다른 자리에서 되풀이 밟은 종류다). */
+  function buildBatch(form, slug, held) {
+    var fd = new FormData(form);
+    var dt0 = String(fd.get('dt') || '');
+    var sname = String(fd.get('s') || '').trim();
+    var out = String(fd.get('dir') || 'in') === 'out';
+    var qCommon = (fd.get('q') !== '' && fd.get('q') != null) ? Math.abs(parseFloat(fd.get('q'))) : null;
+    var amt = (fd.get('amt') !== '' && fd.get('amt') != null) ? Math.abs(parseFloat(fd.get('amt'))) : null;
+    var pFix = (fd.get('p') !== '' && fd.get('p') != null) ? parseFloat(fd.get('p')) : null;
+    var di = dLe(dt0);
+    var rows = parseTickerLines(fd.get('tks')).map(function (e) {
+      var r = { t: e.t, why: '' };
+      r.p = pFix != null ? pFix : (di >= 0 ? pxAt(e.t, di) : null);
+      if (r.p != null) r.p = Math.round(r.p * 100) / 100;
+      var q = e.q != null ? Math.abs(e.q) : null;
+      if (q == null && out && qCommon == null && amt == null) {
+        var hq = held[sname + '\u0000' + e.t] || 0;      // 편출 기본 = 전량
+        q = hq > 0 ? hq : null;
+        r.why = (q == null) ? '이 전략에 순보유가 없습니다' : '전량';
+      }
+      if (q == null && qCommon != null) q = qCommon;
+      if (q == null && amt != null && r.p > 0) {
+        q = Math.floor(amt / r.p);                       // 금액 → 정수 주식(내림)
+        if (!q) r.why = '금액이 1주 값보다 작습니다';
+      }
+      r.q = (q && q > 0) ? (out ? -q : q) : null;
+      if (r.q == null && !r.why) r.why = '수량을 정할 수 없습니다';
+      if (r.p == null && !r.why) r.why = '그날 종가가 패널에 없습니다 — 가격을 직접 넣으세요';
+      else if (r.q != null && TKI[r.t] == null && !r.why) r.why = '패널에 없는 티커 — 성과에 가격이 안 잡힙니다';
+      if (out && r.q != null) {
+        var hq2 = held[sname + '\u0000' + r.t] || 0;
+        if (-r.q > hq2 + 1e-9) r.why = (r.why ? r.why + ' · ' : '') + '순보유(' + num(hq2, 0) + ')보다 많이 뺍니다';
+      }
+      r.ok = (r.q != null && r.p != null && r.p > 0);
+      return r;
     });
-    box.querySelectorAll('.sstat').forEach(function (sel) {
-      sel.addEventListener('change', function () {
-        var m = S.doc.strategies[sel.dataset.s] = S.doc.strategies[sel.dataset.s] || {};
-        m.status = sel.value;
-        mark('전략 상태 — ' + sel.dataset.s + ' → ' + (sel.value === 'closed' ? '종료' : '운용중'));
-      });
-    });
+    return { dt: dt0, s: sname, out: out, rows: rows,
+             n: rows.filter(function (r) { return r.ok; }).length, pFix: pFix };
   }
 
   // ── 렌더: 성과(④) ───────────────────────────────────────────────────────
@@ -927,9 +1047,11 @@
       totExc += exc;
       var bp = exc * F.fx / F.nav * 1e4;
       var closed = (S.doc.strategies[sname] || {}).status === 'closed';
+      // 상태 단추 — 보는 자리에서 바로 바꾼다(종전에는 원장 아래 별도 접이에 있었다).
       h.push('<tr' + (closed ? ' class="closedrow"' : '') + '><td>' + esc(sname) +
         (perf[sname].warn.length ? ' ⚠' + esc(perf[sname].warn.join(',')) : '') +
-        (closed ? ' <span class="badge">종료</span>' : '') + '</td>' +
+        ' <button type="button" class="sstat' + (closed ? ' off' : '') + '" data-s="' + esc(sname) +
+        '" title="누르면 운용중/종료를 바꿉니다">' + (closed ? '종료' : '운용중') + '</button></td>' +
         '<td class="tnum">' + num(L.inv, 0) + '</td>' +
         '<td class="tnum ' + sgn(L.pnl) + '">' + num(L.pnl, 0) + '</td>' +
         '<td class="tnum">' + pct(L.ret, 2, true) + '</td>' +
@@ -1021,6 +1143,13 @@
     });
     var _bars = box._pfBars;
     box.innerHTML = h.join('');
+    box.querySelectorAll('.sstat').forEach(function (b2) {
+      b2.addEventListener('click', function () {
+        var m = S.doc.strategies[b2.dataset.s] = S.doc.strategies[b2.dataset.s] || {};
+        m.status = (m.status === 'closed') ? 'active' : 'closed';
+        mark('전략 상태 — ' + b2.dataset.s + ' → ' + (m.status === 'closed' ? '종료' : '운용중'), slug);
+      });
+    });
     // ⚠ 배선은 innerHTML **뒤에** 한다. 앞에서 하면 방금 그린 노드가 통째로 갈아치워져
     //   단추가 조용히 죽는다(이 저장소가 다른 화면에서 밟은 자리다).
     if (_bars) {
