@@ -143,8 +143,8 @@
    오른쪽 전략 표(7열)는 1.1:1 에서 가로 스크롤 없이 들어간다. */
 .fsplit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;align-items:start}
 .fcol{min-width:0}
-.fcolL{padding-right:26px}
-.fcolR{padding-left:26px;border-left:3px solid var(--line)}
+.fcolL{padding-right:18px}
+.fcolR{padding-left:18px;border-left:3px solid var(--line)}
 /* 각 열의 첫 h3 는 위 여백을 줄인다 — 두 열이 나란히 시작하는데 한쪽만 밀리면 어긋나 보인다 */
 .fcol>h3:first-child{margin-top:0;padding-top:0;border-top:0}
 @media(max-width:1280px){
@@ -234,7 +234,14 @@
   background:color-mix(in srgb,var(--accent) 9%,transparent)}
 .barnote{display:block;margin-top:4px}
 .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--panel);margin:0 0 14px}
-.tblwrap.tall{max-height:560px;overflow-y:auto}
+/* 🚨 2026-08-26 사용자 «왼쪽 보유&지수 테이블 스크롤 없애고 한번에 처음부터 끝까지».
+   종전 max-height:560px + overflow-y:auto 였다 — 500종 표를 창 안에서 다시 굴려야 했고,
+   페이지 스크롤과 표 안 스크롤이 겹쳐 어느 쪽이 움직이는지도 헷갈렸다.
+   ⚠ 가로(overflow-x)는 남긴다. 13열이 좁은 창에서 넘칠 때 **페이지 전체가** 옆으로
+     밀리는 것을 막는 장치라, 없애면 다른 것이 깨진다.
+   ⚠ 머리 줄은 붙여 둔다(sticky) — 500줄을 내려가면 어느 열인지 잊는다. */
+.tblwrap.tall{max-height:none;overflow-y:visible}
+.tall table thead th{position:sticky;top:0;z-index:1;background:var(--panel)}
 #content table{border-collapse:collapse;width:100%;font-size:12.5px}
 #content thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 #content tbody td{padding:5px 7px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
@@ -511,7 +518,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   #content tbody td{padding:4px 6px}
   #content table.big td:not(.tnum):not(.tk){max-width:130px;overflow:hidden;text-overflow:ellipsis}
   .tblwrap{margin:0 0 11px;overflow-x:auto}
-  .tblwrap.tall{max-height:420px}
   .sec{font-size:11px}
   .rowfilter{font-size:11.5px;padding:5px 8px;width:min(260px,100%)}
   .warn{font-size:11.5px}
@@ -529,7 +535,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        이 페이지만 넓히려고 **여기서** 덮는다.
      ⚠ 내비도 같이 넓힌다. 본문만 넓히면 내비보다 본문이 넓어져 화면이 어긋나 보인다
        (셸 주석이 경고해 둔 자리다 — 그래서 둘을 같은 토큰으로 묶는다). */
-  :root{--w-pf:min(99vw,3000px)}
+  /* 2026-08-26 «열 너비 둘다 늘리는게 좋을듯» — 상한 3000 → 4200. 그리고 열 사이
+     여백(26px 씩)을 18px 로 줄인다. 여백은 두 열 모두에서 빠지는 폭이다. */
+  :root{--w-pf:min(99vw,4200px)}
   .wrap{max-width:var(--w-pf)}
   .topnav .nvin{max-width:var(--w-pf)}
   .chart svg{max-width:none}
@@ -582,8 +590,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .tradeform.batch .tfside{flex:0 1 210px;display:flex;flex-direction:column;gap:7px;justify-content:flex-start}
   .tradeform.batch .tfside .pnote{margin:0;font-size:10.5px;line-height:1.5}
   .tradeform.batch input[name=s]{width:150px}
-  .tradeform.batch input[name=p],.tradeform.batch input[name=q],.tradeform.batch input[name=amt]{width:100%}
+  .tradeform.batch input[name=pick]{width:100%}
   .tradeform.batch .tfrow>label:not(.tfgrow)>input[name=p]{width:150px}
+  /* 배분 = 방식 하나 + 값 하나. 한 줄로 붙여 «이 둘이 한 벌» 임을 눈으로 보이게 한다 */
+  .tfalloc{display:flex;gap:5px}
+  .tfalloc select{flex:1 1 auto;min-width:0}
+  .tfalloc input{width:78px;flex:0 0 auto;text-align:right}
   /* 미리보기 — 반영 전에 «무엇이 들어가나» 를 그대로 보여 준다 */
   .tfprev:empty{display:none}
   .tfprev{margin:0 0 9px}

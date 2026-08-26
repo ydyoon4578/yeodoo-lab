@@ -140,6 +140,32 @@
     var v = U16[k * ND + i];
     return v ? v / PF.panel.scale[k] * PF.panel.p0[k] : null;
   }
+  /* ── 그날의 NAV·환율 (2026-08-26) ─────────────────────────────────────────
+     비중 = 수량×체결가(USD)×**그날** 환율 ÷ **그날** NAV(원). 둘 중 하나만 시점을 맞추면
+     나머지가 어긋난다.
+     ⚠ 조각이 옛 판이면 시계열(navs·fxs)이 없다 — 그때는 최신 한 값으로 버티되 **버텼다는
+       사실을 돌려준다**(exact:false). 화면이 그걸 각주로 적는다. 조용히 최신값을 쓰면
+       과거 매매의 비중이 틀린 채로 «맞는 수» 처럼 실린다. */
+  function lastLeq(map, d) {
+    if (!map) return null;
+    var best = null, bk = null;
+    Object.keys(map).forEach(function (k) {
+      if (k <= d && (bk === null || k > bk)) { bk = k; best = map[k]; }
+    });
+    return best;
+  }
+  function navFxAt(F, d) {
+    var n = lastLeq(F.navs, d), x = lastLeq(PF.fxs, d);
+    return { nav: (n != null ? n : F.nav), fx: (x != null ? x : F.fx),
+             exact: (n != null && x != null) };
+  }
+  // 비중(%) — 그 매매가 그날 NAV 의 몇 %였나. 못 내면 null.
+  function wOfNav(F, d, qty, px) {
+    var A = navFxAt(F, d);
+    if (!(A.nav > 0) || !(A.fx > 0) || px == null) return null;
+    return qty * px * A.fx / A.nav * 100;
+  }
+
   function pxLeI(t, i) {
     for (; i >= 0; i--) { var v = pxAt(t, i); if (v != null) return v; }
     return null;
@@ -761,9 +787,15 @@
       //   여러 개 칠수록 오히려 더 필요한 자리다 — 골라서 위 칸에 **덧붙이는** 입구를 둔다.
       '<label>구성종목에서 찾기<input name="pick" list="dl-t-' + slug + '" ' +
       'placeholder="치고 Enter — 위에 줄로 붙습니다"></label>' +
-      '<label>수량(공통)<input name="q" type="number" step="any" placeholder="종목마다 같은 수량"></label>' +
-      '<label>또는 종목당 금액<input name="amt" type="number" step="any" placeholder="USD — 종가로 나눔"></label>' +
-      '<p class="pnote">편출은 <b>비우면 전량</b>입니다.<br>금액은 정수 주식으로 <b>내림</b>합니다.</p>' +
+      // 🚨 2026-08-26 사용자 «종목마다 같은 수량을 쓸 경우는 없으니까 빼고, 종목당 금액
+      //   또는 종목당 비중(해당일자 NAV 대비)». 칸 둘을 나란히 두면 «둘 다 채우면?» 이
+      //   생긴다 — **방식 하나 + 값 하나**로 묶어 그 물음 자체를 없앤다.
+      '<label>배분<span class="tfalloc">' +
+      '<select name="mode"><option value="amt">종목당 금액(USD)</option>' +
+      '<option value="w">종목당 비중(NAV %)</option></select>' +
+      '<input name="val" type="number" step="any" placeholder="값"></span></label>' +
+      '<p class="pnote">줄에 수량을 적으면 그것이 이깁니다.<br>' +
+      '편출은 <b>비우면 전량</b>입니다. 정수 주식으로 <b>내림</b>합니다.</p>' +
       '</div></div>');
     h.push('<datalist id="dl-t-' + slug + '">' + Object.keys(F.cons).sort().map(function (t) {
       return '<option value="' + esc(t) + '">' + esc(F.cons[t][1]) + '</option>';
@@ -789,12 +821,22 @@
           inv += t.q * t.p;
           if (p != null) pnl += t.q * (p - t.p); else np++;
         });
+        // 그날 이 매매들이 펀드의 몇 %였나 — 묶음 머리에 합을 적는다(개별 열의 합계).
+        var gw = 0, gwOK = false;
+        g.forEach(function (t) {
+          var w = wOfNav(F, t.dt, t.q, t.p);
+          if (w != null) { gw += w; gwOK = true; }
+        });
         h.push('<div class="ledgrp"><div class="ledhd"><b>' + esc(d0) + '</b>' +
-          '<span>' + g.length + '건 · 투입 ' + num(inv, 0) + ' USD</span>' +
+          '<span>' + g.length + '건 · 투입 ' + num(inv, 0) + ' USD' +
+          (gwOK ? ' · NAV 대비 ' + pct(gw / 100, 2, true) : '') + '</span>' +
           '<span class="' + sgn(pnl) + '">평가 ' + (pnl > 0 ? '+' : '') + num(pnl, 0) + ' USD' +
           (np ? ' (가격 없는 ' + np + '건 제외)' : '') + '</span></div>');
+        // 🚨 2026-08-26 사용자 «해당 일자 기준 종목별 비중(해당일자 NAV 대비) 열 추가».
+        //   그 매매가 그날 펀드의 몇 %였나 — 손익만으로는 «얼마나 크게 걸었나» 가 안 보인다.
         h.push('<div class="tblwrap"><table class="big"><thead><tr><th>전략</th><th>티커</th>' +
           '<th class="tnum">수량</th><th class="tnum">체결가</th><th class="tnum">금액(USD)</th>' +
+          '<th class="tnum">비중(NAV)</th>' +
           '<th class="tnum">현재가</th><th class="tnum">평가손익</th><th class="tnum">수익률</th><th></th></tr></thead><tbody>');
         g.forEach(function (t) {
           var p = pxLeI(t.t, asofI);
@@ -804,13 +846,17 @@
             '<td class="tk">' + esc(t.t) + '</td>' +
             '<td class="tnum">' + num(t.q, 0) + '</td><td class="tnum">' + num(t.p) + '</td>' +
             '<td class="tnum">' + num(t.q * t.p, 0) + '</td>' +
+            '<td class="tnum">' + (function () {
+              var w = wOfNav(F, t.dt, t.q, t.p);
+              return w != null ? pct(w / 100, 2, true) : '—';
+            })() + '</td>' +
             '<td class="tnum">' + (p != null ? num(p) : '—') + '</td>' +
             '<td class="tnum ' + sgn(pnl1) + '">' + (pnl1 != null ? num(pnl1, 0) : '—') + '</td>' +
             '<td class="tnum ' + sgn(r1) + '">' + (r1 != null ? pct(r1, 1, true) : '—') + '</td>' +
             '<td class="rowops">' + (t.src === 'web'
               ? '<button class="sb" data-edit="' + esc(t.id) + '">✎</button><button class="sb warn" data-del="' + esc(t.id) + '">✕</button>'
               : '') + '</td></tr>');
-          if (t.note) h.push('<tr class="noterow"><td></td><td colspan="8">↳ ' + esc(t.note) + '</td></tr>');
+          if (t.note) h.push('<tr class="noterow"><td></td><td colspan="9">↳ ' + esc(t.note) + '</td></tr>');
         });
         h.push('</tbody></table></div></div>');
       });
@@ -872,20 +918,29 @@
       var warnP = (!B.pFix && false);
       var ph = ['<div class="tblwrap"><table class="mini prevtbl"><thead><tr><th>티커</th>' +
         '<th class="tnum">수량</th><th class="tnum">가격</th><th class="tnum">금액(USD)</th>' +
-        '<th>비고</th></tr></thead><tbody>'];
-      var tot = 0;
+        '<th class="tnum">비중(NAV)</th><th>비고</th></tr></thead><tbody>'];
+      var tot = 0, totW = 0;
       B.rows.forEach(function (r) {
-        if (r.ok) tot += r.q * r.p;
+        var w = r.ok ? wOfNav(F, B.dt, r.q, r.p) : null;
+        if (r.ok) { tot += r.q * r.p; if (w != null) totW += w; }
         ph.push('<tr class="' + (r.ok ? '' : 'badrow') + '"><td class="tk">' + esc(r.t) + '</td>' +
           '<td class="tnum ' + (r.q < 0 ? 'neg' : '') + '">' + (r.q != null ? num(r.q, 0) : '—') + '</td>' +
           '<td class="tnum">' + (r.p != null ? num(r.p) : '—') + '</td>' +
           '<td class="tnum">' + (r.ok ? num(r.q * r.p, 0) : '—') + '</td>' +
+          '<td class="tnum">' + (w != null ? pct(w / 100, 2, true) : '—') + '</td>' +
           '<td class="prevwhy">' + esc(r.why) + '</td></tr>');
       });
       ph.push('</tbody><tfoot><tr><td><b>' + B.rows.length + '종</b></td><td class="tnum"></td>' +
         '<td class="tnum"></td><td class="tnum"><b>' + num(tot, 0) + '</b></td>' +
+        '<td class="tnum"><b>' + pct(totW / 100, 2, true) + '</b></td>' +
         '<td>' + (B.n === B.rows.length ? '' : '<span class="perr">' +
           (B.rows.length - B.n) + '종은 반영되지 않습니다</span>') + '</td></tr></tfoot></table></div>');
+      // ⚠ 어느 NAV 로 나눴는지 말한다. 옛 조각은 시계열이 없어 최신 NAV 로 버티는데,
+      //   그 사실을 안 적으면 과거 일자의 비중이 «맞는 수» 처럼 읽힌다.
+      if (!B.navfx.exact)
+        ph.push('<p class="pnote">비중은 <b>최신 NAV·환율</b> 기준입니다 — 조각에 일자별 ' +
+                'NAV 가 아직 없습니다(사내 PC 에서 <span class="tk">pf</span> 를 한 번 돌리면 ' +
+                '그 날짜의 NAV 로 바뀝니다).</p>');
       if (B.pFix != null && B.rows.length > 1)
         ph.push('<p class="warn">⚠ 가격을 직접 넣으면 <b>모든 종목에 같은 값</b>이 들어갑니다 — ' +
                 '여러 종목이면 비워 두고 그날 종가를 쓰세요.</p>');
@@ -958,9 +1013,11 @@
         // 일괄 폼으로 되돌린다 — 부호는 «구분» 이 갖고 수량은 절대값으로 넣는다.
         //   그래야 화면이 말하는 것(편입/편출)과 저장되는 부호가 한 벌이다.
         form.dt.value = tr.dt; form.s.value = tr.s;
-        form.tks.value = tr.t;
+        // 수량은 종목 줄에 «티커 수량» 으로 되돌린다 — 배분 칸은 비운다(그 칸은 «나눠 담기»
+        //   용이고, 수정은 이미 정해진 한 건을 고치는 일이라 배분이 끼면 값이 덮인다).
+        form.tks.value = tr.t + ' ' + Math.abs(tr.q);
         form.dir.value = tr.q < 0 ? 'out' : 'in';
-        form.q.value = Math.abs(tr.q); form.amt.value = ''; form.p.value = tr.p;
+        form.val.value = ''; form.p.value = tr.p;
         form.editid.value = tr.id;
         var _c1 = el('tfcancel-' + slug); if (_c1) _c1.hidden = false;
         refresh();
@@ -989,25 +1046,31 @@
     var dt0 = String(fd.get('dt') || '');
     var sname = String(fd.get('s') || '').trim();
     var out = String(fd.get('dir') || 'in') === 'out';
-    var qCommon = (fd.get('q') !== '' && fd.get('q') != null) ? Math.abs(parseFloat(fd.get('q'))) : null;
-    var amt = (fd.get('amt') !== '' && fd.get('amt') != null) ? Math.abs(parseFloat(fd.get('amt'))) : null;
+    var mode = String(fd.get('mode') || 'amt');
+    var val = (fd.get('val') !== '' && fd.get('val') != null) ? Math.abs(parseFloat(fd.get('val'))) : null;
     var pFix = (fd.get('p') !== '' && fd.get('p') != null) ? parseFloat(fd.get('p')) : null;
     var di = dLe(dt0);
+    // 비중 배분에 쓸 그날 NAV·환율. 시계열이 없는 옛 조각이면 최신 값으로 버틴다(exact=false).
+    var A = navFxAt(PF.funds[slug], dt0);
+    var perStock = null;                            // 종목당 배분 금액(USD)
+    if (val != null)
+      perStock = (mode === 'w') ? ((A.nav > 0 && A.fx > 0) ? A.nav * val / 100 / A.fx : null) : val;
     var rows = parseTickerLines(fd.get('tks')).map(function (e) {
       var r = { t: e.t, why: '' };
       r.p = pFix != null ? pFix : (di >= 0 ? pxAt(e.t, di) : null);
       if (r.p != null) r.p = Math.round(r.p * 100) / 100;
-      var q = e.q != null ? Math.abs(e.q) : null;
-      if (q == null && out && qCommon == null && amt == null) {
+      var q = e.q != null ? Math.abs(e.q) : null;    // 줄에 적은 수량이 가장 세다
+      if (q == null && out && perStock == null) {
         var hq = held[sname + '\u0000' + e.t] || 0;      // 편출 기본 = 전량
         q = hq > 0 ? hq : null;
         r.why = (q == null) ? '이 전략에 순보유가 없습니다' : '전량';
       }
-      if (q == null && qCommon != null) q = qCommon;
-      if (q == null && amt != null && r.p > 0) {
-        q = Math.floor(amt / r.p);                       // 금액 → 정수 주식(내림)
-        if (!q) r.why = '금액이 1주 값보다 작습니다';
+      if (q == null && perStock != null && r.p > 0) {
+        q = Math.floor(perStock / r.p);                  // 금액·비중 → 정수 주식(내림)
+        if (!q) r.why = (mode === 'w' ? '비중이 1주 값보다 작습니다' : '금액이 1주 값보다 작습니다');
       }
+      if (q == null && val != null && mode === 'w' && !(A.nav > 0 && A.fx > 0))
+        r.why = '그날 NAV·환율이 없어 비중을 못 바꿉니다';
       r.q = (q && q > 0) ? (out ? -q : q) : null;
       if (r.q == null && !r.why) r.why = '수량을 정할 수 없습니다';
       if (r.p == null && !r.why) r.why = '그날 종가가 패널에 없습니다 — 가격을 직접 넣으세요';
@@ -1019,7 +1082,7 @@
       r.ok = (r.q != null && r.p != null && r.p > 0);
       return r;
     });
-    return { dt: dt0, s: sname, out: out, rows: rows,
+    return { dt: dt0, s: sname, out: out, rows: rows, mode: mode, navfx: A,
              n: rows.filter(function (r) { return r.ok; }).length, pFix: pFix };
   }
 

@@ -883,8 +883,15 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     perf_check = {sname: {"inv": round(s["last"]["inv"], 2), "pnl": round(s["last"]["pnl"], 2),
                           "bm": round(s["last"]["bm"], 2)}
                   for sname, s in perf.items() if s.get("last")}
+    # 🚨 2026-08-26 사용자 «종목별 비중(해당일자 NAV 대비)» — 웹 앱이 매매마다 그 날의
+    #   NAV 로 비중을 낸다. 종전에는 최신 NAV 한 값만 실어 보내서 **과거 매매도 오늘 NAV
+    #   로** 나눌 수밖에 없었다(자리 크기가 그 사이 바뀌었으면 틀린 비중이다).
+    #   ⚠ 환율도 같이 싣는다. 비중 = 수량×체결가(USD)×그날 환율 ÷ 그날 NAV(원) 이라
+    #     둘 중 하나만 시점을 맞추면 나머지가 어긋난다.
+    #   무게는 걱정할 것이 없다 — 연초 이후 일자라 펀드당 238개다.
     fmeta = dict(fund=fund, idx=idx, label=label, asof=asof, asof_us=asof_us,
                  nav=nav_v, base=base_p, fx=fx_v, sleeve=round(sleeve, 0), cons_d=cons_d,
+                 navs={d: round(v[0], 0) for d, v in sorted(nav[fund].items())},
                  check=perf_check,
                  cons={t: [round(v[0], 6), (v[1] or "")[:26], (v[2] or "")[:16]] for t, v in cmap.items()},
                  held={t: round(h["qty"], 2) for t, h in held.items()})
@@ -1057,7 +1064,9 @@ def main() -> int:
             last = ser.get(d, last)
             out.append(round(last, 2) if last is not None else None)
         lvl_arr[key] = out
+    # 환율은 펀드가 공유한다 — 펀드마다 담으면 같은 표가 둘이 된다(갈릴 자리를 안 만든다).
     pf = {"gen": gen, "asof": asof_g, "dates": axis, "panel": panel, "lvl": lvl_arr,
+          "fxs": {d: round(v, 4) for d, v in sorted(fx.items())},
           "funds": {slug: checks[k]["meta"] for k, (_f, _i, slug, _l) in enumerate(FUNDS)},
           "mp": [{"idx": t["index"], "dt": t["dt"], "s": t["strategy"],
                   "t": t["ticker"], "q": t["qty"], "p": t["px"]} for t in trades],
