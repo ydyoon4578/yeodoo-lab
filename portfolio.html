@@ -258,16 +258,18 @@
 #content tbody td{padding:5px 7px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
 /* 글줄 셀(이름·전략·섹터)은 폭을 잡아먹는 주범이다 — 말줄임으로 상한. 숫자(.tnum)·티커(.tk)는 그대로 */
 #content table.big td:not(.tnum):not(.tk){max-width:150px;overflow:hidden;text-overflow:ellipsis}
-/* 좁은 창: 포트폴리오 표의 섹터(3열)·패시브 수량(10열)을 접는다 — 티커·비중·차이·괴리가 본체다.
-   🚨 2026-08-26 — 종전에는 8열을 접었는데 8열은 **차이(%p)** 다. 주석은 «차이는 본체» 라고
-     적어 놓고 코드는 그 차이를 접고 있었다(열 순서가 바뀐 뒤 주석만 남은 자리로 보인다).
-     열 순서: 1티커 2이름 3섹터 4지수비중 5펀드비중 6패시브 7전략 8차이 9보유수량
-              10패시브수량 11전략수량 12지수기준 13괴리. */
+/* 좁은 창: 포트폴리오 표의 섹터(2열)·패시브 수량(9열)을 접는다 — 티커·비중·차이·괴리가 본체다.
+   🚨 이 자리는 두 번 어긋났다. ① 종전에는 8열을 접었는데 8열이 **차이(%p)** 였다 —
+     주석은 «차이는 본체» 라고 적어 놓고 코드는 그 차이를 접고 있었다. ② 2026-08-26 에
+     이름 열을 빼면서 뒤 열이 한 칸씩 당겨졌다. nth-child 는 열 순서를 손으로 세는 규칙이라
+     표가 바뀔 때마다 같이 세야 한다 — 아래 순서를 **여기 적어 두고** 함께 고친다.
+     열 순서(12열): 1티커 2섹터 3지수비중 4펀드비중 5패시브 6전략 7차이 8보유수량
+                    9패시브수량 10전략수량 11지수기준 12괴리. */
 @media(max-width:760px){
   #content tbody td{padding:4px 6px}
   #content table.big td:not(.tnum):not(.tk){max-width:105px}
-  .tall table th:nth-child(3),.tall table td:nth-child(3),
-  .tall table th:nth-child(10),.tall table td:nth-child(10){display:none}
+  .tall table th:nth-child(2),.tall table td:nth-child(2),
+  .tall table th:nth-child(9),.tall table td:nth-child(9){display:none}
 }
 #content table.mini{width:auto;min-width:340px;margin:0 0 16px}
 .tnum{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}

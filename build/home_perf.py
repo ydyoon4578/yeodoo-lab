@@ -74,10 +74,13 @@ def _idbars(key, stock=False):
 
 
 # 홈 섹터 판과 같은 한글 이름 — home_summary.SEC_ETF 와 짝이다(다르면 색이 안 맞는다).
+# ⚠ 2026-08-26 — portfolio_fund 가 이것을 **그대로 빌려 쓴다**(SEC_KO 로 공개). 같은 지도를
+#   또 적으면 세 벌이 되고, 한 벌만 고쳐지는 날 화면마다 섹터 이름이 달라진다.
 _SEC_KO = {"Information Technology": "IT", "Financials": "금융", "Health Care": "헬스케어",
            "Consumer Discretionary": "경기소비", "Communication Services": "커뮤니케이션",
            "Industrials": "산업재", "Consumer Staples": "필수소비", "Energy": "에너지",
            "Utilities": "유틸리티", "Real Estate": "부동산", "Materials": "소재"}
+SEC_KO = _SEC_KO          # 밖에서 쓰는 이름(밑줄 없는 것). 같은 객체다.
 
 
 # ── 분봉을 **시각으로** 맞춘다 ────────────────────────────────────────────────

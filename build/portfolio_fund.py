@@ -145,6 +145,29 @@ def cls_sign(v):
     return "pos" if (v or 0) > 0 else ("neg" if (v or 0) < 0 else "")
 
 
+# 🚨 2026-08-26 사용자 지시 «섹터는 종목 신호 탭처럼 IT, 커뮤니케이션, 경기소비 처럼 짧게».
+#   ⚠ 지도를 **여기에 다시 적지 않는다.** home_perf 가 홈 섹터 판에 쓰는 것과 같은 이름이어야
+#     하고(다르면 같은 섹터가 화면마다 다른 글자가 된다), 같은 지도를 또 적으면 세 벌이 되어
+#     한 벌만 고쳐지는 날 어긋난다. 그 모듈은 임포트해도 아무 일도 안 한다(main 가드가 있다).
+try:
+    from home_perf import SEC_KO as _SEC_KO
+except Exception:                    # 임포트가 막히면 원문을 그대로 쓴다(조용히 비우지 않는다)
+    _SEC_KO = {}
+
+
+def sec_short(g):
+    """GICS 섹터명 → 짧은 한글. 지도에 없으면 원문을 잘라 쓴다(빈칸으로 두지 않는다).
+
+    ⚠ 원천(index_constituents.gics_name)이 섹터가 아니라 서브산업을 줄 수도 있다. 그때는
+      지도에 안 걸리므로 **원문이 그대로** 나온다 — 그것이 «못 줄였다» 는 사실을 보여 준다.
+      조용히 빈칸으로 두면 섹터가 없는 것처럼 읽힌다.
+    """
+    g = (g or "").strip()
+    if not g:
+        return ""
+    return _SEC_KO.get(g) or g[:12]
+
+
 def norm_tk(t):
     """티커 정규화 — 클래스주 구분자를 점으로 통일한다(BRK/B → BRK.B · BF/B → BF.B).
 
@@ -746,9 +769,11 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              % (len(held), len(cmap),
                 (' · <b>지수 밖 보유 %d종</b>' % len(off_idx)) if off_idx else ''))
     H.append('<div class="filterbar"><input type="search" class="rowfilter" data-target="tb-%s" '
-             'placeholder="티커·이름으로 거르기" aria-label="표 필터"></div>' % slug)
+             'placeholder="티커·이름·섹터로 거르기" aria-label="표 필터"></div>' % slug)
     H.append('<div class="tblwrap tall"><table class="big" id="tb-%s"><thead><tr>'
-             '<th>티커</th><th>이름</th><th>섹터</th><th class="tnum">지수비중</th><th class="tnum">펀드비중</th>'
+             # ⚠ 2026-08-26 사용자 «좁으니까 이름 열은 빼» — 티커가 이미 종목을 가리키고, 이름은
+             #   말줄임으로 6~8자만 보이던 열이라 폭만 먹고 있었다.
+             '<th>티커</th><th>섹터</th><th class="tnum">지수비중</th><th class="tnum">펀드비중</th>'
              '<th class="tnum">패시브</th><th class="tnum">전략</th>'
              '<th class="tnum">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
@@ -795,7 +820,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         return '<th class="tnum"%s>%s</th>' % ((' title="%s"' % tip) if tip else '', cell)
 
     H.append('<tr class="totrow">'
-             '<th>합계</th><th></th><th></th>'
+             '<th>합계</th><th></th>'
              # ⚠ 지수비중 합계는 100%가 아니다 — 이 표는 **보유 종목만** 담는다.
              #   모자란 몫이 곧 «지수에 있는데 안 든 것» 이라, 그 사실을 칸에 적는다.
              #   안 적으면 «지수 합이 왜 98%지» 가 매번 다시 물어진다.
@@ -825,13 +850,17 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         _shade = min(30.0, abs(r["d"]) * 60.0)
         _bg = (' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
                % ("good" if r["d"] > 0 else "hot", round(_shade))) if abs(r["d"]) >= 0.005 else ''
-        H.append('<tr><td class="tk">%s%s</td><td>%s</td><td class="sec">%s</td>'
+        # ⚠ 이름 열은 뺐지만 **이름으로 거르기는 살린다.** 행에 data-n 으로 실어 두고
+        #   아래 필터가 같이 본다. 티커 칸의 title 로도 남겨 마우스를 올리면 보인다 —
+        #   열을 없애면서 이름을 통째로 잃으면 «이게 무슨 회사였지» 를 못 푼다.
+        H.append('<tr data-n="%s"><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
                  '<td class="tnum">%s</td><td class="tnum"%s>%s</td>'
                  '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
                  '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
-                 % (esc(r["t"]), _off, esc(r["name"][:26]), esc((r["gics"] or "")[:16]),
+                 % (esc(r["name"][:40]), esc(r["name"][:40]),
+                    esc(r["t"]), _off, esc(sec_short(r["gics"])),
                     pct(r["wi"], 2), _bg, pct(r["wf"], 2),
                     pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
@@ -1035,7 +1064,9 @@ FRAG_SCRIPT = """<script>
       var tb=document.getElementById(inp.dataset.target);
       if(!tb)return;
       tb.querySelectorAll('tbody tr').forEach(function(tr){
-        tr.hidden=!!q&&tr.textContent.toUpperCase().indexOf(q)<0;
+        // 이름 열을 뺀 뒤로도 이름으로 걸러진다 — 행의 data-n 을 같이 본다(2026-08-26).
+        var hay=(tr.textContent+' '+(tr.dataset.n||'')).toUpperCase();
+        tr.hidden=!!q&&hay.indexOf(q)<0;
       });
     });
   });
