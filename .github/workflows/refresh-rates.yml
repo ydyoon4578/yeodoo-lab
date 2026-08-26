@@ -38,7 +38,13 @@ jobs:
         run: python build/validate_gate.py baseline
       - name: Fetch rates
         run: python build/refresh_rates.py
-      - name: Validate
+      # 🚨 2026-08-26 — 여기 있던 «- name: Validate» 는 **run 도 uses 도 없는 빈 step**
+      #   이었다. YAML 로는 멀쩡해서 파이썬 파서도 통과하는데, GitHub 의 워크플로
+      #   스키마는 그것을 못 읽는다 → 파일 전체가 무효가 되어 **스케줄이 아예 발화하지
+      #   않았다.** 08-22 부터 나흘간 금리·FedWatch 가 08-20 에 고착했고, 푸시마다
+      #   «workflow file issue» 로만 빨간불이 떠서 자료 고착과는 연결이 안 보였다.
+      #   ⚠ 검증은 아래 마지막 «Validate» 한 번으로 충분하다(수집·재조립을 다 마친 뒤에
+      #     본다). 여기에 하나 더 두면 FedWatch 를 굽기 전 상태를 재게 된다.
       # 🚨 FedWatch(2026-08-22) — 연방기금 선물이 말하는 목표범위 확률. 이 빌더는 CME 가
       #   공표한 표로 **스스로 검산**하고 어긋나면 파일을 안 쓰고 멈춘다(refresh_fedwatch.py).
       - name: FOMC probabilities (fed funds futures)
