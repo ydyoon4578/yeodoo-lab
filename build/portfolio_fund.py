@@ -35,10 +35,17 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
   · 시점 규약(T-1, 실측 검증 2026-08-20): 기준가(D) = 미국 D−1(직전 거래일) 종가 × D일
     한국마감 환율. NAV·환율은 보유일로 자르지 않고 시트 최신 행을 쓰고, 연초 후 차트는
     지수를 last_lt(하루 밀기)로 짝 맞춘다. 같은날 짝은 벤치가 하루 앞서 달리는 오류다.
-  · 펀드비중 = 종목 평가액(원화) ÷ 개별주식 슬리브 합. 지수비중과 같은 눈금이 되도록
-    주식 슬리브 안에서 정규화한다(펀드는 주식+ETF+선물로 지수를 복제하므로 NAV 분모로는
-    전 종목이 일괄 언더웨이트로 보인다 — 그건 틸트가 아니라 구조다).
-  · 패시브 수량 = 지수비중 × 주식슬리브(원) ÷ (종가 × USD환율). 괴리 = 실제 − 패시브.
+  · 펀드비중 = 종목 평가액(원화) ÷ **NAV**. 합계는 100%가 아니라 개별주식 슬리브 비중이다
+    (2A81 실측 69.3% · 2Z30 69.0%). 사용자 결정 2026-08-26 — «이 종목이 펀드의 몇 %인가»
+    라는 물음에 답하려면 분모가 NAV 여야 한다.
+    ⚠ 2026-08-26 이전에는 슬리브로 나눠 합이 늘 100%였다. 그때 사유는 «NAV 분모로는 전
+      종목이 일괄 언더웨이트로 보인다 — 그건 틸트가 아니라 구조다» 였고 그 지적 자체는
+      지금도 맞다. **그래서 지수비중을 같은 눈금으로 환산해 그 구조를 상쇄한다**(아래).
+  · 지수비중(표시) = 지수 원 비중 × 개별주식 슬리브 비중. «지수를 이 펀드의 주식 슬리브
+    크기로 담았다면 이 종목이 NAV 의 몇 %일까». 그래야 차이(%p)가 틸트만 말한다 —
+    지수를 그대로 복제하면 0 이 된다. 지수 원 비중(100% 눈금)은 칸의 title 로 남는다.
+  · 패시브 수량 = 지수 **원** 비중 × 주식슬리브(원) ÷ (종가 × USD환율). 괴리 = 실제 − 패시브.
+    ⚠ 눈금을 바꿔도 이 값은 안 변한다(지수비중_NAV × NAV = 지수비중_원 × 슬리브).
   · 전략 수익률 = Σ수량×(현재가−체결가) ÷ 매수원금. 체결가는 원장의 trade_price 로,
     **당시 종가이지 실제 체결가가 아니다**(MP 엑셀 VBA 가 종가를 박는다).
   · BM 대조 = 같은 날 같은 금액을 지수에 넣었을 때의 손익(매매 시점 일치). 초과 = 차이.
@@ -739,14 +746,29 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     for t in my_trades:
         strat_q[t["ticker"]] = strat_q.get(t["ticker"], 0.0) + t["qty"]
     n_match = sum(1 for t in held if t in cmap)
+    # 🚨 2026-08-26 사용자 지시 — «포트폴리오 비중을 100%에 맞추지 말고 개별주식 비중으로
+    #   맞추고싶어. 펀드 NAV 기준으로. S&P500 펀드의 경우 총합이 100이 아닌 69.0».
+    #   종전에는 슬리브(개별주식 합)로 나눠 합이 늘 100%였다. 그러면 «이 종목이 펀드의 몇
+    #   %인가» 라는 물음에 답을 못 한다 — 실제 자리 크기는 NAV 대비이기 때문이다.
+    #   → 분모를 NAV 로 바꾼다. 합계는 개별주식 슬리브 비중(w_stk)이 된다.
+    #
+    # ⚠ **지수비중도 같은 눈금으로 환산한다.** 안 하면 «차이(%p)» 가 부서진다 —
+    #   펀드는 69% 눈금인데 지수는 100% 눈금이라, 지수를 그대로 복제하고 있어도 전 종목이
+    #   일괄 −31% 언더웨이트로 찍힌다. 그건 틸트가 아니라 구조다(이 파일 머리말이 슬리브
+    #   정규화를 택했던 바로 그 사유다). 환산 = 지수비중 × 개별주식 슬리브 비중.
+    #   즉 «지수를 이 펀드의 주식 슬리브 크기로 담았다면 이 종목이 NAV 의 몇 %일까» 다.
+    #   ⚠ 원래 지수비중(100% 눈금)은 잃지 않는다 — 칸의 title 로 남긴다.
+    # ⚠ 패시브 이론수량(p_qty)은 **안 바뀐다.** wi_nav × NAV = wi × 슬리브 이므로 같은 값이다.
+    #   눈금을 바꾸면서 수량이 따라 움직이면 그것은 환산이 아니라 다른 계산이다.
     tbl = []
     for t, h in held.items():
-        w_f = h["val"] / sleeve
-        w_i = cmap.get(t, (0.0, None, None))[0]
+        w_f = h["val"] / nav_v
+        w_i_raw = cmap.get(t, (0.0, None, None))[0]
+        w_i = w_i_raw * w_stk
         gics = cmap.get(t, (None, None, ""))[2] or ""
         # 패시브 수량 검산은 원장 «내부» 눈금으로 — 원장 평가액(원화)이 원장 종가×보유일 환율로
         # 만들어졌으니, 최신 환율을 섞으면 자기모순이 된다(수량 괴리가 환율 차이로 오염).
-        p_qty = (w_i * sleeve / (h["px"] * fx_hold)) if (h["px"] and fx_hold) else None
+        p_qty = (w_i_raw * sleeve / (h["px"] * fx_hold)) if (h["px"] and fx_hold) else None
         # 🚨 2026-08-21 사용자 지적 «보유 수량 = 패시브 수량 + 전략 수량인데 숫자가 이상해».
         #   맞다 — 종전 「패시브수량」은 **지수비중으로 역산한 이론값**(p_qty)이라 보유수량과
         #   애초에 합이 안 맞는 다른 개념이었다. 항등식이 서려면 패시브를 «보유 − 전략» 으로
@@ -754,8 +776,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         #   있었다 — 같은 표에서 두 열이 다른 정의를 쓰고 있었던 셈이다.
         #   이론값은 «지수기준» 이라는 제 이름으로 옮기고 괴리 계산에만 쓴다.
         _sq = strat_q.get(t, 0.0)
-        w_s = (_sq * h["px"] * fx_hold / sleeve) if (h["px"] and fx_hold and _sq) else 0.0
-        tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wf=w_f, d=(w_f - w_i) * 100,
+        w_s = (_sq * h["px"] * fx_hold / nav_v) if (h["px"] and fx_hold and _sq) else 0.0
+        tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wi_raw=w_i_raw,
+                        wf=w_f, d=(w_f - w_i) * 100,
                         ws=w_s, wp=w_f - w_s,
                         qty=h["qty"], sq=_sq, pq_real=h["qty"] - _sq,
                         pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
@@ -765,8 +788,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                       key=lambda x: -x[1])
     off_idx = [r for r in tbl if r["t"] not in cmap]     # 보유 중인데 지수에 없는 것
 
-    H.append('<h3>② 포트폴리오 <span class="hnote">주식 슬리브 %d종 · 지수 %d종%s</span></h3>'
-             % (len(held), len(cmap),
+    H.append('<h3>② 포트폴리오 <span class="hnote">비중은 <b>NAV 기준</b>(합계 = 개별주식 '
+             '%s) · 지수비중도 같은 눈금으로 환산 · 주식 %d종 · 지수 %d종%s</span></h3>'
+             % (pct(w_stk, 1), len(held), len(cmap),
                 (' · <b>지수 밖 보유 %d종</b>' % len(off_idx)) if off_idx else ''))
     H.append('<div class="filterbar"><input type="search" class="rowfilter" data-target="tb-%s" '
              'placeholder="티커·이름·섹터로 거르기" aria-label="표 필터"></div>' % slug)
@@ -805,7 +829,9 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     _srows = [r for r in tbl if abs(r["ws"]) > 1e-12]      # 전략이 실제로 들고 있는 종목
     _swi_s = sum(r["wi"] for r in _srows)
     _swf_s = sum(r["wf"] for r in _srows)
-    _wi_out = sum(w for _t, w, _n in only_idx)             # 지수에 있는데 안 든 몫
+    # 미보유 몫도 **같은 눈금(NAV 환산)** 으로 적는다 — 한 칸 안에서 두 눈금이 섞이면
+    #   합이 안 맞는 것처럼 읽힌다.
+    _wi_out = sum(w for _t, w, _n in only_idx) * w_stk
     _dp = (_swp - _swi) * 100                              # 패시브 − 지수(전체)
     _ds = (_swf_s - _swi_s) * 100                          # 펀드 − 지수(전략 보유 종목만)
 
@@ -854,14 +880,14 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         #   아래 필터가 같이 본다. 티커 칸의 title 로도 남겨 마우스를 올리면 보인다 —
         #   열을 없애면서 이름을 통째로 잃으면 «이게 무슨 회사였지» 를 못 푼다.
         H.append('<tr data-n="%s"><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
-                 '<td class="tnum">%s</td><td class="tnum"%s>%s</td>'
+                 '<td class="tnum" title="지수 원 비중 %s (100%% 눈금)">%s</td><td class="tnum"%s>%s</td>'
                  '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
                  '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["name"][:40]), esc(r["name"][:40]),
                     esc(r["t"]), _off, esc(sec_short(r["gics"])),
-                    pct(r["wi"], 2), _bg, pct(r["wf"], 2),
+                    pct(r["wi_raw"], 2), pct(r["wi"], 2), _bg, pct(r["wf"], 2),
                     pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq_real"], 0),
@@ -870,11 +896,15 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     cls_sign(r["dq"] or 0), ("%+d" % round(r["dq"])) if r["dq"] is not None else "—"))
     H.append("</tbody></table></div>")
     H.append('<p class="pnote" style="margin:6px 0 12px">'
+             '<b>비중은 모두 NAV 기준</b>입니다 — 합계가 100%%가 아니라 개별주식 슬리브 '
+             '비중(%s)입니다. 지수비중도 같은 눈금으로 환산했습니다(지수 원 비중 × %s) — '
+             '그래야 <b>차이</b>가 틸트만 말합니다. 지수를 그대로 복제하면 0 입니다. '
+             '지수 원 비중은 그 칸에 마우스를 올리면 나옵니다.<br>'
              '<b>보유 수량 = 패시브 수량 + 전략 수량</b>입니다 — 전략 수량은 매매 원장의 종목별 '
              '순수량이고, 패시브는 그 나머지(지수 복제분)입니다. 비중 열도 같은 분해입니다. '
-             '<b>지수기준</b>은 «지수비중 × 주식슬리브 ÷ (종가×환율)» 로 역산한 이론 수량이고, '
+             '<b>지수기준</b>은 «지수 원 비중 × 주식슬리브 ÷ (종가×환율)» 로 역산한 이론 수량이고, '
              '<b>괴리</b> = 보유 − 지수기준 입니다 — 액티브 틸트의 수량 표현이라 위 분해와는 '
-             '다른 질문에 답합니다.</p>')
+             '다른 질문에 답합니다.</p>' % (pct(w_stk, 1), pct(w_stk, 1)))
     if off_idx:
         H.append('<details open><summary>보유 중인데 지수에 없는 %d종 — 편출 뒤 잔존 등</summary>'
                  '<div class="tblwrap"><table class="mini"><tbody>' % len(off_idx))
