@@ -536,9 +536,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   .cs{font-size:10.5px}
   .chart{padding:9px;margin:0 0 12px}
   .chtitle{font-size:10.5px}
-  #content table{font-size:11.5px}
-  #content thead th{font-size:10px;padding:6px 8px}
-  #content tbody td{padding:4px 6px}
+  /* ── 밀도 (2026-08-26 사용자 «다 해») ─────────────────────────────────────
+     폭에서 짜낼 것이 없어 밀도로 간다. 가로로 실제 이득이 나는 것은 **좌우 여백**이다 —
+     세로 여백은 줄 높이만 바꾼다. 그래서 좌우를 더 크게 줄인다.
+       셀 좌우 6px → 4px = 열마다 4px · 12열 표에서 48px
+       머리 좌우 8px → 5px (머리가 셀보다 넓으면 열 폭을 머리가 정한다)
+     ⚠ 글꼴은 11.5 → 11px 까지만 내린다. 10px 대로 내려가면 이 표의 숫자(고정폭 tabular)가
+       한 화면에 다 들어와도 읽히지 않는다 — 넓게 쓰는 것과 못 읽는 것은 다르다.
+     ⚠ 세로 여백(4px → 3px)은 폭과 무관하지만 500줄 표에서 한 화면에 들어오는 줄 수를
+       늘린다. 스크롤을 없앤 뒤로는 그쪽이 «한 번에 보기» 에 직접 걸린다. */
+  #content table{font-size:11px}
+  #content thead th{font-size:9.5px;padding:4px 5px}
+  #content tbody td{padding:3px 4px}
   #content table.big td:not(.tnum):not(.tk){max-width:130px;overflow:hidden;text-overflow:ellipsis}
   .tblwrap{margin:0 0 11px;overflow-x:auto}
   .sec{font-size:11px}

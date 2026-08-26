@@ -148,6 +148,23 @@ def pct(v, nd=2, signed=False):
     return (s % (v * 100)) + "%"
 
 
+def pctn(v, nd=2):
+    """비중을 **% 기호 없이** 낸다 — 머리에 «(%)» 를 한 번 적고 칸에서는 뺀다(2026-08-26).
+
+    🚨 사용자가 «숫자 열을 줄여 폭을 벌자» 고 했을 때 처음 떠오르는 것은 소수 자릿수인데,
+      이 표에서 그것은 **자료를 버리는 짓**이다. S&P500 은 500종이라 지수비중이 0.0x%
+      인 종목이 태반이고(NAV 환산이면 더 작다), 1자리로 내리면 그 종목들이 전부 «0.0»
+      으로 뭉개진다 — 폭은 벌지만 표가 답을 못 한다.
+    → 대신 **반복되는 기호**를 뺀다. 칸마다 붙던 «%» 가 열마다 한 글자씩이고, 비중 열이
+      다섯이라 그만큼이 매 줄에서 빠진다. 잃는 정보는 없다(머리가 단위를 말한다).
+    ⚠ 이 함수는 **포트폴리오 표 전용**이다. 다른 표(자산 구성·성과)는 칸 수가 적어 폭이
+      급하지 않고, 거기까지 기호를 빼면 «어디는 %가 있고 어디는 없나» 가 생긴다.
+    """
+    if v is None:
+        return "—"
+    return ("%." + str(nd) + "f") % (v * 100)
+
+
 def cls_sign(v):
     return "pos" if (v or 0) > 0 else ("neg" if (v or 0) < 0 else "")
 
@@ -797,8 +814,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     H.append('<div class="tblwrap tall"><table class="big" id="tb-%s"><thead><tr>'
              # ⚠ 2026-08-26 사용자 «좁으니까 이름 열은 빼» — 티커가 이미 종목을 가리키고, 이름은
              #   말줄임으로 6~8자만 보이던 열이라 폭만 먹고 있었다.
-             '<th>티커</th><th>섹터</th><th class="tnum">지수비중</th><th class="tnum">펀드비중</th>'
-             '<th class="tnum">패시브</th><th class="tnum">전략</th>'
+             '<th>티커</th><th>섹터</th><th class="tnum">지수비중(%%)</th><th class="tnum">펀드비중(%%)</th>'
+             '<th class="tnum">패시브(%%)</th><th class="tnum">전략(%%)</th>'
              '<th class="tnum">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
              '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
@@ -837,7 +854,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
 
     def _tot(v, diff=None, base=None, tip=None):
         """합계 칸 — 값 + (차이) + (그 차이가 무엇의 차이인지). diff 가 None 이면 값만."""
-        cell = '<b>%s</b>' % pct(v, 2)
+        # ⚠ 본문 칸이 % 기호를 뗐으므로 합계도 뗀다(머리의 «(%)» 가 단위를 말한다).
+        #   한 표 안에서 «20.70» 아래 «69.00%» 가 오면 눈금이 다른 것처럼 읽힌다.
+        #   설명 글씨(밑동·차이)에는 기호를 남긴다 — 그쪽은 문장이라 단위가 필요하다.
+        cell = '<b>%s</b>' % pctn(v, 2)
         if diff is not None:
             cell += ('<span class="totd %s">%+.2f%%p</span>'
                      % ("pos" if diff > 0 else ("neg" if diff < 0 else ""), diff))
@@ -887,8 +907,8 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                  '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["name"][:40]), esc(r["name"][:40]),
                     esc(r["t"]), _off, esc(sec_short(r["gics"])),
-                    pct(r["wi_raw"], 2), pct(r["wi"], 2), _bg, pct(r["wf"], 2),
-                    pct(r["wp"], 2), ("tk" if r["ws"] else ""), (pct(r["ws"], 2) if r["ws"] else "—"),
+                    pct(r["wi_raw"], 2), pctn(r["wi"], 2), _bg, pctn(r["wf"], 2),
+                    pctn(r["wp"], 2), ("tk" if r["ws"] else ""), (pctn(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq_real"], 0),
                     ("tk" if r["sq"] else ""), (num(r["sq"], 0) if r["sq"] else "—"),
