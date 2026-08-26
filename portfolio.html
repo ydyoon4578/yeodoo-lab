@@ -143,8 +143,8 @@
    오른쪽 전략 표(7열)는 1.1:1 에서 가로 스크롤 없이 들어간다. */
 .fsplit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;align-items:start}
 .fcol{min-width:0}
-.fcolL{padding-right:18px}
-.fcolR{padding-left:18px;border-left:3px solid var(--line)}
+.fcolL{padding-right:12px}
+.fcolR{padding-left:12px;border-left:3px solid var(--line)}
 /* 각 열의 첫 h3 는 위 여백을 줄인다 — 두 열이 나란히 시작하는데 한쪽만 밀리면 어긋나 보인다 */
 .fcol>h3:first-child{margin-top:0;padding-top:0;border-top:0}
 @media(max-width:1280px){
@@ -553,10 +553,19 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
      ⚠ 내비도 같이 넓힌다. 본문만 넓히면 내비보다 본문이 넓어져 화면이 어긋나 보인다
        (셸 주석이 경고해 둔 자리다 — 그래서 둘을 같은 토큰으로 묶는다). */
   /* 2026-08-26 «열 너비 둘다 늘리는게 좋을듯» — 상한 3000 → 4200. 그리고 열 사이
-     여백(26px 씩)을 18px 로 줄인다. 여백은 두 열 모두에서 빠지는 폭이다. */
-  :root{--w-pf:min(99vw,4200px)}
-  .wrap{max-width:var(--w-pf)}
-  .topnav .nvin{max-width:var(--w-pf)}
+     여백(26px 씩)을 18px 로 줄인다. 여백은 두 열 모두에서 빠지는 폭이다.
+     ── 좌우 여백 더 줄이기(같은 날 «화면 더 넓게쓰고싶음») ──────────────────
+     남아 있던 여백을 전부 세어 줄인다. 세 군데였다:
+       ① 99vw  → 화면의 1%가 배경으로 남았다
+       ② .wrap 좌우 18px (#pf-compact 가 잡고 있었다)
+       ③ 내비 .nvin 좌우 20px — 본문만 줄이면 브랜드 로고가 본문보다 안쪽에 남는다
+     ⚠ 100vw 를 쓰지 않는다 — 세로 스크롤바 폭이 100vw 에 포함돼 가로 스크롤이 생긴다.
+       100% 는 그 스크롤바를 뺀 폭이라 안전하다(상한 4200px 은 그대로).
+     ⚠ 0 으로 두지 않는다. 표 테두리가 화면 끝에 붙으면 잘린 것처럼 보이고, 손가락으로
+       스크롤하는 화면에서 가장자리를 못 잡는다. 10px 을 남긴다. */
+  :root{--w-pf:min(100%,4200px)}
+  .wrap{max-width:var(--w-pf);padding-left:10px;padding-right:10px}
+  .topnav .nvin{max-width:var(--w-pf);padding-left:10px;padding-right:10px}
   .chart svg{max-width:none}
   /* ── 웹 앱 UI ─────────────────────────────────────────── */
   .pfsync{flex:1 1 320px;min-width:260px}
