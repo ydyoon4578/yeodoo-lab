@@ -759,7 +759,7 @@ PIT_CODE_REV = "2026-08-19"
 #     2026-08-18: x-indmom 은 규칙문이 '승자 2섹터 전 종목'인데 tgt 10 · 실제 평균 98.8종
 #     (44~162), x-valcomp-sn·x-revdrift-sn 은 규칙문이 '섹터별 1위 1종씩'인데 tgt 10 ·
 #     실제 11.0종 고정이다. short(목표 미달 달)도 같은 tgt 을 쓰므로 셋 다 구조적으로 0 이다.
-WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom",
+WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom", "x-grppick",
                  # 비중상한 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
                  "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
                  "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx")
@@ -3571,7 +3571,15 @@ STRATS = []
 #   → 화면이 쓰는 값으로 다시 걸렀다. 소급은 생존편향으로 부풀려진 쪽이라
 #     PIT 으로 거르는 것이 애초에 맞다.
 # ⚠ 이것도 판정이 아니라 사용자 결정이다. 이 랩은 게시 문턱을 두지 않는다.
-DROPPED = {"t-clvgate",
+DROPPED = {
+           # 산업그룹별 복합 상위 2종 — PREREG-2026-08-29-GRPPICK · 결과 -RESULT.md.
+           #   내린 근거는 성적이 아니라 **이 규칙의 고유한 특징이 성적을 깎는다** 는 것이다:
+           #   같은 복합 점수를 제약 없이 담으면 샤프 1.028 인데 산업그룹 제약을 걸면 0.926
+           #   으로 내려가고(연 −3.62%p · 월간차 t −1.74) 회전율은 오히려 오른다(2.72 대 1.96).
+           #   그룹이 얇아서가 아니다 — 문턱 통과 그룹이 매달 평균 19.4개였다.
+           #   사용자 결정 2026-08-29. 정의는 그대로 두고 막은 것은 등록뿐이다.
+           "x-grppick",
+           "t-clvgate",
            "m-logit",
            "m-ridge",
            "m-tree",
@@ -3973,7 +3981,12 @@ ML_SIDS = {"m-ridge", "m-ridge-w", "m-logit", "m-erc", "m-clust", "m-tree"}
 
 
 # 펀더멘털이 필요한 전략들 — 점수 루프가 람다 대신 갈래로 처리한다(날짜·주식수·주가가 필요).
-FUND_SIDS = {"x-custconc",                     # 2026-08-04 사전등록(PREREG-…-CUSTCONC.md)
+FUND_SIDS = {
+             # 산업그룹별 복합 상위 2종 — PREREG-2026-08-29-GRPPICK. 가치·품질 축이
+             #   펀더멘털이라 이 목록에 들어야 채점 갈래에 진입한다.
+             #   ⚠ 안 넣으면 fn=None 인 채 마지막 else 로 떨어져 죽는다 — 한 번 밟았다.
+             "x-grppick",
+             "x-custconc",                     # 2026-08-04 사전등록(PREREG-…-CUSTCONC.md)
              "x-btp", "x-fcfy", "x-ep", "x-sp", "x-roe", "x-npm",
              # E30 밸류 컴포지트 둘 — 사전등록 PREREG-2026-08-06-E30VALUE.md
              "x-valcomp", "x-valcomp-sn",
@@ -5192,6 +5205,21 @@ def build_strats():
                 "아니라 업종 방향에 좌우된다. 업종마다 회계 구조와 정상 밸류에이션 수준이 달라 " 
                 "같은 업종 안에서 비교해야 순수한 상대 저평가 정보가 남는다는 것이다. "
                 "이 랩의 x-btp 기각이 업종 베팅 탓이었는지를 가린다.")
+    xsec("x-grppick", "산업그룹별 복합 상위 2종 (GICS 25그룹 × 2)",
+         "가치(장부가/주가·FCF/주가·장부가/EV)·품질(매출총이익/총자산)·모멘텀(12-1) 세 축을 "
+         "월말 단면 z-점수로 바꿔 단순평균한 복합점수를 GICS 산업그룹 안에서 매겨, 그룹별 상위 "
+         "2종씩 담는다. 소속 종목이 8종 미만인 그룹은 뺀다(그때 «상위 2종»은 선택이 아니다). "
+         "그룹 안은 동일가중, 그룹 간 비중은 유니버스 산업그룹 시총 비중. 월말 리밸런스.",
+         None,          # z-컴포지트라 단면 전체가 필요해 람다로 못 준다
+         "사용자 요청 2026-08-29 «산업별로 최고의 종목을 뽑아 산업별로 다양하게». 사전등록 "
+         "PREREG-2026-08-29-GRPPICK.md. 🚨 축 대표를 성적으로 고르지 않았다 — 각 축의 «가장 잘 "
+         "나온 규칙»이 아니라 «교과서 대표»다(품질은 Novy-Marx 2013 의 매출총이익/자산). 성적으로 "
+         "골랐다면 저PSR·퍼센트영업발생액을 넣었을 것이다. "
+         "⚠ 알고 시작한 것 둘 — 이 랩의 섹터중립 계열은 게시 중인 것이 0종이라 «중립화하면 "
+         "나아진다»가 아직 확인된 적이 없고, 세 축 중 둘(밸류 컴포지트·GPA)이 2026-08-19 «샤프 "
+         "0.5 미만» 청소 때 떨어진 규칙에서 온다. "
+         "🚨 산업 분류가 현재 시점 GICS 라 소속에 선견이 있다 — PIT 레그도 이 편향은 못 걷는다.",
+         reb="me")
     xsec("x-valcomp", "밸류 컴포지트 상위 %d (섹터 제약 없음)" % TOPN,
          _E30_MET + "가 가장 큰 %d종목 동일가중, 월말 리밸런스. 지수 구분 없이 전체 유니버스." % TOPN,
          None, _E30_WHY,
@@ -6826,7 +6854,7 @@ def xsec_score_at(S, i, X, pool=None):
                 e = asof_fund(f.get("eq"), dt_)
                 # 주당순자산 ÷ 주가. 자본잠식(음수)은 자연히 꼴찌로 간다.
                 v = (e / sn / p0) if (e is not None and mcap) else None
-            elif sid in ("x-valcomp", "x-valcomp-sn"):
+            elif sid in ("x-valcomp", "x-valcomp-sn", "x-grppick"):
                 # 🚨 여기서는 **원지표 셋을 모아 두기만** 한다. z-점수는 단면이
                 #   다 모여야 낼 수 있으므로 아래 루프 밖에서 z_composite 가 만든다.
                 e = asof_fund(f.get("eq"), dt_)
@@ -6846,6 +6874,20 @@ def xsec_score_at(S, i, X, pool=None):
                     ev = mcap + lb - (cs or 0.0)
                     if ev > 0:
                         m["bev"] = e / ev
+                if sid == "x-grppick":
+                    # 복합 세 축 — 사전등록 §1-1. 가치는 위 셋(bp·fcfp·bev)이 그대로 쓰이고
+                    #   여기에 품질과 모멘텀을 더한다. 가중치는 두지 않는다(z 단순평균).
+                    # ⚠ 결측 축은 그냥 빼 둔다 — 0 으로 채우면 z 척도에서 «평균» 이라
+                    #   자료 없는 종목이 중간 순위를 공짜로 받는다(E30 규약).
+                    # 🚨 x-gpa 분기를 베끼지 않는다. ⚠ 이 함수는 스칼라가 아니라
+                    #   (총이익, 매출) 튜플을 준다 — 앞 원소만 쓴다(한 번 밟았다).
+                    _gp, _rv2 = _gross_profit(f, dt_)
+                    _at = asof_fund(f.get("asset"), dt_)
+                    if _gp is not None and _at and _at > 0:
+                        m["gpa"] = _gp / _at
+                    _a252 = ret(P, i - 1, 252)
+                    if _a252 is not None:
+                        m["mom"] = _a252 - (ret(P, i - 1, 21) or 0)
                 if m:
                     comp_raw.setdefault(sid, []).append((t, m))
                 v = None                                   # 점수는 나중에 붙인다
@@ -7283,6 +7325,29 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     돌려주는 것: (new, new_w). new_w 가 None 이면 동일가중이다.
     """
     dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    if S["sid"] == "x-grppick":
+        # 🚨 pick_sector_neutral 을 그대로 부르고 **계층만** 바꾼다(섹터 → 산업그룹).
+        #   사본을 만들면 두 벌이 되고 한쪽만 고쳐지는 날이 온다.
+        # ⚠ 최소 8종 문턱은 그룹명을 빈 문자열로 만들어 거른다 — 그 함수가 이미
+        #   «그룹을 모르는 종목은 뺀다» 를 하고 있어서 새 갈래가 필요 없다.
+        #   문턱은 PREREG-2026-08-28-INDMOM 에서 쓴 상수다(새로 고른 값이 아니다).
+        _g0 = {}
+        for _v, _t in sc:
+            _gg = (meta.get(_t) or {}).get("grp") or ""
+            if _gg:
+                _g0[_gg] = _g0.get(_gg, 0) + 1
+        _grp = {}
+        _mc2 = {}
+        for _v, _t in sc:
+            _gg = (meta.get(_t) or {}).get("grp") or ""
+            _grp[_t] = _gg if _g0.get(_gg, 0) >= 8 else ""
+            _f2 = FU.get(_t) or {}
+            _s2 = asof_fund(_f2.get("sh"), dates[i - 1])
+            _p2 = px[_t][i - 1] if px.get(_t) else None
+            if _s2 and _p2 and _s2 > 0 and _p2 > 0:
+                _mc2[_t] = _s2 * _p2
+        _pw = pick_sector_neutral(sc, _grp, _mc2, per=2)
+        return [t for t, _w in _pw], {t: w for t, w in _pw}
     if S["sid"] in ("x-valcomp-sn", "x-revdrift-sn"):
         # 🚨 섹터 중립 — 각 섹터 1위 1종, 비중은 **유니버스 섹터 시총 비중**.
         #   이 엔진은 원래 동일가중 전제라 비중을 실을 자리가 없었다(부르는 쪽의 hw).

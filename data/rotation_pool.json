@@ -44,10 +44,9 @@
    ],
    "recent_at": "2026-08-14",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "국면 연동 팩터 로테이션 (Regime-Conditional Factor Rotation · A2)",
-    "why": "사전등록 뒤 한 번 돌려 게시 기준 넷을 전부 못 넘었다 — 낙폭조정 수익(Calmar) −0.064(p 0.66) · MDD/CVaR 개선 없음(−0.70/−0.35) · 증분알파 t −1.36 · 대조군(팩터 5종 동일가중) 열위. 문헌이 말한 '정적 팩터 대비 낙폭 축소'가 부호부터 반대였고 판정은 '위험 악화'다. 시간의 70%를 고베타 매핑에 보내는 구조라 국면 판별 이전에 매핑 자체가 위험을 키웠다.",
-    "href": "archive.html#a-regime-factor-rotation"
+    "why": "사전등록 뒤 한 번 돌려 게시 기준 넷을 전부 못 넘었다 — 낙폭조정 수익(Calmar) −0.064(p 0.66) · MDD/CVaR 개선 없음(−0.70/−0.35) · 증분알파 t −1.36 · 대조군(팩터 5종 동일가중) 열위. 문헌이 말한 '정적 팩터 대비 낙폭 축소'가 부호부터 반대였고 판정은 '위험 악화'다. 시간의 70%를 고베타 매핑에 보내는 구조라 국면 판별 이전에 매핑 자체가 위험을 키웠다."
    }
   },
   {
@@ -90,10 +89,9 @@
    ],
    "id": "A4",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "축소추정 최소분산 배분 (Minimum Variance · Ledoit-Wolf)",
-    "why": "무위험금리 착시 — excess Sharpe 0.62 < 60/40 0.67, 채권 불장에 의존.",
-    "href": "archive.html#a-min-variance-lw"
+    "why": "무위험금리 착시 — excess Sharpe 0.62 < 60/40 0.67, 채권 불장에 의존."
    },
    "recent_at": "2026-08-16"
   },
@@ -116,10 +114,9 @@
    ],
    "id": "A5",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "대형주 횡단면 모멘텀 · 200일선 추세 (Large-Cap Momentum · 200-DMA)",
-    "why": "PIT 엄격 적용 시 EPS 리비전 드리프트에 열위(0.83) — 증분 없음.",
-    "href": "archive.html#a-largecap-momentum-200dma"
+    "why": "PIT 엄격 적용 시 EPS 리비전 드리프트에 열위(0.83) — 증분 없음."
    },
    "recent_at": "2026-08-13"
   },
@@ -171,10 +168,9 @@
    "id": "A7",
    "recent_at": "2026-08-20",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "경기순환 섹터 로테이션 (Business-Cycle Sector Rotation · A7)",
-    "why": "사전등록 뒤 두 규칙을 한 번씩 돌려 게시 기준 미달 — Conover판 대조군 열위(위험 악화), Fidelity판 구별 불가(t 0.15). 결정적 진단: NBER 침체 라벨을 그날 아는 것으로 가정해 줘도 SPY 를 못 이긴다(샤프 −0.006). 국면 라벨을 섞으면 32%가 실제보다 낫다. 개선판(A7b: 200일선 게이트+IEF 대피)도 기각 — 샤프·낙폭은 좋아졌으나 incr5 이웃이 전부 200일선 계열이고 원판 대비 증분이 음수다.",
-    "href": "archive.html#a-business-cycle-sector-rotation"
+    "why": "사전등록 뒤 두 규칙을 한 번씩 돌려 게시 기준 미달 — Conover판 대조군 열위(위험 악화), Fidelity판 구별 불가(t 0.15). 결정적 진단: NBER 침체 라벨을 그날 아는 것으로 가정해 줘도 SPY 를 못 이긴다(샤프 −0.006). 국면 라벨을 섞으면 32%가 실제보다 낫다. 개선판(A7b: 200일선 게이트+IEF 대피)도 기각 — 샤프·낙폭은 좋아졌으나 incr5 이웃이 전부 200일선 계열이고 원판 대비 증분이 음수다."
    }
   },
   {
@@ -320,10 +316,9 @@
     "How Did the S&P 500 Fall in July When 59% of Its Stocks Rose? (EBC, 2026-08) — https://www.ebc.com/forex/why-did-the-s-and-p-500-fall-in-july-2026"
    ],
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "돈치안 채널 브레이크아웃 (Donchian Breakout)",
-    "why": "빠른 채널은 거래비용에 사망, 느린 채널은 CAGR 1.8%에 그침.",
-    "href": "archive.html#a-donchian-breakout"
+    "why": "빠른 채널은 거래비용에 사망, 느린 채널은 CAGR 1.8%에 그침."
    },
    "recent_at": "2026-08-14"
   },
@@ -529,10 +524,9 @@
    ],
    "id": "C4",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "오버나이트 드리프트 (Overnight Drift)",
-    "why": "종가매수/시가매도 일별 왕복이 신호의 본질 → 비용 breakeven 2bp.",
-    "href": "archive.html#a-overnight-drift"
+    "why": "종가매수/시가매도 일별 왕복이 신호의 본질 → 비용 breakeven 2bp."
    },
    "recent_at": "2026-08-24"
   },
@@ -558,10 +552,9 @@
    ],
    "id": "C5",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "소형주 단기 반전 롱숏 (Short-Term Reversal · Weekly)",
-    "why": "gross Sharpe 1.97이나 50bp 비용에서 −1.87 — 고회전 본질.",
-    "href": "archive.html#a-smallcap-weekly-reversal"
+    "why": "gross Sharpe 1.97이나 50bp 비용에서 −1.87 — 고회전 본질."
    },
    "recent_at": "2026-08-28"
   },
@@ -664,10 +657,9 @@
     "VIX: Wall Street's fear gauge hits 2026 low (CNBC, 2026-08-17) — https://www.cnbc.com/2026/08/17/stock-market-volatility-vix-wall-street.html"
    ],
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "VIX 기간구조 신호 (VIX Term Structure)",
-    "why": "실현변동성 타게팅과 중복(0.988)이고, 2022 같은 완만한 약세장에선 콘탱고라 개입 자체가 없었다.",
-    "href": "archive.html#a-vix-term-structure"
+    "why": "실현변동성 타게팅과 중복(0.988)이고, 2022 같은 완만한 약세장에선 콘탱고라 개입 자체가 없었다."
    }
   },
   {
@@ -790,10 +782,9 @@
    ],
    "id": "D2",
    "lab": {
-    "v": "배포",
+    "v": "배포 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
     "why": "배포 코어 3슬리브 중 하나. 추세 게이트와 결합해 운용.",
-    "href": "explorer.html#s-rp12",
     "repointed": "2026-08-19 — 같은 규칙이 수동 원장에서 랩(asset_backtest 의 rp12)으로 옮겨져 이름이 바뀌었다. 규칙은 같고 눈금(대조군·무위험금리)이 랩 규약이다."
    },
    "recent_at": "2026-08-27"
@@ -817,10 +808,9 @@
    ],
    "id": "D3",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "시계열 모멘텀 — 멀티에셋 (Time-Series Momentum · CTA)",
-    "why": "통합 포트폴리오의 RP 추세 게이트와 정보 중복(corr 0.43).",
-    "href": "archive.html#a-tsmom-multiasset"
+    "why": "통합 포트폴리오의 RP 추세 게이트와 정보 중복(corr 0.43)."
    },
    "recent_at": "2026-08-14"
   },
@@ -843,10 +833,9 @@
    ],
    "id": "D4",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "테일 리스크 헤지 (Tail-Risk Hedge · Long-Volatility)",
-    "why": "상시 비용부담이 크고, 정작 위기에서도 기대만큼 방어하지 못함.",
-    "href": "archive.html#a-tail-risk-hedge"
+    "why": "상시 비용부담이 크고, 정작 위기에서도 기대만큼 방어하지 못함."
    },
    "recent_at": "2026-08-14"
   },
@@ -889,10 +878,9 @@
    ],
    "id": "D6",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "레짐 조건부 슬리브 스위칭 (Regime-Conditional Sleeve Switching)",
-    "why": "서브기간이 서로 반대로 틸트돼 효과가 상쇄됨.",
-    "href": "archive.html#a-regime-conditional-switch"
+    "why": "서브기간이 서로 반대로 틸트돼 효과가 상쇄됨."
    },
    "recent_at": "2026-08-20"
   },
@@ -1023,10 +1011,9 @@
    ],
    "id": "D11",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "글로벌 듀얼 모멘텀 (Global Equities Momentum · GEM)",
-    "why": "SPY·60/40 대비 Sharpe 열위 — 낮은 MDD만 강점.",
-    "href": "archive.html#a-dual-momentum-gem"
+    "why": "SPY·60/40 대비 Sharpe 열위 — 낮은 MDD만 강점."
    },
    "recent_at": "2026-08-19"
   },
@@ -1102,10 +1089,9 @@
     "Trend Following: Week in Review — July 31, 2026 (Top Traders Unplugged · SG Trend Index 2026년 7월 −1.50%) — https://www.toptradersunplugged.com/trend-following-week-in-review-july-31-2026/"
    ],
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "시계열 모멘텀 — 멀티에셋 (Time-Series Momentum · CTA)",
-    "why": "통합 포트폴리오의 RP 추세 게이트와 정보 중복(corr 0.43).",
-    "href": "archive.html#a-tsmom-multiasset"
+    "why": "통합 포트폴리오의 RP 추세 게이트와 정보 중복(corr 0.43)."
    },
    "recent_at": "2026-08-19"
   },
@@ -1202,10 +1188,9 @@
    ],
    "id": "E5",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "크로스에셋 캐리 (Cross-Asset Carry)",
-    "why": "60/40 '동률'은 GFC 08-11의 산물, 이후 구간에선 지배당함.",
-    "href": "archive.html#a-cross-asset-carry"
+    "why": "60/40 '동률'은 GFC 08-11의 산물, 이후 구간에선 지배당함."
    },
    "recent_at": "2026-08-27"
   },
@@ -1228,10 +1213,9 @@
    ],
    "id": "E6",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "합병차익거래 (Merger Arbitrage · MNA)",
-    "why": "단독 Sharpe 0.39이나 위기에서 tail dependence 폭발(2020-03 −16.2%) — 헤지 아님.",
-    "href": "archive.html#a-merger-arbitrage"
+    "why": "단독 Sharpe 0.39이나 위기에서 tail dependence 폭발(2020-03 −16.2%) — 헤지 아님."
    },
    "recent_at": "2026-08-28"
   },
@@ -1312,10 +1296,9 @@
    ],
    "id": "E9",
    "lab": {
-    "v": "기각",
+    "v": "기각 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "변동성 위험프리미엄 숏볼 (Variance Risk Premium · Short-Vol)",
-    "why": "초과수익의 정체가 레버리지 — 위험조정 개선 0.",
-    "href": "archive.html#a-vrp-short-vol"
+    "why": "초과수익의 정체가 레버리지 — 위험조정 개선 0."
    }
   },
   {
@@ -1983,10 +1966,9 @@
     "Equity Factor Insights Q4 2025 — FTSE Russell / LSEG (2026-01) — https://www.lseg.com/content/dam/ftse-russell/en_us/documents/market-insights/equity-factor/equity-factor-insights-q4-2025.pdf"
    ],
    "lab": {
-    "v": "구별 불가",
+    "v": "구별 불가 · 게시 목록에서 내림(월별 초과 승률 50% 미만 · 사용자 결정 2026-08-29)",
     "t": "섹터 중립 밸류 컴포지트 (Within-Industry Value · E30)",
-    "why": "카드가 규정한 3자 비교를 그대로 돌렸다. 게시 기준은 둘 다 미달(t 2.94/2.67 · 문턱 3.37 · incr5 0.87/0.88)이나, 핵심 비교 (c)−(b)가 연 +3.34%p(t 1.08)로 0 이 아니다 — 섹터 중립화의 방향은 맞고 크기가 모자라다.",
-    "href": "archive.html#a-within-industry-value"
+    "why": "카드가 규정한 3자 비교를 그대로 돌렸다. 게시 기준은 둘 다 미달(t 2.94/2.67 · 문턱 3.37 · incr5 0.87/0.88)이나, 핵심 비교 (c)−(b)가 연 +3.34%p(t 1.08)로 0 이 아니다 — 섹터 중립화의 방향은 맞고 크기가 모자라다."
    }
   },
   {

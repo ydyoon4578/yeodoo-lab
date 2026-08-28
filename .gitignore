@@ -67,3 +67,5 @@ data/_ndx_weights_cache.json
 data/_revscreen_raw.json
 # 오버레이 발동률 집계 — 로컬 재계산용
 data/_revscreen_fire.json
+data/_grppick_raw.json
+data/grppick_probe.json
