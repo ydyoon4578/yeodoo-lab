@@ -206,7 +206,16 @@ PRICE_SIDS = [
 # (build/pit_facts.py, 러너에서 SEC 수집). 그 전에는 "시점별 재무가 없어 제외" 였다.
 #   ⚠ 재무 커버리지가 가격보다 낮다 — 편출 종목 중 몇 종이 실제로 채점되는지 매 실행에 찍고
 #     limits 에 싣는다. 커버리지가 낮으면 그 규칙의 PIT 는 '후보가 생존자로 좁혀진' 쪽이다.
-FUND_SIDS = ["x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
+FUND_SIDS = [
+             # 산업잔차 모멘텀 — PREREG-2026-08-29-RESIDIND. 가격만이 아니라 발행주식수가
+             #   필요하다(산업그룹 수익을 시총가중으로 낸다). 그래서 PRICE_SIDS 가 아니라
+             #   여기다.
+             # 🚨 한계를 여기 적어 둔다 — 산업 분류(members.json 의 grp)는 **현재 명단**만
+             #   갖고 있다. PIT 후보에 든 편출 종목은 grp 가 없어 채점에서 통째로 빠진다.
+             #   즉 이 규칙의 PIT 레그는 «가격은 시점정확인데 분류는 생존자만» 인 반쪽이고,
+             #   등록 §5 가 예고한 그 편향이다. 후보 수가 다른 규칙보다 얇게 나오면 그 탓이다.
+             "x-residind",
+             "x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              "x-dy", "x-fcfy", "x-sue", "x-epsacc",
              "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
              # 2026-07-31 추가 — 전부 흐름 항목이라 ttm2(q, a) 로 읽어야 한다.

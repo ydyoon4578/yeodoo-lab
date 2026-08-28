@@ -3469,12 +3469,17 @@ def load(full=False):
     try:
         _mm = (json.load(io.open(os.path.join(DATA, "members.json"), encoding="utf-8"))
                or {}).get("members") or {}
-        _ns = 0
+        _ns = _ng = 0
         for t in meta:
             _sub = ((_mm.get(t) or {}).get("sub") or "").strip()
             if _sub:
                 meta[t]["sub"] = _sub; _ns += 1
-        print("  GICS 서브산업 %d/%d종" % (_ns, len(meta)))
+            # 산업그룹(grp) — PREREG-2026-08-29-RESIDIND 가 쓴다. 같은 원천에서 같이
+            #   싣는다(두 번째 자료 경로를 만들지 않는다). sub 와 달리 25개 계층이다.
+            _grp = ((_mm.get(t) or {}).get("grp") or "").strip()
+            if _grp:
+                meta[t]["grp"] = _grp; _ng += 1
+        print("  GICS 서브산업 %d/%d종 · 산업그룹 %d/%d종" % (_ns, len(meta), _ng, len(meta)))
     except Exception as _e:
         print("  ⚠ 서브산업 불러오기 실패(%s) — sub 규칙은 후보 0 이 된다" % str(_e)[:50])
     rf = json.load(io.open(os.path.join(DATA, "rf_monthly.json"), encoding="utf-8")).get("monthly") or {}
@@ -5246,6 +5251,20 @@ def build_strats():
          "⚠ JKP 의 정본은 3년 증가율(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다. 같은 신호의 "
          "짧은 창이므로 원논문 t 를 이 규칙의 기대치로 읽지 말 것. 3년판은 사전등록에서 배제했다. "
          "⚠ 직전 총부채가 0 이하인 관측은 뺀다(증가율이 정의되지 않는다).")
+    xsec("x-residind", "산업잔차 모멘텀 상위 %d" % TOPN,
+         "종목의 12-1 모멘텀에서 그 종목이 속한 GICS 산업그룹의 12-1(시총가중)을 뺀 잔차로 "
+         "상위 %d종목 동일가중, 월말 리밸런스. 직전 1개월은 건너뛴다. 산업그룹은 소속 종목이 "
+         "8종 이상인 것만 쓴다 — 얇은 그룹이 기준이 되면 잔차가 «그 몇 종목 대비» 가 된다." % TOPN,
+         None,          # 산업 수익이 단면 전체를 요구해 람다로 못 준다
+         "사전등록 PREREG-2026-08-29-RESIDIND.md. 앞선 등록(PREREG-2026-08-28-INDMOM)이 종목 "
+         "모멘텀을 «산업이 통째로 오른 성분» 과 «그 산업 안에서 더 오른 성분» 으로 갈라 재 보니, "
+         "이 유니버스에서는 산업 성분이 실제 매매 대상보다 못했다(매매대상 대비 dS −0.109). "
+         "값이 없는 층을 신호에 계속 태우고 있었다는 뜻이라, 그 층을 빼고 남은 것만 쓴다. "
+         "Moskowitz·Grinblatt(1999)의 «산업이 종목 모멘텀을 설명한다» 와 반대 방향이고, "
+         "Hoberg·Phillips(2018)가 고정 분류에서 산업 모멘텀이 약하다고 한 쪽과 맞는다. "
+         "⚠ 랩의 x-residmom 과는 다른 축이다 — 그것은 시장·규모·가치 잔차이고 이것은 산업 잔차다. "
+         "🚨 산업 분류가 현재 시점 GICS 라 소속에 선견이 실려 있다. PIT 레그도 이 편향은 못 걷는다.",
+         reb="me")
     xsec("x-indmom", "산업 모멘텀 (승자 2섹터 전 종목)",
          "GICS 11섹터를 각 섹터 소속 종목의 최근 6개월 동일가중 수익률로 정렬해, 상위 2개 "
          "섹터에 속한 모든 종목을 동일가중으로 보유한다. 월말 리밸런스.",
@@ -6649,6 +6668,22 @@ def xsec_score_at(S, i, X, pool=None):
             # 위 xsec 등록부의 센티널 교정과 같은 사유(2026-08-18) — 결측은 None.
             _a = ret(P, i - 1, 5)
             v = None if _a is None else -_a
+        elif sid == "x-residind":
+            # 🚨 여기서는 **모으기만** 한다. 산업그룹 수익은 단면이 다 모여야 낼 수 있으므로
+            #   잔차는 아래 루프 밖에서 만든다(x-indmom·E30 과 같은 방식).
+            #   사전등록 PREREG-2026-08-29-RESIDIND.md — 상수는 전 등록에서 안 바꿨다.
+            _a = ret(P, i - 1, 252)
+            _m12 = None if _a is None else _a - (ret(P, i - 1, 21) or 0)
+            _gg = (meta.get(t) or {}).get("grp") or ""
+            _f = FU.get(t) or {}
+            _sh = asof_fund(_f.get("sh"), dates[i - 1])
+            _p0 = P[i - 1] if i - 1 < len(P) else None
+            if _m12 is not None and _gg and _sh and _p0 and _sh > 0 and _p0 > 0:
+                ind_raw.setdefault(_gg, []).append((t, _m12, _sh * _p0))
+            # ⚠ 이 갈래는 **모으기만** 하고 점수는 루프 밖에서 만든다. 그래도 v 를 명시로
+            #   비워 둬야 한다 — 루프 꼬리가 v 를 읽으므로 안 그러면 UnboundLocalError 다
+            #   (x-indmom 갈래는 위쪽에 v 를 두는 다른 경로라 안 걸렸다). 한 번 밟았다.
+            v = None
         elif sid == "x-indmom":
             # 🚨 여기서는 **섹터 수익률을 모으기만** 한다. 섹터 정렬은 단면이
             #   다 모여야 낼 수 있으므로 아래 루프 밖에서 한다(E30 과 같은 방식).
@@ -7078,6 +7113,14 @@ def xsec_score_at(S, i, X, pool=None):
         sc = [(z, t) for t, z in z_composite(comp_raw[S["sid"]]).items()]
     # 산업 모멘텀 — 종목 점수는 자기 섹터의 6개월 수익률이다. 커버리지
     # 게이트(len(sc))가 종목 수를 세도록 sc 를 채워 둔다.
+    if S["sid"] == "x-residind" and ind_raw:
+        # 최소 8종 문턱 — 얇은 그룹이 기준이 되면 잔차가 «그 몇 종목 대비» 가 된다.
+        #   사전등록 §1 의 상수이고 결과를 보고 만지지 않는다.
+        _ok = {g: v for g, v in ind_raw.items() if len(v) >= 8}
+        _gr = {g: sum(m12 * mc for _t, m12, mc in vs) / sum(mc for _t, _m, mc in vs)
+               for g, vs in _ok.items() if sum(mc for _t, _m, mc in vs) > 0}
+        sc = [(m12 - _gr[g], t) for g, vs in _ok.items() if g in _gr
+              for t, m12, _mc in vs]
     if S["sid"] == "x-indmom" and ind_raw:
         _sr = {s: sum(r for _t, r in v) / len(v) for s, v in ind_raw.items() if v}
         sc = [(_sr[s], t) for s, v in ind_raw.items() for t, _r in v if s in _sr]
