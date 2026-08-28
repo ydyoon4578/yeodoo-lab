@@ -69,3 +69,15 @@ data/_revscreen_raw.json
 data/_revscreen_fire.json
 data/_grppick_raw.json
 data/grppick_probe.json
+
+# E18 «구현 A» 오버레이(PREREG-2026-08-29-ASWRITTEN §2) 로컬 캐시
+#   배제 비율 두 판(10% · 20%)을 나란히 돌린다 — 각 판이 엔진 전체 산출이라 커밋 금지.
+data/_maxscreen_raw_10.json
+data/_maxscreen_raw_20.json
+data/_maxscreen_fire_10.json
+data/_maxscreen_fire_20.json
+# 승률 컷 재적용용 덤프(strategy_index.py --winrate-audit). 목록을 사람이 고칠 때 쓰는
+#   중간 산출이고 화면이 안 읽는다.
+data/_winrate_audit.json
+# 원 전략 재현 등록의 시험 실행(사이트 산출물을 안 덮으려고 밑줄로 돌린 것)
+data/_aswritten_dry.json

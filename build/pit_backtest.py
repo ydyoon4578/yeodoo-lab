@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-08-19"
+CODE_REV = "2026-08-29"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -1027,25 +1027,15 @@ def main():
     rf = {k: v for k, v in rf.items() if k >= dates[i0][:7]}
 
     TB.build_strats()
-    # 🚨 바스켓 크기 전수 시험(PREREG-2026-08-13-NSWEEP.md)의 변형은 여기서 걷는다.
-    #   랩 본편이 셋 중 하나만 남기고 나머지를 버리므로, PIT 이 그 버려진 것까지 돌면
-    #   화면에 없는 규칙을 재는 셈이다. 그리고 **승자가 쓴 N 을 그대로 적용해야 한다** —
-    #   안 하면 화면은 20종인데 PIT 은 10종을 재고, 그 차이가 '생존편향'으로 잘못 읽힌다.
-    TB.STRATS[:] = [s for s in TB.STRATS if "~n" not in s["sid"]]
-    try:
-        _tech = json.load(io.open(os.path.join(DATA, "tech_strategies.json"), encoding="utf-8"))
-        _nsel = {r["sid"]: (r.get("nsel") or {}).get("n")
-                 for r in (_tech.get("strategies") or []) if r.get("nsel")}
-    except Exception:
-        _nsel = {}
-    _applied = 0
-    for _s in TB.STRATS:
-        _n = _nsel.get(_s["sid"])
-        if _n and _n != TB.TOPN:
-            _s["topn"] = _n; _applied += 1
-    if _nsel:
-        print("  바스켓 승자 N 적용 %d종(10 이 아닌 것) / 전수 시험 %d종"
-              % (_applied, len(_nsel)))
+    # 🚨 2026-08-29 — 여기 있던 «바스켓 승자 N 적용» 을 걷었다
+    #   (PREREG-2026-08-29-ASWRITTEN.md §0 · 사용자 지시로 전수 시험 자체를 폐기).
+    #   종전에는 ① `~n` 변형을 STRATS 에서 걷고 ② 랩 산출물(tech_strategies.json)의
+    #   `nsel.n` 을 읽어 승자가 쓴 N 을 PIT 레그에 되먹였다. 그 되먹임이 필요했던 이유는
+    #   «화면은 20종인데 PIT 은 10종을 재고, 그 차이가 생존편향으로 잘못 읽힌다» 였는데,
+    #   이제 두 레그가 처음부터 같은 N(규칙의 topn 아니면 TOPN)을 든다.
+    # ⚠ **이 파일이 랩 산출물을 읽어 자기 설정을 바꾸던 유일한 고리였다.** 그 고리가
+    #   사라졌으므로 PIT 레그는 tech_strategies.json 의 존재에 더는 안 매인다 — 순서가
+    #   뒤바뀌어 낡은 파일을 읽고 조용히 다른 N 을 재던 경로도 같이 없어졌다.
     BY = {s["sid"]: s for s in TB.STRATS}
     # 🚨 투자의견 이력을 **이 프로세스에도 올린다.** 랩 본편은 run() 안에서 load_ratings()
     #   를 부르는데(TB._RAT), 이 파일은 TB.STRATS 만 빌려 쓰고 그 초기화를 안 거친다.
@@ -1079,8 +1069,11 @@ def main():
                      #   밴드 12종이 «통과» 라 적힌 채 레그 없이 게시되고 있었다.
                      #   ⚠ 이 검사는 일부러 부숴서 확인했다: 밴드 하나를 목록에서 빼면
                      #     이제 죽는다(전에는 조용히 통과했다).
-                     and s["sid"] not in _listed
-                     and "~n" not in s["sid"])
+                     and s["sid"] not in _listed)
+    # ⚠ 2026-08-29 — 여기 `and "~n" not in s["sid"]` 가 붙어 있었다. 바스켓 크기 전수 시험의
+    #   변형을 이 완결성 검사에서 빼 주던 면제인데, 그 시험이 폐기돼(PREREG-2026-08-29-
+    #   ASWRITTEN.md §0) 면제할 대상이 없다. **면제를 남겨 두면 언젠가 `~n` 이 든 새 sid 가
+    #   조용히 검사를 빠져나간다** — 이 검사가 막으려던 바로 그 사고다.
     if _orphan:
         sys.exit(
             "PIT 목록에 없는 횡단면 규칙 %d종: %s\n"
