@@ -307,13 +307,6 @@
   .ktile .v{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.05;font-variant-numeric:tabular-nums}
   .ktile .s{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}
   .kindtiles .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:9px}
-  /* 바스켓 크기 표 — 고른 줄을 굵게. */
-  .nselwrap{padding:13px 18px 14px;border-bottom:1px solid var(--line-soft)}
-  .nselwrap .kh{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-  .nseltbl td,.nseltbl th{font-variant-numeric:tabular-nums}
-  .nseltbl tbody tr.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
-  .nseltbl tbody tr.on th,.nseltbl tbody tr.on td{font-weight:700;color:var(--ink)}
-  .nselwrap .knote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
   /* 국면 탭 + 그 탭의 표본 고지. 🚨 배너는 장식이 아니라 **탭을 만든 조건**이다
      (2026-08-12 사용자 결정) — 여섯 국면 중 셋이 사건 하나짜리라, 그 사실을 탭 머리에
      크게 적는 것을 조건으로 탭을 만들었다. 지우지 말 것. */
@@ -1626,7 +1619,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           d._pr=x.pr||null; d._prs=x.pr_split||null; d._bl=x.bench_label?ixL(x.bench_label):null;
           d._mx=x.metrics||null;   // 전략 자신의 지표 — 지수 눈금과 나란히 놓을 왼쪽 열
           d._rg=x.rg||null;        // 국면별 월평균(build/strategy_index.py:_regime_stats)
-          d._nsel=x.nsel||null;    // 바스켓 크기 전수 시험의 선택 기록
           d._prb=x.pr_basis||null; // 그 전략의 지표가 어느 주기로 계산됐나(일간/월말)
           // 🚨 2026-08-13 — 보조 대조군을 배포 원장 카드에도 잇는다. 위 add 는 원장을
           //   걸러내므로(이미 D 에 있다) 이 이름 맞춤 고리가 유일한 통로다. 안 이으면
@@ -2900,29 +2892,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
       return out;
     }
-    // ── 바스켓 크기 — 셋 중 골랐다는 사실을 카드가 스스로 말한다 ──────────────
-    // 🚨 이 블록이 PREREG-2026-08-13-NSWEEP.md §4① 이다. 이 시험은 같은 표본에서 셋을
-    //   돌려 최고를 고른 것이라, 그 사실을 안 적으면 그냥 데이터마이닝이다. 셋을 다 보이고
-    //   부풀림(고른 t − 셋의 중앙 t)을 같이 적는다.
-    function nselBlock(d){
-      var q=d&&d._nsel; if(!q||!q.tried||q.tried.length<2)return '';
-      var f=function(v,nd){return (v==null)?'—':Number(v).toFixed(nd==null?2:nd);};
-      var rows=q.tried.map(function(x){
-        var on=(x.n===q.n);
-        return '<tr'+(on?' class="on"':'')+'><th scope="row">'+x.n+'종'+(on?' ←':'')+'</th>'+
-          '<td>'+f(x.sharpe,3)+'</td><td>'+f(x.cagr)+'%</td><td>'+f(x.mdd)+'%</td>'+
-          '<td>'+f(x.turnover)+'</td></tr>';
-      }).join('');
-      return '<div class="nselwrap"><div class="kh">바스켓 크기 — 셋을 돌려 골랐습니다</div>'+
-        '<div class="tblwrap"><table class="cmptbl nseltbl"><thead><tr>'+
-        '<th scope="col">크기</th><th scope="col">샤프</th><th scope="col">CAGR</th>'+
-        '<th scope="col">최대낙폭</th><th scope="col">회전율</th></tr></thead>'+
-        '<tbody>'+rows+'</tbody></table></div>'+
-        '<p class="knote">🚨 <b>샤프가 가장 높은 크기를 골랐습니다</b>(사용자 결정). '+
-        '같은 표본에서 셋을 돌려 최고를 고른 것이므로 <b>이 규칙의 수치는 그만큼 유리하게 '+
-        '잡혀 있습니다</b> — 고른 값과 셋의 중앙값 차이가 <b>'+f(q.inflate,3)+'</b>입니다. '+
-        '⚠ 점수 산식은 셋이 똑같고 다른 것은 상위 몇 종을 담느냐뿐입니다.</p></div>';
-    }
+    // ⚠ 2026-08-29 — 여기 있던 nselBlock() 을 걷었다. 바스켓 크기 전수 시험
+    //   (PREREG-2026-08-13-NSWEEP)의 «셋을 돌려 골랐습니다» 표를 카드에 그리던 자리다.
+    //   그 시험이 폐기돼(PREREG-2026-08-29-ASWRITTEN.md §0) 원천에 nsel 칸이 안 실린다.
+    //   🚨 고지를 걷은 것이 아니라 **고지할 선택이 없어진 것**이다.
 
     // ── 국면별 성적 ─────────────────────────────────────────────────────
     // 탭으로 나누지 않는 이유를 여기 적어 둔다(2026-08-12 결정). 국면 탭을 만들면 화면이
@@ -3275,7 +3248,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       // 🚨 2026-08-13 — 여기 있던 cmpBlock(d) 를 뺐다. 아래 공통 조립이 **모든 카드에**
       //   이미 그리고 있어서, 랩 카드만 같은 지수 비교표가 두 번 나왔다(실측 165종).
       //   양식이 카드마다 다르다는 지적의 한 갈래가 이것이다.
-      play = perf + nselBlock(d) + rgBlock(d) + holdHtml +
+      play = perf + rgBlock(d) + holdHtml +
         (labRows.length?'<div class="labtbl"><table><tbody>'+labRows.map(function(r){
           // 🚨 값은 기본이 esc 다. **세 번째 원소가 true 인 줄만** 이미 만들어진 HTML 로
           //   본다(지금은 원 논문 링크 하나뿐이다). 이 문을 열어 두는 대신, 넣는 쪽에서
