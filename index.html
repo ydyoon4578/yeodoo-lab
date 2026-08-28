@@ -3584,8 +3584,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function wrCell(w){
       if(!w||w.win==null)return '<td class="wr z">—</td>';
       var c=w.win>50?'up':(w.win<50?'dn':'');
-      return '<td class="wr '+c+'">'+w.win.toFixed(1)+'%'+
-             '<em class="wrn">'+w.n+'개월</em></td>';
+      // SPX / NDX 를 나란히 — 바로 옆 최대낙폭 칸(triCell)이 쓰는 것과 같은 관례다.
+      //   ⚠ NDX 는 분모가 따로다(그 지수가 없는 달은 안 센다). 없으면 '—' 로 둔다.
+      var nd=(w.win_ndx==null)?'—':w.win_ndx.toFixed(1)+'%';
+      return '<td class="wr '+c+'"><b>'+w.win.toFixed(1)+'%</b>'+
+             '<em class="wrn">NDX '+nd+' · '+w.n+'개월</em></td>';
     }
 
     function draw(){
