@@ -1276,17 +1276,34 @@ try:
         _ixn = {"SPY": "S&P 500", "QQQ": "나스닥 100", "DIA": "다우존스 30", "IWM": "러셀 2000"}
         _bad = []
         for _hz, _blk in (_P.get("series") or {}).items():
+            # 🚨 자료 건강 — 못 박기로 사라지지 않는 진짜 관측이다. home_perf 가 못 박기
+            #   **전** 의 분봉·종가 차이를 gap_max 로 적는다. 그 수가 없으면 대조를 아예
+            #   안 한 것이고, 그러면 아래 «끝값이 같다» 가 자료가 맞다는 증거가 못 된다.
+            #   ⚠ 문턱은 여기 두지 않는다 — home_perf 의 가드(0.15)가 정본이다.
+            #   ⚠ 반드시 **루프 안**이어야 한다. 밖에 두면 _hz 가 마지막 지평선이라
+            #     조건이 영영 거짓이 된다 — 2026-08-28 에 실제로 그렇게 넣었고 일부러
+            #     gap_max 를 지워 보고서야 안 걸린다는 것을 알았다.
+            if _hz == "1D" and _blk.get("ix") and _blk.get("gap_max") is None:
+                errors.append("홈 1D 시계열에 gap_max 가 없다 — 분봉과 표를 대조하지 "
+                              "않았다는 뜻이다. 끝점은 표와 같게 못 박혀 있으므로 «끝값이 "
+                              "같다» 는 것이 자료가 맞다는 증거가 되지 못한다"
+                              "(build/home_perf.py 를 확인할 것)")
             for _x in (_MB.get("index") or []):
                 _nm = _ixn.get(_x.get("t"))
                 _w = (_x.get("r") or {}).get(_hz)
                 _v = (_blk.get("ix") or {}).get(_nm) or []
-                if _nm and _w is not None and _v and _v[-1] is not None and abs(_w - _v[-1]) > 0.011:
+                if _nm and _w is not None and _v and _v[-1] is not None and round(_v[-1], 2) != round(_w, 2):
                     _bad.append("%s %s 표 %.2f vs 그림 %.2f" % (_hz, _nm, _w, _v[-1]))
             for _s in _secs:
                 _w = (_s.get("r") or {}).get(_hz)
                 _v = (_blk.get("sec") or {}).get(_s.get("nm")) or []
-                if _w is not None and _v and _v[-1] is not None and abs(_w - _v[-1]) > 0.011:
+                if _w is not None and _v and _v[-1] is not None and round(_v[-1], 2) != round(_w, 2):
                     _bad.append("%s %s 표 %.2f vs 그림 %.2f" % (_hz, _s.get("nm"), _w, _v[-1]))
+        # 🚨 아래 검사의 뜻이 2026-08-28 에 바뀌었다. 전에는 «분봉으로 그린 끝점이 표와
+        #   맞나» 를 물었는데, home_perf 가 끝점을 표와 같은 식으로 못 박으면서(분봉
+        #   마지막 체결가는 마감 동시호가를 못 담아 구조적으로 표와 다르다) 이제는
+        #   «그 못 박기가 살아 있나» 를 묻는 회귀 가드다. 문턱을 반올림 오차 수준까지
+        #   표시 자릿수(둘째 자리)에서 같은지로 본다 — 문턱을 고르지 않는다.
         if _bad:
             errors.append("홈 시계열의 끝값이 기간별 수익률 표와 다르다(%d건): %s — "
                           "python build/home_perf.py 를 market_board 뒤에 다시 돌릴 것"
