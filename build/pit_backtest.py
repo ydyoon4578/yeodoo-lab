@@ -226,6 +226,8 @@ FUND_SIDS = [
              "x-custconc",
              # 2026-08-11 바스켓 크기 3종 — 위 PRICE_SIDS 의 같은 주석 참조.
              "x-btp-n155", "x-payout-n50", "x-agrow-n52",
+             # 2026-08-30 BASKET2 — 짝 x-poacc 와 같은 갈래를 탄다(_BASE_SID).
+             "x-poacc-n52",
              # 2026-08-11 — 위 PRICE_SIDS 의 같은 사유. 옮기다 랩 본편의 선견을 찾았다.
              "x-debtiss",
              # 2026-08-11 개편으로 풀린 것들(위 PRICE_SIDS 의 같은 사유).
@@ -301,6 +303,8 @@ EXCLUDED_SIDS = {
     #   밑동(x-revdrift · x-revdrift-sn)이 아래에서 제외된 그 사유가 변형에도 그대로
     #   적용된다. 변형만 돌리면 밑동과 다른 유니버스를 보게 되어 둘을 못 나란히 놓는다.
     "x-revdrift-band": "밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
+    # 2026-08-30 BASKET2 — 크기만 다른 변형이라 밑동의 자료 제약을 그대로 물려받는다.
+    "x-revdrift-n25": "밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
     "x-revdrift-sn-band": "밑동 x-revdrift-sn 과 같은 사유 — 아래 항목 참조",
     # ── 2026-08-24 GICS 서브산업 기반 3종 — **자료가 없어 완전 PIT 이 불가능하다** ────
     # 🚨 실측: 창 안 편출 종목 336종 중 GICS 서브산업(members.json 의 sub)이 있는 것이
