@@ -5906,8 +5906,8 @@
     "one": {
      "vs": "통화조건 섹터 로테이션 (Conover 2008)",
      "corr": 0.177,
-     "alpha": 4.39,
-     "t": 4.17,
+     "alpha": 4.37,
+     "t": 4.15,
      "beta": 0.059
     },
     "five": {
@@ -6406,7 +6406,7 @@
      {
       "k": "꼬리위험 CVaR 개선",
       "v": 0.02,
-      "p": 0.2592
+      "p": 0.2595
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
@@ -6602,7 +6602,7 @@
      "beta": 0.396
     },
     "five": {
-     "alpha": 3.78,
+     "alpha": 3.77,
      "t": 1.28,
      "n": 363,
      "vs": [
@@ -7471,7 +7471,7 @@
      {
       "k": "꼬리위험 CVaR 개선",
       "v": 0.076,
-      "p": 0.0483
+      "p": 0.0485
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
@@ -7486,9 +7486,9 @@
    "incr": {
     "one": {
      "vs": "능형회귀 1개월 예측 (SPY 롱/현금)",
-     "corr": 0.514,
+     "corr": 0.515,
      "alpha": 0.4,
-     "t": 0.39,
+     "t": 0.4,
      "beta": 0.328
     },
     "five": {
@@ -7821,7 +7821,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": 0.173,
-      "p": 0.288
+      "p": 0.2878
      }
     ],
     "n_boot": 4000,
@@ -8351,7 +8351,7 @@
    "incr": {
     "one": {
      "vs": "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
-     "corr": 0.676,
+     "corr": 0.677,
      "alpha": -0.08,
      "t": -0.03,
      "beta": 1.052
@@ -8691,7 +8691,7 @@
      "beta": 0.903
     },
     "five": {
-     "alpha": 0.37,
+     "alpha": 0.36,
      "t": 0.36,
      "n": 507,
      "vs": [
@@ -14845,7 +14845,7 @@
      "corr": 0.467,
      "alpha": -2.5,
      "t": -1.52,
-     "beta": 0.729
+     "beta": 0.73
     },
     "five": {
      "alpha": -2.58,
@@ -15940,8 +15940,8 @@
      "beta": 1.0
     },
     "five": {
-     "alpha": 0.0,
-     "t": 0.0,
+     "alpha": -0.0,
+     "t": -0.0,
      "n": 363,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -16148,7 +16148,7 @@
     },
     "five": {
      "alpha": -0.03,
-     "t": -0.26,
+     "t": -0.25,
      "n": 363,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -16355,11 +16355,11 @@
      "vs": "매니지드 퓨처스 위성 배분 (DBMF 20%)",
      "corr": 0.915,
      "alpha": -4.99,
-     "t": -2.16,
+     "t": -2.15,
      "beta": 1.669
     },
     "five": {
-     "alpha": -4.47,
+     "alpha": -4.46,
      "t": -1.98,
      "n": 363,
      "vs": [
@@ -17097,7 +17097,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -17492,6 +17492,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -17578,6 +17579,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -18006,6 +18008,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -18092,6 +18095,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -18128,7 +18132,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -18832,7 +18836,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -19227,6 +19231,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -19313,6 +19318,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -19741,6 +19747,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -19827,6 +19834,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -19863,7 +19871,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -20562,7 +20570,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -20957,6 +20965,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -21043,6 +21052,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -21471,6 +21481,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -21557,6 +21568,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -21593,7 +21605,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -22292,7 +22304,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -22687,6 +22699,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -22773,6 +22786,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -23201,6 +23215,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -23287,6 +23302,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -23323,7 +23339,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -24022,7 +24038,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -24417,6 +24433,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -24503,6 +24520,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -24931,6 +24949,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -25017,6 +25036,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -25053,7 +25073,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -25752,7 +25772,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 512,
+    "n": 514,
     "tickers": [
      "A",
      "AAPL",
@@ -26147,6 +26167,7 @@
      "Q",
      "QCOM",
      "RCL",
+     "RDDT",
      "REG",
      "REGN",
      "RF",
@@ -26233,6 +26254,7 @@
      "VLO",
      "VLTO",
      "VMC",
+     "VMRK",
      "VRSK",
      "VRSN",
      "VRT",
@@ -26661,6 +26683,7 @@
      "Q": "QNITY ELECTRONICS INC",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
@@ -26747,6 +26770,7 @@
      "VLO": "VALERO ENERGY CORP",
      "VLTO": "VERALTO CORP",
      "VMC": "VULCAN MATERIALS CO",
+     "VMRK": "Vivmark Residential",
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "VRT": "VERTIV HOLDINGS CO-A",
@@ -26783,7 +26807,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 512종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 514종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32345,9 +32369,9 @@
      "MSTR",
      "ON",
      "PLTR",
+     "RDDT",
      "SHOP",
-     "SNDK",
-     "VEEV"
+     "SNDK"
     ],
     "names": {
      "ALAB": "ASTERA LABS INC",
@@ -32357,9 +32381,9 @@
      "MSTR": "MICROSTRATEGY INC-CL A",
      "ON": "ON SEMICONDUCTOR",
      "PLTR": "PALANTIR TECHNOLOGIES INC-A",
+     "RDDT": "Reddit",
      "SHOP": "SHOPIFY INC - CLASS A",
-     "SNDK": "SANDISK CORP",
-     "VEEV": "Veeva Systems Inc A"
+     "SNDK": "SANDISK CORP"
     },
     "weights": null,
     "exposure_now": null,
@@ -34539,24 +34563,24 @@
     "n": 10,
     "tickers": [
      "ALAB",
-     "AMD",
      "CPRT",
      "GRMN",
      "ISRG",
      "MPWR",
      "PLTR",
+     "RDDT",
      "SHOP",
      "TPL",
      "TROW"
     ],
     "names": {
      "ALAB": "ASTERA LABS INC",
-     "AMD": "ADVANCED MICRO DEVICES",
      "CPRT": "COPART INC",
      "GRMN": "GARMIN LTD",
      "ISRG": "INTUITIVE SURGICAL INC",
      "MPWR": "MONOLITHIC POWER SYSTEMS INC",
      "PLTR": "PALANTIR TECHNOLOGIES INC-A",
+     "RDDT": "Reddit",
      "SHOP": "SHOPIFY INC - CLASS A",
      "TPL": "TEXAS PACIFIC LAND CORP",
      "TROW": "T ROWE PRICE GROUP INC"
@@ -36247,25 +36271,25 @@
      "ALAB",
      "ALNY",
      "APP",
-     "BG",
      "CRWV",
      "EQT",
      "EXE",
      "KEY",
      "NBIS",
-     "NVDA"
+     "NVDA",
+     "RDDT"
     ],
     "names": {
      "ALAB": "ASTERA LABS INC",
      "ALNY": "ALNYLAM PHARMACEUTICALS INC",
      "APP": "APPLOVIN CORP-CLASS A",
-     "BG": "BUNGE GLOBAL SA",
      "CRWV": "COREWEAVE INC-CL A",
      "EQT": "EQT CORP",
      "EXE": "EXPAND ENERGY CORP",
      "KEY": "KEYCORP",
      "NBIS": "NEBIUS GROUP NV",
-     "NVDA": "NVIDIA CORP"
+     "NVDA": "NVIDIA CORP",
+     "RDDT": "Reddit"
     },
     "weights": null,
     "exposure_now": null,
@@ -40125,10 +40149,10 @@
      "ALNY",
      "CVNA",
      "ECHO",
-     "FSLR",
      "INTU",
      "ISRG",
      "ON",
+     "RDDT",
      "SHOP",
      "WDAY"
     ],
@@ -40137,10 +40161,10 @@
      "ALNY": "ALNYLAM PHARMACEUTICALS INC",
      "CVNA": "CARVANA CO",
      "ECHO": "ECHOSTAR CORP-A",
-     "FSLR": "FIRST SOLAR INC",
      "INTU": "INTUIT INC",
      "ISRG": "INTUITIVE SURGICAL INC",
      "ON": "ON SEMICONDUCTOR",
+     "RDDT": "Reddit",
      "SHOP": "SHOPIFY INC - CLASS A",
      "WDAY": "WORKDAY INC-CLASS A"
     },
@@ -49784,7 +49808,6 @@
      "MDLZ",
      "MDT",
      "MET",
-     "MLM",
      "MS",
      "MSTR",
      "MTB",
@@ -49832,6 +49855,7 @@
      "USB",
      "VICI",
      "VLO",
+     "VMRK",
      "VZ",
      "WBD",
      "WEC",
@@ -49941,7 +49965,6 @@
      "MDLZ": "MONDELEZ INTERNATIONAL INC-A",
      "MDT": "MEDTRONIC PLC",
      "MET": "METLIFE INC",
-     "MLM": "MARTIN MARIETTA MATERIALS",
      "MS": "MORGAN STANLEY",
      "MSTR": "MICROSTRATEGY INC-CL A",
      "MTB": "M & T BANK CORP",
@@ -49989,6 +50012,7 @@
      "USB": "US BANCORP",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
+     "VMRK": "Vivmark Residential",
      "VZ": "VERIZON COMMUNICATIONS INC",
      "WBD": "WARNER BROS DISCOVERY INC",
      "WEC": "WEC ENERGY GROUP INC",
@@ -50183,7 +50207,7 @@
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 94.9,
+    "exposure_now": 95.0,
     "note": "노출 95%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -56384,7 +56408,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-07-31",
-    "n": 38,
+    "n": 39,
     "tickers": [
      "AMT",
      "CAH",
@@ -56415,6 +56439,7 @@
      "NSC",
      "O",
      "PPG",
+     "RDDT",
      "REG",
      "SBAC",
      "SHW",
@@ -56455,6 +56480,7 @@
      "NSC": "NORFOLK SOUTHERN CORP",
      "O": "REALTY INCOME CORP",
      "PPG": "PPG INDUSTRIES INC",
+     "RDDT": "Reddit",
      "REG": "REGENCY CENTERS CORP",
      "SBAC": "SBA COMMUNICATIONS CORP",
      "SHW": "SHERWIN-WILLIAMS CO/THE",
@@ -56467,7 +56493,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-07-31)에서 고른 38종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-07-31)에서 고른 39종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
