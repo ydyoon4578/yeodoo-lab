@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-08-29"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
+CODE_REV = "2026-09-02"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -250,7 +250,16 @@ FUND_SIDS = [
              #   x-reta 는 이익잉여금 ÷ 총자산이라 re 와 asset 이 둘 다 있어야 채점된다.
              #   실측 커버리지: 편출 71/75(95%) · 랩 502/519(97%) 로 거의 같다 —
              #   후보가 생존자로 좁혀지지 않으므로 두 레그 비교가 성립한다(x-currat 과 같은 기준).
-             "x-reta"]
+             "x-reta",
+             # 2026-09-02 A1 — PREREG-2026-09-02-A1PAYOUT.md. 자격필터형이라 후보 수
+             #   관문을 안 탄다(TB.min_pool → SCREEN_SIDS). PIT 레그도 같은 함수를
+             #   쓰므로 그쪽 관문도 같이 풀린다 — 안 그러면 편출 후보가 붙어도 22종짜리
+             #   바스켓이 30 문턱에 걸려 통째로 무보유가 된다.
+             # ⚠ 짝 x-divgrow 와 같은 반쪽 한계를 그대로 물려받는다 — 편출 145종 중
+             #   dps 가 71종(49%)뿐이라 무배당과 자료없음을 못 가른다. 게다가 이 규칙은
+             #   bb·debt·cash·opinc·dep 까지 요구하므로 편출 쪽 커버가 더 얇아진다.
+             #   PIT 후보가 랩보다 크게 얇으면 그 사실을 결과 문서에 적는다.
+             "x-a1payout"]
 
 # ── 타이밍·오버레이 22종 ────────────────────────────────────────────────────
 # 🚨 2026-08-14 — **이제 잰다.** 종전에는 산출물의 na_timing 이 "타이밍 규칙은 지수·ETF 를
@@ -1423,7 +1432,7 @@ def main():
                 #   머리주석의 목록과 같게 맞춘 것이다 — 두 파일이 갈리면 여기가 먼저 낡는다.
                 pool = pool_at(i - 1) if pool_at else _today
                 sc, ind_raw, _cr = TB.xsec_score_at(S, i, XX, pool)
-                if len(sc) < TB.XSEC_MIN_POOL:                  # 소급 레그와 같은 커버리지 게이트
+                if len(sc) < TB.min_pool(S["sid"]):             # 소급 레그와 같은 커버리지 게이트
                     hold, hw = [], None
                 else:
                     # 🚨 held 를 넘긴다(2026-08-25). 안 넘기면 밴드 변형이 매달 held=None
