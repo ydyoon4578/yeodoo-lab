@@ -2342,6 +2342,88 @@ def build():
          "Jacobsen·Visaltanachoti(2009)는 핼러윈 효과가 경기민감 섹터에 몰려 있다고 보고한다. "
          "신호에 가격이 전혀 안 들어간다 — 달력만 본다.")
 
+    # ══ 섹터 등급리비전 로테이션 (사전등록 PREREG-2026-09-01-SECREV.md) ═════
+    # 🚨 위 열 열둘(SECROT 10 + sec-mom4 + sector-rp)이 **전부 가격·변동성·매크로**다.
+    #   펀더멘털/리비전 신호가 하나도 없다 — 안 가 본 칸이고 그것이 이 등록의 근거다.
+    # 🚨 이 규칙만 **유니버스가 다르다.** 위 열은 9섹터만 사는데(XLC·XLRE 제외) 이 규칙은
+    #   그 시점 상장된 것 전부를 후보로 둔다. 사유는 등록 §1-1 — 둘을 빼도 램프의 원인은
+    #   이미 자료 안에 있다(2018-09 GICS 재편으로 XLK·XLY 구성이, 2016-09 부동산 분리로
+    #   XLF 구성이 그날부터 달라졌다). 제외는 그 사실을 숨길 뿐이고 대신 통신·부동산을
+    #   영영 못 사는 맹점을 만든다. 상장일부터 넣는 것이 이 랩의 PIT 규약 그 자체다.
+    #   ⚠ **기존 10종의 SEC9·_s9bench 는 한 글자도 안 건드린다** — 이미 판정이 난 규칙이라
+    #     지금 유니버스를 바꾸면 그 판정이 무효가 된다(등록 §6).
+    # ⚠ 신호는 build/secrev_panel.py 가 미리 구운 얼린 측정이다(입력인 등급 캐시가 커밋
+    #   금지라 러너가 재생산 못 한다 — tilt·revscreen 과 같은 사유). 패널이 없으면 이
+    #   규칙은 **조용히 빠지지 않고** 아래에서 알린다.
+    SEC11 = SEC9 + ["XLRE", "XLC"]
+    # ETF → GICS 섹터명. 패널(data/members.json 기준)의 문자열과 **정확히** 같아야 한다 —
+    #   한 글자만 달라도 그 섹터가 조용히 후보에서 빠진다. 아래 등록부가 그것을 검사한다.
+    _SEC_OF = {"XLK": "Information Technology", "XLY": "Consumer Discretionary",
+               "XLF": "Financials", "XLI": "Industrials", "XLB": "Materials",
+               "XLE": "Energy", "XLU": "Utilities", "XLP": "Consumer Staples",
+               "XLV": "Health Care", "XLRE": "Real Estate",
+               "XLC": "Communication Services"}
+    _SREV = {}
+    try:
+        _SREV = (json.load(io.open(os.path.join(DATA, "_secrev_panel.json"),
+                                   encoding="utf-8")) or {}).get("panel") or {}
+    except Exception as _e:
+        print("  ⚠ [sec-revdrift] 리비전 패널을 못 읽었다(%s) — 규칙을 등록하지 않는다. "
+              "python build/secrev_panel.py 를 먼저 돌릴 것" % type(_e).__name__)
+
+    if _SREV:
+        # 🚨 매핑이 패널과 어긋나면 **조용히 넘어가지 않는다.** 섹터명이 한 글자만 달라도
+        #   그 섹터가 영영 후보에서 빠지는데, 성적은 멀쩡히 나오므로 아무도 모른다.
+        #   이 저장소가 되풀이 밟은 «수집했는데 배선 안 함» 의 사촌이다.
+        #   ⚠ 첫 행으로 뽑으면 안 된다 — 패널은 자산 격자(2006~)로 만들어져 앞구간이
+        #     비어 있다(등급 이력은 2011-12 부터). 처음에 그렇게 짰다가 이 가드가 스스로
+        #     걸렸다. 전 구간 합집합으로 본다.
+        _pn = {k for r in _SREV.values() for k in r}
+        _miss = sorted(set(_SEC_OF.values()) - _pn)
+        if _miss:
+            raise SystemExit(
+                "sec-revdrift: 패널에 없는 섹터명 %s — build/asset_backtest.py 의 _SEC_OF 와 "
+                "data/_secrev_panel.json 의 섹터 문자열을 맞출 것" % _miss)
+
+        def _live11(i):
+            """그 시점 **가격이 있는** 섹터 ETF. 상장 전이면 후보가 아니다(PIT)."""
+            return [t for t in SEC11
+                    if (ser(t)[i] is not None if i < len(ser(t)) else False)]
+
+        def _srev_bench(i):
+            # 보조 대조군도 같이 램프시킨다 — 전략이 11개에서 고르는데 대조군이 9개면
+            #   비교가 어긋난다(등록 §1-2). 판정선은 run_weights 가 지수로 올린다.
+            return {t: 1.0 for t in _live11(i)}
+
+        def _w_srev(i):
+            row = _SREV.get(DTS[i])
+            if not row:
+                return {}                       # 신호가 없는 달은 안 고른다(무보유)
+            cand = [(t, row.get(_SEC_OF.get(t))) for t in _live11(i)]
+            cand = [(t, v) for t, v in cand if v is not None]
+            if len(cand) < 3:
+                return {}
+            cand.sort(key=lambda x: -x[1])
+            return {t: 1.0 for t, _v in cand[:3]}
+
+        add("sec-revdrift", "", lambda: run_weights(
+            _w_srev, first_common(SEC9), "섹터 등급리비전 상위 3", _srev_bench,
+            "월말에 각 섹터의 애널리스트 등급 리비전 강도를 재고 상위 3섹터를 동일가중. "
+            "섹터 강도는 그 섹터 종목의 (컨센서스 지금 − 30일 전) × 루트 증권사수 를 "
+            "동일가중 평균한 값이다. 후보는 그 시점 상장돼 있는 섹터 ETF 전부다.",
+            "이 랩은 섹터 로테이션을 열두 번 쟀는데 전부 가격·변동성·매크로 신호였다 — "
+            "펀더멘털·애널리스트 축은 한 번도 안 쟀다. 경기순환 로테이션(A7)이 죽은 이유가 "
+            "국면이라는 자가 굵어서였으므로(20.5년에 전환 9회로 섹터 횡단면의 약 6%만 "
+            "건드린다), 매달 움직이는 자로 바꾸면 그 횡단면에 닿는지를 묻는다. "
+            "A7 을 살리려는 것이 아니다 — 실패해도 A7 의 판정은 안 바뀌고 성공해도 "
+            "A7 이 되살아나지 않는다.",
+            note="이 규칙만 11섹터를 삽니다(그 시점 상장된 것 전부 · 2018-06-19 부터 XLC "
+                 "포함). 같은 열의 다른 열둘은 9섹터만 삽니다. "
+                 "⚠ 신호의 섹터 배정은 오늘의 GICS 라벨이라 2018-09 재편 이전에는 ETF 의 "
+                 "실제 구성과 다릅니다 — 측정 구간의 앞 2.1년이 그 상태입니다. "
+                 "⚠ 등급 이력의 원천이 지금 살아 있는 종목만 주므로 생존편향이 남아 있고, "
+                 "그 방향은 성적을 좋게 하는 쪽입니다."))
+
     # ── 달러 축: 미국 vs 해외 선진 (사전등록 PREREG-2026-08-06-USDAXIS.md) ──
     # 🚨 이 축을 여기로 데려온 근거는 **아카이브 기각문 둘**이다. 서로 독립인데 같은 것을
     #   지목했다 — HRP: "정체가 배분 알고리즘이 아니라 UUP 평균 24.9% 배분이며 UUP 를 빼면
