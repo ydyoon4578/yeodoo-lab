@@ -52,9 +52,52 @@ Set-Location $Repo
 
 # ── ① origin 을 따라간다 ────────────────────────────────────────────────
 # autostash — 어제 실패해서 남은 작업물이 있어도 rebase 가 죽지 않는다.
+#
+# 🚨 2026-09-01 — **이 잡이 나흘 연속(08-29~09-01) 여기서 죽어 있었다.**
+#   기전: pull 이 충돌하면 git 은 리베이스를 **열어 둔 채** 실패한다. 종전에는 그대로
+#   Fail 로 나갔고, 그러면 다음 날 실행은 «이미 리베이스 중» 이라 2초 만에 또 죽는다.
+#   한 번 걸리면 사람이 손대기 전까지 영영 못 돈다 — 실제로 나흘이 그렇게 갔고,
+#   그 나흘 동안 rotation.html 의 «최근 동향» 이 멈춰 있었다.
+#   ⚠ 게다가 열린 리베이스는 **이 저장소에서 사람이 하던 작업까지 망가뜨린다.**
+#     autostash 가 워킹트리를 stash 로 걷어간 채 멈추기 때문이다(실측: 그 상태에서
+#     커밋해 «구현이 빠진 커밋» 이 만들어졌고 되돌려 다시 커밋해야 했다).
+#
+# 그래서 둘을 고친다 —
+#   (a) 시작할 때 **남아 있는 리베이스/머지를 먼저 걷는다.** 어제 것이 남아 있으면
+#       오늘도 반드시 죽으므로, 정리하고 시작하는 것이 «다시 시도할 기회» 를 만든다.
+#   (b) pull 이 실패하면 **리베이스를 abort 해서 원래 상태로 되돌린 뒤** 나간다.
+#       충돌을 자동으로 해결하지는 **않는다** — 부딪치는 것이 생성물(asof·strategy_index·
+#       strategy_charts·strategy_report)이고 어느 쪽이 맞는지는 «어느 빌드가 최신인가» 에
+#       달렸다. 기계가 고르면 조용히 틀린 쪽을 실을 수 있다. 사람이 정한다.
+# ⚠ 이것은 «충돌을 없애는 고침» 이 아니라 «충돌이 잡을 영구히 죽이지 못하게 하는 고침» 이다.
+#   충돌 자체는 랩 작업과 CI 자동 커밋이 같은 생성물을 건드리는 한 계속 난다.
+$gitDir = (git rev-parse --git-dir)
+if ((Test-Path (Join-Path $gitDir "rebase-merge")) -or (Test-Path (Join-Path $gitDir "rebase-apply"))) {
+  Say "[!] 지난 실행이 남긴 리베이스가 있다 - 걷고 시작한다(그대로 두면 오늘도 죽는다)."
+  git rebase --abort 2>&1 | Out-Null
+}
+if (Test-Path (Join-Path $gitDir "MERGE_HEAD")) {
+  Say "[!] 지난 실행이 남긴 머지가 있다 - 걷고 시작한다."
+  git merge --abort 2>&1 | Out-Null
+}
+
 git fetch --quiet origin
 git pull --rebase --autostash --quiet origin main
-if ($LASTEXITCODE -ne 0) { Fail "git pull 실패 - 충돌이 남아 있는지 확인할 것" }
+if ($LASTEXITCODE -ne 0) {
+  # 🚨 열린 리베이스를 두고 나가지 않는다. abort 가 autostash 도 되돌려 준다.
+  $u = @(git diff --name-only --diff-filter=U)
+  $gd = (git rev-parse --git-dir)
+  if ((Test-Path (Join-Path $gd "rebase-merge")) -or (Test-Path (Join-Path $gd "rebase-apply"))) {
+    git rebase --abort 2>&1 | Out-Null
+    Say "    (열린 리베이스를 abort 했다 - 저장소는 pull 이전 상태로 돌아갔다)"
+  }
+  if ($u.Count -gt 0) { Say ("    충돌하던 파일: " + ($u -join ", ")) }
+  Say "    보통 원인은 생성물(asof·strategy_index·strategy_charts·strategy_report)이"
+  Say "    랩 작업과 CI 자동 커밋 양쪽에서 바뀐 것이다. 손으로 정리할 것:"
+  Say "      git rebase origin/main   후 충돌 파일을 한쪽으로 정하고 --continue,"
+  Say "      그다음 build/ 사슬을 다시 돌려 생성물을 일치시킨다."
+  Fail "git pull 실패 - 충돌이 남아 있는지 확인할 것"
+}
 $headBefore = (git rev-parse --short HEAD)
 Say ("저장소 " + $headBefore)
 
