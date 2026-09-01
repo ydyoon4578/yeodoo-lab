@@ -107,6 +107,19 @@ SUB_PER = 5           # 서브산업당 시총 상위 몇 종
 SUB_MIN_N = 3         # 소속 종목이 이보다 적은 서브산업은 제외
 
 XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보유로 둔다. sc[:TOPN] 이 후보
+# ── 자격필터형 규칙 — 후보 풀이 **곧 바스켓**이다 ────────────────────────────
+# 🚨 XSEC_MIN_POOL 은 «상위 N 을 뽑을 만큼 후보가 있나» 를 묻는 관문이다. 문턱을 걸어
+#   통과분을 전부 담는 규칙에는 그 물음이 성립하지 않는다 — 후보 22종이 «얇은 풀» 이
+#   아니라 **그것이 답**이다. 이 집합에 없는 규칙은 종전과 완전히 같다.
+#   (PREREG-2026-09-02-A1PAYOUT.md §1 — 카드의 문턱과 「40-60종목」이 이 유니버스에서
+#    동시에 성립하지 않아, 사용자 결정으로 문턱을 지키고 크기를 놓았다.)
+SCREEN_SIDS = {"x-a1payout"}
+SCREEN_MIN = 1             # 하한을 안 둔다(등록 §5). 0 종인 달만 무보유로 떨어진다.
+
+
+def min_pool(sid):
+    """그 규칙의 후보 수 관문. 자격필터형만 다르다."""
+    return SCREEN_MIN if _BASE_SID(sid) in SCREEN_SIDS else XSEC_MIN_POOL
                            # 전량을 통과시키면 '선택'이 아니라 '있는 것 전부'이고, 그 구간의
                            # 성과는 규칙이 아니라 데이터 커버리지가 만든 것이다(적대감사 실측).
 
@@ -751,7 +764,7 @@ TTM_STALE_DAYS = 550
 #   (validate_site 가 두 리터럴을 대조한다 — 손으로 한쪽만 올리면 캐비엇이 영영 뜨거나
 #    영영 안 뜬다). data/pit_strategies.json 의 code_rev 가 이 값과 다르면 PIT 열이 옛
 #   코드로 잰 값이라는 뜻이고, 그 사실을 limits 에 적는다.
-PIT_CODE_REV = "2026-08-29"   # ← 2026-08-19 에서 올렸다: 선택기가 바뀌었다
+PIT_CODE_REV = "2026-09-02"   # ← 2026-08-19 에서 올렸다: 선택기가 바뀌었다
 #   (전수 시험 폐기 · x-lowvol-n100 역변동성 가중 · x-btp-n155 두 축 중립+밴드 ·
 #    x-agrow-n52 연 1회 6월 리밸 — PREREG-2026-08-29-ASWRITTEN.md).
 #   🚨 올리면 PIT 을 다시 굽기 전까지 limits 에 «PIT 열이 옛 코드» 캐비엇이 붙는다.
@@ -4147,7 +4160,9 @@ FUND_SIDS = {
              "x-btp-n155", "x-payout-n50", "x-agrow-n52",
              # 2026-08-30 BASKET2. ⚠ x-revdrift-n25 는 여기 없다 — 그 갈래는 FUND_SIDS 가
              #   아니라 투자의견 갈래(x-revdrift…)이고 _BASE_SID 로 붙는다.
-             "x-poacc-n52"}
+             "x-poacc-n52",
+             # 2026-09-02 A1 — PREREG-2026-09-02-A1PAYOUT.md. 자격필터형(SCREEN_SIDS).
+             "x-a1payout"}
 
 
 def build_strats():
@@ -4554,6 +4569,31 @@ def build_strats():
          "⚠ 원문의 분기 리밸런스는 이미 따르고 있다(PREREG-2026-08-13-REBAL 의 분기 표). "
          "⚠ 원문의 청산 조건('순발행이 플러스로 전환되면 청산')도 안 걸었다.",
          topn=50)
+    xsec("x-a1payout", "자사주매입+배당성장 — 자격필터 통과분 전부 (A1 원문)",
+         "분기말마다 네 조건을 모두 만족하는 종목 전부를 동일가중: "
+         "① 12개월 자사주매입액 ÷ 시가총액 > 3%, "
+         "② 5년 주당배당 CAGR > 5%, "
+         "③ (총부채 − 현금) ÷ (영업이익 + 감가상각) < 3배, "
+         "④ 희석주식수 전년동기 대비 증가율 ≤ 0(순발행 플러스면 청산). "
+         "바스켓 크기는 정하지 않는다 — 통과분이 곧 바스켓이다.",
+         None,
+         "A1 자사주매입+배당성장을 자격필터 쪽으로 지은 판이다. 짝인 x-payout-n50 은 반대로 "
+         "'동일가중 40-60종목' 쪽을 지키고 필터를 안 건 판이다 — 카드의 두 조항이 이 "
+         "유니버스에서 동시에 성립하지 않기 때문이다(실측: 문턱 셋을 다 넘는 종목이 "
+         "175개월 중 40종 이상인 달이 0개, 중앙 20종). 어느 쪽을 지킬지는 사용자가 "
+         "정했다(2026-09-02: 문턱을 지킨다). 규약은 PREREG-2026-09-02-A1PAYOUT.md 다. "
+         "🚨 바스켓이 매 분기 다르다(46분기 중앙 22종·범위 3~35종). 2021년 넉 분기는 "
+         "7·5·6·3종까지 얇아지는데 2020년 자사주 중단의 12개월 그림자다 — 그 구간의 "
+         "수익은 규칙이 아니라 그 서너 종목의 것이라, 결과 문서가 그 넉 분기를 뺀 판정을 "
+         "나란히 싣는다. ⚠ 후보 수 관문(XSEC_MIN_POOL)은 이 규칙에 안 건다 — 순위형이 "
+         "아니라 자격필터형이라 '후보가 얇다'가 결함이 아니라 답이기 때문이다(SCREEN_SIDS). "
+         "⚠ ④ 청산 조항은 분기당 0~2종만 더 걸러낸다. ①이 이미 소각을 함의해서다 — "
+         "이 규칙의 성패를 그 조항 덕으로 읽으면 안 된다. "
+         "⚠ 자사주 태그 커버리지가 78%라, 고르는 것은 '환원이 큰 회사'가 아니라 "
+         "'자사주를 보고하는 회사 중 환원이 큰 회사'다. "
+         "⚠ 5년 배당 이력이 필요해 구조적으로 2014년 이전을 못 돈다. "
+         "⚠ 섹터·시총 중립화를 안 한다 — 카드에 없는 조항이라 넣으면 그것이 새 자유도다.",
+         topn=999, reb="qe")
     xsec("x-agrow-n52", "자산성장 회피 — 최저 52 · 연 1회 6월 리밸 (원 전략)",
          "직전 공개 회계연도 총자산 증가율이 가장 낮은 52종목 동일가중, 월말 리밸런스.",
          None,
@@ -7035,6 +7075,42 @@ def xsec_score_at(S, i, X, pool=None):
                     tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
                     # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
                     v = (tot / mcap) if tot >= 0 else None
+            elif sid == "x-a1payout":
+                # A1 자사주매입+배당성장 — 규약 PREREG-2026-09-02-A1PAYOUT.md §1.
+                # 🚨 **순위 규칙이 아니라 자격필터다.** 문턱 넷을 다 넘은 종목만 점수를
+                #   받고, 그 전부가 바스켓이 된다(topn 을 유니버스보다 크게 둔다).
+                #   점수값 자체는 순위를 만들지 않는다 — 이중클래스 정리(pick_top)에서
+                #   어느 쪽을 남길지에만 쓰이므로 카드의 1번 조건인 매입수익률을 쓴다.
+                # ⚠ 크기가 매달 다르다. XSEC_MIN_POOL 은 SCREEN_SIDS 로 면제된다.
+                _bb = ttm2(f.get("bb"), f.get("bb_a"), dt_)
+                _bby = (_bb / mcap) if (mcap and _bb is not None and _bb > 0) else None
+                # ① 자사주수익률 > 3%
+                if _bby is not None and _bby > 0.03:
+                    # ② 5년 주당배당 CAGR > 5%. 🚨 _shift 는 **빼는** 함수다
+                    #   (x-debtiss 가 2026-08-11 에 부호를 뒤집어 선견을 낸 자리다).
+                    _d0 = ttm2(f.get("dps"), f.get("dps_a"), dt_)
+                    _d5 = ttm2(f.get("dps"), f.get("dps_a"), _shift(dt_, 365 * 5))
+                    _g = ((_d0 / _d5) ** 0.2 - 1.0) if (
+                        _d0 is not None and _d5 is not None and _d5 > 0 and _d0 > 0) else None
+                    if _g is not None and _g > 0.05:
+                        # ③ 순부채/EBITDA < 3. EBITDA = 영업이익 + 감가상각.
+                        _dt = asof_fund(f.get("debt"), dt_)
+                        _ch = asof_fund(f.get("cash"), dt_)
+                        _oi = ttm2(f.get("opinc"), f.get("opinc_a"), dt_)
+                        _dp = ttm2(f.get("dep"), f.get("dep_a"), dt_)
+                        _eb = (_oi + _dp) if (_oi is not None and _dp is not None) else None
+                        _nd = (_dt - _ch) if (_dt is not None and _ch is not None) else None
+                        _lv = (_nd / _eb) if (_nd is not None and _eb and _eb > 0) else None
+                        if _lv is not None and _lv < 3.0:
+                            # ④ 순발행 ≤ 0 — 카드의 청산 조항. 분기마다 다시 거르므로
+                            #   사실상 네 번째 문턱이다. ⚠ 분기당 0~2종만 더 빠진다
+                            #   (등록 §1-1) — 이 규칙의 성패를 이 조항으로 읽으면 안 된다.
+                            _pr = yoy_pair(f.get("sh_u") or f.get("sh"), dt_,
+                                           seam=f.get("sh_seam"))
+                            if _pr:
+                                _n0, _v0, _n1, _v1 = _pr    # (d0, v0, d1, v1)
+                                if _v1 and _v1 > 0 and (_v0 / _v1 - 1.0) <= 0:
+                                    v = _bby
             elif sid == "x-poacc":
                 # 퍼센트 영업발생액 = (순이익 − 영업현금흐름) ÷ |순이익|. 낮을수록 위.
                 # 분모가 자산이 아니라 |순이익|이라 잔고 태그의 2021-06 절벽을 안 탄다.
@@ -7635,14 +7711,14 @@ def current_holdings(strats):
                     _h = []
                     for _j0 in sorted(i for i in _rs if MIN_HIST <= i <= j):
                         _sc0, _ir0, _cr0 = xsec_score_at(S, _j0 + 1, X, None)
-                        if len(_sc0) < XSEC_MIN_POOL:
+                        if len(_sc0) < min_pool(S["sid"]):
                             continue
                         _n0, _w0 = xsec_pick_at(S, _j0 + 1, X, _sc0, _ir0, held=_h)
                         if _n0:
                             _h = _n0
                     _held = _h
                 sc, ind_raw, _cr = xsec_score_at(S, j + 1, X, None)
-                if len(sc) < XSEC_MIN_POOL:
+                if len(sc) < min_pool(S["sid"]):
                     continue
                 hold, hw = xsec_pick_at(S, j + 1, X, sc, ind_raw, held=_held)
                 if not hold:
@@ -7821,7 +7897,7 @@ def run():
             out = []
             for a, b in zip(_me, _me[1:]):
                 sc, ind_raw, _cr = xsec_score_at(S, a + 1, _X)
-                if not sc or len(sc) < XSEC_MIN_POOL:
+                if not sc or len(sc) < min_pool(S["sid"]):
                     continue
                 if not neutral:
                     sel, _w = xsec_pick_at(S, a + 1, _X, sc, ind_raw)
@@ -8109,7 +8185,7 @@ def run():
                     #     그냥 상위 N 이 된다 — PIT 레그가 2026-08-25 에 밟은 바로 그 사고다.
                     new, new_w = xsec_pick_at(S, i, _X, sc, ind_raw,
                                               held=(hold if needs_held(S["sid"]) else None))
-                    if len(sc) < XSEC_MIN_POOL:
+                    if len(sc) < min_pool(S["sid"]):
                         # 🚨 후보가 바스켓 대비 얇으면 이것은 '선택'이 아니라 '있는 것 전부'다.
                         #   적대감사 실측: asset·cash·eq 태그는 KEEP_I=20분기 절단 탓에 최초 관측
                         #   중앙값이 2021-06-30 인데 백테스트는 2017-08 에 시작한다. 그 사이 x-agrow
