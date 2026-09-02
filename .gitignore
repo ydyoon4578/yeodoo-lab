@@ -91,3 +91,7 @@ data/_aswritten_dry.json
 #     규칙이 안 적혔고, git add -A 가 그대로 쓸어 담았다. 무시 규칙은 파일마다
 #     정확한 경로로 확인할 것(.gitignore 머리말의 pit_members 사고와 같은 계열).
 data/_dollarcarry.json
+
+# DSS 내재 듀레이션 얼린 측정(build/dss_duration.py) — 자동 재굽기 금지.
+#   PREREG-2026-09-03-DURATION 에서 기각됐고 기록은 -RESULT.md 에 있다.
+data/_dss_duration.json
