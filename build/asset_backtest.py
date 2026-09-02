@@ -739,6 +739,7 @@ ROLE = {
     # 금리 카드 둘(PREREG-2026-09-03-RATE2). 둘 다 «무엇을 살까»를 고르므로 배분기다 —
     #   노출을 켜고 끄는 것이 아니라 버킷·스타일 사이에서 비중을 옮긴다.
     "bond-rolldown": "배분기", "dur-style": "배분기",
+    "dur-style-r": "배분기", "dur-style-v": "배분기",
     "crypto-sat": "배분기", "sector-rp": "배분기", "bond-trend": "타이밍오버레이",
     "mf-satellite": "배분기", "credit-gate": "타이밍오버레이", "overnight": "수익엔진",
     "merger-arb": "수익엔진", "min-cvar": "배분기", "rp-voltarget": "위험방어",
@@ -1133,6 +1134,66 @@ def build():
             "+16.77% · x-rgrow −12.51%), 그것은 이 규칙의 근거가 아니라 이 규칙이 검정하는 대상이다.")
 
     add("dur-style", None, s_durstyle)
+
+    # ── D13 을 카드가 지목한 ETF 로 — PREREG-2026-09-03-DURSTYLE4.md (계산 전 7e10ff316) ──
+    # 🚨 카드가 «IWD/VTV» 처럼 슬래시로 적었다 = 두 벌의 구현이다. 둘을 다 만들고 둘 다
+    #   싣는다. 좋은 쪽만 게시하면 그것이 nsel 이다(maxscreen_overlay 의 «양 끝을 다 돌려
+    #   나란히 싣는다» 와 같은 규약).
+    # ⚠ 신호는 dur-style 과 한 글자도 다르지 않다 — 바뀌는 것은 ETF 뿐이라야
+    #   «유니버스가 답을 바꾸는가» 가 갈린다.
+    # 🚨 대조군을 S&P 500 **총수익**(SPY)으로 둔다. 랩 공식 판정선 ^GSPC 는 가격지수라
+    #   배당 재투자 전략 대비 연 1.59%p 불리하게 잡힌다(load_index_tr 머리말이 적어 둔
+    #   사실이고 실측이 그렇다). bench_w 로 넘기면 run_weights 가 bench2 로 내리고
+    #   bench 는 지수로 올리므로 **둘 다 기록에 남는다.**
+    def _durstyle_on(val, grw, sid, label, why_extra):
+        ts = [val, grw]
+        st = first_common(ts)
+
+        def w(i):
+            d = DTS[i]
+            now = macro_asof("DFII10", d)
+            y, m = int(d[:4]), int(d[5:7]) - 3
+            y += (m - 1) // 12
+            m = (m - 1) % 12 + 1
+            prev = macro_asof("DFII10", "%04d-%02d-%s" % (y, m, d[8:10]))
+            if now is None or prev is None:
+                return {val: 0.5, grw: 0.5}
+            ch = now - prev
+            if ch >= 0.20:
+                return {val: 0.7, grw: 0.3}
+            if ch <= -0.20:
+                return {val: 0.3, grw: 0.7}
+            return {val: 0.5, grw: 0.5}
+
+        return run_weights(
+            w, st, label,
+            lambda i: {"SPY": 1.0},
+            "매월 말 10년 TIPS 실질금리(DFII10)의 3개월 변화가 +0.20%%p 이상이면 "
+            "%s 70 / %s 30, -0.20%%p 이하면 30 / 70, 그 사이면 50 / 50." % (val, grw),
+            "전략 탐색 풀 D13 을 카드가 이름으로 지목한 ETF로 재현한 판이다. "
+            "신호·문턱(±20bp)·한도(±20%p)·주기는 짝인 dur-style(IVE·IVW)과 한 글자도 "
+            "같고 ETF 만 다르다 — 그래야 «지수 계보가 답을 바꾸는가» 가 갈린다. "
+            + why_extra +
+            " 규약 PREREG-2026-09-03-DURSTYLE4.md. "
+            "🚨 대조군이 S&P 500 총수익(SPY)이다. 랩 공식 판정선인 가격지수(^GSPC)는 "
+            "배당이 빠져 있어 배당 재투자 전략과 견주면 격차가 연 1.6%p 과장된다 — "
+            "보조 대조군(bench2)에 총수익을 두어 둘 다 남긴다. "
+            "⚠ 이 ETF 들은 화면 스타일표에 안 올린다. 백테스트 입력으로만 쓴다. "
+            "⚠ 셋(IVE·IVW / IWD·IWF / VTV·VUG)은 유니버스만 다른 것이 아니라 가치·성장을 "
+            "가르는 산식도 다르다(S&P 는 500종을 쪼개고, 러셀은 한 종목이 양쪽에 부분 "
+            "편입되며, CRSP 는 또 다르다). 셋의 차이를 유니버스 탓으로만 읽으면 안 된다.")
+
+    add("dur-style-r", None, lambda: _durstyle_on(
+        "IWD", "IWF", "dur-style-r",
+        "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
+        "러셀 1000 계보라 S&P 500 판보다 중형주가 들어간다(약 1,000종). "
+        "보수는 둘 다 0.19%다."))
+
+    add("dur-style-v", None, lambda: _durstyle_on(
+        "VTV", "VUG", "dur-style-v",
+        "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
+        "CRSP 대형주 계보로 종목 수가 가장 적다(가치 약 340 · 성장 약 170). "
+        "보수가 0.04%로 셋 중 가장 낮아 연 0.14%p 유리하다."))
 
     # 13) 크립토 변동성 타깃 위성
     def s_crypto():
