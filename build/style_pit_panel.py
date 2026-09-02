@@ -90,13 +90,59 @@ def prepare(ST, P=None, window=None, quiet=False):
     di = {d: k for k, d in enumerate(P.dates)}
     today = set(P.uni)
 
+    # 🚨 2026-09-03 — **달 경계 이월.** 이 지도는 «월 키» 로 조회하는데 갱신 주기가 다르다:
+    #   가격 패널은 매일이고 index_history 는 **주 1회**(refresh-members, 금 21:45 UTC)다.
+    #   그래서 새 달 첫 거래일이 패널에 들어온 뒤 그 주 토요일까지 그 달 키가 **빈다**.
+    #   그동안 members_at(end) 가 빈 집합을 돌려주고 → pool 이 비고 → 채점 0종이 되어
+    #   style_top_pdf 가 전 스타일 «자료 부족» 으로 죽었다.
+    #   실측 2026-09-02: refresh-assets 두 슬롯 연속 실패. 실패 지점이 커밋보다 **앞**이라
+    #   이미 성공한 자산 패널·시장판·홈 기간별 수익률까지 통째로 버려졌고, 화면의
+    #   «3영업일 지연» 경고로 사용자가 알아챘다. 8월 경계에 안 걸린 것은 이 파일이
+    #   08-02 에 만들어지며 8월 키를 이미 담고 있었기 때문이다 — 9월이 첫 경계였다.
+    #   ⚠ **마지막 알려진 달보다 뒤인 달만** 이월한다. 창 안쪽 결손을 이월로 덮으면
+    #     마스크가 풀린 것을 못 보게 되는데, 그것이 바로 아래 gapless 검사가 막으려는 실패다.
+    #   ⚠ 이월은 선견이 아니다 — 9월 1일에 알 수 있는 최신 명단은 8월 명단이다.
+    #     pit_backtest.py 는 같은 자리를 `if m: cur = m`(직전 달 유지)로 이미 이렇게 다룬다.
+    _MK = sorted(k for k, v in mem.items() if v)
+    _LAST = _MK[-1] if _MK else None
+    CARRY_MAX_M = 2          # 주 1회 갱신이라 정상 최대치는 1달. 2를 넘으면 수집이 죽은 것이다.
+
+    def _months_after(k):
+        """월 키 k 가 마지막 알려진 달보다 몇 달 뒤인가(같으면 0, 앞이면 음수)."""
+        return (int(k[:4]) - int(_LAST[:4])) * 12 + (int(k[5:7]) - int(_LAST[5:7]))
+
+    _carry_gap = 0
+    if _LAST:
+        _carry_gap = max(0, _months_after(P.dates[end][:7]))
+        if _carry_gap > CARRY_MAX_M:
+            raise SystemExit(
+                "멤버십 지도가 %s 에서 멈췄는데 가격 패널은 %s 다(%d달 차) — 이월 한도 %d달을 "
+                "넘었다. 한 분기 묵은 명단을 «PIT» 이라 부르며 내보내지 않는다. "
+                "`python build/refresh_index_history.py` 가 왜 안 도는지 볼 것"
+                % (_LAST, P.dates[end], _carry_gap, CARRY_MAX_M))
+        if _carry_gap:
+            say("  ⚠ 멤버십 %s 까지만 있다 — %s 은 %s 명단을 이월한다(주 1회 갱신이라 정상)"
+                % (_LAST, P.dates[end][:7], _LAST))
+
     def members_at(i):
-        """그 달 멤버 — pit_backtest.py 와 같은 정의(월 키 조회)."""
-        return set(mem.get(P.dates[i][:7]) or [])
+        """그 달 멤버 — pit_backtest.py 와 같은 정의(월 키 조회).
+
+        마지막 알려진 달 **뒤**의 달만 그 달 명단으로 이월한다(위 주석). 안쪽은 이월하지 않는다.
+        """
+        k = P.dates[i][:7]
+        v = mem.get(k)
+        if v:
+            return set(v)
+        if _LAST and k > _LAST:
+            return set(mem.get(_LAST) or [])
+        return set()
 
     # 멤버십이 창을 덮는지 먼저 본다. 한 달이라도 비면 그 달은 마스크가 통째로 풀려
     # 조용히 생존자 백테스트로 되돌아간다 — 그것이 막아야 할 실패다.
-    gapless = [i for i in P.me if start - 252 * 3 <= i <= end and not members_at(i)]
+    # ⚠ **원본 지도**(mem)로 본다. members_at 로 보면 위의 꼬리 이월이 결손을 덮어
+    #   이 검사가 이빨을 잃는다. 꼬리(마지막 키 뒤)는 CARRY_MAX_M 이 따로 지킨다.
+    gapless = [i for i in P.me if start - 252 * 3 <= i <= end
+               and not mem.get(P.dates[i][:7]) and (not _LAST or P.dates[i][:7] <= _LAST)]
     if gapless:
         raise SystemExit("멤버십이 빈 월말 %d개(%s …) — 마스크가 풀려 PIT 이 성립하지 않는다"
                          % (len(gapless), P.dates[gapless[0]]))
