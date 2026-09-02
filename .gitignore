@@ -95,3 +95,7 @@ data/_dollarcarry.json
 # DSS 내재 듀레이션 얼린 측정(build/dss_duration.py) — 자동 재굽기 금지.
 #   PREREG-2026-09-03-DURATION 에서 기각됐고 기록은 -RESULT.md 에 있다.
 data/_dss_duration.json
+
+# S&P 스타일 점수 얼린 측정(build/style_score.py) — 1.7MB · 자동 재굽기 금지.
+#   PREREG-2026-09-03-STYLESCORE 참조.
+data/_style_score.json
