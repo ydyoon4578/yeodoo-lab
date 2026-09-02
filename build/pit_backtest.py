@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-09-02b"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
+CODE_REV = "2026-09-02c"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -264,7 +264,10 @@ FUND_SIDS = [
              #   PIT 후보가 랩보다 크게 얇으면 그 사실을 결과 문서에 적는다.
              "x-a1payout",
              # 2026-09-02 QUANTILE4 — 짝 x-shiss 와 같은 갈래를 탄다(_BASE_SID).
-             "x-shiss-n52"]
+             "x-shiss-n52",
+             # 2026-09-02 BMROT — 자기자본/시총. 선택은 TB.xsec_pick_at 의 갈래를 그대로 탄다
+             #   (그 함수가 가중 바스켓을 돌려주므로 두 레그가 안 갈린다 — 등록 §0-1).
+             "x-bmrot", "x-bmrot-flat"]
 
 # ── 타이밍·오버레이 22종 ────────────────────────────────────────────────────
 # 🚨 2026-08-14 — **이제 잰다.** 종전에는 산출물의 na_timing 이 "타이밍 규칙은 지수·ETF 를

@@ -765,7 +765,7 @@ TTM_STALE_DAYS = 550
 #   (validate_site 가 두 리터럴을 대조한다 — 손으로 한쪽만 올리면 캐비엇이 영영 뜨거나
 #    영영 안 뜬다). data/pit_strategies.json 의 code_rev 가 이 값과 다르면 PIT 열이 옛
 #   코드로 잰 값이라는 뜻이고, 그 사실을 limits 에 적는다.
-PIT_CODE_REV = "2026-09-02b"   # ← 2026-08-19 에서 올렸다: 선택기가 바뀌었다
+PIT_CODE_REV = "2026-09-02c"   # ← 2026-08-19 에서 올렸다: 선택기가 바뀌었다
 #   (전수 시험 폐기 · x-lowvol-n100 역변동성 가중 · x-btp-n155 두 축 중립+밴드 ·
 #    x-agrow-n52 연 1회 6월 리밸 — PREREG-2026-08-29-ASWRITTEN.md).
 #   🚨 올리면 PIT 을 다시 굽기 전까지 limits 에 «PIT 열이 옛 코드» 캐비엇이 붙는다.
@@ -782,6 +782,8 @@ PIT_CODE_REV = "2026-09-02b"   # ← 2026-08-19 에서 올렸다: 선택기가 �
 #     (44~162), x-valcomp-sn·x-revdrift-sn 은 규칙문이 '섹터별 1위 1종씩'인데 tgt 10 ·
 #     실제 11.0종 고정이다. short(목표 미달 달)도 같은 tgt 을 쓰므로 셋 다 구조적으로 0 이다.
 WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom", "x-grppick",
+                 # 바스켓이 «상위 N» 이 아니라 유니버스 절반씩 두 다리다(PREREG-…-BMROT).
+                 "x-bmrot", "x-bmrot-flat",
                  # 비중상한 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
                  "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
                  "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx")
@@ -4192,7 +4194,9 @@ FUND_SIDS = {
              #   아니라 투자의견 갈래(x-revdrift…)이고 _BASE_SID 로 붙는다.
              "x-poacc-n52",
              # 2026-09-02 A1 — PREREG-2026-09-02-A1PAYOUT.md. 자격필터형(SCREEN_SIDS).
-             "x-a1payout"}
+             "x-a1payout",
+             # 2026-09-02 BMROT — 자기자본/시총을 쓰므로 펀더멘털 갈래다.
+             "x-bmrot", "x-bmrot-flat"}
 
 
 def build_strats():
@@ -4659,6 +4663,36 @@ def build_strats():
          "그래서 이 규칙만 십분위(52)가 아니라 상위 30%(155=518×0.3)다. 나머지 셋과 수를 "
          "맞추면 «보기 좋다»는 이유로 원문을 어기는 것이라 맞추지 않았다. " + _Q4,
          topn=155)
+    xsec("x-bmrot", "B/M 금리 국면 로테이션 (가치·성장 절반 틸트)",
+         "매월 말 채점 가능 종목 전부를 장부가/시가총액으로 정렬해 중앙값으로 반씩 나눈다. "
+         "높은 절반이 가치 다리, 낮은 절반이 성장 다리이고 각 다리 안에서는 동일가중이다. "
+         "10년 TIPS 실질금리(DFII10)의 3개월 변화가 +0.20%p 이상이면 가치 70 / 성장 30, "
+         "-0.20%p 이하면 30 / 70, 그 사이면 50 / 50. 월말 리밸런스.",
+         None,
+         "탐색 풀 D13(금리 국면 스타일 로테이션)을 ETF 라벨이 아니라 종목 단위로 옮긴 것이다. "
+         "문턱(±20bp)·한도(±20%p)·주기는 전부 카드의 수이고 이 랩이 고른 값이 없다. "
+         "규약 PREREG-2026-09-03-BMROT.md. "
+         "🚨 이 규칙은 원래 대조군으로 만들어졌다 — DSS 내재 듀레이션(PREREG-…-DURATION)과 "
+         "S&P 스타일 점수(PREREG-…-SSROT)가 「B/M 보다 나은가」를 묻는 자였고, 두 번 다 "
+         "대조군이 이겼다. 그래서 제 이름으로 재는 것이다. "
+         "⚠ 소급 수치는 그 두 등록에서 이미 봤으므로 태웠다. 판정은 PIT 레그로만 한다. "
+         "🚨 성적의 출처를 오해하면 안 된다 — 이 랩이 2026-09-02 에 세 번 확인한 것은 "
+         "「190~230종 바스켓에서는 정렬 기준이 씻긴다」이다(듀레이션은 수익 상관 0.9997, "
+         "S&P 스타일 점수는 명단이 41% 다른데도 0.9993). 그러므로 이 규칙의 값은 "
+         "「B/M 이 좋아서」가 아니라 「동일가중 + 금리 틸트」에서 온다. B/M 은 그 둘을 "
+         "얹을 가장 단순한 자일 뿐이다. "
+         "⚠ 400종 넘는 바스켓이라 실무 상품이 아니다. 크기를 줄이는 것은 다른 등록의 일이다.",
+         topn=999, reb="me")
+    xsec("x-bmrot-flat", "B/M 절반 상시보유 (틸트 없음 · x-bmrot 대조군)",
+         "x-bmrot 과 같은 후보를 B/M 중앙값으로 반씩 나누고 항상 50/50 으로 보유한다. "
+         "금리 신호를 쓰지 않는다.",
+         None,
+         "🚨 이것은 전략이 아니라 x-bmrot 의 1번 대조군이다(PREREG-2026-09-03-BMROT §2). "
+         "«금리로 기울인 값» 만 남기려면 같은 후보·같은 분할에 틸트만 없는 짝이 필요하다. "
+         "랩의 vs_traded(동일가중 유니버스)는 후보가 518종이라 이것과 다르다 — x-bmrot 이 "
+         "채점 못 하는 143종이 그쪽에는 들어간다. "
+         "⚠ 대조군이지만 성적을 재는 계산이므로 다중검정 분모에 넣는다.",
+         topn=999, reb="me")
     xsec("x-a1payout", "자사주매입+배당성장 — 자격필터 통과분 전부 (A1 원문)",
          "분기말마다 네 조건을 모두 만족하는 종목 전부를 동일가중: "
          "① 12개월 자사주매입액 ÷ 시가총액 > 3%, "
@@ -7174,6 +7208,11 @@ def xsec_score_at(S, i, X, pool=None):
                     tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
                     # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
                     v = (tot / mcap) if tot >= 0 else None
+            elif sid in ("x-bmrot", "x-bmrot-flat"):
+                # 점수 = B/M. 선택은 xsec_pick_at 의 갈래가 «반으로 쪼개 국면으로 기울이기» 로 한다.
+                #   규약 PREREG-2026-09-03-BMROT.md (계산 전 커밋 78c2dec92).
+                e = asof_fund(f.get("eq"), dt_)
+                v = (e / mcap) if (e is not None and mcap) else None
             elif sid == "x-a1payout":
                 # A1 자사주매입+배당성장 — 규약 PREREG-2026-09-02-A1PAYOUT.md §1.
                 # 🚨 **순위 규칙이 아니라 자격필터다.** 문턱 넷을 다 넘은 종목만 점수를
@@ -7635,6 +7674,61 @@ def sub_baskets(X, i, axis, tickers=None):
     return leg(top, 1.0), leg(bot, -1.0), len(score)
 
 
+def _bmrot_pick(sc, X, i):
+    """B/M 로 반씩 쪼갠 뒤 실질금리 국면으로 두 다리를 기울인다(등록 PREREG-…-BMROT §1).
+
+    돌려주는 것은 (명단, 가중dict) — 각 다리 **안에서는 동일가중**이다.
+    🚨 sc 는 점수 내림차순이라 앞쪽이 B/M 높은 «가치» 다.
+    ⚠ 신호는 달력 3개월이다(거래일 수로 세면 달마다 창이 달라진다).
+    """
+    dates = X["dates"]
+    ts = [t for _v, t in sc]
+    if len(ts) < 100:                 # 반씩 쪼개려면 양쪽에 50종은 있어야 한다
+        return [], None
+    h = len(ts) // 2
+    val, grw = ts[:h], ts[h:]
+    d = dates[i - 1]
+    mr = X.get("mac_real") or []
+    now = mr[i - 1] if i - 1 < len(mr) else None
+    y, m = int(d[:4]), int(d[5:7]) - 3
+    y += (m - 1) // 12
+    m = (m - 1) % 12 + 1
+    tgt = "%04d-%02d-%s" % (y, m, d[8:10])
+    j = _bisect.bisect_right(dates, tgt) - 1
+    prev = mr[j] if (0 <= j < len(mr)) else None
+    if now is None or prev is None:
+        w = 0.5
+    else:
+        ch = now - prev
+        w = 0.7 if ch >= 0.20 else (0.3 if ch <= -0.20 else 0.5)   # 카드 D13 의 수
+    wt = {}
+    for t in val:
+        wt[t] = w / len(val)
+    for t in grw:
+        wt[t] = (1 - w) / len(grw)
+    return ts, wt
+
+
+def _bmrot_flat(sc, X, i):
+    """틸트 없는 대조군 — 같은 두 다리를 **항상 50/50**(등록 PREREG-…-BMROT §2 의 1번).
+
+    🚨 x-bmrot 과 **같은 후보 집합·같은 분할**을 써야 «금리로 기울인 값» 만 남는다.
+      랩의 `vs_traded`(동일가중 유니버스)는 후보가 518종이라 이것과 다르다 —
+      x-bmrot 이 채점 못 하는 143종이 그쪽에는 들어간다.
+    """
+    ts = [t for _v, t in sc]
+    if len(ts) < 100:
+        return [], None
+    h = len(ts) // 2
+    val, grw = ts[:h], ts[h:]
+    wt = {}
+    for t in val:
+        wt[t] = 0.5 / len(val)
+    for t in grw:
+        wt[t] = 0.5 / len(grw)
+    return ts, wt
+
+
 def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     """점수 sc 에서 그달 바스켓을 고른다 — **선택도 한 벌**이어야 한다.
 
@@ -7645,6 +7739,10 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     돌려주는 것: (new, new_w). new_w 가 None 이면 동일가중이다.
     """
     dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    if S["sid"] == "x-bmrot-flat":
+        return _bmrot_flat(sc, X, i)
+    if _BASE_SID(S["sid"]) == "x-bmrot":
+        return _bmrot_pick(sc, X, i)
     if S["sid"] == "x-grppick":
         # 🚨 pick_sector_neutral 을 그대로 부르고 **계층만** 바꾼다(섹터 → 산업그룹).
         #   사본을 만들면 두 벌이 되고 한쪽만 고쳐지는 날이 온다.
