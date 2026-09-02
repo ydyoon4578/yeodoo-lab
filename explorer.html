@@ -1397,6 +1397,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
             _m:m, _b:b, _nav:x.nav||null, _bnav:x.bnav||null,
             _start:x.start, _end:x.end,
             _d:x.d_sharpe, _t:x.t, _turn:x.turnover, _beta:x.beta, _unst:x.bench_unstable,
+            _epi:x.episodes,
             _pool:x.pool||null, _thin:x.n_thin||0, _bask:x.bask||null,
             // ⚠ _risk/_rv 는 어디서도 안 읽는다(2026-08-13 확인, 참조 0곳) — 걷었다.
             //   위험 축은 axes(_ax)가 그린다. 다시 쓸 일이 있으면 x.risk·x.risk_verdict 가
@@ -2972,6 +2973,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         else if(_tv>10)   _tn=' — 국내 공모펀드 평균(약 2.4배)의 4배 이상입니다';
         else if(_tv>2.44) _tn=' — 국내 공모펀드 평균(약 2.4배)보다 높습니다';
         labRows.push(['연 회전',Number(d._turn).toFixed(1)+'회'+_tn]);
+      }
+      // 🚨 실효 표본 — 회전율 바로 밑에 둔다. 둘은 **다른 물음**이라 같이 읽어야 한다:
+      //   회전율은 «얼마나 자주 거래하나», 이것은 «몇 번을 걸었나» 다.
+      //   C14 달러 캐리에서 드러났다(PREREG-2026-09-02-DOLLARCARRY-RESULT §3) — 신호가
+      //   235개월에 두 번만 뒤집혀 실효 표본이 3이었고, 그래서 t 가 «신호가 나쁘다» 가
+      //   아니라 «잴 수가 없다» 를 뜻했다. 개월 수가 많아도 전환이 몇 번뿐이면 검정력이
+      //   안 생긴다. 그 사실이 화면에 없으면 독자가 t 를 액면대로 읽는다.
+      if(d._epi!=null){
+        var _e=Number(d._epi), _lbl, _note='';
+        if(d.det&&d.det.kind==='타이밍오버레이'){
+          _lbl='독립 전환';
+          _note=' — 노출이 바뀐 횟수입니다';
+        }else{
+          _lbl='실제 발동';
+          var _rb=(d._bask&&d._bask.n)||null;
+          _note=_rb?(' / 리밸 '+_rb+'회'):'';
+        }
+        if(_e<=6) _note+=' 🚨 실효 표본이 '+(_e+1)+'입니다 — 이 규칙의 t값은 통계라기보다 '+
+                         '몇 번의 내기 결과에 가깝습니다. 액면대로 읽지 마십시오.';
+        else if(_e<=15) _note+=' ⚠ 독립된 관측이 적어 t값이 흔들립니다';
+        labRows.push(['실효 표본', _lbl+' '+_e+'회'+_note]);
       }
       // 🚨 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전에는 전 규칙이 월말이라 설명문에
       //   글자로 박아 두면 됐다. 주기가 갈린 뒤로는 그 글자가 곧 거짓말이 될 수 있어
