@@ -135,3 +135,19 @@ IWD·VTV·IWF·VUG 는 정확히 그 «같은 축의 다른 운용사 판» 이�
 ---
 
 **계산 전 커밋**: 이 문서를 먼저 커밋하고 그 해시를 결과 문서에 적는다.
+
+---
+
+## 🚨 정정 (2026-09-02) — S&P 스타일 지수도 «겹친다»
+
+이 문서가 «S&P 는 500종을 가치·성장으로 **쪼개고**, 러셀은 한 종목이 양쪽에 부분 편입될 수
+있다» 는 취지로 적은 곳이 있는데 **틀렸다.** S&P U.S. Style Indices 방법론 원문:
+
+> The middle 34% of market capitalization consists of stocks that have similar growth and
+> value ranks. Their market capitalization is **distributed among the Style indices**…
+
+**S&P 도 가운데 34% 를 양쪽에 쪼개 넣는다**(IVE + IVW 를 합치면 S&P 500 이 되는 이유다).
+겹침이 없는 판을 따로 만든 것이 Pure(RPV·RPG)다.
+계산 전 등록은 고치지 않는 것이 규약이라 원문은 그대로 두고 여기 적는다.
+⚠ **판정은 안 바뀐다** — 이 문서의 결론은 전부 실측 기반이고, 틀린 것은 그 차이를 설명하며
+든 «산식» 예시다. 자세한 것은 PREREG-2026-09-03-STYLESCORE.md §0-1.
