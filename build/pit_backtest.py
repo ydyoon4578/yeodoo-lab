@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-09-02"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
+CODE_REV = "2026-09-02b"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -161,6 +161,8 @@ PRICE_SIDS = [
              #   재는 것과 그 수가 무엇을 뜻하는지는 다른 축이다. 둘 다 적는다.
              "x-amihud", "x-turn",
              "x-mom12", "x-lowvol", "x-rev1m", "x-52wh", "x-dist200",
+             # 2026-09-02 QUANTILE4 — 짝과 같은 갈래를 탄다(_BASE_SID). 크기만 다르다.
+             "x-mom12-n52", "x-52wh-n155",
               "x-mom-trend", "x-rev1w", "x-minvar", "x-riskbudget", "x-lowbeta",
               "x-snapback", "x-maxlow", "x-max5low", "x-recency", "x-ivol",
               "x-small",   # 시가총액 = 시점별 주식수 × 종가 (아래 SH 참조)
@@ -180,6 +182,7 @@ PRICE_SIDS = [
               #   못 돌던 것들이 전부 돌게 됐다. 사본을 손으로 옮길 때는 2단 구조를
               #   표현할 수 없었지만, 랩 함수를 그대로 부르면 사전패스도 같이 따라온다.
               "x-hlspread", "x-clv", "x-volvol", "x-residmom", "x-indmom",
+              "x-residmom-n52",        # 2026-09-02 QUANTILE4
               # 🚨 2026-08-12 재검증에서 이 파일의 완전성 가드가 잡았다 — 7차 배치
               #   (PREREG-2026-08-12-PATH.md)의 둘이 랩에는 등록됐는데 여기 없었다.
               #   그 상태에서는 PIT 을 못 재고 소급 t 로만 판정되며, 화면에 아무 표시도 안 난다
@@ -259,7 +262,9 @@ FUND_SIDS = [
              #   dps 가 71종(49%)뿐이라 무배당과 자료없음을 못 가른다. 게다가 이 규칙은
              #   bb·debt·cash·opinc·dep 까지 요구하므로 편출 쪽 커버가 더 얇아진다.
              #   PIT 후보가 랩보다 크게 얇으면 그 사실을 결과 문서에 적는다.
-             "x-a1payout"]
+             "x-a1payout",
+             # 2026-09-02 QUANTILE4 — 짝 x-shiss 와 같은 갈래를 탄다(_BASE_SID).
+             "x-shiss-n52"]
 
 # ── 타이밍·오버레이 22종 ────────────────────────────────────────────────────
 # 🚨 2026-08-14 — **이제 잰다.** 종전에는 산출물의 na_timing 이 "타이밍 규칙은 지수·ETF 를
@@ -395,6 +400,7 @@ if os.path.exists(HLCACHE):
         _hl = {}
     if len(_hl) >= 100:            # 편출 종목 대부분이 있어야 후보가 생존자로 좁혀지지 않는다
         EXCLUDED_SIDS.pop("x-52wh", None)
+        EXCLUDED_SIDS.pop("x-52wh-n155", None)     # 2026-09-02 QUANTILE4 — 짝과 같이 푼다
 
 
 def _lab_meta():
@@ -1155,7 +1161,9 @@ def main():
     #   고가 대신 종가 최대로 채점돼 정의가 바뀐 채 계속 돈다(실측 CAGR 9.11 → 8.01, 경고 0줄).
     #   무보유 관문으로는 절대 못 잡는 유형이라 이름으로 뺀다.
     #   ⚠ 이 목록은 손으로 유지한다 — 고저가를 쓰는 규칙을 새로 만들면 여기에 적을 것.
-    HL_SIDS = ("x-52wh", "x-lshock", "x-ongapd", "x-hlspread", "x-clv")
+    HL_SIDS = ("x-52wh", "x-52wh-n155",      # ← 2026-09-02 QUANTILE4. 위 머리말대로 적는다 —
+                                             #   안 적으면 고가 대신 종가 최대로 조용히 채점된다.
+               "x-lshock", "x-ongapd", "x-hlspread", "x-clv")
     _hl_warn = None
     if os.path.exists(HLCACHE):
         X["hid"], _nl, _nx = load_hilo(set(px), dates, span, 0, ALIAS)
