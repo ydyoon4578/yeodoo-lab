@@ -1034,6 +1034,10 @@ def main() -> int:
             metrics=r.get("metrics") or {}, bench=dict(r.get("bench") or {},
                                                        label=t.get("bench_label")),
             d_sharpe=r.get("d_sharpe"), t=r.get("t"), turnover=r.get("turnover"),
+            # 🚨 실효 표본 — 회전율과 **다른 물음**이다. 회전율은 «얼마나 자주 거래하나»,
+            #   이것은 «몇 번을 걸었나» 다. C14 달러 캐리가 드러낸 함정이라 화면에 같이 낸다
+            #   (PREREG-2026-09-02-DOLLARCARRY-RESULT §3 · tech_backtest.regime_episodes).
+            episodes=r.get("episodes"),
             # 리밸런스 주기(PREREG-2026-08-13-REBAL). 종전엔 전 규칙이 월말이라 설명문에
             # 글자로 박아 두면 됐는데, 주기가 갈린 뒤로는 화면이 자료에서 읽어야 한다.
             reb=r.get("reb"), reb_label=r.get("reb_label"),

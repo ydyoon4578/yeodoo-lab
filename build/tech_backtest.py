@@ -4078,6 +4078,35 @@ def pick_industry(ind_raw, top_sectors=2):
     return [(t, w) for t in sorted(names)]
 
 
+def regime_episodes(w, lo, hi):
+    """노출 계열이 **몇 번의 독립된 내기**였나 — 실효 표본.
+
+    🚨 왜 있나. 회전율은 «얼마나 자주 거래하나» 이고 이것은 «몇 번을 걸었나» 다. 둘은
+      다른 물음인데 화면에 후자가 없었다. C14 달러 캐리에서 드러났다
+      (PREREG-2026-09-02-DOLLARCARRY-RESULT §3): AFD 부호가 235개월에 **두 번**만
+      뒤집혀 실효 표본이 3이었고, 그래서 t = −0.16 이 «신호가 나쁘다» 가 아니라
+      **«잴 수가 없다»** 를 뜻했다. 개월 수가 아무리 많아도 전환이 몇 번뿐이면
+      검정력이 안 생긴다.
+
+    세는 법 —
+      · 편입/현금 전환: 노출이 0 과 양수 사이를 오간 횟수.
+      · 평균 교차: 노출이 제 평균선을 오르내린 횟수(연속형 규칙용).
+      둘 중 **큰 쪽**을 쓴다.
+    🚨 중앙값 기준선은 못 쓴다 — 노출이 절반 넘게 상한(1.0)에 붙어 있으면 중앙값이 곧
+      상한이 되어 «x > med» 가 한 번도 참이 안 되고 전환이 0 으로 나온다. 실제로
+      t-mhvote(24회)·t-mavote(52회)를 «한 번도 안 바뀌었다» 로 오독했다(2026-09-02).
+      평균은 경계에 안 붙으므로 그 함정이 없다.
+    """
+    seg = [x for x in w[lo:hi] if x is not None]
+    if len(seg) < 2:
+        return None
+    f01 = sum(1 for i in range(1, len(seg)) if (seg[i] > 0) != (seg[i - 1] > 0))
+    mu = sum(seg) / len(seg)
+    st = [1 if x > mu else 0 for x in seg]
+    fmu = sum(1 for i in range(1, len(st)) if st[i] != st[i - 1])
+    return max(f01, fmu)
+
+
 def _BASE_SID(sid):
     """변형 접미사를 뗀 sid. 변형이 원본과 같은 채점 갈래를 타게 한다.
 
@@ -8126,6 +8155,8 @@ def run():
             turn = (sum(abs(w[i] - w[i - 1]) for i in range(MIN_HIST + 1, _cn))
                     / max(1, (_cn - MIN_HIST) / 252))
             expo = sum(w[MIN_HIST:_cn]) / max(1, _cn - MIN_HIST)
+            # 실효 표본 — 회전율 옆에 같이 실어야 «몇 번을 걸었나» 를 읽을 수 있다.
+            episodes = regime_episodes(w, MIN_HIST, _cn)
             # 지금 이 규칙이 어떤 상태인지 — 타이밍은 '얼마나 들고 있나'가 곧 구성이다
             start_i = MIN_HIST + 1
             hold_now = {"kind": "timing", "as_of": dates[-1],
@@ -8431,6 +8462,12 @@ def run():
             #   net.t 는 편도 10bp 기준이고, net.sens 에 5·10·20bp 를 전부 싣는다.
             "net": net, **cost_extra, "vs_traded": vs_traded,
             "turnover": round(turn, 2), "exposure": round(expo * 100, 1),
+            # 🚨 실효 표본 — 회전율과 **다른 물음**이다(regime_episodes 독스트링 참조).
+            #   타이밍은 노출 전환 횟수, 횡단면은 «실제로 종목을 든 리밸 횟수» 다.
+            #   후자는 게이트가 있는 규칙(x-ratehot 등)에서만 리밸 횟수와 갈린다.
+            "episodes": (episodes if S["kind"] == "timing" else
+                         (len(bask_hist) - sum(1 for x in bask_hist if not x)
+                          if bask_hist else None)),
             # 리밸런스 주기 — 화면이 '월말'을 손으로 적지 않게 규칙에서 실어 보낸다.
             # 🚨 종전에는 전 규칙이 월말이라 설명문에 글자로 박혀 있었다. 주기가 갈린 뒤로는
             #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).
