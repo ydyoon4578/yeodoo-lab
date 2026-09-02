@@ -1705,8 +1705,25 @@ def main() -> int:
     if _found != HIDE_SIDS:
         # 원본에서 sid 가 바뀌면 제외가 조용히 풀려 목록에 도로 나타난다. 오타로 처음부터
         # 아무것도 안 지워지는 경우도 같은 방식으로 잡힌다.
-        raise SystemExit("제외 대상 sid 를 원본에서 못 찾았다: %s — sid 가 바뀌었는지 확인할 것"
-                         % sorted(HIDE_SIDS - _found))
+        # 🚨 2026-09-03 — 그런데 **환경 따라 없는 sid** 가 있다. 입력이 커밋 금지라
+        #   러너가 규칙을 아예 등록하지 못하는 «얼린 측정» 들이다. 그것까지 여기서 죽이면
+        #   국소에서는 초록인데 러너에서만 refresh-assets 가 통째로 죽는다 — 실제로 그렇게
+        #   됐다(a-sec-revdrift 를 09-01 에 목록에 넣은 뒤 러너 build 전멸).
+        #   ⚠ 조용히 넘기지 않는다. **이름을 여기 적은 것만** 봐준다 — 적지 않은 sid 가
+        #     빠지면 종전대로 죽는다. 그래야 이 예외가 검사의 이빨을 뽑지 않는다.
+        _explained = {
+            # sec-revdrift 의 입력 data/_secrev_panel.json 이 .gitignore 다(등록
+            # PREREG-2026-09-01-SECREV · 기각). asset_backtest.py 가 패널을 못 읽으면
+            # 규칙을 등록하지 않으므로, 러너에서는 **없는 것이 정상**이다.
+            # 국소에서는 등록되니 목록에 남겨야 하고, 그래서 지우는 것이 답이 아니다.
+            "a-sec-revdrift",
+        }
+        _missing = HIDE_SIDS - _found
+        if _missing - _explained:
+            raise SystemExit("제외 대상 sid 를 원본에서 못 찾았다: %s — sid 가 바뀌었는지 확인할 것"
+                             % sorted(_missing - _explained))
+        print("  ⚠ 제외 대상 %d종은 이 환경에서 규칙 자체가 등록되지 않았다(입력이 로컬 전용): %s"
+              % (len(_missing), ", ".join(sorted(_missing))))
     if _hid2:
         print("  목록 제외 %d종(사용자 결정) — 측정 기록에는 남는다:" % len(_hid2))
         for _n, _r in sorted(_hid2, key=lambda x: (x[1], x[0])):
