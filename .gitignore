@@ -84,3 +84,10 @@ data/_secrev_panel.json
 data/_winrate_audit.json
 # 원 전략 재현 등록의 시험 실행(사이트 산출물을 안 덮으려고 밑줄로 돌린 것)
 data/_aswritten_dry.json
+
+# 달러 캐리 얼린 측정(build/dollarcarry.py) — 입력이 yfinance FX + FRED OECD 라
+#   저장소에 없다. 산출물도 로컬에만 둔다(_secrev_panel.json 과 같은 사유).
+#   🚨 2026-09-02 — 이 줄을 «있나» 검사할 때 grep 이 _secrev_panel 줄에 걸려
+#     규칙이 안 적혔고, git add -A 가 그대로 쓸어 담았다. 무시 규칙은 파일마다
+#     정확한 경로로 확인할 것(.gitignore 머리말의 pit_members 사고와 같은 계열).
+data/_dollarcarry.json
