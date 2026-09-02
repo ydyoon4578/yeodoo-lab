@@ -736,6 +736,9 @@ ROLE = {
     "macro-rot": "타이밍오버레이", "infl-real": "타이밍오버레이", "hrp-alloc": "배분기",
     "commod-tsmom": "타이밍오버레이", "rp-extended": "배분기", "vix-ts": "타이밍오버레이",
     "gem": "타이밍오버레이", "vol-roll": "위험방어", "real-yield": "타이밍오버레이",
+    # 금리 카드 둘(PREREG-2026-09-03-RATE2). 둘 다 «무엇을 살까»를 고르므로 배분기다 —
+    #   노출을 켜고 끄는 것이 아니라 버킷·스타일 사이에서 비중을 옮긴다.
+    "bond-rolldown": "배분기", "dur-style": "배분기",
     "crypto-sat": "배분기", "sector-rp": "배분기", "bond-trend": "타이밍오버레이",
     "mf-satellite": "배분기", "credit-gate": "타이밍오버레이", "overnight": "수익엔진",
     "merger-arb": "수익엔진", "min-cvar": "배분기", "rp-voltarget": "위험방어",
@@ -1015,6 +1018,121 @@ def build():
                            "낮은 실질금리가 금에 유리하다는 통설을 규칙으로 건다. "
                            "대조군은 SPY·GLD 반반 상시보유다.")
     add("real-yield", "real-yield-regime-overlay", s_realyield)
+
+    # ── 금리 카드 둘 — PREREG-2026-09-03-RATE2.md (계산 전 커밋 882740940) ──
+    # 🚨 둘 중 좋은 쪽만 게시하지 않는다. 각각 등록에서 완전히 못박았고 둘 다 싣는다.
+
+    # D8) 채권 롤다운 캐리 — 곡선 형태를 먹는다. 방향성 베팅이 아니다.
+    def s_rolldown():
+        # 대표만기·듀레이션은 **고정 상수**다(등록 §1-2). 랩에 시점별 듀레이션 계열이 없다.
+        #   결과를 보고 만지지 않는다 — 만지면 여섯 개짜리 자유도가 생긴다.
+        BUCKET = [("SHY", 2.0, 1.8), ("IEF", 8.5, 7.2), ("TLT", 25.0, 16.5)]
+        # 곡선 격자 — 랩에 있는 것 전부. 일간 계열이라 발표시차 문제가 없다.
+        GRID = [(0.25, "DGS3MO"), (2.0, "DGS2"), (5.0, "DGS5"),
+                (10.0, "DGS10"), (30.0, "DGS30")]
+        ts = [b[0] for b in BUCKET]
+        st = first_common(ts)
+
+        def yld(d, n):
+            """곡선을 선형보간한 만기 n 의 수익률. 격자 밖이면 양 끝값을 쓴다."""
+            pts = [(m, macro_asof(sid, d)) for m, sid in GRID]
+            pts = [(m, v) for m, v in pts if v is not None]
+            if len(pts) < 2:
+                return None
+            if n <= pts[0][0]:
+                return pts[0][1]
+            if n >= pts[-1][0]:
+                return pts[-1][1]
+            for k in range(len(pts) - 1):
+                m0, v0 = pts[k]
+                m1, v1 = pts[k + 1]
+                if m0 <= n <= m1:
+                    return v0 + (v1 - v0) * (n - m0) / (m1 - m0)
+            return None
+
+        def w(i):
+            d = DTS[i]
+            rs = macro_asof("DGS3MO", d)
+            if rs is None:
+                return {}
+            best, bv = None, None
+            for t, n, dur in BUCKET:
+                y0 = yld(d, n)
+                y1 = yld(d, max(0.25, n - 1.0))     # 1년 롤다운 뒤의 자리
+                if y0 is None or y1 is None:
+                    continue
+                # 등록 §1-1 의 식 그대로: 듀레이션당 캐리 + 1년 롤다운
+                cr = (y0 - rs) / dur + (y0 - y1)
+                if bv is None or cr > bv:
+                    best, bv = t, cr
+            return {best: 1.0} if best else {}
+
+        return run_weights(
+            w, st, "채권 롤다운 캐리 (듀레이션당 캐리+롤다운 상위 버킷)",
+            lambda i: {"AGG": 1.0},
+            "매월 말 미 국채 곡선(DGS3MO·2·5·10·30 선형보간)에서 SHY(2년)·IEF(8.5년)·"
+            "TLT(25년) 각각의 «듀레이션당 캐리 + 1년 롤다운»을 구해 가장 큰 하나에 100% 보유. "
+            "CR = (y(n) − 3개월물)/듀레이션 + (y(n) − y(n−1)).",
+            "전략 탐색 풀 D8. 금리 방향을 맞히는 것이 아니라 곡선이 우상향일 때 시간 경과만으로 "
+            "생기는 수취분을 먹는 규칙이다. 카드가 «전통적 만기 고정 배분을 대체한다»고 적었으므로 "
+            "대조군을 AGG 상시보유로 둔다. "
+            "규약 PREREG-2026-09-03-RATE2.md. "
+            "⚠ 카드는 2y/5y/7y/10y/20y/30y 여섯 버킷을 적지만 이 랩 패널에 국채 ETF가 셋뿐이라"
+            "(IEI 없음) 셋으로 줄였다 — 자료 제약이지 고른 것이 아니다. "
+            "⚠ 대표만기·듀레이션은 고정 상수다. 실제 듀레이션은 매달 움직이지만 랩에 그 계열이 없다. "
+            "⚠ 카드의 히스테리시스(진입 상위30%/이탈 하위50%)는 버킷 여섯 전제라 셋에 뜻이 없어 "
+            "안 걸었다. 그만큼 회전이 높게 나온다. "
+            "🚨 곡선이 역전된 구간에서는 이 규칙의 전제가 깨진다 — 측정 구간에 2019·2022~2023 "
+            "역전이 들어 있고, 그 구간 성적을 결과 문서에서 따로 가른다.",
+            )
+    # 🚨 bench2_w 를 넘기면 안 된다 — run_weights 는 bench2 가 비어 있을 때만 원래
+    #   대조군을 그 자리로 내리고 판정선을 지수로 올린다. bench2 를 채워 보내면
+    #   **등록 §1-4 의 1번 대조군(AGG)이 지수에 덮여 사라진다**(실측으로 걸렸다).
+    #   동일가중 대조는 결과 문서에서 따로 잰다.
+
+    add("bond-rolldown", None, s_rolldown)
+
+    # D13) 금리 국면 스타일 로테이션 — 실질금리 방향으로 가치·성장을 기울인다.
+    def s_durstyle():
+        ts = ["IVE", "IVW"]
+        st = first_common(ts)
+
+        def w(i):
+            d = DTS[i]
+            now = macro_asof("DFII10", d)
+            # 3개월 전 — 달력으로 되돌린다(거래일 수로 세면 달마다 창이 달라진다).
+            y, m = int(d[:4]), int(d[5:7]) - 3
+            y += (m - 1) // 12
+            m = (m - 1) % 12 + 1
+            prev = macro_asof("DFII10", "%04d-%02d-%s" % (y, m, d[8:10]))
+            if now is None or prev is None:
+                return {"IVE": 0.5, "IVW": 0.5}
+            ch = now - prev
+            if ch >= 0.20:
+                return {"IVE": 0.7, "IVW": 0.3}      # 실질금리 상승 → 가치로
+            if ch <= -0.20:
+                return {"IVE": 0.3, "IVW": 0.7}      # 하락 → 성장으로
+            return {"IVE": 0.5, "IVW": 0.5}
+
+        return run_weights(
+            w, st, "금리 국면 스타일 로테이션 (실질금리 → 가치·성장 틸트)",
+            lambda i: {"IVE": 0.5, "IVW": 0.5},
+            "매월 말 10년 TIPS 실질금리(DFII10)의 3개월 변화가 +0.20%p 이상이면 "
+            "가치 70 / 성장 30, −0.20%p 이하면 30 / 70, 그 사이면 50 / 50. "
+            "기준배분 반반에 카드의 ±20%p 한도를 그대로 얹은 것이다.",
+            "전략 탐색 풀 D13. 주식 «듀레이션» — 성장주의 현금흐름이 뒤에 몰려 있어 할인율에 "
+            "더 민감하다는 것 — 을 배분으로 바꾼다. 문턱(±20bp)·한도(±20%p)·주기 전부 카드의 수다. "
+            "규약 PREREG-2026-09-03-RATE2.md. "
+            "⚠ 카드는 IWD·VTV(가치)·IWF·VUG(성장)를 적지만 넷 다 이 랩 패널에 없어 "
+            "IVE·IVW(S&P 500 가치·성장)로 대체했다. 유니버스가 러셀1000/전체시장에서 "
+            "S&P 500 으로 좁아지므로 카드의 재현이 아니라 «카드 규칙을 이 랩 스타일 ETF에 "
+            "적용한 것»이다. "
+            "⚠ 카드 자신이 불리한 사실을 적어 두었다 — 2026년 IVE +13.02% 대 IVW +12.65% 로 "
+            "격차가 0.4%p뿐이다. 올해 이 축은 거의 안 벌었다. "
+            "🚨 이 랩이 오늘 사후 관찰로 «금리 상승기에 가치가 낫다»를 봤지만(x-sp 상승국면 "
+            "+16.77% · x-rgrow −12.51%), 그것은 이 규칙의 근거가 아니라 이 규칙이 검정하는 대상이다.")
+
+    add("dur-style", None, s_durstyle)
 
     # 13) 크립토 변동성 타깃 위성
     def s_crypto():
