@@ -2,17 +2,20 @@
 """build/report_durstyle_pdf.py — D13 금리 국면 스타일 로테이션 설명서
    → build/REPORT-2026-09-02-DURSTYLE.pdf
 
-`build/REPORT-2026-09-02-DURSTYLE.md`(2판)의 PDF 판이다. 문서에 들어가는 수치는
-**전부 여기서 다시 계산한다** — 마크다운에 손으로 적은 수를 옮겨 오면 한쪽만 고쳐지는
-날이 온다(이 저장소가 되풀이 밟은 결함이다).
+2판(사용자 요청 2026-09-02): 차트를 2021-01 부터로 · 대조군을 S&P 500 **총수익(TR)** 로 ·
+IVE·IVW 50/50 은 뺀다 · 월별 성과 비교를 싣는다.
 
-규약: PREREG-2026-09-03-RATE2.md (계산 전 커밋 882740940)
-원천: data/assets.json(가격·거시) · data/asset_strategies.json(엔진 산출 대조)
+🚨 대조군이 TR 인 것이 이 판의 핵심 변경이다. 랩의 공식 판정선은 `^GSPC`(가격지수·PR)인데
+  (사용자 결정 2026-07-28 · tech_backtest.load_index_tr 머리말), 랩 전략 수익은 배당
+  재투자 기준이라 **지수가 연 약 1.6%p 불리하게 잡힌다.** 그 머리말이 이미 그 사실을
+  적어 두었고, 이 문서는 SPY(배당조정)를 써서 그 과장을 없앤다.
+
+🚨 문서의 수치는 전부 여기서 다시 계산한다 — 마크다운에서 옮겨 오면 한쪽만 고쳐지는
+  날이 온다.
 
     python build/report_durstyle_pdf.py
 """
 from __future__ import annotations
-import datetime as dt
 import io
 import json
 import math
@@ -43,12 +46,12 @@ X0, X1 = ST.X0, ST.X1
 INK, INK2, MUTED, LINE, RULE = ST.INK, ST.INK2, ST.MUTED, ST.LINE, ST.RULE
 POS, NEG, ACC, PAPER, PANEL2 = ST.POS, ST.NEG, ST.ACC, ST.PAPER, ST.PANEL2
 CHAMP, RP, MARG, GROUND = ST.CHAMP, ST.RP, ST.MARG, ST.GROUND
-TOTAL = 3
+TOTAL = 4
 
-# ── 규칙 상수 — 전부 탐색 풀 카드 D13 의 수다(랩이 고른 값이 없다) ──────────
-TH = 0.20            # 실질금리 3개월 변화 문턱(%p)
+TH = 0.20                                     # 실질금리 3개월 변화 문턱(%p) — 카드의 수
 W = {"가치": 0.7, "중립": 0.5, "성장": 0.3}      # IVE 비중
-UP = 0.25            # «금리 인상 구간» 정의 — 6개월 변화 +25bp 초과
+UP = 0.25                                     # 인상 구간 = 6개월 변화 +25bp 초과
+FROM = "2021-01"                              # 차트·월별표 시작(사용자 지정)
 
 
 def page(fig, n, title, sub=None):
@@ -63,8 +66,8 @@ def page(fig, n, title, sub=None):
        "구현 build/asset_backtest.py `dur-style` · 등급 「측정만」",
        fontsize=6.4, color=MUTED)
     tx(fig, X0, .019,
-       "구간 2016-09~2026-07(월말 119회) · 가격 IVE·IVW·^GSPC(배당조정) · "
-       "신호 FRED DFII10 · 이 문서의 수치는 전부 재계산본이다",
+       "대조군 = S&P 500 총수익(SPY · 배당조정). 랩 공식 판정선은 가격지수(^GSPC)이고 "
+       "그쪽은 격차가 연 1.6%p 과장된다 · 수치는 전부 재계산본",
        fontsize=6.4, color=MUTED)
     tx(fig, X1, .027, "%d / %d" % (n, TOTAL), fontsize=6.4, color=MUTED, ha="right")
 
@@ -76,6 +79,8 @@ def new():
 # ── 자료 ────────────────────────────────────────────────────────────────
 A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
 DTS, PX, MAC = A["dates"], A["px"], A["macro"]
+import asset_backtest as AB
+AB.A, AB.DTS = A, DTS
 
 
 def masof(sid, d):
@@ -96,54 +101,38 @@ def back(d, mo, sid):
     return masof(sid, "%04d-%02d-%s" % (y, m, d[8:10]))
 
 
-def month_ends(lo):
-    return [i for i in range(lo, len(DTS) - 1) if DTS[i][:7] != DTS[i + 1][:7]]
-
-
-def alive(t, i):
-    s = PX.get(t)
-    return bool(s and i < len(s) and s[i] is not None)
-
-
-# 🚨 창을 손으로 근사하지 않는다 — 엔진(asset_backtest)의 first_common·cap_start 를
-#   그대로 부른다. 근사하면 엔진 산출물과 월 수가 갈리고, 같은 전략의 수치가 두 벌이 된다.
-import asset_backtest as AB
-AB.A, AB.DTS = A, DTS
-_start = AB.cap_start(AB.first_common(["IVE", "IVW"]))
-ME = month_ends(_start)
-
-# 엔진이 낸 정본 성적 — 표지 표는 이것을 쓴다(내가 월별로 다시 재면 일간 기반 엔진과
-#   변동성·샤프가 갈린다: 월별 변동성은 일간보다 낮게 나온다).
-_AS = json.load(io.open(os.path.join(DATA, "asset_strategies.json"), encoding="utf-8"))
-ENG = {x["sid"]: x for x in (_AS.get("strategies") or _AS.get("items"))}["dur-style"]
+# 창은 엔진과 같은 함수로 잡는다 — 근사하면 엔진 산출물과 월 수가 갈린다.
+_start = AB.cap_start(AB.first_common(["IVE", "IVW", "SPY"]))
+ME = [i for i in range(_start, len(DTS) - 1) if DTS[i][:7] != DTS[i + 1][:7]]
 
 ROWS = []
 for k in range(1, len(ME)):
     a, b = ME[k - 1], ME[k]
     d = DTS[a]
-    now, p3 = masof("DFII10", d), back(d, 3, "DFII10")
-    ch = None if (now is None or p3 is None) else now - p3
+    n3, p3 = masof("DFII10", d), back(d, 3, "DFII10")
+    ch = None if (n3 is None or p3 is None) else n3 - p3
     g = "중립" if ch is None else ("가치" if ch >= TH else "성장" if ch <= -TH else "중립")
     ve = PX["IVE"][b] / PX["IVE"][a] - 1
     vw = PX["IVW"][b] / PX["IVW"][a] - 1
-    sp = PX["^GSPC"][b] / PX["^GSPC"][a] - 1
-    w = W[g]
 
-    def up(sid):
-        n0, p6 = masof(sid, d), back(d, 6, sid)
+    def up(sid, _d=d):
+        n0, p6 = masof(sid, _d), back(_d, 6, sid)
         return n0 is not None and p6 is not None and n0 - p6 > UP
 
-    ROWS.append(dict(m=DTS[b][:7], reg=g, ch=ch, ve=ve, vw=vw, spx=sp,
-                     strat=w * ve + (1 - w) * vw, base=.5 * ve + .5 * vw,
+    ROWS.append(dict(m=DTS[b][:7], reg=g, ch=ch, ve=ve, vw=vw,
+                     strat=W[g] * ve + (1 - W[g]) * vw,
+                     tr=PX["SPY"][b] / PX["SPY"][a] - 1,        # 총수익
+                     pr=PX["^GSPC"][b] / PX["^GSPC"][a] - 1,    # 가격지수(대조용)
                      up10=up("DGS10"), up2=up("DGS2")))
 N = len(ROWS)
+S21 = [r for r in ROWS if r["m"] >= FROM]
 
 
 def ann(v):
     n = len(v)
     mu = sum(v) / n
     sd = math.sqrt(sum((z - mu) ** 2 for z in v) / (n - 1)) if n > 1 else 0
-    return mu * 12 * 100, (mu / (sd / math.sqrt(n))) if sd else 0.0
+    return mu * 12 * 100, (mu / (sd / math.sqrt(n)) if sd else 0.0)
 
 
 def cum(v):
@@ -153,8 +142,8 @@ def cum(v):
     return 100 * (p - 1)
 
 
-def perf(v, key):
-    r = [x[key] for x in v]
+def perf(v, k):
+    r = [x[k] for x in v]
     n = len(r)
     mu = sum(r) / n
     sd = math.sqrt(sum((z - mu) ** 2 for z in r) / (n - 1))
@@ -164,12 +153,11 @@ def perf(v, key):
         p *= 1 + x
         pk = max(pk, p)
         dd = min(dd, p / pk - 1)
-    return ((p ** (12 / n) - 1) * 100, sd * math.sqrt(12) * 100,
-            (mu * 12) / (sd * math.sqrt(12)), 100 * dd)
+    return (p ** (12 / n) - 1) * 100, sd * math.sqrt(12) * 100, (mu * 12) / (sd * math.sqrt(12)), 100 * dd
 
 
-def fmt(v, d=2, s=True):
-    return ("%+.*f" if s else "%.*f") % (d, v)
+def f(v, d=2):
+    return "%+.*f" % (d, v)
 
 
 with PdfPages(OUT) as pdf:
@@ -177,252 +165,258 @@ with PdfPages(OUT) as pdf:
     fig = new()
     page(fig, 1, "금리 국면 스타일 로테이션",
          "실질금리 방향으로 가치·성장을 기울인다 — 탐색 풀 D13 · `dur-style`")
-
     y = .900
-    tx(fig, X0, y, "묻는 것 — 금리 인상 구간에서 S&P 500 을 이기나", fontsize=10.5, weight="bold")
-    y -= .026
-    tx(fig, X0, y, "세 가지 인상 구간 정의로 각각 쟀다. 하나만 쓰면 «그 자름에서만 되는 것» "
-                   "이라는 반론이 서기 때문이다.", fontsize=7.8, color=INK2)
-    y -= .030
 
-    defs = [("10년물 6개월 +25bp 초과", lambda r: r["up10"]),
-            ("2년물 6개월 +25bp 초과", lambda r: r["up2"]),
-            ("둘 다 — 가장 뚜렷한 인상기", lambda r: r["up10"] and r["up2"]),
-            ("(참고) 전 구간", lambda r: True)]
-    rr = []
-    for lab, sel in defs:
-        v = [r for r in ROWS if sel(r)]
-        a, t = ann([r["strat"] - r["spx"] for r in v])
-        rr.append([lab, "%d" % len(v), fmt(a) + "%p", "%.2f" % t,
-                   fmt(cum([r["strat"] for r in v])) + "%",
-                   fmt(cum([r["spx"] for r in v])) + "%"])
-    y = table(fig, X0, y, [.30, .09, .13, .10, .16, .16],
-              ["인상 구간 정의", "개월", "연 초과", "t", "전략 누적", "S&P 누적"], rr,
-              row_h=.0182, fs=8.0, hfs=7.4, zebra=True,
-              cell_color=lambda r, c: (POS if c in (2, 3, 4) and r < 3 else INK),
-              cell_weight=lambda r, c: ("bold" if c in (2, 3) and r < 3 else "normal"))
-    y -= .020
-    tx(fig, X0, y, "→ 어느 정의로 잘라도 연 3%p 이상, t 3.0~3.9. 가장 뚜렷한 인상기 "
-                   "34개월은 누적 +15.5% 대 +4.5% 다.", fontsize=8.2, weight="bold", color=POS)
+    box(fig, X0, y - .066, X1 - X0, .072, PANEL2, z=-1)
+    tx(fig, X0 + .012, y - .004, "먼저 — 대조군을 총수익(TR)으로 바꾸면 숫자가 크게 준다",
+       fontsize=10, weight="bold", color=NEG)
+    a1, t1 = ann([r["strat"] - r["pr"] for r in ROWS])
+    a2, t2 = ann([r["strat"] - r["tr"] for r in ROWS])
+    tx(fig, X0 + .012, y - .028,
+       "전 구간 %d개월 연 초과 —  가격지수(^GSPC · 랩 공식) %s%%p (t %.2f)   →   "
+       "총수익(SPY) %s%%p (t %.2f)" % (N, f(a1), t1, f(a2), t2),
+       fontsize=8.6, color=INK)
+    tx(fig, X0 + .012, y - .046,
+       "랩 전략 수익은 배당 재투자인데 ^GSPC 는 배당이 빠져 있어 지수가 연 1.6%p 불리하게 "
+       "잡힌다. 아래는 전부 총수익 기준이다.", fontsize=7.6, color=INK2)
+    y -= .090
 
-    # 분해
-    y -= .042
-    tx(fig, X0, y, "그 초과의 절반은 «틸트» 가 아니라 «가치·성장 반반» 이다",
+    tx(fig, X0, y, "2021-01 이후 %d개월 — S&P 500 총수익 대비" % len(S21),
        fontsize=10.5, weight="bold")
-    y -= .026
-    tx(fig, X0, y, "실무에서 이 구분이 중요하다 — 앞은 구조라 지속성이 있고, "
-                   "뒤는 타이밍이라 신호가 계속 맞아야 한다.", fontsize=7.8, color=INK2)
     y -= .030
     rr = []
-    for lab, sel in (("10년물 인상기", lambda r: r["up10"]), ("2년물 인상기", lambda r: r["up2"])):
-        v = [r for r in ROWS if sel(r)]
-        a1, t1 = ann([r["base"] - r["spx"] for r in v])
-        a2, t2 = ann([r["strat"] - r["base"] for r in v])
-        a3, t3 = ann([r["strat"] - r["spx"] for r in v])
-        rr += [[lab + " — 50/50 이 S&P 를 이긴 몫", "%d" % len(v), fmt(a1) + "%p", "%.2f" % t1],
-               ["  같은 구간 — 금리 틸트가 더한 몫", "", fmt(a2) + "%p", "%.2f" % t2],
-               ["  합계", "", fmt(a3) + "%p", "%.2f" % t3]]
-    y = table(fig, X0, y, [.46, .10, .14, .14],
-              ["분해", "개월", "연 초과", "t"], rr, row_h=.0175, fs=8.0, hfs=7.4,
-              cell_color=lambda r, c: (MUTED if r % 3 == 2 else INK))
-    y -= .018
-    tx(fig, X0, y, "S&P 는 시총가중이라 대형 성장주에 쏠려 있고, 그 쏠림이 금리 상승기에 "
-                   "불리하다. 반반으로만 들어도 연 1.6%p 를 얻는다.", fontsize=7.8, color=INK2)
+    for lab, k in (("dur-style", "strat"), ("S&P 500 TR (SPY)", "tr")):
+        c, v, s, m = perf(S21, k)
+        rr.append([lab, "%.2f%%" % c, "%.2f%%" % v, "%.3f" % s, "%.2f%%" % m,
+                   f(cum([r[k] for r in S21])) + "%"])
+    y = table(fig, X0, y, [.24, .12, .12, .11, .12, .13],
+              ["", "CAGR", "변동성", "샤프", "MDD", "누적"], rr,
+              row_h=.0182, fs=8.0, hfs=7.4, zebra=True,
+              cell_weight=lambda r, c: ("bold" if r == 0 else "normal"),
+              cell_color=lambda r, c: (POS if r == 0 and c in (1, 3, 5) else INK))
+    y -= .020
+    a, t = ann([r["strat"] - r["tr"] for r in S21])
+    tx(fig, X0, y, "초과 연 %s%%p · t %.2f — 전 구간으로는 뚜렷하지 않다." % (f(a), t),
+       fontsize=8.2, color=INK2)
 
-    # 지금 상태
-    y -= .046
-    box(fig, X0, y - .088, X1 - X0, .094, PANEL2, z=-1)
-    tx(fig, X0 + .012, y - .004, "지금 — 인상 국면이고 신호도 켜져 있다",
+    y -= .042
+    tx(fig, X0, y, "그런데 국면으로 가르면 갈린다", fontsize=10.5, weight="bold")
+    y -= .026
+    tx(fig, X0, y, "2021-01 이후를 금리 인상 여부로 자른 것이다. "
+                   "인상기에만 벌고, 그 밖에서는 조금 진다.", fontsize=7.8, color=INK2)
+    y -= .030
+    rr = []
+    for lab, sel in (("10년물 6개월 +25bp 초과", lambda r: r["up10"]),
+                     ("2년물 6개월 +25bp 초과", lambda r: r["up2"]),
+                     ("둘 다 — 가장 뚜렷한 인상기", lambda r: r["up10"] and r["up2"]),
+                     ("인상기가 아닌 달", lambda r: not (r["up10"] or r["up2"]))):
+        v = [r for r in S21 if sel(r)]
+        aa, tt = ann([r["strat"] - r["tr"] for r in v])
+        rr.append([lab, "%d" % len(v), f(aa) + "%p", "%.2f" % tt,
+                   f(cum([r["strat"] for r in v])) + "%", f(cum([r["tr"] for r in v])) + "%"])
+    y = table(fig, X0, y, [.30, .09, .13, .10, .15, .15],
+              ["구간", "개월", "연 초과", "t", "전략 누적", "S&P TR 누적"], rr,
+              row_h=.0182, fs=8.0, hfs=7.4, zebra=True,
+              cell_color=lambda r, c: (NEG if r == 3 and c in (2, 3) else
+                                       (POS if r < 3 and c in (2, 3) else INK)),
+              cell_weight=lambda r, c: ("bold" if c in (2, 3) else "normal"))
+    y -= .024
+    tx(fig, X0, y, "→ 금리 인상기 연 +2.9~3.3%p (t 1.9~2.5) · 인상기가 아니면 -0.7%p (t -0.5).\n"
+                   "   물으신 잣대(인상 구간 · S&P 대비)로는 총수익으로 바꿔도 선다.",
+       fontsize=8.4, weight="bold", color=POS, linespacing=1.5)
+
+    y -= .062
+    box(fig, X0, y - .068, X1 - X0, .074, PANEL2, z=-1)
+    tx(fig, X0 + .012, y - .004, "지금 — 마지막 리밸런스 %s" % DTS[ME[-1]],
        fontsize=10, weight="bold")
     d = DTS[ME[-1]]
     cur = []
     for sid, nm in (("DGS10", "10년물"), ("DGS2", "2년물"), ("DFII10", "10년 실질")):
         n0, p6 = masof(sid, d), back(d, 6, sid)
-        cur.append([nm, "%.2f%%" % n0, "%.2f%%" % p6, fmt(n0 - p6) + "%p",
-                    "인상 국면" if n0 - p6 > UP else "—"])
-    # 🚨 ROWS[-1] 의 신호는 DTS[ME[-2]](한 달 앞)의 것이다. 위 표는 DTS[ME[-1]] 을 쓰므로
-    #   그대로 쓰면 표와 신호가 다른 날이 된다(첫 판에서 실제로 그렇게 났다 —
-    #   표는 7월인데 신호는 6월 것이라 «중립» 으로 찍혔다). 같은 날로 다시 낸다.
-    _n3, _p3 = masof("DFII10", d), back(d, 3, "DFII10")
-    _ch = None if (_n3 is None or _p3 is None) else _n3 - _p3
-    _g = "중립" if _ch is None else ("가치" if _ch >= TH else "성장" if _ch <= -TH else "중립")
-    sig = {"ch": _ch, "reg": _g}
-    table(fig, X0 + .012, y - .026, [.16, .12, .13, .12, .14],
-          ["", "현재", "6개월 전", "변화", ""], cur, row_h=.0155, fs=7.6, hfs=7.0,
+        cur.append([nm, "%.2f%%" % n0, "%.2f%%" % p6, f(n0 - p6) + "%p",
+                    "인상 국면" if n0 - p6 > UP else "-"])
+    table(fig, X0 + .012, y - .026, [.15, .11, .12, .11, .13],
+          ["", "현재", "6개월 전", "변화", ""], cur, row_h=.0150, fs=7.6, hfs=7.0,
           cell_color=lambda r, c: (POS if c == 4 else INK))
-    tx(fig, X0 + .60, y - .030,
-       "규칙의 신호(3개월 변화)\n  %s%%p  — 문턱 %.2f 의 %.1f배\n\n현재 비중\n  IVE %.0f%% / IVW %.0f%%"
-       % (fmt(sig["ch"] or 0), TH, abs((sig["ch"] or 0) / TH), 100 * W[sig["reg"]],
-          100 * (1 - W[sig["reg"]])),
-       fontsize=8.4, color=INK, linespacing=1.5)
-
+    _ch = masof("DFII10", d) - back(d, 3, "DFII10")
+    _g = "가치" if _ch >= TH else ("성장" if _ch <= -TH else "중립")
+    tx(fig, X0 + .58, y - .028,
+       "규칙의 신호(3개월 변화)\n  %s%%p — 문턱 %.2f 의 %.1f배\n\n보유 비중\n  IVE %.0f%% / IVW %.0f%%"
+       % (f(_ch), TH, abs(_ch / TH), 100 * W[_g], 100 * (1 - W[_g])),
+       fontsize=8.4, linespacing=1.5)
     pdf.savefig(fig, facecolor=PAPER)
     plt.close(fig)
 
-    # ══ 2쪽 — 규칙과 전 구간 ═══════════════════════════════════════════
+    # ══ 2쪽 — 차트 ════════════════════════════════════════════════════
     fig = new()
-    page(fig, 2, "규칙과 전 구간 성적")
-
+    page(fig, 2, "2021년 이후 누적", "dur-style 대 S&P 500 총수익 · 음영 = 금리 인상 구간")
     y = .900
-    tx(fig, X0, y, "규칙 — 수를 하나도 랩이 고르지 않았다", fontsize=10.5, weight="bold")
-    y -= .026
-    tx(fig, X0, y, "매월 말 미 10년 TIPS 실질금리(FRED DFII10)의 3개월 변화를 본다. "
-                   "문턱(±20bp) · 한도(±20%p) · 주기 전부 카드 D13 의 수다.",
-       fontsize=7.8, color=INK2)
-    y -= .030
-    y = table(fig, X0, y, [.34, .16, .16],
-              ["3개월 변화", "IVE(가치)", "IVW(성장)"],
-              [["≥ +0.20%p   (실질금리 상승)", "70%", "30%"],
-               ["-0.20 ~ +0.20%p   (중립)", "50%", "50%"],
-               ["≤ -0.20%p   (실질금리 하락)", "30%", "70%"]],
-              row_h=.0182, fs=8.0, hfs=7.4, zebra=True)
-    y -= .018
-    tx(fig, X0, y, "논리는 «주식 듀레이션» — 성장주는 현금흐름이 뒤에 몰려 있어 "
-                   "할인율에 더 민감하다.", fontsize=7.8, color=INK2)
 
-    y -= .042
-    tx(fig, X0, y, "전 구간 (2016-09 ~ 2026-07 · 월말 %d회)" % N, fontsize=10.5, weight="bold")
-    y -= .030
-    # 엔진 정본(일간 기반). 월별로 다시 재면 변동성이 낮게 나와 샤프가 부풀려진다.
-    _m, _b2, _bx = ENG["metrics"], ENG["bench2"]["metrics"], ENG["bench"]
-    rr = []
-    for lab, mm in (("dur-style", _m), ("IVE·IVW 50/50", _b2), ("S&P 500 PR", _bx)):
-        rr.append([lab, "%.2f%%" % mm["cagr"], "%.2f%%" % mm["vol"],
-                   "%.3f" % mm["sharpe"], "%.2f%%" % mm["mdd"]])
-    y = table(fig, X0, y, [.26, .14, .14, .13, .14],
-              ["", "CAGR", "변동성", "샤프", "MDD"], rr, row_h=.0182, fs=8.0, hfs=7.4,
-              cell_weight=lambda r, c: ("bold" if r == 0 else "normal"),
-              cell_color=lambda r, c: (POS if r == 0 and c in (1, 3) else INK))
-    y -= .020
-    tx(fig, X0, y, "기준배분 대비 Δ샤프 %s · t %.2f · 회전 %.1f회/년 · 비용 뒤 샤프 %.3f → %.3f "
-                   "(비용이 사실상 안 먹는다)."
-       % (fmt(ENG["bench2"]["d_sharpe"], 3), ENG["bench2"]["t"], ENG["turnover"],
-          _m["sharpe"], ENG["metrics_net"]["sharpe"]), fontsize=8.2, color=INK2)
-
-    # 누적 곡선
-    y -= .034
-    ax = fig.add_axes([X0, y - .245, X1 - X0, .238])
-    for key, col, lab, lw in (("spx", MUTED, "S&P 500 PR", 1.0),
-                              ("base", CHAMP, "IVE·IVW 50/50", 1.1),
-                              ("strat", POS, "dur-style", 1.7)):
-        c, p = [], 100.0
-        for r in ROWS:
+    ax = fig.add_axes([X0, y - .300, X1 - X0, .295])
+    for key, col, lab, lw in (("tr", MUTED, "S&P 500 TR (SPY)", 1.2),
+                              ("strat", POS, "dur-style", 1.9)):
+        c, p = [100.0], 100.0
+        for r in S21:
             p *= 1 + r[key]
             c.append(p)
-        ax.plot(range(N), c, color=col, lw=lw, label=lab, zorder=3 if key == "strat" else 2)
-    # 인상 구간 음영
-    for i, r in enumerate(ROWS):
+        ax.plot(range(len(c)), c, color=col, lw=lw, label=lab, zorder=3)
+    for i, r in enumerate(S21):
         if r["up10"] and r["up2"]:
-            ax.axvspan(i - .5, i + .5, color=ACC, alpha=.10, lw=0, zorder=0)
+            ax.axvspan(i + .5, i + 1.5, color=ACC, alpha=.11, lw=0, zorder=0)
     ax.set_facecolor(PAPER)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     for sp in ("left", "bottom"):
         ax.spines[sp].set_color(LINE)
-    ticks = [i for i, r in enumerate(ROWS) if r["m"][5:7] == "01"]
-    ax.set_xticks(ticks)
-    ax.set_xticklabels([ROWS[i]["m"][:4] for i in ticks], fontsize=6.6, color=MUTED)
-    ax.tick_params(axis="y", labelsize=6.6, colors=MUTED, length=2)
+    tks = [i + 1 for i, r in enumerate(S21) if r["m"][5:7] == "01"]
+    ax.set_xticks(tks)
+    ax.set_xticklabels([S21[i - 1]["m"][:4] for i in tks], fontsize=7, color=MUTED)
+    ax.tick_params(axis="y", labelsize=7, colors=MUTED, length=2)
     ax.grid(axis="y", color=LINE, lw=.5, alpha=.7)
     ax.set_axisbelow(True)
-    ax.legend(fontsize=7, frameon=False, loc="upper left")
-    ax.set_title("누적 (100 시작) · 음영 = 10년물·2년물이 함께 오른 달",
-                 fontsize=7.4, color=MUTED, loc="left", pad=5)
+    ax.legend(fontsize=8, frameon=False, loc="upper left")
+    ax.set_title("100 에서 시작 (%s ~ %s)" % (S21[0]["m"], S21[-1]["m"]),
+                 fontsize=7.6, color=MUTED, loc="left", pad=6)
+    y -= .322
+
+    ax2 = fig.add_axes([X0, y - .185, X1 - X0, .180])
+    rel, p = [100.0], 100.0
+    for r in S21:
+        p *= (1 + r["strat"]) / (1 + r["tr"])
+        rel.append(p)
+    ax2.plot(range(len(rel)), rel, color=CHAMP, lw=1.5)
+    ax2.axhline(100, color=LINE, lw=.8)
+    for i, r in enumerate(S21):
+        if r["up10"] and r["up2"]:
+            ax2.axvspan(i + .5, i + 1.5, color=ACC, alpha=.11, lw=0, zorder=0)
+    ax2.set_facecolor(PAPER)
+    for sp in ("top", "right"):
+        ax2.spines[sp].set_visible(False)
+    for sp in ("left", "bottom"):
+        ax2.spines[sp].set_color(LINE)
+    ax2.set_xticks(tks)
+    ax2.set_xticklabels([S21[i - 1]["m"][:4] for i in tks], fontsize=7, color=MUTED)
+    ax2.tick_params(axis="y", labelsize=7, colors=MUTED, length=2)
+    ax2.grid(axis="y", color=LINE, lw=.5, alpha=.7)
+    ax2.set_axisbelow(True)
+    ax2.set_title("상대곡선 — 전략 ÷ S&P 500 TR (100 위면 앞선다)",
+                  fontsize=7.6, color=MUTED, loc="left", pad=6)
+    y -= .206
+    tx(fig, X0, y, "음영(금리 인상 구간)에서 상대곡선이 오르고, 그 밖에서는 옆으로 가거나 "
+                   "내린다. 이 그림이 1쪽 표의 내용이다.", fontsize=8.0, color=INK2)
     pdf.savefig(fig, facecolor=PAPER)
     plt.close(fig)
 
-    # ══ 3쪽 — 감사와 한계 ═════════════════════════════════════════════
+    # ══ 3쪽 — 월별 ════════════════════════════════════════════════════
     fig = new()
-    page(fig, 3, "감사와 한계", "오늘 x-a1payout 을 기각으로 보낸 검사를 그대로 걸었다")
+    page(fig, 3, "월별 성과 비교",
+         "%s ~ %s · %d개월 · 월 이름이 주황이면 금리 인상 구간"
+         % (S21[0]["m"], S21[-1]["m"], len(S21)))
+    y = .900
+    per = (len(S21) + 2) // 3
+    for blk in range(3):
+        seg = S21[blk * per:(blk + 1) * per]
+        if not seg:
+            continue
+        rr = [[r["m"], r["reg"], "%+.2f" % (100 * r["strat"]), "%+.2f" % (100 * r["tr"]),
+               "%+.2f" % (100 * (r["strat"] - r["tr"]))] for r in seg]
+        up = {i for i, r in enumerate(seg) if r["up10"] and r["up2"]}
 
+        def cc(r, c, _rr=rr, _up=up):
+            if c == 4:
+                return POS if float(_rr[r][4]) > 0 else NEG
+            if c == 0 and r in _up:
+                return ACC
+            return INK
+        table(fig, X0 + blk * .296, y, [.062, .048, .058, .058, .058],
+              ["월", "국면", "전략", "S&P", "차이"], rr,
+              row_h=.0140, fs=6.5, hfs=6.4, aligns=["l", "l", "r", "r", "r"],
+              cell_color=cc)
+    y -= per * .0140 + .052
+
+    v = [r["strat"] - r["tr"] for r in S21]
+    wins = sum(1 for x in v if x > 0)
+    upm = [r for r in S21 if r["up10"] and r["up2"]]
+    uw = sum(1 for r in upm if r["strat"] > r["tr"])
+    nom = [r for r in S21 if not (r["up10"] or r["up2"])]
+    nw = sum(1 for r in nom if r["strat"] > r["tr"])
+    rr = [["전체", "%d" % len(S21), "%d (%.0f%%)" % (wins, 100 * wins / len(S21)),
+           "%+.2f%%p" % (100 * sum(v) / len(v)),
+           "%+.2f%%p" % (100 * max(v)), "%+.2f%%p" % (100 * min(v))],
+          ["금리 인상 구간", "%d" % len(upm), "%d (%.0f%%)" % (uw, 100 * uw / len(upm)),
+           "%+.2f%%p" % (100 * sum(r["strat"] - r["tr"] for r in upm) / len(upm)), "", ""],
+          ["인상기가 아닌 달", "%d" % len(nom), "%d (%.0f%%)" % (nw, 100 * nw / len(nom)),
+           "%+.2f%%p" % (100 * sum(r["strat"] - r["tr"] for r in nom) / len(nom)), "", ""]]
+    table(fig, X0, y, [.20, .09, .14, .14, .13, .13],
+          ["", "개월", "이긴 달", "월평균 차이", "최고", "최저"], rr,
+          row_h=.0178, fs=8.0, hfs=7.4,
+          cell_color=lambda r, c: (POS if r == 1 and c in (2, 3) else
+                                   (NEG if r == 2 and c in (2, 3) else INK)))
+    pdf.savefig(fig, facecolor=PAPER)
+    plt.close(fig)
+
+    # ══ 4쪽 — 감사·한계 ═══════════════════════════════════════════════
+    fig = new()
+    page(fig, 4, "감사와 한계", "오늘 x-a1payout 을 기각으로 보낸 검사를 그대로 걸었다")
     y = .900
     tx(fig, X0, y, "통과한 것", fontsize=10.5, weight="bold", color=POS)
     y -= .028
     aw = sum(W[r["reg"]] for r in ROWS) / N
-    ex = [r["strat"] - r["base"] for r in ROWS]
+    ex = [r["strat"] - r["tr"] for r in ROWS]
     tot = sum(ex)
     mx = max(ex, key=abs)
     h = N // 2
-    a1, t1 = ann(ex[:h])
-    a2, t2 = ann(ex[h:])
+    _, ta = ann(ex[:h])
+    _, tb = ann(ex[h:])
     sw = sum(1 for k in range(1, N) if ROWS[k]["reg"] != ROWS[k - 1]["reg"])
-    y = table(fig, X0, y, [.30, .30, .24],
+    y = table(fig, X0, y, [.28, .28, .28],
               ["검사", "x-a1payout(기각)", "dur-style"],
-              [["순틸트를 숨겼나", "—", "평균 가치비중 %.3f — 없음" % aw],
-               ["한 방 의존", "한 주가 분기 초과의 88%", "최대 한 달이 누적의 %.0f%%" % (100 * abs(mx / tot))],
-               ["반으로 갈라도 서나", "—", "전반 t %.2f · 후반 t %.2f" % (t1, t2)],
+              [["순틸트를 숨겼나", "-", "평균 가치비중 %.3f - 없음" % aw],
+               ["한 방 의존", "한 주가 분기 초과의 88%",
+                "최대 한 달이 누적의 %.0f%%" % (100 * abs(mx / tot))],
+               ["반으로 갈라도 서나", "-", "전반 t %.2f · 후반 t %.2f" % (ta, tb)],
                ["실효 표본", "40분기 중 11분기가 얇았다", "국면 전환 %d회" % sw],
                ["비용", "드래그 0.25%p", "드래그 0.002"]],
               row_h=.0182, fs=7.8, hfs=7.4, aligns=["l", "l", "l"], zebra=True,
               cell_color=lambda r, c: (POS if c == 2 else (NEG if c == 1 else INK)))
-    y -= .020
-    tx(fig, X0, y, "번 것이 «타이밍» 이라는 증거 — 이 구간에 성장이 압도했다"
-                   "(누적 IVE %s%% vs IVW %s%%). 가치를 더 들지도 않았는데(평균 %.3f) "
-                   "50/50 을 이겼다."
-       % (fmt(cum([r["ve"] for r in ROWS]), 1), fmt(cum([r["vw"] for r in ROWS]), 1), aw),
+    y -= .022
+    tx(fig, X0, y, "번 것이 «타이밍» 이라는 증거 - 이 구간에 성장이 압도했는데"
+                   "(누적 IVE %s%% vs IVW %s%%) 가치를 평균적으로 더 들지도 않고(%.3f) 이겼다."
+       % (f(cum([r["ve"] for r in ROWS]), 1), f(cum([r["vw"] for r in ROWS]), 1), aw),
        fontsize=7.8, color=INK2)
 
-    y -= .044
+    y -= .046
     tx(fig, X0, y, "알고 써야 할 것", fontsize=10.5, weight="bold", color=MARG)
-    y -= .028
-    from collections import defaultdict
-    by = defaultdict(list)
-    for r in ROWS:
-        by[r["m"][:4]].append(r)
-    yr = sorted(by, key=lambda k: -(cum([x["strat"] for x in by[k]]) - cum([x["base"] for x in by[k]])))
-    rr = []
-    for k in yr[:3]:
-        e = cum([x["strat"] for x in by[k]]) - cum([x["base"] for x in by[k]])
-        rr.append(["%s년" % k, "%d개월" % len(by[k]), fmt(e) + "%p"])
-    rest = sum(cum([x["strat"] for x in by[k]]) - cum([x["base"] for x in by[k]])
-               for k in by if k not in yr[:3])
-    rr.append(["나머지 %d년 합" % (len(by) - 3), "", fmt(rest) + "%p"])
-    y = table(fig, X0, y, [.20, .14, .16], ["연도", "개월", "초과(50/50 대비)"], rr,
-              row_h=.0175, fs=8.0, hfs=7.4,
-              cell_color=lambda r, c: (MUTED if r == 3 else INK))
-    y -= .018
-    tx(fig, X0, y, "초과가 실질금리가 크게 움직인 세 해에 몰려 있다(2020 급락 · 2022 급등 · "
-                   "2025 반전). 설계가 변화율에 반응하므로 일관되지만,\n"
-                   "«매년 조금씩 꾸준히» 는 아니다 — 조용한 해에는 기준배분과 거의 같다.",
-       fontsize=7.8, color=INK2, linespacing=1.5)
+    y -= .026
+    aex, tex = ann(ex)
+    tx(fig, X0, y,
+       "· 총수익 기준으로는 전 구간 우위가 뚜렷하지 않다 - 연 " + f(aex) + "%p · t "
+       + ("%.2f" % tex) + ". 우위는 «금리 인상 구간» 이라는 조건 안에 있다.\n"
+       "· 그 조건 자체는 성적을 보고 고른 것이 아니라 사용자가 물음으로 먼저 준 것이고, "
+       "정의 셋으로 다 재서 셋 다 같은 답이 나왔다.\n"
+       "· 인상기가 아닌 달에는 조금 진다. 상시 보유 전략이 아니라 국면 의존 전략이다.\n"
+       "· SPY 는 보수 0.09%가 빠져 있어 진짜 S&P 총수익보다 아주 조금 낮다 - "
+       "그만큼 이 표는 전략에 관대하다.\n"
+       "· 랩의 전 구간 다중검정 문턱(시행 304회 · 델타샤프 0.259~0.411)은 못 넘는다. "
+       "등급은 「측정만」이고 배포가 아니다.",
+       fontsize=7.8, color=INK2, linespacing=1.62)
 
-    y -= .050
-    tx(fig, X0, y, "두 다리의 강도가 다르다", fontsize=9.2, weight="bold")
-    y -= .024
-    rr = []
-    for g in ("가치", "성장", "중립"):
-        v = [r for r in ROWS if r["reg"] == g]
-        sp = [r["ve"] - r["vw"] for r in v]
-        _, t = ann(sp)
-        contrib = sum((W[r["reg"]] - .5) * (r["ve"] - r["vw"]) for r in v)
-        rr.append([g, "%d" % len(v), fmt(100 * contrib) + "%p",
-                   "%.0f%%" % (100 * contrib / tot) if tot else "—", "%.2f" % t])
-    y = table(fig, X0, y, [.14, .09, .16, .12, .12],
-              ["국면", "개월", "초과 기여", "비중", "가치-성장 t"], rr,
-              row_h=.0175, fs=8.0, hfs=7.4)
-    y -= .018
-    tx(fig, X0, y, "가치·성장 축만 떼어 보면 «금리 하락 → 성장» 다리가 훨씬 강하다. "
-                   "다만 이것이 1쪽을 부정하지 않는다 —\n1쪽은 S&P 500 대비이고 이것은 "
-                   "가치 대 성장이다. 금리 인상기에는 가치가 성장을 크게 못 이겨도 "
-                   "시총가중 S&P 는 이긴다.", fontsize=7.8, color=INK2, linespacing=1.5)
-
-    y -= .052
+    y -= .116
     tx(fig, X0, y, "한계", fontsize=10.5, weight="bold", color=NEG)
     y -= .026
     tx(fig, X0, y,
        "· 카드의 재현이 아니다. 카드가 지목한 IWD·VTV·IWF·VUG 가 넷 다 랩 패널에 없어 "
        "IVE·IVW(S&P 500 가치·성장)로 대체했다.\n"
-       "· 10년 창 · 월말 " + str(N) + "회뿐이다. 인상 구간은 그중 34~45개월이다.\n"
-       "· 미국만이다. 한국·일본 금리는 이 랩에 자료가 없다 — 이 규칙이 재는 것은 "
+       "· 2021 이후 표본은 " + str(len(S21)) + "개월이고 그중 인상 구간은 22~32개월이다. 얇다.\n"
+       "· 미국만이다. 한국·일본 금리는 이 랩에 자료가 없다 - 이 규칙이 재는 것은 "
        "미 10년 TIPS 실질금리 하나다.\n"
-       "· 랩의 전 구간 다중검정 문턱(시행 304회 · Δ샤프 0.259~0.411)은 못 넘는다. "
-       "등급은 「측정만」이고 배포가 아니다.\n"
-       "· 카드 자신이 적은 불리한 증거 — 2026년 IVE +13.02% vs IVW +12.65% 로 격차가 "
+       "· 카드 자신이 적은 불리한 증거 - 2026년 IVE +13.02% vs IVW +12.65% 로 격차가 "
        "0.4%p뿐이다. 올해는 이 축이 거의 안 벌었다.",
        fontsize=7.8, color=INK2, linespacing=1.62)
-
     pdf.savefig(fig, facecolor=PAPER)
     plt.close(fig)
 
+_a, _t = ann([r["strat"] - r["tr"] for r in S21])
 print("→ %s (%.0fKB · %d쪽)" % (OUT, os.path.getsize(OUT) / 1024, TOTAL))
-print("   월말 %d회 · %s ~ %s" % (N, ROWS[0]["m"], ROWS[-1]["m"]))
+print("   전 구간 %d개월 · 차트·월별표 %s~ (%d개월)" % (N, FROM, len(S21)))
+print("   2021~ S&P TR 대비 연 %s%%p · t %.2f" % (f(_a), _t))
