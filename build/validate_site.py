@@ -2687,6 +2687,64 @@ try:
     except Exception as _e7:
         errors.append("가족 지도 대조 실패 — %s" % _e7)
 
+    # ①-e 🚨 2026-09-02 — **«표시용 계열» 검사.** 이 저장소가 하루에 네 번 밟은 결함이다:
+    #   strategies[].dates/nav 는 약 7일 간격 504점짜리 **표시용 표본**인데 이름이 그렇게
+    #   안 읽혀, 분석에서 «일간 정본» 으로 알고 접었다(chart.nav 도 같다). chart.monthly 도
+    #   월간 표본이고 **둘 중 어느 것도 metrics 를 정확히 재현하지 않는다.**
+    #   그래서 ① 자료가 스스로 그 사실을 적게 하고(series_note·sampling) ② 그 선언이
+    #   실제와 맞는지를 여기서 기계로 대조한다. 선언만 있고 안 맞으면 선언이 낡은 것이다.
+    import datetime as _dtm          # 이 파일은 위쪽에서 _dt 로 쓰는 자리가 따로 있다
+    for _fn, _lbl in (("tech_strategies.json", "종목 랩"), ("asset_strategies.json", "자산 랩")):
+        try:
+            _d = json.load(io.open(os.path.join(ROOT, "data", _fn), encoding="utf-8"))
+        except Exception as _e:
+            errors.append("%s 를 못 읽었다 — %s" % (_fn, _e)); continue
+        if not _d.get("series_note") or not _d.get("sampling"):
+            errors.append("%s 에 series_note/sampling 이 없다 — dates·nav 가 표시용 표본이라는 "
+                          "사실을 자료가 스스로 적어야 한다(2026-09-02 규약). "
+                          "build/%s 의 산출 묶음에 넣을 것"
+                          % (_fn, "tech_backtest.py" if "tech" in _fn else "asset_backtest.py"))
+            continue
+        _sm = _d["sampling"]
+        _rows = _d.get("strategies") or _d.get("items") or []
+        _gaps, _dn, _dm = [], [], []
+        for _r in _rows:
+            _dd, _nv = _r.get("dates"), _r.get("nav")
+            _mo = (_r.get("chart") or {}).get("monthly")
+            _cg = (_r.get("metrics") or {}).get("cagr")
+            if not (_dd and _nv and _mo and _cg):
+                continue
+            try:
+                _g = [(_dtm.date.fromisoformat(_dd[i + 1]) - _dtm.date.fromisoformat(_dd[i])).days
+                      for i in range(min(80, len(_dd) - 1))]
+                _yr = ((_dtm.date.fromisoformat(_dd[-1]) - _dtm.date.fromisoformat(_dd[0])).days
+                       / 365.25)
+            except ValueError:
+                continue                     # 월 키('YYYY-MM')를 쓰는 몇 종은 건너뛴다
+            if not _g or _yr <= 0:
+                continue
+            _gaps.append(sorted(_g)[len(_g) // 2])
+            _dn.append(abs(((_nv[-1] / _nv[0]) ** (1 / _yr) - 1) * 100 - _cg))
+            _p = 1.0
+            for _x in _mo:
+                _p *= 1 + _x["r"] / 100.0
+            _dm.append(abs((_p ** (12.0 / len(_mo)) - 1) * 100 - _cg))
+        if not _gaps:
+            continue
+        _med = sorted(_gaps)[len(_gaps) // 2]
+        _decl = (_sm.get("nav") or {}).get("median_gap_days")
+        if _decl and abs(_med - _decl) > 1:
+            errors.append("%s: nav 간격 선언 %d일인데 실측 %d일 — sampling 선언이 낡았다"
+                          % (_lbl, _decl, _med))
+        _cap = _sm.get("max_cagr_gap_pp") or {}
+        for _k, _v in (("nav", _dn), ("monthly", _dm)):
+            _lim = _cap.get(_k)
+            if _lim and max(_v) > _lim * 1.5:
+                errors.append("%s: %s 복리와 metrics.cagr 의 차이가 선언(%.2f%%p)의 1.5배를 "
+                              "넘었다 — 실측 최대 %.2f%%p. 표본이 더 성겨졌거나 산식이 "
+                              "바뀐 것이다(선언을 고치기 전에 왜 벌어졌는지 볼 것)"
+                              % (_lbl, _k, _lim, max(_v)))
+
     # ①-c 🚨 2026-08-20 — 세 번째 목록의 **셋째 사본**(data/strategy_report.json tested.tech)
     #   도 대조한다. 당일 측정 세션이 정본·tech 사본만 늘리면 report.html 이 옛 수(98종)를
     #   하루 창 동안 보여 줬는데, 이 검사가 없어 «전항 통과»로 보였다(점검 패널 실측).
