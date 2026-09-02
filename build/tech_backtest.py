@@ -9435,6 +9435,26 @@ def run():
         #     as_of 를 쓰면 «10년 성과» 라 적고 실제로는 안 잰 3주를 포함해 말하게 된다.
         "as_of": dates[-1], "perf_as_of": dates[(ASOF_N[0] or n) - 1],
         "start": dates[MIN_HIST], "n_days": (ASOF_N[0] or n) - MIN_HIST,
+        # 🚨 2026-09-02 — **이 파일을 읽는 사람(과 나)에게 계열의 성격을 자료 스스로 말하게 한다.**
+        #   오늘 하루에 네 번, 전부 같은 결함으로 틀렸다: `dates`·`nav` 를 «일간 정본» 으로
+        #   알고 접었는데 실제로는 약 7일 간격 504점짜리 **표시용 표본**이었다.
+        #   이름(`nav`)이 그 사실을 안 알려 주므로 자료에 적어 둔다. 이 선언이 실제와 맞는지는
+        #   build/validate_site.py 의 «표시용 계열» 검사(①-e)가 매 굽기마다 기계로 대조한다.
+        "series_note":
+            "🚨 `dates`·`nav`(그리고 `chart.nav`)는 **표시용 표본이다** — 약 7일 간격 504점이고 "
+            "백테스트가 실제로 돈 일간 계열이 아니다. `chart.monthly` 도 월간 표본이다. "
+            "**둘 중 어느 것도 `metrics` 를 정확히 재현하지 않는다**(복리 차이 최대 약 1.1%p). "
+            "재집계에는 `chart.monthly` 를 쓰되 그 한계를 알고 쓸 것. "
+            "⚠ 2026-09-02 에 이 혼동으로 네 번 틀렸다. "
+            "build/validate_site.py 의 «표시용 계열» 검사가 이 선언을 실제와 대조한다.",
+        "sampling": {
+            "nav": {"kind": "표시용 표본", "points": 504, "median_gap_days": 7,
+                    "reproduces_metrics": False},
+            "chart.monthly": {"kind": "월간 표본", "reproduces_metrics": False},
+            "daily": {"stored": False,
+                      "note": "일간 정본은 저장하지 않는다(용량). metrics 는 그것으로 냈다."},
+            # 실측 상한(2026-09-02). 검사는 이 값의 1.5배를 넘을 때 잡는다.
+            "max_cagr_gap_pp": {"nav": 1.11, "monthly": 0.85}},
         "n_days_px": n - MIN_HIST,
         # 🚨 2026-08-13 — **무위험을 어디부터 평균 냈는지**를 싣는다. load() 가 rf 를
         #   `dates[0][:7]`(패널 시작 2009-01)로 자르는데, strategy_index 는 그동안
