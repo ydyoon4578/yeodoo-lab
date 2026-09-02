@@ -42,6 +42,7 @@ import json
 import math
 import os
 import re
+import bisect as _bisect
 import sys
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
 except Exception: pass
@@ -7181,7 +7182,34 @@ def xsec_score_at(S, i, X, pool=None):
                 #   어느 쪽을 남길지에만 쓰이므로 카드의 1번 조건인 매입수익률을 쓴다.
                 # ⚠ 크기가 매달 다르다. XSEC_MIN_POOL 은 SCREEN_SIDS 로 면제된다.
                 _bb = ttm2(f.get("bb"), f.get("bb_a"), dt_)
-                _bby = (_bb / mcap) if (mcap and _bb is not None and _bb > 0) else None
+                # 🚨 2026-09-02 정정(PREREG-2026-09-03-A1FIX.md · 계산 전 커밋 52f948c3c).
+                #   분모를 **분자와 같은 기간말**의 시총으로 옮긴다. 종전에는 얼어 있는
+                #   직전 회계연도 자사주액(최대 455일 낡음)을 **오늘 시총**으로 나눠,
+                #   회사의 행동이 아니라 그 뒤의 주가 변동을 재고 있었다.
+                #   실례: LOW 는 2021 세 분기 내내 자사주 4,971 로 같았는데 시총이
+                #   132.2 → 166.5B 로 올라 3.76% → 2.99% 가 되어 탈락했다 — 덜 사서가
+                #   아니라 주가가 올라서다. 그 탈락으로 2021-12 바스켓이 1종이 됐다.
+                #   규칙 전체로도 바스켓 크기 ~ 직전 24개월 SPY 수익 상관이 −0.730 이었다.
+                # ⚠ 선견이 아니다 — 기간말은 ttm2 의 전제상 «리밸 − 90일» 보다 과거이고,
+                #   그 시점 종가·보고주식수는 이미 공시된 값이다.
+                _bby = None
+                if _bb is not None and _bb > 0:
+                    _fe = _ttm2_asof(f.get("bb"), f.get("bb_a"), dt_)
+                    # 기간말 → 격자 인덱스. 그날이 거래일이 아니면 **그 이전** 마지막
+                    # 거래일로 내린다(뒤로 올리면 선견이 된다).
+                    # ⚠ _ORD 는 날짜→서수라 인덱스가 아니다 — 처음에 그걸 썼다가 잡았다.
+                    _fi = None
+                    if _fe:
+                        _k = _bisect.bisect_right(dates, _fe) - 1
+                        if 0 <= _k < i:
+                            _fi = _k
+                    if _fi is not None:
+                        _fp = P[_fi]
+                        # 주식수는 그 기간말 시점의 보고치 — 여기서는 공시지연을 다시 걸지
+                        # 않는다(리밸 시점에서 보면 이미 공시된 과거 관측이다).
+                        _fs = asof_fund(f.get("sh"), _fe, lag=0)
+                        if _fp and _fs and _fp > 0 and _fs > 0:
+                            _bby = _bb / (_fs * _fp)
                 # ① 자사주수익률 > 3%
                 if _bby is not None and _bby > 0.03:
                     # ② 5년 주당배당 CAGR > 5%. 🚨 _shift 는 **빼는** 함수다
