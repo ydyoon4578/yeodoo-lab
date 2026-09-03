@@ -114,10 +114,12 @@
   },
   "refresh-members.yml": {
    "cron": [
-    "45 21 * * 5"
+    "45 21 * * 5",
+    "45 22 * * 5"
    ],
    "label": [
-    "매주 토 06:45 KST"
+    "매주 토 06:45 KST",
+    "매주 토 07:45 KST"
    ]
   },
   "refresh-metrics.yml": {
