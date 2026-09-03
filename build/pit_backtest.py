@@ -262,7 +262,6 @@ FUND_SIDS = [
              #   dps 가 71종(49%)뿐이라 무배당과 자료없음을 못 가른다. 게다가 이 규칙은
              #   bb·debt·cash·opinc·dep 까지 요구하므로 편출 쪽 커버가 더 얇아진다.
              #   PIT 후보가 랩보다 크게 얇으면 그 사실을 결과 문서에 적는다.
-             "x-a1payout",
              # 2026-09-02 QUANTILE4 — 짝 x-shiss 와 같은 갈래를 탄다(_BASE_SID).
              "x-shiss-n52",
              # 2026-09-02 BMROT — 자기자본/시총. 선택은 TB.xsec_pick_at 의 갈래를 그대로 탄다
