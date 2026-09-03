@@ -16,7 +16,18 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
+      # 🚨 2026-09-03 — 이력을 받는다. 기본값(fetch-depth: 1)이면 git log 가 비어
+      #   validate_site 의 «갱신 피드 대조» 가 **조용히 건너뛴다** — 러너 로그 실측:
+      #   「갱신 피드 대조 건너뜀 — git 이력을 못 읽었다(얕은 체크아웃?). 통과가 아니라
+      #   미검증이다」. 그 검사는 «사람이 log_update 를 부르는 것을 잊었나» 를 보는 것이라
+      #   **사람이 푸시하는 이 잡이 유일하게 걸 자리**다(자료 잡은 봇 커밋이라 셀 것이 없다).
+      #   ⚠ filter: blob:none — 이 검사는 `git log` 만 쓰고 과거 파일 내용을 안 본다.
+      #     팩이 188MB 라 blob 까지 받으면 매 푸시가 비싸진다. 커밋·트리만 받고 작업
+      #     트리 blob 은 체크아웃이 필요한 만큼만 가져온다.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
