@@ -57,6 +57,7 @@ SIZES = (5, 20)                 # 상위 N — 원문의 두 판
 XS_POOL = 100                   # 근접 후보 풀(SSD 최소 상위 N쌍)
 XS_SIZE = 10                    # 그중 |z| 최대 상위 N쌍을 보유
 XS_HOLD = 21                    # 보유 21거래일(다음 월말까지) — 트리거 없음
+XS_MAXHOLD = TRADE              # 규칙 D 의 강제청산 한도 — GGR 거래창(126일)을 그대로 쓴다
 ENTRY = 2.0                     # ±2σ
 HL_LO, HL_HI = 5, 30
 MIN_TRIPS = 2
@@ -67,9 +68,10 @@ NW_LAGS = 3
 # 규칙×크기 조합 — 표·판정·페어북이 전부 이 목록 하나를 순회한다.
 # 🚨 종전에는 ("A5","A20","B5","B20") 이 여섯 군데에 하드코딩돼 있었다. 규칙 C 를 더하며
 #   그중 하나만 빠뜨려도 «계산은 했는데 표에 없는» 상태가 된다 — 이 랩이 반복해 온 실패다.
-COMBOS = [(r, sz) for r in ("A", "B") for sz in SIZES] + [("C", XS_SIZE)]
+COMBOS = ([(r, sz) for r in ("A", "B") for sz in SIZES]
+          + [("C", XS_SIZE), ("D", XS_SIZE)])
 KEYS = tuple("%s%d" % (r, sz) for r, sz in COMBOS)
-RLBL = {"A": "GGR", "B": "조합", "C": "최대괴리"}
+RLBL = {"A": "GGR", "B": "조합", "C": "최대괴리", "D": "괴리+수렴"}
 
 
 # ══ 자료 ═══════════════════════════════════════════════════════════════
@@ -179,7 +181,7 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
     if rule == "A":
         order = np.argsort(ssd)[: size * 4]
         cand = [o for o in order if np.isfinite(ssd[o])][:size]
-    elif rule == "C":
+    elif rule in ("C", "D"):
         # 횡단면 최대괴리 — PREREG-2026-09-03-PAIRS-XS §1.
         #   ① SSD 최소 상위 XS_POOL 쌍을 후보 풀로 두고
         #   ② 그 안에서 형성 마지막 날 |z| 가 큰 순으로 size 쌍.
@@ -203,16 +205,24 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
         #   여러 페어의 같은 쪽 다리로 반복해 잡혀(실측: AON 롱 4회 = 순노출 +40%)
         #   «페어 10개» 가 사실상 «한 종목 대 그 이웃들» 베팅이 된다 — 분산된 스탯아빗
         #   북이 아니다. 겹침을 막으면 서로 다른 종목이 정확히 2×size 개가 된다.
-        used, cand = set(), []
-        for _az, o, _z in scored:
+        if rule == "D":
+            # 순위만 넘긴다 — 겹침 판정은 «현재 보유 다리» 를 아는 시뮬레이터가 한다.
+            zmap = {o: z for _az, o, z in scored}
+            cand = [o for _az, o, _z in scored]
+        else:
+            cand = None
+        used, _acc = set(), []
+        for _az, o, _z in ([] if cand is not None else scored):
             a, b = int(iu[0][o]), int(iu[1][o])
             if a in used or b in used:
                 continue
             used.add(a); used.add(b)
-            cand.append(o)
-            if len(cand) >= size:
+            _acc.append(o)
+            if len(_acc) >= size:
                 break
-        zmap = {o: z for _az, o, z in scored}
+        if cand is None:
+            cand = _acc
+            zmap = {o: z for _az, o, z in scored}
     else:
         R = np.diff(np.log(PXf), axis=0)
         Rc = R - R.mean(0)
@@ -249,7 +259,7 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
         sd = float(s.std(ddof=1))
         if not (sd > 0):
             continue
-        _z = zmap.get(o) if rule == "C" else None
+        _z = zmap.get(o) if rule in ("C", "D") else None
         out.append((a, b, sd, float(S[a] + S[b]),
                     {"a": names[a], "b": names[b], "ssd": float(ssd[o]),
                      "sec_a": sec.get(names[a], "?"), "sec_b": sec.get(names[b], "?"),
@@ -420,6 +430,115 @@ def trade_xs(PXw, pairs, base, held_prev, wait=1):
     return (pnl, cst, bor), {"open": len(accs), "new": n_new, "keep": n_keep,
                              "dead": n_dead, "worst": min(accs) if accs else 0.0,
                              "accs": accs, "last_idx": T - 1}, held_now
+
+
+def run_convergent(dates, ts, PX, HI, LO, sec, dual, me, mem=None):
+    """규칙 D — 선택은 C 와 같고, 청산만 «수렴(z=0 교차)» 이다.
+
+    🚨 코호트 방식이 아니라 **통짜 시뮬레이션**이다. 포지션이 달을 넘어가므로 월별로 잘라
+      돌리면 P&L 이 끊긴다. C 는 보유가 한 달이라 코호트로 됐지만 D 는 안 된다.
+
+    한 달에 한 번(월말) 빈 자리를 채운다:
+      · 이미 들고 있는 페어는 **건드리지 않는다**(그게 이 규칙의 요지 — 안 갈아탄다).
+      · 빈 자리는 그달 |z| 순위에서, **지금 들고 있는 어느 다리와도 안 겹치는** 페어로 채운다.
+    청산은 셋 중 하나:
+      · z 가 0 을 교차(수렴) — 이 규칙이 노리는 것
+      · 보유 XS_MAXHOLD 거래일 초과(GGR 거래창과 같은 126일) — 발산 지속을 끊는다
+      · 다리 가격이 끊김(상장폐지·편출)
+    ⚠ z 는 **진입 시점 형성창의 μ·σ 로 고정**한다. 매달 다시 재면 그건 다른 규칙이다.
+    """
+    T = len(dates)
+    pnl = np.zeros(T); cst = np.zeros(T); bor = np.zeros(T)
+    book = []                      # 열려 있는 포지션
+    n_open = n_conv = n_forced = n_dead = 0
+    accs = {"conv": [], "forced": [], "dead": []}
+    secct = {}
+    me_set = set(me)
+    slots_used = []
+
+    for t in range(T):
+        # ── ① 보유분 일간 손익 + 청산 판정 ─────────────────────────────
+        still = []
+        for ps in book:
+            la, sa = ps["long"], ps["short"]
+            pl, psh = PX[t, la], PX[t, sa]
+            if not (np.isfinite(pl) and np.isfinite(psh) and pl > 0 and psh > 0):
+                cst[t] += ps["cost"] / 2
+                n_dead += 1
+                accs["dead"].append(ps["acc"])
+                continue
+            d = (pl - ps["lp"]) / ps["eal"] - (psh - ps["sp"]) / ps["eas"]
+            pnl[t] += d
+            ps["acc"] += d
+            bor[t] += BORROW_APY / 252.0
+            ps["lp"], ps["sp"] = pl, psh
+            # 수렴 판정 — 진입 시 부호의 반대편으로 z 가 넘어갔나
+            z = ((PX[t, ps["a"]] / ps["ba"] - PX[t, ps["b"]] / ps["bb"]) - ps["mu"]) / ps["sd"]
+            ps["held"] += 1
+            if (ps["z0"] > 0 and z <= 0) or (ps["z0"] < 0 and z >= 0):
+                cst[t] += ps["cost"] / 2
+                n_conv += 1
+                accs["conv"].append(ps["acc"])
+                continue
+            if ps["held"] >= XS_MAXHOLD:
+                cst[t] += ps["cost"] / 2
+                n_forced += 1
+                accs["forced"].append(ps["acc"])
+                continue
+            still.append(ps)
+        book = still
+
+        # ── ② 월말이면 빈 자리를 채운다 ────────────────────────────────
+        if t in me_set and t + 1 < T and len(book) < XS_SIZE:
+            e = t
+            f0, f1 = e - FORM + 1, e + 1
+            if f0 < 0:
+                continue
+            W = PX[f0:f1]
+            ok = np.isfinite(W).all(0) & (W > 0).all(0)
+            if mem is not None:
+                mm = set(mem.get(dates[e][:7]) or [])
+                ok &= np.array([tk in mm for tk in ts])
+            idx = np.where(ok)[0]
+            if len(idx) < 50:
+                continue
+            names = [ts[k] for k in idx]
+            ranked = select(W[:, idx], HI[f0:f1][:, idx], LO[f0:f1][:, idx],
+                            names, sec, dual, "D", XS_SIZE)
+            legs_held = {ps["a"] for ps in book} | {ps["b"] for ps in book}
+            base = W[0]
+            for a, b, sd, cost, m_ in ranked:
+                if len(book) >= XS_SIZE:
+                    break
+                ga, gb = int(idx[a]), int(idx[b])
+                if ga in legs_held or gb in legs_held:
+                    continue
+                ex = t + 1                       # 체결 = 다음 거래일 종가
+                if not (np.isfinite(PX[ex, ga]) and np.isfinite(PX[ex, gb])):
+                    continue
+                sser = W[:, a] / base[a] - W[:, b] / base[b]
+                mu = float(sser.mean())
+                z0 = m_["z"]
+                if z0 is None or not np.isfinite(z0):
+                    continue
+                side = 1 if z0 > 0 else -1       # +1: a 가 비싸다 → a 숏 · b 롱
+                lg, sh = (gb, ga) if side > 0 else (ga, gb)
+                book.append({"a": ga, "b": gb, "long": lg, "short": sh,
+                             "ba": base[a], "bb": base[b], "mu": mu, "sd": sd, "z0": z0,
+                             "eal": PX[ex, lg], "eas": PX[ex, sh],
+                             "lp": PX[ex, lg], "sp": PX[ex, sh],
+                             "cost": cost, "acc": 0.0, "held": 0})
+                legs_held |= {ga, gb}
+                for _nm in (m_["sec_a"], m_["sec_b"]):
+                    secct[_nm] = secct.get(_nm, 0) + 1
+                cst[ex] += cost / 2
+                n_open += 1
+        if me and t >= me[0]:
+            slots_used.append(len(book))
+    return (pnl, cst, bor), {"open": n_open, "conv": n_conv, "forced": n_forced,
+                             "dead": n_dead, "accs": accs,
+                             "slots_mean": float(np.mean(slots_used)) if slots_used else 0.0,
+                             "sectors": secct}
 
 
 # ══ 통계 ═══════════════════════════════════════════════════════════════
@@ -652,6 +771,52 @@ def run_leg(tag, dates, ts, MATS, sec, dual, i_from, i_to, mem=None):
                                 "gross": [round(float(x), 6) for x in gr],
                                 "nav": [round(float(x), 2) for x in nav],
                                 "dates": dsub}
+
+    # ── 규칙 D — 선택은 C 와 같고 청산만 «수렴» (PREREG §7) ────────────────
+    (g, c, bw), dd = run_convergent(dates, ts, PX, HI, LO, sec, dual, me, mem)
+    lo_ = (me[0] + 1) if me else 0
+    hi_ = i_to
+    if hi_ - lo_ >= 252:
+        daily = (g - c - bw)[lo_:hi_] / XS_SIZE
+        gross = (g - bw)[lo_:hi_] / XS_SIZE
+        costs = c[lo_:hi_] / XS_SIZE
+        dsub = dates[lo_:hi_]
+        eqr = universe_daily(PX, ts, mem, dates, lo_, hi_)
+        mm_ = {}
+        for r_, d_ in zip(eqr, dsub):
+            mm_[d_[:7]] = mm_.get(d_[:7], 1.0) * (1.0 + r_)
+        mkt_m = np.array([mm_[k2] - 1.0 for k2 in sorted(mm_)])
+        st_, mk, mr = stats(daily, dsub, mkt_m)
+        gs, _, gr = stats(gross, dsub)
+        sens = {}
+        for lam, lbl in ((0.5, "x0.5"), (0.1, "x0.1")):
+            s2, _, _ = stats(gross - lam * costs, dsub)
+            sens[lbl] = {"mo_mean": s2["mo_mean"], "t_nw": s2["t_nw"], "cagr": s2["cagr"]}
+        ex_ = {}
+        for k2, v2 in dd["accs"].items():
+            ex_[k2] = {"n": len(v2), "mean": 100.0 * float(np.mean(v2)) if v2 else None,
+                       "sum": 100.0 * float(np.sum(v2)) if v2 else 0.0}
+        st_.update({"rule": "D", "size": XS_SIZE, "leg": tag,
+                    "n_cohort": len(me), "trades": dd["open"],
+                    "conv": dd["conv"], "forced": dd["forced"], "dead": dd["dead"],
+                    "conv_pct": 100.0 * dd["conv"] / max(1, dd["open"]),
+                    "slots_mean": dd["slots_mean"], "by_exit": ex_,
+                    "worst_pair": 100.0 * min([min(v2) for v2 in dd["accs"].values() if v2] or [0.0]),
+                    # 회전율 — 이 규칙의 존재 이유가 «C 보다 덜 갈아탄다» 이므로 같은 눈금으로 잰다.
+                    #   C: 월 회전율 = 새 진입 / 전체 슬롯. D: 진입 건수 / (슬롯 × 개월).
+                    "turnover_pct": 100.0 * dd["open"] / max(1, XS_SIZE * len(me)),
+                    "gross_mo": gs["mo_mean"], "gross_t_nw": gs["t_nw"],
+                    "cost_mo": gs["mo_mean"] - st_["mo_mean"], "cost_sens": sens,
+                    "pool": XS_POOL, "hold": "수렴(z=0)까지 · 최대 %d거래일" % XS_MAXHOLD,
+                    "short_months": 0, "day0_pct": 0.0,
+                    "util_pct": 100.0 * dd["sectors"].get("Utilities", 0) / max(1, sum(dd["sectors"].values())),
+                    "sectors": dict(sorted(dd["sectors"].items(), key=lambda x: -x[1])[:6])})
+        nav = list(np.cumprod(1.0 + daily) * 100.0)
+        res["D%d" % XS_SIZE] = {"stats": st_, "months": mk,
+                                "rets": [round(float(x), 6) for x in mr],
+                                "gross": [round(float(x), 6) for x in gr],
+                                "nav": [round(float(x), 2) for x in nav],
+                                "dates": dsub}
     return res
 
 
@@ -702,6 +867,13 @@ NAMES = {
           "GGR 의 투입자본 규약이 성적을 깎던 것을 아는 상태의 설계다. 원문판 A 를 대조로 "
           "나란히 싣는 이유가 그것이다. 근접은 자격이고 선택은 괴리라, A 와는 무엇을 "
           "고르는지가 다르다."),
+    "D": ("p-xs10c", "페어 트레이딩 — 최대괴리 10쌍 · 수렴까지 보유",
+          "선택은 최대괴리판과 같다(SSD 상위 100쌍 중 |z| 상위 · 다리 겹침 없음 10쌍). "
+          "청산만 다르다 — 월말 교체가 아니라 스프레드가 z=0 으로 수렴할 때 닫고, "
+          "126거래일을 넘기면 강제청산한다. 빈 자리만 월말에 채운다.",
+          "🚨 사용자 요청(2026-09-03). 최대괴리판이 «회전율 96%가 비용을 만든다»로 기각된 "
+          "뒤, 회전율이 진짜 원인인지 가르려고 돌린 판이다 — 결과를 보고 만든 규칙이므로 "
+          "최대괴리판과 나란히 읽어야 한다. 청산 규약만 GGR 원문(수렴)으로 되돌린 셈이다."),
 }
 
 
@@ -725,6 +897,18 @@ def current_book(dates, ts, MATS, sec, dual):
         if True:
             got = select(W[:, idx], HI[f0:f1][:, idx], LO[f0:f1][:, idx],
                          names, sec, dual, rule, size)
+            if rule == "D":
+                # D 의 select 는 «순위 전체» 를 준다(겹침 판정을 시뮬레이터가 하므로).
+                # 화면에는 «새로 시작하면 잡을 10쌍» 을 보인다 — 실제 운용 중이면 수렴 안 된
+                # 페어가 남아 있어 이보다 적게 새로 잡는다. 그 사실은 카드 설명에 있다.
+                _u, _g2 = set(), []
+                for _it in got:
+                    if _it[0] in _u or _it[1] in _u:
+                        continue
+                    _u.add(_it[0]); _u.add(_it[1]); _g2.append(_it)
+                    if len(_g2) >= size:
+                        break
+                got = _g2
             out["%s%d" % (rule, size)] = [
                 {"a": m["a"], "b": m["b"], "sec": m["sec_a"], "ssd": round(m["ssd"], 3),
                  "z": m.get("z"), "long": m.get("long"), "short": m.get("short")}
@@ -812,6 +996,12 @@ def _note(s):
     🚨 A·B 는 수렴 대 강제청산의 상쇄가 결론이고, C 는 회전율이 결론이다.
       한 문장으로 뭉뚱그리면 둘 중 하나는 틀린 설명이 된다 — C 에는 청산 사유 자체가 없다.
     """
+    if s["rule"] == "D":
+        return ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f. 선택은 C 와 같고 청산만 «수렴(z=0)» 이라 "
+                "회전율이 %.0f%% 로 내려간다(C 는 매달 전량 교체). 진입 %d건 중 수렴 청산 %.0f%% · "
+                "%d거래일 강제청산 %d건. 비용은 월 %+.3f%% 로 줄지만 순수익은 %+.3f%% 다."
+                % (s["gross_mo"], s["gross_t_nw"] or 0, s["turnover_pct"], s["trades"],
+                   s["conv_pct"], XS_MAXHOLD, s["forced"], s["cost_mo"], s["mo_mean"]))
     if s["rule"] == "C":
         return ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — 비용을 넣기 전에 이미 0이다. "
                 "월 회전율 %.0f%%(10쌍 중 직전 달과 겹치는 것이 사실상 없다)라 왕복 비용이 "
@@ -999,24 +1189,29 @@ def main() -> int:
             if not r:
                 continue
             s = r["stats"]
-            if s["rule"] == "C":
-                continue          # 진입/수렴/강제 개념이 없다 — 아래 전용 표로 뺀다
+            if s["rule"] in ("C", "D"):
+                continue          # 코호트 구조가 달라 아래 전용 표로 뺀다
             print("%-6s %-5s %4d %7d %7d %6.1f%% %7d %7.1f%% %8.1f %8d"
                   % (lg, RLBL[s["rule"]], s["size"], s["n_cohort"],
                      s["trades"], s["conv_pct"], s["forced"], s["day0_pct"],
                      s["worst_pair"], s["short_months"]))
 
     print(chr(10) + "규칙 C(횡단면 최대괴리) 진단 — 이 규칙의 성패는 회전율과 총·순 격차가 가른다")
-    print("%-6s %6s %7s %9s %9s %9s %9s %9s"
-          % ("레그", "코호트", "회전율", "총수익월", "총t_NW", "비용월", "순수익월", "최악페어%"))
-    for lg in ("full", "sub", "pit"):
-        r = (legs.get(lg) or {}).get("C%d" % XS_SIZE)
+    print("%-4s %-6s %6s %7s %9s %9s %9s %9s %9s"
+          % ("규칙", "레그", "코호트", "회전율", "총수익월", "총t_NW", "비용월", "순수익월", "최악페어%"))
+    for _ck in ("C%d" % XS_SIZE, "D%d" % XS_SIZE):
+      for lg in ("full", "sub", "pit"):
+        r = (legs.get(lg) or {}).get(_ck)
         if not r:
             continue
         s2 = r["stats"]
-        print("%-6s %6d %6.1f%% %+8.3f%% %9.2f %+8.3f%% %+8.3f%% %9.1f"
-              % (lg, s2["n_cohort"], s2["turnover_pct"], s2["gross_mo"], s2["gross_t_nw"],
-                 s2["cost_mo"], s2["mo_mean"], s2["worst_pair"]))
+        if s2.get("gross_t_nw") is None or s2.get("trades", 0) == 0:
+            print("%-4s %-6s %6d   진입 0건 — 배관을 의심할 것(규칙이 아니라 배선이다)"
+                  % (RLBL[s2["rule"]], lg, s2["n_cohort"]))
+            continue
+        print("%-4s %-6s %6d %6.1f%% %+8.3f%% %9.2f %+8.3f%% %+8.3f%% %9.1f"
+              % (RLBL[s2["rule"]], lg, s2["n_cohort"], s2["turnover_pct"], s2["gross_mo"],
+                 s2["gross_t_nw"], s2["cost_mo"], s2["mo_mean"], s2["worst_pair"]))
 
     # ── 생존편향 = sub − pit ──────────────────────────────────────────
     print("\n생존편향(sub − pit) — 🚨 full−pit 이 아니다. 창을 맞춘 두 계열의 차이만이 편향이다.")
