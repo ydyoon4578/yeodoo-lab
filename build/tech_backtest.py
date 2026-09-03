@@ -2484,6 +2484,15 @@ def ndx_members(ym):
 
     ⚠ 결손 달은 **직전 달을 이월**한다 — index_members 와 같은 규약이다. 이월했다는 사실은
       커버리지로 싣는다(빈 달을 «편입 0종» 으로 두면 그 달이 통째로 무보유가 된다).
+
+    🚨 2026-09-03 — 그 이월이 지도의 키 범위 **안에서만** 일어나고 있었다. 마지막 키 뒤는
+      항목 자체가 없어 `.get(ym) or set()` 이 빈 집합을 조용히 돌려줬다. 그런데 이 지도는
+      주 1회 갱신(refresh-members, 금 21:45 UTC)이고 가격 패널은 매 거래일이라, **새 달
+      첫 거래일부터 그 주 토요일까지 매달 빈다.**
+      실측: ndx_members('2026-08')=102 · ('2026-09')=**0**. 2026-09-30 리밸이 격자에
+      들어오면 NDX 계열 다섯(x-ncapw·ncap10·ncap5·ncap45·ncapndx)이 통째로 무보유가 되고,
+      `len(mc)<40` 갈래로 빠져 **예외도 경고도 안 난다.**
+      → 꼬리 규약을 index_members.at() 한 곳에 두고 여기서 그것을 쓴다(한도 2달·넘으면 죽는다).
     """
     if _NDX_MEM[0] is None:
         try:
@@ -2498,7 +2507,8 @@ def ndx_members(ym):
         except Exception as e:
             print("  ⚠ NDX 명단 로드 실패(%s) — NDX 전용 규칙은 후보 0 이 된다" % str(e)[:40])
             _NDX_MEM[0] = {}
-    return _NDX_MEM[0].get(ym) or set()
+    import index_members as _IM                    # noqa: E402  같은 build/ 안
+    return _IM.at(_NDX_MEM[0], ym, label="NDX 편입")
 NDX_TRIG_CUT = 0.045      # 이 비중을 넘는 종목들을
 NDX_TRIG_SUM = 0.48       # 합계가 이만큼을 넘으면
 NDX_TRIG_TO = 0.40        # 합계를 이만큼으로 줄인다 (나스닥 실제 룰)

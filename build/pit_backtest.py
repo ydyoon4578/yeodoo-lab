@@ -445,8 +445,8 @@ def fetch_members():
           거기서는 후보가 다시 생존자로만 채워져, 생존편향을 재려는 이 파일이 그 편향을
           도로 갖는다. 더 내려가려면 관측창이 아니라 **원천**을 바꿔야 한다(상폐 포함 DB).
     """
-    import index_members                            # noqa: E402  같은 build/ 안
-    mem, carried = index_members.load(START)
+    import index_members as _IM                     # noqa: E402  같은 build/ 안
+    mem, carried = _IM.load(START)
     print("  멤버십 %d개월 (위키 과거 리비전 · data/index_history.json)" % len(mem))
     for ym, ix, n in carried:
         print("  ⚠ %s %s 결손 — 직전 달 %d종 이월" % (ym, ix.upper(), n))
@@ -1031,7 +1031,15 @@ def main():
     i0 = min(i for i in me if i >= _s0)
 
     def members_at(i):
-        return set(mem.get(dates[i][:7]) or [])
+        # 🚨 2026-09-03 — **꼬리 이월을 여기서도 받는다(index_members.at).**
+        #   종전에는 `mem.get(dates[i][:7]) or set()` 이라 지도의 마지막 키 뒤가 빈 집합이었다.
+        #   그 결과 같은 파일 안에서 **비대칭**이 생겨 있었다 —
+        #     · 대조군 루프(아래 `if m: cur = m`)는 빈 달에 **직전 달을 유지**해 계속 굴러가고
+        #     · 전략 쪽(:1444 pool_at)은 그대로 써서 min_pool 게이트에 걸려 **무보유**가 된다.
+        #   즉 새 달 첫 거래일부터 그 주 토요일까지(지도는 주 1회 갱신) 전략만 멈추고 대조군만
+        #   복리로 가는데, **그 차이가 그대로 「생존편향」 칸에 적힌다.** 편향이 아니라 결손이다.
+        #   ⚠ 안쪽 결손은 여전히 빈 집합이다 — 이월은 꼬리에만 건다(index_members 머리말).
+        return _IM.at(mem, dates[i][:7], label="지수 멤버십")
 
     # 대조군도 PIT 여야 한다 — 전략만 PIT 이고 벤치가 소급이면 초과수익이 엉뚱해진다.
     ixr = [None] * n

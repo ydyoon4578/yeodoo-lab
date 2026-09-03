@@ -78,6 +78,73 @@ def load(start: str | None = None, path: str | None = None):
     return out, carried
 
 
+# ── 지도의 «꼬리» 규약 — 한 곳에서 정한다 ─────────────────────────────────
+# 🚨 2026-09-03 전면 점검. 이 랩은 주기가 다른 두 자료를 `d[:7]` 월 키로 조인하는 구조가
+#   도처에 있다(지수 멤버십 · NDX 편입 · 스타일 패널). 하나같이 「결손 달은 직전 달을
+#   이월한다」고 적혀 있는데, **그 이월은 지도의 키 범위 «안»에서만 일어난다.**
+#   마지막 키 뒤는 항목 자체가 없어 `mem.get(ym) or set()` 이 **빈 집합을 조용히** 돌려준다.
+#
+#   그런데 가격 패널은 **매 거래일** 갱신이고 이 지도는 **주 1회**(refresh-members,
+#   금 21:45 UTC)다. 그래서 새 달 첫 거래일부터 그 주 토요일까지 **매달 빈다.**
+#
+#   실제로 세 번 밟았다 —
+#     · 2026-09-02 style_pit_panel 이 members_at(마지막날)=∅ 로 스타일 18종 전부를 죽였다.
+#       (refresh-assets 두 슬롯 연속 실패 → 자산 패널·시장판·홈 성과가 하루 고착)
+#     · 실측 ndx_members('2026-08')=102 인데 ('2026-09')=0 — 2026-09-30 리밸에서
+#       NDX 계열 다섯(x-ncapw·ncap10·ncap5·ncap45·ncapndx)이 통째로 무보유가 된다.
+#     · pit_backtest 는 같은 파일 안에서 **대조군만 이월하고 전략은 안 한다** —
+#       그 비대칭이 그대로 「생존편향」 칸에 적힌다.
+#
+#   조용한 이유가 세 겹이라 더 나쁘다: ⓐ 예외가 안 난다(`len(mc)<40` 갈래로 빠진다)
+#   ⓑ 검사가 못 본다(「CAGR 0 = 전 구간 무보유」만 잡는다) ⓒ 화면의 거짓 초록이 덮는다.
+#
+# ⚠ 이월은 **선견이 아니다.** 9월 1일에 알 수 있는 최신 명단은 8월 명단이다.
+# ⚠ **꼬리만** 이월한다. 창 «안쪽» 결손을 이월로 덮으면 마스크가 풀린 것을 못 보게 되는데,
+#   그것이 호출부의 gapless 검사가 막으려는 실패다. 안쪽은 여기서 손대지 않는다.
+CARRY_MAX_M = 2      # 주 1회 갱신이라 정상 최대는 1달. 2를 넘으면 수집이 죽은 것이다.
+
+_WARNED: set = set()
+
+
+def _months_between(a: str, b: str) -> int:
+    """월 키 b 가 a 보다 몇 달 뒤인가(같으면 0, 앞이면 음수)."""
+    return (int(b[:4]) - int(a[:4])) * 12 + (int(b[5:7]) - int(a[5:7]))
+
+
+def at(mem: dict, ym: str, label: str = "멤버십", carry_max: int = CARRY_MAX_M,
+       say=print) -> set:
+    """월 키 조회 — **지도의 마지막 키 뒤는 그 키를 이월한다.**
+
+    mem       {'YYYY-MM': [티커…] 또는 set}
+    ym        찾을 월 키('YYYY-MM')
+    carry_max 마지막 키에서 몇 달까지 이월할 것인가. 넘으면 SystemExit.
+    say       이월했다는 사실을 알리는 함수(조용히 하지 않는다). None 이면 안 알린다.
+
+    ⚠ 지도 «안»의 결손은 이월하지 않는다 — 빈 집합을 그대로 돌려준다(위 머리말).
+    """
+    v = mem.get(ym)
+    if v:
+        return set(v)
+    keys = [k for k, x in mem.items() if x]
+    if not keys:
+        return set()
+    last = max(keys)
+    gap = _months_between(last, ym)
+    if gap <= 0:                       # 지도 안쪽(또는 시작 전)의 결손 — 손대지 않는다
+        return set()
+    if gap > carry_max:
+        raise SystemExit(
+            "%s 지도가 %s 에서 멈췄는데 %s 을 찾는다(%d달 차) — 이월 한도 %d달을 넘었다. "
+            "한 분기 묵은 명단을 시점정합이라 부르며 내보내지 않는다. "
+            "`python build/refresh_index_history.py` 가 왜 안 도는지 볼 것"
+            % (label, last, ym, gap, carry_max))
+    if say and (label, last, ym) not in _WARNED:
+        _WARNED.add((label, last, ym))
+        say("  ⚠ %s 지도가 %s 까지만 있다 — %s 은 %s 명단을 이월한다(주 1회 갱신이라 정상)"
+            % (label, last, ym, last))
+    return set(mem.get(last) or [])
+
+
 def source_note() -> str:
     """산출물에 적어 둘 출처 한 줄. 화면·JSON 이 같은 문장을 쓰게 한다."""
     return ("월말 지수 편입 종목(SPX ∪ NDX) — 위키백과 지수 목록 문서의 과거 리비전"
