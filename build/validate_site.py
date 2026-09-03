@@ -2114,8 +2114,25 @@ except Exception as _e:
 #     그리고 현재 분포를 매 실행 찍어 조용히 삭지 않게 한다.
 try:
     import subprocess as _sp2
+    # 🚨 2026-09-04 — **얕은 체크아웃에서는 건너뛴다.** 이 검사를 넣은 다음 날 새벽에
+    #   자료 잡 넷(regime·sentiment·stocks·earnings)이 이것 때문에 무더기로 죽었다.
+    #   러너의 actions/checkout 기본값이 fetch-depth: 1 이라 `git merge-base --is-ancestor`
+    #   가 이력을 못 보고 **정상 조상을 「고아」로 오판**했다(실측: 국소 전체 클론에서는
+    #   네 편 모두 조상 ✓). 어제 M4 에서 「국소는 초록, 러너는 미검증」을 지적해 놓고
+    #   내가 만든 검사가 같은 함정에 빠졌다 — 그쪽은 조용히 건너뛰었고 이쪽은 **죽였다.**
+    #   ⚠ 「통과」가 아니라 **「미검증」**이라 적는다. 이 저장소의 규약이다.
+    _shallow = (_sp2.run(["git", "rev-parse", "--is-shallow-repository"], cwd=ROOT,
+                         capture_output=True, text=True).stdout.strip() == "true")
     _CUT = "2026-09-03"          # 이 날짜 이후 등록부터 강제한다(옛 문서는 소급 적용 안 한다)
-    _pr = {"ok": 0, "nohash": [], "bad": [], "orphan": []}
+    # ⚠ **결정 가능한 것만 강제한다.** 얕은 클론에서는 옛 커밋 개체가 아예 없어서
+    #   「해시가 저장소에 없다」와 「깊이 밖이라 안 보인다」를 구별할 수 없다.
+    #   그래서 셋으로 가른다 —
+    #     · 문서에 해시가 없다        → 어디서나 결정 가능. 강제한다.
+    #     · 개체가 있는데 조상이 아니다 → 개체가 보이므로 결정 가능. 강제한다.
+    #     · 개체가 안 보인다          → 얕으면 **미검증**(실패로 부르지 않는다),
+    #                                  전체 클론이면 진짜로 없는 것이다.
+    #   ⚠ 못 정하는 것을 실패로 부르면 자료 잡이 죽는다 — 09-04 새벽에 넷이 그렇게 죽었다.
+    _pr = {"ok": 0, "nohash": [], "bad": [], "orphan": [], "undecided": 0}
     for _fn in sorted(os.listdir(os.path.join(ROOT, "build"))):
         if not (_fn.startswith("PREREG-") and _fn.endswith("-RESULT.md")):
             continue
@@ -2128,7 +2145,11 @@ try:
         _h = _hm.group(1)
         if _sp2.run(["git", "cat-file", "-e", _h + "^{commit}"], cwd=ROOT,
                     stdout=_sp2.DEVNULL, stderr=_sp2.DEVNULL).returncode != 0:
-            _pr["bad"].append((_fn, _h, _new)); continue
+            if _shallow:
+                _pr["undecided"] += 1          # 깊이 밖일 수 있다 — 실패로 부르지 않는다
+            else:
+                _pr["bad"].append((_fn, _h, _new))
+            continue
         if _sp2.run(["git", "merge-base", "--is-ancestor", _h, "HEAD"], cwd=ROOT,
                     stdout=_sp2.DEVNULL, stderr=_sp2.DEVNULL).returncode != 0:
             _pr["orphan"].append((_fn, _h, _new)); continue
@@ -2142,9 +2163,11 @@ try:
             "해시가 있어야 하고 그것이 **main 의 조상**이어야 한다(고아 커밋은 gc 되면 "
             "증명이 사라진다. 실측으로 이미 한 편이 그렇게 사라졌다)"
             % (len(_newbad), ", ".join(sorted(_newbad)[:4]), _CUT))
-    print("  ~ 사전등록 해시 대조 — 증명됨 %d편 · 해시 없음 %d · 고아 %d · 개체 없음 %d "
+    print("  ~ 사전등록 해시 대조 — 증명됨 %d편 · 해시 없음 %d · 고아 %d · 개체 없음 %d%s "
           "(%s 이전은 소급 적용하지 않는다)"
-          % (_pr["ok"], len(_pr["nohash"]), len(_pr["orphan"]), len(_pr["bad"]), _CUT))
+          % (_pr["ok"], len(_pr["nohash"]), len(_pr["orphan"]), len(_pr["bad"]),
+             (" · 미검증 %d(얕은 클론이라 개체가 안 보인다)" % _pr["undecided"])
+             if _pr["undecided"] else "", _CUT))
 except Exception as _e:
     print("⚠ 사전등록 해시 대조 실패: %s" % _e)
 
@@ -3351,7 +3374,13 @@ try:
             continue
         _daily_txt = ("매 거래일" in _cad) or ("매일" in _cad)
         _weekly_txt = "주 1회" in _cad
-        _daily_cron = ("월~토" in _sch) or (_sch.count("매주") > 1)
+        # 🚨 2026-09-04 — 종전에는 `_sch.count("매주") > 1` 이면 매일로 읽었다. **틀렸다.**
+        #   본 슬롯 + 백업 슬롯을 **같은 요일**에 두면 「매주 토 06:45 · 매주 토 07:45」가
+        #   되는데, 그것은 여전히 주 1회다(백업은 본 슬롯이 돌았으면 게이트가 건너뛴다).
+        #   refresh-members 에 백업 슬롯을 붙이자마자 이 검사가 정상 라벨을 오류라 불렀다.
+        #   → **서로 다른 요일이 둘 이상**일 때만 주 1회가 아니다. 요일을 세어 판정한다.
+        _days = set(re.findall(r"매주\s*([월화수목금토일])", _sch))
+        _daily_cron = ("월~토" in _sch) or (len(_days) > 1)
         _weekly_cron = ("매주" in _sch) and not _daily_cron
         if (_daily_txt and _weekly_cron) or (_weekly_txt and _daily_cron):
             _bad_cad.append("%s(적힘 '%s' ↔ 크론 '%s')" % (_a.get("label"), _cad, _sch))
