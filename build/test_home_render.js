@@ -180,15 +180,27 @@ async function settle(n) { for (let i = 0; i < n; i++) await new Promise(r => se
       const w = d.getUTCDay(); if (w !== 0 && w !== 6) _lag++;
     }
   }
+  // 🚨 2026-09-04 — **문턱을 화면과 같은 식으로 잰다.** 종전에는 여기만 `2` 로 박혀
+  //   있었고 index.html 은 2026-08-21 에 시각 인지형으로 바뀌었다:
+  //       _thr = (new Date().getHours() < 9) ? 3 : 2
+  //   («왜 아직도 지연이야» 신고 때문이다 — 미국 D일 종가는 KST D+1 새벽에 확정되고
+  //    수집 잡은 07:34~08:20 에 도니, 자정~아침 사이엔 lag 2 가 밀린 게 아니라 주기 안이다.)
+  //   시험만 안 고쳐서 **lag=2 이고 실행 시각이 09시 전인 칸 하나에서만** 화면과 갈렸다.
+  //   실측: refresh-tech 이 그 칸에서 두 번 죽었고(09-02T00:35Z · 08-29T03:53Z),
+  //   09-04 새벽에는 네 잡이 같은 자리에서 죽었다. 자료는 멀쩡한데 시험이 화면을 틀렸다고
+  //   부른 것이다 — 되풀이 결함 3번(경로가 둘이라 갈린다)의 «화면 대 그 시험» 판이다.
+  // ⚠ 같은 프로세스에서 같은 식을 쓰므로 이제 구조적으로 갈릴 수 없다.
+  //   식을 고칠 일이 생기면 **두 곳을 같이** 고쳐야 한다는 사실이 이 주석으로 남는다.
+  const _thr = (new Date().getHours() < 9) ? 3 : 2;
   if (!_last) {
     if (asof !== "· 지수 등락률 미수신")
       fail.push("지수 등락률이 아예 없는데 머리글이 침묵한다: " + JSON.stringify(asof));
-  } else if (_lag >= 2) {
+  } else if (_lag >= _thr) {
     if (!/영업일 지연$/.test(asof))
-      fail.push("지수 등락률이 " + _lag + "영업일 밀렸는데 머리글에 경고가 없다: " +
+      fail.push("지수 등락률이 " + _lag + "영업일 밀렸는데(문턱 " + _thr + ") 머리글에 경고가 없다: " +
                 JSON.stringify(asof));
   } else if (asof !== "") {
-    fail.push("신선한데(" + _lag + "영업일) 머리글에 날짜가 붙었다 — 평소엔 비어야 한다: " +
+    fail.push("신선한데(" + _lag + "영업일 · 문턱 " + _thr + ") 머리글에 날짜가 붙었다 — 평소엔 비어야 한다: " +
               JSON.stringify(asof));
   }
   if (/calfresh/.test(CALG.innerHTML))
