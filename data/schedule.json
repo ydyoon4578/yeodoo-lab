@@ -8,7 +8,6 @@
   "src-cot": "매주 토 07:13 KST",
   "src-fx": "매주 토 07:08 KST",
   "src-fil": "매주 토 07:05 KST",
-  "src-hold": "매월 2일 07:05 KST",
   "src-ins": "매주 토 07:13 KST",
   "src-rg": "매일(월~토) 06:56 KST",
   "src-snt": "매일(월~토) 06:59 KST",
@@ -95,14 +94,6 @@
    ],
    "label": [
     "매주 토 07:05 KST"
-   ]
-  },
-  "refresh-holdings.yml": {
-   "cron": [
-    "5 22 1 * *"
-   ],
-   "label": [
-    "매월 2일 07:05 KST"
    ]
   },
   "refresh-insider.yml": {
