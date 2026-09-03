@@ -1774,6 +1774,33 @@ def main() -> int:
                 "수치는 원본에서 그대로 옮긴 것이며 여기서 계산하지 않는다. "
                 "구간·대조군이 전략마다 다르므로 같은 숫자를 세로로 비교하면 안 된다.",
         "as_of": (t.get("as_of") or a.get("as_of")),
+        # 🚨 2026-09-03 — **한 줄 안에서 레그가 섞인다. 그 사실을 자료가 스스로 말한다.**
+        #   basis="pit" 인 항목의 머리 숫자(metrics·d_sharpe·t)는 시점정확인데,
+        #   그 옆에 놓이는 곡선·구간수익·승률·회전율은 **소급**이다. 실측(2026-09-03):
+        #     · nav 를 역산한 CAGR 이 metrics_retro 와 중앙 0.12%p 로 붙고,
+        #       머리의 metrics 와는 중앙 4.50%p·최대 25.38%p 벌어진다 — PIT 43종 중 42종.
+        #     · turnover 는 43/43 이 tech(소급) 값과 **소수점까지 같다**(pit 값과 같은 것은 1종).
+        #     · trails·winrate·mdd_ix 는 전부 그 소급 nav 에서 파생된다(이 파일 757~761행).
+        #   그런데 그 넷에는 *_retro 짝조차 없어서, **자료만 보고는 어느 레그인지 알 수 없었다.**
+        #   그래서 읽는 사람도(그리고 나도) 한 카드의 수를 같은 잣대로 읽게 된다.
+        # ⚠ 이것을 «PIT 로 통일» 하는 것은 게시 내용이 바뀌는 결정이다 — PIT 곡선으로 승률을
+        #   다시 재면 43종 중 17종이 사용자 문턱(50%) 아래로 내려간다(실측). 그래서 여기서
+        #   임의로 바꾸지 않고, **무엇이 어느 레그인지부터 자료에 적는다.**
+        #   build/validate_site.py 가 이 선언을 실제 값과 대조한다.
+        "legs": {
+            "note": "basis='pit' 항목이라도 필드마다 레그가 다르다. 세로로 비교하기 전에 "
+                    "이 표를 볼 것 — 머리 숫자와 그 밑 곡선은 **같은 잣대가 아니다**.",
+            "pit": ["metrics", "d_sharpe", "t", "excess_cagr", "bench", "pit"],
+            "retro": ["nav", "bnav", "trails", "trails_base", "trails_ix",
+                      "winrate", "mdd_ix", "turnover", "metrics_retro",
+                      "d_sharpe_retro", "t_retro", "excess_cagr_retro", "bench_retro"],
+            "measured": {"nav_vs_metrics_pp": {"median": 4.50, "max": 25.38},
+                         "nav_vs_metrics_retro_pp": {"median": 0.12, "max": 0.53},
+                         "turnover_equals_retro": "43/43", "n_pit_rows": 43,
+                         "when": "2026-09-03"},
+            "if_switched_to_pit": "승률을 PIT 곡선으로 다시 재면 43종 중 17종이 50% 문턱 "
+                                  "아래로 내려간다(게시 47 → 약 30종). 사용자 결정 사항이다.",
+        },
         # 🚨 gates·gates_note 를 안 옮긴다(2026-08-16 "관문, 문턱 다 없애"). 관문이 없으니
         #   그 상태를 실을 것도 없다. 원천(tech_backtest)에서 GATE_* 자체를 걷었다.
         "n": len(rows),
