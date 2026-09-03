@@ -314,9 +314,24 @@ class Panel:
         return np.array(out, float)
 
     def asof(self, t, key, i, n=1):
-        """기간종료일 + LAG_DAYS 가 dates[i] 이전인 관측을 최신 n개. 없으면 []."""
-        cut = (dt.date.fromisoformat(self.dates[i]) - dt.timedelta(days=LAG_DAYS)).isoformat()
-        ser = (self.fx.get(t) or {}).get(key) or []
+        """기간종료일 + LAG_DAYS 가 dates[i] 이전인 관측을 최신 n개. 없으면 [].
+
+        🚨 2026-09-03 — **연간 버킷에서 온 계열에는 ANN_LAG_DAYS(90일)를 쓴다.**
+          이 파일의 ttm12 독스트링이 「45일을 쓰면 아직 제출되지 않은 연간 수치를 알았다고
+          가정하게 된다 — 룩어헤드다」라고 스스로 적어 놓고, 「분기 재무만 쓰는 기존 여섯
+          스타일은 LAG_DAYS 를 그대로 쓴다 — 그쪽은 연간 버킷을 타지 않는다」는 전제를 달았다.
+          **그 전제가 거짓이었다.** load_fund 의 `sh = series("sh") or annual("sh")` 가
+          외국 발행인(20-F 연 1회)의 주식수를 연간 버킷에서 조용히 채운다.
+          실측: 그런 종목 8종(ARM·ASML·CCEP·FDXF·FER·NBIS·PDD·TRI)에서 최근 128개 월말
+          × 8종 = 1024칸 중 **73칸(7.1%)** 이 45일과 90일에서 다른 관측을 고른다.
+          sh 는 sc_val·sc_size(mcap)·sc_grow 가 쓴다.
+          ⚠ 판정은 자료가 한다 — load_fund 가 실어 주는 sh_ann 을 본다(여기서 종목 이름을
+            손으로 적지 않는다. 손으로 적은 목록은 낡는다).
+          ⚠ 분기 버킷이 있는 종목은 종전대로 45일이다. 그쪽은 10-Q 마감 40일이 맞다."""
+        f = self.fx.get(t) or {}
+        _lag = ANN_LAG_DAYS if (key == "sh" and f.get("sh_ann")) else LAG_DAYS
+        cut = (dt.date.fromisoformat(self.dates[i]) - dt.timedelta(days=_lag)).isoformat()
+        ser = f.get(key) or []
         out = [v for d, v in ser if d <= cut][:n]
         return out
 
