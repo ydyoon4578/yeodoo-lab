@@ -27,6 +27,7 @@ OUT  = os.path.join(ROOT, "_build", "pages", "db_content.html")
 #   그 문안에는 사내 테이블명과 게이트웨이 규약이 들어간다 — 본문을 암호화해 놓고 생성기에
 #   같은 내용을 평문으로 두면 잠금이 무의미해진다. 문안은 gitignore 되는 build/db_notes.json 에 있다.
 NOTES = os.path.join(ROOT, "build", "db_notes.json")
+SAMPLES = os.path.join(ROOT, "build", "db_samples.json")
 
 # 작업 테이블·복제 잔재는 카탈로그에서 뺀다 — xfeed 의 tmptable_* 112개가 목록을 덮는다.
 JUNK = re.compile(r"^(tmptable_|awsdms_|_)", re.I)
@@ -54,6 +55,28 @@ def keep_of(ts):
     return [t for t in ts if not JUNK.match(t["table_name"]) and t["schema_name"] != "cron"]
 
 
+def sample_html(sm):
+    """표본 5행. 값은 이미 서버에서 40자로 잘려 왔다."""
+    cols, rows = sm["cols"], sm["rows"]
+    more = sm.get("ncol_total", len(cols)) - len(cols)
+    h = ['<div class="smpwrap"><table class="smptbl"><thead><tr>']
+    for c in cols:
+        h.append("<th>%s</th>" % html.escape(c))
+    if more > 0:
+        h.append('<th class="ell">+%d열</th>' % more)
+    h.append("</tr></thead><tbody>")
+    for r in rows:
+        h.append("<tr>")
+        for v in r:
+            h.append('<td%s>%s</td>' % (' class="nul"' if v is None else "",
+                                        "∅" if v is None else html.escape(str(v))))
+        if more > 0:
+            h.append('<td class="ell">…</td>')
+        h.append("</tr>")
+    h.append("</tbody></table></div>")
+    return "".join(h)
+
+
 def main():
     if not os.path.exists(SRC):
         print("db_catalog.json 없음 — 사내망에서 채우는 파일이다. 아무것도 하지 않는다."); return 0
@@ -64,6 +87,12 @@ def main():
     DBS = [tuple(x) for x in nt["dbs"]]; FINDINGS = [tuple(x) for x in nt["findings"]]
     HILITE = set(nt["hilite"]); FOOTER = nt["footer"]; CAPS = nt.get("caps", {})
     DESCS = nt.get("descs", {})   # DB 주석이 빈 테이블의 설명 — 컬럼 스키마를 읽고 쓴 것
+    # 표본 몇 줄(build/db_samples.py 가 뜬다). 없으면 표만 그린다 — 러너엔 입력이 없다.
+    SAMP = {}
+    if os.path.exists(SAMPLES):
+        _sj = json.load(io.open(SAMPLES, encoding="utf-8"))
+        for _db, _tt in _sj.items():
+            SAMP.setdefault(_db, {}).update(_tt)
     P = []; A = P.append
 
     A('<style>')
@@ -107,6 +136,21 @@ def main():
     A('.dbtbl td.ds{color:var(--muted);font-size:12.5px;line-height:1.55}')
     A('.dbtbl tr.hi td.nm{color:var(--accent)} .dbtbl tr.hi td.rw{color:var(--ink)}')
     A('.dbtbl td.ds b{color:var(--ink);font-weight:600}')
+    A('.dbtbl tr[data-smp]{cursor:pointer}')
+    A('.dbtbl tr[data-smp]:hover td{background:var(--panel-2)}')
+    A('.dbtbl tr[data-smp]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}')
+    A('.cv{color:var(--muted);font-size:10px;margin-left:6px;display:inline-block;transition:transform .12s}')
+    A('tr[aria-expanded="true"] .cv{transform:rotate(90deg);color:var(--accent)}')
+    A('.dbtbl tr.smp>td{padding:0;background:var(--panel-2);border-bottom:1px solid var(--line)}')
+    A('.smpwrap{overflow-x:auto;padding:9px 11px 11px}')
+    A('.smptbl{border-collapse:collapse;font-family:var(--mono);font-size:11.5px}')
+    A('.smptbl th{font-size:10px;letter-spacing:.04em;text-transform:none;color:var(--muted);'
+      'text-align:left;padding:3px 10px 4px 0;border-bottom:1px solid var(--line);background:none;white-space:nowrap}')
+    A('.smptbl td{padding:3px 10px 3px 0;border-bottom:none;white-space:nowrap;color:var(--ink-2);'
+      'max-width:22ch;overflow:hidden;text-overflow:ellipsis}')
+    A('.smptbl td.nul{color:var(--muted);opacity:.55}')
+    A('.smptbl .ell{color:var(--muted);opacity:.7}')
+    A('@media (prefers-reduced-motion:reduce){.cv{transition:none}}')
     A('.dbtbl td.drv{border-left:2px solid var(--line)}')
     A('.dblegend{margin:0 0 11px;font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}')
     A('.dblegend span{display:flex;align-items:center;gap:6px}')
@@ -147,9 +191,11 @@ def main():
     _drv = sum(1 for db in cat.values() if isinstance(db, list) for t in keep_of(db)
                if not (t.get("comment") or "").strip()
                and "%s.%s" % (t["schema_name"], t["table_name"]) in DESCS)
-    A('<div class="dblegend"><span>설명 %d개 — DB 주석 %d, '
-      '<em></em> 왼쪽 선은 주석이 없어 컬럼 스키마를 읽고 쓴 것 %d</span></div>'
-      % (kept, kept - _drv, _drv))
+    _smp = sum(1 for db in SAMP.values() for v in db.values() if v.get("rows"))
+    A('<div class="dblegend">'
+      '<span>설명 %d개 — DB 주석 %d, <em></em> 왼쪽 선은 주석이 없어 컬럼 스키마를 읽고 쓴 것 %d</span>'
+      '<span>▸ 표를 누르면 앞 5행 · 앞 8열 (표본 %d개)</span>'
+      '</div>' % (kept, kept - _drv, _drv, _smp))
     for key, label, note in DBS:
         ts = cat.get(key, [])
         if not isinstance(ts, list): continue
@@ -172,11 +218,19 @@ def main():
                 c = DESCS.get(full, ""); derived = bool(c)
             if len(c) > 165: c = c[:163] + "…"
             cell = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", html.escape(c))
-            A('<tr%s><td class="sc">%s</td><td class="nm">%s</td><td class="rw">%s</td>'
+            sm = SAMP.get(key, {}).get(full)
+            has = bool(sm and sm.get("rows"))
+            A('<tr%s%s><td class="sc">%s</td><td class="nm">%s%s</td><td class="rw">%s</td>'
               '<td class="ds%s">%s</td></tr>'
-              % (' class="hi"' if full in HILITE else "", html.escape(t["schema_name"]),
-                 html.escape(t["table_name"]), fmt(nrows(t.get("approx_rows"))),
+              % (' class="hi"' if full in HILITE else "",
+                 ' data-smp="1" tabindex="0" role="button" aria-expanded="false"' if has else "",
+                 html.escape(t["schema_name"]),
+                 html.escape(t["table_name"]),
+                 '<span class="cv">▸</span>' if has else "",
+                 fmt(nrows(t.get("approx_rows"))),
                  " drv" if derived else "", cell))
+            if has:
+                A('<tr class="smp" hidden><td colspan="4">%s</td></tr>' % sample_html(sm))
         A('</tbody></table>')
         if len(k) > cap:
             A(f'<div class="dbmore">행수 하위 {len(k)-cap}개 생략 — 대부분 ciq* 코드 마스터와 Compustat 레거시(co_*·sec_*·idx_*)다</div>')
@@ -186,6 +240,26 @@ def main():
     for _para in FOOTER:
         A('<p>%s</p>' % _para)
     A('</div></div>')
+
+    # 표본 펼치기. 행마다 핸들러를 달면 345개가 붙으므로 표 단위로 위임한다.
+    A('<script>')
+    A('(function(){')
+    A('  function toggle(tr){')
+    A('    var nx=tr.nextElementSibling;')
+    A('    if(!nx||nx.className!=="smp")return;')
+    A('    var open=nx.hidden;nx.hidden=!open;tr.setAttribute("aria-expanded",open?"true":"false");')
+    A('  }')
+    A('  Array.prototype.forEach.call(document.querySelectorAll(".dbtbl"),function(tb){')
+    A('    tb.addEventListener("click",function(e){')
+    A('      var tr=e.target.closest("tr[data-smp]");if(tr)toggle(tr);')
+    A('    });')
+    A('    tb.addEventListener("keydown",function(e){')
+    A('      if(e.key!=="Enter"&&e.key!==" ")return;')
+    A('      var tr=e.target.closest("tr[data-smp]");if(tr){e.preventDefault();toggle(tr);}')
+    A('    });')
+    A('  });')
+    A('})();')
+    A('</script>')
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     io.open(OUT, "w", encoding="utf-8", newline="").write("\n".join(P))

@@ -107,3 +107,5 @@ data/_ssrot.json
 build/db_catalog.json
 # 사내 DB 지도의 문안(함정 설명·조인키). 생성기는 추적하되 문안은 반입 금지
 build/db_notes.json
+# 사내 DB 표본 몇 줄(실데이터). 반입 금지 — db.html 은 암호문으로만 게시한다
+build/db_samples.json
