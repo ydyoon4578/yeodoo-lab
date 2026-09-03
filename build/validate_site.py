@@ -522,19 +522,60 @@ if pool:
                               "다시 돌릴 것(목록만 굽고 차트를 빠뜨리면 화면이 '차트 없는 전략'을 낸다)"
                               % (len(_miss), ", ".join(sorted(_miss)[:8])))
             # 끝점 대조 — 같은 실행의 산출물인지 본다(개수가 맞아도 내용이 낡을 수 있다).
+            # 🚨 2026-09-03 — **원인을 둘로 가른다.** 종전에는 하나로 묶어 오류를 냈는데,
+            #   그 안에 성질이 다른 둘이 섞여 있었다.
+            #     ⓐ strategy_charts.py 를 안 돌렸다 → 다시 돌리면 낫는다. **오류가 맞다.**
+            #     ⓑ 돌렸는데 원천 pit_strategies.json 이 낡았다 → 다시 돌려도 **안 낫는다.**
+            #        그 파일을 굽는 잡이 저장소에 없다(가격 캐시 넷이 커밋 금지라 러너가 못 굽는다).
+            #        랩 차트 끝점은 패널 끝(매일 움직인다)이고 pit 은 사람이 돌릴 때만 움직이므로
+            #        **stocks 가 하루라도 앞서면 반드시 갈린다.** 구조적 상태지 회귀가 아니다.
+            #   가르지 않았을 때 무슨 일이 났나 — refresh-tech 이 08-29·09-02 연속으로 죽었다.
+            #   회귀 관문이 「이 잡이 1건을 늘렸다」로 읽어 잡 전체를 막았고, 안내문은 헛돌게 하는
+            #   「strategy_charts.py 를 다시 돌릴 것」이었다. 랩 본체가 그 뒤로 CI 에서 한 번도
+            #   안 구워졌다(마지막 성공 2026-08-21).
+            # ⚠ ⓑ 를 **조용히 넘기지 않는다.** 아래에서 pit 의 나이를 실제로 재서 경고로 낸다.
+            #   경고로 내는 것은 style_pit 과 같은 규약이다(«로컬 전용 산출물은 errors 아님»,
+            #   이 파일 1918행). 오류로 내면 사람이 손으로 돌릴 때까지 저장소가 영원히 붉고,
+            #   그러면 이 잡뿐 아니라 **모든 잡**이 이것 때문에 막힌다.
             _tsj = json.load(io.open(os.path.join(ROOT, "data", "tech_strategies.json"), encoding="utf-8"))
-            _stale = []
+            _csrc = _cj.get("src") or {}
+            try:
+                _pit_as_of = json.load(io.open(os.path.join(ROOT, "data", "pit_strategies.json"),
+                                               encoding="utf-8")).get("as_of") or ""
+            except Exception:
+                _pit_as_of = ""
+            _lab_as_of = _tsj.get("as_of") or ""
+            _pit_behind = bool(_pit_as_of and _lab_as_of and _pit_as_of < _lab_as_of)
+            _stale, _struct = [], []
             for _r in (_tsj.get("strategies") or []):
                 _c = _ch.get("t-" + _r["sid"])
                 if not _c:
                     continue
                 _cd = (_c.get("chart") or {}).get("dates") or _c.get("dates") or []
                 _rd = _r.get("dates") or []
-                if _cd and _rd and _cd[-1] != _rd[-1]:
-                    _stale.append("%s(차트 %s ≠ 랩 %s)" % (_r["sid"], _cd[-1], _rd[-1]))
+                if not (_cd and _rd) or _cd[-1] == _rd[-1]:
+                    continue
+                _one = "%s(차트 %s ≠ 랩 %s)" % (_r["sid"], _cd[-1], _rd[-1])
+                # 출처가 pit 이고 pit 자체가 랩보다 뒤면 ⓑ 다. src 가 없는 옛 파일은
+                # 판단 근거가 없으므로 종전대로 ⓐ 로 둔다(안전한 쪽).
+                if _pit_behind and _csrc.get("t-" + _r["sid"]) == "pit_strategies.json":
+                    _struct.append(_one)
+                else:
+                    _stale.append(_one)
             if _stale:
                 errors.append("상세차트가 랩과 다른 실행의 것 %d개: %s — strategy_charts.py 를 "
                               "다시 돌릴 것" % (len(_stale), " · ".join(_stale[:5])))
+            if _struct:
+                _gap = ""
+                try:
+                    _gap = " · %d일 뒤짐" % (_dt.date.fromisoformat(_lab_as_of)
+                                            - _dt.date.fromisoformat(_pit_as_of)).days
+                except Exception:
+                    pass
+                print("  ~ 시점정확 곡선 %d개가 랩보다 낡았다 — pit_strategies.json %s vs 랩 %s%s. "
+                      "strategy_charts.py 를 다시 돌려도 안 낫는다(원천이 낡은 것이다). "
+                      "가격 캐시가 있는 PC 에서 build/pit_backtest.py 를 돌릴 것"
+                      % (len(_struct), _pit_as_of or "?", _lab_as_of or "?", _gap))
     except FileNotFoundError:
         pass
 
