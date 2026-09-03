@@ -1902,6 +1902,23 @@ def dump_json(P, res, detail):
                    "⚠ 홈 화면의 스타일 구성종목 칩과 명단이 다를 수 있다. 그쪽은 벤더 비율을 "
                    "그대로 쓰고 여기는 백테스트라 SEC 재무를 45일 지연으로 쓴다 — "
                    "모멘텀·저변동·고베타는 같고, 퀄리티·가치·성장은 6~7/10 만 겹친다."),
+        # 🚨 2026-09-03 — **표시용 계열 선언.** 오늘 tech·asset 두 랩에 같은 선언을 넣고
+        #   validate_site 에 대조 검사를 걸었는데(468d6a89d), 같은 함정을 가진 이 파일이
+        #   그 규약 밖에 있었다. styles[].nav 는 252점을 **140점으로 솎은 표시용 표본**이고
+        #   dates 도 없다 — 좌표계 자체가 없어서 어느 날의 값인지 되짚을 수 없다.
+        #   실측: 그 nav 로 MDD 를 되계산하면 metrics.mdd 와 중앙 0.65%p · **최대 1.76%p** 다르다.
+        #   ⚠ 이 함정으로 이미 한 번 틀렸다 — PREREG-2026-09-02-A1PAYOUT-RESULT §8-1 이
+        #     표시용 계열을 정본으로 알고 §3 표를 통째로 잘못 냈다.
+        #   ⚠ metrics 는 솎기 전 원해상도로 낸 값이다. 표를 믿고 곡선은 «모양» 으로만 볼 것.
+        "series_note":
+            "🚨 styles[].nav 는 **표시용 표본이다** — 252점을 140점으로 솎았고 dates 가 없다. "
+            "되계산하면 metrics 와 어긋난다(MDD 최대 약 1.8%p). 수치는 metrics 를 쓰고 "
+            "nav 는 모양만 볼 것. build/validate_site.py 의 «표시용 계열» 검사가 이 선언을 "
+            "실제와 대조한다.",
+        "sampling": {"nav": {"kind": "표시용 표본", "points": 140, "has_dates": False,
+                             "reproduces_metrics": False},
+                     "monthly": {"kind": "월간 표본", "reproduces_metrics": False},
+                     "max_mdd_gap_pp": 1.8},
         "months": ms,
         "bench": {},
         "styles": [],

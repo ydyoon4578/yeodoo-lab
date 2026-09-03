@@ -2927,16 +2927,25 @@ try:
     except FileNotFoundError:
         pass
 
-    for _fn, _lbl in (("tech_strategies.json", "종목 랩"), ("asset_strategies.json", "자산 랩")):
+    # ⚠ 2026-09-03 — style_perf.json 을 목록에 더한다. 같은 함정을 가진 파일이 규약 밖에
+    #   있었다: styles[].nav 는 252점 → 140점으로 솎은 표시용 표본이고 **dates 조차 없다**
+    #   (좌표계가 없어 어느 날 값인지 못 되짚는다). 되계산하면 MDD 가 최대 1.76%p 어긋난다.
+    #   이 함정으로 이미 한 번 틀렸다(A1PAYOUT-RESULT §8-1).
+    #   ⚠ 이 파일은 항목이 styles 이고 dates 가 없으므로 아래 «간격·복리» 대조는 건너뛴다 —
+    #     선언이 있는지만 본다. 선언조차 없으면 읽는 사람이 정본으로 안다.
+    _BUILDER = {"tech_strategies.json": "tech_backtest.py",
+                "asset_strategies.json": "asset_backtest.py",
+                "style_perf.json": "style_top_pdf.py"}
+    for _fn, _lbl in (("tech_strategies.json", "종목 랩"), ("asset_strategies.json", "자산 랩"),
+                      ("style_perf.json", "랩 스타일")):
         try:
             _d = json.load(io.open(os.path.join(ROOT, "data", _fn), encoding="utf-8"))
         except Exception as _e:
             errors.append("%s 를 못 읽었다 — %s" % (_fn, _e)); continue
         if not _d.get("series_note") or not _d.get("sampling"):
-            errors.append("%s 에 series_note/sampling 이 없다 — dates·nav 가 표시용 표본이라는 "
+            errors.append("%s 에 series_note/sampling 이 없다 — nav 가 표시용 표본이라는 "
                           "사실을 자료가 스스로 적어야 한다(2026-09-02 규약). "
-                          "build/%s 의 산출 묶음에 넣을 것"
-                          % (_fn, "tech_backtest.py" if "tech" in _fn else "asset_backtest.py"))
+                          "build/%s 의 산출 묶음에 넣을 것" % (_fn, _BUILDER.get(_fn, "?")))
             continue
         _sm = _d["sampling"]
         _rows = _d.get("strategies") or _d.get("items") or []
