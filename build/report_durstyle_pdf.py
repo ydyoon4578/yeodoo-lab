@@ -78,6 +78,10 @@ def new():
 
 # ── 자료 ────────────────────────────────────────────────────────────────
 A = json.load(io.open(os.path.join(DATA, "assets.json"), encoding="utf-8"))
+# 다중검정 분모 — **세어 둔 값을 읽는다**(build/strategy_index.py 의 trials 주석 참조).
+#   손으로 적으면 낡는다. 값이 없으면 문장을 만들지 않는 쪽이 맞으므로 물음표를 낸다.
+_TRIALS = ((json.load(io.open(os.path.join(DATA, "strategy_index.json"), encoding="utf-8"))
+            .get("trials") or {}).get("n") or "?")
 DTS, PX, MAC = A["dates"], A["px"], A["macro"]
 import asset_backtest as AB
 AB.A, AB.DTS = A, DTS
@@ -397,8 +401,11 @@ with PdfPages(OUT) as pdf:
        "· 인상기가 아닌 달에는 조금 진다. 상시 보유 전략이 아니라 국면 의존 전략이다.\n"
        "· SPY 는 보수 0.09%가 빠져 있어 진짜 S&P 총수익보다 아주 조금 낮다 - "
        "그만큼 이 표는 전략에 관대하다.\n"
-       "· 랩의 전 구간 다중검정 문턱(시행 304회 · 델타샤프 0.259~0.411)은 못 넘는다. "
-       "등급은 「측정만」이고 배포가 아니다.",
+       # 🚨 2026-09-03 — 시행 수를 **읽는다.** 종전에는 「시행 304회」가 상수로 박혀 있었는데
+       #   전 원천의 sid 합집합을 세면 440 이었다(문서마다 304·311 로 제각각이었다).
+       #   손으로 적은 수는 낡는다 — strategy_index.json 의 trials.n 이 세어 실어 준다.
+       "· 랩의 전 구간 다중검정 문턱(시행 " + str(_TRIALS) + "회 · 델타샤프 0.259~0.411)은 "
+       "못 넘는다. 등급은 「측정만」이고 배포가 아니다.",
        fontsize=7.8, color=INK2, linespacing=1.62)
 
     y -= .116

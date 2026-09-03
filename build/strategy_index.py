@@ -1774,6 +1774,34 @@ def main() -> int:
     if _unl:
         print("  이웃이 미게시인 규칙 %d종 — 화면이 그 사실을 적는다" % _unl)
 
+    # ── 다중검정 분모를 **센다**(아래 doc["trials"] 주석 참조) ──────────────────
+    def _sidset(path, key="strategies", pre=""):
+        """산출물 하나의 sid 집합. 없으면 빈 집합(원천이 빠져도 죽지 않는다)."""
+        _d = load(path) or {}
+        _v = _d.get(key) or []
+        if isinstance(_v, dict):
+            return {pre + str(_k) for _k in _v}
+        return {pre + str(_x.get("sid")) for _x in _v if isinstance(_x, dict) and _x.get("sid")}
+    _TRIALS_BY, _seen = {}, set()
+    for _lab, _args in (("tech_등록", ("tech_strategies.json", "strategies", "")),
+                        ("tech_은퇴", ("tech_strategies.json", "retired", "")),
+                        ("asset", ("asset_strategies.json", "strategies", "a-")),
+                        ("pairs", ("pairs_strategies.json", "strategies", "")),
+                        ("intraday", ("intraday_strategies.json", "strategies", "")),
+                        ("기각_아카이브", ("archive_index.json", "items", ""))):
+        _s = _sidset(*_args)
+        _TRIALS_BY[_lab] = len(_s)
+        _seen |= _s
+    try:
+        _lj = json.load(io.open(os.path.join(ROOT, "build", "tested_not_published.json"),
+                                encoding="utf-8"))
+        _ls = {str(_x["sid"]) for _x in (_lj.get("items") or []) if _x.get("sid")}
+    except Exception:
+        _ls = set()
+    _TRIALS_BY["기각_원장"] = len(_ls)
+    _seen |= _ls
+    _TRIALS_N = len(_seen)
+
     doc = {
         "note": "전 전략 통합 목록. 파일 출처가 아니라 **성격**(무엇을 하는 전략인가)으로 묶는다. "
                 "수치는 원본에서 그대로 옮긴 것이며 여기서 계산하지 않는다. "
@@ -1792,6 +1820,19 @@ def main() -> int:
         #   다시 재면 43종 중 17종이 사용자 문턱(50%) 아래로 내려간다(실측). 그래서 여기서
         #   임의로 바꾸지 않고, **무엇이 어느 레그인지부터 자료에 적는다.**
         #   build/validate_site.py 가 이 선언을 실제 값과 대조한다.
+        # 🚨 2026-09-03 — **다중검정 분모를 세어서 싣는다.** 종전에는 산문에만 있었고 낡았다:
+        #   PREREG-2026-09-03-BMROT-RESULT 는 「311」, build/report_durstyle_pdf.py 는
+        #   상수로 「시행 304회」라 적었는데, 전 원천의 sid 합집합을 세면 **440** 이다.
+        #   이 랩의 규약은 「성적을 재는 계산이었으면 센다」(LOWCORR) 이므로 기각·은퇴·
+        #   아카이브도 분모에 남는다 — 고른 뒤에 세면 selection 을 무시하는 것이다.
+        #   ⚠ 손으로 적으면 반드시 낡는다(이 저장소의 되풀이 결함 2번). 읽는 쪽이 이 값을 쓴다.
+        "trials": {
+            "n": _TRIALS_N,
+            "by_source": _TRIALS_BY,
+            "note": "다중검정 분모 — 이 랩이 «성적을 재는 계산» 을 돌린 횟수. 게시 건수가 "
+                    "아니다. 기각·은퇴·아카이브를 분모에 남기는 것은 규약이다"
+                    "(고른 뒤에 세면 보정의 취지에 반한다). 중복 sid 는 한 번만 센다.",
+        },
         "legs": {
             "note": "basis='pit' 항목이라도 필드마다 레그가 다르다. 세로로 비교하기 전에 "
                     "이 표를 볼 것 — 머리 숫자와 그 밑 곡선은 **같은 잣대가 아니다**.",
