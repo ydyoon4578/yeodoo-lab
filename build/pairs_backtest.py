@@ -198,7 +198,20 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
             if np.isfinite(z):
                 scored.append((abs(z), o, z))
         scored.sort(key=lambda x: -x[0])
-        cand = [o for _az, o, _z in scored[:size]]
+        # 🚨 다리를 겹치지 않게 고른다(2026-09-03 사용자 지시 · 원 요청의 «10쌍 = 20종목»).
+        #   |z| 큰 순으로 훑되 두 다리 모두 처음 쓰는 페어만 담는다. 안 그러면 한 종목이
+        #   여러 페어의 같은 쪽 다리로 반복해 잡혀(실측: AON 롱 4회 = 순노출 +40%)
+        #   «페어 10개» 가 사실상 «한 종목 대 그 이웃들» 베팅이 된다 — 분산된 스탯아빗
+        #   북이 아니다. 겹침을 막으면 서로 다른 종목이 정확히 2×size 개가 된다.
+        used, cand = set(), []
+        for _az, o, _z in scored:
+            a, b = int(iu[0][o]), int(iu[1][o])
+            if a in used or b in used:
+                continue
+            used.add(a); used.add(b)
+            cand.append(o)
+            if len(cand) >= size:
+                break
         zmap = {o: z for _az, o, z in scored}
     else:
         R = np.diff(np.log(PXf), axis=0)
@@ -682,7 +695,8 @@ NAMES = {
           "무엇을 고르는지가 정해지지 않는다는 관찰에서 나왔다."),
     "C": ("p-xs10", "페어 트레이딩 — 횡단면 최대괴리 상위10",
           "형성 252일 SSD 최소 상위 100쌍을 후보로 두고, 그중 형성 마지막 날 |z| 가 큰 "
-          "상위 10쌍을 보유 · 다음 월말까지 · 트리거/손절 없음 · 달러중립 · 항상 만기투자",
+          "순으로 다리가 겹치지 않게 10쌍(= 서로 다른 20종목) 보유 · 다음 월말까지 · "
+          "트리거/손절 없음 · 달러중립 · 항상 만기투자",
           "🚨 사용자 요청 규칙이다(PREREG-2026-09-03-PAIRS-XS). 발상은 원문판 4종의 성적을 "
           "보기 전에 나왔지만, 배선한 나는 그 성적을 보고 있었다 — 특히 '항상 만기투자'는 "
           "GGR 의 투입자본 규약이 성적을 깎던 것을 아는 상태의 설계다. 원문판 A 를 대조로 "
