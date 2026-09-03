@@ -2786,6 +2786,25 @@ try:
     #   그래서 ① 자료가 스스로 그 사실을 적게 하고(series_note·sampling) ② 그 선언이
     #   실제와 맞는지를 여기서 기계로 대조한다. 선언만 있고 안 맞으면 선언이 낡은 것이다.
     import datetime as _dtm          # 이 파일은 위쪽에서 _dt 로 쓰는 자리가 따로 있다
+    # 🚨 2026-09-03 — **자료가 스스로 못박은 불변식을 검사로 만든다.**
+    #   data/asof.json 의 signals 축 주석이 「종목 스냅샷과 같은 잡에서 같은 기준일로
+    #   굽는다 — **어긋나면 그건 사고다**」라고 적어 뒀는데, 그 사고를 재는 곳이 없었다.
+    #   실제로 refresh-stocks.yml 이 signal_lab.py 를 돌리고 커밋까지 하면서 신선도 검사도
+    #   안 걸고 있었다(같은 날 배선했다). 여기서는 «둘이 같은 날인가» 를 본다 —
+    #   신선도 검사는 «낡았나» 만 보므로 둘이 나란히 낡으면 통과한다. 짝을 이룬다.
+    try:
+        _sl = json.load(io.open(os.path.join(ROOT, "data", "signal_lab.json"), encoding="utf-8"))
+        _st = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
+        _sa, _ta = _sl.get("as_of"), _st.get("as_of")
+        if _sa and _ta and _sa != _ta:
+            errors.append(
+                "지표별 타이밍 신호와 종목 스냅샷의 기준일이 다르다 — signal_lab %s vs "
+                "stocks %s. 둘은 refresh-stocks.yml 의 **같은 실행**에서 같은 격자로 구워야 "
+                "한다(data/asof.json 의 signals 축이 「어긋나면 그건 사고다」라고 적어 뒀다). "
+                "한쪽만 커밋됐거나 잡이 중간에 죽은 것이다" % (_sa, _ta))
+    except FileNotFoundError:
+        pass
+
     for _fn, _lbl in (("tech_strategies.json", "종목 랩"), ("asset_strategies.json", "자산 랩")):
         try:
             _d = json.load(io.open(os.path.join(ROOT, "data", _fn), encoding="utf-8"))
