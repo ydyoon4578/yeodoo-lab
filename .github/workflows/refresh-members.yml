@@ -38,14 +38,27 @@ jobs:
         run: python build/validate_gate.py baseline
       - name: Refresh membership (gated)
         run: python build/refresh_members.py
+      # 🚨 2026-09-03 — **시점정합 편입 «이력»을 여기서 같이 굽는다.**
+      #   members.json 은 스스로 note 에 「오늘 스냅샷이며 과거 편입 이력이 아니다」라고
+      #   적어 뒀다. 생존편향 보정이 실제로 읽는 것은 data/index_history.json 인데,
+      #   그 파일을 굽는 잡이 **저장소에 하나도 없었다**(grep 0건). 마지막 쓰기가
+      #   2026-08-14 라 09-03 시점에 20일 고착이었고, 그 사이 새 달 키가 안 생겨
+      #   ndx_members('2026-09') 가 0종이 됐다 — NDX 계열 다섯이 무보유가 되는 사고가
+      #   2026-10-02 로 예약돼 있었다(build/index_members.py 의 꼬리 규약 주석).
+      #   ⚠ 이 스크립트는 **표준 라이브러리만** 쓰고(외부 의존 0) 증분이라 실측 7.7초다.
+      #     러너가 돌 수 있게 만들어 놓고 배선만 안 한 것이다 — 이 저장소의 되풀이 결함 1번.
+      #   ⚠ refresh_members 뒤에 둔다. 둘은 서로 안 읽지만, 명단 관문이 막히면 이력도
+      #     같이 세우는 편이 낫다(그날 자료가 통째로 의심스러운 상황이다).
+      - name: Refresh PIT membership history
+        run: python build/refresh_index_history.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
-          bash build/ci_push.sh "chore(data): 지수 편입 명단 자동 갱신" \
-            data/members.json data/asof.json
+          bash build/ci_push.sh "chore(data): 지수 편입 명단·시점정합 이력 자동 갱신" \
+            data/members.json data/index_history.json data/asof.json
       # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
       #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
       #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.
