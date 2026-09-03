@@ -480,6 +480,48 @@ def main() -> int:
     }
     json.dump(doc, io.open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dB)" % (OUT, os.path.getsize(OUT)))
+
+    # ── 🚨 2026-09-03 — **빌더 순환을 끊는다** ─────────────────────────────
+    # style.html 의 편향 캐비엇은 data/style_perf.json 의 caveat 을 그대로 찍고, 그 문자열은
+    # style_top_pdf.pit_caveat() 이 **디스크의 style_pit.json 을 읽어** 만든다.
+    # 그런데 style_pit.py(이 파일)는 style_perf.json 을 **앵커로 읽어야** 하므로 그 뒤에 돈다.
+    #   style_top_pdf → style_perf.json → style_pit.py → style_pit.json → (다음 실행의) 캐비엇
+    # 즉 두 빌더가 서로의 산출물을 읽는 순환이라 **캐비엇은 언제나 한 판 뒤진다.**
+    # 실측 2026-09-02: style_perf·style_pit 이 둘 다 09-01 인데 캐비엇 본문은 「2026-08-31
+    # 기준」이었고 인용한 수 여섯 개가 전부 어긋났다. validate_site 는 두 파일의 as_of 만
+    # 비교하는데 둘 다 09-01 이라 **통과했다** — 방어가 정확히 그 한 칸을 안 봤다.
+    # 이 랩이 「정직성」의 근거로 내세우는 문장이 틀린 수를 말하고 있었던 것이다.
+    #
+    # 고침 — 순서를 못 바꾸므로(앵커 의존이 진짜다) **여기서 그 칸만 다시 찍는다.**
+    #   · 문자열을 만드는 곳은 여전히 pit_caveat() 한 곳이다(두 벌로 만들지 않는다)
+    #   · 방금 쓴 style_pit.json 을 읽으므로 값이 반드시 오늘 것이다
+    #   · style_perf.json 의 다른 칸은 건드리지 않는다
+    # ⚠ style_top_pdf 를 한 번 더 돌리는 것으로도 되지만 2~3분이 더 든다. 그리고 그것은
+    #   «순서로 푸는» 방식이라 누가 단계를 옮기면 조용히 되돌아간다.
+    try:
+        import style_top_pdf as _ST                      # noqa: E402  같은 build/ 안
+        _sp = os.path.join(DATA, "style_perf.json")
+        _q = json.load(io.open(_sp, encoding="utf-8"))
+        _old = _q.get("caveat") or ""
+        # style_top_pdf 가 캐비엇 뒤에 붙이는 꼬리말(홈 칩과 명단이 다를 수 있다)은
+        # pit_caveat() 의 몫이 아니다 — 그 뒤부터를 그대로 살려 붙인다.
+        _tail = ""
+        _k = _old.find("⚠ 홈 화면의 스타일 구성종목 칩")
+        if _k >= 0:
+            _tail = " " + _old[_k:]
+        _new = _ST.pit_caveat() + _tail
+        if _new.strip() and _new != _old:
+            _q["caveat"] = _new
+            json.dump(_q, io.open(_sp, "w", encoding="utf-8"),
+                      ensure_ascii=False, separators=(",", ":"))
+            print("  캐비엇을 오늘 style_pit 으로 다시 찍었다(빌더 순환 보정)")
+        else:
+            print("  캐비엇은 이미 오늘 값이다")
+    except Exception as _e:
+        # 조용히 넘기지 않는다 — 캐비엇이 낡으면 화면이 틀린 수를 말한다.
+        print("  ⚠ 캐비엇 재생성 실패(%s: %s) — style.html 의 편향 문구가 한 판 뒤진 채 "
+              "나갈 수 있다. build/style_top_pdf.py --json 을 다시 돌릴 것"
+              % (type(_e).__name__, str(_e)[:60]))
     return 0
 
 
