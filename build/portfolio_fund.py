@@ -420,6 +420,23 @@ def last_leq(series_dict, date):
     return (best, series_dict[best]) if best else (None, None)
 
 
+def bd_gap(d_from, d_to):
+    """두 날짜(YYYY-MM-DD) 사이 영업일 수(주말만 제외 — 휴일은 안 본다).
+
+    휴일을 무시하므로 실제보다 조금 크게 나온다. 이 값은 «너무 낡았나» 문턱에만 쓰므로
+    크게 나오는 쪽이 안전하다(놓치는 것보다 한 번 더 물어보는 편이 낫다).
+    """
+    a, b = dt.date.fromisoformat(d_from), dt.date.fromisoformat(d_to)
+    if b <= a:
+        return 0
+    n = 0
+    while a < b:
+        a += dt.timedelta(days=1)
+        if a.weekday() < 5:
+            n += 1
+    return n
+
+
 def last_lt(series_dict, date):
     """date «미만» 마지막 (date, v) — T-1 짝맞춤용. 기준가(D)는 직전 미국 거래일 종가를 담는다."""
     best = None
@@ -1184,6 +1201,20 @@ def main() -> int:
                              % (c["fund"], c["n_stocks"], c["n_match"]))
         if c["nav_d"] != c["asof"]:
             print("⚠ %s NAV 기준일(%s) ≠ 보유 기준일(%s) — 이하 최근값으로 대체" % (c["fund"], c["nav_d"], c["asof"]))
+        # 🚨 낡은 가격 축을 조용히 게시하지 않는다(2026-09-03 실측 사고).
+        #   가격은 랩의 웹 자료(data/stocks.json·assets.json)에서 오는데 그것은 **git 으로
+        #   들어온다** — 러너가 매일 origin 에 커밋하고, 이 PC 는 pull 해야 받는다.
+        #   그날 portfolio_publish.bat 이 pull 을 마지막(푸시 직전)에만 해서, 조각이
+        #   08-26 시점 사본(마지막 거래일 08-25)으로 구워졌다. 셔틀은 09-02 라 화면의
+        #   날짜가 뒤죽박죽이 됐다 — 헤더는 정직하게 «미국 종가 08-25» 라 적었지만,
+        #   그 경고를 사람이 읽어 주기를 기대하는 것은 게이트가 아니다. 여기서 막는다.
+        _gap = bd_gap(c["meta"]["asof_us"], max(c["nav_d"], c["asof"]))
+        if _gap > 2:
+            raise SystemExit(
+                "%s 가격 축(%s)이 펀드 기준일(%s)보다 %d영업일 낡았다 — 조각을 만들지 않았다.\n"
+                "  → 랩 가격 자료가 오래된 사본이다. 먼저  git pull --rebase origin main  을 하고 다시 돌릴 것.\n"
+                "     (그래도 낡아 있으면 랩의 일일 갱신 잡이 멈춘 것 — data/stocks.json 의 as_of 를 확인)"
+                % (c["fund"], c["meta"]["asof_us"], max(c["nav_d"], c["asof"]), _gap))
 
     gen = dt.datetime.now().strftime("%Y-%m-%d %H:%M KST")
     # 🚨 2026-08-21 사용자 지시 «지수별로 2열씩 · 두 지수 사이 가운데는 굵은 선».
