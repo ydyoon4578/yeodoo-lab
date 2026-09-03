@@ -53,12 +53,23 @@ OUTBOOK = os.path.join(DATA, "pairs_book.json")   # co.html 페어 탭이 지연
 
 FORM, TRADE = 252, 126          # 형성 12개월 → 거래 6개월 (GGR)
 SIZES = (5, 20)                 # 상위 N — 원문의 두 판
+# ── 규칙 C(횡단면 최대괴리) — PREREG-2026-09-03-PAIRS-XS. 값 셋 다 고정이다.
+XS_POOL = 100                   # 근접 후보 풀(SSD 최소 상위 N쌍)
+XS_SIZE = 10                    # 그중 |z| 최대 상위 N쌍을 보유
+XS_HOLD = 21                    # 보유 21거래일(다음 월말까지) — 트리거 없음
 ENTRY = 2.0                     # ±2σ
 HL_LO, HL_HI = 5, 30
 MIN_TRIPS = 2
 BORROW_APY = 0.003
 PIT_START = "2021-07-30"        # 이미 정해진 값 — 페어를 위해 다시 고르지 않는다
 NW_LAGS = 3
+
+# 규칙×크기 조합 — 표·판정·페어북이 전부 이 목록 하나를 순회한다.
+# 🚨 종전에는 ("A5","A20","B5","B20") 이 여섯 군데에 하드코딩돼 있었다. 규칙 C 를 더하며
+#   그중 하나만 빠뜨려도 «계산은 했는데 표에 없는» 상태가 된다 — 이 랩이 반복해 온 실패다.
+COMBOS = [(r, sz) for r in ("A", "B") for sz in SIZES] + [("C", XS_SIZE)]
+KEYS = tuple("%s%d" % (r, sz) for r, sz in COMBOS)
+RLBL = {"A": "GGR", "B": "조합", "C": "최대괴리"}
 
 
 # ══ 자료 ═══════════════════════════════════════════════════════════════
@@ -163,10 +174,32 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
     S = np.where(np.isfinite(S), S, np.nanmedian(S))
     iu = np.triu_indices(n, 1)
     ssd = D[iu]
+    zmap = {}
 
     if rule == "A":
         order = np.argsort(ssd)[: size * 4]
         cand = [o for o in order if np.isfinite(ssd[o])][:size]
+    elif rule == "C":
+        # 횡단면 최대괴리 — PREREG-2026-09-03-PAIRS-XS §1.
+        #   ① SSD 최소 상위 XS_POOL 쌍을 후보 풀로 두고
+        #   ② 그 안에서 형성 마지막 날 |z| 가 큰 순으로 size 쌍.
+        # 🚨 A 와 달리 «가장 가까운» 이 최종 선택 기준이 아니다 — 근접은 자격,
+        #   선택은 괴리다. 그래서 풀 크기가 이 규칙의 성격을 정한다(풀을 넓힐수록
+        #   «가장 변동성 큰 스프레드 고르기» 로 변질된다). 풀은 100 고정.
+        order = [o for o in np.argsort(ssd)[: XS_POOL * 4] if np.isfinite(ssd[o])][:XS_POOL]
+        scored = []
+        for o in order:
+            a, b = iu[0][o], iu[1][o]
+            s = P[:, a] - P[:, b]
+            sd = float(s.std(ddof=1))
+            if not (sd > 0):
+                continue
+            z = (float(s[-1]) - float(s.mean())) / sd
+            if np.isfinite(z):
+                scored.append((abs(z), o, z))
+        scored.sort(key=lambda x: -x[0])
+        cand = [o for _az, o, _z in scored[:size]]
+        zmap = {o: z for _az, o, z in scored}
     else:
         R = np.diff(np.log(PXf), axis=0)
         Rc = R - R.mean(0)
@@ -203,9 +236,14 @@ def select(PXf, HIf, LOf, names, sec, dual, rule, size):
         sd = float(s.std(ddof=1))
         if not (sd > 0):
             continue
+        _z = zmap.get(o) if rule == "C" else None
         out.append((a, b, sd, float(S[a] + S[b]),
                     {"a": names[a], "b": names[b], "ssd": float(ssd[o]),
-                     "sec_a": sec.get(names[a], "?"), "sec_b": sec.get(names[b], "?")}))
+                     "sec_a": sec.get(names[a], "?"), "sec_b": sec.get(names[b], "?"),
+                     # z>0 이면 a 가 비싸다 → a 숏 · b 롱. 규칙 C 는 여기서 방향이 정해진다.
+                     "z": (round(_z, 3) if _z is not None else None),
+                     "long": (names[b] if (_z or 0) > 0 else names[a]) if _z is not None else None,
+                     "short": (names[a] if (_z or 0) > 0 else names[b]) if _z is not None else None}))
     return out
 
 
@@ -313,6 +351,62 @@ def trade_cohort(PXw, pairs, base, wait=1):
     return (pnl, cst, bor), {"open": n_open, "conv": n_conv, "forced": n_forced,
                              "dead": n_dead, "worst": worst, "day0": n_day0,
                              "by_exit": by_exit}
+
+
+def trade_xs(PXw, pairs, base, held_prev, wait=1):
+    """규칙 C — 고른 10쌍을 보유기간 내내 들고 간다. 트리거도 손절도 없다.
+
+    GGR 판(trade_cohort)과 구조가 다르다:
+      · 진입 조건이 없다 — 선택된 순간이 진입이다(체결은 다음 거래일 종가).
+      · 청산 조건이 없다 — 보유기간 끝까지 간다. 수렴해도 안 닫고, 더 벌어져도 안 닫는다.
+      · 그래서 «안 열린 페어» 가 없다 — 자본이 늘 100% 투입된다.
+    방향은 선택 시점 스프레드 부호로 정한다: s>0 이면 a 가 비싸다 → a 숏 · b 롱.
+
+    held_prev  직전 달 보유 집합 {(a이름, b이름, side)} — 여기 있으면 **비용을 안 문다**
+               (실제로 갈아타지 않으므로). 이 규칙은 월마다 다시 고르는데, 전량 왕복으로
+               물리면 회전율이 실제보다 부풀어 비용 과대가 아니라 모형 오류가 된다.
+    돌려주는 것: (일간손익, 비용, 대차), 진단, 이번 달 보유 집합
+    """
+    T = PXw.shape[0]
+    pnl = np.zeros(T)
+    cst = np.zeros(T)
+    bor = np.zeros(T)
+    held_now = set()
+    n_new = n_keep = n_dead = 0
+    accs = []
+    for a, b, sd, cost, meta in pairs:
+        pa, pb = PXw[:, a] / base[a], PXw[:, b] / base[b]
+        ex = min(wait, T - 1)                      # 체결일
+        if not (np.isfinite(pa[ex]) and np.isfinite(pb[ex])):
+            continue
+        side = 1 if (pa[ex] - pb[ex]) > 0 else -1  # +1: a 고평가 → a 숏 · b 롱
+        key = (meta["a"], meta["b"], side)
+        held_now.add(key)
+        if key in held_prev:
+            n_keep += 1
+        else:
+            n_new += 1
+            cst[ex] += cost / 2                    # 진입 반스프레드
+        lp = pb if side > 0 else pa                # 롱 다리
+        sp = pa if side > 0 else pb                # 숏 다리
+        eal, eas = lp[ex], sp[ex]
+        acc = 0.0
+        last = ex
+        for t in range(ex + 1, T):
+            if not (np.isfinite(lp[t]) and np.isfinite(sp[t])):
+                n_dead += 1
+                break
+            d = (lp[t] - lp[t - 1]) / eal - (sp[t] - sp[t - 1]) / eas
+            pnl[t] += d
+            acc += d
+            bor[t] += BORROW_APY / 252.0
+            last = t
+        accs.append(acc)
+        # 청산 반스프레드는 «다음 달에 안 들고 갈 때» 무는 것이라 여기서 미리 못 정한다.
+        # 부르는 쪽이 다음 달 보유 집합과 비교해 물린다(run_leg 의 xs_exit_cost).
+    return (pnl, cst, bor), {"open": len(accs), "new": n_new, "keep": n_keep,
+                             "dead": n_dead, "worst": min(accs) if accs else 0.0,
+                             "accs": accs, "last_idx": T - 1}, held_now
 
 
 # ══ 통계 ═══════════════════════════════════════════════════════════════
@@ -456,6 +550,95 @@ def run_leg(tag, dates, ts, MATS, sec, dual, i_from, i_to, mem=None):
                                           "gross": [round(float(x), 6) for x in gr],
                                           "nav": [round(float(x), 2) for x in nav],
                                           "dates": dsub}
+
+    # ── 규칙 C — 횡단면 최대괴리 상위10 (PREREG-2026-09-03-PAIRS-XS) ────────
+    # 🚨 A·B 와 코호트 구조가 다르다. 거래창이 «다음 월말까지» 라 코호트가 겹치지 않고,
+    #   자본이 늘 100% 투입된다(안 열린 페어가 없다). 그래서 위 루프에 못 끼워 넣는다 —
+    #   억지로 끼우면 투입자본 나눗셈(cnt)의 의미가 규칙마다 달라진다.
+    acc = np.zeros(T); acc_g = np.zeros(T); acc_c = np.zeros(T); cnt = np.zeros(T)
+    held_prev, cost_prev = set(), {}
+    npair, nshort = [], 0
+    secct, accs_all = {}, []
+    n_new = n_keep = n_dead = 0
+    for k, e in enumerate(me):
+        f0, f1 = e - FORM + 1, e + 1
+        W = PX[f0:f1]
+        ok = np.isfinite(W).all(0) & (W > 0).all(0)
+        if mem is not None:
+            mm = set(mem.get(dates[e][:7]) or [])
+            ok &= np.array([t in mm for t in ts])
+        idx = np.where(ok)[0]
+        if len(idx) < 50:
+            continue
+        names = [ts[k2] for k2 in idx]
+        pairs = select(W[:, idx], HI[f0:f1][:, idx], LO[f0:f1][:, idx],
+                       names, sec, dual, "C", XS_SIZE)
+        npair.append(len(pairs))
+        if len(pairs) < XS_SIZE:
+            nshort += 1
+        if not pairs:
+            continue
+        for _, _, _, _, m_ in pairs:
+            secct[m_["sec_a"]] = secct.get(m_["sec_a"], 0) + 1
+            secct[m_["sec_b"]] = secct.get(m_["sec_b"], 0) + 1
+        nxt = me[k + 1] if k + 1 < len(me) else min(e + XS_HOLD, T - 1)
+        t0, t1 = e + 1, min(nxt + 1, T)
+        if t1 - t0 < 5:
+            continue
+        (g, c, bw), d, held_now = trade_xs(PX[t0:t1][:, idx], pairs, W[0][idx], held_prev)
+        # 이탈 페어의 청산 반스프레드 — 직전 달에 들었는데 이번 달에 없는 것만.
+        exit_c = sum(cost_prev.get(kk, 0.0) / 2 for kk in (held_prev - held_now))
+        c = c.copy()
+        c[0] += exit_c
+        acc[t0:t1] += (g - c - bw) / XS_SIZE
+        acc_g[t0:t1] += (g - bw) / XS_SIZE
+        acc_c[t0:t1] += c / XS_SIZE
+        cnt[t0:t1] += 1
+        n_new += d["new"]; n_keep += d["keep"]; n_dead += d["dead"]
+        accs_all.extend(d["accs"])
+        held_prev = held_now
+        # 이번 달 페어의 왕복비용을 방향과 무관하게 기억한다 — 다음 달에 빠지면 그때 청산비를 문다.
+        cost_prev = {}
+        for (_a, _b, _sd, cst_, m_) in pairs:
+            for s_ in (1, -1):
+                cost_prev[(m_["a"], m_["b"], s_)] = cst_
+    live = cnt > 0
+    if live.sum() >= 252:
+        i0, i1 = int(np.argmax(live)), int(T - np.argmax(live[::-1]))
+        cc = np.maximum(cnt[i0:i1], 1)
+        daily = np.where(cnt[i0:i1] > 0, acc[i0:i1] / cc, 0.0)
+        gross = np.where(cnt[i0:i1] > 0, acc_g[i0:i1] / cc, 0.0)
+        costs = np.where(cnt[i0:i1] > 0, acc_c[i0:i1] / cc, 0.0)
+        dsub = dates[i0:i1]
+        eqr = universe_daily(PX, ts, mem, dates, i0, i1)
+        mm_ = {}
+        for r, d_ in zip(eqr, dsub):
+            mm_[d_[:7]] = mm_.get(d_[:7], 1.0) * (1.0 + r)
+        mkt_m = np.array([mm_[k2] - 1.0 for k2 in sorted(mm_)])
+        st_, mk, mr = stats(daily, dsub, mkt_m)
+        gs, _, gr = stats(gross, dsub)
+        sens = {}
+        for lam, lbl in ((0.5, "x0.5"), (0.1, "x0.1")):
+            s2, _, _ = stats(gross - lam * costs, dsub)
+            sens[lbl] = {"mo_mean": s2["mo_mean"], "t_nw": s2["t_nw"], "cagr": s2["cagr"]}
+        tot = sum(secct.values()) or 1
+        st_.update({"rule": "C", "size": XS_SIZE, "leg": tag,
+                    "n_cohort": len(npair), "pairs_med": float(np.median(npair or [0])),
+                    "short_months": nshort,
+                    "trades": n_new, "keep": n_keep, "dead": n_dead,
+                    "turnover_pct": 100.0 * n_new / max(1, n_new + n_keep),
+                    "worst_pair": 100.0 * (min(accs_all) if accs_all else 0.0),
+                    "gross_mo": gs["mo_mean"], "gross_t_nw": gs["t_nw"],
+                    "cost_mo": gs["mo_mean"] - st_["mo_mean"], "cost_sens": sens,
+                    "util_pct": 100.0 * secct.get("Utilities", 0) / tot,
+                    "sectors": dict(sorted(secct.items(), key=lambda x: -x[1])[:6]),
+                    "pool": XS_POOL, "hold": "다음 월말까지"})
+        nav = list(np.cumprod(1.0 + daily) * 100.0)
+        res["C%d" % XS_SIZE] = {"stats": st_, "months": mk,
+                                "rets": [round(float(x), 6) for x in mr],
+                                "gross": [round(float(x), 6) for x in gr],
+                                "nav": [round(float(x), 2) for x in nav],
+                                "dates": dsub}
     return res
 
 
@@ -497,6 +680,14 @@ NAMES = {
           "🚨 형성 단계 진단을 보고 만든 규칙이다(PREREG §0). 거리 하나로 고르면 유틸리티에 "
           "쏠리고(26개 창 누적 62%), 거리·공적분·상관 상위20의 교집합이 0/20 이라 기준 하나로는 "
           "무엇을 고르는지가 정해지지 않는다는 관찰에서 나왔다."),
+    "C": ("p-xs10", "페어 트레이딩 — 횡단면 최대괴리 상위10",
+          "형성 252일 SSD 최소 상위 100쌍을 후보로 두고, 그중 형성 마지막 날 |z| 가 큰 "
+          "상위 10쌍을 보유 · 다음 월말까지 · 트리거/손절 없음 · 달러중립 · 항상 만기투자",
+          "🚨 사용자 요청 규칙이다(PREREG-2026-09-03-PAIRS-XS). 발상은 원문판 4종의 성적을 "
+          "보기 전에 나왔지만, 배선한 나는 그 성적을 보고 있었다 — 특히 '항상 만기투자'는 "
+          "GGR 의 투입자본 규약이 성적을 깎던 것을 아는 상태의 설계다. 원문판 A 를 대조로 "
+          "나란히 싣는 이유가 그것이다. 근접은 자격이고 선택은 괴리라, A 와는 무엇을 "
+          "고르는지가 다르다."),
 }
 
 
@@ -516,12 +707,13 @@ def current_book(dates, ts, MATS, sec, dual):
     idx = np.where(ok)[0]
     names = [ts[k] for k in idx]
     out = {}
-    for rule in ("A", "B"):
-        for size in SIZES:
+    for rule, size in COMBOS:
+        if True:
             got = select(W[:, idx], HI[f0:f1][:, idx], LO[f0:f1][:, idx],
                          names, sec, dual, rule, size)
             out["%s%d" % (rule, size)] = [
-                {"a": m["a"], "b": m["b"], "sec": m["sec_a"], "ssd": round(m["ssd"], 3)}
+                {"a": m["a"], "b": m["b"], "sec": m["sec_a"], "ssd": round(m["ssd"], 3),
+                 "z": m.get("z"), "long": m.get("long"), "short": m.get("short")}
                 for _, _, _, _, m in got]
     return out, dates[f0], dates[e]
 
@@ -600,6 +792,30 @@ def ticker_book(dates, ts, MATS, sec, dual, book, bk_from, bk_to, topk=4):
     }
 
 
+def _note(s):
+    """전략 카드의 «왜 이 판정인가» 한 문단. 규칙마다 결론을 만드는 것이 다르다.
+
+    🚨 A·B 는 수렴 대 강제청산의 상쇄가 결론이고, C 는 회전율이 결론이다.
+      한 문장으로 뭉뚱그리면 둘 중 하나는 틀린 설명이 된다 — C 에는 청산 사유 자체가 없다.
+    """
+    if s["rule"] == "C":
+        return ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — 비용을 넣기 전에 이미 0이다. "
+                "월 회전율 %.0f%%(10쌍 중 직전 달과 겹치는 것이 사실상 없다)라 왕복 비용이 "
+                "월 %+.3f%% 쌓여 순수익이 %+.3f%% 가 된다. 즉 이 규칙의 손실은 «평균회귀가 "
+                "안 통해서» 가 아니라 «벌 것이 없는데 매달 갈아타서» 다. Corwin-Schultz "
+                "유효스프레드를 1/10 로 줄여도 총수익이 음수라 부호가 바뀌지 않는다."
+                % (s["gross_mo"], s["gross_t_nw"] or 0, s["turnover_pct"],
+                   s["cost_mo"], s["mo_mean"]))
+    return ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — 비용을 넣기 전에 이미 0이다. "
+            "수렴 청산 %d건 평균 %+.2f%% 대 기간종료 강제청산 %d건 평균 %+.2f%% 로 "
+            "둘이 상쇄된다(수렴률 %.0f%%). Corwin-Schultz 유효스프레드를 1/10 로 "
+            "줄여도 |t| < 0.5 라 비용 가정이 판정을 바꾸지 않는다."
+            % (s["gross_mo"], s["gross_t_nw"] or 0,
+               s["by_exit"]["conv"]["n"], s["by_exit"]["conv"]["mean"] or 0,
+               s["by_exit"]["forced"]["n"], s["by_exit"]["forced"]["mean"] or 0,
+               s["conv_pct"]))
+
+
 def index_records(legs, book=None, bk_from=None, bk_to=None):
     """`full` 레그 4종 → data/strategy_index.py 가 읽는 모양.
 
@@ -609,9 +825,9 @@ def index_records(legs, book=None, bk_from=None, bk_to=None):
       목록이 실행마다 달라진다 — 판정은 ⓐⓑ 에서 이미 갈렸으므로 결론이 바뀌지 않는다.
     """
     out = []
-    for rule in ("A", "B"):
+    for rule, size in COMBOS:
         sid0, nm0, rule_txt, why0 = NAMES[rule]
-        for size in SIZES:
+        if True:
             key = "%s%d" % (rule, size)
             r = (legs.get("full") or {}).get(key)
             if not r:
@@ -654,14 +870,7 @@ def index_records(legs, book=None, bk_from=None, bk_to=None):
                 "beta": round(s["beta"], 3) if s.get("beta") is not None else None,
                 "nav": r["nav"], "bnav": [100.0] * n, "dates": r["dates"],
                 "holdings": hold,
-                "note": ("총수익(거래비용 전) 월 %+.3f%% · t_NW %.2f — 비용을 넣기 전에 이미 0이다. "
-                         "수렴 청산 %d건 평균 %+.2f%% 대 기간종료 강제청산 %d건 평균 %+.2f%% 로 "
-                         "둘이 상쇄된다(수렴률 %.0f%%). Corwin-Schultz 유효스프레드를 1/10 로 "
-                         "줄여도 |t| < 0.5 라 비용 가정이 판정을 바꾸지 않는다."
-                         % (s["gross_mo"], s["gross_t_nw"] or 0,
-                            s["by_exit"]["conv"]["n"], s["by_exit"]["conv"]["mean"] or 0,
-                            s["by_exit"]["forced"]["n"], s["by_exit"]["forced"]["mean"] or 0,
-                            s["conv_pct"])),
+                "note": _note(s),
             })
     return out
 
@@ -708,13 +917,13 @@ def main() -> int:
     print(hdr)
     print("=" * len(hdr))
     for lg in ("full", "sub", "pit"):
-        for key in ("A5", "A20", "B5", "B20"):
+        for key in KEYS:
             r = (legs.get(lg) or {}).get(key)
             if not r:
                 continue
             s = r["stats"]
             print("%-6s %-5s %5d %8.3f %7.2f %7.2f %7.2f %7s %7.1f %6s %6.0f"
-                  % (lg, "GGR" if s["rule"] == "A" else "조합", s["size"], s["mo_mean"],
+                  % (lg, RLBL[s["rule"]], s["size"], s["mo_mean"],
                      s["cagr"] or 0, s["vol"], s["t_simple"] or 0,
                      "%.2f" % s["t_nw"] if s["t_nw"] is not None else "—",
                      s["mdd"], "%.2f" % s.get("beta", 0) if s.get("beta") is not None else "—",
@@ -725,13 +934,13 @@ def main() -> int:
     print("%-6s %-5s %4s %9s %9s %9s %9s %9s"
           % ("레그", "규칙", "N", "총 월%", "총 t_NW", "비용 월%", "순 월%", "순 t_NW"))
     for lg in ("full", "sub", "pit"):
-        for key in ("A5", "A20", "B5", "B20"):
+        for key in KEYS:
             r = (legs.get(lg) or {}).get(key)
             if not r:
                 continue
             s = r["stats"]
             print("%-6s %-5s %4d %9.3f %9s %9.3f %9.3f %9s"
-                  % (lg, "GGR" if s["rule"] == "A" else "조합", s["size"], s["gross_mo"],
+                  % (lg, RLBL[s["rule"]], s["size"], s["gross_mo"],
                      "%.2f" % s["gross_t_nw"] if s["gross_t_nw"] is not None else "—",
                      -s["cost_mo"], s["mo_mean"],
                      "%.2f" % s["t_nw"] if s["t_nw"] is not None else "—"))
@@ -739,14 +948,14 @@ def main() -> int:
     print("%-6s %-5s %4s %11s %11s %11s"
           % ("레그", "규칙", "N", "CS 그대로", "CS×0.5", "CS×0.1"))
     for lg in ("full", "sub", "pit"):
-        for key in ("A5", "A20", "B5", "B20"):
+        for key in KEYS:
             r = (legs.get(lg) or {}).get(key)
             if not r:
                 continue
             s = r["stats"]
             c = s["cost_sens"]
             print("%-6s %-5s %4d %11.3f %11s %11s"
-                  % (lg, "GGR" if s["rule"] == "A" else "조합", s["size"], s["mo_mean"],
+                  % (lg, RLBL[s["rule"]], s["size"], s["mo_mean"],
                      "%.3f(%.2f)" % (c["x0.5"]["mo_mean"], c["x0.5"]["t_nw"] or 0),
                      "%.3f(%.2f)" % (c["x0.1"]["mo_mean"], c["x0.1"]["t_nw"] or 0)))
 
@@ -754,16 +963,16 @@ def main() -> int:
     print("%-6s %-5s %4s %18s %18s %13s"
           % ("레그", "규칙", "N", "수렴 청산", "기간종료 강제", "총기여%"))
     for lg in ("full", "sub", "pit"):
-        for key in ("A5", "A20", "B5", "B20"):
+        for key in KEYS:
             r = (legs.get(lg) or {}).get(key)
-            if not r:
-                continue
+            if not r or "by_exit" not in r["stats"]:
+                continue          # C 는 트리거가 없어 청산 사유가 없다(결측이 아니라 설계다)
             e = r["stats"]["by_exit"]
 
             def f_(k, e=e):
                 return ("%d건 %+.2f" % (e[k]["n"], e[k]["mean"])) if e[k]["n"] else "—"
             print("%-6s %-5s %4d %18s %18s %13.1f"
-                  % (lg, "GGR" if r["stats"]["rule"] == "A" else "조합", r["stats"]["size"],
+                  % (lg, RLBL[r["stats"]["rule"]], r["stats"]["size"],
                      f_("conv"), f_("forced"),
                      e["conv"]["sum"] + e["forced"]["sum"] + e["dead"]["sum"]))
 
@@ -771,19 +980,33 @@ def main() -> int:
     print("%-6s %-5s %4s %7s %7s %7s %7s %8s %8s %8s"
           % ("레그", "규칙", "N", "코호트", "진입", "수렴%", "강제", "첫이틀%", "최악페어%", "후보부족"))
     for lg in ("full", "sub", "pit"):
-        for key in ("A5", "A20", "B5", "B20"):
+        for key in KEYS:
             r = (legs.get(lg) or {}).get(key)
             if not r:
                 continue
             s = r["stats"]
+            if s["rule"] == "C":
+                continue          # 진입/수렴/강제 개념이 없다 — 아래 전용 표로 뺀다
             print("%-6s %-5s %4d %7d %7d %6.1f%% %7d %7.1f%% %8.1f %8d"
-                  % (lg, "GGR" if s["rule"] == "A" else "조합", s["size"], s["n_cohort"],
+                  % (lg, RLBL[s["rule"]], s["size"], s["n_cohort"],
                      s["trades"], s["conv_pct"], s["forced"], s["day0_pct"],
                      s["worst_pair"], s["short_months"]))
 
+    print(chr(10) + "규칙 C(횡단면 최대괴리) 진단 — 이 규칙의 성패는 회전율과 총·순 격차가 가른다")
+    print("%-6s %6s %7s %9s %9s %9s %9s %9s"
+          % ("레그", "코호트", "회전율", "총수익월", "총t_NW", "비용월", "순수익월", "최악페어%"))
+    for lg in ("full", "sub", "pit"):
+        r = (legs.get(lg) or {}).get("C%d" % XS_SIZE)
+        if not r:
+            continue
+        s2 = r["stats"]
+        print("%-6s %6d %6.1f%% %+8.3f%% %9.2f %+8.3f%% %+8.3f%% %9.1f"
+              % (lg, s2["n_cohort"], s2["turnover_pct"], s2["gross_mo"], s2["gross_t_nw"],
+                 s2["cost_mo"], s2["mo_mean"], s2["worst_pair"]))
+
     # ── 생존편향 = sub − pit ──────────────────────────────────────────
     print("\n생존편향(sub − pit) — 🚨 full−pit 이 아니다. 창을 맞춘 두 계열의 차이만이 편향이다.")
-    for key in ("A5", "A20", "B5", "B20"):
+    for key in KEYS:
         a = (legs.get("sub") or {}).get(key)
         b = (legs.get("pit") or {}).get(key)
         if not (a and b):
@@ -796,7 +1019,7 @@ def main() -> int:
     # ── 게시 판정 (PREREG §3) ─────────────────────────────────────────
     print("\n게시 판정 — ⓐ t_NW>3.45 · ⓑ 순수익>0 · ⓒ pit 부호 유지 · ⓓ |β|<0.2")
     verdicts = {}
-    for key in ("A5", "A20", "B5", "B20"):
+    for key in KEYS:
         f = (legs.get("full") or {}).get(key)
         p = (legs.get("pit") or {}).get(key)
         if not f:
@@ -819,7 +1042,7 @@ def main() -> int:
 
     book, bk_from, bk_to = current_book(dates, ts, MATS, sec, dual)
     print("\n지금의 페어북(형성창 %s ~ %s)" % (bk_from, bk_to))
-    for key in ("A5", "B5", "A20", "B20"):
+    for key in KEYS:
         bk = book.get(key) or []
         print("  %-4s %2d쌍  %s%s"
               % (key, len(bk), " · ".join("%s/%s" % (p["a"], p["b"]) for p in bk[:8]),
