@@ -507,6 +507,39 @@ if pool:
                           "구멍이다(다른 것이 복제돼 자리를 채워도 안 걸린다)"
                           % (len(_lost), ", ".join(sorted(_lost)[:12])))
 
+        # 🚨 2026-09-03 — **「기각이라 적어 놓고 게시 목록에 그대로 둔다」를 잡는다.**
+        #   실측 사고: PREREG-2026-09-03-A1FIX-RESULT 가 「게시하지 않는다 … 판정은 철회한다」
+        #   「기각. x-a1payout 은 게시 목록에서 빠진다」라고 **두 번** 못박았는데, 그 규칙이
+        #   09-03 까지 게시 48종에 그대로 서 있었다. 같은 날 같이 기각된 형제 둘은 배선됐고
+        #   이것만 빠졌다 — 판정문·원장·HIDE_SIDS 셋을 **사람이 손으로** 맞춰야 하기 때문이다.
+        #   → 새 유형 「판정만 하고 안 배선」(«수집만 하고 안 배선» 의 판정 판).
+        #   ⚠ 판정문 본문을 파싱하지 않는다. 표현이 문서마다 다르고(81편) 제목 줄 규약도
+        #     최근 것에만 있어 거짓 양성이 난다. 대신 **기계가 읽는 원장**을 정본으로 삼는다 —
+        #     build/tested_not_published.json 에 실린 sid 는 게시 목록에 있으면 안 된다.
+        #     그 파일이 만들어진 이유가 정확히 이 사고다(2026-08-08: 이미 기각한 셋을
+        #     «한 번도 검정한 적 없는 칸» 이라 적고 재등록했다).
+        #   ⚠ 접두사 — 종목 규칙은 목록에서 `t-` 가 붙고(x-a1payout → t-x-a1payout),
+        #     자산 규칙은 원장이 이미 `a-` 를 달고 있다(a-dur-style-r). 둘 다 본다.
+        try:
+            _led = json.load(io.open(os.path.join(ROOT, "build", "tested_not_published.json"),
+                                     encoding="utf-8"))
+            # ⚠ `readmitted` 가 붙은 항목은 **다시 게시하기로 한 것**이라 목록에 있는 것이
+            #   맞다(실측 4종: x-fscore · x-amihud · x-turn · x-reta — 2026-08-12 게시 정책
+            #   변경으로 관문이 해제됐다). 원장이 그 사실을 이미 적고 있으므로 그것을 읽는다.
+            #   ⚠ 재편입을 이 검사에서 예외로 «하드코딩» 하지 않는다 — 자료가 말하게 둔다.
+            _led_sid = {_r.get("sid") for _r in (_led.get("items") or [])
+                        if _r.get("sid") and not _r.get("readmitted")}
+            _pub = {_it.get("sid") for _it in (_si.get("items") or []) if isinstance(_it, dict)}
+            _leak = sorted(_s for _s in _led_sid if _s in _pub or ("t-" + _s) in _pub)
+            if _leak:
+                errors.append(
+                    "기각 원장에 실린 규칙이 게시 목록에 그대로 있다 %d개: %s — "
+                    "build/tested_not_published.json 은 «검정했고 게시하지 않는다» 는 기록이다. "
+                    "strategy_index.py 의 HIDE_SIDS 에 넣거나, 게시가 맞다면 원장에서 뺄 것"
+                    % (len(_leak), ", ".join(_leak[:8])))
+        except FileNotFoundError:
+            pass
+
         # 🚨 2026-08-05 — 상세차트(strategy_charts.json)는 목록과 분리된 지연 로딩 파일이라
         #   랩을 다시 돌리고 차트를 안 구우면 **카드와 곡선이 다른 실행의 것**이 된다.
         #   실측으로 그 상태였다(차트 07:01 · 랩 15:56). x-52wh 처럼 그날 버그를 고친 규칙은
