@@ -507,6 +507,46 @@ if pool:
                           "구멍이다(다른 것이 복제돼 자리를 채워도 안 걸린다)"
                           % (len(_lost), ", ".join(sorted(_lost)[:12])))
 
+        # 🚨 2026-09-03 — **레그 선언(legs)이 실제와 맞는지 대조한다.**
+        #   strategy_index.json 은 basis='pit' 항목의 머리 숫자만 시점정확이고 곡선·구간수익·
+        #   승률·회전율은 **소급**이다. 실측: nav 역산 CAGR 이 metrics_retro 와 중앙 0.12%p 로
+        #   붙고 머리의 metrics 와는 중앙 4.50%p·최대 25.38%p 벌어진다(PIT 43종 중 42종).
+        #   그 넷에는 *_retro 짝조차 없어 **자료만 보고는 어느 레그인지 알 수 없었다.**
+        #   → strategy_index.py 가 legs 로 적게 했고, 여기서 그 선언을 실제와 댄다.
+        #   ⚠ 선언만 싣고 대조를 안 하면 선언이 낡아도 모른다(오늘 「표시용 계열」에서 얻은 교훈).
+        #   ⚠ 소수는 정상이다 — 두 레그가 거의 같은 규칙이 있다. 절반을 넘으면 선언이 뒤집힌 것이다.
+        # ⚠ 지역 임포트다. 이 파일의 `import datetime as _dt` 는 **1518행**이라 여기서는
+        #   아직 없다. 처음에 그것을 모르고 _dt 를 썼더니 NameError 가 아래 `except` 에
+        #   삼켜져 **모든 행이 건너뛰어지고 검사가 공허하게 통과**했다(선언을 뒤집어도
+        #   조용했다). 이 저장소가 경계하는 vacuous pass 를 검사기 안에서 만든 것이다.
+        import datetime as _dtg
+        _lgrows = [_r for _r in (_si.get("items") or []) if _r.get("basis") == "pit"]
+        if _lgrows and not (_si.get("legs") or {}):
+            errors.append("strategy_index.json 에 legs 선언이 없다 — basis='pit' 항목의 머리 "
+                          "숫자와 곡선·승률·회전율이 서로 다른 레그인데, 자료가 그 사실을 "
+                          "말하지 않으면 읽는 사람이 한 카드의 수를 같은 잣대로 읽는다")
+        _lgbad = 0
+        for _r in _lgrows:
+            _nv = _r.get("nav")
+            _m, _mr = (_r.get("metrics") or {}), (_r.get("metrics_retro") or {})
+            if not (_nv and _m.get("cagr") is not None and _mr.get("cagr") is not None):
+                continue
+            try:
+                _yr = ((_dtg.date.fromisoformat(_r["end"])
+                        - _dtg.date.fromisoformat(_r["start"])).days / 365.25)
+            except Exception:
+                continue
+            if _yr <= 0:
+                continue
+            _c = ((_nv[-1] / _nv[0]) ** (1 / _yr) - 1) * 100
+            if abs(_c - _m["cagr"]) < abs(_c - _mr["cagr"]):
+                _lgbad += 1              # 곡선이 선언(소급)이 아니라 PIT 쪽에 붙었다
+        if _lgrows and _lgbad > len(_lgrows) // 2:
+            errors.append(
+                "strategy_index.json 의 legs 선언이 실제와 뒤집혔다 — nav 를 «retro» 라 적어 "
+                "뒀는데 %d/%d 종이 metrics(PIT) 쪽을 재현한다. 레그를 바꿨다면 legs 선언과 "
+                "화면 설명을 같이 고칠 것" % (_lgbad, len(_lgrows)))
+
         # 🚨 2026-09-03 — **「기각이라 적어 놓고 게시 목록에 그대로 둔다」를 잡는다.**
         #   실측 사고: PREREG-2026-09-03-A1FIX-RESULT 가 「게시하지 않는다 … 판정은 철회한다」
         #   「기각. x-a1payout 은 게시 목록에서 빠진다」라고 **두 번** 못박았는데, 그 규칙이
