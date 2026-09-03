@@ -3007,6 +3007,19 @@ def load_fund(extra_dirs=()):
         _tk = j.get("t") or fn[:-5]
         rev, ni, dps = series("rev"), series("ni"), flow_series("dps")
         sh = series("sh") or annual("sh") or series("sho")
+        # 🚨 2026-09-03 — **이 계열이 연간 버킷에서 왔는지 표시한다.** 다른 태그는 전부
+        #   `*_a` 라는 별도 키로 노출돼 소비자가 「이건 연간이다」를 알 수 있는데(cfo_a ·
+        #   capex_a · bb_a …), sh 만 위 한 줄에서 **조용히 섞어** 같은 이름으로 내보낸다.
+        #   그래서 읽는 쪽이 분기 재무로 알고 45일 공시지연을 걸면 룩어헤드가 된다 —
+        #   연간(20-F·10-K)은 마감이 60~120일이라 45일에는 아직 제출 전이다.
+        #   실측 2026-09-03: 연간 버킷뿐인 8종(ARM·ASML·CCEP·FDXF·FER·NBIS·PDD·TRI)에서
+        #   최근 128개 월말 × 8종 = 1024칸 중 **73칸(7.1%)** 이 45일과 90일에서 다른 관측을
+        #   고른다. build/style_top_pdf.py 의 asof() 가 LAG_DAYS=45 를 쓰고 있었다
+        #   (같은 파일 ttm12 독스트링이 「45일을 쓰면 룩어헤드다」라고 스스로 적어 놓고,
+        #    「분기 재무만 쓰는 스타일은 연간 버킷을 안 탄다」는 전제를 달았는데 그 전제가
+        #    이 8종에서 거짓이었다). tech_backtest 자신은 FUND_LAG_DAYS=90 이라 무사했다.
+        #   ⚠ 값을 바꾸지 않고 **사실만 싣는다** — 소비자가 지연을 고르게 한다.
+        _sh_ann = bool(not series("sh") and annual("sh"))
         ep_a0, dp_a0 = annual("eps"), annual("dps")
         sh, ep, dps, sh_u, seam, ep_a, dp_a = split_trim(sh, ep, dps, _tk, ep_a0, dp_a0)
         if not sh:
@@ -3046,7 +3059,8 @@ def load_fund(extra_dirs=()):
         # cfo만으로 채우면 자본지출이 큰 업종이 통째로 좋아 보인다.
         fcf = sorted(((k, cfo[k] - capex[k]) for k in cfo if k in capex), reverse=True)
         if eq or sh or fcf or ep:
-            out[j.get("t") or fn[:-5]] = {"eq": eq, "sh": sh, "fcf": fcf, "eps": ep,
+            out[j.get("t") or fn[:-5]] = {"sh_ann": _sh_ann,   # sh 가 연간 버킷에서 왔나(위 주석)
+                                          "eq": eq, "sh": sh, "fcf": fcf, "eps": ep,
                                           "rev": rev, "ni": ni, "dps": dps,
                                           "asset": asset, "liab": liab,
                                           # 현금은 총액(달러)이라 분할과 무관 — split_trim 대상 아님.
