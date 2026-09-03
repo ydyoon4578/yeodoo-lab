@@ -38,7 +38,8 @@
     pending: [],
     dirty: false,
     ready: false,
-    loadErr: null
+    loadErr: null,
+    env: null             // 복호 실패한 봉투를 들고 있는다 — 옛 암호 시도를 로컬에서 한다
   };
 
   // ── 유틸 ────────────────────────────────────────────────────────────────
@@ -495,8 +496,13 @@
     try {
       var doc = await decDoc(env);
       S.doc = adoptDoc(doc);
+      S.env = null;
     } catch (e) {
       // 페이지 재잠금 암호가 바뀐 경우 — 봉투는 옛 암호다. 화면에서 옛 암호를 따로 받는다.
+      // 🚨 봉투를 들고 있는다 — 옛 암호 시도가 매번 GitHub 을 다시 부르면 (ㄱ) 느리고
+      //   (ㄴ) 비인증 GET 시간당 60회 제한에 걸려 «암호가 틀렸다» 로 위장된다. 실제로
+      //   그 구별을 못 해서 사용자가 «맞는 암호를 넣어도 안 열린다» 를 겪었다(2026-09-03).
+      S.env = env;
       S.loadErr = 'PWMISMATCH';
     }
   }
@@ -613,25 +619,72 @@
   }
 
   function showPwPrompt() {
+    var env = S.env;
+    var when = env && env.updated ? String(env.updated).slice(0, 10) : '?';
     var p = panel(
-      '<b>원장 암호 확인</b><p class="pnote">저장된 웹 원장이 현재 페이지 암호로 안 풀립니다 — ' +
-      '페이지를 다른 암호로 재잠금한 경우입니다. 원장을 저장할 때 쓴 암호를 입력하면 열고, ' +
-      '다음 저장부터는 현재 페이지 암호로 다시 잠급니다.</p>' +
-      '<input type="password" id="pfoldpw" placeholder="원장 저장 당시 암호">' +
-      '<button class="sb primary" id="pfoldgo">열기</button> <span id="pfolderr" class="perr"></span>');
+      '<b>웹 원장이 옛 암호로 잠겨 있습니다</b>' +
+      '<p class="pnote">저장소에 있는 웹 원장(' + esc(when) + ' 저장분)이 <b>지금 페이지 암호로는 안 열립니다</b>. ' +
+      '웹 원장은 저장할 때의 페이지 암호로 잠기는데, 그 뒤 페이지를 <b>다른 암호로 재잠금</b>하면 이렇게 됩니다. ' +
+      '아래 두 갈래 중 하나를 고르세요 — 어느 쪽이든 <b>지금 화면의 매매 내역은 그대로입니다</b>' +
+      '(화면은 사내 원장에서 직접 읽어 그립니다).</p>' +
+      '<p class="pnote"><b>① 그때 암호를 안다면</b> 여기에 넣으세요. 열면 지금 암호로 다시 잠급니다.</p>' +
+      '<input type="password" id="pfoldpw" placeholder="원장을 저장하던 시기의 암호">' +
+      '<button class="sb primary" id="pfoldgo">열기</button> <span id="pfolderr" class="perr"></span>' +
+      '<p class="pnote" style="margin-top:10px"><b>② 기억나지 않으면</b> 원장을 비우고 지금 암호로 새로 시작하면 됩니다. ' +
+      '옛 원장은 <b>git 이력에 그대로 남아</b> 나중에 암호가 기억나면 언제든 되살릴 수 있습니다(지워지지 않습니다).</p>' +
+      '<button class="sb warn" id="pfreset">원장 비우고 지금 암호로 새로 시작</button> ' +
+      '<span id="pfreseterr" class="perr"></span>');
+
     el('pfoldgo').addEventListener('click', async function () {
+      var msg = el('pfolderr');
+      msg.textContent = '';
+      if (!env) { msg.textContent = '봉투를 못 들고 있습니다 — 새로고침 후 다시 시도하세요.'; return; }
+      var pw = el('pfoldpw').value;
+      if (!pw) { msg.textContent = '암호를 입력하세요.'; return; }
+      var doc;
       try {
-        var pw = el('pfoldpw').value;
+        // 🚨 이미 받아 둔 봉투로 «로컬에서만» 시도한다 — 네트워크를 안 타므로 실패하면
+        //   원인은 오직 암호다. 종전에는 여기서 GitHub 을 다시 불러, 통신 실패까지
+        //   «암호가 틀렸다» 로 뭉뚱그렸다(오진의 근원).
         var km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-        var f = await ghGetFile();
-        var env = JSON.parse(new TextDecoder().decode(b64d(f.content)));
-        var doc = await decDoc(env, km);
+        doc = await decDoc(env, km);
+      } catch (e) {
+        msg.textContent = '이 암호로는 안 열립니다 — 다른 암호를 시도해 보세요.';
+        return;
+      }
+      try {
         S.doc = adoptDoc(doc);
-        S.base = { sha: f.sha, updated: env.updated || null };
-        S.loadErr = null;
+        S.loadErr = null; S.env = null;
         S.dirty = true;                             // 현재 암호로 재저장 유도
         renderAll();
-      } catch (e) { el('pfolderr').textContent = '그 암호로도 안 풀립니다.'; }
+        panel('원장을 열었습니다 — 매매 ' + S.doc.trades.length + '건. ' +
+              '<b>[GitHub에 저장]</b> 을 누르면 지금 페이지 암호로 다시 잠급니다.');
+      } catch (e2) {
+        msg.textContent = '열긴 했지만 내용이 예상 형식이 아닙니다: ' + esc(e2.message);
+      }
+    });
+
+    el('pfreset').addEventListener('click', async function () {
+      var msg = el('pfreseterr');
+      msg.textContent = '';
+      if (!token()) { onCfg(); return; }
+      if (!confirm('웹 원장을 빈 상태로 되돌립니다.\n\n' +
+                   '· 화면의 매매 내역은 사내 원장에서 오므로 그대로 남습니다.\n' +
+                   '· 옛 원장은 git 이력에 보존되어 나중에 되살릴 수 있습니다.\n\n' +
+                   '진행할까요?')) return;
+      try {
+        var body = JSON.stringify({ v: 1, empty: true,
+          note: '웹 원장 초기 상태 — 다음 저장이 AES-256-GCM 봉투로 대체한다' }) + '\n';
+        var cur = await ghGetFile();
+        await ghPut(b64e(new TextEncoder().encode(body)), cur && cur.sha,
+                    'portfolio: 웹 원장 초기화(옛 암호 봉투는 이력에 보존)');
+        S.env = null; S.loadErr = null;
+        await loadLedger();
+        renderAll();
+        panel('원장을 비웠습니다 — 이제 지금 암호로 저장됩니다. 옛 봉투는 git 이력에 남아 있습니다.');
+      } catch (e) {
+        msg.textContent = '초기화 실패: ' + esc(e.message);
+      }
     });
   }
 
