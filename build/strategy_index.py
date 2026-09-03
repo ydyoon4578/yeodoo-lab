@@ -1774,6 +1774,46 @@ def main() -> int:
     if _unl:
         print("  이웃이 미게시인 규칙 %d종 — 화면이 그 사실을 적는다" % _unl)
 
+    # ── 「PIT 로 통일하면 무엇이 바뀌나」를 **센다** ────────────────────────────
+    # 🚨 2026-09-03 — basis='pit' 항목의 승률은 소급 곡선에서 나온다(doc["legs"] 참조).
+    #   PIT 곡선으로 다시 재면 값이 내려가고, 사용자 문턱(승률 50% 미만 제외)에 걸리는
+    #   규칙이 생긴다. **그 수를 손으로 적지 않고 매 실행 센다** — 결정에 쓰는 수가 낡으면
+    #   결정 자체가 낡는다. 문턱 50 은 strategy_index 의 HIDE_SIDS 컷과 같은 값이다.
+    _WIN_CUT = 50.0
+    _SWITCH = {"cut": _WIN_CUT, "n_pit_rows": 0, "n_below_cut": 0,
+               "median_delta_pp": None, "would_publish": None}
+    try:
+        _pj = {_r["sid"]: _r for _r in ((load("pit_strategies.json") or {}).get("strategies") or [])}
+        _dl, _below = [], 0
+        for _r in rows:
+            if _r.get("basis") != "pit":
+                continue
+            _sid = _r["sid"][2:] if _r["sid"].startswith("t-") else _r["sid"]
+            _c = (_pj.get(_sid) or {}).get("chart") or {}
+            if not (_c.get("dates") and _c.get("nav")):
+                continue
+            _wn = winrate_of(_c["dates"], _c["nav"])
+            _wo = _r.get("winrate") or {}
+            if not (_wn and _wo.get("win") is not None):
+                continue
+            _SWITCH["n_pit_rows"] += 1
+            _dl.append(_wn["win"] - _wo["win"])
+            if _wn["win"] < _WIN_CUT:
+                _below += 1
+        _SWITCH["n_below_cut"] = _below
+        if _dl:
+            _dl.sort()
+            _SWITCH["median_delta_pp"] = round(_dl[len(_dl) // 2], 2)
+        _SWITCH["would_publish"] = len(rows) - _below
+    except Exception:
+        pass
+    _SWITCH_NOTE = (
+        "승률·곡선·회전율을 PIT 로 통일하면 승률이 중앙 %s%%p 움직이고, PIT 레그 %d종 중 "
+        "%d종이 문턱 %.0f%% 아래로 내려간다(게시 %d → 약 %s종). 문턱은 **소급 승률로 보정된 "
+        "값**이라 잣대를 바꾸면 문턱의 뜻도 바뀐다 — 사용자 결정 사항이다."
+        % (_SWITCH["median_delta_pp"], _SWITCH["n_pit_rows"], _SWITCH["n_below_cut"],
+           _WIN_CUT, len(rows), _SWITCH["would_publish"]))
+
     # ── 다중검정 분모를 **센다**(아래 doc["trials"] 주석 참조) ──────────────────
     def _sidset(path, key="strategies", pre=""):
         """산출물 하나의 sid 집합. 없으면 빈 집합(원천이 빠져도 죽지 않는다)."""
@@ -1844,8 +1884,11 @@ def main() -> int:
                          "nav_vs_metrics_retro_pp": {"median": 0.12, "max": 0.53},
                          "turnover_equals_retro": "43/43", "n_pit_rows": 43,
                          "when": "2026-09-03"},
-            "if_switched_to_pit": "승률을 PIT 곡선으로 다시 재면 43종 중 17종이 50% 문턱 "
-                                  "아래로 내려간다(게시 47 → 약 30종). 사용자 결정 사항이다.",
+            # 🚨 손으로 적지 않는다 — 아래에서 **세어** 넣는다. 처음에 "43종 중 17종" 이라고
+            #   내가 잰 값을 박아 뒀는데, 그러면 규칙이 늘거나 자료가 바뀔 때 조용히 낡는다
+            #   (이 저장소의 되풀이 결함 2번을 그 자리에서 다시 저지르는 것이다).
+            "if_switched_to_pit": _SWITCH_NOTE,
+            "switch_impact": _SWITCH,
         },
         # 🚨 gates·gates_note 를 안 옮긴다(2026-08-16 "관문, 문턱 다 없애"). 관문이 없으니
         #   그 상태를 실을 것도 없다. 원천(tech_backtest)에서 GATE_* 자체를 걷었다.
