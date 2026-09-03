@@ -184,5 +184,13 @@ jobs:
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
+      # 🚨 2026-09-03 — signal_lab.json 을 더한다. 이 잡이 107행에서 굽고 181행에서
+      #   **커밋까지 하는데** 신선도 검사가 없었다. 손으로 걸어 보면 멀쩡히 돈다 —
+      #   도구가 없는 게 아니라 **부르는 데가 없었다**(이 저장소의 되풀이 결함 1번).
+      #   ⚠ data/asof.json 의 signals 축 주석이 「종목 스냅샷과 같은 잡에서 같은 기준일로
+      #     굽는다 — 어긋나면 그건 사고다」라고 못박아 놨는데, 그 사고를 재는 곳이 없었다.
+      #     여기서는 «낡았나» 만 보고, «둘이 같은가» 는 validate_site 가 본다(짝을 이룬다).
       - name: Verify freshness
-        run: python build/check_freshness.py data/stocks.json "종목 시그널" 2
+        run: |
+          python build/check_freshness.py data/stocks.json "종목 시그널" 2
+          python build/check_freshness.py data/signal_lab.json "지표별 타이밍 신호" 2

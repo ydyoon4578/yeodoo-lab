@@ -65,3 +65,18 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 금리·FOMC 확률 자동 갱신" data/rates.json data/rates_overlay.json data/fedwatch.json data/home_perf.json
+      # 🚨 2026-09-03 — 신선도 검사를 더한다. **매일 도는 잡인데 하나도 없었다.**
+      #   관문(validate_gate)은 «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다.
+      #   크론이 조용히 드롭되면 잡은 초록인데 산출물만 낡는다.
+      #   ⚠ 겪고도 안 만들었던 자리다 — 이 잡의 과거 기록에 「08-22 부터 나흘간 금리·FedWatch 가
+      #     08-20 에 고착했다」가 남아 있는데 그때도 감시층이 안 생겼다. rates.html 은 «가격 축»
+      #     칩만 달고 있어 금리가 굳어도 화면이 초록이다.
+      #   ⚠ 둘 다 3(허용 2)이다. 처음에 rates 를 2 로 뒀다가 **실측으로 걸렸다** —
+      #     이 잡은 UTC 22:10 슬롯이라 실제로는 UTC 00시대에 도는데, 그때 당일 H.15 가
+      #     아직 안 나와 있어 as_of 가 T-2 인 것이 정상이다(실측 09-03 에 09-01).
+      #     fedwatch 도 CME 공표라 주말·휴장을 탄다. 문턱은 «고장» 을 잡는 선이지
+      #     «가장 빠른 정상» 을 재는 선이 아니다.
+      - name: Verify freshness
+        run: |
+          python build/check_freshness.py data/rates.json "금리 이력" 3
+          python build/check_freshness.py data/fedwatch.json "FOMC 확률" 3
