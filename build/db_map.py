@@ -63,6 +63,7 @@ def main():
     nt = json.load(io.open(NOTES, encoding="utf-8"))
     DBS = [tuple(x) for x in nt["dbs"]]; FINDINGS = [tuple(x) for x in nt["findings"]]
     HILITE = set(nt["hilite"]); FOOTER = nt["footer"]; CAPS = nt.get("caps", {})
+    DESCS = nt.get("descs", {})   # DB 주석이 빈 테이블의 설명 — 컬럼 스키마를 읽고 쓴 것
     P = []; A = P.append
 
     A('<style>')
@@ -105,6 +106,11 @@ def main():
     A('.dbtbl td.rw{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}')
     A('.dbtbl td.ds{color:var(--muted);font-size:12.5px;line-height:1.55}')
     A('.dbtbl tr.hi td.nm{color:var(--accent)} .dbtbl tr.hi td.rw{color:var(--ink)}')
+    A('.dbtbl td.ds b{color:var(--ink);font-weight:600}')
+    A('.dbtbl td.drv{border-left:2px solid var(--line)}')
+    A('.dblegend{margin:0 0 11px;font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}')
+    A('.dblegend span{display:flex;align-items:center;gap:6px}')
+    A('.dblegend em{font-style:normal;width:14px;height:0;border-top:2px solid var(--line);display:inline-block}')
     A('.dbmore{padding:9px 11px;font-size:12px;color:var(--muted);font-family:var(--mono);border-top:1px solid var(--line);background:var(--panel-2)}')
     A('.dbfoot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}')
     A('.dbfoot h4{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 9px;font-weight:600}')
@@ -138,6 +144,12 @@ def main():
     A('</div>')
 
     A('<h3 class="dbh2">데이터베이스별 테이블</h3>')
+    _drv = sum(1 for db in cat.values() if isinstance(db, list) for t in keep_of(db)
+               if not (t.get("comment") or "").strip()
+               and "%s.%s" % (t["schema_name"], t["table_name"]) in DESCS)
+    A('<div class="dblegend"><span>설명 %d개 — DB 주석 %d, '
+      '<em></em> 왼쪽 선은 주석이 없어 컬럼 스키마를 읽고 쓴 것 %d</span></div>'
+      % (kept, kept - _drv, _drv))
     for key, label, note in DBS:
         ts = cat.get(key, [])
         if not isinstance(ts, list): continue
@@ -153,10 +165,18 @@ def main():
             full = "%s.%s" % (t["schema_name"], t["table_name"])
             c = re.sub(r"\s+", " ", (t.get("comment") or "")).strip()
             c = re.sub(r"\s*·\s*원천\s.*$", "", c)
-            if len(c) > 145: c = c[:143] + "…"
-            A('<tr%s><td class="sc">%s</td><td class="nm">%s</td><td class="rw">%s</td><td class="ds">%s</td></tr>'
+            # DB 주석이 비었으면 유도 설명으로 채우고, 그 사실을 표식으로 남긴다 —
+            # 원천이 다르니 화면에서도 구분되어야 한다(DB 가 말한 것 vs 우리가 읽고 쓴 것).
+            derived = False
+            if not c:
+                c = DESCS.get(full, ""); derived = bool(c)
+            if len(c) > 165: c = c[:163] + "…"
+            cell = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", html.escape(c))
+            A('<tr%s><td class="sc">%s</td><td class="nm">%s</td><td class="rw">%s</td>'
+              '<td class="ds%s">%s</td></tr>'
               % (' class="hi"' if full in HILITE else "", html.escape(t["schema_name"]),
-                 html.escape(t["table_name"]), fmt(nrows(t.get("approx_rows"))), html.escape(c)))
+                 html.escape(t["table_name"]), fmt(nrows(t.get("approx_rows"))),
+                 " drv" if derived else "", cell))
         A('</tbody></table>')
         if len(k) > cap:
             A(f'<div class="dbmore">행수 하위 {len(k)-cap}개 생략 — 대부분 ciq* 코드 마스터와 Compustat 레거시(co_*·sec_*·idx_*)다</div>')
