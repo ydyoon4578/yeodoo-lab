@@ -103,39 +103,19 @@ def prepare(ST, P=None, window=None, quiet=False):
     #     마스크가 풀린 것을 못 보게 되는데, 그것이 바로 아래 gapless 검사가 막으려는 실패다.
     #   ⚠ 이월은 선견이 아니다 — 9월 1일에 알 수 있는 최신 명단은 8월 명단이다.
     #     pit_backtest.py 는 같은 자리를 `if m: cur = m`(직전 달 유지)로 이미 이렇게 다룬다.
+    # ⚠ 2026-09-03 오후 — 이 규약을 **index_members.at 한 곳으로 옮겼다.** 오전에 여기
+    #   인라인으로 넣었는데, 같은 결함이 tech_backtest.ndx_members 와 pit_backtest.members_at
+    #   에도 있는 것이 그날 점검에서 드러났다. 세 벌로 두면 반드시 갈린다(이 저장소의
+    #   되풀이 결함 3번). 한도·이월 규칙·경고 문구가 이제 한 곳에 있다.
     _MK = sorted(k for k, v in mem.items() if v)
     _LAST = _MK[-1] if _MK else None
-    CARRY_MAX_M = 2          # 주 1회 갱신이라 정상 최대치는 1달. 2를 넘으면 수집이 죽은 것이다.
-
-    def _months_after(k):
-        """월 키 k 가 마지막 알려진 달보다 몇 달 뒤인가(같으면 0, 앞이면 음수)."""
-        return (int(k[:4]) - int(_LAST[:4])) * 12 + (int(k[5:7]) - int(_LAST[5:7]))
-
-    _carry_gap = 0
-    if _LAST:
-        _carry_gap = max(0, _months_after(P.dates[end][:7]))
-        if _carry_gap > CARRY_MAX_M:
-            raise SystemExit(
-                "멤버십 지도가 %s 에서 멈췄는데 가격 패널은 %s 다(%d달 차) — 이월 한도 %d달을 "
-                "넘었다. 한 분기 묵은 명단을 «PIT» 이라 부르며 내보내지 않는다. "
-                "`python build/refresh_index_history.py` 가 왜 안 도는지 볼 것"
-                % (_LAST, P.dates[end], _carry_gap, CARRY_MAX_M))
-        if _carry_gap:
-            say("  ⚠ 멤버십 %s 까지만 있다 — %s 은 %s 명단을 이월한다(주 1회 갱신이라 정상)"
-                % (_LAST, P.dates[end][:7], _LAST))
 
     def members_at(i):
-        """그 달 멤버 — pit_backtest.py 와 같은 정의(월 키 조회).
+        """그 달 멤버 — pit_backtest.py 와 **같은 함수**를 쓴다(index_members.at)."""
+        return index_members.at(mem, P.dates[i][:7], label="멤버십", say=say)
 
-        마지막 알려진 달 **뒤**의 달만 그 달 명단으로 이월한다(위 주석). 안쪽은 이월하지 않는다.
-        """
-        k = P.dates[i][:7]
-        v = mem.get(k)
-        if v:
-            return set(v)
-        if _LAST and k > _LAST:
-            return set(mem.get(_LAST) or [])
-        return set()
+    if _LAST:
+        members_at(end)          # 꼬리 이월·한도 판정을 여기서 한 번 미리 태운다
 
     # 멤버십이 창을 덮는지 먼저 본다. 한 달이라도 비면 그 달은 마스크가 통째로 풀려
     # 조용히 생존자 백테스트로 되돌아간다 — 그것이 막아야 할 실패다.
