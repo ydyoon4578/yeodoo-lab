@@ -2064,6 +2064,88 @@ try:
                 f"build/style_pit.py 를 다시 돌릴 것 — 그 끝에서 캐비엇을 다시 찍는다")
 except Exception as _e:
     print(f"⚠ 편향 캐비엇 기준일 검사 실패: {_e}")
+
+# ── 다중검정 분모를 **손으로 적은 자리**가 또 생겼는가 ─────────────────────────
+# 🚨 2026-09-03 — 시행 수 N 이 산문에만 있어 낡아 있었다. 실측: 전 원천 sid 합집합이 440 인데
+#   build/report_durstyle_pdf.py 는 상수로 「시행 304회」, PREREG-2026-09-03-BMROT-RESULT 는
+#   「311」이라 적었다. 세 수가 다 다르다.
+#   → strategy_index.json 이 trials.n 을 **세어 싣게** 했고, 살아 있는 소비자는 그것을 읽는다.
+#   이 검사는 **build/*.py 에 다시 손으로 박히는 것**을 잡는다(RESULT.md 는 그때의 기록이므로
+#   대상이 아니다 — 기록을 나중에 손대는 것이 더 나쁘다).
+try:
+    _tn = ((json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"), encoding="utf-8"))
+            .get("trials") or {}).get("n"))
+    if _tn:
+        _hard = []
+        for _f in sorted(os.listdir(os.path.join(ROOT, "build"))):
+            if not _f.endswith(".py"):
+                continue
+            _s = io.open(os.path.join(ROOT, "build", _f), encoding="utf-8").read()
+            # 주석은 걷어낸다 — 사고 기록에 옛 수가 적혀 있는 것은 정상이다.
+            _live = "\n".join(_l.split("#", 1)[0] for _l in _s.split("\n"))
+            for _m in re.finditer(r"시행\s*(\d{2,4})\s*회", _live):
+                if int(_m.group(1)) != _tn:
+                    _hard.append("%s(%s회)" % (_f, _m.group(1)))
+        if _hard:
+            errors.append(
+                "다중검정 분모를 손으로 적은 자리 %d곳: %s — 지금 실측은 %d회다. "
+                "strategy_index.json 의 trials.n 을 읽을 것(손으로 적은 수는 낡는다)"
+                % (len(_hard), ", ".join(_hard[:4]), _tn))
+        else:
+            print("  ~ 다중검정 분모 대조 통과(실측 %d회 · 손으로 박힌 자리 0곳)" % _tn)
+except Exception as _e:
+    print("⚠ 다중검정 분모 대조 실패: %s" % _e)
+
+# ── 사전등록 규율: 「계산 전 커밋」이 **검증 가능한가** ─────────────────────────
+# 🚨 2026-09-03 — 이 랩의 신뢰는 「등록을 먼저 커밋하고 그 다음에 계산했다」에 걸려 있다.
+#   RESULT 문서마다 그 해시를 적어 두는데, **그 해시가 실제로 증명이 되는지는 아무도 안 봤다.**
+#   전수 실측(RESULT 61편):
+#       31편  등록 커밋이 결과 커밋의 조상 — 정상, 기계로 증명된다
+#       20편  계산 전 커밋 해시가 아예 없다
+#        9편  해시는 진짜 등록 커밋인데 **main 의 조상이 아니다**(리베이스로 떨어진 고아)
+#        1편  해시가 저장소에 없는 개체다 — PREREG-2026-08-04-RESULT.md 의 14b1aa5
+#   ⚠ 고아 9편은 **내용상으로는 결백하다** — 커밋 개체가 실재하고 날짜·메시지가 등록 그대로다.
+#     문제는 증명이 삭아 간다는 것이다: 고아는 언젠가 gc 되고, 그때 14b1aa5 처럼 사라진다.
+#     즉 1편은 사고가 아니라 **9편의 미래**다.
+#   → 옛 문서를 고쳐 쓰지 않는다(기록을 나중에 손대는 것이 더 나쁘다). 대신 **앞으로**를
+#     강제한다 — 오늘 이후 날짜의 등록은 «main 의 조상인» 해시를 적어야 한다.
+#     그리고 현재 분포를 매 실행 찍어 조용히 삭지 않게 한다.
+try:
+    import subprocess as _sp2
+    _CUT = "2026-09-03"          # 이 날짜 이후 등록부터 강제한다(옛 문서는 소급 적용 안 한다)
+    _pr = {"ok": 0, "nohash": [], "bad": [], "orphan": []}
+    for _fn in sorted(os.listdir(os.path.join(ROOT, "build"))):
+        if not (_fn.startswith("PREREG-") and _fn.endswith("-RESULT.md")):
+            continue
+        _dm = re.match(r"PREREG-(\d{4}-\d{2}-\d{2})-", _fn)
+        _new = bool(_dm and _dm.group(1) >= _CUT)
+        _txt = io.open(os.path.join(ROOT, "build", _fn), encoding="utf-8").read()
+        _hm = re.search(r"커밋\s*[`'\"]?([0-9a-f]{7,40})", _txt)
+        if not _hm:
+            _pr["nohash"].append((_fn, _new)); continue
+        _h = _hm.group(1)
+        if _sp2.run(["git", "cat-file", "-e", _h + "^{commit}"], cwd=ROOT,
+                    stdout=_sp2.DEVNULL, stderr=_sp2.DEVNULL).returncode != 0:
+            _pr["bad"].append((_fn, _h, _new)); continue
+        if _sp2.run(["git", "merge-base", "--is-ancestor", _h, "HEAD"], cwd=ROOT,
+                    stdout=_sp2.DEVNULL, stderr=_sp2.DEVNULL).returncode != 0:
+            _pr["orphan"].append((_fn, _h, _new)); continue
+        _pr["ok"] += 1
+    _newbad = ([f for f, n in _pr["nohash"] if n]
+               + [f for f, _h, n in _pr["bad"] if n]
+               + [f for f, _h, n in _pr["orphan"] if n])
+    if _newbad:
+        errors.append(
+            "사전등록 %d편이 «계산 전 커밋» 을 증명하지 못한다: %s — %s 이후 등록은 "
+            "해시가 있어야 하고 그것이 **main 의 조상**이어야 한다(고아 커밋은 gc 되면 "
+            "증명이 사라진다. 실측으로 이미 한 편이 그렇게 사라졌다)"
+            % (len(_newbad), ", ".join(sorted(_newbad)[:4]), _CUT))
+    print("  ~ 사전등록 해시 대조 — 증명됨 %d편 · 해시 없음 %d · 고아 %d · 개체 없음 %d "
+          "(%s 이전은 소급 적용하지 않는다)"
+          % (_pr["ok"], len(_pr["nohash"]), len(_pr["orphan"]), len(_pr["bad"]), _CUT))
+except Exception as _e:
+    print("⚠ 사전등록 해시 대조 실패: %s" % _e)
+
 # ── 가격 패널 길이: 본체와 상세가 같은 좌표계인가 ──────────────────────────
 #   stocks.json 의 bms/sms 는 pxd_dates 에 대한 **위치 인덱스**다. 본체와 data/sd 가
 #   다른 커밋에서 오면 타점이 엉뚱한 날짜를 가리키는데, 길이만 재면 기계적으로 잡힌다.
