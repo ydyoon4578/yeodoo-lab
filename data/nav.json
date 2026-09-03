@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "d564f88593a4ea44",
+ "generated_from": "a9fc6fef2f9031db",
  "categories": [
   {
    "name": "시장",
@@ -209,6 +209,17 @@
      "verdict": "na",
      "src": "none",
      "effort": "S",
+     "locked": true,
+     "live": true
+    },
+    {
+     "name": "사내 DB 지도",
+     "file": "db.html",
+     "status": "existing",
+     "desc": "사내 DB 7곳 테이블 전수와 안내문이 틀린 지점 · 🔒 열람 잠금",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "M",
      "locked": true,
      "live": true
     }

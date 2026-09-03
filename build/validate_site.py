@@ -225,7 +225,9 @@ GATE_PLAIN = {"kb.html": "kb_content.html",
               #   기본값이 조용히 틀리는 자리라, 잠금 페이지를 늘릴 때 같이 늘려야 한다.
               "ok.html": "ok_content.html",
               # 2026-08-20 — 운용 포트폴리오(실펀드). 조각 생성은 build/portfolio_fund.py(로컬 전용).
-              "portfolio.html": "portfolio_content.html"}
+              "portfolio.html": "portfolio_content.html",
+              # 2026-09-03 — 사내 DB 지도. 조각 생성은 build/db_map.py(로컬 전용).
+              "db.html": "db_content.html"}
 import base64 as _b64
 import hashlib as _hl
 # kb.html 은 이미 PAGES 안에 있다(루트의 '_' 로 시작하지 않는 모든 .html). 그냥 이어 붙이면

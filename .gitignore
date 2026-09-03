@@ -103,3 +103,7 @@ data/_style_score.json
 # 스타일 점수 로테이션 얼린 측정(build/ssrot.py) — 자동 재굽기 금지.
 #   PREREG-2026-09-03-SSROT 에서 기각됐다.
 data/_ssrot.json
+# 사내 DB 카탈로그 원본(스키마·테이블명). 공개 저장소라 평문 반입 금지 — db.html 은 암호문으로만 게시한다
+build/db_catalog.json
+# 사내 DB 지도의 문안(함정 설명·조인키). 생성기는 추적하되 문안은 반입 금지
+build/db_notes.json

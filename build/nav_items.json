@@ -194,6 +194,16 @@
      "verdict": "na",
      "effort": "S",
      "locked": true
+    },
+    {
+     "file": "db.html",
+     "name": "사내 DB 지도",
+     "desc": "사내 DB 7곳 테이블 전수와 안내문이 틀린 지점 · 🔒 열람 잠금",
+     "src": "raw",
+     "status": "existing",
+     "effort": "M",
+     "verdict": "na",
+     "locked": true
     }
    ]
   }

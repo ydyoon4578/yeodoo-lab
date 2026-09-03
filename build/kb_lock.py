@@ -57,6 +57,10 @@ PAGES = {
     # 2026-08-20 — 운용 포트폴리오(실펀드 보유·매매·성과 기여). 조각은 build/portfolio_fund.py 가
     # 사내 export(NAV·환율·해외)와 사내 DB 에서 굽는다 — 실펀드 수치라 평문 게시 불가.
     "portfolio": ("portfolio.html", "portfolio_content.html"),
+    # 2026-09-03 — 사내 DB 지도. 이 랩은 공개 저장소인데 조각은 사내 게이트웨이 주소·DB 스키마·
+    #   테이블명을 담는다. 평문 게시 불가라 다섯 번째 잠금 페이지가 됐다.
+    #   조각은 build/db_map.py 가 build/db_catalog.json 에서 굽는다(로컬 전용 — 러너엔 입력이 없다).
+    "db":        ("db.html",        "db_content.html"),
 }
 # 조각 → 그것을 굽는 빌더. 조각이 빌더보다 낡았으면 잠그기 전에 막는다(아래 가드).
 BUILDERS = {

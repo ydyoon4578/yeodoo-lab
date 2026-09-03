@@ -40,6 +40,8 @@ PAGES = {
     "ok":      ("ok.html",      "ok_content.html",      '<div id="content" hidden></div>',   "div"),
     # 2026-08-20 — 운용 포트폴리오. 셸은 sources.html 에서 떴으므로 슬롯 형태가 같다.
     "portfolio": ("portfolio.html", "portfolio_content.html", '<div id="content" hidden></div>', "div"),
+    # 2026-09-03 — 사내 DB 지도. 셸은 sources.html 에서 떴으므로 슬롯 형태가 같다.
+    "db":      ("db.html",      "db_content.html",      '<div id="content" hidden></div>',   "div"),
 }
 
 
