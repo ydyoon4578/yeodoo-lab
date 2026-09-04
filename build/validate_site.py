@@ -2943,7 +2943,22 @@ try:
         _sl = json.load(io.open(os.path.join(ROOT, "data", "signal_lab.json"), encoding="utf-8"))
         _st = json.load(io.open(os.path.join(ROOT, "data", "stocks.json"), encoding="utf-8"))
         _sa, _ta = _sl.get("as_of"), _st.get("as_of")
-        if _sa and _ta and _sa != _ta:
+        # 🚨 2026-09-04 — **먼저 stocks.json 안을 본다.** 이 검사를 넣은 다음 날 걸렸는데
+        #   원인이 signal_lab 이 아니었다. stocks.json 스스로 as_of 와 pxd_dates[-1] 이
+        #   달랐다 — as_of 는 «유령 거래일» 필터 **전**의 최대 날짜로 잡히는데 그 필터가
+        #   커버리지 미달인 마지막 날을 격자에서 지웠다.
+        #   실측: 「2026-09-03 커버 **0.6%**(3종)」로 지워 놓고 기준일은 09-03 이라 적었다.
+        #   signal_lab 은 pxd_dates[-1](=09-02)을 쓰므로 «신호가 어긋났다» 로 보였지만
+        #   실제로는 **화면 기준일이 격자에 없는 날을 가리키고 있었다.**
+        #   → 원인 파일을 먼저 지목한다. 아래 두 파일 대조는 그대로 두되 순서를 이렇게 둔다.
+        _pxl = (_st.get("pxd_dates") or [None])[-1]
+        if _ta and _pxl and _ta != _pxl:
+            errors.append(
+                "stocks.json 의 기준일이 자기 격자에 없는 날이다 — as_of %s vs "
+                "pxd_dates 마지막 %s. «유령 거래일» 필터(_cov >= 0.5)가 지운 날을 그대로 "
+                "기준일로 적으면 화면이 «그날 가격이 있다» 고 말하게 된다. "
+                "build/refresh_stocks.py 가 필터 뒤 격자로 맞춘다" % (_ta, _pxl))
+        elif _sa and _ta and _sa != _ta:
             errors.append(
                 "지표별 타이밍 신호와 종목 스냅샷의 기준일이 다르다 — signal_lab %s vs "
                 "stocks %s. 둘은 refresh-stocks.yml 의 **같은 실행**에서 같은 격자로 구워야 "
