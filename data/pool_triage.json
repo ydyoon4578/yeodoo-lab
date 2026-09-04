@@ -1,0 +1,966 @@
+{
+ "note": "탐색 풀 카드가 «왜 아직 안 쟀나» 를 말한다. 판정 넷 — measured(이미 쟀다) · ready(구현만 하면 된다) · no_input(랩에 그 자료가 없다) · underspec(원문이 수를 안 적었다). 🚨 underspec 에 기본값을 정하지 않는다 — 폐기한 자유도를 되살리는 것이다(PREREG-2026-08-29-ASWRITTEN).",
+ "method": "heuristic",
+ "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
+ "n": 116,
+ "counts": {
+  "measured": 40,
+  "underspec": 40,
+  "no_input": 10,
+  "ready": 26
+ },
+ "cards": {
+  "A1": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "자사주매입+배당성장",
+   "cat": "A"
+  },
+  "A2": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "시장 국면 연동 팩터 로테이션",
+   "cat": "A"
+  },
+  "A3": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "퀄리티 (Quality Minus Junk, QMJ)",
+   "cat": "A"
+  },
+  "A4": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "저변동성 / 최소분산 (Low Volatility / Minimum Variance)",
+   "cat": "A"
+  },
+  "A5": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "횡단면 모멘텀 (Cross-Sectional Momentum)",
+   "cat": "A"
+  },
+  "A6": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 편입). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 편입"
+   ],
+   "name": "가치+모멘텀 멀티팩터 (Value and Momentum Everywhere)",
+   "cat": "A"
+  },
+  "A7": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "경기순환 섹터 로테이션 (Business-Cycle Sector Rotation)",
+   "cat": "A"
+  },
+  "A10": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 지배구조 자료",
+   "hits": [
+    "지배구조"
+   ],
+   "name": "주주권리·반인수장치 지배구조 스크린 (Shareholder Rights / Anti-Takeover Governance Screen)",
+   "cat": "A"
+  },
+  "A11": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "종업원 만족도 인적자본 (Employee Satisfaction / Human Capital Intangible)",
+   "cat": "A"
+  },
+  "A12": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "애널리스트 의견불일치 회피 (Analyst Forecast Dispersion / Disagreement Avoidance)",
+   "cat": "A"
+  },
+  "A13": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 신평사 등급",
+   "hits": [
+    "신평사"
+   ],
+   "name": "신용등급 하향 드리프트 회피 (Credit Rating Downgrade Drift / Distress Avoidance)",
+   "cat": "A"
+  },
+  "B1": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "[><≥≤]\\s*-?\\d",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "어닝 모멘텀+애널리스트 리비전",
+   "cat": "B"
+  },
+  "B2": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "기술적 브레이크아웃",
+   "cat": "B"
+  },
+  "B3": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 연구개발비(R&D)",
+   "hits": [
+    "R&D자본"
+   ],
+   "name": "혁신 효율 팩터 (Innovative Efficiency)",
+   "cat": "B"
+  },
+  "B4": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "잔차 모멘텀 (Residual / Idiosyncratic Momentum)",
+   "cat": "B"
+  },
+  "B5": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "프로그인더팬 모멘텀 (Frog-in-the-Pan)",
+   "cat": "B"
+  },
+  "B7": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "공급망 고객사 모멘텀 (Customer-Supplier Economic-Links Momentum)",
+   "cat": "B"
+  },
+  "B8": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 옵션 자료",
+   "hits": [
+    "내재변동성"
+   ],
+   "name": "옵션 내재 변동성 스큐 신호 (Option-Implied Volatility Skew Signal)",
+   "cat": "B"
+  },
+  "C1": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "월말 효과 (Turn of the Month)",
+   "cat": "C"
+  },
+  "C2": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "Pre-FOMC 드리프트",
+   "cat": "C"
+  },
+  "C3": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "할로윈 효과 (Sell in May and Go Away)",
+   "cat": "C"
+  },
+  "C4": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "오버나이트 드리프트 (야간 수익 프리미엄)",
+   "cat": "C"
+  },
+  "C5": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "단기 평균회귀 진입 (Short-Term Reversal / RSI-2 + VIX 필터)",
+   "cat": "C"
+  },
+  "C6": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "옵션 만기 주간 효과 (Option-Expiration Week Effect)",
+   "cat": "C"
+  },
+  "C7": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (하위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "하위 분위"
+   ],
+   "name": "세금손실매도 반등 (Tax-Loss Selling Rebound / Turn-of-the-Year)",
+   "cat": "C"
+  },
+  "C10": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "휴일 전 효과 (Pre-Holiday Effect)",
+   "cat": "C"
+  },
+  "C11": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "VIX 기간구조 극단 역발상 게이트 (VIX Term-Structure Contrarian Timing)",
+   "cat": "C"
+  },
+  "C12": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "시장 인트라데이 모멘텀 (Market Intraday Momentum)",
+   "cat": "C"
+  },
+  "C13": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "투자자 심리 극단 역발상 게이트 (Sentiment-Extreme Contrarian Timing)",
+   "cat": "C"
+  },
+  "C14": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "달러 캐리 타이밍 (Dollar Carry Trade)",
+   "cat": "C"
+  },
+  "D1": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "변동성 타게팅",
+   "cat": "D"
+  },
+  "D2": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "리스크 패리티 (동일위험기여, ERC)",
+   "cat": "D"
+  },
+  "D3": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "추세추종 전술적 자산배분 (Faber GTAA)",
+   "cat": "D"
+  },
+  "D4": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "테일 리스크 헤지 (컨벡스 옵션)",
+   "cat": "D"
+  },
+  "D5": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "CPPI (일정비율 포트폴리오 보험)",
+   "cat": "D"
+  },
+  "D6": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "레짐 기반 동적 배분 (마르코프 스위칭·터뷸런스)",
+   "cat": "D"
+  },
+  "D7": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "국가 모멘텀 글로벌 지수 로테이션 (Country Momentum Rotation)",
+   "cat": "D"
+  },
+  "D8": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "채권 롤다운 캐리 (Fixed Income Roll-Down Carry)",
+   "cat": "D"
+  },
+  "D9": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "인플레이션 국면 멀티에셋 배분 (Inflation-Regime Multi-Asset Allocation)",
+   "cat": "D"
+  },
+  "D10": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "초과 CAPE 수익률 동적배분 (Excess CAPE Yield Dynamic Allocation)",
+   "cat": "D"
+  },
+  "D11": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "듀얼 모멘텀 (Dual / Absolute Momentum)",
+   "cat": "D"
+  },
+  "D12": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "국가 CAPE 밸류 로테이션 (Country CAPE Value Rotation)",
+   "cat": "D"
+  },
+  "D13": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "금리 국면 스타일 로테이션 (Equity Duration Style Rotation)",
+   "cat": "D"
+  },
+  "E1": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "타임시리즈 모멘텀 (MOP)",
+   "cat": "E"
+  },
+  "E2": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*종목",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "저변동성 아노말리 / BAB",
+   "cat": "E"
+  },
+  "E3": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "밸류 (HML, 북투마켓 프리미엄)",
+   "cat": "E"
+  },
+  "E4": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "실적서프라이즈 드리프트 (PEAD)",
+   "cat": "E"
+  },
+  "E5": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "캐리 (Carry, 멀티에셋)",
+   "cat": "E"
+  },
+  "E6": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "합병차익거래 (Merger Arbitrage / Risk Arb)",
+   "cat": "E"
+  },
+  "E7": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "[0-9]+\\s*분위"
+   ],
+   "name": "발생액 아노말리 (Accruals Anomaly)",
+   "cat": "E"
+  },
+  "E8": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "자산성장 아노말리 (Asset Growth Effect)",
+   "cat": "E"
+  },
+  "E9": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "변동성 리스크 프리미엄 (VRP / 숏볼)",
+   "cat": "E"
+  },
+  "E10": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "페어 트레이딩 / 통계적 차익거래 (Cointegration Pairs Trading)",
+   "cat": "E"
+  },
+  "E11": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "내부자 매수 추종 (Insider Buying / Form 4 Net Purchases)",
+   "cat": "E"
+  },
+  "E12": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
+   ],
+   "name": "인덱스 리밸런싱 이벤트 (지수 편입·제외 효과)",
+   "cat": "E"
+  },
+  "E13": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 스핀오프 이벤트",
+   "hits": [
+    "스핀오프"
+   ],
+   "name": "스핀오프 아노말리 (Spin-Off Anomaly)",
+   "cat": "E"
+  },
+  "E14": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "공매도 잔량·Days-to-Cover 숏프레셔 (Short Interest / Squeeze)",
+   "cat": "E"
+  },
+  "E15": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 실적 콜 전문",
+   "hits": [
+    "트랜스크립트"
+   ],
+   "name": "어닝콜 센티먼트 (텍스트·NLP 톤 시그널)",
+   "cat": "E"
+  },
+  "E16": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "Piotroski F-Score (재무건전성 9점 스코어)",
+   "cat": "E"
+  },
+  "E17": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "\\d+\\s*종목",
+    "\\d+\\s*[-~]\\s*\\d+\\s*종목",
+    "[><≥≤]\\s*-?\\d",
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
+   ],
+   "name": "Graham 넷넷(NCAV) 딥밸류",
+   "cat": "E"
+  },
+  "E18": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "복권선호 회피 (MAX 효과)",
+   "cat": "E"
+  },
+  "E19": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "유동성 프리미엄 (Amihud 비유동성, ILLIQ/IML)",
+   "cat": "E"
+  },
+  "E20": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "[><≥≤]\\s*-?\\d",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "자사주 매입 발표 드리프트 (Buyback Announcement Drift / ILV 언더리액션)",
+   "cat": "E"
+  },
+  "E21": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "애널리스트 투자의견 변경 드리프트 (Recommendation Revision Drift)",
+   "cat": "E"
+  },
+  "E22": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "실적발표 프리미엄 (Earnings Announcement Premium)",
+   "cat": "E"
+  },
+  "E23": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "배당월 프리미엄 (Dividend Month Premium)",
+   "cat": "E"
+  },
+  "E24": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "원자재 헤징압력 프리미엄 (Commodity Hedging Pressure)",
+   "cat": "E"
+  },
+  "E25": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "추락천사 채권 반등 (Fallen Angel Bond Reversal)",
+   "cat": "E"
+  },
+  "E26": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "리츠 산업내 모멘텀 (REIT Intra-Industry Momentum)",
+   "cat": "E"
+  },
+  "E27": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "ETF 자금흐름 역발상 (ETF Flow Reversal)",
+   "cat": "E"
+  },
+  "E28": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
+   ],
+   "name": "일본 저PBR 밸류업 리레이팅 (TSE Capital-Efficiency Reform)",
+   "cat": "E"
+  },
+  "E29": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*종목",
+    "\\d+\\s*[-~]\\s*\\d+\\s*종목",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "종목별 캘린더월 계절성 (Cross-Sectional Return Seasonality)",
+   "cat": "E"
+  },
+  "D14": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
+   ],
+   "name": "메가캡 성과 귀속 감사 (Mega-Cap Attribution Audit)",
+   "cat": "D"
+  },
+  "D15": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "지수 유효종목수 집중도 국면 팩터 게이트 (Effective N / 1-HHI Regime)",
+   "cat": "D"
+  },
+  "A14": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "[0-9]+\\s*분위"
+   ],
+   "name": "캡중립 팩터 구성 (Cap-Neutral Factor Construction, 시총 분위 내 종목선별)",
+   "cat": "A"
+  },
+  "E30": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "섹터 중립 밸류 컴포지트 (Within-Industry Value)",
+   "cat": "E"
+  },
+  "E31": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "현금 뒷받침 퀄리티 (Cash-Backed Quality)",
+   "cat": "E"
+  },
+  "C15": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "상위\\s*\\d+\\s*%",
+    "[0-9]+\\s*분위"
+   ],
+   "name": "정크 랠리 게이지 (Junk-Rally Gauge — 공매도잔량 × 저수익성)",
+   "cat": "C"
+  },
+  "E32": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "매출이 뒷받침하는 이익성장 선별 (Revenue-Supported Growth Split)",
+   "cat": "E"
+  },
+  "E33": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "듀폰 분해 팩터 — 자산회전율 개선 vs 마진 개선 (DuPont Decomposition: ΔATO vs ΔPM)",
+   "cat": "E"
+  },
+  "B9": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "매출이 받쳐주는 이익전망 상향 (Revenue-Supported Revision Gate)",
+   "cat": "B"
+  },
+  "B10": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 옵션 자료",
+   "hits": [
+    "내재변동성"
+   ],
+   "name": "옵션 내재정보 종목선별 (Option-Implied Information: IV Skew & Call-Put Spread)",
+   "cat": "B"
+  },
+  "E34": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "[0-9]+\\s*분위"
+   ],
+   "name": "매출총이익 서프라이즈 (Gross Profit Surprise, SUGP)",
+   "cat": "E"
+  },
+  "E35": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 그룹). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 그룹"
+   ],
+   "name": "마진 지속성 (Margin Level Persistence) — 수준 매수·급확장 회피",
+   "cat": "E"
+  },
+  "E36": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "[0-9]+\\s*분위"
+   ],
+   "name": "비용규율 컴포지트 (Abarbanell-Bushee 매출·비용 정합성 신호)",
+   "cat": "E"
+  },
+  "A15": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "지수 집중도 국면별 동일가중 전환 (Concentration-Gated Equal Weight)",
+   "cat": "A"
+  },
+  "A16": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*종목",
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
+   ],
+   "name": "시총 상위 10 제외 동일가중 (Bottom-490 디-메가캡)",
+   "cat": "A"
+  },
+  "A17": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+"
+   ],
+   "name": "섹터 내 동일가중+섹터 집중도 게이트 (Within-Sector Equal Weight)",
+   "cat": "A"
+  },
+  "A18": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*종목",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "시장 집중도 조건부 소형주 틸트 (Size Premium in a Granular Economy)",
+   "cat": "A"
+  },
+  "D16": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "지수 비중상한 룰 (개별 종목 캡·Capped-Weight Index)",
+   "cat": "D"
+  },
+  "A19": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*종목",
+    "\\d+\\s*[-~]\\s*\\d+\\s*종목",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "퀄리티·저변동 스크린 동일가중 (Factor-Screened Equal Weight)",
+   "cat": "A"
+  },
+  "A20": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위 · 하위 분위 · 상위 편입). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위",
+    "하위 분위",
+    "상위 편입"
+   ],
+   "name": "52주 신고가 근접 모멘텀 (52-Week High Momentum)",
+   "cat": "A"
+  },
+  "A21": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "조직자본 (Organization Capital, 축적 SG&A 기반 무형자산 팩터)",
+   "cat": "A"
+  },
+  "E37": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위 · 하위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위",
+    "하위 분위"
+   ],
+   "name": "팩터 모멘텀 (Factor Momentum)",
+   "cat": "E"
+  },
+  "E38": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "대차대조표 팽창·순영업자산 아노말리 (Net Operating Assets / Balance-Sheet Bloat)",
+   "cat": "E"
+  },
+  "E39": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "죄악주 프리미엄 (Sin/Vice Stock Premium)",
+   "cat": "E"
+  },
+  "E40": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "R&D 집약도 가치 이례현상 (R&D-to-Market Intangibles Anomaly)",
+   "cat": "E"
+  },
+  "E41": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "리스크관리 모멘텀 (Risk-Managed / Volatility-Scaled Momentum)",
+   "cat": "E"
+  },
+  "E42": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (하위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "하위 분위"
+   ],
+   "name": "장기 반전 (Long-Term Reversal / Overreaction)",
+   "cat": "E"
+  },
+  "B11": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "기술 링크 모멘텀 (Technological Links / Technology Momentum)",
+   "cat": "B"
+  },
+  "B12": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "선도기업 연속정보 리드랙 (A Frog in Every Pan — Information Discreteness in Economic Links)",
+   "cat": "B"
+  },
+  "A22": {
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
+   "name": "산업 모멘텀 (Industry Momentum) — 개별종목 모멘텀의 산업 성분",
+   "cat": "A"
+  },
+  "E43": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "공시 문서 변경 신호 (Lazy Prices — 연도간 10-K·10-Q 텍스트 유사도)",
+   "cat": "E"
+  },
+  "C16": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "매크로 발표일 프리미엄 (Macroeconomic Announcement Premium) — 예정된 거시지표 발표일에만 시장에 노출",
+   "cat": "C"
+  },
+  "E44": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "순주식발행 · 복합주식발행 (Net Share Issuance / Composite Equity Issuance)",
+   "cat": "E"
+  },
+  "E45": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 스핀오프 이벤트",
+   "hits": [
+    "스핀오프"
+   ],
+   "name": "주식분할 발표 드리프트 (Stock Split Announcement Drift)",
+   "cat": "E"
+  },
+  "E46": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위"
+   ],
+   "name": "미실현 자본이득 오버행 (Capital Gains Overhang, 처분효과 준거가격)",
+   "cat": "E"
+  },
+  "E47": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위 · 하위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위",
+    "하위 분위"
+   ],
+   "name": "발표 타이밍 주의분산 (Friday·장마감후 실적발표 언더리액션)",
+   "cat": "E"
+  },
+  "E48": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "상위\\s*\\d+\\s*%"
+   ],
+   "name": "거래량 충격 프리미엄 (High-Volume Return Premium — 이례적 거래량과 가시성)",
+   "cat": "E"
+  },
+  "E49": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "탄소배출 프리미엄 (Carbon Premium / Carbon-Transition Risk)",
+   "cat": "E"
+  },
+  "E50": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 스핀오프 이벤트",
+   "hits": [
+    "스핀오프"
+   ],
+   "name": "행동주의 지분공시 드리프트 (Activist 13D Announcement Drift)",
+   "cat": "E"
+  },
+  "E51": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위 · 하위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [
+    "상위 분위",
+    "하위 분위"
+   ],
+   "name": "목표주가 내재수익률 (Analyst Target Price Implied Return) — 산업 내 상대값",
+   "cat": "E"
+  },
+  "E52": {
+   "verdict": "ready",
+   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
+   "hits": [
+    "상위\\s*\\d+",
+    "\\d+\\s*%\\s*(초과|이상|미만|이하)",
+    "상위\\s*\\d+\\s*%",
+    "[0-9]+\\s*분위"
+   ],
+   "name": "주요고객 존재·고객 집중도 (Major-Customer Presence / Customer-Base Concentration)",
+   "cat": "E"
+  },
+  "E53": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: 신평사 등급",
+   "hits": [
+    "신용등급"
+   ],
+   "name": "배당 개시·중단 발표 드리프트 (Dividend Initiation / Omission Announcement Drift)",
+   "cat": "E"
+  },
+  "E54": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "산업 집중도 (Industry Concentration, 매출 허핀달지수 HHI) — 집중 산업의 낮은 기대수익",
+   "cat": "E"
+  },
+  "D17": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "주식-채권 상관 국면 게이트 (Stock-Bond Correlation Regime) — 분산의 전제 자체를 상태변수로 쓴다",
+   "cat": "D"
+  }
+ }
+}
