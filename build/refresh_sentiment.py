@@ -350,14 +350,30 @@ def main():
     #   vix_ts 가 못 쓰게 된다 → 반영 컴포넌트 3→2 → 완전성 게이트가 갱신을 막았다.
     #   즉 **자료도 대체 경로도 멀쩡한데**(CBOE 4266행 확인) 판정 하나 때문에 하루를 잃었다.
     #   ⚠ «최신값이 있다» 는 «쓸 수 있다» 가 아니다. 끝점만 보는 신선도 판정의 함정이다.
+    #   🚨 2026-09-04 — **최근 구간의 «밀도» 까지 본다.** 세 조건을 차례로 겪었다:
+    #     ① 빈 응답 · ② 마지막 날짜가 뒤짐 — 종전부터 보던 것
+    #     ③ 최신 한 줄만 옴 — 09-04 오전 실측(^VIX 10행 vs ^VIX3M 1행, 날짜는 같음)
+    #     ④ **가운데가 비고 최신 한 줄만 붙음** — 같은 날 오후 실측:
+    #        ^VIX3M 이 2026-07-18~09-02 가 통째로 없고 07-17 → 09-03 로 건너뛴다.
+    #        전체 5033행 · 마지막 09-03 이라 ①②③ 어느 것에도 안 걸리는데,
+    #        기준일(09-02)에 값이 없어 vix_ts 를 통째로 못 쓴다.
+    #   ⚠ 끝점과 총길이는 «쓸 수 있다» 를 보장하지 않는다. 오늘 이 교훈이 세 번째다
+    #     (격자 구멍 · ③ · ④). **필요한 구간에 값이 있는가** 를 물어야 한다.
+    #   → 최근 60일 관측 수를 ^VIX 와 견준다. 절반에 못 미치면 뒤가 성긴 것이다.
+    _recent = (VIX.index.max() - pd.Timedelta(days=60)) if len(VIX) else None
+    _n_v = int((VIX.index >= _recent).sum()) if _recent is not None else 0
+    _n_3 = int((VIX3M.index >= _recent).sum()) if (_recent is not None and len(VIX3M)) else 0
+    _sparse3m = _n_v >= 20 and _n_3 < _n_v * 0.5
     _short3m = len(VIX) and len(VIX3M) < len(VIX) * 0.5
     _stale3m = ((not len(VIX3M))
                 or (len(VIX) and (VIX.index.max() - VIX3M.index.max()).days > 5)
-                or _short3m)
+                or _short3m or _sparse3m)
     if _stale3m:
         print("  ^VIX3M %s — CBOE 에서 직접 받는다"
               % ("빈 응답" if not len(VIX3M)
                  else ("%d행뿐이다(^VIX 는 %d행)" % (len(VIX3M), len(VIX))) if _short3m
+                 else ("최근 60일에 %d행뿐이다(^VIX 는 %d행) — 뒤가 성기다" % (_n_3, _n_v))
+                 if _sparse3m
                  else "이 %s 에서 멈췄다" % VIX3M.index.max().date()))
         _c3 = cboe_close("VIX3M")
         if len(_c3):
