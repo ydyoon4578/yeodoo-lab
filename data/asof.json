@@ -1,6 +1,6 @@
 {
  "note": "기준일 정본. build/asof_index.py가 만들고, 전 페이지 내비 칩·홈·sources.html이 이 파일만 읽는다. 페이지에 날짜를 직접 적지 말 것.",
- "generated": "2026-09-03T23:53:27Z",
+ "generated": "2026-09-04T00:02:47Z",
  "primary": "2026-09-02",
  "unified": false,
  "axes": [
@@ -74,7 +74,7 @@
    "cadence": "수시",
    "note": "외부 출처 수집분 — 랩이 검증한 것이 아니다",
    "manual": "자동 잡 아님 — 로컬 작업 스케줄러(KB_RotationDaily)가 매일 07:55 웹리서치로 갱신해 푸시한다",
-   "collected": "2026-09-04",
+   "collected": "2026-09-03",
    "lag_days": 0
   },
   {
@@ -128,6 +128,7 @@
    "as_of": "2026-09-02",
    "cadence": "매일",
    "note": "예정일은 회사가 바꾼다 — 조회 시점의 예정일이며 확정이 아니다",
+   "collected": "2026-09-04",
    "sched": "월~토 06:53 KST",
    "lag_days": 0
   },
