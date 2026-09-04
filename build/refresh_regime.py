@@ -409,7 +409,19 @@ def build_history(S, cpi_yoy, asof=None):
     nfp3 = S["PAYEMS"].diff().rolling(3).mean()
     dU = S["UNRATE"] - S["UNRATE"].rolling(12).min()
     def asof(s, d):
-        s2 = s.dropna(); s2 = s2[s2.index <= d]; return float(s2.iloc[-1]) if len(s2) else None
+        # 🚨 2026-09-04 — **빈 시리즈를 먼저 거른다.** 위 부분실패 게이트는 결측이 20% 이하면
+        #   「경고하고 계속」인데(그 판단은 옳다 — 한 계열 때문에 국면 이력을 통째로 버릴 이유가
+        #   없다), 여기가 그 약속을 못 지키고 죽었다. 빈 Series 의 인덱스는 DatetimeIndex 가
+        #   아니라 **RangeIndex** 라 `s2.index <= Timestamp` 가 TypeError 를 낸다.
+        #   실측 2026-09-04: fredapi 가 SAHMREALTIME 을 빈 채로 줬고(공개 CSV 에는 800행이
+        #   멀쩡히 있으니 일시 장애다) regime·sentiment 두 잡이 그 자리에서 죽었다.
+        #   ⚠ None 은 이 함수의 정상 반환값이다 — 호출부가 이미 None 을 다룬다.
+        #     즉 «관측이 없다» 를 «죽는다» 로 바꾸고 있던 것이라, 고침이 값을 바꾸지 않는다.
+        s2 = s.dropna()
+        if not len(s2):
+            return None
+        s2 = s2[s2.index <= d]
+        return float(s2.iloc[-1]) if len(s2) else None
     # 🚨 금융여건도 **달마다 되돌려 잰다**(2026-08-23). 종전에는 여기 None 을 넘겨
     #   이력에 이 축이 아예 없었다 — 축은 재고 있는데 조건부 통계를 못 내던 이유다.
     #   ⚠ 살아 있는 계산과 같은 함수(fin_score·fin_label)를 쓴다. 재료도 같다.

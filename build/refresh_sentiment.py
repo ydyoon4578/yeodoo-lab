@@ -343,10 +343,22 @@ def main():
 
     # 🚨 야후의 ^VIX3M 이 끊기면 발표 주체(CBOE)에서 직접 받아 메운다. 사정은 cboe_close() 주석.
     #   야후가 살아 있으면 뒤쪽 결측만 채우므로 기존 값은 바뀌지 않는다.
-    _stale3m = (not len(VIX3M)) or (len(VIX) and (VIX.index.max() - VIX3M.index.max()).days > 5)
+    # 🚨 2026-09-04 — **길이도 본다.** 종전에는 「비었나」와 「마지막 날짜가 5일 넘게
+    #   뒤졌나」만 봤다. 그런데 야후가 **최신 한 줄만** 돌려주는 열화가 있다 —
+    #   실측 09-04: ^VIX 10행인데 ^VIX3M **1행**(마지막 날짜는 같은 09-03).
+    #   그러면 «안 낡았다» 로 통과해 대체가 안 걸리고, 비율 계열이 한 점뿐이라
+    #   vix_ts 가 못 쓰게 된다 → 반영 컴포넌트 3→2 → 완전성 게이트가 갱신을 막았다.
+    #   즉 **자료도 대체 경로도 멀쩡한데**(CBOE 4266행 확인) 판정 하나 때문에 하루를 잃었다.
+    #   ⚠ «최신값이 있다» 는 «쓸 수 있다» 가 아니다. 끝점만 보는 신선도 판정의 함정이다.
+    _short3m = len(VIX) and len(VIX3M) < len(VIX) * 0.5
+    _stale3m = ((not len(VIX3M))
+                or (len(VIX) and (VIX.index.max() - VIX3M.index.max()).days > 5)
+                or _short3m)
     if _stale3m:
-        print("  ^VIX3M 이 %s 에서 멈췄다 — CBOE 에서 직접 받는다"
-              % (VIX3M.index.max().date() if len(VIX3M) else "빈 응답"))
+        print("  ^VIX3M %s — CBOE 에서 직접 받는다"
+              % ("빈 응답" if not len(VIX3M)
+                 else ("%d행뿐이다(^VIX 는 %d행)" % (len(VIX3M), len(VIX))) if _short3m
+                 else "이 %s 에서 멈췄다" % VIX3M.index.max().date()))
         _c3 = cboe_close("VIX3M")
         if len(_c3):
             VIX3M = VIX3M.combine_first(_c3) if len(VIX3M) else _c3
@@ -519,7 +531,12 @@ def main():
     #     원인을 먼저 알아야 하고, 모른 채 덮으면 그게 더 나쁘다.
     revisions, rev_note = [], None
     try:
-        _old = json.load(io.open(OUT, encoding="utf-8"))
+        # ⚠ 2026-09-04 — 이 줄이 `io.open` 이었는데 이 파일은 17행에서 `import io as _io` 다.
+        #   그래서 매 실행 NameError 가 나고 위 try 가 삼켜 「⚠ 사후 수정 대조 실패
+        #   (name 'io' is not defined) — 이번 판은 대조 없이 나간다」만 찍혔다.
+        #   즉 **사후 수정 대조가 한 번도 돈 적이 없다.** 경고가 뜨고 있었지만 사유가
+        #   자료 문제처럼 읽혀 오타로 보이지 않았다(이 저장소가 경계하는 vacuous pass 다).
+        _old = json.load(_io.open(OUT, encoding="utf-8"))
         _oh = {x["dt"]: x["score"] for x in (_old.get("history") or [])}
         for _i, _v in sd.items():
             _d = _i.date().isoformat()
