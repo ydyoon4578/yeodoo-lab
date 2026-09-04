@@ -1,0 +1,58 @@
+name: Attach lab verdicts to exploration pool
+
+# 탐색 풀 카드(data/rotation_pool.json)에 **랩의 사전등록 판정을 되돌려 붙인다.**
+#
+# 🚨 2026-09-04 — 왜 생겼나.
+#   rotation.html 카드에는 「랩 자체 검증 결과」 칸(lab)이 있는데 **손으로** 채워 왔다.
+#   그래서 안 채워졌다 — 실측: A1(자사주매입+배당성장) · C14(달러 캐리) · D8(채권 롤다운) ·
+#   D13(듀레이션 스타일 로테이션) 넷 다 사전등록으로 실제로 돌려 셋을 기각했는데
+#   **카드에는 한 줄도 안 실려 있었다.** 공개 페이지가 「외부 출처 · 미검증」이라 말하는
+#   동안 랩은 이미 재고 기각한 상태였다.
+#   되풀이 결함 「판정만 하고 안 배선」의 세 번째 판이다(게시 목록 → 기각 원장 → 카드).
+#
+# 왜 별 워크플로인가.
+#   data/rotation_pool.json 은 **로컬 작업 스케줄러(KB_RotationDaily)** 가 매일 07:55 에
+#   웹 리서치로 다시 써서 푸시한다 — 저장소의 어느 잡도 이 파일을 안 만든다.
+#   그 푸시가 lab 칸을 통째로 덮으므로, **그 푸시에 반응해서 다시 붙여야** 한다.
+#   ⚠ 크론으로 두면 스케줄러 시각과 어긋나 하루 낡는다. push 트리거가 맞다.
+#
+# 무한 반복이 안 나는 이유 — 이 잡의 커밋은 GITHUB_TOKEN 으로 나가고, GitHub 은 그 푸시에
+#   워크플로를 재귀 실행하지 않는다(build/validate_gate.py 독스트링의 그 성질을 여기서는
+#   이롭게 쓴다). 사람/스케줄러 푸시에만 돈다.
+
+on:
+  push:
+    paths: ['data/rotation_pool.json', 'build/PREREG-*-RESULT.md', 'build/pool_lab.py']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-pool-lab
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # 의존 없음 — pool_lab.py 는 표준 라이브러리만 쓴다(pip 단계가 없는 이유다).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Attach lab verdicts
+        run: python build/pool_lab.py
+      - name: Validate
+        run: python build/validate_gate.py check
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 탐색 풀 카드에 랩 판정 배선" \
+            data/rotation_pool.json
+      # 🚨 신선도 대신 **배선 완결성**을 본다. 이 파일의 as_of 는 웹 리서치 수집일이라
+      #   이 잡이 못 움직인다 — 이 잡이 책임지는 것은 「판정이 카드에 붙어 있는가」다.
+      - name: Verify wiring
+        run: python build/pool_lab.py --check

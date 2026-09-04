@@ -61,6 +61,11 @@ NO_ROW = {
     "refresh-tech.yml":      "종목 전략 재계산 — 백테스트 행이 대표",
     "refresh-assets.yml":    "자산배분 전략 재계산 — 백테스트 행이 대표",
     "validate.yml":          "검증 전용(데이터 산출 없음)",
+    # 🚨 2026-09-04 — 탐색 풀 카드에 랩 판정을 되돌려 붙이는 잡. 표에 안 싣는 이유는
+    #   **주기가 없어서**다: 크론이 아니라 data/rotation_pool.json 푸시에 반응한다
+    #   (그 파일은 로컬 스케줄러 KB_RotationDaily 가 매일 07:55 에 쓴다). 표의 «갱신 주기»
+    #   칸에 적을 값이 없고, 그 축의 기준일은 이미 «전략 탐색 풀» 행이 대표한다.
+    "refresh-pool-lab.yml":  "판정 배선 전용 — 주기 없음(풀 푸시에 반응) · 축 대표는 전략 탐색 풀 행",
     # 🚨 장중 분봉은 «표에 실을 값어치가 없어서» 가 아니라 **sources.html 이 잠금 페이지라
     #   행을 못 넣어서** 여기 있다. 행 하나를 더하려면 평문(_build/pages/sources_content.html)을
     #   고치고 다시 잠가야 하는데 그건 사용자만 할 수 있다(kb_lock.py 가 암호를 묻는다).
@@ -72,7 +77,7 @@ NO_ROW = {
     #   ⚠ 그때까지 이 잡의 기준일은 sources 표에 안 나온다. 대신 rates.html 맨 위가
     #     FRED 기준일을, 수준 표가 **계열마다 자기 기준일**을 찍는다 — 계열별 발표
      #     주기가 달라(모기지는 주 1회) 한 날짜로 뭉뚱그리면 그게 더 틀린다.
-    "refresh-rates.yml":     "금리 분석 — sources 표가 잠금 페이지라 행을 못 넣었다(intraday 와 같은 사정)",
+    "refresh-rates.yml":     "금리 분석 — sources 표가 잠금 페이지라 행을 못 넣었다(intraday 와 같은 사정)",
     # 🚨 2026-08-19 신설. 화면에 실린 규칙 x-custconc 가 읽는 자료인데 어느 잡에도 없었다
     #   (audit_unbuilt 가 찾았다). 행을 못 넣는 사정은 위 refresh-rates 와 같다 —
     #   sources.html 이 잠금 페이지라 평문을 고치고 다시 잠가야 하는데 그건 사용자만 한다.
