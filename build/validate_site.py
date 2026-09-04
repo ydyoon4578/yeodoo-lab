@@ -2121,6 +2121,16 @@ try:
         for _ln in _plo.strip().split("\n"):
             if _ln.strip().startswith("~") or "선언 없는" in _ln:
                 print("  " + _ln.strip())
+    # 🚨 2026-09-04 — 카드 판정(pool_triage)도 지금 자료로 구워졌는지 본다.
+    #   이 파일은 「왜 아직 안 쟀나」를 카드마다 말한다. 풀이 매일 바뀌므로(로컬 스케줄러가
+    #   신규 카드를 넣는다) **다시 안 구우면 새 카드가 판정 없이 화면에 선다.**
+    _tg = _sp.run([sys.executable, os.path.join(ROOT, "build", "pool_triage.py"), "--check"],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace",
+                  env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=ROOT)
+    if _tg.returncode != 0:
+        errors.append("탐색 풀 카드 판정(data/pool_triage.json)이 지금 풀과 안 맞는다 — "
+                      "python build/pool_triage.py 를 다시 돌릴 것(새 카드가 판정 없이 선다)")
+
     # 새 문서(오늘 이후)는 «풀카드:» 선언이 있어야 한다. 옛 53편은 소급 적용하지 않는다.
     _nod = []
     for _fn in sorted(os.listdir(os.path.join(ROOT, "build"))):
