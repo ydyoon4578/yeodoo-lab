@@ -2098,6 +2098,48 @@ try:
 except Exception as _e:
     print("⚠ 다중검정 분모 대조 실패: %s" % _e)
 
+# ── 탐색 풀 카드에 랩 판정이 되돌아가 있는가 ─────────────────────────────────
+# 🚨 2026-09-04 — rotation.html 의 카드에는 「랩 자체 검증 결과」 칸(lab)이 있는데 **손으로**
+#   채워 왔다. 그래서 안 채워졌다 — 실측: A1(자사주매입+배당성장) · C14(달러 캐리) ·
+#   D8(채권 롤다운) · D13(듀레이션 스타일 로테이션) 넷 다 사전등록으로 실제로 돌려
+#   셋을 기각했는데 **카드에는 한 줄도 안 실려 있었다.** 공개 페이지가 「외부 출처 ·
+#   미검증」이라 말하는 동안 랩은 이미 재고 기각한 상태였다.
+#   되풀이 결함 「판정만 하고 안 배선」의 세 번째 판이다(게시 목록 → 원장 → 이번은 카드).
+# ⚠ 산문에서 추론하지 않는다. 카드 지목 방식이 제각각이라(「탐색 풀 B11」·「E21 카드」·
+#   「카드 A22」) 61편에서 6종밖에 못 잇는다. **문서가 «풀카드: D13» 로 선언**하고,
+#   build/pool_lab.py 가 그것을 읽어 붙인다. 여기서는 (a) 새 문서에 선언이 있는지
+#   (b) 붙인 결과가 지금 판정과 같은지를 본다.
+try:
+    _pl = _sp.run([sys.executable, os.path.join(ROOT, "build", "pool_lab.py"), "--check"],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace",
+                  env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=ROOT)
+    _plo = (_pl.stdout or "") + (_pl.stderr or "")
+    if _pl.returncode != 0:
+        errors.append("탐색 풀 카드의 랩 판정이 낡았다 — python build/pool_lab.py 를 돌릴 것"
+                      + (" (%s)" % _plo.strip().split("\n")[-1][:120] if _plo.strip() else ""))
+    else:
+        for _ln in _plo.strip().split("\n"):
+            if _ln.strip().startswith("~") or "선언 없는" in _ln:
+                print("  " + _ln.strip())
+    # 새 문서(오늘 이후)는 «풀카드:» 선언이 있어야 한다. 옛 53편은 소급 적용하지 않는다.
+    _nod = []
+    for _fn in sorted(os.listdir(os.path.join(ROOT, "build"))):
+        if not (_fn.startswith("PREREG-") and _fn.endswith("-RESULT.md")):
+            continue
+        _dm = re.match(r"PREREG-(\d{4}-\d{2}-\d{2})-", _fn)
+        if not (_dm and _dm.group(1) >= "2026-09-04"):
+            continue
+        _t = io.open(os.path.join(ROOT, "build", _fn), encoding="utf-8").read()
+        if not re.search(r"^\s*풀카드\s*[:：]", _t, re.M):
+            _nod.append(_fn)
+    if _nod:
+        errors.append(
+            "사전등록 %d편에 «풀카드:» 선언이 없다: %s — 어느 탐색 풀 카드를 잰 것인지 "
+            "문서가 스스로 적어야 카드에 판정이 되돌아간다(랩이 스스로 낸 규칙이면 "
+            "«풀카드: 없음» 이라 적을 것)" % (len(_nod), ", ".join(_nod[:4])))
+except Exception as _e:
+    print("⚠ 탐색 풀 카드 판정 대조 실패: %s" % _e)
+
 # ── 사전등록 규율: 「계산 전 커밋」이 **검증 가능한가** ─────────────────────────
 # 🚨 2026-09-03 — 이 랩의 신뢰는 「등록을 먼저 커밋하고 그 다음에 계산했다」에 걸려 있다.
 #   RESULT 문서마다 그 해시를 적어 두는데, **그 해시가 실제로 증명이 되는지는 아무도 안 봤다.**

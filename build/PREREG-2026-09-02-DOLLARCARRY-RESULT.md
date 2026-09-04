@@ -1,5 +1,7 @@
 # 결과 — C14 달러 캐리 타이밍(LRV 2014) · 2026-09-02 · **기각**
 
+풀카드: C14   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+
 등록: `build/PREREG-2026-09-02-DOLLARCARRY.md` — **계산 전 커밋 `92554b22b`**
 구현: `build/dollarcarry.py` → `data/_dollarcarry.json`(얼린 측정 · 커밋 안 함)
 

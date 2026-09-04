@@ -1,5 +1,7 @@
 # 결과 — B/M 금리 국면 로테이션 · 2026-09-02 · **여섯 조건 통과**
 
+풀카드: D13   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+
 등록: `build/PREREG-2026-09-03-BMROT.md` — **계산 전 커밋 `78c2dec92`**
 구현: `build/tech_backtest.py` — `x-bmrot` · `x-bmrot-flat`(1번 대조군)
 

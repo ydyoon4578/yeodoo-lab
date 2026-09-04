@@ -1,5 +1,7 @@
 # 결과 — DSS 내재 듀레이션 로테이션 · 2026-09-02 · **기각(F1)**
 
+풀카드: D13   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+
 등록: `build/PREREG-2026-09-03-DURATION.md` — **계산 전 커밋 `4bf910d28`**
 구현: `build/dss_duration.py` → `data/_dss_duration.json`(얼린 측정 · 커밋 안 함)
 

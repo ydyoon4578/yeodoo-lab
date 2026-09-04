@@ -1,5 +1,7 @@
 # 결과 — A1 자사주매입+배당성장 · 2026-09-02
 
+풀카드: A1   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+
 등록: `build/PREREG-2026-09-02-A1PAYOUT.md` — **계산 전 커밋 `5153b0c07`**
 구현: `x-a1payout` (`build/tech_backtest.py` · `build/pit_backtest.py`)
 
