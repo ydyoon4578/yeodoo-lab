@@ -6267,7 +6267,7 @@
    "incr": {
     "one": {
      "vs": "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
-     "corr": 0.891,
+     "corr": 0.89,
      "alpha": 0.95,
      "t": 2.91,
      "beta": 0.931
@@ -6780,7 +6780,7 @@
    "incr": {
     "one": {
      "vs": "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
-     "corr": 0.891,
+     "corr": 0.89,
      "alpha": -0.28,
      "t": -0.89,
      "beta": 0.851
@@ -7274,7 +7274,7 @@
      {
       "k": "꼬리위험 CVaR 개선",
       "v": 0.02,
-      "p": 0.255
+      "p": 0.2552
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
@@ -8705,8 +8705,8 @@
      "beta": 0.619
     },
     "five": {
-     "alpha": 2.51,
-     "t": 1.11,
+     "alpha": 2.5,
+     "t": 1.1,
      "n": 428,
      "vs": [
       "200일 이동평균 (Faber)",
@@ -8828,14 +8828,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 12.88,
+      "cagr": 12.87,
       "sharpe": 0.679,
-      "excess": -0.5,
+      "excess": -0.51,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.1,
+    "drag": 0.11,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -9957,7 +9957,7 @@
      "beta": 0.749
     },
     "five": {
-     "alpha": 4.98,
+     "alpha": 4.99,
      "t": 1.19,
      "n": 364,
      "vs": [
@@ -10768,14 +10768,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 10.49,
+      "cagr": 10.48,
       "sharpe": 0.563,
-      "excess": -2.89,
+      "excess": -2.9,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.28,
+    "drag": 0.29,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -11365,7 +11365,7 @@
     },
     "five": {
      "alpha": -1.48,
-     "t": -0.66,
+     "t": -0.67,
      "n": 364,
      "vs": [
       "절대 모멘텀 (SPY 12-1)",
@@ -12374,7 +12374,7 @@
      "beta": 1.114
     },
     "five": {
-     "alpha": 1.96,
+     "alpha": 1.95,
      "t": 1.35,
      "n": 364,
      "vs": [
@@ -12880,7 +12880,7 @@
     },
     "five": {
      "alpha": 0.8,
-     "t": 1.23,
+     "t": 1.24,
      "n": 504,
      "vs": [
       "200일 이동평균 (Faber)",
@@ -13233,7 +13233,7 @@
      "corr": 0.771,
      "alpha": -0.75,
      "t": -0.27,
-     "beta": 0.948
+     "beta": 0.947
     },
     "five": {
      "alpha": -0.33,
@@ -13438,7 +13438,7 @@
      "beta": 0.708
     },
     "five": {
-     "alpha": 0.5,
+     "alpha": 0.51,
      "t": 0.85,
      "n": 504,
      "vs": [
@@ -13775,7 +13775,7 @@
     "one": {
      "vs": "타이밍 3규칙 다수결",
      "corr": 0.893,
-     "alpha": -0.91,
+     "alpha": -0.9,
      "t": -0.59,
      "beta": 1.174
     },
@@ -13938,7 +13938,7 @@
     "one": {
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
      "corr": 0.976,
-     "alpha": -0.84,
+     "alpha": -0.85,
      "t": -1.09,
      "beta": 1.032
     },
@@ -14270,7 +14270,7 @@
    "incr": {
     "one": {
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
-     "corr": 0.775,
+     "corr": 0.774,
      "alpha": -1.12,
      "t": -0.53,
      "beta": 0.756
@@ -14591,7 +14591,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 7.12,
+      "v": 7.11,
       "p": 0.1275
      },
      {
@@ -14614,7 +14614,7 @@
      "vs": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
      "corr": 0.922,
      "alpha": -2.61,
-     "t": -1.28,
+     "t": -1.29,
      "beta": 1.248
     },
     "five": {
@@ -15879,7 +15879,7 @@
      "vs": "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
      "corr": 0.978,
      "alpha": -0.52,
-     "t": -0.57,
+     "t": -0.58,
      "beta": 1.026
     },
     "five": {
@@ -16057,7 +16057,7 @@
      "vs": "크로스에셋 RP — 목표변동성 8%",
      "corr": 0.833,
      "alpha": 0.17,
-     "t": 0.07,
+     "t": 0.06,
      "beta": 0.897
     },
     "five": {
@@ -33208,11 +33208,11 @@
     "as_of": "2026-08-31",
     "n": 10,
     "tickers": [
+     "AAPL",
+     "APH",
      "CAH",
-     "CASY",
      "CNC",
      "FTNT",
-     "MAR",
      "MRNA",
      "ROST",
      "SNDK",
@@ -33220,11 +33220,11 @@
      "WBD"
     ],
     "names": {
+     "AAPL": "APPLE INC",
+     "APH": "AMPHENOL CORP-CL A",
      "CAH": "CARDINAL HEALTH INC",
-     "CASY": "Casey's General Stores Inc",
      "CNC": "CENTENE CORP",
      "FTNT": "FORTINET INC",
-     "MAR": "MARRIOTT INTERNATIONAL -CL A",
      "MRNA": "MODERNA INC",
      "ROST": "ROSS STORES INC",
      "SNDK": "SANDISK CORP",
@@ -33437,8 +33437,8 @@
      "CASY",
      "DLTR",
      "EIX",
+     "HSY",
      "LLY",
-     "MNST",
      "MRVL",
      "PCG",
      "PYPL",
@@ -33449,8 +33449,8 @@
      "CASY": "Casey's General Stores Inc",
      "DLTR": "DOLLAR TREE INC",
      "EIX": "EDISON INTERNATIONAL",
+     "HSY": "HERSHEY CO/THE",
      "LLY": "ELI LILLY & CO",
-     "MNST": "MONSTER BEVERAGE CORP",
      "MRVL": "MARVELL TECHNOLOGY INC",
      "PCG": "P G & E CORP",
      "PYPL": "PAYPAL HOLDINGS INC",
@@ -34876,7 +34876,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -39069,7 +39069,6 @@
     "tickers": [
      "AAPL",
      "ADI",
-     "ADM",
      "AMAT",
      "AMD",
      "ASML",
@@ -39097,6 +39096,7 @@
      "LLY",
      "LRCX",
      "MAR",
+     "MNST",
      "MPWR",
      "MRK",
      "MRVL",
@@ -39123,7 +39123,6 @@
     "names": {
      "AAPL": "APPLE INC",
      "ADI": "ANALOG DEVICES INC",
-     "ADM": "ARCHER-DANIELS-MIDLAND CO",
      "AMAT": "APPLIED MATERIALS INC",
      "AMD": "ADVANCED MICRO DEVICES",
      "ASML": "ASML HOLDING NV-NY REG SHS",
@@ -39151,6 +39150,7 @@
      "LLY": "ELI LILLY & CO",
      "LRCX": "LAM RESEARCH CORP",
      "MAR": "MARRIOTT INTERNATIONAL -CL A",
+     "MNST": "MONSTER BEVERAGE CORP",
      "MPWR": "MONOLITHIC POWER SYSTEMS INC",
      "MRK": "MERCK & CO. INC.",
      "MRVL": "MARVELL TECHNOLOGY INC",
@@ -44203,9 +44203,9 @@
     "as_of": "2026-08-31",
     "n": 20,
     "tickers": [
-     "DELL",
      "DVN",
      "EOG",
+     "EXE",
      "FANG",
      "HPE",
      "KMI",
@@ -44225,9 +44225,9 @@
      "XOM"
     ],
     "names": {
-     "DELL": "DELL TECHNOLOGIES -C",
      "DVN": "DEVON ENERGY CORP",
      "EOG": "EOG RESOURCES INC",
+     "EXE": "EXPAND ENERGY CORP",
      "FANG": "DIAMONDBACK ENERGY INC",
      "HPE": "HEWLETT PACKARD ENTERPRISE",
      "KMI": "KINDER MORGAN INC",
@@ -46485,25 +46485,25 @@
     "n": 10,
     "tickers": [
      "CMI",
-     "DAL",
      "EIX",
      "FER",
      "HWM",
      "PCG",
      "RL",
      "SNA",
+     "SRE",
      "TJX",
      "TPR"
     ],
     "names": {
      "CMI": "CUMMINS INC",
-     "DAL": "DELTA AIR LINES INC",
      "EIX": "EDISON INTERNATIONAL",
      "FER": "FERROVIAL SE",
      "HWM": "HOWMET AEROSPACE INC",
      "PCG": "P G & E CORP",
      "RL": "RALPH LAUREN CORP",
      "SNA": "SNAP-ON INC",
+     "SRE": "SEMPRA",
      "TJX": "TJX COMPANIES INC",
      "TPR": "TAPESTRY INC"
     },
@@ -54986,13 +54986,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 90.3,
-    "note": "노출 90%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 92.0,
+    "note": "노출 92%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -55408,11 +55408,11 @@
     "n": 10,
     "tickers": [
      "ALNY",
+     "CMI",
      "DIS",
      "EIX",
      "EME",
      "FIX",
-     "MNST",
      "MPWR",
      "NTRS",
      "PCG",
@@ -55420,11 +55420,11 @@
     ],
     "names": {
      "ALNY": "ALNYLAM PHARMACEUTICALS INC",
+     "CMI": "CUMMINS INC",
      "DIS": "WALT DISNEY CO/THE",
      "EIX": "EDISON INTERNATIONAL",
      "EME": "EMCOR GROUP INC",
      "FIX": "COMFORT SYSTEMS USA INC",
-     "MNST": "MONSTER BEVERAGE CORP",
      "MPWR": "MONOLITHIC POWER SYSTEMS INC",
      "NTRS": "NORTHERN TRUST CORP",
      "PCG": "P G & E CORP",
@@ -55605,7 +55605,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -55791,7 +55791,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -57048,7 +57048,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -57811,6 +57811,7 @@
      "ATO",
      "BAC",
      "BRK.B",
+     "CINF",
      "CMS",
      "CNP",
      "COST",
@@ -57825,7 +57826,7 @@
      "FE",
      "FITB",
      "GD",
-     "HBAN",
+     "JNJ",
      "JPM",
      "KEY",
      "L",
@@ -57840,7 +57841,6 @@
      "PNC",
      "PPL",
      "RCL",
-     "RF",
      "SNA",
      "SO",
      "SPG",
@@ -57865,6 +57865,7 @@
      "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
      "BRK.B": "BERKSHIRE HATHAWAY INC-CL B",
+     "CINF": "CINCINNATI FINANCIAL CORP",
      "CMS": "CMS ENERGY CORP",
      "CNP": "CENTERPOINT ENERGY INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -57879,7 +57880,7 @@
      "FE": "FIRSTENERGY CORP",
      "FITB": "FIFTH THIRD BANCORP",
      "GD": "GENERAL DYNAMICS CORP",
-     "HBAN": "HUNTINGTON BANCSHARES INC",
+     "JNJ": "JOHNSON & JOHNSON",
      "JPM": "JPMORGAN CHASE & CO",
      "KEY": "KEYCORP",
      "L": "LOEWS CORP",
@@ -57894,7 +57895,6 @@
      "PNC": "PNC FINANCIAL SERVICES GROUP",
      "PPL": "PPL CORP",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
-     "RF": "REGIONS FINANCIAL CORP",
      "SNA": "SNAP-ON INC",
      "SO": "SOUTHERN CO/THE",
      "SPG": "SIMON PROPERTY GROUP INC",
@@ -58176,6 +58176,7 @@
      "KEY",
      "L",
      "LIN",
+     "MRSH",
      "MTB",
      "NEE",
      "NTRS",
@@ -58187,7 +58188,6 @@
      "PRU",
      "PSA",
      "RF",
-     "SCHW",
      "SO",
      "SPG",
      "SRE",
@@ -58230,6 +58230,7 @@
      "KEY": "KEYCORP",
      "L": "LOEWS CORP",
      "LIN": "LINDE PLC",
+     "MRSH": "MARSH & MCLENNAN COS",
      "MTB": "M & T BANK CORP",
      "NEE": "NEXTERA ENERGY INC",
      "NTRS": "NORTHERN TRUST CORP",
@@ -58241,7 +58242,6 @@
      "PRU": "PRUDENTIAL FINANCIAL INC",
      "PSA": "PUBLIC STORAGE",
      "RF": "REGIONS FINANCIAL CORP",
-     "SCHW": "SCHWAB (CHARLES) CORP",
      "SO": "SOUTHERN CO/THE",
      "SPG": "SIMON PROPERTY GROUP INC",
      "SRE": "SEMPRA",
@@ -58453,8 +58453,8 @@
     "as_of": "2026-08-31",
     "n": 10,
     "tickers": [
+     "APH",
      "FISV",
-     "MNST",
      "WST",
      "WTW",
      "XEL",
@@ -58465,8 +58465,8 @@
      "ZTS"
     ],
     "names": {
+     "APH": "AMPHENOL CORP-CL A",
      "FISV": "FISERV INC",
-     "MNST": "MONSTER BEVERAGE CORP",
      "WST": "WEST PHARMACEUTICAL SERVICES",
      "WTW": "WILLIS TOWERS WATSON PLC",
      "XEL": "XCEL ENERGY INC",
@@ -58651,13 +58651,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 75.0,
-    "note": "노출 75%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 100.0,
+    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -58965,7 +58965,6 @@
      "CNP",
      "COST",
      "CSX",
-     "CVX",
      "D",
      "DTE",
      "DUK",
@@ -59001,6 +59000,7 @@
      "MCD",
      "MET",
      "MMM",
+     "MNST",
      "MTB",
      "NEE",
      "NSC",
@@ -59067,7 +59067,6 @@
      "CNP": "CENTERPOINT ENERGY INC",
      "COST": "COSTCO WHOLESALE CORP",
      "CSX": "CSX CORP",
-     "CVX": "CHEVRON CORP",
      "D": "DOMINION ENERGY INC",
      "DTE": "DTE ENERGY COMPANY",
      "DUK": "DUKE ENERGY CORP",
@@ -59103,6 +59102,7 @@
      "MCD": "MCDONALD'S CORP",
      "MET": "METLIFE INC",
      "MMM": "3M CO",
+     "MNST": "MONSTER BEVERAGE CORP",
      "MTB": "M & T BANK CORP",
      "NEE": "NEXTERA ENERGY INC",
      "NSC": "NORFOLK SOUTHERN CORP",
@@ -60143,7 +60143,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60322,7 +60322,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60735,13 +60735,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 100.0,
-    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 0.0,
+    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -60914,7 +60914,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61100,13 +61100,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 66.2,
-    "note": "노출 66%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 67.0,
+    "note": "노출 67%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -61726,7 +61726,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-04",
     "n": null,
     "tickers": null,
     "names": null,
