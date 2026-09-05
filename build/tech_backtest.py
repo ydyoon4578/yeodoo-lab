@@ -117,7 +117,14 @@ XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보�
 # 🚨 2026-09-03 — 비었다. 유일한 회원이던 x-a1payout 이 사전등록 기각(A1FIX F2 · PIT t 1.24)
 #   으로 등록에서 내려갔다. **기제는 남긴다** — 자격필터형 규칙이 또 나오면 그때 여기 넣는다.
 #   ⚠ 빈 집합이라 min_pool 은 전 규칙에 XSEC_MIN_POOL 을 그대로 건다(종전과 같다).
-SCREEN_SIDS: set = set()
+SCREEN_SIDS: set = {"x-demega10"}
+# 🚨 2026-09-05 — 다시 회원이 생겼다. A16「시총 상위 10 제외 동일가중」은 순위로 상위 N 을
+#   고르는 규칙이 아니라 **걸러낸 나머지 전부**라, 후보 수 관문(XSEC_MIN_POOL)을 걸면
+#   뜻이 어긋난다. 2026-09-03 에 x-a1payout 을 내리며 이 기제를 **비운 채 남겨 뒀고**
+#   (「자격필터형 규칙이 또 나오면 그때 넣는다」) 그 예상대로 됐다.
+DEMEGA_DROP = 10           # 카드 A16 의 수. 랩이 고른 값이 아니다(원문: 「상위 10종목을 제외」)
+# 채점 함수도 채점 갈래도 없는 규칙을 **한 번만** 알리려는 자리(xsec_score_at 의 그 자리 참조).
+_NOFN_SEEN: set = set()
 SCREEN_MIN = 1             # 하한을 안 둔다(등록 §5). 0 종인 달만 무보유로 떨어진다.
 
 
@@ -4221,7 +4228,14 @@ FUND_SIDS = {
              #   아니라 투자의견 갈래(x-revdrift…)이고 _BASE_SID 로 붙는다.
              "x-poacc-n52",
              # 2026-09-02 BMROT — 자기자본/시총을 쓰므로 펀더멘털 갈래다.
-             "x-bmrot", "x-bmrot-flat"}
+             "x-bmrot", "x-bmrot-flat",
+             # 🚨 2026-09-05 DEMEGA(카드 A16) — 점수가 시가총액(주식수 × 가격)이라 여기다.
+             #   ⚠ 이 집합에 없으면 xsec_score_at 이 `S["fn"](...)` 로 떨어지는데,
+             #     이 규칙은 fn=None 이라 **TypeError 로 죽는다**(실측 2026-09-05:
+             #     PIT 레그가 그렇게 멈췄다). 등록 네 곳(xsec 호출 · SCREEN_SIDS ·
+             #     tech FUND_SIDS · pit FUND_SIDS)을 **같이** 채워야 한다.
+             #   → 빠뜨리면 xsec_score_at 이 이름을 대고 죽는다(그 자리 주석 참조).
+             "x-demega10"}
 
 
 def build_strats():
@@ -4708,6 +4722,19 @@ def build_strats():
          "얹을 가장 단순한 자일 뿐이다. "
          "⚠ 400종 넘는 바스켓이라 실무 상품이 아니다. 크기를 줄이는 것은 다른 등록의 일이다.",
          topn=999, reb="me")
+    # 🚨 2026-09-05 — **기각(PREREG-2026-09-05-DEMEGA-RESULT · F1·F2).** 등록을 내렸다.
+    #   전면 동일가중(vs_traded) 대비 소급 Δ샤프 −0.094(t −4.28) 로 **지고**, PIT 에서는
+    #   +0.032(t 0.24) 로 구별되지 않는다. 「상위 10만 뺀다」가 값을 못 냈다.
+    #   ⚠ 카드가 틀렸다는 뜻이 아니다 — 카드의 근거는 2000–2010·1964–1974 의 「잃어버린
+    #     10년」인데 **이 랩의 창(2016-08~)에는 그런 구간이 없다.** 한계로 적고 기각했다.
+    #   ⚠ 이 랩의 규약은 «원장에 실린 종목 규칙은 엔진에 없다» 다(실측 117종 중 114종).
+    #     그래서 RETIRED 도 HIDE_SIDS 도 아니고 **등록을 내린다.**
+    #   정의는 아래 호출과 채점·선택 갈래에 남는다(되살리려면 넷을 같이 되돌릴 것).
+    #   ⚠ 그래서 **등록 호출을 내렸다**(여기 있던 xsec(...) 호출을 지웠다).
+    #     규약·수치는 build/PREREG-2026-09-05-DEMEGA(-RESULT).md 와
+    #     build/tested_not_published.json 에 있고, 채점·선택 갈래는 남겨 뒀다.
+    #     되살리려면 넷을 같이 되돌린다: 이 xsec 호출 · SCREEN_SIDS · tech FUND_SIDS ·
+    #     pit_backtest 의 FUND_SIDS. 그리고 원장 항목에 readmitted 를 적어야 한다.
     xsec("x-bmrot-flat", "B/M 절반 상시보유 (틸트 없음 · x-bmrot 대조군)",
          "x-bmrot 과 같은 후보를 B/M 중앙값으로 반씩 나누고 항상 50/50 으로 보유한다. "
          "금리 신호를 쓰지 않는다.",
@@ -7212,6 +7239,13 @@ def xsec_score_at(S, i, X, pool=None):
                     tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
                     # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
                     v = (tot / mcap) if tot >= 0 else None
+            elif sid == "x-demega10":
+                # A16 — 점수는 **시가총액 그 자체**다(등록 PREREG-2026-09-05-DEMEGA §1).
+                #   sc 가 내림차순으로 정렬되므로 앞 10 개가 곧 「시총 상위 10」이고,
+                #   xsec_pick_at 의 x-demega10 갈래가 그것을 떼고 나머지를 동일가중한다.
+                # ⚠ 시총을 못 읽는 종목은 후보에서 빠진다 — 순위를 매길 수 없기 때문이다.
+                #   그 사실은 결과 문서에 커버리지로 적는다(몇 종을 못 읽었나).
+                v = mcap if mcap else None
             elif sid in ("x-bmrot", "x-bmrot-flat"):
                 # 점수 = B/M. 선택은 xsec_pick_at 의 갈래가 «반으로 쪼개 국면으로 기울이기» 로 한다.
                 #   규약 PREREG-2026-09-03-BMROT.md (계산 전 커밋 78c2dec92).
@@ -7513,7 +7547,29 @@ def xsec_score_at(S, i, X, pool=None):
         elif sid == "x-guruacc":
             v = guru_acc(t, dates[i - 1])
         else:
-            v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
+            # 🚨 2026-09-05 — **여기서 이름을 대고 죽는다.** 새 규칙을 넣으려면 손으로 네 곳을
+            #   채워야 한다: build_strats 의 xsec 호출 · SCREEN_SIDS(자격필터형만) ·
+            #   채점 갈래(FUND_SIDS 회원이거나 이 함수의 전용 elif) · pit 쪽 목록.
+            #   실측: A16(x-demega10)을 넣으며 FUND_SIDS 를 빠뜨렸더니 여기로 떨어져
+            #   **`TypeError: 'NoneType' object is not callable`** 로 PIT 레그가 통째로 멈췄다.
+            #   그 메시지로는 어느 규칙인지도, 무엇을 빠뜨렸는지도 알 수 없다.
+            # ⚠ 정적 검사로 잡으려다 물렀다 — 라우팅 경로가 셋(FUND_SIDS · 전용 갈래 ·
+            #   ML_SIDS)이고 갈래의 **들여쓰기**까지 뜻을 가져서, 정규식 근사가 세 번 연속
+            #   틀린 곳을 짚었다. 런타임은 근사가 아니라 사실이라 틀릴 수가 없다.
+            if S["fn"] is None:
+                # ⚠ **죽이지 않는다.** 처음에 SystemExit 로 뒀더니 기존 규칙 x-fip-base 가
+                #   죽었다 — 그것은 xsec 가 아니라 `event()` 규칙이라 이 갈래를 타도
+                #   점수가 필요 없다. 즉 「fn 이 없다」가 곧 「등록을 빠뜨렸다」는 아니다.
+                #   → 이름을 **한 번만** 찍고 None 을 돌려준다. 진짜로 빠뜨린 규칙은
+                #     그 뒤 「전 구간 무보유」 관문이 크게 잡는다(그쪽이 이미 있다).
+                if sid not in _NOFN_SEEN:
+                    _NOFN_SEEN.add(sid)
+                    print("  ⚠ [%s] 채점 함수도 채점 갈래도 없다 — 이 규칙이 xsec 형이라면 "
+                          "넷 중 하나를 빠뜨린 것이다(xsec 호출 · SCREEN_SIDS · "
+                          "FUND_SIDS/전용 갈래 · pit 목록). event 형이면 정상이다." % sid)
+                v = None
+            else:
+                v = S["fn"](t, i - 1, P, R[t], vol(R[t], i - 1, 60))
         if v is not None and v == v:
             sc.append((v, t))
     # 🚨 E30 — z-점수는 단면이 다 모여야 낼 수 있다. 위 루프에서 원지표만
@@ -7749,6 +7805,18 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     돌려주는 것: (new, new_w). new_w 가 None 이면 동일가중이다.
     """
     dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    if S["sid"] == "x-demega10":
+        # A16 — 「시총 상위 10종목을 제외하고 잔여를 동일가중」. 규약 PREREG-2026-09-05-DEMEGA.md
+        #   (계산 전 커밋 89da3394). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
+        #   (xsec_score_at 규약) — 그래서 앞 10 개를 떼면 그것이 상위 10 제외다.
+        # 🚨 «상위 N 을 고르는» 규칙이 아니라 «걸러낸 나머지 전부» 다. 그래서 자격필터형
+        #   (SCREEN_SIDS)이고 후보 수 관문을 안 건다. 남는 것이 곧 바스켓이라 크기를
+        #   내가 정하지 않는다 — 등록 §1 이 그렇게 못박았다.
+        # ⚠ 카드가 적은 변형 셋(잔여 시총가중 · 비중합 20% · 개별 3%)은 **안 만든다**(등록 §1-1).
+        _ts = [t for _v, t in sc]
+        if len(_ts) <= DEMEGA_DROP:
+            return [], None          # 후보가 제외 수 이하면 담을 것이 없다
+        return _ts[DEMEGA_DROP:], None      # None = 동일가중
     if S["sid"] == "x-bmrot-flat":
         return _bmrot_flat(sc, X, i)
     if _BASE_SID(S["sid"]) == "x-bmrot":
