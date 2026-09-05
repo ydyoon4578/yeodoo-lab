@@ -2115,8 +2115,11 @@ try:
                   env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=ROOT)
     _plo = (_pl.stdout or "") + (_pl.stderr or "")
     if _pl.returncode != 0:
-        errors.append("탐색 풀 카드의 랩 판정이 낡았다 — python build/pool_lab.py 를 돌릴 것"
-                      + (" (%s)" % _plo.strip().split("\n")[-1][:120] if _plo.strip() else ""))
+        # ⚠ 2026-09-05 — 같은 사유로 **경고다**(바로 위 pool_triage 주석 참조).
+        #   이 파일은 로컬 리서치 스케줄러가 매일 덮어쓰고, 그 잡은 lab 칸을 못 채운다.
+        #   오류로 두면 자료가 들어오는 길을 막는다 — refresh-pool-lab.yml 이 다시 붙인다.
+        print("  ~ 탐색 풀 카드의 랩 판정이 아직 안 붙었다 — refresh-pool-lab.yml 이 곧 붙인다"
+              + (" (%s)" % _plo.strip().split("\n")[-1][:100] if _plo.strip() else ""))
     else:
         for _ln in _plo.strip().split("\n"):
             if _ln.strip().startswith("~") or "선언 없는" in _ln:
@@ -2128,8 +2131,17 @@ try:
                   capture_output=True, text=True, encoding="utf-8", errors="replace",
                   env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=ROOT)
     if _tg.returncode != 0:
-        errors.append("탐색 풀 카드 판정(data/pool_triage.json)이 지금 풀과 안 맞는다 — "
-                      "python build/pool_triage.py 를 다시 돌릴 것(새 카드가 판정 없이 선다)")
+        # 🚨 2026-09-05 정정 — **오류가 아니라 경고다.** 오류로 뒀더니 로컬 리서치
+        #   스케줄러가 신규 카드를 못 넣었다: 그 잡은 rotation_pool.json 만 고칠 수 있는데
+        #   검사가 pool_triage.json 재생성까지 요구해 사이트 검증에서 막혔다
+        #   (그 잡이 커밋 메시지에 「E55 초안은 보관」이라 적고 신규 0종으로 끝냈다).
+        #   내가 만든 그물이 **자료가 들어오는 길을 막은** 것이다.
+        #   ⚠ 막을 이유도 없다 — refresh-pool-lab.yml 이 그 푸시에 반응해 몇 초 만에
+        #     다시 굽는다. 검사의 목적(새 카드가 판정 없이 서지 않게)은 그 잡이 이룬다.
+        #     여기서는 «아직 안 구워졌다» 를 보이기만 한다.
+        print("  ~ 탐색 풀 카드 판정(data/pool_triage.json)이 아직 지금 풀과 안 맞는다 — "
+              "refresh-pool-lab.yml 이 곧 다시 굽는다(손으로 하려면 "
+              "python build/pool_triage.py)")
 
     # 🚨 2026-09-05 — **판정이 실제로 배선됐는가.** 「판정만 하고 안 배선」이 사흘에 세 번
     #   났다(게시 목록 x-a1payout · 기각 원장 3건 · 탐색 풀 카드 4건). 세 번이면 사람
