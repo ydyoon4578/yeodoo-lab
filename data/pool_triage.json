@@ -4,10 +4,10 @@
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
  "n": 116,
  "counts": {
-  "measured": 40,
+  "measured": 41,
   "underspec": 40,
   "no_input": 10,
-  "ready": 26
+  "ready": 25
  },
  "cards": {
   "A1": {
@@ -698,13 +698,9 @@
    "cat": "A"
   },
   "A16": {
-   "verdict": "ready",
-   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
-   "hits": [
-    "상위\\s*\\d+",
-    "\\d+\\s*종목",
-    "\\d+\\s*%\\s*(초과|이상|미만|이하)"
-   ],
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
    "name": "시총 상위 10 제외 동일가중 (Bottom-490 디-메가캡)",
    "cat": "A"
   },
