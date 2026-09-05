@@ -2131,6 +2131,23 @@ try:
         errors.append("탐색 풀 카드 판정(data/pool_triage.json)이 지금 풀과 안 맞는다 — "
                       "python build/pool_triage.py 를 다시 돌릴 것(새 카드가 판정 없이 선다)")
 
+    # 🚨 2026-09-05 — **판정이 실제로 배선됐는가.** 「판정만 하고 안 배선」이 사흘에 세 번
+    #   났다(게시 목록 x-a1payout · 기각 원장 3건 · 탐색 풀 카드 4건). 세 번이면 사람
+    #   주의력의 문제가 아니다 — 문서가 기계가 읽게 선언하고 대조한다(build/verdict_wire.py).
+    #   ⚠ 어긋남은 **코드를 고쳐야 하는 것**(엔진 등록·HIDE_SIDS)이라 여기서는 알리기만 한다.
+    _vw = _sp.run([sys.executable, os.path.join(ROOT, "build", "verdict_wire.py"), "--check"],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace",
+                  env=dict(os.environ, PYTHONIOENCODING="utf-8"), cwd=ROOT)
+    if _vw.returncode != 0:
+        _vwo = [l.strip() for l in ((_vw.stdout or "") + (_vw.stderr or "")).split("\n")
+                if l.strip().startswith(("❌", "+"))]
+        errors.append("사전등록 판정이 배선되지 않았다 — " + " / ".join(_vwo[:3])
+                      + " (python build/verdict_wire.py 로 자료 쪽은 채워진다)")
+    else:
+        for _ln in ((_vw.stdout or "").split("\n")):
+            if _ln.startswith("판정 선언"):
+                print("  ~ " + _ln.strip())
+
     # 새 문서(오늘 이후)는 «풀카드:» 선언이 있어야 한다. 옛 53편은 소급 적용하지 않는다.
     _nod = []
     for _fn in sorted(os.listdir(os.path.join(ROOT, "build"))):
@@ -2140,13 +2157,17 @@ try:
         if not (_dm and _dm.group(1) >= "2026-09-04"):
             continue
         _t = io.open(os.path.join(ROOT, "build", _fn), encoding="utf-8").read()
-        if not re.search(r"^\s*풀카드\s*[:：]", _t, re.M):
-            _nod.append(_fn)
+        _need = [k for k in ("풀카드", "판정", "규칙")
+                 if not re.search(r"^\s*%s\s*[:：]" % k, _t, re.M)]
+        if _need:
+            _nod.append("%s(%s 없음)" % (_fn, "·".join(_need)))
     if _nod:
         errors.append(
-            "사전등록 %d편에 «풀카드:» 선언이 없다: %s — 어느 탐색 풀 카드를 잰 것인지 "
-            "문서가 스스로 적어야 카드에 판정이 되돌아간다(랩이 스스로 낸 규칙이면 "
-            "«풀카드: 없음» 이라 적을 것)" % (len(_nod), ", ".join(_nod[:4])))
+            "사전등록 %d편에 선언 줄이 없다: %s — 문서 머리에 세 줄을 적을 것. "
+            "«풀카드: D13»(어느 탐색 풀 카드인가 · 랩이 스스로 낸 규칙이면 «없음») · "
+            "«판정: 기각»(기각·게시·측정만·보류) · «규칙: x-abc»(이 판정이 걸리는 sid · "
+            "규칙이 아니면 «없음»). 그래야 판정이 카드·원장·게시 목록에 되돌아간다"
+            % (len(_nod), ", ".join(_nod[:3])))
 except Exception as _e:
     print("⚠ 탐색 풀 카드 판정 대조 실패: %s" % _e)
 

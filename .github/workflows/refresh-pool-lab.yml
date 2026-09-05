@@ -50,15 +50,31 @@ jobs:
       #   신규 카드를 넣는다) 여기서 같이 굽지 않으면 **새 카드가 판정 없이 화면에 선다.**
       - name: Re-triage pool cards
         run: python build/pool_triage.py
+      # 🚨 판정이 실제로 배선됐는지 보고, **자료 쪽(기각 원장)은 채운다.**
+      #   코드 쪽(엔진 등록·HIDE_SIDS)이 어긋나면 채우지 않고 종료코드로 알린다 —
+      #   규칙을 자동으로 등록·해제하는 것이 더 위험하다.
+      - name: Wire prereg verdicts
+        run: python build/verdict_wire.py
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 탐색 풀 카드에 랩 판정 배선" \
             data/rotation_pool.json data/pool_triage.json
+      # 🚨 기각 원장은 **따로 민다.** ci_push.sh 의 변경 감지가 `git status -- "$WATCH"` 이고
+      #   WATCH 기본값이 data/ 다 — 원장(build/)만 바뀐 실행에서는 「변경 없음 — 스킵」으로
+      #   빠져 **채운 줄이 커밋되지 않는다.** 한 호출에 섞으면 조용히 잃는 자리다.
+      #   WATCH 를 그 파일로 좁혀 부르면 누락 가드도 그 파일만 본다(계약 그대로다).
+      - name: Commit ledger if changed
+        env:
+          WATCH: build/tested_not_published.json
+        run: |
+          bash build/ci_push.sh "chore(prereg): 기각 판정을 원장에 배선" \
+            build/tested_not_published.json
       # 🚨 신선도 대신 **배선 완결성**을 본다. 이 파일의 as_of 는 웹 리서치 수집일이라
       #   이 잡이 못 움직인다 — 이 잡이 책임지는 것은 「판정이 카드에 붙어 있는가」다.
       - name: Verify wiring
         run: |
           python build/pool_lab.py --check
           python build/pool_triage.py --check
+          python build/verdict_wire.py --check

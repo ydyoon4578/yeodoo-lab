@@ -1,6 +1,9 @@
 # 결과 — D13 을 카드가 지목한 ETF 로 재현 · 2026-09-02 · **러셀판 기각(F2) · CRSP판 게시(측정만)**
 
 풀카드: D13   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+판정: 게시
+규칙: a-dur-style-v
+<!-- 러셀판 a-dur-style-r 은 기각(원장·HIDE_SIDS 에 있다) -->
 
 등록: `build/PREREG-2026-09-03-DURSTYLE4.md` — **계산 전 커밋 `7e10ff316`**
 구현: `build/asset_backtest.py` — `dur-style-r`(IWD·IWF) · `dur-style-v`(VTV·VUG)
