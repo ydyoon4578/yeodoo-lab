@@ -2098,6 +2098,83 @@ try:
 except Exception as _e:
     print("⚠ 다중검정 분모 대조 실패: %s" % _e)
 
+# ── 함수 안 import 를 **다른 함수**에서 쓰는가 ────────────────────────────────
+# 🚨 2026-09-05 — 문법은 멀쩡한데 **실행에서 NameError 로 죽는** 종류다.
+#   전날 pit_backtest.members_at 이 `_IM.at(...)` 을 부르게 고쳤는데, 그 `import
+#   index_members as _IM` 은 **453행의 다른 함수 안**이었다. members_at 은 main() 안이라
+#   안 보인다 → pit_backtest 가 통째로 죽었다.
+#   그런데 그 파일은 **CI 에서 안 돈다**(가격 캐시가 커밋 금지라 로컬 전용) — 아무도
+#   못 잡았고, 다음 날 새 규칙을 돌리려다 드러났다. 「굽는 잡이 없는 산출물」의 사각지대다.
+#   → 그런 파일일수록 **정적으로라도** 봐야 한다. import 이름이 정의된 함수 밖에서
+#     쓰이는 자리를 찾는다.
+# ⚠ 중첩 함수는 바깥 함수의 import 를 정상적으로 본다 — 어휘 스택을 따져 거짓 양성을 뺀다.
+#   (처음에 중첩을 안 따졌더니 27건이 나왔고 그중 진짜는 1건이었다.)
+# ⚠ 같은 이름의 **지역 변수**도 걸린다(_s·_c·_dt 처럼). 그래서 «대입된 적이 있는 이름» 은
+#   뺀다 — 남는 것만 진짜 후보다.
+try:
+    import ast as _ast
+
+    def _walk_scoped(_node, _stack, _out):
+        for _ch in _ast.iter_child_nodes(_node):
+            if isinstance(_ch, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+                _walk_scoped(_ch, _stack + [_ch], _out)
+            else:
+                _out.append((_ch, list(_stack)))
+                _walk_scoped(_ch, _stack, _out)
+
+    _scope_bad = []
+    for _f in sorted(os.listdir(os.path.join(ROOT, "build"))):
+        if not _f.endswith(".py"):
+            continue
+        try:
+            _tree = _ast.parse(io.open(os.path.join(ROOT, "build", _f), encoding="utf-8").read())
+        except SyntaxError as _se:
+            errors.append("build/%s: 파이썬 문법 오류 %s행 — %s" % (_f, _se.lineno, _se.msg))
+            continue
+        _nodes = []
+        _walk_scoped(_tree, [], _nodes)
+        _top = {a.asname or a.name.split(".")[0] for n in _tree.body
+                if isinstance(n, (_ast.Import, _ast.ImportFrom)) for a in n.names}
+        _imp, _assigned = {}, set()
+        for _n, _st in _nodes:
+            if isinstance(_n, (_ast.Import, _ast.ImportFrom)) and _st:
+                for a in _n.names:
+                    _imp.setdefault(a.asname or a.name.split(".")[0], []).append(_st)
+            elif isinstance(_n, _ast.Name) and isinstance(_n.ctx, (_ast.Store, _ast.Del)):
+                _assigned.add(_n.id)
+        # ⚠ 인자로 **넘겨받는** 이름도 지역이다. 위 순회는 중첩 함수를 스택으로 내려가느라
+        #   FunctionDef 노드 자체를 _nodes 에 안 담아서 인자를 못 셌다 —
+        #   그 탓에 refresh_estimates 의 `def pull(t, yf)` 가 거짓 양성으로 잡혔다.
+        #   (그 파일은 매주 멀쩡히 돈다 — 검사가 틀렸지 코드가 틀린 게 아니다.)
+        #   트리 전체를 따로 훑어 인자·전역선언 이름을 더한다.
+        for _fn2 in _ast.walk(_tree):
+            if isinstance(_fn2, (_ast.FunctionDef, _ast.AsyncFunctionDef, _ast.Lambda)):
+                _a = _fn2.args
+                _assigned |= {x.arg for x in (_a.args + _a.kwonlyargs + _a.posonlyargs)}
+                for _x in (_a.vararg, _a.kwarg):
+                    if _x:
+                        _assigned.add(_x.arg)
+        for _n, _st in _nodes:
+            if not (isinstance(_n, _ast.Name) and isinstance(_n.ctx, _ast.Load)):
+                continue
+            _nm = _n.id
+            if _nm in _top or _nm in _assigned or _nm not in _imp:
+                continue
+            if any(len(_i) <= len(_st) and _st[:len(_i)] == _i for _i in _imp[_nm]):
+                continue
+            _scope_bad.append("build/%s:%d `%s`(임포트는 %s() 안)"
+                              % (_f, _n.lineno, _nm,
+                                 "→".join(x.name for x in _imp[_nm][0])))
+    if _scope_bad:
+        errors.append(
+            "함수 안 import 를 다른 함수에서 쓴다 %d곳: %s — 실행하면 NameError 로 죽는다. "
+            "쓰는 함수 안에서 다시 import 할 것(문법은 멀쩡해서 파서로는 안 잡힌다)"
+            % (len(_scope_bad), " · ".join(sorted(set(_scope_bad))[:4])))
+    else:
+        print("  ~ 함수 밖 import 참조 검사 통과(build/*.py 전수)")
+except Exception as _e:
+    print("⚠ 함수 밖 import 참조 검사 실패: %s" % _e)
+
 # ── 탐색 풀 카드에 랩 판정이 되돌아가 있는가 ─────────────────────────────────
 # 🚨 2026-09-04 — rotation.html 의 카드에는 「랩 자체 검증 결과」 칸(lab)이 있는데 **손으로**
 #   채워 왔다. 그래서 안 채워졌다 — 실측: A1(자사주매입+배당성장) · C14(달러 캐리) ·
