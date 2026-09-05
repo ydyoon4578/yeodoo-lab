@@ -1,6 +1,9 @@
 # 결과 — 금리 카드 둘 · 2026-09-02 · **D8 기각 · D13 통과(측정만)**
 
 풀카드: D8, D13   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+판정: 기각
+규칙: a-bond-rolldown
+<!-- D8 기각 · D13(a-dur-style)은 DURSTYLE4 문서가 판정한다 -->
 
 등록: `build/PREREG-2026-09-03-RATE2.md` — **계산 전 커밋 `882740940`**
 구현: `build/asset_backtest.py` — `bond-rolldown` · `dur-style`

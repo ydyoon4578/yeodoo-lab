@@ -1,6 +1,9 @@
 # 결과 — A1 자사주매입+배당성장 · 2026-09-02
 
 풀카드: A1   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+판정: 보류
+규칙: x-a1payout
+<!-- 여섯 조건을 넘어 «게시 후보» 였으나 후속 등록 A1FIX 가 분모 시점을 정정해 **철회**했다 -->
 
 등록: `build/PREREG-2026-09-02-A1PAYOUT.md` — **계산 전 커밋 `5153b0c07`**
 구현: `x-a1payout` (`build/tech_backtest.py` · `build/pit_backtest.py`)

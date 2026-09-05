@@ -1,6 +1,9 @@
 # 결과 — S&P 스타일 점수 금리 로테이션 · 2026-09-02 · **기각(F1) · F6 발동**
 
 풀카드: D13   <!-- build/pool_lab.py 가 이 줄을 읽어 탐색 풀 카드에 판정을 붙인다 -->
+판정: 기각
+규칙: x-ssrot
+<!-- standalone 측정이라 엔진에 등록한 적이 없다 -->
 
 등록: `build/PREREG-2026-09-03-SSROT.md` — **계산 전 커밋 `0e0ba241f`**
 구현: `build/ssrot.py` → `data/_ssrot.json`(얼린 측정 · 커밋 안 함)
