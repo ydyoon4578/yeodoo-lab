@@ -117,7 +117,7 @@ XSEC_MIN_POOL = 3 * TOPN   # 채점 후보가 이보다 적은 월말은 무보�
 # 🚨 2026-09-03 — 비었다. 유일한 회원이던 x-a1payout 이 사전등록 기각(A1FIX F2 · PIT t 1.24)
 #   으로 등록에서 내려갔다. **기제는 남긴다** — 자격필터형 규칙이 또 나오면 그때 여기 넣는다.
 #   ⚠ 빈 집합이라 min_pool 은 전 규칙에 XSEC_MIN_POOL 을 그대로 건다(종전과 같다).
-SCREEN_SIDS: set = {"x-demega10"}
+SCREEN_SIDS: set = {"x-cgate", "x-cgate-mom"}
 # 🚨 2026-09-05 — 다시 회원이 생겼다. A16「시총 상위 10 제외 동일가중」은 순위로 상위 N 을
 #   고르는 규칙이 아니라 **걸러낸 나머지 전부**라, 후보 수 관문(XSEC_MIN_POOL)을 걸면
 #   뜻이 어긋난다. 2026-09-03 에 x-a1payout 을 내리며 이 기제를 **비운 채 남겨 뒀고**
@@ -125,6 +125,8 @@ SCREEN_SIDS: set = {"x-demega10"}
 DEMEGA_DROP = 10           # 카드 A16 의 수. 랩이 고른 값이 아니다(원문: 「상위 10종목을 제외」)
 # 채점 함수도 채점 갈래도 없는 규칙을 **한 번만** 알리려는 자리(xsec_score_at 의 그 자리 참조).
 _NOFN_SEEN: set = set()
+# A15 집중도 게이트의 **확장 윈도우 이력**(_cgate_pick 참조). 레그가 바뀌면 그 함수가 비운다.
+_CGATE_H: dict = {}
 SCREEN_MIN = 1             # 하한을 안 둔다(등록 §5). 0 종인 달만 무보유로 떨어진다.
 
 
@@ -794,6 +796,9 @@ PIT_CODE_REV = "2026-09-02c"   # ← 2026-08-19 에서 올렸다: 선택기가 �
 WEIGHTED_SIDS = ("x-valcomp-sn", "x-revdrift-sn", "x-indmom", "x-grppick",
                  # 바스켓이 «상위 N» 이 아니라 유니버스 절반씩 두 다리다(PREREG-…-BMROT).
                  "x-bmrot", "x-bmrot-flat",
+                 # A15 집중도 게이트 — 명단 전부를 담고 **비중**이 국면으로 바뀐다
+                 #   (동일가중 ↔ 시총가중 ↔ 절반 혼합). PREREG-2026-09-07-CGATE.
+                 "x-cgate", "x-cgate-mom",
                  # 비중상한 — 바스켓이 «상위 N» 으로 안 정해진다(명단 전부를 담는다).
                  "x-capw", "x-cap10", "x-cap5", "x-cap45", "x-cap3", "x-capndx",
                  "x-ncapw", "x-ncap10", "x-ncap5", "x-ncap45", "x-ncapndx")
@@ -4235,7 +4240,9 @@ FUND_SIDS = {
              #     PIT 레그가 그렇게 멈췄다). 등록 네 곳(xsec 호출 · SCREEN_SIDS ·
              #     tech FUND_SIDS · pit FUND_SIDS)을 **같이** 채워야 한다.
              #   → 빠뜨리면 xsec_score_at 이 이름을 대고 죽는다(그 자리 주석 참조).
-             "x-demega10"}
+             "x-demega10",
+             # 🚨 2026-09-07 CGATE(카드 A15) — 점수가 시가총액이라 여기다.
+             "x-cgate", "x-cgate-mom"}
 
 
 def build_strats():
@@ -4735,6 +4742,16 @@ def build_strats():
     #     build/tested_not_published.json 에 있고, 채점·선택 갈래는 남겨 뒀다.
     #     되살리려면 넷을 같이 되돌린다: 이 xsec 호출 · SCREEN_SIDS · tech FUND_SIDS ·
     #     pit_backtest 의 FUND_SIDS. 그리고 원장 항목에 readmitted 를 적어야 한다.
+    # 🚨 2026-09-07 — **기각(PREREG-2026-09-07-CGATE-RESULT · F2).** 등록을 내렸다.
+    #   주 규칙 x-cgate 는 «게이트» 가 아니었다 — 121 리밸 중 **109달(90%)** 을 동일가중으로
+    #   보냈다(이 창은 집중도가 단조 증가해 확장 윈도우 백분위가 거의 항상 상위였다).
+    #   그래서 무조건 동일가중 대비 +0.056 · **t 0.86** 으로 F2 에서 걸렸다.
+    #   ⚠ 카드가 요구한 병행판(x-cgate-mom)은 t 2.10 이었지만 **그것으로 판정을 바꾸지
+    #     않았다** — 등록 §1-1 이 계산 전에 「좋은 쪽을 고르지 않는다」고 못박았다.
+    #     그 t 는 게시 근거가 아니라 **다음 등록의 가설**이다.
+    #   ⚠ 정의는 남긴다 — 채점 갈래 · _cgate_pick · gate_regimes. 되살리려면 넷을 같이
+    #     되돌리고(xsec 호출 · SCREEN_SIDS · WEIGHTED_SIDS · tech/pit FUND_SIDS)
+    #     원장 항목에 readmitted 를 적어야 한다.
     xsec("x-bmrot-flat", "B/M 절반 상시보유 (틸트 없음 · x-bmrot 대조군)",
          "x-bmrot 과 같은 후보를 B/M 중앙값으로 반씩 나누고 항상 50/50 으로 보유한다. "
          "금리 신호를 쓰지 않는다.",
@@ -7239,6 +7256,10 @@ def xsec_score_at(S, i, X, pool=None):
                     tot = (dp * sn if dp is not None else 0.0) + (bbv or 0.0)
                     # 자사주는 유출액이라 양수다. 음수(순발행)면 환원이 아니다.
                     v = (tot / mcap) if tot >= 0 else None
+            elif sid in ("x-cgate", "x-cgate-mom"):
+                # A15 — 점수는 시가총액이다. 비중(동일 ↔ 시총)은 _cgate_pick 이 정한다.
+                #   규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071).
+                v = mcap if mcap else None
             elif sid == "x-demega10":
                 # A16 — 점수는 **시가총액 그 자체**다(등록 PREREG-2026-09-05-DEMEGA §1).
                 #   sc 가 내림차순으로 정렬되므로 앞 10 개가 곧 「시총 상위 10」이고,
@@ -7740,6 +7761,85 @@ def sub_baskets(X, i, axis, tickers=None):
     return leg(top, 1.0), leg(bot, -1.0), len(score)
 
 
+def _cgate_pick(sc, X, i, mom=False):
+    """A15 — 집중도 국면으로 **동일가중 ↔ 시총가중**을 전환한다.
+
+    규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071). 카드 원문 그대로:
+      · 집중도 = 그 월말 채점 가능 종목의 시총 비중 **허핀달**(비중 제곱합)
+      · 표준화 = **확장 윈도우 백분위**(그 시점까지의 과거만) — 고정 임계치 금지(선견 방지)
+      · 상위 1/3 → 전 종목 동일가중 · 하위 1/3 → 시총가중 · 중간 → 두 벡터를 절반씩 혼합
+
+    mom=True 면 «집중도 **수준**» 대신 «12개월 변화»(집중도 모멘텀)로 게이트한다.
+      🚨 카드가 「반드시 병행하라」고 한 변형이다(§1-1). **둘 중 좋은 것을 고르지 않는다** —
+        병행의 목적은 평균회귀 가설과 추세 가설 중 어느 쪽이 맞나를 가리는 것이다.
+        주 규칙은 수준판이고 판정도 그것으로 한다.
+
+    🚨 **백분위는 «과거만» 이어야 한다.** 전 구간 허핀달을 모아 놓고 백분위를 매기면
+      그 자체가 선견이다 — 오늘의 집중도가 «역사상 상위인가» 를 미래를 보고 답하게 된다.
+      그래서 실행 중에 쌓아 가는 목록(_CGATE_H)에 대고만 잰다.
+    ⚠ 워밍업 개월수를 두지 않는다(등록 §1). 관측이 1개뿐인 첫 달은 백분위가 0 이 되어
+      «하위 1/3 = 시총가중» 으로 떨어진다 — 그것이 「그 시점까지의 자료」의 문자 그대로다.
+    """
+    ts = [t for _v, t in sc]
+    if len(ts) < 30:
+        return [], None
+    mc = {t: v for v, t in sc}                       # 점수 = 시가총액(채점 갈래 참조)
+    tot = sum(mc.values())
+    if tot <= 0:
+        return [], None
+    w_cap = {t: mc[t] / tot for t in ts}             # 시총가중
+    herf = sum(x * x for x in w_cap.values())        # 허핀달 = 비중 제곱합
+
+    # 🚨 **레그마다 이력을 새로 쌓는다.** 이 함수는 모듈 전역에 이력을 들고 있는데,
+    #   같은 규칙이 소급 레그와 PIT 레그에서 두 번 돌고(그리고 pit_backtest 가 또 부른다)
+    #   그때 이력이 이어지면 **백분위가 앞 레그의 관측을 섞어 쓴다** — 조용히 틀린다.
+    #   백테스트는 i 를 오름차순으로 걷으므로, i 가 되돌아가면 새 레그가 시작된 것이다.
+    key = "mom" if mom else "lvl"
+    _li = _CGATE_H.get("_last_i", {})
+    if i <= _li.get(key, -1):
+        for _k in (key, "raw", "skip", "state"):
+            _CGATE_H.pop(_k, None)
+    _CGATE_H.setdefault("_last_i", {})[key] = i
+    hist = _CGATE_H.setdefault(key, [])
+    if mom:
+        # 12개월 변화 — 월말 격자에서 12칸 전과 견준다. 이력이 짧으면 게이트를 못 켠다.
+        raw = _CGATE_H.setdefault("raw", [])
+        raw.append(herf)
+        if len(raw) <= 12:
+            _CGATE_H.setdefault("skip", set()).add(i)
+            return ts, w_cap                         # 판정 불가 구간은 벤치마크(시총가중)
+        sig = herf - raw[-13]
+    else:
+        sig = herf
+    # ⚠ 백분위를 낸 **뒤에** 오늘 값을 넣는다 — 오늘 값을 포함해 매기면 자기 자신과 비교하게 된다.
+    pct = (sum(1 for x in hist if x < sig) / len(hist)) if hist else 0.0
+    hist.append(sig)
+
+    n = len(ts)
+    w_eq = {t: 1.0 / n for t in ts}
+    if pct >= 2.0 / 3.0:
+        w = w_eq                                     # 집중도 상위 1/3 → 동일가중
+    elif pct <= 1.0 / 3.0:
+        w = w_cap                                    # 하위 1/3 → 시총가중
+    else:
+        w = {t: 0.5 * w_eq[t] + 0.5 * w_cap[t] for t in ts}   # 중간 → 절반씩
+    # 🚨 F6 을 재려면 **상태 이력**이 있어야 한다(등록 §3: 전환 6회 이하면 「측정 불가」).
+    #   조건부 전략인데 조건이 거의 안 바뀌면 조건을 잰 것이 아니다.
+    #   ⚠ 두 번째 구현으로 세지 않는다 — 엔진이 실제로 켠 상태를 그대로 쌓는다.
+    #     밖에서 허핀달을 다시 만들어 세면 경로가 둘이 되고 언젠가 갈린다.
+    st = "eq" if w is w_eq else ("cap" if w is w_cap else "mix")
+    _CGATE_H.setdefault("seq", {}).setdefault(key, []).append(st)
+    return ts, w
+
+
+def cgate_regimes(key="lvl"):
+    """게이트 상태 이력과 전환 횟수. 마지막으로 돈 레그의 것이다(등록 F6)."""
+    sq = (_CGATE_H.get("seq") or {}).get(key) or []
+    sw = sum(1 for a, b in zip(sq, sq[1:]) if a != b)
+    from collections import Counter
+    return {"n": len(sq), "switches": sw, "dist": dict(Counter(sq)), "seq": sq}
+
+
 def _bmrot_pick(sc, X, i):
     """B/M 로 반씩 쪼갠 뒤 실질금리 국면으로 두 다리를 기울인다(등록 PREREG-…-BMROT §1).
 
@@ -7805,6 +7905,8 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     돌려주는 것: (new, new_w). new_w 가 None 이면 동일가중이다.
     """
     dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
+    if S["sid"] in ("x-cgate", "x-cgate-mom"):
+        return _cgate_pick(sc, X, i, mom=(S["sid"] == "x-cgate-mom"))
     if S["sid"] == "x-demega10":
         # A16 — 「시총 상위 10종목을 제외하고 잔여를 동일가중」. 규약 PREREG-2026-09-05-DEMEGA.md
         #   (계산 전 커밋 89da3394). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
@@ -8741,6 +8843,13 @@ def run():
             "episodes": (episodes if S["kind"] == "timing" else
                          (len(bask_hist) - sum(1 for x in bask_hist if not x)
                           if bask_hist else None)),
+            # 🚨 A15 집중도 게이트 — **게이트가 실제로 몇 번 바뀌었나**를 싣는다.
+            #   등록 PREREG-2026-09-07-CGATE §3 의 F6 이 「전환 6회 이하면 측정 불가」다:
+            #   조건부 전략인데 조건이 거의 안 바뀌면 **조건을 잰 것이 아니다**(C14 의 잣대).
+            #   ⚠ 밖에서 허핀달을 다시 만들어 세지 않는다 — 엔진이 실제로 켠 상태를 그대로
+            #     싣는다. 두 번째 구현을 두면 경로가 갈리고 언젠가 다른 답을 낸다.
+            "gate_regimes": (cgate_regimes("mom" if S["sid"] == "x-cgate-mom" else "lvl")
+                             if S["sid"] in ("x-cgate", "x-cgate-mom") else None),
             # 리밸런스 주기 — 화면이 '월말'을 손으로 적지 않게 규칙에서 실어 보낸다.
             # 🚨 종전에는 전 규칙이 월말이라 설명문에 글자로 박혀 있었다. 주기가 갈린 뒤로는
             #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).
