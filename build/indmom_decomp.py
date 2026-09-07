@@ -43,6 +43,18 @@ MIN_GROUPS = 12           # §4-2 — 후보 그룹이 이보다 적은 달은 �
 
 def main():
     import tech_backtest as TB
+    # 🚨 2026-09-07 — **부분 시점정확** 갈래(PREREG-2026-09-07-INDMOM2 · 커밋 b50e7587).
+    #   `--pit` 를 주면 매 월말 «그때 지수에 있던 종목» 만 후보로 둔다.
+    #   ⚠ 여섯 상수(형성구간·계층·최소 종목 수·상위 N·산업수익 가중·보유)는 **하나도 안
+    #     바꾼다.** 바뀌는 것은 후보 집합 하나뿐이고, 그것이 이 등록의 전부다.
+    #   ⚠ 이것은 «PIT» 이 아니라 «부분 PIT» 이다 — 편출 종목의 GICS 산업그룹이 랩에
+    #     없어 생존편향은 못 걷는다(등록 §2). 산출물에 그 이름으로 적는다.
+    PIT = "--pit" in sys.argv
+    # 🚨 --from=YYYY-MM — **창을 맞추는** 갈래. 부분 PIT 은 멤버십 자료가 늦게 시작해
+    #   소급 판(2010-02~)보다 창이 짧다(2014-07~). 두 레그를 그대로 견주면 «선견을 걷은
+    #   효과» 와 «창이 다른 효과» 가 섞인다 — 이 랩이 스타일 측정에서 이미 밟은 함정이다.
+    #   그래서 소급도 같은 창으로 잘라 한 번 더 돌린다.
+    _FROM = next((a[7:] for a in sys.argv if a.startswith("--from=")), None)
     dates, px, vlm, hid, lod, meta, rf = TB.load(full=True)
     FU = TB.load_fund()
     me = TB.month_ends(dates)
@@ -57,6 +69,17 @@ def main():
     GRP = {t: (r.get("grp") or "") for t, r in rows.items()}
     SEC = {t: (r.get("sector") or "") for t, r in rows.items()}
     print("산업그룹 자료 %d종목 · %d그룹" % (len(GRP), len(set(GRP.values()) - {""})))
+    # 부분 PIT 후보 — 그때 지수 편입명단. 꼬리 규약은 index_members.at 한 곳에 있다.
+    _mem = None
+    if PIT:
+        import index_members as _IMi
+        _mem = _IMi.load()[0]
+        print("  [부분 PIT] 멤버십 %d개월 — 선견만 걷는다(편출 종목은 여전히 빠진다)"
+              % len(_mem))
+
+    def _pool_at(i):
+        import index_members as _IMj
+        return _IMj.at(_mem, dates[i][:7], label="지수 멤버십")
 
     def mom(t, i):
         """12-1. ⚠ 랩의 x-mom12 와 **같은 식**이다 — 사본을 만들지 않으려 같은 꼴로 쓴다."""
@@ -84,9 +107,14 @@ def main():
         i0, i1 = me[k], me[k + 1]
         if i0 < LONG + 5:
             continue
+        if _FROM and dates[i1][:7] < _FROM:
+            continue
         # 종목 12-1
         sm = {}
+        _cand = _pool_at(i0) if PIT else None
         for t in px:
+            if _cand is not None and t not in _cand:
+                continue
             v = mom(t, i0)
             if v is not None and v == v:
                 sm[t] = v
@@ -244,7 +272,26 @@ def main():
         "series": {"dates": [dates[i1][:7] for _i0, i1, _n in picks["I"]][-n0:],
                    **series, "uni": [round(x, 6) for x in uni]},
     }
-    io.open(OUT, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
+    # 🚨 부분 PIT 판은 **다른 파일로** 나간다. 소급 판(정본)을 덮으면 8월 결과 문서가
+    #   가리키는 수가 조용히 바뀌고, 그러면 두 레그를 나란히 볼 수가 없다.
+    _out = OUT
+    if _FROM and not PIT:
+        _out = os.path.join(DATA, "indmom_retro_matched.json")
+        doc["leg"] = "retro_matched"
+        doc["leg_note"] = ("소급 레그를 **부분 PIT 과 같은 창**으로 잘라 다시 돌린 판이다. "
+                           "두 레그를 그대로 견주면 «선견을 걷은 효과» 와 «창이 다른 효과» 가 "
+                           "섞인다 — 이것과 indmom_pit.json 의 차이가 곧 «선견을 걷은 효과» 다.")
+    elif PIT:
+        _out = os.path.join(DATA, "indmom_pit.json")
+        doc["leg"] = "partial_pit"
+        doc["leg_note"] = ("🚨 **부분 시점정확**이다 — 매 월말 그때 지수에 있던 종목만 후보로 "
+                           "뒀지만(선견 보정), 편출 종목은 여전히 빠져 있다(생존 미보정). "
+                           "편출 종목의 GICS 산업그룹이 랩에 없기 때문이다. "
+                           "⚠ 산업 분류 자체도 오늘의 GICS 라 그 선견은 이 판도 못 고친다. "
+                           "규약 PREREG-2026-09-07-INDMOM2.md(계산 전 커밋 b50e7587).")
+    else:
+        doc["leg"] = "retro"
+    io.open(_out, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
 
     print("\n%-3s %-22s %7s %7s %7s %7s %9s %9s" %
           ("", "", "CAGR", "Vol", "샤프", "MDD", "유니초과", "유니dS"))
@@ -264,7 +311,7 @@ def main():
              d["months_below_%d" % MIN_GROUPS], d["months_below_pct"], d["thin_dropped_mean"]))
     print("상위 3이 한 섹터에 겹친 달 %d / %d (%.1f%%)"
           % (d["sector_concentrated_months"], d["months"], d["sector_concentrated_pct"]))
-    print("→ %s" % OUT)
+    print("→ %s%s" % (_out, "  ⚠ 부분 PIT — 소급 정본이 아니다" if PIT else ""))
 
 
 if __name__ == "__main__":

@@ -161,6 +161,12 @@ KNOWN_UNREAD = {
 
 # PIT 랩은 통째로 로컬에서 돈다(가격 캐시가 있는 PC). 파일마다 같은 말을 적지 않는다.
 KNOWN_BUILDER = {
+    "indmom_decomp.py":
+        "A22 분해(data/indmom.json · indmom_pit.json · indmom_retro_matched.json). 손으로 "
+        "돌리는 얼린 측정이라 잡에 안 붙인다. --pit 는 부분 시점정확(선견만 보정), "
+        "--from 은 창을 맞춘 소급 — 셋을 나란히 놓아야 «선견 효과» 와 «창 효과» 가 갈린다. "
+        "결과는 PREREG-2026-08-28-INDMOM-RESULT.md 와 PREREG-2026-09-07-INDMOM2-RESULT.md "
+        "가 읽고, x-residind 의 근거 문장이 후자를 가리킨다(2026-09-07 배선).",
     "cap_axis_bridge.py":
         "재현 연구(data/cap_axis_bridge.json) — Shin(2026) 「시총축 적분 진단」 arXiv "
         "2607.01765v3. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다. 결과는 "
