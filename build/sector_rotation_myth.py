@@ -2,7 +2,7 @@
 """재현 — Molchanov & Stangl(2024) 「경기순환 섹터 로테이션이라는 신화」.
 
 원문: *International Journal of Finance & Economics* 29(4), 4419–4442. DOI 10.1002/ijfe.2882.
-규약: build/PREREG-2026-09-07-SRMYTH.md — **계산 전 커밋 3d1ace32**.
+규약: build/PREREG-2026-09-07-SRMYTH.md — **계산 전 커밋 ae6436ef**.
 
 🚨 **게시용 규칙이 아니다.** 완전 예지(다음 고점·저점을 안다)를 쓰므로 실시간에 못 쓴다.
   전략 등록부에 안 올린다(등록 §7). 랩의 실시간판은 asset_backtest 의 a7-fidelity 다.
@@ -218,7 +218,7 @@ def main():
                                "rotation_11sector": {"mean": 0.98, "sd": 5.54,
                                                      "beta": 1.10, "sharpe": 0.17},
                                "window": "1948-01~2022-05 · 경기순환 15개 · FF48 산업"}},
-        "prereg": "build/PREREG-2026-09-07-SRMYTH.md (계산 전 커밋 3d1ace32)",
+        "prereg": "build/PREREG-2026-09-07-SRMYTH.md (계산 전 커밋 ae6436ef)",
         "window": {"from": months[0], "to": months[-1], "n_months": len(months)},
         "undefined_months": {"n": len(undef), "note":
                              ("단계가 정의되지 않은 달 — 끝나지 않은 확장과 자료 앞 끝이다. "
