@@ -127,6 +127,8 @@ DEMEGA_DROP = 10           # 카드 A16 의 수. 랩이 고른 값이 아니다(
 _NOFN_SEEN: set = set()
 # A15 집중도 게이트의 **확장 윈도우 이력**(_cgate_pick 참조). 레그가 바뀌면 그 함수가 비운다.
 _CGATE_H: dict = {}
+# A17 섹터 집중도 게이트의 **섹터별** 확장 윈도우 이력(_secew_pick 참조). 같은 규약이다.
+_SECEW_H: dict = {}
 SCREEN_MIN = 1             # 하한을 안 둔다(등록 §5). 0 종인 달만 무보유로 떨어진다.
 
 
@@ -4242,7 +4244,8 @@ FUND_SIDS = {
              #   → 빠뜨리면 xsec_score_at 이 이름을 대고 죽는다(그 자리 주석 참조).
              "x-demega10",
              # 🚨 2026-09-07 CGATE(카드 A15) — 점수가 시가총액이라 여기다.
-             "x-cgate", "x-cgate-mom"}
+             "x-cgate", "x-cgate-mom",
+             }
 
 
 def build_strats():
@@ -4752,6 +4755,18 @@ def build_strats():
     #   ⚠ 정의는 남긴다 — 채점 갈래 · _cgate_pick · gate_regimes. 되살리려면 넷을 같이
     #     되돌리고(xsec 호출 · SCREEN_SIDS · WEIGHTED_SIDS · tech/pit FUND_SIDS)
     #     원장 항목에 readmitted 를 적어야 한다.
+    # 🚨 2026-09-07 — **기각(PREREG-2026-09-07-SECEW-RESULT · F2).** 등록을 내렸다.
+    #   게이트는 **이번엔 진짜로 돌았다**(A15 와 갈리는 지점이다) — 1,331 섹터-달 중 ON 59.4%,
+    #   섹터별로 29.8%(산업재)~81.8%(소재)로 크게 갈렸다. 그런데 게이트의 순기여가
+    #   **+0.012 · t 0.31** 이라 F2 에서 걸렸다. **작동했지만 값이 없었다.**
+    #   ⚠ 판정 대조군은 벤치가 아니라 **무조건형(x-secew)** 이었다 — 카드가 「게이트의
+    #     순기여를 분리 보고하라」고 적었고, 2026년이 동일가중에 유리한 해라 시총가중
+    #     대비로 읽으면 게이트 덕인지 국면 덕인지 안 갈리기 때문이다(그 설계가 일했다).
+    #   ⚠ 카드의 본래 물음(초과수익이 섹터 배분인가 내부 균등화인가)에는 답이 나왔다 —
+    #     섹터 내부만 균등화한 것과 전면 동일가중이 **구별할 수 없었다**(Δ +0.066 · t 1.06).
+    #   ⚠ 정의는 남긴다 — 채점 갈래 · _secew_pick · secew_regimes · pit 의 vs_ctrl.
+    #     되살리려면 넷을 같이 되돌리고(xsec 호출 · SCREEN_SIDS · WEIGHTED_SIDS ·
+    #     tech/pit FUND_SIDS) 원장 항목에 readmitted 를 적어야 한다.
     xsec("x-bmrot-flat", "B/M 절반 상시보유 (틸트 없음 · x-bmrot 대조군)",
          "x-bmrot 과 같은 후보를 B/M 중앙값으로 반씩 나누고 항상 50/50 으로 보유한다. "
          "금리 신호를 쓰지 않는다.",
@@ -7260,6 +7275,11 @@ def xsec_score_at(S, i, X, pool=None):
                 # A15 — 점수는 시가총액이다. 비중(동일 ↔ 시총)은 _cgate_pick 이 정한다.
                 #   규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071).
                 v = mcap if mcap else None
+            elif sid in ("x-secew", "x-secew-gate"):
+                # A17 — 점수는 시가총액이다. 섹터 비중 고정과 섹터 내부 비중은
+                #   _secew_pick 이 정한다. 규약 PREREG-2026-09-07-SECEW.md(커밋 7d4291ed).
+                # ⚠ 시총을 못 읽는 종목은 후보에서 빠진다 — 섹터 비중을 만들 수 없기 때문이다.
+                v = mcap if mcap else None
             elif sid == "x-demega10":
                 # A16 — 점수는 **시가총액 그 자체**다(등록 PREREG-2026-09-05-DEMEGA §1).
                 #   sc 가 내림차순으로 정렬되므로 앞 10 개가 곧 「시총 상위 10」이고,
@@ -7832,6 +7852,111 @@ def _cgate_pick(sc, X, i, mom=False):
     return ts, w
 
 
+def _secew_pick(sc, X, i, gate=False):
+    """A17 — 섹터 비중은 벤치마크에 고정하고 **섹터 내부만** 동일가중한다.
+
+    규약 build/PREREG-2026-09-07-SECEW.md(계산 전 커밋 7d4291ed). 카드 원문 그대로:
+      · 섹터(GICS) 비중 = 벤치마크 시총가중과 **같게 고정** — 섹터 베팅이 없다(등록 F7)
+      · gate=False → **모든** 섹터 내부를 동일가중(카드가 지정한 대조군 «가»)
+      · gate=True  → 보정 집중도가 그 섹터 **자기 역사**의 확장 윈도우 백분위 상위 1/3 인
+        섹터만 내부를 동일가중, 나머지는 내부도 시총가중(카드의 본체 «나»)
+
+    🚨 보정 집중도는 «허핀달 × 섹터 종목 수» 다. 카드가 「또는 유효 종목 수/실제 종목 수」
+      라고 둘을 적었는데 **고를 것이 없다** — 유효 종목 수 ≡ 1/허핀달이므로 둘은 서로
+      단조 역함수이고, 백분위 순위는 단조변환에 불변이라 «A 상위 1/3» 과 «B 하위 1/3» 이
+      같은 달 집합이다(등록 §1 에 확인까지 적어 뒀다). 고른 것이 아니라 같은 것이다.
+
+    🚨 백분위는 **그 섹터의 과거만** 쓴다. 전 구간을 모아 매기면 그 자체가 선견이다.
+    ⚠ 워밍업을 두지 않는다(등록 §2). 관측이 1개뿐인 첫 달은 백분위 0 → 시총가중이다.
+    """
+    ts = [t for _v, t in sc]
+    if len(ts) < 30:
+        return [], None
+    meta = X["meta"]
+    mc = {t: v for v, t in sc}                       # 점수 = 시가총액(채점 갈래 참조)
+    tot = sum(mc.values())
+    if tot <= 0:
+        return [], None
+
+    # 섹터로 묶는다. 섹터를 모르는 종목은 담지 않는다 — «미분류» 라는 가짜 섹터를 만들면
+    #   그 안에서 동일가중이 돌아 카드에 없는 다리가 생긴다.
+    grp: dict = {}
+    for t in ts:
+        s = ((meta.get(t) or {}).get("sector") or "").strip()
+        if s:
+            grp.setdefault(s, []).append(t)
+    if not grp:
+        return [], None
+
+    # 🚨 레그마다 이력을 새로 쌓는다(_cgate_pick 과 같은 사유 — i 가 되돌아가면 새 레그다).
+    key = "gate" if gate else "flat"
+    _li = _SECEW_H.get("_last_i", {})
+    if i <= _li.get(key, -1):
+        _SECEW_H.pop(key, None)
+        for _k in ("seq", "by_sec"):
+            (_SECEW_H.get(_k) or {}).pop(key, None)
+    _SECEW_H.setdefault("_last_i", {})[key] = i
+    hist = _SECEW_H.setdefault(key, {})
+
+    w, on = {}, []
+    for s in sorted(grp):
+        mem = grp[s]
+        sw = sum(mc[t] for t in mem)                 # 그 섹터의 벤치마크 비중(시총)
+        if sw <= 0:
+            continue
+        sec_w = sw / tot                             # ⚠ 섹터 비중은 **여기서 고정**된다
+        n = len(mem)
+        inner_cap = {t: mc[t] / sw for t in mem}
+        herf = sum(x * x for x in inner_cap.values())
+        adj = herf * n                               # 보정 집중도(종목 수 차이를 지운다)
+        h = hist.setdefault(s, [])
+        # ⚠ 백분위를 낸 **뒤에** 오늘 값을 넣는다(자기 자신과 비교하지 않는다).
+        pct = (sum(1 for x in h if x < adj) / len(h)) if h else 0.0
+        h.append(adj)
+        eq = (not gate) or pct >= 2.0 / 3.0
+        inner = ({t: 1.0 / n for t in mem} if eq else inner_cap)
+        for t in mem:
+            w[t] = sec_w * inner[t]
+        on.append(1 if eq else 0)
+        # 등록 §3-1 의 P1 이 「섹터마다 크게 갈릴 것」이라 예측했다 — 섹터별로도 세야
+        #   그 예측을 판정할 수 있다. ⚠ 서술이지 규칙이 아니다(비중에 안 쓴다).
+        _bs = _SECEW_H.setdefault("by_sec", {}).setdefault(key, {}).setdefault(s, [0, 0])
+        _bs[0] += 1
+        _bs[1] += 1 if eq else 0
+
+    # 🚨 F7 — 섹터 비중이 벤치마크와 어긋나면 이것은 카드가 파는 물건이 아니다.
+    #   「섹터 베팅 없이 집중만 피한다」가 카드의 핵심 주장이라 그것이 새면 다른 규칙이다.
+    #   ⚠ 결과를 보고 판단하지 않는다 — **돌면서** 재고, 어긋나면 그 자리에서 죽는다.
+    #     사후에 재면 «조금 어긋났지만 괜찮다» 는 판단이 끼어들 자리가 생긴다.
+    for s in grp:
+        want = sum(mc[t] for t in grp[s]) / tot
+        got = sum(w[t] for t in grp[s])
+        if abs(got - want) > 1e-9:
+            raise SystemExit(
+                "🚨 A17 F7 위반 — %s 섹터 비중이 벤치마크와 다르다(%.9f vs %.9f). "
+                "섹터 베팅이 샜다는 뜻이라 등록 §3 F7 에 따라 게시하지 않는다." % (s, got, want))
+    # 🚨 F6 을 «분포» 로 재려면 섹터-달 관측을 그대로 쌓아야 한다(등록 §3).
+    #   A15 는 전환 «횟수» 로 재서 90% 한 상태인 것을 통과시켰다. 그 교훈이 이 줄이다.
+    #   ⚠ 두 번째 구현으로 세지 않는다 — 엔진이 실제로 켠 상태를 그대로 쌓는다.
+    _SECEW_H.setdefault("seq", {}).setdefault(key, []).extend(on)
+    return list(w), w
+
+
+def secew_regimes(key="gate"):
+    """섹터-달 관측의 게이트 ON 비율(등록 F6)과 **섹터별 내역**(P1). 마지막 레그의 것이다.
+
+    🚨 F6 은 «비율» 이다. A15 는 전환 횟수로 재서 90% 한 상태인 것을 통과시켰다.
+    ⚠ by_sec 은 서술이다 — 비중을 정하는 데 안 쓴다. P1 을 판정하려고 싣는다.
+    """
+    sq = (_SECEW_H.get("seq") or {}).get(key) or []
+    bs = ((_SECEW_H.get("by_sec") or {}).get(key) or {})
+    return {"n": len(sq), "on": sum(sq),
+            "on_ratio": (round(sum(sq) / len(sq), 4) if sq else None),
+            "by_sec": {s: {"n": v[0], "on": v[1],
+                           "ratio": (round(v[1] / v[0], 3) if v[0] else None)}
+                       for s, v in sorted(bs.items())}}
+
+
 def cgate_regimes(key="lvl"):
     """게이트 상태 이력과 전환 횟수. 마지막으로 돈 레그의 것이다(등록 F6)."""
     sq = (_CGATE_H.get("seq") or {}).get(key) or []
@@ -7907,6 +8032,9 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     dates, meta, px, FU = X["dates"], X["meta"], X["px"], X["FU"]
     if S["sid"] in ("x-cgate", "x-cgate-mom"):
         return _cgate_pick(sc, X, i, mom=(S["sid"] == "x-cgate-mom"))
+    if S["sid"] in ("x-secew", "x-secew-gate"):
+        # A17 — 규약 PREREG-2026-09-07-SECEW.md(계산 전 커밋 7d4291ed).
+        return _secew_pick(sc, X, i, gate=(S["sid"] == "x-secew-gate"))
     if S["sid"] == "x-demega10":
         # A16 — 「시총 상위 10종목을 제외하고 잔여를 동일가중」. 규약 PREREG-2026-09-05-DEMEGA.md
         #   (계산 전 커밋 89da3394). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
@@ -8848,8 +8976,13 @@ def run():
             #   조건부 전략인데 조건이 거의 안 바뀌면 **조건을 잰 것이 아니다**(C14 의 잣대).
             #   ⚠ 밖에서 허핀달을 다시 만들어 세지 않는다 — 엔진이 실제로 켠 상태를 그대로
             #     싣는다. 두 번째 구현을 두면 경로가 갈리고 언젠가 다른 답을 낸다.
+            # 🚨 A17 은 같은 물음에 **분포**로 답한다 — A15 가 전환 11회로 F6 을 통과하고도
+            #   실제로는 121달 중 109달(90%)이 한 상태였기 때문이다. 횟수는 변별을 못 잰다.
+            #   등록 PREREG-2026-09-07-SECEW §3 F6: ON 비율이 15% 미만이거나 85% 초과면 측정 불가.
             "gate_regimes": (cgate_regimes("mom" if S["sid"] == "x-cgate-mom" else "lvl")
-                             if S["sid"] in ("x-cgate", "x-cgate-mom") else None),
+                             if S["sid"] in ("x-cgate", "x-cgate-mom") else
+                             secew_regimes("gate" if S["sid"] == "x-secew-gate" else "flat")
+                             if S["sid"] in ("x-secew", "x-secew-gate") else None),
             # 리밸런스 주기 — 화면이 '월말'을 손으로 적지 않게 규칙에서 실어 보낸다.
             # 🚨 종전에는 전 규칙이 월말이라 설명문에 글자로 박혀 있었다. 주기가 갈린 뒤로는
             #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).

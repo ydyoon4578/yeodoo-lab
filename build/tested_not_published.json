@@ -2806,6 +2806,34 @@
    "gate": "기각",
    "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-CGATE-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
    "blocked_by": ""
+  },
+  {
+   "sid": "x-secew",
+   "name": "섹터 내 동일가중 (게이트 없음 · A17 대조군)",
+   "kind": "xsec",
+   "arch": "A17",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-SECEW-RESULT.md",
+   "paper": "탐색 풀 A17 — 섹터 내 동일가중 + 섹터 집중도 게이트",
+   "t": null,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-SECEW-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
+  },
+  {
+   "sid": "x-secew-gate",
+   "name": "섹터 집중도 게이트 · 섹터 내 동일가중",
+   "kind": "xsec",
+   "arch": "A17",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-SECEW-RESULT.md",
+   "paper": "탐색 풀 A17 — 섹터 내 동일가중 + 섹터 집중도 게이트",
+   "t": 0.31,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-SECEW-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
   }
  ]
 }

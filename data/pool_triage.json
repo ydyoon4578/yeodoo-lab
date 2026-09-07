@@ -4,12 +4,12 @@
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
  "n": 118,
  "counts": {
-  "measured": 43,
+  "measured": 44,
   "underspec": 48,
   "no_input": 18,
   "duplicate": 6,
   "not_a_rule": 1,
-  "ready": 2
+  "ready": 1
  },
  "cards": {
   "A1": {
@@ -691,11 +691,9 @@
    "cat": "A"
   },
   "A17": {
-   "verdict": "ready",
-   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
-   "hits": [
-    "상위\\s*\\d+"
-   ],
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
    "name": "섹터 내 동일가중+섹터 집중도 게이트 (Within-Sector Equal Weight)",
    "cat": "A"
   },
