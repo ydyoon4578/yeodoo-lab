@@ -2883,6 +2883,20 @@
    "gate": "기각",
    "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-PDELAY-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
    "blocked_by": ""
+  },
+  {
+   "sid": "x-capbridge-ra",
+   "name": "시총축 rank-area 다리 (Shin 2026 재현)",
+   "kind": "xsec",
+   "arch": "CAPAXIS",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-CAPAXIS-RESULT.md",
+   "paper": "Shin(2026) A Cap-Axis Integral Diagnostic of Factor Models · arXiv 2607.01765v3",
+   "t": 1.37,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-CAPAXIS-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
   }
  ]
 }
