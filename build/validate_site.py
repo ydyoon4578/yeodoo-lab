@@ -4027,6 +4027,41 @@ except FileNotFoundError:
 except Exception as _e:
     errors.append("시점정확 미측정 사유 대조가 예외로 죽었다 — %s" % _e)
 
+# ── 승률 컷이 표류했나 ────────────────────────────────────────────────────
+# 🚨 사용자 결정(2026-08-29): «지수 대비 월별 초과 승률 50% 미만» 규칙은 게시 목록에서 내린다.
+#   그 목록(strategy_index.HIDE_SIDS)은 **손으로 적은 것**이고, 엔진이 바뀌면 승률이 움직이는데
+#   목록은 안 움직인다 — 그 파일 스스로 「내려간 것이 되살아나고 남은 것이 내려갈 자리를
+#   아무도 안 본다」고 적어 두었다(PREREG-2026-08-29-ASWRITTEN §4①). 그 «아무도 안 본다» 를 막는다.
+# ⚠ **목록을 자동으로 고치지 않는다.** 그 설계가 「기계는 수를 대 주고, 목록을 고치는 것은
+#   사람이다」이기 때문이다(자동으로 고치면 자료가 한 틱 움직일 때마다 게시 목록이 흔들려
+#   «사용자 결정» 이라는 성질이 사라진다). 여기서는 **어긋났다는 사실만** 말한다.
+# ⚠ 반대 방향(숨겼는데 컷 위)은 여기서 안 잡는다 — HIDE_SIDS 의 숨김 사유가 승률만이 아니라
+#   회전 컷·사전등록 기각 등 여럿이라, 그것을 오류라고 부르면 감사기가 거짓말을 하게 된다.
+try:
+    _ixw = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"),
+                             encoding="utf-8"))
+    _drift = [(x["sid"], (x.get("winrate") or {}).get("win"))
+              for x in (_ixw.get("items") or [])
+              if (x.get("winrate") or {}).get("win") is not None
+              and (x.get("winrate") or {}).get("win") < 50.0]
+    if _drift:
+        # ⚠ 실패가 아니라 경고다. 목록을 고치는 것은 **사용자 결정**이라 기계가 못 하고,
+        #   그 결정을 기다리는 동안 매일 도는 갱신 잡을 죽이면 안 된다(rotation_pool 신선도와
+        #   같은 방침). 대신 매 실행 로그에 남아 «아무도 안 본다» 가 안 되게 한다.
+        print("⚠ 승률 컷이 표류했다 — 게시 중인데 지수 대비 월별 승률이 50%% 아래인 규칙 "
+              "%d종: %s. 2026-08-29 사용자 결정은 «50%% 미만은 내린다» 였고, 그 뒤 엔진이 "
+              "바뀌어 수가 움직였는데 목록이 안 움직였다. "
+              "python build/strategy_index.py --winrate-audit 로 전 규칙을 다시 뜬 뒤 "
+              "**사람이** HIDE_SIDS 를 고칠 것(기계가 고치지 않는다)."
+              % (len(_drift), " · ".join("%s %.1f%%" % (s, v) for s, v in _drift)))
+    else:
+        print("  ~ 승률 컷 대조 통과(게시 %d종 전부 지수 대비 월별 승률 50%% 이상)"
+              % len(_ixw.get("items") or []))
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    errors.append("승률 컷 대조가 예외로 죽었다 — %s" % _e)
+
 # ── 성과 기준일이 **전월말**인가 ────────────────────────────────────────
 # 🚨 2026-08-14 사용자 지시 — "성과는 전월말까지로 하고 월 1회 자동 업데이트".
 #   백테스트가 격자를 전월말에서 끊는다(tech_backtest.asof_cut). 그런데 그 절단은 빌더
