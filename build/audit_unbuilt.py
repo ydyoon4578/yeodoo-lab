@@ -161,6 +161,12 @@ KNOWN_UNREAD = {
 
 # PIT 랩은 통째로 로컬에서 돈다(가격 캐시가 있는 PC). 파일마다 같은 말을 적지 않는다.
 KNOWN_BUILDER = {
+    "sector_rotation_myth.py":
+        "재현 연구(data/sector_rotation_myth.json) — Molchanov·Stangl(2024) 「경기순환 섹터 "
+        "로테이션이라는 신화」. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다(tilt 계열과 "
+        "같은 규약). 완전 예지를 쓰므로 전략 등록부에도 안 올린다 — 실시간에 못 쓴다. "
+        "결과는 build/PREREG-2026-09-07-SRMYTH-RESULT.md 가 읽고, 랩의 실시간판 "
+        "a7-fidelity 와 나란히 읽는 것이 이 산출물의 쓸모다.",
     "reality_check.py":
         "다중검정 진단(data/reality_check.json). 입력이 pit_strategies.json 이라 PIT 랩과 "
         "같은 사유로 로컬에서만 돈다 — 러너에 가격 캐시가 없어 그 입력 자체가 안 만들어진다. "
