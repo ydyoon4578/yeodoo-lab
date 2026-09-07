@@ -132,6 +132,15 @@
      "effort": "S"
     },
     {
+     "name": "전략 카드 정리",
+     "file": "digest.html",
+     "status": "existing",
+     "desc": "탐색 풀 카드마다 ①논문 ②이 랩 적용 결과 ③통한 국면 ④활용 — 팀 공유용",
+     "src": "agg",
+     "verdict": "unverified",
+     "effort": "M"
+    },
+    {
      "name": "운용 포트폴리오",
      "file": "portfolio.html",
      "status": "existing",

@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "a9fc6fef2f9031db",
+ "generated_from": "6c56a8fd0b84624e",
  "categories": [
   {
    "name": "시장",
@@ -140,6 +140,16 @@
      "verdict": "unverified",
      "src": "ext",
      "effort": "S",
+     "live": true
+    },
+    {
+     "name": "전략 카드 정리",
+     "file": "digest.html",
+     "status": "existing",
+     "desc": "탐색 풀 카드마다 ①논문 ②이 랩 적용 결과 ③통한 국면 ④활용 — 팀 공유용",
+     "verdict": "unverified",
+     "src": "agg",
+     "effort": "M",
      "live": true
     },
     {
