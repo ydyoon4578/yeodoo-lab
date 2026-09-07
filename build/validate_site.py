@@ -4000,6 +4000,33 @@ except FileNotFoundError:
 except Exception as _e:
     errors.append("다중검정 진단 대조가 예외로 죽었다 — %s" % _e)
 
+# ── 시점정확이 없는 게시 규칙은 «왜 없는지» 를 말해야 한다 ──────────────────
+# 🚨 빈칸은 «해당 없음» 과 «아직 안 쟀다» 를 구별하지 못한다. 2026-09-07 까지 게시 4종이
+#   사유 없이 "측정만" 으로만 나가고 있었다(자산 규칙 — 원천이 pit_na 를 안 채웠다).
+#   ⚠ 화면이 사유를 지어내면 안 된다는 규약이 있으므로(strategy_index._pit_na 머리말),
+#     이 검사는 «원천이 채웠나» 를 본다. 화면 쪽에서 때우는 우회를 막는 자리다.
+try:
+    _ix9 = json.load(io.open(os.path.join(ROOT, "data", "strategy_index.json"),
+                             encoding="utf-8"))
+    _noreason = [x["sid"] for x in (_ix9.get("items") or [])
+                 if x.get("basis") != "pit"
+                 and not ((x.get("pit_na") or {}).get("why")
+                          if isinstance(x.get("pit_na"), dict) else x.get("pit_na"))]
+    if _noreason:
+        errors.append(
+            "시점정확 레그가 없는 게시 규칙 %d종이 **사유를 안 말한다** — %s. "
+            "빈칸은 «해당 없음» 과 «아직 안 쟀다» 를 구별하지 못한다. "
+            "화면에서 문장을 짓지 말고 **원천이** pit_na 를 싣게 할 것"
+            % (len(_noreason), " · ".join(_noreason[:6])))
+    else:
+        _nb = sum(1 for x in (_ix9.get("items") or []) if x.get("basis") != "pit")
+        print("  ~ 시점정확 미측정 사유 대조 통과(게시 %d종 중 소급 %d종 전부 사유 있음)"
+              % (len(_ix9.get("items") or []), _nb))
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    errors.append("시점정확 미측정 사유 대조가 예외로 죽었다 — %s" % _e)
+
 # ── 성과 기준일이 **전월말**인가 ────────────────────────────────────────
 # 🚨 2026-08-14 사용자 지시 — "성과는 전월말까지로 하고 월 1회 자동 업데이트".
 #   백테스트가 격자를 전월말에서 끊는다(tech_backtest.asof_cut). 그런데 그 절단은 빌더
