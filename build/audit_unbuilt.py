@@ -161,6 +161,12 @@ KNOWN_UNREAD = {
 
 # PIT 랩은 통째로 로컬에서 돈다(가격 캐시가 있는 PC). 파일마다 같은 말을 적지 않는다.
 KNOWN_BUILDER = {
+    "cap_axis_bridge.py":
+        "재현 연구(data/cap_axis_bridge.json) — Shin(2026) 「시총축 적분 진단」 arXiv "
+        "2607.01765v3. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다. 결과는 "
+        "build/PREREG-2026-09-07-CAPAXIS-RESULT.md 가 읽는다. 거래 가능한 rank-area "
+        "수익(x-capbridge-ra)은 t 1.37 로 잡음 안쪽이라 게시하지 않았고, 전략 등록부에도 "
+        "안 올렸다 — 남긴 것은 진단이다(이 랩이 시총축을 연속으로 본 첫 기록).",
     "sector_rotation_myth.py":
         "재현 연구(data/sector_rotation_myth.json) — Molchanov·Stangl(2024) 「경기순환 섹터 "
         "로테이션이라는 신화」. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다(tilt 계열과 "
