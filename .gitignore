@@ -109,3 +109,4 @@ build/db_catalog.json
 build/db_notes.json
 # 사내 DB 표본 몇 줄(실데이터). 반입 금지 — db.html 은 암호문으로만 게시한다
 build/db_samples.json
+_pit_subset.json

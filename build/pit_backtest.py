@@ -1551,6 +1551,11 @@ def main():
             #   raw 가 이미 접혀 온 뒤라 못 막는다. **PIT 회전율은 판정에 안 쓰는 진단값**
             #   이라 이대로 두되, 값이 살짝 높을 수 있다는 사실을 여기 적어 둔다.
             "turnover": round(raw["turns"] / max(1, (_mc - 1) / 252), 2),
+            # 🚨 A17 의 F1·F2 는 대조군이 **벤치가 아니라 다른 규칙**이다(x-secew).
+            #   그 대응표본 t 를 내려면 두 규칙의 일간 계열이 같이 있어야 하는데, 여기가
+            #   그 자리다. 밖에서 다시 만들면 경로가 둘이 되고 언젠가 갈린다(되풀이 결함 ③).
+            #   ⚠ 창 절단 뒤의 계열을 그대로 넘긴다 — 두 규칙이 같은 창이어야 대응이 성립한다.
+            "_srets": _sretsM, "_days": _d2M,
             "start": d2[0], "n_days": len(_d2M),
             # 기준일 둘 — perf_end 는 지표, px_end 는 곡선(랩 본편과 같은 이름 규약).
             "perf_end": (_d2M[-1] if _d2M else None),
@@ -1579,9 +1584,19 @@ def main():
     #   그래서 `not in EXCLUDED_SIDS or in PARTIAL` 만으로는 루프가 이름을 볼 일이 없다.
     #   (첫 시도가 그렇게 조용히 아무것도 안 돌았다. 없는 이름은 아무 신호도 안 낸다 —
     #    이 파일 985줄의 완결성 관문이 막으려던 바로 그 실패 모양이다.)
+    # 🚨 --only=sid,sid — **사전등록을 재는 동안만** 쓰는 부분 실행이다. 전 규칙을 다시 재면
+    #   한 번에 40분이 넘어 등록 하나를 판정하는 데 그 값을 여러 번 태우게 된다.
+    #   ⚠ 정본(data/pit_strategies.json)을 **절대 안 덮는다**(아래 저장 자리에서 막는다).
+    #     부분 결과를 정본으로 두면 화면이 «랩 전체» 라고 말하면서 두 종만 담는다.
+    #   ⚠ 대조군이 필요한 규칙은 대조군도 같이 적어야 한다 — vs_ctrl 은 둘이 다 돌아야 난다.
+    _ONLY = set()
+    for _a in sys.argv:
+        if _a.startswith("--only="):
+            _ONLY = {x.strip() for x in _a[7:].split(",") if x.strip()}
     for sid in [s for s in PRICE_SIDS + NEW_PRICE_SIDS + FUND_SIDS + NEW_FUND_SIDS
                 + EVENT_SIDS + TIMING_SIDS + sorted(PARTIAL_PIT_SIDS)
-                if s not in EXCLUDED_SIDS or s in PARTIAL_PIT_SIDS]:
+                if (s not in EXCLUDED_SIDS or s in PARTIAL_PIT_SIDS)
+                and (not _ONLY or s in _ONLY)]:
         S = BY.get(sid)
         if not S:
             # 🚨 조용히 넘어가지 않는다. 랩 본편에서 은퇴한 규칙은 BY 에 없어 여기서 빠지는데,
@@ -1648,6 +1663,10 @@ def main():
             "metrics": P_["metrics"], "bench": P_["bench"],
             "excess_cagr": P_["excess_cagr"], "d_sharpe": P_["d_sharpe"],
             "t": P_["t"], "turnover": P_["turnover"],
+            # A17 F1·F2 — 게이트형을 **무조건형**에 대고 잰다(등록 §3). 아래에서 채운다.
+            # ⚠ _srets 는 그 계산에만 쓰는 **임시 칸**이다. 아래 루프가 산출물에 쓰기 전에
+            #   반드시 지운다 — 남으면 파일이 규칙마다 2,500개짜리 배열을 하나씩 더 싣는다.
+            "vs_ctrl": None, "_srets": P_["_srets"],
             # 전략별 실효 창 — 전역 라벨과 다를 수 있다(보유시작 재기준·커버리지 게이트)
             "start": P_["start"], "n_days": P_["n_days"],
             # 같은 창의 소급 레그와 그 차이 = 유니버스 편향(구간 차이가 섞이지 않는다)
@@ -1687,6 +1706,36 @@ def main():
               % (S["name"][:24], B_["metrics"].get("cagr") or 0,
                  P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
                  B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
+
+    # ── A17 F1·F2 — 게이트의 «순기여» 를 무조건형에 대고 잰다 ────────────────
+    # 🚨 카드가 판정 대조군을 지정했다: 「전 섹터 내부 동일가중(무조건형)·전면 동일가중·
+    #   시총가중 셋을 함께 추적해 **게이트의 순기여와 회전율을 분리 보고**하라」.
+    #   그래서 게이트형의 t 를 벤치가 아니라 **무조건형에 대고** 낸다(등록 §3 F1·F2).
+    # ⚠ 2026년은 동일가중이 이기는 국면이라 시총가중 대비로 읽으면 게이트 덕인지 국면
+    #   덕인지 안 갈린다(카드 자신이 경고했다). 둘 다 같은 국면을 타므로 여기서 상쇄된다.
+    _CTRL = {"x-secew-gate": "x-secew"}
+    _byid = {r["sid"]: r for r in out}
+    for _sid, _csid in _CTRL.items():
+        _r, _c = _byid.get(_sid), _byid.get(_csid)
+        if not _r or not _c:
+            continue
+        _a, _b2 = _r.pop("_srets", None), _c.get("_srets")
+        if not _a or not _b2 or len(_a) != len(_b2):
+            # 창이 다르면 대응표본이 성립하지 않는다 — 지어내지 않고 사유를 적는다.
+            _r["vs_ctrl"] = {"ctrl": _csid, "t": None,
+                             "note": "두 규칙의 창이 달라 대응표본 t 를 못 낸다"}
+            continue
+        _r["vs_ctrl"] = {
+            "ctrl": _csid, "ctrl_name": _c["name"],
+            "d_sharpe": round((_r["metrics"].get("sharpe") or 0)
+                              - (_c["metrics"].get("sharpe") or 0), 3),
+            "d_cagr": round((_r["metrics"].get("cagr") or 0)
+                            - (_c["metrics"].get("cagr") or 0), 2),
+            "t": TB.tstat(_a, _b2), "n_days": len(_a),
+            "note": "게이트의 순기여 — 대조군은 게이트 없는 무조건형이다(등록 §3 F1·F2)."}
+    for _r in out:
+        _r.pop("_srets", None)
+        _r.pop("_days", None)
 
     if _nohold:
         # 무보유로 빠진 것은 커버리지 결함이다 — ok 를 내리고 로그에 크게 남긴다.
@@ -1908,9 +1957,19 @@ def main():
         ],
         "strategies": out,
     }
-    json.dump(doc, io.open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    print("\n→ %s · %d종 · %s ~ %s (%s년)"
-          % (OUT, len(out), doc["start"], doc["as_of"], doc["span_years"]))
+    # 🚨 부분 실행은 **정본을 안 덮는다.** 두 종만 담긴 파일이 정본 자리에 앉으면 화면과
+    #   검증기가 그것을 «랩 전체» 로 읽는다 — 되풀이 결함 ③(경로가 둘이라 갈림)의 최악형이다.
+    _out_path = OUT
+    if _ONLY:
+        _out_path = os.path.join(DATA, "_pit_subset.json")
+        doc["note"] = ("🚨 **부분 실행 결과다**(--only=%s). 정본이 아니다 — 사전등록을 재는 "
+                       "동안만 쓰고, 판정을 배선하기 전에 반드시 전 규칙을 다시 돌린다."
+                       % ",".join(sorted(_ONLY)))
+    json.dump(doc, io.open(_out_path, "w", encoding="utf-8"), ensure_ascii=False,
+              separators=(",", ":"))
+    print("\n→ %s · %d종 · %s ~ %s (%s년)%s"
+          % (_out_path, len(out), doc["start"], doc["as_of"], doc["span_years"],
+             "  ⚠ 부분 실행 — 정본 아님" if _ONLY else ""))
     # 🚨 경고를 **기계가 읽게** 한다. 종전에는 커버리지 미달이 콘솔과 접힌 <details> 에서
     #   끝나서, 사람이 로그를 안 보면 아무 일도 없었던 것이 된다(적대감사 2026-08-12).
     #   산출물은 그대로 쓴다 — '얼마나 낮은지' 를 실은 표는 쓸모가 있다 — 대신 종료코드로
