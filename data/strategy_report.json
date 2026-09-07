@@ -28,7 +28,7 @@
    "표본 구간에서 지수가 200일선 위에 있던 날이 88%(2524일 중 2214일)이고, 고점 대비 -10%를 밑돈 국면은 8번뿐이었다. 현금을 쥐는 규칙은 이런 구간에서 구조적으로 진다 — 여기 '열위'가 많은 것은 규칙의 실력만이 아니라 구간의 성질이기도 하다. 반대로 이 표본은 하락 방어 능력을 사실상 검증하지 못한다.",
    "규칙끼리 많이 겹친다 — 타이밍 규칙 쌍의 상관 중앙값이 0.789이고 1쌍은 0.95를 넘는다. 규칙 수가 곧 검증한 아이디어 수는 아니다.",
    "후보 풀이 표본 앞구간에서 얇다 — 횡단면 103규칙 중 13규칙에서, 그 규칙 자신의 평소 후보 수(중앙값) 절반에도 못 미친 월말이 합계 196번 있었다(최대 매출총이익 서프라이즈 (SUGP 상위 10): 52개월 · 평소 126종인데 최소 11종까지 내려갔다 · 2016-08-31 시작). 재무 태그가 과거로 갈수록 얇아지기 때문이다. 🚨 얇은 달 게이트(후보 30 미만)는 이걸 못 잡는다 — 평소의 절반 안에서 고른 '상위 10'은 전체에서 고른 '상위 10'과 같은 선택이 아니고, 그만큼 앞구간 성과에는 규칙이 아니라 커버리지가 만든 몫이 섞여 있다.",
-   "이중클래스 — 같은 회사의 두 클래스(GOOG·GOOGL 등)를 한 바스켓에 담지 않는다(2026-08-04 사용자 결정). 담으면 10종이 아니라 한 회사에 두 칸을 준 9종 바스켓이 되기 때문이다. 실측 1660회·53규칙에서 걸렸고, 그 자리는 다음 순위 종목이 채웠다."
+   "이중클래스 — 같은 회사의 두 클래스(GOOG·GOOGL 등)를 한 바스켓에 담지 않는다(2026-08-04 사용자 결정). 담으면 10종이 아니라 한 회사에 두 칸을 준 9종 바스켓이 되기 때문이다. 실측 1676회·54규칙에서 걸렸고, 그 자리는 다음 순위 종목이 채웠다."
   ],
   "asset": [
    "무비용이다. 오버나이트 드리프트처럼 연 252회 왕복하는 규칙은 무비용 수치를 그대로 읽으면 안 된다 — 함께 적은 회전율을 반드시 볼 것.",
@@ -3671,14 +3671,6 @@
     "where": "화면에 있음",
     "role": "수익엔진",
     "verdict": "측정만",
-    "name": "산업잔차 모멘텀 상위 10",
-    "sid": "x-residind",
-    "lab": "종목·타이밍"
-   },
-   {
-    "where": "화면에 있음",
-    "role": "수익엔진",
-    "verdict": "측정만",
     "name": "에코 모멘텀 (12~7개월 전 구간)",
     "sid": "x-echo",
     "lab": "종목·타이밍"
@@ -3865,6 +3857,14 @@
     "verdict": "측정만",
     "name": "상하방 베타 비대칭 상위 20",
     "sid": "x-updown",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "수익엔진",
+    "verdict": "측정만",
+    "name": "산업잔차 모멘텀 상위 52 (십분위 · 원 전략 크기)",
+    "sid": "x-residind-n52",
     "lab": "종목·타이밍"
    },
    {
@@ -31190,226 +31190,6 @@
    ]
   },
   {
-   "sid": "x-residind",
-   "name": "산업잔차 모멘텀 상위 10",
-   "family": "종목·타이밍",
-   "role": "수익엔진",
-   "kind": "xsec",
-   "arch": null,
-   "rule": "종목의 12-1 모멘텀에서 그 종목이 속한 GICS 산업그룹의 12-1(시총가중)을 뺀 잔차로 상위 10종목 동일가중, 월말 리밸런스. 직전 1개월은 건너뛴다. 산업그룹은 소속 종목이 8종 이상인 것만 쓴다 — 얇은 그룹이 기준이 되면 잔차가 «그 몇 종목 대비» 가 된다.",
-   "why": "사전등록 PREREG-2026-08-29-RESIDIND.md. 앞선 등록(PREREG-2026-08-28-INDMOM)이 종목 모멘텀을 «산업이 통째로 오른 성분» 과 «그 산업 안에서 더 오른 성분» 으로 갈라 재 보니, 이 유니버스에서는 산업 성분이 실제 매매 대상보다 못했다(매매대상 대비 dS −0.109). 값이 없는 층을 신호에 계속 태우고 있었다는 뜻이라, 그 층을 빼고 남은 것만 쓴다. 🚨 2026-09-07 정정 — 그 분해를 선견 보정해 다시 쟀다(PREREG-2026-09-07-INDMOM2-RESULT). 「산업 성분이 매매 대상보다 못하다」는 여전히 맞지만(dS −0.106), 「그래서 빼면 좋아진다」의 크기는 선견이었다 — 잔차가 산업을 앞선 폭이 소급 +0.301 에서 부분 PIT −0.001 로 사라졌다. 같은 창에서 셋(종목·산업·잔차) 다 동일가중 유니버스에 진다. ⚠ 이 규칙 자체의 기각은 아니다(그 분해의 잔차는 바스켓 60~120종이고 이것은 상위 10종이라 다른 물건이다). 그러나 이 규칙을 만든 근거가 그만큼 약하다. Moskowitz·Grinblatt(1999)의 «산업이 종목 모멘텀을 설명한다» 와 반대 방향이고, Hoberg·Phillips(2018)가 고정 분류에서 산업 모멘텀이 약하다고 한 쪽과 맞는다. ⚠ 랩의 x-residmom 과는 다른 축이다 — 그것은 시장·규모·가치 잔차이고 이것은 산업 잔차다. 🚨 산업 분류가 현재 시점 GICS 라 소속에 선견이 실려 있다. PIT 레그도 이 편향은 못 걷는다.",
-   "note": null,
-   "repro": null,
-   "window": {
-    "start": "2016-08-31",
-    "end": "2026-09-04",
-    "n_days": 2513,
-    "n_thin": 0,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": true,
-    "bench_tickers": null,
-    "bench_unstable": null
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 42.45,
-     "b": 13.48,
-     "d": 28.97
-    },
-    {
-     "k": "변동성",
-     "s": 35.54,
-     "b": 18.09,
-     "d": 17.45
-    },
-    {
-     "k": "샤프",
-     "s": 1.137,
-     "b": 0.713,
-     "d": 0.424
-    },
-    {
-     "k": "최대낙폭",
-     "s": -38.36,
-     "b": -33.92,
-     "d": -4.44
-    }
-   ],
-   "excess_cagr": 28.97,
-   "d_sharpe": 0.424,
-   "t": 3.25,
-   "t_crit": null,
-   "cost": {
-    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
-    "rows": [
-     {
-      "rt": 10,
-      "cagr": 41.98,
-      "sharpe": 1.127,
-      "excess": 28.5,
-      "t": 3.22,
-      "main": false
-     },
-     {
-      "rt": 20,
-      "cagr": 41.5,
-      "sharpe": 1.118,
-      "excess": 28.02,
-      "t": 3.18,
-      "main": true
-     },
-     {
-      "rt": 40,
-      "cagr": 40.56,
-      "sharpe": 1.099,
-      "excess": 27.08,
-      "t": 3.1,
-      "main": false
-     }
-    ],
-    "drag": 0.95,
-    "traded": 6.68,
-    "kill": false,
-    "sensitive": true,
-    "bench_pays": false,
-    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
-   },
-   "turnover": 3.38,
-   "exposure": 100.0,
-   "risk": null,
-   "incr": {
-    "one": {
-     "vs": "12-1 모멘텀 상위 10",
-     "corr": 0.922,
-     "alpha": 0.22,
-     "t": 0.06,
-     "beta": 0.797
-    },
-    "five": null,
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": {
-    "label": "랩 동일가중 유니버스 매수후보유",
-    "cagr": 18.59,
-    "sharpe": 0.934,
-    "excess": 23.86,
-    "d_sharpe": 0.203,
-    "t": 2.57,
-    "t_net": 2.49,
-    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
-   },
-   "pit": {
-    "window": "2016-08~2026-09",
-    "start": "2016-08-31",
-    "n_days": 2513,
-    "pit": {
-     "cagr": 26.21,
-     "sharpe": 0.822,
-     "mdd": -38.95,
-     "bench_cagr": 13.27,
-     "excess": 12.94,
-     "t": 1.79,
-     "d_sharpe": 0.191,
-     "turnover": 3.82
-    },
-    "retro": {
-     "cagr": 42.45,
-     "sharpe": 1.109,
-     "mdd": -38.36,
-     "bench_cagr": 18.59,
-     "excess": 23.86,
-     "t": 2.57
-    },
-    "bias": {
-     "cagr": 16.24,
-     "excess": 10.92,
-     "sharpe": 0.287,
-     "bench_cagr": 5.32
-    },
-    "t_crit": null,
-    "t_crit_lab": null,
-    "holdings": [
-     "CIEN",
-     "FTNT",
-     "INTC",
-     "LITE",
-     "MRNA",
-     "MU",
-     "NBIS",
-     "SNDK",
-     "STX",
-     "WDC"
-    ]
-   },
-   "pool": {
-    "first": 296,
-    "last": 389,
-    "min": 291,
-    "med": 350,
-    "narrow": 0,
-    "n": 121,
-    "d0": "2016-08-31"
-   },
-   "holdings": {
-    "kind": "xsec",
-    "as_of": "2026-08-31",
-    "n": 10,
-    "tickers": [
-     "CIEN",
-     "FTNT",
-     "INTC",
-     "LITE",
-     "MRNA",
-     "MU",
-     "NBIS",
-     "SNDK",
-     "STX",
-     "WDC"
-    ],
-    "names": {
-     "CIEN": "CIENA CORP",
-     "FTNT": "FORTINET INC",
-     "INTC": "INTEL CORP",
-     "LITE": "LUMENTUM HOLDINGS INC",
-     "MRNA": "MODERNA INC",
-     "MU": "MICRON TECHNOLOGY INC",
-     "NBIS": "NEBIUS GROUP NV",
-     "SNDK": "SANDISK CORP",
-     "STX": "SEAGATE TECHNOLOGY HOLDINGS",
-     "WDC": "WESTERN DIGITAL CORP"
-    },
-    "weights": null,
-    "exposure_now": null,
-    "note": "월말 리밸런스(2026-08-31)에서 고른 10종목을 보유 중이다."
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [],
-    "src": [
-     {
-      "k": "일봉 OHLCV",
-      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
-     },
-     {
-      "k": "지수 편입 이력",
-      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
-   },
-   "missing": [
-    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
-    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
-   ]
-  },
-  {
    "sid": "x-ncap10",
    "name": "NDX 시총가중 · 개별 상한 10%",
    "family": "종목·타이밍",
@@ -36102,11 +35882,11 @@
    "risk": null,
    "incr": {
     "one": {
-     "vs": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
-     "corr": 0.897,
-     "alpha": -1.7,
-     "t": -0.81,
-     "beta": 0.457
+     "vs": "산업잔차 모멘텀 상위 52 (십분위 · 원 전략 크기)",
+     "corr": 0.909,
+     "alpha": 1.08,
+     "t": 0.54,
+     "beta": 1.266
     },
     "five": null,
     "absorbed": null,
@@ -36327,6 +36107,352 @@
      "VRT": "VERTIV HOLDINGS CO-A",
      "WBD": "WARNER BROS DISCOVERY INC",
      "WDC": "WESTERN DIGITAL CORP"
+    },
+    "weights": null,
+    "exposure_now": null,
+    "note": "월말 리밸런스(2026-08-31)에서 고른 52종목을 보유 중이다."
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [],
+    "src": [
+     {
+      "k": "일봉 OHLCV",
+      "v": "yfinance — S&P 500 ∪ NASDAQ 100 오늘의 518종목"
+     },
+     {
+      "k": "지수 편입 이력",
+      "v": "위키백과 과거 리비전(data/index_history.json) — PIT 레그"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": true,
+    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+   },
+   "missing": [
+    "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
+    "증분알파(이웃 5개) — 날짜가 겹치는 이웃이 5개에 못 미쳤다"
+   ]
+  },
+  {
+   "sid": "x-residind-n52",
+   "name": "산업잔차 모멘텀 상위 52 (십분위 · 원 전략 크기)",
+   "family": "종목·타이밍",
+   "role": "수익엔진",
+   "kind": "xsec",
+   "arch": null,
+   "rule": "종목의 12-1 모멘텀에서 그 종목이 속한 GICS 산업그룹의 12-1(시총가중)을 뺀 잔차로 상위 52종목 동일가중, 월말 리밸런스. 직전 1개월은 건너뛴다. 산업그룹은 소속 종목이 8종 이상인 것만 쓴다 — 얇은 그룹이 기준이 되면 잔차가 «그 몇 종목 대비» 가 된다.",
+   "why": "사전등록 PREREG-2026-08-29-RESIDIND.md. 앞선 등록(PREREG-2026-08-28-INDMOM)이 종목 모멘텀을 «산업이 통째로 오른 성분» 과 «그 산업 안에서 더 오른 성분» 으로 갈라 재 보니, 이 유니버스에서는 산업 성분이 실제 매매 대상보다 못했다(매매대상 대비 dS −0.109). 값이 없는 층을 신호에 계속 태우고 있었다는 뜻이라, 그 층을 빼고 남은 것만 쓴다. 🚨 2026-09-07 정정 — 그 분해를 선견 보정해 다시 쟀다(PREREG-2026-09-07-INDMOM2-RESULT). 「산업 성분이 매매 대상보다 못하다」는 여전히 맞지만(dS −0.106), 「그래서 빼면 좋아진다」의 크기는 선견이었다 — 잔차가 산업을 앞선 폭이 소급 +0.301 에서 부분 PIT −0.001 로 사라졌다. 같은 창에서 셋(종목·산업·잔차) 다 동일가중 유니버스에 진다. ⚠ 이것은 그 분해의 잔차와도 다른 물건이다(분해는 바스켓 60~120종). 그러나 이 규칙을 만든 근거가 그만큼 약하다. 🚨 N 의 출처 — 신호는 Asness·Porter·Stevens(2000)의 within-industry momentum(개별 수익 − 자기 산업 평균)이지만 그 논문은 파마–맥베스 횡단면 회귀라 포트폴리오를 안 만든다. 즉 원문에 N 이 없다. 그래서 정렬 문헌의 표준인 십분위를 쓴다 — Jegadeesh·Titman(1993)이 십분위로 최상 데실을 롱하므로 52(=518÷10)다. 랩의 x-mom12-n52·x-residmom-n52 와 같은 규약이고, 종전 10종판은 근거가 랩 기본값뿐이라 내렸다(PREREG-2026-09-07-RESIDIND2 §3). Moskowitz·Grinblatt(1999)의 «산업이 종목 모멘텀을 설명한다» 와 반대 방향이고, Hoberg·Phillips(2018)가 고정 분류에서 산업 모멘텀이 약하다고 한 쪽과 맞는다. ⚠ 랩의 x-residmom 과는 다른 축이다 — 그것은 시장·규모·가치 잔차이고 이것은 산업 잔차다. 🚨 산업 분류가 현재 시점 GICS 라 소속에 선견이 실려 있다. PIT 레그도 이 편향은 못 걷는다.",
+   "note": null,
+   "repro": null,
+   "window": {
+    "start": "2016-08-31",
+    "end": "2026-09-04",
+    "n_days": 2513,
+    "n_thin": 0,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": true,
+    "bench_tickers": null,
+    "bench_unstable": null
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 22.22,
+     "b": 13.48,
+     "d": 8.74
+    },
+    {
+     "k": "변동성",
+     "s": 21.95,
+     "b": 18.09,
+     "d": 3.86
+    },
+    {
+     "k": "샤프",
+     "s": 0.962,
+     "b": 0.713,
+     "d": 0.249
+    },
+    {
+     "k": "최대낙폭",
+     "s": -34.5,
+     "b": -33.92,
+     "d": -0.58
+    }
+   ],
+   "excess_cagr": 8.74,
+   "d_sharpe": 0.249,
+   "t": 2.49,
+   "t_crit": null,
+   "cost": {
+    "unit": "종목 랩은 편도 bp 로 재고 여기서 왕복(×2)으로 적는다",
+    "rows": [
+     {
+      "rt": 10,
+      "cagr": 21.86,
+      "sharpe": 0.949,
+      "excess": 8.38,
+      "t": 2.4,
+      "main": false
+     },
+     {
+      "rt": 20,
+      "cagr": 21.51,
+      "sharpe": 0.935,
+      "excess": 8.03,
+      "t": 2.31,
+      "main": true
+     },
+     {
+      "rt": 40,
+      "cagr": 20.79,
+      "sharpe": 0.908,
+      "excess": 7.31,
+      "t": 2.13,
+      "main": false
+     }
+    ],
+    "drag": 0.71,
+    "traded": 5.91,
+    "kill": false,
+    "sensitive": true,
+    "bench_pays": false,
+    "note": "대조군은 매수후보유라 비용 0 이다 — 전략만 비용을 문다"
+   },
+   "turnover": 3.0,
+   "exposure": 100.0,
+   "risk": null,
+   "incr": {
+    "one": {
+     "vs": "12-1 모멘텀 상위 52 (십분위 · 원 전략)",
+     "corr": 0.909,
+     "alpha": 0.76,
+     "t": 0.53,
+     "beta": 0.652
+    },
+    "five": null,
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": {
+    "label": "랩 동일가중 유니버스 매수후보유",
+    "cagr": 18.59,
+    "sharpe": 0.934,
+    "excess": 3.63,
+    "d_sharpe": 0.028,
+    "t": 0.99,
+    "t_net": 0.83,
+    "note": "2026-07-28 이전의 대조군이다. 지금 대조군(S&P 500 PR)보다 연 6%p 이상 높아 문턱이 그만큼 높았다 — 예전 잣대로 다시 읽는 열이다."
+   },
+   "pit": {
+    "window": "2016-08~2026-09",
+    "start": "2016-08-31",
+    "n_days": 2513,
+    "pit": {
+     "cagr": 17.0,
+     "sharpe": 0.749,
+     "mdd": -36.05,
+     "bench_cagr": 13.27,
+     "excess": 3.73,
+     "t": 1.05,
+     "d_sharpe": 0.118,
+     "turnover": 3.08
+    },
+    "retro": {
+     "cagr": 22.22,
+     "sharpe": 0.917,
+     "mdd": -34.5,
+     "bench_cagr": 18.59,
+     "excess": 3.63,
+     "t": 0.99
+    },
+    "bias": {
+     "cagr": 5.22,
+     "excess": -0.1,
+     "sharpe": 0.168,
+     "bench_cagr": 5.32
+    },
+    "t_crit": null,
+    "t_crit_lab": null,
+    "holdings": [
+     "AMAT",
+     "AMD",
+     "BNY",
+     "CAH",
+     "CASY",
+     "CAT",
+     "CIEN",
+     "CNC",
+     "CRWD",
+     "CVS",
+     "DDOG",
+     "DELL",
+     "EXPE",
+     "FCX",
+     "FDX",
+     "FIX",
+     "FTNT",
+     "GS",
+     "IBKR",
+     "INTC",
+     "JBHT",
+     "LITE",
+     "LRCX",
+     "MAR",
+     "MNST",
+     "MPC",
+     "MRNA",
+     "MRVL",
+     "MS",
+     "MU",
+     "NBIS",
+     "NTRS",
+     "NUE",
+     "PANW",
+     "PFG",
+     "PSX",
+     "PWR",
+     "ROST",
+     "SNDK",
+     "STLD",
+     "STT",
+     "STX",
+     "TER",
+     "TGT",
+     "TRGP",
+     "TRV",
+     "UNH",
+     "VLO",
+     "VRT",
+     "WBD",
+     "WDC",
+     "WST"
+    ]
+   },
+   "pool": {
+    "first": 296,
+    "last": 389,
+    "min": 291,
+    "med": 350,
+    "narrow": 0,
+    "n": 121,
+    "d0": "2016-08-31"
+   },
+   "holdings": {
+    "kind": "xsec",
+    "as_of": "2026-08-31",
+    "n": 52,
+    "tickers": [
+     "AMAT",
+     "AMD",
+     "BNY",
+     "CAH",
+     "CASY",
+     "CAT",
+     "CIEN",
+     "CNC",
+     "CRWD",
+     "CVS",
+     "DDOG",
+     "DELL",
+     "EXPE",
+     "FCX",
+     "FDX",
+     "FIX",
+     "FTNT",
+     "GS",
+     "IBKR",
+     "INTC",
+     "JBHT",
+     "LITE",
+     "LRCX",
+     "MAR",
+     "MNST",
+     "MPC",
+     "MRNA",
+     "MRVL",
+     "MS",
+     "MU",
+     "NBIS",
+     "NTRS",
+     "NUE",
+     "PANW",
+     "PFG",
+     "PSX",
+     "PWR",
+     "ROST",
+     "SNDK",
+     "STLD",
+     "STT",
+     "STX",
+     "TER",
+     "TGT",
+     "TRGP",
+     "TRV",
+     "UNH",
+     "VLO",
+     "VRT",
+     "WBD",
+     "WDC",
+     "WST"
+    ],
+    "names": {
+     "AMAT": "APPLIED MATERIALS INC",
+     "AMD": "ADVANCED MICRO DEVICES",
+     "BNY": "BANK OF NEW YORK MELLON CORP",
+     "CAH": "CARDINAL HEALTH INC",
+     "CASY": "Casey's General Stores Inc",
+     "CAT": "CATERPILLAR INC",
+     "CIEN": "CIENA CORP",
+     "CNC": "CENTENE CORP",
+     "CRWD": "CROWDSTRIKE HOLDINGS INC - A",
+     "CVS": "CVS HEALTH CORP",
+     "DDOG": "DATADOG INC - CLASS A",
+     "DELL": "DELL TECHNOLOGIES -C",
+     "EXPE": "EXPEDIA GROUP INC",
+     "FCX": "FREEPORT-MCMORAN INC",
+     "FDX": "FEDEX CORP",
+     "FIX": "COMFORT SYSTEMS USA INC",
+     "FTNT": "FORTINET INC",
+     "GS": "GOLDMAN SACHS GROUP INC",
+     "IBKR": "INTERACTIVE BROKERS GRO-CL A",
+     "INTC": "INTEL CORP",
+     "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
+     "LITE": "LUMENTUM HOLDINGS INC",
+     "LRCX": "LAM RESEARCH CORP",
+     "MAR": "MARRIOTT INTERNATIONAL -CL A",
+     "MNST": "MONSTER BEVERAGE CORP",
+     "MPC": "MARATHON PETROLEUM CORP",
+     "MRNA": "MODERNA INC",
+     "MRVL": "MARVELL TECHNOLOGY INC",
+     "MS": "MORGAN STANLEY",
+     "MU": "MICRON TECHNOLOGY INC",
+     "NBIS": "NEBIUS GROUP NV",
+     "NTRS": "NORTHERN TRUST CORP",
+     "NUE": "NUCOR CORP",
+     "PANW": "PALO ALTO NETWORKS INC",
+     "PFG": "PRINCIPAL FINANCIAL GROUP",
+     "PSX": "PHILLIPS 66",
+     "PWR": "QUANTA SERVICES INC",
+     "ROST": "ROSS STORES INC",
+     "SNDK": "SANDISK CORP",
+     "STLD": "STEEL DYNAMICS INC",
+     "STT": "STATE STREET CORP",
+     "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "TER": "TERADYNE INC",
+     "TGT": "TARGET CORP",
+     "TRGP": "TARGA RESOURCES CORP",
+     "TRV": "TRAVELERS COS INC/THE",
+     "UNH": "UNITEDHEALTH GROUP INC",
+     "VLO": "VALERO ENERGY CORP",
+     "VRT": "VERTIV HOLDINGS CO-A",
+     "WBD": "WARNER BROS DISCOVERY INC",
+     "WDC": "WESTERN DIGITAL CORP",
+     "WST": "WEST PHARMACEUTICAL SERVICES"
     },
     "weights": null,
     "exposure_now": null,

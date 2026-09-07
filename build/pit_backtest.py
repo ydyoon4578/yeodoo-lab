@@ -217,7 +217,7 @@ FUND_SIDS = [
              #   갖고 있다. PIT 후보에 든 편출 종목은 grp 가 없어 채점에서 통째로 빠진다.
              #   즉 이 규칙의 PIT 레그는 «가격은 시점정확인데 분류는 생존자만» 인 반쪽이고,
              #   등록 §5 가 예고한 그 편향이다. 후보 수가 다른 규칙보다 얇게 나오면 그 탓이다.
-             "x-residind",
+             "x-residind-n52",
              "x-ep", "x-sp", "x-btp", "x-roe", "x-npm", "x-rgrow", "x-lowde",
              "x-dy", "x-fcfy", "x-sue", "x-epsacc",
              "x-agrow", "x-shiss", "x-cash",      # 2026-07-30 추가
