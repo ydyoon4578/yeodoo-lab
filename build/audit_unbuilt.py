@@ -167,6 +167,12 @@ KNOWN_BUILDER = {
         "--from 은 창을 맞춘 소급 — 셋을 나란히 놓아야 «선견 효과» 와 «창 효과» 가 갈린다. "
         "결과는 PREREG-2026-08-28-INDMOM-RESULT.md 와 PREREG-2026-09-07-INDMOM2-RESULT.md "
         "가 읽고, x-residind 의 근거 문장이 후자를 가리킨다(2026-09-07 배선).",
+    "regime_info.py":
+        "A7 국면의 정보성 측정(data/regime_info.json) — 전략이 아니라 «국면 라벨이 섹터에 "
+        "대해 정보를 갖나» 만 잰다. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다. "
+        "결과는 build/PREREG-2026-09-07-REGIME0-RESULT.md 가 읽는다. 🚨 기각(무작위의 "
+        "50.9% 지점)이라 로테이션을 안 만들었다 — 게시용 규칙이 없다. 남긴 것은 이 랩이 "
+        "A7 국면을 개정 없는 계열로 매긴 첫 기록이다.",
     "cap_axis_bridge.py":
         "재현 연구(data/cap_axis_bridge.json) — Shin(2026) 「시총축 적분 진단」 arXiv "
         "2607.01765v3. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다. 결과는 "
