@@ -1497,9 +1497,14 @@ def main():
             if hw:
                 # 가중 바스켓(섹터 중립·산업 모멘텀). 랩 본편과 같은 되정규화 —
                 # 결측 종목을 0 으로 두면 그날 현금을 든 것이 되어 중립이 조용히 깨진다.
+                # 🚨 2026-09-07 — 여기 Σw 로 나누는 식이 박혀 있었다. 롱숏은 Σw = 0 이라
+                #   그 식이 0 으로 나눈다. tech_backtest 는 그 함정을 알고 다리별 되정규화를
+                #   넣었는데 **이쪽엔 안 들어왔다** — 롱숏에 PIT 레그가 붙은 적이 없어
+                #   10개월간 안 드러났고, E55 가 처음 붙자 NAV 가 0 아래로 뚫렸다.
+                #   ⚠ 산식을 옮겨 적지 않는다. 두 레그가 TB.weighted_ret 하나를 부른다.
                 _pairs = [(hw[t], R[t][i]) for t in hold if R[t][i] is not None and t in hw]
-                _sw = sum(w for w, _x in _pairs)
-                srets.append((sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0)
+                srets.append(TB.weighted_ret(
+                    _pairs, TB._BASE_SID(sid) in TB.LONGSHORT_SIDS))
             else:
                 rs = [R[t][i] for t in hold if R[t][i] is not None]
                 srets.append(sum(rs) / len(rs) if rs else 0.0)
@@ -1543,7 +1548,10 @@ def main():
         stt, bs = TB.ann_stats(_navM, _d2M, rf), TB.ann_stats(_bnavM, _d2M, rf)
         return {
             "metrics": stt, "bench": bs,
-            "excess_cagr": round(stt.get("cagr", 0) - bs.get("cagr", 0), 2),
+            # ⚠ 파산(NAV ≤ 0)이면 cagr 가 None 이다 — 0 으로 바꿔 빼면 「대조군만큼 졌다」는
+            #   평범한 수가 되어 화면이 파산을 부진으로 말한다(TB.ann_stats 의 그 주석 참조).
+            "excess_cagr": (None if stt.get("cagr") is None
+                            else round(stt["cagr"] - (bs.get("cagr") or 0), 2)),
             "d_sharpe": round((stt.get("sharpe") or 0) - (bs.get("sharpe") or 0), 3),
             "t": TB.tstat(_sretsM, raw["IXR"][i0 + 1 + k:][:max(0, _mc - 1)]),
             # ⚠ 회전율은 분모만 창에 맞춘다. 분자(turns)는 전 구간 누적이라 절단 뒤 리밸이
@@ -1651,6 +1659,8 @@ def main():
         _k = max(max(0, (_p["first"] or (i0 + 1)) - 1 - i0),
                  max(0, (_b["first"] or (i0 + 1)) - 1 - i0))
         P_, B_ = fin(_p, _k), fin(_b, _k)
+        # 한 레그라도 파산했나 — 아래 편향 지표들이 이 값을 본다.
+        _ruined = bool(P_["metrics"].get("ruin") or B_["metrics"].get("ruin"))
         out.append({
             "sid": sid, "name": S["name"],
             # 레그 성격 — 화면이 «완전» 과 «부분» 을 같은 말로 부르지 않게 한다
@@ -1680,13 +1690,27 @@ def main():
             #     구별하지 못한다. 실제로 그 탓에 "고배당은 PIT 로 오히려 좋아진다"고
             #     잘못 읽었다 — 전략 CAGR 은 33.42 → 32.68 로 **나빠졌는데** 벤치가 더
             #     내려가 −4.51 로 찍혔다. 화면은 bias_cagr 를 먼저 적어야 한다.
-            "bias_cagr": round((B_["metrics"].get("cagr") or 0)
-                               - (P_["metrics"].get("cagr") or 0), 2),
+            # 🚨 2026-09-07 — 여기 넷이 전부 `or 0` 이었다. 한 레그가 **파산**(NAV ≤ 0)하면
+            #   그쪽 cagr·sharpe 가 None 인데 0 으로 바뀌어, 편향이 「소급 CAGR 그 자체」로
+            #   찍힌다 — 재는 것이 편향이 아니라 파산이 되는 것이고 화면은 그걸 모른다.
+            #   ⚠ 한쪽이라도 파산이면 편향은 **정의되지 않는다**. None 으로 둔다.
+            "bias_cagr": (None if _ruined else
+                          round((B_["metrics"].get("cagr") or 0)
+                                - (P_["metrics"].get("cagr") or 0), 2)),
             "bench_bias_cagr": round((B_["bench"].get("cagr") or 0)
                                      - (P_["bench"].get("cagr") or 0), 2),
-            "bias_excess": round(B_["excess_cagr"] - P_["excess_cagr"], 2),
-            "bias_sharpe": round((B_["metrics"].get("sharpe") or 0)
-                                 - (P_["metrics"].get("sharpe") or 0), 3),
+            "bias_excess": (None if _ruined else
+                            round(B_["excess_cagr"] - P_["excess_cagr"], 2)),
+            "bias_sharpe": (None if _ruined else
+                            round((B_["metrics"].get("sharpe") or 0)
+                                  - (P_["metrics"].get("sharpe") or 0), 3)),
+            "ruin": (None if not _ruined else
+                     {"pit": bool(P_["metrics"].get("ruin")),
+                      "retro": bool(B_["metrics"].get("ruin")),
+                      "at": (P_["metrics"].get("ruin_at")
+                             or B_["metrics"].get("ruin_at")),
+                      "note": "NAV 가 0 이하로 내려간 레그가 있다 — 연율 지표와 편향이 "
+                              "정의되지 않는다. 성적이 나쁜 것이 아니라 **다른 사건**이다."}),
             # 타이밍은 '무엇을 들었나' 가 아니라 '얼마나 들었나' 가 구성이다 —
             # 랩 본편(hold_now)과 같은 모양으로 낸다. 종목 목록을 빈 채로 내보내면
             # 화면이 '보유 0종' 으로 읽어 규칙이 안 돈 것처럼 보인다.
@@ -1701,11 +1725,19 @@ def main():
             # 시점정확 곡선. 소급 곡선(B_)은 싣지 않는다 — 화면에서 걷은 레그다.
             "chart": P_["chart"],
         })
-        print("  %-24s CAGR 소급 %+7.2f → PIT %+7.2f (편향 %+6.2f) · 초과 %+7.2f → %+7.2f "
-              "(t %5.2f → %5.2f)"
-              % (S["name"][:24], B_["metrics"].get("cagr") or 0,
-                 P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
-                 B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
+        if _ruined:
+            # ⚠ 파산은 «수가 나쁜 것» 이 아니라 수가 **없는** 것이다. 0 으로 채워 같은 줄에
+            #   찍으면 로그를 읽는 사람이 부진으로 읽는다.
+            print("  %-24s 🚨 NAV 0 이하 — 연율 지표 정의 안 됨(%s 레그 · %s)"
+                  % (S["name"][:24],
+                     "PIT" if P_["metrics"].get("ruin") else "소급",
+                     out[-1]["ruin"]["at"] or "?"))
+        else:
+            print("  %-24s CAGR 소급 %+7.2f → PIT %+7.2f (편향 %+6.2f) · 초과 %+7.2f → %+7.2f "
+                  "(t %5.2f → %5.2f)"
+                  % (S["name"][:24], B_["metrics"].get("cagr") or 0,
+                     P_["metrics"].get("cagr") or 0, out[-1]["bias_cagr"],
+                     B_["excess_cagr"], P_["excess_cagr"], B_["t"] or 0, P_["t"] or 0))
 
     # ── A17 F1·F2 — 게이트의 «순기여» 를 무조건형에 대고 잰다 ────────────────
     # 🚨 카드가 판정 대조군을 지정했다: 「전 섹터 내부 동일가중(무조건형)·전면 동일가중·

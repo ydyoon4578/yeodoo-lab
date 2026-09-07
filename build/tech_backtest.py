@@ -89,6 +89,15 @@ SHORT_SIDS = {"x-ratehot"}
 #   2.70% 만 잡을 수 있는 설계였다 — 논문의 주장을 아직 안 재 봤다.
 FIP_LS_SIDS = {"x-fipq-cont", "x-fipq-disc", "x-fipq-cont-sn", "x-fipq-disc-sn"}
 LONGSHORT_SIDS = {"x-subls", "x-subom"}
+
+# 🚨 2026-09-07 — 위 집합이 **두 일을 겸하고 있었다.** 회원이 x-subls·x-subom 둘뿐일 때는
+#   같은 말이었지만 E55 셋이 들어오며 갈라졌다:
+#     ⓐ 「선택 단위가 종목이 아니라 **서브산업**」 — 채점·선택 갈래가 통째로 다르다
+#     ⓑ 「Σw = 0 이라 **다리별로** 되정규화한다」 — 비중 경로의 규약
+#   E55 셋은 ⓑ만 필요한데 ⓐ 갈래에 걸려 **점수가 전부 0.0 이 됐다**(실측: 세 규칙의
+#   바스켓이 알파벳순으로 똑같았다 — 서로 다른 신호인데 결과가 한 글자도 안 달랐다).
+#   ⚠ 이런 겸직은 회원이 늘 때 조용히 틀린다. 그래서 ⓐ를 별도 집합으로 떼어 이름을 준다.
+SUBIND_LS_SIDS = {"x-subls", "x-subom"}
 # ⚠ FIP 롱숏 4종은 여기 안 넣는다. 이 집합의 분기는 전부 xsec 경로인데 그 넷은
 #   event(src="me", hold=126) 로 등록해 **겹치는 6개월 포트폴리오**를 만든다
 #   (논문 구조가 그렇다). 대조군만 CASH_BENCH_SIDS 로 공유한다.
@@ -614,12 +623,54 @@ def maxdd(nav):
     return mdd
 
 
+def weighted_ret(pairs, longshort=False):
+    """가중 바스켓의 그날 수익 — **이 랩의 유일한 가중 합산기**.
+
+    pairs 는 (비중, 그날수익) 목록이다. 결측 종목은 부르는 쪽이 이미 뺐고, 남은 비중을
+    되정규화한다 — 0 으로 두면 그날 현금을 든 것이 되어 중립이 조용히 깨진다.
+
+    🚨 longshort=True 면 **다리별로** 되정규화한다. 롱숏은 Σw = 0 이라 보통 식이 0 으로
+      나눈다. 각 다리 합을 1 로 되돌려 롱100/숏100 중립을 만든다. 한쪽 다리가 통째로
+      결측이면 그날은 0 으로 둔다 — 반쪽만 들고 «중립» 이라 부르지 않는다.
+
+    🚨 왜 함수로 들어냈나(2026-09-07). 이 규약이 tech_backtest 에만 있고 pit_backtest 는
+      Σw 로 나누는 옛 식을 그대로 갖고 있었다. 롱숏 규칙에 PIT 레그가 붙은 적이 없어
+      (x-subls·x-subom 은 다른 사유로 제외돼 있다) **10개월간 안 드러났다.**
+      E55 가 처음 붙자 PIT NAV 가 0 아래로 뚫렸고 MDD 가 −6.2×10¹⁵ 으로 찍혔다 —
+      성적이 아니라 0 으로 나눈 결과였다. 되풀이 결함 ③(경로가 둘이라 갈림)의 전형이다.
+      ⚠ 그래서 **산식을 옮겨 적지 않는다.** 두 레그가 이 함수를 부른다.
+    """
+    if not pairs:
+        return 0.0
+    if longshort:
+        lp = [(w, x) for w, x in pairs if w > 0]
+        sp = [(w, x) for w, x in pairs if w < 0]
+        lw = sum(w for w, _x in lp)
+        sw = -sum(w for w, _x in sp)
+        if lw <= 0 or sw <= 0:
+            return 0.0
+        return (sum(w * x for w, x in lp) / lw) + (sum(w * x for w, x in sp) / sw)
+    sw = sum(w for w, _x in pairs)
+    return (sum(w * x for w, x in pairs) / sw) if sw > 0 else 0.0
+
+
 def ann_stats(nav, dates, rf_m):
     """연율 수익·변동성·샤프(무위험 차감)·MDD."""
     n = len(nav)
     if n < 2:
         return {}
     yrs = (dt.date.fromisoformat(dates[-1]) - dt.date.fromisoformat(dates[0])).days / 365.25
+    # 🚨 2026-09-07 — NAV 가 0 이하로 내려가면 (음수)**(1/연) 이 **복소수**가 되어
+    #   round() 가 TypeError 로 죽었다(E55 롱숏의 PIT 레그에서 실제로 밟았다).
+    #   ⚠ 조용히 0 으로 바꾸지 않는다. 「원금을 다 잃었다」는 성적이 나쁜 것이 아니라
+    #     **다른 사건**이고, 그것을 −100% 라는 평범한 수로 적으면 화면이 파산을 부진으로
+    #     말하게 된다. 그래서 사실을 그대로 실어 보낸다(ruin).
+    _ruin = next((k for k, v in enumerate(nav) if v <= 0), None)
+    if _ruin is not None:
+        return {"cagr": None, "vol": None, "sharpe": None,
+                "mdd": round(maxdd(nav[:_ruin + 1]) * 100, 2) if _ruin else -100.0,
+                "ruin": True, "ruin_at": (dates[_ruin] if _ruin < len(dates) else None),
+                "note": "NAV 가 0 이하로 내려갔다 — 연율 지표가 정의되지 않는다(파산)."}
     cagr = (nav[-1] / nav[0]) ** (1 / yrs) - 1 if yrs > 0 and nav[0] > 0 else None
     rs = [nav[i] / nav[i - 1] - 1 for i in range(1, n) if nav[i - 1] > 0]
     if not rs:
@@ -2076,6 +2127,152 @@ def mom_vol_scaled(P, R, i, vwin=MOMVOL_VWIN):
 
 AMIHUD_WIN = 60          # 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2① 에서 확정. 바꾸지 않는다.
 TURN_WIN = 60            # 같은 문서 §2②.
+
+# ── E55 가격 지연 ───────────────────────────────────────────────────────
+# 사전등록 build/PREREG-2026-09-07-PDELAY.md(계산 전 커밋 3f6f856d) §2 가 셋을 못박았다.
+# 🚨 이 셋을 훑으면 훑은 사람이 결과를 만든다 — 그래서 상수로 두고 한 곳에서만 읽는다.
+PD_WEEKS = 52            # 창 길이(주). 카드의 수.
+PD_LAGS = 4              # 시차 개수. 카드의 수.
+PD_DOW = 2               # 주간 절단 요일 — 수요일(월=0). 원 논문(Hou·Moskowitz) 규약이다.
+#   ⚠ 카드는 「수·목」이라 둘을 적었지만 목요일 판을 **병행하지 않는다**(등록 §8).
+
+
+def _wk_idx(dates, dow=PD_DOW):
+    """날짜 격자에서 **주간 절단점**의 인덱스. 그 요일이 휴장이면 직전 거래일로 대체한다.
+
+    등록 §2 가 「그 수요일이 휴장이면 직전 거래일」이라고 계산 전에 적어 뒀다.
+    ⚠ 랩의 week_ends() 를 안 쓴다 — 그쪽은 «그 주의 마지막 거래일» 이라 규약이 다르다.
+      같은 이름의 두 규약을 한 함수에 섞으면 부르는 곳마다 어느 쪽인지 헷갈린다.
+    """
+    import datetime as _dtw
+    out, seen = [], set()
+    for i, d in enumerate(dates):
+        y, m, dd = int(d[:4]), int(d[5:7]), int(d[8:10])
+        wd = _dtw.date(y, m, dd).weekday()
+        if wd <= dow:
+            # 이 주의 «목표 요일 이하» 인 마지막 날을 그 주의 절단점으로 삼는다.
+            key = _dtw.date(y, m, dd) - _dtw.timedelta(days=wd)     # 그 주 월요일
+            seen.add(key)
+            if out and out[-1][0] == key:
+                out[-1] = (key, i)
+            else:
+                out.append((key, i))
+    return [i for _k, i in out]
+
+
+def _ols_r2(Y, Xs):
+    """Y ~ [1] + Xs 의 결정계수. Xs 는 열 목록(각각 Y 와 같은 길이).
+
+    🚨 정규방정식을 직접 푼다 — 이 랩에는 다변량 회귀가 없었고, 여기서만 쓰는 5변수라
+      외부 의존을 들이지 않는다. 특이하면 None 을 돌려준다(조용히 0 을 주지 않는다).
+    """
+    n = len(Y)
+    k = len(Xs) + 1
+    if n <= k + 2:
+        return None
+    cols = [[1.0] * n] + [list(c) for c in Xs]
+    A = [[sum(cols[a][t] * cols[b][t] for t in range(n)) for b in range(k)] for a in range(k)]
+    b = [sum(cols[a][t] * Y[t] for t in range(n)) for a in range(k)]
+    # 가우스 소거(부분 피벗)
+    for c in range(k):
+        p = max(range(c, k), key=lambda r: abs(A[r][c]))
+        if abs(A[p][c]) < 1e-12:
+            return None
+        A[c], A[p] = A[p], A[c]
+        b[c], b[p] = b[p], b[c]
+        for r in range(c + 1, k):
+            f = A[r][c] / A[c][c]
+            if f:
+                for cc in range(c, k):
+                    A[r][cc] -= f * A[c][cc]
+                b[r] -= f * b[c]
+    beta = [0.0] * k
+    for r in range(k - 1, -1, -1):
+        s = b[r] - sum(A[r][c] * beta[c] for c in range(r + 1, k))
+        beta[r] = s / A[r][r]
+    ybar = sum(Y) / n
+    sst = sum((y - ybar) ** 2 for y in Y)
+    if sst <= 0:
+        return None
+    sse = 0.0
+    for t in range(n):
+        fit = sum(beta[a] * cols[a][t] for a in range(k))
+        sse += (Y[t] - fit) ** 2
+    return 1.0 - sse / sst
+
+
+# 진단용 이력 — 등록 §0 이 「성적보다 분포를 먼저」라고 했다. 분위 경계·평균 R²·유효 주수를
+#   싣지 않으면 «무엇을 정렬했는지 모르는 채 성적을 낸 것» 이 된다(카드 ②).
+_PD_H: dict = {}
+_PD_MKT: dict = {}
+_PD_WK: dict = {}
+
+
+def _wk_cache(dates):
+    """주간 절단점 인덱스 — 격자당 한 번만 만든다(전 종목이 공유한다)."""
+    key = (len(dates), dates[0], dates[-1])
+    if key not in _PD_WK:
+        _PD_WK[key] = _wk_idx(dates)
+    return _PD_WK[key]
+
+
+def pd_market(dates):
+    """시장 프록시 **수준** 계열 — S&P 500(PR). 등록 §2(정정본).
+
+    🚨 `ixr`(동일가중 유니버스 평균)을 쓰지 않는다. 등록에 처음 그렇게 적었다가 계산 전에
+      잡아 고쳤다 — 지연도는 「시장에 얼마나 늦게 반응하나」라 프록시가 틀리면 재는 것
+      자체가 달라진다. 랩의 공식 판정선과 **같은 계열**을 쓴다.
+    ⚠ data/bench_px.json 은 표시용이라 안 쓴다(검증기가 그 오용을 따로 잡는다).
+    ⚠ 두 레그(소급·PIT)가 같이 부르므로 여기 한 곳에서 캐시한다 — X 마다 실으면 경로가
+      둘이 되고, pit_backtest 는 자기 X 를 따로 만들어 더 갈리기 쉽다(되풀이 결함 ③).
+    """
+    key = (len(dates), dates[0], dates[-1])
+    if key in _PD_MKT:
+        return _PD_MKT[key]
+    r = (load_index_tr(dates) or {}).get("S&P 500")
+    if not r:
+        raise SystemExit(
+            "E55 — 시장 프록시(S&P 500 PR)를 assets.json 에서 못 읽었다. 지연도를 못 잰다.")
+    lv, cur = [100.0], 100.0
+    for i in range(1, len(dates)):
+        v = r[i] if i < len(r) and r[i] is not None else 0.0
+        cur *= (1.0 + v)
+        lv.append(cur)
+    _PD_MKT[key] = lv
+    return lv
+
+
+def price_delay(Rt, IXR, wk, i):
+    """가격 지연도 = 1 − R²(시장 당기만) / R²(당기 + 1~4주 시차).
+
+    등록 PREREG-2026-09-07-PDELAY §2. 돌려주는 것은 (지연도, 비제약 R², 유효 주수).
+    ⚠ 창을 다 못 채우면 (None, None, n) — 「신호 없음」이지 0 이 아니다(카드 ③).
+    """
+    ws = [w for w in wk if w <= i]
+    need = PD_WEEKS + PD_LAGS + 1
+    if len(ws) < need:
+        return None, None, len(ws)
+    ws = ws[-need:]
+    def _ret(S, a, b):
+        pa, pb = S[a], S[b]
+        return (pb / pa - 1.0) if (pa and pb and pa > 0) else None
+    r_s = [_ret(Rt, ws[j - 1], ws[j]) for j in range(1, len(ws))]
+    r_m = [_ret(IXR, ws[j - 1], ws[j]) for j in range(1, len(ws))]
+    Y, Xc = [], [[] for _ in range(PD_LAGS + 1)]
+    for j in range(PD_LAGS, len(r_s)):
+        vals = [r_s[j]] + [r_m[j - L] for L in range(PD_LAGS + 1)]
+        if any(v is None for v in vals):
+            continue
+        Y.append(vals[0])
+        for L in range(PD_LAGS + 1):
+            Xc[L].append(vals[1 + L])
+    if len(Y) < PD_WEEKS // 2:
+        return None, None, len(Y)
+    r2u = _ols_r2(Y, Xc)                    # 비제약 — 당기 + 시차 1~4
+    r2r = _ols_r2(Y, Xc[:1])                # 제약   — 당기만(시차 계수 = 0)
+    if r2u is None or r2r is None or r2u <= 0:
+        return None, r2u, len(Y)
+    return max(0.0, 1.0 - r2r / r2u), r2u, len(Y)
 
 
 def amihud(P, V, i, win=AMIHUD_WIN):
@@ -4767,6 +4964,17 @@ def build_strats():
     #   ⚠ 정의는 남긴다 — 채점 갈래 · _secew_pick · secew_regimes · pit 의 vs_ctrl.
     #     되살리려면 넷을 같이 되돌리고(xsec 호출 · SCREEN_SIDS · WEIGHTED_SIDS ·
     #     tech/pit FUND_SIDS) 원장 항목에 readmitted 를 적어야 한다.
+    # 🚨 2026-09-07 — **기각(PREREG-2026-09-07-PDELAY-RESULT · 사유 «판별 불가» F7).**
+    #   등록을 내렸다. 동일가중판은 대조군(Amihud 롱숏)에 지고(Δ −0.089) 시총가중판은
+    #   이긴다(Δ +0.187) — 카드가 「가중방식은 결론을 바꾸는 축」이라 적었고 등록 F7 이
+    #   그 경우를 미리 «판별 불가» 로 정해 뒀다. **좋은 쪽을 고르지 않는다.**
+    #   🚨 더 큰 결과는 성적이 아니라 **분포**였다 — 지연도와 비제약 R² 가 완벽하게 반대로
+    #     정렬됐다(Q1 0.296 → Q5 0.076). 52주에 시차 4개를 넣으면 잡음만으로 R² 가 4/52
+    #     ≈ 0.077 오르는데 Q5 의 「시차가 설명한 몫」이 정확히 그 크기다. 즉 이 유니버스에서
+    #     지연도는 **시장 R² 의 역순**이지 지연이 아니다. 카드가 목적 (3)에 미리 적어 둔 함정.
+    #   ⚠ 정의는 남긴다 — price_delay · _quintile_ls · pdelay_dist · weighted_ret.
+    #     되살리려면 넷을 같이 되돌리고(xsec 호출 · LONGSHORT_SIDS · WEIGHTED_SIDS ·
+    #     tech/pit FUND_SIDS) 원장 항목에 readmitted 를 적어야 한다.
     xsec("x-bmrot-flat", "B/M 절반 상시보유 (틸트 없음 · x-bmrot 대조군)",
          "x-bmrot 과 같은 후보를 B/M 중앙값으로 반씩 나누고 항상 50/50 으로 보유한다. "
          "금리 신호를 쓰지 않는다.",
@@ -6727,6 +6935,11 @@ def xsec_score_at(S, i, X, pool=None):
     # 국면 서술형 규칙의 그 시점 상태를 여기서 채운다(종목 루프 **직전**).
     X["_pool"] = pool
     _narrative_state(S["sid"], i - 1, X)
+    # E55 — 시장 계열과 주간 절단점은 **전 종목이 공유**한다. 루프 안에서 만들면 종목마다
+    #   다시 만들어 518배로 느려지고, 더 나쁘게는 두 벌이 될 자리가 생긴다.
+    _PDM = _PDW = None
+    if _BASE_SID(S["sid"]) in ("x-pdelay", "x-pdelay-cw"):
+        _PDM, _PDW = pd_market(dates), _wk_cache(dates)
     # ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md ────────────────────────────
     # 🚨 **종목 루프보다 앞**이어야 한다. 여섯은 fn 이 None(모형이 단면 전체를 봐야 하므로
     #   종목당 람다로 못 쓴다)이라, 루프에 들어가면 fn(None) 을 불러 죽는다. 실제로 그랬다.
@@ -7157,7 +7370,7 @@ def xsec_score_at(S, i, X, pool=None):
             v = None
             if _mb is not None and _RATEHOT_CUT[0] is not None and abs(_mb) >= _RATEHOT_CUT[0]:
                 v = ret(P, i - 1, 252)          # 관문 통과분 중 12개월 수익 상위
-        elif sid in LONGSHORT_SIDS:
+        elif sid in SUBIND_LS_SIDS:
             # 🚨 이 둘은 채점 단위가 종목이 아니라 **서브산업**이다. 선택은 xsec_pick_at 의
             #   sub_baskets 가 통째로 하고, 여기서는 «후보 자격» 만 만든다 —
             #   서브산업이 붙은 종목이면 0 점. 이렇게 둬야 후보 수 관문(XSEC_MIN_POOL)과
@@ -7275,6 +7488,23 @@ def xsec_score_at(S, i, X, pool=None):
                 # A15 — 점수는 시가총액이다. 비중(동일 ↔ 시총)은 _cgate_pick 이 정한다.
                 #   규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071).
                 v = mcap if mcap else None
+            elif sid in ("x-pdelay", "x-pdelay-cw"):
+                # E55 — 점수는 **가격 지연도**다. 규약 PREREG-2026-09-07-PDELAY.md
+                #   (계산 전 커밋 3f6f856d · 시장 프록시 정정 7bb6c413).
+                # ⚠ 창(52주 + 시차 4)을 못 채우면 None — 「신호 없음」이지 0 이 아니다(카드 ③).
+                #   0 으로 두면 지연이 가장 낮은 쪽(= 숏 다리)에 신규 편입주가 통째로 들어간다.
+                _d, _r2, _nw = price_delay(P, _PDM, _PDW, i - 1)
+                v = _d
+                if _d is not None:
+                    # 등록 §0 — 성적보다 분포를 먼저 낸다. 여기서 그 재료를 쌓는다.
+                    _PD_H.setdefault("obs", {}).setdefault(i, []).append((_d, _r2, _nw))
+            elif sid == "x-illiqls":
+                # E55 의 대조군 — 같은 구조(오분위·Q5롱/Q1숏·연1회)에 점수만 Amihud 다.
+                #   카드 ⑦: 「E19 를 못 이기면 이 카드는 E19 를 다른 이름으로 다시 잰 것이다」.
+                # ⚠ 랩의 amihud() 를 그대로 쓴다(PREREG-2026-08-12-LIQ-CAL 확정 · win 60).
+                #   비유동성은 클수록 «지연이 클 것으로 보는 쪽» 이라 부호를 안 뒤집는다 —
+                #   지연도와 정렬 방향을 맞춰야 Q5/Q1 이 같은 뜻이 된다.
+                v = amihud(P, vlm.get(t) or [], i - 1)
             elif sid in ("x-secew", "x-secew-gate"):
                 # A17 — 점수는 시가총액이다. 섹터 비중 고정과 섹터 내부 비중은
                 #   _secew_pick 이 정한다. 규약 PREREG-2026-09-07-SECEW.md(커밋 7d4291ed).
@@ -7942,6 +8172,89 @@ def _secew_pick(sc, X, i, gate=False):
     return list(w), w
 
 
+def _quintile_ls(sc, X, i, cap=False):
+    """E55 — 점수 **오분위**로 최상위(Q5) 롱 · 최하위(Q1) 숏. 등록 §3.
+
+    돌려주는 것은 (명단, 가중dict). 롱 다리 합 +1 · 숏 다리 합 −1 이다
+    (LONGSHORT_SIDS 의 규약 — 부르는 쪽이 다리별로 되정규화한다).
+
+    cap=True 면 다리 **안에서** 시가총액가중이다. 카드 ⑤ 가 「동일가중과 시총가중을 반드시
+    같은 표에 병기」하라 했고, 「가중방식이 표시 방법이 아니라 **결론을 바꾸는 축**」이라 적었다.
+    🚨 둘 중 좋은 쪽을 고르지 않는다(등록 §8). 갈리면 갈렸다고 적는다(F7).
+
+    ⚠ sc 는 점수 **내림차순**이다(xsec_score_at 규약) — 앞이 Q5(지연 큼), 뒤가 Q1 이다.
+    ⚠ F1: 어느 분위든 30종 미만이면 **빈 손**으로 돌려준다. 등록이 「숫자를 내지 않고
+      측정 불가로 적는다」고 했으므로 여기서 조용히 작은 바스켓을 만들지 않는다.
+    """
+    ts = [t for _v, t in sc]
+    n = len(ts)
+    q = n // 5
+    if q < 30:                       # 등록 §5 F1 — 분위가 30종 미만이면 안 만든다
+        _PD_H.setdefault("thin", []).append((i, n, q))
+        return [], None
+    lg, sh = ts[:q], ts[-q:]
+    if cap:
+        # ⚠ sc 의 점수를 시총으로 쓰면 안 된다 — 여기서 점수는 **지연도**다.
+        #   시총은 주식수 × 종가로 따로 만든다(랩의 다른 시총가중 규칙과 같은 산식).
+        mc = {}
+        meta, px, FU, dates = X["meta"], X["px"], X["FU"], X["dates"]
+        for t in lg + sh:
+            _f = FU.get(t) or {}
+            _sn = asof_fund(_f.get("sh"), dates[i - 1])
+            _p0 = px[t][i - 1] if px.get(t) else None
+            if _sn and _p0 and _sn > 0 and _p0 > 0:
+                mc[t] = _sn * _p0
+        if len(mc) < 2 * q * 0.8:    # 시총을 8할도 못 읽으면 시총가중판을 만들지 않는다
+            _PD_H.setdefault("nocap", []).append((i, len(mc), 2 * q))
+            return [], None
+        lg = [t for t in lg if t in mc]
+        sh = [t for t in sh if t in mc]
+        sl, ss = sum(mc[t] for t in lg), sum(mc[t] for t in sh)
+        if sl <= 0 or ss <= 0:
+            return [], None
+        w = {t: mc[t] / sl for t in lg}
+        w.update({t: -mc[t] / ss for t in sh})
+    else:
+        w = {t: 1.0 / len(lg) for t in lg}
+        w.update({t: -1.0 / len(sh) for t in sh})
+    return lg + sh, w
+
+
+def pdelay_dist():
+    """지연도 **분포** — 등록 §0·§5 F2 가 성적보다 먼저 요구한 것이다.
+
+    🚨 이것이 이 카드의 첫 결과다. 오분위 경계 · Q5−Q1 격차 · 분위별 평균 비제약 R² 와
+      유효 주수를 낸다. 이것 없이 스프레드만 내면 «무엇을 정렬했는지 모르는 채 성적을
+      낸 것» 이 된다(카드 ②).
+    ⚠ 마지막으로 돈 레그의 것이다. 원 증거 격차(0.341 − 0.002 = 0.339)와 나란히 읽는다.
+    """
+    obs = _PD_H.get("obs") or {}
+    if not obs:
+        return None
+    last = max(obs)
+    rows = sorted(obs[last], key=lambda x: x[0])
+    n = len(rows)
+    if n < 5:
+        return None
+    def _cut(p):
+        return round(rows[min(n - 1, int(p * n))][0], 4)
+    qs = []
+    for k in range(5):
+        seg = rows[k * n // 5:(k + 1) * n // 5]
+        if not seg:
+            continue
+        qs.append({"q": k + 1, "n": len(seg),
+                   "delay": round(sum(x[0] for x in seg) / len(seg), 4),
+                   "r2u": round(sum((x[1] or 0) for x in seg) / len(seg), 4),
+                   "weeks": round(sum(x[2] for x in seg) / len(seg), 1)})
+    gap = (round(qs[-1]["delay"] - qs[0]["delay"], 4) if len(qs) == 5 else None)
+    return {"n": n, "cuts": [_cut(p) for p in (0.2, 0.4, 0.6, 0.8)],
+            "quintiles": qs, "gap_q5_q1": gap,
+            "ref_gap": 0.339, "ref_note": "원 증거 Hou·Moskowitz 2005: 1분위 0.002 · 10분위 0.341",
+            "ratio_of_ref": (round(gap / 0.339, 3) if gap is not None else None),
+            "thin": len(_PD_H.get("thin") or [])}
+
+
 def secew_regimes(key="gate"):
     """섹터-달 관측의 게이트 ON 비율(등록 F6)과 **섹터별 내역**(P1). 마지막 레그의 것이다.
 
@@ -8035,6 +8348,9 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     if S["sid"] in ("x-secew", "x-secew-gate"):
         # A17 — 규약 PREREG-2026-09-07-SECEW.md(계산 전 커밋 7d4291ed).
         return _secew_pick(sc, X, i, gate=(S["sid"] == "x-secew-gate"))
+    if S["sid"] in ("x-pdelay", "x-pdelay-cw", "x-illiqls"):
+        # E55 — 규약 PREREG-2026-09-07-PDELAY.md(계산 전 커밋 3f6f856d).
+        return _quintile_ls(sc, X, i, cap=(S["sid"] == "x-pdelay-cw"))
     if S["sid"] == "x-demega10":
         # A16 — 「시총 상위 10종목을 제외하고 잔여를 동일가중」. 규약 PREREG-2026-09-05-DEMEGA.md
         #   (계산 전 커밋 89da3394). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
@@ -8137,7 +8453,7 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
         if not _pw:
             return [], None
         return [t for t, _w in _pw], {t: w for t, w in _pw}
-    if _BASE_SID(S["sid"]) in LONGSHORT_SIDS:
+    if _BASE_SID(S["sid"]) in SUBIND_LS_SIDS:
         # 사전등록 PREREG-2026-08-23-NARRATIVE B1·B2. 채점(sc)을 안 쓴다 —
         #   선택 단위가 종목이 아니라 **서브산업**이라 여기서 통째로 만든다.
         # ⚠ 후보를 **sc 에서** 받는다. X["tickers"] 를 그대로 쓰면 PIT 마스킹을 우회해
@@ -8764,23 +9080,7 @@ def run():
                     # 가중 바스켓. 결측 종목은 빼고 남은 비중을 되정규화한다 —
                     # 0 으로 두면 그날 현금을 든 것이 되어 섹터 중립이 조용히 깨진다.
                     _pairs = [(hw[t], R[t][i]) for t in hold if R[t][i] is not None and t in hw]
-                    if _BASE_SID(S["sid"]) in LONGSHORT_SIDS:
-                        # 🚨 롱숏은 Σw = 0 이라 위 식이 0 으로 나눈다. **다리별로** 되정규화해
-                        #   각 다리 합을 1 로 되돌린다(롱100/숏100 중립). 한쪽 다리가 통째로
-                        #   결측이면 그날은 남은 한 다리만 든 것이 되므로 0 으로 둔다 —
-                        #   반쪽만 들고 «중립» 이라 부르지 않는다.
-                        _lp = [(w, x) for w, x in _pairs if w > 0]
-                        _sp = [(w, x) for w, x in _pairs if w < 0]
-                        _lw = sum(w for w, _x in _lp)
-                        _sw2 = -sum(w for w, _x in _sp)
-                        if _lw > 0 and _sw2 > 0:
-                            r = (sum(w * x for w, x in _lp) / _lw
-                                 + sum(w * x for w, x in _sp) / _sw2)
-                        else:
-                            r = 0.0
-                    else:
-                        _sw = sum(w for w, _x in _pairs)
-                        r = (sum(w * x for w, x in _pairs) / _sw) if _sw > 0 else 0.0
+                    r = weighted_ret(_pairs, _BASE_SID(S["sid"]) in LONGSHORT_SIDS)
                 else:
                     rs = [R[t][i] for t in hold if R[t][i] is not None]
                     r = sum(rs) / len(rs) if rs else 0.0
@@ -8983,6 +9283,11 @@ def run():
                              if S["sid"] in ("x-cgate", "x-cgate-mom") else
                              secew_regimes("gate" if S["sid"] == "x-secew-gate" else "flat")
                              if S["sid"] in ("x-secew", "x-secew-gate") else None),
+            # 🚨 E55 — **이 카드의 첫 결과는 성적이 아니라 이것이다**(등록 §0 · 카드 ②).
+            #   오분위 경계 · Q5−Q1 격차 · 분위별 평균 비제약 R² 와 유효 주수.
+            #   F2 를 이 값으로 건다(격차 < 0.034 면 스프레드를 아예 안 적는다).
+            "delay_dist": (pdelay_dist()
+                           if S["sid"] in ("x-pdelay", "x-pdelay-cw") else None),
             # 리밸런스 주기 — 화면이 '월말'을 손으로 적지 않게 규칙에서 실어 보낸다.
             # 🚨 종전에는 전 규칙이 월말이라 설명문에 글자로 박혀 있었다. 주기가 갈린 뒤로는
             #   그 글자가 곧 거짓말이 될 수 있으므로 자료로 내보낸다(PREREG-2026-08-13-REBAL).

@@ -2834,6 +2834,48 @@
    "gate": "기각",
    "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-SECEW-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
    "blocked_by": ""
+  },
+  {
+   "sid": "x-pdelay",
+   "name": "가격 지연 오분위 롱숏 (동일가중)",
+   "kind": "xsec",
+   "arch": "E55",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-PDELAY-RESULT.md",
+   "paper": "탐색 풀 E55 — 가격 지연(Hou·Moskowitz 2005)",
+   "t": null,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-PDELAY-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
+  },
+  {
+   "sid": "x-pdelay-cw",
+   "name": "가격 지연 오분위 롱숏 (시총가중)",
+   "kind": "xsec",
+   "arch": "E55",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-PDELAY-RESULT.md",
+   "paper": "탐색 풀 E55 — 가격 지연(Hou·Moskowitz 2005)",
+   "t": null,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-PDELAY-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
+  },
+  {
+   "sid": "x-illiqls",
+   "name": "Amihud 비유동성 오분위 롱숏 (E55 대조군)",
+   "kind": "xsec",
+   "arch": "E55",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-PDELAY-RESULT.md",
+   "paper": "탐색 풀 E55 — 가격 지연(Hou·Moskowitz 2005)",
+   "t": null,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-PDELAY-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
   }
  ]
 }
