@@ -167,11 +167,6 @@ KNOWN_BUILDER = {
         "--from 은 창을 맞춘 소급 — 셋을 나란히 놓아야 «선견 효과» 와 «창 효과» 가 갈린다. "
         "결과는 PREREG-2026-08-28-INDMOM-RESULT.md 와 PREREG-2026-09-07-INDMOM2-RESULT.md "
         "가 읽고, x-residind 의 근거 문장이 후자를 가리킨다(2026-09-07 배선).",
-    "strategy_digest.py":
-        "탐색 풀 카드의 팀 공유용 정리(data/strategy_digest.json) — 카드마다 ①논문 ②랩 적용 "
-        "결과 ③통한 국면 ④활용. 입력이 pit_strategies.json 이라 PIT 랩과 같은 사유로 로컬에서만 "
-        "돈다. 결과는 digest.html 이 fetch 로 직접 읽는다(2026-09-07 배선). "
-        "⚠ PIT·tech 를 다시 구우면 이것도 다시 굽는다 — 안 그러면 화면이 옛 표본을 말한다.",
     "cap_axis_bridge.py":
         "재현 연구(data/cap_axis_bridge.json) — Shin(2026) 「시총축 적분 진단」 arXiv "
         "2607.01765v3. 손으로 한 번 돌리는 얼린 측정이라 잡에 안 붙인다. 결과는 "
