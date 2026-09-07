@@ -40,14 +40,35 @@ OUT = os.path.join(DATA, "strategy_digest.json")
 #   ⚠ 사용자 요청대로 **카드를 하나씩 확인하며** 채운다. 빈 카드는 «아직 안 이었다» 로
 #     화면에 그대로 나오고, 지어낸 문장으로 덮지 않는다.
 LINK: dict = {
-    # 2026-09-07 선언 규약(풀카드:/규칙:)이 붙은 문서에서 기계로 확인한 것들
+    # ── ① 선언 규약(풀카드:/규칙:)이 붙은 판정 문서에서 기계로 확인 ──────────
     "A15": ["x-cgate", "x-cgate-mom"],
     "A16": ["x-demega10"],
     "A17": ["x-secew", "x-secew-gate"],
     "A22": ["x-residind-n52"],
     "E55": ["x-pdelay", "x-pdelay-cw", "x-illiqls"],
-    "A7": ["a7-fidelity", "a7-conover"],
+    # ── ② 규칙의 why/rule 문장이 **그 카드를 원문으로 인용**한 것 ────────────
+    #   🚨 정규식으로 카드 번호를 훑은 뒤 **인용 문장을 사람이 한 줄씩 읽어** 걸렀다.
+    #     이름이 비슷하다고 잇지 않았고, 실제로 오탐 다섯을 걸러 냈다:
+    #       · A1 ↔ x-revdrift-n25   — A1 을 «중앙값을 쓰는 규약» 의 선례로 인용
+    #       · E8 ↔ x-btp-n155       — E8 을 «가치가중이라는 용어» 의 근거로 인용
+    #       · A7 ↔ sec-revdrift / a-sec-revdrift — A7 이 죽은 것을 «동기» 로 인용
+    #       · D1 · D10 ↔ e-pead     — 그 D1/D10 은 카드 번호가 아니라 **십분위 이름**이다
+    #     ⚠ 마지막 것이 이 방식의 함정이다 — 카드 번호와 같은 글자가 다른 뜻으로 쓰인다.
+    "A1": ["x-payout-n50", "x-a1payout"],
     "A2": ["a2-factor-rot"],
+    "A5": ["x-mom12-n52"],
+    "A7": ["a7-fidelity", "a7-conover", "a7b-gate-sector"],
+    "A20": ["x-52wh-n155"],
+    "B4": ["x-residmom-n52"],
+    "D8": ["bond-rolldown", "a-bond-rolldown"],
+    "D13": ["dur-style", "dur-style-v", "dur-style-r", "a-dur-style-r", "x-durrot", "x-ssrot"],
+    "E2": ["x-lowvol-n100"],
+    "E3": ["x-btp-n155"],
+    "E7": ["x-poacc-n52"],
+    "E8": ["x-agrow-n52"],
+    "E18": ["x-maxlow-n52", "x-max5low-n52"],
+    "E21": ["x-revdrift-n25"],
+    "E44": ["x-shiss-n52"],
 }
 
 # ── ④ 활용 방안을 «측정값에서» 뽑는 규칙 ────────────────────────────────────
