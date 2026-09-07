@@ -2778,6 +2778,34 @@
    "gate": "기각",
    "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-05-DEMEGA-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
    "blocked_by": ""
+  },
+  {
+   "sid": "x-cgate",
+   "name": "지수 집중도 게이트 — 수준(허핀달 확장윈도우 백분위)",
+   "kind": "xsec",
+   "arch": "A15",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-CGATE-RESULT.md",
+   "paper": "탐색 풀 A15 — 지수 집중도 국면별 동일가중 전환",
+   "t": 0.86,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-CGATE-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
+  },
+  {
+   "sid": "x-cgate-mom",
+   "name": "지수 집중도 게이트 — 12개월 변화(병행판)",
+   "kind": "xsec",
+   "arch": "A15",
+   "when": "2026-09-07",
+   "src": "PREREG-2026-09-07-CGATE-RESULT.md",
+   "paper": "탐색 풀 A15 — 지수 집중도 국면별 동일가중 전환",
+   "t": 2.1,
+   "incr": null,
+   "gate": "기각",
+   "why": "판정 «기각» — 사유와 수치는 build/PREREG-2026-09-07-CGATE-RESULT.md 에 있다. (build/verdict_wire.py 가 선언을 읽어 넣은 줄이다. 이름·수치 칸은 사람이 채운다 — 기계가 요약하면 그 요약이 정본처럼 읽힌다.)",
+   "blocked_by": ""
   }
  ]
 }
