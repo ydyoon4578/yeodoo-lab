@@ -94,6 +94,31 @@ def scan() -> dict:
     return {"cards": out, "undeclared": undecl, "no_card": none_decl}
 
 
+_ARCH = None
+
+
+def _arch_name(cid):
+    """그 풀 카드 id 를 가리키는 아카이브 항목의 **이름**. 없으면 None.
+
+    validate_site 가 이 이름으로 «랩 판정 ↔ 풀 카드» 를 맞대므로, 여기서 같은 규칙으로
+    찾아야 두 검사가 서로 싸우지 않는다(그쪽은 aka·sid 에 카드 id 가 들어 있나를 본다).
+    """
+    global _ARCH
+    if _ARCH is None:
+        try:
+            _ARCH = (json.load(io.open(os.path.join(ROOT, "data", "archive_index.json"),
+                                       encoding="utf-8")).get("items") or [])
+        except Exception:
+            _ARCH = []
+    if not cid:
+        return None
+    for x in _ARCH:
+        tags = [str(a) for a in (x.get("aka") or [])] + [str(x.get("sid") or "")]
+        if any(str(cid).lower() in t.lower() for t in tags):
+            return x.get("n")
+    return None
+
+
 def main(argv) -> int:
     check = "--check" in argv
     s = scan()
@@ -121,8 +146,13 @@ def main(argv) -> int:
         else:
             v = " · ".join("%s %s" % (_short(f), (x or "판정 문구를 못 읽었다"))
                            for f, x in pairs)
+        # 🚨 t 는 **아카이브 항목의 이름**이어야 한다 — validate_site 의 «랩에서 판정한
+        #   전략이 풀 카드에 안 비친다» 검사가 그 이름으로 맞댄다. 카드 이름을 쓰면
+        #   아카이브 이름과 한 글자(« · A7» 같은 꼬리)만 달라도 연결이 끊기고,
+        #   그러면 화면이 그 카드를 «검정한 적 없는 아이디어» 로 되돌린다(실측 2026-09-07).
+        #   ⚠ 손 표로 맞추지 않는다 — 아카이브에서 그 카드 id 를 가리키는 항목을 찾아 쓴다.
         lab = {"v": v,
-               "t": str(c.get("name") or ""),
+               "t": _arch_name(c.get("id")) or str(c.get("name") or ""),
                "why": ("사전등록 %d편에서 이 랩의 구현으로 쟀다: %s. "
                        "⚠ 검증 대상은 «이 랩의 특정 구현» 이라 카드 규칙과 완전히 같지는 않다 — "
                        "각 문서의 §1(규칙)과 한계를 볼 것. "
