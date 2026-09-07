@@ -17,6 +17,12 @@
     "diff": 0.09
    },
    {
+    "sid": "x-cgate-mom",
+    "monthly_t": 2.029,
+    "record_t": 2.09,
+    "diff": -0.06
+   },
+   {
     "sid": "x-ncap10",
     "monthly_t": 2.023,
     "record_t": 1.94,
@@ -57,12 +63,6 @@
     "monthly_t": 1.862,
     "record_t": 1.62,
     "diff": 0.24
-   },
-   {
-    "sid": "x-cap45",
-    "monthly_t": 1.845,
-    "record_t": 1.66,
-    "diff": 0.19
    }
   ],
   "max_abs_diff": 0.59
@@ -77,13 +77,13 @@
    "to": "2026-09",
    "n_months": 120
   },
-  "n_rules": 113,
+  "n_rules": 114,
   "trials_n": 450,
-  "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 113종이고 시행 분모는 450다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
+  "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 114종이고 시행 분모는 450다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
   "actual": {
    "max_t": 2.493,
    "min_t": -2.538,
-   "n_over_2": 7,
+   "n_over_2": 8,
    "top": [
     {
      "sid": "x-pead-sue",
@@ -92,6 +92,10 @@
     {
      "sid": "x-ncapndx",
      "t": 2.08
+    },
+    {
+     "sid": "x-cgate-mom",
+     "t": 2.029
     },
     {
      "sid": "x-ncap10",
@@ -120,15 +124,11 @@
     {
      "sid": "x-divgrow",
      "t": 1.862
-    },
-    {
-     "sid": "x-cap45",
-     "t": 1.845
     }
    ]
   },
   "null_max_t": {
-   "median": 2.257,
+   "median": 2.259,
    "p90": 3.134,
    "p95": 3.718,
    "p99": 7.53,
@@ -136,9 +136,9 @@
   },
   "null_n_over_2": {
    "mean": 5.0,
-   "max": 38
+   "max": 39
   },
-  "reality_check_p": 0.3415,
+  "reality_check_p": 0.342,
   "reading": "실측 최고 t 2.49 · 잡음의 최고 t 중앙값 2.26(95% 3.72). Reality Check p = 0.342 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
   "block_months": 3,
   "reps": 2000,
@@ -156,84 +156,84 @@
     "from": "2016-09",
     "to": "2026-09",
     "n_months": 121,
-    "n_rules": 99,
-    "share": 0.846
+    "n_rules": 100,
+    "share": 0.847
    },
    {
     "from": "2016-10",
     "to": "2026-09",
     "n_months": 120,
-    "n_rules": 113,
+    "n_rules": 114,
     "share": 0.966
    },
    {
     "from": "2020-08",
     "to": "2026-09",
     "n_months": 74,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-09",
     "to": "2026-09",
     "n_months": 73,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-10",
     "to": "2026-09",
     "n_months": 72,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-11",
     "to": "2026-09",
     "n_months": 71,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-12",
     "to": "2026-09",
     "n_months": 70,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-01",
     "to": "2026-09",
     "n_months": 69,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-02",
     "to": "2026-09",
     "n_months": 68,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-03",
     "to": "2026-09",
     "n_months": 67,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-04",
     "to": "2026-09",
     "n_months": 66,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-05",
     "to": "2026-09",
     "n_months": 65,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    }
   ],
@@ -244,9 +244,9 @@
     "to": "2026-09",
     "n_months": 74
    },
-   "n_rules": 117,
+   "n_rules": 118,
    "actual_max_t": 3.184,
-   "null_max_t_median": 2.281,
+   "null_max_t_median": 2.284,
    "reality_check_p": 0.115
   },
   "null_argmax_top": [
@@ -271,9 +271,9 @@
     "excess_sd_m": 4.152
    },
    {
-    "sid": "x-runs",
-    "share": 0.023,
-    "excess_sd_m": 2.799
+    "sid": "x-rgrow",
+    "share": 0.022,
+    "excess_sd_m": 4.411
    }
   ],
   "excess_sd_note": "초과수익 월 표준편차(퍼센트). 값이 작을수록 t 의 분모가 작아 재표집에서 큰 t 가 자주 나온다 — 잡음 꼬리를 두껍게 만든다."
@@ -288,13 +288,13 @@
    "to": "2026-09",
    "n_months": 120
   },
-  "n_rules": 113,
+  "n_rules": 114,
   "trials_n": 450,
-  "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 113종이고 시행 분모는 450다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
+  "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 114종이고 시행 분모는 450다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
   "actual": {
    "max_t": 5.954,
    "min_t": -2.128,
-   "n_over_2": 15,
+   "n_over_2": 16,
    "top": [
     {
      "sid": "x-cap5",
@@ -339,18 +339,18 @@
    ]
   },
   "null_max_t": {
-   "median": 2.143,
-   "p90": 2.984,
-   "p95": 3.276,
-   "p99": 3.912,
+   "median": 2.146,
+   "p90": 2.989,
+   "p95": 3.285,
+   "p99": 3.914,
    "max": 4.903
   },
   "null_n_over_2": {
-   "mean": 5.5,
+   "mean": 5.6,
    "max": 45
   },
   "reality_check_p": 0.0,
-  "reading": "실측 최고 t 5.95 · 잡음의 최고 t 중앙값 2.14(95% 3.28). Reality Check p = 0.000 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
+  "reading": "실측 최고 t 5.95 · 잡음의 최고 t 중앙값 2.15(95% 3.29). Reality Check p = 0.000 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
   "block_months": 3,
   "reps": 2000,
   "seed": 20260907,
@@ -367,84 +367,84 @@
     "from": "2016-09",
     "to": "2026-09",
     "n_months": 121,
-    "n_rules": 99,
-    "share": 0.846
+    "n_rules": 100,
+    "share": 0.847
    },
    {
     "from": "2016-10",
     "to": "2026-09",
     "n_months": 120,
-    "n_rules": 113,
+    "n_rules": 114,
     "share": 0.966
    },
    {
     "from": "2020-08",
     "to": "2026-09",
     "n_months": 74,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-09",
     "to": "2026-09",
     "n_months": 73,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-10",
     "to": "2026-09",
     "n_months": 72,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-11",
     "to": "2026-09",
     "n_months": 71,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2020-12",
     "to": "2026-09",
     "n_months": 70,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-01",
     "to": "2026-09",
     "n_months": 69,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-02",
     "to": "2026-09",
     "n_months": 68,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-03",
     "to": "2026-09",
     "n_months": 67,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-04",
     "to": "2026-09",
     "n_months": 66,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    },
    {
     "from": "2021-05",
     "to": "2026-09",
     "n_months": 65,
-    "n_rules": 117,
+    "n_rules": 118,
     "share": 1.0
    }
   ],
@@ -455,15 +455,15 @@
     "to": "2026-09",
     "n_months": 74
    },
-   "n_rules": 117,
+   "n_rules": 118,
    "actual_max_t": 2.804,
-   "null_max_t_median": 2.134,
-   "reality_check_p": 0.1515
+   "null_max_t_median": 2.138,
+   "reality_check_p": 0.1545
   },
   "null_argmax_top": [
    {
     "sid": "x-hurst",
-    "share": 0.037,
+    "share": 0.036,
     "excess_sd_m": 3.978
    },
    {
@@ -482,9 +482,9 @@
     "excess_sd_m": 4.311
    },
    {
-    "sid": "x-archlm",
-    "share": 0.029,
-    "excess_sd_m": 2.888
+    "sid": "x-earngap",
+    "share": 0.028,
+    "excess_sd_m": 4.059
    }
   ],
   "excess_sd_note": "초과수익 월 표준편차(퍼센트). 값이 작을수록 t 의 분모가 작아 재표집에서 큰 t 가 자주 나온다 — 잡음 꼬리를 두껍게 만든다."
