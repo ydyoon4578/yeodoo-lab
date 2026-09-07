@@ -161,6 +161,12 @@ KNOWN_UNREAD = {
 
 # PIT 랩은 통째로 로컬에서 돈다(가격 캐시가 있는 PC). 파일마다 같은 말을 적지 않는다.
 KNOWN_BUILDER = {
+    "reality_check.py":
+        "다중검정 진단(data/reality_check.json). 입력이 pit_strategies.json 이라 PIT 랩과 "
+        "같은 사유로 로컬에서만 돈다 — 러너에 가격 캐시가 없어 그 입력 자체가 안 만들어진다. "
+        "결과는 build/strategy_report.py 가 doc['reality'] 로 실어 report.html 의 "
+        "«이 랩의 최고 t 는 운으로 나올 수 있는 크기인가» 구획이 읽는다(2026-09-07 배선). "
+        "⚠ PIT 을 다시 구우면 이것도 다시 굽는다 — 안 그러면 진단이 옛 표본을 말한다.",
     "pit_backtest.py":
         "PIT 랩은 원본 가격 캐시 넷(_pit_px·_pit_hl·_pit_vol·_pit_sh)이 있는 PC 에서만 돈다. "
         "낡으면 validate_site 의 «시점정확 곡선이 랩보다 낡았다» 경고가 나이를 일수로 말한다.",

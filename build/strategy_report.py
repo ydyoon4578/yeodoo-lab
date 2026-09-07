@@ -492,6 +492,11 @@ def main():
         #   다중검정의 크기다. ⚠ 개수는 여기 적지 않는다 — 매 실행 산출물이 세게 둔다
         #   (종전에 '69 · 95' 라고 적혀 있었고 지금 기준으로는 완전히 다른 값이다).
         "tested": {"tech": tech.get("tested") or []},
+        # 🚨 다중검정 진단 — 세 번째 목록이 «얼마나 팠나» 를 세고, 이것이 «그 판 것이
+        #   운으로 나올 크기인가» 를 답한다. 둘이 같은 자리에 있어야 뜻이 산다.
+        #   ⚠ 없으면 None 으로 둔다(화면이 그 칸을 통째로 안 그린다) — 손으로 적은 수를
+        #     남겨 두면 낡는다(되풀이 결함 ②).
+        "reality": _load("reality_check.json") or None,
         # 전략 지도 — 축 셋으로 접은 한 장(위 _strategy_map 머리말 참조)
         "map": _strategy_map(tech, asset, archive, index, deploy),
         "refs_policy": (refs.get("policy") or ""),

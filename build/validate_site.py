@@ -3968,6 +3968,38 @@ except FileNotFoundError:
 except Exception as _e:
     errors.append("시점정확 원천 대조가 예외로 죽었다 — %s" % _e)
 
+# ── 다중검정 진단이 PIT 과 같은 표본을 말하나 ──────────────────────────────
+# 🚨 이 진단은 pit_strategies.json 에서 나온다. PIT 을 다시 굽고 이것을 안 구우면
+#   화면이 **옛 표본의 p값**을 지금 값처럼 말한다 — 되풀이 결함 ②(손으로 적은 수가
+#   낡음)의 기계판이다. 그래서 두 산출물의 as_of 를 맞대고, 리포트에 실렸는지도 본다.
+try:
+    _rc = json.load(io.open(os.path.join(ROOT, "data", "reality_check.json"), encoding="utf-8"))
+    _pd0 = json.load(io.open(os.path.join(ROOT, "data", "pit_strategies.json"), encoding="utf-8"))
+    _ra, _pa = _rc.get("as_of"), _pd0.get("as_of")
+    if _ra != _pa:
+        errors.append(
+            "다중검정 진단이 PIT 과 다른 표본을 말한다 — 진단 as_of %s vs PIT %s. "
+            "python build/reality_check.py 를 다시 돌리고 strategy_report 를 같이 구울 것"
+            % (_ra, _pa))
+    else:
+        _rep = json.load(io.open(os.path.join(ROOT, "data", "strategy_report.json"), encoding="utf-8"))
+        _rr = (_rep.get("reality") or {}).get("primary") or {}
+        if not _rr:
+            errors.append(
+                "다중검정 진단을 구웠는데 strategy_report.json 에 안 실렸다 — 화면이 "
+                "그 칸을 통째로 안 그린다(재 놓고 안 실으면 잰 적 없는 것이다). "
+                "python build/strategy_report.py 를 다시 돌릴 것")
+        elif _rr.get("reality_check_p") is None:
+            errors.append("다중검정 진단에 p값이 없다 — 진단이 반쪽만 실렸다")
+        else:
+            print("  ~ 다중검정 진단 대조 통과(규칙 %s종 · 최고 t %s · p %s · 표본 %s)"
+                  % (_rr.get("n_rules"), (_rr.get("actual") or {}).get("max_t"),
+                     _rr.get("reality_check_p"), _ra))
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    errors.append("다중검정 진단 대조가 예외로 죽었다 — %s" % _e)
+
 # ── 성과 기준일이 **전월말**인가 ────────────────────────────────────────
 # 🚨 2026-08-14 사용자 지시 — "성과는 전월말까지로 하고 월 1회 자동 업데이트".
 #   백테스트가 격자를 전월말에서 끊는다(tech_backtest.asof_cut). 그런데 그 절단은 빌더
