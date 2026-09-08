@@ -444,7 +444,41 @@ def main():
     print("    틸트가 버는 것  등록 레그 %+.2f%%p(t %.2f) → 보정 %+.2f%%p(t %.2f)"
           % (tb_, tbt, -bx, -bt))
 
+    # ── 화면용 계열 — 판정에 안 쓴다. 결과를 «보여주기» 위한 것이다 ──────
+    _pm = {}
+    for _j, _x in enumerate(rows):
+        _pm[_x["m"]] = _j
+    pit_rows = []
+    _k2 = 0
+    for k in range(len(ms) - 1):
+        d, d1 = ms[k], ms[k + 1]
+        if d not in di or d1 not in di:
+            continue
+        mm = dates[di[d1]][:7]
+        if mm not in _pm or memb(d) is None:
+            continue
+        if _k2 < len(PR):
+            pit_rows.append({"m": mm, "pure10": round(PR[_k2], 6),
+                             "bm10": round(PB[_k2], 6), "base": round(PBASE[_k2], 6),
+                             "spy": round(PSP[_k2], 6)})
+            _k2 += 1
+    hold = [{"m": x["m"], "d": x["d"], "reg": x["reg"],
+             "pv": sorted(x["pure10"]["val"]), "pg": sorted(x["pure10"]["grw"]),
+             "bv": sorted(x["bm10"]["val"]), "bg": sorted(x["bm10"]["grw"])}
+            for x in rows[-6:]]
+    seen = {}
+    for x in rows:
+        U = memb(x["d"]) or set()
+        for _t in x["pure10"]["grw"]:
+            e = seen.setdefault(_t, [0, 0])
+            e[0] += 1
+            if _t not in U:
+                e[1] += 1
+    growfreq = sorted(([t] + v for t, v in seen.items()), key=lambda z: -z[1])[:15]
+
     doc = {"note": "금리 국면 스타일 로테이션 20종판. 규약 PREREG-2026-09-08-PURE10.md. 얼린 측정.",
+           "pit_rows": pit_rows, "holdings": hold, "growfreq": growfreq,
+           "sector_value": [[s, c] for s, c in sc.most_common()],
            "prereg": "c1c8ac20", "window": [rows[0]["m"], rows[-1]["m"]], "n": n, "k": K,
            "f1_sharpe": [S["pure10"]["sharpe"], S["bm10"]["sharpe"]],
            "f2_rho_narrow": rho10, "f2_rho_wide": rhow,
