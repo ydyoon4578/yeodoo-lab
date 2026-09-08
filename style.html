@@ -506,16 +506,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="body" aria-live="polite"><p class="muted">불러오는 중…</p></section>
 
-  <p class="note" id="note"></p>
-  <p class="note warn" id="caveat"></p>
-  <!-- 🚨 2026-08-05 — 여기가 "같은 계산을 판형에 맞춰 담은 문서" 라고 적고 있었다. 아니다.
-       그 PDF 는 2026-07-30 에 손으로 구운 문서이고 전략 6종만 담겨 있는데, 이 화면이 읽는
-       style_perf.json 은 15종이다. CI 에 matplotlib·한글 폰트가 없어 자동으로 다시 굽지도
-       못한다 — 즉 갱신 시점도 담긴 범위도 다르다. '같은 계산' 이라고 쓰면 안 된다.
-       링크는 남기되 무엇인지 정확히 적는다. -->
-  <p class="note">판형 문서(손으로 굽는다 · 최근 생성 <b>2026-07-30</b> · 전략 6종만 담김):
-    <a href="data/style_strategies.pdf">style_strategies.pdf</a>
-    <span class="warn">— 위 표(15종)와 갱신 시점·범위가 다릅니다. 표가 정본입니다.</span></p>
+  <!-- 🚨 2026-09-08 사용자 지시 「스타일 전략 탭에서 아래 설명글 지워줘」 — 셋을 뺐다.
+       ① note(style_perf.json) ② 편향 캐비엇(caveat) ③ 판형 PDF 안내.
+       ②를 뺀 것은 글자 수 때문이 아니다. 그 문장은 「오늘 518종목을 과거로 소급해 고른다」
+       고 말하는데, 이 화면의 수치는 2026-08-23 부터 **PIT** 다(build/style_top_pdf.bt() 가
+       P._pit_at 없이는 죽고, build/style_pit.py 의 앵커가 «배포 = pit 레그» 를 강제한다).
+       즉 캐비엇이 자기 페이지의 수를 틀리게 설명하고 있었다 — 지우는 것이 맞다.
+       ⚠ style_perf.json 의 caveat·note 칸은 그대로 둔다. 편향 «측정» 자체는 계속 돌고
+         (data/style_pit.json), validate_site 의 기준일 검사도 그 칸을 계속 본다.
+         화면에서만 뺀 것이지 측정을 끈 것이 아니다.
+       ⚠ 판형 PDF 는 링크만 뺐다. 파일(data/style_strategies.pdf)은 지우지 않았다. -->
 
   <!-- ⚠ 푸터는 .wrap **안**이다. 전에는 </div></main> 뒤에 있어 .wrap 의 max-width·좌우 여백을
        못 받았고(넓은 화면에서 구분선이 끝에서 끝까지, 모바일에서 글자가 가장자리에 붙었다),
@@ -723,7 +723,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if(!s){ KEY=_V[0].key; s=_V[0]; }
     tabs();
     document.getElementById('sub').textContent=
-      D.start+' ~ '+D.as_of+' · 월말 '+s.n_rebal+'회 리밸런스 · 상위 10종목 동일가중 · 비용 0';
+      D.start+' ~ '+D.as_of+' · 월말 '+s.n_rebal+'회 리밸런스 · 상위 10종목 동일가중 · '+
+      '비용 0 · 시점정확(PIT) — 그 달에 실제로 지수에 있던 종목만 고른다';
     document.getElementById('body').innerHTML=
       '<div class="stwrap">'+
         '<div><h2>'+esc(s.label)+' <span class="ref">'+esc(s.ref)+'</span></h2>'+
@@ -736,7 +737,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           months(s)+'</div>'+
         '<div class="two">'+port(s.prev,'전월말 기준',s.mlab,false)+
           port(s.today,'금일 기준',s.mlab,true)+'</div>'+
-        '<p class="note">＋ 는 금일 기준에서 새로 들어온 자리, − 는 전월말에 있다가 빠진 자리다.</p>'+
       '</div>';
     document.title='여두 · '+s.label+' 전략';
   }
@@ -745,8 +745,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     KEY=keyOf();
     fetch('data/style_perf.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
       D=j;
-      document.getElementById('note').textContent=j.note||'';
-      document.getElementById('caveat').textContent=j.caveat||'';
       if(!KEY) KEY=shown()[0].key;
       draw();
     }).catch(function(e){
