@@ -216,6 +216,22 @@ def main():
             rows.append(dict(m=mm1, i=i, i1=i1, names=names, wb=wb, sec=sec, Z=Z,
                              cov=cov, cash=cashm(mm1),
                              r={t: px[t][i1] / px[t][i] - 1 for t in names}))
+        # ── 🚨 패널을 얼려 내보낸다 — 다음 등록(FACROT)이 «계산을 복사하지 않고» 읽는다.
+        #    판정 계산은 안 건드린다(덤프만 추가).
+        _pan = os.path.join(DATA, "_idxtilt_panel_%s.json" % IDX)
+        io.open(_pan, "w", encoding="utf-8").write(json.dumps(
+            {"note": "idxtilt 가 만든 월별 패널(벤치비중·섹터·팩터 z·수익). 얼린 측정.",
+             "prereg": "bb21306c", "index": IDX, "factors": list(FACTORS),
+             "rows": [{"m": x["m"], "wb": {t: round(v, 8) for t, v in x["wb"].items()},
+                       "sec": x["sec"], "cash": x["cash"],
+                       "r": {t: round(v, 6) for t, v in x["r"].items()},
+                       "cov": x["cov"],
+                       "Z": {k: {t: round(v, 4) for t, v in x["Z"][k].items()}
+                             for k in FACTORS}} for x in rows]},
+            ensure_ascii=False))
+        print("   → 패널 덤프 %s (%.0fMB)" % (os.path.basename(_pan),
+                                              os.path.getsize(_pan) / 1e6))
+
         n = len(rows)
         print("월 %d (%s ~ %s) · 벤치 종목수 중앙 %d"
               % (n, rows[0]["m"], rows[-1]["m"],
@@ -382,8 +398,17 @@ def main():
         print()
         print("ERC 평균 가중: " + " · ".join("%s %.1f%%" % (FLAB[FACTORS[a_]][:6], 100 * wl[a_])
                                              for a_ in range(len(FACTORS))))
+        # ── 진단용 덤프 — 국면별 팩터 성적을 재려면 팩터별 월별 초과가 필요하다.
+        #    🚨 판정 계산은 안 건드린다. 등록 뒤 «재기만» 하는 자료다.
+        fac_rows = {}
+        for k in FACTORS:
+            oo = R[(k, TE_JUDGE)][1]
+            fac_rows[k] = [round(z["p"] - z["b"], 6) for z in oo]
         RESULT[IDX] = {
             "label": IXLAB, "n_oos": len(o),
+            "fac_excess": fac_rows,
+            "spread": {k: [round(v, 6) for v in SPD[k][WARM:]] for k in FACTORS},
+            "bench_ret": [round(z["b"], 6) for z in o],
             "window": [o[0]["m"], o[-1]["m"]],
             "cov": covm, "erc_w": wl,
             "main": st, "eq": seq,
