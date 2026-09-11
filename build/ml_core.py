@@ -235,22 +235,28 @@ def erc_weights(C, shrink=ERC_SHRINK, iters=ERC_ITER):
 
 
 # ── ⑤ 평균연결 계층군집 ────────────────────────────────────────────────
-def corr_clusters(C, k):
-    """상관행렬 C → 평균연결 계층군집을 k 개로 자른 라벨 배열.
+def _avg_linkage(C):
+    """상관행렬 C → **평균연결 병합 순서**. corr_clusters 와 corr_leaf_order 가 함께 쓴다.
 
-    거리 = √(2(1−ρ)) — 상관을 거리로 옮기는 표준형(López de Prado 도 같은 변환을 쓴다).
-    ⚠ 라이브러리를 안 쓰므로 O(n³) 이다. 유니버스 518종·월 170회면 감당된다.
+    🚨 2026-09-11 — 이 함수를 떼어낸 이유. HRP(PREREG-2026-09-11-HRP)는 «자른 라벨» 이
+      아니라 **덴드로그램 잎 순서**가 필요하다. 군집 코드를 한 벌 더 쓰면 이 랩이
+      2026-08-11 에 네 개를 잡은 «채점기 사본» 이 된다 — 그래서 병합 순서를 여기 한 곳에서
+      내고 둘이 그것을 읽는다.
+    ⚠ 기존 corr_clusters 는 k 개가 되면 멈췄는데, 그 루프는 **완전 병합의 앞부분**이다
+      (탐욕적·결정적이라 순서가 같다). 그래서 끝까지 돌린 뒤 앞에서부터 되짚어도 라벨이
+      한 칸도 안 바뀐다. 실측 검산은 build/hrp.py 머리말에 적었다.
+
+    돌려주는 것: (merges, members, alive) — merges 는 (남는쪽, 흡수되는쪽) 순서.
     """
     C = np.asarray(C, float)
     n = C.shape[0]
-    if n <= k:
-        return np.arange(n)
     D = np.sqrt(np.maximum(2.0 * (1.0 - np.clip(C, -1, 1)), 0.0))
     np.fill_diagonal(D, np.inf)
     members = [[i] for i in range(n)]
     alive = list(range(n))
     Dw = D.copy()
-    while len(alive) > k:
+    merges = []
+    while len(alive) > 1:
         sub = np.array(alive)
         M = Dw[np.ix_(sub, sub)]
         a, b = np.unravel_index(np.argmin(M), M.shape)
@@ -260,13 +266,57 @@ def corr_clusters(C, k):
         ni, nj = len(members[i]), len(members[j])
         # 평균연결 — 새 거리는 표본 수 가중 평균
         newd = (ni * Dw[i, :] + nj * Dw[j, :]) / (ni + nj)
+        merges.append((i, j))
         members[i] = members[i] + members[j]
         Dw[i, :] = newd
         Dw[:, i] = newd
         Dw[i, i] = np.inf
+        alive.remove(j)
+    return merges, members, alive
+
+
+def corr_clusters(C, k):
+    """상관행렬 C → 평균연결 계층군집을 k 개로 자른 라벨 배열.
+
+    거리 = √(2(1−ρ)) — 상관을 거리로 옮기는 표준형(López de Prado 도 같은 변환을 쓴다).
+    ⚠ 라이브러리를 안 쓰므로 O(n³) 이다. 유니버스 518종·월 170회면 감당된다.
+    ⚠ 2026-09-11 — 병합 자체는 _avg_linkage 가 한다. 이 함수는 그 순서를 k 개가 될 때까지
+      되짚어 라벨만 만든다. 종전 판과 라벨이 동일함을 검산했다(hrp.py 머리말).
+    """
+    C = np.asarray(C, float)
+    n = C.shape[0]
+    if n <= k:
+        return np.arange(n)
+    merges, _m, _a = _avg_linkage(C)
+    members = [[i] for i in range(n)]
+    alive = list(range(n))
+    for i, j in merges:
+        if len(alive) <= k:
+            break
+        members[i] = members[i] + members[j]
         alive.remove(j)
     lab = np.zeros(n, int)
     for c, i in enumerate(alive):
         for m in members[i]:
             lab[m] = c
     return lab
+
+
+def corr_leaf_order(C):
+    """상관행렬 C → **덴드로그램 잎 순서**(준대각화용). HRP §1②.
+
+    병합이 (남는쪽 + 흡수되는쪽) 으로 이어 붙으므로, 끝까지 병합한 뒤 살아남은
+    뿌리들의 members 를 차례로 이으면 그것이 곧 잎 순서다.
+    """
+    C = np.asarray(C, float)
+    n = C.shape[0]
+    if n <= 1:
+        return list(range(n))
+    _mg, members, alive = _avg_linkage(C)
+    out = []
+    for i in alive:
+        out.extend(members[i])
+    seen = set()
+    order = [x for x in out if not (x in seen or seen.add(x))]
+    order += [x for x in range(n) if x not in seen]      # 안전망
+    return order
