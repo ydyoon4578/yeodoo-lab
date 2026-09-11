@@ -98,6 +98,16 @@ jobs:
       # 남겨 두면 산출물과 화면의 반올림이 갈리기 시작할 때 눈에 띈다.
       - name: Precision report (does not block)
         run: python build/audit_precision.py
+      # 증분 감사 — «게시 규칙이 나머지 게시 규칙 + 시장에 무엇을 더하나».
+      # 🚨 관문이 아니다(사용자 결정 2026-09-11 「매 실행 수치만 로그에 남김」).
+      #   문턱을 안 걸고 목록도 안 고친다 — 막지 않는 리포트다. 근거는
+      #   PREREG-2026-09-11-UNION-RESULT.md §4·§5: 관문(샤프·회전율·승률)이
+      #   수익은 고르는데 «유의성» 도 «새로움» 도 못 고른다는 것이 거기서 측정됐다.
+      # ⚠ 이 자리인 이유: 바로 위 tech_backtest 가 방금 다시 구운 엔진의 산출물을 읽는다.
+      #   실측 20초대이고 표준 라이브러리만 쓴다.
+      - name: Incremental-alpha report (does not block)
+        run: python build/incr_audit.py
+        continue-on-error: true
       - name: Validate
         run: python build/validate_gate.py check
       - name: Commit if changed

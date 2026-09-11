@@ -110,3 +110,21 @@ build/db_notes.json
 # 사내 DB 표본 몇 줄(실데이터). 반입 금지 — db.html 은 암호문으로만 게시한다
 build/db_samples.json
 _pit_subset.json
+
+# 2026-09-08~11 얼린 측정 — 사전등록 결과 문서가 수를 인용하고, 원본은 커밋하지 않는다
+#   (data/_* 관례. 어느 것도 사이트가 읽지 않는다.)
+data/_pure10.json
+data/_purevm.json
+data/_purels.json
+data/_purewf.json
+data/_puregp.json
+data/_pure25.json
+data/_puresw.json
+data/_idxtilt.json
+data/_idxtilt_panel_spx.json
+data/_idxtilt_panel_ndx.json
+data/_facrot.json
+# PREREG-2026-09-11-UNION — 측정 195종 동일가중
+data/_union.json
+# 증분 감사(build/incr_audit.py) — 관문이 아니라 기록이다(사용자 결정 2026-09-11)
+data/_incr_audit.json
