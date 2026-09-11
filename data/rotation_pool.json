@@ -1106,7 +1106,7 @@
     "Will value stocks continue their hot streak in 2026? (InvestmentNews, 2026-01-30 · 1월 말 기준 IWD +4%·IWF −2.5% · IWD 22배(배당 1.7%)·IWF 36배(0.36%) · 연방기금 3.50~3.75%·연내 1~2회 인하 반영 · 5년 성장 +90%·가치 +60%) — https://www.investmentnews.com/equities/growthvalue/265055"
    ],
    "lab": {
-    "v": "BMROT 여섯 조건 통과 · DURATION 기각(F1) · DURSTYLE4 러셀판 기각(F2) · CRSP판 게시(측정만) · RATE2 D8 기각 · D13 통과(측정만) · SSROT 기각(F1) · F6 발동 · PURE10 기각(F4) · 그러나 F2 가 답을 냈다 · PURE25 보류(실패조건은 전부 통과 · 배선과 승률 문턱에서 막힘) · PUREGP 기각(F1·F2·F3·F5) · F8 발동 · PURELS 기각(F3·F4) · F6·F7 발동 · PURESW 기각(F1·F4) · PUREVM 기각(F1·F2·F4) · F3·F5 발동 · PUREWF 보류(실패조건 전부 통과 · 배선에서 막힘)",
+    "v": "BMROT 여섯 조건 통과 · DURATION 기각(F1) · DURSTYLE4 러셀판 기각(F2) · CRSP판 보류 · RATE2 D8 기각 · D13 통과(측정만) · SSROT 기각(F1) · F6 발동 · PURE10 기각(F4) · 그러나 F2 가 답을 냈다 · PURE25 보류(실패조건은 전부 통과 · 배선과 승률 문턱에서 막힘) · PUREGP 기각(F1·F2·F3·F5) · F8 발동 · PURELS 기각(F3·F4) · F6·F7 발동 · PURESW 기각(F1·F4) · PUREVM 기각(F1·F2·F4) · F3·F5 발동 · PUREWF 보류(실패조건 전부 통과 · 배선에서 막힘)",
     "t": "금리 국면 스타일 로테이션 (Equity Duration Style Rotation)",
     "why": "사전등록 12편에서 이 랩의 구현으로 쟀다: PREREG-2026-09-03-BMROT-RESULT.md · PREREG-2026-09-03-DURATION-RESULT.md · PREREG-2026-09-03-DURSTYLE4-RESULT.md · PREREG-2026-09-03-RATE2-RESULT.md · PREREG-2026-09-03-SSROT-RESULT.md · PREREG-2026-09-08-PURE10-RESULT.md · PREREG-2026-09-08-PURE25-RESULT.md · PREREG-2026-09-08-PUREGP-RESULT.md · PREREG-2026-09-08-PURELS-RESULT.md · PREREG-2026-09-08-PURESW-RESULT.md · PREREG-2026-09-08-PUREVM-RESULT.md · PREREG-2026-09-08-PUREWF-RESULT.md. ⚠ 검증 대상은 «이 랩의 특정 구현» 이라 카드 규칙과 완전히 같지는 않다 — 각 문서의 §1(규칙)과 한계를 볼 것. ⚠ 편마다 다른 구현을 쟀을 수 있다(같은 카드를 각도를 바꿔 여러 번 잰다).",
     "docs": [
