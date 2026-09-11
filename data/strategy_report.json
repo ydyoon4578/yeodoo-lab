@@ -3752,10 +3752,10 @@
    "화면에 있음": {
     "수익엔진": 115,
     "타이밍오버레이": 12,
-    "배분기": 2
+    "배분기": 1
    },
    "화면에서 뺌": {
-    "배분기": 18,
+    "배분기": 19,
     "수익엔진": 21,
     "타이밍오버레이": 18,
     "위험방어": 3
@@ -3775,11 +3775,11 @@
   },
   "by_where_verdict": {
    "화면에 있음": {
-    "측정만": 125,
+    "측정만": 124,
     "판정 불가": 4
    },
    "화면에서 뺌": {
-    "측정만": 60
+    "측정만": 61
    },
    "퇴출": {
     "퇴출": 13
@@ -4796,7 +4796,7 @@
     "lab": "종목·타이밍"
    },
    {
-    "where": "화면에 있음",
+    "where": "화면에서 뺌",
     "role": "배분기",
     "verdict": "측정만",
     "name": "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
@@ -37413,7 +37413,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -45938,9 +45938,9 @@
      "COR",
      "CVS",
      "F",
+     "HPQ",
      "KR",
-     "MCK",
-     "TSN"
+     "MCK"
     ],
     "names": {
      "BG": "BUNGE GLOBAL SA",
@@ -45950,9 +45950,9 @@
      "COR": "CENCORA INC",
      "CVS": "CVS HEALTH CORP",
      "F": "FORD MOTOR CO",
+     "HPQ": "HP INC",
      "KR": "KROGER CO",
-     "MCK": "MCKESSON CORP",
-     "TSN": "TYSON FOODS INC-CL A"
+     "MCK": "MCKESSON CORP"
     },
     "weights": null,
     "exposure_now": null,
@@ -56224,6 +56224,7 @@
      "CPRT",
      "CRM",
      "CSCO",
+     "CSX",
      "CVS",
      "CVX",
      "D",
@@ -56305,7 +56306,6 @@
      "PCAR",
      "PCG",
      "PG",
-     "PH",
      "PHM",
      "PLD",
      "PPL",
@@ -56381,6 +56381,7 @@
      "CPRT": "COPART INC",
      "CRM": "SALESFORCE INC",
      "CSCO": "CISCO SYSTEMS INC",
+     "CSX": "CSX CORP",
      "CVS": "CVS HEALTH CORP",
      "CVX": "CHEVRON CORP",
      "D": "DOMINION ENERGY INC",
@@ -56462,7 +56463,6 @@
      "PCAR": "PACCAR INC",
      "PCG": "P G & E CORP",
      "PG": "PROCTER & GAMBLE CO/THE",
-     "PH": "PARKER HANNIFIN CORP",
      "PHM": "PULTEGROUP INC",
      "PLD": "PROLOGIS INC",
      "PPL": "PPL CORP",
@@ -57354,13 +57354,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 83.0,
-    "note": "노출 83%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 79.6,
+    "note": "노출 80%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -57922,7 +57922,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -58108,7 +58108,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -59116,7 +59116,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60618,7 +60618,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -62103,7 +62103,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -62855,7 +62855,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63268,7 +63268,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63447,12 +63447,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 93.1,
+    "exposure_now": 92.6,
     "note": "노출 93%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -63633,13 +63633,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 59.4,
-    "note": "노출 59%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 57.5,
+    "note": "노출 57%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -64259,7 +64259,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-09",
+    "as_of": "2026-09-10",
     "n": null,
     "tickers": null,
     "names": null,
