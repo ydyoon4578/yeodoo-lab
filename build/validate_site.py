@@ -3151,6 +3151,18 @@ try:
             continue
         _sm = _d["sampling"]
         _rows = _d.get("strategies") or _d.get("items") or []
+        # 🚨 2026-09-11 — **표시용 계열을 성과 기준일에서 끊고 나서 비교한다.**
+        #   종전에는 안 끊어서 «다른 구간끼리» 비교하고 있었다: nav·chart.monthly 는
+        #   px_end(오늘 격자)까지인데 metrics 는 perf_as_of(전월말)에서 끊는다
+        #   (2026-08-14 사용자 지시 · tech_backtest.asof_cut). 그 차이가 곧 «이번 달
+        #   진행분» 이라, 달이 갈수록 벌어지고 달 말에 가장 크다 —
+        #   자료가 아니라 **검사가 만든 표류**다.
+        #   실측 2026-09-11: 안 끊으면 nav 최대 1.59%p · 월간 1.25%p 인데,
+        #   perf_as_of 에서 끊으면 **0.60%p · 0.27%p** 로 무너진다(선언 1.11 · 0.85).
+        #   대부분 규칙은 0.01~0.17%p 다. 남는 0.60%p 는 nav 첫 점이 시작보다 며칠 뒤라
+        #   초기 구간을 못 담는 «진짜 표본 효과» 이고, 그것이 선언이 말하는 바다.
+        #   ⚠ 선언을 느슨하게 고치지 않았다 — 검사가 같은 구간을 보게 했을 뿐이다.
+        _pcut = _d.get("perf_as_of") or ""
         _gaps, _dn, _dm = [], [], []
         for _r in _rows:
             _dd, _nv = _r.get("dates"), _r.get("nav")
@@ -3158,6 +3170,13 @@ try:
             _cg = (_r.get("metrics") or {}).get("cagr")
             if not (_dd and _nv and _mo and _cg):
                 continue
+            _pe = _r.get("perf_end") or _pcut
+            if _pe:
+                _k = [_i for _i, _x in enumerate(_dd) if str(_x)[:10] <= _pe]
+                if len(_k) >= 3:
+                    _dd = [_dd[_i] for _i in _k]
+                    _nv = [_nv[_i] for _i in _k]
+                _mo = [_x for _x in _mo if str(_x.get("m") or "")[:7] <= _pe[:7]] or _mo
             try:
                 _g = [(_dtm.date.fromisoformat(_dd[i + 1]) - _dtm.date.fromisoformat(_dd[i])).days
                       for i in range(min(80, len(_dd) - 1))]
