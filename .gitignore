@@ -128,3 +128,7 @@ data/_facrot.json
 data/_union.json
 # 증분 감사(build/incr_audit.py) — 관문이 아니라 기록이다(사용자 결정 2026-09-11)
 data/_incr_audit.json
+
+# PREREG-2026-09-11-HRP — 계층적 위험 패리티(얼린 측정)
+data/_hrp.json
+data/_hrp_v5.json
