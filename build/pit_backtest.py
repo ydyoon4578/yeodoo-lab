@@ -2037,11 +2037,12 @@ def write_reuse(want, span):
     ⚠ 이 판정은 온라인이라야 한다. 그래서 백테스트가 아니라 수집 단계에 둔다 — 채점이
       네트워크에 매달리면 CI 와 로컬이 조용히 다른 결과를 낸다.
     """
-    import urllib.request
-    ua = {"User-Agent": "yeouido-lab/1.0 (globalkbam@gmail.com) pit-reuse-check"}
+    import edgar   # 🚨 2026-09-14 — SEC 호출은 edgar 한 곳으로(validate_site 가 막는다)
     try:
-        raw = urllib.request.urlopen(urllib.request.Request(
-            "https://www.sec.gov/files/company_tickers.json", headers=ua), timeout=60).read()
+        # ⚠ max_wait=60 — 로컬 진단이라 SEC 10분 차단을 기다릴 이유가 없다. 실패하면 아래
+        #   except 가 종전처럼 «갱신하지 않는다» 로 넘어간다.
+        raw = edgar.fetch_bytes("https://www.sec.gov/files/company_tickers.json",
+                                timeout=60, max_wait=60)
         sec = json.loads(raw)
     except Exception as e:
         print("  ⚠ SEC 티커지도 실패(%s) — pit_reuse.json 을 갱신하지 않는다" % str(e)[:50])

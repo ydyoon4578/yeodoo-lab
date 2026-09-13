@@ -1825,6 +1825,36 @@ try:
         errors.append(f"stdout UTF-8 재설정 누락 {len(_rc_bad)}개 ({', '.join(_rc_bad[:5])}) — "
                       "cp949 콘솔에서 print 시 UnicodeEncodeError로 죽는다. "
                       'try: sys.stdout.reconfigure(encoding="utf-8") 프렐류드를 추가할 것')
+    # 🚨 2026-09-14 — SEC 에 가는 요청은 edgar.py 한 곳만 urlopen 을 부른다.
+    #   refresh_13f.py 가 자기 fetch() 로 직접 요청해 edgar 의 초당 8회 제한과 429 재시도를
+    #   둘 다 우회했고, 2026-09-05·09-12 두 주 연속 첫 요청에서 429 한 번에 13F 잡이 죽었다.
+    #   같은 복사본이 insider·13f_history·custconc·pit_backtest 에도 있었다(«경로 둘»).
+    #   ⚠ 판정은 «파일에 sec.gov 가 있고 AST 에 urlopen 호출이 있다» 다. 주석에 urlopen 이라는
+    #     글자가 있어도 호출이 아니면 안 걸리고, 다른 호스트만 부르는 파일은 sec.gov 가 없어 안 걸린다.
+    _sec_bad = []
+    for _p in sorted(_glob.glob(os.path.join(ROOT, "build", "*.py"))):
+        if os.path.basename(_p) == "edgar.py":
+            continue
+        _s = io.open(_p, encoding="utf-8").read()
+        if "sec.gov" not in _s or "urlopen" not in _s:
+            continue
+        try:
+            _t = _ast.parse(_s)
+        except SyntaxError:
+            continue
+        for _nd in _ast.walk(_t):
+            if isinstance(_nd, _ast.Call):
+                _f = _nd.func
+                _nm = (_f.attr if isinstance(_f, _ast.Attribute)
+                       else _f.id if isinstance(_f, _ast.Name) else "")
+                if _nm == "urlopen":
+                    _sec_bad.append(f"{os.path.basename(_p)}:{_nd.lineno}")
+    if _sec_bad:
+        errors.append(f"SEC 직접 호출 {len(_sec_bad)}곳 ({', '.join(_sec_bad[:5])}) — "
+                      "edgar.fetch_bytes / edgar.get_json 을 거칠 것. 우회하면 초당 8회 제한과 "
+                      "429 재시도가 둘 다 빠진다(13F 가 2026-09-05·09-12 에 첫 요청에서 죽었다)")
+    else:
+        print("  ~ SEC 호출 경로 검사 통과(edgar.py 한 곳)")
 except Exception as _e:
     errors.append(f"open() encoding 검사 실패: {_e}")
 

@@ -127,9 +127,10 @@ DISCRETIONARY = ("P", "S")
 
 
 def fetch(url: str, timeout: int = 180) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": edgar.UA, "Accept-Encoding": "gzip"})
-    raw = urllib.request.urlopen(req, timeout=timeout).read()
-    return gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw
+    # 🚨 2026-09-14 — edgar.fetch_bytes 로 모았다(초당 8회 제한 + 429 재시도). 이 함수는
+    #   refresh_13f.fetch 와 한 글자도 다르지 않은 복사본이었고, 13F 가 토요일에 429 로 두 번
+    #   죽는 동안 같은 시간대(22:13 UTC)에 도는 이 잡은 순번이 앞이라 운 좋게 살았을 뿐이다.
+    return edgar.fetch_bytes(url, timeout=timeout)
 
 
 def latest_zips(n: int):
