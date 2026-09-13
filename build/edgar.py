@@ -55,6 +55,59 @@ def _throttle() -> None:
     _last[0] = time.time()
 
 
+# 429·403·5xx·연결오류 뒤 기다리는 시간(초). 합계 760초(약 12.7분) · 7회 시도.
+# 🚨 SEC 는 초당 10회를 넘긴 IP 를 약 10분간 막는다. GitHub 러너는 IP 대역을 공유해서
+#   토요일 SEC 잡 다섯 개(estimates 22:02 · filings 22:05 · facts 22:08 · insider 22:13 ·
+#   13f 22:19 UTC)가 몰리면 **남의 잡 때문에** 막힐 수 있다 — 2026-09-05 와 09-12 에
+#   13F 가 그렇게 첫 요청(인덱스 페이지)에서 죽었다. 그래서 대기 합계가 10분을 넘게 잡는다.
+# ⚠ 가장 짧은 잡 제한시간이 20분(refresh-insider)이다. 이 합계를 늘리면 그 잡이 잘린다.
+BACKOFF = (10, 30, 60, 120, 240, 300)
+
+
+def fetch_bytes(url: str, timeout: int = 60, max_wait=None, accept=None) -> bytes:
+    """EDGAR 원문 1건(바이트). **SEC 에 가는 파일 다운로드는 전부 이 함수를 거친다.**
+
+    get_json 과 다른 점 둘 —
+      ① 실패하면 None 이 아니라 **예외를 올린다.** 13F·Form 4 ZIP 은 없으면 산출물이
+         통째로 비므로, 조용히 None 을 받아 빈 파일을 커밋하는 것보다 잡이 빨갛게
+         죽는 편이 낫다.
+      ② 기다리는 시간이 길다(BACKOFF). 큰 ZIP 을 한 번 받으면 되는 잡이라 10분 차단을
+         버티는 쪽이 이득이다.
+    404 는 재시도하지 않는다 — 없다는 확정 답이다. Retry-After 가 오면 따른다(300초 상한).
+    max_wait 을 주면 대기 합계를 그 안으로 자른다(로컬 진단처럼 오래 기다릴 필요 없는 곳).
+    ⚠ 재시도 알림은 stdout 으로 낸다 — stderr 는 프렐류드가 안 걸려 cp949 콘솔에서 ⚠ 에 죽는다.
+    """
+    hdr = {"User-Agent": UA, "Accept-Encoding": "gzip"}
+    if accept:
+        hdr["Accept"] = accept
+    waited, last, n = 0.0, None, len(BACKOFF)
+    for attempt in range(n + 1):
+        _throttle()
+        try:
+            req = urllib.request.Request(url, headers=hdr)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                raw = r.read()
+            return gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                raise
+            last, code = e, e.code
+            wait = BACKOFF[attempt] if attempt < n else 0
+            ra = e.headers.get("Retry-After") if e.headers else None
+            if ra and str(ra).strip().isdigit():
+                wait = max(wait, min(int(str(ra).strip()), 300))
+        except Exception as e:           # URLError · 시간초과 · 연결 끊김
+            last, code = e, type(e).__name__
+            wait = BACKOFF[attempt] if attempt < n else 0
+        if attempt >= n or (max_wait is not None and waited + wait > max_wait):
+            break
+        print("  ⚠ SEC %s — %d초 뒤 재시도 (%d/%d) %s"
+              % (code, wait, attempt + 1, n, url[:90]), flush=True)
+        time.sleep(wait)
+        waited += wait
+    raise last
+
+
 def get_json(url: str, retries: int = 4):
     """EDGAR JSON 1건. 실패하면 None을 준다(빌드를 중단하지 않는다 — 판단은 호출자 몫).
 
