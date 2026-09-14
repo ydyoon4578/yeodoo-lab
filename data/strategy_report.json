@@ -9140,7 +9140,7 @@
      "beta": 0.869
     },
     "five": {
-     "alpha": 6.1,
+     "alpha": 6.11,
      "t": 1.59,
      "n": 504,
      "vs": [
@@ -10949,7 +10949,7 @@
      "beta": 0.749
     },
     "five": {
-     "alpha": 4.98,
+     "alpha": 4.99,
      "t": 1.19,
      "n": 364,
      "vs": [
@@ -12357,7 +12357,7 @@
     },
     "five": {
      "alpha": -1.48,
-     "t": -0.66,
+     "t": -0.67,
      "n": 364,
      "vs": [
       "절대 모멘텀 (SPY 12-1)",
@@ -13361,7 +13361,7 @@
     "one": {
      "vs": "방어형 자산배분 DAA (카나리아 2종)",
      "corr": 0.923,
-     "alpha": 1.68,
+     "alpha": 1.67,
      "t": 0.89,
      "beta": 1.114
     },
@@ -13535,10 +13535,10 @@
      "corr": 0.936,
      "alpha": -5.44,
      "t": -0.94,
-     "beta": 10.386
+     "beta": 10.387
     },
     "five": {
-     "alpha": -3.06,
+     "alpha": -3.07,
      "t": -0.67,
      "n": 364,
      "vs": [
@@ -14225,7 +14225,7 @@
      "corr": 0.771,
      "alpha": -0.75,
      "t": -0.27,
-     "beta": 0.947
+     "beta": 0.948
     },
     "five": {
      "alpha": -0.33,
@@ -14772,7 +14772,7 @@
      "beta": 1.174
     },
     "five": {
-     "alpha": -1.9,
+     "alpha": -1.89,
      "t": -1.01,
      "n": 364,
      "vs": [
@@ -15262,7 +15262,7 @@
    "incr": {
     "one": {
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
-     "corr": 0.774,
+     "corr": 0.775,
      "alpha": -1.12,
      "t": -0.53,
      "beta": 0.756
@@ -15583,7 +15583,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 7.11,
+      "v": 7.12,
       "p": 0.1275
      },
      {
@@ -16701,7 +16701,7 @@
     },
     "five": {
      "alpha": -2.58,
-     "t": -1.2,
+     "t": -1.19,
      "n": 364,
      "vs": [
       "초과채권프리미엄(EBP) 리스크선호 게이트",
@@ -17939,7 +17939,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.006,
-      "p": 0.531
+      "p": 0.5308
      }
     ],
     "n_boot": 4000,
@@ -17951,7 +17951,7 @@
      "vs": "크로스에셋 RP 12자산 — 변동성 추정창 90일",
      "corr": 1.0,
      "alpha": 0.0,
-     "t": 0.03,
+     "t": 0.04,
      "beta": 1.0
     },
     "five": {
@@ -18158,7 +18158,7 @@
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 1.0,
      "alpha": -0.01,
-     "t": -0.08,
+     "t": -0.09,
      "beta": 0.999
     },
     "five": {
@@ -18375,7 +18375,7 @@
     },
     "five": {
      "alpha": -4.42,
-     "t": -1.96,
+     "t": -1.97,
      "n": 364,
      "vs": [
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
@@ -32708,7 +32708,6 @@
      "F",
      "FANG",
      "FE",
-     "FIS",
      "GM",
      "HSY",
      "IBKR",
@@ -32730,6 +32729,7 @@
      "PANW",
      "PCG",
      "PFG",
+     "SBUX",
      "STT",
      "SW",
      "TPR",
@@ -32762,7 +32762,6 @@
      "F": "FORD MOTOR CO",
      "FANG": "DIAMONDBACK ENERGY INC",
      "FE": "FIRSTENERGY CORP",
-     "FIS": "FIDELITY NATIONAL INFO SERV",
      "GM": "GENERAL MOTORS CO",
      "HSY": "HERSHEY CO/THE",
      "IBKR": "INTERACTIVE BROKERS GRO-CL A",
@@ -32784,6 +32783,7 @@
      "PANW": "PALO ALTO NETWORKS INC",
      "PCG": "P G & E CORP",
      "PFG": "PRINCIPAL FINANCIAL GROUP",
+     "SBUX": "STARBUCKS CORP",
      "STT": "STATE STREET CORP",
      "SW": "SMURFIT WESTROCK PLC",
      "TPR": "TAPESTRY INC",
@@ -40482,11 +40482,11 @@
      "COF",
      "CRWD",
      "DDOG",
-     "FIS",
      "GM",
      "IRM",
      "ON",
-     "TPR"
+     "TPR",
+     "VTR"
     ],
     "names": {
      "CCI": "CROWN CASTLE INC",
@@ -40494,11 +40494,11 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "CRWD": "CROWDSTRIKE HOLDINGS INC - A",
      "DDOG": "DATADOG INC - CLASS A",
-     "FIS": "FIDELITY NATIONAL INFO SERV",
      "GM": "GENERAL MOTORS CO",
      "IRM": "IRON MOUNTAIN INC",
      "ON": "ON SEMICONDUCTOR",
-     "TPR": "TAPESTRY INC"
+     "TPR": "TAPESTRY INC",
+     "VTR": "VENTAS INC"
     },
     "weights": null,
     "exposure_now": null,
@@ -45959,9 +45959,9 @@
      "ECHO",
      "FTV",
      "IFF",
+     "IP",
      "LUV",
      "MMM",
-     "NDAQ",
      "ON",
      "TPR",
      "WDC"
@@ -45971,9 +45971,9 @@
      "ECHO": "ECHOSTAR CORP-A",
      "FTV": "FORTIVE CORP",
      "IFF": "INTL FLAVORS & FRAGRANCES",
+     "IP": "INTERNATIONAL PAPER CO",
      "LUV": "SOUTHWEST AIRLINES CO",
      "MMM": "3M CO",
-     "NDAQ": "NASDAQ INC",
      "ON": "ON SEMICONDUCTOR",
      "TPR": "TAPESTRY INC",
      "WDC": "WESTERN DIGITAL CORP"
@@ -46244,7 +46244,6 @@
      "EBAY",
      "ECHO",
      "EL",
-     "F",
      "FER",
      "FOXA",
      "FTNT",
@@ -46252,6 +46251,7 @@
      "HON",
      "HSY",
      "IFF",
+     "IP",
      "IR",
      "JBHT",
      "JCI",
@@ -46298,7 +46298,6 @@
      "EBAY": "EBAY INC",
      "ECHO": "ECHOSTAR CORP-A",
      "EL": "ESTEE LAUDER COMPANIES-CL A",
-     "F": "FORD MOTOR CO",
      "FER": "FERROVIAL SE",
      "FOXA": "FOX CORP - CLASS A",
      "FTNT": "FORTINET INC",
@@ -46306,6 +46305,7 @@
      "HON": "HONEYWELL INTERNATIONAL INC",
      "HSY": "HERSHEY CO/THE",
      "IFF": "INTL FLAVORS & FRAGRANCES",
+     "IP": "INTERNATIONAL PAPER CO",
      "IR": "INGERSOLL-RAND INC",
      "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
      "JCI": "JOHNSON CONTROLS INTERNATION",
@@ -51540,7 +51540,6 @@
      "CVX",
      "EOG",
      "EXPE",
-     "FIS",
      "FTV",
      "GM",
      "HCA",
@@ -51553,6 +51552,7 @@
      "LVS",
      "MDT",
      "MET",
+     "MO",
      "MSCI",
      "MTB",
      "NKE",
@@ -51592,7 +51592,6 @@
      "CVX": "CHEVRON CORP",
      "EOG": "EOG RESOURCES INC",
      "EXPE": "EXPEDIA GROUP INC",
-     "FIS": "FIDELITY NATIONAL INFO SERV",
      "FTV": "FORTIVE CORP",
      "GM": "GENERAL MOTORS CO",
      "HCA": "HCA HEALTHCARE INC",
@@ -51605,6 +51604,7 @@
      "LVS": "LAS VEGAS SANDS CORP",
      "MDT": "MEDTRONIC PLC",
      "MET": "METLIFE INC",
+     "MO": "ALTRIA GROUP INC",
      "MSCI": "MSCI INC",
      "MTB": "M & T BANK CORP",
      "NKE": "NIKE INC -CL B",
@@ -51829,11 +51829,11 @@
     "as_of": "2026-06-30",
     "n": 10,
     "tickers": [
+     "ACGL",
      "ACN",
      "ADBE",
      "AIG",
      "CMCSA",
-     "FIS",
      "HCA",
      "LUV",
      "PYPL",
@@ -51841,11 +51841,11 @@
      "ZTS"
     ],
     "names": {
+     "ACGL": "ARCH CAPITAL GROUP LTD",
      "ACN": "ACCENTURE PLC-CL A",
      "ADBE": "ADOBE INC",
      "AIG": "AMERICAN INTERNATIONAL GROUP",
      "CMCSA": "COMCAST CORP-CLASS A",
-     "FIS": "FIDELITY NATIONAL INFO SERV",
      "HCA": "HCA HEALTHCARE INC",
      "LUV": "SOUTHWEST AIRLINES CO",
      "PYPL": "PAYPAL HOLDINGS INC",
@@ -56293,6 +56293,7 @@
      "IBKR",
      "IBM",
      "INTC",
+     "IP",
      "IR",
      "JCI",
      "JPM",
@@ -56353,7 +56354,6 @@
      "TJX",
      "TMO",
      "TMUS",
-     "TPL",
      "TRV",
      "TSLA",
      "TSN",
@@ -56450,6 +56450,7 @@
      "IBKR": "INTERACTIVE BROKERS GRO-CL A",
      "IBM": "INTL BUSINESS MACHINES CORP",
      "INTC": "INTEL CORP",
+     "IP": "INTERNATIONAL PAPER CO",
      "IR": "INGERSOLL-RAND INC",
      "JCI": "JOHNSON CONTROLS INTERNATION",
      "JPM": "JPMORGAN CHASE & CO",
@@ -56510,7 +56511,6 @@
      "TJX": "TJX COMPANIES INC",
      "TMO": "THERMO FISHER SCIENTIFIC INC",
      "TMUS": "T-MOBILE US INC",
-     "TPL": "TEXAS PACIFIC LAND CORP",
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
      "TSN": "TYSON FOODS INC-CL A",
@@ -57163,7 +57163,7 @@
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 83.4,
+    "exposure_now": 83.5,
     "note": "노출 83%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -63889,7 +63889,7 @@
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 58.8,
+    "exposure_now": 59.0,
     "note": "노출 59%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
