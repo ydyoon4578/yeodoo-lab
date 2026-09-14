@@ -135,3 +135,4 @@ data/_hrp_v5.json
 
 # PREREG-2026-09-14-DNBETA — 하방 베타(E59) 얼린 측정
 data/_dnbeta.json
+data/_dnbeta_excl.json
