@@ -3148,7 +3148,15 @@
     "Realized semibetas: Disentangling \"good\" and \"bad\" downside risks (Bollerslev, Patton & Quaedvlieg, Journal of Financial Economics 144(1), 227-246, 2022, doi 10.1016/j.jfineco.2021.05.056 · 베타 = βN + βP − βM+ − βM− · CRSP 1963-2019 일간→월간 세미베타 · TAQ 15분 봉 S&P 500 구성종목 1993-2019(6,799일·1,182종) · 연율 위험프리미엄 N 18.10% · −M− 7.82% · 전체 베타 4.49% · P·M+ 비유의 · 가치가중 매일 리밸런싱 롱숏 세미베타 8.17%·샤프 0.92 vs 전체 베타 5.62%·0.37 vs Ang-Chen-Xing 하방 베타 7.11%·0.49 · 세미베타 FFC4·FF5 알파 6.85%·7.52% · 하방 베타 포트폴리오 알파 4.15%·5.64% · 상·하방 두 조각 분해를 네 조각에 대해 강하게 기각) — https://public.econ.duke.edu/~ap172/BPQ_semibeta_2022_JFE.pdf",
     "Left-tail momentum: Underreaction to bad news, costly arbitrage and equity returns (Atilgan, Bali, Demirtas & Gunaydin, Journal of Financial Economics 135(3), 725-753, 2020 · VaR·기대손실로 잰 좌측꼬리 위험과 이후 수익의 유의한 음(−)의 관계 · 미국과 국제 시장 · 투자자가 좌측꼬리 위험의 지속성을 과소평가 · 개인 보유 비중이 크고 주목이 적고 차익거래 비용이 큰 종목에서 더 강함 = 시장 조건부 하방 공변과는 다른 축) — https://ideas.repec.org/a/eee/jfinec/v135y2020i3p725-753.html"
    ],
-   "recent_at": "2026-09-14"
+   "recent_at": "2026-09-14",
+   "lab": {
+    "v": "기각 — 「이 유니버스에서 하방 베타는 베타의 다른 이름이다」",
+    "t": "하방 베타 (Downside Beta · Realized Semibeta) — 시장이 떨어질 때만 같이 떨어지는 몫에 프리미엄이 붙는가",
+    "why": "사전등록 1편에서 이 랩의 구현으로 쟀다: PREREG-2026-09-14-DNBETA-RESULT.md. ⚠ 검증 대상은 «이 랩의 특정 구현» 이라 카드 규칙과 완전히 같지는 않다 — 각 문서의 §1(규칙)과 한계를 볼 것. ⚠ 편마다 다른 구현을 쟀을 수 있다(같은 카드를 각도를 바꿔 여러 번 잰다).",
+    "docs": [
+     "PREREG-2026-09-14-DNBETA-RESULT.md"
+    ]
+   }
   }
  ],
  "id_moved": {
