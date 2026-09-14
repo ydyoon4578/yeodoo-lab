@@ -283,6 +283,25 @@ if pool:
         if not s.get("sources"): errors.append(f"rotation_pool {s.get('id')}: 출처 없음")
         if s["id"] in ids: errors.append(f"rotation_pool: id 중복 {s['id']}")
         ids.add(s["id"])
+    # 🚨 2026-09-14 — 신규 카드는 다단계 전략이어야 한다(사용자 요청: «더 복잡하고 수준 있는 전략»).
+    #   그동안 매일 들어온 카드가 «특성 하나 → 상위 N 동일가중» 이었다(E56~E59).
+    #   지시서(build/rotation_daily_prompt.md ①)만 고치면 «목록만 적음» 이라 여기서 강제한다.
+    #   ⚠ 무엇이 진짜 단계인지는 기계가 못 가린다 — 꼬리표 **선언**이 있는지만 본다.
+    #     이 번호까지는 옛 규칙으로 들어온 카드라 소급하지 않는다.
+    _POOL_FRONTIER = {"A": 22, "B": 12, "C": 16, "D": 18, "E": 59}
+    _STAGE = ("결합", "조건", "구성", "위험", "회전", "적응")
+    for s in pool.get("strategies", []):
+        _m = re.match(r"([A-E])(\d+)$", str(s.get("id", "")))
+        if not _m or int(_m.group(2)) <= _POOL_FRONTIER[_m.group(1)]:
+            continue
+        _tags = set(re.findall(r"\[(신호|결합|조건|구성|위험|회전|적응|대조|원문 미지정)\]", str(s.get("entry", ""))))
+        _lack = [t for t in ("신호", "대조", "원문 미지정") if t not in _tags]
+        _nst = sum(1 for t in _STAGE if t in _tags)
+        if _lack or _nst < 2:
+            errors.append("rotation_pool %s: 신규 카드 entry 에 단계 꼬리표가 모자란다 — 빠진 필수 %s · "
+                          "단계 %d종(두 종류 이상 필요: [결합][조건][구성][위험][회전][적응]). "
+                          "지시서 build/rotation_daily_prompt.md ① 참조"
+                          % (s["id"], _lack or "없음", _nst))
     # lab 앵커가 실제 항목을 가리키는지 — 앵커 키는 표시명이 아니라 **불변 id(sid)** 다.
     # 전에는 슬러그를 이름에서 즉석 생성해, 전략을 개명하는 순간 여기 19개 딥링크가 조용히 깨졌다.
     def _slug(n):   # archive.html / explorer.html의 slug()와 동일 규칙(구 슬러그 호환용)
