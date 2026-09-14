@@ -47,8 +47,12 @@ def _pitpx():
       (사내 DB 로 메운 76종은 기록에만 있다).
     """
     out = {}
+    _quar = set()
     try:
         sl = _load("pit_px.json") or {}
+        # 🚨 2026-09-14 — 격리된 이름(편입 기간 값이 믿을 수 없어 기록에서 지운 것)을 로컬 캐시에서
+        #   되살리지 않는다. 캐시(8월 14일 생성)에 같은 오염이 그대로 있다 — PARA·COL.
+        _quar = set((sl.get("quarantine") or {}).keys())
         ds = sl.get("dates") or []
         for t, v in (sl.get("px") or {}).items():
             i0 = v.get("i0") or 0
@@ -57,6 +61,8 @@ def _pitpx():
     except Exception as e:
         print("  [주의] pit_px.json 을 못 읽었다(%s)" % str(e)[:50])
     for t, ser in (_load("_pit_px_cache.json") or {}).items():
+        if t in _quar:
+            continue
         if isinstance(ser, dict):
             out.setdefault(t, {}).update(ser)
     return out
