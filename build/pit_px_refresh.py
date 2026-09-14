@@ -35,6 +35,7 @@
     python build/pit_px_refresh.py
 """
 from __future__ import annotations
+import datetime as _dtm
 import io
 import json
 import math
@@ -108,12 +109,31 @@ def basis_break(old, new):
     return None
 
 
+def break_skips(breaks, today=None):
+    """이음매 관문에 막힌 지 RETRY_DAYS 가 안 지난 이름 — 오늘은 묻지 않는다.
+
+    🚨 2026-09-14 — 관문을 넣은 날 바로 알아챘다. AVB 는 기록의 마지막 값(08-20 184.06)과
+      야후 값(65 안팎 · 합병 전환 뒤)이 영영 안 맞으니, 매일 묻고 매일 막고 매일 경고를 찍게 된다.
+      이 파일이 스스로 적은 원칙 «고칠 수 없는 경고가 매일 뜨면 사람이 경고 전체를 안 믿는다» 에
+      걸린다. 그래서 never 와 같은 방식으로 한 번 막히면 RETRY_DAYS 동안 쉬고 그 뒤 한 번만 다시 본다.
+    """
+    today = today or _dtm.date.today()
+    out = set()
+    for t, b in (breaks or {}).items():
+        try:
+            if (today - _dtm.date.fromisoformat(str((b or {}).get("seen"))[:10])).days < RETRY_DAYS:
+                out.add(t)
+        except Exception:
+            pass
+    return out
+
+
 def wanted():
     """받아야 할 티커 — 기록에 있는 것 ∪ (지수 이력에 있었는데 오늘 유니버스엔 없는 것).
 
     ⚠ «영영 못 받는» 목록에 있고 아직 RETRY_DAYS 가 안 지난 이름은 뺀다.
     """
-    have, never, quar = set(), {}, set()
+    have, never, quar, bskip = set(), {}, set(), set()
     if os.path.exists(OUT):
         _o = json.load(io.open(OUT, encoding="utf-8"))
         have = set(_o.get("px") or {})
@@ -121,6 +141,7 @@ def wanted():
         for t, v in (_o.get("never") or {}).items():
             never[t] = v if isinstance(v, dict) else {"since": str(v), "n": FAIL_STREAK}
         quar = set((_o.get("quarantine") or {}).keys())
+        bskip = break_skips(_o.get("breaks"))
     today = set()
     try:
         st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
@@ -150,14 +171,14 @@ def wanted():
                 skip.add(t)
         except Exception:
             pass
-    return sorted(want - skip), len(have), len(gone - have - skip), skip, never
+    return sorted(want - skip - bskip), len(have), len(gone - have - skip), skip, never, bskip
 
 
 def main() -> int:
     import pandas as pd                                   # noqa: F401
     import yfinance as yf
 
-    tick, n_have, n_new, skipped, never = wanted()
+    tick, n_have, n_new, skipped, never, bskipped = wanted()
     if not tick:
         print("❌ 받을 티커가 없다")
         return 1
@@ -171,6 +192,9 @@ def main() -> int:
     last = max(dates) if dates else None
     print("기록 %d종(마지막 %s) · 새로 데려올 이름 %d종 · 받을 대상 %d종"
           % (n_have, last, n_new, len(tick)))
+    if bskipped:
+        print("  (이음매가 안 맞아 기록에 남긴 %d종은 %d일마다 한 번만 다시 본다 — 오늘은 건너뜀: %s)"
+              % (len(bskipped), RETRY_DAYS, " ".join(sorted(bskipped)[:12])))
     if skipped:
         print("  (영영 못 받는 %d종은 %d일마다 한 번만 다시 묻는다 — 오늘은 건너뜀)"
               % (len(skipped), RETRY_DAYS))
@@ -203,7 +227,7 @@ def main() -> int:
                 miss.append(t); continue
             brk = basis_break(flat.get(t), d)
             if brk:
-                breaks[t] = brk
+                breaks[t] = dict(brk, seen=_dtm.date.today().isoformat())
                 continue
             flat.setdefault(t, {}).update(d)              # 🚨 병합만 — 기존 값을 지우지 않는다
             got += 1
