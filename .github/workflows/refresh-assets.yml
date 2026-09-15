@@ -159,6 +159,9 @@ jobs:
       # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
       - name: Rebuild lab charts
         run: python build/strategy_charts.py
+      # 🚨 2026-09-15 — 게시 규칙 진단. 차트를 읽으므로 strategy_charts 뒤(refresh-stocks 와 같은 사유).
+      - name: Rebuild strategy diagnostics
+        run: python build/strategy_diag.py
       # 복제 리포트는 랩 세 파일에서 값을 **옮긴** 것이다. 랩만 갱신되고 이걸 빠뜨리면
       # 같은 사이트의 두 화면이 다른 날짜·다른 t 를 말한다 — '채점기가 두 벌' 이다.
       # validate_site 가 기준일을 대조해 막지만, 막히기 전에 여기서 같이 굽는 것이 맞다.
@@ -212,7 +215,7 @@ jobs:
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·홈 성과 자동 갱신" \
             data/assets.json data/asset_strategies.json data/guru_clone.json \
             data/bench_px.json \
-            data/strategy_index.json data/strategy_charts.json data/strategy_report.json \
+            data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/strategy_report.json \
             data/market_board.json data/home_perf.json \
             data/home_flow.json data/asof.json \
             data/verdicts.json

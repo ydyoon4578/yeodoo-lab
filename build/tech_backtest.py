@@ -621,7 +621,40 @@ def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
             mon.append(row)
             prev = i
         pack["monthly"] = mon
+
+    # ── 급등락 고정 구간의 경계값 ──────────────────────────────────────────
+    # 🚨 2026-09-15 — 사용자 구간표(data/market_episodes.json)의 시작·끝 날짜에서 **전체 계열의 값**을
+    #   집어 둔다. 줄인 곡선(110점)·월별로는 26일짜리 구간을 못 잰다 — 월 격자로 재면 QE 랠리의
+    #   S&P 500 이 +30.9%(일간) 대신 +5.0%(3~6월 창)로 나온다(실측). build/strategy_diag.py 가 읽는다.
+    # ⚠ 계열이 그 날짜를 덮지 않으면 None. 주간 격자면 그 날짜 이하 마지막 관측이라 **집은 날짜를 같이** 싣는다.
+    # ⚠ 격자가 월(YYYY-MM)이면 싣지 않는다 — 문자열 비교로 집으면 달 전체가 한 날짜처럼 잡힌다.
+    eb = _episode_bounds()
+    if eb and len(dates[0]) == 10:
+        vals = []
+        for d in eb:
+            j = bisect.bisect_right(dates, d) - 1
+            if j < 0 or d > dates[-1]:
+                vals.append(None)
+                continue
+            iv = {lab: round(seq[j], 4) for lab, seq in full_idx.items() if seq}
+            vals.append([dates[j], round(nav[j], 4), round(bnav[j], 4)] + ([iv] if iv else []))
+        pack["epi"] = {"d": eb, "v": vals}
     return pack
+
+
+_EPI_BOUNDS = None
+
+
+def _episode_bounds():
+    """data/market_episodes.json 의 시작·끝 날짜(정렬·중복 제거). 파일이 없으면 빈 목록 — 곡선은 그대로 만든다."""
+    global _EPI_BOUNDS
+    if _EPI_BOUNDS is None:
+        try:
+            j = json.load(io.open(os.path.join(DATA, "market_episodes.json"), encoding="utf-8"))
+            _EPI_BOUNDS = sorted({e[x] for e in (j.get("episodes") or []) for x in ("a", "b")})
+        except Exception:
+            _EPI_BOUNDS = []
+    return _EPI_BOUNDS
 
 
 def maxdd(nav):

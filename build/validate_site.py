@@ -670,6 +670,41 @@ if pool:
                       "strategy_charts.py 를 다시 돌려도 안 낫는다(원천이 낡은 것이다). "
                       "가격 캐시가 있는 PC 에서 build/pit_backtest.py 를 돌릴 것"
                       % (len(_struct), _pit_as_of or "?", _lab_as_of or "?", _gap))
+        # 🚨 2026-09-15 — 게시 규칙 진단(strategy_diag.json)도 **차트와 같은 실행**이어야 한다.
+        #   진단은 차트 곡선을 읽어 재므로 차트만 다시 굽고 진단을 빠뜨리면 카드의 곡선과 그 밑
+        #   진단이 다른 실행의 것이 된다 — 바로 위 «상세차트 ↔ 랩» 대조와 같은 유형이다.
+        _dp = os.path.join(ROOT, "data", "strategy_diag.json")
+        if not os.path.exists(_dp):
+            errors.append("data/strategy_diag.json 이 없다 — python build/strategy_diag.py 를 돌릴 것")
+        elif os.path.exists(_cp):
+            _dj = json.load(io.open(_dp, encoding="utf-8"))
+            if _dj.get("charts_generated") != _cj.get("generated"):
+                errors.append("게시 규칙 진단이 상세차트와 다른 실행의 것이다(진단이 읽은 차트 %s ≠ 지금 차트 %s) — "
+                              "strategy_charts.py 뒤에 strategy_diag.py 를 돌릴 것"
+                              % (_dj.get("charts_generated"), _cj.get("generated")))
+            _nod = sorted(_it["sid"] for _it in (_si.get("items") or [])
+                          if isinstance(_it, dict) and _it.get("sid") and _it["sid"] not in (_dj.get("rules") or {}))
+            if _nod:
+                errors.append("진단이 없는 게시 규칙 %d개: %s — strategy_diag.py 를 다시 돌릴 것"
+                              % (len(_nod), ", ".join(_nod[:8])))
+            try:
+                _eps = json.load(io.open(os.path.join(ROOT, "data", "market_episodes.json"),
+                                         encoding="utf-8")).get("episodes") or []
+            except Exception:
+                _eps = []
+            # 구간표는 사용자가 준 고정 표다(12개). 줄거나 늘면 누가 손댄 것이다.
+            if len(_eps) != 12 or len(_dj.get("episodes") or []) != len(_eps):
+                errors.append("급등락 구간표가 12개가 아니거나 진단에 다 안 실렸다(표 %d · 진단 %d)"
+                              % (len(_eps), len(_dj.get("episodes") or [])))
+            _short = [_s for _s, _rr in (_dj.get("rules") or {}).items() if len(_rr.get("epi") or []) != len(_eps)]
+            if _short:
+                errors.append("급등락 칸 수가 구간표와 다른 진단 %d개: %s" % (len(_short), ", ".join(sorted(_short)[:6])))
+            # ⚠ 월 격자로 잰 칸은 **경고**다. 시점정확 곡선은 가격 캐시가 있는 PC 에서만 굽혀서 경계값이
+            #   늦게 붙는다 — 오류로 두면 사람이 돌릴 때까지 모든 잡이 막힌다(위 ⓑ 와 같은 사유).
+            _gm = (_dj.get("epi_grid") or {}).get("m") or 0
+            if _gm:
+                print("  ~ 게시 규칙 진단: 급등락 %d칸을 월 격자로 쟀다(곡선에 구간 경계값이 없다) — 짧은 구간은 "
+                      "실제와 크게 다르다. 시점정확 레그는 가격 캐시가 있는 PC 에서 build/pit_backtest.py 로 붙는다" % _gm)
     except FileNotFoundError:
         pass
 

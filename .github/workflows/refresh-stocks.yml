@@ -148,6 +148,10 @@ jobs:
       # 새 전략이 화면에서 '차트 없는 전략'으로 보인다.
       - name: Rebuild lab charts
         run: python build/strategy_charts.py
+      # 🚨 2026-09-15 — 게시 규칙 진단(시장 상태 삼분위 · 급등락 12구간 · 변화점). 차트를 **읽어서**
+      #   재므로 반드시 strategy_charts 뒤다. 차트만 굽고 이것을 빠뜨리면 validate_site 가 «다른 실행» 으로 막는다.
+      - name: Rebuild strategy diagnostics
+        run: python build/strategy_diag.py
       # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
       #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
       #   실제로 CI 가 여기서 걸렸다(grid_days 4430 ≠ 4431 · px_nulls 2 ≠ 31).
@@ -180,7 +184,7 @@ jobs:
             data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
-            data/strategy_index.json data/strategy_charts.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json
+            data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
