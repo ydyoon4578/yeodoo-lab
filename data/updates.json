@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-09-15",
+   "hm": "10:45",
+   "target": "explorer",
+   "title": "전략 랩 — 게시 규칙 42종에 진단 셋(급등락 고정 12구간 · 시장 상태 삼분위 · 평균 변화점) · 시점정확 재실행(가격 기록 수리 반영)"
+  },
+  {
+   "dt": "2026-09-15",
    "hm": "08:25",
    "target": "rotation",
    "title": "최근동향 13종 갱신 + 신규 1종(E60 자산가격결정 트리 (Asset Pricing Trees · Bryzgalova·Pelger·Zhu, JF 2025))"
