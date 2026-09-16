@@ -4,8 +4,8 @@
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
  "n": 125,
  "counts": {
-  "measured": 46,
-  "underspec": 49,
+  "measured": 47,
+  "underspec": 48,
   "no_input": 19,
   "duplicate": 6,
   "not_a_rule": 1,
@@ -927,8 +927,8 @@
    "cat": "E"
   },
   "D17": {
-   "verdict": "underspec",
-   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
    "hits": [],
    "name": "주식-채권 상관 국면 게이트 (Stock-Bond Correlation Regime) — 분산의 전제 자체를 상태변수로 쓴다",
    "cat": "D"
