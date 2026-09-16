@@ -1547,8 +1547,158 @@
     out.innerHTML = h.join('');
   }
 
+  /* ── ② 포트폴리오 표의 «전략» 열을 원장과 맞춘다 (2026-09-17) ──────────────
+     사용자 지적 — «매매내역 넣어도 왼쪽 포트폴리오에서 전략 수량이 안 바뀌어.
+     나스닥 MU 6/24 +489 · 9/10 −180 인데 전략 수량 624 로 찍힘».
+
+     맞다. 왼쪽 표는 **파이썬이 구워 둔 정적 HTML** 이고, 그 생성기(build/portfolio_fund.py)는
+     전략 수량을 **DB 씨앗(mp.strategy_trade)만** 보고 만든다 — 웹 원장은 암호문이라
+     생성기가 못 읽는다. 그래서 웹에 넣은 매매는 ③④ 에만 반영되고 ② 는 게시 시점의 DB
+     값에 얼어붙어 있었다. MU 624 = DB 의 6/24 +489 와 8/3 +135 이고, 웹의 9/10 매도는
+     그 합에 닿지 못했다. 고치는 자리는 여기다 — 잠금이 풀린 이 앱만이 두 원장을 다 안다.
+
+     【왜 «다시 계산» 이 아니라 «차이만 더하기» 인가】
+     처음에 전략(%)·패시브 수량 따위를 **다시 계산**해 덮어썼더니 합계에서 파이썬과
+     0.01%p 가 갈렸다 — 화면에 있는 값은 이미 반올림된 것이라 그것을 더하면 파이썬이
+     반올림 전에 더한 합과 다르다(실측: 패시브차이 합계 +0.00 → +0.01).
+     그래서 산식을 옮겨오지 않는다. **원장이 바뀐 만큼만 움직인다.**
+       Δ수량 = 통합원장 순수량 − 씨앗 순수량(=구워진 칸)
+       Δ비중 = Δ수량 ÷ spp            (spp = NAV 1%p 를 만드는 주식수, 생성기가 구움)
+       전략(%) += Δ비중 · 전략수량 += Δ수량 · 패시브수량 −= Δ수량
+       펀드패시브 −= Δ비중 · 패시브차이 −= Δ비중       (지수패시브는 안 움직인다)
+     이러면 Δ=0 일 때 **칸을 건드리지 않는 것이 보장된다** — 우연이 아니라 구조로.
+     ⚠ 지수비중·펀드비중·보유 수량은 안 건드린다. 사내 보유 원장에서 온 사실이고
+       전략 원장과 무관하다.
+     ⚠ mergedTrades 가 이미 권위다(migrated 플래그로 씨앗을 버릴지 그쪽이 정한다).
+       같은 판단을 여기서 다시 하지 않는다.
+     🚨 열은 **이름으로 찾는다.** 이 표의 nth-child 규칙이 열 순서가 바뀔 때마다 어긋난
+       적이 세 번 있다(가장 최근 2026-09-16). 번호를 또 손으로 세지 않는다.
+     🔑 전제 검사 — «구워진 전략수량 칸 = 씨앗 순수량» 이어야 Δ 의 기준이 성립한다.
+       어긋나면 조각이 다른 씨앗으로 구워진 것이므로 **아무것도 고치지 않고** 경고만 띄운다. */
+  var COLS = { ipas: '지수패시브', fpas: '펀드패시브', dpas: '패시브차이',
+               st: '전략', hq: '보유 수량', pq: '패시브 수량', sq: '전략 수량' };
+  function colMap(tb) {
+    var ths = tb.querySelectorAll('thead tr:first-child th'), m = {};
+    Array.prototype.forEach.call(ths, function (th, i) {
+      var t = (th.textContent || '').replace(/\(.*$/, '').trim();
+      Object.keys(COLS).forEach(function (k) { if (t === COLS[k]) m[k] = i; });
+    });
+    return m;
+  }
+  function cellNum(td) {
+    if (!td) return null;
+    var v = parseFloat((td.textContent || '').replace(/[,+\s]/g, ''));
+    return isFinite(v) ? v : null;
+  }
+  function tickerOf(tr) {
+    var td = tr.querySelector('td.tk');
+    if (!td) return null;
+    var n0 = td.firstChild;                       // 배지(밖) 앞의 순수 텍스트 노드
+    return ((n0 && n0.nodeValue) || td.textContent || '').trim();
+  }
+  function netByTicker(list, key) {
+    var n = {};
+    list.forEach(function (t) { n[t.t] = (n[t.t] || 0) + t[key || 'q']; });
+    return n;
+  }
+  /* 구워진 값을 한 번만 떠 둔다. 두 번째 호출부터 이미 고친 칸을 «구워진 값» 으로
+     읽으면 Δ 가 누적돼 원장을 고칠 때마다 수가 밀린다. */
+  function bake(tr, m) {
+    if (tr._pfBake) return tr._pfBake;
+    var td = tr.children;
+    tr._pfBake = { st: cellNum(td[m.st]) || 0, sq: cellNum(td[m.sq]) || 0,
+                   pq: cellNum(td[m.pq]), fpas: cellNum(td[m.fpas]),
+                   dpas: cellNum(td[m.dpas]) };
+    return tr._pfBake;
+  }
+  function syncStrategyCols(slug) {
+    var tb = document.getElementById('tb-' + slug);
+    if (!tb) return;
+    var m = colMap(tb);
+    if (m.st == null || m.sq == null || m.pq == null || m.fpas == null ||
+        m.dpas == null || m.ipas == null) return;      // 표가 바뀌었다 — 손대지 않는다
+    var rows = Array.prototype.filter.call(tb.querySelectorAll('tbody tr[data-spp]'),
+                                           function (tr) { return tickerOf(tr); });
+    var idx = PF.funds[slug].idx, seed = [];
+    PF.mp.forEach(function (t) { if (t.idx === idx) seed.push(t); });
+    var sn = netByTicker(seed), net = netByTicker(mergedTrades(slug));
+
+    // 🔑 전제 검사 — 구워진 «전략 수량» 이 씨앗 순수량과 같은가.
+    var bad = null;
+    rows.forEach(function (tr) {
+      if (bad) return;
+      var b = bake(tr, m), want = sn[tickerOf(tr)] || 0;
+      if (Math.abs(b.sq - want) > 0.5) bad = tickerOf(tr) + ' 화면 ' + num(b.sq, 0) + ' ≠ 씨앗 ' + num(want, 0);
+    });
+    var box = tb.parentNode, warn = box.querySelector('.stsyncwarn');
+    if (bad) {
+      if (!warn) {
+        warn = document.createElement('p');
+        warn.className = 'warn stsyncwarn';
+        box.insertBefore(warn, box.firstChild);
+      }
+      warn.textContent = '⚠ 전략 수량의 기준이 안 맞습니다(' + bad +
+        ') — 원장을 반영하지 않고 게시 시점 값을 그대로 둡니다.';
+      return;
+    }
+    if (warn) warn.remove();
+
+    // 원장이 바뀐 만큼만 각 칸을 민다.
+    var dwTot = 0, touched = 0;
+    rows.forEach(function (tr) {
+      var b = bake(tr, m), td = tr.children,
+          spp = parseFloat(tr.getAttribute('data-spp')),
+          q = net[tickerOf(tr)] || 0, dq = q - b.sq;
+      if (!isFinite(spp) || !spp) return;
+      var dw = dq / spp;
+      dwTot += dw;
+      if (!dq) return;
+      touched++;
+      var st = b.st + dw;
+      td[m.st].textContent = q ? num(st, 2) : '—';
+      td[m.st].className = 'tnum' + (q ? ' tk' : '');
+      td[m.sq].textContent = q ? num(q, 0) : '—';
+      td[m.sq].className = 'tnum' + (q ? ' tk' : '');
+      if (b.pq != null) td[m.pq].textContent = num(b.pq - dq, 0);
+      if (b.fpas != null) td[m.fpas].textContent = num(b.fpas - dw, 2);
+      if (b.dpas != null) {
+        var dp = b.dpas - dw;
+        td[m.dpas].textContent = (dp > 0 ? '+' : '') + num(dp, 2);
+        td[m.dpas].className = 'tnum ' + (dp > 0 ? 'pos' : (dp < 0 ? 'neg' : ''));
+      }
+    });
+
+    // 합계 줄도 같은 Δ 로 민다(전략 +Δ · 펀드패시브 −Δ · 패시브차이 −Δ).
+    var tot = tb.querySelector('thead tr.totrow');
+    if (!tot) return;
+    if (!tot._pfBake) tot._pfBake = { st: cellNum(tot.children[m.st]),
+                                      fpas: cellNum(tot.children[m.fpas]),
+                                      dpas: cellNum(tot.children[m.dpas]) };
+    var tb0 = tot._pfBake;
+    function setTot(i, v, signed) {
+      var th = tot.children[i];
+      if (!th || v == null) return;
+      var b = th.querySelector('b');
+      var txt = (signed && v > 0 ? '+' : '') + num(v, 2);
+      if (b) b.textContent = txt; else th.textContent = txt;
+    }
+    if (touched || dwTot) {
+      setTot(m.st, tb0.st + dwTot);
+      setTot(m.fpas, tb0.fpas - dwTot);
+      setTot(m.dpas, tb0.dpas - dwTot, true);
+      // ⚠ 전략 합계 칸의 «그 N종 지수 대비» 밑줄은 지운다 — 게시 시점 구성으로 계산된
+      //   수라 원장이 바뀌면 더는 맞지 않는다. 틀린 설명을 남기느니 없앤다.
+      var cell = tot.children[m.st];
+      if (cell) {
+        var d1 = cell.querySelector('.totd'), d2 = cell.querySelector('.totb');
+        if (d1) d1.remove();
+        if (d2) d2.remove();
+      }
+    }
+  }
+
   // ── 조립 ────────────────────────────────────────────────────────────────
-  function renderFund(slug) { renderLedger(slug); renderPerf(slug); }
+  function renderFund(slug) { renderLedger(slug); renderPerf(slug); syncStrategyCols(slug); }
   function renderAll() {
     renderSync();
     Object.keys(PF.funds).forEach(renderFund);
@@ -1641,6 +1791,7 @@
     renderAll();
   }
 
-  window.PFAPP = { init: init };
+  // refresh — 원장을 바꾸지 않고 화면만 다시 그린다(콘솔 점검·회귀 검증용).
+  window.PFAPP = { init: init, refresh: function () { if (S.ready) renderAll(); } };
   init();                                           // 앱이 게이트보다 늦게 로드된 경우
 })();
