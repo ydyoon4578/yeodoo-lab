@@ -1643,6 +1643,35 @@
     }
     if (warn) warn.remove();
 
+    /* 🚨 겹침 경보 — 씨앗을 아직 안 버렸는데(migrated=false) 웹 원장에 **같은 매매**가
+       또 있으면 수량이 두 배로 센다. 전략 이름이 다르면(«…웹» 처럼 손으로 다시 적은
+       경우) 이름으로는 안 갈리므로 «같은 날 · 같은 종목 · 같은 수량» 으로 본다.
+       ⚠ 막지는 않는다. ③④ 도 같은 mergedTrades 를 쓰므로 ② 만 다르게 굴리면 화면
+         안에서 수가 갈린다 — 한 벌로 두고 **겹쳤다는 사실을 말한다**. 고치는 자리는
+         원장이지 이 표가 아니다(«웹 원장으로 가져오기» 를 누르면 씨앗을 버린다).
+       ⚠ 열쇠 구분자는 '~' 다. 티커·날짜에 안 나오고, 소스에 제어문자를 박지 않는다
+         (2026-09-16 에 편집이 NUL 바이트를 써 넣어 게이트에 걸린 적이 있다). */
+    if (!S.doc.migrated) {
+      var key = {}, dup = [];
+      seed.forEach(function (t) { key[t.dt + '~' + t.t + '~' + t.q] = 1; });
+      S.doc.trades.forEach(function (t) {
+        if (t.fund === slug && key[t.dt + '~' + t.t + '~' + t.q] && dup.indexOf(t.t) < 0)
+          dup.push(t.t);
+      });
+      var dwarn = box.querySelector('.stdupwarn');
+      if (dup.length) {
+        if (!dwarn) {
+          dwarn = document.createElement('p');
+          dwarn.className = 'warn stdupwarn';
+          box.insertBefore(dwarn, box.firstChild);
+        }
+        dwarn.textContent = '⚠ DB 씨앗과 웹 원장에 같은 매매가 겹쳐 있습니다(' +
+          dup.slice(0, 6).join(', ') + (dup.length > 6 ? ' 외 ' + (dup.length - 6) + '종' : '') +
+          ') — 전략 수량이 두 번 세어집니다. ③ 매매 원장의 «웹 원장으로 가져오기» 를 누르면 ' +
+          '씨앗을 버리고 웹 원장 하나로 굴러갑니다.';
+      } else if (dwarn) dwarn.remove();
+    }
+
     // 원장이 바뀐 만큼만 각 칸을 민다.
     var dwTot = 0, touched = 0;
     rows.forEach(function (tr) {
