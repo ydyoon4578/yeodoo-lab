@@ -20,7 +20,11 @@
 
   · 필요한 티커 = 기록에 이미 있는 것 ∪ (지수 이력에 있었는데 오늘 유니버스엔 없는 것).
     뒤쪽이 «새로 편출된 이름» 을 자동으로 데려온다 — 사람이 알아챌 필요가 없다.
-  · 이미 있는 티커는 **마지막 날짜 다음부터만** 받는다. 새 티커는 전체를 받는다.
+  · 🚨 2026-09-14 정정 — 모든 티커를 **기록의 마지막 날짜부터** 받는다. 새 티커도 전체를 받지
+    않는다(종전 문장 «새 티커는 전체를 받는다» 는 코드와 달랐다). 그래서 오늘 유니버스를 떠나
+    sd 파일이 지워진 이름은 편입 기간의 과거 가격이 여기 없다 — 실행 끝에 명단을 찍는다.
+    실측: AVB·EQR(2026-08 합병 편출)의 12년치가 그렇게 빠졌다(build/pit_px_repair.py 로 복구).
+  · 🚨 격리(quarantine)된 이름은 다시 받지 않는다. 이음매가 안 맞는 이름은 그날 붙이지 않는다.
   · 🚨 **병합만 한다. 절대 줄이지 않는다.** yfinance 가 상장폐지된 이름을 더는 안 주는 날이
     와도(실제로 온다) 저장소에 있는 기록은 그대로 남는다. 이름 하나가 조용히 사라지면
     PIT 후보가 생존자 쪽으로 기울고, 그러면 «생존편향을 재는 표» 가 스스로 생존편향을 갖는다.
@@ -31,6 +35,7 @@
     python build/pit_px_refresh.py
 """
 from __future__ import annotations
+import datetime as _dtm
 import io
 import json
 import math
@@ -68,6 +73,59 @@ RETRY_DAYS = 30
 #   종목이 30일간 기록에서 빠지고, 그 사이 PIT 후보가 조용히 좁아진다.
 #   → 연속 FAIL_STREAK 번 실패해야 «영영» 으로 본다. 한 번이라도 받아지면 0 으로 되돌린다.
 FAIL_STREAK = 3
+# 🚨 2026-09-14 — 이음매 관문. 야후 티커가 합병·재사용으로 «다른 증권» 을 가리키면 이어 붙인
+#   자리에 가짜 급변이 생긴다. 실측: AVB 는 2026-08-17 EQR 과 합병(1주 → 2.793주 · 새 이름 VMRK)
+#   했는데 야후 AVB 가 08-21 부터 전환 뒤 가격(65.90)을 줘 기록의 08-20 값 184.06 뒤에 붙었고
+#   하루 −64% 가 찍혔다(184.06 ÷ 65.90 = 2.793 — 전환비 그대로).
+#   · 같은 날짜가 겹치면 저장값과 새 값이 SAME_DAY_TOL 넘게 다를 때 막는다
+#     (배당 소급조정은 보통 1% 안팎이라 통과한다).
+#   · 안 겹치면 저장된 마지막 값과 새 첫 값의 비가 JOIN_TOL 을 넘을 때 막는다
+#     (실적 폭락 같은 하루 −40% 대는 통과한다).
+#   막힌 이름은 그날 붙이지 않고 breaks 에 남긴다. 기록은 줄이지 않는다.
+SAME_DAY_TOL = 0.15
+JOIN_TOL = 0.50
+
+
+def basis_break(old, new):
+    """old·new 는 {날짜: 값}. 붙이면 안 되면 사유 dict, 괜찮으면 None."""
+    if not old or not new:
+        return None
+    both = sorted(set(old) & set(new))
+    if both:
+        d = both[-1]
+        a, b = old.get(d), new.get(d)
+        if a and b and abs(b / a - 1.0) > SAME_DAY_TOL:
+            return {"kind": "같은 날 값 불일치", "date": d, "old": a, "new": b,
+                    "ratio": round(b / a, 4)}
+        return None
+    ld = max(old)
+    later = sorted(k for k in new if k > ld)
+    if not later:
+        return None
+    a, b = old[ld], new[later[0]]
+    if a and b and abs(b / a - 1.0) > JOIN_TOL:
+        return {"kind": "이음매 급변", "date_old": ld, "old": a, "date_new": later[0],
+                "new": b, "ratio": round(b / a, 4)}
+    return None
+
+
+def break_skips(breaks, today=None):
+    """이음매 관문에 막힌 지 RETRY_DAYS 가 안 지난 이름 — 오늘은 묻지 않는다.
+
+    🚨 2026-09-14 — 관문을 넣은 날 바로 알아챘다. AVB 는 기록의 마지막 값(08-20 184.06)과
+      야후 값(65 안팎 · 합병 전환 뒤)이 영영 안 맞으니, 매일 묻고 매일 막고 매일 경고를 찍게 된다.
+      이 파일이 스스로 적은 원칙 «고칠 수 없는 경고가 매일 뜨면 사람이 경고 전체를 안 믿는다» 에
+      걸린다. 그래서 never 와 같은 방식으로 한 번 막히면 RETRY_DAYS 동안 쉬고 그 뒤 한 번만 다시 본다.
+    """
+    today = today or _dtm.date.today()
+    out = set()
+    for t, b in (breaks or {}).items():
+        try:
+            if (today - _dtm.date.fromisoformat(str((b or {}).get("seen"))[:10])).days < RETRY_DAYS:
+                out.add(t)
+        except Exception:
+            pass
+    return out
 
 
 def wanted():
@@ -75,13 +133,15 @@ def wanted():
 
     ⚠ «영영 못 받는» 목록에 있고 아직 RETRY_DAYS 가 안 지난 이름은 뺀다.
     """
-    have, never = set(), {}
+    have, never, quar, bskip = set(), {}, set(), set()
     if os.path.exists(OUT):
         _o = json.load(io.open(OUT, encoding="utf-8"))
         have = set(_o.get("px") or {})
         # never[t] = {"since": 포기한 날, "n": 연속 실패 횟수}. 옛 판(문자열)도 읽는다.
         for t, v in (_o.get("never") or {}).items():
             never[t] = v if isinstance(v, dict) else {"since": str(v), "n": FAIL_STREAK}
+        quar = set((_o.get("quarantine") or {}).keys())
+        bskip = break_skips(_o.get("breaks"))
     today = set()
     try:
         st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
@@ -97,7 +157,7 @@ def wanted():
         gone -= today
     except Exception as e:
         print("  ⚠ 지수 이력을 못 읽었다(%s) — 기록에 있는 것만 갱신한다" % str(e)[:60])
-    want = have | gone
+    want = (have | gone) - quar           # 🚨 격리된 이름은 다시 받지 않는다(2026-09-14)
     import datetime as _dt
     today = _dt.date.today()
     skip = set()
@@ -111,14 +171,14 @@ def wanted():
                 skip.add(t)
         except Exception:
             pass
-    return sorted(want - skip), len(have), len(gone - have - skip), skip, never
+    return sorted(want - skip - bskip), len(have), len(gone - have - skip), skip, never, bskip
 
 
 def main() -> int:
     import pandas as pd                                   # noqa: F401
     import yfinance as yf
 
-    tick, n_have, n_new, skipped, never = wanted()
+    tick, n_have, n_new, skipped, never, bskipped = wanted()
     if not tick:
         print("❌ 받을 티커가 없다")
         return 1
@@ -132,6 +192,9 @@ def main() -> int:
     last = max(dates) if dates else None
     print("기록 %d종(마지막 %s) · 새로 데려올 이름 %d종 · 받을 대상 %d종"
           % (n_have, last, n_new, len(tick)))
+    if bskipped:
+        print("  (이음매가 안 맞아 기록에 남긴 %d종은 %d일마다 한 번만 다시 본다 — 오늘은 건너뜀: %s)"
+              % (len(bskipped), RETRY_DAYS, " ".join(sorted(bskipped)[:12])))
     if skipped:
         print("  (영영 못 받는 %d종은 %d일마다 한 번만 다시 묻는다 — 오늘은 건너뜀)"
               % (len(skipped), RETRY_DAYS))
@@ -139,6 +202,7 @@ def main() -> int:
     # ⚠ 이미 있는 이름은 마지막 날짜부터만 받는다(하루 겹치게 — 경계에서 빠지지 않게).
     frm = last if last else START
     got, miss = 0, []
+    breaks = {}
     for i in range(0, len(tick), 60):                     # yfinance 는 묶음이 클수록 잘 흘린다
         batch = tick[i:i + 60]
         try:
@@ -161,6 +225,10 @@ def main() -> int:
             d = {k: v for k, v in d.items() if v is not None}
             if not d:
                 miss.append(t); continue
+            brk = basis_break(flat.get(t), d)
+            if brk:
+                breaks[t] = dict(brk, seen=_dtm.date.today().isoformat())
+                continue
             flat.setdefault(t, {}).update(d)              # 🚨 병합만 — 기존 값을 지우지 않는다
             got += 1
         print("  … %d/%d종 · 받은 종목 %d" % (min(i + 60, len(tick)), len(tick), got), flush=True)
@@ -210,9 +278,19 @@ def main() -> int:
         #   고칠 수 없는 경고를 매일 띄우면 사람이 경고 전체를 안 믿게 된다.
         "never": never,
         "n_never": len(never),
+        # 🚨 2026-09-14 — 격리·수리·이음매 기록을 매일 다시 쓸 때 잃지 않는다.
+        "quarantine": rec.get("quarantine") or {},
+        "n_quarantine": len(rec.get("quarantine") or {}),
+        "repairs": rec.get("repairs") or {},
+        "breaks": dict(rec.get("breaks") or {}, **breaks),
         "dates": alld,
         "px": out,
     }
+    # 🚨 2026-09-14 — pit_px_db.py 가 적은 «어느 값이 사내 DB 에서 왔나» 를 지우지 않는다.
+    #   종전에는 이 파일을 새로 쓰면서 src 를 빠뜨려 출처 표시가 사라졌다.
+    for _k in ("src", "n_src_db", "src_note", "quarantine_note"):
+        if _k in rec:
+            doc[_k] = rec[_k]
     io.open(OUT, "w", encoding="utf-8", newline="").write(
         json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + chr(10))
     print("→ %s · 티커 %d(이번에 받은 것 %d · 못 받은 것 %d) · %s ~ %s · %.1fMB"
@@ -221,6 +299,16 @@ def main() -> int:
     # 못 받은 이름을 둘로 가른다 — 다른 뜻이라 같이 찍으면 둘 다 안 읽힌다.
     #   ① 기록이 있는데 오늘 못 받았다 → 벤더가 오늘 안 줬다. 값어치 있는 경고다.
     #   ② 기록도 없고 못 받는다 → 오래 전에 사라진 이름. 세어서 한 줄, 그리고 기억한다.
+    if breaks:
+        print("  🚨 이음매 관문에 막혀 오늘 안 붙인 이름 %d종(합병·티커 재사용일 수 있다 · 기록은 유지):"
+              % len(breaks))
+        for _t, _b in sorted(breaks.items()):
+            print("     %-6s %s" % (_t, _b))
+    _new = sorted(set(out) - set(px))
+    if _new:
+        print("  ⚠ 새로 들어온 편출 이름 %d종 — 가격이 이 실행의 시작일부터라 편입 기간 과거 가격이 없다"
+              "(편출 전 sd 이력을 넘겨야 한다): %s"
+              % (len(_new), " ".join("%s(%s~)" % (t, alld[out[t]["i0"]]) for t in _new[:12])))
     warn = [t for t in miss if t in out]
     lost = [t for t in miss if t not in out]
     if warn:

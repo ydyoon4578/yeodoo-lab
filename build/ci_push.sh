@@ -73,6 +73,7 @@ data/asset_strategies.json|build/asset_backtest.py
 data/verdicts.json|build/verdicts_gen.py
 data/strategy_index.json|build/strategy_index.py
 data/strategy_charts.json|build/strategy_charts.py
+data/strategy_diag.json|build/strategy_diag.py
 data/strategy_report.json|build/strategy_report.py
 data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json

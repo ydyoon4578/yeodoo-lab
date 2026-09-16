@@ -371,6 +371,11 @@
   .epi tr.up td.wl b{color:var(--deploy)} .epi tr.dn td.wl b{color:var(--hot)}
   .epi td.best{font-weight:800;color:var(--deploy)}
   .epi .bar{display:inline-block;height:9px;vertical-align:middle;border-radius:1px}
+  /* 게시 규칙 진단(2026-09-15) — 초과 부호 색 · 월 격자로 잰 칸 표식 */
+  .epi td.pos{color:var(--deploy)} .epi td.neg{color:var(--hot)}
+  .epi .gm{display:inline-block;font-size:10px;line-height:1;padding:2px 4px;border:1px solid var(--line-soft);
+    border-radius:3px;color:var(--muted);font-family:var(--mono);vertical-align:1px}
+  .epi.dg{margin-top:2px}
 
   /* ⑦ 대조군 근거 */
   .bmwrap{margin:16px 0 4px;padding:13px 15px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px}
@@ -2805,6 +2810,71 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       ['catch'](function(){LABC_ST=3;_labFlush();});
   }
 
+  // ── 게시 규칙 진단 ── 2026-09-15 사용자 요청(«이 진단들을 랩의 게시 규칙에 붙여»).
+  //   build/strategy_diag.py 가 **카드 곡선과 같은 계열**(strategy_charts)로 잰 셋 —
+  //   급등락 고정 12구간 · 시장 상태 삼분위 · 평균 변화점. 판정이 아니라 서술이다.
+  // ⚠ 목록과 분리된 지연 로딩 파일이라 차트와 같은 대기열 규약으로 받는다(위 LABC_Q 사유 그대로).
+  var LABD=null, LABD_ST=0, LABD_Q=[];
+  function labDiag(cb){
+    if(LABD_ST===2||LABD_ST===3)return;
+    if(cb)LABD_Q.push(cb);
+    if(LABD_ST===1)return;
+    LABD_ST=1;
+    var done=function(){var q=LABD_Q;LABD_Q=[];q.forEach(function(g){try{g();}catch(e){}});};
+    fetch('data/strategy_diag.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
+      .then(function(j){LABD=j;LABD_ST=j?2:3;done();})
+      ['catch'](function(){LABD_ST=3;done();});
+  }
+  function diagHTML(d, redraw){
+    if(LABD_ST!==2){ if(LABD_ST!==3)labDiag(redraw); return ''; }
+    var R=LABD.rules&&LABD.rules[d.sid]; if(!R)return '';
+    var f=function(v,k){return v==null?'—':((v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(k==null?1:k));};
+    var pc=function(v){return v==null?'—':f(v)+'%';};
+    var bl=d._bl||'판정 기준';
+    // ① 급등락 고정 12구간 — 경계값(g=d)이 없으면 월 격자(g=m)로 쟀다는 표시를 칸마다 단다
+    var E=LABD.episodes||[], er=R.epi||[], anyM=false;
+    var rows=E.map(function(e,q){
+      var x=er[q], lab='<b>'+(e.k==='dn'?'급락':'급등')+'</b> '+esc(e.nm);
+      if(!x)return '<tr class="'+e.k+'"><td class="wl">'+lab+'</td><td colspan="5" style="color:var(--muted)">곡선이 이 구간을 덮지 않음</td></tr>';
+      if(x.g==='m')anyM=true;
+      return '<tr class="'+e.k+'"><td class="wl">'+lab+' <span style="color:var(--muted)">'+esc(e.a.slice(2))+' → '+esc(e.b.slice(2))+'</span>'+
+        (x.g==='m'?' <span class="gm" title="경계값이 없어 월 격자('+esc(x.at[0])+'~'+esc(x.at[1])+')로 쟀습니다">월</span>':'')+'</td>'+
+        '<td>'+pc(x.r)+'</td><td>'+pc(x.b)+'</td>'+
+        '<td class="'+(x.x==null?'':(x.x>0?'pos':'neg'))+'">'+(x.x==null?'—':f(x.x)+'%p')+'</td>'+
+        '<td>'+pc(x.s)+'</td><td>'+pc(x.n)+'</td></tr>';
+    }).join('');
+    var S=R.epi_sum||{};
+    var sm=function(k,lab){var s=S[k]||{};return s.n?lab+' '+s.n+'구간 평균 초과 '+(s.avg==null?'—':f(s.avg)+'%p')+' · 앞선 구간 '+s.pos+'/'+s.n:'';};
+    var h='<div class="chartttl">급등락 고정 12구간 — 초과는 '+esc(bl)+' 대비</div>'+
+      '<table class="epi dg"><thead><tr><th class="wl">구간 (시작 → 끝)</th><th>이 전략</th><th>'+esc(bl)+'</th><th>초과</th>'+
+      '<th>S&amp;P 500</th><th>나스닥 100</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<p class="labnote">'+[sm('dn','급락'),sm('up','급등')].filter(Boolean).join(' · ')+
+      ' — 구간마다 한 번뿐이라 사례입니다'+(anyM?' · <b>월</b> 칸은 월 격자로 재서 짧은 구간일수록 실제와 다릅니다':'')+'</p>';
+    // ② 시장 상태 삼분위
+    var V=LABD.vars||[], T=R.terc||[];
+    var trows=V.map(function(v,q){
+      var t=T[q]||{};
+      if(t.lo==null)return '';
+      return '<tr><td class="wl" title="'+esc(v.def)+'">'+esc(v.ko)+'</td><td>'+f(t.lo,2)+'</td><td>'+f(t.mid,2)+'</td><td>'+f(t.hi,2)+'</td>'+
+        '<td'+(t.fdr?' class="best"':'')+'>'+f(t.d,2)+' <span style="color:var(--muted)">(t '+(t.t==null?'—':f(t.t,1))+')</span></td></tr>';
+    }).join('');
+    if(trows){
+      var fd=LABD.fdr||{};
+      h+='<div class="chartttl">시장 상태별 월평균 초과 (%p) — 직전 월말 상태의 하·중·상 삼분위</div>'+
+        '<table class="epi dg"><thead><tr><th class="wl">상태 변수</th><th>하</th><th>중</th><th>상</th><th>상 − 하</th></tr></thead><tbody>'+trows+'</tbody></table>'+
+        '<p class="labnote">서술이지 검정이 아닙니다 · 게시 규칙 × 변수 '+(fd.m||0)+'칸에 BH FDR '+Math.round((fd.q||0)*100)+
+        '%를 걸면 남는 칸 '+(fd.k||0)+'개'+(fd.k?'(굵게)':'')+'</p>';
+    }
+    // ③ 평균 변화점 — 날짜는 표본에서 고른 것이라 사건으로 읽지 않게 늘 같이 적는다
+    var B=R.brk;
+    if(B){
+      h+='<p class="labnote"><b>평균 변화점</b> '+esc(B.tau)+' 전후 월평균 초과 '+f(B.pre,2)+' → '+f(B.post,2)+'%p · sup-Wald '+
+        (B.w==null?'—':B.w.toFixed(1))+(B.lvl?' (<b>'+esc(B.lvl)+' 유의</b>)':' (10% 임계 7.12 미달)')+
+        ' · 날짜는 표본에서 고른 것입니다</p>';
+    }
+    return h;
+  }
+
   function drawDetail(d){
     if(!d){detailEl.innerHTML="";return;}
     var vc='var('+VMETA[d.v].col+')';
@@ -3261,7 +3331,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                          (MHM===m[0]?'true':'false')+'">'+esc(m[1])+'</button>';}).join('');
                      return '<div class="chartttl">월별 수익</div><div class="segchips">'+chips+'</div>'+
                             mhmHTML(C,d,MHM)+
-                            '<div class="chartttl">급등·급락 구간 비교</div>'+epiHTML(C,d);
+                            '<div class="chartttl">급등·급락 구간 비교</div>'+epiHTML(C,d)+
+                            // 2026-09-15 — 게시 규칙 진단(고정 12구간 · 시장 상태 삼분위 · 변화점). 진단 파일이
+                            //   아직 안 왔으면 빈 문자열을 내고, 오는 대로 이 카드만 다시 그린다.
+                            diagHTML(d,function(){ if(D[state.sel]===d)drawDetail(d); });
                    })();
           }
           labCharts(function(){ if(D[state.sel]===d)drawDetail(d); });

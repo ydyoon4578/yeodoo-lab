@@ -23,20 +23,15 @@ from refresh_13f import GURUS, PREDECESSOR, cusip_map, fold_class  # noqa: E402 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "guru_history.json")
-UA = {"User-Agent": os.environ.get("SEC_UA") or "yeodoo-lab globalkbam@gmail.com"}
+import edgar  # noqa: E402  SEC 호출 규약(UA·초당 제한·재시도)을 복제하지 않는다
 SLEEP = 0.14          # SEC 권고 8 req/s 이내
 
 
 def get(u, timeout=60):
-    for k in range(4):
-        try:
-            with urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=timeout) as r:
-                return r.read()
-        except Exception:
-            if k == 3:
-                raise
-            time.sleep(1.5 * (k + 1))
-    return b""
+    # 🚨 2026-09-14 — edgar.fetch_bytes 로 모았다. 종전에는 UA 를 여기서 따로 만들고 대기
+    #   1.5~4.5초로 네 번만 재시도했다 — SEC 의 10분 차단을 못 버틴다. refresh_13f 가 같은
+    #   구조로 2026-09-05·09-12 에 429 로 죽었다.
+    return edgar.fetch_bytes(u, timeout=timeout)
 
 
 def filings(cik):

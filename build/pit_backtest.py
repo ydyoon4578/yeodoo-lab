@@ -104,7 +104,7 @@ CACHE_START = "2009-01-01"
 #   그래서 소스를 고쳐도 data/pit_strategies.json 은 손으로 다시 돌리기 전까지 옛 코드로 잰
 #   값이다. 산출물에 코드 판을 새겨 두고, tech_backtest 가 그것을 보고 화면에 적는다.
 #   ⚠ 채점·수집에 영향을 주는 수정을 하면 이 날짜를 올릴 것(그래야 캐비엇이 다시 뜬다).
-CODE_REV = "2026-09-02c"   # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
+CODE_REV = "2026-09-16"    # tech_backtest.PIT_CODE_REV 와 **같아야 한다**(validate 가 대조)
 TOPN = TB.TOPN
 
 # 가격·거래량만으로 정의되는 규칙. 펀더멘털 규칙은 시점별 재무·주식수가 없어 제외한다 —
@@ -1963,8 +1963,10 @@ def main():
             "🚨 주당지표 분할 기준 — 주가는 분할조정본인데 SEC 주당지표(eps·dps)와 주식수는 "
             "당시 보고치라 한 계열에 분할 전·후 기준이 섞인다(실측: CMG sh 1387.37 옆에 27.79). "
             "그대로 두면 나중에 분할한 종목의 이익수익률·배당수익률이 분할비만큼 부풀어 **선견**이 "
-            "된다 — tech_backtest.split_trim() 이 기준 불일치 관측을 잘라낸다(89종). "
-            "자르기 전에는 저PER t 2.63·저PSR 2.49·고배당 2.94 로 문턱을 넘는 것처럼 보였다.",
+            "된다 — tech_backtest.split_trim() 이 관측마다 기준을 오늘로 되맞추고(2026-09-16 부터는 "
+            "분할과 분사를 갈라 주당지표도 같은 배수로 나눈다), 되맞출 수 없는 관측만 버린다"
+            "(113종 847관측 — 대부분 분할 이력이 없는 편출 종목이다). "
+            "손대기 전에는 저PER t 2.63·저PSR 2.49·고배당 2.94 로 문턱을 넘는 것처럼 보였다.",
             "규칙 %d종(가격·거래량 %d + 펀더멘털 %d). 소형주(시가총액)는 시점별 주식수를 랩의 "
             "SEC XBRL 과 yfinance(편출분)로 합쳐 재현했다 — 두 출처가 0.3~2.3%% 차이 나지만 시총이 "
             "자릿수로 벌어지는 횡단면이라 순위 영향은 미미하다. "
@@ -2037,11 +2039,12 @@ def write_reuse(want, span):
     ⚠ 이 판정은 온라인이라야 한다. 그래서 백테스트가 아니라 수집 단계에 둔다 — 채점이
       네트워크에 매달리면 CI 와 로컬이 조용히 다른 결과를 낸다.
     """
-    import urllib.request
-    ua = {"User-Agent": "yeouido-lab/1.0 (globalkbam@gmail.com) pit-reuse-check"}
+    import edgar   # 🚨 2026-09-14 — SEC 호출은 edgar 한 곳으로(validate_site 가 막는다)
     try:
-        raw = urllib.request.urlopen(urllib.request.Request(
-            "https://www.sec.gov/files/company_tickers.json", headers=ua), timeout=60).read()
+        # ⚠ max_wait=60 — 로컬 진단이라 SEC 10분 차단을 기다릴 이유가 없다. 실패하면 아래
+        #   except 가 종전처럼 «갱신하지 않는다» 로 넘어간다.
+        raw = edgar.fetch_bytes("https://www.sec.gov/files/company_tickers.json",
+                                timeout=60, max_wait=60)
         sec = json.loads(raw)
     except Exception as e:
         print("  ⚠ SEC 티커지도 실패(%s) — pit_reuse.json 을 갱신하지 않는다" % str(e)[:50])
