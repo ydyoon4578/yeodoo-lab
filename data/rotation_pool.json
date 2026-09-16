@@ -3007,7 +3007,15 @@
     "Understanding the dynamics of stock/bond correlations (Vanguard · 2000-2021 평균 상관 −7% · 1990년대 약 +33% · 1990년대 수준의 양의 상관을 가정해도 60/40 투자자에게 필요한 조정은 62/38 정도 = 배분 변경 필요성에 대한 반론) — https://www.vanguard.co.uk/professional/vanguard-365/investment-knowledge/portfolio-construction/understanding-stock-bond-correlations",
     "이 랩의 실측 (data/assets.json · as_of 2026-09-02 · SPY·IEF 일간 수익률의 역년 상관 · 2007-2021 전 구간 음(−) · 2022 +0.19 · 2023 +0.04 · 2024 +0.07 · 2025 −0.09 · 2026년 8월까지 +0.40 · 직전 252일 +0.28 · 직전 756일 +0.09 · 관측된 국면 전환 1회)"
    ],
-   "recent_at": "2026-09-09"
+   "recent_at": "2026-09-09",
+   "lab": {
+    "v": "둘 다 기각(F2 / F1·F2) · F6 발동",
+    "t": "주식-채권 상관 국면 게이트 (Stock-Bond Correlation Regime) — 분산의 전제 자체를 상태변수로 쓴다",
+    "why": "사전등록 1편에서 이 랩의 구현으로 쟀다: PREREG-2026-09-16-RATEUP-RESULT.md. ⚠ 검증 대상은 «이 랩의 특정 구현» 이라 카드 규칙과 완전히 같지는 않다 — 각 문서의 §1(규칙)과 한계를 볼 것. ⚠ 편마다 다른 구현을 쟀을 수 있다(같은 카드를 각도를 바꿔 여러 번 잰다).",
+    "docs": [
+     "PREREG-2026-09-16-RATEUP-RESULT.md"
+    ]
+   }
   },
   {
    "id": "E55",
