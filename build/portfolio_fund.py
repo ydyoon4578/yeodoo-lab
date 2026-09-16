@@ -837,14 +837,20 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              #   지수를 얼마나 따라가는지는 합계 행에서만 볼 수 있었고 종목별로는 못 봤다.
              #   패시브 = 펀드 − 전략 이므로 전략이 든 종목에서만 두 차이가 갈린다 —
              #   그 종목들이 곧 «틸트를 건 자리» 라 종목별로 보이는 것이 본론이다.
-             # ⚠ 값 바로 뒤에 그 값의 비교를 둔다(패시브 → 패시브차이 · 펀드 → 차이).
-             '<th class="tnum">패시브(%%)</th>'
-             '<th class="tnum" title="패시브 − 지수. 🚨 이 열만 지수를 **패시브 슬리브 '
-             '크기**에 다시 압축해 뺀다(펀드 눈금으로 빼면 늘 −전략비중이 나와 뜻이 없다). '
-             '패시브 바구니 안에서의 오버/언더다.">패시브차이(%%p)</th>'
+             # 🚨 2026-09-16 사용자 «패시브(%%) 열도 2개 열로 해서 지수 패시브, 펀드
+             #   패시브로 비교해줘. 전략 오른쪽 차이는 없애도 되겠네».
+             #   종전에는 패시브 한 열 + 차이 한 열이라, 그 차이가 «무엇에서 무엇을 뺀
+             #   것인가» 가 title 에만 있었다(눈금이 둘인 표라 그게 늘 되물어졌다).
+             #   이제 빼기의 **두 항을 나란히** 놓는다 — 지수패시브 옆에 펀드패시브다.
+             # ⚠ 두 열은 같은 눈금이다(둘 다 패시브 슬리브 크기에 압축). 그래서 눈으로
+             #   바로 빼진다 — 이 표에서 그렇게 되는 유일한 쌍이다.
+             '<th class="tnum" title="지수 원 비중을 **패시브 슬리브 크기**에 압축한 값. '
+             '바로 오른쪽 펀드패시브와 같은 눈금이라 눈으로 빼진다.">지수패시브(%%)</th>'
+             '<th class="tnum" title="펀드 − 전략. 전략 틸트를 걷어낸 복제분이다.">'
+             '펀드패시브(%%)</th>'
+             '<th class="tnum" title="펀드패시브 − 지수패시브. 패시브 바구니 안에서의 '
+             '오버/언더다.">패시브차이(%%p)</th>'
              '<th class="tnum">전략(%%)</th>'
-             '<th class="tnum" title="펀드 − 지수. 지수는 펀드 주식슬리브 눈금으로 '
-             '환산한 값이다(패시브차이 열과 눈금이 다르다).">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
              '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
              '</tr>' % slug)
@@ -919,17 +925,20 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     tip="이 표는 보유 종목만 담는다. 나머지 %s 는 지수에 있는데 안 든 %d종이다."
                         % (pct(_wi_out, 2), len(only_idx)))
              + _tot(_swf)                                   # 펀드비중
-             + _tot(_swp, _dp, "지수(패시브 눈금) %s 대비" % pct(_swi_p, 2),
-                    "지수를 패시브 슬리브 크기(%s)에 다시 압축해 뺀 값이다. 남는 %+.2f%%p 는 "
-                    "«지수에 있는데 안 든 종목» 몫이다 — 0 에 가까울수록 복제가 촘촘하다. "
-                    "펀드 눈금(%s)으로 빼면 언제나 −(전략 비중)이 나와 뜻이 없다."
-                    % (pct(_swp, 2), _dp, pct(_swi, 2)))
-             + ('<th class="tnum"><b>%+.2f</b></th>' % _dp)          # 패시브차이 합계
+             # 지수패시브 합계 — 여기에는 차이를 안 붙인다. 바로 오른쪽 두 칸이
+             #   펀드패시브와 그 차이라, 같은 수를 세 번 적게 된다.
+             + _tot(_swi_p, base="지수 %s 를 패시브 눈금에 압축" % pct(_swi, 2),
+                    tip="지수 원 비중 합을 패시브 슬리브 크기(%s)에 다시 압축한 값이다. "
+                        "펀드 눈금(%s)으로 빼면 언제나 −(전략 비중)이 나와 뜻이 없어 "
+                        "패시브 열만 눈금을 따로 둔다." % (pct(_swp, 2), pct(_swi, 2)))
+             + _tot(_swp)                                   # 펀드패시브
+             + ('<th class="tnum" title="%s"><b>%+.2f</b></th>'
+                % ("남는 %+.2f%%p 는 «지수에 있는데 안 든 종목» 몫이다 — "
+                   "0 에 가까울수록 복제가 촘촘하다." % _dp, _dp))     # 패시브차이 합계
              + _tot(_sws, _ds, "그 %d종 지수 대비" % len(_srows),
                     "전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s. "
                     "전략 합계에서 지수를 직접 빼지 않는다 — 전략은 패시브 위에 얹는 틸트다."
                     % (len(_srows), pct(_swf_s, 2), pct(_swi_s, 2)))
-             + '<th class="tnum"><b>%+.2f</b></th>' % ((_swf - _swi) * 100)
              + '<th></th><th></th><th></th><th></th><th></th>'
              '</tr></thead><tbody>')
     for r in tbl:
@@ -941,25 +950,31 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         # 🚨 완성된 조각(_off·_bg)을 **포맷 문자열에 이어 붙이지 않는다.** 붙였다가
         #   color-mix 의 «30%,» 가 서식 문자로 읽혀 빌드가 죽었다(ValueError, 2026-08-21).
         #   조각은 값으로만 넘긴다 — 그러면 그 안에 무엇이 들어 있든 안전하다.
+        # 🚨 «차이(%p)» 열을 걷었으므로(2026-09-16 사용자 지시) 그 수치를 잃지 않게
+        #   펀드비중 칸의 title 로 옮긴다. 음영은 색이라 «얼마나» 를 못 말한다 —
+        #   색만 남기고 수를 버리면 이 표에서 펀드가 지수 대비 어디인지 읽을 곳이
+        #   합계 행밖에 안 남는다.
         _shade = min(30.0, abs(r["d"]) * 60.0)
-        _bg = (' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
-               % ("good" if r["d"] > 0 else "hot", round(_shade))) if abs(r["d"]) >= 0.005 else ''
+        _bg = (' title="지수 대비 %+.2f%%p (펀드 − 지수, 펀드 슬리브 눈금)"'
+               ' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
+               % (r["d"], "good" if r["d"] > 0 else "hot", round(_shade))
+               ) if abs(r["d"]) >= 0.005 else (' title="지수 대비 %+.2f%%p"' % r["d"])
         # ⚠ 이름 열은 뺐지만 **이름으로 거르기는 살린다.** 행에 data-n 으로 실어 두고
         #   아래 필터가 같이 본다. 티커 칸의 title 로도 남겨 마우스를 올리면 보인다 —
         #   열을 없애면서 이름을 통째로 잃으면 «이게 무슨 회사였지» 를 못 푼다.
         H.append('<tr data-n="%s"><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
                  '<td class="tnum" title="지수 원 비중 %s (100%% 눈금)">%s</td><td class="tnum"%s>%s</td>'
-                 '<td class="tnum">%s</td><td class="tnum %s">%+.2f</td>'
-                 '<td class="tnum %s">%s</td>'
+                 '<td class="tnum sub">%s</td><td class="tnum">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
+                 '<td class="tnum %s">%s</td>'
                  '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["name"][:40]), esc(r["name"][:40]),
                     esc(r["t"]), _off, esc(sec_short(r["gics"])),
                     pct(r["wi_raw"], 2), pctn(r["wi"], 2), _bg, pctn(r["wf"], 2),
-                    pctn(r["wp"], 2), cls_sign(r["dp"]), r["dp"],
+                    pctn(r["wi_p"], 2), pctn(r["wp"], 2),
+                    cls_sign(r["dp"]), r["dp"],
                     ("tk" if r["ws"] else ""), (pctn(r["ws"], 2) if r["ws"] else "—"),
-                    cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq_real"], 0),
                     ("tk" if r["sq"] else ""), (num(r["sq"], 0) if r["sq"] else "—"),
                     num(r["pq"], 0) if r["pq"] is not None else "—",
@@ -968,8 +983,13 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     H.append('<p class="pnote" style="margin:6px 0 12px">'
              '<b>비중은 모두 NAV 기준</b>입니다 — 합계가 100%%가 아니라 개별주식 슬리브 '
              '비중(%s)입니다. 지수비중도 같은 눈금으로 환산했습니다(지수 원 비중 × %s) — '
-             '그래야 <b>차이</b>가 틸트만 말합니다. 지수를 그대로 복제하면 0 입니다. '
-             '지수 원 비중은 그 칸에 마우스를 올리면 나옵니다.<br>'
+             '그래야 펀드와 지수의 차이가 틸트만 말합니다. 지수 원 비중은 그 칸에 마우스를 '
+             '올리면 나옵니다. 종목별 <b>펀드 − 지수</b>(%%p)는 펀드비중 칸의 음영과 '
+             '툴팁에 있습니다.<br>'
+             '<b>지수패시브 · 펀드패시브</b>는 <b>같은 눈금</b>입니다 — 둘 다 패시브 슬리브 '
+             '크기에 맞춘 값이라 눈으로 바로 빼집니다(그 차이가 패시브차이 열입니다). '
+             '펀드 눈금으로 빼면 언제나 −(전략 비중)이 나와 뜻이 없어서 이 두 열만 눈금을 '
+             '따로 둡니다.<br>'
              '<b>보유 수량 = 패시브 수량 + 전략 수량</b>입니다 — 전략 수량은 매매 원장의 종목별 '
              '순수량이고, 패시브는 그 나머지(지수 복제분)입니다. 비중 열도 같은 분해입니다. '
              '<b>지수기준</b>은 «지수 원 비중 × 주식슬리브 ÷ (종가×환율)» 로 역산한 이론 수량이고, '
