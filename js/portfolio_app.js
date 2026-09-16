@@ -399,8 +399,12 @@
     o.push('<line class="chguide" x1="0" y1="12" x2="0" y2="' + (h - 26) + '" stroke="var(--muted)" stroke-width="1" opacity="0"/>');
     series.forEach(function (t, k) { o.push('<circle class="chdot" r="3.2" fill="' + (t[2] || colors[k % colors.length]) + '" opacity="0"/>'); });
     o.push('</svg>');
+    // 🚨 2026-09-17 — 범례가 **기본 팔레트**를 쓰고 있었다. 선 색을 직접 넘긴 그림에서는
+    //   (renderPerf 의 «전략 vs 지수» 가 그렇다) 범례 색과 선 색이 서로 달랐다 —
+    //   지수 선은 --hot 인데 범례 점은 --champ 였다. 선과 같은 색을 쓴다.
     if (labels) o.push('<div class="chlgd">' + labels.map(function (lb, k) {
-      return '<span><i style="background:' + colors[k % colors.length] + '"></i>' + esc(lb) + '</span>';
+      var c2 = (series[k] && series[k][2]) || colors[k % colors.length];
+      return '<span><i style="background:' + c2 + '"></i>' + esc(lb) + '</span>';
     }).join('') + '</div>');
     var meta = {
       pad: pad, w: w, h: h, lo: lo, hi: hi, labs: labs,
@@ -1799,6 +1803,48 @@
         num(totExc, 0) + '</div></div>' +
       '<div class="prc"><div class="prk">NAV 기여</div><div class="prv ' + sgn(totExc) + '">' +
         num(totExc * F.fx / F.nav * 1e4, 1) + ' bp</div></div></div>');
+    /* 차트 (2026-09-17 사용자 «전략 차트 나오게 해주고») — 화면과 **같은 svgLines** 를
+       쓴다. 그림을 따로 그리면 눈금 규약이 갈려 같은 자료가 다르게 보인다.
+       ⚠ 매수원금이 0 인 구간(c[3]=0)은 뺀다 — 나누면 발산한다(화면 쪽과 같은 필터).
+       ⚠ 전략이 여럿이면 ① 은 전략별로 겹쳐 그리고, ② 는 전부 합친 한 쌍으로 그린다.
+         ② 를 전략별로 또 겹치면 선이 네 개가 되어 인쇄에서 못 읽는다. */
+    /* 🚨 색을 테마 변수(var(--accent) 등)에 맡기지 않는다. 인쇄는 흰 종이 위이고,
+       변수는 화면 테마를 따라 연할 수 있다(다크에서 고른 색이 흰 바탕에서 안 보인다).
+       리포트에서만 쓰는 고정 팔레트를 준다 — 명도를 낮춰 흑백 출력에서도 갈린다. */
+    var PRC = ['#1a4e8a', '#b5651d', '#2e7d32', '#6a1b9a', '#00707a'];
+    var exSeries = [];
+    Object.keys(perf).sort().forEach(function (sname) {
+      var pts = perf[sname].curve
+        .filter(function (c) { return c[3]; })
+        .map(function (c) { return [PF.dates[c[0]], (c[1] - c[2]) / c[3] * 100]; });
+      if (pts.length) exSeries.push([sname, pts, PRC[exSeries.length % PRC.length]]);
+    });
+    if (exSeries.length)
+      h.push('<h4>전략별 누적 초과수익 (%, 매수원금 대비 · 0선 = 지수와 같은 성과)</h4>' +
+        '<div class="prch">' +
+        svgLines(exSeries, exSeries.map(function (x) { return x[0].slice(0, 16); }),
+                 760, 200, '#b02a37') + '</div>');
+    // 합산 전략 vs 지수 — 날짜별로 전 전략을 더한 뒤 매수원금으로 나눈다.
+    var agg = {};
+    Object.keys(perf).forEach(function (sname) {
+      perf[sname].curve.forEach(function (c) {
+        var a = agg[c[0]] = agg[c[0]] || [0, 0, 0];
+        a[0] += c[1]; a[1] += c[2]; a[2] += c[3];
+      });
+    });
+    var ks = Object.keys(agg).map(Number).sort(function (a, b) { return a - b; });
+    var sCur = [], bCur = [];
+    ks.forEach(function (i) {
+      var a = agg[i];
+      if (!a[2]) return;
+      sCur.push([PF.dates[i], a[0] / a[2] * 100]);
+      bCur.push([PF.dates[i], a[1] / a[2] * 100]);
+    });
+    if (sCur.length)
+      h.push('<h4>전략 합산 vs 지수 (%, 매수원금 대비)</h4><div class="prch">' +
+        svgLines([['전략', sCur, '#1a4e8a'], ['지수', bCur, '#b02a37']],
+                 ['전략', '지수(PR)'], 760, 200) + '</div>');
+
     // 전략별
     h.push('<h4>전략별</h4><table class="prtbl"><thead><tr><th>전략</th>' +
       '<th class="tnum">비중(NAV)</th><th class="tnum">종목</th><th class="tnum">매수원금</th>' +
@@ -1845,19 +1891,24 @@
       });
       h.push('</tbody></table>');
     });
+    /* 🚨 2026-09-17 사용자 «정의·한계 이 부분은 빼줘» — 통째로 뺀다.
+       ⚠ 다만 **그 리포트에서 실제로 일어난 일**은 남긴다. 둘 다 평소에는 안 나오고,
+         나올 때는 숫자 자체의 뜻이 달라지는 것들이다:
+           · 성과에서 뺀 매매가 있으면 표의 합이 원장 전체가 아니다.
+           · ⚠ 표시가 있는데 범례가 없으면 «이 기호가 뭐지» 로 남는다.
+         «늘 같은 문구» 만 없애고 «이번에만 참인 사실» 은 남기는 것이 지운 취지에 맞다. */
     var sk = cp.skipped, ex = [];
     if (sk.old) ex.push('가격 패널 이전 ' + sk.old + '건');
     if (sk.future) ex.push('기준일 이후 ' + sk.future + '건');
     if (sk.nopx) ex.push('가격 없는 종목 ' + sk.nopx + '건');
-    h.push('<div class="prnote"><b>정의·한계</b><br>' +
-      '· 금액 단위 USD. 비중은 <b>NAV 기준</b>이고 ② 포트폴리오 표의 값과 같다(웹 원장 반영).<br>' +
-      '· 체결가는 당시 종가다 — 실제 체결가가 아닌 건이 섞여 있어 수익률은 근사치다.<br>' +
-      '· BM = 같은 날 같은 금액을 지수에 넣었을 때의 손익(매매 시점 일치). 초과 = 전략 − BM.<br>' +
-      '· NAV 기여(bp) = 초과(USD) × 기준일 환율 ÷ NAV × 10,000.<br>' +
-      '· 배당 미반영(종가는 수정주가가 아니다). ⚠ 는 보유 중 하루 ±' +
-      num(PF.guard * 100, 0) + '% 초과 변동 — 분할 의심.<br>' +
-      (ex.length ? '· 성과 계산 제외: ' + esc(ex.join(' · ')) + '<br>' : '') +
-      '· 기준일 ' + esc(F.asof_us) + ' · 조각 생성 ' + esc(PF.gen) + '</div>');
+    var anyWarn = Object.keys(perf).some(function (k) {
+      return perf[k].rows.some(function (r) { return r.warn; });
+    });
+    if (ex.length || anyWarn)
+      h.push('<div class="prnote">' +
+        (ex.length ? '· 성과 계산에서 뺀 매매: ' + esc(ex.join(' · ')) + '<br>' : '') +
+        (anyWarn ? '· ⚠ = 보유 중 하루 ±' + num(PF.guard * 100, 0) +
+                   '% 초과 변동(분할 의심)' : '') + '</div>');
 
     var box = document.getElementById('pfprint');
     if (!box) {

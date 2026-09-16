@@ -661,9 +661,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          음수만 색을 주고, 부호는 숫자 자체가 이미 말한다(−). */
     #pfprint .neg{color:#a11}
     #pfprint .pos{color:#111}
-    #pfprint .prnote{margin-top:11px;padding-top:5px;border-top:1px solid #999;
+    #pfprint .prnote{margin-top:9px;padding-top:4px;border-top:1px solid #999;
       font-size:8.5px;color:#444;line-height:1.5}
     #pfprint tr{page-break-inside:avoid}
+    /* 차트 (2026-09-17) — 화면과 같은 svgLines 마크업이다. 인쇄에서만 크기를 잡는다.
+       ⚠ 그림이 페이지에 걸쳐 잘리지 않게 통째로 다음 장으로 넘긴다.
+       ⚠ 호버용 안내선·점(.chguide/.chdot)은 인쇄에 뜻이 없다 — 숨긴다.
+       🚨 선 색이 CSS 변수라 «배경 그래픽 없음» 으로 인쇄해도 stroke 는 남지만, 밝은
+         테마 변수가 연할 수 있어 굵기를 올려 둔다(1.8 → 2.1). */
+    /* ⚠ 폭을 190mm 로 묶어 뒀더니 A4 가로(인쇄 폭 275mm)에서 오른쪽 3분의 1이
+         비었다 — 표는 100%인데 그림만 좁아 한 장 안에서 눈이 어긋난다. 풀어 둔다. */
+    #pfprint .prch{margin:4px 0 2px;page-break-inside:avoid}
+    #pfprint .prch svg{width:100%;height:auto}
+    #pfprint .prch path{stroke-width:2.1}
+    #pfprint .chguide,#pfprint .chdot,#pfprint .chtip{display:none!important}
+    #pfprint .chlgd{display:flex;gap:12px;font-size:8.5px;color:#444;margin-top:2px}
+    #pfprint .chlgd i{display:inline-block;width:9px;height:2.5px;margin-right:4px;
+      vertical-align:2px}
   }
 
   /* ── 웹 앱 UI ─────────────────────────────────────────── */
