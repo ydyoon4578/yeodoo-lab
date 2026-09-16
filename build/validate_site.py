@@ -283,6 +283,25 @@ if pool:
         if not s.get("sources"): errors.append(f"rotation_pool {s.get('id')}: 출처 없음")
         if s["id"] in ids: errors.append(f"rotation_pool: id 중복 {s['id']}")
         ids.add(s["id"])
+    # 🚨 2026-09-14 — 신규 카드는 다단계 전략이어야 한다(사용자 요청: «더 복잡하고 수준 있는 전략»).
+    #   그동안 매일 들어온 카드가 «특성 하나 → 상위 N 동일가중» 이었다(E56~E59).
+    #   지시서(build/rotation_daily_prompt.md ①)만 고치면 «목록만 적음» 이라 여기서 강제한다.
+    #   ⚠ 무엇이 진짜 단계인지는 기계가 못 가린다 — 꼬리표 **선언**이 있는지만 본다.
+    #     이 번호까지는 옛 규칙으로 들어온 카드라 소급하지 않는다.
+    _POOL_FRONTIER = {"A": 22, "B": 12, "C": 16, "D": 18, "E": 59}
+    _STAGE = ("결합", "조건", "구성", "위험", "회전", "적응")
+    for s in pool.get("strategies", []):
+        _m = re.match(r"([A-E])(\d+)$", str(s.get("id", "")))
+        if not _m or int(_m.group(2)) <= _POOL_FRONTIER[_m.group(1)]:
+            continue
+        _tags = set(re.findall(r"\[(신호|결합|조건|구성|위험|회전|적응|대조|원문 미지정)\]", str(s.get("entry", ""))))
+        _lack = [t for t in ("신호", "대조", "원문 미지정") if t not in _tags]
+        _nst = sum(1 for t in _STAGE if t in _tags)
+        if _lack or _nst < 2:
+            errors.append("rotation_pool %s: 신규 카드 entry 에 단계 꼬리표가 모자란다 — 빠진 필수 %s · "
+                          "단계 %d종(두 종류 이상 필요: [결합][조건][구성][위험][회전][적응]). "
+                          "지시서 build/rotation_daily_prompt.md ① 참조"
+                          % (s["id"], _lack or "없음", _nst))
     # lab 앵커가 실제 항목을 가리키는지 — 앵커 키는 표시명이 아니라 **불변 id(sid)** 다.
     # 전에는 슬러그를 이름에서 즉석 생성해, 전략을 개명하는 순간 여기 19개 딥링크가 조용히 깨졌다.
     def _slug(n):   # archive.html / explorer.html의 slug()와 동일 규칙(구 슬러그 호환용)
@@ -651,6 +670,41 @@ if pool:
                       "strategy_charts.py 를 다시 돌려도 안 낫는다(원천이 낡은 것이다). "
                       "가격 캐시가 있는 PC 에서 build/pit_backtest.py 를 돌릴 것"
                       % (len(_struct), _pit_as_of or "?", _lab_as_of or "?", _gap))
+        # 🚨 2026-09-15 — 게시 규칙 진단(strategy_diag.json)도 **차트와 같은 실행**이어야 한다.
+        #   진단은 차트 곡선을 읽어 재므로 차트만 다시 굽고 진단을 빠뜨리면 카드의 곡선과 그 밑
+        #   진단이 다른 실행의 것이 된다 — 바로 위 «상세차트 ↔ 랩» 대조와 같은 유형이다.
+        _dp = os.path.join(ROOT, "data", "strategy_diag.json")
+        if not os.path.exists(_dp):
+            errors.append("data/strategy_diag.json 이 없다 — python build/strategy_diag.py 를 돌릴 것")
+        elif os.path.exists(_cp):
+            _dj = json.load(io.open(_dp, encoding="utf-8"))
+            if _dj.get("charts_generated") != _cj.get("generated"):
+                errors.append("게시 규칙 진단이 상세차트와 다른 실행의 것이다(진단이 읽은 차트 %s ≠ 지금 차트 %s) — "
+                              "strategy_charts.py 뒤에 strategy_diag.py 를 돌릴 것"
+                              % (_dj.get("charts_generated"), _cj.get("generated")))
+            _nod = sorted(_it["sid"] for _it in (_si.get("items") or [])
+                          if isinstance(_it, dict) and _it.get("sid") and _it["sid"] not in (_dj.get("rules") or {}))
+            if _nod:
+                errors.append("진단이 없는 게시 규칙 %d개: %s — strategy_diag.py 를 다시 돌릴 것"
+                              % (len(_nod), ", ".join(_nod[:8])))
+            try:
+                _eps = json.load(io.open(os.path.join(ROOT, "data", "market_episodes.json"),
+                                         encoding="utf-8")).get("episodes") or []
+            except Exception:
+                _eps = []
+            # 구간표는 사용자가 준 고정 표다(12개). 줄거나 늘면 누가 손댄 것이다.
+            if len(_eps) != 12 or len(_dj.get("episodes") or []) != len(_eps):
+                errors.append("급등락 구간표가 12개가 아니거나 진단에 다 안 실렸다(표 %d · 진단 %d)"
+                              % (len(_eps), len(_dj.get("episodes") or [])))
+            _short = [_s for _s, _rr in (_dj.get("rules") or {}).items() if len(_rr.get("epi") or []) != len(_eps)]
+            if _short:
+                errors.append("급등락 칸 수가 구간표와 다른 진단 %d개: %s" % (len(_short), ", ".join(sorted(_short)[:6])))
+            # ⚠ 월 격자로 잰 칸은 **경고**다. 시점정확 곡선은 가격 캐시가 있는 PC 에서만 굽혀서 경계값이
+            #   늦게 붙는다 — 오류로 두면 사람이 돌릴 때까지 모든 잡이 막힌다(위 ⓑ 와 같은 사유).
+            _gm = (_dj.get("epi_grid") or {}).get("m") or 0
+            if _gm:
+                print("  ~ 게시 규칙 진단: 급등락 %d칸을 월 격자로 쟀다(곡선에 구간 경계값이 없다) — 짧은 구간은 "
+                      "실제와 크게 다르다. 시점정확 레그는 가격 캐시가 있는 PC 에서 build/pit_backtest.py 로 붙는다" % _gm)
     except FileNotFoundError:
         pass
 
@@ -1825,6 +1879,36 @@ try:
         errors.append(f"stdout UTF-8 재설정 누락 {len(_rc_bad)}개 ({', '.join(_rc_bad[:5])}) — "
                       "cp949 콘솔에서 print 시 UnicodeEncodeError로 죽는다. "
                       'try: sys.stdout.reconfigure(encoding="utf-8") 프렐류드를 추가할 것')
+    # 🚨 2026-09-14 — SEC 에 가는 요청은 edgar.py 한 곳만 urlopen 을 부른다.
+    #   refresh_13f.py 가 자기 fetch() 로 직접 요청해 edgar 의 초당 8회 제한과 429 재시도를
+    #   둘 다 우회했고, 2026-09-05·09-12 두 주 연속 첫 요청에서 429 한 번에 13F 잡이 죽었다.
+    #   같은 복사본이 insider·13f_history·custconc·pit_backtest 에도 있었다(«경로 둘»).
+    #   ⚠ 판정은 «파일에 sec.gov 가 있고 AST 에 urlopen 호출이 있다» 다. 주석에 urlopen 이라는
+    #     글자가 있어도 호출이 아니면 안 걸리고, 다른 호스트만 부르는 파일은 sec.gov 가 없어 안 걸린다.
+    _sec_bad = []
+    for _p in sorted(_glob.glob(os.path.join(ROOT, "build", "*.py"))):
+        if os.path.basename(_p) == "edgar.py":
+            continue
+        _s = io.open(_p, encoding="utf-8").read()
+        if "sec.gov" not in _s or "urlopen" not in _s:
+            continue
+        try:
+            _t = _ast.parse(_s)
+        except SyntaxError:
+            continue
+        for _nd in _ast.walk(_t):
+            if isinstance(_nd, _ast.Call):
+                _f = _nd.func
+                _nm = (_f.attr if isinstance(_f, _ast.Attribute)
+                       else _f.id if isinstance(_f, _ast.Name) else "")
+                if _nm == "urlopen":
+                    _sec_bad.append(f"{os.path.basename(_p)}:{_nd.lineno}")
+    if _sec_bad:
+        errors.append(f"SEC 직접 호출 {len(_sec_bad)}곳 ({', '.join(_sec_bad[:5])}) — "
+                      "edgar.fetch_bytes / edgar.get_json 을 거칠 것. 우회하면 초당 8회 제한과 "
+                      "429 재시도가 둘 다 빠진다(13F 가 2026-09-05·09-12 에 첫 요청에서 죽었다)")
+    else:
+        print("  ~ SEC 호출 경로 검사 통과(edgar.py 한 곳)")
 except Exception as _e:
     errors.append(f"open() encoding 검사 실패: {_e}")
 

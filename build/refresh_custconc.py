@@ -98,14 +98,10 @@ THRESH = re.compile(r"\b\d{1,3}(?:\.\d)?\s?(?:%|percent)\s+or\s+(?:more|greater|
 
 
 def fetch(url: str) -> str:
-    edgar._throttle()
-    rq = urllib.request.Request(url, headers={"User-Agent": edgar.UA,
-                                              "Accept-Encoding": "gzip, deflate"})
-    rs = urllib.request.urlopen(rq, timeout=60)
-    b = rs.read()
-    if rs.headers.get("Content-Encoding") == "gzip":
-        b = gzip.GzipFile(fileobj=io.BytesIO(b)).read()
-    return b.decode("utf-8", "replace")
+    # 🚨 2026-09-14 — edgar.fetch_bytes 로 모았다. 초당 제한은 이미 걸었지만 재시도가 없어
+    #   429 한 번에 죽는 구조였다(refresh_13f 가 그렇게 두 주 연속 죽었다).
+    #   ⚠ 종전 «gzip, deflate» 요청은 deflate 를 실제로 풀지 않았다 — gzip 만 받는다.
+    return edgar.fetch_bytes(url, timeout=60).decode("utf-8", "replace")
 
 
 def filings(cik: int):

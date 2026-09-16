@@ -621,7 +621,40 @@ def curve_pack(dates, nav, bnav, k=110, idx_rets=None, i0=0):
             mon.append(row)
             prev = i
         pack["monthly"] = mon
+
+    # ── 급등락 고정 구간의 경계값 ──────────────────────────────────────────
+    # 🚨 2026-09-15 — 사용자 구간표(data/market_episodes.json)의 시작·끝 날짜에서 **전체 계열의 값**을
+    #   집어 둔다. 줄인 곡선(110점)·월별로는 26일짜리 구간을 못 잰다 — 월 격자로 재면 QE 랠리의
+    #   S&P 500 이 +30.9%(일간) 대신 +5.0%(3~6월 창)로 나온다(실측). build/strategy_diag.py 가 읽는다.
+    # ⚠ 계열이 그 날짜를 덮지 않으면 None. 주간 격자면 그 날짜 이하 마지막 관측이라 **집은 날짜를 같이** 싣는다.
+    # ⚠ 격자가 월(YYYY-MM)이면 싣지 않는다 — 문자열 비교로 집으면 달 전체가 한 날짜처럼 잡힌다.
+    eb = _episode_bounds()
+    if eb and len(dates[0]) == 10:
+        vals = []
+        for d in eb:
+            j = bisect.bisect_right(dates, d) - 1
+            if j < 0 or d > dates[-1]:
+                vals.append(None)
+                continue
+            iv = {lab: round(seq[j], 4) for lab, seq in full_idx.items() if seq}
+            vals.append([dates[j], round(nav[j], 4), round(bnav[j], 4)] + ([iv] if iv else []))
+        pack["epi"] = {"d": eb, "v": vals}
     return pack
+
+
+_EPI_BOUNDS = None
+
+
+def _episode_bounds():
+    """data/market_episodes.json 의 시작·끝 날짜(정렬·중복 제거). 파일이 없으면 빈 목록 — 곡선은 그대로 만든다."""
+    global _EPI_BOUNDS
+    if _EPI_BOUNDS is None:
+        try:
+            j = json.load(io.open(os.path.join(DATA, "market_episodes.json"), encoding="utf-8"))
+            _EPI_BOUNDS = sorted({e[x] for e in (j.get("episodes") or []) for x in ("a", "b")})
+        except Exception:
+            _EPI_BOUNDS = []
+    return _EPI_BOUNDS
 
 
 def maxdd(nav):
@@ -840,9 +873,10 @@ TTM_STALE_DAYS = 550
 #   (validate_site 가 두 리터럴을 대조한다 — 손으로 한쪽만 올리면 캐비엇이 영영 뜨거나
 #    영영 안 뜬다). data/pit_strategies.json 의 code_rev 가 이 값과 다르면 PIT 열이 옛
 #   코드로 잰 값이라는 뜻이고, 그 사실을 limits 에 적는다.
-PIT_CODE_REV = "2026-09-02c"   # ← 2026-08-19 에서 올렸다: 선택기가 바뀌었다
-#   (전수 시험 폐기 · x-lowvol-n100 역변동성 가중 · x-btp-n155 두 축 중립+밴드 ·
-#    x-agrow-n52 연 1회 6월 리밸 — PREREG-2026-08-29-ASWRITTEN.md).
+PIT_CODE_REV = "2026-09-16"    # ← 2026-09-02c 에서 올렸다: 주식수 기준이 바뀌었다
+#   (분사형 분할 가르기 · 단절에서 안 자르기 · sho 로 앞 잇기 · 야후로 빈 곳 메우기 —
+#    시총과 E/P·배당수익률이 함께 움직인다. 그 앞판은 선택기 변경이었다: 전수 시험 폐기 ·
+#    x-lowvol-n100 역변동성 가중 · x-btp-n155 두 축 중립+밴드 — PREREG-2026-08-29-ASWRITTEN.md).
 #   🚨 올리면 PIT 을 다시 굽기 전까지 limits 에 «PIT 열이 옛 코드» 캐비엇이 붙는다.
 #     그것이 이 상수의 일이다 — 다시 구우면 저절로 빠진다.
 
@@ -2910,6 +2944,10 @@ def pick_top(sc, sid="", topn=None):
     return out
 SPLIT_TRIMMED = {}      # 티커 → (자른 날짜, 배수). 얼마나 잘랐는지 로그·limits 에 싣는다
 SPLIT_REBASED = {}      # 티커 → 되맞춘 관측 수. 자르는 대신 살린 양을 로그·limits 에 싣는다
+SPLIT_KIND = {}         # 티커 → [{s,r,kind,q,how}]. 분할을 실제/분사형/섞임으로 가른 결과(split_kinds)
+SPLIT_BREAKS = {}       # 티커 → [단절 날짜]. 분할로 설명 못 하는 자리 — refresh_shares_yf 가 야후 수집 대상으로 쓴다
+SHYF_ADDED = {}         # 티커 → 야후 주식수로 메운 관측 수
+SHYF_SCALED = {}        # 티커 → 야후÷SEC 중앙 비율(정의 차이로 수준이 벌어져 SEC 쪽으로 옮긴 종목)
 _SPLITS = None          # 티커 → [(날짜, 분할비)] — data/splits.json. 없으면 {} 로 남는다
 _CCONC = None           # 티커 → [(제출일, 집중도%)] — data/cust_conc.json
 
@@ -3000,10 +3038,211 @@ def shares_yf(tk):
     return out
 
 
-def _rebase(ok, splits):
-    """당시 보고 주식수를 **오늘 기준**으로 되맞춘다. → (되맞춘 계열, 배수 적용 횟수)
+# 분할비의 **모양**으로 가르는 표. 정확한 단순 비율만 실제 분할로 본다(2:1 · 3:2 · 1:7 …).
+_SIMPLE = sorted(set([float(n) for n in range(1, 101)] + [1.0 / n for n in range(2, 101)]
+                     + [1.5, 1.25, 4 / 3, 5 / 3, 2.5, 2 / 3, 0.8, 0.75, 0.6, 0.4, 3.5]))
+_MIXED_Q = (2.0, 3.0, 4.0, 0.5, 1 / 3, 0.25, 0.2, 0.125, 0.1)
+# 🚨 한날 «역분할 + 분사» 는 비율 모양으로 못 가른다 — 둘이 곱해져 아무 데도 안 맞는 수가 된다.
+#   (티커, 날짜) → (종류, 주식수가 실제로 바뀐 비율). 근거는 회사 공시다.
+SPLIT_KIND_OVERRIDE = {
+    ("HLT", "2017-01-04"): ("mixed", 1 / 3),     # 1:3 역분할 + Park·HGV 분사 (0.4873 = 1/3 × 1.462)
+    ("DD", "2019-06-03"): ("mixed", 1 / 3),      # 1:3 역분할 + Corteva 분사 (0.4725)
+    ("LDOS", "2013-09-30"): ("mixed", 0.25),     # 1:4 역분할 + SAIC 분사 (0.405)
+    ("MSI", "2011-01-04"): ("mixed", 1 / 7),     # 1:7 역분할 + 모토로라 모빌리티 분사 (0.2474)
+    ("WTW", "2016-01-05"): ("real", None),       # Willis 2.649:1 역분할(합병) — 분사가 아니다
+    ("WBD", "2014-08-07"): ("real", None),       # 디스커버리 C주 배당 — 주식수가 실제로 두 배
+}
+SHYF_GAP_DAYS = 400      # SEC 계열에 이만큼 구멍이 나면 야후로 메운다(분기 공시로 한 해를 넘긴 자리)
+SHYF_BACK_DAYS = 630     # 야후 첫 관측 앞 이만큼은 첫 값으로 채운다(대형주 초기 공백)
 
-    ok 는 날짜 내림차순, 단위오류를 이미 뺀 계열이다.
+
+def _prod(xs):
+    r = 1.0
+    for x in xs:
+        r *= x
+    return r
+
+
+def _near_ratio(x, cands=_SIMPLE):
+    return min(cands, key=lambda q: abs(math.log(x / q)))
+
+
+def split_kinds(tk, splits, sec):
+    """분할 하나하나를 **실제 분할 / 분사형 / 섞임** 으로 가른다. → [{s, r, kind, q, how}]
+
+    🚨 2026-09-16 — **data/splits.json 의 절반 가까이는 분할이 아니다.** refresh_splits 가
+      yfinance 의 splits 를 그대로 싣는데, 야후는 **분사(스핀오프)** 도 거기에 적는다 —
+      자회사를 떼어 주면 그만큼 과거 주가를 낮추고 그 비율을 '분할비'로 남긴다.
+      실측(2026-09-16): 245건 중 비정수 비율 73건이고 대부분 분사다
+      (GE 2023-01 1.281 · T 2022-04 1.324 · EBAY 2015-07 2.376 · WDC 2025-02 1.323 …).
+    ⚠ 분사는 **주식수를 바꾸지 않는다.** 그런데 시총 기준에는 그 배수를 곱해야 한다 —
+      조정주가 = 원주가 ÷ r 이므로 주식수 × r 이라야 원래 시총이 된다. 반대로 주식수 «되맞춤»
+      후보로 쓰면 있지도 않은 분할을 되돌리는 셈이라 계열이 통째로 어긋난다.
+      실측: GE 2022-12 시총이 56B$(실제 91B$)로 나오고 있었다 — 분사 배수 두 개(1.281 · 1.253)가 빠졌다.
+    가르는 법 —
+      ① 지정표(SPLIT_KIND_OVERRIDE): 한날 역분할+분사.
+      ② 정확한 단순 비율(±0.15%)이면 실제 분할이다. 분할비는 회사가 정한 정수/간단한 분수다.
+      ③ 그 밖은 분사형이 기본. 다만 SEC 주식수가 분할 앞뒤 200일 안에서 그 비율만큼(±6%) 실제로
+         움직였으면 실제 분할로, 작은 단순 비율(1/2·1/3·1/4 …)만큼 움직였으면 섞임으로 올린다.
+    🚨 yfinance 의 get_shares_full 은 판정에 쓰지 않는다 — 분할 앞뒤가 되맞춰져 있거나 엉뚱하다
+      (실측: NVDA·CMG·GOOGL 은 1배로 평평하고, TSLA 5:1 에 25배, BDX 분사에 1.27배가 찍힌다).
+    """
+    out = []
+    for s, r in splits:
+        s = s[:10]
+        if (tk, s) in SPLIT_KIND_OVERRIDE:
+            kind, q = SPLIT_KIND_OVERRIDE[(tk, s)]
+            out.append({"s": s, "r": r, "kind": kind, "q": r if q is None else q, "how": "지정"})
+            continue
+        if abs(math.log(r / _near_ratio(r))) < math.log(1.0015):
+            out.append({"s": s, "r": r, "kind": "real", "q": r, "how": "정확한 비율"})
+            continue
+        kind, q, how = "pseudo", 1.0, "비정수 비율"
+        before = [v for d, v in sec if _ord(s) - 200 <= _ord(d) < _ord(s)]
+        after = [v for d, v in sec if _ord(s) <= _ord(d) <= _ord(s) + 200]
+        if before and after and before[0]:
+            J = after[-1] / before[0]        # sec 는 날짜 내림차순 — 앞쪽의 마지막 · 뒤쪽의 첫 관측
+            how = "SEC %.3f" % J
+            if abs(math.log(J / r)) < math.log(1.06):
+                kind, q = "real", r
+            elif abs(math.log(J / _near_ratio(J, _MIXED_Q))) < math.log(1.03):
+                kind, q = "mixed", _near_ratio(J, _MIXED_Q)
+        out.append({"s": s, "r": r, "kind": kind, "q": q, "how": how})
+    return out
+
+
+def _clean_units(sh):
+    """① 단위 오류·외톨이 관측 정리. sh 는 날짜 내림차순 → (정리한 계열, 뺀 날짜 집합, 되돌린 수)
+
+    🚨 2026-09-16 — 예전에는 중앙값의 100배 밖을 **버리기만** 했다. 그런데 천주/백만주 단위
+      실수는 되돌릴 수 있다: 1000배 근처면 1000 으로 나누고, 그 값이 가장 가까운 정상 관측과
+      5% 안일 때만 쓴다. 실측 COP — 2008~2016 이 1000배로 실려 통째로 버려졌고, asof_fund 는
+      낡기 제한이 없어 그 구간이 2011년 값(1412M 주)에 묶여 있었다(실제 1240M 주).
+    ⚠ 되돌린 값이 이웃과 안 맞으면 버린다 — 단위가 아니라 다른 사고일 수 있다(WAT·ARE).
+    ⚠ 앞뒤와 30% 넘게 벌어지고 앞뒤끼리는 15% 안인 **외톨이**도 뺀다. 실측 HON 2025-06-30 이
+      앞뒤(651.7 · 638.8)의 절반인 320.5 로 실려 있었다 — 한 분기만 튀는 오보다.
+    """
+    vs = sorted(v for _d, v in sh if v and v > 0)
+    if len(vs) < 3:
+        return [(d, v) for d, v in sh if v and v > 0], {d for d, v in sh if not v or v <= 0}, 0
+    med = vs[len(vs) // 2]
+    tmp, bad = [], set()
+    for d, v in sh:
+        r = (v / med) if (v and v > 0) else 0
+        if 500 < r < 2000:
+            tmp.append((d, v / 1000, True))
+        elif 0 < r and 1 / 2000 < r < 1 / 500:
+            tmp.append((d, v * 1000, True))
+        elif 0.01 < r < 100:
+            tmp.append((d, v, False))
+        else:
+            bad.add(d)                       # 분할비는 아무리 커도 50 정도다 — 100배 밖은 단위 사고다
+    mid, nres = [], 0
+    for i, (d, v, resc) in enumerate(tmp):
+        if resc:
+            nb = ([x[1] for x in reversed(tmp[:i]) if not x[2]][:1]
+                  + [x[1] for x in tmp[i + 1:] if not x[2]][:1])
+            if nb and not any(abs(math.log(v / w)) < math.log(1.05) for w in nb):
+                bad.add(d)
+                continue
+            nres += 1
+        mid.append((d, v))
+    ok = []
+    for i, (d, v) in enumerate(mid):
+        if 0 < i < len(mid) - 1:
+            a, b = mid[i - 1][1], mid[i + 1][1]
+            if max(v / a, a / v) > 1.3 and max(v / b, b / v) > 1.3 and max(a / b, b / a) < 1.15:
+                bad.add(d)
+                continue
+        ok.append((d, v))
+    return ok, bad, nres
+
+
+def _despike(ser):
+    """앞뒤와 30% 넘게 벌어지고 앞뒤끼리는 15% 안인 외톨이 관측을 뺀다(날짜 내림차순 계열).
+
+    야후 주식수는 분할일 앞뒤 하루가 자주 튄다 — 실측 AVGO 2024-07-13 이 열 배로 실렸다가
+    이틀 뒤 제자리로 돌아온다(분할일은 07-15).
+    """
+    out = []
+    for i, (d, v) in enumerate(ser):
+        if 0 < i < len(ser) - 1:
+            a, b = ser[i - 1][1], ser[i + 1][1]
+            if max(v / a, a / v) > 1.3 and max(v / b, b / v) > 1.3 and max(a / b, b / a) < 1.15:
+                continue
+        out.append((d, v))
+    return out
+
+
+def _shyf_at(yr, d, win=120):
+    """야후 계열(시총 기준·날짜 내림차순)에서 d 에 가장 가까운 값. win 일 안에 없으면 None."""
+    if not yr:
+        return None
+    best = min(yr, key=lambda x: _days_between(x[0], d))
+    return best[1] if _days_between(best[0], d) <= win else None
+
+
+def merge_shares_yf(sh, tk, spl):
+    """SEC 주식수 계열(시총 기준·날짜 내림차순)의 **빈 곳만** 야후로 메운다. → (계열, 메운 관측 수)
+
+    🚨 2026-09-16 — 예전에는 SEC 계열이 **아예 없을 때만** 야후를 썼다. 그런데 실제 구멍은 셋 더 있다.
+      ① 시작이 늦다 — 알파벳은 희석주식수 태그가 2023 년부터뿐이라 **9년 동안 시총이 없었고**,
+         그래서 내부 S&P 500 지수·시총가중 규칙에서 통째로 빠져 있었다(BLK 2023~ · XOM 2025~ · DIS).
+      ② 중간이 비었다 — MO 2015~2019 · PANW 2013~2021 · SPG 2014~2020. asof_fund 에는 낡기
+         제한이 없어 몇 해 전 값을 현재값처럼 물고 있었다(MO 2019년에 2014년 주식수).
+      ③ 끝이 멈췄다 — MCD 2023~.
+      실측 효과: S&P 500 편입 종목 중 가격이 있는 것들 기준 주식수 보유율 2014-06 89.8% → 96.9%.
+    ⚠ 야후는 **기말 발행주식수(전 클래스)** 라 SEC(가중평균 희석)와 정의가 다르다. 겹치는 구간의
+      중앙 비율이 5% 넘게 벌어지면 그 비율로 나눠 **SEC 수준에 맞춰** 넣는다 — 안 그러면 이음매에
+      계단이 생겨 주식수 증가율 규칙이 그것을 발행·소각으로 읽는다.
+      실측: SPG 1.15배(운영파트너십 지분 포함) · PANW 0.93배(희석분) · CVNA 2.21배(클래스 A vs 전체).
+    ⚠ 야후 값도 외톨이를 뺀 뒤 쓴다(_despike).
+    """
+    yr = _despike(shares_yf(tk))
+    if not yr:
+        return sh, 0
+    lvl, sc = None, 1.0
+    if sh:
+        rat = []
+        for d, v in yr:
+            near = _shyf_at(sh, d, 45)
+            if near:
+                rat.append(v / near)
+        if len(rat) >= 4:
+            rat.sort()
+            lvl = rat[len(rat) // 2]
+            if abs(math.log(lvl)) > math.log(1.05):
+                sc = 1.0 / lvl
+    have = sorted(d for d, _v in sh)
+    add = []
+    for d, v in yr:
+        if not have or d < have[0]:
+            add.append((d, v * sc))
+            continue
+        j = max(i for i, x in enumerate(have) if x <= d)
+        nxt = have[j + 1] if j + 1 < len(have) else None
+        if ((nxt is None and _ord(d) - _ord(have[j]) > SHYF_GAP_DAYS)
+                or (nxt and _ord(nxt) - _ord(have[j]) > SHYF_GAP_DAYS and d not in have)):
+            add.append((d, v * sc))
+    y0d, y0v = min(yr)
+    if not have or have[0] > y0d:
+        # 야후 첫 관측 앞 약 2년 — 그 값에 그 사이 분사 몫만 곱해 채운다(실측 2015-10 이전이 통째로 비었다)
+        # ⚠ _shift(d, n) 은 n 일 **빼기**다(asof_fund 의 lag 과 같은 규약) — 부호를 뒤집으면 미래 날짜가 생긴다.
+        back = _shift(y0d, SHYF_BACK_DAYS)
+        if not have or back < have[0]:
+            add.append((back, y0v * sc * _prod(x["r"] / x["q"] for x in spl if back < x["s"] <= y0d)))
+    if not add:
+        return sh, 0
+    if sc != 1.0:
+        SHYF_SCALED[tk] = round(lvl, 3)
+    return sorted(dict(list(sh) + add).items(), reverse=True), len(add)
+
+
+def _rebase(ok, spl, yr=None):
+    """당시 보고 주식수를 **오늘 기준**으로 되맞춘다.
+    → (시총 기준 계열, 날짜별 배수, 주식수 계열, 단절 날짜들, 배수를 태운 관측 수)
+
+    ok 는 날짜 내림차순, 단위오류를 이미 뺀 계열이다. spl 은 split_kinds() 의 결과다.
 
     🚨 왜 '한 번 자르기'로는 안 되는가. 기준이 한 지점에서 바뀌는 게 아니라 관측마다
       **따로** 바뀐다. refresh_facts.pick() 이 기간말마다 제출일 최신본을 남기는데,
@@ -3011,55 +3250,64 @@ def _rebase(ok, splits):
       실측(NFLX, 2025-11-17 ×10 분할): 2026-03 소급됨 · 2025-09 아직 아님 ·
       2025-06 소급됨 — 오르내린다. 그래서 관측 하나하나를 분류한다.
 
-    후보는 추정치가 아니라 **그 날짜 이후 실제 분할들의 접미 곱**이다(0개 반영 = 이미
-    오늘 기준, k개 반영 = 최근 k개만 소급된 상태). 그중 직전(이미 확정된) 관측과 가장
-    매끄럽게 이어지는 것을 고르고, 어느 후보로도 1.5배 안에 못 들어오면 되맞추기를
-    포기한다 — 거기서부터는 호출부가 예전처럼 자른다.
+    두 배수를 **따로** 쓴다(2026-09-16) —
+      · 분사 몫(pm = Π r/q): 소급될 일이 없다(주식수가 안 바뀌었으니 재작성도 없다). 그 날짜
+        뒤의 분사면 **무조건** 곱한다. 시총 기준에만 들어가고 주식수 계열(unit)에는 안 들어간다.
+      · 실제 분할 몫(k): 후보는 그 날짜 이후 실제 분할들의 접미 곱이다(0개 반영 = 이미 오늘
+        기준, k개 반영 = 최근 k개만 소급된 상태). 직전 관측과 가장 매끄럽게 이어지는 것을 고른다.
+        🚨 매끄러움은 **분사 몫을 뺀 주식수**로 잰다 — 분사일에는 주식수가 안 변하므로, 시총
+        기준으로 재면 분사 배수가 그대로 '단절'로 잡힌다(실측 EBAY·NI·HPQ·ABT 등 9건).
+
+    🚨 어느 후보로도 1.5배 안에 못 들어오는 자리(=단절)에서 **예전에는 계열을 잘랐다.** 그게
+      바로 합병·대량발행이라, 주식수 증가율 규칙(x-shiss)이 겨냥해야 할 종목이 꼴찌가 아니라
+      후보에서 사라졌고(OMC 20관측 중 19 삭제), 대형주가 통째로 빠지기도 했다(HON 52관측 중 51).
+      이제 자르지 않고 이어 간다. 그 자리의 후보는 이렇게 고른다 —
+        · 야후 실제 주식수가 그 무렵(120일)을 덮으면 **그것과 맞는 후보**를 쓴다(25% 안일 때).
+          실측 AMCR 2024-12(합병과 1:5 역분할이 한 분기에 겹친 자리)가 이 증거로 바로잡혔다.
+        · 없으면 «아직 소급 안 됨»(그 뒤 분할 전부 적용)으로 둔다. 옛 관측은 대개 그렇다 —
+          실측 DD 2016~2018(DowDuPont)이 이 가정으로 맞는다(옛 코드 대비 2.4배).
+      단절 날짜는 돌려주고(seam), 분할 이력을 모르는 종목만 호출부가 예전처럼 자른다.
     """
-    if len(ok) < 2:
-        return list(ok), 0
-    # 🚨 닻(최신 관측)이 반드시 오늘 기준인 것은 아니다. 마지막 제출 **뒤에** 분할이 있으면
-    #   계열 전체가 분할 전 기준으로 남는다. 이 경우 예전 코드는 단절이 없어 아무 일도
-    #   하지 않았고(그래서 조용히 틀렸다), 되맞추기도 닻을 그대로 믿으면 같이 틀린다.
-    #   실측(2026-08-04): KLAC 2026-06-12 ×10 분할, 최신 관측은 2026-03-31 —
-    #   주식수 131.75M(분할 전)에 분할조정 주가를 물려 E/P 가 10배로 나오고 있었다.
-    #   가르는 법: 최신이 **이미 소급됐다면** 바로 아래 관측과 분할비만큼 벌어져 있다.
-    #   실측 5종이 깨끗이 갈렸다 — BKNG 점프 24.386(≈×25, 이미 반영) vs
-    #   CRWD 1.026 · DD 0.983 · FDX 1.013 · KLAC 0.998(전 구간 분할 전).
-    f0, used = 1.0, 0
-    aft = [r for sd, r in splits if sd > ok[0][0]]
-    if aft:
-        pr = 1.0
-        for r in aft:
-            pr *= r
-        jump = (ok[0][1] / ok[1][1]) if ok[1][1] else None
-        if jump is None or abs(jump - pr) / pr > 0.05:
-            f0, used = pr, 1
-    out = [(ok[0][0], ok[0][1] * f0)]
-    prev = ok[0][1] * f0
-    for d, v in ok[1:]:
+    reb, unit, fac, breaks, used, prev = [], [], {}, [], 0, None
+    for i, (d, v) in enumerate(ok):
+        pm = _prod(x["r"] / x["q"] for x in spl if x["s"] > d)
+        reals = sorted((x for x in spl if x["s"] > d and x["q"] != 1.0), key=lambda x: x["s"], reverse=True)
         cands, f = [1.0], 1.0
-        for _sd, r in reversed([s for s in splits if s[0] > d]):
-            f *= r
+        for x in reals:
+            f *= x["q"]
             cands.append(f)
-        best = bestk = None
-        for k in cands:
-            j = (v * k) / prev if prev else 0
-            if j <= 0:
-                continue
-            dev = max(j, 1.0 / j)
-            if best is None or dev < best:
-                best, bestk = dev, k
-        if best is None or best >= 1.5:
-            break                        # 분할로 설명 안 되는 단절 — 여기서 멈춘다
-        if bestk != 1.0:
-            used += 1
-        prev = v * bestk
-        out.append((d, prev))
-    return out, used
+        if prev is None:
+            # 🚨 닻(최신 관측)이 반드시 오늘 기준인 것은 아니다. 마지막 제출 **뒤에** 분할이 있으면
+            #   계열 전체가 분할 전 기준으로 남는다(실측 KLAC 2026-06-12 ×10 — 주식수 131.75M 에
+            #   분할조정 주가를 물려 E/P 가 10배로 나오고 있었다). 이미 소급됐다면 바로 아래
+            #   관측과 분할비만큼 벌어져 있다 — BKNG 점프 24.386(≈×25, 반영됨) vs CRWD 1.026 · KLAC 0.998.
+            k = 1.0
+            if reals:
+                pr = cands[-1]
+                jump = (ok[0][1] / ok[1][1]) if len(ok) > 1 and ok[1][1] else None
+                k = 1.0 if (jump is not None and abs(jump - pr) / pr <= 0.05) else pr
+        else:
+            best = min(cands, key=lambda c: abs(math.log(v * c / prev)))
+            if abs(math.log(v * best / prev)) < math.log(1.5):
+                k = best
+            else:
+                k = cands[-1]                       # 기본은 «아직 소급 안 됨»
+                if len(cands) > 1:
+                    y = _shyf_at(yr, d)             # 야후 실제 주식수가 덮으면 그것으로 고른다
+                    if y:
+                        c2 = min(cands, key=lambda c: abs(math.log(v * pm * c / y)))
+                        if abs(math.log(v * pm * c2 / y)) < math.log(1.25):
+                            k = c2
+                breaks.append(ok[i - 1][0])         # 단절 뒤쪽(최근 쪽) 첫 관측 날짜 = 옛 seam 과 같은 뜻
+        reb.append((d, v * pm * k))
+        unit.append((d, v * k))
+        fac[d] = pm * k
+        used += (pm * k) != 1.0
+        prev = v * k
+    return reb, fac, unit, breaks, used
 
 
-def split_trim(sh, eps, dps, tk="", eps_a=None, dps_a=None):
+def split_trim(sh, eps, dps, tk="", eps_a=None, dps_a=None, splits_known=True):
     """🚨 분할 기준 불일치 관측을 잘라낸다 — 안 자르면 순수 선견이 된다.
 
     주가는 **분할조정본**(auto_adjust=True)이라 전 구간이 오늘 기준이다. 그런데 SEC 주당지표
@@ -3103,66 +3351,74 @@ def split_trim(sh, eps, dps, tk="", eps_a=None, dps_a=None):
     각각 내부적으로 일관되므로 잘못된 값은 이음매를 지나는 비율 하나뿐이다.
     ⚠ 비율만으로 분할과 증자를 구별하려는 시도는 하지 않는다: 인접 분기 |>1.2배| 168건 중
       단순 분할비(±2%) 근접은 67건뿐이고 나머지는 단위오류(1000배대)와 실제 자본거래다.
+
+    🚨 2026-09-16 — **세 가지를 바꿨다.** 위 ⚠ 의 "설명 못 하는 단절은 예전처럼 자른다"는 여기서 끝난다.
+      ① 분할을 실제/분사형/섞임으로 **가른다**(split_kinds 참조). splits.json 의 비정수 비율 73건은
+         대부분 분사라 주식수를 바꾸지 않는다 — 되맞춤 후보로 쓰면 없던 분할을 되돌리는 셈이었다.
+      ② 단절에서 **자르지 않는다**(_rebase 참조). 자르기가 지우던 것이 바로 합병·대량발행이라,
+         주식수 증가율 규칙이 벌해야 할 종목이 후보에서 사라졌고(OMC 20관측 중 19) 대형주가
+         통째로 빠지기도 했다(HON 52관측 중 51 · DVN 44 중 43). 후보는 야후 실제 주식수로
+         고르고, 없으면 «아직 소급 안 됨»으로 둔다.
+         ⚠ 단, **분할 이력을 모르는 종목**(data/fx 밖 = 편출 종목)은 예전처럼 자른다.
+      ③ 단위 오류는 버리기 전에 되돌려 본다(_clean_units 참조).
+      ④ 주당지표는 분사형 몫까지 같이 나눈다 — 조정주가가 그만큼 낮으므로 분자도 같은 기준이어야 한다.
+      실측(옛 코드와 같은 자료로 맞대 봄 · data/fx + fx_pit): 자른 관측 1,947 → 847(186종 → 113종) ·
+      월말 as-of 85,442칸 중 98.0% 가 2% 안에서 같고 **사라진 칸 0** · 새로 생긴 칸 5,271
+      (HON·DVN·OMC 각 147·144칸 · XOM 135 · 알파벳 102 · BLK 114 …) · 시총을 만들 수 있는 칸
+      67,204 → 71,614 · eps 관측 31,207 → 32,360. 검산: E/P 30% 초과(불가능) 칸 227 → 244 로
+      사실상 그대로고(늘어난 20칸은 KDP 2018 합병 특별배당 — 배당조정가 쪽 문제다),
+      내부 S&P 500 총시총/공식 지수 비율이 2014-12 0.80 → 0.91 · 2016-12 0.88 → 0.98 로 붙었다.
     """
-    if not sh or len(sh) < 3:
+    if not sh:
         return sh, eps, dps, sh, None, eps_a, dps_a
-    vs = sorted(v for _d, v in sh if v and v > 0)
-    if not vs:
-        return sh, eps, dps, sh, None, eps_a, dps_a
-    med = vs[len(vs) // 2]
-    # ① 단위 오류 — 100배 넘게 벗어난 관측(분할로는 설명 안 되는 크기)
-    bad = {d for d, v in sh if not v or v <= 0 or v / med > 100 or med / v > 100}
-    ok = [(d, v) for d, v in sh if d not in bad]
-    # ② 되맞추기 — 분할 이력으로 관측마다 기준을 오늘로 맞춘다(_rebase 참조).
-    #    splits.json 이 없으면 _rebase 가 첫 단절에서 바로 멈춰 예전 '자르기'와 같아진다.
-    reb, used = _rebase(ok, load_splits().get(tk) or [])
-    fac = {d: (v / raw) for (d, v), (_d0, raw) in zip(reb, ok) if raw}   # 날짜 → 적용 배수
-    unit = list(reb)                       # ①+② 계열(주식수 성장률용 — 자르지 않는다)
+    # ① 단위 오류·외톨이 관측(_clean_units 참조 — 버리는 대신 되돌릴 수 있으면 되돌린다)
+    ok, bad, _nres = _clean_units(sorted(sh, reverse=True))
+    if not ok:
+        return [], [], [], [], None, [], []
+    # ② 분할을 실제/분사형/섞임으로 가르고(split_kinds), 관측마다 기준을 오늘로 맞춘다(_rebase)
+    spl = split_kinds(tk, load_splits().get(tk) or [], ok)
+    if spl:
+        SPLIT_KIND[tk] = spl
+    reb, fac, unit, breaks, used = _rebase(ok, spl, shares_yf(tk))
+    if breaks:
+        SPLIT_BREAKS[tk] = breaks
+    seam = breaks[0] if breaks else None
+    # ③ 분할 이력을 **모르는** 종목만 예전처럼 자른다. data/fx(오늘 유니버스)는 refresh_splits 가
+    #    훑지만 편출 종목(extra_dirs=data/fx_pit)은 안 훑어서, 단절이 '분할 누락'인지 '자본거래'인지
+    #    가를 근거가 없다 — 실측으로 splits.json 에 없는 분할이 그쪽에 여럿이다
+    #    (XRX 2017-06 1:4 역분할 · VFC 2013-12 4:1 · FLS 2013-06 3:1 · ALK·LKQ·UA 2:1).
+    if seam and not splits_known:
+        bad = bad | {d for d, _v in sh if d < seam}
+        reb = [(d, v) for d, v in reb if d >= seam]
+        unit = [(d, v) for d, v in unit if d >= seam]
+        used = sum(1 for d, _v in reb if fac.get(d, 1.0) != 1.0)
     if used:
         SPLIT_REBASED[tk] = used
-    # ③ 되맞추기가 멈춘 지점부터 자른다 — 분할이 설명하지 못한 단절이다.
-    seam = None
-    if len(reb) < len(ok):
-        seam = reb[-1][0]
-        bad |= {d for d, _v in sh if d < seam}
-    # ⚠ '버릴 게 없으면 그냥 돌려준다'는 지름길을 두지 않는다. 자를 게 없어도 되맞춤
-    #   배수는 적용해야 한다 — 실측으로 한 번 틀렸다(NFLX 는 버릴 관측이 0이라 조기
-    #   반환에 걸려 주식수만 70배로 고쳐지고 EPS 는 분할 전 값 그대로 남았고,
-    #   그 결과 2012년 E/P 가 463% 로 나왔다).
     if bad:
+        vs = sorted(v for _d, v in sh if v and v > 0)
+        med = vs[len(vs) // 2] if vs else 1.0
         worst = max((max(v / med, med / v) for d, v in sh if d in bad and v and v > 0), default=0)
         SPLIT_TRIMMED[tk] = (min(bad), round(worst, 2), len(bad), len(sh))
-    keep = lambda ser: [(d, v) for d, v in (ser or []) if d not in bad]
-    # 🚨 주당지표는 주식수와 **반대로** 움직인다. 분할 전 기준이면 주식수는 k 배 작고
-    #   EPS·DPS 는 k 배 크다 — 그래서 같은 배수로 나눈다. 기준은 '어느 제출본에서 왔나'라
-    #   항목이 아니라 기간말이 정하므로, 주식수에서 얻은 날짜별 배수를 그대로 쓴다.
-    #   🚨 sh 격자에 없는 날짜는 배수를 못 정한다. 예전에는 그대로 뒀는데, 되맞추기를
-    #   넣은 뒤로는 그러면 안 된다 — 옆의 주식수는 오늘 기준으로 고쳐졌는데 이 주당지표만
-    #   분할 전 기준으로 남으면 정확히 이 함수가 막으려던 선견이 되살아난다.
-    #   그래서 **그 날짜 뒤에 분할이 있는** 무배수 관측만 버린다(뒤에 분할이 없으면
-    #   기준이 흔들릴 수 없으므로 예전처럼 남긴다).
+    # 🚨 주당지표는 주식수와 **반대로** 움직인다. 분할 전 기준이면 주식수는 k 배 작고 EPS·DPS 는
+    #   k 배 크다 — 그래서 같은 배수로 나눈다. 분사형 몫(pm)도 함께 나눈다: 조정주가가 그만큼
+    #   낮아져 있으므로 분자도 같은 기준이어야 E/P·배당수익률이 맞는다.
+    #   🚨 sh 격자에 없는 날짜는 배수를 못 정한다. **그 날짜 뒤에 분할이 있는** 무배수 관측만
+    #   버린다(뒤에 분할이 없으면 기준이 흔들릴 수 없으므로 예전처럼 남긴다).
     #   총액 항목 rev·ni·eq·liab·cfo·capex 는 달러라 애초에 분할과 무관하다.
-    spl = load_splits().get(tk) or []
+    spl_all = load_splits().get(tk) or []
 
     def persh(ser):
         out = []
-        for d, v in keep(ser):
+        for d, v in (ser or []):
+            if d in bad:
+                continue
             if d in fac:
                 out.append((d, (v / fac[d]) if (fac[d] and v is not None) else v))
-            elif not any(sd > d for sd, _r in spl):
+            elif not any(sd > d for sd, _r in spl_all):
                 out.append((d, v))
         return out
 
-    # 🚨 2026-08-05 — **연간 버킷도 같은 배수를 태운다.** 하루 전에 ttm2 의 연간 폴백을
-    #   x-ep·x-dy·x-payout 에 이었는데, 그 폴백이 집는 eps_a·dps_a 가 여기를 안 거치고 있었다.
-    #   그러면 분자만 분할 전 기준·분모(주가)만 분할 후 기준이 되어 이 함수가 막으려는 선견이
-    #   정확히 되살아난다. 실측(적대감사): x-ep 보유칸 1,990개 중 1,503개(75.5%)가 '그 달
-    #   이후 실제로 분할한 종목'이었고, 이익수익률 30% 초과(현실 불가) 칸이 82.9% 였다.
-    #   NVDA 2019-06-28 — 분할조정 주가 4.08 · 연간 EPS 6.63(2021 ×4 · 2024 ×10 전 보고치)
-    #   → E/P 162.5%. 그날 상위 10종이 10/10 나중에 분할한 종목이었다.
-    #   ⚠ 배수를 못 정하는 날짜(sh 격자 밖)는 persh 가 '뒤에 분할이 있으면' 버린다 —
-    #     연간 관측은 회계연도말이라 sh 격자와 자주 어긋나므로 이 경로가 실제로 작동한다.
-    return keep(reb), persh(eps), persh(dps), unit, seam, persh(eps_a), persh(dps_a)
+    return reb, persh(eps), persh(dps), unit, seam, persh(eps_a), persh(dps_a)
 
 
 def load_fund(extra_dirs=()):
@@ -3223,11 +3479,23 @@ def load_fund(extra_dirs=()):
         #      연간 관측이어도 맞다(흐름 항목이었다면 이렇게 못 섞는다 — ttm 이 4년을 더한다).
         #   ③ sho(기말 발행주식수) — 희석주식수를 아예 안 내는 회사(HSY·KKR·LYB·SJM).
         #      정의가 달라(가중평균 아님, 희석 아님) 마지막이다.
-        #   ④ shares_yf(SEC 로는 못 만드는 다중클래스 6종 — ARES·BKR·BRK.B·ERIE·STZ·V).
-        #      출처가 다르므로 정말 마지막이다.
+        #   ④ shares_yf(야후) — SEC 로는 못 만드는 다중클래스(ARES·BKR·BRK.B·ERIE·HONA·STZ·V)와
+        #      **빈 곳**(시작이 늦음·중간 구멍·끝 멈춤)을 메운다. 출처가 다르므로 정말 마지막이고,
+        #      정의 차이로 수준이 5% 넘게 벌어지면 SEC 쪽에 맞춰 넣는다(merge_shares_yf 참조).
         _tk = j.get("t") or fn[:-5]
         rev, ni, dps = series("rev"), series("ni"), flow_series("dps")
-        sh = series("sh") or annual("sh") or series("sho")
+        # 🚨 2026-09-16 — sh 와 sho 를 **잇는다**(고르는 게 아니라). 예전에는 sh 가 하나라도
+        #   있으면 sho 를 아예 안 봤는데, 희석주식수를 최근 몇 해만 태깅한 회사가 있다 —
+        #   알파벳은 sh 가 2023 년부터 10개뿐이고 sho 는 2014 년부터 있었다. 그래서 알파벳이
+        #   9년 동안 '시총을 만들 수 없는 종목'이 되어 내부 지수·시총가중 규칙에서 빠져 있었다.
+        #   정의가 다르니 겹치는 구간은 sh 를 쓰고, **sh 가 시작하기 전만** sho 로 잇는다.
+        _prim = series("sh") or annual("sh")
+        _sho = series("sho")
+        if _prim:
+            _first = min(d for d, _v in _prim)
+            sh = sorted(_prim + [(d, v) for d, v in _sho if d < _first], reverse=True)
+        else:
+            sh = sorted(_sho, reverse=True)
         # 🚨 2026-09-03 — **이 계열이 연간 버킷에서 왔는지 표시한다.** 다른 태그는 전부
         #   `*_a` 라는 별도 키로 노출돼 소비자가 「이건 연간이다」를 알 수 있는데(cfo_a ·
         #   capex_a · bb_a …), sh 만 위 한 줄에서 **조용히 섞어** 같은 이름으로 내보낸다.
@@ -3242,22 +3510,32 @@ def load_fund(extra_dirs=()):
         #   ⚠ 값을 바꾸지 않고 **사실만 싣는다** — 소비자가 지연을 고르게 한다.
         _sh_ann = bool(not series("sh") and annual("sh"))
         ep_a0, dp_a0 = annual("eps"), annual("dps")
-        sh, ep, dps, sh_u, seam, ep_a, dp_a = split_trim(sh, ep, dps, _tk, ep_a0, dp_a0)
+        # 분할 이력을 **아는** 종목만 단절에서 이어 간다(split_trim ③ 참조). data/fx 는
+        # refresh_splits 가 훑는 범위와 같고, extra_dirs(편출 종목)는 splits.json 에 없다.
+        _known = path.startswith(os.path.join(DATA, "fx") + os.sep) or (_tk in load_splits())
+        sh, ep, dps, sh_u, seam, ep_a, dp_a = split_trim(sh, ep, dps, _tk, ep_a0, dp_a0,
+                                                        splits_known=_known)
         if not sh:
             # 🚨 이 계열에는 split_trim 을 태우지 않는다. 되맞춤이 이미 정확하고
             #   (shares_yf 참조 — 추정이 아니라 날짜별 분할 곱), 그 위에 '매끄러움' 규칙을
             #   또 걸면 **진짜 자본거래를 분할로 착각해 자른다**. 실측: ARES 는 345행이
             #   251행으로 줄고 시작이 2015-11 → 2022-04 이 됐다(ARES 는 분할 이력이 없다).
-            sh = sh_u = shares_yf(_tk)
+            sh, _nadd = merge_shares_yf([], _tk, split_kinds(_tk, load_splits().get(_tk) or [], []))
+            sh_u = sh
             seam = None
             # 주당지표는 여전히 SEC 의 당시 보고치다. 이 종목들은 배수를 정할 주식수
             # 계열이 SEC 에 없어 되맞출 수 없다 — 마지막 분할 이전은 **자른다**(옛 방침).
-            # 해당은 둘뿐이다(BRK.B 2010-01-21 ×50 · V 2015-03-19 ×4). 나머지 넷은 분할이 없다.
             _sp = load_splits().get(_tk) or []
             if sh and _sp:
                 _cut = max(d for d, _r in _sp)
                 ep = [(d, v) for d, v in (ep or []) if d >= _cut]
                 dps = [(d, v) for d, v in (dps or []) if d >= _cut]
+        else:
+            # 🚨 SEC 계열이 있어도 **빈 곳**은 야후로 메운다(merge_shares_yf 참조) — 시작이
+            #   늦거나(알파벳·BLK·XOM) 중간이 비거나(MO·PANW·SPG) 끝이 멈춘(MCD) 자리다.
+            sh, _nadd = merge_shares_yf(sh, _tk, SPLIT_KIND.get(_tk) or [])
+            if _nadd:
+                SHYF_ADDED[_tk] = _nadd
         asset, liab = series("asset"), series("liab")
         cfo_s, capex_s = series("cfo"), series("capex")
         cfo, capex = dict(cfo_s), dict(capex_s)
@@ -3312,12 +3590,20 @@ def load_fund(extra_dirs=()):
                                           "cogs_a": annual("cogs"), "opinc_a": annual("opinc")}
     # 분할 기준 처리 결과를 **로그로 남긴다.** 조용히 자르면 표본이 왜 짧은지 아무도 모른다
     # (실제로 그랬다 — SPLIT_TRIMMED 를 모으기만 하고 찍는 곳이 없었다).
-    if SPLIT_REBASED or SPLIT_TRIMMED:
+    if SPLIT_REBASED or SPLIT_TRIMMED or SHYF_ADDED:
         nre = sum(SPLIT_REBASED.values())
         ntr = sum(v[2] for v in SPLIT_TRIMMED.values())
-        print("  [분할 기준] 되맞춤 %d관측/%d종 · 자름 %d관측/%d종%s"
-              % (nre, len(SPLIT_REBASED), ntr, len(SPLIT_TRIMMED),
+        _k = {}
+        for _v in SPLIT_KIND.values():
+            for _x in _v:
+                _k[_x["kind"]] = _k.get(_x["kind"], 0) + 1
+        print("  [분할 기준] 되맞춤 %d관측/%d종 · 자름 %d관측/%d종 · 분할 %d건(실제 %d · 분사형 %d · 섞임 %d) · 단절 %d종%s"
+              % (nre, len(SPLIT_REBASED), ntr, len(SPLIT_TRIMMED), sum(_k.values()),
+                 _k.get("real", 0), _k.get("pseudo", 0), _k.get("mixed", 0), len(SPLIT_BREAKS),
                  "" if load_splits() else "  ⚠ data/splits.json 없음 — 되맞추기 꺼짐"))
+        print("  [주식수 보완] 야후로 메움 %d관측/%d종 · 수준 옮김 %d종%s"
+              % (sum(SHYF_ADDED.values()), len(SHYF_ADDED), len(SHYF_SCALED),
+                 "" if load_shares_yf() else "  ⚠ data/shares_yf.json 없음 — 보완 꺼짐"))
     return out
 
 
@@ -6246,8 +6532,9 @@ def build_strats():
          "🚨 적대감사가 이 규칙의 첫 구현을 무효로 만들었다. split_trim 이 분할 이음매 이전 이력을 "
          "전부 지우는데, 대규모 발행이야말로 이음매로 잡힌다 — OMC 20개 관측 중 19개 삭제(단절의 "
          "정체는 분할이 아니라 IPG 합병 대가 발행 +53%), MSTR 12/20 삭제(ATM 대량발행). 즉 이 규칙이 "
-         "벌해야 하는 종목이 꼴찌가 아니라 후보에서 사라졌다. 지금은 단위오류만 교정한 계열을 쓰고 "
-         "이음매를 건너뛰는 짝만 버린다. 문서의 절대값 50% 컷은 실측 0.2%만 걸러 사실상 무해했다. "
+         "벌해야 하는 종목이 꼴찌가 아니라 후보에서 사라졌다. 2026-09-16 부터는 단절에서 아예 자르지 "
+         "않는다(분할 이력을 모르는 편출 종목만 예전대로) — 단위오류만 교정한 계열을 쓰고 이음매를 "
+         "건너뛰는 짝만 버린다. 문서의 절대값 50% 컷은 실측 0.2%만 걸러 사실상 무해했다. "
          "⚠ 태그는 가중평균 '희석' 주식수다(시점 잔고가 아니라 기간 평균). 옵션·전환권 희석이 "
          "섞이고 소각 반영이 최대 1분기 늦다 — 원논문의 순발행과 같지 않다.")
     # 규약은 build/PREREG-2026-08-04-CUSTCONC.md 에 **자료를 모으기 전에** 확정해 커밋했다.
@@ -10245,6 +10532,16 @@ def run():
             "(2026-08-04 사용자 결정). 담으면 10종이 아니라 한 회사에 두 칸을 준 9종 바스켓이 "
             "되기 때문이다. 실측 %d회·%d규칙에서 걸렸고, 그 자리는 다음 순위 종목이 채웠다."
             % (sum(DUAL_SKIPS.values()), len(DUAL_SKIPS)),
+            # 🚨 2026-09-16 — 시총·주당지표의 밑바탕(주식수)이 바뀌었다. 판정이 아니라 사실만 적는다.
+            #   수는 손으로 적지 않고 이번 실행의 처리 결과에서 뽑는다(split_trim 참조).
+            "주식수 기준이 2026-09-16 에 바뀌었다 — 시가총액·이익수익률·배당수익률·주식수 증가율을 "
+            "쓰는 규칙은 그 전 기록과 직접 비교되지 않는다. 야후가 분사(스핀오프)를 '분할'로 적은 것을 "
+            "갈라내 주가 기준과 맞췄고(분사형·섞임 %d건 · 실측 GE 2022-12 시총 ×1.6), 합병·대량발행 "
+            "자리에서 이력을 자르던 것을 멈췄으며(자른 관측 1,947 → %d), SEC 주식수가 늦게 시작하거나 "
+            "비는 구간은 야후 기말 주식수로 메웠다 — 알파벳·엑슨모빌·블랙록은 앞 구간이 통째로 비어 "
+            "있었다(편입 종목 중 주식수가 있는 비율 2014-06 89.8%% → 96.9%%)."
+            % (sum(1 for _v in SPLIT_KIND.values() for _x in _v if _x["kind"] != "real"),
+               sum(_v[2] for _v in SPLIT_TRIMMED.values())),
         ],
         "dup": dup, "regime": regime,
         # 목록에서 뺀 규칙 — 아카이브 재현 링크(arch)를 잃지 않으려고 남긴다.

@@ -133,6 +133,10 @@ data/_incr_audit.json
 data/_hrp.json
 data/_hrp_v5.json
 
+# PREREG-2026-09-14-DNBETA — 하방 베타(E59) 얼린 측정
+data/_dnbeta.json
+data/_dnbeta_excl.json
+
 # RATEUP(2026-09-16) 얼린 측정 — build/rateup_gate.py 로 언제든 재생성된다.
 data/_rateup_gate.json
 

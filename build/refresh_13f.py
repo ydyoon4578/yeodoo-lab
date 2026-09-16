@@ -190,9 +190,12 @@ def fold_class(t):
 
 
 def fetch(url: str, timeout: int = 300) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": edgar.UA, "Accept-Encoding": "gzip"})
-    raw = urllib.request.urlopen(req, timeout=timeout).read()
-    return gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw
+    # 🚨 2026-09-14 — SEC 호출을 edgar.fetch_bytes 한 곳으로 모았다. 종전에는 여기서 요청을
+    #   직접 보내 edgar 의 초당 8회 제한과 재시도를 **둘 다 우회**했고, 2026-09-05·09-12 두 주
+    #   연속 첫 요청(인덱스 페이지)에서 429 한 번에 잡이 죽었다. 같은 복사본이 insider·
+    #   13f_history·custconc·pit_backtest 에도 있었다 — 랩의 되풀이 결함 «경로 둘».
+    #   validate_site 가 이제 edgar.py 밖의 SEC 직접 호출을 막는다.
+    return edgar.fetch_bytes(url, timeout=timeout)
 
 
 def _abs(href: str) -> str:
