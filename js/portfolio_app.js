@@ -847,8 +847,10 @@
       '<select name="mode"><option value="amt">종목당 금액(USD)</option>' +
       '<option value="w">종목당 비중(NAV %)</option></select>' +
       '<input name="val" type="number" step="any" placeholder="값"></span></label>' +
-      '<p class="pnote">줄에 수량을 적으면 그것이 이깁니다.<br>' +
-      '편출은 <b>비우면 전량</b>입니다. 정수 주식으로 <b>내림</b>합니다.</p>' +
+      '<p class="pnote">줄에 <b>티커 수량 가격</b> 순으로 적으면 그것이 가장 셉니다 ' +
+      '(예: <code>INTC US 1400 106.24</code> — 가격은 생략 가능).<br>' +
+      '편출은 <b>비우면 전량</b>입니다. 정수 주식으로 <b>내림</b>합니다. ' +
+      '쉼표는 종목 구분자라 <b>천단위 쉼표를 쓰지 마세요</b>.</p>' +
       '</div></div>');
     h.push('<datalist id="dl-t-' + slug + '">' + Object.keys(F.cons).sort().map(function (t) {
       return '<option value="' + esc(t) + '">' + esc(F.cons[t][1]) + '</option>';
@@ -1079,16 +1081,26 @@
     });
   }
 
-  /* ── 일괄 입력 해석 (2026-08-26) ──────────────────────────────────────────
-     한 줄(또는 쉼표 한 토막) = 한 종목. «티커» 또는 «티커 수량».
-     ⚠ 뒤에서 가른다 — 티커에 공백이 있다(«NVDA US»). 마지막 토막이 숫자일 때만 수량으로
-       본다. 앞에서 자르면 «NVDA US 100» 의 티커가 «NVDA» 가 된다. */
+  /* ── 일괄 입력 해석 (2026-08-26 · 가격 토막 2026-09-16) ────────────────────
+     한 줄(또는 쉼표 한 토막) = 한 종목.
+       «티커»                 수량·가격은 폼에서 정한다
+       «티커 수량»            가격은 폼에서 정한다
+       «티커 수량 가격»       ← 2026-09-16 추가
+     🚨 가격 토막을 왜 넣나. 사내 매매내역 CSV 는 종목마다 **실제 체결가**가 다른데 폼의
+       «가격» 칸은 전 종목에 하나뿐이라, 그대로 넣으면 10건이 전부 그날 종가로 기록된다.
+       랩 원장이 여태 «체결가 = 당시 종가»였던 것이 정확히 그 제약이었다 — 실체결가가
+       손에 있는데 버릴 이유가 없다.
+     ⚠ 뒤에서 가른다 — 티커에 공백이 있다(«NVDA US»). 뒤쪽 숫자 토막을 최대 둘까지 떼고
+       남은 앞부분이 티커다. 앞에서 자르면 «NVDA US 100» 의 티커가 «NVDA» 가 된다.
+     ⚠ 천단위 쉼표를 쓰지 말 것 — 쉼표는 **종목 구분자**라 «1,400» 은 두 종목이 된다. */
   function parseTickerLines(text) {
     return String(text || '').split(/[\n;,]+/).map(function (x) { return x.trim(); })
       .filter(Boolean).map(function (line) {
-        var m = line.match(/^(.*\S)\s+(-?\d+(?:\.\d+)?)$/);
-        return m ? { t: m[1].trim().toUpperCase(), q: parseFloat(m[2]) }
-                 : { t: line.toUpperCase(), q: null };
+        var m = line.match(/^(.*\S)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)$/);
+        if (m) return { t: m[1].trim().toUpperCase(), q: parseFloat(m[2]), p: parseFloat(m[3]) };
+        m = line.match(/^(.*\S)\s+(-?\d+(?:\.\d+)?)$/);
+        return m ? { t: m[1].trim().toUpperCase(), q: parseFloat(m[2]), p: null }
+                 : { t: line.toUpperCase(), q: null, p: null };
       });
   }
 
@@ -1110,8 +1122,14 @@
       perStock = (mode === 'w') ? ((A.nav > 0 && A.fx > 0) ? A.nav * val / 100 / A.fx : null) : val;
     var rows = parseTickerLines(fd.get('tks')).map(function (e) {
       var r = { t: e.t, why: '' };
-      r.p = pFix != null ? pFix : (di >= 0 ? pxAt(e.t, di) : null);
-      if (r.p != null) r.p = Math.round(r.p * 100) / 100;
+      if (e.p != null) {
+        // 줄에 적은 **실체결가**가 가장 세다. 🚨 반올림하지 않는다 — 521.095 를 521.1 로
+        // 접으면 실체결가를 쓰려고 넣은 칸이 도로 근사값이 된다.
+        r.p = e.p;
+      } else {
+        r.p = pFix != null ? pFix : (di >= 0 ? pxAt(e.t, di) : null);
+        if (r.p != null) r.p = Math.round(r.p * 100) / 100;
+      }
       var q = e.q != null ? Math.abs(e.q) : null;    // 줄에 적은 수량이 가장 세다
       if (q == null && out && perStock == null) {
         var hq = held[sname + '\u0000' + e.t] || 0;      // 편출 기본 = 전량
