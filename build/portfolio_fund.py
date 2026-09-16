@@ -813,7 +813,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         w_s = (_sq * h["px"] * fx_hold / nav_v) if (h["px"] and fx_hold and _sq) else 0.0
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wi_raw=w_i_raw,
                         wf=w_f, d=(w_f - w_i) * 100,
-                        ws=w_s, wp=w_f - w_s, dp=(w_f - w_s - w_i) * 100,
+                        ws=w_s, wp=w_f - w_s,
                         qty=h["qty"], sq=_sq, pq_real=h["qty"] - _sq,
                         pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
@@ -838,9 +838,13 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              #   패시브 = 펀드 − 전략 이므로 전략이 든 종목에서만 두 차이가 갈린다 —
              #   그 종목들이 곧 «틸트를 건 자리» 라 종목별로 보이는 것이 본론이다.
              # ⚠ 값 바로 뒤에 그 값의 비교를 둔다(패시브 → 패시브차이 · 펀드 → 차이).
-             '<th class="tnum">패시브(%%)</th><th class="tnum">패시브차이(%%p)</th>'
+             '<th class="tnum">패시브(%%)</th>'
+             '<th class="tnum" title="패시브 − 지수. 🚨 이 열만 지수를 **패시브 슬리브 '
+             '크기**에 다시 압축해 뺀다(펀드 눈금으로 빼면 늘 −전략비중이 나와 뜻이 없다). '
+             '패시브 바구니 안에서의 오버/언더다.">패시브차이(%%p)</th>'
              '<th class="tnum">전략(%%)</th>'
-             '<th class="tnum">차이(%%p)</th>'
+             '<th class="tnum" title="펀드 − 지수. 지수는 펀드 주식슬리브 눈금으로 '
+             '환산한 값이다(패시브차이 열과 눈금이 다르다).">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
              '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
              '</tr>' % slug)
@@ -873,7 +877,23 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     # 미보유 몫도 **같은 눈금(NAV 환산)** 으로 적는다 — 한 칸 안에서 두 눈금이 섞이면
     #   합이 안 맞는 것처럼 읽힌다.
     _wi_out = sum(w for _t, w, _n in only_idx) * w_stk
-    _dp = (_swp - _swi) * 100                              # 패시브 − 지수(전체)
+    # 🚨 2026-09-16 사용자 정정 — 종전 «패시브차이» 는 **눈금이 다른 둘을 뺐다.**
+    #   펀드 슬리브가 66.10%%라 지수비중도 66.10 눈금으로 환산해 두었는데, 패시브는
+    #   65.16%%(= 66.10 − 전략 0.94)짜리 바구니다. 그 둘을 빼면 결과가 언제나
+    #   **−(전략 비중)** 이 된다 — 전략 합계 열을 부호만 바꿔 되풀이한 셈이고,
+    #   «0 에 가까울수록 복제가 잘 따라간다» 는 설명도 그래서 거짓이었다.
+    #   사용자 말 그대로: «지수비중 65.16(기존 100%%를 65.16 로 압축한 비중)이랑
+    #   전략부분을 제외한 펀드부문 65.16 이랑 비교해야 한다».
+    # → 패시브 열 전용으로 지수를 **패시브 슬리브 크기(_swp)** 에 다시 압축한다.
+    #   그러면 «패시브 바구니 안에서 이 종목이 지수 대비 오버/언더인가» 가 된다.
+    # ⚠ 표의 다른 «차이» 열(펀드−지수)은 66.10 눈금 그대로 둔다 — 그쪽은 펀드 전체가
+    #   지수 대비 어디에 있느냐를 묻는 열이라 눈금이 달라야 맞다. 한 표에 눈금 둘이
+    #   있게 되므로 각 열의 title 에 무엇을 무엇과 뺐는지 적는다.
+    for _r in tbl:
+        _r["wi_p"] = _r["wi_raw"] * _swp
+        _r["dp"] = (_r["wp"] - _r["wi_p"]) * 100
+    _swi_p = sum(_r["wi_p"] for _r in tbl)
+    _dp = (_swp - _swi_p) * 100                            # 패시브 − 지수(패시브 눈금)
     _ds = (_swf_s - _swi_s) * 100                          # 펀드 − 지수(전략 보유 종목만)
 
     def _tot(v, diff=None, base=None, tip=None):
@@ -899,8 +919,11 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     tip="이 표는 보유 종목만 담는다. 나머지 %s 는 지수에 있는데 안 든 %d종이다."
                         % (pct(_wi_out, 2), len(only_idx)))
              + _tot(_swf)                                   # 펀드비중
-             + _tot(_swp, _dp, "지수 %s 대비" % pct(_swi, 2),
-                    "패시브 합계 − 지수 합계. 0 에 가까울수록 복제가 지수를 잘 따라간다.")
+             + _tot(_swp, _dp, "지수(패시브 눈금) %s 대비" % pct(_swi_p, 2),
+                    "지수를 패시브 슬리브 크기(%s)에 다시 압축해 뺀 값이다. 남는 %+.2f%%p 는 "
+                    "«지수에 있는데 안 든 종목» 몫이다 — 0 에 가까울수록 복제가 촘촘하다. "
+                    "펀드 눈금(%s)으로 빼면 언제나 −(전략 비중)이 나와 뜻이 없다."
+                    % (pct(_swp, 2), _dp, pct(_swi, 2)))
              + ('<th class="tnum"><b>%+.2f</b></th>' % _dp)          # 패시브차이 합계
              + _tot(_sws, _ds, "그 %d종 지수 대비" % len(_srows),
                     "전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s. "
