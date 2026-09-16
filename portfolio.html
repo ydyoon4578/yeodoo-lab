@@ -140,8 +140,18 @@
 .pftabs{margin:0 0 18px}
 /* 🚨 2026-08-26 사용자 «전략 성과 기여 열 너비 특히 늘려줘» — 1.4:1 → 1.1:1.
    왼쪽이 여전히 조금 넓은 이유: 보유 vs 지수가 13열이라 같은 폭이면 그쪽만 늘 잘린다.
-   오른쪽 전략 표(7열)는 1.1:1 에서 가로 스크롤 없이 들어간다. */
-.fsplit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;align-items:start}
+   오른쪽 전략 표(7열)는 1.1:1 에서 가로 스크롤 없이 들어간다.
+   🚨 2026-09-16 사용자 «조금 더 열너비 늘려주고» — 1.1:1 → 1:1.
+   그 사이에 오른쪽이 무거워졌다. 매매 원장이 **10열**이 됐고(전략·티커·수량·체결가·
+   금액·비중·현재가·평가손익·수익률·편집) 일괄 입력 폼과 미리보기 표까지 그 열에 있다.
+   위 주석의 «오른쪽은 7열» 이라는 전제가 더는 참이 아니라서 1.1 의 근거가 사라졌다.
+   ⚠ 왼쪽을 더 줄이지는 않는다 — 13열이라 1 미만으로 내리면 그쪽이 가로로 잘린다. */
+.fsplit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start}
+/* 매도 줄 — 평가가 아니라 «실현» 을 적는 줄이라 눈으로 갈리게 한다(2026-09-16).
+   ⚠ 색으로만 가르지 않는다. 칸 안에 «실현» 배지가 같이 있고 title 에 원가·수량이 있다. */
+.sellrow td{background:color-mix(in srgb,var(--panel-2,#f2f0eb) 55%,transparent)}
+.rlz{font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--muted);
+     border:1px solid var(--line);border-radius:2px;padding:0 3px;vertical-align:1px}
 .fcol{min-width:0}
 /* 2026-08-26 사용자 지시 — 열 사이에서 마지막으로 짜낸다: 12+3+12=27px → 6+1+6=13px.
    ⚠ 선을 없애지는 않는다. 두 열이 붙으면 오른쪽 표의 첫 열이 왼쪽 표의 마지막 열처럼

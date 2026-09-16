@@ -867,14 +867,16 @@
       // 진입 시점별 묶음(2026-08-20 사용자 지시 «DB 형태 말고 진입 시점별로 딱 보기 좋게»).
       // 같은 날 매매를 한 묶음으로 — 머리에 날짜·건수·투입금액·현재 평가손익 합.
       // 최신이 위로 온다(원장은 과거를 뒤지는 표가 아니라 «지금» 을 보는 표다).
+      annotateRealized(trs);            // 매도 줄에 실현손익·실현수익률을 달아 둔다
       var byD = {};
       trs.forEach(function (t) { (byD[t.dt] = byD[t.dt] || []).push(t); });
       Object.keys(byD).sort().reverse().forEach(function (d0) {
-        var g = byD[d0], inv = 0, pnl = 0, np = 0;
+        var g = byD[d0], inv = 0, pnl = 0, np = 0, real = 0, nReal = 0;
         g.forEach(function (t) {
           var p = pxLeI(t.t, asofI);
           inv += t.q * t.p;
           if (p != null) pnl += t.q * (p - t.p); else np++;
+          if (t.rp != null) { real += t.rp; nReal++; }
         });
         // 그날 이 매매들이 펀드의 몇 %였나 — 묶음 머리에 합을 적는다(개별 열의 합계).
         var gw = 0, gwOK = false;
@@ -886,7 +888,11 @@
           '<span>' + g.length + '건 · 투입 ' + num(inv, 0) + ' USD' +
           (gwOK ? ' · NAV 대비 ' + pct(gw / 100, 2, true) : '') + '</span>' +
           '<span class="' + sgn(pnl) + '">평가 ' + (pnl > 0 ? '+' : '') + num(pnl, 0) + ' USD' +
-          (np ? ' (가격 없는 ' + np + '건 제외)' : '') + '</span></div>');
+          (np ? ' (가격 없는 ' + np + '건 제외)' : '') + '</span>' +
+          // 실현은 «평가» 와 다른 것을 잰다 — 평가는 지금 값이고 실현은 판 순간 확정된 돈이다.
+          // 둘을 더하지 않는다(더하면 같은 몫을 두 번 센다). 매도가 있는 묶음에만 적는다.
+          (nReal ? '<span class="' + sgn(real) + '">실현 ' + (real > 0 ? '+' : '') +
+                   num(real, 0) + ' USD (' + nReal + '건)</span>' : '') + '</div>');
         // 🚨 2026-08-26 사용자 «해당 일자 기준 종목별 비중(해당일자 NAV 대비) 열 추가».
         //   그 매매가 그날 펀드의 몇 %였나 — 손익만으로는 «얼마나 크게 걸었나» 가 안 보인다.
         h.push('<div class="tblwrap"><table class="big"><thead><tr><th>전략</th><th>티커</th>' +
@@ -897,7 +903,17 @@
           var p = pxLeI(t.t, asofI);
           var pnl1 = p != null ? t.q * (p - t.p) : null;
           var r1 = (p != null && t.p > 0 && t.q > 0) ? (p / t.p - 1) : null;
-          h.push('<tr><td>' + esc(t.s) + (t.src === 'web' ? ' <span class="badge web">웹</span>' : '') + '</td>' +
+          var sell = t.q < 0, tip = '';
+          if (sell) {
+            // 매도 줄은 «실현» 으로 갈아 끼운다(위 annotateRealized 주석 참조).
+            pnl1 = t.rp; r1 = t.rr;
+            tip = (t.ravg != null)
+              ? '실현 — 이동평균 원가 ' + num(t.ravg) + ' 대비 ' + num(t.rn, 0) + '주' +
+                (t.rn < -t.q ? ' (순보유 초과 ' + num(-t.q - t.rn, 0) + '주 제외)' : '')
+              : '이 전략에 이 종목의 매수 기록이 없어 원가를 못 잡습니다';
+          }
+          h.push('<tr' + (sell ? ' class="sellrow"' : '') + '><td>' +
+            esc(t.s) + (t.src === 'web' ? ' <span class="badge web">웹</span>' : '') + '</td>' +
             '<td class="tk">' + esc(t.t) + '</td>' +
             '<td class="tnum">' + num(t.q, 0) + '</td><td class="tnum">' + num(t.p) + '</td>' +
             '<td class="tnum">' + num(t.q * t.p, 0) + '</td>' +
@@ -906,8 +922,10 @@
               return w != null ? pct(w / 100, 2, true) : '—';
             })() + '</td>' +
             '<td class="tnum">' + (p != null ? num(p) : '—') + '</td>' +
-            '<td class="tnum ' + sgn(pnl1) + '">' + (pnl1 != null ? num(pnl1, 0) : '—') + '</td>' +
-            '<td class="tnum ' + sgn(r1) + '">' + (r1 != null ? pct(r1, 1, true) : '—') + '</td>' +
+            '<td class="tnum ' + sgn(pnl1) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
+              (pnl1 != null ? (sell ? '<span class="rlz">실현</span> ' : '') + num(pnl1, 0) : '—') + '</td>' +
+            '<td class="tnum ' + sgn(r1) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
+              (r1 != null ? pct(r1, 1, true) : '—') + '</td>' +
             '<td class="rowops">' + (t.src === 'web'
               ? '<button class="sb" data-edit="' + esc(t.id) + '">✎</button><button class="sb warn" data-del="' + esc(t.id) + '">✕</button>'
               : '') + '</td></tr>');
@@ -1093,6 +1111,38 @@
      ⚠ 뒤에서 가른다 — 티커에 공백이 있다(«NVDA US»). 뒤쪽 숫자 토막을 최대 둘까지 떼고
        남은 앞부분이 티커다. 앞에서 자르면 «NVDA US 100» 의 티커가 «NVDA» 가 된다.
      ⚠ 천단위 쉼표를 쓰지 말 것 — 쉼표는 **종목 구분자**라 «1,400» 은 두 종목이 된다. */
+  /* ── 매도의 «실현» (2026-09-16) ────────────────────────────────────────────
+     사용자 지시 — «9월 10일 매도 부분 수익률도 나오게 해줘. sell 이니까 빠진만큼 + 해주면 될듯».
+
+     왜 필요한가. 행의 «평가손익» 은 q×(현재가−체결가) 다. 매도(q<0)에서 그 값은
+     «팔고 나서 얼마나 덜 손해봤나» 이지 **팔아서 번 돈이 아니다**. 그리고 수익률 칸은
+     `t.q > 0` 일 때만 채우고 있어 **매도 줄이 통째로 «—»** 였다(09-10 매도 10건 실측).
+     → 매도 줄에는 «실현» 을 적는다: 이동평균 원가 대비 얼마에 팔았나.
+
+     ⚠ 전략×종목으로 따로 센다 — 같은 종목을 두 전략이 들면 원가가 섞이면 안 된다.
+     ⚠ **이동평균 원가**다(FIFO 아님). 원장이 로트를 안 들고 있어 FIFO 를 만들 수 없다.
+     ⚠ 순보유를 넘겨 판 몫은 원가가 없다 — 그 몫은 실현에서 뺀다(rn 에 실제로 센 수량을
+       적어 두고 화면이 «순보유 초과분 제외» 를 말할 수 있게 한다). */
+  function annotateRealized(trs) {
+    var pos = {};
+    trs.slice().sort(function (a, b) { return a.dt < b.dt ? -1 : a.dt > b.dt ? 1 : 0; })
+      .forEach(function (t) {
+        t.rp = t.rr = t.ravg = null; t.rn = 0;
+        var k = t.s + '\u0000' + t.t, P = pos[k] || (pos[k] = { q: 0, cost: 0 });
+        if (t.q > 0) { P.q += t.q; P.cost += t.q * t.p; return; }
+        if (!(t.q < 0)) return;
+        var avg = P.q > 0 ? P.cost / P.q : null;
+        var n = Math.min(-t.q, P.q);
+        if (avg != null && n > 0) {
+          t.rp = n * (t.p - avg);
+          t.rr = avg > 0 ? (t.p / avg - 1) : null;
+          t.ravg = avg; t.rn = n;
+          P.cost -= n * avg; P.q -= n;
+        }
+      });
+    return trs;
+  }
+
   function parseTickerLines(text) {
     return String(text || '').split(/[\n;,]+/).map(function (x) { return x.trim(); })
       .filter(Boolean).map(function (line) {

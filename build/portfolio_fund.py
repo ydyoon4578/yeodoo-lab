@@ -813,7 +813,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         w_s = (_sq * h["px"] * fx_hold / nav_v) if (h["px"] and fx_hold and _sq) else 0.0
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wi_raw=w_i_raw,
                         wf=w_f, d=(w_f - w_i) * 100,
-                        ws=w_s, wp=w_f - w_s,
+                        ws=w_s, wp=w_f - w_s, dp=(w_f - w_s - w_i) * 100,
                         qty=h["qty"], sq=_sq, pq_real=h["qty"] - _sq,
                         pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
@@ -832,7 +832,14 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              # ⚠ 2026-08-26 사용자 «좁으니까 이름 열은 빼» — 티커가 이미 종목을 가리키고, 이름은
              #   말줄임으로 6~8자만 보이던 열이라 폭만 먹고 있었다.
              '<th>티커</th><th>섹터</th><th class="tnum">지수비중(%%)</th><th class="tnum">펀드비중(%%)</th>'
-             '<th class="tnum">패시브(%%)</th><th class="tnum">전략(%%)</th>'
+             # 🚨 2026-09-16 사용자 «패시브는 패시브 비중이랑(펀드에서 액티브 빼면 될듯)
+             #   비교 되게끔». 종전에는 «차이(%%p)» 가 **펀드−지수** 하나뿐이라, 복제가
+             #   지수를 얼마나 따라가는지는 합계 행에서만 볼 수 있었고 종목별로는 못 봤다.
+             #   패시브 = 펀드 − 전략 이므로 전략이 든 종목에서만 두 차이가 갈린다 —
+             #   그 종목들이 곧 «틸트를 건 자리» 라 종목별로 보이는 것이 본론이다.
+             # ⚠ 값 바로 뒤에 그 값의 비교를 둔다(패시브 → 패시브차이 · 펀드 → 차이).
+             '<th class="tnum">패시브(%%)</th><th class="tnum">패시브차이(%%p)</th>'
+             '<th class="tnum">전략(%%)</th>'
              '<th class="tnum">차이(%%p)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
              '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
@@ -894,6 +901,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              + _tot(_swf)                                   # 펀드비중
              + _tot(_swp, _dp, "지수 %s 대비" % pct(_swi, 2),
                     "패시브 합계 − 지수 합계. 0 에 가까울수록 복제가 지수를 잘 따라간다.")
+             + ('<th class="tnum"><b>%+.2f</b></th>' % _dp)          # 패시브차이 합계
              + _tot(_sws, _ds, "그 %d종 지수 대비" % len(_srows),
                     "전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s. "
                     "전략 합계에서 지수를 직접 빼지 않는다 — 전략은 패시브 위에 얹는 틸트다."
@@ -918,14 +926,16 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         #   열을 없애면서 이름을 통째로 잃으면 «이게 무슨 회사였지» 를 못 푼다.
         H.append('<tr data-n="%s"><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
                  '<td class="tnum" title="지수 원 비중 %s (100%% 눈금)">%s</td><td class="tnum"%s>%s</td>'
-                 '<td class="tnum">%s</td><td class="tnum %s">%s</td>'
+                 '<td class="tnum">%s</td><td class="tnum %s">%+.2f</td>'
+                 '<td class="tnum %s">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
                  '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
                  '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
                  % (esc(r["name"][:40]), esc(r["name"][:40]),
                     esc(r["t"]), _off, esc(sec_short(r["gics"])),
                     pct(r["wi_raw"], 2), pctn(r["wi"], 2), _bg, pctn(r["wf"], 2),
-                    pctn(r["wp"], 2), ("tk" if r["ws"] else ""), (pctn(r["ws"], 2) if r["ws"] else "—"),
+                    pctn(r["wp"], 2), cls_sign(r["dp"]), r["dp"],
+                    ("tk" if r["ws"] else ""), (pctn(r["ws"], 2) if r["ws"] else "—"),
                     cls_sign(r["d"]), r["d"],
                     num(r["qty"], 0), num(r["pq_real"], 0),
                     ("tk" if r["sq"] else ""), (num(r["sq"], 0) if r["sq"] else "—"),
