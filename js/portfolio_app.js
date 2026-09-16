@@ -1251,6 +1251,8 @@
     var cp = calcPerf(slug, trs, asofI);
     var perf = cp.byS, sk = cp.skipped;
 
+    h.push('<div class="prbar"><button class="sb" id="pdf-' + slug + '">전략 성과 PDF</button>' +
+      '<span class="pnote">브라우저 인쇄 대화상자에서 «대상 → PDF로 저장» 을 고르면 됩니다.</span></div>');
     var cc = crossCheck(slug);
     if (cc.n) {
       h.push(cc.skip ? '<p class="pnote">교차검증 생략 — ' + esc(cc.skip) + '</p>'
@@ -1373,6 +1375,8 @@
     });
     var _bars = box._pfBars;
     box.innerHTML = h.join('');
+    var _pdf = el('pdf-' + slug);
+    if (_pdf) _pdf.addEventListener('click', function () { printReport(slug); });
     box.querySelectorAll('.sstat').forEach(function (b2) {
       b2.addEventListener('click', function () {
         var m = S.doc.strategies[b2.dataset.s] = S.doc.strategies[b2.dataset.s] || {};
@@ -1715,15 +1719,163 @@
       setTot(m.st, tb0.st + dwTot);
       setTot(m.fpas, tb0.fpas - dwTot);
       setTot(m.dpas, tb0.dpas - dwTot, true);
-      // ⚠ 전략 합계 칸의 «그 N종 지수 대비» 밑줄은 지운다 — 게시 시점 구성으로 계산된
-      //   수라 원장이 바뀌면 더는 맞지 않는다. 틀린 설명을 남기느니 없앤다.
-      var cell = tot.children[m.st];
-      if (cell) {
-        var d1 = cell.querySelector('.totd'), d2 = cell.querySelector('.totb');
-        if (d1) d1.remove();
-        if (d2) d2.remove();
-      }
     }
+    /* 🚨 2026-09-17 사용자 «2A81 도 그 10종 지수 대비 이런 거 없애줘. 2Z30 이랑 통일해».
+       ⚠ 조건 없이 지운다. 종전에는 «원장이 바뀐 경우» 에만 지워서, 원장과 씨앗이 같은
+         펀드(2A81, Δ=0)에는 그대로 남았다 — 같은 표인데 두 펀드가 다른 것을 말했다.
+         생성기에서도 뺐지만(다음 게시부터) 이미 게시된 조각에도 걸려야 한다. */
+    var stc = tot.children[m.st];
+    if (stc) {
+      var d1 = stc.querySelector('.totd'), d2 = stc.querySelector('.totb');
+      if (d1) d1.remove();
+      if (d2) d2.remove();
+    }
+  }
+
+  /* ── 전략 성과 리포트(인쇄 → PDF) (2026-09-17) ────────────────────────────
+     사용자 «둘 다 전략 성과 PDF로 내용 깔끔하게 뽑는 버튼도 만들어줘. 내용에 전략 비중도
+     포함되어야 함(현재 S&P 0.43%, 나스닥 0.54%)».
+
+     🚨 PDF 라이브러리를 끌어오지 않는다. 이 페이지는 사내 PC 에서 열리고, 외부 CDN 을
+       새로 부르는 것은 이 저장소가 지켜 온 «로컬에서 임의 외부 호출 최소화» 와 어긋난다.
+       브라우저의 인쇄 → «PDF 로 저장» 이면 의존 없이 같은 결과가 나온다.
+     🔑 전략 비중은 **② 표의 합계 칸에서 읽는다.** 다시 계산하지 않는다 — 그 칸은 이미
+       웹 원장을 반영해 밀어 둔 값이고, 리포트가 화면과 한 글자라도 다르면 둘 중 어느
+       것을 믿어야 할지 알 수 없게 된다. 종목별 비중도 같은 표의 spp 로 만든다.
+     ⚠ 성과 수치는 renderPerf 와 **같은 calcPerf** 를 부른다(엔진 두 벌 금지).
+     ⚠ 인쇄가 끝나면 리포트 DOM 을 지운다. 남겨 두면 다음 렌더에서 두 벌이 된다. */
+  function sppMap(slug) {
+    var tb = document.getElementById('tb-' + slug), out = {};
+    if (!tb) return out;
+    Array.prototype.forEach.call(tb.querySelectorAll('tbody tr[data-spp]'), function (tr) {
+      var t = tickerOf(tr), v = parseFloat(tr.getAttribute('data-spp'));
+      if (t && isFinite(v) && v) out[t] = v;
+    });
+    return out;
+  }
+  function stratTotalW(slug) {
+    var tb = document.getElementById('tb-' + slug);
+    if (!tb) return null;
+    var m = colMap(tb), tot = tb.querySelector('thead tr.totrow');
+    if (!tot || m.st == null) return null;
+    return cellNum(tot.children[m.st]);
+  }
+  function fmtLocal(d) {
+    function z(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) +
+           ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  }
+  function printReport(slug) {
+    var F = PF.funds[slug], trs = mergedTrades(slug);
+    if (!trs.length) { alert('매매가 없어 낼 리포트가 없습니다.'); return; }
+    var asofI = dLe(F.asof_us), cp = calcPerf(slug, trs, asofI), perf = cp.byS;
+    var spp = sppMap(slug), wTot = stratTotalW(slug);
+    var h = [];
+    h.push('<div class="prh"><div class="prt">전략 성과</div>' +
+      '<div class="prs">' + esc(F.label) + ' <span class="tk">' + esc(F.fund) + '</span></div></div>');
+    h.push('<table class="prmeta"><tbody><tr>' +
+      '<td>기준일(미국 종가)</td><td class="tnum">' + esc(F.asof_us) + '</td>' +
+      '<td>NAV</td><td class="tnum">' + num(F.nav / 1e8, 1) + '억원</td>' +
+      '<td>환율</td><td class="tnum">' + num(F.fx, 2) + '</td>' +
+      // ⚠ toISOString 은 UTC 라 한국에서 날짜가 하루 어긋난다(실측: KST 09-17 08:09 을
+      //   «2026-09-16 23:09» 로 찍었다). 리포트에 박히는 시각이라 현지시로 쓴다.
+      '<td>출력</td><td class="tnum">' + esc(fmtLocal(new Date())) + '</td>' +
+      '</tr></tbody></table>');
+    // 요약 — 전략 비중이 첫 줄이다(사용자 요구).
+    var totExc = 0, totPnl = 0, totInv = 0, nS = 0;
+    Object.keys(perf).forEach(function (k) {
+      var L = perf[k].last;
+      if (!L) return;
+      nS++; totExc += L.pnl - L.bm; totPnl += L.pnl; totInv += L.inv;
+    });
+    h.push('<div class="prcards">' +
+      '<div class="prc"><div class="prk">전략 비중 (NAV 기준)</div><div class="prv">' +
+        (wTot == null ? '—' : num(wTot, 2) + '%') + '</div></div>' +
+      '<div class="prc"><div class="prk">전략 수</div><div class="prv">' + nS + '</div></div>' +
+      '<div class="prc"><div class="prk">매수원금</div><div class="prv">' + num(totInv, 0) + '</div></div>' +
+      '<div class="prc"><div class="prk">평가손익</div><div class="prv ' + sgn(totPnl) + '">' +
+        num(totPnl, 0) + '</div></div>' +
+      '<div class="prc"><div class="prk">BM 대비 초과</div><div class="prv ' + sgn(totExc) + '">' +
+        num(totExc, 0) + '</div></div>' +
+      '<div class="prc"><div class="prk">NAV 기여</div><div class="prv ' + sgn(totExc) + '">' +
+        num(totExc * F.fx / F.nav * 1e4, 1) + ' bp</div></div></div>');
+    // 전략별
+    h.push('<h4>전략별</h4><table class="prtbl"><thead><tr><th>전략</th>' +
+      '<th class="tnum">비중(NAV)</th><th class="tnum">종목</th><th class="tnum">매수원금</th>' +
+      '<th class="tnum">평가손익</th><th class="tnum">수익률</th><th class="tnum">BM</th>' +
+      '<th class="tnum">초과</th><th class="tnum">기여(bp)</th></tr></thead><tbody>');
+    Object.keys(perf).sort().forEach(function (sname) {
+      var P = perf[sname], L = P.last;
+      if (!L) return;
+      var wS = 0, known = false;
+      P.rows.forEach(function (r) { if (spp[r.t]) { wS += r.q / spp[r.t]; known = true; } });
+      h.push('<tr><td>' + esc(sname) + '</td>' +
+        '<td class="tnum">' + (known ? num(wS, 2) : '—') + '</td>' +
+        '<td class="tnum">' + P.rows.length + '</td>' +
+        '<td class="tnum">' + num(L.inv, 0) + '</td>' +
+        '<td class="tnum ' + sgn(L.pnl) + '">' + num(L.pnl, 0) + '</td>' +
+        '<td class="tnum ' + sgn(L.ret) + '">' + (L.ret == null ? '—' : pct(L.ret, 2, true)) + '</td>' +
+        '<td class="tnum">' + (L.bmRet == null ? '—' : pct(L.bmRet, 2, true)) + '</td>' +
+        '<td class="tnum ' + sgn(L.pnl - L.bm) + '">' + num(L.pnl - L.bm, 0) + '</td>' +
+        '<td class="tnum ' + sgn(L.pnl - L.bm) + '">' + num((L.pnl - L.bm) * F.fx / F.nav * 1e4, 1) + '</td></tr>');
+    });
+    h.push('<tr class="prtot"><td>합계</td><td class="tnum">' + (wTot == null ? '—' : num(wTot, 2)) +
+      '</td><td class="tnum"></td><td class="tnum">' + num(totInv, 0) + '</td>' +
+      '<td class="tnum ' + sgn(totPnl) + '">' + num(totPnl, 0) + '</td><td class="tnum"></td>' +
+      '<td class="tnum"></td><td class="tnum ' + sgn(totExc) + '">' + num(totExc, 0) + '</td>' +
+      '<td class="tnum ' + sgn(totExc) + '">' + num(totExc * F.fx / F.nav * 1e4, 1) + '</td></tr>');
+    h.push('</tbody></table>');
+    // 종목별
+    Object.keys(perf).sort().forEach(function (sname) {
+      var P = perf[sname];
+      if (!P.rows.length) return;
+      h.push('<h4>' + esc(sname) + ' — 종목별</h4><table class="prtbl"><thead><tr>' +
+        '<th>티커</th><th class="tnum">순수량</th><th class="tnum">비중(NAV)</th>' +
+        '<th class="tnum">현재가</th><th class="tnum">매수원금</th><th class="tnum">평가손익</th>' +
+        '<th class="tnum">수익률</th><th class="tnum">초과</th></tr></thead><tbody>');
+      P.rows.forEach(function (r) {
+        h.push('<tr><td class="tk">' + esc(r.t) + (r.warn ? ' ⚠' : '') + '</td>' +
+          '<td class="tnum">' + num(r.q, 0) + '</td>' +
+          '<td class="tnum">' + (spp[r.t] ? num(r.q / spp[r.t], 2) : '—') + '</td>' +
+          '<td class="tnum">' + num(r.px, 2) + '</td>' +
+          '<td class="tnum">' + num(r.inv, 0) + '</td>' +
+          '<td class="tnum ' + sgn(r.pnl) + '">' + num(r.pnl, 0) + '</td>' +
+          '<td class="tnum ' + sgn(r.ret) + '">' + (r.ret == null ? '—' : pct(r.ret, 2, true)) + '</td>' +
+          '<td class="tnum ' + sgn(r.exc) + '">' + num(r.exc, 0) + '</td></tr>');
+      });
+      h.push('</tbody></table>');
+    });
+    var sk = cp.skipped, ex = [];
+    if (sk.old) ex.push('가격 패널 이전 ' + sk.old + '건');
+    if (sk.future) ex.push('기준일 이후 ' + sk.future + '건');
+    if (sk.nopx) ex.push('가격 없는 종목 ' + sk.nopx + '건');
+    h.push('<div class="prnote"><b>정의·한계</b><br>' +
+      '· 금액 단위 USD. 비중은 <b>NAV 기준</b>이고 ② 포트폴리오 표의 값과 같다(웹 원장 반영).<br>' +
+      '· 체결가는 당시 종가다 — 실제 체결가가 아닌 건이 섞여 있어 수익률은 근사치다.<br>' +
+      '· BM = 같은 날 같은 금액을 지수에 넣었을 때의 손익(매매 시점 일치). 초과 = 전략 − BM.<br>' +
+      '· NAV 기여(bp) = 초과(USD) × 기준일 환율 ÷ NAV × 10,000.<br>' +
+      '· 배당 미반영(종가는 수정주가가 아니다). ⚠ 는 보유 중 하루 ±' +
+      num(PF.guard * 100, 0) + '% 초과 변동 — 분할 의심.<br>' +
+      (ex.length ? '· 성과 계산 제외: ' + esc(ex.join(' · ')) + '<br>' : '') +
+      '· 기준일 ' + esc(F.asof_us) + ' · 조각 생성 ' + esc(PF.gen) + '</div>');
+
+    var box = document.getElementById('pfprint');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'pfprint';
+      document.body.appendChild(box);
+    }
+    box.innerHTML = h.join('');
+    document.body.classList.add('pf-printing');
+    var done = function () {
+      document.body.classList.remove('pf-printing');
+      if (box && box.parentNode) box.parentNode.removeChild(box);
+      window.removeEventListener('afterprint', done);
+    };
+    window.addEventListener('afterprint', done);
+    // 인쇄 대화상자를 안 띄우고 닫는 브라우저 대비 — afterprint 가 안 오면 손으로 치운다.
+    setTimeout(function () { if (document.body.classList.contains('pf-printing')) done(); }, 60000);
+    window.print();
   }
 
   // ── 조립 ────────────────────────────────────────────────────────────────
