@@ -1793,13 +1793,15 @@
       nS++; totExc += L.pnl - L.bm; totPnl += L.pnl; totInv += L.inv;
     });
     h.push('<div class="prcards">' +
-      '<div class="prc"><div class="prk">전략 비중 (NAV 기준)</div><div class="prv">' +
+      // ⚠ 라벨을 짧게 — 세로 A4(인쇄 폭 188mm)에서 여섯 칸이 한 줄에 들어와야 한다.
+      //   길면 줄바꿈이 생겨 카드 높이가 배가 되고, 그만큼 한 장에서 밀려난다.
+      '<div class="prc"><div class="prk">전략 비중(NAV)</div><div class="prv">' +
         (wTot == null ? '—' : num(wTot, 2) + '%') + '</div></div>' +
       '<div class="prc"><div class="prk">전략 수</div><div class="prv">' + nS + '</div></div>' +
       '<div class="prc"><div class="prk">매수원금</div><div class="prv">' + num(totInv, 0) + '</div></div>' +
       '<div class="prc"><div class="prk">평가손익</div><div class="prv ' + sgn(totPnl) + '">' +
         num(totPnl, 0) + '</div></div>' +
-      '<div class="prc"><div class="prk">BM 대비 초과</div><div class="prv ' + sgn(totExc) + '">' +
+      '<div class="prc"><div class="prk">초과(vs BM)</div><div class="prv ' + sgn(totExc) + '">' +
         num(totExc, 0) + '</div></div>' +
       '<div class="prc"><div class="prk">NAV 기여</div><div class="prv ' + sgn(totExc) + '">' +
         num(totExc * F.fx / F.nav * 1e4, 1) + ' bp</div></div></div>');
@@ -1819,31 +1821,13 @@
         .map(function (c) { return [PF.dates[c[0]], (c[1] - c[2]) / c[3] * 100]; });
       if (pts.length) exSeries.push([sname, pts, PRC[exSeries.length % PRC.length]]);
     });
+    // ⚠ «전략 합산 vs 지수» 차트는 뺐다(2026-09-17 사용자 «이 차트는 필요 없어»).
+    //   초과수익 그림의 0선이 이미 지수라, 같은 이야기를 두 번 하고 있었다.
     if (exSeries.length)
       h.push('<h4>전략별 누적 초과수익 (%, 매수원금 대비 · 0선 = 지수와 같은 성과)</h4>' +
         '<div class="prch">' +
         svgLines(exSeries, exSeries.map(function (x) { return x[0].slice(0, 16); }),
-                 760, 200, '#b02a37') + '</div>');
-    // 합산 전략 vs 지수 — 날짜별로 전 전략을 더한 뒤 매수원금으로 나눈다.
-    var agg = {};
-    Object.keys(perf).forEach(function (sname) {
-      perf[sname].curve.forEach(function (c) {
-        var a = agg[c[0]] = agg[c[0]] || [0, 0, 0];
-        a[0] += c[1]; a[1] += c[2]; a[2] += c[3];
-      });
-    });
-    var ks = Object.keys(agg).map(Number).sort(function (a, b) { return a - b; });
-    var sCur = [], bCur = [];
-    ks.forEach(function (i) {
-      var a = agg[i];
-      if (!a[2]) return;
-      sCur.push([PF.dates[i], a[0] / a[2] * 100]);
-      bCur.push([PF.dates[i], a[1] / a[2] * 100]);
-    });
-    if (sCur.length)
-      h.push('<h4>전략 합산 vs 지수 (%, 매수원금 대비)</h4><div class="prch">' +
-        svgLines([['전략', sCur, '#1a4e8a'], ['지수', bCur, '#b02a37']],
-                 ['전략', '지수(PR)'], 760, 200) + '</div>');
+                 760, 168, '#b02a37') + '</div>');
 
     // 전략별
     h.push('<h4>전략별</h4><table class="prtbl"><thead><tr><th>전략</th>' +
@@ -1871,26 +1855,33 @@
       '<td class="tnum"></td><td class="tnum ' + sgn(totExc) + '">' + num(totExc, 0) + '</td>' +
       '<td class="tnum ' + sgn(totExc) + '">' + num(totExc * F.fx / F.nav * 1e4, 1) + '</td></tr>');
     h.push('</tbody></table>');
-    // 종목별
-    Object.keys(perf).sort().forEach(function (sname) {
-      var P = perf[sname];
-      if (!P.rows.length) return;
-      h.push('<h4>' + esc(sname) + ' — 종목별</h4><table class="prtbl"><thead><tr>' +
+    /* 종목별 — 전략마다 표를 따로 내지 않는다(2026-09-17 «가급적 한 페이지에»).
+       전략이 둘이면 머리글 줄과 열 이름 줄이 두 벌씩 붙어 그것만으로 20mm 가까이
+       먹었다. 한 장으로 합치고 «전략» 열을 둔다 — 전략이 하나인 펀드에서는 열이
+       하나 늘 뿐이고, 둘 이상이면 자리를 아끼면서 비교도 쉬워진다.
+       ⚠ 전략 이름은 첫 줄에만 적는다. 같은 값을 세로로 반복하면 눈이 그 열을 읽게 된다. */
+    var anyRow = Object.keys(perf).some(function (k) { return perf[k].rows.length; });
+    if (anyRow) {
+      h.push('<h4>종목별</h4><table class="prtbl"><thead><tr><th>전략</th>' +
         '<th>티커</th><th class="tnum">순수량</th><th class="tnum">비중(NAV)</th>' +
         '<th class="tnum">현재가</th><th class="tnum">매수원금</th><th class="tnum">평가손익</th>' +
         '<th class="tnum">수익률</th><th class="tnum">초과</th></tr></thead><tbody>');
-      P.rows.forEach(function (r) {
-        h.push('<tr><td class="tk">' + esc(r.t) + (r.warn ? ' ⚠' : '') + '</td>' +
-          '<td class="tnum">' + num(r.q, 0) + '</td>' +
-          '<td class="tnum">' + (spp[r.t] ? num(r.q / spp[r.t], 2) : '—') + '</td>' +
-          '<td class="tnum">' + num(r.px, 2) + '</td>' +
-          '<td class="tnum">' + num(r.inv, 0) + '</td>' +
-          '<td class="tnum ' + sgn(r.pnl) + '">' + num(r.pnl, 0) + '</td>' +
-          '<td class="tnum ' + sgn(r.ret) + '">' + (r.ret == null ? '—' : pct(r.ret, 2, true)) + '</td>' +
-          '<td class="tnum ' + sgn(r.exc) + '">' + num(r.exc, 0) + '</td></tr>');
+      Object.keys(perf).sort().forEach(function (sname) {
+        perf[sname].rows.forEach(function (r, i) {
+          h.push('<tr' + (i ? '' : ' class="prgrp"') + '><td>' +
+            (i ? '' : esc(sname)) + '</td>' +
+            '<td class="tk">' + esc(r.t) + (r.warn ? ' ⚠' : '') + '</td>' +
+            '<td class="tnum">' + num(r.q, 0) + '</td>' +
+            '<td class="tnum">' + (spp[r.t] ? num(r.q / spp[r.t], 2) : '—') + '</td>' +
+            '<td class="tnum">' + num(r.px, 2) + '</td>' +
+            '<td class="tnum">' + num(r.inv, 0) + '</td>' +
+            '<td class="tnum ' + sgn(r.pnl) + '">' + num(r.pnl, 0) + '</td>' +
+            '<td class="tnum ' + sgn(r.ret) + '">' + (r.ret == null ? '—' : pct(r.ret, 2, true)) + '</td>' +
+            '<td class="tnum ' + sgn(r.exc) + '">' + num(r.exc, 0) + '</td></tr>');
+        });
       });
       h.push('</tbody></table>');
-    });
+    }
     /* 🚨 2026-09-17 사용자 «정의·한계 이 부분은 빼줘» — 통째로 뺀다.
        ⚠ 다만 **그 리포트에서 실제로 일어난 일**은 남긴다. 둘 다 평소에는 안 나오고,
          나올 때는 숫자 자체의 뜻이 달라지는 것들이다:
