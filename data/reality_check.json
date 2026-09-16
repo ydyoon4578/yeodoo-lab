@@ -6,66 +6,66 @@
   "rows": [
    {
     "sid": "x-pead-sue",
-    "monthly_t": 2.517,
-    "record_t": 1.89,
-    "diff": 0.63
+    "monthly_t": 2.548,
+    "record_t": 1.96,
+    "diff": 0.59
+   },
+   {
+    "sid": "x-cgate-mom",
+    "monthly_t": 2.11,
+    "record_t": 2.14,
+    "diff": -0.03
    },
    {
     "sid": "x-ncapndx",
     "monthly_t": 2.108,
-    "record_t": 1.99,
-    "diff": 0.12
-   },
-   {
-    "sid": "x-sp",
-    "monthly_t": 2.086,
-    "record_t": 1.71,
-    "diff": 0.38
-   },
-   {
-    "sid": "x-cgate-mom",
-    "monthly_t": 2.073,
-    "record_t": 2.1,
-    "diff": -0.03
-   },
-   {
-    "sid": "x-ncap10",
-    "monthly_t": 2.058,
     "record_t": 1.94,
-    "diff": 0.12
-   },
-   {
-    "sid": "x-ncapw",
-    "monthly_t": 2.046,
-    "record_t": 1.94,
-    "diff": 0.11
-   },
-   {
-    "sid": "x-ncap5",
-    "monthly_t": 1.998,
-    "record_t": 1.82,
-    "diff": 0.18
-   },
-   {
-    "sid": "x-ncap45",
-    "monthly_t": 1.983,
-    "record_t": 1.81,
     "diff": 0.17
    },
    {
-    "sid": "x-cap45",
-    "monthly_t": 1.89,
-    "record_t": 1.67,
-    "diff": 0.22
+    "sid": "x-ncap10",
+    "monthly_t": 2.089,
+    "record_t": 1.95,
+    "diff": 0.14
    },
    {
-    "sid": "x-cap5",
-    "monthly_t": 1.888,
+    "sid": "x-ncap5",
+    "monthly_t": 2.038,
+    "record_t": 1.86,
+    "diff": 0.18
+   },
+   {
+    "sid": "x-ncapw",
+    "monthly_t": 2.027,
+    "record_t": 1.9,
+    "diff": 0.13
+   },
+   {
+    "sid": "x-ncap45",
+    "monthly_t": 2.022,
+    "record_t": 1.84,
+    "diff": 0.18
+   },
+   {
+    "sid": "x-fcfy",
+    "monthly_t": 2.017,
     "record_t": 1.67,
-    "diff": 0.22
+    "diff": 0.35
+   },
+   {
+    "sid": "x-divgrow",
+    "monthly_t": 2.002,
+    "record_t": 1.83,
+    "diff": 0.17
+   },
+   {
+    "sid": "x-sp",
+    "monthly_t": 1.986,
+    "record_t": 1.64,
+    "diff": 0.35
    }
   ],
-  "max_abs_diff": 0.63
+  "max_abs_diff": 0.59
  },
  "primary": {
   "note": "시행 다중검정 진단 — 잰 t 를 «잡음이었다면 어떻게 생겼을지» 에 대고 본다. 🚨 문턱이 아니다. 통과/탈락을 내지 않는다(관문·문턱은 2026-08-13 에 걷었다).",
@@ -81,65 +81,65 @@
   "trials_n": 465,
   "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 114종이고 시행 분모는 465다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
   "actual": {
-   "max_t": 2.517,
-   "min_t": -2.169,
-   "n_over_2": 8,
+   "max_t": 2.548,
+   "min_t": -2.256,
+   "n_over_2": 11,
    "top": [
     {
      "sid": "x-pead-sue",
-     "t": 2.517
+     "t": 2.548
+    },
+    {
+     "sid": "x-cgate-mom",
+     "t": 2.11
     },
     {
      "sid": "x-ncapndx",
      "t": 2.108
     },
     {
-     "sid": "x-sp",
-     "t": 2.086
-    },
-    {
-     "sid": "x-cgate-mom",
-     "t": 2.073
-    },
-    {
      "sid": "x-ncap10",
-     "t": 2.058
-    },
-    {
-     "sid": "x-ncapw",
-     "t": 2.046
+     "t": 2.089
     },
     {
      "sid": "x-ncap5",
-     "t": 1.998
+     "t": 2.038
+    },
+    {
+     "sid": "x-ncapw",
+     "t": 2.027
     },
     {
      "sid": "x-ncap45",
-     "t": 1.983
+     "t": 2.022
     },
     {
-     "sid": "x-cap45",
-     "t": 1.89
+     "sid": "x-fcfy",
+     "t": 2.017
     },
     {
-     "sid": "x-cap5",
-     "t": 1.888
+     "sid": "x-divgrow",
+     "t": 2.002
+    },
+    {
+     "sid": "x-sp",
+     "t": 1.986
     }
    ]
   },
   "null_max_t": {
-   "median": 2.253,
-   "p90": 3.137,
+   "median": 2.267,
+   "p90": 3.154,
    "p95": 3.719,
    "p99": 7.53,
    "max": 9.605
   },
   "null_n_over_2": {
-   "mean": 5.0,
-   "max": 38
+   "mean": 5.1,
+   "max": 40
   },
-  "reality_check_p": 0.334,
-  "reading": "실측 최고 t 2.52 · 잡음의 최고 t 중앙값 2.25(95% 3.72). Reality Check p = 0.334 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
+  "reality_check_p": 0.3305,
+  "reading": "실측 최고 t 2.55 · 잡음의 최고 t 중앙값 2.27(95% 3.72). Reality Check p = 0.331 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
   "block_months": 3,
   "reps": 2000,
   "seed": 20260907,
@@ -245,9 +245,9 @@
     "n_months": 74
    },
    "n_rules": 118,
-   "actual_max_t": 3.143,
-   "null_max_t_median": 2.287,
-   "reality_check_p": 0.1255
+   "actual_max_t": 3.119,
+   "null_max_t_median": 2.285,
+   "reality_check_p": 0.1325
   },
   "null_argmax_top": [
    {
@@ -257,23 +257,23 @@
    },
    {
     "sid": "x-hurst",
-    "share": 0.042,
-    "excess_sd_m": 3.506
+    "share": 0.041,
+    "excess_sd_m": 3.491
    },
    {
     "sid": "x-realsw",
-    "share": 0.034,
-    "excess_sd_m": 2.923
+    "share": 0.035,
+    "excess_sd_m": 2.931
    },
    {
     "sid": "x-lshock",
-    "share": 0.027,
-    "excess_sd_m": 4.014
+    "share": 0.034,
+    "excess_sd_m": 4.093
    },
    {
-    "sid": "x-earngap",
-    "share": 0.023,
-    "excess_sd_m": 4.167
+    "sid": "x-runs",
+    "share": 0.027,
+    "excess_sd_m": 2.844
    }
   ],
   "excess_sd_note": "초과수익 월 표준편차(퍼센트). 값이 작을수록 t 의 분모가 작아 재표집에서 큰 t 가 자주 나온다 — 잡음 꼬리를 두껍게 만든다."
@@ -292,65 +292,65 @@
   "trials_n": 465,
   "coverage_note": "이 진단이 덮는 것은 계열이 남아 있는 114종이고 시행 분모는 465다. 원장·아카이브의 시행은 계열이 없어 재표집할 수 없다. 🚨 덮는 수가 적을수록 잡음의 최고 t 가 **과소평가**되므로 이 진단은 실측에 **유리한 쪽으로 치우쳐 있다** — 즉 여기서도 못 넘으면 확실히 못 넘는다.",
   "actual": {
-   "max_t": 6.014,
+   "max_t": 5.937,
    "min_t": -2.151,
-   "n_over_2": 13,
+   "n_over_2": 15,
    "top": [
     {
      "sid": "x-cap5",
-     "t": 6.014
+     "t": 5.937
     },
     {
      "sid": "x-cap10",
-     "t": 5.95
+     "t": 5.835
     },
     {
      "sid": "x-capndx",
-     "t": 5.95
+     "t": 5.835
     },
     {
      "sid": "x-capw",
-     "t": 5.95
+     "t": 5.835
     },
     {
      "sid": "x-cap45",
-     "t": 5.874
+     "t": 5.821
     },
     {
      "sid": "x-cap3",
-     "t": 4.896
+     "t": 5.113
     },
     {
      "sid": "x-ncapndx",
-     "t": 3.078
-    },
-    {
-     "sid": "x-ncapw",
-     "t": 2.993
+     "t": 3.157
     },
     {
      "sid": "x-ncap10",
-     "t": 2.992
+     "t": 3.074
+    },
+    {
+     "sid": "x-ncapw",
+     "t": 3.002
     },
     {
      "sid": "x-ncap5",
-     "t": 2.895
+     "t": 2.988
     }
    ]
   },
   "null_max_t": {
-   "median": 2.145,
-   "p90": 3.017,
-   "p95": 3.302,
-   "p99": 3.868,
-   "max": 4.921
+   "median": 2.155,
+   "p90": 2.988,
+   "p95": 3.236,
+   "p99": 3.799,
+   "max": 4.663
   },
   "null_n_over_2": {
-   "mean": 5.5,
-   "max": 45
+   "mean": 5.6,
+   "max": 48
   },
   "reality_check_p": 0.0,
-  "reading": "실측 최고 t 6.01 · 잡음의 최고 t 중앙값 2.15(95% 3.30). Reality Check p = 0.000 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
+  "reading": "실측 최고 t 5.94 · 잡음의 최고 t 중앙값 2.15(95% 3.24). Reality Check p = 0.000 — 잡음만으로 이만한 최고 t 가 나올 확률이 그만큼이다. ⚠ 이 수는 판정이 아니라 «어디쯤인가» 다.",
   "block_months": 3,
   "reps": 2000,
   "seed": 20260907,
@@ -456,38 +456,38 @@
     "n_months": 74
    },
    "n_rules": 118,
-   "actual_max_t": 2.871,
-   "null_max_t_median": 2.147,
-   "reality_check_p": 0.131
+   "actual_max_t": 3.253,
+   "null_max_t_median": 2.144,
+   "reality_check_p": 0.0505
   },
   "null_argmax_top": [
    {
     "sid": "x-hurst",
     "share": 0.037,
-    "excess_sd_m": 3.986
+    "excess_sd_m": 3.959
    },
    {
     "sid": "x-sur",
-    "share": 0.036,
-    "excess_sd_m": 4.008
-   },
-   {
-    "sid": "x-sue",
-    "share": 0.031,
-    "excess_sd_m": 2.443
+    "share": 0.035,
+    "excess_sd_m": 4.002
    },
    {
     "sid": "x-earngap",
-    "share": 0.029,
+    "share": 0.031,
     "excess_sd_m": 4.064
+   },
+   {
+    "sid": "x-sue",
+    "share": 0.029,
+    "excess_sd_m": 2.427
    },
    {
     "sid": "x-lshock",
     "share": 0.029,
-    "excess_sd_m": 4.192
+    "excess_sd_m": 4.243
    }
   ],
   "excess_sd_note": "초과수익 월 표준편차(퍼센트). 값이 작을수록 t 의 분모가 작아 재표집에서 큰 t 가 자주 나온다 — 잡음 꼬리를 두껍게 만든다."
  },
- "reading": "주된 값(그 규칙의 PIT 대조군 기준): 실측 최고 t 2.52 · 잡음의 최고 t 중앙 2.25 (95% 3.72) · Reality Check p = 0.334. ⚠ S&P 500 기준으로 재면 최고 t 가 6.01 로 뛰는데, 그 상위는 종목을 고르는 규칙이 아니라 랩 유니버스를 시총가중한 x-cap* 무리다 — 신호가 아니라 유니버스 구성 차이다."
+ "reading": "주된 값(그 규칙의 PIT 대조군 기준): 실측 최고 t 2.55 · 잡음의 최고 t 중앙 2.27 (95% 3.72) · Reality Check p = 0.331. ⚠ S&P 500 기준으로 재면 최고 t 가 5.94 로 뛰는데, 그 상위는 종목을 고르는 규칙이 아니라 랩 유니버스를 시총가중한 x-cap* 무리다 — 신호가 아니라 유니버스 구성 차이다."
 }
