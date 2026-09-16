@@ -39,6 +39,7 @@ sys.path.insert(0, HERE)
 import idxtilt as IT                       # sd·zs·CAP_SEC·TE_*·COST_RT 정본
 import tech_backtest as TB                 # rat_signal·load_ratings 정본
 
+BAND = TB.BAND                             # 2.0 — tech_backtest 의 값을 그대로 쓴다
 REV_DAYS = 30                              # 등록 §1 — x-revdrift 21일판과 같은 달력 30일
 JUDGE_START = "2018-07"                    # 등록 §1-1 — IDXTILT 와 같은 창
 RAT_END = "2026-07"                        # 캐시가 2026-08-11 까지 → 마지막 부분월 제외
@@ -93,11 +94,16 @@ def build(idx):
     return P, out
 
 
-def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None):
+def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None, band=False):
     """signal: 'rev' | 'erc7'  ·  cap_mode: 'abs' | 'prop'
 
     lam_mult 를 주면 원 λ 에 그 배수를 곱한다(부칙 A2 의 이분탐색이 쓴다).
     None 이면 **원 등록 그대로**(idxtilt 의 λ 를 그대로) 돌린다.
+
+    band=True 는 PREREG-2026-09-16-IDXREVBAND.md(계산 전 커밋 f0d0cae69) §1 —
+    능동비중 무거래 밴드. 직전에 들고 있던 능동비중의 **절반~두 배** 안이고 부호가 같으면
+    그대로 들고, 아니면 새 목표로 갈아탄다. 비(BAND)는 tech_backtest 의 값을 그대로 쓴다.
+    🚨 band=False 경로는 한 줄도 안 바뀐다 — IDXREV 의 수가 그대로 재현돼야 한다.
 
     idxtilt.run 과 같은 산식. 다른 것은 «점수를 무엇으로 내나»와 «개별 한도»뿐이다.
     ⚠ erc7 은 패널에 얼려 둔 7팩터 z 를 **동일가중**으로 합친다 — 롤링 ERC 가중을 다시
@@ -107,6 +113,8 @@ def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None):
     """
     out, prevw, binds, acts = [], None, [0, 0], []
     capw = [0.0, 0.0]                  # [한도에 붙은 |Δw| 합, 전체 |Δw| 합] — 부칙 A3
+    aprev = {}                         # 티커 → 직전에 «실제로 들고 있던» 능동비중(밴드용)
+    held = [0, 0]                      # [밴드가 잡아 안 갈아탄 횟수, 전체]
     for j in range(j0, len(rows)):
         x = rows[j]
         names, wb = x["names"], x["wb"]
@@ -133,6 +141,15 @@ def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None):
         for t in names:
             cap = IT.CAP_NAME if cap_mode == "abs" else wb[t]
             a_ = max(-cap, min(cap, lam * tl[t]))
+            if band:
+                held[1] += 1
+                ap = aprev.get(t)
+                if ap:                                   # 0·None 이면 밴드가 정의되지 않는다
+                    if a_ and (a_ > 0) == (ap > 0) \
+                            and abs(ap) / BAND <= abs(a_) <= BAND * abs(ap):
+                        a_ = ap                          # 절반~두 배 안 · 같은 부호 → 그대로
+                        held[0] += 1
+                a_ = max(-cap, min(cap, a_))             # 그 달 한도로 다시 자른다
             if cap > 0 and abs(a_) >= cap - 1e-12:
                 binds[0] += 1
                 capw[0] += abs(a_)
@@ -150,6 +167,9 @@ def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None):
                     w[t] = max(0.0, wb[t] + (w[t] - wb[t]) * k_)
         z = sum(w.values())
         w = {t: w[t] / z for t in w}
+        if band:
+            # «직전에 들고 있던 능동비중» = 제약·정규화를 다 거친 뒤 실제로 든 것
+            aprev = {t: w[t] - wb[t] for t in names}
         acts.append(0.5 * sum(abs(w[t] - wb[t]) for t in names))
         rp = sum(w[t] * x["r"][t] for t in names)
         rb = sum(wb[t] * x["r"][t] for t in names)
@@ -160,17 +180,18 @@ def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None):
         prevw = w
         out.append(dict(m=x["m"], p=rp, b=rb, cost=c))
     binds.append(capw[0] / capw[1] if capw[1] else 0.0)     # binds[2] = 능동비중 가중 걸림
+    binds.append(held[0] / held[1] if held[1] else 0.0)     # binds[3] = 밴드가 잡은 비율
     return out, binds, acts, prevw
 
 
-def solve(rows, j0, signal, cap_mode, te_target, flip=False):
+def solve(rows, j0, signal, cap_mode, te_target, flip=False, band=False):
     """부칙 A2 — 실현 TE 가 목표와 같아지는 λ 배수를 이분탐색으로 «푼다».
 
     손잡이가 아니다: 목표를 주면 답이 하나다(TE 는 λ 에 단조 증가, 한도에서 포화).
     포화해서 목표에 못 닿으면 최대치를 돌려주고 saturated=True 를 함께 준다.
     """
     def te_of(mult):
-        return ev(run(rows, j0, signal, cap_mode, te_target, flip, mult)[0])["te"]
+        return ev(run(rows, j0, signal, cap_mode, te_target, flip, mult, band)[0])["te"]
     lo, hi = 1e-4, 1.0
     if te_of(hi) < te_target * 100:                 # 위로 못 닿으면 배수를 키워 본다
         for _ in range(24):
@@ -178,7 +199,7 @@ def solve(rows, j0, signal, cap_mode, te_target, flip=False):
             if te_of(hi) >= te_target * 100 or hi > 1e6:
                 break
     if te_of(hi) < te_target * 100:
-        o, b, a, lw = run(rows, j0, signal, cap_mode, te_target, flip, hi)
+        o, b, a, lw = run(rows, j0, signal, cap_mode, te_target, flip, hi, band)
         return o, b, a, lw, hi, True
     for _ in range(60):
         mid = math.sqrt(lo * hi)
@@ -188,7 +209,7 @@ def solve(rows, j0, signal, cap_mode, te_target, flip=False):
             hi = mid
         if hi / lo < 1.0001:
             break
-    o, b, a, lw = run(rows, j0, signal, cap_mode, te_target, flip, hi)
+    o, b, a, lw = run(rows, j0, signal, cap_mode, te_target, flip, hi, band)
     return o, b, a, lw, hi, False
 
 

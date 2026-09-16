@@ -138,3 +138,6 @@ data/_rateup_gate.json
 
 # IDXREV(2026-09-16) 얼린 측정 — build/idxrev.py 로 재생성된다.
 data/_idxrev.json
+
+# IDXREVBAND(2026-09-16) 얼린 측정
+data/_idxrevband.json
