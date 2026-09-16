@@ -883,7 +883,7 @@
         //   머리의 «평가»는 회피라 양수였고, 라벨이 그 차이를 하나도 말해 주지 않았다).
         //   ⚠ 실현과 회피를 더하지 않는다 — 실현은 «산 값 대비», 회피는 «판 값 대비»다.
         var g = byD[d0], inv = 0, pnlB = 0, pnlS = 0, npB = 0, npS = 0,
-            nB = 0, nS = 0, real = 0, nReal = 0;
+            nB = 0, nS = 0;
         g.forEach(function (t) {
           var p = pxLeI(t.t, asofI);
           inv += t.q * t.p;
@@ -894,7 +894,6 @@
             nB++;
             if (p != null) pnlB += t.q * (p - t.p); else npB++;
           }
-          if (t.rp != null) { real += t.rp; nReal++; }
         });
         // 그날 이 매매들이 펀드의 몇 %였나 — 묶음 머리에 합을 적는다(개별 열의 합계).
         var gw = 0, gwOK = false;
@@ -915,10 +914,12 @@
                   '판 값 대비라, 산 값 대비인 «실현» 과 더하면 안 됩니다.">매도 후 회피 ' +
                 (pnlS > 0 ? '+' : '') + num(pnlS, 0) + ' USD' +
                 (npS ? ' (가격 없는 ' + npS + '건 제외)' : '') + '</span>' : '') +
-          // 실현은 «평가» 와 다른 것을 잰다 — 평가는 지금 값이고 실현은 판 순간 확정된 돈이다.
-          // 둘을 더하지 않는다(더하면 같은 몫을 두 번 센다). 매도가 있는 묶음에만 적는다.
-          (nReal ? '<span class="' + sgn(real) + '">실현 ' + (real > 0 ? '+' : '') +
-                   num(real, 0) + ' USD (' + nReal + '건)</span>' : '') + '</div>');
+          // 🚨 2026-09-17 사용자 «매매내역에는 헷갈리니까 실현 빼고 기존 매매처럼 적어줘».
+          //   «실현»(원가 대비)을 머리에서도 뺀다. 같은 줄에 기준이 다른 두 수가 나란히
+          //   있으면 부호가 갈릴 때 어느 쪽을 봐야 할지 알 수 없다 — 실제로 그렇게 걸렸다
+          //   (9/10 매도: 실현 −158,909 vs 회피 +129,214).
+          //   ⚠ 원가·실현은 버리지 않는다. 줄의 title 로 남긴다(마우스를 올려야 보인다).
+          '</div>');
         // 🚨 2026-08-26 사용자 «해당 일자 기준 종목별 비중(해당일자 NAV 대비) 열 추가».
         //   그 매매가 그날 펀드의 몇 %였나 — 손익만으로는 «얼마나 크게 걸었나» 가 안 보인다.
         h.push('<div class="tblwrap"><table class="big"><thead><tr><th>전략</th><th>티커</th>' +
@@ -927,23 +928,26 @@
           '<th class="tnum">현재가</th><th class="tnum">평가손익</th><th class="tnum">수익률</th><th></th></tr></thead><tbody>');
         g.forEach(function (t) {
           var p = pxLeI(t.t, asofI);
+          /* 🚨 2026-09-17 사용자 «기존 매매처럼 적어줘. 나스닥 9/10 LITE 는 988.98 에
+             팔았고 838.88 됐으니 111×(988.98−838.88) 이 평가손익이고 수익률도 그만큼 +».
+             매수·매도를 **한 식**으로 되돌린다:
+               평가손익 = 수량 × (현재가 − 체결가)      ← 매도는 수량이 음수라 부호가 뒤집힌다
+               수익률   = 평가손익 ÷ |수량 × 체결가|
+             매수에서는 종전과 똑같다(= 현재가/체결가 − 1). 매도에서는 «판 뒤 얼마나
+             빠졌나» 가 + 로 나온다 — LITE: +16,661 · +15.2%.
+             ⚠ 종전에는 수익률을 q>0 일 때만 채워 매도 줄이 통째로 «—» 였다. 그래서
+               «실현» 을 넣었던 것인데, 기준이 다른 수가 한 표에 섞여 더 헷갈렸다.
+               칸을 비우지도, 다른 기준을 섞지도 않는 길은 이 한 식뿐이다. */
           var pnl1 = p != null ? t.q * (p - t.p) : null;
-          var r1 = (p != null && t.p > 0 && t.q > 0) ? (p / t.p - 1) : null;
+          var r1 = (pnl1 != null && t.p > 0 && t.q) ? pnl1 / Math.abs(t.q * t.p) : null;
           var sell = t.q < 0, tip = '';
           if (sell) {
-            // 매도 줄은 «실현» 으로 갈아 끼운다(위 annotateRealized 주석 참조).
-            pnl1 = t.rp; r1 = t.rr;
-            tip = (t.ravg != null)
-              ? '실현 — 이동평균 원가 ' + num(t.ravg) + ' 대비 ' + num(t.rn, 0) + '주' +
-                (t.rn < -t.q ? ' (순보유 초과 ' + num(-t.q - t.rn, 0) + '주 제외)' : '')
-              : '이 전략에 이 종목의 매수 기록이 없어 원가를 못 잡습니다';
-            // 같은 줄에 «판 값 대비» 도 적어 둔다 — 원가 대비 −인데 매도 뒤 주가는 빠진
-            // 경우가 흔하고(09-10 매도 10건 중 9건), 그때 두 수가 부호까지 갈린다.
-            if (p != null) {
-              var av = -t.q * (t.p - p);
-              tip += ' · 매도 후 회피 ' + (av > 0 ? '+' : '') + num(av, 0) + ' USD' +
-                     ' (체결 ' + num(t.p) + ' → 현재 ' + num(p) + ')';
-            }
+            tip = '체결 ' + num(t.p) + ' → 현재 ' + num(p) + ' · 판 값 대비';
+            // ⚠ 원가·실현은 화면에서 뺐을 뿐 버리지 않는다 — 여기 남긴다.
+            if (t.ravg != null)
+              tip += ' / 이동평균 원가 ' + num(t.ravg) + ' 대비 실현 ' +
+                     (t.rp > 0 ? '+' : '') + num(t.rp, 0) + ' USD (' + num(t.rn, 0) + '주' +
+                     (t.rn < -t.q ? ' · 순보유 초과 ' + num(-t.q - t.rn, 0) + '주 제외' : '') + ')';
           }
           h.push('<tr' + (sell ? ' class="sellrow"' : '') + '><td>' +
             esc(t.s) + (t.src === 'web' ? ' <span class="badge web">웹</span>' : '') + '</td>' +
@@ -956,7 +960,7 @@
             })() + '</td>' +
             '<td class="tnum">' + (p != null ? num(p) : '—') + '</td>' +
             '<td class="tnum ' + sgn(pnl1) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
-              (pnl1 != null ? (sell ? '<span class="rlz">실현</span> ' : '') + num(pnl1, 0) : '—') + '</td>' +
+              (pnl1 != null ? num(pnl1, 0) : '—') + '</td>' +
             '<td class="tnum ' + sgn(r1) + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
               (r1 != null ? pct(r1, 1, true) : '—') + '</td>' +
             '<td class="rowops">' + (t.src === 'web'
