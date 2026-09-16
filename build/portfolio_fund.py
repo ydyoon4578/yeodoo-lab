@@ -811,9 +811,16 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         #   이론값은 «지수기준» 이라는 제 이름으로 옮기고 괴리 계산에만 쓴다.
         _sq = strat_q.get(t, 0.0)
         w_s = (_sq * h["px"] * fx_hold / nav_v) if (h["px"] and fx_hold and _sq) else 0.0
+        # 🚨 2026-09-16 사용자 «내가 타겟 비중 넣으면 몇 주 팔아야 하는지도 바로 볼 수 있게».
+        #   NAV 1%p 를 만드는 주식수. 목표비중을 넣으면 (목표 − 현재) × spp 가 곧 필요 수량이다.
+        #   ⚠ 원장 «내부» 눈금으로 만든다(보유일 환율 fx_hold) — 펀드비중이 그 눈금으로
+        #     계산된 값이라, 최신 환율을 섞으면 «목표 = 현재» 를 넣어도 0 이 안 나온다.
+        #   ⚠ 화면이 곱하기만 하게 파이썬에서 다 굽는다. 브라우저에 NAV·환율을 실어 보내
+        #     거기서 나누게 하면 같은 계산이 두 벌이 되고, 언젠가 한쪽만 고쳐진다.
+        _spp = (nav_v / (h["px"] * fx_hold) / 100.0) if (h["px"] and fx_hold) else None
         tbl.append(dict(t=t, name=h["name"], gics=gics, wi=w_i, wi_raw=w_i_raw,
                         wf=w_f, d=(w_f - w_i) * 100,
-                        ws=w_s, wp=w_f - w_s,
+                        ws=w_s, wp=w_f - w_s, spp=_spp,
                         qty=h["qty"], sq=_sq, pq_real=h["qty"] - _sq,
                         pq=p_qty, dq=(h["qty"] - p_qty) if p_qty is not None else None))
     tbl.sort(key=lambda r: -r["wf"])
@@ -832,6 +839,12 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              # ⚠ 2026-08-26 사용자 «좁으니까 이름 열은 빼» — 티커가 이미 종목을 가리키고, 이름은
              #   말줄임으로 6~8자만 보이던 열이라 폭만 먹고 있었다.
              '<th>티커</th><th>섹터</th><th class="tnum">지수비중(%%)</th><th class="tnum">펀드비중(%%)</th>'
+             # 🚨 2026-09-16 사용자 «지수비중 펀드비중 차이도 펀드비중 오른쪽 열에 넣어주고».
+             #   같은 날 앞서 걷었던 열을 되살린다 — 다만 자리가 다르다. 종전에는 전략
+             #   오른쪽이라 무엇에서 무엇을 뺀 것인지 건너뛰어 읽어야 했다. 뺄셈의 두 항
+             #   바로 옆이 제자리다(패시브 쌍과 같은 규칙).
+             '<th class="tnum" title="펀드 − 지수. 지수는 펀드 주식슬리브 눈금으로 '
+             '환산한 값이다(패시브차이 열과 눈금이 다르다).">차이(%%p)</th>'
              # 🚨 2026-09-16 사용자 «패시브는 패시브 비중이랑(펀드에서 액티브 빼면 될듯)
              #   비교 되게끔». 종전에는 «차이(%%p)» 가 **펀드−지수** 하나뿐이라, 복제가
              #   지수를 얼마나 따라가는지는 합계 행에서만 볼 수 있었고 종목별로는 못 봤다.
@@ -852,7 +865,17 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              '오버/언더다.">패시브차이(%%p)</th>'
              '<th class="tnum">전략(%%)</th>'
              '<th class="tnum">보유 수량</th><th class="tnum">패시브 수량</th><th class="tnum">전략 수량</th>'
-             '<th class="tnum">지수기준</th><th class="tnum">괴리</th>'
+             # ⚠ «괴리» 열 제거(2026-09-16 사용자 지시). 보유 − 지수기준 이라 두 항이 바로
+             #   옆에 있고, 아래 목표 칸이 같은 물음(«몇 주 움직여야 하나»)에 더 곧게 답한다.
+             '<th class="tnum">지수기준</th>'
+             # 🚨 사용자 «내가 타겟 비중 넣으면 몇 주 팔아야 하는지도 바로 볼 수 있게».
+             #   입력 칸이라 파이썬이 아니라 js 가 채운다(portfolio_app.js 의 wireTargets).
+             #   ⚠ 값은 **NAV 기준 %%** 다 — 이 표의 펀드비중과 같은 눈금이어야 «목표 =
+             #     현재» 를 넣었을 때 0 이 나온다.
+             '<th class="tnum" title="목표 비중(NAV 기준 %%). 넣으면 오른쪽에 필요 수량이 '
+             '바로 나온다. 비우면 사라진다.">목표(%%)</th>'
+             '<th class="tnum" title="목표 − 현재 를 주식수로 옮긴 값. 음수 = 매도.">'
+             '매매수량</th>'
              '</tr>' % slug)
 
     # 🚨 2026-08-26 사용자 지시 — «맨 위 열에는 합계를 적어줘. 비중 열에만. 패시브 열 비중
@@ -925,9 +948,11 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     tip="이 표는 보유 종목만 담는다. 나머지 %s 는 지수에 있는데 안 든 %d종이다."
                         % (pct(_wi_out, 2), len(only_idx)))
              + _tot(_swf)                                   # 펀드비중
-             # 지수패시브 합계 — 여기에는 차이를 안 붙인다. 바로 오른쪽 두 칸이
-             #   펀드패시브와 그 차이라, 같은 수를 세 번 적게 된다.
-             + _tot(_swi_p, base="지수 %s 를 패시브 눈금에 압축" % pct(_swi, 2),
+             + ('<th class="tnum"><b>%+.2f</b></th>' % ((_swf - _swi) * 100))   # 차이 합계
+             # 지수패시브 합계 — 차이도, 밑동 설명도 안 붙인다(2026-09-16 사용자 «지수 66.10%
+             #   를 패시브 눈금에 압축 이런 글 빼고»). 오른쪽 두 칸이 펀드패시브와 그 차이라
+             #   같은 수를 세 번 적게 되고, 무엇을 압축했는지는 열 머리 title 에 이미 있다.
+             + _tot(_swi_p,
                     tip="지수 원 비중 합을 패시브 슬리브 크기(%s)에 다시 압축한 값이다. "
                         "펀드 눈금(%s)으로 빼면 언제나 −(전략 비중)이 나와 뜻이 없어 "
                         "패시브 열만 눈금을 따로 둔다." % (pct(_swp, 2), pct(_swi, 2)))
@@ -939,8 +964,13 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
                     "전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s. "
                     "전략 합계에서 지수를 직접 빼지 않는다 — 전략은 패시브 위에 얹는 틸트다."
                     % (len(_srows), pct(_swf_s, 2), pct(_swi_s, 2)))
-             + '<th></th><th></th><th></th><th></th><th></th>'
-             '</tr></thead><tbody>')
+             # 보유·패시브·전략 수량 · 지수기준 · 목표 — 다섯 칸 비우고, 마지막 «매매수량»
+             #   칸에는 js 가 입력된 행들의 합을 적는다(여러 종목을 한 번에 손볼 때 필요하다).
+             #   ⚠ 수량 합계는 단위가 섞인 숫자라 원래 안 적는다. 여기만 예외인 것은
+             #     «몇 건을 건드렸나» 를 세는 칸이기 때문이고, 그래서 건수를 같이 적는다.
+             + ('<th></th><th></th><th></th><th></th><th></th>'
+                '<th class="tnum tgtsum"></th>')
+             + '</tr></thead><tbody>')
     for r in tbl:
         # 지수 밖 보유 — 편출 뒤 잔존 보유 등. 지수비중 0.00 만으로는 «아주 작다» 와
         # «지수에 없다» 가 안 갈린다. 배지로 말한다.
@@ -950,35 +980,41 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
         # 🚨 완성된 조각(_off·_bg)을 **포맷 문자열에 이어 붙이지 않는다.** 붙였다가
         #   color-mix 의 «30%,» 가 서식 문자로 읽혀 빌드가 죽었다(ValueError, 2026-08-21).
         #   조각은 값으로만 넘긴다 — 그러면 그 안에 무엇이 들어 있든 안전하다.
-        # 🚨 «차이(%p)» 열을 걷었으므로(2026-09-16 사용자 지시) 그 수치를 잃지 않게
-        #   펀드비중 칸의 title 로 옮긴다. 음영은 색이라 «얼마나» 를 못 말한다 —
-        #   색만 남기고 수를 버리면 이 표에서 펀드가 지수 대비 어디인지 읽을 곳이
-        #   합계 행밖에 안 남는다.
+        # ⚠ 차이(%p) 열이 되살아났으므로 title 로 옮겨 뒀던 수치는 걷는다 — 바로 옆 칸이
+        #   같은 수를 말한다. 음영은 남긴다(색 = 방향, 옆 칸 = 크기).
         _shade = min(30.0, abs(r["d"]) * 60.0)
-        _bg = (' title="지수 대비 %+.2f%%p (펀드 − 지수, 펀드 슬리브 눈금)"'
-               ' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
-               % (r["d"], "good" if r["d"] > 0 else "hot", round(_shade))
-               ) if abs(r["d"]) >= 0.005 else (' title="지수 대비 %+.2f%%p"' % r["d"])
+        _bg = (' style="background:color-mix(in srgb,var(--%s) %d%%,transparent)"'
+               % ("good" if r["d"] > 0 else "hot", round(_shade))) if abs(r["d"]) >= 0.005 else ''
         # ⚠ 이름 열은 뺐지만 **이름으로 거르기는 살린다.** 행에 data-n 으로 실어 두고
         #   아래 필터가 같이 본다. 티커 칸의 title 로도 남겨 마우스를 올리면 보인다 —
         #   열을 없애면서 이름을 통째로 잃으면 «이게 무슨 회사였지» 를 못 푼다.
-        H.append('<tr data-n="%s"><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
+        # 목표 칸 — spp(1%p 당 주식수)와 현재 비중(%)을 **행에** 실어 둔다. js 는 곱하기만 한다.
+        #   ⚠ spp 를 못 만든 행(종가·환율 결손)은 입력 칸을 아예 안 낸다. 빈 칸을 내주고
+        #     «넣어도 답이 안 나오는 칸» 으로 두면 고장으로 읽힌다.
+        _tg = ('<td class="tnum"><input class="tgtw" type="number" step="0.01" min="0" '
+               'inputmode="decimal" aria-label="%s 목표 비중(%%)"></td>'
+               '<td class="tnum tgtq"></td>' % esc(r["t"])) if r["spp"] else (
+              '<td class="tnum sub">—</td><td class="tnum sub">—</td>')
+        H.append('<tr data-n="%s"%s><td class="tk" title="%s">%s%s</td><td class="sec">%s</td>'
                  '<td class="tnum" title="지수 원 비중 %s (100%% 눈금)">%s</td><td class="tnum"%s>%s</td>'
+                 '<td class="tnum %s">%+.2f</td>'
                  '<td class="tnum sub">%s</td><td class="tnum">%s</td>'
                  '<td class="tnum %s">%+.2f</td>'
                  '<td class="tnum %s">%s</td>'
                  '<td class="tnum"><b>%s</b></td><td class="tnum">%s</td><td class="tnum %s">%s</td>'
-                 '<td class="tnum sub">%s</td><td class="tnum %s">%s</td></tr>'
-                 % (esc(r["name"][:40]), esc(r["name"][:40]),
+                 '<td class="tnum sub">%s</td>%s</tr>'
+                 % (esc(r["name"][:40]),
+                    (' data-spp="%.6f" data-wf="%.6f"' % (r["spp"], r["wf"] * 100)) if r["spp"] else "",
+                    esc(r["name"][:40]),
                     esc(r["t"]), _off, esc(sec_short(r["gics"])),
                     pct(r["wi_raw"], 2), pctn(r["wi"], 2), _bg, pctn(r["wf"], 2),
+                    cls_sign(r["d"]), r["d"],
                     pctn(r["wi_p"], 2), pctn(r["wp"], 2),
                     cls_sign(r["dp"]), r["dp"],
                     ("tk" if r["ws"] else ""), (pctn(r["ws"], 2) if r["ws"] else "—"),
                     num(r["qty"], 0), num(r["pq_real"], 0),
                     ("tk" if r["sq"] else ""), (num(r["sq"], 0) if r["sq"] else "—"),
-                    num(r["pq"], 0) if r["pq"] is not None else "—",
-                    cls_sign(r["dq"] or 0), ("%+d" % round(r["dq"])) if r["dq"] is not None else "—"))
+                    num(r["pq"], 0) if r["pq"] is not None else "—", _tg))
     H.append("</tbody></table></div>")
     H.append('<p class="pnote" style="margin:6px 0 12px">'
              '<b>비중은 모두 NAV 기준</b>입니다 — 합계가 100%%가 아니라 개별주식 슬리브 '

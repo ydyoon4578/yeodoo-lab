@@ -1558,6 +1558,70 @@
     try { if (window.PFCHARTS) window.PFCHARTS(document); } catch (e) {}
   }
 
+  /* ── 목표 비중 → 필요 수량 (2026-09-16) ──────────────────────────────────
+     사용자 지시 — «내가 타겟 비중 넣으면 몇 주 팔아야 하는지도 바로 볼 수 있게».
+
+     행에 실린 두 수만 쓴다(생성기가 구워 둔다):
+       data-spp  NAV 1%p 를 만드는 주식수 = NAV ÷ (종가 × 보유일환율) ÷ 100
+       data-wf   지금 펀드비중(%)
+     필요 수량 = (목표 − 현재) × spp. 음수면 매도다.
+
+     ⚠ 여기서 NAV·환율을 다시 나누지 않는다. 그러면 같은 계산이 파이썬과 js 두 벌이
+       되고, 언젠가 한쪽만 고쳐진다 — 이 저장소가 되풀이 밟는 종류다. 곱하기만 한다.
+     ⚠ 환율은 **보유일** 것이다(생성기 fx_hold). 최신 환율을 섞으면 «목표 = 현재» 를
+       넣어도 0 이 안 나온다 — 화면의 비중이 그 눈금으로 만들어졌기 때문이다.
+     ⚠ 위임으로 건다. 이 표는 암호문 안에 있어 잠금이 풀린 뒤에야 DOM 에 들어온다 —
+       로드 시점에 칸을 찾아 거는 배선은 아무것도 못 잡는다.
+     ⚠ 값은 어디에도 저장하지 않는다. 계산기이지 원장이 아니다 — 새로고침하면 빈다. */
+  function fmtQty(n) {
+    return (n > 0 ? '+' : '') + n.toLocaleString('en-US');
+  }
+  function targetRow(tr) {
+    var inp = tr.querySelector('input.tgtw'), out = tr.querySelector('td.tgtq');
+    if (!inp || !out) return 0;
+    var spp = parseFloat(tr.getAttribute('data-spp')),
+        wf = parseFloat(tr.getAttribute('data-wf')),
+        v = inp.value.trim();
+    out.className = 'tnum tgtq';
+    if (v === '' || !isFinite(spp) || !isFinite(wf)) { out.textContent = ''; return 0; }
+    var tgt = parseFloat(v);
+    if (!isFinite(tgt)) { out.textContent = ''; return 0; }
+    var dq = Math.round((tgt - wf) * spp);
+    out.textContent = fmtQty(dq);
+    out.className = 'tnum tgtq ' + (dq > 0 ? 'pos' : (dq < 0 ? 'neg' : ''));
+    out.title = '목표 ' + tgt.toFixed(2) + '% − 현재 ' + wf.toFixed(2) + '% = '
+              + (tgt - wf).toFixed(2) + '%p → ' + fmtQty(dq) + '주'
+              + (dq < 0 ? ' (매도)' : (dq > 0 ? ' (매수)' : ''));
+    return 1;
+  }
+  function targetSum(tbody) {
+    // 합계 칸은 «몇 건을 건드렸나» 를 센다. 수량을 더하지는 않는다 — 단위가 섞인
+    // 숫자라 더해도 뜻이 없다(이 표의 다른 수량 열에 합계가 없는 것과 같은 이유다).
+    var tb = tbody.closest ? tbody.closest('table') : null;
+    if (!tb) return;
+    var cell = tb.querySelector('th.tgtsum');
+    if (!cell) return;
+    var n = 0, buy = 0, sell = 0;
+    Array.prototype.forEach.call(tb.querySelectorAll('tbody tr[data-spp]'), function (tr) {
+      var out = tr.querySelector('td.tgtq');
+      if (!out || !out.textContent) return;
+      n++;
+      var q = parseFloat(out.textContent.replace(/[+,]/g, ''));
+      if (q > 0) buy++; else if (q < 0) sell++;
+    });
+    cell.textContent = n ? (n + '건') : '';
+    cell.title = n ? ('목표를 넣은 ' + n + '종 — 매수 ' + buy + ' · 매도 ' + sell
+                      + '. 수량은 종목마다 단가가 달라 더하지 않는다.') : '';
+  }
+  document.addEventListener('input', function (e) {
+    var inp = e.target;
+    if (!inp || !inp.classList || !inp.classList.contains('tgtw')) return;
+    var tr = inp.closest('tr');
+    if (!tr) return;
+    targetRow(tr);
+    targetSum(tr.parentNode);
+  });
+
   window.addEventListener('beforeunload', function (e) {
     if (S.dirty) { e.preventDefault(); e.returnValue = ''; }
   });

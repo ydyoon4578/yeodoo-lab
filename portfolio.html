@@ -279,13 +279,17 @@
      주석은 «차이는 본체» 라고 적어 놓고 코드는 그 차이를 접고 있었다. ② 2026-08-26 에
      이름 열을 빼면서 뒤 열이 한 칸씩 당겨졌다. nth-child 는 열 순서를 손으로 세는 규칙이라
      표가 바뀔 때마다 같이 세야 한다 — 아래 순서를 **여기 적어 두고** 함께 고친다.
-     열 순서(12열): 1티커 2섹터 3지수비중 4펀드비중 5패시브 6전략 7차이 8보유수량
-                    9패시브수량 10전략수량 11지수기준 12괴리. */
+     🚨 2026-09-16 세 번째로 어긋날 뻔했다 — 표가 15열이 되면서 9열이 «패시브수량» 에서
+       «전략(%)» 로 밀렸다. 그대로 뒀으면 좁은 창에서 전략 열이 사라졌을 것이다.
+       접는 대상은 이름이지 번호가 아니다: 섹터(2) · 패시브수량(11).
+     열 순서(15열): 1티커 2섹터 3지수비중 4펀드비중 5차이 6지수패시브 7펀드패시브
+                    8패시브차이 9전략 10보유수량 11패시브수량 12전략수량 13지수기준
+                    14목표 15매매수량. */
 @media(max-width:760px){
   #content tbody td{padding:4px 6px}
   #content table.big td:not(.tnum):not(.tk){max-width:105px}
   .tall table th:nth-child(2),.tall table td:nth-child(2),
-  .tall table th:nth-child(9),.tall table td:nth-child(9){display:none}
+  .tall table th:nth-child(11),.tall table td:nth-child(11){display:none}
 }
 #content table.mini{width:auto;min-width:340px;margin:0 0 16px}
 .tnum{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
@@ -558,6 +562,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   #content table{font-size:11px}
   #content thead th{font-size:9.5px;padding:4px 5px}
   #content tbody td{padding:3px 4px}
+  /* 🚨 2026-09-16 사용자 «열 너비 줄이고» — 포트폴리오 표만 한 단계 더 조인다.
+       15열이 된 표라 좌우 여백이 곧 잘림이다. 다른 표(원장·미보유 목록)는 열이
+       적어 더 조일 이유가 없으므로 .big 에만 건다.
+     ⚠ 글자 크기는 안 줄인다(11px 이 이미 하한이다) — 줄이는 것은 **여백**이다.
+       숫자 표에서 글자를 더 줄이면 자릿수를 세는 일이 어려워진다. */
+  #content table.big thead th{padding:3px 3px;letter-spacing:.02em}
+  #content table.big tbody td{padding:2px 3px}
+  /* 목표 비중 입력 — 칸 안에 들어앉게. 기본 number 스핀 화살표가 폭을 6~8px 먹는다. */
+  input.tgtw{width:46px;font-family:var(--mono);font-size:10.5px;text-align:right;
+    padding:1px 3px;border:1px solid var(--line);border-radius:2px;
+    background:var(--panel);color:var(--ink)}
+  input.tgtw::-webkit-outer-spin-button,input.tgtw::-webkit-inner-spin-button{
+    -webkit-appearance:none;margin:0}
+  input.tgtw{-moz-appearance:textfield}
+  input.tgtw:focus{outline:1px solid var(--marg,#b8860b);outline-offset:0}
+  td.tgtq{font-weight:600}
   #content table.big td:not(.tnum):not(.tk){max-width:130px;overflow:hidden;text-overflow:ellipsis}
   .tblwrap{margin:0 0 11px;overflow-x:auto}
   .sec{font-size:11px}
