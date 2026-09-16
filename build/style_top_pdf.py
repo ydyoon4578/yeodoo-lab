@@ -648,6 +648,8 @@ def _sh_change(P, t, i):
       12/20 삭제). 즉 이 규칙이 겨냥해야 할 가장 전형적인 사건이 일어난 종목이 꼴찌가
       아니라 **후보에서 사라진다.**
       대신 그 함수가 함께 돌려주는 이음매(sh_seam)를 **건너뛰는 짝만** 배제한다.
+      ⚠ 2026-09-16 — 그때까지 sh_u 는 **이름만** 안 잘린 계열이었다(split_trim 이 되맞춤을 멈춘
+        자리에서 sh 와 똑같이 끊겨 있었다 — 실측 518종 전부 sh 와 같은 값). 이제 실제로 이어진다.
     """
     f = P.fx.get(t) or {}
     cut = (dt.date.fromisoformat(P.dates[i]) - dt.timedelta(days=LAG_DAYS)).isoformat()

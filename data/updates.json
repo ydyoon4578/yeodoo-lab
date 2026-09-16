@@ -5,6 +5,12 @@
  "events": [
   {
    "dt": "2026-09-16",
+   "hm": "09:20",
+   "target": "explorer",
+   "title": "전략 랩 — 주식수 기준 보정(분사형 분할 가르기 · 합병 단절에서 이력 유지 · 빈 구간 야후 보완) 뒤 전체 재실행 · 게시 42종 그대로, 36종 수치 소폭 이동(최대 |Δ샤프| 0.077)"
+  },
+  {
+   "dt": "2026-09-16",
    "hm": "08:16",
    "target": "rotation",
    "title": "최근동향 13종 갱신 + 신규 1종(A24 거래량 알파 (Trading Volume Alpha · Goyenko·Kelly·Moskowitz·Su·Zhang, NBER 2024))"
