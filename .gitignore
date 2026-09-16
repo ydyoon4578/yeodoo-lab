@@ -135,3 +135,6 @@ data/_hrp_v5.json
 
 # RATEUP(2026-09-16) 얼린 측정 — build/rateup_gate.py 로 언제든 재생성된다.
 data/_rateup_gate.json
+
+# IDXREV(2026-09-16) 얼린 측정 — build/idxrev.py 로 재생성된다.
+data/_idxrev.json
