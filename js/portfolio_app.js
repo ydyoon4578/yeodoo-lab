@@ -871,11 +871,25 @@
       var byD = {};
       trs.forEach(function (t) { (byD[t.dt] = byD[t.dt] || []).push(t); });
       Object.keys(byD).sort().reverse().forEach(function (d0) {
-        var g = byD[d0], inv = 0, pnl = 0, np = 0, real = 0, nReal = 0;
+        // 🚨 2026-09-16 — «평가» 합을 **매수/매도로 가른다.** 둘은 이름만 같지 다른 것을 잰다.
+        //   매수 줄의 q×(현재가−체결가) 는 «아직 안 판 돈»(평가)이지만, 매도 줄에서 그 값은
+        //   q<0 이라 부호가 뒤집혀 «팔고 나서 안 맞은 하락분»(회피)이 된다. 한 칸에 «평가»
+        //   라고만 적어 두면 매도 묶음에서 뜻이 통째로 어긋난다 — 사용자가 「매도하고 가격
+        //   떨어졌는데 수익률이 −」로 걸린 자리가 여기다(행의 «실현»은 원가 대비라 음수인데
+        //   머리의 «평가»는 회피라 양수였고, 라벨이 그 차이를 하나도 말해 주지 않았다).
+        //   ⚠ 실현과 회피를 더하지 않는다 — 실현은 «산 값 대비», 회피는 «판 값 대비»다.
+        var g = byD[d0], inv = 0, pnlB = 0, pnlS = 0, npB = 0, npS = 0,
+            nB = 0, nS = 0, real = 0, nReal = 0;
         g.forEach(function (t) {
           var p = pxLeI(t.t, asofI);
           inv += t.q * t.p;
-          if (p != null) pnl += t.q * (p - t.p); else np++;
+          if (t.q < 0) {
+            nS++;
+            if (p != null) pnlS += t.q * (p - t.p); else npS++;
+          } else {
+            nB++;
+            if (p != null) pnlB += t.q * (p - t.p); else npB++;
+          }
           if (t.rp != null) { real += t.rp; nReal++; }
         });
         // 그날 이 매매들이 펀드의 몇 %였나 — 묶음 머리에 합을 적는다(개별 열의 합계).
@@ -887,8 +901,16 @@
         h.push('<div class="ledgrp"><div class="ledhd"><b>' + esc(d0) + '</b>' +
           '<span>' + g.length + '건 · 투입 ' + num(inv, 0) + ' USD' +
           (gwOK ? ' · NAV 대비 ' + pct(gw / 100, 2, true) : '') + '</span>' +
-          '<span class="' + sgn(pnl) + '">평가 ' + (pnl > 0 ? '+' : '') + num(pnl, 0) + ' USD' +
-          (np ? ' (가격 없는 ' + np + '건 제외)' : '') + '</span>' +
+          // 매수가 있는 묶음에만 «평가» 를 적는다(매도만인 날에 평가 0 을 적으면 안 판 것이 있다고 읽힌다).
+          (nB ? '<span class="' + sgn(pnlB) + '">평가 ' + (pnlB > 0 ? '+' : '') + num(pnlB, 0) + ' USD' +
+                (nS ? ' (매수 ' + nB + '건)' : '') +
+                (npB ? ' (가격 없는 ' + npB + '건 제외)' : '') + '</span>' : '') +
+          // 매도 묶음의 «회피» — 판 값 대비 지금 얼마나 빠졌나. 팔아서 번 돈이 아니라
+          // «안 팔았으면 더 잃었을 돈»이다. 그래서 이름을 «평가» 와 다르게 준다.
+          (nS ? '<span class="' + sgn(pnlS) + '" title="매도 후 회피 — 체결가 대비 현재가가 빠진 몫입니다. ' +
+                  '판 값 대비라, 산 값 대비인 «실현» 과 더하면 안 됩니다.">매도 후 회피 ' +
+                (pnlS > 0 ? '+' : '') + num(pnlS, 0) + ' USD' +
+                (npS ? ' (가격 없는 ' + npS + '건 제외)' : '') + '</span>' : '') +
           // 실현은 «평가» 와 다른 것을 잰다 — 평가는 지금 값이고 실현은 판 순간 확정된 돈이다.
           // 둘을 더하지 않는다(더하면 같은 몫을 두 번 센다). 매도가 있는 묶음에만 적는다.
           (nReal ? '<span class="' + sgn(real) + '">실현 ' + (real > 0 ? '+' : '') +
@@ -911,6 +933,13 @@
               ? '실현 — 이동평균 원가 ' + num(t.ravg) + ' 대비 ' + num(t.rn, 0) + '주' +
                 (t.rn < -t.q ? ' (순보유 초과 ' + num(-t.q - t.rn, 0) + '주 제외)' : '')
               : '이 전략에 이 종목의 매수 기록이 없어 원가를 못 잡습니다';
+            // 같은 줄에 «판 값 대비» 도 적어 둔다 — 원가 대비 −인데 매도 뒤 주가는 빠진
+            // 경우가 흔하고(09-10 매도 10건 중 9건), 그때 두 수가 부호까지 갈린다.
+            if (p != null) {
+              var av = -t.q * (t.p - p);
+              tip += ' · 매도 후 회피 ' + (av > 0 ? '+' : '') + num(av, 0) + ' USD' +
+                     ' (체결 ' + num(t.p) + ' → 현재 ' + num(p) + ')';
+            }
           }
           h.push('<tr' + (sell ? ' class="sellrow"' : '') + '><td>' +
             esc(t.s) + (t.src === 'web' ? ' <span class="badge web">웹</span>' : '') + '</td>' +
