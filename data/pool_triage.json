@@ -2,11 +2,11 @@
  "note": "탐색 풀 카드가 «왜 아직 안 쟀나» 를 말한다. 판정 넷 — measured(이미 쟀다) · ready(구현만 하면 된다) · no_input(랩에 그 자료가 없다) · underspec(원문이 수를 안 적었다). 🚨 underspec 에 기본값을 정하지 않는다 — 폐기한 자유도를 되살리는 것이다(PREREG-2026-08-29-ASWRITTEN).",
  "method": "heuristic",
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
- "n": 125,
+ "n": 126,
  "counts": {
   "measured": 47,
   "underspec": 48,
-  "no_input": 19,
+  "no_input": 20,
   "duplicate": 6,
   "not_a_rule": 1,
   "ready": 4
@@ -1009,6 +1009,15 @@
    ],
    "name": "거래량 알파 (Trading Volume Alpha · Goyenko·Kelly·Moskowitz·Su·Zhang, NBER 2024) — 무엇을 담을지가 아니라 오늘 목표까지 얼마나 따라갈지를 예측 거래량으로 정한다",
    "cat": "A"
+  },
+  "E61": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: PIT 컨센서스",
+   "hits": [
+    "과거 컨센서스"
+   ],
+   "name": "머신 예측 불일치 (Machine Forecast Disagreement · Bali·Kelly·Mörke·Rahman, The Review of Financial Studies, 2026 · doi 10.1093/rfs/hhag042) — 투자자를 서로 다른 머신러닝 모형 100개로 두고 그 예측이 흩어진 정도를 종목의 의견불일치로 잰다",
+   "cat": "E"
   }
  }
 }
