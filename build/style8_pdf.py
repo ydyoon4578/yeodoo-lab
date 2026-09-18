@@ -3,7 +3,7 @@
 
 무엇을. 홈 화면에 실리는 **스타일 8종**을 A4 네 쪽으로 뽑는다.
   1쪽  종합 ① 스타일 성과 — 기간별 수익률 표 · 월별 수익률 · 위험과 수익
-  2쪽  종합 ② 기간별 수익률 — **홈 화면과 같은 네 판**(지수 · 스타일 · 섹터 · 산업그룹)
+  2쪽  종합 ② 기간별 수익률 3개월 — 위에서 아래로 넷: 지수 · **내 스타일 8종**(하이라이트) · 섹터 · 산업그룹
   3쪽  스타일별 구성종목 넷
   4쪽  스타일별 구성종목 넷
 
@@ -15,18 +15,23 @@
   2026-09-18  «기간별 수익률 차트도 넣고 정보 추가해서 4페이지로 구성해줘» → 4쪽
   2026-09-18  «기간별 수익률차트, 장기 성과, 누적수익률, 여러 스타일이 같이 든 종목, 섹터구성
               빼고 대신에 index.html 에 있는 기간별 수익률 4개 차트를 포함해줘. 1,2페이지는
-              종합정보로 잘 구성하고, 3,4페이지는 스타일별 구성종목만» → 지금 판
+              종합정보로 잘 구성하고, 3,4페이지는 스타일별 구성종목만» → 1·2쪽 종합 + 3·4쪽 구성종목
+  2026-09-18  «2페이지 차트 기간 3개월로 해주고, 차트 위에서 하나씩 총 4개 만들어. 그리고 스타일
+              빼고 내 스타일 8종으로 대체하고 하이라이트 표시해» → 지금 판(2쪽 세로 4단)
 
 자료 — **계산하지 않는다.** 이미 구워진 파일을 그린다(숫자를 두 번 계산하면 조용히 갈린다).
-  · data/style_perf.json      ← build/style_top_pdf.py --json   (1·3·4쪽)
+  · data/style_perf.json      ← build/style_top_pdf.py --json   (1·3·4쪽 · 2쪽 내 스타일 = path)
   · data/home_perf.json       ← build/home_perf.py              (2쪽 — 홈 «기간별 수익률» 시계열)
   · data/home_ind_perf.json   ← 1일 밖 구간의 산업그룹 경로       (2쪽)
   🚨 2쪽은 홈과 **같은 자료·같은 규칙**이다(index.html drawStChart 를 옮겼다).
     지수는 고정색(CIX) · 섹터와 스타일은 끝값 순으로 11색을 돌려 쓰고 · 산업그룹은 **부모 섹터의
     색 + 선 모양**으로 가른다(반도체가 IT 색이라 옆 섹터 판과 같이 읽힌다). 선 끝에 «이름 값».
     산업그룹 축이 다르면(1일 분봉 ↔ 일간) 그 판을 뺀다 — 다른 잣대를 나란히 놓지 않는다.
-  ⚠ 기본 구간은 홈 첫 화면과 같은 **1일**(전일 종가 대비 · 미 동부 분봉). 그 구간이 자료에
-    없으면(장중 잡 전) 1주로 내려가고 머리에 그렇게 적는다. `--horizon` 으로 바꿀 수 있다.
+  ⚠ 기본 구간은 **3개월**(사용자 지시 2026-09-18). 그 구간이 자료에 없으면 1주로 내려가고
+    머리에 그렇게 적는다. `--horizon` 으로 바꿀 수 있다(내 스타일 판은 1주·1개월·3개월·6개월만).
+  ⚠ 내 스타일 8종 판은 style_perf.json 의 path(날짜 붙은 원해상도 일별, 최근 6개월)를 쓴다 —
+    nav(140점 표시용 표본)는 날짜가 없어 못 쓴다. 끝값이 1쪽 표의 같은 칸과 같다.
+    색은 줄마다 고정(MYCOL) · 벤치마크(S&P 500·NASDAQ 100 가격지수)는 회색.
   ⚠ 두 파일은 기준일이 다를 수 있다(러너가 따로 굽는다). 1쪽·2쪽 머리에 **각자의 기준일**을
     적는다 — 한 날짜로 뭉개지 않는다.
   ⚠ 산업그룹 이름은 영문 GICS(최장 47자)라 A4 반 폭에 안 들어간다 — GICS 한글명으로 적는다
@@ -40,7 +45,7 @@
   -티커 = 다음 재선정에서 빠지는 종목 · +티커 = 새로 들어오는 종목
 
     python build/style8_pdf.py                                  # data/ → data/style8.pdf
-    python build/style8_pdf.py --horizon 1M                     # 2쪽 구간 바꾸기
+    python build/style8_pdf.py --horizon 1M                     # 2쪽 구간 바꾸기(기본 3M)
     python build/style8_pdf.py --src A --perf B --ind C --out D
       (매일 아침 작업이 origin/main 의 자료를 작업 트리 밖에서 읽어 공유폴더로 낼 때 쓴다 —
        ops/style8_daily/style8_daily.py)
@@ -117,6 +122,13 @@ SECPAL = [_ACC, _HOT, _DEP, _MARG, _CHAMP, "#4F74C9", "#A9782A", "#5E8F2F", "#7E
 DASH = ["-", (0, (5, 2.5)), (0, (2, 2)), (0, (7, 2, 1.5, 2))]   # 같은 섹터 안 산업그룹을 가르는 선 모양
 HZL = {"1D": "1일", "1W": "1주", "1M": "1개월", "3M": "3개월", "6M": "6개월", "12M": "1년", "YTD": "올해"}
 PT = 1 / (11.69 * 72)  # 1pt 를 그림 세로 비율로
+# 내 스타일 8종 — **줄마다 고정색**(끝값 순으로 돌리면 날마다 색이 바뀌어 매일 받는 문서에서 못 따라간다).
+MYCOL = {"div": "#0C7A4A", "val": "#2C6E8F", "qvm": "#7E5DB5", "spmo": "#A64B3B",
+         "size": "#A35510", "grow": "#4F74C9", "hbeta": "#816400", "squal": "#C24F66"}
+HL = "#FFF4CC"         # 하이라이트 바탕(형광펜) — 내 스타일 판을 시장판 셋과 가른다
+# 내 스타일 경로를 자르는 거래일 수 — build/style_top_pdf.py TRAIL 과 같다(그래야 끝값이 1쪽 표의 칸과 같다)
+HN = {"1W": 5, "1M": 21, "3M": 63, "6M": 126}
+TRL = {"1W": "1주", "1M": "1개월", "3M": "3개월", "6M": "6개월"}   # 1쪽 표의 칸 이름
 # GICS 산업그룹 한글명 — 영문(최장 47자)은 A4 반 폭에 안 들어간다.
 IND_KO = {
     "Energy": "에너지", "Materials": "소재", "Capital Goods": "자본재",
@@ -166,24 +178,6 @@ def section(fig, y, title, note=""):
     if note:
         tx(fig, X1, y, note, fontsize=6.3, color=MUTED, ha="right")
     return y - .013
-
-
-def _wrap(s, em_cap):
-    """글자 폭을 어림해(한글 1em · 그 밖 .55em) 줄을 나눈다 — fig.text 의 wrap 은 X1 을 모른다."""
-    lines, cur, w = [], "", 0.0
-    for ch in s:
-        cw = 1.0 if ord(ch) >= 0x2E80 else (.3 if ch == " " else .55)
-        if w + cw > em_cap and cur:
-            cut = cur.rfind(" ")
-            if cut > len(cur) * .6:                  # 낱말 가운데서 끊지 않게 — 마지막 빈칸으로
-                lines.append(cur[:cut]); cur = cur[cut + 1:]
-            else:
-                lines.append(cur); cur = ""
-            w = sum(1.0 if ord(c) >= 0x2E80 else (.3 if c == " " else .55) for c in cur)
-        cur += ch; w += cw
-    if cur:
-        lines.append(cur)
-    return lines
 
 
 # ── 1쪽 · 종합 ① 스타일 성과 ──────────────────────────────────────────────────
@@ -329,6 +323,11 @@ def _ranked(d):
                   key=lambda kv: -(_last(kv[1])[0] if _last(kv[1])[0] is not None else -1e9))
 
 
+def _em(s):
+    """글자 폭 어림(em) — 한글 1 · 빈칸 .3 · 그 밖 .55. 제목 옆 글씨를 제목 끝에 붙이는 데만 쓴다."""
+    return sum(1.0 if ord(c) >= 0x2E80 else (.3 if c == " " else .55) for c in s)
+
+
 def _nice_step(span):
     """y 눈금 간격 — 홈과 같은 규칙(범위/5 에 가장 가까운 1·2·2.5·5·10 × 10^k)."""
     import math
@@ -362,28 +361,36 @@ def _xticks(dates, intraday):
     return pick, ["%s/%s" % (str(dates[i])[5:7], str(dates[i])[8:10]) for i in pick]
 
 
-def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, dashes=False, fx=None):
-    """홈 판 하나. series = [(이름, 값[], 색, 선모양)] — 끝값 내림차순으로 이미 정렬돼 있다.
+def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, dashes=False, fx=None,
+                    right="", count=None, title_color=INK, face=PAPER):
+    """판 하나. series = [(이름, 값[], 색, 선모양[, 'b'])] — 끝값 내림차순으로 이미 정렬돼 있다.
 
     홈 JS chart() 와 같은 요소: y 눈금(보기 좋은 간격) · x 눈금 넷 · 0 아래 옅은 바탕 · 끝점 ·
     선 끝 «이름 값» 라벨(겹치면 민다 · 민 만큼 가는 선으로 끝점과 잇는다) · 산업그룹은 라벨 앞에
     선 모양 견본. 라벨 글씨는 선 색이다(홈과 같다 — 여기서는 색이 곧 개체다).
+    다섯째 칸이 'b' 인 줄은 벤치마크다 — 회색 가는 선 · 보통 굵기 라벨(비교 대상이지 주인공이 아니다).
+    right = 판 오른쪽 위 글씨(구간) · count = 제목 옆 회색 글씨(없으면 «· N개»).
     """
+    import math
     n = len(dates)
     lots = len(series) > 12
-    tx(fig, cx, top + .0035, title, fontsize=8.8, weight="bold", va="bottom")
-    tx(fig, cx + .0145 * len(title) + .004, top + .0038, "· %d개" % len(series),
-       fontsize=6.4, color=MUTED, va="bottom")
+    cnt = ("· %d개" % len(series)) if count is None else count
+    tw = _em(title) * 8.8 / 595 + .006                      # 제목 폭(그림 비율) + 사이
+    tx(fig, cx, top + .0035, title, fontsize=8.8, weight="bold", va="bottom", color=title_color)
+    tx(fig, cx + tw, top + .0038, cnt, fontsize=6.4, color=MUTED, va="bottom")
+    if right:
+        tx(fig, cx + cw, top + .0038, right, fontsize=6.3, va="bottom", ha="right",
+           color=MUTED if title_color == INK else title_color)
     ax_x = cx + .030                                         # 왼쪽 y 눈금 자리
     ax_w = cw - .030 - lab_w
     y0 = top - h
     ax = fig.add_axes([ax_x, y0, ax_w, h])
-    ax.set_facecolor(PAPER)
-    for s in ax.spines.values():
-        s.set_visible(False)
+    ax.set_facecolor(face)
+    for sp_ in ax.spines.values():
+        sp_.set_visible(False)
     ax.tick_params(colors=MUTED, labelsize=5.7, length=0, pad=2.5)
 
-    allv = [v for _, vals, _, _ in series for v in vals if v is not None]
+    allv = [v for t in series for v in t[1] if v is not None]
     lo, hi = min(0.0, min(allv, default=0.0)), max(0.0, max(allv, default=0.0))
     if hi - lo < 1:
         hi += .5; lo -= .5
@@ -393,7 +400,6 @@ def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, 
     ax.set_ylim(lo, hi)
 
     st = _nice_step(hi - lo)
-    import math
     t = math.ceil(lo / st) * st
     ticks = []
     while t <= hi + 1e-9:
@@ -417,8 +423,8 @@ def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, 
         fv = [v for v in fx if v is not None]
         if len(fv) > 1:
             ax2 = ax.twinx()
-            for s in ax2.spines.values():
-                s.set_visible(False)
+            for sp_ in ax2.spines.values():
+                sp_.set_visible(False)
             b_lo, b_hi = min(fv), max(fv)
             if b_hi - b_lo < 1:
                 b_hi += 1; b_lo -= 1
@@ -426,23 +432,26 @@ def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, 
             ax2.set_ylim(b_lo - bp, b_hi + bp)
             ax2.plot(range(n), fx, color=_RP, lw=1.0, alpha=.3, zorder=0)
             ax2.set_yticks([])
-            # 글씨는 판 제목 바로 뒤에 — 오른쪽 끝에 두면 옆 판 제목(스타일)을 밟는다
-            tx(fig, cx + .0145 * len(title) + .052, top + .0038,
+            # 글씨는 판 제목 바로 뒤에 — 오른쪽 끝에 두면 구간 글씨를 밟는다
+            tx(fig, cx + tw + _em(cnt) * 6.4 / 595 + .014, top + .0038,
                "배경 = 원/달러  %s → %s" % (format(round(fv[0], 1), ",.1f"), format(round(fv[-1], 1), ",.1f")),
                fontsize=5.8, color=_RP, va="bottom")
 
     labs = []
-    for nm, vals, col, ls in series:
+    for t in series:
+        nm, vals, col, ls = t[:4]
+        bench = len(t) > 4 and t[4] == "b"
         xs = [i for i, v in enumerate(vals) if v is not None]
         ys = [v for v in vals if v is not None]
         if not xs:
             continue
-        ax.plot(xs, ys, color=col, lw=.85 if lots else 1.15, ls=ls, alpha=.92 if lots else 1,
-                zorder=3, solid_capstyle="round", solid_joinstyle="round")
+        ax.plot(xs, ys, color=col, lw=.8 if bench else (.85 if lots else 1.15), ls=ls,
+                alpha=.92 if lots else 1, zorder=2 if bench else 3,
+                solid_capstyle="round", solid_joinstyle="round")
         ax.scatter([xs[-1]], [ys[-1]], s=4 if lots else 7, color=col, zorder=4, lw=0)
         yf = y0 + h * (ys[-1] - lo) / (hi - lo)
         xf = ax_x + ax_w * (xs[-1] / max(1, n - 1))
-        labs.append({"nm": nm, "v": ys[-1], "col": col, "ls": ls, "x": xf, "y": yf})
+        labs.append({"nm": nm, "v": ys[-1], "col": col, "ls": ls, "x": xf, "y": yf, "b": bench})
 
     # 🚨 라벨 겹침 — 홈과 같은 세 단계: ① 위에서부터 최소 간격만큼 아래로 민다 ② 바닥을 넘으면
     #   뭉치를 통째로 올린다 ③ 그래도 위를 넘으면 위 경계에서 멈춘다(잘리느니 겹치는 편이 낫다).
@@ -475,17 +484,61 @@ def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, 
                                   ls=L["ls"], transform=fig.transFigure, zorder=3))
             tx0 = rx + .031
         tx(fig, tx0, L["ly"], "%s  %+.2f" % (L["nm"], L["v"]), fontsize=fs, color=L["col"],
-           va="center", weight="bold")
+           va="center", weight="normal" if L["b"] else "bold")
     return ax
 
 
-def draw_home_page(fig, HP, IP, horizon):
-    """2쪽 — 홈과 같은 네 판을 2×2 로. 위 = 살 수 있는 넓은 것(지수·스타일), 아래 = 쪼갠 것(섹터·산업그룹)."""
+def my_styles(P, hz):
+    """내 스타일 8종 + 벤치마크 둘 — style_perf.json 의 path(날짜 붙은 원해상도 일별)에서 그린다.
+
+    반환 (series, dates) · 못 그리면 (None, 사유).
+    ⚠ nav(140점 표시용 표본)를 쓰지 않는다 — 날짜가 없어 «3개월 전 그날» 을 못 짚고, 끝값이
+      1쪽 표와 어긋난다. path 는 trails 와 같은 거래일 수(HN)로 잘라 끝값이 표의 칸과 같다.
+    """
+    n = HN.get(hz)
+    pdts = (P or {}).get("path_dates") or []
+    if not n:
+        return None, "%s 구간은 내 스타일 일별 경로가 없다(최근 6개월만 싣는다)" % HZL.get(hz, hz)
+    if len(pdts) < n + 1:
+        return None, ("style_perf.json 에 %s 치 일별 경로(path)가 아직 없다 — 러너가 다음에 구울 때 실린다"
+                      % HZL.get(hz, hz))
+    S = {x["key"]: x for x in P.get("styles") or []}
+
+    def seg(p):
+        if not p or len(p) < n + 1:
+            return None
+        a = p[-(n + 1):]
+        if not a[0]:
+            return None
+        return [None if v is None else (v / a[0] - 1) * 100 for v in a]
+
+    out = []
+    for k in KEYS:
+        v = seg((S.get(k) or {}).get("path"))
+        if v is None:
+            return None, "%s 의 일별 경로가 자료에 없다" % ((S.get(k) or {}).get("label", k))
+        out.append((S[k]["label"], v, MYCOL.get(k, _ACC), "-"))
+    for bk, ls in (("spx", "-"), ("ndx", (0, (4, 2)))):
+        bx = (P.get("bench") or {}).get(bk) or {}
+        v = seg(bx.get("path"))
+        if v is not None:
+            out.append((bx.get("label", bk), v, BENCH_C, ls, "b"))
+    out.sort(key=lambda t: -(_last(t[1])[0] if _last(t[1])[0] is not None else -1e9))
+    return out, pdts[-(n + 1):]
+
+
+def draw_home_page(fig, HP, IP, P, horizon):
+    """2쪽 — 판 넷을 **위에서 아래로 한 줄씩**(사용자 지시 2026-09-18 «차트 위에서 하나씩 총 4개»).
+
+    지수 → **내 스타일 8종**(하이라이트) → 섹터 → 산업그룹. 홈의 «스타일»(스타일 ETF) 판은 뺐다
+    (같은 지시 «스타일 빼고 내 스타일 8종으로 대체하고 하이라이트 표시해»).
+    판 폭·라벨 칸을 전부 같게 둬 네 판의 x 축이 세로로 맞는다.
+    """
     series = HP.get("series") or {}
     hz = horizon if horizon in series else ("1W" if "1W" in series else next(iter(series), None))
     y = .962
     tx(fig, X0, y, "기간별 수익률 · %s" % HZL.get(hz, hz or "—"), fontsize=17, weight="bold")
-    tx(fig, X1, y + .002, "여두 전략 랩 · 홈 화면과 같은 네 판", fontsize=8, color=ACC, ha="right")
+    tx(fig, X1, y + .002, "여두 전략 랩 · 홈 화면 차트 + 내 스타일 8종", fontsize=8, color=ACC, ha="right")
     if hz is None:
         tx(fig, X0, .9, "기간별 수익률 시계열(home_perf.json)에 구간이 하나도 없다", fontsize=9, color=NEG)
         return
@@ -493,13 +546,9 @@ def draw_home_page(fig, HP, IP, horizon):
     intraday = bool(blk.get("intraday"))
     dates = blk.get("dates") or []
     sdates = blk.get("sec_dates") or dates
-    base = (HP.get("base_dates") or {}).get(hz, dates[0] if dates else "")
     y -= .017
-    if intraday:
-        span = "1일 = 전일 종가 대비 · 미 동부 %s~%s 분봉" % (dates[0], dates[-1])
-    else:
-        span = "%s 종가 대비 · %s ~ %s 일간 종가" % (base, dates[0], dates[-1])
-    tx(fig, X0, y, "기준일 %s · %s · 달러 기준 · 선 끝 숫자 = 누적 수익률(%%)" % (HP.get("as_of", "—"), span),
+    tx(fig, X0, y, ("1일 = 전일 종가 대비 · 미 동부 분봉 · " if intraday else "")
+       + "달러 기준 · 선 끝 숫자 = 구간 누적 수익률(%) · 판마다 자료 기준일이 달라 판 오른쪽 위에 구간을 적었다",
        fontsize=6.8, color=MUTED)
     if hz != horizon:
         tx(fig, X1, y, "※ %s 구간이 아직 자료에 없어 대신 %s 구간을 그렸다" % (HZL.get(horizon, horizon), HZL.get(hz, hz)),
@@ -508,7 +557,6 @@ def draw_home_page(fig, HP, IP, horizon):
     hline(fig, X0, X1, y, RULE, .9)
 
     ix = [(k, v, CIX.get(k, _ACC), "-") for k, v in _ranked(blk.get("ix"))]
-    sty = [(k, v, SECPAL[i % len(SECPAL)], "-") for i, (k, v) in enumerate(_ranked(blk.get("sty")))]
     sec = [(k, v, SECPAL[i % len(SECPAL)], "-") for i, (k, v) in enumerate(_ranked(blk.get("sec")))]
     csec = {k: c for k, _v, c, _ls in sec}
     # 산업그룹 — 1일은 blk 안에(ind·ind_sec), 나머지 구간은 별도 파일(home_ind_perf).
@@ -527,36 +575,57 @@ def draw_home_page(fig, HP, IP, horizon):
         key = parent or ("_%d" % i)
         j = seen.get(key, 0); seen[key] = j + 1
         ind.append((ind_name(k), v, csec.get(parent) or SECPAL[i % len(SECPAL)], DASH[j % len(DASH)]))
+    mys, mdates = my_styles(P, hz)
 
-    gx = .040
-    cw = (X1 - X0 - gx) / 2
-    c2 = X0 + cw + gx
-    top1, h1 = y - .030, .300
-    fx = blk.get("fx") if not intraday else None
-    draw_home_panel(fig, X0, top1, cw, h1, "지수", dates, ix, intraday, lab_w=.098, fx=fx)
-    if sty:
-        draw_home_panel(fig, c2, top1, cw, h1, "스타일", sdates, sty, intraday, lab_w=.098)
-    top2 = top1 - h1 - .048
-    h2 = top2 - .110
-    draw_home_panel(fig, X0, top2, cw, h2, "섹터", sdates, sec, intraday, lab_w=.108)
-    if ind:
-        draw_home_panel(fig, c2, top2, cw, h2, "산업그룹", iblk["dates"], ind, intraday, lab_w=.162,
-                        dashes=True)
+    def rng(ds):
+        return (("%s ~ %s ET" if intraday else "%s ~ %s") % (ds[0], ds[-1])) if ds else ""
+
+    W = X1 - X0
+    LAB = .170          # 라벨 칸 — 가장 긴 산업그룹명(선 모양 견본 포함)이 들어가는 폭을 네 판이 같이 쓴다
+    H = (.125, .185, .165, .210)
+    GAP = .041          # 판 사이 = x 눈금 글씨 .013 + 여백 .012 + 다음 판 제목 .016
+    top = .905
+    # ① 지수 — 원/달러 배경선(일간 구간만)
+    draw_home_panel(fig, X0, top, W, H[0], "지수", dates, ix, intraday, LAB,
+                    fx=None if intraday else blk.get("fx"), right=rng(dates))
+    top -= H[0] + GAP
+    # ② 내 스타일 8종 — 하이라이트: 형광 바탕 + 왼쪽 굵은 띠 + 제목·구간 글씨를 랩 색으로
+    b0, b1 = top - H[1] - .019, top + .021
+    # ⚠ zorder 는 축(0)보다 낮게 — 같은 0 이면 그림이 축을 먼저 그리고 바탕을 위에 덮는다(실측: 판이 통째로 가려졌다)
+    fig.patches.append(plt.Rectangle((X0 - .014, b0), W + .020, b1 - b0, transform=fig.transFigure,
+                                     facecolor=HL, edgecolor="none", zorder=-1))
+    fig.add_artist(Line2D([X0 - .014, X0 - .014], [b0, b1], color=ACC, lw=3.2, solid_capstyle="butt",
+                          transform=fig.transFigure, zorder=1))
+    if mys:
+        draw_home_panel(fig, X0, top, W, H[1], "내 스타일 8종", mdates, mys, False, LAB,
+                        right=rng(mdates), count="· 여두 랩 스타일 8종 + 벤치마크 2(회색)",
+                        title_color=ACC, face=HL)
     else:
-        tx(fig, c2, top2 + .0035, "산업그룹", fontsize=8.8, weight="bold", va="bottom")
-        tx(fig, c2, top2 - .02, ("1일은 분봉 경로라 일간 산업그룹 판을 나란히 놓지 않는다(홈과 같은 규칙)"
-                                 if iskip else "이 구간의 산업그룹 경로가 자료에 없다"),
+        tx(fig, X0, top + .0035, "내 스타일 8종", fontsize=8.8, weight="bold", va="bottom", color=ACC)
+        tx(fig, X0, top - .02, mdates, fontsize=6.8, color=NEG)
+    top -= H[1] + GAP
+    # ③ 섹터
+    draw_home_panel(fig, X0, top, W, H[2], "섹터", sdates, sec, intraday, LAB, right=rng(sdates))
+    top -= H[2] + GAP
+    # ④ 산업그룹
+    if ind:
+        draw_home_panel(fig, X0, top, W, H[3], "산업그룹", iblk["dates"], ind, intraday, LAB,
+                        dashes=True, right=rng(iblk["dates"]))
+    else:
+        tx(fig, X0, top + .0035, "산업그룹", fontsize=8.8, weight="bold", va="bottom")
+        tx(fig, X0, top - .02, ("1일은 분봉 경로라 일간 산업그룹 판을 나란히 놓지 않는다(홈과 같은 규칙)"
+                                if iskip else "이 구간의 산업그룹 경로가 자료에 없다"),
            fontsize=6.6, color=MUTED)
 
-    notes = ["섹터 = 섹터 안 종목별 수익률의 평균(홈 표와 같은 정의) · 스타일 = 홈 표의 스타일 ETF 줄",
-             "산업그룹 = 부모 섹터와 같은 색, 같은 섹터 안에서는 선 모양(실선·파선·점선·일점쇄선)으로 가른다 · "
-             "라벨은 겹치지 않게 밀었다(가는 선이 원래 끝점)"]
-    if ind and not intraday and iblk.get("dates") and iblk["dates"][-1] != dates[-1]:
-        notes.append("※ 산업그룹 경로는 %s 까지다(별도 파일 home_ind_perf.json — 다른 판보다 늦게 온다)"
-                     % iblk["dates"][-1])
-    yy = .072
-    for s in notes:
-        tx(fig, X0, yy, s, fontsize=6.0, color=NEG if s.startswith("※") else MUTED)
+    notes = ["지수·섹터·산업그룹 = 홈 화면 «기간별 수익률» 과 같은 자료 · 섹터 = 섹터 안 종목별 수익률의 평균 · "
+             "산업그룹 = 부모 섹터 색, 같은 섹터 안은 선 모양으로 가른다"]
+    if mys:
+        notes.append("내 스타일 8종 = 1쪽의 여덟 줄(상위 10종목 동일가중 · 월말 리밸런스 · 비용 0) — 선 끝 숫자는 "
+                     "1쪽 표 «%s» 칸과 같다 · 회색 = 벤치마크(가격지수)" % TRL.get(hz, HZL.get(hz, hz)))
+    notes.append("라벨은 겹치지 않게 밀었다 — 가는 선이 원래 끝점을 가리킨다")
+    yy = .070
+    for s_ in notes:
+        tx(fig, X0, yy, s_, fontsize=6.0, color=MUTED)
         yy -= .0105
 
 
@@ -651,7 +720,7 @@ def main(argv=None):
     ap.add_argument("--src", default=SRC, help="style_perf.json 경로(기본 data/)")
     ap.add_argument("--perf", default=PERF, help="home_perf.json 경로(기본 data/)")
     ap.add_argument("--ind", default=IND, help="home_ind_perf.json 경로(기본 data/)")
-    ap.add_argument("--horizon", default="1D", choices=list(HZL), help="2쪽 구간(기본 1D = 홈 첫 화면)")
+    ap.add_argument("--horizon", default="3M", choices=list(HZL), help="2쪽 구간(기본 3M — 사용자 지시 2026-09-18)")
     ap.add_argument("--out", default=OUT, help="PDF 경로(기본 data/style8.pdf)")
     a = ap.parse_args(argv)
 
@@ -692,23 +761,17 @@ def main(argv=None):
     y -= .028
     y = section(fig, y, "위험과 수익",
                 "1년 변동성 대비 1년 수익률  ·  점선보다 위 = S&P 보다 위험 한 단위에 더 벌었다")
-    # 유니버스 편향 각주 — 자료(style_perf.json caveat)의 실측 문장을 그대로 싣는다.
-    #   위 1년 수익률이 오늘 유니버스를 과거로 소급해 고른 값이라, 이 줄 없이 내면 부풀려 읽힌다.
-    cav = (P.get("caveat") or "").replace("\U0001F6A8", "").strip()
-    k = cav.find("기준).")
-    cav = cav[:k + 4] if k > 0 else cav.split(". ")[0]
-    cl = _wrap(cav, (X1 - X0) * 8.27 * 72 / 5.9 * .97) if cav else []
-    y_cav = .052 + .0098 * len(cl)
-    # 축 아래 .036 = 눈금 글씨 + «1년 변동성» 축 이름 자리(종전 .020 에서 축 이름이 각주를 밟았다)
-    draw_risk_return(fig, y - .002, (y - .002) - (y_cav + .036), P, S, keys, kinds)
-    for s in cl:
-        tx(fig, X0, y_cav, s, fontsize=5.9, color=NEG)
-        y_cav -= .0098
+    # ⚠ 2026-09-18 — 여기 있던 «유니버스 편향» 각주(style_perf.json caveat)를 뺐다. 그 문장은
+    #   «유니버스는 소급이다» 라고 적는데, 이 표의 수치는 이미 **선정 시점 구성(PIT)** 값이다
+    #   (style_pit.json 의 pit 과 소수 둘째 자리까지 같다 — 고베타 27.83 · 소급이면 117.13).
+    #   문장이 2026-08-23 PIT 전환 전 것으로 남아 있다. 고치기 전까지 싣지 않는다.
+    # 축 아래 .088 = 눈금 글씨 + «1년 변동성» 축 이름 + 꼬리말 자리
+    draw_risk_return(fig, y - .002, (y - .002) - .088, P, S, keys, kinds)
 
     # ── 2쪽 · 종합 ② 홈 기간별 수익률 네 판 ────────────────────────────────
     fig = new_page(); figs.append(fig)
     if HP:
-        draw_home_page(fig, HP, IP, a.horizon)
+        draw_home_page(fig, HP, IP, P, a.horizon)
     else:
         tx(fig, X0, .962, "기간별 수익률", fontsize=17, weight="bold")
         tx(fig, X0, .92, "시계열(home_perf.json)이 없어 이 쪽을 비웠다", fontsize=9, color=NEG)
