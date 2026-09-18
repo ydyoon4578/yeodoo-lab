@@ -10,19 +10,25 @@
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
 /* ══════════════════════════════════════════════════════════════════════════
-   스타일 8종 판형 — 화면에서 A4 두 장을 그대로 보여 주고, 그대로 인쇄한다.
+   스타일 8종 판형 — 화면에서 A4 네 장을 그대로 보여 주고, 그대로 인쇄한다.
+   build/style8_pdf.py(매일 아침 공유폴더로 나가는 PDF)와 **같은 네 장**이다
+   (사용자 지시 2026-09-18 «여두 전략 랩에서 바로 매일매일 최신일자로 뽑을 수 있도록»).
+     1장  기간별 수익률 표 · 월별 수익률 · 위험과 수익
+     2장  기간별 수익률(기본 1개월) — 지수 · 섹터 · 산업그룹 · 내 스타일 8종(하이라이트), 네 판 같은 날짜
+     3·4장 스타일별 구성종목 넷씩
 
    【왜 페이지인가】 이 사이트는 정적 배포라 버튼이 파이썬을 돌릴 수 없다. 만들어 둔
    PDF 를 링크하면 그 PDF 가 커밋된 날짜에 멈춘다 — data/style_strategies.pdf 가 실제로
-   7주 묵어 있었다. 그래서 «살아 있는 data/style_perf.json 을 브라우저가 그리고, 사람이
-   인쇄로 뽑는다». 자료가 갱신되면 이 장도 같이 갱신된다.
+   7주 묵어 있었다. 그래서 «살아 있는 자료를 브라우저가 그리고, 사람이 인쇄로 뽑는다».
 
-   【숫자를 두 번 계산하지 않는다】 이 장은 아무것도 계산하지 않는다. style_perf.json 에
-   이미 있는 값만 골라 배치한다. 순위는 샤프 내림차순, 교체 표시는 전월말·금일 티커
-   집합의 차집합 — 그 둘이 여기서 하는 일의 전부다.
+   【숫자를 두 번 계산하지 않는다】 읽는 것은 러너가 매일 굽는 세 파일뿐이다 —
+     data/style_perf.json(1·3·4장 + 2장 내 스타일 path) · data/home_perf.json(2장 시장판)
+     · data/home_ind_perf.json(2장 산업그룹). 여기서 하는 일은 고르기·줄 세우기와
+     2장의 «공통 구간 첫날을 0 으로 다시 잰다» 뿐이다(누적 % 의 기준점만 옮긴다 — PDF 와 같은 식).
 
    ⚠ 판형은 화면 테마를 따르지 않는다. 흰 종이에 검은 잉크가 인쇄 결과이고, 화면은
      그 결과를 미리 보는 자리이기 때문이다. 다크 모드에서도 종이는 희다.
+   ⚠ 색은 PDF 와 같다 — 오름 초록 #0E8A54 · 내림 빨강 #A64B3B · 랩 금색 #8A6B00.
    ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰지 말 것(셸 주석과 같은 이유).
    ══════════════════════════════════════════════════════════════════════════ */
   *{box-sizing:border-box}
@@ -31,15 +37,21 @@
   .wrap{max-width:var(--w-base);margin:0 auto;padding:0 20px 70px}
   .pghead{padding:26px 0 14px;border-bottom:1px solid var(--line)}
   .pghead h1{font-size:23px;margin:0 0 6px;letter-spacing:-.3px}
-  .pghead p{margin:0;color:var(--muted);font-size:13px;line-height:1.65;max-width:78ch}
+  .pghead p{margin:0;color:var(--muted);font-size:13px;line-height:1.65;max-width:84ch}
   .pghead b{color:var(--ink-2)}
-  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:16px 0 4px}
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 4px}
   .btn{appearance:none;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
        font-family:inherit;font-size:13px;font-weight:700;padding:9px 16px;border-radius:3px;
        cursor:pointer;text-decoration:none;display:inline-block}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn.go{background:var(--accent);border-color:var(--accent);color:#fff}
   .btn.go:hover{color:#fff;opacity:.88}
+  .hz{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .hz button{appearance:none;border:0;border-right:1px solid var(--line);background:var(--panel);
+             color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;padding:8px 12px;cursor:pointer}
+  .hz button:last-child{border-right:0}
+  .hz button.on{background:var(--accent);color:#fff}
+  .bar .lab{font-size:12px;color:var(--muted);margin-left:6px}
   .bar .meta{color:var(--muted);font-size:12px;margin-left:auto}
   .bar .meta b{color:var(--ink-2);font-weight:700}
   .msg{padding:28px 0;color:var(--muted);font-size:13.5px;line-height:1.7}
@@ -48,63 +60,87 @@
 
 /* ── 종이 ── 아래는 판형 전용이다. 화면 테마 변수를 쓰지 않는다(인쇄 결과가 기준). */
   #sheets{margin-top:18px}
-  .pg{width:192mm;min-height:277mm;margin:0 auto 7mm;background:#fff;color:#15202b;
-      font:10px/1.4 var(--sans);padding:8mm 8mm 6mm;position:relative;
-      border:1px solid var(--line);border-radius:3px}
-  .pg h1{font-size:17px;margin:0 0 2px;color:#15202b;letter-spacing:-.3px}
-  .pg .sub{font-size:8.6px;color:#6b7684;margin-bottom:8px}
-  .pg h2{font-size:11px;margin:11px 0 5px;color:#15202b;padding-bottom:3px;
-         border-bottom:2px solid #15202b;display:flex;align-items:baseline}
-  .pg h2 span{font-weight:400;font-size:8.2px;color:#8a94a2;margin-left:auto}
+  .pg{width:192mm;min-height:277mm;margin:0 auto 7mm;background:#fff;color:#14181D;
+      font:10px/1.4 var(--sans);padding:8mm 8mm 9mm;position:relative;
+      border:1px solid var(--line);border-radius:3px;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pg .top{display:flex;align-items:baseline;border-bottom:1.2px solid #C8C0AC;padding-bottom:3px;margin-bottom:4px}
+  .pg .top h1{font-size:19px;margin:0;color:#14181D;letter-spacing:-.4px}
+  .pg .top .brd{margin-left:auto;font-size:9px;color:#8A6B00;font-weight:600}
+  .pg .sub{font-size:8.4px;color:#6A737D;margin:-1px 0 6px}
+  .pg h2{font-size:12px;margin:10px 0 4px;color:#14181D;display:flex;align-items:baseline}
+  .pg h2 span{font-weight:400;font-size:7.8px;color:#6A737D;margin-left:auto}
   .pg table{width:100%;border-collapse:collapse}
-  .pf th,.pf td{padding:3.2px 4px;border-bottom:1px solid #e9edf2}
-  .pf th{background:#f5f7fa;font-size:8.2px;color:#5a6472;text-align:right;font-weight:700;
-         border-bottom:1.5px solid #d6dde6}
-  .pf th:first-child,.pf th:nth-child(2){text-align:left}
-  .pg .lbl{white-space:nowrap;font-size:9.8px}
-  .pg .ref{font-size:7.6px;color:#8a94a2;white-space:nowrap}
-  .pg .n{text-align:right;font-variant-numeric:tabular-nums;font-size:9.2px}
-  .pg .sh{font-weight:700;background:#f7f9fb}
-  .pg .sm{font-size:8.2px;color:#6b7684}
-  .pg .sep{border-left:1.5px solid #d6dde6}
-  .pg .up{color:#c0392b}.pg .dn{color:#1f6feb}.pg .dim{color:#b4bcc6}
-  .pg tr.bn td{background:#f4f7fb;color:#39424e;font-weight:600;border-bottom:1px solid #d6dde6}
-  .pg tr.bn .lbl{font-size:9.2px}
-  .pg tr.bn .ref{color:#2f6fd0;font-weight:700}
-  .pg tr.bn+tr:not(.bn) td{border-top:2px solid #15202b}
-  .blk{margin-bottom:3px;break-inside:avoid}
-  .b-h{display:flex;align-items:baseline;gap:6px;border-bottom:1.5px solid #15202b;
-       padding-bottom:.5px;line-height:1.25}
-  .b-h b{font-size:11px}
-  .b-r{font-size:8.4px;color:#2f6fd0}
-  .b-c{margin-left:auto;font-size:7.6px;color:#8a94a2}
-  .b-d{font-size:8px;color:#5a6472;padding:.8px 1px 0;line-height:1.28}
-  .b-g{font-size:7.4px;color:#8a94a2;padding:0 1px .8px;line-height:1.24}
+  .pos{color:#0E8A54}.neg{color:#A64B3B}.mut{color:#6A737D}
+/* 1장 표 */
+  .pf th,.pf td{padding:3.4px 5px;border-bottom:1px solid #E4DFD0;border-right:1px solid #E4DFD0;
+               font-size:9.6px;text-align:right;font-variant-numeric:tabular-nums}
+  .pf th:last-child,.pf td:last-child{border-right:0}
+  .pf th{background:#F3EFE1;font-size:8.6px;color:#6A737D;font-weight:500;
+         border-top:1.2px solid #C8C0AC;border-bottom:1.2px solid #C8C0AC}
+  .pf th:nth-child(-n+2),.pf td:nth-child(-n+2){text-align:left}
+  .pf td.lbl{white-space:nowrap}
+  .pf td.ref{font-size:8.8px;color:#6A737D;white-space:nowrap}
+  .pf tr.bn td{color:#6A737D}
+  .pf tr.bn td.lbl{font-weight:700}
+  .pf td.sh{font-weight:700}
+  .pf tbody tr:last-child td{border-bottom:1.2px solid #C8C0AC}
+/* 1장 월별 히트맵 */
+  .hm td,.hm th{padding:0;height:20px;text-align:center;font-size:8.6px;font-variant-numeric:tabular-nums}
+  .hm th{color:#6A737D;font-weight:500;border-bottom:1.2px solid #C8C0AC;height:17px}
+  .hm td.l{text-align:left;padding-left:4px;width:15%;font-size:9.2px;white-space:nowrap}
+  .hm td.c{border:1px solid #fff}
+  .hm tr.bn td.l{color:#6A737D}
+  .hm tr.sp td{border-bottom:1px solid #C8C0AC}
+  .hm tr:not(.bn) td.l{font-weight:700}
+  .hm tbody tr:last-child td{border-bottom:1.2px solid #C8C0AC}
+/* 2장 차트 */
+  .ch{margin:0 0 3.2mm}
+  .chh{display:flex;align-items:baseline;gap:6px;line-height:1.2;margin-bottom:1px}
+  .chh b{font-size:12px;color:#14181D}
+  .chh .cnt{font-size:8.4px;color:#6A737D}
+  .chh .fxn{font-size:7.8px;color:#7A5AA6}
+  .chh .rg{margin-left:auto;font-size:8.2px;color:#6A737D}
+  .ch svg{display:block;width:100%;height:auto}
+  .ch.hl{background:#FFF4CC;border-left:3.2px solid #8A6B00;margin-left:-3.6mm;margin-right:-1.6mm;
+         padding:2.4mm 1.6mm 1.6mm 3.2mm}
+  .ch.hl .chh b,.ch.hl .chh .rg{color:#8A6B00}
+  .ch .none{font-size:9.6px;color:#A64B3B;padding:8mm 0}
+/* 3·4장 보유 */
+  .blk{margin-bottom:3.4mm;break-inside:avoid}
+  .b-h{display:flex;align-items:baseline;gap:7px;border-bottom:1.2px solid #C8C0AC;padding-bottom:1px;line-height:1.25}
+  .b-h b{font-size:13px}
+  .b-r{font-size:9px;color:#8A6B00}
+  .b-c{margin-left:auto;font-size:8.2px;color:#6A737D}
+  .b-d{font-size:9px;color:#3C444D;padding:2px 1px 0;line-height:1.3}
+  .b-g{font-size:7.8px;color:#6A737D;padding:1px 1px 2px;line-height:1.28}
 /* 섹터 이름이 잘리지 않도록 폭을 열 단위로 못박는다 — width:100% 표는 남는 폭을 제멋대로
    나눠 갖고, 그 결과 «커뮤니케이션» 이 잘리고 «지수» 열만 넓어졌다(실측). */
   .ht{table-layout:fixed}
-  .ht .cr{width:3%}.ht .ctk{width:9%}.ht .csc{width:12%}.ht .cix{width:6%}
-  .ht .cmt{width:9%}.ht .cv{width:12%}.ht .cg{width:1%}
-  .ht th,.ht td{padding:.6px 4px;border-bottom:1px solid #f0f3f6;font-size:8.5px;line-height:1.2}
-  .ht thead tr.g th{background:#eef2f7;color:#445061;font-size:8px;font-weight:700;text-align:center;
-                    border-bottom:none;padding:1.2px 3px}
-  .ht thead tr:last-child th{background:#f7f9fb;color:#6b7684;font-size:7.6px;font-weight:700;
-                             text-align:right;border-bottom:1.5px solid #d6dde6}
+  .ht .cr{width:3%}.ht .ctk{width:9%}.ht .csc{width:12.5%}.ht .cix{width:6%}
+  .ht .cmt{width:8.5%}.ht .cv{width:11.5%}.ht .cg{width:2%}
+  .ht th,.ht td{padding:1.9px 4px;border-bottom:1px solid #E4DFD0;font-size:9px;line-height:1.25;
+               font-variant-numeric:tabular-nums}
+  .ht thead tr.g th{background:#fff;color:#3C444D;font-size:8.4px;font-weight:500;text-align:center;
+                    border-bottom:none;padding:1px 3px}
+  .ht thead tr:last-child th{background:#F3EFE1;color:#6A737D;font-size:8.2px;font-weight:500;
+                             text-align:right;border-top:1.2px solid #C8C0AC;border-bottom:1.2px solid #C8C0AC}
   .ht thead tr:last-child th:nth-child(2),.ht thead tr:last-child th:nth-child(3),
   .ht thead tr:last-child th:nth-child(8),.ht thead tr:last-child th:nth-child(9){text-align:left}
   .ht thead tr:last-child th:nth-child(4),.ht thead tr:last-child th:nth-child(10){text-align:center}
-  .ht .r{color:#b4bcc6;font-size:7.6px;text-align:right}
-  .ht .tk{font-weight:700;white-space:nowrap}
-  .ht .sc{color:#39424e;font-size:8px;white-space:nowrap}
-  .ht .ix{color:#8a94a2;font-size:7.6px;text-align:center}
-  .ht .v{color:#15202b}
-  .pg .gap{border-bottom:none !important;background:#fff}
-  .pg .in{color:#c0392b;font-weight:700}
-  .pg .out{color:#1f6feb;font-weight:700}
-  .foot{position:absolute;bottom:3.5mm;left:8mm;right:8mm;font-size:7px;color:#b4bcc6;
-        border-top:1px solid #eef1f5;padding-top:3px;display:flex}
+  .ht tbody tr:last-child td{border-bottom:1.2px solid #C8C0AC}
+  .ht td{text-align:right}
+  .ht .r{color:#6A737D;font-size:8.2px}
+  .ht .tk{font-weight:700;white-space:nowrap;text-align:left}
+  .ht .sc{color:#3C444D;white-space:nowrap;text-align:left}
+  .ht .ix{color:#6A737D;font-size:8.4px;text-align:center}
+  .ht .gap{border-bottom:none !important;background:#fff}
+  .pg .in{color:#A64B3B;font-weight:700}
+  .pg .out{color:#2C6E8F;font-weight:700}
+  .pg .lgd{position:absolute;top:3mm;right:8mm;font-size:8px;color:#6A737D}
+  .foot{position:absolute;bottom:3.5mm;left:8mm;right:8mm;font-size:7.4px;color:#6A737D;display:flex}
   .foot span{margin-left:auto}
-  @media(max-width:860px){.pg{width:100%;min-height:0;padding:14px}}
+  @media(max-width:860px){.pg{width:100%;min-height:0;padding:14px 14px 30px}.pg .lgd{position:static;margin-bottom:4px}}
 
 /* ── 인쇄 ── 랩의 껍데기를 걷고 종이만 남긴다. 셸·내비가 !important 를 쓰므로 이쪽도 쓴다. */
   @page{size:A4;margin:10mm 9mm}
@@ -113,9 +149,10 @@
     .skiplink,.topnav,.pghead,.bar,.msg{display:none !important}
     .wrap{max-width:none !important;padding:0 !important}
     #sheets{margin-top:0}
-    .pg{width:auto;height:272mm;min-height:0;margin:0;padding:0;border:0;border-radius:0;
-        page-break-after:always;background:#fff}
+    .pg{width:auto;height:275mm;min-height:0;margin:0;padding:0;border:0;border-radius:0;
+        page-break-after:always;background:#fff;overflow:hidden}
     .pg:last-child{page-break-after:auto}
+    .pg .lgd{top:0;right:0}
     .foot{left:0;right:0;bottom:0}
   }
 /* SHELL:BEGIN */
@@ -478,14 +515,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <div class="wrap">
   <header class="pghead">
     <h1>스타일 8종 판형</h1>
-    <p>지수 방법론 8종을 A4 두 장으로 뽑는 화면입니다. 기간별 수익률(벤치마크 먼저)과
-       스타일별 보유 10종목을 전월말·금일 나란히 싣습니다. 숫자는 이 사이트가 매일 갱신하는
-       <code>data/style_perf.json</code> 을 그대로 읽으므로 <b>여는 순간이 곧 기준일</b>입니다.
-       아래 종이 모양 그대로 인쇄됩니다 — 인쇄 대화상자에서 <b>배경 그래픽</b>을 켜고,
-       배율은 <b>기본(100%)</b> 으로 두세요.</p>
+    <p>지수 방법론 8종을 <b>A4 네 장</b>으로 뽑는 화면입니다 — 매일 아침 공유폴더로 나가는 PDF 와 같은 구성입니다.
+       1장 기간별 수익률·월별 수익률·위험과 수익, 2장 기간별 수익률 차트(지수·섹터·산업그룹·내 스타일 8종),
+       3·4장 스타일별 구성종목. 숫자는 이 사이트가 매일 갱신하는 자료를 그대로 읽으므로
+       <b>여는 순간의 최신 기준일</b>로 그려집니다. 아래 종이 모양 그대로 인쇄됩니다 —
+       인쇄 대화상자에서 대상 «PDF로 저장», 배율 <b>기본(100%)</b>으로 두세요.</p>
   </header>
   <div class="bar">
     <button class="btn go" id="prt" type="button">인쇄 · PDF 저장</button>
+    <span class="lab">2장 기간</span>
+    <span class="hz" id="hz" role="group" aria-label="2장 기간">
+      <button type="button" data-h="1W">1주</button><button type="button" data-h="1M" class="on">1개월</button><button type="button" data-h="3M">3개월</button>
+    </span>
     <a class="btn" href="style.html">스타일 화면으로</a>
     <span class="meta" id="meta">불러오는 중…</span>
   </div>
@@ -493,51 +534,348 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <main id="sheets"></main>
 </div>
 <script>
-/* 판형 조립기. 계산하지 않는다 — style_perf.json 의 값을 고르고 배치할 뿐이다.
-   build/style8_pdf.py(로컬 PDF)와 같은 규칙을 쓴다: 같은 8종, 같은 열, 같은 정렬. */
+/* 판형 조립기 — build/style8_pdf.py(로컬 PDF)와 같은 규칙·같은 색·같은 배치.
+   그쪽을 고치면 여기도 같이 고친다(한쪽만 바뀌면 공유폴더 PDF 와 이 화면이 다른 말을 한다). */
 (function(){
   var KEYS = ["div","val","qvm","spmo","size","grow","hbeta","squal"];
   var TR   = ["1일","1주","1개월","3개월","6개월","1년","YTD"];
-  /* 첫 장은 제목·수익률표·소제목(실측 80.9mm)을 이고 가므로 덩이가 3개만 들어간다.
-     둘째 장은 5개. 이 3/5 는 build/style8_pdf.py 의 PAGE1_N 과 같은 값이다 —
-     화면에서 뽑은 종이와 로컬 PDF 가 같은 장에 같은 스타일을 싣게 하려는 것이다.
-     ⚠ 손으로 고른 수가 아니라 브라우저 실측에서 나온 수다(덩이 51.5mm · 안쪽 여유 263mm).
-       줄 간격·글자 크기를 건드리면 다시 재야 한다. */
-  var PAGE1 = 3;
+  var POS = "#0E8A54", NEG = "#A64B3B", ACC = "#8A6B00", INK = "#14181D", MUTED = "#6A737D",
+      LINE = "#E4DFD0", RULE = "#C8C0AC", BENCH = "#8C949C", HOT = "#A64B3B", RP = "#7A5AA6";
+  var CIX = {"S&P 500":"#816400","나스닥 100":"#2C6E8F","다우존스 30":"#A35510","러셀 2000":"#0C7A4A"};
+  /* 홈 SECPAL 과 같은 순서 — 뒤 여섯은 흰 종이용으로 한 단계 진하게(PDF 와 같은 값). */
+  var SECPAL = ["#816400","#A64B3B","#0C7A4A","#A35510","#2C6E8F","#4F74C9","#A9782A","#5E8F2F","#7E5DB5","#1B8AA1","#C24F66"];
+  /* 내 스타일 — 줄마다 고정색(끝값 순으로 돌리면 날마다 색이 바뀐다). */
+  var MYCOL = {div:"#0C7A4A",val:"#2C6E8F",qvm:"#7E5DB5",spmo:"#A64B3B",size:"#A35510",
+               grow:"#4F74C9",hbeta:"#816400",squal:"#C24F66"};
+  var DASH = ["","5 2.5","2 2","7 2 1.5 2"];
+  var HZL = {"1W":"1주","1M":"1개월","3M":"3개월"};
+  /* 거래일 수 — build/style_top_pdf.py TRAIL 과 같다. 그래야 내 스타일 끝값이 1장 표의 같은 칸과 같다. */
+  var HN = {"1W":5,"1M":21,"3M":63};
   var SECTOR = {"부동":"부동산","소재":"소재","금융":"금융","필소":"필수소비","산업":"산업재",
                 "유틸":"유틸리티","헬스":"헬스케어","커뮤":"커뮤니케이션","경소":"경기소비",
                 "에너":"에너지","IT":"IT"};
-  var NB = "&nbsp;|&nbsp;";
-  /* 산식은 build/style_top_pdf.py 의 sc_* 함수에서 그대로 옮긴 것이다(지어내지 않았다).
-     그 함수가 바뀌면 이 줄도 같이 고쳐야 한다 — 여기서 점수를 다시 계산하지는 않는다. */
+  var IND_KO = {
+    "Energy":"에너지","Materials":"소재","Capital Goods":"자본재",
+    "Commercial & Professional Services":"상업·전문 서비스","Transportation":"운송",
+    "Automobiles & Components":"자동차·부품","Consumer Durables & Apparel":"내구소비재·의류",
+    "Consumer Services":"소비자 서비스",
+    "Consumer Discretionary Distribution & Retail":"경기소비 유통·소매",
+    "Consumer Staples Distribution & Retail":"필수소비 유통·소매",
+    "Food, Beverage & Tobacco":"식품·음료·담배","Household & Personal Products":"가정·개인용품",
+    "Health Care Equipment & Services":"헬스케어 장비·서비스",
+    "Pharmaceuticals, Biotechnology & Life Sciences":"제약·바이오·생명과학",
+    "Banks":"은행","Financial Services":"금융 서비스","Insurance":"보험",
+    "Software & Services":"소프트웨어·서비스","Technology Hardware & Equipment":"기술 하드웨어·장비",
+    "Semiconductors & Semiconductor Equipment":"반도체·장비",
+    "Telecommunication Services":"통신 서비스","Media & Entertainment":"미디어·엔터테인먼트",
+    "Utilities":"유틸리티","Equity Real Estate Investment Trusts (REITs)":"리츠",
+    "Real Estate Management & Development":"부동산 관리·개발"
+  };
+  var NB = "&nbsp;&nbsp;&nbsp;";
+  /* 산식은 build/style_top_pdf.py 의 sc_* 함수에서 옮긴 것이다(지어내지 않았다). */
   var GLOSS = {
     "div":  "배당수익률 = 최근 4분기 주당배당금(선언 기준) ÷ 현재 주가",
     "val":  "B/P = 주당순자산 ÷ 주가" + NB + "E/P = 주당순이익(최근 4분기) ÷ 주가" + NB +
             "S/P = 주당매출(최근 4분기) ÷ 주가 — 셋의 z 를 평균",
     "qvm":  "퀄리티·가치·모멘텀 z 점수의 단순 평균 · 셋을 모두 가진 종목만 남긴다" + NB +
             "여기 퀄리티는 MSCI 정의(ROE·부채비율·이익변동성)라 아래 퀄리티 줄과 다르다",
-    "spmo": "(1개월 전 주가 ÷ 13개월 전 주가 − 1) ÷ 3년 주간수익률 표준편차" + NB +
+    "spmo": "(1개월 전 주가 ÷ 13개월 전 주가 - 1) ÷ 3년 주간수익률 표준편차" + NB +
             "최근 1개월을 빼는 이유는 단기 반전을 피하려는 것",
     "size": "시가총액 = 주식수 × 주가 · 작을수록 상위",
     "grow": "3년 주당매출 연평균 성장률" + NB + "3년 주당순이익 변화 ÷ 주가" + NB +
             "12개월 모멘텀 — 셋의 z 를 평균",
     "hbeta":"베타 = 최근 252거래일 일간수익률의 시장과의 공분산 ÷ 시장 분산",
-    "squal":"발생액비율 = (순이익 − 영업활동현금흐름) ÷ 평균 총자산 · 최근 4분기 합 기준" + NB +
+    "squal":"발생액비율 = (순이익 - 영업활동현금흐름) ÷ 평균 총자산 · 최근 4분기 합 기준" + NB +
             "재무레버리지 = 부채총계 ÷ 자기자본"
   };
+  var D = {P:null, HP:null, IP:null, hz:"1M"};
 
   function esc(s){
     s = (s === null || s === undefined) ? "" : String(s);
-    return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+    return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split('"').join("&quot;");
   }
-  /* 파이썬의 %+.1f 와 같게 — 0 에도 부호를 붙인다(열이 흔들리지 않게). */
+  /* 파이썬 %+.Nf 와 같게 — 0 에도 부호. 음수는 ASCII 하이픈(PDF 와 같은 글자). */
   function sgn(v, d){ return (v < 0 ? "-" : "+") + Math.abs(v).toFixed(d); }
-  function num(v, d, cls){
-    d = (d === undefined) ? 1 : d; cls = cls || "";
-    if (v === null || v === undefined) return '<td class="n dim ' + cls + '">·</td>';
-    return '<td class="n ' + (v > 0 ? "up" : (v < 0 ? "dn" : "")) + ' ' + cls + '">' + sgn(v, d) + '</td>';
+  function cls(v){ return v > 0 ? "pos" : (v < 0 ? "neg" : ""); }
+  function f1(v, d){ return (v === null || v === undefined) ? "—" : sgn(v, d === undefined ? 1 : d); }
+  function indName(s){ var k = String(s).split(/\s+/).join(" "); return IND_KO[k] || k; }
+  function last(v){ for (var i = (v || []).length - 1; i >= 0; i--) if (v[i] !== null && v[i] !== undefined) return [v[i], i]; return [null, null]; }
+  function ranked(obj){
+    var a = [], k;
+    for (k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) a.push([k, obj[k]]);
+    a.sort(function(x, y){
+      var lx = last(x[1])[0], ly = last(y[1])[0];
+      return (ly === null ? -1e9 : ly) - (lx === null ? -1e9 : lx);
+    });
+    return a;
   }
-  function rule(desc){                 /* 방법론 한 줄 — desc 의 첫 문장만 */
+
+  /* ── 1장 ─────────────────────────────────────────────────────────────── */
+  function perfRows(P, S){
+    var out = [], bk, bx, order, k;
+    for (bk in (P.bench || {})) if (Object.prototype.hasOwnProperty.call(P.bench, bk))
+      out.push({kind:"b", key:bk, x:P.bench[bk]});
+    order = KEYS.slice().sort(function(a, b){ return S[b].metrics.sharpe - S[a].metrics.sharpe; });
+    for (k = 0; k < order.length; k++) out.push({kind:"s", key:order[k], x:S[order[k]]});
+    return out;
+  }
+  function perfTable(rows){
+    var h = "", i, j, r, x, m, t, w;
+    for (i = 0; i < rows.length; i++){
+      r = rows[i]; x = r.x; m = x.metrics || {}; t = x.trails || {};
+      if (r.kind === "b"){
+        h += '<tr class="bn"><td class="lbl">' + esc(x.label || r.key) + '</td><td class="ref">벤치마크</td>'
+           + '<td class="sh">' + (m.sharpe || 0).toFixed(2) + '</td><td>' + (m.mdd || 0).toFixed(1) + '</td><td>·</td>';
+        for (j = 0; j < TR.length; j++) h += '<td>' + f1(t[TR[j]]) + '</td>';
+      } else {
+        w = (x.win && x.win.spx) ? x.win.spx : [0, 12];
+        h += '<tr><td class="lbl">' + esc(x.label) + '</td>'
+           + '<td class="ref">' + esc(String(x.ref).split("S&P 500 ").join("").split("MSCI USA ").join("")) + '</td>'
+           + '<td class="sh">' + m.sharpe.toFixed(2) + '</td><td class="neg">' + m.mdd.toFixed(1) + '</td>'
+           + '<td>' + w[0] + '/' + w[1] + '</td>';
+        for (j = 0; j < TR.length; j++){ var v = t[TR[j]]; h += '<td class="' + cls(v) + '">' + f1(v) + '</td>'; }
+      }
+      h += '</tr>';
+    }
+    var hd = '<tr><th>스타일</th><th>지수</th><th>샤프</th><th>MDD</th><th>이긴달</th>';
+    for (j = 0; j < TR.length; j++) hd += '<th>' + TR[j] + '</th>';
+    return '<table class="pf"><thead>' + hd + '</tr></thead><tbody>' + h + '</tbody></table>';
+  }
+  function mix(a, b, f){
+    var pa = [parseInt(a.slice(1,3),16), parseInt(a.slice(3,5),16), parseInt(a.slice(5,7),16)];
+    var pb = [parseInt(b.slice(1,3),16), parseInt(b.slice(3,5),16), parseInt(b.slice(5,7),16)];
+    return "rgb(" + [0,1,2].map(function(i){ return Math.round(pa[i] + (pb[i] - pa[i]) * f); }).join(",") + ")";
+  }
+  function heat(P, rows){
+    var ms = P.months || [], n = ms.length, h = '<table class="hm"><thead><tr><th></th>', i, j, r, mo, v, f;
+    for (j = 0; j < n; j++) h += '<th>' + ms[j].slice(2,4) + '/' + ms[j].slice(5,7) + (j === n - 1 ? '*' : '') + '</th>';
+    h += '</tr></thead><tbody>';
+    for (i = 0; i < rows.length; i++){
+      r = rows[i]; mo = r.x.monthly || [];
+      h += '<tr class="' + (r.kind === "b" ? "bn" : "") + (i === 1 ? " sp" : "") + '"><td class="l">' + esc(r.x.label || r.key) + '</td>';
+      for (j = 0; j < n; j++){
+        v = mo[j];
+        if (v === null || v === undefined){ h += '<td class="c"></td>'; continue; }
+        f = Math.max(-1, Math.min(1, v / 10));
+        h += '<td class="c" style="background:' + (f < 0 ? mix("#FFFFFF", NEG, -f) : mix("#FFFFFF", POS, f))
+           + ';color:' + (Math.abs(f) > .55 ? "#fff" : INK) + '">' + sgn(v, 1) + '</td>';
+      }
+      h += '</tr>';
+    }
+    return h + '</tbody></table>';
+  }
+  function scatter(rows){
+    var W = 720, H = 330, L = 44, R = 700, T = 8, B = 296, pts = [], i, m, xs = [], ys = [];
+    for (i = 0; i < rows.length; i++){
+      m = rows[i].x.metrics || {};
+      if (m.vol === null || m.vol === undefined || m.ret === null || m.ret === undefined) continue;
+      pts.push({v:m.vol, r:m.ret, l:rows[i].x.label || rows[i].key, b:rows[i].kind === "b"});
+      xs.push(m.vol); ys.push(m.ret);
+    }
+    if (!pts.length) return "";
+    var xmax = Math.max.apply(null, xs) * 1.12, ymax = Math.max.apply(null, ys) * 1.18;
+    var ymin = Math.min(0, Math.min.apply(null, ys)) - 2;
+    function X(v){ return L + v / xmax * (R - L); }
+    function Y(v){ return T + (ymax - v) / (ymax - ymin) * (B - T); }
+    var g = "", t, st;
+    st = niceStep(xmax); for (t = 0; t <= xmax + 1e-9; t += st)
+      g += '<line x1="' + X(t) + '" y1="' + T + '" x2="' + X(t) + '" y2="' + B + '" stroke="' + LINE + '" stroke-width=".6"/>'
+         + '<text x="' + X(t) + '" y="' + (B + 11) + '" font-size="8" fill="' + MUTED + '" text-anchor="middle">' + Math.round(t) + '</text>';
+    st = niceStep(ymax - ymin); for (t = Math.ceil(ymin / st) * st; t <= ymax + 1e-9; t += st)
+      g += '<line x1="' + L + '" y1="' + Y(t) + '" x2="' + R + '" y2="' + Y(t) + '" stroke="' + LINE + '" stroke-width=".6"/>'
+         + '<text x="' + (L - 5) + '" y="' + (Y(t) + 3) + '" font-size="8" fill="' + MUTED + '" text-anchor="end">' + Math.round(t) + '</text>';
+    var sp = null; for (i = 0; i < pts.length; i++) if (pts[i].b){ sp = pts[i]; break; }
+    if (sp && sp.v){
+      var sl = sp.r / sp.v;
+      g += '<line x1="' + X(0) + '" y1="' + Y(0) + '" x2="' + X(xmax) + '" y2="' + Y(sl * xmax) + '" stroke="' + BENCH + '" stroke-width=".8" stroke-dasharray="4 3"/>'
+         + '<text x="' + X(xmax * .6) + '" y="' + (Y(sl * xmax * .6) + 13) + '" font-size="7.6" fill="' + MUTED + '">S&amp;P 와 같은 수익/위험</text>';
+    }
+    for (i = 0; i < pts.length; i++){
+      var p = pts[i];
+      g += '<circle cx="' + X(p.v) + '" cy="' + Y(p.r) + '" r="' + (p.b ? 3.4 : 4) + '" fill="' + (p.b ? BENCH : ACC) + '" stroke="#fff" stroke-width="1"/>'
+         + '<text x="' + (X(p.v) + 7) + '" y="' + (Y(p.r) + 3.2) + '" font-size="9" font-weight="' + (p.b ? 400 : 700)
+         + '" fill="' + (p.b ? MUTED : INK) + '">' + esc(p.l) + '</text>';
+    }
+    g += '<text x="' + ((L + R) / 2) + '" y="' + (H - 4) + '" font-size="8.2" fill="' + MUTED + '" text-anchor="middle">1년 변동성 (%)</text>'
+       + '<text x="11" y="' + ((T + B) / 2) + '" font-size="8.2" fill="' + MUTED + '" text-anchor="middle" transform="rotate(-90 11 ' + ((T + B) / 2) + ')">1년 수익률 (%)</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="display:block;width:100%;height:auto">' + g + '</svg>';
+  }
+
+  /* ── 2장 ─────────────────────────────────────────────────────────────── */
+  function niceStep(span){
+    var raw = span / 5, mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    return [1, 2, 2.5, 5, 10].reduce(function(a, b){ return Math.abs(b * mag - raw) < Math.abs(a * mag - raw) ? b : a; }, 1) * mag;
+  }
+  function xticks(dates){
+    var n = dates.length, mk = [], pm = null, i, want, pick = [], q, s = {};
+    for (i = 0; i < n; i++){ var m = String(dates[i]).slice(0, 7); if (m !== pm){ mk.push(i); pm = m; } }
+    want = Math.min(4, mk.length);
+    for (q = 0; q < want; q++) s[mk[Math.floor(q * (mk.length - 1) / Math.max(1, want - 1) + .5)]] = 1;
+    for (i in s) pick.push(+i); pick.sort(function(a, b){ return a - b; });
+    if (pick.length >= 3 && pick[1] - pick[0] < n * .18) pick = pick.slice(1);
+    if (pick.length >= 3) return pick.map(function(i){ return [i, String(dates[i]).slice(2, 7)]; });
+    s = {}; pick = [];
+    [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].forEach(function(i){ if (i >= 0 && i < n) s[i] = 1; });
+    for (i in s) pick.push(+i); pick.sort(function(a, b){ return a - b; });
+    return pick.map(function(i){ return [i, String(dates[i]).slice(5, 7) + "/" + String(dates[i]).slice(8, 10)]; });
+  }
+  /* 네 판을 같은 날짜 축으로 — PDF 의 _align 과 같다. 공통 격자의 마지막 n+1 날만 쓰고 첫날을 0 으로. */
+  function align(panels, n){
+    var nm, S0 = null, E = null, sets = [], cd = [], out = {};
+    for (nm in panels){ var d = panels[nm].d; if (!d.length) continue;
+      if (S0 === null || d[0] > S0) S0 = d[0]; if (E === null || d[d.length - 1] < E) E = d[d.length - 1]; }
+    for (nm in panels){ var st = {}; panels[nm].d.forEach(function(x){ if (x >= S0 && x <= E) st[x] = 1; }); sets.push(st); }
+    for (var x in sets[0]) if (sets.every(function(s){ return s[x]; })) cd.push(x);
+    cd.sort();
+    if (n && cd.length > n + 1) cd = cd.slice(cd.length - n - 1);
+    if (cd.length < 2) return null;
+    for (nm in panels){
+      var pos = {}, rows = {}, k;
+      panels[nm].d.forEach(function(x, i){ pos[x] = i; });
+      for (k in panels[nm].rows){
+        var vals = panels[nm].rows[k], v = cd.map(function(x){ var y = vals[pos[x]]; return (y === undefined) ? null : y; }), b = v[0];
+        rows[k] = (b === null) ? v.map(function(){ return null; })
+                 : v.map(function(y){ return y === null ? null : ((1 + y / 100) / (1 + b / 100) - 1) * 100; });
+      }
+      out[nm] = {d:cd, rows:rows};
+    }
+    return {panels:out, cd:cd};
+  }
+  /* 판 하나 — 홈 drawStChart 와 PDF draw_home_panel 과 같은 요소. series = [{nm,v,col,ls,b}] */
+  function chart(o){
+    var W = 720, PL = 32, LAB = 140, T = 6, B = 16, H = o.H;
+    var d = o.d, n = d.length, ser = o.series, lots = ser.length > 12;
+    var x0 = PL, x1 = W - LAB, y0 = T, y1 = H - B;
+    var all = [], i, g = "";
+    ser.forEach(function(s){ s.v.forEach(function(v){ if (v !== null) all.push(v); }); });
+    var lo = Math.min(0, Math.min.apply(null, all.length ? all : [0])), hi = Math.max(0, Math.max.apply(null, all.length ? all : [0]));
+    if (hi - lo < 1){ hi += .5; lo -= .5; }
+    var pad = (hi - lo) * .08; hi += pad; lo -= pad;
+    function X(i){ return x0 + (n < 2 ? 0 : i / (n - 1)) * (x1 - x0); }
+    function Y(v){ return y0 + (hi - v) / (hi - lo) * (y1 - y0); }
+    var zy = Y(0);
+    g += '<rect x="' + x0 + '" y="' + zy.toFixed(1) + '" width="' + (x1 - x0) + '" height="' + Math.max(0, y1 - zy).toFixed(1) + '" fill="' + HOT + '" opacity=".05"/>';
+    var st = niceStep(hi - lo), frac = Math.abs(st - Math.round(st)) > 1e-9, t;
+    for (t = Math.ceil(lo / st) * st; t <= hi + 1e-9; t += st){
+      var z = Math.abs(t) < 1e-9, yy = Y(t).toFixed(1);
+      g += '<line x1="' + x0 + '" y1="' + yy + '" x2="' + x1 + '" y2="' + yy + '" stroke="' + (z ? RULE : LINE) + '" stroke-width="' + (z ? 1 : .6) + '"/>'
+         + '<text x="' + (x0 - 4) + '" y="' + (+yy + 2.8) + '" font-size="7.4" fill="' + MUTED + '" text-anchor="end">'
+         + (z ? (frac ? "0.0" : "0") : ((t > 0 ? "+" : "-") + (frac ? Math.abs(t).toFixed(1) : Math.round(Math.abs(t))))) + '</text>';
+    }
+    xticks(d).forEach(function(p){
+      g += '<line x1="' + X(p[0]).toFixed(1) + '" y1="' + y0 + '" x2="' + X(p[0]).toFixed(1) + '" y2="' + y1 + '" stroke="' + LINE + '" stroke-width=".6"/>'
+         + '<text x="' + X(p[0]).toFixed(1) + '" y="' + (y1 + 11) + '" font-size="7.4" fill="' + MUTED + '" text-anchor="middle">' + esc(p[1]) + '</text>';
+    });
+    if (o.fx && o.fx.length === n){                     /* 원/달러 배경선 — 지수 판만 */
+      var fv = o.fx.filter(function(v){ return v !== null; });
+      if (fv.length > 1){
+        var bl = Math.min.apply(null, fv), bh = Math.max.apply(null, fv); if (bh - bl < 1){ bh += 1; bl -= 1; }
+        var bp = (bh - bl) * .3; bl -= bp; bh += bp; var pth = "", on = false;
+        o.fx.forEach(function(v, i){ if (v === null) return; pth += (on ? "L" : "M") + X(i).toFixed(1) + " " + (y0 + (bh - v) / (bh - bl) * (y1 - y0)).toFixed(1); on = true; });
+        g += '<path d="' + pth + '" fill="none" stroke="' + RP + '" stroke-width="1.3" opacity=".3"/>';
+      }
+    }
+    var labs = [];
+    ser.slice().sort(function(a, b){ return (a.b ? 0 : 1) - (b.b ? 0 : 1); }).forEach(function(s){
+      var pth = "", on = false, li = null, lv = null;
+      s.v.forEach(function(v, i){ if (v === null) return; pth += (on ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); on = true; li = i; lv = v; });
+      if (!on) return;
+      g += '<path d="' + pth + '" fill="none" stroke="' + s.col + '" stroke-width="' + (s.b ? 1 : (lots ? 1.05 : 1.45)) + '"'
+         + (s.ls ? ' stroke-dasharray="' + s.ls + '"' : '') + ' stroke-linejoin="round" stroke-linecap="round"' + (lots ? ' opacity=".92"' : '') + '/>'
+         + '<circle cx="' + X(li).toFixed(1) + '" cy="' + Y(lv).toFixed(1) + '" r="' + (lots ? 1.4 : 1.9) + '" fill="' + s.col + '"/>';
+      labs.push({nm:s.nm, v:lv, col:s.col, ls:s.ls, b:s.b, x:X(li), y:Y(lv)});
+    });
+    /* 라벨 겹침 — 홈과 같은 세 단계(아래로 민다 → 넘치면 통째로 올린다 → 위 경계에서 멈춘다) */
+    var fs = lots ? 7.3 : 8.6, TOPL = y0 + 2, BOTL = y1 - 2, GAP = fs * 1.22;
+    if (labs.length > 1) GAP = Math.max(fs * .98, Math.min(GAP, (BOTL - TOPL) / (labs.length - 1)));
+    labs.sort(function(a, b){ return a.y - b.y; });
+    var prev = -1e9; labs.forEach(function(L){ L.ly = Math.max(L.y, prev + GAP); prev = L.ly; });
+    var over = labs.length ? labs[labs.length - 1].ly - BOTL : 0; if (over > 0) labs.forEach(function(L){ L.ly -= over; });
+    if (labs.length && labs[0].ly < TOPL){
+      var up = TOPL - labs[0].ly, room = BOTL - labs[labs.length - 1].ly, mv = Math.min(up, Math.max(0, room));
+      labs.forEach(function(L){ L.ly += mv; if (L.ly < TOPL) L.ly = TOPL; });
+    }
+    labs.forEach(function(L){
+      g += '<line x1="' + (L.x + 2).toFixed(1) + '" y1="' + L.y.toFixed(1) + '" x2="' + (x1 + 7) + '" y2="' + L.ly.toFixed(1) + '" stroke="' + L.col + '" stroke-width=".6" opacity=".5"/>';
+      var tx0 = x1 + 10;
+      if (o.dashes){
+        g += '<line x1="' + (x1 + 9) + '" y1="' + L.ly.toFixed(1) + '" x2="' + (x1 + 24) + '" y2="' + L.ly.toFixed(1) + '" stroke="' + L.col + '" stroke-width="1.5"'
+           + (L.ls ? ' stroke-dasharray="' + L.ls + '"' : '') + '/>';
+        tx0 = x1 + 28;
+      }
+      g += '<text x="' + tx0 + '" y="' + (L.ly + fs * .36).toFixed(1) + '" font-size="' + fs + '" font-weight="' + (L.b ? 400 : 700) + '" fill="' + L.col + '">'
+         + esc(L.nm) + '<tspan dx="4" font-weight="' + (L.b ? 400 : 600) + '">' + sgn(L.v, 2) + '</tspan></text>';
+    });
+    var fxn = "";
+    if (o.fx && o.fx.length){ var f0 = null, f1_ = null; o.fx.forEach(function(v){ if (v !== null){ if (f0 === null) f0 = v; f1_ = v; } });
+      if (f0 !== null) fxn = '<span class="fxn">배경 = 원/달러 ' + f0.toLocaleString("en-US", {minimumFractionDigits:1, maximumFractionDigits:1})
+                           + ' → ' + f1_.toLocaleString("en-US", {minimumFractionDigits:1, maximumFractionDigits:1}) + '</span>'; }
+    return '<div class="ch' + (o.hl ? ' hl' : '') + '"><div class="chh"><b>' + esc(o.title) + '</b><span class="cnt">'
+         + esc(o.count !== undefined ? o.count : ('· ' + ser.length + '개')) + '</span>' + fxn
+         + '<span class="rg">' + esc(d[0] + ' ~ ' + d[n - 1]) + '</span></div>'
+         + '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(o.title) + ' 누적 수익률">' + g + '</svg></div>';
+  }
+  function none(title, why, hl){
+    return '<div class="ch' + (hl ? ' hl' : '') + '"><div class="chh"><b>' + esc(title) + '</b></div><div class="none">' + esc(why) + '</div></div>';
+  }
+  function page2(P, HP, IP, hz){
+    var sr = (HP && HP.series) || {}, isr = (IP && IP.series) || {};
+    /* 1주·1개월·3개월은 일간 3개월 계열에서 자른다 — 홈 1개월 계열(달력 30일)은 하루 짧을 수 있다(PDF 와 같은 이유). */
+    var src = sr["3M"] ? "3M" : hz, blk = sr[src] || sr[hz];
+    if (!blk) return '<div class="top"><h1>기간별 수익률 · ' + HZL[hz] + '</h1></div>' + none("", "기간별 수익률 시계열(data/home_perf.json)을 읽지 못했습니다");
+    var dates = blk.dates || [], sdates = blk.sec_dates || dates;
+    var panels = {"지수":{d:dates, rows:blk.ix || {}}, "섹터":{d:sdates, rows:blk.sec || {}}};
+    var ib = isr[src] || isr[hz], isec = (IP && IP.sec) || {};
+    if (ib && ib.ind) panels["산업그룹"] = {d:ib.dates || [], rows:ib.ind};
+    /* 내 스타일 — style_perf.json 의 path(날짜 붙은 원해상도 일별). nav(표시용 표본)는 날짜가 없어 못 쓴다. */
+    var myWhy = null, S = {}, lab = {}, pd = P.path_dates || [];
+    (P.styles || []).forEach(function(x){ S[x.key] = x; });
+    if (pd.length < HN[hz] + 1) myWhy = "style_perf.json 에 " + HZL[hz] + " 치 일별 경로(path)가 아직 없습니다 — 러너가 다음에 구울 때 실립니다";
+    else {
+      var rows = {};
+      KEYS.forEach(function(k){
+        var p = (S[k] || {}).path;
+        if (!p || p.length !== pd.length || !p[0]){ myWhy = myWhy || ((S[k] || {}).label || k) + " 의 일별 경로가 없습니다"; return; }
+        rows[S[k].label] = p.map(function(v){ return v === null ? null : (v / p[0] - 1) * 100; });
+        lab[S[k].label] = k;
+      });
+      if (!myWhy) panels["내 스타일"] = {d:pd, rows:rows};
+    }
+    var A = align(panels, HN[hz]);
+    if (!A) return '<div class="top"><h1>기간별 수익률 · ' + HZL[hz] + '</h1></div>' + none("", "네 판이 겹치는 날짜가 없습니다");
+    var cd = A.cd, Pn = A.panels;
+    var fx = null;
+    if (blk.fx && blk.fx.length === dates.length){ var fp = {}; dates.forEach(function(x, i){ fp[x] = i; }); fx = cd.map(function(x){ return blk.fx[fp[x]]; }); }
+    var ix = ranked(Pn["지수"].rows).map(function(e){ return {nm:e[0], v:e[1], col:CIX[e[0]] || ACC, ls:""}; });
+    var sec = ranked(Pn["섹터"].rows).map(function(e, i){ return {nm:e[0], v:e[1], col:SECPAL[i % SECPAL.length], ls:""}; });
+    var csec = {}; sec.forEach(function(s){ csec[s.nm] = s.col; });
+    var ind = [], seen = {};
+    if (Pn["산업그룹"]) ranked(Pn["산업그룹"].rows).forEach(function(e, i){
+      var par = isec[e[0]], key = par || ("_" + i), j = seen[key] || 0; seen[key] = j + 1;
+      ind.push({nm:indName(e[0]), v:e[1], col:csec[par] || SECPAL[i % SECPAL.length], ls:DASH[j % DASH.length]});
+    });
+    var my = null;
+    if (Pn["내 스타일"]){
+      var mr = {}, k; for (k in Pn["내 스타일"].rows) mr[k] = Pn["내 스타일"].rows[k];
+      /* 회색 기준선 = 지수 판의 선 그대로(같은 날짜 축에 맞춘 뒤라 값이 한 치도 안 다르다) */
+      [["S&P 500", ""], ["나스닥 100", "4 2"]].forEach(function(b){ if (Pn["지수"].rows[b[0]]){ mr[b[0]] = Pn["지수"].rows[b[0]]; lab[b[0]] = "#" + b[1]; } });
+      my = ranked(mr).map(function(e){
+        var bk = lab[e[0]] && lab[e[0]].charAt(0) === "#";
+        return {nm:e[0], v:e[1], col:bk ? BENCH : (MYCOL[lab[e[0]]] || ACC), ls:bk ? lab[e[0]].slice(1) : "", b:bk};
+      });
+    }
+    var h = '<div class="top"><h1>기간별 수익률 · ' + HZL[hz] + '</h1><span class="brd">여두 전략 랩 · 홈 화면 차트 + 내 스타일 8종</span></div>'
+          + '<div class="sub">' + esc(cd[0] + ' ~ ' + cd[cd.length - 1]) + ' · 네 판 같은 날짜 · 달러 기준 · 선 끝 숫자 = 누적 수익률(%)</div>';
+    h += chart({title:"지수", d:cd, series:ix, H:148, fx:fx});
+    h += chart({title:"섹터", d:cd, series:sec, H:190});
+    h += ind.length ? chart({title:"산업그룹", d:cd, series:ind, H:250, dashes:true}) : none("산업그룹", "이 구간의 산업그룹 경로가 자료에 없습니다");
+    h += my ? chart({title:"내 스타일 8종", d:cd, series:my, H:212, hl:true, count:"· 회색 = 지수 판의 S&P 500·나스닥 100"})
+            : none("내 스타일 8종", myWhy || "내 스타일 경로가 없습니다", true);
+    return h;
+  }
+
+  /* ── 3·4장 ──────────────────────────────────────────────────────────── */
+  function rule(desc){
     var ln = String(desc || "").split("\n"), t = "", i, q, j;
     for (i = 0; i < ln.length; i++){ q = ln[i].trim(); if (q){ t = q; break; } }
     if (!t) return "";
@@ -545,129 +883,84 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return j > 0 ? t.slice(0, j + 1) : t;
   }
   function tickers(rows){ var s = {}, i; for (i = 0; i < rows.length; i++) s[rows[i].t] = 1; return s; }
-
-  function perfTable(P, S){
-    var rows = "", bench = P.bench || {}, bk, bx, bm, bt, i, k, x, m, w, t, order, head;
-    for (bk in bench){
-      if (!Object.prototype.hasOwnProperty.call(bench, bk)) continue;
-      bx = bench[bk]; bm = bx.metrics || {}; bt = bx.trails || {};
-      rows += '<tr class="bn"><td class="lbl">' + esc(bx.label || bk) + '</td>'
-            + '<td class="ref">벤치마크</td>'
-            + '<td class="n sh">' + (bm.sharpe || 0).toFixed(2) + '</td>'
-            + '<td class="n">' + (bm.mdd || 0).toFixed(1) + '</td><td class="n sm">·</td>';
-      for (i = 0; i < TR.length; i++) rows += num(bt[TR[i]], 1, TR[i] === "1일" ? "sep" : "");
-      rows += '</tr>';
-    }
-    order = KEYS.slice().sort(function(a, b){ return S[b].metrics.sharpe - S[a].metrics.sharpe; });
-    for (k = 0; k < order.length; k++){
-      x = S[order[k]]; m = x.metrics; t = x.trails || {};
-      w = (x.win && x.win.spx) ? x.win.spx : [0, 12];
-      rows += '<tr><td class="lbl"><b>' + esc(x.label) + '</b></td>'
-            + '<td class="ref">' + esc(String(x.ref).split("S&P 500 ").join("").split("MSCI USA ").join("")) + '</td>'
-            + '<td class="n sh">' + m.sharpe.toFixed(2) + '</td>'
-            + '<td class="n dn">' + m.mdd.toFixed(1) + '</td>'
-            + '<td class="n sm">' + w[0] + '/' + w[1] + '</td>';
-      for (i = 0; i < TR.length; i++) rows += num(t[TR[i]], 1, TR[i] === "1일" ? "sep" : "");
-      rows += '</tr>';
-    }
-    head = "";
-    for (i = 0; i < TR.length; i++) head += '<th class="' + (TR[i] === "1일" ? "sep" : "") + '">' + TR[i] + '</th>';
-    return '<table class="pf"><thead><tr><th>스타일</th><th>지수</th><th>샤프</th><th>MDD</th>'
-         + '<th>이긴달</th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table>';
-  }
-
-  /* 한 스타일 덩이 — 전월말과 금일을 한 표에 나란히. 교체는 두 집합의 차이로만 판정한다. */
   function block(x){
-    var pv = x.prev || {}, td = x.today || {};
-    var pr = pv.rows || [], tr = td.rows || [];
-    var pvt = tickers(pr), tdt = tickers(tr);
-    var body = "", i, nin = 0, ml;
+    var pv = x.prev || {}, td = x.today || {}, pr = pv.rows || [], tr = td.rows || [];
+    var pvt = tickers(pr), tdt = tickers(tr), body = "", i, nin = 0, ml = esc(x.mlab || "");
     function side(r, other, mark){
-      if (!r) return '<td colspan="5" class="dim"></td>';
-      var tk = (other[r.t] ? esc(r.t)
-                : '<span class="' + (mark === "−" ? "out" : "in") + '">' + mark + esc(r.t) + '</span>');
-      return '<td class="tk">' + tk + '</td>'
-           + '<td class="sc">' + esc(SECTOR[r.s] || r.s || "") + '</td>'
+      if (!r) return '<td colspan="5"></td>';
+      var tk = other[r.t] ? esc(r.t) : '<span class="' + (mark === "-" ? "out" : "in") + '">' + mark + esc(r.t) + '</span>';
+      var v = r.mtd;
+      return '<td class="tk">' + tk + '</td><td class="sc">' + esc(SECTOR[r.s] || r.s || "") + '</td>'
            + '<td class="ix">' + esc(r.idx || "") + '</td>'
-           + num(r.mtd, 1, "")
-           + '<td class="n v">' + esc(r.v || "") + '</td>';
+           + '<td class="' + cls(v) + '">' + f1(v) + '</td><td>' + esc(r.v || "") + '</td>';
     }
-    for (i = 0; i < 10; i++){
-      body += '<tr><td class="r">' + (i + 1) + '</td>'
-            + side(i < pr.length ? pr[i] : null, tdt, "−")
-            + '<td class="gap"></td>'
-            + side(i < tr.length ? tr[i] : null, pvt, "＋") + '</tr>';
-    }
+    for (i = 0; i < 10; i++)
+      body += '<tr><td class="r">' + (i + 1) + '</td>' + side(i < pr.length ? pr[i] : null, tdt, "-")
+            + '<td class="gap"></td>' + side(i < tr.length ? tr[i] : null, pvt, "+") + '</tr>';
     for (i = 0; i < tr.length; i++) if (!pvt[tr[i].t]) nin++;
-    ml = esc(x.mlab || "");
-    return '<div class="blk"><div class="b-h"><b>' + esc(x.label) + '</b>'
-         + '<span class="b-r">' + esc(x.ref) + '</span>'
+    return '<div class="blk"><div class="b-h"><b>' + esc(x.label) + '</b><span class="b-r">' + esc(x.ref) + '</span>'
          + '<span class="b-c">' + (nin ? ("교체 " + nin + "종") : "교체 없음") + '</span></div>'
          + '<div class="b-d">' + esc(rule(x.desc)) + '</div>'
-         + (GLOSS[x.key] ? ('<div class="b-g">' + GLOSS[x.key] + '</div>') : "")
-         + '<table class="ht"><colgroup><col class="cr"><col class="ctk"><col class="csc">'
-         + '<col class="cix"><col class="cmt"><col class="cv"><col class="cg"><col class="ctk">'
-         + '<col class="csc"><col class="cix"><col class="cmt"><col class="cv"></colgroup><thead>'
-         + '<tr class="g"><th></th><th colspan="5">전월말 기준 ' + esc(pv.d || "") + '</th>'
-         + '<th class="gap"></th><th colspan="5">금일 기준 ' + esc(td.d || "") + '</th></tr>'
+         + (GLOSS[x.key] ? '<div class="b-g">' + GLOSS[x.key] + '</div>' : "")
+         + '<table class="ht"><colgroup><col class="cr"><col class="ctk"><col class="csc"><col class="cix"><col class="cmt">'
+         + '<col class="cv"><col class="cg"><col class="ctk"><col class="csc"><col class="cix"><col class="cmt"><col class="cv"></colgroup><thead>'
+         + '<tr class="g"><th></th><th colspan="5">전월말 기준 ' + esc(pv.d || "") + '</th><th class="gap"></th>'
+         + '<th colspan="5">금일 기준 ' + esc(td.d || "") + '</th></tr>'
          + '<tr><th>#</th><th>티커</th><th>섹터</th><th>지수</th><th>MTD %</th><th>' + ml + '</th>'
          + '<th class="gap"></th><th>티커</th><th>섹터</th><th>지수</th><th>MTD %</th><th>' + ml + '</th></tr>'
          + '</thead><tbody>' + body + '</tbody></table></div>';
   }
 
   function fail(why){
-    document.getElementById("msg").innerHTML =
-      '판형을 그리지 못했습니다. <b>' + why + '</b><br>'
+    document.getElementById("msg").innerHTML = '판형을 그리지 못했습니다. <b>' + why + '</b><br>'
       + '이 장은 계산을 하지 않으므로, 원인은 언제나 자료 쪽입니다 — '
       + '<a href="data/style_perf.json">data/style_perf.json</a> 을 직접 열어 확인하세요.';
     document.getElementById("meta").textContent = "불러오지 못함";
   }
-
-  function render(P){
-    var S = {}, i, miss = [], asof, blocks = [], n, html = "", pi, j, nre, lo, hi;
-    for (i = 0; i < P.styles.length; i++) S[P.styles[i].key] = P.styles[i];
+  function render(){
+    var P = D.P, S = {}, i, miss = [];
+    (P.styles || []).forEach(function(x){ S[x.key] = x; });
     for (i = 0; i < KEYS.length; i++) if (!S[KEYS[i]]) miss.push(KEYS[i]);
-    if (miss.length){
-      fail("style_perf.json 에 <b>" + esc(miss.join(", ")) + "</b> 스타일이 없습니다 — "
-         + "build 쪽에서 스타일 목록이 바뀌었는지 확인하세요.");
-      return;
-    }
-    asof = esc(P.as_of);
-    for (i = 0; i < KEYS.length; i++) blocks.push(block(S[KEYS[i]]));
-    n = 1 + Math.ceil(Math.max(0, blocks.length - PAGE1) / (PAGE1 + 2));
-    nre = (S[KEYS[0]].n_rebal === undefined) ? 11 : S[KEYS[0]].n_rebal;
-    for (pi = 0; pi < n; pi++){
-      html += '<section class="pg">';
-      if (pi === 0){
-        html += '<h1>스타일 8종</h1><div class="sub">' + esc(P.start || "") + ' ~ ' + asof
-             + ' · 월말 ' + nre + '회 리밸런스 · 상위 10종목 동일가중</div>'
-             + '<h2>기간별 수익률 <span>%  ·  샤프·MDD·이긴달은 ' + esc(P.start || "")
-             + ' 이후 구간  ·  샤프 내림차순</span></h2>'
-             + perfTable(P, S)
-             + '<h2>스타일별 보유 <span><span class="out">−티커</span> 빠짐  ·  '
-             + '<span class="in">＋티커</span> 들어옴</span></h2>';
-      }
-      lo = (pi === 0) ? 0 : (PAGE1 + (pi - 1) * (PAGE1 + 2));
-      hi = Math.min((pi === 0) ? PAGE1 : (lo + PAGE1 + 2), blocks.length);
-      for (j = lo; j < hi; j++) html += blocks[j];
-      html += '<div class="foot">스타일 8종 · 기준일 ' + asof + ' · 여두 전략 랩'
-           + '<span>' + (pi + 1) + ' / ' + n + '</span></div></section>';
-    }
-    document.getElementById("sheets").innerHTML = html;
+    if (miss.length){ fail("style_perf.json 에 " + esc(miss.join(", ")) + " 스타일이 없습니다"); return; }
+    var asof = esc(P.as_of), rows = perfRows(P, S), nre = (S[KEYS[0]].n_rebal === undefined) ? 11 : S[KEYS[0]].n_rebal;
+    var pages = [];
+    pages.push('<div class="top"><h1>스타일 8종</h1><span class="brd">여두 전략 랩</span></div>'
+      + '<div class="sub">기준일 ' + asof + ' · ' + esc(P.start || "") + ' ~ ' + asof + ' · 월말 ' + nre + '회 리밸런스 · 상위 10종목 동일가중 · 비용 0</div>'
+      + '<h2>기간별 수익률<span>%  ·  샤프·MDD·이긴달은 ' + esc(P.start || "") + ' 이후  ·  이긴달 = S&amp;P 500 을 이긴 달  ·  샤프 내림차순</span></h2>'
+      + perfTable(rows)
+      + '<h2>월별 수익률<span>%  ·  초록 +  빨강 -  (±10%p 에서 가장 진함)  ·  * 진행 중인 달(기준일까지)</span></h2>'
+      + heat(P, rows)
+      + '<h2>위험과 수익<span>1년 변동성 대비 1년 수익률  ·  점선보다 위 = S&amp;P 보다 위험 한 단위에 더 벌었다</span></h2>'
+      + scatter(rows));
+    pages.push(page2(P, D.HP, D.IP, D.hz));
+    pages.push('<div class="lgd"><span class="out">-티커</span> = 다음 재선정에서 빠짐  ·  <span class="in">+티커</span> = 새로 들어옴</div>'
+      + KEYS.slice(0, 4).map(function(k){ return block(S[k]); }).join(""));
+    pages.push(KEYS.slice(4).map(function(k){ return block(S[k]); }).join(""));
+    document.getElementById("sheets").innerHTML = pages.map(function(h, i){
+      return '<section class="pg">' + h + '<div class="foot">스타일 8종 · 기준일 ' + asof + ' · 여두 전략 랩<span>'
+           + (i + 1) + ' / ' + pages.length + '</span></div></section>';
+    }).join("");
     document.getElementById("msg").style.display = "none";
-    document.getElementById("meta").innerHTML =
-      '기준일 <b>' + asof + '</b> · A4 <b>' + n + '</b>장 · 8종';
+    document.getElementById("meta").innerHTML = '스타일 기준일 <b>' + asof + '</b> · 시장판 <b>' + esc((D.HP || {}).as_of || "—") + '</b> · A4 4장';
     document.title = "스타일 8종 · " + P.as_of;
   }
 
   document.getElementById("prt").addEventListener("click", function(){ window.print(); });
-
-  fetch("data/style_perf.json", {cache: "no-cache"})
-    .then(function(r){
-      if (!r.ok) throw new Error("HTTP " + r.status);
+  [].forEach.call(document.querySelectorAll("#hz button"), function(b){
+    b.addEventListener("click", function(){
+      D.hz = b.getAttribute("data-h");
+      [].forEach.call(document.querySelectorAll("#hz button"), function(x){ x.classList.toggle("on", x === b); });
+      if (D.P) render();
+    });
+  });
+  function get(u, need){
+    return fetch(u, {cache:"no-cache"}).then(function(r){
+      if (!r.ok){ if (need) throw new Error(u + " HTTP " + r.status); return null; }
       return r.json();
-    })
-    .then(render)
+    }).catch(function(e){ if (need) throw e; return null; });
+  }
+  Promise.all([get("data/style_perf.json", true), get("data/home_perf.json", false), get("data/home_ind_perf.json", false)])
+    .then(function(a){ D.P = a[0]; D.HP = a[1]; D.IP = a[2]; render(); })
     .catch(function(e){ fail(esc(e && e.message ? e.message : e)); });
 })();
 </script>
