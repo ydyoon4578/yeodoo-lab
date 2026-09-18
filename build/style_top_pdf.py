@@ -107,6 +107,11 @@ WINDOW = 252           # 성과·차트 구간 — 최근 1년
 #   실제 길이가 1245일로 줄어 5년 칸이 통째로 빈다(실측). 여유를 두고, 아래에서 정확히
 #   1260일(3년은 756일)을 뒤로 본다.
 WINDOW5 = 1290
+# 🚨 2026-09-18 — **날짜 붙은 원해상도 일별 경로**의 길이(거래일). 6개월 = 126 + 기준점 1.
+#   styles[].nav 는 140점 표시용 표본에 날짜가 없어 «3개월 전 그날» 을 못 짚는다. 스타일 8종
+#   PDF 2쪽(사용자 지시 «스타일 빼고 내 스타일 8종으로 대체»)이 홈 시장판과 같은 3개월 축에
+#   랩 스타일을 그리려면 날짜와 원해상도가 둘 다 있어야 한다. 1주·1개월·3개월·6개월을 덮는다.
+PATH_N = 126
 # 홈 표 ETF 행에 샤프를 적는 대상. 1년·5년 두 곳에서 같은 목록을 써야 한 열이 성립한다 —
 # 손으로 두 번 적으면 조용히 갈린다.
 ETF_SHARPE_TK = ("SPY", "QQQ", "DIA", "IWM",
@@ -1804,6 +1809,17 @@ def vol_managed(P, R, wmap):
     return R2
 
 
+def _path(a, n=None):
+    """창 끝에서 n 거래일 전까지의 **솎지 않은** 일별 값(창 시작 = 100). 날짜는 doc 의 path_dates.
+
+    ⚠ 모든 곡선의 끝이 같은 날(창 끝)이라야 path_dates 한 벌을 같이 쓸 수 있다 —
+      backtest·bench_nav 는 둘 다 end = 마지막 거래일이다.
+    """
+    n = PATH_N if n is None else n
+    a = list(a[-(n + 1):])
+    return [None if (x != x) else round(float(x) * 100, 4) for x in a]
+
+
 def _thin(a, k=140):
     """곡선을 k점으로 줄인다 — 화면 폭이 그보다 촘촘할 이유가 없다(strategy_index 와 같은 규약)."""
     a = [None if (x != x) else round(float(x), 5) for x in a]
@@ -1919,9 +1935,15 @@ def dump_json(P, res, detail):
             "실제와 대조한다.",
         "sampling": {"nav": {"kind": "표시용 표본", "points": 140, "has_dates": False,
                              "reproduces_metrics": False},
+                     # path 는 솎지 않은 일별 값이다 — trails 의 1주·1개월·3개월·6개월을
+                     #   끝 ÷ 끝−n 으로 **그대로 재현**한다(소수 넷째 자리 반올림 안에서).
+                     "path": {"kind": "원해상도 일별", "points": PATH_N + 1, "has_dates": True,
+                              "dates_key": "path_dates", "reproduces": "trails 1주·1개월·3개월·6개월"},
                      "monthly": {"kind": "월간 표본", "reproduces_metrics": False},
                      "max_mdd_gap_pp": 1.8},
         "months": ms,
+        # 경로의 날짜 — bench·styles 의 path 가 전부 이 축을 쓴다(창 끝 = as_of 에서 PATH_N 거래일 전까지)
+        "path_dates": P.dates[max(R0["start"], R0["end"] - PATH_N):R0["end"] + 1],
         "bench": {},
         "styles": [],
     }
@@ -1935,6 +1957,7 @@ def dump_json(P, res, detail):
                        for k, v in trails(a, P.dates, R0["start"]).items()},
             "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
             "nav": _thin([x * 100 for x in a]),
+            "path": _path(a),
         }
     # 홈 표의 ETF 행에도 샤프를 적을 수 있게 **같은 창·같은 metrics** 로 잰다
     # (사용자 요청 2026-08-02 "메인에 샤프도 표시").
@@ -2026,6 +2049,9 @@ def dump_json(P, res, detail):
             "prev": {"d": P.dates[R["prev_i"]], "rows": side(R["prev"], R["prev_i"], ns)},
             "today": {"d": P.dates[R["today_i"]], "rows": side(R["today"], R["today_i"], ps)},
         })
+        # 경로는 **화면에 나가는 줄만** 싣는다(숨긴 줄까지 실으면 파일이 1/4 커지고 읽는 곳이 없다).
+        if key not in HOME_HIDE:
+            doc["styles"][-1]["path"] = _path(nav)
     p = os.path.join(DATA, "style_perf.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dKB · 스타일 %d종)" % (p, os.path.getsize(p) // 1024, len(doc["styles"])))
