@@ -103,6 +103,14 @@ data/_style_score.json
 # 스타일 점수 로테이션 얼린 측정(build/ssrot.py) — 자동 재굽기 금지.
 #   PREREG-2026-09-03-SSROT 에서 기각됐다.
 data/_ssrot.json
+
+# 스타일 8종 로테이션의 천장 진단(build/style8_oracle.py) — 🚨 게시용 규칙이 아니다.
+#   oracle 레그가 완전 예지를 쓰므로 실시간에 못 쓴다. PREREG-2026-09-18-STYLE8W §7 참조.
+data/_style8_oracle.json
+
+# 스타일 8종 가중 방식 얼린 측정(build/style8w.py) — PREREG-2026-09-18-STYLE8W 에서
+#   iv·erc·mv 셋 다 기각됐다(F2·F3·F4). 진단 기록이지 게시물이 아니다.
+data/_style8w.json
 # 사내 DB 카탈로그 원본(스키마·테이블명). 공개 저장소라 평문 반입 금지 — db.html 은 암호문으로만 게시한다
 build/db_catalog.json
 # 사내 DB 지도의 문안(함정 설명·조인키). 생성기는 추적하되 문안은 반입 금지
@@ -145,3 +153,7 @@ data/_idxrev.json
 
 # IDXREVBAND(2026-09-16) 얼린 측정
 data/_idxrevband.json
+
+# SWING1020(2026-09-19) 얼린 측정 — 과매도 롱10·과매수 숏10. F2·F3·F4 로 기각됐다.
+#   build/swing1020.py 로 재생성된다. 진단 기록이지 게시물이 아니다.
+data/_swing1020.json
