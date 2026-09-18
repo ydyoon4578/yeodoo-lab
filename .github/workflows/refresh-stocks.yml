@@ -12,10 +12,16 @@ on:
     # ⚠ 이 cron 문자열을 바꾸면 build/should_refresh.py 의 BACKUP_CRONS 도 같이 바꿀 것.
     #   (2026-08-12 부터 validate_site.py 가 그 표와 이 파일을 대조한다 — 어긋나면 빨개진다.)
     - cron: '42 22 * * 0-5'    # 백업 슬롯 — 매일(월~토) 07:42 KST
+    # 🚨 2026-09-18 재시도 슬롯 — 오늘 이미 커밋했어도 격자가 기대 최신 미국 세션에 못 미치면
+    #   다시 받는다(gate 의 --session). 실측 09-18: 본 슬롯이 09-17 세션 없이 커밋했고 백업은
+    #   «오늘 커밋됨» 으로 건너뛰어 종목 패널 파생물이 하루 뒤처졌다. 몇 시간 뒤 야후는 다 주었다.
+    #   ⚠ 뒤처졌을 때만 일한다 — 평소엔 gate 에서 끝난다(쓰로틀 절감이라는 백업의 목적 유지).
+    - cron: '15 2 * * 1-6'     # 재시도 슬롯 — 매일(월~토) 11:15 KST
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write    # 뒤처진 스타일 산출물을 따라잡게 refresh-assets 를 부른다(맨 아래 스텝)
 
 concurrency:
   group: refresh-stocks
@@ -38,7 +44,7 @@ jobs:
       - id: decide
         run: |
           python build/should_refresh.py data/stocks.json \
-            "${{ github.event_name }}" "${{ github.event.schedule }}" >> "$GITHUB_OUTPUT"
+            "${{ github.event_name }}" "${{ github.event.schedule }}"             --session=data/stocks.json >> "$GITHUB_OUTPUT"
 
   refresh:
     needs: gate
@@ -185,6 +191,27 @@ jobs:
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json
+      # 🚨 2026-09-18 — 미국 세션이 빠졌으면 경고(노란 주석)만 남긴다. 실패로 만들지 않는다:
+      #   야후 지연은 잡의 결함이 아니고, 백업·재시도 슬롯이 gate 의 --session 으로 다시 받는다.
+      - name: Report missing US session
+        run: python build/should_refresh.py --report-session=data/stocks.json
+      # 🚨 2026-09-18 — 종목 격자가 늦게 따라잡으면 style_perf.json(refresh-assets 가 굽는다)이
+      #   뒤처진 채 남는다. refresh-assets 의 슬롯(07:34·08:20)이 이미 지나간 뒤라 다음 날까지 안 낫는다.
+      #   그래서 **스타일 산출물이 방금 커밋한 격자보다 뒤일 때만** refresh-assets 를 부른다.
+      #   수동 실행이라 그쪽 gate 는 무조건 통과한다. 평소(본 슬롯이 제때 끝난 날)엔 assets 본 슬롯이
+      #   뒤에 돌므로 여기서 부르지 않는다 — 조건이 거짓이다.
+      # ⚠ workflow_dispatch 는 GITHUB_TOKEN 으로도 다른 워크플로를 띄운다(actions: write 필요).
+      - name: Catch up style outputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git pull --ff-only --quiet || true
+          if python -c "import sys; sys.path.insert(0,'build'); import should_refresh as s; sys.exit(0 if s.behind(['data/style_perf.json:data/stocks.json']) else 1)"; then
+            echo "::notice::style_perf.json 이 stocks.json 보다 뒤 — refresh-assets 를 부른다"
+            gh workflow run refresh-assets.yml --ref "${{ github.ref_name }}"
+          else
+            echo "style_perf.json 은 stocks.json 을 따라잡았다 — 부르지 않는다"
+          fi
       # 갱신이 '돌았는데 낡은 데이터'면 잡을 실패시켜 GitHub 기본 실패 알림 메일이 소유자에게 가게 한다.
       #   커밋 스텝 뒤라 데이터는 이미 남기고(있는 만큼 최선), 잡만 빨갛게 만든다.
       #   '아예 안 뜬' 케이스는 이걸로 못 잡으니 sources.html 신선도 배지가 상보적으로 드러낸다.
