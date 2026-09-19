@@ -184,3 +184,6 @@ data/_breadth_gauge.json
 _ffcache/
 # 국면 패널 계측(2026-09-19) — build/regime_panel.py 로 재생성된다.
 data/_regime_panel.json
+
+# ORGCAP(2026-09-19) 얼린 측정
+data/_orgcap.json
