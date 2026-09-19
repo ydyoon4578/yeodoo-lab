@@ -173,3 +173,6 @@ data/_momswing.json
 # SIGLOOK 감사(2026-09-19) 대조용 — 옛 진입시점(i-1)으로 돌린 판. build/_siglab_old.py 산출.
 data/_siglab_olddelay.json
 build/_siglab_old.py
+
+# LSBETA 감사(2026-09-19) 산출 — 롱숏 규칙의 잔존 β. build/lsbeta_audit.py 로 재생성된다.
+data/_lsbeta.json
