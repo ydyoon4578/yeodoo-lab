@@ -169,3 +169,7 @@ data/_resrev_diag.json
 data/_momtiming_diag.json
 # MOMSWING(2026-09-19) 얼린 측정
 data/_momswing.json
+
+# SIGLOOK 감사(2026-09-19) 대조용 — 옛 진입시점(i-1)으로 돌린 판. build/_siglab_old.py 산출.
+data/_siglab_olddelay.json
+build/_siglab_old.py
