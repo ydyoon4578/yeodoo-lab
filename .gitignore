@@ -193,3 +193,6 @@ data/_taxsurp.json
 
 # OPLEV(2026-09-19) 얼린 측정
 data/_oplev.json
+
+# F6 전수 검사(2026-09-19) — build/f6_screen.py 로 재생성된다.
+data/_f6_screen.json
