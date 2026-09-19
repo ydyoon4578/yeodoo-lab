@@ -163,3 +163,9 @@ data/_swing_diag.json
 data/_swing_beta.json
 # SWING2(2026-09-19) 얼린 측정
 data/_swing2.json
+
+# 재료 교체 계측(2026-09-19) — 잔차 역추세 · 모멘텀×타점. 계측이지 게시물이 아니다.
+data/_resrev_diag.json
+data/_momtiming_diag.json
+# MOMSWING(2026-09-19) 얼린 측정
+data/_momswing.json
