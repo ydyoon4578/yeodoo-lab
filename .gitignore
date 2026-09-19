@@ -179,3 +179,8 @@ data/_lsbeta.json
 
 # 시장 폭 계기판(2026-09-19) — build/breadth_gauge.py 로 재생성된다. 계측이지 게시물이 아니다.
 data/_breadth_gauge.json
+
+# Fama-French 원본 zip 내려받기 캐시 — build/fetch_ff.py 가 다시 받는다(공개 자료).
+_ffcache/
+# 국면 패널 계측(2026-09-19) — build/regime_panel.py 로 재생성된다.
+data/_regime_panel.json
