@@ -176,3 +176,6 @@ build/_siglab_old.py
 
 # LSBETA 감사(2026-09-19) 산출 — 롱숏 규칙의 잔존 β. build/lsbeta_audit.py 로 재생성된다.
 data/_lsbeta.json
+
+# 시장 폭 계기판(2026-09-19) — build/breadth_gauge.py 로 재생성된다. 계측이지 게시물이 아니다.
+data/_breadth_gauge.json
