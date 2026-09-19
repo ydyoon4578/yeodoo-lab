@@ -157,3 +157,9 @@ data/_idxrevband.json
 # SWING1020(2026-09-19) 얼린 측정 — 과매도 롱10·과매수 숏10. F2·F3·F4 로 기각됐다.
 #   build/swing1020.py 로 재생성된다. 진단 기록이지 게시물이 아니다.
 data/_swing1020.json
+
+# SWING1020 사후 계측(2026-09-19) — 반감기·폭·순위지속성·순베타. 전략 선택 근거지 게시물이 아니다.
+data/_swing_diag.json
+data/_swing_beta.json
+# SWING2(2026-09-19) 얼린 측정
+data/_swing2.json
