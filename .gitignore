@@ -190,3 +190,6 @@ data/_orgcap.json
 
 # TAXSURP(2026-09-19) 얼린 측정
 data/_taxsurp.json
+
+# OPLEV(2026-09-19) 얼린 측정
+data/_oplev.json
