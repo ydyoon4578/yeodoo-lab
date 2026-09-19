@@ -55,8 +55,8 @@ def main():
             var += 2 * (1 - k / (lag + 1.0)) * float((d[k:] * d[:-k]).sum() / m)
         return float(x.mean() / np.sqrt(var / m)) if var > 0 else np.nan
 
-    def run(col, weight="cap", hold=1):
-        ls, pool = [], []
+    def run(col, weight="cap", hold=1, want_months=False):
+        ls, pool, mos = [], [], []
         for m in ms:
             g = panel[m].dropna(subset=[col])          # 그 신호를 가진 종목만
             pool.append(len(g))
@@ -78,15 +78,16 @@ def main():
                     w = pd.Series(1.0 / len(names), index=names)
                 return float(sum((w * MR.loc[x, names].astype(float).fillna(0)).sum()
                                  for x in nx)) / hold
-            ls.append(ret(hi) - ret(lo))
-        return np.array(ls), np.array(pool)
+            ls.append(ret(hi) - ret(lo)); mos.append(str(m))
+        return (np.array(ls), np.array(pool), mos) if want_months else (np.array(ls), np.array(pool))
 
     print("\n■ 단일 신호 여덟 — 시점정확 · 섹터중립 · 그 신호를 가진 종목의 십분위")
     print("   %-9s %9s %7s %7s %9s %9s %7s"
           % ("신호", "월 롱숏", "t", "NW t", "동일가중", "12개월", "후보"))
-    res = {}
+    res, series = {}, {}
     for c in C.SIGS:
-        a, pool = run(c)
+        a, pool, _mo = run(c, want_months=True)
+        series[c] = {"months": _mo, "ls": [float(x) for x in a]}
         if len(a) < 10:
             print("   %-9s 측정 불가" % c); continue
         b, _ = run(c, weight="ew")
@@ -104,7 +105,7 @@ def main():
           % (len(pos), len(res), sum(1 for c in res if abs(res[c]["t"]) >= 2)))
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
         {"note": "단일 신호 성적의 정본. combo.py 의 ⓐ 블록은 신호 수로 나누는 버그가 있었다.",
-         "rows": res}, ensure_ascii=False, indent=1, default=float) + "\n")
+         "rows": res, "series": series}, ensure_ascii=False, indent=1, default=float) + "\n")
     print("→ %s" % OUT)
     return 0
 

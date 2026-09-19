@@ -208,3 +208,6 @@ data/_combo2.json
 
 # 단일 신호 성적 정본 — build/single_table.py 로 재생성된다.
 data/_single_table.json
+
+# 국면별 계측(2026-09-20) — build/regime_table.py 로 재생성된다.
+data/_regime_table.json
