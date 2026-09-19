@@ -205,3 +205,6 @@ data/_combo.json
 
 # COMBO2(2026-09-19) 얼린 측정
 data/_combo2.json
+
+# 단일 신호 성적 정본 — build/single_table.py 로 재생성된다.
+data/_single_table.json
