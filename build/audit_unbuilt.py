@@ -49,6 +49,9 @@ WF = os.path.join(ROOT, ".github", "workflows")
 # ⚠ 여기에 넣는 것은 «잡에 넣지 못하는 이유» 가 있어야 한다. «아직 안 했다» 는 이유가
 #   아니다. 이유 없이 조용히 만들려고 넣으면 이 감사가 있는 뜻이 사라진다.
 KNOWN = {
+    "_residmom_fund.json":
+        "얼린 사전등록 측정(PREREG-2026-09-20-RESIDMOM · 기각 · 아홉 중 여섯 걸림). "
+        "**자동 재굽기 금지 — 기록이다.** _valsleeve.json 과 같은 규약이다.",
     "_guruacc_fund.json":
         "얼린 사전등록 측정(PREREG-2026-09-20-GURUACC · 기각 · F3 증분 t 1.39). "
         "**자동 재굽기 금지 — 기록이다.** _valsleeve.json 과 같은 규약이다.",
