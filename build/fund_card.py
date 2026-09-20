@@ -30,18 +30,32 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fund_fit import fund_monthly, ols          # noqa: E402
+import qg_cap                                   # noqa: E402
 
 OUT = os.path.join(DATA, "_fund_card.json")
+
+# 🚨 사용자 결정 2026-09-21 — *"근데 20%는 너무 커. 10%로 하자"*
+#   사전등록_우량성장선별 §4 가 상한 메뉴(25·20·15·12·10%)를 **미리** 못박고
+#   «고른 뒤에는 바꾸지 않는다» 고 적어 뒀다. 그 메뉴 안의 선택이라 사후 조정이 아니다.
+#   ⚠ 등록서의 전제는 «법규·약관» 이었고 이번 사유는 **위험 선호**다. 사유가 다르다는
+#     사실을 적어 둔다(build/qg_cap.py 머리말에도 같은 말이 있다).
+#   ⚠ 상한을 바꾸면 `python build/qg_cap.py` 를 먼저 돌려 **앵커 둘**이 서는지 본다.
+CAP = 10.0
+PREV_CAP = 20.0
 
 # 🚨 2026-09-21 정정 — 종전 문구는 «수익성·성장·재무건전성» 셋이라고 적었는데
 #   산출물(02_우량성장_최소구성/qg_monthly.pkl)을 열어 보니 **점수는 두 축뿐**이다.
 #   `score_raw = (roe_pct + eg_pct) / 2` 로 재현된다(가중치 최적화해도 0.50 · 잔차 2.5e-5).
 #   **재무건전성에 해당하는 칸이 자료에 아예 없다.** 없는 축을 카드가 말하고 있었다.
-RULE = ("S&P 500 안에서 **ROE 백분위와 이익성장 백분위를 반씩 평균**해 점수를 내고, "
-        "그 점수를 **6개월 이동평균**으로 눅인 뒤 상위 30종을 뽑는다. "
-        "분기(3·6·9·12월) 말에 다시 고른다. 비중은 **지수비중 비례 + 한 종목 20% 상한**"
+# ⚠ `eg` 는 **이익성장이 아니라 기대투자성장**이다(2026-09-21 확인). 준비데이터 시트:
+#   «다음 해 투자증가율 예측값. log q · Cop · dRoe 에 평균기울기를 곱해 만든다»
+#   = q^5 모형의 Eg 팩터 구성(Hou·Mo·Xue·Zhang 2021). 애널리스트 컨센서스가 아니다.
+RULE = ("S&P 500 안에서 **ROE 백분위와 기대투자성장(EG) 백분위를 반씩 평균**해 점수를 "
+        "내고, 그 점수를 **6개월 이동평균**으로 눅인 뒤 상위 30종을 뽑는다. "
+        "분기(3·6·9·12월) 말에 다시 고른다. 비중은 **지수비중 비례 + 한 회사 %g%% 상한**"
         "(넘치는 몫은 나머지에 비례 재배분)이고, 분기 중에는 표류를 그대로 둔다. "
-        "리밸런스 거래에 왕복 25bp 를 물린다.")
+        "금융업은 점수 대상에서 빼고, 같은 회사의 두 종목은 한 자리로 묶는다. "
+        "리밸런스 거래에 왕복 25bp 를 물린다." % CAP)
 
 # 오늘까지 사전등록·측정으로 확인된 «설계를 바꾸면 드는 비용»
 COSTS = [
@@ -53,7 +67,9 @@ COSTS = [
 
 
 def main():
-    F = fund_monthly()
+    # 🚨 상한 판을 카드의 정본 계열로 쓴다. 20% 원본은 아래 prev_design 에 남긴다.
+    F, extra = qg_cap.series(CAP)
+    P20 = fund_monthly()                        # 원본(20%) — 대조용
     n = len(F)
     mu_m, mu_y = float(F.mean() * 100), float(F.mean() * 1200)
     sd_y = float(F.std(ddof=1) * np.sqrt(12) * 100)
@@ -75,6 +91,24 @@ def main():
         "window": {"start": str(F.index[0]), "end": str(F.index[-1]), "n_months": n},
         "perf": {"excess_m_pct": mu_m, "excess_y_pp": mu_y, "te_y_pct": sd_y,
                  "t": t, "ir": ir, "win_rate_pct": win},
+        "cap_pct": CAP,
+        # 🚨 이 카드가 어느 상한 판인지, 그리고 이전 판이 무엇이었는지 나란히 둔다.
+        #   없으면 «+8.16%p» 를 기억하는 사람이 이 카드를 보고 수가 줄었다고만 읽는다.
+        "prev_design": {
+            "cap_pct": PREV_CAP,
+            "excess_y_pp": float(P20.mean() * 1200),
+            "ir": float(P20.mean() * 1200 / (P20.std(ddof=1) * np.sqrt(12) * 100)),
+            "t": float(P20.mean() / (P20.std(ddof=1) / np.sqrt(len(P20)))),
+            "why": "사용자 결정 2026-09-21 — «20%는 너무 커. 10%로 하자». "
+                   "사전등록 §4 의 상한 메뉴 안의 선택이고 «고른 뒤에는 바꾸지 않는다». "
+                   "⚠ 등록서의 전제는 법규·약관이었고 이번 사유는 위험 선호다.",
+            "traded": "집중 ↓(상위 3사 46.1%→29.6%) · 초과 −3.11%p · IR 0.99→0.65 · "
+                      "t 3.44→2.27. ⚠ 추적오차는 8.26→7.77 로 거의 안 줄었다 — "
+                      "«상한을 조여도 지수에서 벌어지는 폭은 줄지 않는다»(등록서 §4).",
+        },
+        "concentration": {"top3_pct": extra["top3_pct"], "turn_y_pct": extra["turn_y_pct"]},
+        # ⚠ 아래 넷은 **20% 판에서 잰 값**이다. 상한을 바꿨다고 다시 재지 않았다.
+        "costs_basis_cap_pct": PREV_CAP,
         "costs": [{"what": a, "pp_per_year": b, "src": c, "verdict": d} for a, b, c, d in COSTS],
         "limits": [
             "이 랩의 규칙들과 **잣대가 다르다**(펀드는 TR, 규칙은 PR 대비). 한 표에 섞지 말 것.",
@@ -84,12 +118,11 @@ def main():
             "생존편향이 없지만, 그것은 바스켓을 만든 쪽의 기록으로만 확인된다.",
             # 🚨 2026-09-21 — Novy-Marx (2025) 의 경고를 그대로 옮긴다. 이 한계는
             #   «아직 안 갈렸다» 이지 «틀렸다» 가 아니다. 가르려면 별도 등록이 필요하다.
-            "🚨 **«우량» 축이 수익성 하나로 환원될 수 있다.** Novy-Marx (2025) 는 "
-            "ROE·이익안정성·저레버리지가 **수익성을 통제하면 유의성을 잃는다**고 보고한다"
-            "(4팩터 알파 월 48bp · t 6.96). 이 펀드의 6팩터에서도 RMW 는 +0.149(t 1.98)로 "
-            "**경계선**이고 CMA 는 −0.095(t −1.01)로 안 잡히는 반면, 가장 센 적재는 "
-            "HML **−0.245(t −3.82)** 다 — 회귀가 «우량» 보다 **«성장»** 을 더 크게 본다. "
-            "**알파가 우량에서 오는지 성장에서 오는지 이 카드로는 안 갈린다.**",
+            "🚨 **t 가 잡음 문턱 언저리로 내려왔다.** 랩의 다중검정 귀무분포에서 "
+            "«잡음만으로 나오는 최고 t» 의 중앙값이 **2.267** 인데 이 판의 t 가 그 근처다"
+            "(%g%% 판은 3.44 였다). 사전등록 §4 는 10%% 도 뒤바꾸기 검정을 통과한다고 "
+            "적었지만(+1.06), **«지수를 이긴다» 가 더 약해진 것은 사실이다.** "
+            "확정된 것은 «점수가 무작위가 아니다» 쪽이다." % PREV_CAP,
         ],
     }
 
@@ -102,6 +135,12 @@ def main():
                 if nm.startswith("펀드"):
                     reg[ax] = cells
         card["regime"] = reg
+        # ⚠ regime_table 은 **20% 판 계열**로 구워졌다. 상한 판으로 다시 굽지 않았다.
+        card["regime_basis_cap_pct"] = PREV_CAP
+        card["regime_note"] = ("🚨 이 15칸은 **이전 설계(20% 상한) 계열**로 잰 것이다. "
+                               "build/regime_table.py 가 fund_fit.fund_monthly() 를 읽기 "
+                               "때문이다. 국면 «방향» 은 상한과 대체로 무관하겠지만 "
+                               "**그것을 확인하지는 않았다** — 크기를 인용하지 말 것.")
     except Exception:
         card["regime"] = {}
 
@@ -128,6 +167,33 @@ def main():
         }
     except Exception as ex:
         card["factor6"] = {"error": str(ex)}
+
+    # 🚨 6팩터를 잰 **뒤에** 그 수로 한계를 적는다. 상수로 박아 두면 상한을 바꿨을 때
+    #   본문은 10%% 판인데 인용된 수는 20%% 판인 모순이 생긴다(실제로 한 번 생겼다).
+    f6 = card.get("factor6") or {}
+    L = f6.get("loadings") or {}
+    if L:
+        def _bt(k):
+            v = L.get(k) or {}
+            return v.get("b"), v.get("t")
+        hb, ht = _bt("hml"); rb, rt = _bt("rmw"); cb, ct = _bt("cma")
+        card["limits"].append(
+            "🚨 **«우량» 축이 수익성 하나로 환원될 수 있다.** Novy-Marx (2025) 는 "
+            "ROE·이익안정성·저레버리지가 **수익성을 통제하면 유의성을 잃는다**고 "
+            "보고한다(4팩터 알파 월 48bp · t 6.96). 이 판(%g%% 상한)의 6팩터에서도 "
+            "RMW %+.3f(t %.2f) · CMA %+.3f(t %.2f) 로 둘 다 약한 반면 HML 은 "
+            "**%+.3f(t %.2f)** 다 — 회귀가 «우량» 보다 **«성장»** 을 크게 본다. "
+            "**알파가 우량에서 오는지 성장에서 오는지 이 카드로는 안 갈린다.**"
+            % (CAP, rb, rt, cb, ct, hb, ht))
+        a_t = f6.get("alpha_t")
+        if a_t is not None and abs(a_t) < 2.0:
+            card["limits"].append(
+                "🚨 **6팩터 알파가 유의하지 않다 — 월 %+.3f%% (t %.2f).** "
+                "%g%% 상한 판에서는 월 +0.403%% (t 2.41) 이었다. 상한을 조이면서 "
+                "**«팩터로 설명 안 되는 몫» 이 통계적으로 사라졌다.** 남은 초과의 "
+                "상당 부분이 성장·모멘텀 적재로 설명된다는 뜻이고, 그것은 "
+                "**싸게 살 수 있는 노출**이다. 이 사실을 성적표와 함께 읽을 것."
+                % (f6.get("alpha_m_pct"), a_t, PREV_CAP))
 
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(card, ensure_ascii=False, indent=1, default=float) + "\n")
