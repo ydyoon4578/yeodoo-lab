@@ -123,17 +123,10 @@ def main():
     M = P.resample("M").last()
     M.index = M.index.to_period("M")
     MR = M.pct_change()
-    shrow = []
-    for t, b in base.items():
-        tg = (b.get("tags") or {})
-        s = tg.get("sh") or tg.get("sho") or {}
-        for end, v, *_ in (s.get("i") or s.get("q") or s.get("a") or []):
-            shrow.append({"t": t, "m": end[:7], "sh": float(v)})
-    SHW = pd.DataFrame(shrow).pivot_table(index="m", columns="t", values="sh", aggfunc="last")
-    SHW.index = pd.PeriodIndex(SHW.index, freq="M")
-    SHW = SHW.reindex(M.index).ffill()
-    CAP = pd.DataFrame(M.reindex(columns=SHW.columns).to_numpy() * SHW.to_numpy(),
-                       index=M.index, columns=SHW.columns).reindex(columns=M.columns)
+    # 🚨 주식수에 100만 배 단위 사고가 있다(build/audit_shares.py · 점프 238건/78종).
+    #   고치지 않으면 2026-06 에 WAT 가 지수의 29.5% 가 된다. 자릿수만 맞춘다.
+    from shares_clean import cap_frame                            # noqa: E402
+    CAP = cap_frame(M, DATA)
     print("   가격 %d종 · 월 %d개 · 시총 %d종" % (P.shape[1], len(M), CAP.notna().any().sum()))
 
     # ── 연간판: 6월말 형성 ────────────────────────────────────────────────

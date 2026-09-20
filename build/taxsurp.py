@@ -140,12 +140,10 @@ def main():
     print("   가격 %d종 · 월 %d개" % (P.shape[1], len(M)))
 
     # 시총 = 종가 × 보고 주식수(카드 §3 — 최대 3개월 낡는다)
-    shp = SH.copy()
-    shp["m"] = pd.PeriodIndex(pd.to_datetime(shp.end), freq="M")
-    shw = shp.pivot_table(index="m", columns="t", values="sh", aggfunc="last")
-    shw = shw.reindex(mper).ffill()
-    CAP = M.reindex(columns=shw.columns).to_numpy() * shw.to_numpy()
-    CAP = pd.DataFrame(CAP, index=mper, columns=shw.columns).reindex(columns=M.columns)
+    # 🚨 주식수에 100만 배 단위 사고가 있다(build/audit_shares.py · 점프 238건/78종).
+    #   고치지 않으면 2026-06 에 WAT 가 지수의 29.5% 가 된다. 자릿수만 맞춘다.
+    from shares_clean import cap_frame                            # noqa: E402
+    CAP = cap_frame(M, DATA)
 
     # ── 월별 신호판 ───────────────────────────────────────────────────────
     S["avail"] = pd.PeriodIndex(S.avail, freq="M")

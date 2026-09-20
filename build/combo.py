@@ -131,15 +131,10 @@ def main():
     OSC = -S_osc.resample("M").last()
     OSC.index = OSC.index.to_period("M")
 
-    shrow = []
-    for t, b in base.items():
-        s = (b.get("tags") or {}).get("sh") or (b.get("tags") or {}).get("sho") or {}
-        for e, v, *_ in (s.get("i") or s.get("q") or s.get("a") or []):
-            shrow.append({"t": t, "m": e[:7], "sh": float(v)})
-    SW = pd.DataFrame(shrow).pivot_table(index="m", columns="t", values="sh", aggfunc="last")
-    SW.index = pd.PeriodIndex(SW.index, freq="M"); SW = SW.reindex(M.index).ffill()
-    CAP = pd.DataFrame(M.reindex(columns=SW.columns).to_numpy() * SW.to_numpy(),
-                       index=M.index, columns=SW.columns).reindex(columns=M.columns)
+    # 🚨 주식수에 100만 배 단위 사고가 있다(build/audit_shares.py — 점프 238건/78종).
+    #   고치지 않으면 2026-06 에 WAT 가 지수의 29.5% 가 된다. shares_clean 이 자릿수만 맞춘다.
+    from shares_clean import cap_frame                            # noqa: E402
+    CAP = cap_frame(M, DATA)
     print("가격 %d종 · 월 %d개 · 재무 %d행/%d종" % (P.shape[1], len(M), len(D), D.t.nunique()))
 
     # ── 월별 패널 (시점정확 · 섹터중립 z) ─────────────────────────────────
