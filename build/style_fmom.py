@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """build/style_fmom.py — 스타일 로테이션(팩터 모멘텀). 규약은 PREREG-2026-09-21-STYLE8ROT.md.
 
 🚨 등록서에 적은 것만 한다. 결과를 보고 자산 수(8/8)·선택 크기(상위 절반)·
@@ -60,6 +60,18 @@ EIGHT = ["val", "grow", "hbeta", "div", "spmo", "qvm", "squal", "size"]
 STD8 = ["val", "size", "spmo", "squal", "div", "lowvol", "fcfy", "netbuy"]
 
 
+def bench_m():
+    """F5 용 벤치(S&P 500) 월수익. data/bench_px.json 의 spx 계열.
+
+    ⚠ 이 계열은 **가격지수(PR)** 다 — 배당 재투자가 없다. 그만큼 벤치가 낮게 잡힌다.
+      F5 를 통과해도 «배당까지 포함한 벤치를 넘었다» 는 뜻이 아니다. 결과문서에 적는다.
+    """
+    b = json.load(io.open(os.path.join(DATA, "bench_px.json"), encoding="utf-8"))
+    s = pd.Series(b["series"]["spx"]["px"], index=pd.to_datetime(b["dates"]), dtype="float64")
+    s = s.dropna()
+    return s.resample("ME").last().pct_change().dropna()
+
+
 def eff_n(C):
     """상관행렬의 유효 자산 수 — 고유값 참여비."""
     ev = np.linalg.eigvalsh(np.asarray(C, float))[::-1]
@@ -113,7 +125,7 @@ def fmom(X, names):
     X = X[names].dropna()
     idx = X.index
     k = max(1, len(names) // 2)
-    rows, held, prev = [], [], set()
+    rows, held, prev, scores = [], [], set(), []
     for i in range(LB_A, len(idx) - 1):
         win = X.iloc[i - LB_A:i - LB_B + 1]          # t-12 ~ t-2
         sd = win.std().replace(0, np.nan)
@@ -126,9 +138,11 @@ def fmom(X, names):
         churn = len(set(pick) ^ prev) / (2.0 * k) if prev else 1.0
         rows.append((idx[i + 1], gross, gross - COST * churn, churn))
         held.append(pick)
+        scores.append(sc.reindex(names))
         prev = set(pick)
     R = pd.DataFrame(rows, columns=["m", "gross", "net", "churn"]).set_index("m")
-    return R, held
+    S = pd.DataFrame(scores, index=R.index)      # §4-5 신호의 지속성
+    return R, held, S
 
 
 def stats(r):
@@ -162,12 +176,13 @@ def main():
            "window": [X.index[0].strftime("%Y-%m"), X.index[-1].strftime("%Y-%m")],
            "n_month": len(X), "runs": {}}
 
+    BM = bench_m()
     rng = np.random.default_rng(SEED)
     for tag, want in (("fmom", EIGHT), ("fmom8", STD8)):
         names = [n for n in want if n in X.columns]
         sub = X[names]
         en = eff_n(sub.corr())
-        R, held = fmom(X, names)
+        R, held, S = fmom(X, names)
         ew = sub.loc[R.index].mean(axis=1)
         d = R["net"] - ew
         k = max(1, len(names) // 2)
@@ -179,6 +194,12 @@ def main():
         a_net = stats(R["net"])["ann"]
         pct = float((np.asarray(sh) < a_net).mean() * 100)
         half = len(d) // 2
+        ac = float(np.mean([S[c].autocorr() for c in S.columns]))
+        # 명단 지속성 — 다음 달에도 남아 있는 비율
+        keep = float(np.mean([len(set(a) & set(b)) / len(a)
+                              for a, b in zip(held[:-1], held[1:])])) * 100
+        bm = BM.reindex(R.index).dropna()
+        b_st = stats(bm)
         res["runs"][tag] = {
             "names": names, "eff_n": en,
             "gross": stats(R["gross"]), "net": stats(R["net"]), "ew": stats(ew),
@@ -189,6 +210,9 @@ def main():
             "shuffle_pct": pct, "shuffle_mean": float(np.mean(sh)),
             "half1_excess": float(d.iloc[:half].mean() * 1200),
             "half2_excess": float(d.iloc[half:].mean() * 1200),
+            "score_ac": ac, "keep_pct": keep,
+            "bench": b_st, "bench_n": len(bm),
+            "f5_beat_bench": bool(stats(R["net"])["sharpe"] > (b_st.get("sharpe") or 9e9)),
         }
         r = res["runs"][tag]
         print("\n== %s · %d종 · 유효 %.2f ==============================" % (tag, len(names), en))
@@ -200,6 +224,10 @@ def main():
               % (r["churn_m"], r["shuffle_pct"], r["shuffle_mean"]))
         print("   앞절반 초과 %+.2f%%p · 뒤절반 %+.2f%%p"
               % (r["half1_excess"], r["half2_excess"]))
+        print("   점수 자기상관 %.2f · 명단 유지 %.1f%%" % (r["score_ac"], r["keep_pct"]))
+        print("   벤치 S&P500 연 %6.2f%% (샤프 %5.2f, %d개월) → F5 %s"
+              % (r["bench"]["ann"], r["bench"]["sharpe"], r["bench_n"],
+                 "통과" if r["f5_beat_bench"] else "❌ 걸림"))
 
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(res, ensure_ascii=False, indent=1, default=float))
