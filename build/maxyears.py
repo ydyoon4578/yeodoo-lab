@@ -25,6 +25,8 @@ import os
 import sys
 
 import pandas as pd
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
 
 MAX_YEARS = 10          # tech_backtest.py · asset_backtest.py 와 같은 값이어야 한다
 
