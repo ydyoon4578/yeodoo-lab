@@ -97,6 +97,23 @@ def main():
         % (dt.date.today().isoformat(), ff["end"]))
     say("=" * 74)
 
+    # ── 전략 카드 — 펀드의 제원을 한 곳에서 읽는다 ─────────────────────────
+    # 🚨 2026-09-20 — 펀드가 랩의 세 목록 어디에도 없어서 «전략이 몇 개냐» 에 답할 때
+    #   통째로 빠져 있었다. build/fund_card.py 가 규칙 항목과 같은 모양의 카드를 굽고,
+    #   이 보고서가 그 카드를 읽는다. 잣대·비용·한계를 **두 군데에 적지 않으려는 것**이다.
+    try:
+        FC = json.load(io.open(os.path.join(DATA, "_fund_card.json"), encoding="utf-8"))
+        say("")
+        say("  잣대  %s" % FC["bench"])
+        say("  창    %s ~ %s (%d개월) · 초과 연 %+.2f%%p · TE %.2f%% · t %.2f · IR %.2f"
+            % (FC["window"]["start"], FC["window"]["end"], FC["window"]["n_months"],
+               FC["perf"]["excess_y_pp"], FC["perf"]["te_y_pct"],
+               FC["perf"]["t"], FC["perf"]["ir"]))
+        say("  바꾸면 드는 비용 — " + " · ".join(
+            "%s %+.2f%%p" % (c["what"], c["pp_per_year"]) for c in FC["costs"]))
+    except Exception as _e:
+        say("  (전략 카드를 못 읽었다: %s — python build/fund_card.py 를 먼저 돌린다)" % _e)
+
     # ── ① 지금 어느 국면인가 ──────────────────────────────────────────────
     say("\n① 지금 어느 국면인가")
     say("   %-16s %9s %7s   %-24s %s" % ("축", "값", "칸", "그 칸의 과거 실측", "펀드에"))
