@@ -4,12 +4,12 @@
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
  "n": 129,
  "counts": {
-  "measured": 47,
-  "underspec": 49,
-  "no_input": 21,
+  "measured": 52,
+  "underspec": 46,
+  "no_input": 20,
   "duplicate": 6,
   "not_a_rule": 1,
-  "ready": 5
+  "ready": 4
  },
  "cards": {
   "A1": {
@@ -734,11 +734,9 @@
    "cat": "A"
   },
   "A21": {
-   "verdict": "underspec",
-   "why": "원문이 크기·문턱의 수를 안 적었다 (상위 분위). 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
-   "hits": [
-    "상위 분위"
-   ],
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
    "name": "조직자본 (Organization Capital, 축적 SG&A 기반 무형자산 팩터)",
    "cat": "A"
   },
@@ -948,28 +946,23 @@
    "cat": "D"
   },
   "E56": {
-   "verdict": "underspec",
-   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
    "hits": [],
    "name": "세금비용 서프라이즈 (Tax Expense Momentum) — 분기 법인세비용의 계절차분",
    "cat": "E"
   },
   "E57": {
-   "verdict": "ready",
-   "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
-   "hits": [
-    "상위\\s*\\d+",
-    "상위\\s*\\d+\\s*%"
-   ],
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
    "name": "현금보유 프리미엄 (Cash Holdings Premium, 현금/자산) — 주식 안에 들어 있는 단기채 몫",
    "cat": "E"
   },
   "E58": {
-   "verdict": "no_input",
-   "why": "랩에 없는 자료를 쓴다: 연구개발비(R&D)",
-   "hits": [
-    "연구개발비"
-   ],
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
+   "hits": [],
    "name": "영업 레버리지 (Operating Leverage, 영업비용/자산총계) — 원가구조가 자산의 경기 노출을 지렛대질한다",
    "cat": "E"
   },
@@ -1020,8 +1013,8 @@
    "cat": "E"
   },
   "E62": {
-   "verdict": "underspec",
-   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "verdict": "measured",
+   "why": "이미 쟀다 — lab 칸 참조",
    "hits": [],
    "name": "딥러닝 통계적 차익거래 (Deep Learning Statistical Arbitrage · Guijarro-Ordonez·Pelger·Zanotti, Management Science 72권 9호, 2026, 7502~7549 · doi 10.1287/mnsc.2022.03132) — 잔차를 만드는 단계·잔차 궤적을 읽는 단계·비중을 내는 단계를 하나의 목적함수로 이어 붙인다",
    "cat": "E"
