@@ -32600,7 +32600,20 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Sloan",
+      "y": 1996,
+      "t": "Do stock prices fully reflect information in accruals and cash flows about future earnings?",
+      "j": "The Accounting Review 71"
+     },
+     {
+      "a": "Hafzalla·Lundholm·Van Winkle",
+      "y": 2011,
+      "t": "Percent accruals",
+      "j": "The Accounting Review 86"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -32619,8 +32632,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -37157,7 +37170,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Jegadeesh·Titman",
+      "y": 1993,
+      "t": "Returns to buying winners and selling losers",
+      "j": "Journal of Finance 48"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -37172,8 +37192,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -39685,7 +39705,15 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Grullon·Michaely·Swaminathan",
+      "y": 2002,
+      "t": "Are dividend changes a sign of firm maturity?",
+      "j": "Journal of Business 75",
+      "fit": "부분 일치. 원문은 배당을 **올린 사건** 뒤 3년 누적 초과수익(FF3 기준 약 8%)을 보고하고, 그 원인을 체계적 위험의 하락으로 설명한다. 이 규칙은 «올렸나» 가 아니라 **증가율의 크기**로 줄을 세우고 보유가 한 달(이 랩 원판)이다. 🚨 원문은 오히려 «성숙해져서 위험이 준 것» 이라고 읽으므로, 이 규칙이 **원문의 주장을 그대로 구현한 것은 아니다.**"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -39700,8 +39728,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -41012,7 +41040,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Blitz·Huij·Martens",
+      "y": 2011,
+      "t": "Residual momentum",
+      "j": "Journal of Empirical Finance 18"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -41027,8 +41062,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -41442,7 +41477,32 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Womack",
+      "y": 1996,
+      "t": "Do brokerage analysts' recommendations have investment value?",
+      "j": "Journal of Finance 51"
+     },
+     {
+      "a": "Barber·Lehavy·McNichols·Trueman",
+      "y": 2001,
+      "t": "Can investors profit from the prophets? Security analyst recommendations and stock returns",
+      "j": "Journal of Finance 56"
+     },
+     {
+      "a": "Jegadeesh·Kim·Krische·Lee",
+      "y": 2004,
+      "t": "Analyzing the analysts: When do recommendations add value?",
+      "j": "Journal of Finance 59"
+     },
+     {
+      "a": "Loh·Stulz",
+      "y": 2011,
+      "t": "When are analyst recommendation changes influential?",
+      "j": "Review of Financial Studies 24"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -41453,8 +41513,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "PIT(생존편향 보정) — 밑동 x-revdrift 와 같은 사유 — 아래 항목 참조",
@@ -43543,7 +43603,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Pontiff·Woodgate",
+      "y": 2008,
+      "t": "Share issuance and cross-sectional returns",
+      "j": "Journal of Finance 63"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -43558,8 +43625,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -43990,7 +44057,22 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Hackel·Livnat·Rai",
+      "y": 1994,
+      "t": "The free cash flow/small-cap anomaly",
+      "j": "Financial Analysts Journal 50",
+      "fit": "부분 일치. 원문은 **소형주**에서 «잉여현금흐름을 꾸준히 내고 · 부채가 낮고 · 잉여현금흐름 배수가 낮은» 회사를 함께 고른다. 이 규칙은 그중 «배수가 낮다(=수익률이 높다)» 하나만 쓰고 유니버스가 **대형주 S&P 500∪NDX** 다. 방향의 근거로는 맞고, 성적을 원문과 나란히 놓을 수는 없다."
+     },
+     {
+      "a": "Hackel·Livnat·Rai",
+      "y": 2000,
+      "t": "A free cash flow investment anomaly",
+      "j": "Journal of Accounting, Auditing & Finance 15",
+      "fit": "위 1994 의 후속 검정. 같은 이유로 부분 일치다."
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -44009,8 +44091,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -46911,7 +46993,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Cooper·Gulen·Schill",
+      "y": 2008,
+      "t": "Asset growth and the cross-section of stock returns",
+      "j": "Journal of Finance 63"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -46930,8 +47019,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -50320,7 +50409,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Boudoukh·Michaely·Richardson·Roberts",
+      "y": 2007,
+      "t": "On the importance of measuring payout yield",
+      "j": "Journal of Finance 62"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -50339,8 +50435,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -55314,7 +55410,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "George·Hwang",
+      "y": 2004,
+      "t": "The 52-week high and momentum investing",
+      "j": "Journal of Finance 59"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -55329,8 +55432,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -57555,7 +57658,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Fama·French",
+      "y": 1992,
+      "t": "The cross-section of expected stock returns",
+      "j": "Journal of Finance 47"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -57574,8 +57684,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -60929,7 +61039,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Bali·Cakici·Whitelaw",
+      "y": 2011,
+      "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+      "j": "Journal of Financial Economics 99"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -60944,8 +61061,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -61800,7 +61917,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Bali·Cakici·Whitelaw",
+      "y": 2011,
+      "t": "Maxing out: Stocks as lotteries and the cross-section of expected returns",
+      "j": "Journal of Financial Economics 99"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -61815,8 +61939,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
@@ -62290,7 +62414,14 @@
    },
    "verdict": "측정만",
    "refs": {
-    "papers": [],
+    "papers": [
+     {
+      "a": "Ang·Hodrick·Xing·Zhang",
+      "y": 2006,
+      "t": "The cross-section of volatility and expected returns",
+      "j": "Journal of Finance 61"
+     }
+    ],
     "src": [
      {
       "k": "일봉 OHLCV",
@@ -62305,8 +62436,8 @@
       "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
      }
     ],
-    "no_paper": true,
-    "note": "원 논문을 특정하지 못했다 — 이 랩이 자료 사정에 맞춰 만든 변형이거나 실무 관행이라 단일 출처가 없다. **비워 두는 것이 정직하다.**"
+    "no_paper": false,
+    "note": null
    },
    "missing": [
     "위험 부트스트랩 — 종목 랩은 이 측정을 아예 안 돌린다",
