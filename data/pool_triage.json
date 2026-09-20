@@ -2,11 +2,11 @@
  "note": "탐색 풀 카드가 «왜 아직 안 쟀나» 를 말한다. 판정 넷 — measured(이미 쟀다) · ready(구현만 하면 된다) · no_input(랩에 그 자료가 없다) · underspec(원문이 수를 안 적었다). 🚨 underspec 에 기본값을 정하지 않는다 — 폐기한 자유도를 되살리는 것이다(PREREG-2026-08-29-ASWRITTEN).",
  "method": "heuristic",
  "method_note": "진입기준 산문의 낱말로 판정하는 **추정**이다. 근거 낱말을 hits 로 남긴다. 카드를 열어 보고 뒤집으면 build/pool_triage.py 의 OVERRIDE 에 사유와 함께 적을 것 — 코드에 적어야 다음 실행에도 남는다.",
- "n": 127,
+ "n": 129,
  "counts": {
   "measured": 47,
-  "underspec": 48,
-  "no_input": 20,
+  "underspec": 49,
+  "no_input": 21,
   "duplicate": 6,
   "not_a_rule": 1,
   "ready": 5
@@ -1020,13 +1020,28 @@
    "cat": "E"
   },
   "E62": {
+   "verdict": "underspec",
+   "why": "원문이 크기·문턱의 수를 안 적었다. 여기에 기본값을 정하면 폐기한 자유도를 되살리는 것이라 자동 구현하지 않는다(PREREG-2026-08-29-ASWRITTEN)",
+   "hits": [],
+   "name": "딥러닝 통계적 차익거래 (Deep Learning Statistical Arbitrage · Guijarro-Ordonez·Pelger·Zanotti, Management Science 72권 9호, 2026, 7502~7549 · doi 10.1287/mnsc.2022.03132) — 잔차를 만드는 단계·잔차 궤적을 읽는 단계·비중을 내는 단계를 하나의 목적함수로 이어 붙인다",
+   "cat": "E"
+  },
+  "A25": {
+   "verdict": "no_input",
+   "why": "랩에 없는 자료를 쓴다: PIT 컨센서스",
+   "hits": [
+    "과거 컨센서스"
+   ],
+   "name": "파워 정렬 (Power Sorting · Kagkadis·Lohre·Nolte·Nolte·Pham·Vasilas · SSRN 4552208 · 2023 CQA 학술경진 1위) — 무엇으로 정렬하느냐가 아니라 그 순위를 비중으로 옮기는 함수 자체를 롱·숏 따로 표본외로 추정한다",
+   "cat": "A"
+  },
+  "E63": {
    "verdict": "ready",
    "why": "원문이 크기·문턱을 구체적으로 적었고 랩에 입력이 있다 — 구현만 하면 된다",
    "hits": [
-    "[><≥≤]\\s*-?\\d",
     "\\d+\\s*%\\s*(초과|이상|미만|이하)"
    ],
-   "name": "축소 추정 SDF (Shrinking the Cross-Section · Kozak·Nagel·Santosh, Journal of Financial Economics 135(2), 271-292, 2020 · doi 10.1016/j.jfineco.2019.06.008) — 규칙을 고르지 않고 전부 넣은 뒤 주성분 고유값에 따라 차등 축소한다",
+   "name": "확률할인계수 축소추정 (Shrinking the Cross-Section · Kozak·Nagel·Santosh, Journal of Financial Economics 135권 2호, 2020, 271~292 · doi 10.1016/j.jfineco.2019.06.008) — 규칙을 하나씩 세우는 대신 수백 개를 한 번에 넣고 주성분 고유값에 비례해 깎는다",
    "cat": "E"
   }
  }

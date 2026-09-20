@@ -16,10 +16,14 @@
   · 전월말 기준 — 이번 달 내내 실제로 들고 있는 명단
   · 금일 기준   — 같은 규칙을 오늘 다시 돌린 결과, 즉 다음 리밸런스 후보
 
-시점 정확성 — **재무는 시점, 유니버스는 아니다.** 이 구분을 흐리면 안 된다.
+시점 정확성 — **재무도 유니버스도 시점이다**(유니버스는 2026-08-23 부터).
   · 재무는 **기간종료일 + 45일**이 지난 것만 쓴다(Panel.asof). 분기 재무는 분기가 끝난 날
     바로 공개되지 않는다. 안 자르면 없던 정보를 쓰는 것이 된다.
   · 가격은 그날 종가로 만든다.
+  · 유니버스는 그 달에 실제로 지수에 있던 종목이다(편출 종목 포함) — main() 이
+    style_pit_panel.prepare/inject 로 패널을 준비하고 bt() 는 P._pit_at 없이는 죽는다.
+    오늘 명단으로 소급했다면 얼마나 달랐는지는 build/style_pit.py 가 잰다(base − pit).
+  · 아래 두 항목은 **2026-08-23 이전 기록**이다(그때 무엇이 빠져 있었는지의 근거로 남긴다).
   · 🚨 **유니버스는 오늘의 518종목을 과거로 소급한다 = 생존편향.** 이 랩에는 선정 시점
     멤버십(data/index_history.json, 위키 과거 리비전, 2014-06~ 월말)이 있고
     이 창을 100% 덮는데도 여기서 읽지 않는다. 읽는 곳은 build/pit_backtest.py 하나이고
@@ -107,6 +111,11 @@ WINDOW = 252           # 성과·차트 구간 — 최근 1년
 #   실제 길이가 1245일로 줄어 5년 칸이 통째로 빈다(실측). 여유를 두고, 아래에서 정확히
 #   1260일(3년은 756일)을 뒤로 본다.
 WINDOW5 = 1290
+# 🚨 2026-09-18 — **날짜 붙은 원해상도 일별 경로**의 길이(거래일). 6개월 = 126 + 기준점 1.
+#   styles[].nav 는 140점 표시용 표본에 날짜가 없어 «3개월 전 그날» 을 못 짚는다. 스타일 8종
+#   PDF 2쪽(사용자 지시 «스타일 빼고 내 스타일 8종으로 대체»)이 홈 시장판과 같은 3개월 축에
+#   랩 스타일을 그리려면 날짜와 원해상도가 둘 다 있어야 한다. 1주·1개월·3개월·6개월을 덮는다.
+PATH_N = 126
 # 홈 표 ETF 행에 샤프를 적는 대상. 1년·5년 두 곳에서 같은 목록을 써야 한 열이 성립한다 —
 # 손으로 두 번 적으면 조용히 갈린다.
 ETF_SHARPE_TK = ("SPY", "QQQ", "DIA", "IWM",
@@ -1307,16 +1316,32 @@ def num(v, d=2, sign=True):
 
 def footer(fig, page, total):
     hline(fig, X0, X1, .034, LINE, .6)
-    # 생존편향을 각주에 박는다 — 유니버스가 소급이라는 사실 없이 +137% 를 내보내면 안 된다.
+    # 유니버스 편향을 각주에 박는다 — 표는 PIT 이고(2026-08-23~), 오늘 명단으로 소급했다면
+    #   얼마나 달랐을지를 같이 적는다. 종전 문구 «선정 시점 구성으로 다시 재면 A → B» 는
+    #   PIT 전환 뒤 방향이 거꾸로였다(표에 이미 B 가 찍혀 있다).
     tx(fig, X0, .026, "스타일 상위 10종목 전략 · 지수 SPX = S&P 500 단독 · "
-                      "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0",
-       fontsize=6.4, color=MUTED)
+                      "NDX = NASDAQ 100 단독 · 공통 = 양쪽 모두 · 대조군은 가격지수(PR) · 비용 0 · "
+                      "시점정확(PIT)", fontsize=6.4, color=MUTED)
     # 한 줄에서 넘치지 않게 짧게 — 렌더해 보고 오른쪽이 잘려 줄였다. 자세한 것은 style.html.
     #   ⚠ '대부분 선견이다' 를 손으로 붙였다가 지웠다 — 가치는 반대로 편출 누락이 전부인데
     #     각주가 가치 블록 바로 아래에 놓인다(적대감사가 잡았다). 채널은 자료에서 파생한다.
-    tx(fig, X0, .0175, "유니버스 편향(실측) — 선정 시점 구성으로 다시 재면 "
-                       + pit_caveat(short=True) + ". " + pit_channel_line(),
-       fontsize=6.0, color=NEG)
+    # 🚨 길이는 자료(라벨·채널 목록)에 따라 바뀐다 — 손으로 자르지 않고 **그려서 재고**, 넘치면
+    #   인용 수를 3 → 2 → 1 로 줄인다. 2026-09-18 실측: 종전 문구는 스타일이 늘며 오른쪽
+    #   경계(X1 .942)를 넘어 종이 밖(1.075)까지 나가 있었다 — 뒤쪽 채널 목록이 잘려 안 보였다.
+    # ⚠ 재는 것은 Agg 이고 찍히는 것은 PDF 다. 6pt 에서 PDF 가 한글은 2.7%·숫자는 3.9% 더 넓게
+    #   찍는다(힌팅 차이 — 같은 줄이 Agg 로 .923, PDF 잉크로 .949 였다). 그래서 5% 여유를 둔다.
+    ch = pit_channel_line()
+    for n in (3, 2, 1):
+        t = tx(fig, X0, .0175, "유니버스 편향(실측) — " + pit_caveat(short=True, n=n) + ". " + ch,
+               fontsize=6.0, color=NEG)
+        try:
+            _x1 = t.get_window_extent(renderer=fig.canvas.get_renderer()).x1 / fig.bbox.width
+            fits = X0 + (_x1 - X0) * 1.05 <= X1
+        except Exception:
+            fits = True                  # 못 재는 백엔드면 종전처럼 그대로 둔다
+        if fits or n == 1:
+            break
+        t.remove()
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
        fontsize=6.4, color=MUTED, ha="right")
 
@@ -1831,6 +1856,17 @@ def vol_managed(P, R, wmap):
     return R2
 
 
+def _path(a, n=None):
+    """창 끝에서 n 거래일 전까지의 **솎지 않은** 일별 값(창 시작 = 100). 날짜는 doc 의 path_dates.
+
+    ⚠ 모든 곡선의 끝이 같은 날(창 끝)이라야 path_dates 한 벌을 같이 쓸 수 있다 —
+      backtest·bench_nav 는 둘 다 end = 마지막 거래일이다.
+    """
+    n = PATH_N if n is None else n
+    a = list(a[-(n + 1):])
+    return [None if (x != x) else round(float(x) * 100, 4) for x in a]
+
+
 def _thin(a, k=140):
     """곡선을 k점으로 줄인다 — 화면 폭이 그보다 촘촘할 이유가 없다(strategy_index 와 같은 규약)."""
     a = [None if (x != x) else round(float(x), 5) for x in a]
@@ -1842,16 +1878,64 @@ def _thin(a, k=140):
     return out
 
 
-def pit_channel_line():
+def _pit_load():
+    return json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
+
+
+def pit_rows(j):
+    """style_pit.json(dict) → 화면에 나가는 스타일 중 |편향| 1%p 이상, 큰 순.
+
+    한 줄 = (라벨, 표의 값(pit), 소급했다면(base), 편향(base − pit), 지배 채널 '선견'|'생존').
+    ⚠ HOME_HIDE 는 뺀다. 숨긴 줄의 수치를 인용하면 독자가 표에서 그 값을 못 찾고, 라벨도
+      겹친다(모멘텀 = mom·spmo · 퀄리티 = qual·squal) — 빼기 전에는 캐비엇이
+      «고베타·모멘텀·성장·모멘텀» 이라 적었고 그 «모멘텀 +68%» 는 숨긴 mom 의 값이었다
+      (화면의 모멘텀은 spmo +66%, 2026-09-18 실측).
+    ⚠ 채널 지배는 **절댓값끼리** 견준다. 선견이 음수인 스타일(가치·멀티팩터 — 소급하면
+      오히려 낮아진다)을 부호째 견주면 생존이 지배한다고 잘못 판정한다. 종전 캐비엇이
+      가치를 «생존편향이 지배» 로 적은 것이 그것이었다(선견 −7.57 · 생존 −0.25%p).
+    """
+    rows = []
+    for k, s in (j.get("styles") or {}).items():
+        b = (s.get("bias") or {}).get("ret")
+        if k in HOME_HIDE or b is None or abs(b) < 1.0:
+            continue
+        la, sv = s["channel"]["lookahead"], s["channel"]["survivorship"]
+        rows.append((s["label"], s["pit"]["ret"], s["base"]["ret"], b,
+                     "선견" if abs(la) >= abs(sv) else "생존"))
+    rows.sort(key=lambda r: -abs(r[3]))
+    return rows
+
+
+def _pit_pair(r):
+    """'고베타 +28% → +117%' — 표의 값(pit) → 소급했다면(base). 화살표 방향은 이것으로 못 박는다."""
+    return "%s %+.0f%% → %+.0f%%" % (r[0], r[1], r[2])
+
+
+def pit_shift(j, n_up=3, n_dn=2):
+    """«소급했다면» 뒤에 올 절 — '… 로 부풀었을 것이고, … 는 오히려 낮아졌을 것'.
+
+    ⚠ 소급이 늘 부풀리지는 않는다. 가치·멀티팩터는 소급하면 **낮아진다**(PIT 전환 커밋
+      e5f0544c 가 이미 적어 둔 사실). '부풀었을 것' 을 통째로 붙이면 그 둘에 거짓이라
+      방향을 편향의 부호에서 뽑는다. 빈 문자열 = 인용할 차이(1%p 이상)가 없다.
+    style_pit.py 의 note 도 이 함수로 만든다 — 같은 문장을 두 벌로 짜지 않는다.
+    """
+    rows = pit_rows(j)
+    up = [r for r in rows if r[3] > 0][:n_up]
+    dn = [r for r in rows if r[3] < 0][:n_dn]
+    out = []
+    if up:
+        out.append(" · ".join(_pit_pair(r) for r in up) + " 로 부풀었을 것")
+    if dn:
+        out.append(" · ".join(_pit_pair(r) for r in dn) + " 는 오히려 낮아졌을 것")
+    return "이고, ".join(out)
+
+
+def pit_channel_line(j=None):
     """채널 지배를 **자료에서** 한 줄로. 손으로 '대부분 선견' 이라 적으면 가치에 거짓이다."""
     try:
-        st = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))["styles"]
-        L = [s["label"] for s in st.values()
-             if s["channel"]["lookahead"] >= 1.0
-             and s["channel"]["lookahead"] > abs(s["channel"]["survivorship"])]
-        S = [s["label"] for s in st.values()
-             if abs(s["channel"]["survivorship"]) >= 1.0
-             and abs(s["channel"]["survivorship"]) >= s["channel"]["lookahead"]]
+        rows = pit_rows(_pit_load() if j is None else j)
+        L = [r[0] for r in rows if r[4] == "선견"]
+        S = [r[0] for r in rows if r[4] == "생존"]
         out = []
         if L:
             out.append("사후편입 선견: " + "·".join(L))
@@ -1862,47 +1946,67 @@ def pit_channel_line():
         return ""
 
 
-def pit_caveat(short=False):
+def pit_caveat(short=False, n=3):
     """유니버스 편향 문구를 data/style_pit.json 실측에서 만든다.
 
+    🚨 2026-09-18 — **문장의 방향을 뒤집었다.** 배포 수치는 2026-08-23 부터 PIT 인데(bt()),
+      이 문구는 그 뒤로도 «유니버스는 시점이 아니다 · 다시 재면 고베타 +117% → +28%» 라고
+      적어 바로 옆 표의 +28% 를 소급값이라고 설명하고 있었다. style_perf.json 의 metrics.ret 은
+      style_pit 의 **pit 레그**다(style_pit.py 의 앵커가 강제한다) — 이제 문장은 «표는 PIT 이고,
+      오늘 명단으로 소급했다면 이만큼 달랐을 것» 이다. 수치는 pit(표)·base(소급)에서 파생한다.
     ⚠ '생존편향'이라고만 적으면 안 된다. 채널이 둘이고 **스타일마다 지배 채널이 다르다** —
-      고베타·모멘텀·성장은 사후편입 선견(그때 지수에 없던 종목을 미리 고른 것)이 지배하고,
-      **가치는 반대로 편출 종목 부재(교과서적 생존편향)가 전부다.** 하나의 이름으로 부르면
-      한쪽을 반드시 틀리게 말한다. 그래서 채널 판정을 pit_channel_line() 이 자료에서 뽑는다.
+      사후편입 선견(그때 지수에 없던 종목을 미리 고른 것)과 편출 종목 부재(교과서적
+      생존편향)다. 하나의 이름으로 부르면 한쪽을 반드시 틀리게 말한다. 어느 스타일이 어느
+      쪽인지는 창이 굴러가며 바뀌므로(가치는 한때 생존이 전부였다) 손으로 적지 않고
+      pit_rows() 가 자료에서 뽑는다.
+    short=True 는 PDF 각주 한 줄용이다(footer) — 인용 n 개. «표는 PIT» 는 그 윗줄이 말한다.
     파일이 없으면(러너 등) 수치 없이 정성 문구만 낸다 — 없는 숫자를 지어내지 않는다.
+      그래도 «표는 PIT» 는 참이다 — 배포 경로 bt() 가 P._pit_at 없이는 죽는다.
+    ⚠ 끝에 공백을 두지 않는다. 꼬리말은 부르는 쪽이 « ⚠ …» 로 붙인다(dump_json·style_pit.py
+      둘 다 공백 하나 — 둘이 같아야 style_pit.py 의 재찍기가 같은 문자열을 만든다).
     """
+    lag = "공시 지연(분기 %d일·연간 %d일)" % (LAG_DAYS, ANN_LAG_DAYS)
     try:
-        j = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
-        u, st = j["universe"], j["styles"]
-        hit = [s for s in st.values() if abs(s["bias"]["ret"]) >= 1.0]
-        big = sorted(hit, key=lambda s: -abs(s["bias"]["ret"]))
-        # ⚠ 표기는 base→pit 이다. published→pit 로 적으면 하니스 몫이 섞인다 —
-        #   지금은 좁히기로 base==published 라 같은 값이지만, 계약은 base 로 못 박는다.
-        nums = " · ".join("%s %+.0f%% → %+.0f%%" % (s["label"], s["base"]["ret"], s["pit"]["ret"])
-                          for s in big[:3])
+        j = _pit_load()
+        u = j["universe"]
         if short:
-            return nums or "편향 유의미하지 않음"
-        # 채널 지배는 **자료에서 판정**한다. '대부분 선견'이라고 못 박으면 안 된다 —
-        # 가치는 반대로 생존 채널이 전부다(실측). 스타일마다 다르므로 갈라서 적는다.
-        look = [s["label"] for s in big if s["channel"]["lookahead"] > abs(s["channel"]["survivorship"])]
-        surv = [s["label"] for s in big if abs(s["channel"]["survivorship"]) >= s["channel"]["lookahead"]]
-        ch = ""
-        if look:
-            ch += "사후편입 선견이 지배하는 것은 " + "·".join(look) + " 이고, "
-        if surv:
-            ch += "편출 종목 부재(생존편향)가 지배하는 것은 " + "·".join(surv) + " 다. "
-        head = ("🚨 유니버스 편향(실측) — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
-                "오늘 %d종목을 과거로 소급해 고르는데, 그중 %d종은 구간 시작 시점에 아직 지수 "
-                "비멤버였고(선견), 반대로 그때 멤버 %d종 중 %d종은 오늘 유니버스에 없다(생존). "
-                "선정 시점 구성이력으로 다시 재면 %s(%s 기준). %s"
-                "자세한 분해는 랩의 유니버스 편향 측정 참조. "
-                % (u["today"], u["not_yet_member_at_start"],
-                   u["n_members_at_start"], u["gone_at_start"], nums, j["as_of"], ch))
-        return head
+            _r = pit_rows(j)[:n]
+            return ("오늘 명단으로 소급하면 " + " · ".join(_pit_pair(r) for r in _r) if _r
+                    else "오늘 명단으로 소급해도 차이 1%p 미만")
+        rows = pit_rows(j)
+        sh = pit_shift(j)
+        # ⚠ 기준일은 «(YYYY-MM-DD 기준)» 꼴 그대로 둔다 — validate_site 가 이 꼴을 찾아
+        #   style_pit.json 의 as_of 와 대조한다(한 판 뒤진 캐비엇을 잡는 그물).
+        head = ("🚨 유니버스 편향 실측(%s 기준) — 이 수치는 선정 시점 구성이력(PIT)으로 고른 "
+                "것이다. 매월 그 달에 실제로 지수에 있던 종목만 후보로 두고(그 뒤 편출된 종목 "
+                "포함), 재무도 %s을 두고 쓴다. " % (j["as_of"], lag))
+        head += ("오늘 %d종목을 과거로 소급해 골랐다면 %s이다. " % (u["today"], sh) if sh else
+                 "오늘 %d종목을 과거로 소급해 골라도 차이는 1%%p 미만이다. " % u["today"])
+        L = [r[0] for r in rows if r[4] == "선견"]
+        S = [r[0] for r in rows if r[4] == "생존"]
+        ch = []
+        if L:
+            ch.append("사후편입 선견(그때 지수에 없던 종목을 미리 고름)은 " + "·".join(L))
+        if S:
+            ch.append("편출 누락(그 뒤 빠진 종목이 후보에 없음)은 " + "·".join(S))
+        if ch:
+            head += "차이의 출처는 스타일마다 다르다 — " + ", ".join(ch) + ". "
+        head += ("측정 창 시작(%s)에는 오늘 종목 중 %d종이 아직 지수 밖이었고, 그때 멤버 %d종 중 "
+                 "%d종은 오늘 명단에 없다. "
+                 % (j["start"], u["not_yet_member_at_start"],
+                    u["n_members_at_start"], u["gone_at_start"]))
+        if u.get("cov_min") is not None and u.get("cov_med") is not None:
+            # 편출 종목은 가격 기록이 있어야 후보가 된다 — 'PIT' 가 곧 '생존편향 0' 은 아니다.
+            head += ("편출 종목은 가격 기록이 있어야 후보가 되는데, 월말마다 그 달 멤버 중 가격을 "
+                     "확보한 비율이 창 안 최저 %.0f%%·중앙 %.0f%%라 생존편향이 그만큼 남을 수 있다. "
+                     % (100 * u["cov_min"], 100 * u["cov_med"]))
+        return head + "자세한 분해는 랩의 유니버스 편향 측정 참조."
     except Exception:
-        return ("🚨 유니버스 편향 — 재무는 시점(공시 45일 지연)이지만 유니버스는 아니다. "
-                "오늘의 종목을 과거로 소급해 고르므로, 그때는 지수에 없던 종목까지 후보가 된다. "
-                "지수는 많이 오른 종목을 편입하니 그만큼 수익률이 유리하게 부풀려져 있다. "
+        return ("🚨 유니버스 편향 — 이 수치는 선정 시점 구성이력(PIT)으로 고른 것이다. "
+                "매월 그 달에 실제로 지수에 있던 종목만 후보로 두고, 재무도 %s을 두고 쓴다. "
+                "오늘의 종목을 과거로 소급해 고르면 그때 지수에 없던 종목까지 후보가 되어 "
+                "수익률이 달라진다 — 대개 부풀지만 늘 그렇지는 않다. "
+                "측정 파일이 없어 크기는 싣지 않는다." % lag
                 if not short else "측정 파일 없음")
 
 
@@ -1921,13 +2025,15 @@ def dump_json(P, res, detail):
         "note": ("style_strategies.pdf 와 같은 계산이다 — 규칙을 과거로 되돌려 매월 다시 골라 "
                  "최근 1년을 잰 것이다. 상위 10종목 동일가중 · 월말 리밸런스 · 비용 0 · "
                  "대조군은 S&P 500(PR)·NASDAQ 100(PR)."),
-        # 유니버스 편향을 caveat 맨 앞에 둔다 — 이 화면은 +137% 를 보여준다. 그 수치를 읽는
-        # 사람이 가장 먼저 알아야 하는 것이 '고를 수 있었던 명단이 그때 것이 아니다'라는 사실이다.
+        # 유니버스 편향을 caveat 맨 앞에 둔다. 2026-08-23 부터 이 수치는 PIT 이므로, 읽는 사람이
+        # 알아야 할 것은 «명단이 그때 것이다» 와 «오늘 명단으로 소급했다면 얼마나 달랐을지» 다
+        # (종전 문장은 거꾸로 «명단이 그때 것이 아니다» 라고 적고 있었다 — pit_caveat 머리말).
         # 수치는 build/style_pit.py 의 실측(data/style_pit.json)에서 **파생**한다 — 손으로 적으면
         # 다음 갱신에 낡는다(이 저장소가 반복해 겪은 라벨 드리프트).
         # ⚠ 화면에 그대로 나가는 문장이다. 마크다운(**)을 쓰지 말 것 — textContent 로 꽂히므로
         #   별표가 글자로 보인다. 사내 DB 테이블명도 적지 말 것(공개 사이트다).
-        "caveat": (pit_caveat() +
+        #   (style.html 은 2026-09-08 부터 이 칸을 안 찍는다 — 칸과 검사는 그대로 둔다.)
+        "caveat": (pit_caveat() + " "
                    "⚠ 홈 화면의 스타일 구성종목 칩과 명단이 다를 수 있다. 그쪽은 벤더 비율을 "
                    "그대로 쓰고 여기는 백테스트라 SEC 재무를 45일 지연으로 쓴다 — "
                    "모멘텀·저변동·고베타는 같고, 퀄리티·가치·성장은 6~7/10 만 겹친다."),
@@ -1946,9 +2052,15 @@ def dump_json(P, res, detail):
             "실제와 대조한다.",
         "sampling": {"nav": {"kind": "표시용 표본", "points": 140, "has_dates": False,
                              "reproduces_metrics": False},
+                     # path 는 솎지 않은 일별 값이다 — trails 의 1주·1개월·3개월·6개월을
+                     #   끝 ÷ 끝−n 으로 **그대로 재현**한다(소수 넷째 자리 반올림 안에서).
+                     "path": {"kind": "원해상도 일별", "points": PATH_N + 1, "has_dates": True,
+                              "dates_key": "path_dates", "reproduces": "trails 1주·1개월·3개월·6개월"},
                      "monthly": {"kind": "월간 표본", "reproduces_metrics": False},
                      "max_mdd_gap_pp": 1.8},
         "months": ms,
+        # 경로의 날짜 — bench·styles 의 path 가 전부 이 축을 쓴다(창 끝 = as_of 에서 PATH_N 거래일 전까지)
+        "path_dates": P.dates[max(R0["start"], R0["end"] - PATH_N):R0["end"] + 1],
         "bench": {},
         "styles": [],
     }
@@ -1962,6 +2074,7 @@ def dump_json(P, res, detail):
                        for k, v in trails(a, P.dates, R0["start"]).items()},
             "monthly": [None if mo.get(x) is None else round(mo[x], 1) for x in ms],
             "nav": _thin([x * 100 for x in a]),
+            "path": _path(a),
         }
     # 홈 표의 ETF 행에도 샤프를 적을 수 있게 **같은 창·같은 metrics** 로 잰다
     # (사용자 요청 2026-08-02 "메인에 샤프도 표시").
@@ -2053,6 +2166,9 @@ def dump_json(P, res, detail):
             "prev": {"d": P.dates[R["prev_i"]], "rows": side(R["prev"], R["prev_i"], ns)},
             "today": {"d": P.dates[R["today_i"]], "rows": side(R["today"], R["today_i"], ps)},
         })
+        # 경로는 **화면에 나가는 줄만** 싣는다(숨긴 줄까지 실으면 파일이 1/4 커지고 읽는 곳이 없다).
+        if key not in HOME_HIDE:
+            doc["styles"][-1]["path"] = _path(nav)
     p = os.path.join(DATA, "style_perf.json")
     json.dump(doc, io.open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print("→ %s (%dKB · 스타일 %d종)" % (p, os.path.getsize(p) // 1024, len(doc["styles"])))
@@ -2087,6 +2203,8 @@ def dump_trails(doc):
     }
     # 유니버스 편향 실측치 몇 개를 여기 태워 보낸다 — 홈이 style_pit.json(5KB)을 따로 받지
     # 않게. 홈 각주가 이 값으로 문장을 만든다. 없으면 홈은 수치 없이 정성 문구만 낸다.
+    # ⚠ pub 은 이름과 달리 «배포» 값이 아니라 **소급** 값이다(style_pit 의 published 레그 = base).
+    #   2026-08-23 부터 배포(표)는 pit 이다 — index.html pitLine() 이 그 방향으로 읽는다.
     try:
         j = json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
         slim["pit"] = {
