@@ -103,9 +103,40 @@ def main():
     pos = [c for c in res if res[c]["mean_pct"] > 0]
     print("\n   양수 %d / %d · t 2 이상 %d개"
           % (len(pos), len(res), sum(1 for c in res if abs(res[c]["t"]) >= 2)))
+
+    # ── 원천 태그 커버리지 ────────────────────────────────────────────────
+    # 🚨 이 표의 신호 절반은 어제 새로 받은 SEC 확장 태그(`data/fxe/`)에서 온다.
+    #   그 수집의 커버리지 기록이 `data/facts_ext.json` 인데, 판정 스크립트들이
+    #   `data/fxe/*.json` 을 직접 읽어서 **그 기록을 아무도 안 보고 있었다**
+    #   (`build/audit_unbuilt.py` 가 «읽는 곳 없는 산출물» 로 잡았다).
+    #   커버리지는 장식이 아니라 **F6 관문의 눈금**이다 — 실측으로
+    #   커버 98.8%(tax) → 섹터차 +2.50%p 통과 · 80.2%(sga) → +4.89%p 걸림이었고,
+    #   그 F6 이 실은 섹터를 재고 있었다(AUDIT-2026-09-19-F6SECTOR).
+    #   **커버가 낮은 태그는 그 자체로 판정을 흔든다. 그래서 표 옆에 함께 찍는다.**
+    cov_ext = {}
+    for f, lbl in (("facts_ext.json", "오늘의 518종"), ("facts_ext_pit.json", "편출 종목")):
+        try:
+            m = json.load(io.open(os.path.join(DATA, f), encoding="utf-8"))
+        except Exception:
+            continue
+        cov_ext[f] = {"cov": m.get("cov") or {}, "labels": m.get("labels") or {},
+                      "n_co": m.get("n_co"), "pit_kind": m.get("pit_kind"),
+                      "coverage_of_gone": m.get("coverage_of_gone")}
+        cv = sorted((m.get("cov") or {}).items(), key=lambda x: x[1])
+        print("\n■ 원천 태그 커버 — %s (%s · %d사)" % (lbl, f, m.get("n_co") or 0))
+        print("   " + " · ".join("%s %.0f%%" % (k, v) for k, v in cv))
+        low = [k for k, v in cv if v < 50]
+        if low:
+            print("   ⚠ 커버 50%% 미만: %s — 이 태그를 쓰는 규칙은 F6 위험이 크다"
+                  % " · ".join(low))
+        if m.get("pit_kind") == "partial":
+            print("   ⚠ 이 다리는 partial 이다 — 편출 %d종 중 %.0f%%만 덮는다."
+                  % (m.get("n_gone") or 0, m.get("coverage_of_gone") or 0))
+
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
         {"note": "단일 신호 성적의 정본. combo.py 의 ⓐ 블록은 신호 수로 나누는 버그가 있었다.",
-         "rows": res, "series": series}, ensure_ascii=False, indent=1, default=float) + "\n")
+         "rows": res, "series": series, "tag_coverage": cov_ext},
+        ensure_ascii=False, indent=1, default=float) + "\n")
     print("→ %s" % OUT)
     return 0
 
