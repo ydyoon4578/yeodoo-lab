@@ -49,6 +49,13 @@ WF = os.path.join(ROOT, ".github", "workflows")
 # ⚠ 여기에 넣는 것은 «잡에 넣지 못하는 이유» 가 있어야 한다. «아직 안 했다» 는 이유가
 #   아니다. 이유 없이 조용히 만들려고 넣으면 이 감사가 있는 뜻이 사라진다.
 KNOWN = {
+    "_revcomp.json":
+        "얼린 사전등록 측정(PREREG-2026-09-20-REVCOMP · 기각 · 이 등록으로 반전 계열을 닫았다). "
+        "**자동 재굽기 금지 — 기록이다.**",
+    "_forward_track.json":
+        "사전등록 전방 추적(build/forward_track.py · append-only). **월초에 monthly_refresh 가 "
+        "손으로 부른다** — 러너 잡이 없는 것이 정상이다(strategy_forward.json 과 같은 규약). "
+        "얼린 판정은 안 건드리고 «등록 뒤 실제로 어떻게 갔나»만 쌓는다.",
     "_runs2_fund.json":
         "얼린 사전등록 측정(PREREG-2026-09-20-RUNS2 · 기각 · 이 등록으로 런 검정 축을 닫았다). "
         "**자동 재굽기 금지 — 기록이다.**",
