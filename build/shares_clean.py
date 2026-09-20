@@ -74,7 +74,20 @@ def clean_shares(data_dir=None):
 
 
 def cap_frame(M, data_dir=None):
-    """월 종가 격자 M(Period 인덱스)에 맞춘 시가총액 표."""
+    """월 종가 격자 M(Period 인덱스)에 맞춘 시가총액 표.
+
+    🚨 2026-09-20 2차 — 단위 사고를 고치고도 시총이 틀렸다(`AUDIT-2026-09-20-SHARES2`).
+       조정가격에 **분할 전** 주식수를 곱하고 있었고(AMZN 2021-06 이 0.09조\$ · 실제 1.7조\$),
+       이중클래스를 두 번 세고 있었다(GOOGL+GOOG = 지수의 13.7%).
+       **정본은 `shares_split.cap_frame2` 다.** 여기서 그리로 넘긴다 —
+       이미 `cap_frame` 을 쓰도록 고쳐 둔 코드가 자동으로 고쳐진 값을 받게 한다.
+    """
+    from shares_split import cap_frame2          # 순환 참조를 피해 늦게 부른다
+    return cap_frame2(M, data_dir)
+
+
+def cap_frame_scale_only(M, data_dir=None):
+    """단위 사고만 고친 옛 시총 표 — 정정 전후를 대조할 때만 쓴다."""
     sh = clean_shares(data_dir)
     rows = []
     for t, ser in sh.items():
@@ -133,7 +146,7 @@ def main():
                 px[s["t"]] = v
     P = pd.DataFrame(px, index=pd.to_datetime(dates))
     M = P.resample("M").last(); M.index = M.index.to_period("M")
-    C = cap_frame(M)
+    C = cap_frame(M)   # 정본(분할·이중클래스까지)
     m = M.index[-2]
     c = C.loc[m].dropna(); c = c[c > 0]
     w = (c / c.sum() * 100).sort_values(ascending=False)

@@ -18,6 +18,25 @@ Brinson 분해 — 초과수익을 둘로 가른다.
 
   python build/qg_sector.py
 """
+
+# 🚨 2026-09-20 — 이 스크립트는 **폐기**한다. 돌려도 결과를 쓰지 않는다.
+#
+#    이 분해는 「그 달 편입명단 시총가중」으로 재구성한 지수를 벤치마크로 쓴다.
+#    그 지수가 공식 ^GSPC 를 **월 +0.799%(연 +9.59%p)** 이긴다.
+#
+#    원인은 시총이 아니라 패널이다 — 편입명단에 한 번이라도 나온 797종 중
+#    **가격이 아예 없는 것이 166종(21%)** 이고, 그 166종은
+#    **2014-06 기준 120종 중 오늘 지수에 남은 것이 0종**이다.
+#    즉 빠진 종목은 무작위 결측이 아니라 **탈락자 명단**이고,
+#    그것을 빼고 만든 지수는 **생존편향 그 자체**다.
+#
+#    분해 합계가 확정 잣대(+8.16%p)의 절반도 안 되는 +3.41%p 로 나온 것이
+#    처음부터 그 증상이었다. 고치려면 **탈락 종목의 과거 가격**이 필요하고
+#    이 랩에는 없다.  → `build/AUDIT-2026-09-20-SHARES2.md` §5
+#
+#    ⚠ 펀드의 확정 초과수익 +8.16%p 는 멀쩡하다 — 그것은 공식 S&P 500 TR 을 쓴다.
+#      무효가 된 것은 **그 초과를 섹터와 종목으로 쪼개려던 시도 하나**다.
+
 from __future__ import annotations
 import io, json, os, sys
 
@@ -66,17 +85,15 @@ def main():
     P = pd.DataFrame(px, index=pd.to_datetime(dates))
     M = P.resample("M").last(); M.index = M.index.to_period("M")
     MR = M.pct_change()
-    shrow = []
-    import glob
-    for p in glob.glob(os.path.join(DATA, "fx", "*.json")):
-        j = json.load(io.open(p, encoding="utf-8"))
-        s = (j.get("tags") or {}).get("sh") or (j.get("tags") or {}).get("sho") or {}
-        for e, v, *_ in (s.get("i") or s.get("q") or s.get("a") or []):
-            shrow.append({"t": j["t"], "m": e[:7], "sh": float(v)})
-    SW = pd.DataFrame(shrow).pivot_table(index="m", columns="t", values="sh", aggfunc="last")
-    SW.index = pd.PeriodIndex(SW.index, freq="M"); SW = SW.reindex(M.index).ffill()
-    CAP = pd.DataFrame(M.reindex(columns=SW.columns).to_numpy() * SW.to_numpy(),
-                       index=M.index, columns=SW.columns).reindex(columns=M.columns)
+    # 🚨 시총은 직접 만들지 않는다 — AUDIT-2026-09-20-SHARES 규약 §7-1.
+    #    data/fx 의 주식수에 100만 배 단위 사고가 있어, 이 분해의 첫 판이 무효가 됐다.
+    from shares_clean import cap_frame
+    CAP = cap_frame(M, DATA)
+    top = CAP.iloc[-1].dropna().sort_values(ascending=False)
+    tot = float(top.sum())
+    print("   시총 비중 상위 5 (%s) — %s" % (
+        str(M.index[-1]),
+        " · ".join("%s %.2f%%" % (t, 100 * v / tot) for t, v in top.head(5).items())))
     print("가격 %d종 · 월 %d개" % (P.shape[1], len(M)))
 
     # 펀드 보유 — 분기 형성 뒤 3개월 유지(표류는 무시하고 목표비중으로 근사)
