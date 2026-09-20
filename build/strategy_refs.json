@@ -966,6 +966,22 @@
     "j": "Journal of Accounting, Auditing & Finance 15",
     "fit": "위 1994 의 후속 검정. 같은 이유로 부분 일치다."
    }
+  ],
+  "qg30": [
+   {
+    "a": "Lepetit·Cherief·Ly·Sekine",
+    "y": 2021,
+    "t": "Revisiting Quality Investing",
+    "j": "Amundi Asset Management (SSRN working paper, 93p)",
+    "fit": "퀄리티를 **수익성·이익의 질·안전성·투자** 네 기둥으로 정의하고 분기마다 백분위→z 로 합산해 **상위 5분위 롱온리**를 든다(초과 연 +2.8% · IR 0.81). 이 펀드의 «수익성·성장·재무건전성» 중 수익성·재무건전성이 그 기둥과 맞고 **«성장» 은 이 논문의 네 기둥에 없다** — 거기까지가 근거다. 원문은 5분위(수백 종목)이고 이 펀드는 상위 30종이라 집중도가 훨씬 높다."
+   },
+   {
+    "a": "Novy-Marx",
+    "y": 2025,
+    "t": "Profitability Retrospective: What Have We Learned?",
+    "j": "Simon Business School, University of Rochester (SSRN working paper, 77p)",
+    "fit": "⚠ **이 펀드를 지지하는 논문이 아니라 경고다.** 수익성만이 일관된 알파를 내고(4팩터 월 48bp · t 6.96) **ROE·이익안정성·저레버리지는 수익성을 통제하면 유의성을 잃는다**고 보고한다. 이 펀드의 «우량» 축이 수익성 하나로 환원되는지 이 카드로는 안 갈린다 — 카드 limits 네 번째에 그렇게 적었다."
+   }
   ]
  },
  "no_paper": {
@@ -984,5 +1000,15 @@
  "partial": {
   "note": "일부 항목의 `fit` 칸은 **원문과 이 랩의 구현이 어디서 갈리는지**를 적은 것이다. fit 이 있는 항목은 «이 규칙 = 이 논문» 이 아니라 «방향의 근거» 로만 읽어야 한다. 이 랩의 출처 규약이 막으려는 것은 독자가 원문을 찾아가서 다른 것을 보는 일이다.",
   "x-divgrow-prose": "규칙 본문이 Michaely·Thaler·Womack(1995)를 첫 줄에 댄다. 그 논문은 **배당의 개시·중단**에 대한 것이고 이 규칙은 증가율 크기다. 본문 인용은 그대로 두되 형식 출처로 올리지 않는다 — 대신 Grullon 외(2002)를 부분 일치로 붙였다."
+ },
+ "via": {
+  "qg30": {
+   "note": "🚨 이 둘은 **펀드가 인용한 출처가 아니다.** 펀드 카드에는 출처 칸이 없었고 이 파일에도 qg30 키가 없었다. 2026-09-21 사용자가 «이 블로그에 참조논문이 있었을 것» 이라고 지목해 찾아 붙인 것이다. **설계 혈통이지 인용이 아니다.**",
+   "blog": "네이버 블로그 boulder2163 «모델링기반투자»(categoryNo=10) — 논문 리뷰 136편",
+   "posts": [
+    "222455406046 (Revisiting Quality Investing)",
+    "223847226647 (Profitability Retrospective)"
+   ]
+  }
  }
 }
