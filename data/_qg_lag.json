@@ -1,0 +1,14 @@
+{
+ "prereg": "PREREG-2026-09-21-QGLAG.md",
+ "cap_pct": 10.0,
+ "note": "랩 data/fx 로 만든 **재현판**이다. 펀드 카드에 싣지 않는다.",
+ "cop_proxy": "cfo/asset — 원문의 cop 구성요소가 data/fx 에 없다",
+ "runs": {},
+ "anchor": {
+  "overlap_median": 17.0,
+  "overlap_min": 10,
+  "overlap_mean": 16.632653061224488,
+  "n_form": 49,
+  "late_obs": 0
+ }
+}
