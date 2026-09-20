@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.stdout.reconfigure(encoding="utf-8")
-LAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yeodoo-lab")
+# ⚠ 이 파일은 스크래치패드에서 build/ 로 옮겨졌다. 그때 LAB 이 «자기 폴더 + yeodoo-lab»
+#   으로 남아 build/yeodoo-lab/data 를 찾다가 죽었다. 저장소 뿌리는 이 파일의 **부모의 부모**다.
+LAB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(LAB, "build"))
 from quarterly_report import fund_monthly                         # noqa: E402
 
