@@ -981,6 +981,20 @@
     "t": "Profitability Retrospective: What Have We Learned?",
     "j": "Simon Business School, University of Rochester (SSRN working paper, 77p)",
     "fit": "⚠ **이 펀드를 지지하는 논문이 아니라 경고다.** 수익성만이 일관된 알파를 내고(4팩터 월 48bp · t 6.96) **ROE·이익안정성·저레버리지는 수익성을 통제하면 유의성을 잃는다**고 보고한다. 이 펀드의 «우량» 축이 수익성 하나로 환원되는지 이 카드로는 안 갈린다 — 카드 limits 네 번째에 그렇게 적었다."
+   },
+   {
+    "a": "Hou·Mo·Xue·Zhang",
+    "y": 2021,
+    "t": "An Augmented q-Factor Model with Expected Growth",
+    "j": "Review of Finance 25(1)",
+    "fit": "🚨 **이 펀드의 `eg` 축이 여기서 온다.** q^5 모형은 q-팩터 넷에 **기대투자성장(Eg)** 을 더하는데, 그 Eg 는 **다음 해 투자증가율을 `log q` · `cop`(현금기준 영업수익성) · `dROE` 세 변수로 예측**해 만든다. 준비데이터 시트의 EG 정의가 «다음 해 투자증가율 예측값 · log q · Cop · dRoe 에 평균기울기를 곱해 만든다» 로 **세 변수가 그대로 일치한다.**\n⚠ 일치는 **구성 변수 대조로 확인한 것**이고, 펀드 쪽 문서가 이 논문을 인용한 기록은 없다. 표본·추정창·정규화가 같은지는 확인 못 했다.\n⚠ 그래서 «기대성장» 은 **애널리스트 컨센서스가 아니다** — SEC 재무로 직접 만든 예측값이다. 이름만 보고 IBES 류로 읽으면 안 된다."
+   },
+   {
+    "a": "Zhang",
+    "y": 2019,
+    "t": "Q-factors and Investment CAPM",
+    "j": "NBER Working Paper 26538",
+    "fit": "이 펀드의 **두 축 조합 자체**를 처방하는 글이다 — «to earn higher expected returns, investors should buy stocks with **high quality (measured as high profitability and high expected growth)** at bargain prices». 수익성 + 기대성장이 곧 «우량성장» 이다.\n⚠ 다만 이 펀드는 **«at bargain prices» 를 안 쓴다** — 밸류에이션 축이 없다. 처방의 셋 중 둘만 가져온 셈이고, 6팩터에서 HML −0.245(t −3.82)로 **오히려 비싼 쪽에 서 있는 것**이 그 결과로 읽힌다."
    }
   ]
  },
@@ -1003,11 +1017,12 @@
  },
  "via": {
   "qg30": {
-   "note": "🚨 이 둘은 **펀드가 인용한 출처가 아니다.** 펀드 카드에는 출처 칸이 없었고 이 파일에도 qg30 키가 없었다. 2026-09-21 사용자가 «이 블로그에 참조논문이 있었을 것» 이라고 지목해 찾아 붙인 것이다. **설계 혈통이지 인용이 아니다.**",
+   "note": "🚨 이 둘은 **펀드가 인용한 출처가 아니다.** 펀드 카드에는 출처 칸이 없었고 이 파일에도 qg30 키가 없었다. 2026-09-21 사용자가 «이 블로그에 참조논문이 있었을 것» 이라고 지목해 찾아 붙인 것이다. **설계 혈통이지 인용이 아니다.** 2026-09-21 추가 — 같은 카테고리의 「The Investment CAPM」 글에서 «수익성 + 기대성장» 이라는 두 축 조합과 Eg 의 출처를 찾았다.",
    "blog": "네이버 블로그 boulder2163 «모델링기반투자»(categoryNo=10) — 논문 리뷰 136편",
    "posts": [
     "222455406046 (Revisiting Quality Investing)",
-    "223847226647 (Profitability Retrospective)"
+    "223847226647 (Profitability Retrospective)",
+    "222401914884 (The Investment CAPM: 투자 혁신)"
    ]
   }
  }
