@@ -2,7 +2,7 @@
 
 풀카드: 없음
 판정: 기각
-규칙: `x-style-fmom` · `x-style-fmom8`
+규칙: x-style-fmom · x-style-fmom8
 
 **둘 다 기각.** `fmom` 은 여덟 조건 중 넷(F1·F2·F3·F5), `fmom8` 은 다섯(F1·F2·F3·F5·F8).
 
