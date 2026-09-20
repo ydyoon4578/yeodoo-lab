@@ -66,6 +66,18 @@ COSTS = [
 ]
 
 
+def cap_menu():
+    """상한 메뉴(사전등록 §4) 를 확정 잣대로 재진술한 표 — build/qg_cap.py 가 굽는다."""
+    try:
+        m = json.load(io.open(os.path.join(DATA, "_qg_cap.json"), encoding="utf-8"))
+    except Exception:
+        return {"error": "data/_qg_cap.json 이 없다 — python build/qg_cap.py 를 돌릴 것"}
+    return {"note": m.get("note"), "anchor_recon_gap_pp": m.get("recon_gap_pp"),
+            "window": m.get("window"),
+            "rows": [{"cap_pct": float(k), **v} for k, v in
+                     sorted(m.get("caps", {}).items(), key=lambda x: -float(x[0]))]}
+
+
 def main():
     # 🚨 상한 판을 카드의 정본 계열로 쓴다. 20% 원본은 아래 prev_design 에 남긴다.
     F, extra = qg_cap.series(CAP)
@@ -107,6 +119,9 @@ def main():
                       "«상한을 조여도 지수에서 벌어지는 폭은 줄지 않는다»(등록서 §4).",
         },
         "concentration": {"top3_pct": extra["top3_pct"], "turn_y_pct": extra["turn_y_pct"]},
+        # 🚨 고른 메뉴를 **카드가 들고 있는다.** 「왜 10% 인가」는 옆 칸들을 봐야 답이 된다.
+        #   그리고 재 놓고 안 실으면 잰 적 없는 것이다(audit_unbuilt 의 규약).
+        "cap_menu": cap_menu(),
         # ⚠ 아래 넷은 **20% 판에서 잰 값**이다. 상한을 바꿨다고 다시 재지 않았다.
         "costs_basis_cap_pct": PREV_CAP,
         "costs": [{"what": a, "pp_per_year": b, "src": c, "verdict": d} for a, b, c, d in COSTS],
