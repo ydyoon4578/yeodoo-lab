@@ -1,17 +1,19 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """build/style_fmom.py — 스타일 로테이션(팩터 모멘텀). 규약은 PREREG-2026-09-21-STYLE8ROT.md.
 
 🚨 등록서에 적은 것만 한다. 결과를 보고 자산 수(8/8)·선택 크기(상위 절반)·
-   신호(12-1)·주기(월말)·창(10년)을 바꾸지 않는다. 16종판·9종판·7종판은 만들지 않는다.
+   신호(12-1)·주기(월말)·창(계산값)을 바꾸지 않는다. 16종판·9종판·7종판은 만들지 않는다.
 🚨 자산 선정을 **네 번 고쳤다**(등록서 §3-1-a). 최종은 «표준 8종» 이고
    기준은 성적이 아니라 **표준 팩터 분류**다. 그래도 나는 성적표를 이미 봤다 —
    그래서 fmom8 > fmom 을 «축을 다양화하면 좋아진다» 의 증거로 쓰지 않는다.
    두 판 다 **8종**이라, 바뀐 것은 개수가 아니라 **축의 다양성** 하나다.
 
 🚨 레그를 여기서 다시 굽는다(등록서 §3-2-a). data/style_pit.json 의 레그는 1년짜리라
-   (n_rebal 11) 12-1 신호를 얹으면 시험할 달이 0개다. ST.WINDOW 를 10년으로 두고
-   **패널도 같은 인자로** 준비한다 — 5년 패널에 10년 창을 돌리면 앞 5년이 조용히
+   (n_rebal 11) 12-1 신호를 얹으면 시험할 달이 0개다. ST.WINDOW 를 늘리고
+   **패널도 같은 인자로** 준비한다 — 짧은 패널에 긴 창을 돌리면 앞쪽이 조용히
    생존자가 된다(style_pit.py §259 가 적어 둔 사고).
+🚨 창 길이는 leg_days() 가 **계산한다**(등록서 §3-2-a 재개정). 10년이 상한이지만
+   멤버십이 2014-06 부터라 가드(3년) 때문에 10년에 못 미친다. 그 값을 손대지 않는다.
 
 ⚠ data/style_pit.json 을 덮어쓰지 않는다. 게시 산출물이다.
 """
@@ -34,7 +36,23 @@ from maxyears import MAX_YEARS, check_const, cap                  # noqa: E402
 LB_A, LB_B = 12, 2          # 점수 구간 t-12 ~ t-2 (직전 1개월 건너뜀)
 COST = 0.0020               # 왕복 20bp — STYLE8W F4 와 같은 값
 NSHUF, SEED = 200, 20260921
-LEG_DAYS = MAX_YEARS * 252  # §3-2-a — 상한까지 채운다. 내가 고른 값이 아니다
+GUARD_Y = 3                 # style_pit_panel.prepare §124 — 창 시작보다 3년 앞까지 멤버십 요구
+
+
+def leg_days(P, mem):
+    """§3-2-a 재개정 — 창 길이를 **계산한다.** 손으로 고르지 않는다.
+
+    허용 시작 = (멤버십 첫 달의 첫 거래일) + 252*3
+    LEG_DAYS  = min(MAX_YEARS*252,  마지막날 − 허용 시작)
+    """
+    m0 = min(mem.keys())
+    i0 = next(i for i, d in enumerate(P.dates) if d[:7] >= m0)
+    lo = i0 + 252 * GUARD_Y
+    end = len(P.dates) - 1
+    n = min(MAX_YEARS * 252, end - lo)
+    print("멤버십 시작 %s · 가드 %d년 → 허용 시작 %s · 창 %d거래일(%.1f년)"
+          % (m0, GUARD_Y, P.dates[lo], n, n / 252.0))
+    return n
 
 EIGHT = ["val", "grow", "hbeta", "div", "spmo", "qvm", "squal", "size"]
 # 표준 8종 — MSCI 6대(val·size·spmo·squal·lowvol·div) + 수익성(fcfy 대용)
@@ -58,16 +76,19 @@ def monthly(nav, dates):
 
 def build_legs():
     """PIT 레그의 월별 수익. §3-2-a 의 창·패널로."""
+    import index_members
     import style_top_pdf as ST
     import style_pit_panel as SPP
-    ST.WINDOW = LEG_DAYS                       # §3-2-a — 창을 상한까지
-    prep = SPP.prepare(ST, window=LEG_DAYS)    # 🚨 패널도 **같은 인자**
+    mem, _ = index_members.load()
+    P0 = ST.Panel()
+    LEG_DAYS = leg_days(P0, mem)
+    ST.WINDOW = LEG_DAYS                       # §3-2-a — 창을 계산된 값으로
+    prep = SPP.prepare(ST, P=P0, window=LEG_DAYS)   # 🚨 패널도 **같은 인자**
     P = prep["P"]
     SPP.inject(prep)                           # 편출 종목 주입 — 이것이 PIT 의 뜻
     members_at = prep["members_at"]
     inject, missing = prep["inject"], prep.get("missing") or []
-    print("레그 창 %d거래일(=%d년) · 주입 %d종 · 가격 부재 %d종"
-          % (LEG_DAYS, MAX_YEARS, len(inject), len(missing)))
+    print("주입 %d종 · 가격 부재 %d종" % (len(inject), len(missing)))
 
     out, failed = {}, {}
     for st in ST.STYLES:
@@ -84,7 +105,7 @@ def build_legs():
         print("  %-10s %-14s %3d개월 (%s ~ %s) 리밸 %d"
               % (key, label, len(r), r.index[0].strftime("%Y-%m"),
                  r.index[-1].strftime("%Y-%m"), R["n_rebal"]))
-    return out, failed, len(inject), len(missing)
+    return out, failed, len(inject), len(missing), LEG_DAYS
 
 
 def fmom(X, names):
@@ -129,14 +150,14 @@ def tstat(d):
 
 def main():
     check_const()
-    legs, failed, n_inj, n_miss = build_legs()
+    legs, failed, n_inj, n_miss, leg_d = build_legs()
     X = pd.DataFrame(legs).dropna()
     X = X.loc[cap(X.index)]                     # 🚨 10년 상한
     print("\n공통 %d개월 (%s ~ %s) · 레그 %d종"
           % (len(X), X.index[0].strftime("%Y-%m"),
              X.index[-1].strftime("%Y-%m"), X.shape[1]))
 
-    res = {"max_years": MAX_YEARS, "leg_days": LEG_DAYS, "cost_bp": COST * 1e4,
+    res = {"max_years": MAX_YEARS, "leg_days": leg_d, "leg_years": leg_d / 252.0, "cost_bp": COST * 1e4,
            "n_inject": n_inj, "n_missing_px": n_miss, "failed_legs": failed,
            "window": [X.index[0].strftime("%Y-%m"), X.index[-1].strftime("%Y-%m")],
            "n_month": len(X), "runs": {}}
