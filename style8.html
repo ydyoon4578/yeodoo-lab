@@ -496,7 +496,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 /* 판형 조립기. 계산하지 않는다 — style_perf.json 의 값을 고르고 배치할 뿐이다.
    build/style8_pdf.py(로컬 PDF)와 같은 규칙을 쓴다: 같은 8종, 같은 열, 같은 정렬. */
 (function(){
-  var KEYS = ["div","val","qvm","spmo","size","grow","hbeta","squal"];
+  /* 🚨 2026-09-21 사용자 결정 — 「표준 8종」으로 갈았다.
+     나간 셋 qvm·grow·hbeta ← 들어온 셋 lowvol·fcfy·netbuy.
+     정본은 build/style_top_pdf.py 의 HOME_HIDE 이고 거기에 사유가 적혀 있다. */
+  var KEYS = ["div","val","lowvol","spmo","size","fcfy","netbuy","squal"];
   var TR   = ["1일","1주","1개월","3개월","6개월","1년","YTD"];
   /* 첫 장은 제목·수익률표·소제목(실측 80.9mm)을 이고 가므로 덩이가 3개만 들어간다.
      둘째 장은 5개. 이 3/5 는 build/style8_pdf.py 의 PAGE1_N 과 같은 값이다 —
@@ -519,6 +522,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     "spmo": "(1개월 전 주가 ÷ 13개월 전 주가 − 1) ÷ 3년 주간수익률 표준편차" + NB +
             "최근 1개월을 빼는 이유는 단기 반전을 피하려는 것",
     "size": "시가총액 = 주식수 × 주가 · 작을수록 상위",
+    /* ── 2026-09-21 표준 8종 교체로 들어온 셋 ── */
+    "lowvol":"변동성 = 최근 252거래일 일간수익률 표준편차 × √252 · 낮을수록 상위" + NB +
+            "연속값이라 동점이 없다",
+    "fcfy": "FCF수익률 = 최근 4분기 잉여현금흐름 ÷ 시가총액" + NB +
+            "⚠ 정본(COWZ)의 분모는 기업가치(EV)다 — 순부채 태그가 없어 시가총액을 쓴다",
+    "netbuy":"순감소율 = (1년 전 주식수 ÷ 현재 주식수 − 1) · 늘었으면 음수" + NB +
+            "⚠ 분할 자르기 전 계열(sh_u)을 쓴다 — 대량발행 종목이 후보에서 사라지지 않게",
+    /* ── 아래 셋은 2026-09-21 에 화면에서 빠졌다. 산식은 남겨 둔다 ── */
     "grow": "3년 주당매출 연평균 성장률" + NB + "3년 주당순이익 변화 ÷ 주가" + NB +
             "12개월 모멘텀 — 셋의 z 를 평균",
     "hbeta":"베타 = 최근 252거래일 일간수익률의 시장과의 공분산 ÷ 시장 분산",
