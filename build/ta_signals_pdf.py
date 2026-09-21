@@ -3,6 +3,8 @@
 
 자료는 build/ta_signals.py 가 낸 data/_ta_signals.json 하나뿐이다. 여기서 계산하지 않는다.
 
+쪽 구성 — 지수마다 매수 한 쪽·매도 한 쪽(줄이 35·23 이라 한 쪽에 같이 못 넣는다) + 합류 한 쪽.
+
 ⚠ 맑은 고딕에 없는 글자: ✓ ✗ ⚠ 🚨 U+2212(진짜 빼기표). «!!» 와 하이픈으로 눕힌다.
   있는 글자: ▲ ▼ → ← · — ± ≥ ≤ « » ★ ∧
 
@@ -32,144 +34,154 @@ INK, INK2, MUTED, LINE, RULE = ST.INK, ST.INK2, ST.MUTED, ST.LINE, ST.RULE
 POS, NEG, ACC, PAPER, PANEL2 = ST.POS, ST.NEG, ST.ACC, ST.PAPER, ST.PANEL2
 
 HOT = 10          # 이 안에 발동했으면 «최근» 으로 본다
+TOT = 5
 
 
-def foot(fig, page, total, asof):
+def foot(fig, page, asof):
     ST.hline(fig, X0, X1, .034, LINE, .6)
     ST.tx(fig, X0, .026,
           "여두 전략 랩 · 교과서 TA 신호 검증 · 기준 %s · 10년 · 설계 출처 ta_lab "
-          "(산식·발동조건만) · **자료는 이 랩 종가**" % asof, fontsize=6.4, color=MUTED)
+          "(산식·발동조건만) · 자료는 이 랩 계열" % asof, fontsize=6.4, color=MUTED)
     ST.tx(fig, X0, .0175,
           "!! 신호는 진단이지 예측이 아니다. 매도 신호는 **숏 진입 신호가 아니다** - "
-          "어느 것도 사후 평균이 음수가 아니다(아래 표).", fontsize=6.0, color=NEG)
-    ST.tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
+          "어느 것도 사후 1개월 평균이 음수가 아니다.", fontsize=6.0, color=NEG)
+    ST.tx(fig, X1, .026, "%d / %d · %s" % (page, TOT, dt.datetime.now().strftime("%Y-%m-%d")),
           fontsize=6.4, color=MUTED, ha="right")
 
 
-def sig_table(fig, y, rows, side):
-    """매수/매도 한 표. 최근 발동한 줄은 날짜를 붉게."""
+def side_page(fig, R, side, asof, page):
     buy = side == "buy"
+    ko = "매수" if buy else "매도"
+    y = .958
+    ST.tx(fig, X0, y, "%s — %s 신호" % (R["label"], ko), fontsize=15, weight="bold",
+          color=POS if buy else NEG)
+    ST.tx(fig, X1, y, "기준 %s · %s~ · %d거래일 · 기준선 %+.2f%%"
+          % (asof, R["start"], R["n_days"], R["base1m"]), fontsize=7.2, color=MUTED, ha="right")
+    y -= .026
+    ST.hline(fig, X0, X1, y, RULE, .9)
+    y -= .016
+
+    hot = [x for x in R[side] if x["days_ago"] is not None and x["days_ago"] <= HOT]
+    hot.sort(key=lambda z: z["days_ago"])
+    # ⚠ 한 줄에 132자로 잘랐더니 11종 중 넷만 보였다(렌더 실측) — 세 줄까지 편다.
+    #   여기가 이 쪽에서 **제일 먼저 보는 칸**이라 잘리면 안 된다.
+    items = ["%s(%s)" % (x["signal"], x["last"]) for x in hot] or ["없음"]
+    lines, cur = [], ""
+    for it in items:
+        nxt = (cur + " · " + it) if cur else it
+        if len(nxt) > 126 and cur:
+            lines.append(cur); cur = it
+        else:
+            cur = nxt
+    if cur:
+        lines.append(cur)
+    lines = lines[:3]
+    bh = .014 + .0125 * len(lines)
+    ST.box(fig, X0, y - bh, X1 - X0, bh, PANEL2, z=0)
+    ST.tx(fig, X0 + .008, y - .010, "최근 %d일 안에 발동 — %d종" % (HOT, len(hot)),
+          fontsize=9, weight="bold")
+    for i, ln in enumerate(lines):
+        ST.tx(fig, X0 + .008, y - .0235 - i * .0118, ln, fontsize=6.6,
+              color=POS if buy else NEG)
+    y -= bh + .012
+
+    ST.tx(fig, X0, y,
+          ("초과 = 1개월 평균 - 기준선. **초과 순**. «상태» 는 켜져 있는 모든 날을 센 것이라 "
+           "횟수가 크다(중첩)." if buy else
+           "**«덜 오름» = 기준선 - 1개월 평균.** 양수면 기준선보다 덜 올랐다는 뜻이다 - "
+           "내렸다는 뜻이 아니다."), fontsize=6.6, color=MUTED)
+    y -= .0150
+
+    rows = [x for x in R[side] if x.get("n", 0) >= 5]
+    rows.sort(key=(lambda x: -(x.get("fwd1m_excess") or -99)) if buy
+              else (lambda x: -(x.get("edge_vs_base") or -99)))
     tr = []
     for x in rows:
         ex = x.get("fwd1m_excess") if buy else x.get("edge_vs_base")
-        tr.append([x["signal"][:20], str(x["n"]),
-                   "%+.2f%%" % x["fwd1w_mean"], "%.0f%%" % x["fwd1w_win"],
+        tr.append([x["signal"][:21], "상태" if x["kind"] == "state" else "",
+                   str(x["n"]), "%+.2f%%" % x["fwd1w_mean"], "%.0f%%" % x["fwd1w_win"],
                    "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % x["fwd1m_win"],
-                   "%+.2f%%p" % ex,
-                   (x["last"] or "—"),
+                   "%+.2f%%p" % ex, (x["last"] or "—"),
                    ("%d일" % x["days_ago"]) if x["days_ago"] is not None else "—",
                    "★" if x["on_now"] else ""])
 
     def cc(r, c, tr=tr, rows=rows):
         if c == 0:
             return INK
-        if c == 6:
-            return POS if not tr[r][6].startswith("-") else NEG
-        if c in (7, 8):
+        if c == 7:
+            return POS if not tr[r][7].startswith("-") else NEG
+        if c in (8, 9):
             d = rows[r]["days_ago"]
             return NEG if (d is not None and d <= HOT) else MUTED
-        if c == 9:
+        if c == 10:
             return NEG
         return MUTED
-    head = ["신호", "횟수", "1주", "승률", "1개월", "승률",
-            "초과" if buy else "덜 오름", "최근 발동", "경과", ""]
-    return ST.table(fig, X0, y, [.148, .046, .062, .050, .062, .050, .068, .086, .048, .026],
-                    head, tr, row_h=.0163, fs=6.9, hfs=6.2, zebra=True,
-                    aligns=["l", "r", "r", "r", "r", "r", "r", "l", "r", "c"], cell_color=cc)
-
-
-def index_page(fig, R, asof, page, total):
-    y = .958
-    ST.tx(fig, X0, y, "%s — 교과서 TA 신호" % R["label"], fontsize=16, weight="bold")
-    ST.tx(fig, X1, y, "기준 %s · %s~ · %d거래일"
-          % (asof, R["start"], R["n_days"]), fontsize=7.4, color=MUTED, ha="right")
-    y -= .026
-    ST.hline(fig, X0, X1, y, RULE, .9)
-    y -= .016
-
-    # 지금 무엇이 켜졌나 — 이 쪽에서 제일 먼저 보는 것
-    hot_b = [x for x in R["buy"] if x["days_ago"] is not None and x["days_ago"] <= HOT]
-    hot_s = [x for x in R["sell"] if x["days_ago"] is not None and x["days_ago"] <= HOT]
-    ST.box(fig, X0, y - .046, X1 - X0, .046, PANEL2, z=0)
-    ST.tx(fig, X0 + .008, y - .010, "최근 %d일 안에 발동한 신호" % HOT,
-          fontsize=9.5, weight="bold")
-    f = lambda v: " · ".join("%s(%s)" % (x["signal"], x["last"]) for x in
-                             sorted(v, key=lambda z: z["days_ago"])) or "없음"
-    ST.tx(fig, X0 + .008, y - .024, "매수  " + f(hot_b)[:118], fontsize=7.0, color=POS)
-    ST.tx(fig, X0 + .008, y - .036, "매도  " + f(hot_s)[:118], fontsize=7.0, color=NEG)
-    y -= .058
-
-    ST.tx(fig, X0, y, "매수 신호", fontsize=11, weight="bold", color=POS)
-    ST.tx(fig, X0 + .090, y + .001,
-          "초과 = 1개월 평균 - 기준선 %+.2f%% · 초과 순 · 굵은 날짜 = %d일 안"
-          % (R["base1m"], HOT), fontsize=6.4, color=MUTED)
-    y -= .0140
-    rb = [x for x in R["buy"] if x.get("n", 0) >= 5]
-    rb.sort(key=lambda x: -(x.get("fwd1m_excess") or -99))
-    y = sig_table(fig, y, rb, "buy")
-    thin = [x["signal"] for x in R["buy"] if x.get("n", 0) < 5]
+    y = ST.table(fig, X0, y,
+                 [.152, .034, .046, .060, .048, .060, .050, .066, .084, .046, .024],
+                 ["신호", "", "횟수", "1주", "승률", "1개월", "승률",
+                  "초과" if buy else "덜 오름", "최근 발동", "경과", ""], tr,
+                 row_h=.0158, fs=6.8, hfs=6.1, zebra=True,
+                 aligns=["l", "c", "r", "r", "r", "r", "r", "r", "l", "r", "c"],
+                 cell_color=cc)
+    thin = [x["signal"] for x in R[side] if x.get("n", 0) < 5]
     if thin:
-        y -= .011
+        y -= .012
         ST.tx(fig, X0, y, "표본 5회 미만이라 통계 없음 — %s" % " · ".join(thin),
               fontsize=6.2, color=MUTED)
-    y -= .022
-
-    ST.tx(fig, X0, y, "매도 신호", fontsize=11, weight="bold", color=NEG)
-    ST.tx(fig, X0 + .090, y + .001,
-          "«덜 오름» = 기준선 - 1개월 평균. 양수면 기준선보다 **덜 올랐다**는 뜻이다",
-          fontsize=6.4, color=MUTED)
-    y -= .0140
-    rs = [x for x in R["sell"] if x.get("n", 0) >= 5]
-    rs.sort(key=lambda x: -(x.get("edge_vs_base") or -99))
-    y = sig_table(fig, y, rs, "sell")
-    thin = [x["signal"] for x in R["sell"] if x.get("n", 0) < 5]
-    if thin:
-        y -= .011
-        ST.tx(fig, X0, y, "표본 5회 미만이라 통계 없음 — %s" % " · ".join(thin),
-              fontsize=6.2, color=MUTED)
-    y -= .016
-    worst = min(rs, key=lambda x: x["fwd1m_mean"]) if rs else None
-    if worst:
+    if not buy:
+        y -= .016
+        worst = min(rows, key=lambda x: x["fwd1m_mean"])
         ST.tx(fig, X0, y,
-              "!! **매도 신호 %d종 전부 사후 1개월 평균이 양수다**(최저 %s %+.2f%%). "
-              "숏 진입 신호가 아니라 «차익실현·신규매수 자제» 로만 읽을 것."
-              % (len(rs), worst["signal"], worst["fwd1m_mean"]), fontsize=6.8, color=NEG)
-    foot(fig, page, total, asof)
+              "!! **매도 신호 %d종 전부 사후 1개월 평균이 양수다**(최저 %s %+.2f%%)."
+              % (len(rows), worst["signal"], worst["fwd1m_mean"]), fontsize=6.8, color=NEG)
+        y -= .0118
+        ST.tx(fig, X0, y,
+              "   숏 진입 신호가 아니라 «차익실현·신규매수 자제» 로만 읽을 것. "
+              "원본 ta_lab 의 결론과 같다.", fontsize=6.8, color=NEG)
+        dn = [x for x in rows if x.get("fwd1m_down") is not None]
+        if dn:
+            best = max(dn, key=lambda x: x["fwd1m_down"])
+            y -= .0118
+            ST.tx(fig, X0, y,
+                  "   하락 적중이 가장 높은 것도 **%s %.0f%%** 다 - 절반을 못 넘는다."
+                  % (best["signal"], best["fwd1m_down"]), fontsize=6.8, color=MUTED)
+    foot(fig, page, asof)
 
 
 def main() -> int:
     M = json.load(io.open(os.path.join(DATA, "_ta_signals.json"), encoding="utf-8"))
     asof = M["as_of"]
-    TOT = 3
+    figs = []
     with PdfPages(OUT) as pdf:
-        figs = []
-        for i, k in enumerate(("spx", "ndx"), 1):
-            fig = ST.new_page(); figs.append(fig)
-            index_page(fig, M["index"][k], asof, i, TOT)
+        pg = 0
+        for k in ("spx", "ndx"):
+            for side in ("buy", "sell"):
+                pg += 1
+                fig = ST.new_page(); figs.append(fig)
+                side_page(fig, M["index"][k], side, asof, pg)
 
-        # ── 3쪽 — 컨버전스 + 뺀 것 ────────────────────────────────────
+        # ── 마지막 쪽 — 합류 + 읽는 법 ────────────────────────────────
+        pg += 1
         fig = ST.new_page(); figs.append(fig)
         y = .958
-        ST.tx(fig, X0, y, "신호 합류 · 그리고 못 낸 것", fontsize=16, weight="bold")
+        ST.tx(fig, X0, y, "신호 합류 · 이 표를 어떻게 읽나", fontsize=15, weight="bold")
         ST.tx(fig, X1, y, "기준 %s" % asof, fontsize=7.4, color=MUTED, ha="right")
         y -= .026
         ST.hline(fig, X0, X1, y, RULE, .9)
         y -= .018
         ST.tx(fig, X0, y,
-              "원본 ta_lab 의 첫째 원칙이 «단일 지표 의존 금지» 다. 두 신호가 **5거래일 안에 같이** "
-              "발동한 날만 세면 단독보다 낫다 — 그것을 이 랩 자료로 다시 쟀다.",
+              "원본 ta_lab 의 첫째 원칙이 «단일 지표 의존 금지» 다. 두 신호가 **5거래일 안에 "
+              "같이** 발동한 날만 세면 단독보다 낫다 — 그것을 이 랩 자료로 다시 쟀다.",
               fontsize=7.2, color=INK2)
-        y -= .020
+        y -= .022
         for k, ko in (("spx", "S&P 500"), ("ndx", "NASDAQ 100")):
             R = M["index"][k]
             cf = [x for x in R["confluence"] if x.get("n", 0) >= 5]
             cf.sort(key=lambda x: -(x.get("fwd1m_excess") or -99))
-            # ⚠ .090 은 «S&P 500» 에는 맞았지만 «NASDAQ 100» 을 먹었다(렌더 실측).
-            #   11pt 라틴 열 글자면 .13 이 넘는다 — 여유 두고 .150.
             ST.tx(fig, X0, y, ko, fontsize=11, weight="bold")
             ST.tx(fig, X0 + .150, y + .001, "기준선 %+.2f%%" % R["base1m"],
                   fontsize=6.6, color=MUTED)
-            y -= .0135
+            y -= .0140
             tr = [[x["pair"][:34], str(x["n"]), "%+.2f%%" % x["fwd1m_mean"],
                    "%.0f%%" % x["fwd1m_win"], "%+.2f%%p" % x["fwd1m_excess"],
                    x["last"] or "—"] for x in cf]
@@ -182,50 +194,48 @@ def main() -> int:
                          ["짝", "횟수", "1개월", "승률", "초과", "최근 발동"], tr,
                          row_h=.0165, fs=7.0, hfs=6.3, zebra=True,
                          aligns=["l", "r", "r", "r", "r", "l"], cell_color=cc2)
-            thin = [x["pair"] for x in R["confluence"] if x.get("n", 0) < 5]
+            thin = [x for x in R["confluence"] if x.get("n", 0) < 5]
             if thin:
                 y -= .011
-                # ⚠ 짝 이름을 다 적었더니 오른쪽으로 잘렸다(렌더 실측). 수만 적는다 —
-                #   이름은 _ta_signals.json 에 다 있다.
                 ST.tx(fig, X0, y,
                       "표본 5회 미만이라 통계 없음 — %d짝 (이름은 _ta_signals.json 에)"
                       % len(thin), fontsize=6.2, color=MUTED)
             y -= .022
 
-        ST.tx(fig, X0, y, "못 낸 것 — 왜", fontsize=11, weight="bold", color=NEG)
+        ST.tx(fig, X0, y, "자료", fontsize=11, weight="bold")
         y -= .0150
+        ST.tx(fig, X0, y, "· " + M["src"], fontsize=6.9, color=INK2)
+        y -= .0125
         ST.tx(fig, X0, y,
-              "이 랩의 지수 계열에는 **고가·저가·거래량이 없다**(bench_px 는 종가 5,210일). "
-              "원본 37종 중 그것이 필요한 %d종을 **뺐다.**" % len(M["dropped"]),
-              fontsize=7.2, color=INK2)
-        y -= .0130
-        ST.tx(fig, X0, y, "  " + " · ".join(M["dropped"][:12]), fontsize=6.8, color=MUTED)
+              "· 고가·저가·거래량은 **따로 받는다**(build/bench_ohlc.py → bench_ohlc.json). "
+              "종가는 bench_px 와 대조해 **0.00000%% 차이**를 확인했고, 어긋나면 갱신을 멈춘다 -",
+              fontsize=6.9, color=INK2)
         y -= .0115
-        ST.tx(fig, X0, y, "  " + " · ".join(M["dropped"][12:]), fontsize=6.8, color=MUTED)
-        y -= .0140
-        # ⚠ 한 줄에 다 넣었더니 오른쪽으로 잘렸다(렌더 실측) — 두 줄로 나눈다.
+        ST.tx(fig, X0, y, "  벤치마크 잣대가 둘로 갈리지 않게.", fontsize=6.9, color=INK2)
+        y -= .0125
         ST.tx(fig, X0, y,
-              "!! 종가로 비슷하게 흉내 낸 변종을 **같은 이름으로 싣지 않는다.** "
-              "이름이 같으면 같은 것이어야 한다.", fontsize=6.8, color=NEG)
-        y -= .0115
-        ST.tx(fig, X0, y,
-              "   원본의 RSI 와 이 표의 RSI 는 같지만, 원본의 Keltner 를 종가로 만든 것은 "
-              "Keltner 가 아니다.", fontsize=6.8, color=NEG)
+              "· 기준일은 **랩 격자(bench_px)로 자른다.** 수집기가 하루이틀 더 받아 와도 "
+              "그 뒤는 버린다 - 안 그러면 «최근 발동일» 이 다른 화면과 어긋난다.",
+              fontsize=6.9, color=INK2)
         y -= .0240
         ST.tx(fig, X0, y, "이 표를 어떻게 읽나", fontsize=11, weight="bold")
         y -= .0150
         for ln, col in (
             ("· 신호는 **진단**이지 예측이 아니다. 원본 ta_lab 의 결론이고 이 랩의 결론과도 같다.", INK2),
-            ("· **매도 신호는 숏이 아니다.** 양 지수 모두 매도 신호 전부가 사후 1개월 평균 양수다. "
-             "«덜 올랐다»가 최선이다 - 차익실현·신규매수 자제로만 읽을 것.", NEG),
+            ("· **매도 신호는 숏이 아니다.** 양 지수 모두 매도 신호 전부가 사후 1개월 평균 "
+             "양수다. «덜 올랐다»가 최선이다.", NEG),
+            ("· **Donchian 하단 이탈은 오히려 매수 쪽이다** - SPX 사후 1개월 +2.87%. "
+             "이름이 매도 묶음에 있다고 매도 신호가 아니다.", NEG),
             ("· 횟수가 적은 줄(10~20회)은 **운으로 그 값이 나올 수 있다.** 초과 %p 크기보다 "
              "횟수를 먼저 볼 것.", MUTED),
+            ("· «상태» 줄은 켜져 있는 **모든 날**을 센 것이라 횟수가 1,500~2,500 이다. "
+             "이벤트 줄과 같은 무게로 읽으면 안 된다 - 관측이 겹친다.", MUTED),
             ("· 10년 한 구간이다. 이 랩은 국면 조건부 규칙을 12번 시도해 11번 기각했다 - "
              "신호 하나로 판을 바꾸지 않는다.", MUTED),
         ):
             ST.tx(fig, X0, y, ln, fontsize=6.9, color=col)
             y -= .0125
-        foot(fig, 3, TOT, asof)
+        foot(fig, pg, asof)
 
         for i, f in enumerate(figs, 1):
             pdf.savefig(f)
@@ -235,7 +245,7 @@ def main() -> int:
         d = pdf.infodict()
         d["Title"] = "교과서 TA 신호 검증 · 기준 %s" % asof
 
-    print("→ %s · 3쪽 · 기준 %s" % (OUT, asof))
+    print("→ %s · %d쪽 · 기준 %s" % (OUT, TOT, asof))
     return 0
 
 
