@@ -581,8 +581,13 @@ def main() -> int:
         buy, sell, kind, stt = build_signals(c_all, h_all, l_all, v_all)
 
         c0 = c.index[-1] - pd.DateOffset(months=CHART_M)   # 차트·발동일 구간의 시작
+        # 🚨 기준선 **승률**도 낸다. 이게 없으면 「승률 57%」 가 높은지 낮은지 말할 수 없다.
+        #   시장은 그냥 두어도 1개월 뒤 오를 때가 훨씬 많아서, 50% 가 아니라 이 수가 기준이다.
+        _r1m = fwd["1m"].dropna()
+        base1w = float((_r1m > 0).mean()) * 100
         rec = {"label": label, "ticker": ticker, "n_days": len(c),
                "start": str(c.index[0].date()), "base1m": round(base1m * 100, 2),
+               "base1m_win": round(base1w, 1),
                "chart_from": str(c0.date()), "buy": [], "sell": []}
         ev_cache = {}
         for side, dct, is_sell in (("buy", buy, False), ("sell", sell, True)):
