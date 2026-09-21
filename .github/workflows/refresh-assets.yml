@@ -201,9 +201,14 @@ jobs:
       # ⚠ assets.json 을 새로 만든 **이 자리에서** 같이 구워야 격자가 어긋나지 않는다.
       - name: Rebuild benchmark slim series
         run: python build/bench_px.py
-      # 교과서 TA 신호 검증 — bench_px 종가만 읽으므로 **바로 뒤**가 제자리다.
-      #   pandas·numpy 가 필요한데 이 잡이 이미 깐다(refresh-stocks 도 깔지만 그쪽은
-      #   bench_px 를 안 굽는다 — 낡은 종가로 신호를 내면 「최근 발동일」이 어긋난다).
+      # 지수 OHLCV 얇은 계열 — bench_px 는 종가만이라 고가·저가·거래량이 필요한 TA 지표
+      #   23종을 못 냈다. 여기서만 따로 받는다(yfinance · 이 잡이 이미 깐다).
+      #   🚨 받은 종가를 bench_px 와 **대조하고 어긋나면 스스로 멈춘다** — 벤치마크
+      #     잣대가 둘로 갈리지 않게. 그래서 bench_px **뒤**에 와야 한다.
+      - name: Rebuild benchmark OHLCV
+        run: python build/bench_ohlc.py
+        continue-on-error: true
+      # 교과서 TA 신호 검증 — 위 둘(bench_px 기준일 · bench_ohlc 고저거)을 읽으므로 그 뒤다.
       #   ⚠ 종이(ta_signals_pdf.py)는 **여기서 안 굽는다** — matplotlib 과 한글 폰트가
       #     러너에 없다. 그건 로컬/ops 에서 낸다(style8_pdf 와 같은 규약).
       - name: Rebuild TA signal validation
@@ -237,7 +242,7 @@ jobs:
           #     «될 때는 되다가 정작 자료가 바뀌는 날 죽는» 형태라 더 나쁘다.
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·홈 성과 자동 갱신" \
             data/assets.json data/asset_strategies.json data/guru_clone.json \
-            data/bench_px.json \
+            data/bench_px.json data/bench_ohlc.json data/_ta_signals.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/strategy_report.json \
             data/market_board.json data/home_perf.json \
             data/home_flow.json data/asof.json \
