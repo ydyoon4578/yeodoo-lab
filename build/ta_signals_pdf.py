@@ -55,10 +55,10 @@ MIN_SHOW = 10
 #   매수는 오를 확률, 매도는 내릴 확률이 이 이상인 신호만. 종수를 미리 못 박지
 #   않으므로 지수·방향에 따라 몇 종이 뜨는지가 달라진다 — 그게 곧 진단이다.
 CHART_WIN = {True: 70.0, False: 40.0}   # True=매수 · False=매도
-# 🚨 층 간격은 **가격 비율이 아니라 그림 범위(hi-lo) 비율**이다.
-#   비율로 잡았더니 6층이 쌓인 날에 여백이 범위의 60%를 먹어 가격선이 납작해졌다
-#   (렌더 실측). 범위 기준이면 지수가 무엇이든 보이는 간격이 같다.
-MK_SIZE, MK_BASE, MK_STEP, MK_CAP = 26, .045, .032, 6   # 크기·첫 층·간격·층 상한
+# 🚨 띄울 거리는 **가격 비율이 아니라 그림 범위(hi-lo) 비율**이다.
+#   가격 비율로 잡았더니 여백이 범위의 60%를 먹어 가격선이 납작해졌다(렌더 실측).
+#   범위 기준이면 지수가 무엇이든 보이는 간격이 같다.
+MK_SIZE, MK_BASE = 26, .045              # 세모 크기 · 가격선에서 띄울 거리(범위 비율)
 
 # 칸 너비는 **렌더 실측**이다(6.6pt 본문 · PDF 5% 여유 포함).
 #   신호명 최대 .123 · 설명 최대 .195 · 「★켜짐157일」 .065 · 날짜 .060
@@ -129,48 +129,44 @@ def rows_of(R, side, max_n):
 
 # ══ 차트 ═══════════════════════════════════════════════════════════════════
 def chart(fig, R, y_top, h, max_n):
-    """가격 + **딱 20종**의 발동일(사용자 지시 2026-09-22).
+    """가격 + **멀티 신호**가 뜬 날(사용자 지시 2026-09-22).
 
-    멀티 신호 · 단일 신호 각각 매수 CHART_TOP 종 · 매도 CHART_TOP 종 = 20종.
-    고르는 잣대는 표와 같은 **승률**이라, 「각 표의 위 다섯 줄」이 곧 차트에 뜬 것이다.
+    아래 두 표에서 **승률이 문턱 이상인 짝**만 찍는다 — 매수 CHART_WIN[True]%,
+    매도 CHART_WIN[False]%. 그래서 차트와 표가 같은 것을 본다.
 
-      속 찬 세모  멀티 신호(두 신호가 같이 뜬 날)
-      속 빈 세모  단일 신호
-      초록 세모 아래 = 매수 · 빨강 세모 위 = 매도 · **크기는 모두 같다**
+      세모 = 멀티 신호가 뜬 날. 초록 아래 = 매수 · 빨강 위 = 매도 · 크기는 모두 같다.
 
-    ⚠ 종전엔 크기로 「몇 개 겹쳤나」를 나타냈는데, 이제 겹침은 멀티 신호가
-      직접 말하므로 크기를 쓸 자리가 없다 — 크기를 같이 두고 속으로 가른다.
+    ⚠ 단일 신호는 안 찍는다(사용자 지시). 문턱을 70%/40% 로 낮추고 단일까지
+      넣었더니 S&P 매수만 세모 201개가 한 날 8층까지 쌓여 가격선이 묻혔다.
     """
     d, c = R["px"]["d"], R["px"]["c"]
     n = len(d)
     pos = {x: i for i, x in enumerate(d)}
 
-    # 차트에 올릴 것 — 승률이 문턱 이상인 신호만(멀티·단일 둘 다).
-    picks = []                       # (발동일목록, 매수인가, 속을 채우나)
+    # 차트에 올릴 것 — **멀티 신호만**, 그중 승률이 문턱 이상인 것(사용자 지시 2026-09-22).
+    #   단일 신호는 맞은편 쪽 표에만 있다. 이 쪽은 멀티 신호 쪽이라 차트도 그것만 본다.
+    picks = []                       # (발동일목록, 매수인가)
     named = {}
     for side, up in (("buy", True), ("sell", False)):
         wk = "fwd1m_win" if up else "fwd1m_down"
         th = CHART_WIN[up]
         mul = [x for x in (R.get("conf_" + side) or [])
                if x.get("n", 0) >= MIN_SHOW and (x.get(wk) or 0) >= th]
-        sgl = [x for x in rows_of(R, side, max_n)[0] if (x.get(wk) or 0) >= th]
-        named[up] = (len(mul), len(sgl))
+        named[up] = len(mul)
         for x in mul:
-            picks.append((x.get("fires") or [], up, True))
-        for x in sgl:
-            picks.append((x.get("fires") or [], up, False))
+            picks.append((x.get("fires") or [], up))
 
     # 🚨 세모는 하루에 **종류당 하나**다(집합). 문턱을 70%/40% 로 낮추니 S&P 매수만
     #   35종·201개가 걸려 한 날 8층까지 쌓였고 가격선이 묻혔다(렌더 실측 — 이 랩에서
     #   「세모 벽」을 만든 것이 두 번째다). **몇 종이 떴나는 아래 막대판이 이미 말한다** —
-    #   세모는 «언제, 어느 쪽, 멀티인가 단일인가» 만 말하면 된다. 층은 최대 둘이다.
-    mk = {}
+    #   세모는 «언제, 어느 쪽» 만 말하면 된다. 멀티만 그리므로 층은 하나다.
+    mk = set()
     nb = [0] * n
     ns = [0] * n
-    for fires, up, fill in picks:
+    for fires, up in picks:
         for f in fires:
             if f in pos:
-                mk.setdefault((pos[f], up), set()).add(fill)
+                mk.add((pos[f], up))
                 (nb if up else ns)[pos[f]] += 1
 
     hp, hb = h * .70, h * .24
@@ -190,20 +186,14 @@ def chart(fig, R, y_top, h, max_n):
 
     lo, hi = min(c), max(c)
     rng = (hi - lo) or 1.0
-    deep = 1
-    for (i, up), fl in mk.items():
+    off = rng * MK_BASE
+    for i, up in mk:
         col = POS if up else NEG
-        deep = max(deep, len(fl))
-        for j, fill in enumerate(sorted(fl, reverse=True)):     # 속 찬 것이 안쪽
-            # (fl 은 집합이라 j 는 0 또는 1 — 멀티 안쪽, 단일 바깥쪽)
-            off = rng * (MK_BASE + MK_STEP * min(j, MK_CAP - 1))
-            yy = c[i] - off if up else c[i] + off
-            ax.scatter([i], [yy], marker="^" if up else "v", s=MK_SIZE, zorder=6,
-                       linewidths=.85,
-                       facecolors=(col if fill else "none"), edgecolors=col)
-    # 층이 쌓인 만큼 위아래를 비운다 — 안 그러면 바깥 층이 테두리를 넘는다.
-    pad = MK_BASE + MK_STEP * min(deep, MK_CAP) + .02
-    ax.set_ylim(lo - rng * pad, hi + rng * pad)
+        ax.scatter([i], [c[i] - off if up else c[i] + off],
+                   marker="^" if up else "v", s=MK_SIZE, zorder=6,
+                   linewidths=.85, facecolors=col, edgecolors=col)
+    # 세모가 한 층뿐이라 위아래를 조금만 비우면 된다.
+    ax.set_ylim(lo - rng * (MK_BASE + .04), hi + rng * (MK_BASE + .04))
     ax.text(.010, .96, "기준일 %s 종가 %s" % (d[-1], format(int(round(c[-1])), ",")),
             transform=ax.transAxes, fontsize=6.4, color=INK, weight="bold", va="top")
 
@@ -235,10 +225,10 @@ def multi_page(fig, R, asof, page, max_n):
     y, named, nday = chart(fig, R, y - .014, .200, max_n)
     ST.tx(fig, X0, y_cap, "최근 12개월", fontsize=8.5, weight="bold")
     ST.tx(fig, X0 + .090, y_cap + .0005,
-          "**속 찬 세모 = 멀티 · 속 빈 세모 = 단일** · 아래 초록 매수(승률 %.0f%%↑ %d종) · "
-          "위 빨강 매도(%.0f%%↑ %d종) · 막대는 그날 뜬 수"
-          % (CHART_WIN[True], sum(named[True]),
-             CHART_WIN[False], sum(named[False])), fontsize=6.2, color=MUTED)
+          "**세모 = 멀티 신호** · 아래 초록 매수(승률 %.0f%%↑ %d종 · %d일) · "
+          "위 빨강 매도(%.0f%%↑ %d종 · %d일) · 막대는 그날 뜬 수"
+          % (CHART_WIN[True], named[True], nday[0],
+             CHART_WIN[False], named[False], nday[1]), fontsize=6.2, color=MUTED)
     y -= .030
 
     for key, ko, col, nmax in (("conf_buy", "매수", POS, N_MULTI[0]),
