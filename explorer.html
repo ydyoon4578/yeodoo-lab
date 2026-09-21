@@ -1759,15 +1759,28 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // '지금 국면' 정렬은 RGM 이 온 뒤에만 뜻이 있다 — 라벨을 그때 채운다(아래 rgSortLabel).
   // 사용자 요청 2026-09-21 「주간 월간 분기 등 기간별로 전략은 분리해줘」 — 'reb' 축을 둔다.
   var SORTS=[['sharpe','샤프'],['rgnow','지금 국면'],['kind','성격'],['reb','리밸 주기'],['verdict','등급'],['n','관측개월']];
-  // 빠른 주기부터. 주기를 모르는 것(자산배분·페어 등)은 맨 뒤로 — 없는 것을 지어 채우지 않는다.
+  // 빠른 주기부터. 주기가 원천에 없는 99종은 **성격으로 가른다** — 사용자 요청 2026-09-21
+  //   「세 주기에 속하지 않은 전략들도 타이밍, 자산배분 등으로 구분해서 넣어줘」.
+  // ⚠ 주기를 지어내지 않는다. 그 칸의 이름은 '주기'가 아니라 그 전략이 무엇인가다.
   var REB_ORDER=['주간','월말','분기','반기','연'];
+  // 주기 없는 것들의 순서 — 주기 뒤에 붙는다.
+  var NOREB_ORDER=['타이밍 오버레이','자산배분','거장 겹침','페어 트레이딩','미분류'];
+  function noRebLab(d){
+    // 역할은 kindOf() 로 읽는다 — d._role 은 없고 det.kind 에 실린다(1417행).
+    if((d._hold&&d._hold.kind==='timing')||kindOf(d)==='타이밍오버레이')return '타이밍 오버레이';
+    if(d._src==='자산배분')return '자산배분';
+    if(d._src==='거장 겹침')return '거장 겹침';
+    if(d._src==='페어 트레이딩')return '페어 트레이딩';
+    return '미분류';
+  }
   function rebRank(d){
-    var L=d._reb; if(!L)return 99;
-    for(var i=0;i<REB_ORDER.length;i++){if(L.indexOf(REB_ORDER[i])===0)return i;}
-    return 98;
+    var L=d._reb;
+    if(L){for(var i=0;i<REB_ORDER.length;i++){if(L.indexOf(REB_ORDER[i])===0)return i;}return 9;}
+    var j=NOREB_ORDER.indexOf(noRebLab(d));
+    return 20+(j<0?99:j);            // 주기 있는 것(0~9) 뒤에 둔다
   }
   function rebLab(d){
-    var L=d._reb; if(!L)return '주기 미상';
+    var L=d._reb; if(!L)return noRebLab(d);
     return L.indexOf('주')===0?'주간':L.indexOf('월')===0?'월간':L.indexOf('분기')===0?'분기'
          :L.indexOf('반기')===0?'반기':L.indexOf('연')===0?'연 1회':L;
   }
@@ -2044,7 +2057,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                   '분기':'분기말에 다시 고릅니다. 재무 공시 주기를 따르는 규칙들이라 회전이 가장 작습니다.',
                   '반기':'반기마다 다시 고릅니다.',
                   '연 1회':'연 1회 t년 6월말에 다시 고릅니다(Fama-French 컨벤션).',
-                  '주기 미상':'주기가 원천에 없는 전략입니다 — 자산배분·페어 등. 없는 것을 지어 채우지 않았습니다.'};
+                  // 아래 넷은 주기가 아니라 **성격**입니다 — 원천에 주기가 없어서 그렇습니다.
+                  '타이밍 오버레이':'주기가 아니라 신호가 바뀔 때 들어가고 나옵니다. 고정 리밸이 없습니다.',
+                  '자산배분':'자산 단위로 담습니다. 주기는 규칙마다 원천(asset_strategies)에 따로 있습니다.',
+                  '거장 겹침':'13F 공시 주기를 따릅니다(분기). 원천이 주기 칸을 안 싣습니다.',
+                  '페어 트레이딩':'쌍이 벌어지면 들어가고 수렴하면 나옵니다 — 고정 리밸이 없습니다.',
+                  '미분류':'주기가 원천에 없습니다. 없는 것을 지어 채우지 않았습니다.'};
     rows.forEach(function(d){
       if(state.sort==='reb'){
         var rl=rebLab(d);

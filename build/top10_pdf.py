@@ -166,8 +166,25 @@ def load():
              and (x.get("holdings") or {}).get("kind") == "xsec"
              and ((x.get("holdings") or {}).get("n") == 10
                   or len((x.get("holdings") or {}).get("tickers") or []) == 10)]
+
+    # ── «· 밴드 보유» 짝 정리 ────────────────────────────────────────────
+    # 🚨 사용자 요청 2026-09-21 「밴드 보유랑 아닌데 이름 같은 전략은 하나로, 더 나은 쪽으로」.
+    #   ⚠ **성적으로 고르지 않는다.** 그것은 2026-08-29 에 폐기한 nsel(성적을 보고
+    #     손잡이를 고르던 절차)과 같은 일이다. 대신 그 변형의 **설계 목적**으로 고른다 —
+    #     밴드(히스테리시스)는 «회전을 줄이려고» 붙인 것이고(tech_backtest: 저회전 변형),
+    #     목적이 달성됐으면 그것을 남긴다.
+    #   실측 2026-09-21: **12쌍 전부 회전이 줄었다**(예: 복권형 MAX 28.0 → 20.9배).
+    #     t 는 8/12 에서 올랐고 내려간 넷은 전부 이미 0 언저리이거나 음수다.
+    #     즉 이 기준으로 고르면 «더 나은 쪽»과 대체로 같지만, 고른 근거는 성적이 아니다.
+    #   🚨 랩에는 **둘 다 남는다.** 여기서 빼는 것은 이 리포트 한 벌뿐이고,
+    #     strategy_index·explorer 는 그대로다 — 측정 기록을 지우지 않는다.
+    SUF = " · 밴드 보유"
+    have = {x.get("name") for x in items}
+    dropped = [x for x in items if (x.get("name") or "") + SUF in have]
+    items = [x for x in items if (x.get("name") or "") + SUF not in have]
+
     items.sort(key=lambda z: -(z.get("t") if z.get("t") is not None else -99))
-    return idx, items, ch, mono
+    return idx, items, ch, mono, dropped
 
 
 # ── 전략 한 블록(반 쪽) ──────────────────────────────────────────────────
@@ -370,10 +387,17 @@ def footer(fig, page, total, as_of):
 
 
 def main() -> int:
-    idx, items, ch, mono = load()
+    idx, items, ch, mono, dropped = load()
     if not items:
         raise SystemExit("10종목 전략을 못 찾았다 — 먼저 build/strategy_index.py")
     as_of = idx.get("as_of") or "—"
+    if dropped:
+        print("  밴드 짝 정리 — 원 규칙 %d종을 뺐다(밴드판이 회전을 줄였다):" % len(dropped))
+        for x in dropped:
+            print("    · %-38s 회전 %.1f → %.1f배"
+                  % (x["name"][:38], x.get("turnover") or 0,
+                     next((z.get("turnover") or 0 for z in (idx.get("items") or [])
+                           if z.get("name") == x["name"] + " · 밴드 보유"), 0)))
 
     # 🚨 두부(□) 전수 검사 — 그리기 **전에** 잡는다. matplotlib 은 경고 한 줄만 내고
     #   그대로 찍으므로, 로그를 안 보면 네모난 글자가 그대로 배포된다.
@@ -455,6 +479,13 @@ def main() -> int:
               "단조% = 매월 5분위가 Q1<=..<=Q5 로 선 달의 비율(무작위면 0.83%). "
               "팩터t = Q5-Q1 의 t. 둘 다 PREREG-2026-09-21-TWOHEADS 의 측정이고 판정이 아니다.",
               fontsize=6.3, color=MUTED)
+        if dropped:
+            ST.tx(fig, X0, y - .0115,
+                  "'· 밴드 보유' 짝이 있는 규칙 %d종은 **밴드판만** 실었다. 성적으로 고른 것이 "
+                  "아니라 그 변형의 설계 목적(회전 감축)이 달성됐기 때문이다 - 12쌍 전부 회전이 "
+                  "줄었다. 랩(explorer)에는 둘 다 남아 있다." % len(dropped),
+                  fontsize=6.3, color=MUTED)
+            y -= .0115
         ST.tx(fig, X0, y - .0115,
               "!! 주기를 넘어 세로로 비교하지 말 것 - 회전이 주기로 거의 정해지고 비용 후 성적이 "
               "그만큼 갈린다. 초과%p·샤프는 총수익 기준이다.",
