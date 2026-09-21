@@ -38,7 +38,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(DATA, "top10_strategies.pdf")
+# 🚨 2026-09-21 — 랩 전 전략으로 넓히면서 이름을 바꿨다(종전 top10_strategies.pdf).
+#   같은 이름을 두면 «10종목만» 이라고 읽힌다. strategy_book.pdf 는 **성격**으로 묶은
+#   총람이고 이것은 **주기**로 묶은 총람이다 — 렌즈가 다르다.
+OUT = os.path.join(DATA, "strategy_by_period.pdf")
 
 sys.path.insert(0, HERE)
 import style_top_pdf as ST                                       # noqa: E402
@@ -90,14 +93,32 @@ REB_KO = {"we": "주간", "me": "월간", "qe": "분기", "y6": "연 1회", "h":
 
 # 빠른 주기부터 — 「얼마나 자주 손대나」 순서다. 성적 순이 아니다.
 REB_ORDER = ["we", "me", "qe", "h", "y6"]
+# 주기가 원천에 없는 것들 — 주기 뒤에 **성격**으로 이어 붙인다(사용자 요청 2026-09-21).
+#   ⚠ 이 칸의 이름은 '주기'가 아니라 그 전략이 무엇인가다. 주기를 지어내지 않는다.
+NOREB_ORDER = ["타이밍 오버레이", "자산배분", "거장 겹침", "페어 트레이딩", "미분류"]
 REB_NOTE = {
-    "we": "주마다 다시 고른다. 신호 수명이 짧은 규칙들이고, **회전이 가장 크다** — "
-          "비용 후 수치를 먼저 볼 것.",
+    "we": "주마다 다시 고른다. 신호 수명이 짧은 규칙들이고, 회전이 가장 크다.",
     "me": "월말에 다시 고른다. 이 랩의 기본 주기이고 대부분이 여기 있다.",
-    "qe": "분기말에 다시 고른다. 재무 공시 주기를 따르는 규칙들이라 **회전이 가장 작다**.",
+    "qe": "분기말에 다시 고른다. 재무 공시 주기를 따르는 규칙들이라 회전이 가장 작다.",
     "h": "반기마다 다시 고른다.",
     "y6": "연 1회 t년 6월말에 다시 고른다(Fama-French 컨벤션).",
+    "타이밍 오버레이": "고정 주기가 없다 — 신호가 바뀔 때 들어가고 나온다.",
+    "자산배분": "자산 단위로 담는다. 주기는 규칙마다 원천에 따로 있다.",
+    "거장 겹침": "13F 공시 주기(분기)를 따른다. 원천이 주기 칸을 안 싣는다.",
+    "페어 트레이딩": "고정 주기가 없다 — 쌍이 벌어지면 들어가고 수렴하면 나온다.",
+    "미분류": "주기가 원천에 없다. 없는 것을 지어 채우지 않았다.",
 }
+
+
+def noreb_of(x):
+    """주기가 없는 전략의 성격 칸."""
+    h = x.get("holdings") or {}
+    if h.get("kind") == "timing" or x.get("role") == "타이밍오버레이":
+        return "타이밍 오버레이"
+    s = x.get("src")
+    if s in ("자산배분", "거장 겹침", "페어 트레이딩"):
+        return s
+    return "미분류"
 
 
 def reb_of(x):
@@ -114,14 +135,14 @@ def by_reb(items):
     """
     g = {}
     for x in items:
-        g.setdefault(x.get("reb") or "", []).append(x)
+        g.setdefault(x.get("reb") or noreb_of(x), []).append(x)
     out = []
-    for k in REB_ORDER:
+    for k in REB_ORDER + NOREB_ORDER:
         if g.get(k):
             out.append((k, REB_KO.get(k, k), sorted(g[k], key=lambda z: -(z.get("t") or -99))))
-    for k, v in g.items():                      # 주기를 모르는 것 — 있으면 맨 뒤에 그대로
-        if k not in REB_ORDER:
-            out.append((k, "주기 미상", sorted(v, key=lambda z: -(z.get("t") or -99))))
+    for k, v in g.items():                      # 표에 없는 칸이 생기면 맨 뒤에 그대로 싣는다
+        if k not in REB_ORDER and k not in NOREB_ORDER:
+            out.append((k, str(k), sorted(v, key=lambda z: -(z.get("t") or -99))))
     return out
 
 
@@ -138,6 +159,30 @@ def num(v, d=2, sign=False):
     if v is None:
         return "—"
     return ("%+." + str(d) + "f") % v if sign else ("%." + str(d) + "f") % v
+
+
+def idx_cagr(cc, key):
+    """그 전략의 **자기 창**에서 지수 CAGR. chart.idx 의 NAV 를 쓴다.
+
+    🚨 사용자 요청 2026-09-21 「bm 에 S&P 랑 나스닥 둘다 넣어 모든 전략에」.
+    ⚠ 규칙마다 창이 다르므로 지수 CAGR 도 규칙마다 다르다 — 한 값을 전부에 쓰면 안 된다.
+      (실측: 같은 'S&P 500(PR)' 라벨인데 원천의 BM CAGR 이 15가지였다.)
+    ⚠ 이것은 **참고 열**이다. 초과%p 는 그 규칙에 배정된 대조군 대비로 그대로 둔다 —
+      판정의 근거를 화면에서 바꾸지 않는다(거장겹침은 같은 풀 동일가중, 페어는 현금이다).
+    """
+    v = ((cc or {}).get("idx") or {}).get(key) or []
+    d = (cc or {}).get("dates") or []
+    if len(v) < 24 or len(d) < 24 or not v[0]:
+        return None
+    try:
+        y0, y1 = int(str(d[0])[:4]), int(str(d[-1])[:4])
+        m0, m1 = int(str(d[0])[5:7]), int(str(d[-1])[5:7])
+        yrs = ((y1 - y0) * 12 + (m1 - m0)) / 12.0
+        if yrs <= 0:
+            return None
+        return ((v[-1] / v[0]) ** (1.0 / yrs) - 1.0) * 100
+    except Exception:
+        return None
 
 
 def wrap(s, n):
@@ -161,11 +206,9 @@ def load():
         mono = {r["sid"]: r for r in (J("_monotonicity.json") or {}).get("rows") or []}
     except Exception:
         mono = {}
-    items = [x for x in (idx.get("items") or [])
-             if x.get("src") == "종목 전략"
-             and (x.get("holdings") or {}).get("kind") == "xsec"
-             and ((x.get("holdings") or {}).get("n") == 10
-                  or len((x.get("holdings") or {}).get("tickers") or []) == 10)]
+    # 🚨 2026-09-21 — 랩 **전 전략**으로 넓혔다(사용자 요청 «연1회도 이어붙이고 아래
+    #   이어서 타이밍 오버레이 등 이어서 붙여»). 종전에는 10종목 판 66종뿐이었다.
+    items = list(idx.get("items") or [])
 
     # ── «· 밴드 보유» 짝 정리 ────────────────────────────────────────────
     # 🚨 사용자 요청 2026-09-21 「밴드 보유랑 아닌데 이름 같은 전략은 하나로, 더 나은 쪽으로」.
@@ -214,9 +257,10 @@ def draw_block(fig, top, x, ch, mono):
     h = x.get("holdings") or {}
     pp = (x.get("papers") or [None])[0]
     mo = mono.get(x["sid"])
+    cc_ = ch.get(x["sid"]) or {}          # 곡선·지수 — 표에서도 쓰므로 앞에서 잡는다
 
     y = top
-    # ⚠ 제목이 길면 오른쪽 논문 이름과 부딪힌다 — 실측으로 32자에서 멈춘다.
+    # ⚠ 제목이 길면 오른쪽 정보줄(ha=right) 아래로 파고든다. 글자수로 먼저 줄이고,
     # ⚠ 제목이 길면 오른쪽 정보줄(ha=right) 아래로 파고든다. 글자수로 먼저 줄이고,
     #   그래도 길면 **크기를 낮춘다** — 자르기만 하면 규칙 이름이 원래 그런 줄 안다.
     _ttl = with_reb(x, 30)
@@ -248,8 +292,11 @@ def draw_block(fig, top, x, ch, mono):
           fontsize=9.0, weight="bold")
     t_top = y - .0132
     wr = x.get("winrate") or {}
+    # 두 지수를 그 규칙의 자기 창으로 같이 싣는다(사용자 요청 2026-09-21).
+    _sp, _nd = idx_cagr(cc_, "S&P 500"), idx_cagr(cc_, "NASDAQ 100")
     rows = [
         ["CAGR %", num(m.get("cagr")), num(b.get("cagr")), num(x.get("excess_cagr"), 2, True)],
+        ["  S&P 500 / NDX", "%s / %s" % (num(_sp, 1), num(_nd, 1)), "—", "—"],
         ["변동성 %", num(m.get("vol")), num(b.get("vol")), "—"],
         ["샤프", num(m.get("sharpe"), 3), num(b.get("sharpe"), 3), num(x.get("d_sharpe"), 3, True)],
         ["MDD %", num(m.get("mdd")), num(b.get("mdd")), "—"],
@@ -270,8 +317,12 @@ def draw_block(fig, top, x, ch, mono):
         v = rows[r][c]
         if c == 3 and v not in ("—",):
             return POS if not v.startswith("-") else NEG
-        if c == 1 and r in (0, 2, 4, 5) and v != "—":
+        # ⚠ «S&P/NDX» 줄이 1행에 끼면서 아래가 한 칸씩 밀렸다.
+        #   0 CAGR · 1 지수 · 2 변동성 · 3 샤프 · 4 MDD · 5 t · 6 비용후 · 7 이긴달
+        if c == 1 and r in (0, 3, 5, 6) and v != "—":
             return POS if not v.startswith("-") else NEG
+        if c == 1 and r == 1:
+            return MUTED                     # 지수 줄은 전략 성적이 아니다
         return INK
     y1 = ST.table(fig, X0, t_top, [.152, .098, .092, .090],
                   ["지표", "전략", "대조군", "차이"], rows, row_h=.0136,
@@ -300,7 +351,6 @@ def draw_block(fig, top, x, ch, mono):
                   cell_weight=lambda r, c: "bold" if (r == 0 and c > 0) else "normal")
 
     # ③ 누적 곡선
-    cc_ = ch.get(x["sid"]) or {}
     # 🚨 차트를 왼쪽 표에서 충분히 떼어 놓는다. y축 눈금 글자가 «차이» 칸 위로 올라온다
     #   (실측: .050 간격에서 겹쳤다). 그리고 y라벨은 축 옆이 아니라 **위**에 눕힌다 —
     #   세로로 세우면 그것부터 표를 침범한다.
@@ -313,8 +363,17 @@ def draw_block(fig, top, x, ch, mono):
     if nav:
         xi = np.arange(len(nav))
         ax.axhline(100, color=LINE, lw=.6)
-        if bn and len(bn) == len(nav):
-            ax.plot(xi, bn, color=BM1, lw=1.0, ls="--", label="S&P 500(PR)")
+        # 두 지수를 같이 그린다(사용자 요청 2026-09-21) — 배정된 대조군이 지수가 아닌
+        #   규칙(거장겹침·페어)도 지수 대비 위치를 볼 수 있어야 한다.
+        _ix = cc_.get("idx") or {}
+        for _k, _c, _ls in (("S&P 500", BM1, "--"), ("NASDAQ 100", BM2, ":")):
+            _v = _ix.get(_k)
+            if _v and len(_v) == len(nav):
+                ax.plot(xi, _v, color=_c, lw=.9, ls=_ls, label=_k)
+        # 배정된 대조군이 지수와 다르면 그것도 그린다(같은 풀 동일가중·현금 등).
+        if bn and len(bn) == len(nav) and not (x.get("bench_label") or "").startswith("S&P"):
+            ax.plot(xi, bn, color=MUTED, lw=.9, ls="-.",
+                    label=cut(x.get("bench_label") or "대조군", 14))
         ax.plot(xi, nav, color=ACC, lw=1.6, label="전략")
         ax.set_yscale("log")
         # ⚠ 로그축 기본 눈금은 «6 x 10^2» 로 찍힌다 — 종이에서 읽히지 않는다. 맨수로 눕힌다.
@@ -336,10 +395,13 @@ def draw_block(fig, top, x, ch, mono):
 
     # ④ 현재 보유 + ⑤ 팩터 단조성
     yp = y3 - .0165
-    ST.tx(fig, X0, yp, "지금 담는 10종목", fontsize=9.0, weight="bold")
-    # ⚠ .112 에서는 제목 꼬리와 겹쳤다(실측). 제목이 9pt 8글자라 .140 이 필요하다.
-    ST.tx(fig, X0 + .140, yp, "기준 %s" % (h.get("as_of") or "—"), fontsize=6.4, color=MUTED)
     tks = h.get("tickers") or []
+    # ⚠ 랩 전체로 넓히면서 10종이 아닌 규칙이 들어온다 — 실제 수를 적는다.
+    _n = h.get("n") or len(tks)
+    ST.tx(fig, X0, yp, "지금 담는 %s" % ("%d종목" % _n if _n else "것"),
+          fontsize=9.0, weight="bold")
+    ST.tx(fig, X0 + .140, yp, "기준 %s%s" % (h.get("as_of") or "—",
+          "  (앞 10개만)" if len(tks) > 10 else ""), fontsize=6.4, color=MUTED)
     ST.tx(fig, X0, yp - .0145, "  ".join(tks[:10]), fontsize=8.2, color=INK, weight="bold")
     nmz = h.get("names") or {}
     ST.tx(fig, X0, yp - .0255,
@@ -392,12 +454,12 @@ def draw_block(fig, top, x, ch, mono):
 def footer(fig, page, total, as_of):
     ST.hline(fig, X0, X1, .034, LINE, .6)
     ST.tx(fig, X0, .026,
-          "개별종목 상위 10종목 전략 · 유니버스 518종(S&P 500 U NASDAQ 100) · "
-          "동일가중 · 대조군 S&P 500(PR) · 창 10년 · 기준 %s" % as_of,
+          "여두 전략 랩 · 리밸런스 주기별 총람 · 지수는 규칙마다 자기 창으로 다시 잰 값 "
+          "(S&P 500 PR · NASDAQ 100 PR) · 기준 %s" % as_of,
           fontsize=6.4, color=MUTED)
     ST.tx(fig, X0, .0175,
-          "!! 10종목은 유니버스의 2%다 - 원 논문이 분위(52~155종)로 말한 규칙을 가장 집중한 판으로 "
-          "옮긴 것이 여럿이다. 회전율이 0.5~28배로 벌어지므로 비용 후 수치를 같이 볼 것.",
+          "!! 구획을 넘어 세로로 비교하지 말 것 - 창·대조군·회전이 규칙마다 다르다. "
+          "초과%p 는 그 규칙에 **배정된** 대조군 대비이고 S&P 가 아닌 것이 17종 있다(이름 끝 표시).",
           fontsize=6.0, color=NEG)
     ST.tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
           fontsize=6.4, color=MUTED, ha="right")
@@ -444,74 +506,123 @@ def main() -> int:
     #   10배 다른 규칙이 한 표에 서서 총수익만 보고 비교하게 된다.
     G = by_reb(items)
     nblk = sum((len(v) + per - 1) // per for _k, _lab, v in G)
-    nsum = 1
+
+    # ── 요약 쪽 짜기 — 구획이 쪽을 넘어가면 «(이어서)» 로 잇는다 ──────────
+    ROW_H, Y_TOP0, Y_TOPN, Y_END = .0110, .903, .944, .086
+    seg = []                                  # (gk, glab, 부분, 이어짐?)
+    for gk, glab, gv in G:
+        i = 0
+        while i < len(gv):
+            seg.append([gk, glab, gv, i, i > 0])
+            i += 1                            # 자리는 아래에서 다시 센다
+    pages, cur, y_avail, first = [], [], Y_TOP0 - Y_END, True
+    for gk, glab, gv in G:
+        rest, cont = gv, False
+        while rest:
+            room = int((y_avail - .0130 - ROW_H) / ROW_H)   # 구획제목 + 표머리글
+            if room < 3:
+                pages.append(cur); cur = []
+                y_avail = Y_TOPN - Y_END; first = False
+                room = int((y_avail - .0130 - ROW_H) / ROW_H)
+            take, rest = rest[:room], rest[room:]
+            cur.append((gk, glab, take, cont, len(gv)))
+            y_avail -= .0130 + ROW_H * (len(take) + 1) + .0130
+            cont = True
+    if cur:
+        pages.append(cur)
+    nsum = len(pages)
     total = nsum + nblk
-    print("10종목 전략 %d종 — %s · 요약 1쪽 + 본문 %d쪽 = %d쪽"
-          % (len(items), " · ".join("%s %d" % (lab, len(v)) for _k, lab, v in G), nblk, total))
+    print("전략 %d종 — %s"
+          % (len(items), " · ".join("%s %d" % (lab, len(v)) for _k, lab, v in G)))
+    print("요약 %d쪽 + 본문 %d쪽 = %d쪽" % (nsum, nblk, total))
+
+    W = [.268, .062, .062, .062, .066, .058, .064, .058, .064, .060]
+    HD = ["전략", "CAGR%", "S&P%", "NDX%", "초과%p", "t", "샤프", "회전", "단조%", "팩터t"]
 
     with PdfPages(OUT) as pdf:
         # ── 요약 ────────────────────────────────────────────────────────
-        fig = ST.new_page()
-        y = .958
-        ST.tx(fig, X0, y, "개별종목 상위 10종목 전략", fontsize=23, weight="bold")
-        ST.tx(fig, X0, y - .034, "리밸런스 주기로 나눠 싣는다 - 주기 안에서는 t 순",
-              fontsize=10, color=ACC)
-        ST.tx(fig, X1, y - .030, "%d종 · 기준 %s" % (len(items), as_of),
-              fontsize=8.5, color=MUTED, ha="right")
-        ST.hline(fig, X0, X1, y - .046, RULE, .9)
-        y -= .055
+        for pi, blocks in enumerate(pages):
+            fig = ST.new_page()
+            if pi == 0:
+                y = .958
+                ST.tx(fig, X0, y, "여두 전략 랩 — 주기별 총람", fontsize=23, weight="bold")
+                ST.tx(fig, X0, y - .034,
+                      "리밸런스 주기로 나눠 싣는다 - 주기가 없는 것은 성격으로. 구획 안에서는 t 순",
+                      fontsize=10, color=ACC)
+                ST.tx(fig, X1, y - .030, "%d종 · 기준 %s" % (len(items), as_of),
+                      fontsize=8.5, color=MUTED, ha="right")
+                ST.hline(fig, X0, X1, y - .046, RULE, .9)
+                y = Y_TOP0
+            else:
+                y = Y_TOPN
+            for gk, glab, part, cont, gn in blocks:
+                trn = [z.get("turnover") for z in part if z.get("turnover") is not None]
+                ST.tx(fig, X0, y, "%s  %d종%s" % (glab, gn, " (이어서)" if cont else ""),
+                      fontsize=10.5, weight="bold")
+                if trn:
+                    ST.tx(fig, X0 + .120, y, "회전 연 %.1f~%.1f회" % (min(trn), max(trn)),
+                          fontsize=6.5, color=MUTED)
+                if not cont:
+                    ST.tx(fig, X1, y, cut(REB_NOTE.get(gk, ""), 58), fontsize=6.3,
+                          color=MUTED, ha="right")
+                y -= .0130
+                rows = []
+                for x in part:
+                    m = x.get("metrics") or {}
+                    cc_ = ch.get(x["sid"]) or {}
+                    mo = mono.get(x["sid"]) or {}
+                    # 🚨 초과가 없는 규칙이 많다 — 이 랩은 **시점정확 레그가 있을 때만**
+                    #   초과를 싣기 때문이다(소급 초과는 생존편향이라 안 옮긴다).
+                    #   그래서 CAGR 과 두 지수를 왼쪽에 같이 둔다. 빈칸이 «0» 으로 읽히면 안 된다.
+                    # ⚠ 배정된 대조군이 S&P 가 아닌 규칙은 이름 끝에 표시한다 —
+                    #   그 줄의 초과%p 는 S&P 대비가 아니다.
+                    _bl = x.get("bench_label") or ""
+                    _tag = ("" if _bl.startswith("S&P") else
+                            (" [동일가중]" if "동일가중" in _bl else
+                             (" [현금]" if "현금" in _bl else
+                              (" [NDX]" if "NASDAQ" in _bl else " [*]"))))
+                    rows.append([cut(x.get("name"), 30) + _tag,
+                                 num(m.get("cagr"), 1),
+                                 num(idx_cagr(cc_, "S&P 500"), 1),
+                                 num(idx_cagr(cc_, "NASDAQ 100"), 1),
+                                 num(x.get("excess_cagr"), 1, True), num(x.get("t")),
+                                 num(m.get("sharpe"), 3), num(x.get("turnover"), 1),
+                                 num(mo.get("mono_pct"), 1) if mo else "—",
+                                 num(mo.get("ls_t")) if mo else "—"])
 
-        W = [.360, .078, .068, .078, .068, .078, .072]
-        HD = ["전략", "초과%p", "t", "샤프", "회전", "단조%", "팩터t"]
-        for gk, glab, gv in G:
-            trn = [z.get("turnover") for z in gv if z.get("turnover") is not None]
-            ST.tx(fig, X0, y, "%s  %d종" % (glab, len(gv)), fontsize=10.5, weight="bold")
-            if trn:
-                ST.tx(fig, X0 + .112, y, "회전 연 %.1f~%.1f회" % (min(trn), max(trn)),
-                      fontsize=6.5, color=MUTED)
-            ST.tx(fig, X1, y, cut(REB_NOTE.get(gk, ""), 62), fontsize=6.3,
-                  color=MUTED, ha="right")
-            y -= .0130
-            rows = []
-            for x in gv:
-                m = x.get("metrics") or {}
-                mo = mono.get(x["sid"]) or {}
-                rows.append([cut(x.get("name"), 40),        # 주기는 구획 제목이 말한다
-                             num(x.get("excess_cagr"), 1, True), num(x.get("t")),
-                             num(m.get("sharpe"), 3), num(x.get("turnover"), 1),
-                             num(mo.get("mono_pct"), 1) if mo else "—",
-                             num(mo.get("ls_t")) if mo else "—"])
-
-            def cs(r, c, rows=rows):
-                if c == 0:
-                    return INK
-                v = rows[r][c]
-                if c in (1, 2, 6) and v != "—":
-                    return POS if not v.startswith("-") else NEG
-                return INK if c == 3 else MUTED
-            y = ST.table(fig, X0, y, W, HD, rows, row_h=.0110, fs=6.4, hfs=6.0,
-                         zebra=True, aligns=["l"] + ["r"] * 6, cell_color=cs)
-            y -= .0130
-        ST.tx(fig, X0, y,
-              "단조% = 매월 5분위가 Q1<=..<=Q5 로 선 달의 비율(무작위면 0.83%). "
-              "팩터t = Q5-Q1 의 t. 둘 다 PREREG-2026-09-21-TWOHEADS 의 측정이고 판정이 아니다.",
-              fontsize=6.3, color=MUTED)
-        if dropped:
-            ST.tx(fig, X0, y - .0115,
-                  "'· 밴드 보유' 짝 %d종은 한쪽만 실었다. 성적으로 고른 것이 아니라 (1) 그 변형의 "
-                  "설계 목적인 회전 감축이 달성됐는지 (2) 한쪽에만 시점정확(PIT) 레그가 있으면 "
-                  "**그쪽을 남긴다** 로 골랐다. 랩(explorer)에는 둘 다 남아 있다." % len(dropped),
-                  fontsize=6.3, color=MUTED)
-            y -= .0115
-        ST.tx(fig, X0, y - .0115,
-              "!! 주기를 넘어 세로로 비교하지 말 것 - 회전이 주기로 거의 정해지고 비용 후 성적이 "
-              "그만큼 갈린다. 초과%p·샤프는 총수익 기준이다.",
-              fontsize=6.3, color=NEG)
-        footer(fig, 1, total, as_of)
-        pdf.savefig(fig)
-        if "--png" in sys.argv:
-            fig.savefig(os.path.join(DATA, "_top10_summary.png"), dpi=110, facecolor=PAPER)
-        ST.plt.close(fig)
+                def cs(r, c, rows=rows):
+                    if c == 0:
+                        return INK
+                    v = rows[r][c]
+                    if c in (2, 3):
+                        return MUTED                      # 지수는 눌러 둔다
+                    if c in (4, 5, 9) and v != "—":
+                        return POS if not v.startswith("-") else NEG
+                    return INK if c in (1, 6) else MUTED
+                y = ST.table(fig, X0, y, W, HD, rows, row_h=ROW_H, fs=6.4, hfs=6.0,
+                             zebra=True, aligns=["l"] + ["r"] * 9, cell_color=cs)
+                y -= .0130
+            if pi == nsum - 1:
+                ST.tx(fig, X0, y,
+                      "단조% = 매월 점수 5분위로 갈라 Q1<=Q2<=..<=Q5 로 줄이 선 달의 비율이다"
+                      "(무작위면 0.83%). 높을수록 점수가 «전체를 줄 세운다». "
+                      "팩터t = Q5-Q1 의 t - 양 끝 차이의 세기.",
+                      fontsize=6.3, color=MUTED)
+                ST.tx(fig, X0, y - .0110,
+                      "초과%p 빈칸은 0 이 아니라 **안 실었다**는 뜻이다 - 이 랩은 시점정확(PIT) "
+                      "레그가 있을 때만 초과를 싣는다(소급 초과는 생존편향이라 안 옮긴다). "
+                      "그래서 CAGR·BM 을 왼쪽에 같이 뒀다.",
+                      fontsize=6.3, color=MUTED)
+                ST.tx(fig, X0, y - .0220,
+                      "!! BM 은 넷이다 - S&P 500(PR) 184 · 같은 풀 동일가중 10(거장겹침) · "
+                      "현금 6(달러중립 페어) · NDX 1. 같은 라벨이어도 규칙마다 창이 달라 BM CAGR 이 "
+                      "15가지다. 구획·BM 을 넘어 세로로 비교하지 말 것.",
+                      fontsize=6.3, color=NEG)
+            footer(fig, pi + 1, total, as_of)
+            pdf.savefig(fig)
+            if "--png" in sys.argv and pi == 0:
+                fig.savefig(os.path.join(DATA, "_top10_summary.png"), dpi=110, facecolor=PAPER)
+            ST.plt.close(fig)
 
         # ── 본문 ────────────────────────────────────────────────────────
         pg = nsum
