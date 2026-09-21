@@ -178,10 +178,27 @@ def load():
     #     즉 이 기준으로 고르면 «더 나은 쪽»과 대체로 같지만, 고른 근거는 성적이 아니다.
     #   🚨 랩에는 **둘 다 남는다.** 여기서 빼는 것은 이 리포트 한 벌뿐이고,
     #     strategy_index·explorer 는 그대로다 — 측정 기록을 지우지 않는다.
+    #   🚨 2026-09-21 — 그런데 **측정 품질이 회전보다 먼저다.** 한쪽에만 시점정확(PIT)
+    #     레그가 있으면 그쪽을 남긴다. 실측으로 9쌍 중 8쌍은 둘 다 PIT 가 있어 상관없었지만,
+    #     투자의견 리비전 드리프트(21일)만 **원 규칙에 PIT 가 있고 밴드판에 없었다.**
+    #     처음 쓴 규칙은 그 쌍에서 소급 성적만 남은 밴드판을 남기고 PIT 판을 버렸다 —
+    #     소급 샤프 0.788 이 PIT 0.690 보다 좋아 보이는 것은 생존편향이다.
     SUF = " · 밴드 보유"
-    have = {x.get("name") for x in items}
-    dropped = [x for x in items if (x.get("name") or "") + SUF in have]
-    items = [x for x in items if (x.get("name") or "") + SUF not in have]
+    BYN = {x.get("name"): x for x in items}
+    drop = set()
+    for x in items:
+        nm = x.get("name") or ""
+        if nm.endswith(SUF):
+            continue                              # 짝 판단은 원 규칙 쪽에서 한 번만 한다
+        band = BYN.get(nm + SUF)
+        if band is None:
+            continue                              # 짝이 없다
+        if x.get("pit") and not band.get("pit"):
+            drop.add(band["name"])                # PIT 가 있는 원 규칙을 남긴다
+        else:
+            drop.add(nm)                          # 밴드판을 남긴다(회전 감축 목적 달성)
+    dropped = [x for x in items if x.get("name") in drop]
+    items = [x for x in items if x.get("name") not in drop]
 
     items.sort(key=lambda z: -(z.get("t") if z.get("t") is not None else -99))
     return idx, items, ch, mono, dropped
@@ -392,12 +409,12 @@ def main() -> int:
         raise SystemExit("10종목 전략을 못 찾았다 — 먼저 build/strategy_index.py")
     as_of = idx.get("as_of") or "—"
     if dropped:
-        print("  밴드 짝 정리 — 원 규칙 %d종을 뺐다(밴드판이 회전을 줄였다):" % len(dropped))
+        print("  밴드 짝 정리 — %d종을 뺐다:" % len(dropped))
         for x in dropped:
-            print("    · %-38s 회전 %.1f → %.1f배"
-                  % (x["name"][:38], x.get("turnover") or 0,
-                     next((z.get("turnover") or 0 for z in (idx.get("items") or [])
-                           if z.get("name") == x["name"] + " · 밴드 보유"), 0)))
+            band = (x.get("name") or "").endswith(" · 밴드 보유")
+            print("    · %-40s %s" % (x["name"][:40],
+                  "밴드판을 뺐다 — 원 규칙에만 PIT 레그가 있다(측정 품질 우선)" if band
+                  else "원 규칙을 뺐다 — 밴드판이 회전을 줄였다"))
 
     # 🚨 두부(□) 전수 검사 — 그리기 **전에** 잡는다. matplotlib 은 경고 한 줄만 내고
     #   그대로 찍으므로, 로그를 안 보면 네모난 글자가 그대로 배포된다.
@@ -481,9 +498,9 @@ def main() -> int:
               fontsize=6.3, color=MUTED)
         if dropped:
             ST.tx(fig, X0, y - .0115,
-                  "'· 밴드 보유' 짝이 있는 규칙 %d종은 **밴드판만** 실었다. 성적으로 고른 것이 "
-                  "아니라 그 변형의 설계 목적(회전 감축)이 달성됐기 때문이다 - 12쌍 전부 회전이 "
-                  "줄었다. 랩(explorer)에는 둘 다 남아 있다." % len(dropped),
+                  "'· 밴드 보유' 짝 %d종은 한쪽만 실었다. 성적으로 고른 것이 아니라 (1) 그 변형의 "
+                  "설계 목적인 회전 감축이 달성됐는지 (2) 한쪽에만 시점정확(PIT) 레그가 있으면 "
+                  "**그쪽을 남긴다** 로 골랐다. 랩(explorer)에는 둘 다 남아 있다." % len(dropped),
                   fontsize=6.3, color=MUTED)
             y -= .0115
         ST.tx(fig, X0, y - .0115,
