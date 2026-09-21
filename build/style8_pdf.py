@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""build/style8_pdf.py — 스타일 8종 한눈에 → data/style8.pdf (A4 4쪽)
+"""build/style8_pdf.py — 스타일 10종 한눈에 → data/style8.pdf (A4 5쪽)
 
-무엇을. 홈 화면에 실리는 **스타일 8종**을 A4 네 쪽으로 뽑는다.
+무엇을. 홈 화면에 실리는 **스타일 10종**을 A4 다섯 쪽으로 뽑는다.
+  ⚠ 파일 이름은 style8 그대로다 — 러너 잡과 얼린 사전등록이 그 이름을 부른다.
   1쪽  종합 ① 스타일 성과 — 기간별 수익률 표 · 월별 수익률 · 위험과 수익
   2쪽  종합 ② 기간별 수익률 1개월 — 위에서 아래로 넷: 지수 · 섹터 · 산업그룹 · **내 스타일 8종**(하이라이트)
         네 판은 같은 날짜 축(공통 구간) · 꼬리말 없음
-  3쪽  스타일별 구성종목 넷
-  4쪽  스타일별 구성종목 넷
+  3~5쪽 스타일별 구성종목 (쪽당 넷 · 10종이면 4+4+2)
 
 `style_top_pdf.py` 가 «오늘 무엇을 담나» 를 전략별 반 쪽으로 싣는다면, 이 문서는
-**여덟 줄을 한 화면에 놓고 견주는** 자리다. 회의에 들고 갈 몇 장이 필요해서 만들었다.
+**열 줄을 한 화면에 놓고 견주는** 자리다. 회의에 들고 갈 몇 장이 필요해서 만들었다.
 
 판 이력(사용자 지시)
   2026-09-17  A4 2쪽(표 + 보유)
@@ -20,6 +20,7 @@
   2026-09-18  «2페이지 차트 기간 3개월로 해주고, 차트 위에서 하나씩 총 4개 만들어. 그리고 스타일
               빼고 내 스타일 8종으로 대체하고 하이라이트 표시해» → 2쪽 세로 4단
   2026-09-18  «4개 차트 다 일치해야해» → 네 판 공통 구간(_align)
+  2026-09-22  «지수 방법론 8종에 고베타·성장 두 개 추가해서 10종으로» → KEYS 10 · 3~5쪽
   2026-09-18  «기간별 수익률은 1개월로 하자. 그리고 내 스타일 8종을 산업그룹 아래 배치해.
               아래 주석들은 다 삭제해 지저분해» → 지금 판
 
@@ -33,7 +34,7 @@
     산업그룹 축이 다르면(1일 분봉 ↔ 일간) 그 판을 뺀다 — 다른 잣대를 나란히 놓지 않는다.
   ⚠ 기본 구간은 **1개월**(사용자 지시 2026-09-18). 그 구간이 자료에 없으면 1주로 내려가고
     머리에 그렇게 적는다. `--horizon` 으로 바꿀 수 있다(내 스타일 판은 1주·1개월·3개월·6개월만).
-  ⚠ 내 스타일 8종 판은 style_perf.json 의 path(날짜 붙은 원해상도 일별, 최근 1년)를 쓴다 —
+  ⚠ 내 스타일 10종 판은 style_perf.json 의 path(날짜 붙은 원해상도 일별, 최근 1년)를 쓴다 —
     nav(140점 표시용 표본)는 날짜가 없어 못 쓴다. 끝값이 1쪽 표의 같은 칸과 같다.
     색은 줄마다 고정(MYCOL) · 벤치마크(S&P 500·NASDAQ 100 가격지수)는 회색.
   ⚠ 두 파일은 기준일이 다를 수 있다(러너가 따로 굽는다). 1쪽·2쪽 머리에 **각자의 기준일**을
@@ -85,11 +86,18 @@ PERF = os.path.join(DATA, "home_perf.json")
 IND = os.path.join(DATA, "home_ind_perf.json")
 OUT = os.path.join(DATA, "style8.pdf")
 
-# 홈 화면에 보이는 여덟 줄. style_perf.json 의 hide 목록 밖이 이 여덟이다 —
+# 홈 화면에 보이는 줄. style_perf.json 의 hide 목록 밖이 이것들이다 —
 # 손으로 두 번 적지 않도록 여기서 한 번만 적고 아래에서 대조한다.
 # 🚨 2026-09-21 사용자 결정 — 「표준 8종」으로 갈았다(build/style_top_pdf.py HOME_HIDE 주석).
 #   나간 셋 qvm·grow·hbeta ← 들어온 셋 lowvol·fcfy·netbuy.
-KEYS = ["div", "val", "lowvol", "spmo", "size", "fcfy", "netbuy", "squal"]
+# 🚨 2026-09-22 사용자 결정 — **고베타·성장을 더해 10종.** 지시: *"지수 방법론 8종에
+#   고베타 s&p500 high beta 랑 성장 s&p 500 growth(S&P U.S Style) 두개 추가해서 10종으로"*
+#   ⚠ 파일 이름(style8_pdf.py · style8.pdf · style8.html)은 **안 바꾼다.** 러너 잡과
+#     ops/style8_daily 가 그 이름을 부르고, PREREG-2026-09-18-STYLE8W·STYLE8ROT 가
+#     그 이름으로 얼려 있다. 이름은 굳고 내용이 움직이는 것이 이 랩의 규약이다.
+#   ⚠ 짝을 **나란히** 둔다 — val↔grow(같은 축 반대편) · lowvol↔hbeta(같은 축 반대편).
+#     흩어 놓으면 둘이 한 축이라는 사실이 표에서 안 보인다.
+KEYS = ["div", "val", "grow", "lowvol", "hbeta", "spmo", "size", "fcfy", "netbuy", "squal"]
 TR = ["1일", "1주", "1개월", "3개월", "6개월", "1년", "YTD"]
 
 # 섹터 약어를 펴서 쓴다 — 두 글자로는 회의에서 안 읽힌다.
@@ -305,13 +313,23 @@ def draw_risk_return(fig, y_top, h, P, S, keys, kinds):
         # 글씨는 선의 60% 지점 **아래**에 — 오른쪽 끝에 두면 고수익 스타일 라벨과 겹친다
         ax.text(xmax * .60, slope * xmax * .60 - (ymax - ymin) * .035, "S&P 와 같은 수익/위험",
                 fontsize=5.8, color=MUTED, ha="left", va="top")
-    for vol, ret, lab, kd in pts:
-        if vol is None or ret is None:
-            continue
+    # 🚨 이름표를 전부 점 오른쪽 같은 높이에 두면 y 가 가까운 것끼리 겹친다. 8종일 때도
+    #   빽빽했고 10종이 되자 «주식수감소·중소형·NASDAQ 100 PR» 셋이 한 덩어리로 뭉갰다.
+    #   아래에서 위로 훑으며 최소 간격을 못 지키면 **위로 밀어낸다**. 많이 밀린 것은
+    #   점과 글씨를 가는 선으로 잇는다 — 어느 점의 이름인지 잃지 않게.
+    okp = [p for p in pts if p[0] is not None and p[1] is not None]
+    for vol, ret, lab, kd in okp:
         ax.scatter([vol], [ret], s=30 if kd == "s" else 22, zorder=3,
                    color=(BENCH_C if kd == "b" else ACC), edgecolor=PAPER, linewidth=.8)
-        ax.text(vol + xmax * .012, ret, lab, fontsize=6.8, va="center",
+    gap = (ymax - ymin) * .042          # 6.8pt 글씨 한 줄 높이(실측으로 맞춘 눈금)
+    last = None
+    for vol, ret, lab, kd in sorted(okp, key=lambda p: p[1]):
+        ly = ret if last is None else max(ret, last + gap)
+        if ly - ret > gap * .35:        # 눈에 띄게 밀렸으면 점과 잇는다
+            ax.plot([vol, vol + xmax * .010], [ret, ly], color=LINE, lw=.5, zorder=2)
+        ax.text(vol + xmax * .012, ly, lab, fontsize=6.8, va="center",
                 color=MUTED if kd == "b" else INK, weight="normal" if kd == "b" else "bold")
+        last = ly
     ax.set_xlim(0, xmax)
     ax.set_ylim(ymin, ymax)
     ax.grid(True, color=LINE, lw=.4, zorder=0)
@@ -593,7 +611,7 @@ def draw_home_page(fig, HP, IP, P, horizon):
     hz = horizon if horizon in series else ("1W" if "1W" in series else next(iter(series), None))
     y = .962
     tx(fig, X0, y, "기간별 수익률 · %s" % HZL.get(hz, hz or "—"), fontsize=17, weight="bold")
-    tx(fig, X1, y + .002, "여두 전략 랩 · 홈 화면 차트 + 내 스타일 8종", fontsize=8, color=ACC, ha="right")
+    tx(fig, X1, y + .002, "여두 전략 랩 · 홈 화면 차트 + 내 스타일 10종", fontsize=8, color=ACC, ha="right")
     if hz is None:
         tx(fig, X0, .9, "기간별 수익률 시계열(home_perf.json)에 구간이 하나도 없다", fontsize=9, color=NEG)
         return
@@ -714,11 +732,11 @@ def draw_home_page(fig, HP, IP, P, horizon):
     fig.add_artist(Line2D([X0 - .014, X0 - .014], [b0, b1], color=ACC, lw=3.2, solid_capstyle="butt",
                           transform=fig.transFigure, zorder=1))
     if mys:
-        draw_home_panel(fig, X0, top, W, H[3], "내 스타일 8종", pdates["내 스타일"], mys, False, LAB,
+        draw_home_panel(fig, X0, top, W, H[3], "내 스타일 10종", pdates["내 스타일"], mys, False, LAB,
                         right=rng(pdates["내 스타일"]), count="· 회색 = 지수 판의 S&P 500·나스닥 100",
                         title_color=ACC, face=HL)
     else:
-        tx(fig, X0, top + .0035, "내 스타일 8종", fontsize=8.8, weight="bold", va="bottom", color=ACC)
+        tx(fig, X0, top + .0035, "내 스타일 10종", fontsize=8.8, weight="bold", va="bottom", color=ACC)
         tx(fig, X0, top - .02, mdates, fontsize=6.8, color=NEG)
 
 
@@ -809,12 +827,14 @@ def _load(path, what, required=True):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="스타일 8종 A4 4쪽")
+    ap = argparse.ArgumentParser(description="스타일 10종 A4 5쪽")
     ap.add_argument("--src", default=SRC, help="style_perf.json 경로(기본 data/)")
     ap.add_argument("--perf", default=PERF, help="home_perf.json 경로(기본 data/)")
     ap.add_argument("--ind", default=IND, help="home_ind_perf.json 경로(기본 data/)")
     ap.add_argument("--horizon", default="1M", choices=list(HZL), help="2쪽 구간(기본 1M — 사용자 지시 2026-09-18)")
     ap.add_argument("--out", default=OUT, help="PDF 경로(기본 data/style8.pdf)")
+    ap.add_argument("--png", action="store_true",
+                    help="쪽마다 data/_s8_N.png 도 낸다(판이 넘쳤는지 눈으로 보려는 것)")
     a = ap.parse_args(argv)
 
     require_draw()
@@ -836,7 +856,7 @@ def main(argv=None):
     # ── 1쪽 · 종합 ① 스타일 성과 ─────────────────────────────────────────
     fig = new_page(); figs.append(fig)
     y = .962
-    tx(fig, X0, y, "스타일 8종", fontsize=17, weight="bold")
+    tx(fig, X0, y, "스타일 10종", fontsize=17, weight="bold")
     tx(fig, X1, y + .002, "여두 전략 랩", fontsize=8, color=ACC, ha="right")
     y -= .017
     tx(fig, X0, y, "기준일 %s · %s ~ %s · 월말 %d회 리밸런스 · 상위 10종목 동일가중 · 비용 0"
@@ -871,7 +891,10 @@ def main(argv=None):
 
     # ── 3·4쪽 · 스타일별 구성종목 ───────────────────────────────────────────
     HW = [.026] + [.082, .110, .055, .078, .094] + [.020] + [.082, .110, .055, .078, .094]
-    for pi, chunk in enumerate((KEYS[:BLK_PER_PAGE], KEYS[BLK_PER_PAGE:])):
+    # 🚨 종전에는 «앞 4 · 나머지» 두 쪽으로 못박혀 있었다. 10종이 되면 뒤쪽이 6블록이 돼
+    #   각주를 뚫는다. 쪽 수를 키 수에서 뽑는다 — 10종이면 4+4+2 로 세 쪽이다.
+    _chunks = [KEYS[i:i + BLK_PER_PAGE] for i in range(0, len(KEYS), BLK_PER_PAGE)]
+    for pi, chunk in enumerate(_chunks):
         fig = new_page(); figs.append(fig)
         y = .962
         if pi == 0:
@@ -881,16 +904,22 @@ def main(argv=None):
             y = draw_block(fig, S[k], k, y, HW)
 
     for i, f in enumerate(figs, 1):
-        tx(f, X0, .022, "스타일 8종 · 기준일 %s · 여두 전략 랩" % asof, fontsize=6, color=MUTED)
+        tx(f, X0, .022, "스타일 10종 · 기준일 %s · 여두 전략 랩" % asof, fontsize=6, color=MUTED)
         tx(f, X1, .022, "%d / %d" % (i, len(figs)), fontsize=6, color=MUTED, ha="right")
 
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    # --png : 쪽마다 PNG 도 같이 낸다. **판이 넘쳤는지 눈으로 보려는 것**이다 —
+    #   이 PC 에 PDF 를 그림으로 여는 수단이 없어 종이를 못 봤다. 다른 빌더(month_map_pdf ·
+    #   rrg_pdf)가 쓰는 것과 같은 장치다. 산출물은 data/_s8_1.png … 로, 커밋하지 않는다.
+    _png = bool(getattr(a, "png", False))
     with PdfPages(a.out) as pdf:
-        for f in figs:
+        for i, f in enumerate(figs, 1):
             pdf.savefig(f)
+            if _png:
+                f.savefig(os.path.join(DATA, "_s8_%d.png" % i), dpi=110, facecolor=PAPER)
             plt.close(f)
         d = pdf.infodict()
-        d["Title"] = "스타일 8종 · 기준일 %s" % asof
+        d["Title"] = "스타일 10종 · 기준일 %s" % asof
     print("저장: %s · %d쪽 · 기준일 %s · 2쪽 기준일 %s"
           % (a.out, len(figs), asof, (HP or {}).get("as_of", "—")))
     return asof
