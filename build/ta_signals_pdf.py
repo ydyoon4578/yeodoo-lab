@@ -50,9 +50,13 @@ def foot(fig, page, asof):
 
 
 CIRC = "①②③④⑤⑥⑦⑧⑨⑩"
-# 차트에 찍을 신호의 승률 문턱 — 사용자 지시 2026-09-22.
-#   승률 = 1개월 뒤 **오른** 비율. 매수는 높을수록, 매도는 낮을수록 제 몫을 한 것이다.
-BUY_WIN, SELL_WIN = 60.0, 40.0
+# 차트에 찍을 신호의 승률 문턱 — 사용자 지시 2026-09-22(매수 60↑ · 매도 40↓).
+# 🚨 **절대값 대신 기준선 대비로 잡는다.** 지시한 방향은 맞았는데 수가 범위 밖이었다 —
+#   시장은 그냥 두어도 1개월 뒤 오를 때가 훨씬 많아(S&P 68.8% · NDX 67.1%) 중립점이
+#   50% 가 아니라 **68% 근처**다. 그래서 「매도 승률 40% 이하」는 어느 신호도 못 넘었고
+#   (가장 낮은 것이 52%), 「매수 60% 이상」은 37종 중 32종이 통과해 덜어내지 못했다.
+#   기준선에서 ±WIN_GAP 만큼 떨어진 것만 찍으면 양쪽 다 절반쯤 걸러진다.
+WIN_GAP = 2.0
 
 
 def chart(fig, R, y_top, h):
@@ -71,6 +75,8 @@ def chart(fig, R, y_top, h):
     #   여러 신호가 한꺼번에 켜진 날만 탑이 된다 — 그게 보고 싶은 것이다.
     #   ⚠ 승률 문턱을 먼저 건다 — 차트에 신호가 너무 많아서다(사용자 지시).
     #     표는 전부 싣고, **차트만** 거른다.
+    bwin = R.get("base1m_win") or 50.0
+    BUY_WIN, SELL_WIN = bwin + WIN_GAP, bwin - WIN_GAP
     day = {}
     nB = nS = 0
     for x in R["buy"]:
@@ -166,7 +172,7 @@ def chart(fig, R, y_top, h):
     ax2.set_xticks(tk); ax2.set_xticklabels(lb, fontsize=5.6)
     cs = sum(1 for k in cg if k[1] == "매도")      # 문턱을 넘은 **합류 매도** 건수
     return (y_top - h, [(num[k], k[0], k[1], cg[k]) for k in keys],
-            (nB, len(R["buy"]), nS, len(R["sell"]), cs))
+            (nB, len(R["buy"]), nS, len(R["sell"]), cs, bwin, BUY_WIN, SELL_WIN))
 
 
 def side_page(fig, R, side, asof, page, with_chart, with_legend):
@@ -187,25 +193,26 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
               "1개월 초과가 기대와 반대 · 큰 세모+번호 = 합류",
               fontsize=6.2, color=MUTED)
         y -= .014
-        y, legend, (nB, tB, nS, tS, cs) = chart(fig, R, y, .200)
+        y, legend, (nB, tB, nS, tS, cs, bw, bwu, bwd) = chart(fig, R, y, .200)
         # ⚠ .013 만 뗐더니 아래 월 눈금(막대판 x축)과 겹쳤다 — 눈금 자리를 비운다.
         y -= .026
-        # 🚨 차트는 승률로 거른다 — 무엇이 빠졌는지 반드시 적는다.
+        # 🚨 차트는 승률로 거른다 — 문턱이 무엇이고 무엇이 빠졌는지 반드시 적는다.
         ST.tx(fig, X0 + .004, y,
-              "차트에 찍은 것 — **매수 승률 %.0f%% 이상 %d/%d종** · "
-              "**매도 승률 %.0f%% 이하 %d/%d종**. 표에는 전부 있다."
-              % (BUY_WIN, nB, tB, SELL_WIN, nS, tS), fontsize=6.6, color=INK2)
-        y -= .0115
+              "차트에 찍은 것 — **매수 승률 %.1f%% 이상 %d/%d종** · "
+              "**매도 %.1f%% 이하 %d/%d종**. 표에는 전부 있다."
+              % (bwu, nB, tB, bwd, nS, tS), fontsize=6.6, color=INK2)
+        y -= .0112
+        ST.tx(fig, X0 + .004, y,
+              "문턱은 **기준선 승률 %.1f%% 에서 ±%.0f%%p** 다 — 아무 날이나 사도 1개월 뒤 "
+              "오를 확률이 그만큼이라, 50%% 가 아니라 이 수가 중립이다."
+              % (bw, WIN_GAP), fontsize=6.6, color=MUTED)
+        y -= .0112
         if nS == 0:
             lo = min((x["fwd1m_win"] for x in R["sell"] if x.get("n", 0) >= 5), default=0)
-            # ⚠ 한 줄에 다 넣었더니 오른쪽으로 넘쳤다(렌더 실측) — 두 줄로 나눈다.
             ST.tx(fig, X0 + .004, y,
-                  "!! **단일 매도 표기가 없다** — 승률 %.0f%% 이하인 매도 신호가 하나도 "
-                  "없다(가장 낮은 것이 %.0f%%)." % (SELL_WIN, lo), fontsize=6.6, color=NEG)
-            y -= .0110
-            ST.tx(fig, X0 + .004, y,
-                  "   어느 것도 1개월 뒤 하락 쪽이 우세하지 않다는 뜻이다.%s"
-                  % (" 빨간 ▼ %d 건은 **합류**가 문턱을 넘은 것이다." % cs if cs else ""),
+                  "!! **단일 매도 표기가 없다** — 문턱 이하인 매도 신호가 하나도 없다"
+                  "(가장 낮은 것이 %.0f%%).%s"
+                  % (lo, " 빨간 ▼ %d 건은 합류다." % cs if cs else ""),
                   fontsize=6.6, color=NEG)
             y -= .0110
         y -= .002
@@ -227,8 +234,8 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
     ST.tx(fig, X0, y, "전체 · 승률 %s 순" % ("높은" if buy else "낮은"),
           fontsize=9, weight="bold")
     ST.tx(fig, X0 + .180, y + .0005,
-          ("승률 = 1개월 뒤 오른 비율. 매수는 높을수록 제 몫을 한 것" if buy else
-           "승률 = 1개월 뒤 **오른** 비율. 매도는 **낮을수록** 제 몫을 한 것"),
+          "승률 = 1개월 뒤 **오른** 비율 · 아무 날이나 사면 **%.1f%%** 다 — 그보다 %s"
+          % (R.get("base1m_win") or 0, "높아야 제 몫" if buy else "**낮아야** 제 몫"),
           fontsize=6.6, color=MUTED)
     y -= .0140
 
