@@ -655,6 +655,38 @@ def main() -> int:
 
         rec["conf_buy"] = pairs_of(rec["buy"], CONF_TOP_N)
         rec["conf_sell"] = pairs_of(rec["sell"], 10)
+
+        # ── 겹친 날 — 「성과 좋은 신호가 그날 K개 이상」을 **하나의 사건으로 잰다** ──
+        #   🚨 이것을 따로 재는 이유. 차트에 「그날 켜진 신호들의 1개월 평균」을 적었더니
+        #     매도가 **구조상 음수가 될 수 없었다** — 단일 매도 23종이 전부 양수라
+        #     그 평균도 늘 양수다. 그건 그 날의 성과가 아니라 신호들의 평균일 뿐이다.
+        #     겹친 날을 사건으로 놓고 그날부터의 사후수익을 직접 재야 뜻이 있는 수가 된다.
+        #   ⚠ 「좋은 신호」를 초과 부호로 고르는 것 자체가 전 구간을 본 선택이다
+        #     (선견). 그래서 이 수는 **설명용**이지 매매 근거가 아니다 — 그 사실을 적어 둔다.
+        stack = {}
+        for side, good in (("buy", lambda e: e > 0), ("sell", lambda e: e < 0)):
+            gs = [x["signal"] for x in rec[side]
+                  if x.get("n", 0) >= MIN_N and good(x.get("fwd1m_excess") or 0)]
+            cnt = None
+            for nm in gs:
+                cnt = ev_cache[nm].astype(int) if cnt is None else cnt + ev_cache[nm].astype(int)
+            rows = []
+            for kk in (2, 3):
+                m = (cnt >= kk) if cnt is not None else None
+                if m is None:
+                    continue
+                m = m & ~m.shift(1, fill_value=False)
+                st = _stat(m, fwd, base1m, sell=(side == "sell"))
+                f3 = c.index[m]
+                rows.append({"k": kk, **st,
+                             "last": str(f3[-1].date()) if len(f3) else None,
+                             "n_good": len(gs),
+                             "days": [str(x.date()) for x in f3[f3 >= c0]]})
+            stack[side] = rows
+        rec["stack"] = stack
+        rec["stack_note"] = ("「성과 좋은 신호가 그날 K개 이상 켜진 날」을 하나의 사건으로 "
+                             "재고 그날부터의 사후수익을 낸다. 좋은 신호를 초과 부호로 "
+                             "고르는 것이 전 구간을 본 선택이라 **설명용**이다.")
         rec["conf_note"] = ("두 신호가 5거래일 안에 같이 발동한 날. 매수는 초과 상위 %d종, "
                             "매도는 상위 10종끼리 전부 짝지었고 횟수 %d회 이상만 싣는다."
                             % (CONF_TOP_N, MIN_N))
