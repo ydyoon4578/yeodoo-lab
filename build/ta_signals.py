@@ -40,9 +40,12 @@ OUT = os.path.join(DATA, "_ta_signals.json")
 
 YEARS = 10
 MIN_N = 5          # 원본과 같은 문턱 — 이보다 적으면 통계를 안 낸다
+MAX_N = 500        # 🚨 이보다 잦은 줄은 **사건이 아니라 상태**다(사용자 지시 2026-09-22).
+                   #   NVI>1년MA 는 2,511회 — 2,700거래일 중 거의 매일이라
+                   #   「겹쳤다」가 뜻을 잃는다. 표·차트·겹친날에서 전부 뺀다.
 CHART_M = 12       # 차트에 그릴 구간(개월). 발동일도 이 구간 것만 싣는다
-CONF_TOP_N = 12    # 합류를 볼 신호 수 — 초과 상위 이만큼(횟수 10회 이상인 것 중)
-CONF_MIN_N = 10    # 합류 후보가 되려면 단독 횟수가 이 이상
+CONF_TOP_N = 12    # 멀티 신호로 볼 신호 수 — 수익률 차 상위 이만큼(횟수 10회 이상)
+CONF_MIN_N = 10    # 멀티 신호 후보가 되려면 단독 횟수가 이 이상
 
 # ══ 지표 — ta_lab/indicators.py 에서 **그대로** 옮긴다 ════════════════════
 ema = lambda c, n: c.ewm(span=n, adjust=False).mean()
@@ -556,6 +559,10 @@ def main() -> int:
                           "(사용자 지시 2026-09-22 — 종전에 매도만 «덜 오름» 이라 부호가 "
                           "뒤집혀 헷갈렸다). 그래서 매도 신호는 **음수일수록 제 몫을 한 것**이고, "
                           "매도 표는 낮은 것부터 정렬한다.",
+           "max_n": MAX_N,
+           "max_n_note": "횟수 %d회 초과는 싣지 않는다 — 발동 이벤트가 아니라 조건이 "
+                         "켜져 있는 날을 센 «상태»라, 사후수익 표본이 거의 전부 겹친다."
+                         % MAX_N,
            "as_of": asof, "years": YEARS, "basis": B.get("basis"),
            "src": ("bench_ohlc.json(고가·저가·거래량) + bench_px.json(기준일)" if OH
                    else "bench_px.json(종가만) — 고가·저가·거래량이 없어 27종만 낸다"),
@@ -630,13 +637,13 @@ def main() -> int:
         rec["px"] = {"d": [str(x.date()) for x in cc.index],
                      "c": [round(float(x), 2) for x in cc]}
 
-        # ── 합류 — 짝을 넓힌다 ─────────────────────────────────────────
+        # ── 멀티 신호 — 짝을 넓힌다 ─────────────────────────────────────────
         #   종전에는 미리 박아 둔 다섯(=10짝)뿐이라 표가 빈약했다. 이제 **초과 상위**
         #   신호들끼리 전부 짝지어 본다(매수·매도 각각). 고르는 기준은 성적이지만
         #   그건 «어느 짝을 보여 줄까» 이지 «어느 짝이 좋다» 가 아니다 — 결과는 다 싣는다.
         def pairs_of(side_rows, top_n, is_sell=False):
             cand = [x for x in side_rows
-                    if x.get("n", 0) >= CONF_MIN_N and x["kind"] == "event"]
+                    if CONF_MIN_N <= x.get("n", 0) <= MAX_N and x["kind"] == "event"]
             cand.sort(key=lambda x: -abs(x.get("fwd1m_excess") or 0))
             names = [x["signal"] for x in cand[:top_n]]
             outp = []
@@ -674,7 +681,7 @@ def main() -> int:
         stack = {}
         for side, good in (("buy", lambda e: e > 0), ("sell", lambda e: e < 0)):
             gs = [x["signal"] for x in rec[side]
-                  if x.get("n", 0) >= MIN_N and good(x.get("fwd1m_excess") or 0)]
+                  if MIN_N <= x.get("n", 0) <= MAX_N and good(x.get("fwd1m_excess") or 0)]
             cnt = None
             for nm in gs:
                 cnt = ev_cache[nm].astype(int) if cnt is None else cnt + ev_cache[nm].astype(int)
@@ -695,9 +702,10 @@ def main() -> int:
         rec["stack_note"] = ("「성과 좋은 신호가 그날 K개 이상 켜진 날」을 하나의 사건으로 "
                              "재고 그날부터의 사후수익을 낸다. 좋은 신호를 초과 부호로 "
                              "고르는 것이 전 구간을 본 선택이라 **설명용**이다.")
-        rec["conf_note"] = ("두 신호가 5거래일 안에 같이 발동한 날. 매수는 초과 상위 %d종, "
-                            "매도는 상위 10종끼리 전부 짝지었고 횟수 %d회 이상만 싣는다."
-                            % (CONF_TOP_N, MIN_N))
+        rec["conf_note"] = ("멀티 신호 = 두 신호가 5거래일 안에 같이 발동한 날. 매수는 상위 "
+                            "%d종, 매도는 상위 10종끼리 전부 짝지었고 횟수 %d회 이상만 "
+                            "싣는다(%d회 초과인 상태형은 애초에 후보가 아니다)."
+                            % (CONF_TOP_N, MIN_N, MAX_N))
         out["index"][key] = rec
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
@@ -715,7 +723,7 @@ def main() -> int:
         win = lambda x, sl: (x.get("fwd1m_down") if sl else x.get("fwd1m_win")) or 0
         for side, ko in (("buy", "매수"), ("sell", "매도")):
             sl = side == "sell"
-            rows = [x for x in r[side] if x.get("n", 0) >= MIN_N]
+            rows = [x for x in r[side] if MIN_N <= x.get("n", 0) <= MAX_N]
             rows.sort(key=lambda x: (win(x, sl), -(x.get("fwd1m_excess") or 0)
                                      if sl else (x.get("fwd1m_excess") or 0)),
                       reverse=True)
@@ -733,6 +741,9 @@ def main() -> int:
             thin = [x["signal"] for x in r[side] if x.get("n", 0) < MIN_N]
             if thin:
                 print("      표본 %d회 미만: %s" % (MIN_N, " · ".join(thin)))
+            over = [x["signal"] for x in r[side] if x.get("n", 0) > MAX_N]
+            if over:
+                print("      %d회 초과(상태형이라 제외): %s" % (MAX_N, " · ".join(over)))
     print("\n자료: %s" % out["src"])
     print("→ _ta_signals.json")
     return 0
