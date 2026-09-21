@@ -118,6 +118,31 @@ def diag():
         return None
 
 
+def _j(n):
+    try:
+        return json.load(io.open(os.path.join(DATA, n), encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def diag2():
+    """진단 나머지 — 순위상관 · OOS백분위 · 십분위 · 가중분해 · 대조군 · 크기구간.
+
+    🚨 이 랩의 규약이 «재 놓고 안 실으면 잰 적 없는 것» 이라 카드가 여기서 읽는다.
+      (audit_unbuilt 가 «읽는 곳이 없는 산출물» 로 잡던 넷이 이것이다.)
+    🚨 이 여섯이 함께 말하는 것 — +9.19%p 는 실측이지만 그것을 만든 것은 **선별이 아니라
+      집중**이다. 같은 30종을 동일가중으로 들면 +0.35%p(t 0.16)뿐이고, 초과의 96% 가
+      «누구에게 몰아주나» 에서 온다. 점수는 시총 1~100위 안에서만 듣는다(t 1.35).
+      ⚠ 그래도 점수가 죽은 것은 아니다 — 크기를 묶어 놓으면 시총100 중 상위30 − 하위30
+        이 +9.12%p 다. 발표문이 «종목선별» 이라고 적으면 그것이 틀린 것이지 성적이 틀린
+        것이 아니다. 판정은 사용자 몫으로 남겨 둔다.
+    """
+    d = {"rank_oos": _j("_qg_diag2.json"), "decile": _j("_qg_decile.json"),
+         "weight": _j("_qg_weight.json"), "control": _j("_qg_control.json"),
+         "sizeband": _j("_qg_sizeband.json")}
+    return d if any(v for v in d.values()) else None
+
+
 def _cost_run(R):
     """runs 에서 «무비용» 이 아닌 쪽 — 키에 비용률이 들어 있어 이름으로 못 찾는다."""
     for k, v in (R.get("runs") or {}).items():
@@ -220,6 +245,10 @@ def main():
         # 🚨 2026-09-21 — 다른 파이프라인의 단계 구성을 기준으로 받아(사용자 제시)
         #   거기 있는데 여기 없던 진단을 채웠다. build/qg_diag.py 가 굽는다.
         "diag": diag(),
+        # 🚨 2026-09-21 — 그 파이프라인의 과적합 5지표 중 남은 둘(순위상관·OOS백분위)을
+        #   채우자 «점수가 순서를 못 맞히는데 왜 바스켓은 이기나» 가 나왔고, 대조군까지
+        #   따라간 결과가 이것이다. build/qg_diag2·decile·weight·control·sizeband.py
+        "diag2": diag2(),
         # ⚠ 아래 넷은 **20% 판에서 잰 값**이다. 상한을 바꿨다고 다시 재지 않았다.
         "costs_basis_cap_pct": PREV_CAP,
         "costs": _costs_rows(),
