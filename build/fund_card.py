@@ -16,7 +16,23 @@
 담는 것
    ① 규칙 문장 · 운용 제원        ② 성적(확정 잣대 B = 바스켓 TR − S&P 500 TR)
    ③ 국면별 성적(15칸)           ④ 오늘까지 측정된 «바꾸면 드는 비용» 네 가지
-   ⑤ 6팩터 회귀로 본 스타일       ⑥ 못 하는 것 · 알려진 한계
+   ⑤ 못 하는 것 · 알려진 한계
+
+🚨 2026-09-21 — **6팩터 회귀를 카드에서 걷어냈다**(사용자 결정).
+   *"왜 자꾸 이 전략에 6팩터를 꼽사리 끼는거야"* → *"아예 빼"*
+   걷어낸 이유 셋. 전부 «틀렸다» 가 아니라 «이 카드에서 제 몫보다 크게 말했다» 다:
+   ① **잣대가 어긋난다.** 좌변이 S&P 500 대비 **액티브 수익**인데 우변은 롱숏 팩터다.
+     그래서 절편은 통상적 의미의 알파가 아니라 «틸트로 설명 안 되는 액티브 몫» 이다.
+     그것을 «알파» 라고 적으면 읽는 사람이 다른 것을 본다.
+   ② **R² 가 0.22 였다.** 분산의 78%가 설명 안 되는 회귀의 적재값으로
+     «이 전략의 정체» 를 말하는 것은 과한 읽기다.
+   ③ 🚨 **내가 증거를 부풀렸다.** 축 분해(수익성 단독 t 1.91 · 성장 단독 t 2.24)와
+     HML 적재(−0.18)를 «두 독립적인 증거» 라고 썼는데 **같은 사실을 두 번 본 것**이다.
+     ROE + 기대성장으로 상위 30 을 고르면 성장주 쪽에 서는 것은 **설계의 기계적 결과**다.
+   ⚠ 이 전략을 설명하는 직접 증거는 따로 있다 — **축 분해 · 상한 메뉴 · 걸어가며 고르기 ·
+     국면표.** 그 넷으로 결론이 다 서고, 6팩터를 빼도 아무 문장이 바뀌지 않는다.
+   ⚠ 되살리려면: ff_daily.json 을 읽어 절편·적재를 재는 코드였고 git 이력에 있다.
+     되살릴 때는 **잣대가 어긋난다는 사실을 카드에 같이 적을 것.**
 """
 from __future__ import annotations
 import io, json, os, sys
@@ -131,13 +147,24 @@ def main():
             "(AUDIT-2026-09-20-SHARES2 §5).",
             "시점정확 다리가 따로 없다. 바스켓 자체가 그때그때 편입명단에서 골라졌다면 "
             "생존편향이 없지만, 그것은 바스켓을 만든 쪽의 기록으로만 확인된다.",
-            # 🚨 2026-09-21 — Novy-Marx (2025) 의 경고를 그대로 옮긴다. 이 한계는
-            #   «아직 안 갈렸다» 이지 «틀렸다» 가 아니다. 가르려면 별도 등록이 필요하다.
             "🚨 **t 가 잡음 문턱 언저리로 내려왔다.** 랩의 다중검정 귀무분포에서 "
             "«잡음만으로 나오는 최고 t» 의 중앙값이 **2.267** 인데 이 판의 t 가 그 근처다"
             "(%g%% 판은 3.44 였다). 사전등록 §4 는 10%% 도 뒤바꾸기 검정을 통과한다고 "
             "적었지만(+1.06), **«지수를 이긴다» 가 더 약해진 것은 사실이다.** "
             "확정된 것은 «점수가 무작위가 아니다» 쪽이다." % PREV_CAP,
+            # 🚨 이 줄은 **직접 측정**으로만 적는다. 종전에는 같은 말을 6팩터 적재로
+            #   한 번 더 해서 «두 독립적인 증거» 처럼 보이게 했는데, 그것은 같은 사실을
+            #   두 번 본 것이었다(머리말 ③). 회귀를 걷어내면서 이 줄도 직접 증거로 고쳤다.
+            "🚨 **«우량» 보다 «성장» 이 일한다.** 같은 엔진에서 축만 갈아 끼운 실측 — "
+            "**기대성장 단독 +6.96%p(IR 0.72 · t 2.24)** vs **수익성 단독 +3.65%p"
+            "(IR 0.53 · t 1.91)**. 수익성은 **혼자서는 유의하지 않다.** "
+            "둘을 합치면 +8.63%p 로 둘 다보다 나으므로 두 축이 서로 다른 것을 잡고는 있다. "
+            "⚠ 문헌도 같은 쪽을 경고한다 — Novy-Marx (2025) 는 수익성을 통제하면 "
+            "ROE·이익안정성·저레버리지가 유의성을 잃는다고 보고한다. 다만 이 펀드에서 "
+            "약한 쪽은 **수익성** 이고 남는 쪽은 **기대성장** 이라 방향이 반대다. "
+            "«아직 안 갈렸다» 이지 «틀렸다» 가 아니고, 가르려면 별도 등록이 필요하다. "
+            "⚠ 위 수치는 **옛 잣대**(같은 종목 지수 대비)라 축 사이의 상대 관계로만 읽을 것. "
+            "출처는 정리_우량성장선별.md 「두 다리가 각각 얼마나 일하나」.",
         ],
     }
 
@@ -159,57 +186,6 @@ def main():
     except Exception:
         card["regime"] = {}
 
-    # 6팩터 — 스타일로 얼마나 설명되나
-    try:
-        ff = json.load(io.open(os.path.join(DATA, "ff_daily.json"), encoding="utf-8"))
-        FD = pd.DataFrame(ff["series"], index=pd.to_datetime(ff["dates"])) / 100.0
-        MF = (1 + FD).groupby(FD.index.to_period("M")).prod() - 1
-        cols = ["mkt_rf", "smb", "hml", "rmw", "cma", "mom"]
-        j = MF.index.intersection(F.index)
-        y, Xf = F.reindex(j).to_numpy(), MF.reindex(j)[cols].to_numpy()
-        X = np.column_stack([np.ones(len(j)), Xf])
-        bh, *_ = np.linalg.lstsq(X, y, rcond=None)
-        e = y - X @ bh
-        s2 = float(e @ e) / (len(y) - X.shape[1])
-        se = np.sqrt(np.diag(np.linalg.inv(X.T @ X) * s2))
-        ss = float(((y - y.mean()) ** 2).sum())
-        card["factor6"] = {
-            "n_months": int(len(j)),
-            "alpha_m_pct": float(bh[0] * 100), "alpha_t": float(bh[0] / se[0]),
-            "loadings": {c: {"b": float(bh[i + 1]), "t": float(bh[i + 1] / se[i + 1])}
-                         for i, c in enumerate(cols)},
-            "r2": 1 - float(e @ e) / ss if ss else None,
-        }
-    except Exception as ex:
-        card["factor6"] = {"error": str(ex)}
-
-    # 🚨 6팩터를 잰 **뒤에** 그 수로 한계를 적는다. 상수로 박아 두면 상한을 바꿨을 때
-    #   본문은 10%% 판인데 인용된 수는 20%% 판인 모순이 생긴다(실제로 한 번 생겼다).
-    f6 = card.get("factor6") or {}
-    L = f6.get("loadings") or {}
-    if L:
-        def _bt(k):
-            v = L.get(k) or {}
-            return v.get("b"), v.get("t")
-        hb, ht = _bt("hml"); rb, rt = _bt("rmw"); cb, ct = _bt("cma")
-        card["limits"].append(
-            "🚨 **«우량» 축이 수익성 하나로 환원될 수 있다.** Novy-Marx (2025) 는 "
-            "ROE·이익안정성·저레버리지가 **수익성을 통제하면 유의성을 잃는다**고 "
-            "보고한다(4팩터 알파 월 48bp · t 6.96). 이 판(%g%% 상한)의 6팩터에서도 "
-            "RMW %+.3f(t %.2f) · CMA %+.3f(t %.2f) 로 둘 다 약한 반면 HML 은 "
-            "**%+.3f(t %.2f)** 다 — 회귀가 «우량» 보다 **«성장»** 을 크게 본다. "
-            "**알파가 우량에서 오는지 성장에서 오는지 이 카드로는 안 갈린다.**"
-            % (CAP, rb, rt, cb, ct, hb, ht))
-        a_t = f6.get("alpha_t")
-        if a_t is not None and abs(a_t) < 2.0:
-            card["limits"].append(
-                "🚨 **6팩터 알파가 유의하지 않다 — 월 %+.3f%% (t %.2f).** "
-                "%g%% 상한 판에서는 월 +0.403%% (t 2.41) 이었다. 상한을 조이면서 "
-                "**«팩터로 설명 안 되는 몫» 이 통계적으로 사라졌다.** 남은 초과의 "
-                "상당 부분이 성장·모멘텀 적재로 설명된다는 뜻이고, 그것은 "
-                "**싸게 살 수 있는 노출**이다. 이 사실을 성적표와 함께 읽을 것."
-                % (f6.get("alpha_m_pct"), a_t, PREV_CAP))
-
     io.open(OUT, "w", encoding="utf-8").write(
         json.dumps(card, ensure_ascii=False, indent=1, default=float) + "\n")
 
@@ -220,12 +196,8 @@ def main():
     print("  창     %s ~ %s (%d개월)" % (card["window"]["start"], card["window"]["end"], n))
     print("  초과   월 %+.3f%% · 연 %+.2f%%p · TE %.2f%% · t %.2f · IR %.2f · 승률 %.1f%%"
           % (mu_m, mu_y, sd_y, t, ir, win))
-    f6 = card["factor6"]
-    if "alpha_m_pct" in f6:
-        print("  6팩터  알파 월 %+.3f%% (t %.2f) · R² %.2f"
-              % (f6["alpha_m_pct"], f6["alpha_t"], f6["r2"]))
-        print("         " + " · ".join("%s %+.2f(t%.1f)" % (k, v["b"], v["t"])
-                                       for k, v in f6["loadings"].items()))
+    print("  집중   상위 3사 %.1f%% · 연 회전 %.1f%%"
+          % (card["concentration"]["top3_pct"], card["concentration"]["turn_y_pct"]))
     print("\n  바꾸면 드는 비용 (오늘까지 잰 것)")
     for a, b, c, d in COSTS:
         print("     %-26s %+6.2f%%p/년   [%s · %s]" % (a, b, c, d))
