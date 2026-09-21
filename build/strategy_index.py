@@ -1780,23 +1780,12 @@ def main() -> int:
         "a-bond-rolldown",  # PREREG-2026-09-03-RATE2 D8 F2 기각
         "a-sec-revdrift",   # PREREG-2026-09-01-SECREV 실패조건 둘 다 적중. 입력도 로컬 전용
         "a-dur-style-v",    # 사용자 결정 2026-09-11 «CRSP 대형 이거는 일단 빼자»
-        # 🚨 아래 16종은 **판정 때문이 아니라 «창»이 안 맞아서** 계속 가린다.
-        #   페어 6종 2010-02~ (16.5년) · 거장겹침 10종 2013-09~ (12.9년) 인데 이 랩의
-        #   상한은 MAX_YEARS = 10 이다(사용자 결정 2026-08-13). 두 엔진은 그 결정보다
-        #   앞서 만들어졌고, 그동안 숨겨져 있어서 창을 다시 거는 일이 없었다.
-        #   ⚠ 창이 갈리면 카드끼리 세로로 비교가 안 된다 — validate_site 가 그래서 죈다.
-        #   ⚠ 날짜만 10년으로 고쳐 적는 것은 **거짓말이다.** 성적(CAGR·샤프)은 긴 창에서
-        #     잰 값이라 같이 다시 재야 한다.
-        #   🚨 그런데 guru_overlap.json 에는 «손대지 않는다 — guru.html#overlap 과 진단물은
-        #     그대로다» 가 적혀 있다. 다시 구우면 **다른 페이지의 게시 수치가 바뀐다.**
-        #     그래서 여기서 임의로 못 건드린다. 두 엔진에 10년 상한을 걸어 다시 돌리는
-        #     것은 별건의 작업이고, 그 전까지는 이 16종만 창 불일치로 남긴다.
-        "p-ggr-top5", "p-ggr-top20", "p-comb-top5", "p-comb-top20",
-        "p-xs10-top10", "p-xs10c-top10",
-        "g-overlap-k2", "g-overlap-k3", "g-overlap-k4", "g-overlap-k5",
-        "g-overlap-k2-conv", "g-overlap-k3-conv",
-        "g-overlap-k2-new", "g-overlap-k3-new",
-        "g-overlap-top10-ov", "g-overlap-top10-mc",
+        # 🚨 2026-09-21 — 여기 있던 **창 불일치 16종**(페어 6 · 거장겹침 10)은 내렸다.
+        #   사용자 «둘다 해결해». build/restate_16.py 가 두 원천의 곡선에서 창만 잘라
+        #   10년으로 다시 재고, 그 값을 아래 «창 재진술» 자리에서 이 목록에 덮는다.
+        #   ⚠ **원본은 안 건드렸다** — guru_overlap.json·pairs_strategies.json 도,
+        #     guru.html#overlap 의 게시 수치도 그대로다. 재진술은 별도 산출물에 낸다.
+        #   ⚠ 앵커 — 안 자르고 돌리면 원본 metrics 와 같아야 한다. restate_16 이 검사한다.
         # 🚨 기각 재검 둘 — 이것도 판정이 아니라 **잴 수가 없어서** 가린다.
         #   원천(archive_backtests.json)이 dates·nav 는 주는데 `monthly` 를 안 준다.
         #   strategy_diag 는 chart.monthly 로만 재고, strategy_charts 는 머리말에
@@ -1807,6 +1796,60 @@ def main() -> int:
         #   ⚠ 둘 다 등급이 「미채택」이다 — 원래 배포하지 않기로 못박은 것들이다.
         "r-low-beta-weight-tilt", "r-tail-risk-hedge",
     }
+    # ── 창 재진술(build/restate_16.py) ──────────────────────────────────────
+    # 🚨 페어·거장겹침 16종의 창·성적을 **10년 판으로 덮는다.** 두 엔진이 MAX_YEARS
+    #   결정보다 앞서 만들어져 12.9년·16.5년으로 재 놨기 때문이다. 원본은 안 고친다.
+    # ⚠ `t` 의 정의는 엔진마다 다르고 재진술이 **각자의 정의를 그대로 따랐다** —
+    #   거장겹침 CAPM 알파 t · 페어 NW t. 여기서 섞지 않는다.
+    # ⚠ 창을 줄이면 수가 **내려간다**(실측: 거장겹침 t 3.77→3.03 · 3.89→2.75 …).
+    #   긴 창이 유리했던 것이고, 그래서 같은 창으로 맞추는 것이 옳다.
+    _RS = (load("_restate16.json") or {}).get("rows") or {}
+    _rsn, _rsmiss = 0, []
+    for _r in rows:
+        _q = _RS.get(_r["sid"])
+        if not _q:
+            continue
+        # 🚨 재진술했다는 사실을 **화면이 이미 그리는 칸**에 적는다. 새 필드를 만들면
+        #   explorer 가 안 읽어 고아가 되고, 이 랩은 그것을 «재 놓고 안 그린 것» 으로 죈다.
+        _w = _q.get("was") or {}
+        _note_add = (
+            "⚠ 창 재진술 — 원래 %s~%s(%s년)로 재 놨던 것을 이 랩의 상한인 **10년**으로 "
+            "다시 읽은 값이다. 두 엔진이 MAX_YEARS=10 결정(2026-08-13)보다 앞서 만들어졌고 "
+            "그동안 목록에서 빠져 있어 창을 다시 거는 일이 없었다. 원본(guru_overlap.json · "
+            "pairs_strategies.json)과 guru.html#overlap 의 수치는 **그대로 두었다** — "
+            "곡선에서 창만 잘라 같은 함수로 다시 쟀다(build/restate_16.py). "
+            "창을 줄이면 수가 내려간다 — 이 규칙은 t %s → %s 였다."
+            % (_w.get("start"), _w.get("end"),
+               ("%.1f" % (((int(str(_w.get("end"))[:4]) * 12 + int(str(_w.get("end"))[5:7]))
+                           - (int(str(_w.get("start"))[:4]) * 12 + int(str(_w.get("start"))[5:7]))) / 12.0))
+               if _w.get("start") and _w.get("end") else "?",
+               "—" if _w.get("t") is None else "%.2f" % _w["t"],
+               "—" if _q.get("t") is None else "%.2f" % _q["t"]))
+        _r["note"] = ((_r.get("note") + " ") if _r.get("note") else "") + _note_add
+        _r["start"], _r["end"] = _q["start"], _q["end"]
+        _r["metrics"] = _q["metrics"]
+        if _q.get("bench"):
+            _r["bench"] = _q["bench"]
+        _r["d_sharpe"], _r["t"] = _q.get("d_sharpe"), _q.get("t")
+        _r["excess_cagr"] = _q.get("excess_cagr")
+        if _q.get("beta") is not None:
+            _r["beta"] = _q.get("beta")
+        # 🚨 시점정확 레그가 없는 사유 — 빈칸은 «해당 없음» 과 «아직 안 쟀다» 를 못 가른다.
+        _r["pit_na"] = (
+            "13F 공시 명단의 겹침으로만 고르는 규칙이라 종목 재무 축이 없다. "
+            "13F 는 소급 정정되지 않으므로 시점정확·소급의 구분이 생기지 않는다."
+            if _r["sid"].startswith("g-overlap") else
+            "가격만 쓰는 시장중립 페어 장부다(재무 축이 없다). 편입은 이미 "
+            "시점정확 격자에서 고른다 — pairs_backtest 의 PIT_START 2021-07-30.")
+        _rsn += 1
+    if _RS and _rsn != len(_RS):
+        _rsmiss = sorted(set(_RS) - {r["sid"] for r in rows})
+        raise SystemExit("창 재진술 대상 %d종 중 %d종만 목록에 있다 — 없는 것 %s. "
+                         "sid 가 바뀌었는지, 원천이 이 환경에 등록됐는지 볼 것"
+                         % (len(_RS), _rsn, _rsmiss))
+    if _rsn:
+        print("  창 재진술 %d종 적용(페어·거장겹침 → 10년)" % _rsn)
+
     _LIFTED = HIDE_SIDS - KEEP_HIDDEN
     HIDE_SIDS = HIDE_SIDS & KEEP_HIDDEN
     print("  🚨 숨김 해제 %d종(사용자 결정 2026-09-21) — 계속 가리는 것 %d종(사전등록 판정)"
