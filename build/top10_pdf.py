@@ -88,9 +88,41 @@ def cut(s, n):
 REB_KO = {"we": "주간", "me": "월간", "qe": "분기", "y6": "연 1회", "h": "반기"}
 
 
+# 빠른 주기부터 — 「얼마나 자주 손대나」 순서다. 성적 순이 아니다.
+REB_ORDER = ["we", "me", "qe", "h", "y6"]
+REB_NOTE = {
+    "we": "주마다 다시 고른다. 신호 수명이 짧은 규칙들이고, **회전이 가장 크다** — "
+          "비용 후 수치를 먼저 볼 것.",
+    "me": "월말에 다시 고른다. 이 랩의 기본 주기이고 대부분이 여기 있다.",
+    "qe": "분기말에 다시 고른다. 재무 공시 주기를 따르는 규칙들이라 **회전이 가장 작다**.",
+    "h": "반기마다 다시 고른다.",
+    "y6": "연 1회 t년 6월말에 다시 고른다(Fama-French 컨벤션).",
+}
+
+
 def reb_of(x):
     """주기 한 낱말. 모르면 빈 문자열 — **지어내지 않는다.**"""
     return REB_KO.get(x.get("reb") or "", "")
+
+
+def by_reb(items):
+    """주기별로 가른다 — 빠른 것부터. 주기 안에서는 t 순.
+
+    🚨 주기를 섞어 한 줄에 세우면 안 되는 이유 — 회전이 주기로 거의 정해지고(주간 8종은
+      연 10~28배, 분기 12종은 0.5~2배), 비용 후 성적이 그만큼 갈린다. 같은 표에 놓으면
+      총수익만 보고 «주간이 낫다» 로 읽게 된다.
+    """
+    g = {}
+    for x in items:
+        g.setdefault(x.get("reb") or "", []).append(x)
+    out = []
+    for k in REB_ORDER:
+        if g.get(k):
+            out.append((k, REB_KO.get(k, k), sorted(g[k], key=lambda z: -(z.get("t") or -99))))
+    for k, v in g.items():                      # 주기를 모르는 것 — 있으면 맨 뒤에 그대로
+        if k not in REB_ORDER:
+            out.append((k, "주기 미상", sorted(v, key=lambda z: -(z.get("t") or -99))))
+    return out
 
 
 def with_reb(x, n=None):
@@ -366,38 +398,44 @@ def main() -> int:
         print("  ⚠ 두부 검사를 못 돌렸다 — %s" % e)
 
     per = len(BLOCK_TOPS)
-    nblk = (len(items) + per - 1) // per
-    # 요약 — 66종을 **한 쪽에** 담는다. 나눠 실으면 t 순 비교가 쪽을 넘어가 끊긴다.
-    # ⚠ 행높이는 실측으로 맞췄다 — .900 에서 시작해 66행 + 머리글 + 각주 두 줄이
-    #   각주선(.034) 위에 들어와야 한다.
-    CAP = 70
-    nsum = (len(items) + CAP - 1) // CAP
+    # 🚨 사용자 요청 2026-09-21 「주간 월간 분기 등 기간별로 전략은 분리해줘」.
+    #   주기별로 가르고 본문은 **주기마다 새 쪽**에서 시작한다. 섞어 놓으면 회전이
+    #   10배 다른 규칙이 한 표에 서서 총수익만 보고 비교하게 된다.
+    G = by_reb(items)
+    nblk = sum((len(v) + per - 1) // per for _k, _lab, v in G)
+    nsum = 1
     total = nsum + nblk
-    print("10종목 전략 %d종 · 요약 %d쪽 + 본문 %d쪽 = %d쪽" % (len(items), nsum, nblk, total))
+    print("10종목 전략 %d종 — %s · 요약 1쪽 + 본문 %d쪽 = %d쪽"
+          % (len(items), " · ".join("%s %d" % (lab, len(v)) for _k, lab, v in G), nblk, total))
 
     with PdfPages(OUT) as pdf:
         # ── 요약 ────────────────────────────────────────────────────────
-        for s in range(nsum):
-            fig = ST.new_page()
-            y = .958
-            if s == 0:
-                ST.tx(fig, X0, y, "개별종목 상위 10종목 전략", fontsize=23, weight="bold")
-                ST.tx(fig, X0, y - .034,
-                      "한 번에 10종목만 담는 규칙 전부 - 이긴 것도 진 것도 같이 싣는다",
-                      fontsize=10, color=ACC)
-                ST.tx(fig, X1, y - .030, "%d종 · 기준 %s" % (len(items), as_of),
-                      fontsize=8.5, color=MUTED, ha="right")
-                ST.hline(fig, X0, X1, y - .046, RULE, .9)
-                y -= .058
-            else:
-                ST.tx(fig, X0, y, "개별종목 상위 10종목 전략 (이어서)", fontsize=13, weight="bold")
-                y -= .026
-            part = items[s * CAP:(s + 1) * CAP]
+        fig = ST.new_page()
+        y = .958
+        ST.tx(fig, X0, y, "개별종목 상위 10종목 전략", fontsize=23, weight="bold")
+        ST.tx(fig, X0, y - .034, "리밸런스 주기로 나눠 싣는다 - 주기 안에서는 t 순",
+              fontsize=10, color=ACC)
+        ST.tx(fig, X1, y - .030, "%d종 · 기준 %s" % (len(items), as_of),
+              fontsize=8.5, color=MUTED, ha="right")
+        ST.hline(fig, X0, X1, y - .046, RULE, .9)
+        y -= .055
+
+        W = [.360, .078, .068, .078, .068, .078, .072]
+        HD = ["전략", "초과%p", "t", "샤프", "회전", "단조%", "팩터t"]
+        for gk, glab, gv in G:
+            trn = [z.get("turnover") for z in gv if z.get("turnover") is not None]
+            ST.tx(fig, X0, y, "%s  %d종" % (glab, len(gv)), fontsize=10.5, weight="bold")
+            if trn:
+                ST.tx(fig, X0 + .112, y, "회전 연 %.1f~%.1f회" % (min(trn), max(trn)),
+                      fontsize=6.5, color=MUTED)
+            ST.tx(fig, X1, y, cut(REB_NOTE.get(gk, ""), 62), fontsize=6.3,
+                  color=MUTED, ha="right")
+            y -= .0130
             rows = []
-            for x in part:
+            for x in gv:
                 m = x.get("metrics") or {}
                 mo = mono.get(x["sid"]) or {}
-                rows.append([with_reb(x, 36),
+                rows.append([cut(x.get("name"), 40),        # 주기는 구획 제목이 말한다
                              num(x.get("excess_cagr"), 1, True), num(x.get("t")),
                              num(m.get("sharpe"), 3), num(x.get("turnover"), 1),
                              num(mo.get("mono_pct"), 1) if mo else "—",
@@ -410,45 +448,48 @@ def main() -> int:
                 if c in (1, 2, 6) and v != "—":
                     return POS if not v.startswith("-") else NEG
                 return INK if c == 3 else MUTED
-            y = ST.table(fig, X0, y, [.372, .078, .068, .078, .068, .078, .072],
-                         ["전략", "초과%p", "t", "샤프", "회전", "단조%", "팩터t"],
-                         rows, row_h=.0119, fs=6.5, hfs=6.1, zebra=True,
-                         aligns=["l"] + ["r"] * 6, cell_color=cs)
-            if s == nsum - 1:
-                ST.tx(fig, X0, y - .012,
-                      "단조% = 매월 5분위가 Q1<=..<=Q5 로 선 달의 비율(무작위면 0.83%). "
-                      "팩터t = Q5-Q1 의 t. 둘 다 PREREG-2026-09-21-TWOHEADS 의 측정이고 "
-                      "판정이 아니다 - 그 등록은 '측정만'으로 닫혔다.",
-                      fontsize=6.4, color=MUTED)
-                ST.tx(fig, X0, y - .026,
-                      "!! 초과%p·샤프는 총수익 기준이다. 회전이 큰 규칙은 비용 후가 크게 다르다 "
-                      "- 전략마다의 비용 후 수치는 본문 쪽에 있다.",
-                      fontsize=6.4, color=NEG)
-            footer(fig, s + 1, total, as_of)
-            pdf.savefig(fig)
-            if "--png" in sys.argv and s == 0:
-                fig.savefig(os.path.join(DATA, "_top10_summary.png"), dpi=110,
-                            facecolor=PAPER)
-            ST.plt.close(fig)
+            y = ST.table(fig, X0, y, W, HD, rows, row_h=.0110, fs=6.4, hfs=6.0,
+                         zebra=True, aligns=["l"] + ["r"] * 6, cell_color=cs)
+            y -= .0130
+        ST.tx(fig, X0, y,
+              "단조% = 매월 5분위가 Q1<=..<=Q5 로 선 달의 비율(무작위면 0.83%). "
+              "팩터t = Q5-Q1 의 t. 둘 다 PREREG-2026-09-21-TWOHEADS 의 측정이고 판정이 아니다.",
+              fontsize=6.3, color=MUTED)
+        ST.tx(fig, X0, y - .0115,
+              "!! 주기를 넘어 세로로 비교하지 말 것 - 회전이 주기로 거의 정해지고 비용 후 성적이 "
+              "그만큼 갈린다. 초과%p·샤프는 총수익 기준이다.",
+              fontsize=6.3, color=NEG)
+        footer(fig, 1, total, as_of)
+        pdf.savefig(fig)
+        if "--png" in sys.argv:
+            fig.savefig(os.path.join(DATA, "_top10_summary.png"), dpi=110, facecolor=PAPER)
+        ST.plt.close(fig)
 
         # ── 본문 ────────────────────────────────────────────────────────
-        for bi in range(nblk):
-            fig = ST.new_page()
-            for k, top in enumerate(BLOCK_TOPS):
-                j = bi * per + k
-                if j >= len(items):
-                    break
-                draw_block(fig, top, items[j], ch, mono)
-                if k == 0 and j + 1 < len(items):
-                    ST.hline(fig, X0, X1, .524, LINE, .6)
-            footer(fig, nsum + bi + 1, total, as_of)
-            pdf.savefig(fig)
-            # ⚠ 눈으로 확인할 쪽만 PNG 로도 남긴다 — 넘침·겹침은 수로 못 잡고 봐야 잡힌다.
-            #   (스타일 리포트가 각주 길이를 «그려서 재고» 줄인 것과 같은 취지다.)
-            if "--png" in sys.argv and bi == 0:
-                fig.savefig(os.path.join(DATA, "_top10_body.png"), dpi=110,
-                            facecolor=PAPER)
-            ST.plt.close(fig)
+        pg = nsum
+        for gk, glab, gv in G:
+            for bi in range((len(gv) + per - 1) // per):
+                fig = ST.new_page()
+                for k, top in enumerate(BLOCK_TOPS):
+                    j = bi * per + k
+                    if j >= len(gv):
+                        break
+                    draw_block(fig, top, gv[j], ch, mono)
+                    if k == 0 and j + 1 < len(gv):
+                        ST.hline(fig, X0, X1, .524, LINE, .6)
+                # 구획 꼬리표 — 이 쪽이 어느 주기인지 종이에서 바로 보이게 한다.
+                ST.tx(fig, X1, .9765, "%s · %d종 중 %d~%d"
+                      % (glab, len(gv), bi * per + 1, min((bi + 1) * per, len(gv))),
+                      fontsize=7.4, color=ACC, ha="right", weight="bold")
+                pg += 1
+                footer(fig, pg, total, as_of)
+                pdf.savefig(fig)
+                # ⚠ 눈으로 확인할 쪽만 PNG 로도 남긴다 — 넘침·겹침은 수로 못 잡고 봐야 잡힌다.
+                #   (스타일 리포트가 각주 길이를 «그려서 재고» 줄인 것과 같은 취지다.)
+                if "--png" in sys.argv and pg == nsum + 1:
+                    fig.savefig(os.path.join(DATA, "_top10_body.png"), dpi=110,
+                                facecolor=PAPER)
+                ST.plt.close(fig)
 
     print("→ %s (%.1fMB)" % (OUT, os.path.getsize(OUT) / 1e6))
     return 0

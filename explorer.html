@@ -1757,7 +1757,20 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // '성격' 정렬은 목록 단계에서 "성격마다 보는 눈이 다르다"를 가르치고, 세 칸 머리글도 그때만 나온다.
   // '관측개월' 정렬은 "표본이 짧아 판정 못 한 것"과 "길게 봐도 안 되는 것"을 구분해 준다.
   // '지금 국면' 정렬은 RGM 이 온 뒤에만 뜻이 있다 — 라벨을 그때 채운다(아래 rgSortLabel).
-  var SORTS=[['sharpe','샤프'],['rgnow','지금 국면'],['kind','성격'],['verdict','등급'],['n','관측개월']];
+  // 사용자 요청 2026-09-21 「주간 월간 분기 등 기간별로 전략은 분리해줘」 — 'reb' 축을 둔다.
+  var SORTS=[['sharpe','샤프'],['rgnow','지금 국면'],['kind','성격'],['reb','리밸 주기'],['verdict','등급'],['n','관측개월']];
+  // 빠른 주기부터. 주기를 모르는 것(자산배분·페어 등)은 맨 뒤로 — 없는 것을 지어 채우지 않는다.
+  var REB_ORDER=['주간','월말','분기','반기','연'];
+  function rebRank(d){
+    var L=d._reb; if(!L)return 99;
+    for(var i=0;i<REB_ORDER.length;i++){if(L.indexOf(REB_ORDER[i])===0)return i;}
+    return 98;
+  }
+  function rebLab(d){
+    var L=d._reb; if(!L)return '주기 미상';
+    return L.indexOf('주')===0?'주간':L.indexOf('월')===0?'월간':L.indexOf('분기')===0?'분기'
+         :L.indexOf('반기')===0?'반기':L.indexOf('연')===0?'연 1회':L;
+  }
   // 샤프 조회 — 자료가 두 모양으로 들어온다. 평평한 metrics.sharpe(랩 94종·인덱스 130종)와
   // v2 의 metrics.s/.vs/.profile(백테스트 9종)이다. 둘 다 훑고, 없으면 **null 을 돌린다**.
   // ⚠ 없는 값을 0 으로 채우지 않는다 — 0 으로 두면 '못 쟀음'이 '샤프 0'인 척하며 중간에 끼어든다.
@@ -1901,6 +1914,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         if(sa!==sb)return sa-sb;
         var ka=KIND_ORDER.indexOf(kindOf(a)),kb=KIND_ORDER.indexOf(kindOf(b));
         var kd=(ka<0?99:ka)-(kb<0?99:kb); if(kd)return kd;
+      }else if(state.sort==="reb"){
+        // 주기로 먼저 가르고, 주기 안에서는 샤프 내림차순. 주기를 섞어 세우면 회전이
+        // 10배 다른 규칙이 한 줄에 서서 총수익만 보고 비교하게 된다.
+        var ra=rebRank(a),rb2=rebRank(b); if(ra!==rb2)return ra-rb2;
+        var sa2=shp(a),sb2=shp(b);
+        if(sa2==null&&sb2!=null)return 1;
+        if(sb2==null&&sa2!=null)return -1;
+        if(sa2!=null&&sb2!=null&&sa2!==sb2)return sb2-sa2;
       }else if(state.sort==="n"){
         var nd=nMonths(b)-nMonths(a); if(nd)return nd;
       }else if(state.rgk){
@@ -2011,17 +2032,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // ⚠ 라벨은 '월말'·'연 1회(6월말)' 처럼 «언제»까지 적는다. 목록에는 주기만 한 낱말로 줄이고,
     //   정확한 시점은 상세 패널의 리밸런스 줄이 그대로 보여 준다(3095행).
     // ⚠ 모르는 값은 **비운다** — 없는 것을 지어 채우지 않는다(자산배분·페어 등 99종).
+    // 🚨 낱말 매핑은 rebLab() **한 벌**만 쓴다. 여기 사본을 두면 한쪽만 고쳐지는 날이 온다
+    //   — 이 저장소가 되풀이 밟는 결함이 정확히 그것이다.
     function rebCue(d){
-      var L=d._reb; if(!L) return '';
-      var k = L.indexOf('주')===0 ? '주간'
-            : L.indexOf('월')===0 ? '월간'
-            : L.indexOf('분기')===0 ? '분기'
-            : L.indexOf('반기')===0 ? '반기'
-            : L.indexOf('연')===0 ? '연 1회' : L;
-      return '<span class="rebcue" title="리밸런스 '+esc(L)+'">'+esc(k)+'</span>';
+      if(!d._reb) return '';
+      return '<span class="rebcue" title="리밸런스 '+esc(d._reb)+'">'+esc(rebLab(d))+'</span>';
     }
+    // 리밸 주기 묶음 머리 — '성격' 묶음과 같은 모양으로 그린다.
+    var REB_NOTE={'주간':'주마다 다시 고릅니다. 신호 수명이 짧은 규칙들이고 회전이 가장 큽니다.',
+                  '월간':'월말에 다시 고릅니다. 이 랩의 기본 주기입니다.',
+                  '분기':'분기말에 다시 고릅니다. 재무 공시 주기를 따르는 규칙들이라 회전이 가장 작습니다.',
+                  '반기':'반기마다 다시 고릅니다.',
+                  '연 1회':'연 1회 t년 6월말에 다시 고릅니다(Fama-French 컨벤션).',
+                  '주기 미상':'주기가 원천에 없는 전략입니다 — 자산배분·페어 등. 없는 것을 지어 채우지 않았습니다.'};
     rows.forEach(function(d){
-      if(state.sort==='kind'){
+      if(state.sort==='reb'){
+        var rl=rebLab(d);
+        if(rl!==lastK){
+          lastK=rl;
+          var rc=rows.filter(function(x){return rebLab(x)===rl;}).length;
+          var rg=document.createElement('div');
+          rg.className='grouphdr';
+          rg.innerHTML='<span class="gn" style="--kc:var(--accent)"><i></i>'+esc(rl)+'</span>'+
+            '<span class="gc">'+rc+'건</span>'+
+            '<span class="gd">'+esc(REB_NOTE[rl]||'')+'</span>';
+          listEl.appendChild(rg);
+        }
+      }else if(state.sort==='kind'){
         // 큰 칸 헤더 — 성격 헤더보다 위. 여기서 '무엇을 볼 수 있는 전략인가'가 먼저 갈린다.
         var sc=secOf(d);
         if(sc!==lastS){
