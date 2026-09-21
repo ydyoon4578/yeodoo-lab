@@ -589,9 +589,13 @@ def main() -> int:
         #   시장은 그냥 두어도 1개월 뒤 오를 때가 훨씬 많아서, 50% 가 아니라 이 수가 기준이다.
         _r1m = fwd["1m"].dropna()
         base1w = float((_r1m > 0).mean()) * 100
+        # 🚨 매도의 기준선 승률은 **내린 비율**이다(사용자 지적 2026-09-22 —
+        #   「매도는 지수가 하락하는 경우가 많을수록 승률이 높은거야」).
+        #   오름·내림이 100 을 정확히 못 채우는 건 정확히 0 인 날 때문이다. 각각 센다.
+        base1d = float((_r1m < 0).mean()) * 100
         rec = {"label": label, "ticker": ticker, "n_days": len(c),
                "start": str(c.index[0].date()), "base1m": round(base1m * 100, 2),
-               "base1m_win": round(base1w, 1),
+               "base1m_win": round(base1w, 1), "base1m_down": round(base1d, 1),
                "chart_from": str(c0.date()), "buy": [], "sell": []}
         ev_cache = {}
         for side, dct, is_sell in (("buy", buy, False), ("sell", sell, True)):
@@ -630,7 +634,7 @@ def main() -> int:
         #   종전에는 미리 박아 둔 다섯(=10짝)뿐이라 표가 빈약했다. 이제 **초과 상위**
         #   신호들끼리 전부 짝지어 본다(매수·매도 각각). 고르는 기준은 성적이지만
         #   그건 «어느 짝을 보여 줄까» 이지 «어느 짝이 좋다» 가 아니다 — 결과는 다 싣는다.
-        def pairs_of(side_rows, top_n):
+        def pairs_of(side_rows, top_n, is_sell=False):
             cand = [x for x in side_rows
                     if x.get("n", 0) >= CONF_MIN_N and x["kind"] == "event"]
             cand.sort(key=lambda x: -abs(x.get("fwd1m_excess") or 0))
@@ -643,7 +647,7 @@ def main() -> int:
                     both = (ea & eb.rolling(w, min_periods=1).max().astype(bool)) | \
                            (eb & ea.rolling(w, min_periods=1).max().astype(bool))
                     both = both & ~both.shift(1, fill_value=False)
-                    st = _stat(both, fwd, base1m)
+                    st = _stat(both, fwd, base1m, sell=is_sell)
                     if st["n"] < MIN_N:
                         continue
                     f2 = c.index[both]
@@ -658,7 +662,7 @@ def main() -> int:
             return outp
 
         rec["conf_buy"] = pairs_of(rec["buy"], CONF_TOP_N)
-        rec["conf_sell"] = pairs_of(rec["sell"], 10)
+        rec["conf_sell"] = pairs_of(rec["sell"], 10, is_sell=True)
 
         # ── 겹친 날 — 「성과 좋은 신호가 그날 K개 이상」을 **하나의 사건으로 잰다** ──
         #   🚨 이것을 따로 재는 이유. 차트에 「그날 켜진 신호들의 1개월 평균」을 적었더니
@@ -705,20 +709,24 @@ def main() -> int:
               % (r["label"], r["ticker"], r["start"], asof, r["n_days"], r["base1m"],
                  len(r["buy"]), len(r["sell"])))
         print("═" * 98)
+        # 🚨 승률의 뜻이 방향마다 다르다(사용자 지적 2026-09-22) —
+        #   매수 승률 = 1개월 뒤 **오른** 비율 · 매도 승률 = **내린** 비율.
+        #   그래야 양쪽 다 «높을수록 제 몫을 했다» 가 되고, 둘 다 높은 순으로 놓을 수 있다.
+        win = lambda x, sl: (x.get("fwd1m_down") if sl else x.get("fwd1m_win")) or 0
         for side, ko in (("buy", "매수"), ("sell", "매도")):
+            sl = side == "sell"
             rows = [x for x in r[side] if x.get("n", 0) >= MIN_N]
-            # 승률 순 — 매수는 높은 것이 위, 매도는 낮은 것이 위(사용자 지시 2026-09-22).
-            rows.sort(key=lambda x: ((x.get("fwd1m_win") or 0),
-                                     (x.get("fwd1m_excess") or 0)),
-                      reverse=(side == "buy"))
-            print("\n  ── %s %d종 ──   %-22s %4s %8s %7s %8s %7s %8s  %-11s %6s"
-                  % (ko, len(rows), "신호", "횟수", "1주", "1주승", "1개월", "1개월승",
-                     "기준선차", "최근 발동", "며칠전"))
+            rows.sort(key=lambda x: (win(x, sl), -(x.get("fwd1m_excess") or 0)
+                                     if sl else (x.get("fwd1m_excess") or 0)),
+                      reverse=True)
+            print("\n  ── %s %d종 ──   %-22s %4s %8s %8s %8s  %-11s %6s"
+                  % (ko, len(rows), "신호", "횟수", "1개월",
+                     "승률(내림)" if sl else "승률(오름)", "기준선차", "최근 발동", "며칠전"))
             for x in rows:
-                print("      %-24s %-4s %4d %7.2f%% %6.0f%% %7.2f%% %6.0f%% %7.2f%%p  %-11s %5s일 %s"
+                print("      %-24s %-4s %4d %7.2f%% %7.0f%% %7.2f%%p  %-11s %5s일 %s"
                       % (x["signal"][:24], "상태" if x["kind"] == "state" else "",
-                         x["n"], x["fwd1w_mean"], x["fwd1w_win"], x["fwd1m_mean"],
-                         x["fwd1m_win"], x["fwd1m_excess"], x["last"] or "—",
+                         x["n"], x["fwd1m_mean"], win(x, sl), x["fwd1m_excess"],
+                         x["last"] or "—",
                          x["days_ago"] if x["days_ago"] is not None else "—",
                          ("★오늘 " if x["fired_today"] else "") +
                          ("켜짐 %s일째" % x["state_days"] if x["state_now"] else "꺼짐")))
