@@ -296,12 +296,12 @@ CONF_TOP = ["RSI14<30", "TEMA20>SMA50 교차", "TD BuySetup9", "BB %b<0", "MACD 
 # 신호 한 줄 설명 — ta_lab/catalog.md 의 「산식 요지 · 교과서 신호」에서 옮겼다.
 DESC = {
     "RSI14<30": "상승폭보다 하락폭이 커진 과매도",
-    "StochRSI<0.2": "RSI를 다시 스토캐스틱한 초민감 과매도",
-    "CMO<-50": "상승합-하락합 대칭 오실레이터 바닥권",
+    "StochRSI<0.2": "RSI에 스토캐스틱을 건 초민감 과매도",
+    "CMO<-50": "상승합-하락합 대칭 지표 바닥권",
     "PSY<25": "최근 12일 중 오른 날이 3일 이하",
-    "BB %b<0": "볼린저 하단 **밖으로** 종가가 이탈",
+    "BB %b<0": "볼린저 **하단 밖으로** 종가 이탈",
     "이격도<95": "20일선보다 5% 넘게 아래",
-    "TD BuySetup9": "4봉 전보다 낮은 종가가 9일 연속",
+    "TD BuySetup9": "4봉 전보다 낮은 종가 9일 연속",
     "골든크로스 50/200": "50일선이 200일선을 위로 뚫음",
     "TEMA20>SMA50 교차": "빠른 3중평활선이 50일선 상향",
     "MACD 골든(0선 아래)": "0선 아래에서 시그널선 상향 교차",
@@ -312,33 +312,33 @@ DESC = {
     "Stoch %K<20 골든": "저점권에서 %K가 %D를 상향",
     "CCI<-100": "평균값 대비 이례적인 저가권",
     "Williams%R<-80": "14일 고저 범위의 아래 20%",
-    "UltimateOsc<30": "7·14·28일 매수압력 종합이 바닥",
+    "UltimateOsc<30": "7·14·28일 매수압력 종합 바닥",
     "Keltner 하단 이탈": "EMA±ATR 채널 하단 밖",
     "MFI<20": "거래량까지 실은 RSI의 과매도",
-    "MassIndex 반전벌지": "고저폭이 팽창했다 수축 — 반전 예고",
+    "MassIndex 반전벌지": "고저폭 팽창 뒤 수축, 반전 예고",
     "PSAR 상승 전환": "추적점이 가격 아래로 내려옴",
     "SuperTrend 상승 전환": "ATR 채널 색이 상승으로 바뀜",
     "Donchian20 상단 돌파": "20일 최고가 돌파(터틀 방식)",
     "Aroon 업 교차": "고점이 저점보다 최근에 생김",
     "일목 구름 상향 돌파": "종가가 구름 위로 올라섬",
-    "ElderRay 강세셋업": "저가-EMA13이 음수인데 회복 중",
-    "ForceIndex2 매수딥": "상승추세 중 2일 힘지수가 음수",
-    "ChaikinOsc 0선 상향": "매집-분산선 단기-장기 차가 0선 상향",
-    "OBV Osc 0선 상향": "거래량 누적선 단기-장기 차가 0선 상향",
+    "ElderRay 강세셋업": "저가-EMA13 음수인데 회복 중",
+    "ForceIndex2 매수딥": "상승추세 중 2일 힘지수 음수",
+    "ChaikinOsc 0선 상향": "매집-분산선 단기-장기 차 0선 상향",
+    "OBV Osc 0선 상향": "거래량 누적선 단·장기 차 0선 상향",
     "EOM 0선 상향": "적은 거래량으로 쉽게 오르는 구간",
-    "ADX>25 & +DI>-DI": "추세강도 25 넘고 상승DI가 우위",
+    "ADX>25 & +DI>-DI": "추세강도 25↑ · 상승DI 우위",
     "RWI High>1": "무작위 걸음보다 강한 상승",
     "가격>VWAP20": "20일 거래량가중 평균가 위",
-    "NVI>1년MA": "거래량 적은 날만 누적(스마트머니) 강세",
-    "PVI>1년MA": "거래량 많은 날만 누적(대중) 강세",
+    "NVI>1년MA": "거래량 적은 날만 누적 = 강세",
+    "PVI>1년MA": "거래량 많은 날만 누적 = 강세",
     "RVI(변동성)>50": "상승일 변동성이 하락일보다 큼",
     "RSI14>70": "상승폭이 하락폭보다 커진 과매수",
     "StochRSI>0.8": "초민감 지표가 꼭대기",
     "CMO>+50": "대칭 오실레이터 천장권",
     "PSY>75": "최근 12일 중 9일 이상 올랐다",
-    "BB %b>1": "볼린저 상단 **밖으로** 종가가 이탈",
+    "BB %b>1": "볼린저 **상단 밖으로** 종가 이탈",
     "이격도>105": "20일선보다 5% 넘게 위",
-    "TD SellSetup9": "4봉 전보다 높은 종가가 9일 연속",
+    "TD SellSetup9": "4봉 전보다 높은 종가 9일 연속",
     "데드크로스 50/200": "50일선이 200일선을 아래로 뚫음",
     "TEMA20<SMA50 교차": "빠른 3중평활선이 50일선 하향",
     "MACD 데드(0선 위)": "0선 위에서 시그널선 하향 교차",
@@ -348,19 +348,26 @@ DESC = {
     "Stoch %K>80 데드": "고점권에서 %K가 %D를 하향",
     "CCI>+100": "평균값 대비 이례적인 고가권",
     "Williams%R>-20": "14일 고저 범위의 위 20%",
-    "UltimateOsc>70": "7·14·28일 매수압력 종합이 천장",
+    "UltimateOsc>70": "7·14·28일 매수압력 종합 천장",
     "Keltner 상단 돌파": "EMA±ATR 채널 상단 밖",
     "MFI>80": "거래량까지 실은 RSI의 과매수",
     "PSAR 하락 전환": "추적점이 가격 위로 올라섬",
     "SuperTrend 하락 전환": "ATR 채널 색이 하락으로 바뀜",
-    "Donchian20 하단 이탈": "20일 최저가 이탈 — 이름만 매도다",
+    "Donchian20 하단 이탈": "20일 최저가 이탈 · 이름만 매도",
     "Aroon 다운 교차": "저점이 고점보다 최근에 생김",
     "일목 구름 하향 이탈": "종가가 구름 아래로 내려감",
 }
 
 
 def build_signals(c, h=None, l=None, v=None):
-    """반환: (매수, 매도, 종류). h/l/v 가 없으면 종가 전용 27종만."""
+    """반환: (매수, 매도, 종류, **지속조건**). h/l/v 가 없으면 종가 전용 27종만.
+
+    🚨 «지속조건» 이 네 번째로 붙은 이유 — 교차 신호는 발동이 **순간**이라 event 인데,
+      교차 **뒤에는 그 관계가 유지되는 상태**가 있다. 「45일 전에 TEMA 가 50일선을
+      뚫었다」만 적고 「지금도 위인가」를 안 적으면 표를 보고 판단할 수가 없다.
+      (사용자 지적 2026-09-22 — 「교차는 왜 상태열 없어」)
+      문턱 신호(RSI<30 등)는 발동조건이 곧 지속조건이라 그대로 쓴다.
+    """
     bb, m, tx = bollinger(c), macd(c), trix(c)
     td, dsp, sr = td_setup(c), disparity(c), sroc(c)
     bw_low = bb["bw"].rolling(126).min()
@@ -404,8 +411,26 @@ def build_signals(c, h=None, l=None, v=None):
     buy["RVI(변동성)>50"] = rvi_vol(c) > 50
     kind["RVI(변동성)>50"] = "state"
 
+    # 교차·전환 신호의 «지속조건» — 교차가 난 뒤에도 유지되는 관계.
+    tm, s50, s200 = tema(c, 20), sma(c, 50), sma(c, 200)
+    stt = {
+        "골든크로스 50/200": s50 > s200,
+        "TEMA20>SMA50 교차": tm > s50,
+        "MACD 골든(0선 아래)": m["macd"] > m["signal"],
+        "MACD 0선 상향": m["macd"] > 0,
+        "TRIX 0선 상향": tx["trix"] > 0,
+        "S-ROC 0선 상향": sr > 0,
+        "BB 스퀴즈 후 상단 돌파": c > bb["up"],
+        "데드크로스 50/200": s50 < s200,
+        "TEMA20<SMA50 교차": tm < s50,
+        "MACD 데드(0선 위)": m["macd"] < m["signal"],
+        "MACD 0선 하향": m["macd"] < 0,
+        "TRIX 0선 하향": tx["trix"] < 0,
+        "S-ROC 0선 하향": sr < 0,
+    }
+
     if h is None:
-        return buy, sell, kind
+        return buy, sell, kind, stt
 
     st, ax = stoch(h, l, c), adx(h, l, c)
     kc, dc, ar, ich = keltner(h, l, c), donchian(h, l), aroon(h, l), ichimoku(h, l)
@@ -462,7 +487,22 @@ def build_signals(c, h=None, l=None, v=None):
               "Keltner 상단 돌파", "MFI>80", "PSAR 하락 전환", "SuperTrend 하락 전환",
               "Donchian20 하단 이탈", "Aroon 다운 교차", "일목 구름 하향 이탈"):
         kind[k] = "event"
-    return buy, sell, kind
+    stt.update({
+        "Stoch %K<20 골든": st["k"] > st["d"],
+        "PSAR 상승 전환": ps == 1,
+        "SuperTrend 상승 전환": sp == 1,
+        "Aroon 업 교차": ar["up"] > ar["down"],
+        "일목 구름 상향 돌파": c > cloud_hi,
+        "ChaikinOsc 0선 상향": chaikin_osc(h, l, c, v) > 0,
+        "OBV Osc 0선 상향": obv_osc(c, v) > 0,
+        "EOM 0선 상향": eom(h, l, v) > 0,
+        "Stoch %K>80 데드": st["k"] < st["d"],
+        "PSAR 하락 전환": ps == -1,
+        "SuperTrend 하락 전환": sp == -1,
+        "Aroon 다운 교차": ar["up"] < ar["down"],
+        "일목 구름 하향 이탈": c < cloud_lo,
+    })
+    return buy, sell, kind, stt
 
 
 def fwd_returns(c):
@@ -538,7 +578,7 @@ def main() -> int:
         c = c_all[c_all.index >= start]
         fwd = fwd_returns(c)
         base1m = float(np.nanmean(fwd["1m"]))
-        buy, sell, kind = build_signals(c_all, h_all, l_all, v_all)
+        buy, sell, kind, stt = build_signals(c_all, h_all, l_all, v_all)
 
         c0 = c.index[-1] - pd.DateOffset(months=CHART_M)   # 차트·발동일 구간의 시작
         rec = {"label": label, "ticker": ticker, "n_days": len(c),
@@ -556,7 +596,18 @@ def main() -> int:
                 fired = c.index[ev_cache[nm]]
                 r["last"] = str(fired[-1].date()) if len(fired) else None
                 r["days_ago"] = int((c.index[-1] - fired[-1]).days) if len(fired) else None
-                r["on_now"] = bool(cond.iloc[-1])
+                # 🚨 둘을 나눈다 —
+                #   fired_today  기준일에 **발동**했나(교차가 오늘 일어났나)
+                #   state_now    기준일에 그 **관계가 유지되나**(교차 뒤에도 위에 있나)
+                #   문턱 신호는 둘의 조건이 같아 state_now 가 곧 「지금 조건이 참」이다.
+                sc = stt.get(nm)
+                sc = cond if sc is None else sc.reindex(c.index).fillna(False).astype(bool)
+                r["fired_today"] = bool(ev_cache[nm].iloc[-1])
+                r["state_now"] = bool(sc.iloc[-1])
+                # 그 상태가 며칠째인가 — 마지막으로 바뀐 날부터 센다.
+                flip = sc != sc.shift(1)
+                fi = c.index[flip & sc] if sc.iloc[-1] else c.index[flip & ~sc]
+                r["state_days"] = int((c.index[-1] - fi[-1]).days) if len(fi) else None
                 # 차트가 날짜에 찍을 발동일 — 최근 CHART_M 개월 것만 싣는다.
                 r["fires"] = [str(x.date()) for x in fired[fired >= c0]]
                 rec[side].append(r)
@@ -625,7 +676,8 @@ def main() -> int:
                          x["n"], x["fwd1w_mean"], x["fwd1w_win"], x["fwd1m_mean"],
                          x["fwd1m_win"], x["fwd1m_excess"], x["last"] or "—",
                          x["days_ago"] if x["days_ago"] is not None else "—",
-                         "★ 켜짐" if x["on_now"] else ""))
+                         ("★오늘 " if x["fired_today"] else "") +
+                         ("켜짐 %s일째" % x["state_days"] if x["state_now"] else "꺼짐")))
             thin = [x["signal"] for x in r[side] if x.get("n", 0) < MIN_N]
             if thin:
                 print("      표본 %d회 미만: %s" % (MIN_N, " · ".join(thin)))
