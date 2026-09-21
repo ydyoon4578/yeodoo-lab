@@ -66,8 +66,17 @@ def fund_excess():
             z = sum(w.values()); w = {t: v / z for t, v in w.items()}
         prev = w
     ms = sorted(m for m in out if m in ipr and m in idiv and pd.notna(ipr[m]))
-    return pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
-                     index=pd.PeriodIndex(ms, freq="M"))
+    S = pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
+                  index=pd.PeriodIndex(ms, freq="M"))
+    # 🚨 2026-09-21 — MAX_YEARS = 10. 이 파일도 fund_fit 과 **같은 계산을 또 한 벌**
+    #   갖고 있었다(세 벌째다). 한쪽만 고치면 국면표와 카드가 갈린다.
+    #   ⚠ 다른 계열(_single_table.json 의 8신호)은 각자의 창을 그대로 쓴다 —
+    #     삼분위는 **FF 축**으로 나누므로 계열마다 길이가 달라도 칸은 성립한다.
+    #     다만 펀드 행의 n 이 다른 행과 다르다는 사실은 산출물의 n 칸에 남는다.
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    from maxyears import cap as _cap                      # noqa: E402
+    return S.reindex(_cap(S.index))
 
 
 def main():

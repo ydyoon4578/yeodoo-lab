@@ -85,12 +85,55 @@ RULE = ("S&P 500 안에서 **ROE 백분위와 기대투자성장(EG) 백분위�
         "리밸런스 거래에 왕복 25bp 를 물린다." % CAP)
 
 # 오늘까지 사전등록·측정으로 확인된 «설계를 바꾸면 드는 비용»
+# 🚨 2026-09-21 — 네 줄이 **서로 다른 창에서 잰 값**인데 한 표에 나란히 있었다.
+#   각 줄에 창·상한을 붙이고, 다시 잴 수 있는 것은 현행 판(20% · 10년)으로 다시 쟀다.
+#   ⚠ 상한은 넷 다 **20%** 에서 쟀다 — 각 결과문서의 «확정안 재현 +8.16%p · IR 0.987»
+#     검산이 그 증거다. **창만 다르다**(146개월 vs 지금 카드의 120개월).
+#   (what, pp_per_year, src, verdict, basis, remeasured)
 COSTS = [
-    ("종목을 빼면(최대 −N)", -0.80, "QGMAX", "기각"),
-    ("신규 편입을 1개월 미루면", -0.26, "QGDELAY", "기각"),
-    ("분기 대신 매월 리밸런스하면", -0.97, "qg_reb", "측정만"),
-    ("한 계열 상한을 60%로 걸면", -1.64, "qg_max", "측정만"),
+    ("종목을 빼면(복권형 MAX5 배제)", -0.80, "QGMAX", "기각",
+     "20% 상한 · 146개월(얼림)", False),
+    ("신규 편입을 1개월 미루면", -0.26, "QGDELAY", "기각",
+     "20% 상한 · 146개월(얼림)", False),
+    ("분기 대신 매월 리밸런스하면", None, "qg_costs", "측정만",
+     "20% 상한 · 10년(다시 잼)", True),
+    ("한 계열 상한을 60%로 걸면", -1.64, "qg_max", "측정만",
+     "20% 상한 · 146개월(얼림)", False),
 ]
+
+
+def costs_remeasured():
+    """build/qg_costs.py 가 다시 잰 값 — 비용 있음/없음 두 판."""
+    try:
+        return json.load(io.open(os.path.join(DATA, "_qg_costs.json"), encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _costs_rows():
+    """다시 잰 것은 새 값으로, 못 잰 것은 얼린 값으로. **어느 쪽인지 줄마다 적는다.**"""
+    R = costs_remeasured() or {}
+    rows = []
+    for what, pp, src, verdict, basis, re_ in COSTS:
+        row = {"what": what, "src": src, "verdict": verdict,
+               "basis": basis, "remeasured": re_}
+        if re_ and R.get("monthly_decomp"):
+            d = R["monthly_decomp"]
+            row["pp_per_year"] = d["total"]
+            row["pp_per_year_nocost"] = d["design"]
+            row["note"] = (
+                "🚨 비용을 갈라 보면 **설계 효과 %+.2f%%p + 거래비용 %+.2f%%p** 다. "
+                "회전이 연 %.0f%% → %.0f%% 로 느는데 손실의 대부분은 거래가 아니라 "
+                "**신호가 나빠지는 쪽**이다 — 한 달마다 다시 고르면 6개월 평활이 "
+                "잡아 주던 잡음을 도로 집어넣는다."
+                % (d["design"], d["trading"],
+                   R["runs"]["비용 25bp"]["quarterly"]["turn"],
+                   R["runs"]["비용 25bp"]["monthly"]["turn"]))
+        else:
+            row["pp_per_year"] = pp
+            row["note"] = "⚠ 이 클론에 입력이 없어 **다시 재지 못했다.** 얼린 값이다."
+        rows.append(row)
+    return rows
 
 
 def cap_menu():
@@ -157,7 +200,7 @@ def main():
         "cap_menu": cap_menu(),
         # ⚠ 아래 넷은 **20% 판에서 잰 값**이다. 상한을 바꿨다고 다시 재지 않았다.
         "costs_basis_cap_pct": PREV_CAP,
-        "costs": [{"what": a, "pp_per_year": b, "src": c, "verdict": d} for a, b, c, d in COSTS],
+        "costs": _costs_rows(),
         "limits": [
             "이 랩의 규칙들과 **잣대가 다르다**(펀드는 TR, 규칙은 PR 대비). 한 표에 섞지 말 것.",
             "초과의 섹터·종목 분해는 **폐기**했다 — 재구성 지수가 생존편향 덩어리다"
@@ -216,8 +259,13 @@ def main():
     print("  집중   상위 3사 %.1f%% · 연 회전 %.1f%%"
           % (card["concentration"]["top3_pct"], card["concentration"]["turn_y_pct"]))
     print("\n  바꾸면 드는 비용 (오늘까지 잰 것)")
-    for a, b, c, d in COSTS:
-        print("     %-26s %+6.2f%%p/년   [%s · %s]" % (a, b, c, d))
+    for r in card["costs"]:
+        v = r.get("pp_per_year")
+        ex_ = ("" if r.get("pp_per_year_nocost") is None
+               else "  (무비용 %+.2f)" % r["pp_per_year_nocost"])
+        print("     %-28s %s  [%s]%s"
+              % (r["what"], ("%+6.2f%%p/년" % v) if v is not None else "   —   ",
+                 r["basis"], ex_))
     if card["regime"]:
         print("\n  국면별 초과 (월 %) — 열다섯 칸")
         for ax, cells in card["regime"].items():
