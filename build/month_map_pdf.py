@@ -51,13 +51,19 @@ def main() -> int:
     D = json.load(io.open(os.path.join(DATA, "_month_map.json"), encoding="utf-8"))
     P, K, M = D["persistence"], D["kinds"], D["months"]
     span = D["span"]
+    # 닮은 달 찾기 결과 — 있으면 마지막에 한 쪽 붙인다(없어도 나머지는 그대로 나온다).
+    try:
+        A = json.load(io.open(os.path.join(DATA, "_analog.json"), encoding="utf-8"))
+    except Exception:
+        A = None
 
     # 쪽 나누기 — 축별 요약은 칸마다 5줄 + 제목 1줄
-    AX_PER = 7                      # 한 쪽에 축 칸 7개
+    # ⚠ 7개면 첫 쪽(범례가 자리를 먹는다)에서 마지막 칸이 각주 위로 넘쳤다 — 실측으로 5로 줄였다.
+    AX_PER = 5                      # 한 쪽에 축 칸 5개
     npk = (len(K) + AX_PER - 1) // AX_PER
     ROWS_P = 46                     # 월별 표 한 쪽에 46행
     npm = (len(M) + ROWS_P - 1) // ROWS_P
-    total = npk + npm
+    total = npk + npm + (1 if A else 0)
     print("축 칸 %d개 · 달 %d개 → %d쪽" % (len(K), len(M), total))
 
     with PdfPages(OUT) as pdf:
@@ -89,6 +95,18 @@ def main() -> int:
                       "「급락할 것을 알았다」가 아니다. 쓰임은 «내가 든 전략이 어떤 달에 다칠지» 까지다.",
                       fontsize=7.0, color=MUTED)
                 y -= .062
+                # 범례 — 말이 어려우면 표가 안 읽힌다(사용자 지적 2026-09-21).
+                ST.tx(fig, X0, y, "표에 나오는 말", fontsize=9.5, weight="bold")
+                y -= .0125
+                lg = [[z["short"], z["long"]] for z in (D.get("legend") or [])]
+                y = ST.table(fig, X0, y, [.150, .734], ["말", "뜻"], lg,
+                             row_h=.0132, fs=6.9, hfs=6.2, aligns=["l", "l"],
+                             cell_color=lambda r, c: INK if c == 0 else MUTED)
+                y -= .0125
+                ST.tx(fig, X0, y,
+                      "«하 / 중 / 상» 은 이 122개월을 셋으로 나눈 자리다 - 절대 기준이 아니라 "
+                      "이 구간 안에서의 위치다.", fontsize=6.4, color=MUTED)
+                y -= .018
             else:
                 ST.tx(fig, X0, y, "상황별 (이어서)", fontsize=13, weight="bold")
                 y -= .026
@@ -157,8 +175,69 @@ def main() -> int:
                 fig.savefig(os.path.join(DATA, "_mm2.png"), dpi=110, facecolor=PAPER)
             ST.plt.close(fig)
 
+        # ── 덧 — 닮은 달 찾기(해 봤고 안 섰다) ──────────────────────────
+        if A:
+            fig = ST.new_page()
+            analog_page(fig, .958, A)
+            pg += 1
+            footer(fig, pg, total, span)
+            pdf.savefig(fig)
+            if "--png" in sys.argv:
+                fig.savefig(os.path.join(DATA, "_mm3.png"), dpi=110, facecolor=PAPER)
+            ST.plt.close(fig)
+
     print("→ %s (%.1fMB)" % (OUT, os.path.getsize(OUT) / 1e6))
     return 0
+
+
+def analog_page(fig, y, A):
+    """닮은 달 찾기 — **해 봤고 안 섰다.** 그 사실이 이 쪽의 내용이다.
+
+    🚨 이 쪽이 없으면 data/_analog.json 은 «재 놓고 안 실은» 산출물이 된다.
+      이 랩은 그것을 «잰 적 없는 것» 으로 친다(audit_unbuilt).
+    """
+    t, now = A["test"], A["now"]
+    ST.tx(fig, X0, y, "덧 — 지금과 «흐름이 닮은» 과거 달 찾기", fontsize=13, weight="bold")
+    y -= .020
+    ST.tx(fig, X0, y,
+          "3개월 궤적(전전달·전달·이번달) x 7변수 = 21차원으로 가장 닮은 창을 찾아봤다. "
+          "결론부터: **안 선다.**", fontsize=7.4, color=INK2)
+    y -= .016
+    rows = [["이웃이 다음 달 상위5 를 맞히나",
+             "%.2f / 5" % t["analog_hit"],
+             "전 구간 최다 5개 %.2f · 무작위 %.2f" % (t["always_hit"], t["random_hit"]),
+             "대조군에 진다"],
+            ["이웃이 시장 방향을 맞히나",
+             "%.1f%%" % (t["dir_acc"] * 100),
+             "늘 한 방향으로 찍기 %.1f%%" % (t["dir_base"] * 100),
+             "기준선에 진다"],
+            ["이웃이 가깝기는 한가",
+             "%.2f" % t["dist_near"],
+             "중앙 %.2f · 하위10%% %.2f" % (t["dist_median"], t["dist_p10"]),
+             "닮았다기보다 덜 멀다"]]
+    y = ST.table(fig, X0, y, [.300, .110, .300, .174],
+                 ["물은 것", "값", "대조군", "읽기"], rows,
+                 row_h=.0150, fs=7.0, hfs=6.4, aligns=["l", "r", "l", "l"],
+                 cell_color=lambda r, c: INK if c == 0 else (NEG if c == 3 else MUTED))
+    y -= .014
+    ST.tx(fig, X0, y, "지금 창 %s (S&P %s) — 가장 닮은 과거 창"
+          % (" -> ".join(now["window"]),
+             " -> ".join("%+.1f" % v for v in now["spx3"])),
+          fontsize=8.6, weight="bold")
+    y -= .0125
+    nr = [[" -> ".join(z["window"]), "%.2f" % z["dist"],
+           " ".join("%+.1f" % v for v in z["spx3"]),
+           "%s %+.1f%%" % (z["next_m"], z["next_spx"])] for z in A["near"]]
+    y = ST.table(fig, X0, y, [.290, .080, .190, .150],
+                 ["닮은 창", "거리", "그때 S&P 3개월", "그 다음 달"], nr,
+                 row_h=.0142, fs=7.0, hfs=6.4, aligns=["l", "r", "l", "l"],
+                 cell_color=lambda r, c: INK if c == 0 else MUTED)
+    y -= .013
+    ST.tx(fig, X0, y,
+          "!! 이 표를 «닮았으니 그때처럼 될 것» 으로 읽으면 안 된다 - 위 검정이 바로 그것을 "
+          "재서 아니라고 말한다. k 를 바꿔 가며 더 나은 값을 찾지 않았다(그것이 이 랩이 "
+          "폐기한 절차다).", fontsize=6.4, color=NEG)
+    return y
 
 
 if __name__ == "__main__":
