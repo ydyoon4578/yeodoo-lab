@@ -85,23 +85,31 @@ def side_page(fig, R, side, asof, page):
               color=POS if buy else NEG)
     y -= bh + .012
 
+    # 🚨 매수·매도 **같은 부호 규약**이다(사용자 지시 2026-09-22). 초과 = 사후 − 기준선.
+    #   종전에 매도만 «덜 오름»(부호 뒤집기)이라 두 표를 나란히 보면 헷갈렸다.
     ST.tx(fig, X0, y,
-          ("초과 = 1개월 평균 - 기준선. **초과 순**. «상태» 는 켜져 있는 모든 날을 센 것이라 "
-           "횟수가 크다(중첩)." if buy else
-           "**«덜 오름» = 기준선 - 1개월 평균.** 양수면 기준선보다 덜 올랐다는 뜻이다 - "
-           "내렸다는 뜻이 아니다."), fontsize=6.6, color=MUTED)
+          ("초과 = 1개월 평균 - 기준선. **높은 것부터**. «상태» 는 켜져 있는 모든 날을 "
+           "센 것이라 횟수가 크다(중첩)." if buy else
+           "초과 = 1개월 평균 - 기준선. **매수 표와 같은 부호**다. 매도 신호는 "
+           "**음수일수록 제 몫을 한 것**이라 낮은 것부터 놓았다."),
+          fontsize=6.6, color=MUTED)
+    if not buy:
+        # ⚠ 색은 **부호**를 따른다(두 표를 같은 규칙으로 읽게). 그래서 이 표에서는
+        #   붉은 것이 제 몫을 한 것이다 — 색만 보고 «나쁘다» 로 읽지 않게 적어 둔다.
+        y -= .0118
+        ST.tx(fig, X0, y,
+              "색은 부호를 따른다(두 표를 같은 규칙으로) — **이 표에서는 붉은 쪽이 "
+              "제 몫을 한 것**이다.", fontsize=6.6, color=MUTED)
     y -= .0150
 
     rows = [x for x in R[side] if x.get("n", 0) >= 5]
-    rows.sort(key=(lambda x: -(x.get("fwd1m_excess") or -99)) if buy
-              else (lambda x: -(x.get("edge_vs_base") or -99)))
+    rows.sort(key=lambda x: (x.get("fwd1m_excess") or 0), reverse=buy)
     tr = []
     for x in rows:
-        ex = x.get("fwd1m_excess") if buy else x.get("edge_vs_base")
         tr.append([x["signal"][:21], "상태" if x["kind"] == "state" else "",
                    str(x["n"]), "%+.2f%%" % x["fwd1w_mean"], "%.0f%%" % x["fwd1w_win"],
                    "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % x["fwd1m_win"],
-                   "%+.2f%%p" % ex, (x["last"] or "—"),
+                   "%+.2f%%p" % x["fwd1m_excess"], (x["last"] or "—"),
                    ("%d일" % x["days_ago"]) if x["days_ago"] is not None else "—",
                    "★" if x["on_now"] else ""])
 
@@ -119,7 +127,7 @@ def side_page(fig, R, side, asof, page):
     y = ST.table(fig, X0, y,
                  [.152, .034, .046, .060, .048, .060, .050, .066, .084, .046, .024],
                  ["신호", "", "횟수", "1주", "승률", "1개월", "승률",
-                  "초과" if buy else "덜 오름", "최근 발동", "경과", ""], tr,
+                  "초과", "최근 발동", "경과", ""], tr,
                  row_h=.0158, fs=6.8, hfs=6.1, zebra=True,
                  aligns=["l", "c", "r", "r", "r", "r", "r", "r", "l", "r", "c"],
                  cell_color=cc)
@@ -131,9 +139,11 @@ def side_page(fig, R, side, asof, page):
     if not buy:
         y -= .016
         worst = min(rows, key=lambda x: x["fwd1m_mean"])
+        neg = sum(1 for x in rows if x["fwd1m_excess"] < 0)
         ST.tx(fig, X0, y,
-              "!! **매도 신호 %d종 전부 사후 1개월 평균이 양수다**(최저 %s %+.2f%%)."
-              % (len(rows), worst["signal"], worst["fwd1m_mean"]), fontsize=6.8, color=NEG)
+              "!! 초과가 음수인 것은 %d/%d 종뿐이고, **사후 1개월 평균이 음수인 것은 하나도 "
+              "없다**(최저 %s %+.2f%%)." % (neg, len(rows), worst["signal"], worst["fwd1m_mean"]),
+              fontsize=6.8, color=NEG)
         y -= .0118
         ST.tx(fig, X0, y,
               "   숏 진입 신호가 아니라 «차익실현·신규매수 자제» 로만 읽을 것. "
@@ -222,9 +232,11 @@ def main() -> int:
         y -= .0150
         for ln, col in (
             ("· 신호는 **진단**이지 예측이 아니다. 원본 ta_lab 의 결론이고 이 랩의 결론과도 같다.", INK2),
-            ("· **매도 신호는 숏이 아니다.** 양 지수 모두 매도 신호 전부가 사후 1개월 평균 "
-             "양수다. «덜 올랐다»가 최선이다.", NEG),
-            ("· **Donchian 하단 이탈은 오히려 매수 쪽이다** - SPX 사후 1개월 +2.87%. "
+            ("· **초과는 매수·매도 같은 부호다**(사후 - 기준선). 매도 신호는 **음수일수록 "
+             "제 몫을 한 것**이다 - 그래서 매도 표는 낮은 것부터 놓았다.", INK2),
+            ("· **매도 신호는 숏이 아니다.** 양 지수 모두 매도 신호 중 사후 1개월 평균이 "
+             "음수인 것은 **하나도 없다**. «기준선보다 덜 올랐다»가 최선이다.", NEG),
+            ("· **Donchian 하단 이탈은 오히려 매수 쪽이다** - SPX 초과 **+1.71%p**. "
              "이름이 매도 묶음에 있다고 매도 신호가 아니다.", NEG),
             ("· 횟수가 적은 줄(10~20회)은 **운으로 그 값이 나올 수 있다.** 초과 %p 크기보다 "
              "횟수를 먼저 볼 것.", MUTED),
