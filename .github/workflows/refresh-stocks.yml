@@ -180,6 +180,13 @@ jobs:
       - name: Rebuild composite Risk-On/Off
         run: python build/riskonoff.py
         continue-on-error: true
+      # 점수밴드 × 추세 15칸. riskonoff 가 낸 _riskonoff_daily.json 만 읽으므로
+      #   **바로 뒤에** 와야 한다(점수가 낡으면 표도 같이 낡는다).
+      #   ⚠ 판정은 「측정만」이다 — PREREG-2026-09-21-REGIMEGRID-RESULT.
+      #     밴드가 거꾸로 가고 추세축으로도 안 풀렸다. 방향을 믿고 쓰는 표가 아니다.
+      - name: Rebuild regime grid
+        run: python build/regime_grid.py
+        continue-on-error: true
       # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
       #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
       #   실제로 CI 가 여기서 걸렸다(grid_days 4430 ≠ 4431 · px_nulls 2 ≠ 31).
