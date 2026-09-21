@@ -41,8 +41,10 @@
 > 이 천장은 멤버십이 2014-06 보다 앞으로 가기 전에는 안 올라간다.
 > 출처: `PREREG-2026-09-21-STYLE8ROT-RESULT.md` §2.
 
-⚠ 그리고 **게시 산출물의 `n_month_ends` 는 레그 길이가 아니다** — 패널의 월말 수다.
-**길이는 `n_rebal` 이 말한다.** `style_pit.json` 의 레그는 `n_rebal 11`, 즉 **1년짜리**다.
+⚠ 그리고 **`style_pit.json` 의 창은 둘이다.** 2026-09-21 부터 산출물의 `windows` 가 필드마다
+어느 창인지 적는다 — `start`·`n_days`·`n_months` 는 **1년 레그 창**이고(`n_rebal 11` 도 같은 말),
+5년은 `windows.panel`(편출 주입 명단·`universe` 집계)이다. 그 전 판은 맨 위 `n_month_ends 62` 가
+**패널의 월말 수**라 레그 길이로 오독됐다(STYLE8ROT 등록이 그 탓에 두 번 고쳐졌다).
 
 ---
 

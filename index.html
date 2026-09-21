@@ -3134,8 +3134,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   샤프가 가장 좋아 보이는 행이 바로 그것이라 가장 위험하다).
     var ks=Object.keys(p.styles).filter(function(k){return Math.abs(p.styles[k].bias)>=1;});
     ks.sort(function(a,b){return Math.abs(p.styles[b].bias)-Math.abs(p.styles[a].bias);});
+    // 🚨 2026-09-21 — 지배 채널은 **절댓값끼리** 견준다. 종전 «Math.abs(s.surv)>=s.look» 은 선견이
+    //   음수면 |생존| 이 1 만 넘어도 선견이 훨씬 커도 «편출 누락» 으로 분류했다 — style_top_pdf.pit_rows
+    //   에서 고친 것(2cdf0e0de)과 같은 결함이다. ⚠ 되살릴 때 남은 차이 셋 — pit_rows()·pit_shift() 를 따를 것:
+    //   ① HOME_HIDE(SLAB.hide)를 안 뺀다(숨긴 mom 의 값을 «모멘텀» 으로 인용한다)
+    //   ② «부풀었을 것» 을 편향 부호와 상관없이 붙인다(음수는 «오히려 낮아졌을 것»)
+    //   ③ not_yet 은 5년 패널 시작 기준 수다(style_pit.json universe.at) — «구간 시작» 이 아니다
     var surv=ks.filter(function(k){var s=p.styles[k];
-      return Math.abs(s.surv)>=1 && Math.abs(s.surv)>=s.look;});
+      return Math.abs(s.surv)>=1 && Math.abs(s.surv)>=Math.abs(s.look);});
     var show=ks.slice(0,2);
     surv.forEach(function(k){ if(show.indexOf(k)<0)show.push(k); });
     if(!show.length)return '';
