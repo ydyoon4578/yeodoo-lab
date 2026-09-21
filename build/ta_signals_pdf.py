@@ -51,8 +51,10 @@ N_MULTI = (21, 15)        # 멀티 신호 표에 실을 짝 수(매수, 매도)
 #   (합류 후보 문턱 CONF_MIN_N 과 같은 10회다.)
 MIN_SHOW = 10
 
-# 차트에 올릴 종수 — 멀티·단일 x 매수·매도 각각 이만큼(= 모두 20종).
-CHART_TOP = 5
+# 차트에 올릴 것 — **승률 문턱**으로 고른다(사용자 지시 2026-09-22).
+#   매수는 오를 확률, 매도는 내릴 확률이 이 이상인 신호만. 종수를 미리 못 박지
+#   않으므로 지수·방향에 따라 몇 종이 뜨는지가 달라진다 — 그게 곧 진단이다.
+CHART_WIN = {True: 70.0, False: 40.0}   # True=매수 · False=매도
 # 🚨 층 간격은 **가격 비율이 아니라 그림 범위(hi-lo) 비율**이다.
 #   비율로 잡았더니 6층이 쌓인 날에 여백이 범위의 60%를 먹어 가격선이 납작해졌다
 #   (렌더 실측). 범위 기준이면 지수가 무엇이든 보이는 간격이 같다.
@@ -143,33 +145,33 @@ def chart(fig, R, y_top, h, max_n):
     n = len(d)
     pos = {x: i for i, x in enumerate(d)}
 
-    # 차트에 올릴 20종 — 표와 같은 정렬(승률)에서 위 CHART_TOP 종씩.
+    # 차트에 올릴 것 — 승률이 문턱 이상인 신호만(멀티·단일 둘 다).
     picks = []                       # (발동일목록, 매수인가, 속을 채우나)
     named = {}
     for side, up in (("buy", True), ("sell", False)):
         wk = "fwd1m_win" if up else "fwd1m_down"
-        mul = sorted([x for x in (R.get("conf_" + side) or [])
-                      if x.get("n", 0) >= MIN_SHOW],
-                     key=lambda x: ((x.get(wk) or 0), x["n"]), reverse=True)[:CHART_TOP]
-        sgl = rows_of(R, side, max_n)[0][:CHART_TOP]
+        th = CHART_WIN[up]
+        mul = [x for x in (R.get("conf_" + side) or [])
+               if x.get("n", 0) >= MIN_SHOW and (x.get(wk) or 0) >= th]
+        sgl = [x for x in rows_of(R, side, max_n)[0] if (x.get(wk) or 0) >= th]
         named[up] = (len(mul), len(sgl))
         for x in mul:
             picks.append((x.get("fires") or [], up, True))
         for x in sgl:
             picks.append((x.get("fires") or [], up, False))
 
-    # 같은 날 여러 종이 뜨면 세모가 포개진다 — 바깥으로 층을 쌓는다.
-    #   멀티가 안쪽(가격에 가깝게), 단일이 바깥쪽이다.
+    # 🚨 세모는 하루에 **종류당 하나**다(집합). 문턱을 70%/40% 로 낮추니 S&P 매수만
+    #   35종·201개가 걸려 한 날 8층까지 쌓였고 가격선이 묻혔다(렌더 실측 — 이 랩에서
+    #   「세모 벽」을 만든 것이 두 번째다). **몇 종이 떴나는 아래 막대판이 이미 말한다** —
+    #   세모는 «언제, 어느 쪽, 멀티인가 단일인가» 만 말하면 된다. 층은 최대 둘이다.
     mk = {}
+    nb = [0] * n
+    ns = [0] * n
     for fires, up, fill in picks:
         for f in fires:
             if f in pos:
-                mk.setdefault((pos[f], up), []).append(fill)
-    # 아래 막대판도 **같은 20종**만 센다 — 위아래가 다른 모집단이면 읽을 수 없다.
-    nb = [0] * n
-    ns = [0] * n
-    for (i, up), fl in mk.items():
-        (nb if up else ns)[i] = len(fl)
+                mk.setdefault((pos[f], up), set()).add(fill)
+                (nb if up else ns)[pos[f]] += 1
 
     hp, hb = h * .70, h * .24
     ax = fig.add_axes([X0, y_top - hp, X1 - X0, hp])
@@ -193,6 +195,7 @@ def chart(fig, R, y_top, h, max_n):
         col = POS if up else NEG
         deep = max(deep, len(fl))
         for j, fill in enumerate(sorted(fl, reverse=True)):     # 속 찬 것이 안쪽
+            # (fl 은 집합이라 j 는 0 또는 1 — 멀티 안쪽, 단일 바깥쪽)
             off = rng * (MK_BASE + MK_STEP * min(j, MK_CAP - 1))
             yy = c[i] - off if up else c[i] + off
             ax.scatter([i], [yy], marker="^" if up else "v", s=MK_SIZE, zorder=6,
@@ -227,14 +230,15 @@ def chart(fig, R, y_top, h, max_n):
 def multi_page(fig, R, asof, page, max_n):
     y = head(fig, R, "멀티 신호", asof)
 
-    ST.tx(fig, X0, y, "최근 12개월", fontsize=8.5, weight="bold")
-    ST.tx(fig, X0 + .090, y + .0005,
-          "**속 찬 세모 = 멀티 신호 · 속 빈 세모 = 단일 신호** · 아래 초록 매수 · 위 빨강 매도 · "
-          "각 표의 **위 %d줄**씩 모두 20종 · 아래 막대는 그날 뜬 수" % CHART_TOP,
-          fontsize=6.2, color=MUTED)
-    y -= .014
+    y_cap = y
     # ⚠ .013 만 떼면 아래 월 눈금과 겹친다 — 눈금 자리를 비운다(렌더 실측).
-    y, named, nday = chart(fig, R, y, .200, max_n)
+    y, named, nday = chart(fig, R, y - .014, .200, max_n)
+    ST.tx(fig, X0, y_cap, "최근 12개월", fontsize=8.5, weight="bold")
+    ST.tx(fig, X0 + .090, y_cap + .0005,
+          "**속 찬 세모 = 멀티 · 속 빈 세모 = 단일** · 아래 초록 매수(승률 %.0f%%↑ %d종) · "
+          "위 빨강 매도(%.0f%%↑ %d종) · 막대는 그날 뜬 수"
+          % (CHART_WIN[True], sum(named[True]),
+             CHART_WIN[False], sum(named[False])), fontsize=6.2, color=MUTED)
     y -= .030
 
     for key, ko, col, nmax in (("conf_buy", "매수", POS, N_MULTI[0]),
