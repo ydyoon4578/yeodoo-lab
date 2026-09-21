@@ -38,6 +38,9 @@ OUT = os.path.join(DATA, "_ta_signals.json")
 
 YEARS = 10
 MIN_N = 5          # 원본과 같은 문턱 — 이보다 적으면 통계를 안 낸다
+CHART_M = 12       # 차트에 그릴 구간(개월). 발동일도 이 구간 것만 싣는다
+CONF_TOP_N = 12    # 합류를 볼 신호 수 — 초과 상위 이만큼(횟수 10회 이상인 것 중)
+CONF_MIN_N = 10    # 합류 후보가 되려면 단독 횟수가 이 이상
 
 # ══ 지표 — ta_lab/indicators.py 에서 **그대로** 옮긴다 ════════════════════
 ema = lambda c, n: c.ewm(span=n, adjust=False).mean()
@@ -537,9 +540,10 @@ def main() -> int:
         base1m = float(np.nanmean(fwd["1m"]))
         buy, sell, kind = build_signals(c_all, h_all, l_all, v_all)
 
+        c0 = c.index[-1] - pd.DateOffset(months=CHART_M)   # 차트·발동일 구간의 시작
         rec = {"label": label, "ticker": ticker, "n_days": len(c),
                "start": str(c.index[0].date()), "base1m": round(base1m * 100, 2),
-               "buy": [], "sell": []}
+               "chart_from": str(c0.date()), "buy": [], "sell": []}
         ev_cache = {}
         for side, dct, is_sell in (("buy", buy, False), ("sell", sell, True)):
             for nm, cond in dct.items():
@@ -553,20 +557,49 @@ def main() -> int:
                 r["last"] = str(fired[-1].date()) if len(fired) else None
                 r["days_ago"] = int((c.index[-1] - fired[-1]).days) if len(fired) else None
                 r["on_now"] = bool(cond.iloc[-1])
+                # 차트가 날짜에 찍을 발동일 — 최근 CHART_M 개월 것만 싣는다.
+                r["fires"] = [str(x.date()) for x in fired[fired >= c0]]
                 rec[side].append(r)
 
-        conf = []
-        for i in range(len(CONF_TOP)):
-            for j in range(i + 1, len(CONF_TOP)):
-                a, b = CONF_TOP[i], CONF_TOP[j]
-                ea, eb, w = ev_cache[a], ev_cache[b], 5
-                both = (ea & eb.rolling(w, min_periods=1).max().astype(bool)) | \
-                       (eb & ea.rolling(w, min_periods=1).max().astype(bool))
-                both = both & ~both.shift(1, fill_value=False)
-                fired = c.index[both]
-                conf.append({"pair": "%s ∧ %s" % (a, b), **_stat(both, fwd, base1m),
-                             "last": str(fired[-1].date()) if len(fired) else None})
-        rec["confluence"] = conf
+        # ── 차트용 가격 ────────────────────────────────────────────────
+        cc = c[c.index >= c0]
+        rec["px"] = {"d": [str(x.date()) for x in cc.index],
+                     "c": [round(float(x), 2) for x in cc]}
+
+        # ── 합류 — 짝을 넓힌다 ─────────────────────────────────────────
+        #   종전에는 미리 박아 둔 다섯(=10짝)뿐이라 표가 빈약했다. 이제 **초과 상위**
+        #   신호들끼리 전부 짝지어 본다(매수·매도 각각). 고르는 기준은 성적이지만
+        #   그건 «어느 짝을 보여 줄까» 이지 «어느 짝이 좋다» 가 아니다 — 결과는 다 싣는다.
+        def pairs_of(side_rows, top_n):
+            cand = [x for x in side_rows
+                    if x.get("n", 0) >= CONF_MIN_N and x["kind"] == "event"]
+            cand.sort(key=lambda x: -abs(x.get("fwd1m_excess") or 0))
+            names = [x["signal"] for x in cand[:top_n]]
+            outp = []
+            for i in range(len(names)):
+                for j in range(i + 1, len(names)):
+                    a, b = names[i], names[j]
+                    ea, eb, w = ev_cache[a], ev_cache[b], 5
+                    both = (ea & eb.rolling(w, min_periods=1).max().astype(bool)) | \
+                           (eb & ea.rolling(w, min_periods=1).max().astype(bool))
+                    both = both & ~both.shift(1, fill_value=False)
+                    st = _stat(both, fwd, base1m)
+                    if st["n"] < MIN_N:
+                        continue
+                    f2 = c.index[both]
+                    outp.append({"a": a, "b": b, "pair": "%s ∧ %s" % (a, b), **st,
+                                 "last": str(f2[-1].date()),
+                                 "solo_a": next(x.get("fwd1m_excess") for x in side_rows
+                                                if x["signal"] == a),
+                                 "solo_b": next(x.get("fwd1m_excess") for x in side_rows
+                                                if x["signal"] == b)})
+            return outp
+
+        rec["conf_buy"] = pairs_of(rec["buy"], CONF_TOP_N)
+        rec["conf_sell"] = pairs_of(rec["sell"], 10)
+        rec["conf_note"] = ("두 신호가 5거래일 안에 같이 발동한 날. 매수는 초과 상위 %d종, "
+                            "매도는 상위 10종끼리 전부 짝지었고 횟수 %d회 이상만 싣는다."
+                            % (CONF_TOP_N, MIN_N))
         out["index"][key] = rec
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
