@@ -86,7 +86,7 @@ def fund_monthly(full=False):
             if s <= 0:
                 continue
             g = sum(v / s * r[t] for t, v in ok.items())
-            out[hm] = g - (trade * 0.0025 if not ch else 0.0)
+            out[hm] = g - (trade * 0.0010 if not ch else 0.0)
             ch = True
             w = {t: (v / s) * (1 + r[t]) for t, v in ok.items()}
             z = sum(w.values()); w = {t: v / z for t, v in w.items()}

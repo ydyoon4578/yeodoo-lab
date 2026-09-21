@@ -5,7 +5,7 @@
   사용자 지시 2026-09-21: *"costs·국면표를 20% 판으로 다시 재기 … 다 반영해. 무비용으로 해"*
 
 🚨 «무비용» 을 두 가지로 읽을 수 있어 **둘 다** 낸다:
-   ⒜ 거래비용 있음(왕복 25bp) — 카드가 쓰는 값
+   ⒜ 거래비용 있음(**편도 10bp** — 살 때 10 · 팔 때 10) — 카드가 쓰는 값
    ⒝ 거래비용 없음 — **설계 효과만** 본다. 회전이 달라지는 변형(매월 리밸런스)에서
      «신호가 나빠진 것» 과 «거래를 더 한 것» 이 섞이는 것을 가른다.
 
@@ -36,7 +36,7 @@ FORM_Q = (3, 6, 9, 12)
 
 
 def run(q, ipr, idiv, cap, months, cost):
-    """months = 형성월 집합(분기 또는 매월) · cost = 왕복 비용률(0 이면 무비용)."""
+    """months = 형성월 집합(분기 또는 매월) · cost = **편도** 비용률(0 이면 무비용)."""
     sel, forms = {}, []
     for f, g in q[q.top30 == "Y"].groupby("ym"):
         if months is not None and int(f[5:7]) not in months:
@@ -101,7 +101,7 @@ def main():
     print("── 상한 %g%% · %d년 창 ──" % (CAP, MAX_YEARS))
     print("%-22s %8s %7s %7s %7s %9s" % ("", "연초과%p", "TE%", "IR", "t", "연회전%"))
     base = {}
-    for cost, lab in ((0.0025, "비용 25bp"), (0.0, "무비용")):
+    for cost, lab in ((QC.COST_SIDE, "비용 %gbp(편도)" % (QC.COST_SIDE*1e4)), (0.0, "무비용")):
         exq, tq = run(q, ipr, idiv, CAP, FORM_Q, cost)
         exm, tm = run(q, ipr, idiv, CAP, None, cost)
         a, b = st(exq), st(exm)
@@ -113,7 +113,8 @@ def main():
               % ("분기 형성(현행)", a["ann"], a["te"], a["ir"], a["t"], tq))
         print("   %-20s %+8.2f %7.2f %7.2f %7.2f %9.1f   차 %+.2f%%p"
               % ("매월 형성", b["ann"], b["te"], b["ir"], b["t"], tm, b["ann"] - a["ann"]))
-    d_cost = res["runs"]["비용 25bp"]["delta_ann"]
+    _CK = "비용 %gbp(편도)" % (QC.COST_SIDE*1e4)
+    d_cost = res["runs"][_CK]["delta_ann"]
     d_free = res["runs"]["무비용"]["delta_ann"]
     print("\n  매월 리밸런스의 «비용» 분해")
     print("   비용 포함 차 %+.2f%%p  =  설계 효과 %+.2f  +  거래비용 %+.2f"
