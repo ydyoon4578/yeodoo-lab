@@ -201,6 +201,14 @@ jobs:
       # ⚠ assets.json 을 새로 만든 **이 자리에서** 같이 구워야 격자가 어긋나지 않는다.
       - name: Rebuild benchmark slim series
         run: python build/bench_px.py
+      # 교과서 TA 신호 검증 — bench_px 종가만 읽으므로 **바로 뒤**가 제자리다.
+      #   pandas·numpy 가 필요한데 이 잡이 이미 깐다(refresh-stocks 도 깔지만 그쪽은
+      #   bench_px 를 안 굽는다 — 낡은 종가로 신호를 내면 「최근 발동일」이 어긋난다).
+      #   ⚠ 종이(ta_signals_pdf.py)는 **여기서 안 굽는다** — matplotlib 과 한글 폰트가
+      #     러너에 없다. 그건 로컬/ops 에서 낸다(style8_pdf 와 같은 규약).
+      - name: Rebuild TA signal validation
+        run: python build/ta_signals.py
+        continue-on-error: true
       - name: Rebuild home flow (calendar day returns)
         run: python build/home_flow.py
       - name: Rebuild as-of index

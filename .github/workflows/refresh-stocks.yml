@@ -191,8 +191,12 @@ jobs:
       #   그래서 **맨 뒤에** 와야 한다. 새로 계산하는 건 ②지금 시장 · ④전략 온도계 둘뿐이다.
       #   ⚠ 새 주장을 만들지 않는다 — 판정이 붙은 것을 옮기고, 사실을 적고, 지난달을 센다.
       #     여기에 「그러니 무엇을 사라」 를 더하면 그때는 사전등록이 필요하다.
+      # 🚨 2026-09-22 정정 — 처음에 `monitor.py && monitor_pdf.py` 로 붙였는데 **틀렸다.**
+      #   이 잡은 pandas·numpy·yfinance 만 깐다. matplotlib 도 한글 폰트도 러너에 없어
+      #   종이 쪽은 늘 실패했을 것이다(continue-on-error 라 조용히). 자료만 굽는다.
+      #   종이는 로컬/ops 에서 낸다 — style8_pdf·month_map_pdf·rrg_pdf 와 같은 규약이다.
       - name: Rebuild market regime monitor
-        run: python build/monitor.py && python build/monitor_pdf.py
+        run: python build/monitor.py
         continue-on-error: true
       # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
       #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
