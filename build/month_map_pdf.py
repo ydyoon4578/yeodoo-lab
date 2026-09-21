@@ -56,6 +56,10 @@ def main() -> int:
         A = json.load(io.open(os.path.join(DATA, "_analog.json"), encoding="utf-8"))
     except Exception:
         A = None
+    try:
+        FL = json.load(io.open(os.path.join(DATA, "_flags.json"), encoding="utf-8"))
+    except Exception:
+        FL = None
 
     # 쪽 나누기 — 축별 요약은 칸마다 5줄 + 제목 1줄
     # ⚠ 7개면 첫 쪽(범례가 자리를 먹는다)에서 마지막 칸이 각주 위로 넘쳤다 — 실측으로 5로 줄였다.
@@ -63,7 +67,7 @@ def main() -> int:
     npk = (len(K) + AX_PER - 1) // AX_PER
     ROWS_P = 46                     # 월별 표 한 쪽에 46행
     npm = (len(M) + ROWS_P - 1) // ROWS_P
-    total = npk + npm + (1 if A else 0)
+    total = npk + npm + (1 if A else 0) + (1 if FL else 0)
     print("축 칸 %d개 · 달 %d개 → %d쪽" % (len(K), len(M), total))
 
     with PdfPages(OUT) as pdf:
@@ -173,6 +177,66 @@ def main() -> int:
             pdf.savefig(fig)
             if "--png" in sys.argv and pi == npm - 1:
                 fig.savefig(os.path.join(DATA, "_mm2.png"), dpi=110, facecolor=PAPER)
+            ST.plt.close(fig)
+
+        # ── 극단 플래그 감시 ────────────────────────────────────────────
+        if FL:
+            fig = ST.new_page()
+            y = .958
+            ST.tx(fig, X0, y, "극단 플래그 감시", fontsize=15, weight="bold")
+            ST.tx(fig, X1, y, "기준 %s · S&P %.0f" % (FL["as_of"], FL["spx"]),
+                  fontsize=7.4, color=MUTED, ha="right")
+            y -= .020
+            ST.tx(fig, X0, y,
+                  "설계 출처는 사용자 제공 「시장 국면 모니터」(2026-07-09) ④. 트리거는 그 문서 값 "
+                  "그대로 쓰고, **적중률은 이 랩 자료로 다시 쟀다**(창·유니버스가 다르다).",
+                  fontsize=6.8, color=INK2)
+            y -= .0145
+            b = FL["base"]
+            ST.tx(fig, X0, y,
+                  "기준선 — 아무 날이나 사서 1개월 들면 %+.2f%% · 승률 %.0f%% (n=%d). "
+                  "아래 «기준선차» 가 그것을 뺀 값이다."
+                  % (b["fwd_mean"], b["win"], b["n"]), fontsize=6.8, color=MUTED)
+            y -= .018
+            fr = []
+            for r in FL["flags"]:
+                o = r["ON"]
+                fr.append([r["ko"], r["now"], (r["value"] or "")[:20],
+                           "—" if o["fwd_mean"] is None else "%+.2f%%" % o["fwd_mean"],
+                           "—" if o["win"] is None else "%.0f%%" % o["win"],
+                           "—" if o["lift"] is None else "%+.2f%%p" % o["lift"],
+                           str(o["n"]), r["trigger"][:26]])
+
+            def cf(rr, c, fr=fr):
+                if c == 1:
+                    return NEG if fr[rr][1] == "ON" else (ACC if fr[rr][1] == "주의" else MUTED)
+                if c == 5 and fr[rr][5] != "—":
+                    return POS if not fr[rr][5].startswith("-") else NEG
+                return INK if c == 0 else MUTED
+            y = ST.table(fig, X0, y, [.150, .048, .130, .076, .054, .076, .046, .304],
+                         ["플래그", "상태", "현재값", "ON 1개월", "승률", "기준선차", "횟수",
+                          "트리거"], fr, row_h=.0170, fs=6.7, hfs=6.2, zebra=True,
+                         aligns=["l", "c", "l", "r", "r", "r", "r", "l"], cell_color=cf)
+            y -= .016
+            ST.tx(fig, X0, y,
+                  "!! 매매 규칙이 아니라 **감시판**이다. 이 랩은 국면 조건부 규칙을 12번 시도해 "
+                  "11번 기각했다. 플래그가 켜졌다고 사는 것이 아니라 «지금 무엇이 극단인가» 를 본다.",
+                  fontsize=6.4, color=NEG)
+            y -= .0110
+            ST.tx(fig, X0, y,
+                  "!! 그 문서의 16개 중 자료가 없는 다섯은 뺐다(지어 채우지 않는다) — %s."
+                  % " · ".join(FL["dropped"]), fontsize=6.4, color=MUTED)
+            y -= .0110
+            ST.tx(fig, X0, y,
+                  # ⚠ 는 맑은 고딕에 없다 — 종이에는 «!!» 로 눕힌다(두부 방지).
+                  "!! 처음에 RSI 를 단순 n봉 평균으로 짰다가 잡았다 - n=2 에서 값이 0/100 에 "
+                  "몰려 «최근 2일 다 내렸나» 를 재는 이진 지표가 됐다. Wilder 평활로 고쳤다.",
+                  fontsize=6.4, color=MUTED)
+            pg += 1
+            footer(fig, pg, total, span)
+            pdf.savefig(fig)
+            if "--png" in sys.argv:
+                fig.savefig(os.path.join(DATA, "_mm4.png"), dpi=110, facecolor=PAPER)
             ST.plt.close(fig)
 
         # ── 덧 — 닮은 달 찾기(해 봤고 안 섰다) ──────────────────────────

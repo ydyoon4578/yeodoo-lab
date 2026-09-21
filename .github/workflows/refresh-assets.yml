@@ -172,6 +172,11 @@ jobs:
       #   빠뜨리면 이 표만 한 판 낡은 달로 남고 아무도 안 알려준다.
       - name: Rebuild month map
         run: python build/month_map.py
+      # 🚨 극단 플래그 감시 — 지수 가격(bench_px)과 매크로(assets)만 읽으므로 여기 둔다.
+      #   설계는 사용자 제공 「시장 국면 모니터」 ④, 적중률은 랩 자료로 다시 잰다.
+      #   ⚠ 매매 규칙이 아니라 감시판이다 — 켜졌다고 사는 것이 아니다.
+      - name: Rebuild extreme flags
+        run: python build/flags.py
       # 복제 리포트는 랩 세 파일에서 값을 **옮긴** 것이다. 랩만 갱신되고 이걸 빠뜨리면
       # 같은 사이트의 두 화면이 다른 날짜·다른 t 를 말한다 — '채점기가 두 벌' 이다.
       # validate_site 가 기준일을 대조해 막지만, 막히기 전에 여기서 같이 굽는 것이 맞다.
