@@ -49,6 +49,10 @@ WF = os.path.join(ROOT, ".github", "workflows")
 # ⚠ 여기에 넣는 것은 «잡에 넣지 못하는 이유» 가 있어야 한다. «아직 안 했다» 는 이유가
 #   아니다. 이유 없이 조용히 만들려고 넣으면 이 감사가 있는 뜻이 사라진다.
 KNOWN = {
+    "_qg_diag.json":
+        "진단 3종(build/qg_diag.py · 구조 1/HHI·Jaccard · 다중검정 셔플 500회·DSR · "
+        "Funnel Value-Add). 입력이 고정(사내 pkl)이라 낡을 길이 없고 카드가 diag 로 읽는다. "
+        "**손으로 굽는다** — 셔플 500회에 몇 분 걸린다.",
     "_qg_costs.json":
         "「바꾸면 드는 비용」 재측정(build/qg_costs.py). 입력이 고정(사내 pkl)이라 낡을 길이 "
         "없고, 펀드 카드가 costs 줄로 읽는다. **손으로 굽는다.**",
