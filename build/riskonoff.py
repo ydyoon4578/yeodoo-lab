@@ -241,6 +241,10 @@ def main() -> int:
                           "나머지 다섯을 %d 으로 재정규화했다 — 그 문서의 점수와 같은 수가 아니다."
                           % wsum,
            "missing": ["심리 전체", "VIX 기간구조", "VVIX", "MOVE"],
+           # 🚨 시장 폭 «원수치» 를 같이 낸다. 그동안 백분위로 빻은 점수(7.4)만 실어서
+           #   «무엇이 7.4 를 만들었나» 를 밖에서 볼 수 없었다. 국면 모니터가 이걸 읽는다.
+           #   ⚠ 주 1회 격자를 앞으로 채운 값이라 기준일과 며칠 어긋날 수 있다(선견은 아니다).
+           "breadth_now": BRD[di[cur["d"]]],
            "backtest": bt, "n_days": len(rows),
            "hist": [{"d": r["d"], "score": r["score"], "band": r["band"]}
                     for r in rows[::5]]}
