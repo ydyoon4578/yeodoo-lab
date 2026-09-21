@@ -163,6 +163,11 @@ jobs:
       #   재므로 반드시 strategy_charts 뒤다. 차트만 굽고 이것을 빠뜨리면 validate_site 가 «다른 실행» 으로 막는다.
       - name: Rebuild strategy diagnostics
         run: python build/strategy_diag.py
+      # 🚨 달마다의 시장 상황과 그달 잘 간 전략 — strategy_diag(시장 상태)와
+      #   strategy_charts(규칙 월수익)를 둘 다 읽으므로 **그 뒤**다.
+      #   빠뜨리면 이 표만 한 판 낡은 달로 남고 아무도 안 알려준다.
+      - name: Rebuild month map
+        run: python build/month_map.py
       # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
       #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
       #   실제로 CI 가 여기서 걸렸다(grid_days 4430 ≠ 4431 · px_nulls 2 ≠ 31).

@@ -41,6 +41,27 @@ def J(n):
     return json.load(io.open(os.path.join(DATA, n), encoding="utf-8"))
 
 
+# 🚨 사용자 지적 2026-09-21 「집중 변화 시장폭 이렇게 말하면 내가 못알아들어」.
+#   원천(strategy_diag.vars)의 이름은 짧은 학술어다. 화면·종이에는 **뜻이 드러나는 말**을 쓴다.
+#   ⚠ 원천의 키는 안 바꾼다 — 바꾸면 strategy_diag 와 갈린다. 여기서 옮겨 적기만 한다.
+KO = {
+    "mkt12":     ("지수 1년 수익", "S&P 500 이 지난 1년 동안 얼마나 올랐나"),
+    "vol1":      ("출렁임", "S&P 500 이 최근 한 달 하루하루 얼마나 흔들렸나(연율)"),
+    "disp":      ("종목 간 격차", "그달 종목마다 수익이 얼마나 갈렸나 — 클수록 고를 여지가 크다"),
+    "conc":      ("쏠림", "상위 10종목이 지수에서 차지하는 비중"),
+    "dconc12":   ("쏠림 방향", "그 쏠림이 1년 동안 더 커졌나(+) 풀렸나(-)"),
+    "breadth12": ("덩치 싸움", "동일가중이 시총가중을 1년 동안 얼마나 이겼나 — "
+                            "마이너스면 큰 종목이 이긴 것"),
+    "rate12":    ("금리 방향", "10년물 금리가 1년 동안 몇 %p 올랐나"),
+    "curve":     ("장단기 금리차", "10년물 - 3개월물"),
+}
+
+
+def ko(k):
+    v = KO.get(k)
+    return v[0] if v else k
+
+
 def terc(vals):
     """삼분위 경계. 결측은 빼고 센다."""
     v = sorted(x for x in vals if x is not None)
@@ -60,7 +81,9 @@ def label(spx, vol, disp, rate, brd):
     d = ("급락" if spx is not None and spx <= -5 else
          "하락" if spx is not None and spx < 0 else
          "급등" if spx is not None and spx >= 5 else "상승")
-    return "%s · 변동성%s · 분산%s · 금리%s · 폭%s" % (d, vol, disp, rate, brd)
+    # ⚠ 말이 어려우면 표가 안 읽힌다(사용자 지적 2026-09-21 「집중 변화 시장폭 이렇게
+    #   말하면 내가 못알아들어」). «분산·폭» 대신 «격차·덩치» 를 쓴다.
+    return "%s · 출렁임%s · 격차%s · 금리%s · 덩치%s" % (d, vol, disp, rate, brd)
 
 
 def main() -> int:
@@ -144,15 +167,18 @@ def main() -> int:
     #   거의 전부 잡음이다(실제로 처음 그렇게 짰다가 재현율 17~50% 로 흔들렸다).
     #   축을 하나씩 보면 한 칸이 40개월 안팎이라 셀 수 있는 수가 된다.
     # ⚠ 그래도 **검정이 아니다.** FDR 을 안 걸었고 다중검정 보정도 없다.
-    AXES = [("dir", "시장 방향", lambda r: ("급락" if r["spx"] <= -5 else "하락" if r["spx"] < 0
-                                          else "급등" if r["spx"] >= 5 else "상승")),
-            ("vol1", "변동성", lambda r: r["band"]["vol1"]),
-            ("disp", "종목 분산", lambda r: r["band"]["disp"]),
-            ("rate12", "금리 변화", lambda r: r["band"]["rate12"]),
-            ("breadth12", "시장 폭", lambda r: r["band"]["breadth12"]),
-            ("dconc12", "집중 변화", lambda r: r["band"]["dconc12"])]
+    # ⚠ 축 이름이 길면 옆의 «N개월» 과 겹친다(실측). 수준(급락·상승…)이 이미 뜻을 말하므로
+    #   축 이름은 짧게 둔다.
+    AXES = [("dir", "그달 지수",
+             lambda r: ("급락" if r["spx"] <= -5 else "하락" if r["spx"] < 0
+                        else "급등" if r["spx"] >= 5 else "상승")),
+            ("vol1", ko("vol1"), lambda r: r["band"]["vol1"]),
+            ("disp", ko("disp"), lambda r: r["band"]["disp"]),
+            ("rate12", ko("rate12"), lambda r: r["band"]["rate12"]),
+            ("breadth12", ko("breadth12"), lambda r: r["band"]["breadth12"]),
+            ("dconc12", ko("dconc12"), lambda r: r["band"]["dconc12"])]
     kinds = []
-    for key, ko, fn in AXES:
+    for key, axko, fn in AXES:          # ⚠ ko() 함수를 가리지 않게 이름을 달리한다
         for lev in ("급락", "하락", "상승", "급등", "하", "중", "상"):
             rs = [r for r in rows if fn(r) == lev]
             if len(rs) < 12:                    # 12개월 못 되면 세지 않는다
@@ -169,7 +195,7 @@ def main() -> int:
             top = sorted(cnt.items(),
                          key=lambda z: -(z[1] / len(rs) - base.get(z[0], 0) / len(rows)))[:6]
             kinds.append({
-                "axis": key, "axis_ko": ko, "level": lev, "n_months": len(rs),
+                "axis": key, "axis_ko": axko, "level": lev, "n_months": len(rs),
                 "spx_mean": round(st.mean([r["spx"] for r in rs]), 2),
                 "med_ex": round(st.median([r["med"] for r in rs]), 2),
                 "recur": [{"sid": k, "name": META[k]["name"], "hit": v,
@@ -183,6 +209,8 @@ def main() -> int:
                    "1592칸 중 3칸만 FDR 10% 를 넘었다.",
            "span": [rows[0]["m"], rows[-1]["m"]], "n_months": len(rows),
            "n_rules_median": int(st.median([r["n"] for r in rows])),
+           # 범례 — 화면·종이가 이것을 읽어 쓴다. 말을 두 곳에 적지 않는다.
+           "legend": [{"k": k, "short": v[0], "long": v[1]} for k, v in KO.items()],
            "topn": TOPN, "cuts": {k: v for k, v in cuts.items()},
            "persistence": persist, "kinds": kinds, "months": rows}
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")

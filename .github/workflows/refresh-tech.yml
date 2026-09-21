@@ -82,6 +82,11 @@ jobs:
       # 🚨 2026-09-15 — 게시 규칙 진단. 차트를 읽으므로 strategy_charts 뒤(refresh-stocks 와 같은 사유).
       - name: Rebuild strategy diagnostics
         run: python build/strategy_diag.py
+      # 🚨 달마다의 시장 상황과 그달 잘 간 전략 — strategy_diag(시장 상태)와
+      #   strategy_charts(규칙 월수익)를 둘 다 읽으므로 **그 뒤**다.
+      #   빠뜨리면 이 표만 한 판 낡은 달로 남고 아무도 안 알려준다.
+      - name: Rebuild month map
+        run: python build/month_map.py
       # 복제 리포트는 랩 세 파일에서 값을 **옮긴** 것이다. 랩만 갱신되고 이걸 빠뜨리면
       # 같은 사이트의 두 화면이 다른 날짜·다른 t 를 말한다 — '채점기가 두 벌' 이다.
       # validate_site 가 기준일을 대조해 막지만, 막히기 전에 여기서 같이 굽는 것이 맞다.
