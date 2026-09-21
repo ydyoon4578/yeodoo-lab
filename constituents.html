@@ -650,6 +650,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <details class="more"><summary>무엇을 못 재나</summary><div class="mbody" id="drklim"></div></details>
   </section>
 
+  <section class="sec" id="reusesec" hidden>
+    <h2 class="lbl">티커가 같아도 같은 회사가 아닙니다 <span class="sub" id="rusub"></span></h2>
+    <p class="lblnote">편입 명단은 <b>티커</b>로 적혀 있습니다. 그런데 티커는 재활용됩니다 —
+      회사가 사라지면 그 세 글자를 <b>다른 법인이 넘겨받습니다</b>. 옛 명단의 티커로 오늘 가격을
+      받아오면 <b>두 회사의 가격이 한 줄로 이어집니다</b>. 그러면 과거 수익률이 그 시점에
+      존재하지도 않던 회사의 것이 됩니다. 아래는 그것을 <b>같은 CIK(미국 증권거래위 법인번호)</b>로
+      대조해 가려낸 기록입니다.</p>
+    <div class="drk" id="ruwrap"></div>
+    <div class="note hard" id="ruwarn"></div>
+    <details class="more"><summary>무엇을 못 재나</summary><div class="mbody" id="rulim"></div></details>
+  </section>
+
   <section class="sec" id="panel"></section>
 
   <section class="sec">
@@ -955,6 +967,107 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     .then(function(r){return r.ok?r.json():null;})
     .then(function(j){ DRK=j; renderDrop(); })
     ['catch'](function(){ DRK=null; renderDrop(); });
+
+  // ── 티커가 같아도 같은 회사가 아니다 ──────────────────────────────────
+  // 🚨 data/pit_reuse.json 과 data/pit_fetch_report.json 도 화면이 아무도 안 읽고 있었다
+  //   (배선 감사가 «읽는 곳 없음 2» 로 세던 바로 그 둘이다). 위 index_drop_rank 와 같은 사유로
+  //   여기에 싣는다 — «재 놓고 안 실으면 잰 적 없는 것».
+  // ⚠ 두 파일은 PIT 백테스트가 **쓰고 또 읽는다**(pit_reuse 는 입력이고, 창이 넓어지면
+  //   pit_backtest 가 sys.exit 로 막는다). 그러니 고아 산출물이 아니라 «사람만 못 보던» 것이다.
+  // ⚠ 여기서는 **이 두 파일이 말하는 것만** 적는다. 백테스트가 실제로 자른 수는
+  //   pit_strategies.json 의 reuse_guard 에 있는데 그 파일은 3MB 라 이 쪽에서 안 끌어온다.
+  //   그 수를 손으로 옮겨 적지 않는다 — 손으로 적은 수는 낡는다.
+  var RU=null, RF=null;
+  function renderReuse(){
+    var host=document.getElementById('reusesec');
+    if(!host) return;
+    if(!RU&&!RF){ host.hidden=true; return; }
+    host.hidden=false;
+    var sub=[];
+    if(RU&&RU.as_of) sub.push('SEC 대조 '+RU.as_of);
+    if(RF&&RF.as_of) sub.push('가격 수집 '+String(RF.as_of).slice(0,10));
+    document.getElementById('rusub').textContent=sub.length?('· '+sub.join(' · ')):'';
+
+    var box=[];
+    // ① 티커가 다른 법인에 넘어간 것
+    if(RU&&RU.reassigned){
+      var ks=Object.keys(RU.reassigned).sort();
+      var rows=ks.map(function(t){
+        var d=RU.reassigned[t]||{};
+        return '<div class="drrow"><span><b>'+esc(t)+'</b></span><span class="drbarw" '+
+          'style="font-size:11px;color:var(--muted);text-align:left;padding-left:6px">'+
+          esc(String(d.wiki_cik||'').replace(/^0+/,''))+' → '+
+          esc(String(d.sec_cik||'').replace(/^0+/,''))+'</span><b style="font-size:11px;'+
+          'font-weight:400;color:var(--muted)">'+esc(d.first||'')+'~'+esc(d.last||'')+'</b></div>';
+      }).join('');
+      box.push('<div class="drb"><h4>티커가 다른 법인에 넘어간 '+ks.length+'종</h4>'+rows+
+        '<p class="lim" style="margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6">'+
+        '대조한 티커 <b>'+RU.n_checked+'</b>종 중 · 아직 같은 회사 <b>'+RU.n_match+'</b>종 · '+
+        '넘어감 <b>'+RU.n_reassigned+'</b>종 · 지금 아무도 안 씀 <b>'+RU.n_unknown+'</b>종<br>'+
+        '왼쪽 번호가 그때 법인, 오른쪽이 지금 그 티커를 쓰는 법인입니다. '+
+        '오른쪽 날짜는 그 티커가 지수에 들어 있던 기간입니다.</p></div>');
+    }
+    // ② 가격을 끝내 못 구한 것
+    if(RF){
+      var sr=RF.skip_reasons||{}, cnt={};
+      Object.keys(sr).forEach(function(t){
+        var s=String(sr[t]);
+        // 사유 문구가 종목명을 품어 제각각이다 — 앞머리로 묶는다(지어내지 않는다).
+        var k=(s.indexOf('형제 없음')>=0)?'같은 법인의 다른 티커가 없다':
+              (s.indexOf('갈린다')>=0)?'법인번호가 둘로 갈린다':
+              (s.indexOf('CIK 없음')>=0)?'법인번호 자체가 없다':
+              (s.indexOf('형제에도 가격이 없다')>=0)?'다른 티커에도 가격이 없다':'그 밖';
+        cnt[k]=(cnt[k]||0)+1;
+      });
+      var tot=Object.keys(cnt).reduce(function(a,k){return a+cnt[k];},0);
+      var rs=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).map(function(k){
+        var w=tot?(100*cnt[k]/tot):0;
+        return '<div class="drrow"><span>'+esc(k)+'</span><span class="drbarw">'+
+          '<i class="drbar" style="width:'+w.toFixed(1)+'%;display:block"></i></span><b>'+
+          cnt[k]+'</b></div>';
+      }).join('');
+      var ms=RF.missing||{}, sp=RF.splice||{}, zr=(RF.zero_rows||[]).length;
+      box.push('<div class="drb"><h4>가격을 끝내 못 구한 '+(ms.n||0)+'종 — 왜</h4>'+rs+
+        '<p class="lim" style="margin:9px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6">'+
+        '이 '+(ms.n||0)+'종이 차지하던 자리가 <b>'+(ms.member_months||0)+
+        '개 멤버-월</b>입니다 — 그 달 그 종목은 후보에서 빠집니다.<br>'+
+        '이름이 바뀌어 이어 붙인 것 <b>'+(sp.n||0)+'</b>종 · 받았는데 빈 줄이던 것 <b>'+zr+'</b>종.'+
+        '</p></div>');
+    }
+    document.getElementById('ruwrap').innerHTML=box.join('');
+
+    var msg='';
+    if(RU&&RF){
+      msg='<b>읽히는 것:</b> 옛 편입 명단의 티커 <b>'+RU.n_checked+'종</b>을 지금 법인번호와 '+
+        '맞대 봤더니, <b>'+RU.n_reassigned+'종</b>은 그 사이 <b>다른 회사의 티커가 되어 '+
+        '있었습니다</b>. 이 랩은 그 종목의 가격 계열을 <b>지수에서 빠진 달에서 잘라</b> '+
+        '두 회사가 한 줄로 이어지지 않게 합니다.'+
+        '<br><b>그런데 이것을 «다 걸렀다» 로 읽으면 안 됩니다.</b> '+RU.n_unknown+
+        '종은 <b>지금 아무도 그 티커를 안 써서</b> 넘어갔는지 아닌지 자체를 못 정합니다 — '+
+        '대조한 '+RU.n_checked+'종의 '+
+        (100*RU.n_unknown/Math.max(1,RU.n_checked)).toFixed(0)+'%입니다. '+
+        '«안 넘어갔다»가 아니라 <b>«모른다»</b>입니다.';
+    }
+    document.getElementById('ruwarn').innerHTML=msg;
+    document.getElementById('rulim').innerHTML=
+      (RU&&RU.note?'<p class="lim">'+esc(RU.note)+'</p>':'')+
+      '<p class="lim">두 수는 <b>같은 것을 세지 않습니다</b>. 위 칸은 «티커가 다른 법인에 '+
+      '넘어갔나»(법인번호 대조)이고, 아래 칸은 «가격 자료를 구했나»입니다. 넘어가지 않았어도 '+
+      '가격이 없을 수 있고, 그 반대도 있습니다.</p>'+
+      '<p class="lim">이 쪽은 두 진단 파일이 <b>말하는 것만</b> 적습니다. 백테스트가 실제로 '+
+      '잘라낸 종목 수는 그보다 적습니다 — 지수에서 빠진 때가 랩의 PIT 창(2016-08~)보다 앞서면 '+
+      '자를 것이 없기 때문입니다. 그 수는 PIT 산출물(pit_strategies.json 의 reuse_guard)에 '+
+      '있고, 여기로 옮겨 적으면 낡으므로 옮기지 않습니다.</p>'+
+      '<p class="lim">법인번호 대조는 <b>오늘의</b> SEC 티커 지도를 씁니다. 그래서 «지금 누가 '+
+      '쓰나»는 알아도 «언제 넘어갔나»는 모릅니다 — 넘어간 시점이 지수 편입 기간 안인지 뒤인지는 '+
+      '이 자료로 못 가립니다.</p>';
+  }
+  fetch('data/pit_reuse.json',{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ RU=j; renderReuse(); })['catch'](function(){ renderReuse(); });
+  fetch('data/pit_fetch_report.json',{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ RF=j; renderReuse(); })['catch'](function(){ renderReuse(); });
 
   fetch('data/index_ledger.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
     D=j; var ms=monthsOf(IX); M=ms[ms.length-1];
