@@ -2797,6 +2797,38 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var CSTY={};
     stys.forEach(function(s,i){CSTY[s.nm]=SECPAL[i%SECPAL.length];});
 
+    /* 지수 방법론 8종 — 랩 백테스트 경로. 자료는 style_trails.json 의 path/path_dates 다
+       (build/style_top_pdf.py 가 «끝값 = 표의 그 칸» 을 검사하고 실어 보낸다).
+       🚨 구간을 **거래일 오프셋**으로 자른다 — 표의 TRAIL 과 같은 수여야 한다.
+         1일 1 · 1주 5 · 1개월 21 · 3개월 63 · 6개월 126 · 1년 252. 달력 날짜로 자르면
+         6개월 칸이 최대 6.98%p 어긋난다(실측 2026-09-21).
+       ⚠ '1D' 는 판을 안 낸다 — 다른 판은 분봉이고 이쪽은 일간이라 점이 둘이다.
+         같은 화면에 다른 해상도를 나란히 놓지 않는다(산업그룹 판과 같은 규약).
+       ⚠ 자료가 없으면(옛 산출물) 판을 안 낸다. 빈 판을 그리지 않는다. */
+    var LABOFF={'1W':5,'1M':21,'3M':63,'6M':126,'12M':252};
+    var LABP=(SLAB&&SLAB._path)||null, LABPD=(SLAB&&SLAB._path_dates)||null;
+    var labs=[], CLAB={}, LABD=[];
+    if(LABP&&LABPD&&LABPD.length&&STC_HZ!=='1D'){
+      var i0;
+      if(STC_HZ==='YTD'){
+        var yr=String(LABPD[LABPD.length-1]).slice(0,4);
+        i0=LABPD.length-1;
+        for(var q=0;q<LABPD.length;q++){if(String(LABPD[q]).slice(0,4)===yr){i0=Math.max(0,q-1);break;}}
+      }else{
+        i0=Math.max(0, LABPD.length-1-(LABOFF[STC_HZ]||252));
+      }
+      LABD=LABPD.slice(i0);
+      Object.keys(LABP).forEach(function(k){
+        var a=LABP[k], b=a[i0];
+        if(!b)return;
+        var v=a.slice(i0).map(function(x){return x==null?null:+(((x/b)-1)*100).toFixed(3);});
+        var nm=(SLAB&&SLAB[k]&&SLAB[k].label)||k;
+        labs.push({nm:nm, v:v, last:v.length?v[v.length-1]:-1e9});
+      });
+      labs.sort(function(a,b){return b.last-a.last;});
+      labs.forEach(function(s,i){CLAB[s.nm]=SECPAL[i%SECPAL.length];});
+    }
+
     // 산업그룹 22줄 — 섹터 판과 **같은 방식**이되 판을 따로 둔다. 섹터 11 위에 22를 얹으면
     //   한 판에 33선이라 라벨이 엉킨다(사용자와 그렇게 정했다).
     // ⚠ 자료가 없으면 판을 안 낸다(별도 파일이라 늦게 오거나 아예 없을 수 있다).
@@ -2842,13 +2874,25 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           //   **이미 맞춰져** 온다(build/home_perf.py). 길이가 다르면 안 그린다 —
           //   길이가 다른 두 배열을 같은 x 로 그리면 날짜가 조용히 어긋난다.
           (blk.fx&&blk.fx.length===blk.dates.length)?{v:blk.fx}:null)+
-        (stys.length?chart(blk.sec_dates, stys, '스타일', CSTY):'')+
+        (stys.length?chart(blk.sec_dates, stys, '스타일 ETF', CSTY):'')+
+        // 🚨 2026-09-21 사용자 지시 «지수 방법론 8개 차트로 맞춰줘» — 위 판은 **살 수 있는
+        //   ETF** 이고 바로 아래 표에는 **지수 방법론 8종**(랩 백테스트)이 따로 있는데
+        //   차트에는 그 줄이 없었다. 같은 화면에서 위아래가 다른 것을 말하고 있었다.
+        //   ⚠ 두 판을 **합치지 않는다.** ETF 는 실제 상품 수익률이고 이쪽은 상위 10종목
+        //     동일가중 백테스트라, 한 판에 그리면 크기를 그대로 견주게 된다(표에서 두
+        //     묶음을 가른 이유와 같다).
+        (labs.length?chart(LABD, labs, '지수 방법론(랩 백테스트)', CLAB):'')+
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
       '</div>'+
       (iSkip?'<p class="stnote">⚠ 1일은 <b>분봉 경로</b>다(일간 종가로는 점이 둘이라 선이 '+
         '안 된다). 산업그룹은 아직 분봉으로 안 굽기 때문에 이 칸에서만 판을 뺐다 — '+
         '다른 축을 같은 화면에 나란히 놓지 않는다.</p>':'')+
+      // ⚠ 1일 칸에서 지수 방법론 판이 빠지는 이유를 적는다. 안 적으면 «그 판이 원래
+      //   없는 화면» 으로 읽힌다 — 차트 전체가 말없이 사라졌던 2026-09-17 과 같은 실수다.
+      ((STC_HZ==='1D'&&LABP)?'<p class="stnote">⚠ <b>지수 방법론</b> 판은 1일 칸에서 뺐다 — '+
+        '랩 백테스트는 <b>일간 종가</b>라 이 칸에서는 점이 둘이다. 위 판들은 분봉이라 '+
+        '한 화면에 놓으면 해상도가 다른 두 그림이 된다.</p>':'')+
       '<div class="scfoot">기준일 '+esc((STC_P.base_dates||{})[STC_HZ]||'')+
       ' 부터의 누적 수익률(%). 각 선의 끝값은 아래 표의 같은 칸이다.'+
       // ⚠ 산업그룹 파일만 못 받은 경우 — 판 셋은 멀쩡하니 판을 비우지 않고 각주로 알린다.
@@ -3198,7 +3242,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(tj&&tj.styles){
         ST_HIDE=tj.hide||{};   // 정본은 빌더다(위 ST_HIDE 주석)
         SLAB={_as_of:tj.as_of||'', _start:tj.start||'', _start5:tj.start5||'', _pit:tj.pit||null,
-              _etf:tj.etf_sharpe||null, _etf5:tj.etf_sharpe5||null};
+              _etf:tj.etf_sharpe||null, _etf5:tj.etf_sharpe5||null,
+              // 지수 방법론 8종의 일별 경로 — 차트 판 하나가 이것으로 그려진다(2026-09-21).
+              //   없으면(옛 산출물) 그 판만 안 난다. 나머지 화면은 그대로다.
+              _path:tj.path||null, _path_dates:tj.path_dates||null};
         tj.styles.forEach(function(s){SLAB[s.key]=s;});
       }
       // market_board 는 기간별 수익률 표의 지수 줄(SPY·QQQ·DIA·IWM)과 섹터 줄을 먹인다.
