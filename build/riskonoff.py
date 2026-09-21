@@ -31,6 +31,10 @@ except Exception: pass
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "_riskonoff.json")
+# 🚨 일별 전량 덤프. _riskonoff.json 의 hist 는 rows[::5] 라 5일마다 뽑은 축약본이고,
+#   추세축(d5)·사후창(21일)을 재려면 빠진 4/5 가 필요하다. 그래서 따로 낸다.
+#   ⚠ 이 파일은 _riskonoff.json 을 **대체하지 않는다** — 화면이 읽는 건 그쪽이다.
+OUT_DAILY = os.path.join(DATA, "_riskonoff_daily.json")
 sys.path.insert(0, os.path.join(ROOT, "build"))
 
 W = {"trend": 18, "vol": 18, "breadth": 18, "macro": 18, "sector": 18, "senti": 10}
@@ -241,6 +245,14 @@ def main() -> int:
            "hist": [{"d": r["d"], "score": r["score"], "band": r["band"]}
                     for r in rows[::5]]}
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
+
+    # 일별 전량 — 추세축(d5)·사후창을 재는 쪽이 읽는다. indent 없이 줄여 쓴다.
+    io.open(OUT_DAILY, "w", encoding="utf-8").write(json.dumps(
+        {"note": "riskonoff.py 일별 전량. _riskonoff.json 의 hist(rows[::5]) 축약 이전 값이다. "
+                 "화면은 이 파일을 안 읽는다 — 검정기 전용.",
+         "as_of": cur["d"], "n": len(rows), "fwd_days": FWD,
+         "rows": [{"d": r["d"], "score": r["score"], "band": r["band"], "spx": r["spx"]}
+                  for r in rows]}, ensure_ascii=False) + "\n")
 
     print("\n기준 %s · 종합 **%.1f** → %s" % (cur["d"], cur["score"], cur["band"]))
     print("  %-14s %s" % ("신호군", "점수"))
