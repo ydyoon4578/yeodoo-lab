@@ -173,6 +173,13 @@ jobs:
       #   ⚠ 매매 규칙이 아니라 감시판이다 — 켜졌다고 사는 것이 아니다.
       - name: Rebuild extreme flags
         run: python build/flags.py
+      # 🚨 종합 Risk-On/Off — 518종 패널을 훑어 시장 폭을 낸다(수 분). 그래서 패널을
+      #   만드는 이 잡에만 둔다(refresh-assets/tech 에는 안 붙인다).
+      #   설계는 사용자 제공 「시장 국면 모니터」 ①, 심리 10%는 자료가 없어 뺐다.
+      #   ⚠ 실패해도 잡을 세우지 않는다 — 이 산출물이 없어도 나머지는 다 선다.
+      - name: Rebuild composite Risk-On/Off
+        run: python build/riskonoff.py
+        continue-on-error: true
       # 🚨 지수 편입 원장은 **가격 격자를 세어 커버리지를 박아 둔다**(src_fp). 격자가
       #   하루 늘거나 결손 수가 바뀌면 그 수가 조용히 낡고, 관문의 지문 검사가 막는다.
       #   실제로 CI 가 여기서 걸렸다(grid_days 4430 ≠ 4431 · px_nulls 2 ≠ 31).
