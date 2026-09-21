@@ -1,5 +1,6 @@
 {
  "note": "교과서 TA 신호 검증. 설계 출처는 사용자 제공 사내 ta_lab (backtest_signals.py · indicators.py) — **산식과 발동 조건만** 가져왔다.",
+ "excess_note": "초과 = 사후 1개월 평균 − 기준선. **매수·매도 같은 부호 규약**이다(사용자 지시 2026-09-22 — 종전에 매도만 «덜 오름» 이라 부호가 뒤집혀 헷갈렸다). 그래서 매도 신호는 **음수일수록 제 몫을 한 것**이고, 매도 표는 낮은 것부터 정렬한다.",
  "as_of": "2026-09-18",
  "years": 10,
  "basis": "가격지수(PR) — 배당 재투자 없음",
@@ -494,8 +495,8 @@
      "fwd1w_win": 70.0,
      "fwd1m_mean": 1.28,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": 0.12,
      "fwd1m_down": 29.0,
-     "edge_vs_base": -0.12,
      "last": "2026-05-26",
      "days_ago": 115,
      "on_now": false
@@ -508,8 +509,8 @@
      "fwd1w_win": 60.0,
      "fwd1m_mean": 1.36,
      "fwd1m_win": 69.0,
+     "fwd1m_excess": 0.2,
      "fwd1m_down": 31.0,
-     "edge_vs_base": -0.2,
      "last": "2026-08-03",
      "days_ago": 46,
      "on_now": false
@@ -522,8 +523,8 @@
      "fwd1w_win": 59.0,
      "fwd1m_mean": 0.79,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": -0.37,
      "fwd1m_down": 33.0,
-     "edge_vs_base": 0.37,
      "last": "2026-08-18",
      "days_ago": 31,
      "on_now": false
@@ -536,8 +537,8 @@
      "fwd1w_win": 61.0,
      "fwd1m_mean": 0.25,
      "fwd1m_win": 57.0,
+     "fwd1m_excess": -0.91,
      "fwd1m_down": 43.0,
-     "edge_vs_base": 0.91,
      "last": "2026-06-04",
      "days_ago": 106,
      "on_now": false
@@ -550,8 +551,8 @@
      "fwd1w_win": 59.0,
      "fwd1m_mean": 0.51,
      "fwd1m_win": 61.0,
+     "fwd1m_excess": -0.65,
      "fwd1m_down": 39.0,
-     "edge_vs_base": 0.65,
      "last": "2026-08-04",
      "days_ago": 45,
      "on_now": false
@@ -564,8 +565,8 @@
      "fwd1w_win": 35.0,
      "fwd1m_mean": 1.14,
      "fwd1m_win": 65.0,
+     "fwd1m_excess": -0.02,
      "fwd1m_down": 35.0,
-     "edge_vs_base": 0.02,
      "last": "2026-04-22",
      "days_ago": 149,
      "on_now": false
@@ -578,8 +579,8 @@
      "fwd1w_win": 58.0,
      "fwd1m_mean": 0.53,
      "fwd1m_win": 68.0,
+     "fwd1m_excess": -0.63,
      "fwd1m_down": 32.0,
-     "edge_vs_base": 0.63,
      "last": "2026-08-11",
      "days_ago": 38,
      "on_now": false
@@ -600,8 +601,8 @@
      "fwd1w_win": 64.0,
      "fwd1m_mean": 1.26,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": 0.1,
      "fwd1m_down": 29.0,
-     "edge_vs_base": -0.1,
      "last": "2026-09-16",
      "days_ago": 2,
      "on_now": false
@@ -614,8 +615,8 @@
      "fwd1w_win": 68.0,
      "fwd1m_mean": 0.53,
      "fwd1m_win": 69.0,
+     "fwd1m_excess": -0.63,
      "fwd1m_down": 31.0,
-     "edge_vs_base": 0.63,
      "last": "2026-08-20",
      "days_ago": 29,
      "on_now": false
@@ -628,8 +629,8 @@
      "fwd1w_win": 65.0,
      "fwd1m_mean": 0.61,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": -0.55,
      "fwd1m_down": 29.0,
-     "edge_vs_base": 0.55,
      "last": "2026-09-15",
      "days_ago": 3,
      "on_now": false
@@ -642,8 +643,8 @@
      "fwd1w_win": 69.0,
      "fwd1m_mean": 0.92,
      "fwd1m_win": 69.0,
+     "fwd1m_excess": -0.24,
      "fwd1m_down": 31.0,
-     "edge_vs_base": 0.24,
      "last": "2026-07-31",
      "days_ago": 49,
      "on_now": false
@@ -656,8 +657,8 @@
      "fwd1w_win": 64.0,
      "fwd1m_mean": 1.15,
      "fwd1m_win": 72.0,
+     "fwd1m_excess": -0.01,
      "fwd1m_down": 28.0,
-     "edge_vs_base": 0.01,
      "last": "2026-09-09",
      "days_ago": 9,
      "on_now": false
@@ -670,8 +671,8 @@
      "fwd1w_win": 62.0,
      "fwd1m_mean": 0.73,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": -0.43,
      "fwd1m_down": 33.0,
-     "edge_vs_base": 0.43,
      "last": "2026-08-17",
      "days_ago": 32,
      "on_now": false
@@ -684,8 +685,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 0.89,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": -0.27,
      "fwd1m_down": 29.0,
-     "edge_vs_base": 0.27,
      "last": "2026-08-03",
      "days_ago": 46,
      "on_now": false
@@ -698,8 +699,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 1.18,
      "fwd1m_win": 68.0,
+     "fwd1m_excess": 0.02,
      "fwd1m_down": 32.0,
-     "edge_vs_base": -0.02,
      "last": "2026-08-03",
      "days_ago": 46,
      "on_now": false
@@ -712,8 +713,8 @@
      "fwd1w_win": 58.0,
      "fwd1m_mean": 0.41,
      "fwd1m_win": 65.0,
+     "fwd1m_excess": -0.75,
      "fwd1m_down": 35.0,
-     "edge_vs_base": 0.75,
      "last": "2026-05-12",
      "days_ago": 129,
      "on_now": false
@@ -726,8 +727,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 0.11,
      "fwd1m_win": 65.0,
+     "fwd1m_excess": -1.05,
      "fwd1m_down": 35.0,
-     "edge_vs_base": 1.05,
      "last": "2026-08-13",
      "days_ago": 36,
      "on_now": false
@@ -740,8 +741,8 @@
      "fwd1w_win": 45.0,
      "fwd1m_mean": 0.56,
      "fwd1m_win": 64.0,
+     "fwd1m_excess": -0.6,
      "fwd1m_down": 36.0,
-     "edge_vs_base": 0.6,
      "last": "2026-04-17",
      "days_ago": 154,
      "on_now": false
@@ -754,8 +755,8 @@
      "fwd1w_win": 64.0,
      "fwd1m_mean": 1.24,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": 0.08,
      "fwd1m_down": 29.0,
-     "edge_vs_base": -0.08,
      "last": "2026-08-31",
      "days_ago": 18,
      "on_now": false
@@ -768,8 +769,8 @@
      "fwd1w_win": 55.0,
      "fwd1m_mean": 0.39,
      "fwd1m_win": 64.0,
+     "fwd1m_excess": -0.77,
      "fwd1m_down": 36.0,
-     "edge_vs_base": 0.77,
      "last": "2026-09-16",
      "days_ago": 2,
      "on_now": false
@@ -782,8 +783,8 @@
      "fwd1w_win": 58.0,
      "fwd1m_mean": 2.87,
      "fwd1m_win": 74.0,
+     "fwd1m_excess": 1.71,
      "fwd1m_down": 26.0,
-     "edge_vs_base": -1.71,
      "last": "2026-09-16",
      "days_ago": 2,
      "on_now": false
@@ -796,8 +797,8 @@
      "fwd1w_win": 61.0,
      "fwd1m_mean": 0.59,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": -0.57,
      "fwd1m_down": 29.0,
-     "edge_vs_base": 0.57,
      "last": "2026-09-09",
      "days_ago": 9,
      "on_now": false
@@ -810,8 +811,8 @@
      "fwd1w_win": 62.0,
      "fwd1m_mean": 1.52,
      "fwd1m_win": 62.0,
+     "fwd1m_excess": 0.36,
      "fwd1m_down": 38.0,
-     "edge_vs_base": -0.36,
      "last": "2026-03-12",
      "days_ago": 190,
      "on_now": false
@@ -1378,8 +1379,8 @@
      "fwd1w_win": 53.0,
      "fwd1m_mean": 1.18,
      "fwd1m_win": 66.0,
+     "fwd1m_excess": -0.45,
      "fwd1m_down": 34.0,
-     "edge_vs_base": 0.45,
      "last": "2026-05-21",
      "days_ago": 120,
      "on_now": false
@@ -1392,8 +1393,8 @@
      "fwd1w_win": 60.0,
      "fwd1m_mean": 1.62,
      "fwd1m_win": 66.0,
+     "fwd1m_excess": -0.01,
      "fwd1m_down": 34.0,
-     "edge_vs_base": 0.01,
      "last": "2026-09-17",
      "days_ago": 1,
      "on_now": true
@@ -1406,8 +1407,8 @@
      "fwd1w_win": 58.0,
      "fwd1m_mean": 1.35,
      "fwd1m_win": 70.0,
+     "fwd1m_excess": -0.28,
      "fwd1m_down": 30.0,
-     "edge_vs_base": 0.28,
      "last": "2026-06-02",
      "days_ago": 108,
      "on_now": false
@@ -1420,8 +1421,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 0.36,
      "fwd1m_win": 68.0,
+     "fwd1m_excess": -1.27,
      "fwd1m_down": 32.0,
-     "edge_vs_base": 1.27,
      "last": "2026-04-14",
      "days_ago": 157,
      "on_now": false
@@ -1434,8 +1435,8 @@
      "fwd1w_win": 60.0,
      "fwd1m_mean": 0.84,
      "fwd1m_win": 61.0,
+     "fwd1m_excess": -0.79,
      "fwd1m_down": 39.0,
-     "edge_vs_base": 0.79,
      "last": "2026-05-08",
      "days_ago": 133,
      "on_now": false
@@ -1448,8 +1449,8 @@
      "fwd1w_win": 67.0,
      "fwd1m_mean": 1.47,
      "fwd1m_win": 56.0,
+     "fwd1m_excess": -0.16,
      "fwd1m_down": 44.0,
-     "edge_vs_base": 0.16,
      "last": "2026-05-05",
      "days_ago": 136,
      "on_now": false
@@ -1462,8 +1463,8 @@
      "fwd1w_win": 59.0,
      "fwd1m_mean": 0.49,
      "fwd1m_win": 52.0,
+     "fwd1m_excess": -1.14,
      "fwd1m_down": 48.0,
-     "edge_vs_base": 1.14,
      "last": "2026-06-03",
      "days_ago": 107,
      "on_now": false
@@ -1484,8 +1485,8 @@
      "fwd1w_win": 50.0,
      "fwd1m_mean": 1.33,
      "fwd1m_win": 69.0,
+     "fwd1m_excess": -0.3,
      "fwd1m_down": 31.0,
-     "edge_vs_base": 0.3,
      "last": "2026-09-16",
      "days_ago": 2,
      "on_now": false
@@ -1498,8 +1499,8 @@
      "fwd1w_win": 61.0,
      "fwd1m_mean": 0.75,
      "fwd1m_win": 64.0,
+     "fwd1m_excess": -0.88,
      "fwd1m_down": 36.0,
-     "edge_vs_base": 0.88,
      "last": "2026-08-21",
      "days_ago": 28,
      "on_now": false
@@ -1512,8 +1513,8 @@
      "fwd1w_win": 57.0,
      "fwd1m_mean": 1.61,
      "fwd1m_win": 71.0,
+     "fwd1m_excess": -0.02,
      "fwd1m_down": 29.0,
-     "edge_vs_base": 0.02,
      "last": "2026-09-15",
      "days_ago": 3,
      "on_now": false
@@ -1526,8 +1527,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 1.04,
      "fwd1m_win": 70.0,
+     "fwd1m_excess": -0.59,
      "fwd1m_down": 30.0,
-     "edge_vs_base": 0.59,
      "last": "2026-07-20",
      "days_ago": 60,
      "on_now": false
@@ -1540,8 +1541,8 @@
      "fwd1w_win": 58.0,
      "fwd1m_mean": 1.82,
      "fwd1m_win": 66.0,
+     "fwd1m_excess": 0.19,
      "fwd1m_down": 34.0,
-     "edge_vs_base": -0.19,
      "last": "2026-09-14",
      "days_ago": 4,
      "on_now": false
@@ -1554,8 +1555,8 @@
      "fwd1w_win": 65.0,
      "fwd1m_mean": 1.21,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": -0.42,
      "fwd1m_down": 33.0,
-     "edge_vs_base": 0.42,
      "last": "2026-08-18",
      "days_ago": 31,
      "on_now": false
@@ -1568,8 +1569,8 @@
      "fwd1w_win": 62.0,
      "fwd1m_mean": 1.58,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": -0.05,
      "fwd1m_down": 33.0,
-     "edge_vs_base": 0.05,
      "last": "2026-08-12",
      "days_ago": 37,
      "on_now": false
@@ -1582,8 +1583,8 @@
      "fwd1w_win": 63.0,
      "fwd1m_mean": 1.23,
      "fwd1m_win": 65.0,
+     "fwd1m_excess": -0.4,
      "fwd1m_down": 35.0,
-     "edge_vs_base": 0.4,
      "last": "2026-09-18",
      "days_ago": 0,
      "on_now": true
@@ -1596,8 +1597,8 @@
      "fwd1w_win": 61.0,
      "fwd1m_mean": 0.47,
      "fwd1m_win": 61.0,
+     "fwd1m_excess": -1.16,
      "fwd1m_down": 39.0,
-     "edge_vs_base": 1.16,
      "last": "2026-05-28",
      "days_ago": 113,
      "on_now": false
@@ -1610,8 +1611,8 @@
      "fwd1w_win": 56.0,
      "fwd1m_mean": 0.8,
      "fwd1m_win": 61.0,
+     "fwd1m_excess": -0.83,
      "fwd1m_down": 39.0,
-     "edge_vs_base": 0.83,
      "last": "2026-05-20",
      "days_ago": 121,
      "on_now": false
@@ -1624,8 +1625,8 @@
      "fwd1w_win": 51.0,
      "fwd1m_mean": 1.06,
      "fwd1m_win": 66.0,
+     "fwd1m_excess": -0.57,
      "fwd1m_down": 34.0,
-     "edge_vs_base": 0.57,
      "last": "2026-08-17",
      "days_ago": 32,
      "on_now": false
@@ -1638,8 +1639,8 @@
      "fwd1w_win": 66.0,
      "fwd1m_mean": 1.71,
      "fwd1m_win": 65.0,
+     "fwd1m_excess": 0.08,
      "fwd1m_down": 35.0,
-     "edge_vs_base": -0.08,
      "last": "2026-08-24",
      "days_ago": 25,
      "on_now": false
@@ -1652,8 +1653,8 @@
      "fwd1w_win": 57.0,
      "fwd1m_mean": 0.91,
      "fwd1m_win": 57.0,
+     "fwd1m_excess": -0.72,
      "fwd1m_down": 42.0,
-     "edge_vs_base": 0.72,
      "last": "2026-06-05",
      "days_ago": 105,
      "on_now": false
@@ -1666,8 +1667,8 @@
      "fwd1w_win": 62.0,
      "fwd1m_mean": 2.88,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": 1.25,
      "fwd1m_down": 33.0,
-     "edge_vs_base": -1.25,
      "last": "2026-07-24",
      "days_ago": 56,
      "on_now": false
@@ -1680,8 +1681,8 @@
      "fwd1w_win": 44.0,
      "fwd1m_mean": 0.74,
      "fwd1m_win": 63.0,
+     "fwd1m_excess": -0.89,
      "fwd1m_down": 37.0,
-     "edge_vs_base": 0.89,
      "last": "2026-09-09",
      "days_ago": 9,
      "on_now": false
@@ -1694,8 +1695,8 @@
      "fwd1w_win": 65.0,
      "fwd1m_mean": 2.23,
      "fwd1m_win": 67.0,
+     "fwd1m_excess": 0.6,
      "fwd1m_down": 33.0,
-     "edge_vs_base": -0.6,
      "last": "2026-08-24",
      "days_ago": 25,
      "on_now": false

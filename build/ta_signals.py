@@ -420,12 +420,13 @@ def _stat(mask, fwd, base1m, sell=False):
               "fwd1w_win": round(float((r1w > 0).mean()) * 100, 0),
               "fwd1m_mean": round(float(r1m.mean()) * 100, 2),
               "fwd1m_win": round(float((r1m > 0).mean()) * 100, 0)})
+    # 🚨 2026-09-22 사용자 지시 — **매수·매도 모두 같은 「초과」** 를 쓴다.
+    #   종전에는 매도만 «덜 오름»(= 기준선 − 사후)이라 부호가 뒤집혀 헷갈렸다.
+    #   이제 어느 표를 봐도 **초과 = 사후 − 기준선** 이고, 양수는 기준선보다 더 오른 것이다.
+    #   ⚠ 그래서 매도 신호는 **음수일수록 제 몫을 한 것**이다. 정렬도 낮은 것부터 한다.
+    r["fwd1m_excess"] = round((float(r1m.mean()) - base1m) * 100, 2)
     if sell:
-        # 🚨 매도는 «덜 올랐나» 로 본다 — 숏 진입 신호가 아니라 차익실현 신호라서.
         r["fwd1m_down"] = round(float((r1m < 0).mean()) * 100, 0)
-        r["edge_vs_base"] = round((base1m - float(r1m.mean())) * 100, 2)
-    else:
-        r["fwd1m_excess"] = round((float(r1m.mean()) - base1m) * 100, 2)
     return r
 
 
@@ -439,6 +440,10 @@ def main() -> int:
 
     out = {"note": "교과서 TA 신호 검증. 설계 출처는 사용자 제공 사내 ta_lab "
                    "(backtest_signals.py · indicators.py) — **산식과 발동 조건만** 가져왔다.",
+           "excess_note": "초과 = 사후 1개월 평균 − 기준선. **매수·매도 같은 부호 규약**이다"
+                          "(사용자 지시 2026-09-22 — 종전에 매도만 «덜 오름» 이라 부호가 "
+                          "뒤집혀 헷갈렸다). 그래서 매도 신호는 **음수일수록 제 몫을 한 것**이고, "
+                          "매도 표는 낮은 것부터 정렬한다.",
            "as_of": asof, "years": YEARS, "basis": B.get("basis"),
            "src": ("bench_ohlc.json(고가·저가·거래량) + bench_px.json(기준일)" if OH
                    else "bench_px.json(종가만) — 고가·저가·거래량이 없어 27종만 낸다"),
@@ -510,18 +515,17 @@ def main() -> int:
         print("═" * 98)
         for side, ko in (("buy", "매수"), ("sell", "매도")):
             rows = [x for x in r[side] if x.get("n", 0) >= MIN_N]
-            kf = (lambda x: -(x.get("fwd1m_excess") or -99)) if side == "buy" \
-                else (lambda x: -(x.get("edge_vs_base") or -99))
-            rows.sort(key=kf)
+            # 매수는 높은 초과가 위 · 매도는 **낮은 초과가 위**(음수일수록 제 몫을 했다).
+            rows.sort(key=lambda x: (x.get("fwd1m_excess") or 0),
+                      reverse=(side == "buy"))
             print("\n  ── %s %d종 ──   %-22s %4s %8s %7s %8s %7s %8s  %-11s %6s"
                   % (ko, len(rows), "신호", "횟수", "1주", "1주승", "1개월", "1개월승",
-                     "초과" if side == "buy" else "덜오름", "최근 발동", "며칠전"))
+                     "초과", "최근 발동", "며칠전"))
             for x in rows:
-                ex = x.get("fwd1m_excess") if side == "buy" else x.get("edge_vs_base")
                 print("      %-24s %-4s %4d %7.2f%% %6.0f%% %7.2f%% %6.0f%% %7.2f%%p  %-11s %5s일 %s"
                       % (x["signal"][:24], "상태" if x["kind"] == "state" else "",
                          x["n"], x["fwd1w_mean"], x["fwd1w_win"], x["fwd1m_mean"],
-                         x["fwd1m_win"], ex, x["last"] or "—",
+                         x["fwd1m_win"], x["fwd1m_excess"], x["last"] or "—",
                          x["days_ago"] if x["days_ago"] is not None else "—",
                          "★ 켜짐" if x["on_now"] else ""))
             thin = [x["signal"] for x in r[side] if x.get("n", 0) < MIN_N]
