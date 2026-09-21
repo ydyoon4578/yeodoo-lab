@@ -640,6 +640,8 @@ def main() -> int:
                     f2 = c.index[both]
                     outp.append({"a": a, "b": b, "pair": "%s ∧ %s" % (a, b), **st,
                                  "last": str(f2[-1].date()),
+                                 # 차트가 번호를 매길 발동일 — 최근 CHART_M 개월 것만.
+                                 "fires": [str(x.date()) for x in f2[f2 >= c0]],
                                  "solo_a": next(x.get("fwd1m_excess") for x in side_rows
                                                 if x["signal"] == a),
                                  "solo_b": next(x.get("fwd1m_excess") for x in side_rows
