@@ -60,6 +60,10 @@ def main() -> int:
         FL = json.load(io.open(os.path.join(DATA, "_flags.json"), encoding="utf-8"))
     except Exception:
         FL = None
+    try:
+        RO = json.load(io.open(os.path.join(DATA, "_riskonoff.json"), encoding="utf-8"))
+    except Exception:
+        RO = None
 
     # 쪽 나누기 — 축별 요약은 칸마다 5줄 + 제목 1줄
     # ⚠ 7개면 첫 쪽(범례가 자리를 먹는다)에서 마지막 칸이 각주 위로 넘쳤다 — 실측으로 5로 줄였다.
@@ -67,7 +71,7 @@ def main() -> int:
     npk = (len(K) + AX_PER - 1) // AX_PER
     ROWS_P = 46                     # 월별 표 한 쪽에 46행
     npm = (len(M) + ROWS_P - 1) // ROWS_P
-    total = npk + npm + (1 if A else 0) + (1 if FL else 0)
+    total = npk + npm + (1 if A else 0) + (1 if FL else 0) + (1 if RO else 0)
     print("축 칸 %d개 · 달 %d개 → %d쪽" % (len(K), len(M), total))
 
     with PdfPages(OUT) as pdf:
@@ -177,6 +181,85 @@ def main() -> int:
             pdf.savefig(fig)
             if "--png" in sys.argv and pi == npm - 1:
                 fig.savefig(os.path.join(DATA, "_mm2.png"), dpi=110, facecolor=PAPER)
+            ST.plt.close(fig)
+
+        # ── 종합 Risk-On/Off ───────────────────────────────────────────
+        if RO:
+            fig = ST.new_page()
+            y = .958
+            ST.tx(fig, X0, y, "종합 Risk-On/Off", fontsize=15, weight="bold")
+            ST.tx(fig, X1, y, "기준 %s" % RO["as_of"], fontsize=7.4, color=MUTED, ha="right")
+            # ⚠ 30pt 숫자는 폭이 넓다 — 밴드 라벨을 .085 에 두니 겹쳤다(실측). .125 로 뗀다.
+            y -= .026
+            bc = NEG if "Off" in RO["band"] else (POS if "On" in RO["band"] else ACC)
+            ST.tx(fig, X0, y, "%.1f" % RO["score"], fontsize=30, weight="bold", color=bc)
+            ST.tx(fig, X0 + .125, y + .006, RO["band"], fontsize=15, weight="bold", color=bc)
+            ST.tx(fig, X0 + .125, y - .008,
+                  ">=68 Risk-On · 60~67 준Risk-On · 50~59 중립 · 40~49 준Risk-Off · <40 Risk-Off",
+                  fontsize=6.4, color=MUTED)
+            y -= .034
+            KO = {"trend": "추세·모멘텀", "vol": "변동성 안정도", "breadth": "시장 폭",
+                  "macro": "매크로·신용", "sector": "섹터 리더십"}
+            gr = [[KO[k], "%.1f" % RO["groups"][k], "%d%%" % RO["weights"][k]]
+                  for k in ("trend", "vol", "breadth", "macro", "sector")]
+            gr.append(["심리", "—", "10% (자료 없음 · 뺐다)"])
+
+            def cg(r, c, gr=gr):
+                if c == 1 and gr[r][1] != "—":
+                    v = float(gr[r][1])
+                    return NEG if v < 35 else (POS if v > 65 else INK)
+                return INK if c == 0 else MUTED
+            y = ST.table(fig, X0, y, [.180, .090, .220], ["신호군", "점수", "가중"], gr,
+                         row_h=.0170, fs=7.4, hfs=6.6, aligns=["l", "r", "l"], cell_color=cg)
+            y -= .016
+            ST.tx(fig, X0, y,
+                  "!! 이 점수는 그 문서의 점수와 **같은 수가 아니다** - 심리 10%% 가 통째로 없어"
+                  "(F&G·풋콜·SKEW·AAII·NAAIM) 나머지 다섯을 90 으로 재정규화했다. "
+                  "변동성도 셋 중 하나(VIX)뿐이다.", fontsize=6.4, color=NEG)
+            y -= .0110
+            ST.tx(fig, X0, y,
+                  "산식(각 지표를 «그날까지의» 분포 백분위로 바꿔 신호군 안에서 평균)은 그 문서가 "
+                  "안 밝혀 내가 골랐다. 확장창이라 선견은 없다.", fontsize=6.4, color=MUTED)
+            y -= .022
+            bt = RO["backtest"]
+            ST.tx(fig, X0, y, "밴드가 다음 달을 가르나", fontsize=10, weight="bold")
+            # ⚠ 10pt 12글자는 .130 을 넘는다(실측 겹침) — .165 로 뗀다.
+            ST.tx(fig, X0 + .165, y, "기준선 %+.2f%% · 승률 %.0f%% (일 %d)"
+                  % (bt["base"]["mean"], bt["base"]["win"], bt["base"]["n"]),
+                  fontsize=6.6, color=MUTED)
+            y -= .0130
+            br = []
+            for b_ in ("Risk-On", "준Risk-On", "중립", "준Risk-Off", "Risk-Off"):
+                if b_ in bt:
+                    v = bt[b_]
+                    br.append([b_, str(v["n"]), "%+.2f%%" % v["mean"],
+                               "%.0f%%" % v["win"], "%+.2f%%p" % v["lift"]])
+
+            def cb(r, c, br=br):
+                if c == 4:
+                    return POS if not br[r][4].startswith("-") else NEG
+                return INK if c == 0 else MUTED
+            y = ST.table(fig, X0, y, [.150, .080, .090, .080, .100],
+                         ["밴드", "일수", "1개월", "승률", "기준선차"], br,
+                         row_h=.0168, fs=7.2, hfs=6.4,
+                         aligns=["l", "r", "r", "r", "r"], cell_color=cb)
+            y -= .016
+            ST.tx(fig, X0, y,
+                  # 🚨 는 맑은 고딕에 없다 — 종이에는 «!!» 로 눕힌다(두부 방지).
+                  "!! **거꾸로 선다.** 점수가 높을수록 다음 달이 나쁘다 - Risk-On %+.2f%% vs "
+                  "Risk-Off %+.2f%%. 평균회귀이지 «점수 높으면 사라» 가 아니다."
+                  % (bt.get("Risk-On", {}).get("mean", 0), bt.get("Risk-Off", {}).get("mean", 0)),
+                  fontsize=6.6, color=NEG)
+            y -= .0112
+            ST.tx(fig, X0, y,
+                  "그 문서의 국면표도 같은 방향이다 - 「점수 낮음(<45) +2.1%p / 점수 높음(>=60) "
+                  "-0.4%p」. 그쪽도 «설명용·예측 아님» 이라 적어 뒀다.",
+                  fontsize=6.4, color=MUTED)
+            pg += 1
+            footer(fig, pg, total, span)
+            pdf.savefig(fig)
+            if "--png" in sys.argv:
+                fig.savefig(os.path.join(DATA, "_mm5.png"), dpi=110, facecolor=PAPER)
             ST.plt.close(fig)
 
         # ── 극단 플래그 감시 ────────────────────────────────────────────
