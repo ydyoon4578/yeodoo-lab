@@ -4597,7 +4597,12 @@ except Exception as _e:
 #   퇴행을 못 잡는다). 그 안내를 화면에 같이 찍는다.
 # 2026-08-19 — 1→0. data/home_perf.json 을 refresh-intraday 도 굽게 되면서 «굽는 잡이
 #   없는 산출물» 이 사라졌다. 래칫이므로 줄면 바로 낮춘다 — 안 낮추면 다시 늘어도 안 걸린다.
-BASE_UNBUILT, BASE_UNREAD = 0, 2
+# 2026-09-21 — 2→0. 남아 있던 둘(data/pit_reuse.json · data/pit_fetch_report.json)을
+#   constituents.html «티커가 같아도 같은 회사가 아닙니다» 구획이 읽는다. 둘 다 고아가
+#   아니라 PIT 백테스트가 쓰고 또 읽던 것이었는데(pit_reuse 는 입력이고 창이 넓어지면
+#   sys.exit 로 막는다), **사람만 못 보고 있었다.** 이제 기준선이 0 이다 — 새로 구운
+#   산출물을 화면에 안 실으면 바로 걸린다.
+BASE_UNBUILT, BASE_UNREAD = 0, 0
 try:
     import importlib, contextlib
     _au = importlib.import_module("audit_unbuilt")
