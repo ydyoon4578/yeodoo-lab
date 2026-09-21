@@ -64,6 +64,11 @@ def main() -> int:
         RO = json.load(io.open(os.path.join(DATA, "_riskonoff.json"), encoding="utf-8"))
     except Exception:
         RO = None
+    # 점수밴드 × 추세 15칸 — Risk-On/Off 쪽 바로 뒤에 붙는다(같은 점수를 쓰는 표다).
+    try:
+        RG = json.load(io.open(os.path.join(DATA, "_regime_grid.json"), encoding="utf-8"))
+    except Exception:
+        RG = None
 
     # 쪽 나누기 — 축별 요약은 칸마다 5줄 + 제목 1줄
     # ⚠ 7개면 첫 쪽(범례가 자리를 먹는다)에서 마지막 칸이 각주 위로 넘쳤다 — 실측으로 5로 줄였다.
@@ -71,7 +76,8 @@ def main() -> int:
     npk = (len(K) + AX_PER - 1) // AX_PER
     ROWS_P = 46                     # 월별 표 한 쪽에 46행
     npm = (len(M) + ROWS_P - 1) // ROWS_P
-    total = npk + npm + (1 if A else 0) + (1 if FL else 0) + (1 if RO else 0)
+    total = (npk + npm + (1 if A else 0) + (1 if FL else 0)
+             + (1 if RO else 0) + (1 if RG else 0))
     print("축 칸 %d개 · 달 %d개 → %d쪽" % (len(K), len(M), total))
 
     with PdfPages(OUT) as pdf:
@@ -223,8 +229,9 @@ def main() -> int:
             y -= .022
             bt = RO["backtest"]
             ST.tx(fig, X0, y, "밴드가 다음 달을 가르나", fontsize=10, weight="bold")
-            # ⚠ 10pt 12글자는 .130 을 넘는다(실측 겹침) — .165 로 뗀다.
-            ST.tx(fig, X0 + .165, y, "기준선 %+.2f%% · 승률 %.0f%% (일 %d)"
+            # ⚠ .130 → .165 로 뗐는데 **그래도 겹쳤다**(렌더 실측: «가르나» 가 «기준선» 을 먹었다).
+            #   10pt 한글은 글자당 약 .0179 다 — 11글자면 .197. 여유 두고 .210.
+            ST.tx(fig, X0 + .210, y, "기준선 %+.2f%% · 승률 %.0f%% (일 %d)"
                   % (bt["base"]["mean"], bt["base"]["win"], bt["base"]["n"]),
                   fontsize=6.6, color=MUTED)
             y -= .0130
@@ -260,6 +267,115 @@ def main() -> int:
             pdf.savefig(fig)
             if "--png" in sys.argv:
                 fig.savefig(os.path.join(DATA, "_mm5.png"), dpi=110, facecolor=PAPER)
+            ST.plt.close(fig)
+
+        # ── 국면 15칸 (점수밴드 × 추세) ─────────────────────────────────
+        # ⚠ ▲▼→ 는 맑은 고딕에 **있다**(실측: U+25B2·U+25BC·U+2192 전부 cmap 안).
+        #   없는 것은 ✓✗⚠🚨 다 — 그것만 «!!» 로 눕힌다.
+        if RG:
+            fig = ST.new_page()
+            y = .958
+            ST.tx(fig, X0, y, "국면 15칸 — 점수밴드 × 추세", fontsize=15, weight="bold")
+            ST.tx(fig, X1, y, "기준 %s" % RG["as_of"], fontsize=7.4, color=MUTED, ha="right")
+            y -= .020
+            ST.tx(fig, X0, y,
+                  "앞쪽 Risk-On/Off 밴드가 **거꾸로** 갔다. 그 문서의 국면표는 밴드 하나가 아니라 "
+                  "두 축이라, 추세축을 더하면 풀리나 물었다.", fontsize=6.8, color=INK2)
+            y -= .0145
+            ST.tx(fig, X0, y,
+                  "추세 = d5(5거래일 점수 변화) · ▲ +2 이상 · ▼ -2 이하 · → 그 사이. "
+                  "**원천 _scell() 값 그대로다** — 컷도 되돌아보기도 안 움직였다.",
+                  fontsize=6.8, color=MUTED)
+            y -= .0145
+            ST.tx(fig, X0, y,
+                  "기준선 — 아무 날이나 사서 1개월 들면 %+.2f%% · 승률 %.0f%% (일 %d)."
+                  % (RG["base_mean"], RG["base_win"], RG["n_used"]),
+                  fontsize=6.8, color=MUTED)
+            y -= .020
+
+            TR = RG["trends"]
+            gcells, gr2 = {}, []
+            for b_ in RG["bands"]:
+                row = [b_]
+                for t_ in TR:
+                    c = RG["grid"]["%s|%s" % (b_, t_)]
+                    gcells[(len(gr2), len(row))] = c
+                    row += ["—" if not c["n"] else "%+.2f%%" % c["mean"],
+                            "—" if not c["n"] else "%d" % c["n"]]
+                gr2.append(row)
+
+            def cgr(r, c, gcells=gcells, base=RG["base_mean"]):
+                if c == 0:
+                    return INK
+                if c % 2 == 1:                         # 값 칸 — 기준선 위/아래
+                    cell = gcells.get((r, c))
+                    if not cell or not cell["n"]:
+                        return MUTED
+                    return POS if cell["mean"] >= base else NEG
+                cell = gcells.get((r, c - 1))          # 일수 칸 — 얇으면 빨갛게
+                return NEG if (cell and 0 < cell["n"] < 60) else MUTED
+            y = ST.table(fig, X0, y, [.120, .086, .062, .086, .062, .086, .062],
+                         ["밴드", TR[0], "일수", TR[1], "일수", TR[2], "일수"], gr2,
+                         row_h=.0182, fs=7.4, hfs=6.6, zebra=True,
+                         aligns=["l", "r", "r", "r", "r", "r", "r"], cell_color=cgr)
+            y -= .018
+
+            f1, f2, f3 = RG["f1"], RG["f2"], RG["f3"]
+            f4, f5 = RG["f4"], RG["f5"]
+            fr2 = [
+                ["F1", "Risk-Off 안에서 ▲ 가 ▼ 보다 큰가",
+                 "%+.2f%%p" % f1["diff"] if f1["diff"] is not None else "—",
+                 "걸림" if f1["hit"] else "통과"],
+                ["F2", "그 차이의 t 가 %.1f 이상인가" % f2["문턱"],
+                 "t %.2f" % f2["t_overlap"] if f2["t_overlap"] is not None else "—",
+                 "구별 불가" if f2["hit"] else "통과"],
+                ["F3", "같은 추세 안에서도 Risk-On 이 Risk-Off 보다 낮은가",
+                 "%d / 3" % f3["n_worse"], "걸림" if f3["hit"] else "통과"],
+                ["F4", "60일 미만 얇은 칸이 5개 이상인가",
+                 "%d개" % len(f4["thin"]), "측정 불가" if f4["hit"] else "통과"],
+                ["F5", "중첩과 비중첩의 판정이 갈리나",
+                 "t 중앙 %.2f" % f5["t_median"] if f5["t_median"] is not None else "—",
+                 "보류" if f5["split"] else "안 갈림"],
+            ]
+
+            def cf2(r, c, fr2=fr2):
+                if c == 3:
+                    return POS if fr2[r][3] in ("통과", "안 갈림") else NEG
+                return INK if c == 0 else MUTED
+            ST.tx(fig, X0, y, "미리 못박은 실패 조건", fontsize=10, weight="bold")
+            y -= .0140
+            y = ST.table(fig, X0, y, [.044, .330, .110, .096],
+                         ["", "묻는 것", "결과", "판정"], fr2,
+                         row_h=.0172, fs=7.0, hfs=6.4,
+                         aligns=["l", "l", "r", "l"], cell_color=cf2)
+            y -= .016
+            ST.tx(fig, X0, y,
+                  "!! **역방향은 안 풀렸다.** 세 추세 전부에서 Risk-On 칸이 Risk-Off 칸보다 "
+                  "낮다(%d/3). 「밴드 해석 불가」 판정을 유지한다." % f3["n_worse"],
+                  fontsize=6.6, color=NEG)
+            y -= .0112
+            ST.tx(fig, X0, y,
+                  "!! 겹침을 빼니 t 가 %.2f → %.2f (%.0f%%) 로 주저앉았다. 21개 위상에서 "
+                  "t 가 %.2f ~ %+.2f 로 널뛴다 — **부호조차 안 정해진다.**"
+                  % (f2["t_overlap"], f5["t_median"],
+                     abs(f5["t_median"]) / abs(f2["t_overlap"]) * 100,
+                     f5["t_min"], f5["t_max"]), fontsize=6.6, color=NEG)
+            y -= .0112
+            ST.tx(fig, X0, y,
+                  "일별로 21일 창을 재면 이웃 관측이 20일을 공유한다 — 일수가 875 라도 독립 "
+                  "표본은 42 에 가깝다. 위상을 하나 고르지 않고 21개를 전부 돌았다.",
+                  fontsize=6.4, color=MUTED)
+            y -= .0112
+            ST.tx(fig, X0, y,
+                  "!! 판정 **%s** — 지금이 어느 칸인지 보는 기술표로만 쓴다. 밴드 방향을 믿거나 "
+                  "칸 사이 차이를 «유의하다» 고 말하면 안 된다. "
+                  "(PREREG-2026-09-21-REGIMEGRID · 계산 전 커밋 6b120f2)" % RG["verdict"],
+                  fontsize=6.4, color=NEG)
+            pg += 1
+            footer(fig, pg, total, span)
+            pdf.savefig(fig)
+            if "--png" in sys.argv:
+                fig.savefig(os.path.join(DATA, "_mm6.png"), dpi=110, facecolor=PAPER)
             ST.plt.close(fig)
 
         # ── 극단 플래그 감시 ────────────────────────────────────────────
