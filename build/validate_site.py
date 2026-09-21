@@ -4218,13 +4218,18 @@ try:
             _bad4.append("%s %s(샤프 %.3f)"
                          % (_x.get("sid"), (_x.get("name") or "")[:24], _sh))
     if _bad4:
-        errors.append(
-            "샤프 %.1f 미만인데 목록에 남아 있는 전략 %d종 — %s. 이것은 랩의 문턱이 "
-            "아니라 **사용자 결정**(2026-08-19 · 08-23)이다. 빼려면 "
-            "build/strategy_index.py 의 HIDE_SIDS 에 sid 를 넣고 "
-            "build/tested_not_published.json 에 사유를 함께 적을 것 — 기록을 지우지 "
-            "않는 것이 이 랩의 규약이다"
-            % (_SH_CUT, len(_bad4), " · ".join(_bad4[:6])))
+        # 🚨 2026-09-21 사용자 결정 — 이 컷을 **되돌렸다**(«다 보이게 해줘»).
+        #   그래서 여기서 죽이지 않는다. ⚠ 그러나 **검사는 끄지 않는다** — 몇 종이 이
+        #   잣대 아래인지 매번 소리 내어 적는다. 끄면 다음에 되살릴 때 또 «숨김을 푸는 것은
+        #   새로 싣는 것과 같다» 를 아무도 안 본다(2026-08-23 에 실제로 그랬다).
+        #   되돌리려면 이 분기를 errors.append 로 되돌리고 strategy_index 의 KEEP_HIDDEN 을
+        #   옛 HIDE_SIDS 로 다시 쓰면 된다.
+        _shs4 = sorted(float((_x.get("metrics") or {}).get("sharpe"))
+                       for _x in (_si4.get("items") or [])
+                       if isinstance((_x.get("metrics") or {}).get("sharpe"), (int, float)))
+        print("  ~ 샤프 하한 — **문턱 해제됨**(사용자 결정 2026-09-21). "
+              "옛 잣대 %.1f 아래 %d종이 목록에 있다(최저 %.3f) — 판정이 아니라 사실 기록이다"
+              % (_SH_CUT, len(_bad4), _shs4[0] if _shs4 else float("nan")))
     else:
         _shs = sorted((_x.get("metrics") or {}).get("sharpe") for _x in (_si4.get("items") or [])
                       if isinstance((_x.get("metrics") or {}).get("sharpe"), (int, float)))
@@ -4251,11 +4256,14 @@ try:
             _bad5.append("%s %s(연 %.1f회)"
                          % (_x.get("sid"), (_x.get("name") or "")[:22], _tv))
     if _bad5:
-        errors.append(
-            "연 회전율 %.0f배 초과인데 목록에 남아 있는 전략 %d종 — %s. 이것은 랩의 문턱이 "
-            "아니라 **사용자 결정**(2026-08-24)이다. 빼려면 build/strategy_index.py 의 "
-            "HIDE_SIDS 에 sid 를 넣고 build/tested_not_published.json 에 사유를 함께 적을 것"
-            % (_TURN_CAP, len(_bad5), " · ".join(_bad5[:6])))
+        # 🚨 2026-09-21 사용자 결정 — 이 컷도 **되돌렸다**. 위 샤프 칸과 같은 원칙이다 —
+        #   죽이지 않되 끄지도 않는다. ⚠ 회전율은 성적이 아니라 **행동**을 자르던 잣대라
+        #   되살아난 종들은 비용에 더 민감하다. 그 사실을 여기 남겨 둔다.
+        _tv5 = sorted((float(_x.get("turnover")) for _x in (_si5.get("items") or [])
+                       if isinstance(_x.get("turnover"), (int, float))), reverse=True)
+        print("  ~ 회전율 상한 — **문턱 해제됨**(사용자 결정 2026-09-21). "
+              "옛 잣대 %.0f배 초과 %d종이 목록에 있다(최고 연 %.1f회) — 비용 민감도를 같이 볼 것"
+              % (_TURN_CAP, len(_bad5), _tv5[0] if _tv5 else 0.0))
     else:
         _tv2 = sorted((_x.get("turnover") for _x in (_si5.get("items") or [])
                        if isinstance(_x.get("turnover"), (int, float))), reverse=True)
