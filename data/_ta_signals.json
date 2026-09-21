@@ -17,6 +17,7 @@
     {
      "signal": "RSI14<30",
      "kind": "event",
+     "desc": "상승폭보다 하락폭이 커진 과매도",
      "n": 23,
      "fwd1w_mean": 0.97,
      "fwd1w_win": 74.0,
@@ -30,6 +31,7 @@
     {
      "signal": "StochRSI<0.2",
      "kind": "event",
+     "desc": "RSI를 다시 스토캐스틱한 초민감 과매도",
      "n": 191,
      "fwd1w_mean": 0.07,
      "fwd1w_win": 59.0,
@@ -43,6 +45,7 @@
     {
      "signal": "CMO<-50",
      "kind": "event",
+     "desc": "상승합-하락합 대칭 오실레이터 바닥권",
      "n": 29,
      "fwd1w_mean": 0.93,
      "fwd1w_win": 79.0,
@@ -56,6 +59,7 @@
     {
      "signal": "PSY<25",
      "kind": "event",
+     "desc": "최근 12일 중 오른 날이 3일 이하",
      "n": 6,
      "fwd1w_mean": -0.27,
      "fwd1w_win": 50.0,
@@ -69,6 +73,7 @@
     {
      "signal": "BB %b<0",
      "kind": "event",
+     "desc": "볼린저 하단 **밖으로** 종가가 이탈",
      "n": 70,
      "fwd1w_mean": 0.21,
      "fwd1w_win": 55.0,
@@ -82,6 +87,7 @@
     {
      "signal": "이격도<95",
      "kind": "event",
+     "desc": "20일선보다 5% 넘게 아래",
      "n": 20,
      "fwd1w_mean": 0.07,
      "fwd1w_win": 70.0,
@@ -95,6 +101,7 @@
     {
      "signal": "TD BuySetup9",
      "kind": "event",
+     "desc": "4봉 전보다 낮은 종가가 9일 연속",
      "n": 19,
      "fwd1w_mean": 0.84,
      "fwd1w_win": 63.0,
@@ -108,6 +115,7 @@
     {
      "signal": "골든크로스 50/200",
      "kind": "event",
+     "desc": "50일선이 200일선을 위로 뚫음",
      "n": 4,
      "last": "2025-07-01",
      "days_ago": 444,
@@ -116,6 +124,7 @@
     {
      "signal": "TEMA20>SMA50 교차",
      "kind": "event",
+     "desc": "빠른 3중평활선이 50일선 상향",
      "n": 29,
      "fwd1w_mean": 0.69,
      "fwd1w_win": 66.0,
@@ -129,6 +138,7 @@
     {
      "signal": "MACD 골든(0선 아래)",
      "kind": "event",
+     "desc": "0선 아래에서 시그널선 상향 교차",
      "n": 39,
      "fwd1w_mean": 0.52,
      "fwd1w_win": 56.0,
@@ -142,6 +152,7 @@
     {
      "signal": "MACD 0선 상향",
      "kind": "event",
+     "desc": "MACD가 0선을 위로 통과",
      "n": 32,
      "fwd1w_mean": 0.2,
      "fwd1w_win": 66.0,
@@ -155,6 +166,7 @@
     {
      "signal": "TRIX 0선 상향",
      "kind": "event",
+     "desc": "3중 EMA 변화율이 0선 상향",
      "n": 27,
      "fwd1w_mean": 0.54,
      "fwd1w_win": 67.0,
@@ -168,6 +180,7 @@
     {
      "signal": "S-ROC 0선 상향",
      "kind": "event",
+     "desc": "평활한 변화율이 0선 상향",
      "n": 45,
      "fwd1w_mean": 0.2,
      "fwd1w_win": 60.0,
@@ -181,6 +194,7 @@
     {
      "signal": "BB 스퀴즈 후 상단 돌파",
      "kind": "event",
+     "desc": "밴드 폭이 최저였다가 상단 돌파",
      "n": 8,
      "fwd1w_mean": 0.5,
      "fwd1w_win": 75.0,
@@ -194,6 +208,7 @@
     {
      "signal": "RVI(변동성)>50",
      "kind": "state",
+     "desc": "상승일 변동성이 하락일보다 큼",
      "n": 1662,
      "fwd1w_mean": 0.23,
      "fwd1w_win": 61.0,
@@ -207,6 +222,7 @@
     {
      "signal": "Stoch %K<20 골든",
      "kind": "event",
+     "desc": "저점권에서 %K가 %D를 상향",
      "n": 65,
      "fwd1w_mean": 0.43,
      "fwd1w_win": 65.0,
@@ -220,6 +236,7 @@
     {
      "signal": "CCI<-100",
      "kind": "event",
+     "desc": "평균값 대비 이례적인 저가권",
      "n": 91,
      "fwd1w_mean": 0.08,
      "fwd1w_win": 54.0,
@@ -233,6 +250,7 @@
     {
      "signal": "Williams%R<-80",
      "kind": "event",
+     "desc": "14일 고저 범위의 아래 20%",
      "n": 144,
      "fwd1w_mean": 0.15,
      "fwd1w_win": 60.0,
@@ -246,6 +264,7 @@
     {
      "signal": "UltimateOsc<30",
      "kind": "event",
+     "desc": "7·14·28일 매수압력 종합이 바닥",
      "n": 15,
      "fwd1w_mean": 1.47,
      "fwd1w_win": 93.0,
@@ -259,6 +278,7 @@
     {
      "signal": "Keltner 하단 이탈",
      "kind": "event",
+     "desc": "EMA±ATR 채널 하단 밖",
      "n": 53,
      "fwd1w_mean": 0.25,
      "fwd1w_win": 66.0,
@@ -272,6 +292,7 @@
     {
      "signal": "MFI<20",
      "kind": "event",
+     "desc": "거래량까지 실은 RSI의 과매도",
      "n": 6,
      "fwd1w_mean": 0.22,
      "fwd1w_win": 67.0,
@@ -285,6 +306,7 @@
     {
      "signal": "MassIndex 반전벌지",
      "kind": "event",
+     "desc": "고저폭이 팽창했다 수축 — 반전 예고",
      "n": 2,
      "last": "2020-10-09",
      "days_ago": 2170,
@@ -293,6 +315,7 @@
     {
      "signal": "PSAR 상승 전환",
      "kind": "event",
+     "desc": "추적점이 가격 아래로 내려옴",
      "n": 120,
      "fwd1w_mean": 0.23,
      "fwd1w_win": 62.0,
@@ -306,6 +329,7 @@
     {
      "signal": "SuperTrend 상승 전환",
      "kind": "event",
+     "desc": "ATR 채널 색이 상승으로 바뀜",
      "n": 45,
      "fwd1w_mean": -0.05,
      "fwd1w_win": 64.0,
@@ -319,6 +343,7 @@
     {
      "signal": "Donchian20 상단 돌파",
      "kind": "event",
+     "desc": "20일 최고가 돌파(터틀 방식)",
      "n": 225,
      "fwd1w_mean": 0.21,
      "fwd1w_win": 60.0,
@@ -332,6 +357,7 @@
     {
      "signal": "Aroon 업 교차",
      "kind": "event",
+     "desc": "고점이 저점보다 최근에 생김",
      "n": 36,
      "fwd1w_mean": 0.64,
      "fwd1w_win": 61.0,
@@ -345,6 +371,7 @@
     {
      "signal": "일목 구름 상향 돌파",
      "kind": "event",
+     "desc": "종가가 구름 위로 올라섬",
      "n": 65,
      "fwd1w_mean": 0.44,
      "fwd1w_win": 61.0,
@@ -358,6 +385,7 @@
     {
      "signal": "ElderRay 강세셋업",
      "kind": "event",
+     "desc": "저가-EMA13이 음수인데 회복 중",
      "n": 116,
      "fwd1w_mean": -0.01,
      "fwd1w_win": 57.0,
@@ -371,6 +399,7 @@
     {
      "signal": "ForceIndex2 매수딥",
      "kind": "event",
+     "desc": "상승추세 중 2일 힘지수가 음수",
      "n": 307,
      "fwd1w_mean": 0.2,
      "fwd1w_win": 63.0,
@@ -384,6 +413,7 @@
     {
      "signal": "ChaikinOsc 0선 상향",
      "kind": "event",
+     "desc": "매집-분산선 단기-장기 차가 0선 상향",
      "n": 127,
      "fwd1w_mean": 0.2,
      "fwd1w_win": 60.0,
@@ -397,6 +427,7 @@
     {
      "signal": "OBV Osc 0선 상향",
      "kind": "event",
+     "desc": "거래량 누적선 단기-장기 차가 0선 상향",
      "n": 162,
      "fwd1w_mean": 0.23,
      "fwd1w_win": 58.0,
@@ -410,6 +441,7 @@
     {
      "signal": "EOM 0선 상향",
      "kind": "event",
+     "desc": "적은 거래량으로 쉽게 오르는 구간",
      "n": 117,
      "fwd1w_mean": 0.36,
      "fwd1w_win": 64.0,
@@ -423,6 +455,7 @@
     {
      "signal": "ADX>25 & +DI>-DI",
      "kind": "state",
+     "desc": "추세강도 25 넘고 상승DI가 우위",
      "n": 557,
      "fwd1w_mean": 0.17,
      "fwd1w_win": 63.0,
@@ -436,6 +469,7 @@
     {
      "signal": "RWI High>1",
      "kind": "state",
+     "desc": "무작위 걸음보다 강한 상승",
      "n": 1665,
      "fwd1w_mean": 0.17,
      "fwd1w_win": 61.0,
@@ -449,6 +483,7 @@
     {
      "signal": "가격>VWAP20",
      "kind": "state",
+     "desc": "20일 거래량가중 평균가 위",
      "n": 1744,
      "fwd1w_mean": 0.25,
      "fwd1w_win": 62.0,
@@ -462,6 +497,7 @@
     {
      "signal": "NVI>1년MA",
      "kind": "state",
+     "desc": "거래량 적은 날만 누적(스마트머니) 강세",
      "n": 2511,
      "fwd1w_mean": 0.26,
      "fwd1w_win": 61.0,
@@ -475,6 +511,7 @@
     {
      "signal": "PVI>1년MA",
      "kind": "state",
+     "desc": "거래량 많은 날만 누적(대중) 강세",
      "n": 455,
      "fwd1w_mean": -0.05,
      "fwd1w_win": 55.0,
@@ -490,6 +527,7 @@
     {
      "signal": "RSI14>70",
      "kind": "event",
+     "desc": "상승폭이 하락폭보다 커진 과매수",
      "n": 69,
      "fwd1w_mean": 0.31,
      "fwd1w_win": 70.0,
@@ -504,6 +542,7 @@
     {
      "signal": "StochRSI>0.8",
      "kind": "event",
+     "desc": "초민감 지표가 꼭대기",
      "n": 202,
      "fwd1w_mean": 0.38,
      "fwd1w_win": 60.0,
@@ -518,6 +557,7 @@
     {
      "signal": "CMO>+50",
      "kind": "event",
+     "desc": "대칭 오실레이터 천장권",
      "n": 104,
      "fwd1w_mean": 0.25,
      "fwd1w_win": 59.0,
@@ -532,6 +572,7 @@
     {
      "signal": "PSY>75",
      "kind": "event",
+     "desc": "최근 12일 중 9일 이상 올랐다",
      "n": 28,
      "fwd1w_mean": -0.01,
      "fwd1w_win": 61.0,
@@ -546,6 +587,7 @@
     {
      "signal": "BB %b>1",
      "kind": "event",
+     "desc": "볼린저 상단 **밖으로** 종가가 이탈",
      "n": 74,
      "fwd1w_mean": 0.13,
      "fwd1w_win": 59.0,
@@ -560,6 +602,7 @@
     {
      "signal": "이격도>105",
      "kind": "event",
+     "desc": "20일선보다 5% 넘게 위",
      "n": 17,
      "fwd1w_mean": -0.44,
      "fwd1w_win": 35.0,
@@ -574,6 +617,7 @@
     {
      "signal": "TD SellSetup9",
      "kind": "event",
+     "desc": "4봉 전보다 높은 종가가 9일 연속",
      "n": 62,
      "fwd1w_mean": 0.32,
      "fwd1w_win": 58.0,
@@ -588,6 +632,7 @@
     {
      "signal": "데드크로스 50/200",
      "kind": "event",
+     "desc": "50일선이 200일선을 아래로 뚫음",
      "n": 4,
      "last": "2025-04-14",
      "days_ago": 522,
@@ -596,6 +641,7 @@
     {
      "signal": "TEMA20<SMA50 교차",
      "kind": "event",
+     "desc": "빠른 3중평활선이 50일선 하향",
      "n": 29,
      "fwd1w_mean": 0.53,
      "fwd1w_win": 64.0,
@@ -610,6 +656,7 @@
     {
      "signal": "MACD 데드(0선 위)",
      "kind": "event",
+     "desc": "0선 위에서 시그널선 하향 교차",
      "n": 95,
      "fwd1w_mean": 0.37,
      "fwd1w_win": 68.0,
@@ -624,6 +671,7 @@
     {
      "signal": "MACD 0선 하향",
      "kind": "event",
+     "desc": "MACD가 0선을 아래로 통과",
      "n": 32,
      "fwd1w_mean": 0.22,
      "fwd1w_win": 65.0,
@@ -638,6 +686,7 @@
     {
      "signal": "TRIX 0선 하향",
      "kind": "event",
+     "desc": "3중 EMA 변화율이 0선 하향",
      "n": 26,
      "fwd1w_mean": 0.63,
      "fwd1w_win": 69.0,
@@ -652,6 +701,7 @@
     {
      "signal": "S-ROC 0선 하향",
      "kind": "event",
+     "desc": "평활한 변화율이 0선 하향",
      "n": 45,
      "fwd1w_mean": 0.33,
      "fwd1w_win": 64.0,
@@ -666,6 +716,7 @@
     {
      "signal": "Stoch %K>80 데드",
      "kind": "event",
+     "desc": "고점권에서 %K가 %D를 하향",
      "n": 220,
      "fwd1w_mean": 0.21,
      "fwd1w_win": 62.0,
@@ -680,6 +731,7 @@
     {
      "signal": "CCI>+100",
      "kind": "event",
+     "desc": "평균값 대비 이례적인 고가권",
      "n": 169,
      "fwd1w_mean": 0.33,
      "fwd1w_win": 63.0,
@@ -694,6 +746,7 @@
     {
      "signal": "Williams%R>-20",
      "kind": "event",
+     "desc": "14일 고저 범위의 위 20%",
      "n": 217,
      "fwd1w_mean": 0.36,
      "fwd1w_win": 63.0,
@@ -708,6 +761,7 @@
     {
      "signal": "UltimateOsc>70",
      "kind": "event",
+     "desc": "7·14·28일 매수압력 종합이 천장",
      "n": 72,
      "fwd1w_mean": 0.25,
      "fwd1w_win": 58.0,
@@ -722,6 +776,7 @@
     {
      "signal": "Keltner 상단 돌파",
      "kind": "event",
+     "desc": "EMA±ATR 채널 상단 밖",
      "n": 123,
      "fwd1w_mean": 0.14,
      "fwd1w_win": 63.0,
@@ -736,6 +791,7 @@
     {
      "signal": "MFI>80",
      "kind": "event",
+     "desc": "거래량까지 실은 RSI의 과매수",
      "n": 22,
      "fwd1w_mean": 0.08,
      "fwd1w_win": 45.0,
@@ -750,6 +806,7 @@
     {
      "signal": "PSAR 하락 전환",
      "kind": "event",
+     "desc": "추적점이 가격 위로 올라섬",
      "n": 120,
      "fwd1w_mean": 0.45,
      "fwd1w_win": 64.0,
@@ -764,6 +821,7 @@
     {
      "signal": "SuperTrend 하락 전환",
      "kind": "event",
+     "desc": "ATR 채널 색이 하락으로 바뀜",
      "n": 45,
      "fwd1w_mean": -0.1,
      "fwd1w_win": 55.0,
@@ -778,6 +836,7 @@
     {
      "signal": "Donchian20 하단 이탈",
      "kind": "event",
+     "desc": "20일 최저가 이탈 — 이름만 매도다",
      "n": 67,
      "fwd1w_mean": 0.42,
      "fwd1w_win": 58.0,
@@ -792,6 +851,7 @@
     {
      "signal": "Aroon 다운 교차",
      "kind": "event",
+     "desc": "저점이 고점보다 최근에 생김",
      "n": 36,
      "fwd1w_mean": 0.28,
      "fwd1w_win": 61.0,
@@ -806,6 +866,7 @@
     {
      "signal": "일목 구름 하향 이탈",
      "kind": "event",
+     "desc": "종가가 구름 아래로 내려감",
      "n": 39,
      "fwd1w_mean": 0.8,
      "fwd1w_win": 62.0,
@@ -906,6 +967,7 @@
     {
      "signal": "RSI14<30",
      "kind": "event",
+     "desc": "상승폭보다 하락폭이 커진 과매도",
      "n": 15,
      "fwd1w_mean": 2.79,
      "fwd1w_win": 93.0,
@@ -919,6 +981,7 @@
     {
      "signal": "StochRSI<0.2",
      "kind": "event",
+     "desc": "RSI를 다시 스토캐스틱한 초민감 과매도",
      "n": 194,
      "fwd1w_mean": 0.46,
      "fwd1w_win": 61.0,
@@ -932,6 +995,7 @@
     {
      "signal": "CMO<-50",
      "kind": "event",
+     "desc": "상승합-하락합 대칭 오실레이터 바닥권",
      "n": 20,
      "fwd1w_mean": 1.94,
      "fwd1w_win": 75.0,
@@ -945,6 +1009,7 @@
     {
      "signal": "PSY<25",
      "kind": "event",
+     "desc": "최근 12일 중 오른 날이 3일 이하",
      "n": 2,
      "last": "2018-03-28",
      "days_ago": 3096,
@@ -953,6 +1018,7 @@
     {
      "signal": "BB %b<0",
      "kind": "event",
+     "desc": "볼린저 하단 **밖으로** 종가가 이탈",
      "n": 64,
      "fwd1w_mean": 0.69,
      "fwd1w_win": 61.0,
@@ -966,6 +1032,7 @@
     {
      "signal": "이격도<95",
      "kind": "event",
+     "desc": "20일선보다 5% 넘게 아래",
      "n": 49,
      "fwd1w_mean": 1.1,
      "fwd1w_win": 61.0,
@@ -979,6 +1046,7 @@
     {
      "signal": "TD BuySetup9",
      "kind": "event",
+     "desc": "4봉 전보다 낮은 종가가 9일 연속",
      "n": 18,
      "fwd1w_mean": 1.27,
      "fwd1w_win": 61.0,
@@ -992,6 +1060,7 @@
     {
      "signal": "골든크로스 50/200",
      "kind": "event",
+     "desc": "50일선이 200일선을 위로 뚫음",
      "n": 4,
      "last": "2025-06-24",
      "days_ago": 451,
@@ -1000,6 +1069,7 @@
     {
      "signal": "TEMA20>SMA50 교차",
      "kind": "event",
+     "desc": "빠른 3중평활선이 50일선 상향",
      "n": 33,
      "fwd1w_mean": 0.69,
      "fwd1w_win": 62.0,
@@ -1013,6 +1083,7 @@
     {
      "signal": "MACD 골든(0선 아래)",
      "kind": "event",
+     "desc": "0선 아래에서 시그널선 상향 교차",
      "n": 39,
      "fwd1w_mean": 0.35,
      "fwd1w_win": 67.0,
@@ -1026,6 +1097,7 @@
     {
      "signal": "MACD 0선 상향",
      "kind": "event",
+     "desc": "MACD가 0선을 위로 통과",
      "n": 36,
      "fwd1w_mean": 0.87,
      "fwd1w_win": 69.0,
@@ -1039,6 +1111,7 @@
     {
      "signal": "TRIX 0선 상향",
      "kind": "event",
+     "desc": "3중 EMA 변화율이 0선 상향",
      "n": 27,
      "fwd1w_mean": 0.47,
      "fwd1w_win": 56.0,
@@ -1052,6 +1125,7 @@
     {
      "signal": "S-ROC 0선 상향",
      "kind": "event",
+     "desc": "평활한 변화율이 0선 상향",
      "n": 46,
      "fwd1w_mean": 0.49,
      "fwd1w_win": 59.0,
@@ -1065,6 +1139,7 @@
     {
      "signal": "BB 스퀴즈 후 상단 돌파",
      "kind": "event",
+     "desc": "밴드 폭이 최저였다가 상단 돌파",
      "n": 14,
      "fwd1w_mean": 0.71,
      "fwd1w_win": 71.0,
@@ -1078,6 +1153,7 @@
     {
      "signal": "RVI(변동성)>50",
      "kind": "state",
+     "desc": "상승일 변동성이 하락일보다 큼",
      "n": 1726,
      "fwd1w_mean": 0.4,
      "fwd1w_win": 62.0,
@@ -1091,6 +1167,7 @@
     {
      "signal": "Stoch %K<20 골든",
      "kind": "event",
+     "desc": "저점권에서 %K가 %D를 상향",
      "n": 61,
      "fwd1w_mean": 0.67,
      "fwd1w_win": 66.0,
@@ -1104,6 +1181,7 @@
     {
      "signal": "CCI<-100",
      "kind": "event",
+     "desc": "평균값 대비 이례적인 저가권",
      "n": 91,
      "fwd1w_mean": 0.4,
      "fwd1w_win": 57.0,
@@ -1117,6 +1195,7 @@
     {
      "signal": "Williams%R<-80",
      "kind": "event",
+     "desc": "14일 고저 범위의 아래 20%",
      "n": 150,
      "fwd1w_mean": 0.67,
      "fwd1w_win": 58.0,
@@ -1130,6 +1209,7 @@
     {
      "signal": "UltimateOsc<30",
      "kind": "event",
+     "desc": "7·14·28일 매수압력 종합이 바닥",
      "n": 10,
      "fwd1w_mean": 2.85,
      "fwd1w_win": 100.0,
@@ -1143,6 +1223,7 @@
     {
      "signal": "Keltner 하단 이탈",
      "kind": "event",
+     "desc": "EMA±ATR 채널 하단 밖",
      "n": 62,
      "fwd1w_mean": 0.6,
      "fwd1w_win": 66.0,
@@ -1156,6 +1237,7 @@
     {
      "signal": "MFI<20",
      "kind": "event",
+     "desc": "거래량까지 실은 RSI의 과매도",
      "n": 6,
      "fwd1w_mean": 1.1,
      "fwd1w_win": 83.0,
@@ -1169,6 +1251,7 @@
     {
      "signal": "MassIndex 반전벌지",
      "kind": "event",
+     "desc": "고저폭이 팽창했다 수축 — 반전 예고",
      "n": 1,
      "last": "2020-04-07",
      "days_ago": 2355,
@@ -1177,6 +1260,7 @@
     {
      "signal": "PSAR 상승 전환",
      "kind": "event",
+     "desc": "추적점이 가격 아래로 내려옴",
      "n": 118,
      "fwd1w_mean": 0.68,
      "fwd1w_win": 70.0,
@@ -1190,6 +1274,7 @@
     {
      "signal": "SuperTrend 상승 전환",
      "kind": "event",
+     "desc": "ATR 채널 색이 상승으로 바뀜",
      "n": 41,
      "fwd1w_mean": 0.26,
      "fwd1w_win": 61.0,
@@ -1203,6 +1288,7 @@
     {
      "signal": "Donchian20 상단 돌파",
      "kind": "event",
+     "desc": "20일 최고가 돌파(터틀 방식)",
      "n": 208,
      "fwd1w_mean": 0.27,
      "fwd1w_win": 59.0,
@@ -1216,6 +1302,7 @@
     {
      "signal": "Aroon 업 교차",
      "kind": "event",
+     "desc": "고점이 저점보다 최근에 생김",
      "n": 39,
      "fwd1w_mean": 0.28,
      "fwd1w_win": 59.0,
@@ -1229,6 +1316,7 @@
     {
      "signal": "일목 구름 상향 돌파",
      "kind": "event",
+     "desc": "종가가 구름 위로 올라섬",
      "n": 69,
      "fwd1w_mean": 0.37,
      "fwd1w_win": 65.0,
@@ -1242,6 +1330,7 @@
     {
      "signal": "ElderRay 강세셋업",
      "kind": "event",
+     "desc": "저가-EMA13이 음수인데 회복 중",
      "n": 119,
      "fwd1w_mean": 0.08,
      "fwd1w_win": 56.0,
@@ -1255,6 +1344,7 @@
     {
      "signal": "ForceIndex2 매수딥",
      "kind": "event",
+     "desc": "상승추세 중 2일 힘지수가 음수",
      "n": 316,
      "fwd1w_mean": 0.35,
      "fwd1w_win": 63.0,
@@ -1268,6 +1358,7 @@
     {
      "signal": "ChaikinOsc 0선 상향",
      "kind": "event",
+     "desc": "매집-분산선 단기-장기 차가 0선 상향",
      "n": 133,
      "fwd1w_mean": 0.01,
      "fwd1w_win": 60.0,
@@ -1281,6 +1372,7 @@
     {
      "signal": "OBV Osc 0선 상향",
      "kind": "event",
+     "desc": "거래량 누적선 단기-장기 차가 0선 상향",
      "n": 141,
      "fwd1w_mean": -0.25,
      "fwd1w_win": 56.0,
@@ -1294,6 +1386,7 @@
     {
      "signal": "EOM 0선 상향",
      "kind": "event",
+     "desc": "적은 거래량으로 쉽게 오르는 구간",
      "n": 120,
      "fwd1w_mean": 0.4,
      "fwd1w_win": 62.0,
@@ -1307,6 +1400,7 @@
     {
      "signal": "ADX>25 & +DI>-DI",
      "kind": "state",
+     "desc": "추세강도 25 넘고 상승DI가 우위",
      "n": 523,
      "fwd1w_mean": 0.35,
      "fwd1w_win": 61.0,
@@ -1320,6 +1414,7 @@
     {
      "signal": "RWI High>1",
      "kind": "state",
+     "desc": "무작위 걸음보다 강한 상승",
      "n": 1651,
      "fwd1w_mean": 0.29,
      "fwd1w_win": 60.0,
@@ -1333,6 +1428,7 @@
     {
      "signal": "가격>VWAP20",
      "kind": "state",
+     "desc": "20일 거래량가중 평균가 위",
      "n": 1697,
      "fwd1w_mean": 0.35,
      "fwd1w_win": 61.0,
@@ -1346,6 +1442,7 @@
     {
      "signal": "NVI>1년MA",
      "kind": "state",
+     "desc": "거래량 적은 날만 누적(스마트머니) 강세",
      "n": 2202,
      "fwd1w_mean": 0.41,
      "fwd1w_win": 61.0,
@@ -1359,6 +1456,7 @@
     {
      "signal": "PVI>1년MA",
      "kind": "state",
+     "desc": "거래량 많은 날만 누적(대중) 강세",
      "n": 806,
      "fwd1w_mean": 0.18,
      "fwd1w_win": 57.0,
@@ -1374,6 +1472,7 @@
     {
      "signal": "RSI14>70",
      "kind": "event",
+     "desc": "상승폭이 하락폭보다 커진 과매수",
      "n": 64,
      "fwd1w_mean": 0.32,
      "fwd1w_win": 53.0,
@@ -1388,6 +1487,7 @@
     {
      "signal": "StochRSI>0.8",
      "kind": "event",
+     "desc": "초민감 지표가 꼭대기",
      "n": 194,
      "fwd1w_mean": 0.41,
      "fwd1w_win": 60.0,
@@ -1402,6 +1502,7 @@
     {
      "signal": "CMO>+50",
      "kind": "event",
+     "desc": "대칭 오실레이터 천장권",
      "n": 89,
      "fwd1w_mean": 0.08,
      "fwd1w_win": 58.0,
@@ -1416,6 +1517,7 @@
     {
      "signal": "PSY>75",
      "kind": "event",
+     "desc": "최근 12일 중 9일 이상 올랐다",
      "n": 38,
      "fwd1w_mean": 0.05,
      "fwd1w_win": 63.0,
@@ -1430,6 +1532,7 @@
     {
      "signal": "BB %b>1",
      "kind": "event",
+     "desc": "볼린저 상단 **밖으로** 종가가 이탈",
      "n": 72,
      "fwd1w_mean": 0.1,
      "fwd1w_win": 60.0,
@@ -1444,6 +1547,7 @@
     {
      "signal": "이격도>105",
      "kind": "event",
+     "desc": "20일선보다 5% 넘게 위",
      "n": 36,
      "fwd1w_mean": 0.76,
      "fwd1w_win": 67.0,
@@ -1458,6 +1562,7 @@
     {
      "signal": "TD SellSetup9",
      "kind": "event",
+     "desc": "4봉 전보다 높은 종가가 9일 연속",
      "n": 54,
      "fwd1w_mean": 0.06,
      "fwd1w_win": 59.0,
@@ -1472,6 +1577,7 @@
     {
      "signal": "데드크로스 50/200",
      "kind": "event",
+     "desc": "50일선이 200일선을 아래로 뚫음",
      "n": 4,
      "last": "2025-04-14",
      "days_ago": 522,
@@ -1480,6 +1586,7 @@
     {
      "signal": "TEMA20<SMA50 교차",
      "kind": "event",
+     "desc": "빠른 3중평활선이 50일선 하향",
      "n": 33,
      "fwd1w_mean": 0.29,
      "fwd1w_win": 50.0,
@@ -1494,6 +1601,7 @@
     {
      "signal": "MACD 데드(0선 위)",
      "kind": "event",
+     "desc": "0선 위에서 시그널선 하향 교차",
      "n": 88,
      "fwd1w_mean": 0.19,
      "fwd1w_win": 61.0,
@@ -1508,6 +1616,7 @@
     {
      "signal": "MACD 0선 하향",
      "kind": "event",
+     "desc": "MACD가 0선을 아래로 통과",
      "n": 36,
      "fwd1w_mean": 0.56,
      "fwd1w_win": 57.0,
@@ -1522,6 +1631,7 @@
     {
      "signal": "TRIX 0선 하향",
      "kind": "event",
+     "desc": "3중 EMA 변화율이 0선 하향",
      "n": 27,
      "fwd1w_mean": 0.12,
      "fwd1w_win": 63.0,
@@ -1536,6 +1646,7 @@
     {
      "signal": "S-ROC 0선 하향",
      "kind": "event",
+     "desc": "평활한 변화율이 0선 하향",
      "n": 46,
      "fwd1w_mean": 0.55,
      "fwd1w_win": 58.0,
@@ -1550,6 +1661,7 @@
     {
      "signal": "Stoch %K>80 데드",
      "kind": "event",
+     "desc": "고점권에서 %K가 %D를 하향",
      "n": 204,
      "fwd1w_mean": 0.38,
      "fwd1w_win": 65.0,
@@ -1564,6 +1676,7 @@
     {
      "signal": "CCI>+100",
      "kind": "event",
+     "desc": "평균값 대비 이례적인 고가권",
      "n": 168,
      "fwd1w_mean": 0.48,
      "fwd1w_win": 62.0,
@@ -1578,6 +1691,7 @@
     {
      "signal": "Williams%R>-20",
      "kind": "event",
+     "desc": "14일 고저 범위의 위 20%",
      "n": 215,
      "fwd1w_mean": 0.36,
      "fwd1w_win": 63.0,
@@ -1592,6 +1706,7 @@
     {
      "signal": "UltimateOsc>70",
      "kind": "event",
+     "desc": "7·14·28일 매수압력 종합이 천장",
      "n": 88,
      "fwd1w_mean": 0.06,
      "fwd1w_win": 61.0,
@@ -1606,6 +1721,7 @@
     {
      "signal": "Keltner 상단 돌파",
      "kind": "event",
+     "desc": "EMA±ATR 채널 상단 밖",
      "n": 113,
      "fwd1w_mean": 0.3,
      "fwd1w_win": 56.0,
@@ -1620,6 +1736,7 @@
     {
      "signal": "MFI>80",
      "kind": "event",
+     "desc": "거래량까지 실은 RSI의 과매수",
      "n": 35,
      "fwd1w_mean": 0.06,
      "fwd1w_win": 51.0,
@@ -1634,6 +1751,7 @@
     {
      "signal": "PSAR 하락 전환",
      "kind": "event",
+     "desc": "추적점이 가격 위로 올라섬",
      "n": 119,
      "fwd1w_mean": 0.63,
      "fwd1w_win": 66.0,
@@ -1648,6 +1766,7 @@
     {
      "signal": "SuperTrend 하락 전환",
      "kind": "event",
+     "desc": "ATR 채널 색이 하락으로 바뀜",
      "n": 40,
      "fwd1w_mean": 0.29,
      "fwd1w_win": 57.0,
@@ -1662,6 +1781,7 @@
     {
      "signal": "Donchian20 하단 이탈",
      "kind": "event",
+     "desc": "20일 최저가 이탈 — 이름만 매도다",
      "n": 69,
      "fwd1w_mean": 0.66,
      "fwd1w_win": 62.0,
@@ -1676,6 +1796,7 @@
     {
      "signal": "Aroon 다운 교차",
      "kind": "event",
+     "desc": "저점이 고점보다 최근에 생김",
      "n": 39,
      "fwd1w_mean": -0.34,
      "fwd1w_win": 44.0,
@@ -1690,6 +1811,7 @@
     {
      "signal": "일목 구름 하향 이탈",
      "kind": "event",
+     "desc": "종가가 구름 아래로 내려감",
      "n": 52,
      "fwd1w_mean": 1.02,
      "fwd1w_win": 65.0,
