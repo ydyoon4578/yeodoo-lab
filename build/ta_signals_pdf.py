@@ -50,6 +50,9 @@ def foot(fig, page, asof):
 
 
 CIRC = "①②③④⑤⑥⑦⑧⑨⑩"
+# 차트에 찍을 신호의 승률 문턱 — 사용자 지시 2026-09-22.
+#   승률 = 1개월 뒤 **오른** 비율. 매수는 높을수록, 매도는 낮을수록 제 몫을 한 것이다.
+BUY_WIN, SELL_WIN = 60.0, 40.0
 
 
 def chart(fig, R, y_top, h):
@@ -66,13 +69,22 @@ def chart(fig, R, y_top, h):
     # 🚨 같은 날 것을 **쌓는다.** 처음에 전부 가격의 ±1.4% 에 얹었더니 500건이 세모 벽이
     #   되어 가격선이 묻혔다(렌더 실측). 하루 평균 1.3건이라 쌓으면 대부분 한두 층이고,
     #   여러 신호가 한꺼번에 켜진 날만 탑이 된다 — 그게 보고 싶은 것이다.
+    #   ⚠ 승률 문턱을 먼저 건다 — 차트에 신호가 너무 많아서다(사용자 지시).
+    #     표는 전부 싣고, **차트만** 거른다.
     day = {}
+    nB = nS = 0
     for x in R["buy"]:
+        if (x.get("fwd1m_win") or 0) < BUY_WIN:
+            continue
+        nB += 1
         ok = (x.get("fwd1m_excess") or 0) > 0
         for f in x.get("fires") or []:
             if f in pos:
                 day.setdefault((pos[f], "b"), []).append(ok); nb[pos[f]] += 1
     for x in R["sell"]:
+        if (x.get("fwd1m_win") or 100) > SELL_WIN:
+            continue
+        nS += 1
         ok = (x.get("fwd1m_excess") or 0) < 0
         for f in x.get("fires") or []:
             if f in pos:
@@ -89,6 +101,9 @@ def chart(fig, R, y_top, h):
     cg = {}
     for side, tag in (("conf_buy", "매수"), ("conf_sell", "매도")):
         for x in (R.get(side) or []):
+            w = x.get("fwd1m_win")
+            if w is None or (w < BUY_WIN if tag == "매수" else w > SELL_WIN):
+                continue                         # 합류도 같은 문턱을 건다
             for f in (x.get("fires") or []):
                 if f in pos:
                     cg.setdefault((f, tag), []).append("%s ∧ %s" % (x["a"], x["b"]))
@@ -149,7 +164,9 @@ def chart(fig, R, y_top, h):
             tk.append(i); lb.append(MON[int(s[5:7]) - 1] if s[5:7] != "01" else s[2:4] + "년")
             last = m
     ax2.set_xticks(tk); ax2.set_xticklabels(lb, fontsize=5.6)
-    return y_top - h, [(num[k], k[0], k[1], cg[k]) for k in keys]
+    cs = sum(1 for k in cg if k[1] == "매도")      # 문턱을 넘은 **합류 매도** 건수
+    return (y_top - h, [(num[k], k[0], k[1], cg[k]) for k in keys],
+            (nB, len(R["buy"]), nS, len(R["sell"]), cs))
 
 
 def side_page(fig, R, side, asof, page, with_chart, with_legend):
@@ -170,32 +187,56 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
               "1개월 초과가 기대와 반대 · 큰 세모+번호 = 합류",
               fontsize=6.2, color=MUTED)
         y -= .014
-        y, legend = chart(fig, R, y, .200)
-        y -= .014
+        y, legend, (nB, tB, nS, tS, cs) = chart(fig, R, y, .200)
+        # ⚠ .013 만 뗐더니 아래 월 눈금(막대판 x축)과 겹쳤다 — 눈금 자리를 비운다.
+        y -= .026
+        # 🚨 차트는 승률로 거른다 — 무엇이 빠졌는지 반드시 적는다.
+        ST.tx(fig, X0 + .004, y,
+              "차트에 찍은 것 — **매수 승률 %.0f%% 이상 %d/%d종** · "
+              "**매도 승률 %.0f%% 이하 %d/%d종**. 표에는 전부 있다."
+              % (BUY_WIN, nB, tB, SELL_WIN, nS, tS), fontsize=6.6, color=INK2)
+        y -= .0115
+        if nS == 0:
+            lo = min((x["fwd1m_win"] for x in R["sell"] if x.get("n", 0) >= 5), default=0)
+            # ⚠ 한 줄에 다 넣었더니 오른쪽으로 넘쳤다(렌더 실측) — 두 줄로 나눈다.
+            ST.tx(fig, X0 + .004, y,
+                  "!! **단일 매도 표기가 없다** — 승률 %.0f%% 이하인 매도 신호가 하나도 "
+                  "없다(가장 낮은 것이 %.0f%%)." % (SELL_WIN, lo), fontsize=6.6, color=NEG)
+            y -= .0110
+            ST.tx(fig, X0 + .004, y,
+                  "   어느 것도 1개월 뒤 하락 쪽이 우세하지 않다는 뜻이다.%s"
+                  % (" 빨간 ▼ %d 건은 **합류**가 문턱을 넘은 것이다." % cs if cs else ""),
+                  fontsize=6.6, color=NEG)
+            y -= .0110
+        y -= .002
         # 번호표 — 차트의 ①②③ 가 무엇이었는지. «N짝» 만 적으면 뭔지 알 수 없다.
-        for mk, fd, tag, pairs in legend[:5]:
+        # ⚠ 다섯 줄이면 표가 각주를 밀어낸다(렌더 실측) — 넷으로 줄인다.
+        for mk, fd, tag, pairs in legend[:4]:
             ST.tx(fig, X0 + .004, y, "%s %s %s" % (mk, fd[5:], tag),
                   fontsize=6.4, weight="bold", color=POS if tag == "매수" else NEG)
             ST.tx(fig, X0 + .078, y, " · ".join(sorted(set(pairs)))[:108],
                   fontsize=6.4, color=INK2)
             y -= .0108
-        if len(legend) > 5:
+        if len(legend) > 4:
             ST.tx(fig, X0 + .004, y,
                   "그 밖 %d건은 번호만 달았다 — 어느 짝인지는 합류 표(5·6쪽)에서 날짜로 찾는다"
                   % (len(legend) - 5), fontsize=6.2, color=MUTED)
             y -= .0108
         y -= .012
 
-    ST.tx(fig, X0, y, "전체 · 초과 %s 순" % ("높은" if buy else "낮은"),
+    ST.tx(fig, X0, y, "전체 · 승률 %s 순" % ("높은" if buy else "낮은"),
           fontsize=9, weight="bold")
     ST.tx(fig, X0 + .180, y + .0005,
-          ("초과가 클수록 기준선보다 더 올랐다" if buy else
-           "매도는 **초과가 음수일수록** 제 몫을 한 것 — 색은 부호를 따른다"),
+          ("승률 = 1개월 뒤 오른 비율. 매수는 높을수록 제 몫을 한 것" if buy else
+           "승률 = 1개월 뒤 **오른** 비율. 매도는 **낮을수록** 제 몫을 한 것"),
           fontsize=6.6, color=MUTED)
     y -= .0140
 
     rows = [x for x in R[side] if x.get("n", 0) >= 5]
-    rows.sort(key=lambda x: (x.get("fwd1m_excess") or 0), reverse=buy)
+    # 승률 순 — 매수는 높은 것이 위, 매도는 낮은 것이 위(사용자 지시 2026-09-22).
+    #   동률은 초과로 가른다.
+    rows.sort(key=lambda x: ((x.get("fwd1m_win") or 0), (x.get("fwd1m_excess") or 0)),
+              reverse=buy)
     # 🚨 「지금」 칸 — 발동(순간)과 **지속**(그 관계가 유지되나)을 나눠 적는다.
     #   교차 신호가 45일 전에 났어도 이미 되돌아갔으면 «꺼짐» 이다. 그게 알고 싶은 것이다.
     def nowcell(x):
@@ -226,7 +267,7 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
         if c == 8:
             return (POS if buy else NEG) if rows[r].get("state_now") else MUTED
         return MUTED
-    y = ST.table(fig, X0, y, W, HEAD, tr, row_h=.0150, fs=6.7, hfs=6.1, zebra=True,
+    y = ST.table(fig, X0, y, W, HEAD, tr, row_h=.0144, fs=6.6, hfs=6.1, zebra=True,
                  aligns=["l", "l", "r", "r", "r", "r", "l", "r", "c"], cell_color=cc)
     thin = [x["signal"] for x in R[side] if x.get("n", 0) < 5]
     if thin:

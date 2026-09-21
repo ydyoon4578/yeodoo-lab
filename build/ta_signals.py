@@ -666,8 +666,9 @@ def main() -> int:
         print("═" * 98)
         for side, ko in (("buy", "매수"), ("sell", "매도")):
             rows = [x for x in r[side] if x.get("n", 0) >= MIN_N]
-            # 매수는 높은 초과가 위 · 매도는 **낮은 초과가 위**(음수일수록 제 몫을 했다).
-            rows.sort(key=lambda x: (x.get("fwd1m_excess") or 0),
+            # 승률 순 — 매수는 높은 것이 위, 매도는 낮은 것이 위(사용자 지시 2026-09-22).
+            rows.sort(key=lambda x: ((x.get("fwd1m_win") or 0),
+                                     (x.get("fwd1m_excess") or 0)),
                       reverse=(side == "buy"))
             print("\n  ── %s %d종 ──   %-22s %4s %8s %7s %8s %7s %8s  %-11s %6s"
                   % (ko, len(rows), "신호", "횟수", "1주", "1주승", "1개월", "1개월승",
