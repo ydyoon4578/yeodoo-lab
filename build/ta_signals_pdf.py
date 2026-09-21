@@ -34,8 +34,8 @@ POS, NEG, ACC, PAPER, PANEL2 = ST.POS, ST.NEG, ST.ACC, ST.PAPER, ST.PANEL2
 
 HOT = 10
 TOT = 6
-W = [.126, .262, .038, .052, .042, .056, .074, .040, .030]
-HEAD = ["신호", "무엇을 보나", "횟수", "1개월", "승률", "초과", "최근 발동", "경과", ""]
+W = [.122, .236, .036, .050, .040, .054, .072, .036, .092]
+HEAD = ["신호", "무엇을 보나", "횟수", "1개월", "승률", "초과", "최근 발동", "경과", "지금"]
 MON = ["1월", "2월", "3월", "4월", "5월", "6월",
        "7월", "8월", "9월", "10월", "11월", "12월"]
 
@@ -90,16 +90,25 @@ def chart(fig, R, y_top, h):
                    edgecolor=PAPER, linewidth=.6, zorder=5)
         # ⚠ 오른쪽 끝 셋을 같은 방향으로 달았더니 서로, 그리고 종가 딱지와 겹쳤다(렌더 실측).
         #   끝에 가까우면 **왼쪽으로** 뻗고, 위아래를 번갈아 놓는다.
-        for t, k in enumerate(sorted(cf)[-3:]):
+        # ⚠ 최근 셋을 다 달았더니 날짜가 붙어 있을 때 서로 겹쳤다(렌더 실측).
+        #   **10봉 이상 떨어진 것만** 최신부터 둘 고른다.
+        lab, seen = [], None
+        for k in sorted(cf, reverse=True):
+            i = pos[k]
+            if seen is None or seen - i >= 10:
+                lab.append(k); seen = i
+            if len(lab) >= 2:
+                break
+        for t, k in enumerate(lab):
             i = pos[k]
             right = i > n * .82
             ax.annotate("합류 %d짝 %s" % (cf[k], k[5:]), (i, c[i]),
                         textcoords="offset points",
-                        xytext=(-5 if right else 4, -10 if t % 2 else 7),
+                        xytext=(-5 if right else 4, 8 if t % 2 else -11),
                         ha="right" if right else "left",
                         fontsize=5.4, color=POS, zorder=6)
     lo, hi = min(c), max(c)
-    ax.set_ylim(lo - (hi - lo) * .10, hi + (hi - lo) * .16)
+    ax.set_ylim(lo - (hi - lo) * .12, hi + (hi - lo) * .20)
     # 기준일 종가는 점에 달지 않고 판 **왼쪽 위**에 둔다 — 오른쪽은 합류 딱지 자리다.
     ax.text(.012, .94, "기준일 %s 종가 %s" % (d[-1], format(int(round(c[-1])), ",")),
             transform=ax.transAxes, fontsize=6.4, color=INK, weight="bold", va="top")
@@ -151,25 +160,35 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
 
     rows = [x for x in R[side] if x.get("n", 0) >= 5]
     rows.sort(key=lambda x: (x.get("fwd1m_excess") or 0), reverse=buy)
+    # 🚨 「지금」 칸 — 발동(순간)과 **지속**(그 관계가 유지되나)을 나눠 적는다.
+    #   교차 신호가 45일 전에 났어도 이미 되돌아갔으면 «꺼짐» 이다. 그게 알고 싶은 것이다.
+    def nowcell(x):
+        s = "★" if x.get("fired_today") else ""
+        if x.get("state_now"):
+            d_ = x.get("state_days")
+            return s + ("켜짐%d일" % d_ if d_ is not None else "켜짐")
+        return s + "꺼짐"
     tr = [[x["signal"][:16], x.get("desc", ""), str(x["n"]),
            "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % x["fwd1m_win"],
            "%+.2f%%p" % x["fwd1m_excess"], (x["last"] or "—"),
            ("%d일" % x["days_ago"]) if x["days_ago"] is not None else "—",
-           ("상태" if x["kind"] == "state" else "") + ("★" if x["on_now"] else "")]
-          for x in rows]
+           nowcell(x)] for x in rows]
 
     def cc(r, c, tr=tr, rows=rows):
         if c == 0:
             return INK
         if c == 1:
             return INK2
+        if c == 2:
+            # 횟수가 주황이면 «켜져 있는 모든 날» 을 센 줄이다(상태형).
+            return ACC if rows[r]["kind"] == "state" else MUTED
         if c == 5:
             return POS if not tr[r][5].startswith("-") else NEG
         if c in (6, 7):
             d_ = rows[r]["days_ago"]
             return NEG if (d_ is not None and d_ <= HOT) else MUTED
         if c == 8:
-            return ACC
+            return (POS if buy else NEG) if rows[r].get("state_now") else MUTED
         return MUTED
     y = ST.table(fig, X0, y, W, HEAD, tr, row_h=.0150, fs=6.7, hfs=6.1, zebra=True,
                  aligns=["l", "l", "r", "r", "r", "r", "l", "r", "c"], cell_color=cc)
@@ -194,9 +213,12 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
         for k, v in (
             ("초과", "신호가 난 뒤 1개월 수익 - **아무 날이나 샀을 때**의 1개월 수익"
                      "(%s %+.2f%%)" % (R["label"], R["base1m"])),
-            ("횟수", "신호가 **처음 켜진 날**을 센 것. 「상태」 줄만 켜져 있는 모든 날을 센다"),
-            ("상태", "켜졌다 꺼지는 사건이 아니라 **조건이 유지되는 구간**"),
-            ("★", "기준일에 그 조건이 **아직 켜져 있다**"),
+            ("횟수", "신호가 **처음 켜진 날**을 센 것. **주황색**은 켜져 있는 모든 날을 센 줄"),
+            ("지금", "**켜짐** = 그 조건이 지금도 유지된다(교차 신호는 교차 뒤에도 그 위/아래에 "
+                     "있다는 뜻). 뒤의 날수는 그 상태가 며칠째인지다"),
+            ("꺼짐", "발동은 했지만 **이미 되돌아갔다.** 45일 전 상향교차가 꺼짐이면 그 사이에 "
+                     "다시 아래로 내려온 것이다"),
+            ("★", "기준일 **그날** 발동했다"),
         ):
             ST.tx(fig, X0 + .006, y, k, fontsize=6.8, weight="bold", color=ACC)
             ST.tx(fig, X0 + .044, y, v, fontsize=6.8, color=INK2)
