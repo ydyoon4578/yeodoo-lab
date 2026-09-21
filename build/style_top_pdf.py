@@ -1230,10 +1230,49 @@ def win_rate(nav, bench, dates, start):
 
 
 # ── 그리기 도구 ─────────────────────────────────────────────────────────────
+_PDF_PAD = 1.05     # 재는 건 Agg 인데 찍히는 건 PDF 다 — PDF 가 2.7~3.9% 넓다(아래 1339줄 실측)
+
+
 def tx(fig, x, y, s, **kw):
+    """🚨 «**굵게**» 표기를 실제 굵은체로 그린다.
+
+    처음엔 이 함수가 문자열을 그대로 fig.text 에 넘겨서, 랩의 모든 PDF 에 별표가
+    **그대로 찍히고 있었다**(month_map 22곳 · period 47곳 · style8 42곳 · 여기 234곳).
+    ⚠ 한글은 굵어져도 자폭이 안 변한다(전각) — 실측으로 0.03310 = 0.03310 이었다.
+      그래서 한글 줄은 길이가 안 바뀐다. 라틴·숫자만 조금 넓어진다.
+    ⚠ 그래도 **넘치면 통째로 되돌린다**. PDF 8개 × 수백 쪽을 다 눈으로 못 보므로,
+      새 겹침을 낼 바에 표기만 떼고 종전 모습으로 두는 쪽이 낫다.
+    ⚠ 반환은 **마지막 조각**이다 — 부르는 쪽(1339줄)이 .x1 로 줄 오른쪽 끝을 재는데,
+      조각으로 나뉘면 마지막 조각의 x1 이 그 값이다.
+    """
     kw.setdefault("color", INK); kw.setdefault("fontsize", 8)
     kw.setdefault("va", "top"); kw.setdefault("ha", "left")
-    return fig.text(x, y, s, **kw)
+    if "**" not in s:
+        return fig.text(x, y, s, **kw)
+    parts = s.split("**")
+    plain = s.replace("**", "")
+    # 짝이 안 맞거나(표기 실수) · 왼쪽 정렬이 아니거나 · 이미 굵기를 지정했으면 표기만 뗀다
+    if len(parts) % 2 == 0 or kw.get("ha") != "left" or kw.get("weight"):
+        return fig.text(x, y, plain, **kw)
+    try:
+        r = fig.canvas.get_renderer()
+    except Exception:
+        return fig.text(x, y, plain, **kw)          # 못 재는 백엔드면 종전대로
+    W, xx, arts = fig.bbox.width, x, []
+    for i, p in enumerate(parts):
+        if not p:
+            continue
+        k = dict(kw); k["weight"] = "bold" if i % 2 else "normal"
+        t = fig.text(xx, y, p, **k)
+        arts.append(t)
+        xx += t.get_window_extent(renderer=r).width / W
+    if not arts:
+        return fig.text(x, y, plain, **kw)
+    if x + (xx - x) * _PDF_PAD <= X1:
+        return arts[-1]
+    for t in arts:                                  # 넘쳤다 — 되돌린다
+        t.remove()
+    return fig.text(x, y, plain, **kw)
 
 
 def hline(fig, x0, x1, y, color=LINE, lw=.7):
