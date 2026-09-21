@@ -45,8 +45,17 @@ TURN_HI = 10.0      # 연 회전 배수 상한(사용자 결정과 같은 값)
 SUSPECT = ("x-cap", "x-ncap", "x-shiss", "x-capw", "x-capndx", "x-demega")
 
 
-def fund_monthly():
-    """펀드 월별 **초과**(바스켓 TR − S&P 500 TR). 확정 잣대 B 와 같은 정의다."""
+def fund_monthly(full=False):
+    """펀드 월별 **초과**(바스켓 TR − S&P 500 TR). 확정 잣대 B 와 같은 정의다.
+
+    🚨 2026-09-21 — **MAX_YEARS = 10 을 여기서 건다.** 사용자 지적:
+      «우량성장선별 30 이건 백테스팅 최근 10년만 하라니깐 왜 아직도 2014부터야»
+      아래 HOLD0/HOLD1 이 손으로 박힌 날짜(2014-07~2026-08 · 12.2년)라 이 함수를 읽는
+      곳이 전부 규약 밖에 있었다. build/maxyears.py 가 어제 «규약은 코드가 아니라
+      랩에 거는 것» 이라고 적으며 만들어졌는데, 정작 **펀드 계열이 그것을 안 읽었다.**
+      ⚠ 원자료의 창(2014-07~)은 그대로 둔다 — 자르는 것은 **끝에서부터 10년**이다.
+    full=True — 자르지 않은 전체 창. **재진술·앵커 대조에만 쓴다.**
+    """
     qg = pd.read_pickle(os.path.join(D18, r"02_우량성장_최소구성\qg_monthly.pkl"))
     idx = pd.read_pickle(os.path.join(D18, r"02_우량성장_최소구성\qg_index.pkl"))
     ipr = dict(zip(idx.ym, idx.ret_pct / 100.0))
@@ -83,8 +92,14 @@ def fund_monthly():
             z = sum(w.values()); w = {t: v / z for t, v in w.items()}
         prev = w
     ms = sorted(m for m in out if m in ipr and m in idiv and pd.notna(ipr[m]))
-    return pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
-                     index=pd.PeriodIndex(ms, freq="M"), dtype="float64")
+    S = pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
+                  index=pd.PeriodIndex(ms, freq="M"), dtype="float64")
+    if full:
+        return S
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    from maxyears import cap as _cap                      # noqa: E402
+    return S.reindex(_cap(S.index))
 
 
 def ols(y, x):
