@@ -108,13 +108,29 @@ def head(fig, R, sub, asof, color=INK):
 def nowcell(x):
     """「지금」 칸 — 발동(순간)과 지속(그 관계가 유지되나)을 나눠 적는다.
 
-    교차가 45일 전에 났어도 이미 되돌아갔으면 «꺼짐» 이다. ★ 는 기준일 당일 발동.
+      ★        기준일 당일 발동
+      켜짐N일    발동한 뒤 **한 번도 안 끊기고** 유지 중 · N 은 그 날수
+      다시켜짐N일 발동 뒤 **되돌아갔다가 다시** 켜졌다 · N 은 다시 켜진 뒤 날수
+      꺼짐      되돌아갔고 지금도 아니다
+
+    🚨 「다시켜짐」을 가르게 된 까닭(사용자 지적 2026-09-22 —「켜짐 0일은 신호가
+      제대로 안 나오는 것 같다」). NASDAQ「MACD 골든(0선 아래)」이 최근 발동
+      2026-08-04(45일 전)인데 켜짐 0일이었다. 8/4 교차가 그 사이 되돌아갔다가
+      **오늘 다시** MACD>시그널이 된 것인데, 오늘은 MACD 가 0선 위라
+      「0선 아래 골든」으로는 발동하지 않았다. 그래서 「45일 전 발동 + 켜짐 0일」
+      이라는 읽을 수 없는 줄이 나왔다.
+      가르는 잣대는 **지속 날수와 경과 날수의 비교**다 — 지속이 경과보다 짧으면
+      발동 뒤 한 번 끊겼다는 뜻이다. 이 칸이 애초에 답하려던 물음이 그것이다.
     """
     s = "★" if x.get("fired_today") else ""
-    if x.get("state_now"):
-        d_ = x.get("state_days")
-        return s + ("켜짐%d일" % d_ if d_ is not None else "켜짐")
-    return s + "꺼짐"
+    if not x.get("state_now"):
+        return s + "꺼짐"
+    d_, a_ = x.get("state_days"), x.get("days_ago")
+    if d_ is None:
+        return s + "켜짐"
+    if a_ is not None and d_ < a_:
+        return s + "다시켜짐%d일" % d_
+    return s + "켜짐%d일" % d_
 
 
 def rows_of(R, side, max_n):
@@ -264,7 +280,9 @@ def multi_page(fig, R, asof, page, max_n):
                 d_ = cf[r].get("days_ago")
                 return NEG if (d_ is not None and d_ <= HOT) else MUTED
             if c == 6:
-                return col if cf[r].get("state_now") else MUTED
+                if not cf[r].get("state_now"):
+                    return MUTED
+                return ACC if "다시" in tr[r][6] else col
             return MUTED
         y = ST.table(fig, X0, y, W_MUL, H_MUL, tr, row_h=.0150, fs=6.7, hfs=6.1,
                      zebra=True, aligns=A_MUL, cell_color=cc)
@@ -307,7 +325,9 @@ def table_page(fig, R, asof, page, max_n, tail=False):
                 d_ = rows[r]["days_ago"]
                 return NEG if (d_ is not None and d_ <= HOT) else MUTED
             if c == 6:
-                return col if rows[r].get("state_now") else MUTED
+                if not rows[r].get("state_now"):
+                    return MUTED
+                return ACC if "다시" in tr[r][6] else col
             return MUTED
         y = ST.table(fig, X0, y, W_SIG, H_SIG, tr, row_h=.0138, fs=6.6, hfs=6.1,
                      zebra=True, aligns=A_SIG, cell_color=cc)
