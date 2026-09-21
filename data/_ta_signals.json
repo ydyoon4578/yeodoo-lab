@@ -2144,6 +2144,10 @@
      "fwd1m_win": 57.0,
      "fwd1m_excess": -0.04,
      "last": "2025-04-04",
+     "days_ago": 532,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 2.67,
      "solo_b": -1.67
@@ -2159,6 +2163,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": 3.1,
      "last": "2026-03-27",
+     "days_ago": 175,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-20",
       "2026-03-27"
@@ -2177,6 +2185,10 @@
      "fwd1m_win": 77.0,
      "fwd1m_excess": 2.59,
      "last": "2026-03-31",
+     "days_ago": 171,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-20",
       "2026-03-27",
@@ -2196,6 +2208,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": 1.45,
      "last": "2026-03-27",
+     "days_ago": 175,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27"
      ],
@@ -2213,6 +2229,10 @@
      "fwd1m_win": 86.0,
      "fwd1m_excess": 2.91,
      "last": "2026-04-02",
+     "days_ago": 169,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-02"
      ],
@@ -2230,6 +2250,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": 2.9,
      "last": "2026-03-26",
+     "days_ago": 176,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-20",
       "2026-03-26"
@@ -2248,6 +2272,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": -0.46,
      "last": "2025-04-04",
+     "days_ago": 532,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.67,
      "solo_b": 1.32
@@ -2263,6 +2291,10 @@
      "fwd1m_win": 47.0,
      "fwd1m_excess": -1.74,
      "last": "2025-03-14",
+     "days_ago": 553,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.67,
      "solo_b": 0.94
@@ -2278,6 +2310,10 @@
      "fwd1m_win": 56.0,
      "fwd1m_excess": -0.45,
      "last": "2025-04-04",
+     "days_ago": 532,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.67,
      "solo_b": 0.9
@@ -2293,6 +2329,10 @@
      "fwd1m_win": 58.0,
      "fwd1m_excess": -0.03,
      "last": "2025-04-08",
+     "days_ago": 528,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.67,
      "solo_b": 0.56
@@ -2308,6 +2348,10 @@
      "fwd1m_win": 76.0,
      "fwd1m_excess": 1.44,
      "last": "2026-09-16",
+     "days_ago": 2,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-21",
       "2026-03-17",
@@ -2331,6 +2375,10 @@
      "fwd1m_win": 63.0,
      "fwd1m_excess": 1.0,
      "last": "2026-03-27",
+     "days_ago": 175,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27"
      ],
@@ -2348,6 +2396,10 @@
      "fwd1m_win": 67.0,
      "fwd1m_excess": -0.65,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-08-03"
      ],
@@ -2365,6 +2417,10 @@
      "fwd1m_win": 75.0,
      "fwd1m_excess": 1.47,
      "last": "2026-09-16",
+     "days_ago": 2,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-10",
       "2025-11-18",
@@ -2394,6 +2450,10 @@
      "fwd1m_win": 82.0,
      "fwd1m_excess": 0.73,
      "last": "2026-09-17",
+     "days_ago": 1,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-15",
       "2025-11-24",
@@ -2418,6 +2478,10 @@
      "fwd1m_win": 83.0,
      "fwd1m_excess": 1.17,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-12-04",
       "2026-04-14",
@@ -2437,6 +2501,10 @@
      "fwd1m_win": 100.0,
      "fwd1m_excess": 0.98,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-28",
       "2026-08-04"
@@ -2455,6 +2523,10 @@
      "fwd1m_win": 89.0,
      "fwd1m_excess": 1.03,
      "last": "2025-01-23",
+     "days_ago": 603,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.2,
      "solo_b": 0.78
@@ -2470,6 +2542,10 @@
      "fwd1m_win": 81.0,
      "fwd1m_excess": 1.15,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-28",
       "2026-04-14",
@@ -2489,6 +2565,10 @@
      "fwd1m_win": 89.0,
      "fwd1m_excess": 0.08,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-28",
       "2026-08-04"
@@ -2507,6 +2587,10 @@
      "fwd1m_win": 76.0,
      "fwd1m_excess": 1.25,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-14"
      ],
@@ -2524,6 +2608,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": -0.86,
      "last": "2025-01-22",
+     "days_ago": 604,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.01,
      "solo_b": 0.78
@@ -2539,6 +2627,10 @@
      "fwd1m_win": 85.0,
      "fwd1m_excess": 1.33,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-12-04",
       "2026-04-13",
@@ -2558,6 +2650,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": 1.11,
      "last": "2026-09-08",
+     "days_ago": 10,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-08-04",
       "2026-09-08"
@@ -2576,6 +2672,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": -0.58,
      "last": "2026-09-08",
+     "days_ago": 10,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-07-01",
       "2026-07-07",
@@ -2596,6 +2696,10 @@
      "fwd1m_win": 74.0,
      "fwd1m_excess": 1.06,
      "last": "2026-04-13",
+     "days_ago": 158,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-12-05",
       "2026-04-13"
@@ -2614,6 +2718,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": 1.04,
      "last": "2026-03-31",
+     "days_ago": 171,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27",
       "2026-03-31"
@@ -2632,6 +2740,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": 2.02,
      "last": "2026-04-02",
+     "days_ago": 169,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-02"
      ],
@@ -2649,6 +2761,10 @@
      "fwd1m_win": 86.0,
      "fwd1m_excess": -0.9,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-28",
       "2026-08-03"
@@ -2667,6 +2783,10 @@
      "fwd1m_win": 68.0,
      "fwd1m_excess": 0.09,
      "last": "2026-09-17",
+     "days_ago": 1,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-21",
       "2026-03-17",
@@ -2691,6 +2811,10 @@
      "fwd1m_win": 64.0,
      "fwd1m_excess": -0.36,
      "last": "2026-09-17",
+     "days_ago": 1,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 1,
      "fires": [
       "2025-11-24",
       "2026-07-30",
@@ -2711,6 +2835,10 @@
      "fwd1m_win": 67.0,
      "fwd1m_excess": 1.58,
      "last": "2026-03-27",
+     "days_ago": 175,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27"
      ],
@@ -2728,6 +2856,10 @@
      "fwd1m_win": 60.0,
      "fwd1m_excess": -0.28,
      "last": "2023-08-23",
+     "days_ago": 1122,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 0.9,
      "solo_b": -0.53
@@ -2743,6 +2875,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": -0.16,
      "last": "2025-01-22",
+     "days_ago": 604,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 0.78,
      "solo_b": 0.62
@@ -2758,6 +2894,10 @@
      "fwd1m_win": 91.0,
      "fwd1m_excess": 2.55,
      "last": "2023-01-09",
+     "days_ago": 1348,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 0.78,
      "solo_b": 0.56
@@ -2773,6 +2913,10 @@
      "fwd1m_win": 45.0,
      "fwd1m_excess": -2.11,
      "last": "2026-02-25",
+     "days_ago": 205,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-02-25"
      ],
@@ -2790,6 +2934,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": -1.86,
      "last": "2025-01-22",
+     "days_ago": 604,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 0.78,
      "solo_b": 0.52
@@ -2805,6 +2953,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": -1.9,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-08-03"
      ],
@@ -2822,6 +2974,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": -1.34,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-28",
       "2026-08-03"
@@ -2840,6 +2996,10 @@
      "fwd1m_win": 78.0,
      "fwd1m_excess": 1.12,
      "last": "2026-04-13",
+     "days_ago": 158,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-13"
      ],
@@ -2857,6 +3017,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": -0.1,
      "last": "2026-09-17",
+     "days_ago": 1,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-15",
       "2025-11-24",
@@ -2886,6 +3050,10 @@
      "fwd1m_win": 45.0,
      "fwd1m_excess": -1.16,
      "last": "2025-10-24",
+     "days_ago": 329,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-24"
      ],
@@ -2906,6 +3074,10 @@
      "fwd1m_excess": 0.24,
      "fwd1m_down": 32.0,
      "last": "2026-09-16",
+     "days_ago": 2,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-18",
       "2025-11-20",
@@ -2926,6 +3098,10 @@
      "fwd1m_excess": -2.8,
      "fwd1m_down": 50.0,
      "last": "2025-02-27",
+     "days_ago": 568,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.71,
      "solo_b": -0.63
@@ -2942,6 +3118,10 @@
      "fwd1m_excess": -0.28,
      "fwd1m_down": 36.0,
      "last": "2026-09-10",
+     "days_ago": 8,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-19",
       "2026-09-10"
@@ -2961,6 +3141,10 @@
      "fwd1m_excess": -1.2,
      "fwd1m_down": 48.0,
      "last": "2026-04-15",
+     "days_ago": 156,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-15"
      ],
@@ -2979,6 +3163,10 @@
      "fwd1m_excess": -3.38,
      "fwd1m_down": 20.0,
      "last": "2025-10-10",
+     "days_ago": 343,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-10"
      ],
@@ -2997,6 +3185,10 @@
      "fwd1m_excess": -0.74,
      "fwd1m_down": 31.0,
      "last": "2026-05-05",
+     "days_ago": 136,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-13",
       "2026-04-30",
@@ -3017,6 +3209,10 @@
      "fwd1m_excess": -0.82,
      "fwd1m_down": 38.0,
      "last": "2026-08-07",
+     "days_ago": 42,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-18",
       "2025-10-27",
@@ -3039,6 +3235,10 @@
      "fwd1m_excess": -1.93,
      "fwd1m_down": 40.0,
      "last": "2026-08-13",
+     "days_ago": 36,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-18",
       "2025-10-09",
@@ -3063,6 +3263,10 @@
      "fwd1m_excess": -1.12,
      "fwd1m_down": 34.0,
      "last": "2025-10-09",
+     "days_ago": 344,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-01",
       "2025-10-09"
@@ -3082,6 +3286,10 @@
      "fwd1m_excess": -0.43,
      "fwd1m_down": 41.0,
      "last": "2026-04-17",
+     "days_ago": 154,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-22",
       "2026-04-17"
@@ -3101,6 +3309,10 @@
      "fwd1m_excess": 0.07,
      "fwd1m_down": 27.0,
      "last": "2026-04-15",
+     "days_ago": 156,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-15"
      ],
@@ -3119,6 +3331,10 @@
      "fwd1m_excess": -1.82,
      "fwd1m_down": 50.0,
      "last": "2026-04-15",
+     "days_ago": 156,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-15"
      ],
@@ -3137,6 +3353,10 @@
      "fwd1m_excess": -0.37,
      "fwd1m_down": 40.0,
      "last": "2026-04-15",
+     "days_ago": 156,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-12-05",
       "2026-04-15"
@@ -3156,6 +3376,10 @@
      "fwd1m_excess": -0.98,
      "fwd1m_down": 50.0,
      "last": "2023-12-29",
+     "days_ago": 994,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -0.91,
      "solo_b": -0.63
@@ -3172,6 +3396,10 @@
      "fwd1m_excess": -1.18,
      "fwd1m_down": 57.0,
      "last": "2026-04-17",
+     "days_ago": 154,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-17"
      ],
@@ -3190,6 +3418,10 @@
      "fwd1m_excess": -0.86,
      "fwd1m_down": 39.0,
      "last": "2026-01-20",
+     "days_ago": 241,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 2,
      "fires": [
       "2025-10-10",
       "2026-01-20"
@@ -3209,6 +3441,10 @@
      "fwd1m_excess": -1.26,
      "fwd1m_down": 36.0,
      "last": "2026-06-11",
+     "days_ago": 99,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 2,
      "fires": [
       "2025-11-19",
       "2026-06-11"
@@ -3228,6 +3464,10 @@
      "fwd1m_excess": -0.96,
      "fwd1m_down": 44.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-14"
      ],
@@ -3246,6 +3486,10 @@
      "fwd1m_excess": -0.62,
      "fwd1m_down": 37.0,
      "last": "2026-05-12",
+     "days_ago": 129,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-14",
       "2026-05-06",
@@ -3266,6 +3510,10 @@
      "fwd1m_excess": -2.03,
      "fwd1m_down": 37.0,
      "last": "2026-05-18",
+     "days_ago": 123,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-05-18"
      ],
@@ -3284,6 +3532,10 @@
      "fwd1m_excess": -0.89,
      "fwd1m_down": 38.0,
      "last": "2024-08-23",
+     "days_ago": 756,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -0.75,
      "solo_b": -0.6
@@ -3300,6 +3552,10 @@
      "fwd1m_excess": -0.76,
      "fwd1m_down": 35.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-28",
       "2026-04-14"
@@ -3319,6 +3575,10 @@
      "fwd1m_excess": -0.53,
      "fwd1m_down": 31.0,
      "last": "2025-07-29",
+     "days_ago": 416,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -0.65,
      "solo_b": -0.63
@@ -3335,6 +3595,10 @@
      "fwd1m_excess": -1.42,
      "fwd1m_down": 50.0,
      "last": "2026-04-17",
+     "days_ago": 154,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-17"
      ],
@@ -3353,6 +3617,10 @@
      "fwd1m_excess": -2.52,
      "fwd1m_down": 36.0,
      "last": "2025-10-09",
+     "days_ago": 344,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-09"
      ],
@@ -3371,6 +3639,10 @@
      "fwd1m_excess": -0.49,
      "fwd1m_down": 29.0,
      "last": "2026-04-17",
+     "days_ago": 154,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-22",
       "2026-04-17"
@@ -3390,6 +3662,10 @@
      "fwd1m_excess": -1.84,
      "fwd1m_down": 80.0,
      "last": "2025-09-25",
+     "days_ago": 358,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-25"
      ],
@@ -3408,6 +3684,10 @@
      "fwd1m_excess": -3.55,
      "fwd1m_down": 50.0,
      "last": "2026-02-05",
+     "days_ago": 225,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 9,
      "fires": [
       "2026-02-05"
      ],
@@ -5678,6 +5958,10 @@
      "fwd1m_win": 60.0,
      "fwd1m_excess": 4.42,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5695,6 +5979,10 @@
      "fwd1m_win": 60.0,
      "fwd1m_excess": 4.41,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5712,6 +6000,10 @@
      "fwd1m_win": 56.0,
      "fwd1m_excess": 4.2,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5729,6 +6021,10 @@
      "fwd1m_win": 56.0,
      "fwd1m_excess": 3.79,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5746,6 +6042,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": -0.86,
      "last": "2026-04-02",
+     "days_ago": 169,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-02"
      ],
@@ -5763,6 +6063,10 @@
      "fwd1m_win": 46.0,
      "fwd1m_excess": 0.62,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5780,6 +6084,10 @@
      "fwd1m_win": 56.0,
      "fwd1m_excess": 2.56,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5797,6 +6105,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": 3.23,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5814,6 +6126,10 @@
      "fwd1m_win": 80.0,
      "fwd1m_excess": 0.13,
      "last": "2024-07-24",
+     "days_ago": 786,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 2.72,
      "solo_b": 1.4
@@ -5829,6 +6145,10 @@
      "fwd1m_win": 57.0,
      "fwd1m_excess": 1.34,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5846,6 +6166,10 @@
      "fwd1m_win": 67.0,
      "fwd1m_excess": 1.55,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5863,6 +6187,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": -1.99,
      "last": "2026-04-02",
+     "days_ago": 169,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-02"
      ],
@@ -5880,6 +6208,10 @@
      "fwd1m_win": 75.0,
      "fwd1m_excess": 2.32,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5897,6 +6229,10 @@
      "fwd1m_win": 69.0,
      "fwd1m_excess": 1.21,
      "last": "2026-03-30",
+     "days_ago": 172,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-30"
      ],
@@ -5914,6 +6250,10 @@
      "fwd1m_win": 81.0,
      "fwd1m_excess": 3.05,
      "last": "2026-07-27",
+     "days_ago": 53,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-20",
       "2026-03-26",
@@ -5933,6 +6273,10 @@
      "fwd1m_win": 67.0,
      "fwd1m_excess": 1.27,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27",
       "2026-07-29"
@@ -5951,6 +6295,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": 2.35,
      "last": "2026-07-28",
+     "days_ago": 52,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-01-20",
@@ -5978,6 +6326,10 @@
      "fwd1m_win": 67.0,
      "fwd1m_excess": 0.19,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-25",
       "2026-01-22",
@@ -5997,6 +6349,10 @@
      "fwd1m_win": 65.0,
      "fwd1m_excess": 0.87,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-03-27",
@@ -6016,6 +6372,10 @@
      "fwd1m_win": 70.0,
      "fwd1m_excess": 1.2,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-02-05",
@@ -6036,6 +6396,10 @@
      "fwd1m_win": 80.0,
      "fwd1m_excess": 0.18,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-07-29"
      ],
@@ -6053,6 +6417,10 @@
      "fwd1m_win": 76.0,
      "fwd1m_excess": 1.56,
      "last": "2026-07-27",
+     "days_ago": 53,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-20",
       "2026-03-24",
@@ -6073,6 +6441,10 @@
      "fwd1m_win": 57.0,
      "fwd1m_excess": 0.66,
      "last": "2023-10-31",
+     "days_ago": 1053,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.4,
      "solo_b": -0.89
@@ -6088,6 +6460,10 @@
      "fwd1m_win": 85.0,
      "fwd1m_excess": 3.21,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-07-29"
      ],
@@ -6105,6 +6481,10 @@
      "fwd1m_win": 76.0,
      "fwd1m_excess": 2.62,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-26",
       "2026-07-29"
@@ -6123,6 +6503,10 @@
      "fwd1m_win": 70.0,
      "fwd1m_excess": 0.78,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27",
       "2026-07-29"
@@ -6141,6 +6525,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": 0.48,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-02",
       "2026-08-03"
@@ -6159,6 +6547,10 @@
      "fwd1m_win": 58.0,
      "fwd1m_excess": 0.52,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27",
       "2026-07-29"
@@ -6177,6 +6569,10 @@
      "fwd1m_win": 57.0,
      "fwd1m_excess": -0.21,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-03-27",
       "2026-07-29"
@@ -6195,6 +6591,10 @@
      "fwd1m_win": 80.0,
      "fwd1m_excess": 1.01,
      "last": "2024-11-06",
+     "days_ago": 681,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.14,
      "solo_b": 1.05
@@ -6210,6 +6610,10 @@
      "fwd1m_win": 80.0,
      "fwd1m_excess": 2.16,
      "last": "2023-12-12",
+     "days_ago": 1011,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.14,
      "solo_b": -0.89
@@ -6225,6 +6629,10 @@
      "fwd1m_win": 68.0,
      "fwd1m_excess": 0.12,
      "last": "2026-09-17",
+     "days_ago": 1,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-15",
       "2025-12-19",
@@ -6252,6 +6660,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": -0.39,
      "last": "2026-09-18",
+     "days_ago": 0,
+     "fired_today": true,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-12-22",
       "2026-09-18"
@@ -6270,6 +6682,10 @@
      "fwd1m_win": 64.0,
      "fwd1m_excess": 0.96,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-03-27",
@@ -6289,6 +6705,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": 1.98,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-02-05",
@@ -6309,6 +6729,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": -0.67,
      "last": "2025-04-14",
+     "days_ago": 522,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": 1.05,
      "solo_b": 0.76
@@ -6324,6 +6748,10 @@
      "fwd1m_win": 52.0,
      "fwd1m_excess": -0.79,
      "last": "2026-09-18",
+     "days_ago": 0,
+     "fired_today": true,
+     "state_now": true,
+     "state_days": 0,
      "fires": [
       "2025-12-02",
       "2025-12-22",
@@ -6345,6 +6773,10 @@
      "fwd1m_win": 62.0,
      "fwd1m_excess": -0.14,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-25",
       "2026-04-02",
@@ -6364,6 +6796,10 @@
      "fwd1m_win": 71.0,
      "fwd1m_excess": 1.02,
      "last": "2026-08-03",
+     "days_ago": 46,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-25",
       "2026-08-03"
@@ -6382,6 +6818,10 @@
      "fwd1m_win": 60.0,
      "fwd1m_excess": 0.42,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 0,
      "fires": [
       "2025-11-28",
       "2026-02-25",
@@ -6402,6 +6842,10 @@
      "fwd1m_win": 73.0,
      "fwd1m_excess": 1.41,
      "last": "2026-08-07",
+     "days_ago": 42,
+     "fired_today": false,
+     "state_now": true,
+     "state_days": 0,
      "fires": [
       "2025-12-02",
       "2026-04-10",
@@ -6421,6 +6865,10 @@
      "fwd1m_win": 59.0,
      "fwd1m_excess": 0.05,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-03-27",
@@ -6440,6 +6888,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": 0.77,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-08-04"
      ],
@@ -6457,6 +6909,10 @@
      "fwd1m_win": 50.0,
      "fwd1m_excess": -0.33,
      "last": "2026-08-04",
+     "days_ago": 45,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-08-04"
      ],
@@ -6477,6 +6933,10 @@
      "fwd1m_excess": -2.35,
      "fwd1m_down": 44.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-19",
       "2026-04-14"
@@ -6496,6 +6956,10 @@
      "fwd1m_excess": -1.99,
      "fwd1m_down": 39.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-04-14"
      ],
@@ -6514,6 +6978,10 @@
      "fwd1m_excess": -2.08,
      "fwd1m_down": 33.0,
      "last": "2025-07-11",
+     "days_ago": 434,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.27,
      "solo_b": -0.88
@@ -6530,6 +6998,10 @@
      "fwd1m_excess": 0.81,
      "fwd1m_down": 16.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-18",
       "2026-04-14"
@@ -6549,6 +7021,10 @@
      "fwd1m_excess": -2.3,
      "fwd1m_down": 35.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-18",
       "2026-04-14"
@@ -6568,6 +7044,10 @@
      "fwd1m_excess": -0.7,
      "fwd1m_down": 35.0,
      "last": "2026-07-17",
+     "days_ago": 63,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-19",
       "2026-02-04",
@@ -6588,6 +7068,10 @@
      "fwd1m_excess": -3.19,
      "fwd1m_down": 70.0,
      "last": "2026-02-04",
+     "days_ago": 226,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-02-04"
      ],
@@ -6606,6 +7090,10 @@
      "fwd1m_excess": 0.34,
      "fwd1m_down": 32.0,
      "last": "2026-02-04",
+     "days_ago": 226,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-18",
       "2026-02-04"
@@ -6625,6 +7113,10 @@
      "fwd1m_excess": 1.22,
      "fwd1m_down": 32.0,
      "last": "2026-07-29",
+     "days_ago": 51,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-02-04",
@@ -6645,6 +7137,10 @@
      "fwd1m_excess": -1.97,
      "fwd1m_down": 51.0,
      "last": "2026-06-03",
+     "days_ago": 107,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-19",
       "2025-10-28",
@@ -6667,6 +7163,10 @@
      "fwd1m_excess": -2.79,
      "fwd1m_down": 39.0,
      "last": "2025-02-24",
+     "days_ago": 571,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -1.16,
      "solo_b": -0.88
@@ -6683,6 +7183,10 @@
      "fwd1m_excess": -0.95,
      "fwd1m_down": 38.0,
      "last": "2026-04-13",
+     "days_ago": 158,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-19",
       "2025-10-02",
@@ -6706,6 +7210,10 @@
      "fwd1m_excess": -1.75,
      "fwd1m_down": 45.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-19",
       "2025-10-27",
@@ -6726,6 +7234,10 @@
      "fwd1m_excess": 0.91,
      "fwd1m_down": 38.0,
      "last": "2026-06-04",
+     "days_ago": 106,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-10",
       "2026-06-04"
@@ -6745,6 +7257,10 @@
      "fwd1m_excess": -0.88,
      "fwd1m_down": 48.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-09",
       "2025-10-28",
@@ -6766,6 +7282,10 @@
      "fwd1m_excess": -1.68,
      "fwd1m_down": 57.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-19",
       "2025-10-28",
@@ -6786,6 +7306,10 @@
      "fwd1m_excess": -3.68,
      "fwd1m_down": 67.0,
      "last": "2026-02-04",
+     "days_ago": 226,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-01-05",
       "2026-02-04"
@@ -6805,6 +7329,10 @@
      "fwd1m_excess": -0.96,
      "fwd1m_down": 42.0,
      "last": "2026-06-11",
+     "days_ago": 99,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-19",
       "2026-02-04",
@@ -6825,6 +7353,10 @@
      "fwd1m_excess": -0.65,
      "fwd1m_down": 42.0,
      "last": "2026-02-04",
+     "days_ago": 226,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-11-20",
       "2026-02-04"
@@ -6844,6 +7376,10 @@
      "fwd1m_excess": 1.41,
      "fwd1m_down": 10.0,
      "last": "2026-05-20",
+     "days_ago": 121,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-10",
       "2025-11-06",
@@ -6864,6 +7400,10 @@
      "fwd1m_excess": 1.31,
      "fwd1m_down": 30.0,
      "last": "2024-07-15",
+     "days_ago": 795,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [],
      "solo_a": -0.88,
      "solo_b": -0.79
@@ -6880,6 +7420,10 @@
      "fwd1m_excess": -1.49,
      "fwd1m_down": 52.0,
      "last": "2026-06-05",
+     "days_ago": 105,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-10-10",
       "2026-02-04",
@@ -6900,6 +7444,10 @@
      "fwd1m_excess": -2.61,
      "fwd1m_down": 58.0,
      "last": "2026-08-24",
+     "days_ago": 25,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-01-20",
       "2026-02-04",
@@ -6920,6 +7468,10 @@
      "fwd1m_excess": -1.02,
      "fwd1m_down": 42.0,
      "last": "2026-04-14",
+     "days_ago": 157,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2025-09-18",
       "2025-10-27",
@@ -6940,6 +7492,10 @@
      "fwd1m_excess": 1.13,
      "fwd1m_down": 29.0,
      "last": "2026-02-04",
+     "days_ago": 226,
+     "fired_today": false,
+     "state_now": false,
+     "state_days": null,
      "fires": [
       "2026-02-04"
      ],

@@ -43,8 +43,7 @@ POS, NEG, ACC, PAPER, PANEL2 = ST.POS, ST.NEG, ST.ACC, ST.PAPER, ST.PANEL2
 
 HOT = 10                  # 「최근 발동」을 빨갛게 볼 날수
 TOT = 4
-MIN_STACK = 2             # 차트 세모 — 좋은 신호가 그날 이만큼 겹친 날
-N_MULTI = (20, 14)        # 멀티 신호 표에 실을 짝 수(매수, 매도)
+N_MULTI = (21, 15)        # 멀티 신호 표에 실을 짝 수(매수, 매도)
 # 🚨 「횟수」 칸을 지우라는 지시(2026-09-22)의 대가를 여기서 막는다.
 #   승률 순으로만 세우면 **5회짜리 승률 100%가 1등**으로 올라오는데, 칸이 없으니
 #   독자가 그게 5회인 줄 알 길이 없다. 칸을 되살리는 대신 **문턱을 올려**
@@ -52,14 +51,25 @@ N_MULTI = (20, 14)        # 멀티 신호 표에 실을 짝 수(매수, 매도)
 #   (합류 후보 문턱 CONF_MIN_N 과 같은 10회다.)
 MIN_SHOW = 10
 
+# 차트에 올릴 종수 — 멀티·단일 x 매수·매도 각각 이만큼(= 모두 20종).
+CHART_TOP = 5
+# 🚨 층 간격은 **가격 비율이 아니라 그림 범위(hi-lo) 비율**이다.
+#   비율로 잡았더니 6층이 쌓인 날에 여백이 범위의 60%를 먹어 가격선이 납작해졌다
+#   (렌더 실측). 범위 기준이면 지수가 무엇이든 보이는 간격이 같다.
+MK_SIZE, MK_BASE, MK_STEP, MK_CAP = 26, .045, .032, 6   # 크기·첫 층·간격·층 상한
+
 # 칸 너비는 **렌더 실측**이다(6.6pt 본문 · PDF 5% 여유 포함).
 #   신호명 최대 .123 · 설명 최대 .195 · 「★켜짐157일」 .065 · 날짜 .060
 W_SIG = [.190, .330, .062, .050, .082, .050, .120]          # 합 .884 = X1-X0
 H_SIG = ["신호", "무엇을 보나", "수익률", "승률", "최근 발동", "경과", "지금"]
 A_SIG = ["l", "l", "r", "r", "l", "r", "c"]
-W_MUL = [.255, .255, .062, .050, .110, .072, .080]          # 합 .884
-H_MUL = ["신호 A", "신호 B", "수익률", "승률", "단독 A/B", "단독 대비", "최근"]
-A_MUL = ["l", "l", "r", "r", "r", "r", "l"]
+# 🚨 멀티 표는 단일 표와 **같은 꼴**로 둔다(사용자 지시 2026-09-22) —
+#   「단독 A/B」·「단독 대비」를 빼고 그 자리에 최근 발동·경과·지금을 넣는다.
+#   ⚠ 그 대가로 「같이 본 값이 있나」를 표에서 바로 읽을 수는 없게 됐다.
+#     맞은편 쪽 단일 표의 같은 신호와 수익률·승률을 견주면 된다.
+W_MUL = [.260, .260, .062, .050, .082, .050, .120]          # 합 .884
+H_MUL = ["신호 A", "신호 B", "수익률", "승률", "최근 발동", "경과", "지금"]
+A_MUL = ["l", "l", "r", "r", "l", "r", "c"]
 
 MON = ["1월", "2월", "3월", "4월", "5월", "6월",
        "7월", "8월", "9월", "10월", "11월", "12월"]
@@ -93,6 +103,18 @@ def head(fig, R, sub, asof, color=INK):
     return y - .014
 
 
+def nowcell(x):
+    """「지금」 칸 — 발동(순간)과 지속(그 관계가 유지되나)을 나눠 적는다.
+
+    교차가 45일 전에 났어도 이미 되돌아갔으면 «꺼짐» 이다. ★ 는 기준일 당일 발동.
+    """
+    s = "★" if x.get("fired_today") else ""
+    if x.get("state_now"):
+        d_ = x.get("state_days")
+        return s + ("켜짐%d일" % d_ if d_ is not None else "켜짐")
+    return s + "꺼짐"
+
+
 def rows_of(R, side, max_n):
     """싣는 줄 — 표본이 너무 얇지도(MIN_SHOW) 너무 잦지도(max_n) 않은 것, 승률 순."""
     wkey = "fwd1m_win" if side == "buy" else "fwd1m_down"
@@ -105,49 +127,58 @@ def rows_of(R, side, max_n):
 
 # ══ 차트 ═══════════════════════════════════════════════════════════════════
 def chart(fig, R, y_top, h, max_n):
-    """가격 + 날짜별 신호 수. 세모는 좋은 신호가 그날 MIN_STACK 개 이상 켜진 날."""
+    """가격 + **딱 20종**의 발동일(사용자 지시 2026-09-22).
+
+    멀티 신호 · 단일 신호 각각 매수 CHART_TOP 종 · 매도 CHART_TOP 종 = 20종.
+    고르는 잣대는 표와 같은 **승률**이라, 「각 표의 위 다섯 줄」이 곧 차트에 뜬 것이다.
+
+      속 찬 세모  멀티 신호(두 신호가 같이 뜬 날)
+      속 빈 세모  단일 신호
+      초록 세모 아래 = 매수 · 빨강 세모 위 = 매도 · **크기는 모두 같다**
+
+    ⚠ 종전엔 크기로 「몇 개 겹쳤나」를 나타냈는데, 이제 겹침은 멀티 신호가
+      직접 말하므로 크기를 쓸 자리가 없다 — 크기를 같이 두고 속으로 가른다.
+    """
     d, c = R["px"]["d"], R["px"]["c"]
     n = len(d)
     pos = {x: i for i, x in enumerate(d)}
-    # ⚠ 막대판도 표와 **같은 모집단**을 센다. 종전엔 상태형(NVI 2,511회 등)까지 세어
-    #   막대가 늘 꽉 차 있었다 — 표에서 뺐으면 차트에서도 빼야 수가 맞는다.
+
+    # 차트에 올릴 20종 — 표와 같은 정렬(승률)에서 위 CHART_TOP 종씩.
+    picks = []                       # (발동일목록, 매수인가, 속을 채우나)
+    named = {}
+    for side, up in (("buy", True), ("sell", False)):
+        wk = "fwd1m_win" if up else "fwd1m_down"
+        mul = sorted([x for x in (R.get("conf_" + side) or [])
+                      if x.get("n", 0) >= MIN_SHOW],
+                     key=lambda x: ((x.get(wk) or 0), x["n"]), reverse=True)[:CHART_TOP]
+        sgl = rows_of(R, side, max_n)[0][:CHART_TOP]
+        named[up] = (len(mul), len(sgl))
+        for x in mul:
+            picks.append((x.get("fires") or [], up, True))
+        for x in sgl:
+            picks.append((x.get("fires") or [], up, False))
+
+    # 같은 날 여러 종이 뜨면 세모가 포개진다 — 바깥으로 층을 쌓는다.
+    #   멀티가 안쪽(가격에 가깝게), 단일이 바깥쪽이다.
+    mk = {}
+    for fires, up, fill in picks:
+        for f in fires:
+            if f in pos:
+                mk.setdefault((pos[f], up), []).append(fill)
+    # 아래 막대판도 **같은 20종**만 센다 — 위아래가 다른 모집단이면 읽을 수 없다.
     nb = [0] * n
     ns = [0] * n
-    for side, arr in (("buy", nb), ("sell", ns)):
-        for x in R[side]:
-            if x.get("n", 0) > max_n:
-                continue
-            for f in x.get("fires") or []:
-                if f in pos:
-                    arr[pos[f]] += 1
-
-    cg, cm = {}, {}
-    nB = nS = 0
-    for side, tag, good in (("buy", "매수", lambda e: e > 0),
-                            ("sell", "매도", lambda e: e < 0)):
-        for x in R[side]:
-            ok = MIN_SHOW <= x.get("n", 0) <= max_n
-            if not ok or not good(x.get("fwd1m_excess") or 0):
-                continue
-            if tag == "매수":
-                nB += 1
-            else:
-                nS += 1
-            for f in (x.get("fires") or []):
-                if f in pos:
-                    cg.setdefault((f, tag), []).append(x["signal"])
-                    cm.setdefault((f, tag), []).append(x["fwd1m_mean"])
-    cg = {k: v for k, v in cg.items() if len(v) >= MIN_STACK}
-    cm = {k: v for k, v in cm.items() if k in cg}
+    for (i, up), fl in mk.items():
+        (nb if up else ns)[i] = len(fl)
 
     hp, hb = h * .70, h * .24
     ax = fig.add_axes([X0, y_top - hp, X1 - X0, hp])
     ax2 = fig.add_axes([X0, y_top - h, X1 - X0, hb])
     for a in (ax, ax2):
         a.set_facecolor(PAPER)
-        for s in a.spines.values():
-            s.set_color(LINE)
-            s.set_linewidth(.7)
+        for sp in a.spines.values():
+            sp.set_color(LINE)
+            sp.set_linewidth(.7)
         a.set_xlim(-2, n + 1)
         a.tick_params(colors=MUTED, labelsize=5.8, length=2)
     ax.plot(range(n), c, color=INK, lw=.9, zorder=3)
@@ -155,40 +186,21 @@ def chart(fig, R, y_top, h, max_n):
     ax.grid(True, axis="y", color=LINE, lw=.4)
     ax.set_axisbelow(True)
 
-    # 🚨 라벨의 수는 **겹친 날을 사건으로 놓고 직접 잰** 1개월 수익이다(stack).
-    #   그날 켜진 신호들의 평균이 아니다 — 그건 매도가 구조상 음수가 못 된다.
-    ER = {}
-    for side, tag in (("buy", "매수"), ("sell", "매도")):
-        for x in (R.get("stack") or {}).get(side) or []:
-            if x.get("n", 0) >= 5:
-                ER[(tag, x["k"])] = x["fwd1m_mean"]
-    ev = [(pos[fd], tag == "매수",
-           ER.get((tag, 3)) if len(cm[(fd, tag)]) >= 3 else ER.get((tag, 2)),
-           len(cm[(fd, tag)])) for (fd, tag) in cg]
-    # ⚠ 전부 라벨을 달면 수치가 서로 뭉갠다 — **방향별로** 18봉 이상 떨어진 넷씩.
-    #   12봉·다섯씩으로 두었더니 NASDAQ 왼쪽 끝에서 라벨끼리, 또 y축 눈금 숫자와
-    #   겹쳤다(렌더 실측). 왼쪽 12봉은 눈금 자리라 아예 비운다.
-    lab = set()
-    for up in (True, False):
-        taken = []
-        for i, u, er, kk in sorted((z for z in ev if z[1] is up),
-                                   key=lambda z: (-z[3], -z[0])):
-            if i >= 12 and all(abs(i - jj) >= 18 for jj in taken):
-                lab.add((i, u))
-                taken.append(i)
-            if len(taken) >= 4:
-                break
-    for i, up, er, kk in ev:
-        col = POS if up else NEG
-        yy = c[i] * (.972 if up else 1.028)
-        ax.scatter([i], [yy], marker="^" if up else "v", s=10 + 8 * (kk - 1),
-                   zorder=6, linewidths=.55, facecolors=col, edgecolors=PAPER)
-        if (i, up) in lab and er is not None:
-            ax.annotate("%d개 %+.1f%%" % (kk, er), (i, yy),
-                        textcoords="offset points", xytext=(0, -9 if up else 5),
-                        ha="center", fontsize=5.5, color=col, weight="bold", zorder=7)
     lo, hi = min(c), max(c)
-    ax.set_ylim(lo - (hi - lo) * .20, hi + (hi - lo) * .24)
+    rng = (hi - lo) or 1.0
+    deep = 1
+    for (i, up), fl in mk.items():
+        col = POS if up else NEG
+        deep = max(deep, len(fl))
+        for j, fill in enumerate(sorted(fl, reverse=True)):     # 속 찬 것이 안쪽
+            off = rng * (MK_BASE + MK_STEP * min(j, MK_CAP - 1))
+            yy = c[i] - off if up else c[i] + off
+            ax.scatter([i], [yy], marker="^" if up else "v", s=MK_SIZE, zorder=6,
+                       linewidths=.85,
+                       facecolors=(col if fill else "none"), edgecolors=col)
+    # 층이 쌓인 만큼 위아래를 비운다 — 안 그러면 바깥 층이 테두리를 넘는다.
+    pad = MK_BASE + MK_STEP * min(deep, MK_CAP) + .02
+    ax.set_ylim(lo - rng * pad, hi + rng * pad)
     ax.text(.010, .96, "기준일 %s 종가 %s" % (d[-1], format(int(round(c[-1])), ",")),
             transform=ax.transAxes, fontsize=6.4, color=INK, weight="bold", va="top")
 
@@ -200,15 +212,15 @@ def chart(fig, R, y_top, h, max_n):
     ax2.set_yticks([-mx, 0, mx])
     ax2.set_yticklabels(["매도 %d" % mx, "", "매수 %d" % mx], fontsize=5.4)
     tk, lb, last = [], [], None
-    for i, s in enumerate(d):
-        if s[:7] != last:
+    for i, sdt in enumerate(d):
+        if sdt[:7] != last:
             tk.append(i)
-            lb.append(MON[int(s[5:7]) - 1] if s[5:7] != "01" else s[2:4] + "년")
-            last = s[:7]
+            lb.append(MON[int(sdt[5:7]) - 1] if sdt[5:7] != "01" else sdt[2:4] + "년")
+            last = sdt[:7]
     ax2.set_xticks(tk)
     ax2.set_xticklabels(lb, fontsize=5.6)
-    nday = (sum(1 for k in cg if k[1] == "매수"), sum(1 for k in cg if k[1] == "매도"))
-    return y_top - h, (nB, nS, nday)
+    nday = (sum(1 for k in mk if k[1]), sum(1 for k in mk if not k[1]))
+    return y_top - h, named, nday
 
 
 # ══ 1·3쪽 — 차트 + 멀티 신호 ═══════════════════════════════════════════════
@@ -217,29 +229,13 @@ def multi_page(fig, R, asof, page, max_n):
 
     ST.tx(fig, X0, y, "최근 12개월", fontsize=8.5, weight="bold")
     ST.tx(fig, X0 + .090, y + .0005,
-          "세모 = 성과 좋은 신호가 그날 **%d개 이상** 켜진 날 · 크기는 그 개수 · "
-          "옆 수는 **그 개수일 때 실제 1개월 수익** · 아래 막대는 그날 켜진 신호 수"
-          % MIN_STACK, fontsize=6.2, color=MUTED)
+          "**속 찬 세모 = 멀티 신호 · 속 빈 세모 = 단일 신호** · 아래 초록 매수 · 위 빨강 매도 · "
+          "각 표의 **위 %d줄**씩 모두 20종 · 아래 막대는 그날 뜬 수" % CHART_TOP,
+          fontsize=6.2, color=MUTED)
     y -= .014
     # ⚠ .013 만 떼면 아래 월 눈금과 겹친다 — 눈금 자리를 비운다(렌더 실측).
-    y, (nB, nS, nday) = chart(fig, R, y, .200, max_n)
-    y -= .028
-
-    # 차트 라벨에 쓴 수의 출처 — 말 뜻이 아니라 실측치라 남긴다.
-    st = []
-    for sd, tag in (("buy", "매수"), ("sell", "매도")):
-        for x in (R.get("stack") or {}).get(sd) or []:
-            if x.get("n", 0) >= 5:
-                st.append("%s %d개↑ %d회 **%+.2f%%** 승률 %.0f%%"
-                          % (tag, x["k"], x["n"], x["fwd1m_mean"],
-                             (x.get("fwd1m_down") if sd == "sell"
-                              else x.get("fwd1m_win")) or 0))
-    ST.tx(fig, X0 + .004, y, " · ".join(st), fontsize=6.6, color=INK2)
-    y -= .0112
-    ST.tx(fig, X0 + .004, y,
-          "겹친 날은 매수 %d일 · 매도 %d일. !! 「성과 좋은 신호」를 전 구간 성적으로 "
-          "고른 것이라 이 수는 **설명용**이다." % nday, fontsize=6.4, color=MUTED)
-    y -= .0150
+    y, named, nday = chart(fig, R, y, .200, max_n)
+    y -= .030
 
     for key, ko, col, nmax in (("conf_buy", "매수", POS, N_MULTI[0]),
                                ("conf_sell", "매도", NEG, N_MULTI[1])):
@@ -249,36 +245,32 @@ def multi_page(fig, R, asof, page, max_n):
         cf = sorted(allp, key=lambda x: ((x.get(wk) or 0), x["n"]), reverse=True)[:nmax]
         if not cf:
             continue
+        bw = (R.get("base1m_win") if buy else R.get("base1m_down")) or 0
         ST.tx(fig, X0, y, "%s · 승률 순" % ko, fontsize=9.5, weight="bold", color=col)
         ST.tx(fig, X0 + .114, y + .0005,
-              "두 신호가 **5거래일 안에 같이** 뜬 날 · %d짝 중 %d · "
-              "단독 대비가 **양수면 같이 본 값이 있다**" % (len(allp), len(cf)),
+              "두 신호가 **5거래일 안에 같이** 뜬 날 · %d짝 중 %d · 「지금」은 **두 조건이 "
+              "다 유지되나** · 아무 날이나 잡아도 %s %.1f%%" % (len(allp), len(cf),
+                                                     "오를 확률" if buy else "내릴 확률", bw),
               fontsize=6.4, color=MUTED)
         y -= .0140
-        base = R["base1m"]
-        tr, gain = [], []
-        for x in cf:
-            # 🚨 단독 A/B 는 **날것의 1개월 등락**이다. JSON 의 solo_* 는 기준선차라
-            #   기준선을 도로 더한다(수익률 = 기준선차 + 기준선).
-            ma = (x.get("solo_a") or 0) + base
-            mb = (x.get("solo_b") or 0) + base
-            # 🚨 「단독 대비」는 **양쪽 다 양수가 제 몫**이 되게 잡는다. 매수는 더 오른 만큼,
-            #   매도는 더 내린 만큼. 부호가 방향마다 뒤집히면 또 헷갈린다(2026-09-22 지적).
-            g = (x["fwd1m_mean"] - max(ma, mb)) if buy else (min(ma, mb) - x["fwd1m_mean"])
-            gain.append(g)
-            tr.append([x["a"], x["b"], "%+.2f%%" % x["fwd1m_mean"],
-                       "%.0f%%" % ((x.get(wk) or 0)),
-                       "%+.2f / %+.2f" % (ma, mb), "%+.2f%%p" % g, x["last"]])
 
-        bw = (R.get("base1m_win") if buy else R.get("base1m_down")) or 0
+        tr = [[x["a"], x["b"], "%+.2f%%" % x["fwd1m_mean"],
+               "%.0f%%" % (x.get(wk) or 0), (x["last"] or "—"),
+               ("%d일" % x["days_ago"]) if x.get("days_ago") is not None else "—",
+               nowcell(x)] for x in cf]
 
-        def cc(r, c, tr=tr, gain=gain, bw=bw, col=col):
+        def cc(r, c, tr=tr, cf=cf, bw=bw, col=col):
             if c in (0, 1):
                 return INK
+            if c == 2:
+                return INK          # 방향마다 좋고 나쁨이 갈려 색을 안 준다
             if c == 3:
                 return col if float(tr[r][3][:-1]) >= bw else MUTED
-            if c == 5:
-                return POS if gain[r] > 0 else NEG
+            if c in (4, 5):
+                d_ = cf[r].get("days_ago")
+                return NEG if (d_ is not None and d_ <= HOT) else MUTED
+            if c == 6:
+                return col if cf[r].get("state_now") else MUTED
             return MUTED
         y = ST.table(fig, X0, y, W_MUL, H_MUL, tr, row_h=.0150, fs=6.7, hfs=6.1,
                      zebra=True, aligns=A_MUL, cell_color=cc)
@@ -302,13 +294,6 @@ def table_page(fig, R, asof, page, max_n, tail=False):
               "그보다 높아야 제 몫" % ("오른" if buy else "내린", bw),
               fontsize=6.4, color=MUTED)
         y -= .0138
-
-        def nowcell(x):
-            s = "★" if x.get("fired_today") else ""
-            if x.get("state_now"):
-                d_ = x.get("state_days")
-                return s + ("켜짐%d일" % d_ if d_ is not None else "켜짐")
-            return s + "꺼짐"
 
         tr = [[x["signal"], x.get("desc", ""), "%+.2f%%" % x["fwd1m_mean"],
                "%.0f%%" % (x.get(wkey) or 0), (x["last"] or "—"),
