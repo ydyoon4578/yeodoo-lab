@@ -75,8 +75,14 @@ def fund_monthly():
             z = sum(w.values()); w = {t: v / z for t, v in w.items()}
         prev = w
     ms = sorted(m for m in out if m in ipr and m in idiv and pd.notna(ipr[m]))
-    return pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
-                     index=pd.PeriodIndex(ms, freq="M"))
+    S = pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
+                  index=pd.PeriodIndex(ms, freq="M"))
+    # 🚨 2026-09-21 — MAX_YEARS = 10. 이 파일은 fund_fit 과 **같은 계산을 두 벌**로
+    #   갖고 있어 한쪽만 고치면 분기보고와 카드가 갈린다. 그래서 여기도 같이 건다.
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__)))
+    from maxyears import cap as _cap                      # noqa: E402
+    return S.reindex(_cap(S.index))
 
 
 def main():

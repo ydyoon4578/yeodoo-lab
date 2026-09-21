@@ -33,6 +33,7 @@ DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "_qg_cap.json")
 sys.path.insert(0, os.path.join(ROOT, "build"))
 from fund_fit import D18, fund_monthly                            # noqa: E402
+from maxyears import MAX_YEARS, cap as capidx                     # noqa: E402
 
 SRC = os.path.join(D18, r"02_우량성장_최소구성\qg_monthly.pkl")
 SRC_IX = os.path.join(D18, r"02_우량성장_최소구성\qg_index.pkl")
@@ -167,7 +168,8 @@ def series(cap=None):
     X = pd.read_csv(DIV)
     idx_div = dict(zip(X.iloc[:, 0].astype(str), X.iloc[:, 4]))
     ex, tn, t3, _ = run(q, idx_pr, idx_div, cap=cap)
-    return ex, {"turn_y_pct": tn, "top3_pct": t3}
+    # 🚨 2026-09-21 — MAX_YEARS = 10. 카드가 이 함수를 읽으므로 여기서 자른다.
+    return ex.reindex(capidx(ex.index)), {"turn_y_pct": tn, "top3_pct": t3}
 
 
 def main():
@@ -183,6 +185,7 @@ def main():
 
     # ── 앵커 ① 자료의 wtgt 그대로 → fund_monthly() 와 같아야 한다 ─────────
     ex0, tn0, t30, _ = run(q, idx_pr, idx_div, cap=None)
+    ex0 = ex0.reindex(capidx(ex0.index))          # 🚨 10년 상한 — 앵커도 같은 창에서
     ref = fund_monthly()
     j = ex0.index.intersection(ref.index)
     gap = float((ex0.reindex(j) - ref.reindex(j)).abs().max())
@@ -192,6 +195,7 @@ def main():
 
     # ── 앵커 ② idxw 로 20% 를 다시 만들면 원본 wtgt 와 같은가 ─────────────
     ex20, tn20, t3_20, sel20 = run(q, idx_pr, idx_div, cap=20.0)
+    ex20 = ex20.reindex(capidx(ex20.index))
     d = float((ex20 - ex0).abs().max())
     print("앵커② idxw→20%% 재구성 — 월별 초과 최대 차 %.4f%%p" % (d * 100))
     if d > 0.002:
@@ -205,6 +209,7 @@ def main():
     base = None
     for c in CAPS:
         ex, tn, t3, _ = run(q, idx_pr, idx_div, cap=c)
+        ex = ex.reindex(capidx(ex.index))         # 🚨 10년 상한
         s = stats(ex); s["turn_y_pct"] = tn; s["top3_pct"] = t3
         if c == 20.0:
             base = s
