@@ -213,7 +213,9 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
             ST.tx(fig, X0 + .004, y,
                   "**%s** — " % tag + " · ".join(
                       "%d개↑ %d회 **%+.2f%%** (승률 %.0f%% · 기준선차 %+.2f%%p)"
-                      % (x["k"], x["n"], x["fwd1m_mean"], x["fwd1m_win"], x["fwd1m_excess"])
+                      % (x["k"], x["n"], x["fwd1m_mean"],
+                         (x.get("fwd1m_down") if sd == "sell" else x.get("fwd1m_win")) or 0,
+                         x["fwd1m_excess"])
                       for x in xs),
                   fontsize=6.5, color=POS if sd == "buy" else NEG)
             y -= .0110
@@ -237,19 +239,23 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
             y -= .0108
         y -= .012
 
-    ST.tx(fig, X0, y, "전체 · 승률 %s 순" % ("높은" if buy else "낮은"),
-          fontsize=9, weight="bold")
-    ST.tx(fig, X0 + .180, y + .0005,
-          "승률 = 1개월 뒤 **오른** 비율 · 아무 날이나 사면 **%.1f%%** 다 — 그보다 %s"
-          % (R.get("base1m_win") or 0, "높아야 제 몫" if buy else "**낮아야** 제 몫"),
+    # 🚨 승률의 뜻이 방향마다 다르다(사용자 지적 2026-09-22) — 매수는 **오른** 비율,
+    #   매도는 **내린** 비율. 그래야 양쪽 다 «높을수록 제 몫» 이라 둘 다 높은 순으로 선다.
+    wkey = "fwd1m_win" if buy else "fwd1m_down"
+    bwin = (R.get("base1m_win") if buy else R.get("base1m_down")) or 0
+    ST.tx(fig, X0, y, "전체 · 승률 높은 순", fontsize=9, weight="bold")
+    # ⚠ 9pt 한글 9자는 .145 다 — .132 로는 부제를 먹었다(렌더 실측).
+    ST.tx(fig, X0 + .160, y + .0005,
+          "승률 = 1개월 뒤 **%s** 비율 · 아무 날이나 잡아도 **%.1f%%** 는 그러니 "
+          "그보다 높아야 제 몫" % ("오른" if buy else "내린", bwin),
           fontsize=6.6, color=MUTED)
     y -= .0140
 
     rows = [x for x in R[side] if x.get("n", 0) >= 5]
-    # 승률 순 — 매수는 높은 것이 위, 매도는 낮은 것이 위(사용자 지시 2026-09-22).
-    #   동률은 기준선차로 가른다.
-    rows.sort(key=lambda x: ((x.get("fwd1m_win") or 0), (x.get("fwd1m_excess") or 0)),
-              reverse=buy)
+    #   동률은 기준선차로 가른다(매수는 큰 것, 매도는 작은 것이 위).
+    rows.sort(key=lambda x: ((x.get(wkey) or 0),
+                             (x.get("fwd1m_excess") or 0) * (1 if buy else -1)),
+              reverse=True)
     # 🚨 「지금」 칸 — 발동(순간)과 **지속**(그 관계가 유지되나)을 나눠 적는다.
     #   교차 신호가 45일 전에 났어도 이미 되돌아갔으면 «꺼짐» 이다. 그게 알고 싶은 것이다.
     def nowcell(x):
@@ -259,7 +265,7 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
             return s + ("켜짐%d일" % d_ if d_ is not None else "켜짐")
         return s + "꺼짐"
     tr = [[x["signal"][:16], x.get("desc", ""), str(x["n"]),
-           "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % x["fwd1m_win"],
+           "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % (x.get(wkey) or 0),
            "%+.2f%%p" % x["fwd1m_excess"], (x["last"] or "—"),
            ("%d일" % x["days_ago"]) if x["days_ago"] is not None else "—",
            nowcell(x)] for x in rows]
@@ -307,6 +313,11 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
                         "1개월 지수 수익(%s %+.2f%%)" % (R["label"], R["base1m"]),
                         "**둘 다 같은 지수의 등락이다.** 다른 것을 견준 «초과수익» 이 아니라 "
                         "«이 신호가 붙는 날이 보통 날과 다른가» 를 재는 것이다"]),
+            ("승률", ["매수는 1개월 뒤 **오른** 비율, 매도는 **내린** 비율이다. 양쪽 다 "
+                     "**높을수록 제 몫을 한 것**이라 둘 다 높은 순으로 놓았다",
+                     "아무 날이나 잡아도 오를 확률이 %.1f%% · 내릴 확률이 %.1f%% 다 — "
+                     "그 수가 중립이지 50%% 가 아니다"
+                     % (R.get("base1m_win") or 0, R.get("base1m_down") or 0)]),
             ("횟수", ["신호가 **처음 켜진 날**을 센 것. **주황색**은 켜져 있는 모든 날을 센 줄"]),
             ("지금", ["**켜짐** = 그 조건이 지금도 유지된다(교차 신호는 교차 뒤에도 그 위/아래에 "
                      "있다는 뜻). 뒤의 날수는 그 상태가 며칠째인지다"]),
@@ -358,7 +369,9 @@ def conf_page(fig, R, asof, page, tail=False):
             sa, sb = x.get("solo_a") or 0, x.get("solo_b") or 0
             best = max(sa, sb) if rev else min(sa, sb)
             tr.append([x["a"][:17], x["b"][:17], str(x["n"]),
-                       "%+.2f%%" % x["fwd1m_mean"], "%.0f%%" % x["fwd1m_win"],
+                       "%+.2f%%" % x["fwd1m_mean"],
+                       "%.0f%%" % ((x.get("fwd1m_win") if rev
+                                    else x.get("fwd1m_down")) or 0),
                        "%+.2f%%p" % x["fwd1m_excess"],
                        "%+.2f / %+.2f" % (sa, sb),
                        "%+.2f%%p" % (x["fwd1m_excess"] - best), x["last"]])
