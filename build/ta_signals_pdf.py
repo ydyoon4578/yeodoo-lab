@@ -95,16 +95,10 @@ def chart(fig, R, y_top, h):
         for f in x.get("fires") or []:
             if f in pos:
                 day.setdefault((pos[f], "s"), []).append(ok); ns[pos[f]] += 1
-    P = {"bf": [[], []], "bh": [[], []], "sf": [[], []], "sh": [[], []]}
-    for (i, sd), oks in day.items():
-        up = sd == "b"
-        for k, ok in enumerate(sorted(oks, reverse=True)):
-            yv = c[i] * ((1 - .013 - .0105 * k) if up else (1 + .013 + .0105 * k))
-            t = ("bf" if ok else "bh") if up else ("sf" if ok else "sh")
-            P[t][0].append(i); P[t][1].append(yv)
-
-    # 합류 — 날짜·방향으로 묶고 최근 것부터 번호를 매긴다
-    cg = {}
+    # 🚨 **단일 신호는 세모로 안 찍는다**(사용자 지시 2026-09-22). 500건이 깔리면
+    #   합류가 안 보인다. 단일은 아래 막대판이 «그날 몇 개 켜졌나» 로만 보여 준다.
+    #   합류 — 날짜·방향으로 묶는다. 같은 날 여러 짝이면 기대수익률은 그 평균이다.
+    cg, cm = {}, {}
     for side, tag in (("conf_buy", "매수"), ("conf_sell", "매도")):
         for x in (R.get(side) or []):
             w = x.get("fwd1m_win")
@@ -113,10 +107,9 @@ def chart(fig, R, y_top, h):
             for f in (x.get("fires") or []):
                 if f in pos:
                     cg.setdefault((f, tag), []).append("%s ∧ %s" % (x["a"], x["b"]))
-    # 번호는 다섯까지만 — 열 개를 달았더니 오른쪽에서 뭉쳤다(렌더 실측).
-    #   나머지는 번호 없이 큰 세모만 찍고, 어느 짝인지는 합류 표에서 날짜로 찾는다.
-    keys = sorted(cg, reverse=True)[:5]
-    num = {k: CIRC[i] for i, k in enumerate(keys)}
+                    cm.setdefault((f, tag), []).append(
+                        (x["fwd1m_mean"], x["fwd1m_excess"]))
+    keys = sorted(cg, reverse=True)
 
     hp, hb = h * .70, h * .24
     ax = fig.add_axes([X0, y_top - hp, X1 - X0, hp])
@@ -132,25 +125,36 @@ def chart(fig, R, y_top, h):
     ax.grid(True, axis="y", color=LINE, lw=.4)
     ax.set_axisbelow(True)
 
-    # 단일 신호 — 작은 세모(원본 swing_panel 방식). 속이 빈 것은 초과가 기대와 반대.
-    def put(t, mk, col, fill):
-        if P[t][0]:
-            ax.scatter(P[t][0], P[t][1], marker=mk, s=6, zorder=5, linewidths=.45,
-                       alpha=.9, facecolors=(col if fill else "none"), edgecolors=col)
-    put("bf", "^", POS, True); put("bh", "^", POS, False)
-    put("sf", "v", NEG, True); put("sh", "v", NEG, False)
-
-    # 합류 — 큰 세모 + 번호. 번호는 차트 아래 표와 짝짓는다(«N짝» 이라고만 적으면 뭔지 모른다)
+    # 합류만 찍는다 — 작은 세모 + **기대수익률**(번호 대신. 사용자 지시).
+    #   속이 빈 것은 초과가 기대와 반대인 짝이다.
+    ev = []
     for (fd, tag) in cg:
-        i, up = pos[fd], (tag == "매수")
-        yy = c[i] * (.958 if up else 1.042)
-        ax.scatter([i], [yy], marker="^" if up else "v", s=50,
-                   color=POS if up else NEG, edgecolor=PAPER, linewidth=.7, zorder=6)
-        mk = num.get((fd, tag))
-        if mk:
-            ax.annotate(mk, (i, yy), textcoords="offset points",
-                        xytext=(0, -10 if up else 4), ha="center", fontsize=6.2,
-                        color=POS if up else NEG, weight="bold", zorder=7)
+        ms = cm[(fd, tag)]
+        ev.append((pos[fd], tag == "매수",
+                   sum(a for a, _b in ms) / len(ms),      # 그날 겹친 짝들의 1개월 평균
+                   sum(b for _a, b in ms) / len(ms)))
+    # 🚨 63건을 전부 라벨 달았더니 수치가 서로 뭉갰다(렌더 실측). 세모는 다 찍고
+    #   **라벨은 간격을 둔다** — 기대수익이 큰 것부터 10봉 이상 떨어진 것만, 최대 10개.
+    #   ⚠ 한 통에 담아 고르면 라벨이 매수 쪽에 다 간다 — **방향별로 따로** 다섯씩.
+    lab = set()
+    for side in (True, False):
+        taken = []
+        for i, up, er, _ex in sorted((z for z in ev if z[1] is side),
+                                     key=lambda z: -abs(z[2])):
+            if all(abs(i - j) >= 10 for j in taken):
+                lab.add((i, up)); taken.append(i)
+            if len(taken) >= 5:
+                break
+    for i, up, er, ex in ev:
+        ok = (ex > 0) if up else (ex < 0)
+        col = POS if up else NEG
+        yy = c[i] * (.972 if up else 1.028)
+        ax.scatter([i], [yy], marker="^" if up else "v", s=16, zorder=6, linewidths=.55,
+                   facecolors=(col if ok else "none"), edgecolors=col)
+        if (i, up) in lab:
+            ax.annotate("%+.1f%%" % er, (i, yy), textcoords="offset points",
+                        xytext=(0, -9 if up else 5), ha="center", fontsize=5.6,
+                        color=col, weight="bold", zorder=7)
     lo, hi = min(c), max(c)
     ax.set_ylim(lo - (hi - lo) * .18, hi + (hi - lo) * .18)
     ax.text(.010, .96, "기준일 %s 종가 %s" % (d[-1], format(int(round(c[-1])), ",")),
@@ -171,7 +175,8 @@ def chart(fig, R, y_top, h):
             last = m
     ax2.set_xticks(tk); ax2.set_xticklabels(lb, fontsize=5.6)
     cs = sum(1 for k in cg if k[1] == "매도")      # 문턱을 넘은 **합류 매도** 건수
-    return (y_top - h, [(num[k], k[0], k[1], cg[k]) for k in keys],
+    leg = [(k[0], k[1], sum(a for a, _ in cm[k]) / len(cm[k]), cg[k]) for k in keys]
+    return (y_top - h, leg,
             (nB, len(R["buy"]), nS, len(R["sell"]), cs, bwin, BUY_WIN, SELL_WIN))
 
 
@@ -187,47 +192,37 @@ def side_page(fig, R, side, asof, page, with_chart, with_legend):
     y -= .014
 
     if with_chart:
-        ST.tx(fig, X0, y, "최근 12개월 — 가격과 신호", fontsize=8.5, weight="bold")
-        ST.tx(fig, X0 + .200, y + .0005,
-              "작은 세모 = 단일 신호(아래 초록 매수 · 위 빨강 매도) · **속이 빈 것**은 "
-              "1개월 초과가 기대와 반대 · 큰 세모+번호 = 합류",
+        ST.tx(fig, X0, y, "최근 12개월 — 가격과 신호 합류", fontsize=8.5, weight="bold")
+        ST.tx(fig, X0 + .230, y + .0005,
+              "세모 = **두 신호가 5일 안에 같이 발동**한 날 · 옆 수는 **그 뒤 1개월 "
+              "평균수익** · 속이 빈 것은 초과가 기대와 반대",
               fontsize=6.2, color=MUTED)
         y -= .014
         y, legend, (nB, tB, nS, tS, cs, bw, bwu, bwd) = chart(fig, R, y, .200)
         # ⚠ .013 만 뗐더니 아래 월 눈금(막대판 x축)과 겹쳤다 — 눈금 자리를 비운다.
         y -= .026
-        # 🚨 차트는 승률로 거른다 — 문턱이 무엇이고 무엇이 빠졌는지 반드시 적는다.
         ST.tx(fig, X0 + .004, y,
-              "차트에 찍은 것 — **매수 승률 %.1f%% 이상 %d/%d종** · "
-              "**매도 %.1f%% 이하 %d/%d종**. 표에는 전부 있다."
-              % (bwu, nB, tB, bwd, nS, tS), fontsize=6.6, color=INK2)
+              "**단일 신호는 세모로 안 찍는다** — 12개월에 500건이라 합류가 묻힌다. "
+              "아래 막대가 «그날 몇 개 켜졌나» 를 대신 보여 준다.",
+              fontsize=6.6, color=INK2)
         y -= .0112
         ST.tx(fig, X0 + .004, y,
-              "문턱은 **기준선 승률 %.1f%% 에서 ±%.0f%%p** 다 — 아무 날이나 사도 1개월 뒤 "
-              "오를 확률이 그만큼이라, 50%% 가 아니라 이 수가 중립이다."
-              % (bw, WIN_GAP), fontsize=6.6, color=MUTED)
+              "문턱 — 매수 승률 %.1f%%↑ %d/%d종 · 매도 %.1f%%↓ %d/%d종. **기준선 승률 "
+              "%.1f%% 에서 ±%.0f%%p** 다(아무 날이나 사도 그만큼 오르므로 50%% 가 중립이 아니다)."
+              % (bwu, nB, tB, bwd, nS, tS, bw, WIN_GAP), fontsize=6.6, color=MUTED)
         y -= .0112
-        if nS == 0:
-            lo = min((x["fwd1m_win"] for x in R["sell"] if x.get("n", 0) >= 5), default=0)
-            ST.tx(fig, X0 + .004, y,
-                  "!! **단일 매도 표기가 없다** — 문턱 이하인 매도 신호가 하나도 없다"
-                  "(가장 낮은 것이 %.0f%%).%s"
-                  % (lo, " 빨간 ▼ %d 건은 합류다." % cs if cs else ""),
-                  fontsize=6.6, color=NEG)
-            y -= .0110
-        y -= .002
-        # 번호표 — 차트의 ①②③ 가 무엇이었는지. «N짝» 만 적으면 뭔지 알 수 없다.
-        # ⚠ 다섯 줄이면 표가 각주를 밀어낸다(렌더 실측) — 넷으로 줄인다.
-        for mk, fd, tag, pairs in legend[:4]:
-            ST.tx(fig, X0 + .004, y, "%s %s %s" % (mk, fd[5:], tag),
+        y -= .004
+        # 합류가 무엇이었는지 — 번호를 뺐으니 **날짜**로 짝짓는다.
+        for fd, tag, er, pairs in legend[:4]:
+            ST.tx(fig, X0 + .004, y, "%s %s %+.1f%%" % (fd[5:], tag, er),
                   fontsize=6.4, weight="bold", color=POS if tag == "매수" else NEG)
-            ST.tx(fig, X0 + .078, y, " · ".join(sorted(set(pairs)))[:108],
+            ST.tx(fig, X0 + .096, y, " · ".join(sorted(set(pairs)))[:102],
                   fontsize=6.4, color=INK2)
             y -= .0108
         if len(legend) > 4:
             ST.tx(fig, X0 + .004, y,
-                  "그 밖 %d건은 번호만 달았다 — 어느 짝인지는 합류 표(5·6쪽)에서 날짜로 찾는다"
-                  % (len(legend) - 5), fontsize=6.2, color=MUTED)
+                  "그 밖 %d건 — 어느 짝인지는 합류 표(5·6쪽)에서 날짜로 찾는다"
+                  % (len(legend) - 4), fontsize=6.2, color=MUTED)
             y -= .0108
         y -= .012
 
