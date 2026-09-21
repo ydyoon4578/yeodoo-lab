@@ -1886,10 +1886,17 @@ def _pit_load():
     return json.load(io.open(os.path.join(DATA, "style_pit.json"), encoding="utf-8"))
 
 
-def pit_rows(j):
-    """style_pit.json(dict) → 화면에 나가는 스타일 중 |편향| 1%p 이상, 큰 순.
+# 편향을 인용하는 문턱(%p) — pit_rows·pit_caveat·style_pit.py 헤드라인이 같이 쓴다.
+#   문장에 «1%p» 를 따로 적으면 문턱을 바꿀 때 문장만 남는다.
+PIT_MIN_PP = 1.0
 
-    한 줄 = (라벨, 표의 값(pit), 소급했다면(base), 편향(base − pit), 지배 채널 '선견'|'생존').
+
+def pit_rows(j):
+    """style_pit.json(dict) → 화면에 나가는 스타일 중 |편향| PIT_MIN_PP 이상, 큰 순.
+
+    한 줄 = (라벨, 표의 값(pit), 소급했다면(base), 편향(base − pit), 지배 채널 '선견'|'생존', 키).
+    ⚠ 키(r[5])는 2026-09-21 에 뒤에 붙였다 — 라벨은 겹칠 수 있어(모멘텀 = mom·spmo) 채널 값을
+      다시 찾으려면 키가 필요하다(style_pit.py 헤드라인이 채널 부호를 읽는다). 앞 다섯 칸은 그대로다.
     ⚠ HOME_HIDE 는 뺀다. 숨긴 줄의 수치를 인용하면 독자가 표에서 그 값을 못 찾고, 라벨도
       겹친다(모멘텀 = mom·spmo · 퀄리티 = qual·squal) — 빼기 전에는 캐비엇이
       «고베타·모멘텀·성장·모멘텀» 이라 적었고 그 «모멘텀 +68%» 는 숨긴 mom 의 값이었다
@@ -1901,11 +1908,11 @@ def pit_rows(j):
     rows = []
     for k, s in (j.get("styles") or {}).items():
         b = (s.get("bias") or {}).get("ret")
-        if k in HOME_HIDE or b is None or abs(b) < 1.0:
+        if k in HOME_HIDE or b is None or abs(b) < PIT_MIN_PP:
             continue
         la, sv = s["channel"]["lookahead"], s["channel"]["survivorship"]
         rows.append((s["label"], s["pit"]["ret"], s["base"]["ret"], b,
-                     "선견" if abs(la) >= abs(sv) else "생존"))
+                     "선견" if abs(la) >= abs(sv) else "생존", k))
     rows.sort(key=lambda r: -abs(r[3]))
     return rows
 
@@ -1920,7 +1927,7 @@ def pit_shift(j, n_up=3, n_dn=2):
 
     ⚠ 소급이 늘 부풀리지는 않는다. 가치·멀티팩터는 소급하면 **낮아진다**(PIT 전환 커밋
       e5f0544c 가 이미 적어 둔 사실). '부풀었을 것' 을 통째로 붙이면 그 둘에 거짓이라
-      방향을 편향의 부호에서 뽑는다. 빈 문자열 = 인용할 차이(1%p 이상)가 없다.
+      방향을 편향의 부호에서 뽑는다. 빈 문자열 = 인용할 차이(PIT_MIN_PP 이상)가 없다.
     style_pit.py 의 note 도 이 함수로 만든다 — 같은 문장을 두 벌로 짜지 않는다.
     """
     rows = pit_rows(j)
@@ -1976,7 +1983,7 @@ def pit_caveat(short=False, n=3):
         if short:
             _r = pit_rows(j)[:n]
             return ("오늘 명단으로 소급하면 " + " · ".join(_pit_pair(r) for r in _r) if _r
-                    else "오늘 명단으로 소급해도 차이 1%p 미만")
+                    else "오늘 명단으로 소급해도 차이 %g%%p 미만" % PIT_MIN_PP)
         rows = pit_rows(j)
         sh = pit_shift(j)
         # ⚠ 기준일은 «(YYYY-MM-DD 기준)» 꼴 그대로 둔다 — validate_site 가 이 꼴을 찾아
@@ -1985,7 +1992,8 @@ def pit_caveat(short=False, n=3):
                 "것이다. 매월 그 달에 실제로 지수에 있던 종목만 후보로 두고(그 뒤 편출된 종목 "
                 "포함), 재무도 %s을 두고 쓴다. " % (j["as_of"], lag))
         head += ("오늘 %d종목을 과거로 소급해 골랐다면 %s이다. " % (u["today"], sh) if sh else
-                 "오늘 %d종목을 과거로 소급해 골라도 차이는 1%%p 미만이다. " % u["today"])
+                 "오늘 %d종목을 과거로 소급해 골라도 차이는 %g%%p 미만이다. "
+                 % (u["today"], PIT_MIN_PP))
         L = [r[0] for r in rows if r[4] == "선견"]
         S = [r[0] for r in rows if r[4] == "생존"]
         ch = []
@@ -1995,15 +2003,21 @@ def pit_caveat(short=False, n=3):
             ch.append("편출 누락(그 뒤 빠진 종목이 후보에 없음)은 " + "·".join(S))
         if ch:
             head += "차이의 출처는 스타일마다 다르다 — " + ", ".join(ch) + ". "
-        head += ("측정 창 시작(%s)에는 오늘 종목 중 %d종이 아직 지수 밖이었고, 그때 멤버 %d종 중 "
+        # 🚨 2026-09-21 — 아래 두 집계는 **패널 창**의 것이다(style_pit.json 의 windows.panel ·
+        #   universe.at). 그날부터 j["start"] 는 1년 레그 창이라, 그것을 쓰면 5년 수에 1년 날짜가
+        #   붙는다. universe.at 이 없는 옛 파일은 start 가 곧 패널 시작이었고 문구도 종전 그대로
+        #   나간다 — 러너의 첫 판(style_top_pdf --json)이 옛 파일을 읽는다.
+        _pw = (j.get("windows") or {}).get("panel") or {}
+        _pl = ("%d년 패널" % max(1, round(_pw["n_days"] / 252.0))) if _pw.get("n_days") else ""
+        head += ("%s(%s)에는 오늘 종목 중 %d종이 아직 지수 밖이었고, 그때 멤버 %d종 중 "
                  "%d종은 오늘 명단에 없다. "
-                 % (j["start"], u["not_yet_member_at_start"],
-                    u["n_members_at_start"], u["gone_at_start"]))
+                 % ((_pl + " 시작") if _pl else "측정 창 시작", u.get("at") or j["start"],
+                    u["not_yet_member_at_start"], u["n_members_at_start"], u["gone_at_start"]))
         if u.get("cov_min") is not None and u.get("cov_med") is not None:
             # 편출 종목은 가격 기록이 있어야 후보가 된다 — 'PIT' 가 곧 '생존편향 0' 은 아니다.
             head += ("편출 종목은 가격 기록이 있어야 후보가 되는데, 월말마다 그 달 멤버 중 가격을 "
-                     "확보한 비율이 창 안 최저 %.0f%%·중앙 %.0f%%라 생존편향이 그만큼 남을 수 있다. "
-                     % (100 * u["cov_min"], 100 * u["cov_med"]))
+                     "확보한 비율이 %s 안 최저 %.0f%%·중앙 %.0f%%라 생존편향이 그만큼 남을 수 있다. "
+                     % ((_pl + " 창") if _pl else "창", 100 * u["cov_min"], 100 * u["cov_med"]))
         return head + "자세한 분해는 랩의 유니버스 편향 측정 참조."
     except Exception:
         return ("🚨 유니버스 편향 — 이 수치는 선정 시점 구성이력(PIT)으로 고른 것이다. "

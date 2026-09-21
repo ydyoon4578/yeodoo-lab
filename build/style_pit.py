@@ -64,6 +64,17 @@
   pit       … 주입 후 패널·선정 시점 멤버 전부    → mask 대비 차이가 **생존**
               = **지금 화면에 나가는 수치**(2026-08-23~). 아래 앵커 검증이 이 등식을 강제한다
 
+## 🚨 창이 둘이다 — 산출물의 windows 가 필드마다 어느 창인지 적는다(2026-09-21)
+
+  panel … 5년(max(WINDOW, WINDOW5)). 배포(style_top_pdf)와 같은 창으로 준비해야 주입 명단이
+          같다. universe 의 집계(편출·주입·미확보·시작 시점 멤버)는 이 창의 것이다(universe.at).
+  legs  … 1년(ST.WINDOW). ST.backtest 의 창이다. styles·bench·anchor·scored·universe.legs 가
+          전부 이 창이고 산출물의 start·n_days·n_months 도 이 창이다(style_perf.json 과 같다).
+  2026-09-18 에 둘이 섞인 것이 드러났다 — concentr 가 1년 nav 에 5년 전 날짜를 붙였고
+  (월 라벨 2021-08~2022-07), 대조군은 5년 창이라 1년 레그의 편향과 견줄 수 없었고,
+  start·n_days 는 5년인데 limits 는 «12개월» 이라 적었다. 레그 창은 공식을 다시 적지 않고
+  레그(R["start"])에서 받는다 — 두 벌로 두면 또 갈린다.
+
 🚨 base 를 따로 두는 이유(적대감사가 잡은 결함). 처음엔 published 를 기준선으로 썼는데,
   published 는 518 패널이고 pit 은 538 패널이다. sc_mom 은 zs() 로 표준화하므로 모집단이
   바뀌면 평균·표준편차·윈저 경계가 같이 움직여 **마스크를 걸지 않아도** 순위가 달라진다 —
@@ -163,24 +174,31 @@ def need(path, what):
     return json.load(io.open(path, encoding="utf-8"))
 
 
-def concentr(nav_a, nav_b, P, start):
+def concentr(nav_a, nav_b, P, start, end):
     """편향이 몇 달에 실려 있나 — 월별 기여와 상위 2달 몫.
 
     두 nav 의 **월별 수익률 차**를 낸다. 상위 2달이 총합의 대부분이면 그 편향은 점추정으로
     읽을 것이 아니라 '그 몇 달 이야기' 다. 재실행이 필요 없다(nav 만 쓴다).
+    start·end 는 **그 nav 의 창**이다(nav[0] = P.dates[start]).
+
+    🚨 2026-09-21 — 두 결함을 고쳤다.
+      ① 창. 패널(5년) 시작을 받아 1년 레그 nav 에 5년 전 날짜를 붙이고 있었다 — 월 라벨이
+         2021-08~2022-07 로 나왔다(실제 레그는 2025-10~2026-09). 이제 nav 길이를 창과
+         대조해 안 맞으면 죽는다. 조용히 남의 날짜를 붙이는 것이 이 결함의 전부였다.
+      ② 달 경계. «새 달 첫 거래일» 을 경계로 잡아 구간이 하루씩 밀리고 라벨이 한 달 늦었다
+         (첫 칸은 하루치, 마지막 달은 두 번 나왔다). 이제 경계는 ST.monthly 다 —
+         style_perf.json 의 monthly 와 같은 자로 잰다(두 벌로 두지 않는다).
     """
     a, b = np.asarray(nav_a, float), np.asarray(nav_b, float)
-    if len(a) != len(b) or len(a) < 2:
+    if len(a) != end - start + 1 or len(b) != len(a):
+        raise SystemExit("concentr 창 불일치 — nav %d·%d점 vs 창 %s~%s(%d일). 다른 창의 날짜를 "
+                         "붙이면 월 라벨과 경계가 조용히 틀린다"
+                         % (len(a), len(b), P.dates[start], P.dates[end], end - start + 1))
+    if len(a) < 2:
         return {"months": [], "top2_share": None}
-    ends = [k for k in range(1, len(a))
-            if P.dates[start + k][:7] != P.dates[start + k - 1][:7]] + [len(a) - 1]
-    out, prev = [], 0
-    for e in ends:
-        if e <= prev:
-            continue
-        d = ((a[e] / a[prev]) - (b[e] / b[prev])) * 100
-        out.append([P.dates[start + e][:7], round(float(d), 2)])
-        prev = e
+    ms, ra = ST.monthly(a, P.dates, start)
+    _ms, rb = ST.monthly(b, P.dates, start)
+    out = [[m, round(float(ra[m] - rb[m]), 2)] for m in ms if rb.get(m) is not None]
     tot = sum(abs(x[1]) for x in out)
     top2 = sum(sorted((abs(x[1]) for x in out), reverse=True)[:2])
     return {"months": out, "top2_share": (round(top2 / tot, 3) if tot > 0 else None)}
@@ -246,6 +264,34 @@ def ew_nav(P, pool_at, start, end):
     return nav
 
 
+def channel_split(res):
+    """채널 지배를 **자료에서** 가른다 → {'선견': (부푼 쪽, 낮춘 쪽), '생존': (…, …)} — 라벨 목록.
+
+    🚨 2026-09-21 — headline 이 이것을 손으로 적고 있었다(«고베타·모멘텀·성장이 선견 · 가치가
+      생존»). 2026-09-18 자료로는 가치의 편향 −7.83%p 가 **음의 선견**(−7.57)에서 왔고 생존
+      지배는 중소형·고배당·잉여현금흐름·순수가치였다 — 창이 굴러가면 지배 채널이 바뀐다.
+    분류는 style_top_pdf.pit_rows() 그대로다(화면 스타일만 · |편향| PIT_MIN_PP 이상 · 두 채널은
+    **절댓값끼리** 견준다 — 부호째 견주면 음의 선견이 «생존 지배» 로 잘못 분류된다).
+    부푼 쪽·낮춘 쪽은 **그 채널 값의 부호**로 가른다 — 소급이 늘 부풀리지는 않는다.
+    """
+    out = {"선견": ([], []), "생존": ([], [])}
+    ch = {"선견": "lookahead", "생존": "survivorship"}
+    for r in ST.pit_rows({"styles": res}):
+        tag, k = r[4], r[5]
+        (out[tag][0] if res[k]["channel"][ch[tag]] > 0 else out[tag][1]).append(r[0])
+    return out
+
+
+def _grp_txt(up, dn):
+    """channel_split 한 칸 → '가·나(소급하면 부푼다) · 다(소급하면 오히려 낮아진다)' 또는 '없다'."""
+    parts = []
+    if up:
+        parts.append("·".join(up) + "(소급하면 부푼다)")
+    if dn:
+        parts.append("·".join(dn) + "(소급하면 오히려 낮아진다)")
+    return " · ".join(parts) if parts else "없다"
+
+
 def main() -> int:
     # ⚠ 2026-08-03: 사내 DB 산출(pit_members.json) → 위키 과거 리비전(index_history.json).
     #   그 파일은 저장소에 커밋되므로 이 스크립트가 더 이상 사내망 PC 에 묶이지 않는다.
@@ -261,7 +307,7 @@ def main() -> int:
     prep = SPP.prepare(ST, window=max(ST.WINDOW, ST.WINDOW5))
     P = prep["P"]
     members_at, today = prep["members_at"], prep["today"]
-    start, end, win_me = prep["start"], prep["end"], prep["win_me"]
+    start, end = prep["start"], prep["end"]          # ⚠ 패널 창이다 — 레그 창(ls·le)은 아래에서 레그가 정한다
     inject, missing = prep["inject"], prep["missing"]
     not_yet = prep["not_yet"]
     mem = prep["mem"]
@@ -278,14 +324,27 @@ def main() -> int:
     #   못 잰 것은 '측정 불가'로 남긴다 — '재현 못 했다'와 '편향이 없다'는 다른 말이고,
     #   섞으면 얇은 스타일이 영원히 '편향 0' 으로 보인다.
     res, failed = {}, {}
+    wins = set()                  # 레그가 실제로 쓴 창 (start, end) — 아래에서 하나여야 한다
     for key, label, fn in STYLES:
         R = ST.backtest(P, fn, pool_of=None)
         if not R:
             failed[key] = {"label": label, "why": "앵커 레그 산출 실패(후보가 문턱에 못 닿음)"}
             print("  ⚠ %s — 앵커 레그 실패, 측정 불가로 남긴다" % label)
             continue
+        wins.add((R["start"], R["end"]))
         m = perf(R["nav"]); m["n_rebal"] = R["n_rebal"]
         res[key] = {"label": label, "published": m}
+
+    # 🚨 2026-09-21 — **레그 창은 레그에서 받는다.** prep 의 start 는 패널 창(5년)이고 레그는
+    #   ST.backtest 의 1년 창이다. 그 둘을 섞어 concentr 가 1년 nav 에 5년 전 날짜를 붙였고
+    #   대조군은 5년 창으로 돌았다. 창 공식을 여기 다시 적지 않는다 — 레그가 쓴 창을 그대로 쓴다.
+    if len(wins) != 1:
+        raise SystemExit("레그 창을 하나로 정할 수 없다(%s) — 레그가 하나도 없거나 스타일마다 "
+                         "창이 갈린다" % (sorted((P.dates[a], P.dates[b]) for a, b in wins)
+                                          or "레그 없음"))
+    (ls, le), = wins
+    print("창 — 레그 %s~%s(%d일) · 패널 %s~%s(%d일)"
+          % (P.dates[ls], P.dates[le], le - ls + 1, P.dates[start], P.dates[end], end - start + 1))
 
     # ── ② 주입 후 — 세 레그를 **같은 패널**에서 잰다 ────────────────────────
     # 주입은 세 축을 같이 해야 한다:
@@ -305,15 +364,28 @@ def main() -> int:
     n_fx = prep.get("n_fx", 0)
     cov = prep.get("cov") or []
 
+    # 레그 창의 편출 — 패널의 gone 과 **같은 정의**(창 안 월말 멤버 합집합 − 오늘)를 레그 창에 건다.
+    #   주입 여부(filled·missing)는 패널이 정한 것을 그대로 읽는다(주입 명단은 배포와 같아야 한다).
+    u_l = set()
+    for i in [j for j in P.me if ls <= j <= le]:
+        u_l |= members_at(i)
+    gone_l = sorted(u_l - today)
+    inj_l = [t for t in gone_l if t in inject]
+    m0_l = members_at(ls)
+
     # 주입 종목이 스타일별로 **실제 채점되는지** 센다. 이것 없이 '편출 기여 0' 을 적으면
     # 자료가 없어서 0 인지 진짜 0 인지 구별이 안 된다(적대감사가 짚은 함정).
+    # 🚨 2026-09-21 — **레그 시작에서, 레그 창 편출만** 센다. 패널을 5년으로 넓힌 뒤 이 자리가
+    #   조용히 패널 첫 월말(5년 전)·패널 편출 전체(77종)로 옮겨 가 있었다 — 1년 레그의 생존
+    #   채널과 상관없는 수였다. 처음 뜻(레그 창 편출이 레그에서 후보가 되는가)으로 되돌린다.
     scored = {}
     for key, label, fn in STYLES:
-        s, _tie = fn(P, win_me[0])
-        scored[key] = len([t for t in inject if t in s])
-    print("주입 %d종 중 채점되는 수: %s"
-          % (len(inject), " · ".join("%s %d" % (STYLES[k][1], scored[STYLES[k][0]])
-                                     for k in range(len(STYLES)))))
+        s, _tie = fn(P, ls)
+        scored[key] = len([t for t in inj_l if t in s])
+    print("레그 창 편출 %d종 · 주입 %d종 중 레그 시작(%s)에 채점되는 수: %s"
+          % (len(gone_l), len(inj_l), P.dates[ls],
+             " · ".join("%s %d" % (STYLES[k][1], scored[STYLES[k][0]])
+                        for k in range(len(STYLES)))))
 
     LEGS = (("base", lambda i: today),                      # 마스크 없음 = 오늘의 유니버스
             ("mask", lambda i: members_at(i) & today),      # 그때 멤버였던 오늘 종목만
@@ -329,6 +401,10 @@ def main() -> int:
             if not R:
                 _bad = tag
                 break
+            if (R["start"], R["end"]) != (ls, le):
+                raise SystemExit("%s %s 레그 창 %s~%s 가 레그 창 %s~%s 와 다르다 — 편향은 같은 "
+                                 "창끼리만 뺄 수 있다" % (label, tag, P.dates[R["start"]],
+                                                        P.dates[R["end"]], P.dates[ls], P.dates[le]))
             m = perf(R["nav"]); m["n_rebal"] = R["n_rebal"]
             res[key][tag] = m
         if _bad:
@@ -354,7 +430,7 @@ def main() -> int:
         # 🚨 집중도 — 이것 없이 점추정만 내면 안 된다(적대감사). 총편향이 몇 달에 실려
         #   있는지를 nav 에서 바로 센다(재실행 없음). 한두 달이 대부분이면 그 수치는
         #   '측정' 이라기보다 '그 달 이야기' 다. 가치가 정확히 그런 경우로 나왔다.
-        v["concentration"] = concentr(v["base"]["nav"], v["pit"]["nav"], P, start)
+        v["concentration"] = concentr(v["base"]["nav"], v["pit"]["nav"], P, ls, le)
         c = v["concentration"]
         print("  %-5s 배포 %+8.2f · 기준선 %+8.2f · 마스크 %+8.2f · PIT %+8.2f "
               "→ 총편향 %+7.2f%%p (선견 %+.2f · 생존 %+.2f · 잔여하니스 %+.2f) "
@@ -370,10 +446,14 @@ def main() -> int:
     # 같지 않으면 '편향을 쟀다'고 말할 수 없다. data/style_perf.json 의 metrics.ret 과 대조한다.
     anchor, bad = {}, []
     try:
-        pub = {s["key"]: s for s in json.load(
-            io.open(os.path.join(DATA, "style_perf.json"), encoding="utf-8"))["styles"]}
+        _pubdoc = json.load(io.open(os.path.join(DATA, "style_perf.json"), encoding="utf-8"))
+        pub = {s["key"]: s for s in _pubdoc["styles"]}
     except Exception as e:
         raise SystemExit("배포 수치(style_perf.json)를 못 읽어 앵커 검증을 못 한다: %s" % e)
+    # 창도 대조한다(2026-09-21) — 수익률이 우연히 같아도 창이 다르면 앵커가 아니다.
+    if (_pubdoc.get("start"), _pubdoc.get("as_of")) != (P.dates[ls], P.dates[le]):
+        bad.append("창 %s~%s vs 배포 %s~%s" % (P.dates[ls], P.dates[le],
+                                              _pubdoc.get("start"), _pubdoc.get("as_of")))
     for key, label, _fn in STYLES:
         want = ((pub.get(key) or {}).get("metrics") or {}).get("ret")
         # 🚨 못 잰 스타일은 앵커 대조 대상이 아니다(2026-08-10). '재현 실패'와 '측정 불가'는
@@ -407,15 +487,20 @@ def main() -> int:
 
     # ── 대조군 ─────────────────────────────────────────────────────────────
     # 동일가중은 z 표준화를 쓰지 않으므로 패널 확장 효과가 없다 — base 와 published 가 같다.
+    # 🚨 2026-09-21 — **레그 창**에서 잰다. 종전에는 패널 창(5년)이라 bench.bias 가 연율 5년
+    #   값(약 5.2%p)이었고, 1년 레그의 편향과 나란히 놓여도 견줄 수 없었다. 대조군은 대조하는
+    #   것과 같은 창이어야 한다. 5년짜리를 따로 싣지 않는 이유 — 유니버스 전체의 긴 창 소급
+    #   편향은 build/pit_backtest.py 가 이미 bench_bias_cagr 로 낸다. 다른 방식으로 한 벌 더 두면
+    #   두 파일이 같은 질문에 다른 답을 하게 된다.
     bench = {}
     for tag, po in (("base", lambda i: today), ("pit", members_at)):
-        bench[tag] = perf(ew_nav(P, po, start, end))
+        bench[tag] = perf(ew_nav(P, po, ls, le))
     bench["bias"] = {k: (None if (bench["base"].get(k) is None or bench["pit"].get(k) is None)
                          else round(bench["base"][k] - bench["pit"][k], 2))
                      for k in ("ret", "total", "sharpe", "mdd")}
-    print("  대조군 동일가중 기준선 %+.2f%% · PIT %+.2f%% → 편향 %+.2f%%p"
+    print("  대조군 동일가중(레그 창) 기준선 %+.2f%% · PIT %+.2f%% → 편향 %+.2f%%p"
           % (bench["base"]["ret"], bench["pit"]["ret"], bench["bias"]["ret"]))
-    bench["concentration"] = concentr(bench["base"]["nav"], bench["pit"]["nav"], P, start)
+    bench["concentration"] = concentr(bench["base"]["nav"], bench["pit"]["nav"], P, ls, le)
     for lg in ("base", "pit"):
         bench[lg].pop("nav", None)
 
@@ -430,10 +515,63 @@ def main() -> int:
         _shift = ""
         print("  ⚠ note 의 소급 비교 문장을 못 만들었다(%s: %s) — 수치 없이 낸다"
               % (type(_e).__name__, str(_e)[:60]))
+    # ── 창 — 필드마다 어느 창인지 산출물이 스스로 말하게 한다(2026-09-21) ──────────
+    months_l, _ = ST.monthly(np.ones(le - ls + 1), P.dates, ls)       # 레그 창의 달(ST.monthly 경계)
+    LW = "%d년" % max(1, round((le - ls + 1) / 252.0))               # 창 이름도 길이에서 뽑는다
+    PW = "%d년" % max(1, round((end - start + 1) / 252.0))
+    windows = {
+        "legs": {"start": P.dates[ls], "end": P.dates[le], "n_days": le - ls + 1,
+                 "n_months": len(months_l),
+                 "months": [months_l[0], months_l[-1]] if months_l else [],
+                 "fields": ["start", "n_days", "n_months", "styles", "bench", "anchor",
+                            "scored", "universe.legs"],
+                 "what": "ST.backtest 의 창(WINDOW) — style_perf.json 의 start~as_of 와 같다. "
+                         "마지막 달은 기준일까지다"},
+        "panel": {"start": P.dates[start], "end": P.dates[end], "n_days": end - start + 1,
+                  "n_month_ends": len([j for j in P.me if start <= j <= end]),
+                  "fields": ["universe"],
+                  "what": "편출 주입 명단을 정하는 준비 창 — 배포(style_top_pdf)와 같은 "
+                          "max(WINDOW, WINDOW5) 라야 주입 명단이 같다"},
+    }
+    miss_s, gap_s = set(missing), set(gap)
+    miss_l = [t for t in gone_l if t in miss_s]
+
+    # 헤드라인 — 채널 지배를 **자료에서** 뽑는다(channel_split). 손으로 적은 판은 틀려 있었다.
+    sp = channel_split(res)
+    headline = ("편향에는 채널이 둘이고 스타일마다 지배 채널이 다르다. 아래 분류는 화면에 나가는 "
+                "스타일 중 |편향| %g%%p 이상을 두 채널의 절댓값으로 가른 것이다"
+                "(style_top_pdf.pit_rows — 부호째 견주면 음의 선견이 생존 지배로 잘못 분류된다). "
+                "(1) 사후편입 선견 — 오늘 %d종목 중 %d종은 %s 레그 창 시작(%s)에 아직 지수 "
+                "비멤버였다(%s 패널 시작 %s 기준으로는 %d종). 지수는 많이 오른 종목을 편입하므로 "
+                "소급 유니버스는 '오를 것'을 미리 아는 셈이 된다. 이 채널이 지배하는 스타일: %s. "
+                "(2) 생존편향 — %s 레그 창 시작 멤버 %d종 중 %d종이 오늘 유니버스에 없다(%s 패널 "
+                "시작 기준 %d종 중 %d종). 빠진 이유가 부진이면 소급이 부풀고, 인수 프리미엄이면 "
+                "오히려 낮춘다. 이 채널이 지배하는 스타일: %s. "
+                "채널별 크기·부호는 styles[*].channel 에 있다."
+                % (ST.PIT_MIN_PP, len(today), len(today - m0_l), LW, P.dates[ls],
+                   PW, P.dates[start], len(not_yet), _grp_txt(*sp["선견"]),
+                   LW, len(m0_l), len(m0_l - today), PW, len(m0), len(m0 - today),
+                   _grp_txt(*sp["생존"])))
+
+    # limits 의 집중도 한 줄 — 헤드라인과 같은 모집단(pit_rows)에서 센다.
+    _sh2 = sorted(res[r[5]]["concentration"]["top2_share"] for r in ST.pit_rows({"styles": res})
+                  if res[r[5]]["concentration"]["top2_share"] is not None)
+    _conc = (" — 화면 스타일 중 |편향| %g%%p 이상 %d종의 상위 2달 몫: 중앙 %.0f%%·최대 %.0f%%"
+             % (ST.PIT_MIN_PP, len(_sh2), 100 * _sh2[len(_sh2) // 2], 100 * _sh2[-1])
+             if _sh2 else "")
+    _sc_vis = " · ".join("%s %d" % (lab, scored[k]) for k, lab, _f in STYLES
+                         if k not in ST.HOME_HIDE)
     doc = {
-        "as_of": P.dates[end], "start": P.dates[start],
-        "n_days": end - start + 1, "n_month_ends": len([j for j in P.me if start <= j <= end]),
+        "as_of": P.dates[end],
+        # 🚨 2026-09-21 — start·n_days 는 **레그 창**이다(style_perf.json 의 start 와 같은 뜻).
+        #   종전에는 패널 창(5년)이라 1년 수치 옆에 5년 전 날짜가 붙어 있었다. 패널은 windows.panel.
+        "start": P.dates[ls], "n_days": le - ls + 1, "n_months": len(months_l),
+        "windows": windows,
         "note": ("같은 백테스트 코드에 pool_of 만 갈아 끼워 유니버스 편향을 잰 것이다. "
+                 + ("창이 둘이다(windows) — 레그(styles·bench·anchor·scored)는 %s 창 %s~%s 로 "
+                    "style_perf.json 과 같은 창이고, 편출 주입 명단과 universe 집계는 배포와 같은 "
+                    "%s 패널 창(%s~)에서 정한다(레그 창으로 본 집계는 universe.legs). "
+                    % (LW, P.dates[ls], P.dates[le], PW, P.dates[start])) +
                  "화면(style_perf.json)에 나가는 수치는 pit 레그다 — 매월 그 달에 실제로 지수에 "
                  "있던 종목(편출 포함)으로 고른 선정 시점(PIT) 값이고, anchor 가 그 일치를 확인한다. "
                  "bias = base − pit 는 오늘 유니버스로 소급했다면 달라졌을 몫이다"
@@ -447,45 +585,57 @@ def main() -> int:
                  "base→mask 가 사후편입 선견, mask→pit 가 교과서적 생존편향이다. "
                  "스타일 %d종을 쟀다(못 잰 것은 unmeasured) — 편출 종목 재무를 data/fx_pit 로 "
                  "받아(build/pit_facts.py, 러너) 재무 스타일도 잴 수 있다. "
-                 "채점되는 편출 종목 수는 scored 에 있다." % len(res)),
-        "headline": ("편향에는 채널이 둘이고 스타일마다 지배 채널이 다르다. "
-                     "(1) 사후편입 선견 — 오늘 %d종목 중 %d종은 구간 시작 시점에 아직 지수 "
-                     "비멤버였다. 지수는 많이 오른 종목을 편입하므로 소급 유니버스는 '오를 것'을 "
-                     "미리 아는 셈이 된다. 고베타·모멘텀·성장이 여기에 걸린다. "
-                     "(2) 생존편향 — 구간 시작 멤버 %d종 중 %d종이 오늘 유니버스에 없다. "
-                     "가치가 여기에 걸린다(편출 종목은 전형적인 값싼 주식이고 지수에서 빠진 "
-                     "이유가 부진이라, 가치 스크린이 골랐어야 할 후보가 없었다). "
-                     "채널별 크기는 styles[*].channel 에 있다."
-                     % (len(today), len(not_yet), len(m0), len(m0 - today))),
+                 "레그 창 편출이 레그 시작에 채점되는 수는 scored 에 있다(scored_basis)." % len(res)),
+        "headline": headline,
+        # 🚨 2026-09-21 — 레그 시작에서 레그 창 편출만 센다(위 scored 주석). 기준을 같이 싣는다.
         "scored": {STYLES[k][0]: scored[STYLES[k][0]] for k in range(len(STYLES))},
-        "limits": ("'하한'이라고 단정하지 않는다. 창 편출 %d티커 중 가격 확보 %d개, 미확보 %d개인데 "
-                   "그중 개명 5개(BK→BNY·MMC→MRSH·FI→FISV·PARA→PSKY·SATS→ECHO)는 후임 티커로 "
-                   "재실행해 영향 0.00%%p 를 확인했고, SOLS 는 이력이 짧아 어느 스타일에서도 채점 "
-                   "자체가 안 된다. 실효 미검증은 6개(CTRA·DAY·HOLX·IPG·K·WBA)이고 대부분 인수·"
-                   "비상장화 편출이라 방향을 단정하지 않는다 — 다만 저변동은 딜가에 고정된 저변동 "
-                   "종목이 상위10 문턱(실현변동성 16~18%%) 아래라 과소측정 쪽이 유력하다. "
-                   "🚨 **크기를 점추정으로 읽지 말 것** — 구간이 12개월뿐이라 편향이 몇 달에 "
-                   "몰려 있다(concentration.top2_share 참조). 특히 가치의 생존 채널은 교체가 "
-                   "9개월·18슬롯에 불과하고 상당 부분이 한계슬롯에서 밀려난 생존 종목의 그 달 "
-                   "큰 수익에서 나온다 — 방향은 신뢰할 만하지만 크기는 표본오차와 구별하기 어렵다. "
-                   "|채널| 2%%p 미만(퀄리티·성장의 생존 채널)은 잡음으로 읽을 것. "
-                   "재무 커버리지도 완전하지 않다 — 편출 20종 중 채점되는 것이 퀄리티 13·가치 17·"
-                   "성장 20 이다. 사유는 태그로 메울 수 있는 것(LKQ·LW 의 liab, LW 의 rev)과 "
-                   "그렇지 않은 것(AZN·GFS 는 IFRS 라 분기 프레임이 없다 · MTCH·INSM 은 평균 "
-                   "자기자본이 음수 · ENPH 는 분기 eps 프레임이 희소)이 섞여 있고, 오늘 유니버스도 "
-                   "같은 규칙으로 빠지는 종목이 많아(퀄리티 채점률 오늘 62%% vs 편출 65%%) "
-                   "차별적 불리함은 아니다. 가치만 격차가 있다(오늘 92%% vs 편출 85%%). "
+        "scored_basis": {"window": "legs", "at": P.dates[ls], "among": len(inj_l),
+                         "what": "레그 창 편출 중 가격을 넣은 종목이 레그 시작 시점에 그 스타일의 "
+                                 "점수를 받는 수"},
+        # ⚠ 창마다 이름을 붙인다 — 레그 창·패널 창. 2026-07-29 에 잰 수는 그 날짜를 붙인다
+        #   (그때 창은 지금 창이 아니다). 손으로 적은 종목 명단은 자료에서 뽑은 것으로 바꿨다.
+        "limits": ("'하한'이라고 단정하지 않는다. "
+                   "편출 종목 가격 — %s 레그 창(%s~%s)에 걸린 편출 %d티커 중 %d개는 가격을 확보해 "
+                   "후보에 넣었고 %d개는 못 넣었다%s. 주입 명단은 배포와 같은 %s 패널 창(%s~)에서 "
+                   "정하며 그 창으로는 편출 %d티커 중 %d개 확보·%d개 미확보다(universe). "
+                   "미확보에는 티커 개명(같은 회사가 오늘 다른 티커로 명단에 있다)이 섞여 있다 — "
+                   "2026-07-29 창에서 개명 5개를 후임 티커로 이어 재실행한 영향은 0.00%%p 였다"
+                   "(상위 10에 못 든다). 개명이 아닌 미확보는 대부분 인수·비상장화 편출이라 방향을 "
+                   "단정하지 않는다 — 다만 저변동은 딜가에 고정된 저변동 종목이 상위10 문턱"
+                   "(실현변동성 16~18%%, 2026-07-29 실측) 아래라 과소측정 쪽이 유력하다. "
+                   "🚨 **크기를 점추정으로 읽지 말 것** — 레그 구간이 %d개월(%s~%s, 마지막 달은 "
+                   "기준일까지)뿐이라 편향이 몇 달에 몰려 있다(concentration.top2_share%s). "
+                   "방향은 믿을 만해도 크기는 표본오차와 구별하기 어렵다(2026-07-29 감사 — 그때 "
+                   "가치의 생존 채널 +9.5%%p 는 교체 9개월·18슬롯뿐이었고 상당 부분이 한계슬롯의 "
+                   "그 달 큰 수익이었다). |채널| 2%%p 미만은 잡음으로 읽을 것. "
+                   "재무 커버리지도 완전하지 않다 — 레그 창 편출 중 넣은 %d종 가운데 레그 시작(%s)에 "
+                   "채점되는 수는 %s 이다(전 스타일은 scored). 빠지는 사유는(2026-07-29 조사) 태그로 "
+                   "메울 수 있는 것(LKQ·LW 의 liab, LW 의 rev)과 그렇지 않은 것(AZN·GFS 는 IFRS 라 "
+                   "분기 프레임이 없다 · MTCH·INSM 은 평균 자기자본이 음수 · ENPH 는 분기 eps "
+                   "프레임이 희소)이 섞여 있고, 오늘 유니버스도 같은 규칙으로 빠지는 종목이 많아 "
+                   "차별적 불리함은 아니다(2026-07-29 실측: 퀄리티 채점률 오늘 62%% vs 편출 65%% · "
+                   "가치만 격차 92%% vs 85%%). "
                    "채점 모집단까지 좁혀 하니스 산물을 애초에 만들지 않았다"
                    "(channel.harness_zpop 이 0 인지로 확인할 수 있다). "
                    "sc_val·sc_grow 는 성분이 결손이면 0.0 으로 채우는데(for/else) 이는 배포 "
                    "수치에도 같이 있는 성질이라 여기서 바꾸지 않았다. "
-                   "비율의 분모가 배당수정가라 고배당 종목이 싸게 잡힌다(가치 생존채널에 약 0.3%%p). "
-                   "보유 중 가격이 끊긴 종목은 마지막 종가에 빠져나온 것으로 보아 파산 손실을 "
-                   "덜 잡는다. 멤버십은 SPX∪NDX 합집합·월 해상도(그 달 마지막 스냅샷)다."
-                   % (len(gone), len(inject), len(missing))),
-        "universe": {"today": len(today), "n_members_at_start": len(m0),
-                     # ⚠ 두 기준을 섞지 말 것 — gone 은 창 12개월 **합집합**이고
-                     #   gone_at_start 는 창 시작 **스냅샷**이다. 517 과 짝이 맞는 것은 후자다.
+                   "비율의 분모가 배당수정가라 고배당 종목이 싸게 잡힌다(2026-07-29 실측: 가치 "
+                   "생존채널에 약 0.3%%p). 보유 중 가격이 끊긴 종목은 마지막 종가에 빠져나온 것으로 "
+                   "보아 파산 손실을 덜 잡는다. 멤버십은 SPX∪NDX 합집합·월 해상도(그 달 마지막 "
+                   "스냅샷)다."
+                   % (LW, P.dates[ls], P.dates[le], len(gone_l), len(inj_l), len(miss_l),
+                      ("(%s)" % "·".join(miss_l)) if miss_l else "",
+                      PW, P.dates[start], len(gone), len(inject), len(missing),
+                      len(months_l), months_l[0] if months_l else "—",
+                      months_l[-1] if months_l else "—", _conc,
+                      len(inj_l), P.dates[ls], _sc_vis)),
+        # universe 의 평평한 키는 **패널 창**이다(at = 패널 시작). 레그 창으로 본 같은 집계는 legs.
+        #   ⚠ 평평한 키의 뜻은 바꾸지 않았다 — style_top_pdf.pit_caveat 이 이 수를 at 날짜와 함께
+        #     인용하고, build/pit_facts.py(러너)가 gone_tickers 로 SEC 재무를 받는다.
+        "universe": {"window": "panel", "at": P.dates[start],
+                     "today": len(today), "n_members_at_start": len(m0),
+                     # ⚠ 두 기준을 섞지 말 것 — gone 은 패널 창 **합집합**이고
+                     #   gone_at_start 는 패널 시작 **스냅샷**이다. n_members_at_start 와 짝이 맞는 것은 후자다.
                      "gone": len(gone), "gone_at_start": len(m0 - today),
                      "filled": len(inject),
                      # 러너가 읽는다 — build/pit_facts.py 가 이 명단으로 SEC 재무를 받아
@@ -494,7 +644,15 @@ def main() -> int:
                      "gone_tickers": gone,
                      "not_yet_member_at_start": len(not_yet), "not_yet": not_yet,
                      "missing": sorted(missing), "reused_ticker_suspect": sorted(gap),
-                     "cov_min": round(min(cov), 4), "cov_med": round(sorted(cov)[len(cov) // 2], 4)},
+                     "cov_min": round(min(cov), 4), "cov_med": round(sorted(cov)[len(cov) // 2], 4),
+                     "legs": {"window": "legs", "at": P.dates[ls],
+                              "n_members_at_start": len(m0_l),
+                              "not_yet_member_at_start": len(today - m0_l),
+                              "not_yet": sorted(today - m0_l),
+                              "gone_at_start": len(m0_l - today),
+                              "gone": len(gone_l), "gone_tickers": gone_l, "filled": len(inj_l),
+                              "missing": miss_l,
+                              "reused_ticker_suspect": [t for t in gone_l if t in gap_s]}},
         "anchor": anchor, "styles": res, "bench": bench,
         # 못 잰 스타일 — 산출물에 싣는다. 안 실으면 화면이 18줄 중 몇 줄만 편향을
         # 말하는데 나머지가 "편향 없음"인지 "안 쟀음"인지 구별할 수 없다.
