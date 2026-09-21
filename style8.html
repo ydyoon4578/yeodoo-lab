@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex">
-<title>스타일 8종 판형 · 여두 전략 랩</title>
+<title>스타일 10종 판형 · 여두 전략 랩</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
 /* ══════════════════════════════════════════════════════════════════════════
-   스타일 8종 판형 — 화면에서 A4 네 장을 그대로 보여 주고, 그대로 인쇄한다.
+   스타일 10종 판형 — 화면에서 A4 네 장을 그대로 보여 주고, 그대로 인쇄한다.
    build/style8_pdf.py(매일 아침 공유폴더로 나가는 PDF)와 **같은 네 장**이다
    (사용자 지시 2026-09-18 «여두 전략 랩에서 바로 매일매일 최신일자로 뽑을 수 있도록»).
      1장  기간별 수익률 표 · 월별 수익률 · 위험과 수익
-     2장  기간별 수익률(기본 1개월) — 지수 · 섹터 · 산업그룹 · 내 스타일 8종(하이라이트), 네 판 같은 날짜
+     2장  기간별 수익률(기본 1개월) — 지수 · 섹터 · 산업그룹 · 내 스타일 10종(하이라이트), 네 판 같은 날짜
      3·4장 스타일별 구성종목 넷씩
 
    【왜 페이지인가】 이 사이트는 정적 배포라 버튼이 파이썬을 돌릴 수 없다. 만들어 둔
@@ -514,9 +514,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAV:END -->
 <div class="wrap">
   <header class="pghead">
-    <h1>스타일 8종 판형</h1>
+    <h1>스타일 10종 판형</h1>
     <p>지수 방법론 8종을 <b>A4 네 장</b>으로 뽑는 화면입니다 — 매일 아침 공유폴더로 나가는 PDF 와 같은 구성입니다.
-       1장 기간별 수익률·월별 수익률·위험과 수익, 2장 기간별 수익률 차트(지수·섹터·산업그룹·내 스타일 8종),
+       1장 기간별 수익률·월별 수익률·위험과 수익, 2장 기간별 수익률 차트(지수·섹터·산업그룹·내 스타일 10종),
        3·4장 스타일별 구성종목. 숫자는 이 사이트가 매일 갱신하는 자료를 그대로 읽으므로
        <b>여는 순간의 최신 기준일</b>로 그려집니다. 아래 종이 모양 그대로 인쇄됩니다 —
        인쇄 대화상자에서 대상 «PDF로 저장», 배율 <b>기본(100%)</b>으로 두세요.</p>
@@ -875,13 +875,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         return {nm:e[0], v:e[1], col:bk ? BENCH : (MYCOL[lab[e[0]]] || ACC), ls:bk ? lab[e[0]].slice(1) : "", b:bk};
       });
     }
-    var h = '<div class="top"><h1>기간별 수익률 · ' + HZL[hz] + '</h1><span class="brd">여두 전략 랩 · 홈 화면 차트 + 내 스타일 8종</span></div>'
+    var h = '<div class="top"><h1>기간별 수익률 · ' + HZL[hz] + '</h1><span class="brd">여두 전략 랩 · 홈 화면 차트 + 내 스타일 10종</span></div>'
           + '<div class="sub">' + esc(cd[0] + ' ~ ' + cd[cd.length - 1]) + ' · 네 판 같은 날짜 · 달러 기준 · 선 끝 숫자 = 누적 수익률(%)</div>';
     h += chart({title:"지수", d:cd, series:ix, H:148, fx:fx});
     h += chart({title:"섹터", d:cd, series:sec, H:190});
     h += ind.length ? chart({title:"산업그룹", d:cd, series:ind, H:250, dashes:true}) : none("산업그룹", "이 구간의 산업그룹 경로가 자료에 없습니다");
-    h += my ? chart({title:"내 스타일 8종", d:cd, series:my, H:212, hl:true, count:"· 회색 = 지수 판의 S&P 500·나스닥 100"})
-            : none("내 스타일 8종", myWhy || "내 스타일 경로가 없습니다", true);
+    h += my ? chart({title:"내 스타일 10종", d:cd, series:my, H:212, hl:true, count:"· 회색 = 지수 판의 S&P 500·나스닥 100"})
+            : none("내 스타일 10종", myWhy || "내 스타일 경로가 없습니다", true);
     return h;
   }
 
@@ -935,7 +935,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     if (miss.length){ fail("style_perf.json 에 " + esc(miss.join(", ")) + " 스타일이 없습니다"); return; }
     var asof = esc(P.as_of), rows = perfRows(P, S), nre = (S[KEYS[0]].n_rebal === undefined) ? 11 : S[KEYS[0]].n_rebal;
     var pages = [];
-    pages.push('<div class="top"><h1>스타일 8종</h1><span class="brd">여두 전략 랩</span></div>'
+    pages.push('<div class="top"><h1>스타일 10종</h1><span class="brd">여두 전략 랩</span></div>'
       + '<div class="sub">기준일 ' + asof + ' · ' + esc(P.start || "") + ' ~ ' + asof + ' · 월말 ' + nre + '회 리밸런스 · 상위 10종목 동일가중 · 비용 0</div>'
       + '<h2>기간별 수익률<span>%  ·  샤프·MDD·이긴달은 ' + esc(P.start || "") + ' 이후  ·  이긴달 = S&amp;P 500 을 이긴 달  ·  샤프 내림차순</span></h2>'
       + perfTable(rows)
@@ -948,12 +948,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       + KEYS.slice(0, 4).map(function(k){ return block(S[k]); }).join(""));
     pages.push(KEYS.slice(4).map(function(k){ return block(S[k]); }).join(""));
     document.getElementById("sheets").innerHTML = pages.map(function(h, i){
-      return '<section class="pg">' + h + '<div class="foot">스타일 8종 · 기준일 ' + asof + ' · 여두 전략 랩<span>'
+      return '<section class="pg">' + h + '<div class="foot">스타일 10종 · 기준일 ' + asof + ' · 여두 전략 랩<span>'
            + (i + 1) + ' / ' + pages.length + '</span></div></section>';
     }).join("");
     document.getElementById("msg").style.display = "none";
     document.getElementById("meta").innerHTML = '스타일 기준일 <b>' + asof + '</b> · 시장판 <b>' + esc((D.HP || {}).as_of || "—") + '</b> · A4 4장';
-    document.title = "스타일 8종 · " + P.as_of;
+    document.title = "스타일 10종 · " + P.as_of;
   }
 
   document.getElementById("prt").addEventListener("click", function(){ window.print(); });
