@@ -658,8 +658,20 @@ def main() -> int:
                     if st["n"] < MIN_N:
                         continue
                     f2 = c.index[both]
+                    # 🚨 짝에도 단일과 **같은 세 가지**를 붙인다(사용자 지시 2026-09-22 —
+                    #   멀티 표를 단일 표와 같은 꼴로). 「지금」의 뜻만 짝에 맞게 정한다:
+                    #   두 신호의 **조건이 둘 다 유지되고 있나**. 며칠째는 **짧은 쪽**이다
+                    #   — 둘이 같이 켜져 있은 날수가 그것이기 때문이다.
+                    ra = next(x for x in side_rows if x["signal"] == a)
+                    rb = next(x for x in side_rows if x["signal"] == b)
+                    on = bool(ra["state_now"]) and bool(rb["state_now"])
+                    dd = [x for x in (ra["state_days"], rb["state_days"]) if x is not None]
                     outp.append({"a": a, "b": b, "pair": "%s ∧ %s" % (a, b), **st,
                                  "last": str(f2[-1].date()),
+                                 "days_ago": int((c.index[-1] - f2[-1]).days),
+                                 "fired_today": bool(both.iloc[-1]),
+                                 "state_now": on,
+                                 "state_days": (min(dd) if (on and dd) else None),
                                  # 차트가 번호를 매길 발동일 — 최근 CHART_M 개월 것만.
                                  "fires": [str(x.date()) for x in f2[f2 >= c0]],
                                  "solo_a": next(x.get("fwd1m_excess") for x in side_rows
