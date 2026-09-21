@@ -99,6 +99,22 @@ def main() -> int:
                                "yearly": b.get("yearly") or []}
             src["r-" + sid] = "archive_backtests.json"
 
+    # 🚨 2026-09-21 — 페어·거장겹침 16종. 두 엔진은 MAX_YEARS = 10 보다 앞서 만들어져
+    #   창이 12.9년·16.5년이었다. build/restate_16.py 가 **원본을 안 건드리고** 곡선에서
+    #   창만 잘라 다시 잰 것을 여기서 싣는다(guru.html#overlap 은 종전 수치 그대로다).
+    # ⚠ 다시 계산하지 않는다 — restate_16 이 «안 자르면 원본과 같다» 는 앵커를 세운 뒤
+    #   자르기만 한 값이다. 그 모듈이 죽으면 여기도 조용히 비는 것이 아니라 소리가 난다.
+    _rs = (load("_restate16.json") or {}).get("rows") or {}
+    _nrs = 0
+    for sid, q in _rs.items():
+        c = q.get("chart")
+        if c and c.get("dates"):
+            out[sid] = slim(c)
+            src[sid] = "_restate16.json"
+            _nrs += 1
+    if _nrs:
+        print("  창 재진술 곡선 %d개(페어·거장겹침 · 10년)" % _nrs)
+
     # 🚨 지수(S&P 500·NASDAQ 100) 월별을 **한 벌만** 싣는다. 배포 원장 전략은 자기 레코드에
     #   지수를 안 갖고 있어(대조군이 모전략·동일가중인 것도 있다) 같은 표를 못 그렸다 —
     #   그래서 카드마다 구성이 달랐다. 여기서 공유 계열을 주면 두 렌더러가 같은 블록을 쓴다.
