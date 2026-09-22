@@ -271,6 +271,11 @@
 .totb{display:block;font-size:10px;color:var(--muted);font-weight:400}
 #content table{border-collapse:collapse;width:100%;font-size:12.5px}
 #content thead th{position:sticky;top:0;background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+/* 🚨 2026-09-22 사용자 «열 이름이랑 열 값들좀 잘 맞춰줘. 지금 전략 부분은 다 안맞아».
+   위 규칙(#content thead th · 명시도 1-0-2)이 .tnum(0-1-0)의 오른쪽 정렬을 이겨, **숫자 열
+   머리글만 왼쪽**에 붙고 값은 오른쪽에 붙었다 — 넓은 열일수록 머리글이 옆 열 값 위에 걸려
+   보인다. 숫자 머리글은 값과 같은 쪽(오른쪽)에 둔다. 칸 수는 원래 다 맞았다. */
+#content thead th.tnum{text-align:right}
 #content tbody td{padding:5px 7px;border-bottom:1px solid var(--line-soft);white-space:nowrap}
 /* 글줄 셀(이름·전략·섹터)은 폭을 잡아먹는 주범이다 — 말줄임으로 상한. 숫자(.tnum)·티커(.tk)는 그대로 */
 #content table.big td:not(.tnum):not(.tk){max-width:150px;overflow:hidden;text-overflow:ellipsis}
@@ -665,6 +670,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       page-break-after:avoid}
     #pfprint .prtbl th{font-size:8px;text-align:left;border-bottom:1px solid #111;
       padding:2px 4px;white-space:nowrap}
+    /* 🚨 2026-09-22 — 화면과 같은 결함(위 #content thead th.tnum 주석): 이 규칙(1-1-1)이
+       아래 #pfprint .tnum(1-1-0)을 이겨 숫자 머리글만 왼쪽이었다. 값과 같은 쪽에 둔다. */
+    #pfprint .prtbl th.tnum{text-align:right}
     #pfprint .prtbl td{padding:1.5px 4px;border-bottom:1px solid #e8e8e8;white-space:nowrap}
     /* 전략이 바뀌는 줄에만 옅은 구분선 — 이름을 첫 줄에만 적으므로 경계가 보여야 한다. */
     #pfprint .prtbl tr.prgrp td{border-top:1px solid #bbb}
