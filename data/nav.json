@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "f6f399489a7a2dea",
+ "generated_from": "6f5e8f68fd960c2c",
  "categories": [
   {
    "name": "시장",
@@ -120,6 +120,16 @@
      "verdict": "unverified",
      "src": "model",
      "effort": "S",
+     "live": true
+    },
+    {
+     "name": "S&P 팩터 Top10",
+     "file": "factorbt.html",
+     "status": "existing",
+     "desc": "S&P Global 팩터 314개마다 S&P 500·NASDAQ 100 상위 10종목을 매월 다시 고른 11년 백테스트",
+     "verdict": "unverified",
+     "src": "model",
+     "effort": "M",
      "live": true
     },
     {
