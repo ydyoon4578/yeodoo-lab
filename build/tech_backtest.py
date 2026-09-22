@@ -6172,32 +6172,57 @@ def build_strats():
     #   둘은 **그 둘이 기각된 사유(DATA-FACTS #7)에 면역인 것만** 고른 결과다.
     #   등록 §0 에 그 경위를 적었다 — 팩터 사전을 보고 유동성 축을 다시 권했다가
     #   tested 21건을 안 본 것을 뒤늦게 잡았고, 그래서 배치가 둘로 줄었다.
-    xsec("x-volcv", "거래량 변동계수 상위 %d" % TOPN,
-         "거래량을 그날 종가로 나눈 계열의 변동계수(표준편차÷평균)를 최근 %d거래일에서 "
-         "재어 가장 큰 %d종목 동일가중, 월말 리밸런스." % (VOLCV_WIN, TOPN),
-         None,
-         "원표 60 Day Coefficient of Variation of Volume to Price — 방향(내림차순)도 "
-         "원표 그대로다. 거래량이 들쭉날쭉한 종목이 더 높은 위험프리미엄을 요구받는다는 것. "
-         "🚨 이 랩은 같은 자리에서 두 번 미끄러졌다(x-illiq·x-amihud 는 자료 타당성, "
-         "x-turn 은 그 위에 성적까지). 사유는 거래대금이 미국 상장분인데 가격·시총은 회사 "
-         "전체라 그 비율 f 가 분자에만 남는 것이다(DATA-FACTS #7). 변동계수는 그 자리에서 "
-         "면역이다 — CV(f·X)=CV(X) 로 f 가 분자·분모에서 정확히 상쇄된다. **척도 불변이 "
-         "이 팩터를 고른 유일한 이유다.** ⚠ f 가 창 안에서 변하면 상쇄가 깨지므로 "
-         "등록 §4 의 F5 가 보유칸의 그 13종 비중을 잰다(20% 이상이면 기각).")
+    # 🚨 x-volcv 는 **등록을 내린다 — F1 사망**이다(랩 동일가중 대비 초과 −7.78%p · t −1.21,
+    #   시점정확 −7.34%p). 지수 대비로는 못 이겼는지도 불분명한데(−2.67%p) 동일가중
+    #   잣대로는 확실히 졌다. 기각 배선은 이 랩의 관행대로 **등록 줄을 주석으로 내리고**
+    #   채점 갈래(xsec_score_at 의 elif)는 남긴다 — x-turnchg·x-volconc 와 같은 모양이다.
+    #   ⚠ 이 기각은 «신호 없음» 이지 «자료 깨짐» 이 아니다. 척도 불변(CV(f·X)=CV(X))은
+    #     실제로 통했다 — 저회전율 x-turn 과 월별 초과 상관이 **+0.008** 이라 같은 종목을
+    #     고르고 있지 않다. 그래서 이 배치의 소득은 «거래량 축은 이제 자료 문제가 아니라
+    #     신호 문제» 라는 것이다(등록 §7 의 두 갈래 중 뒤쪽).
+    #   사유 전문·수치는 build/PREREG-2026-09-22-PXSTAT-RESULT.md §2 와
+    #   build/tested_not_published.json.
+#    xsec("x-volcv", "거래량 변동계수 상위 %d" % TOPN,
+#         "거래량을 그날 종가로 나눈 계열의 변동계수(표준편차÷평균)를 최근 %d거래일에서 "
+#         "재어 가장 큰 %d종목 동일가중, 월말 리밸런스." % (VOLCV_WIN, TOPN),
+#         None,
+#         "원표 60 Day Coefficient of Variation of Volume to Price — 방향(내림차순)도 "
+#         "원표 그대로다. 거래량이 들쭉날쭉한 종목이 더 높은 위험프리미엄을 요구받는다는 것. "
+#         "🚨 이 랩은 같은 자리에서 두 번 미끄러졌다(x-illiq·x-amihud 는 자료 타당성, "
+#         "x-turn 은 그 위에 성적까지). 사유는 거래대금이 미국 상장분인데 가격·시총은 회사 "
+#         "전체라 그 비율 f 가 분자에만 남는 것이다(DATA-FACTS #7). 변동계수는 그 자리에서 "
+#         "면역이다 — CV(f·X)=CV(X) 로 f 가 분자·분모에서 정확히 상쇄된다. **척도 불변이 "
+#         "이 팩터를 고른 유일한 이유다.** ⚠ f 가 창 안에서 변하면 상쇄가 깨지므로 "
+#         "등록 §4 의 F5 가 보유칸의 그 13종 비중을 잰다(20% 이상이면 기각).")
     xsec("x-dalpha", "알파 개선 상위 %d" % TOPN,
          "월간 CAPM 알파(창 %d개월 · 시장은 S&P 500 PR · 무위험 rf_monthly)의 "
          "%d개월 변화가 가장 큰 %d종목 동일가중, 월말 리밸런스."
          % (DALPHA_WIN, DALPHA_LAG, TOPN),
          None,
+         # ⚠ 이 why 에는 마크다운을 쓰지 않는다 — 화면이 esc() 를 타서 «**» 가 그대로 찍히고
+         #   validate_site 가 그것을 잡는다. 강조는 「」·«» 로 한다.
          "원표 6M Chg in 12M CAPM Alpha — 방향(내림차순)도 원표 그대로다. "
-         "🚨 원표는 알파의 **수준**(60M CAPM Alpha)을 오름차순으로 둔다. 「직전 5년 수익과 "
-         "미래 수익 사이에 음의 관계」라는 장기 반전이다. 우리는 **변화만** 등록했다 — "
+         "🚨 원표는 알파의 「수준」(60M CAPM Alpha)을 오름차순으로 둔다. 「직전 5년 수익과 "
+         "미래 수익 사이에 음의 관계」라는 장기 반전이다. 우리는 「변화만」 등록했다 — "
          "수준은 이 랩의 반전 계열과 같은 축이고 그 계열은 이미 무너져 있다(x-revcomp "
          "기각문: 「반전 여덟은 상관 0.945~0.989 로 실은 넷이고 넷 다 시점정확으로 음수」 · "
          "t-x-ltrev 는 화면 샤프 0.5 미만으로 걷힘). "
          "⚠ 12개월 알파의 6개월 변화는 최근 6개월 수익에 크게 실린다 — 모멘텀과 겹치는지가 "
          "이 규칙의 최대 위험이고, 등록 §4 의 F4(기존 모멘텀·반전 계열과 월별 초과 상관 "
-         "0.80 이상이면 기각)가 그것을 잰다.")
+         "0.80 이상이면 기각)가 그것을 쟀다. "
+         # ⚠ 위 x-turn 주석과 같다 — 이 why 에는 % 연산자가 안 붙으므로 백분율은 한 글자로 적는다.
+         "실측으로 사망 조건 다섯을 다 넘겨 게시했다(PREREG-2026-09-22-PXSTAT-RESULT). "
+         "F1 랩 동일가중 대비 +10.74%p(t 1.55) · F2 생존편향 배수 1.13(소급 +10.74 → "
+         "시점정확 +9.47%p · 문턱 2.0) · F3 시총 5분위 중립화 뒤에도 초과의 93%가 남는다"
+         "(+12.09 → +11.25%p · 문턱은 절반) · F4 최고 상관 0.548(x-dist200) · "
+         "F6 월간 승률 60.0%. "
+         "🚨 F4 가 0.80 에 한참 못 미치지만 0.45~0.55 대가 넷이다(x-dist200 0.548 · "
+         "x-mommvol 0.491 · x-mom12 0.474 · x-residmom 0.455) — 모멘텀의 다른 이름은 "
+         "아니어도 「모멘텀과 절반쯤 겹친다」. 이 랩의 모멘텀 계열과 같이 담을 때 그만큼은 "
+         "같은 베팅이다. "
+         "⚠ F2 배수 1.13 은 「하한이 아니라 추정」이다 — 그날 시점정확 실행이 커버리지 "
+         "문턱 미달로 끝났다(월별 보유율 최저 81.1%, 문턱 90%). 커버리지가 오르면 배수가 "
+         "커질 수 있다.")
 
     xsec("x-turn", "저회전율 최하위 %d" % TOPN,
          "거래량의 최근 %d거래일 평균을 가중평균 희석주식수로 나눈 값이 가장 작은 %d종목 "
@@ -9252,9 +9277,18 @@ def run():
     #   **바스켓을 짜는 법만** 바꾼다. 그것이 F3 이 묻는 바로 그 차이다.
     # ⚠ F3 의 분위 나누는 법은 등록 §4 에 미리 못박아 뒀다(그달 후보의 20/40/60/80 백분위 ·
     #   각 분위에서 N/5, 나머지는 큰 분위부터). 여기서 바꾸지 않는다.
-    if "--flowdiag" in sys.argv:
+    # 🚨 대상 sid 를 인자로 열어 둔다(`--flowdiag=x-dalpha,x-volcv`). 기본값은 FLOW 의 다섯
+    #   그대로라 인자 없이 부르면 등록분이 **한 줄도 안 바뀌고** 재현된다.
+    #   왜 여는가 — PREREG-2026-09-22-PXSTAT §4 의 F3 은 FLOW §4 와 **문구가 같다**
+    #   (그달 후보의 20/40/60/80 백분위 · 각 분위에서 N/5, 나머지는 큰 분위부터).
+    #   같은 조건을 두 번째로 구현하면 이 파일 머리말이 기록한 그 사고(채점기 두 벌)를
+    #   판정 장치에서 되풀이하는 것이다. 목록만 넓히고 산식은 손대지 않는다.
+    if any(a == "--flowdiag" or a.startswith("--flowdiag=") for a in sys.argv):
         _me = [i for i in month_ends(dates) if i > MIN_HIST]
         _SIDS = ["x-guruacc", "x-mfi", "x-turnchg", "x-adslope", "x-volconc"]
+        for _a in sys.argv:
+            if _a.startswith("--flowdiag="):
+                _SIDS = [s for s in _a.split("=", 1)[1].split(",") if s]
         print("[--flowdiag] 월말 %d개 · 대상 %d종" % (len(_me), len(_SIDS)))
 
         def _mcap_at(t, i):
@@ -9273,7 +9307,7 @@ def run():
                     rs.append(b / a - 1.0)
             return (sum(rs) / len(rs)) if rs else None
 
-        def _leg(S, neutral):
+        def _leg(S, neutral, bench=None):
             """월별 바스켓 수익 계열. neutral=True 면 시총 5분위에서 고르게 뽑는다.
 
             🚨 원본 다리는 **정본 선택기 xsec_pick_at() 을 그대로 부른다.** 여기서 sc[:N] 을
@@ -9313,6 +9347,10 @@ def run():
                 r = _fwd(sel, a, b)
                 if r is not None:
                     out.append(r)
+                    # ⚠ 벤치마크는 **그 달이 실제로 쓰인 달에만** 쌓는다. 규칙이 건너뛴 달까지
+                    #   넣으면 초과가 «다른 기간 둘의 차» 가 된다(vs_traded 주석과 같은 이유).
+                    if bench is not None:
+                        bench.append(_fwd([t for _v, t in sc], a, b))
             return out
 
         def _cagr(rs):
@@ -9323,18 +9361,32 @@ def run():
                 g *= (1 + r)
             return (g ** (12.0 / len(rs)) - 1) * 100
 
-        _bench = None
+        # 🚨 등록서(FLOW §4 · PXSTAT §4)의 F3 은 «**초과** CAGR 이 원본의 절반 미만» 이다.
+        #   그런데 2026-08-14 에 이 장치가 낸 것은 **원 CAGR 비**였고 FLOW 결과 문서의
+        #   1.01·1.11 이 그 값이다. 둘을 같이 낸다 — 판정은 등록서대로 **초과 비**로 하고,
+        #   원 비는 FLOW 와 이어 읽으라고 남긴다(옛 숫자를 조용히 갈아끼우지 않는다).
+        #   벤치마크는 그 다리가 **실제로 쓴 달에만** 후보 전체를 동일가중한 것이다
+        #   (같은 _fwd · 같은 월말 · 같은 가격원이라 초과가 기간 차이를 재지 않는다).
+        def _ex(c, bs):
+            b = _cagr([x for x in bs if x is not None])
+            return (c - b) if (c is not None and b is not None) else None
         for S in STRATS:
             if S["kind"] != "xsec" or S["sid"] not in _SIDS:
                 continue
-            base = _leg(S, False)
-            neut = _leg(S, True)
+            bb, bn = [], []
+            base = _leg(S, False, bb)
+            neut = _leg(S, True, bn)
             cb, cn = _cagr(base), _cagr(neut)
-            print("  %-11s 원본 CAGR %7s · 시총중립 %7s · 비 %s"
+            eb, en = _ex(cb, bb), _ex(cn, bn)
+            def _f(v):
+                return ("%+.2f" % v) if v is not None else "—"
+            print("  %-11s 원본 %6s · 중립 %6s · 원비 %5s │ 초과 %6s → %6s · 초과비 %5s"
                   % (S["sid"],
                      "%.2f" % cb if cb is not None else "—",
                      "%.2f" % cn if cn is not None else "—",
-                     ("%.2f" % (cn / cb)) if (cb and cn and cb > 0) else "—"))
+                     ("%.2f" % (cn / cb)) if (cb and cn and cb > 0) else "—",
+                     _f(eb), _f(en),
+                     ("%.2f" % (en / eb)) if (eb and en is not None and eb > 0) else "—"))
         print("[--flowdiag] 산출물 안 씀. F5(지연 민감도)는 F13_LAG 를 30 으로 두고 다시 돌린다.")
         return 0
 
