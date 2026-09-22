@@ -119,6 +119,26 @@ SUBIND_LS_SIDS = {"x-subls", "x-subom"}
 #   지금 바꾸면 그 둘의 과거 판정이 조용히 달라진다. 새 규칙만 이 규약으로 간다.
 CASH_BENCH_SIDS = set(FIP_LS_SIDS)
 
+# 대조군 이름표 — 🚨 2026-09-22. 계열을 고르는 판정(bench_is_cash)과 **같은 자리**에 둔다.
+#   종전엔 이름표가 파일 머리에 하나(BENCH_LABEL)뿐이었고, strategy_index·strategy_report 가
+#   «종목 전략은 전부 같은 대조군» 이라며 그것을 전 규칙에 붙였다. 2026-08-23 숏·시장중립이
+#   현금을 대조군으로 쓰기 시작하며 그 전제가 깨졌는데 이름표는 안 따라와, 「금리민감 과열
+#   15 숏」 카드가 현금 수치(연 2.45% · 변동성 0.12 · MDD 0)를 «S&P 500 대비» 라고 적었다.
+#   explorer 렌더 검사가 CI 에서 잡았다(09-21 숨김 해제로 그 규칙이 처음 게시되면서).
+BENCH_LABEL = "S&P 500(PR) 매수후보유"
+CASH_BENCH_LABEL = "현금(무위험)"
+
+
+def bench_is_cash(sid):
+    """이 규칙의 대조군이 현금(무위험)인가 — 숏(SHORT_SIDS)·시장중립(CASH_BENCH_SIDS).
+
+    변형(-n·-band)은 밑동으로 본다(_BASE_SID). ⚠ 대조군 계열을 굴리는 곳(_iscash)과
+    이름표를 붙이는 곳(strategy_index·strategy_report)이 **이 함수 하나**를 부른다 —
+    둘이 따로 판정하면 라벨과 계산이 다시 갈린다.
+    """
+    b = _BASE_SID(sid)
+    return b in SHORT_SIDS or b in CASH_BENCH_SIDS
+
 # 프로그인더팬 이중정렬 규약 — 논문 Table 2 Panel A 그대로. 스윕하지 않는다(등록 §하지 않을 것).
 FIP_Q = 5             # PRET 5분위 → 그 안에서 ID 5분위
 FIP_SEC_MIN = 3       # 업종중립: 같은 분위·같은 섹터 칸이 이보다 적으면 그 종목은 뺀다
@@ -9463,8 +9483,7 @@ def run():
 
         # 🚨 숏 규칙의 대조군은 **현금(무위험)** 이다(SHORT_SIDS 주석 참조). 지수를 대조군으로
         #   두면 «숏이 지수보다 못하다» 는, 정의상 참인 말을 재게 된다.
-        _isshort = _BASE_SID(S["sid"]) in SHORT_SIDS
-        _iscash = _isshort or _BASE_SID(S["sid"]) in CASH_BENCH_SIDS
+        _iscash = bench_is_cash(S["sid"])     # 이름표(strategy_index·strategy_report)와 같은 판정
         _bxr = ([(rfd_d[i] if i < len(rfd_d) and rfd_d[i] is not None else 0.0)
                  for i in range(n)] if _iscash else bxr)
         bnav = [100.0]
@@ -10436,7 +10455,7 @@ def run():
         #   ⚠ start(전략 시작)와 **다른 값이다.** 헷갈리지 말 것.
         "rf_from": dates[0][:7],
         "n_stocks": len(tickers), "topn": TOPN,
-        "bench_label": "S&P 500(PR) 매수후보유",
+        "bench_label": BENCH_LABEL,          # 규칙별 예외(현금)는 bench_is_cash 가 가른다
         "span_years": round((n - MIN_HIST) / 252.0, 1),
         "surv_proxy": surv,
         "idx_stats": idx_sh,

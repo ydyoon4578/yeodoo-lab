@@ -220,7 +220,7 @@ def _refs(sid, fam, kind, refs, fund_sids, has_pit):
                      if not papers else None)}
 
 
-def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids, na_of=None):
+def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids, na_of=None, cash=None):
     sid = r.get("sid")
     m, b = r.get("metrics") or {}, r.get("bench") or {}
     vt = r.get("vs_traded") or {}
@@ -238,10 +238,12 @@ def _one(r, fam, tcrit, audit_of, dup_of, pit_of, lab, refs, fund_sids, na_of=No
         # ② 구간 ────────────────────────────────────────────────
         # ⚠ 종목 랩은 규칙마다 end·bench_label 을 따로 안 싣는다(랩 전체가 한 값이다).
         #   비워 두면 '이 규칙만 대조군이 없다'로 읽히므로 랩 값으로 채우고 출처를 남긴다.
+        # 🚨 2026-09-22 — 단 숏·시장중립은 대조군이 **현금**이다(tech_backtest.bench_is_cash).
+        #   랩 값으로 채우면 현금 수치 옆에 «S&P 500(PR) 매수후보유 — 랩 전체 공통값» 이 찍힌다.
         "window": {"start": r.get("start"), "end": r.get("end") or lab.get("as_of"),
                    "n_days": r.get("n_days"), "n_thin": r.get("n_thin"),
-                   "bench_label": r.get("bench_label") or lab.get("bench_label"),
-                   "bench_from_lab": r.get("bench_label") is None,
+                   "bench_label": r.get("bench_label") or cash or lab.get("bench_label"),
+                   "bench_from_lab": r.get("bench_label") is None and not cash,
                    "bench_tickers": r.get("bench_tickers"),
                    "bench_unstable": r.get("bench_unstable")},
         # ③ 성과 ────────────────────────────────────────────────
@@ -443,8 +445,11 @@ def main():
     try:
         import tech_backtest as _T
         fund_sids = set(_T.FUND_SIDS)
+        # 대조군이 현금인 규칙 — 판정은 랩 본편 하나(bench_is_cash). 이름표도 거기서 받는다.
+        cash_of = (lambda s: _T.CASH_BENCH_LABEL if _T.bench_is_cash(s or "") else None)
     except Exception:
         fund_sids = set()
+        cash_of = (lambda s: None)
     deploy = _load("deploy_index.json")
 
     pit_by = {x.get("sid"): x for x in (pit.get("strategies") or [])}
@@ -523,7 +528,7 @@ def main():
     for r in (tech.get("strategies") or []):
         out["items"].append(_one(r, "종목·타이밍", tech.get("t_crit"),
                                  None, dup_by.get(r.get("sid")), pit_by.get(r.get("sid")), tech,
-                                 refs, fund_sids, _na(r, "종목·타이밍")))
+                                 refs, fund_sids, _na(r, "종목·타이밍"), cash=cash_of(r.get("sid"))))
     # 족 → t 내림차순. 같은 족을 나란히 읽게 하고, 그 안에서 t 가 큰 것부터.
     # ⚠ 이 정렬은 **읽는 순서**일 뿐 순위가 아니다 — t 가 큰 것이 좋은 것이라는 뜻이 아니다.
     out["items"].sort(key=lambda x: (x["family"], -(x["t"] if x["t"] is not None else -99)))
