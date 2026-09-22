@@ -1,15 +1,145 @@
 {
-  "note": "팩터 사전(factors.html)에 덧붙이는 여두 전략 랩 팩터. 사내 원표(build/factors_src.json — 반입 금지)와 섞지 않는다 — 생성기가 원표 행 **뒤에** 이어 붙이고, 줄마다 «랩» 표시와 원 규칙 카드 링크를 단다. 원표 행(S&P Global 314 · Style Factor 13)은 한 글자도 바꾸지 않는다.",
+  "note": "팩터 사전(factors.html)에 덧붙이는 여두 전략 랩 팩터. 사내 원표(build/factors_src.json — 반입 금지)와 섞지 않는다 — 생성기가 원표 행 **뒤에** 이어 붙이고, 펼친 본문에 원 규칙 카드(출처)와 비슷한 원표 팩터 링크를 단다. 원표 행(S&P Global 314 · Style Factor 13)은 한 글자도 바꾸지 않는다.",
   "added": "2026-09-22",
-  "request": "사용자: «전략 랩 explorer 보고, factors Style Factor에 추가할만한거 있으면 추가해줘. Low Volatility, Momentum, Size, Value, Quality 로 분류되어야함» · «S&P Global은 건들면 안돼. 비슷한 팩터는 스타일 팩터 오른쪽에 따로 분류»",
+  "revised": "2026-09-22 — «유사 팩터» 그룹 폐지 · 랩 표시 제거 · 다섯 스타일로 나뉘는 규칙 25종 추가(15 → 40)",
+  "request": "사용자: «전략 랩 explorer 보고, factors Style Factor에 추가할만한거 있으면 추가해줘. Low Volatility, Momentum, Size, Value, Quality 로 분류되어야함» · «S&P Global은 건들면 안돼. 비슷한 팩터는 스타일 팩터 오른쪽에 따로 분류» → 같은 날 «유사 팩터 탭 없애고 분류 가능하면 다 스타일 팩터에 넣어줘. 그리고 팩터 옆에 랩을 붙일 필요는 없어»",
   "criteria": [
-    "① 랩에 구현·백테스트가 있는 종목 규칙(explorer 카드)의 점수 정의일 것 — 산식·창·지연은 build/tech_backtest.py 등록문과 같게 적는다",
-    "② 다섯 스타일(Low Volatility · Momentum · Size · Value · Quality) 중 하나에 들어갈 것 — 반전·성장·유동성·기술적 추세·통계 모양 축은 뺐다",
-    "③ 기존 Style Factor 13 과 창 길이만 다른 변형은 넣지 않는다(저변동성 60일 · 특이변동성 120일 · 변동성조정 모멘텀 126일 · 소형주 · 저PSR · 12-1 모멘텀)",
-    "④ 같은 양을 재는 S&P Global 팩터가 이미 있으면 group «유사 팩터» 로 따로 두고 similar 에 그 이름을 적는다(읽기만 — S&P Global 행은 안 건드린다). 없으면 group «Style Factor»",
-    "⑤ 참고문헌은 build/strategy_refs.json(랩 원 논문 목록)을 따른다. 거기 없으면 등록문 주석이 인용한 논문, 그것도 없으면 비운다(지어 채우지 않는다)"
+    "① explorer 에 카드가 있는 종목 규칙(횡단면)의 점수 정의일 것 — 산식·창·지연은 build/tech_backtest.py 등록문·점수 코드와 같게 적는다",
+    "② 다섯 스타일(Low Volatility · Momentum · Size · Value · Quality) 중 하나로 나뉠 것 — 그 점수가 **사는 쪽**이 스타일 이름과 맞아야 한다. 공편왜도·상하방 베타 비대칭은 위험을 사는 규칙이라 Low Volatility 에 넣지 않는다. 반전은 원표(S&P Global)처럼 Momentum 에 둔다. 성장(매출·배당 증가율) · 유동성·거래량 · 가격 패턴 통계(허스트·런·분산비·엔트로피·오차수정·변동성 군집) · 고객 집중도는 다섯 어디에도 안 맞아 뺐다",
+    "③ 원표 행과 정의가 같으면 넣지 않는다(12-1 모멘텀 = 원표 12-1 모멘텀 · 저PSR = 원표 S/P (TTM Sales)). 창·분모만 다른 것은 넣고 similar 로 원표 행을 가리킨다",
+    "④ 같은 점수의 구성 변형(바스켓 크기 -n52·-n155·-n50·-n25 · 밴드 보유 · 섹터중립 -sn · 63일판 · 이벤트 보유판)은 원 행 하나로 — 팩터가 아니라 포트폴리오 차이다. 시총가중 복제 · 국면 전환 · 실적 이벤트 · 13F 규칙은 팩터가 아니라 뺐다",
+    "⑤ group 은 전부 «Style Factor» — «유사 팩터» 그룹은 2026-09-22 사용자 결정으로 없앴다. similar 는 비슷한 원표 팩터 이름(없어도 된다) — 링크만 건다",
+    "⑥ Size 는 비어 있다 — 랩의 소형주 규칙(x-small)은 목록에서 내려가(DROPPED) explorer 카드가 없다",
+    "⑦ 참고문헌은 build/strategy_refs.json(랩 원 논문 목록)을 따른다. 거기 없으면 등록문 주석이 인용한 논문, 그것도 없으면 비운다(지어 채우지 않는다)"
   ],
   "rows": [
+    {
+      "factor": "저변동성 (60일)",
+      "spg": "Low Volatility (60D)",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "최근 60거래일 일별 수익률 표준편차 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "저변동성 이상현상 — 변동성이 낮은 종목이 위험 대비 더 나은 수익을 냈다는 관찰. 원표 Style Factor 의 1Y 일간 stdev 와 같은 양을 창만 60일로 줄였다. 시세가 멈춘 종목은 수익이 0 으로 채워져 변동성이 가장 낮게 나오므로 뺀다.",
+      "formula": "Vol60 = stdev_{60D}( r_t )\n\n  r_t : 일별 수익률\n  정지시세 제외 : 직전 252거래일 중 수익이 0 인 날 > 10%",
+      "citations": "1) Ang, A., Hodrick, R., Xing, Y. & Zhang, X. (2006) The Cross-Section of Volatility and Expected Returns. Journal of Finance.",
+      "lab_sid": "t-x-lowvol",
+      "similar": [
+        "1Y 일간 stdev"
+      ]
+    },
+    {
+      "factor": "특이변동성 (120일)",
+      "spg": "Idiosyncratic Volatility (120D)",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "동일가중 지수로 설명되지 않는 잔차의 120거래일 표준편차 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "시장으로 설명되는 부분을 뺀 변동만 잰다 — 저변동성과 저베타 중 무엇이 이상현상을 만드는지 가르려는 지표. 원표 Style Factor 의 Idio Vol 과 같은 양이고, 여기서는 시장을 동일가중 유니버스로 두고 창을 120일로 잡았다.",
+      "formula": "r_i = α + β × r_EW + ε   (최근 120거래일 회귀)\nIVol = stdev_{120D}( ε )\n\n  r_EW : 동일가중 유니버스 일별 수익률\n  유효 관측 < 60일 → 제외",
+      "citations": "1) Ang, A., Hodrick, R., Xing, Y. & Zhang, X. (2006) The Cross-Section of Volatility and Expected Returns. Journal of Finance.",
+      "lab_sid": "t-x-ivol",
+      "similar": [
+        "Idio Vol"
+      ]
+    },
+    {
+      "factor": "MAX (최대 일간 수익률)",
+      "spg": "MAX (Lottery)",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "최근 1개월 일별 수익률의 최댓값 (낮을수록 좋음 · 복권형 회피)",
+      "rank_order": "오름차순",
+      "notes": "지난달 하루 크게 튄 종목은 복권처럼 선호돼 값이 비싸지고 다음 달 수익이 낮다는 관찰(저위험 이상현상의 한 갈래). 원논문의 효과는 하락 구간에서 주로 나온다. S&P Global 쪽은 창이 6개월이다.",
+      "formula": "MAX = max_{21D}( r_t )\n\n  r_t : 일별 수익률 · window : 21 거래일",
+      "citations": "1) Bali, T. G., Cakici, N. & Whitelaw, R. F. (2011) Maxing Out: Stocks as Lotteries and the Cross-Section of Expected Returns. Journal of Financial Economics.",
+      "lab_sid": "t-x-maxlow",
+      "similar": [
+        "Max Daily Return in the Past 6 Months"
+      ]
+    },
+    {
+      "factor": "MAX(5) (상위 5일 평균 수익률)",
+      "spg": "MAX(5)",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "최근 1개월 일별 수익률 상위 5일의 평균 (낮을수록 좋음 · 복권형 회피)",
+      "rank_order": "오름차순",
+      "notes": "하루짜리 극단값 하나에 순위가 흔들리지 않게 상위 5일 평균으로 잰 MAX. 주간 리밸런스. S&P Global 쪽은 창이 6개월이고 하루 최댓값이다.",
+      "formula": "MAX5 = mean( top5_{21D}( r_t ) )\n\n  r_t : 일별 수익률 · window : 21 거래일",
+      "citations": "1) Bali, T. G., Cakici, N. & Whitelaw, R. F. (2011) Maxing Out: Stocks as Lotteries and the Cross-Section of Expected Returns. Journal of Financial Economics.",
+      "lab_sid": "t-x-max5low",
+      "similar": [
+        "Max Daily Return in the Past 6 Months"
+      ]
+    },
+    {
+      "factor": "초과첨도",
+      "spg": "Excess Kurtosis",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "최근 252거래일 일별 수익률의 초과첨도 (낮을수록 좋음 · 꼬리가 얇음)",
+      "rank_order": "오름차순",
+      "notes": "복권형 선호의 4차 적률 판 — 꼬리가 두꺼운 종목은 크게 터질 가능성 때문에 사들여져 비싸진다는 것이 방향의 근거다. 첨도는 표본 극단값 하나에 크게 흔들려 창을 252일로 길게 잡았다.",
+      "formula": "Kurt = E[ (r − μ)⁴ ] / σ⁴ − 3   (최근 252거래일)\n\n  유효 관측 < 창의 80% → 제외",
+      "citations": null,
+      "lab_sid": "t-x-kurt",
+      "similar": []
+    },
+    {
+      "factor": "분포 모양 컴포지트",
+      "spg": "Distribution Shape Composite",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "왜도·초과첨도·점프 비중의 횡단면 z 평균 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "왜도(3차)·첨도(4차)·점프 비중을 한데 묶은 복권형 회피 지표 — 셋 다 '낮은 쪽'을 사는 규칙이라 합성도 같은 방향이다. 점프 비중은 변동성의 크기가 아니라 구성(점프 몫)을 잰다.",
+      "formula": "Shape = mean( z(Skew), z(Kurt), z(Jump) )   (각 최근 252거래일 · 그달 횡단면 z)\n\n  Jump = 1 − BV / RV   (RV : 실현분산 · BV : 이변동)\n  결측 지표는 0 으로 채우지 않고 있는 것만 평균",
+      "citations": null,
+      "lab_sid": "t-x-distshape",
+      "similar": []
+    },
+    {
+      "factor": "금리 둔감 (|10년물 베타|)",
+      "spg": "Absolute Rate Beta",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "10년 국채금리 일간 변화에 대한 베타의 절댓값 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "저베타·저변동성 이상현상의 논리를 시장 밖 요인으로 넓힌 것 — 금리에 덜 흔들리는 쪽을 산다. 방향은 절댓값 최하위라 오르든 내리든 둔감한 종목이다. 금리는 % 단위라 비율이 아니라 차분(%p)을 쓴다.",
+      "formula": "r_i = α + β × ΔY10 + ε   (최근 252거래일 단순회귀)\nRateBeta = | β |\n\n  ΔY10 : 10년 국채 수익률의 일간 변화(%p)\n  유효 관측 < 창의 60% → 제외",
+      "citations": "1) Frazzini, A. & Pedersen, L. H. (2014) Betting Against Beta. Journal of Financial Economics.\n2) Baker, M., Bradley, B. & Wurgler, J. (2011) Benchmarks as Limits to Arbitrage: Understanding the Low-Volatility Anomaly. Financial Analysts Journal.",
+      "lab_sid": "t-x-ratebeta",
+      "similar": []
+    },
+    {
+      "factor": "달러 둔감 (|달러지수 베타|)",
+      "spg": "Absolute Dollar Beta",
+      "group": "Style Factor",
+      "subgroup": "Low Volatility",
+      "description": "광의 달러지수 일간 변화율에 대한 베타의 절댓값 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "금리 둔감과 같은 논리를 달러에 적용한 것 — 둘이 같은 종목을 고르면 '거시 둔감'이라는 축이 하나라는 뜻이다. 달러지수는 지수라 비율변화를 쓴다.",
+      "formula": "r_i = α + β × r_USD + ε   (최근 252거래일 단순회귀)\nFXBeta = | β |\n\n  r_USD : 광의 달러지수(DTWEXBGS) 일간 변화율\n  유효 관측 < 창의 60% → 제외",
+      "citations": "1) Frazzini, A. & Pedersen, L. H. (2014) Betting Against Beta. Journal of Financial Economics.\n2) Baker, M., Bradley, B. & Wurgler, J. (2011) Benchmarks as Limits to Arbitrage: Understanding the Low-Volatility Anomaly. Financial Analysts Journal.",
+      "lab_sid": "t-x-fxbeta",
+      "similar": []
+    },
+    {
+      "factor": "변동성 조정 모멘텀 (126일)",
+      "spg": "Volatility-Scaled Momentum",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "12-1 모멘텀 ÷ 최근 126거래일 일별 수익률 표준편차",
+      "rank_order": "내림차순",
+      "notes": "같은 수익이라도 덜 흔들리며 온 쪽을 위로 올린다. 원표 Style Factor 의 위험조정 12-1 모멘텀과 같은 착상이고 분모 창만 126일이다. Barroso·Santa-Clara(2015)는 포트폴리오 수익을 그 전략의 변동성으로 나눠 노출을 조절한 것이라, 이것(종목 순위)과 같은 규칙은 아니다.",
+      "formula": "VMom = [ (1 + R_12M) / (1 + R_1M) − 1 ] / stdev_{126D}( r_t )",
+      "citations": "1) Barroso, P. & Santa-Clara, P. (2015) Momentum Has Its Moments. Journal of Financial Economics.",
+      "lab_sid": "t-x-mommvol",
+      "similar": [
+        "위험조정 12-1 모멘텀"
+      ]
+    },
     {
       "factor": "잔차 모멘텀",
       "spg": "Residual Momentum",
@@ -22,6 +152,163 @@
       "citations": "1) Blitz, D., Huij, J. & Martens, M. (2011) Residual Momentum. Journal of Empirical Finance.",
       "lab_sid": "t-x-residmom",
       "similar": []
+    },
+    {
+      "factor": "산업잔차 모멘텀",
+      "spg": "Industry-Residual Momentum",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "종목 12-1 모멘텀 − 소속 GICS 산업그룹의 시총가중 12-1 모멘텀",
+      "rank_order": "내림차순",
+      "notes": "산업이 통째로 오른 몫을 빼고 그 산업 안에서 더 오른 몫만 쓴다(within-industry momentum). 랩 등록판은 상위 52종목(십분위)이다 — 원 논문은 횡단면 회귀라 포트폴리오 크기가 없어 정렬 문헌의 표준인 십분위를 썼다.",
+      "formula": "IndRes = Mom_i − Σ_{j∈G} w_j × Mom_j\n\n  Mom : R_12M − R_1M (직전 1개월 건너뜀)\n  G : GICS 산업그룹 (소속 8종목 이상) · w : 시가총액 비중",
+      "citations": "1) Asness, C. S., Porter, R. B. & Stevens, R. L. (2000) Predicting Stock Returns Using Industry-Relative Firm Characteristics. Working Paper.",
+      "lab_sid": "t-x-residind-n52",
+      "similar": []
+    },
+    {
+      "factor": "서브산업 모멘텀",
+      "spg": "Sub-Industry Momentum",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "GICS 서브산업의 시총가중 6개월 수익률 (서브산업 단위 순위)",
+      "rank_order": "내림차순",
+      "notes": "산업 모멘텀을 섹터보다 잘게 내린 것 — 같은 섹터 안에서도 서브산업끼리 방향이 갈리는데 섹터로 묶으면 그 갈림이 상쇄된다. 점수가 종목이 아니라 서브산업에 붙는다. 랩 수치는 차입·대차 비용을 빼지 않았다.",
+      "formula": "SubMom_s = Σ_{i∈s} w_i × R_6M,i   (s : GICS 서브산업, 소속 3종목 이상)\n\n  롱 : 상위 5 서브산업 · 숏 : 하위 5 서브산업\n  서브산업 안 시총 상위 5종목 · 두 다리 각각 합 1 (롱100/숏100)",
+      "citations": "1) Moskowitz, T. J. & Grinblatt, M. (1999) Do Industries Explain Momentum? Journal of Finance.",
+      "lab_sid": "t-x-subls",
+      "similar": []
+    },
+    {
+      "factor": "에코 모멘텀 (12~7개월)",
+      "spg": "Echo Momentum",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "12개월 전 ~ 7개월 전 6개월 누적수익률 (최근 6개월 제외)",
+      "rank_order": "내림차순",
+      "notes": "모멘텀의 예측력이 최근 6개월이 아니라 그 앞 중기 구간에서 나온다는 주장. 12-1 모멘텀의 창이 이 구간을 전부 포함하므로 둘은 독립이 아니다 — 랩은 별개 축으로 세지 말라고 적어 두었다.",
+      "formula": "Echo = P_{T−126D} / P_{T−252D} − 1",
+      "citations": "1) Novy-Marx, R. (2012) Is Momentum Really Momentum? Journal of Financial Economics.",
+      "lab_sid": "t-x-echo",
+      "similar": [
+        "12-1 모멘텀"
+      ]
+    },
+    {
+      "factor": "52주 신고가 근접",
+      "spg": "52-Week High Proximity",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "현재가 ÷ 직전 252거래일 일중 고가의 최대",
+      "rank_order": "내림차순",
+      "notes": "고점 근접을 추세의 대리변수로 쓰는 모멘텀 변형. 분모는 종가가 아니라 일중 고가다(종가를 쓰면 신고가 종목이 정확히 1.0 에 붙어 동점이 된다). 상장 직후 종목은 창이 짧아 비율이 1 에 붙으므로 창 안 유효 관측이 200일 미만이면 뺀다.",
+      "formula": "52WH = Close_T / max_{252D}( High )\n\n  High : 일별 일중 고가\n  유효 관측 < 200일 → 제외",
+      "citations": "1) George, T. J. & Hwang, C.-Y. (2004) The 52-Week High and Momentum Investing. Journal of Finance.",
+      "lab_sid": "t-x-52wh",
+      "similar": [
+        "Closing Price to 52 Week High"
+      ]
+    },
+    {
+      "factor": "200일선 이격도",
+      "spg": "Distance from 200-Day Moving Average",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "현재가 ÷ 200일 이동평균 − 1",
+      "rank_order": "내림차순",
+      "notes": "추세의 강도를 이동평균과의 거리로 잰다. 과열과 강세를 구분하지 못한다는 비판이 있다.",
+      "formula": "Dist200 = P_T / SMA_{200D}( P ) − 1",
+      "citations": null,
+      "lab_sid": "t-x-dist200",
+      "similar": []
+    },
+    {
+      "factor": "드리프트 t값",
+      "spg": "Drift t-Statistic (Newey–West)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "평균 일간수익률 ÷ 뉴이–웨스트 표준오차 (최근 252거래일)",
+      "rank_order": "내림차순",
+      "notes": "모멘텀을 수익의 크기가 아니라 추세의 꾸준함으로 줄 세운다 — 같은 12% 라도 흔들리며 온 것과 꾸준히 온 것을 가른다. 변동성 조정 모멘텀과 비슷해 보이지만 자기상관을 보정한 표준오차를 쓴다.",
+      "formula": "t = mean( r ) / sqrt( LRV / n )\nLRV = γ_0 + 2 × Σ_{L=1}^{5} ( 1 − L/6 ) × γ_L   (바틀렛 가중)\n\n  r : 최근 252거래일 일별 수익률 · γ_L : L시차 자기공분산\n  유효 관측 < 창의 80% → 제외",
+      "citations": null,
+      "lab_sid": "t-x-drift-t",
+      "similar": []
+    },
+    {
+      "factor": "연속정보 모멘텀 (정보이산성 ID)",
+      "spg": "Frog-in-the-Pan (Information Discreteness)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "12-1 모멘텀 상위 종목 중 정보이산성(ID)이 낮은 쪽 — 수익이 잘게 나뉘어 온 종목",
+      "rank_order": "오름차순",
+      "notes": "정보가 조금씩 연속으로 들어온 종목은 시장이 늦게 반응해 모멘텀이 더 오래 간다는 주장(frog in the pan). ID 는 모멘텀을 대체하는 신호가 아니라 모멘텀 종목을 거르는 조건이다. 랩에서 ID 를 단독 선택 축으로 쓴 원 규칙은 시점정확 검정에서 기각됐다.",
+      "formula": "ID = sign( PRET ) × ( %neg − %pos )   (형성창 T−251D ~ T−21D)\n\n  PRET : 형성창 누적수익률\n  %pos · %neg : 일별 수익률이 양 · 음인 날의 비율\n  선택 : 12-1 모멘텀 상위 30 중 ID 하위 절반 · 6개월 보유",
+      "citations": "1) Da, Z., Gurun, U. G. & Warachka, M. (2014) Frog in the Pan: Continuous Information and Momentum. Review of Financial Studies.",
+      "lab_sid": "t-x-fip-cont",
+      "similar": []
+    },
+    {
+      "factor": "단기 반전 (1개월)",
+      "spg": "Short-Term Reversal (1M)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "최근 1개월(21거래일) 수익률 (낮을수록 좋음 · 반전)",
+      "rank_order": "오름차순",
+      "notes": "직전 한 달 많이 내린 종목이 다음에 되돌린다는 관찰. 모멘텀과 방향이 반대라 같은 표에서 서로의 대조군이 된다. 주간 리밸런스. S&P Global 은 반전 팩터를 Price Momentum 에 둔다(5일 · 6개월 창).",
+      "formula": "Rev1M = P_T / P_{T−21D} − 1",
+      "citations": "1) Jegadeesh, N. (1990) Evidence of Predictable Behavior of Security Returns. Journal of Finance.",
+      "lab_sid": "t-x-rev1m",
+      "similar": [
+        "5 Day Price Reversal",
+        "6 Months Price Reversal"
+      ]
+    },
+    {
+      "factor": "주간 반전 (1주)",
+      "spg": "Short-Term Reversal (1W)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "최근 5거래일 수익률 (낮을수록 좋음 · 반전)",
+      "rank_order": "오름차순",
+      "notes": "한 주 단위의 되돌림. 월말 리밸런스.",
+      "formula": "Rev1W = P_T / P_{T−5D} − 1",
+      "citations": "1) Lehmann, B. N. (1990) Fads, Martingales, and Market Efficiency. Quarterly Journal of Economics.",
+      "lab_sid": "t-x-rev1w",
+      "similar": [
+        "5 Day Price Reversal"
+      ]
+    },
+    {
+      "factor": "추세정렬 과매도 반등",
+      "spg": "Oversold in Uptrend (RSI 14)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "200일선 위 종목 중 RSI(14)가 가장 낮은 쪽",
+      "rank_order": "오름차순",
+      "notes": "추세는 살아 있는데 단기만 눌린 종목 — 랩이 종목 신호에서 역추세를 폐기하며 남긴 유일한 형태다. S&P Global 의 14-Day RSI 는 추세 조건 없이 RSI 만 본다.",
+      "formula": "Score = RSI_{14}   (P_T > SMA_{200D}( P ) 인 종목만)",
+      "citations": null,
+      "lab_sid": "t-x-snapback",
+      "similar": [
+        "14-Day Relative Strength Index"
+      ]
+    },
+    {
+      "factor": "SUE (전년 동기 대비)",
+      "spg": "Standardized Unexpected Earnings (seasonal random walk)",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "직전 분기 EPS의 전년 동기 대비 변화 ÷ 그 변화의 표준편차 (이익 모멘텀)",
+      "rank_order": "내림차순",
+      "notes": "애널리스트 컨센서스 없이 재는 표준화 이익 서프라이즈 — 기대값을 «전년 동기 EPS» 로 둔다. 이익 소식이 몇 달에 걸쳐 주가에 스며드는 현상(실적 발표 후 드리프트)을 노린다. S&P Global 의 Standardized Unexpected Earnings 는 컨센서스 대비라 기대값이 다르고, EPS Stability 는 계산이 거의 같다.",
+      "formula": "SUE = ( EPS_q − EPS_{q−4} ) / stdev( EPS_k − EPS_{k−4} )\n\n  stdev : 직전 8개 분기의 전년 동기 대비 변화\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Foster, G., Olsen, C. & Shevlin, T. (1984) Earnings Releases, Anomalies, and the Behavior of Security Returns. The Accounting Review.\n2) Bernard, V. L. & Thomas, J. K. (1989) Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium? Journal of Accounting Research.",
+      "lab_sid": "t-x-sue",
+      "similar": [
+        "EPS Stability",
+        "Standardized Unexpected Earnings"
+      ]
     },
     {
       "factor": "매출 서프라이즈 (SUR)",
@@ -37,6 +324,94 @@
       "similar": []
     },
     {
+      "factor": "매출총이익 서프라이즈 (SUGP)",
+      "spg": "Standardized Unexpected Gross Profit",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "직전 분기 매출총이익의 전년 동기 대비 변화 ÷ 그 변화의 표준편차",
+      "rank_order": "내림차순",
+      "notes": "SUE·SUR 과 같은 계산을 매출총이익에 적용한 것. 매출총이익은 감가상각 정책·일회성 항목·자본구조에 덜 오염된 수익성 지표라는 주장을 변화 축으로 옮겼다. 매출원가를 보고하지 않는 업종(은행·보험·유틸리티·에너지 등)은 값이 없어 후보가 얇다.",
+      "formula": "SUGP = ( GP_q − GP_{q−4} ) / stdev( GP_k − GP_{k−4} )\n\n  GP : 매출 − 매출원가 (기간종료일이 같은 분기끼리만)\n  stdev : 직전 8개 분기의 전년 동기 대비 변화\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Novy-Marx, R. (2013) The Other Side of Value: The Gross Profitability Premium. Journal of Financial Economics.",
+      "lab_sid": "t-x-sugp",
+      "similar": []
+    },
+    {
+      "factor": "이익 개선 가속",
+      "spg": "Earnings Acceleration",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "EPS 전년 동기 대비 변화가 직전 분기보다 커진 폭 ÷ 주가",
+      "rank_order": "내림차순",
+      "notes": "이익이 좋아지는 속도가 빨라지는 종목. SUE 의 짝으로 둔 것이라 표준편차로 나누지 않는다 — 둘이 같은 종목을 고르면 표준화가 결과를 만든 게 아니다. '좋아지는 중'을 본다는 점에서 리비전 쪽에 가깝다. S&P Global 은 같은 가속 개념을 매출로 재서(Sales Acceleration) Historical Growth 에 둔다.",
+      "formula": "EAcc = [ ( EPS_q − EPS_{q−4} ) − ( EPS_{q−1} − EPS_{q−5} ) ] / P_T\n\n  두 분기가 인접하지 않으면(간격 > 120일) 제외\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": null,
+      "lab_sid": "t-x-epsacc",
+      "similar": [
+        "Sales Acceleration"
+      ]
+    },
+    {
+      "factor": "투자의견 리비전",
+      "spg": "Analyst Recommendation Revision",
+      "group": "Style Factor",
+      "subgroup": "Momentum",
+      "description": "증권사 투자의견 컨센서스(5=적극 매수 → 1=적극 매도)의 30일 변화 × √증권사 수",
+      "rank_order": "내림차순",
+      "notes": "애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 증권사별 최신 의견을 이어 붙여 컨센서스를 만들고(의견은 발표일부터 365일까지 유효) 그 변화에 √증권사 수를 곱한다 — 곱하지 않으면 커버가 적은 종목이 상위를 차지한다.",
+      "formula": "Rec_T = mean_b( rating_{b,T} )   (5 = Strong Buy … 1 = Strong Sell)\nRevScore = ( Rec_T − Rec_{T−30D} ) × √n_brokers\n\n  rating : 증권사별 최신 투자의견 · 발표일부터 365일 유효",
+      "citations": "1) Womack, K. L. (1996) Do Brokerage Analysts' Recommendations Have Investment Value? Journal of Finance.\n2) Barber, B., Lehavy, R., McNichols, M. & Trueman, B. (2001) Can Investors Profit from the Prophets? Security Analyst Recommendations and Stock Returns. Journal of Finance.\n3) Jegadeesh, N., Kim, J., Krische, S. D. & Lee, C. M. C. (2004) Analyzing the Analysts: When Do Recommendations Add Value? Journal of Finance.\n4) Loh, R. K. & Stulz, R. M. (2011) When Are Analyst Recommendation Changes Influential? Review of Financial Studies.",
+      "lab_sid": "t-x-revdrift",
+      "similar": [
+        "6M Avg Chg 1M Recommendation"
+      ]
+    },
+    {
+      "factor": "B/P (장부가 대비 주가)",
+      "spg": "Book-to-Price",
+      "group": "Style Factor",
+      "subgroup": "Value",
+      "description": "주당순자산 ÷ 주가 (큰 값 = 저평가)",
+      "rank_order": "내림차순",
+      "notes": "Fama-French 가치(HML)의 단변량판. 자본잠식(음수)은 자연히 하위로 간다.",
+      "formula": "B/P = ( Equity / Shares ) / Price\n\n  Equity : 자본총계 (SEC XBRL)\n  Shares : 가중평균 희석주식수 (없으면 연간 → 기말 발행주식수 → yfinance 순)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
+      "citations": "1) Fama, E. F. & French, K. R. (1992) The Cross-Section of Expected Stock Returns. Journal of Finance.",
+      "lab_sid": "t-x-btp",
+      "similar": [
+        "Book to Price"
+      ]
+    },
+    {
+      "factor": "FCF 수익률",
+      "spg": "Free Cash Flow Yield",
+      "group": "Style Factor",
+      "subgroup": "Value",
+      "description": "최근 12개월 잉여현금흐름(영업현금흐름 − 자본지출) ÷ 시가총액",
+      "rank_order": "내림차순",
+      "notes": "잉여현금흐름 대비 싸게 거래되는 종목. 변화량이 아니라 수준으로 잰다 — 무료 자료로는 현금흐름이 연 단위로만 들어오는 종목이 많아 변화량을 같은 품질로 못 만든다. S&P Global 의 Free Cash Flow to Price 는 배당까지 빼고 평균 시가총액으로 나눈다.",
+      "formula": "FCF/P = ( TTM(CFO) − TTM(CapEx) ) / MarketCap\n\n  CFO : 영업활동현금흐름 · CapEx : 자본적지출 (SEC XBRL)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
+      "citations": "1) Hackel, K. S., Livnat, J. & Rai, A. (1994) The Free Cash Flow/Small-Cap Anomaly. Financial Analysts Journal.\n2) Hackel, K. S., Livnat, J. & Rai, A. (2000) A Free Cash Flow Investment Anomaly. Journal of Accounting, Auditing & Finance.",
+      "lab_sid": "t-x-fcfy",
+      "similar": [
+        "Free Cash Flow to Price"
+      ]
+    },
+    {
+      "factor": "배당수익률",
+      "spg": "Dividend Yield",
+      "group": "Style Factor",
+      "subgroup": "Value",
+      "description": "최근 12개월 주당배당 ÷ 주가",
+      "rank_order": "내림차순",
+      "notes": "배당을 선언하지 않는 종목은 순위에 없다. 감액 직전에 수익률이 가장 높아 보이는 함정이 있다 — 이 정의는 그것을 걸러내지 않는다.",
+      "formula": "DY = TTM(DPS) / Price\n\n  DPS : 주당배당 (SEC XBRL)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
+      "citations": "1) Litzenberger, R. H. & Ramaswamy, K. (1979) The Effect of Personal Taxes and Dividends on Capital Asset Prices: Theory and Empirical Evidence. Journal of Financial Economics.",
+      "lab_sid": "t-x-dy",
+      "similar": [
+        "Dividends to Price Ratio"
+      ]
+    },
+    {
       "factor": "총주주환원수익률",
       "spg": "Shareholder Payout Yield",
       "group": "Style Factor",
@@ -48,6 +423,52 @@
       "citations": "1) Boudoukh, J., Michaely, R., Richardson, M. & Roberts, M. R. (2007) On the Importance of Measuring Payout Yield: Implications for Empirical Asset Pricing. Journal of Finance.",
       "lab_sid": "t-x-payout",
       "similar": []
+    },
+    {
+      "factor": "부채비율 (D/E)",
+      "spg": "Debt-to-Equity",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "총부채 ÷ 자본총계 (낮을수록 좋음 · 재무 안정성)",
+      "rank_order": "오름차순",
+      "notes": "재무 안정성 팩터. 부채 항목이 없으면 자산 − 자본으로 메우고 자본잠식 종목은 뺀다. S&P Global 의 Financial Leverage·Book Leverage 는 총자산 ÷ 보통주 자기자본이라 거의 1 + 이 값이다(자본을 보통주로 좁힌 차이뿐) — 같은 축을 재지만 그쪽 순위 방향은 내림차순이고, 이 규칙은 오름차순(부채가 적을수록 위)이다.",
+      "formula": "D/E = Total Liabilities / Total Equity\n\n  부채 없음 → Total Assets − Total Equity\n  Equity ≤ 0 → 제외 · 회계 수치 : 기간 종료 90일 뒤부터 사용",
+      "citations": null,
+      "lab_sid": "t-x-lowde",
+      "similar": [
+        "Financial Leverage",
+        "Book Leverage"
+      ]
+    },
+    {
+      "factor": "유동비율",
+      "spg": "Current Ratio",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "유동자산 ÷ 유동부채",
+      "rank_order": "내림차순",
+      "notes": "단기 지급 능력으로 재는 재무 안정성. 잔고 항목이라 12개월 합이 아니라 그 시점 값을 쓴다.",
+      "formula": "CR = Current Assets / Current Liabilities\n\n  Current Liabilities ≤ 0 → 제외\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Ou, J. A. & Penman, S. H. (1989) Financial Statement Analysis and the Prediction of Stock Returns. Journal of Accounting and Economics.",
+      "lab_sid": "t-x-currat",
+      "similar": [
+        "Current Ratio"
+      ]
+    },
+    {
+      "factor": "이익잉여금 비율",
+      "spg": "Retained Earnings to Total Assets",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "이익잉여금 ÷ 총자산",
+      "rank_order": "내림차순",
+      "notes": "Altman(1968) Z-score 의 X2 — 이익을 쌓아 온 이력으로 재는 재무 건전성. 누적 결손(음수)도 정보라 자르지 않는다.",
+      "formula": "RE/TA = Retained Earnings / Total Assets\n\n  Total Assets ≤ 0 → 제외\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Altman, E. I. (1968) Financial Ratios, Discriminant Analysis and the Prediction of Corporate Bankruptcy. Journal of Finance.",
+      "lab_sid": "t-x-reta",
+      "similar": [
+        "Retained Earnings to Total Assets"
+      ]
     },
     {
       "factor": "이익 변동성",
@@ -63,113 +484,9 @@
       "similar": []
     },
     {
-      "factor": "52주 신고가 근접",
-      "spg": "52-Week High Proximity",
-      "group": "유사 팩터",
-      "subgroup": "Momentum",
-      "description": "현재가 ÷ 직전 252거래일 일중 고가의 최대",
-      "rank_order": "내림차순",
-      "notes": "고점 근접을 추세의 대리변수로 쓰는 모멘텀 변형. 분모는 종가가 아니라 일중 고가다(종가를 쓰면 신고가 종목이 정확히 1.0 에 붙어 동점이 된다). 상장 직후 종목은 창이 짧아 비율이 1 에 붙으므로 창 안 유효 관측이 200일 미만이면 뺀다.",
-      "formula": "52WH = Close_T / max_{252D}( High )\n\n  High : 일별 일중 고가\n  유효 관측 < 200일 → 제외",
-      "citations": "1) George, T. J. & Hwang, C.-Y. (2004) The 52-Week High and Momentum Investing. Journal of Finance.",
-      "lab_sid": "t-x-52wh",
-      "similar": ["Closing Price to 52 Week High"]
-    },
-    {
-      "factor": "SUE (전년 동기 대비)",
-      "spg": "Standardized Unexpected Earnings (seasonal random walk)",
-      "group": "유사 팩터",
-      "subgroup": "Momentum",
-      "description": "직전 분기 EPS의 전년 동기 대비 변화 ÷ 그 변화의 표준편차 (이익 모멘텀)",
-      "rank_order": "내림차순",
-      "notes": "애널리스트 컨센서스 없이 재는 표준화 이익 서프라이즈 — 기대값을 «전년 동기 EPS» 로 둔다. 이익 소식이 몇 달에 걸쳐 주가에 스며드는 현상(실적 발표 후 드리프트)을 노린다. S&P Global 의 Standardized Unexpected Earnings 는 컨센서스 대비라 기대값이 다르고, EPS Stability 는 계산이 거의 같다.",
-      "formula": "SUE = ( EPS_q − EPS_{q−4} ) / stdev( EPS_k − EPS_{k−4} )\n\n  stdev : 직전 8개 분기의 전년 동기 대비 변화\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
-      "citations": "1) Foster, G., Olsen, C. & Shevlin, T. (1984) Earnings Releases, Anomalies, and the Behavior of Security Returns. The Accounting Review.\n2) Bernard, V. L. & Thomas, J. K. (1989) Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium? Journal of Accounting Research.",
-      "lab_sid": "t-x-sue",
-      "similar": ["EPS Stability", "Standardized Unexpected Earnings"]
-    },
-    {
-      "factor": "투자의견 리비전",
-      "spg": "Analyst Recommendation Revision",
-      "group": "유사 팩터",
-      "subgroup": "Momentum",
-      "description": "증권사 투자의견 컨센서스(5=적극 매수 → 1=적극 매도)의 30일 변화 × √증권사 수",
-      "rank_order": "내림차순",
-      "notes": "애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 증권사별 최신 의견을 이어 붙여 컨센서스를 만들고(의견은 발표일부터 365일까지 유효) 그 변화에 √증권사 수를 곱한다 — 곱하지 않으면 커버가 적은 종목이 상위를 차지한다.",
-      "formula": "Rec_T = mean_b( rating_{b,T} )   (5 = Strong Buy … 1 = Strong Sell)\nRevScore = ( Rec_T − Rec_{T−30D} ) × √n_brokers\n\n  rating : 증권사별 최신 투자의견 · 발표일부터 365일 유효",
-      "citations": "1) Womack, K. L. (1996) Do Brokerage Analysts' Recommendations Have Investment Value? Journal of Finance.\n2) Barber, B., Lehavy, R., McNichols, M. & Trueman, B. (2001) Can Investors Profit from the Prophets? Security Analyst Recommendations and Stock Returns. Journal of Finance.\n3) Jegadeesh, N., Kim, J., Krische, S. D. & Lee, C. M. C. (2004) Analyzing the Analysts: When Do Recommendations Add Value? Journal of Finance.\n4) Loh, R. K. & Stulz, R. M. (2011) When Are Analyst Recommendation Changes Influential? Review of Financial Studies.",
-      "lab_sid": "t-x-revdrift",
-      "similar": ["6M Avg Chg 1M Recommendation"]
-    },
-    {
-      "factor": "MAX (최대 일간 수익률)",
-      "spg": "MAX (Lottery)",
-      "group": "유사 팩터",
-      "subgroup": "Low Volatility",
-      "description": "최근 1개월 일별 수익률의 최댓값 (낮을수록 좋음 · 복권형 회피)",
-      "rank_order": "오름차순",
-      "notes": "지난달 하루 크게 튄 종목은 복권처럼 선호돼 값이 비싸지고 다음 달 수익이 낮다는 관찰(저위험 이상현상의 한 갈래). 원논문의 효과는 하락 구간에서 주로 나온다. S&P Global 쪽은 창이 6개월이다.",
-      "formula": "MAX = max_{21D}( r_t )\n\n  r_t : 일별 수익률 · window : 21 거래일",
-      "citations": "1) Bali, T. G., Cakici, N. & Whitelaw, R. F. (2011) Maxing Out: Stocks as Lotteries and the Cross-Section of Expected Returns. Journal of Financial Economics.",
-      "lab_sid": "t-x-maxlow",
-      "similar": ["Max Daily Return in the Past 6 Months"]
-    },
-    {
-      "factor": "B/P (장부가 대비 주가)",
-      "spg": "Book-to-Price",
-      "group": "유사 팩터",
-      "subgroup": "Value",
-      "description": "주당순자산 ÷ 주가 (큰 값 = 저평가)",
-      "rank_order": "내림차순",
-      "notes": "Fama-French 가치(HML)의 단변량판. 자본잠식(음수)은 자연히 하위로 간다.",
-      "formula": "B/P = ( Equity / Shares ) / Price\n\n  Equity : 자본총계 (SEC XBRL)\n  Shares : 가중평균 희석주식수 (없으면 연간 → 기말 발행주식수 → yfinance 순)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
-      "citations": "1) Fama, E. F. & French, K. R. (1992) The Cross-Section of Expected Stock Returns. Journal of Finance.",
-      "lab_sid": "t-x-btp",
-      "similar": ["Book to Price"]
-    },
-    {
-      "factor": "FCF 수익률",
-      "spg": "Free Cash Flow Yield",
-      "group": "유사 팩터",
-      "subgroup": "Value",
-      "description": "최근 12개월 잉여현금흐름(영업현금흐름 − 자본지출) ÷ 시가총액",
-      "rank_order": "내림차순",
-      "notes": "잉여현금흐름 대비 싸게 거래되는 종목. 변화량이 아니라 수준으로 잰다 — 무료 자료로는 현금흐름이 연 단위로만 들어오는 종목이 많아 변화량을 같은 품질로 못 만든다. S&P Global 의 Free Cash Flow to Price 는 배당까지 빼고 평균 시가총액으로 나눈다.",
-      "formula": "FCF/P = ( TTM(CFO) − TTM(CapEx) ) / MarketCap\n\n  CFO : 영업활동현금흐름 · CapEx : 자본적지출 (SEC XBRL)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
-      "citations": "1) Hackel, K. S., Livnat, J. & Rai, A. (1994) The Free Cash Flow/Small-Cap Anomaly. Financial Analysts Journal.\n2) Hackel, K. S., Livnat, J. & Rai, A. (2000) A Free Cash Flow Investment Anomaly. Journal of Accounting, Auditing & Finance.",
-      "lab_sid": "t-x-fcfy",
-      "similar": ["Free Cash Flow to Price"]
-    },
-    {
-      "factor": "배당수익률",
-      "spg": "Dividend Yield",
-      "group": "유사 팩터",
-      "subgroup": "Value",
-      "description": "최근 12개월 주당배당 ÷ 주가",
-      "rank_order": "내림차순",
-      "notes": "배당을 선언하지 않는 종목은 순위에 없다. 감액 직전에 수익률이 가장 높아 보이는 함정이 있다 — 이 정의는 그것을 걸러내지 않는다.",
-      "formula": "DY = TTM(DPS) / Price\n\n  DPS : 주당배당 (SEC XBRL)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
-      "citations": "1) Litzenberger, R. H. & Ramaswamy, K. (1979) The Effect of Personal Taxes and Dividends on Capital Asset Prices: Theory and Empirical Evidence. Journal of Financial Economics.",
-      "lab_sid": "t-x-dy",
-      "similar": ["Dividends to Price Ratio"]
-    },
-    {
-      "factor": "부채비율 (D/E)",
-      "spg": "Debt-to-Equity",
-      "group": "유사 팩터",
-      "subgroup": "Quality",
-      "description": "총부채 ÷ 자본총계 (낮을수록 좋음 · 재무 안정성)",
-      "rank_order": "오름차순",
-      "notes": "재무 안정성 팩터. 부채 항목이 없으면 자산 − 자본으로 메우고 자본잠식 종목은 뺀다. S&P Global 의 Financial Leverage·Book Leverage 는 총자산 ÷ 보통주 자기자본이라 거의 1 + 이 값이다(자본을 보통주로 좁힌 차이뿐) — 같은 축을 재지만 그쪽 순위 방향은 내림차순이고, 이 규칙은 오름차순(부채가 적을수록 위)이다.",
-      "formula": "D/E = Total Liabilities / Total Equity\n\n  부채 없음 → Total Assets − Total Equity\n  Equity ≤ 0 → 제외 · 회계 수치 : 기간 종료 90일 뒤부터 사용",
-      "citations": null,
-      "lab_sid": "t-x-lowde",
-      "similar": ["Financial Leverage", "Book Leverage"]
-    },
-    {
       "factor": "퍼센트 영업발생액",
       "spg": "Percent Operating Accruals",
-      "group": "유사 팩터",
+      "group": "Style Factor",
       "subgroup": "Quality",
       "description": "(순이익 − 영업현금흐름) ÷ |순이익| (낮을수록 이익이 현금으로 뒷받침)",
       "rank_order": "오름차순",
@@ -177,12 +494,44 @@
       "formula": "POA = ( TTM(NI) − TTM(CFO) ) / | TTM(NI) |\n\n  NI : 순이익 · CFO : 영업활동현금흐름 (같은 12개월 창)\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
       "citations": "1) Sloan, R. G. (1996) Do Stock Prices Fully Reflect Information in Accruals and Cash Flows About Future Earnings? The Accounting Review.\n2) Hafzalla, N., Lundholm, R. & Van Winkle, E. M. (2011) Percent Accruals. The Accounting Review.",
       "lab_sid": "t-x-poacc",
-      "similar": ["Accrual Ratio - Cash Flows"]
+      "similar": [
+        "Accrual Ratio - Cash Flows"
+      ]
+    },
+    {
+      "factor": "비용규율",
+      "spg": "Cost Discipline",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "매출 증가율 − 매출원가 증가율 (전년 동기 대비)",
+      "rank_order": "내림차순",
+      "notes": "매출이 원가보다 빨리 늘면 마진이 벌어지는 중이다. 표준화하지 않은 값이다. S&P Global 은 비슷한 변화량(1-Year Change in Gross Profit Margin)을 Historical Growth 에 둔다.",
+      "formula": "CDisc = ( Rev_q / Rev_{q−4} − 1 ) − ( COGS_q / COGS_{q−4} − 1 )\n\n  Rev_{q−4} · COGS_{q−4} 가 둘 다 0 보다 클 때만\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Abarbanell, J. S. & Bushee, B. J. (1997) Fundamental Analysis, Future Earnings, and Stock Prices. Journal of Accounting Research.\n2) Abarbanell, J. S. & Bushee, B. J. (1998) Abnormal Returns to a Fundamental Analysis Strategy. The Accounting Review.",
+      "lab_sid": "t-x-cdisc",
+      "similar": [
+        "1-Year Change in Gross Profit Margin"
+      ]
+    },
+    {
+      "factor": "서브산업 영업이익률",
+      "spg": "Sub-Industry Operating Margin",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "GICS 서브산업별 영업이익률 중앙값 (서브산업 단위 순위)",
+      "rank_order": "내림차순",
+      "notes": "서브산업 모멘텀과 모든 것이 같고 정렬 축만 수익성으로 바꾼 짝 — 가격이 아니라 원인(마진)을 본다. 병목을 쥔 쪽이 마진을 가져간다는 가설이다. 흐름 항목이라 TTM 으로 읽는다.",
+      "formula": "SubOM_s = median_{i∈s}( TTM Operating Income / TTM Sales )\n\n  롱 : 상위 5 서브산업 · 숏 : 하위 5 서브산업 (소속 3종목 이상)\n  서브산업 안 시총 상위 5종목 · 두 다리 각각 합 1 (롱100/숏100)",
+      "citations": null,
+      "lab_sid": "t-x-subom",
+      "similar": [
+        "OP Margin"
+      ]
     },
     {
       "factor": "자산성장률",
       "spg": "Asset Growth",
-      "group": "유사 팩터",
+      "group": "Style Factor",
       "subgroup": "Quality",
       "description": "총자산의 전년 동기 대비 증가율 (낮을수록 좋음 · 보수적 투자)",
       "rank_order": "오름차순",
@@ -190,12 +539,29 @@
       "formula": "AG = TotalAssets_q / TotalAssets_{q−4} − 1\n\n  TotalAssets ≤ 0 → 제외 · clip ±200%\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
       "citations": "1) Cooper, M. J., Gulen, H. & Schill, M. J. (2008) Asset Growth and the Cross-Section of Stock Returns. Journal of Finance.",
       "lab_sid": "t-x-agrow",
-      "similar": ["Asset Growth - 1 Year"]
+      "similar": [
+        "Asset Growth - 1 Year"
+      ]
+    },
+    {
+      "factor": "비정상 자본투자",
+      "spg": "Abnormal Capital Investment",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "설비투자÷매출의 직전 3개 회계연도 평균 대비 증가율 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "설비투자를 갑자기 늘린 회사가 이후 부진하다는 관찰(과잉투자). 자산성장률과 같은 투자 계열이지만 총자산이 아니라 설비투자 강도의 이상치를 본다. 분기 리밸런스.",
+      "formula": "ACI = CE_t / mean( CE_{t−1}, CE_{t−2}, CE_{t−3} ) − 1\n\n  CE : 연간 설비투자 ÷ 연간 매출\n  | ACI | > 3 → 제외 · 금융업 제외\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Titman, S., Wei, K. C. J. & Xie, F. (2004) Capital Investments and Stock Returns. Journal of Financial and Quantitative Analysis.",
+      "lab_sid": "t-x-aci",
+      "similar": [
+        "Capital Expenditure to Sales"
+      ]
     },
     {
       "factor": "순주식발행",
       "spg": "Net Share Issuance",
-      "group": "유사 팩터",
+      "group": "Style Factor",
       "subgroup": "Quality",
       "description": "가중평균 희석주식수의 전년 동기 대비 증가율 (낮을수록 좋음 · 자사주 소각)",
       "rank_order": "오름차순",
@@ -203,7 +569,24 @@
       "formula": "ISS = Shares_q / Shares_{q−4} − 1\n\n  Shares : 가중평균 희석주식수\n  |ISS| > 50% → 제외",
       "citations": "1) Pontiff, J. & Woodgate, A. (2008) Share Issuance and Cross-Sectional Returns. Journal of Finance.",
       "lab_sid": "t-x-shiss",
-      "similar": ["1Y Chg in Shares Outstanding"]
+      "similar": [
+        "1Y Chg in Shares Outstanding"
+      ]
+    },
+    {
+      "factor": "차입금 증가율",
+      "spg": "Long-Term Debt Growth",
+      "group": "Style Factor",
+      "subgroup": "Quality",
+      "description": "장기차입금의 1년 전 대비 증가율 (낮을수록 좋음 · 순부채발행 회피)",
+      "rank_order": "오름차순",
+      "notes": "부채를 새로 많이 조달한 회사가 이후 부진하다는 관찰의 재무제표판 — 순주식발행(주식)과 짝을 이루는 조달 쪽 지표다. 정본은 3년 증가율인데 표본을 지키려고 1년으로 쟀다. 랩 카드 이름은 «총부채 증가율»이지만 쓰는 값은 장기차입금 태그다. 분기 리밸런스.",
+      "formula": "DebtGr = Debt_t / Debt_{t−1Y} − 1\n\n  Debt : 장기차입금 (LongTermDebtNoncurrent · LongTermDebt · LongTermDebtAndCapitalLeaseObligations 중 최근 보고 태그)\n  짝 간격 320~410일 · Debt_{t−1Y} ≤ 0 → 제외\n  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)",
+      "citations": "1) Spiess, D. K. & Affleck-Graves, J. (1999) The Long-Run Performance of Stock Returns Following Debt Offerings. Journal of Financial Economics.",
+      "lab_sid": "t-x-debtiss",
+      "similar": [
+        "Year over Year Change of Total Debt"
+      ]
     }
   ]
 }

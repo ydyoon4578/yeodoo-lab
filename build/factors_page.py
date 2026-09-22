@@ -8,16 +8,17 @@
       build/factors_lab.json — 여두 전략 랩 규칙에서 옮긴 팩터(공개 · 저장소에 있다).
       원표 열에 lab_sid(explorer 카드) · similar(비슷한 원표 팩터 이름 목록)를 더한 모양이다.
       🚨 2026-09-22 사용자 «Style Factor에 추가할만한거 … Low Volatility, Momentum, Size, Value,
-        Quality 로 분류» · «S&P Global은 건들면 안돼. 비슷한 팩터는 스타일 팩터 오른쪽에 따로 분류».
+        Quality 로 분류» · «S&P Global은 건들면 안돼» · 같은 날 «유사 팩터 탭 없애고 분류 가능하면
+        다 스타일 팩터에 넣어줘. 그리고 팩터 옆에 랩을 붙일 필요는 없어».
         → 원표 행 **뒤에** 이어 붙인다. 원표 행은 순서·문구·번호(#f1…)가 그대로다.
-          비슷한 원표 팩터가 있는 것은 group «유사 팩터»(분류 단추가 Style Factor 오른쪽에 온다),
-          없는 것은 group «Style Factor». 둘 다 소분류는 다섯 스타일 중 하나다.
+          group 은 전부 «Style Factor», 소분류는 다섯 스타일 중 하나다. 줄 옆에 «랩» 표시를 달지
+          않는다 — 출처(규칙 카드)와 비슷한 원표 팩터는 펼친 본문에만 링크로 둔다.
 출력  factors.html 의 <!-- FACTORS:BEGIN --> ~ <!-- FACTORS:END --> 구간(요약 수치·필터 선택지·목록).
       머리·스타일·스크립트·메뉴는 손대지 않는다(메뉴는 sync_nav, 셸은 sync_shell 몫).
 
 원칙  값은 **원표 그대로** 싣는다 — 문구를 고치거나 줄이지 않는다. 순서도 원표 순서다.
       빈 값(NULL)은 '—' 로 보이게 둔다(없는 것을 없다고 표시한다).
-      랩 행은 줄마다 «랩» 표시와 출처(카드 링크)를 달아 원표 행과 섞여 읽히지 않게 한다.
+      랩 행은 펼친 본문에 출처(카드 링크)를 달고, 요약줄에 «랩 규칙에서 옮김 N» 을 적는다.
 실행  python build/factors_page.py            굽기
       python build/factors_page.py --check    페이지가 입력과 같은지만 본다(다르면 종료코드 1)
       ⚠ 입력이 반입 금지라 CI 러너에는 없다 — --check 를 CI 에 걸지 말 것.
@@ -36,9 +37,10 @@ KEYS = ("factor", "spg", "group", "subgroup", "description", "rank_order",
         "notes", "formula", "citations")
 # rank_order 원문 → (필터 키, 화면 표기). 원문 낱말은 그대로 두고 화살표만 덧붙인다.
 DIR = {"오름차순": ("asc", "오름차순 ↑"), "내림차순": ("desc", "내림차순 ↓")}
-KNOWN_GROUPS = {"S&P Global": "sp", "Style Factor": "st", "유사 팩터": "sim"}
+KNOWN_GROUPS = {"S&P Global": "sp", "Style Factor": "st"}
 # 랩 행이 들어갈 수 있는 그룹과 소분류 — 사용자가 정한 다섯 스타일 밖으로 나가지 않게 막는다.
-LAB_GROUPS = ("Style Factor", "유사 팩터")
+# («유사 팩터» 그룹은 2026-09-22 사용자 결정으로 없앴다 — 되살리지 말 것.)
+LAB_GROUPS = ("Style Factor",)
 STYLE_SUBS = ("Low Volatility", "Momentum", "Size", "Value", "Quality")
 
 
@@ -90,11 +92,6 @@ def load():
         if not re.fullmatch(r"t-[a-z0-9-]+", r.get("lab_sid") or ""):
             raise SystemExit("랩 행 lab_sid 가 explorer 카드 id(t-…) 가 아니다: %s" % nm)
         sim = r.get("similar") or []
-        # 유사 팩터는 짝이 있어야 하고, Style Factor 로 넣은 것은 짝이 없어야 한다 — 두 판정이 갈리면 분류가 틀린 것이다.
-        if r["group"] == "유사 팩터" and not sim:
-            raise SystemExit("«유사 팩터» 인데 similar 가 비었다: %s" % nm)
-        if r["group"] == "Style Factor" and sim:
-            raise SystemExit("similar 가 있는데 «Style Factor» 로 넣었다 — «유사 팩터» 로 옮길 것: %s" % nm)
         for s in sim:
             if s not in base:
                 raise SystemExit("similar 가 가리키는 원표 팩터가 없다: %r (%s) — 원표가 바뀌었나" % (s, nm))
@@ -138,7 +135,7 @@ def render(d):
          '<span>소분류 <b class="tnum">%d</b>개</span><span>원표 추출 <b class="tnum">%s</b></span>%s</p>'
          % (len(rows), "".join('<span>%s <b class="tnum">%d</b></span>' % (esc(g or "—"), gc[g]) for g in groups),
             len(subs), esc(d["extracted"]),
-            ('<span>랩 추가 <b class="tnum">%d</b> (여두 전략 랩 규칙 · 원표 아님)</span>' % n_lab) if n_lab else "")]
+            ('<span>랩 규칙에서 옮김 <b class="tnum">%d</b></span>' % n_lab) if n_lab else "")]
     L.append('<div class="fxbar">')
     L.append('<input type="search" id="fxq" placeholder="팩터명·설명·산식·참고문헌 검색" aria-label="팩터 검색" autocomplete="off">')
     L.append('<div class="fxg" role="group" aria-label="그룹">'
@@ -175,11 +172,10 @@ def render(d):
                         % (esc(r["lab_sid"]), esc(r["lab_sid"])))
         L.append('<details class="fx" id="f%d" data-g="%s" data-sg="%s" data-dir="%s"><summary>'
                  '<span class="fxn">%s</span><span class="fxd">%s</span>'
-                 '<span class="fxm">%s<span class="chip">%s</span><span class="chip g-%s">%s</span>'
+                 '<span class="fxm"><span class="chip">%s</span><span class="chip g-%s">%s</span>'
                  '<span class="dir">%s</span></span></summary><div class="fxb">%s</div></details>'
                  % (i, gk[r["group"]], esc(r["subgroup"] or ""), dk,
                     esc(r["factor"]), esc(r["description"] or "—"),
-                    '<span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span>' if lab else "",
                     esc(r["subgroup"] or "—"), gk[r["group"]], esc(r["group"] or "—"), esc(dl),
                     "".join(body)))
     L.append('<p class="fxempty" id="fxempty" hidden>조건에 맞는 팩터가 없습니다.</p>')
