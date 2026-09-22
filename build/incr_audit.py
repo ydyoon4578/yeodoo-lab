@@ -67,6 +67,16 @@ def ols3(y, x1, x2):
     res = [y[i] - (beta[0] + beta[1] * x1[i] + beta[2] * x2[i]) for i in range(k)]
     s2 = sum(v * v for v in res) / (k - 3)
     se_a = math.sqrt(s2 * inv00)
+    # 🚨 잔차가 0 이면 t 가 정의되지 않는다 — 여기서 0 으로 나눠 **감사가 통째로 죽었다**
+    #   (2026-09-22 실측). 원인은 게시 목록에 **전 구간 무보유** 규칙이 들어온 것이다:
+    #   t-x-ratehot 의 월수익이 121개월 전부 정확히 0.0 이라 벤치+나머지로 완전히
+    #   재구성되고, 그러면 s2 = 0 → se_a = 0 이 된다.
+    #   ⚠ 죽으면 그 한 종이 아니라 **191종의 결과가 하나도 안 남는다.** 위 특이행렬과
+    #     같은 자리에서 None 을 돌려 그 규칙만 «못 잼» 으로 적고 나머지를 살린다.
+    #   ⚠ 이 규칙을 목록에서 빼지는 않는다 — 재편입은 사용자 결정(2026-09-21)이고,
+    #     «안 돈 것» 이라는 사실은 PIT 쪽(coverage.warn·excluded)에도 따로 남아 있다.
+    if not (se_a > 0):
+        return None
     return (beta[0] * 12, beta[0] / se_a, beta[1], beta[2],
             st.stdev(res) * math.sqrt(12))
 
@@ -101,8 +111,15 @@ def main():
         xo = [st.mean([M[o][m] for o in others if m in M[o]]) for m in ms]
         out = ols3(y, xb, xo)
         if out is None:
+            # ⚠ 사유를 «특이행렬» 하나로 뭉뚱그리지 않는다 — 잔차 0(전 구간 무보유처럼
+            #   계열이 상수인 경우)도 여기로 온다. 둘은 다른 일이고, 빈칸이 아니라
+            #   무엇 때문에 못 쟀는지가 남아야 한다.
+            _flat = len(set(y)) <= 1
             rows.append({"sid": s, "name": NM.get(s, (s, ""))[0], "n": len(ms),
-                         "alpha": None, "t": None, "note": "특이행렬"})
+                         "alpha": None, "t": None,
+                         "note": ("월수익이 전 구간 상수(%.4f)라 t 를 만들 수 없다 — "
+                                  "성과 0 이 아니라 안 돈 것일 수 있다" % y[0]) if _flat else
+                                 "특이행렬이거나 잔차 0 — t 를 만들 수 없다"})
             continue
         a, ta, b, g, rv = out
         rows.append({"sid": s, "name": NM.get(s, (s, ""))[0], "role": NM.get(s, (s, ""))[1],

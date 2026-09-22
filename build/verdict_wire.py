@@ -18,6 +18,19 @@
     판정: 기각             기각 · 게시 · 측정만 · 보류  중 하나
     규칙: x-a1payout       이 판정이 걸리는 sid(여럿이면 콤마 · 규칙이 아니면 «없음»)
 
+  🚨 **판정이 갈리는 배치는 sid 뒤에 괄호로 적는다**(2026-09-22 추가).
+
+      규칙: x-volcv(기각), x-dalpha(게시)
+
+    왜 넓혔나. 종전에는 한 낱말이 sid **전부**에 걸려서, 한 등록서에서 하나는 죽고
+    하나는 사는 배치를 적을 수가 없었다. 그런 문서(PXSTAT)는 «대표값 한 낱말 + 본문이
+    정본» 으로 우회했는데, 그 우회는 **게시가 0 일 때만** 안전하다 — 대표값을 «기각» 으로
+    두면 같이 적힌 게시 규칙이 기각으로 검사되고, «게시» 로 두면 기각 규칙이 배선
+    검사에서 통째로 빠진다. 뒤쪽이 바로 이 파일이 막으려고 만들어진 그 구멍이다.
+    ⚠ 이 확장은 검사를 **느슨하게 하지 않는다.** 괄호가 없으면 종전과 한 글자도 다르지
+      않게 동작하고(문서 57편이 그대로다), 괄호를 쓰면 sid 마다 따로 묶여 더 엄해진다.
+      사망 조건이나 판정 어휘는 건드리지 않았다.
+
 무엇을 자동으로 하고 무엇을 안 하나.
   **자료는 쓴다** — 기각인데 build/tested_not_published.json 에 없으면 **넣는다.**
     ⚠ 사유(why)를 **지어내지 않는다.** 판정 줄과 «사유는 이 문서 참조» 만 적는다.
@@ -62,9 +75,21 @@ def declarations() -> tuple[list, list]:
             missing.append(fn)
             continue
         v = mv.group(1).strip()
-        sids = [] if "없음" in ms.group(1) else [
-            s.strip() for s in re.split(r"[,·]", ms.group(1)) if s.strip()]
-        out.append({"doc": fn, "verdict": v, "sids": sids})
+        sids, per = [], {}
+        if "없음" not in ms.group(1):
+            for s in re.split(r"[,·]", ms.group(1)):
+                s = s.strip()
+                if not s:
+                    continue
+                # sid(판정) — 괄호가 붙은 sid 만 문서 판정 대신 그 낱말로 검사한다.
+                #   괄호가 없으면 per 가 비고 문서 판정을 쓴다 = 종전 동작 그대로.
+                m = re.match(r"^(\S+?)\s*[（(]\s*(.+?)\s*[）)]\s*$", s)
+                if m:
+                    sids.append(m.group(1))
+                    per[m.group(1)] = m.group(2)
+                else:
+                    sids.append(s)
+        out.append({"doc": fn, "verdict": v, "sids": sids, "per": per})
     return out, missing
 
 
@@ -103,6 +128,12 @@ def main(argv) -> int:
                         % (d["doc"], v[:24], " · ".join(VERDICTS)))
             continue
         for sid in d["sids"]:
+            # 괄호로 따로 적은 sid 는 그 판정으로, 아니면 문서 판정으로 검사한다.
+            v = d["per"].get(sid, d["verdict"])
+            if not any(k in v for k in VERDICTS):
+                errs.append("%s: 규칙 %s 의 판정 «%s» 을 못 읽었다 — %s 중 하나로 적을 것"
+                            % (d["doc"], sid, v[:24], " · ".join(VERDICTS)))
+                continue
             pub = sid in S["published"] or ("t-" + sid) in S["published"]
             if "기각" in v:
                 # ① 게시돼 있으면 **코드를 고쳐야 한다** — 여기서 안 만진다.
