@@ -114,6 +114,15 @@
      "effort": "S"
     },
     {
+     "name": "S&P 팩터 Top10",
+     "file": "factorbt.html",
+     "status": "existing",
+     "desc": "S&P Global 팩터 314개마다 S&P 500·NASDAQ 100 상위 10종목을 매월 다시 고른 11년 백테스트",
+     "src": "model",
+     "verdict": "unverified",
+     "effort": "M"
+    },
+    {
      "name": "거장 포트폴리오·매매",
      "file": "guru.html",
      "status": "existing",

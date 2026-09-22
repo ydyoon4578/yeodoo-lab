@@ -49,6 +49,11 @@ WF = os.path.join(ROOT, ".github", "workflows")
 # ⚠ 여기에 넣는 것은 «잡에 넣지 못하는 이유» 가 있어야 한다. «아직 안 했다» 는 이유가
 #   아니다. 이유 없이 조용히 만들려고 넣으면 이 감사가 있는 뜻이 사라진다.
 KNOWN = {
+    "factor_bt.json":
+        "S&P Global 팩터 Top10 백테스트(build/factor_bt.py · factorbt.html). 입력이 사내 팩터 자료 추출물"
+        "(build/factor_bt_src/ · 반입 금지 · gitignore)이라 러너가 재생산할 수 없다. 팩터 월말 자료가 들어오는 "
+        "월초에 **손으로 굽는다** — 추출(저장소 밖) → python build/factor_bt.py. 현재 보유의 MTD 칸만 "
+        "stocks·sd 를 따라 낡는다(굽는 날까지의 값이다).",
     "_qg_diag.json":
         "진단 3종(build/qg_diag.py · 구조 1/HHI·Jaccard · 다중검정 셔플 500회·DSR · "
         "Funnel Value-Add). 입력이 고정(사내 pkl)이라 낡을 길이 없고 카드가 diag 로 읽는다. "

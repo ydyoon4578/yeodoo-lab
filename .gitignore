@@ -213,3 +213,6 @@ data/_single_table.json
 
 # 국면별 계측(2026-09-20) — build/regime_table.py 로 재생성된다.
 data/_regime_table.json
+
+# S&P Global 팩터 Top10 백테스트 입력 — 사내 자료 추출물(저장소 밖 추출 스크립트가 만든다). 반입 금지.
+build/factor_bt_src/

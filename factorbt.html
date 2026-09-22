@@ -4,127 +4,102 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — S&P 518사의 8-K 수시공시 원문 피드. 회사가 스스로 단 Item 코드로만 분류하고, 해설이나 전망은 붙이지 않습니다.">
-<title>여두 · 8-K 공시 피드</title>
+<meta name="description" content="여두 전략 랩 — S&amp;P Global 팩터 314개 각각의 상위 10종목을 매월 다시 고른 백테스트. S&amp;P 500·NASDAQ 100 시점정합 · 성과·기간별·연도별·보유 명단.">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<title>여두 · S&amp;P Global 팩터 Top10</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
-<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/filings.html">
-<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/filings.html">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/factorbt.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/factorbt.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
-<meta property="og:title" content="여두 · 8-K 공시 피드">
-<meta property="og:description" content="기사가 아니라 8-K 원문 — 회사가 스스로 단 Item 코드로 분류하고 해설은 붙이지 않습니다.">
+<meta property="og:title" content="여두 · S&amp;P Global 팩터 Top10">
+<meta property="og:description" content="S&amp;P Global 팩터 314개마다 S&amp;P 500·NASDAQ 100 상위 10종목을 매월 다시 고른 11년 백테스트 — 성과·기간별·연도별·보유 명단.">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="여두 · 8-K 공시 피드">
-<meta name="twitter:description" content="기사가 아니라 8-K 원문 — Item 코드로 분류, 해설 없음.">
-<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<meta name="twitter:title" content="여두 · S&amp;P Global 팩터 Top10">
+<meta name="twitter:description" content="S&amp;P Global 팩터 314개마다 S&amp;P 500·NASDAQ 100 상위 10종목을 매월 다시 고른 11년 백테스트 — 성과·기간별·연도별·보유 명단.">
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
   :root{
     --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
-    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;
-    --deploy:#0C7A4A;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;
-    --shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    --good:#0E8A54;--marg:#A35510;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
   }
   @media (prefers-color-scheme:dark){:root{
     --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
-    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;
-    --deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;
-    --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;
+    --good:#38D083;--marg:#F0863C;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
   }}
-  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--deploy:#0C7A4A;--marg:#A35510;--champ:#2C6E8F;--rp:#7A5AA6;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 10px 30px -16px rgba(23,39,51,.18);}
-  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--deploy:#38D083;--marg:#F0863C;--champ:#6BB0D6;--rp:#B79AE0;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 14px 34px -16px rgba(0,0,0,.6);}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--good:#0E8A54;--marg:#A35510;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--good:#38D083;--marg:#F0863C;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
+  /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
   /* 폭 토큰은 셸이 보장한다(build/sync_shell.py) — 페이지 사본은 2026-08-10 에 걷어냈다.
      사본이 1440 으로 남아 있었는데 셸은 1680 이었다. 지금은 셸이 뒤에 와서 셸이 이기지만,
      CSS 순서가 바뀌면 조용히 뒤집힌다. 같은 값을 두 곳에 두지 않는다. */
-  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   *,*::before,*::after{box-sizing:border-box}
+  /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
+     떨어졌고, 영문만 Segoe UI로 갈렸다 — 한 글꼴로 통일한다. 숫자·차트 라벨은 고정폭(--mono)
+     유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
-  a{color:inherit}
-  .tnum{font-variant-numeric:tabular-nums}
-  .wrap{max-width:var(--w-base);margin:0 auto;padding:0 22px 80px}
-  @media(max-width:640px){.wrap{padding:0 14px 60px}}
-
-  header.mast{padding:40px 0 22px;border-bottom:1px solid var(--line)}
-  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:12px}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
+     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
+     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
+  .wrap{max-width:var(--w-read);margin:0 auto;padding:0 20px 70px}
+  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
+  a.home:hover{border-color:var(--accent);color:var(--ink)}
+  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
+  header.mast{padding:64px 0 16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
   .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
-  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(25px,4.4vw,36px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 0;text-wrap:balance}
-  .lede{margin:14px 0 0;max-width:74ch;font-size:15px;color:var(--ink-2)}
-  .lede b{color:var(--ink)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
+  .lede{margin:12px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)} .lede b{color:var(--ink)}
 
-  .tally{margin:22px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
-  .ty{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--edge,var(--line));border-radius:2px;padding:13px 15px;box-shadow:var(--shadow)}
-  .ty b{display:block;font-family:var(--mono);font-size:26px;font-weight:800;color:var(--edge,var(--ink));line-height:1}
-  .ty span{display:block;margin-top:5px;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
-  .ty em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+  .policy{margin:18px 0 0;padding:13px 16px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:13px;color:var(--ink-2);line-height:1.7}
+  .policy b{color:var(--ink)}
 
-  .lbl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);font-weight:700;margin:40px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .lbl::before{content:"";width:3px;height:14px;background:var(--accent);border-radius:2px;flex:none}
-  .lblnote{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.65}
+  .lbl{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:30px 0 12px}
 
-  .note{background:var(--panel-2);border:1px solid var(--line-soft);border-left:3px solid var(--marg);border-radius:2px;padding:12px 16px;margin:16px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
-  /* details.more — 이 파일이 class="more" 를 쓰는데 규칙이 없어 요약 화살표·여백이 안 붙었다.
-     index.html 482~489 행의 정본을 그대로 옮긴다(2026-08-03). */
-  details.more{margin-top:7px}
-  details.more>summary{cursor:pointer;color:var(--ink-2);list-style:none;display:inline-flex;align-items:center;gap:5px}
-  details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary::before{content:'\25B8';font-size:11px}
-  details.more[open]>summary::before{content:'\25BE'}
-  details.more>summary:hover{color:var(--accent)}
-  details.more .mbody{margin-top:7px}
-  details.more .mbody p{margin:0 0 6px} details.more .mbody p:last-child{margin-bottom:0}
-  .note b{color:var(--ink)}
-  .note.hard{border-left-color:var(--hot)}
-  .skel{font-family:var(--mono);font-size:12.5px;color:var(--muted);padding:20px 0}
+  .srcwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow)}
+  .srctbl{border-collapse:collapse;width:100%;min-width:640px;font-size:12.5px}
+  .srctbl th,.srctbl td{padding:10px 14px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}
+  .srctbl thead th{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .srctbl tbody tr:last-child th,.srctbl tbody tr:last-child td{border-bottom:none}
+  .srctbl tbody th{font-weight:600;white-space:nowrap}
+  .srctbl tbody th a{color:var(--ink);text-decoration:none}
+  .srctbl tbody th a:hover{color:var(--accent)}
+  .srctbl td{color:var(--ink-2)}
+  .srctbl .dt{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+  .srctbl .stale{display:inline-block;margin-left:6px;font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--hot);background:color-mix(in srgb,var(--hot) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--hot) 40%,transparent);border-radius:2px;padding:1px 5px;white-space:nowrap}
+  .srctbl .dbrow{background:color-mix(in srgb,var(--marg) 6%,transparent)}
+  .dbtag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--marg);border:1px solid color-mix(in srgb,var(--marg) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
+  .freetag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--good);border:1px solid color-mix(in srgb,var(--good) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
 
-  /* ── 필터 ── */
-  .filters{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:14px 16px;margin:0 0 16px}
-  .frow{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-  .frow+.frow{margin-top:11px;padding-top:11px;border-top:1px solid var(--line-soft)}
-  .frow>.fl{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;flex:none;width:64px}
-  input[type=search]{font-family:var(--mono);font-size:12.5px;padding:7px 11px;border:1px solid var(--line);border-radius:2px;background:var(--ground);color:var(--ink);min-width:190px}
-  input[type=search]:focus{outline:2px solid var(--accent);outline-offset:1px}
-  .chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 10px;border:1px solid var(--line);border-radius:2px;background:var(--ground);color:var(--ink-2);cursor:pointer;line-height:1.4}
-  .chip:hover{border-color:var(--accent);color:var(--ink)}
-  /* 선택 칩은 accent 배경 위에 글자를 올린다. 다크에서 --panel은 밝지 않아 대비가 죽으므로
-     양쪽 테마 모두에서 어두운 글자로 고정한다(accent가 라이트=황토, 다크=노랑이라 둘 다 밝은 편). */
-  .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#FFFFFF}
-  @media (prefers-color-scheme:dark){.chip[aria-pressed=true]{color:#131820}}
-  :root[data-theme="light"] .chip[aria-pressed=true]{color:#FFFFFF}
-  :root[data-theme="dark"] .chip[aria-pressed=true]{color:#131820}
-  .chip .cn{font-weight:500;opacity:.75;margin-left:4px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:16px 19px;margin-bottom:12px}
+  .card h3{margin:0;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3 a{color:var(--ink);text-decoration:none} .card h3 a:hover{color:var(--accent)}
+  .card p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65}
+  .card .meta{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:11.5px}
+  .card .meta span{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:2px 8px;color:var(--ink-2)}
+  .card .meta b{color:var(--muted);font-weight:600;margin-right:5px}
+  .card .meta i{font-style:normal}
+  /* .card .meta span 은 칩 스타일인데 자손 선택자라 **칩 안의 값 span까지** 잡아
+     배경·테두리·패딩이 이중으로 걸렸다(값이 상자 안 상자로 보이고 칩이 불필요하게 넓어진다).
+     값은 평평하게 — 갱신 시각을 넣은 <i>와 생김새를 맞춘다. */
+  .card .meta span span{background:none;border:0;padding:0}
 
-  /* ── 피드 ── */
-  .feed{display:flex;flex-direction:column;gap:1px}
-  .fil{display:grid;grid-template-columns:96px 92px 1fr auto;gap:3px 13px;align-items:baseline;padding:11px 2px;border-top:1px solid var(--line-soft)}
-  .fil:first-child{border-top:0}
-  .fil .fd{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
-  .fil .ft{font-family:var(--mono);font-size:13px;font-weight:800;letter-spacing:-.01em}
-  .fil .ft a{text-decoration:none} .fil .ft a:hover{color:var(--accent)}
-  .fil .fi{display:flex;gap:6px;flex-wrap:wrap}
-  .fil .fo{font-family:var(--mono);font-size:11px;white-space:nowrap}
-  .fil .fo a{color:var(--accent);text-decoration:none} .fil .fo a:hover{text-decoration:underline}
-  .fil .fn{grid-column:2/-1;font-size:11.5px;color:var(--muted);line-height:1.5}
-  .it{font-family:var(--mono);font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);color:var(--ink-2);white-space:nowrap}
-  .it.maj{border-color:var(--hot);color:var(--hot);background:transparent}
-  .it .ic{opacity:.65;font-weight:500;margin-right:5px}
-  @media(max-width:720px){
-    .fil{grid-template-columns:1fr auto}
-    .fil .fd{grid-column:1} .fil .ft{grid-column:1} .fil .fi{grid-column:1/-1} .fil .fn{grid-column:1/-1}
-  }
-
-  .more{display:block;width:100%;margin:16px 0 0;padding:11px;font-family:var(--mono);font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:2px;color:var(--ink-2);cursor:pointer}
-  .more:hover{border-color:var(--accent);color:var(--ink)}
-
-  .leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:1px 18px}
-  .leg div{font-size:12px;padding:5px 0;border-top:1px solid var(--line-soft);color:var(--ink-2)}
-  .leg code{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:700;margin-right:7px}
-  .leg .mj code{color:var(--hot)}
-
-  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
-  footer a{color:var(--accent);text-decoration:none} footer a:hover{text-decoration:underline}
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
   a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important}}
+  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
+  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
+  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
 
 /* SHELL:BEGIN */
 /* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
@@ -341,8 +316,61 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
 </style>
 <!-- NAVCSS:END -->
+
+<style>
+  /* S&P Global 팩터 Top10 — style.html 의 스타일 카드와 같은 짜임. 다른 점: 팩터가 314개라 탭 대신 스타일군 탭 +
+     정렬되는 순위표를 앞에 두고, 팩터를 고르면(#f=번호) 스타일 카드와 같은 모양의 상세로 간다.
+     기간이 11년이라 누적 곡선은 로그 눈금이다(선형이면 앞쪽 몇 해가 바닥에 눌린다). */
+  .wrap{max-width:var(--w-base)}
+  .pghead h1{font-size:1.6rem;margin:0 0 .2rem}
+  .pghead .sub{color:var(--muted);margin:0 0 1rem;font-size:.92rem}
+  .tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:0 0 .8rem}
+  .tabs a{padding:.34rem .7rem;border:1px solid var(--line);border-radius:2px;
+    text-decoration:none;color:var(--ink-2);font-size:.9rem;background:var(--panel)}
+  .tabs a .n{color:var(--muted);font-size:.78rem;margin-left:.3rem}
+  .tabs a[aria-current="page"]{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:600}
+  .tabs a[aria-current="page"] .n{color:inherit;opacity:.85}
+  .tools{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin:0 0 .7rem}
+  .tools input{padding:.38rem .6rem;border:1px solid var(--line);border-radius:2px;background:var(--panel);
+    color:var(--ink);font:inherit;font-size:.88rem;min-width:260px}
+  .tools .cnt{color:var(--muted);font-size:.84rem}
+  .tools[hidden]{display:none}     /* display:flex 가 hidden 속성을 덮지 않게 */
+  .stwrap{display:grid;gap:1rem}
+  .stwrap>*,.two>*{min-width:0}   /* 그리드 칸은 기본 min-width:auto — 안쪽 넓은 표가 칸을 밀어 페이지가 가로로 넘친다(모바일 415px 실측) */
+  .stwrap h2{font-size:1.15rem;margin:.2rem 0 .1rem;overflow-wrap:anywhere}
+  .stwrap .ref{color:var(--accent);font-size:.85rem}
+  .stwrap .desc{color:var(--ink-2);font-size:.9rem;line-height:1.62;margin:.35rem 0 .2rem;white-space:pre-line}
+  .stwrap h3{font-size:.98rem;margin:.2rem 0 .4rem}
+  .back{font-size:.86rem;margin:0 0 .2rem}
+  table.st{width:100%;border-collapse:collapse;font-size:.86rem}
+  table.st th,table.st td{padding:.3rem .45rem;border-bottom:1px solid var(--line);text-align:right}
+  table.st th:first-child,table.st td:first-child{text-align:left}
+  table.st thead th{background:var(--panel-2);font-weight:600;color:var(--ink-2)}
+  table.rank td.nm,table.rank th.nm,table.rank td.gp,table.rank th.gp{text-align:left}
+  table.rank td.nm a{text-decoration:none}
+  table.rank td.nm .fid{color:var(--muted);font-size:.76rem;margin-left:.3rem}
+  table.rank tr.bm td{background:var(--panel-2);font-weight:600}
+  table.rank th.sort{cursor:pointer;user-select:none;white-space:nowrap}
+  table.rank th.sort:hover{color:var(--accent)}
+  table.rank th[aria-sort="descending"]::after{content:" ↓"}
+  table.rank th[aria-sort="ascending"]::after{content:" ↑"}
+  .pos{color:var(--good)}.neg{color:var(--hot)}.mut{color:var(--muted)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:760px){.two{grid-template-columns:1fr}.tools input{min-width:0;width:100%}}
+  .scroll{overflow-x:auto}
+  .newin{color:var(--good);font-weight:600}
+  .gone{color:var(--hot)}
+  .note{color:var(--muted);font-size:.82rem;line-height:1.6;margin:.6rem 0 0}
+  .note.warn{color:var(--hot)}
+  svg.curve{width:100%;height:auto;display:block}
+  .lgd{display:flex;align-items:center;gap:.3rem;font-size:.78rem;color:var(--muted);margin-top:.25rem}
+  .lgd i{display:inline-block;width:16px;height:0;border-top:2px solid var(--accent);margin-left:.55rem}
+  .lgd i:first-child{margin-left:0}
+  .lgd i.l2{border-top:1px dashed var(--muted)}
+  .lgd i.l3{border-top:1px dotted var(--muted)}
+</style>
 </head>
-<body data-tool="filings.html">
+<body data-tool="factorbt.html">
 <!-- NAV:BEGIN -->
 <a class="skiplink" href="#main">본문 바로가기</a>
 <nav class="topnav" aria-label="주 메뉴">
@@ -486,185 +514,256 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 </script>
 <!-- NAV:END -->
 
-<div class="wrap" id="main">
-  <header class="mast">
-    <div class="eyebrow">Filings · 8-K 원문 피드</div>
-    <h1 class="title">기사가 아니라<br>회사가 낸 원문</h1>
-    <p class="lede">미국 상장사는 보고 의무가 생긴 사건을 <b>8-K</b>로 제출하면서, 그게 무슨 사건인지를
-      <b>Item 번호로 스스로 분류</b>합니다. 이 피드가 분류를 붙일 수 있는 이유가 그것입니다 —
-      랩이 원문을 읽고 판단한 게 아니라, 회사가 단 번호에 한국어 이름만 붙였습니다.</p>
-    <div class="tally" id="tally"><div class="ty"><b>—</b><span>불러오는 중</span></div></div>
+<main id="main">
+<div class="wrap">
+  <header class="pghead">
+    <h1>S&amp;P Global 팩터 Top10</h1>
+    <p class="sub" id="sub">팩터마다 상위 10종목 동일가중 · 월말 리밸런스</p>
   </header>
 
-  <div class="note hard">
-    <b>이 화면이 하지 않는 것</b> — 해설·요약·전망을 붙이지 않습니다. 어떤 Item이 주가에 어떻게 작용하는지
-    이 랩은 <b>검증한 적이 없고</b>, 그래서 중요도 점수나 매매 시사점을 만들지 않습니다.
-    피드는 "무엇이 언제 제출됐는가"까지만 말하고, 그다음은 원문 링크로 넘깁니다.
+  <!-- 스타일군 탭 — href="#g=…" 로 이동하는 링크 묶음이다(style.html 과 같은 이유로 tablist 역할을 달지 않는다). -->
+  <nav class="tabs" id="tabs" aria-label="스타일군 선택"></nav>
+  <div class="tools" id="tools" hidden>
+    <input type="search" id="q" placeholder="팩터 이름 찾기 (예: Momentum, Price, ROE)" aria-label="팩터 이름 찾기">
+    <span class="cnt" id="cnt"></span>
   </div>
 
-  <section aria-labelledby="feed-h">
-    <h2 class="lbl" id="feed-h">공시 피드</h2>
-    <p class="lblnote">최신순. 티커를 누르면 종목 화면으로, <b>원문</b>을 누르면 SEC EDGAR의 제출 문서로 갑니다.</p>
-
-    <div class="filters">
-      <div class="frow">
-        <span class="fl">검색</span>
-        <input type="search" id="q" placeholder="티커 (예: AAPL)" autocomplete="off" aria-label="티커 검색">
-        <button class="chip" id="majonly" aria-pressed="false" type="button">중요 항목만</button>
-        <button class="chip" id="reset" type="button">초기화</button>
-        <span id="hits" style="margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted)"></span>
-      </div>
-      <div class="frow">
-        <span class="fl">Item</span>
-        <div id="itemchips" class="frow" style="gap:6px;flex:1"></div>
-      </div>
-    </div>
-
-    <div id="feed"><div class="skel">불러오는 중…</div></div>
-    <button class="more" id="more" hidden type="button">더 보기</button>
-  </section>
-
-  <section aria-labelledby="leg-h">
-    <h2 class="lbl" id="leg-h">Item 코드 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· 출처 SEC Form 8-K 서식</span></h2>
-    <p class="lblnote"><span style="color:var(--hot)">붉은 코드</span>는 랩이 '중요'로 따로 묶은 항목입니다 —
-      회사의 존립·회계 신뢰성·지배구조에 걸리는 것들입니다. <b>주가 영향을 예측하는 분류가 아니라 편집 판단</b>이고,
-      그래서 원문 Item 코드를 항상 함께 보여줍니다.</p>
-    <div class="leg" id="leg"></div>
-  </section>
-
-  <div class="note" id="limits"></div>
+  <section id="body" aria-live="polite"><p class="muted">불러오는 중…</p></section>
 
   <footer>
-    <a href="index.html">← 전략 랩 홈</a> ·
-    <a href="stocks.html">종목 신호</a> · <a href="sources.html">데이터 출처·기준일</a>
-    <br>출처 SEC EDGAR submissions API · 무인증 공개 데이터 · 생성 <code>build/refresh_filings.py</code>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="factors.html">팩터 사전</a> · <a href="style.html">스타일 전략</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a><br>
+    과거 성과는 미래 수익을 보장하지 않습니다.
   </footer>
 </div>
+</main>
 
 <script>
 (function(){
-  var el=function(i){return document.getElementById(i);};
-  function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  var PAGE=150, shown=PAGE, D=null, sel={}, majOnly=false, q='';
+  var D=null, SORT={k:'sharpe',dir:-1}, Q='';
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function num(v,d){ if(v==null) return '—'; var x=Number(v).toFixed(d==null?2:d); return (v>0?'+':'')+x; }
+  function unum(v,d){ return v==null?'—':Number(v).toFixed(d==null?2:d); }
+  function cls(v){ return v==null?'mut':(v<0?'neg':'pos'); }
+  function route(){
+    var h=location.hash||'', m=/[#&]f=(\d+)/.exec(h);
+    if(m) return {f:+m[1]};
+    var g=/[#&]g=([a-z0-9]+)/i.exec(h);
+    return {g:g?g[1]:'all'};
+  }
+  function byId(id){ for(var i=0;i<D.factors.length;i++){ if(D.factors[i].id===id) return D.factors[i]; } return null; }
+  function gIndex(sub){ for(var i=0;i<D.groups.length;i++){ if(D.groups[i].key===sub) return i; } return -1; }
+  function gLab(sub){ var i=gIndex(sub); return i<0?sub:D.groups[i].ko; }
+  function dirLab(d){ return d==='desc'?'내림차순 ↓ — 값이 클수록 상위':'오름차순 ↑ — 값이 작을수록 상위'; }
+  function winPct(w){ return (w&&w[1])?100*w[0]/w[1]:null; }
 
-  function ty(v,lab,note,edge){
-    return '<div class="ty" style="--edge:'+edge+'"><b class="tnum">'+esc(v)+'</b><span>'+esc(lab)+'</span><em>'+esc(note)+'</em></div>';
-  }
-  // 원문 링크는 저장하지 않고 규칙으로 되짓는다(피드 파일이 두 배가 되는 걸 피하려고 조각만 담았다).
-  // p가 비면 SEC가 주 문서를 안 준 제출이라 제출 인덱스로 보낸다.
-  // f.c는 '이 제출은 전신 법인 CIK 아래에 있다'는 표시다(지주회사 전환 등으로 티커가
-  // 새 등록 법인으로 넘어간 경우). 없으면 대표 CIK를 쓴다.
-  function docUrl(f){
-    var cik=f.c||D.cik[f.t]; if(!cik||!f.a)return '';
-    return D.doc_base+cik+'/'+f.a+'/'+(f.p||'');
-  }
-  function isMaj(f){
-    for(var i=0;i<f.it.length;i++) if(D.major.indexOf(f.it[i])>=0) return true;
-    return false;
-  }
-  function match(f){
-    if(majOnly&&!isMaj(f))return false;
-    if(q&&f.t.toLowerCase().indexOf(q)<0)return false;
-    var keys=Object.keys(sel);
-    if(keys.length){
-      var hit=false;
-      for(var i=0;i<f.it.length;i++) if(sel[f.it[i]]){hit=true;break;}
-      if(!hit)return false;
-    }
-    return true;
+  function tabs(cur){
+    var h='<a href="#g=all"'+(cur==='all'?' aria-current="page"':'')+'>전체<span class="n">'+D.factors.length+'</span></a>';
+    D.groups.forEach(function(g,i){
+      h+='<a href="#g='+i+'"'+(String(i)===String(cur)?' aria-current="page"':'')+'>'+esc(g.ko)+
+         '<span class="n">'+g.n+'</span></a>';
+    });
+    document.getElementById('tabs').innerHTML=h;
   }
 
-  function render(){
-    var rows=D.feed.filter(match);
-    el('hits').textContent=rows.length.toLocaleString()+'건'+(rows.length!==D.feed.length?(' / '+D.feed.length.toLocaleString()):'');
-    if(!rows.length){
-      el('feed').innerHTML='<div class="skel">조건에 맞는 제출이 없습니다 — 필터를 넓혀 보세요.</div>';
-      el('more').hidden=true; return;
-    }
-    var slice=rows.slice(0,shown), h='<div class="feed">';
-    for(var i=0;i<slice.length;i++){
-      var f=slice[i], u=docUrl(f);
-      var its='';
-      for(var j=0;j<f.it.length;j++){
-        var c=f.it[j], nm=D.items[c], mj=D.major.indexOf(c)>=0;
-        its+='<span class="it'+(mj?' maj':'')+'"><span class="ic">'+esc(c)+'</span>'+esc(nm||'분류 미상')+'</span>';
+  // ── 순위표 ─────────────────────────────────────────────────────────────
+  var COLS=[['#',null],['팩터','name'],['스타일군','grp'],['방향','dir'],['연수익 %','cagr'],['변동성 %','vol'],['샤프','sharpe'],
+            ['MDD %','mdd'],['1년 %','r1'],['3년(연) %','r3'],['5년(연) %','r5'],['이긴 달 %','win'],['월 회전 %','turn']];
+  function val(f,k){
+    var m=f.metrics||{}, t=f.trails||{};
+    return {name:f.name,grp:gLab(f.sub),dir:f.dir,cagr:m.cagr,vol:m.vol,sharpe:m.sharpe,mdd:m.mdd,
+            r1:t['1년'],r3:t['3년(연)'],r5:t['5년(연)'],win:winPct(f.win&&f.win.spx),turn:f.turn}[k];
+  }
+  function listView(g){
+    var L=D.factors.filter(function(f){
+      if(g!=='all' && gIndex(f.sub)!==+g) return false;
+      if(Q && f.name.toLowerCase().indexOf(Q)<0 && String(f.desc||'').toLowerCase().indexOf(Q)<0) return false;
+      return true;
+    });
+    L.sort(function(a,b){
+      var x=val(a,SORT.k), y=val(b,SORT.k);
+      if(x==null&&y==null) return a.id-b.id; if(x==null) return 1; if(y==null) return -1;   // 빈 값은 늘 아래로
+      var c=(typeof x==='string')?(x<y?-1:x>y?1:0):(x-y);
+      return (SORT.dir>0?c:-c) || a.id-b.id;                                              // dir 1 = 오름차순, -1 = 내림차순
+    });
+    document.getElementById('cnt').textContent=L.length+'개 · 머리글을 누르면 정렬';
+    var h='<div class="scroll"><table class="st rank"><thead><tr>';
+    COLS.forEach(function(c){
+      var srt=c[1]?(' class="sort'+(c[1]==='name'?' nm':c[1]==='grp'?' gp':'')+'" data-k="'+c[1]+'"'+
+        (SORT.k===c[1]?' aria-sort="'+(SORT.dir<0?'descending':'ascending')+'"':'')):'';
+      h+='<th'+srt+'>'+esc(c[0])+'</th>';
+    });
+    h+='</tr></thead><tbody>';
+    ['spx','ndx'].forEach(function(k){
+      var b=D.bench[k], m=b.metrics, t=b.trails;
+      h+='<tr class="bm"><td>—</td><td class="nm">'+esc(b.label)+' <span class="fid">대조군</span></td><td class="gp mut">지수</td><td class="mut">—</td>'+
+        '<td>'+num(m.cagr)+'</td><td>'+unum(m.vol)+'</td><td>'+unum(m.sharpe)+'</td><td>'+num(m.mdd)+'</td>'+
+        '<td>'+num(t['1년'],1)+'</td><td>'+num(t['3년(연)'],1)+'</td><td>'+num(t['5년(연)'],1)+'</td><td class="mut">—</td><td class="mut">—</td></tr>';
+    });
+    L.forEach(function(f,i){
+      var m=f.metrics||{}, t=f.trails||{}, w=winPct(f.win&&f.win.spx);
+      h+='<tr><td class="mut">'+(i+1)+'</td>'+
+        '<td class="nm"><a href="#f='+f.id+'">'+esc(f.name)+'</a><span class="fid">#f'+f.id+(f.same_as?' = #f'+f.same_as:'')+'</span></td>'+
+        '<td class="gp mut">'+esc(gLab(f.sub))+'</td><td class="mut">'+(f.dir==='desc'?'↓':'↑')+'</td>'+
+        '<td class="'+cls(m.cagr)+'">'+num(m.cagr)+'</td><td>'+unum(m.vol)+'</td><td><b>'+unum(m.sharpe)+'</b></td>'+
+        '<td class="neg">'+num(m.mdd)+'</td><td class="'+cls(t['1년'])+'">'+num(t['1년'],1)+'</td>'+
+        '<td class="'+cls(t['3년(연)'])+'">'+num(t['3년(연)'],1)+'</td><td class="'+cls(t['5년(연)'])+'">'+num(t['5년(연)'],1)+'</td>'+
+        '<td>'+(w==null?'—':w.toFixed(0))+'</td><td class="mut">'+(f.turn==null?'—':f.turn)+'</td></tr>';
+    });
+    h+='</tbody></table></div>'+notes();
+    document.getElementById('body').innerHTML=h;
+    Array.prototype.forEach.call(document.querySelectorAll('th.sort'),function(th){
+      th.addEventListener('click',function(){
+        var k=th.getAttribute('data-k');
+        if(SORT.k===k) SORT.dir=-SORT.dir; else { SORT.k=k; SORT.dir=(k==='name'||k==='grp'||k==='dir'||k==='vol'||k==='turn')?1:-1; }
+        listView(g);
+      });
+    });
+  }
+
+  function notes(){
+    var fl=D.fill||{};
+    return '<p class="note">규칙 — '+esc(D.rule)+'. '+esc(D.basis)+
+      ' 팩터값은 <a href="factors.html">팩터 사전</a>의 S&amp;P Global 314개 팩터 월말 값이고, 순위 방향도 사전 그대로다(방향 ↓ 내림차순 = 값이 클수록 상위).</p>'+
+      '<p class="note">이긴 달 % = S&amp;P 500(PR)보다 수익이 높았던 달의 비율 · 월 회전 % = 매달 새로 들어온 종목 비율의 평균. '+
+      '보유 종목의 다음 달 수익이 팩터 자료에 없던 자리는 랩 일간 종가로 '+(fl.lab||0)+'곳, 보정표(월말 종가·사건 보정)로 '+(fl.fix||0)+
+      '곳을 메웠고, 그래도 없는 '+(fl.n||0)+'곳(전체 '+(fl.slots||0)+'곳의 '+((fl.slots?100*fl.n/fl.slots:0).toFixed(2))+'% · 대부분 인수로 상장폐지된 달)은 0 으로 두었다.</p>'+
+      '<p class="note warn">⚠ 314개를 한꺼번에 재면 우연히 좋아 보이는 것이 반드시 섞인다(다중검정). 순위 위쪽을 그대로 믿지 말고 기간별·연도별로 꾸준한지 볼 것.</p>';
+  }
+
+  // ── 상세(스타일 카드와 같은 짜임) ─────────────────────────────────────────
+  function curve(f){
+    var S=[{v:f.nav,c:'var(--accent)',w:2.2},{v:D.bench.spx.nav,c:'var(--muted)',w:1.3,d:'6 4'},{v:D.bench.ndx.nav,c:'var(--muted)',w:1.3,d:'2 4'}];
+    var all=[]; S.forEach(function(s){ s.v.forEach(function(y){ if(y!=null&&y>0) all.push(y); }); });
+    if(!all.length) return '';
+    var lo=Math.log(Math.min.apply(null,all)), hi=Math.log(Math.max.apply(null,all)), pd=(hi-lo)*0.06||0.1;
+    lo-=pd; hi+=pd;
+    var W=560,H=300,L=40,R=6,T=8,B=24, n=f.nav.length;   // 좌표계를 칸 폭 가까이 둬야 눈금 글자가 읽힌다
+    function X(i){ return L+(i/(n-1))*(W-L-R); }
+    function Y(v){ return T+(1-(Math.log(v)-lo)/(hi-lo))*(H-T-B); }
+    var g='';
+    [10,25,50,100,200,400,800,1600,3200,6400].forEach(function(t){
+      if(Math.log(t)<lo||Math.log(t)>hi) return;
+      var y=Y(t).toFixed(1);
+      g+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="var(--line)" stroke-width="'+(t===100?1.4:0.8)+'" vector-effect="non-scaling-stroke"/>'+
+         '<text x="'+(L-6)+'" y="'+(+y+4)+'" text-anchor="end" font-size="12" fill="var(--muted)">'+t+'</text>';
+    });
+    D.nav_months.forEach(function(m,i){
+      if(m.slice(5)==='01' && +m.slice(0,4)%2===0){
+        g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+m.slice(0,4)+'</text>';
       }
-      if(!f.it.length) its='<span class="it">Item 표기 없음</span>';
-      h+='<div class="fil">'+
-           '<div class="fd tnum">'+esc(f.d)+'</div>'+
-           '<div class="ft"><a href="stocks.html#t='+encodeURIComponent(f.t)+'">'+esc(f.t)+'</a></div>'+
-           '<div class="fi">'+its+'</div>'+
-           '<div class="fo">'+(u?'<a href="'+esc(u)+'" target="_blank" rel="noopener nofollow">원문 ↗</a>':'—')+'</div>'+
-           (f.rd&&f.rd!==f.d?'<div class="fn">사건일 '+esc(f.rd)+' · 제출일 '+esc(f.d)+'</div>':'')+
-         '</div>';
+    });
+    function path(v){
+      return v.map(function(y,i){ return y==null||y<=0?null:(i?'L':'M')+X(i).toFixed(1)+' '+Y(y).toFixed(1); }).filter(Boolean).join(' ');
     }
-    h+='</div>';
-    el('feed').innerHTML=h;
-    el('more').hidden=rows.length<=shown;
-    el('more').textContent='더 보기 ('+(rows.length-shown).toLocaleString()+'건 남음)';
+    return '<svg class="curve" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="누적 곡선 — 시작 100, 로그 눈금">'+g+
+      S.map(function(s){ return '<path d="'+path(s.v)+'" fill="none" vector-effect="non-scaling-stroke" stroke="'+s.c+'" stroke-width="'+s.w+'"'+(s.d?' stroke-dasharray="'+s.d+'"':'')+'/>'; }).join('')+
+      '</svg>';
   }
-
-  function buildChips(){
-    // 실제로 피드에 등장한 Item만 칩으로 세운다 — 안 쓰이는 코드까지 늘어놓으면 고르기가 어려워진다.
-    var cnt={};
-    D.feed.forEach(function(f){f.it.forEach(function(c){cnt[c]=(cnt[c]||0)+1;});});
-    var codes=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];});
-    var h='';
-    codes.forEach(function(c){
-      h+='<button class="chip" type="button" data-c="'+esc(c)+'" aria-pressed="false" title="'+esc(D.items[c]||'')+'">'+
-         esc(c)+' '+esc(D.items[c]||'분류 미상')+'<span class="cn">'+cnt[c]+'</span></button>';
+  function perf(f){
+    var b=D.bench, rows=[['연수익 %','cagr',2,1],['누적 %','cum',1,1],['변동성 %','vol',2,0],['샤프','sharpe',2,0],['MDD %','mdd',2,1]];
+    var h='<div class="scroll"><table class="st"><thead><tr><th>지표</th><th>전략</th><th>'+esc(b.spx.label)+
+      '</th><th>'+esc(b.ndx.label)+'</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var fm=r[3]?num:unum;
+      h+='<tr><td>'+r[0]+'</td><td class="'+(r[3]?cls(f.metrics[r[1]]):'')+'"><b>'+fm(f.metrics[r[1]],r[2])+'</b></td>'+
+        '<td class="mut">'+fm(b.spx.metrics[r[1]],r[2])+'</td><td class="mut">'+fm(b.ndx.metrics[r[1]],r[2])+'</td></tr>';
     });
-    el('itemchips').innerHTML=h;
-    el('itemchips').addEventListener('click',function(e){
-      var b=e.target.closest('.chip'); if(!b)return;
-      var c=b.getAttribute('data-c');
-      if(sel[c]){delete sel[c];b.setAttribute('aria-pressed','false');}
-      else{sel[c]=1;b.setAttribute('aria-pressed','true');}
-      shown=PAGE; render();
-    });
+    h+='<tr><td>이긴 달</td><td class="mut">—</td>'+
+       '<td class="'+(f.win.spx[0]*2>f.win.spx[1]?'pos':'neg')+'">'+f.win.spx[0]+'/'+f.win.spx[1]+'</td>'+
+       '<td class="'+(f.win.ndx[0]*2>f.win.ndx[1]?'pos':'neg')+'">'+f.win.ndx[0]+'/'+f.win.ndx[1]+'</td></tr>';
+    return h+'</tbody></table></div>';
   }
-
-  function buildLegend(){
-    var codes=Object.keys(D.items).sort(), h='';
-    codes.forEach(function(c){
-      var mj=D.major.indexOf(c)>=0;
-      h+='<div'+(mj?' class="mj"':'')+'><code>'+esc(c)+'</code>'+esc(D.items[c])+'</div>';
-    });
-    el('leg').innerHTML=h;
+  function grid(title,keys,get,lab){
+    var h='<h3>'+esc(title)+'</h3><div class="scroll"><table class="st"><thead><tr><th></th>'+
+      keys.map(function(k){return '<th>'+esc(lab?lab(k):k)+'</th>';}).join('')+'</tr></thead><tbody>';
+    function row(name,o,strong){
+      return '<tr><td>'+esc(name)+'</td>'+keys.map(function(k){ var v=o(k);
+        return '<td class="'+(strong?cls(v):'mut')+'">'+(strong?'<b>'+num(v,1)+'</b>':num(v,1))+'</td>'; }).join('')+'</tr>';
+    }
+    return h+row('전략',get.s,true)+row(D.bench.spx.label,get.spx)+row(D.bench.ndx.label,get.ndx)+
+      row('초과(vs S&P)',function(k){ var a=get.s(k), b=get.spx(k); return (a==null||b==null)?null:a-b; },true)+'</tbody></table></div>';
   }
-
-  fetch('data/filings.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
-    if(!j||!j.feed){
-      el('feed').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다</b> — <code>data/filings.json</code>이 아직 없거나 읽히지 않습니다. 추정치로 채우지 않습니다.</div>';
-      el('tally').innerHTML=ty('—','불러오기 실패','data/filings.json','var(--hot)');
+  function port(side,title,sub,retLab,isIn){
+    var h='<div><h3>'+esc(title)+' <span class="mut" style="font-weight:400">'+esc(sub)+'</span></h3>'+
+      '<div class="scroll"><table class="st"><thead><tr><th>#</th><th>티커</th><th>종목명</th><th>섹터</th><th>지수</th>'+
+      '<th>'+esc(retLab)+'</th><th>팩터값</th></tr></thead><tbody>';
+    if(!side.rows.length) h+='<tr><td colspan="7" class="mut">그달 후보가 없다</td></tr>';
+    side.rows.forEach(function(r){
+      h+='<tr><td class="mut">'+r.r+'</td>'+
+        '<td><a href="stocks.html#t='+encodeURIComponent(r.t)+'" class="'+(r.new?(isIn?'newin':'gone'):'')+'">'+
+        (r.new?(isIn?'＋':'−'):'')+esc(r.t)+'</a></td>'+
+        '<td class="mut">'+esc((r.n||'').slice(0,22))+'</td><td class="mut">'+esc(r.s)+'</td><td class="mut">'+esc(r.idx)+'</td>'+
+        '<td class="'+cls(r.ret)+'">'+num(r.ret,1)+'</td><td class="mut">'+esc(r.v)+'</td></tr>';
+    });
+    return h+'</tbody></table></div></div>';
+  }
+  function detail(f){
+    var gi=gIndex(f.sub);
+    document.getElementById('tools').hidden=true;
+    tabs(String(gi));
+    if(!f.metrics){
+      document.getElementById('body').innerHTML='<p class="back"><a href="#g='+gi+'">← '+esc(gLab(f.sub))+' 목록</a></p>'+
+        '<p class="note warn">'+esc(f.na||'결과 없음')+'</p>';
       return;
     }
-    D=j;
-    var majN=j.feed.filter(isMaj).length;
-    el('tally').innerHTML=
-      ty(j.n.toLocaleString(),'8-K 제출','최근 '+j.window_days+'일 누적','var(--ink)')+
-      ty(j.n_co,'대상 회사','유니버스 전수','var(--champ)')+
-      ty(majN.toLocaleString(),'중요 항목','랩 편집 판단 · 아래 범례','var(--hot)')+
-      ty(j.as_of,'최근 제출일','가장 최근 8-K 접수일','var(--deploy)');
-    el('limits').innerHTML='<b>이 데이터의 한계</b><br>· '+j.limits.map(esc).join('<br>· ');
-    buildChips(); buildLegend(); render();
-  })['catch'](function(){
-    el('feed').innerHTML='<div class="note hard"><b>데이터를 불러오지 못했습니다.</b></div>';
-  });
+    var yrs=D.years, t=f.trails, bt={spx:D.bench.spx, ndx:D.bench.ndx};
+    var prevLab=f.prev.hold.slice(0,4)+'-'+f.prev.hold.slice(5)+' 수익 %';
+    document.getElementById('body').innerHTML=
+      '<div class="stwrap">'+
+        '<div><p class="back"><a href="#g='+gi+'">← '+esc(gLab(f.sub))+' 목록</a> · <a href="#g=all">전체 순위</a></p>'+
+          '<h2>'+esc(f.name)+' <span class="ref">'+esc(f.sub)+' · '+esc(gLab(f.sub))+'</span></h2>'+
+          '<div class="desc">'+esc(f.desc)+'\n순위 방향: '+esc(dirLab(f.dir))+' · <a href="factors.html#f'+f.id+'">사전 #f'+f.id+' →</a>'+
+          (f.same_as?'\n사전의 #f'+f.same_as+' 와 같은 팩터 자료를 가리키는 행이라 결과가 같다.':'')+'</div></div>'+
+        '<div class="two"><div>'+perf(f)+
+          '<p class="note">'+esc(D.start.slice(0,7))+' 말 ~ '+esc(D.end_ret)+' · '+D.n_months+'개월 · 후보(그달 멤버 중 팩터값이 있는 종목) 중앙 '+f.cov.med+' · 최근 '+f.cov.last+
+          (f.cov.thin?' · 10 미만인 달 '+f.cov.thin:'')+' · 월 회전 평균 '+(f.turn==null?'—':f.turn+'%')+'</p></div>'+
+          '<div>'+curve(f)+'<div class="lgd"><i class="l1"></i>전략<i class="l2"></i>'+esc(D.bench.spx.label)+
+          '<i class="l3"></i>'+esc(D.bench.ndx.label)+' · 시작 100 · 로그 눈금</div></div></div>'+
+        '<div>'+grid('기간별 수익률 % (1년까지 누적, 3·5·10년은 연율)',Object.keys(t),
+          {s:function(k){return t[k];},spx:function(k){return bt.spx.trails[k];},ndx:function(k){return bt.ndx.trails[k];}})+'</div>'+
+        '<div>'+grid('연도별 수익률 %',yrs,
+          {s:function(y){return f.yearly[y];},spx:function(y){return bt.spx.yearly[y];},ndx:function(y){return bt.ndx.yearly[y];}},
+          function(y){ return y===yrs[0]?y+'(7~)':(y===yrs[yrs.length-1]?y+'(~'+(+D.end_ret.slice(5))+')':y); })+'</div>'+
+        '<div>'+grid('월별 수익률 % (최근 12개월)',D.months.map(function(m,i){return i;}),
+          {s:function(i){return f.monthly[i];},spx:function(i){return bt.spx.monthly[i];},ndx:function(i){return bt.ndx.monthly[i];}},
+          function(i){ return D.months[i].slice(2); })+'</div>'+
+        '<div class="two">'+port(f.today,'현재 보유',f.today.d+' 선정 · '+D.px_as_of.slice(0,7)+' 보유 중','MTD %(~'+D.px_as_of.slice(5)+')',true)+
+          port(f.prev,'직전 보유',f.prev.d+' 선정',prevLab,false)+'</div>'+
+        notes()+
+      '</div>';
+    document.title='여두 · '+f.name+' Top10';
+  }
 
-  el('q').addEventListener('input',function(){q=this.value.trim().toLowerCase();shown=PAGE;render();});
-  el('majonly').addEventListener('click',function(){
-    majOnly=!majOnly; this.setAttribute('aria-pressed',majOnly?'true':'false'); shown=PAGE; render();
-  });
-  el('reset').addEventListener('click',function(){
-    sel={}; majOnly=false; q=''; shown=PAGE;
-    el('q').value=''; el('majonly').setAttribute('aria-pressed','false');
-    Array.prototype.forEach.call(el('itemchips').querySelectorAll('.chip'),function(b){b.setAttribute('aria-pressed','false');});
-    render();
-  });
-  el('more').addEventListener('click',function(){shown+=PAGE;render();});
-  // 테마 토글은 내비 블록(build/sync_nav.py)이 맡는다 — 여기서 또 붙이면 한 번 클릭에 두 번 토글된다
+  function draw(){
+    var r=route();
+    if(r.f!=null){ var f=byId(r.f); if(f){ detail(f); window.scrollTo(0,0); return; } }
+    var g=r.g||'all';
+    if(g!=='all' && !(+g>=0 && +g<D.groups.length)) g='all';
+    tabs(g);
+    document.getElementById('tools').hidden=false;
+    listView(g);
+    document.title='여두 · S&P Global 팩터 Top10';
+  }
+
+  function boot(){
+    fetch('data/factor_bt.json',{cache:'no-cache'}).then(function(r){return r.json();}).then(function(j){
+      D=j;
+      document.getElementById('sub').textContent=
+        D.start.slice(0,7)+' 말 ~ '+D.end_ret+' · '+D.n_months+'개월 · 팩터마다 상위 10종목 동일가중 · 월말 리밸런스 · 비용 0 · '+
+        '가격수익(PR) · 시점정합 — 그 달 S&P 500 ∪ NASDAQ 100 멤버 중에서 고른다 · 현재 보유 수익은 '+D.px_as_of+'까지';
+      draw();
+    }).catch(function(e){
+      document.getElementById('body').innerHTML=
+        '<p class="note warn">데이터를 불러오지 못했습니다 — data/factor_bt.json ('+esc(e)+')</p>';
+    });
+    var q=document.getElementById('q');
+    q.addEventListener('input',function(){ Q=q.value.trim().toLowerCase(); if(D){ var r=route(); if(r.f==null) listView(r.g||'all'); } });
+  }
+  window.addEventListener('hashchange',function(){ if(D) draw(); });
+  if(document.readyState!=='loading') boot(); else document.addEventListener('DOMContentLoaded',boot);
 })();
 </script>
+
 </body>
 </html>
