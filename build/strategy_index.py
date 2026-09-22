@@ -1028,6 +1028,9 @@ def main() -> int:
             continue
         rows.append(rec(
             sid="t-" + r["sid"], name=r["name"], role=r.get("role") or "미분류",
+            # 개명 전 이름의 슬러그 — explorer 가 #s-<옛 슬러그> 딥링크를 이 카드로 연다.
+            #   있는 규칙만 싣는다(tech_backtest.xsec 의 aka).
+            **({"aka": r["aka"]} if r.get("aka") else {}),
             grade=GRADE.get(r.get("verdict"), r.get("verdict") or "판정 불가"),
             src="종목 전략", rule=r.get("rule"), why=r.get("why"),
             # 원 논문 — 없으면 **비운다.** 지어 채우면 독자가 원문을 못 찾고 그 사실조차

@@ -4681,7 +4681,7 @@ def _BASE_SID(sid):
     return re.sub(r"-n\d+$", "", re.sub(r"-band$", "", sid))
 
 
-def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
+def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT, aka=None):
     """횡단면 규칙 등록. topn 을 주면 그 규칙만 바스켓 크기가 달라진다(기본은 TOPN=10).
 
     🚨 2026-08-11 추가. 이 랩의 횡단면 51종은 전부 상위 10종인데, 흉내 내려는 원 전략은
@@ -4693,6 +4693,9 @@ def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
     reb 는 리밸런스 주기('we' 주간 · 'me' 월말 · 'qe' 분기). 사전등록
     PREREG-2026-08-13-REBAL.md 가 규칙마다 값을 못박아 두었다 — 여기서 결과를 보고
     바꾸면 그 등록이 무의미해진다.
+
+    aka 는 개명 전 이름의 슬러그 목록이다(explorer 의 _slug 규칙). explorer 가 #s-<sid> 와
+    함께 받아 주므로 옛 이름으로 만든 딥링크가 개명 뒤에도 같은 카드를 연다.
     """
     if reb not in REB_KINDS:
         raise ValueError("%s: 모르는 리밸 주기 %r" % (sid, reb))
@@ -4709,6 +4712,8 @@ def xsec(sid, name, rule, fn, why, arch=None, topn=None, reb=REB_DEFAULT):
         return
     STRATS.append({"sid": sid, "name": name, "kind": "xsec", "rule": rule, "why": why,
                    "fn": fn, "arch": arch, "topn": topn, "reb": reb})
+    if aka:
+        STRATS[-1]["aka"] = list(aka)
 
 
 # ── ML6 — 사전등록 PREREG-2026-08-16-ML6.md. 여섯 다 가격·거래량 특징만 쓴다 ──
@@ -6309,8 +6314,12 @@ def build_strats():
          "⚠ 9신호를 전부 낼 수 없는 종목은 후보에서 뺀다(8개로 매기면 0~9 척도가 깨진다). "
          "매출총이익은 gp 태그를 쓰되 없으면 매출−매출원가 폴백이고, 둘 다 있으면 정합성 "
          "검사를 통과한 것만 쓴다(x-gpa 와 같은 가드 — 건보사 과대계상 방지).")
-    xsec("x-debtiss", "총부채 증가율 최저 %d (순부채발행 회피)" % TOPN,
-         "총부채가 1년 전 대비 가장 적게 늘어난(또는 가장 많이 줄어든) %d종목 동일가중, "
+    # 🚨 2026-09-22 개명 — 종전 이름 «총부채 증가율 최저 10» 은 틀렸다. 점수가 쓰는
+    #   f["debt"] 는 refresh_facts 의 장기차입금 태그이고 부채총계(liab)가 아니다.
+    #   계산은 그대로다(사전등록도 debt 태그로 적었다). aka 는 explorer 의 옛 슬러그
+    #   딥링크(#s-<옛 이름 슬러그>)를 살려 둔다.
+    xsec("x-debtiss", "장기차입금 증가율 최저 %d (순부채발행 회피)" % TOPN,
+         "장기차입금이 1년 전 대비 가장 적게 늘어난(또는 가장 많이 줄어든) %d종목 동일가중, "
          "월말 리밸런스." % TOPN,
          None,
          "Spiess·Affleck-Graves 'The long-run performance of stock returns following debt "
@@ -6319,7 +6328,9 @@ def build_strats():
          "자산성장·순주식발행·비정상자본투자는 있었지만 부채 쪽은 통째로 없었다. "
          "⚠ JKP 의 정본은 3년 증가율(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다. 같은 신호의 "
          "짧은 창이므로 원논문 t 를 이 규칙의 기대치로 읽지 말 것. 3년판은 사전등록에서 배제했다. "
-         "⚠ 직전 총부채가 0 이하인 관측은 뺀다(증가율이 정의되지 않는다).")
+         "⚠ 쓰는 값은 SEC 장기차입금 태그다(부채총계가 아니다). "
+         "⚠ 직전 장기차입금이 0 이하인 관측은 뺀다(증가율이 정의되지 않는다).",
+         aka=("총부채-증가율-최저-10-순부채발행-회피",))
     # 🚨 2026-09-07 — **x-residind(상위 10)의 등록을 내렸다**(PREREG-2026-09-07-RESIDIND2).
     #   사유는 성적이 아니라 **N 의 출처가 없다**는 것이다. 10 은 랩 기본값 TOPN 이었고,
     #   그 정당화(「10·20·30 을 다 싣는다」)는 2026-08-29 에 폐기된 nsel 격자였으며
@@ -7975,7 +7986,8 @@ def xsec_score_at(S, i, X, pool=None):
                         v = -((ni_ - cf_) / abs(ni_))
             # ── 2026-08-08 신규 3종 (PREREG-2026-08-08-WEBRESEARCH5.md) ──
             elif sid == "x-debtiss":
-                # 총부채 1년 증가율. 낮을수록 좋으므로 부호를 뒤집는다.
+                # 장기차입금(debt — 부채총계 liab 가 아니다) 1년 증가율. 낮을수록 좋으므로
+                # 부호를 뒤집는다.
                 # ⚠ JKP 정본은 3년(debt_gr3)인데 표본을 지키려고 1년으로 바꿨다.
                 # 🚨 2026-08-11 선견 교정 — 종전 분모가 `_shift(dt_, -365)` 였다.
                 #   _shift 는 **빼는** 함수라 부호가 뒤집혀 '1년 전' 자리에
@@ -9616,6 +9628,8 @@ def run():
         }
         out.append({
             "sid": S["sid"], "name": S["name"], "kind": S["kind"], "arch": S.get("arch"),
+            # 개명 전 이름의 슬러그(xsec 독스트링) — 있는 규칙만 싣는다.
+            **({"aka": S["aka"]} if S.get("aka") else {}),
             # 성격 — 통합 목록에서 '무엇을 하는 전략인가'로 묶는 축(strategy_kinds.json 어휘).
             # 파일 출처가 아니라 역할로 나눠야 읽는 사람이 비교할 수 있다.
             # 이벤트는 «어느 종목을 살지» 를 고르므로 수익엔진이다(노출을 켰다 껐다 하는
