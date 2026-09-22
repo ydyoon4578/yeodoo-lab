@@ -626,8 +626,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return '<p class="note">규칙 — '+esc(D.rule)+'. '+esc(D.basis)+
       ' 팩터값은 <a href="factors.html">팩터 사전</a>의 S&amp;P Global 314개 팩터 월말 값이고, 순위 방향도 사전 그대로다(방향 ↓ 내림차순 = 값이 클수록 상위).</p>'+
       '<p class="note">이긴 달 % = S&amp;P 500(PR)보다 수익이 높았던 달의 비율 · 월 회전 % = 매달 새로 들어온 종목 비율의 평균. '+
-      '보유 종목의 다음 달 수익이 팩터 자료에 없던 자리는 랩 일간 종가로 '+(fl.lab||0)+'곳, 보정표(월말 종가·사건 보정)로 '+(fl.fix||0)+
-      '곳을 메웠고, 그래도 없는 '+(fl.n||0)+'곳(전체 '+(fl.slots||0)+'곳의 '+((fl.slots?100*fl.n/fl.slots:0).toFixed(2))+'% · 대부분 인수로 상장폐지된 달)은 0 으로 두었다.</p>'+
+      '보유 종목의 다음 달 수익이 팩터 자료에 없던 자리는 랩 일간 종가로 '+(fl.lab||0)+'곳, 보정표(월말 종가·합병 승계·사건 보정)로 '+(fl.fix||0)+
+      '곳을 메웠고, 그래도 없는 '+(fl.n||0)+'곳(전체 '+(fl.slots||0)+'곳의 '+((fl.slots?100*fl.n/fl.slots:0).toFixed(2))+'% · 대부분 인수로 상장폐지된 달, 일부는 시세를 못 구한 편출 종목)은 0 으로 두었다'+
+      ((fl.top&&fl.top.length)?' — 많은 순: '+fl.top.map(function(t){return esc(t[0])+' '+esc(t[1])+'('+t[2]+')';}).join(' · '):'')+'.</p>'+
       '<p class="note warn">⚠ 314개를 한꺼번에 재면 우연히 좋아 보이는 것이 반드시 섞인다(다중검정). 순위 위쪽을 그대로 믿지 말고 기간별·연도별로 꾸준한지 볼 것.</p>';
   }
 

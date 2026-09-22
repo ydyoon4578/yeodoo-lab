@@ -18,7 +18,7 @@ style.html#s=lowvol 이런식으로 구성해. S&P Global 314개 팩터에 대�
       동일가중으로 다음 달 한 달 보유 · 월말 리밸런스 · 비용 0.
       수익은 **가격수익(PR)** — 대조군 S&P 500(PR)·NASDAQ 100(PR)과 같은 기준이다(배당을 넣은 쪽만 유리해지지 않게).
       보유 종목의 다음 달 수익이 팩터 자료에 없으면(유니버스 이탈) 랩 일간 종가(sd·pit_px — 배당조정)로 그달 수익을
-      메우고, 그래도 없으면 보정표(build/factor_bt_src/ret_fill.json — yfinance 월말 종가·사건 보정)를 쓰고,
+      메우고, 그래도 없으면 보정표(build/factor_bt_src/ret_fill.json — 시세 공급사·yfinance 월말 종가 · 합병·재분류 승계 · 사건 보정)를 쓰고,
       그래도 없으면 0 으로 둔다(대부분 인수로 상장폐지된 달) — 세 건수를 산출물 fill 에 적는다.
       0 으로 남은 (티커, 월) 목록은 build/factor_bt_src/missing.json 에 떨군다(보정 스크립트의 입력).
       후보가 10 미만인 달은 있는 만큼, 0 이면 그달 0%(현금).
@@ -56,11 +56,14 @@ def r1(v, d=1):
 
 
 def fmt_val(v):
-    """팩터값 표시 — 크기가 제각각이라 유효숫자 4자리."""
+    """팩터값 표시 — 크기가 제각각이라 유효숫자 4자리.
+    아주 작은 값(Amihud 비유동성 ~1e-12 등)은 고정 소수점이면 전부 0.0000 이 돼 순위가 안 보인다 → 지수 표기."""
     if v is None or not math.isfinite(v):
         return "—"
     a = abs(v)
-    if a >= 1e6:
+    if a == 0:
+        return "0"
+    if a >= 1e6 or a < 1e-3:
         return "%.3g" % v
     if a >= 100:
         return "%.1f" % v
@@ -212,7 +215,8 @@ def main() -> int:
         return None
     tick_of = {ys: dict(zip(grp["g"].astype(int), grp["ticker"])) for ys, grp in memb.items()}
     # 빠진 월수익 보정표(반입 금지 폴더) — 저장소 밖 보정 스크립트가 만든다: {"TICKER|YYYY-MM": {"r": 수익, "src": 출처}}
-    #   yfinance 월말 종가(가격수익) · 사건 보정(예: 2023-03 은행 폐쇄 — 보통주 가치 소멸 −100%).
+    #   시세 공급사·yfinance 월말 종가(가격수익) · 합병·재분류 승계(교환비율·특별 현금) · 사건 보정(예: 2023-03 은행 폐쇄 −100%).
+    #   🚨 보정 스크립트는 기존 표에 병합한다 — missing.json 은 «아직 0 인 자리»만 담기 때문(덮어쓰면 지난 보정이 사라진다).
     FIXP = os.path.join(SRC, "ret_fill.json")
     FIX = rd(FIXP) if os.path.exists(FIXP) else {}
 
@@ -321,8 +325,10 @@ def main() -> int:
                 "동일가중 · 다음 달 한 달 보유(월말 리밸런스) · 비용 0",
         "basis": "가격수익(PR) — 대조군 S&P 500(PR)·NASDAQ 100(PR)과 같은 기준. 샤프는 무위험(FRED 3개월물)을 뺀 월 초과수익으로 잰다.",
         "fill": {"n": n_fill, "lab": n_lab, "fix": n_fix, "slots": n_slots,
+                 "top": [[k[0], k[1], v] for k, v in sorted(MISS.items(), key=lambda kv: (-kv[1], kv[0]))[:8]],
                  "note": "보유 종목의 다음 달 수익이 팩터 자료에 없던 자리(전 팩터 합) — lab 은 랩 일간 종가(배당조정)로 메운 수, "
-                         "fix 는 보정표(yfinance 월말 종가·사건 보정)로 메운 수, n 은 그래도 없어 0 으로 둔 수(대부분 인수로 상장폐지된 달)"},
+                         "fix 는 보정표(시세 공급사·yfinance 월말 종가 · 합병·재분류 승계 · 사건 보정)로 메운 수, "
+                         "n 은 그래도 없어 0 으로 둔 수(대부분 인수로 상장폐지된 달 · 일부는 시세를 못 구한 편출 종목) · top 은 0 으로 둔 자리가 많은 (티커, 수익월, 횟수)"},
         "groups": groups, "bench": bench, "factors": factors,
     }
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
