@@ -492,27 +492,29 @@ def draw_home_panel(fig, cx, top, cw, h, title, dates, series, intraday, lab_w, 
         xf = ax_x + ax_w * (xs[-1] / max(1, n - 1))
         labs.append({"nm": nm, "v": ys[-1], "col": col, "ls": ls, "x": xf, "y": yf, "b": bench})
 
-    # 🚨 라벨 겹침 — 홈과 같은 세 단계: ① 위에서부터 최소 간격만큼 아래로 민다 ② 바닥을 넘으면
-    #   뭉치를 통째로 올린다 ③ 그래도 위를 넘으면 위 경계에서 멈춘다(잘리느니 겹치는 편이 낫다).
+    # 🚨 라벨 겹침 — 두 번 민다: ① 위→아래(최소 간격만큼 아래로) ② 아래→위(바닥을 넘은 만큼만 올린다).
+    #   2026-09-22 사용자 «산업그룹 차트에서 이름 겹치는거». 종전(세 단계)은 바닥을 넘으면 뭉치를
+    #   **통째로** 올렸다 — 가운데 줄 사이의 넓은 자연 간격은 그대로 두고 전체를 옮겨, 24줄이
+    #   들어갈 자리가 있는데도 맨 위 두 줄이 위 경계에 같이 박혀 **완전히 포개졌다**(style8.html
+    #   실측 09-21 1개월: 미디어·엔터테인먼트 · 통신 서비스 같은 높이). 두 번 밀면 움직여야 할
+    #   줄만 움직이고, 들어갈 자리가 있으면 반드시 안 겹친다.
+    #   ⚠ 그래도 안 들어가면(줄 × 최소 간격 > 높이) 고르게 나눠 편다 — 한 자리에 포개지 않는다.
+    #   ⚠ style8.html(웹 판형) · index.html(홈) 과 같은 규칙이다 — 같이 고칠 것. 좌표는 위가 큰 값이다.
     fs = 5.6 if lots else 6.6
     topl, botl = top - .002, y0 + .002
     gap = fs * 1.22 * PT
     if len(labs) > 1:
         gap = max(fs * .98 * PT, min(gap, (topl - botl) / (len(labs) - 1)))
-    labs.sort(key=lambda L: -L["y"])
-    prev = 1e9
-    for L in labs:
-        L["ly"] = min(L["y"], prev - gap); prev = L["ly"]
-    if labs and labs[-1]["ly"] < botl:
-        over = botl - labs[-1]["ly"]
-        for L in labs:
-            L["ly"] += over
-    if labs and labs[0]["ly"] > topl:
-        up = labs[0]["ly"] - topl
-        room = labs[-1]["ly"] - botl
-        mv = min(up, max(0, room))
-        for L in labs:
-            L["ly"] = min(L["ly"] - mv, topl)
+    labs.sort(key=lambda L: -L["y"])                     # 위(큰 y)부터
+    nl = len(labs)
+    for k in range(nl):                                  # ① 위→아래
+        labs[k]["ly"] = min(labs[k]["y"], labs[k - 1]["ly"] - gap if k else topl)
+    for k in range(nl - 1, -1, -1):                      # ② 아래→위
+        labs[k]["ly"] = max(labs[k]["ly"], labs[k + 1]["ly"] + gap if k < nl - 1 else botl)
+    if nl > 1 and labs[0]["ly"] > topl + 1e-9:           # ③ 줄 × 최소 간격 > 높이 — 고르게 편다
+        eq = (topl - botl) / (nl - 1)
+        for k in range(nl):
+            labs[k]["ly"] = topl - k * eq
     rx = ax_x + ax_w
     for L in labs:
         fig.add_artist(Line2D([L["x"] + .002, rx + .007], [L["y"], L["ly"]], color=L["col"], lw=.45,
