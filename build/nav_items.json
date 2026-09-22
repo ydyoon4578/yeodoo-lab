@@ -158,6 +158,15 @@
      "effort": "M"
     },
     {
+     "name": "팩터 사전",
+     "file": "factors.html",
+     "status": "existing",
+     "desc": "S&P Global 314개·스타일 13개 팩터의 정의·산식·순위 방향·참고문헌 — 원표 그대로",
+     "src": "raw",
+     "verdict": "na",
+     "effort": "S"
+    },
+    {
      "name": "지수 편입 원장",
      "file": "constituents.html",
      "status": "existing",

@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "a9fc6fef2f9031db",
+ "generated_from": "f6f399489a7a2dea",
  "categories": [
   {
    "name": "시장",
@@ -168,6 +168,16 @@
      "verdict": "na",
      "src": "none",
      "effort": "M",
+     "live": true
+    },
+    {
+     "name": "팩터 사전",
+     "file": "factors.html",
+     "status": "existing",
+     "desc": "S&P Global 314개·스타일 13개 팩터의 정의·산식·순위 방향·참고문헌 — 원표 그대로",
+     "verdict": "na",
+     "src": "raw",
+     "effort": "S",
      "live": true
     },
     {
