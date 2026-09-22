@@ -1,8 +1,8 @@
 {
   "note": "팩터 사전(factors.html)에 덧붙이는 여두 전략 랩 팩터. 사내 원표(build/factors_src.json — 반입 금지)와 섞지 않는다 — 생성기가 원표 행 **뒤에** 이어 붙이고, 펼친 본문에 원 규칙 카드(출처)와 비슷한 원표 팩터 링크를 단다. 원표 행(S&P Global 314 · Style Factor 13)은 한 글자도 바꾸지 않는다.",
   "added": "2026-09-22",
-  "revised": "2026-09-22 — «유사 팩터» 그룹 폐지 · 랩 표시 제거 · 다섯 스타일로 나뉘는 규칙 25종 추가(15 → 40)",
-  "request": "사용자: «전략 랩 explorer 보고, factors Style Factor에 추가할만한거 있으면 추가해줘. Low Volatility, Momentum, Size, Value, Quality 로 분류되어야함» · «S&P Global은 건들면 안돼. 비슷한 팩터는 스타일 팩터 오른쪽에 따로 분류» → 같은 날 «유사 팩터 탭 없애고 분류 가능하면 다 스타일 팩터에 넣어줘. 그리고 팩터 옆에 랩을 붙일 필요는 없어»",
+  "revised": "2026-09-22 — «유사 팩터» 그룹 폐지 · 랩 표시 제거 · 다섯 스타일로 나뉘는 규칙 25종 추가(15 → 40) · 같은 날 소분류 넷 추가(Growth · Liquidity · Price Pattern · Tail Risk) · 그동안 다섯에 안 맞아 빠졌던 14종 추가(40 → 54)",
+  "request": "사용자: «전략 랩 explorer 보고, factors Style Factor에 추가할만한거 있으면 추가해줘. Low Volatility, Momentum, Size, Value, Quality 로 분류되어야함» · «S&P Global은 건들면 안돼. 비슷한 팩터는 스타일 팩터 오른쪽에 따로 분류» → 같은 날 «유사 팩터 탭 없애고 분류 가능하면 다 스타일 팩터에 넣어줘. 그리고 팩터 옆에 랩을 붙일 필요는 없어» · 같은 날 «만들수 있는건 다 만들어서 팩터 사전에 추가해보자. 다 Style Factor에 넣을수 있나? 아니면 분류를 늘려야하나» → 소분류를 넷 늘려(Growth · Liquidity · Price Pattern · Tail Risk) explorer 카드가 있는데 다섯에 안 맞아 빠졌던 14종을 넣었다. 원표의 Style Factor 13행은 앞의 다섯 안에 그대로 있다.",
   "criteria": [
     "① explorer 에 카드가 있는 종목 규칙(횡단면)의 점수 정의일 것 — 산식·창·지연은 build/tech_backtest.py 등록문·점수 코드와 같게 적는다",
     "② 다섯 스타일(Low Volatility · Momentum · Size · Value · Quality) 중 하나로 나뉠 것 — 그 점수가 **사는 쪽**이 스타일 이름과 맞아야 한다. 공편왜도·상하방 베타 비대칭은 위험을 사는 규칙이라 Low Volatility 에 넣지 않는다. 반전은 원표(S&P Global)처럼 Momentum 에 둔다. 성장(매출·배당 증가율) · 유동성·거래량 · 가격 패턴 통계(허스트·런·분산비·엔트로피·오차수정·변동성 군집) · 고객 집중도는 다섯 어디에도 안 맞아 뺐다",
@@ -587,6 +587,197 @@
       "similar": [
         "Year over Year Change of Total Debt"
       ]
+    },
+    {
+      "factor": "고매출성장",
+      "spg": "Sales Growth (TTM)",
+      "group": "Style Factor",
+      "subgroup": "Growth",
+      "description": "12개월 매출의 전년 동기 대비 증가율 (높을수록 좋음)",
+      "rank_order": "내림차순",
+      "notes": "성장 팩터. 이익이 아니라 매출로 재는 이유는 이익이 회계 처리에 더 많이 휘둘리기 때문이다. 인수합병으로 늘어난 매출도 그대로 잡힌다 — 이 표는 그것을 구분하지 못한다.",
+      "formula": "SG = Sales_TTM / Sales_TTM(1년 전) − 1\n\n  상위 10종목 동일가중 · 월말 리밸런스\n  회계 수치 : 기간 종료 90일 뒤부터 사용",
+      "citations": null,
+      "lab_sid": "t-x-rgrow",
+      "similar": []
+    },
+    {
+      "factor": "배당 증액률",
+      "spg": "Dividend Growth",
+      "group": "Style Factor",
+      "subgroup": "Growth",
+      "description": "직전 공개 분기 주당배당금의 전년 동기 대비 증가율 (높을수록 좋음)",
+      "rank_order": "내림차순",
+      "notes": "이 랩에는 배당의 수준(배당수익률)과 총주주환원 수준이 있는데 배당의 변화 축이 비어 있었다. ⚠ 무배당에서 배당을 개시하면 증가율이 정의되지 않아(분모 0) 후보에서 빠진다 — 그래서 이 팩터는 «이미 주던 회사가 더 주는 것» 만 본다.",
+      "formula": "DG = DPS_q / DPS_{q−4} − 1\n\n  DPS_{q−4} ≤ 0 → 제외\n  상위 10종목 동일가중 · 월말 리밸런스",
+      "citations": "1) Grullon, G., Michaely, R. & Swaminathan, B. (2002) Are Dividend Changes a Sign of Firm Maturity? Journal of Business 75.",
+      "lab_sid": "t-x-divgrow",
+      "similar": []
+    },
+    {
+      "factor": "저회전율",
+      "spg": "Share Turnover (low)",
+      "group": "Style Factor",
+      "subgroup": "Liquidity",
+      "description": "60거래일 평균 거래량 ÷ 가중평균 희석주식수 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "회전율이 낮은 종목이 이후 더 낫다는 것이다 — 유동성 프리미엄의 횡단면 판. 🚨 분모는 '발행주식수'가 아니라 EPS 의 분모와 같은 가중평균 희석주식수다. S&P Global 쪽은 같은 축을 Share Turnover 로 Price Momentum 에 둔다.",
+      "formula": "TO = mean(Volume, 60일) / DilutedShares\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": "1) Datar, V. T., Naik, N. Y. & Radcliffe, R. (1998) Liquidity and Stock Returns: An Alternative Test. Journal of Financial Markets 1.",
+      "lab_sid": "t-x-turn",
+      "similar": [
+        "Share Turnover",
+        "6 Month Average Share Turn Over"
+      ]
+    },
+    {
+      "factor": "거래량 급증 + 추세",
+      "spg": "Volume Surge with Trend",
+      "group": "Style Factor",
+      "subgroup": "Liquidity",
+      "description": "20일 평균거래량 ÷ 60일 평균이 크고 200일선 위인 종목 (높을수록 좋음)",
+      "rank_order": "내림차순",
+      "notes": "가격에 거래량을 더한다. 거래량이 정보 유입의 대리변수라는 가정을 시험한다. 추세 조건(200일선 위)을 같이 거는 이유는 급증만 보면 악재 급증까지 잡히기 때문이다.",
+      "formula": "VS = mean(Volume, 20일) / mean(Volume, 60일)\n\n  조건 : 종가 > SMA200\n  상위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-volsurge",
+      "similar": [
+        "5 Day Volume Signal",
+        "50 Day Volume Signal"
+      ]
+    },
+    {
+      "factor": "고저가 스프레드 급확대",
+      "spg": "High-Low Spread Shock",
+      "group": "Style Factor",
+      "subgroup": "Liquidity",
+      "description": "Corwin–Schultz 스프레드의 최근 63일 평균 ÷ 그 앞 구간 평균 (높을수록 좋음)",
+      "rank_order": "내림차순",
+      "notes": "비유동성 충격은 동시대 가격을 눌러 이후 수익을 높인다 — 그것을 횡단면으로 옮긴 것이다. 수준이 아니라 **자기 평소 대비 변화**를 보므로 스프레드 수준 팩터와 축이 다르다. 월말 종가 $5 미만은 제외한다.",
+      "formula": "S = Corwin–Schultz 고저가 스프레드(일간)\nLS = ln( mean(S, [m−62, m]) / mean(S, [m−251, m−63]) )\n\n  유효일 : 최근 32일 이상 · 이전 95일 이상\n  상위 10종목 동일가중 · 월말 리밸런스",
+      "citations": "1) Amihud, Y. (2002) Illiquidity and Stock Returns: Cross-Section and Time-Series Effects. Journal of Financial Markets 5.\n2) Corwin, S. A. & Schultz, P. (2012) A Simple Way to Estimate Bid-Ask Spreads from Daily High and Low Prices. Journal of Finance 67.",
+      "lab_sid": "t-x-lshock",
+      "similar": [
+        "Amihud Illiquidity Measure",
+        "1Y Chg in Amihud"
+      ]
+    },
+    {
+      "factor": "허스트 지수",
+      "spg": "Hurst Exponent",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "R/S 분석의 로그-로그 기울기, 252거래일 (높을수록 장기기억)",
+      "rank_order": "내림차순",
+      "notes": "0.5 면 무작위, 0.5 보다 크면 장기기억(추세가 이어진다)이다. 1차 자기상관 하나가 아니라 여러 시간척도를 한 번에 본다. ⚠ R/S 는 짧은 표본에서 0.5 위로 치우치는 편향이 알려져 있다 — 순위만 쓰므로 수준은 읽지 말 것.",
+      "formula": "창 n ∈ {8, 16, 32, 64}일 에서 R/S(n) 을 구하고\nH = slope( log R/S(n) ~ log n )   (최근 252거래일)\n\n  상위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-hurst",
+      "similar": []
+    },
+    {
+      "factor": "런 검정 z",
+      "spg": "Runs Test z (Wald–Wolfowitz)",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "부호 런 수의 z, 252거래일 (낮을수록 같은 부호가 뭉쳐 있다)",
+      "rank_order": "오름차순",
+      "notes": "부호가 무작위라면 런 수의 기댓값과 분산이 알려져 있다. z 가 낮다는 것은 런이 적다는 것이고 같은 부호가 뭉쳐 있다는 뜻이다. ⚠ 오른 날의 **개수**를 세는 것과 이것은 다르다 — 이것은 부호의 **배열**이다.",
+      "formula": "R = 부호 런의 수 · n₊, n₋ = 양·음의 날 수\nE[R] = 2 n₊ n₋ / n + 1\nz = ( R − E[R] ) / sd(R)   (최근 252거래일)\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-runs",
+      "similar": []
+    },
+    {
+      "factor": "분산비",
+      "spg": "Variance Ratio",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "5일 수익 분산 ÷ (5 × 1일 수익 분산) (낮을수록 평균회귀)",
+      "rank_order": "오름차순",
+      "notes": "1이면 무작위보행, 1보다 작으면 평균회귀다. 가장 작은 쪽(회귀가 강한 쪽)을 산다. ⚠ 허스트도 추세/회귀를 재지만 R/S 통계량이다. VR 은 «분산의 시간 스케일링» 이라 단기 시차에 민감하고, 같은 계열에서 둘이 다른 답을 내는 일이 흔하다.",
+      "formula": "VR(q) = Var( r_t(q) ) / ( q · Var( r_t ) ),  q = 5\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-varratio",
+      "similar": []
+    },
+    {
+      "factor": "수익률 엔트로피",
+      "spg": "Return Entropy (Shannon)",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "수익을 자기 5분위로 나눈 분포의 섀넌 엔트로피, 252거래일 (낮을수록 덜 무작위)",
+      "rank_order": "오름차순",
+      "notes": "고르게 흩어지면 최대(ln 5), 한쪽에 몰리면 작다 — 경로가 덜 무작위인 쪽을 산다. ⚠ 자기 분위로 나누므로 변동성 **크기와 무관**하다. 그것이 저변동 계열과 다른 점이다. ⚠ 고른 분포에 가까울수록 값이 ln 5 에 붙어 순위가 잡음에 약해진다.",
+      "formula": "p_i = 창 안 수익이 자기 5분위 i 에 든 비율\nH = − Σ p_i ln p_i   (최근 252거래일 · 5분위)\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-entropy",
+      "similar": []
+    },
+    {
+      "factor": "순열 엔트로피",
+      "spg": "Permutation Entropy",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "이웃한 3개 수익의 순서 패턴 분포로 잰 정규화 엔트로피 (낮을수록 규칙적)",
+      "rank_order": "오름차순",
+      "notes": "자기상관·허스트는 «선형» 의존을 본다. 순열 엔트로피는 순서 패턴의 «비선형» 규칙성을 본다 — 자기상관이 0인데 엔트로피가 낮은 계열이 실제로 있다. ⚠ 낮다 = 패턴이 규칙적이다. 그것이 수익으로 이어지는지는 이 검정이 묻는 것이지 전제가 아니다.",
+      "formula": "임베딩 차원 m = 3 · 이웃 m 개 수익의 대소 순서를 패턴 π 로 본다\nPE = − Σ p(π) ln p(π) / ln(m!)   (최근 252거래일)\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-permen",
+      "similar": []
+    },
+    {
+      "factor": "지수 대비 오차수정 괴리",
+      "spg": "Error-Correction Gap vs Index",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "누적 로그수익을 지수에 회귀한 장기 관계의 잔차 (음일수록 저평가)",
+      "rank_order": "오름차순",
+      "notes": "페어 규칙이 «종목쌍» 공적분이라면 이것은 종목–지수 관계다. ⚠ 가격 수준이 아니라 누적 로그수익으로 만든다 — 창 안에서만 비교하므로 기준점이 상쇄되고 액면분할 같은 수준 사건에 안 흔들린다.",
+      "formula": "cum_i = Σ log r_i · cum_m = Σ log r_m  (창 안 누적)\ncum_i = α + β · cum_m + ε\n괴리 = ε_t (최근값)\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-ecm",
+      "similar": []
+    },
+    {
+      "factor": "변동성 군집",
+      "spg": "Volatility Clustering (ARCH)",
+      "group": "Style Factor",
+      "subgroup": "Price Pattern",
+      "description": "제곱수익의 시차 5개 자기상관으로 잰 군집 강도 (낮을수록 좋음)",
+      "rank_order": "오름차순",
+      "notes": "군집이 강하면 나쁜 날이 몰려 온다 — 약한 쪽을 산다. ⚠ 다중회귀를 풀지 않고 시차별 자기상관의 제곱합으로 근사한다(설명변수끼리 상관이 있어 R² 의 상한이다). 순위만 쓰므로 단조성이면 충분하지만 값을 'LM 통계량' 이라 부르면 안 된다.",
+      "formula": "ρ_k = corr( r²_t , r²_{t−k} ),  k = 1…5\n군집 = Σ_k ρ_k²   (최근 252거래일)\n\n  최하위 10종목 동일가중 · 월말 리밸런스",
+      "citations": null,
+      "lab_sid": "t-x-archlm",
+      "similar": []
+    },
+    {
+      "factor": "공편왜도",
+      "spg": "Coskewness",
+      "group": "Style Factor",
+      "subgroup": "Tail Risk",
+      "description": "시장 제곱충격에 대한 수익의 동조, 252거래일 (음일수록 꼬리 동조가 크다)",
+      "rank_order": "오름차순",
+      "notes": "시장이 크게 흔들릴 때 같이 무너지는 종목은 그 위험의 대가로 더 높은 수익을 요구받는다는 것이다. 저베타·특이변동성은 둘 다 2차 적률이고, 꼬리의 **비대칭**은 그것들이 못 재는 축이다. ⚠ 위험을 사는 규칙이라 저변동성으로 분류하지 않는다.",
+      "formula": "CoSkew = E[ (r_i − μ_i)(r_m − μ_m)² ] / ( sd(r_i) · var(r_m) )\n\n  최근 252거래일 · 유효관측 200일 이상\n  최저 10종목 동일가중 · 월말 리밸런스",
+      "citations": "1) Harvey, C. R. & Siddique, A. (2000) Conditional Skewness in Asset Pricing Tests. Journal of Finance 55.\n2) Ang, A., Chen, J. & Xing, Y. (2006) Downside Risk. Review of Financial Studies 19.",
+      "lab_sid": "t-x-coskew",
+      "similar": []
+    },
+    {
+      "factor": "상하방 베타 비대칭",
+      "spg": "Up/Down Beta Asymmetry",
+      "group": "Style Factor",
+      "subgroup": "Tail Risk",
+      "description": "하락장 베타와 상승장 베타의 차 ÷ 두 베타 크기의 합 (높을수록 하방에 민감)",
+      "rank_order": "내림차순",
+      "notes": "시장이 내릴 때 더 크게 내리는 종목은 위험보상을 요구받는다. 원차분(β⁻ − β⁺) 대신 비율형을 쓴 이유는 규모와 무관하게 비대칭만 보려는 것이다. ⚠ 위험을 사는 규칙이라 저변동성으로 분류하지 않는다. 20종을 든다.",
+      "formula": "시장 수익이 평균보다 낮은 날 → β⁻ · 높은 날 → β⁺\n비대칭 = ( β⁻ − β⁺ ) / ( |β⁻| + |β⁺| )   (최근 252거래일)\n\n  상위 20종목 동일가중 · 월말 리밸런스",
+      "citations": "1) Ang, A., Chen, J. & Xing, Y. (2006) Downside Risk. Review of Financial Studies 19.",
+      "lab_sid": "t-x-updown",
+      "similar": []
     }
   ]
 }

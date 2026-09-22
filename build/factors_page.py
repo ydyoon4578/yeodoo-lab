@@ -41,7 +41,14 @@ KNOWN_GROUPS = {"S&P Global": "sp", "Style Factor": "st"}
 # 랩 행이 들어갈 수 있는 그룹과 소분류 — 사용자가 정한 다섯 스타일 밖으로 나가지 않게 막는다.
 # («유사 팩터» 그룹은 2026-09-22 사용자 결정으로 없앴다 — 되살리지 말 것.)
 LAB_GROUPS = ("Style Factor",)
-STYLE_SUBS = ("Low Volatility", "Momentum", "Size", "Value", "Quality")
+# 다섯은 **원표의 Style Factor 13행이 쓰는 것**을 그대로 따른 것이다(지어낸 것이 아니다).
+#   뒤의 넷은 랩 행만 쓴다 — 원표 행은 여전히 앞의 다섯 안에만 있고 한 글자도 안 바뀐다.
+#   키운 까닭(2026-09-22 사용자) — explorer 카드가 있는데 다섯 어디에도 안 맞아 사전에
+#   못 들어오던 규칙이 14종이었다(성장 2 · 유동성 3 · 가격패턴 7 · 꼬리위험 2).
+#   ⚠ 원표의 8분류(Earnings Quality…)로 바꾸는 길은 닫혔 있다 — 그러면 같은 Style Factor
+#     그룹 안에 원표 13행(다섯)과 랩 행(여덟)이 섞여 체계가 둘이 된다.
+STYLE_SUBS = ("Low Volatility", "Momentum", "Size", "Value", "Quality",
+              "Growth", "Liquidity", "Price Pattern", "Tail Risk")
 
 
 def esc(v):
@@ -63,9 +70,72 @@ def _check_row(r, where):
                          % (r["rank_order"], r["factor"]))
 
 
+def src_from_page():
+    """원표가 없을 때 — **이미 구워진 factors.html 에서 원표 행을 되살린다.**
+
+    🚨 왜 필요한가. build/factors_src.json 은 반입 금지(.gitignore)라 이 저장소를 클론한
+      기계에는 없다. 그런데 랩 행 하나를 고치려 해도 페이지를 통째로 다시 구워야 하고,
+      다시 구우려면 원표 행이 있어야 한다. 페이지가 원표 행을 한 글자도 안 바꾸고 담고
+      있으니 그것을 되읽는 것이 유일한 길이다.
+    ⚠ 되읽기가 정확한지는 믿지 않고 **잰다** — main() 이 다시 그린 원표 구간을 원래
+      페이지의 그것과 바이트까지 대조하고, 다르면 굽지 않고 멈춘다.
+    ⚠ 이것은 원표의 대용품이지 원표가 아니다. 원표가 바뀌면 이 길로는 그 변화를 모른다.
+    """
+    with open(PAGE, encoding="utf-8", newline="") as f:
+        page = f.read()
+    ex = re.search(r"원표 추출 <b class=\"tnum\">(.*?)</b>", page)
+    G = {v: k for k, v in KNOWN_GROUPS.items()}
+    D = {v[0]: k for k, v in DIR.items()}
+
+    # ⚠ 페이지가 CRLF 라 되살린 값에도 CRLF 가 들어 있다. 그대로 두면 render 뒤의
+    #   LF→CRLF 변환이 한 번 더 걸려 CR CR LF 가 된다(대조에서 잡은 자리) — LF 로 돌린다.
+    def _lf(t):
+        return t.replace(CRLF, LF)
+
+    def val(body, label, code=False):
+        tag = "pre" if code else "div"
+        m = re.search(r'<div class="fxk">%s</div><%s class="fxv(?: code)?">(.*?)</%s>'
+                      % (re.escape(label), tag, tag), body, re.S)
+        if m:
+            return _lf(html.unescape(m.group(1)))
+        if re.search(r'<div class="fxk">%s</div><div class="fxv nil">' % re.escape(label), body):
+            return None
+        return None
+
+    rows = []
+    for m in re.finditer(r'<details class="fx" id="f\d+" data-g="([^"]*)" data-sg="([^"]*)" '
+                         r'data-dir="([^"]*)"><summary><span class="fxn">(.*?)</span>'
+                         r'<span class="fxd">(.*?)</span>.*?<div class="fxb">(.*?)</div></details>',
+                         page, re.S):
+        g, sg, dr, name, desc, body = m.groups()
+        if 'href="explorer.html#s-' in body:        # 랩 행은 factors_lab.json 이 정본이다
+            continue
+        name = _lf(html.unescape(name))
+        spg = val(body, "원 명칭") or name
+        rows.append({"factor": name, "spg": spg, "group": G.get(g, g),
+                     "subgroup": _lf(html.unescape(sg)) or None,
+                     "description": (_lf(html.unescape(desc)) if desc != "—" else None),
+                     "rank_order": D.get(dr), "notes": val(body, "설명"),
+                     "formula": val(body, "산식", code=True), "citations": val(body, "참고문헌")})
+    if not rows:
+        raise SystemExit("factors.html 에서 원표 행을 하나도 못 읽었다 — 되살리기를 믿지 말 것")
+    return {"extracted": ex.group(1) if ex else "—", "rows": rows, "_from_page": True}
+
+
+def _src_blocks(page):
+    """페이지 안의 **원표 행**(랩 행이 아닌 것)을 그려진 모습 그대로 뽑는다."""
+    return [m.group(0) for m in re.finditer(r'<details class="fx".*?</details>', page, re.S)
+            if 'href="explorer.html#s-' not in m.group(0)]
+
+
 def load():
-    with open(SRC, encoding="utf-8") as f:
-        d = json.load(f)
+    if os.path.exists(SRC):
+        with open(SRC, encoding="utf-8") as f:
+            d = json.load(f)
+    else:
+        print("  ⚠ build/factors_src.json 이 없다 — factors.html 에서 원표 행을 되살린다"
+              "(다시 그린 원표 구간을 바이트로 대조한다)")
+        d = src_from_page()
     seen = set()
     for r in d["rows"]:
         _check_row(r, "원표")
@@ -88,7 +158,7 @@ def load():
         if r["group"] not in LAB_GROUPS:
             raise SystemExit("랩 행 group 은 %s 중 하나: %s (%s)" % (LAB_GROUPS, r["group"], nm))
         if r["subgroup"] not in STYLE_SUBS:
-            raise SystemExit("랩 행 subgroup 은 다섯 스타일 %s 중 하나: %s (%s)" % (STYLE_SUBS, r["subgroup"], nm))
+            raise SystemExit("랩 행 subgroup 은 %s 중 하나: %s (%s)" % (STYLE_SUBS, r["subgroup"], nm))
         if not re.fullmatch(r"t-[a-z0-9-]+", r.get("lab_sid") or ""):
             raise SystemExit("랩 행 lab_sid 가 explorer 카드 id(t-…) 가 아니다: %s" % nm)
         sim = r.get("similar") or []
@@ -193,6 +263,16 @@ def main():
     if a < 0 or b < a:
         raise SystemExit("factors.html 에 FACTORS:BEGIN/END 표지가 없다")
     new = page[:a + len(BEGIN)] + nl + render(d).replace(LF, nl) + nl + page[b:]
+    # 🚨 원표를 페이지에서 되살려 구운 판이면, 다시 그린 원표 행이 원래와 **바이트까지**
+    #   같은지 본다. 하나라도 다르면 굽지 않는다 — 원표를 손대느니 멈추는 쪽이 낫다.
+    if d.get("_from_page"):
+        o, n = _src_blocks(page), _src_blocks(new)
+        if o != n:
+            bad = next((i for i, (x, y) in enumerate(zip(o, n)) if x != y), None)
+            raise SystemExit(
+                "되살린 원표 행이 원래와 다르게 그려졌다(%d행 중 %s번째부터) — 굽지 않는다"
+                % (len(o), bad if bad is not None else "길이"))
+        print("  ~ 원표 %d행 되살리기 대조 통과(바이트 일치)" % len(o))
     if check:
         same = new == page
         print("팩터 사전:", "입력과 같음" if same else "입력과 다름 — python build/factors_page.py 로 다시 구울 것")
