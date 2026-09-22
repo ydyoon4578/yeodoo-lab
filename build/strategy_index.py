@@ -824,6 +824,20 @@ def rec(**kw):
         kw["basis"] = "pit"
     else:
         kw["basis"] = "retro"
+    # 🚨 2026-09-22 — 현금 대조군 이름표(tech_backtest.bench_is_cash 가 판정해 bench_cash 로 넘긴다).
+    #   숏·시장중립은 랩 본편이 현금(무위험)을 대조군으로 굴리는데 이름표는 파일 머리의
+    #   「S&P 500(PR) 매수후보유」 하나가 전 규칙에 붙어 있었다 → 「금리민감 과열 15 숏」 카드가
+    #   현금 수치를 «S&P 500 대비» 라고 적었다(explorer 렌더 검사가 CI 에서 잡았다).
+    #   ⚠ **화면에 남는 대조군**에만 붙인다. 시점정확(PIT)으로 갈아 끼운 규칙(프로그인더팬 롱숏
+    #     4종)은 머리 대조군이 PIT 레그의 것(그때 지수 멤버 동일가중)이라 현금이 아니다 —
+    #     그때는 물러난 소급 대조군(bench_retro, 그쪽이 현금)에만 이름을 단다.
+    _cash_lab = kw.pop("bench_cash", None)
+    if _cash_lab:
+        if kw["basis"] == "retro":
+            kw["bench_label"] = _cash_lab
+            kw["bench"] = dict(kw.get("bench") or {}, label=_cash_lab)
+        elif kw.get("bench_retro") is not None:
+            kw["bench_retro"] = dict(kw["bench_retro"], label=_cash_lab)
     # 분류는 여기 한 곳에서만 매긴다. 출처마다 따로 계산하면 같은 전략이 화면에서
     # 다른 칸에 들어가는 일이 생긴다.
     kw["holds"] = holds_kind(kw.get("holdings"))
@@ -985,6 +999,9 @@ def main() -> int:
 
     # ── ② 종목 전략 ──
     t = load("tech_strategies.json") or {}
+    # 대조군이 현금인 규칙을 가르는 판정은 랩 본편에 하나만 있다 — 여기서 다시 적지 않는다.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import tech_backtest as _TB                     # noqa: E402  표준 라이브러리만 쓴다(0.1초)
     # SPX(TR) Sharpe 미달 종목선택 제외는 2026-07-28 에 **되돌렸다**(사용자 결정).
     # 종목 전략은 전부 목록에 싣는다 — 판정(등급)이 이미 그 정보를 담고 있고, 목록에서까지
     # 빼면 '무엇을 재고 무엇을 버렸나'가 화면에서 사라진다.
@@ -1016,9 +1033,12 @@ def main() -> int:
             # 원 논문 — 없으면 **비운다.** 지어 채우면 독자가 원문을 못 찾고 그 사실조차
             # 모른다(strategy_refs.json 의 policy 가 그 규약이다).
             papers=REF_PAPERS.get(r["sid"]) or None,
-            # 대조군 이름은 파일 머리에 하나로 있다(종목 전략은 전부 같은 대조군을 쓴다).
-            # 레코드로 안 옮기면 화면이 '무엇과 겨뤘나'를 못 적는다.
+            # 대조군 이름은 파일 머리에 하나로 있다. 레코드로 안 옮기면 화면이 '무엇과
+            # 겨뤘나'를 못 적는다.
+            # 🚨 «종목 전략은 전부 같은 대조군» 은 2026-08-23 부터 틀렸다 — 숏·시장중립은 현금을
+            #   쓴다. 그 규칙만 rec() 이 이름을 갈아 준다(bench_cash · 위 rec 주석 참조).
             bench_label=t.get("bench_label"),
+            bench_cash=(_TB.CASH_BENCH_LABEL if _TB.bench_is_cash(r["sid"]) else None),
             # ⚠ 구간은 **전략별**로 다르다. 펀더멘털이 늦게 채워지는 규칙은 한동안 후보가 없어
             #   실제 시작이 늦다(고ROE 2021-01, 장부가대비저평가 2020-03). 문서 전체 start 를
             #   쓰면 화면이 "2017-08 부터 쟀다"고 잘못 말하고, 같은 표에 놓인 다른 전략과
