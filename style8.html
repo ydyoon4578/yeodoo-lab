@@ -800,15 +800,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          + '<circle cx="' + X(li).toFixed(1) + '" cy="' + Y(lv).toFixed(1) + '" r="' + (lots ? 1.4 : 1.9) + '" fill="' + s.col + '"/>';
       labs.push({nm:s.nm, v:lv, col:s.col, ls:s.ls, b:s.b, x:X(li), y:Y(lv)});
     });
-    /* 라벨 겹침 — 홈과 같은 세 단계(아래로 민다 → 넘치면 통째로 올린다 → 위 경계에서 멈춘다) */
+    /* 라벨 겹침 — 두 번 민다: ① 위→아래(최소 간격만큼 아래로) ② 아래→위(바닥을 넘은 만큼만 올린다).
+       🚨 2026-09-22 사용자 «산업그룹 차트에서 이름 겹치는거». 종전(세 단계)은 바닥을 넘으면 뭉치를
+         **통째로** 올렸다 — 가운데 줄 사이에 넓은 자연 간격이 남아 있어도 안 줄이고 전체를 옮겨,
+         24줄 × 8.9 = 205 가 높이 224 에 들어가는데도 맨 위 두 줄이 위 경계에 같이 박혀 **완전히
+         포개졌다**(실측 09-21 1개월: 미디어·엔터테인먼트 +9.41 · 통신 서비스 +9.21 같은 높이).
+         두 번 밀면 움직여야 할 줄만 움직이고, 들어갈 자리가 있으면 반드시 안 겹친다.
+       ⚠ 그래도 안 들어가면(줄 × 최소 간격 > 높이) 고르게 나눠 편다 — 한 자리에 포개지 않는다.
+       ⚠ build/style8_pdf.py(매일 PDF) · index.html(홈) 과 같은 규칙이다 — 같이 고칠 것. */
     var fs = lots ? 7.3 : 8.6, TOPL = y0 + 2, BOTL = y1 - 2, GAP = fs * 1.22;
     if (labs.length > 1) GAP = Math.max(fs * .98, Math.min(GAP, (BOTL - TOPL) / (labs.length - 1)));
     labs.sort(function(a, b){ return a.y - b.y; });
-    var prev = -1e9; labs.forEach(function(L){ L.ly = Math.max(L.y, prev + GAP); prev = L.ly; });
-    var over = labs.length ? labs[labs.length - 1].ly - BOTL : 0; if (over > 0) labs.forEach(function(L){ L.ly -= over; });
-    if (labs.length && labs[0].ly < TOPL){
-      var up = TOPL - labs[0].ly, room = BOTL - labs[labs.length - 1].ly, mv = Math.min(up, Math.max(0, room));
-      labs.forEach(function(L){ L.ly += mv; if (L.ly < TOPL) L.ly = TOPL; });
+    var nL = labs.length, k;
+    for (k = 0; k < nL; k++) labs[k].ly = Math.max(labs[k].y, k ? labs[k - 1].ly + GAP : TOPL);
+    for (k = nL - 1; k >= 0; k--) labs[k].ly = Math.min(labs[k].ly, k < nL - 1 ? labs[k + 1].ly - GAP : BOTL);
+    if (nL > 1 && labs[0].ly < TOPL - 1e-6){
+      var eq = (BOTL - TOPL) / (nL - 1);
+      for (k = 0; k < nL; k++) labs[k].ly = TOPL + k * eq;
     }
     labs.forEach(function(L){
       g += '<line x1="' + (L.x + 2).toFixed(1) + '" y1="' + L.y.toFixed(1) + '" x2="' + (x1 + 7) + '" y2="' + L.ly.toFixed(1) + '" stroke="' + L.col + '" stroke-width=".6" opacity=".5"/>';
