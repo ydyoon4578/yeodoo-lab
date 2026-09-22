@@ -193,10 +193,14 @@
   }
 
   // ── 성과 엔진 — build/portfolio_fund.py 의 strat_perf 와 같은 정의 ────────
-  //   pnl = Σ qty×(px_t − 체결가) · BM = 전략 첫 매매일에 같은 금액을 지수에(전략별 단일 앵커)
-  //   inv = 매수(qty>0)의 원금 합. 파이썬 쪽 수치(PF.funds[*].check)와 기계 대조한다.
-  //   🚨 2026-09-22 — BM 앵커를 매매별(tr.dt)에서 전략 첫 매매일(t0) 하나로 바꿨다.
-  //     build/portfolio_fund.py의 같은 날짜 주석 참조 — 여기만 고치면 크로스체크가 불일치로 뜬다.
+  //   pnl = Σ qty×(px_t − 체결가) · inv = 매수(qty>0)의 원금 합
+  //   BM(%) = 전략 첫 매매일(t0) → 그날까지 **지수 등락률** · BM 손익 = inv × BM(%)
+  //   파이썬 쪽 수치(PF.funds[*].check)와 기계 대조한다.
+  //   🚨 2026-09-22 사용자 «나스닥BM 그냥 6/24부터 등락률 계산해서 쓰면됨». 매매마다
+  //     qty×체결가×(지수 등락)을 더하던 방식은 매도(qty<0)가 음수로 들어가 BM(%)이
+  //     «지수 등락률 × 순매수/총매수» 로 줄었다 — 같은 날 시작한 두 전략도 리밸런싱
+  //     매도량이 다르면 BM 이 갈렸다. 이제 BM(%)은 전략마다 지수 한 줄의 등락률이다.
+  //     build/portfolio_fund.py 의 같은 날짜 주석 참조 — 한쪽만 고치면 크로스체크가 불일치로 뜬다.
   function calcPerf(slug, trades, asofI) {
     var lvl = PF.lvl[slug];
     // 창 경계 — 조용히 새는 세 갈래를 «제외 + 집계»로 바꾼다(적대감사 13·14·15):
@@ -227,17 +231,17 @@
       var iv0Fixed = lvlLeI(lvl, dLe(t0));             // 전략 전체의 BM 0점(전략 첫 매매일)
       var curve = [];
       for (var i = i0; i <= asofI; i++) {
-        var pnl = 0, bm = 0, inv = 0, d = PF.dates[i];
+        var pnl = 0, inv = 0, d = PF.dates[i];
         for (var j = 0; j < trs.length; j++) {
           var tr = trs[j];
           if (tr.dt > d) continue;
           var p = pxLeI(tr.t, i);
           if (p == null) continue;
           pnl += tr.q * (p - tr.p);
-          var it = lvlLeI(lvl, i);
-          if (it && iv0Fixed) bm += tr.q * tr.p * (it / iv0Fixed - 1);
           if (tr.q > 0) inv += tr.q * tr.p;
         }
+        var it = lvlLeI(lvl, i);
+        var bm = (it && iv0Fixed) ? inv * (it / iv0Fixed - 1) : 0;   // 매수원금 × 첫 매매일부터 지수 등락률
         curve.push([i, pnl, bm, inv]);
       }
       // 분할 가드 — 보유 구간에 하루 |40%| 초과 변동
@@ -272,8 +276,8 @@
           //   inv/qT=1264.78 인데 현재가 930.92 보다도 높아 +12.38% 수익과 모순됐다).
           //   매매가는 **매수분만의 가중평균**이어야 한다 — inv/qBuyT.
           if (t.q > 0) { invT += t.q * t.p; qBuyT += t.q; }
-          if (it && iv0Fixed) bmT += t.q * t.p * (it / iv0Fixed - 1);   // curve 와 같은 앵커(t0)
         });
+        bmT = (it && iv0Fixed) ? invT * (it / iv0Fixed - 1) : 0;         // curve 와 같은 정의(t0 → 기준일 지수 등락률)
         rows.push({ t: tk, q: qT, qbuy: qBuyT, px: p, inv: invT, pnl: pnlT, ret: invT ? pnlT / invT : null,
                     exc: pnlT - bmT, warn: !!warn[tk] });
       });
@@ -1353,7 +1357,7 @@
                note: '매수원금 대비 손익 — 자리 크기와 무관한 순수 등락' },
         exc: { lab: '초과손익(USD)', unit: '', nd: 0,
                f: function (a2) { return a2.exc; },
-               note: '그 전략 첫 매매일에 같은 금액을 지수에 넣었을 때 대비' }
+               note: '매수원금 × 그 전략 첫 매매일부터의 지수 등락률 대비' }
       };
       h.push('<div class="chart barchart" id="bars-' + slug + '">');
       h.push('<div class="chtitle">종목별 <span class="barbtns">' +

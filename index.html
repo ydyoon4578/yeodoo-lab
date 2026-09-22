@@ -2585,10 +2585,21 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       var rb=el('stretry'); if(rb)rb.addEventListener('click',loadStSeries);
       return;
     }
+    // 🚨 2026-09-22 사용자 «홈 차트 탭 결함도 고쳐줘». 고른 구간(기본 '1D')이 자료에 없으면
+    //   여기서 return 해 **탭까지 통째로** 안 그렸다. 1D 는 장중 잡이 따로 굽는 칸이라 그 잡이
+    //   늦거나 빠진 날(09-22 실측 — 크론을 바꾼 푸시가 대기 중이던 그날 실행을 지웠다) 차트 자리에
+    //   «이 구간의 시계열이 아직 없습니다» 한 줄만 남고, 멀쩡히 있는 1주~올해도 고를 수 없었다.
+    //   → 고른 구간이 없으면 **있는 첫 구간**(아래 순서)으로 그린다. 1일이 빠진 것은 각주로 알린다.
+    //   ⚠ 기본값 선언(STC_HZ='1D')은 그대로다 — 사용자 결정(2026-08-23)이고 검사가 못박아 뒀다.
+    var STC_ORD=['1D','1W','1M','3M','6M','12M','YTD'];
+    if(!(STC_P.series||{})[STC_HZ]){
+      var _alt=STC_ORD.filter(function(h){return (STC_P.series||{})[h];})[0]||Object.keys(STC_P.series||{})[0];
+      if(_alt) STC_HZ=_alt;
+    }
+    var no1D=!(STC_P.series||{})['1D'];
     var blk=(STC_P.series||{})[STC_HZ];
-    // ⚠ 그 구간만 없는 것은 자료가 원래 그런 것이다(예: 장중 잡 전 아침에는 '1D' 가 없다).
-    //   실패와 구분해서 적는다 — «못 받았다» 로 읽히면 새로고침만 되풀이하게 된다.
-    if(!blk){box.innerHTML='<div class="skel2">이 구간의 시계열이 아직 없습니다.</div>';return;}
+    // ⚠ 구간이 하나도 없을 때만 여기서 멈춘다(실패와 구분 — «못 받았다» 는 위 STC_ERR 가 말한다).
+    if(!blk){box.innerHTML='<div class="skel2">기간별 수익률 시계열이 아직 없습니다.</div>';return;}
 
     // ⚠ 홈의 두 블록이 **같은 구간 목록·같은 이름**을 쓴다(사용자 요청 2026-08-13 —
     //   "어떤건 1주가 없고 어떤건 YTD로 적혀있고 그러니깐 별로야"). 아래 TP_LAB 과 짝이다.
@@ -2886,6 +2897,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         chart(blk.sec_dates, secs, '섹터', CSEC)+
         (inds.length?chart(iblk.dates, inds, '산업그룹', CIND, IDASH):'')+
       '</div>'+
+      // 1일 탭이 없는 이유를 적는다 — 안 적으면 «1일이 원래 없는 화면» 으로 읽힌다(위 결함과 같은 실수).
+      (no1D?'<p class="stnote">⚠ <b>1일</b>(장중 분봉)은 아직 안 들어왔다 — 장중 잡이 돌면 1일 탭이 생긴다. '+
+        '그동안은 있는 구간부터 보여 준다.</p>':'')+
       (iSkip?'<p class="stnote">⚠ 1일은 <b>분봉 경로</b>다(일간 종가로는 점이 둘이라 선이 '+
         '안 된다). 산업그룹은 아직 분봉으로 안 굽기 때문에 이 칸에서만 판을 뺐다 — '+
         '다른 축을 같은 화면에 나란히 놓지 않는다.</p>':'')+
