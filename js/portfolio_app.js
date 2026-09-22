@@ -193,8 +193,10 @@
   }
 
   // ── 성과 엔진 — build/portfolio_fund.py 의 strat_perf 와 같은 정의 ────────
-  //   pnl = Σ qty×(px_t − 체결가) · BM = 같은 날 같은 금액을 지수에(매매 시점 일치)
+  //   pnl = Σ qty×(px_t − 체결가) · BM = 전략 첫 매매일에 같은 금액을 지수에(전략별 단일 앵커)
   //   inv = 매수(qty>0)의 원금 합. 파이썬 쪽 수치(PF.funds[*].check)와 기계 대조한다.
+  //   🚨 2026-09-22 — BM 앵커를 매매별(tr.dt)에서 전략 첫 매매일(t0) 하나로 바꿨다.
+  //     build/portfolio_fund.py의 같은 날짜 주석 참조 — 여기만 고치면 크로스체크가 불일치로 뜬다.
   function calcPerf(slug, trades, asofI) {
     var lvl = PF.lvl[slug];
     // 창 경계 — 조용히 새는 세 갈래를 «제외 + 집계»로 바꾼다(적대감사 13·14·15):
@@ -222,6 +224,7 @@
       var i0 = dLe(t0);
       if (i0 < 0) i0 = 0;
       if (PF.dates[i0] < t0) i0++;                    // 첫 매매일 이후 축부터
+      var iv0Fixed = lvlLeI(lvl, dLe(t0));             // 전략 전체의 BM 0점(전략 첫 매매일)
       var curve = [];
       for (var i = i0; i <= asofI; i++) {
         var pnl = 0, bm = 0, inv = 0, d = PF.dates[i];
@@ -231,8 +234,8 @@
           var p = pxLeI(tr.t, i);
           if (p == null) continue;
           pnl += tr.q * (p - tr.p);
-          var it = lvlLeI(lvl, i), iv0 = lvlLeI(lvl, dLe(tr.dt));
-          if (it && iv0) bm += tr.q * tr.p * (it / iv0 - 1);
+          var it = lvlLeI(lvl, i);
+          if (it && iv0Fixed) bm += tr.q * tr.p * (it / iv0Fixed - 1);
           if (tr.q > 0) inv += tr.q * tr.p;
         }
         curve.push([i, pnl, bm, inv]);
@@ -258,16 +261,20 @@
         var p = pxLeI(tk, asofI);
         if (p == null) return;
         var trsT = byT[tk];
-        var invT = 0, pnlT = 0, bmT = 0, qT = 0;
+        var invT = 0, pnlT = 0, bmT = 0, qT = 0, qBuyT = 0;
         var it = lvlLeI(lvl, asofI);
         trsT.forEach(function (t) {
           qT += t.q;
           pnlT += t.q * (p - t.p);
-          if (t.q > 0) invT += t.q * t.p;
-          var iv0 = lvlLeI(lvl, dLe(t.dt));
-          if (it && iv0) bmT += t.q * t.p * (it / iv0 - 1);
+          // 🚨 2026-09-22 — qBuyT(매수 수량 합)를 따로 센다. 리밸런싱으로 일부만
+          //   팔았으면 순수량(qT)이 매수 수량보다 적어, inv/qT 는 «남은 수량» 을 «전체
+          //   매수원금» 으로 나눈 값이 되어 실제 평단보다 부풀려진다(실측: LITE US
+          //   inv/qT=1264.78 인데 현재가 930.92 보다도 높아 +12.38% 수익과 모순됐다).
+          //   매매가는 **매수분만의 가중평균**이어야 한다 — inv/qBuyT.
+          if (t.q > 0) { invT += t.q * t.p; qBuyT += t.q; }
+          if (it && iv0Fixed) bmT += t.q * t.p * (it / iv0Fixed - 1);   // curve 와 같은 앵커(t0)
         });
-        rows.push({ t: tk, q: qT, px: p, inv: invT, pnl: pnlT, ret: invT ? pnlT / invT : null,
+        rows.push({ t: tk, q: qT, qbuy: qBuyT, px: p, inv: invT, pnl: pnlT, ret: invT ? pnlT / invT : null,
                     exc: pnlT - bmT, warn: !!warn[tk] });
       });
       rows.sort(function (a, b) { return b.exc - a.exc; });
@@ -1346,7 +1353,7 @@
                note: '매수원금 대비 손익 — 자리 크기와 무관한 순수 등락' },
         exc: { lab: '초과손익(USD)', unit: '', nd: 0,
                f: function (a2) { return a2.exc; },
-               note: '같은 날 같은 금액을 지수에 넣었을 때 대비' }
+               note: '그 전략 첫 매매일에 같은 금액을 지수에 넣었을 때 대비' }
       };
       h.push('<div class="chart barchart" id="bars-' + slug + '">');
       h.push('<div class="chtitle">종목별 <span class="barbtns">' +
@@ -1866,22 +1873,28 @@
        ⚠ 전략 이름은 첫 줄에만 적는다. 같은 값을 세로로 반복하면 눈이 그 열을 읽게 된다. */
     var anyRow = Object.keys(perf).some(function (k) { return perf[k].rows.length; });
     if (anyRow) {
-      h.push('<h4>종목별</h4><table class="prtbl"><thead><tr><th>전략</th>' +
-        '<th>티커</th><th class="tnum">순수량</th><th class="tnum">비중(NAV)</th>' +
-        '<th class="tnum">현재가</th><th class="tnum">매수원금</th><th class="tnum">평가손익</th>' +
-        '<th class="tnum">수익률</th><th class="tnum">초과</th></tr></thead><tbody>');
+      // 🚨 2026-09-22 사용자 지시 «티커·비중·수량·매매가·현재가·평가손익·수익률 이렇게만
+      //   깔끔하게». 전략·초과 두 열은 뺀다. 계산(calcPerf)은 그대로 두고 여기 표시만
+      //   줄인다 — crossCheck 가 대조하는 값(perf[*].last)엔 손대지 않았다.
+      //   ⚠ 전략별 그룹은 열로는 안 보이지만 정렬은 그대로 유지한다(같은 전략 티커가
+      //     흩어지지 않게) — Object.keys(perf).sort() 순서를 그대로 쓴다.
+      h.push('<h4>종목별</h4><table class="prtbl"><thead><tr>' +
+        '<th>티커</th><th class="tnum">비중</th><th class="tnum">수량</th>' +
+        '<th class="tnum">매매가</th><th class="tnum">현재가</th><th class="tnum">평가손익</th>' +
+        '<th class="tnum">수익률</th></tr></thead><tbody>');
       Object.keys(perf).sort().forEach(function (sname) {
-        perf[sname].rows.forEach(function (r, i) {
-          h.push('<tr' + (i ? '' : ' class="prgrp"') + '><td>' +
-            (i ? '' : esc(sname)) + '</td>' +
+        perf[sname].rows.forEach(function (r) {
+          // 매매가 = 매수원금 ÷ **매수 수량**(가중평균) — 순수량(r.q)이 아니다. 일부를
+          // 팔았으면 순수량은 매수 수량보다 적어, r.q 로 나누면 평단이 부풀려진다.
+          var avgPx = r.qbuy ? r.inv / r.qbuy : null;
+          h.push('<tr>' +
             '<td class="tk">' + esc(r.t) + (r.warn ? ' ⚠' : '') + '</td>' +
-            '<td class="tnum">' + num(r.q, 0) + '</td>' +
             '<td class="tnum">' + (spp[r.t] ? num(r.q / spp[r.t], 2) : '—') + '</td>' +
+            '<td class="tnum">' + num(r.q, 0) + '</td>' +
+            '<td class="tnum">' + (avgPx == null ? '—' : num(avgPx, 2)) + '</td>' +
             '<td class="tnum">' + num(r.px, 2) + '</td>' +
-            '<td class="tnum">' + num(r.inv, 0) + '</td>' +
             '<td class="tnum ' + sgn(r.pnl) + '">' + num(r.pnl, 0) + '</td>' +
-            '<td class="tnum ' + sgn(r.ret) + '">' + (r.ret == null ? '—' : pct(r.ret, 2, true)) + '</td>' +
-            '<td class="tnum ' + sgn(r.exc) + '">' + num(r.exc, 0) + '</td></tr>');
+            '<td class="tnum ' + sgn(r.ret) + '">' + (r.ret == null ? '—' : pct(r.ret, 2, true)) + '</td></tr>');
         });
       });
       h.push('</tbody></table>');

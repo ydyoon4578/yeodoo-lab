@@ -6,7 +6,7 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
   ② 포트폴리오 — 종목별 지수비중/펀드비중/액티브 틸트, 패시브 대비 수량 괴리
       (2026-08-26 사용자 지시로 «보유 vs 지수» → «포트폴리오» 로 개칭)
   ③ 전략 매매 내역 — 웹 원장(+이전 전이면 DB 씨앗) + 현재가 평가
-  ④ 전략 성과·기여 — 매매 시점 일치 BM 대비 초과손익과 NAV 기여(bp)
+  ④ 전략 성과·기여 — 전략 첫 매매일 기준 BM 대비 초과손익과 NAV 기여(bp)
 를 렌더 완료된 HTML 조각으로 _build/pages/portfolio_content.html 에 쓴다.
 
 🚨 이 조각은 **평문 그대로 저장소에 들어가지 않는다.** _build/ 는 gitignore 이고,
@@ -48,7 +48,9 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
     ⚠ 눈금을 바꿔도 이 값은 안 변한다(지수비중_NAV × NAV = 지수비중_원 × 슬리브).
   · 전략 수익률 = Σ수량×(현재가−체결가) ÷ 매수원금. 체결가는 원장의 trade_price 로,
     **당시 종가이지 실제 체결가가 아니다**(MP 엑셀 VBA 가 종가를 박는다).
-  · BM 대조 = 같은 날 같은 금액을 지수에 넣었을 때의 손익(매매 시점 일치). 초과 = 차이.
+  · BM 대조 = 그 전략의 첫 매매일에 같은 금액을 지수에 넣었을 때의 손익(전략별 단일 기준일 —
+    2026-09-22 이전엔 매매마다 각자 날짜를 앵커로 썼는데, 첫 매매일이 같아도 그 뒤 교체매매
+    이력이 다르면 BM 이 갈려 사용자가 "같은 날 시작했는데 왜 다르냐"고 물었다). 초과 = 차이.
   · NAV 기여(bp) = 초과손익(USD) × 기준일 환율 ÷ 기준일 NAV × 10,000.
 
 한계(화면에 싣는다):
@@ -448,10 +450,18 @@ def last_lt(series_dict, date):
 
 # ── 3) 전략 성과 계산 ────────────────────────────────────────────────────────
 def strat_perf(trades, px, lvl_idx, asof_us):
-    """전략 → {curve, last, rows, warn_split}. BM 은 매매 시점 일치 지수 투자.
+    """전략 → {curve, last, rows, warn_split}. BM 은 **전략 첫 매매일** 기준 지수 투자.
 
     손익 = Σ qty×(px_t − 체결가). 매도(qty<0)도 같은 식이 성립한다 — 매도 시점에
     잠근 손익이 이후 가격변동과 상쇄되어 실현분으로 남는다.
+
+    🚨 2026-09-22 사용자 지시 — BM 앵커를 매매마다 각자 날짜로 잡지 않고 **전략의 첫
+      매매일 하나**로 통일한다. 종전엔 리밸런싱(교체매매)이 있으면 그 매매 날짜가 따로
+      앵커가 되어, 첫 매매일이 같은 두 전략도 그 뒤 교체매매 이력이 다르면 가중평균 BM 이
+      갈렸다(실측: 두 전략 다 6/24 개시인데 BM 이 +0.94%/+1.08% 로 벌어져 사용자가 사유를
+      물었다). 이제는 "그 전략 전체를 첫 매매일에 지수로 샀다면" 하나의 잣대로 통일한다.
+      ⚠ js/portfolio_app.js 의 calcPerf() 가 같은 정의를 미러링한다 — 같이 고칠 것
+        (아래 crossCheck 가 두 엔진을 대조하므로 한쪽만 고치면 화면에 불일치로 뜬다).
     """
     out = {}
     dates = sorted(d for d in lvl_idx if d <= asof_us)
@@ -462,6 +472,7 @@ def strat_perf(trades, px, lvl_idx, asof_us):
 
     for _sname, s in out.items():
         t0 = min(t["dt"] for t in s["trades"])
+        i0_fixed = lvl_idx.get(t0) or last_leq(lvl_idx, t0)[1]   # 전략 전체의 BM 0점
         curve = []
         for d in [x for x in dates if x >= t0]:
             pnl = bm = inv = 0.0
@@ -473,9 +484,8 @@ def strat_perf(trades, px, lvl_idx, asof_us):
                     continue
                 pnl += tr["qty"] * (p - tr["px"])
                 i_t = lvl_idx.get(d) or last_leq(lvl_idx, d)[1]
-                i_0 = lvl_idx.get(tr["dt"]) or last_leq(lvl_idx, tr["dt"])[1]
-                if i_t and i_0:
-                    bm += tr["qty"] * tr["px"] * (i_t / i_0 - 1)
+                if i_t and i0_fixed:
+                    bm += tr["qty"] * tr["px"] * (i_t / i0_fixed - 1)
                 if tr["qty"] > 0:
                     inv += tr["qty"] * tr["px"]
             curve.append((d, pnl, bm, inv))
@@ -506,9 +516,8 @@ def strat_perf(trades, px, lvl_idx, asof_us):
             bm_t = 0.0
             i_t = last_leq(lvl_idx, asof_us)[1]
             for t in trs:
-                i_0 = lvl_idx.get(t["dt"]) or last_leq(lvl_idx, t["dt"])[1]
-                if i_t and i_0:
-                    bm_t += t["qty"] * t["px"] * (i_t / i_0 - 1)
+                if i_t and i0_fixed:                    # 전략 첫 매매일 0점 — curve 와 같은 앵커
+                    bm_t += t["qty"] * t["px"] * (i_t / i0_fixed - 1)
             rows.append(dict(ticker=tk, qty=sum(t["qty"] for t in trs), inv=inv_t, px=p,
                              pnl=pnl_t, ret=(pnl_t / inv_t if inv_t else None),
                              exc=pnl_t - bm_t, warn=(tk in s["warn_split"])))
@@ -1058,7 +1067,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     #   수치를 실어 앱이 기계 대조한다(불일치면 화면에 ⚠).
     H.append('<h3>③ 매매 원장 <span class="hnote">DB(mp)+웹 입력 통합 · 체결가 = 당시 종가(실제 체결가 아님)</span></h3>')
     H.append('<div class="appbox" id="ledger-%s"><p class="jswait">웹 앱이 그립니다 — 이 문구가 남아 있으면 js/portfolio_app.js 로드 실패</p></div>' % slug)
-    H.append('<h3>④ 전략 성과·기여 <span class="hnote">라이브 계산 · BM = 같은 날 같은 금액을 지수에(매매 시점 일치)</span></h3>')
+    H.append('<h3>④ 전략 성과·기여 <span class="hnote">라이브 계산 · BM = 전략 첫 매매일에 같은 금액을 지수에</span></h3>')
     H.append('<div class="appbox" id="perf-%s"><p class="jswait">웹 앱이 그립니다…</p></div>' % slug)
 
     H.append('<details class="dbstatic"><summary>정적 스냅샷 — 생성 시점 파이썬 계산(교차검증용)</summary>')
@@ -1240,7 +1249,7 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 <li><b>펀드비중</b>은 종목 평가액(원화)을 개별주식 슬리브 합으로 나눈 것이다 — 지수비중과 같은 눈금이 되도록 주식 안에서 정규화했다. 펀드는 주식+ETF+선물로 지수를 복제하므로 NAV 분모로 보면 전 종목이 일괄 언더웨이트로 보인다.</li>
 <li><b>패시브 수량</b> = 지수비중 × 주식슬리브(원) ÷ (종가 × USD환율). 괴리 = 실제 − 패시브. 액티브 틸트의 수량 표현이다.</li>
 <li><b>체결가는 당시 종가다</b> — 실제 체결가가 아니다(원장을 쓰는 MP 엑셀이 종가를 박는다). 수익률·기여는 그만큼 근사치다.</li>
-<li><b>BM 대조</b>는 같은 날 같은 금액을 지수에 넣었을 때의 손익이다(매매 시점 일치). 초과 = 전략 손익 − BM 손익. <b>NAV 기여(bp)</b> = 초과(USD) × 기준일 환율 ÷ NAV × 10,000.</li>
+<li><b>BM 대조</b>는 그 전략의 <b>첫 매매일</b>에 같은 금액을 지수에 넣었을 때의 손익이다(전략마다 단일 기준일 — 매매가 여러 건이어도 앵커는 하나). 초과 = 전략 손익 − BM 손익. <b>NAV 기여(bp)</b> = 초과(USD) × 기준일 환율 ÷ NAV × 10,000.</li>
 <li><b>배당 미반영</b> — 종가는 수정주가가 아니다. 보유 기간이 짧아 왜곡은 작지만 0이 아니다.</li>
 <li>매매~기준일 사이 하루 ±40%를 넘는 가격변동이 있으면 <b>분할 의심 ⚠</b>를 단다 — 벤더가 분할을 소급 반영하지 않은 사고가 실측된 바 있다.</li>
 <li><b>자료 원천</b>(2026-08-21 개편) — ① 사내 export 엑셀: NAV·환율·보유 원장. ② 사내 DB: <b>지수 구성종목·비중·GICS 하나만</b>. ③ 이 랩의 웹 자료(yfinance·매일 자동): 종목 종가·지수 레벨·분할 이력. ④ 웹 원장: 전략 매매. 갱신은 수동이고 상단의 생성 시각이 곧 이 화면의 기준이다.</li>
