@@ -2374,6 +2374,126 @@ def turnover(V, sh, i, win=TURN_WIN):
     return (sum(xs) / len(xs) / sh) if len(xs) >= win * 0.8 else None
 
 
+VOLCV_WIN = 60           # 사전등록 PREREG-2026-09-22-PXSTAT.md §2. 바꾸지 않는다.
+DALPHA_WIN, DALPHA_LAG = 12, 6      # 알파 창(개월) · 변화 간격(개월). 같은 문서 §2.
+
+
+def vol_cv(P, V, i, win=VOLCV_WIN):
+    """거래량÷주가의 변동계수 — sd/mean, win 일. 클수록 거래량이 들쭉날쭉하다.
+
+    사전등록 PREREG-2026-09-22-PXSTAT.md §2(원표 `60 Day Coefficient of Variation of
+    Volume to Price`). 방향은 원표의 내림차순 그대로 — 큰 것을 산다.
+
+    🚨 **이 랩이 Amihud·회전율에서 두 번 밟은 함정(DATA-FACTS #7)에 왜 면역인가.**
+      거래대금은 미국 상장분인데 가격·시총은 회사 전체를 따라간다. Amihud(=|수익|÷거래대금)와
+      회전율(=거래량÷주식수)은 그 비율 f 가 **분자에만** 남아 이중클래스 B주·해외
+      주력상장을 구조적으로 비유동적으로 만들었다. 변동계수는 다르다 —
+        CV(f·X) = sd(f·X)/mean(f·X) = f·sd(X)/(f·mean(X)) = CV(X)
+      **f 가 정확히 상쇄된다.** 척도 불변이 이 팩터를 고른 유일한 이유다.
+    ⚠ 면역의 한계 — f 가 창 안에서 변하면(2차 상장·전환·편입) 상쇄가 깨진다.
+      등록 §4 의 F5 가 그것을 잰다(보유칸에서 그 13종 비중 ≥ 20% 면 기각).
+    🚨 amihud() 와 같은 길이 가드가 필요하다 — `vlm.get(t) or []` 로 빈 리스트가 온다.
+    """
+    if i < win or not V or len(V) <= i:
+        return None
+    xs = []
+    for j in range(i - win + 1, i + 1):
+        v, p = V[j], P[j]
+        if not (v and p and v > 0 and p > 0):
+            continue
+        xs.append(v / p)
+    if len(xs) < win * 0.8:
+        return None
+    m = sum(xs) / len(xs)
+    if m <= 0:
+        return None
+    var = sum((x - m) ** 2 for x in xs) / (len(xs) - 1)
+    return (var ** 0.5) / m
+
+
+def _capm_alpha(rs, rm, rf):
+    """월간 CAPM 알파 — r_i − r_f = a + b(r_m − r_f) + e 의 절편 a. 자료가 얇으면 None."""
+    n = len(rs)
+    if n < 6 or len(rm) != n or len(rf) != n:
+        return None
+    x = [rm[k] - rf[k] for k in range(n)]
+    y = [rs[k] - rf[k] for k in range(n)]
+    mx = sum(x) / n
+    sxx = sum((v - mx) ** 2 for v in x)
+    if sxx <= 0:
+        return None
+    my = sum(y) / n
+    b = sum((x[k] - mx) * (y[k] - my) for k in range(n)) / sxx
+    return my - b * mx
+
+
+_MTH_CTX: dict = {}
+
+
+def mth_ctx(dates, me_list):
+    """월말 격자의 (시장 월수익, 무위험 월수익) — 격자당 한 번만 만들고 캐시한다.
+
+    🚨 **두 레그가 같은 것을 부르게 한다.** 랩과 PIT 이 각자 월간 계열을 만들면
+      xsec_score_at 을 함수로 들어낸 이유(사본이 어긋난다)가 무너진다. pd_market 이
+      같은 사유로 여기 한 곳에서 캐시하는 것과 같은 규약이다.
+    🚨 시장은 **S&P 500(PR)** 이다(등록 §2 정정본 · pd_market). ixr 이 아니다.
+    ⚠ rf_monthly 에 없는 달은 0 으로 두지 않고 **그 달을 통째로 버린다**(None) —
+      없는 것을 0 이라 부르면 그건 자료가 아니라 추측이다. 알파는 그 달을 건너뛴다.
+    """
+    key = (len(dates), dates[0], dates[-1], len(me_list))
+    if key in _MTH_CTX:
+        return _MTH_CTX[key]
+    lv = pd_market(dates)
+    try:
+        rfm = json.load(io.open(os.path.join(DATA, "rf_monthly.json"),
+                                encoding="utf-8")).get("monthly") or {}
+    except Exception:
+        rfm = {}
+    mrm, mrf = [], []
+    for n, e in enumerate(me_list):
+        if n == 0:
+            mrm.append(None); mrf.append(None); continue
+        a, b = lv[me_list[n - 1]], lv[e]
+        mrm.append((b / a - 1.0) if (a and b and a > 0) else None)
+        mrf.append(rfm.get(dates[e][:7]))
+    out = (mrm, mrf)
+    _MTH_CTX[key] = out
+    return out
+
+
+def alpha_chg_at(P, dates, me_list, i, win=DALPHA_WIN, lag=DALPHA_LAG):
+    """알파 개선 — 최근 win 개월 알파 − lag 개월 전의 win 개월 알파. 신호일 i 기준.
+
+    사전등록 PREREG-2026-09-22-PXSTAT.md §2(원표 `6M Chg in 12M CAPM Alpha`).
+    방향은 원표의 내림차순 그대로 — 개선된 것을 산다.
+    ⚠ 원표는 알파의 **수준**을 오름차순(장기 반전)으로 둔다. 우리는 **변화만** 등록했다 —
+      수준은 이 랩의 반전 계열과 같은 축이고 그 계열은 이미 무너져 있다(등록 §2).
+    ⚠ i 는 일간 격자의 신호일이다. 그 날 **이하**의 마지막 월말을 월간 격자의 끝으로 쓴다 —
+      i 가 월말이 아닐 수도 있으므로(주간 리밸 규칙이 같은 도우미를 부를 수 있다).
+    """
+    k = bisect.bisect_right(me_list, i) - 1
+    if k < win + lag:
+        return None
+    mrm, mrf = mth_ctx(dates, me_list)
+    mrs = []
+    for n in range(k - win - lag + 1, k + 1):
+        a, b = P[me_list[n - 1]], P[me_list[n]]
+        mrs.append((b / a - 1.0) if (a and b and a > 0) else None)
+    base = k - win - lag + 1                       # mrs[0] 이 가리키는 월간 인덱스
+
+    def win_at(end):
+        s, m, f = [], [], []
+        for n in range(end - win + 1, end + 1):
+            x, y, z = mrs[n - base], mrm[n], mrf[n]
+            if x is None or y is None or z is None:
+                continue
+            s.append(x); m.append(y); f.append(z)
+        return _capm_alpha(s, m, f) if len(s) >= win * 0.8 else None
+
+    a_now, a_old = win_at(k), win_at(k - lag)
+    return None if (a_now is None or a_old is None) else (a_now - a_old)
+
+
 def tom_window(dates, me):
     """월말 효과의 창 — 월 마지막 거래일 + 다음 달 첫 3거래일. [bool] × len(dates).
 
@@ -6046,6 +6166,39 @@ def build_strats():
     # ⚠ arch 를 라이브 선언에 안 붙인다 — arch 는 archive_index 의 '이전 판정'
     #   줄과 잇는 키라, 아카이브에 없는 값을 붙이면 그 줄이 조용히 빈다(검증기가 잡는다).
     #   계보 기록은 build/tested_not_published.json 의 항목에 arch 로 남아 있다.
+
+    # ── PXSTAT 2종 — 사전등록 build/PREREG-2026-09-22-PXSTAT.md ──────────────
+    # 🚨 이 두 줄이 바로 위 x-amihud·아래 x-turn 옆에 있는 것이 우연이 아니다.
+    #   둘은 **그 둘이 기각된 사유(DATA-FACTS #7)에 면역인 것만** 고른 결과다.
+    #   등록 §0 에 그 경위를 적었다 — 팩터 사전을 보고 유동성 축을 다시 권했다가
+    #   tested 21건을 안 본 것을 뒤늦게 잡았고, 그래서 배치가 둘로 줄었다.
+    xsec("x-volcv", "거래량 변동계수 상위 %d" % TOPN,
+         "거래량을 그날 종가로 나눈 계열의 변동계수(표준편차÷평균)를 최근 %d거래일에서 "
+         "재어 가장 큰 %d종목 동일가중, 월말 리밸런스." % (VOLCV_WIN, TOPN),
+         None,
+         "원표 60 Day Coefficient of Variation of Volume to Price — 방향(내림차순)도 "
+         "원표 그대로다. 거래량이 들쭉날쭉한 종목이 더 높은 위험프리미엄을 요구받는다는 것. "
+         "🚨 이 랩은 같은 자리에서 두 번 미끄러졌다(x-illiq·x-amihud 는 자료 타당성, "
+         "x-turn 은 그 위에 성적까지). 사유는 거래대금이 미국 상장분인데 가격·시총은 회사 "
+         "전체라 그 비율 f 가 분자에만 남는 것이다(DATA-FACTS #7). 변동계수는 그 자리에서 "
+         "면역이다 — CV(f·X)=CV(X) 로 f 가 분자·분모에서 정확히 상쇄된다. **척도 불변이 "
+         "이 팩터를 고른 유일한 이유다.** ⚠ f 가 창 안에서 변하면 상쇄가 깨지므로 "
+         "등록 §4 의 F5 가 보유칸의 그 13종 비중을 잰다(20% 이상이면 기각).")
+    xsec("x-dalpha", "알파 개선 상위 %d" % TOPN,
+         "월간 CAPM 알파(창 %d개월 · 시장은 S&P 500 PR · 무위험 rf_monthly)의 "
+         "%d개월 변화가 가장 큰 %d종목 동일가중, 월말 리밸런스."
+         % (DALPHA_WIN, DALPHA_LAG, TOPN),
+         None,
+         "원표 6M Chg in 12M CAPM Alpha — 방향(내림차순)도 원표 그대로다. "
+         "🚨 원표는 알파의 **수준**(60M CAPM Alpha)을 오름차순으로 둔다. 「직전 5년 수익과 "
+         "미래 수익 사이에 음의 관계」라는 장기 반전이다. 우리는 **변화만** 등록했다 — "
+         "수준은 이 랩의 반전 계열과 같은 축이고 그 계열은 이미 무너져 있다(x-revcomp "
+         "기각문: 「반전 여덟은 상관 0.945~0.989 로 실은 넷이고 넷 다 시점정확으로 음수」 · "
+         "t-x-ltrev 는 화면 샤프 0.5 미만으로 걷힘). "
+         "⚠ 12개월 알파의 6개월 변화는 최근 6개월 수익에 크게 실린다 — 모멘텀과 겹치는지가 "
+         "이 규칙의 최대 위험이고, 등록 §4 의 F4(기존 모멘텀·반전 계열과 월별 초과 상관 "
+         "0.80 이상이면 기각)가 그것을 잰다.")
+
     xsec("x-turn", "저회전율 최하위 %d" % TOPN,
          "거래량의 최근 %d거래일 평균을 가중평균 희석주식수로 나눈 값이 가장 작은 %d종목 "
          "동일가중, 월말 리밸런스." % (TURN_WIN, TOPN),
@@ -7688,6 +7841,13 @@ def xsec_score_at(S, i, X, pool=None):
             v = sue((FU.get(t) or {}).get("rev") or [], dates[i - 1])
         elif sid == "x-amihud":
             v = amihud(P, vlm.get(t) or [], i - 1)
+        # ── PXSTAT 2종 — 사전등록 build/PREREG-2026-09-22-PXSTAT.md ──────────
+        #   둘 다 원표(S&P Global)의 rank_order 를 그대로 따라 **내림차순**이다.
+        #   부호를 뒤집지 않는다 — 음수가 나오면 그것이 결과다(등록 §5).
+        elif sid == "x-volcv":
+            v = vol_cv(P, vlm.get(t) or [], i - 1)
+        elif sid == "x-dalpha":
+            v = alpha_chg_at(P, dates, X["me_list"], i - 1)
         elif sid == "x-turn":
             _sn = asof_fund((FU.get(t) or {}).get("sh"), dates[i - 1])
             _tv = turnover(vlm.get(t) or [], _sn, i - 1)
