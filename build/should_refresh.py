@@ -61,9 +61,13 @@ KST = timezone(timedelta(hours=9))
 #   상수 하나면 assets 의 백업 cron 이 BACKUP_CRON 과 달라 '본 슬롯' 으로 판정되고
 #   **매일 두 번 도는** 정반대 결과가 난다. 값이 무엇에 쓰이는지가 아니라 '어느 워크플로의
 #   백업인가' 가 정보이므로 워크플로 이름을 같이 적는다(검증기가 이 표를 대조한다).
+# 🚨 2026-09-22 — 아침 사슬(편입·종목·자산·장중)을 **1시간씩 당겼다**(사용자 결정).
+#   GitHub 예약 실행이 실측 1:43~2:10 늦게 떠서 종목 패널이 08:50~09:35 KST 에야 들어왔다.
+#   서로의 앞뒤는 그대로다(전부 같은 폭으로 옮겼다). 대신 겨울(EST)엔 본 슬롯이 미국 장 마감
+#   **전**에 걸릴 수 있어 --after-close 가드가 그때를 막는다(아래 us_market_busy).
 BACKUP_CRONS = {
-    "42 22 * * 0-5": "refresh-stocks.yml",
-    "20 23 * * 0-5": "refresh-assets.yml",
+    "42 21 * * 0-5": "refresh-stocks.yml",
+    "20 22 * * 0-5": "refresh-assets.yml",
     # 🚨 2026-09-03 — refresh-members 에 백업 슬롯을 준다. **주 1회 잡이라 한 번 드롭되면
     #   일주일이 빈다** — 매일 잡은 다음 날 스스로 낫지만 이쪽은 안 낫는다.
     #   그리고 같은 날 이 잡에 data/index_history.json(시점정합 편입 이력) 갱신을 얹었다.
@@ -72,9 +76,9 @@ BACKUP_CRONS = {
     #   ⚠ 20개 잡 중 슬롯이 하나뿐인 것이 16개다. 나머지 15개를 한꺼번에 고치지 않은 것은
     #     의도다 — 매일 잡은 다음 날 낫고, 오늘 붙인 신선도 검사가 드롭을 붉게 띄운다.
     #     주기가 길어 스스로 못 낫는 잡부터 준다.
-    "45 22 * * 5": "refresh-members.yml",
+    "45 21 * * 5": "refresh-members.yml",
     # 🚨 2026-09-18 — refresh-stocks 재시도 슬롯(11:15 KST). 야후가 전날 봉을 늦게 주는 날,
-    #   07:42 백업도 같이 헛받을 수 있다. --session 판정이 «뒤처졌을 때만» 돌린다.
+    #   백업(06:42 — 2026-09-22 전엔 07:42)도 같이 헛받을 수 있다. --session 판정이 «뒤처졌을 때만» 돌린다.
     "15 2 * * 1-6": "refresh-stocks.yml",
 }
 
@@ -149,8 +153,11 @@ def _us_holidays(y):
 def expected_us_session(now=None):
     """지금(KST) 기준으로 «이미 끝났어야 할» 가장 최근 미국 세션 날짜.
 
-    미국 D 세션은 KST D+1 05:00~06:00 에 끝난다. 모든 슬롯이 06:50 KST 이후라
-    'KST 오늘보다 앞선 마지막 NYSE 거래일' 이 곧 기대값이다.
+    미국 D 세션은 KST D+1 05:00~06:00 에 끝난다. 'KST 오늘보다 앞선 마지막 NYSE 거래일'
+    이 곧 기대값이다.
+    ⚠ 2026-09-22 본 슬롯을 05:50 KST 로 당겼다 — 겨울엔 그 시각 미국 장이 아직 열려 있다.
+      그때는 이 기대값이 «아직 안 끝난 세션» 을 가리키지만, 슬롯 자체를 us_market_busy()
+      가드가 먼저 막으므로 여기서 받지는 않는다.
     """
     d = (now or datetime.now(KST)).date() - timedelta(days=1)
     hol = {}
@@ -161,6 +168,43 @@ def expected_us_session(now=None):
             return d.isoformat()
         d -= timedelta(days=1)
     return None
+
+
+def _et_now(now_utc=None):
+    """지금의 미국 동부 시각. zoneinfo 가 없으면 미국 서머타임 규칙으로 직접 센다.
+
+    규칙: 3월 둘째 일요일 02:00 현지 ~ 11월 첫째 일요일 02:00 현지 = EDT(UTC-4), 나머지 EST(UTC-5).
+    """
+    now_utc = now_utc or datetime.now(timezone.utc)
+    try:
+        from zoneinfo import ZoneInfo
+        return now_utc.astimezone(ZoneInfo("America/New_York"))
+    except Exception:
+        y = now_utc.year
+        mar = datetime(y, 3, 1, tzinfo=timezone.utc)
+        start = mar + timedelta(days=(6 - mar.weekday()) % 7 + 7, hours=7)     # 둘째 일요일 07:00 UTC
+        nov = datetime(y, 11, 1, tzinfo=timezone.utc)
+        end = nov + timedelta(days=(6 - nov.weekday()) % 7, hours=6)           # 첫째 일요일 06:00 UTC
+        off = -4 if start <= now_utc < end else -5
+        return now_utc.astimezone(timezone(timedelta(hours=off)))
+
+
+def us_market_busy(grace_min, now_utc=None):
+    """미국 장이 열려 있거나 마감 뒤 grace_min 분이 안 지났나 — 그때 받으면 **장중 가격이 종가로 들어간다.**
+
+    🚨 2026-09-22 예약을 1시간 당기며 넣었다. 겨울(EST)엔 본 슬롯(20:50 UTC)이 15:50 ET —
+      마감 10분 전이다. GitHub 지연이 평소(실측 1:43~2:10)보다 짧은 날 그 시각에 돌면
+      yfinance 는 오늘 봉을 **장중 값으로** 준다. 518종 전부 값이 있어서 «유령 거래일»
+      필터(커버리지 <50% 제거)에도 안 걸리고, 틀린 종가가 조용히 격자에 박힌다.
+    판정: ET 오늘이 NYSE 거래일이고 09:30 <= 지금 < 16:00 + grace 이면 True.
+      조기마감일(13:00)도 16:00 으로 본다 — 늦게 보는 쪽이라 안전하다.
+    """
+    et = _et_now(now_utc)
+    d = et.date()
+    if d.weekday() >= 5 or d.isoformat() in _us_holidays(d.year):
+        return False
+    t = et.hour * 60 + et.minute
+    return 9 * 60 + 30 <= t < 16 * 60 + grace_min
 
 
 def session_behind(path):
@@ -186,6 +230,7 @@ def main() -> int:
     argv = [x for x in sys.argv[1:] if not x.startswith("--")]
     pairs = [x.split("=", 1)[1] for x in sys.argv[1:] if x.startswith("--behind=")]
     sess = [x.split("=", 1)[1] for x in sys.argv[1:] if x.startswith("--session=")]
+    grace = [int(x.split("=", 1)[1]) for x in sys.argv[1:] if x.startswith("--after-close=")]
     path = argv[0] if len(argv) > 0 else "data/stocks.json"
     event = argv[1] if len(argv) > 1 else ""
     cron = argv[2] if len(argv) > 2 else ""
@@ -194,6 +239,15 @@ def main() -> int:
     if event != "schedule":
         print("run=true")
         print(f"::notice::{event or '비스케줄'} 실행 — 항상 수집한다", file=sys.stderr)
+        return 0
+    # 🚨 장 마감 가드 — 본 슬롯·백업 슬롯 모두. 장중에 받으면 장중 가격이 종가로 박힌다.
+    #   건너뛰어도 잃는 것은 없다: 뒤의 백업(07:42→06:42)·재시도(11:15) 슬롯이 다시 본다.
+    if grace and us_market_busy(grace[0]):
+        et = _et_now()
+        print("run=false")
+        print("::notice::미국 장 마감 + %d분 전이다(지금 %s ET) — 장중 가격을 종가로 받지 않도록 "
+              "이번 슬롯은 건너뛴다. 백업·재시도 슬롯이 다시 본다" % (grace[0], et.strftime("%m-%d %H:%M")),
+              file=sys.stderr)
         return 0
     # 본 슬롯은 언제나 돈다. 판정 대상은 백업 슬롯뿐이다.
     if cron.strip() not in BACKUP_CRONS:

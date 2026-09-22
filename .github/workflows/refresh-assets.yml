@@ -49,17 +49,20 @@ name: Refresh asset panel & archive re-check
 
 on:
   schedule:
-    - cron: '34 22 * * 0-5'  # 본 슬롯 — 매일(월~토) 07:34 KST · refresh-stocks(06:50)보다 뒤
+    # 🚨 2026-09-22 한 시간 당겼다(07:34 → 06:34 KST) — refresh-stocks 와 같은 폭이라 앞뒤는 그대로다.
+    #   ETF 종가를 받는 잡이라 같은 장 마감 가드(--after-close=40)를 건다.
+    - cron: '34 21 * * 0-5'  # 본 슬롯 — 매일(월~토) 06:34 KST · refresh-stocks(05:50)보다 뒤
     # 🚨 2026-08-12 백업 슬롯 추가. GitHub 스케줄 크론은 드롭이 잦은데 이 잡만 무방비였다.
     #   실측 08-11: 본 슬롯이 **아예 발화하지 않아** 시장판·스타일 성과가 하루 고착했고,
     #   다음 날 사용자가 "기간별 수익률 업데이트가 늦네"로 알아챌 때까지 아무도 몰랐다.
     #   refresh-stocks 는 07-21 고착 사고 뒤 같은 보호를 이미 받고 있었다 — 그 차이가
     #   그날 하루를 갈랐다.
-    # ⚠ 08:20 인 이유: refresh-stocks 백업(07:42)이 끝난 뒤여야 한다(실측 13분 → ~07:55).
+    # ⚠ 07:20 인 이유: refresh-stocks 백업(06:42)이 끝난 뒤여야 한다(실측 13분 → ~06:55).
+    #   (2026-09-22 전에는 08:20 · 07:42 였다 — 둘 다 한 시간 당겼다.)
     #   본 슬롯보다 앞서면 어제 종목 자료로 패널을 굽는다.
     # ⚠ 이 cron 문자열을 바꾸면 build/should_refresh.py 의 BACKUP_CRONS 도 같이 바꿀 것.
     #   안 바꾸면 백업이 '본 슬롯'으로 판정되어 **매일 두 번** 돈다.
-    - cron: '20 23 * * 0-5'  # 백업 슬롯 — 매일(월~토) 08:20 KST
+    - cron: '20 22 * * 0-5'  # 백업 슬롯 — 매일(월~토) 07:20 KST
   workflow_dispatch:
 
 permissions:
@@ -93,7 +96,7 @@ jobs:
           #   «오늘 이미 갱신됐다» 며 건너뛰어 스타일만 하루 뒤처진 채 굳었다.
           python build/should_refresh.py data/assets.json \
             "${{ github.event_name }}" "${{ github.event.schedule }}" \
-            --behind=data/style_perf.json:data/stocks.json >> "$GITHUB_OUTPUT"
+            --behind=data/style_perf.json:data/stocks.json --after-close=40 >> "$GITHUB_OUTPUT"
 
   refresh:
     needs: gate
