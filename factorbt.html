@@ -349,6 +349,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   table.rank td.nm,table.rank th.nm,table.rank td.gp,table.rank th.gp{text-align:left}
   table.rank td.nm a{text-decoration:none}
   table.rank td.nm .fid{color:var(--muted);font-size:.76rem;margin-left:.3rem}
+  /* 팩터마다 설명 한 줄 — 값은 사전 원표(factors_src)의 description 을 그대로 쓴다.
+     🚨 여기서 문장을 짓지 않는다. 314종 전부 차 있고 서로 다른 문구가 310개다.
+     ⚠ 한 줄로 묶는다(표시폭 실측: 중앙 39칸 · 90번째 60칸 · 최대 104칸 — 한글 2칸 셈).
+       안 묶으면 긴 10%만 두 줄이 되어 행 높이가 들쭉날쭉해진다. 잘린 것은 title 로
+       전문을 주고, 상세 패널(#f=<id>)에는 원래부터 전문이 있다(.stwrap .desc).
+     🚨 nowrap + text-overflow 를 쓰지 않는다. 표 자동 레이아웃은 nowrap 요소의 최소폭을
+       «문장 전체 길이» 로 잡아서, max-width 를 걸어도 팩터 열이 그만큼 넓어진다(104칸짜리가
+       열 폭을 끌고 간다). line-clamp 는 줄바꿈을 허용하므로 최소폭이 낱말 하나이고,
+       열 폭을 한 픽셀도 안 건드린 채 한 줄만 보여 준다. */
+  table.rank td.nm .fdesc{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+       overflow:hidden;max-width:26rem;color:var(--ink-2);font-size:.78rem;
+       line-height:1.5;margin-top:.1rem}
   table.rank tr.bm td{background:var(--panel-2);font-weight:600}
   table.rank th.sort{cursor:pointer;user-select:none;white-space:nowrap}
   table.rank th.sort:hover{color:var(--accent)}
@@ -603,7 +615,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     L.forEach(function(f,i){
       var m=f.metrics||{}, t=f.trails||{}, w=winPct(f.win&&f.win.spx);
       h+='<tr><td class="mut">'+(i+1)+'</td>'+
-        '<td class="nm"><a href="#f='+f.id+'">'+esc(f.name)+'</a><span class="fid">#f'+f.id+(f.same_as?' = #f'+f.same_as:'')+'</span></td>'+
+        '<td class="nm"><a href="#f='+f.id+'">'+esc(f.name)+'</a><span class="fid">#f'+f.id+(f.same_as?' = #f'+f.same_as:'')+'</span>'+
+        (f.desc?'<span class="fdesc" title="'+esc(f.desc)+'">'+esc(f.desc)+'</span>':'')+'</td>'+
         '<td class="gp mut">'+esc(gLab(f.sub))+'</td><td class="mut">'+(f.dir==='desc'?'↓':'↑')+'</td>'+
         '<td class="'+cls(m.cagr)+'">'+num(m.cagr)+'</td><td>'+unum(m.vol)+'</td><td><b>'+unum(m.sharpe)+'</b></td>'+
         '<td class="neg">'+num(m.mdd)+'</td><td class="'+cls(t['1년'])+'">'+num(t['1년'],1)+'</td>'+
