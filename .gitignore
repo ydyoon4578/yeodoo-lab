@@ -117,6 +117,8 @@ build/db_catalog.json
 build/db_notes.json
 # 사내 DB 표본 몇 줄(실데이터). 반입 금지 — db.html 은 암호문으로만 게시한다
 build/db_samples.json
+# 팩터 사전 원본(사내 팩터 정의 표를 그대로 뽑은 것). 게시물은 factors.html 하나 — 원본은 반입 금지
+build/factors_src.json
 _pit_subset.json
 
 # 2026-09-08~11 얼린 측정 — 사전등록 결과 문서가 수를 인용하고, 원본은 커밋하지 않는다
