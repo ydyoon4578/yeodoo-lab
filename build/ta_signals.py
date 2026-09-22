@@ -510,6 +510,16 @@ def build_signals(c, h=None, l=None, v=None):
     return buy, sell, kind, stt
 
 
+def _reon(sc, idx, fired_at):
+    """발동일 뒤로 지속조건이 **다시 켜진** 횟수. 0 = 발동 뒤 한 번도 안 끊겼다."""
+    w = idx[idx >= fired_at]
+    on = sc.loc[w]
+    fl = on != on.shift(1)
+    if len(fl):
+        fl.iloc[0] = False
+    return int((fl & on).sum())
+
+
 def fwd_returns(c):
     """달력 +7일 / +30일 — 원본과 같다(목표일 이하 마지막 거래일로 스냅)."""
     out = {}
@@ -604,7 +614,7 @@ def main() -> int:
                "start": str(c.index[0].date()), "base1m": round(base1m * 100, 2),
                "base1m_win": round(base1w, 1), "base1m_down": round(base1d, 1),
                "chart_from": str(c0.date()), "buy": [], "sell": []}
-        ev_cache = {}
+        ev_cache, st_cache = {}, {}
         for side, dct, is_sell in (("buy", buy, False), ("sell", sell, True)):
             for nm, cond in dct.items():
                 cond = cond.reindex(c.index).fillna(False).astype(bool)
@@ -622,12 +632,18 @@ def main() -> int:
                 #   문턱 신호는 둘의 조건이 같아 state_now 가 곧 「지금 조건이 참」이다.
                 sc = stt.get(nm)
                 sc = cond if sc is None else sc.reindex(c.index).fillna(False).astype(bool)
+                st_cache[nm] = sc
                 r["fired_today"] = bool(ev_cache[nm].iloc[-1])
                 r["state_now"] = bool(sc.iloc[-1])
                 # 그 상태가 며칠째인가 — 마지막으로 바뀐 날부터 센다.
                 flip = sc != sc.shift(1)
                 fi = c.index[flip & sc] if sc.iloc[-1] else c.index[flip & ~sc]
                 r["state_days"] = int((c.index[-1] - fi[-1]).days) if len(fi) else None
+                # 🚨 발동한 뒤 지속조건이 **몇 번 다시 켜졌나**(사용자 물음 2026-09-22 —
+                #   「8월 4일부터 지금까지 몇 번 켜졌는데?」). 0 이면 발동 뒤 한 번도
+                #   안 끊겼다는 뜻이고, 크면 그동안 깜빡였다는 뜻이다. 「다시켜짐」 한
+                #   마디로는 한 번 되살아난 것과 다섯 번 깜빡인 것이 똑같아 보인다.
+                r["state_reon"] = _reon(sc, c.index, fired[-1]) if len(fired) else 0
                 # 차트가 날짜에 찍을 발동일 — 최근 CHART_M 개월 것만 싣는다.
                 r["fires"] = [str(x.date()) for x in fired[fired >= c0]]
                 rec[side].append(r)
@@ -666,12 +682,14 @@ def main() -> int:
                     rb = next(x for x in side_rows if x["signal"] == b)
                     on = bool(ra["state_now"]) and bool(rb["state_now"])
                     dd = [x for x in (ra["state_days"], rb["state_days"]) if x is not None]
+                    bs = st_cache[a] & st_cache[b]       # 둘 다 켜져 있는 날
                     outp.append({"a": a, "b": b, "pair": "%s ∧ %s" % (a, b), **st,
                                  "last": str(f2[-1].date()),
                                  "days_ago": int((c.index[-1] - f2[-1]).days),
                                  "fired_today": bool(both.iloc[-1]),
                                  "state_now": on,
                                  "state_days": (min(dd) if (on and dd) else None),
+                                 "state_reon": _reon(bs, c.index, f2[-1]),
                                  # 차트가 번호를 매길 발동일 — 최근 CHART_M 개월 것만.
                                  "fires": [str(x.date()) for x in f2[f2 >= c0]],
                                  "solo_a": next(x.get("fwd1m_excess") for x in side_rows
