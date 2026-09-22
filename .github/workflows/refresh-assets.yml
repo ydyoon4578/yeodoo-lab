@@ -243,13 +243,17 @@ jobs:
           #   ⚠ 지금까지 안 터진 이유는 그 파일이 매번 바뀌지는 않아서다 —
           #     판정 원장이 실제로 바뀌는 날에만 ci_push 가드가 잡을 죽인다.
           #     «될 때는 되다가 정작 자료가 바뀌는 날 죽는» 형태라 더 나쁘다.
+          # 🚨 2026-09-22 — 같은 유형이 또 났다(위 verdicts.json 주석 참조). restate_16·
+          #   month_map·flags 세 산출물도 이 잡이 위에서 굽는데 목록에 없어, 값이 바뀌는
+          #   실행마다(거의 매번 — as_of 가 방금 받은 자료를 그대로 찍는다) 누락 가드가
+          #   커밋 전체를 죽였다. 실측 2026-09-21 저녁부터.
           bash build/ci_push.sh "chore(data): 자산 패널·시장판·홈 성과 자동 갱신" \
             data/assets.json data/asset_strategies.json data/guru_clone.json \
             data/bench_px.json data/bench_ohlc.json data/_ta_signals.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/strategy_report.json \
             data/market_board.json data/home_perf.json \
             data/home_flow.json data/asof.json \
-            data/verdicts.json
+            data/verdicts.json data/_restate16.json data/_month_map.json data/_flags.json
       # 신선도는 커밋 직후에 본다 — 뒤가 죽어도 '패널이 낡았나'는 답이 나와야 한다.
       - name: Verify freshness
         run: python build/check_freshness.py data/assets.json "자산 패널" 10

@@ -68,12 +68,21 @@ MAX_TRIES="${MAX_TRIES:-5}"
 #   asset_backtest.py 는 stdlib 만 쓰고 61초에 결정적으로 재현된다 — 표에 올릴 조건을 만족한다.
 # ⚠ strategy_report 는 asset_strategies **뒤**여야 한다 — 그 파일에서 값을 옮겨 담는다.
 #   두 잡(refresh-tech·refresh-assets)이 커밋하므로 표에 없으면 충돌 시 그날치가 버려진다.
+# ⚠ _restate16·_month_map·_flags 는 2026-09-22 추가 — 셋 다 refresh-stocks·refresh-assets·
+#   refresh-tech **세 잡**이 커밋한다(각자 restate_16.py·month_map.py·flags.py를 돌린다).
+#   원래 이 표에 없어서(누락 가드가 잡음, 아래 참조) 세 잡이 전부 매일 죽었다.
+#   _restate16 은 guru_overlap.json(정적)·pairs_strategies.json(stocks 잡 전용, 경합 없음)만
+#   읽어 strategy_index 보다 **앞**이다. _month_map 은 strategy_diag(시장 상태)를 읽어
+#   그 **뒤**다. _flags 는 bench_px·assets 만 읽어 독립적이라 순서에 안 걸린다.
 REBAKE_TABLE="\
 data/asset_strategies.json|build/asset_backtest.py
 data/verdicts.json|build/verdicts_gen.py
+data/_restate16.json|build/restate_16.py
 data/strategy_index.json|build/strategy_index.py
 data/strategy_charts.json|build/strategy_charts.py
 data/strategy_diag.json|build/strategy_diag.py
+data/_month_map.json|build/month_map.py
+data/_flags.json|build/flags.py
 data/strategy_report.json|build/strategy_report.py
 data/market_board.json|build/market_board.py
 data/style_perf.json|build/style_top_pdf.py --json

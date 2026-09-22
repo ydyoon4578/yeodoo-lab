@@ -228,13 +228,21 @@ jobs:
       #   위 주석에 'validate_site.py' 라는 글자가 있어서 substring 검사를 통과했다.
       - name: Validate
         run: python build/validate_gate.py check
+      # 🚨 2026-09-22 — restate_16·month_map·flags·riskonoff·regime_grid·monitor 여섯 산출물이
+      #   이 목록에 없어 **누락 가드가 매 실행 죽었다**(과거 home_reco·index_ledger 유실과
+      #   같은 유형이 또 났다). 각 스크립트가 방금 받은 stocks.json 의 as_of 를 그대로
+      #   찍으므로 값이 매번 달라져 git status 가 매번 이 파일들을 미스테이징으로 잡았고,
+      #   그 한 줄이 stocks.json·sd/ 518종까지 통째로 커밋을 막았다(실측 09-21 저녁부터
+      #   2026-09-22 CI 스케줄·수동 실행 전부 여기서 실패). 다섯 스크립트를 워크플로에
+      #   붙인 커밋들이 이 목록을 같이 안 고쳤다 — 스크립트를 추가할 때는 이 목록도 본다.
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 종목 테크니컬 시그널 자동 갱신" \
             data/stocks.json data/home_reco.json data/home_stocks.json data/sd data/target_history.json data/fund_history.json \
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
-            data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json
+            data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json \
+            data/_restate16.json data/_month_map.json data/_flags.json data/_riskonoff.json data/_riskonoff_daily.json data/_regime_grid.json data/_monitor.json
       # 🚨 2026-09-18 — 미국 세션이 빠졌으면 경고(노란 주석)만 남긴다. 실패로 만들지 않는다:
       #   야후 지연은 잡의 결함이 아니고, 백업·재시도 슬롯이 gate 의 --session 으로 다시 받는다.
       - name: Report missing US session
