@@ -108,32 +108,21 @@ def head(fig, R, sub, asof, color=INK):
 def nowcell(x):
     """「지금」 칸 — 발동(순간)과 지속(그 관계가 유지되나)을 나눠 적는다.
 
-      ★           기준일 당일 발동
-      켜짐N일       발동한 뒤 **한 번도 안 끊기고** 유지 중 · N 은 그 날수
-      다시N일·K번   발동 뒤 되돌아갔다가 다시 켜졌다 · N 은 다시 켜진 뒤 날수 ·
-                  **K 는 발동 뒤 다시 켜진 횟수**
-      꺼짐         되돌아갔고 지금도 아니다
+      ★       기준일 당일 발동
+      켜짐N일   그 조건이 지금도 참이다 · N 은 그 상태가 며칠째인지
+      꺼짐     되돌아갔고 지금도 아니다
 
-    🚨 「다시켜짐」을 가르게 된 까닭(사용자 지적 2026-09-22 —「켜짐 0일은 신호가
-      제대로 안 나오는 것 같다」). NASDAQ「MACD 골든(0선 아래)」이 최근 발동
-      2026-08-04(45일 전)인데 켜짐 0일이었다. 8/4 교차가 그 사이 되돌아갔다가
-      **오늘 다시** MACD>시그널이 된 것인데, 오늘은 MACD 가 0선 위라
-      「0선 아래 골든」으로는 발동하지 않았다. 그래서 「45일 전 발동 + 켜짐 0일」
-      이라는 읽을 수 없는 줄이 나왔다.
-      가르는 잣대는 **지속 날수와 경과 날수의 비교**다 — 지속이 경과보다 짧으면
-      발동 뒤 한 번 끊겼다는 뜻이다. 이 칸이 애초에 답하려던 물음이 그것이다.
+    ⚠ 한때 「끊겼다 다시 켜진 것」을 「다시N일·K번」으로 갈라 적었다(2026-09-22).
+      계산은 맞았고 — NASDAQ「MACD 골든(0선 아래)」은 8/04 발동 뒤 8/21 에 끊겼다
+      9/18 에 다시 켜졌다 — 다시 켜진 횟수도 원자료와 맞았지만, 사용자가 신경
+      쓰지 말라 하여 되돌렸다. 세는 값(state_reon)은 자료에 그대로 있다.
     """
     s = "★" if x.get("fired_today") else ""
     if not x.get("state_now"):
         return s + "꺼짐"
-    d_, a_ = x.get("state_days"), x.get("days_ago")
+    d_ = x.get("state_days")
     if d_ is None:
         return s + "켜짐"
-    if a_ is not None and d_ < a_:
-        # 🚨 횟수를 같이 적는다(사용자 물음 2026-09-22). S&P「SuperTrend 하락 전환 ∧
-        #   MACD 데드」는 1/20 발동 뒤 **다섯 번** 깜빡였는데 종전 표기로는 한 번
-        #   되살아난 줄과 똑같아 보였다.
-        return s + "다시%d일·%d번" % (d_, x.get("state_reon") or 1)
     return s + "켜짐%d일" % d_
 
 
@@ -148,7 +137,7 @@ def rows_of(R, side, max_n):
 
 
 # ══ 차트 ═══════════════════════════════════════════════════════════════════
-def chart(fig, R, y_top, h, max_n):
+def chart(fig, R, y_top, h, max_n, asof):
     """가격 + **멀티 신호**가 뜬 날(사용자 지시 2026-09-22).
 
     아래 두 표에서 **승률이 문턱 이상인 짝**만 찍는다 — 매수 CHART_WIN[True]%,
@@ -167,14 +156,24 @@ def chart(fig, R, y_top, h, max_n):
     #   단일 신호는 맞은편 쪽 표에만 있다. 이 쪽은 멀티 신호 쪽이라 차트도 그것만 본다.
     picks = []                       # (발동일목록, 매수인가)
     named = {}
+    today = {True: 0, False: 0}
     for side, up in (("buy", True), ("sell", False)):
         wk = "fwd1m_win" if up else "fwd1m_down"
         th = CHART_WIN[up]
+        # 🚨 **기준일 발동분은 문턱을 면제한다**(사용자 지시 2026-09-22 —
+        #   「9월 18일에도 차트에 표시해줘」). 문턱은 «지난 열두 달 중 볼 만한 날»
+        #   을 고르는 잣대지, 오늘 무엇이 떴는지를 가릴 잣대가 아니다.
         mul = [x for x in (R.get("conf_" + side) or [])
-               if x.get("n", 0) >= MIN_SHOW and (x.get(wk) or 0) >= th]
+               if x.get("n", 0) >= MIN_SHOW
+               and ((x.get(wk) or 0) >= th or x.get("last") == asof)]
         named[up] = len(mul)
         for x in mul:
             picks.append((x.get("fires") or [], up))
+        # 기준일에 몇이 떴나 — 문턱도, 멀티·단일도 가리지 않고 센다.
+        today[up] = (sum(1 for x in (R.get("conf_" + side) or [])
+                         if x.get("n", 0) >= MIN_SHOW and x.get("last") == asof)
+                     + sum(1 for x in R[side]
+                           if MIN_SHOW <= x.get("n", 0) <= max_n and x.get("last") == asof))
 
     # 🚨 세모는 하루에 **종류당 하나**다(집합). 문턱을 70%/40% 로 낮추니 S&P 매수만
     #   35종·201개가 걸려 한 날 8층까지 쌓였고 가격선이 묻혔다(렌더 실측 — 이 랩에서
@@ -216,6 +215,13 @@ def chart(fig, R, y_top, h, max_n):
     ax.set_ylim(lo - rng * (MK_BASE + .04), hi + rng * (MK_BASE + .04))
     ax.text(.010, .96, "기준일 %s 종가 %s" % (d[-1], format(int(round(c[-1])), ",")),
             transform=ax.transAxes, fontsize=6.4, color=INK, weight="bold", va="top")
+    # 🚨 기준일 세로선 — 아무것도 안 뜬 날도 **안 떴다는 것이 보이게** 한다.
+    ax.axvline(n - 1, color=ACC, lw=.8, ls=(0, (3, 2)), zorder=4)
+    # ⚠ 위쪽 .96 에 두었더니 최근 고점의 매도 세모와 겹쳤다(렌더 실측) — 아래로 내린다.
+    ax.text(.990, .035,
+            "기준일 %s · 매수 %d · 매도 %d 발동" % (asof[5:], today[True], today[False]),
+            transform=ax.transAxes, fontsize=6.4, color=ACC, weight="bold",
+            va="bottom", ha="right")
 
     ax2.bar(range(n), nb, color=POS, width=1.0, linewidth=0, zorder=3)
     ax2.bar(range(n), [-v for v in ns], color=NEG, width=1.0, linewidth=0, zorder=3)
@@ -242,13 +248,13 @@ def multi_page(fig, R, asof, page, max_n):
 
     y_cap = y
     # ⚠ .013 만 떼면 아래 월 눈금과 겹친다 — 눈금 자리를 비운다(렌더 실측).
-    y, named, nday = chart(fig, R, y - .014, .200, max_n)
+    y, named, nday = chart(fig, R, y - .014, .200, max_n, asof)
     ST.tx(fig, X0, y_cap, "최근 12개월", fontsize=8.5, weight="bold")
     ST.tx(fig, X0 + .090, y_cap + .0005,
-          "**세모 = 멀티 신호** · 아래 초록 매수(승률 %.0f%%↑ %d종 · %d일) · "
-          "위 빨강 매도(%.0f%%↑ %d종 · %d일) · 막대는 그날 뜬 수"
-          % (CHART_WIN[True], named[True], nday[0],
-             CHART_WIN[False], named[False], nday[1]), fontsize=6.2, color=MUTED)
+          "**세모 = 멀티 신호** · 아래 초록 매수 %d종·%d일 · 위 빨강 매도 %d종·%d일 · "
+          "승률 %.0f%%/%.0f%% 이상**과 기준일 발동분** · 주황 세로선은 기준일"
+          % (named[True], nday[0], named[False], nday[1],
+             CHART_WIN[True], CHART_WIN[False]), fontsize=6.2, color=MUTED)
     y -= .030
 
     for key, ko, col, nmax in (("conf_buy", "매수", POS, N_MULTI[0]),
@@ -284,9 +290,7 @@ def multi_page(fig, R, asof, page, max_n):
                 d_ = cf[r].get("days_ago")
                 return NEG if (d_ is not None and d_ <= HOT) else MUTED
             if c == 6:
-                if not cf[r].get("state_now"):
-                    return MUTED
-                return ACC if "다시" in tr[r][6] else col
+                return col if cf[r].get("state_now") else MUTED
             return MUTED
         y = ST.table(fig, X0, y, W_MUL, H_MUL, tr, row_h=.0150, fs=6.7, hfs=6.1,
                      zebra=True, aligns=A_MUL, cell_color=cc)
@@ -329,9 +333,7 @@ def table_page(fig, R, asof, page, max_n, tail=False):
                 d_ = rows[r]["days_ago"]
                 return NEG if (d_ is not None and d_ <= HOT) else MUTED
             if c == 6:
-                if not rows[r].get("state_now"):
-                    return MUTED
-                return ACC if "다시" in tr[r][6] else col
+                return col if rows[r].get("state_now") else MUTED
             return MUTED
         y = ST.table(fig, X0, y, W_SIG, H_SIG, tr, row_h=.0138, fs=6.6, hfs=6.1,
                      zebra=True, aligns=A_SIG, cell_color=cc)
