@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 팩터 327개(S&amp;P Global 314 · 스타일 팩터 13)의 정의·산식·순위 방향·참고문헌을 원표 그대로 모은 사전.">
+<meta name="description" content="여두 전략 랩 — 팩터의 정의·산식·순위 방향·참고문헌을 모은 사전. 사내 팩터 정의 표(S&amp;P Global · Style Factor)는 원표 그대로, 랩 규칙에서 옮긴 팩터는 «랩» 표시로 덧붙였다.">
 <title>여두 · 팩터 사전</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
 <link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/factors.html">
@@ -12,10 +12,10 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
 <meta property="og:title" content="여두 · 팩터 사전">
-<meta property="og:description" content="팩터 327개의 정의·산식·순위 방향·참고문헌 — 검색하고 분류별로 걸러 보는 팩터 사전.">
+<meta property="og:description" content="팩터의 정의·산식·순위 방향·참고문헌 — 검색하고 분류별로 걸러 보는 팩터 사전.">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="여두 · 팩터 사전">
-<meta name="twitter:description" content="팩터 327개의 정의·산식·순위 방향·참고문헌 — 검색하고 분류별로 걸러 보는 팩터 사전.">
+<meta name="twitter:description" content="팩터의 정의·산식·순위 방향·참고문헌 — 검색하고 분류별로 걸러 보는 팩터 사전.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
@@ -75,7 +75,7 @@
   .fxtool b{color:var(--ink)}
   .fxtool button{font:inherit;background:none;border:0;color:var(--accent);cursor:pointer;padding:4px 0}
   .fxlist{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow)}
-  .fx{border-bottom:1px solid var(--line-soft)}
+  .fx{border-bottom:1px solid var(--line-soft);scroll-margin-top:60px}   /* #f<n> 로 건너갈 때 고정 메뉴(53px) 밑에 묻히지 않게 */
   .fx:last-of-type{border-bottom:0}
   .fx[hidden]{display:none}
   .fx>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;padding:12px 18px 12px 34px;position:relative}
@@ -88,6 +88,12 @@
   .fxm{grid-column:2;grid-row:1 / span 2;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-content:start}
   .chip,.dir{font-family:var(--mono);font-size:11px;padding:2px 8px;border:1px solid var(--line);border-radius:2px;color:var(--ink-2);background:var(--panel-2);white-space:nowrap}
   .chip.g-st{color:var(--champ);border-color:color-mix(in srgb,var(--champ) 40%,transparent);background:color-mix(in srgb,var(--champ) 10%,transparent)}
+  .chip.g-sim{color:var(--deploy);border-color:color-mix(in srgb,var(--deploy) 40%,transparent);background:color-mix(in srgb,var(--deploy) 10%,transparent)}
+  /* 랩 — 여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님). 원표 행과 섞여 읽히지 않게 줄마다 단다 */
+  /* 색은 --marg(호박색) — --accent 는 셸에서 파랑이라 Style Factor 칩(--champ)과 구별이 안 됐다(다크 #6FB6EA vs #6BB0D6) */
+  .chip.lab{color:var(--marg);font-weight:700;border-color:color-mix(in srgb,var(--marg) 45%,transparent);background:color-mix(in srgb,var(--marg) 12%,transparent)}
+  .fxv a{color:var(--accent);text-decoration:none} .fxv a:hover{text-decoration:underline}
+  .fxs{color:var(--muted);font-size:12px}
   .dir{background:none;color:var(--muted)}
   .fxb{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px 16px;padding:6px 18px 18px 34px;font-size:13.5px;color:var(--ink-2)}
   .fxk{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);padding-top:3px}
@@ -101,6 +107,9 @@
     .fxm{grid-column:1;grid-row:auto;justify-content:flex-start;margin-top:4px}
     .fxb{grid-template-columns:minmax(0,1fr);gap:4px;padding:2px 14px 16px 30px}
     .fxk{padding-top:8px}
+    /* 그룹 단추 4개(유사 팩터 추가)는 폰 폭에 한 줄로 안 들어간다 — 끝 단추만 떨어지지 않게 2열 격자로 */
+    .fxg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);width:100%}
+    .fxg button+button{border-left:0}
   }
 
   footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:11.5px;line-height:1.8}
@@ -472,20 +481,22 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <div class="eyebrow">Factors · 팩터 사전</div>
     <h1 class="title">팩터 사전</h1>
     <p class="lede">팩터마다 무엇을 재는지, 어떻게 계산하는지, 어느 쪽이 상위인지, 근거 문헌이 무엇인지를 모았습니다.
-      사내 팩터 정의 표를 <b>원문 그대로</b> 옮겼습니다 — 문구를 고치거나 줄이지 않았고, 순서도 원표 순서입니다.</p>
+      사내 팩터 정의 표를 <b>원문 그대로</b> 옮겼습니다 — 문구를 고치거나 줄이지 않았고, 순서도 원표 순서입니다.
+      원표 뒤에는 여두 전략 랩 규칙에서 옮긴 팩터를 <span class="chip lab">랩</span> 표시와 함께 덧붙였습니다 — 원표에 없는 것은 <b>Style Factor</b>에,
+      원표 팩터와 비슷한 것은 <b>유사 팩터</b>에 따로 모았고, 모두 Low Volatility · Momentum · Size · Value · Quality 중 하나로 나눴습니다. 원표 행은 건드리지 않았습니다.</p>
   </header>
 
   <section aria-labelledby="fx-h">
     <h2 class="lbl" id="fx-h">팩터 목록</h2>
 <!-- FACTORS:BEGIN -->
-<p class="stats"><span>팩터 <b class="tnum">327</b>개</span><span>S&amp;P Global <b class="tnum">314</b></span><span>Style Factor <b class="tnum">13</b></span><span>소분류 <b class="tnum">12</b>개</span><span>원표 추출 <b class="tnum">2026-09-22</b></span></p>
+<p class="stats"><span>팩터 <b class="tnum">342</b>개</span><span>S&amp;P Global <b class="tnum">314</b></span><span>Style Factor <b class="tnum">17</b></span><span>유사 팩터 <b class="tnum">11</b></span><span>소분류 <b class="tnum">12</b>개</span><span>원표 추출 <b class="tnum">2026-09-22</b></span><span>랩 추가 <b class="tnum">15</b> (여두 전략 랩 규칙 · 원표 아님)</span></p>
 <div class="fxbar">
 <input type="search" id="fxq" placeholder="팩터명·설명·산식·참고문헌 검색" aria-label="팩터 검색" autocomplete="off">
-<div class="fxg" role="group" aria-label="그룹"><button type="button" data-g="all" aria-pressed="true">전체 <span class="tnum">327</span></button><button type="button" data-g="sp" aria-pressed="false">S&amp;P Global <span class="tnum">314</span></button><button type="button" data-g="st" aria-pressed="false">Style Factor <span class="tnum">13</span></button></div>
-<select id="fxsg" aria-label="소분류"><option value="">소분류 전체</option><option value="Earnings Quality">Earnings Quality (72)</option><option value="Historical Growth">Historical Growth (62)</option><option value="Price Momentum">Price Momentum (59)</option><option value="Valuation">Valuation (45)</option><option value="Capital Efficiency">Capital Efficiency (32)</option><option value="Analyst Expectations">Analyst Expectations (27)</option><option value="Volatility">Volatility (11)</option><option value="Size">Size (7)</option><option value="Momentum">Momentum (6)</option><option value="Low Volatility">Low Volatility (3)</option><option value="Value">Value (2)</option><option value="Quality">Quality (1)</option></select>
-<select id="fxdir" aria-label="순위 방향"><option value="">순위 방향 전체</option><option value="asc">오름차순 (83)</option><option value="desc">내림차순 (244)</option></select>
+<div class="fxg" role="group" aria-label="그룹"><button type="button" data-g="all" aria-pressed="true">전체 <span class="tnum">342</span></button><button type="button" data-g="sp" aria-pressed="false">S&amp;P Global <span class="tnum">314</span></button><button type="button" data-g="st" aria-pressed="false">Style Factor <span class="tnum">17</span></button><button type="button" data-g="sim" aria-pressed="false">유사 팩터 <span class="tnum">11</span></button></div>
+<select id="fxsg" aria-label="소분류"><option value="">소분류 전체</option><option value="Earnings Quality">Earnings Quality (72)</option><option value="Historical Growth">Historical Growth (62)</option><option value="Price Momentum">Price Momentum (59)</option><option value="Valuation">Valuation (45)</option><option value="Capital Efficiency">Capital Efficiency (32)</option><option value="Analyst Expectations">Analyst Expectations (27)</option><option value="Momentum">Momentum (11)</option><option value="Volatility">Volatility (11)</option><option value="Size">Size (7)</option><option value="Quality">Quality (6)</option><option value="Value">Value (6)</option><option value="Low Volatility">Low Volatility (4)</option></select>
+<select id="fxdir" aria-label="순위 방향"><option value="">순위 방향 전체</option><option value="asc">오름차순 (89)</option><option value="desc">내림차순 (253)</option></select>
 </div>
-<div class="fxtool"><span>표시 <b class="tnum" id="fxcnt">327 / 327</b></span><button type="button" id="fxopen" data-open="0">모두 펼치기</button></div>
+<div class="fxtool"><span>표시 <b class="tnum" id="fxcnt">342 / 342</b></span><button type="button" id="fxopen" data-open="0">모두 펼치기</button></div>
 <div class="fxlist" id="fxlist">
 <details class="fx" id="f1" data-g="sp" data-sg="Earnings Quality" data-dir="asc"><summary><span class="fxn">Earnings Quality  - Monthly</span><span class="fxd">이익의 질 종합 점수(월간)</span><span class="fxm"><span class="chip">Earnings Quality</span><span class="chip g-sp">S&amp;P Global</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">설명</div><div class="fxv">ClariFI Earnings Quality 종합 지표 — 5개 이익품질 팩터(CashCycle, NetProfitMargin, WCAccruals, AccrualRatioCF, NIStab)를 동일가중(각 20%)으로 결합.
 
@@ -3894,6 +3905,75 @@ rank_order=오름차순 — Overhead/Sales 비율이 낮은(비용 효율 우수
   IBQ   : 분기 특별손익 전 순이익(Compustat 379)</pre><div class="fxk">참고문헌</div><div class="fxv">1) Freeman, R. N. (1983) Alternative Measures of Profit Margin: An Empirical Study of the Potential Information Content of Current Cost Accounting. Journal of Accounting Research.
 2) Kaen, F. R. &amp; Baumann, H. (2003) Firm Size, Employees and Profitability in U.S. Manufacturing Industries. Working Paper.
 3) Dhawan, R. (2001) Firm Size and Productivity Differential: Theory and Evidence from a Panel of US Firms. Journal of Economic Behavior and Organization.</div></div></details>
+<details class="fx" id="f328" data-g="st" data-sg="Momentum" data-dir="desc"><summary><span class="fxn">잔차 모멘텀</span><span class="fxd">3요인(시장·규모·가치) 회귀 잔차의 12-1개월 합 ÷ 잔차 표준편차</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Momentum</span><span class="chip g-st">Style Factor</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Residual Momentum</div><div class="fxk">설명</div><div class="fxv">공통요인 노출을 걷어낸 잔차로 잰 모멘텀. Blitz·Huij·Martens(2011)는 총수익 모멘텀(12-1)보다 위험조정 수익이 높고 모멘텀 급락이 완만하다고 보고했다(급락 회피라는 전제는 최근 연구가 되묻고 있다). 규모·가치 요인은 ETF 스프레드 대리변수라 Fama-French 정본이 아니다.</div><div class="fxk">산식</div><pre class="fxv code">r_i = α + β_MKT × MKT + β_SMB × SMB + β_HML × HML + ε   (과거 36개월 월간 회귀)
+ResMom = Σ_{t-12}^{t-2} ε / stdev_{36M}( ε )
+
+  MKT : 동일가중 유니버스 수익
+  SMB 대리 : IWM − SPY · HML 대리 : IVE − RPG (ETF 스프레드)
+  SKIP : 직전 1개월 제외 · 분모 : 36개월 창 전체 잔차의 표준편차</pre><div class="fxk">참고문헌</div><div class="fxv">1) Blitz, D., Huij, J. &amp; Martens, M. (2011) Residual Momentum. Journal of Empirical Finance.</div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-residmom">t-x-residmom</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f329" data-g="st" data-sg="Momentum" data-dir="desc"><summary><span class="fxn">매출 서프라이즈 (SUR)</span><span class="fxd">직전 분기 매출의 전년 동기 대비 변화 ÷ 그 변화의 표준편차 (매출 모멘텀)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Momentum</span><span class="chip g-st">Style Factor</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Standardized Unexpected Revenue</div><div class="fxk">설명</div><div class="fxv">표준화 이익 서프라이즈(SUE)와 같은 계산을 매출에 적용한 것. Jegadeesh·Livnat(2006)은 매출 서프라이즈가 이익 서프라이즈보다 되돌림이 적다고 보고했다 — 가격·수량 변화가 일회성 항목보다 오래 간다. 매출 태그(ASC 606)는 2017년부터라 그 전 구간은 표본이 얇다.</div><div class="fxk">산식</div><pre class="fxv code">SUR = ( Rev_q − Rev_{q−4} ) / stdev( Rev_k − Rev_{k−4} )
+
+  stdev : 직전 8개 분기의 전년 동기 대비 변화
+  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)</pre><div class="fxk">참고문헌</div><div class="fxv">1) Jegadeesh, N. &amp; Livnat, J. (2006) Revenue Surprises and Stock Returns. Journal of Accounting and Economics.</div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-sur">t-x-sur</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f330" data-g="st" data-sg="Value" data-dir="desc"><summary><span class="fxn">총주주환원수익률</span><span class="fxd">(최근 12개월 배당총액 + 자사주매입액) ÷ 시가총액</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Value</span><span class="chip g-st">Style Factor</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Shareholder Payout Yield</div><div class="fxk">설명</div><div class="fxv">배당만 보면 주주환원의 절반을 놓친다 — 미국 기업의 환원은 2000년대 이후 자사주매입이 배당을 넘었다. 배당과 자사주 두 항의 기간말이 한 분기(120일) 넘게 벌어지면 제외한다.</div><div class="fxk">산식</div><pre class="fxv code">Payout Yield = ( TTM(Dividends) + TTM(Buybacks) ) / MarketCap
+
+  Dividends : 주당배당 × 주식수
+  Buybacks : 자사주 매입액 (현금흐름표 · 연간 기준)
+  두 항 기간말 차이 &gt; 120일 → 제외</pre><div class="fxk">참고문헌</div><div class="fxv">1) Boudoukh, J., Michaely, R., Richardson, M. &amp; Roberts, M. R. (2007) On the Importance of Measuring Payout Yield: Implications for Empirical Asset Pricing. Journal of Finance.</div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-payout">t-x-payout</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f331" data-g="st" data-sg="Quality" data-dir="asc"><summary><span class="fxn">이익 변동성</span><span class="fxd">최근 8분기 EPS 표준편차 ÷ 평균 |EPS| (낮을수록 이익이 안정)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Quality</span><span class="chip g-st">Style Factor</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Earnings Variability</div><div class="fxk">설명</div><div class="fxv">이익이 안정적인 회사가 더 나은지 본다 — Dichev·Tang(2009)은 이익 변동성이 클수록 이익 예측력이 떨어진다고 보고했다. 분모가 이익 수준이라 이익이 0 근처인 회사는 값이 커진다.</div><div class="fxk">산식</div><pre class="fxv code">EarnVol = stdev_{8Q}( EPS ) / mean_{8Q}( |EPS| )
+
+  EPS : 분기 주당순이익 (SEC XBRL)
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Dichev, I. D. &amp; Tang, V. W. (2009) Earnings Volatility and Earnings Predictability. Journal of Accounting and Economics.</div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-earnvol">t-x-earnvol</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f332" data-g="sim" data-sg="Momentum" data-dir="desc"><summary><span class="fxn">52주 신고가 근접</span><span class="fxd">현재가 ÷ 직전 252거래일 일중 고가의 최대</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Momentum</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">52-Week High Proximity</div><div class="fxk">설명</div><div class="fxv">고점 근접을 추세의 대리변수로 쓰는 모멘텀 변형. 분모는 종가가 아니라 일중 고가다(종가를 쓰면 신고가 종목이 정확히 1.0 에 붙어 동점이 된다). 상장 직후 종목은 창이 짧아 비율이 1 에 붙으므로 창 안 유효 관측이 200일 미만이면 뺀다.</div><div class="fxk">산식</div><pre class="fxv code">52WH = Close_T / max_{252D}( High )
+
+  High : 일별 일중 고가
+  유효 관측 &lt; 200일 → 제외</pre><div class="fxk">참고문헌</div><div class="fxv">1) George, T. J. &amp; Hwang, C.-Y. (2004) The 52-Week High and Momentum Investing. Journal of Finance.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f154">Closing Price to 52 Week High</a> <span class="fxs">(S&amp;P Global · Price Momentum)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-52wh">t-x-52wh</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f333" data-g="sim" data-sg="Momentum" data-dir="desc"><summary><span class="fxn">SUE (전년 동기 대비)</span><span class="fxd">직전 분기 EPS의 전년 동기 대비 변화 ÷ 그 변화의 표준편차 (이익 모멘텀)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Momentum</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Standardized Unexpected Earnings (seasonal random walk)</div><div class="fxk">설명</div><div class="fxv">애널리스트 컨센서스 없이 재는 표준화 이익 서프라이즈 — 기대값을 «전년 동기 EPS» 로 둔다. 이익 소식이 몇 달에 걸쳐 주가에 스며드는 현상(실적 발표 후 드리프트)을 노린다. S&amp;P Global 의 Standardized Unexpected Earnings 는 컨센서스 대비라 기대값이 다르고, EPS Stability 는 계산이 거의 같다.</div><div class="fxk">산식</div><pre class="fxv code">SUE = ( EPS_q − EPS_{q−4} ) / stdev( EPS_k − EPS_{k−4} )
+
+  stdev : 직전 8개 분기의 전년 동기 대비 변화
+  회계 수치 : 기간 종료 90일 뒤부터 사용 (SEC XBRL)</pre><div class="fxk">참고문헌</div><div class="fxv">1) Foster, G., Olsen, C. &amp; Shevlin, T. (1984) Earnings Releases, Anomalies, and the Behavior of Security Returns. The Accounting Review.
+2) Bernard, V. L. &amp; Thomas, J. K. (1989) Post-Earnings-Announcement Drift: Delayed Price Response or Risk Premium? Journal of Accounting Research.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f141">EPS Stability</a> <span class="fxs">(S&amp;P Global · Historical Growth)</span> · <a href="#f268">Standardized Unexpected Earnings</a> <span class="fxs">(S&amp;P Global · Analyst Expectations)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-sue">t-x-sue</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f334" data-g="sim" data-sg="Momentum" data-dir="desc"><summary><span class="fxn">투자의견 리비전</span><span class="fxd">증권사 투자의견 컨센서스(5=적극 매수 → 1=적극 매도)의 30일 변화 × √증권사 수</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Momentum</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Analyst Recommendation Revision</div><div class="fxk">설명</div><div class="fxv">애널리스트가 의견을 올린 종목이 그 뒤 몇 달에 걸쳐 더 오른다는 관찰. 증권사별 최신 의견을 이어 붙여 컨센서스를 만들고(의견은 발표일부터 365일까지 유효) 그 변화에 √증권사 수를 곱한다 — 곱하지 않으면 커버가 적은 종목이 상위를 차지한다.</div><div class="fxk">산식</div><pre class="fxv code">Rec_T = mean_b( rating_{b,T} )   (5 = Strong Buy … 1 = Strong Sell)
+RevScore = ( Rec_T − Rec_{T−30D} ) × √n_brokers
+
+  rating : 증권사별 최신 투자의견 · 발표일부터 365일 유효</pre><div class="fxk">참고문헌</div><div class="fxv">1) Womack, K. L. (1996) Do Brokerage Analysts&#x27; Recommendations Have Investment Value? Journal of Finance.
+2) Barber, B., Lehavy, R., McNichols, M. &amp; Trueman, B. (2001) Can Investors Profit from the Prophets? Security Analyst Recommendations and Stock Returns. Journal of Finance.
+3) Jegadeesh, N., Kim, J., Krische, S. D. &amp; Lee, C. M. C. (2004) Analyzing the Analysts: When Do Recommendations Add Value? Journal of Finance.
+4) Loh, R. K. &amp; Stulz, R. M. (2011) When Are Analyst Recommendation Changes Influential? Review of Financial Studies.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f47">6M Avg Chg 1M Recommendation</a> <span class="fxs">(S&amp;P Global · Analyst Expectations)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-revdrift">t-x-revdrift</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f335" data-g="sim" data-sg="Low Volatility" data-dir="asc"><summary><span class="fxn">MAX (최대 일간 수익률)</span><span class="fxd">최근 1개월 일별 수익률의 최댓값 (낮을수록 좋음 · 복권형 회피)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Low Volatility</span><span class="chip g-sim">유사 팩터</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">MAX (Lottery)</div><div class="fxk">설명</div><div class="fxv">지난달 하루 크게 튄 종목은 복권처럼 선호돼 값이 비싸지고 다음 달 수익이 낮다는 관찰(저위험 이상현상의 한 갈래). 원논문의 효과는 하락 구간에서 주로 나온다. S&amp;P Global 쪽은 창이 6개월이다.</div><div class="fxk">산식</div><pre class="fxv code">MAX = max_{21D}( r_t )
+
+  r_t : 일별 수익률 · window : 21 거래일</pre><div class="fxk">참고문헌</div><div class="fxv">1) Bali, T. G., Cakici, N. &amp; Whitelaw, R. F. (2011) Maxing Out: Stocks as Lotteries and the Cross-Section of Expected Returns. Journal of Financial Economics.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f224">Max Daily Return in the Past 6 Months</a> <span class="fxs">(S&amp;P Global · Price Momentum)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-maxlow">t-x-maxlow</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f336" data-g="sim" data-sg="Value" data-dir="desc"><summary><span class="fxn">B/P (장부가 대비 주가)</span><span class="fxd">주당순자산 ÷ 주가 (큰 값 = 저평가)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Value</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Book-to-Price</div><div class="fxk">설명</div><div class="fxv">Fama-French 가치(HML)의 단변량판. 자본잠식(음수)은 자연히 하위로 간다.</div><div class="fxk">산식</div><pre class="fxv code">B/P = ( Equity / Shares ) / Price
+
+  Equity : 자본총계 (SEC XBRL)
+  Shares : 가중평균 희석주식수 (없으면 연간 → 기말 발행주식수 → yfinance 순)
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Fama, E. F. &amp; French, K. R. (1992) The Cross-Section of Expected Stock Returns. Journal of Finance.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f142">Book to Price</a> <span class="fxs">(S&amp;P Global · Valuation)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-btp">t-x-btp</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f337" data-g="sim" data-sg="Value" data-dir="desc"><summary><span class="fxn">FCF 수익률</span><span class="fxd">최근 12개월 잉여현금흐름(영업현금흐름 − 자본지출) ÷ 시가총액</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Value</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Free Cash Flow Yield</div><div class="fxk">설명</div><div class="fxv">잉여현금흐름 대비 싸게 거래되는 종목. 변화량이 아니라 수준으로 잰다 — 무료 자료로는 현금흐름이 연 단위로만 들어오는 종목이 많아 변화량을 같은 품질로 못 만든다. S&amp;P Global 의 Free Cash Flow to Price 는 배당까지 빼고 평균 시가총액으로 나눈다.</div><div class="fxk">산식</div><pre class="fxv code">FCF/P = ( TTM(CFO) − TTM(CapEx) ) / MarketCap
+
+  CFO : 영업활동현금흐름 · CapEx : 자본적지출 (SEC XBRL)
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Hackel, K. S., Livnat, J. &amp; Rai, A. (1994) The Free Cash Flow/Small-Cap Anomaly. Financial Analysts Journal.
+2) Hackel, K. S., Livnat, J. &amp; Rai, A. (2000) A Free Cash Flow Investment Anomaly. Journal of Accounting, Auditing &amp; Finance.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f46">Free Cash Flow to Price</a> <span class="fxs">(S&amp;P Global · Valuation)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-fcfy">t-x-fcfy</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f338" data-g="sim" data-sg="Value" data-dir="desc"><summary><span class="fxn">배당수익률</span><span class="fxd">최근 12개월 주당배당 ÷ 주가</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Value</span><span class="chip g-sim">유사 팩터</span><span class="dir">내림차순 ↓</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Dividend Yield</div><div class="fxk">설명</div><div class="fxv">배당을 선언하지 않는 종목은 순위에 없다. 감액 직전에 수익률이 가장 높아 보이는 함정이 있다 — 이 정의는 그것을 걸러내지 않는다.</div><div class="fxk">산식</div><pre class="fxv code">DY = TTM(DPS) / Price
+
+  DPS : 주당배당 (SEC XBRL)
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Litzenberger, R. H. &amp; Ramaswamy, K. (1979) The Effect of Personal Taxes and Dividends on Capital Asset Prices: Theory and Empirical Evidence. Journal of Financial Economics.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f159">Dividends to Price Ratio</a> <span class="fxs">(S&amp;P Global · Valuation)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-dy">t-x-dy</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f339" data-g="sim" data-sg="Quality" data-dir="asc"><summary><span class="fxn">부채비율 (D/E)</span><span class="fxd">총부채 ÷ 자본총계 (낮을수록 좋음 · 재무 안정성)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Quality</span><span class="chip g-sim">유사 팩터</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Debt-to-Equity</div><div class="fxk">설명</div><div class="fxv">재무 안정성 팩터. 부채 항목이 없으면 자산 − 자본으로 메우고 자본잠식 종목은 뺀다. S&amp;P Global 의 Financial Leverage·Book Leverage 는 총자산 ÷ 보통주 자기자본이라 거의 1 + 이 값이다(자본을 보통주로 좁힌 차이뿐) — 같은 축을 재지만 그쪽 순위 방향은 내림차순이고, 이 규칙은 오름차순(부채가 적을수록 위)이다.</div><div class="fxk">산식</div><pre class="fxv code">D/E = Total Liabilities / Total Equity
+
+  부채 없음 → Total Assets − Total Equity
+  Equity ≤ 0 → 제외 · 회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv nil">—</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f54">Financial Leverage</a> <span class="fxs">(S&amp;P Global · Capital Efficiency)</span> · <a href="#f274">Book Leverage</a> <span class="fxs">(S&amp;P Global · Volatility)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-lowde">t-x-lowde</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f340" data-g="sim" data-sg="Quality" data-dir="asc"><summary><span class="fxn">퍼센트 영업발생액</span><span class="fxd">(순이익 − 영업현금흐름) ÷ |순이익| (낮을수록 이익이 현금으로 뒷받침)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Quality</span><span class="chip g-sim">유사 팩터</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Percent Operating Accruals</div><div class="fxk">설명</div><div class="fxv">Sloan(1996) 발생액 이상현상의 퍼센트 판 — 이익이 현금으로 뒷받침되지 않는 회사가 이후 부진하다. 분모를 자산이 아니라 |순이익|으로 둔다. S&amp;P Global 의 Accrual Ratio - Cash Flows 는 같은 발생액을 순영업자산으로 나눈다.</div><div class="fxk">산식</div><pre class="fxv code">POA = ( TTM(NI) − TTM(CFO) ) / | TTM(NI) |
+
+  NI : 순이익 · CFO : 영업활동현금흐름 (같은 12개월 창)
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Sloan, R. G. (1996) Do Stock Prices Fully Reflect Information in Accruals and Cash Flows About Future Earnings? The Accounting Review.
+2) Hafzalla, N., Lundholm, R. &amp; Van Winkle, E. M. (2011) Percent Accruals. The Accounting Review.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f176">Accrual Ratio - Cash Flows</a> <span class="fxs">(S&amp;P Global · Earnings Quality)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-poacc">t-x-poacc</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f341" data-g="sim" data-sg="Quality" data-dir="asc"><summary><span class="fxn">자산성장률</span><span class="fxd">총자산의 전년 동기 대비 증가율 (낮을수록 좋음 · 보수적 투자)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Quality</span><span class="chip g-sim">유사 팩터</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Asset Growth</div><div class="fxk">설명</div><div class="fxv">자산을 빠르게 늘린 회사가 이후 부진하다 — 투자(investment) 팩터의 대표 대리변수. 총자산이 0 이하인 분기는 빼고 증가율은 ±200%로 자른다. S&amp;P Global 쪽은 4분기 평균 총자산으로 잰다.</div><div class="fxk">산식</div><pre class="fxv code">AG = TotalAssets_q / TotalAssets_{q−4} − 1
+
+  TotalAssets ≤ 0 → 제외 · clip ±200%
+  회계 수치 : 기간 종료 90일 뒤부터 사용</pre><div class="fxk">참고문헌</div><div class="fxv">1) Cooper, M. J., Gulen, H. &amp; Schill, M. J. (2008) Asset Growth and the Cross-Section of Stock Returns. Journal of Finance.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f236">Asset Growth - 1 Year</a> <span class="fxs">(S&amp;P Global · Capital Efficiency)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-agrow">t-x-agrow</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
+<details class="fx" id="f342" data-g="sim" data-sg="Quality" data-dir="asc"><summary><span class="fxn">순주식발행</span><span class="fxd">가중평균 희석주식수의 전년 동기 대비 증가율 (낮을수록 좋음 · 자사주 소각)</span><span class="fxm"><span class="chip lab" title="여두 전략 랩 규칙에서 옮긴 팩터(사내 원표 아님)">랩</span><span class="chip">Quality</span><span class="chip g-sim">유사 팩터</span><span class="dir">오름차순 ↑</span></span></summary><div class="fxb"><div class="fxk">원 명칭</div><div class="fxv">Net Share Issuance</div><div class="fxk">설명</div><div class="fxv">주식을 새로 찍는 회사는 부진하고 줄이는 회사는 낫다. 증가율 절대값이 50%를 넘는 분기(합병 대가 발행 등)는 뺀다.</div><div class="fxk">산식</div><pre class="fxv code">ISS = Shares_q / Shares_{q−4} − 1
+
+  Shares : 가중평균 희석주식수
+  |ISS| &gt; 50% → 제외</pre><div class="fxk">참고문헌</div><div class="fxv">1) Pontiff, J. &amp; Woodgate, A. (2008) Share Issuance and Cross-Sectional Returns. Journal of Finance.</div><div class="fxk">비슷한 기존 팩터</div><div class="fxv"><a href="#f230">1Y Chg in Shares Outstanding</a> <span class="fxs">(S&amp;P Global · Capital Efficiency)</span></div><div class="fxk">출처</div><div class="fxv">여두 전략 랩 규칙 <a href="explorer.html#s-t-x-shiss">t-x-shiss</a> — 백테스트·판정은 그 카드에서 본다</div></div></details>
 <p class="fxempty" id="fxempty" hidden>조건에 맞는 팩터가 없습니다.</p>
 </div>
 <!-- FACTORS:END -->
@@ -3964,9 +4044,22 @@ rank_order=오름차순 — Overhead/Sales 비율이 낮은(비용 효율 우수
     var id = decodeURIComponent(location.hash.slice(1));
     if (!id) return;
     var r = document.getElementById(id);
-    if (r && r.tagName === 'DETAILS') { r.hidden = false; r.open = true; r.scrollIntoView({block: 'start'}); }
+    if (!r || r.tagName !== 'DETAILS') return;
+    // 걸러 둔 조건 밖의 팩터로 건너가면(랩 행의 «비슷한 기존 팩터» 링크) 조건을 풀어 목록과 개수를 맞춘다.
+    // 그 행만 드러내면 «11 / 342» 인데 12줄이 보이고, 다음 입력 때 다시 숨는다.
+    if (r.hidden) {
+      q.value = ''; sg.value = ''; dir.value = ''; g = 'all';
+      gbtns.forEach(function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-g') === 'all' ? 'true' : 'false'); });
+      apply();
+    }
+    r.open = true; r.scrollIntoView({block: 'start'});
   }
   window.addEventListener('hashchange', fromHash);
+  // 주소창의 해시와 같은 링크를 다시 누르면 hashchange 가 안 난다 — 그때도 건너가게 한다.
+  list.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[href^="#f"]') : null;
+    if (a && a.getAttribute('href') === location.hash) { e.preventDefault(); fromHash(); }
+  });
   apply();
   fromHash();
 })();
