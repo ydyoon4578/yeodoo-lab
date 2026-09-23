@@ -55,7 +55,9 @@ RULES = [
     # 종목 RRG 판(rrg.html · 2026-09-23) — 제목에 «판정(기각)» 이 들어가 아래 method 에 먼저 걸렸다.
     #   ⚠ 판 커밋만 좁게 잡는다. «RRG» 하나로 넓히면 어제(09-22) 팩터 RRG 사전등록·결과 제목의
     #     대상이 explorer·archive 에서 바뀌어, 그 날짜를 다시 긁을 때 두 벌로 들어간다(키가 날짜·대상·제목).
-    (r"rrg\.html|RRG 로테이션 판", "stocks"),
+    # 🚨 2026-09-24 «종목 RRG 판을 …» (판 나누기) 가 «지수» 로 explorer 에 떨어졌다. 앞에 «을» 을 붙여 좁힌다 —
+    #   09-23 사전등록 «종목 RRG 판: …» 은 이미 explorer 로 실려 있어 이 규칙에 걸리면 안 된다(두 벌).
+    (r"rrg\.html|RRG 로테이션 판|종목 RRG 판을", "stocks"),
     (r"\bco\b|종목 정보|종목 재무|페어", "company"),
     (r"sector|섹터", "sector"),
     (r"macro|경제지표", "macro"),
