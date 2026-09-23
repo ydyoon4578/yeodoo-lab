@@ -43,6 +43,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # 미묘하게 갈리고, 그때 어느 쪽이 맞는지 아무도 모른다.
 from guru17_backtest import (ann_from_monthly, capm, add_months, month_end,
                              load, LAG_MONTHS, holm_bh)
+# 🚨 2026-09-23 — 겹침은 퀀트·분산 축(refresh_13f.AXES 의 overlap=False)을 **세지 않는다**.
+#   2026-08-19 사용자 결정(«퀀트는 겹침에서 제외»)이 화면(refresh_13f)에만 들어가고 여기엔 빠져 있었다.
+#   그 사이 이력에 들어온 AQR·고담·르네상스는 유니버스 518종 중 508·501·281종을 들고 있어, «3곳 이상»의
+#   상당수가 퀀트 셋만으로 채워졌다(2026-08 신규 합의 27종 전부 퀀트가 끼고 5종은 퀀트뿐).
+#   명단·축의 정본은 refresh_13f 하나다 — 여기서 CIK 를 다시 적지 않는다.
+from refresh_13f import NO_OVERLAP
+NO_OVERLAP_S = {str(c) for c in NO_OVERLAP}
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -96,6 +103,8 @@ def counts_by_quarter(G, mi, P, months):
         i_r = mi[rm]
         cnt, used, skipped = {}, 0, 0
         for cik, raw in H[q].items():
+            if cik in NO_OVERLAP_S:
+                continue                        # 퀀트·분산 축 — 겹침에서 뺀다(위 import 주석)
             fd = (FILED.get(q) or {}).get(cik)
             if fd and fd > month_end(rm):
                 skipped += 1                    # 그때는 아직 공시 전이다
@@ -269,7 +278,7 @@ def build_topn(counts, k, n, rank, SH, P, mi, months, ISS):
         if drop:
             dropped[m] = drop
     if not plan:
-        return {}, [], [], None, skipped
+        return {}, [], [], None, skipped, dropped     # 반환 수를 아래와 맞춘다(빈 계획이면 main 의 여섯 개 풀기가 죽던 것)
     W, cur, turn, nhold = {}, None, [], []
     start = mi[min(plan)]
     for i in range(start, len(months)):
@@ -583,10 +592,12 @@ def main() -> int:
                           "알파를 그만큼 깎아서 읽어야 한다.",
             "rf": "FRED DGS3MO 월율, 샤프·알파는 초과수익 기준",
             "costs": "거래비용·세금 0. 회전율을 함께 실어 크기를 가늠하게 한다",
+            "overlap_excluded": sorted((G.get("names") or {}).get(c, c) for c in NO_OVERLAP_S),
+            "overlap_excluded_note": "퀀트·분산 축은 수천 종목을 들고 있어 모든 종목의 겹침 수를 +1 하므로 세지 않는다",
         },
         "limits": [
-            "명단 17곳이 **사후 선택**이다 — 2026년 시점의 유명세로 고른 곳들이고 13년 구간에서 "
-            "폐업·청산이 0곳이다. 어떤 대조군도 이 편향을 상쇄하지 못한다.",
+            "명단 운용사가 **사후 선택**이다 — 2026년 시점의 유명세로 고른 곳들이고 폐업·청산한 "
+            "곳이 거의 없다. 어떤 대조군도 이 편향을 상쇄하지 못한다.",
             "유니버스(518종목)와 CUSIP→티커 매핑이 모두 **오늘 스냅샷**이다. 과거 보유 중 "
             "'지금 대형주로 살아남은 것'만 남으므로 방향은 위쪽이다. 대조군을 같은 풀 "
             "동일가중으로 두어 일부만 상쇄한다.",

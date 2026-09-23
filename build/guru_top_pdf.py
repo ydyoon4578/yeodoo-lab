@@ -169,6 +169,10 @@ def build_weights(cik, G, P):
     return sched, diag
 
 
+from refresh_13f import NO_OVERLAP as _NO_OVERLAP     # 명단·축 정본은 refresh_13f 하나
+_NOV = {str(c) for c in _NO_OVERLAP}
+
+
 def build_overlap(G, P):
     """거장 최다 보유 — 분기마다 '몇 곳이 들고 있나'로 세어 상위 10종목을 동일가중으로 담는다.
 
@@ -192,6 +196,8 @@ def build_overlap(G, P):
             continue
         cnt = {}
         for cik, hold in (H[q] or {}).items():
+            if cik in _NOV:                   # 퀀트·분산 축은 세지 않는다(2026-09-23 — 2026-08-19 사용자 결정의 누락분)
+                continue
             f = (FILED.get(q) or {}).get(cik)
             if f and f > P.dates[i]:          # 그때는 아직 안 나온 공시다
                 diag["lookahead"] += 1
@@ -723,10 +729,10 @@ def draw_summary(fig, P, res, order, total):
 
 # ── 바스켓 두 종류의 쪽 사양 ────────────────────────────────────────────────
 SPEC_OVERLAP = {
-    "kind": "overlap", "short": "겹침", "ref": "17곳 겹침",
+    "kind": "overlap", "short": "겹침", "ref": "명단 겹침",
     "title": "거장 최다 보유 종목", "cnt": "보유", "who": "들고 있는 운용사",
     "rule": lambda n: "최다 보유 상위 %d(동점 포함 %d종목)" % (TOP_OVERLAP, n),
-    "desc1": ("분기마다 명단 17곳의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
+    "desc1": ("분기마다 명단 운용사(퀀트·분산 제외)의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
               "동일가중으로 담는다. %d위에 동점이 있으면 전부 넣으므로 종목 수는 %d개 이상이다."
               % (TOP_OVERLAP, TOP_OVERLAP, TOP_OVERLAP)),
     "desc2": ("개별 운용사를 복제하는 뒤쪽 쪽들과 달리, 여기서 묻는 것은 "
@@ -741,7 +747,7 @@ SPEC_TOP1 = {
     "kind": "top1", "short": "1위", "ref": "운용사별 1위",
     "title": "거장별 1위 종목", "cnt": "지목", "who": "1위로 지목한 운용사",
     "rule": lambda n: "운용사별 1위 종목 %d개(중복 제거)" % n,
-    "desc1": ("분기마다 명단 17곳 각각의 유니버스 내 **최대 비중** 종목을 하나씩 뽑아 모으고, "
+    "desc1": ("분기마다 명단 운용사 각각의 유니버스 내 **최대 비중** 종목을 하나씩 뽑아 모으고, "
               "중복을 없앤 뒤 동일가중으로 담는다.".replace("**", "")),
     "desc2": ("한 종목을 여러 곳이 1위로 꼽아도 한 칸이다 — 지목 수만큼 비중을 주면 "
               "'여러 명이 1위로 꼽은 것이 더 좋다'는 검증한 적 없는 가정을 규칙에 심게 된다."),
