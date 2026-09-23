@@ -1270,8 +1270,16 @@
     var cp = calcPerf(slug, trs, asofI);
     var perf = cp.byS, sk = cp.skipped;
 
+    /* 단추 둘 — 이 펀드만 / 전 펀드 한번에(2026-09-23 사용자 «S&P500, 나스닥 100 한번에»).
+       ⚠ 「전 펀드」는 펀드가 둘 이상일 때만 낸다. 하나뿐이면 같은 것을 두 번 내는 셈이다. */
+    var _all = Object.keys(PF.funds);
     h.push('<div class="prbar"><button class="sb" id="pdf-' + slug + '">전략 성과 PDF</button>' +
-      '<span class="pnote">브라우저 인쇄 대화상자에서 «대상 → PDF로 저장» 을 고르면 됩니다.</span></div>');
+      (_all.length > 1
+        ? '<button class="sb" id="pdfall-' + slug + '">전 펀드 PDF (' +
+          esc(_all.map(function (sg) { return PF.funds[sg].fund; }).join(' + ')) + ')</button>'
+        : '') +
+      '<span class="pnote">브라우저 인쇄 대화상자에서 «대상 → PDF로 저장» 을 고르면 됩니다.' +
+      (_all.length > 1 ? ' 전 펀드는 펀드마다 새 장으로 나옵니다.' : '') + '</span></div>');
     var cc = crossCheck(slug);
     if (cc.n) {
       h.push(cc.skip ? '<p class="pnote">교차검증 생략 — ' + esc(cc.skip) + '</p>'
@@ -1396,6 +1404,11 @@
     box.innerHTML = h.join('');
     var _pdf = el('pdf-' + slug);
     if (_pdf) _pdf.addEventListener('click', function () { printReport(slug); });
+    // 전 펀드 — 화면에 그려진 순서(PF.funds 의 키 순서)대로 이어 붙인다.
+    var _pdfA = el('pdfall-' + slug);
+    if (_pdfA) _pdfA.addEventListener('click', function () {
+      printReport(Object.keys(PF.funds));
+    });
     box.querySelectorAll('.sstat').forEach(function (b2) {
       b2.addEventListener('click', function () {
         var m = S.doc.strategies[b2.dataset.s] = S.doc.strategies[b2.dataset.s] || {};
@@ -1784,9 +1797,13 @@
     return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) +
            ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
   }
-  function printReport(slug) {
+  /* 리포트 **본문만** 만든다(인쇄는 안 한다). 아래 printReport 가 펀드를 여럿 받아
+     이어 붙일 수 있게 가른 것이다 — 2026-09-23 사용자 «S&P500, 나스닥100 한번에».
+     ⚠ 매매가 없으면 null 을 준다. 경고는 여기서 띄우지 않는다 — 두 펀드를 묶어 뽑을 때
+       한쪽이 비었다고 전체가 멈추면 안 된다. 부르는 쪽이 정한다. */
+  function reportHTML(slug) {
     var F = PF.funds[slug], trs = mergedTrades(slug);
-    if (!trs.length) { alert('매매가 없어 낼 리포트가 없습니다.'); return; }
+    if (!trs.length) return null;
     var asofI = dLe(F.asof_us), cp = calcPerf(slug, trs, asofI), perf = cp.byS;
     var spp = sppMap(slug), wTot = stratTotalW(slug);
     var h = [];
@@ -1922,13 +1939,34 @@
         (anyWarn ? '· ⚠ = 보유 중 하루 ±' + num(PF.guard * 100, 0) +
                    '% 초과 변동(분할 의심)' : '') + '</div>');
 
+    return h;
+  }
+
+  /* 인쇄 — 펀드 하나(문자열)든 여럿(배열)이든 받는다.
+     🚨 2026-09-23 사용자 «S&P500, 나스닥 100 한번에 뽑을수 있게». 펀드마다 .prpage 로
+       감싸고 둘째 장부터 page-break-before 를 건다(css 는 portfolio.html 인쇄 블록).
+     ⚠ 매매가 없는 펀드는 **조용히 건너뛴다** — 한쪽이 비었다고 나머지까지 못 뽑으면
+       한번에 뽑는 뜻이 없다. 하나도 없을 때만 알린다. */
+  function printReport(slugs) {
+    if (typeof slugs === 'string') slugs = [slugs];
+    var parts = [], empty = [];
+    slugs.forEach(function (sg) {
+      var h = reportHTML(sg);
+      if (h) parts.push('<div class="prpage">' + h.join('') + '</div>');
+      else empty.push((PF.funds[sg] || {}).fund || sg);
+    });
+    if (!parts.length) {
+      alert('매매가 없어 낼 리포트가 없습니다' + (empty.length ? ' — ' + empty.join(' · ') : '') + '.');
+      return;
+    }
+    if (empty.length) alert('매매가 없어 뺀 펀드: ' + empty.join(' · '));
     var box = document.getElementById('pfprint');
     if (!box) {
       box = document.createElement('div');
       box.id = 'pfprint';
       document.body.appendChild(box);
     }
-    box.innerHTML = h.join('');
+    box.innerHTML = parts.join('');
     document.body.classList.add('pf-printing');
     var done = function () {
       document.body.classList.remove('pf-printing');
