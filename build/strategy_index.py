@@ -1266,12 +1266,22 @@ def main() -> int:
 
     # ── ⑤ 거장 겹침 복제 ──────────────────────────────────────────────────
     # 13F 명단 중 K곳 이상이 들고 있는 종목을 동일가중으로 담는 규칙(build/guru_overlap_backtest.py).
-    # 변형 6종을 **전부** 싣는다. 좋은 것만 올리면 목록이 다중검정 분모를 숨기게 된다 —
+    # 변형 10종을 **전부** 싣는다. 좋은 것만 올리면 목록이 다중검정 분모를 숨기게 된다 —
     # 종목 전략 블록에 적어 둔 것과 같은 이유다("무엇을 재고 무엇을 버렸나"가 사라진다).
+    # (2026-09-23 압축 — 화면에는 셋만 남긴다. 아래 GURU_COMPRESS. 싣고 재는 것은 그대로다.)
     #
-    # 대조군은 **같은 풀 동일가중**으로 잡는다. SPY 도 같이 쟀지만 그쪽을 bench 로 놓으면
-    # 이 계열이 실제보다 좋아 보인다 — 유니버스가 대형주 518종목이라 SPY 를 넘는 것은
-    # 종목선택이 아니라 동일가중이 만든 사이즈 틸트로도 설명된다. 더 어려운 쪽을 잣대로 둔다.
+    # 🚨 대조군 — 처음에는 **같은 풀 동일가중**이었다(SPY 를 넘는 것은 동일가중 사이즈 틸트로도
+    #   설명되므로 더 어려운 쪽). 2026-08-16 에 S&P 500·나스닥 100 으로 바뀌면서 그 풀이 없어졌다.
+    #   그런데 why 문구는 «같은 풀 대비»·«SPY 총수익 대비» 를 그대로 말하고 있었고, 없는 spy 칸을
+    #   읽어 카드에 «None%/yr» 가 찍혔다(2026-09-23 발견). 문구를 지금 잣대에 맞추고,
+    #   그것이 **쉬운 쪽**이라는 것을 카드에 적는다.
+    def _ov_why(grade, ds, alpha, tt, start, end):
+        """거장겹침 카드의 why. 원래 창과 재진술 창(아래 «창 재진술») 이 같은 문장을 쓴다."""
+        return ("<b>%s.</b> S&P 500(PR) 매수후보유 대비 Δ샤프 %s · CAPM 알파 %s%%/yr (t %s) · %s~%s. "
+                "⚠ 쉬운 잣대다 — 오늘 518종 안의 대형주를 동일가중으로 담는 규칙이라 지수를 넘는 몫에 "
+                "사이즈 틸트와 생존 편향이 같이 들어 있다(같은 풀 동일가중 대조군은 2026-08-16 대조군 "
+                "교체 때 빠졌다)." % (grade, ds, alpha, tt, start, end))
+
     def _ov_grade(ds, tt):
         """Δ샤프와 t 로 등급을 매긴다. 눈으로 고르지 않으려고 규칙으로 박아 둔다."""
         if ds is None:
@@ -1323,17 +1333,19 @@ def main() -> int:
 
             rule=_rule + " 분기마다 다시 고르고, 공시일이 체결일보다 뒤인 운용사는 그 분기 "
                          "세지 않는다(그때는 아직 알 수 없던 정보다).",
-            why="<b>%s.</b> 같은 풀(S&P 500 ∪ NASDAQ 100 동일가중) 대비 Δ샤프 %s · "
-                "알파 %s%%/yr (t %s). SPY 총수익 대비로는 알파 %s%%/yr (t %s)로 이겼지만, "
-                "이 랩은 더 어려운 쪽인 같은 풀을 잣대로 둔다 — 유니버스가 대형주라 지수를 "
-                "넘는 것은 동일가중이 만든 사이즈 틸트로도 설명되기 때문이다."
-                % (_ov_grade(ds, pl.get("t")), ds,
-                   pl.get("alpha"), pl.get("t"),
-                   (v.get("spy") or {}).get("alpha"), (v.get("spy") or {}).get("t")),
-            note="같은 아이디어의 변형 %d개 중 하나다 — 문턱 4개와 좁힌 판 2개를 함께 쟀고 "
-                 "어느 다중검정 보정으로도 통과 0건이다. 명단이 사후 선택이고 유니버스·"
-                 "CUSIP 매핑이 오늘 스냅샷이라 생존편향은 위쪽으로 남는다. 거래비용 0."
-                 % ((ovd.get("multiplicity") or {}).get("m") or 6),
+            why=_ov_why(_ov_grade(ds, pl.get("t")), ds, pl.get("alpha"), pl.get("t"),
+                        v.get("start"), v.get("end")),
+            # 🚨 2026-09-23 — «문턱 4개와 좁힌 판 2개 · 어느 보정으로도 통과 0건» 은 변형이 6개이고
+            #   대조군이 같은 풀이던 때의 문장이었다. 지금 분모와 통과 수를 산출물에서 그대로 읽는다.
+            note="같은 아이디어의 변형 %s개(겹침 문턱·담는 법 %d판 + 상위 10 좁힌 판 %d) 중 하나다. "
+                 "전부를 원래 창의 S&P 500 알파 t 로 다중검정하면 통과가 Bonferroni %s · Holm %s · "
+                 "BH(q=.10) %s판이다. 명단이 사후 선택이고 유니버스·CUSIP 매핑이 오늘 스냅샷이라 생존편향은 "
+                 "위쪽으로 남는다. 거래비용 0."
+                 % ((ovd.get("multiplicity") or {}).get("m", "?"),
+                    len(ovd.get("variants") or []), len(ovd.get("tops") or []),
+                    (ovd.get("multiplicity") or {}).get("bonferroni", "?"),
+                    (ovd.get("multiplicity") or {}).get("holm", "?"),
+                    (ovd.get("multiplicity") or {}).get("bh10", "?")),
             bench_label="같은 풀 동일가중(월 리밸)",
             start=v.get("start"), end=v.get("end"),
             # 곡선이 닿는 마지막 날 — 구간수익의 지수 대조가 이 끝을 쓴다(rec 머리말).
@@ -1346,7 +1358,7 @@ def main() -> int:
         ))
         _ovn += 1
     if _ovn:
-        print("  거장 겹침 %d종 추가(대조군 = 같은 풀 동일가중)" % _ovn)
+        print("  거장 겹침 %d종 추가(대조군 = S&P 500 PR · 2026-08-16 교체)" % _ovn)
 
     # ── 목록 제외(운용 결정) ────────────────────────────────────────────────
     # 사용자 결정(2026-07-27). 위험감축 5종·방어보험 3종 + 합병차익 1종을 목록에서 뺀다.
@@ -1857,6 +1869,14 @@ def main() -> int:
         _r["excess_cagr"] = _q.get("excess_cagr")
         if _q.get("beta") is not None:
             _r["beta"] = _q.get("beta")
+        # 🚨 2026-09-23 — 거장겹침은 **등급·why 도 재진술한 수로** 다시 매긴다(같은 _ov_grade).
+        #   종전에는 성적만 10년으로 덮고 등급·why 는 원래 창(12.9년) 값이 남아, 카드가 «통과 후보»
+        #   옆에 그 기준을 못 넘는 10년 t 를 그릴 수 있었다(09-23 13F 갱신 뒤 g-overlap-k2-new 가
+        #   10년 t 1.34 인데 원래 창 t 2.11 로 «통과 후보»). 규칙은 그대로, 잣는 수만 화면의 수로.
+        if _r["sid"].startswith("g-overlap"):
+            _r["grade"] = _ov_grade(_q.get("d_sharpe"), _q.get("t"))
+            _r["why"] = _ov_why(_r["grade"], _q.get("d_sharpe"), (_q.get("spx") or {}).get("alpha"),
+                                _q.get("t"), _q["start"], _q["end"])
         # 🚨 시점정확 레그가 없는 사유 — 빈칸은 «해당 없음» 과 «아직 안 쟀다» 를 못 가른다.
         _r["pit_na"] = (
             "13F 공시 명단의 겹침으로만 고르는 규칙이라 종목 재무 축이 없다. "
@@ -1877,6 +1897,43 @@ def main() -> int:
     HIDE_SIDS = HIDE_SIDS & KEEP_HIDDEN
     print("  🚨 숨김 해제 %d종(사용자 결정 2026-09-21) — 계속 가리는 것 %d종(사전등록 판정)"
           % (len(_LIFTED), len(HIDE_SIDS)))
+
+    # ── 🚨 2026-09-23 사용자 결정 — 거장 전략 압축 ──────────────────────────────
+    #   «거장 전략이 너무 잡다하게 여러갠데 강화해서 압축해». 거장 12종의 월수익 상관이 **세 묶음**이었다
+    #   (넓은 합의 0.84~1.00 · 신규 합의는 다른 것과 0.35~0.53 로 독립 · 집중 상위 10 은 0.88~0.93 —
+    #   build/PREREG-2026-09-23-GURUCMP.md §0). 묶음마다 **규칙이 가장 단순한 하나**만 남긴다 —
+    #   성적으로 고르지 않았다(등록 §1 이 계산 전에 정했다 · 커밋 61894ace).
+    #     남김  g-overlap-k2(사용자 요청 기본값 K=2) · g-overlap-k2-new(같은 K) · g-overlap-top10-ov(13F 만으로 전 구간)
+    #   ⚠ «재면서 화면에서만 뺀다»(HIDE_SIDS 의 뜻)다. 원본 guru_overlap.json·guru.html 의 민감도 표·
+    #     측정 기록·다중검정 분모는 그대로 둔다. 되살리려면 이 집합에서 빼면 된다.
+    GURU_COMPRESS = {
+        "g-overlap-k3", "g-overlap-k4", "g-overlap-k5",            # 넓은 합의 — K 민감도
+        "g-overlap-k2-conv", "g-overlap-k3-conv",                   # 넓은 합의 — 겹침수 가중
+        "g-overlap-k3-new",                                         # 넓은 합의와 0.92 (신규 합의 묶음은 k2-new 하나)
+        "g-overlap-top10-mc",                                       # 집중 상위 10 — 2020-06 부터만 잰다
+        "a-guru-clone",                                             # 집중 상위 10 과 0.93
+        "t-x-guruacc",                                              # 넓은 합의와 0.84
+    }
+    GURU_KEEP = {"g-overlap-k2", "g-overlap-k2-new", "g-overlap-top10-ov"}
+    HIDE_SIDS = HIDE_SIDS | GURU_COMPRESS
+    _gk = (load("_guru_cmp.json") or {}).get("idx") or {}
+    _gsp = ((_gk.get("spx") or {}).get("cells") or {}).get("prop") or {}
+    _gnd = ((_gk.get("ndx") or {}).get("cells") or {}).get("prop") or {}
+    _gsv = (_gk.get("spx") or {}).get("survivor") or {}
+    for _r in rows:
+        if _r["sid"] not in GURU_KEEP:
+            continue
+        # 🚨 남은 셋에 압축 사유와 **정직한 재측정**을 화면이 이미 그리는 칸(note)에 적는다.
+        _add = ("🚨 거장 전략 압축(2026-09-23) — 같은 베팅의 변형 9종을 목록에서 뺐고(월수익 상관 0.84~1.00) "
+                "묶음마다 규칙이 가장 단순한 것만 남겼다. ⚠ 이 계열의 수치는 오늘 518종 안에서만 고른 것이다 — "
+                "13F 매핑이 편출 종목을 덮지 않는다%s. 시점정확 패널·시총가중 벤치로 다시 재면 거장 합의 점수 틸트(TE 2%%)의 "
+                "IR 이 S&P 500 %s · NASDAQ 100 %s 로 0 과 구별되지 않는다(PREREG-2026-09-23-GURUCMP)."
+                % ((" — 오늘 518종 안의 멤버만 동일가중으로 담아도 그때 멤버 전체보다 연 약 %.1f%%p 앞선다"
+                    "(고르기 전에 얻는 몫)" % (_gsv["ew_pm"] * 12)) if _gsv.get("ew_pm") is not None else "",
+                   ("%+.2f(t %.2f)" % (_gsp["metrics"]["ir"], _gsp["metrics"]["t"])) if _gsp.get("metrics") else "—",
+                   ("%+.2f(t %.2f)" % (_gnd["metrics"]["ir"], _gnd["metrics"]["t"])) if _gnd.get("metrics") else "—"))
+        _r["note"] = ((_r.get("note") + " ") if _r.get("note") else "") + _add
+    print("  🚨 거장 전략 압축 %d종 숨김(사용자 결정 2026-09-23) — 남김 %s" % (len(GURU_COMPRESS), ", ".join(sorted(GURU_KEEP))))
 
     _found = ({r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
               | {sid for sid in HIDE_SIDS if sid in _hidden_sids})
