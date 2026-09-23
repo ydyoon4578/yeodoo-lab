@@ -203,6 +203,17 @@ def main() -> int:
         T = json.load(io.open(TEST, encoding="utf-8"))
         test = {k: T.get(k) for k in ("verdict", "prereg", "commit", "window", "n_obs",
                                       "base_mean", "quadrants", "f1", "f2", "f3", "f4", "f5", "f6")}
+    # 섹터 ETF 판(PREREG-2026-09-23-SECRRG) — «이 판을 섹터 로테이션에 쓰면?» 에 대한 답을 판정 상자가 읽는다.
+    #   ⚠ 옮겨 적기만 한다. 여기서 다시 재지 않는다(그 파일도 얼린 기록이다).
+    sect = None
+    sp = os.path.join(DATA, "_secrrg.json")
+    if os.path.exists(sp):
+        S2 = json.load(io.open(sp, encoding="utf-8"))
+        sect = {"verdict": S2.get("verdict"), "commit": S2.get("commit"), "window": S2.get("window"),
+                "ann_excess_pp": (S2.get("f1") or {}).get("ann_excess_pp"), "t": (S2.get("f1") or {}).get("t"),
+                "net_ann_excess_pp": (S2.get("f5") or {}).get("ann_excess_pp"),
+                "turnover": (S2.get("turnover") or {}).get("S1"),
+                "lead_lag_t": (S2.get("f3") or {}).get("t_clustered")}
     strats, wide = explorer_strategies()
     doc = {
         "note": "종목 RRG 판. 518종(explorer 전 전략 보유의 합집합) × S&P 500(PR) 대비 주간. "
@@ -219,7 +230,7 @@ def main() -> int:
         "enc": "x·y 는 floor((값 − 100) × 100) 정수 — 내림이라 부호(사분면)가 보존된다. "
                "null 은 계산 불가(상장 12+12주 미만 등).",
         "weeks": weeks, "sectors": sectors, "counts": cnt, "n": len(rows),
-        "test": test, "stocks": rows, "sector_med": sec,
+        "test": test, "test_sector": sect, "stocks": rows, "sector_med": sec,
         "strategies": strats, "wide_n": wide, "wide_cut": WIDE,
     }
     s = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
