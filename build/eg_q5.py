@@ -333,6 +333,7 @@ def main() -> int:
     mem, _c = IM.load(F0)
     months = [m for m in sorted(mem) if F0 <= m <= F1_]
     rows, prev_w, prev_rn, f4_rho, drops = [], {}, {}, [], {"no_state": 0, "fin": 0, "dual": 0, "no_px": 0, "reuse": 0}
+    SCORES = {}               # 형성월 → {멤버 티커: E_t} — PREREG-2026-09-23-IDXEG 가 읽는다
     for m in months:
         bb = bbar(m)
         if bb is None:
@@ -381,6 +382,7 @@ def main() -> int:
             s12 = state(t, mshift(m, 12)) if mshift(m, 12) <= allm[-1] else None
             real = (s12[3] - s[3]) if (s12 and s12[4] != s[4]) else None
             cand.append({"t": t, "eg": eg, "mc": s[5], "rn": rn, "real": real})
+        SCORES[m] = {c["t"]: round(c["eg"], 6) for c in cand}   # --scores 가 내보낸다(계산에는 안 쓴다)
         if len(cand) < 60:
             raise SystemExit("🚨 %s 자격 종목 %d — 너무 얇다" % (m, len(cand)))
         egs = np.array([c["eg"] for c in cand])
@@ -476,6 +478,15 @@ def main() -> int:
            "sanity": {"univ_vs_spx_corr": corr_spx}, "drops": drops, **R, "verdict": verdict,
            "monthly": [{"m": r["m"], "spread": round(r["spread"], 4), "lo": round(r["lo"], 4)} for r in rows]}
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
+    # 🚨 --scores — 월별 예측치 E_t 를 따로 내보낸다(PREREG-2026-09-23-IDXEG 의 신호). 판정 산출물(OUT)은
+    #   이 깃발과 무관하게 한 바이트도 달라지지 않아야 한다 — 같은 계산의 부산물을 적을 뿐이다.
+    if "--scores" in sys.argv:
+        sp_ = os.path.join(DATA, "_eg_q5_scores.json")
+        io.open(sp_, "w", encoding="utf-8", newline="\n").write(json.dumps(
+            {"note": "eg_q5.py 형성월별 Eg 예측치 E_t(금융 제외 · 그때의 멤버 중 재무 상태가 있는 종목). 얼린 측정의 부산물.",
+             "prereg": "build/PREREG-2026-09-23-EG.md", "months": SCORES},
+            ensure_ascii=False, separators=(",", ":")) + "\n")
+        print("→ %s (%d개월)" % (sp_, len(SCORES)))
 
     print("보유 %s ~ %s · %d개월 · 회귀 %d개월(표본 중앙 %d) · %.0f초"
           % (rows[0]["m"], rows[-1]["m"], len(rows), len(B), np.median(list(nreg.values())), dt))
