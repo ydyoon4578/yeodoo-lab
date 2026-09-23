@@ -676,6 +676,10 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
         sys.exit("편출 종목 가격 캐시가 없다(%s) — `python build/pit_backtest.py --fetch-cache` 로 "
                  "먼저 받을 것. 없이 돌리면 생존자 전용 결과에 PIT 라벨이 붙는다." % CACHE)
     cache = json.load(io.open(CACHE, encoding="utf-8"))
+    # 🚨 2026-09-23 — 격리 이름은 아래 크기 검사보다 **먼저** 명시적으로 뺀다. 크기 검사는 PARA 를
+    #   우연히 잡아 왔지만(1,971배), 격리의 정본은 data/pit_px.json 이다(build/pit_quarantine.py).
+    import pit_quarantine as _PQ                   # noqa: E402  같은 build/ 안
+    _PQ.drop(cache, "PIT 가격")
     reassigned = load_reuse()
     bad_reuse, cut, bad_scale = [], [], []
     for t, ser in cache.items():
@@ -852,6 +856,8 @@ def load_hilo(need, dates, MEMBER_SPAN=None, which=0, alias=None):
             hl = json.load(io.open(HLCACHE, encoding="utf-8"))
         except Exception:
             hl = {}
+        import pit_quarantine as _PQ               # noqa: E402  종가와 같은 격리(load_prices 참조)
+        _PQ.drop(hl, "PIT 고저가", say=None)
         # 종가와 **같은 자리에서** 자른다. 한쪽만 자르면 같은 종목이 규칙마다 다른 이력을
         # 갖게 되고, 그 어긋남은 예외를 안 내고 지나간다(이 파일이 세 번 겪은 유형이다).
         reassigned = load_reuse()
@@ -916,6 +922,8 @@ def load_vol(need, dates, MEMBER_SPAN=None, alias=None):
             vc = json.load(io.open(VOLCACHE, encoding="utf-8"))
         except Exception:
             vc = {}
+        import pit_quarantine as _PQ               # noqa: E402  종가와 같은 격리(load_prices 참조)
+        _PQ.drop(vc, "PIT 거래량", say=None)
         reassigned = load_reuse()
         for t, ser in vc.items():
             if t not in need or t in vl or not ser:
@@ -2141,6 +2149,14 @@ def fetch_cache():
     out = json.load(io.open(CACHE, encoding="utf-8")) if os.path.exists(CACHE) else {}
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
     vlout = json.load(io.open(VOLCACHE, encoding="utf-8")) if os.path.exists(VOLCACHE) else {}
+    # 🚨 2026-09-23 — 격리 이름은 **받지도 담지도 않는다**(build/pit_quarantine.py). 종전에는 이 수집기가
+    #   격리를 몰라, 캐시를 러너에서 새로 만든 첫 실행(a2a9c154)이 야후가 지금 «PARA» 로 주는 다른 증권을
+    #   다시 받아 넣었다. 이미 들어 있는 것도 여기서 지운다 — 다음 커밋에 그대로 실려 나가지 않게.
+    import pit_quarantine as _PQ                   # noqa: E402  같은 build/ 안
+    _qn = _PQ.names()
+    want = [t for t in want if t not in _qn]
+    for _d, _lb in ((out, "종가"), (hlout, "고저가"), (vlout, "거래량")):
+        _PQ.drop(_d, "수집 · " + _lb)
     # 🚨 --rebuild 가 필요한 이유. 아래 루프는 '이미 있는 티커는 건너뛴다'가 기본이고
     #   저장도 setdefault 다 — 재수집 시점이 달라 값이 미세하게 흔들리면 그 위에서 잰 PIT
     #   수치가 조용히 바뀌기 때문이다. 그런데 그 보호가 **창을 앞으로 늘릴 때는 정반대로
@@ -2289,6 +2305,7 @@ def fetch_cache():
     # ⚠ 두 출처는 정의가 미세하게 다르다(실측 yfinance 가 0.3~2.3% 낮다). 시총이 자릿수로
     #   벌어지는 횡단면에서는 순위에 거의 영향이 없지만, limits 에 적고 민감도도 재 둔다.
     sh = json.load(io.open(SHCACHE, encoding="utf-8")) if os.path.exists(SHCACHE) else {}
+    _PQ.drop(sh, "수집 · 주식수")                  # 종가·고저가·거래량과 같은 격리(위 참조)
     tgt = sorted(out) if rebuild else [t for t in sorted(out) if t not in sh]
     print("주식수 수집 %d종 (이미 %d종)" % (len(tgt), len(sh)))
     for k, t in enumerate(tgt):

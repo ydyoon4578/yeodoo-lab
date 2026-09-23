@@ -85,6 +85,9 @@ NO_ROW = {
     "refresh-custconc.yml":  "고객 집중도 — sources 표가 잠금 페이지라 행을 못 넣었다(rates 와 같은 사정)",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
+    # 2026-09-23 a2a9c154 가 들여온 잡 — 등록이 빠져 그날부터 Validate site 가 매 푸시 실패했다.
+    "pit-cache.yml":         "편출 종목 가격·고저·거래량·주식수 캐시 — 수시(workflow_dispatch). "
+                             "멤버십이 바뀔 때만 돈다(pit-facts 와 같은 성격)",
     # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.
     #   같은 파일을 매일 다시 받을 이유가 없어 크론을 두지 않았다(build/PREREG-2026-08-12-TECHLINK.md §3).
     "probe-patents.yml":     "B11 기술링크 자료 관문 실측 — 1회성(workflow_dispatch). 원천이 동결돼 주기가 없다",
