@@ -82,6 +82,12 @@ def prepare(ST, P=None, window=None, quiet=False):
         _cv = _sl.get("coverage") or {}
         say("  가격 원천: %s(커밋된 기록) · 티커 %s · ~%s"
             % (os.path.basename(SLIM), _cv.get("n_tickers"), _cv.get("end")))
+    # 🚨 2026-09-23 — 격리 이름(PARA·COL)은 **어느 원천이든** 뺀다(build/pit_quarantine.py 머리말).
+    #   캐시가 저장소에 올라간 뒤로 러너도 위 첫 갈래(원시 캐시)를 타는데, 그 캐시에는 격리를 모르는
+    #   수집기가 다시 받아 넣은 PARA(«다른 증권» · 57~113,900달러)가 있다. 이 함수에는 크기 검사가 없어
+    #   빼지 않으면 그대로 주입된다 — 받은 가격이 200봉 넘고 60일 공백이 없어 아래 두 가드도 통과한다.
+    import pit_quarantine as _PQ                   # noqa: E402  같은 build/ 안
+    _PQ.drop(cache, "스타일 PIT 패널", say=say)
     if P is None:
         P = ST.Panel()
     win = ST.WINDOW if window is None else window

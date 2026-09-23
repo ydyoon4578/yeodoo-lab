@@ -71,6 +71,10 @@ def main() -> int:
     # 가격
     sd_dates = (jload(os.path.join(DATA, "stocks.json")) or {}).get("pxd_dates") or []
     pitpx = jload(os.path.join(DATA, "_pit_px_cache.json"), {}) or {}
+    # 🚨 2026-09-23 — 격리 이름(PARA·COL)은 뺀다(build/pit_quarantine.py). 원시 캐시에는 격리를 모르는
+    #   수집기가 다시 받아 넣은 PARA(«다른 증권»)가 있다.
+    import pit_quarantine as _PQ                   # noqa: E402  같은 build/ 안
+    _PQ.drop(pitpx, "편출 순위", say=None)
     splits = (jload(os.path.join(DATA, "splits.json"), {}) or {}).get("co") or {}
 
     _px_cache = {}
