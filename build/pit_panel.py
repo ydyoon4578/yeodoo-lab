@@ -81,11 +81,29 @@ def load_world():
             "me": me, "lists": lists}
 
 
-def _key(W, t):
-    if t in W["PX"]:
-        return t
-    n = W["splice"].get(t)
-    return n if (n and n in W["PX"]) else None
+def _key(W, t, i=None):
+    """명단 티커 → 가격 계열 키.
+
+    🚨 2026-09-24 정정 — 결함 둘(PREREG-2026-09-24-RALLY 결과 §0 에서 찾았다):
+      ① 점 표기 — 명단은 `BRK-B`·`BF-B`(load_world 가 '.'→'-' 로 바꾼다)인데 가격 키는 `BRK.B`·`BF.B` 라
+         버크셔·브라운포먼이 **전 기간** 빠졌다 → 점 표기도 찾는다.
+      ② 티커 재사용 — pit_px.json 의 `FB` 는 2025-06-26 부터의 **다른 증권**(39~46달러 · 같은 날 메타 700달러대)이다.
+         키가 그것을 먼저 잡아 `FB → META`(cik_spliced)가 안 걸렸고, 메타가 2014~2022 명단에서 빠졌다
+         → 날짜 i 를 주면 **그날 가격이 선 후보**를 고른다(명단 티커 → 점 표기 → cik_spliced 차례).
+    i 를 안 주면 있는 첫 후보다(종전과 같은 뜻 — 날짜를 모르는 호출용).
+    """
+    cands = []
+    for c in (t, t.replace("-", "."), W["splice"].get(t)):
+        if c and c in W["PX"] and c not in cands:
+            cands.append(c)
+    if not cands:
+        return None
+    if i is not None:
+        for c in cands:
+            v = W["PX"][c][i]
+            if v == v and v > 0:
+                return c
+    return cands[0]
 
 
 def _sector(W, t, k):
@@ -133,7 +151,7 @@ def month_rows(W, ix, sig_months, end):
             keep.add(k_[0] if k_ else sorted(ts)[0])
         mc, r, sec, kk = {}, {}, {}, {}
         for t in sorted(keep):
-            k = _key(W, t)
+            k = _key(W, t, i)                     # 🚨 날짜를 준다 — 그날 가격이 선 후보(재사용 티커 · 2026-09-24 정정)
             if k is None or not (PX[k][i] == PX[k][i]) or PX[k][i] <= 0:
                 continue
             if t in W["reassigned"] and mm >= W["reassigned"][t].get("last", "9999"):
