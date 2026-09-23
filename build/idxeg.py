@@ -46,130 +46,25 @@ def mshift(ym, k):
 
 
 def main() -> int:
-    S = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
-    dates = S["pxd_dates"]
-    D = len(dates)
-    sector_now = {s["t"]: s.get("sector") for s in S["stocks"]}
-    PX = {}
-    for t in sector_now:
-        d = json.load(io.open(os.path.join(DATA, "sd", t + ".json"), encoding="utf-8"))
-        PX[t] = np.array([np.nan if v is None else float(v) for v in d["pxd"]])
-    slim = json.load(io.open(os.path.join(DATA, "pit_px.json"), encoding="utf-8"))
-    if slim.get("dates") != dates:
-        raise SystemExit("🚨 pit_px.json 격자가 stocks.json 과 다르다")
-    for t, obj in slim["px"].items():          # {i0, p} 압축 배열 — 격리 이름은 정리본에 이미 없다
-        if t in PX or t in PQ.names():
-            continue
-        a = np.full(D, np.nan)
-        i0, arr = int(obj.get("i0") or 0), obj.get("p") or []
-        for j, v in enumerate(arr):
-            if v is not None and 0 <= i0 + j < D:
-                a[i0 + j] = float(v)
-        PX[t] = a
-    PU = json.load(io.open(os.path.join(DATA, "pit_universe.json"), encoding="utf-8"))
-    splice = PU.get("cik_spliced") or {}
-    reassigned = (json.load(io.open(os.path.join(DATA, "pit_reuse.json"), encoding="utf-8")).get("reassigned") or {})
-    meta = json.load(io.open(os.path.join(DATA, "index_ledger.json"), encoding="utf-8")).get("meta") or {}
-    H = json.load(io.open(os.path.join(DATA, "index_history.json"), encoding="utf-8"))
-    cikmap = H.get("cik") or {}
-    FUND = TB.load_fund(extra_dirs=[os.path.join(DATA, "fx_pit")])
+    # 🚨 2026-09-23 — 패널 준비를 build/pit_panel.py 로 떼어냈다(GURUCMP 가 같은 패널을 쓴다).
+    #   계산은 한 글자도 안 바뀌어야 한다 — 떼어낸 뒤 _idxeg.json 의 판정 수치가 재현되는지 확인했다.
+    import pit_panel as PP                     # noqa: E402  같은 build/ 안
+    Wd = PP.load_world()
     SC = json.load(io.open(os.path.join(DATA, "_eg_q5_scores.json"), encoding="utf-8"))["months"]
     CH = json.load(io.open(os.path.join(DATA, "strategy_charts.json"), encoding="utf-8"))
     IDXM = CH["idx_monthly"]
 
-    def key(t):
-        if t in PX:
-            return t
-        n = splice.get(t)
-        return n if (n and n in PX) else None
-
-    def sector(t, k):
-        s = sector_now.get(k) or sector_now.get(t)
-        if s:
-            return s
-        m = meta.get(t) or meta.get(k)
-        return m[1] if (m and len(m) > 1) else "?"
-
-    def shares(t, k, d):
-        for c in (k, t):
-            f = FUND.get(c) or {}
-            sh = f.get("sh")
-            if sh:
-                obs = TB.asof_all(sh, d)
-                if obs and obs[0][1]:
-                    return obs[0][1]
-        return None
-
-    me = {}
-    for i, d in enumerate(dates):
-        me[d[:7]] = i
-
-    # 지수별 월말 명단 — 비는 달은 직전 달을 잇는다(NDX 2018-10~12 파싱 공백)
-    months_all = sorted(H["months"])
-    lists = {"spx": {}, "ndx": {}}
-    last = {"spx": [], "ndx": []}
-    for m in months_all:
-        row = H["months"][m] or {}
-        for ix in ("spx", "ndx"):
-            if row.get(ix):
-                last[ix] = [x.replace(".", "-") for x in row[ix]]
-            lists[ix][m] = list(last[ix])
-
     RESULT = {"prereg": "build/PREREG-2026-09-23-IDXEG.md", "prereg_commit": "c9e755b1",
               "judge": list(JUDGE), "long0": LONG0, "te_target": IT.TE_JUDGE, "idx": {}}
     for ix, lab, bench_name in (("spx", "S&P 500", "S&P 500"), ("ndx", "NASDAQ 100", "NASDAQ 100")):
-        rows = []
-        cover = []
-        for mm in sorted(SC):                                  # 신호월 = Eg 형성월
-            mm1 = mshift(mm, 1)
-            if mm not in me or mm1 not in me or mm1 > JUDGE[1]:
-                continue
-            i, i1 = me[mm], me[mm1]
-            mem = lists[ix].get(mm) or []
-            by_cik = {}
-            for t in mem:
-                c = cikmap.get(t) or cikmap.get(t.replace("-", "."))
-                by_cik.setdefault(c or ("_" + t), []).append(t)
-            keep = set()
-            for c, ts in by_cik.items():
-                if len(ts) == 1 or c.startswith("_"):
-                    keep.update(ts)
-                    continue
-                k_ = [t for t in ts if t in KEEP_DUAL]
-                keep.add(k_[0] if k_ else sorted(ts)[0])
-            mc, r, sec = {}, {}, {}
-            for t in sorted(keep):
-                k = key(t)
-                if k is None or not (PX[k][i] == PX[k][i]) or PX[k][i] <= 0:
-                    continue
-                if t in reassigned and mm >= reassigned[t].get("last", "9999"):
-                    continue
-                sh = shares(t, k, dates[i])
-                if not sh or sh <= 0:
-                    continue
-                p = PX[k]
-                seg = p[i + 1:i1 + 1]
-                ok = np.where(seg == seg)[0]
-                mc[t] = p[i] * sh
-                r[t] = (seg[ok[-1]] / p[i] - 1) if len(ok) else 0.0
-                sec[t] = sector(t, k)
-            cover.append(len(mc) / max(1, len(keep)))
-            if len(mc) < 40:
-                continue
-            zsum = sum(mc.values())
-            wb = {t: mc[t] / zsum for t in mc}
-            names = sorted(wb)
-            raw = {t: SC[mm][t] for t in names if t in SC[mm]}
-            rows.append({"m": mm1, "names": names, "wb": wb, "sec": sec, "r": r,
-                         "Z": {"rev": IR.zsec(raw, sec, names)},      # 🚨 Eg z 를 IDXREV 의 신호 칸에 싣는다
-                         "cov": {"eg": sum(wb[t] for t in raw)}})
+        rows, cover = PP.month_rows(Wd, ix, SC, JUDGE[1])          # 신호월 = Eg 형성월
+        for x in rows:
+            names = x["names"]
+            raw = {t: SC[x["sig"]][t] for t in names if t in SC[x["sig"]]}
+            x["Z"] = {"rev": IR.zsec(raw, x["sec"], names)}      # 🚨 Eg z 를 IDXREV 의 신호 칸에 싣는다
+            x["cov"] = {"eg": sum(x["wb"][t] for t in raw)}
         # ── F0 패널 관문 ─────────────────────────────────────────────────────
-        bm = IDXM.get(bench_name) or {}
-        pairs = [(sum(x["wb"][t] * x["r"][t] for t in x["names"]) * 100, bm[x["m"]]) for x in rows
-                 if x["m"] in bm and JUDGE[0] <= x["m"] <= JUDGE[1]]
-        f0_corr = float(np.corrcoef([a for a, b in pairs], [b for a, b in pairs])[0, 1])
-        f0_gap = float(np.mean([a - b for a, b in pairs]))
-        f0_ok = bool(f0_corr >= 0.98 and abs(f0_gap) <= 0.30)     # numpy 불리언은 JSON 이 못 쓴다
+        f0_ok, f0_corr, f0_gap = PP.f0_gate(rows, IDXM, bench_name, JUDGE)
         j0 = next(k for k, x in enumerate(rows) if x["m"] >= JUDGE[0])
         jl = next(k for k, x in enumerate(rows) if x["m"] >= LONG0)
         print("\n" + "=" * 74)
