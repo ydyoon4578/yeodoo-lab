@@ -1,0 +1,58 @@
+name: Build PIT price/share cache for index-departed names
+
+# 편출 종목의 가격·고저·거래량·주식수 캐시를 만들어 저장소에 넣는다.
+# build/pit_backtest.py 가 이것을 읽어 생존편향(시점정확) 레그를 잰다.
+#
+# 🚨 왜 러너인가 — 두 가지다.
+#   ① SEC. --fetch-cache 는 fetch_cache() → write_reuse() 로 SEC company_tickers.json 을
+#      부른다(티커 승계 판정). SEC 는 사내 PC 의 로컬 호출 화이트리스트에 없다 —
+#      pit-facts.yml·refresh-facts.yml 과 같은 경로다.
+#   ② 🚨 **PC 한 대에 묶여 있던 것을 끊는다**(2026-09-23 사용자 «이 PC에서만 작업할거야.
+#      그 pc 의존 끊어»). 종전에는 네 캐시가 gitignore 라 **캐시를 가진 PC 에서만** PIT 을
+#      돌릴 수 있었고, 그 결과 같은 저장소인데 PC 마다 커버리지가 달랐다 —
+#      실측 2026-09-23: 한 PC 는 월별 보유율 최저 83.0%, 다른 PC 는 81.1% 로 게시 수치가
+#      **어느 PC에서 구웠느냐에 따라** 달라졌다. 캐시를 저장소가 가지면 그 차이가 사라진다.
+#      ⚠ 이 랩은 같은 병을 한 번 고쳤다 — fetch_members() 가 2026-08-03 에 사내 DB 를
+#        걷어내고 위키 산출물로 옮긴 것이 그것이다("생존편향 측정이 PC 한 대에 묶여 있었다").
+#        멤버십은 그때 풀렸는데 **가격 캐시가 남아 있었다.** 이 잡이 그 나머지다.
+#
+# ⚠ 크기 — 네 캐시 합이 약 30MB 다. gitignore 가 「재현 가능하지만 4MB라 로컬에만 둔다」고
+#   적어 둔 자리인데, 그 절충이 위 ②의 값을 못 봤다. 이미 _pit_vol_cache.json(9MB)은
+#   추적 중이라 선례도 있다. 재현성과 크기 중 재현성을 고른다.
+#
+# 주기 없음(workflow_dispatch 전용). 멤버십이 바뀌었을 때만 돌리면 된다 —
+#   편출 종목이 새로 생기면 그 종목이 캐시에 없어 조용히 사각지대가 된다(함수 머리말 참조).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pit-cache
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install --prefer-binary --quiet pandas numpy yfinance
+      # 기준선 — 이 잡과 무관한 기존 결함 때문에 받은 자료를 버리지 않게(pit-facts 와 같은 이유).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Fetch departed-name caches
+        run: python build/pit_backtest.py --fetch-cache
+      - name: Validate
+        run: python build/validate_gate.py check
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 편출 종목 가격·주식수 캐시 수집(PIT 백테스트용)" \
+            data/_pit_px_cache.json data/_pit_hl_cache.json \
+            data/_pit_vol_cache.json data/_pit_sh_cache.json

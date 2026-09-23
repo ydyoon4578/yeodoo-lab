@@ -16,7 +16,6 @@ build/nav_head.html
 build/nav_body.html
 
 # PIT 백테스트 로컬 입력 — 저장소에 두지 않는다.
-#   _pit_px_cache.json 편출 종목 가격(yfinance). 재현 가능하지만 4MB라 로컬에만 둔다.
 # ⚠ pit_members.json(사내 DB 산출)은 2026-08-03 에 걷어냈다 — 멤버십은 이제
 #   data/index_history.json(위키 과거 리비전, 커밋됨)에서 온다. build/index_members.py 참조.
 #   🚨 2026-08-05 — 걷어내면서 **무시 규칙도 같이 지웠다.** 그래서 예전 PC 에 남아 있던
@@ -24,13 +23,18 @@ build/nav_body.html
 #     이 저장소는 공개다 — 사내 DB 산출물은 규칙으로 막는다. 안 쓰는 것과 올라가도 되는 것은
 #     다르다.
 data/pit_members.json
-data/_pit_px_cache.json
-# 편출 종목 고가·저가(yfinance) — 2026-08-05 추가. x-52wh 등 고가·저가 규칙의 PIT 레그가
-#   이것을 읽는다. 10.6MB 이고 --fetch-cache 로 재현되므로 종가 캐시와 같이 로컬에만 둔다.
-data/_pit_hl_cache.json
-# 편출 종목 시점별 주식수(yfinance) — x-small PIT 용
-#   ⚠ gitignore 는 줄 끝 주석을 지원하지 않는다. 패턴과 같은 줄에 쓰면 통째로 리터럴이 된다.
-data/_pit_sh_cache.json
+
+# 🚨 2026-09-23 — 편출 종목 캐시 넷(_pit_px·_pit_hl·_pit_vol·_pit_sh)을 **무시에서 뺐다.**
+#   종전 사유는 「재현 가능하지만 4MB라 로컬에만 둔다」였는데, 그 절충이 값 하나를 못 봤다:
+#   캐시가 gitignore 면 **캐시를 가진 PC 에서만** PIT 을 돌릴 수 있고, PC 마다 캐시 두께가
+#   달라 **게시 수치가 어느 PC에서 구웠느냐에 따라 달라진다.**
+#   실측(2026-09-23): 같은 코드·같은 커밋인데 한 PC 는 월별 보유율 최저 83.0%, 다른 PC 는
+#   81.1% 였다. 얇은 쪽이 덮어쓰면 생존자 쪽으로 더 좁아져 **초과수익이 커 보인다.**
+#   ⚠ 이 랩은 같은 병을 한 번 고쳤다 — fetch_members() 가 2026-08-03 에 사내 DB 를 걷어내며
+#     「생존편향 측정이 PC 한 대에 묶여 있었다」고 적은 그것이다. 멤버십은 그때 풀렸는데
+#     가격 캐시가 남아 있었다. 이것이 그 나머지다.
+#   → 채우는 곳은 .github/workflows/pit-cache.yml(러너). SEC 를 타므로 로컬에서 못 만든다.
+#   ⚠ 합쳐 약 30MB 다. 크기보다 재현성을 골랐다(_pit_vol_cache.json 9MB 는 이미 추적 중이었다).
 
 # macOS 파인더가 폴더마다 만드는 메타파일 — 저장소와 무관하다
 .DS_Store
