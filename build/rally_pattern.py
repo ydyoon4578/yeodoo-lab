@@ -195,7 +195,7 @@ def main() -> int:
         for t in sorted(keep):
             if t in Wd["reassigned"] and pm >= Wd["reassigned"][t].get("last", "9999"):
                 continue
-            out.append((t, PP._key(Wd, t)))
+            out.append((t, PP._key(Wd, t, i)))           # 2026-09-24 정정 — 날짜 인식 키(결과 문서 §8)
         return out, len(keep)
 
     def members_today(ix_code):
