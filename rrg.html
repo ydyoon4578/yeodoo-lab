@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="여두 전략 랩 — 전략 랩 518종목의 S&amp;P 500 대비 상대강도 4분면(RRG) 주간 판. 위치 서술 전용 — 회전·주도 칸의 예측력은 사전등록 검정에서 기각.">
+<script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
+<title>여두 · 종목 RRG 로테이션</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://ydyoon4578.github.io/yeodoo-lab/rrg.html">
+<meta property="og:url" content="https://ydyoon4578.github.io/yeodoo-lab/rrg.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="여두 전략 랩">
+<meta property="og:title" content="여두 · 종목 RRG 로테이션">
+<meta property="og:description" content="518종목을 S&amp;P 500 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="여두 · 종목 RRG 로테이션">
+<meta name="twitter:description" content="518종목을 S&amp;P 500 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
+<!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
+<style>
+  :root{
+    --ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;
+    --ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;
+    --good:#0E8A54;--marg:#A35510;--hot:#A64B3B;
+    --shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;
+    --ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;
+    --good:#38D083;--marg:#F0863C;--hot:#E5806A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7FA;--panel:#FFFFFF;--panel-2:#EEF2F6;--line:#DCE3EA;--line-soft:#E9EEF3;--ink:#1B2733;--ink-2:#42505E;--muted:#646B74;--accent:#816400;--gA:#158A52;--gB:#4F9A54;--gC:#B0870F;--gD:#C2600F;--gF:#A64B3B;--good:#0E8A54;--marg:#A35510;--hot:#A64B3B;--shadow:0 1px 2px rgba(23,39,51,.05),0 8px 24px -12px rgba(23,39,51,.18);}
+  :root[data-theme="dark"]{--ground:#0F141A;--panel:#181E26;--panel-2:#20272F;--line:#2E3742;--line-soft:#242C34;--ink:#EAEEF2;--ink-2:#C4CDD6;--muted:#8A97A3;--accent:#FFBC00;--gA:#2FBE77;--gB:#5FB06A;--gC:#D6A537;--gD:#E5893C;--gF:#E5806A;--good:#38D083;--marg:#F0863C;--hot:#E5806A;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -14px rgba(0,0,0,.6);}
+  /* 폭 토큰 — 넓은 표/본문형/읽기형 세 가지로 통일(페이지 이동 시 폭이 튀지 않게) */
+  /* 폭 토큰은 셸이 보장한다(build/sync_shell.py) — 페이지 사본은 2026-08-10 에 걷어냈다.
+     사본이 1440 으로 남아 있었는데 셸은 1680 이었다. 지금은 셸이 뒤에 와서 셸이 이기지만,
+     CSS 순서가 바뀌면 조용히 뒤집힌다. 같은 값을 두 곳에 두지 않는다. */
+  *,*::before,*::after{box-sizing:border-box}
+  /* 본문 글꼴: 맑은 고딕 우선. Segoe UI에는 한글 글리프가 없어 한글은 어차피 맑은 고딕으로
+     떨어졌고, 영문만 Segoe UI로 갈렸다 — 한 글꼴로 통일한다. 숫자·차트 라벨은 고정폭(--mono)
+     유지: 맑은 고딕은 가변폭이라 적합도·수익률 열이 어긋난다. */
+  :root{--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",monospace;--sans:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+  /* keep-all은 한글 단어를 안 쪼개려고 넣은 것인데, 끊을 곳 없는 라틴 문자열
+     (예: "(Goldilocks·Recovery·…·Recession)" 527px)까지 통째로 붙들어 모바일에서 페이지를
+     가로로 밀어냈다. overflow-wrap:break-word는 **넘칠 때만** 끊으므로 한글 단어 보전은 유지된다. */
+  .wrap{max-width:var(--w-read);margin:0 auto;padding:0 20px 70px}
+  a.home{position:fixed;top:14px;left:16px;z-index:20;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:6px 11px;text-decoration:none}
+  a.home:hover{border-color:var(--accent);color:var(--ink)}
+  button.theme{position:fixed;top:14px;right:14px;z-index:20;width:38px;height:32px;font-size:16px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer}
+  header.mast{padding:64px 0 16px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:12px}
+  .eyebrow::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  h1.title{font-family:var(--mono);font-weight:600;font-size:clamp(23px,4vw,32px);line-height:1.14;letter-spacing:-.01em;margin:14px 0 0}
+  .lede{margin:12px 0 0;max-width:78ch;font-size:15px;color:var(--ink-2)} .lede b{color:var(--ink)}
+
+  .policy{margin:18px 0 0;padding:13px 16px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line-soft);font-size:13px;color:var(--ink-2);line-height:1.7}
+  .policy b{color:var(--ink)}
+
+  .lbl{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:30px 0 12px}
+
+  .srcwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow)}
+  .srctbl{border-collapse:collapse;width:100%;min-width:640px;font-size:12.5px}
+  .srctbl th,.srctbl td{padding:10px 14px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}
+  .srctbl thead th{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .srctbl tbody tr:last-child th,.srctbl tbody tr:last-child td{border-bottom:none}
+  .srctbl tbody th{font-weight:600;white-space:nowrap}
+  .srctbl tbody th a{color:var(--ink);text-decoration:none}
+  .srctbl tbody th a:hover{color:var(--accent)}
+  .srctbl td{color:var(--ink-2)}
+  .srctbl .dt{font-family:var(--mono);white-space:nowrap;color:var(--ink)}
+  .srctbl .stale{display:inline-block;margin-left:6px;font-family:var(--mono);font-size:11px;font-weight:700;
+    color:var(--hot);background:color-mix(in srgb,var(--hot) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--hot) 40%,transparent);border-radius:2px;padding:1px 5px;white-space:nowrap}
+  .srctbl .dbrow{background:color-mix(in srgb,var(--marg) 6%,transparent)}
+  .dbtag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--marg);border:1px solid color-mix(in srgb,var(--marg) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
+  .freetag{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--good);border:1px solid color-mix(in srgb,var(--good) 45%,transparent);border-radius:2px;padding:1px 6px;margin-right:6px;white-space:nowrap}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);padding:16px 19px;margin-bottom:12px}
+  .card h3{margin:0;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3 a{color:var(--ink);text-decoration:none} .card h3 a:hover{color:var(--accent)}
+  .card p{margin:8px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65}
+  .card .meta{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:11.5px}
+  .card .meta span{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:2px;padding:2px 8px;color:var(--ink-2)}
+  .card .meta b{color:var(--muted);font-weight:600;margin-right:5px}
+  .card .meta i{font-style:normal}
+  /* .card .meta span 은 칩 스타일인데 자손 선택자라 **칩 안의 값 span까지** 잡아
+     배경·테두리·패딩이 이중으로 걸렸다(값이 상자 안 상자로 보이고 칩이 불필요하게 넓어진다).
+     값은 평평하게 — 갱신 시각을 넣은 <i>와 생김새를 맞춘다. */
+  .card .meta span span{background:none;border:0;padding:0}
+
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* 상단 내비는 build/sync_nav.py가 넣는 NAVCSS 블록이 담당한다 — 여기서 중복 정의하지 않는다 */
+  .grade{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:22px;border-radius:2px;font-family:var(--mono);font-size:12px;font-weight:800;padding:0 6px;color:#fff;line-height:1}
+  .grade.gA{background:var(--gA)}.grade.gB{background:var(--gB)}.grade.gC{background:var(--gC)}.grade.gD{background:var(--gD)}.grade.gF{background:var(--gF)}
+  .rpill{display:inline-flex;gap:7px;align-items:center;font-family:var(--mono);font-size:11px;font-weight:700;border-radius:2px;padding:4px 11px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2)}
+
+/* SHELL:BEGIN */
+/* ── 공통 셸 v1 — build/sync_shell.py 생성. 이 블록은 직접 고치지 말 것 ──────────────
+   23장이 각자 스타일 블록을 들고 있어 공통 양식을 넣을 자리가 첫 블록 맨 끝밖에 없다.
+   같은 특이도면 뒤가 이기므로 페이지 셸 규칙만 덮어쓰고 고유 컴포넌트는 건드리지 않는다.
+   ⚠ 이 블록 안에 스타일 종료 태그를 글자 그대로 쓰면 안 된다 — HTML 파서는 주석 안이든
+      아니든 그 지점에서 style 요소를 끝내버린다(실제로 한 번 밟았다). */
+
+/* ① 글꼴 — Pretendard.
+   기존 스택 첫 후보는 "Malgun Gothic"이었다. 윈도 기본 한글 글꼴이라 굵기가 사실상 400/700
+   두 단계뿐이고 맥에서는 Apple SD Gothic Neo로 떨어져, 같은 화면이 OS마다 다른 글꼴로 보였다.
+   Pretendard는 100~900 가변에 라틴·숫자가 Inter 계열이라 한글과 숫자가 한 글꼴로 붙는다.
+   --mono의 한글 후보도 Pretendard로 바꾼다 — 고정폭이 필요한 건 숫자뿐인데, 한글까지 고정폭
+   스택으로 떨어뜨리면 본문과 다른 글꼴이 한 줄 안에서 섞인다. */
+:root{
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,"Pretendard Variable",Pretendard,"Apple SD Gothic Neo",monospace;
+  /* 폭 토큰 — 페이지를 옮겨 다닐 때 본문 폭이 튀지 않게 하는 값이다. 21장은 각자 갖고 있었지만
+     stocks.html은 max-width:var(--w-wide)를 쓰면서 정의를 안 갖고 있어 폭 제한 없이 퍼져 있었다.
+     이런 건 페이지마다 챙길 것이 아니라 셸이 보장할 것이다.
+     🚨 2026-08-10 — --w-wide 를 1440 → 1680 으로 올렸다(사용자 요청 '화면을 최대한 넓게').
+       홈은 자료 화면이다. 종목 히트맵이 518칸을 그리는데 폭이 곧 읽히는 종목 수다 —
+       1200px 에서는 가장 작은 칸이 7×10px 라 글자가 안 들어갔다.
+       ⚠ 내비(.topnav .nvin)도 이 토큰을 쓴다. 본문만 넓히면 내비보다 본문이 넓어져
+         화면이 어긋나 보인다 — 그래서 페이지가 아니라 여기서 바꾼다.
+       ⚠ --w-read 는 글이 주인 화면이다. 한 줄이 길어지면 읽기 나빠지므로 가장 덜 늘린다 —
+         넓게 쓰는 것과 아무 데나 늘리는 것은 다르다.
+     🚨 2026-08-19 — **고정 px 를 걷고 화면에 맞춘다**(사용자 지적 "사이트 전체에서 빈공간이
+       절반이야, 내 화면 기준"). 종전에는 상한이 1680/1200/980 고정이라 2560px 화면에서
+       본문이 각각 66%/47%/38% 만 썼다. 남는 절반은 배경이었다.
+       → min(뷰포트 비율, 상한) 으로 바꾼다. 좁은 화면에서는 vw 가 이겨 종전과 같고,
+         넓은 화면에서만 상한까지 늘어난다. 세 층 구조는 그대로 둔다 —
+         층을 없애면 «글 화면» 이 표 화면만큼 넓어져 읽기가 나빠진다.
+       ⚠ 상한을 무한히 두지 않는 이유: 표·차트는 넓을수록 낫지만 글줄은 아니고,
+         내비(.topnav .nvin)도 같은 토큰을 쓰기 때문에 통째로 늘어난다. */
+  --w-wide:min(96vw,2240px);--w-base:min(94vw,1600px);--w-read:min(92vw,1120px);
+}
+/* 넓은 층 한 벌 — 종전에는 intraday·rates 가 **각자** 이 한 줄을 갖고 있었다.
+   그래서 다른 페이지를 넓은 층으로 올리려면 CSS 를 또 복사해야 했고, 실제로 guru 를
+   올렸더니 class 만 붙고 아무 일도 안 일어났다(2026-08-19 실측). 셸이 보장한다.
+   ⚠ 대체값(fallback)을 두지 않는다 — 토큰은 바로 위에서 셸이 반드시 정의한다. */
+.wrap.wide{max-width:var(--w-wide)}
+
+/* ② 중립색 — 라이트는 중립 회색, 다크는 터미널 계열. 의미색(accent·deploy·국면·심리 계열)은
+   손대지 않는다. 대비는 sync_shell.py의 check_contrast()가 배포 전에 검사한다.
+   ⚠ 주석에 별표와 빗금이 붙은 토큰명을 그대로 쓰면 거기서 주석이 닫힌다(밟았다). */
+:root{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+@media(prefers-color-scheme:dark){:root{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}}
+:root[data-theme="light"]{--ground:#FBFAF7;--panel:#FBFAF7;--panel-2:#F2F0EB;--line:#D8D6D0;--line-soft:#EDEBE6;--ink:#111418;--ink-2:#3E444B;--muted:#5F656D;--shadow:none;--hot:#A3352A;--marg:#7E5200;--deploy:#0A7040;--accent:#0A5697;}
+:root[data-theme="dark"]{--ground:#0C0E11;--panel:#0C0E11;--panel-2:#161A1F;--line:#252A30;--line-soft:#1A1E23;--ink:#DEE3E8;--ink-2:#AEB6BE;--muted:#949DA6;--shadow:none;--hot:#E8887A;--marg:#DFAE55;--deploy:#4BD08D;--accent:#6FB6EA;}
+
+/* ③ 타이포 — 한글에 고정폭·대문자변환·자간을 걸던 것을 되돌린다.
+   한글은 대소문자가 없어 text-transform:uppercase가 무의미하고(라틴만 바뀐다), 자간 .1~.2em은
+   음절을 벌려 읽기를 방해한다. 실제로 이 규칙 때문에 통계량 |t|가 화면에서 |T|로 찍힌 적이 있다. */
+body{font-family:var(--sans);letter-spacing:-.003em}
+h1,h2,h3,h4{letter-spacing:-.02em}
+h1.title{font-family:var(--sans);font-weight:800;letter-spacing:-.032em;line-height:1.14}
+/* 큰 제목은 본문 글꼴로. 고정폭 스택에서 한글은 Pretendard로, 라틴·숫자는 SF Mono로 떨어져
+   한 제목 안에 두 글꼴이 섞인다("… RP 통합 (Multi-Sleeve Core)"가 그렇게 보였다).
+   작은 머리글(h4 등)은 라틴 약어가 대부분이라 그대로 둔다.
+   :not(._)은 특이도를 페이지 규칙(.dtop h2 같은 것)과 맞추려고 붙였다 — 요소 선택자만으로는
+   페이지 쪽이 이긴다. !important를 쓰지 않으려는 최소 장치다. */
+:is(h1,h2):not(._){font-family:var(--sans);letter-spacing:-.025em}
+.eyebrow{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.06em}
+.lbl{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:-.012em;text-transform:none;color:var(--ink)}
+.lbl::before{height:16px}
+.lbl .sub{font-size:12.5px;font-weight:500}
+.card .ch{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:0;text-transform:none}
+.chip{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:-.006em;border-radius:2px}
+
+/* ④ 숫자 — 자릿수가 흔들리면 세로로 비교할 수 없다. 표·지표값은 전부 고정폭 숫자로. */
+.tnum,.num,.cv,.stat,table,code,kbd{font-variant-numeric:tabular-nums}
+
+/* ⑤ 표 — 머리글은 한글이라 고정폭을 벗기고, 행에 hover를 준다(어느 줄을 읽는지 잃지 않게). */
+.tbl{font-variant-numeric:tabular-nums}
+.tbl thead th{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted)}
+.tbl tbody th{font-family:var(--sans);font-weight:700;letter-spacing:-.01em}
+.tbl tbody tr:hover>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+
+/* ⑥ 잔손질 — 키보드 초점 링(전엔 브라우저 기본에 맡겨 다크에서 안 보였다), 선택색, 얇은 스크롤바 */
+:where(a,button,summary,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+
+/* ⑦ 장식 걷기 (2026-08-09) — 사용자 지적 "클로드 특유의 인터페이스 구성방식".
+   그 인상의 정체는 색만이 아니다. **떠 있는 둥근 카드**와 **알약 배지**가 나머지 몫이다.
+   팔레트는 위에서 바꿨고 여기서 형태를 걷는다.
+
+   🚨 범위를 좁게 잡는다. 페이지마다 컴포넌트가 다르고, 전부에 border-radius:0 을 걸면
+     입력창·버튼까지 각져 오히려 쓰기 나빠진다. **떠 보이게 하는 것**만 끈다:
+       · box-shadow — 토큰(--shadow:none)으로 이미 죽지만, 값을 손으로 박은 자리가 남아 있다
+       · 큰 모서리(2px 이상) — 카드가 카드처럼 보이는 반경. 작은 반경(칩·입력)은 둔다
+   ⚠ :where() 로 감싸 특이도 0 으로 둔다 — 페이지가 의도적으로 다르게 준 곳은 그대로 이긴다.
+     셸이 페이지를 이겨서는 안 된다(이 블록의 원칙이다). */
+:where(.card,.scard,.rep,.panel,.box,.tile,.sec,details,.toc,table,.tbl,.search,.controls,
+       .asoftbl,.asofrow,.calgrid,.calcell,.chiprow,.statline){box-shadow:none}
+:where(.card,.scard,.rep,.panel,.box,.tile,.asoftbl,.calgrid,details.toc){border-radius:3px}
+/* SHELL:END */
+</style>
+<!-- NAVCSS:BEGIN -->
+<style>
+  /* ── 메가메뉴(build/sync_nav.py 생성 — 직접 고치지 말 것) ────────────────
+     카테고리 × 슬롯 구조(개수는 nav_items.json 이 정한다). 데스크톱은 카테고리 버튼 → 패널, 모바일은 드로어 + 아코디언.
+     현재 위치 강조는 <body data-tool>을 JS가 읽는다(블록을 전 페이지 바이트 동일하게 유지). */
+
+  /* 배지 색은 자체 토큰으로 들고 간다 — 페이지마다 --deploy/--marg/--champ 보유가 달라
+     (잠금 래퍼 4장엔 없다) 페이지 팔레트에 기대면 22장에서 다르게 보인다. */
+  :root{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  @media(prefers-color-scheme:dark){:root{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}}
+  :root[data-theme="light"]{--nv-pass:#0E8A54;--nv-marg:#B25E12;--nv-unv:#66757F;--nv-rej:#A64B3B;--nv-soon:#2C6E8F}
+  :root[data-theme="dark"]{--nv-pass:#38D083;--nv-marg:#F0863C;--nv-unv:#8A97A3;--nv-rej:#E5806A;--nv-soon:#6BB0D6}
+  .skiplink{position:absolute;left:-9999px;top:0;z-index:100;background:var(--panel);color:var(--ink);
+            padding:10px 16px;border:1px solid var(--accent);border-radius:0 0 2px 0;font-family:var(--mono);font-size:13px}
+  .skiplink:focus{left:0}
+  .topnav{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--panel) 92%,transparent);
+          backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);
+          border-bottom:1px solid var(--line)}
+  .topnav .nvin{max-width:var(--w-wide,1440px);margin:0 auto;padding:0 20px;height:52px;
+                display:flex;align-items:center;gap:10px}
+  .topnav .brand{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:800;
+                 font-size:15px;color:var(--ink);text-decoration:none;letter-spacing:-.01em;flex:none}
+  .topnav .brand svg{width:22px;height:22px;flex:none}
+  .navsp{flex:1}
+
+  .navcats{display:flex;align-items:center;gap:1px;margin:0 0 0 6px;padding:0;list-style:none}
+  .navcat{position:relative}
+  .navcat>button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);
+                 background:none;border:0;cursor:pointer;padding:7px 9px;border-radius:2px;white-space:nowrap;
+                 display:inline-flex;align-items:center;gap:3px}
+  .navcat>button:hover{background:var(--panel-2);color:var(--accent)}
+  .navcat>button[aria-expanded="true"]{background:var(--panel-2);color:var(--accent)}
+  .navcat.on>button{color:var(--accent)}
+  .navcat.on>button::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+  .navcat .cv{font-size:11px;opacity:.55;transition:transform .12s}
+  .navcat>button[aria-expanded="true"] .cv{transform:rotate(180deg)}
+
+  .mmpanel{position:absolute;top:calc(100% + 5px);left:0;min-width:320px;max-width:min(560px,92vw);
+           background:var(--panel);border:1px solid var(--line);border-radius:2px;box-shadow:var(--shadow);
+           padding:7px;z-index:70}
+  .mmpanel[hidden]{display:none}
+  /* 🚨 네 카테고리 모두 버튼 왼쪽 끝에서 **오른쪽으로** 편다. 전에는 마지막 둘만
+     `:last-child,:nth-last-child(2){left:auto;right:0}` 로 뒤집었다 — 그 규칙은 틀렸던 게
+     아니라 **자기 레이아웃보다 오래 살아남았다**. 메가메뉴는 10칸으로 출발했고(2026-07-25)
+     그때 마지막 두 칸은 바 오른쪽 끝에 있어서 오른쪽 정렬이 실제로 넘침을 막고 있었다.
+     이후 10→6(2026-07-25)→5(748cbf58 공시 탭)→4(741fbe1d 가치 탭, 2026-08-12)로 줄면서
+     버튼이 왼쪽으로 밀려왔는데 규칙은 따라오지 않았다. 위치 선택자가 집는 대상은 그대로인데
+     그 대상이 서 있는 자리가 바뀐 것이다.
+     실측(뷰포트 1442px · 버튼 한 칸 55px): 5칸일 때 전략 패널은 x=38 에서 시작해 멀쩡했다.
+     가치 탭이 빠져 4칸이 되자 딱 한 칸만큼 왼쪽으로 밀려 38−55 = x=−17 — 뷰포트 밖에서 잘렸다.
+     사용자가 "왼쪽이 살짝 잘린다"고 한 그 17px 이고, 오늘 생긴 회귀다.
+     왼쪽 정렬은 안전하다. 패널 실폭은 min-width 320px 로 고정이고(내용이 그 안에 들어가
+     max-width 560px 까지 가지 않는다) 가장 오른쪽 패널의 오른쪽 끝은 x=624 로 **뷰포트 폭이
+     변해도 그대로다** — nvin 이 max-width:1440 중앙정렬이라 폭이 줄면 여백만 사라지고 내용
+     시작점은 padding 20px 에 남기 때문이다. 데스크톱 하한 1101px 에서도 여유 477px
+     (1101·1200·1366·1440 네 폭 실측 넘침 0). 1100px 이하는 드로어라 이 규칙과 무관하다.
+     ⚠ 칸을 다시 늘리면 이 계산이 깨진다. 그때도 위치 선택자로 되돌리지 마라 — 칸 수가 바뀌면
+     또 조용히 엉뚱한 자리를 집는다. 넘치는 그 패널을 지목해서 다뤄야 한다. */
+  /* 설명 줄을 걷어내 한 줄짜리가 됐다 — 세로 여백을 줄여 목록이 촘촘히 읽히게 한다. */
+  .mmi{display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:baseline;
+       padding:7px 10px;border-radius:2px;text-decoration:none;color:inherit}
+  a.mmi:hover{background:var(--panel-2)}
+  a.mmi:hover .mmn{color:var(--accent)}
+  .mmi .mmn{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;letter-spacing:-.012em}
+  .mmi[aria-current="page"]{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .mmi[aria-current="page"] .mmn{color:var(--accent)}
+  span.mmi{cursor:default}
+  span.mmi .mmn{color:var(--muted);font-weight:600}
+  .mmb{font-family:var(--sans);font-size:11px;font-weight:700;border-radius:2px;padding:2px 6px;white-space:nowrap;
+       border:1px solid color-mix(in srgb,var(--mmc,var(--muted)) 40%,transparent);
+       background:color-mix(in srgb,var(--mmc,var(--muted)) 12%,transparent);color:var(--mmc,var(--muted))}
+  .mmb.vpass{--mmc:var(--nv-pass)} .mmb.vmarg{--mmc:var(--nv-marg)}
+  .mmb.vunv{--mmc:var(--nv-unv)}   .mmb.vrej{--mmc:var(--nv-rej)}
+  .mmb.soon{--mmc:var(--nv-soon)}  .mmb.wont{--mmc:var(--nv-unv)}
+  .mmlk{font-size:11px;opacity:.6;margin-left:3px;vertical-align:1px}
+
+  .asofchip{display:none;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
+            color:var(--ink-2);text-decoration:none;border:1px solid var(--line);border-radius:2px;
+            padding:4px 9px;white-space:nowrap;flex:none}
+  .asofchip:hover{border-color:var(--accent);color:var(--accent)}
+  .asofchip .ac1{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .asofchip.stale{border-color:var(--hot);color:var(--hot)}
+  .asofchip.ready{display:inline-flex}
+  .themebtn{width:32px;height:32px;border-radius:2px;border:1px solid var(--line);background:var(--panel);
+            color:var(--ink-2);cursor:pointer;font-size:14px;display:inline-flex;align-items:center;
+            justify-content:center;flex:none}
+  .themebtn:hover{border-color:var(--accent)}
+  .navtoggle{display:none;width:34px;height:32px;border-radius:2px;border:1px solid var(--line);
+             background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:15px;align-items:center;
+             justify-content:center;flex:none}
+
+  /* ── 모바일: 카테고리 줄을 드로어로 접는다 ───────────────────────────── */
+  @media(max-width:1100px){
+    /* ⚠ backdrop-filter를 반드시 끈다 — 장식이 아니라 **레이아웃 버그의 원인**이다.
+       filter·backdrop-filter·transform이 걸린 요소는 자손 position:fixed의 컨테이닝 블록이
+       된다(뷰포트가 아니라). 아래 .navcats는 fixed 드로어인데 .topnav(높이 52px)가 기준이 되면
+       top:52px·bottom:0이 52px짜리 상자 안에서 계산돼 **드로어 높이가 0이 된다**.
+       실측(2026-07-25): 필터 있음 0px · 제거 859px. 화면에는 첫 카테고리만 삐져나와
+       "모바일에서 시장밖에 안 보인다"로 나타났다.
+       블러를 끄는 대신 배경을 불투명하게 만들어 스티키 바 가독성을 지킨다. */
+    .topnav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--panel)}
+    .topnav .nvin{gap:8px;padding:0 14px}
+    .navtoggle{display:inline-flex}
+    .navcats{position:fixed;top:52px;left:0;right:0;bottom:0;display:block;margin:0;padding:8px 14px 40px;
+             background:var(--ground);border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .navcats[hidden]{display:none}
+    .navcat{position:static;border-bottom:1px solid var(--line-soft)}
+    .navcat>button{width:100%;justify-content:space-between;padding:13px 4px;font-size:13.5px}
+    .navcat.on>button::after{display:none}
+    .mmpanel{position:static;min-width:0;max-width:none;border:0;box-shadow:none;background:none;
+             padding:0 0 8px 4px;border-radius:0}
+    .mmi{padding:9px 8px}
+  }
+  @media(min-width:1101px){ .navcats[hidden]{display:flex} }
+  @media(prefers-reduced-motion:reduce){.navcat .cv{transition:none}}
+</style>
+<!-- NAVCSS:END -->
+
+<style>
+  /* 종목 RRG 판 — 518종 × S&P 500(PR) 주간. 사전등록 PREREG-2026-09-23-RRGSTOCK · 판정 기각.
+     🚨 사분면에 색을 입히지 않는다. RRG 관례는 주도=초록·부진=빨강인데, 그러면 «주도가 좋다» 로
+       읽힌다 — 이 랩이 잰 다음 주 성적은 **정반대**였다(주도 +0.050% · 부진 +0.174%).
+       사분면은 위치와 모서리 글자로만 가르고, 색은 «고른 종목 vs 나머지» 한 가지에만 쓴다.
+     ⚠ 두 축은 같은 단위(z 점수)라 정사각형으로 그린다. 한쪽만 늘이면 회전 각도가 거짓이 된다. */
+  .wrap{max-width:var(--w-base)}
+  .pghead h1{font-size:1.6rem;margin:0 0 .2rem}
+  .pghead .sub{color:var(--muted);margin:0 0 1rem;font-size:.92rem}
+  .vbox{border:1px solid var(--line);background:var(--panel-2);padding:.8rem 1rem;border-radius:3px;
+    margin:0 0 1rem;font-size:.9rem;line-height:1.65;color:var(--ink-2)}
+  .vbox .vt{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;font-weight:700;color:var(--ink);margin:0 0 .3rem}
+  .vchip{font-size:.78rem;font-weight:700;border-radius:2px;padding:1px 7px;white-space:nowrap;
+    border:1px solid color-mix(in srgb,var(--hot) 45%,transparent);
+    background:color-mix(in srgb,var(--hot) 12%,transparent);color:var(--hot)}
+  .vbox ul{margin:.25rem 0 0;padding-left:1.15rem}
+  .vbox li{margin:.12rem 0}
+  .vbox b{color:var(--ink)}
+  .vbox details{margin:.55rem 0 0}
+  .vbox summary{cursor:pointer;color:var(--accent);font-size:.86rem}
+  .vbox .fine{font-size:.82rem;color:var(--muted);margin:.45rem 0 0}
+  .ctl{display:flex;flex-wrap:wrap;gap:.55rem 1.1rem;align-items:center;margin:0 0 .8rem}
+  .ctl label{font-size:.84rem;color:var(--ink-2);display:inline-flex;gap:.4rem;align-items:center}
+  .ctl select,.ctl input[type=search]{padding:.34rem .5rem;border:1px solid var(--line);border-radius:2px;
+    background:var(--panel);color:var(--ink);font:inherit;font-size:.86rem}
+  /* 드롭다운 폭은 앞 글자(«보기»)와 여백을 뺀 만큼만 — 88vw 로 두었더니 390px 에서 9px 넘쳐 페이지가 가로로 밀렸다 */
+  .ctl select{max-width:min(24rem,calc(100vw - 7rem))}
+  .ctl input[type=search]{width:9.5rem}
+  .ctl input[type=range]{width:8.5rem;accent-color:var(--accent)}
+  .ctl .rv{font-variant-numeric:tabular-nums;color:var(--ink);min-width:5.6rem;display:inline-block}
+  .ctl button{padding:.32rem .7rem;border:1px solid var(--line);border-radius:2px;background:var(--panel);
+    color:var(--ink-2);font:inherit;font-size:.84rem;cursor:pointer}
+  .ctl button:hover{border-color:var(--accent);color:var(--accent)}
+  .ctl button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .board{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:1rem;align-items:start}
+  .board>*{min-width:0}
+  @media(max-width:1060px){.board{grid-template-columns:1fr}}
+  .chartbox{position:relative;border:1px solid var(--line);border-radius:3px;background:var(--panel);padding:.4rem}
+  svg.rrg{display:block;margin:0 auto;max-width:100%;height:auto;touch-action:manipulation;font-family:var(--sans)}
+  svg.rrg .ax{stroke:var(--line);stroke-width:1}
+  svg.rrg .gd{stroke:var(--line-soft);stroke-width:1}
+  svg.rrg .tk{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  svg.rrg .qn{fill:var(--muted);font-size:12.5px;font-weight:700}
+  svg.rrg .qe{fill:var(--muted);font-size:11px;font-weight:500}
+  svg.rrg .at{fill:var(--ink-2);font-size:11.5px}
+  svg.rrg .ctx{fill:var(--muted);opacity:.38}
+  svg.rrg .ctx.all{opacity:.55}
+  svg.rrg .tl{stroke:var(--accent);fill:none;stroke-linecap:round}
+  svg.rrg .tn{fill:var(--accent)}
+  svg.rrg .hd{fill:var(--accent);stroke:var(--panel);stroke-width:2}
+  svg.rrg .lb{fill:var(--ink-2);font-size:11px;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+  svg.rrg .sm{fill:var(--ink-2);stroke:var(--panel);stroke-width:1.5}
+  svg.rrg .smt{stroke:var(--ink-2);fill:none;stroke-width:1;opacity:.55}
+  svg.rrg .sml{fill:var(--ink);font-size:11px;font-weight:700;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+  svg.rrg .hv{fill:none;stroke:var(--ink);stroke-width:1.5}
+  .lgd{display:flex;flex-wrap:wrap;gap:.3rem 1rem;align-items:center;font-size:.8rem;color:var(--muted);margin:.45rem .3rem .2rem}
+  .lgd i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:.35rem;vertical-align:-1px}
+  .lgd i.a{background:var(--accent)} .lgd i.c{background:var(--muted);opacity:.5}
+  .lgd i.d{background:var(--ink-2);border-radius:0;transform:rotate(45deg);width:8px;height:8px}
+  .tip{position:absolute;z-index:5;pointer-events:none;min-width:12rem;max-width:17rem;background:var(--panel);
+    border:1px solid var(--line);border-radius:3px;padding:.5rem .65rem;font-size:.8rem;line-height:1.5;
+    color:var(--ink-2);box-shadow:0 6px 20px -8px rgba(0,0,0,.35)}
+  .tip[hidden]{display:none}
+  .tip .tt{font-weight:800;color:var(--ink);font-size:.9rem}
+  .tip .tn2{color:var(--muted);font-size:.76rem;margin:0 0 .25rem}
+  .tip .tv{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700}
+  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem;margin:0 0 .7rem}
+  .tile{border:1px solid var(--line);border-radius:3px;padding:.4rem .7rem;background:var(--panel)}
+  .tile .tl{font-size:.8rem;color:var(--muted)}
+  .tile .tv{font-size:1.3rem;font-weight:700;color:var(--ink);line-height:1.25}
+  .tile .ts{font-size:.78rem;color:var(--muted);margin-left:.3rem}
+  .tcap{font-size:.8rem;color:var(--muted);margin:0 0 .4rem}
+  .tblbox{max-height:640px;overflow:auto;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+  table.st{width:100%;border-collapse:collapse;font-size:.82rem;font-variant-numeric:tabular-nums}
+  table.st th,table.st td{padding:.28rem .38rem;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap}
+  table.st th:first-child,table.st td:first-child,table.st th.l,table.st td.l{text-align:left}
+  table.st thead th{position:sticky;top:0;background:var(--panel-2);font-weight:600;color:var(--ink-2);z-index:1}
+  table.st th.sort{cursor:pointer;user-select:none}
+  table.st th.sort:hover{color:var(--accent)}
+  table.st th[aria-sort="descending"]::after{content:" ↓"}
+  table.st th[aria-sort="ascending"]::after{content:" ↑"}
+  table.st tbody tr{cursor:pointer}
+  table.st tbody tr:hover>*,table.st tbody tr:focus>*{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  table.st tbody tr:focus{outline:none}
+  table.st tr.pin td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+  table.st td a{color:var(--ink);text-decoration:none;font-weight:700}
+  table.st td a:hover{color:var(--accent)}
+  /* 회사 이름은 한 줄로 자르고 전문은 title 로 준다 — 이름이 표 폭을 끌고 가면 오른쪽 수익 열이 칸 밖으로 밀린다
+     (1440px 실측: 이름 12rem 일 때 «1주 %» 가 잘리고 «4주 %» 가 안 보였다) */
+  table.st td .nm{color:var(--muted);font-size:.74rem;margin-left:.3rem;display:inline-block;max-width:7.5rem;
+    overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+  @media(max-width:1060px){table.st td .nm{max-width:12rem}}
+  /* 폰에서는 이름을 걷는다 — 이름이 있으면 숫자 열이 전부 가로 스크롤 뒤로 밀린다(390px 실측). 이름은 툴팁·종목 정보에 있다 */
+  @media(max-width:560px){table.st td .nm{display:none}}
+  .pos{color:var(--good)}.neg{color:var(--hot)}.mut{color:var(--muted)}
+  .qtw{overflow-x:auto;max-width:100%}
+  table.qt{border-collapse:collapse;font-size:.84rem;margin:.4rem 0 0;font-variant-numeric:tabular-nums}
+  table.qt th,table.qt td{padding:.22rem .6rem;border-bottom:1px solid var(--line-soft);text-align:right}
+  table.qt th:first-child,table.qt td:first-child{text-align:left}
+  table.qt thead th{color:var(--muted);font-weight:600}
+  .note{color:var(--muted);font-size:.82rem;line-height:1.6;margin:.6rem 0 0}
+  .muted{color:var(--muted)}
+</style>
+</head>
+<body data-tool="rrg.html">
+<!-- NAV:BEGIN -->
+<a class="skiplink" href="#main">본문 바로가기</a>
+<nav class="topnav" aria-label="주 메뉴">
+  <div class="nvin">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="currentColor" opacity=".12"/><path d="M6 22 L13 15 L18 19 L26 8" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="8" r="2.4" fill="var(--accent)"/></svg> 여두 전략 랩</a>
+    <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navcats" aria-label="메뉴 열기">☰</button>
+    <ul class="navcats" id="navcats">
+      <li class="navcat" data-cat="market">
+        <button aria-expanded="false" aria-controls="mm-market">시장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-market" hidden role="group" aria-label="시장">
+          <a class="mmi" href="filings.html" data-nav="filings.html"><span class="mmn">8-K 공시 피드</span></a>
+          <a class="mmi" href="regime.html" data-nav="regime.html"><span class="mmn">시장 국면</span></a>
+          <a class="mmi" href="macro.html" data-nav="macro.html"><span class="mmn">경제지표</span></a>
+          <a class="mmi" href="rates.html" data-nav="rates.html"><span class="mmn">금리 분석</span></a>
+          <a class="mmi" href="calendar.html#macro" data-nav="calendar.html#macro"><span class="mmn">발표 일정</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="stocks">
+        <button aria-expanded="false" aria-controls="mm-stocks">종목<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-stocks" hidden role="group" aria-label="종목">
+          <a class="mmi" href="stocks.html" data-nav="stocks.html"><span class="mmn">종목 신호</span></a>
+          <a class="mmi" href="co.html" data-nav="co.html"><span class="mmn">종목 정보</span></a>
+          <a class="mmi" href="signals.html" data-nav="signals.html"><span class="mmn">지표별 타이밍</span></a>
+          <a class="mmi" href="rrg.html" data-nav="rrg.html"><span class="mmn">종목 RRG 로테이션</span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="strategy">
+        <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
+          <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span></a>
+          <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span></a>
+          <a class="mmi" href="factorbt.html" data-nav="factorbt.html"><span class="mmn">S&amp;P 팩터 Top10</span></a>
+          <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span></a>
+          <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span></a>
+          <a class="mmi" href="portfolio.html" data-nav="portfolio.html"><span class="mmn">포트폴리오<span class="mmlk">🔒</span></span></a>
+        </div>
+      </li>
+      <li class="navcat" data-cat="ledger">
+        <button aria-expanded="false" aria-controls="mm-ledger">원장<span class="cv" aria-hidden="true">▼</span></button>
+        <div class="mmpanel" id="mm-ledger" hidden role="group" aria-label="랩 원장">
+          <a class="mmi" href="method.html" data-nav="method.html"><span class="mmn">등급·판정 규약</span></a>
+          <a class="mmi" href="factors.html" data-nav="factors.html"><span class="mmn">팩터 사전</span></a>
+          <a class="mmi" href="constituents.html" data-nav="constituents.html"><span class="mmn">지수 편입 원장</span></a>
+          <a class="mmi" href="updates.html" data-nav="updates.html"><span class="mmn">갱신 기록</span></a>
+          <a class="mmi" href="sources.html" data-nav="sources.html"><span class="mmn">데이터 출처·기준일<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="ok.html" data-nav="ok.html"><span class="mmn">OK<span class="mmlk">🔒</span></span></a>
+          <a class="mmi" href="db.html" data-nav="db.html"><span class="mmn">비공개 DB 지도<span class="mmlk">🔒</span></span></a>
+        </div>
+      </li>
+    </ul>
+    <span class="navsp"></span>
+    <a class="asofchip" id="navasof" href="sources.html"><span class="ac1">기준일</span><b id="navasofv">—</b></a>
+    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>
+  </div>
+</nav>
+<script>
+(function(){
+  var root=document.documentElement;
+  // ── 테마 ── (초기 적용은 <head> 인라인 스크립트가 이미 했다 — 여기서 다시 하면 이중 실행)
+  var tb=document.getElementById('themebtn');
+  if(tb)tb.addEventListener('click',function(){
+    var cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+    var next=cur==='dark'?'light':'dark'; root.setAttribute('data-theme',next);
+    try{localStorage.setItem('yeouido-theme',next);}catch(e){}
+  });
+
+  // ── 현재 위치: 마크업이 아니라 <body data-tool>에서 읽는다(메뉴 블록을 전 페이지 동일하게 유지) ──
+  var cur=(document.body.getAttribute('data-tool')||'').trim();
+  if(cur){
+    var a=document.querySelector('.mmi[data-nav="'+cur.replace(/"/g,'')+'"]');
+    if(a){a.setAttribute('aria-current','page');
+      var li=a.closest('.navcat'); if(li)li.classList.add('on');}
+  }
+
+  // ── 카테고리 패널 ──
+  var cats=[].slice.call(document.querySelectorAll('.navcat'));
+  var drawer=document.getElementById('navcats'), toggle=document.getElementById('navtoggle');
+  function mobile(){return matchMedia('(max-width:1100px)').matches;}
+  function closeAll(except){
+    cats.forEach(function(li){
+      var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+      if(li===except||!b||!p)return;
+      b.setAttribute('aria-expanded','false'); p.hidden=true;
+    });
+  }
+  cats.forEach(function(li){
+    var b=li.querySelector('button'), p=li.querySelector('.mmpanel');
+    if(!b||!p)return;
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=b.getAttribute('aria-expanded')==='true';
+      if(!mobile())closeAll(li);          // 데스크톱은 한 번에 하나만, 모바일 아코디언은 여러 개 허용
+      b.setAttribute('aria-expanded',open?'false':'true'); p.hidden=open;
+    });
+  });
+  // 드로어(모바일)
+  if(toggle&&drawer){
+    drawer.hidden=mobile();
+    toggle.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=toggle.getAttribute('aria-expanded')==='true';
+      toggle.setAttribute('aria-expanded',open?'false':'true');
+      drawer.hidden=open; toggle.textContent=open?'☰':'✕';
+      toggle.setAttribute('aria-label',open?'메뉴 열기':'메뉴 닫기');
+    });
+    // 폭이 바뀌면 드로어 상태를 그 폭의 기본값으로 되돌린다(데스크톱에서 hidden이 남으면 메뉴가 사라진다)
+    var mq=matchMedia('(max-width:1100px)');
+    (mq.addEventListener?mq.addEventListener.bind(mq,'change'):mq.addListener.bind(mq))(function(){
+      drawer.hidden=mobile();
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';}
+      closeAll(null);
+    });
+  }
+  document.addEventListener('click',function(){ if(!mobile())closeAll(null); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    closeAll(null);
+    if(toggle&&toggle.getAttribute('aria-expanded')==='true'){
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰';
+      if(drawer)drawer.hidden=true; toggle.focus();
+    }
+  });
+
+  // ── 기준일 칩: data/asof.json 정본 하나만 읽는다(페이지마다 다른 날짜를 적지 않는다) ──
+  function bdGap(d){
+    var p=String(d||'').split('-'); if(p.length!==3)return 0;
+    var x=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])), t=new Date(), n=0;
+    var end=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());
+    while(x.getTime()<end&&n<40){x.setUTCDate(x.getUTCDate()+1);var w=x.getUTCDay();if(w!==0&&w!==6)n++;}
+    return n;
+  }
+  fetch('data/asof.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    if(!j||!j.primary)return;
+    var el=document.getElementById('navasof'), v=document.getElementById('navasofv');
+    if(!el||!v)return;
+    v.textContent=j.primary; el.classList.add('ready');
+    var n=bdGap(j.primary);
+    if(n>=3){el.classList.add('stale');el.title='데이터가 '+n+'영업일 지연 — 자동갱신 확인 필요';}
+    else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
+  }).catch(function(){});
+})();
+</script>
+<!-- NAV:END -->
+
+<main id="main">
+<div class="wrap">
+  <header class="pghead">
+    <h1>종목 RRG 로테이션</h1>
+    <p class="sub" id="sub">518종 · S&amp;P 500(PR) 대비 · 주간 · 되돌아보기 12주</p>
+  </header>
+
+  <section class="vbox" id="vbox" aria-label="판정"><p class="muted">불러오는 중…</p></section>
+
+  <!-- 필터는 한 줄로, 그 아래 전부(그림·칸·표)를 같은 조각으로 다시 그린다. -->
+  <div class="ctl" id="ctl" hidden>
+    <label>보기
+      <select id="view" aria-label="보기 대상"></select>
+    </label>
+    <label>종목 추가
+      <input type="search" id="q" list="tks" placeholder="티커 (예: MU)" aria-label="티커로 종목 고정" autocomplete="off">
+      <datalist id="tks"></datalist>
+    </label>
+    <button type="button" id="clr" hidden>고정 해제</button>
+    <label>꼬리
+      <input type="range" id="tail" min="0" max="12" step="1" value="5" aria-label="꼬리 길이(주)">
+      <span class="rv" id="tailv">5주</span>
+    </label>
+    <label>기준 주
+      <input type="range" id="wk" min="0" max="52" step="1" value="52" aria-label="기준 주">
+      <span class="rv" id="wkv">—</span>
+    </label>
+    <button type="button" id="play" aria-pressed="false">▶ 재생</button>
+    <label><input type="checkbox" id="secmed"> 섹터 중앙값</label>
+  </div>
+
+  <div class="board" id="board" hidden>
+    <div>
+      <div class="chartbox" id="chartbox">
+        <div id="chart"></div>
+        <div class="tip" id="tip" hidden role="status" aria-live="polite"></div>
+      </div>
+      <div class="lgd" id="lgd"></div>
+    </div>
+    <div>
+      <div class="tiles" id="tiles"></div>
+      <p class="tcap" id="tcap"></p>
+      <div class="tblbox"><table class="st" id="tbl"></table></div>
+    </div>
+  </div>
+
+  <p class="note" id="foot"></p>
+
+  <footer>
+    여두 전략 랩 · <a href="index.html">홈</a> · <a href="explorer.html">전략 랩</a> · <a href="stocks.html">종목 신호</a> · <a href="co.html">종목 정보</a> · <a href="signals.html">지표별 타이밍</a><br>
+    과거 성과는 미래 수익을 보장하지 않습니다. 이 판은 매매 신호가 아닙니다.
+  </footer>
+</div>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var D=null, IDX={}, SEL=[], SELSET={}, PIN={}, W=0, TAIL=5, VIEW='all', SECMED=false, TIMER=null;
+  var SORT={k:'q',dir:1}, DRAWN=[], HOV=null;
+  var Q=['회복','주도','약화','부진'], QEN={'회복':'Improving','주도':'Leading','약화':'Weakening','부진':'Lagging'};
+  // 표의 사분면 정렬 차례 — 시계 방향(회복→주도→약화→부진)
+  var QORD={'회복':0,'주도':1,'약화':2,'부진':3};
+  var SECKO={'Communication Services':'커뮤니케이션','Consumer Discretionary':'경기소비재',
+    'Consumer Staples':'필수소비재','Energy':'에너지','Financials':'금융','Health Care':'헬스케어',
+    'Industrials':'산업재','Information Technology':'IT','Materials':'소재','Real Estate':'부동산',
+    'Utilities':'유틸리티'};
+  function $(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function sgn(v,d){ if(v==null) return '—'; var x=Number(v).toFixed(d==null?2:d); return (v>0?'+':'')+x; }
+  function cls(v){ return v==null?'mut':(v<0?'neg':'pos'); }
+  function dec(e){ return e==null?null:100+e/100; }        // 빌더가 (값−100)×100 을 내림한 정수로 보낸다
+  function qOf(x,y){ if(x==null||y==null) return null; return x>=0?(y>=0?'주도':'약화'):(y>=0?'회복':'부진'); }
+  function secName(i){ var s=D.sectors[i]; return SECKO[s]||s; }
+  function fmtW(i){ return D.weeks[i]||'—'; }
+
+  // ── 상태 ↔ 주소 ── 보고 있는 그림을 링크로 건넬 수 있게 한다
+  function readHash(){
+    var h=(location.hash||'').replace(/^#/,''), o={};
+    h.split('&').forEach(function(p){ var k=p.split('='); if(k[0]) o[k[0]]=decodeURIComponent(k.slice(1).join('=')); });
+    if(o.v) VIEW=o.v;
+    if(o.p) o.p.split(',').forEach(function(t){ if(IDX[t]!=null) PIN[t]=1; });
+    if(o.tl!=null && !isNaN(+o.tl)) TAIL=Math.max(0,Math.min(12,+o.tl));
+    if(o.w!=null && !isNaN(+o.w)) W=Math.max(0,Math.min(D.weeks.length-1,+o.w));
+    if(o.sm==='1') SECMED=true;
+  }
+  function writeHash(){
+    var p=[]; if(VIEW!=='all') p.push('v='+encodeURIComponent(VIEW));
+    var pins=Object.keys(PIN); if(pins.length) p.push('p='+pins.join(','));
+    if(TAIL!==5) p.push('tl='+TAIL);
+    if(W!==D.weeks.length-1) p.push('w='+W);
+    if(SECMED) p.push('sm=1');
+    var h=p.length?('#'+p.join('&')):' ';
+    try{ history.replaceState(null,'',h===' '?location.pathname+location.search:h); }catch(e){}
+  }
+
+  // ── 무엇을 강조하나 ── 보기(전체·섹터·전략) + 손으로 고정한 종목
+  function members(){
+    var out=[];
+    if(VIEW.indexOf('s:')===0){
+      var si=+VIEW.slice(2);
+      D.stocks.forEach(function(s,i){ if(s.s===si) out.push(i); });
+    }else if(VIEW.indexOf('k:')===0){
+      var sid=VIEW.slice(2), st=null;
+      for(var k=0;k<D.strategies.length;k++){ if(D.strategies[k].sid===sid){ st=D.strategies[k]; break; } }
+      if(st) st.t.forEach(function(t){ if(IDX[t]!=null) out.push(IDX[t]); });
+    }
+    return out;
+  }
+  function recompute(){
+    var m=members(), seen={};
+    SEL=[]; m.forEach(function(i){ if(!seen[i]){ seen[i]=1; SEL.push(i); } });
+    Object.keys(PIN).forEach(function(t){ var i=IDX[t]; if(i!=null && !seen[i]){ seen[i]=1; SEL.push(i); } });
+    SELSET=seen;
+  }
+
+  // ── 판정 상자 ── 수치는 전부 _rrg_stock.json(사전등록 검정) 에서 옮긴다. 여기서 짓지 않는다
+  function vbox(){
+    var T=D.test, h='';
+    if(!T){ $('vbox').innerHTML='<p>⚠ 검정 결과 파일이 없습니다 — 위치만 그립니다.</p>'; return; }
+    var qd=T.quadrants||{}, f1=T.f1||{}, f2=T.f2||{}, f3=T.f3||{}, f5=T.f5||{}, f6=T.f6||{};
+    var pct=function(v){ return v==null?'—':(v*100).toFixed(2)+'%'; };
+    var ex=function(q){ var o=qd[q]||{}; return o.mean==null?'—':sgn(o.mean,3)+'%'; };
+    // ⚠ 문장을 span 하나로 감싼다 — .vt 는 flex 라 글자 조각·<b> 가 따로 항목이 되어 사이마다 gap 이 벌어진다
+    h+='<p class="vt"><span class="vchip">'+esc(T.verdict)+'</span><span>이 판은 <b>위치</b>를 보여 줄 뿐입니다 — 회전도, 주도 칸도 다음 주를 말하지 않았습니다</span></p>';
+    h+='<ul>'+
+      '<li>✅ <b>지금 이 종목이 S&amp;P 500 대비 어디쯤인가</b> — 12주 상대강도의 수준(가로)과 기울기(세로). 서술입니다.</li>'+
+      '<li>❌ <b>다음에 어디로 가나</b> — 시계 방향 회전은 산식이 그립니다. 종목마다 주간 수익을 뒤섞어 로테이션을 없앤 자료도 '+
+        pct(f3.null_median)+' 시계로 돌았고, 실제는 <b>'+pct(f3.real)+'</b>로 오히려 낮았습니다(뒤섞기 '+esc(f3.n_shuffle)+'회).</li>'+
+      '<li>❌ <b>주도 칸을 사라</b> — 다음 주 S&amp;P 500 대비 초과가 주도 '+ex('주도')+' · 부진 <b>'+ex('부진')+'</b>. '+
+        '주도가 오히려 나빴습니다. 그 차이도 주 단위로 묶으면 t '+sgn(f5.t_clustered,2)+'로 0과 구별되지 않습니다.</li>'+
+      '</ul>';
+    h+='<details><summary>근거 — 사분면별 다음 주 ('+esc(T.window||'')+')</summary>'+
+      '<div class="qtw"><table class="qt"><thead><tr><th>사분면</th><th>관측(종목·주)</th><th>다음 주 초과</th><th>승률</th><th>전체 평균 대비</th></tr></thead><tbody>';
+    Q.forEach(function(q){
+      var o=qd[q]||{};
+      h+='<tr><td>'+q+' <span class="muted">'+QEN[q]+'</span></td><td>'+(o.n!=null?Number(o.n).toLocaleString('en-US'):'—')+'</td>'+
+         '<td>'+ex(q)+'</td><td>'+(o.win!=null?o.win.toFixed(1)+'%':'—')+'</td>'+
+         '<td class="'+cls(o.lift)+'">'+(o.lift!=null?sgn(o.lift,3)+'%p':'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div>'+
+      '<p class="fine">주도 − 부진 '+sgn(f1.diff,3)+'%p · t '+sgn(f2.t_pooled,2)+'(종목·주를 따로 셈) → '+sgn(f5.t_clustered,2)+
+      '(주 '+esc(f5.n_weeks)+'개로 묶음). 같은 주의 518종은 같은 시장을 타서, 따로 세면 표본이 부풉니다. '+
+      '그때그때 실제 지수 편입 종목만 남겨도(관측 '+(f6.share_obs!=null?(f6.share_obs*100).toFixed(1):'—')+'%) t '+sgn(f6.t_clustered,2)+'로 같습니다. '+
+      '뒤섞은 자료의 시계 방향 비율은 '+pct(f3.null_min)+'~'+pct(f3.null_max)+'(95% '+pct(f3.null_p95)+')였습니다.</p>'+
+      '<p class="fine">⚠ «부진이 낫다» 를 전략으로 쓰지 마십시오 — 이 랩의 «주간 반전» 규칙과 같은 현상이고, 그 규칙은 시점정확 백테스트에서 t 4.00 → 1.02로 무너졌습니다.</p>'+
+      '<p class="fine">사전등록 <code>build/PREREG-2026-09-23-RRGSTOCK.md</code>(계산 전 커밋 '+esc(T.commit||'')+') · 결과 <code>…-RESULT.md</code> · '+
+      '산식은 팩터 판(PREREG-2026-09-22-RRG, 같은 기각)과 같습니다.</p></details>';
+    $('vbox').innerHTML=h;
+  }
+
+  // ── 컨트롤 ──────────────────────────────────────────────────────────────
+  function controls(){
+    var o='<option value="all">전체 518종</option><optgroup label="섹터">';
+    D.sectors.forEach(function(s,i){
+      var n=0; D.stocks.forEach(function(x){ if(x.s===i) n++; });
+      o+='<option value="s:'+i+'">'+esc(secName(i))+' ('+n+')</option>';
+    });
+    o+='</optgroup><optgroup label="전략 랩 보유 ('+D.strategies.length+'개 전략)">';
+    D.strategies.forEach(function(s){
+      o+='<option value="k:'+esc(s.sid)+'">'+esc(s.name)+' ('+s.t.length+')</option>';
+    });
+    o+='</optgroup>';
+    $('view').innerHTML=o;
+    var dl=''; D.stocks.forEach(function(s){ dl+='<option value="'+esc(s.t)+'">'+esc(s.n)+'</option>'; });
+    $('tks').innerHTML=dl;
+    $('wk').max=String(D.weeks.length-1);
+    $('view').addEventListener('change',function(){ VIEW=this.value; update(); });
+    $('q').addEventListener('change',function(){
+      var t=String(this.value||'').trim().toUpperCase();
+      if(IDX[t]!=null){ PIN[t]=1; this.value=''; update(); }
+    });
+    $('q').addEventListener('keydown',function(e){ if(e.key==='Enter'){ this.dispatchEvent(new Event('change')); } });
+    $('clr').addEventListener('click',function(){ PIN={}; update(); });
+    $('tail').addEventListener('input',function(){ TAIL=+this.value; update(); });
+    $('wk').addEventListener('input',function(){ stop(); W=+this.value; update(); });
+    $('secmed').addEventListener('change',function(){ SECMED=this.checked; update(); });
+    $('play').addEventListener('click',function(){ if(TIMER) stop(); else play(); });
+  }
+  function syncCtl(){
+    $('view').value=VIEW; if($('view').value!==VIEW){ VIEW='all'; $('view').value='all'; }
+    $('tail').value=String(TAIL); $('tailv').textContent=TAIL?TAIL+'주':'없음';
+    $('wk').value=String(W); $('wkv').textContent=fmtW(W)+(W===D.weeks.length-1?' (최근)':'');
+    $('secmed').checked=SECMED;
+    $('clr').hidden=!Object.keys(PIN).length;
+  }
+  function play(){
+    var last=D.weeks.length-1;
+    if(W>=last) W=Math.max(0,last-26);
+    $('play').setAttribute('aria-pressed','true'); $('play').textContent='❚❚ 멈춤';
+    update();
+    TIMER=setInterval(function(){
+      if(W>=last){ stop(); return; }
+      W++; update();
+    },420);
+  }
+  function stop(){
+    if(TIMER){ clearInterval(TIMER); TIMER=null; }
+    $('play').setAttribute('aria-pressed','false'); $('play').textContent='▶ 재생';
+  }
+
+  // ── 그림 ────────────────────────────────────────────────────────────────
+  function pt(s,k){ var x=s.x[k], y=s.y[k]; return (x==null||y==null)?null:[dec(x),dec(y)]; }
+  function domain(){
+    // 100 을 가운데 두고 대칭으로 — 네 칸이 늘 같은 크기라야 «어느 칸에 몰렸나» 가 눈에 맞는다
+    // «전체» 보기면 518종 머리를 늘 넣는다 — 종목 하나를 고정했다고 그림이 그 종목으로 확대되면 맥락이 사라진다
+    var m=0, span=function(i,t0){
+      var s=D.stocks[i];
+      for(var k=Math.max(0,W-t0);k<=W;k++){
+        var p=pt(s,k); if(!p) continue;
+        m=Math.max(m,Math.abs(p[0]-100),Math.abs(p[1]-100));
+      }
+    };
+    if(VIEW==='all') D.stocks.forEach(function(_,i){ span(i,0); });
+    SEL.forEach(function(i){ span(i,TAIL); });
+    if(SECMED) D.sector_med.forEach(function(g){ var x=dec(g.x[W]), y=dec(g.y[W]); if(x!=null) m=Math.max(m,Math.abs(x-100),Math.abs(y-100)); });
+    var h=Math.ceil(m*1.08/0.5)*0.5;
+    return Math.max(1.5,Math.min(3.5,h||1.5));
+  }
+  function draw(){
+    var box=$('chart'), cw=box.clientWidth||600;
+    var S=Math.max(300,Math.min(cw,780)), PL=44, PR=14, PT=14, PB=40;
+    var iw=S-PL-PR, ih=S-PT-PB, H=domain(), lo=100-H;
+    var sx=function(v){ return PL+(v-lo)/(2*H)*iw; }, sy=function(v){ return PT+(1-(v-lo)/(2*H))*ih; };
+    var g='';
+    // 격자 — 눈금은 깔끔한 수에만
+    var step=H>2.2?1:0.5;
+    for(var v=Math.ceil(lo/step)*step; v<=100+H+1e-9; v+=step){
+      var vv=Math.round(v*100)/100, isC=Math.abs(vv-100)<1e-9;
+      g+='<line class="'+(isC?'ax':'gd')+'" x1="'+sx(vv).toFixed(1)+'" x2="'+sx(vv).toFixed(1)+'" y1="'+PT+'" y2="'+(PT+ih)+'"/>';
+      g+='<line class="'+(isC?'ax':'gd')+'" y1="'+sy(vv).toFixed(1)+'" y2="'+sy(vv).toFixed(1)+'" x1="'+PL+'" x2="'+(PL+iw)+'"/>';
+      g+='<text class="tk" x="'+sx(vv).toFixed(1)+'" y="'+(PT+ih+15)+'" text-anchor="middle">'+(step<1?vv.toFixed(1):vv.toFixed(0))+'</text>';
+      g+='<text class="tk" x="'+(PL-6)+'" y="'+(sy(vv)+3.5).toFixed(1)+'" text-anchor="end">'+(step<1?vv.toFixed(1):vv.toFixed(0))+'</text>';
+    }
+    g+='<rect x="'+PL+'" y="'+PT+'" width="'+iw+'" height="'+ih+'" fill="none" class="ax" stroke="var(--line)"/>';
+    // 사분면 이름 — 색 없이 모서리 글자로만
+    var qn=function(t,e,x,y,a){ return '<text class="qn" x="'+x+'" y="'+y+'" text-anchor="'+a+'">'+t+' <tspan class="qe">'+e+'</tspan></text>'; };
+    g+=qn('회복','Improving',PL+8,PT+18,'start')+qn('주도','Leading',PL+iw-8,PT+18,'end')+
+       qn('부진','Lagging',PL+8,PT+ih-9,'start')+qn('약화','Weakening',PL+iw-8,PT+ih-9,'end');
+    g+='<text class="at" x="'+(PL+iw/2)+'" y="'+(S-6)+'" text-anchor="middle">RS-Ratio — 상대강도 수준 (100 = 12주 평균) →</text>';
+    g+='<text class="at" transform="translate(12,'+(PT+ih/2)+') rotate(-90)" text-anchor="middle">RS-Mom — 상대강도 기울기 →</text>';
+    g+='<clipPath id="pc"><rect x="'+PL+'" y="'+PT+'" width="'+iw+'" height="'+ih+'"/></clipPath><g clip-path="url(#pc)">';
+    DRAWN=[];
+    var SECLB=[];   // 섹터 이름 글자 — 아래 배치기가 종목 글자 뒤에 자리를 준다
+    var inD=function(p){ return p && Math.abs(p[0]-100)<=H && Math.abs(p[1]-100)<=H; };
+    // ① 나머지 — 회색 점. 강조가 없으면 518종 전부가 그림의 주인공이라 조금 진하게
+    var all=!SEL.length;
+    D.stocks.forEach(function(s,i){
+      if(SELSET[i]) return;
+      var p=pt(s,W); if(!inD(p)) return;
+      var X=sx(p[0]), Y=sy(p[1]);
+      g+='<circle class="ctx'+(all?' all':'')+'" cx="'+X.toFixed(1)+'" cy="'+Y.toFixed(1)+'" r="'+(all?3.4:2.8)+'"/>';
+      DRAWN.push({i:i,X:X,Y:Y,sel:false});
+    });
+    // ② 섹터 중앙값(선택) — 섹터 지수의 RRG 가 아니라 소속 종목 점의 중앙값이다
+    if(SECMED){
+      D.sector_med.forEach(function(sm){
+        var pts=[];
+        for(var k=Math.max(0,W-TAIL);k<=W;k++){ var x=dec(sm.x[k]), y=dec(sm.y[k]); if(x!=null&&y!=null) pts.push([sx(x),sy(y)]); }
+        if(pts.length>1) g+='<polyline class="smt" points="'+pts.map(function(q){return q[0].toFixed(1)+','+q[1].toFixed(1);}).join(' ')+'"/>';
+        var x=dec(sm.x[W]), y=dec(sm.y[W]); if(x==null||y==null) return;
+        var X=sx(x), Y=sy(y);
+        g+='<rect class="sm" x="'+(X-4.5).toFixed(1)+'" y="'+(Y-4.5).toFixed(1)+'" width="9" height="9" transform="rotate(45 '+X.toFixed(1)+' '+Y.toFixed(1)+')"/>';
+        SECLB.push({X:X,Y:Y,t:secName(sm.s),w:secName(sm.s).length*11+2,cls:'sml'});
+      });
+    }
+    // ③ 강조 — 꼬리(옛 주일수록 옅게) + 머리 점 + 적으면 티커
+    // 많이 고르면(섹터 80종 등) 꼬리를 얇고 옅게 — 굵게 두면 꼬리가 실타래가 되어 머리 점(지금 위치)이 묻힌다
+    var many=SEL.length>30, lw=SEL.length<=12?2:(many?1:1.4), tf=many?0.45:1;
+    SEL.forEach(function(i){
+      var s=D.stocks[i], pts=[];
+      for(var k=Math.max(0,W-TAIL);k<=W;k++){ var p=pt(s,k); pts.push(p?[sx(p[0]),sy(p[1])]:null); }
+      var n=pts.length;
+      for(var a=1;a<n;a++){
+        if(!pts[a]||!pts[a-1]) continue;
+        var op=((0.18+0.72*a/(n-1))*tf).toFixed(2);
+        g+='<line class="tl" stroke-width="'+lw+'" opacity="'+op+'" x1="'+pts[a-1][0].toFixed(1)+'" y1="'+pts[a-1][1].toFixed(1)+'" x2="'+pts[a][0].toFixed(1)+'" y2="'+pts[a][1].toFixed(1)+'"/>';
+      }
+      for(var b=0;b<n-1;b++){ if(pts[b]) g+='<circle class="tn" r="'+(many?1.4:1.9)+'" opacity="'+((0.25+0.6*b/Math.max(1,n-1))*tf).toFixed(2)+'" cx="'+pts[b][0].toFixed(1)+'" cy="'+pts[b][1].toFixed(1)+'"/>'; }
+      var hp=pts[n-1]; if(!hp) return;
+      g+='<circle class="hd" r="'+(many?4:5)+'" cx="'+hp[0].toFixed(1)+'" cy="'+hp[1].toFixed(1)+'"/>';
+      DRAWN.push({i:i,X:hp[0],Y:hp[1],sel:true});
+    });
+    // 글자(티커·섹터 이름) — 겹치지 않는 자리를 네 곳에서 고른다. 다 막히면 **안 단다**(값은 표·툴팁에 있다).
+    //   겹친 채 찍으면 두 글자가 한 덩어리로 읽힌다(WDC·CIEN, 섹터 중앙값 여럿 실측).
+    //   고른 종목 글자가 먼저 자리를 잡고, 섹터 이름은 남은 자리에 든다.
+    var heads=DRAWN.filter(function(d){return d.sel;}), boxes=[], req=[];
+    heads.forEach(function(d){ boxes.push([d.X-5,d.Y-5,d.X+5,d.Y+5]); });
+    SECLB.forEach(function(r){ boxes.push([r.X-5,r.Y-5,r.X+5,r.Y+5]); });
+    if(!many) heads.forEach(function(d){ var t=D.stocks[d.i].t; req.push({X:d.X,Y:d.Y,t:t,w:t.length*7+2,cls:'lb'}); });
+    req=req.concat(SECLB);
+    var hit=function(b){ for(var z=0;z<boxes.length;z++){ var o=boxes[z];
+      if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1]) return true; } return false; };
+    req.forEach(function(r){
+      var cand=[[7,-6,'start'],[7,15,'start'],[-7,-6,'end'],[-7,15,'end']];
+      for(var c=0;c<cand.length;c++){
+        var x=r.X+cand[c][0], y=r.Y+cand[c][1], an=cand[c][2];
+        var b=an==='start'?[x,y-10,x+r.w,y+2]:[x-r.w,y-10,x,y+2];
+        if(b[0]<PL||b[2]>PL+iw||b[1]<PT||b[3]>PT+ih||hit(b)) continue;
+        boxes.push(b);
+        g+='<text class="'+r.cls+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+an+'">'+esc(r.t)+'</text>';
+        break;
+      }
+    });
+    g+='<circle class="hv" id="hvr" r="8" cx="0" cy="0" visibility="hidden"/></g>';
+    box.innerHTML='<svg class="rrg" id="svg" viewBox="0 0 '+S+' '+S+'" width="'+S+'" height="'+S+'" role="img" aria-label="종목 RRG — '+
+      esc(fmtW(W))+' 기준, 가로 RS-Ratio, 세로 RS-Mom. 같은 값은 오른쪽 표에 있습니다.">'+g+'</svg>';
+    var svg=$('svg');
+    svg.addEventListener('pointermove',onMove);
+    svg.addEventListener('pointerleave',function(){ setHover(null); });
+    svg.addEventListener('click',onClick);
+    if(HOV!=null) setHover(HOV);
+  }
+  // 호버 — 가장 가까운 점(24px 안). 강조 점을 먼저 본다
+  function nearest(ev){
+    var svg=$('svg'); if(!svg) return null;
+    var r=svg.getBoundingClientRect(), k=svg.viewBox.baseVal.width/r.width;
+    var mx=(ev.clientX-r.left)*k, my=(ev.clientY-r.top)*k, best=null, bd=1e9;
+    for(var pass=0;pass<2;pass++){
+      for(var j=0;j<DRAWN.length;j++){
+        var d=DRAWN[j]; if((pass===0)!==d.sel) continue;
+        var dd=(d.X-mx)*(d.X-mx)+(d.Y-my)*(d.Y-my);
+        if(dd<bd){ bd=dd; best=d; }
+      }
+      if(best && bd<=(24*k)*(24*k)) return best;
+      best=null; bd=1e9;
+    }
+    return null;
+  }
+  // 호버는 고리 하나만 옮긴다 — 518점을 다시 그리지 않는다
+  function setHover(i){
+    HOV=i; var ring=$('hvr'), d=null;
+    if(i!=null) for(var z=0;z<DRAWN.length;z++){ if(DRAWN[z].i===i){ d=DRAWN[z]; break; } }
+    if(!d){ if(ring) ring.setAttribute('visibility','hidden'); $('tip').hidden=true; return; }
+    if(ring){ ring.setAttribute('cx',d.X.toFixed(1)); ring.setAttribute('cy',d.Y.toFixed(1)); ring.setAttribute('visibility','visible'); }
+    showTip(d.i,d.X,d.Y);
+  }
+  function onMove(ev){ var d=nearest(ev); setHover(d?d.i:null); }
+  function onClick(ev){
+    var d=nearest(ev); if(!d) return;
+    var t=D.stocks[d.i].t;
+    if(PIN[t]) delete PIN[t]; else PIN[t]=1;
+    update();
+  }
+  function showTip(i,X,Y){
+    var s=D.stocks[i], tip=$('tip'), p=pt(s,W), q=qOf(s.x[W],s.y[W]), q4=W>=4?qOf(s.x[W-4],s.y[W-4]):null;
+    tip.textContent='';
+    var add=function(tag,cl,txt){ var e=document.createElement(tag); if(cl) e.className=cl; if(txt!=null) e.textContent=txt; tip.appendChild(e); return e; };
+    add('div','tt',s.t+(PIN[s.t]?' ★':''));
+    add('div','tn2',s.n+' · '+secName(s.s));
+    var l1=add('div',null,null);
+    var v=document.createElement('span'); v.className='tv'; v.textContent=(q||'—'); l1.appendChild(v);
+    l1.appendChild(document.createTextNode(' '+(q?QEN[q]:'')+(q4&&q4!==q?' · 4주 전 '+q4:'')));
+    var l2=add('div',null,null);
+    var a=document.createElement('span'); a.className='tv'; a.textContent=p?p[0].toFixed(2):'—'; l2.appendChild(document.createTextNode('RS-Ratio ')); l2.appendChild(a);
+    var b=document.createElement('span'); b.className='tv'; b.textContent=p?p[1].toFixed(2):'—'; l2.appendChild(document.createTextNode(' · RS-Mom ')); l2.appendChild(b);
+    if(W===D.weeks.length-1){
+      add('div',null,'최근 1주 '+sgn(s.r1,1)+'% · 4주 '+sgn(s.r4,1)+'% (절대 수익)');
+    }
+    add('div','tn2',fmtW(W)+' 기준 · 누르면 '+(PIN[s.t]?'고정 해제':'꼬리 고정'));
+    tip.hidden=false;
+    var svg=$('svg'), r=svg.getBoundingClientRect(), br=$('chartbox').getBoundingClientRect(), k=r.width/svg.viewBox.baseVal.width;
+    var left=(r.left-br.left)+X*k+14, top=(r.top-br.top)+Y*k+14;
+    if(left+tip.offsetWidth>br.width-4) left=(r.left-br.left)+X*k-tip.offsetWidth-14;
+    if(top+tip.offsetHeight>br.height-4) top=(r.top-br.top)+Y*k-tip.offsetHeight-14;
+    tip.style.left=Math.max(4,left)+'px'; tip.style.top=Math.max(4,top)+'px';
+  }
+  function legend(){
+    var h='';
+    if(SEL.length) h+='<span><i class="a"></i>고른 종목 '+SEL.length+'개 — 꼬리는 지난 '+TAIL+'주(옛 주일수록 옅게)</span><span><i class="c"></i>나머지</span>';
+    else h+='<span><i class="c"></i>518종 전부 · '+esc(fmtW(W))+' — 보기를 고르거나 점을 누르면 꼬리가 나옵니다</span>';
+    if(SECMED) h+='<span><i class="d"></i>섹터 중앙값(소속 종목 점의 중앙값)</span>';
+    h+='<span>RRG 가 말하는 시계 방향: 회복 → 주도 → 약화 → 부진 — <b>산식이 만드는 방향입니다</b></span>';
+    $('lgd').innerHTML=h;
+  }
+
+  // ── 네 칸 + 표 ──────────────────────────────────────────────────────────
+  // 칸·표의 대상 — «전체» 보기면 늘 518종(고정한 종목은 표에서 표시만), 아니면 고른 종목
+  function LIST(){ return VIEW==='all'?D.stocks.map(function(_,i){return i;}):SEL.slice(); }
+  function tiles(){
+    var list=LIST(), c={'회복':0,'주도':0,'약화':0,'부진':0}, n=0;
+    list.forEach(function(i){ var s=D.stocks[i], q=qOf(s.x[W],s.y[W]); if(q){ c[q]++; n++; } });
+    // 칸 배치를 그림과 같게 — 위: 회복 | 주도, 아래: 부진 | 약화
+    var h='';
+    ['회복','주도','부진','약화'].forEach(function(q){
+      h+='<div class="tile"><div class="tl">'+q+' '+QEN[q]+'</div><div class="tv">'+c[q]+
+         '<span class="ts">'+(n?Math.round(c[q]/n*100):0)+'%</span></div></div>';
+    });
+    $('tiles').innerHTML=h;
+    $('tcap').textContent=(VIEW==='all'?'전체 '+list.length+'종':'고른 '+list.length+'종')+' · '+fmtW(W)+' 기준'+
+      (n<list.length?' · 계산 불가 '+(list.length-n)+'종(상장 24주 미만 등)':'')+
+      ' · 1주·4주 %는 '+D.weeks[D.weeks.length-1]+'까지의 절대 수익 · 행을 누르면 그림에 고정';
+  }
+  var COLS=[['종목','t','l'],['섹터','sec','l'],['사분면','q','l'],['RS-Ratio','x'],['RS-Mom','y'],['4주 전','q4','l'],['1주 %','r1'],['4주 %','r4']];
+  function rowVal(i,k){
+    var s=D.stocks[i];
+    switch(k){
+      case 't': return s.t; case 'sec': return secName(s.s);
+      case 'q': var q=qOf(s.x[W],s.y[W]); return q==null?null:QORD[q];
+      case 'q4': var q4=W>=4?qOf(s.x[W-4],s.y[W-4]):null; return q4==null?null:QORD[q4];
+      case 'x': return dec(s.x[W]); case 'y': return dec(s.y[W]);
+      case 'r1': return s.r1; case 'r4': return s.r4;
+    }
+    return null;
+  }
+  function table(){
+    var list=LIST();
+    list.sort(function(a,b){
+      var x=rowVal(a,SORT.k), y=rowVal(b,SORT.k);
+      if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1;
+      var c=(typeof x==='string')?(x<y?-1:x>y?1:0):(x-y);
+      if(!c && SORT.k==='q'){ c=(rowVal(b,'x')||0)-(rowVal(a,'x')||0); return c; }   // 같은 칸이면 수준 높은 순
+      return SORT.dir>0?c:-c;
+    });
+    var last=W===D.weeks.length-1;
+    var h='<thead><tr>';
+    COLS.forEach(function(c){
+      // 수익 열의 기준일은 머리글이 아니라 표 위 설명줄(tcap)에 적는다 — 머리글에 날짜를 붙이면 열이 넓어져 칸 밖으로 밀린다
+      var lab=c[0];
+      h+='<th class="sort'+(c[2]?' '+c[2]:'')+'" data-k="'+c[1]+'"'+(SORT.k===c[1]?' aria-sort="'+(SORT.dir>0?'ascending':'descending')+'"':'')+'>'+lab+'</th>';
+    });
+    h+='</tr></thead><tbody>';
+    list.forEach(function(i){
+      var s=D.stocks[i], q=qOf(s.x[W],s.y[W]), q4=W>=4?qOf(s.x[W-4],s.y[W-4]):null, x=dec(s.x[W]), y=dec(s.y[W]);
+      h+='<tr tabindex="0" data-i="'+i+'"'+(PIN[s.t]?' class="pin"':'')+'>'+
+        '<td><a href="co.html?t='+encodeURIComponent(s.t)+'">'+esc(s.t)+'</a><span class="nm" title="'+esc(s.n)+'">'+esc(s.n)+'</span></td>'+
+        '<td class="l">'+esc(secName(s.s))+'</td>'+
+        '<td class="l">'+(q||'<span class="mut">—</span>')+'</td>'+
+        '<td>'+(x==null?'—':x.toFixed(2))+'</td><td>'+(y==null?'—':y.toFixed(2))+'</td>'+
+        '<td class="l'+(q4&&q4!==q?'':' mut')+'">'+(q4||'—')+'</td>'+
+        '<td class="'+(last?cls(s.r1):'mut')+'">'+sgn(s.r1,1)+'</td><td class="'+(last?cls(s.r4):'mut')+'">'+sgn(s.r4,1)+'</td></tr>';
+    });
+    h+='</tbody>';
+    var tb=$('tbl'); tb.innerHTML=h;
+    tb.querySelectorAll('th.sort').forEach(function(th){
+      th.addEventListener('click',function(){
+        var k=th.getAttribute('data-k');
+        if(SORT.k===k) SORT.dir=-SORT.dir; else { SORT.k=k; SORT.dir=(k==='t'||k==='sec'||k==='q'||k==='q4')?1:-1; }
+        table();
+      });
+    });
+    tb.querySelectorAll('tbody tr').forEach(function(tr){
+      var i=+tr.getAttribute('data-i');
+      tr.addEventListener('click',function(e){
+        if(e.target.closest('a')) return;
+        var t=D.stocks[i].t; if(PIN[t]) delete PIN[t]; else PIN[t]=1; update();
+      });
+      tr.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); tr.click(); } });
+      // 키보드 초점도 호버와 같은 내용을 보인다
+      tr.addEventListener('focus',function(){ setHover(i); });
+      tr.addEventListener('mouseenter',function(){ setHover(i); });
+      tr.addEventListener('mouseleave',function(){ setHover(null); });
+      tr.addEventListener('blur',function(){ setHover(null); });
+    });
+  }
+
+  function update(){
+    recompute(); syncCtl(); draw(); legend(); tiles(); table(); writeHash();
+  }
+
+  function init(d){
+    D=d; D.stocks.forEach(function(s,i){ IDX[s.t]=i; });
+    W=D.weeks.length-1;
+    readHash();
+    $('sub').textContent=D.n+'종 · '+D.bench+' 대비 · '+D.freq+' · 되돌아보기 '+D.look+'주 · 기준 주 '+D.as_of+
+      (D.partial?' (이번 주 '+D.partial+'까지는 아직 안 끝나 뺐습니다)':'');
+    vbox(); controls();
+    $('ctl').hidden=false; $('board').hidden=false;
+    $('foot').innerHTML='종목 명단은 <a href="explorer.html">전략 랩</a> 202개 전략의 «지금 보유» 를 합친 것이고, 실측해 보니 랩 유니버스 518종 전부입니다. '+
+      '보기 목록에는 '+D.wide_cut+'종 이하를 쥔 전략 '+D.strategies.length+'개만 싣습니다(그보다 많이 쥔 '+D.wide_n+'개는 «전체» 와 같은 그림이라 뺐습니다). '+
+      esc(D.axis_note)+' '+esc(D.px_note)+' 가격 기준일 '+esc(D.px_as_of)+'.';
+    update();
+    var rt=null; window.addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(draw,120); });
+  }
+  fetch('data/rrg_board.json',{cache:'no-cache'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(init).catch(function(e){ $('vbox').innerHTML='<p>⚠ 자료를 불러오지 못했습니다 ('+esc(e&&e.message)+').</p>'; });
+})();
+</script>
+
+</body>
+</html>

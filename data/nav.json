@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "6f5e8f68fd960c2c",
+ "generated_from": "1f5746698ae0dd51",
  "categories": [
   {
    "name": "시장",
@@ -90,6 +90,16 @@
      "file": "signals.html",
      "status": "existing",
      "desc": "테크니컬 신호 32개 성적 + 오늘 발동 종목",
+     "verdict": "rejected",
+     "src": "model",
+     "effort": "M",
+     "live": true
+    },
+    {
+     "name": "종목 RRG 로테이션",
+     "file": "rrg.html",
+     "status": "existing",
+     "desc": "518종목 S&P 500 대비 주간 상대강도 4분면 — 위치 서술만, 회전·주도 칸 예측은 기각",
      "verdict": "rejected",
      "src": "model",
      "effort": "M",
