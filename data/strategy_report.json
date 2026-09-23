@@ -8144,7 +8144,7 @@
    "incr": {
     "one": {
      "vs": "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
-     "corr": 0.892,
+     "corr": 0.893,
      "alpha": 0.89,
      "t": 2.74,
      "beta": 0.936
@@ -8657,7 +8657,7 @@
    "incr": {
     "one": {
      "vs": "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
-     "corr": 0.892,
+     "corr": 0.893,
      "alpha": -0.26,
      "t": -0.82,
      "beta": 0.851
@@ -10705,14 +10705,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 12.87,
+      "cagr": 12.88,
       "sharpe": 0.679,
-      "excess": -0.51,
+      "excess": -0.5,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.11,
+    "drag": 0.1,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -13343,9 +13343,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.81,
+     "s": 0.809,
      "b": 0.692,
-     "d": 0.118
+     "d": 0.117
     },
     {
      "k": "최대낙폭",
@@ -13355,7 +13355,7 @@
     }
    ],
    "excess_cagr": -2.47,
-   "d_sharpe": 0.118,
+   "d_sharpe": 0.117,
    "t": -0.74,
    "t_crit": null,
    "cost": null,
@@ -13388,7 +13388,7 @@
      "vs": "오버나이트 보유 (QQQ 종가→시가)",
      "corr": 0.921,
      "alpha": 1.51,
-     "t": 1.0,
+     "t": 1.01,
      "beta": 0.68
     },
     "five": {
@@ -13563,7 +13563,7 @@
      "beta": 1.066
     },
     "five": {
-     "alpha": -0.62,
+     "alpha": -0.61,
      "t": -0.27,
      "n": 506,
      "vs": [
@@ -15102,7 +15102,7 @@
      "corr": 0.771,
      "alpha": -0.75,
      "t": -0.27,
-     "beta": 0.948
+     "beta": 0.947
     },
     "five": {
      "alpha": -0.31,
@@ -16460,7 +16460,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 7.12,
+      "v": 7.11,
       "p": 0.1275
      },
      {
@@ -16665,8 +16665,8 @@
       "대담형 자산배분 BAA (균형형 · 6종 분산)",
       "위험균형 × 개별 추세 게이트 (2단)",
       "경계형 자산배분 VAA-G4 (Keller 2017)",
-      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
-      "매니지드 퓨처스 위성 배분 (DBMF 20%)"
+      "매니지드 퓨처스 위성 배분 (DBMF 20%)",
+      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)"
      ]
     },
     "absorbed": null,
@@ -16845,7 +16845,7 @@
     "one": {
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 0.968,
-     "alpha": 1.26,
+     "alpha": 1.25,
      "t": 1.59,
      "beta": 0.571
     },
@@ -17571,7 +17571,7 @@
    "incr": {
     "one": {
      "vs": "초과채권프리미엄(EBP) 리스크선호 게이트",
-     "corr": 0.467,
+     "corr": 0.466,
      "alpha": -2.51,
      "t": -1.52,
      "beta": 0.729
@@ -17930,7 +17930,7 @@
      "beta": 0.897
     },
     "five": {
-     "alpha": 0.26,
+     "alpha": 0.27,
      "t": 0.08,
      "n": 366,
      "vs": [
@@ -18101,7 +18101,7 @@
      "vs": "크로스에셋 RP — 분기 리밸런스",
      "corr": 0.968,
      "alpha": -2.75,
-     "t": -2.63,
+     "t": -2.64,
      "beta": 1.027
     },
     "five": {
@@ -18301,7 +18301,7 @@
      "corr": 0.98,
      "alpha": 0.89,
      "t": 1.03,
-     "beta": 1.014
+     "beta": 1.013
     },
     "five": {
      "alpha": -0.73,
@@ -18832,8 +18832,8 @@
      "beta": 1.0
     },
     "five": {
-     "alpha": -0.01,
-     "t": -0.06,
+     "alpha": -0.0,
+     "t": -0.04,
      "n": 366,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19039,8 +19039,8 @@
      "beta": 0.999
     },
     "five": {
-     "alpha": -0.02,
-     "t": -0.21,
+     "alpha": -0.03,
+     "t": -0.22,
      "n": 366,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -37768,7 +37768,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -58502,12 +58502,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 80.8,
+    "exposure_now": 81.1,
     "note": "노출 81%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -59072,7 +59072,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -59489,7 +59489,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60328,7 +60328,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61634,7 +61634,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63009,7 +63009,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64011,7 +64011,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64871,13 +64871,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 0.0,
-    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 100.0,
+    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65050,7 +65050,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65236,13 +65236,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 52.7,
-    "note": "노출 53%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 50.9,
+    "note": "노출 51%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65415,7 +65415,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-09-21",
+    "as_of": "2026-09-22",
     "n": null,
     "tickers": null,
     "names": null,
