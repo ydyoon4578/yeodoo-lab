@@ -84,7 +84,11 @@ def main() -> int:
         d = json.load(io.open(os.path.join(DATA, "sd", t + ".json"), encoding="utf-8"))
         PX[t] = np.array([np.nan if v is None else float(v) for v in d["pxd"]])
         VO[t] = np.array([np.nan if v is None else float(v) for v in d["vd"]])
-    pxc = json.load(io.open(os.path.join(DATA, "_pit_px_cache.json"), encoding="utf-8"))
+    # 🚨 2026-09-23 정정 — 편출 가격은 **정리본 data/pit_px.json** 을 쓴다(격리·합병 보정 반영).
+    #   처음에는 원시 캐시 _pit_px_cache.json 을 읽었는데, 그 안의 PARA 는 랩이 2026-09-14 에 격리한
+    #   «다른 증권» 계열이다(주당 57~113,900달러). 그 한 종목이 시총가중을 지배해 Eg 첫 판을 오염시켰다.
+    #   정리본은 157종으로 원시 캐시(122종)보다 넓다 — 인수된 36종이 더 들어 있다.
+    pxc = json.load(io.open(os.path.join(DATA, "pit_px.json"), encoding="utf-8"))["px"]
     voc = json.load(io.open(os.path.join(DATA, "_pit_vol_cache.json"), encoding="utf-8"))
 
     def grid(dct):
@@ -95,9 +99,18 @@ def main() -> int:
                 a[i] = float(v)
         return a
 
-    for t, dct in pxc.items():
+    def unpack(obj):
+        # pit_px.json 의 한 종목 = {i0: 격자 시작 인덱스, p: 가격 배열} (날짜 사전이 아니다)
+        a = np.full(D, np.nan)
+        i0, arr = int(obj.get("i0") or 0), obj.get("p") or []
+        for j, v in enumerate(arr):
+            if v is not None and 0 <= i0 + j < D:
+                a[i0 + j] = float(v)
+        return a
+
+    for t, obj in pxc.items():
         if t not in PX:
-            PX[t] = grid(dct)
+            PX[t] = unpack(obj)
             VO[t] = grid(voc.get(t) or {})
     PU = json.load(io.open(os.path.join(DATA, "pit_universe.json"), encoding="utf-8"))
     splice = PU.get("cik_spliced") or {}
@@ -298,7 +311,13 @@ def main() -> int:
             pool.append((sid, s.get("name"), np.array([ex[m_] for m_ in mset])))
     cors = sorted(((abs(np.corrcoef(st, v)[0, 1]), float(np.corrcoef(st, v)[0, 1]), sid, nm, v) for sid, nm, v in pool),
                   key=lambda x: -x[0])
-    top5 = cors[:5]
+    # 상관 상위 5 — 서로 사실상 같은 계열(상관 0.999 초과, 예: 밴드판 = 원판)은 하나만 남긴다(eg_q5 와 같은 규칙)
+    top5 = []
+    for x in cors:
+        if all(abs(np.corrcoef(x[4], y[4])[0, 1]) < 0.999 for y in top5):
+            top5.append(x)
+        if len(top5) == 5:
+            break
     a6, t6 = ols_alpha_t(st, np.column_stack([x[4] for x in top5]))
 
     f1 = float(st.mean()); t_ = tstat(st)
