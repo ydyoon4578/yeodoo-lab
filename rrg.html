@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="여두 전략 랩 — 전략 랩 518종목의 S&amp;P 500 대비 상대강도 4분면(RRG) 주간 판. 위치 서술 전용 — 회전·주도 칸의 예측력은 사전등록 검정에서 기각.">
+<meta name="description" content="여두 전략 랩 — S&amp;P 500·NASDAQ 100 구성 종목을 각 지수 대비 상대강도 4분면(RRG)에 놓은 주간 판 두 개. 위치 서술 전용 — 회전·주도 칸의 예측력은 사전등록 검정에서 기각.">
 <script>try{var s=localStorage.getItem('yeouido-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}</script>
 <title>여두 · 종목 RRG 로테이션</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232A2621'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 8' fill='none' stroke='%23FFBC00' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.4' fill='%23FFBC00'/%3E%3C/svg%3E">
@@ -13,10 +13,10 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="여두 전략 랩">
 <meta property="og:title" content="여두 · 종목 RRG 로테이션">
-<meta property="og:description" content="518종목을 S&amp;P 500 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
+<meta property="og:description" content="S&amp;P 500·NASDAQ 100 구성 종목을 각 지수 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 지수·섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="여두 · 종목 RRG 로테이션">
-<meta name="twitter:description" content="518종목을 S&amp;P 500 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
+<meta name="twitter:description" content="S&amp;P 500·NASDAQ 100 구성 종목을 각 지수 대비 주간 상대강도의 수준·기울기 4분면에 놓은 판 — 지수·섹터·전략 보유별로 보고, 지난 52주를 되감는다. 판정: 기각(위치 서술 전용).">
 <!-- SHELLFONT:BEGIN --><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><!-- SHELLFONT:END -->
 <style>
   :root{
@@ -318,7 +318,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <!-- NAVCSS:END -->
 
 <style>
-  /* 종목 RRG 판 — 518종 × S&P 500(PR) 주간. 사전등록 PREREG-2026-09-23-RRGSTOCK · 판정 기각.
+  /* 종목 RRG 판 — 지수별 두 판(S&P 500 종목 × S&P 500 · NASDAQ 100 종목 × NASDAQ 100) 주간.
+     사전등록 PREREG-2026-09-23-RRGSTOCK(518종 × S&P 500) · 판정 기각. NASDAQ 100 판은 따로 검정하지 않았다.
      🚨 사분면에 색을 입히지 않는다. RRG 관례는 주도=초록·부진=빨강인데, 그러면 «주도가 좋다» 로
        읽힌다 — 이 랩이 잰 다음 주 성적은 **정반대**였다(주도 +0.050% · 부진 +0.174%).
        사분면은 위치와 모서리 글자로만 가르고, 색은 «고른 종목 vs 나머지» 한 가지에만 쓴다.
@@ -351,6 +352,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     color:var(--ink-2);font:inherit;font-size:.84rem;cursor:pointer}
   .ctl button:hover{border-color:var(--accent);color:var(--accent)}
   .ctl button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  /* 지수 판 전환 — 두 칸 한 벌. 누른 쪽만 accent(사분면에 색을 안 입히는 것과 같은 이유로 판에도 색을 따로 두지 않는다) */
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .ctl .seg button{border:0;border-radius:0;padding:.36rem .8rem;font-weight:600}
+  .ctl .seg button+button{border-left:1px solid var(--line)}
+  .ctl .seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent)}
+  .seg .sn{font-weight:500;color:var(--muted);margin-left:.35rem;font-variant-numeric:tabular-nums}
   .board{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:1rem;align-items:start}
   .board>*{min-width:0}
   @media(max-width:1060px){.board{grid-template-columns:1fr}}
@@ -570,13 +577,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <div class="wrap">
   <header class="pghead">
     <h1>종목 RRG 로테이션</h1>
-    <p class="sub" id="sub">518종 · S&amp;P 500(PR) 대비 · 주간 · 되돌아보기 12주</p>
+    <p class="sub" id="sub">S&amp;P 500 · NASDAQ 100 — 각 지수 대비 · 주간 · 되돌아보기 12주</p>
   </header>
 
   <section class="vbox" id="vbox" aria-label="판정"><p class="muted">불러오는 중…</p></section>
 
   <!-- 필터는 한 줄로, 그 아래 전부(그림·칸·표)를 같은 조각으로 다시 그린다. -->
   <div class="ctl" id="ctl" hidden>
+    <div class="seg" id="seg" role="group" aria-label="지수 판"></div>
     <label>보기
       <select id="view" aria-label="보기 대상"></select>
     </label>
@@ -624,7 +632,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <script>
 (function(){
   'use strict';
-  var D=null, IDX={}, SEL=[], SELSET={}, PIN={}, W=0, TAIL=5, VIEW='all', SECMED=false, TIMER=null;
+  var D=null, IDX={}, ALLT={}, BD='spx', SEL=[], SELSET={}, PIN={}, W=0, TAIL=5, VIEW='all', SECMED=false, TIMER=null;
   var SORT={k:'q',dir:1}, DRAWN=[], HOV=null;
   var Q=['회복','주도','약화','부진'], QEN={'회복':'Improving','주도':'Leading','약화':'Weakening','부진':'Lagging'};
   // 표의 사분면 정렬 차례 — 시계 방향(회복→주도→약화→부진)
@@ -647,14 +655,17 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function readHash(){
     var h=(location.hash||'').replace(/^#/,''), o={};
     h.split('&').forEach(function(p){ var k=p.split('='); if(k[0]) o[k[0]]=decodeURIComponent(k.slice(1).join('=')); });
+    if(o.b && D.boards[o.b]) useBoard(o.b);
     if(o.v) VIEW=o.v;
-    if(o.p) o.p.split(',').forEach(function(t){ if(IDX[t]!=null) PIN[t]=1; });
+    // 고정 종목은 두 판 어디든 있으면 기억한다 — 판을 바꾸면 그 판에 있는 것만 그린다
+    if(o.p) o.p.split(',').forEach(function(t){ if(ALLT[t]) PIN[t]=1; });
     if(o.tl!=null && !isNaN(+o.tl)) TAIL=Math.max(0,Math.min(12,+o.tl));
     if(o.w!=null && !isNaN(+o.w)) W=Math.max(0,Math.min(D.weeks.length-1,+o.w));
     if(o.sm==='1') SECMED=true;
   }
   function writeHash(){
-    var p=[]; if(VIEW!=='all') p.push('v='+encodeURIComponent(VIEW));
+    var p=[]; if(BD!==(D.default||'spx')) p.push('b='+BD);
+    if(VIEW!=='all') p.push('v='+encodeURIComponent(VIEW));
     var pins=Object.keys(PIN); if(pins.length) p.push('p='+pins.join(','));
     if(TAIL!==5) p.push('tl='+TAIL);
     if(W!==D.weeks.length-1) p.push('w='+W);
@@ -692,8 +703,12 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var ex=function(q){ var o=qd[q]||{}; return o.mean==null?'—':sgn(o.mean,3)+'%'; };
     // ⚠ 문장을 span 하나로 감싼다 — .vt 는 flex 라 글자 조각·<b> 가 따로 항목이 되어 사이마다 gap 이 벌어진다
     h+='<p class="vt"><span class="vchip">'+esc(T.verdict)+'</span><span>이 판은 <b>위치</b>를 보여 줄 뿐입니다 — 회전도, 주도 칸도 다음 주를 말하지 않았습니다</span></p>';
+    var bl=esc(D.boards[BD].label);
     h+='<ul>'+
-      '<li>✅ <b>지금 이 종목이 S&amp;P 500 대비 어디쯤인가</b> — 12주 상대강도의 수준(가로)과 기울기(세로). 서술입니다.</li>'+
+      '<li>✅ <b>지금 이 종목이 '+bl+' 대비 어디쯤인가</b> — 12주 상대강도의 수준(가로)과 기울기(세로). 서술입니다.</li>'+
+      // ⚠ 검정은 518종 × S&P 500 하나다. 다른 판에서 그 수를 그 판의 것처럼 읽히게 두지 않는다
+      (BD!=='spx'?'<li>ⓘ <b>'+bl+' 판은 따로 검정하지 않았습니다</b> — 아래 ❌ 줄의 수치는 518종 × S&amp;P 500 대비 검정입니다. '+
+        '다만 회전이 산식에서 나온다는 것(첫 ❌)은 자료가 아니라 산식의 성질이라 이 판에도 똑같이 적용됩니다.</li>':'')+
       '<li>❌ <b>다음에 어디로 가나</b> — 시계 방향 회전은 산식이 그립니다. 종목마다 주간 수익을 뒤섞어 로테이션을 없앤 자료도 '+
         pct(f3.null_median)+' 시계로 돌았고, 실제는 <b>'+pct(f3.real)+'</b>로 오히려 낮았습니다(뒤섞기 '+esc(f3.n_shuffle)+'회).</li>'+
       '<li>❌ <b>주도 칸을 사라</b> — 다음 주 S&amp;P 500 대비 초과가 주도 '+ex('주도')+' · 부진 <b>'+ex('부진')+'</b>. '+
@@ -725,21 +740,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   // ── 컨트롤 ──────────────────────────────────────────────────────────────
-  function controls(){
-    var o='<option value="all">전체 518종</option><optgroup label="섹터">';
+  // ── 지수 판 ── 판마다 종목·섹터 중앙값·벤치가 다르다. 주·섹터 이름·전략 명단은 두 판이 같이 쓴다
+  function useBoard(k){
+    if(!D.boards[k]) k=D.default||'spx';
+    BD=k; var b=D.boards[k];
+    D.stocks=b.stocks; D.sector_med=b.sector_med; D.n=b.n; D.bench=b.bench;
+    IDX={}; D.stocks.forEach(function(s,i){ IDX[s.t]=i; });
+  }
+  function header(){
+    $('sub').textContent=D.boards[BD].label+' '+D.n+'종 · '+D.bench+' 대비 · '+D.freq+' · 되돌아보기 '+D.look+'주 · 기준 주 '+D.as_of+
+      (D.partial?' (이번 주 '+D.partial+'까지는 아직 안 끝나 뺐습니다)':'');
+  }
+  // 판을 바꾸면 다시 채운다 — 섹터·전략 옵션의 종목 수는 그 판 안에서 센다(0종이면 옵션을 안 낸다)
+  function fillOptions(){
+    var o='<option value="all">전체 '+D.stocks.length+'종</option><optgroup label="섹터">';
     D.sectors.forEach(function(s,i){
       var n=0; D.stocks.forEach(function(x){ if(x.s===i) n++; });
-      o+='<option value="s:'+i+'">'+esc(secName(i))+' ('+n+')</option>';
+      if(n) o+='<option value="s:'+i+'">'+esc(secName(i))+' ('+n+')</option>';
     });
-    o+='</optgroup><optgroup label="전략 랩 보유 ('+D.strategies.length+'개 전략)">';
-    D.strategies.forEach(function(s){
-      o+='<option value="k:'+esc(s.sid)+'">'+esc(s.name)+' ('+s.t.length+')</option>';
-    });
+    var ks=[];
+    D.strategies.forEach(function(s){ var n=0; s.t.forEach(function(t){ if(IDX[t]!=null) n++; }); if(n) ks.push([s,n]); });
+    o+='</optgroup><optgroup label="전략 랩 보유 ('+ks.length+'개 전략)">';
+    ks.forEach(function(q){ o+='<option value="k:'+esc(q[0].sid)+'">'+esc(q[0].name)+' ('+q[1]+')</option>'; });
     o+='</optgroup>';
     $('view').innerHTML=o;
     var dl=''; D.stocks.forEach(function(s){ dl+='<option value="'+esc(s.t)+'">'+esc(s.n)+'</option>'; });
     $('tks').innerHTML=dl;
+    var h='';
+    ['spx','ndx'].forEach(function(k){ var b=D.boards[k]; if(!b) return;
+      h+='<button type="button" data-b="'+k+'" aria-pressed="'+(k===BD?'true':'false')+'">'+esc(b.label)+'<span class="sn">'+b.n+'종</span></button>'; });
+    $('seg').innerHTML=h;
+  }
+  function controls(){
+    fillOptions();
     $('wk').max=String(D.weeks.length-1);
+    $('seg').addEventListener('click',function(e){
+      var b=e.target.closest('button[data-b]'); if(!b || b.getAttribute('data-b')===BD) return;
+      stop(); useBoard(b.getAttribute('data-b')); fillOptions(); header(); vbox(); update();
+    });
     $('view').addEventListener('change',function(){ VIEW=this.value; update(); });
     $('q').addEventListener('change',function(){
       var t=String(this.value||'').trim().toUpperCase();
@@ -778,7 +816,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function pt(s,k){ var x=s.x[k], y=s.y[k]; return (x==null||y==null)?null:[dec(x),dec(y)]; }
   function domain(){
     // 100 을 가운데 두고 대칭으로 — 네 칸이 늘 같은 크기라야 «어느 칸에 몰렸나» 가 눈에 맞는다
-    // «전체» 보기면 518종 머리를 늘 넣는다 — 종목 하나를 고정했다고 그림이 그 종목으로 확대되면 맥락이 사라진다
+    // «전체» 보기면 그 판 종목 머리를 늘 넣는다 — 종목 하나를 고정했다고 그림이 그 종목으로 확대되면 맥락이 사라진다
     var m=0, span=function(i,t0){
       var s=D.stocks[i];
       for(var k=Math.max(0,W-t0);k<=W;k++){
@@ -818,7 +856,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     DRAWN=[];
     var SECLB=[];   // 섹터 이름 글자 — 아래 배치기가 종목 글자 뒤에 자리를 준다
     var inD=function(p){ return p && Math.abs(p[0]-100)<=H && Math.abs(p[1]-100)<=H; };
-    // ① 나머지 — 회색 점. 강조가 없으면 518종 전부가 그림의 주인공이라 조금 진하게
+    // ① 나머지 — 회색 점. 강조가 없으면 그 판 종목 전부가 그림의 주인공이라 조금 진하게
     var all=!SEL.length;
     D.stocks.forEach(function(s,i){
       if(SELSET[i]) return;
@@ -878,7 +916,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       }
     });
     g+='<circle class="hv" id="hvr" r="8" cx="0" cy="0" visibility="hidden"/></g>';
-    box.innerHTML='<svg class="rrg" id="svg" viewBox="0 0 '+S+' '+S+'" width="'+S+'" height="'+S+'" role="img" aria-label="종목 RRG — '+
+    box.innerHTML='<svg class="rrg" id="svg" viewBox="0 0 '+S+' '+S+'" width="'+S+'" height="'+S+'" role="img" aria-label="종목 RRG — '+esc(D.boards[BD].label)+' 판 · '+
       esc(fmtW(W))+' 기준, 가로 RS-Ratio, 세로 RS-Mom. 같은 값은 오른쪽 표에 있습니다.">'+g+'</svg>';
     var svg=$('svg');
     svg.addEventListener('pointermove',onMove);
@@ -902,7 +940,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     return null;
   }
-  // 호버는 고리 하나만 옮긴다 — 518점을 다시 그리지 않는다
+  // 호버는 고리 하나만 옮긴다 — 수백 점을 다시 그리지 않는다
   function setHover(i){
     HOV=i; var ring=$('hvr'), d=null;
     if(i!=null) for(var z=0;z<DRAWN.length;z++){ if(DRAWN[z].i===i){ d=DRAWN[z]; break; } }
@@ -943,14 +981,14 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function legend(){
     var h='';
     if(SEL.length) h+='<span><i class="a"></i>고른 종목 '+SEL.length+'개 — 꼬리는 지난 '+TAIL+'주(옛 주일수록 옅게)</span><span><i class="c"></i>나머지</span>';
-    else h+='<span><i class="c"></i>518종 전부 · '+esc(fmtW(W))+' — 보기를 고르거나 점을 누르면 꼬리가 나옵니다</span>';
+    else h+='<span><i class="c"></i>'+esc(D.boards[BD].label)+' '+D.stocks.length+'종 전부 · '+esc(fmtW(W))+' — 보기를 고르거나 점을 누르면 꼬리가 나옵니다</span>';
     if(SECMED) h+='<span><i class="d"></i>섹터 중앙값(소속 종목 점의 중앙값)</span>';
     h+='<span>RRG 가 말하는 시계 방향: 회복 → 주도 → 약화 → 부진 — <b>산식이 만드는 방향입니다</b></span>';
     $('lgd').innerHTML=h;
   }
 
   // ── 네 칸 + 표 ──────────────────────────────────────────────────────────
-  // 칸·표의 대상 — «전체» 보기면 늘 518종(고정한 종목은 표에서 표시만), 아니면 고른 종목
+  // 칸·표의 대상 — «전체» 보기면 늘 그 판 전체(고정한 종목은 표에서 표시만), 아니면 고른 종목
   function LIST(){ return VIEW==='all'?D.stocks.map(function(_,i){return i;}):SEL.slice(); }
   function tiles(){
     var list=LIST(), c={'회복':0,'주도':0,'약화':0,'부진':0}, n=0;
@@ -1037,15 +1075,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }
 
   function init(d){
-    D=d; D.stocks.forEach(function(s,i){ IDX[s.t]=i; });
+    D=d; ALLT={};
+    Object.keys(D.boards).forEach(function(k){ D.boards[k].stocks.forEach(function(s){ ALLT[s.t]=1; }); });
+    useBoard(D.default||'spx');
     W=D.weeks.length-1;
     readHash();
-    $('sub').textContent=D.n+'종 · '+D.bench+' 대비 · '+D.freq+' · 되돌아보기 '+D.look+'주 · 기준 주 '+D.as_of+
-      (D.partial?' (이번 주 '+D.partial+'까지는 아직 안 끝나 뺐습니다)':'');
-    vbox(); controls();
+    header(); vbox(); controls();
     $('ctl').hidden=false; $('board').hidden=false;
-    $('foot').innerHTML='종목 명단은 <a href="explorer.html">전략 랩</a> 202개 전략의 «지금 보유» 를 합친 것이고, 실측해 보니 랩 유니버스 518종 전부입니다. '+
-      '보기 목록에는 '+D.wide_cut+'종 이하를 쥔 전략 '+D.strategies.length+'개만 싣습니다(그보다 많이 쥔 '+D.wide_n+'개는 «전체» 와 같은 그림이라 뺐습니다). '+
+    $('foot').innerHTML='종목은 <a href="explorer.html">전략 랩</a> 유니버스 '+D.universe_n+'종을 지수별로 나눈 것입니다 — S&amp;P 500 판 '+
+      D.boards.spx.n+'종 · NASDAQ 100 판 '+D.boards.ndx.n+'종('+D.both_n+'종은 두 판 모두 · 판마다 그 지수 대비로 따로 잽니다). '+
+      esc(D.member_note)+' 보기 목록에는 '+D.wide_cut+'종 이하를 쥔 전략만 싣습니다(그보다 많이 쥔 '+D.wide_n+'개는 «전체» 와 같은 그림이라 뺐습니다). '+
       esc(D.axis_note)+' '+esc(D.px_note)+' 가격 기준일 '+esc(D.px_as_of)+'.';
     update();
     var rt=null; window.addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(draw,120); });
