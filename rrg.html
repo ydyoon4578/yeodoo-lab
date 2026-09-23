@@ -956,7 +956,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
          '<span class="ts">'+(n?Math.round(c[q]/n*100):0)+'%</span></div></div>';
     });
     $('tiles').innerHTML=h;
-    $('tcap').textContent=(VIEW==='all'?'전체 '+list.length+'종':'고른 '+list.length+'종')+' · '+fmtW(W)+' 기준'+
+    // 전략 보기면 보유 명단의 기준일을 같이 적는다 — 명단은 그 전략의 리밸 날짜 것이라 그림의 기준 주와 다르다
+    var stAsof='';
+    if(VIEW.indexOf('k:')===0) D.strategies.forEach(function(s){ if('k:'+s.sid===VIEW && s.as_of) stAsof=' · 보유 명단 '+s.as_of+' 기준'; });
+    $('tcap').textContent=(VIEW==='all'?'전체 '+list.length+'종':'고른 '+list.length+'종')+stAsof+' · '+fmtW(W)+' 위치'+
       (n<list.length?' · 계산 불가 '+(list.length-n)+'종(상장 24주 미만 등)':'')+
       ' · 1주·4주 %는 '+D.weeks[D.weeks.length-1]+'까지의 절대 수익 · 행을 누르면 그림에 고정';
   }
