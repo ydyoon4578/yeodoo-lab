@@ -45,8 +45,25 @@ TURN_HI = 10.0      # 연 회전 배수 상한(사용자 결정과 같은 값)
 SUSPECT = ("x-cap", "x-ncap", "x-shiss", "x-capw", "x-capndx", "x-demega")
 
 
-def fund_monthly(full=False):
+def fund_monthly(full=False, parts=False, basis="tr"):
     """펀드 월별 **초과**(바스켓 TR − S&P 500 TR). 확정 잣대 B 와 같은 정의다.
+
+    basis="pr" — 확정 잣대가 아니라 **옛 잣대(PR−PR)** 로 잰다. 바스켓은 r_pr,
+      지수는 배당을 안 더한 ret_pct 다.
+      🚨 **한쪽만 PR 로 바꾸지 않는다.** 바스켓만 TR 로 두고 지수를 PR 로 내리면 초과가
+        배당수익률만큼(연 1.5~2%p) 통째로 부풀어 오른다 — 그것은 전략의 성적이 아니다.
+        사내 원문서도 옛 판을 「PR−PR」로 적었지 한쪽만 바꾼 적이 없다.
+      ⚠ 인용할 때 **반드시 「PR 기준」이라고 밝힌다.** 확정 잣대 문서가 「잣대를 빼고
+        인용하면 안 된다」고 못박았고, TR 전환은 사전등록 변경이력(2026-09-18)에 있다.
+        이 선택지는 그 결정을 뒤집는 것이 아니라 **옛 잣대로도 보게** 하는 것이다.
+      ⚠ 달 집합은 두 잣대가 같다(배당 자료가 있는 달로 맞춘다) — 안 그러면 PR·TR 비교가
+        「다른 기간 둘의 차」가 된다.
+
+    parts=True — 초과 하나가 아니라 **펀드·지수·초과 세 열**(DataFrame)을 준다.
+      종전에는 두 조각을 만들어 놓고 버렸다. 연도별 표(지수 / 펀드 / 초과)를 그리려면
+      조각이 필요한데 그것을 밖에서 다시 만들면 **같은 계열의 두 번째 사본**이 생긴다 —
+      이 저장소가 반복해서 겪은 사고다. ⚠ 초과 열은 여기서 만든 그 값을 그대로 싣는다
+      (밖에서 펀드−지수를 다시 빼지 않는다).
 
     🚨 2026-09-21 — **MAX_YEARS = 10 을 여기서 건다.** 사용자 지적:
       «우량성장선별 30 이건 백테스팅 최근 10년만 하라니깐 왜 아직도 2014부터야»
@@ -62,7 +79,8 @@ def fund_monthly(full=False):
     X = pd.read_csv(os.path.join(D18,
         r"01_이관묶음\01_우량성장선별_산출물\idx_div_monthly_20260918.csv"))
     idiv = dict(zip(X.iloc[:, 0].astype(str), X.iloc[:, 4]))
-    ret = {m: dict(zip(g.tkr, g.r_tr / 100.0)) for m, g in qg.groupby("ym")}
+    _rc = "r_pr" if basis == "pr" else "r_tr"
+    ret = {m: dict(zip(g.tkr, g[_rc] / 100.0)) for m, g in qg.groupby("ym")}
     sel, forms = {}, []
     for f, g in qg[qg.top30 == "Y"].groupby("ym"):
         if int(f[5:7]) in (3, 6, 9, 12):
@@ -92,8 +110,14 @@ def fund_monthly(full=False):
             z = sum(w.values()); w = {t: v / z for t, v in w.items()}
         prev = w
     ms = sorted(m for m in out if m in ipr and m in idiv and pd.notna(ipr[m]))
-    S = pd.Series([out[m] - (ipr[m] + idiv[m]) for m in ms],
-                  index=pd.PeriodIndex(ms, freq="M"), dtype="float64")
+    _ix = pd.PeriodIndex(ms, freq="M")
+    # 지수: 확정 잣대는 PR + 배당(= TR), 옛 잣대는 PR 그대로. 바스켓 쪽은 위 _rc 가 짝을 맞춘다.
+    _bm = {m: (ipr[m] if basis == "pr" else ipr[m] + idiv[m]) for m in ms}
+    S = pd.Series([out[m] - _bm[m] for m in ms], index=_ix, dtype="float64")
+    if parts:
+        S = pd.DataFrame({"fund": [out[m] for m in ms],
+                          "bench": [_bm[m] for m in ms],
+                          "excess": S.values}, index=_ix)
     if full:
         return S
     import sys as _s, os as _o
