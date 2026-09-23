@@ -1935,6 +1935,18 @@ def main() -> int:
         _r["note"] = ((_r.get("note") + " ") if _r.get("note") else "") + _add
     print("  🚨 거장 전략 압축 %d종 숨김(사용자 결정 2026-09-23) — 남김 %s" % (len(GURU_COMPRESS), ", ".join(sorted(GURU_KEEP))))
 
+    # ── 🚨 2026-09-24 사용자 결정 — 나스닥 100 시총가중 계열 내림 ──────────────────────
+    #   «나스닥 100시총가중 전략도 여러개인데 다 없애버려». 이 여섯은 2026-08-25 «시총가중 개별 상한 전부
+    #   삭제» 로 한 번 내렸다가 09-21 일괄 해제(위 KEEP_HIDDEN 만 남김) 때 되살아났다.
+    #   이번 지시는 **NASDAQ 100 쪽만**이다 — 풀 전체 시총가중(t-x-capw·cap10·cap5·cap45·cap3)은 그대로 둔다.
+    #   t-x-capndx 는 풀에 NDX 특별 리밸런스 규칙을 건 판인데 이름이 «NASDAQ 100 …» 이고, 이 창에서
+    #   트리거가 한 번도 효과를 안 내 t-x-capw 와 수치가 전부 같다(중복) — 같이 내린다.
+    #   ⚠ 성적 판정이 아니다(샤프 0.82~0.89 · 전부 측정만). 정의·PIT 레그·다중검정 분모·원장
+    #     (build/tested_not_published.json 의 rehidden)은 그대로 — 막는 것은 게시뿐이다.
+    NDX_CAP_DROP = {"t-x-ncapw", "t-x-ncap10", "t-x-ncap5", "t-x-ncap45", "t-x-ncapndx", "t-x-capndx"}
+    HIDE_SIDS = HIDE_SIDS | NDX_CAP_DROP
+    print("  🚨 나스닥 100 시총가중 %d종 숨김(사용자 결정 2026-09-24)" % len(NDX_CAP_DROP))
+
     _found = ({r["sid"] for r in rows if r["sid"] in HIDE_SIDS}
               | {sid for sid in HIDE_SIDS if sid in _hidden_sids})
     _hid2 = [(r["name"], r["role"]) for r in rows if r["sid"] in HIDE_SIDS]
