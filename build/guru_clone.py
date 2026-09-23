@@ -146,8 +146,13 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         return "%04d-%02d" % (y, mo)
 
     # 분기별 목표 바스켓: 컨빅션(운용사 포트폴리오 내 비중) × 컨센서스(보유 운용사 수)
+    # 🚨 2026-09-23 — 퀀트·분산 축(refresh_13f.NO_OVERLAP)은 컨센서스에서 뺀다(2026-08-19 사용자 결정의 누락분).
+    #   유니버스 거의 전부를 들고 있어 보유 운용사 수를 모든 종목에 똑같이 +1 한다.
+    from refresh_13f import NO_OVERLAP                # build/ 는 모듈 머리에서 이미 sys.path 에 있다
+    _nov = {str(c) for c in NO_OVERLAP}
     basket = {}
     for q, mm in (G.get("holdings") or {}).items():
+        mm = {c: h for c, h in mm.items() if c not in _nov}
         if len(mm) < MIN_MGR:
             continue                 # 운용사가 적은 초기 분기는 '컨센서스'가 성립하지 않는다
         score, nheld = {}, {}
