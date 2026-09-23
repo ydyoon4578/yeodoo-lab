@@ -169,7 +169,7 @@ def main() -> int:
                  if x["m"] in bm and JUDGE[0] <= x["m"] <= JUDGE[1]]
         f0_corr = float(np.corrcoef([a for a, b in pairs], [b for a, b in pairs])[0, 1])
         f0_gap = float(np.mean([a - b for a, b in pairs]))
-        f0_ok = f0_corr >= 0.98 and abs(f0_gap) <= 0.30
+        f0_ok = bool(f0_corr >= 0.98 and abs(f0_gap) <= 0.30)     # numpy 불리언은 JSON 이 못 쓴다
         j0 = next(k for k, x in enumerate(rows) if x["m"] >= JUDGE[0])
         jl = next(k for k, x in enumerate(rows) if x["m"] >= LONG0)
         print("\n" + "=" * 74)
@@ -220,8 +220,9 @@ def main() -> int:
             x = rows[-1]
             act = sorted(((t, lw.get(t, 0.0) - x["wb"][t]) for t in x["names"]), key=lambda z: -z[1])
             V[cap] = {"metrics": s, "bind": round(bind, 2), "bind_w": round(100 * b[2], 2),
-                      "placebo_ir": round(pl["ir"], 4), "lam_mult": round(mult, 4), "saturated": sat,
-                      "f1": f1, "f2": f2, "f3": f3, "f4": f4, "f5": f5, "f6": f6, "verdict": verdict,
+                      "placebo_ir": round(pl["ir"], 4), "lam_mult": round(mult, 4), "saturated": bool(sat),
+                      "f1": bool(f1), "f2": bool(f2), "f3": bool(f3), "f4": bool(f4), "f5": bool(f5), "f6": bool(f6),
+                      "verdict": verdict,
                       "active_median": round(100 * sorted(a)[len(a) // 2], 2),
                       "long": {"start": rows[jl]["m"], "n": sl["n"], "ir": round(sl["ir"], 4),
                                "t": round(sl["t"], 3), "ir_net": round(sl["ir_net"], 4)},
