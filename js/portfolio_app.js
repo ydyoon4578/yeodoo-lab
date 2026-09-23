@@ -1316,17 +1316,58 @@
       '<td class="tnum ' + sgn(totBp) + '"><b>' + (totBp > 0 ? '+' : '') + totBp.toFixed(1) + '</b></td></tr>');
     h.push('</tbody></table></div>');
 
-    var series = [];
-    Object.keys(perf).sort().forEach(function (sname) {
-      var pts = perf[sname].curve
-        .filter(function (c) { return c[3]; })
-        .map(function (c) { return [PF.dates[c[0]], (c[1] - c[2]) / c[3] * 100]; });
-      if (pts.length) series.push([sname, pts]);
+    /* ── 전략별 누적 초과 — 두 눈금 (2026-09-23) ─────────────────────────────
+       🚨 사용자 «nav 기여랑 왜 아래 차트값이랑 달라» → «차트에 NAV 기여(bp) 보기 단추를 붙여».
+         분모가 다르다: 표의 NAV 기여 = 초과 ÷ **펀드 NAV**, 이 그림 = 초과 ÷ **그 전략의 매수원금**.
+         같은 초과를 NAV 로 나눈 눈금을 단추로 붙인다 — 끝값이 표의 «NAV 기여(bp)» 와 같아야 한다.
+       ⚠ NAV·환율은 표와 같은 기준일 값(F.nav · F.fx)으로 전 구간을 나눈다. 날짜별 NAV 이력이 없고,
+         표와 끝값이 맞는 것이 이 단추의 목적이다(«지금 NAV 에 대한 누적 기여»).
+       ⚠ bp 는 전략끼리 분모가 같아 더할 수 있다 — 전략이 둘 이상이면 «합계» 선(점선)을 긋는다(표의
+         합계 행과 같다). % 눈금에는 긋지 않는다 — 분모가 전략마다 달라 더하면 뜻이 없다. */
+    var LV = {
+      pct: { lab: '초과수익(%, 매수원금 대비)', f: function (c) { return (c[1] - c[2]) / c[3] * 100; },
+             note: '초과손익 ÷ 그 전략의 매수원금 — 끝값 = 표의 수익률 − BM' },
+      bp:  { lab: 'NAV 기여(bp)', f: function (c) { return (c[1] - c[2]) * F.fx / F.nav * 1e4; },
+             note: '초과손익 × 기준일 환율 ÷ 펀드 NAV — 끝값 = 표의 NAV 기여' }
+    };
+    var lnames = Object.keys(perf).sort().filter(function (sname) {
+      return perf[sname].curve.some(function (c) { return c[3]; });
     });
-    if (series.length)
-      h.push('<div class="chart"><div class="chtitle">전략별 누적 초과수익(%, 매수원금 대비)' +
-        '<span class="hnote">빨간 0선 = 지수와 같은 성과</span></div>' +
-        svgLines(series, series.map(function (s) { return s[0].slice(0, 16); }), null, null, 'var(--hot)') + '</div>');
+    if (lnames.length) {
+      h.push('<div class="chart" id="lines-' + slug + '"><div class="chtitle">전략별 누적 초과 <span class="barbtns">' +
+        Object.keys(LV).map(function (k) {
+          return '<button type="button" class="bbt" data-v="' + k + '"' +
+                 (k === 'pct' ? ' aria-pressed="true"' : '') + '>' + esc(LV[k].lab) + '</button>';
+        }).join('') + '</span><span class="hnote linenote">' + esc(LV.pct.note) + ' · 빨간 0선 = 지수와 같은 성과</span></div>' +
+        '<div class="linebody"></div></div>');
+      // 그리기는 DOM 이 붙은 뒤에 한다 — 아래 box.innerHTML 다음에서 배선한다(막대와 같은 이유)
+      box._pfLines = {
+        def: 'pct',
+        mk: function (k) {
+          var V = LV[k], series = [];
+          lnames.forEach(function (sname) {
+            var pts = perf[sname].curve.filter(function (c) { return c[3]; })
+              .map(function (c) { return [PF.dates[c[0]], V.f(c)]; });
+            if (pts.length) series.push([sname, pts]);
+          });
+          if (k === 'bp' && series.length > 1) {
+            // 날짜마다 전략 값을 더한다 — 아직 시작 안 한 전략은 0. 한 번 사면 매수원금이 0 으로
+            //   돌아가지 않아(매수분만 센다) 시작한 전략은 그 뒤 모든 날짜에 값이 있다.
+            var tot = {}, ord = [];
+            series.forEach(function (s) {
+              s[1].forEach(function (p) {
+                if (!(p[0] in tot)) { tot[p[0]] = 0; ord.push(p[0]); }
+                tot[p[0]] += p[1];
+              });
+            });
+            ord.sort();
+            series.push(['합계', ord.map(function (d) { return [d, tot[d]]; }), 'var(--ink)', true]);
+          }
+          return { html: svgLines(series, series.map(function (s) { return s[0].slice(0, 16); }), null, null, 'var(--hot)'),
+                   note: V.note };
+        }
+      };
+    }
 
     /* ── 종목별 등락률·기여도 (2026-08-26) ────────────────────────────────
        🚨 사용자 «구성종목별 등락률이나 기여도도 차트로 딱 볼 수 있게». 접이 밖에 둔다 —
@@ -1392,7 +1433,7 @@
       });
       h.push('</tbody></table></div></details>');
     });
-    var _bars = box._pfBars;
+    var _bars = box._pfBars, _lines = box._pfLines;
     box.innerHTML = h.join('');
     var _pdf = el('pdf-' + slug);
     if (_pdf) _pdf.addEventListener('click', function () { printReport(slug); });
@@ -1426,6 +1467,29 @@
       // ⚠ 저장값을 그대로 믿지 않는다 — 눈금 이름이 바뀌면 없는 키로 그리다 죽는다.
       //   실제로 단추가 있는 값일 때만 쓴다.
       draw(want && wrap.querySelector('.bbt[data-v="' + want + '"]') ? want : _bars.def);
+    }
+    if (_lines) {
+      var lw = el('lines-' + slug);
+      var lbody = lw && lw.querySelector('.linebody');
+      var lnote = lw && lw.querySelector('.linenote');
+      var drawL = function (k) {
+        var r = _lines.mk(k);
+        lbody.innerHTML = r.html || '<p class="pnote">이 눈금으로 그릴 값이 없습니다.</p>';
+        if (lnote) lnote.textContent = r.note + ' · 빨간 0선 = 지수와 같은 성과';
+        [].slice.call(lw.querySelectorAll('.bbt')).forEach(function (b2) {
+          b2.setAttribute('aria-pressed', b2.dataset.v === k ? 'true' : 'false');
+        });
+        try { sessionStorage.setItem('pf.lineview', k); } catch (e) {}
+        // 새로 그린 그림에도 호버 배선을 건다 — 첫 그림은 renderAll 끝의 PFCHARTS 가 걸고,
+        //   단추로 다시 그린 그림은 여기서 건다(이미 걸린 것은 dataset.wired 로 건너뛴다).
+        try { if (window.PFCHARTS) window.PFCHARTS(lbody); } catch (e) {}
+      };
+      [].slice.call(lw.querySelectorAll('.bbt')).forEach(function (b2) {
+        b2.addEventListener('click', function () { drawL(b2.dataset.v); });
+      });
+      var wantL = null;
+      try { wantL = sessionStorage.getItem('pf.lineview'); } catch (e) {}
+      drawL(wantL && lw.querySelector('.bbt[data-v="' + wantL + '"]') ? wantL : _lines.def);
     }
   }
 
