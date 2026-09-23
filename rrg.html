@@ -698,6 +698,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         pct(f3.null_median)+' 시계로 돌았고, 실제는 <b>'+pct(f3.real)+'</b>로 오히려 낮았습니다(뒤섞기 '+esc(f3.n_shuffle)+'회).</li>'+
       '<li>❌ <b>주도 칸을 사라</b> — 다음 주 S&amp;P 500 대비 초과가 주도 '+ex('주도')+' · 부진 <b>'+ex('부진')+'</b>. '+
         '주도가 오히려 나빴습니다. 그 차이도 주 단위로 묶으면 t '+sgn(f5.t_clustered,2)+'로 0과 구별되지 않습니다.</li>'+
+      // 섹터 ETF 판(SECRRG) — «섹터 로테이션에 쓰면?» 의 답. 수치는 빌더가 _secrrg.json 에서 옮겨 온 것이다
+      (D.test_sector?('<li>❌ <b>섹터 로테이션에 쓰면</b> — SPDR 섹터 9종 주간 판도 '+esc(D.test_sector.verdict)+
+        '입니다. 주도 섹터만 들면 9종 동일가중에 연 '+sgn(D.test_sector.ann_excess_pp,2)+'%p(t '+sgn(D.test_sector.t,2)+')로 지고, '+
+        '연 '+Number(D.test_sector.turnover).toFixed(0)+'배 회전이라 편도 0.1%만 떼도 연 <b>'+sgn(D.test_sector.net_ann_excess_pp,1)+'%p</b>입니다.</li>'):'')+
       '</ul>';
     h+='<details><summary>근거 — 사분면별 다음 주 ('+esc(T.window||'')+')</summary>'+
       '<div class="qtw"><table class="qt"><thead><tr><th>사분면</th><th>관측(종목·주)</th><th>다음 주 초과</th><th>승률</th><th>전체 평균 대비</th></tr></thead><tbody>';
@@ -714,7 +718,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '뒤섞은 자료의 시계 방향 비율은 '+pct(f3.null_min)+'~'+pct(f3.null_max)+'(95% '+pct(f3.null_p95)+')였습니다.</p>'+
       '<p class="fine">⚠ «부진이 낫다» 를 전략으로 쓰지 마십시오 — 이 랩의 «주간 반전» 규칙과 같은 현상이고, 그 규칙은 시점정확 백테스트에서 t 4.00 → 1.02로 무너졌습니다.</p>'+
       '<p class="fine">사전등록 <code>build/PREREG-2026-09-23-RRGSTOCK.md</code>(계산 전 커밋 '+esc(T.commit||'')+') · 결과 <code>…-RESULT.md</code> · '+
-      '산식은 팩터 판(PREREG-2026-09-22-RRG, 같은 기각)과 같습니다.</p></details>';
+      '산식은 팩터 판(PREREG-2026-09-22-RRG, 같은 기각)과 같습니다.'+
+      (D.test_sector?' 섹터 판은 <code>PREREG-2026-09-23-SECRRG</code>(계산 전 커밋 '+esc(D.test_sector.commit||'')+') · '+esc(D.test_sector.window||'')+'.':'')+
+      '</p></details>';
     $('vbox').innerHTML=h;
   }
 
