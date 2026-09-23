@@ -172,6 +172,14 @@ jobs:
       #   빠뜨리면 이 표만 한 판 낡은 달로 남고 아무도 안 알려준다.
       - name: Rebuild month map
         run: python build/month_map.py
+      # 🚨 2026-09-23 — 종목 RRG 판(rrg.html). stocks.json·sd/(이 잡이 방금 구운 격자)과
+      #   strategy_index.json(전략 보유 필터)을 읽으므로 **strategy_index 뒤**다.
+      #   ⚠ 판 자료만 굽는다. 검정(build/rrg_stock.py → _rrg_stock.json)은 사전등록 한 번의
+      #     얼린 기록이라 **여기 붙이지 않는다** — 매일 다시 재면 판정이 날마다 조용히 바뀐다.
+      #   ⚠ 실패해도 잡을 세우지 않는다 — 판 하나가 낡는 것이 518종 커밋 전체를 막는 것보다 낫다.
+      - name: Rebuild RRG board
+        run: python build/rrg_board.py
+        continue-on-error: true
       # 🚨 극단 플래그 감시 — 지수 가격(bench_px)과 매크로(assets)만 읽으므로 여기 둔다.
       #   설계는 사용자 제공 「시장 국면 모니터」 ④, 적중률은 랩 자료로 다시 잰다.
       #   ⚠ 매매 규칙이 아니라 감시판이다 — 켜졌다고 사는 것이 아니다.
@@ -242,7 +250,8 @@ jobs:
             data/signal_lab.json data/home_flow.json data/style_top.json data/splits.json data/shares_yf.json \
             data/home_ind_perf.json \
             data/strategy_index.json data/strategy_charts.json data/strategy_diag.json data/asof.json data/index_ledger.json data/tech_strategies.json data/pairs_strategies.json data/pairs_book.json \
-            data/_restate16.json data/_month_map.json data/_flags.json data/_riskonoff.json data/_riskonoff_daily.json data/_regime_grid.json data/_monitor.json
+            data/_restate16.json data/_month_map.json data/_flags.json data/_riskonoff.json data/_riskonoff_daily.json data/_regime_grid.json data/_monitor.json \
+            data/rrg_board.json
       # 🚨 2026-09-18 — 미국 세션이 빠졌으면 경고(노란 주석)만 남긴다. 실패로 만들지 않는다:
       #   야후 지연은 잡의 결함이 아니고, 백업·재시도 슬롯이 gate 의 --session 으로 다시 받는다.
       - name: Report missing US session

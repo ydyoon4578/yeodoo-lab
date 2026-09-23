@@ -86,6 +86,15 @@
      "src": "model",
      "verdict": "rejected",
      "effort": "M"
+    },
+    {
+     "name": "종목 RRG 로테이션",
+     "file": "rrg.html",
+     "status": "existing",
+     "desc": "518종목 S&P 500 대비 주간 상대강도 4분면 — 위치 서술만, 회전·주도 칸 예측은 기각",
+     "src": "model",
+     "verdict": "rejected",
+     "effort": "M"
     }
    ]
   },
