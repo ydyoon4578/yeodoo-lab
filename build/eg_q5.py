@@ -41,6 +41,13 @@ LAG_Q = 90                # dRoe 분기 공시 지연(랩 FUND_LAG_DAYS)
 COST = 0.0010
 F_T = 1.5
 KEEP_DUAL = {"GOOGL", "FOXA", "NWSA"}
+# 🚨 2026-09-24 — `--pit-gics`: 금융 판정을 **그때의 GICS** 로. 랩의 섹터는 오늘 것뿐이라 GICS 개편이 미래 정보가 됐다 —
+#   2023-03 결제 처리(IT → 금융: V·MA·PYPL…)가 2016~2023 에도 빠졌고, 2016-09 부동산 분리 전의 리츠는 반대로 들어갔으며,
+#   종목별 리츠 편입(AMT 2012 · CCI 2014 · WY 2011)과 끝내 금융이 아니었던 회사(EQIX IT · IRM 산업재)도 섞였다.
+#   적대 검토(PREREG-2026-09-24-EGBEST 1·3차)가 잡았다. 손으로 적은 예외 대신 **월말 위키 표의 GICS 열**(data/pit_gics.json ·
+#   build/pit_gics.py)로 가른다: 그달 표에 있으면 그 분류 · 없으면 가장 가까운 달의 분류 · 그것도 없으면 오늘 분류.
+#   깃발이 없으면 계산·산출물이 한 바이트도 달라지지 않는다(얼린 측정 PREREG-2026-09-23-EG 그대로).
+PIT_GICS = "--pit-gics" in sys.argv
 
 
 def d_(s):
@@ -262,7 +269,60 @@ def main() -> int:
     #   회귀용 표본은 가격 계열이 있는 모든 회사(금융·음(−)자본 제외) — 사전등록 §1
     # 이중클래스의 남기지 않는 쪽(GOOG·FOX·NWS)은 회귀에서도 뺀다 — 같은 회사를 두 번 세지 않게
     universe_all = sorted({t for t in FIRMS if key(t)} - {"GOOG", "FOX", "NWS"})
+    if PIT_GICS:
+        # 같은 회사의 옛 티커가 따로 들어오면 회귀에서 두 번 센다(FI → FISV: 오늘 금융이라 얼린 판에선 빠져 있던 쌍).
+        #   오늘 금융인 별칭 쌍만 하나로 줄인다 — 비금융 쌍(ECHO/SATS)은 얼린 판과 같게 둔다.
+        _u = set(universe_all)
+        universe_all = [t for t in universe_all
+                        if not (key(t) != t and key(t) in _u and (sector(t, key(t)) or "").strip() == "Financials")]
     fin = {t for t in universe_all if (sector(t, key(t)) or "").strip() == "Financials"}
+    PGI, PGT, pg_stat = {}, {}, {"month": 0, "near": 0, "today": 0}
+    if PIT_GICS:
+        PG = json.load(io.open(os.path.join(DATA, "pit_gics.json"), encoding="utf-8"))["months"]
+        for ym_, v in PG.items():
+            fin_t = set(v["fin"])
+            all_t = fin_t | set(v["other"])
+            cikf = {c: (t in fin_t) for t, c in v["cik"].items() if t in all_t}
+            PGI[ym_] = (fin_t, all_t, cikf)
+            for t in all_t:                                   # 회사별 연표(가까운 달 찾기용)
+                PGT.setdefault("t:" + t, []).append((ym_, t in fin_t))
+            for c, f in cikf.items():
+                PGT.setdefault("c:" + c, []).append((ym_, f))
+        pg_lo, pg_hi = min(PG), max(PG)
+
+    def _mdist(a, b):
+        return abs((int(a[:4]) * 12 + int(a[5:7])) - (int(b[:4]) * 12 + int(b[5:7])))
+
+    def fin_at(t, ym, k=None):
+        """ym 월말의 금융 여부. 깃발이 없으면 오늘 GICS(얼린 판) 그대로."""
+        f = (t in fin) if k is None else ((sector(t, k) or "").strip() == "Financials")
+        if not PIT_GICS or ym > pg_hi:
+            return f
+        kk = k or key(t)
+        cks = [c for c in (cikmap.get(t), cikmap.get(kk), cikmap.get((t or "").replace(".", "-"))) if c]
+        tks = [x.replace("-", ".") for x in (t, kk) if x]
+        row = PGI.get(ym)
+        if row:
+            fin_t, all_t, cikf = row
+            for c in cks:
+                if c in cikf:
+                    pg_stat["month"] += 1
+                    return cikf[c]
+            for x in tks:
+                if x in all_t:
+                    pg_stat["month"] += 1
+                    return x in fin_t
+        best = None
+        for key_ in ["c:" + c for c in cks] + ["t:" + x for x in tks]:
+            for ym_, fl in PGT.get(key_, ()):
+                d = _mdist(ym_, ym)
+                if best is None or d < best[0]:
+                    best = (d, fl)
+        if best is not None:
+            pg_stat["near"] += 1
+            return best[1]
+        pg_stat["today"] += 1
+        return f
     cache = {}
 
     def state(t, ym):
@@ -303,7 +363,7 @@ def main() -> int:
     for ym in reg_months:
         y, X, w = [], [], []
         for t in universe_all:
-            if t in fin:
+            if fin_at(t, ym):
                 continue
             s1 = state(t, ym)
             s0 = state(t, mshift(ym, -12))
@@ -340,7 +400,7 @@ def main() -> int:
             raise SystemExit("🚨 %s: 평균 기울기를 낼 회귀가 %d개월뿐이다(최소 %d)" % (m, len([x for x in B if x <= m]), ROLL_MIN))
         e1, e2 = me[m], me[mshift(m, 1)]
         # 예측변수 윈저 기준 = 그 달 회귀 표본 전체의 분포(원문 «most recent winsorized predictors»)
-        Xall = [state(t, m) for t in universe_all if t not in fin]
+        Xall = [state(t, m) for t in universe_all if not fin_at(t, m)]
         Xall = np.array([[s[0], s[1], s[2]] for s in Xall if s])
         lo = np.percentile(Xall, 1, axis=0)
         hi = np.percentile(Xall, 99, axis=0)
@@ -362,7 +422,7 @@ def main() -> int:
             if k is None or not (PX[k][e1] == PX[k][e1]):
                 drops["no_px"] += 1
                 continue
-            if (sector(t, k) or "").strip() == "Financials":
+            if fin_at(t, m, k):
                 drops["fin"] += 1
                 continue
             if t in reassigned and m >= reassigned[t].get("last", "9999"):
@@ -415,6 +475,19 @@ def main() -> int:
                      "n": {"H": res["H"]["n"], "L": res["L"]["n"], "all": len(cand)}, "turn": turns,
                      "slopes": [round(float(v), 5) for v in bb]})
     dt = time.time() - t0
+    if PIT_GICS:
+        # 점수만 내보내고 끝낸다 — 이 판의 성과(Eg 3분위 스프레드 등)는 **계산은 되지만 적지도 찍지도 않는다**.
+        #   EGBEST 가 이 점수를 기저로 쓰기 전에 성과를 보면 안 되기 때문이다(사전등록 PREREG-2026-09-24-EGBEST).
+        sp_ = os.path.join(DATA, "_eg_q5_scores_pitgics.json")
+        io.open(sp_, "w", encoding="utf-8", newline="\n").write(json.dumps(
+            {"note": "eg_q5.py --pit-gics 형성월별 Eg 예측치 E_t. 금융 판정만 시점정확(월말 위키 표의 GICS · data/pit_gics.json) — "
+                     "나머지는 얼린 판(_eg_q5_scores.json)과 같은 식. 점수만 — 성과는 내보내지 않는다.",
+             "prereg": "build/PREREG-2026-09-24-EGBEST.md", "pit_gics": "data/pit_gics.json", "pit_gics_range": [pg_lo, pg_hi],
+             "fin_lookups": pg_stat,
+             "months": SCORES}, ensure_ascii=False, separators=(",", ":")) + "\n")
+        print("→ %s (%d개월 · 월 평균 %.1f종 · 금융 판정 그달 표 %d · 가까운 달 %d · 오늘 %d · %.0f초)" % (
+            sp_, len(SCORES), np.mean([len(v) for v in SCORES.values()]), pg_stat["month"], pg_stat["near"], pg_stat["today"], dt))
+        return 0
 
     sp = np.array([r["spread"] for r in rows])
     lo_ = np.array([r["lo"] for r in rows])
