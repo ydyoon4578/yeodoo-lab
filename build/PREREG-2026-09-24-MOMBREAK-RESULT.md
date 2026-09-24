@@ -4,8 +4,8 @@
 판정: 기각
 규칙: 없음   <!-- 게시하지 않았다 -->
 
-사전등록: `build/PREREG-2026-09-24-MOMBREAK.md` — **계산 전 커밋 `0c3418eb`**
-검정기: `build/mombreak.py` — **실행 전 커밋 `c7c8bbc1`** · 산출물 `data/_mombreak.json`
+사전등록: `build/PREREG-2026-09-24-MOMBREAK.md` — **계산 전 커밋 `265df179`**
+검정기: `build/mombreak.py` — **실행 전 커밋 `4892cf98`** · 산출물 `data/_mombreak.json`
 표본: 랩 `x-mom12` 시점정확 재현 · 형성 2016-08 ~ 2026-07 (120개월 · 63거래일 사건 창이 자료 안에 다 있는 118개월) · 비용 편도 20bp
 
 ---

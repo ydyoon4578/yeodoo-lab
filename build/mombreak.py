@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/mombreak.py — 모멘텀 주도주 부러짐: 이익이 뒷받침하지 않는 승자(SUE ≤ 0) 빼기 → data/_mombreak.json
 
-사전등록: build/PREREG-2026-09-24-MOMBREAK.md (계산 전 커밋 0c3418eb)
+사전등록: build/PREREG-2026-09-24-MOMBREAK.md (계산 전 커밋 265df179)
 
 기저 = 랩 x-mom12(점수 252일 − 21일 · 상위 10 동일가중 · 월말 종가) 시점정확 재현(stoploss.py 와 같은 선택).
 ① 깃발(형성일에 알 수 있던 최근 분기 SUE ≤ 0) 종목이 63거래일 안에 더 부러지나 — 달 안 순열 1,000번.
@@ -202,7 +202,7 @@ def main() -> int:
         ex = np.asarray(r) - rf
         return float(ex.mean() / ex.std(ddof=1) * math.sqrt(12))
     RESULT = {
-        "prereg": "build/PREREG-2026-09-24-MOMBREAK.md", "prereg_commit": "0c3418eb",
+        "prereg": "build/PREREG-2026-09-24-MOMBREAK.md", "prereg_commit": "265df179",
         "window": [M[0]["m"], M[-1]["m"]], "n_months": len(M), "n_event_months": sum(1 for mo in M if mo["full"]),
         "events": {"n": len(ev), "breaks": brk_n, "flagged_n": nf, "unflagged_n": nn,
                    "flag_share": nf / max(1, len(ev)), "sue_coverage": cov,

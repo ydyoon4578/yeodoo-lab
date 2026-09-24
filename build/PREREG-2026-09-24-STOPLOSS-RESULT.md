@@ -4,8 +4,8 @@
 판정: 기각
 규칙: 없음   <!-- 게시하지 않았다 -->
 
-사전등록: `build/PREREG-2026-09-24-STOPLOSS.md` — **계산 전 커밋 `f899af77`**
-검정기: `build/stoploss.py` — **실행 전 커밋 `f84c27cf`** · 산출물 `data/_stoploss.json`
+사전등록: `build/PREREG-2026-09-24-STOPLOSS.md` — **계산 전 커밋 `cbb879ef`**
+검정기: `build/stoploss.py` — **실행 전 커밋 `c52eeadb`** · 산출물 `data/_stoploss.json`
 창: 보유 2016-09 ~ 2026-08 (120개월) · 시점정확 S&P 500 ∪ NASDAQ 100(후보 중앙 483) · 모든 체결 편도 20bp
 
 ---

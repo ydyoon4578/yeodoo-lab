@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/ttemplate.py — 미너비니 트렌드 템플릿 × RS 상위 10 시점정확 검정 → data/_ttemplate.json
 
-사전등록: build/PREREG-2026-09-24-TTEMPLATE.md (계산 전 커밋 f899af77)
+사전등록: build/PREREG-2026-09-24-TTEMPLATE.md (계산 전 커밋 cbb879ef)
 
 매월 말 그때의 S&P 500 ∪ NASDAQ 100 명단(편출 종목 포함)에서 8조건(종가·이평·52주 고저·RS 백분위)을 통과한 종목 중
 RS 상위 10 을 동일가중으로 든다. 핵심 대조는 **같은 RS 상위 10(템플릿 없음)** — 템플릿이 RS 위에 더하는 것이 있나.
@@ -223,7 +223,7 @@ def main() -> int:
             secs[s] = secs.get(s, 0) + c
     tot = sum(secs.values()) or 1
     RESULT = {
-        "prereg": "build/PREREG-2026-09-24-TTEMPLATE.md", "prereg_commit": "f899af77",
+        "prereg": "build/PREREG-2026-09-24-TTEMPLATE.md", "prereg_commit": "cbb879ef",
         "window": [P["rows"][0]["m"], P["rows"][-1]["m"]], "n_months": len(P["rows"]),
         "cost_bp": COST * 1e4,
         "pit": {b: S[b] for b in S}, "pit_cost10": S_lo, "pit_gross": S_g, "retro": Sr, "spx": spx_s,

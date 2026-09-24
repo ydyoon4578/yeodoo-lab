@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/stoploss.py — 12-1 모멘텀 상위 10 에 −8% 손절 시점정확 검정 → data/_stoploss.json
 
-사전등록: build/PREREG-2026-09-24-STOPLOSS.md (계산 전 커밋 f899af77)
+사전등록: build/PREREG-2026-09-24-STOPLOSS.md (계산 전 커밋 cbb879ef)
 
 기저는 랩 `x-mom12` 그대로(점수 = 252일 수익 − 21일 수익 · 상위 10 동일가중 · 월말 종가 리밸런스)를 시점정확 패널에서 다시 만들고,
 그 위에 «처음 산 값 대비 −8% 면 다음 날 종가에 팔고 월말까지 현금» 을 얹는다. 두 판을 **같은 일간 엔진**으로 돌린다.
@@ -191,7 +191,7 @@ def main() -> int:
              for nm, (a_, z_) in {"2020-02~03": ("2020-02", "2020-03"), "2022": ("2022-01", "2022-12")}.items()}
     reb = [v for x in sl for v in x["rebound"]]
     RESULT = {
-        "prereg": "build/PREREG-2026-09-24-STOPLOSS.md", "prereg_commit": "f899af77",
+        "prereg": "build/PREREG-2026-09-24-STOPLOSS.md", "prereg_commit": "cbb879ef",
         "window": [base[0]["m"], base[-1]["m"]], "n_months": len(base), "cost_bp": COST * 1e4, "stop": STOP,
         "f0_anchor": {"ok": F0, "corr": corr, "gap_pm": gap, "n": len(pairs)},
         "base": Sb, "stop8": Ss, "variants": {k: summarize(v) for k, v in var.items()},
