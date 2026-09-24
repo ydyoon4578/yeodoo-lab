@@ -1492,6 +1492,18 @@ def main():
         if len(_ghost) > 20:
             raise SystemExit("유령 거래일이 %d일이나 된다 — 날짜 축이 통째로 어긋났다. "
                              "갱신 중단, 이전본 유지" % len(_ghost))
+        # 🚨 2026-09-24 — **직전 빌드에 정상 거래일로 있던 날**은 유령이 아니다. 다운로드가 그날을
+        #   대부분 종목에서 빠뜨린 것이다(09-23 실행이 09-22 를 지워 MU −2.07% 가 +2.7% 로 찍혔다 —
+        #   일간 수익·히트맵이 전 종목에서 하루씩 어긋났다). 지우지 말고 갱신을 멈춘다.
+        try:
+            _prev_dates = set(json.load(open(os.path.join(HERE, "..", "data", "stocks.json"),
+                                             encoding="utf-8")).get("pxd_dates") or [])
+        except Exception:
+            _prev_dates = set()
+        _real = [d.strftime("%Y-%m-%d") for d in _ghost.index if d.strftime("%Y-%m-%d") in _prev_dates]
+        if _real:
+            raise SystemExit("직전 빌드의 정상 거래일 %s 이 이번 다운로드에서 대부분 비었다 — "
+                             "지우면 일간 수익이 하루씩 어긋난다. 갱신 중단, 이전본 유지" % ", ".join(_real))
         daily = daily[_cov >= 0.5]
     pxd_dates = [d.strftime("%Y-%m-%d") for d in daily.index]
     # 🚨 2026-09-04 — **기준일을 «유령 거래일» 필터 뒤 격자에 맞춘다.**
