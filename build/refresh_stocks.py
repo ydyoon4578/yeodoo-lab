@@ -1703,16 +1703,23 @@ def main():
             def _fmt(x, unit="%", nd=1):
                 return "—" if x is None or x != x else f"{x:+.{nd}f}{unit}" if unit == "%" else f"{x:.{nd}f}"
 
+            # 🚨 2026-09-24 — 스칼라 `.iloc[pos]` 는 한 번에 수 µs 다. _ctx 가 아래 (b) 루프에서 종목마다 거의 모든 봉에 불려
+            #   (518종 × 약 4,450봉) `.iloc` 을 4,300만 번 두드렸고, 이것이 이 단계 CPU 의 대부분이었다(프로파일 실측).
+            #   같은 값을 numpy 배열에서 꺼낸다 — 원소·순서가 같아 출력은 바이트 단위로 같다.
+            _s2a, _s5a, _rsa, _oha = s2b.to_numpy(), s5b.to_numpy(), rsb.to_numpy(), ohb.to_numpy()
+            _hia, _loa, _vma, _v2a, _mha = hi20.to_numpy(), lo20.to_numpy(), vmb.to_numpy(), v20.to_numpy(), mhb.to_numpy()
+
             def _ctx(pos):
                 """마커 시점의 상태값 — 근거 문장 재료."""
-                px_ = _f(dv[pos]); s2 = _f(s2b.iloc[pos]); s5 = _f(s5b.iloc[pos])
+                px_ = _f(dv[pos]); s2 = _f(_s2a[pos]); s5 = _f(_s5a[pos])
+                h20 = _f(_hia[pos]); l20 = _f(_loa[pos]); a20 = _f(_v2a[pos])
                 return {"px": px_, "d200": (px_/s2 - 1)*100 if (px_ == px_ and s2 == s2 and s2) else None,
                         "d50": (px_/s5 - 1)*100 if (px_ == px_ and s5 == s5 and s5) else None,
-                        "rsi": _f(rsb.iloc[pos]), "oh": _f(ohb.iloc[pos]),
-                        "dd20": (px_/_f(hi20.iloc[pos]) - 1)*100 if (px_ == px_ and _f(hi20.iloc[pos]) == _f(hi20.iloc[pos])) else None,
-                        "up20": (px_/_f(lo20.iloc[pos]) - 1)*100 if (px_ == px_ and _f(lo20.iloc[pos]) == _f(lo20.iloc[pos])) else None,
-                        "vr": (_f(vmb.iloc[pos])/_f(v20.iloc[pos])) if (_f(v20.iloc[pos]) == _f(v20.iloc[pos]) and _f(v20.iloc[pos])) else None,
-                        "mh": _f(mhb.iloc[pos])}
+                        "rsi": _f(_rsa[pos]), "oh": _f(_oha[pos]),
+                        "dd20": (px_/h20 - 1)*100 if (px_ == px_ and h20 == h20) else None,
+                        "up20": (px_/l20 - 1)*100 if (px_ == px_ and l20 == l20) else None,
+                        "vr": (_f(_vma[pos])/a20) if (a20 == a20 and a20) else None,
+                        "mh": _f(_mha[pos])}
 
             def _reason(pos, typ, kind):
                 c_ = _ctx(pos); parts = []
@@ -1777,16 +1784,17 @@ def main():
             cwin = pd.Series(dv, index=daily.index)
             piv_lo = cwin == cwin.rolling(W, center=True, min_periods=W).min()
             piv_hi = cwin == cwin.rolling(W, center=True, min_periods=W).max()
+            _plo, _phi = piv_lo.to_numpy(), piv_hi.to_numpy()      # 위 _ctx 와 같은 이유 — 봉마다 .iloc 을 두드리지 않는다
             def _spaced(lst, pos, gap=8):
                 return all(abs(pos - q) >= gap for q in lst)
             for pos in range(K, len(pxd_dates) - K):
                 cc = _ctx(pos)
                 if cc["d200"] is None or cc["rsi"] != cc["rsi"]: continue
-                if bool(piv_lo.iloc[pos]) and cc["d200"] > 0 and _spaced(bms, pos):
+                if bool(_plo[pos]) and cc["d200"] > 0 and _spaced(bms, pos):
                     deep = (cc["dd20"] is not None and cc["dd20"] <= -4.0)
                     if (cc["rsi"] < 48 or deep) and (cc["oh"] != cc["oh"] or cc["oh"] <= 55):
                         bms.append(pos); bmr[pos] = _reason(pos, "L", "pull")
-                if bool(piv_hi.iloc[pos]) and cc["d200"] < 0 and _spaced(sms, pos):
+                if bool(_phi[pos]) and cc["d200"] < 0 and _spaced(sms, pos):
                     high = (cc["up20"] is not None and cc["up20"] >= 4.0)
                     if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
                         sms.append(pos); smr[pos] = _reason(pos, "H", "bounce")
@@ -1840,7 +1848,7 @@ def main():
                 notes = []; div = False
                 pv = _prev_tp(pos, typ)
                 if pv is not None:
-                    pp = _f(dv[pv]); pr = _f(rsb.iloc[pv]); cp = _f(dv[pos]); cr = _f(rsb.iloc[pos])
+                    pp = _f(dv[pv]); pr = _f(_rsa[pv]); cp = _f(dv[pos]); cr = _f(_rsa[pos])
                     _ref = pxd_dates[pv] if 0 <= pv < len(pxd_dates) else "?"
                     if pp == pp and pr == pr and cp == cp and cr == cr:
                         if typ == "L" and cp < pp and cr > pr + 2:
