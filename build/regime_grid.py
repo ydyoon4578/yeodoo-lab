@@ -82,9 +82,17 @@ def main() -> int:
     #   기준으로 쟀다(di[d] → PX[i+FWD]). 여기서는 행 오프셋을 쓰므로, 행이
     #   중간에 건너뛴 날이 있으면 i+21 이 21거래일 뒤가 아니게 된다.
     #   n - FWD 가 원 산출물의 표본수(3678)와 같으면 연속이다.
-    contiguous = (n - FWD == 3678)
+    # 🚨 2026-09-24 — 종전에는 «n − FWD == 3678»(원 산출물 표본수)로 쟀다. 그러면 거래일이 하루만
+    #   늘어도 연속인데 멈춘다(09-22 복구 뒤 3681 에서 refresh-stocks 가 죽었다).
+    #   → 행 날짜가 종목 격자(stocks.json pxd_dates)에서 빈틈없이 이어지는지를 직접 본다.
+    grid = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))["pxd_dates"]
+    pos = {d: i for i, d in enumerate(grid)}
+    idx = [pos.get(r["d"]) for r in rows]
+    contiguous = all(x is not None for x in idx) and all(b - a == 1 for a, b in zip(idx, idx[1:]))
     if not contiguous:
-        print("🚨 행이 격자상 연속이 아니다 (n-FWD=%d ≠ 3678). 중단한다." % (n - FWD))
+        gaps = [rows[j]["d"] for j in range(1, n)
+                if idx[j] is None or idx[j - 1] is None or idx[j] - idx[j - 1] != 1][:5]
+        print("🚨 행이 격자상 연속이 아니다 (첫 빈틈 %s). 중단한다." % ", ".join(gaps))
         return 1
 
     for i, r in enumerate(rows):
