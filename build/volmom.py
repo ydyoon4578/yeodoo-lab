@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/volmom.py — 변동성 관리 모멘텀(Barroso·Santa-Clara) 시점정확 검정 → data/_volmom.json
 
-사전등록: build/PREREG-2026-09-24-VOLMOM.md (계산 전 커밋 c3a1e2ca)
+사전등록: build/PREREG-2026-09-24-VOLMOM.md (계산 전 커밋 ef1d5798)
 
 기저 = 랩 x-mom12 시점정확 재현(stoploss.py 와 같은 선택 · F0 앵커로 확인). 기저의 **일간** 수익 경로를 2014 부터 만들어
 σ̂(직전 126거래일 · 연율)와 확장창 목표 σ*(이전 월말 σ̂ 평균)를 잡고, 노출 e = min(1, σ*/σ̂) 로 판정 120개월을 돈다.
@@ -198,7 +198,7 @@ def main() -> int:
              for nm, (a, z) in {"2018-10~12": ("2018-10", "2018-12"), "2020-02~03": ("2020-02", "2020-03"),
                                 "2022": ("2022-01", "2022-12")}.items()}
     RESULT = {
-        "prereg": "build/PREREG-2026-09-24-VOLMOM.md", "prereg_commit": "c3a1e2ca",
+        "prereg": "build/PREREG-2026-09-24-VOLMOM.md", "prereg_commit": "ef1d5798",
         "window": [J[0]["m"], J[-1]["m"]], "n_months": len(J), "cost_bp": COST * 1e4, "lookd": LOOKD,
         "f0_anchor": {"ok": F0, "corr": corr, "gap_pm": gap, "n": int(len(pairs))},
         "base": dict(SB, turn=b_turn), "managed": dict(SM, turn=m_turn),
