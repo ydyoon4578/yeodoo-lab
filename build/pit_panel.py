@@ -106,6 +106,34 @@ def _key(W, t, i=None):
     return cands[0]
 
 
+def union_members(W, mm, i):
+    """그달 말 명단 S&P 500 ∪ NASDAQ 100 → [(명단 티커, 가격 키)] · 명단 수(이중클래스 하나로 줄인 뒤).
+
+    2026-09-24 추가(TTEMPLATE·STOPLOSS 가 같이 쓴다 — 사본을 두지 않는다). 규칙은 month_rows 와 같다:
+    이중클래스 회사당 하나(KEEP_DUAL · 그 밖은 사전순 첫째) · 재배정 티커의 마지막 멤버월 제외 · 날짜 인식 키.
+    """
+    mem = set(W["lists"]["spx"].get(mm) or []) | set(W["lists"]["ndx"].get(mm) or [])
+    by_cik = {}
+    for t in mem:
+        c = W["cikmap"].get(t) or W["cikmap"].get(t.replace("-", "."))
+        by_cik.setdefault(c or ("_" + t), []).append(t)
+    keep = []
+    for c, ts in by_cik.items():
+        if len(ts) == 1 or c.startswith("_"):
+            keep.extend(ts)
+            continue
+        k_ = [t for t in ts if t in KEEP_DUAL]
+        keep.append(k_[0] if k_ else sorted(ts)[0])
+    out = []
+    for t in sorted(keep):
+        if t in W["reassigned"] and mm >= W["reassigned"][t].get("last", "9999"):
+            continue
+        k = _key(W, t, i)
+        if k is not None:
+            out.append((t, k))
+    return out, len(keep)
+
+
 def _sector(W, t, k):
     s = W["sector_now"].get(k) or W["sector_now"].get(t)
     if s:
