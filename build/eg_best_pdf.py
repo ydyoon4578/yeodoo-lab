@@ -21,10 +21,12 @@ except Exception: pass
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "data", "_eg_best.json")
 MIX = os.path.join(ROOT, "data", "_fund_mix.json")
+MECH = os.path.join(ROOT, "data", "mech_episodes.json")         # 기계적 급락·반등(지수만 · build/mech_episodes.py)
 OUTDIR = os.environ.get("FUND_REPORT_DIR", r"C:\Project\fund_reports")
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 DATE = "2026-09-24"
 R3 = "2023-09"
+ME = None
 COL = {"s1": "#2a78d6", "s2": "#eb6834", "s3": "#1baf7a", "s4": "#eda100", "neg": "#e34948", "pos": "#2a78d6",
        "ink": "#0b0b0b", "ink2": "#52514e", "muted": "#898781", "grid": "#e1e0d9", "axis": "#c3c2b7", "surf": "#fcfcfb"}
 EG_DEF = ("다음 해 투자증가율 예측값(Eg) — 시장가치÷자산 · 현금 기준 영업이익÷자산 · ROE 변화 셋에 과거 120개월 회귀계수 평균을 곱해 더한 값"
@@ -228,6 +230,37 @@ def drawdown(v):
     return (v / np.maximum.accumulate(v) - 1) * 100
 
 
+def mech_score(res, ME):
+    """기계적 급락 다리·반등 창에서 펀드 초과(펀드 수익 − S&P500 PR 수익, %p) · 급락월·급등월 평균 월 초과.
+    저장된 일간 계열(results[*].series)만 쓴다 — 서술(사후 선택 없는 구간으로 다시 잰 것 · 판정 아님)."""
+    S = res["series"]
+    pos = {d: i for i, d in enumerate(S["d"])}
+
+    def at(d):                                        # 그날 또는 직전 거래일
+        while d not in pos:
+            i = bisect_left_date(S["d"], d)
+            d = S["d"][max(0, i - 1)]
+        return pos[d]
+
+    def leg(a, b):
+        ia, ib = at(a), at(b)
+        f = S["fund"][ib] / S["fund"][ia] - 1
+        x = S["index"][ib] / S["index"][ia] - 1
+        return {"a": a, "b": b, "index": x * 100, "fund": f * 100, "ex": (f - x) * 100}
+    fz = ME["frozen"]
+    crash = [leg(l["a"], l["b"]) for l in fz["legs"] if l["side"] == "crash"]
+    reb = [leg(r["a"], r["b"]) for r in fz["rebounds"]]
+    mex = dict(zip(res["hold_months"], res["monthly_ex"]))
+    cm = [mex[m] for m in ME["months"]["crash_m"] if m in mex]
+    sm = [mex[m] for m in ME["months"]["surge_m"] if m in mex]
+    return {"crash": crash, "reb": reb, "cm": cm, "sm": sm}
+
+
+def bisect_left_date(ds, d):
+    import bisect
+    return bisect.bisect_left(ds, d)
+
+
 def updown(fund_m, index_m):
     f, x = np.asarray(fund_m, float), np.asarray(index_m, float)
     up, dn = x > 0, x < 0
@@ -385,7 +418,33 @@ def build(J, X):
                      % (esc(e["name"]), e["a"][2:], e["z"][2:], cls, pct(e["index"]), pct(e["fund"]), pp(e["ex"]), pct(e["basket"]), pp(e["basket_ex"])))
         h.append("<tr class='avg'><td>%d구간 평균</td><td></td><td class='n'>%s</td><td class='n'>%s</td><td class='n b'>%s</td><td class='n'>%s</td><td class='n'>%s</td></tr></table>"
                  % (len(es), pct(av("index")), pct(av("fund")), pp(av("ex")), pct(av("basket")), pp(av("basket_ex"))))
-    h.append("<p class='note'>시작일 종가 → 끝일 종가, 일간 가격. 초과 = 펀드 − S&amp;P500 PR. 바스켓 단독 = NAV 전부를 바스켓에 넣었을 때.</p>")
+    h.append("<p class='note'>시작일 종가 → 끝일 종가, 일간 가격. 초과 = 펀드 − S&amp;P500 PR. 바스켓 단독 = NAV 전부를 바스켓에 넣었을 때. "
+             "위 12구간은 이름을 붙여 <b>사후에 고른</b> 구간이다 — 다음 쪽은 문턱을 미리 정한 기계적 구간으로 다시 잰다.</p>")
+    if ME:
+        ms = mech_score(s, ME)
+        h.append(ph())
+        h.append("<h2>3-2. 기계적 급락·반등 구간 — 사후 선택 없이</h2>")
+        h.append("<p class='note'>S&amp;P500 PR 일간 종가 지그재그(하락·상승 문턱 10%%)의 확정 급락 다리 %d개와, 각 저점부터 63거래일(또는 다음 상승 다리 끝까지)의 반등 창 %d개. "
+                 "월 구간은 SPY 총수익 월 수익이 ±σ(판정 창 전 2006-02~2016-08 표준편차 %s) 밖인 달 — 급락월 %d · 급등월 %d. 규칙은 build/mech_episodes.py(지수만 · 전략 수익을 읽지 않는다). "
+                 "이미 정한 전략을 다시 재는 서술이며 판정은 바뀌지 않는다.</p>"
+                 % (len(ms["crash"]), len(ms["reb"]), pct(ME["sigma_pre"] * 100, sign=False), len(ME["months"]["crash_m"]), len(ME["months"]["surge_m"])))
+        for lab, rows in (("급락 다리", ms["crash"]), ("반등 창 (급등)", ms["reb"])):
+            win_ = sum(r["ex"] > 0 for r in rows)
+            h.append("<h3>%s %d개 — 펀드가 앞선 구간 %d/%d · 평균 초과 %s</h3>" % (lab, len(rows), win_, len(rows), pp(sum(r["ex"] for r in rows) / len(rows))))
+            h.append(col_chart([r["a"][2:7] for r in rows], [r["ex"] for r in rows], h=135))
+        h.append("<h3>후보 비교 — 같은 기계적 구간 (펀드 초과 %p)</h3>")
+        h.append("<table><tr><th>전략</th><th>급락 다리 승</th><th>급락 평균</th><th>반등 창 승</th><th>반등 평균</th><th>급락월 평균 월 초과</th><th>급등월 평균 월 초과</th><th>둘 중 나쁜 쪽</th></tr>")
+        for k, t in (("EG_BASE", "EG30 (기저)"), ("C1", "C1 통합"), ("C2", "C2 거르기"), ("EG_FROZEN", "EG30 얼린 판"), ("REF_QG", "우량성장 30")):
+            if k not in J["results"]:
+                continue
+            q = mech_score(J["results"][k], ME)
+            avg = lambda xs: sum(xs) / len(xs) if xs else float("nan")
+            cmv, smv = avg(q["cm"]), avg(q["sm"])
+            h.append("<tr%s><td class='nw'>%s</td><td class='n'>%d/%d</td><td class='n'>%s</td><td class='n'>%d/%d</td><td class='n'>%s</td><td class='n'>%s</td><td class='n'>%s</td><td class='n b'>%s</td></tr>"
+                     % (" class='avg'" if k == win else "", t, sum(r["ex"] > 0 for r in q["crash"]), len(q["crash"]), pp(avg([r["ex"] for r in q["crash"]])),
+                        sum(r["ex"] > 0 for r in q["reb"]), len(q["reb"]), pp(avg([r["ex"] for r in q["reb"]])), pp(cmv), pp(smv), pp(min(cmv, smv))))
+        h.append("</table><p class='note'>급락월·급등월 평균 월 초과 = 그 달들의 펀드 월 초과 평균. «둘 중 나쁜 쪽» 이 양수여야 급락·급등 양쪽에서 이긴 것이다 — "
+                 "사용자 기준(꾸준함 + 급등락 양쪽 승)으로 보는 칸.</p>")
     # 4·5. 전략 요약 · 방법론 · 보유
     h.append(ph())
     h.append("<h2>4. 전략 요약</h2><table class='kv'>")
@@ -539,6 +598,8 @@ def build(J, X):
 def main() -> int:
     J = json.load(io.open(SRC, encoding="utf-8"))
     X = json.load(io.open(MIX, encoding="utf-8"))
+    global ME
+    ME = json.load(io.open(MECH, encoding="utf-8")) if os.path.exists(MECH) else None
     outdir = os.environ.get("FUND_REPORT_DIR", OUTDIR)
     os.makedirs(os.path.join(outdir, "old"), exist_ok=True)
     win = J["winner"]
