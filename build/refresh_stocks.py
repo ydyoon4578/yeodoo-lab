@@ -1173,6 +1173,120 @@ def main():
                 _rec = {"d": _want, "n": _n,
                         "how": "일봉 종가 결측 → 같은 원천의 60분봉 마지막 체결로 집계"}
 
+    # ── 벤더 일봉 구멍(중간 날짜) 복구 ─────────────────────────────────────────
+    # 🚨 2026-09-24 — 야후가 2026-09-22 일봉을 **종목의 85%에서 아예 안 준다**(배치든 종목 하나씩이든 —
+    #   SPY 에는 있다). 그러면 아래 «유령 거래일» 필터가 그 진짜 거래일을 지워, 사이트의 일간 수익·히트맵이
+    #   전 종목에서 하루씩 어긋났다(MU 실제 −2.07% 가 +2.7% 로). 위 복구는 «가장 최근 날» 만 본다.
+    #   SPY 세션이 있는 날인데 커버가 절반 미만이면 벤더 구멍으로 보고, 빠진 종목만 채운다:
+    #     ① 직전 빌드(data/sd)에 그 날 값이 있으면 그것 — 전날 두 판 종가의 비로 배당 재조정분을 맞춘다.
+    #        (매 실행 전체를 다시 받으므로 이게 없으면 한 번 복구한 날이 60분봉 창을 벗어나면 다시 사라진다)
+    #     ② 없으면 같은 원천의 60분봉(1개월 창)으로 집계 — 위 _recover_intraday 와 같은 원칙.
+    #   채운 날·종목 수를 산출물(px_recon)에 남긴다. 조용히 섞지 않는다.
+    try:
+        _spy_days = set(str(pd.Timestamp(x).date()) for x in (px.get("SPY").index if px.get("SPY") is not None else []))
+        _cnt = {}
+        for _t, _v in px.items():
+            if _t == "SPY" or not len(_v):
+                continue
+            for _x in _v.index:
+                _k = str(pd.Timestamp(_x).date())
+                _cnt[_k] = _cnt.get(_k, 0) + 1
+        _nt = max(1, len([t for t in px if t != "SPY"]))
+        _holes = sorted(d for d in _spy_days if d >= PX_START and _cnt.get(d, 0) < 0.5 * _nt)
+        if _holes:
+            print("  [벤더구멍] SPY 세션인데 일봉 커버 절반 미만:", ", ".join(
+                "%s(%d/%d)" % (d, _cnt.get(d, 0), _nt) for d in _holes))
+            _prev_grid = json.load(open(OUT, encoding="utf-8")).get("pxd_dates") or []
+            _pg = {d: i for i, d in enumerate(_prev_grid)}
+            _filled = {d: {"prev": 0, "intraday": 0} for d in _holes}
+
+            def _put(_t, _d, o, h, l, c, v):
+                _idx0 = px[_t].index
+                _ni = pd.Timestamp(_d)
+                if getattr(_idx0, "tz", None) is not None:
+                    _ni = _ni.tz_localize(_idx0.tz)
+                if _ni in _idx0:
+                    return False
+                _row = pd.DataFrame([{"Open": o, "High": h, "Low": l, "Close": c, "Volume": v}], index=[_ni])
+                px[_t] = pd.concat([px[_t], _row]).sort_index()
+                return True
+
+            _need = {d: [t for t in px if t != "SPY" and len(px[t])
+                         and not any(str(pd.Timestamp(x).date()) == d for x in px[t].index[-60:])] for d in _holes}
+            # ① 직전 빌드 값
+            for _d in _holes:
+                if _d not in _pg:
+                    continue
+                _j = _pg[_d]
+                for _t in list(_need[_d]):
+                    _sdp = os.path.join(HERE, "..", "data", "sd", _t + ".json")
+                    if not os.path.exists(_sdp):
+                        continue
+                    _o = json.load(open(_sdp, encoding="utf-8"))
+                    _c = (_o.get("pxd") or [None] * (_j + 1))[_j] if _j < len(_o.get("pxd") or []) else None
+                    if _c is None:
+                        continue
+                    # 배당 재조정 — 그 날 직전 거래일의 (새 판 ÷ 옛 판) 종가 비를 곱한다
+                    _sc = 1.0
+                    _pj = _j - 1
+                    _po = (_o.get("pxd") or [None])[_pj] if _pj >= 0 else None
+                    _pd = pd.Timestamp(_prev_grid[_pj]) if _pj >= 0 else None
+                    _nv = None
+                    if _pd is not None:
+                        _ix = px[_t].index
+                        _m = [x for x in _ix if str(pd.Timestamp(x).date()) == str(_pd.date())]
+                        if _m:
+                            _nv = float(px[_t].loc[_m[0], "Close"])
+                    if _po and _nv:
+                        _sc = _nv / float(_po)
+                    _h = (_o.get("hd") or [None] * (_j + 1))[_j] if _j < len(_o.get("hd") or []) else None
+                    _l = (_o.get("ld") or [None] * (_j + 1))[_j] if _j < len(_o.get("ld") or []) else None
+                    _vv = (_o.get("vd") or [None] * (_j + 1))[_j] if _j < len(_o.get("vd") or []) else None
+                    c = float(_c) * _sc
+                    if _put(_t, _d, c, (float(_h) * _sc if _h else c), (float(_l) * _sc if _l else c), c,
+                            (float(_vv) * 1e3 if _vv else 0.0)):
+                        _filled[_d]["prev"] += 1
+                        _need[_d].remove(_t)
+            # ② 60분봉(1개월 창)
+            _left = sorted({t for d in _holes for t in _need[d]})
+            for _i in range(0, len(_left), 120):
+                _ch = _left[_i:_i + 120]
+                _dd = None
+                for _k in range(3):
+                    try:
+                        _dd = yf.download([_yf(t) for t in _ch], period="1mo", interval="60m",
+                                          auto_adjust=True, progress=False, group_by="ticker", threads=True)
+                        if _dd is not None and len(_dd):
+                            break
+                    except Exception:
+                        _dd = None
+                    time.sleep(2 * (_k + 1))
+                if _dd is None or not len(_dd):
+                    continue
+                for _t in _ch:
+                    try:
+                        _s = _unwrap(_dd, _t)
+                    except Exception:
+                        continue
+                    for _d in _holes:
+                        if _t not in _need[_d]:
+                            continue
+                        _sub = _s[[str(x.date()) == _d for x in _s.index]].dropna(subset=["Close"])
+                        if len(_sub) < 2:
+                            continue
+                        _lt = _sub.index[-1]
+                        if _lt.hour * 60 + _lt.minute < 12 * 60 + 30:
+                            continue
+                        if _put(_t, _d, float(_sub["Open"].iloc[0]), float(_sub["High"].max()),
+                                float(_sub["Low"].min()), float(_sub["Close"].iloc[-1]), float(_sub["Volume"].sum())):
+                            _filled[_d]["intraday"] += 1
+            for _d in _holes:
+                print("  [벤더구멍] %s 채움 — 직전 빌드 %d종 · 60분봉 %d종" % (_d, _filled[_d]["prev"], _filled[_d]["intraday"]))
+            _rec = dict(_rec or {}, vendor_holes={d: _filled[d] for d in _holes},
+                        vendor_holes_how="SPY 세션인데 일봉이 빈 날 — 직전 빌드 값(배당 재조정) · 없으면 60분봉 집계")
+    except Exception as _e:
+        print("  [벤더구멍] 복구 실패 — 건너뜀:", str(_e)[:120])
+
     # ★ 미확정 당일 봉 제거 — 랩 최우선 규칙 '기준일 통일'. 장중 실행 시 yfinance 마지막 봉이 실시간이라
     #   종가·지표·목표주가 상승여력이 확정 전 값으로 계산되고, 사이트 다른 데이터(regime·sentiment)와 기준일이 갈린다.
     #   미 동부 16:15 이전이면 당일 봉은 미확정으로 보고 전 종목에서 버린다(크론은 마감 후라 영향 없음).
