@@ -221,6 +221,18 @@ def build_signals():
         lambda h, l, c, v, X: c <= c.rolling(252, min_periods=200).min())
 
 
+def _distinct_60(v, w):
+    """rolling(w).apply(len(set(값))) 의 벡터판 — 창 안 서로 다른 값의 수. 창에 NaN 이 있으면 NaN."""
+    a = v.to_numpy(dtype="float64")
+    out = np.full(len(a), np.nan)
+    if len(a) >= w:
+        win = np.lib.stride_tricks.sliding_window_view(a, w)
+        full = ~np.isnan(win).any(axis=1)
+        s = np.sort(win[full], axis=1)
+        out[w - 1:][full] = 1 + (np.diff(s, axis=1) != 0).sum(axis=1)
+    return pd.Series(out, index=v.index)
+
+
 def prep(h, l, c, v):
     """공통 지표 — 신호마다 다시 계산하면 32번 중복된다."""
     ml, ms, _mh = macd(c)
@@ -241,7 +253,11 @@ def prep(h, l, c, v):
     #   해상도가 모자란 구간은 **신호 없음(NaN)** 으로 둔다 — 틀린 채로 재느니 안 재는 것이 낫다.
     _w = 60
     _zero = (v.fillna(0) == 0).rolling(_w).mean()
-    _dist = v.rolling(_w).apply(lambda a: len(set(a[~pd.isna(a)])), raw=False)
+    # ⚡ 2026-09-24 — 종전 `v.rolling(60).apply(lambda a: len(set(...)), raw=False)` 가 창마다 Series 를
+    #   지어 518종 × 4,457창 ≈ 230만 번 파이썬을 돌았다(이 스크립트 시간의 절반 · CI 약 3분).
+    #   같은 값을 한 번에 — 창을 정렬해 값이 바뀌는 자리를 센다. rolling 의 기본 min_periods(=창)대로
+    #   창에 결측이 하나라도 있으면 NaN 이다(종전과 같다).
+    _dist = _distinct_60(v, _w)
     _vol_ok = (_zero <= 0.20) & (_dist >= 10)
     _mfi = mfi(h, l, c, v).where(_vol_ok)
     rv = rv.where(_vol_ok)
@@ -367,6 +383,10 @@ def run():
 
     out = []
     firing = {}
+    # ⚡ 2026-09-24 — 아래 사건 고리가 `Series.iloc[i]` 를 670만 번 불렀다(CI 약 2분). 같은 값을 numpy 배열에서 읽는다.
+    _BETA = {t: BETA[t].to_numpy() for t in tick}
+    _FS = {H: {t: fwd_s[H][t].to_numpy() for t in tick} for H in HOR}
+    _FB = {H: fwd_b[H].to_numpy() for H in HOR}
     for S in SIGNALS:
         rows = []          # 에피소드 중복제거 후의 사건들
         today = []
@@ -381,14 +401,14 @@ def run():
                 if i - last < PRIMARY:          # ── 에피소드 중복제거 ──
                     continue
                 last = i
-                bt = BETA[t].iloc[i]
+                bt = _BETA[t][i]
                 if bt != bt:
                     continue
                 r = {}
                 okall = True
                 for H in HOR:
-                    a = fwd_s[H][t].iloc[i]
-                    m = fwd_b[H].iloc[i]
+                    a = _FS[H][t][i]
+                    m = _FB[H][i]
                     if a != a or m != m:
                         okall = False
                         break
@@ -609,6 +629,8 @@ def run():
     month_end = [i for i in range(MIN_HIST, n - 1)
                  if dates[i][:7] != dates[i + 1][:7]]
     TOPN = 10
+    _RA = {t: R[t].to_numpy() for t in tick}     # ⚡ port() 의 일간 수익을 배열에서 읽는다
+    _BA = bench.to_numpy()
 
     def port(rank_df, asc, label, rule, why):
         """월말에 rank_df 상위(또는 하위) TOPN을 동일가중 보유.
@@ -627,21 +649,22 @@ def run():
            R[m+2] 가 된다. 사건 연구와 같은 잣대다.
         """
         hold, navs, rets, turns = [], [100.0], [], 0
+        _me = set(month_end)                    # ⚡ 목록 안 찾기(O(n)) 대신 집합
         for i in range(MIN_HIST + 1, n):
-            if i - 2 in month_end:
+            if i - 2 in _me:
                 row = rank_df.iloc[i - 2].dropna()
                 if len(row) >= TOPN:
                     new = list(row.sort_values(ascending=asc).index[:TOPN])
                     turns += len(set(new) - set(hold))
                     hold = new
-            rs = [R[t].iloc[i] for t in hold if R[t].iloc[i] == R[t].iloc[i]]
+            rs = [_RA[t][i] for t in hold if _RA[t][i] == _RA[t][i]]
             r = sum(rs) / len(rs) if rs else 0.0
             rets.append(r)
             navs.append(navs[-1] * (1 + r))
         bn = [100.0]
         brs = []
         for i in range(MIN_HIST + 1, n):
-            r = bench.iloc[i]
+            r = _BA[i]
             r = 0.0 if r != r else float(r)
             brs.append(r)
             bn.append(bn[-1] * (1 + r))
