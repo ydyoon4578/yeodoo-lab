@@ -1,0 +1,744 @@
+{
+ "prereg": "build/PREREG-2026-09-24-MOMBREAK.md",
+ "prereg_commit": "0c3418eb",
+ "window": [
+  "2016-09",
+  "2026-08"
+ ],
+ "n_months": 120,
+ "n_event_months": 118,
+ "events": {
+  "n": 1180,
+  "breaks": 127,
+  "flagged_n": 219,
+  "unflagged_n": 961,
+  "flag_share": 0.18559322033898304,
+  "sue_coverage": 0.8416666666666667,
+  "p_break_flag": 0.1095890410958904,
+  "p_break_noflag": 0.10718002081165452,
+  "ratio_break": 1.0224763931373853,
+  "p_perm": 0.24975024975024976,
+  "p_surge_flag": 0.1872146118721461,
+  "p_surge_noflag": 0.2861602497398543,
+  "ratio_surge": 0.6542299709422996,
+  "ratio_break_over_surge": 1.5628699976320153,
+  "alt_thresholds": {
+   "sue<=-1": 1.4295227524972252,
+   "sue<=+1": 0.7909383849233473
+  }
+ },
+ "book": {
+  "base": {
+   "mean_pm": 2.193736066794092,
+   "sharpe": 0.7403644632157586,
+   "mdd": -33.331963908083104,
+   "held_breaks": 127,
+   "turn": 3.7948857096003383
+  },
+  "treat": {
+   "mean_pm": 2.10143860769683,
+   "sharpe": 0.7067702624609143,
+   "mdd": -31.404089962268078,
+   "held_breaks": 121,
+   "turn": 4.096029346071618
+  },
+  "ctrl": {
+   "mean_pm_median": 1.9534686057424206,
+   "held_breaks_median": 124.0,
+   "held_breaks_p10": 119.0,
+   "mdd_median": -30.042091582451274,
+   "treat_mdd_pct_better": 16.5
+  },
+  "p_breaks": 0.246,
+  "mean_drop_k": 1.8416666666666666,
+  "fill_short_months": 0
+ },
+ "F": {
+  "F0": true,
+  "F1": false,
+  "F2": true,
+  "F3": false,
+  "F4": true,
+  "F5": true
+ },
+ "verdict": "기각",
+ "break_months_top": [
+  [
+   "2018-09",
+   8
+  ],
+  [
+   "2019-12",
+   7
+  ],
+  [
+   "2018-08",
+   6
+  ],
+  [
+   "2022-03",
+   5
+  ],
+  [
+   "2025-01",
+   5
+  ],
+  [
+   "2018-07",
+   4
+  ],
+  [
+   "2021-11",
+   4
+  ],
+  [
+   "2025-10",
+   4
+  ],
+  [
+   "2026-04",
+   4
+  ],
+  [
+   "2026-05",
+   4
+  ]
+ ],
+ "broke": [
+  {
+   "sig": "2016-08",
+   "t": "EW",
+   "flag": false
+  },
+  {
+   "sig": "2017-01",
+   "t": "FCX",
+   "flag": false
+  },
+  {
+   "sig": "2017-05",
+   "t": "STX",
+   "flag": false
+  },
+  {
+   "sig": "2018-01",
+   "t": "TTWO",
+   "flag": true
+  },
+  {
+   "sig": "2018-02",
+   "t": "MELI",
+   "flag": true
+  },
+  {
+   "sig": "2018-03",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-04",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-05",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-07",
+   "t": "ALGN",
+   "flag": false
+  },
+  {
+   "sig": "2018-07",
+   "t": "MU",
+   "flag": false
+  },
+  {
+   "sig": "2018-07",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-07",
+   "t": "STX",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "ALGN",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "AMZN",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "CPRT",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "NFLX",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-08",
+   "t": "STX",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "ALGN",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "AMD",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "AMZN",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "GWW",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "ILMN",
+   "flag": true
+  },
+  {
+   "sig": "2018-09",
+   "t": "NFLX",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "NKTR",
+   "flag": false
+  },
+  {
+   "sig": "2018-09",
+   "t": "NTAP",
+   "flag": true
+  },
+  {
+   "sig": "2018-10",
+   "t": "M",
+   "flag": false
+  },
+  {
+   "sig": "2019-12",
+   "t": "CMG",
+   "flag": false
+  },
+  {
+   "sig": "2019-12",
+   "t": "CPRT",
+   "flag": false
+  },
+  {
+   "sig": "2019-12",
+   "t": "KLAC",
+   "flag": true
+  },
+  {
+   "sig": "2019-12",
+   "t": "LRCX",
+   "flag": true
+  },
+  {
+   "sig": "2019-12",
+   "t": "LULU",
+   "flag": false
+  },
+  {
+   "sig": "2019-12",
+   "t": "TGT",
+   "flag": false
+  },
+  {
+   "sig": "2019-12",
+   "t": "XRX",
+   "flag": false
+  },
+  {
+   "sig": "2020-01",
+   "t": "CPRT",
+   "flag": false
+  },
+  {
+   "sig": "2020-01",
+   "t": "LRCX",
+   "flag": true
+  },
+  {
+   "sig": "2020-01",
+   "t": "PAYC",
+   "flag": false
+  },
+  {
+   "sig": "2020-02",
+   "t": "ARNC",
+   "flag": true
+  },
+  {
+   "sig": "2020-02",
+   "t": "PHM",
+   "flag": true
+  },
+  {
+   "sig": "2020-08",
+   "t": "DXCM",
+   "flag": false
+  },
+  {
+   "sig": "2020-09",
+   "t": "ZM",
+   "flag": false
+  },
+  {
+   "sig": "2020-11",
+   "t": "ZM",
+   "flag": false
+  },
+  {
+   "sig": "2020-12",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2020-12",
+   "t": "PTON",
+   "flag": false
+  },
+  {
+   "sig": "2021-01",
+   "t": "ENPH",
+   "flag": false
+  },
+  {
+   "sig": "2021-01",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2021-01",
+   "t": "PTON",
+   "flag": false
+  },
+  {
+   "sig": "2021-02",
+   "t": "ENPH",
+   "flag": false
+  },
+  {
+   "sig": "2021-02",
+   "t": "ETSY",
+   "flag": false
+  },
+  {
+   "sig": "2021-02",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2021-03",
+   "t": "PENN",
+   "flag": false
+  },
+  {
+   "sig": "2021-04",
+   "t": "PENN",
+   "flag": false
+  },
+  {
+   "sig": "2021-09",
+   "t": "MRNA",
+   "flag": false
+  },
+  {
+   "sig": "2021-10",
+   "t": "MRNA",
+   "flag": false
+  },
+  {
+   "sig": "2021-11",
+   "t": "BBWI",
+   "flag": false
+  },
+  {
+   "sig": "2021-11",
+   "t": "GNRC",
+   "flag": false
+  },
+  {
+   "sig": "2021-11",
+   "t": "MRNA",
+   "flag": false
+  },
+  {
+   "sig": "2021-11",
+   "t": "NVDA",
+   "flag": false
+  },
+  {
+   "sig": "2021-12",
+   "t": "BBWI",
+   "flag": false
+  },
+  {
+   "sig": "2021-12",
+   "t": "LCID",
+   "flag": false
+  },
+  {
+   "sig": "2021-12",
+   "t": "MRNA",
+   "flag": false
+  },
+  {
+   "sig": "2022-01",
+   "t": "F",
+   "flag": true
+  },
+  {
+   "sig": "2022-02",
+   "t": "NVDA",
+   "flag": false
+  },
+  {
+   "sig": "2022-03",
+   "t": "DDOG",
+   "flag": false
+  },
+  {
+   "sig": "2022-03",
+   "t": "FTNT",
+   "flag": false
+  },
+  {
+   "sig": "2022-03",
+   "t": "MOS",
+   "flag": false
+  },
+  {
+   "sig": "2022-03",
+   "t": "NVDA",
+   "flag": false
+  },
+  {
+   "sig": "2022-03",
+   "t": "PANW",
+   "flag": false
+  },
+  {
+   "sig": "2022-04",
+   "t": "MOS",
+   "flag": false
+  },
+  {
+   "sig": "2022-05",
+   "t": "APA",
+   "flag": false
+  },
+  {
+   "sig": "2022-05",
+   "t": "HAL",
+   "flag": true
+  },
+  {
+   "sig": "2022-11",
+   "t": "EQT",
+   "flag": false
+  },
+  {
+   "sig": "2022-12",
+   "t": "APA",
+   "flag": false
+  },
+  {
+   "sig": "2023-01",
+   "t": "ENPH",
+   "flag": false
+  },
+  {
+   "sig": "2023-01",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2023-02",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2023-02",
+   "t": "STLD",
+   "flag": false
+  },
+  {
+   "sig": "2023-03",
+   "t": "VLO",
+   "flag": false
+  },
+  {
+   "sig": "2023-07",
+   "t": "CCL",
+   "flag": false
+  },
+  {
+   "sig": "2023-07",
+   "t": "FSLR",
+   "flag": false
+  },
+  {
+   "sig": "2023-07",
+   "t": "RCL",
+   "flag": false
+  },
+  {
+   "sig": "2023-12",
+   "t": "TSLA",
+   "flag": true
+  },
+  {
+   "sig": "2024-02",
+   "t": "MDB",
+   "flag": false
+  },
+  {
+   "sig": "2024-03",
+   "t": "BLDR",
+   "flag": true
+  },
+  {
+   "sig": "2024-03",
+   "t": "SMCI",
+   "flag": true
+  },
+  {
+   "sig": "2024-05",
+   "t": "PDD",
+   "flag": false
+  },
+  {
+   "sig": "2024-05",
+   "t": "SMCI",
+   "flag": false
+  },
+  {
+   "sig": "2024-06",
+   "t": "CRWD",
+   "flag": false
+  },
+  {
+   "sig": "2024-06",
+   "t": "MU",
+   "flag": false
+  },
+  {
+   "sig": "2024-06",
+   "t": "SMCI",
+   "flag": false
+  },
+  {
+   "sig": "2024-07",
+   "t": "SMCI",
+   "flag": false
+  },
+  {
+   "sig": "2024-08",
+   "t": "SMCI",
+   "flag": false
+  },
+  {
+   "sig": "2024-09",
+   "t": "MPWR",
+   "flag": false
+  },
+  {
+   "sig": "2024-12",
+   "t": "APP",
+   "flag": false
+  },
+  {
+   "sig": "2024-12",
+   "t": "UAL",
+   "flag": true
+  },
+  {
+   "sig": "2025-01",
+   "t": "APP",
+   "flag": false
+  },
+  {
+   "sig": "2025-01",
+   "t": "CEG",
+   "flag": false
+  },
+  {
+   "sig": "2025-01",
+   "t": "TSLA",
+   "flag": false
+  },
+  {
+   "sig": "2025-01",
+   "t": "UAL",
+   "flag": true
+  },
+  {
+   "sig": "2025-01",
+   "t": "VST",
+   "flag": false
+  },
+  {
+   "sig": "2025-02",
+   "t": "UAL",
+   "flag": true
+  },
+  {
+   "sig": "2025-04",
+   "t": "TPL",
+   "flag": false
+  },
+  {
+   "sig": "2025-06",
+   "t": "MSTR",
+   "flag": true
+  },
+  {
+   "sig": "2025-07",
+   "t": "MSTR",
+   "flag": true
+  },
+  {
+   "sig": "2025-08",
+   "t": "AXON",
+   "flag": true
+  },
+  {
+   "sig": "2025-08",
+   "t": "MSTR",
+   "flag": true
+  },
+  {
+   "sig": "2025-08",
+   "t": "RCL",
+   "flag": false
+  },
+  {
+   "sig": "2025-09",
+   "t": "AXON",
+   "flag": true
+  },
+  {
+   "sig": "2025-09",
+   "t": "HOOD",
+   "flag": false
+  },
+  {
+   "sig": "2025-09",
+   "t": "MSTR",
+   "flag": false
+  },
+  {
+   "sig": "2025-10",
+   "t": "APP",
+   "flag": false
+  },
+  {
+   "sig": "2025-10",
+   "t": "HOOD",
+   "flag": false
+  },
+  {
+   "sig": "2025-10",
+   "t": "PLTR",
+   "flag": false
+  },
+  {
+   "sig": "2025-10",
+   "t": "SHOP",
+   "flag": false
+  },
+  {
+   "sig": "2025-11",
+   "t": "HOOD",
+   "flag": false
+  },
+  {
+   "sig": "2025-12",
+   "t": "HOOD",
+   "flag": false
+  },
+  {
+   "sig": "2025-12",
+   "t": "PLTR",
+   "flag": false
+  },
+  {
+   "sig": "2026-01",
+   "t": "HOOD",
+   "flag": false
+  },
+  {
+   "sig": "2026-02",
+   "t": "NEM",
+   "flag": false
+  },
+  {
+   "sig": "2026-04",
+   "t": "CIEN",
+   "flag": false
+  },
+  {
+   "sig": "2026-04",
+   "t": "COHR",
+   "flag": false
+  },
+  {
+   "sig": "2026-04",
+   "t": "LITE",
+   "flag": false
+  },
+  {
+   "sig": "2026-04",
+   "t": "SATS",
+   "flag": true
+  },
+  {
+   "sig": "2026-05",
+   "t": "CIEN",
+   "flag": false
+  },
+  {
+   "sig": "2026-05",
+   "t": "COHR",
+   "flag": false
+  },
+  {
+   "sig": "2026-05",
+   "t": "INTC",
+   "flag": false
+  },
+  {
+   "sig": "2026-05",
+   "t": "SATS",
+   "flag": true
+  }
+ ]
+}
