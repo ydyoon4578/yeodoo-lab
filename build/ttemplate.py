@@ -143,7 +143,7 @@ def main() -> int:
                      "c2": [(x[0], x[1]) for x in el]}
             rf = float(RF.get(m1, 0.0))
             out = {"m": m1, "sig": m, "n_mem": n_mem, "n_el": len(el), "n_pass": len(passed),
-                   "tt": [t for t, _ in books["tt"]], "sec": {}}
+                   "tt_names": [t for t, _ in books["tt"]], "sec": {}}   # 🚨 "tt" 는 아래 성적 칸이 쓴다(첫 판에서 명단을 덮었다 — 서술 칸만)
             for b, lst in books.items():
                 slots = TOPN if b in ("tt", "c1") else max(1, len(lst))
                 w, rets = {}, {}
@@ -240,7 +240,7 @@ def main() -> int:
         "sector_share": {s: round(c / tot * 100, 1) for s, c in sorted(secs.items(), key=lambda kv: -kv[1])},
         "F": {"F0": F0, "F1": F1, "F2": F2, "F3": F3, "F4": F4},
         "verdict": verdict,
-        "now": {"sig": P["rows"][-1]["sig"], "tt": P["rows"][-1]["tt"], "n_pass": P["rows"][-1]["n_pass"]},
+        "now": {"sig": P["rows"][-1]["sig"], "tt": P["rows"][-1]["tt_names"], "n_pass": P["rows"][-1]["n_pass"]},
         "monthly": [{"m": x["m"], "n_pass": x["n_pass"], "tt": round(x["tt"]["g"] * 100, 4),
                      "c1": round(x["c1"]["g"] * 100, 4), "c2": round(x["c2"]["g"] * 100, 4)} for x in P["rows"]],
     }
