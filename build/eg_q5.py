@@ -48,6 +48,10 @@ KEEP_DUAL = {"GOOGL", "FOXA", "NWSA"}
 #   build/pit_gics.py)로 가른다: 그달 표에 있으면 그 분류 · 없으면 가장 가까운 달의 분류 · 그것도 없으면 오늘 분류.
 #   깃발이 없으면 계산·산출물이 한 바이트도 달라지지 않는다(얼린 측정 PREREG-2026-09-23-EG 그대로).
 PIT_GICS = "--pit-gics" in sys.argv
+# --from YYYY-MM(--pit-gics 와 함께만): 판정 창 앞 형성월(그달 ~ 2016-07)의 점수만 따로 쓴다 — EG30+ 창 이전 점검(PREREG-2026-09-24-EG30PLUS).
+#   회귀·기울기·금융 판정은 --pit-gics 와 같고, 2016-08 이후 점수는 쓰지 않는다(얼린 두 산출물은 그대로).
+PRE_FROM = sys.argv[sys.argv.index("--from") + 1] if (PIT_GICS and "--from" in sys.argv) else None
+PRE_TO = "2016-07"
 
 
 def d_(s):
@@ -390,8 +394,8 @@ def main() -> int:
         return np.mean([B[m] for m in ks], axis=0)
 
     # ── ③④ 형성·보유 ─────────────────────────────────────────────────────────
-    mem, _c = IM.load(F0)
-    months = [m for m in sorted(mem) if F0 <= m <= F1_]
+    mem, _c = IM.load(PRE_FROM or F0)
+    months = [m for m in sorted(mem) if (PRE_FROM <= m <= PRE_TO if PRE_FROM else F0 <= m <= F1_)]
     rows, prev_w, prev_rn, f4_rho, drops = [], {}, {}, [], {"no_state": 0, "fin": 0, "dual": 0, "no_px": 0, "reuse": 0}
     SCORES = {}               # 형성월 → {멤버 티커: E_t} — PREREG-2026-09-23-IDXEG 가 읽는다
     for m in months:
@@ -478,7 +482,7 @@ def main() -> int:
     if PIT_GICS:
         # 점수만 내보내고 끝낸다 — 이 판의 성과(Eg 3분위 스프레드 등)는 **계산은 되지만 적지도 찍지도 않는다**.
         #   EGBEST 가 이 점수를 기저로 쓰기 전에 성과를 보면 안 되기 때문이다(사전등록 PREREG-2026-09-24-EGBEST).
-        sp_ = os.path.join(DATA, "_eg_q5_scores_pitgics.json")
+        sp_ = os.path.join(DATA, "_eg_q5_scores_pitgics_pre.json" if PRE_FROM else "_eg_q5_scores_pitgics.json")
         io.open(sp_, "w", encoding="utf-8", newline="\n").write(json.dumps(
             {"note": "eg_q5.py --pit-gics 형성월별 Eg 예측치 E_t. 금융 판정만 시점정확(월말 위키 표의 GICS · data/pit_gics.json) — "
                      "나머지는 얼린 판(_eg_q5_scores.json)과 같은 식. 점수만 — 성과는 내보내지 않는다.",

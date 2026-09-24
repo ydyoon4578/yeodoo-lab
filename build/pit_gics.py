@@ -32,7 +32,38 @@ OUT = os.path.join(ROOT, "data", "pit_gics.json")
 M0, M1 = "2009-12", "2023-06"      # Eg 회귀 첫 달(2010-01)의 직전부터 2023-03 개편 뒤 석 달까지
 
 
+OUT_SEC = os.path.join(ROOT, "data", "pit_gics_sectors.json")
+M0S, M1S = "2014-06", "2026-08"   # --sectors: 업종 전체(EG30+ 의 업종 안 선별 · 업종 폭 · 벤치 업종 비중) — 명단 기록이 서는 달부터
+
+
+def main_sectors() -> int:
+    """--sectors: 월말마다 표의 GICS 섹터 이름 전체를 싣는다(pit_gics.json 은 건드리지 않는다 — EGBEST 가 얼린 판이다)."""
+    t0 = time.time()
+    months, fails = {}, []
+    for ym, iso in RIH.month_ends(M0S, M1S):
+        tk, meta = RIH.snapshot("spx", iso)
+        if not tk:
+            fails.append({"m": ym, "why": str(meta.get("fail"))})
+            print("  ✗ %s %s" % (ym, meta.get("fail")))
+            continue
+        sec = {}
+        for t, v in tk.items():
+            sec.setdefault(v[2] or "", []).append(t)
+        months[ym] = {"rev": meta["rev"], "ts": meta["ts"], "sec": {k: sorted(v) for k, v in sorted(sec.items())},
+                      "cik": {t: v[0] for t, v in tk.items() if v[0]}}
+        print("  %s rev %s · 섹터 %d · 종목 %d · 섹터 없음 %d" % (ym, meta["rev"], len([k for k in sec if k]), len(tk), len(sec.get("", []))))
+    doc = {"note": "월말 S&P 500 표(위키 과거 리비전)의 GICS 섹터 이름 전체(값으로 찾는다 · 비표준 통신 표기 포함). 빈 키 = 섹터 칸이 빈 종목. "
+                   "발효일 정본이 아니라 근사 — 위키 편집 지연이 있다. 표에 없는 회사는 쓰는 쪽이 메운다.",
+           "source": "en.wikipedia.org «List of S&P 500 companies» (CC BY-SA) — 월마다 리비전 번호를 싣는다",
+           "range": [M0S, M1S], "fails": fails, "months": months}
+    io.open(OUT_SEC, "w", encoding="utf-8", newline="\n").write(json.dumps(doc, ensure_ascii=False, separators=(",", ":")) + "\n")
+    print("→ %s (%d개월 · 실패 %d · %.0f초)" % (OUT_SEC, len(months), len(fails), time.time() - t0))
+    return 0 if not fails else 1
+
+
 def main() -> int:
+    if "--sectors" in sys.argv:
+        return main_sectors()
     t0 = time.time()
     months, fails = {}, []
     for ym, iso in RIH.month_ends(M0, M1):
