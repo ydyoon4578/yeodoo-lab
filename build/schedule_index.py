@@ -91,6 +91,10 @@ NO_ROW = {
     # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.
     #   같은 파일을 매일 다시 받을 이유가 없어 크론을 두지 않았다(build/PREREG-2026-08-12-TECHLINK.md §3).
     "probe-patents.yml":     "B11 기술링크 자료 관문 실측 — 1회성(workflow_dispatch). 원천이 동결돼 주기가 없다",
+    # 전방 원장(QFWD · build/PREREG-2026-09-26-QFWD.md) — 기록 전용 잡이다. 판정을 안 하고 화면에 실을 축도 아니라
+    #   sources 표에 싣지 않는다. 결정 마감(다음 개장 · 마감 30분 전)을 지키려고 refresh-stocks · refresh-assets
+    #   뒤(workflow_run)와 백업 크론 일곱에 돈다(2026-09-25 검토 — 예약 실행이 1:45~2:30 늦게 뜬다).
+    "qfwd-ledger.yml":       "전방 원장(QFWD) — 기록 전용 · 판정 없음 · sources 표에 싣지 않는다",
     "refresh-ml.yml":        "ML 연구 산출물 — refresh-assets 직후 연쇄(workflow_run)라 "
                              "고유 주기가 없다. 백테스트 행이 대표",
 }

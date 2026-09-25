@@ -1,0 +1,107 @@
+name: QFWD forward ledger
+# 전방 원장(build/PREREG-2026-09-26-QFWD.md) — 판 고르기 · 결정 · 일간 가격 포착 · 월 실현. 판정은 하지 않는다(qfwd_judge 는 관문 날짜에만).
+#
+# 근본 이유 — 결정 시각이 곧 기록의 값이다. 결정은 d_m 미국 마감 뒤 가장 이른 유효 판으로 마감(QF07 · QF08 · V0 = 다음 개장,
+#   QF06 = 다음 거래일 마감 30분 전) 전에 나와야 하고, 그 시각을 git 커밋이 증명한다. 할 일이 없으면 아무것도 안 쓴다
+#   (원장은 멱등 — 모든 것을 git 이력과 이미 쓴 기록에서 끌어낸다).
+# 🚨 2026-09-25 검토 — 이 저장소의 예약 실행은 실측 1:45~2:30 늦게 뜬다(refresh-* 커밋 시각). 그래서
+#   ① 주 실행은 사건이다: refresh-stocks · refresh-assets 가 끝나면(workflow_run · 예약 지연을 받지 않는다) 바로 돈다.
+#   ② 크론은 백업이다 — 늦게 떠도 마감 전에 닿도록 당겼다: 개장 마감(13:30 · 14:30 UTC) 전 마지막 10:40 · QF06 마감
+#      (19:30 · 20:30 UTC) 전 15:40 · 16:40. 23:40 은 두 계절 모두 d_m 마감 뒤다. 토요일 KST 도 돈다.
+# ⚠ 등록 전(data/_qfwd/pins.json 없음)에는 원장이 «미등록» 을 찍고 0 으로 끝난다 — 커밋할 것도 없다.
+# ⚠ 커밋 단계는 원장이 중간에 멈춰도(예: 달력 경보로 종료 1) 이미 봉인한 줄을 올린다 — 결정 줄의 시각이 다음 실행으로 밀리면
+#   그 자체가 늦음이 된다. 대신 «무결성(뒤)» 이 통과해야만 커밋한다. 사이트 검증(validate_gate)은 랩 규칙대로 두되 커밋을 막지
+#   않는다 — 기준선은 원장 앞에, 대조는 커밋 **뒤**에(회귀면 잡만 붉다). 이 잡은 data/_qfwd 만 쓰고 validate_site 는 그 폴더를
+#   읽지 않으므로, 사이트의 다른 결함이 봉인한 결정 줄을 버리게 하지 않는다(2026-09-25 검토).
+# ⚠ 이 파일도 핀이다(pins.json · qfwd_files). 고치는 길은 수정 등록 고리(qfwd_adapter.py amend)뿐이다 — 러너 · 액션은 판을 박아
+#   강제 편집을 줄인다(ubuntu-24.04 · 액션은 커밋 SHA).
+on:
+  workflow_run:
+    workflows: ["Refresh stock signals (yfinance)", "Refresh asset panel & archive re-check"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: '40 23 * * *'   # 08:40 KST — d_m 마감 뒤(EDT · EST 모두) 첫 백업
+    - cron: '40 2 * * *'    # 11:40 KST
+    - cron: '40 5 * * *'    # 14:40 KST
+    - cron: '40 8 * * *'    # 17:40 KST
+    - cron: '40 10 * * *'   # 19:40 KST — 2시간 반 늦게 떠도 서머타임 개장(13:30 UTC) 전
+    - cron: '40 15 * * *'   # 00:40 KST — QF06 마감(19:30 · 20:30 UTC) 전 백업
+    - cron: '40 16 * * *'   # 01:40 KST — QF06 마감 전 마지막 백업
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'auto | status | parityA | rehearse'
+        default: 'auto'
+permissions:
+  contents: write
+concurrency:
+  group: qfwd
+  cancel-in-progress: false
+jobs:
+  ledger:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90          # 원장 실행 예산(BUDGET_SEC 70분) + 20분 — 잡이 잘려 시도 기록 없이 사라지지 않게
+    env:
+      PYTHONHASHSEED: '0'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      PYTHONIOENCODING: utf-8
+      MODE: ${{ github.event.inputs.mode || 'auto' }}
+    steps:
+      # 판 고르기 · 커밋 시각 · 접두사 검사가 전 이력을 본다 — 얕은 클론이면 조용히 틀린 판을 고른다.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4.4.0
+        with:
+          fetch-depth: 0
+      # 줄 서서 기다린 실행은 이벤트 때의 GITHUB_SHA 로 체크아웃된다 — 앞 실행이 그새 올린 줄을 다시 만들지 않게 main 끝으로 맞춘다.
+      - name: Sync to main tip
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git checkout -B main origin/main
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065   # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Install pinned numerics
+        run: pip install --prefer-binary --quiet numpy==2.5.3 scipy==1.18.1 pandas==3.0.6
+      - name: Validate baseline
+        id: vbase
+        continue-on-error: true
+        run: python build/validate_gate.py baseline
+      - name: Ledger integrity (before)
+        run: python build/qfwd_check.py --full
+      - name: Ledger
+        id: ledger
+        run: |
+          case "$MODE" in
+            parityA)  python build/qfwd_adapter.py parity --tier A --out "$RUNNER_TEMP/parityA.json" ;;
+            status)   python build/qfwd_ledger.py --status ;;
+            rehearse) python build/qfwd_ledger.py --rehearse 2026-06 --qdir "$RUNNER_TEMP/qfwd_rehearse" --withhold-fits 5 ;;
+            *)        python build/qfwd_ledger.py --auto ;;
+          esac
+      - name: Ledger integrity (after)
+        id: after
+        if: ${{ !cancelled() && (steps.ledger.outcome == 'success' || steps.ledger.outcome == 'failure') }}
+        run: python build/qfwd_check.py --full
+      - name: Commit if changed
+        if: ${{ !cancelled() && steps.after.outcome == 'success' }}
+        run: |
+          bash build/ci_push.sh "chore(qfwd): 전방 원장 자동 기록" \
+            data/_qfwd/
+      # 사이트 검증(회귀 관문) — 커밋 뒤라 봉인한 줄을 버리지 않는다 · 회귀면 잡이 붉다(알림)
+      - name: Validate (after commit · report only)
+        if: ${{ !cancelled() && steps.vbase.outcome == 'success' }}
+        run: python build/validate_gate.py check
+      # 사슬 머리를 git 밖(잡 요약)에 남긴다 — 뒤의 이력 재작성과 대조할 닻
+      - name: Anchor chain heads
+        if: ${{ !cancelled() }}
+        run: python build/qfwd_check.py --heads >> "$GITHUB_STEP_SUMMARY"
+      - name: Runner parity summary
+        if: ${{ !cancelled() && env.MODE == 'parityA' }}
+        run: python build/qfwd_adapter.py parity-summary "$RUNNER_TEMP/parityA.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4.6.2
+        if: ${{ !cancelled() && env.MODE == 'parityA' }}
+        with:
+          name: qfwd-parityA
+          path: ${{ runner.temp }}/parityA.json
+          retention-days: 90
