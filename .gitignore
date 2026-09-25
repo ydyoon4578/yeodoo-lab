@@ -220,3 +220,14 @@ data/_regime_table.json
 
 # S&P Global 팩터 Top10 백테스트 입력 — 사내 자료 추출물(저장소 밖 추출 스크립트가 만든다). 반입 금지.
 build/factor_bt_src/
+
+# 배치 T(PREREG-2026-09-26-TBATCH · B8) — L 층 산출 · 라이선스 원자료는 저장소 밖 캐시에만 둔다(D1 · D3).
+#   산출(_tbatch.json · _tbatch.public.json · _tbatch.run.json · _tbatch.started)이나 원자료 사본이 작업 트리에 복사돼도
+#   git add -A 에 쓸려 들어가지 않게 한다. 걸러도 build/t_guard.py(validate_site 가 매 푸시 · 매일 부른다)가 이름으로 한 번 더 막는다.
+_tbatch*
+tbatch_cache/
+*_History.csv
+SENTIMENT.xlsx
+ie_data*.xls
+Time-Series-Momentum-Factors*
+Betting-Against-Beta*
