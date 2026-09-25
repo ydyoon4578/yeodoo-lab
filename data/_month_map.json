@@ -79,7 +79,7 @@
   "top5_carry_pct": 7.107438016528926,
   "random_pct": 2.7085831002175746,
   "rank_rho_median": 0.029389743043907523,
-  "rank_rho_mean": 0.013825425210970499
+  "rank_rho_mean": 0.013818296551661507
  },
  "kinds": [
   {
@@ -9221,9 +9221,9 @@
    ],
    "bot": [
     {
-     "sid": "a-vol-roll",
-     "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": -4.44
+     "sid": "a-rel-mom3",
+     "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
+     "ex": -4.33
     },
     {
      "sid": "a-st-hurst",
