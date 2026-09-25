@@ -1,14 +1,22 @@
 {
- "as_of_members": "2026-09-18",
+ "as_of_members": "2026-09-25",
  "note": "지수 편입 명단. 출처 — S&P 500: 위키백과 목록 + SSGA SPY 보유내역 교차 확인, NASDAQ-100: 위키백과 목록. 오늘 스냅샷이며 과거 편입 이력이 아니다(백테스트의 생존편향은 각 결과 화면에 별도 명시).",
  "gates": {
   "spx_n": 503,
-  "ndx_n": 102,
-  "added": [],
-  "removed": [],
+  "ndx_n": 101,
+  "added": [
+   "BE",
+   "ILMN",
+   "P"
+  ],
+  "removed": [
+   "BLDR",
+   "TAP",
+   "TTD"
+  ],
   "cross_check": "SPY 보유내역 대조",
   "sector_changed": [],
-  "name_style_kept": 515,
+  "name_style_kept": 512,
   "ndx_caveat": "NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존한다"
  },
  "members": {
@@ -626,6 +634,16 @@
    "grp": "Health Care Equipment & Services",
    "ind": "Health Care Equipment & Supplies"
   },
+  "BE": {
+   "name": "Bloom Energy",
+   "sector": "Industrials",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Electrical Components & Equipment",
+   "grp": "Capital Goods",
+   "ind": "Electrical Equipment"
+  },
   "BEN": {
    "name": "FRANKLIN RESOURCES INC",
    "sector": "Financials",
@@ -687,16 +705,6 @@
    "sub": "Oil & Gas Equipment & Services",
    "grp": "Energy",
    "ind": "Energy Equipment & Services"
-  },
-  "BLDR": {
-   "name": "BUILDERS FIRSTSOURCE INC",
-   "sector": "Industrials",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Building Products",
-   "grp": "Capital Goods",
-   "ind": "Building Products"
   },
   "BLK": {
    "name": "BLACKROCK INC",
@@ -2551,6 +2559,16 @@
    "grp": "Materials",
    "ind": "Chemicals"
   },
+  "ILMN": {
+   "name": "Illumina, Inc.",
+   "sector": "Health Care",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Life Sciences Tools & Services",
+   "grp": "Pharmaceuticals, Biotechnology  & Life Sciences",
+   "ind": "Life Sciences Tools & Services"
+  },
   "INCY": {
    "name": "INCYTE CORP",
    "sector": "Health Care",
@@ -2779,7 +2797,6 @@
    "name": "KRAFT HEINZ CO/THE",
    "sector": "Consumer Staples",
    "idx": [
-    "NDX",
     "SPX"
    ],
    "sub": "Packaged Foods & Meats",
@@ -3704,6 +3721,16 @@
    "grp": "Energy",
    "ind": "Oil, Gas & Consumable Fuels"
   },
+  "P": {
+   "name": "Everpure",
+   "sector": "Information Technology",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Technology Hardware, Storage & Peripherals",
+   "grp": "Technology Hardware & Equipment",
+   "ind": "Technology Hardware, Storage & Peripherals"
+  },
   "PANW": {
    "name": "PALO ALTO NETWORKS INC",
    "sector": "Information Technology",
@@ -4488,16 +4515,6 @@
    "grp": "Telecommunication Services",
    "ind": "Diversified Telecommunication Services"
   },
-  "TAP": {
-   "name": "MOLSON COORS BEVERAGE CO - B",
-   "sector": "Consumer Staples",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Brewers",
-   "grp": "Food, Beverage & Tobacco",
-   "ind": "Beverages"
-  },
   "TDG": {
    "name": "TRANSDIGM GROUP INC",
    "sector": "Industrials",
@@ -4720,16 +4737,6 @@
    "sub": "Building Products",
    "grp": "Capital Goods",
    "ind": "Building Products"
-  },
-  "TTD": {
-   "name": "TRADE DESK INC/THE -CLASS A",
-   "sector": "Communication Services",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Advertising",
-   "grp": "Media & Entertainment",
-   "ind": "Media"
   },
   "TTWO": {
    "name": "TAKE-TWO INTERACTIVE SOFTWRE",
