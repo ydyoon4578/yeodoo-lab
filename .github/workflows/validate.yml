@@ -47,3 +47,8 @@ jobs:
           python-version: '3.12'
       - name: Validate (표준 라이브러리만 사용 — 설치 단계 없음)
         run: python build/validate_site.py
+      # 전방 원장(QFWD) 무결성 — 표준 라이브러리만 · 창 모드(최근 8일 판). 등록 전에는 «미등록 — 건너뜀» 으로 0.
+      #   봇 커밋에는 이 잡이 안 돌지만 매일 예정 실행(09:30 KST)이 한 번은 본다(위 schedule 주석).
+      #   🚨 생존 점검도 한다(창 모드) — 마감 + 1일 지난 결정 없음 · 포착 3거래일 밀림 · data/_qfwd 커밋 4거래일 없음이면 붉다.
+      - name: QFWD ledger integrity
+        run: python build/qfwd_check.py

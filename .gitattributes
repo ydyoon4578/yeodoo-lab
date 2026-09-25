@@ -1,0 +1,5 @@
+# QFWD 전방 원장 — 해시 사슬 · parity_sha · 어댑터 blob_sha1(바이트) 은 LF 바이트 위에서 잰다.
+#   core.autocrlf=true 인 Windows 사본은 CRLF 로 꺼내 바이트 sha 가 갈린다(blob id 는 그대로).
+data/_qfwd/** text eol=lf
+build/qfwd_*.py text eol=lf
+.github/workflows/qfwd-ledger.yml text eol=lf
