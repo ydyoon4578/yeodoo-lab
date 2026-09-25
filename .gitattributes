@@ -3,3 +3,6 @@
 data/_qfwd/** text eol=lf
 build/qfwd_*.py text eol=lf
 .github/workflows/qfwd-ledger.yml text eol=lf
+# 배치 T 연방 통계 고정본 — 명세(data/_tb_manifest.json)의 SHA-256 은 받은 바이트 그대로 잰다.
+#   core.autocrlf=true 인 사본이 CRLF 로 꺼내면 판 점검(t_data.check_pins)이 멈춘다 → 변환하지 않는다(예행에서 확인).
+data/_tb_fred/** -text

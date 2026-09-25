@@ -1,0 +1,7791 @@
+{
+ "note": "배치 T 자료 판 동결(B0) — build/t_data.py 가 쓴다. 값은 없다: URL · 받은 때 · SHA-256 · 행 수 · 기간 · 구조만. AQR · Cboe · Wurgler(D3) · French · Shiller · yfinance 원자료는 저장소 밖 캐시에만 있고, 연방 통계(FRED/ALFRED)만 data/_tb_fred/ 에 고정한다. 사이트 자료가 아니다(D1 — L 층 전용).",
+ "generated_at": "2026-09-25T23:29:19Z",
+ "cache_root": "$TBATCH_CACHE 또는 %TEMP%/tbatch_cache (저장소 밖)",
+ "design": "tbatch_research.json final · data.hashes / verified_this_step(설계 워크플로 2026-09-25~26)",
+ "decisions": {
+  "D1": "장기 검정은 L-R · L-C 기전 증거 층 전용 · 사이트 10년 규약 유지",
+  "D2": "S&P 지수 선물 ±5% · 지수 옵션 · 커버드콜 ETF 허용 / 교차자산 선물 불허 → T02 측정만",
+  "D3": "AQR · Cboe · Wurgler 원자료와 파생 NAV 비커밋 · 비게시 · 해시만",
+  "D4": "배치 FWER 0.025 → H_T0 하나 · 누적 N 은 DSR 보고만"
+ },
+ "availability": {
+  "french": {
+   "recon": 0,
+   "live": 2
+  },
+  "aqr": {
+   "recon": 0,
+   "live": 2
+  },
+  "cboe": {
+   "recon": 0,
+   "live": 0
+  },
+  "yf": {
+   "recon": 0,
+   "live": 0
+  },
+  "fred:GS10": {
+   "recon": 1,
+   "live": 1
+  },
+  "fred:TB3MS": {
+   "recon": 1,
+   "live": 1
+  },
+  "fred:UNRATE": {
+   "recon": 1,
+   "live": 1
+  },
+  "fred:CPIAUCSL": {
+   "recon": 1,
+   "live": 1
+  },
+  "fred:DFII10": {
+   "recon": 0,
+   "live": 0
+  },
+  "alfred:UNRATE": {
+   "recon": 1,
+   "live": 1
+  },
+  "shiller:P": {
+   "recon": 0,
+   "live": 0
+  },
+  "shiller:E": {
+   "recon": 6,
+   "live": 6
+  },
+  "shiller:CPI": {
+   "recon": 1,
+   "live": 1
+  },
+  "shiller:D": {
+   "recon": 6,
+   "live": 6
+  },
+  "shiller:GS10_shiller": {
+   "recon": 1,
+   "live": 1
+  },
+  "wurgler": {
+   "recon": 3,
+   "live": 3
+  }
+ },
+ "forbidden_signals": {
+  "fred:USREC": "USREC 는 신호로 쓰지 않는다(설계 availability)",
+  "fred:USRECM": "USREC 계열",
+  "wurgler:recess": "경기후퇴 표지 — USREC 와 같은 취지로 신호 금지"
+ },
+ "cache_identity": {
+  "file": "meta/cache_id.txt",
+  "sha256": "9991e55639451e4ae8ff974744e0e53265407229771470be43cf31e7696cddf1",
+  "note": "러너는 이 표지를 가진 캐시에서만 굽는다(무작위 값 · 뜻 없음 — 캐시 뿌리를 바꿔 다시 굽는 길을 막는다)"
+ },
+ "pylib": {
+  "xlrd": {
+   "version": "2.0.2",
+   "files": {
+    "__init__.py": "926b88133f1cbad6ad1a38d6dc499a0294c481c1e672c628d027161ffb61d8fd",
+    "biffh.py": "1a3b41a08f4f34811d6d99864ef7c343c1ee85988b25dda87dda36aa6ba7ce60",
+    "book.py": "d4b1f1c9631be74641230525642e14b4815e9b9cbca3c337cc00dc74f085ffce",
+    "compdoc.py": "df191fb896cb44644c74f899541b160201a4b70ec99dafb0de9fe5713093e984",
+    "formatting.py": "e8c87a18e33b1594e3d1c2781474a5d02568fbc227603bf6288653332704c3a4",
+    "formula.py": "72011735609a6152b3219c1aec85b4b43702d485f352f86a25750e2fbe57a1ac",
+    "info.py": "030b2f2f9ed9fa598a0c368205f515a24c0cc0fbc92e7f638c6b6a3fd81ebcec",
+    "sheet.py": "9a1c04a84b5e508418f632b90b25fceecb6e9363265d444e35ff3a91940c858d",
+    "timemachine.py": "ec2b54ec563a9905bb1d23f91633352bda487cd7b1542b7f3c95c6d8cdc51007",
+    "xldate.py": "4beb9468b5fc91ab86cb64a45ff33e4be141aaa43a1fd11f4c0569bf914c5f42"
+   }
+  }
+ },
+ "datasets": {
+  "french/ff3_m": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "B(Mkt TR) · RF · T01 · T04 · T05(IB) · T12 · T13 · 전 카드",
+   "pinned_in": "cache:raw/french/F-F_Research_Data_Factors_CSV.zip",
+   "design_sha256": "b840dba55d319f4818fc7300e65c52eff5f64870c8d495fa58ff5d4cd749f5eb",
+   "pinned": {
+    "sha256": "b840dba55d319f4818fc7300e65c52eff5f64870c8d495fa58ff5d4cd749f5eb",
+    "bytes": 13067,
+    "fetched_at": "2026-09-25T14:01:29Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:39 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.csv",
+    "crsp_vintage": "202607",
+    "main_block": "m",
+    "rows": 1201,
+    "first": "1926-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "The 1-month TBill rate data until 202405 are from Ibbotson Associates. Starting from 202406, the 1-month TBill rate is from ICE BofA US 1-Month Treasury Bill Index."
+    ],
+    "spot_mktrf": "25/25 일치(설계 스폿 25개 중 이 판에 있는 달 25)"
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T20:59:51Z",
+    "sha256": "b840dba55d319f4818fc7300e65c52eff5f64870c8d495fa58ff5d4cd749f5eb",
+    "last_modified": "Fri, 04 Sep 2026 14:47:39 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "b840dba55d319f4818fc7300e65c52eff5f64870c8d495fa58ff5d4cd749f5eb",
+    "matches_design": true
+   }
+  },
+  "french/ff3_d": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T05 PANIC σ²(126거래일)",
+   "pinned_in": "cache:raw/french/F-F_Research_Data_Factors_daily_CSV.zip",
+   "design_sha256": "1916d331c2c51d2aee3d00215897d2b8e5995cb387f1f4569ba46bff5fb049a8",
+   "pinned": {
+    "sha256": "1916d331c2c51d2aee3d00215897d2b8e5995cb387f1f4569ba46bff5fb049a8",
+    "bytes": 178044,
+    "fetched_at": "2026-09-25T14:01:31Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:39 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors_daily.csv",
+    "crsp_vintage": "202607",
+    "main_block": "d",
+    "rows": 26296,
+    "first": "1926-07-01",
+    "last": "2026-07-31",
+    "blocks": [
+     {
+      "kind": "d",
+      "title": "",
+      "rows": 26296,
+      "first": "1926-07-01",
+      "last": "2026-07-31",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by using the 202607 CRSP database.",
+     "The Tbill return is the simple daily rate that, over the number of trading days"
+    ]
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T20:59:53Z",
+    "sha256": "1916d331c2c51d2aee3d00215897d2b8e5995cb387f1f4569ba46bff5fb049a8",
+    "last_modified": "Fri, 04 Sep 2026 14:47:39 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "1916d331c2c51d2aee3d00215897d2b8e5995cb387f1f4569ba46bff5fb049a8",
+    "matches_design": true
+   }
+  },
+  "french/mom_d": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T05 BSC 쌍둥이(σ̂_UMD 126일)",
+   "pinned_in": "cache:raw/french/F-F_Momentum_Factor_daily_CSV.zip",
+   "design_sha256": "b039d986db27fc831bcf1f52ba2134916e96fbeba4762fefc942429b0a568a96",
+   "pinned": {
+    "sha256": "b039d986db27fc831bcf1f52ba2134916e96fbeba4762fefc942429b0a568a96",
+    "bytes": 85202,
+    "fetched_at": "2026-09-25T14:01:39Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:40 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "F-F_Momentum_Factor_daily.csv",
+    "crsp_vintage": "202607",
+    "main_block": "d",
+    "rows": 26195,
+    "first": "1926-11-03",
+    "last": "2026-07-31",
+    "blocks": [
+     {
+      "kind": "d",
+      "title": "",
+      "rows": 26195,
+      "first": "1926-11-03",
+      "last": "2026-07-31",
+      "cols": [
+       "Mom"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by using the 202607 CRSP database.  It",
+     "contains a momentum factor, constructed from six value-weight portfolios formed"
+    ]
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T20:59:54Z",
+    "sha256": "b039d986db27fc831bcf1f52ba2134916e96fbeba4762fefc942429b0a568a96",
+    "last_modified": "Fri, 04 Sep 2026 14:47:40 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "b039d986db27fc831bcf1f52ba2134916e96fbeba4762fefc942429b0a568a96",
+    "matches_design": true
+   }
+  },
+  "french/prior12_2": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T05 MOM(Hi PRIOR) · T04 쌍둥이(Lo PRIOR)",
+   "pinned_in": "cache:raw/french/10_Portfolios_Prior_12_2_CSV.zip",
+   "design_sha256": "fb968db8061acb1052e595b59118f26fccda24963bd71f490a9a51c31eead8ec",
+   "pinned": {
+    "sha256": "fb968db8061acb1052e595b59118f26fccda24963bd71f490a9a51c31eead8ec",
+    "bytes": 119019,
+    "fetched_at": "2026-09-25T14:02:05Z",
+    "last_modified": "Fri, 04 Sep 2026 14:48:12 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "10_Portfolios_Prior_12_2.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 1195,
+    "first": "1927-01",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 1195,
+      "first": "1927-01",
+      "last": "2026-07",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Average Equal Weighted Returns -- Monthly",
+      "rows": 1195,
+      "first": "1927-01",
+      "last": "2026-07",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Average Value Weighted Returns -- Annual",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Average Equal Weighted Returns -- Annual",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1195,
+      "first": "1927-01",
+      "last": "2026-07",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1195,
+      "first": "1927-01",
+      "last": "2026-07",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of Prior Returns",
+      "rows": 100,
+      "first": "1927",
+      "last": "2026",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for  10 prior-return portfolios."
+    ],
+    "legs_firms": {
+     "Hi PRIOR": {
+      "months_lt_20": 0,
+      "first_ok": "1927-01",
+      "vw_missing": 0
+     },
+     "Lo PRIOR": {
+      "months_lt_20": 0,
+      "first_ok": "1927-01",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T20:59:56Z",
+    "sha256": "fb968db8061acb1052e595b59118f26fccda24963bd71f490a9a51c31eead8ec",
+    "last_modified": "Fri, 04 Sep 2026 14:48:12 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "fb968db8061acb1052e595b59118f26fccda24963bd71f490a9a51c31eead8ec",
+    "matches_design": true
+   }
+  },
+  "french/beta": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BETA_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T03 L(Lo 20) · T04 DEF 쌍둥이 · T15 BETA 판",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_BETA_CSV.zip",
+   "design_sha256": "273ba6f791cc1b786d95e50c6741fee5b9daf4e598987596dd501cd07b45f890",
+   "pinned": {
+    "sha256": "273ba6f791cc1b786d95e50c6741fee5b9daf4e598987596dd501cd07b45f890",
+    "bytes": 115984,
+    "fetched_at": "2026-09-25T14:02:07Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:36 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BETA_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_BETA.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 757,
+    "first": "1963-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of Prior Beta",
+      "rows": 64,
+      "first": "1963",
+      "last": "2026",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on BETA."
+    ],
+    "legs_firms": {
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Hi 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T20:59:58Z",
+    "sha256": "273ba6f791cc1b786d95e50c6741fee5b9daf4e598987596dd501cd07b45f890",
+    "last_modified": "Fri, 04 Sep 2026 14:47:36 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "273ba6f791cc1b786d95e50c6741fee5b9daf4e598987596dd501cd07b45f890",
+    "matches_design": true
+   }
+  },
+  "french/var": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_VAR_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T15 Lo/Hi 20 · T03 대조(VAR Lo 20)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_VAR_CSV.zip",
+   "design_sha256": "c55289c24e14925bb3b3a2cfd7cc7cd4aedc8b7894fa58eaafa482cf757d6179",
+   "pinned": {
+    "sha256": "c55289c24e14925bb3b3a2cfd7cc7cd4aedc8b7894fa58eaafa482cf757d6179",
+    "bytes": 147318,
+    "fetched_at": "2026-09-25T14:16:10Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_VAR_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_VAR.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 757,
+    "first": "1963-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg",
+      "title": "Value-Weighted Average of Past Return Variance",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on VAR."
+    ],
+    "legs_firms": {
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Hi 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:00Z",
+    "sha256": "c55289c24e14925bb3b3a2cfd7cc7cd4aedc8b7894fa58eaafa482cf757d6179",
+    "last_modified": "Fri, 04 Sep 2026 14:47:30 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "c55289c24e14925bb3b3a2cfd7cc7cd4aedc8b7894fa58eaafa482cf757d6179",
+    "matches_design": true
+   }
+  },
+  "french/op": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_OP_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T04 DEF · T12 DEF(Hi 30)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_OP_CSV.zip",
+   "design_sha256": "43af7d9041520121b58ea85971aac084b29d16362840d67667d54b82eecef54b",
+   "pinned": {
+    "sha256": "43af7d9041520121b58ea85971aac084b29d16362840d67667d54b82eecef54b",
+    "bytes": 135027,
+    "fetched_at": "2026-09-25T14:16:15Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_OP_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_OP.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 757,
+    "first": "1963-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Average Value Weight Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Average Equal Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of OP",
+      "rows": 64,
+      "first": "1963",
+      "last": "2026",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on OP."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:02Z",
+    "sha256": "43af7d9041520121b58ea85971aac084b29d16362840d67667d54b82eecef54b",
+    "last_modified": "Fri, 04 Sep 2026 14:47:31 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "43af7d9041520121b58ea85971aac084b29d16362840d67667d54b82eecef54b",
+    "matches_design": true
+   }
+  },
+  "french/beme": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T04 REB(Hi 30) · T16 · T17 십분위 반쪽 · T05 VAL 쌍둥이",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "design_sha256": "7ddd8918eb34b125b03e3e6e0bc927aef71dd9e3ff5a2a274d47da3a453c305b",
+   "pinned": {
+    "sha256": "7ddd8918eb34b125b03e3e6e0bc927aef71dd9e3ff5a2a274d47da3a453c305b",
+    "bytes": 219000,
+    "fetched_at": "2026-09-25T14:01:59Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:37 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_BE-ME.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 1201,
+    "first": "1926-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 43,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 43,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 2,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 2,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 43,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of BE / Sum of ME",
+      "rows": 100,
+      "first": "1927",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 2,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of BE / ME",
+      "rows": 100,
+      "first": "1927",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 2,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on BE/ME."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Lo 10": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 2": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 3": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 4": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 5": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 6": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 7": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 8": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 9": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Hi 10": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:04Z",
+    "sha256": "7ddd8918eb34b125b03e3e6e0bc927aef71dd9e3ff5a2a274d47da3a453c305b",
+    "last_modified": "Fri, 04 Sep 2026 14:47:37 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "7ddd8918eb34b125b03e3e6e0bc927aef71dd9e3ff5a2a274d47da3a453c305b",
+    "matches_design": true
+   }
+  },
+  "french/ep": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_E-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T16(E-P Hi 30)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_E-P_CSV.zip",
+   "design_sha256": "5a235d4cde9fc59d9a46dd48724859fde2fb25586643fb990a4a2296d537bb23",
+   "pinned": {
+    "sha256": "5a235d4cde9fc59d9a46dd48724859fde2fb25586643fb990a4a2296d537bb23",
+    "bytes": 163652,
+    "fetched_at": "2026-09-25T15:42:08Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_E-P_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_E-P.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 901,
+    "first": "1951-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 74,
+      "first": "1952",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 74,
+      "first": "1952",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of E      / Sum of ME",
+      "rows": 76,
+      "first": "1951",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of E      / ME",
+      "rows": 76,
+      "first": "1951",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on E/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1951-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:06Z",
+    "sha256": "5a235d4cde9fc59d9a46dd48724859fde2fb25586643fb990a4a2296d537bb23",
+    "last_modified": "Fri, 04 Sep 2026 14:47:34 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "5a235d4cde9fc59d9a46dd48724859fde2fb25586643fb990a4a2296d537bb23",
+    "matches_design": true
+   }
+  },
+  "french/cfp": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_CF-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T16(CF-P Hi 30)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_CF-P_CSV.zip",
+   "design_sha256": "8dc6f9ba49ef7ab009122c0677113629ca7aa492222bb5911893e284aa930d61",
+   "pinned": {
+    "sha256": "8dc6f9ba49ef7ab009122c0677113629ca7aa492222bb5911893e284aa930d61",
+    "bytes": 164147,
+    "fetched_at": "2026-09-25T15:42:09Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_CF-P_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_CF-P.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 901,
+    "first": "1951-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 74,
+      "first": "1952",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 74,
+      "first": "1952",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 901,
+      "first": "1951-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of CF     / Sum of ME",
+      "rows": 76,
+      "first": "1951",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of CF     / ME",
+      "rows": 76,
+      "first": "1951",
+      "last": "2026",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on CF/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1951-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:08Z",
+    "sha256": "8dc6f9ba49ef7ab009122c0677113629ca7aa492222bb5911893e284aa930d61",
+    "last_modified": "Fri, 04 Sep 2026 14:47:36 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "8dc6f9ba49ef7ab009122c0677113629ca7aa492222bb5911893e284aa930d61",
+    "matches_design": true
+   }
+  },
+  "french/dp": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_D-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T16(D-P Hi 30)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_D-P_CSV.zip",
+   "design_sha256": "5fc9980adfe68c1e998431fe393b9bc762bf235cc5caec7d0c43f1fecd86b922",
+   "pinned": {
+    "sha256": "5fc9980adfe68c1e998431fe393b9bc762bf235cc5caec7d0c43f1fecd86b922",
+    "bytes": 202094,
+    "fetched_at": "2026-09-25T14:02:08Z",
+    "last_modified": "Fri, 04 Sep 2026 14:47:35 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_D-P_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_D-P.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 1189,
+    "first": "1927-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 1189,
+      "first": "1927-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 1189,
+      "first": "1927-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 98,
+      "first": "1928",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 98,
+      "first": "1928",
+      "last": "2025",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1189,
+      "first": "1927-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1189,
+      "first": "1927-07",
+      "last": "2026-07",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on D/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1927-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:10Z",
+    "sha256": "5fc9980adfe68c1e998431fe393b9bc762bf235cc5caec7d0c43f1fecd86b922",
+    "last_modified": "Fri, 04 Sep 2026 14:47:35 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "5fc9980adfe68c1e998431fe393b9bc762bf235cc5caec7d0c43f1fecd86b922",
+    "matches_design": true
+   }
+  },
+  "french/ni": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_NI_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T18(< 0)",
+   "pinned_in": "cache:raw/french/Portfolios_Formed_on_NI_CSV.zip",
+   "design_sha256": "0923757ad94ac3e77506cb6b5700803370f8415f5a1ae2c99fd59fc9c9c88abb",
+   "pinned": {
+    "sha256": "0923757ad94ac3e77506cb6b5700803370f8415f5a1ae2c99fd59fc9c9c88abb",
+    "bytes": 127251,
+    "fetched_at": "2026-09-25T15:42:11Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_NI_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "Portfolios_Formed_on_NI.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 757,
+    "first": "1963-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 62,
+      "first": "1964",
+      "last": "2025",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 757,
+      "first": "1963-07",
+      "last": "2026-07",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of NI",
+      "rows": 64,
+      "first": "1963",
+      "last": "2026",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on NI."
+    ],
+    "legs_firms": {
+     "< 0": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:11Z",
+    "sha256": "0923757ad94ac3e77506cb6b5700803370f8415f5a1ae2c99fd59fc9c9c88abb",
+    "last_modified": "Fri, 04 Sep 2026 14:47:32 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "0923757ad94ac3e77506cb6b5700803370f8415f5a1ae2c99fd59fc9c9c88abb",
+    "matches_design": true
+   }
+  },
+  "french/ind12": {
+   "source": "french",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/12_Industry_Portfolios_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "T04 · T12 방어 산업 쌍둥이(NoDur · Utils · Hlth)",
+   "pinned_in": "cache:raw/french/12_Industry_Portfolios_CSV.zip",
+   "design_sha256": "c7316c6ae07bc2028632b57ad757dfef8303a62a6956946d7aabe926aadfdeb4",
+   "pinned": {
+    "sha256": "c7316c6ae07bc2028632b57ad757dfef8303a62a6956946d7aabe926aadfdeb4",
+    "bytes": 138954,
+    "fetched_at": "2026-09-25T14:16:23Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/12_Industry_Portfolios_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "12_Industry_Portfolios.csv",
+    "crsp_vintage": "202607",
+    "main_block": "vw_m",
+    "rows": 1201,
+    "first": "1926-07",
+    "last": "2026-07",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Average Value Weighted Returns -- Monthly",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Average Equal Weighted Returns -- Monthly",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Average Value Weighted Returns -- Annual",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Average Equal Weighted Returns -- Annual",
+      "rows": 99,
+      "first": "1927",
+      "last": "2025",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1201,
+      "first": "1926-07",
+      "last": "2026-07",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of BE / Sum of ME",
+      "rows": 101,
+      "first": "1926",
+      "last": "2026",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of BE/ME",
+      "rows": 101,
+      "first": "1926",
+      "last": "2026",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created using the 202607 CRSP database.",
+     "It contains value- and equal-weighted returns for 12 industry portfolios."
+    ],
+    "legs_firms": {
+     "NoDur": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Utils": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Hlth": {
+      "months_lt_20": 384,
+      "first_ok": "1958-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:13Z",
+    "sha256": "c7316c6ae07bc2028632b57ad757dfef8303a62a6956946d7aabe926aadfdeb4",
+    "last_modified": "Fri, 04 Sep 2026 14:48:10 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "c7316c6ae07bc2028632b57ad757dfef8303a62a6956946d7aabe926aadfdeb4",
+    "matches_design": true
+   }
+  },
+  "french@2024-12/beme": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T04 REB(Hi 30) · T16 · T17 십분위 반쪽 · T05 VAL 쌍둥이",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "7c61ed44cf3173cda1d3556eb643128306fd5a6090e49371aaac002f4fa94333",
+    "bytes": 213142,
+    "fetched_at": "2026-09-25T20:56:28Z",
+    "last_modified": "Thu, 22 May 2025 19:02:16 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BE-ME_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_BE-ME.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 1182,
+    "first": "1926-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 21,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 21,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 3,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 3,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 21,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of BE / Sum of ME",
+      "rows": 99,
+      "first": "1926",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 1,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of BE / ME",
+      "rows": 99,
+      "first": "1926",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 1,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_BEME_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on BE/ME."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Lo 10": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 2": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 3": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 4": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 5": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 6": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 7": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 8": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Dec 9": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Hi 10": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:15Z",
+    "sha256": "7c61ed44cf3173cda1d3556eb643128306fd5a6090e49371aaac002f4fa94333",
+    "last_modified": "Thu, 22 May 2025 19:02:16 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "7c61ed44cf3173cda1d3556eb643128306fd5a6090e49371aaac002f4fa94333",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/beta": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BETA_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T03 L(Lo 20) · T04 DEF 쌍둥이 · T15 BETA 판",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_BETA_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "8ff250f6585f05f06ee835b36542a9f14d9e6a5861525c0e140d92fe1679604e",
+    "bytes": 112960,
+    "fetched_at": "2026-09-25T20:56:30Z",
+    "last_modified": "Thu, 22 May 2025 19:02:26 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BETA_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_BETA.csv",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 738,
+    "first": "1963-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of Prior Beta",
+      "rows": 62,
+      "first": "1963",
+      "last": "2024",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_BETA_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on BETA."
+    ],
+    "legs_firms": {
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Hi 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:17Z",
+    "sha256": "8ff250f6585f05f06ee835b36542a9f14d9e6a5861525c0e140d92fe1679604e",
+    "last_modified": "Thu, 22 May 2025 19:02:26 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "8ff250f6585f05f06ee835b36542a9f14d9e6a5861525c0e140d92fe1679604e",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/cfp": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_CF-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T16(CF-P Hi 30)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_CF-P_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "8582aa9a1f23aefb1748cb3119f0fc72e131768fde0bdfd6ec48dc30077b9000",
+    "bytes": 160830,
+    "fetched_at": "2026-09-25T20:56:32Z",
+    "last_modified": "Thu, 22 May 2025 19:02:23 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_CF-P_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_CF-P.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 882,
+    "first": "1951-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 73,
+      "first": "1952",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 73,
+      "first": "1952",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of CF     / Sum of ME",
+      "rows": 74,
+      "first": "1951",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of CF     / ME",
+      "rows": 74,
+      "first": "1951",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_EP_CFP_OP_INV_NI_AC_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on CF/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1951-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:19Z",
+    "sha256": "8582aa9a1f23aefb1748cb3119f0fc72e131768fde0bdfd6ec48dc30077b9000",
+    "last_modified": "Thu, 22 May 2025 19:02:23 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "8582aa9a1f23aefb1748cb3119f0fc72e131768fde0bdfd6ec48dc30077b9000",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/dp": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_D-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T16(D-P Hi 30)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_D-P_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "5aaaa49c29d5196672e6cac044b87d8116e00e6477e95d662bd157012a94068d",
+    "bytes": 198099,
+    "fetched_at": "2026-09-25T20:56:34Z",
+    "last_modified": "Thu, 22 May 2025 19:02:26 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_D-P_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_D-P.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 1170,
+    "first": "1927-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 1170,
+      "first": "1927-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 1170,
+      "first": "1927-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 97,
+      "first": "1928",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 97,
+      "first": "1928",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1170,
+      "first": "1927-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1170,
+      "first": "1927-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_DP_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on D/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1927-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:21Z",
+    "sha256": "5aaaa49c29d5196672e6cac044b87d8116e00e6477e95d662bd157012a94068d",
+    "last_modified": "Thu, 22 May 2025 19:02:26 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "5aaaa49c29d5196672e6cac044b87d8116e00e6477e95d662bd157012a94068d",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/ep": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_E-P_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T16(E-P Hi 30)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_E-P_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "e3e01a4dc3de1ee3325f0b24b88f3c0d24f2ee82515e0d8c80501786b284a859",
+    "bytes": 160610,
+    "fetched_at": "2026-09-25T20:56:36Z",
+    "last_modified": "Thu, 22 May 2025 19:02:28 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_E-P_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_E-P.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 882,
+    "first": "1951-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 73,
+      "first": "1952",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 73,
+      "first": "1952",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 882,
+      "first": "1951-07",
+      "last": "2024-12",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of E      / Sum of ME",
+      "rows": 74,
+      "first": "1951",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of E      / ME",
+      "rows": 74,
+      "first": "1951",
+      "last": "2024",
+      "cols": [
+       "<= 0",
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_EP_CFP_OP_INV_NI_AC_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on E/P."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1951-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:23Z",
+    "sha256": "e3e01a4dc3de1ee3325f0b24b88f3c0d24f2ee82515e0d8c80501786b284a859",
+    "last_modified": "Thu, 22 May 2025 19:02:28 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "e3e01a4dc3de1ee3325f0b24b88f3c0d24f2ee82515e0d8c80501786b284a859",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/ff3_d": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_daily_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T05 PANIC σ²(126거래일)",
+   "pinned_in": "cache:raw/french@2024-12/F-F_Research_Data_Factors_daily_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "2ea687afb4b1b8f75c67bcb8b414a6bc5510e42d36b8671335b0fced2ae3b985",
+    "bytes": 179691,
+    "fetched_at": "2026-09-25T20:56:38Z",
+    "last_modified": "Thu, 22 May 2025 19:02:10 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_daily_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors_daily.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "d",
+    "rows": 25901,
+    "first": "1926-07-01",
+    "last": "2024-12-31",
+    "blocks": [
+     {
+      "kind": "d",
+      "title": "",
+      "rows": 25901,
+      "first": "1926-07-01",
+      "last": "2024-12-31",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS_DAILY using the 202412 CRSP database.",
+     "The Tbill return is the simple daily rate that, over the number of trading days"
+    ]
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:25Z",
+    "sha256": "2ea687afb4b1b8f75c67bcb8b414a6bc5510e42d36b8671335b0fced2ae3b985",
+    "last_modified": "Thu, 22 May 2025 19:02:10 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "2ea687afb4b1b8f75c67bcb8b414a6bc5510e42d36b8671335b0fced2ae3b985",
+    "matches_design": null
+   }
+  },
+  "french@2005-08/ff3_m": {
+   "source": "french@2005-08",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202005%20Update/ftp/F-F_Research_Data_Factors_TXT.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "F0 판별 FAST 불일치 · G5f",
+   "pinned_in": "cache:raw/french@2005-08/F-F_Research_Data_Factors_TXT.zip",
+   "design_sha256": "5788b202778d8249dfdc279590374f81f19432cd7576932d6df6ef8131a2c74a",
+   "pinned": {
+    "sha256": "5788b202778d8249dfdc279590374f81f19432cd7576932d6df6ef8131a2c74a",
+    "bytes": 11538,
+    "fetched_at": "2026-09-25T14:03:21Z",
+    "last_modified": "Thu, 08 Dec 2022 15:50:12 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202005%20Update/ftp/F-F_Research_Data_Factors_TXT.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.txt",
+    "crsp_vintage": "200507",
+    "main_block": "m",
+    "rows": 949,
+    "first": "1926-07",
+    "last": "2005-07",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 949,
+      "first": "1926-07",
+      "last": "2005-07",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 78,
+      "first": "1927",
+      "last": "2004",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS using the 200507 CRSP database.",
+     "The 1-month TBill return is from Ibbotson and Associates, Inc."
+    ],
+    "spot_mktrf": "0/8 일치(설계 스폿 25개 중 이 판에 있는 달 8)"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:26Z",
+    "sha256": "5788b202778d8249dfdc279590374f81f19432cd7576932d6df6ef8131a2c74a",
+    "last_modified": "Thu, 08 Dec 2022 15:50:12 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "5788b202778d8249dfdc279590374f81f19432cd7576932d6df6ef8131a2c74a",
+    "matches_design": true
+   }
+  },
+  "french@2015-08/ff3_m": {
+   "source": "french@2015-08",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202015%20Update/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "F0 판별 FAST 불일치 · G5f",
+   "pinned_in": "cache:raw/french@2015-08/F-F_Research_Data_Factors_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "d40f89a404b677d1bb071b1554acaa71ec50c7d50b46b1c2037e55230b0d1b4c",
+    "bytes": 12995,
+    "fetched_at": "2026-09-25T14:03:23Z",
+    "last_modified": "Thu, 08 Dec 2022 15:50:08 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202015%20Update/ftp/F-F_Research_Data_Factors_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.CSV",
+    "crsp_vintage": "201507",
+    "main_block": "m",
+    "rows": 1069,
+    "first": "1926-07",
+    "last": "2015-07",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 1069,
+      "first": "1926-07",
+      "last": "2015-07",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 88,
+      "first": "1927",
+      "last": "2014",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS using the 201507 CRSP database.",
+     "The 1-month TBill return is from Ibbotson and Associates Inc."
+    ],
+    "spot_mktrf": "1/11 일치(설계 스폿 25개 중 이 판에 있는 달 11)"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:27Z",
+    "sha256": "d40f89a404b677d1bb071b1554acaa71ec50c7d50b46b1c2037e55230b0d1b4c",
+    "last_modified": "Thu, 08 Dec 2022 15:50:08 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "d40f89a404b677d1bb071b1554acaa71ec50c7d50b46b1c2037e55230b0d1b4c",
+    "matches_design": null
+   }
+  },
+  "french@2020-08/ff3_m": {
+   "source": "french@2020-08",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202020%20Update/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "F0 판별 FAST 불일치 · G5f",
+   "pinned_in": "cache:raw/french@2020-08/F-F_Research_Data_Factors_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "c0c3726daab4ea744924791243013fac97db9ac8b4c4abb1ef89613bd281e145",
+    "bytes": 13689,
+    "fetched_at": "2026-09-25T14:03:24Z",
+    "last_modified": "Thu, 08 Dec 2022 15:49:59 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202020%20Update/ftp/F-F_Research_Data_Factors_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.CSV",
+    "crsp_vintage": "202007",
+    "main_block": "m",
+    "rows": 1129,
+    "first": "1926-07",
+    "last": "2020-07",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 1129,
+      "first": "1926-07",
+      "last": "2020-07",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 93,
+      "first": "1927",
+      "last": "2019",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS using the 202007 CRSP database.",
+     "The 1-month TBill return is from Ibbotson and Associates, Inc."
+    ],
+    "spot_mktrf": "4/17 일치(설계 스폿 25개 중 이 판에 있는 달 17)"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:29Z",
+    "sha256": "c0c3726daab4ea744924791243013fac97db9ac8b4c4abb1ef89613bd281e145",
+    "last_modified": "Thu, 08 Dec 2022 15:49:59 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "c0c3726daab4ea744924791243013fac97db9ac8b4c4abb1ef89613bd281e145",
+    "matches_design": null
+   }
+  },
+  "french@2024-08/ff3_m": {
+   "source": "french@2024-08",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202024%20Update/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "F0 판별 FAST 불일치 · G5f",
+   "pinned_in": "cache:raw/french@2024-08/F-F_Research_Data_Factors_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "0b04328f5d25a6037281de3d7778ebd3932aebffba6fd4eb3fdfec44d4ba5a06",
+    "bytes": 12929,
+    "fetched_at": "2026-09-25T14:03:25Z",
+    "last_modified": "Tue, 01 Oct 2024 19:21:47 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/Data_Library/Historical_Archives/08%202024%20Update/ftp/F-F_Research_Data_Factors_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.CSV",
+    "crsp_vintage": "202407",
+    "main_block": "m",
+    "rows": 1177,
+    "first": "1926-07",
+    "last": "2024-07",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 1177,
+      "first": "1926-07",
+      "last": "2024-07",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 97,
+      "first": "1927",
+      "last": "2023",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS using the 202407 CRSP database.",
+     "The 1-month TBill rate data until 202405 are from Ibbotson Associates. Starting from 202406, the 1-month TBill rate is from ICE BofA US 1-Month Treasury Bill Index."
+    ],
+    "spot_mktrf": "4/22 일치(설계 스폿 25개 중 이 판에 있는 달 22)"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:30Z",
+    "sha256": "0b04328f5d25a6037281de3d7778ebd3932aebffba6fd4eb3fdfec44d4ba5a06",
+    "last_modified": "Tue, 01 Oct 2024 19:21:47 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "0b04328f5d25a6037281de3d7778ebd3932aebffba6fd4eb3fdfec44d4ba5a06",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/ff3_m": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "F0 판별 FAST 불일치 · G5f",
+   "pinned_in": "cache:raw/french@2024-12/F-F_Research_Data_Factors_CSV.zip",
+   "design_sha256": "fc9e41cc3b66c62fa8f565a01fb4c8c0d7962c777303c46b8ab7102190b98ea2",
+   "pinned": {
+    "sha256": "fc9e41cc3b66c62fa8f565a01fb4c8c0d7962c777303c46b8ab7102190b98ea2",
+    "bytes": 12995,
+    "fetched_at": "2026-09-25T14:03:11Z",
+    "last_modified": "Thu, 22 May 2025 19:02:09 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_CSV.zip"
+   },
+   "design_state": "일치",
+   "summary": {
+    "inner": "F-F_Research_Data_Factors.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "m",
+    "rows": 1182,
+    "first": "1926-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "m",
+      "title": "",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "a",
+      "title": "Annual Factors: January-December",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "Mkt-RF",
+       "SMB",
+       "HML",
+       "RF"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_BEME_RETS using the 202412 CRSP database.",
+     "The 1-month TBill rate data until 202405 are from Ibbotson Associates. Starting from 202406, the 1-month TBill rate is from ICE BofA US 1-Month Treasury Bill Index."
+    ],
+    "spot_mktrf": "4/22 일치(설계 스폿 25개 중 이 판에 있는 달 22)"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:31Z",
+    "sha256": "fc9e41cc3b66c62fa8f565a01fb4c8c0d7962c777303c46b8ab7102190b98ea2",
+    "last_modified": "Thu, 22 May 2025 19:02:09 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "fc9e41cc3b66c62fa8f565a01fb4c8c0d7962c777303c46b8ab7102190b98ea2",
+    "matches_design": true
+   }
+  },
+  "french@2024-12/ind12": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/12_Industry_Portfolios_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T04 · T12 방어 산업 쌍둥이(NoDur · Utils · Hlth)",
+   "pinned_in": "cache:raw/french@2024-12/12_Industry_Portfolios_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "27aa7e47d7c525a9ad00ee6fc498d96f96d5536b018cd17d6db54f117171a3eb",
+    "bytes": 136938,
+    "fetched_at": "2026-09-25T20:56:40Z",
+    "last_modified": "Thu, 22 May 2025 18:53:40 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/12_Industry_Portfolios_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "12_Industry_Portfolios.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 1182,
+    "first": "1926-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Average Value Weighted Returns -- Monthly",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Average Equal Weighted Returns -- Monthly",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Average Value Weighted Returns -- Annual",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Average Equal Weighted Returns -- Annual",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1182,
+      "first": "1926-07",
+      "last": "2024-12",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "sum_ratio",
+      "title": "Sum of BE / Sum of ME",
+      "rows": 99,
+      "first": "1926",
+      "last": "2024",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of BE/ME",
+      "rows": 99,
+      "first": "1926",
+      "last": "2024",
+      "cols": [
+       "NoDur",
+       "Durbl",
+       "Manuf",
+       "Enrgy",
+       "Chems",
+       "BusEq",
+       "Telcm",
+       "Utils",
+       "Shops",
+       "Hlth",
+       "Money",
+       "Other"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_IND_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for 12 industry portfolios."
+    ],
+    "legs_firms": {
+     "NoDur": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Utils": {
+      "months_lt_20": 0,
+      "first_ok": "1926-07",
+      "vw_missing": 0
+     },
+     "Hlth": {
+      "months_lt_20": 384,
+      "first_ok": "1958-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:33Z",
+    "sha256": "27aa7e47d7c525a9ad00ee6fc498d96f96d5536b018cd17d6db54f117171a3eb",
+    "last_modified": "Thu, 22 May 2025 18:53:40 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "27aa7e47d7c525a9ad00ee6fc498d96f96d5536b018cd17d6db54f117171a3eb",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/mom_d": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Momentum_Factor_daily_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T05 BSC 쌍둥이(σ̂_UMD 126일)",
+   "pinned_in": "cache:raw/french@2024-12/F-F_Momentum_Factor_daily_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "9b91c4ff709f6f0c9deb07caff523a7e93298870905c3abe0f64a63f51e41adb",
+    "bytes": 83926,
+    "fetched_at": "2026-09-25T20:56:42Z",
+    "last_modified": "Thu, 22 May 2025 19:02:06 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Momentum_Factor_daily_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "F-F_Momentum_Factor_daily.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "d",
+    "rows": 25800,
+    "first": "1926-11-03",
+    "last": "2024-12-31",
+    "blocks": [
+     {
+      "kind": "d",
+      "title": "",
+      "rows": 25800,
+      "first": "1926-11-03",
+      "last": "2024-12-31",
+      "cols": [
+       "Mom"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_ME_PRIOR_RETS_DAILY using the 202412 CRSP database.  It",
+     "contains a momentum factor, constructed from six value-weight portfolios formed"
+    ]
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:35Z",
+    "sha256": "9b91c4ff709f6f0c9deb07caff523a7e93298870905c3abe0f64a63f51e41adb",
+    "last_modified": "Thu, 22 May 2025 19:02:06 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "9b91c4ff709f6f0c9deb07caff523a7e93298870905c3abe0f64a63f51e41adb",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/ni": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_NI_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T18(< 0)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_NI_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "2135f3fb57323054d7c84fe9096ae01406123f9233074c611712104d886b50ae",
+    "bytes": 124064,
+    "fetched_at": "2026-09-25T20:56:44Z",
+    "last_modified": "Thu, 22 May 2025 19:03:04 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_NI_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_NI.csv",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 738,
+    "first": "1963-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of NI",
+      "rows": 62,
+      "first": "1963",
+      "last": "2024",
+      "cols": [
+       "< 0",
+       "ZERO",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_EP_CFP_OP_INV_NI_AC_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on NI."
+    ],
+    "legs_firms": {
+     "< 0": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:37Z",
+    "sha256": "2135f3fb57323054d7c84fe9096ae01406123f9233074c611712104d886b50ae",
+    "last_modified": "Thu, 22 May 2025 19:03:04 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "2135f3fb57323054d7c84fe9096ae01406123f9233074c611712104d886b50ae",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/op": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_OP_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T04 DEF · T12 DEF(Hi 30)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_OP_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "b990448be80112e3144c99f9b88d83207d1c326df988b7117f064b9da951febf",
+    "bytes": 131678,
+    "fetched_at": "2026-09-25T20:56:45Z",
+    "last_modified": "Thu, 22 May 2025 19:03:04 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_OP_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_OP.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 738,
+    "first": "1963-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weight Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weight Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weight Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weight Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value Weight Average of OP",
+      "rows": 62,
+      "first": "1963",
+      "last": "2024",
+      "cols": [
+       "Lo 30",
+       "Med 40",
+       "Hi 30",
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_EP_CFP_OP_INV_NI_AC_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on OP."
+    ],
+    "legs_firms": {
+     "Hi 30": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:39Z",
+    "sha256": "b990448be80112e3144c99f9b88d83207d1c326df988b7117f064b9da951febf",
+    "last_modified": "Thu, 22 May 2025 19:03:04 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "b990448be80112e3144c99f9b88d83207d1c326df988b7117f064b9da951febf",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/prior12_2": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/10_Portfolios_Prior_12_2_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T05 MOM(Hi PRIOR) · T04 쌍둥이(Lo PRIOR)",
+   "pinned_in": "cache:raw/french@2024-12/10_Portfolios_Prior_12_2_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "69c648e5ea7cd5260b0d6466115e871d1ba2eea39d6680a416ed98837d4ccf98",
+    "bytes": 115843,
+    "fetched_at": "2026-09-25T20:56:47Z",
+    "last_modified": "Thu, 22 May 2025 18:53:23 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/10_Portfolios_Prior_12_2_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "10_Portfolios_Prior_12_2.CSV",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 1176,
+    "first": "1927-01",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Average Value Weighted Returns -- Monthly",
+      "rows": 1176,
+      "first": "1927-01",
+      "last": "2024-12",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Average Equal Weighted Returns -- Monthly",
+      "rows": 1176,
+      "first": "1927-01",
+      "last": "2024-12",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Average Value Weighted Returns -- Annual",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Average Equal Weighted Returns -- Annual",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 1176,
+      "first": "1927-01",
+      "last": "2024-12",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 1176,
+      "first": "1927-01",
+      "last": "2024-12",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg_a",
+      "title": "Value-Weighted Average of Prior Returns",
+      "rows": 98,
+      "first": "1927",
+      "last": "2024",
+      "cols": [
+       "Lo PRIOR",
+       "PRIOR 2",
+       "PRIOR 3",
+       "PRIOR 4",
+       "PRIOR 5",
+       "PRIOR 6",
+       "PRIOR 7",
+       "PRIOR 8",
+       "PRIOR 9",
+       "Hi PRIOR"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_PRIOR_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for  10 prior-return portfolios."
+    ],
+    "legs_firms": {
+     "Hi PRIOR": {
+      "months_lt_20": 0,
+      "first_ok": "1927-01",
+      "vw_missing": 0
+     },
+     "Lo PRIOR": {
+      "months_lt_20": 0,
+      "first_ok": "1927-01",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:41Z",
+    "sha256": "69c648e5ea7cd5260b0d6466115e871d1ba2eea39d6680a416ed98837d4ccf98",
+    "last_modified": "Thu, 22 May 2025 18:53:23 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "69c648e5ea7cd5260b0d6466115e871d1ba2eea39d6680a416ed98837d4ccf98",
+    "matches_design": null
+   }
+  },
+  "french@2024-12/var": {
+   "source": "french@2024-12",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_VAR_CSV.zip",
+   "license": "French: 라이선스 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만)",
+   "cards": "G5f(2024-12 판 재실행) · T15 Lo/Hi 20 · T03 대조(VAR Lo 20)",
+   "pinned_in": "cache:raw/french@2024-12/Portfolios_Formed_on_VAR_CSV.zip",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "0ff972a5e88eb94ef652ad8053db757c4f9f3bbe39607e2a2c18ebe9fe6acfad",
+    "bytes": 143507,
+    "fetched_at": "2026-09-25T20:56:49Z",
+    "last_modified": "Thu, 22 May 2025 19:03:10 GMT",
+    "origin": "live",
+    "fetched_from": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_VAR_CSV.zip"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "inner": "Portfolios_Formed_on_VAR.csv",
+    "crsp_vintage": "202412",
+    "main_block": "vw_m",
+    "rows": 738,
+    "first": "1963-07",
+    "last": "2024-12",
+    "blocks": [
+     {
+      "kind": "vw_m",
+      "title": "Value Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_m",
+      "title": "Equal Weighted Returns -- Monthly",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vw_a",
+      "title": "Value Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "ew_a",
+      "title": "Equal Weighted Returns -- Annual from January to December",
+      "rows": 61,
+      "first": "1964",
+      "last": "2024",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "nfirms",
+      "title": "Number of Firms in Portfolios",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "avgsize",
+      "title": "Average Firm Size",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     },
+     {
+      "kind": "vwavg",
+      "title": "Value-Weighted Average of Past Return Variance",
+      "rows": 738,
+      "first": "1963-07",
+      "last": "2024-12",
+      "cols": [
+       "Lo 20",
+       "Qnt 2",
+       "Qnt 3",
+       "Qnt 4",
+       "Hi 20",
+       "Lo 10",
+       "Dec 2",
+       "Dec 3",
+       "Dec 4",
+       "Dec 5",
+       "Dec 6",
+       "Dec 7",
+       "Dec 8",
+       "Dec 9",
+       "Hi 10"
+      ],
+      "n_missing_codes": 0,
+      "dup_dates": 0
+     }
+    ],
+    "preamble_head": [
+     "This file was created by CMPT_VAR_RETS using the 202412 CRSP database.",
+     "It contains value- and equal-weighted returns for portfolios formed on VAR."
+    ],
+    "legs_firms": {
+     "Lo 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     },
+     "Hi 20": {
+      "months_lt_20": 0,
+      "first_ok": "1963-07",
+      "vw_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:43Z",
+    "sha256": "0ff972a5e88eb94ef652ad8053db757c4f9f3bbe39607e2a2c18ebe9fe6acfad",
+    "last_modified": "Thu, 22 May 2025 19:03:10 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "0ff972a5e88eb94ef652ad8053db757c4f9f3bbe39607e2a2c18ebe9fe6acfad",
+    "matches_design": null
+   }
+  },
+  "fred/GS10": {
+   "source": "fred",
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GS10",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T17 ΔGS10 · T17 실질금리 대리",
+   "pinned_in": "repo:data/_tb_fred/GS10.csv",
+   "design_sha256": "e22128f6caa50e4e7fed03a1c2d323a517bad452a2c69eab89277450fb59bc5c",
+   "pinned": {
+    "sha256": "e22128f6caa50e4e7fed03a1c2d323a517bad452a2c69eab89277450fb59bc5c",
+    "bytes": 14190,
+    "fetched_at": "2026-09-25T14:16:56Z",
+    "last_modified": "Tue, 01 Sep 2026 20:16:37 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GS10"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 881,
+    "first": "1953-04",
+    "last": "2026-08",
+    "n_missing": 0,
+    "freq": "M",
+    "last_valid": "2026-08"
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:44Z",
+    "sha256": "e22128f6caa50e4e7fed03a1c2d323a517bad452a2c69eab89277450fb59bc5c",
+    "last_modified": "Tue, 01 Sep 2026 20:16:37 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "e22128f6caa50e4e7fed03a1c2d323a517bad452a2c69eab89277450fb59bc5c",
+    "matches_design": true
+   }
+  },
+  "fred/TB3MS": {
+   "source": "fred",
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=TB3MS",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "가용 목록(설계 availability)",
+   "pinned_in": "repo:data/_tb_fred/TB3MS.csv",
+   "design_sha256": "ebf04b1ae5bc5729ba3bb2b35dbb0e0c5e22dace36bea0c02632782d625ae6ab",
+   "pinned": {
+    "sha256": "ebf04b1ae5bc5729ba3bb2b35dbb0e0c5e22dace36bea0c02632782d625ae6ab",
+    "bytes": 17849,
+    "fetched_at": "2026-09-25T14:16:54Z",
+    "last_modified": "Tue, 01 Sep 2026 20:16:39 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=TB3MS"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 1112,
+    "first": "1934-01",
+    "last": "2026-08",
+    "n_missing": 0,
+    "freq": "M",
+    "last_valid": "2026-08"
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:45Z",
+    "sha256": "ebf04b1ae5bc5729ba3bb2b35dbb0e0c5e22dace36bea0c02632782d625ae6ab",
+    "last_modified": "Tue, 01 Sep 2026 20:16:39 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "ebf04b1ae5bc5729ba3bb2b35dbb0e0c5e22dace36bea0c02632782d625ae6ab",
+    "matches_design": true
+   }
+  },
+  "fred/UNRATE": {
+   "source": "fred",
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T12(현재 판 — 최초 공표판의 대조)",
+   "pinned_in": "repo:data/_tb_fred/UNRATE.csv",
+   "design_sha256": "ffe86c903f6944ebc8281e5474a15fc4ceaac61059bc51ec86a7241391d8713d",
+   "pinned": {
+    "sha256": "ffe86c903f6944ebc8281e5474a15fc4ceaac61059bc51ec86a7241391d8713d",
+    "bytes": 14196,
+    "fetched_at": "2026-09-25T14:17:04Z",
+    "last_modified": "Fri, 04 Sep 2026 13:27:31 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UNRATE"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 944,
+    "first": "1948-01",
+    "last": "2026-08",
+    "n_missing": 1,
+    "freq": "M",
+    "last_valid": "2026-08"
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:46Z",
+    "sha256": "ffe86c903f6944ebc8281e5474a15fc4ceaac61059bc51ec86a7241391d8713d",
+    "last_modified": "Fri, 04 Sep 2026 13:27:31 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "ffe86c903f6944ebc8281e5474a15fc4ceaac61059bc51ec86a7241391d8713d",
+    "matches_design": true
+   }
+  },
+  "fred/CPIAUCSL": {
+   "source": "fred",
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T17 실질금리 대리(12개월 CPI)",
+   "pinned_in": "repo:data/_tb_fred/CPIAUCSL.csv",
+   "design_sha256": "f8ecddf53a9a9a74dda92c2c4204e6039466fcb744bc74171b73b5f6aac48119",
+   "pinned": {
+    "sha256": "f8ecddf53a9a9a74dda92c2c4204e6039466fcb744bc74171b73b5f6aac48119",
+    "bytes": 17744,
+    "fetched_at": "2026-09-25T14:17:05Z",
+    "last_modified": "Fri, 11 Sep 2026 13:37:49 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCSL"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 956,
+    "first": "1947-01",
+    "last": "2026-08",
+    "n_missing": 1,
+    "freq": "M",
+    "last_valid": "2026-08"
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:46Z",
+    "sha256": "f8ecddf53a9a9a74dda92c2c4204e6039466fcb744bc74171b73b5f6aac48119",
+    "last_modified": "Fri, 11 Sep 2026 13:37:49 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "f8ecddf53a9a9a74dda92c2c4204e6039466fcb744bc74171b73b5f6aac48119",
+    "matches_design": true
+   }
+  },
+  "fred/DFII10": {
+   "source": "fred",
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T17 S 층 DFII10 원판(국면 일치 수만)",
+   "pinned_in": "repo:data/_tb_fred/DFII10.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "ddb4c4057c7cc4b6dc337cce84f02bfcbde9da5c95dcb2d966e06b6d65d65502",
+    "bytes": 99019,
+    "fetched_at": "2026-09-25T20:56:50Z",
+    "last_modified": "Fri, 25 Sep 2026 20:16:34 GMT",
+    "origin": "live",
+    "fetched_from": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6191,
+    "first": "2003-01-02",
+    "last": "2026-09-24",
+    "n_missing": 254,
+    "freq": "D",
+    "last_valid": "2026-09-24"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:47Z",
+    "sha256": "ddb4c4057c7cc4b6dc337cce84f02bfcbde9da5c95dcb2d966e06b6d65d65502",
+    "last_modified": "Fri, 25 Sep 2026 20:16:34 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "ddb4c4057c7cc4b6dc337cce84f02bfcbde9da5c95dcb2d966e06b6d65d65502",
+    "matches_design": null
+   }
+  },
+  "fred/alfred_UNRATE_2008-12-05": {
+   "source": "fred",
+   "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=UNRATE&vintage_date=2008-12-05",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T12 개정 한계 대조(설계: 2008 판 대비 731개월 중 15개월 차이)",
+   "pinned_in": "repo:data/_tb_fred/alfred_UNRATE_2008-12-05.csv",
+   "design_sha256": "8b7a68367104b31926d1d397f73bc9cbf50a1529d7182dee10a72e75c63bf86d",
+   "pinned": {
+    "sha256": "8b7a68367104b31926d1d397f73bc9cbf50a1529d7182dee10a72e75c63bf86d",
+    "bytes": 11008,
+    "fetched_at": "2026-09-25T14:17:15Z",
+    "last_modified": "Thu, 21 Mar 2019 18:40:57 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=UNRATE&vintage_date=2008-12-05"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 731,
+    "first": "1948-01",
+    "last": "2008-11",
+    "n_missing": 0,
+    "freq": "M",
+    "last_valid": "2008-11"
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:48Z",
+    "sha256": "8b7a68367104b31926d1d397f73bc9cbf50a1529d7182dee10a72e75c63bf86d",
+    "last_modified": "Thu, 21 Mar 2019 18:40:57 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "8b7a68367104b31926d1d397f73bc9cbf50a1529d7182dee10a72e75c63bf86d",
+    "matches_design": true
+   }
+  },
+  "alfred/UNRATE_first": {
+   "source": "alfred",
+   "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=UNRATE,…&vintage_date=<월말 12개씩>",
+   "license": "FRED/ALFRED 연방 통계 — 저장소 data/_tb_fred/ 에 고정",
+   "cards": "T12 최초 공표 UNRATE(t−1 · 최초 공표 판 날짜 ≤ t)",
+   "pinned_in": "repo:data/_tb_fred/UNRATE_first_release.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "56ab64d6acf4d9d878abcc6e17cdb1bf796510ebf16bb6e16fa2c745e1900268",
+    "bytes": 23420,
+    "fetched_at": "2026-09-25T20:59:09Z",
+    "last_modified": null,
+    "origin": "live (월말 판 표본)",
+    "fetched_from": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=UNRATE,…&vintage_date=<월말 12개씩>",
+    "n_batches": 76,
+    "batch_sha256": [
+     [
+      "UNRATE_1960-03-31_1960-03-31.csv",
+      "4d564dc32663e6d699620a61a48a5b16857a0844d4aca9d539fad3ebd90d749b"
+     ],
+     [
+      "UNRATE_1960-04-30_1960-04-30.csv",
+      "2d5acae8ae0b50e97074747e3a87bb112036686d99a8c3ea90d47dcfc7cb0de3"
+     ],
+     [
+      "UNRATE_1960-05-31_1960-05-31.csv",
+      "74e2ded90052492c4b61994b261db2fb2e38764ecb0f883d8e972eb24733f3c0"
+     ],
+     [
+      "UNRATE_1960-06-30_1960-06-30.csv",
+      "2ca6f9718dab48551d32ab6763f4ad09b57acc9df53468ffaaa38350e9e04612"
+     ],
+     [
+      "UNRATE_1960-07-31_1960-07-31.csv",
+      "42f90bd453225c874bf198aafd10da8a05f7da8fb3efef71e8c2061e54b8afd8"
+     ],
+     [
+      "UNRATE_1960-08-31_1960-08-31.csv",
+      "91fb058fdd444fbe62562cd9311d0954369ec7f19ccb1bad12b82b0112c07fa4"
+     ],
+     [
+      "UNRATE_1960-09-30_1960-09-30.csv",
+      "dd60de332b5fe58a9ca6cfdbacd71c921b223431cbc33bbe98fee3ed2cc96556"
+     ],
+     [
+      "UNRATE_1960-10-31_1960-10-31.csv",
+      "32300c71bdbe675307539076be3075eb675ca5bdd0692e1feb9d48b7d53cadf2"
+     ],
+     [
+      "UNRATE_1960-11-30_1960-11-30.csv",
+      "6785b29136c1f7ef17fe42bbc25e386d1631d5021199781995d990d506653aa6"
+     ],
+     [
+      "UNRATE_1960-12-31_1960-12-31.csv",
+      "157b8dfbdc34c4018e7adc53d3576edef1b2284219b84552cd8be375e7f5e4b0"
+     ],
+     [
+      "UNRATE_1961-01-31_1961-12-31.csv",
+      "c1e1195cf49619ec20ebdd579a4d3fb414032da947095e45831b5225b03a80ec"
+     ],
+     [
+      "UNRATE_1962-01-31_1962-12-31.csv",
+      "9e95f7edf7054240cb817db90f10fed81e4490249fbf314629ce2cea4eb2f841"
+     ],
+     [
+      "UNRATE_1963-01-31_1963-12-31.csv",
+      "106872bd3a1b9617959d66b8f50527dc1ab1a0be4f98ddbbb0ebd28541171fa3"
+     ],
+     [
+      "UNRATE_1964-01-31_1964-12-31.csv",
+      "6c4d56cf779c0fc2dc62074533bc4a268bbbf7d806028131d39208aabe1764f5"
+     ],
+     [
+      "UNRATE_1965-01-31_1965-12-31.csv",
+      "dff5e371a2b9f69ef48a18a86b20a78adeedd4070bd11feba1069b317ccad87d"
+     ],
+     [
+      "UNRATE_1966-01-31_1966-12-31.csv",
+      "a5d94aff8feb9a4082de987d02cdbdd0d3108aedc14702f45a72eae56fc487f1"
+     ],
+     [
+      "UNRATE_1967-01-31_1967-12-31.csv",
+      "7dc376b9777b427308e5173ab7c11f420449ff7dd5c397d364cfd2161b324aa6"
+     ],
+     [
+      "UNRATE_1968-01-31_1968-12-31.csv",
+      "52b2d7b8cfec0b2ad072bf851a300324549b9c6afcce1eba4bffc651c92f1108"
+     ],
+     [
+      "UNRATE_1969-01-31_1969-12-31.csv",
+      "26c5d264aa3f1cce161715eb5a577fe3f7e6880cf77964bad02c6ec400653fc4"
+     ],
+     [
+      "UNRATE_1970-01-31_1970-12-31.csv",
+      "2460173c2e5bcdfb8e929c076f1b41ca32fd8f827059b6b57e7c9cb84b97a39c"
+     ],
+     [
+      "UNRATE_1971-01-31_1971-12-31.csv",
+      "34515adc02dd6dd70c46fbf68c6f26ce4244fe23c90211a929a0dd06d52b7e83"
+     ],
+     [
+      "UNRATE_1972-01-31_1972-12-31.csv",
+      "691b7b86252c0bafc050fb386b0a141fd04dadc73291311abd0c5ffaae5894c5"
+     ],
+     [
+      "UNRATE_1973-01-31_1973-12-31.csv",
+      "05f5bf0b34ce8ae7b38ae07796f6abdb8e9e2b861c349a679df8ae92577c349a"
+     ],
+     [
+      "UNRATE_1974-01-31_1974-12-31.csv",
+      "b3d9749186f3dc3f7fd2a27aad23f816f0d423cd288ad627fbbb4a431029d256"
+     ],
+     [
+      "UNRATE_1975-01-31_1975-12-31.csv",
+      "e1c61c3da0c887489b486781fca67368e69a33d749f4b9589f7a78f068026bf2"
+     ],
+     [
+      "UNRATE_1976-01-31_1976-12-31.csv",
+      "601c03b79d3451fa9a01ec99caddb2579752931c3d80750f1f3c10a3220f66a6"
+     ],
+     [
+      "UNRATE_1977-01-31_1977-12-31.csv",
+      "685d3819457b43542c90b6e69a873109d954b6728317ec3d0b18b69eaed2222f"
+     ],
+     [
+      "UNRATE_1978-01-31_1978-12-31.csv",
+      "67009fac0d9ca065dc2ad689fd8b0eec90f94c53202057ae6932bed18fc936dc"
+     ],
+     [
+      "UNRATE_1979-01-31_1979-12-31.csv",
+      "9f4adddeda8bd6e0fae16bf9a0aaae691f2a48cabdc8d3cf0f1b5e606eb0b2c5"
+     ],
+     [
+      "UNRATE_1980-01-31_1980-12-31.csv",
+      "0ef034e04198b614015800e8c7413f76c3e32644a4390a0b79c2b57eb65cd208"
+     ],
+     [
+      "UNRATE_1981-01-31_1981-12-31.csv",
+      "a7752f6c2bca500732fdc91af5ba29345ce401f2db6a9d61f274c2792e931728"
+     ],
+     [
+      "UNRATE_1982-01-31_1982-12-31.csv",
+      "803c352a4da1b5d8c3a7e679574ecf2df393b12e93a5f2974ef986a881f5aa9d"
+     ],
+     [
+      "UNRATE_1983-01-31_1983-12-31.csv",
+      "684f58fb0467817739f37e9128b9369f0e2fd7963ae5390f3787a5fe656b23c0"
+     ],
+     [
+      "UNRATE_1984-01-31_1984-12-31.csv",
+      "7ce519ab6efdc4f9742aa5edce63bb87878f46c0b969b60013d50435a050e5cc"
+     ],
+     [
+      "UNRATE_1985-01-31_1985-12-31.csv",
+      "cc16b676ab527fa02eae2d724cb67ab1a637971eff5f184cee6c695ce275926d"
+     ],
+     [
+      "UNRATE_1986-01-31_1986-12-31.csv",
+      "25a75e083b361f0413f0256ff670d50ec54e2681dc538eefbe856102cfbe3b52"
+     ],
+     [
+      "UNRATE_1987-01-31_1987-12-31.csv",
+      "2d87b6528795ce3e1241cb24760aae112ee19ce0bd97174487645406ac9bb02b"
+     ],
+     [
+      "UNRATE_1988-01-31_1988-12-31.csv",
+      "281382cacc42600426547e4cdb5c90dfd54bd6bc8d241aac087be0fe8f69cf5e"
+     ],
+     [
+      "UNRATE_1989-01-31_1989-12-31.csv",
+      "71af7c6c4bee39b5f263def3cac9749418d249a8cb264514324ee38a4728e1cb"
+     ],
+     [
+      "UNRATE_1990-01-31_1990-12-31.csv",
+      "831cdbe36005fdcbcc931acc03d9d24cbb4084d160f311d1bd281f872491ce20"
+     ],
+     [
+      "UNRATE_1991-01-31_1991-12-31.csv",
+      "8e287baee7e168177e4f7e3371305381f0827976fb9aeaea47bbb6d4d706ff57"
+     ],
+     [
+      "UNRATE_1992-01-31_1992-12-31.csv",
+      "f2031d7181dcdcd5707fa29382d1d48f50c1b4703847f23878881b1df10a12d7"
+     ],
+     [
+      "UNRATE_1993-01-31_1993-12-31.csv",
+      "34a443f2d6b3e9b2852782a93756d6cc2ebcde16ca2bffbf4c3a420b6925857e"
+     ],
+     [
+      "UNRATE_1994-01-31_1994-12-31.csv",
+      "c1187511ffbfd9292c262994b4de9aedbae201b6df5e73b1eed75ca20481ae92"
+     ],
+     [
+      "UNRATE_1995-01-31_1995-12-31.csv",
+      "138f893efb9dce427dbcd30569372bdd1023e66b2bfeb84a9f24cb21ace9cb07"
+     ],
+     [
+      "UNRATE_1996-01-31_1996-12-31.csv",
+      "cedd89940a9c412b954b99cfc89d7cbd8ad5676f0e6b0dc97fa1d21737ae135d"
+     ],
+     [
+      "UNRATE_1997-01-31_1997-12-31.csv",
+      "f83b57d8b472ee62ffae83bb499b38f1182749474b80eceb7800c8aabddacdf6"
+     ],
+     [
+      "UNRATE_1998-01-31_1998-12-31.csv",
+      "127f3bd1e84fd621c568b6a1538a543b50da353b940ffa03207af6a178e94fac"
+     ],
+     [
+      "UNRATE_1999-01-31_1999-12-31.csv",
+      "e52359952aab4ab3380bbf77719fa19e9bff0c00418604fbc85868233371c8ae"
+     ],
+     [
+      "UNRATE_2000-01-31_2000-12-31.csv",
+      "6c768248cde149859de3e154ad1a756d7161cffb10592844df8ef1c145f1cae4"
+     ],
+     [
+      "UNRATE_2001-01-31_2001-12-31.csv",
+      "d1bbbee20f69674286dfb27c47fb0b490ef4975df5e7b116d828163c5a60f7d5"
+     ],
+     [
+      "UNRATE_2002-01-31_2002-12-31.csv",
+      "618ba1338b856e765a7c5a301865925bc6f8151843eb2ab34d72887fe81b8124"
+     ],
+     [
+      "UNRATE_2003-01-31_2003-12-31.csv",
+      "290f2f35e801142c45139e8974d70a31415ec39e18d70abdeb6bf6bf65b18dd1"
+     ],
+     [
+      "UNRATE_2004-01-31_2004-12-31.csv",
+      "b8a2cc44012949ffe7911254d886e23675c99a4672269350a12ce8c31895e741"
+     ],
+     [
+      "UNRATE_2005-01-31_2005-12-31.csv",
+      "bb5cede8020ff10aa866ae3eefdc55c3e61d413d1f3c05c3fac8cec89c2f9813"
+     ],
+     [
+      "UNRATE_2006-01-31_2006-12-31.csv",
+      "a54f4cb62c8e80048f8108c8214d0cd1c9d7b557f1d0693f63c0ac548bc145f2"
+     ],
+     [
+      "UNRATE_2007-01-31_2007-12-31.csv",
+      "b04e0113638986ad271f74caea00be3128f469521164b5ca88b5ecb1cee60b82"
+     ],
+     [
+      "UNRATE_2008-01-31_2008-12-31.csv",
+      "1f11c48dcb0454268cfafa3754df1d849ff5e2560bc350099eee6b79d4ea9feb"
+     ],
+     [
+      "UNRATE_2009-01-31_2009-12-31.csv",
+      "38419460cc509f21a0b5468d5d3e5d398c14dc3f4dd0e62a636aa4e78af2242f"
+     ],
+     [
+      "UNRATE_2010-01-31_2010-12-31.csv",
+      "0c64387d23d3f766ea8dee9a11d49849c037993a9723534a66668d8f053dc8c2"
+     ],
+     [
+      "UNRATE_2011-01-31_2011-12-31.csv",
+      "02bfa98c99cfe91b1e0379be6db09129574c9f2eed4f87f5d1e38132cb6fc80b"
+     ],
+     [
+      "UNRATE_2012-01-31_2012-12-31.csv",
+      "cf6e66d5220ac30504bb0a57f18f543c65211a9b7dc74eaee747e6876f8ac59c"
+     ],
+     [
+      "UNRATE_2013-01-31_2013-12-31.csv",
+      "fbd782e8a97d97c78ec80e7706fcbc505bc0c4786f4ab0b6fd5f60f9f632dd8b"
+     ],
+     [
+      "UNRATE_2014-01-31_2014-12-31.csv",
+      "3ef54d853dbdc883cb62eab37ad6c9dc84853db7491f41c5326dddf8e41b8679"
+     ],
+     [
+      "UNRATE_2015-01-31_2015-12-31.csv",
+      "5ae0a8e5737d827d406253b6b353c5f67f957674c8e4bf260620b179136f82d0"
+     ],
+     [
+      "UNRATE_2016-01-31_2016-12-31.csv",
+      "38888cc1f87294343dedf52a3b8fb39eec24c5c13fa6d57a45c54d1d29e98165"
+     ],
+     [
+      "UNRATE_2017-01-31_2017-12-31.csv",
+      "baf1a9ca0c1f526f639cf3c37097cf4879605ef728b490b3601ced603c1cceaf"
+     ],
+     [
+      "UNRATE_2018-01-31_2018-12-31.csv",
+      "b4ed8849a29cccb0bba2dd9df099a5a71242e02039e295cf11b539b2cb3a8b36"
+     ],
+     [
+      "UNRATE_2019-01-31_2019-12-31.csv",
+      "7d747e14be13770790757f27cf6820661b44deba16e636db01ecf83ec5b6cd26"
+     ],
+     [
+      "UNRATE_2020-01-31_2020-12-31.csv",
+      "2dadd932918ddcfe751b9daa78d2e0056c6cad47307a9646a38bd48caa4a741e"
+     ],
+     [
+      "UNRATE_2021-01-31_2021-12-31.csv",
+      "60710aed793a9ea5169bededf120f81a2a9aad5ca59d561e12a60b056df9317e"
+     ],
+     [
+      "UNRATE_2022-01-31_2022-12-31.csv",
+      "72e454bde76cccb1410a7ae54003c8119b082a1480951259b7441ac1c1d88fdd"
+     ],
+     [
+      "UNRATE_2023-01-31_2023-12-31.csv",
+      "77ee22ff8d32d5280764ece28871523b4b98ea17588f75629365275b1fa9fecd"
+     ],
+     [
+      "UNRATE_2024-01-31_2024-12-31.csv",
+      "7556dbf462022a660a0f0adb148f4f1e7baee13f044cb5f7636f5ed19ff7fcfc"
+     ],
+     [
+      "UNRATE_2025-01-31_2025-12-31.csv",
+      "816299875c1c2ed2bd488381f9242a077454948b7271522b559e6ba8eb707086"
+     ],
+     [
+      "UNRATE_2026-01-31_2026-09-26.csv",
+      "dd19d157156bd7582b8d49a938e9a591b3de7234450e53b4a78621a60dd0e5ce"
+     ]
+    ],
+    "failed_vintages": [
+     [
+      "1960-01-31",
+      404
+     ],
+     [
+      "1960-02-29",
+      404
+     ]
+    ]
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 943,
+    "first": "1948-01",
+    "last": "2026-08",
+    "first_release_from": "1960-02",
+    "n_not_first_release": 145,
+    "earliest_vintage": "1960-03-31",
+    "latest_vintage": "2026-09-25",
+    "release_delay_months": {
+     "0": 7,
+     "1": 790,
+     "2": 1
+    }
+   },
+   "vs_design_expect": null
+  },
+  "shiller/ie_data": {
+   "source": "shiller",
+   "url": "https://img1.wsimg.com/blobby/go/e5e77e0b-59d1-44d9-ab25-4763ac982e53/downloads/70fec4f5-727f-4e53-b5f1-179af109c5fa/ie_data.xls?ver=1788371540009",
+   "license": "Shiller: 문구 없음 — 원자료 재게시 안 함(캐시만)",
+   "cards": "T13 CAPE 재계산(P · E · CPI) · S&P TR 이음 1975-1987(D)",
+   "pinned_in": "cache:raw/shiller/ie_data.xls",
+   "design_sha256": "044196dafe44c3030b2facbdea023975b3f6aa68b4e52f8f9bafc403e19589c1",
+   "pinned": {
+    "sha256": "044196dafe44c3030b2facbdea023975b3f6aa68b4e52f8f9bafc403e19589c1",
+    "bytes": 1674752,
+    "fetched_at": "2026-09-25T14:04:39Z",
+    "last_modified": "Wed, 02 Sep 2026 17:51:53 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://img1.wsimg.com/blobby/go/e5e77e0b-59d1-44d9-ab25-4763ac982e53/downloads/70fec4f5-727f-4e53-b5f1-179af109c5fa/ie_data.xls?ver=1788371540009"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 1869,
+    "first": "1871-01",
+    "last": "2026-09",
+    "cols": {
+     "P": {
+      "first": "1871-01",
+      "last": "2026-09",
+      "n": 1869,
+      "inner_missing": 0
+     },
+     "D": {
+      "first": "1871-01",
+      "last": "2026-06",
+      "n": 1866,
+      "inner_missing": 0
+     },
+     "E": {
+      "first": "1871-01",
+      "last": "2026-06",
+      "n": 1866,
+      "inner_missing": 0
+     },
+     "CPI": {
+      "first": "1871-01",
+      "last": "2026-09",
+      "n": 1869,
+      "inner_missing": 0
+     },
+     "GS10_shiller": {
+      "first": "1871-01",
+      "last": "2026-09",
+      "n": 1869,
+      "inner_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:49Z",
+    "sha256": "044196dafe44c3030b2facbdea023975b3f6aa68b4e52f8f9bafc403e19589c1",
+    "last_modified": "Wed, 02 Sep 2026 17:51:53 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "044196dafe44c3030b2facbdea023975b3f6aa68b4e52f8f9bafc403e19589c1",
+    "matches_design": true
+   }
+  },
+  "cboe/BXMD": {
+   "source": "cboe",
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/BXMD_History.csv",
+   "license": "Cboe: 개인·비상업 사용(D3) — 캐시만 · 해시만 · 파생 NAV 비공개",
+   "cards": "T08 하락 국면 BXMD",
+   "pinned_in": "cache:raw/cboe/BXMD_History.csv",
+   "design_sha256": "498886e4a22f707606cf5d3dbbe505dc059fafe92e6afb7dc14c2974d28aac79",
+   "pinned": {
+    "sha256": "498886e4a22f707606cf5d3dbbe505dc059fafe92e6afb7dc14c2974d28aac79",
+    "bytes": 227972,
+    "fetched_at": "2026-09-25T14:18:56Z",
+    "last_modified": "Wed, 23 Sep 2026 01:51:04 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://cdn.cboe.com/api/global/us_indices/daily_prices/BXMD_History.csv"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 10136,
+    "first": "1986-06-20",
+    "last": "2026-09-22",
+    "cols": [
+     "BXMD"
+    ],
+    "dup_dates": 0,
+    "sorted_in_file": true,
+    "n_missing": 0
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:51Z",
+    "sha256": "4f6c571d096100049eca02f0b691ade709754e655b4ec20b166db308ffd4a6a3",
+    "last_modified": "Fri, 25 Sep 2026 01:50:58 GMT",
+    "same_as_pinned": false,
+    "pinned_sha256": "498886e4a22f707606cf5d3dbbe505dc059fafe92e6afb7dc14c2974d28aac79",
+    "matches_design": false,
+    "diff": {
+     "rows": [
+      10136,
+      10138
+     ],
+     "added": 2,
+     "added_range": [
+      "2026-09-23",
+      "2026-09-24"
+     ],
+     "removed": 0,
+     "changed_cells": 0,
+     "cells_compared": 10136,
+     "max_abs_diff": 0.0,
+     "cols_only_pinned": [],
+     "cols_only_live": []
+    }
+   }
+  },
+  "cboe/BXM": {
+   "source": "cboe",
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/BXM_History.csv",
+   "license": "Cboe: 개인·비상업 사용(D3) — 캐시만 · 해시만 · 파생 NAV 비공개",
+   "cards": "T08 대조(BXM 베타 · 팩트시트 β 0.62 는 고정값)",
+   "pinned_in": "cache:raw/cboe/BXM_History.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "530146d693111b1e68cf710f94dd783f2bd4af3bfc670c72ccc186240a9af0f7",
+    "bytes": 138783,
+    "fetched_at": "2026-09-25T14:18:54Z",
+    "last_modified": "Wed, 23 Sep 2026 01:51:04 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://cdn.cboe.com/api/global/us_indices/daily_prices/BXM_History.csv"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6162,
+    "first": "2002-03-22",
+    "last": "2026-09-22",
+    "cols": [
+     "BXM"
+    ],
+    "dup_dates": 0,
+    "sorted_in_file": true,
+    "n_missing": 0
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:52Z",
+    "sha256": "778a0b9c76a88d8e42d9d45a27c110315bcc257f703a1d11ae106fa34db2a446",
+    "last_modified": "Fri, 25 Sep 2026 01:50:58 GMT",
+    "same_as_pinned": false,
+    "pinned_sha256": "530146d693111b1e68cf710f94dd783f2bd4af3bfc670c72ccc186240a9af0f7",
+    "matches_design": null,
+    "diff": {
+     "rows": [
+      6162,
+      6164
+     ],
+     "added": 2,
+     "added_range": [
+      "2026-09-23",
+      "2026-09-24"
+     ],
+     "removed": 0,
+     "changed_cells": 0,
+     "cells_compared": 6162,
+     "max_abs_diff": 0.0,
+     "cols_only_pinned": [],
+     "cols_only_live": []
+    }
+   }
+  },
+  "cboe/PUT": {
+   "source": "cboe",
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/PUT_History.csv",
+   "license": "Cboe: 개인·비상업 사용(D3) — 캐시만 · 해시만 · 파생 NAV 비공개",
+   "cards": "옵션 가족 기록(측정 보조)",
+   "pinned_in": "cache:raw/cboe/PUT_History.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "f44994ad4c0db2ba0d9ed8aff21904aca8138617cac06cefbac0be389f11f744",
+    "bytes": 113399,
+    "fetched_at": "2026-09-25T14:18:55Z",
+    "last_modified": "Wed, 23 Sep 2026 01:51:06 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://cdn.cboe.com/api/global/us_indices/daily_prices/PUT_History.csv"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 4968,
+    "first": "1991-03-04",
+    "last": "2026-09-22",
+    "cols": [
+     "PUT"
+    ],
+    "dup_dates": 0,
+    "sorted_in_file": true,
+    "n_missing": 0
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:00:54Z",
+    "sha256": "14d837033975238772ba1f2d1529ecf9c0f8ad20b55283c6b89cd309c1d44b2f",
+    "last_modified": "Fri, 25 Sep 2026 13:30:57 GMT",
+    "same_as_pinned": false,
+    "pinned_sha256": "f44994ad4c0db2ba0d9ed8aff21904aca8138617cac06cefbac0be389f11f744",
+    "matches_design": null,
+    "diff": {
+     "rows": [
+      4968,
+      4970
+     ],
+     "added": 2,
+     "added_range": [
+      "2026-09-23",
+      "2026-09-24"
+     ],
+     "removed": 0,
+     "changed_cells": 0,
+     "cells_compared": 4968,
+     "max_abs_diff": 0.0,
+     "cols_only_pinned": [],
+     "cols_only_live": []
+    }
+   }
+  },
+  "cboe/VIX": {
+   "source": "cboe",
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+   "license": "Cboe: 개인·비상업 사용(D3) — 캐시만 · 해시만 · 파생 NAV 비공개",
+   "cards": "T08-S1 VRP(VIX 월말)",
+   "pinned_in": "cache:raw/cboe/VIX_History.csv",
+   "design_sha256": "c1fa255f4e659d217f8cf244310a126517dc8f832568afe6be8184f46ca6dae7",
+   "pinned": {
+    "sha256": "c1fa255f4e659d217f8cf244310a126517dc8f832568afe6be8184f46ca6dae7",
+    "bytes": 472921,
+    "fetched_at": "2026-09-25T14:19:10Z",
+    "last_modified": "Wed, 23 Sep 2026 01:51:09 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 9278,
+    "first": "1990-01-02",
+    "last": "2026-09-22",
+    "cols": [
+     "OPEN",
+     "HIGH",
+     "LOW",
+     "CLOSE"
+    ],
+    "dup_dates": 0,
+    "sorted_in_file": true,
+    "n_missing": 0
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:54Z",
+    "sha256": "4c1af3176a904f3a0dd6dcc55b3762283ed0d972f55c863641cd29c03bf6efd6",
+    "last_modified": "Fri, 25 Sep 2026 00:31:08 GMT",
+    "same_as_pinned": false,
+    "pinned_sha256": "c1fa255f4e659d217f8cf244310a126517dc8f832568afe6be8184f46ca6dae7",
+    "matches_design": false,
+    "diff": {
+     "rows": [
+      9278,
+      9280
+     ],
+     "added": 2,
+     "added_range": [
+      "2026-09-23",
+      "2026-09-24"
+     ],
+     "removed": 0,
+     "changed_cells": 0,
+     "cells_compared": 37112,
+     "max_abs_diff": 0.0,
+     "cols_only_pinned": [],
+     "cols_only_live": []
+    }
+   }
+  },
+  "cboe/SPX": {
+   "source": "cboe",
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/SPX_History.csv",
+   "license": "Cboe: 개인·비상업 사용(D3) — 캐시만 · 해시만 · 파생 NAV 비공개",
+   "cards": "S&P TR 이음 1975-1987",
+   "pinned_in": "cache:raw/cboe/SPX_History.csv",
+   "design_sha256": "6bceb0b211f0841001ce6506a654e9b0bd27c90f069c8036f0d3a2930954c0fa",
+   "pinned": {
+    "sha256": "6bceb0b211f0841001ce6506a654e9b0bd27c90f069c8036f0d3a2930954c0fa",
+    "bytes": 292826,
+    "fetched_at": "2026-09-25T14:19:15Z",
+    "last_modified": "Wed, 23 Sep 2026 01:51:08 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://cdn.cboe.com/api/global/us_indices/daily_prices/SPX_History.csv"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 13039,
+    "first": "1975-01-02",
+    "last": "2026-09-22",
+    "cols": [
+     "SPX"
+    ],
+    "dup_dates": 0,
+    "sorted_in_file": true,
+    "n_missing": 0
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:55Z",
+    "sha256": "f73abef35ec65d6793e6f76305b8c56897f76c4cc36cf185963e43a2965c8fc2",
+    "last_modified": "Fri, 25 Sep 2026 01:11:00 GMT",
+    "same_as_pinned": false,
+    "pinned_sha256": "6bceb0b211f0841001ce6506a654e9b0bd27c90f069c8036f0d3a2930954c0fa",
+    "matches_design": false,
+    "diff": {
+     "rows": [
+      13039,
+      13041
+     ],
+     "added": 2,
+     "added_range": [
+      "2026-09-23",
+      "2026-09-24"
+     ],
+     "removed": 0,
+     "changed_cells": 0,
+     "cells_compared": 13039,
+     "max_abs_diff": 0.0,
+     "cols_only_pinned": [],
+     "cols_only_live": []
+    }
+   }
+  },
+  "aqr/TSMOM": {
+   "source": "aqr",
+   "url": "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Time-Series-Momentum-Factors-Monthly.xlsx",
+   "license": "AQR: express prior written consent 없이 재배포·게시 금지(D3) — 캐시만 · 해시만 · 파생 결과 비공개",
+   "cards": "T02(측정만 · D2 로 전방 불가)",
+   "pinned_in": "cache:raw/aqr/Time-Series-Momentum-Factors-Monthly.xlsx",
+   "design_sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+   "pinned": {
+    "sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+    "bytes": 139830,
+    "fetched_at": "2026-09-25T14:25:15Z",
+    "last_modified": "Fri, 26 Jun 2026 15:54:00 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Time-Series-Momentum-Factors-Monthly.xlsx"
+   },
+   "design_state": "일치",
+   "summary": {
+    "sheet": "TSMOM Factors",
+    "rows": 497,
+    "first": "1985-01",
+    "last": "2026-05",
+    "n_cols": 5,
+    "used_cols": {
+     "TSMOM": {
+      "first": "1985-01",
+      "last": "2026-05",
+      "n": 497,
+      "inner_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:00:58Z",
+    "sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+    "last_modified": "Fri, 26 Jun 2026 15:54:00 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+    "matches_design": true
+   }
+  },
+  "aqr/BAB": {
+   "source": "aqr",
+   "url": "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Betting-Against-Beta-Equity-Factors-Monthly.xlsx",
+   "license": "AQR: express prior written consent 없이 재배포·게시 금지(D3) — 캐시만 · 해시만 · 파생 결과 비공개",
+   "cards": "T03 대조(AQR BAB · 측정만 · 라이선스 제한)",
+   "pinned_in": "cache:raw/aqr/Betting-Against-Beta-Equity-Factors-Monthly.xlsx",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "b98d9ce68033e9ac38812737ab7444e6883348bcae6e4573abcdaa94fd164514",
+    "bytes": 2501890,
+    "fetched_at": "2026-09-25T14:23:01Z",
+    "last_modified": "Thu, 17 Sep 2026 08:47:06 GMT",
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Betting-Against-Beta-Equity-Factors-Monthly.xlsx"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "sheet": "BAB Factors",
+    "rows": 1148,
+    "first": "1930-12",
+    "last": "2026-07",
+    "n_cols": 29,
+    "used_cols": {
+     "USA": {
+      "first": "1930-12",
+      "last": "2026-07",
+      "n": 1148,
+      "inner_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": null,
+   "live": {
+    "checked_at": "2026-09-25T21:01:05Z",
+    "sha256": "b98d9ce68033e9ac38812737ab7444e6883348bcae6e4573abcdaa94fd164514",
+    "last_modified": "Thu, 17 Sep 2026 08:47:06 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "b98d9ce68033e9ac38812737ab7444e6883348bcae6e4573abcdaa94fd164514",
+    "matches_design": null
+   }
+  },
+  "wurgler/SENTIMENT": {
+   "source": "wurgler",
+   "url": "https://pages.stern.nyu.edu/~jwurgler/data/SENTIMENT.xlsx",
+   "license": "Wurgler: 라이선스 문구 없음(D3) — 커밋 안 함 · 실행 때 받는다",
+   "cards": "T15 SENT^PIT(다섯 구성요소)",
+   "pinned_in": "cache:raw/wurgler/SENTIMENT.xlsx",
+   "design_sha256": "3580398aaba6b72ad988844416c7b0ac9caca24fd2ab1d9149a983ec63b9f7a2",
+   "pinned": {
+    "sha256": "3580398aaba6b72ad988844416c7b0ac9caca24fd2ab1d9149a983ec63b9f7a2",
+    "bytes": 130146,
+    "fetched_at": "2026-09-25T15:16:31Z",
+    "last_modified": null,
+    "origin": "design-stage copy (설계 워크플로가 받은 판 · 2026-09-25)",
+    "fetched_from": "https://pages.stern.nyu.edu/~jwurgler/data/SENTIMENT.xlsx"
+   },
+   "design_state": "일치",
+   "summary": {
+    "rows": 816,
+    "first": "1958-01",
+    "last": "2025-12",
+    "readme_updated": "March, 2026",
+    "cols": {
+     "SENT": {
+      "first": "1965-07",
+      "last": "2025-12",
+      "n": 726,
+      "inner_missing": 0
+     },
+     "SENT_ORTH": {
+      "first": "1965-07",
+      "last": "2025-12",
+      "n": 725,
+      "inner_missing": 1
+     },
+     "pdnd": {
+      "first": "1960-04",
+      "last": "2025-12",
+      "n": 789,
+      "inner_missing": 0
+     },
+     "ripo": {
+      "first": "1960-01",
+      "last": "2025-12",
+      "n": 761,
+      "inner_missing": 31
+     },
+     "nipo": {
+      "first": "1960-01",
+      "last": "2025-12",
+      "n": 792,
+      "inner_missing": 0
+     },
+     "cefd": {
+      "first": "1965-07",
+      "last": "2025-12",
+      "n": 726,
+      "inner_missing": 0
+     },
+     "s": {
+      "first": "1958-12",
+      "last": "2025-12",
+      "n": 805,
+      "inner_missing": 0
+     }
+    }
+   },
+   "vs_design_expect": "설계 기대와 같다",
+   "live": {
+    "checked_at": "2026-09-25T21:01:08Z",
+    "sha256": "3580398aaba6b72ad988844416c7b0ac9caca24fd2ab1d9149a983ec63b9f7a2",
+    "last_modified": "Thu, 17 Sep 2026 21:14:22 GMT",
+    "same_as_pinned": true,
+    "pinned_sha256": "3580398aaba6b72ad988844416c7b0ac9caca24fd2ab1d9149a983ec63b9f7a2",
+    "matches_design": true
+   }
+  },
+  "yf/^GSPC": {
+   "source": "yf",
+   "url": "yfinance:Ticker('^GSPC').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "사건 다리(지그재그) · T08-S1 실현분산 · 가격 상태 S 층",
+   "pinned_in": "cache:raw/yf/_GSPC.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "8ecffb5a89460fedfd9c5f694f52a80952197b9f1b21bb5fcfd931f50318e05d",
+    "bytes": 2019567,
+    "fetched_at": "2026-09-25T20:59:14Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('^GSPC').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 24801,
+    "first": "1927-12-30",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits"
+    ],
+    "n_dividends": 0,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/^SP500TR": {
+   "source": "yf",
+   "url": "yfinance:Ticker('^SP500TR').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "S&P TR 이음 1988+ · G5g",
+   "pinned_in": "cache:raw/yf/_SP500TR.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "33c591164ca637530d070d06845f2b5fb491be8cda9cd0dee05cda5417b84652",
+    "bytes": 734169,
+    "fetched_at": "2026-09-25T20:59:15Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('^SP500TR').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 9756,
+    "first": "1988-01-04",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits"
+    ],
+    "n_dividends": 0,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/^VIX": {
+   "source": "yf",
+   "url": "yfinance:Ticker('^VIX').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T08-S1 VRP 대조(Cboe VIX 와 같은 계열)",
+   "pinned_in": "cache:raw/yf/_VIX.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "9b91c7411421b374bb6e47a71c74cd0e3630cd0522cdea9683d8a0a5b3017d7e",
+    "bytes": 699239,
+    "fetched_at": "2026-09-25T20:59:16Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('^VIX').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 9253,
+    "first": "1990-01-02",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits"
+    ],
+    "n_dividends": 0,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/SPY": {
+   "source": "yf",
+   "url": "yfinance:Ticker('SPY').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "S 층 B",
+   "pinned_in": "cache:raw/yf/SPY.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "8d0cca69d50076f27009dcbf6a99d1c1a1cfd9fcf4b9acf7cd61e1eb2cc30fa7",
+    "bytes": 690807,
+    "fetched_at": "2026-09-25T20:59:17Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('SPY').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 8472,
+    "first": "1993-01-29",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 136,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/BIL": {
+   "source": "yf",
+   "url": "yfinance:Ticker('BIL').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "S 층 RF",
+   "pinned_in": "cache:raw/yf/BIL.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "29aeb85799ed5dabe46142644d153f95fa211bc0e3878359293a7230d025ec00",
+    "bytes": 405184,
+    "fetched_at": "2026-09-25T20:59:18Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('BIL').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 4863,
+    "first": "2007-05-30",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 127,
+    "n_splits": 1,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/SPLV": {
+   "source": "yf",
+   "url": "yfinance:Ticker('SPLV').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T03 · T15 ETF 쌍둥이",
+   "pinned_in": "cache:raw/yf/SPLV.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "053aa7524f9c32e8f63e8ee8c96eb1980c85a3c5c806491cc61ca9b0082fb090",
+    "bytes": 324217,
+    "fetched_at": "2026-09-25T20:59:19Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('SPLV').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3871,
+    "first": "2011-05-05",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 183,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/SPHB": {
+   "source": "yf",
+   "url": "yfinance:Ticker('SPHB').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T15 ETF 쌍둥이",
+   "pinned_in": "cache:raw/yf/SPHB.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "9844023492454fd3243ad2aeae3dff17afca15472fdb9623de9fb0ab93486526",
+    "bytes": 318605,
+    "fetched_at": "2026-09-25T20:59:20Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('SPHB').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3871,
+    "first": "2011-05-05",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 60,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/QUAL": {
+   "source": "yf",
+   "url": "yfinance:Ticker('QUAL').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T04 · T12 DEF 쌍둥이",
+   "pinned_in": "cache:raw/yf/QUAL.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "bfcd6440eae2410d7dd1950c0bf2c7068cd93a650273a0e17e08d879be912c83",
+    "bytes": 274962,
+    "fetched_at": "2026-09-25T20:59:22Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('QUAL').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3318,
+    "first": "2013-07-18",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 52,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/RPV": {
+   "source": "yf",
+   "url": "yfinance:Ticker('RPV').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T04 REB · T16 쌍둥이",
+   "pinned_in": "cache:raw/yf/RPV.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "901382856b9073b935f8b6ded8912bc1931add40066ffc22eb4be09471bc4612",
+    "bytes": 423920,
+    "fetched_at": "2026-09-25T20:59:23Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('RPV').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 5172,
+    "first": "2006-03-07",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 79,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/IVE": {
+   "source": "yf",
+   "url": "yfinance:Ticker('IVE').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T04 · T16 · T17 대용",
+   "pinned_in": "cache:raw/yf/IVE.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "81e8308854c75408d4d63141693867ef8fa3942ded9d1186665a317065496a13",
+    "bytes": 545308,
+    "fetched_at": "2026-09-25T20:59:24Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('IVE').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 107,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/IVW": {
+   "source": "yf",
+   "url": "yfinance:Ticker('IVW').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T17 대용",
+   "pinned_in": "cache:raw/yf/IVW.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "750425f619792acd01375562a27aea788b0bb95b6f89123d41163b9f9e40abdf",
+    "bytes": 551851,
+    "fetched_at": "2026-09-25T20:59:25Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('IVW').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 107,
+    "n_splits": 1,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/IWD": {
+   "source": "yf",
+   "url": "yfinance:Ticker('IWD').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T17 쌍둥이",
+   "pinned_in": "cache:raw/yf/IWD.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "730eb9f9a2d777d30ff35c4cd21cbcfbc674f86a19e942d27c5210f0206bf003",
+    "bytes": 549204,
+    "fetched_at": "2026-09-25T20:59:26Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('IWD').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 107,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/IWF": {
+   "source": "yf",
+   "url": "yfinance:Ticker('IWF').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T17 쌍둥이",
+   "pinned_in": "cache:raw/yf/IWF.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "22050d36603f26093098c1a8b83f80d938edf4f116e8405953be12141e15226c",
+    "bytes": 555098,
+    "fetched_at": "2026-09-25T20:59:27Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('IWF').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 108,
+    "n_splits": 1,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/VTV": {
+   "source": "yf",
+   "url": "yfinance:Ticker('VTV').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T17 쌍둥이",
+   "pinned_in": "cache:raw/yf/VTV.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "aa2711443edebf4a6d5cdad4ed5f3a6f3124885101218461cdbaf0ff313d24ab",
+    "bytes": 472524,
+    "fetched_at": "2026-09-25T20:59:28Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('VTV').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 5700,
+    "first": "2004-01-30",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 90,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": null
+  },
+  "yf/VUG": {
+   "source": "yf",
+   "url": "yfinance:Ticker('VUG').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T17 쌍둥이",
+   "pinned_in": "cache:raw/yf/VUG.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "a2c588bb15e04be4a236f03f3e2117ae74a1349f9083ce215504cdffeb4f87a4",
+    "bytes": 479147,
+    "fetched_at": "2026-09-25T20:59:30Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('VUG').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 5700,
+    "first": "2004-01-30",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 90,
+    "n_splits": 1,
+    "nan_close": 0
+   },
+   "vs_design_expect": null
+  },
+  "yf/MTUM": {
+   "source": "yf",
+   "url": "yfinance:Ticker('MTUM').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T05 쌍둥이",
+   "pinned_in": "cache:raw/yf/MTUM.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "a2d9dc2e19ed10855e35c2bb0a985201b74aa6dcb0e15000af679c0853dc86b4",
+    "bytes": 279443,
+    "fetched_at": "2026-09-25T20:59:31Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('MTUM').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3381,
+    "first": "2013-04-18",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 54,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/SPMO": {
+   "source": "yf",
+   "url": "yfinance:Ticker('SPMO').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T05 쌍둥이",
+   "pinned_in": "cache:raw/yf/SPMO.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "9aec74d2d53b95f529ab3b3cb53dab67cbedcc456394be6809fa4ed667b76e84",
+    "bytes": 223774,
+    "fetched_at": "2026-09-25T20:59:32Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('SPMO').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 2755,
+    "first": "2015-10-12",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 40,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/XYLD": {
+   "source": "yf",
+   "url": "yfinance:Ticker('XYLD').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T08 ETF 쌍둥이",
+   "pinned_in": "cache:raw/yf/XYLD.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "1d97dea2520c9c2be6df790c3dc12de50237968955110759b93eaf2a5ef02558",
+    "bytes": 271209,
+    "fetched_at": "2026-09-25T20:59:32Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('XYLD').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3335,
+    "first": "2013-06-24",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 159,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/AQMIX": {
+   "source": "yf",
+   "url": "yfinance:Ticker('AQMIX').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T02 주 대용(측정만)",
+   "pinned_in": "cache:raw/yf/AQMIX.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "f647c3cd93af6bb6bcd37a46c634b5dbacc99550310cd305e1604ea5e13a8aee",
+    "bytes": 325618,
+    "fetched_at": "2026-09-25T20:59:33Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('AQMIX').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 4206,
+    "first": "2010-01-05",
+    "last": "2026-09-24",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 16,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/DBMF": {
+   "source": "yf",
+   "url": "yfinance:Ticker('DBMF').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T02 쌍둥이(측정만)",
+   "pinned_in": "cache:raw/yf/DBMF.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "bc01727ddc297251fef64914077c0fc52e2fc4c2deed571d29cc25b83038e2e6",
+    "bytes": 151915,
+    "fetched_at": "2026-09-25T20:59:34Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('DBMF').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 1857,
+    "first": "2019-05-08",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 18,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/RYMFX": {
+   "source": "yf",
+   "url": "yfinance:Ticker('RYMFX').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T02 쌍둥이(측정만)",
+   "pinned_in": "cache:raw/yf/RYMFX.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "59de0dce5abf08f8cfcab5509747b6d961d50bba864f6d566c79cec39b5b79d9",
+    "bytes": 383773,
+    "fetched_at": "2026-09-25T20:59:35Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('RYMFX').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 4929,
+    "first": "2007-02-22",
+    "last": "2026-09-24",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 12,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/PKW": {
+   "source": "yf",
+   "url": "yfinance:Ticker('PKW').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T18 쌍둥이",
+   "pinned_in": "cache:raw/yf/PKW.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "ea42023513b597c179e4e6005e429cf876b52cb75cf7807fd98e370eff309e61",
+    "bytes": 406184,
+    "fetched_at": "2026-09-25T20:59:36Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('PKW').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 4971,
+    "first": "2006-12-20",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 74,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/SYLD": {
+   "source": "yf",
+   "url": "yfinance:Ticker('SYLD').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T18 쌍둥이",
+   "pinned_in": "cache:raw/yf/SYLD.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "db93024fdf0651e36efa1c905632617c12275e4d57744e1cb011b6219e5d06b1",
+    "bytes": 273720,
+    "fetched_at": "2026-09-25T20:59:37Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('SYLD').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 3363,
+    "first": "2013-05-14",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 32,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  },
+  "yf/COWZ": {
+   "source": "yf",
+   "url": "yfinance:Ticker('COWZ').history(period='max', auto_adjust=False, actions=True)",
+   "license": "yfinance: 개인 사용 — 캐시만",
+   "cards": "T16 쌍둥이",
+   "pinned_in": "cache:raw/yf/COWZ.csv",
+   "design_sha256": null,
+   "pinned": {
+    "sha256": "5bf07d4cfe436acae133fec97db955dfe8a61f2398ec33653a2019a35e3f1de7",
+    "bytes": 202676,
+    "fetched_at": "2026-09-25T20:59:38Z",
+    "last_modified": null,
+    "origin": "live",
+    "fetched_from": "yfinance:Ticker('COWZ').history(period='max', auto_adjust=False, actions=True)",
+    "yfinance": "1.7.0"
+   },
+   "design_state": "설계 해시 없음",
+   "summary": {
+    "rows": 2452,
+    "first": "2016-12-22",
+    "last": "2026-09-25",
+    "cols": [
+     "Open",
+     "High",
+     "Low",
+     "Close",
+     "Adj Close",
+     "Volume",
+     "Dividends",
+     "Stock Splits",
+     "Capital Gains"
+    ],
+    "n_dividends": 39,
+    "n_splits": 0,
+    "nan_close": 0
+   },
+   "vs_design_expect": "설계 기대와 같다"
+  }
+ }
+}

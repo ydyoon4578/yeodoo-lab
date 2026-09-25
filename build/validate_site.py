@@ -4631,6 +4631,22 @@ try:
 except Exception as _e:
     print("  ~ 배선 감사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 배치 T(PREREG-2026-09-26-TBATCH · B8) 사이트 경계 ─────────────────────────────
+# L 층(1926+) 산출 · AQR/Cboe/Wurgler/Shiller 원자료가 저장소 · 사이트 자료에 없어야 한다(사용자 결정 D1 · D3).
+#   굽기 전 판 점검만 이것을 보면 굽기 **뒤**에 복사된 산출이 git add -A 로 쓸려 들어가도 아무도 못 잡는다 — 매 푸시 · 매일 여기서도 본다.
+#   build/t_guard.py 는 표준 라이브러리만 쓴다(이 검증과 같은 조건). 러너(t_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_tb
+    _tg = _il_tb.import_module("t_guard")
+    _g = _tg.site_guard(ROOT)
+    if not _g["ok"]:
+        errors.append("배치 T 사이트 경계(B8) 위반 %d건 — %s. L 층 산출(_tbatch*) · 라이선스 원자료는 저장소 밖 캐시에만 둔다(D1 · D3)"
+                      % (_g.get("n_bad", len(_g["bad"])), " · ".join(_g["bad"][:4])))
+    else:
+        print("  ~ 배치 T 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_g["n_files"], _g["n_scanned"]))
+except Exception as _e:
+    print("  ~ 배치 T 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
