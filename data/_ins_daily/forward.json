@@ -1,0 +1,121 @@
+{
+ "generated": "2026-09-25T21:15:38Z",
+ "through": "2026-09-24",
+ "index_days": {
+  "by_month": {
+   "2026-07": 22,
+   "2026-08": 21,
+   "2026-09": 17
+  },
+  "total": 60,
+  "note": "받은 EDGAR daily-index form.idx 날 수(= NYSE 거래일)"
+ },
+ "files": {
+  "2026-07": {
+   "rows": 2238,
+   "bytes": 47957,
+   "sha256": "6004e65a50925e486fb86c8e6ef08e7e1f3e17fd04e4d92fca417b8d0110ff5e",
+   "corr_rows_4a": 1,
+   "dcorr_rows_4a": 0,
+   "stc_v1_only_S": 0,
+   "complete": true
+  },
+  "2026-08": {
+   "rows": 3099,
+   "bytes": 70049,
+   "sha256": "42e47899e33c7045f06a1eaa613b6e77121c4ea0633abcf478a9b2d94fc20482",
+   "corr_rows_4a": 0,
+   "dcorr_rows_4a": 1,
+   "stc_v1_only_S": 0,
+   "complete": true
+  },
+  "2026-09": {
+   "rows": 2646,
+   "bytes": 56321,
+   "sha256": "7bf1b689b061b5debb197e5bdbb94398e3cb9f2dae1317a4e40fb5d872dda800",
+   "corr_rows_4a": 0,
+   "dcorr_rows_4a": 0,
+   "stc_v1_only_S": 0,
+   "complete": false
+  }
+ },
+ "parse": {
+  "rows": 8025,
+  "docs": 5900,
+  "issuer_outside_world": 70
+ },
+ "density_by_avail_month": {
+  "2026-07": {
+   "world_S": 153,
+   "s16_S": 151,
+   "s16_S_nostc": 149,
+   "s16_P": 7,
+   "complete": true
+  },
+  "2026-08": {
+   "world_S": 259,
+   "s16_S": 258,
+   "s16_S_nostc": 256,
+   "s16_P": 34,
+   "complete": true
+  },
+  "2026-09": {
+   "world_S": 193,
+   "s16_S": 190,
+   "s16_S_nostc": 189,
+   "s16_P": 24,
+   "complete": false
+  }
+ },
+ "back_corrections": {
+  "note": "전방 4/A 가 수량·단가를 고친 DERA 기간(≤ 2026-06-30) 원 행 — [acc, sk, 그룹, 거래일, 코드, 제출된 수량, 제출된 단가, 정정 수량, 정정 단가, [정정 4/A acc, sk]]. 원 행 가용일 · 사건 · 1차 값은 그대로(선언 q).",
+  "n": 0,
+  "rows": []
+ },
+ "back_tdate_corrections": {
+  "note": "전방 4/A 가 거래일을 고친 DERA 기간 원 행 — [acc, sk, 그룹, 거래일, 코드, [고친 거래일, 4/A acc, sk]] · 사건 · 라벨 그대로 · 분류 이력만 고친 거래일(선언 q2).",
+  "n": 0,
+  "rows": []
+ },
+ "late_corrections": {
+  "note": "전방 달 파일의 행을 뒤 달에 제출된 4/A 가 고친 것 — 달 파일에는 넣지 않았다(그달 끝 현재 · 덧붙이기만) · [acc, sk, 'values', 정정 수량, 정정 단가, [4/A acc, sk]] · [acc, sk, 'tdate', [고친 거래일, 4/A acc, sk]].",
+  "n": 0,
+  "rows": []
+ },
+ "complete_months_changed": {
+  "note": "지난 실행(through 2026-09-24)에 이미 다 찼던 달 가운데 파일 sha256 이 바뀐 달(감사 · 비어야 정상)",
+  "months": [
+   "2026-07",
+   "2026-08"
+  ]
+ },
+ "pins": {
+  "issuer_map": "eaabac2ee9a2223b6df455642c04a9d75ff91aa9d8ea3de99f31ad0112a228bb",
+  "dera_panel": {
+   "ps_2011.json.gz": "4a97c71461500b34490fff4a936b97aa0b2d65f3c4ce1376d558104134c109c1",
+   "ps_2012.json.gz": "a09d5f72b6a00561a5bf70029a87eb40ecaedf60763cc1298e2cb5ba9efbb37b",
+   "ps_2013.json.gz": "9bb40b4c5127459be019d74a6f1905ed3a88252f2e0c5038af31c39de44f5f9f",
+   "ps_2014.json.gz": "4f8c9cfc3d8fd311d2e0557400ce461bd75e7c6ee2667acf1ce35793c036db31",
+   "ps_2015.json.gz": "25efadb39a60bf2d715ab7d5e2098d844c5968758a93c05375a987011b567e59",
+   "ps_2016.json.gz": "c1038962500b4c28e3f4e6ae5c2647e5a33ae5519e9b07562ba8d6b65c8adbee",
+   "ps_2017.json.gz": "4abba1a442d4c687a40fc0dc9651c5331c2eb7d581e21a791286996cdf31b13d",
+   "ps_2018.json.gz": "9803cc160bb4a65f71ff426a788b25d259e65e4ac3e7172012dcee2e06f00220",
+   "ps_2019.json.gz": "993898af54efd6b77c0a655a11073342badc18d2bc643b22c3a81e1f40618171",
+   "ps_2020.json.gz": "0474473aca94da4297015298b55caa8208c5ffe8b8357632b9fcd017573104ca",
+   "ps_2021.json.gz": "480be39874d68be3c40044c76df38eced51bfb6d7a4a283f65081e55fa2c9f5f",
+   "ps_2022.json.gz": "3671842dc8fd8d0b368ba63bc279945a3d2a01dc8542cfb2fb1312eb6e7f3f10",
+   "ps_2023.json.gz": "90956b64f3b334140e5fb00ff6657437e5e8becbcd2859dedd9671f923c9f14e",
+   "ps_2024.json.gz": "17dc5d4a8ab821fd522120bff03019f0ffa10f488a665f4a671bd0baeb287ebf",
+   "ps_2025.json.gz": "b4451e3811186e0a1c9fcdef02266267ec39edcce787c56daa1310cf17d21ee9",
+   "ps_2026.json.gz": "620113e1102a9700f5c72c224a0c665ea204bb61357c13eb5a54fb14ad4c5afc"
+  },
+  "manifests": {
+   "2026-07": "7b10d127dc4eb56e50e8e39eb97c21c3327a03cd120cd445d63d6f1e57d8e931",
+   "2026-08": "ddf931fbbcb9a4f546abf76538d1f3dae1607543ba78594a3daf3ea95ee104ef",
+   "2026-09": "f3196f0d3952e62fb4ef15cae8e5bb911f23c33493b45db2541c0210d1c853be"
+  },
+  "script": "329f00fce5f064eb040bd057f9503644d213332053d63a290a3ed0bc88711508",
+  "ins_pit_build": "b71f6069820cb6cd1ec2a1a48a368750471e4ed3ec3801832833bdb8bbe0b2dc",
+  "r_r1_flags": "5792f1abac91793711411598039d5d8c5dda1ac1dc4a47d1d6cbbef10df68097"
+ }
+}
