@@ -10,6 +10,23 @@ IDXEG(PREREG-2026-09-23-IDXEG)의 idxeg.py 안에 있던 패널 준비를 떼어
   · 주식수 = tech_backtest.load_fund 의 sh (fx + fx_pit · 90일 공시 지연)
   · 이중클래스는 회사당 하나(GOOGL·FOXA·NWSA, 그 밖은 사전순 첫째) · 재배정 티커의 마지막 멤버월은 뺀다
   · 벤치 비중 = 시총가중 · 보유월 수익 = 다음 달 말 가격(달 중간 상장폐지는 마지막 가격)
+
+2026-09-25(배치 R) — 셋을 더했다.
+  ① 날짜 인식 별칭(build/pit_alias.py) — _key 가 그 창 안에서는 별칭 키를 먼저 쓴다(IR→TT ~2020-02 · FOXA/FOX→TFCFA/TFCF
+    ~2019-03-12 · DISCA/DISCK→WBD · PCLN→BKNG · TSO→ANDV · SPLS·SNDK 재사용 티커의 옛 증권 키 · UA/UA-C 클래스).
+    cik_spliced 는 '-' 표기와 '.' 표기를 둘 다 찾는다(명단 'UA-C' ↔ cik_spliced 'UA.C' 를 못 찾던 결함).
+  ② 명단 고치기 — NDX 2022-01..2024-05 의 'NXP'(위키 표기 오타) → NXPI.
+  ③ 보유월 수익 결측 규칙(y_stop) — 사내 DB 로 메운 계열은 «지수에 있던 날» 까지만 있다. 계열이 보유월 끝 전에 멈췄는데
+    회사가 **상장폐지되지 않고 계속 거래됐으면**(지수만 떠남 · 개명 · 재분류) 그 달 수익은 마지막 가격이 아니라 **결측**이다
+    (month_rows 는 그 이름을 그달 패널에서 뺀다). 인수 · 파산 · 비공개화로 멈춘 것만 종전 «마지막 가격» 규칙이다.
+    판정은 data/pit_px.json closed[키].stops(build/pit_px_db2.py --merge 가 이름마다 공개 사실로 적는다).
+
+2026-09-26 — 둘을 고쳤다(편출 가격 보관소 대조 · 랩 문제 L1/L2).
+  ④ 별칭 창 안인데 별칭 키에 계열이 아예 없으면 _key 가 None 이다(종전: 명단 티커 키로 떨어졌다 — DD 2014-06..2017-08 이
+    Dow Chemical 가격, JCI 2014-06..2016-08 이 Tyco 가격, CB 2014-06..2015-12 가 ACE 가격을 읽었다). 옛 회사 계열이 들어오기
+    전까지 그 달들은 «가격 키 없음»(결측)이다.
+  ⑤ 이중클래스 한 종 줄이기의 CIK 를 날짜 인식으로 — pit_alias 의 dedup_cik 줄 창 안에서는 그 줄의 CIK(_dedup_cik).
+    index_history 평면 CIK 가 인수자의 것이라 JCI/TYC(833444) · CB/ACE(896159)가 한 종으로 접혀 TYC · ACE 가 빠졌다.
 """
 from __future__ import annotations
 import io, json, os, sys
@@ -23,6 +40,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import tech_backtest as TB            # noqa: E402  load_fund·asof_all
 import pit_quarantine as PQ           # noqa: E402  격리 명단
+import pit_alias as PA                # noqa: E402  날짜 인식 별칭 · 명단 고치기(2026-09-25)
 
 ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
@@ -71,7 +89,13 @@ def load_world():
             if row.get(ix):
                 last[ix] = [x.replace(".", "-") for x in row[ix]]
             lists[ix][m] = list(last[ix])
-    return {"dates": dates, "D": D, "PX": PX, "sector_now": sector_now, "today": set(sector_now),
+    PA.fix_lists(lists)                         # NDX 2022-01..2024-05 'NXP' → NXPI(위키 오타 · pit_alias.LIST_FIX)
+    # 보유월 결측 규칙 — closed[키].stops = [{d, y, …}] (pit_px_db2 --merge 가 적는다 · 없으면 빈 판정 = 종전 규칙)
+    stops = {}
+    for k, c in (slim.get("closed") or {}).items():
+        for s in (c or {}).get("stops") or []:
+            stops.setdefault(k, {})[s["d"]] = s
+    return {"dates": dates, "D": D, "PX": PX, "sector_now": sector_now, "today": set(sector_now), "stops": stops,
             "splice": PU.get("cik_spliced") or {},
             "reassigned": (json.load(io.open(os.path.join(DATA, "pit_reuse.json"), encoding="utf-8"))
                            .get("reassigned") or {}),
@@ -91,9 +115,19 @@ def _key(W, t, i=None):
          키가 그것을 먼저 잡아 `FB → META`(cik_spliced)가 안 걸렸고, 메타가 2014~2022 명단에서 빠졌다
          → 날짜 i 를 주면 **그날 가격이 선 후보**를 고른다(명단 티커 → 점 표기 → cik_spliced 차례).
     i 를 안 주면 있는 첫 후보다(종전과 같은 뜻 — 날짜를 모르는 호출용).
+
+    2026-09-25 — ③ 날짜 인식 별칭(build/pit_alias.py)이 그 창 안에서는 **먼저 이긴다**. 명단 티커 키에 다른 증권 값이
+      있어도 별칭 키를 돌려준다(IR 2017-05..2020-02 의 Gardner Denver 값). 별칭 키가 그날 비었으면 그대로 돌려준다
+      (부르는 쪽이 «값 없음» 으로 센다 — 다른 증권으로 떨어지지 않는다). ④ cik_spliced 는 '.' 표기로도 찾는다(UA-C ↔ UA.C).
+    2026-09-26 — 별칭 키에 계열 자체가 없어도(값이 병합 단계로 아직 안 들어온 날짜 인식 키) None 이다. 명단 티커 키로
+      떨어지지 않는다(그 키가 다른 회사 계열이라 별칭을 둔 것이다 — L1 DD · L2 JCI/CB).
     """
+    if i is not None:
+        a = PA.key_at(t, W["dates"][i])
+        if a is not None:
+            return a if a in W["PX"] else None
     cands = []
-    for c in (t, t.replace("-", "."), W["splice"].get(t)):
+    for c in (t, t.replace("-", "."), W["splice"].get(t), W["splice"].get(t.replace("-", "."))):
         if c and c in W["PX"] and c not in cands:
             cands.append(c)
     if not cands:
@@ -106,6 +140,13 @@ def _key(W, t, i=None):
     return cands[0]
 
 
+def _dedup_cik(W, t, i):
+    """이중클래스 한 종 줄이기에 쓰는 CIK — pit_alias dedup_cik 줄의 창 안이면 그 줄의 CIK · 아니면 index_history 평면 CIK.
+    union_members · month_rows · r_stagem._members 가 같이 쓴다(사본을 두지 않는다)."""
+    c = PA.dedup_cik_at(t, W["dates"][i]) if i is not None else None
+    return c or W["cikmap"].get(t) or W["cikmap"].get(t.replace("-", "."))
+
+
 def union_members(W, mm, i):
     """그달 말 명단 S&P 500 ∪ NASDAQ 100 → [(명단 티커, 가격 키)] · 명단 수(이중클래스 하나로 줄인 뒤).
 
@@ -115,7 +156,7 @@ def union_members(W, mm, i):
     mem = set(W["lists"]["spx"].get(mm) or []) | set(W["lists"]["ndx"].get(mm) or [])
     by_cik = {}
     for t in mem:
-        c = W["cikmap"].get(t) or W["cikmap"].get(t.replace("-", "."))
+        c = _dedup_cik(W, t, i)
         by_cik.setdefault(c or ("_" + t), []).append(t)
     keep = []
     for c, ts in by_cik.items():
@@ -153,6 +194,25 @@ def _shares(W, t, k, d):
     return None
 
 
+def y_stop(W, k, i, i1):
+    """보유월(격자 i+1..i1) 계열이 달 끝 전에 멈췄을 때의 규칙 — None(끝까지 있다) · 'missing' · 'last_price' · 'short_cut'.
+
+    멈춘 날 = 보유월 안 마지막 값의 날(보유월에 값이 하나도 없으면 신호월 말 i). 그 날이 closed[k].stops 에 있으면 그 규칙,
+    없으면 종전 규칙(야후 계열이 달 중간에 끝남 = 상장폐지 → 'last_price'). 규칙의 뜻:
+      missing    — 회사는 계속 거래됐다(지수만 떠남 · 개명 · 재분류) → 그 달 수익은 결측(마지막 가격을 쓰지 않는다)
+      last_price — 인수 · 파산 · 비공개화로 거래가 끝났다 → 마지막 가격(종전 규약)
+      short_cut  — 사내 DB 에 월말 행이 없다(NDX 2018-05-31 · SPX 2025-06-26/27/30) → 1~3일 짧은 수익(선언된 절단)
+    """
+    p = W["PX"][k]
+    seg = p[i + 1:i1 + 1]
+    ok = np.where(seg == seg)[0]
+    if len(ok) and ok[-1] == len(seg) - 1:
+        return None
+    L = (i + 1 + int(ok[-1])) if len(ok) else i
+    s = (W.get("stops") or {}).get(k, {}).get(W["dates"][L])
+    return s["y"] if s else "last_price"
+
+
 def month_rows(W, ix, sig_months, end):
     """신호월 목록 → 행 목록. 행 = {m(보유월), names, wb, sec, r, key}. Z·cov 는 부르는 쪽이 붙인다.
 
@@ -168,7 +228,7 @@ def month_rows(W, ix, sig_months, end):
         mem = W["lists"][ix].get(mm) or []
         by_cik = {}
         for t in mem:
-            c = W["cikmap"].get(t) or W["cikmap"].get(t.replace("-", "."))
+            c = _dedup_cik(W, t, i)
             by_cik.setdefault(c or ("_" + t), []).append(t)
         keep = set()
         for c, ts in by_cik.items():
@@ -186,6 +246,8 @@ def month_rows(W, ix, sig_months, end):
                 continue
             sh = _shares(W, t, k, dates[i])
             if not sh or sh <= 0:
+                continue
+            if y_stop(W, k, i, i1) == "missing":  # 2026-09-25 — 계속 거래된 회사의 잘린 보유월 = 결측(위 y_stop)
                 continue
             p = PX[k]
             seg = p[i + 1:i1 + 1]
