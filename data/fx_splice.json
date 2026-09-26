@@ -1,0 +1,465 @@
+{
+"note": "refresh_facts · pit_facts 가 읽는 선행 CIK 잇기 표. build/refresh_facts.py --build-splices 가 data/_issuer_map.json 에서 짓는다(손으로 고치지 말 것). prepend = 선행 법인 관측 중 지금 파일 그 태그·버킷의 첫 관측보다 이른 것만 앞에 붙인다. cut = segs [CIK, lo(초과), hi(이하)] 의 기간말 구간마다 그 CIK 값만 쓴다.",
+"src": {
+"_issuer_map.json": "eaabac2ee9a2223b6df455642c04a9d75ff91aa9d8ea3de99f31ad0112a228bb"
+},
+"kinds": [
+"holdco_reorg",
+"redomicile",
+"merger_holdco",
+"separation_parent"
+],
+"t": {
+"LLL": {
+"mode": "prepend",
+"cur": 1039101,
+"pred": [
+1056239
+],
+"group": "g1056239",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2016-12-31"
+]
+},
+"XRX": {
+"mode": "prepend",
+"cur": 1770450,
+"pred": [
+108772
+],
+"group": "g108772",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2019-07-31"
+]
+},
+"BLK": {
+"mode": "prepend",
+"cur": 2012383,
+"pred": [
+1364742
+],
+"group": "g1364742",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2024-10-01"
+]
+},
+"ESRX": {
+"mode": "prepend",
+"cur": 1532063,
+"pred": [
+885721
+],
+"group": "g1532063",
+"kinds": [
+"merger_holdco"
+],
+"dates": [
+"2012-04-02"
+]
+},
+"ETN": {
+"mode": "prepend",
+"cur": 1551182,
+"pred": [
+31277
+],
+"group": "g1551182",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2012-11-30"
+]
+},
+"ICE": {
+"mode": "prepend",
+"cur": 1571949,
+"pred": [
+1174746
+],
+"group": "g1571949",
+"kinds": [
+"merger_holdco"
+],
+"dates": [
+"2013-11-13"
+]
+},
+"ACT": {
+"mode": "prepend",
+"cur": 1578845,
+"pred": [
+884629
+],
+"group": "g1578845",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2013-10-01"
+]
+},
+"AGN": {
+"mode": "prepend",
+"cur": 1578845,
+"pred": [
+884629
+],
+"group": "g1578845",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2013-10-01"
+]
+},
+"PRGO": {
+"mode": "prepend",
+"cur": 1585364,
+"pred": [
+820096
+],
+"group": "g1585364",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2013-12-18"
+]
+},
+"ENDP": {
+"mode": "prepend",
+"cur": 1593034,
+"pred": [
+1100962
+],
+"group": "g1593034",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2014-02-28"
+]
+},
+"MDT": {
+"mode": "prepend",
+"cur": 1613103,
+"pred": [
+64670
+],
+"group": "g1613103",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2015-01-26"
+]
+},
+"WAG": {
+"mode": "prepend",
+"cur": 1618921,
+"pred": [
+104207
+],
+"group": "g1618921",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2014-12-31"
+]
+},
+"WBA": {
+"mode": "prepend",
+"cur": 1618921,
+"pred": [
+104207
+],
+"group": "g1618921",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2014-12-31"
+]
+},
+"MYL": {
+"mode": "prepend",
+"cur": 1623613,
+"pred": [
+69499
+],
+"group": "g1623613",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2015-02-27"
+]
+},
+"GOOG": {
+"mode": "prepend",
+"cur": 1652044,
+"pred": [
+1288776
+],
+"group": "g1652044",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2015-10-02"
+]
+},
+"GOOGL": {
+"mode": "prepend",
+"cur": 1652044,
+"pred": [
+1288776
+],
+"group": "g1652044",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2015-10-02"
+]
+},
+"AVGO": {
+"mode": "prepend",
+"cur": 1730168,
+"pred": [
+1649338,
+1441634
+],
+"group": "g1730168",
+"kinds": [
+"merger_holdco",
+"redomicile"
+],
+"dates": [
+"2016-02-01",
+"2018-04-04"
+]
+},
+"WRK": {
+"mode": "prepend",
+"cur": 1732845,
+"pred": [
+1636023
+],
+"group": "g1732845",
+"kinds": [
+"merger_holdco"
+],
+"dates": [
+"2018-11-02"
+]
+},
+"CI": {
+"mode": "prepend",
+"cur": 1739940,
+"pred": [
+701221
+],
+"group": "g1739940",
+"kinds": [
+"merger_holdco"
+],
+"dates": [
+"2018-12-20"
+]
+},
+"DIS": {
+"mode": "prepend",
+"cur": 1744489,
+"pred": [
+1001039
+],
+"group": "g1744489",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2019-03-20"
+]
+},
+"DOW": {
+"mode": "prepend",
+"cur": 1751788,
+"pred": [
+29915
+],
+"group": "g1751788",
+"kinds": [
+"separation_parent"
+],
+"dates": [
+"2019-04-01"
+]
+},
+"STE": {
+"mode": "prepend",
+"cur": 1757898,
+"pred": [
+1624899
+],
+"group": "g1757898",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2019-03-28"
+]
+},
+"MRVL": {
+"mode": "prepend",
+"cur": 1835632,
+"pred": [
+1058057
+],
+"group": "g1835632",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2021-04-20"
+]
+},
+"APO": {
+"mode": "prepend",
+"cur": 1858681,
+"pred": [
+1411494
+],
+"group": "g1858681",
+"kinds": [
+"merger_holdco"
+],
+"dates": [
+"2022-01-01"
+]
+},
+"BG": {
+"mode": "prepend",
+"cur": 1996862,
+"pred": [
+1144519
+],
+"group": "g1996862",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2023-11-01"
+]
+},
+"FERG": {
+"mode": "prepend",
+"cur": 2011641,
+"pred": [
+1832433
+],
+"group": "g2011641",
+"kinds": [
+"redomicile"
+],
+"dates": [
+"2024-08-01"
+]
+},
+"XOM": {
+"mode": "prepend",
+"cur": 2115436,
+"pred": [
+34088
+],
+"group": "g34088",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2026-07-01"
+]
+},
+"APA": {
+"mode": "prepend",
+"cur": 1841666,
+"pred": [
+6769
+],
+"group": "g6769",
+"kinds": [
+"holdco_reorg"
+],
+"dates": [
+"2021-03-01"
+]
+},
+"DD": {
+"mode": "cut",
+"segs": [
+[
+30554,
+null,
+"2017-08-31"
+],
+[
+1666700,
+"2017-08-31",
+null
+]
+],
+"tenure": [
+[
+30554,
+"2014-06",
+"2017-08"
+],
+[
+1666700,
+"2019-06",
+"2026-09"
+]
+],
+"why": "2014-06..2017-08 의 DD 는 E.I. du Pont(30554). 1666700(DowDuPont → DuPont de Nemours)의 그 시절 비교 재무는 회계상 인수자 Dow Chemical 의 것이라(주식수 11~12억 · 자기자본 260~300억$) DD 로 쓰면 남의 회사다."
+},
+"FTI": {
+"mode": "cut",
+"segs": [
+[
+1135152,
+null,
+"2016-12-31"
+],
+[
+1681459,
+"2016-12-31",
+null
+]
+],
+"tenure": [
+[
+1135152,
+"2014-06",
+"2016-12"
+],
+[
+1681459,
+"2017-01",
+"2021-01"
+]
+],
+"why": "2016-12 까지 FTI 는 FMC Technologies(1135152), 2017-01 부터 TechnipFMC(1681459 · 합병 종결 2017-01-16 · 지도의 2017-01 행은 두 CIK). 두 법인을 기간말로 가른다 — 2016-12-31 까지는 FMC Technologies 가 낸 값만 쓰고 TechnipFMC 의 합병 전 비교 재무로 채우지 않는다."
+}
+}
+}
