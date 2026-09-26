@@ -1,0 +1,394 @@
+{
+ "note": "RBATCH Stage M 보유월 수익 y 규칙(2026-09-26 등록 전 결정 · r_stagem.y_rule) — 가격 계열이 보유월 끝 전에 끝나고 끝 뒤 5 거래일 안에 다시 서지 않는 (가격 키, 마지막 값 날짜) 마다 판정. delisted = 실제 상장폐지(인수 · 파산 · 비공개화) → 마지막 가격 수익 · kept_trading = 지수만 떠났거나 이름만 바뀌고 거래가 이어짐(랩 가격이 끊긴 것 포함) → y 결측(행이 회귀에서 빠진다). 판정은 공개 지식(인수 · 편출 사실)과 랩 자료의 수리 기록(pit_px.json repairs)만 쓴다 — 회사 DB 자료(이름 · 섹터 · 비중 · 주식수 · 시총)는 쓰지 않았다. 대상 목록 = r_stagem.ytrunc_scan(지금 자료 + 병합 전 DB 스테이징 두 판을 얹은 것 + 2026-09-26 병합 판). 가격 자료가 바뀌면 r_stagem --ytrunc-scan 으로 다시 보고(판정 없는 끝이 있으면 종료 1) 여기에 더한다.",
+ "made": "2026-09-26",
+ "rule": {
+  "end_look_trading_days": 5,
+  "window": [
+   "2016-08",
+   "2026-07"
+  ]
+ },
+ "scan": {
+  "base": "지금 data(pit_px · stocks)",
+  "stage": "%TEMP%/rbatch/pxrec/stage_pit_px.json 을 얹은 판",
+  "stage_nullmeta": "+ nullmeta/stage_pit_px.json"
+ },
+ "rows": [
+  {
+   "key": "LLTC",
+   "last": "2016-10-18",
+   "class": "kept_trading",
+   "t": "LLTC",
+   "why": "Linear Technology — ADI 인수는 2017-03-10 완료. 2016-10 DB 계열 끝은 NASDAQ-100 편출일 뿐 거래는 이어짐",
+   "confidence": "high"
+  },
+  {
+   "key": "SRCL",
+   "last": "2016-12-16",
+   "class": "kept_trading",
+   "t": "SRCL",
+   "why": "Stericycle — 2016-12 NASDAQ-100 연례 재구성 편출 · 거래 계속(2024 WM 인수 전까지)",
+   "confidence": "high"
+  },
+  {
+   "key": "WFM",
+   "last": "2016-12-16",
+   "class": "kept_trading",
+   "t": "WFM",
+   "why": "Whole Foods — 2016-12 NASDAQ-100 편출 · 2017-08 Amazon 인수 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "YHOO",
+   "last": "2017-06-16",
+   "class": "kept_trading",
+   "t": "YHOO",
+   "why": "Yahoo — 2017-06 영업 부문 Verizon 매각 뒤 Altaba(AABA)로 개명 · 증권은 새 티커로 계속 거래(상장폐지 아님)",
+   "confidence": "high"
+  },
+  {
+   "key": "VIAB",
+   "last": "2017-12-15",
+   "class": "kept_trading",
+   "t": "VIAB",
+   "why": "Viacom — 2017-12 NASDAQ-100 편출 · 2019-12 CBS 합병 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "LVNTA",
+   "last": "2018-03-09",
+   "class": "kept_trading",
+   "t": "LVNTA",
+   "why": "Liberty Ventures — 2018-03-09 GCI Liberty 로 분리(LVNTA 1주 → GLIBA 1주) · 같은 사업이 새 티커로 계속 거래",
+   "confidence": "medium"
+  },
+  {
+   "key": "QVCA",
+   "last": "2018-03-09",
+   "class": "kept_trading",
+   "t": "QVCA",
+   "why": "QVC Group 추적주 — 2018-03 Qurate Retail(QRTEA)로 개명 · 계속 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "CSRA",
+   "last": "2018-04-03",
+   "class": "delisted",
+   "t": "CSRA",
+   "why": "CSRA — General Dynamics 인수 완료 2018-04-03(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "TWX",
+   "last": "2018-06-15",
+   "class": "delisted",
+   "t": "TWX",
+   "why": "Time Warner — AT&T 인수 완료 2018-06-14(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "DISH",
+   "last": "2018-07-20",
+   "class": "kept_trading",
+   "t": "DISH",
+   "why": "DISH Network — 2018-07 NASDAQ-100 편출 · 2023 EchoStar 합병 전까지 거래",
+   "confidence": "medium"
+  },
+  {
+   "key": "ANDV",
+   "last": "2018-10-01",
+   "class": "delisted",
+   "t": "ANDV",
+   "why": "Andeavor — Marathon Petroleum 인수 완료 2018-10-01(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "EVHC",
+   "last": "2018-10-10",
+   "class": "delisted",
+   "t": "EVHC",
+   "why": "Envision Healthcare — KKR 비공개화 완료 2018-10-11(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "CA",
+   "last": "2018-11-02",
+   "class": "delisted",
+   "t": "CA",
+   "why": "CA Inc — Broadcom 인수 완료 2018-11-05(마지막 거래 11-02 · 상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "AET",
+   "last": "2018-11-29",
+   "class": "delisted",
+   "t": "AET",
+   "why": "Aetna — CVS 인수 완료 2018-11-28(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "ESRX",
+   "last": "2018-12-21",
+   "class": "delisted",
+   "t": "ESRX",
+   "why": "Express Scripts — Cigna 인수 완료 2018-12-20(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "HOLX",
+   "last": "2018-12-21",
+   "class": "kept_trading",
+   "t": "HOLX",
+   "why": "Hologic — 2018-12 NASDAQ-100 연례 재구성 편출 · S&P 500 멤버로 계속 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "QRTEA",
+   "last": "2018-12-21",
+   "class": "kept_trading",
+   "t": "QRTEA",
+   "why": "Qurate Retail — 2018-12 NASDAQ-100 편출 · 계속 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "SCG",
+   "last": "2018-12-31",
+   "class": "delisted",
+   "t": "SCG",
+   "why": "SCANA — Dominion Energy 인수 완료 2019-01-01(마지막 거래 2018-12-31 · 상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "SHPG",
+   "last": "2019-01-08",
+   "class": "delisted",
+   "t": "SHPG",
+   "why": "Shire — Takeda 인수 완료 2019-01-08(ADS 상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "TFCFA",
+   "last": "2019-03-19",
+   "class": "delisted",
+   "t": "FOXA",
+   "why": "21st Century Fox 클래스 A(2019-03-13 TFCFA 로 티커 변경) — Disney 인수 완료 2019-03-20(상장폐지 · 랩 pit_alias FOXA→TFCFA)",
+   "confidence": "high"
+  },
+  {
+   "key": "CTRP",
+   "last": "2019-11-04",
+   "class": "kept_trading",
+   "t": "CTRP",
+   "why": "Ctrip — 2019-11 Trip.com Group(TCOM)으로 개명 · 계속 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "CELG",
+   "last": "2019-11-20",
+   "class": "delisted",
+   "t": "CELG",
+   "why": "Celgene — Bristol-Myers Squibb 인수 완료 2019-11-20(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "MYL",
+   "last": "2019-12-20",
+   "class": "kept_trading",
+   "t": "MYL",
+   "why": "Mylan — 2019-12 NASDAQ-100 편출 · 2020-11 Viatris 전환 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "CTXS",
+   "last": "2020-12-18",
+   "class": "kept_trading",
+   "t": "CTXS",
+   "why": "Citrix — 2020-12 NASDAQ-100 연례 재구성 편출 · S&P 500 멤버로 2022-09 비공개화 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "ALXN",
+   "last": "2021-07-20",
+   "class": "delisted",
+   "t": "ALXN",
+   "why": "Alexion — AstraZeneca 인수 완료 2021-07-21(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "MXIM",
+   "last": "2021-08-25",
+   "class": "delisted",
+   "t": "MXIM",
+   "why": "Maxim Integrated — Analog Devices 인수 완료 2021-08-26(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "CERN",
+   "last": "2021-12-17",
+   "class": "kept_trading",
+   "t": "CERN",
+   "why": "Cerner — 2021-12 NASDAQ-100 연례 재구성 편출 · 2022-06 Oracle 인수 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "XLNX",
+   "last": "2022-02-11",
+   "class": "delisted",
+   "t": "XLNX",
+   "why": "Xilinx — AMD 인수 완료 2022-02-14(마지막 거래 02-11 · 상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "SPLK",
+   "last": "2022-12-16",
+   "class": "kept_trading",
+   "t": "SPLK",
+   "why": "Splunk — 2022-12 NASDAQ-100 연례 재구성 편출 · 2024-03 Cisco 인수 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "ATVI",
+   "last": "2023-07-14",
+   "class": "kept_trading",
+   "t": "ATVI",
+   "why": "Activision Blizzard — 2023-07 NASDAQ-100 편출 · S&P 500 멤버로 2023-10-13 Microsoft 인수 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "SGEN",
+   "last": "2023-12-14",
+   "class": "delisted",
+   "t": "SGEN",
+   "why": "Seagen — Pfizer 인수 완료 2023-12-14(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "SPLK",
+   "last": "2024-03-15",
+   "class": "delisted",
+   "t": "SPLK",
+   "why": "Splunk — Cisco 인수 완료 2024-03-18(마지막 거래 03-15 · 상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "WBA",
+   "last": "2024-07-19",
+   "class": "kept_trading",
+   "t": "WBA",
+   "why": "Walgreens — 2024-07 NASDAQ-100 편출 · S&P 500 멤버로 2025-08 Sycamore 비공개화 전까지 거래",
+   "confidence": "high"
+  },
+  {
+   "key": "DFS",
+   "last": "2025-05-16",
+   "class": "delisted",
+   "t": "DFS",
+   "why": "Discover Financial — Capital One 인수 완료 2025-05-18(상장폐지 · 금융 — 표본 밖)",
+   "confidence": "high"
+  },
+  {
+   "key": "ANSS",
+   "last": "2025-07-17",
+   "class": "delisted",
+   "t": "ANSS",
+   "why": "Ansys — Synopsys 인수 완료 2025-07-17(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "WBA",
+   "last": "2025-08-27",
+   "class": "delisted",
+   "t": "WBA",
+   "why": "Walgreens — Sycamore Partners 비공개화 완료 2025-08-28(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "IPG",
+   "last": "2025-11-26",
+   "class": "delisted",
+   "t": "IPG",
+   "why": "Interpublic — Omnicom 인수 완료 2025-11-26(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "K",
+   "last": "2025-12-10",
+   "class": "delisted",
+   "t": "K",
+   "why": "Kellanova — Mars 인수 완료 2025-12(상장폐지)",
+   "confidence": "high"
+  },
+  {
+   "key": "DAY",
+   "last": "2026-02-06",
+   "class": "delisted",
+   "t": "DAY",
+   "why": "Dayforce — Thoma Bravo 비공개화(2025-08 발표) 완료(상장폐지)",
+   "confidence": "medium"
+  },
+  {
+   "key": "HOLX",
+   "last": "2026-04-08",
+   "class": "delisted",
+   "t": "HOLX",
+   "why": "Hologic — Blackstone · TPG 비공개화(2025-10 발표) 완료(상장폐지)",
+   "confidence": "medium"
+  },
+  {
+   "key": "CTRA",
+   "last": "2026-05-06",
+   "class": "delisted",
+   "t": "CTRA",
+   "why": "Coterra — Devon Energy 전액 주식 합병(2026 초 발표) 완료(피인수 · 상장폐지)",
+   "confidence": "medium"
+  },
+  {
+   "key": "AVB",
+   "last": "2026-07-17",
+   "class": "kept_trading",
+   "t": "AVB",
+   "why": "AvalonBay — 랩 가격이 07-17 에서 끊긴 것(2026-07-20..08-17 빈 날) · 회사는 2026-08-17 합병까지 거래(랩 pit_px repairs AVB)",
+   "confidence": "high"
+  },
+  {
+   "key": "EQR",
+   "last": "2026-07-17",
+   "class": "kept_trading",
+   "t": "EQR",
+   "why": "Equity Residential — 2026-08-17 AvalonBay 를 합병하고 Vivmark Residential(VMRK)로 개명 · 계속 거래(랩 pit_px repairs EQR)",
+   "confidence": "high"
+  },
+  {
+   "key": "EA",
+   "last": "2026-08-04",
+   "class": "delisted",
+   "t": "EA",
+   "why": "Electronic Arts — 비공개화 완료(상장폐지) · 병합 판(굳은 08-05..08-10 값을 자른 계열)의 마지막 날",
+   "confidence": "medium"
+  },
+  {
+   "key": "AVB",
+   "last": "2026-08-17",
+   "class": "delisted",
+   "t": "AVB",
+   "why": "AvalonBay — 2026-08-17 Equity Residential 에 합병(피인수 · 랩 pit_px repairs AVB) · 병합 판(굳은 값을 자른 계열)의 마지막 날",
+   "confidence": "high"
+  },
+  {
+   "key": "EA",
+   "last": "2026-08-10",
+   "class": "delisted",
+   "t": "EA",
+   "why": "Electronic Arts — PIF · Silver Lake · Affinity 비공개화($210 · 2025-09 발표) 완료(상장폐지 · 랩 값 209.7 고정과 맞다)",
+   "confidence": "medium"
+  },
+  {
+   "key": "AVB",
+   "last": "2026-08-20",
+   "class": "delisted",
+   "t": "AVB",
+   "why": "AvalonBay — 2026-08-17 Equity Residential 에 합병(AVB 1주 = EQR 2.793주 · 피인수 · 랩 pit_px repairs AVB). ⚠ 08-18..08-20 값(184.06)은 합병 뒤 굳은 값 — 병합 쪽 정리 몫(검토 지적)",
+   "confidence": "high"
+  }
+ ]
+}
