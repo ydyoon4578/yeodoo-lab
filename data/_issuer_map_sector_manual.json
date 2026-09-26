@@ -1,0 +1,38 @@
+{
+ "note": "§A0 발행사 지도의 수작업 섹터 표 — build/issuer_map.py sector_at 이 읽는다(위키 PIT 표 → 이 표 → 비PIT 대체 index_history · stocks.json 순). 위키 SPX GICS 표(data/pit_gics_sectors.json)에 없고(NDX 전용 · 편출) 비PIT 대체 칸도 비어 섹터가 전혀 없던 멤버-월만 채운다. 값 = 그 회사의 **그때** GICS 섹터(공개 지식 — 회사 사업과 GICS 구조). 사내 DB 는 쓰지 않았다. 수익은 보지 않았다.",
+ "verified_on": "2026-09-25",
+ "rules": {
+  "names": "섹터 이름은 랩 표기(eg30plus.SEC_NORM 뒤) — 'Telecommunication Services' 등. 위키 PIT 표와 같은 이름만 쓴다.",
+  "gics_2018": "2018-09 GICS 개편(Telecommunication Services → Communication Services · Media(Consumer Discretionary) → Communication Services · Internet & Direct Marketing Retail 은 Consumer Discretionary 에 남음). 첫 새 섹터 달 = 2018-09 — data/pit_gics_sectors.json 에서 CHTR · CMCSA · DISH · T 가 2018-09 에 바뀌는 것과 같게 둔다.",
+  "scope": "from..to 는 지도에서 그 티커의 섹터가 없던 멤버-월 구간 전부(Stage M 창 2016-08..2026-07 밖 포함). 금융(Financials)인 행은 없다 — Stage M 세계(비금융)는 이 표로 바뀌지 않는다."
+ },
+ "rows": [
+  {"t": "BATRA", "from": "2016-04", "to": "2016-10", "sector": "Consumer Discretionary", "why": "Liberty Braves Group(Liberty Media Corp 추적 주식) — 야구단·엔터테인먼트(GICS Media · Movies & Entertainment). 2018-09 전 Media 는 Consumer Discretionary."},
+  {"t": "BATRK", "from": "2016-04", "to": "2016-10", "sector": "Consumer Discretionary", "why": "BATRA 와 같은 추적 주식(C 주)."},
+  {"t": "BMRN", "from": "2015-07", "to": "2020-11", "sector": "Health Care", "why": "BioMarin Pharmaceutical — 희귀질환 바이오텍(GICS Health Care · Biotechnology). NDX 전용 멤버라 위키 SPX 표에 없다."},
+  {"t": "CMCSK", "from": "2014-12", "to": "2015-08", "sector": "Consumer Discretionary", "why": "Comcast Class A Special — 케이블(GICS Media · Cable & Satellite · 2018-09 전 Consumer Discretionary). 같은 회사 CMCSA 가 그달 위키 표에서 Consumer Discretionary."},
+  {"t": "CTRP", "from": "2015-12", "to": "2019-10", "sector": "Consumer Discretionary", "why": "Ctrip.com International ADR — 온라인 여행(GICS Consumer Discretionary · Internet & Direct Marketing Retail · 2018-09 개편 뒤에도 Consumer Discretionary). 후속 티커 TCOM 도 Consumer Discretionary."},
+  {"t": "CTRX", "from": "2014-06", "to": "2015-06", "sector": "Health Care", "why": "Catamaran Corp — 약제비 관리(PBM · GICS Health Care · Health Care Providers & Services)."},
+  {"t": "LBTYA", "from": "2014-06", "to": "2018-08", "sector": "Consumer Discretionary", "why": "Liberty Global plc A — 유럽 케이블 사업자(GICS Media · Cable & Satellite). 2018-09 전 Media 는 Consumer Discretionary(위키 표의 CMCSA · CHTR 과 같다)."},
+  {"t": "LBTYA", "from": "2018-09", "to": "2020-11", "sector": "Communication Services", "why": "2018-09 GICS 개편으로 Cable & Satellite 가 Communication Services(Media & Entertainment)로 옮겨졌다."},
+  {"t": "LBTYK", "from": "2014-12", "to": "2018-08", "sector": "Consumer Discretionary", "why": "Liberty Global plc C — LBTYA 와 같은 회사."},
+  {"t": "LBTYK", "from": "2018-09", "to": "2020-11", "sector": "Communication Services", "why": "LBTYA 와 같은 2018-09 개편."},
+  {"t": "LILA", "from": "2015-07", "to": "2015-11", "sector": "Consumer Discretionary", "why": "LiLAC Group(Liberty Global 추적 주식 · 중남미 케이블) — GICS Media · Cable & Satellite · 2018-09 전 Consumer Discretionary."},
+  {"t": "LILA", "from": "2017-06", "to": "2017-12", "sector": "Consumer Discretionary", "why": "같은 LiLAC 추적 주식(2017-12-29 Liberty Latin America 로 분리 전) — 케이블 · Consumer Discretionary."},
+  {"t": "LILAK", "from": "2015-07", "to": "2015-11", "sector": "Consumer Discretionary", "why": "LILA 와 같은 추적 주식(C 주)."},
+  {"t": "LILAK", "from": "2017-06", "to": "2017-12", "sector": "Consumer Discretionary", "why": "LILA 와 같은 추적 주식(C 주)."},
+  {"t": "LINTA", "from": "2014-06", "to": "2014-10", "sector": "Consumer Discretionary", "why": "Liberty Interactive Series A(QVC 등 · GICS Consumer Discretionary · Internet & Catalog Retail). 2014-10 QVC Group 추적 주식(QVCA)으로 바뀌기 전."},
+  {"t": "LMCA", "from": "2014-06", "to": "2016-10", "sector": "Consumer Discretionary", "why": "Liberty Media Corp(SiriusXM · Formula One · Braves 지분 등 · GICS Media) — 2018-09 전 Consumer Discretionary."},
+  {"t": "LMCK", "from": "2014-08", "to": "2016-10", "sector": "Consumer Discretionary", "why": "LMCA 와 같은 회사(C 주)."},
+  {"t": "LVNTA", "from": "2014-11", "to": "2018-03", "sector": "Consumer Discretionary", "why": "Liberty Ventures(Liberty Interactive Corp 추적 주식 · Charter · Liberty Broadband 지분 · Expedia 지분(2016-11 분리 전) · 온라인 사업). 발행사 Liberty Interactive 의 GICS Consumer Discretionary(Internet & Direct Marketing Retail) — 어느 산업으로 보든(케이블 지분 = Media) 2018-09 전에는 Consumer Discretionary. 금융(지주사) 분류는 아니다. 확신 중간."},
+  {"t": "LYV", "from": "2019-12", "to": "2019-12", "sector": "Communication Services", "why": "Live Nation Entertainment — 2019-12 S&P 500 편입 달 — 위키 표에 이름은 있으나 섹터 칸이 비었다(파싱 사고). 다음 달(2020-01) 위키 표 · 2018-09 뒤 GICS(Media & Entertainment · Movies & Entertainment)가 Communication Services."},
+  {"t": "QRTEA", "from": "2018-04", "to": "2018-12", "sector": "Consumer Discretionary", "why": "Qurate Retail(QVC · HSN · zulily — 옛 QVC Group) — GICS Internet & Direct Marketing Retail 은 2018-09 개편 뒤에도 Consumer Discretionary."},
+  {"t": "QVCA", "from": "2014-11", "to": "2018-03", "sector": "Consumer Discretionary", "why": "QVC Group(Liberty Interactive 추적 주식) — 홈쇼핑·온라인 소매(GICS Consumer Discretionary · Internet & Direct Marketing Retail)."},
+  {"t": "SHPG", "from": "2016-11", "to": "2018-12", "sector": "Health Care", "why": "Shire plc ADR — 희귀질환 제약(GICS Health Care · Biotechnology/Pharmaceuticals)."},
+  {"t": "TFCF", "from": "2019-03", "to": "2019-03", "sector": "Communication Services", "why": "Twenty-First Century Fox(Disney 인수 직전 티커 TFCF) — 영화·TV(Media · 2018-09 뒤 Communication Services). 앞 달 FOX 가 위키 표에서 Communication Services."},
+  {"t": "TFCFA", "from": "2019-03", "to": "2019-03", "sector": "Communication Services", "why": "TFCF 와 같은 회사(A 주)."},
+  {"t": "VIP", "from": "2014-06", "to": "2015-11", "sector": "Telecommunication Services", "why": "VimpelCom ADR — 이동통신(GICS Telecommunication Services · Wireless). 2018-09 전 섹터 이름."},
+  {"t": "VOD", "from": "2014-06", "to": "2018-08", "sector": "Telecommunication Services", "why": "Vodafone Group ADR — 이동통신(GICS Telecommunication Services · Wireless). 이름은 랩 SEC_NORM 표기."},
+  {"t": "VOD", "from": "2018-09", "to": "2018-12", "sector": "Communication Services", "why": "2018-09 GICS 개편으로 Telecommunication Services → Communication Services(위키 표의 T · VZ 가 2018-09 에 바뀐다)."}
+ ]
+}
