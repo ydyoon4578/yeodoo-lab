@@ -366,8 +366,13 @@ def _strategy_map(tech, asset, archive, index, deploy):
     #   (e-spxadd/ndxadd 6종) — blocked_by 를 우선 키로 쓰면 미달이 보류로 뒤집힌다.
     # ⚠ 2026-08-13 t 문턱 폐지 이후의 gate 어휘('사망 조건 F1~F6 …')에는 '통과' 도
     #   '미달' 도 없다. 그건 본편과 같은 '측정만' 이지 '판정 전' 이 아니다.
+    # ⚠ 2026-09-26 — t 가 없다고 다 '측정 불가'(F0 미달 · 잴 수 없었다)가 아니다. 배치 T
+    #   (PREREG-2026-09-26-TBATCH) 카드는 굽혀 **쟀지만** 카드 하나에 서는 단일 t 가 없다
+    #   (관문 여럿 · 결과는 결과 문서에만 · 등록 §5). 그런 항목은 원장에 명시적 불리언
+    #   `measured_no_t: true` 를 달고, 판정은 다른 항목처럼 gate 문구에서 읽는다. 추측하지
+    #   않는다 — 그 불리언이 없는 t 없는 항목은 종전대로 '측정 불가' 다.
     def _tested_verdict(x):
-        if x.get("t") is None:
+        if x.get("t") is None and x.get("measured_no_t") is not True:
             return "측정 불가"
         g = str(x.get("gate") or "")
         if "미달" in g:

@@ -3816,6 +3816,186 @@
      "cost": "⚠ 이 규칙의 F2(생존편향 배수 1.13)는 **하한이 아니라 추정**이다. 그날 PIT 실행이 커버리지 문턱 미달로 끝났다(월별 보유율 최저 81.1% < 90%). 커버리지가 오르면 배수가 커질 수 있다. 등록 §4 가 커버리지를 사망 조건으로 두지 않았으므로 게시를 막지는 않되, 확정으로 읽지 않는다(RESULT §4).",
      "kept": "이 항목을 원장에서 **빼지 않는다.** 돌린 2종은 게시 여부와 무관하게 다중검정 분모에 남는다(등록 §8). why 는 «보류» 상태 문구 한 곳만 «게시» 로 고쳤고 나머지 수치·사유는 그대로다."
     }
+   },
+   {
+    "sid": "tb-t01",
+    "name": "T01 MTP 속도 오버레이 (GHM MED · 규모 ½)",
+    "kind": "펀드 슬리브 10% · 오버레이 · 가격 상태 · 전환점",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t02",
+    "name": "T02 관리선물 TSMOM 오버레이 (변동성 맞춤 · 비용 뗌)",
+    "kind": "펀드 슬리브 10% · 오버레이 · 교차자산 시계열 추세",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 비공개(D3)",
+    "why": "배치 T 사전등록 d7c76ab1f · 비공개(D3)",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t03",
+    "name": "T03 저베타 소매 + 베타 채움 (VW)",
+    "kind": "펀드 슬리브 10% · 상시 + 선물 채움 · 저위험 이상현상",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t04",
+    "name": "T04 네 국면 라우터 (Bull = 시장 · 하락 국면 = 퀄리티 · 반등 = 가치)",
+    "kind": "펀드 슬리브 10% · 교체(신호 → 전략)",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t05",
+    "name": "T05 모멘텀 + 패닉 중립 단계 (약세장 × 고변동이면 시장으로)",
+    "kind": "펀드 슬리브 10% · 교체(신호 → 중립)",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t08",
+    "name": "T08 조건부 커버드콜 (하락 국면만 BXMD · 실현분산 단계)",
+    "kind": "펀드 슬리브 10% · 교체(신호 → 전략) · 옵션 가족 탐침",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 비공개(D3)",
+    "why": "배치 T 사전등록 d7c76ab1f · 비공개(D3)",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t12",
+    "name": "T12 고용 추세 → 퀄리티 방어 (GTT 변형)",
+    "kind": "펀드 슬리브 10% · 교체(신호 → 전략)",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t13",
+    "name": "T13 CAPE 가치 + 모멘텀 틸트 50~150% (CAPE 재계산)",
+    "kind": "펀드 슬리브 10% · 오버레이 · 밸류에이션 타이밍",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t15",
+    "name": "T15 심리 조건부 SML 교체 (고심리 = 저변동 · 저심리 = 고변동)",
+    "kind": "펀드 슬리브 10% · 교체(신호 → 전략)",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t16",
+    "name": "T16 가치 합성 소매 장기 감사 (x-valsleeve 의 축을 랩 표본 밖에서)",
+    "kind": "펀드 슬리브 10% · 상시 · 랩 생존 소매 감사",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t17",
+    "name": "T17 금리 국면 가치/성장 교체 장기 감사 (D13 가족 · 죽이기 검정)",
+    "kind": "펀드 슬리브 10% · 교체 · 랩 생존 규칙 감사",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
+   },
+   {
+    "sid": "tb-t18",
+    "name": "T18 순자사주매입 소매 장기 감사 (주주환원 · 순발행 < 0)",
+    "kind": "펀드 슬리브 10% · 상시 · 랩 생존 축 감사",
+    "arch": "",
+    "when": "2026-09-26",
+    "src": "PREREG-2026-09-26-TBATCH.md · PREREG-2026-09-26-TBATCH-RESULT.md",
+    "paper": "",
+    "t": null,
+    "incr": null,
+    "measured_no_t": true,
+    "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
+    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "blocked_by": ""
    }
   ]
  },
@@ -4313,7 +4493,7 @@
   "reading": "주된 값(그 규칙의 PIT 대조군 기준): 실측 최고 t 2.58 · 잡음의 최고 t 중앙 2.28 (95% 4.96) · Reality Check p = 0.317. ⚠ S&P 500 기준으로 재면 최고 t 가 5.91 로 뛰는데, 그 상위는 종목을 고르는 규칙이 아니라 랩 유니버스를 시총가중한 x-cap* 무리다 — 신호가 아니라 유니버스 구성 차이다."
  },
  "map": {
-  "n": 456,
+  "n": 468,
   "axes": {
    "where": [
     "화면에 있음",
@@ -4363,7 +4543,7 @@
    "돌렸지만 게시 안 함": {
     "수익엔진": 68,
     "타이밍오버레이": 19,
-    "미분류": 143
+    "미분류": 155
    },
    "재현 안 함": {
     "미분류": 23
@@ -4384,7 +4564,7 @@
     "게시 보류": 11,
     "구별 불가": 22,
     "측정 불가": 129,
-    "측정만": 68
+    "측정만": 80
    },
    "재현 안 함": {
     "판정 전": 23
@@ -7856,6 +8036,102 @@
     "lab": "종목·타이밍"
    },
    {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T01 MTP 속도 오버레이 (GHM MED · 규모 ½)",
+    "sid": "tb-t01",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T02 관리선물 TSMOM 오버레이 (변동성 맞춤 · 비용 뗌)",
+    "sid": "tb-t02",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T03 저베타 소매 + 베타 채움 (VW)",
+    "sid": "tb-t03",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T04 네 국면 라우터 (Bull = 시장 · 하락 국면 = 퀄리티 · 반등 = 가치)",
+    "sid": "tb-t04",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T05 모멘텀 + 패닉 중립 단계 (약세장 × 고변동이면 시장으로)",
+    "sid": "tb-t05",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T08 조건부 커버드콜 (하락 국면만 BXMD · 실현분산 단계)",
+    "sid": "tb-t08",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T12 고용 추세 → 퀄리티 방어 (GTT 변형)",
+    "sid": "tb-t12",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T13 CAPE 가치 + 모멘텀 틸트 50~150% (CAPE 재계산)",
+    "sid": "tb-t13",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T15 심리 조건부 SML 교체 (고심리 = 저변동 · 저심리 = 고변동)",
+    "sid": "tb-t15",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T16 가치 합성 소매 장기 감사 (x-valsleeve 의 축을 랩 표본 밖에서)",
+    "sid": "tb-t16",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T17 금리 국면 가치/성장 교체 장기 감사 (D13 가족 · 죽이기 검정)",
+    "sid": "tb-t17",
+    "lab": "종목·타이밍"
+   },
+   {
+    "where": "돌렸지만 게시 안 함",
+    "role": "미분류",
+    "verdict": "측정만",
+    "name": "T18 순자사주매입 소매 장기 감사 (주주환원 · 순발행 < 0)",
+    "sid": "tb-t18",
+    "lab": "종목·타이밍"
+   },
+   {
     "where": "재현 안 함",
     "role": "미분류",
     "verdict": "판정 전",
@@ -8040,7 +8316,7 @@
     "lab": "아카이브"
    }
   ],
-  "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더한 수가 아니라 겹침을 걷은 456 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
+  "note": "이 랩이 판 규칙 전부를 축 셋으로 한 번씩만 센다 — 어디 있나 · 무엇을 하나 · 어떻게 됐나. 목록을 그냥 더한 수가 아니라 겹침을 걷은 468 다(아카이브 중 자산 랩에서 재현된 것은 이미 자산 랩으로 세었다).",
   "vocab": "어휘를 2026-08-08 에 통일했다 — 자산 랩만 쓰던 '대조군 열위'는 '열위'로, 각 1~2종짜리 고아였던 '방어보험'·'위험감축'은 '위험방어' 하나로 합쳤다. 합치기 전에는 그 셋이 전부 화면에서 빠져 있어 집계에 아예 안 나왔다."
  },
  "refs_policy": "🚨 **URL 을 지어내지 않는다.** 이 저장소가 실제로 가진 링크가 아니면 직접 URL 을 적지 않고, 화면이 제목으로 학술검색 질의를 만들어 건다(결정적이고 항상 열린다). 저자·연도·학술지는 그 규칙을 등록할 때 코드 주석에 적어 둔 것과 같아야 한다 — 다르면 둘 중 하나가 틀린 것이다. 확실하지 않은 규칙은 **비워 둔다.** 없는 것을 지어 채우면 독자가 원문을 못 찾고, 그 사실도 모른다.",
