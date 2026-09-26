@@ -108,6 +108,26 @@ def fetch_bytes(url: str, timeout: int = 60, max_wait=None, accept=None) -> byte
     raise last
 
 
+def probe(url: str, method: str = "GET", timeout: int = 60, raise_http: bool = False):
+    """SEC 접속 점검 1건 — (HTTP 상태, 응답 머리, 전송 바이트 그대로 · gzip 을 풀지 않는다). 2026-09-26.
+
+    접속 점검(issuer_map check · tenq_rf_build check)과 HEAD(Last-Modified · Content-Length)는 «받은 그대로» 를 봐야 한다
+    (차단 페이지 · 비 gzip · 상태 코드). fetch_bytes 는 gzip 을 풀고 오류를 재시도하므로 그 일을 못 한다 — 그래서 따로 둔다.
+    같은 UA · 같은 초당 상한(_throttle) · Accept-Encoding gzip. 재시도하지 않는다(점검용). raise_http 가 거짓이면 4xx·5xx 도
+    예외 없이 (상태, 머리, 본문) 으로 돌려준다 · 참이면 HTTPError 를 그대로 올린다. 연결 오류는 늘 예외다.
+    🚨 SEC 에 가는 urlopen 은 이 파일에만 있다(validate_site 가 build/*.py 를 훑어 막는다).
+    """
+    _throttle()
+    req = urllib.request.Request(url, method=method, headers={"User-Agent": UA, "Accept-Encoding": "gzip"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, r.headers, (b"" if method == "HEAD" else r.read())
+    except urllib.error.HTTPError as e:
+        if raise_http:
+            raise
+        return e.code, e.headers, (b"" if method == "HEAD" else e.read())
+
+
 def get_json(url: str, retries: int = 4):
     """EDGAR JSON 1건. 실패하면 None을 준다(빌드를 중단하지 않는다 — 판단은 호출자 몫).
 
