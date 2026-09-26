@@ -231,3 +231,8 @@ SENTIMENT.xlsx
 ie_data*.xls
 Time-Series-Momentum-Factors*
 Betting-Against-Beta*
+
+# 배치 V(PREREG-2026-09-27-VBATCH · D1) — L 층 산출 · 라이선스 원자료는 저장소 밖 캐시에만 둔다.
+#   산출(_vbatch.json · _vbatch.public.json · _vbatch.run.json · _vbatch.child.json · _vbatch.cmp.json · _vbatch.started)이나 캐시 사본이 작업 트리에 복사돼도 쓸려 들지 않게.
+_vbatch*
+vbatch_cache/
