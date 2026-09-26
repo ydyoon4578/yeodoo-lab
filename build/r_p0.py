@@ -38,6 +38,9 @@
     가격 무관)의 (그룹, 월) 집합을 경계 세계로 넘긴다. 정식 R2 자료가 있는데 경계 세계가 2015-01 보다 늦게 시작하면 멈춘다.
   2026-09-26: FPI 는 지도의 등록 표지(fpi_registered.tm_index · r_p0_adapt) · 지도 F0 위반 멤버-월은 두 세계(member_world · world_panel)
     에서 뺀다 — r_stagem.boundary_world · build_panel 과 같은 표본 규칙.
+  2026-09-26(배치 R 등록 전 정렬 · 수익 없음): member_world 는 시점정확 GICS 섹터를 모르는 멤버를 **남긴다**(금융만 뺀다) —
+    r_stagem.boundary_world · r_r2flags.members_from_im 과 같은 뜻. 전에는 섹터 모름을 빼서 경계 세계가 78 그룹-월(2015-01..2019-03 ·
+    NDX 의 Liberty 계열 추적주 · CTRX · TFCF 등) 작았고 r_run --check-reg 가 두 세계의 크기 차이로 멈췄다.
 
 🚨 방화벽 — 이 파일은 실제 플래그의 γ 를 계산하지 않는다.
   두 단계로 나눈다.
@@ -127,7 +130,7 @@ LIT = {
         "t_lit": 3.44, "T_lit": 264,
         "source": "Cohen · Malloy · Pomorski, «Decoding Inside Information», NBER WP w16454(2010-10) 표 IX 열 (2) «Large Stocks» "
                   "Opportunistic Sell −0.55***(−3.44) · 풀링 회귀 · 달 고정효과 · 회사 군집 SE(JF 2012 게재판 쪽번호는 열어 보지 못했다)",
-        "verified": {"t": "확인 — 로컬 NBER 판 본문(scratchpad/comp/cmp.txt) 표 IX: −0.55***(−3.44) · 열 (2) = 시총 상위 절반(12월 시총)",
+        "verified": {"t": "확인 — 로컬 NBER 판 본문(cmp.txt · 저장소 밖) 표 IX: −0.55***(−3.44) · 열 (2) = 시총 상위 절반(12월 시총)",
                      "months": "부분 확인 — 본문 «Form 4 filings for the period January, 1986 to December, 2007»(22년 = 264개월 · "
                                "«our entire 22 year sample»). 수익 검정 · 표는 3년 분류 이력 뒤 1989–2007(228개월)로 적힌 곳이 많다 "
                                "(표 II · Figure). 등록 입력은 선언대로 264(긴 쪽 · 보수 — 228 이면 t_alt_lit 가 √(264/228) = 1.076배)",
@@ -778,7 +781,7 @@ def run(panel, counts_doc, months_ok=None, B=N_PLACEBO, seed=SEED, external=None
 # 세계 패널(실자료) — eg30plus.World(시점정확 명단 · 날짜 인식 가격 키 · 시점정확 GICS) 위에서
 # ════════════════════════════════════════════════════════════════════════
 def member_world(W, imap, months):
-    """R2 경계 분포의 세계 {(그룹, 월)} — 시점정확 S&P 500 ∪ NASDAQ 100 멤버 가운데 비금융(시점정확 GICS · 섹터를 모르면 뺌) ·
+    """R2 경계 분포의 세계 {(그룹, 월)} — 시점정확 S&P 500 ∪ NASDAQ 100 멤버 가운데 비금융(시점정확 GICS · 섹터를 모르면 남긴다 — 세기만) ·
     지도에서 푼 그룹 · FPI(fpi=1) 제외. 🔒 가격·시총은 묻지 않는다 — 경계는 «우리 세계» 의 전년도 분포이고 가격 커버리지는
     세계의 정의가 아니다(W.universe 와 pit_panel.union_members 는 가격 키·시총이 선 이름만 주므로 쓰지 않고 날것의 월말 명단
     W.W["lists"] 를 읽는다 · 2015 달은 가격 결측이 커서 시총을 요구하면 그룹 수가 약 ¼ 준다). 재배정 티커의 마지막 멤버월은
@@ -808,8 +811,7 @@ def member_world(W, imap, months):
                 tally["fin"] += 1
                 continue
             if not sec or sec == "?":
-                tally["nosec"] += 1
-                continue
+                tally["nosec"] += 1                                     # 세기만 한다 — 섹터 모름은 남긴다(r_stagem.boundary_world 와 같다 · 2026-09-26 등록 전 정렬)
             if imap.ok:
                 g = imap.get(t, s, k)
                 if g is None or g["gid"] is None:

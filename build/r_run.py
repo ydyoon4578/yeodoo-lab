@@ -2,10 +2,12 @@
 """build/r_run.py — 배치 R(RBATCH) 한 번 굽기 러너: Stage M 주 통계 · 한쪽 p · Holm(m 은 등록 커밋에 고정) · 관문 i~iii · 판정
 · F0 재현 · 얼린 판 점검(SNAP/BASE 핀 · 새 자료 고정표) · 검문점 → data/_rbatch.json
 
-사전등록: build/PREREG-2026-09-2x-RBATCH.md(뼈대 — 등록 때 날짜를 채워 이름을 바꾸고 PREREG · PREREG_CARDS · RESULT 를 같은 커밋에서 고친다).
-카드 원문: scratchpad rbatch_research.json «final»(slate R1-OPPSELL · R2-LAZYRF · R3-8KNE · R5-ALARM · batch_design_changes 1~12 ·
-data_build_plan §E «러너는 qbatch_run 처럼»). 우선순위는 사전등록 문서가 정한다 — 글과 이 코드가 어긋나면 **얼린 코드가 돌고**
-그 어긋남은 결과 문서에 «등록 오류» 로 적는다.
+사전등록: build/PREREG-2026-09-26-RBATCH.md(등록 커밋 · 뼈대 build/PREREG-2026-09-2x-RBATCH.md 는 같은 커밋에서 지운다 · PREREG ·
+PREREG_CARDS · RESULT 한 날짜 줄기). 카드 원문: build/PREREG-2026-09-26-RBATCH-CARDS.md(설계 원본 «final» 그대로 — slate R1-OPPSELL ·
+R2-LAZYRF · R3-8KNE · R5-ALARM · batch_design_changes 1~12 · data_build_plan §E «러너는 qbatch_run 처럼»).
+🔒 2026-09-26 등록 — 배치 R = R1 · R2 뿐이다. R3-8KNE · R5-ALARM 은 표지 원천(§B submissions 패널 · §D 사건 표지)을 짓지 않아
+이 등록에서 뺐다(PREREG §1.4 · §0b-2 ⑩) — 러너에 R3 · R5 경로가 없고, 그 원천 파일(DROPPED_DATA)이 RBATCH_DATA 에 있으면 멈춘다.
+우선순위는 사전등록 문서가 정한다 — 글과 이 코드가 어긋나면 **얼린 코드가 돌고** 그 어긋남은 결과 문서에 «등록 오류» 로 적는다.
 
 근본 이유(왜 이렇게 나눴나).
   배치 Q 러너처럼 «엔진은 계열만 내고 판정은 러너가 한 벌로» 한다. 엔진은 build/r_stagem.py(월별 횡단면 회귀 · FWL · JT · 관문 변형)다.
@@ -29,7 +31,7 @@ Holm(batch_design_changes 1 · 2).
   R2 (i) WLS 에서도 γ_CH < 0 · (ii) Δlog(1A 단어수) 통제에도 γ_CH < 0 · 보고만: 결측 더미 계수 < γ_CH → «분리 실패 오염».
 판정(카드마다 · 표본 안 통과는 채택이 아니다).
   가족 밖(P0 < 0.15 등) → «측정만»(단계 팔은 측정 팔) · 가족 안 → Holm 통과 ∧ 관문 전부 → «Stage M 통과 — 단계는 전방 판정»,
-  Holm 통과 ∧ 관문 실패 → «기각 — 관문 … 미달», Holm 실패 → «기각». R3 → «측정만(가족 밖)» · R5 → «사건 수만».
+  Holm 통과 ∧ 관문 실패 → «기각 — 관문 … 미달», Holm 실패 → «기각». (R3 · R5 는 이 등록에서 뺐다 — 판정 줄이 없다.)
   단계 팔의 채택 경로는 Stage M 통과 ∧ Stage S F0(편입당 교체 수 중앙값 2~15) 참일 때만 연다(forward_plan). 그 밖은 측정 팔.
   R1 팔은 §G 일치 시험, R2 팔은 §C 파서 검증을 통과해야 전방에서 연다(여기서는 상태만 싣는다).
 F0(수익 없음 · 등록 전 --f0 가 data/_r_f0.json 에 쓰고 커밋 · 굽기 때 같은 판으로 다시 세어 바이트 수준으로 같아야 한다).
@@ -38,7 +40,10 @@ F0(수익 없음 · 등록 전 --f0 가 data/_r_f0.json 에 쓰고 커밋 · 굽
 
 🚨 방화벽 — 이 파일은 등록 전에 실제 표지와 실제 미래 수익의 관계를 계산하지 않는다.
   굽기(main)는 frozen_check 를 넘어야만 돈다(RBATCH_COMMIT = 사전등록 문서를 처음 더한 커밋 · origin/main 조상 · 등록 값 빈칸 없음 ·
-  ⟨TBD⟩ 없음 · 얼린 파일(가져오기 닫힘 전부) · 핀 · 고정표 · 판 · 환경). 등록 전에 되는 것은 다섯뿐이다 —
+  ⟨TBD⟩ · 초안 자리표시자 괄호 없음 · 얼린 파일(가져오기 닫힘 전부) · 핀 · 고정표 · 판 · 환경 · **공개 판**(RBATCH_PX_OVERLAY 없음) ·
+  **배치 V 등록 뒤**(RBATCH_AFTER_V = 배치 V 등록 커밋 · origin/main 조상 · build/PREREG-*-VBATCH*.md 를 처음 더한 커밋 ·
+  배치 U 는 등록 전에 취소됐다 — PREREG §5.4) ·
+  뺀 카드 원천 없음). 등록 전에 되는 것은 다섯뿐이다 —
     --selftest     합성 자료만(판정 논리 · Holm · p · 관문 · F0 · 핀 · 검문점 · 끝에서 끝까지)
     --dry          구조 점검(상수 한 벌 · 얼린 파일 · 가져오기 닫힘 핀 · 등록 빈칸 · 새 자료 · 고정표 링크 · --check-reg) — 수익 없음 ·
                    하나라도 어긋나거나 빠지면 종료 코드 1
@@ -50,20 +55,22 @@ F0(수익 없음 · 등록 전 --f0 가 data/_r_f0.json 에 쓰고 커밋 · 굽
                    산출물 · 검문점은 임시 폴더에 두고 열지 않고 지우며 수치는 찍지 않는다(구조 · 예외 · 초만).
   --smoke-synth 은 합성 세계로 러너 전체를 돌리고 결과를 찍는다(실제 자료 없음).
 
-자료 어댑터 — 아직 빌드 중인 새 자료(발행사 지도 · 내부자 PIT · 10-Q 위험요인 · §D 사건 · §G 일치 · §C 검증)의 파일·필드 이름은
+자료 어댑터 — 새 자료(발행사 지도 · 내부자 PIT · 10-Q 위험요인 · §G 일치 · §C 검증)의 파일·필드 이름은
   RF 한 곳에만 적는다(표지 자체의 필드는 r_stagem.FIELDS · r_p0_adapt.FIELDS 가 맡는다). 이름이 바뀌면 여기만 고친다.
   R1 쌍둥이 T1~T6 은 정본 cikmonth.json 한 파일의 칸(r_r1_flags.cikmonth_doc · r_stagem.FIELDS["ins"]["twins"])이고 엔진 stage_m_r1 이
   돌린다(따로 파일을 두지 않는다 · 시도를 두 번 세지 않는다). R2 대조(SimDoc · iXBRL · 코로나)는 r_stagem.r2_variants 로 지어 stage_m_r2 에 넘긴다.
   R2 경계 분포의 세계 = r_stagem.boundary_world(2015-01 부터 · 가격 무관) — Stage M 표지 · 대조 · F0 외부 · Stage S 묶음이 모두 이 한 벌을 쓴다.
-  R5 이름-월은 Stage S 모듈이 연결되면 그 묶음의 ALARM(r_r2flags.r5_events 정본) 하나에서 센다(§D _ev_flags 의 R5 는 모듈이 없을 때만).
+  밀도 F0 는 쓸 달 가운데 표지 원천이 정의한 달(months_ok · k = 0)에서만 센다 — 정의 밖 달을 «0 개» 로 읽지 않는다(PREREG §0b-2 ⑨ ·
+  r_p0 의 밀도 달과 같다 · 규칙 수는 그대로).
+  --f0 · --check-reg · --dry · 굽기는 같은 환경(numpy 2.5.3 · scipy 1.18.1 · PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1)을 요구한다.
 
   python build/r_run.py --selftest
   python build/r_run.py --dry
   python build/r_run.py --check-reg          (등록 커밋 전 · ④ 뒤 ⑦ 전 — PREREG §12)
   cd $TEMP/snap_wt && RBATCH_DATA=<저장소 data> python -X utf8 build/r_run.py --check-reg --rebuild
   cd $TEMP/snap_wt && RBATCH_DATA=<저장소 data> python -X utf8 build/r_run.py --f0 [--out 경로]
-  cd $TEMP/snap_wt && RBATCH_DATA=<저장소 data> RBATCH_REPO=<저장소> RBATCH_COMMIT=<등록 커밋> PYTHONHASHSEED=0 OPENBLAS_NUM_THREADS=1 \\
-      python -X utf8 build/r_run.py
+  cd $TEMP/snap_wt && RBATCH_DATA=<저장소 data> RBATCH_REPO=<저장소> RBATCH_COMMIT=<등록 커밋> RBATCH_AFTER_V=<배치 V 등록 커밋> \\
+      PYTHONHASHSEED=0 OPENBLAS_NUM_THREADS=1 python -X utf8 build/r_run.py
   (저장소 작업 트리는 가격 격자가 어긋나 pit_panel.load_world 가 멈춘다 — 자료 판 작업 사본 snap_wt 로 돌린다.
    얼린 파일은 실행 뿌리(snap_wt) 쪽을 등록 커밋과 대조하고, 새 자료는 RBATCH_DATA 쪽을 대조한다.)
 """
@@ -83,11 +90,13 @@ ROOT = os.path.dirname(HERE)                               # 실행 뿌리 — �
 REPO = os.environ.get("RBATCH_REPO") or ROOT               # 등록 커밋이 있는 git 저장소(작업 사본이면 같은 객체를 본다)
 RDATA = os.environ.get("RBATCH_DATA") or os.path.join(ROOT, "data")   # 배치 R 새 자료 · 산출물(r_stagem.RDATA 와 같은 뜻)
 
-PREREG = "build/PREREG-2026-09-2x-RBATCH.md"               # 🚨 자리표시자 — 등록 때 날짜로 바꾼다(frozen_check 가 '2x' 를 막는다)
-PREREG_CARDS = "build/PREREG-2026-09-2x-RBATCH-CARDS.md"   # 카드 원문(slate · data_build_plan · batch_design_changes 그대로)
-RESULT = "build/PREREG-2026-09-2x-RBATCH-RESULT.md"
+PREREG = "build/PREREG-2026-09-26-RBATCH.md"               # 등록 날짜 줄기(2026-09-26) — name_check · frozen_check 가 '2x' 자리표시자를 막는다
+PREREG_CARDS = "build/PREREG-2026-09-26-RBATCH-CARDS.md"   # 카드 원문(slate · data_build_plan · batch_design_changes 그대로)
+RESULT = "build/PREREG-2026-09-26-RBATCH-RESULT.md"
 OUT_NAME, MARK_NAME, F0_NAME = "_rbatch.json", "_rbatch.started", "_r_f0.json"
 PLACEHOLDER = "⟨TBD"                                       # 사전등록 문서의 빈칸 표시 — 등록 커밋 판에 하나라도 있으면 굽지 않는다
+DRAFT_MARK = "\u3014"                                      # 등록 초안의 자리표시자 괄호(U+3014) — 이것도 하나라도 있으면 굽지 않는다(PREREG §5.1 ⑩)
+VBATCH_GLOB = "build/PREREG-*-VBATCH*.md"                  # 배치 V 사전등록 문서(RESULT · CARDS 제외) — 배치 R 은 그 등록 뒤에만 굽는다(PREREG §5.4 · 배치 U 는 등록 전 취소)
 
 # ── 등록 규칙의 수(카드 원문 · batch_design_changes — 여기서 바꾸지 않는다 · --dry 가 r_stagem · r_p0 와 같은지 본다) ─────
 M0, M1 = "2016-08", "2026-07"          # 신호월 t(보유 t+1 = 2016-09 ~ 2026-08)
@@ -111,36 +120,38 @@ P0_Q, P0_A1, P0_TCRIT, P0_SCALE = 0.4, 0.0125, 2.27, 0.5   # P0 식의 상수(ba
 P0_LIT = {"R1-OPPSELL": (3.44, 264), "R2-LAZYRF": (2.22, 240)}
 P0_TOL = 1e-6                          # P0 재유도 허용(문서 값은 소수 6자리)
 # 등록 전에 선언한 «돌리지 않는 시도»(엔진 trials 의 run=False 가운데 굽기를 막지 않는 것) — 그 밖의 못 돌린 시도는 등록 오류로 멈춘다
-DECLARED_NOT_RUN = {"R1.sens2014": "2014-07 넓힌 창 — 편출 가격 복구 전에는 P_wide 가 없다(PREREG §4)",
-                    "R2.sens2014": "2014-07 넓힌 창 — 편출 가격 복구 전에는 P_wide 가 없다(PREREG §4)"}
-# Stage S 측정 팔(카드 controls) — 돌지 않으면 못 돌린 시도로 싣는다(조용히 잃지 않는다). R3 는 Stage S 모듈에 팔이 없다(선언).
+DECLARED_NOT_RUN = {"R1.sens2014": "2014-07 넓힌 창 — 그 창(2014-07..2016-07)의 커버리지 T 가 어느 판에서도 0 이다(가격이 묶는다 · PREREG §0.3 · §1.0)",
+                    "R2.sens2014": "2014-07 넓힌 창 — 그 창(2014-07..2016-07)의 커버리지 T 가 어느 판에서도 0 이다(가격이 묶는다 · PREREG §0.3 · §1.0)"}
+# Stage S 측정 팔(카드 controls) — 돌지 않으면 못 돌린 시도로 싣는다(조용히 잃지 않는다). R3 · R5 는 이 등록에서 뺐다(PREREG §1.4).
 S_ARMS = {"R1-OPPSELL": ("rule", "C1", "C2", "C3", "C4", "placebo"), "R2-LAZYRF": ("rule", "C2", "C3", "C4", "C5", "placebo"),
-          "R12-STACK": ("rule",), "R3-8KNE": ("rule_monthly", "placebo", "hibeta")}
+          "R12-STACK": ("rule",)}
 P0_DENS = {"R1": ("OS", "RS"), "R2": ("CH",)}   # r_p0.CARDS density_f0 가 보는 표지(OS 중앙값·최소 · RS 중앙값 | CH 중앙값)
 
-CODES = {"R1": "R1-OPPSELL", "R2": "R2-LAZYRF", "R3": "R3-8KNE", "R5": "R5-ALARM"}
-CANDIDATES = ("R1", "R2")              # 1차 후보(같은 자료 가족에 하나)
+# 🔒 2026-09-26 등록 — 배치 R = R1 · R2 뿐(R3-8KNE · R5-ALARM 은 표지 원천 §B · §D 를 짓지 않아 뺐다 · PREREG §1.4 · §0b-2 ⑩).
+#   Stage M · F0 · 판정 · 표 · 시도 목록이 모두 CANDIDATES 만 돈다.
+CODES = {"R1": "R1-OPPSELL", "R2": "R2-LAZYRF"}
+CANDIDATES = ("R1", "R2")              # 1차 후보(같은 자료 가족에 하나) = 이 등록의 카드 전부
 FAMILY = {"R1": "insider", "R2": "text"}
-FOCAL = {"R1": "OS", "R2": "CH", "R3": "FL", "R5": "AL"}
+FOCAL = {"R1": "OS", "R2": "CH"}
 
 V_PASS = "Stage M 통과 — 단계는 전방 판정"
 V_REJ = "기각"
 V_MEAS = "측정만"
-V_R3 = "측정만(Holm 가족 밖 · 승격 없음)"
-V_R5 = "사건 수만(수익 계산 없음 · 시도 수에 넣지 않는다)"
 ARM_ADOPT = "채택 경로(전방 FF1 · FF2)"
 ARM_MEAS = "측정 팔"
 
 # ══ 등록 값 — 등록 커밋에서 채운다. None 이 하나라도 남으면 굽지 않는다 ═══════════════════════════════
 REG = {
-    "m": None,             # Holm 가족 크기 0 · 1 · 2 — data/_r_p0.json holm.m 과 같아야 한다
-    "primary": None,       # 1차 카드(짧은 코드 · 길이 m) — 예 ["R1", "R2"] · ["R2"] · []
-    "p0": None,            # {"R1": 0.xxxxxx 또는 None, "R2": …} — _r_p0.json 의 값(소수 6자리)
-    "snap": None,          # P1 가격 핀 — stocks.json · pit_px.json 두 격자가 같고 검증을 통과한 가장 이른 커밋(§F)
-    "base": None,          # P2 가격 밖 입력 핀
-    "n_lab_prior": None,   # 등록 때 랩 누적 시도 수(forward_plan 약 716)
-    "stage_s": None,       # Stage S 모듈 이름(build · run 을 가진 것 · 실제 굽기는 "r_stages" 만) — "none" 은 합성 · 연기 시험 전용
-    "frozen_extra": None,  # 자료 빌더 등 등록 때 확정하는 얼린 파일(튜플 · 없으면 ())
+    "m": 0,                # Holm 가족 크기 0 · 1 · 2 — data/_r_p0.json holm.m 과 같아야 한다
+    "primary": [],         # 1차 카드(짧은 코드 · 길이 m) — 예 ["R1", "R2"] · ["R2"] · []
+    "p0": {"R1": 0.059206, "R2": 0.034484},  # {"R1": 0.xxxxxx 또는 None, "R2": …} — _r_p0.json 의 값(소수 6자리)
+    "snap": "8da9529bab7918ec31a5f221b1e7d621111363e4",  # P1 가격 핀 — stocks.json · pit_px.json 두 격자가 같고 검증을 통과한 가장 이른 커밋(§F)
+    "base": "8da9529bab7918ec31a5f221b1e7d621111363e4",  # P2 가격 밖 입력 핀
+    "n_lab_prior": 840,    # 등록 때 랩 누적 시도 수(PREREG §2 — 약 840 = 배치 T 결과 약 878 − 그 안에 이미 든 배치 R 예상 약 38)
+    "stage_s": "r_stages", # Stage S 모듈 이름 — 실제 굽기는 "r_stages" 만("none" 은 합성 · 연기 시험 전용) · 첫 --f0 전에 정했다(F0 문서의 셈 규칙)
+    "frozen_extra": ("build/ins_pit_build.py", "build/ins_daily.py", "build/tenq_rf_build.py", "build/pit_px_db2.py",
+                     "build/pit_px_refresh.py", "build/refresh_facts.py", "build/pit_facts.py", "build/r_cov.py", "build/r_p0_test.py",
+                     "build/pit_px_repair_leavers.py"),  # 자료 빌더 등 등록 때 확정하는 얼린 파일(튜플 · 없으면 ())
 }
 
 # ══ 얼린 파일 · 핀 ═════════════════════════════════════════════════════════════════════════════
@@ -164,16 +175,19 @@ BASE_FILES = ("data/bench_px.json", "data/rf_monthly.json", "data/index_history.
 #   R1 쌍둥이 T1~T6 은 cikmonth.json 안의 칸이다(따로 파일 없음 · r_r1_flags.cikmonth_doc).
 #   2026-09-26 — 실제 파일 이름으로 고쳤다(§G 일치 시험 = _ins_daily/test_2026q2.json · §C 검증 = _tenq_rf/validation.json) ·
 #   r_stagem 이 읽는 둘을 더했다(_issuer_map_sector_manual.json = SectorAt 섹터 더미 · _r_ytrunc.json = 보유월 y 이름별 판정).
+#   2026-09-26 등록 — R3 · R5 원천(_sub_pit.json.gz · _ev_flags.json)을 뺐다(아무도 짓지 않았다 · DROPPED_DATA 가 없음을 본다).
 NEW_DATA = ("_issuer_map.json", "_issuer_map_manifest.json", "_issuer_map_manual.json", "_issuer_map_sector_manual.json",
             "_ins_pit/manifest.json", "_ins_pit/cikmonth.json", "_ins_pit/routine.json", "_ins_daily/test_2026q2.json",
-            "_sub_pit.json.gz", "_tenq_rf.json", "_tenq_rf/validation.json", "_ev_flags.json", "_r_ytrunc.json",
+            "_tenq_rf.json", "_tenq_rf/validation.json", "_r_ytrunc.json",
             "_r_p0.json", "_r_p0_counts.json", F0_NAME)
 # 있으면 읽히는 입력(선택) — 커밋과 로컬 모두에 없으면 «없음» 으로 싣고, 어느 한쪽에만 있거나 내용이 다르면 멈춘다.
-#   _px_raw.json = r_stagem 시총 가격(원 종가 · 없으면 배당조정 판) · _t401.json = R5 4.01 본문(r_stages · r_r2flags.load_t401) ·
-#   _r_coverage.json = r_stages · r_p0_adapt 가 읽는 §F 달 관문
-NEW_DATA_OPT = ("_px_raw.json", "_t401.json", "_r_coverage.json")
+#   _px_raw.json = r_stagem 시총 가격(원 종가 · 없으면 배당조정 판) · _r_coverage.json = r_stages · r_p0_adapt 가 읽는 §F 달 관문
+NEW_DATA_OPT = ("_px_raw.json", "_r_coverage.json")
 # 굽기에서 있으면 안 되는 파일 — 덮어쓰기 표지(r_stages · r_p0_adapt 옵트인 · 정식 빌더를 가린다)
 FORBID_DATA = ("_r_flags.json",)
+# 🔒 이 등록에서 뺀 카드(R3 · R5)의 표지 원천 — RBATCH_DATA 에 있으면 --f0 · 등록 대조 · --dry · 굽기가 멈춘다. r_stages 는 _sub_pit
+#   (+ _t401)이 있으면 R5 경보 묶음을 조용히 짓는다 — 뺀 카드가 F0 문서 · Stage S 묶음 · 해시에 섞이지 않게 막는다(PREREG §1.4).
+DROPPED_DATA = ("_sub_pit.json.gz", "_ev_flags.json", "_t401.json")
 
 # ══ 자료 어댑터 — 파일 · 필드 이름은 여기 한 곳(빌더가 이름을 정하면 여기만 고친다) ═══════════════════════════
 RF = {
@@ -191,11 +205,8 @@ RF = {
     # §G 일간 XML 대 DERA 일치 시험(2026Q2) — R1 전방 팔을 여는 조건
     "g_check": {"file": "_ins_daily/test_2026q2.json", "row_match": ("row_match", "row_match_rate"),         # 2026-09-26 실제 파일
                 "os_mismatch": ("os_flag_mismatch", "os_mismatch", "os_mismatch_rate")},
-    # §D 사건 표지 — 값은 [[그룹, 달], …] 또는 {판: [[그룹, 달], …]} (그룹-월 = 그달 말 표지가 켜짐)
-    "ev": {"file": "_ev_flags.json", "R3": ("r3", "R3", "fl"), "R5": ("r5", "R5", "alarm"), "primary": ("primary", "main")},
-    # 대조 표지 — R2 는 r_stagem.r2_variants 의 키(stage_m_r2 fp_doc · fp_ixbrl · fp_covid) · R3 는 §D _ev_flags 의 판 이름
+    # 대조 표지 — R2 는 r_stagem.r2_variants 의 키(stage_m_r2 fp_doc · fp_ixbrl · fp_covid)
     "variants_r2": {"doc": "fp_doc", "ixbrl": "fp_ixbrl", "covid": "fp_covid"},
-    "twins_r3": ("long", "good", "bad", "w5"),
     # R1 쌍둥이 · 표본 칸(cikmonth 안 · r_stagem.ins_flags 가 옮긴 이름) — 하나라도 없으면 실제 굽기는 Stage M 전에 멈춘다
     "need_r1": ("OS", "RS", "SALL", "CLS", "OS_T1", "OS_T1C", "OS_T2", "RS_T2", "OS_T4", "RS_T4", "OS_T6", "RS_T6"),
     # P0 개수 표(r_p0 build_counts) — R2 경계 세계 요약(r_p0.member_world) · 표지 출처
@@ -219,9 +230,9 @@ RF = {
     "stage_s": {"load_bundle": "load_bundle", "view": "View", "build": "build", "run": "run", "cards": "cards", "f0": "f0", "n_r": "n_r",
                 "excluded": "excluded", "ok": "ok", "hash": "hash", "v0_hash": "v0_hash", "synth_bundle": "synth_bundle",
                 "issuer_map": "IssuerMap", "months": "months",
-                "codes": {"R1": "R1-OPPSELL", "R2": "R2-LAZYRF"}, "extra": ("R12-STACK", "R5-ALARM"), "consts": ("F0_NR", "N_TOP", "WINDOW"),
-                # Stage M 표지 이름 ↔ 묶음 표지 이름(같은 칸이 켜졌는지 대조) · R5 경보
-                "agree": {"R1": ("OS", "OS"), "R2": ("CH", "CH")}, "alarm": "ALARM"},
+                "codes": {"R1": "R1-OPPSELL", "R2": "R2-LAZYRF"}, "extra": ("R12-STACK",), "consts": ("F0_NR", "N_TOP", "WINDOW"),
+                # Stage M 표지 이름 ↔ 묶음 표지 이름(같은 칸이 켜졌는지 대조) · 모듈의 R5-ALARM 카드는 이 등록에서 뺐다(요약 · 해시에 싣지 않는다)
+                "agree": {"R1": ("OS", "OS"), "R2": ("CH", "CH")}},
 }
 
 
@@ -643,16 +654,26 @@ def f0_all(S, prov, P, fps, months):
     rw = prov.r2_world_info()
     r2_world_check(rw)
     dens = {}
-    for flag, c in (("OS", "R1"), ("RS", "R1"), ("SALL", "R1"), ("CH", "R2"), ("FL", "R3")):
+    for flag, c in (("OS", "R1"), ("RS", "R1"), ("SALL", "R1"), ("CH", "R2")):
         fp = fps.get(c)
         if fp is None:
             dens[flag] = {"ok": None, "why": "표지 없음"}
             continue
-        d = S.f0_density(P, fp, flag, months)
+        # 🔒 2026-09-26 등록 전 정렬(PREREG §0b-2 ⑨) — 밀도는 쓸 달 가운데 표지 원천이 정의한 달(months_ok · k = 0)에서만 센다.
+        #   정의 밖 달(cikmonth months_ok 가 2026-06 에서 끝나 신호월 2026-07 의 OS · RS 는 «모름»)을 «0 개» 로 읽지 않는다 —
+        #   r_p0 의 밀도 달(관문 − 정의 밖)과 같은 달이다. 규칙 수(20 · 5 · 10 · 30)는 그대로이고 뺀 달은 문서에 남긴다.
+        mo = getattr(fp, "months_ok", None)
+        mm = [m for m in months if mo is None or m in mo]
+        und = [m for m in months if not (mo is None or m in mo)]
+        if mm:
+            d = S.f0_density(P, fp, flag, mm)
+        else:                                               # 정의된 달이 없다 — 엔진은 빈 목록을 «전 달» 로 읽으므로 부르지 않는다
+            d = {"median": None, "min": None, "ok": None, "by_month": {}}
         mine = f0_flag_ok(flag, list(d["by_month"].values()))
         if flag in F0_FLAG and d["ok"] is not None and bool(d["ok"]) != mine:
             raise SystemExit("🚨 밀도 F0(%s) 가 엔진(%s)과 러너(%s)에서 다르다." % (flag, d["ok"], mine))
-        dens[flag] = {"median": d["median"], "min": d["min"], "ok": mine, "rule": F0_FLAG.get(flag), "by_month": d["by_month"]}
+        dens[flag] = {"median": d["median"], "min": d["min"], "ok": mine, "rule": F0_FLAG.get(flag), "by_month": d["by_month"],
+                      "undefined_months": und}
     ss = {}
     for c in CANDIDATES:
         nr, unm = prov.stage_s_nr(c, fps.get(c), FOCAL[c], STAGE_S_WIN[c])
@@ -923,11 +944,7 @@ def verdicts(qual, family, holm, gates, f0):
         if c == "R2" and g is not None and g.get("contam"):
             rec["report"] = "분리 실패 오염 — 결측 더미 계수(%.4f) < γ_CH(%.4f) · 결과 문서에 적는다" % (g["vals"]["miss"], g["vals"]["ch"])
         out[c] = rec
-    out["R3"] = {"stage_m": V_R3, "why": ["측정 전용 카드(조건부 승격을 없앴다 · 표본 안에서 한 번 재면 이 창은 R3 에 오염된다)"],
-                 "stage_s_arm": "원장 밖(R3 는 원장에 넣지 않는다)", "in_family": False}
-    out["R5"] = {"stage_m": V_R5, "why": ["사건이 드물어 표본 안 검정력이 0 — 사건 수와 업종 분포만"],
-                 "stage_s_arm": "전방 기록 팔(V0 + 경보 제외 · 채택 경로 없음)", "in_family": False}
-    return out
+    return out                                              # R3 · R5 줄은 없다(이 등록에서 뺐다 · PREREG §1.4)
 
 
 def headline(V, m):
@@ -1109,6 +1126,65 @@ def forbidden_present(rdata=None):
     return [p for p in FORBID_DATA if os.path.exists(os.path.join(rdata, _rel(p)))]
 
 
+def dropped_present(rdata=None):
+    """이 등록에서 뺀 카드(R3 · R5)의 표지 원천(DROPPED_DATA) 가운데 RBATCH_DATA 에 있는 것 — 있으면 F0 · 등록 대조 · 굽기가 멈춘다."""
+    rdata = rdata or RDATA
+    return [p for p in DROPPED_DATA if os.path.exists(os.path.join(rdata, _rel(p)))]
+
+
+def env_problems():
+    """판 · 환경(PREREG §3 · §5.1 ②) — numpy 2.5.3 · scipy 1.18.1 · PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1.
+    --f0 · --check-reg(--rebuild) · --dry · 굽기가 같은 점검을 한다(F0 를 굽기와 같은 환경에서 세어 바이트 재현이 흔들리지 않게)."""
+    import scipy
+    bad = []
+    if scipy.__version__ != "1.18.1" or np.__version__ != "2.5.3":
+        bad.append("scipy/numpy 판이 다르다(%s · %s)" % (scipy.__version__, np.__version__))
+    if os.environ.get("PYTHONHASHSEED") != "0" or os.environ.get("OPENBLAS_NUM_THREADS") != "1":
+        bad.append("PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1 로 돌려라(부동소수 합 순서 · BLAS 스레드 고정 · 지금 %s · %s)"
+                   % (os.environ.get("PYTHONHASHSEED"), os.environ.get("OPENBLAS_NUM_THREADS")))
+    return bad
+
+
+def overlay_problems(f0doc=None, env=None):
+    """등록 판 = 공개 판(PREREG §0b-2 ⑤) — RBATCH_PX_OVERLAY 가 켜져 있거나 F0 문서가 오버레이 판이면 문제(오버레이는 sha · T 수만 공개)."""
+    env = os.environ if env is None else env
+    bad = []
+    if (env.get("RBATCH_PX_OVERLAY") or "").strip():
+        bad.append("RBATCH_PX_OVERLAY 가 켜져 있다 — 등록 판(F0 · 굽기)은 공개 판이다")
+    if f0doc is not None and f0doc.get("px_overlay") is not None:
+        bad.append("F0 문서가 오버레이 판이다(px_overlay sha %s…) — 등록 F0 문서는 px_overlay = None"
+                   % str((f0doc.get("px_overlay") or {}).get("sha256"))[:12])
+    return bad
+
+
+def placeholder_counts(text):
+    """사전등록 문서에 남은 빈칸 — (러너 표식 ⟨TBD 수, 초안 자리표시자 괄호 U+3014 수). 둘 다 0 이어야 굽는다."""
+    return text.count(PLACEHOLDER), text.count(DRAFT_MARK)
+
+
+def after_v_check(repo, v, ref="origin/main"):
+    """🔒 배치 R 은 배치 V 의 등록 뒤에만 굽는다(PREREG §5.4 · 검토 M7 — 배치 V 설계자가 R 의 표본 안 결과를 보기 전에 V 가 등록된다).
+    처음 게이트는 배치 U 였다 — U 는 등록 전에 취소됐고(사용자 2026-09-26 · 모든 전략이 EG30 파생) 다음 배치는 EG30 을 쓰지 않는 배치 V 다.
+    v = RBATCH_AFTER_V(배치 V 등록 커밋) — 커밋으로 풀리고 · ref(origin/main)의 조상이며 · 그 트리에 배치 V 사전등록 문서
+    (VBATCH_GLOB · RESULT · CARDS 제외)가 있고 · 그 문서를 처음 더한 커밋이 v 여야 한다. 돌려주는 것 {commit, prereg} · 어긋나면 멈춘다."""
+    import fnmatch
+    if not v:
+        raise SystemExit("🚨 RBATCH_AFTER_V(배치 V 등록 커밋)를 넘겨라 — 배치 R 은 배치 V 가 등록 · 푸시된 뒤에만 굽는다(PREREG §5.4).")
+    full = _git(repo, "rev-parse", "--verify", "-q", v + "^{commit}").stdout.strip()
+    if not full:
+        raise SystemExit("🚨 RBATCH_AFTER_V %s 를 커밋으로 풀 수 없다(%s)." % (v, repo))
+    if not is_ancestor(repo, full, ref):
+        raise SystemExit("🚨 배치 V 등록 커밋 %s 가 %s 에 없다 — 배치 V 가 등록 · 푸시된 뒤에 굽는다." % (full[:12], ref))
+    names = [x.strip() for x in _git(repo, "ls-tree", "--name-only", full, "build/").stdout.split("\n")]
+    cand = sorted(p for p in names if p and fnmatch.fnmatchcase(p, VBATCH_GLOB) and not p.endswith(("-RESULT.md", "-CARDS.md")))
+    if not cand:
+        raise SystemExit("🚨 %s 의 트리에 배치 V 사전등록 문서(%s)가 없다." % (full[:12], VBATCH_GLOB))
+    first = [p for p in cand if first_add_is(repo, full, p)]
+    if not first:
+        raise SystemExit("🚨 %s 는 배치 V 사전등록 문서 %s 를 처음 더한 커밋이 아니다 — 배치 V 등록 커밋을 넘겨라." % (full[:12], cand))
+    return {"commit": full, "prereg": first[0]}
+
+
 def frozen_check(reg=None):
     """굽기 전 점검 — 하나라도 어긋나면 돌지 않는다. 돌려주는 것 {commit, pins …}(JSON 에 싣는다)."""
     reg = REG if reg is None else reg
@@ -1124,6 +1200,12 @@ def frozen_check(reg=None):
     fb = forbidden_present()
     if fb:
         raise SystemExit("🚨 덮어쓰기 표지 파일 %s 가 있다 — 정식 빌더를 가린다. 굽기 전에 치운다(r_stages · r_p0_adapt 옵트인)." % fb)
+    dp = dropped_present()
+    if dp:
+        raise SystemExit("🚨 이 등록에서 뺀 카드(R3 · R5)의 표지 원천 %s 가 RBATCH_DATA 에 있다 — 치우고 굽는다(PREREG §1.4)." % dp)
+    ov = overlay_problems()
+    if ov:
+        raise SystemExit("🚨 %s(PREREG §0b-2 ⑤)." % " · ".join(ov))
     unp = closure_unpinned(reg)
     if unp:
         raise SystemExit("🚨 굽기 경로가 가져오는 build/ 모듈 %s 가 얼린 목록에 없다 — CODE_FROZEN 또는 REG['frozen_extra'] 에 더한다." % unp)
@@ -1139,8 +1221,12 @@ def frozen_check(reg=None):
     if not is_ancestor(REPO, full, "origin/main"):
         raise SystemExit("🚨 사전등록 커밋이 origin/main 에 없다 — 먼저 푸시.")
     doc = _git(REPO, "show", "%s:%s" % (full, PREREG)).stdout
-    if PLACEHOLDER in doc:
+    n_tbd, n_mark = placeholder_counts(doc)
+    if n_tbd:
         raise SystemExit("🚨 등록 커밋의 사전등록 문서에 %s⟩ 빈칸이 남았다." % PLACEHOLDER)
+    if n_mark:
+        raise SystemExit("🚨 등록 커밋의 사전등록 문서에 초안 자리표시자 괄호(U+3014) %d 개가 남았다(PREREG §5.1 ⑩)." % n_mark)
+    after_v = after_v_check(REPO, os.environ.get("RBATCH_AFTER_V"))
     out, mark = os.path.join(RDATA, OUT_NAME), os.path.join(RDATA, MARK_NAME)
     rerun = os.environ.get("RBATCH_RERUN") or os.environ.get("RBATCH_RESUME")
     if os.path.exists(out):
@@ -1168,14 +1254,12 @@ def frozen_check(reg=None):
         raise SystemExit("🚨 선택 입력이 고정 판과 다르다: %s" % bad)
     links = link_check(strict=True)
     raw = raw_check(os.environ.get("RBATCH_RAW"))
-    import scipy
-    if scipy.__version__ != "1.18.1" or np.__version__ != "2.5.3":
-        raise SystemExit("🚨 scipy/numpy 판이 다르다(%s · %s)." % (scipy.__version__, np.__version__))
-    if os.environ.get("PYTHONHASHSEED") != "0" or os.environ.get("OPENBLAS_NUM_THREADS") != "1":
-        raise SystemExit("🚨 PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1 로 돌려라(부동소수 합 순서 · BLAS 스레드 고정).")
+    ev = env_problems()
+    if ev:
+        raise SystemExit("🚨 %s." % " · ".join(ev))
     return {"commit": full, "snap": reg["snap"], "base": reg["base"], "n_frozen": len(frozen), "links": links, "raw": raw,
             "manifests": manifest_shas(), "new_data_blobs": tree_blobs(REPO, full, ["data/" + p for p in NEW_DATA]), "optional": opt,
-            "closure": import_closure(("r_run", reg["stage_s"]))}
+            "closure": import_closure(("r_run", reg["stage_s"])), "after_v": after_v}
 
 
 # ══ 검문점 ═════════════════════════════════════════════════════════════════════════════════════
@@ -1211,46 +1295,24 @@ def ck_run(ck_dir, card, hdr, fn, resume):
 
 
 # ══ Stage M 계산(엔진 호출) ══════════════════════════════════════════════════════════════════════
-def _r3_measure(S, P, fp, variants, months):
-    """R3 측정 한 벌 — 엔진에 R3 카드 함수가 없어 러너가 fm 을 부르고, 시도 목록(trials)을 엔진 _Trials 와 같은 모양으로 적는다."""
-    SP = S.SPECS["R3"]
-    rows, out = [], {}
-
-    def run(key, what, fp_, mm):
-        if fp_ is None:
-            rows.append({"id": "R3.%s" % key, "what": what, "run": False, "missing": ["§D 판 없음"]})
-            return
-        out[key] = S.fm(P, fp_, SP, mm)
-        rows.append({"id": "R3.%s" % key, "what": what, "run": True})
-    run("main", "FL JT k=0..2", fp, months)
-    run("sens2020", "민감도 — 신호월 %s 부터" % SENS_2020, fp, [m for m in months if m >= SENS_2020])
-    for nm in RF["twins_r3"]:
-        run("tw_" + nm, "쌍둥이 %s(§D 판)" % nm, (variants or {}).get(nm), months)
-    out["trials"] = rows
-    return out
-
-
 def stage_m(S, P, fps, variants, months, card, rs_f0_ok=None):
     """카드 한 장의 Stage M 한 벌 — 엔진(r_stagem) 카드 함수 그대로(주 · 관문 변형 · 측정 · 쌍둥이 · 민감도 · 시도 목록).
     R1 = stage_m_r1(쌍둥이 T1~T6 은 cikmonth 한 판의 칸 · T2 분할은 한 시도 안 · rs_f0_ok → 관문 i) ·
-    R2 = stage_m_r2(fp_doc · fp_ixbrl · fp_covid = r2_variants) · R3 = _r3_measure."""
+    R2 = stage_m_r2(fp_doc · fp_ixbrl · fp_covid = r2_variants). R3 · R5 는 이 등록에서 뺐다(PREREG §1.4)."""
     if card == "R1":
         return S.stage_m_r1(P, fps["R1"], months, rs_f0_ok=rs_f0_ok)
     if card == "R2":
         kw = {RF["variants_r2"][k]: v for k, v in (variants or {}).items() if k in RF["variants_r2"]}
         return S.stage_m_r2(P, fps["R2"], months, **kw)
-    if card == "R3":
-        return _r3_measure(S, P, fps["R3"], variants, months)
     raise ValueError(card)
 
 
 def required_inputs(S, fps, variants):
-    """등록된 측정 입력 가운데 없는 것(Stage M 을 돌리기 전에 본다) — R1 쌍둥이 · 표본 칸 · R2 대조 판 · R3 §D 판."""
+    """등록된 측정 입력 가운데 없는 것(Stage M 을 돌리기 전에 본다) — R1 쌍둥이 · 표본 칸 · R2 대조 판."""
     miss = []
     if fps.get("R1") is not None:
         miss += ["R1:%s" % n for n in RF["need_r1"] if not S._has(fps["R1"], n)]
     miss += ["R2:%s" % k for k in RF["variants_r2"] if (variants.get("R2") or {}).get(k) is None]
-    miss += ["R3:%s" % k for k in RF["twins_r3"] if (variants.get("R3") or {}).get(k) is None]
     return miss
 
 
@@ -1269,7 +1331,7 @@ def rec_of(card, o):
         rec = {"main": {"CH": _g(o["main"], "CH"), "CH_miss": _g(o["main"], "CH_miss")}, "wls": {"CH": _g(o.get("wls"), "CH")},
                "len": {"CH": _g(o.get("len"), "CH")}, "engine_gates": o.get("gates")}
     else:
-        rec = {"main": {"FL": _g(o["main"], "FL")}}
+        raise ValueError(card)
     rec["months"] = list(o["main"].get("months") or [])
     rec["engine_sum"] = ((o["main"].get("sum") or {}).get(FOCAL[card]))
     meas, series = {}, {}
@@ -1288,29 +1350,8 @@ def rec_of(card, o):
     return rec
 
 
-def r5_counts(P, fp5, top=STAGE_S_N, source=None):
-    """R5 — 걸린 이름-월 수 · EG30(Eg 상위 30) 안 수 · 업종 분포 · 연도별(수익 없음 · 시도 수에 넣지 않는다)."""
-    if fp5 is None:
-        return {"ok": None, "why": "경보 표지 없음", "source": source}
-    per, per_top, sec, yr = {}, {}, {}, {}
-    for m in P["months"]:
-        D = P["m"][m]
-        hit = [j for j, g in enumerate(D["grp"]) if ((fp5.get((g, m)) or {}).get(FOCAL["R5"]) or 0) >= 1]
-        tk = set((P["eg_rank"].get(m) or [])[:top])
-        per[m] = len(hit)
-        per_top[m] = sum(1 for j in hit if D["k"][j] in tk)
-        for j in hit:
-            sec[D["sec"][j]] = sec.get(D["sec"][j], 0) + 1
-        y = yr.setdefault(m[:4], [0, 0])
-        y[0] += per[m]
-        y[1] += per_top[m]
-    return {"ok": True, "name_months": int(sum(per.values())), "eg30_name_months": int(sum(per_top.values())),
-            "by_year": {y: {"name_months": a, "eg30": b} for y, (a, b) in sorted(yr.items())},
-            "sector": dict(sorted(sec.items(), key=lambda kv: -kv[1])), "source": source, "note": "수익 계산 없음 · 시도 수에 넣지 않는다"}
-
-
 def stage_s_rows(stage_s):
-    """Stage S 시도 목록 — 카드 controls 의 팔(S_ARMS)마다 돌았으면 run, 아니면 못 돌린 사유와 함께(R3 는 모듈에 팔이 없다 · 선언).
+    """Stage S 시도 목록 — 카드 controls 의 팔(S_ARMS)마다 돌았으면 run, 아니면 못 돌린 사유와 함께.
     stage_s = None 이면(모듈 없음 · 'none') 모든 팔이 못 돌린 시도로 실린다."""
     rows = []
     for code, arms in S_ARMS.items():
@@ -1318,7 +1359,7 @@ def stage_s_rows(stage_s):
         have = list((s or {}).get("arms") or [])
         if stage_s is None:
             why = "Stage S 모듈 없음(REG stage_s = none · 합성 · 연기 시험)"
-        elif code == "R3-8KNE" or s is None:
+        elif s is None:
             why = "Stage S 모듈에 %s 팔이 없다 — 결과 문서에 «등록 오류(미구현 측정)» 로 적는다" % code
         else:
             why = s.get("skipped") or ((s.get("f0") or {}).get("why")) or "측정 안 됨"
@@ -1332,7 +1373,7 @@ def stage_s_rows(stage_s):
 
 def trials(recs, s_rows, n_prior):
     """이 배치의 시도 수 — 엔진 · 러너 시도 목록(run = True 인 줄 · 주 · 관문 변형 · 측정 · 쌍둥이 · 민감도 · 합동 회귀) + Stage S 팔.
-    못 돌린 시도(run = False)는 사유와 함께 따로 싣는다. R5 는 넣지 않는다."""
+    못 돌린 시도(run = False)는 사유와 함께 따로 싣는다. R3 · R5 는 이 등록에서 뺐다(줄이 없다)."""
     rows = [r for c in sorted(recs) for r in recs[c]["trials"]] + list(s_rows or [])
     run = [r["id"] for r in rows if r.get("run")]
     return {"batch": len(run), "names": run, "not_run": [r for r in rows if not r.get("run")], "lab_prior": n_prior,
@@ -1378,7 +1419,7 @@ def f0_doc(prov):
     P = prov.P
     cov = S.f0_coverage(P)
     months = cov["months"]
-    fps = {c: prov.flags(c) for c in ("R1", "R2", "R3", "R5")}
+    fps = {c: prov.flags(c) for c in CANDIDATES}
     f0 = f0_all(S, prov, P, fps, months)
     return _roundtrip({"kind": "r_run.f0", "version": 2, "provider": prov.kind,
                        "note": "배치 R F0(수익 없음) — 커버리지 · 밀도 · R2 외부 · R2 경계 세계 · Stage S(교체 수 · 목표 해시) · §G · 지도. "
@@ -1386,7 +1427,7 @@ def f0_doc(prov):
                        "window": [M0, M1], "T": len(months), "months": months, "months_sha": _sha_json(list(months)),
                        "panel_digest": S.panel_digest(P), "coverage_by_month": cov["by_month"], "f0": f0,
                        "px_overlay": px_overlay_of(prov),          # 선언된 내부 가격 오버레이 sha256 · 수(None = 공개 판)
-                       "flags_sha": {c: fp_digest(fps[c]) for c in sorted(fps)}, "r5": r5_counts(P, fps["R5"], source=prov.r5_source()),
+                       "flags_sha": {c: fp_digest(fps[c]) for c in sorted(fps)},
                        "stage_s_rule": prov.stage_s_rule(), "sanity": prov.sanity() if hasattr(prov, "sanity") else None,
                        "firewall": {"y_stripped": bool(getattr(prov, "y_stripped", False)), "returns_used": False}})
 
@@ -1421,8 +1462,8 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
     san = _roundtrip(prov.sanity()) if hasattr(prov, "sanity") else None
     if san is not None and not san["shares_ok"]:
         raise SystemExit("🚨 시총 핀(AUDIT-2026-09-20-SHARES2)이 맞지 않는다: %s" % san["shares_pin"])
-    fps = {c: prov.flags(c) for c in ("R1", "R2", "R3", "R5")}
-    for c in ("R1", "R2", "R3"):
+    fps = {c: prov.flags(c) for c in CANDIDATES}
+    for c in CANDIDATES:
         if fps[c] is None:
             raise SystemExit("🚨 %s 표지가 없다 — 등록된 입력이 빠졌다." % c)
     fsha = {c: fp_digest(fps[c]) for c in sorted(fps)}
@@ -1431,7 +1472,7 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
     f0 = _roundtrip(f0_all(S, prov, P, fps, months))
     if _canon(f0) != _canon(f0doc["f0"]):
         raise SystemExit("🚨 F0 가 등록 판과 다르다(같은 판 · 같은 코드면 바이트까지 같아야 한다).")
-    variants = {c: prov.variants(c) for c in ("R1", "R2", "R3")}
+    variants = {c: prov.variants(c) for c in CANDIDATES}
     miss_in = required_inputs(S, fps, variants)
     if miss_in and real:
         raise SystemExit("🚨 등록된 측정(쌍둥이 · 대조) 입력이 없다: %s — Stage M 을 돌리기 전에 멈춘다(등록 오류)." % miss_in)
@@ -1439,7 +1480,7 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
     rs_ok = f0["density"]["RS"].get("ok")
     os.makedirs(ck_dir, exist_ok=True)
     recs, ck_log = {}, {}
-    for c in ("R1", "R2", "R3"):
+    for c in CANDIDATES:
         t1 = time.time()
         hdr = dict(ck_header(commit, c, prov.kind, digest, msha, fps[c], variants[c], reg.get("stage_s")),
                    rs_f0_ok=rs_ok if c == "R1" else None)
@@ -1461,14 +1502,13 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
     V = verdicts(qual, fam, holm, gates, f0v)
     stage_s = None
     if hasattr(prov, "stage_s_all") and (reg.get("stage_s") not in (None, "none")):
-        hdr = dict(ck_header(commit, "S", prov.kind, digest, msha, fps["R1"], {"R2": fps["R2"], "R5": fps["R5"]}, reg.get("stage_s")),
+        hdr = dict(ck_header(commit, "S", prov.kind, digest, msha, fps["R1"], {"R2": fps["R2"]}, reg.get("stage_s")),
                    module=reg["stage_s"], hashes=f0.get("stage_s_hashes"))
         stage_s, resumed = ck_run(ck_dir, "S", hdr, prov.stage_s_all, resume)
         ck_log["S"] = {"resumed": resumed}
         if stage_s is not None:
             stage_s_hash_check(stage_s, f0)
     s_rows = stage_s_rows(stage_s)
-    r5 = r5_counts(P, fps["R5"], source=prov.r5_source())
     import scipy
     doc = {"kind": "rbatch", "prereg": PREREG, "prereg_commit": commit, "started": started, "provider": prov.kind,
            "rerun": os.environ.get("RBATCH_RERUN"), "resume": os.environ.get("RBATCH_RESUME"),
@@ -1481,12 +1521,17 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
            "inputs_missing": miss_in,
            "stage_m": {c: {"primary": stats[c], "gates": gates.get(c), "measures": recs[c]["measures"], "pooled": recs[c]["pooled"],
                            "series": recs[c]["series"], "trials": recs[c]["trials"]} for c in recs},
-           "holm": holm, "verdicts": V, "headline": headline(V, m), "r5": r5, "stage_s": stage_s,
+           "holm": holm, "verdicts": V, "headline": headline(V, m), "stage_s": stage_s,
            "trials": trials(recs, s_rows, reg.get("n_lab_prior")), "checkpoint": ck_log,
            "notes": {"df": "한쪽 p = P(t(T−1) ≤ t) · T = γ 가 선 달 수(T = 120 이면 t(119))",
                      "nw": "NW(3) t 는 달력 위치를 지킨다 — 쓴 달이 이어지면 eg30plus.nw_t · 빈 달이 끼면 r_stagem.nw_t_gap(압축 계열 값 nw_t_compressed 를 함께)",
                      "declared_not_run": DECLARED_NOT_RUN,
-                     "stage_arms": "R1 · R2 단계 팔은 Stage M 결과와 무관하게 등록 커밋에서 얼려 원장에 든다(forward_plan) — 여기 판정은 채택 경로만 정한다",
+                     "stage_arms": "R1 · R2 · R12 단계 팔은 이 등록에서 전방 원장(QFWD)에 넣지 않는다 — QFWD §10 · 계획 batch_design_changes 7 의 "
+                                   "«Stage M 결과와 무관하게 원장에 넣는다» 에서 굽기 전에 벗어남을 선언했고 수정 등록은 없다(PREREG §1.3) · "
+                                   "여기 팔 라벨은 표본 안 측정의 이름일 뿐이다",
+                     "dropped": "R3-8KNE · R5-ALARM 은 이 등록에서 뺐다 — 표지 원천(§B · §D)을 짓지 않았다(PREREG §1.4)",
+                     "public_only": "등록 굽기 = 공개 판(RBATCH_PX_OVERLAY 없음 · px_overlay None · PREREG §0b-2 ⑤)",
+                     "one_shot": "굽기 트리 하나 · 시작 표식 · 검문점을 지우지 않는다 — 새 작업 사본에서 표식 없이 다시 굽는 것은 규칙 위반(PREREG §5.3 ④)",
                      "in_sample": "표본 안 통과는 채택이 아니다 · 떨어진 규칙을 고쳐 다시 굽지 않는다"},
            "elapsed": round(time.time() - t0, 1)}
     if out_path:
@@ -1499,7 +1544,7 @@ def bake_core(prov, reg, p0doc, f0doc, commit, started, ck_dir, resume=False, ou
 
 def print_table(doc):
     print("\n카드 | 1차 | P0 | T | γ 평균 | NW t | p(한쪽) | Holm α | 관문 | 판정 | 단계 팔")
-    for c in ("R1", "R2", "R3"):
+    for c in CANDIDATES:
         s = doc["stage_m"][c]["primary"]
         q = doc["p0"].get(c) or {}
         h = (doc["holm"]["rows"] or {}).get(c)
@@ -1509,29 +1554,12 @@ def print_table(doc):
             c, "예" if c in doc["family"] else "아니오", ("%.3f" % q["p0"]) if q.get("p0") is not None else "—", s["T"],
             "%+.4f" % s["mean"] if s["mean"] is not None else "—", "%.2f" % s["nw_t"] if s["nw_t"] is not None else "—", s["p_one"],
             "%.4f" % h["alpha"] if h else "—", gs, doc["verdicts"][c]["stage_m"], doc["verdicts"][c]["stage_s_arm"]))
-    print("R5 | 사건 수만 | 이름-월 %s · EG30 안 %s" % (doc["r5"].get("name_months"), doc["r5"].get("eg30_name_months")))
     hl = doc["headline"]
     print("머리 줄: 풀카드: %s · 판정: %s · 규칙: %s · 시도 %d(누적 %s) · %.0f초" % (
         hl["풀카드"], hl["판정"], hl["규칙"], doc["trials"]["batch"], doc["trials"]["cumulative"], doc["elapsed"]))
 
 
 # ══ 공급자 — 실제(PIT 세계 · snap_wt) ═════════════════════════════════════════════════════════════
-def _ev_pairs(card, variant="primary", rdata=None):
-    """§D 사건 표지 → [(그룹, 달)] 또는 None."""
-    F = RF["ev"]
-    J = _rj(os.path.join(rdata or RDATA, _rel(F["file"])))
-    if J is None:
-        return None
-    X = _pick(J, F[card])
-    if X is None:
-        return None
-    if isinstance(X, dict):
-        X = _pick(X, F["primary"]) if variant == "primary" else X.get(variant)
-        if X is None:
-            return None
-    return [(str(g), m) for g, m in X]
-
-
 def stage_s_summary(C):
     """r_stages CardResult → 싣는 모양(f0 · 목표 해시 · measured · 월 초과 계열(TR 10bp · TR 20bp · PR) · 시도 수로 셀 팔 이름).
     20bp 행(fr20 · V0_20)과 PR 행(fr_pr)은 카드 «편도 10bp · 20bp 행을 함께 기록한다» 의 기록이다(팔 수에는 넣지 않는다)."""
@@ -1560,7 +1588,7 @@ def stage_s_summary(C):
 class StageSAdapter:
     """REG["stage_s"] 모듈(build/r_stages.py) 연결 — 교체 수 · 목표 해시(F0)는 build(수익 없음), 측정 팔은 run(등록 뒤 · 검문점).
     이름은 RF["stage_s"]. 묶음은 Stage M 과 같은 R2 경계 세계(boundary_world)로 짓고 덮어쓰기 표지는 쓰지 않는다(옵트인 안 함).
-    Stage M 표지와 묶음 표지가 같은 칸에서 켜졌는지(OS · CH) 대조하고, R5 이름-월도 이 묶음의 ALARM 하나에서 센다."""
+    Stage M 표지와 묶음 표지가 같은 칸에서 켜졌는지(OS · CH) 대조한다. 모듈의 R5-ALARM 카드는 이 등록에서 뺐다(요약 · 해시에 싣지 않는다)."""
 
     def __init__(self, prov, modname):
         self.M, self.prov = importlib.import_module(modname), prov
@@ -1623,16 +1651,12 @@ class StageSAdapter:
         return out
 
     def hashes(self):
+        """등록 F0 문서에 얼릴 목표 해시 — 이 등록의 카드(R1 · R2) · 쌓은 팔(R12) · V0 만(모듈의 다른 카드 · R5-ALARM 은 싣지 않는다)."""
         B = self.built()
-        out = {code: (C or {}).get(self.F["hash"]) for code, C in sorted((B.get(self.F["cards"]) or {}).items())}
+        keep = set(self.F["codes"].values()) | set(self.F["extra"])
+        out = {code: (C or {}).get(self.F["hash"]) for code, C in sorted((B.get(self.F["cards"]) or {}).items()) if code in keep}
         out["_v0"] = B.get(self.F["v0_hash"])
         return out
-
-    def alarm_pairs(self):
-        fs = self.bundle().get(self.F["alarm"])
-        if fs is None:
-            return None
-        return sorted((str(g), m) for m, gs in fs.on.items() for g in gs)
 
     def summarize(self, R):
         codes = list(self.F["codes"].values()) + list(self.F["extra"])
@@ -1699,35 +1723,24 @@ class RealProvider:
             self._r2v, self._R2 = r2_flag_set(self.bworld())
         return self._r2v
 
-    def r5_source(self):
-        return "Stage S 묶음 ALARM(r_r2flags.r5_events · %s)" % self.reg.get("stage_s") if self._ssmod() is not None else "§D %s" % RF["ev"]["file"]
-
     def flags(self, c):
-        """카드 표지 — 자료가 아직 없으면 None(--f0 은 «표지 없음» 으로 싣고, 굽기는 멈춘다)."""
+        """카드 표지 — 자료가 아직 없으면 None(--f0 은 «표지 없음» 으로 싣고, 굽기는 멈춘다). R3 · R5 는 이 등록에서 뺐다."""
         S = _S()
         if c == "R1":
             return S.ins_flags() if self._have("ins") else None
         if c == "R2":
             v = self._r2()
             return None if v is None else v["rf"]
-        if c == "R5" and self._ssmod() is not None:           # R5 는 한 원천 — Stage S 묶음의 ALARM(정본 r5_events)
-            pairs = self._ssmod().alarm_pairs()
-            return None if pairs is None else S.flags_from_pairs(pairs, FOCAL["R5"])
-        pairs = _ev_pairs(c)
-        return None if pairs is None else S.flags_from_pairs(pairs, FOCAL[c])
+        raise ValueError("%s 는 이 등록의 카드가 아니다(R3 · R5 는 뺐다 · PREREG §1.4)" % c)
 
     def variants(self, c):
-        """대조 판 — R1 은 없다(쌍둥이는 cikmonth 칸 · 엔진) · R2 = r2_variants 의 doc · ixbrl · covid · R3 = §D 판."""
+        """대조 판 — R1 은 없다(쌍둥이는 cikmonth 칸 · 엔진) · R2 = r2_variants 의 doc · ixbrl · covid."""
         if c == "R1":
             return {}
         if c == "R2":
             v = self._r2() or {}
             return {k: v.get(k) for k in RF["variants_r2"]}
-        out = {}
-        for nm in RF["twins_r3"]:
-            pairs = _ev_pairs("R3", nm)
-            out[nm] = None if pairs is None else _S().flags_from_pairs(pairs, FOCAL["R3"])
-        return out
+        raise ValueError("%s 는 이 등록의 카드가 아니다(R3 · R5 는 뺐다 · PREREG §1.4)" % c)
 
     def r2_external(self):
         if self._r2() is None:
@@ -1806,7 +1819,8 @@ class RealProvider:
 # ══ 공급자 — 합성(실제 자료 없음) ═════════════════════════════════════════════════════════════════
 class SynthProvider:
     """합성 세계 — r_stagem 패널과 같은 모양 · 표지는 그룹-월 베르누이 · y = 섹터 + 크기 + 효과 + 잡음(σ 8).
-    eff = {"R1": OS 가 t−2..t 에 켜진 이름의 다음 달 효과(%p), "R2": CH_t 효과, "R3": FL t−2..t 효과}.
+    eff = {"R1": OS 가 t−2..t 에 켜진 이름의 다음 달 효과(%p), "R2": CH_t 효과}. (FL · AL 은 씨앗 줄기를 지키려고 뽑기만 한다 —
+    R3 · R5 는 이 등록에서 뺐다.)
     R1 표지는 정본 cikmonth 모양대로 쌍둥이 칸(OS_T1 · OS_T2/RS_T2 · OS_T4/RS_T4 · OS_T6/RS_T6)과 CLS 를 한 판에 싣는다(따로 씨앗 줄기)."""
     kind = "synth"
 
@@ -1825,7 +1839,7 @@ class SynthProvider:
             for nm, pr in prob.items():
                 H[nm][mm] = rng.random(N) < pr
         H["CH_miss"] = {mm: v & ~H["CH"][mm] for mm, v in H["CH_miss"].items()}
-        f1, f2, f3, f5 = {}, {}, {}, {}
+        f1, f2 = {}, {}
         for mm in pre + months:
             for j in range(N):
                 o, r_, u = bool(H["O"][mm][j]), bool(H["R"][mm][j]), bool(H["U"][mm][j])
@@ -1838,11 +1852,7 @@ class SynthProvider:
                 ch, mi = bool(H["CH"][mm][j]), bool(H["CH_miss"][mm][j])
                 if ch or mi:
                     f2[(grp[j], mm)] = {"CH": float(ch), "CH_miss": float(mi), "dlog": float(rng.normal(0, 0.1))}
-                if H["FL"][mm][j]:
-                    f3[(grp[j], mm)] = {"FL": 1.0}
-                if H["AL"][mm][j]:
-                    f5[(grp[j], mm)] = {"AL": 1.0}
-        self.fp = {"R1": f1, "R2": f2, "R3": f3, "R5": f5}
+        self.fp = {"R1": f1, "R2": f2}
         anyk = lambda nm, mm, j: any(bool(H[nm][mshift(mm, -k)][j]) for k in (0, 1, 2))
         P = {"kind": "synth", "months": [], "m": {}, "stat": {}, "eg_rank": {}}
         for mm in months:
@@ -1862,8 +1872,6 @@ class SynthProvider:
                 y += eff["R1"] * np.array([anyk("O", mm, j) for j in keep], float)
             if eff.get("R2"):
                 y += eff["R2"] * H["CH"][mm][keep].astype(float)
-            if eff.get("R3"):
-                y += eff["R3"] * np.array([anyk("FL", mm, j) for j in keep], float)
             keys = ["T%03d" % j for j in keep]
             P["m"][mm] = {"t": keys, "k": list(keys), "grp": [grp[j] for j in keep], "glag": [(grp[j],) * 3 for j in keep],
                           "sec": list(sec[keep]), "y": y, "mc": np.exp(size), "size": size, "logbm": lbm, "r1": rng.normal(1, 7, n),
@@ -1889,7 +1897,7 @@ class SynthProvider:
             return {}
         if c == "R2":
             return {nm: self._thin(self.fp["R2"], 0.9, 10 + i) for i, nm in enumerate(RF["variants_r2"])}
-        return {nm: self._thin(self.fp["R3"], 0.7, 20 + i) for i, nm in enumerate(RF["twins_r3"])}
+        raise ValueError(c)
 
     def r2_world_info(self):
         return world_info({("g%d" % j, mm) for mm in months_between(self.world_from, M1) for j in range(self._N)})
@@ -1902,9 +1910,6 @@ class SynthProvider:
 
     def group_of(self, k, r):
         return "g%d" % int(k[1:])
-
-    def r5_source(self):
-        return "합성"
 
     def stage_s_rule(self):
         return {"module": "none", "provisional": False, "rule": "합성 — 러너 기본 교체 수 셈"}
@@ -1987,8 +1992,8 @@ def const_check():
     eq("r_stagem.T_MIN", S.T_MIN, T_MIN)
     eq("r_stagem.LAG", S.LAG, LAG)
     eq("r_stagem.F0_FLAG", S.F0_FLAG, F0_FLAG)
-    eq("r_stagem.SPECS focal", tuple(S.SPECS[c]["focal"] for c in ("R1", "R2", "R3")), (FOCAL["R1"], FOCAL["R2"], FOCAL["R3"]))
-    eq("r_stagem.JT R1/R2/R3", tuple(tuple(S.SPECS[c]["jt"]) for c in ("R1", "R2", "R3")), ((0, 1, 2), (0,), (0, 1, 2)))
+    eq("r_stagem.SPECS focal", tuple(S.SPECS[c]["focal"] for c in CANDIDATES), tuple(FOCAL[c] for c in CANDIDATES))
+    eq("r_stagem.JT R1/R2", tuple(tuple(S.SPECS[c]["jt"]) for c in CANDIDATES), ((0, 1, 2), (0,)))
     eq("r_stagem.BOUND_FROM", S.BOUND_FROM, BOUND_FROM)
     eq("r_stagem.SENS_FROM[1] · SPLIT_T2", (S.SENS_FROM[1], S.SPLIT_T2), (SENS_2020, T2_SPLIT))
     eq("r_stagem P0 식 상수(q · α₁ · 2.27)", (S.Q_PRIOR, S.ALPHA1, S.T_P0), (P0_Q, P0_A1, P0_TCRIT))
@@ -2035,6 +2040,10 @@ def reg_problems(rebuild=False, rdata=None, reg=None):
     blanks = reg_missing(reg)
     if blanks:
         probs.append("REG 빈칸 %s(등록 커밋에서 채운다 — 그때까지 문서끼리만 본다)" % blanks)
+    dp = dropped_present(rdata)
+    if dp:
+        probs.append("이 등록에서 뺀 카드(R3 · R5)의 표지 원천 %s 가 있다 — 치운다(PREREG §1.4)" % dp)
+    probs += overlay_problems(f0doc)
     if f0doc is None:
         probs.append("F0 문서(data/%s) 없음 — --f0 로 만든다" % F0_NAME)
     else:
@@ -2064,7 +2073,7 @@ def reg_problems(rebuild=False, rdata=None, reg=None):
 def check_reg(argv=()) -> int:
     """--check-reg [--rebuild] — 등록 커밋 전(PREREG §12 ④ 뒤 ⑦ 전) REG · P0 · F0 대조. 수익 없음."""
     t0 = time.time()
-    probs = reg_problems(rebuild="--rebuild" in argv)
+    probs = ["환경: %s" % p for p in env_problems()] + reg_problems(rebuild="--rebuild" in argv)
     print("r_run --check-reg%s (수익 없음) · %.0f초" % (" --rebuild" if "--rebuild" in argv else "", time.time() - t0))
     for p in probs:
         print("  ✗ %s" % p)
@@ -2099,10 +2108,10 @@ def dry() -> int:
     probs += nb
     pp = os.path.join(ROOT, _rel(PREREG))
     if os.path.exists(pp):
-        n = io.open(pp, encoding="utf-8").read().count(PLACEHOLDER)
-        print("  사전등록 문서 %s 빈칸 %d" % (PLACEHOLDER + "⟩", n))
-        if n:
-            probs.append("사전등록 문서 빈칸 %d" % n)
+        n, n2 = placeholder_counts(io.open(pp, encoding="utf-8").read())
+        print("  사전등록 문서 %s 빈칸 %d · 초안 자리표시자 괄호(U+3014) %d" % (PLACEHOLDER + "⟩", n, n2))
+        if n or n2:
+            probs.append("사전등록 문서 빈칸 %d · 자리표시자 괄호 %d" % (n, n2))
     have = [p for p in NEW_DATA if os.path.exists(os.path.join(RDATA, _rel(p)))]
     lack = [p for p in NEW_DATA if p not in have]
     print("  새 자료 %d/%d 있음 · 없음 %s" % (len(have), len(NEW_DATA), lack))
@@ -2113,6 +2122,12 @@ def dry() -> int:
     if fb:
         print("  ✗ 덮어쓰기 표지 %s 가 있다(굽기 전에 치운다)" % fb)
         probs.append("덮어쓰기 표지 %s" % fb)
+    print("  뺀 카드(R3 · R5) 원천 %s: %s" % (list(DROPPED_DATA), dropped_present() or "없음"))
+    for p in env_problems():
+        print("  ✗ 환경: %s" % p)
+        probs.append("환경: %s" % p)
+    v = os.environ.get("RBATCH_AFTER_V")
+    print("  배치 V 등록 커밋(RBATCH_AFTER_V): %s" % (v or "없음 — 굽기 때만 필요(PREREG §5.4 · 배치 V 등록 뒤에 굽는다)"))
     try:
         for r in link_check(strict=False):
             print("  링크 %-24s %-18s → %-32s %s(%s)" % (r["src"], r["key"], r["target"], r["result"], r["status"]))
@@ -2133,6 +2148,12 @@ def dry() -> int:
 def f0_main(argv) -> int:
     """PIT 세계로 F0 문서를 쓴다(수익 없음 · y 는 짓자마자 NaN)."""
     t0 = time.time()
+    ev = env_problems()
+    if ev:
+        raise SystemExit("🚨 --f0 은 굽기와 같은 환경에서 센다(PREREG §5.1 ②): %s." % " · ".join(ev))
+    dp = dropped_present()
+    if dp:
+        raise SystemExit("🚨 이 등록에서 뺀 카드(R3 · R5)의 표지 원천 %s 가 RBATCH_DATA 에 있다 — 치우고 센다(PREREG §1.4)." % dp)
     out = argv[argv.index("--out") + 1] if "--out" in argv else os.path.join(RDATA, F0_NAME)
     overlay_out_guard(out)
     prov = RealProvider(strip_y=True)
@@ -2347,6 +2368,28 @@ def selftest() -> int:
         check("R2 표지 한 벌 — 패널 세계(2015 짝 없음)면 멈춤(uncovered_all 섞임)", raises(lambda: r2_flag_set(W_panel, tp, nim, win)))
     finally:
         _rmtree(tq)
+    # 4b 밀도 F0 — 표지 원천이 정의하지 않은 달(months_ok 밖)은 밀도에서 뺀다(PREREG §0b-2 ⑨ · 0 개로 읽지 않는다)
+    class _MO(dict):
+        months_ok = None
+    pm = SynthProvider(seed=5, eff={"R1": -1.2})
+    last_m = pm.P["months"][-1]
+    fmo = _MO(pm.fp["R1"])
+    fmo.months_ok = set(pm.P["months"][:-1]) | {mshift(pm.P["months"][0], -j) for j in (1, 2)}
+    pm.fp["R1"] = fmo
+    fdm = f0_doc(pm)
+    dOS, dRS = fdm["f0"]["density"]["OS"], fdm["f0"]["density"]["RS"]
+    raw = S.f0_density(pm.P, fmo, "OS", pm.P["months"])
+    check("밀도 F0 — months_ok 밖 달은 밀도에서 빠진다(0 개로 읽지 않는다 · 뺀 달은 문서에)",
+          last_m not in dOS["by_month"] and dOS["undefined_months"] == [last_m] and dRS["undefined_months"] == [last_m]
+          and len(dOS["by_month"]) == fdm["T"] - 1 and dOS["ok"] is True and raw["by_month"][last_m] == 0 and raw["min"] == 0
+          and fdm["f0"]["density"]["CH"]["undefined_months"] == [] and f0_selfcheck(fdm, real=False) == [],
+          (dOS.get("undefined_months"), dOS.get("min"), raw["min"]))
+    fmo2 = _MO(fmo)
+    fmo2.months_ok = set()
+    pm.fp["R1"] = fmo2
+    d0 = f0_doc(pm)["f0"]["density"]["OS"]
+    check("밀도 F0 — 정의된 달이 하나도 없으면 전 달로 읽지 않고 거짓", d0["by_month"] == {} and d0["ok"] is False
+          and len(d0["undefined_months"]) == fdm["T"], d0.get("ok"))
 
     # 5 자격 · 등록 대조 · 판정
     p0d = synth_p0doc(120, {"R1": 0.20, "R2": 0.18})
@@ -2414,7 +2457,8 @@ def selftest() -> int:
     check("REG m 다르면 멈춤", raises(lambda: reg_consistency(dict(reg, m=1), qual, m, fam, None)))
     check("REG 가족 다르면 멈춤", raises(lambda: reg_consistency(dict(reg, primary=["R1"]), qual, m, fam, None)))
     check("REG P0 다르면 멈춤", raises(lambda: reg_consistency(dict(reg, p0={"R1": 0.21, "R2": 0.18}), qual, m, fam, None)))
-    check("REG 빈칸 목록", reg_missing(REG) == list(REG) and reg_missing(reg) == [])
+    check("REG 빈칸 목록 — 빈 등록 값은 모두 잡고 · 채운 값은 비지 않는다 · Stage S 모듈은 첫 --f0 전에 정했다",
+          reg_missing({k: None for k in REG}) == list(REG) and reg_missing(reg) == [] and REG["stage_s"] == "r_stages")
     f0 = {"stage_s": {"R1": {"ok": True}, "R2": {"ok": True}}, "g_concord": {"ok": True}, "r2_external": {"parser_c": True}}
     gt = {"R1": {"gates": {"i": True, "ii": True, "iii": True}, "all": True, "notes": {}},
           "R2": {"gates": {"i": True, "ii": False}, "all": False, "notes": {}, "contam": False, "vals": {}}}
@@ -2422,7 +2466,7 @@ def selftest() -> int:
     V = verdicts(qual, fam, hh, gt, f0)
     check("판정 — 통과 · 채택 경로", V["R1"]["stage_m"] == V_PASS and V["R1"]["stage_s_arm"] == ARM_ADOPT)
     check("판정 — Holm 통과 · 관문 ii 미달 → 기각", V["R2"]["stage_m"] == V_REJ + " — 관문 ii 미달" and V["R2"]["stage_s_arm"] == ARM_MEAS)
-    check("판정 — R3 · R5 고정 라벨", V["R3"]["stage_m"] == V_R3 and V["R5"]["stage_m"] == V_R5)
+    check("판정 — R3 · R5 줄이 없다(이 등록에서 뺐다)", set(V) == {"R1", "R2"})
     check("머리 줄 — 통과", headline(V, 2)["판정"].startswith("Stage M 통과(R1)") and headline(V, 2)["풀카드"] == "없음")
     hh = holm_fixed({"R1": mk(0.02), "R2": mk(0.03)}, 2, ["R1", "R2"])
     V = verdicts(qual, fam, hh, gt, f0)
@@ -2457,8 +2501,8 @@ def selftest() -> int:
     # 7 굽기 문 · 자리표시자 · 이름 · 가져오기 닫힘
     old = os.environ.pop("RBATCH_COMMIT", None)
     try:
-        check("frozen_check — 자리표시자 이름 · 빈칸 · 커밋 없음이면 멈춤", raises(lambda: frozen_check()))
-        check("frozen_check — 등록 값이 차도 커밋 없으면 멈춤(이름 자리표시자 포함)", raises(lambda: frozen_check(reg)))
+        check("frozen_check — 등록 빈칸 · 커밋 없음이면 멈춤", raises(lambda: frozen_check()))
+        check("frozen_check — 등록 값이 차도(Stage S none · 커밋 없음) 멈춤", raises(lambda: frozen_check(reg)))
     finally:
         if old is not None:
             os.environ["RBATCH_COMMIT"] = old
@@ -2466,7 +2510,28 @@ def selftest() -> int:
     check("이름 — 한 날짜 줄기면 문제 없음", name_check(*nm_ok) == [])
     check("이름 — RESULT 만 자리표시자여도 잡는다", any("RESULT" in b for b in name_check(nm_ok[0], nm_ok[1], "build/PREREG-2026-09-2x-RBATCH-RESULT.md")))
     check("이름 — 날짜 줄기가 다르면 잡는다", any("줄기" in b for b in name_check(nm_ok[0], "build/PREREG-2026-10-03-RBATCH-CARDS.md", nm_ok[2])))
-    check("이름 — 지금 판은 자리표시자", len(name_check()) >= 3)
+    check("이름 — 지금 판은 등록 날짜 한 줄기(2026-09-26)", name_check() == [] and all("2026-09-26" in p for p in (PREREG, PREREG_CARDS, RESULT)),
+          name_check())
+    check("빈칸 — ⟨TBD · 자리표시자 괄호(U+3014) 둘 다 센다", placeholder_counts("a %s: x⟩ b \u3014x\u3015 \u3014y\u3015" % PLACEHOLDER) == (1, 2)
+          and placeholder_counts("등록 문서") == (0, 0) and DRAFT_MARK == "\u3014")
+    old_env = {k: os.environ.get(k) for k in ("PYTHONHASHSEED", "OPENBLAS_NUM_THREADS")}
+    try:
+        os.environ["PYTHONHASHSEED"], os.environ["OPENBLAS_NUM_THREADS"] = "0", "1"
+        e_ok = env_problems()
+        os.environ["OPENBLAS_NUM_THREADS"] = "4"
+        e_bad = env_problems()
+    finally:
+        for k, v in old_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    import scipy as _sp
+    check("환경 — 판 · 해시 씨앗 · BLAS 스레드 점검(등록 절차 · 굽기 한 벌)", any("OPENBLAS" in p for p in e_bad)
+          and (e_ok == [] or (_sp.__version__, np.__version__) != ("1.18.1", "2.5.3")), (e_ok, e_bad))
+    check("공개 판 — 오버레이 변수 · 오버레이 F0 문서를 잡는다", overlay_problems({"px_overlay": None}, env={}) == []
+          and len(overlay_problems({"px_overlay": {"sha256": "e3" * 32}}, env={})) == 1
+          and len(overlay_problems(None, env={"RBATCH_PX_OVERLAY": "x.json"})) == 1)
     clo = import_closure(("r_run", "r_stages"))
     check("가져오기 닫힘 — qbatch_run · refresh_events · r_stagem 포함", all(p in clo for p in ("build/qbatch_run.py", "build/refresh_events.py",
                                                                                    "build/r_stagem.py", "build/r_r2flags.py")), clo)
@@ -2519,12 +2584,51 @@ def selftest() -> int:
         check("처음 더한 커밋", first_add_is(repo, c2, "d/c.bin") and not first_add_is(repo, c2, "a.txt") and first_add_is(repo, c1, "a.txt"))
         gi("update-ref", "refs/remotes/origin/main", c1)
         check("origin/main 조상", is_ancestor(repo, c1, "origin/main") and not is_ancestor(repo, c2, "origin/main"))
+        # 배치 V 뒤에만 굽는다(PREREG §5.4) — RBATCH_AFTER_V 가 origin/main 조상 · 배치 V 등록 문서를 처음 더한 커밋이어야 한다
+        # (처음 게이트였던 배치 U 는 등록 전에 취소됐다 — U 문서만 있는 커밋은 게이트를 열지 못한다)
+        os.makedirs(os.path.join(repo, "build"), exist_ok=True)
+        with open(os.path.join(repo, "build", "PREREG-2026-09-26-UBATCH.md"), "wb") as f:
+            f.write(b"u\n")
+        gi("add", "-A")
+        gi("commit", "-q", "-m", "u-cancelled")
+        cu = gi("rev-parse", "HEAD").stdout.strip()
+        with open(os.path.join(repo, "build", "PREREG-2026-10-01-VBATCH.md"), "wb") as f:
+            f.write(b"v\n")
+        gi("add", "-A")
+        gi("commit", "-q", "-m", "v")
+        cv = gi("rev-parse", "HEAD").stdout.strip()
+        with open(os.path.join(repo, "build", "PREREG-2026-10-01-VBATCH-RESULT.md"), "wb") as f:
+            f.write(b"r\n")
+        gi("add", "-A")
+        gi("commit", "-q", "-m", "v-result")
+        cvr = gi("rev-parse", "HEAD").stdout.strip()
+        gi("update-ref", "refs/remotes/origin/main", cvr)
+        with open(os.path.join(repo, "build", "PREREG-2026-10-02-VBATCH.md"), "wb") as f:
+            f.write(b"v2\n")
+        gi("add", "-A")
+        gi("commit", "-q", "-m", "v2")
+        cw = gi("rev-parse", "HEAD").stdout.strip()
+        check("배치 V 뒤 — 등록 커밋(origin/main 조상 · V 문서를 처음 더함)이면 통과",
+              after_v_check(repo, cv[:10]) == {"commit": cv, "prereg": "build/PREREG-2026-10-01-VBATCH.md"}, cv)
+        check("배치 V 뒤 — 변수가 없으면 멈춤", raises(lambda: after_v_check(repo, None)) and raises(lambda: after_v_check(repo, "")))
+        check("배치 V 뒤 — 풀 수 없는 커밋이면 멈춤", raises(lambda: after_v_check(repo, "0" * 40)))
+        check("배치 V 뒤 — V 문서가 없는 커밋이면 멈춤", raises(lambda: after_v_check(repo, c1)))
+        check("배치 V 뒤 — 취소된 배치 U 문서만 있는 커밋이면 멈춤(origin/main 조상이어도)",
+              is_ancestor(repo, cu, "origin/main") and raises(lambda: after_v_check(repo, cu)))
+        check("배치 V 뒤 — V 문서를 처음 더한 커밋이 아니면 멈춤(결과 커밋)", raises(lambda: after_v_check(repo, cvr)))
+        check("배치 V 뒤 — origin/main 에 없는 커밋이면 멈춤", raises(lambda: after_v_check(repo, cw)))
         dd = os.path.join(tmp, "data")
         os.makedirs(dd)
         check("덮어쓰기 표지 없음", forbidden_present(dd) == [])
         with open(os.path.join(dd, FORBID_DATA[0]), "w", encoding="utf-8") as f:
             f.write("{}")
         check("덮어쓰기 표지가 있으면 잡는다", forbidden_present(dd) == [FORBID_DATA[0]])
+        check("뺀 카드(R3 · R5) 원천 없음", dropped_present(dd) == [])
+        with open(os.path.join(dd, "_ev_flags.json"), "w", encoding="utf-8") as f:
+            f.write("{}")
+        check("뺀 카드(R3 · R5) 원천이 있으면 잡는다", dropped_present(dd) == ["_ev_flags.json"]
+              and set(DROPPED_DATA) == {"_sub_pit.json.gz", "_ev_flags.json", "_t401.json"}
+              and not any(p in NEW_DATA or p in NEW_DATA_OPT for p in DROPPED_DATA))
     finally:
         _rmtree(tmp)
 
@@ -2580,25 +2684,27 @@ def selftest() -> int:
         check("끝에서 끝 — 심은 R1 효과 통과", doc["verdicts"]["R1"]["stage_m"] == V_PASS, (doc["stage_m"]["R1"]["primary"], doc["stage_m"]["R1"]["gates"]))
         check("끝에서 끝 — R1 은 첫 칸 α 0.0125", doc["holm"]["order"][0] == "R1" and doc["holm"]["rows"]["R1"]["alpha"] == 0.0125)
         check("끝에서 끝 — 효과 없는 R2 기각", doc["verdicts"]["R2"]["stage_m"].startswith(V_REJ), doc["stage_m"]["R2"]["primary"])
-        check("끝에서 끝 — R3 측정만 · 가족 밖", doc["verdicts"]["R3"]["stage_m"] == V_R3 and "R3" not in doc["holm"]["rows"])
+        check("끝에서 끝 — R3 · R5 없음(Stage M · 판정 · 시도 · 표지 지문에 줄이 없다)", sorted(doc["stage_m"]) == ["R1", "R2"]
+              and set(doc["verdicts"]) == {"R1", "R2"} and "r5" not in doc and sorted(f0d["flags_sha"]) == ["R1", "R2"]
+              and not any(x.startswith(("R3", "R5")) for x in doc["trials"]["names"]), sorted(doc["stage_m"]))
         check("끝에서 끝 — 단계 팔 채택 경로(R1)", doc["verdicts"]["R1"]["stage_s_arm"] == ARM_ADOPT)
-        check("끝에서 끝 — R5 이름-월 > 0", (doc["r5"].get("name_months") or 0) > 0)
         nm = doc["trials"]["names"]
         r1n = [x for x in nm if x.startswith("R1.")]
         check("끝에서 끝 — R1 시도 13(엔진 한 벌 · 쌍둥이 T1~T6 한 번씩 · 선언된 민감도 T1C · tw_ 없음)", len(r1n) == 13
               and all("R1.t%d" % k in r1n for k in range(1, 7)) and "R1.t1c" in r1n and not any("tw_" in x for x in r1n), r1n)
         r2n = [x for x in nm if x.startswith("R2.")]
         check("끝에서 끝 — R2 시도 7(대조 SimDoc · iXBRL · 코로나를 엔진이 돌렸다)", len(r2n) == 7 and all(k in r2n for k in ("R2.simdoc", "R2.diag_ixbrl", "R2.diag_covid")), r2n)
-        check("끝에서 끝 — R3 시도 6", len([x for x in nm if x.startswith("R3.")]) == 6, [x for x in nm if x.startswith("R3.")])
         nr = {r["id"] for r in doc["trials"]["not_run"]}
-        check("끝에서 끝 — 못 돌린 시도(선언 sens2014 · Stage S 모듈 없음 · R3 Stage S)를 싣는다",
-              {"R1.sens2014", "R2.sens2014", "R1-OPPSELL.S.rule", "R3-8KNE.S.placebo"} <= nr, sorted(nr)[:8])
-        check("끝에서 끝 — 시도 수 26 · 누적", doc["trials"]["batch"] == 26 and doc["trials"]["cumulative"] == 716 + 26, doc["trials"]["batch"])
+        check("끝에서 끝 — 못 돌린 시도(선언 sens2014 · Stage S 모듈 없음)를 싣는다 · R3 줄 없음",
+              {"R1.sens2014", "R2.sens2014", "R1-OPPSELL.S.rule", "R12-STACK.S.rule"} <= nr and not any(x.startswith("R3") for x in nr),
+              sorted(nr)[:8])
+        check("끝에서 끝 — 시도 수 20(R1 13 · R2 7 · Stage S 모듈 없음) · 누적", doc["trials"]["batch"] == 20
+              and doc["trials"]["cumulative"] == 716 + 20, doc["trials"]["batch"])
         check("끝에서 끝 — df = T − 1 · 이어진 달력", doc["stage_m"]["R1"]["primary"]["df"] == doc["stage_m"]["R1"]["primary"]["T"] - 1
               and doc["stage_m"]["R1"]["primary"]["gaps"] == 0)
         check("끝에서 끝 — T2 분할 보고는 한 시도 안", "split" in doc["stage_m"]["R1"]["measures"]["t2"])
         doc2 = bake_core(prov, synth_reg(p0d), p0d, f0d, "synthetic", "t", ck, resume=True)
-        check("끝에서 끝 — 검문점 이어받기 · 같은 결과", all(doc2["checkpoint"][c]["resumed"] for c in ("R1", "R2", "R3"))
+        check("끝에서 끝 — 검문점 이어받기 · 같은 결과", all(doc2["checkpoint"][c]["resumed"] for c in ("R1", "R2"))
               and _canon(doc2["stage_m"]["R1"]["primary"]) == _canon(doc["stage_m"]["R1"]["primary"]))
         p0z = synth_p0doc(f0d["T"], {"R1": 0.10, "R2": 0.12})
         doc3 = bake_core(prov, synth_reg(p0z), p0z, f0d, "synthetic", "t", ck, resume=True)
@@ -2617,7 +2723,7 @@ def selftest() -> int:
         check("끝에서 끝 — F0 문서 없으면 멈춤", raises(lambda: bake_core(prov, synth_reg(p0d), p0d, None, "synthetic", "t", ck, resume=True)))
         check("끝에서 끝 — 다른 판 검문점이면 멈춤", raises(lambda: bake_core(SynthProvider(seed=6, eff={"R1": -1.2}), synth_reg(p0d), p0d,
                                                                         f0_doc(SynthProvider(seed=6, eff={"R1": -1.2})), "synthetic", "t", ck, resume=True)))
-        # 빈 달 세 갈래 — 흩어진 커버리지 실패 달 · 자유도로 건너뛴 달 · 주 표지 0 달(R3 · m = 0) — 엔진과 러너가 같은 NW t 로 굽는다
+        # 빈 달 세 갈래 — 흩어진 커버리지 실패 달 · 자유도로 건너뛴 달 · 주 표지 0 달(R1 · m = 0) — 엔진과 러너가 같은 NW t 로 굽는다
         pa = SynthProvider(seed=5, eff={"R1": -1.2})
         pa.P["stat"][pa.P["months"][60]]["cov_n"] = 0.5
         fa = f0_doc(pa)
@@ -2647,16 +2753,18 @@ def selftest() -> int:
               and db["stage_m"]["R2"]["primary"]["gaps"] >= 1, db and db["stage_m"]["R1"]["primary"])
         pc = SynthProvider(seed=5, eff={"R1": -1.2})
         mc_ = pc.P["months"][50]
-        pc.fp["R3"] = {k: v for k, v in pc.fp["R3"].items() if k[1] != mc_}
+        pc.fp["R1"] = {k: (dict(v, OS=0.0) if k[1] == mc_ else v) for k, v in pc.fp["R1"].items()}   # 그달 OS 0 → JT 세 달(t · t+1 · t+2)
         fc = f0_doc(pc)
         pc0 = synth_p0doc(fc["T"], {"R1": 0.10, "R2": 0.10})
+        for c in CANDIDATES:                                               # 그달 OS 0 → OS 최소 0(밀도 F0 거짓) — P0 문서도 같게
+            pc0["cards"][CODES[c]]["density_pass"] = all(fc["f0"]["density"][f]["ok"] for f in P0_DENS[c])
         dc = None
         try:
             dc = bake_core(pc, synth_reg(pc0), pc0, fc, "synthetic", "t", os.path.join(tmp, "ckc"))
         except SystemExit as e:
             print("    (멈춤 %s)" % e)
-        check("빈 달 — R3 주 표지 0 달(JT 세 달)이 있어도 m = 0 굽기가 돈다", dc is not None and dc["stage_m"]["R3"]["primary"]["gaps"] == 3
-              and dc["headline"]["판정"] == "측정만", dc and dc["stage_m"]["R3"]["primary"])
+        check("빈 달 — R1 주 표지 0 달(JT 세 달)이 있어도 m = 0 굽기가 돈다", dc is not None and dc["stage_m"]["R1"]["primary"]["gaps"] == 3
+              and dc["headline"]["판정"] == "측정만", dc and dc["stage_m"]["R1"]["primary"])
     finally:
         _rmtree(tmp)
     print("  (끝에서 끝 %.0f초)" % (time.time() - t1))
@@ -2685,8 +2793,8 @@ def selftest() -> int:
     check("Stage S 연결 — 모듈 F0 · 뺀 편입 · 목표 해시 · 표지 일치", fc1["module_ok"] is True and fc1["targets_hash"] == "h1"
           and fc1["excluded"] == {"2017-03": ["OS 창 밖"]} and fc1["flag_agree"]["only_m"] == 0, fc1)
     check("Stage S 연결 — Stage M 과 묶음 표지가 다르면 멈춤", raises(lambda: ad.flag_agree("R1", {("g1", "2016-08"): {"OS": 1.0}, ("g2", "2016-08"): {"OS": 1.0}})))
-    check("Stage S 연결 — 목표 해시 · V0 해시", ad.hashes() == {"R1-OPPSELL": "h1", "R2-LAZYRF": None, "R12-STACK": None, "R5-ALARM": "h5", "_v0": "v0h"})
-    check("Stage S 연결 — R5 는 묶음 ALARM 하나에서", ad.alarm_pairs() == [("g3", "2016-09"), ("g4", "2016-09")])
+    check("Stage S 연결 — 목표 해시 · V0 해시(이 등록의 카드 · R12 · V0 만 · R5-ALARM 은 싣지 않는다)",
+          ad.hashes() == {"R1-OPPSELL": "h1", "R2-LAZYRF": None, "R12-STACK": None, "_v0": "v0h"}, ad.hashes())
     import qbatch_core as _QC
     _old_ctx = _QC.Ctx
     _QC.Ctx = lambda: types.SimpleNamespace()
@@ -2694,14 +2802,15 @@ def selftest() -> int:
         allr = ad.run_all(nperm=7)
     finally:
         _QC.Ctx = _old_ctx
-    check("Stage S 연결 — 측정 팔 요약 · 20bp · PR 행", allr["R1-OPPSELL"]["arms"] == ["rule", "C3", "placebo"] and allr["R2-LAZYRF"] is None
-          and allr["R5-ALARM"]["counts"] == {"n": 3} and allr["R5-ALARM"]["arms"] == [] and allr["_meta"]["nperm"] == 7
+    check("Stage S 연결 — 측정 팔 요약 · 20bp · PR 행 · R5-ALARM 없음", allr["R1-OPPSELL"]["arms"] == ["rule", "C3", "placebo"] and allr["R2-LAZYRF"] is None
+          and "R5-ALARM" not in allr and allr["_meta"]["nperm"] == 7
           and allr["R1-OPPSELL"]["series"]["rule_20bp"] == [0.09] and allr["R1-OPPSELL"]["series"]["rule_pr"] == [0.08]
           and allr["R1-OPPSELL"]["series"]["V0_20"] == [0.0], allr["R1-OPPSELL"])
     rows = stage_s_rows(allr)
     run_ids = [r["id"] for r in rows if r["run"]]
     check("Stage S 시도 — 돈 팔만 세고 등록 팔의 빈칸은 못 돌린 시도로", run_ids == ["R1-OPPSELL.S.rule", "R1-OPPSELL.S.C3", "R1-OPPSELL.S.placebo"]
-          and {"R1-OPPSELL.S.C1", "R2-LAZYRF.S.rule", "R3-8KNE.S.hibeta"} <= {r["id"] for r in rows if not r["run"]}, run_ids)
+          and {"R1-OPPSELL.S.C1", "R2-LAZYRF.S.rule", "R12-STACK.S.rule"} <= {r["id"] for r in rows if not r["run"]}
+          and not any(r["id"].startswith(("R3", "R5")) for r in rows), run_ids)
     check("Stage S 시도 — 모듈이 없으면 모든 팔이 못 돌린 시도", all(not r["run"] for r in stage_s_rows(None)) and len(stage_s_rows(None)) == sum(len(v) for v in S_ARMS.values()))
     fz = {"stage_s_hashes": ad.hashes()}
     check("Stage S 목표 해시 — 등록 F0 와 같으면 통과", not raises(lambda: stage_s_hash_check(allr, fz)))
