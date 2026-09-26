@@ -308,6 +308,24 @@ KNOWN = {
     "delisted_names.json":
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
+    # ── 배치 R(2026-09-26) — 사전등록 자료 빌드. 입력이 저장소 밖(사내 DB 캐시 · SEC 원본 캐시)이라 러너가 재생산할 수 없다 ──
+    "_px_raw.json":
+        "시총용 원 종가(build/pit_px_db2.py --merge). 입력이 사내 DB 캐시(저장소 밖)라 러너가 재생산할 수 없다 — "
+        "pit_px.json 병합과 같은 커밋에서 손으로 굽는다. 차례: 당겨 온 판에서 --merge(pit_px.json + 이 파일) → "
+        "--merge-stage 파일 --write(pit_px.json 만 · 공개 스테이징) → r_stagem --ytrunc-scan. --merge 는 스테이징 병합본 "
+        "위에서도 돈다(관문을 통과한 stage_merges 가 넣은 날의 변동 = stage_confirmed · 같은 바이트) — CI 가 격자를 옮긴 뒤 "
+        "이 파일만 다시 맞출 때도 --merge 를 다시 돌린다. 격자가 stocks.json 과 다른 판에서는 r_stagem 이 멈춘다"
+        "(조용히 낡지 않는다).",
+    "_issuer_map.json":
+        "§A0 날짜 인식 발행사 지도 · §B FPI 표지(build/issuer_map.py build). 입력이 SEC 원본(DERA ZIP · submissions)을 "
+        "sha256 로 얼린 저장소 밖 캐시(RBATCH_RAW)라 러너가 재생산할 수 없다 — **손으로 굽는다.** 배치 R 등록 커밋에서 "
+        "blob 으로 얼린다(build/r_run.py NEW_DATA · 고정표 링크 pins.script · pins.manual). 다시 구우면 "
+        "_ins_pit/cikmonth.json 등 이 지도를 핀으로 적은 파생 파일도 같이 다시 굽는다.",
+    "_issuer_map_manifest.json":
+        "_issuer_map.json 과 같은 빌더가 쓰는 원본 고정표(저장소 밖 원본의 sha256) — 같은 사유로 손으로 굽는다.",
+    "_tenq_rf.json":
+        "§C 10-Q 위험요인 패널(build/tenq_rf_build.py build). 입력이 저장소 밖 10-Q 원문 캐시(RBATCH_RAW)라 러너가 "
+        "재생산할 수 없다 — **손으로 굽는다.** 배치 R 등록 커밋에서 blob 으로 얼린다(build/r_run.py NEW_DATA).",
 }
 
 # ── ②(읽는 곳이 없다) 전용 사유 ────────────────────────────────────────────
