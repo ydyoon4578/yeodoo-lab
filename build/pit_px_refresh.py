@@ -32,6 +32,13 @@
     여기서 안 막으면 «잡은 초록인데 자료는 안 움직인다» 가 그대로 숨는다(2026-08-19 에
     고객 집중도에서 정확히 그 사고를 냈다).
 
+  · 🚨 2026-09-25 — **닫힌 키(closed)는 묻지도 잇지도 않는다.** build/pit_px_db2.py --merge 가 사내 DB «지수에 있던 날의
+    종가» 로 메운 편출 이름(ALXN·ATVI·CELG·HES·K …)과 재사용 티커의 옛 증권 키(SPLS@791519 · TFCFA …)를 closed 에 적는다.
+    그 이름들은 상장폐지됐거나 티커가 남에게 넘어갔다 — 야후에 물으면 FB·STI·POM·SBNY·SPLS 가 그랬듯 **다른 증권** 값이
+    이음매 관문(50%)을 통과해 붙는다. 그래서 wanted() 에서 빼고, 받은 묶음에 섞여 와도 붙이지 않는다.
+    closed · basis · db_merge 칸은 다시 쓸 때 잃지 않는다(src 와 같다). 2026-09-26 — --merge-stage 의 stage_note · stage_src ·
+    stage_merges(공개 데이터셋 스테이징의 출처 · 관문)도 같다.
+
     python build/pit_px_refresh.py
 """
 from __future__ import annotations
@@ -128,12 +135,17 @@ def break_skips(breaks, today=None):
     return out
 
 
+def closed_keys(rec):
+    """닫힌 키 집합 — 사내 DB 로 메운 편출 이름 · 재사용 티커의 옛 증권 키(pit_px_db2 --merge 가 적는다). 묻지도 잇지도 않는다."""
+    return set(((rec or {}).get("closed") or {}).keys())
+
+
 def wanted():
     """받아야 할 티커 — 기록에 있는 것 ∪ (지수 이력에 있었는데 오늘 유니버스엔 없는 것).
 
     ⚠ «영영 못 받는» 목록에 있고 아직 RETRY_DAYS 가 안 지난 이름은 뺀다.
     """
-    have, never, quar, bskip = set(), {}, set(), set()
+    have, never, quar, bskip, closed = set(), {}, set(), set(), set()
     if os.path.exists(OUT):
         _o = json.load(io.open(OUT, encoding="utf-8"))
         have = set(_o.get("px") or {})
@@ -142,6 +154,7 @@ def wanted():
             never[t] = v if isinstance(v, dict) else {"since": str(v), "n": FAIL_STREAK}
         quar = set((_o.get("quarantine") or {}).keys())
         bskip = break_skips(_o.get("breaks"))
+        closed = closed_keys(_o)
     today = set()
     try:
         st = json.load(io.open(os.path.join(DATA, "stocks.json"), encoding="utf-8"))
@@ -157,7 +170,7 @@ def wanted():
         gone -= today
     except Exception as e:
         print("  ⚠ 지수 이력을 못 읽었다(%s) — 기록에 있는 것만 갱신한다" % str(e)[:60])
-    want = (have | gone) - quar           # 🚨 격리된 이름은 다시 받지 않는다(2026-09-14)
+    want = (have | gone) - quar - closed  # 🚨 격리된 이름은 다시 받지 않는다(2026-09-14) · 닫힌 키도(2026-09-25)
     import datetime as _dt
     today = _dt.date.today()
     skip = set()
@@ -185,6 +198,8 @@ def main() -> int:
     rec = {"dates": [], "px": {}}
     if os.path.exists(OUT):
         rec = json.load(io.open(OUT, encoding="utf-8"))
+    closed = closed_keys(rec)
+    tick = [t for t in tick if t not in closed]      # wanted() 가 이미 뺐다 — 두 번째 문(다른 경로로 불려도 안 묻는다)
     dates, px = list(rec.get("dates") or []), dict(rec.get("px") or {})
     # 기존 기록을 {티커: {날짜: 값}} 으로 편다(병합하기 쉬운 모양).
     flat = {t: {dates[v["i0"] + k]: p for k, p in enumerate(v["p"]) if p is not None}
@@ -221,6 +236,8 @@ def main() -> int:
                 s = None
             if s is None:
                 miss.append(t); continue
+            if t in closed:
+                continue                                  # 닫힌 키 — 받은 값이 있어도 붙이지 않는다(2026-09-25)
             d = {str(k)[:10]: sig(v) for k, v in s.items() if v == v}
             d = {k: v for k, v in d.items() if v is not None}
             if not d:
@@ -288,7 +305,12 @@ def main() -> int:
     }
     # 🚨 2026-09-14 — pit_px_db.py 가 적은 «어느 값이 사내 DB 에서 왔나» 를 지우지 않는다.
     #   종전에는 이 파일을 새로 쓰면서 src 를 빠뜨려 출처 표시가 사라졌다.
-    for _k in ("src", "n_src_db", "src_note", "quarantine_note"):
+    # 🚨 2026-09-25 — pit_px_db2 --merge 의 closed(닫힌 키 · 보유월 결측 규칙) · basis(기준) · db_merge(출처)도 같다.
+    #   closed 를 잃으면 다음 날 위 wanted() 가 그 이름들을 다시 야후에 묻고, 재사용 티커면 남의 값이 붙는다.
+    # 🚨 2026-09-26 — pit_px_db2 --merge-stage 의 stage_note · stage_src(키마다 넣은 구간 · 공개 데이터셋 태그 · 기준) ·
+    #   stage_merges(파일 sha256 · provenance · 관문)도 같다. 잃으면 공개 스테이징 값이 출처 없는 값이 된다.
+    for _k in ("src", "n_src_db", "src_note", "quarantine_note", "closed", "n_closed", "closed_note", "basis",
+               "db_merge", "stage_note", "stage_src", "stage_merges"):
         if _k in rec:
             doc[_k] = rec[_k]
     io.open(OUT, "w", encoding="utf-8", newline="").write(
