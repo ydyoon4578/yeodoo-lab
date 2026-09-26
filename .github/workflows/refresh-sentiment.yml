@@ -3,6 +3,12 @@ name: Refresh market sentiment (VIX/FRED)
 on:
   schedule:
     - cron: '59 21 * * 0-5'    # 매일(월~토) 06:59 KST (UTC 자정 前이라 요일은 0-5)
+    # 🚨 2026-09-26 재시도 슬롯(11:25 KST) — 본 슬롯은 실측 00:00~00:30 UTC 에 돈다. 2026-09-04 부터 그 창에서
+    #   야후 일봉 종가가 빈다(같은 창의 stocks.json px_recon 이 519종을 60분봉으로 메웠다). 여기서는 SPY 의
+    #   그 세션이 dropna 로 빠져 as_of 가 T-1 로 나가고, 다음 날 refresh-stocks 본·백업이 sentiment T-2 를 보고
+    #   validate_site 「기준일 고착」 교차 검사에 막혔다(09-17·09-22·09-24·09-25 Validate 실패 전부).
+    #   ⚠ 뒤처졌을 때만 일한다(gate 의 --session). 이 cron 을 바꾸면 build/should_refresh.py 의 BACKUP_CRONS 도 같이.
+    - cron: '25 2 * * 1-6'
   workflow_dispatch:
 
 permissions:
@@ -13,7 +19,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 재시도 슬롯이 헛돌지 않게 하는 값싼 판정 잡 — 본 슬롯·수동 실행은 무조건 통과(refresh-stocks 와 같은 틀).
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - id: decide
+        run: |
+          python build/should_refresh.py data/sentiment.json \
+            "${{ github.event_name }}" "${{ github.event.schedule }}" \
+            --session=data/sentiment.json >> "$GITHUB_OUTPUT"
+
   refresh:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

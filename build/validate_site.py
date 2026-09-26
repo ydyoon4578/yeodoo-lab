@@ -908,6 +908,14 @@ try:
     # 그 주장이 거짓이 되므로 여기서도 막는다. 다만 FRED 릴리스가 하루 늦는 건 정상이라 2영업일부터 실패시킨다
     # (실사고: FRED 시크릿 미설정으로 전 시리즈가 조용히 멈춘 적이 있다 — 그건 곧 2영업일을 넘긴다).
     import datetime as _d0
+    # 🚨 2026-09-26 — 평일이 아니라 **NYSE 세션**을 센다. 평일 휴장(추수감사절 등) 다음 날엔 1세션 뒤처짐이
+    #   2로 세어져 멀쩡한 잡을 막는다. 규칙은 refresh_events._holidays 한 곳(should_refresh 와 같다).
+    try:
+        sys.path.insert(0, os.path.join(ROOT, "build"))
+        from refresh_events import _holidays as _hol0
+    except Exception:
+        _hol0 = lambda y: {}
+    _holc = {}
     def _bdgap(a, b):
         try:
             _x, _y = _d0.date.fromisoformat(str(a)[:10]), _d0.date.fromisoformat(str(b)[:10])
@@ -917,7 +925,7 @@ try:
         n = 0
         while _y < _x:
             _y += _d0.timedelta(days=1)
-            if _y.weekday() < 5: n += 1
+            if _y.weekday() < 5 and _y.isoformat() not in _holc.setdefault(_y.year, _hol0(_y.year)): n += 1
         return n
     for _fn in ("regime.json", "sentiment.json"):
         try:
