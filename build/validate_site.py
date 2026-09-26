@@ -4655,6 +4655,22 @@ try:
 except Exception as _e:
     print("  ~ 배치 T 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 배치 V(PREREG-2026-09-27-VBATCH · D1) 사이트 경계 ─────────────────────────────
+# L 층(1926+) 산출(_vbatch*) · French · yfinance · companyfacts 원자료가 저장소 · 사이트 자료에 없어야 한다(사용자 결정 D1).
+#   data/_vb* 는 공개 안전 명세 셋(_vb_manifest · _vb_lit_open · _vb_f0)뿐 · data/_vfwd/ 는 창세(genesis.json)뿐 · 값 계열 목록 없음 · 사이트 자료에 굽기 산출 표식 없음.
+#   build/v_guard.py 는 표준 라이브러리만 쓴다(이 검증과 같은 조건). 러너(v_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_vb
+    _vg = _il_vb.import_module("v_guard")
+    _gv = _vg.site_guard(ROOT)
+    if not _gv["ok"]:
+        errors.append("배치 V 사이트 경계(D1) 위반 %d건 — %s. L 층 산출(_vbatch*) · 라이선스 원자료는 저장소 밖 캐시에만 둔다(D1)"
+                      % (_gv.get("n_bad", len(_gv["bad"])), " · ".join(_gv["bad"][:4])))
+    else:
+        print("  ~ 배치 V 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gv["n_files"], _gv["n_scanned"]))
+except Exception as _e:
+    print("  ~ 배치 V 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

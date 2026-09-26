@@ -1,0 +1,225 @@
+{
+ "note": "배치 V 〔초록〕 주 가닥 원문 열기 기록(명세 registration.open_before_register · D26 — 원문을 못 열면 그 가닥은 쌍둥이로 강등 · 원문 부호가 반대면 삭제 · 부호를 뒤집지 않는다). build/v_cond.py strand_status() 가 이 파일 한 곳에서 판정을 읽고 build/v_ear.py attn_sameday_primary() 도 같은 판정을 읽는다. 수익 · 통계 없음 — 문헌 확인 기록이다. 원문 PDF · 본문 텍스트는 저장소 밖 캐시(%TEMP%/vbatch_cache/lit)에만 두고 여기에는 출처 · 해시 · 쪽 · 표 · 짧은 인용만 싣는다. 판정은 등록 커밋에서 닫힌다.",
+ "attempted_at": "2026-09-26",
+ "retries": [
+  {
+   "at": "2026-09-26 등록 초안 단계(두 번째 시도)",
+   "who": "등록 초안 워크플로(수익 · 통계 없음 · 원문 열기만)",
+   "tried": [
+    "OpenAlex works API(DOI 네 개 — 열린 판 위치 조회): CGH2004 · HLT2009 = Wiley pdfdirect(bronze) · SS2010 = SSRN abstract 1064101(green) · HKV2010 = closed",
+    "Wiley pdfdirect CGH2004 · HLT2009 → 403",
+    "SSRN papers.cfm · Delivery.cfm(abstract 1064101) → 403",
+    "NUS ScholarBank(handle 10635/44524 CGH · 10635/44436 HKV) DSpace REST → 서지 정보만 · 파일 묶음 없음",
+    "CiteSeerX(10.1.1.161.7788 · 10.1.1.120.2418) → 404 · 429",
+    "CORE 검색 → 403",
+    "Semantic Scholar DOI(HKV) → 404",
+    "MPRA 3110(HLT 공개 판) → 접속 거부(첫 시도와 같다)",
+    "웹 검색 도구 → 세션 한도(200) 소진으로 쓰지 못함"
+   ],
+   "opened": [],
+   "result": "새로 연 원문 없음 — strand_decisions 는 첫 시도 그대로(DISP · PANICX · MKT3 · ATTN 같은 날 절반 = 쌍둥이 · SLOW = 주 가닥(DM 직접) · 삭제 가닥 없음)"
+  },
+  {
+   "at": "2026-09-27 검토 반영 단계(세 번째 시도)",
+   "who": "검토 반영 워크플로(수익 · 통계 없음 · 원문 열기만)",
+   "tried": [
+    "MPRA 3110(HLT 공개 판) → curl 접속 시간 초과 · WebFetch(다른 망) → ECONNREFUSED",
+    "SSRN abstract 1064101(Stivers–Sun 공개 판) → 403",
+    "CiteSeerX PDF(10.1.1.161.7788) → web.archive.org 로 넘김 — archive.org 는 쓰지 않는다(첫 시도 · 설계 감사와 같은 규칙)",
+    "사용자 브라우저(claude-in-chrome · 검토 제안) → 연결된 브라우저가 셋이라 사용자 선택이 필요 — 하위 작업자는 사용자에게 물을 수 없어 쓰지 못했다",
+    "웹 검색 도구 → 세션 한도(200) 소진"
+   ],
+   "opened": [],
+   "result": "새로 연 원문 없음 — strand_decisions 그대로. 사용자 브라우저로 MPRA 3110 · SSRN 1064101 을 여는 길은 남아 있다(설계 시한 10-05 · 등록 날짜는 오케스트레이터 결정)"
+  },
+  {
+   "at": "2026-09-27 등록 직전(네 번째 시도)",
+   "who": "사용자 결정(원문을 사용자 브라우저로 연다) → 오케스트레이터가 사용자 브라우저 세션에서 저자 공개 사본 셋을 받았다 · 판정은 등록 마감 워크플로(수익 · 통계 없음 · 원문 읽기만)",
+   "tried": [
+    "people.duke.edu/~viswanat — HKV 2010 JF 최종 원고(Stock_Market_Declines_and_Liquidity_JF2009_Final) + 인터넷 부록(65쪽)",
+    "home.business.utah.edu/finmc/JOFI_12.pdf — CGH 2004 JF 59(3) 게재 판(쪽 1345–1365)",
+    "econ.yale.edu/~shiller/behfin/2006-11/hirshleifer.pdf — HLT 작업 논문 판(표지 2006-10-25 · Yale/NBER 행동재무 모임 2006-11 게시본 · JF 2009 최종판이 아니다)",
+    "Stivers–Sun 2010 — 본문 판은 모두 유료 · 공개된 것은 SSRN 초록뿐(초록은 읽었다 · 본문은 못 열었다)"
+   ],
+   "opened": [
+    "CGH2004",
+    "HKV2010",
+    "HLT2009(작업 논문 판)"
+   ],
+   "result": "SLOW = 주 가닥 유지(CGH 인용 되살림) · ATTN 같은 날 절반 = 주 판으로 되살림(HLT 작업 논문 판에 결과 · 부호가 있다) · PANICX = 쌍둥이 유지(HKV 를 열었으나 등록 정의의 결과가 아니다 · 부호 반대 아님) · DISP = 쌍둥이 유지(Stivers–Sun 본문 미개봉) · MKT3 = 쌍둥이 유지 · 삭제 0"
+  }
+ ],
+ "method": "합법 공개 원천만 — 출판사 페이지(Wiley · Cambridge Core) · RePEc/IDEAS 목록의 다른 판(MPRA) · Semantic Scholar DOI 조회 · 2026-09-27 에 사용자 브라우저로 받은 저자 공개 사본(저자 · 학교 누리집). archive.org 는 쓰지 않았다(설계 감사와 같다).",
+ "rule": "D26 과 등록 전 적용 규칙(2026-09-27): 원문을 열었고 그 안의 결과가 등록한 가닥의 부호와 정의(상태 변수)를 뒷받침하면 주 가닥으로 되살린다 · 원문 부호가 반대면 삭제 · 못 열면(초록만이면) 쌍둥이 · 작업 논문 판은 해당 결과와 부호가 그 판에 있을 때만 «열었다» 로 센다 · 열었으나 등록 정의의 결과가 없으면(다른 수준 · 다른 상태 창) 쌍둥이 · 명세가 그 가닥의 원천으로 적지 않은 문헌으로 가닥을 구하지 않는다(엄격 · §3.7).",
+ "sources": {
+  "CGH2004": {
+   "cite": "Cooper, Gutierrez, Hameed (2004) Market States and Momentum, Journal of Finance 59(3) 1345-1365",
+   "doi": "10.1111/j.1540-6261.2004.00665.x",
+   "tried": [
+    "https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1540-6261.2004.00665.x (403)",
+    "https://ideas.repec.org/a/bla/jfinan/v59y2004i3p1345-1365.html (404)",
+    "Semantic Scholar DOI 조회(없음)",
+    "home.business.utah.edu/finmc/JOFI_12.pdf(저자 공개 · 2026-09-27 사용자 브라우저 · 열림)"
+   ],
+   "opened": true,
+   "version": "JF 게재 판(조판 · 쪽 1345–1365 · 22쪽 PDF)",
+   "pdf_sha256": "25b1b99be69ad19a4465401e69f47f91000ae7034c1d50aaa10813a9ee819669",
+   "text_copy": "%TEMP%/vbatch_cache/lit/cgh2004.txt(저장소 밖)",
+   "pages": [
+    "쪽 1347: UP = 지난 36개월 시장 수익 ≥ 0 · «robust using one-year and two-year lagged market states»",
+    "표 I(쪽 1351): 36개월 UP 뒤 6/6 모멘텀 월 0.93%(t 8.41) · DOWN 뒤 −0.37%(t −0.65) · 1929–1995 NYSE/AMEX",
+    "표 IV(쪽 1360): 12개월 시장 상태 — UP 뒤 월 1.04%(t 9.23 · N 579) · DOWN 뒤 −0.08%(t −0.22 · N 219) · 같음 검정 t 3.00(CAPM 3.05 · FF 2.28)",
+    "쪽 1359(II.C): 연속 변수 — «the 12-month and 24-month results are similar» · 수익은 지난 시장 수익과 양의 관계",
+    "표 V(쪽 1361): LAGMKT(36개월) 계수 2.77(t 2.41) · LAGMKT² −2.40(t −2.60) — 오목(5분위 중앙에서 가장 높고 가장 높은 분위에서도 유의한 양)"
+   ],
+   "quotes": [
+    "«Momentum profits depend on the state of the market, as predicted. From 1929 to 1995, the mean monthly momentum profit following positive market returns is 0.93%, whereas the mean profit following negative market returns is -0.37%.»(초록 · 쪽 1345)",
+    "«As shown in Panel A of Table V, the raw and risk-adjusted profits are positively related to lagged market returns, confirming our finding that momentum is high (low) when lagged market return is high (low).»(쪽 1359)"
+   ],
+   "reading": "SLOW(V01 · +) = 12개월 시장 초과 로그수익(연속)이다. CGH 는 지난 12개월 시장 수익으로 나눈 상태(표 IV)와 연속 변수 회귀(표 V · 12개월도 비슷하다고 적음)에서 지난 시장 수익이 높을수록 뒤 모멘텀이 높다고 보인다 — 부호와 정의(시장 수준 · 12개월 창) 모두 뒷받침. 차이 공개: CGH 는 VW CRSP 원 수익(초과 아님) · 6/6 전략 · 1929–1995 · 관계가 오목(중앙 상태에서 가장 높다)이다 — V 의 선형 기울기 · 축소 · 부호 잘림이 다룬다.",
+   "supports": "SLOW(+)"
+  },
+  "SS2010": {
+   "cite": "Stivers, Sun (2010) Cross-Sectional Return Dispersion and Time Variation in Value and Momentum Premiums, JFQA 45(4) 987-1014",
+   "doi": "10.1017/S0022109010000384",
+   "tried": [
+    "https://www.cambridge.org/core/product/identifier/S0022109010000384/type/journal_article (초록만 · Get access)",
+    "Semantic Scholar DOI 조회(openAccessPdf CLOSED)",
+    "SSRN 초록 페이지(열림 · 초록만) — 본문 판(JFQA · SSRN 다운로드 · 저자 판)은 모두 유료 또는 막힘(2026-09-27)"
+   ],
+   "opened": false,
+   "abstract_read": true,
+   "abstract_reading": "SSRN 초록: 수익 분산(RD)은 뒤 가치 프리미엄과 양의 관계 · 뒤 모멘텀 프리미엄과 음의 관계 — 등록 부호(V06 DISP + · V01 DISP −)와 같은 쪽이다. 초록만이라 규칙상 되살리지 않는다(D26 · 〔초록〕).",
+   "supports": null
+  },
+  "HKV2010": {
+   "cite": "Hameed, Kang, Viswanathan (2010) Stock Market Declines and Liquidity, Journal of Finance 65(1) 257-293",
+   "doi": "10.1111/j.1540-6261.2009.01529.x",
+   "tried": [
+    "https://onlinelibrary.wiley.com/doi/full/10.1111/j.1540-6261.2009.01529.x (403)",
+    "https://ideas.repec.org/a/bla/jfinan/v65y2010i1p257-293.html (출판사 링크만)",
+    "Semantic Scholar DOI 조회(없음)",
+    "people.duke.edu/~viswanat(저자 공개 · JF 최종 원고 + 인터넷 부록 · 2026-09-27 사용자 브라우저 · 열림)"
+   ],
+   "opened": true,
+   "version": "JF 최종 원고(조판 전 · 원고 쪽 1–50) + 인터넷 부록(표 IA.AI · IA.BI–IA.BVIII) · 65쪽 PDF",
+   "pdf_sha256": "43a190f29f9aece8217eafb8070209366bac8b8a267dd9b435cbe80f27608b56",
+   "text_copy": "%TEMP%/vbatch_cache/lit/hkv2010.txt(저장소 밖)",
+   "pages": [
+    "초록(원고 쪽 1): «economically significant returns to supplying liquidity following periods of large drop in market valuations»",
+    "원고 쪽 29(IV 절): 역추세 수익을 «cumulative market returns over the previous four weeks» 로 조건 — 큰 하락 = 평균보다 1.5σ 넘게 아래 · 주간 · NYSE 1988–2003",
+    "표 VIII(원고 쪽 46): 역추세(회전 가중 · 주간) t+1 — 큰 하락 뒤 1.18%(t 3.01 · FF 조정 1.16% t 2.90) · 다른 상태 0.52~0.64% · t+2 0.90%(t 1.93)",
+    "표 IX(원고 쪽 47): 지정가 전략 ±5% — 큰 하락 뒤 매수 − 매도 1.56%(t 5.17) · 다른 상태 0.63~0.68%",
+    "원고 쪽 30–31: 인터넷 부록 표 IA.BVIII — 유동성 공통성 높음 + 큰 하락 뒤 1.73% · 결론 «the cost of providing liquidity is highest in periods with large market declines»"
+   ],
+   "quotes": [
+    "«We investigate the effect of lagged market returns by conditioning the contrarian profits on cumulative market returns over the previous four weeks.»(원고 쪽 29)",
+    "«Large Up (Large Down) refers to cumulative market returns from week t-4 to t-1 being more than 1.5 standard deviations above (below) the mean.»(표 VIII 설명 · 원고 쪽 46)"
+   ],
+   "reading": "부호: 큰 시장 하락 뒤 유동성 공급(단기 반전) 수익이 크다 — V03 의 «시장 스트레스 → 반전 +» 쪽과 같다. 정의: 등록 PANICX = I_B(지난 24개월 누적 시장 < 0 · DM 약세장 표지) × 126일 시장 분산(한쪽 척도)인데 HKV 의 상태는 지난 4주 누적 시장 수익의 꼬리(−1.5σ)이고 24개월 약세장 표지나 시장 분산으로 반전 수익을 조건한 결과는 본문 · 인터넷 부록 어디에도 없다(변동성은 스프레드 회귀의 통제 변수로만 · 표 II · IA.BV). 그래서 등록 정의를 뒷받침하지 않는다(부호 반대는 아니다) → 쌍둥이. 주간 역추세(회전 가중)는 V03 의 월간 IRRX 와도 다르다(공개).",
+   "supports": null
+  },
+  "CHST2017": {
+   "cite": "Cheng, Hameed, Subrahmanyam, Titman (2017) Short-Term Reversals: The Effects of Past Returns and Institutional Exits, JFQA 52(1) 143-173",
+   "doi": "10.1017/S0022109016000958",
+   "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/7B9F21C81D419D4C51430E2CC376A649/S0022109016000958a.pdf/short-term-reversals-the-effects-of-past-returns-and-institutional-exits.pdf",
+   "opened": true,
+   "pdf_sha256": "56872536f94419d7043fd6262666c87f4e6414491699ca25f3a6906f6633d05e",
+   "text_copy": "scratchpad/vbatch/lit/chst2017.txt(저장소 밖)",
+   "quotes": [
+    "초록: «Price declines over the previous quarter lead to stronger reversals across the subsequent 2 months.»(chst2017.txt:15)",
+    "서론: «We show that reversals are stronger for stocks that recently experienced a decline in market value.»(chst2017.txt:27-28)",
+    "각주 3: «We also find that the higher reversal profits among the past 3-month-loser stocks are not confined to periods of market declines or VIX increases, as documented by Hameed et al. (2010) and Nagel (2012).»(chst2017.txt:205-207)"
+   ],
+   "reading": "결과는 종목 수준(그 종목의 지난 분기 하락)이다. 시장 수준 3개월 하락이 뒤 반전을 키운다는 결과는 이 논문의 것이 아니고(각주 3 은 그것을 HKV 2010 · Nagel 에 돌린다) 이 논문 안에서 시장 수준 부호를 따로 보이지 않는다(표 6 의 UP/DOWN 은 형성 · 보유 달의 1개월 시장 부호). 부호가 반대는 아니다."
+  },
+  "HLT2009": {
+   "cite": "Hirshleifer, Lim, Teoh (2009) Driven to Distraction: Extraneous Events and Underreaction to Earnings News, Journal of Finance 64(5) 2289-2325",
+   "doi": "10.1111/j.1540-6261.2009.01501.x",
+   "tried": [
+    "https://mpra.ub.uni-muenchen.de/3110/1/MPRA_paper_3110.pdf (MPRA Paper 3110 · 공개 판 — 이 망에서 접속 거부 ECONNREFUSED · https · http 모두)",
+    "Wiley(403)",
+    "Semantic Scholar DOI 조회(없음)",
+    "econ.yale.edu/~shiller/behfin/2006-11/hirshleifer.pdf(작업 논문 판 · 2026-09-27 사용자 브라우저 · 열림)"
+   ],
+   "opened": true,
+   "version": "작업 논문 판 — 표지 날짜 2006-10-25 · Yale/NBER 행동재무 모임(2006-11) 게시본 · 41쪽 · JF 2009 최종판이 아니다(쪽 · 표 번호는 이 판의 것)",
+   "pdf_sha256": "b08ecb170b48991f2eb636a24460dfea167c4b4c6b1b75f3f5299cc2428839ba",
+   "text_copy": "%TEMP%/vbatch_cache/lit/hlt_wp2006.txt(저장소 밖)",
+   "pages": [
+    "초록: 다른 회사 발표가 같은 날 많을수록 즉시 가격 · 거래량 반응이 약하고 발표 뒤 드리프트가 세다 · 드리프트 전략은 경쟁 뉴스가 많은 날 발표에서 가장 벌고 적은 날엔 벌지 못한다",
+    "쪽 4 · 각주 9 · 쪽 13–14: 척도 = 같은 날 다른 회사 발표 수(요일 · 달 · 해 더미를 뺀 잔차 · 10분위 NRANK) · «the results are similar when we use the raw number of earnings announcements»",
+    "표 3(쪽 15): 60일 드리프트 CAR[2,61] 호재 − 악재 폭 — 발표 많은 날 7.14%(p < 0.001) 대 적은 날 2.30%(p 0.12) · 차 4.85%(p 0.03)",
+    "표 4(쪽 17–18): CAR[2,61] 에 FE×NRANK +0.047(1% 유의 · 크기 · B/M · 금요일 통제)",
+    "표 5(쪽 18–19): 호재만(양의 놀람) CAR[2,61] FE×NRANK +0.115(1%) · 악재만은 유의하지 않음",
+    "표 7(쪽 21–22 · 본문은 «Table 6» 으로 적음): 드리프트 헤지 4요인 α — 발표 많은 날 월 1.34%(1%) 대 적은 날 −0.33% · 차 1.35%(5%) · 각주 22 금요일 발표를 빼도 비슷 · 쪽 22: 대형주(NYSE 4–10분위)에서는 모든 NRANK 에서 유의하지 않다 · 표본 1995–2004"
+   ],
+   "quotes": [
+    "«We find that the immediate stock price and volume reaction to a firm's earnings surprise is weaker, and post-earnings announcement drift is stronger, when a greater number of earnings announcements by other firms are made on the same day.»(초록)",
+    "«Similarly, the residual number of announcements significantly increases the sensitivity of post-announcement abnormal return to positive earnings news.»(쪽 18)"
+   ],
+   "reading": "V05 ATTN 의 같은 날 절반 = pct(같은 날 합집합 8-K 2.02 접수 수) · 기울기는 호재 책(CAR 상위 20%) 안에서 같은 날 발표가 많은 이름을 더 싣는다(+). 이 작업 논문 판에 그 결과와 부호가 있다 — 드리프트는 같은 날 발표가 많을수록 세다(표 3 · 4) · 호재 부분표본에서 특히(표 5) · 원 발표 수로도 비슷하다(쪽 14). 차이 공개: HLT 는 요일 · 달 · 해를 뺀 잔차 수(등록은 원 수의 백분위 · 금요일 절반과 겹친다) · 표본 1995–2004 전 종목 · 대형주에서 전략 α 가 유의하지 않다(쪽 22 — V05 사전 «낮음» 그대로) · JF 최종판이 아니다.",
+   "supports": "ATTN_sameday(+)"
+  },
+  "DM2016_for_SLOW": {
+   "cite": "Daniel, Moskowitz, Momentum Crashes (lit/dm2016.txt · 이미 로컬 본문 · 이번 단계 재대조)",
+   "opened": true,
+   "text_sha256": "be2c126a4fda0233870dbd4dd4ea77b05be4c924049e5877f4ab55e2d34af292",
+   "quotes": [
+    "«Table 5 reports the regression results, showing that both estimated market variance and the bear market indicator independently forecast future momentum returns. … in periods of high market stress, as indicated by bear markets and high volatility, future momentum returns are low.»(dm2016.txt:788-794)"
+   ],
+   "reading": "약세장 표지 I_B(24개월 누적 시장 < 0)가 뒤 WML 을 낮춘다 — 과거 시장 수익이 높을수록 모멘텀이 높다는 SLOW(+)와 같은 방향(직접 · 본문 표 5)."
+  }
+ },
+ "strand_decisions": {
+  "SLOW": {
+   "status": "primary",
+   "why": "CGH 2004 본문을 열었다(JF 게재 판 · 표 IV 쪽 1360 12개월 상태 · 쪽 1359 · 표 V 쪽 1361 연속 LAGMKT +) — 부호 · 정의 뒷받침 · DM 표 5(직접 · dm2016.txt:788-794)도 같은 방향 · CGH 인용을 되살린다 · 오목(중앙 상태 최고) 공개"
+  },
+  "DISP": {
+   "status": "twin",
+   "why": "Stivers–Sun 2010 본문 미개봉(본문 판 모두 유료 · SSRN 초록만) → D26 쌍둥이(V01 −, V06 + 모두) · 초록의 부호는 등록과 같은 쪽이지만 초록만으로는 되살리지 않는다 · DM 서론(dm2016.txt:93-95)의 인용은 2차 인용이라 P2 로 쓰지 않는다"
+  },
+  "PANICX": {
+   "status": "twin",
+   "why": "HKV 2010 본문을 열었다(JF 최종 원고 + 인터넷 부록) — 큰 시장 하락 뒤 반전 수익이 크다(표 VIII 원고 쪽 46 · 표 IX 쪽 47 · 부호 같은 쪽)지만 상태는 «t−4 ~ t−1 주 누적 시장 수익이 평균보다 1.5σ 아래»(쪽 29 · 주간 · 1988–2003)이고 등록 정의(I_B 24개월 약세장 × 126일 시장 분산)의 결과는 본문 · 부록에 없다 → 등록 정의를 뒷받침하지 않는다 · 부호 반대 아님 → 쌍둥이(삭제 아님 · MKT3/CHST 와 같은 규칙 · 추론 부호 금지 P2)"
+  },
+  "MKT3": {
+   "status": "twin",
+   "why": "Cheng 외 2017 원문을 열었다 — 종목 수준 결과이고 시장 하락과 무관하다고 적었다(각주 3). 시장 수준 MKT3 의 부호 출처가 아니다(부호 반대는 아니라 삭제가 아니라 강등) · HKV 2010 의 4주 시장 하락 결과(표 VIII)는 MKT3 의 등록 원천이 아니고 창도 다르다(4주 꼬리 ≠ 3개월 연속) — Nagel 4주 계수와 같은 엄격 규칙으로 쓰지 않는다 · D26 · P2"
+  },
+  "ATTN_sameday": {
+   "status": "primary",
+   "why": "HLT 작업 논문 판(표지 2006-10-25 · 2006-11 NBER 게시본 · JF 최종판 아님)을 열었다 — 결과와 부호가 그 판에 있다: 같은 날 발표가 많을수록 드리프트가 세다(표 3 쪽 15 · 표 4 쪽 17–18 FE×NRANK +0.047) · 호재 부분표본 +0.115(표 5 쪽 18–19) · 원 발표 수로도 비슷(쪽 14) → 주 판으로 되살린다 · ATTN 주 판 = 명세 정의 a_i = ½·1[금요일] + ½·pct(같은 날 수) · 대형주 전략 α 비유의(쪽 22) 공개"
+  },
+  "ATTN_friday": {
+   "status": "primary",
+   "why": "DellaVigna–Pollet w11683.txt:44-46 · 137-141(직접)"
+  },
+  "BSPRD": {
+   "status": "primary",
+   "why": "FP 명제 2 · 표 XI(본문)"
+  },
+  "VSPRD": {
+   "status": "primary",
+   "why": "CPV(본문) · HKS 표 5(직접)"
+  },
+  "RVAR": {
+   "status": "primary",
+   "why": "Nagel(본문 · w17653)"
+  },
+  "G2own": {
+   "status": "primary",
+   "why": "HKS w26708 표 5 행 10 · 11(직접)"
+  }
+ },
+ "consequence": {
+  "V01": "주 가닥 SLOW(L·S · CGH 본문 + DM) · G2own(S) — DISP 는 쌍둥이 · L 층 군 하나(SLOW)라 D09 절반 강도(변화 없음 · 출처만 넓어짐)",
+  "V03": "주 가닥 RVAR(L·S) · G2own(S) — PANICX(HKV 를 열었으나 정의가 다르다) · MKT3 는 쌍둥이 · L 층 군 하나라 절반 강도(변화 없음)",
+  "V06": "주 가닥 VSPRD — DISP 는 쌍둥이 · 군 하나라 절반 강도",
+  "V05": "ATTN 기울기의 주 판 특성 a_i = ½·1[금요일] + ½·pct(같은 날 발표 수)(명세 정의 · HLT 작업 논문 판) · γ_A 2.75(합성 재보정 · build/v_core.py) · 금요일 단독 판은 보고용 칸(attn_twin · 팔 없음)",
+  "V02 · V07": "변화 없음",
+  "multiplicity": "H_V 가족 m 6 은 등록 전에 고정 — 군 셈으로 줄지 않는다(명세 multiplicity.H_V)",
+  "summary": "되살림 1(ATTN 같은 날 절반 · V05) · 주 가닥 유지 1(SLOW · CGH 인용 되살림) · 쌍둥이 유지 3(DISP · PANICX · MKT3) · 삭제 0 · H_V 웹 다섯의 L 층 가닥 수는 그대로"
+ }
+}

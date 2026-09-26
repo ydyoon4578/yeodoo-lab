@@ -1,0 +1,200 @@
+{
+ "kind": "vfwd_genesis",
+ "registration": "build/PREREG-2026-09-27-VBATCH.md",
+ "cards": {
+  "VF01W": {
+   "card": "V01",
+   "arm": "W",
+   "kind": "W",
+   "main_contrast": "VF01S",
+   "adoption": "web_alone"
+  },
+  "VF01S": {
+   "card": "V01",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF02W": {
+   "card": "V02",
+   "arm": "W",
+   "kind": "W",
+   "main_contrast": "VF02S",
+   "adoption": "none(배분기 구성원만 · D11)"
+  },
+  "VF02S": {
+   "card": "V02",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF03W": {
+   "card": "V03",
+   "arm": "W",
+   "kind": "W",
+   "main_contrast": "VF03S",
+   "adoption": "web_alone"
+  },
+  "VF03S": {
+   "card": "V03",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF06W": {
+   "card": "V06",
+   "arm": "W",
+   "kind": "W",
+   "main_contrast": "VF06S",
+   "adoption": "web_alone"
+  },
+  "VF06S": {
+   "card": "V06",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF07W": {
+   "card": "V07",
+   "arm": "W",
+   "kind": "W",
+   "main_contrast": "VF07S",
+   "adoption": "web_alone"
+  },
+  "VF07S": {
+   "card": "V07",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF04S": {
+   "card": "V04",
+   "arm": "S0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF05W": {
+   "card": "V05",
+   "arm": "W(CH 제외 + ATTN)",
+   "kind": "W",
+   "main_contrast": "VF05S",
+   "adoption": "measure_only"
+  },
+  "VF05S": {
+   "card": "V05",
+   "arm": "S0(CH 제외)",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only"
+  },
+  "VF08S": {
+   "card": "V08",
+   "arm": "S0",
+   "kind": "N",
+   "main_contrast": "w_B",
+   "adoption": "forward_only",
+   "conditions": [
+    "G-EGD 통과(F0 «EG30-근접» 이면 측정만 · 채택 경로 없음)",
+    "D29 사용자 확인 — 2026-09-27 확인됨(V08 전방 채택 경로 유지 · 등록 §8.4-6 · §8.2): 이 창세가 확인 기록이다 · VFWD 원장은 다시 확인받지 않고 이 조건을 참으로 읽는다(더 좁히는 것만 할 수 있다)"
+   ],
+   "d29": {
+    "confirmed": true,
+    "date": "2026-09-27",
+    "by": "사용자(오케스트레이터가 전달)",
+    "decision": "V08 순자사주 카드는 전방 채택 경로(VF08S · FF1 · FF2)를 유지한다",
+    "recorded_in": "build/PREREG-2026-09-27-VBATCH.md §8.4-6"
+   }
+  },
+  "VFA": {
+   "arm": "FULL",
+   "kind": "A",
+   "members": "등록 F0 의 G-EGD 를 넘은 MOM · LBS · LIQ · VAL · QLT(K ≥ 3)",
+   "main_contrast": "VFE",
+   "adoption": "allocator"
+  },
+  "VFE": {
+   "arm": "C0",
+   "kind": "static",
+   "main_contrast": "w_B",
+   "adoption": "measure_only(귀무)"
+  },
+  "VFW": {
+   "arm": "C-W",
+   "kind": "static",
+   "main_contrast": "VFE",
+   "adoption": "measure_only"
+  },
+  "VFA7": {
+   "arm": "C-7",
+   "kind": "A",
+   "main_contrast": "VFE",
+   "adoption": "measure_only"
+  }
+ },
+ "entry": {
+  "decision": "2026-10",
+  "d0_close": "2026-10-30T20:00:00Z",
+  "t1_close": "2026-11-02",
+  "primary_row": "T+1",
+  "measure_row": "D0",
+  "cost_primary": 0.001,
+  "cost_alt": 0.002,
+  "late": "10-28 까지 VFWD 원장을 올리지 못하면 2026-11-30 종가에 같은 절차(소급 결정 없음 · 카드 수를 줄이지 않는다)"
+ },
+ "book_rules": {
+  "cards": "build/v_cards.py spec_of · SLayer.books · SLayer.path(T+1 행 · ½ 체결 · LIQ 전량) — 등록 F0 결정(data/_vb_f0.json decisions)을 건다",
+  "web": "build/v_cards.py SLayer.web(L 기울기 · S-E 쌍 · 군 등록물) · build/v_core.py direction_eval · theta_path",
+  "allocator": "build/v_alloc.py s_allocator(FM 기울기 = L · 두 소매 체결 A5)"
+ },
+ "gates": {
+  "constants": {
+   "FF1_months": 24,
+   "FF1_t": -1.0,
+   "FF2_months": 36,
+   "FF2_t": 1.0,
+   "late_window": 36,
+   "late_max": 3,
+   "publish_months": 60,
+   "events_min": {
+    "crash_legs": 3,
+    "rebounds": 3,
+    "crash_m": 4,
+    "surge_m": 4,
+    "down": 10
+   }
+  },
+  "functions": [
+   "build/v_tests.py ff_late_fill(FF0)",
+   "build/v_tests.py ff1(FF1)",
+   "build/v_tests.py ff2(FF2)"
+  ],
+  "FF0": "늦은 결정 · 핀 어긋남 · 대체 판 달 = 주 대조의 X(W → S · VFA → VFE · VF08S → 0) · 첫 36개월 늦음 ≥ 3 이면 FF2 막힘",
+  "FF1": "24개월(2028-11) · Δ 의 NW(6) t ≤ −1.0 이면 기각(측정 계속)",
+  "FF2": "≥ 36개월 · 사건 최소 · (a)~(g) · 통과 = «전방 일치»(확인 아님) · 60개월(2031-11)에 한 번 더 넘어야 게시"
+ },
+ "gegd_fail": "F0 G-EGD «EG30-근접» 카드는 측정만(모든 채택 경로 없음 · VF08S 포함)",
+ "code_pins": {
+  "build/v_data.py": "6d4aab805bb06dd3",
+  "build/v_cond.py": "64cca5f5f73f4d25",
+  "build/v_fund.py": "bf8c8a15f1a95346",
+  "build/v_px_split.py": "c6af02078350f5dc",
+  "build/v_pit.py": "f47267c254fbfce7",
+  "build/v_ins.py": "36e178da68ed872b",
+  "build/v_ear.py": "68aec2170d7635ed",
+  "build/v_guard.py": "5d9c80ee1bfcfe15",
+  "build/v_core.py": "cca487736fcf60a0",
+  "build/v_cards.py": "200acc645c7438db",
+  "build/v_alloc.py": "b57589e09628f2e5",
+  "build/v_tests.py": "a05671db51c96447",
+  "build/v_cmp.py": "643748307345cc4b",
+  "build/v_audit.py": "585cd9fac33285d6",
+  "build/v_run.py": "431e2e53d186344f"
+ },
+ "note": "배치 V 등록 커밋이 더한다(판 점검이 이 파일 · 코드 핀을 얼린 코드와 대조) — 원장 파일은 VFWD 등록이 data/_vfwd/ 에 더한다"
+}

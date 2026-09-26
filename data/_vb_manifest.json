@@ -1,0 +1,2018 @@
+{
+ "note": "배치 V 자료 판 동결 — build/v_data.py 가 쓴다. 값은 없다: URL · 받은 때 · SHA-256 · 행 수 · 기간 · 구조만. French · yfinance · companyfacts 원자료는 저장소 밖 캐시에만 있다(D1 — L 층은 내부 기전 증거 · 사이트 자료가 아니다).",
+ "generated_at": "2026-09-26T19:46:06Z",
+ "cache_root": "$VBATCH_CACHE 또는 %TEMP%/vbatch_cache (저장소 밖)",
+ "design": "vbatch_research.json final(설계 워크플로 2026-09-26) · 오케스트레이터 결정 8 변경(V08 전방 전용)",
+ "crsp_vintage": "202608",
+ "fiz_vintage": "2024-12",
+ "availability": {
+  "french:mkt": {
+   "L": 0,
+   "S": 2
+  },
+  "french:mkt_d": {
+   "L": 0,
+   "S": 2
+  },
+  "french:lag2": {
+   "L": 2,
+   "S": 2
+  },
+  "french:june": {
+   "L": 2,
+   "S": 2
+  },
+  "lab:spy": {
+   "L": null,
+   "S": 0
+  },
+  "lab:spy_d": {
+   "L": null,
+   "S": 0
+  },
+  "lab:rf": {
+   "L": null,
+   "S": 0
+  },
+  "v:book_y": {
+   "L": null,
+   "S": 0
+  }
+ },
+ "pit_availability": {
+  "px": "그날 종가(결정일 d 까지 · d 종가 포함)",
+  "8k": "8-K Item 2.02 EDGAR 접수일 f — CAR 창 끝 f+1 ≤ d(창이 다 관측된 발표만) · 가장 최근 = f+1 ≤ d 인 것 가운데 가장 늦은 것",
+  "form4": "_ins_pit 가용월 = FILING_DATE 다음 NYSE 거래일의 달(R1 규칙) — 결정 달 m 에는 가용월 ≤ m",
+  "fxv": "_fxv 기록 가용일 = max(기간말 + 90일, filed 다음 NYSE 거래일) ≤ d",
+  "wide": "넓힌 원장(원 companyfacts) 같은 가용일 규칙 ≤ d",
+  "tenq": "_tenq_rf avail(16:00 ET 뒤 · 휴장 → 다음 거래일 · filingDate 바닥) — 공개월 ≤ m",
+  "sector": "pit_gics_sectors 월 m 또는 과거 쪽 가장 가까운 달(미래 달 금지) · 2014-06 앞(S-E 추정 전용)은 첫 달 값(선견 · 공개)",
+  "members": "index_history 월말 명단(위키 과거 리비전) · 2014-06 앞(S-E 추정 전용)은 첫 달 명단(선견 · 생존 · 공개)",
+  "split": "분할 사건일 ≤ d 만 주식수에 곱한다 · V-D1 가격의 사건 계수는 오늘까지(가격 수준 되돌림 — ME 에서 상쇄 · 선견 점검 대상)"
+ },
+ "forbidden_inputs": {
+  "fred:USREC": "경기후퇴 표지(u_data FORBIDDEN)",
+  "fred:USRECM": "경기후퇴 표지",
+  "fred:RECPROUSM156N": "경기후퇴 확률",
+  "gz:ebp": "EBP(u_data FORBIDDEN)",
+  "gz:est_prob": "경기후퇴 확률",
+  "wurgler:recess": "경기후퇴 표지",
+  "fred:TEDRATE": "지연 TED(명세 conditions.forbidden)",
+  "eg:score": "Eg 점수 — v_cmp 밖 금지",
+  "eg:eg30": "EG30 보유 — v_cmp 밖 금지",
+  "eg:qg30": "QG30 — v_cmp 밖 금지",
+  "fund:cfo": "cfo(Cop · Eg 입력) 금지",
+  "fund:investment": "투자 · 자산 증가 신호 금지",
+  "fund:accruals": "발생액 신호 금지"
+ },
+ "lab_files": {
+  "data/stocks.json": {
+   "sha256": "c156d70cd8760790352c5b8241b434f60d716cafe0d16dec245cfa522fe624ae",
+   "bytes": 1037968
+  },
+  "data/pit_px.json": {
+   "sha256": "9cd59399efaba6fff1b456bb8b58f8ef1ad714e261578318d7910f78c83f310c",
+   "bytes": 4730225
+  },
+  "data/_px_raw.json": {
+   "sha256": "ddebc6780a85f8bf1ad73e373641c7de84e973c663b1a105d4d6f075948be545",
+   "bytes": 330084
+  },
+  "data/splits.json": {
+   "sha256": "43e54bf84e02029010bc3c6c7eb73cc477ec817756e95124a565ee89065a61aa",
+   "bytes": 6524
+  },
+  "data/index_history.json": {
+   "sha256": "55b2e9e64230ba8bc992071f203919ae9b44ac1cdfa8e752363f0addf7fc1024",
+   "bytes": 659728
+  },
+  "data/index_ledger.json": {
+   "sha256": "51fbbc3db25150ac58128bb44fcb72a0420737be7066b836af4199f2efee4f65",
+   "bytes": 364224
+  },
+  "data/pit_universe.json": {
+   "sha256": "afe05a41c21f85266e831c5995e00c19b1bdad14cd9597067bd37f630bcf3ac2",
+   "bytes": 7244
+  },
+  "data/pit_reuse.json": {
+   "sha256": "ec1a976e52b86df398d60cdabc24a4fd42da0029d2def6b794c02880096dbfa3",
+   "bytes": 22276
+  },
+  "data/pit_gics_sectors.json": {
+   "sha256": "876aa395750abe6bd945b53044117ab9b0256089a6f63fa1067293b77f359dbf",
+   "bytes": 1911491
+  },
+  "data/earn_dates.json": {
+   "sha256": "b05e4542728897bc0a76431b08f1c05c5c82677c461bcacf570b37d321907cc4",
+   "bytes": 710559
+  },
+  "data/_ins_pit/cikmonth.json": {
+   "sha256": "4705cb2340bdd84a709d8163bd00227bab863846318159bcfb73143059816555",
+   "bytes": 7244152
+  },
+  "data/_ins_pit/routine.json": {
+   "sha256": "48cf3abb74eef26980d9ee14b3ab1ae18047bd51a3243b3a034478570b1a85ad",
+   "bytes": 768241
+  },
+  "data/_ins_pit/manifest.json": {
+   "sha256": "8cfa670b7ac4bfb9c14494a353bc5dd1867d9d906ce023dc26adfbc5a1957b85",
+   "bytes": 51010
+  },
+  "data/_tenq_rf.json": {
+   "sha256": "bb5c996682e6a7e47b060363673e25c7cdfaf906ec9a22a09d8f1815fd162504",
+   "bytes": 6841500
+  },
+  "data/_issuer_map.json": {
+   "sha256": "eaabac2ee9a2223b6df455642c04a9d75ff91aa9d8ea3de99f31ad0112a228bb",
+   "bytes": 308448
+  },
+  "data/_fxv/index.json": {
+   "sha256": "03023e2050899b6234637c97387ce2ea26d195497d949b9ff5b35af5500e3677",
+   "bytes": 329903
+  },
+  "data/_fxv/manifest.json": {
+   "sha256": "e0e6f9b17a0fa064b02fbde8f2123165b59c48ea8022aedba769b8323ba9e126",
+   "bytes": 120565
+  },
+  "data/assets.json": {
+   "sha256": "740054b609bce17d5e4e63503f68fcb31390bb1e8538f4122a76aba203bd4cc8",
+   "bytes": 5229433
+  },
+  "data/rf_monthly.json": {
+   "sha256": "211c2480e03d11aee1f5adfcc98b7eb89ca2204ba4f772aace6d11e820978194",
+   "bytes": 11518
+  },
+  "data/shares_yf.json": {
+   "sha256": "e6664bacba42a31373d0f40aa6f48a4b11866621d50b1b6bf22ab7b6b9651de8",
+   "bytes": 725011
+  }
+ },
+ "lab_dirs": {
+  "data/sd": {
+   "digest": "b59286c046dbb60ee35e8d7f097d531ca59424a50686ac04ec0730631269512c",
+   "files": 518,
+   "rule": "sha256(«이름 \\t sha256 \\n» 을 이름 차례로)"
+  },
+  "data/fx": {
+   "digest": "4f1386c8a828fc85064dbfec0fe37a44bff55700ac7a2e02d05479793fe0f801",
+   "files": 518,
+   "rule": "sha256(«이름 \\t sha256 \\n» 을 이름 차례로)"
+  },
+  "data/fx_pit": {
+   "digest": "f906a859330f7b3474ee9c6c52bf35861d6f1cb3cc3e400f6f904c04ab10de3a",
+   "files": 328,
+   "rule": "sha256(«이름 \\t sha256 \\n» 을 이름 차례로)"
+  },
+  "data/_fxv": {
+   "digest": "435531adca770ad4fcbbd2855869585ed704fdcc8da38cb08ca04a82197cd81b",
+   "files": 653,
+   "rule": "sha256(«이름 \\t sha256 \\n» 을 이름 차례로)"
+  }
+ },
+ "french": {
+  "french/ff3_m": {
+   "sha256": "593f4fbef03181bc0b22ff6292f217689dd1fb79355049ca905d95b262040a66",
+   "bytes": 13065,
+   "crsp": "202608",
+   "inner": "F-F_Research_Data_Factors.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "blocks": [
+    {
+     "kind": "m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 4
+    },
+    {
+     "kind": "a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 4
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "Mkt · RF — SLOW · MKT3 · PANICX I_B · 목표 y = P − Mkt · RF",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/ff3_m": {
+   "sha256": "fc9e41cc3b66c62fa8f565a01fb4c8c0d7962c777303c46b8ab7102190b98ea2",
+   "bytes": 12995,
+   "crsp": "202412",
+   "inner": "F-F_Research_Data_Factors.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_CSV.zip",
+   "blocks": [
+    {
+     "kind": "m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 4
+    },
+    {
+     "kind": "a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 4
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/ff3_d": {
+   "sha256": "2f29e22546069914890a712680a6f81f3680ebc3543b52864484d209ca13a7db",
+   "bytes": 178184,
+   "crsp": "202608",
+   "inner": "F-F_Research_Data_Factors_daily.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip",
+   "blocks": [
+    {
+     "kind": "d",
+     "rows": 26317,
+     "first": "1926-07-01 00:00:00",
+     "last": "2026-08-31 00:00:00",
+     "n_cols": 4
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "Mkt-RF 일간 — RVAR(L) · PANICX σ²(L)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/ff3_d": {
+   "sha256": "2ea687afb4b1b8f75c67bcb8b414a6bc5510e42d36b8671335b0fced2ae3b985",
+   "bytes": 179691,
+   "crsp": "202412",
+   "inner": "F-F_Research_Data_Factors_daily.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/F-F_Research_Data_Factors_daily_CSV.zip",
+   "blocks": [
+    {
+     "kind": "d",
+     "rows": 25901,
+     "first": "1926-07-01 00:00:00",
+     "last": "2024-12-31 00:00:00",
+     "n_cols": 4
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/me_prior12": {
+   "sha256": "68d90a218235b2c14e67eb1b7b1acd2d9fcc6b626bc4c64e854e2788bcf44bf3",
+   "bytes": 127456,
+   "crsp": "202608",
+   "inner": "6_Portfolios_ME_Prior_12_2.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_Prior_12_2_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "equally_weight_average_of_prior_returns",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "V01 L 대리 BIG HiPRIOR",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/me_prior12": {
+   "sha256": "9f0f1dbbccc3d6ae70e27f0b1b2c07bc0b76c5bc49dbdd25485aa362714e3d47",
+   "bytes": 119727,
+   "crsp": "202412",
+   "inner": "6_Portfolios_ME_Prior_12_2.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/6_Portfolios_ME_Prior_12_2_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 97,
+     "first": "1927",
+     "last": "2023",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 97,
+     "first": "1927",
+     "last": "2023",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "equally_weight_average_of_prior_returns",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/prior12_2": {
+   "sha256": "dce836c412a4ce0a9c4bdb2d4f3a613672b6ffd10e434132e2a21bf9bb18f001",
+   "bytes": 119089,
+   "crsp": "202608",
+   "inner": "10_Portfolios_Prior_12_2.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/10_Portfolios_Prior_12_2_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 10
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 10
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 10
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 10
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 10
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1196,
+     "first": "1927-01",
+     "last": "2026-08",
+     "n_cols": 10
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 100,
+     "first": "1927",
+     "last": "2026",
+     "n_cols": 10
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "V01 쌍둥이 Hi PRIOR(10분위)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/prior12_2": {
+   "sha256": "69c648e5ea7cd5260b0d6466115e871d1ba2eea39d6680a416ed98837d4ccf98",
+   "bytes": 115843,
+   "crsp": "202412",
+   "inner": "10_Portfolios_Prior_12_2.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/10_Portfolios_Prior_12_2_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 10
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 10
+    },
+    {
+     "kind": "vw_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 10
+    },
+    {
+     "kind": "ew_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 10
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 10
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1176,
+     "first": "1927-01",
+     "last": "2024-12",
+     "n_cols": 10
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 10
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/me_beta": {
+   "sha256": "716efc2073e44fbb7de5443c326f08275ec12c39a0b7fe18f7e127006deb7fcc",
+   "bytes": 465140,
+   "crsp": "202608",
+   "inner": "25_Portfolios_ME_BETA_5x5.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:14Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/25_Portfolios_ME_BETA_5x5_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "ew_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "vw_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 25
+    },
+    {
+     "kind": "ew_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 25
+    },
+    {
+     "kind": "nfirms",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "avgsize",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeme_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeme_jun",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeta_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwop_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 25
+    }
+   ],
+   "forbidden_blocks_skipped": 1,
+   "use": "V02 L 대리 ME5×β1(BIG LoBETA) · G2own(월별 BE/ME 절 · BIG LoBETA − 시장)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/me_beta": {
+   "sha256": "988b3eac59011c0c350e9f79f4fe23ff3f54838b860f99d438da692780870d8a",
+   "bytes": 447987,
+   "crsp": "202412",
+   "inner": "25_Portfolios_ME_BETA_5x5.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:15Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/25_Portfolios_ME_BETA_5x5_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "ew_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "vw_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 25
+    },
+    {
+     "kind": "ew_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 25
+    },
+    {
+     "kind": "nfirms",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "avgsize",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeme_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeme_jun",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwbeta_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    },
+    {
+     "kind": "vwop_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 25
+    }
+   ],
+   "forbidden_blocks_skipped": 1
+  },
+  "french/beta": {
+   "sha256": "fb317445a0160c694ee2773d1718490259e1c6873f1490191efc9ec3bcc1b65e",
+   "bytes": 116169,
+   "crsp": "202608",
+   "inner": "Portfolios_Formed_on_BETA.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:15Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BETA_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 15
+    },
+    {
+     "kind": "ew_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 15
+    },
+    {
+     "kind": "vw_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 15
+    },
+    {
+     "kind": "ew_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 15
+    },
+    {
+     "kind": "nfirms",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 15
+    },
+    {
+     "kind": "avgsize",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 15
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 64,
+     "first": "1963",
+     "last": "2026",
+     "n_cols": 15
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "V02 쌍둥이 Lo 20 · BSPRD(U17 사전 베타 절)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/beta": {
+   "sha256": "8ff250f6585f05f06ee835b36542a9f14d9e6a5861525c0e140d92fe1679604e",
+   "bytes": 112960,
+   "crsp": "202412",
+   "inner": "Portfolios_Formed_on_BETA.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:15Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BETA_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 15
+    },
+    {
+     "kind": "ew_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 15
+    },
+    {
+     "kind": "vw_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 15
+    },
+    {
+     "kind": "ew_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 15
+    },
+    {
+     "kind": "nfirms",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 15
+    },
+    {
+     "kind": "avgsize",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 15
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 62,
+     "first": "1963",
+     "last": "2024",
+     "n_cols": 15
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/me_prior10": {
+   "sha256": "78204befd7fe92024d14914c5bda51ced6673b7d1b2dc4cdfc6c2d10660dbd5e",
+   "bytes": 124021,
+   "crsp": "202608",
+   "inner": "6_Portfolios_ME_Prior_1_0.csv",
+   "origin": "copy:scout",
+   "pinned_at": "2026-09-26T12:15:15Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_Prior_1_0_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "equally_weight_average_of_prior_returns",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg",
+     "rows": 1207,
+     "first": "1926-02",
+     "last": "2026-08",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "V03 L 대리 BIG LoPRIOR",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/me_prior10": {
+   "sha256": "b6dd5cce77ceb4256f57d5b12846d3238595b8391e5605fe60435a8a0821ae89",
+   "bytes": 117230,
+   "crsp": "202412",
+   "inner": "6_Portfolios_ME_Prior_1_0.CSV",
+   "origin": "live Thu, 22 May 2025 19:01:14 GMT",
+   "pinned_at": "2026-09-26T12:15:17Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/6_Portfolios_ME_Prior_1_0_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 97,
+     "first": "1927",
+     "last": "2023",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 97,
+     "first": "1927",
+     "last": "2023",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "equally_weight_average_of_prior_returns",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg",
+     "rows": 1187,
+     "first": "1926-02",
+     "last": "2024-12",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/me_ep": {
+   "sha256": "e65860efdf0fddbcc3a54b6881fe5ef06ef559b32497efc32b561cd8ad710d5c",
+   "bytes": 57504,
+   "crsp": "202608",
+   "inner": "6_Portfolios_ME_EP_2x3.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:17Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_EP_2x3_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 902,
+     "first": "1951-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 902,
+     "first": "1951-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 74,
+     "first": "1952",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 74,
+     "first": "1952",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 902,
+     "first": "1951-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 902,
+     "first": "1951-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 76,
+     "first": "1951",
+     "last": "2026",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "V06 L 대리 BIG HiEP",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/me_ep": {
+   "sha256": "a0012a5632d872bfa97a604d688af1948a56bdc194db21a4411bf9531f65a0c9",
+   "bytes": 56618,
+   "crsp": "202412",
+   "inner": "6_Portfolios_ME_EP_2x3.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:17Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/6_Portfolios_ME_EP_2x3_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 882,
+     "first": "1951-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 882,
+     "first": "1951-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 73,
+     "first": "1952",
+     "last": "2024",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 73,
+     "first": "1952",
+     "last": "2024",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 882,
+     "first": "1951-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 882,
+     "first": "1951-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 74,
+     "first": "1951",
+     "last": "2024",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/me_op": {
+   "sha256": "5974ba70b4e23e46e58bdc821fb0c93caea86f46ca50523d0622e86d7f2eba5b",
+   "bytes": 105990,
+   "crsp": "202608",
+   "inner": "6_Portfolios_ME_OP_2x3.csv",
+   "origin": "copy:scout",
+   "pinned_at": "2026-09-26T12:15:17Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_OP_2x3_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 62,
+     "first": "1964",
+     "last": "2025",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwbeme_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwbeme_jun",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwop_m",
+     "rows": 758,
+     "first": "1963-07",
+     "last": "2026-08",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 1,
+   "use": "V07 L 대리 BIG HiOP · PQ(월별 BE/ME 절 HiOP − LoOP)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/me_op": {
+   "sha256": "326f31f4c0d58cb4396cdf3ac3a3ce83e38e972c07bc20db60382cbf1ab441e4",
+   "bytes": 103368,
+   "crsp": "202412",
+   "inner": "6_Portfolios_ME_OP_2x3.CSV",
+   "origin": "live Thu, 22 May 2025 19:01:07 GMT",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/6_Portfolios_ME_OP_2x3_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vw_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 6
+    },
+    {
+     "kind": "ew_a",
+     "rows": 61,
+     "first": "1964",
+     "last": "2024",
+     "n_cols": 6
+    },
+    {
+     "kind": "nfirms",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "avgsize",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwbeme_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwbeme_jun",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    },
+    {
+     "kind": "vwop_m",
+     "rows": 738,
+     "first": "1963-07",
+     "last": "2024-12",
+     "n_cols": 6
+    }
+   ],
+   "forbidden_blocks_skipped": 1
+  },
+  "french/beme": {
+   "sha256": "9a701c046c81aea43627fda7dcc4a6a516ccccbf80593da25572f4dc0b5e7b5d",
+   "bytes": 219193,
+   "crsp": "202608",
+   "inner": "Portfolios_Formed_on_BE-ME.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 19
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 100,
+     "first": "1927",
+     "last": "2026",
+     "n_cols": 19
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 100,
+     "first": "1927",
+     "last": "2026",
+     "n_cols": 19
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "VSPRD(U16) BE/ME 연 절 Hi 30 · Lo 30",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/beme": {
+   "sha256": "7c61ed44cf3173cda1d3556eb643128306fd5a6090e49371aaac002f4fa94333",
+   "bytes": 213142,
+   "crsp": "202412",
+   "inner": "Portfolios_Formed_on_BE-ME.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "vw_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 19
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/beme_xd": {
+   "sha256": "a3a120e10b4d99871f7fec04c097d84b0ac00c755e47b7ad264c85964943ce2d",
+   "bytes": 219114,
+   "crsp": "202608",
+   "inner": "Portfolios_Formed_on_BE-ME_Wout_Div.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_Wout_Div_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 19
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 19
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 100,
+     "first": "1927",
+     "last": "2026",
+     "n_cols": 19
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 100,
+     "first": "1927",
+     "last": "2026",
+     "n_cols": 19
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "VSPRD(U16) 배당 제외 VW 가격 비",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/beme_xd": {
+   "sha256": "1edaaeaccf30e5d7d87f966744bbea538a955db268dff9926cd5ad97129a8c54",
+   "bytes": 213238,
+   "crsp": "202412",
+   "inner": "Portfolios_Formed_on_BE-ME_Wout_Div.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/Portfolios_Formed_on_BE-ME_Wout_Div_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "vw_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "ew_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 19
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 19
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 19
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/ind30": {
+   "sha256": "8380fadbf9b1eab98ecda389c3d4f0d62756e81b8a69a639d1e8a1331a10722a",
+   "bytes": 314316,
+   "crsp": "202608",
+   "inner": "30_Industry_Portfolios.csv",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/30_Industry_Portfolios_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 30
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 30
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 30
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 30
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 30
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 30
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 101,
+     "first": "1926",
+     "last": "2026",
+     "n_cols": 30
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 101,
+     "first": "1926",
+     "last": "2026",
+     "n_cols": 30
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "DISP(U08) 30 산업 월 VW 수익 · 기업 수",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/ind30": {
+   "sha256": "69760c5346e9f58e87e95d79daeb54ee04f8d7739e08ffd41aa9531dfdf994a5",
+   "bytes": 309007,
+   "crsp": "202412",
+   "inner": "30_Industry_Portfolios.CSV",
+   "origin": "copy:ubatch_cache",
+   "pinned_at": "2026-09-26T12:15:20Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/30_Industry_Portfolios_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 30
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 30
+    },
+    {
+     "kind": "vw_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 30
+    },
+    {
+     "kind": "ew_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 30
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 30
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 30
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 30
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 30
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  },
+  "french/ind49": {
+   "sha256": "16b3f20bf5bd1db8f5cd7a1b29f5cab1350eb0d5106c5309f77a6629590b1c0e",
+   "bytes": 489433,
+   "crsp": "202608",
+   "inner": "49_Industry_Portfolios.csv",
+   "origin": "copy:scout",
+   "pinned_at": "2026-09-26T12:15:21Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/49_Industry_Portfolios_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 49
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 49
+    },
+    {
+     "kind": "vw_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 49
+    },
+    {
+     "kind": "ew_a",
+     "rows": 99,
+     "first": "1927",
+     "last": "2025",
+     "n_cols": 49
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 49
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1202,
+     "first": "1926-07",
+     "last": "2026-08",
+     "n_cols": 49
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 101,
+     "first": "1926",
+     "last": "2026",
+     "n_cols": 49
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 101,
+     "first": "1926",
+     "last": "2026",
+     "n_cols": 49
+    }
+   ],
+   "forbidden_blocks_skipped": 0,
+   "use": "T-MOM-IND 쌍둥이(L French 49 산업)",
+   "license": "French: 문구 없음 — 출처 표기 · 원자료 재게시 안 함(캐시만 · D1)"
+  },
+  "french@2024-12/ind49": {
+   "sha256": "1226aa3764ac454bac9509e57a8cbe99882ef3009aa2d3d99f613d4fdcb1f796",
+   "bytes": 481229,
+   "crsp": "202412",
+   "inner": "49_Industry_Portfolios.CSV",
+   "origin": "live Thu, 22 May 2025 18:59:53 GMT",
+   "pinned_at": "2026-09-26T12:15:23Z",
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp_202412/49_Industry_Portfolios_CSV.zip",
+   "blocks": [
+    {
+     "kind": "vw_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 49
+    },
+    {
+     "kind": "ew_m",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 49
+    },
+    {
+     "kind": "vw_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 49
+    },
+    {
+     "kind": "ew_a",
+     "rows": 98,
+     "first": "1927",
+     "last": "2024",
+     "n_cols": 49
+    },
+    {
+     "kind": "nfirms",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 49
+    },
+    {
+     "kind": "avgsize",
+     "rows": 1182,
+     "first": "1926-07",
+     "last": "2024-12",
+     "n_cols": 49
+    },
+    {
+     "kind": "sum_ratio",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 49
+    },
+    {
+     "kind": "vwavg_a",
+     "rows": 99,
+     "first": "1926",
+     "last": "2024",
+     "n_cols": 49
+    }
+   ],
+   "forbidden_blocks_skipped": 0
+  }
+ },
+ "vd1": {
+  "n": 518,
+  "digest": "1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c",
+  "fetched_first": "2026-09-26T12:26:57Z",
+  "fetched_last": "2026-09-26T12:37:17Z",
+  "source": "yfinance history(period='max', auto_adjust=False, actions=True) · Close · Dividends · Stock Splits",
+  "license": "yfinance: 개인 사용 — 캐시만(D1)",
+  "rule": "sha256(«티커 \\t sha256 \\n» 을 티커 차례로)"
+ },
+ "companyfacts_pin": {
+  "files": 815,
+  "digest": "c1406b38c9b7965ff32defc4c4664864a8adf4e30e53482302e60b6ee7a0d655",
+  "fxv_manifest_match": 815,
+  "pinned_at": "2026-09-26T12:25:01Z",
+  "rule": "sha256(«CIK \\t 내용 sha256 \\n» 을 CIK 차례로)"
+ },
+ "lit_open": {
+  "file": "data/_vb_lit_open.json",
+  "sha256": "3d4cefb57f7b2a38e429ede78de39e0b6238cd069867c7aabdca77c8651de926"
+ },
+ "cache_identity": {
+  "file": "<캐시>/meta/cache_id.txt",
+  "sha256": "745546b63f8cc66c0e5c61583a44e5f0ac3c36d635d6d13b5965f1c4eaace0a5",
+  "rule": "v_run.frozen_check — 캐시 표지 SHA 가 이 값이어야 굽는다(새 캐시로 돌려 다시 굽는 길을 막는다)"
+ },
+ "gspc_pin": {
+  "file": "<캐시>/raw/yf/_GSPC.csv",
+  "sha256": "8ecffb5a89460fedfd9c5f694f52a80952197b9f1b21bb5fcfd931f50318e05d",
+  "origin": "copy:tbatch_cache",
+  "meta_sha_same": true,
+  "use": "L 층 사건(급락 다리 · 반등 지그재그 · v_tests.events_L)"
+ },
+ "wide_ledger": {
+  "file": "<캐시>/derived/wide_ledger.json.gz",
+  "sha256": "4765b3f61c0e87227e4d6a0ecc0fc2b6bd3ff79d82d5a03d2ae8b486d182c899",
+  "rule": "v_fund.build_wide 가 원 companyfacts 핀 사본에서 지은 파생(최초 제출 규칙) — 굽기는 같은 파일로"
+ },
+ "market_cap_anchor": {
+  "rule": "명세 data_plan.market_cap_rule.anchor_check — 각 |ME/알려진 값 − 1| ≤ 0.10 · 평균 절대오차 ≤ 0.05(자료 타당성 · 수익 아님)",
+  "gate_ok": true,
+  "mae": 0.0182,
+  "sec_cover_reference_ok": true,
+  "sec_cover_reference_mae": 0.0105,
+  "rows": [
+   {
+    "t": "AAPL",
+    "m": "2021-11",
+    "known_T": 2.65,
+    "spec_T": 2.65,
+    "repaired": false,
+    "calc_T": 2.7369,
+    "err": 0.0328,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 2.6976,
+    "sec_ref_asof": "2022-01-14",
+    "err_vs_sec": 0.0146
+   },
+   {
+    "t": "NVDA",
+    "m": "2024-05",
+    "known_T": 2.7,
+    "spec_T": 2.7,
+    "repaired": false,
+    "calc_T": 2.7014,
+    "err": 0.0005,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 2.697,
+    "sec_ref_asof": "2024-05-24",
+    "err_vs_sec": 0.0016
+   },
+   {
+    "t": "MSFT",
+    "m": "2021-11",
+    "known_T": 2.39,
+    "spec_T": 2.39,
+    "repaired": false,
+    "calc_T": 2.4857,
+    "err": 0.04,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 2.4821,
+    "sec_ref_asof": "2021-10-21",
+    "err_vs_sec": 0.0015
+   },
+   {
+    "t": "AMZN",
+    "m": "2021-06",
+    "known_T": 1.73,
+    "spec_T": 1.73,
+    "repaired": false,
+    "calc_T": 1.7338,
+    "err": 0.0022,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 1.7422,
+    "sec_ref_asof": "2021-07-21",
+    "err_vs_sec": -0.0048
+   },
+   {
+    "t": "TSLA",
+    "m": "2021-11",
+    "known_T": 1.1,
+    "spec_T": 1.1,
+    "repaired": false,
+    "calc_T": 1.1264,
+    "err": 0.024,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 1.1496,
+    "sec_ref_asof": "2021-10-21",
+    "err_vs_sec": -0.0202
+   },
+   {
+    "t": "WMT",
+    "m": "2019-06",
+    "known_T": 0.31,
+    "spec_T": 0.31,
+    "repaired": false,
+    "calc_T": 0.3254,
+    "err": 0.0497,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 0.3154,
+    "sec_ref_asof": "2019-06-05",
+    "err_vs_sec": 0.0316
+   },
+   {
+    "t": "JNJ",
+    "m": "2017-10",
+    "known_T": 0.3745,
+    "spec_T": 0.44,
+    "repaired": true,
+    "calc_T": 0.3822,
+    "err": 0.0205,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 0.3745,
+    "sec_ref_asof": "2017-10-27",
+    "err_vs_sec": 0.0205
+   },
+   {
+    "t": "KO",
+    "m": "2019-06",
+    "known_T": 0.22,
+    "spec_T": 0.22,
+    "repaired": false,
+    "calc_T": 0.2189,
+    "err": -0.005,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 0.2177,
+    "sec_ref_asof": "2019-07-22",
+    "err_vs_sec": 0.0054
+   },
+   {
+    "t": "GE",
+    "m": "2017-10",
+    "known_T": 0.1748,
+    "spec_T": 0.2,
+    "repaired": true,
+    "calc_T": 0.1745,
+    "err": -0.0015,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 0.1748,
+    "sec_ref_asof": "2017-09-30",
+    "err_vs_sec": -0.0016
+   },
+   {
+    "t": "GE",
+    "m": "2022-12",
+    "known_T": 0.091,
+    "spec_T": 0.091,
+    "repaired": false,
+    "calc_T": 0.0916,
+    "err": 0.0061,
+    "how": "vd1",
+    "kind": "gate",
+    "sec_ref_T": 0.0913,
+    "sec_ref_asof": "2023-01-31",
+    "err_vs_sec": 0.0031
+   },
+   {
+    "t": "XOM",
+    "m": "2014-12",
+    "known_T": 0.39,
+    "spec_T": 0.39,
+    "repaired": false,
+    "calc_T": 0.3945,
+    "err": 0.0115,
+    "how": "vd1",
+    "kind": "report",
+    "sec_ref_T": null,
+    "sec_ref_asof": null,
+    "err_vs_sec": null
+   },
+   {
+    "t": "GOOGL",
+    "m": "2026-04",
+    "known_T": 1.4,
+    "spec_T": 1.4,
+    "repaired": false,
+    "calc_T": 4.6515,
+    "err": 2.3225,
+    "how": "vd1",
+    "kind": "report",
+    "sec_ref_T": null,
+    "sec_ref_asof": null,
+    "err_vs_sec": null
+   }
+  ],
+  "table": "v_px_split.anchor_table(shares_split.ANCHOR 사본 + ANCHOR_REPAIRS)",
+  "repairs": [
+   {
+    "t": "GE",
+    "m": "2017-10",
+    "known_T": 0.1748,
+    "spec_T": 0.2,
+    "source": "SEC 10-Q(2017 Q3 · 접수번호 0000040545-17-000073 · 2017-10-30 제출) 표지 발행주식수 8,672,085,000주(2017-09-30 기준) × NYSE 2017-10-31 종가 $20.16(분할 · 분사 조정 전) = 174.8B$ · 옛 표 0.20"
+   },
+   {
+    "t": "JNJ",
+    "m": "2017-10",
+    "known_T": 0.3745,
+    "spec_T": 0.44,
+    "source": "SEC 10-Q(2017 Q3 · 접수번호 0000200406-17-000052 · 2017-11-02 제출) 표지 발행주식수 2,686,520,050주(2017-10-27 기준) × NYSE 2017-10-31 종가 $139.41 = 374.5B$ · 옛 표 0.44"
+   }
+  ],
+  "note": "알려진 값 = V 소유 앵커 표(v_px_split.anchor_table — shares_split.ANCHOR 사본 · 출처 표기 없음 · AUDIT-2026-09-20-SHARES2 §4 — 에서 JNJ · GE 2017-10 두 칸만 SEC 10-Q 표지 발행주식수 × NYSE 월말 원 종가로 고쳤다 · repairs 에 출처 · 검토 고침). SEC 참고 = 원 companyfacts 핀 사본의 표지 발행주식(dei:EntityCommonStockSharesOutstanding · 그달 말에 가장 가까운 기준일) × 그달 말 원 가격(V-D1) — 관문 밖 대조용."
+ }
+}
