@@ -759,7 +759,8 @@ class EndToEnd(unittest.TestCase):
             [R.n1_of(P, C["cards"]["R2-LAZYRF"]["CH"]["months"], t) for t in ms])))    # 밀도는 0 인 달도 센다
 
     def test_member_world_ignores_prices(self):
-        """R2 경계 세계 = 날것 월말 명단(가격 무관) · 금융·섹터 모름·FPI·못 푼 그룹·재배정 티커 마지막 멤버월은 뺀다."""
+        """R2 경계 세계 = 날것 월말 명단(가격 무관) · 금융·FPI·못 푼 그룹·재배정 티커 마지막 멤버월은 뺀다 · 섹터 모름은 남긴다(세기만 ·
+        r_stagem.boundary_world 와 같다 · 2026-09-26 등록 전 정렬)."""
         class FW:
             W = {"lists": {"spx": {"2015-01": ["AAA", "BBB", "FIN", "FPI"]}, "ndx": {"2015-01": ["AAA", "CCC", "NOS", "RE"]}},
                  "reassigned": {"RE": {"last": "2015-01"}}}
@@ -773,9 +774,9 @@ class EndToEnd(unittest.TestCase):
 
             def get(self, t, ym, k=None):
                 return {"AAA": {"gid": "g1", "fpi": 0}, "BBB": {"gid": "g2", "fpi": None}, "FPI": {"gid": "g3", "fpi": 1},
-                        "RE": {"gid": "g4", "fpi": 0}}.get(t)
+                        "RE": {"gid": "g4", "fpi": 0}, "NOS": {"gid": "g5", "fpi": 0}}.get(t)
         w, tl = R.member_world(FW(), IM(), ["2015-01"])
-        self.assertEqual(w, {("g1", "2015-01"), ("g2", "2015-01")})
+        self.assertEqual(w, {("g1", "2015-01"), ("g2", "2015-01"), ("g5", "2015-01")})
         self.assertEqual((tl["fin"], tl["nosec"], tl["fpi"], tl["unresolved"], tl["reassigned_last"]), (1, 1, 1, 1, 1))
 
     def test_provenance(self):
