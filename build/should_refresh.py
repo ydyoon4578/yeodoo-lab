@@ -80,6 +80,9 @@ BACKUP_CRONS = {
     # 🚨 2026-09-18 — refresh-stocks 재시도 슬롯(11:15 KST). 야후가 전날 봉을 늦게 주는 날,
     #   백업(06:42 — 2026-09-22 전엔 07:42)도 같이 헛받을 수 있다. --session 판정이 «뒤처졌을 때만» 돌린다.
     "15 2 * * 1-6": "refresh-stocks.yml",
+    # 🚨 2026-09-26 — refresh-sentiment 재시도 슬롯(11:25 KST). 본 슬롯이 00시 UTC 뒤에 돌면 야후 일봉 종가가
+    #   비어 as_of 가 T-1 로 나간다 — --session 판정이 «뒤처졌을 때만» 다시 받는다.
+    "25 2 * * 1-6": "refresh-sentiment.yml",
 }
 
 
