@@ -146,9 +146,12 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
         return "%04d-%02d" % (y, mo)
 
     # 분기별 목표 바스켓: 컨빅션(운용사 포트폴리오 내 비중) × 컨센서스(보유 운용사 수)
-    # 🚨 2026-09-23 — 퀀트·분산 축(refresh_13f.NO_OVERLAP)은 컨센서스에서 뺀다(2026-08-19 사용자 결정의 누락분).
-    #   유니버스 거의 전부를 들고 있어 보유 운용사 수를 모든 종목에 똑같이 +1 한다.
-    from refresh_13f import NO_OVERLAP                # build/ 는 모듈 머리에서 이미 sys.path 에 있다
+    # 🚨 refresh_13f.NO_OVERLAP(겹침·합의에서 빼는 곳)은 컨센서스에서도 뺀다.
+    #   2026-09-23 — 처음에는 퀀트·분산 축만 뺐다(2026-08-19 사용자 결정의 누락분). 유니버스 거의 전부를 들고 있어
+    #   보유 운용사 수를 모든 종목에 똑같이 +1 한다.
+    #   2026-09-27 — 사용자 결정 «c»: 가치·성장 축만 센다(19곳을 뺀다). 등록 굽기(GURUFUND) 뒤에 옮겼다 —
+    #   그래서 이 곡선은 «명단 변경 뒤 소급» 이다(옛 분기도 오늘 정한 명단으로 센다 · 아래 레코드 note).
+    from refresh_13f import NO_OVERLAP, NO_OVERLAP_PREV, AXES   # build/ 는 모듈 머리에서 이미 sys.path 에 있다
     _nov = {str(c) for c in NO_OVERLAP}
     basket = {}
     for q, mm in (G.get("holdings") or {}).items():
@@ -269,8 +272,13 @@ def guru_clone(RF, TOPN=10, MIN_MGR=8):
                "운용사별 EDGAR 제출을 직접 읽으면 제출당 44KB라 100배 가볍다 — 그 길로 돌렸다.",
         "note": "제출 마감 45일 지연을 반영했다. 대조군은 같은 종목 풀 동일가중이라 "
                 "'고르기'의 값어치만 남는다. 13F는 롱 미국주식만 담아 실제 포트폴리오가 아니다. "
-                "베타 %s (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치)."
-                % ("%.2f" % beta if beta else "—"),
+                "베타 %s (아카이브가 '초과수익 전부 베타'라 적은 대목의 실측치). "
+                # 🚨 2026-09-27 명단 변경 표지 — 보유 운용사 수를 새 명단으로 옛 분기까지 거슬러 센다(설계 D1).
+                "명단 변경 뒤 소급 — 보유 운용사 수는 2026-09-27(사용자 결정 «c»)에 정한 %s 축으로 옛 분기까지 "
+                "거슬러 센다. 그때 이 명단이 정해져 있던 것이 아니다. 옛 명단(퀀트·분산 %d곳만 뺌)으로 잰 옛 수치는 "
+                "물려받지 않는다."
+                % ("%.2f" % beta if beta else "—",
+                   " · ".join(lab for _k, lab, _d, ov, _c in AXES if ov), len(NO_OVERLAP_PREV)),
         # ⚠ as_of 가 start/end 와 다를 수 있다 — 일부러다. 성과는 전월말까지, 명단은 오늘.
         "holdings": {"kind": "xsec", "as_of": hold_m, "n": len(hold_now),
                      "tickers": sorted(hold_now),

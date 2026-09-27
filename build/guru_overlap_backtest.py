@@ -43,13 +43,35 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # 미묘하게 갈리고, 그때 어느 쪽이 맞는지 아무도 모른다.
 from guru17_backtest import (ann_from_monthly, capm, add_months, month_end,
                              load, LAG_MONTHS, holm_bh)
-# 🚨 2026-09-23 — 겹침은 퀀트·분산 축(refresh_13f.AXES 의 overlap=False)을 **세지 않는다**.
-#   2026-08-19 사용자 결정(«퀀트는 겹침에서 제외»)이 화면(refresh_13f)에만 들어가고 여기엔 빠져 있었다.
-#   그 사이 이력에 들어온 AQR·고담·르네상스는 유니버스 518종 중 508·501·281종을 들고 있어, «3곳 이상»의
-#   상당수가 퀀트 셋만으로 채워졌다(2026-08 신규 합의 27종 전부 퀀트가 끼고 5종은 퀀트뿐).
+# 🚨 겹침은 refresh_13f.NO_OVERLAP(AXES 의 overlap=False 축)을 **세지 않는다**.
+#   2026-09-23 — 처음 뺀 것은 퀀트·분산 축이다. 2026-08-19 사용자 결정(«퀀트는 겹침에서 제외»)이 화면(refresh_13f)에만
+#   들어가고 여기엔 빠져 있었다. 그 사이 이력에 들어온 AQR·고담·르네상스는 유니버스 518종 중 508·501·281종을 들고
+#   있어, «3곳 이상»의 상당수가 퀀트 셋만으로 채워졌다(2026-08 신규 합의 27종 전부 퀀트가 끼고 5종은 퀀트뿐).
+#   2026-09-27 — 사용자 결정 «c»: 13F 가 본업인 가치·성장 축만 센다(행동주의·매크로·부실채권·크레딧·재단·퀀트 19곳을 뺀다).
+#   화면은 그날 옮겼고, 이 백테스트는 등록 굽기(PREREG-2026-09-27-GURUFUND)가 끝난 뒤 옮겼다(refresh_13f 의 NO_OVERLAP 주석).
+#   → 여기서 굽는 곡선은 전부 **«명단 변경 뒤 소급»** 이다 — 옛 분기도 2026-09-27 에 정한 명단으로 거슬러 센다(아래 ROSTER).
 #   명단·축의 정본은 refresh_13f 하나다 — 여기서 CIK 를 다시 적지 않는다.
-from refresh_13f import NO_OVERLAP
+from refresh_13f import NO_OVERLAP, NO_OVERLAP_PREV, AXES, OVERLAP_OFF_WHY, GURUS
 NO_OVERLAP_S = {str(c) for c in NO_OVERLAP}
+# 🚨 명단 변경 표지(2026-09-27 · GURUFUND 등록 §5-1 · 설계 D1 의 적용 방식). 화면·통합 목록이 이 칸을 읽는다 —
+#   strategy_index 는 이 칸이 있으면 겹침 카드를 «측정만» 으로 새로 시작하고(옛 명단 때 등급을 물려받지 않는다),
+#   guru.html 전략 탭은 곡선에 «명단 변경 뒤 소급» 을 적는다.
+#   ⚠ 소급이라는 말은 «그때 이 명단이 정해져 있지 않았다» 는 뜻이다. 공시일 선견 차단(lookahead_guard)은 그대로다.
+#   ⚠ 옛 명단(퀀트·분산 3곳만 뺌)으로 잰 옛 수치는 git 기록에 있다 — 여기서 다시 재지 않는다(재면 팔이 하나 는다).
+ROSTER = {
+    "since": "2026-09-27",
+    "retro": "명단 변경 뒤 소급",
+    "on": [lab for _k, lab, _d, ov, _c in AXES if ov],
+    "n_on": sum(1 for c in GURUS if c not in NO_OVERLAP),
+    "n_off": sum(1 for c in GURUS if c in NO_OVERLAP),
+    "prev_rule": "퀀트·분산 %d곳만 뺌" % len(NO_OVERLAP_PREV),
+    "note": ("2026-09-27(사용자 결정 «c»)에 겹침을 세는 곳을 %s 축 %d곳으로 바꾼 뒤, "
+             "옛 분기까지 같은 명단으로 거슬러 센 곡선이다(명단 밖으로 나간 이력 전용 곳의 그때 보유는 센다). "
+             "그때 이 명단이 정해져 있던 것이 아니다. 명단은 성과가 아니라 정의로 정했고, 이 명단으로 잰 수익은 "
+             "등록 GURUFUND 가 먼저 한 번 쟀다. 옛 명단(퀀트·분산 %d곳만 뺌)으로 잰 옛 수치·등급은 물려받지 않는다."
+             % (" · ".join(lab for _k, lab, _d, ov, _c in AXES if ov),
+                sum(1 for c in GURUS if c not in NO_OVERLAP), len(NO_OVERLAP_PREV))),
+}
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -104,7 +126,7 @@ def counts_by_quarter(G, mi, P, months):
         cnt, used, skipped = {}, 0, 0
         for cik, raw in H[q].items():
             if cik in NO_OVERLAP_S:
-                continue                        # 퀀트·분산 축 — 겹침에서 뺀다(위 import 주석)
+                continue                        # 가치·성장 밖 축 — 겹침에서 뺀다(위 import 주석)
             fd = (FILED.get(q) or {}).get(cik)
             if fd and fd > month_end(rm):
                 skipped += 1                    # 그때는 아직 공시 전이다
@@ -593,8 +615,17 @@ def main() -> int:
             "rf": "FRED DGS3MO 월율, 샤프·알파는 초과수익 기준",
             "costs": "거래비용·세금 0. 회전율을 함께 실어 크기를 가늠하게 한다",
             "overlap_excluded": sorted((G.get("names") or {}).get(c, c) for c in NO_OVERLAP_S),
-            "overlap_excluded_note": "퀀트·분산 축은 수천 종목을 들고 있어 모든 종목의 겹침 수를 +1 하므로 세지 않는다",
+            # 🚨 2026-09-27 — 빼는 사유가 퀀트 한 가지에서 축 다섯으로 늘었다. 사유는 refresh_13f 가 축마다 싣는
+            #   글(OVERLAP_OFF_WHY — 화면 guru.json 의 why_off 와 같은 원천)을 그대로 쓴다. 여기서 따로 적지 않는다.
+            "overlap_excluded_note": (
+                "2026-09-27 사용자 결정 «c» — 13F 에 직접 고른 미국 주식 롱이 본업 그대로 실리는 축(%s)만 센다. "
+                "성과가 아니라 정의로 정했다. 빼는 축: %s. 그 전에는 퀀트·분산 %d곳만 뺐다."
+                % (" · ".join(lab for _k, lab, _d, ov, _c in AXES if ov),
+                   " / ".join("%s — %s" % (lab, OVERLAP_OFF_WHY[k]) for k, lab, _d, ov, _c in AXES if not ov),
+                   len(NO_OVERLAP_PREV))),
+            "roster_note": "%s — %s" % (ROSTER["retro"], ROSTER["note"]),
         },
+        "roster": ROSTER,
         "limits": [
             "명단 운용사가 **사후 선택**이다 — 2026년 시점의 유명세로 고른 곳들이고 폐업·청산한 "
             "곳이 거의 없다. 어떤 대조군도 이 편향을 상쇄하지 못한다.",
