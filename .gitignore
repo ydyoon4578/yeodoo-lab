@@ -267,3 +267,9 @@ dstk_cache/
 #   명세(data/_egstep_manifest.json)는 «_egstep_» 라 걸리지 않는다.
 _egstepout*
 egstep_cache/
+
+# Q06 방어 스텝 방아쇠 기전 검정(PREREG-*-Q06HOLD · 랩이 안 본 창) — 굽기 산출(_q06holdout.json · _q06holdout.public.json · _q06holdout.run.json ·
+#   _q06holdout.started · _q06holdout.internal.md)이나 캐시 사본(q06hold_cache)이 작업 트리에 복사돼도 쓸려 들지 않게.
+#   명세(data/_q06hold_manifest.json)는 «_q06hold_» 라 걸리지 않는다.
+_q06holdout*
+q06hold_cache/

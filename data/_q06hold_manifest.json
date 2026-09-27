@@ -1,0 +1,126 @@
+{
+ "kind": "q06hold_manifest",
+ "note": "Q06 방어 스텝 방아쇠 기전 검정(Q06HOLD) 명세 — 해시만(값 없음). 러너 판 점검이 이 파일을 등록 커밋 판과 대조한다.",
+ "prereg": "build/PREREG-2026-09-28-Q06HOLD.md",
+ "engine": "build/q06hold.py",
+ "runner": "build/q06hold_run.py",
+ "code_sha256_lf": {
+  "build/q06hold.py": "6c33ca82179e5abdbb51b9e0dbcde1b0246c857c09b1bf5c1979bb34008027d1",
+  "build/q06hold_run.py": "5c42fbbb70bf20c5edc29387aeae1f0e35bbeb76fe41e8f520105e4b42896eee"
+ },
+ "reused_blobs": {
+  "build/x_adapter.py": "897c4c94b22e415f38e32ac47bf8037025f28cb2"
+ },
+ "spdr_long": {
+  "source": "yfinance Ticker.history(period='max', auto_adjust=True, actions=False) · Close · 저장소 밖 캐시에만(값은 싣지 않는다)",
+  "tickers": [
+   "XLB",
+   "XLE",
+   "XLF",
+   "XLI",
+   "XLK",
+   "XLP",
+   "XLU",
+   "XLV",
+   "XLY"
+  ],
+  "end": "2026-08-31",
+  "digest_rule": "sha256(티커\\t파일 sha256\\n · 티커 차례)",
+  "digest": "4a01c8502dcf17fdf87f169fb7111046419b551b4a0699d9bf68e4be71fc4f2b",
+  "n_files": 9
+ },
+ "roots": {
+  "root": {
+   "code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+   "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+   "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
+   "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+   "p3": {
+    "data/_q07_ltd_fits.json": "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",
+    "data/_eg_q5_scores_pitgics.json": "21f43d226463f3978982acc077fbca1576780f33",
+    "data/_eg_q5_scores_pitgics_pre.json": "cb96d4bf7cd35786c0b69d369df0a317db137373",
+    "data/_eg_q5_scores.json": "2868509a502b5104e49d378457451f80eb694d17",
+    "data/pit_gics_sectors.json": "4b20f0e6a02595ec81db4ceaa877afe5628201e8",
+    "data/pit_gics.json": "f4163293cc92f1386ef5c5f31521d6d302a5c228",
+    "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f",
+    "data/_eg_best.json": "cc58f30c84886554c76fecf6df5dc85974eb09f1",
+    "data/_eg30plus.json": "c205f1365e924ebf097b200042133369d7de3f3d"
+   },
+   "frozen_blobs": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "pit_panel": "ae044a5d3b8af4b6b8aee12d3879f5c97d4885fb",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "rally_pattern": "25bbe121aec76be3a54c62a5bb5567c63666cbfa",
+    "index_members": "7850ef55f5b89583b24e190b250a14c897c93395",
+    "mech_episodes": "161080fd9244c060a7a94c559044de3e3ddcc27c"
+   },
+   "engine_asserts": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+    "q_corrsurp": "d32a270e2db0682f8b940ffe647607d15b57ba52",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea"
+   },
+   "builder": "x_adapter.build_root"
+  },
+  "vroot": {
+   "data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+   "v_frozen": {
+    "v_cards": "aadaf24f173579d3f3146014aa150a4ca07eb0a5",
+    "v_core": "bdba648f1d790748cd5008ceeea3c5eee9d733c8",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+    "v_pit": "5983b9902b106a2b234db05a397e9ce0b73fb689",
+    "v_fund": "2d8093f0009c09b05f597e07eea10f53c8d18b8e",
+    "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
+    "v_cond": "d25914deb89490410ea2dca56b5999356628821e",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628"
+   },
+   "dbook_frozen": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a"
+   },
+   "engine_asserts": {
+    "v_cards": "aadaf24f173579d3f3146014aa150a4ca07eb0a5",
+    "v_core": "bdba648f1d790748cd5008ceeea3c5eee9d733c8",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+    "v_pit": "5983b9902b106a2b234db05a397e9ce0b73fb689",
+    "v_fund": "2d8093f0009c09b05f597e07eea10f53c8d18b8e",
+    "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
+    "v_cond": "d25914deb89490410ea2dca56b5999356628821e",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "x_adapter": "897c4c94b22e415f38e32ac47bf8037025f28cb2"
+   },
+   "builder": "x_adapter.build_vroot",
+   "children": "q06hold --child f0v · leg(French) — root 자식 st 가 vroot 의 data/_qbatch.json(배치 Q 기록 신호 달)을 읽는다",
+   "read_files_blob": {
+    "data/_vb_manifest.json": "06fee3c1ded9ca85cdd0dfdc8e237f9a06d339ee",
+    "data/_qbatch.json": "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7"
+   },
+   "french": "v_data.l_proxy(\"V02\") · ff3(\"m\") — French 판 SHA · CRSP 202608 은 data/_vb_manifest.json(위 blob)이 핀한다"
+  }
+ },
+ "start_tag": "q06hold-started",
+ "git_mark": "q06hold_started",
+ "forward": "없음 — 사용자 2026-09-27 «미래 일정 다 꺼»"
+}
