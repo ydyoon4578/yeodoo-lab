@@ -15,19 +15,11 @@ name: QFWD forward ledger
 #   읽지 않으므로, 사이트의 다른 결함이 봉인한 결정 줄을 버리게 하지 않는다(2026-09-25 검토).
 # ⚠ 이 파일도 핀이다(pins.json · qfwd_files). 고치는 길은 수정 등록 고리(qfwd_adapter.py amend)뿐이다 — 러너 · 액션은 판을 박아
 #   강제 편집을 줄인다(ubuntu-24.04 · 액션은 커밋 SHA).
+# 🚨 2026-09-27 멈춤 — 사용자 지시 «이런 불필요한 미래 일정들은 다 꺼» · «QFWD까지 모두 끄라».
+#   자동 실행(workflow_run · schedule 크론 일곱)을 뺐다 — 수동 실행(workflow_dispatch)만 남는다.
+#   원장은 첫 결정(2026-09-30 종가) 전에 멈췄으므로 기록된 결정 줄은 없다. 되살리려면 이 커밋을 되돌리면
+#   되지만, 멈춘 동안의 결정 달은 소급해 채울 수 없다(FF0 · 등록 문서 PREREG-2026-09-26-QFWD 는 그대로 둔다).
 on:
-  workflow_run:
-    workflows: ["Refresh stock signals (yfinance)", "Refresh asset panel & archive re-check"]
-    types: [completed]
-    branches: [main]
-  schedule:
-    - cron: '40 23 * * *'   # 08:40 KST — d_m 마감 뒤(EDT · EST 모두) 첫 백업
-    - cron: '40 2 * * *'    # 11:40 KST
-    - cron: '40 5 * * *'    # 14:40 KST
-    - cron: '40 8 * * *'    # 17:40 KST
-    - cron: '40 10 * * *'   # 19:40 KST — 2시간 반 늦게 떠도 서머타임 개장(13:30 UTC) 전
-    - cron: '40 15 * * *'   # 00:40 KST — QF06 마감(19:30 · 20:30 UTC) 전 백업
-    - cron: '40 16 * * *'   # 01:40 KST — QF06 마감 전 마지막 백업
   workflow_dispatch:
     inputs:
       mode:
