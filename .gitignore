@@ -261,3 +261,9 @@ wbatch_cache/
 #   캐시 사본(dstk_cache)이 작업 트리에 복사돼도 쓸려 들지 않게. 명세(data/_dstk_manifest.json)는 «_dstk_» 라 걸리지 않는다.
 _dstkout*
 dstk_cache/
+
+# EG30 상태 조건 스텝 역할 검정(PREREG-*-EGSTEP · 사용자 2026-09-27 «EG30 코어 + 금리 스텝 + 방어 스텝 성과 괜찮아?») — 굽기 산출(_egstepout.json ·
+#   _egstepout.public.json · _egstepout.run.json · _egstepout.started)이나 캐시 사본(egstep_cache)이 작업 트리에 복사돼도 쓸려 들지 않게.
+#   명세(data/_egstep_manifest.json)는 «_egstep_» 라 걸리지 않는다.
+_egstepout*
+egstep_cache/
