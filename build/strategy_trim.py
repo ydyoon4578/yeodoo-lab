@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r"""전략(액티브 틸트) 비중 조정 주문 계산기 — 2Z30 / 2A81.
+r"""전략(액티브 틸트) 비중 조정 주문 계산기 — 운용 펀드 둘(펀드코드는 build/_private/funds.json).
 
 화면(portfolio.html)의 «전략(%)» 은 소수 2자리 반올림 표시값이다. 그걸로 역산하면
 종목당 수십 주가 틀어진다(MU 와 LITE 는 화면엔 0.11·0.12 로 달라 보이지만 실제로는
@@ -64,7 +64,7 @@ def collect(fund):
             e["qty"] += r["qty"]
             e["val"] += r["val_krw"]
 
-    asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in P.FUNDS if f in hold}
+    asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in P.funds() if f in hold}
     all_tk = {r["ticker"] for f in asof_by_fund
               for r in hold[f][asof_by_fund[f]] if r["asset"] == "1" and r["ticker"]}
     cons, seed = P.load_db(asof_by_fund, all_tk)
@@ -74,8 +74,8 @@ def collect(fund):
         uni |= set(_cmap)
     P.load_web(uni)
 
-    # 🚨 원장은 펀드가 아니라 «지수»로 갈린다(FUNDS 두 번째 칸) — main() 과 같은 기준.
-    idx = dict((f, i) for f, i, _s, _l in P.FUNDS)[fund]
+    # 🚨 원장은 펀드가 아니라 «지수»로 갈린다(funds() 두 번째 칸) — main() 과 같은 기준.
+    idx = dict((f, i) for f, i, _s, _l in P.funds())[fund]
     strat_q = {}
     for t in seed:
         if t["index"] != idx:
@@ -127,7 +127,8 @@ def read_csv_map(path, key_col=0, val_col=1):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fund", default="2Z30")
+    ap.add_argument("--fund", default=None,
+                    help="펀드코드(없으면 build/_private/funds.json 의 default_fund — 로컬 전용)")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--make-plan", metavar="CSV", default="")
     ap.add_argument("--plan", metavar="CSV", default="")
@@ -140,6 +141,7 @@ def main():
                     help="매도대금으로 살 ETF 티커 (예: QQQM)")
     ap.add_argument("--csv", default="", help="주문지 저장")
     a = ap.parse_args()
+    a.fund = a.fund or P.default_fund()
 
     st = collect(a.fund)
     nav, fxh = st["nav"], st["fx"]

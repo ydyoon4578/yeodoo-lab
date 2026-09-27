@@ -22,9 +22,10 @@ exec >>"$LOG" 2>&1
 echo "───── $(date '+%F %T') 시작 ─────"
 
 # DB 도달 가능 여부 먼저 확인 — tailnet 밖이면 조용히 종료(에러 스팸 방지)
-HOST="${YEOUIDO_DB_HOST:-100.88.75.91}"
-if ! nc -z -G 5 "$HOST" 5432 2>/dev/null; then
-  echo "DB($HOST:5432) 도달 불가 — 스킵. 다음 실행의 --backfill 이 이 날짜를 복구한다."
+# 🚨 2026-09-27 — 주소를 여기 적지 않는다(공개 저장소). db_load.py --ping 이 환경변수 ·
+#   ~/.yeouido_db.env · build/_private/db.json(gitignore) · 연구 repo 순으로 찾아 닿는지만 본다.
+if ! python3 build/db_load.py --ping; then
+  echo "DB 도달 불가(또는 접속 정보 없음) — 스킵. 다음 실행의 --backfill 이 이 날짜를 복구한다."
   exit 0
 fi
 

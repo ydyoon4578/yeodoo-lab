@@ -4,7 +4,7 @@
 
 무엇을·왜.
   PIT(시점정합) 검정은 '그때 실제로 지수에 있던 명단'이 있어야 성립한다. 그 명단이
-  오래 **사내 DB(public.index_constituents)** 에서만 왔고, 그래서 data/pit_members.json 이
+  오래 **사내 DB(지수 구성 테이블)** 에서만 왔고, 그래서 data/pit_members.json 이
   gitignore 였다 — 러너가 스스로 만들 수 없어 생존편향 측정이 PC 한 대에 묶여 있었다.
 
   build/refresh_index_history.py 가 위키백과 지수 목록 문서의 **과거 리비전**으로 같은

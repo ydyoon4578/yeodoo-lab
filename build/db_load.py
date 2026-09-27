@@ -4,7 +4,7 @@
 yeouido-lab · Postgres 누적 적재기 (schema: yeodoo)
 =====================================================================
 왜 이런 구조인가
-  GitHub Actions 러너는 Tailscale tailnet 밖이라 100.88.75.91 에 도달할 수 없다.
+  GitHub Actions 러너는 Tailscale tailnet 밖이라 사내 DB 에 도달할 수 없다.
   그래서 사이트 생성기(refresh_*.py)는 DB를 전혀 모르게 두고, 이 로더만
   tailnet 안 머신에서 돌린다. 매 영업일 산출물은 git에 커밋되므로 git 이력이
   곧 일별 아카이브 → 적재 머신이 며칠 꺼져 있어도 --backfill 한 번으로 복구된다.
@@ -22,10 +22,15 @@ yeouido-lab · Postgres 누적 적재기 (schema: yeodoo)
   2순위 ~/.yeouido_db.env          (KEY=VALUE 줄 나열, 저장소 밖)
   3순위 연구 repo의 util/variables.py  (자격증명 단일 출처 — 복제하지 않는다)
         경로는 YEOUIDO_REPO 로 조정, 기본 ~/Project/Yeouido
+  호스트는 환경변수 → ~/.yeouido_db.env → build/_private/db.json 의 host(gitignore · 로컬 전용)
+        → 연구 repo 순이다. 🚨 주소는 이 파일에도 저장소 어디에도 적지 않는다. 사내 테이블 이름도
+        같은 로컬 파일의 tables 에서 읽는다 — table(key).
+  python3 build/db_load.py --ping        # DB 에 닿는지만(주소는 안 찍는다) — db_daily.sh 가 쓴다
 """
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 ⚠·— 출력 시 UnicodeEncodeError 방지
@@ -37,6 +42,31 @@ DATA = os.path.join(ROOT, "data")
 
 # ── 접속 정보 ────────────────────────────────────────────────────────
 ENV_FILE = os.path.expanduser("~/.yeouido_db.env")
+# 공개 저장소에 적으면 안 되는 값(사내 DB 호스트 · 테이블 이름) — git-ignore 된 로컬 파일.
+#   {"host": "<주소>", "tables": {"constituents": "<스키마.테이블>", "trades": "<스키마.테이블>"}}
+#   자격증명은 여기에도 두지 않는다(위 세 곳이 단일 출처다).
+PRIVATE = os.path.join(HERE, "_private", "db.json")
+
+
+def _private():
+    try:
+        with open(PRIVATE, encoding="utf-8") as fh:
+            return json.load(fh) or {}
+    except FileNotFoundError:
+        return {}
+
+
+def table(key):
+    """사내 DB 테이블 이름(«스키마.테이블») — build/_private/db.json 의 tables[key]. 없으면 멈춘다.
+
+    SQL 에 문자열로 끼워 넣으므로 모양을 검사한다(로컬 파일이지만 오타 한 글자가 다른 문장이 되지 않게)."""
+    t = str(((_private().get("tables") or {}).get(key)) or "").strip()
+    if not t:
+        sys.exit(f"✗ 사내 DB 테이블 이름 없음 — {PRIVATE} 의 tables.{key} 를 적을 것"
+                 "(로컬 전용 · gitignore). 테이블 이름은 공개 저장소에 적지 않는다.")
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*", t):
+        sys.exit(f"✗ {PRIVATE} 의 tables.{key} 가 «스키마.테이블» 모양이 아니다")
+    return t
 
 
 def _from_research_repo():
@@ -48,7 +78,8 @@ def _from_research_repo():
     sys.path.insert(0, repo)
     try:
         import util.variables as V           # noqa: WPS433
-        return {"YEOUIDO_DB_NAME": getattr(V, "database", None),
+        return {"YEOUIDO_DB_HOST": getattr(V, "host", None),
+                "YEOUIDO_DB_NAME": getattr(V, "database", None),
                 "YEOUIDO_DB_USER": getattr(V, "user", None),
                 "YEOUIDO_DB_PASS": getattr(V, "password", None)}
     except Exception:
@@ -72,24 +103,29 @@ def _conn_params():
     def g(k, d=None):
         return os.getenv(k) or cfg.get(k) or d
 
-    if not g("YEOUIDO_DB_USER") or not g("YEOUIDO_DB_PASS"):
+    # 호스트: 환경변수 → 파일 → build/_private/db.json(로컬 전용) → 연구 repo.
+    if not g("YEOUIDO_DB_HOST") and _private().get("host"):
+        cfg["YEOUIDO_DB_HOST"] = str(_private()["host"])
+    if not g("YEOUIDO_DB_USER") or not g("YEOUIDO_DB_PASS") or not g("YEOUIDO_DB_HOST"):
         for k, v in _from_research_repo().items():
             if v and not cfg.get(k):
                 cfg[k] = str(v)
     p = dict(
-        host=g("YEOUIDO_DB_HOST", "100.88.75.91"),
+        host=g("YEOUIDO_DB_HOST"),
         port=int(g("YEOUIDO_DB_PORT", "5432")),
         dbname=g("YEOUIDO_DB_NAME", "postgres"),
         user=g("YEOUIDO_DB_USER"),
         password=g("YEOUIDO_DB_PASS"),
         connect_timeout=10,
     )
-    if not p["user"] or not p["password"]:
+    if not p["host"] or not p["user"] or not p["password"]:
         sys.exit(
             "✗ DB 접속 정보 없음. 다음 중 하나를 준비하세요:\n"
-            "    · 환경변수 YEOUIDO_DB_USER / YEOUIDO_DB_PASS\n"
+            "    · 환경변수 YEOUIDO_DB_HOST / YEOUIDO_DB_USER / YEOUIDO_DB_PASS\n"
             f"    · {ENV_FILE} (KEY=VALUE)\n"
             "    · 연구 repo util/variables.py (YEOUIDO_REPO 로 경로 지정)\n"
+            f"    · 호스트만이면 {PRIVATE} 의 host (로컬 전용 · gitignore)\n"
+            "  주소는 공개 저장소에 적지 않는다.\n"
         )
     return p
 
@@ -507,7 +543,20 @@ def main():
     ap.add_argument("--backfill", action="store_true", help="git 이력 전체 적재")
     ap.add_argument("--force", action="store_true", help="기존 as_of도 덮어쓰기")
     ap.add_argument("--stats", action="store_true", help="적재 현황만 출력")
+    ap.add_argument("--ping", action="store_true",
+                    help="DB 에 닿는지만 본다(주소는 안 찍는다 · 닿으면 0, 안 닿으면 3)")
     a = ap.parse_args()
+
+    if a.ping:
+        import socket
+        p = _conn_params()
+        try:
+            socket.create_connection((p["host"], p["port"]), timeout=5).close()
+        except OSError:
+            print("DB 도달 불가")
+            sys.exit(3)
+        print("DB 도달 가능")
+        return
 
     cn = connect()
     cn.autocommit = False

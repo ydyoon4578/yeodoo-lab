@@ -19,8 +19,16 @@
   · 같은 (날짜·대상·제목) 이 이미 있으면 건너뛴다. 여러 번 돌려도 늘지 않는다.
   ⚠ 커밋 제목을 **그대로** 싣는다. 요약해 다듬지 않는다 — 다듬는 순간 이 도구도 사람의
     기억에 기대게 되고, 그게 처음에 깨진 바로 그 고리다.
-    딱 하나 예외가 «%%» → «%» 치환이다(아래 참조). 뜻을 안 바꾸는 기계적 치환이고,
-    안 하면 품질 관문이 산출물을 막는다.
+    예외는 둘이다(둘 다 기계적이고 사람의 판단이 없다):
+      ① «%%» → «%» 치환(아래 참조). 뜻을 안 바꾸고, 안 하면 품질 관문이 산출물을 막는다.
+      ② 🚨 2026-09-27 — **사내 식별자는 «[내부]» 로 가린다.** 커밋 제목에 펀드코드 같은 사내 식별자가
+         들어가면 이 도구가 그것을 공개 피드(data/updates.json)로 그대로 옮긴다.
+         무엇이 사내 식별자인지는 build/_private/deny_hashes.json(해시만 · 로컬 전용)이 정한다 — build/deny_gate.py.
+         목록이 없는 곳에서는 가리지 못한다고 알린다 — 피드 갱신은 이 PC 에서 돌린다.
+         ⚠ 가린 제목은 원 제목과 글자가 달라 «같은 (날짜·대상·제목) 이면 건너뛴다» 가 안 통한다.
+           그래서 가린 자리를 «아무 글자» 로 보고 같은 날짜·대상의 옛 제목과 대조한다 — 사람이 옛 줄을
+           일반 명칭으로 고쳐 둔 경우에도 다시 싣지 않는다(멱등).
+           대상(target)은 **원 제목으로** 고른다 — 이미 실린 줄과 같은 대상이 나와야 대조가 된다.
   ⚠ chore(data)·chore(rotation) 은 이미 잡이 자기 기록을 남기므로 뺀다. 넣으면 두 벌이 된다.
 
   python build/log_from_git.py --since 2026-08-12            # 채운다
@@ -42,6 +50,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = os.path.join(ROOT, "data", "updates.json")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from log_update import TARGETS                                   # noqa: E402
+import deny_gate                                                 # noqa: E402  사내 식별자 차단(해시 대조)
 
 # 제목 → target. 위에서부터 먼저 맞는 것을 쓴다. 오른쪽은 log_update.TARGETS 의 값이어야 한다.
 RULES = [
@@ -112,7 +121,13 @@ def main() -> int:
 
     doc = json.load(io.open(P, encoding="utf-8"))
     have = {(e["dt"], e["target"], e["title"]) for e in doc["events"]}
-    add, skip_chore, dup = [], 0, 0
+    by_day = {}                           # (날짜, 대상) → 제목들 — 가린 제목의 대조용
+    for e in doc["events"]:
+        by_day.setdefault((e["dt"], e["target"]), []).append(e["title"])
+    deny = deny_gate.load_hashes()
+    if deny is None:
+        print("⚠ 차단 목록(로컬 전용 build/_private/deny_hashes.json)이 없어 커밋 제목의 사내 식별자를 가리지 못한다 — 이 PC 에서 돌릴 것")
+    add, skip_chore, dup, n_red = [], 0, 0, 0
     for line in out.splitlines():
         parts = line.split("|", 2)
         if len(parts) != 3:
@@ -132,15 +147,25 @@ def main() -> int:
         title = title.replace("%%", "%")
         if dt < since:
             continue                      # 넓게 긁되 요청 범위 밖은 버린다
-        tgt = pick(title)
+        tgt = pick(title)                 # 대상은 원 제목으로 고른다(위 머리말 ②)
+        red, n_hit = deny_gate.redact(title, deny)
+        if n_hit:
+            n_red += 1
+            pat = deny_gate.redacted_pattern(red)
+            if any(pat.match(t) for t in by_day.get((dt, tgt), [])):
+                dup += 1                  # 이미 실린 줄(원 제목이든 고쳐 둔 제목이든)
+                continue
+            title = red
         key = (dt, tgt, title)
         if key in have:
             dup += 1
             continue
         have.add(key)
+        by_day.setdefault((dt, tgt), []).append(title)
         add.append({"dt": dt, "hm": hm, "target": tgt, "title": title})
 
-    print("커밋에서 %d건 · 이미 있음 %d · 자동잡·머지라 제외 %d" % (len(add), dup, skip_chore))
+    print("커밋에서 %d건 · 이미 있음 %d · 자동잡·머지라 제외 %d · 사내 식별자 가림 %d"
+          % (len(add), dup, skip_chore, n_red))
     import collections
     for t, n in collections.Counter(x["target"] for x in add).most_common():
         print("   %-10s %d건" % (t, n))

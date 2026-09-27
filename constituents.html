@@ -194,7 +194,7 @@
      background:var(--panel);color:var(--ink);border-radius:2px;min-width:170px;margin-left:auto}
   .mnote{margin:12px 0 0;font-size:13px;color:var(--ink-2);line-height:1.65}
 
-  /* 비중순 세로 표 — index_constituents 테이블 양식. 500줄을 훑는 화면이라
+  /* 비중순 세로 표 — 사내 지수 구성 테이블 양식. 500줄을 훑는 화면이라
      행 높이를 낮추고 숫자는 tabular-nums 로 자릿수를 맞춘다. */
   .tw{margin-top:14px;overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel)}
   table.ctbl{width:100%;border-collapse:collapse;font-size:13px}
@@ -836,7 +836,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<button type="button" class="mdb sortb" id="sortb">'+(SORT==='w'?'비중순 ↓':'티커순 A→Z')+'</button>'+
       '<input id="q" class="q" type="search" placeholder="티커·이름 찾기" autocomplete="off"></div>';
 
-    // 🚨 비중순 세로 표 — 사용자 요청(2026-08-13) "index_constituents 테이블 양식처럼
+    // 🚨 비중순 세로 표 — 사용자 요청(2026-08-13) "[사내 지수 구성] 테이블 양식처럼
     //   아래로 쭉, 비중순으로". 종전에는 섹터별 카드 격자였는데 500종을 눈으로 훑기에는
     //   순서가 없어 읽히지 않았다. 비중이 순서를 준다.
     // ⚠ w 는 sorted(멤버) 와 같은 순서로 실려 온다. 길이가 어긋나면 **비중을 통째로 버린다** —

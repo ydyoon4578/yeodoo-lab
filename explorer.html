@@ -1128,7 +1128,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <footer>
     여두 전략 랩 · <b>배포·제한적 유효 + 검증 단일팩터</b> (📊=실제 백테스트 차트) · 전부 구현→적대검증 · 전략마다 <b>성격에 맞는 1차 지표</b>로 판단합니다<br>
-    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(FactSet 라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a> · <a href="sources.html">데이터 출처</a>.
+    수치는 백테스트 기준(구간은 전략별 상이 — 각 패널에 표기 · 명시 없으면 무비용·월말 gross) · 백테스트 데이터는 <b>사내 리서치 DB(라이선스 데이터) 파생 집계 성과</b>만 공개(원천 수치·종목 선정 비공개), 현재 포트폴리오 구성은 <b>yfinance 무료 데이터</b>로 재현 가능한 전략만 공개 · 과거 성과는 미래 수익을 보장하지 않습니다 · <a href="index.html">홈</a> · <a href="stocks.html">종목 신호</a> · <a href="regime.html">시장 국면</a> · <a href="rotation.html">전략 탐색 풀</a> · <a href="explorer.html">전략 랩</a> · <a href="sources.html">데이터 출처</a>.
   </footer>
 </div>
 
@@ -2678,7 +2678,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<div class="btsec"><h4><span>현재 포트폴리오 구성</span><small>기준일 '+esc(h.as_of||'—')+'</small></h4>'+holdStale(h.as_of)+
         (ex?'<div class="hxrow">'+ex+'</div>':'')+
         (h.note?'<div class="btnote">'+esc(h.note)+'</div>':'')+
-        '<div class="btnote"><b>보유 종목 리스트는 비공개</b> — 라이선스 데이터(FactSet) 파생 결과이며 배포 전략 보호 목적. '+
+        '<div class="btnote"><b>보유 종목 리스트는 비공개</b> — 라이선스 데이터 파생 결과이며 배포 전략 보호 목적. '+
         '공개 범위는 위 요약(종목수·가중·규약)과 백테스트 집계 성과까지입니다.</div></div>';
     }
     var kindLab={stocks:'종목',assets:'자산',sleeves:'슬리브'}[h.kind]||'구성';

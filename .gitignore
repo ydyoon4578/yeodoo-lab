@@ -123,6 +123,10 @@ build/db_notes.json
 build/db_samples.json
 # 팩터 사전 원본(사내 팩터 정의 표를 그대로 뽑은 것). 게시물은 factors.html 하나 — 원본은 반입 금지
 build/factors_src.json
+# 사내 식별자 로컬 입력(펀드코드 · 사내 DB 테이블명 · 접속 호스트 · 공개용 치환 문안) — 반입 금지(2026-09-27).
+#   build/portfolio_fund.py · strategy_trim.py · db_load.py(와 그것을 부르는 DB 스크립트) · factors_page.py 가 읽고,
+#   없으면 무엇을 적을지 말하고 멈춘다. 추적 파일에 다시 적으면 build/deny_gate.py(validate_site 가 부른다)가 막는다.
+build/_private/
 _pit_subset.json
 
 # 2026-09-08~11 얼린 측정 — 사전등록 결과 문서가 수를 인용하고, 원본은 커밋하지 않는다

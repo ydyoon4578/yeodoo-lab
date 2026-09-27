@@ -7,7 +7,7 @@
   적용한다. 그 사이 상장폐지·편출된 종목이 없어 모든 수치가 실제보다 좋게 나온다"
   (data/signal_lab.json 의 limits, sources.html, tech_backtest.py 곳곳).
   그걸 재려면 '그때 실제로 지수에 있던 명단'이 필요한데, 지금 그 명단은 라이선스 DB
-  (public.index_constituents)에서만 오고 그래서 data/pit_members.json 이 gitignore 다 —
+  (사내 지수 구성 테이블)에서만 오고 그래서 data/pit_members.json 이 gitignore 다 —
   즉 **러너가 스스로 만들 수 없고**, 그래서 시점정합 검증이 사내망 PC 에 묶여 있다.
 
   위키백과의 지수 목록 문서는 **과거 리비전이 영구 보존**된다. 월말 시점의 리비전을 받으면

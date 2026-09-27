@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)의 본문 조각을 만든다.
 
-무엇을 만드나. 실펀드 2종(2Z30=나스닥100 · 2A81=S&P500)의
+무엇을 만드나. 실펀드 2종(나스닥 100 펀드 · S&P 500 펀드 — 펀드코드는 build/_private/funds.json)의
   ① 펀드 개요 — NAV·기준가, 연초 후 기준가 vs 지수(원화환산), 자산 구성
   ② 포트폴리오 — 종목별 지수비중/펀드비중/액티브 틸트, 패시브 대비 수량 괴리
       (2026-08-26 사용자 지시로 «보유 vs 지수» → «포트폴리오» 로 개칭)
@@ -20,12 +20,13 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
       ⚠ 시트 이름·컬럼이 사내 시스템 export 규격이다. 바뀌면 여기가 아니라 규격이 바뀐 것.
   · 사내 DB — 자격증명·호스트는 연구 repo util/variables.py 가 단일 출처다(아래 _db_params.
       🚨 이 저장소는 공개라 여기에 절대 적지 않는다 — 2026-08-20 적대감사가 평문 노출을 잡았다).
-      **public.index_constituents(지수 비중·GICS) 하나만 쓴다**(2026-08-21 사용자 결정).
+      **사내 지수 구성 테이블(지수 비중·GICS) 하나만 쓴다**(2026-08-21 사용자 결정).
+      테이블 이름은 공개 저장소에 적지 않는다 — build/_private/db.json 의 tables(db_load.table).
       나머지 셋은 이 랩의 웹 자료로 옮겼다 — 아래 «자료 원천» 참조.
   · 이 랩의 웹 자료(yfinance · CI 가 매일 굽는다 · 사내망 불필요):
       data/sd/<티커>.json  종목 종가(분할 소급 조정) · data/assets.json  ^GSPC·^NDX 지수 레벨
       data/splits.json     분할 이력 — 원장 체결가를 오늘 기준으로 되맞추는 데 쓴다
-  · 웹 원장 data/portfolio_user.json — 전략 매매(AES-256-GCM). mp.strategy_trade 는
+  · 웹 원장 data/portfolio_user.json — 전략 매매(AES-256-GCM). 사내 전략 매매 테이블은
       이전용 씨앗으로만 한 번 더 읽고, 화면에서 옮기면 그 뒤로는 안 본다.
 
 자산구분 코드(해외 시트, 실측 2026-08-18): 1=개별주식 · 3=지수 ETF · 4=지수선물(평가액=노셔널)
@@ -36,7 +37,7 @@ r"""build/portfolio_fund.py — 운용 포트폴리오 페이지(portfolio.html)
     한국마감 환율. NAV·환율은 보유일로 자르지 않고 시트 최신 행을 쓰고, 연초 후 차트는
     지수를 last_lt(하루 밀기)로 짝 맞춘다. 같은날 짝은 벤치가 하루 앞서 달리는 오류다.
   · 펀드비중 = 종목 평가액(원화) ÷ **NAV**. 합계는 100%가 아니라 개별주식 슬리브 비중이다
-    (2A81 실측 69.3% · 2Z30 69.0%). 사용자 결정 2026-08-26 — «이 종목이 펀드의 몇 %인가»
+    (S&P 500 펀드 실측 69.3% · 나스닥 100 펀드 69.0%). 사용자 결정 2026-08-26 — «이 종목이 펀드의 몇 %인가»
     라는 물음에 답하려면 분모가 NAV 여야 한다.
     ⚠ 2026-08-26 이전에는 슬리브로 나눠 합이 늘 100%였다. 그때 사유는 «NAV 분모로는 전
       종목이 일괄 언더웨이트로 보인다 — 그건 틸트가 아니라 구조다» 였고 그 지적 자체는
@@ -122,11 +123,44 @@ def _db_params():
     raise SystemExit("DB 접속 정보 없음 — 연구 repo util/variables.py(YEOUIDO_REPO) 또는 "
                      "환경변수 YEOUIDO_DB_HOST/USER/PASS 를 준비할 것")
 
-# 탭 순서 = 이 목록 순서. 2026-08-20 사용자 지시 — «S&P500을 왼쪽에, 나스닥100을 오른쪽에».
-FUNDS = [
-    ("2A81", "SPX Index", "spx", "S&P500"),
-    ("2Z30", "NDX Index", "ndx", "나스닥100"),
-]
+# 탭 순서 = 목록 순서. 2026-08-20 사용자 지시 — «S&P500을 왼쪽에, 나스닥100을 오른쪽에».
+# 🚨 2026-09-27 — 펀드코드는 **이 파일에 두지 않는다**(공개 저장소 · 사내 식별자).
+#   git-ignore 된 build/_private/funds.json 에서 읽는다:
+#     {"funds": [{"code": "<펀드코드>", "index": "SPX Index", "slug": "spx", "label": "S&P500"}, …],
+#      "default_fund": "<펀드코드>"}
+#   code 는 사내 export 시트(NAV·해외)가 펀드를 가르는 값, index 는 지수 구성 테이블의 "index" 값이다.
+#   ⚠ 임포트만으로는 읽지 않는다 — strategy_trim --help 처럼 펀드가 필요 없는 길이 막히면 안 된다.
+FUNDS_CFG = os.path.join(ROOT, "build", "_private", "funds.json")
+_FUNDS_CACHE = None
+
+
+def _funds_cfg():
+    global _FUNDS_CACHE
+    if _FUNDS_CACHE is None:
+        if not os.path.exists(FUNDS_CFG):
+            raise SystemExit("펀드 설정 없음: %s — 로컬 전용 파일(gitignore)이다. 형식:\n"
+                             '  {"funds": [{"code": "<펀드코드>", "index": "SPX Index", "slug": "spx", '
+                             '"label": "S&P500"}, …], "default_fund": "<펀드코드>"}\n'
+                             "펀드코드는 공개 저장소에 적지 않는다." % FUNDS_CFG)
+        d = json.load(io.open(FUNDS_CFG, encoding="utf-8"))
+        rows = [(str(f["code"]), str(f["index"]), str(f["slug"]), str(f["label"]))
+                for f in (d.get("funds") or [])]
+        if not rows:
+            raise SystemExit("펀드 설정에 funds 가 비었다: %s" % FUNDS_CFG)
+        _FUNDS_CACHE = (rows, str(d.get("default_fund") or rows[0][0]))
+    return _FUNDS_CACHE
+
+
+def funds():
+    """[(펀드코드, 지수, slug, 표시명), …] — 탭 순서. build/_private/funds.json 에서 읽는다."""
+    return _funds_cfg()[0]
+
+
+def default_fund():
+    """strategy_trim 의 --fund 기본값 — 같은 로컬 파일의 default_fund."""
+    return _funds_cfg()[1]
+
+
 SPLIT_GUARD = 0.40      # 매매 구간 일수익 절대값이 이걸 넘으면 분할 의심 ⚠
 
 
@@ -184,7 +218,7 @@ except Exception:                    # 임포트가 막히면 원문을 그대�
 def sec_short(g):
     """GICS 섹터명 → 짧은 한글. 지도에 없으면 원문을 잘라 쓴다(빈칸으로 두지 않는다).
 
-    ⚠ 원천(index_constituents.gics_name)이 섹터가 아니라 서브산업을 줄 수도 있다. 그때는
+    ⚠ 원천(지수 구성 테이블의 gics_name)이 섹터가 아니라 서브산업을 줄 수도 있다. 그때는
       지도에 안 걸리므로 **원문이 그대로** 나온다 — 그것이 «못 줄였다» 는 사실을 보여 준다.
       조용히 빈칸으로 두면 섹터가 없는 것처럼 읽힌다.
     """
@@ -197,8 +231,8 @@ def sec_short(g):
 def norm_tk(t):
     """티커 정규화 — 클래스주 구분자를 점으로 통일한다(BRK/B → BRK.B · BF/B → BF.B).
 
-    🚨 2026-08-20 사용자 발견: 펀드가 들고 있는 BRK/B(사내 시트 · 블룸버그식 슬래시)가
-      지수 구성종목의 BRK.B(팩트셋식 점)와 안 맞아, 보유 중인데 «지수에 있는데 미보유»
+    🚨 2026-08-20 사용자 발견: 펀드가 들고 있는 BRK/B(사내 시트 · 슬래시 표기)가
+      지수 구성종목의 BRK.B(사내 DB · 점 표기)와 안 맞아, 보유 중인데 «지수에 있는데 미보유»
       목록에 나오고 표의 지수비중은 0 이었다. BF/B 도 같다.
     모든 입구(시트·지수구성·매매원장·종가)가 이 함수를 지나므로 어느 원천이 어느 표기를
     쓰든 안에서는 한 이름이다. 종가 조회만은 DB 표기를 모르니 **두 표기를 다 물어보고**
@@ -222,7 +256,8 @@ def load_xlsm():
     files = sorted((f for g in _local_cfg()["xlsm_globs"] for f in glob.glob(g)),
                    key=lambda f: (os.path.getmtime(f), f.replace(chr(92), '/').startswith('//')))
     if not files:
-        raise SystemExit("사내 export 없음 — 네트워크 공유((주간) 자동화 2Z30*.xlsm) 또는 " "SecureGate 다운로드에 파일을 둘 것")
+        raise SystemExit("사내 export 없음 — _build/portfolio_local.json 의 xlsm_globs 가 가리키는 곳"
+                         "(사내 공유 폴더 또는 보안 다운로드 폴더)에 파일을 둘 것")
     path = files[-1]
     import openpyxl
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
@@ -267,27 +302,30 @@ def load_db(asof_by_fund, held_tickers):
     """지수 구성종목(비중·이름·GICS) — **이것만 사내 DB에서 온다.**
 
     🚨 2026-08-21 사용자 결정으로 나머지 셋은 웹(yfinance) 자료로 옮겼다:
-        market.ohlcv_factset      → data/sd/<티커>.json      (랩이 매일 굽는 종가)
-        public.price_major_index  → data/assets.json         (^GSPC · ^NDX)
-        mp.strategy_trade         → 웹 원장(data/portfolio_user.json)
+        사내 종가 테이블          → data/sd/<티커>.json      (랩이 매일 굽는 종가)
+        사내 지수 레벨 테이블     → data/assets.json         (^GSPC · ^NDX)
+        사내 전략 매매 테이블     → 웹 원장(data/portfolio_user.json)
+      (테이블 이름은 공개 저장소에 적지 않는다 — build/_private/db.json 의 tables.)
       사용자 판단 근거를 그대로 적어 둔다 —
         · 지수 밖 보유는 «편출 예정이거나 합병 등으로 일시적으로 생긴 것»이라 가격이 없어도 된다.
         · **사내 원장의 가격이 오히려 틀리다** — 분할을 소급 반영하지 않는다. 랩 자료는
           분할 소급이 검사로 보장된다(validate_site 의 «분할 소급 검사»).
       지수 비중만은 웹에 대체 자료가 없다(랩은 시총·유동주식수를 안 들고 있다). 그래서 남긴다.
-    ⚠ mp.strategy_trade 는 **이전용으로만** 한 번 더 읽는다(아래 seed) — 웹 원장으로 옮기고
+    ⚠ 전략 매매 테이블은 **이전용으로만** 한 번 더 읽는다(아래 seed) — 웹 원장으로 옮기고
       나면 이 읽기도 지운다. 옮기기 전까지 화면이 비면 안 되니까 남겨 둔 다리다.
     """
     import psycopg2
+    import db_load as _DBL                          # 사내 테이블 이름 — build/_private/db.json(tables)
+    T_CONS, T_TRADE = _DBL.table("constituents"), _DBL.table("trades")
     cn = psycopg2.connect(**_db_params())
     cur = cn.cursor()
 
     cons = {}         # index → (dt, {ticker: (정규화 비중, 이름, GICS)})
-    for _f, idx, _s, _l in FUNDS:
-        cur.execute('SELECT max(dt) FROM public.index_constituents WHERE "index"=%s AND dt<=%s',
+    for _f, idx, _s, _l in funds():
+        cur.execute(f'SELECT max(dt) FROM {T_CONS} WHERE "index"=%s AND dt<=%s',
                     (idx, asof_by_fund[_f]))
         d = cur.fetchone()[0]
-        cur.execute('SELECT ticker, index_weight, name, gics_name FROM public.index_constituents '
+        cur.execute(f'SELECT ticker, index_weight, name, gics_name FROM {T_CONS} '
                     'WHERE "index"=%s AND dt=%s', (idx, d))
         rows = cur.fetchall()
         tot = sum(float(w or 0) for _t, w, _n, _g in rows) or 1.0
@@ -297,11 +335,11 @@ def load_db(asof_by_fund, held_tickers):
     seed = []
     try:
         cur.execute('SELECT "index", dt, strategy, ticker, trade_qty, trade_price '
-                    'FROM mp.strategy_trade ORDER BY dt, strategy, ticker')
+                    f'FROM {T_TRADE} ORDER BY dt, strategy, ticker')
         seed = [dict(index=i, dt=str(d), strategy=s2, ticker=norm_tk(t),
                      qty=float(q), px=float(p or 0)) for i, d, s2, t, q, p in cur.fetchall()]
     except Exception as _e:
-        print("  ⚠ mp.strategy_trade 를 못 읽었다(%s) — 웹 원장만 쓴다." % str(_e)[:60])
+        print("  ⚠ 전략 매매 테이블을 못 읽었다(%s) — 웹 원장만 쓴다." % str(_e)[:60])
     cn.close()
     return cons, seed
 
@@ -654,7 +692,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     # ── 연초 후의 0점 (2026-08-21 사용자 검증으로 고침) ──────────────────────
     # 🚨 종전에는 시트 첫 행(전년 12-31 기준가)을 0점으로 썼다. 그런데 T-1 규약 때문에
     #   12-31 기준가는 **미국 12-30 종가**를 담는다 — 미국 12-31 하루(전년 몫: 2025-12-31
-    #   SPX −0.74% · NDX −0.84%)가 새해 수익률로 새어 들어왔다. 그래서 2A81 연초후가
+    #   SPX −0.74% · NDX −0.84%)가 새해 수익률로 새어 들어왔다. 그래서 S&P 500 펀드 연초후가
     #   사내 화면 +9.6% 대비 +8.67% 로 낮았다(차이 ≈ 정확히 그 하루 + 하루 지연).
     # → 0점 = **새해 첫 영업일의 기준가**(보통 1/2 · 미국 12-31 종가 반영). 사내 잣대와 같다.
     #   ⚠ «값이 달라진 첫 행» 으로 찾으면 안 된다 — 1/1 휴일 행도 이자 발생분만큼 미세하게
@@ -710,7 +748,7 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
     tot_exc = sum(s["last"]["pnl"] - s["last"]["bm"] for s in perf.values() if s.get("last"))
     tot_bp = tot_exc * fx_v / nav_v * 1e4 if perf else 0.0
 
-    # 두 펀드를 나란히 그린다(2열) — 숨기지 않는다. 순서는 FUNDS 가 정한다.
+    # 두 펀드를 나란히 그린다(2열) — 숨기지 않는다. 순서는 funds() 가 정한다.
     H.append('<section class="fundcol" id="pane-%s">' % slug)
     # 🚨 2026-08-21 사용자 지시 «난잡하니까 기준일만 딱». 다섯 축이 **거의 항상 같은 날**이라
     #   전부 적으면 같은 날짜가 다섯 번 반복된다 — 그건 정보가 아니라 소음이다.
@@ -968,10 +1006,10 @@ def render_fund(fund, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, ax
              + ('<th class="tnum" title="%s"><b>%+.2f</b></th>'
                 % ("남는 %+.2f%%p 는 «지수에 있는데 안 든 종목» 몫이다 — "
                    "0 에 가까울수록 복제가 촘촘하다." % _dp, _dp))     # 패시브차이 합계
-             # 🚨 2026-09-17 사용자 «2A81 도 그 10종 지수 대비 이런 거 없애줘. 2Z30 이랑 통일해».
+             # 🚨 2026-09-17 사용자 «[S&P 500 펀드] 도 그 10종 지수 대비 이런 거 없애줘. [나스닥 100 펀드] 이랑 통일해».
              #   밑줄(«+0.20%%p · 그 10종 지수 대비»)을 뗀다. 그 수는 **게시 시점 구성**으로
-             #   계산된 것이라 웹 원장을 고치면 곧바로 낡는다 — 2Z30 에서는 앱이 원장대로
-             #   전략 합계를 밀면서 그 밑줄을 지웠고, 2A81 은 원장과 씨앗이 같아 Δ=0 이라
+             #   계산된 것이라 웹 원장을 고치면 곧바로 낡는다 — 나스닥 100 펀드에서는 앱이 원장대로
+             #   전략 합계를 밀면서 그 밑줄을 지웠고, S&P 500 펀드는 원장과 씨앗이 같아 Δ=0 이라
              #   남아 있었다. 두 펀드가 «같은 표인데 다른 것을 말하는» 상태였다.
              #   설명은 열 title 로 남긴다 — 칸 안에서 낡을 수 있는 수를 없앤다.
              + _tot(_sws, tip="전략이 든 %d종에서 펀드비중 합 %s − 지수비중 합 %s = %+.2f%%p. "
@@ -1262,13 +1300,13 @@ NOTES = """<div class="notes"><h3>정의·한계</h3><ul>
 def main() -> int:
     path, nav, fx, hold = load_xlsm()
     print("입력: %s" % os.path.basename(path))
-    for f, _i, _s, _l in FUNDS:
+    for f, _i, _s, _l in funds():
         if f not in hold:
             raise SystemExit("해외 시트에 펀드 %s 가 없다 — export 범위를 확인할 것" % f)
         if f not in nav:
             raise SystemExit("NAV 시트에 펀드 %s 가 없다" % f)
-    asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in FUNDS}
-    held_tk = {r["ticker"] for f, _i, _s, _l in FUNDS
+    asof_by_fund = {f: max(hold[f]) for f, _i, _s, _l in funds()}
+    held_tk = {r["ticker"] for f, _i, _s, _l in funds()
                for r in hold[f][max(hold[f])] if r["asset"] == "1" and r["ticker"]}
     cons, seed = load_db(asof_by_fund, held_tk)
     load_splits()
@@ -1290,7 +1328,7 @@ def main() -> int:
         print("  분할 되맞춤 %d건: %s" % (len(_adj), " · ".join(_adj[:6])))
 
     panes, checks = [], []
-    for f, idx, slug, label in FUNDS:
+    for f, idx, slug, label in funds():
         pane, chk = render_fund(f, idx, slug, label, nav, fx, hold, cons, trades, px, lvl, axis)
         panes.append(pane)
         checks.append(chk)
@@ -1342,7 +1380,7 @@ def main() -> int:
     # 환율은 펀드가 공유한다 — 펀드마다 담으면 같은 표가 둘이 된다(갈릴 자리를 안 만든다).
     pf = {"gen": gen, "asof": asof_g, "dates": axis, "panel": panel, "lvl": lvl_arr,
           "fxs": {d: round(v, 4) for d, v in sorted(fx.items())},
-          "funds": {slug: checks[k]["meta"] for k, (_f, _i, slug, _l) in enumerate(FUNDS)},
+          "funds": {slug: checks[k]["meta"] for k, (_f, _i, slug, _l) in enumerate(funds())},
           "mp": [{"idx": t["index"], "dt": t["dt"], "s": t["strategy"],
                   "t": t["ticker"], "q": t["qty"], "p": t["px"]} for t in trades],
           "guard": SPLIT_GUARD}

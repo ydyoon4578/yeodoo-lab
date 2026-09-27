@@ -209,7 +209,7 @@ create table if not exists yeodoo.site_update (
 
 -- ---------------------------------------------------------------------
 -- 12) 전략 백테스트 지표 스냅샷 (strategy_backtests.json)
---     ⚠ 사내 DB(FactSet) 파생 집계 성과. 원천 수치·종목선정은 담지 않는다.
+--     ⚠ 사내 DB(라이선스 자료) 파생 집계 성과. 원천 수치·종목선정은 담지 않는다.
 -- ---------------------------------------------------------------------
 create table if not exists yeodoo.strategy_perf (
   asof         date not null,                -- generated

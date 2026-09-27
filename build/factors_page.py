@@ -17,6 +17,10 @@
       머리·스타일·스크립트·메뉴는 손대지 않는다(메뉴는 sync_nav, 셸은 sync_shell 몫).
 
 원칙  값은 **원표 그대로** 싣는다 — 문구를 고치거나 줄이지 않는다. 순서도 원표 순서다.
+      🚨 예외 하나(2026-09-27) — 원표에 적힌 **사내 DB 테이블 이름**은 공개하지 않는다. 구울 때
+        git-ignore 된 build/_private/redact.json 의 짝 [원문, 일반 명칭] 으로 바꾸고(긴 것부터),
+        다 구운 구간을 build/deny_gate.py(해시 목록)로 한 번 더 훑어 남은 것이 있으면 **굽지 않고
+        멈춘다**(--check 도 같다). 페이지 머리말에도 이 예외를 적었다.
       빈 값(NULL)은 '—' 로 보이게 둔다(없는 것을 없다고 표시한다).
       랩 행은 펼친 본문에 출처(카드 링크)를 달고, 요약줄에 «랩 규칙에서 옮김 N» 을 적는다.
 실행  python build/factors_page.py            굽기
@@ -30,6 +34,7 @@ import html, json, os, re
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SRC = os.path.join(ROOT, "build", "factors_src.json")
 LAB = os.path.join(ROOT, "build", "factors_lab.json")
+REDACT = os.path.join(ROOT, "build", "_private", "redact.json")     # 로컬 전용(gitignore)
 PAGE = os.path.join(ROOT, "factors.html")
 BEGIN, END = "<!-- FACTORS:BEGIN -->", "<!-- FACTORS:END -->"
 LF, CRLF = chr(10), chr(13) + chr(10)
@@ -128,10 +133,47 @@ def _src_blocks(page):
             if 'href="explorer.html#s-' not in m.group(0)]
 
 
+def _neutralize(rows):
+    """원표 문자열 속 사내 DB 테이블 이름을 공개용 일반 명칭으로 — 짝은 로컬 파일(REDACT)에만 있다.
+
+    짝 파일이 없으면 아무것도 안 바꾼다. 그래도 새지는 않는다 — main() 의 _guard 가 멈춘다."""
+    if not os.path.exists(REDACT):
+        return 0
+    with open(REDACT, encoding="utf-8") as f:
+        pairs = sorted(((a, b) for a, b in (json.load(f).get("pairs") or [])), key=lambda p: -len(p[0]))
+    n = 0
+    for r in rows:
+        for k in KEYS:
+            v = r.get(k)
+            if isinstance(v, str):
+                for a, b in pairs:
+                    if a and a in v:
+                        n += v.count(a)
+                        v = v.replace(a, b)
+                r[k] = v
+    return n
+
+
+def _guard(text):
+    """공개 페이지 구간에 사내 식별자가 남으면 굽지 않는다(build/deny_gate.py 의 해시 목록)."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import deny_gate
+    if deny_gate.load_hashes() is None:
+        print("⚠ 차단 목록(로컬 전용 build/_private/deny_hashes.json)이 없어 사내 식별자 점검을 건너뛴다 — 이 PC 에서 구울 것")
+    bad = deny_gate.scan_text(text)
+    if bad:
+        raise SystemExit("🚨 팩터 사전 구간에 사내 식별자가 남는다(%d줄 · 구간 안 첫 줄 %d) — "
+                         "build/_private/redact.json 의 pairs 에 [원문, 일반 명칭] 을 적고 다시 구울 것. "
+                         "공개 페이지라 굽지 않는다." % (len(bad), bad[0]))
+
+
 def load():
     if os.path.exists(SRC):
         with open(SRC, encoding="utf-8") as f:
             d = json.load(f)
+        _n = _neutralize(d["rows"])
+        if _n:
+            print("  ~ 사내 테이블 이름 %d곳을 일반 명칭으로 바꿨다(build/_private/redact.json)" % _n)
     else:
         print("  ⚠ build/factors_src.json 이 없다 — factors.html 에서 원표 행을 되살린다"
               "(다시 그린 원표 구간을 바이트로 대조한다)")
@@ -263,6 +305,7 @@ def main():
     if a < 0 or b < a:
         raise SystemExit("factors.html 에 FACTORS:BEGIN/END 표지가 없다")
     new = page[:a + len(BEGIN)] + nl + render(d).replace(LF, nl) + nl + page[b:]
+    _guard(new[a:new.find(END)])
     # 🚨 원표를 페이지에서 되살려 구운 판이면, 다시 그린 원표 행이 원래와 **바이트까지**
     #   같은지 본다. 하나라도 다르면 굽지 않는다 — 원표를 손대느니 멈추는 쪽이 낫다.
     if d.get("_from_page"):

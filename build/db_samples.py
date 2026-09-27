@@ -14,7 +14,7 @@
 출력 build/db_samples.json 은 gitignore 다(사내 데이터).
 
     python build/db_samples.py            전 DB
-    python build/db_samples.py kbam-dart  한 곳만
+    python build/db_samples.py <DB키>  한 곳만(키는 db_notes.json 의 dbs 첫 칸)
 """
 from __future__ import annotations
 import io, json, os, ssl, sys, time, urllib.request
@@ -36,8 +36,17 @@ def _conf():
     m = (json.load(io.open(NOTES, encoding="utf-8")) or {}).get("mcp") or {}
     if not m.get("base"):
         sys.exit("db_notes.json 에 mcp.base 가 없다")
-    return m["base"], m.get("ca") or os.path.join(
-        os.path.expanduser("~"), ".claude", "certs", "kbam-mcp.crt")
+    ca = m.get("ca")
+    if not ca:
+        # 인증서 경로를 안 적었으면 ~/.claude/certs 의 *mcp*.crt **하나**를 쓴다(파일 이름은 로컬마다
+        #   다르니 여기 적지 않는다). 없거나 여럿이면 적으라고 하고 멈춘다.
+        import glob
+        c = sorted(glob.glob(os.path.join(os.path.expanduser("~"), ".claude", "certs", "*mcp*.crt")))
+        if len(c) != 1:
+            sys.exit("db_notes.json 에 mcp.ca(게이트웨이 인증서 경로)를 적을 것 — ~/.claude/certs 의 "
+                     "*mcp*.crt 를 %s" % ("못 찾았다" if not c else "여럿 찾았다(%d개)" % len(c)))
+        ca = c[0]
+    return m["base"], ca
 
 
 BASE, CA = _conf()

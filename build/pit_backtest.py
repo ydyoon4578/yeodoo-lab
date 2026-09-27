@@ -9,7 +9,7 @@
 데이터 출처가 둘인 이유.
   · 멤버십 — **위키백과 지수 목록 문서의 과거 리비전**(data/index_history.json,
              build/refresh_index_history.py 산출 · CC BY-SA). SPX∪NDX 합집합을 쓴다.
-             ⚠ 2026-08-03 이전엔 사내 DB(public.index_constituents)였고 그 산출물이
+             ⚠ 2026-08-03 이전엔 사내 DB(지수 구성 테이블)였고 그 산출물이
              gitignore 라 이 검정이 PC 한 대에 묶여 있었다. 대조 실측은 실질 일치 60/60.
   · 가격  — **yfinance**. 오늘의 유니버스는 랩이 이미 받아 둔 data/sd/*.json 을 그대로 쓰고,
              그 사이 지수에서 빠진 종목만 따로 받아 data/_pit_px_cache.json 에 캐시한다.
@@ -451,8 +451,8 @@ def _lab_meta():
 def fetch_members():
     """월말 멤버십 — data/index_history.json(위키 과거 리비전) 하나만 읽는다.
 
-    ⚠ 2026-08-03 에 **사내 DB 경로를 걷어냈다**(사용자 결정). 전에는 public.index_constituents
-      를 질의해 data/pit_members.json 에 캐시했고, 그 파일이 라이선스 원천이라 gitignore 였다 —
+    ⚠ 2026-08-03 에 **사내 DB 경로를 걷어냈다**(사용자 결정). 전에는 사내 지수 구성 테이블
+      을 질의해 data/pit_members.json 에 캐시했고, 그 파일이 라이선스 원천이라 gitignore 였다 —
       러너가 스스로 만들 수 없어, 이 랩이 스스로 최대 약점으로 꼽는 **생존편향 측정이 PC 한
       대에 묶여 있었다.** 위키 산출물은 저장소에 커밋되므로 CI 에서도 돈다.
       대조 실측은 build/refresh_index_history.py 머리말에 있다(실질 일치 60/60 · 티커가 아니라

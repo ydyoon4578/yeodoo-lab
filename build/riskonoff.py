@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/riskonoff.py — 종합 Risk-On/Off 점수 → data/_riskonoff.json
 
-출처. 사용자 제공 「시장 국면 모니터」(KBAM globalpassive · 2026-07-09) ① 「신호군 점수」.
+출처. 사용자 제공 「시장 국면 모니터」(2026-07-09) ① 「신호군 점수」.
 신호군·가중·밴드는 그 문서 값 그대로 쓴다 — 내가 고르면 그것부터가 자유도다.
   추세·모멘텀 18 · 변동성 안정도 18 · 시장 폭 18 · 매크로·신용 18 · 섹터 리더십 18 · 심리 10
   밴드 >=68 Risk-On · 60~67 준Risk-On · 50~59 중립 · 40~49 준Risk-Off · <40 Risk-Off
@@ -233,7 +233,7 @@ def main() -> int:
                  "lift": st.mean(v) - bt["base"]["mean"]}
 
     cur = rows[-1]
-    doc = {"note": "종합 Risk-On/Off — 설계 출처는 사용자 제공 KBAM 시장 국면 모니터 ①. "
+    doc = {"note": "종합 Risk-On/Off — 설계 출처는 사용자 제공 「시장 국면 모니터」 ①. "
                    "신호군·가중·밴드는 그 문서 값. 산식(백분위)은 문서가 안 밝혀 내가 골랐다.",
            "as_of": cur["d"], "score": cur["score"], "band": cur["band"],
            "groups": cur["g"], "weights": W,

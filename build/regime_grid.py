@@ -157,7 +157,7 @@ def main() -> int:
 
     doc = {"note": "점수밴드 × 추세 15칸. 사전등록 PREREG-2026-09-21-REGIMEGRID(커밋 6b120f2) "
                    "대로 계산 전에 실패조건을 못박았다. 추세 정의(d5·±2)는 사용자 제공 "
-                   "KBAM 국면 모니터의 _scell() 값 그대로다.",
+                   "「시장 국면 모니터」의 _scell() 값 그대로다.",
            "as_of": src["as_of"], "look": LOOK, "cut": CUT, "fwd_days": FWD,
            "n_used": len(usable), "base_mean": base,
            "base_win": sum(1 for x in allv if x > 0) / len(allv) * 100,

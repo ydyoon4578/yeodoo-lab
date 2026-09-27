@@ -200,8 +200,10 @@ for _jf in (sorted(os.listdir(_jsdir)) if os.path.isdir(_jsdir) else []):
 # ── 자격증명 평문 게이트 — 2026-08-20 build/portfolio_fund.py 의 DB 암호가 평문으로
 #    origin/main 까지 나간 사고의 재발 방지. 리터럴만 잡는다(환경변수·모듈 참조는 통과).
 #    이 저장소는 공개다 — 사내망 IP·암호는 어떤 추적 파일에도 못 들어간다.
+#    2026-09-27 — 사내 VPN 대역(CGNAT · 100.64/10)도 사내 주소다. 10.2xx 만 보던 것을 넓히고 .sh · .ps1 도 본다.
+#    (알려진 주소는 해시 목록으로도 막는다 — 아래 «사내 식별자 관문».)
 for _cf in sorted(os.listdir(os.path.join(ROOT, "build"))):
-    if not _cf.endswith(".py"):
+    if not _cf.endswith((".py", ".sh", ".ps1")):
         continue
     try:
         _cs = io.open(os.path.join(ROOT, "build", _cf), encoding="utf-8", errors="replace").read()
@@ -209,8 +211,10 @@ for _cf in sorted(os.listdir(os.path.join(ROOT, "build"))):
         continue
     if re.search(r'password\s*=\s*["\'][^"\']{2,}["\']', _cs):
         errors.append(f"build/{_cf}: 암호 리터럴 의심 — 자격증명은 저장소 밖(util/variables.py·환경변수)에 둘 것")
-    if re.search(r"\b10\.2\d\d\.\d{1,3}\.\d{1,3}\b", _cs):
-        errors.append(f"build/{_cf}: 사내망 IP 리터럴 — 공개 저장소에 내부 주소를 적지 않는다")
+    if re.search(r"\b10\.2\d\d\.\d{1,3}\.\d{1,3}\b"
+                 r"|\b100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}\b", _cs):
+        errors.append(f"build/{_cf}: 사내망 · 사내 VPN(100.64/10) IP 리터럴 — 공개 저장소에 내부 주소를 "
+                      "적지 않는다(주소는 환경변수 · 로컬 파일 build/_private/ 로)")
 
 # ── 잠금 게이트 무결성: 암호문 sanity + 평문 지문(ph) 대조 ──────────────────
 #   ct 손상은 괄호 균형 검사로는 안 잡히고(실증: ct 400자 치환 → 통과), 페이지가 영구 복호불가가 된다.
@@ -3626,7 +3630,7 @@ if _ctrl:
                   % (len(_ctrl), ", ".join(_ctrl[:6])))
 
 # ── 라이선스 자료가 공개 저장소에 들어왔는가 ──────────────────────────────
-# 🚨 2026-08-05 — data/pit_members.json(사내 DB public.index_constituents 산출)이
+# 🚨 2026-08-05 — data/pit_members.json(사내 DB 지수 구성 테이블 산출)이
 #   `git add -A` 에 쓸려 커밋됐다. 2026-08-03 에 파이프라인에서 걷어내면서 **무시 규칙도
 #   같이 지웠기** 때문이다. 이 저장소는 공개(GitHub Pages)라 올라가면 되돌리기 어렵다.
 #   푸시가 거부돼 공개되진 않았지만, 그건 운이었다. 규칙으로 막는다.
@@ -3645,6 +3649,42 @@ if _leak:
     errors.append("라이선스 자료가 저장소에 추적되고 있다: %s — 사내 DB 산출물이라 공개 "
                   "저장소에 두면 안 된다(`git rm --cached` 로 빼고 .gitignore 에 넣을 것)"
                   % ", ".join(_leak))
+
+# ── 사내 식별자 관문(해시 대조) ─────────────────────────────────────────────
+# 🚨 2026-09-27 — 사용자 규칙: 사내 정보(내부 펀드코드 · 사내 시스템 이름 · 사내 DB 스키마/테이블명 · 접속 주소 ·
+#   사내 조직 이름)는 공개 저장소에 두지 않는다 — 잠금 페이지(kb_lock) 나 git-ignore 된 로컬 입력(build/_private/)으로.
+#   코드 주석 · 공개 페이지 · 자료 · 갱신 피드(커밋 제목을 옮기는 log_from_git) 어디로든 들어올 수 있어 전 파일을 본다.
+#   무엇이 사내 식별자인지는 build/_private/deny_hashes.json(해시만 · 로컬 전용 · 짧은 값의 해시는 되찾을 수 있어 공개하지 않는다)이 정하고, 걸리면 «파일:줄» 만 찍는다 —
+#   **토큰은 찍지 않는다**(CI 로그도 공개다). 규약 · 뺀 것 · 한계는 build/deny_gate.py 머리말.
+# ⚠ try/except: pass 로 감싸지 않는다 — 검사가 죽으면 실패로 적는다(바로 위 라이선스 검사와 같은 이유).
+try:
+    import deny_gate as _dg
+    _dg_fail = _dg.selftest()
+    if _dg_fail:
+        errors.append("사내 식별자 관문 자체 시험 실패 — %s" % "; ".join(_dg_fail))
+    _dg_r = _dg.scan_repo(ROOT)
+    if _dg_r.get("skipped"):
+        print("  ~ 사내 식별자 관문: 차단 목록(로컬 전용 build/_private/deny_hashes.json)이 없어 건너뜀 — "
+              "CI · 다른 PC 의 통과는 검사가 아니다(푸시 전 이 PC 의 검증이 관문)")
+    for _p, _ln in _dg_r["hits"][:40]:
+        errors.append("%s:%d: 사내 식별자(차단 목록 해시 일치) — 공개 저장소에 두지 않는다. 일반 명칭으로 "
+                      "바꾸거나(«S&P 500 펀드» · «사내 DB» · «사내 시스템») 값이 필요하면 git-ignore 된 "
+                      "build/_private/ 로 옮길 것" % (_p, _ln))
+    if len(_dg_r["hits"]) > 40:
+        errors.append("사내 식별자 — 위 40줄 말고도 %d줄 더(python build/deny_gate.py 로 전부 본다)"
+                      % (len(_dg_r["hits"]) - 40))
+    for _p, _n, _a in _dg_r["frozen_over"]:
+        errors.append("%s: 얼린 기록인데 사내 식별자 줄이 %d 로 허용 %d 을 넘었다 — 얼린 기록에 새로 적지 말 것"
+                      % (_p, _n, _a))
+    for _p, _n, _a in _dg_r["frozen_stale"]:
+        print("  ~ 사내 식별자 관문: %s 허용 %d 인데 지금 %s — build/deny_gate.py 의 FROZEN 을 낮출 것(래칫)"
+              % (_p, _a, "없음" if _n is None else _n))
+    if not (_dg_fail or _dg_r["hits"] or _dg_r["frozen_over"] or _dg_r.get("skipped")):
+        print("  ~ 사내 식별자 관문 통과(텍스트 %d · 이진 %d 건너뜀 · 목록 %d · 얼린 기록 %d곳 허용 · 자체 시험 통과 · %.1f초)"
+              % (_dg_r["files"], _dg_r["binary"], _dg_r["hashes"], len(_dg.FROZEN), _dg_r["seconds"]))
+except Exception as _e:
+    errors.append("사내 식별자 관문이 예외로 죽었다 — %s: %s (미검증은 통과가 아니다)"
+                  % (type(_e).__name__, str(_e)[:120]))
 
 # ── 손으로 적은 갱신 주기가 크론과 어긋나는가 ────────────────────────────
 # 🚨 2026-08-05 — asof_index 의 cadence 는 손으로 적고 sched 는 크론에서 파생한다.

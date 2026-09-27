@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/pit_px_db2.py — 편출 종목 가격을 사내 DB(public.index_constituents)로 **복구**한다(§F · 배치 R).
+"""build/pit_px_db2.py — 편출 종목 가격을 사내 DB(지수 구성 테이블)로 **복구**한다(§F · 배치 R).
 
   사내 DB 캐시  →  $TEMP/rbatch/pxrec[/nullmeta|/merge]/stage_pit_px.json · stage_px_raw.json · splits.json · report.json
   --merge       →  위 스테이징을 **지금의** data/pit_px.json 위에 병합 + data/_px_raw.json(시총용 원 종가) — 두 파일만 쓴다
@@ -174,12 +174,13 @@ def fetch_cache(path):
     """SPX·NDX 의 가격 있는 행만 받는다 — 이름·섹터·비중·ISIN 은 조회하지 않는다."""
     import db_load
     import psycopg2
+    T_CONS = db_load.table("constituents")        # 사내 테이블 이름 — build/_private/db.json(로컬)
     conn = psycopg2.connect(**db_load._conn_params())
     try:
         cur = conn.cursor()
-        cur.execute("""select index, ticker, split_part(ticker,' ',1), crncy, country, dt,
+        cur.execute(f"""select index, ticker, split_part(ticker,' ',1), crncy, country, dt,
                               local_price, index_shares, index_market_cap
-                         from public.index_constituents
+                         from {T_CONS}
                         where index = any(%s) and local_price is not null
                         order by 3, 6, 1""", (list(IDX),))
         rows = cur.fetchall()
@@ -726,7 +727,7 @@ STOPS = {
     "XLNX": {"2022-02-11": (_LP, "AMD 인수 완료(2022-02-14 · 마지막 거래일 02-11)", False)},
     "YHOO": {"2017-06-16": (_M, "본업 Verizon 매각(2017-06-13) 뒤 Altaba(AABA)로 개명 — 계속 거래", False)},
 }
-# STOPS 에 적힌 랩(야후) 키의 closed[키].src — DB 로 메운 키(index_constituents)와 가른다. closed 에 오르면
+# STOPS 에 적힌 랩(야후) 키의 closed[키].src — DB 로 메운 키(표지 «db»)와 가른다. closed 에 오르면
 # pit_px_refresh 가 그 키를 더 묻지 않는다(EQR: 티커가 VMRK 로 바뀌어 야후 EQR 은 멈춘 값만 준다).
 LAB_STOP_SRC = "yfinance"
 # DB 에 월말 행이 없는 날 — 멈춘 날 → 다시 서는 날(그 사이가 월말). 지수에 계속 있었으니 결측이 아니라 짧은 수익(선언).
@@ -1223,7 +1224,7 @@ def main(argv=None):
             if not st_:
                 continue                                # 적힌 날이 계열에 없다(값이 바뀌었다) — 싣지 않는다
             last_stop = last_stop or st_[-1]
-        closed[k] = {"since": dates[last_i], "src": LAB_STOP_SRC if k in lab_stop_keys else "index_constituents",
+        closed[k] = {"since": dates[last_i], "src": LAB_STOP_SRC if k in lab_stop_keys else "db",
                      "exit": (last_stop or {}).get("why") or pc.get("exit") or "",
                      "uncertain": bool((last_stop or {}).get("uncertain")),
                      "stops": st_}
@@ -1463,7 +1464,7 @@ def main(argv=None):
     # ── 문서 조립(스테이징 = 병합 결과와 같은 바이트) ─────────────────────────────────────────
     src = dict(rec.get("src") or {})
     for k in db_keys:
-        src[k] = "index_constituents"
+        src[k] = "db"                                   # 표지만 남긴다(테이블 이름은 싣지 않는다 · 2026-09-27)
     never = dict(rec.get("never") or {})
     never_removed = sorted(k for k in list(never) if k in closed)
     for k in never_removed:
@@ -1479,7 +1480,7 @@ def main(argv=None):
         "coverage": {"start": dates[0], "end": dates[-1], "n_dates": D, "n_tickers": len(newpx), "n_points": n_pts},
         "never": never, "n_never": len(never), "repairs": repairs,
         "src": dict(sorted(src.items())), "n_src_db": len(src),
-        "src_note": "src 에 적힌 키는 사내 DB(public.index_constituents)의 «지수에 있던 날의 종가» 로 빈 날만 메운 것이다"
+        "src_note": "src 에 적힌 키(표지 «db»)는 사내 DB(지수 구성 테이블)의 «지수에 있던 날의 종가» 로 빈 날만 메운 것이다"
                     "(build/pit_px_db2.py --merge). 이미 있던 값은 덮지 않았다(선언된 절단은 repairs 의 db_merge_cut). "
                     "기준은 basis 에 키별로 적었다(db_pr = 분할만 되맞춘 가격수익 · 배당 없음 · db_scaled = 랩 배당조정 계열에 비율로 맞춤).",
         "basis": {k: b for k, b in sorted(basis.items())},

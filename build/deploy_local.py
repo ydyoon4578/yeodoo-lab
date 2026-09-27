@@ -20,7 +20,7 @@
   · robots.txt · sitemap.xml — 공개 도메인이 박혀 있다. 사내에서는 색인 자체를 막는다.
   · data/_pit_*_cache.json (20.5MB) — 빌드 전용. 화면이 **한 번도 안 받는다**(실측:
     HTML 참조 0곳). 배포에서 뺀다.
-  · data/pit_members.json — 사내 DB(public.index_constituents) 산출물이라 공개 저장소에
+  · data/pit_members.json — 사내 DB(지수 구성 테이블) 산출물이라 공개 저장소에
     못 올린다. **사내 배포에는 넣을 수 있다** — 있으면 그대로 싣는다.
 
 ## 서버에 반드시 걸어야 하는 것 둘

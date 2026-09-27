@@ -29,7 +29,7 @@ OUT  = os.path.join(ROOT, "_build", "pages", "db_content.html")
 NOTES = os.path.join(ROOT, "build", "db_notes.json")
 SAMPLES = os.path.join(ROOT, "build", "db_samples.json")
 
-# 작업 테이블·복제 잔재는 카탈로그에서 뺀다 — xfeed 의 tmptable_* 112개가 목록을 덮는다.
+# 작업 테이블·복제 잔재는 카탈로그에서 뺀다 — 한 DB 의 tmptable_* 112개가 목록을 덮는다.
 JUNK = re.compile(r"^(tmptable_|awsdms_|_)", re.I)
 
 
@@ -167,7 +167,7 @@ def main():
     kept  = sum(len(keep_of(v)) for v in cat.values() if isinstance(v, list))
     asof  = datetime.date.today().isoformat()
 
-    A('<p class="dbnote">AI추진팀이 MCP 로 연 사내 데이터베이스 7곳의 테이블을 <code>list_tables</code> 로 전수 조회하고, '
+    A('<p class="dbnote">사내에서 MCP 로 연 데이터베이스 7곳의 테이블을 <code>list_tables</code> 로 전수 조회하고, '
       '핵심 테이블은 실제로 질의해 행수·기간·커버리지를 확인한 결과다. '
       f'테이블 <b>{total}개</b>(작업·시스템 잔재 {total-kept} 제외 {kept}) · 실측 {asof} · '
       '전부 읽기 전용 · 60초 타임아웃 · 1000행 리밋. '
@@ -233,7 +233,7 @@ def main():
                 A('<tr class="smp" hidden><td colspan="4">%s</td></tr>' % sample_html(sm))
         A('</tbody></table>')
         if len(k) > cap:
-            A(f'<div class="dbmore">행수 하위 {len(k)-cap}개 생략 — 대부분 ciq* 코드 마스터와 Compustat 레거시(co_*·sec_*·idx_*)다</div>')
+            A(f'<div class="dbmore">행수 하위 {len(k)-cap}개 생략 — 대부분 코드 마스터와 레거시 테이블이다</div>')
         A('</div></section>')
 
     A('<div class="dbfoot"><h4>접속과 규약</h4>')

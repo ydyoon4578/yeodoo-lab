@@ -16,7 +16,7 @@
 
 1. **비중 캐시 갱신** — YEOUIDO_REPO 자격으로 NDX 주말 스냅샷을 다시 받는다
    (v2 형식: [티커, 비중, gics]). 세션 기록 2026-08-20 참조 — 쿼리는
-   index_constituents 에서 주말 날짜 목록으로. 산출: data/_ndx_weights_cache.json(gitignore).
+   사내 지수 구성 테이블(이름은 build/_private/db.json 의 tables.constituents)에서 주말 날짜 목록으로. 산출: data/_ndx_weights_cache.json(gitignore).
 2. **전방 파일에 잇기** — `python build/forward_weekly.py` (2026-08-21 구현).
    얼린 정본은 건드리지 않고 data/strategy_forward.json 에 append-only 로 쌓는다:
    기존 행 불변 · 재계산이 기존 행과 어긋나면 경고만(원 기록 유지) · 얼린 span 이후의

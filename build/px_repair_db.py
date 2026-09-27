@@ -118,10 +118,11 @@ def main() -> int:
         print("메울 것이 없다")
         return 0
 
+    T_CONS = db_load.table("constituents")        # 사내 테이블 이름 — build/_private/db.json(로컬)
     conn = psycopg2.connect(**db_load._conn_params())
     cur = conn.cursor()
-    cur.execute("""select split_part(ticker,' ',1) as t, dt, local_price
-                     from public.index_constituents
+    cur.execute(f"""select split_part(ticker,' ',1) as t, dt, local_price
+                     from {T_CONS}
                     where index = any(%s) and local_price is not null
                       and crncy = 'USD' and country = 'US'
                       and split_part(ticker,' ',1) = any(%s)
@@ -201,7 +202,7 @@ def main() -> int:
             rep[dd] = "db"
         obj["px_repair"] = rep
         obj["px_repair_note"] = (
-            "이 날짜의 종가는 사내 DB(public.index_constituents)의 원종가를 끊기기 직전 "
+            "이 날짜의 종가는 사내 DB(지수 구성 테이블)의 원종가를 끊기기 직전 "
             "구간의 비율(랩/DB)로 이 계열의 기준에 맞춰 넣은 것이다. yfinance 가 이 종목을 "
             "주지 않아 생긴 공백을 메운 것이며, **고가·저가·거래량은 그대로 비어 있다** — "
             "DB 에 없기 때문이다. "

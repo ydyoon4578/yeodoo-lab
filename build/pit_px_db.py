@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """build/pit_px_db.py — 편출 종목 가격 기록의 **빈 곳을 사내 DB 로 메운다**.
 
-  public.index_constituents  →  data/pit_px.json (병합)
+  사내 지수 구성 테이블(이름은 build/_private/db.json 의 tables.constituents)  →  data/pit_px.json (병합)
 
 ## 왜 있나 (2026-08-19 · 사용자 지시)
 
-  "종목 없는거는 index_constituents db 참고해서 채우라고 했을텐데.
+  "종목 없는거는 [사내 지수 구성 테이블] db 참고해서 채우라고 했을텐데.
    적어도 최근 1년치는 100% 데이터가 있어야지 지수 둘다"
 
   편입 원장(constituents.html)의 최근 12개월 커버리지가 SPX 95.8~99.6% · NDX 94.1~99.0%
@@ -101,13 +101,14 @@ def main() -> int:
                          % str(e)[:70])
     print("랩 지수 이력 티커 %d종 — 이 안에 있는 것만 메운다" % len(need))
 
+    T_CONS = db_load.table("constituents")        # 사내 테이블 이름 — 저장소 밖(로컬 파일)
     conn = psycopg2.connect(**db_load._conn_params())
     cur = conn.cursor()
     # 🚨 통화·국가로 거른다. 전체 106만행 중 6.5만행이 crncy/country 가 NULL 인데
     #   (2014~2018 옛 행들), 그것을 그대로 실으면 어느 통화인지 모르는 값을 섞게 된다.
     #   USD/US 만 쓴다 — 이 랩의 가격은 전부 USD 다.
-    cur.execute("""select split_part(ticker,' ',1) as t, dt, local_price
-                     from public.index_constituents
+    cur.execute(f"""select split_part(ticker,' ',1) as t, dt, local_price
+                     from {T_CONS}
                     where index = any(%s) and local_price is not null
                       and crncy = 'USD' and country = 'US'
                     order by 1, 2""", (list(IDX),))
@@ -208,12 +209,12 @@ def main() -> int:
 
     src = dict(rec.get("src") or {})
     for t in add_t:
-        src[t] = "index_constituents"     # 어느 이름이 DB 에서 왔는지 남긴다
+        src[t] = "db"     # 어느 이름이 DB 에서 왔는지 남긴다(표지 «db» — 테이블 이름은 싣지 않는다)
     rec.update({
         "coverage": {"start": alld[0], "end": alld[-1], "n_dates": len(alld),
                      "n_tickers": len(out), "n_points": n_pts},
         "src": src, "n_src_db": len(src),
-        "src_note": "src 에 적힌 티커는 사내 DB(public.index_constituents)의 «지수에 있던 "
+        "src_note": "src 에 적힌 티커(표지 «db»)는 사내 DB(지수 구성 테이블)의 «지수에 있던 "
                     "날의 종가» 로 메운 것이다. 이미 있던 값은 덮지 않았다 — 원천을 섞지 않는다.",
         "dates": alld, "px": out,
     })
