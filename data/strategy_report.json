@@ -8893,8 +8893,8 @@
      "beta": 0.936
     },
     "five": {
-     "alpha": 0.69,
-     "t": 2.33,
+     "alpha": 0.68,
+     "t": 2.32,
      "n": 506,
      "vs": [
       "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
@@ -9555,7 +9555,7 @@
      "beta": -0.66
     },
     "five": {
-     "alpha": 25.86,
+     "alpha": 25.85,
      "t": 2.34,
      "n": 119,
      "vs": [
@@ -13385,7 +13385,7 @@
      {
       "rt": 5.0,
       "cagr": 10.49,
-      "sharpe": 0.563,
+      "sharpe": 0.562,
       "excess": -2.89,
       "t": null,
       "main": true
@@ -14136,7 +14136,7 @@
     },
     "five": {
      "alpha": 2.68,
-     "t": 1.94,
+     "t": 1.95,
      "n": 506,
      "vs": [
       "오버나이트 보유 (QQQ 종가→시가)",
@@ -14306,7 +14306,7 @@
      "beta": 1.066
     },
     "five": {
-     "alpha": -0.61,
+     "alpha": -0.62,
      "t": -0.27,
      "n": 506,
      "vs": [
@@ -14471,13 +14471,13 @@
    "incr": {
     "one": {
      "vs": "골든크로스 (50/200)",
-     "corr": 0.613,
+     "corr": 0.612,
      "alpha": -0.5,
      "t": -0.34,
      "beta": 0.414
     },
     "five": {
-     "alpha": -0.72,
+     "alpha": -0.73,
      "t": -0.54,
      "n": 506,
      "vs": [
@@ -16337,14 +16337,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 9.27,
+      "cagr": 9.28,
       "sharpe": 0.619,
-      "excess": -4.11,
+      "excess": -4.1,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.11,
+    "drag": 0.1,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -16547,7 +16547,7 @@
      "beta": 1.032
     },
     "five": {
-     "alpha": -0.86,
+     "alpha": -0.87,
      "t": -1.22,
      "n": 506,
      "vs": [
@@ -16874,7 +16874,7 @@
    "incr": {
     "one": {
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
-     "corr": 0.775,
+     "corr": 0.774,
      "alpha": -1.11,
      "t": -0.53,
      "beta": 0.756
@@ -17195,7 +17195,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 7.11,
+      "v": 7.12,
       "p": 0.1275
      },
      {
@@ -17219,10 +17219,10 @@
      "corr": 0.921,
      "alpha": -2.86,
      "t": -1.41,
-     "beta": 1.248
+     "beta": 1.247
     },
     "five": {
-     "alpha": -2.8,
+     "alpha": -2.81,
      "t": -1.37,
      "n": 506,
      "vs": [
@@ -17400,8 +17400,8 @@
       "대담형 자산배분 BAA (균형형 · 6종 분산)",
       "위험균형 × 개별 추세 게이트 (2단)",
       "경계형 자산배분 VAA-G4 (Keller 2017)",
-      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
-      "매니지드 퓨처스 위성 배분 (DBMF 20%)"
+      "매니지드 퓨처스 위성 배분 (DBMF 20%)",
+      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)"
      ]
     },
     "absorbed": null,
@@ -18129,7 +18129,7 @@
      "beta": 0.932
     },
     "five": {
-     "alpha": 0.23,
+     "alpha": 0.22,
      "t": 0.35,
      "n": 506,
      "vs": [
@@ -18302,7 +18302,7 @@
    "incr": {
     "one": {
      "vs": "초과채권프리미엄(EBP) 리스크선호 게이트",
-     "corr": 0.467,
+     "corr": 0.466,
      "alpha": -2.51,
      "t": -1.52,
      "beta": 0.729
@@ -19032,7 +19032,7 @@
      "corr": 0.98,
      "alpha": 0.89,
      "t": 1.03,
-     "beta": 1.013
+     "beta": 1.014
     },
     "five": {
      "alpha": -0.73,
@@ -19547,7 +19547,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.006,
-      "p": 0.531
+      "p": 0.5308
      }
     ],
     "n_boot": 4000,
@@ -19559,7 +19559,7 @@
      "vs": "크로스에셋 RP 12자산 — 변동성 추정창 90일",
      "corr": 1.0,
      "alpha": 0.0,
-     "t": 0.01,
+     "t": 0.0,
      "beta": 1.0
     },
     "five": {
@@ -41786,28 +41786,28 @@
     "as_of": "2026-08-31",
     "n": 10,
     "tickers": [
+     "CRWD",
+     "DLR",
      "DVN",
      "FLEX",
-     "GEHC",
      "INTC",
      "NBIS",
      "PEG",
      "PH",
      "SMCI",
-     "STX",
-     "WBD"
+     "STX"
     ],
     "names": {
+     "CRWD": "CROWDSTRIKE HOLDINGS INC - A",
+     "DLR": "DIGITAL REALTY TRUST INC",
      "DVN": "DEVON ENERGY CORP",
      "FLEX": "FLEX LTD",
-     "GEHC": "GE HEALTHCARE TECHNOLOGY",
      "INTC": "INTEL CORP",
      "NBIS": "NEBIUS GROUP NV",
      "PEG": "PUBLIC SERVICE ENTERPRISE GP",
      "PH": "PARKER HANNIFIN CORP",
      "SMCI": "SUPER MICRO COMPUTER INC",
-     "STX": "SEAGATE TECHNOLOGY HOLDINGS",
-     "WBD": "WARNER BROS DISCOVERY INC"
+     "STX": "SEAGATE TECHNOLOGY HOLDINGS"
     },
     "weights": null,
     "exposure_now": null,
@@ -47986,7 +47986,6 @@
      "CNC",
      "COP",
      "CVS",
-     "DG",
      "DLTR",
      "DXCM",
      "EBAY",
@@ -48026,7 +48025,8 @@
      "VRSK",
      "VRSN",
      "WBD",
-     "WDC"
+     "WDC",
+     "XOM"
     ],
     "names": {
      "ADBE": "ADOBE INC",
@@ -48040,7 +48040,6 @@
      "CNC": "CENTENE CORP",
      "COP": "CONOCOPHILLIPS",
      "CVS": "CVS HEALTH CORP",
-     "DG": "DOLLAR GENERAL CORP",
      "DLTR": "DOLLAR TREE INC",
      "DXCM": "DEXCOM INC",
      "EBAY": "EBAY INC",
@@ -48080,7 +48079,8 @@
      "VRSK": "VERISK ANALYTICS INC",
      "VRSN": "VERISIGN INC",
      "WBD": "WARNER BROS DISCOVERY INC",
-     "WDC": "WESTERN DIGITAL CORP"
+     "WDC": "WESTERN DIGITAL CORP",
+     "XOM": "EXXON MOBIL CORP"
     },
     "weights": null,
     "exposure_now": null,
@@ -57986,11 +57986,12 @@
     "tickers": [
      "ABNB",
      "ABT",
+     "ACGL",
      "ACN",
      "ADI",
      "ADM",
      "AIG",
-     "ANET",
+     "AMAT",
      "APH",
      "ATO",
      "BAC",
@@ -58028,7 +58029,6 @@
      "ED",
      "EIX",
      "ELV",
-     "EMR",
      "EOG",
      "EQT",
      "ES",
@@ -58040,11 +58040,9 @@
      "FANG",
      "FDX",
      "FISV",
-     "FITB",
      "FOXA",
      "FSLR",
      "FTV",
-     "GD",
      "GEHC",
      "GLW",
      "GRMN",
@@ -58091,6 +58089,7 @@
      "NXPI",
      "O",
      "ON",
+     "OXY",
      "PCAR",
      "PCG",
      "PG",
@@ -58098,7 +58097,6 @@
      "PLD",
      "PPL",
      "PRU",
-     "PSX",
      "QCOM",
      "RCL",
      "REGN",
@@ -58125,6 +58123,8 @@
      "TRV",
      "TSLA",
      "UAL",
+     "UBER",
+     "UPS",
      "URI",
      "VEEV",
      "VICI",
@@ -58143,11 +58143,12 @@
     "names": {
      "ABNB": "AIRBNB INC-CLASS A",
      "ABT": "ABBOTT LABORATORIES",
+     "ACGL": "ARCH CAPITAL GROUP LTD",
      "ACN": "ACCENTURE PLC-CL A",
      "ADI": "ANALOG DEVICES INC",
      "ADM": "ARCHER-DANIELS-MIDLAND CO",
      "AIG": "AMERICAN INTERNATIONAL GROUP",
-     "ANET": "ARISTA NETWORKS INC",
+     "AMAT": "APPLIED MATERIALS INC",
      "APH": "AMPHENOL CORP-CL A",
      "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
@@ -58185,7 +58186,6 @@
      "ED": "CONSOLIDATED EDISON INC",
      "EIX": "EDISON INTERNATIONAL",
      "ELV": "ELEVANCE HEALTH INC",
-     "EMR": "EMERSON ELECTRIC CO",
      "EOG": "EOG RESOURCES INC",
      "EQT": "EQT CORP",
      "ES": "EVERSOURCE ENERGY",
@@ -58197,11 +58197,9 @@
      "FANG": "DIAMONDBACK ENERGY INC",
      "FDX": "FEDEX CORP",
      "FISV": "FISERV INC",
-     "FITB": "FIFTH THIRD BANCORP",
      "FOXA": "FOX CORP - CLASS A",
      "FSLR": "FIRST SOLAR INC",
      "FTV": "FORTIVE CORP",
-     "GD": "GENERAL DYNAMICS CORP",
      "GEHC": "GE HEALTHCARE TECHNOLOGY",
      "GLW": "CORNING INC",
      "GRMN": "GARMIN LTD",
@@ -58248,6 +58246,7 @@
      "NXPI": "NXP SEMICONDUCTORS NV",
      "O": "REALTY INCOME CORP",
      "ON": "ON SEMICONDUCTOR",
+     "OXY": "OCCIDENTAL PETROLEUM CORP",
      "PCAR": "PACCAR INC",
      "PCG": "P G & E CORP",
      "PG": "PROCTER & GAMBLE CO/THE",
@@ -58255,7 +58254,6 @@
      "PLD": "PROLOGIS INC",
      "PPL": "PPL CORP",
      "PRU": "PRUDENTIAL FINANCIAL INC",
-     "PSX": "PHILLIPS 66",
      "QCOM": "QUALCOMM INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
      "REGN": "REGENERON PHARMACEUTICALS",
@@ -58282,6 +58280,8 @@
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
      "UAL": "UNITED AIRLINES HOLDINGS INC",
+     "UBER": "UBER TECHNOLOGIES INC",
+     "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
@@ -65914,7 +65914,7 @@
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 49.4,
+    "exposure_now": 49.3,
     "note": "노출 49%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
