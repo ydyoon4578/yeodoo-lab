@@ -4147,6 +4147,21 @@
    "gate": "관문 통과(채택 표시 · 표본 안 · 오염 측정) — 보류: 펀드에 붙이기는 사용자 결정 · EGSTEP(결과는 결과 문서에만)",
    "why": "EGSTEP 사전등록 29535c2df · 결과는 build/PREREG-2026-09-27-EGSTEP-RESULT.md",
    "blocked_by": ""
+  },
+  {
+   "sid": "q06-hold",
+   "name": "Q06HOLD — 방어 스텝 방아쇠(Q06 상관 놀람 · 긴 이력판) 기전 검정 · 랩이 안 본 창(보유 2006-09 ~ 2016-08) · French BIG LoBETA − 시장 총 Δ_timing",
+   "kind": "방어 스텝 방아쇠 역할 검정(기전 대리 · 보유 없음)",
+   "arch": "",
+   "when": "2026-09-28",
+   "src": "PREREG-2026-09-28-Q06HOLD.md · PREREG-2026-09-28-Q06HOLD-RESULT.md",
+   "paper": "",
+   "t": null,
+   "incr": null,
+   "measured_no_t": true,
+   "gate": "측정만 — Q06 방아쇠 기전 검정 Q06HOLD(주 점 추정 부호 양 · 결과는 결과 문서에만)",
+   "why": "Q06HOLD 사전등록 7b461f4f8 · 결과는 build/PREREG-2026-09-28-Q06HOLD-RESULT.md",
+   "blocked_by": ""
   }
  ]
 }
