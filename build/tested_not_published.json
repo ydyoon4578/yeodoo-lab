@@ -3982,6 +3982,21 @@
    "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
    "blocked_by": ""
+  },
+  {
+   "sid": "xb-bear",
+   "name": "X-BEAR — 성장 코어(EG30) 급락 방어 스텝(느린 약세 국면에 슬리브 ½ 을 섹터 안 저베타로)",
+   "kind": "펀드 슬리브 10% · EG30 V0 위 조건부 스텝 · 시장 국면 신호(GHM 2023)",
+   "arch": "",
+   "when": "2026-09-27",
+   "src": "PREREG-2026-09-27-XBATCH.md · PREREG-2026-09-27-XBATCH-RESULT.md",
+   "paper": "",
+   "t": null,
+   "incr": null,
+   "measured_no_t": true,
+   "gate": "기각 — 배치 X(결과는 결과 문서에만)",
+   "why": "배치 X 사전등록 757c111cf · 결과는 build/PREREG-2026-09-27-XBATCH-RESULT.md",
+   "blocked_by": ""
   }
  ]
 }
