@@ -1,0 +1,801 @@
+{
+ "kind": "wbatch_f0",
+ "generated_at": "2026-09-27T08:07:02Z",
+ "note": "등록 전 F0 — 개수 · 몫 · 날짜 · 라벨 · 시장 상태 셈만(수익 · 신호-수익 통계 없음 · 값 계열 없음). G-EGD · P0 기록은 굽기 첫 단계(R1).",
+ "coverage": {
+  "rule": "PN2 — 달 판정 = 시총 몫 ≥ 0.95(가격 · 위생 시총 · PIT 섹터가 선 세계 후보 · w_panel.tier1_months) · 개수 몫은 보고 · 개수 ∧ 시총 ≥ 0.95(엔진 H5 판)과 배치 R 규칙은 민감도",
+  "by_year": {
+   "2010": {
+    "months": 12,
+    "pass": 0,
+    "cov_n_min": 0.6273,
+    "cov_cap_min": 0.8128,
+    "world_median": 279.0
+   },
+   "2011": {
+    "months": 12,
+    "pass": 0,
+    "cov_n_min": 0.6829,
+    "cov_cap_min": 0.8324,
+    "world_median": 297.5
+   },
+   "2012": {
+    "months": 12,
+    "pass": 0,
+    "cov_n_min": 0.7014,
+    "cov_cap_min": 0.848,
+    "world_median": 305.0
+   },
+   "2013": {
+    "months": 12,
+    "pass": 0,
+    "cov_n_min": 0.7153,
+    "cov_cap_min": 0.8567,
+    "world_median": 310.5
+   },
+   "2014": {
+    "months": 12,
+    "pass": 0,
+    "cov_n_min": 0.7222,
+    "cov_cap_min": 0.8605,
+    "world_median": 380.0
+   },
+   "2015": {
+    "months": 12,
+    "pass": 8,
+    "cov_n_min": 0.8866,
+    "cov_cap_min": 0.9455,
+    "world_median": 386.5
+   },
+   "2016": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9224,
+    "cov_cap_min": 0.9617,
+    "world_median": 399.5
+   },
+   "2017": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9598,
+    "cov_cap_min": 0.9744,
+    "world_median": 429.0
+   },
+   "2018": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9433,
+    "cov_cap_min": 0.9677,
+    "world_median": 419.5
+   },
+   "2019": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9568,
+    "cov_cap_min": 0.9811,
+    "world_median": 424.0
+   },
+   "2020": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9753,
+    "cov_cap_min": 0.9906,
+    "world_median": 439.0
+   },
+   "2021": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9888,
+    "cov_cap_min": 0.9956,
+    "world_median": 445.0
+   },
+   "2022": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9889,
+    "cov_cap_min": 0.996,
+    "world_median": 446.0
+   },
+   "2023": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9909,
+    "cov_cap_min": 0.9931,
+    "world_median": 439.0
+   },
+   "2024": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9909,
+    "cov_cap_min": 0.9934,
+    "world_median": 436.0
+   },
+   "2025": {
+    "months": 12,
+    "pass": 12,
+    "cov_n_min": 0.9954,
+    "cov_cap_min": 0.9985,
+    "world_median": 433.5
+   },
+   "2026": {
+    "months": 7,
+    "pass": 7,
+    "cov_n_min": 1.0,
+    "cov_cap_min": 1.0,
+    "world_median": 432.0
+   }
+  },
+  "vs_R": {
+   "R_fail": [
+    "2016-08",
+    "2018-02",
+    "2018-05"
+   ],
+   "same_fail": false,
+   "only_W": [],
+   "only_R": [
+    "2016-08",
+    "2018-02",
+    "2018-05"
+   ]
+  }
+ },
+ "px_overlay": {
+  "sha256": "7c4041a926aa650d0729edd1906a6343eec03cbbc8dbd1daa75ac4f631de8b9f",
+  "bytes": 904481,
+  "format": "pit_px_stage/1",
+  "visibility": "INTERNAL",
+  "keys_in_file": 99,
+  "keys_filled": 53,
+  "keys_new": 7,
+  "values_filled": 33959,
+  "skipped": {
+   "kept_existing": 55259
+  },
+  "stops_added": 40,
+  "stops_kept_existing": 2,
+  "rule": "PN8 — price-missing member-days only · never overwrites · no today/quarantined keys · no other-key reads"
+ },
+ "price_hole": {
+  "rule": "결정일 가격이 없는 세계 후보(이름 수의 달 평균) · 그 가운데 창 끝 전에 명단을 떠나는 이름",
+  "by_year": {
+   "2016": {
+    "months": 5,
+    "missing_mean": 2.2,
+    "later_exit_mean": 2.2,
+    "cands_mean": 421.4
+   },
+   "2017": {
+    "months": 12,
+    "missing_mean": 0.92,
+    "later_exit_mean": 0.92,
+    "cands_mean": 438.9
+   },
+   "2018": {
+    "months": 12,
+    "missing_mean": 15.08,
+    "later_exit_mean": 15.08,
+    "cands_mean": 442.0
+   },
+   "2019": {
+    "months": 12,
+    "missing_mean": 11.33,
+    "later_exit_mean": 11.33,
+    "cands_mean": 440.5
+   },
+   "2020": {
+    "months": 12,
+    "missing_mean": 4.25,
+    "later_exit_mean": 4.25,
+    "cands_mean": 446.8
+   },
+   "2021": {
+    "months": 12,
+    "missing_mean": 3.08,
+    "later_exit_mean": 3.08,
+    "cands_mean": 448.7
+   },
+   "2022": {
+    "months": 12,
+    "missing_mean": 2.67,
+    "later_exit_mean": 2.67,
+    "cands_mean": 449.8
+   },
+   "2023": {
+    "months": 12,
+    "missing_mean": 2.0,
+    "later_exit_mean": 2.0,
+    "cands_mean": 442.4
+   },
+   "2024": {
+    "months": 12,
+    "missing_mean": 2.0,
+    "later_exit_mean": 2.0,
+    "cands_mean": 439.1
+   },
+   "2025": {
+    "months": 12,
+    "missing_mean": 0.67,
+    "later_exit_mean": 0.67,
+    "cands_mean": 433.8
+   },
+   "2026": {
+    "months": 7,
+    "missing_mean": 0.0,
+    "later_exit_mean": 0.0,
+    "cands_mean": 431.6
+   }
+  }
+ },
+ "tier1_months": {
+  "months": [
+   "2016-08",
+   "2016-09",
+   "2016-10",
+   "2016-11",
+   "2016-12",
+   "2017-01",
+   "2017-02",
+   "2017-03",
+   "2017-04",
+   "2017-05",
+   "2017-06",
+   "2017-07",
+   "2017-08",
+   "2017-09",
+   "2017-10",
+   "2017-11",
+   "2017-12",
+   "2018-01",
+   "2018-02",
+   "2018-03",
+   "2018-04",
+   "2018-05",
+   "2018-06",
+   "2018-07",
+   "2018-08",
+   "2018-09",
+   "2018-10",
+   "2018-11",
+   "2018-12",
+   "2019-01",
+   "2019-02",
+   "2019-03",
+   "2019-04",
+   "2019-05",
+   "2019-06",
+   "2019-07",
+   "2019-08",
+   "2019-09",
+   "2019-10",
+   "2019-11",
+   "2019-12",
+   "2020-01",
+   "2020-02",
+   "2020-03",
+   "2020-04",
+   "2020-05",
+   "2020-06",
+   "2020-07",
+   "2020-08",
+   "2020-09",
+   "2020-10",
+   "2020-11",
+   "2020-12",
+   "2021-01",
+   "2021-02",
+   "2021-03",
+   "2021-04",
+   "2021-05",
+   "2021-06",
+   "2021-07",
+   "2021-08",
+   "2021-09",
+   "2021-10",
+   "2021-11",
+   "2021-12",
+   "2022-01",
+   "2022-02",
+   "2022-03",
+   "2022-04",
+   "2022-05",
+   "2022-06",
+   "2022-07",
+   "2022-08",
+   "2022-09",
+   "2022-10",
+   "2022-11",
+   "2022-12",
+   "2023-01",
+   "2023-02",
+   "2023-03",
+   "2023-04",
+   "2023-05",
+   "2023-06",
+   "2023-07",
+   "2023-08",
+   "2023-09",
+   "2023-10",
+   "2023-11",
+   "2023-12",
+   "2024-01",
+   "2024-02",
+   "2024-03",
+   "2024-04",
+   "2024-05",
+   "2024-06",
+   "2024-07",
+   "2024-08",
+   "2024-09",
+   "2024-10",
+   "2024-11",
+   "2024-12",
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07"
+  ],
+  "fail": [],
+  "T": 120,
+  "window": [
+   "2016-08",
+   "2026-07"
+  ],
+  "rule": "PN2 — 시총 몫 ≥ 0.95(가격 · 위생 시총 · PIT 섹터가 선 세계 후보)",
+  "sensitivity": {
+   "count_and_cap_095": {
+    "T": 114,
+    "n_fail": 6,
+    "months": [
+     "2016-08",
+     "2016-09",
+     "2016-10",
+     "2016-11",
+     "2016-12",
+     "2017-01",
+     "2017-02",
+     "2017-03",
+     "2017-04",
+     "2017-05",
+     "2017-06",
+     "2017-07",
+     "2017-08",
+     "2017-09",
+     "2017-10",
+     "2017-11",
+     "2017-12",
+     "2018-01",
+     "2018-06",
+     "2018-07",
+     "2018-08",
+     "2018-09",
+     "2018-10",
+     "2019-01",
+     "2019-02",
+     "2019-03",
+     "2019-04",
+     "2019-05",
+     "2019-06",
+     "2019-07",
+     "2019-08",
+     "2019-09",
+     "2019-10",
+     "2019-11",
+     "2019-12",
+     "2020-01",
+     "2020-02",
+     "2020-03",
+     "2020-04",
+     "2020-05",
+     "2020-06",
+     "2020-07",
+     "2020-08",
+     "2020-09",
+     "2020-10",
+     "2020-11",
+     "2020-12",
+     "2021-01",
+     "2021-02",
+     "2021-03",
+     "2021-04",
+     "2021-05",
+     "2021-06",
+     "2021-07",
+     "2021-08",
+     "2021-09",
+     "2021-10",
+     "2021-11",
+     "2021-12",
+     "2022-01",
+     "2022-02",
+     "2022-03",
+     "2022-04",
+     "2022-05",
+     "2022-06",
+     "2022-07",
+     "2022-08",
+     "2022-09",
+     "2022-10",
+     "2022-11",
+     "2022-12",
+     "2023-01",
+     "2023-02",
+     "2023-03",
+     "2023-04",
+     "2023-05",
+     "2023-06",
+     "2023-07",
+     "2023-08",
+     "2023-09",
+     "2023-10",
+     "2023-11",
+     "2023-12",
+     "2024-01",
+     "2024-02",
+     "2024-03",
+     "2024-04",
+     "2024-05",
+     "2024-06",
+     "2024-07",
+     "2024-08",
+     "2024-09",
+     "2024-10",
+     "2024-11",
+     "2024-12",
+     "2025-01",
+     "2025-02",
+     "2025-03",
+     "2025-04",
+     "2025-05",
+     "2025-06",
+     "2025-07",
+     "2025-08",
+     "2025-09",
+     "2025-10",
+     "2025-11",
+     "2025-12",
+     "2026-01",
+     "2026-02",
+     "2026-03",
+     "2026-04",
+     "2026-05",
+     "2026-06",
+     "2026-07"
+    ]
+   },
+   "R_rule_count090_cap095": {
+    "T": 120,
+    "fail": []
+   }
+  },
+  "count_share_min": 0.9433106575963719
+ },
+ "kps_coverage": {
+  "fail": [],
+  "min": 0.9775561097256857,
+  "rule": "KPS8 원값 ≥ 6 인 이름 몫 ≥ 0.90",
+  "w01_T": 120
+ },
+ "me_sane": {
+  "rule": "PN1 — 시총 < 300 백만 달러 · > 8e+06 백만 달러 · 랩 원장 대조 비 [0.2, 5.0] 밖 → 결측",
+  "n_obs": 93864,
+  "n_flag": 530,
+  "by_year": {
+   "2010": 82,
+   "2011": 79,
+   "2012": 56,
+   "2013": 33,
+   "2014": 27,
+   "2015": 35,
+   "2016": 39,
+   "2017": 35,
+   "2018": 26,
+   "2019": 26,
+   "2020": 33,
+   "2021": 23,
+   "2022": 12,
+   "2023": 13,
+   "2024": 11
+  },
+  "by_reason": {
+   "ceil": 18,
+   "floor": 366,
+   "ledger": 146
+  },
+  "tier1_names": {
+   "AIV": 52,
+   "COP": 95,
+   "DPS": 16,
+   "LIN": 4,
+   "SIRI": 6,
+   "TCOM": 21
+  },
+  "tier1_n_flag": 194
+ },
+ "anchors": {
+  "gate_ok": true,
+  "mae": 0.0182,
+  "n_rows": 12,
+  "rows": [
+   {
+    "t": "AAPL",
+    "m": "2021-11",
+    "known_T": 2.65,
+    "calc_T": 2.7369,
+    "err": 0.0328,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "NVDA",
+    "m": "2024-05",
+    "known_T": 2.7,
+    "calc_T": 2.7014,
+    "err": 0.0005,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "MSFT",
+    "m": "2021-11",
+    "known_T": 2.39,
+    "calc_T": 2.4857,
+    "err": 0.04,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "AMZN",
+    "m": "2021-06",
+    "known_T": 1.73,
+    "calc_T": 1.7338,
+    "err": 0.0022,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "TSLA",
+    "m": "2021-11",
+    "known_T": 1.1,
+    "calc_T": 1.1264,
+    "err": 0.024,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "WMT",
+    "m": "2019-06",
+    "known_T": 0.31,
+    "calc_T": 0.3254,
+    "err": 0.0497,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "JNJ",
+    "m": "2017-10",
+    "known_T": 0.3745,
+    "calc_T": 0.3822,
+    "err": 0.0205,
+    "kind": "gate",
+    "repaired": true
+   },
+   {
+    "t": "KO",
+    "m": "2019-06",
+    "known_T": 0.22,
+    "calc_T": 0.2189,
+    "err": -0.005,
+    "kind": "gate",
+    "repaired": false
+   },
+   {
+    "t": "GE",
+    "m": "2017-10",
+    "known_T": 0.1748,
+    "calc_T": 0.1745,
+    "err": -0.0015,
+    "kind": "gate",
+    "repaired": true
+   },
+   {
+    "t": "GE",
+    "m": "2022-12",
+    "known_T": 0.091,
+    "calc_T": 0.0916,
+    "err": 0.0061,
+    "kind": "gate",
+    "repaired": false
+   }
+  ]
+ },
+ "switch_activity": {
+  "W04_theta_ge_075_months": 17,
+  "W04_theta_le_025_months": 13,
+  "W06_triggers_S": 7,
+  "W06_trigger_months": [
+   "2018-02",
+   "2018-10",
+   "2018-12",
+   "2020-02",
+   "2020-03",
+   "2024-08",
+   "2025-04"
+  ],
+  "W06_events": 5,
+  "W06_label": null,
+  "W10m_state_months": 120,
+  "W01_cross_state_months": {
+   "z_baa": 120,
+   "z_vix": 120
+  },
+  "rule": "시장 상태만(수익 없음) — 이진 스위치 활성 달 < 12 또는 독립 사건 < 4 면 «사건 측정만»(규칙은 그대로 굽는다)"
+ },
+ "w04_qfa": {
+  "converged_share_S": 1.0,
+  "n_windows": 151,
+  "first_window_decision": "2014-01"
+ },
+ "fomc": {
+  "n": 140,
+  "n_T1": 97,
+  "by_year": {
+   "2009": 8,
+   "2010": 8,
+   "2011": 8,
+   "2012": 8,
+   "2013": 8,
+   "2014": 8,
+   "2015": 8,
+   "2016": 8,
+   "2017": 8,
+   "2018": 8,
+   "2019": 8,
+   "2020": 7,
+   "2021": 8,
+   "2022": 8,
+   "2023": 8,
+   "2024": 8,
+   "2025": 8,
+   "2026": 5
+  },
+  "source": "https://www.federalreserve.gov/monetarypolicy/{fomccalendars,fomchistorical<YYYY>}.htm"
+ },
+ "w03_sectors": {
+  "min": 11,
+  "max": 11
+ },
+ "reg_B_f0": {
+  "w02_f0": {
+   "sha256_16": "91df76b703a9e44a",
+   "gate": {
+    "coverage_pass": true,
+    "median_share": 0.7172413793103448,
+    "min_share": 0.6882793017456359,
+    "gate": 0.5,
+    "close_card": false,
+    "switch_to_sgml": true,
+    "sgml_changes_values": false,
+    "relocation_mismatch": 3,
+    "relocation_n": 6,
+    "sgml_same": "9/9",
+    "top15_share_min": 0.6,
+    "top15_share_max": 0.628,
+    "density_theta_range": [
+     0.2,
+     0.8
+    ]
+   },
+   "note": "등록 B F0(등록 전 · 개수만 · 🔁 고침 단계가 w_panel 세계(PN8 오버레이 우주)로 다시 셌다 — 비평 2 H1)"
+  },
+  "w11_f0": {
+   "sha256_16": "4761122690a05a9a",
+   "gate": {
+    "gate_pass": true,
+    "start_listed": "2013q2",
+    "holders_min_by_quarter": 0.9976303317535545,
+    "link_pooled": 0.9999423542523347,
+    "link_min_by_quarter": 0.9976303317535545,
+    "close_card": false,
+    "label": "사건 측정만",
+    "n_active": 5,
+    "n_events": 3,
+    "n_pos": 47,
+    "active_months": [
+     "2018-12",
+     "2020-03",
+     "2020-04",
+     "2020-05",
+     "2025-04"
+    ],
+    "io_flag_name_months": 50
+   },
+   "note": "등록 B F0(등록 전 · 개수만 · 🔁 고침 단계가 w_panel 세계(PN8 오버레이 우주)로 다시 셌다 — 비평 2 H1)"
+  }
+ },
+ "decisions_fixed": {
+  "V06_use_sp": false,
+  "twin_24_industry_groups": "삭제(빌드 없음 · F0 허용 결정)"
+ },
+ "noeg_child": {
+  "static": true,
+  "runtime": true,
+  "open_audit": true,
+  "n_opened": 3639,
+  "n_black": 0
+ },
+ "data_files_opened_unregistered": [],
+ "cache_files_opened": {
+  "ov:px_overlay": 1,
+  "v:derived": 1,
+  "v:raw/companyfacts": 12,
+  "v:raw/vd1": 518,
+  "v:raw/yf": 1,
+  "w:f0": 4,
+  "w:raw/fomc": 13
+ },
+ "code_sha": {
+  "build/w_core.py": "51afdd9c215ef711",
+  "build/w_guard.py": "3089003e9048833f",
+  "build/w_stagem.py": "7e2d4ea4e6d2e7c1",
+  "build/w_hygiene.py": "9dc2b56c363163e4",
+  "build/w_audit.py": "17cf4fbc89535619",
+  "build/w_cmp.py": "0ced520468580aa3",
+  "build/w_panel.py": "aebebad62930af8c",
+  "build/w_ipca.py": "f9ce6a059e901fcf",
+  "build/w_ciq.py": "3ba9f1792cb7c165",
+  "build/w_pap.py": "40365772d7083770",
+  "build/w_steps.py": "c6d8fb76ae697ce3",
+  "build/w_cards.py": "ea7a91124dc7ff91",
+  "build/w_geo.py": "8378935a28ac60ea",
+  "build/w_frag.py": "c51caf68a80bbec7",
+  "build/w_run.py": "c0817d06bccf2063",
+  "build/edgar.py": "e8cab8ff83663fa3",
+  "build/index_members.py": "b919613a189fd270",
+  "build/maxyears.py": "78ac080dc0814a89",
+  "build/mech_episodes.py": "a8c6b2ade874a39f",
+  "build/ml_core.py": "594c9d6e1f13207e",
+  "build/ml_strats.py": "63fffacfab417fbc",
+  "build/pit_alias.py": "d857221df63c2180",
+  "build/pit_backtest.py": "d953f61ef9d9c3ad",
+  "build/pit_panel.py": "caa863537f631037",
+  "build/pit_quarantine.py": "708e83f21f26ad08",
+  "build/shares_clean.py": "4aa239e9b5cdb8de",
+  "build/shares_split.py": "ce1c0475ff4ca199",
+  "build/t_pit.py": "213b99cc601c8384",
+  "build/tech_backtest.py": "c2bd26e2fe64c2b6",
+  "build/v_alloc.py": "b57589e09628f2e5",
+  "build/v_cards.py": "200acc645c7438db",
+  "build/v_cond.py": "64cca5f5f73f4d25",
+  "build/v_core.py": "cca487736fcf60a0",
+  "build/v_data.py": "6d4aab805bb06dd3",
+  "build/v_ear.py": "68aec2170d7635ed",
+  "build/v_fund.py": "bf8c8a15f1a95346",
+  "build/v_guard.py": "5d9c80ee1bfcfe15",
+  "build/v_ins.py": "36e178da68ed872b",
+  "build/v_pit.py": "f47267c254fbfce7",
+  "build/v_px_split.py": "c6af02078350f5dc",
+  "build/v_tests.py": "a05671db51c96447",
+  "build/eg30plus.py": "d03d65b413cc0912",
+  "build/qg_lab.py": "048fa2d46dfbf252",
+  "build/rally_pattern.py": "c244193bf0aebeb0",
+  "build/stoploss.py": "f4cac797285ad333"
+ },
+ "sec": 74.8,
+ "peak_mb": 1380
+}

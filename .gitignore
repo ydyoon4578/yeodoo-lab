@@ -246,3 +246,9 @@ xbatch_cache/
 #   캐시 사본(gfund_cache)이 작업 트리에 복사돼도 쓸려 들지 않게. 명세(data/_gf_manifest.json)는 «_gf_» 라 걸리지 않는다.
 _gfund*
 gfund_cache/
+
+# 배치 W(PREREG-2026-09-27-WBATCH) — 굽기 산출 · 원자료는 저장소 밖 캐시에만 둔다.
+#   산출(_wbatch.json · _wbatch.public.json · _wbatch.run.json · _wbatch.child.json · _wbatch.prep.json · _wbatch.books.json.gz · _wbatch.gegd.json · _wbatch.cmp.json ·
+#   _wbatch.started · _wbatch_b.*)이나 캐시 사본이 작업 트리에 복사돼도 쓸려 들지 않게. 걸러도 build/w_guard.py(validate_site 가 매 푸시 · 매일 부른다)가 이름으로 한 번 더 막는다.
+_wbatch*
+wbatch_cache/

@@ -1,0 +1,189 @@
+{
+ "kind": "wbatch_manifest",
+ "note": "배치 W 자료 판 동결 — build/w_run.py --manifest 가 쓴다. 값은 없다: SHA-256 · 개수 · 판만. 원자료(yfinance · companyfacts · French · SEC 자료집 · HUD 교차표 · 연준 쪽)는 저장소 밖 캐시에만 있다.",
+ "generated_at": "2026-09-27T08:03:19Z",
+ "cache_root": "$WBATCH_CACHE 또는 %TEMP%/wbatch_cache(저장소 밖)",
+ "v_cache_root": "$VBATCH_CACHE 또는 %TEMP%/vbatch_cache(읽기 전용)",
+ "lab_files": {
+  "data/stocks.json": {
+   "sha256_lf": "c156d70cd8760790352c5b8241b434f60d716cafe0d16dec245cfa522fe624ae",
+   "bytes": 1037968
+  },
+  "data/pit_px.json": {
+   "sha256_lf": "9cd59399efaba6fff1b456bb8b58f8ef1ad714e261578318d7910f78c83f310c",
+   "bytes": 4730225
+  },
+  "data/_px_raw.json": {
+   "sha256_lf": "ddebc6780a85f8bf1ad73e373641c7de84e973c663b1a105d4d6f075948be545",
+   "bytes": 330084
+  },
+  "data/splits.json": {
+   "sha256_lf": "43e54bf84e02029010bc3c6c7eb73cc477ec817756e95124a565ee89065a61aa",
+   "bytes": 6524
+  },
+  "data/index_history.json": {
+   "sha256_lf": "55b2e9e64230ba8bc992071f203919ae9b44ac1cdfa8e752363f0addf7fc1024",
+   "bytes": 659728
+  },
+  "data/index_ledger.json": {
+   "sha256_lf": "51fbbc3db25150ac58128bb44fcb72a0420737be7066b836af4199f2efee4f65",
+   "bytes": 364224
+  },
+  "data/pit_universe.json": {
+   "sha256_lf": "afe05a41c21f85266e831c5995e00c19b1bdad14cd9597067bd37f630bcf3ac2",
+   "bytes": 7244
+  },
+  "data/pit_reuse.json": {
+   "sha256_lf": "ec1a976e52b86df398d60cdabc24a4fd42da0029d2def6b794c02880096dbfa3",
+   "bytes": 22276
+  },
+  "data/pit_gics_sectors.json": {
+   "sha256_lf": "876aa395750abe6bd945b53044117ab9b0256089a6f63fa1067293b77f359dbf",
+   "bytes": 1911491
+  },
+  "data/earn_dates.json": {
+   "sha256_lf": "b05e4542728897bc0a76431b08f1c05c5c82677c461bcacf570b37d321907cc4",
+   "bytes": 710559
+  },
+  "data/_ins_pit/cikmonth.json": {
+   "sha256_lf": "4705cb2340bdd84a709d8163bd00227bab863846318159bcfb73143059816555",
+   "bytes": 7244152
+  },
+  "data/_ins_pit/routine.json": {
+   "sha256_lf": "48cf3abb74eef26980d9ee14b3ab1ae18047bd51a3243b3a034478570b1a85ad",
+   "bytes": 768241
+  },
+  "data/_ins_pit/manifest.json": {
+   "sha256_lf": "8cfa670b7ac4bfb9c14494a353bc5dd1867d9d906ce023dc26adfbc5a1957b85",
+   "bytes": 51010
+  },
+  "data/_tenq_rf.json": {
+   "sha256_lf": "bb5c996682e6a7e47b060363673e25c7cdfaf906ec9a22a09d8f1815fd162504",
+   "bytes": 6841500
+  },
+  "data/_issuer_map.json": {
+   "sha256_lf": "eaabac2ee9a2223b6df455642c04a9d75ff91aa9d8ea3de99f31ad0112a228bb",
+   "bytes": 308448
+  },
+  "data/_fxv/index.json": {
+   "sha256_lf": "03023e2050899b6234637c97387ce2ea26d195497d949b9ff5b35af5500e3677",
+   "bytes": 329903
+  },
+  "data/_fxv/manifest.json": {
+   "sha256_lf": "e0e6f9b17a0fa064b02fbde8f2123165b59c48ea8022aedba769b8323ba9e126",
+   "bytes": 120565
+  },
+  "data/assets.json": {
+   "sha256_lf": "740054b609bce17d5e4e63503f68fcb31390bb1e8538f4122a76aba203bd4cc8",
+   "bytes": 5229433
+  },
+  "data/rf_monthly.json": {
+   "sha256_lf": "e77aa64ff346de7dbd379bd07aaffbd761b1f8ca931580a3cd94fcc7f9261c54",
+   "bytes": 11518
+  },
+  "data/shares_yf.json": {
+   "sha256_lf": "e6664bacba42a31373d0f40aa6f48a4b11866621d50b1b6bf22ab7b6b9651de8",
+   "bytes": 725011
+  },
+  "data/bench_px.json": {
+   "sha256_lf": "b898b92a5f43597d69500bbea1f29b6698fa318fc73432763eee404695f64a2d",
+   "bytes": 163982
+  },
+  "data/mech_episodes.json": {
+   "sha256_lf": "384b253059607dce84b0e38645ab79db5ecf82e09616693b386f4f762f9020df",
+   "bytes": 23083
+  },
+  "data/_vb_manifest.json": {
+   "sha256_lf": "d4699f3ead27d31e25acf9024e4e87e5a3d94e10bcf5866a0fdabef984445e3b",
+   "bytes": 47858
+  },
+  "data/_vb_f0.json": {
+   "sha256_lf": "d6c3bc01384ce2dda90ceb6015afb2f24995478c85d397a3a45f96dd2bac737a",
+   "bytes": 41827
+  },
+  "data/_vb_lit_open.json": {
+   "sha256_lf": "3d4cefb57f7b2a38e429ede78de39e0b6238cd069867c7aabdca77c8651de926",
+   "bytes": 21203
+  }
+ },
+ "lab_dirs": {
+  "data/sd": {
+   "digest": "b59286c046dbb60ee35e8d7f097d531ca59424a50686ac04ec0730631269512c",
+   "files": 518,
+   "rule": "sha256(«상대 이름 \\t LF sha256 \\n» 을 이름 차례로)"
+  },
+  "data/fx": {
+   "digest": "4f1386c8a828fc85064dbfec0fe37a44bff55700ac7a2e02d05479793fe0f801",
+   "files": 518,
+   "rule": "sha256(«상대 이름 \\t LF sha256 \\n» 을 이름 차례로)"
+  },
+  "data/fx_pit": {
+   "digest": "f906a859330f7b3474ee9c6c52bf35861d6f1cb3cc3e400f6f904c04ab10de3a",
+   "files": 328,
+   "rule": "sha256(«상대 이름 \\t LF sha256 \\n» 을 이름 차례로)"
+  },
+  "data/_fxv": {
+   "digest": "ab75bafe21fad4b8b75a88c9e3771ac8385dda0c43ced023a4b2077df886c07a",
+   "files": 653,
+   "rule": "sha256(«상대 이름 \\t LF sha256 \\n» 을 이름 차례로)"
+  }
+ },
+ "v_cache": {
+  "vd1": {
+   "digest": "1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c",
+   "rule": "V 규칙 — sha256(«키 \\t sha256 \\n»)"
+  },
+  "companyfacts_pin": {
+   "digest": "c1406b38c9b7965ff32defc4c4664864a8adf4e30e53482302e60b6ee7a0d655"
+  },
+  "gspc": {
+   "sha256": "8ecffb5a89460fedfd9c5f694f52a80952197b9f1b21bb5fcfd931f50318e05d"
+  },
+  "wide_ledger": {
+   "sha256": "4765b3f61c0e87227e4d6a0ecc0fc2b6bd3ff79d82d5a03d2ae8b486d182c899"
+  },
+  "french_ind49": {
+   "sha256": "16b3f20bf5bd1db8f5cd7a1b29f5cab1350eb0d5106c5309f77a6629590b1c0e",
+   "use": "W03 내부 L 쌍둥이만"
+  }
+ },
+ "w_cache": {
+  "fomc": {
+   "digest": "0dee80789cd67f934bc1661025671d1905f7d1e0c1ef7f3a686404003848365e",
+   "files": 13,
+   "source": "federalreserve.gov FOMC 일정 쪽"
+  },
+  "w02_manifest": {
+   "sha256": "e47fbd57d3c51f4ac6c25d0fb2edd91d767a75f8219c553fc1219c7824ef0eeb",
+   "use": "등록 B 자료 판(FSDS · HUD · FTD · 13F 원자료 sha 목록)"
+  },
+  "w11_manifest": {
+   "sha256": "2f6080589228cf68c095a7cde86abbc65ea2994e2b0eec9954ce78abd2bf9c28",
+   "use": "등록 B 자료 판(FSDS · HUD · FTD · 13F 원자료 sha 목록)"
+  },
+  "px_overlay": {
+   "sha256": "7c4041a926aa650d0729edd1906a6343eec03cbbc8dbd1daa75ac4f631de8b9f",
+   "bytes": 904481,
+   "use": "PN8 내부 가격 오버레이(저장소 밖 비공개 파일 — sha256 만 · 경로 · 원천 이름 · 값 없음)"
+  }
+ },
+ "versions": {
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "pandas": "3.0.6"
+ },
+ "env_rule": {
+  "PYTHONHASHSEED": "0",
+  "OPENBLAS_NUM_THREADS": "1",
+  "MKL_NUM_THREADS": "1",
+  "OMP_NUM_THREADS": "1"
+ },
+ "frozen_v": {
+  "commit": "ada1e16ae9772a95246198407acb2f1e51a1906f",
+  "n_modules": 26,
+  "data": [
+   "data/mech_episodes.json"
+  ]
+ },
+ "eg_files": "없다(w_guard EG 표식 파일은 이 명세 · 굽기 입력에 없다)"
+}

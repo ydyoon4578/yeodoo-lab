@@ -4704,6 +4704,22 @@ except Exception as _e:
     # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(144개월 산출이 새는지 모른 채 게시하지 않는다 · 2026-09-27 검토 지적)
     errors.append("거장 슬리브 측정 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
 
+# ── 배치 W(PREREG-2026-09-27-WBATCH · 사용자 갱신 2026-09-27) 사이트 경계 ─────────────────────────
+# 배치 W 굽기 산출(_wbatch*) · 원자료(SEC FSDS · 13F · FTD · HUD 교차표 · French)가 저장소 · 사이트 자료에 없어야 한다 · data/_wb* 는 공개 안전 명세 둘
+#   (_wb_manifest · _wb_f0)뿐 · 🚨 data/_wfwd/* 는 하나도 없다(전방 원장 없음 — 사용자 «미래 일정은 다 꺼») · 값 계열 목록 없음 · W 파일에 전자우편 모양 문자열 없음(SEC 연락처는 SEC_UA 로만).
+#   build/w_guard.py 는 표준 라이브러리만 쓴다(이 검증과 같은 조건). 러너(w_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_wb
+    _wg = _il_wb.import_module("w_guard")
+    _gw = _wg.site_guard(ROOT)
+    if not _gw["ok"]:
+        errors.append("배치 W 사이트 경계 위반 %d건 — %s. 굽기 산출(_wbatch*) · 원자료는 저장소 밖 캐시에만 · data/_wfwd 는 없다"
+                      % (_gw.get("n_bad", len(_gw["bad"])), " · ".join(_gw["bad"][:4])))
+    else:
+        print("  ~ 배치 W 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gw["n_files"], _gw["n_scanned"]))
+except Exception as _e:
+    print("  ~ 배치 W 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
