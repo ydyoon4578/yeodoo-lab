@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """과적합 진단 5지표 중 **남은 둘** — OOS Percentile · IS-OOS Rank Corr.
 
-QMind README(사용자 제공)의 [8] 5지표:
+글로벌 팩터 모델 README(사용자 제공)의 [8] 5지표:
   Funnel Value-Add · OOS Percentile Tracking · Strict Jaccard ·
   IS-OOS Rank Correlation · Deflation Ratio
 앞 셋은 build/qg_diag.py 에서 이미 쟀다. 여기서 뒤 둘을 잰다.
