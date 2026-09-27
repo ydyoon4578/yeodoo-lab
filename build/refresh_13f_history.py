@@ -7,7 +7,8 @@
 18개 운용사 × 약 40분기 = 40MB 안쪽. 벌크의 1/100이다.
 
 CUSIP→티커는 refresh_13f.py의 FTD 방식을 그대로 재사용한다(13F는 티커를 안 적는다).
-그 매핑은 **현재 시점** 기준이라, 과거에 티커가 바뀐 종목은 놓친다 — 한계에 적는다.
+그 매핑은 **현재 시점** 기준이라 CUSIP 이 바뀐 종목의 옛 분기를 놓친다 — 그래서 옛 CUSIP 지도(CUSIP_HIST ·
+2026-09-27)를 가장 낮은 우선순위로 더한다. 지도에 없는 옛 CUSIP 은 여전히 빠진다 — 한계에 적는다.
 
   python build/refresh_13f_history.py            # 전체
   python build/refresh_13f_history.py --q 20     # 최근 20분기만
@@ -26,6 +27,104 @@ DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "guru_history.json")
 import edgar  # noqa: E402  SEC 호출 규약(UA·초당 제한·재시도)을 복제하지 않는다
 SLEEP = 0.14          # SEC 권고 8 req/s 이내
+
+# ── 옛 CUSIP → 유니버스 키(2026-09-27 · GURUFUND 등록 전 자료 수선) ──────────────────────────
+# 🚨 cusip_map 은 최근 석 달 FTD 파일만 본다(FTD_FILES 6). CUSIP 이 바뀐 종목의 **옛 CUSIP** 은 그 창 밖이라 이 이력의
+#   옛 분기에서 통째로 빠졌다 — 이력은 매번 오늘 지도로 전 분기를 다시 풀기 때문이다. 실측(구성 사실 · 수익 없음):
+#   체결월 2014-08(2014-06-30 13F)에 시점정확 S&P 500 ∪ NASDAQ 100 멤버 가운데 38종(GOOGL · AVGO · LRCX · BLK · GE · MDT ·
+#   ACE→CB · PCLN→BKNG · IR→TT …)을 명단 47곳(퀀트 포함) **아무도 안 든 것**으로 셌고, 체결월 48개(2014-08 ~ 2026-05) 합이
+#   934종·월이었다. 이 지도를 더하면 한 체결월 최대 4(S&P 500 만 3) · 합 41 로 준다(남은 것은 원문 행 대조로 실제로 안 든 것).
+# 만든 법: SEC FTD 보관 파일 350개(cnsfails 2012-01a ~ 2026-08b)의 CUSIP·심볼 가운데 이 이력의 13F 정보표에 나오는데
+#   오늘 지도에 없는 CUSIP 을, 심볼이 유니버스 키로 읽히는 것만 모아 손으로 검토했다.
+#   · 심볼이 그 키 자신이면 같은 회사인지 본다 — 티커 재사용 15건은 뺐다(Weight Watchers WTW · CoreSite COR · Physicians Realty
+#     DOC · Genesis Healthcare GEN · Axovant AXON · American Apparel APP · Michael Baker BKR · LIN Media LIN · 옛 Coherent COHR ·
+#     옛 Dell · 옛 News Corp NWSA · Pandora P · Echo ECHO · Crexendo EXE · Roundhill META ETF).
+#   · 명단 티커가 개명 · 별칭으로 그 키로 읽히면(PCLN→BKNG · ACE→CB · IR→TT · MHFI→SPGI …) 그 CUSIP 의 FTD 기간이 그
+#     명단 티커가 그 키로 읽히던 달과 겹칠 때만 넣는다(2017-12 분사 Delphi Technologies · 오늘 NU 홀딩스 · 해시코프 HCP ·
+#     2020 분사 Arconic Corp · Frank's FI 를 이것으로 걸렀다).
+#   · pit_alias 날짜 인식 별칭이 그 기간 **다른 가격 키**를 가리키는 CUSIP 은 넣지 않는다(옛 Chubb Corp → CB@20171 ·
+#     E.I. du Pont → DD@30554 · Dow Chemical → DOW@29915 · 옛 Johnson Controls → JCI@53669 · 21CF → TFCFA/TFCF ·
+#     옛 SanDisk · 옛 IR plc 의 IR 키) — 13F 보유를 랩이 그 달 그 키로 읽는 증권에만 붙인다.
+#   · 손으로 둘을 더했다(FTD 심볼이 명단 티커가 아니었던 같은 법인): Willis Group(WSH) → WTW · Quintiles IMS → IQV.
+# 값은 cusip_map 의 out 과 같은 꼴(접기 전 클래스 티커 — GOOG 는 fold_class 가 GOOGL 로 접는다).
+# ⚠ 가장 낮은 우선순위다(오늘 FTD 창 · CUSIP_EXTRA 가 이긴다). 화면 경로(refresh_13f · guru.json)는 이 표를 쓰지 않는다
+#   — 옛 CUSIP 은 이력의 옛 분기에서만 뜻이 있다. 새 CUSIP 변경은 석 달 창에서 빠지기 전에 여기에 더한다.
+CUSIP_HIST = {
+    "G0250X107": "AMCR",    # Amcor plc → 2026-01 새 CUSIP · FTD 201906 ~ 202601
+    "040413106": "ANET",    # Arista — 2024-12 1:4 분할 · FTD 201406 ~ 202412
+    "G0408V102": "AON",     # Aon plc(영국) → 2020-04 아일랜드 · FTD 201204 ~ 202004
+    "037411105": "APA",     # Apache → 2021-03 APA Corp 지주회사 · FTD 201201 ~ 202103
+    "037612306": "APO",     # Apollo Global Management · FTD 201201 ~ 201909
+    "03768E105": "APO",     # Apollo Global Management · FTD 201909 ~ 202201
+    "G27823106": "APTV",    # Delphi Automotive(DLPH) → 2017-12 Aptiv 개명 · 2024-12 새 CUSIP · FTD 201201 ~ 201712
+    "G6095L109": "APTV",    # Delphi Automotive(DLPH) → 2017-12 Aptiv 개명 · 2024-12 새 CUSIP · FTD 201712 ~ 202412
+    "04014Y101": "ARES",    # Ares Management LP → 2018-11 Corp · FTD 201405 ~ 201811
+    "Y0486S104": "AVGO",    # Avago(→ 2016-02 Broadcom Ltd → 2018-04 Broadcom Inc) · FTD 201201 ~ 201602
+    "Y09827109": "AVGO",    # Avago(→ 2016-02 Broadcom Ltd → 2018-04 Broadcom Inc) · FTD 201602 ~ 201804
+    "G16962105": "BG",      # Bunge Limited(버뮤다) → 2023-11 Bunge Global(스위스) · FTD 201201 ~ 202311
+    "741503403": "BKNG",    # Priceline(PCLN) → 2018-02 Booking Holdings 개명 · 같은 법인 · FTD 201201 ~ 201802
+    "09247X101": "BLK",     # BlackRock — 2024-10 새 지주회사 · FTD 201201 ~ 202410
+    "09253U108": "BX",      # Blackstone LP → 2019-07 Blackstone Inc · FTD 201201 ~ 201907
+    "H0023R105": "CB",      # ACE Ltd(ACE) → 2016-01 Chubb Limited 개명 · 같은 법인(옛 Chubb Corp 는 넣지 않는다) · FTD 201201 ~ 201601
+    "228227104": "CCI",     # Crown Castle → 2014-12 리츠 재편 · FTD 201201 ~ 201412
+    "143658300": "CCL",     # Carnival Corp(쌍둥이 주식) → 2026-05 새 CUSIP · FTD 201201 ~ 202605
+    "16117M305": "CHTR",    # 옛 Charter → 2016-05 새 Charter(TWC 합병 지주회사) · FTD 201201 ~ 201605
+    "125509109": "CI",      # 옛 Cigna → 2018-12 새 Cigna(Express Scripts 합병 지주회사) · FTD 201201 ~ 201812
+    "216648402": "COO",     # Cooper Cos — 2024-02 1:4 분할 · FTD 201201 ~ 202402
+    "339041105": "CPAY",    # FleetCor(FLT) → 2024-03 Corpay 개명 · FTD 201201 ~ 202403
+    "12626K203": "CRH",     # CRH plc ADR → 2023-09 보통주 상장(1 ADR = 1주) · FTD 201201 ~ 202309
+    "26078J100": "DD",      # DowDuPont(DWDP · 2017-09 ~ 2019-06) → DuPont de Nemours 개명 · 같은 법인 · FTD 201709 ~ 201906
+    "40414L109": "DOC",     # HCP Inc(HCP) → 2019-11 Healthpeak 개명(해시코프 HCP 는 넣지 않는다) · FTD 201201 ~ 201911
+    "94973V107": "ELV",     # WellPoint(WLP) → 2014-12 Anthem → Elevance · FTD 201201 ~ 201412
+    "29444U502": "EQIX",    # Equinix → 2015-01 리츠 재편 · FTD 201201 ~ 201501
+    "664397106": "ES",      # Northeast Utilities(NU) → 2015-02 Eversource 개명(오늘 NU 홀딩스는 넣지 않는다) · FTD 201201 ~ 201502
+    "G3421J106": "FERG",    # Ferguson plc(저지) → 2024-08 Ferguson Enterprises · FTD 202103 ~ 202408
+    "313747206": "FRT",     # Federal Realty Investment Trust → 2022-01 새 지주회사 · FTD 201201 ~ 202201
+    "369604103": "GE",      # General Electric — 2021-08 1:8 병합으로 CUSIP 바뀜 · FTD 201201 ~ 202108
+    "871503108": "GEN",     # Symantec(SYMC) → 2019-11 NortonLifeLock → Gen Digital · FTD 201201 ~ 201911
+    "891027104": "GL",      # Torchmark(TMK) → 2019-08 Globe Life 개명 · FTD 201201 ~ 201908
+    "38259P706": "GOOG",    # Google Inc 클래스 C(2014-04 ~ 2015-10) → Alphabet C · fold_class 가 GOOGL 로 접는다 · FTD 201404 ~ 201510
+    "38259P508": "GOOGL",   # Google Inc 클래스 A(2014-04 까지 GOOG · 그 뒤 GOOGL) → 2015-10 Alphabet · FTD 201201 ~ 201404
+    "43300A104": "HLT",     # Hilton — 2017-01 1:3 병합 · 분사 · FTD 201312 ~ 201701
+    "428236103": "HPQ",     # Hewlett-Packard Co → 2015-11 HP Inc 개명 · 같은 법인 · FTD 201201 ~ 201511
+    "443510201": "HUBB",    # Hubbell 클래스 B → 2015-12 단일 클래스 · FTD 201201 ~ 201601
+    "03965L100": "HWM",     # Arconic Inc(ARNC · 2016-11 ~ 2020-04) → Howmet Aerospace 개명(2020 분사 Arconic Corp 는 넣지 않는다) · FTD 201611 ~ 202004
+    "45865V100": "ICE",     # IntercontinentalExchange Inc → 2013-11 ICE Group · FTD 201201 ~ 201311
+    "74876Y101": "IQV",     # Quintiles IMS(Q · 74876Y101) → 2017-11 IQVIA 개명 · 같은 증권(명단 Q 는 pit_alias 가 Q@1478242 로 읽어 IQV 키와 겹치지 않는다) · FTD 201305 ~ 201711
+    "462846106": "IRM",     # Iron Mountain → 2015-01 리츠 재편 · FTD 201201 ~ 201501
+    "469814107": "J",       # Jacobs Engineering(JEC → 2019 J) → 2022-08 새 지주회사 · FTD 201201 ~ 202208
+    "26138E109": "KDP",     # Dr Pepper Snapple(DPS) → 2018-07 Keurig Dr Pepper(DPS 가 법적 존속) · FTD 201201 ~ 201807
+    "48248M102": "KKR",     # KKR & Co LP → 2018-07 KKR & Co Inc · FTD 201201 ~ 201807
+    "50540R409": "LH",      # LabCorp → 2024-05 Labcorp Holdings · FTD 201201 ~ 202404
+    "413875105": "LHX",     # Harris(HRS) → 2019-07 L3Harris(Harris 가 법적 존속) · FTD 201201 ~ 201907
+    "G5494J103": "LIN",     # Linde plc(아일랜드 · 2018-10) → 2023-03 새 Linde plc · FTD 201810 ~ 202303
+    "512807108": "LRCX",    # Lam Research — 2024-10 1:10 분할 · FTD 201201 ~ 202410
+    "585055106": "MDT",     # Medtronic Inc → 2015-01 Medtronic plc · FTD 201201 ~ 201501
+    "611740101": "MNST",    # Monster Beverage → 2015-06 새 지주회사 · FTD 201201 ~ 201506
+    "G5876H105": "MRVL",    # Marvell Technology Group(버뮤다) → 2021-04 Marvell Technology Inc · FTD 201201 ~ 202104
+    "H6169Q108": "PNR",     # Pentair Ltd(스위스) → 2014-06 Pentair plc · FTD 201210 ~ 201406
+    "773122106": "RKLB",    # Rocket Lab USA → 2025-06 Rocket Lab Corp · FTD 202108 ~ 202506
+    "913017109": "RTX",     # United Technologies(UTX) → 2020-04 Raytheon Technologies(UTC 가 법적 존속) · FTD 201201 ~ 202004
+    "78388J106": "SBAC",    # SBA Communications → 2017-01 리츠 전환 · FTD 201201 ~ 201701
+    "86800U104": "SMCI",    # Super Micro — 2024-10 1:10 분할 · FTD 201201 ~ 202410
+    "580645109": "SPGI",    # McGraw Hill Financial(MHFI) → 2016-04 S&P Global 개명 · FTD 201305 ~ 201604
+    "859152100": "STE",     # STERIS Corp → 2015-11 STERIS plc(영국) → 2019-03 아일랜드 · FTD 201201 ~ 201511
+    "G84720104": "STE",     # STERIS Corp → 2015-11 STERIS plc(영국) → 2019-03 아일랜드 · FTD 201511 ~ 201903
+    "G7945M107": "STX",     # Seagate plc(아일랜드) → 2021-05 Seagate Technology Holdings · FTD 201201 ~ 202105
+    "878377100": "TECH",    # Techne → 2014-11 Bio-Techne · FTD 201201 ~ 201411
+    "H84989104": "TEL",     # TE Connectivity(스위스) → 2024-10 아일랜드 · FTD 201201 ~ 202410
+    "882610108": "TPL",     # Texas Pacific Land Trust → 2021-01 Corp · FTD 201201 ~ 202101
+    "189754104": "TPR",     # Coach(COH) → 2017-11 Tapestry 개명 · FTD 201201 ~ 201711
+    "884903105": "TRI",     # Thomson Reuters — 2018 · 2023 · 2026 주식 통합 · 새 CUSIP · FTD 201201 ~ 201811
+    "884903709": "TRI",     # Thomson Reuters — 2018 · 2023 · 2026 주식 통합 · 새 CUSIP · FTD 201811 ~ 202306
+    "884903808": "TRI",     # Thomson Reuters — 2018 · 2023 · 2026 주식 통합 · 새 CUSIP · FTD 202306 ~ 202605
+    "G47791101": "TT",      # Ingersoll-Rand plc(IR · ~2020-02) → Trane Technologies 개명 · pit_alias IR→TT 와 같은 증권 · FTD 201201 ~ 202003
+    "25470F104": "WBD",     # Discovery(DISCA · DISCK) → 2022-04 Warner Bros. Discovery · 같은 법인 · FTD 201201 ~ 202204
+    "25470F302": "WBD",     # Discovery(DISCA · DISCK) → 2022-04 Warner Bros. Discovery · 같은 법인 · FTD 201201 ~ 202204
+    "976657106": "WEC",     # Wisconsin Energy → 2015-06 WEC Energy Group · FTD 201201 ~ 201507
+    "42217K106": "WELL",    # Health Care REIT(HCN) → 2015-09 Welltower 개명 · FTD 201201 ~ 201510
+    "G96666105": "WTW",     # Willis Group Holdings(WSH) → 2016-01 Willis Towers Watson(Willis 가 법적 존속 · 옛 Weight Watchers WTW 는 넣지 않는다) · FTD 201201 ~ 201601
+}
 
 
 def get(u, timeout=60):
@@ -143,7 +242,12 @@ def main() -> int:
     uni = {s["t"] for s in st["stocks"]}
     print("CUSIP→티커 매핑(FTD) 수집…")
     cmap = cusip_map(uni)
-    print("  CUSIP %d개" % len(cmap))
+    _nh = 0
+    for _c, _t in CUSIP_HIST.items():       # 옛 CUSIP 지도 — 가장 낮은 우선순위(위 주석)
+        if _c not in cmap and fold_class(_t) in uni:
+            cmap[_c] = _t
+            _nh += 1
+    print("  CUSIP %d개(옛 CUSIP 지도 %d개 포함)" % (len(cmap), _nh))
 
     hist = {}          # {분기: {cik: {티커: 가치}}}
     shs = {}           # {분기: {cik: {티커: 주식수}}} — 제출 단위 판정에만 쓰고 파일에는 안 넣는다
@@ -349,7 +453,8 @@ def main() -> int:
         "empty_managers": [v["name"] for v in cover.values() if v["n_q"] == 0],
         "limits": [
             "CUSIP→티커 매핑은 SEC 공매도 미결제(FTD) 파일에서 만들며 **현재 시점** 기준이다. "
-            "과거에 티커가 바뀌었거나 지금 상장폐지된 종목은 매핑되지 않아 빠진다.",
+            "CUSIP 이 바뀐 종목의 옛 분기는 손으로 검토한 옛 CUSIP 지도(refresh_13f_history.CUSIP_HIST · 2026-09-27)로 잇는다. "
+            "그 지도에 없는 옛 CUSIP · 지금 상장폐지된 종목은 매핑되지 않아 빠진다.",
             "13F는 미국 상장 주식 롱 포지션만 담는다. 숏·현금·채권·해외 보유는 안 보이므로 "
             "이 데이터로 만든 '복제'는 운용사의 실제 포트폴리오가 아니다.",
             "분기말 잔고를 45일 뒤에 제출한다. 복제는 그 지연을 반드시 반영해야 한다 — "
