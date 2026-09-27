@@ -4720,6 +4720,23 @@ try:
 except Exception as _e:
     print("  ~ 배치 W 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── D13 주식판(PREREG-*-DSTK · 사용자 2026-09-27) 사이트 경계 ─────────────────────────────
+# 굽기 산출(_dstkout*)이 저장소 · 사이트 자료에 없어야 한다. data/_dstk* 는 해시만 담은 명세(_dstk_manifest) 하나뿐 ·
+#   data/_dstkfwd/ 없음(전방 원장 없음 · 사용자 2026-09-27 «미래 일정 다 꺼») · 사이트 자료에 굽기 산출 표식 없음.
+#   build/dstk_run.py 는 모듈 머리에서 표준 라이브러리만 불러온다(site_guard_std). 러너(dstk_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_dstk
+    _dsr = _il_dstk.import_module("dstk_run")
+    _gds = _dsr.site_guard_std(ROOT)
+    if not _gds["ok"]:
+        errors.append("D13 주식판 사이트 경계 위반 %d건 — %s. 굽기 산출(_dstkout*)은 저장소 밖 캐시에만 둔다"
+                      % (_gds.get("n_bad", len(_gds["bad"])), " · ".join(_gds["bad"][:4])))
+    else:
+        print("  ~ D13 주식판 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gds["n_files"], _gds["n_scanned"]))
+except Exception as _e:
+    # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(GURUFUND 와 같은 규약)
+    errors.append("D13 주식판 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
