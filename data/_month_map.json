@@ -78,8 +78,8 @@
  "persistence": {
   "top5_carry_pct": 8.099173553719009,
   "random_pct": 2.7085831002175746,
-  "rank_rho_median": 0.0223690031585337,
-  "rank_rho_mean": 0.01444410643317633
+  "rank_rho_median": 0.023085074642221468,
+  "rank_rho_mean": 0.01445235059485957
  },
  "kinds": [
   {
