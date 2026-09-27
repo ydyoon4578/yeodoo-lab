@@ -1,0 +1,63 @@
+{
+ "kind": "dstk_manifest",
+ "note": "D13 주식판(DSTK) 명세 — 해시만(값 없음). 러너 판 점검이 이 파일을 등록 커밋 판과 대조한다.",
+ "prereg": "build/PREREG-2026-09-27-DSTK.md",
+ "engine": "build/dstk.py",
+ "runner": "build/dstk_run.py",
+ "code_sha256_lf": {
+  "build/dstk.py": "e5799b67dd815a2fc4afb4105fff7bbcf8bca87f796f2e3cddc2dda74a4ec12b",
+  "build/dstk_run.py": "e5f4214167209935c96de5b8163f4ae5742b3ea8c796b10204f5d88f95587db8"
+ },
+ "data_pin": {
+  "commit": "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b",
+  "trees": {
+   "data": "d72aec6dd1e268d66144ed8d21e05deb11950b98",
+   "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"
+  },
+  "reused_modules_blob": {
+   "build/style_top_pdf.py": "fb2a0fbe4439b2c703b51180e704c285fc3695dd",
+   "build/style_pit_panel.py": "171248e57f1d899f87aff0ca06f77e0700eeae90",
+   "build/pit_panel.py": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+   "build/pit_alias.py": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+   "build/pit_quarantine.py": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+   "build/tech_backtest.py": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+   "build/index_members.py": "7850ef55f5b89583b24e190b250a14c897c93395",
+   "build/qbatch_core.py": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+   "build/eg30plus.py": "5688b266adece152d2dc72f911bb7a6ac977d628",
+   "build/qg_lab.py": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+   "build/g_fund.py": "74e9d13d997d1b61eafbbe68a34345bdc8e98462",
+   "build/v_tests.py": "2f1ec4db1cd7458564da73ec5ad88cef8a0b2f2f",
+   "build/t_signals.py": "35e2407d8f80c81aacec5a62128dd78a73b68c0b",
+   "build/t_data.py": "32937e89e8732727c6aed535e450b4c5013ba12c"
+  },
+  "read_files_blob": {
+   "data/stocks.json": "dc6f6ce184c5276d9e56005c447bce3d33686d59",
+   "data/pit_px.json": "0d857800fd0fa23d19e13a4d81ebd93511002966",
+   "data/_pit_px_cache.json": "f8c1a16ba22c89f54999cf4291807feb30c53225",
+   "data/index_history.json": "b7c2975b18c615732f8fc624ea7d27eea78da8d6",
+   "data/assets.json": "e131fde7b376dfb575949a93dd46d3e4ff1301f6",
+   "data/bench_px.json": "e93158046584e27d64d748bce5b7fbf4b0146e7f",
+   "data/rf_monthly.json": "5c432bb6d3d0037e9dd7621a7815053af3f96c26",
+   "data/ff_daily.json": "7cf949b8a199dab2922146cbe719d966556238cb",
+   "data/pit_universe.json": "5662f912332f50938a627ee14405580a5357f532",
+   "data/pit_reuse.json": "a9e69996f7a03937a76dfd424efcde4a908faae4",
+   "data/index_ledger.json": "856f2fbfc14a37880224b33ba0a69baa3e5ac7f9",
+   "data/splits.json": "8e09aae5279d7b3e7b654632708de1a4ccce3444",
+   "data/style_top.json": "beba0c8fbf9dde2fb70f1bba88ef7ec83b30f1e3",
+   "data/style_perf.json": "c4defd84da641f2a7563a98cd30d09d6e55f861e",
+   "data/_qbatch.json": "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7",
+   "data/_fund_mix.json": "2d9975cf0a566ea7d23aa6aa2c5e420cd365b72f",
+   "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f"
+  }
+ },
+ "vd1": {
+  "digest": "1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c",
+  "n": "518",
+  "source": "yfinance history(period='max', auto_adjust=False, actions=True) · Close(야후 분할 행으로 나눈 값 — 분사를 분할로 적은 비정수 행 포함 · 배당 없음) · Dividends · Stock Splits · 배치 V 캐시(vbatch_cache/raw/vd1 · 저장소 밖)",
+  "rule": "sha256(«티커\\t파일 sha256\\n» 을 stocks.json 오늘 이름 차례로)",
+  "license": "yfinance — 개인 사용 · 캐시만 · 값은 싣지 않는다"
+ },
+ "start_tag": "dstk-started",
+ "git_mark": "dstk_started",
+ "forward": "없음 — 사용자 2026-09-27 «미래 일정 다 꺼»"
+}

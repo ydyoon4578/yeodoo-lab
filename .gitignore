@@ -252,3 +252,8 @@ gfund_cache/
 #   _wbatch.started · _wbatch_b.*)이나 캐시 사본이 작업 트리에 복사돼도 쓸려 들지 않게. 걸러도 build/w_guard.py(validate_site 가 매 푸시 · 매일 부른다)가 이름으로 한 번 더 막는다.
 _wbatch*
 wbatch_cache/
+
+# D13 주식판(PREREG-*-DSTK · 사용자 2026-09-27 «스타일 top10 으로 · 20 30 도») — 굽기 산출(_dstkout.json · _dstkout.public.json · _dstkout.run.json · _dstkout.started)이나
+#   캐시 사본(dstk_cache)이 작업 트리에 복사돼도 쓸려 들지 않게. 명세(data/_dstk_manifest.json)는 «_dstk_» 라 걸리지 않는다.
+_dstkout*
+dstk_cache/
