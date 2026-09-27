@@ -4117,6 +4117,21 @@
    "gate": "기각 — 배치 W(결과는 결과 문서에만)",
    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-B-RESULT.md",
    "blocked_by": ""
+  },
+  {
+   "sid": "ds-d13",
+   "name": "D13 주식판 DSTK — 실질금리(DFII10) 규칙으로 스타일 top-N 가치(spval)·성장(grow) 회전 · N 10/20/30",
+   "kind": "펀드 슬리브 10% · 스타일 로테이션(ETF 없음)",
+   "arch": "",
+   "when": "2026-09-27",
+   "src": "PREREG-2026-09-27-DSTK.md · PREREG-2026-09-27-DSTK-RESULT.md",
+   "paper": "",
+   "t": null,
+   "incr": null,
+   "measured_no_t": true,
+   "gate": "측정만 — D13 주식판 DSTK(결과는 결과 문서에만)",
+   "why": "DSTK 사전등록 235233e1c · 결과는 build/PREREG-2026-09-27-DSTK-RESULT.md",
+   "blocked_by": ""
   }
  ]
 }
