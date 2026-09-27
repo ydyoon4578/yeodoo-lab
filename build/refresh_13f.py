@@ -54,7 +54,18 @@ OUT = os.path.join(DATA, "guru.json")
 
 IDX_13F = "https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets"
 IDX_FTD = "https://www.sec.gov/data/foiadocsfailsdatahtm"
-FTD_FILES = 2        # CUSIP↔티커 커버를 올리려고 최근 몇 개를 합칠지
+# CUSIP↔티커 커버를 올리려고 최근 몇 개(반월 파일)를 합칠지.
+# 🚨 2026-09-27 — 2 → 6(석 달). FTD 는 **그 반월에 미결제가 난 종목만** 싣는다. 최신 두 파일
+#   (2026-08a·b)에 EQIX·ORLY·BR 이 없어서 세 종목이 유니버스 «밖»(#29444U700 등)으로 찍혔고,
+#   이력(guru_history)에서는 54분기 전부에서 **통째로 빠졌다** — 이력은 매번 오늘 지도로 전 분기를
+#   다시 풀기 때문이다. 같은 날 앞선 10개 파일(2026-03a~07b)에는 EQIX·ORLY 가 10개 모두, BR 이
+#   7개에 있었다. 달마다 어느 종목이 빠지는지가 바뀌어 커버가 조용히 흔들린다 → 석 달을 합친다.
+#   ⚠ 같은 CUSIP 이 여러 파일에 있으면 **최신 파일의 심볼**이 이긴다(setdefault · 최신순).
+#   ⚠ 부수 효과(같은 날 실측): 석 달 창에는 CUSIP 이 바뀐 종목의 **옛 CUSIP** 도 남아 있어
+#     XOM(30231G102)·HON(438516106)·DD(26614N102)가 다시 풀린다. 두 파일 창에서는 새 CUSIP 만 보여
+#     이력에서 세 종목이 2026-06-30 한 분기에만 있었다. 옛 CUSIP 이 창에서 빠지면 다시 사라진다 —
+#     이 부분은 창 넓히기로 영구히 풀리지 않는다(과거 CUSIP 을 쌓아 두는 지도가 따로 필요하다).
+FTD_FILES = 6
 KEEP_HOLD = 90       # 운용사별로 남길 보유 종목 수(평가액순).
 # 유니버스 밖 종목까지 담게 되면서 60칸으로는 큰 운용사가 상위만 남고 잘린다.
 
@@ -231,13 +242,29 @@ def history_roster():
 #   합산은 기계가 하는 것이라, 기계에는 명시적인 표를 준다.
 # ⚠ 워런트(…W)·우선주·CUSIP(#…)은 여기 절대 넣지 않는다. 의결권·권리가 다르다.
 # ⚠ 대표 티커는 **거래가 많은 쪽**으로 둔다(GOOGL·FOXA — 의결권 있는 클래스).
+# 🚨 대표 티커는 **유니버스에 있는 쪽**이어야 한다(2026-09-27). 버크셔를 BRK.A 로 접고 있었는데
+#   유니버스는 BRK.B 다 — 접는 순간 유니버스 종목이 유니버스 밖 티커가 되어, 13F 에서 버크셔가
+#   «밖» 으로 찍히고 이력(guru_history)에서는 54분기 전부 사라졌다(히말라야 유니버스 비중
+#   71.0% · 게이츠 55.8% 로 과소). 아래 cusip_map 이 이 규칙을 매 실행 확인한다.
 SHARE_CLASS = {
     "GOOG": "GOOGL", "GOOGM": "GOOGL", "GOOGN": "GOOGL",   # 알파벳 — 의결권만 다르다
     "ZG": "Z",                                              # 질로우 A/C
     "FOX": "FOXA",                                          # 폭스 A/B
     "LLYVK": "LLYVA",                                       # 리버티 라이브 A/C
-    "BRK.B": "BRK.A", "BRKB": "BRK.A",                      # 버크셔 A/B
+    "BRK.A": "BRK.B", "BRKA": "BRK.B", "BRKB": "BRK.B",     # 버크셔 A/B — 유니버스는 BRK.B
 }
+# 접을 때 **주식 수**에 곱하는 환산비 — 클래스끼리 1주의 경제적 몫이 다른 짝만 적는다.
+# 🚨 버크셔 A 1주 = B 1,500주(2010-01 B주 50:1 분할 뒤 전환비 · 이력 시작 2013 이후 불변).
+#   환산 없이 더하면 A 868주 + B 738,433주가 «739,301주» 가 되어 주식 수 비교(증가·감소 판정)와
+#   내재주가 눈금 검사(평가액÷주식수 ≈ 종가)가 둘 다 틀린다. 알파벳·폭스·질로우·리버티는 1:1 이다.
+#   (같은 비율을 v_fund.SHARE_CLASS_FACTOR 도 쓴다.)
+SHARE_FACTOR = {"BRK.A": 1500.0, "BRKA": 1500.0}
+# FTD 파일에 **나오지 않는** 유니버스 발행사의 다른 클래스 CUSIP — 손으로 확인해 적는다.
+# 🚨 버크셔 A(084670108)는 1주가 수십만 달러라 CNS 미결제가 사실상 안 나서 FTD 에 없다
+#   (2026-09-27 실측: 최근 12개 반월 파일 어디에도 없음). 그래서 2026-06-30 13F 에서 마클·가드너
+#   루소·데이비스·루안·페어홈·페어팩스의 A주가 «#084670108» 로 따로 떠 있었다.
+#   CUSIP 과 발행사는 13F 원문 nameOfIssuer(«Berkshire Hathaway Inc., Class A») 로 확인했다.
+CUSIP_EXTRA = {"084670108": "BRK.A"}
 
 
 # ── 주식이 아닌 것(채권·전환사채) 판정 ────────────────────────────────────────
@@ -256,6 +283,11 @@ def is_debt(cusip: str) -> bool:
 def fold_class(t):
     """복수 클래스를 대표 티커로 접는다. 표에 없으면 그대로 둔다."""
     return SHARE_CLASS.get(t, t)
+
+
+def fold_shares(t, sh):
+    """접기 **전** 티커 t 의 주식 수를 대표 클래스 주식 수로 환산한다(SHARE_FACTOR)."""
+    return sh * SHARE_FACTOR.get(t, 1.0)
 
 
 def fetch(url: str, timeout: int = 300) -> bytes:
@@ -308,7 +340,10 @@ def cusip_map(universe):
     hrefs = sorted(set(hrefs), key=key, reverse=True)[:FTD_FILES]
     alias = {}
     for t in universe:
-        for v in (t, t.replace(".", "-"), t.replace("-", ".")):
+        # 🚨 2026-09-27 — 구분자 없는 표기도 받는다. FTD 는 클래스주를 **BRKB · BFB** 로 적는다
+        #   (실측: 084670702 → BRKB · 115637209 → BFB). '.'·'-' 두 표기만 보던 탓에 유니버스의
+        #   BRK.B·BF.B 가 매핑되지 않아 커버 513/518 의 빠진 다섯 중 둘이었다.
+        for v in (t, t.replace(".", "-"), t.replace("-", "."), t.replace(".", "").replace("-", "")):
             alias[v.upper()] = t
     out = {}
     full = {}          # 유니버스 밖까지 포함한 CUSIP→심볼. 거장 포트폴리오에서 쓴다.
@@ -323,13 +358,26 @@ def cusip_map(universe):
                 p = line.split("|")
                 if len(p) < 4:
                     continue
-                c, s = p[1].strip(), p[2].strip().upper()
+                c, s = p[1].strip().upper(), p[2].strip().upper()
                 if not c or not s:
                     continue
                 full.setdefault(c, s)
                 t = alias.get(s)
                 if t:
                     out.setdefault(c, t)
+    # FTD 에 구조적으로 안 나오는 클래스(CUSIP_EXTRA). 값은 **접기 전** 클래스 티커(BRK.A)라
+    #   접기(fold_class)와 주식 수 환산(fold_shares)이 호출부에서 그대로 걸린다.
+    #   ⚠ 그래서 out 의 값에는 유니버스 티커 말고도 «접으면 유니버스가 되는» 클래스 티커가 있다.
+    uset = set(universe)
+    for c, s in CUSIP_EXTRA.items():
+        full.setdefault(c, s)
+        if fold_class(s) in uset:
+            out.setdefault(c, s)
+    # 🚨 유니버스 티커를 유니버스 밖으로 접는 짝이 생기면 그 종목은 조용히 사라진다(BRK.B → BRK.A 가
+    #   그랬다). 매 실행 확인해 로그 맨 위에 남긴다.
+    _out = sorted(t for t in uset if fold_class(t) not in uset)
+    if _out:
+        print("::warning::SHARE_CLASS 가 유니버스 티커를 유니버스 밖으로 접는다: " + ", ".join(_out))
     cusip_map.full = full          # 부수 산출물 — 반환 계약은 그대로 둔다(호출부가 셋이다)
     return out
 
@@ -430,6 +478,7 @@ def edgar_quarters(cmap: dict):
                 #   벌크). 한쪽만 고치면 공급원이 바뀌는 날 조용히 갈린다. 실제로
                 #   2026-08-16 에 벌크 쪽만 고치고 돌렸다가 GOOGL·GOOG 가 그대로 둘로
                 #   남았다 — 쓰이는 경로가 EDGAR 였다.
+                sh = fold_shares(t, sh)          # 버크셔 A → B주 환산(SHARE_FACTOR) — 접기 전 티커로
                 t = fold_class(t)
                 h = holds.setdefault(t, {"v": 0.0, "sh": 0.0, "off": off, "nm": nm,
                                          "debt": 1 if (off and is_debt(cu)) else 0})
@@ -533,7 +582,12 @@ def read_quarter(url: str, cmap: dict):
             # 콜/풋은 보통주 보유가 아니다 — 섞으면 '몇 주 들고 있나'가 틀린다
             if (row.get("PUTCALL") or "").strip():
                 continue
-            cu = (row.get("CUSIP") or "").strip()
+            # 🚨 대문자로 맞춘다(2026-09-27). 벌크 INFOTABLE 에는 제출사가 적은 대소문자가 그대로
+            #   오는데, FTD 지도의 CUSIP 은 대문자다. 실측(2026-06-30): 에이커의 KKR(48251w104 ·
+            #   보고총액의 8.9%)이 «밖» 이 됐고, 알티미터의 Cerebras(15675d103)는 다른 곳들의
+            #   CBRS(7곳)와 갈려 공통보유 표에 두 줄로 섰다. EDGAR 경로(refresh_13f_history.holdings)는
+            #   처음부터 upper() 를 걸었다 — 이 저장소가 되풀이하는 «경로가 둘이라 갈린다» 자리다.
+            cu = (row.get("CUSIP") or "").strip().upper()
             t = cmap.get(cu)
             off = False
             if not t:
@@ -542,13 +596,14 @@ def read_quarter(url: str, cmap: dict):
             # 🚨 복수 클래스를 **여기서** 접는다(SHARE_CLASS 주석 참조). 이 한 곳이
             #   이번 분기와 직전 분기를 다 지나므로, 접기가 한 벌이면 변동 판정이
             #   저절로 맞는다. 화면에서 접으면 psh(직전 주식수)와 어긋난다.
+            _sh = fold_shares(t, _f(row.get("SSHPRNAMT")))   # 버크셔 A → B주 환산 — 접기 전 티커로
             t = fold_class(t)
             h = out[cik]["holds"].setdefault(
                 t, {"v": 0.0, "sh": 0.0, "off": off,
                     "debt": 1 if (off and is_debt(cu)) else 0,
                     "nm": (row.get("NAMEOFISSUER") or "").strip()})
             h["v"] += _f(row.get("VALUE"))
-            h["sh"] += _f(row.get("SSHPRNAMT"))
+            h["sh"] += _sh
     return per, out
 
 
@@ -568,8 +623,11 @@ def main() -> int:
 
     print("CUSIP→티커 매핑(FTD) 수집…")
     cmap = cusip_map(uni)
-    covered = len(set(cmap.values()))
+    covered = len(set(cmap.values()) & set(uni))   # 값에 클래스 티커(BRK.A)가 섞인다 — 유니버스만 센다
     print("  CUSIP %d개 · 유니버스 커버 %d/%d (%.1f%%)" % (len(cmap), covered, len(uni), covered / len(uni) * 100))
+    _miss = sorted(set(uni) - set(cmap.values()))
+    if _miss:      # 빠진 종목은 13F 에서 «밖» 으로 찍힌다 — 이름을 남겨야 다음에 찾는다(EQIX 가 그랬다)
+        print("  ⚠ CUSIP 을 못 찾은 유니버스 종목 %d: %s" % (len(_miss), ", ".join(_miss[:20])))
     if covered / len(uni) < 0.9:
         print("❌ CUSIP 매핑 커버가 90% 미만 — 갱신 중단(이전본 유지)")
         return 1
