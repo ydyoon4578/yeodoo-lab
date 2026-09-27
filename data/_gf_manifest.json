@@ -1,0 +1,109 @@
+{
+ "kind": "gfund_manifest",
+ "note": "거장 슬리브 측정(GURUFUND) 명세 — 해시만(값 없음). 러너 판 점검이 이 파일을 등록 커밋 판과 대조한다.",
+ "prereg": "build/PREREG-2026-09-27-GURUFUND.md",
+ "engine": "build/g_fund.py",
+ "runner": "build/g_fund_run.py",
+ "code_sha256_lf": {
+  "build/g_fund.py": "124e832202bbaa5a200112c961d5e2ea012edfd9384793afbdc3629da1064023",
+  "build/g_fund_run.py": "d47040533d779655ab8bd4de154a6eac3b7b3a594e8b8c3becfb475b8e3083ee"
+ },
+ "data_pin": {
+  "commit": "760df724ba97e3c9345a9eba81ac31118c6c4bb3",
+  "trees": {
+   "data": "38b1e108f40c7a36833e3c1eee8722cb480b4fc9",
+   "build": "0249dcf324f8e8ea3497d898613b840d633853d1"
+  },
+  "blobs": {
+   "data/guru_history.json": "105ee67ac5841e3704ee3766123d90ac9afb2329",
+   "data/_guru_cmp.json": "a45deddc2ff6607615b0bb0be3a7e3c88a64f567",
+   "data/_qbatch.json": "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7",
+   "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f"
+  },
+  "reused_modules_blob": {
+   "build/guru17_backtest.py": "5579705c12396eca51d7d687a864f14234dd4b8a",
+   "build/guru_overlap_backtest.py": "9bab378bf5dbb0d9585a17fc63528d9d2911aa05",
+   "build/guru_cmp.py": "17086f81040a3ddd7ac433c5e042ef665acf5717",
+   "build/idxrev.py": "c5129f764dfd8be88f12c67b06f2e64f32a257ad",
+   "build/idxtilt.py": "2bf8695d006252b33b26473d28f81b2cb7b2bcce",
+   "build/pit_panel.py": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+   "build/pit_alias.py": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+   "build/pit_quarantine.py": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+   "build/tech_backtest.py": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+   "build/refresh_13f.py": "03e4565c68200a470e8753d9485614c1101f223f",
+   "build/qbatch_core.py": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+   "build/eg30plus.py": "5688b266adece152d2dc72f911bb7a6ac977d628",
+   "build/qg_lab.py": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+   "build/stoploss.py": "e2408e98d03216146cf809d6643c68947130c727"
+  },
+  "read_files_blob": {
+   "data/stocks.json": "dc6f6ce184c5276d9e56005c447bce3d33686d59",
+   "data/pit_px.json": "0d857800fd0fa23d19e13a4d81ebd93511002966",
+   "data/index_history.json": "b7c2975b18c615732f8fc624ea7d27eea78da8d6",
+   "data/assets.json": "e131fde7b376dfb575949a93dd46d3e4ff1301f6",
+   "data/bench_px.json": "e93158046584e27d64d748bce5b7fbf4b0146e7f",
+   "data/rf_monthly.json": "5c432bb6d3d0037e9dd7621a7815053af3f96c26",
+   "data/ff_daily.json": "7cf949b8a199dab2922146cbe719d966556238cb",
+   "data/pit_universe.json": "5662f912332f50938a627ee14405580a5357f532",
+   "data/pit_reuse.json": "a9e69996f7a03937a76dfd424efcde4a908faae4",
+   "data/index_ledger.json": "856f2fbfc14a37880224b33ba0a69baa3e5ac7f9"
+  }
+ },
+ "f0b_pin": {
+  "code_commit": "3bbe5ca1d496bfb14648502fedb59f06a2e3d171",
+  "data_commit": "b036943529af797ebe5e5f0287959824d959ad00",
+  "trees": {
+   "build": [
+    "3bbe5ca1d496bfb14648502fedb59f06a2e3d171",
+    "230d95cd203e69ba5b90fe8a939de3a3cf28be57"
+   ],
+   "data": [
+    "b036943529af797ebe5e5f0287959824d959ad00",
+    "53d1c2ec21937c27f5334a70c50fdb98f28402cc"
+   ]
+  },
+  "overlay": {
+   "data/_guru_cmp.json": "3bbe5ca1d496bfb14648502fedb59f06a2e3d171"
+  },
+  "blobs": {
+   "data/_guru_cmp.json": "a45deddc2ff6607615b0bb0be3a7e3c88a64f567",
+   "data/guru_history.json": "6ac2910963e2dde3cd667cebe094dbb3395afaf9"
+  },
+  "provenance": {
+   "record_commit": "3bbe5ca1d496bfb14648502fedb59f06a2e3d171",
+   "pre_rebase_original": "77e31bc395f10f699f226b780cca65945bedb8af",
+   "inputs_equal_to": "b036943529af797ebe5e5f0287959824d959ad00",
+   "build_tree_same_as_pre_rebase": "230d95cd203e69ba5b90fe8a939de3a3cf28be57",
+   "pre_rebase_parent": "b036943529af797ebe5e5f0287959824d959ad00",
+   "pre_rebase_data_tree": "856fdc98a10f7dd7135c5588f9639be9f85c07ac",
+   "data_files_differing_from_parent": {
+    "data/_guru_cmp.json": "a45deddc2ff6607615b0bb0be3a7e3c88a64f567",
+    "data/_idxeg.json": "793c0903e1511c7673fd9e2e85b3782f867fc2cd",
+    "data/strategy_index.json": "404bc554055c4129295cdb4ba42e89d3998458b2"
+   }
+  },
+  "reused_modules_blob": {
+   "build/guru_cmp.py": "17086f81040a3ddd7ac433c5e042ef665acf5717",
+   "build/guru_overlap_backtest.py": "9bab378bf5dbb0d9585a17fc63528d9d2911aa05",
+   "build/guru17_backtest.py": "5579705c12396eca51d7d687a864f14234dd4b8a",
+   "build/idxrev.py": "c5129f764dfd8be88f12c67b06f2e64f32a257ad",
+   "build/idxtilt.py": "2bf8695d006252b33b26473d28f81b2cb7b2bcce",
+   "build/pit_panel.py": "1061ed210c51d5a146884c2b06612ae606475efb",
+   "build/pit_quarantine.py": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+   "build/tech_backtest.py": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+   "build/refresh_13f.py": "1d074fbf5340f3a43865d7a516056a0441190c84"
+  }
+ },
+ "hist_overlay": {
+  "file": "data/guru_history.json",
+  "blob": "21afd320740547a82da71978583305d1b43c78a0",
+  "base_blob_at_data_pin": "105ee67ac5841e3704ee3766123d90ac9afb2329",
+  "source": "등록 커밋(GFUND_COMMIT) 판",
+  "builder": "build/refresh_13f_history.py",
+  "builder_blob": "f46483fad315174cf2f72d934dd9ee529197adfa",
+  "smoke_source": "작업 트리(같은 blob 이어야)"
+ },
+ "start_tag": "gfund-started",
+ "git_mark": "gfund_started",
+ "forward": "없음 — 사용자 2026-09-27 «이런 불필요한 미래 일정들은 다 꺼»"
+}

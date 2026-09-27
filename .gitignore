@@ -241,3 +241,8 @@ vbatch_cache/
 #   캐시 사본(xbatch_cache)이 작업 트리에 복사돼도 쓸려 들지 않게. 명세 둘(data/_xb_manifest.json · data/_xb_f0.json)은 «_xb_» 라 걸리지 않는다.
 _xbatch*
 xbatch_cache/
+
+# 거장 슬리브 측정(PREREG-*-GURUFUND · 사용자 20년 규칙 2026-09-27) — 144개월 산출(_gfund.json · _gfund.public.json · _gfund.run.json · _gfund.started)이나
+#   캐시 사본(gfund_cache)이 작업 트리에 복사돼도 쓸려 들지 않게. 명세(data/_gf_manifest.json)는 «_gf_» 라 걸리지 않는다.
+_gfund*
+gfund_cache/
