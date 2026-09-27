@@ -138,23 +138,48 @@ GURUS = {
 #   참여자를 같이 세면 **모든 종목의 겹침 수가 +1** 되어, 「여러 거장이 함께 든 종목」
 #   이라는 신호가 묽어진다. 그건 명단 추가가 아니라 규칙 변경이다.
 #   → 카드는 보여 주되 겹침에서는 빼고, 화면이 그 사실을 적는다.
+# 🚨 2026-09-27 — 사용자 결정 «c»: 겹침·합의는 13F 가 본업인 가치 · 성장 27곳만 센다.
+#   행동주의 · 매크로 · 부실채권·크레딧 · 재단도 overlap=False 로 돌렸다(퀀트는 원래 False). 16곳이 더 빠져 퀀트 3곳과 합쳐 19곳을 뺀다.
+#   · 성과가 아니라 정의로 정했다 — 13F 에 «직접 고른 미국 주식 롱» 이 본업 그대로 실리는 축만 센다.
+#     행동주의는 캠페인 지분이라 정보가 13D·캠페인 결과로 먼저 나오고, 매크로·크레딧은 13F 주식 줄이
+#     본업의 일부이며(브리지워터는 S&P 500 ETF 26.8% 에 유니버스 360여 종목을 시총 비슷하게 흩어 든다 ·
+#     오크트리는 138줄 중 87줄이 채권·전환사채), 재단은 기부받은 주식이다(2026-06-30 13F 실측).
+#   · 정할 때 프로필(축별 보유 구성)은 봤고, 이 명단으로 잰 수익(VG)은 보기 전이었다. 옛 명단으로 잰 GURUCMP
+#     결과(기각)는 본 뒤였다 — 그 오염은 등록 문서(PREREG-2026-09-27-GURUFUND §0.7)에 적었다.
+#     VG 수익은 그 등록이 한 번 쟀다(결과 문서 · 측정만). 결과로 명단을 바꾸거나 되돌리지 않는다(등록 §5-1).
+#   · 카드는 그대로 보인다 — 보유·변동·분기 성과는 뺀 19곳도 모두 싣고, 공통 보유·합의의 머릿수에서만 뺀다.
+#   ⚠ 축 단위 정의라 곳마다 고르지 않는다. 넓게 드는 성장 쪽 곳(매버릭 · 베일리 기포드)도 남고,
+#     집중해서 고르는 행동주의(퍼싱스퀘어 · 트라이언 · 밸류액트)도 빠진다.
+#   · 백테스트(겹침 전략 · 컨빅션 복제 · 최다 보유 PDF)도 같은 정의로 센다 — GURUFUND 굽기가 끝난 뒤
+#     풀었다(아래 NO_OVERLAP 주석). 옛 명단으로 잰 겹침 카드의 등급은 물려받지 않는다(strategy_index).
 AXES = [
     ("value",    "집중 밸류",    "소수 종목을 오래 든다",              True,
      [1067983, 1061768, 1709323, 1112520, 1358706, 1056831, 1720792, 1096343,
       1549575, 860643, 1036325, 813917, 807985, 1697868, 915191, 1569205]),
-    ("activist", "행동주의",     "지분을 들고 경영에 개입한다",          True,
+    ("activist", "행동주의",     "지분을 들고 경영에 개입한다",          False,
      [2026053, 1040273, 1791786, 1345471, 1418814, 921669, 1517137, 1998597, 1489933]),
     ("growth",   "성장",        "고성장주 집중 — 이른바 타이거 계열",     True,
      [1167483, 1061165, 1103804, 1135730, 1697748, 1747057, 1541617, 1798849, 934639, 1602189, 1088875]),
-    ("macro",    "매크로",       "자산군을 오가며 큰 그림에 건다",        True,
+    ("macro",    "매크로",       "자산군을 오가며 큰 그림에 건다",        False,
      [1350694, 1029160, 1536411]),
-    ("credit",   "부실채권·크레딧", "싸진 채권·구조조정 상황을 산다",       True,
+    ("credit",   "부실채권·크레딧", "싸진 채권·구조조정 상황을 산다",       False,
      [1656456, 949509, 1035674]),
     ("quant",    "퀀트·분산",    "수천 종목을 규칙으로 담는다",          False,
      [1037389, 1167557, 1510387]),
-    ("endow",    "재단",        "재단·신탁 자금",                   True,
+    ("endow",    "재단",        "재단·신탁 자금",                   False,
      [1166559]),
 ]
+# 겹침·합의에서 뺀 축의 사유 — 화면(guru.html)의 «겹침·합의 제외» 표시가 이 글을 그대로 쓴다
+#   (사유를 화면에 따로 적으면 퀀트 한 줄이 행동주의·재단에도 붙는다 — 2026-09-27 전 화면이 그랬다).
+OVERLAP_OFF_WHY = {
+    "activist": "캠페인 지분이다 — 고른 판단은 맞지만 정보는 13D 공시·캠페인 결과로 먼저 나온다",
+    "macro":    "13F 주식 줄은 본업의 일부다 — 넓게 흩어 드는 곳(브리지워터 유니버스 360여 종목)이 "
+                "거의 모든 종목의 겹침 수를 +1 한다",
+    "credit":   "본업이 채권·구조조정이다 — 13F 주식 줄이 본업을 대표하지 않는다",
+    "quant":    "수천 종목을 규칙으로 들어 겹침 수를 통째로 밀어 올린다",
+    "endow":    "기부받은 주식이 대부분이다 — 운용 판단이 아니다",
+}
+assert set(OVERLAP_OFF_WHY) == {a[0] for a in AXES if not a[3]}, "겹침 제외 축과 사유 표가 어긋난다"
 # ── 법인이 바뀐 곳 — 직전 분기를 **옛 법인**에서 읽는다 ────────────────────
 # 🚨 왜 필요한가(2026-08-19 실측). 퍼싱스퀘어가 2026-06-30 부터 새 법인(2026053)으로
 #   신고한다. 새 법인의 직전 분기(2026-03-31)는 1종·5.7억$ 뿐이라, 그대로 비교하면
@@ -167,7 +192,25 @@ PREDECESSOR = {2026053: 1336528,   # 새 CIK → 옛 CIK
                1489933: 1079114}   # 그린라이트: GREENLIGHT CAPITAL INC → DME Capital Management, LP(합산 13F-HR)
 
 AXIS_OF = {c: a[0] for a in AXES for c in a[4]}
-NO_OVERLAP = {c for a in AXES if not a[3] for c in a[4]}
+# 화면(guru.json)의 공통 보유·이번 분기 합의에서 세지 않는 곳 — overlap=False 축 전부(가치·성장 밖 19곳).
+NO_OVERLAP_VIEW = {c for a in AXES if not a[3] for c in a[4]}
+# 2026-09-27 전 규칙(퀀트·분산 축만 뺌) — 화면 보조 칸(overlap[].n_prev · count_rule.prev_rule)만 쓴다.
+#   규칙이 아니라 기록이다. NO_OVERLAP 을 푼 뒤에도 그대로 둔다(보조 칸이 «옛 기준» 을 계속 말하게).
+NO_OVERLAP_PREV = {c for a in AXES if a[0] == "quant" for c in a[4]}
+# 🚨 백테스트가 import 하는 이름 — guru_overlap_backtest(겹침 전략 · counts_by_quarter) · guru_clone(컨빅션 복제) ·
+#   guru_top_pdf(최다 보유 10)가 읽는다. 2026-09-27 부터 화면과 **같은 정의**(가치·성장 밖 19곳을 뺀다)다.
+#   경위. 등록 굽기(PREREG-2026-09-27-GURUFUND)가 끝날 때까지 옛 정의(퀀트·분산 3곳만)에 묶어 두었다 — 안 묶으면
+#   CI(refresh-assets 가 매일 guru_clone · refresh-13f-history 가 매달 guru_overlap)가 새 명단으로 잰 수익을 등록보다
+#   먼저 게시하기 때문이었다. 굽기가 끝난 뒤 등록 §5-1 이 미리 적은 대로 **결과와 무관하게** 풀었다.
+#   ⚠ 옛 정의로 되돌리지 않는다 — 측정 결과를 보고 명단을 고르는 것이 된다(등록 §5-1).
+#   ⚠ 명단 밖 이력 전용 곳(HISTORY_ONLY · 사이언)은 AXES 에 없어 여기서 빠지지 않는다 — 이력 기반 백테스트는
+#     그곳의 그때 보유를 센다(GURUFUND VG 팔 «27 + 사이언 이력» 과 같은 셈).
+#   ⚠ 얼린 GURUFUND selftest 둘(g_fund_run._st_arms_consistent · g_fund._arms_check)은 등록 때 규칙(퀀트 셋)을
+#     단언한다 — 이제 실패하는 것은 «등록 뒤 규칙 해제» 이지 결함이 아니다. 얼린 파일은 고치지 않는다.
+#   ⚠ guru_cmp.py(GURUCMP 동결 기록을 만든 것)는 counts_by_quarter 를 부른다 — 다시 돌리면 새 정의로 세어
+#     동결값과 다른 수가 나온다. 다시 돌리지 않는다(재현은 동결 커밋의 코드 + 자료로 · GURUFUND 등록 §0.8).
+NO_OVERLAP = NO_OVERLAP_VIEW
+assert NO_OVERLAP_PREV <= NO_OVERLAP_VIEW
 assert set(AXIS_OF) == set(GURUS), (
     "축에 안 들어간 운용사: %s" % sorted(set(GURUS) - set(AXIS_OF)))
 
@@ -832,6 +875,7 @@ def main() -> int:
         return out
 
     managers, overlap, OFFNM = [], {}, {}
+    overlap_prev = {}    # 옛 기준(퀀트·분산만 뺌)으로 센 곳 — 화면 보조 칸(n_prev)에만 쓴다
     for cik, d in sorted(cur.items(), key=lambda kv: -sum(h["v"] for h in kv[1]["holds"].values())):
         p = (prev.get(cik) or {}).get("holds") or {}
         # 🚨 법인이 바뀐 곳은 **변동을 재지 않는다.** 새 법인의 직전 분기는 껍데기라
@@ -905,10 +949,14 @@ def main() -> int:
         for r in full:
             if r["chg"] == "전량매도":
                 continue
-            # 🚨 퀀트·분산 축은 겹침에서 뺀다(AXES 의 overlap=False). 수천~수만 종목을
-            #   드는 참여자를 같이 세면 모든 종목의 겹침 수가 +1 되어 신호가 묽어진다.
+            # 🚨 overlap=False 축은 겹침에서 뺀다(2026-09-27 부터 가치·성장 밖 19곳 · 위 AXES 주석).
+            #   처음 이유는 퀀트였다 — 수천~수만 종목을 드는 참여자를 같이 세면 모든 종목의 겹침 수가 +1 된다.
             #   ⚠ 카드에서 빼는 것이 아니다 — 보유는 그대로 보이고 겹침 계산에서만 뺀다.
-            if cik in NO_OVERLAP:
+            # ⚠ 옛 기준 곳 수(n_prev)를 보조 칸으로 같이 센다 — 기준을 바꾼 날 화면이 무엇이 바뀌었는지
+            #   보여 줄 수 있어야 한다. 신호로 쓰지 않는다.
+            if cik not in NO_OVERLAP_PREV:
+                overlap_prev.setdefault(r["t"], set()).add(cik)
+            if cik in NO_OVERLAP_VIEW:
                 continue
             overlap.setdefault(r["t"], []).append(cik)
             # 유니버스 밖 표시도 여기서 같이 모은다. 예전처럼 managers[].holds(잘린 목록)로
@@ -954,11 +1002,13 @@ def main() -> int:
                         "분기말+45일이라, 여기 보이는 것은 이미 45일 이상 지난 변화다. "
                         "곳수만 세면 큰 움직임과 작은 움직임이 같은 무게가 되므로 금액을 "
                         "함께 적는다. 한 곳뿐인 것은 합의가 아니라 싣지 않는다(n≥2). "
+                        "세는 곳은 공통 보유와 같다(count_rule — 가치·성장 축만). "
                         "split 은 같은 분기에 **한쪽은 늘리고 한쪽은 줄인** 종목이다 — "
                         "합의가 아니라 이견이고, 그 사실이 정보다."}
 
     ov = [{"t": t, "n": len(v), "ciks": sorted(v),
-           "nm": names.get(t) or OFFNM.get(t, ""), "off": 1 if t in OFFNM else 0}
+           "nm": names.get(t) or OFFNM.get(t, ""), "off": 1 if t in OFFNM else 0,
+           "n_prev": len(overlap_prev.get(t) or ())}
           for t, v in overlap.items()]
     ov.sort(key=lambda x: (-x["n"], x["t"]))
 
@@ -1021,9 +1071,25 @@ def main() -> int:
                     for c, h in HISTORY_ONLY.items()],
         # 축 정의를 산출물에 싣는다 — 화면이 이름·설명·겹침 포함 여부를 여기서 읽는다
         #   (정본을 코드 한 곳에만 두고 화면이 자기 목록을 또 적지 않게 한다).
-        "axes": [{"k": k, "label": lab, "desc": desc, "overlap": ov,
-                  "n": sum(1 for m in managers if m["axis"] == k)}
+        "axes": [dict({"k": k, "label": lab, "desc": desc, "overlap": ov,
+                       "n": sum(1 for m in managers if m["axis"] == k)},
+                      **({} if ov else {"why_off": OVERLAP_OFF_WHY[k]}))
                  for k, lab, desc, ov, _c in AXES],
+        # 🚨 공통 보유·합의를 누구로 세나(2026-09-27 사용자 결정 «c»). 화면이 이 칸 하나로 규칙을 적고,
+        #   전략 탭(guru_overlap.spec.overlap_excluded)과 기준이 다르면 그 사실도 이 칸과 견줘서 적는다.
+        #   off_labels 는 명단(GURUS) 기준이다 — 이번 분기 보고 여부와 무관하게 «뺀 곳» 전부다.
+        "count_rule": {
+            "since": "2026-09-27",
+            "on": [k for k, _l, _d, ov, _c in AXES if ov],
+            "n_on": sum(1 for c in GURUS if c not in NO_OVERLAP_VIEW),
+            "n_off": sum(1 for c in GURUS if c in NO_OVERLAP_VIEW),
+            "off_labels": sorted(GURUS[c] for c in GURUS if c in NO_OVERLAP_VIEW),
+            "prev_rule": "퀀트·분산 %d곳만 뺌" % len(NO_OVERLAP_PREV),
+            "note": "2026-09-27 부터 13F 가 본업인 가치·성장 축만 셉니다 — 13F 에 직접 고른 미국 주식 롱이 "
+                    "그대로 실리는 곳입니다. 새 명단으로 잰 성과는 보지 않고 정의로 정했습니다"
+                    "(옛 명단의 겹침 전략 성과는 이미 게시돼 있었습니다). "
+                    "그 전에는 퀀트·분산 %d곳만 뺐습니다." % len(NO_OVERLAP_PREV),
+        },
         "n_managers": len(managers),
         "n_listed": len(GURUS),
         "cusip_cover": round(covered / len(uni) * 100, 1),
@@ -1032,7 +1098,9 @@ def main() -> int:
                     "이름은 13F 원문(nameOfIssuer)에서, 티커는 SEC 공매도 미결제 파일에서 "
                     "찾은 것이라 티커가 없으면 CUSIP을 그대로 적는다. 이 사이트에는 그 종목의 "
                     "가격·재무 화면이 없다 — 무엇을 들고 있는지만 보여준다.",
-        "consensus": _consensus(managers),
+        # 🚨 2026-09-27 — 합의도 공통 보유와 같은 곳만 센다(사용자 결정 «c» — «겹침·합의는 27곳만»).
+        #   그 전에는 명단 전원(퀀트 포함)을 셌다 — 겹침만 퀀트를 빼고 합의는 안 빼던 어긋남이 같이 풀린다.
+        "consensus": _consensus([m for m in managers if m["cik"] not in NO_OVERLAP_VIEW]),
         "managers": managers,
         "overlap": ov,
         "limits": [

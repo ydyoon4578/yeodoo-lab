@@ -1277,10 +1277,12 @@ def main() -> int:
     #   그것이 **쉬운 쪽**이라는 것을 카드에 적는다.
     def _ov_why(grade, ds, alpha, tt, start, end):
         """거장겹침 카드의 why. 원래 창과 재진술 창(아래 «창 재진술») 이 같은 문장을 쓴다."""
-        return ("<b>%s.</b> S&P 500(PR) 매수후보유 대비 Δ샤프 %s · CAPM 알파 %s%%/yr (t %s) · %s~%s. "
+        _rt = (_OVR.get("note") or "") if _OVR.get("retro") else ""
+        return ("<b>%s%s.</b> %sS&P 500(PR) 매수후보유 대비 Δ샤프 %s · CAPM 알파 %s%%/yr (t %s) · %s~%s. "
                 "⚠ 쉬운 잣대다 — 오늘 518종 안의 대형주를 동일가중으로 담는 규칙이라 지수를 넘는 몫에 "
                 "사이즈 틸트와 생존 편향이 같이 들어 있다(같은 풀 동일가중 대조군은 2026-08-16 대조군 "
-                "교체 때 빠졌다)." % (grade, ds, alpha, tt, start, end))
+                "교체 때 빠졌다)." % (grade, (" · " + _OVR["retro"]) if _rt else "",
+                                    (_rt + " ") if _rt else "", ds, alpha, tt, start, end))
 
     def _ov_grade(ds, tt):
         """Δ샤프와 t 로 등급을 매긴다. 눈으로 고르지 않으려고 규칙으로 박아 둔다."""
@@ -1293,6 +1295,20 @@ def main() -> int:
         return "구별 불가"
 
     ovd = load("guru_overlap.json") or {}
+    # 🚨 2026-09-27 — 명단 변경(사용자 결정 «c» · 설계 D1 의 적용 방식 · GURUFUND 등록 §5-1).
+    #   원본이 roster 표지(guru_overlap.json 의 roster.retro)를 실어 보내면 겹침 카드는 **새 명단 카드로 «측정만» 에서
+    #   시작한다** — 옛 명단(퀀트·분산 3곳만 뺌) 때 매긴 등급(통과 후보 · 구별 불가 · 열위)을 물려받지 않는다.
+    #   곡선이 옛 분기까지 새 명단으로 거슬러 센 것이라(«명단 변경 뒤 소급»), Δ샤프·t 로 배지를 달면 명단을 정한
+    #   뒤의 소급 성적에 등급을 주는 것이 된다. 수치(Δ샤프 · 알파 · t)는 그대로 싣는다 — 막는 것은 등급뿐이다.
+    #   ⚠ sid 는 그대로 둔다(g-overlap-k2 …). sid 는 규칙(문턱 K · 담는 법)의 이름이지 명단의 이름이 아니고,
+    #     새 sid 를 만들면 숨김·압축·재진술·검증의 sid 목록이 전부 같이 바뀌어야 하며 옛 sid 는 가리킬 원본이 없다.
+    #     옛 카드 수치는 git 기록과 동결 기록(_guru_cmp.json)에 있다 — 여기서 덮지도 옮기지도 않는다.
+    #   ⚠ 표지가 없으면(옛 원본) 종전 규칙(_ov_grade)을 그대로 쓴다.
+    _OVR = ovd.get("roster") or {}
+
+    def _ov_grade_d1(ds, tt):
+        return "측정만" if _OVR.get("retro") else _ov_grade(ds, tt)
+
     _ovn = 0
     for v in ((ovd.get("variants") or []) + (ovd.get("tops") or [])):
         # 🚨 2026-08-16 — 대조군을 S&P 500·나스닥 100 으로 바꾸면서 `pool`(풀 동일가중)이
@@ -1307,7 +1323,9 @@ def main() -> int:
             continue                     # 표본 부족으로 성과가 없는 변형은 싣지 않는다
         ds = (round(m["sharpe"] - bm["sharpe"], 3)
               if m.get("sharpe") is not None and bm.get("sharpe") is not None else None)
-        _nm = ovd.get("n_managers") or 17
+        # 🚨 2026-09-27 — 종전에는 원본에 없는 n_managers 를 읽어 늘 «17곳» 이 찍혔다(명단은 46곳 · 셈에 넣는 곳은
+        #   43곳이었다). 명단 변경 표지가 셈에 넣는 곳 수(roster.n_on)를 실어 보내므로 그것을 쓴다.
+        _nm = _OVR.get("n_on") or ovd.get("n_managers") or 17
         if v.get("rank"):
             sid = "g-overlap-top%d-%s" % (ovd.get("topn") or 10, v["rank"])
             name = "거장 겹침 2곳 이상 · %s" % v.get("label")
@@ -1327,13 +1345,13 @@ def main() -> int:
                          "conv": "담되 여러 곳이 겹칠수록 더 많이 담는다",
                          "new": "그 분기에 처음 넘긴 것만 담는다"}.get(_mode, "담는다")))
         rows.append(rec(
-            sid=sid, name=name, role="수익엔진", grade=_ov_grade(ds, pl.get("t")),
+            sid=sid, name=name, role="수익엔진", grade=_ov_grade_d1(ds, pl.get("t")),
             src="거장 겹침", cat="13F 복제",
             pr_hint="M",   # 월 리밸 계열이다(대조군도 '같은 풀 동일가중(월 리밸)')
 
             rule=_rule + " 분기마다 다시 고르고, 공시일이 체결일보다 뒤인 운용사는 그 분기 "
                          "세지 않는다(그때는 아직 알 수 없던 정보다).",
-            why=_ov_why(_ov_grade(ds, pl.get("t")), ds, pl.get("alpha"), pl.get("t"),
+            why=_ov_why(_ov_grade_d1(ds, pl.get("t")), ds, pl.get("alpha"), pl.get("t"),
                         v.get("start"), v.get("end")),
             # 🚨 2026-09-23 — «문턱 4개와 좁힌 판 2개 · 어느 보정으로도 통과 0건» 은 변형이 6개이고
             #   대조군이 같은 풀이던 때의 문장이었다. 지금 분모와 통과 수를 산출물에서 그대로 읽는다.
@@ -1873,8 +1891,9 @@ def main() -> int:
         #   종전에는 성적만 10년으로 덮고 등급·why 는 원래 창(12.9년) 값이 남아, 카드가 «통과 후보»
         #   옆에 그 기준을 못 넘는 10년 t 를 그릴 수 있었다(09-23 13F 갱신 뒤 g-overlap-k2-new 가
         #   10년 t 1.34 인데 원래 창 t 2.11 로 «통과 후보»). 규칙은 그대로, 잣는 수만 화면의 수로.
+        # ⚠ 2026-09-27 — 명단 변경 표지가 있으면 등급은 «측정만»(위 _ov_grade_d1 · 설계 D1). why 에 표지를 같이 적는다.
         if _r["sid"].startswith("g-overlap"):
-            _r["grade"] = _ov_grade(_q.get("d_sharpe"), _q.get("t"))
+            _r["grade"] = _ov_grade_d1(_q.get("d_sharpe"), _q.get("t"))
             _r["why"] = _ov_why(_r["grade"], _q.get("d_sharpe"), (_q.get("spx") or {}).get("alpha"),
                                 _q.get("t"), _q["start"], _q["end"])
         # 🚨 시점정확 레그가 없는 사유 — 빈칸은 «해당 없음» 과 «아직 안 쟀다» 를 못 가른다.

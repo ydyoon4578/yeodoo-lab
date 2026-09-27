@@ -701,7 +701,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   <section id="overlap" aria-labelledby="o-h" hidden>
     <h2 class="lbl" id="o-h">공통 보유종목</h2>
-    <p class="lblnote">명단 중 몇 곳이 같이 들고 있는지. <b>많이 겹친다고 좋은 종목이라는 뜻이 아닙니다</b> —
+    <p class="lblnote">명단 중 <b>셈에 넣는 곳</b>(바로 아래 첫 줄) 몇 곳이 같이 들고 있는지. <b>많이 겹친다고 좋은 종목이라는 뜻이 아닙니다</b> —
       대형주일수록 자연히 겹칩니다(이 랩의 유니버스가 애초에 대형주 518종목입니다).
       이 랩은 겹침이 수익으로 이어지는지 검증한 적이 없습니다.</p>
     <div id="ovout"><div class="skel">불러오는 중…</div></div>
@@ -773,7 +773,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var idx={}; D.managers.forEach(function(m,i){ (idx[m.axis]=idx[m.axis]||[]).push(i); });
     el('mgrs').innerHTML=AX.filter(function(a){return (idx[a.k]||[]).length;}).map(function(a){
       return '<div class="axhd"><b>'+esc(a.label)+'</b> <span>'+(idx[a.k].length)+'곳 · '+esc(a.desc)+'</span>'+
-        (a.overlap?'':'<i class="axoff" title="수천 종목을 들어 겹침 수를 통째로 밀어 올린다 — 카드는 그대로 보이고 계산에서만 뺀다">겹침 제외</i>')+
+        // 🚨 2026-09-27 — 빼는 축이 퀀트 하나에서 다섯으로 늘었다(사용자 결정 «c» · 가치·성장만 센다).
+        //   사유를 퀀트 한 문장으로 박아 두면 행동주의·재단에도 «수천 종목» 이라고 말하게 된다 → 빌더가 축마다 싣는 why_off 를 쓴다.
+        (a.overlap?'':'<i class="axoff" title="'+esc((a.why_off?a.why_off+' — ':'')+
+          '공통 보유·이번 분기 합의의 머릿수에서만 뺀다. 카드는 그대로 보인다')+'">겹침·합의 제외</i>')+
         '</div>'+idx[a.k].map(function(i){return mgBtn(D.managers[i],i);}).join('');
     }).join('');
   }
@@ -1113,8 +1116,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (function(){
         var a=(D.axes||[]).filter(function(x){return x.k===m.axis;})[0];
         var t='';
-        if(a)t+='<span class="axtag'+(a.overlap?'':' off')+'">'+esc(a.label)+
-                (a.overlap?'':' · 겹침 제외')+'</span>';
+        if(a)t+='<span class="axtag'+(a.overlap?'':' off')+'"'+
+                (a.overlap||!a.why_off?'':' title="'+esc(a.why_off)+'"')+'>'+esc(a.label)+
+                (a.overlap?'':' · 겹침·합의 제외')+'</span>';
         // 법인 승계 — «신규 13종» 이라 적지 않는 이유를 카드가 직접 말한다
         if(m.succ_note)t+='<p class="lblnote" style="margin:6px 0 0;color:var(--marg)">⚠ '+esc(m.succ_note)+'</p>';
         return t;
@@ -1203,11 +1207,50 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<p class="lblnote" style="margin:6px 0 12px">'+
       '🚨 <b>매매 신호가 아닙니다.</b> 13F 는 분기 스냅샷이고 제출 마감이 분기말+45일이라, '+
       '여기 보이는 것은 <b>이미 45일 이상 지난 변화</b>입니다. 한 곳뿐인 것은 합의가 아니라 '+
-      '싣지 않습니다(2곳 이상). <span class="cnsx">↕</span> 는 같은 분기에 한쪽은 늘리고 '+
+      '싣지 않습니다(2곳 이상). 세는 곳은 공통 보유와 같습니다(위 «셈에 넣는 곳»). <span class="cnsx">↕</span> 는 같은 분기에 한쪽은 늘리고 '+
       '한쪽은 줄인 종목 — 합의가 아니라 <b>이견</b>이고 그 사실이 정보입니다. '+
       '종목에 마우스를 올리면 어느 곳이 어떻게 움직였는지 나옵니다.</p>'+
       '<div class="cnsgrid">'+col(C.acc,'여러 곳이 늘렸다','mvup')+
       col(C.dis,'여러 곳이 줄였다','mvdn')+'</div></div>';
+  }
+
+  // ── 누구를 세나 (2026-09-27 사용자 결정 «c») ─────────────────────────────────
+  // 🚨 공통 보유와 이번 분기 합의는 **13F 가 본업인 축(집중 밸류 · 성장)만** 센다. 축 목록·곳 수·사유는
+  //   빌더가 실어 보낸 D.axes · D.count_rule 만 읽는다 — 화면이 명단을 또 적지 않는다.
+  // ⚠ «전략» 탭의 겹침 전략·컨빅션 복제는 빌더가 따로 굽는다. 그쪽이 뺀 곳(guru_overlap.spec.overlap_excluded)이
+  //   이 화면의 뺀 곳(count_rule.off_labels)과 다르면 **다른 기준으로 센 표**라는 사실을 적는다.
+  //   두 목록이 같아지면(새 기준으로 다시 구우면) 이 줄은 저절로 사라진다 — 날짜를 박아 두지 않는다.
+  function sameSet(a,b){
+    if(!a||!b||a.length!==b.length)return false;
+    var s={}; a.forEach(function(x){s[x]=1;});
+    return b.every(function(x){return s[x]===1;});
+  }
+  function oldBasis(){
+    var R=D&&D.count_rule, ex=((STRAT.ov||{}).spec||{}).overlap_excluded;
+    return (R&&R.off_labels&&ex&&!sameSet(ex,R.off_labels))?ex:null;
+  }
+  function ruleNote(){
+    var AX=(D&&D.axes)||[], R=(D&&D.count_rule)||{};
+    if(!AX.length)return '';
+    var on=AX.filter(function(a){return a.overlap;}), off=AX.filter(function(a){return !a.overlap;});
+    // 합계는 명단 기준(count_rule.n_on)이다 — 축별 a.n 은 «이번 분기 보고한 곳» 이라, 한 곳이 한 분기 보고를 걸러도
+    //   규칙은 27곳 그대로다(2026-09-27 검토 지적). 둘이 다르면 이번 분기 보고 곳 수를 옆에 적는다.
+    var nRep=on.reduce(function(s,a){return s+(a.n||0);},0);
+    var nOn=(R.n_on!=null)?R.n_on:nRep;
+    var h='<div class="note" style="margin:0 0 14px"><b>셈에 넣는 곳</b> — '+
+      on.map(function(a){return esc(a.label)+' '+(a.n||0)+'곳';}).join(' · ')+' = 명단 <b>'+nOn+'곳</b>'+
+      (nRep!==nOn?' <span style="color:var(--muted)">(이번 분기 보고 '+nRep+'곳)</span>':'')+
+      (off.length?'<br><b>빼는 곳</b> — '+off.map(function(a){
+        return '<span'+(a.why_off?' title="'+esc(a.why_off)+'"':'')+'>'+esc(a.label)+' '+(a.n||0)+'곳</span>';}).join(' · ')+
+        ' <span style="color:var(--muted)">(이름에 마우스를 올리면 사유)</span>':'')+
+      '<br><span style="color:var(--muted)">'+esc(R.note||'')+
+      ' 뺀 곳의 카드와 보유·변동은 «운용사별 보유»에 그대로 보이고, 아래 두 표의 <b>머릿수에서만</b> 뺍니다.'+
+      (R.prev_rule?' 공통 보유의 곳 수에 마우스를 올리면 옛 기준('+esc(R.prev_rule)+')으로 센 곳 수가 나옵니다.':'')+
+      '</span>';
+    var ob=oldBasis();
+    if(ob)h+='<br><span style="color:var(--marg)">⚠ «전략» 탭의 겹침 전략·컨빅션 복제는 <b>아직 옛 기준</b>으로 센 표입니다 — '+
+      '그쪽은 '+ob.map(esc).join(' · ')+'만 뺍니다. 새 기준으로는 다시 재지 않았습니다.</span>';
+    return h+'</div>';
   }
 
   var OVMIN=2;                     // 겹침 필터 — «몇 곳 이상» 만 보인다
@@ -1221,7 +1264,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<button type="button" data-k="'+k+'" aria-pressed="'+(OVMIN===k?'true':'false')+
              '" style="'+(OVMIN===k?'color:var(--accent)':'')+'">'+k+'곳 이상 <span class="cn">'+c+'</span></button>';
     }).join('')+'</div>';
-    var h=cnsBlock()+'<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>'+bar;
+    var h=ruleNote()+cnsBlock()+'<div class="card"><h3>둘 이상이 같이 들고 있는 종목<span class="hn">'+rows.length+'종목 · 기준 '+esc(D.as_of)+'</span></h3>'+bar;
     rows.slice(0,80).forEach(function(x){
       var ot=x.off?('<span class="tkoff">'+esc(x.t)+'</span><span class="offb">밖</span>')
                   :('<a href="stocks.html#t='+encodeURIComponent(x.t)+'">'+esc(x.t)+'</a>');
@@ -1235,7 +1278,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
                rest.map(function(t){return '<span>'+t+'</span>';}).join('')+'</details>'):'';
       h+='<div class="ovrow'+(x.off?' offrow':'')+'"><span class="ot">'+ot+
          '<small title="'+esc(x.nm||'')+'">'+esc(x.nm||'')+'</small></span>'+
-         '<span class="on">'+x.n+'곳</span>'+
+         // 옛 기준 곳 수(n_prev)는 눈에 띄게 두지 않는다 — 신호는 새 기준 하나다. 확인하고 싶은 사람만 본다.
+         '<span class="on"'+((x.n_prev!=null&&x.n_prev!==x.n&&D.count_rule&&D.count_rule.prev_rule)?
+           ' title="'+esc('옛 기준('+D.count_rule.prev_rule+')으로는 '+x.n_prev+'곳')+'"':'')+'>'+x.n+'곳</span>'+
          '<span class="om">'+head+more+'</span></div>';
     });
     h+='</div>';
@@ -1262,7 +1307,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   //   높이에서 출발하는 사고가 난다 — 이 저장소가 2026-08-14 에 그것으로 그림이 승패를
   //   거꾸로 말하고 있었다(자산 랩 9종 중 8종).
   // ⚠ 세 계열이 **같은 달 목록**이다. 그래서 같은 그림에 올릴 수 있다.
-  function curveSvg(C,ttl){
+  function curveSvg(C,ttl,tag){
     if(!C||!C.m||!C.m.length)return '';
     var W=760,H=200,PL=44,PR=8,PT=10,PB=18;
     // 🚨 대조군 교체(2026-08-16) — 풀 동일가중을 걷고 지수 둘을 놓는다.
@@ -1296,7 +1341,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       return '<span class="cvk"><i style="background:'+k[2]+'"></i>'+k[1]+
              (a?' <b>'+(a[a.length-1]/100).toFixed(2)+'배</b>':'')+'</span>';}).join('');
     return '<div class="cvwrap"><div class="cvttl">'+esc(ttl||'')+
-      '<span class="cvsub">'+esc(C.m[0])+' ~ '+esc(C.m[n-1])+' · 100 기준 · 로그 눈금 · 무비용</span></div>'+
+      '<span class="cvsub">'+esc(C.m[0])+' ~ '+esc(C.m[n-1])+' · 100 기준 · 로그 눈금 · 무비용'+
+      (tag?' · <b>'+esc(tag)+'</b>':'')+'</span></div>'+
       '<svg viewBox="0 0 '+W+' '+H+'" class="cvsvg" role="img" aria-label="'+
       esc((ttl||'')+' 누적 곡선')+'">'+g+'</svg><div class="cvlg">'+lg+'</div></div>';
   }
@@ -1333,6 +1379,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     renderStratList();
     var kind=it[Math.min(STSEL,it.length-1)].k;
     var h='';
+    // 🚨 2026-09-27 — 공통 보유 탭과 **다른 기준으로 센 표**면 표 위에 적는다(ruleNote 와 같은 판정).
+    //   겹침 전략·컨빅션 복제는 둘 다 refresh_13f.NO_OVERLAP 을 읽으므로 guru_overlap 의 목록 하나로 판정한다.
+    var ob=(kind==='ov'||kind==='clone')?oldBasis():null;
+    if(ob)h+='<div class="note" style="margin:0 0 12px;color:var(--marg)">⚠ 이 표는 <b>옛 기준</b>으로 셌습니다 — '+
+      ob.map(esc).join(' · ')+'만 빼고 명단 전원을 셉니다. «공통 보유종목» 탭은 지금 '+
+      esc(((D.axes||[]).filter(function(a){return a.overlap;}).map(function(a){return a.label;})).join(' · '))+
+      ' 축만 셉니다. 새 기준으로는 다시 재지 않았습니다.</div>';
+    // 🚨 2026-09-27 — 명단 변경 뒤 소급 표지(설계 D1 · guru_overlap.json 의 roster). 새 기준으로 다시 구운 표는
+    //   옛 분기까지 새 명단으로 거슬러 센 것이라 그 사실을 표 위와 곡선 머리에 적는다. 문구는 빌더가 실어 보낸 것만 쓴다.
+    //   겹침 전략·컨빅션 복제는 둘 다 refresh_13f.NO_OVERLAP 으로 세므로 guru_overlap 의 표지 하나로 판정한다.
+    var RT=(!ob&&(kind==='ov'||kind==='clone'))?((STRAT.ov||{}).roster||null):null;
+    if(RT&&RT.retro)h+='<div class="note" style="margin:0 0 12px">⚠ <b>'+esc(RT.retro)+'</b> — '+esc(RT.note||'')+'</div>';
     if(kind==='ov'){
       if(!S||!S.variants){el('stout').innerHTML='<div class="note hard">guru_overlap.json 없음.</div>';return;}
       var MAIN=(S.tops||[]).filter(function(v){return v.rank==='ov'&&v.metrics;})[0];
@@ -1360,7 +1418,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        '그 쏠림이 알파로 보입니다. 두 지수 다 <b>가격지수</b>라 배당이 빠져 연 ~2%p 불리합니다.</p></div>';
 
     // ── ② 곡선 ──────────────────────────────────────────────────────
-    if(MAIN.curve) h+='<div class="card">'+curveSvg(MAIN.curve,nm(MAIN))+'</div>';
+    if(MAIN.curve) h+='<div class="card">'+curveSvg(MAIN.curve,nm(MAIN),RT&&RT.retro)+'</div>';
 
     // ── ③ 연도별 — 막대 대신 표. 어느 해에 벌고 잃었나가 곡선보다 정확히 읽힌다 ──
     if(MAIN.yearly&&MAIN.yearly.length){
@@ -1509,7 +1567,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   var STRAT={ov:null, clone:null, g17:null, n:0};
   function _got(k, j){
     STRAT[k]=j; STRAT.n++;
-    if(STRAT.n>=3) renderStrat();
+    if(STRAT.n>=3){
+      renderStrat();
+      // 공통 보유 탭의 «전략 탭은 옛 기준» 줄은 guru_overlap.json 을 봐야 알 수 있다 — 늦게 오면 다시 그린다
+      try{ if(D&&D.overlap) renderOv(); }catch(e){}
+    }
   }
   fetch('data/guru_overlap.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;})
     ['catch'](function(){return null;}).then(function(j){_got('ov',j);});
@@ -1577,6 +1639,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     el('limits').innerHTML='<b>이 데이터의 한계</b><br>· '+(j.limits||[]).map(esc).join('<br>· ')+
       '<br>· CUSIP↔티커 매핑 커버는 '+nf(j.cusip_cover,1)+'%입니다.';
     renderMgrs(); renderPf(); renderOv(); onHash();
+    // 전략 탭이 먼저 그려졌으면 «옛 기준» 줄(guru.json 의 count_rule 이 있어야 판정된다)을 위해 다시 그린다
+    try{ if(STRAT.n>=3) renderStrat(); }catch(e){}
     // 비교표는 guru_qperf.json 이 먼저 오면 D 없이 한 번 그려진다 — 명단(retired·현재 강조)을 반영해 다시 그린다
     try{ renderAllTbl(); }catch(e){}
     // 검색 — 목록만 좁힌다(축 머리는 남는 것이 있을 때만 보인다)

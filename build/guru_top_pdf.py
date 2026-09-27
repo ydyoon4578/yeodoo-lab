@@ -169,7 +169,9 @@ def build_weights(cik, G, P):
     return sched, diag
 
 
-from refresh_13f import NO_OVERLAP as _NO_OVERLAP     # 명단·축 정본은 refresh_13f 하나
+# 명단·축 정본은 refresh_13f 하나. 2026-09-27 부터 가치·성장 축만 센다(사용자 결정 «c» · GURUFUND 굽기 뒤 옮김) —
+#   그 전에는 퀀트·분산 축만 뺐다. 옛 분기도 새 명단으로 거슬러 세므로 이 쪽의 곡선은 «명단 변경 뒤 소급» 이다.
+from refresh_13f import NO_OVERLAP as _NO_OVERLAP, GURUS as _GURUS
 _NOV = {str(c) for c in _NO_OVERLAP}
 
 
@@ -196,7 +198,7 @@ def build_overlap(G, P):
             continue
         cnt = {}
         for cik, hold in (H[q] or {}).items():
-            if cik in _NOV:                   # 퀀트·분산 축은 세지 않는다(2026-09-23 — 2026-08-19 사용자 결정의 누락분)
+            if cik in _NOV:                   # 가치·성장 밖 축은 세지 않는다(2026-09-27 «c» · 처음엔 퀀트만 — 2026-09-23)
                 continue
             f = (FILED.get(q) or {}).get(cik)
             if f and f > P.dates[i]:          # 그때는 아직 안 나온 공시다
@@ -351,7 +353,8 @@ def footer(fig, page, total, kind="top"):
         lead = (
            "거장 상위 %d종목 전략 · 13F 보유 중 유니버스 상위 %d종목을 원래 비중 비율로 100%% 환산"
            % (TOPN, TOPN))
-    tx(fig, X0, .026, lead + " · 대조군은 가격지수(PR) · 비용 0 · 명단은 손으로 고른 18곳이다",
+    # ⚠ 명단 곳 수는 정본(refresh_13f.GURUS)에서 센다 — 종전에는 «18곳» 을 박아 두어 명단이 46곳이 된 뒤에도 그대로였다.
+    tx(fig, X0, .026, lead + " · 대조군은 가격지수(PR) · 비용 0 · 명단은 손으로 고른 %d곳이다" % len(_GURUS),
        fontsize=6.4, color=MUTED)
     tx(fig, X1, .026, "%d / %d · %s" % (page, total, dt.datetime.now().strftime("%Y-%m-%d")),
        fontsize=6.4, color=MUTED, ha="right")
@@ -732,11 +735,13 @@ SPEC_OVERLAP = {
     "kind": "overlap", "short": "겹침", "ref": "명단 겹침",
     "title": "거장 최다 보유 종목", "cnt": "보유", "who": "들고 있는 운용사",
     "rule": lambda n: "최다 보유 상위 %d(동점 포함 %d종목)" % (TOP_OVERLAP, n),
-    "desc1": ("분기마다 명단 운용사(퀀트·분산 제외)의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
-              "동일가중으로 담는다. %d위에 동점이 있으면 전부 넣으므로 종목 수는 %d개 이상이다."
-              % (TOP_OVERLAP, TOP_OVERLAP, TOP_OVERLAP)),
+    # ⚠ 한 줄(tx 는 줄을 안 바꾼다) — 종전 문장은 상위 20 으로 바뀐 뒤 쪽 오른쪽 끝에서 잘렸다(«종목 수는 20개» 까지만 보였다).
+    "desc1": ("분기마다 명단 운용사(가치·성장 축만)의 13F 를 세어 몇 곳이 들고 있나로 줄 세우고, 상위 %d종목을 "
+              "동일가중으로 담는다(%d위 동점은 전부 넣는다)."
+              % (TOP_OVERLAP, TOP_OVERLAP)),
+    # 🚨 2026-09-27 명단 변경 표지 — 한 줄짜리 글(tx 는 줄을 안 바꾼다)이라 desc1 을 늘리지 않고 여기 붙인다.
     "desc2": ("개별 운용사를 복제하는 뒤쪽 쪽들과 달리, 여기서 묻는 것은 "
-              "'여러 명이 겹쳐 든 것'이 따로 값을 하는가다."),
+              "'여러 명이 겹쳐 든 것'이 따로 값을 하는가다. 셈에 넣는 곳은 2026-09-27 에 정했다 — 명단 변경 뒤 소급."),
     "sub": lambda now: ("동일가중 %d종목 · %d위가 %d곳인데 동점이 많아 %d종목이 됐다"
                         % (len(now), TOP_OVERLAP, min(now.values()) if now else 0, len(now)),
                         len(now) > TOP_OVERLAP * 1.3),
@@ -830,7 +835,12 @@ def main() -> int:
         H, FILED = G["holdings"], (G.get("filed") or {})
         qlast, last = max(H), len(P.dates) - 1
         cnt = {}
+        # 🚨 2026-09-27 — «오늘 다시 고르면» 표도 백테스트(build_overlap)와 같은 곳만 센다(_NOV 를 뺀다).
+        #   종전에는 여기만 명단 전원을 세어, «퀀트·분산 제외» 라고 적은 쪽의 표가 AQR·르네상스까지 셌다
+        #   (2026-09-23 제외를 넣을 때 백테스트 쪽에만 들어갔다). 들고 있는 운용사 칸도 같은 곳만 적는다.
         for cik, hold in (H[qlast] or {}).items():
+            if cik in _NOV:
+                continue
             for t, v in (hold or {}).items():
                 if t in P.px and v and v > 0:
                     pp = P.px[t][last]
@@ -841,6 +851,8 @@ def main() -> int:
         now_cnt = {t: c for t, c in ranked if c >= cut}
         holders = {}
         for cik, hold in (H[qlast] or {}).items():
+            if cik in _NOV:
+                continue
             nm = _short((cov.get(cik) or {}).get("name") or names.get(cik) or cik)
             for t in now_cnt:
                 if (hold or {}).get(t):
