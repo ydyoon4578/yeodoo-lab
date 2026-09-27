@@ -741,6 +741,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 여기서는 '자료 범위'라고만 적고, 표본 길이는 각 카드가 자기 것을 찍는다.
     el('stamp').textContent='자료 범위 '+(sp.start||'')+' ~ '+(sp.end||'')+' · 운용사 '+
       (j.managers.length)+'곳(성과 산출 '+((j.headline.multiplicity||{}).m||0)+'곳)';
+    // 🚨 2026-09-27 — 이 표는 13F **이력** 기준이라 지금 명단(guru.html)에서 뺀 곳도 지난 제출만큼 들어 있다
+    //   (사후 선택을 막으려고 지우지 않는다 · refresh_13f.HISTORY_ONLY). 수가 거장 화면과 다른 까닭을 여기 적는다.
+    fetch('data/guru.json',{cache:'no-cache'}).then(function(r){return r.ok?r.json():null;}).then(function(g){
+      var ret=((g&&g.retired)||[]).filter(function(r){
+        return j.managers.some(function(x){return String(x.cik)===String(r.cik);});});
+      if(!ret.length)return;
+      el('stamp').textContent+=' · 그중 지금 명단에서 뺀 곳 '+ret.length+'곳('+ret.map(function(r){
+        return r.label+' — 마지막 13F '+(r.last||'—');}).join(' · ')+') — 그때 공개된 지난 분기만 들어 있다';
+    })['catch'](function(){});
     el('verdict').innerHTML=drawVerdict(j);
     el('limits').innerHTML='<h2>이 숫자를 알파로 읽으면 안 되는 이유</h2><ul>'+
       (j.not_alpha||[]).map(function(s){return '<li>'+md(s)+'</li>';}).join('')+'</ul>';
