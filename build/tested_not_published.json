@@ -4132,6 +4132,21 @@
    "gate": "측정만 — D13 주식판 DSTK(결과는 결과 문서에만)",
    "why": "DSTK 사전등록 235233e1c · 결과는 build/PREREG-2026-09-27-DSTK-RESULT.md",
    "blocked_by": ""
+  },
+  {
+   "sid": "eg-step",
+   "name": "EGSTEP — EG30 상태 조건 스텝(금리 스텝: 가치 국면 → DSTK 가치 다리 ½ · 방어 스텝: Q06 상관 놀람 → V02 책 ½ · 둘 다: 방어 먼저 · 합 ½ 상한)",
+   "kind": "펀드 슬리브 10% · EG30 운용 스텝 역할 검정",
+   "arch": "",
+   "when": "2026-09-28",
+   "src": "PREREG-2026-09-27-EGSTEP.md · PREREG-2026-09-27-EGSTEP-RESULT.md",
+   "paper": "",
+   "t": null,
+   "incr": null,
+   "measured_no_t": true,
+   "gate": "관문 통과(채택 표시 · 표본 안 · 오염 측정) — 보류: 펀드에 붙이기는 사용자 결정 · EGSTEP(결과는 결과 문서에만)",
+   "why": "EGSTEP 사전등록 29535c2df · 결과는 build/PREREG-2026-09-27-EGSTEP-RESULT.md",
+   "blocked_by": ""
   }
  ]
 }
