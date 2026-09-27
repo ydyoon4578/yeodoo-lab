@@ -18,7 +18,8 @@ try: sys.stdout.reconfigure(encoding="utf-8")   # Windows 콘솔(cp949)에서 �
 except Exception: pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from refresh_13f import GURUS, PREDECESSOR, cusip_map, fold_class  # noqa: E402  명단·매핑·클래스표를 복제하지 않는다
+from refresh_13f import (GURUS, PREDECESSOR, HISTORY_ONLY, history_roster,  # noqa: E402
+                         cusip_map, fold_class)      # 명단·매핑·클래스표를 복제하지 않는다
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -143,7 +144,10 @@ def main() -> int:
     #   갈아타면서 13년 성과가 사라지고 «성과 없음» 이 됐다.
     #   ⚠ 여기는 분기별로 담기만 하는 자리라 이어 붙여도 기준 분기 선택을 흔들지 않는다
     #     (refresh_13f 의 최신분기 선택에 넣었다가 27곳이 한 분기 밀린 사고와 다른 자리다).
-    _roster = dict(GURUS)
+    # 🚨 2026-09-27 — 명단은 GURUS 가 아니라 history_roster() 다. 명단에서 뺀 곳 중 지난 제출을
+    #   이력에 남기는 곳(refresh_13f.HISTORY_ONLY · 사이언)을 계속 받는다. GURUS 만 돌면 다음
+    #   재수집 때 그 곳의 과거 분기가 **소급해서 사라져** 복제·겹침 백테스트가 사후 선택이 된다.
+    _roster = history_roster()
     for _succ, _pred in PREDECESSOR.items():
         if _pred not in _roster:
             _roster[_pred] = GURUS.get(_succ, "승계 전 법인")
@@ -171,6 +175,11 @@ def main() -> int:
                 continue
             if rd not in best or fdate >= filed.get(rd, ""):
                 best[rd], filed[rd] = acc, fdate
+        # 이력 전용(명단에서 뺀 곳)은 **마지막 보고분기까지만** 싣는다. 뒤에 같은 CIK 로 무엇이
+        #   올라와도(정정·다른 법인 합산 등) 명단에서 뺀 뒤의 것이라 이력에 넣지 않는다.
+        _cap = (HISTORY_ONLY.get(cik) or {}).get("last")
+        if _cap:
+            best = {rd: a for rd, a in best.items() if rd <= _cap}
         qs = sorted(best)[-nq:] if nq else sorted(best)
         got = 0
         for rd in qs:
