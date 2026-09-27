@@ -1,0 +1,1476 @@
+{
+ "note": "배치 X 자료 명세(build/x_data.py --manifest) — 원천 판 · 해시 · 행 수 · 처음/끝 날짜 · 가용 늦춤 규칙 · 창만. 원자료 · 값 계열 · 수익 · 20년 수치는 없다(원자료는 저장소 밖 %TEMP%/xbatch_cache/raw · 20년 산출은 캐시 out/ 에만). 국외 원천은 x_intl 명세 절이 더한다.",
+ "generated_at": "2026-09-27T04:13:56Z",
+ "cache_root": "%TEMP%/xbatch_cache",
+ "windows": {
+  "score": [
+   "2006-09",
+   "2026-08"
+  ],
+  "n_score": 240,
+  "input_min": "2005-08-01",
+  "warmup": [
+   "2005-09",
+   "2006-08"
+  ],
+  "halves": [
+   [
+    "2006-09",
+    "2016-08"
+   ],
+   [
+    "2016-09",
+    "2026-08"
+   ]
+  ],
+  "out_of_literature": [
+   "2019-01",
+   "2026-08"
+  ],
+  "gfc_excluded_report": [
+   "2007-10",
+   "2009-06"
+  ],
+  "full_years": [
+   2007,
+   2025
+  ],
+  "s_layer": [
+   "2016-09",
+   "2026-08"
+  ],
+  "s_pit_from": "2014-06",
+  "public_from": "2016-09",
+  "max_years_public": 10,
+  "first_active_min": {
+   "X-BEAR": "2006-08",
+   "X-GVTREND": "2006-12",
+   "X-BLR": "2010-08",
+   "X-JM": "2008-08"
+  },
+  "bake_end_t1": "2026-09-01"
+ },
+ "availability": {
+  "spy": {
+   "T1": "same_day",
+   "D0": "same_day",
+   "G": "same_day",
+   "freq": "d",
+   "note": "SPY 16:00 ET 종가(수정종가 TR)"
+  },
+  "gspc": {
+   "T1": "same_day",
+   "D0": "same_day",
+   "G": "same_day",
+   "freq": "d",
+   "note": "^GSPC 16:00 종가(PR)"
+  },
+  "sp500tr": {
+   "T1": null,
+   "D0": null,
+   "G": null,
+   "freq": "d",
+   "note": "대조 전용 — 신호 입력 금지"
+  },
+  "etf": {
+   "T1": "same_day",
+   "D0": "same_day",
+   "G": "same_day",
+   "freq": "d",
+   "note": "IVW · IVE · IWF · 국가 ETF 종가"
+  },
+  "vix": {
+   "T1": "same_day",
+   "D0": "prev_session",
+   "G": "same_day",
+   "freq": "d",
+   "note": "Cboe VIX 16:15 ET > SPY 16:00 — D0 행(d_m 종가 체결)은 d_m − 1 거래일 VIX(SN-1.2) · T+1 주 행은 d_m"
+  },
+  "vix3m": {
+   "T1": "same_day",
+   "D0": "prev_session",
+   "G": "same_day",
+   "freq": "d",
+   "note": "VIX 와 같은 시각(16:15) · 공표일(VXV_PUB) 앞은 VTS = 0"
+  },
+  "fred_d": {
+   "T1": "prev_bday",
+   "D0": "prev_bday",
+   "G": "prev_bday",
+   "freq": "d",
+   "note": "FRED 일간(BAA10Y · DBAA · DGS10 · DFII10 · DGS3MO)은 다음 영업일 공표 — d_m − 1 영업일(보수)"
+  },
+  "fred_fx": {
+   "T1": "same_day",
+   "D0": "same_day",
+   "G": "same_day",
+   "freq": "d",
+   "note": "H.10 정오(NY) d_m 값 · 없으면 직전 영업일(x_intl)"
+  },
+  "rf_us_m": {
+   "T1": "month_le",
+   "D0": "month_le",
+   "G": "month_le",
+   "freq": "m",
+   "note": "보유월 u 의 rf = DGS3MO(u−1 월평균)/12 — 결정월 t 에는 u ≤ t 만(u = t 는 t−1 월평균)"
+  },
+  "oecd_m": {
+   "T1": "month_le",
+   "D0": "month_le",
+   "G": "month_le",
+   "freq": "m",
+   "note": "현지 3개월 금리 u−1 월평균/12 · 늦으면 마지막 공표값 유지(선언 · x_intl)"
+  },
+  "french": {
+   "T1": null,
+   "D0": null,
+   "G": "month_le",
+   "freq": "m",
+   "note": "French — 신호에 쓰지 않는다(평가 · G 층 전용 · 월말 근사 = 하루 선견은 M 의 D0−T+1 차이로 적는다 SN-1.4)"
+  },
+  "vix3m_yf": {
+   "T1": null,
+   "D0": null,
+   "G": null,
+   "freq": "d",
+   "note": "yfinance ^VIX3M — Cboe 값 대조 전용"
+  }
+ },
+ "vxv_publication": {
+  "default": "2009-09-18",
+  "in_force": "2009-09-18",
+  "rule": "Cboe 공식 VIX3M CSV 시작일 · Cboe 1차 공고로 더 이른 날을 증명할 때만 앞당긴다(SN-1.1)"
+ },
+ "french": {
+  "crsp": "202608",
+  "growth_proxies": {
+   "LG": [
+    "p6_m",
+    "BIG LoBM"
+   ],
+   "EXG": [
+    "beme",
+    "Lo 10"
+   ],
+   "MOM": [
+    "me_prior12",
+    "BIG HiPRIOR"
+   ],
+   "QG": [
+    "me_op",
+    "BIG HiOP"
+   ]
+  },
+  "d_proxy": [
+   "me_beta",
+   "BIG LoBETA"
+  ],
+  "d_proxy_fallback": [
+   "beta",
+   "Lo 20"
+  ],
+  "min_firms": 20
+ },
+ "frozen_calls": {
+  "v_data.parse_french_blob": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a"
+ },
+ "sources": {
+  "yf/SPY": {
+   "url": "yfinance:Ticker('SPY').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "8d0cca69d50076f27009dcbf6a99d1c1a1cfd9fcf4b9acf7cd61e1eb2cc30fa7",
+   "bytes": 690807,
+   "seed_fetched_at": "2026-09-25T20:59:17Z",
+   "yfinance": "1.7.0",
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "X-BEAR 주 수익(수정종가 = TR) · M 층 일간 T+1 · 결정일 달력",
+   "summary": {
+    "rows": 8472,
+    "first": "1993-01-29",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "yf/^SP500TR": {
+   "url": "yfinance:Ticker('^SP500TR').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "33c591164ca637530d070d06845f2b5fb491be8cda9cd0dee05cda5417b84652",
+   "bytes": 734169,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "SPY TR 월 값 대조(개수만)",
+   "summary": {
+    "rows": 9756,
+    "first": "1988-01-04",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "yf/^GSPC": {
+   "url": "yfinance:Ticker('^GSPC').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "8ecffb5a89460fedfd9c5f694f52a80952197b9f1b21bb5fcfd931f50318e05d",
+   "bytes": 2019567,
+   "seed_fetched_at": "2026-09-26T13:35:02Z",
+   "yfinance": null,
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "지그재그(얼린 mech_episodes) · 하락월(S&P PR) · SMA200 쌍둥이",
+   "summary": {
+    "rows": 24801,
+    "first": "1927-12-30",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "yf/IVW": {
+   "url": "yfinance:Ticker('IVW').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "750425f619792acd01375562a27aea788b0bb95b6f89123d41163b9f9e40abdf",
+   "bytes": 551851,
+   "seed_fetched_at": "2026-09-25T20:59:25Z",
+   "yfinance": "1.7.0",
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "X-GVTREND 성장(TR)",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "yf/IVE": {
+   "url": "yfinance:Ticker('IVE').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "81e8308854c75408d4d63141693867ef8fa3942ded9d1186665a317065496a13",
+   "bytes": 545308,
+   "seed_fetched_at": "2026-09-25T20:59:24Z",
+   "yfinance": "1.7.0",
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "X-GVTREND 가치(TR)",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "yf/IWF": {
+   "url": "yfinance:Ticker('IWF').history(period='max', auto_adjust=False, actions=True)",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "22050d36603f26093098c1a8b83f80d938edf4f116e8405953be12141e15226c",
+   "bytes": 555098,
+   "seed_fetched_at": "2026-09-25T20:59:27Z",
+   "yfinance": "1.7.0",
+   "license": "Yahoo Finance(yfinance) — 개인 · 캐시만 · 재게시 없음",
+   "use": "G 층 보고 코어 IWF TR",
+   "summary": {
+    "rows": 6622,
+    "first": "2000-05-26",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 5322,
+    "n_nan_in_window": 0
+   }
+  },
+  "fred/DGS3MO": {
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS3MO",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:09Z",
+   "sha256": "d865e67e9e1ec47d3e2f18d98581cfee8f5c26a37808bffcc1dcdb444afd64cb",
+   "bytes": 186563,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "FRED(St. Louis Fed) — 공공 · BAA10Y/DBAA 는 Moody's 저작권 표기 · 원자료 재게시 없음",
+   "use": "rf 대조(주 원천은 rf_monthly 고정 사본) · 일간 rf",
+   "summary": {
+    "rows": 11758,
+    "first": "1981-09-01",
+    "last": "2026-09-24",
+    "n_nan": 492,
+    "rows_in_window": 5519,
+    "n_nan_in_window": 227
+   }
+  },
+  "fred/BAA10Y": {
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAA10Y",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:11Z",
+   "sha256": "351d14708ceac987d9d855e81759a4a29ef9a0cbaaa14e0581fb6cf8bbe1ed16",
+   "bytes": 168268,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "FRED(St. Louis Fed) — 공공 · BAA10Y/DBAA 는 Moody's 저작권 표기 · 원자료 재게시 없음",
+   "use": "X-CRED · X-BLR CREDIT · X-COMP",
+   "summary": {
+    "rows": 10626,
+    "first": "1986-01-02",
+    "last": "2026-09-24",
+    "n_nan": 443,
+    "rows_in_window": 5519,
+    "n_nan_in_window": 232
+   }
+  },
+  "fred/DBAA": {
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DBAA",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:12Z",
+   "sha256": "a86c7570e41e7af62f4d8809f0aab95ed3f2eb4539957eb562af17782ce81b70",
+   "bytes": 169495,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "FRED(St. Louis Fed) — 공공 · BAA10Y/DBAA 는 Moody's 저작권 표기 · 원자료 재게시 없음",
+   "use": "BAA10Y 항등식 · Moody's 지속 · ALFRED 판 대조",
+   "summary": {
+    "rows": 10626,
+    "first": "1986-01-02",
+    "last": "2026-09-24",
+    "n_nan": 407,
+    "rows_in_window": 5519,
+    "n_nan_in_window": 227
+   }
+  },
+  "fred/DGS10": {
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:13Z",
+   "sha256": "89dabb1a3db1e14a4948563ee2b8555b54f22a1cded5ef7a97c3e6575bc13c72",
+   "bytes": 268839,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "FRED(St. Louis Fed) — 공공 · BAA10Y/DBAA 는 Moody's 저작권 표기 · 원자료 재게시 없음",
+   "use": "BAA10Y 항등식 · ALFRED 판 대조",
+   "summary": {
+    "rows": 16888,
+    "first": "1962-01-02",
+    "last": "2026-09-24",
+    "n_nan": 720,
+    "rows_in_window": 5519,
+    "n_nan_in_window": 227
+   }
+  },
+  "fred/DFII10": {
+   "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DFII10",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "ddb4c4057c7cc4b6dc337cce84f02bfcbde9da5c95dcb2d966e06b6d65d65502",
+   "bytes": 99019,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "FRED(St. Louis Fed) — 공공 · BAA10Y/DBAA 는 Moody's 저작권 표기 · 원자료 재게시 없음",
+   "use": "X-RRSHOCK(F_G 측정)",
+   "summary": {
+    "rows": 6191,
+    "first": "2003-01-02",
+    "last": "2026-09-24",
+    "n_nan": 254,
+    "rows_in_window": 5519,
+    "n_nan_in_window": 227
+   }
+  },
+  "cboe/VIX": {
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+   "origin": "copy:tbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "c1fa255f4e659d217f8cf244310a126517dc8f832568afe6be8184f46ca6dae7",
+   "bytes": 472921,
+   "seed_fetched_at": "2026-09-25T14:19:10Z",
+   "yfinance": null,
+   "license": "Cboe Global Markets — 지수 이력 CSV · 원자료 재게시 없음",
+   "use": "X-VTS · X-COMP · X-BLR FEAR(Cboe 1차)",
+   "summary": {
+    "rows": 9278,
+    "first": "1990-01-02",
+    "last": "2026-09-22",
+    "n_nan": 0,
+    "rows_in_window": 5352,
+    "n_nan_in_window": 0
+   }
+  },
+  "cboe/VIX3M": {
+   "url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+   "origin": "live",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "11149cbb1fb55d8eb1dca52009944f757f5b39ff241ed49b94ab668dafbe5160",
+   "bytes": 218356,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Cboe Global Markets — 지수 이력 CSV · 원자료 재게시 없음",
+   "use": "X-VTS · X-COMP(공표일 뒤만 · Cboe 1차)",
+   "summary": {
+    "rows": 4281,
+    "first": "2009-09-18",
+    "last": "2026-09-25",
+    "n_nan": 0,
+    "rows_in_window": 4281,
+    "n_nan_in_window": 0
+   }
+  },
+  "lab/rf_monthly": {
+   "url": "data/rf_monthly.json",
+   "origin": "copy:repo:data/rf_monthly.json",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "211c2480e03d11aee1f5adfcc98b7eb89ca2204ba4f772aace6d11e820978194",
+   "bytes": 11518,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "랩 저장소 data/ (이미 공개 · 해시만)",
+   "use": "r^e 의 rf = DGS3MO(u−1 월평균)/12(명세 signals X-BEAR data)",
+   "summary": {
+    "rows": 541,
+    "first": "1981-09",
+    "last": "2026-09",
+    "source": "DGS3MO",
+    "fetched": "2026-09-26"
+   }
+  },
+  "lab/assets": {
+   "url": "data/assets.json",
+   "origin": "copy:repo:data/assets.json",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "740054b609bce17d5e4e63503f68fcb31390bb1e8538f4122a76aba203bd4cc8",
+   "bytes": 5229433,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "랩 저장소 data/ (이미 공개 · 해시만)",
+   "use": "yfinance ^VIX3M 값 대조만(수익 계산 없음)",
+   "summary": {
+    "rows": 5215,
+    "first": "2006-01-03",
+    "last": "2026-09-25",
+    "as_of": "2026-09-25"
+   }
+  },
+  "french/ff3_m": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "593f4fbef03181bc0b22ff6292f217689dd1fb79355049ca905d95b262040a66",
+   "bytes": 13065,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "Mkt · RF(G 층 펀드 Mkt · French Mkt-RF 판 상태 일치)",
+   "summary": {
+    "rows": 1202,
+    "first": "1926-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 2,
+    "rows_in_window": 253
+   }
+  },
+  "french/ff3_d": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "2f29e22546069914890a712680a6f81f3680ebc3543b52864484d209ca13a7db",
+   "bytes": 178184,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "Mkt-RF 일간(보고)",
+   "summary": {
+    "rows": 26317,
+    "first": "1926-07-01",
+    "last": "2026-08-31",
+    "crsp": "202608",
+    "blocks": 1,
+    "rows_in_window": 5304
+   }
+  },
+  "french/p6_m": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_2x3_CSV.zip",
+   "origin": "copy:ubatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:14Z",
+   "sha256": "82b66ccd6a4dff103eba51b60e1f2310eaa94bbebbb843550173b972c64cdbff",
+   "bytes": 149412,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "LG 주 코어 BIG LoBM(VW 월)",
+   "summary": {
+    "rows": 1202,
+    "first": "1926-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 9,
+    "rows_in_window": 253
+   }
+  },
+  "french/p6_d": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_2x3_daily_CSV.zip",
+   "origin": "copy:ubatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:15Z",
+   "sha256": "413a33d12a6b12ef4c0d86df39c0f8c01b4420dac31a95abf62b271ffa6e4846",
+   "bytes": 1134056,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "LG 코어 일간(보고)",
+   "summary": {
+    "rows": 26317,
+    "first": "1926-07-01",
+    "last": "2026-08-31",
+    "crsp": "202608",
+    "blocks": 4,
+    "rows_in_window": 5304
+   }
+  },
+  "french/me_beta": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/25_Portfolios_ME_BETA_5x5_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:15Z",
+   "sha256": "716efc2073e44fbb7de5443c326f08275ec12c39a0b7fe18f7e127006deb7fcc",
+   "bytes": 465140,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "D 대리 ME5×β1 = BIG LoBETA",
+   "summary": {
+    "rows": 758,
+    "first": "1963-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 10,
+    "rows_in_window": 253
+   }
+  },
+  "french/beta": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BETA_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:15Z",
+   "sha256": "fb317445a0160c694ee2773d1718490259e1c6873f1490191efc9ec3bcc1b65e",
+   "bytes": 116169,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "D 대리 대체 Lo 20(충실도 < 0.6 이면 · 기계적)",
+   "summary": {
+    "rows": 758,
+    "first": "1963-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 7,
+    "rows_in_window": 253
+   }
+  },
+  "french/beme": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/Portfolios_Formed_on_BE-ME_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:15Z",
+   "sha256": "9a701c046c81aea43627fda7dcc4a6a516ccccbf80593da25572f4dc0b5e7b5d",
+   "bytes": 219193,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "EXG = BE-ME Lo 10",
+   "summary": {
+    "rows": 1202,
+    "first": "1926-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 8,
+    "rows_in_window": 253
+   }
+  },
+  "french/me_prior12": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_Prior_12_2_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:16Z",
+   "sha256": "68d90a218235b2c14e67eb1b7b1acd2d9fcc6b626bc4c64e854e2788bcf44bf3",
+   "bytes": 127456,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "MOM = BIG HiPRIOR",
+   "summary": {
+    "rows": 1196,
+    "first": "1927-01",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 8,
+    "rows_in_window": 253
+   }
+  },
+  "french/me_op": {
+   "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/6_Portfolios_ME_OP_2x3_CSV.zip",
+   "origin": "copy:vbatch_cache/raw",
+   "pinned_at": "2026-09-27T01:25:16Z",
+   "sha256": "5974ba70b4e23e46e58bdc821fb0c93caea86f46ca50523d0622e86d7f2eba5b",
+   "bytes": 105990,
+   "seed_fetched_at": null,
+   "yfinance": null,
+   "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+   "use": "QG = BIG HiOP",
+   "summary": {
+    "rows": 758,
+    "first": "1963-07",
+    "last": "2026-08",
+    "crsp": "202608",
+    "blocks": 9,
+    "rows_in_window": 253
+   }
+  }
+ },
+ "alfred": {
+  "series": [
+   "DBAA",
+   "DGS10",
+   "BAA10Y"
+  ],
+  "vintages": [
+   "2010-01-04",
+   "2016-09-01",
+   "2021-01-04",
+   "2026-09-25"
+  ],
+  "files": {
+   "alfred/DBAA@2010-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DBAA&vintage_date=2010-01-04",
+    "sha256": null,
+    "pinned_at": null,
+    "error": "HTTP 404"
+   },
+   "alfred/DBAA@2016-09-01": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DBAA&vintage_date=2016-09-01",
+    "sha256": "97c5c8ff01b531d3a41cd725a53ca99dbcaac76c0500a064b7fa7d81cd354fee",
+    "pinned_at": "2026-09-27T01:25:18Z",
+    "error": null
+   },
+   "alfred/DBAA@2021-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DBAA&vintage_date=2021-01-04",
+    "sha256": "f43930681cd061a6ee68a2406794bad033406d3811bde1526a58a03710caf1cf",
+    "pinned_at": "2026-09-27T01:25:20Z",
+    "error": null
+   },
+   "alfred/DBAA@2026-09-25": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DBAA&vintage_date=2026-09-25",
+    "sha256": "8b0c4a0520ef5ad3d7f7c080aa1e17749967b876e60f99ed04ea510db6dbecd9",
+    "pinned_at": "2026-09-27T01:25:21Z",
+    "error": null
+   },
+   "alfred/DGS10@2010-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DGS10&vintage_date=2010-01-04",
+    "sha256": "52266d67dedc534e89ab4331d74046338931225371daeb3756305b213a975194",
+    "pinned_at": "2026-09-27T01:25:24Z",
+    "error": null
+   },
+   "alfred/DGS10@2016-09-01": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DGS10&vintage_date=2016-09-01",
+    "sha256": "c808e861dda8642c32b61d9b132bf3cd6eaee6adde2ae1fa0a99a1ed7262e4e5",
+    "pinned_at": "2026-09-27T01:25:25Z",
+    "error": null
+   },
+   "alfred/DGS10@2021-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DGS10&vintage_date=2021-01-04",
+    "sha256": "459b21136bb0555c40ea987a94784846b1932d1baaa3b5a98019842856571a70",
+    "pinned_at": "2026-09-27T01:25:28Z",
+    "error": null
+   },
+   "alfred/DGS10@2026-09-25": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=DGS10&vintage_date=2026-09-25",
+    "sha256": "67fa694ba0708bf825245fe831b243ab6fde20178a63e7a05cc435d738ad6b05",
+    "pinned_at": "2026-09-27T01:25:29Z",
+    "error": null
+   },
+   "alfred/BAA10Y@2010-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=BAA10Y&vintage_date=2010-01-04",
+    "sha256": null,
+    "pinned_at": null,
+    "error": "HTTP 404"
+   },
+   "alfred/BAA10Y@2016-09-01": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=BAA10Y&vintage_date=2016-09-01",
+    "sha256": "e584a3a8b7eb8f7b92654aef349fdca55edec92896791e315aa2c2ba04f653a4",
+    "pinned_at": "2026-09-27T01:25:32Z",
+    "error": null
+   },
+   "alfred/BAA10Y@2021-01-04": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=BAA10Y&vintage_date=2021-01-04",
+    "sha256": "cc18767e6360966515a399e1955d64514a6ea7305f3c4c699c72c74e47a4bb37",
+    "pinned_at": "2026-09-27T01:25:35Z",
+    "error": null
+   },
+   "alfred/BAA10Y@2026-09-25": {
+    "url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=BAA10Y&vintage_date=2026-09-25",
+    "sha256": "e1c8a46171121d65de0df2d7c3f8e248d98ec8f7068e7e2e59ff96f1700aec83",
+    "pinned_at": "2026-09-27T01:25:36Z",
+    "error": null
+   }
+  }
+ },
+ "guards": {
+  "repo_allowed": [
+   "data/_xb_manifest.json",
+   "data/_xb_f0.json"
+  ],
+  "repo_allowed_globs": [
+   "build/PREREG-*-XBATCH.md",
+   "build/PREREG-*-XBATCH-RESULT.md"
+  ],
+  "cache_only_marker": "x_data.CACHE_ONLY_KEY(문자열은 여기 싣지 않는다 — site_guard 표식)",
+  "forbidden_read_marks": "x_data.FORBIDDEN_READ_MARKS — 배치 T 산출 폴더(tbatch_cache/out)와 배치 T 산출 파일 넷(이름은 배치 T 사이트 경계 표식이라 여기 싣지 않는다 · T01 C:bearonly 저장값을 열지 않는다)",
+  "signal_layer_forbidden_marks": [
+   "_eg_q5",
+   "_eg30plus",
+   "_qfwd",
+   "_eg_best",
+   "_idxeg",
+   "_qbatch",
+   "_qg_",
+   "v0_pin",
+   "_fund_card"
+  ]
+ },
+ "intl": {
+  "note": "I 층 국외 패널 원천(build/x_intl.py --manifest) — 국가 ETF(yfinance · 캐시만) · FRB H.10 FX · OECD MEI 3개월 금리(FRED · 대안 OECD SDMX) · French 국제 국가(충실도 보고만). 판 · 해시 · 행 수 · 날짜 · 규칙만 — 수익 · 값 계열 없음.",
+  "generated_at": "2026-09-27T04:13:57Z",
+  "cache_root": "%TEMP%/xbatch_cache/raw/intl",
+  "spec_markets": [
+   {
+    "cc": "JP",
+    "etf": "EWJ",
+    "fx": "DEXJPUS"
+   },
+   {
+    "cc": "GB",
+    "etf": "EWU",
+    "fx": "DEXUSUK(역수)"
+   },
+   {
+    "cc": "DE",
+    "etf": "EWG",
+    "fx": "DEXUSEU(역수)"
+   },
+   {
+    "cc": "FR",
+    "etf": "EWQ",
+    "fx": "DEXUSEU(역수)"
+   },
+   {
+    "cc": "IT",
+    "etf": "EWI",
+    "fx": "DEXUSEU(역수)"
+   },
+   {
+    "cc": "CH",
+    "etf": "EWL",
+    "fx": "DEXSZUS"
+   },
+   {
+    "cc": "SE",
+    "etf": "EWD",
+    "fx": "DEXSDUS"
+   },
+   {
+    "cc": "CA",
+    "etf": "EWC",
+    "fx": "DEXCAUS"
+   },
+   {
+    "cc": "AU",
+    "etf": "EWA",
+    "fx": "DEXUSAL(역수)"
+   },
+   {
+    "cc": "KR",
+    "etf": "EWY",
+    "fx": "DEXKOUS"
+   }
+  ],
+  "substitutes_in_order": [
+   "NL EWN",
+   "ES EWP"
+  ],
+  "rules": {
+   "returns": "현지 TR = (P_t·X_t)/(P_{t−1}·X_{t−1}) − 1 · X = 현지/USD(DEXUS* 는 역수) · P = ETF 수정종가(USD)",
+   "excess": "rf_u = IR3TIB01{cc}M156N(u−1 월평균)/1200 · USD 판 rf_u = DGS3MO(u−1 월평균)/12",
+   "timing": "결정 d_m 종가 · T+1 체결(다음 NYSE 거래일 종가) · 보유 다음 T+1 까지 · FX 는 그날 또는 직전 영업일(달력 7일 안)",
+   "px_stale_days": 5,
+   "fx_stale_days": 7,
+   "rate_tail_max_months": null,
+   "usd_switch_at": 3,
+   "empty_rule": "ETF · FX · 금리 가운데 하나라도 필요한 날/달을 못 덮으면 그 시장이 빈다 · 금리는 FRED 먼저 · FRED 가 비면 OECD SDMX",
+   "switch_rule": "빈 주 시장 1~2 → 대체 NL → ES 순서(덮인 것만) · 셋 이상 또는 대체 모자람 → 패널 전체 USD TR − DGS3MO"
+  },
+  "window": {
+   "input_min": "2005-08-01",
+   "warm": [
+    "2005-09",
+    "2006-08"
+   ],
+   "score": [
+    "2006-09",
+    "2026-08"
+   ],
+   "rate_months": [
+    "2005-08",
+    "2026-07"
+   ]
+  },
+  "calendar": {
+   "file": "tbatch_cache/raw/yf/SPY.csv (읽기만 · NYSE 거래일 달력)",
+   "sha256": "8d0cca69d50076f27009dcbf6a99d1c1a1cfd9fcf4b9acf7cd61e1eb2cc30fa7"
+  },
+  "rf_us": {
+   "file": "%TEMP%/xbatch_cache/raw/us/lab/rf_monthly.json(x_data lab/rf_monthly 고정 사본 · 원본 data/rf_monthly.json)",
+   "sha256_lf": "211c2480e03d11aee1f5adfcc98b7eb89ca2204ba4f772aace6d11e820978194"
+  },
+  "sources": {
+   "yf/EWJ": {
+    "url": "yfinance:Ticker('EWJ').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:11:21Z",
+    "sha256": "604ba4b4690f9a5db825e218085a065b5bf6eadc508556bcc27f284d53fa525f",
+    "bytes": 445547,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01JPM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01JPM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:22:53Z",
+    "sha256": "0aa06106938eef623e261224de4da258fa81eb53cecd8720fd16ee0323f4556a",
+    "bytes": 4861,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 252,
+     "first": "2005-08",
+     "last": "2026-07",
+     "n_nan": 0
+    }
+   },
+   "yf/EWU": {
+    "url": "yfinance:Ticker('EWU').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:16:04Z",
+    "sha256": "22d4c27d6d0723fff9d9a10a5c95334f11b1d1a54db6b0723431c3a99e98ed0f",
+    "bytes": 442474,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01GBM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01GBM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:22:54Z",
+    "sha256": "8c093d06d54ef43057b536ecf817604024c4a84052b79135623c9252e5d9521d",
+    "bytes": 4707,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 246,
+     "first": "2005-08",
+     "last": "2026-01",
+     "n_nan": 0
+    }
+   },
+   "oecd/GB": {
+    "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/GBR.M.IR3TIB.PA.....?startPeriod=2005-08&format=csvfilewithlabels",
+    "fetched_at": "2026-09-27T01:26:38Z",
+    "sha256": "4792bb88593844b99e55a40f71ae9a4be6f015d459536de23b753acef646de25",
+    "bytes": 70059,
+    "license": "OECD — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 247,
+     "first": "2005-08",
+     "last": "2026-02",
+     "n_nan": 0
+    }
+   },
+   "yf/EWG": {
+    "url": "yfinance:Ticker('EWG').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:20:47Z",
+    "sha256": "aefda0fe39714fa68fe0ac4449f3f474b6b7d05de385f6bd42fad392d97aa96f",
+    "bytes": 444763,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01DEM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01DEM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:22:55Z",
+    "sha256": "53c5a887be501f188771de6dda6ca569da4531349f2a8ec2854a263b443d3b59",
+    "bytes": 7709,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWQ": {
+    "url": "yfinance:Ticker('EWQ').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:22:57Z",
+    "sha256": "4c358546fc1a80b8829372aa07ab05a35a2f2b0d0a3f22b6ac4c9cbde7317af3",
+    "bytes": 440463,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01FRM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01FRM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:22:57Z",
+    "sha256": "7ead019ec29801089bd8df9977e52210a16f60b11a3412b28ab8d302fa09c29b",
+    "bytes": 7709,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWI": {
+    "url": "yfinance:Ticker('EWI').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:22:58Z",
+    "sha256": "3c0b7f92a1b3f2754b9329716308d41583f30895bafd359fe45362cbf37dcdf1",
+    "bytes": 439357,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01ITM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01ITM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:22:58Z",
+    "sha256": "b7282ff7d3362ea2478a01241df41e0818a842339174b562841872f593b0294a",
+    "bytes": 5432,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWL": {
+    "url": "yfinance:Ticker('EWL').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:22:59Z",
+    "sha256": "7c95853d15c570fec827c9493b2aca21534043c47559213a0deaab3c01df9364",
+    "bytes": 440106,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01CHM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01CHM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:01Z",
+    "sha256": "a530773468d46c3e8f6c632d6e9828cded554aa97bb87311fa339a849b4f2fb1",
+    "bytes": 7757,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWD": {
+    "url": "yfinance:Ticker('EWD').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:01Z",
+    "sha256": "cd28ce9d9adb02add8a82af296eec481869a81e84af6a93ebab0ec6b79a9a3a2",
+    "bytes": 439145,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01SEM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01SEM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:02Z",
+    "sha256": "3ece1a6610e94a96c8888489610aaa6c9ffcb906081d052e97543e654a2075eb",
+    "bytes": 5180,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWC": {
+    "url": "yfinance:Ticker('EWC').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:03Z",
+    "sha256": "3be3affef189d064eeba464aaca28fab38b044d1fe452566253fbabecc51ed1e",
+    "bytes": 443689,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01CAM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01CAM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:03Z",
+    "sha256": "7375359ba30ec078fff3df75e8f3ca38b63215d95b1207d54c45fe58a4235362",
+    "bytes": 5852,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWA": {
+    "url": "yfinance:Ticker('EWA').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:04Z",
+    "sha256": "9962cbdd2fadc9bedb09108d77c8ab866d791ca7ba9782814dbb941ea22763ac",
+    "bytes": 444290,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01AUM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01AUM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:04Z",
+    "sha256": "e9d5fb6bb7a7b1c5589a889247b50fdba7d09cbd5b308ec8b283af0738ad6334",
+    "bytes": 7117,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWY": {
+    "url": "yfinance:Ticker('EWY').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:05Z",
+    "sha256": "3f5753e8625f3079cc500938a1f94056026906c486b7d8babf7c423ca24d8474",
+    "bytes": 443588,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01KRM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01KRM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:05Z",
+    "sha256": "7732a2ab98631840157d5aa7b4c04b625b518308f59e3f514c06f52874b762ab",
+    "bytes": 4081,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWN": {
+    "url": "yfinance:Ticker('EWN').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:06Z",
+    "sha256": "8e275abb6483eb2c1cdd2838d06895faf1eb7f37a3cb2143af24a48688f7a04f",
+    "bytes": 437637,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01NLM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01NLM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:07Z",
+    "sha256": "c13caf2ae56baf7aa6156522b75306260a5e8587e0dd257999d8e1acd2ecb77d",
+    "bytes": 5432,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "yf/EWP": {
+    "url": "yfinance:Ticker('EWP').history(start='2005-08-01', auto_adjust=False, actions=True)",
+    "fetched_at": "2026-09-27T01:23:08Z",
+    "sha256": "42e7d4d09f845f8e76da052c86b9ad9abb4758250e0364892078e51984ba3ff4",
+    "bytes": 440105,
+    "license": "yfinance: 개인 사용 — 캐시만",
+    "sha_ok": true,
+    "yfinance": "1.7.0",
+    "summary": {
+     "rows": 5322,
+     "first": "2005-08-01",
+     "last": "2026-09-25",
+     "n_nan": 0
+    }
+   },
+   "fred/IR3TIB01ESM156N": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IR3TIB01ESM156N&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:09Z",
+    "sha256": "edfa2da573a66bc5da070cc2834f87676c7b1e6826e664c3c629f5497592a519",
+    "bytes": 7709,
+    "license": "OECD MEI via FRED — 출처 표기",
+    "sha_ok": true,
+    "summary": {
+     "rows": 253,
+     "first": "2005-08",
+     "last": "2026-08",
+     "n_nan": 0
+    }
+   },
+   "fred/DEXCAUS": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXCAUS&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:11Z",
+    "sha256": "5e58c09a762ee4286c2bbe904fd8bdc7c8b963f080e48dc6c1fb13c08b7f172e",
+    "bytes": 97975,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXJPUS": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:11Z",
+    "sha256": "5ea3c2616c8d8c540473fc8b1d62bd7c3fb4b8228eae4520c35829fcacffab2b",
+    "bytes": 96726,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXKOUS": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXKOUS&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:13Z",
+    "sha256": "8e8a52db87431dc972b214f05968cb14f6c4cfb34036f4231832306561245776",
+    "bytes": 102689,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXSDUS": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXSDUS&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:14Z",
+    "sha256": "8440e3c439dd4e1aa337ac07edbf767fcc02b3a4a0e5f11bbe51e190632a1026",
+    "bytes": 98704,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXSZUS": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXSZUS&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:15Z",
+    "sha256": "e5fa9707458625f491b4caf88e9027caf68d63444efc763e222d60b47489b703",
+    "bytes": 97975,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXUSAL": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSAL&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:17Z",
+    "sha256": "ccc16d56312247192752b3b91112dc18d734e3a9de914cb6ae735d43d4ef98e4",
+    "bytes": 97975,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXUSEU": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSEU&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:18Z",
+    "sha256": "bba19b4bb4405eb690dd351c56e8aa46267fa12fe336de3247ef007222930c6b",
+    "bytes": 97975,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "fred/DEXUSUK": {
+    "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSUK&cosd=2005-08-01",
+    "fetched_at": "2026-09-27T01:23:19Z",
+    "sha256": "304674a7156d1b3dbbe0163d960c89201580a4c6f344875b4f838f591f427ead",
+    "bytes": 97975,
+    "license": "FRB H.10 via FRED",
+    "sha_ok": true,
+    "summary": {
+     "rows": 5515,
+     "first": "2005-08-01",
+     "last": "2026-09-18",
+     "n_nan": 220
+    }
+   },
+   "french/intl_countries": {
+    "url": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_International_Countries.zip",
+    "fetched_at": "2026-09-27T01:23:21Z",
+    "sha256": "6041ff104726d6aadfea76c4ef25af35594e799b90064b76b6bb83bd4acb0091",
+    "bytes": 1281647,
+    "license": "Kenneth R. French Data Library — 출처 표기 · 재게시 없음",
+    "sha_ok": true,
+    "summary": {
+     "members": 21
+    }
+   }
+  },
+  "decision": {
+   "mode": "local",
+   "markets": [
+    "JP",
+    "GB",
+    "DE",
+    "FR",
+    "IT",
+    "CH",
+    "SE",
+    "CA",
+    "AU",
+    "KR"
+   ],
+   "empty": [],
+   "substituted": {},
+   "why": "빈 시장 없음"
+  }
+ },
+ "registration": {
+  "note": "배치 X 등록 절(build/x_run.py --manifest) — 캐시 표지 · 문헌 열기 기록 · 얼린 호출 핀 · 사용자 답 · 전방 취소. 값 계열 · 수익 없음.",
+  "generated_at": "2026-09-27T04:13:58Z",
+  "cache_identity": {
+   "file": "%TEMP%/xbatch_cache/meta/cache_id.txt",
+   "sha256": "760f1b521aff621012d648ba00ac572dda45166bc05f9a699f93126d2b013e3a"
+  },
+  "lit_open": {
+   "file": "%TEMP%/xbatch_cache/lit/lit_open.json(저장소 밖)",
+   "sha256": "a3167f30abf2dfa8d0ef780af94b5a2b0a1b217a160fb460752d295de5b192d7",
+   "attempted_at": "2026-09-27",
+   "arm_decisions": {
+    "X-RRSHOCK": "쌍둥이(참고 · F_G BY 가족 밖 · 보고만)",
+    "X-GVTREND": "측정 팔 유지(F_G)",
+    "X-VTS": "삭제(단독 측정 팔로 채점 · 보고하지 않는다 · 전방 카드 없음)",
+    "X-COMP": "변경 없음(정의 얼림 · VTS 성분 그대로)",
+    "D(V02 LBS)": "변경 없음"
+   },
+   "pdf_sha256": {
+    "weber_w22520.pdf": "0697dd5c18ab6d3e91b056d94c60373981cfac326b4092371db8c1e894d3750a",
+    "el_w25551.pdf": "00af3d637aedf63d0c10023ec474614335d807c72b547fdecbe2dc2da634fdd3",
+    "fp_w16601.pdf": "ccb60baf587453692eec6ddca6f66c839e054ed78d1ec81cf859e9f1f19d3c2c",
+    "fh2019_econstor.pdf": "bd2a7c0ce4abbdedf63250817fd54eec5b3dac79567b019033f21aa60a4a72b6",
+    "_springer_dss.bin(초록 페이지)": "1867169156db2845e93619c521ffda349095a2400410bb9b81f1dc1e214367ea"
+   }
+  },
+  "frozen_calls": {
+   "x_eval": {
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "mech_episodes": "161080fd9244c060a7a94c559044de3e3ddcc27c"
+   },
+   "x_signals.q_jump": "b55652b5bf2db83e28e9e54480aa6254d20ffb95",
+   "x_data.v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+   "x_adapter.code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+   "x_adapter.build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+   "x_adapter.root_frozen": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "pit_panel": "ae044a5d3b8af4b6b8aee12d3879f5c97d4885fb",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "rally_pattern": "25bbe121aec76be3a54c62a5bb5567c63666cbfa",
+    "index_members": "7850ef55f5b89583b24e190b250a14c897c93395",
+    "mech_episodes": "161080fd9244c060a7a94c559044de3e3ddcc27c"
+   },
+   "x_adapter.v_frozen": {
+    "v_cards": "aadaf24f173579d3f3146014aa150a4ca07eb0a5",
+    "v_core": "bdba648f1d790748cd5008ceeea3c5eee9d733c8",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+    "v_pit": "5983b9902b106a2b234db05a397e9ce0b73fb689",
+    "v_fund": "2d8093f0009c09b05f597e07eea10f53c8d18b8e",
+    "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
+    "v_cond": "d25914deb89490410ea2dca56b5999356628821e",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628"
+   },
+   "x_adapter.dbook_frozen": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a"
+   },
+   "x_adapter.vb_books_sha": "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b",
+   "x_adapter.v0_hash_pin": {
+    "V0_LT": "ec0a2aa43f1efffa3d59b5d5b78268153a2bf7f36947ab2ed6345c61c0370202",
+    "V0_BL": "132008e66ddf2ef85ea3acf408ae213641f92a0a0a4f7ea3118b6963d2a3c077"
+   },
+   "x_adapter.p3": {
+    "data/_q07_ltd_fits.json": "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",
+    "data/_eg_q5_scores_pitgics.json": "21f43d226463f3978982acc077fbca1576780f33",
+    "data/_eg_q5_scores_pitgics_pre.json": "cb96d4bf7cd35786c0b69d369df0a317db137373",
+    "data/_eg_q5_scores.json": "2868509a502b5104e49d378457451f80eb694d17",
+    "data/pit_gics_sectors.json": "4b20f0e6a02595ec81db4ceaa877afe5628201e8",
+    "data/pit_gics.json": "f4163293cc92f1386ef5c5f31521d6d302a5c228",
+    "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f",
+    "data/_eg_best.json": "cc58f30c84886554c76fecf6df5dc85974eb09f1",
+    "data/_eg30plus.json": "c205f1365e924ebf097b200042133369d7de3f3d"
+   },
+   "x_adapter.price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+   "x_adapter.base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
+   "x_adapter.data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+   "x_adapter.vroot_paths": [
+    "build/",
+    "data/"
+   ]
+  },
+  "user_answers": {
+   "U1_a_op": "½",
+   "U2_path": "B",
+   "premium_trail": "뒤 24개월 −0.40%p NAV",
+   "premium_cum": "붙인 뒤 누적 −0.60%p NAV",
+   "disclose": "오염 창에서 고름 · 전방 미확인 · 보험 결정",
+   "answered_at": "2026-09-27"
+  },
+  "spec_rules": {
+   "premium_trail_exemption": "뒤 24개월 한도는 그 24개월 창에 완료된 급락 다리가 없을 때만 선다 — 명세 규칙(x_eval.premium_cap_kill) · 사용자 답에는 없다",
+   "premium_shadow_v0": "경로 B 로 붙였을 때만: 운용 담당이 매달 운용 펀드(@ a_op) − 같은 달 V0 그림자 펀드(얼린 V0 규칙 · 같은 비용)의 월 차를 x_eval.premium_cap_kill 에 넣어 조건을 본다 · QFWD 원장은 멈췄으므로 그림자 V0 는 운용 기록에서 따로 계산한다(원장 · 예정 판정일 없음)"
+  },
+  "forward": {
+   "cancelled": true,
+   "text": "전방 원장(XFWD) · FF1 · FF2 · 날짜가 박힌 전방 판정 없음 — 사용자 갱신 2026-09-27(계산 전) «이런 불필요한 미래 일정들은 다 꺼 · QFWD까지 모두 끄라»",
+   "no_dir": "data/_xfwd"
+  },
+  "runner": {
+   "file": "build/x_run.py",
+   "env_pins": {
+    "PYTHONHASHSEED": "0",
+    "OPENBLAS_NUM_THREADS": "1"
+   },
+   "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "pandas": "3.0.6"
+   },
+   "first_added": [
+    "build/PREREG-2026-09-27-XBATCH.md",
+    "build/x_run.py",
+    "data/_xb_f0.json"
+   ],
+   "lookahead_real": {
+    "n_main": 200,
+    "n_arm": 80
+   }
+  }
+ }
+}
