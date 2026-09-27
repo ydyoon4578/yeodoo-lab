@@ -61,7 +61,14 @@ def filings(cik):
     return out
 
 
-TAG = re.compile(r"<(?:\w+:)?(nameOfIssuer|cusip|value|sshPrnamt|putCall)>([^<]*)</", re.I)
+# 🚨 CDATA 로 감싼 값도 읽는다(2026-09-27). 해리스(오크마크)는 정보표를
+#   «<nameOfIssuer> <![CDATA[ABBVIE INC]]> </nameOfIssuer>» 로 낸다. 예전 패턴([^<]*)은 CDATA 의
+#   '<' 에서 멈춰 nameOfIssuer 를 **한 번도** 못 읽었고, 행을 끊는 지점이 nameOfIssuer 뿐이라
+#   226행이 dict 하나에 덮어써져 **마지막 한 줄만** 남았다(앞 행의 putCall 까지 붙어 그 한 줄마저
+#   옵션으로 버려지기도 했다). 실측: 이력의 해리스가 2022-03-31 부터 분기마다 유니버스 0~1종목 ·
+#   2026-06-30 은 0 — 같은 분기 벌크(guru.json)는 정보표 226행 · 754억$ 다.
+TAG = re.compile(r"<(?:\w+:)?(nameOfIssuer|cusip|value|sshPrnamt|putCall)>"
+                 r"\s*(?:<!\[CDATA\[(.*?)\]\]>|([^<]*))\s*</", re.I | re.S)
 
 
 def holdings(cik, acc):
@@ -93,7 +100,8 @@ def holdings(cik, acc):
         #   13F 정보표의 태그 순서가 … value → sshPrnamt → putCall … 이라서 그렇게 끊으면
         #   putCall 이 **다음 종목의 dict** 로 들어간다. 옵션 필터가 엉뚱한 행을 지우게 된다.
         for m in TAG.finditer(body):
-            k, v = m.group(1).lower(), m.group(2).strip()
+            k = m.group(1).lower()
+            v = (m.group(2) if m.group(2) is not None else m.group(3)).strip()
             if k == "nameofissuer":
                 if cur.get("cusip"):
                     rows.append(cur)
@@ -101,6 +109,12 @@ def holdings(cik, acc):
             cur[k] = v
         if cur.get("cusip"):
             rows.append(cur)          # 마지막 종목 — 뒤에 nameOfIssuer 가 없어 flush 가 안 된다
+        # 읽은 행 수를 정보표의 infoTable 요소 수와 맞춰 본다. 해리스는 226요소가 1행이 됐는데도
+        #   아무 말이 없어 이력 파일이 생긴 뒤로 줄곧 안 들켰다 — 형식이 또 바뀌면 로그가 먼저 말하게 한다.
+        _n_it = len(re.findall(r"<(?:\w+:)?infoTable[\s>]", body, re.I))
+        if rows and _n_it and len(rows) != _n_it:
+            print("  ⚠ 정보표 행 수 불일치 CIK %d %s: infoTable %d · 읽은 행 %d"
+                  % (cik, acc, _n_it, len(rows)))
         if rows:
             break
     out = []
@@ -134,6 +148,7 @@ def main() -> int:
     hist = {}          # {분기: {cik: {티커: 가치}}}
     shs = {}           # {분기: {cik: {티커: 주식수}}} — 제출 단위 판정에만 쓰고 파일에는 안 넣는다
     vraw = {}          # {분기: {cik: {티커: 가치}}} — **클래스 접기 전** 값. 단위 판정 전용.
+    tall = {}          # {분기: {cik: 정보표 전체 합}} — 유니버스 밖까지 더한 값. 단위 판정 전용.
     fdates = {}        # {분기: {cik: 공시일}} — 리밸런스 시점에 공개돼 있었는지 판정용
     names = {}
     # 운용사별 커버리지를 남긴다 — 명단에 이름이 있는데 데이터가 0인 것을 조용히 넘기면,
@@ -212,6 +227,7 @@ def main() -> int:
                 shs.setdefault(rd, {})[str(cik)] = msh
                 vraw.setdefault(rd, {})[str(cik)] = mraw
                 fdates.setdefault(rd, {})[str(cik)] = filed.get(rd) or ""
+                tall.setdefault(rd, {})[str(cik)] = sum(v_ for _c, v_, _s, _n in hs)
                 got += 1
         # 승계 전 법인의 분기는 **새 CIK 자리로 옮긴다**(같은 운용사이므로).
         _dst = None
@@ -226,13 +242,17 @@ def main() -> int:
             for _rd in list(hist):
                 if str(cik) in hist[_rd] and _dst not in hist[_rd]:
                     hist[_rd][_dst] = hist[_rd].pop(str(cik))
-                    if str(cik) in (vraw.get(_rd) or {}):
-                        vraw[_rd][_dst] = vraw[_rd].pop(str(cik))
+                    # 단위 판정 재료도 **전부** 옮긴다(2026-09-27) — shs·tall 이 옛 CIK 에 남아 있으면
+                    #   옮겨 온 분기는 가격 대조가 0종목이 되어 아래 보고 규모 판정으로만 갈린다.
+                    for _b in (vraw, shs, tall):
+                        if str(cik) in (_b.get(_rd) or {}):
+                            _b[_rd][_dst] = _b[_rd].pop(str(cik))
                     fdates.setdefault(_rd, {})[_dst] = fdates.get(_rd, {}).pop(str(cik), "")
                     _moved += 1
                 else:
                     hist[_rd].pop(str(cik), None)
-                    (vraw.get(_rd) or {}).pop(str(cik), None)
+                    for _b in (vraw, shs, tall):
+                        (_b.get(_rd) or {}).pop(str(cik), None)
             print("  [승계] 옛 법인 CIK %d 의 %d분기를 %s 자리로 옮김" % (cik, _moved, _dst))
             continue
         names[str(cik)] = label
@@ -298,7 +318,12 @@ def main() -> int:
                    if sh.get(t) and vr.get(t) and _px.get(t)]
             if len(rat) >= 3:
                 med = statistics.median(rat)
-            elif sum(m.values()) < 1e8:      # 13F 는 13F증권 1억$ 이상일 때 내는 보고다
+            # 13F 는 13F증권 1억$ 이상일 때 내는 보고다 — 그 하한은 **제출 전체**에 걸린다.
+            # 🚨 2026-09-27 — 예전에는 m(유니버스 안만 남긴 합)으로 쟀다. 유니버스 밖이 대부분인
+            #   달러 제출이 «1억$ 미만 = 천$» 로 오판되어 ×1000 됐다. 실측: 폴슨(보고총액 25.8억$ ·
+            #   유니버스 안은 GOOGL 5,000주 177만$ 하나)의 GOOGL 이 17.7억$ 로 실렸다 — guru.json 은 177만$.
+            #   refresh_13f 는 처음부터 보고총액(total_val)으로 쟀다 — 경로가 둘이라 갈린 자리다.
+            elif ((tall.get(rd) or {}).get(cik) or sum(m.values())) < 1e8:
                 med = 0.001
             else:
                 _unknown += 1
