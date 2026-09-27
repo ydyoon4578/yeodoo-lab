@@ -1,0 +1,1202 @@
+{
+ "kind": "xbatch_f0",
+ "generated_at": "2026-09-27T04:16:36Z",
+ "prereg": "build/PREREG-2026-09-27-XBATCH.md",
+ "smoke": false,
+ "note": "배치 X F0(build/x_run.py --f0) — 개수 · 날짜 · 라벨 · 커버리지 · 해시 · 자료 충실도(상태 일치율 · D 대리 corr)만. 수익 · 초과수익 · 타이밍 통계 · 관문 값 · 무조건 켜짐 비율 · 켜진 달 수는 없다(명세 data_plan.F0_counts_only · 굽기에서만).",
+ "windows": {
+  "scored": [
+   "2006-09",
+   "2026-08"
+  ],
+  "input_min": "2005-08-01",
+  "warmup": [
+   "2005-09",
+   "2006-08"
+  ],
+  "s_layer": [
+   "2016-09",
+   "2026-08"
+  ]
+ },
+ "calendar": {
+  "n_decision_months_loaded": 253,
+  "first_decision_month": "2005-08",
+  "last_decision_month": "2026-08",
+  "first_scored_decision": "2006-08",
+  "last_scored_decision": "2026-07",
+  "n_scored_months": 240,
+  "first_t1": "2006-09-01",
+  "bake_end_t1": "2026-09-01"
+ },
+ "labels": {
+  "window": [
+   "2006-09",
+   "2026-08"
+  ],
+  "n_months": 240,
+  "down_months": {
+   "n": 85,
+   "n_first_half": 46,
+   "n_second_half": 39,
+   "rule": "S&P 500 PR(^GSPC) 달 수익 < 0"
+  },
+  "crash_m": {
+   "n": 29,
+   "months": [
+    "2008-01",
+    "2008-06",
+    "2008-09",
+    "2008-10",
+    "2008-11",
+    "2009-01",
+    "2009-02",
+    "2010-05",
+    "2010-06",
+    "2010-08",
+    "2011-08",
+    "2011-09",
+    "2012-05",
+    "2015-08",
+    "2016-01",
+    "2018-10",
+    "2018-12",
+    "2019-05",
+    "2020-02",
+    "2020-03",
+    "2021-09",
+    "2022-01",
+    "2022-04",
+    "2022-06",
+    "2022-09",
+    "2022-12",
+    "2023-09",
+    "2025-03",
+    "2026-03"
+   ],
+   "rule": "SPY TR 달력 달 ≤ −σ_pre(0.042903)"
+  },
+  "surge_m": {
+   "n": 47,
+   "months": [
+    "2007-04",
+    "2008-04",
+    "2009-03",
+    "2009-04",
+    "2009-05",
+    "2009-07",
+    "2009-11",
+    "2010-03",
+    "2010-07",
+    "2010-09",
+    "2010-12",
+    "2011-10",
+    "2012-01",
+    "2012-02",
+    "2013-01",
+    "2013-07",
+    "2013-10",
+    "2014-02",
+    "2015-02",
+    "2015-10",
+    "2016-03",
+    "2018-01",
+    "2019-01",
+    "2019-06",
+    "2020-04",
+    "2020-05",
+    "2020-07",
+    "2020-08",
+    "2020-11",
+    "2021-03",
+    "2021-04",
+    "2021-10",
+    "2021-12",
+    "2022-07",
+    "2022-10",
+    "2022-11",
+    "2023-01",
+    "2023-06",
+    "2023-11",
+    "2023-12",
+    "2024-02",
+    "2024-05",
+    "2024-11",
+    "2025-05",
+    "2025-06",
+    "2026-04",
+    "2026-05"
+   ],
+   "rule": "SPY TR 달력 달 ≥ +σ_pre"
+  },
+  "crash_m_in_window_sd": {
+   "n": 29,
+   "rule": "창 안 240개월 SD(민감도 · D-9)"
+  },
+  "surge_m_in_window_sd": {
+   "n": 46
+  },
+  "crash_legs": {
+   "n": 17,
+   "legs": [
+    [
+     "2007-10-09",
+     "2008-03-10"
+    ],
+    [
+     "2008-05-19",
+     "2008-10-10"
+    ],
+    [
+     "2008-10-13",
+     "2008-10-27"
+    ],
+    [
+     "2008-11-04",
+     "2008-11-20"
+    ],
+    [
+     "2009-01-06",
+     "2009-03-09"
+    ],
+    [
+     "2010-04-23",
+     "2010-07-02"
+    ],
+    [
+     "2011-04-29",
+     "2011-10-03"
+    ],
+    [
+     "2015-05-21",
+     "2015-08-25"
+    ],
+    [
+     "2015-11-03",
+     "2016-02-11"
+    ],
+    [
+     "2018-01-26",
+     "2018-02-08"
+    ],
+    [
+     "2018-09-20",
+     "2018-12-24"
+    ],
+    [
+     "2020-02-19",
+     "2020-03-23"
+    ],
+    [
+     "2022-01-03",
+     "2022-03-08"
+    ],
+    [
+     "2022-03-29",
+     "2022-06-16"
+    ],
+    [
+     "2022-08-16",
+     "2022-10-12"
+    ],
+    [
+     "2023-07-31",
+     "2023-10-27"
+    ],
+    [
+     "2025-02-19",
+     "2025-04-08"
+    ]
+   ],
+   "rule": "^GSPC PR 일간 10%/10% 지그재그(얼린 mech_episodes · 2006-08-31 ~ 2026-08-31)"
+  },
+  "rebounds": {
+   "n": 17,
+   "spans": [
+    [
+     "2008-03-10",
+     "2008-05-19"
+    ],
+    [
+     "2008-10-10",
+     "2008-10-13"
+    ],
+    [
+     "2008-10-27",
+     "2008-11-04"
+    ],
+    [
+     "2008-11-20",
+     "2009-01-06"
+    ],
+    [
+     "2009-03-09",
+     "2009-06-08"
+    ],
+    [
+     "2010-07-02",
+     "2010-10-01"
+    ],
+    [
+     "2011-10-03",
+     "2012-01-03"
+    ],
+    [
+     "2015-08-25",
+     "2015-11-03"
+    ],
+    [
+     "2016-02-11",
+     "2016-05-12"
+    ],
+    [
+     "2018-02-08",
+     "2018-05-10"
+    ],
+    [
+     "2018-12-24",
+     "2019-03-27"
+    ],
+    [
+     "2020-03-23",
+     "2020-06-22"
+    ],
+    [
+     "2022-03-08",
+     "2022-03-29"
+    ],
+    [
+     "2022-06-16",
+     "2022-08-16"
+    ],
+    [
+     "2022-10-12",
+     "2023-01-12"
+    ],
+    [
+     "2023-10-27",
+     "2024-01-30"
+    ],
+    [
+     "2025-04-08",
+     "2025-07-10"
+    ]
+   ],
+   "rule": "[저점, min(저점 + 63거래일, 다음 상승 다리 끝)]"
+  },
+  "episodes": {
+   "n": 10,
+   "items": [
+    {
+     "span": [
+      "2007-10",
+      "2009-06"
+     ],
+     "n_legs": 5
+    },
+    {
+     "span": [
+      "2010-04",
+      "2010-10"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2011-04",
+      "2012-01"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2015-05",
+      "2016-05"
+     ],
+     "n_legs": 2
+    },
+    {
+     "span": [
+      "2018-01",
+      "2018-05"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2018-09",
+      "2019-03"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2020-02",
+      "2020-06"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2022-01",
+      "2023-01"
+     ],
+     "n_legs": 3
+    },
+    {
+     "span": [
+      "2023-07",
+      "2024-01"
+     ],
+     "n_legs": 1
+    },
+    {
+     "span": [
+      "2025-02",
+      "2025-07"
+     ],
+     "n_legs": 1
+    }
+   ],
+   "rule": "앞 다리 저점 ~ 다음 다리 고점 ≤ 126거래일이면 한 에피소드"
+  }
+ },
+ "activation": {
+  "X-BEAR": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "X-COMP": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "X-CRED": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "X-JM": {
+   "first_decision": "2009-01",
+   "n_defined_scored": 211
+  },
+  "X-BLR": {
+   "first_decision": "2011-08",
+   "n_defined_scored": 180
+  },
+  "X-GVTREND": {
+   "first_decision": "2006-12",
+   "n_defined_scored": 236
+  },
+  "X-RRSHOCK": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "T-SMA200": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "vol63": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "nagel_z": {
+   "first_decision": "2006-08",
+   "n_defined_scored": 240
+  },
+  "X-COMP-W": {
+   "first_day": "2006-09-06",
+   "n_days_defined": 5028
+  }
+ },
+ "fidelity": {
+  "bear_state_spy_vs_french": {
+   "window": [
+    "2006-08",
+    "2026-07"
+   ],
+   "n_common": 240,
+   "state_agree": "캐시 전체판(<캐시>/f0/xb_f0_full.json)에만 — 20년 창 수치(사용자 20년 규칙)",
+   "min_agree": 0.95,
+   "pass": true,
+   "rule": "상태 일치율(SPY TR − DGS3MO 판 대 French Mkt-RF 판) · 수익 비교가 아니다"
+  },
+  "spy_vs_sp500tr": {
+   "n_months": 252,
+   "n_within_tol": 235,
+   "tol": 0.0025
+  },
+  "rf_vs_fred": {
+   "n_months": 253,
+   "n_within_tol_same_month": 253,
+   "n_within_tol_lag1": 0,
+   "tol": 1e-06
+  },
+  "vix3m_sources": {
+   "cboe_first": "2009-09-18",
+   "cboe_last": "2026-09-25",
+   "yf_first": "2006-07-17",
+   "cboe_first_equals_default_pub": true,
+   "n_common_in_window": 4264,
+   "n_within_tol": 4255,
+   "tol": 0.011
+  },
+  "baa10y_identity": {
+   "n_common": 5271,
+   "n_within_tol": 5271,
+   "tol": 0.011,
+   "DBAA": {
+    "first": "2005-08-01",
+    "last": "2026-09-01",
+    "n_obs": 5276,
+    "max_gap_bdays": 1,
+    "covers_score_window": true
+   },
+   "BAA10Y": {
+    "first": "2005-08-01",
+    "last": "2026-09-01",
+    "n_obs": 5271,
+    "max_gap_bdays": 1,
+    "covers_score_window": true
+   }
+  }
+ },
+ "alfred": {
+  "DBAA": {
+   "n_vintages": 3,
+   "failed_vintages": [
+    "2010-01-04"
+   ],
+   "revised": false,
+   "ok_three_plus": true,
+   "sha_by_vintage": {
+    "2016-09-01": "8d5a08288739086c",
+    "2021-01-04": "8d5a08288739086c",
+    "2026-09-25": "8d5a08288739086c"
+   },
+   "current_vs_last_vintage": {
+    "n_overlap": 5276,
+    "n_diff": 0
+   }
+  },
+  "DGS10": {
+   "n_vintages": 4,
+   "failed_vintages": [],
+   "revised": false,
+   "ok_three_plus": true,
+   "sha_by_vintage": {
+    "2010-01-04": "5764d952964a242b",
+    "2016-09-01": "5764d952964a242b",
+    "2021-01-04": "5764d952964a242b",
+    "2026-09-25": "5764d952964a242b"
+   },
+   "current_vs_last_vintage": {
+    "n_overlap": 5276,
+    "n_diff": 0
+   }
+  },
+  "BAA10Y": {
+   "n_vintages": 3,
+   "failed_vintages": [
+    "2010-01-04"
+   ],
+   "revised": false,
+   "ok_three_plus": true,
+   "sha_by_vintage": {
+    "2016-09-01": "e342a7f81ecb0123",
+    "2021-01-04": "e342a7f81ecb0123",
+    "2026-09-25": "e342a7f81ecb0123"
+   },
+   "current_vs_last_vintage": {
+    "n_overlap": 5271,
+    "n_diff": 0
+   }
+  }
+ },
+ "vxv": {
+  "default": "2009-09-18",
+  "in_force": "2009-09-18",
+  "evidence_file": false,
+  "rule": "Cboe 공식 VIX3M CSV 시작일 · Cboe 1차 공고로 더 이른 날을 증명할 때만 앞당긴다(SN-1.1 · 증빙 찾지 않음)"
+ },
+ "d_target": {
+  "pairing_A_pass": true,
+  "vb_books_sha_ok": true,
+  "n_months_A": 120,
+  "n_match_A": 120,
+  "n_with_target": 147,
+  "first": "2014-05",
+  "last": "2026-07",
+  "max_w_le_cap": true,
+  "v_blobs_ok": true,
+  "sel_hash": "24f37379ab36e2f826ed42ba147f2e3924972c98775a4fcf3bfe5eddb0accc70",
+  "d_child_sec": 48.7
+ },
+ "d_proxy_fidelity": {
+  "window": [
+   "2014-06",
+   "2026-08"
+  ],
+  "n": 147,
+  "corr_fid": "캐시 전체판(<캐시>/f0/xb_f0_full.json)에만 — 20년 창 수치(사용자 20년 규칙)",
+  "corr_fid_min": 0.6,
+  "pass": true,
+  "fallback": false,
+  "rule": "corr(D_S 월 D0 수익 · French ME5×β1) < 0.6 이면 Portfolios_Formed_on_BETA Lo 20 · G 관문 «참고»(기계적)"
+ },
+ "s_coverage": {
+  "window": [
+   "2016-08",
+   "2026-07"
+  ],
+  "n_months": 120,
+  "n_ok": 120,
+  "coverage_min": 1.0,
+  "n_mapped_min": 106,
+  "rule": "그달 World(배치 V 핀 판 vroot · K6 · K7)에 값이 선 이름 ≥ 1 이고 D 목표 비중의 ≥ 0.90 이 옮겨졌다(K1)",
+  "v0_beta": {
+   "window": [
+    "2016-08",
+    "2026-07"
+   ],
+   "n_months": 120,
+   "coverage_beta_min": 0.9976886228344509,
+   "coverage_beta_median": 1.0,
+   "n_beta_names_min": 29,
+   "n_names_min": 30,
+   "n_names_max": 30,
+   "rule": "V0 흘린 비중 가운데 VBATCH FP β̂ 가 선 이름의 비중 몫(K3 — 없는 이름은 β 1.0 으로 APP_S 의 β̂_C 에 든다)"
+  }
+ },
+ "intl": {
+  "layer": "I",
+  "window": {
+   "input_min": "2005-08-01",
+   "warm": [
+    "2005-09",
+    "2006-08"
+   ],
+   "score": [
+    "2006-09",
+    "2026-08"
+   ],
+   "rate_months": [
+    "2005-08",
+    "2026-07"
+   ],
+   "d_first": "2005-08-31",
+   "t1_last": "2026-09-01",
+   "n_months_sched": 253
+  },
+  "rules": {
+   "px_stale_days": 5,
+   "fx_stale_days": 7,
+   "rate_tail_max": null,
+   "usd_switch_at": 3
+  },
+  "markets": {
+   "JP": {
+    "role": "primary",
+    "etf": "EWJ",
+    "fx": "DEXJPUS",
+    "fx_inverse": false,
+    "rate": "IR3TIB01JPM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "GB": {
+    "role": "primary",
+    "etf": "EWU",
+    "fx": "DEXUSUK",
+    "fx_inverse": true,
+    "rate": "IR3TIB01GBM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 246,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 6,
+      "tail_carried": 6,
+      "last_obs": "2026-01",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "DE": {
+    "role": "primary",
+    "etf": "EWG",
+    "fx": "DEXUSEU",
+    "fx_inverse": true,
+    "rate": "IR3TIB01DEM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "FR": {
+    "role": "primary",
+    "etf": "EWQ",
+    "fx": "DEXUSEU",
+    "fx_inverse": true,
+    "rate": "IR3TIB01FRM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "IT": {
+    "role": "primary",
+    "etf": "EWI",
+    "fx": "DEXUSEU",
+    "fx_inverse": true,
+    "rate": "IR3TIB01ITM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "CH": {
+    "role": "primary",
+    "etf": "EWL",
+    "fx": "DEXSZUS",
+    "fx_inverse": false,
+    "rate": "IR3TIB01CHM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "SE": {
+    "role": "primary",
+    "etf": "EWD",
+    "fx": "DEXSDUS",
+    "fx_inverse": false,
+    "rate": "IR3TIB01SEM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "CA": {
+    "role": "primary",
+    "etf": "EWC",
+    "fx": "DEXCAUS",
+    "fx_inverse": false,
+    "rate": "IR3TIB01CAM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "AU": {
+    "role": "primary",
+    "etf": "EWA",
+    "fx": "DEXUSAL",
+    "fx_inverse": true,
+    "rate": "IR3TIB01AUM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "KR": {
+    "role": "primary",
+    "etf": "EWY",
+    "fx": "DEXKOUS",
+    "fx_inverse": false,
+    "rate": "IR3TIB01KRM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "NL": {
+    "role": "substitute",
+    "etf": "EWN",
+    "fx": "DEXUSEU",
+    "fx_inverse": true,
+    "rate": "IR3TIB01NLM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   },
+   "ES": {
+    "role": "substitute",
+    "etf": "EWP",
+    "fx": "DEXUSEU",
+    "fx_inverse": true,
+    "rate": "IR3TIB01ESM156N",
+    "ok": true,
+    "etf_first": "2005-08-01",
+    "etf_last": "2026-09-01",
+    "etf_n_sessions_missing": 0,
+    "etf_n_need_filled": 0,
+    "etf_n_need_missing": 0,
+    "etf_ok": true,
+    "fx_first": "2005-08-01",
+    "fx_last": "2026-09-01",
+    "fx_n_blank": 219,
+    "fx_n_need_filled": 2,
+    "fx_n_need_missing": 0,
+    "fx_level_band_ok": true,
+    "fx_ok": true,
+    "rate_source": "fred",
+    "rate_ok": true,
+    "rate_by_source": {
+     "fred": {
+      "present": 252,
+      "head_missing": 0,
+      "interior_missing": 0,
+      "tail_missing": 0,
+      "tail_carried": 0,
+      "last_obs": "2026-07",
+      "ok": true,
+      "available": true
+     }
+    }
+   }
+  },
+  "rf_us_ok": true,
+  "decision": {
+   "mode": "local",
+   "markets": [
+    "JP",
+    "GB",
+    "DE",
+    "FR",
+    "IT",
+    "CH",
+    "SE",
+    "CA",
+    "AU",
+    "KR"
+   ],
+   "empty": [],
+   "substituted": {},
+   "why": "빈 시장 없음",
+   "pending_oecd": []
+  },
+  "note": "개수 · 날짜 · 참/거짓만 — 수익 · 켜짐 비율 없음 (명세 data_plan.F0_counts_only «I 층 커버리지와 대체/USD 전환 판정»)",
+  "labels_by_market": {
+   "window": [
+    "2006-09",
+    "2026-08"
+   ],
+   "markets": {
+    "JP": {
+     "n_down": 98,
+     "n_crash_m_in_window_sd": 30,
+     "n_surge_m_in_window_sd": 39,
+     "n_hold_rows": 240
+    },
+    "GB": {
+     "n_down": 98,
+     "n_crash_m_in_window_sd": 28,
+     "n_surge_m_in_window_sd": 40,
+     "n_hold_rows": 240
+    },
+    "DE": {
+     "n_down": 106,
+     "n_crash_m_in_window_sd": 29,
+     "n_surge_m_in_window_sd": 36,
+     "n_hold_rows": 240
+    },
+    "FR": {
+     "n_down": 96,
+     "n_crash_m_in_window_sd": 29,
+     "n_surge_m_in_window_sd": 42,
+     "n_hold_rows": 240
+    },
+    "IT": {
+     "n_down": 101,
+     "n_crash_m_in_window_sd": 33,
+     "n_surge_m_in_window_sd": 41,
+     "n_hold_rows": 240
+    },
+    "CH": {
+     "n_down": 95,
+     "n_crash_m_in_window_sd": 33,
+     "n_surge_m_in_window_sd": 43,
+     "n_hold_rows": 240
+    },
+    "SE": {
+     "n_down": 96,
+     "n_crash_m_in_window_sd": 28,
+     "n_surge_m_in_window_sd": 40,
+     "n_hold_rows": 240
+    },
+    "CA": {
+     "n_down": 93,
+     "n_crash_m_in_window_sd": 21,
+     "n_surge_m_in_window_sd": 43,
+     "n_hold_rows": 240
+    },
+    "AU": {
+     "n_down": 96,
+     "n_crash_m_in_window_sd": 32,
+     "n_surge_m_in_window_sd": 43,
+     "n_hold_rows": 240
+    },
+    "KR": {
+     "n_down": 102,
+     "n_crash_m_in_window_sd": 18,
+     "n_surge_m_in_window_sd": 33,
+     "n_hold_rows": 240
+    }
+   }
+  }
+ },
+ "vroot": {
+  "ok": true,
+  "data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+  "paths": [
+   "build/",
+   "data/"
+  ],
+  "rule": "D 자식 · D 책 · S 커버리지는 자료 핀 커밋의 build/ + data/(git archive · 캐시 s/vroot) — 파일 핀 20 · 폴더 요약 4 = data/_vb_manifest.json"
+ },
+ "pins": {
+  "x_data_ok": true,
+  "x_data_n_sources": 24,
+  "x_intl_ok": true,
+  "x_intl_n_sources": 34
+ },
+ "decisions": {
+  "d_proxy": "main",
+  "g_binding": true,
+  "vxv_pub_in_force": "2009-09-18",
+  "vxv_evidence": false,
+  "intl_mode": "local",
+  "intl_markets": [
+   "JP",
+   "GB",
+   "DE",
+   "FR",
+   "IT",
+   "CH",
+   "SE",
+   "CA",
+   "AU",
+   "KR"
+  ],
+  "intl_substituted": {},
+  "alfred_first_release": false,
+  "french_last_month": "2026-08",
+  "d_sel_hash": "24f37379ab36e2f826ed42ba147f2e3924972c98775a4fcf3bfe5eddb0accc70",
+  "d_pairing_A": true,
+  "s_cov_ok": true,
+  "state_agree_pass": true,
+  "lookahead_real_prior": "엔진 단계 x_signals --lookahead-real 모두 참(BEAR 200/200 · 성분 80/80) — 굽기가 다시 돈다",
+  "d_data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a"
+ },
+ "code_sha": {
+  "build/x_data.py": "e297bd2e3a608a37",
+  "build/x_intl.py": "69488b08ca6b7b5e",
+  "build/x_signals.py": "7907346bb0e53087",
+  "build/x_blr.py": "0373135c3bb10fb0",
+  "build/x_eval.py": "74d57f8945f0a104",
+  "build/x_adapter.py": "0de8464c62ffb649",
+  "build/x_run.py": "1c6b6faf626ecf34",
+  "build/edgar.py": "e8cab8ff83663fa3",
+  "build/eg30plus.py": "d03d65b413cc0912",
+  "build/index_members.py": "b919613a189fd270",
+  "build/ml_core.py": "594c9d6e1f13207e",
+  "build/ml_strats.py": "63fffacfab417fbc",
+  "build/pit_alias.py": "d857221df63c2180",
+  "build/pit_backtest.py": "d953f61ef9d9c3ad",
+  "build/pit_panel.py": "caa863537f631037",
+  "build/pit_quarantine.py": "708e83f21f26ad08",
+  "build/q_bmrot_leg.py": "b126b6d05e179505",
+  "build/q_jump.py": "9bc17c5dfd2e314e",
+  "build/q_switch.py": "ca77a06c613fa6f6",
+  "build/qbatch_core.py": "5b163ea9d3c10457",
+  "build/qg_lab.py": "048fa2d46dfbf252",
+  "build/rally_pattern.py": "c244193bf0aebeb0",
+  "build/shares_clean.py": "4aa239e9b5cdb8de",
+  "build/shares_split.py": "ce1c0475ff4ca199",
+  "build/stoploss.py": "f4cac797285ad333",
+  "build/t_pit.py": "213b99cc601c8384",
+  "build/tech_backtest.py": "c2bd26e2fe64c2b6",
+  "build/v_cards.py": "200acc645c7438db",
+  "build/v_cond.py": "64cca5f5f73f4d25",
+  "build/v_core.py": "cca487736fcf60a0",
+  "build/v_data.py": "6d4aab805bb06dd3",
+  "build/v_ear.py": "68aec2170d7635ed",
+  "build/v_fund.py": "bf8c8a15f1a95346",
+  "build/v_guard.py": "5d9c80ee1bfcfe15",
+  "build/v_ins.py": "36e178da68ed872b",
+  "build/v_pit.py": "f47267c254fbfce7",
+  "build/v_px_split.py": "c6af02078350f5dc",
+  "build/t_guard.py": "b537cbab25b7f5dc",
+  "build/mech_episodes.py": "a8c6b2ade874a39f"
+ },
+ "manifest_sha16": "8f2576c9a759c5a3",
+ "clock": {
+  "pins_calendar": 0.7,
+  "labels": 0.3,
+  "signals": 4.2,
+  "fidelity_alfred": 0.8,
+  "intl": 0.9,
+  "d_child": 49.0,
+  "s_coverage": 30.5
+ },
+ "sec": 86.7
+}

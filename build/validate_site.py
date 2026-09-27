@@ -4671,6 +4671,22 @@ try:
 except Exception as _e:
     print("  ~ 배치 V 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
 
+# ── 배치 X(PREREG-*-XBATCH · 사용자 20년 규칙 2026-09-27) 사이트 경계 ─────────────────────────────
+# 20년 수치(_xbatch*) · French · Cboe · FRED · OECD · yfinance 원자료가 저장소 · 사이트 자료에 없어야 한다(사이트는 10년 · MAX_YEARS 10).
+#   data/_xb* 는 공개 안전 명세 둘(_xb_manifest · _xb_f0)뿐 · data/_xfwd/ 없음(전방 원장 취소 · 사용자 갱신 2026-09-27) · 값 계열 목록 없음 · 사이트 자료에 굽기 산출 표식 없음.
+#   build/x_run.py 는 모듈 머리에서 표준 라이브러리만 불러온다(site_guard_std). 러너(x_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_xb
+    _xr = _il_xb.import_module("x_run")
+    _gx = _xr.site_guard_std(ROOT)
+    if not _gx["ok"]:
+        errors.append("배치 X 사이트 경계 위반 %d건 — %s. 20년 산출(_xbatch*) · 라이선스 원자료는 저장소 밖 캐시에만 둔다"
+                      % (_gx.get("n_bad", len(_gx["bad"])), " · ".join(_gx["bad"][:4])))
+    else:
+        print("  ~ 배치 X 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gx["n_files"], _gx["n_scanned"]))
+except Exception as _e:
+    print("  ~ 배치 X 사이트 경계 검사가 예외로 죽었다 — %s (미검증)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
