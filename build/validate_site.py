@@ -4794,6 +4794,23 @@ except Exception as _e:
     # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(DSTK · GURUFUND 와 같은 규약)
     errors.append("EG30 스텝 역할 검정 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
 
+# ── Q06 방어 스텝 방아쇠 기전 검정(PREREG-*-Q06HOLD · 랩이 안 본 창) 사이트 경계 ─────────────────────────────
+# 굽기 산출(_q06holdout*)이 저장소 · 사이트 자료에 없어야 한다(창이 2016-09 앞이라 값은 캐시에만 · 사이트는 10년). data/_q06hold* 는 해시만 담은
+#   명세(_q06hold_manifest) 하나뿐 · data/_q06holdfwd/ 없음(전방 원장 없음 · 사용자 2026-09-27 «미래 일정 다 꺼») · 사이트 자료에 굽기 산출 표식 없음.
+#   build/q06hold_run.py 는 모듈 머리에서 표준 라이브러리만 불러온다(site_guard_std). 러너(q06hold_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_q06h
+    _q6r = _il_q06h.import_module("q06hold_run")
+    _gq6 = _q6r.site_guard_std(ROOT)
+    if not _gq6["ok"]:
+        errors.append("Q06 방아쇠 기전 검정 사이트 경계 위반 %d건 — %s. 굽기 산출(_q06holdout*)은 저장소 밖 캐시에만 둔다"
+                      % (_gq6.get("n_bad", len(_gq6["bad"])), " · ".join(_gq6["bad"][:4])))
+    else:
+        print("  ~ Q06 방아쇠 기전 검정 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gq6["n_files"], _gq6["n_scanned"]))
+except Exception as _e:
+    # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(EGSTEP · DSTK 와 같은 규약)
+    errors.append("Q06 방아쇠 기전 검정 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)
