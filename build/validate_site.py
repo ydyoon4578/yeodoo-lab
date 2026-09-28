@@ -4811,6 +4811,23 @@ except Exception as _e:
     # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(EGSTEP · DSTK 와 같은 규약)
     errors.append("Q06 방아쇠 기전 검정 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
 
+# ── 확률지배(SSD) 지수 강화 책 역할 검정(PREREG-*-SSDIX · 사용자 2026-09-28) 사이트 경계 ─────────────────────────────
+# 굽기 산출(_ssdixout*)이 저장소 · 사이트 자료에 없어야 한다. data/_ssdix* 는 해시만 담은 명세(_ssdix_manifest) 하나뿐 ·
+#   data/_ssdixfwd/ 없음(전방 원장 없음 · 사용자 2026-09-27 «미래 일정 다 꺼») · 사이트 자료에 굽기 산출 표식 없음 · French 원자료 사본 없음.
+#   build/ssdix_run.py 는 모듈 머리에서 표준 라이브러리만 불러온다(site_guard_std). 러너(ssdix_run.frozen_check)도 같은 함수를 부른다.
+try:
+    import importlib as _il_ssdix
+    _ssr = _il_ssdix.import_module("ssdix_run")
+    _gss = _ssr.site_guard_std(ROOT)
+    if not _gss["ok"]:
+        errors.append("SSD 지수 강화 역할 검정 사이트 경계 위반 %d건 — %s. 굽기 산출(_ssdixout*)은 저장소 밖 캐시에만 둔다"
+                      % (_gss.get("n_bad", len(_gss["bad"])), " · ".join(_gss["bad"][:4])))
+    else:
+        print("  ~ SSD 지수 강화 역할 검정 사이트 경계 통과(파일 %d · 사이트 자료 %d 훑음)" % (_gss["n_files"], _gss["n_scanned"]))
+except Exception as _e:
+    # 닫힌 쪽 — 이 경계를 확인하지 못하면 통과시키지 않는다(EGSTEP · DSTK · GURUFUND 와 같은 규약)
+    errors.append("SSD 지수 강화 역할 검정 사이트 경계 검사가 예외로 죽었다 — %s (확인하지 못하면 통과시키지 않는다)" % str(_e)[:80])
+
 print("사이트 검증:", "통과 ✅" if not errors else f"실패 ❌ {len(errors)}건")
 for e in errors: print("  -", e)
 sys.exit(1 if errors else 0)

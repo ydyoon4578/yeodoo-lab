@@ -1,0 +1,175 @@
+{
+ "kind": "ssdix_manifest",
+ "note": "확률지배(SSD) 지수 강화 책 역할 검정(SSDIX) 명세 — 해시만(값 없음). 러너 판 점검이 이 파일을 등록 커밋 판과 대조한다.",
+ "prereg": "build/PREREG-2026-09-28-SSDIX.md",
+ "engine": "build/ssdix.py",
+ "runner": "build/ssdix_run.py",
+ "code_sha256_lf": {
+  "build/ssdix.py": "502cddbd271171b0c336e36d4e92e857f6f2e0bd1848f4e3f83d016dacfe6f7e",
+  "build/ssdix_run.py": "f84ca194694419420d3297eff00567a4784686422460a91d12fcf19f04c8df44"
+ },
+ "reused_blobs": {
+  "build/egstep.py": "2749cbe238910e78e5ab4e36a98969b1553a7444",
+  "build/egstep_run.py": "71a8bdd9f1f080a887b54f66c18bf44251030c5f",
+  "build/x_adapter.py": "897c4c94b22e415f38e32ac47bf8037025f28cb2",
+  "build/dstk.py": "60e634875df6a42f191b6ce91fd391dffc721d4f",
+  "build/dstk_run.py": "4bc0306e1b0aa638fa13574751d098bb9590f991",
+  "build/v_cmp.py": "0ef32e81a4c97283e8d0e945cee234955025e88d"
+ },
+ "roots": {
+  "builder": "egstep_run.preflight(얼린 EGSTEP 판 — x_adapter.build_root · build_vroot · dstk_run.materialize)",
+  "egstep_roots": {
+   "root": {
+    "code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+    "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+    "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
+    "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+    "p3": {
+     "data/_q07_ltd_fits.json": "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",
+     "data/_eg_q5_scores_pitgics.json": "21f43d226463f3978982acc077fbca1576780f33",
+     "data/_eg_q5_scores_pitgics_pre.json": "cb96d4bf7cd35786c0b69d369df0a317db137373",
+     "data/_eg_q5_scores.json": "2868509a502b5104e49d378457451f80eb694d17",
+     "data/pit_gics_sectors.json": "4b20f0e6a02595ec81db4ceaa877afe5628201e8",
+     "data/pit_gics.json": "f4163293cc92f1386ef5c5f31521d6d302a5c228",
+     "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f",
+     "data/_eg_best.json": "cc58f30c84886554c76fecf6df5dc85974eb09f1",
+     "data/_eg30plus.json": "c205f1365e924ebf097b200042133369d7de3f3d"
+    },
+    "frozen_blobs": {
+     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+     "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+     "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+     "pit_panel": "ae044a5d3b8af4b6b8aee12d3879f5c97d4885fb",
+     "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+     "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+     "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+     "rally_pattern": "25bbe121aec76be3a54c62a5bb5567c63666cbfa",
+     "index_members": "7850ef55f5b89583b24e190b250a14c897c93395",
+     "mech_episodes": "161080fd9244c060a7a94c559044de3e3ddcc27c"
+    },
+    "engine_asserts": {
+     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+     "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+     "q_corrsurp": "d32a270e2db0682f8b940ffe647607d15b57ba52",
+     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+     "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+     "x_adapter": "897c4c94b22e415f38e32ac47bf8037025f28cb2"
+    },
+    "builder": "x_adapter.build_root"
+   },
+   "vroot": {
+    "data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+    "v_frozen": {
+     "v_cards": "aadaf24f173579d3f3146014aa150a4ca07eb0a5",
+     "v_core": "bdba648f1d790748cd5008ceeea3c5eee9d733c8",
+     "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+     "v_pit": "5983b9902b106a2b234db05a397e9ce0b73fb689",
+     "v_fund": "2d8093f0009c09b05f597e07eea10f53c8d18b8e",
+     "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
+     "v_cond": "d25914deb89490410ea2dca56b5999356628821e",
+     "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+     "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628"
+    },
+    "dbook_frozen": {
+     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+     "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+     "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+     "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+     "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+     "stoploss": "e2408e98d03216146cf809d6643c68947130c727",
+     "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+     "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a"
+    },
+    "vb_books_sha256": "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b",
+    "builder": "x_adapter.build_vroot",
+    "children": "x_adapter --d-child · --dbook-child · --s-cov-child"
+   },
+   "droot": {
+    "data_pin": "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b",
+    "trees": {
+     "data": "d72aec6dd1e268d66144ed8d21e05deb11950b98",
+     "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"
+    },
+    "read_files_blob": {
+     "data/stocks.json": "dc6f6ce184c5276d9e56005c447bce3d33686d59",
+     "data/pit_px.json": "0d857800fd0fa23d19e13a4d81ebd93511002966",
+     "data/_pit_px_cache.json": "f8c1a16ba22c89f54999cf4291807feb30c53225",
+     "data/index_history.json": "b7c2975b18c615732f8fc624ea7d27eea78da8d6",
+     "data/assets.json": "e131fde7b376dfb575949a93dd46d3e4ff1301f6",
+     "data/bench_px.json": "e93158046584e27d64d748bce5b7fbf4b0146e7f",
+     "data/rf_monthly.json": "5c432bb6d3d0037e9dd7621a7815053af3f96c26",
+     "data/ff_daily.json": "7cf949b8a199dab2922146cbe719d966556238cb",
+     "data/pit_universe.json": "5662f912332f50938a627ee14405580a5357f532",
+     "data/pit_reuse.json": "a9e69996f7a03937a76dfd424efcde4a908faae4",
+     "data/index_ledger.json": "856f2fbfc14a37880224b33ba0a69baa3e5ac7f9",
+     "data/splits.json": "8e09aae5279d7b3e7b654632708de1a4ccce3444",
+     "data/style_top.json": "beba0c8fbf9dde2fb70f1bba88ef7ec83b30f1e3",
+     "data/style_perf.json": "c4defd84da641f2a7563a98cd30d09d6e55f861e",
+     "data/_qbatch.json": "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7",
+     "data/_fund_mix.json": "2d9975cf0a566ea7d23aa6aa2c5e420cd365b72f",
+     "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f"
+    },
+    "engine_asserts": {
+     "dstk": "60e634875df6a42f191b6ce91fd391dffc721d4f",
+     "v_tests": "2f1ec4db1cd7458564da73ec5ad88cef8a0b2f2f",
+     "t_signals": "35e2407d8f80c81aacec5a62128dd78a73b68c0b",
+     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628"
+    },
+    "vd1_digest": "1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c",
+    "builder": "dstk_run.materialize"
+   }
+  },
+  "egstep_manifest_code_sha256_lf": {
+   "build/egstep.py": "770c15834bd94111b94b6790e0cdb2e388f7eaa1719fad036eca123553515786",
+   "build/egstep_run.py": "7883404e127d2e9e9bbcb9e9c824739d9b3c96dd6f9a80f352412d17f8cecb80"
+  },
+  "engine_asserts": {
+   "root": {
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
+    "q_corrsurp": "d32a270e2db0682f8b940ffe647607d15b57ba52",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
+    "x_adapter": "897c4c94b22e415f38e32ac47bf8037025f28cb2",
+    "egstep": "2749cbe238910e78e5ab4e36a98969b1553a7444"
+   },
+   "vroot": {
+    "v_pit": "5983b9902b106a2b234db05a397e9ce0b73fb689",
+    "v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
+    "v_fund": "2d8093f0009c09b05f597e07eea10f53c8d18b8e",
+    "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
+    "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
+    "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b",
+    "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
+    "tech_backtest": "4bf3424b71986ef1ee0eec19c05fda3efcdbda79",
+    "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628",
+    "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
+    "v_tests": "2f1ec4db1cd7458564da73ec5ad88cef8a0b2f2f",
+    "x_adapter": "897c4c94b22e415f38e32ac47bf8037025f28cb2"
+   }
+  }
+ },
+ "external": {
+  "french": {
+   "ind49_d": {
+    "file": "49_Industry_Portfolios_daily_CSV.zip",
+    "sha256": "8f394fe34bea54d41b9aafed410425ee8f8e252ede3c71a7c1cd20bab83040de"
+   },
+   "ff3_d": {
+    "file": "F-F_Research_Data_Factors_daily_CSV.zip",
+    "sha256": "2f29e22546069914890a712680a6f81f3680ebc3543b52864484d209ca13a7db"
+   }
+  },
+  "french_vintage_crsp": "202608",
+  "egstep_out_sha256": "28234607383080a6e00f8ad1e7d1310067a59b6122eebf46becbaab4399dce3f",
+  "vb_books_sha256": "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b",
+  "vd1_digest": "1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c"
+ },
+ "start_tag": "ssdix-started",
+ "git_mark": "ssdix_started",
+ "forward": "없음 — 사용자 2026-09-27 «미래 일정 다 꺼»"
+}
