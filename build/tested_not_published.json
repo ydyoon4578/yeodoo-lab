@@ -4162,6 +4162,21 @@
    "gate": "측정만 — Q06 방아쇠 기전 검정 Q06HOLD(주 점 추정 부호 양 · 결과는 결과 문서에만)",
    "why": "Q06HOLD 사전등록 7b461f4f8 · 결과는 build/PREREG-2026-09-28-Q06HOLD-RESULT.md",
    "blocked_by": ""
+  },
+  {
+   "sid": "ssd-ix",
+   "name": "SSDIX — 확률지배(SSD) 지수 강화 책(척도 SSD · 200일 · 월 교체 · 이름 상한 20%) 역할 검정 · (A) 독립 엔진 확증 · (B) 방어 스텝 목적지 읽기",
+   "kind": "펀드 슬리브 10% · 종목 바스켓 엔진 역할 검정(LP)",
+   "arch": "",
+   "when": "2026-09-28",
+   "src": "PREREG-2026-09-28-SSDIX.md · PREREG-2026-09-28-SSDIX-RESULT.md",
+   "paper": "",
+   "t": null,
+   "incr": null,
+   "measured_no_t": true,
+   "gate": "측정만 — SSD 지수 강화 책 역할 검정 SSDIX((A) 기각 · 관문 G4 거짓 · 채택 표시 없음 · (B) 읽기 · 결과는 결과 문서에만)",
+   "why": "SSDIX 사전등록 49e33fb56 · 결과는 build/PREREG-2026-09-28-SSDIX-RESULT.md",
+   "blocked_by": ""
   }
  ]
 }
