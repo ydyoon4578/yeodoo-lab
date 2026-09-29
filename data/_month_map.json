@@ -78,8 +78,8 @@
  "persistence": {
   "top5_carry_pct": 8.099173553719009,
   "random_pct": 2.7085831002175746,
-  "rank_rho_median": 0.025412306964206714,
-  "rank_rho_mean": 0.015158391077095934
+  "rank_rho_median": 0.024706523863905264,
+  "rank_rho_mean": 0.015160668885765378
  },
  "kinds": [
   {
@@ -9223,17 +9223,17 @@
     {
      "sid": "a-st-hurst",
      "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
-     "ex": -4.76
+     "ex": -4.77
     },
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": -4.82
+     "ex": -4.84
     },
     {
      "sid": "a-rel-mom3",
      "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
-     "ex": -7.43
+     "ex": -7.44
     }
    ],
    "med": 0.19
