@@ -51,23 +51,23 @@
  "topn": 5,
  "cuts": {
   "vol1": [
-   0.10491,
+   0.10541,
    0.15089
   ],
   "disp": [
-   0.06405,
+   0.06411,
    0.07821
   ],
   "rate12": [
-   -0.05,
+   -0.01,
    0.62
   ],
   "breadth12": [
    -0.05908,
-   -0.01291
+   -0.0137
   ],
   "conc": [
-   0.25929,
+   0.26218,
    0.32541
   ],
   "dconc12": [
@@ -77,9 +77,9 @@
  },
  "persistence": {
   "top5_carry_pct": 8.166666666666666,
-  "random_pct": 2.693437806072478,
-  "rank_rho_median": 0.03139738456061279,
-  "rank_rho_mean": 0.01661414861401865
+  "random_pct": 2.6939175349541364,
+  "rank_rho_median": 0.04097927464994546,
+  "rank_rho_mean": 0.016743434063147697
  },
  "kinds": [
   {
@@ -127,8 +127,8 @@
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
      "hit": 3,
      "in_pct": 25.0,
-     "all_pct": 8.3,
-     "lift": 16.7
+     "all_pct": 7.4,
+     "lift": 17.6
     },
     {
      "sid": "a-tom",
@@ -145,7 +145,7 @@
    "axis_ko": "그달 지수",
    "level": "하락",
    "n_months": 27,
-   "spx_mean": -2.03,
+   "spx_mean": -2.04,
    "med_ex": 0.19,
    "recur": [
     {
@@ -159,10 +159,10 @@
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
-     "hit": 10,
-     "in_pct": 37.0,
+     "hit": 11,
+     "in_pct": 40.7,
      "all_pct": 21.5,
-     "lift": 15.5
+     "lift": 19.3
     },
     {
      "sid": "t-x-kurt",
@@ -181,20 +181,20 @@
      "lift": 6.6
     },
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "hit": 4,
-     "in_pct": 14.8,
-     "all_pct": 8.3,
-     "lift": 6.6
-    },
-    {
      "sid": "t-x-divgrow",
      "name": "배당 증액률 상위 10",
      "hit": 3,
      "in_pct": 11.1,
      "all_pct": 5.0,
      "lift": 6.2
+    },
+    {
+     "sid": "a-st-hurst",
+     "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
+     "hit": 2,
+     "in_pct": 7.4,
+     "all_pct": 1.7,
+     "lift": 5.8
     }
    ]
   },
@@ -207,20 +207,20 @@
    "med_ex": -0.07,
    "recur": [
     {
-     "sid": "t-x-dist200",
-     "name": "200일선 이격도 상위 10",
-     "hit": 13,
-     "in_pct": 21.0,
-     "all_pct": 15.7,
-     "lift": 5.3
-    },
-    {
      "sid": "t-x-sp",
      "name": "저PSR (매출수익률 상위 10)",
      "hit": 10,
      "in_pct": 16.1,
      "all_pct": 11.6,
      "lift": 4.6
+    },
+    {
+     "sid": "t-x-dist200",
+     "name": "200일선 이격도 상위 10",
+     "hit": 13,
+     "in_pct": 21.0,
+     "all_pct": 16.5,
+     "lift": 4.4
     },
     {
      "sid": "t-x-archlm",
@@ -318,57 +318,57 @@
    "axis": "vol1",
    "axis_ko": "출렁임",
    "level": "하",
-   "n_months": 39,
-   "spx_mean": 2.5,
-   "med_ex": -0.08,
+   "n_months": 40,
+   "spx_mean": 2.51,
+   "med_ex": -0.07,
    "recur": [
     {
      "sid": "t-x-btp",
      "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
      "hit": 7,
-     "in_pct": 17.9,
+     "in_pct": 17.5,
      "all_pct": 9.1,
-     "lift": 8.9
+     "lift": 8.4
     },
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
      "hit": 6,
-     "in_pct": 15.4,
+     "in_pct": 15.0,
      "all_pct": 8.3,
-     "lift": 7.1
+     "lift": 6.7
     },
     {
      "sid": "t-x-rgrow",
      "name": "고매출성장 상위 10",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 6.6,
-     "lift": 6.2
+     "lift": 5.9
     },
     {
      "sid": "t-x-lshock",
      "name": "고저가 스프레드 급확대 상위 10 (유동성 충격)",
      "hit": 4,
-     "in_pct": 10.3,
+     "in_pct": 10.0,
      "all_pct": 5.0,
-     "lift": 5.3
+     "lift": 5.0
     },
     {
      "sid": "t-x-payout",
      "name": "총주주환원수익률 (배당 + 자사주매입)",
      "hit": 3,
-     "in_pct": 7.7,
+     "in_pct": 7.5,
      "all_pct": 2.5,
-     "lift": 5.2
+     "lift": 5.0
     },
     {
      "sid": "t-x-coskew",
      "name": "공편왜도 최저 (가장 음의 꼬리 동조)",
      "hit": 3,
-     "in_pct": 7.7,
+     "in_pct": 7.5,
      "all_pct": 2.5,
-     "lift": 5.2
+     "lift": 5.0
     }
    ]
   },
@@ -376,57 +376,57 @@
    "axis": "vol1",
    "axis_ko": "출렁임",
    "level": "중",
-   "n_months": 41,
-   "spx_mean": 1.46,
+   "n_months": 40,
+   "spx_mean": 1.42,
    "med_ex": 0.04,
    "recur": [
-    {
-     "sid": "t-x-curvebank",
-     "name": "곡선 확대 국면 은행·보험 저PBR 15",
-     "hit": 6,
-     "in_pct": 14.6,
-     "all_pct": 6.6,
-     "lift": 8.0
-    },
     {
      "sid": "t-x-mommvol",
      "name": "변동성 조정 모멘텀 상위 10",
      "hit": 7,
-     "in_pct": 17.1,
+     "in_pct": 17.5,
      "all_pct": 9.1,
-     "lift": 8.0
+     "lift": 8.4
+    },
+    {
+     "sid": "t-x-curvebank",
+     "name": "곡선 확대 국면 은행·보험 저PBR 15",
+     "hit": 6,
+     "in_pct": 15.0,
+     "all_pct": 6.6,
+     "lift": 8.4
     },
     {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "hit": 8,
-     "in_pct": 19.5,
+     "in_pct": 20.0,
      "all_pct": 12.4,
-     "lift": 7.1
+     "lift": 7.6
     },
     {
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "hit": 10,
-     "in_pct": 24.4,
+     "in_pct": 25.0,
      "all_pct": 18.2,
-     "lift": 6.2
-    },
-    {
-     "sid": "t-m-clust",
-     "name": "상관 클러스터 10개 × 각 1종",
-     "hit": 4,
-     "in_pct": 9.8,
-     "all_pct": 4.1,
-     "lift": 5.6
+     "lift": 6.8
     },
     {
      "sid": "t-x-earngap",
      "name": "실적 공백기 (발표 후 60일 지난 종목만)",
      "hit": 5,
-     "in_pct": 12.2,
+     "in_pct": 12.5,
      "all_pct": 6.6,
-     "lift": 5.6
+     "lift": 5.9
+    },
+    {
+     "sid": "t-m-clust",
+     "name": "상관 클러스터 10개 × 각 1종",
+     "hit": 4,
+     "in_pct": 10.0,
+     "all_pct": 4.1,
+     "lift": 5.9
     }
    ]
   },
@@ -492,56 +492,56 @@
    "axis": "disp",
    "axis_ko": "종목 간 격차",
    "level": "하",
-   "n_months": 39,
-   "spx_mean": 0.16,
-   "med_ex": 0.0,
+   "n_months": 40,
+   "spx_mean": 0.12,
+   "med_ex": 0.01,
    "recur": [
     {
      "sid": "t-x-sp",
      "name": "저PSR (매출수익률 상위 10)",
      "hit": 7,
-     "in_pct": 17.9,
+     "in_pct": 17.5,
      "all_pct": 11.6,
-     "lift": 6.4
+     "lift": 5.9
     },
     {
      "sid": "g-overlap-top10-ov",
      "name": "거장 겹침 2곳 이상 · 겹친 운용사 수 상위 10",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 6.6,
-     "lift": 6.2
+     "lift": 5.9
     },
     {
      "sid": "t-x-poacc",
      "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
      "hit": 4,
-     "in_pct": 10.3,
+     "in_pct": 10.0,
      "all_pct": 5.0,
-     "lift": 5.3
+     "lift": 5.0
+    },
+    {
+     "sid": "t-x-revdrift-band",
+     "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+     "hit": 4,
+     "in_pct": 10.0,
+     "all_pct": 5.8,
+     "lift": 4.2
     },
     {
      "sid": "t-x-fcfy",
      "name": "잉여현금흐름 수익률 상위 10",
      "hit": 3,
-     "in_pct": 7.7,
+     "in_pct": 7.5,
      "all_pct": 3.3,
-     "lift": 4.4
+     "lift": 4.2
     },
     {
      "sid": "a-merger-arb",
      "name": "합병차익거래 (MNA ETF)",
      "hit": 3,
-     "in_pct": 7.7,
+     "in_pct": 7.5,
      "all_pct": 3.3,
-     "lift": 4.4
-    },
-    {
-     "sid": "t-x-subls",
-     "name": "서브산업 모멘텀 롱숏 (상하위 5)",
-     "hit": 10,
-     "in_pct": 25.6,
-     "all_pct": 21.5,
      "lift": 4.2
     }
    ]
@@ -550,57 +550,57 @@
    "axis": "disp",
    "axis_ko": "종목 간 격차",
    "level": "중",
-   "n_months": 41,
-   "spx_mean": 1.36,
-   "med_ex": -0.02,
+   "n_months": 40,
+   "spx_mean": 1.44,
+   "med_ex": -0.04,
    "recur": [
     {
      "sid": "t-x-echo",
      "name": "에코 모멘텀 (12~7개월 전 구간)",
      "hit": 11,
-     "in_pct": 26.8,
+     "in_pct": 27.5,
      "all_pct": 16.5,
-     "lift": 10.3
+     "lift": 11.0
     },
     {
      "sid": "t-x-currat",
      "name": "유동비율 상위 10",
      "hit": 6,
-     "in_pct": 14.6,
+     "in_pct": 15.0,
      "all_pct": 7.4,
-     "lift": 7.2
+     "lift": 7.6
     },
     {
      "sid": "t-m-clust",
      "name": "상관 클러스터 10개 × 각 1종",
      "hit": 4,
-     "in_pct": 9.8,
+     "in_pct": 10.0,
      "all_pct": 4.1,
-     "lift": 5.6
+     "lift": 5.9
+    },
+    {
+     "sid": "g-overlap-k2-new",
+     "name": "거장 겹침 2곳 이상 (신규 합의만)",
+     "hit": 5,
+     "in_pct": 12.5,
+     "all_pct": 8.3,
+     "lift": 4.2
     },
     {
      "sid": "t-x-sur",
      "name": "매출 서프라이즈 (SUR 상위 10)",
      "hit": 4,
-     "in_pct": 9.8,
+     "in_pct": 10.0,
      "all_pct": 5.8,
-     "lift": 4.0
+     "lift": 4.2
     },
     {
      "sid": "t-x-aci",
      "name": "비정상 자본투자 회피 (설비투자 급증 회피)",
      "hit": 4,
-     "in_pct": 9.8,
+     "in_pct": 10.0,
      "all_pct": 5.8,
-     "lift": 4.0
-    },
-    {
-     "sid": "t-x-archlm",
-     "name": "변동성 군집 최하위 10 (5시차)",
-     "hit": 4,
-     "in_pct": 9.8,
-     "all_pct": 5.8,
-     "lift": 4.0
+     "lift": 4.2
     }
    ]
   },
@@ -609,7 +609,7 @@
    "axis_ko": "종목 간 격차",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.88,
+   "spx_mean": 1.87,
    "med_ex": 0.04,
    "recur": [
     {
@@ -637,20 +637,20 @@
      "lift": 11.1
     },
     {
-     "sid": "t-x-dist200",
-     "name": "200일선 이격도 상위 10",
-     "hit": 10,
-     "in_pct": 24.4,
-     "all_pct": 15.7,
-     "lift": 8.7
-    },
-    {
      "sid": "t-x-cdisc",
      "name": "비용규율 상위 10 (매출증가 − 원가증가)",
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
      "lift": 8.0
+    },
+    {
+     "sid": "t-x-dist200",
+     "name": "200일선 이격도 상위 10",
+     "hit": 10,
+     "in_pct": 24.4,
+     "all_pct": 16.5,
+     "lift": 7.9
     },
     {
      "sid": "a-rel-mom3",
@@ -666,7 +666,7 @@
    "axis": "rate12",
    "axis_ko": "금리 방향",
    "level": "하",
-   "n_months": 39,
+   "n_months": 40,
    "spx_mean": 1.63,
    "med_ex": -0.02,
    "recur": [
@@ -674,49 +674,49 @@
      "sid": "a-rel-mom3",
      "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 5.0,
-     "lift": 7.9
+     "lift": 7.5
     },
     {
      "sid": "t-x-rev1m",
      "name": "단기 반전 (1개월 최하위 10)",
      "hit": 6,
-     "in_pct": 15.4,
+     "in_pct": 15.0,
      "all_pct": 9.1,
-     "lift": 6.3
+     "lift": 5.9
     },
     {
      "sid": "t-x-rev1m-band",
      "name": "단기 반전 (1개월 최하위 10) · 밴드 보유",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 6.6,
-     "lift": 6.2
+     "lift": 5.9
     },
     {
      "sid": "t-x-earngap",
      "name": "실적 공백기 (발표 후 60일 지난 종목만)",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 6.6,
-     "lift": 6.2
+     "lift": 5.9
     },
     {
      "sid": "t-x-divgrow",
      "name": "배당 증액률 상위 10",
      "hit": 4,
-     "in_pct": 10.3,
+     "in_pct": 10.0,
      "all_pct": 5.0,
-     "lift": 5.3
+     "lift": 5.0
     },
     {
      "sid": "t-x-rev1w-band",
      "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 12.5,
      "all_pct": 8.3,
-     "lift": 4.6
+     "lift": 4.2
     }
    ]
   },
@@ -724,57 +724,57 @@
    "axis": "rate12",
    "axis_ko": "금리 방향",
    "level": "중",
-   "n_months": 39,
-   "spx_mean": 1.26,
+   "n_months": 38,
+   "spx_mean": 1.27,
    "med_ex": 0.03,
    "recur": [
     {
      "sid": "t-x-dist200",
      "name": "200일선 이격도 상위 10",
-     "hit": 9,
-     "in_pct": 23.1,
-     "all_pct": 15.7,
-     "lift": 7.4
-    },
-    {
-     "sid": "t-x-realsw",
-     "name": "실질금리 국면 채점축 전환 (잉여현금흐름 ↔ 매출성장)",
-     "hit": 3,
-     "in_pct": 7.7,
-     "all_pct": 2.5,
-     "lift": 5.2
+     "hit": 10,
+     "in_pct": 26.3,
+     "all_pct": 16.5,
+     "lift": 9.8
     },
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 13.2,
      "all_pct": 8.3,
-     "lift": 4.6
+     "lift": 4.9
     },
     {
      "sid": "t-x-drift-t",
      "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
      "hit": 5,
-     "in_pct": 12.8,
+     "in_pct": 13.2,
      "all_pct": 8.3,
-     "lift": 4.6
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "hit": 5,
-     "in_pct": 12.8,
-     "all_pct": 8.3,
-     "lift": 4.6
+     "lift": 4.9
     },
     {
      "sid": "t-x-rgrow",
      "name": "고매출성장 상위 10",
      "hit": 4,
-     "in_pct": 10.3,
+     "in_pct": 10.5,
      "all_pct": 6.6,
-     "lift": 3.6
+     "lift": 3.9
+    },
+    {
+     "sid": "g-overlap-top10-ov",
+     "name": "거장 겹침 2곳 이상 · 겹친 운용사 수 상위 10",
+     "hit": 4,
+     "in_pct": 10.5,
+     "all_pct": 6.6,
+     "lift": 3.9
+    },
+    {
+     "sid": "t-x-max5low",
+     "name": "복권형 회피 — MAX(5) 최하위 10",
+     "hit": 3,
+     "in_pct": 7.9,
+     "all_pct": 4.1,
+     "lift": 3.8
     }
    ]
   },
@@ -783,7 +783,7 @@
    "axis_ko": "금리 방향",
    "level": "상",
    "n_months": 43,
-   "spx_mean": 0.61,
+   "spx_mean": 0.59,
    "med_ex": 0.03,
    "recur": [
     {
@@ -827,8 +827,8 @@
      "lift": 4.3
     },
     {
-     "sid": "t-x-fxweak",
-     "name": "달러 약세 국면 달러민감 20",
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
      "hit": 5,
      "in_pct": 11.6,
      "all_pct": 7.4,
@@ -898,111 +898,53 @@
    "axis": "breadth12",
    "axis_ko": "덩치 싸움",
    "level": "중",
-   "n_months": 41,
-   "spx_mean": 0.68,
+   "n_months": 40,
+   "spx_mean": 0.66,
    "med_ex": 0.03,
    "recur": [
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
-     "hit": 8,
-     "in_pct": 19.5,
-     "all_pct": 8.3,
-     "lift": 11.2
-    },
-    {
-     "sid": "t-x-drift-t",
-     "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
-     "hit": 6,
-     "in_pct": 14.6,
-     "all_pct": 8.3,
-     "lift": 6.4
-    },
-    {
-     "sid": "t-x-snapback-band",
-     "name": "추세정렬 과매도 반등 · 밴드 보유",
-     "hit": 3,
-     "in_pct": 7.3,
-     "all_pct": 2.5,
-     "lift": 4.8
-    },
-    {
-     "sid": "t-x-snapback",
-     "name": "추세정렬 과매도 반등",
-     "hit": 3,
-     "in_pct": 7.3,
-     "all_pct": 2.5,
-     "lift": 4.8
-    },
-    {
-     "sid": "t-x-coskew",
-     "name": "공편왜도 최저 (가장 음의 꼬리 동조)",
-     "hit": 3,
-     "in_pct": 7.3,
-     "all_pct": 2.5,
-     "lift": 4.8
-    },
-    {
-     "sid": "t-x-shiss",
-     "name": "순주식발행 회피 (희석주식수 증가 최저)",
-     "hit": 3,
-     "in_pct": 7.3,
-     "all_pct": 2.5,
-     "lift": 4.8
-    }
-   ]
-  },
-  {
-   "axis": "breadth12",
-   "axis_ko": "덩치 싸움",
-   "level": "상",
-   "n_months": 40,
-   "spx_mean": 1.09,
-   "med_ex": -0.03,
-   "recur": [
-    {
-     "sid": "t-x-ecm-band",
-     "name": "지수 대비 오차수정 괴리 최하위 10 · 밴드 보유",
-     "hit": 7,
-     "in_pct": 17.5,
-     "all_pct": 6.6,
-     "lift": 10.9
-    },
-    {
-     "sid": "t-x-ecm",
-     "name": "지수 대비 오차수정 괴리 최하위 10",
      "hit": 7,
      "in_pct": 17.5,
      "all_pct": 8.3,
      "lift": 9.2
     },
     {
-     "sid": "t-x-kurt",
-     "name": "초과첨도 최하위 10",
-     "hit": 6,
-     "in_pct": 15.0,
-     "all_pct": 7.4,
-     "lift": 7.6
-    },
-    {
-     "sid": "t-x-rev1w-band",
-     "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
+     "sid": "t-x-drift-t",
+     "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
      "hit": 6,
      "in_pct": 15.0,
      "all_pct": 8.3,
      "lift": 6.7
     },
     {
-     "sid": "t-x-btp",
-     "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
-     "hit": 6,
-     "in_pct": 15.0,
-     "all_pct": 9.1,
-     "lift": 5.9
+     "sid": "t-x-dalpha",
+     "name": "알파 개선 상위 10",
+     "hit": 7,
+     "in_pct": 17.5,
+     "all_pct": 12.4,
+     "lift": 5.1
     },
     {
-     "sid": "a-vrp-shortvol",
-     "name": "변동성 위험프리미엄 숏볼 (SVXY 25%)",
+     "sid": "t-x-divgrow",
+     "name": "배당 증액률 상위 10",
+     "hit": 4,
+     "in_pct": 10.0,
+     "all_pct": 5.0,
+     "lift": 5.0
+    },
+    {
+     "sid": "t-x-snapback",
+     "name": "추세정렬 과매도 반등",
+     "hit": 3,
+     "in_pct": 7.5,
+     "all_pct": 2.5,
+     "lift": 5.0
+    },
+    {
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "hit": 3,
      "in_pct": 7.5,
      "all_pct": 2.5,
@@ -1011,11 +953,69 @@
    ]
   },
   {
+   "axis": "breadth12",
+   "axis_ko": "덩치 싸움",
+   "level": "상",
+   "n_months": 41,
+   "spx_mean": 1.09,
+   "med_ex": -0.02,
+   "recur": [
+    {
+     "sid": "t-x-ecm-band",
+     "name": "지수 대비 오차수정 괴리 최하위 10 · 밴드 보유",
+     "hit": 7,
+     "in_pct": 17.1,
+     "all_pct": 6.6,
+     "lift": 10.5
+    },
+    {
+     "sid": "t-x-ecm",
+     "name": "지수 대비 오차수정 괴리 최하위 10",
+     "hit": 7,
+     "in_pct": 17.1,
+     "all_pct": 8.3,
+     "lift": 8.8
+    },
+    {
+     "sid": "t-x-kurt",
+     "name": "초과첨도 최하위 10",
+     "hit": 6,
+     "in_pct": 14.6,
+     "all_pct": 7.4,
+     "lift": 7.2
+    },
+    {
+     "sid": "t-x-rev1w-band",
+     "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
+     "hit": 6,
+     "in_pct": 14.6,
+     "all_pct": 8.3,
+     "lift": 6.4
+    },
+    {
+     "sid": "t-x-btp",
+     "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
+     "hit": 6,
+     "in_pct": 14.6,
+     "all_pct": 9.1,
+     "lift": 5.5
+    },
+    {
+     "sid": "a-vrp-shortvol",
+     "name": "변동성 위험프리미엄 숏볼 (SVXY 25%)",
+     "hit": 3,
+     "in_pct": 7.3,
+     "all_pct": 2.5,
+     "lift": 4.8
+    }
+   ]
+  },
+  {
    "axis": "dconc12",
    "axis_ko": "쏠림 방향",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.4,
+   "spx_mean": 0.38,
    "med_ex": 0.01,
    "recur": [
     {
@@ -1081,8 +1081,8 @@
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
      "hit": 7,
      "in_pct": 17.5,
-     "all_pct": 8.3,
-     "lift": 9.2
+     "all_pct": 7.4,
+     "lift": 10.1
     },
     {
      "sid": "g-overlap-top10-ov",
@@ -1155,8 +1155,8 @@
      "name": "곡선 축 팩터 전환 (고베타 ↔ 저변동)",
      "hit": 6,
      "in_pct": 14.6,
-     "all_pct": 8.3,
-     "lift": 6.4
+     "all_pct": 7.4,
+     "lift": 7.2
     },
     {
      "sid": "t-x-mom12",
@@ -1188,8 +1188,8 @@
  "months": [
   {
    "m": "2016-09",
-   "spx": -0.12,
-   "ndx": 2.19,
+   "spx": 0.24,
+   "ndx": 0.45,
    "vol": 0.14519,
    "disp": 0.04806,
    "rate12": -0.46,
@@ -1204,8 +1204,8 @@
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "하락 · 출렁임중 · 격차하 · 금리하 · 덩치상",
-   "n": 165,
+   "label": "상승 · 출렁임중 · 격차하 · 금리하 · 덩치상",
+   "n": 161,
    "top": [
     {
      "sid": "t-x-fxweak",
@@ -1264,13 +1264,13 @@
    "dconc12": 0.00817,
    "band": {
     "vol1": "하",
-    "disp": "중",
+    "disp": "하",
     "rate12": "하",
     "breadth12": "상",
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "하락 · 출렁임하 · 격차중 · 금리하 · 덩치상",
+   "label": "하락 · 출렁임하 · 격차하 · 금리하 · 덩치상",
    "n": 179,
    "top": [
     {
@@ -1643,7 +1643,7 @@
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
-     "ex": -2.85
+     "ex": -2.86
     }
    ],
    "med": 0.16
@@ -1662,11 +1662,11 @@
     "vol1": "하",
     "disp": "하",
     "rate12": "중",
-    "breadth12": "중",
+    "breadth12": "상",
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치중",
+   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치상",
    "n": 181,
    "top": [
     {
@@ -1802,13 +1802,18 @@
    "n": 181,
    "top": [
     {
-     "sid": "t-x-snapback-band",
-     "name": "추세정렬 과매도 반등 · 밴드 보유",
-     "ex": 4.38
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": 4.46
     },
     {
      "sid": "t-x-snapback",
      "name": "추세정렬 과매도 반등",
+     "ex": 4.38
+    },
+    {
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "ex": 4.38
     },
     {
@@ -1820,11 +1825,6 @@
      "sid": "t-x-fxbeta",
      "name": "달러 둔감 최하위 10 (|광의 달러지수 베타|)",
      "ex": 3.92
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": 3.16
     }
    ],
    "bot": [
@@ -2105,7 +2105,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -5.31
+     "ex": -6.21
     }
    ],
    "med": 0.14
@@ -2189,12 +2189,12 @@
    "band": {
     "vol1": "하",
     "disp": "하",
-    "rate12": "중",
+    "rate12": "하",
     "breadth12": "중",
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치중",
+   "label": "상승 · 출렁임하 · 격차하 · 금리하 · 덩치중",
    "n": 183,
    "top": [
     {
@@ -2296,14 +2296,14 @@
      "ex": -8.12
     },
     {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -8.64
+    },
+    {
      "sid": "t-x-maxlow-band",
      "name": "복권형 회피 (MAX 최하위 10) · 밴드 보유",
      "ex": -8.74
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -9.45
     }
    ],
    "med": 0.0
@@ -2489,6 +2489,11 @@
    ],
    "bot": [
     {
+     "sid": "t-x-volsurge-band",
+     "name": "거래량 급증 + 추세 10 · 밴드 보유",
+     "ex": -3.81
+    },
+    {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "ex": -3.94
@@ -2497,11 +2502,6 @@
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "ex": -4.23
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -4.79
     }
    ],
    "med": -0.01
@@ -2543,13 +2543,13 @@
      "ex": 6.54
     },
     {
-     "sid": "t-x-fip-base",
-     "name": "모멘텀 상위 30 · 1개월 보유 (기준선)",
+     "sid": "t-m-erc",
+     "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "ex": 5.04
     },
     {
-     "sid": "t-m-erc",
-     "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
+     "sid": "t-x-fip-base",
+     "name": "모멘텀 상위 30 · 1개월 보유 (기준선)",
      "ex": 5.04
     }
    ],
@@ -2636,7 +2636,7 @@
      "ex": -6.9
     }
    ],
-   "med": -0.23
+   "med": -0.26
   },
   {
    "m": "2018-07",
@@ -2687,14 +2687,14 @@
    ],
    "bot": [
     {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -5.13
+    },
+    {
      "sid": "t-x-sur",
      "name": "매출 서프라이즈 (SUR 상위 10)",
      "ex": -5.24
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -5.37
     },
     {
      "sid": "t-x-subls",
@@ -2753,11 +2753,6 @@
    ],
    "bot": [
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -5.23
-    },
-    {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "ex": -5.42
@@ -2766,6 +2761,11 @@
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "ex": -6.07
+    },
+    {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -6.94
     }
    ],
    "med": 0.1
@@ -2939,13 +2939,13 @@
      "ex": 3.92
     },
     {
-     "sid": "t-x-snapback-band",
-     "name": "추세정렬 과매도 반등 · 밴드 보유",
+     "sid": "t-x-snapback",
+     "name": "추세정렬 과매도 반등",
      "ex": 3.53
     },
     {
-     "sid": "t-x-snapback",
-     "name": "추세정렬 과매도 반등",
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "ex": 3.53
     }
    ],
@@ -2966,7 +2966,7 @@
      "ex": -5.23
     }
    ],
-   "med": -0.65
+   "med": -0.71
   },
   {
    "m": "2018-12",
@@ -2997,7 +2997,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": 13.42
+     "ex": 12.52
     },
     {
      "sid": "a-min-cvar",
@@ -3127,6 +3127,16 @@
      "ex": 5.24
     },
     {
+     "sid": "t-x-revdrift-sn-band",
+     "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+     "ex": 4.69
+    },
+    {
+     "sid": "t-x-revdrift-band",
+     "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+     "ex": 4.69
+    },
+    {
      "sid": "t-x-rev1w-band",
      "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
      "ex": 4.59
@@ -3135,16 +3145,6 @@
      "sid": "t-x-rev1w",
      "name": "주간 반전 (1주 최하위 10)",
      "ex": 4.59
-    },
-    {
-     "sid": "t-x-revdrift-sn-band",
-     "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
-     "ex": 4.32
-    },
-    {
-     "sid": "t-x-revdrift-band",
-     "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
-     "ex": 4.32
     }
    ],
    "bot": [
@@ -3415,7 +3415,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -9.1
+     "ex": -9.23
     },
     {
      "sid": "a-vol-roll",
@@ -3626,7 +3626,7 @@
      "ex": -9.21
     }
    ],
-   "med": -0.78
+   "med": -0.86
   },
   {
    "m": "2019-10",
@@ -3709,7 +3709,7 @@
     "disp": "중",
     "rate12": "하",
     "breadth12": "중",
-    "conc": "중",
+    "conc": "하",
     "dconc12": "중"
    },
    "label": "상승 · 출렁임하 · 격차중 · 금리하 · 덩치중",
@@ -3797,14 +3797,14 @@
      "ex": 3.21
     },
     {
-     "sid": "a-curve-factorsw",
-     "name": "곡선 축 팩터 전환 (고베타 ↔ 저변동)",
-     "ex": 2.78
+     "sid": "t-x-revdrift-sn-band",
+     "name": "투자의견 리비전 드리프트 (21일 · 섹터중립) · 밴드 보유",
+     "ex": 3.06
     },
     {
-     "sid": "a-fx-factorsw",
-     "name": "달러 축 팩터 전환 (고베타 ↔ 저변동)",
-     "ex": 2.78
+     "sid": "t-x-revdrift-band",
+     "name": "투자의견 리비전 드리프트 (21일) · 밴드 보유",
+     "ex": 3.06
     }
    ],
    "bot": [
@@ -4151,7 +4151,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -7.4
+     "ex": -7.95
     }
    ],
    "med": -0.21
@@ -4283,7 +4283,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -12.69
+     "ex": -12.9
     }
    ],
    "med": 0.18
@@ -4349,7 +4349,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -12.51
+     "ex": -11.32
     }
    ],
    "med": -0.74
@@ -4469,6 +4469,11 @@
    ],
    "bot": [
     {
+     "sid": "t-x-echo",
+     "name": "에코 모멘텀 (12~7개월 전 구간)",
+     "ex": -5.18
+    },
+    {
      "sid": "t-x-sugp",
      "name": "매출총이익 서프라이즈 (SUGP 상위 10)",
      "ex": -5.32
@@ -4477,14 +4482,9 @@
      "sid": "t-x-mommvol",
      "name": "변동성 조정 모멘텀 상위 10",
      "ex": -5.64
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -5.78
     }
    ],
-   "med": -0.19
+   "med": -0.22
   },
   {
    "m": "2020-11",
@@ -4542,7 +4542,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -21.03
+     "ex": -19.38
     },
     {
      "sid": "a-vol-roll",
@@ -4596,19 +4596,19 @@
     {
      "sid": "t-x-curvebank",
      "name": "곡선 확대 국면 은행·보험 저PBR 15",
-     "ex": 3.93
+     "ex": 4.08
     }
    ],
    "bot": [
     {
+     "sid": "t-x-subls",
+     "name": "서브산업 모멘텀 롱숏 (상하위 5)",
+     "ex": -6.55
+    },
+    {
      "sid": "t-x-mommvol",
      "name": "변동성 조정 모멘텀 상위 10",
      "ex": -6.62
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -7.52
     },
     {
      "sid": "t-x-fxbeta",
@@ -4660,8 +4660,8 @@
      "ex": 10.19
     },
     {
-     "sid": "t-x-volsurge-band",
-     "name": "거래량 급증 + 추세 10 · 밴드 보유",
+     "sid": "t-x-volsurge",
+     "name": "거래량 급증 + 추세 10",
      "ex": 9.7
     }
    ],
@@ -4738,14 +4738,14 @@
      "ex": -10.33
     },
     {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -12.76
+    },
+    {
      "sid": "t-x-fxbeta",
      "name": "달러 둔감 최하위 10 (|광의 달러지수 베타|)",
      "ex": -13.25
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -14.53
     }
    ],
    "med": -1.03
@@ -4880,7 +4880,7 @@
      "ex": -17.99
     }
    ],
-   "med": -0.71
+   "med": -0.74
   },
   {
    "m": "2021-05",
@@ -4911,7 +4911,7 @@
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
-     "ex": 6.43
+     "ex": 6.42
     },
     {
      "sid": "t-x-sp",
@@ -5038,7 +5038,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": 7.16
+     "ex": 7.72
     },
     {
      "sid": "t-x-hurst",
@@ -5200,14 +5200,14 @@
      "ex": -3.85
     },
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -4.6
-    },
-    {
      "sid": "t-x-drift-t",
      "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
      "ex": -4.81
+    },
+    {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -5.07
     }
    ],
    "med": 0.1
@@ -5276,7 +5276,7 @@
      "ex": -12.64
     }
    ],
-   "med": -0.02
+   "med": 0.0
   },
   {
    "m": "2021-11",
@@ -5310,11 +5310,6 @@
      "ex": 9.08
     },
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": 7.97
-    },
-    {
      "sid": "t-x-divgrow",
      "name": "배당 증액률 상위 10",
      "ex": 5.88
@@ -5323,6 +5318,11 @@
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
      "ex": 5.79
+    },
+    {
+     "sid": "t-x-dist200",
+     "name": "200일선 이격도 상위 10",
+     "ex": 4.97
     }
    ],
    "bot": [
@@ -5459,18 +5459,18 @@
    ],
    "bot": [
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -9.87
-    },
-    {
-     "sid": "t-x-volsurge-band",
-     "name": "거래량 급증 + 추세 10 · 밴드 보유",
-     "ex": -10.89
+     "sid": "t-x-currat",
+     "name": "유동비율 상위 10",
+     "ex": -9.4
     },
     {
      "sid": "t-x-volsurge",
      "name": "거래량 급증 + 추세 10",
+     "ex": -10.89
+    },
+    {
+     "sid": "t-x-volsurge-band",
+     "name": "거래량 급증 + 추세 10 · 밴드 보유",
      "ex": -10.89
     }
    ],
@@ -5525,14 +5525,14 @@
    ],
    "bot": [
     {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -5.37
-    },
-    {
      "sid": "t-x-lshock-band",
      "name": "고저가 스프레드 급확대 상위 10 (유동성 충격) · 밴드 보유",
      "ex": -5.38
+    },
+    {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -6.06
     },
     {
      "sid": "t-x-runs",
@@ -5672,7 +5672,7 @@
      "ex": -13.81
     }
    ],
-   "med": 1.18
+   "med": 1.1
   },
   {
    "m": "2022-05",
@@ -5764,7 +5764,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": 15.44
+     "ex": 13.4
     },
     {
      "sid": "a-vol-roll",
@@ -6053,14 +6053,14 @@
    ],
    "bot": [
     {
+     "sid": "t-x-varratio",
+     "name": "분산비 최하위 10 (VR 5일)",
+     "ex": -10.29
+    },
+    {
      "sid": "t-x-turn",
      "name": "저회전율 최하위 10",
      "ex": -12.17
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -13.42
     },
     {
      "sid": "a-vol-roll",
@@ -7505,13 +7505,13 @@
    ],
    "bot": [
     {
-     "sid": "t-x-snapback-band",
-     "name": "추세정렬 과매도 반등 · 밴드 보유",
+     "sid": "t-x-snapback",
+     "name": "추세정렬 과매도 반등",
      "ex": -5.07
     },
     {
-     "sid": "t-x-snapback",
-     "name": "추세정렬 과매도 반등",
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "ex": -5.07
     },
     {
@@ -7967,8 +7967,8 @@
    ],
    "bot": [
     {
-     "sid": "t-x-snapback",
-     "name": "추세정렬 과매도 반등",
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "ex": -7.89
     },
     {
@@ -8436,7 +8436,7 @@
     {
      "sid": "t-x-curvebank",
      "name": "곡선 확대 국면 은행·보험 저PBR 15",
-     "ex": -5.06
+     "ex": -5.11
     },
     {
      "sid": "t-x-subom",
@@ -8903,7 +8903,7 @@
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "ex": -13.83
+     "ex": -13.82
     }
    ],
    "med": -0.41
@@ -8957,8 +8957,8 @@
    ],
    "bot": [
     {
-     "sid": "t-x-volsurge",
-     "name": "거래량 급증 + 추세 10",
+     "sid": "t-x-volsurge-band",
+     "name": "거래량 급증 + 추세 10 · 밴드 보유",
      "ex": -11.02
     },
     {
@@ -9051,14 +9051,14 @@
    "conc": 0.37561,
    "dconc12": -0.00719,
    "band": {
-    "vol1": "중",
+    "vol1": "하",
     "disp": "상",
     "rate12": "중",
     "breadth12": "중",
     "conc": "상",
     "dconc12": "하"
    },
-   "label": "상승 · 출렁임중 · 격차상 · 금리중 · 덩치중",
+   "label": "상승 · 출렁임하 · 격차상 · 금리중 · 덩치중",
    "n": 187,
    "top": [
     {
@@ -9067,13 +9067,13 @@
      "ex": 25.33
     },
     {
-     "sid": "t-x-snapback-band",
-     "name": "추세정렬 과매도 반등 · 밴드 보유",
+     "sid": "t-x-snapback",
+     "name": "추세정렬 과매도 반등",
      "ex": 15.72
     },
     {
-     "sid": "t-x-snapback",
-     "name": "추세정렬 과매도 반등",
+     "sid": "t-x-snapback-band",
+     "name": "추세정렬 과매도 반등 · 밴드 보유",
      "ex": 15.72
     },
     {
@@ -9108,11 +9108,11 @@
   },
   {
    "m": "2026-09",
-   "spx": 0.23,
-   "ndx": 3.47,
+   "spx": -0.45,
+   "ndx": 3.23,
    "vol": 0.10843,
    "disp": 0.08736,
-   "rate12": 1.1,
+   "rate12": 1.13,
    "breadth12": -0.03898,
    "conc": 0.38962,
    "dconc12": -0.00192,
@@ -9124,9 +9124,14 @@
     "conc": "상",
     "dconc12": "하"
    },
-   "label": "상승 · 출렁임중 · 격차상 · 금리상 · 덩치중",
+   "label": "하락 · 출렁임중 · 격차상 · 금리상 · 덩치중",
    "n": 184,
    "top": [
+    {
+     "sid": "t-x-subls",
+     "name": "서브산업 모멘텀 롱숏 (상하위 5)",
+     "ex": 16.98
+    },
     {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
@@ -9141,11 +9146,6 @@
      "sid": "t-x-dist200",
      "name": "200일선 이격도 상위 10",
      "ex": 14.91
-    },
-    {
-     "sid": "t-x-subls",
-     "name": "서브산업 모멘텀 롱숏 (상하위 5)",
-     "ex": 14.89
     },
     {
      "sid": "t-x-dalpha",
