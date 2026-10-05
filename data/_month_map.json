@@ -79,7 +79,7 @@
   "top5_carry_pct": 8.166666666666666,
   "random_pct": 2.6939175349541364,
   "rank_rho_median": 0.03733091405362449,
-  "rank_rho_mean": 0.017461762235787767
+  "rank_rho_mean": 0.017458172361334828
  },
  "kinds": [
   {
@@ -2611,7 +2611,7 @@
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": 3.23
+     "ex": 3.24
     },
     {
      "sid": "t-x-archlm",
