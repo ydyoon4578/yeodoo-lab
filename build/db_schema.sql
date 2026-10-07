@@ -1,5 +1,5 @@
 -- =====================================================================
--- yeouido-lab · Postgres 누적 스토어 (schema: yeodoo)
+-- yeouido-lab · Postgres 누적 스토어 (schema: yd_lab)
 -- =====================================================================
 -- 역할 분담 (중요)
 --   · 원본(source of truth) = git 저장소의 data/*.json
@@ -15,13 +15,13 @@
 --   신규 지표는 DDL 변경 없이 raw->>'키' 로 즉시 조회된다.
 -- =====================================================================
 
-create schema if not exists yeodoo;
-comment on schema yeodoo is 'yeouido-lab 공개 사이트 일별 스냅샷 누적 (원본은 git data/*.json, 여기는 미러)';
+create schema if not exists yd_lab;
+comment on schema yd_lab is 'yeouido-lab 공개 사이트 일별 스냅샷 누적 (원본은 git data/*.json, 여기는 미러)';
 
 -- ---------------------------------------------------------------------
 -- 1) 종목 일별 스냅샷
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.stock_daily (
+create table if not exists yd_lab.stock_daily (
   asof          date              not null,
   ticker        text              not null,
   name          text,
@@ -40,14 +40,14 @@ create table if not exists yeodoo.stock_daily (
   loaded_at     timestamptz       not null default now(),
   primary key (asof, ticker)
 );
-create index if not exists ix_stock_daily_ticker on yeodoo.stock_daily (ticker, asof desc);
-create index if not exists ix_stock_daily_sector on yeodoo.stock_daily (sector, asof desc);
-create index if not exists ix_stock_daily_raw    on yeodoo.stock_daily using gin (raw jsonb_path_ops);
+create index if not exists ix_stock_daily_ticker on yd_lab.stock_daily (ticker, asof desc);
+create index if not exists ix_stock_daily_sector on yd_lab.stock_daily (sector, asof desc);
+create index if not exists ix_stock_daily_raw    on yd_lab.stock_daily using gin (raw jsonb_path_ops);
 
 -- ---------------------------------------------------------------------
 -- 2) 펀더멘털 일별 (raw 중심 — 지표 추가시 DDL 무변경)
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.fundamental_daily (
+create table if not exists yd_lab.fundamental_daily (
   asof          date              not null,
   ticker        text              not null,
   teps          double precision,            -- 주당순이익 TTM
@@ -59,15 +59,15 @@ create table if not exists yeodoo.fundamental_daily (
   loaded_at     timestamptz       not null default now(),
   primary key (asof, ticker)
 );
-create index if not exists ix_fund_daily_ticker on yeodoo.fundamental_daily (ticker, asof desc);
-create index if not exists ix_fund_daily_raw    on yeodoo.fundamental_daily using gin (raw jsonb_path_ops);
+create index if not exists ix_fund_daily_ticker on yd_lab.fundamental_daily (ticker, asof desc);
+create index if not exists ix_fund_daily_raw    on yd_lab.fundamental_daily using gin (raw jsonb_path_ops);
 
 -- ---------------------------------------------------------------------
 -- 3) 애널리스트 목표주가 일별
 --    ⚠ 표기·검증 전용. 상승여력(up)은 매수 근거 아님(기각 아카이브 참조).
 --    git의 target_history.json 은 무한 증가하므로 장기 이력은 여기가 정본.
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.target_daily (
+create table if not exists yd_lab.target_daily (
   asof          date              not null,
   ticker        text              not null,
   tp_mean       double precision,
@@ -78,7 +78,7 @@ create table if not exists yeodoo.target_daily (
   upside_pct    double precision,
   primary key (asof, ticker)
 );
-create index if not exists ix_target_daily_ticker on yeodoo.target_daily (ticker, asof desc);
+create index if not exists ix_target_daily_ticker on yd_lab.target_daily (ticker, asof desc);
 
 -- ---------------------------------------------------------------------
 -- 4) 스윙 마커 생명주기  ★ JSON이 줄 수 없는 유일한 자산
@@ -86,7 +86,7 @@ create index if not exists ix_target_daily_ticker on yeodoo.target_daily (ticker
 --    리페인팅으로 사라지는지를 추적한다. 화면에 쓰는 "확정 확률 ~%"를
 --    과거 추정치가 아니라 우리 실측으로 대체하기 위한 근거 테이블.
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.swing_marker (
+create table if not exists yd_lab.swing_marker (
   ticker          text            not null,
   bar_date        date            not null,  -- 마커가 찍힌 봉의 날짜
   side            text            not null,  -- 'buy' | 'sell'
@@ -97,19 +97,19 @@ create table if not exists yeodoo.swing_marker (
   price           double precision,
   primary key (ticker, bar_date, side)
 );
-create index if not exists ix_swing_marker_seen on yeodoo.swing_marker (last_seen desc);
+create index if not exists ix_swing_marker_seen on yd_lab.swing_marker (last_seen desc);
 
 -- ---------------------------------------------------------------------
 -- 5) 시장 국면 / 6) 시장 심리
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.regime_daily (
+create table if not exists yd_lab.regime_daily (
   asof        date        primary key,
   regime      text,
   raw         jsonb       not null,
   loaded_at   timestamptz not null default now()
 );
 
-create table if not exists yeodoo.sentiment_daily (
+create table if not exists yd_lab.sentiment_daily (
   asof        date        primary key,
   score       double precision,
   score_pctl  double precision,
@@ -121,7 +121,7 @@ create table if not exists yeodoo.sentiment_daily (
 -- ---------------------------------------------------------------------
 -- 7) 적재 감사 로그 — 어느 커밋에서 무엇을 넣었는지
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.load_log (
+create table if not exists yd_lab.load_log (
   id          bigserial   primary key,
   source      text        not null,          -- stocks / fundamental / target / regime / sentiment / swing
   asof        date,
@@ -131,7 +131,7 @@ create table if not exists yeodoo.load_log (
   message     text,
   ran_at      timestamptz not null default now()
 );
-create index if not exists ix_load_log_src on yeodoo.load_log (source, asof desc);
+create index if not exists ix_load_log_src on yd_lab.load_log (source, asof desc);
 
 -- ---------------------------------------------------------------------
 -- 뷰: 잠정 마커 확정 전환율 (화면의 "확정 확률" 실측 대체용)
@@ -147,17 +147,17 @@ create index if not exists ix_load_log_src on yeodoo.load_log (source, asof desc
 -- ---------------------------------------------------------------------
 -- CREATE OR REPLACE VIEW는 컬럼 추가/개명이 불가 → 뷰는 항상 drop 후 재생성.
 -- (뷰는 파생물이라 drop해도 데이터 손실 없음. 테이블은 절대 drop하지 않는다.)
-drop view if exists yeodoo.v_swing_promotion;
-create view yeodoo.v_swing_promotion as
-with obs as (select distinct first_seen as d from yeodoo.swing_marker),
+drop view if exists yd_lab.v_swing_promotion;
+create view yd_lab.v_swing_promotion as
+with obs as (select distinct first_seen as d from yd_lab.swing_marker),
      ev as (
        select m.*
-       from yeodoo.swing_marker m
+       from yd_lab.swing_marker m
        where m.ever_provisional
          and exists (select 1 from obs where obs.d > m.first_seen)   -- 승격 기회 있었음
      )
 select side,
-       (select count(*) from yeodoo.swing_marker s
+       (select count(*) from yd_lab.swing_marker s
          where s.side = ev.side and s.ever_provisional)   as n_total,
        count(*)                                           as n_evaluable,
        count(*) filter (where first_confirmed is not null) as n_promoted,
@@ -170,17 +170,17 @@ from ev
 group by side;
 
 -- 뷰: 최신 영업일 스냅샷 (조회 편의)
-drop view if exists yeodoo.v_stock_latest;
-create view yeodoo.v_stock_latest as
-select * from yeodoo.stock_daily
-where asof = (select max(asof) from yeodoo.stock_daily);
+drop view if exists yd_lab.v_stock_latest;
+create view yd_lab.v_stock_latest as
+select * from yd_lab.stock_daily
+where asof = (select max(asof) from yd_lab.stock_daily);
 
 -- ---------------------------------------------------------------------
 -- 10) 로테이션 전략 풀 일별 스냅샷 (2026-07-22 추가)
 --     매일 헤드리스 잡이 recent/recent_at을 갱신하고 신규 전략을 추가한다.
 --     "언제 어떤 전략이 풀에 있었나 · 최근동향이 언제 갱신됐나"를 되짚기 위한 이력.
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.rotation_strategy (
+create table if not exists yd_lab.rotation_strategy (
   asof        date        not null,          -- rotation_pool.generated
   sid         text        not null,          -- A1 · E23 …
   cat         text,
@@ -193,13 +193,13 @@ create table if not exists yeodoo.rotation_strategy (
   loaded_at   timestamptz not null default now(),
   primary key (asof, sid)
 );
-create index if not exists ix_rot_sid on yeodoo.rotation_strategy (sid, asof desc);
-create index if not exists ix_rot_cat on yeodoo.rotation_strategy (cat, asof desc);
+create index if not exists ix_rot_sid on yd_lab.rotation_strategy (sid, asof desc);
+create index if not exists ix_rot_cat on yd_lab.rotation_strategy (cat, asof desc);
 
 -- ---------------------------------------------------------------------
 -- 11) 사이트 갱신 피드 (updates.json)
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.site_update (
+create table if not exists yd_lab.site_update (
   dt        date not null,
   target    text not null,                   -- rotation/explorer/archive/stocks/regime/sentiment/holdings
   title     text not null,
@@ -211,7 +211,7 @@ create table if not exists yeodoo.site_update (
 -- 12) 전략 백테스트 지표 스냅샷 (strategy_backtests.json)
 --     ⚠ 사내 DB(라이선스 자료) 파생 집계 성과. 원천 수치·종목선정은 담지 않는다.
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.strategy_perf (
+create table if not exists yd_lab.strategy_perf (
   asof         date not null,                -- generated
   strategy     text not null,
   bench_label  text,
@@ -234,7 +234,7 @@ create table if not exists yeodoo.strategy_perf (
 -- ---------------------------------------------------------------------
 -- 13) 전략 포트폴리오 구성 (strategy_holdings*.json)
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.strategy_holding (
+create table if not exists yd_lab.strategy_holding (
   asof      date not null,                   -- 리밸 기준일
   strategy  text not null,
   ticker    text not null,
@@ -244,12 +244,12 @@ create table if not exists yeodoo.strategy_holding (
   loaded_at timestamptz not null default now(),
   primary key (asof, strategy, ticker)
 );
-create index if not exists ix_hold_strategy on yeodoo.strategy_holding (strategy, asof desc);
+create index if not exists ix_hold_strategy on yd_lab.strategy_holding (strategy, asof desc);
 
 -- ---------------------------------------------------------------------
 -- 14) 유니버스 구성 스냅샷 (members.json) — 지수 편입/제외 추적
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.universe_member (
+create table if not exists yd_lab.universe_member (
   asof      date not null,
   ticker    text not null,
   name      text,
@@ -264,7 +264,7 @@ create table if not exists yeodoo.universe_member (
 --     화면은 클라이언트에서 계산하지만, 여기 이력이 쌓이면 나중에 실제 예측력을
 --     검증할 수 있다(현재 랩은 펀더멘털 팩터를 검증한 적이 없음).
 -- ---------------------------------------------------------------------
-create table if not exists yeodoo.screen_daily (
+create table if not exists yd_lab.screen_daily (
   asof      date             not null,
   screen    text             not null,       -- qval · growth · income · cash · garp · lowvol
   ticker    text             not null,
@@ -273,13 +273,13 @@ create table if not exists yeodoo.screen_daily (
   loaded_at timestamptz      not null default now(),
   primary key (asof, screen, ticker)
 );
-create index if not exists ix_screen_tkr on yeodoo.screen_daily (ticker, asof desc);
-create index if not exists ix_screen_rnk on yeodoo.screen_daily (screen, asof desc, rnk);
+create index if not exists ix_screen_tkr on yd_lab.screen_daily (ticker, asof desc);
+create index if not exists ix_screen_rnk on yd_lab.screen_daily (screen, asof desc, rnk);
 
 -- 스크린별 종목 수 추이 — 시장 국면에 따라 어떤 범주가 늘고 주는지
-create or replace view yeodoo.v_screen_count as
+create or replace view yd_lab.v_screen_count as
 select asof, screen, count(*) n
-from yeodoo.screen_daily group by 1,2 order by 1 desc, 2;
+from yd_lab.screen_daily group by 1,2 order by 1 desc, 2;
 
 -- ---------------------------------------------------------------------
 -- 증분 마이그레이션
@@ -287,4 +287,4 @@ from yeodoo.screen_daily group by 1,2 order by 1 desc, 2;
 --   컬럼을 추가할 때는 반드시 여기에 add column if not exists 를 함께 적을 것
 --   (--init이 스키마 진화까지 책임지도록. 안 그러면 로더가 UndefinedColumn으로 죽는다).
 -- ---------------------------------------------------------------------
-alter table yeodoo.site_update add column if not exists hm text;   -- 기록 시각 HH:MM(KST)
+alter table yd_lab.site_update add column if not exists hm text;   -- 기록 시각 HH:MM(KST)

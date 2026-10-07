@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-yeouido-lab · Postgres 누적 적재기 (schema: yeodoo)
+yeouido-lab · Postgres 누적 적재기 (schema: yd_lab)
 =====================================================================
 왜 이런 구조인가
   GitHub Actions 러너는 Tailscale tailnet 밖이라 사내 DB 에 도달할 수 없다.
@@ -183,7 +183,7 @@ def num(v):
 
 def _log(cur, source, asof, sha, n, status, msg=""):
     cur.execute(
-        "insert into yeodoo.load_log(source,asof,git_sha,n_rows,status,message)"
+        "insert into yd_lab.load_log(source,asof,git_sha,n_rows,status,message)"
         " values(%s,%s,%s,%s,%s,%s)",
         (source, asof, (sha or "worktree")[:12], n, status, msg[:500]))
 
@@ -210,7 +210,7 @@ def load_stocks(cur, doc, sha, force=False):
     if head_asof() and asof > head_asof():
         return 0
     if not force:
-        cur.execute("select 1 from yeodoo.stock_daily where asof=%s limit 1", (asof,))
+        cur.execute("select 1 from yd_lab.stock_daily where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
 
@@ -245,7 +245,7 @@ def load_stocks(cur, doc, sha, force=False):
                     mk.append((t, dates[pos], side, asof, prov))
 
     execute_values(cur, """
-        insert into yeodoo.stock_daily
+        insert into yd_lab.stock_daily
           (asof,ticker,name,sector,idx,timing,overheat,trend,momentum,volatility,
            positioning,bscore,sscore,flags,raw)
         values %s
@@ -260,7 +260,7 @@ def load_stocks(cur, doc, sha, force=False):
 
     if fd:
         execute_values(cur, """
-            insert into yeodoo.fundamental_daily(asof,ticker,teps,feps,tpe,fpe,gr,raw)
+            insert into yd_lab.fundamental_daily(asof,ticker,teps,feps,tpe,fpe,gr,raw)
             values %s
             on conflict (asof,ticker) do update set
               teps=excluded.teps, feps=excluded.feps, tpe=excluded.tpe,
@@ -270,7 +270,7 @@ def load_stocks(cur, doc, sha, force=False):
 
     if td:
         execute_values(cur, """
-            insert into yeodoo.target_daily
+            insert into yd_lab.target_daily
               (asof,ticker,tp_mean,tp_high,tp_low,n_analyst,rec_key,upside_pct)
             values %s
             on conflict (asof,ticker) do update set
@@ -288,16 +288,16 @@ def load_stocks(cur, doc, sha, force=False):
             if k not in best or (best[k][4] and not prov):
                 best[k] = (t, bd, side, a, prov)
         execute_values(cur, """
-            insert into yeodoo.swing_marker
+            insert into yd_lab.swing_marker
               (ticker,bar_date,side,first_seen,last_seen,ever_provisional,first_confirmed)
             select x.ticker,x.bar_date,x.side,x.asof,x.asof,x.prov,
                    case when x.prov then null else x.asof end
             from (values %s) as x(ticker,bar_date,side,asof,prov)
             on conflict (ticker,bar_date,side) do update set
-              last_seen = greatest(yeodoo.swing_marker.last_seen, excluded.last_seen),
-              first_seen = least(yeodoo.swing_marker.first_seen, excluded.first_seen),
-              ever_provisional = yeodoo.swing_marker.ever_provisional or excluded.ever_provisional,
-              first_confirmed = coalesce(yeodoo.swing_marker.first_confirmed,
+              last_seen = greatest(yd_lab.swing_marker.last_seen, excluded.last_seen),
+              first_seen = least(yd_lab.swing_marker.first_seen, excluded.first_seen),
+              ever_provisional = yd_lab.swing_marker.ever_provisional or excluded.ever_provisional,
+              first_confirmed = coalesce(yd_lab.swing_marker.first_confirmed,
                                          excluded.first_confirmed)""",
                        list(best.values()),
                        template="(%s,%s::date,%s,%s::date,%s::boolean)", page_size=500)
@@ -314,14 +314,14 @@ def load_simple(cur, doc, sha, table, cols, force=False):
     if head_asof() and asof > head_asof():      # 철회된 미래 스냅샷 차단
         return 0
     if not force:
-        cur.execute(f"select 1 from yeodoo.{table} where asof=%s", (asof,))
+        cur.execute(f"select 1 from yd_lab.{table} where asof=%s", (asof,))
         if cur.fetchone():
             return 0
     vals = [asof] + [cols[c](doc) for c in cols] + [Json(doc)]
     names = ",".join(["asof"] + list(cols) + ["raw"])
     ph = ",".join(["%s"] * len(vals))
     upd = ",".join(f"{c}=excluded.{c}" for c in list(cols) + ["raw"])
-    cur.execute(f"insert into yeodoo.{table}({names}) values({ph}) "
+    cur.execute(f"insert into yd_lab.{table}({names}) values({ph}) "
                 f"on conflict(asof) do update set {upd}, loaded_at=now()", vals)
     _log(cur, table.replace("_daily", ""), asof, sha, 1, "ok")
     return 1
@@ -335,7 +335,7 @@ def load_target_history(cur, doc, sha):
         d, tp = snap.get("d"), snap.get("tp") or {}
         if not d or not tp:
             continue
-        cur.execute("select 1 from yeodoo.target_daily where asof=%s limit 1", (d,))
+        cur.execute("select 1 from yd_lab.target_daily where asof=%s limit 1", (d,))
         if cur.fetchone():                     # 이미 있는 날짜는 건너뛴다(로그 부풀림 방지)
             continue
         rows = [(d, t, num(v)) for t, v in tp.items() if num(v) is not None]
@@ -343,7 +343,7 @@ def load_target_history(cur, doc, sha):
             continue
         # 이미 stocks 경로로 들어온 풍부한 행(고가·저가·애널리스트수 포함)은 덮지 않는다.
         execute_values(cur, """
-            insert into yeodoo.target_daily(asof,ticker,tp_mean) values %s
+            insert into yd_lab.target_daily(asof,ticker,tp_mean) values %s
             on conflict (asof,ticker) do nothing""", rows, page_size=500)
         n += len(rows)
     if n:
@@ -369,22 +369,22 @@ def purge_retracted(cur):
     if not head:
         return
     for tbl in ("stock_daily", "fundamental_daily", "target_daily"):
-        cur.execute(f"delete from yeodoo.{tbl} where asof > %s", (head,))
+        cur.execute(f"delete from yd_lab.{tbl} where asof > %s", (head,))
         n = cur.rowcount                     # _log의 INSERT가 rowcount를 덮으므로 먼저 붙잡는다
         if n:
             _log(cur, tbl.replace("_daily", ""), head, None, n,
                  "retracted", f"HEAD as_of {head} 이후 철회분 삭제")
             print(f"  ⚠ {tbl}: 철회된 미래 as_of {n}행 삭제 (기준일 통일)")
-    cur.execute("delete from yeodoo.swing_marker where first_seen > %s", (head,))
+    cur.execute("delete from yd_lab.swing_marker where first_seen > %s", (head,))
     for tbl, src in (("regime_daily", "data/regime.json"),
                      ("sentiment_daily", "data/sentiment.json")):
         h = (read_at(None, src) or {}).get("as_of")
         if h:
-            cur.execute(f"delete from yeodoo.{tbl} where asof > %s", (h,))
+            cur.execute(f"delete from yd_lab.{tbl} where asof > %s", (h,))
 
 
 
-# ── 신규 적재(2026-07-22): 사이트 산출물 전체를 yeodoo에 정리 ──────────
+# ── 신규 적재(2026-07-22): 사이트 산출물 전체를 yd_lab(옛 yeodoo)에 정리 ──────────
 def load_rotation(cur, doc, sha, force=False):
     """로테이션 전략 풀 일별 스냅샷 — '언제 어떤 전략이 있었나·최근동향 갱신 시점'."""
     from psycopg2.extras import Json, execute_values
@@ -392,7 +392,7 @@ def load_rotation(cur, doc, sha, force=False):
     if not asof or not doc.get("strategies"):
         return 0
     if not force:
-        cur.execute("select 1 from yeodoo.rotation_strategy where asof=%s limit 1", (asof,))
+        cur.execute("select 1 from yd_lab.rotation_strategy where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
     rows = []
@@ -400,7 +400,7 @@ def load_rotation(cur, doc, sha, force=False):
         lab = (st.get("lab") or {}).get("v")
         rows.append((asof, st.get("id"), st.get("cat"), st.get("cat_label"), st.get("name"),
                      st.get("recent_at") or None, len(st.get("sources") or []), lab, Json(st)))
-    execute_values(cur, "insert into yeodoo.rotation_strategy"
+    execute_values(cur, "insert into yd_lab.rotation_strategy"
                         "(asof,sid,cat,cat_label,name,recent_at,n_sources,lab_verdict,raw) values %s"
                         " on conflict(asof,sid) do update set name=excluded.name,"
                         " recent_at=excluded.recent_at,n_sources=excluded.n_sources,"
@@ -417,8 +417,8 @@ def load_updates(cur, doc, sha):
             if e.get("dt") and e.get("target") and e.get("title")]
     if not rows:
         return 0
-    execute_values(cur, "insert into yeodoo.site_update(dt,target,title,hm) values %s"
-                        " on conflict (dt,target,title) do update set hm=coalesce(excluded.hm,yeodoo.site_update.hm)", rows)
+    execute_values(cur, "insert into yd_lab.site_update(dt,target,title,hm) values %s"
+                        " on conflict (dt,target,title) do update set hm=coalesce(excluded.hm,yd_lab.site_update.hm)", rows)
     _log(cur, "updates", (doc or {}).get("updated"), sha, len(rows), "ok")
     return len(rows)
 
@@ -431,7 +431,7 @@ def load_strategy_perf(cur, doc, sha, force=False):
     if not asof or not S:
         return 0
     if not force:
-        cur.execute("select 1 from yeodoo.strategy_perf where asof=%s limit 1", (asof,))
+        cur.execute("select 1 from yd_lab.strategy_perf where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
     rows = []
@@ -448,7 +448,7 @@ def load_strategy_perf(cur, doc, sha, force=False):
                      _start, _end, num(m.get("cagr")), num(m.get("vol")),
                      num(m.get("sharpe")), num(m.get("mdd")), num(b.get("mdd_b")), num(b.get("mdd_b2")),
                      num(m.get("calmar")), num(m.get("hit")), Json(lean)))
-    execute_values(cur, "insert into yeodoo.strategy_perf(asof,strategy,bench_label,bench2_label,"
+    execute_values(cur, "insert into yd_lab.strategy_perf(asof,strategy,bench_label,bench2_label,"
                         "start_dt,end_dt,cagr,vol,sharpe,mdd,mdd_bench,mdd_bench2,calmar,hit,raw) values %s"
                         " on conflict(asof,strategy) do update set cagr=excluded.cagr,vol=excluded.vol,"
                         " sharpe=excluded.sharpe,mdd=excluded.mdd,mdd_bench=excluded.mdd_bench,"
@@ -473,7 +473,7 @@ def load_holdings(cur, doc, sha, src):
             rows.append((asof, nm, pos["t"], pos.get("name"), num(pos.get("w")), src))
     if not rows:
         return 0
-    execute_values(cur, "insert into yeodoo.strategy_holding(asof,strategy,ticker,name,weight,src) values %s"
+    execute_values(cur, "insert into yd_lab.strategy_holding(asof,strategy,ticker,name,weight,src) values %s"
                         " on conflict(asof,strategy,ticker) do update set weight=excluded.weight,"
                         " name=excluded.name,src=excluded.src,loaded_at=now()", rows)
     _log(cur, f"holdings_{src}", (doc or {}).get("generated"), sha, len(rows), "ok")
@@ -488,11 +488,11 @@ def load_members(cur, doc, sha, force=False):
     if not asof or not M:
         return 0
     if not force:
-        cur.execute("select 1 from yeodoo.universe_member where asof=%s limit 1", (asof,))
+        cur.execute("select 1 from yd_lab.universe_member where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
     rows = [(asof, t, v.get("name"), v.get("sector"), v.get("idx") or []) for t, v in M.items()]
-    execute_values(cur, "insert into yeodoo.universe_member(asof,ticker,name,sector,idx) values %s"
+    execute_values(cur, "insert into yd_lab.universe_member(asof,ticker,name,sector,idx) values %s"
                         " on conflict(asof,ticker) do update set name=excluded.name,"
                         " sector=excluded.sector,idx=excluded.idx,loaded_at=now()", rows)
     _log(cur, "members", asof, sha, len(rows), "ok")
@@ -508,14 +508,14 @@ def load_screens(cur, stocks_doc, sha, force=False):
     if not asof or not SCR:
         return 0
     if not force:
-        cur.execute("select 1 from yeodoo.screen_daily where asof=%s limit 1", (asof,))
+        cur.execute("select 1 from yd_lab.screen_daily where asof=%s limit 1", (asof,))
         if cur.fetchone():
             return 0
     rows = [(asof, key, r["t"], num(r.get("s")), i + 1)
             for key, lst in SCR.items() for i, r in enumerate(lst or [])]
     if not rows:
         return 0
-    execute_values(cur, "insert into yeodoo.screen_daily(asof,screen,ticker,score,rnk) values %s"
+    execute_values(cur, "insert into yd_lab.screen_daily(asof,screen,ticker,score,rnk) values %s"
                         " on conflict(asof,screen,ticker) do update set score=excluded.score,"
                         " rnk=excluded.rnk,loaded_at=now()", rows)
     _log(cur, "screens", asof, sha, len(rows), "ok")
@@ -566,18 +566,18 @@ def main():
         with open(os.path.join(HERE, "db_schema.sql"), encoding="utf-8") as fh:
             cur.execute(fh.read())
         cn.commit()
-        print("✓ yeodoo 스키마 준비 완료")
+        print("✓ yd_lab 스키마 준비 완료")
 
     if a.stats:
         for t in ("stock_daily", "fundamental_daily", "target_daily",
                   "regime_daily", "sentiment_daily", "swing_marker"):
-            cur.execute(f"select count(*), min(asof), max(asof) from yeodoo.{t}"
+            cur.execute(f"select count(*), min(asof), max(asof) from yd_lab.{t}"
                         if t != "swing_marker" else
-                        "select count(*), min(bar_date), max(bar_date) from yeodoo.swing_marker")
+                        "select count(*), min(bar_date), max(bar_date) from yd_lab.swing_marker")
             c, lo, hi = cur.fetchone()
             print(f"  {t:20s} {c:>8,}행  {lo} ~ {hi}")
         cur.execute("select side,n_total,n_evaluable,n_promoted,promote_pct,"
-                    "avg_days_to_confirm,n_obs_days from yeodoo.v_swing_promotion")
+                    "avg_days_to_confirm,n_obs_days from yd_lab.v_swing_promotion")
         rows = cur.fetchall()
         for side, tot, ev, pr, pct, days, nobs in rows:
             warn = "  ← 표본 부족, 인용 금지" if (ev or 0) < 200 else ""
@@ -586,7 +586,7 @@ def main():
         if rows:
             print(f"  (관측일 {rows[0][6]}일 누적 — 절단된 최신 코호트는 분모에서 제외)")
         else:
-            cur.execute("select count(distinct first_seen) from yeodoo.swing_marker")
+            cur.execute("select count(distinct first_seen) from yd_lab.swing_marker")
             print(f"  [잠정→확정] 평가 가능 표본 0건 — 관측일 {cur.fetchone()[0]}일뿐이라 "
                   "승격 여부를 판정할 시간이 지나지 않음. 며칠 더 적재 후 재확인.")
         cn.close()
