@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-10-02",
-  "asset": "2026-10-08",
+  "asset": "2026-10-09",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -8935,11 +8935,11 @@
      "vs": "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
      "corr": 0.892,
      "alpha": 0.85,
-     "t": 2.6,
+     "t": 2.59,
      "beta": 0.94
     },
     "five": {
-     "alpha": 0.66,
+     "alpha": 0.65,
      "t": 2.21,
      "n": 504,
      "vs": [
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9431,7 +9431,7 @@
      {
       "k": "꼬리위험 CVaR 개선",
       "v": 0.039,
-      "p": 0.0517
+      "p": 0.0515
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10136,7 +10136,7 @@
      "beta": 0.4
     },
     "five": {
-     "alpha": 3.34,
+     "alpha": 3.35,
      "t": 1.15,
      "n": 368,
      "vs": [
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10339,7 +10339,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10502,7 +10502,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10840,7 +10840,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11023,7 +11023,7 @@
      "corr": 0.519,
      "alpha": 0.39,
      "t": 0.38,
-     "beta": 0.334
+     "beta": 0.335
     },
     "five": {
      "alpha": 1.0,
@@ -11047,7 +11047,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11217,7 +11217,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11367,7 +11367,7 @@
      "vs": "200일 이동평균 (Faber)",
      "corr": 0.721,
      "alpha": 2.28,
-     "t": 1.07,
+     "t": 1.06,
      "beta": 0.618
     },
     "five": {
@@ -11392,7 +11392,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11562,7 +11562,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11713,7 +11713,7 @@
      "corr": 0.882,
      "alpha": -2.09,
      "t": -1.22,
-     "beta": 0.87
+     "beta": 0.869
     },
     "five": {
      "alpha": -1.1,
@@ -11737,7 +11737,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11905,7 +11905,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12084,7 +12084,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12259,7 +12259,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12429,7 +12429,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12600,7 +12600,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12802,7 +12802,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12973,7 +12973,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13156,7 +13156,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13343,7 +13343,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13515,7 +13515,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13658,13 +13658,13 @@
    "incr": {
     "one": {
      "vs": "절대 모멘텀 (SPY 12-1)",
-     "corr": 0.631,
+     "corr": 0.63,
      "alpha": -1.59,
      "t": -0.96,
      "beta": 0.632
     },
     "five": {
-     "alpha": -1.48,
+     "alpha": -1.47,
      "t": -0.67,
      "n": 368,
      "vs": [
@@ -13685,7 +13685,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13855,7 +13855,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14007,7 +14007,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14183,7 +14183,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14357,7 +14357,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14520,7 +14520,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14696,7 +14696,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14723,11 +14723,11 @@
      ],
      [
       "XLB",
-      11.0
+      11.1
      ],
      [
       "XLY",
-      10.6
+      10.5
      ],
      [
       "XLE",
@@ -14898,7 +14898,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15028,7 +15028,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.035,
-      "p": 0.693
+      "p": 0.6933
      }
     ],
     "n_boot": 4000,
@@ -15065,7 +15065,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15207,7 +15207,7 @@
      "beta": 0.924
     },
     "five": {
-     "alpha": 0.82,
+     "alpha": 0.81,
      "t": 1.26,
      "n": 504,
      "vs": [
@@ -15228,7 +15228,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15403,7 +15403,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15573,7 +15573,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15780,18 +15780,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SPY",
-      63.8
+      63.7
      ],
      [
       "DBC",
-      36.2
+      36.3
      ]
     ],
     "exposure_now": null,
@@ -15954,7 +15954,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16117,7 +16117,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16288,7 +16288,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16441,7 +16441,7 @@
     "one": {
      "vs": "타이밍 3규칙 다수결",
      "corr": 0.893,
-     "alpha": -0.9,
+     "alpha": -0.91,
      "t": -0.59,
      "beta": 1.174
     },
@@ -16467,7 +16467,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16630,7 +16630,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16800,7 +16800,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16933,7 +16933,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.028,
-      "p": 0.509
+      "p": 0.5088
      }
     ],
     "n_boot": 4000,
@@ -16970,7 +16970,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17114,11 +17114,11 @@
      "corr": 0.975,
      "alpha": 0.91,
      "t": 1.03,
-     "beta": 0.945
+     "beta": 0.946
     },
     "five": {
-     "alpha": 1.18,
-     "t": 1.98,
+     "alpha": 1.19,
+     "t": 1.99,
      "n": 504,
      "vs": [
       "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
@@ -17138,7 +17138,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17149,11 +17149,11 @@
      ],
      [
       "SPY",
-      30.1
+      30.0
      ],
      [
       "DBC",
-      17.1
+      17.2
      ],
      [
       "GLD",
@@ -17305,7 +17305,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17476,14 +17476,38 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      100.0
+      50.0
+     ],
+     [
+      "DBC",
+      8.4
+     ],
+     [
+      "EEM",
+      8.4
+     ],
+     [
+      "EFA",
+      8.3
+     ],
+     [
+      "HYG",
+      8.3
+     ],
+     [
+      "QQQ",
+      8.3
+     ],
+     [
+      "SPY",
+      8.3
      ]
     ],
     "exposure_now": null,
@@ -17619,7 +17643,7 @@
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 0.967,
      "alpha": 1.39,
-     "t": 1.75,
+     "t": 1.76,
      "beta": 0.571
     },
     "five": {
@@ -17644,7 +17668,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17822,14 +17846,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      44.0
+      43.9
      ],
      [
       "SPY",
@@ -17837,7 +17861,7 @@
      ],
      [
       "EFA",
-      13.1
+      13.2
      ],
      [
       "DBC",
@@ -17978,7 +18002,7 @@
    "incr": {
     "one": {
      "vs": "초과채권프리미엄(EBP) 리스크선호 게이트",
-     "corr": 0.466,
+     "corr": 0.467,
      "alpha": -2.52,
      "t": -1.52,
      "beta": 0.729
@@ -18005,7 +18029,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18155,7 +18179,7 @@
     },
     "five": {
      "alpha": 0.26,
-     "t": 0.41,
+     "t": 0.4,
      "n": 504,
      "vs": [
       "최소 CVaR 최적화 (4자산)",
@@ -18175,7 +18199,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18186,15 +18210,15 @@
      ],
      [
       "SPY",
-      18.7
+      18.8
      ],
      [
       "DBC",
-      18.6
+      18.7
      ],
      [
       "VNQ",
-      16.0
+      15.8
      ],
      [
       "EFA",
@@ -18354,7 +18378,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18499,7 +18523,7 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.071,
+      "v": 0.072,
       "p": 0.4215
      }
     ],
@@ -18516,7 +18540,7 @@
      "beta": 0.926
     },
     "five": {
-     "alpha": 0.23,
+     "alpha": 0.24,
      "t": 0.07,
      "n": 368,
      "vs": [
@@ -18537,7 +18561,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18692,7 +18716,7 @@
     },
     "five": {
      "alpha": -0.92,
-     "t": -1.09,
+     "t": -1.08,
      "n": 504,
      "vs": [
       "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
@@ -18712,7 +18736,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18895,7 +18919,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18910,7 +18934,7 @@
      ],
      [
       "TLT",
-      14.2
+      14.3
      ],
      [
       "SPY",
@@ -18922,7 +18946,7 @@
      ],
      [
       "GLD",
-      5.6
+      5.5
      ],
      [
       "SLV",
@@ -19094,7 +19118,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19113,11 +19137,11 @@
      ],
      [
       "DBC",
-      9.4
+      9.5
      ],
      [
       "GLD",
-      8.2
+      8.1
      ]
     ],
     "exposure_now": null,
@@ -19260,7 +19284,7 @@
     },
     "five": {
      "alpha": -0.89,
-     "t": -0.31,
+     "t": -0.32,
      "n": 368,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19280,7 +19304,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19448,7 +19472,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19597,12 +19621,12 @@
      "vs": "크로스에셋 RP 12자산 — 변동성 추정창 90일",
      "corr": 1.0,
      "alpha": 0.01,
-     "t": 0.09,
+     "t": 0.08,
      "beta": 1.0
     },
     "five": {
      "alpha": -0.0,
-     "t": -0.02,
+     "t": -0.04,
      "n": 368,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19622,14 +19646,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      21.8
+      21.6
      ],
      [
       "IEF",
@@ -19641,11 +19665,11 @@
      ],
      [
       "LQD",
-      12.2
+      12.1
      ],
      [
       "TLT",
-      7.1
+      7.0
      ],
      [
       "SPY",
@@ -19653,7 +19677,7 @@
      ],
      [
       "VNQ",
-      5.8
+      6.1
      ],
      [
       "EFA",
@@ -19669,7 +19693,7 @@
      ],
      [
       "EEM",
-      3.1
+      3.2
      ],
      [
       "GLD",
@@ -19804,12 +19828,12 @@
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 1.0,
      "alpha": -0.01,
-     "t": -0.14,
+     "t": -0.13,
      "beta": 0.999
     },
     "five": {
      "alpha": -0.03,
-     "t": -0.25,
+     "t": -0.24,
      "n": 368,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19829,7 +19853,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19839,12 +19863,12 @@
       22.2
      ],
      [
-      "UUP",
+      "IEF",
       14.4
      ],
      [
-      "IEF",
-      14.3
+      "UUP",
+      14.4
      ],
      [
       "LQD",
@@ -19856,7 +19880,7 @@
      ],
      [
       "SPY",
-      5.9
+      5.8
      ],
      [
       "VNQ",
@@ -20041,7 +20065,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-09",
     "n": null,
     "tickers": null,
     "names": null,
