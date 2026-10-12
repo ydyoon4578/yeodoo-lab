@@ -4801,8 +4801,8 @@
      "last": "2026-09-21",
      "days_ago": 18,
      "fired_today": false,
-     "state_now": true,
-     "state_days": 18,
+     "state_now": false,
+     "state_days": 0,
      "state_reon": 0,
      "fires": [
       "2025-10-30",
