@@ -1,0 +1,67 @@
+name: Refresh forecast (index · RL · stock ranks)
+
+# «다음 주가 흐름»(forecast.html) 세 칸을 매 거래일 굽는다.
+#   ① build/forecast_index.py  → data/forecast.json        S&P 500 · 나스닥 100 다음 1~5일 분포(기준 M0 · 부스팅 M1 보조) · 상황 표시
+#   ② build/forecast_rl.py     → data/forecast_rl.json     강화학습(깊은 Q 학습) 다음 거래일 비중 — 저장한 모형으로 행동만(다시 학습 안 함)
+#   ③ build/forecast_stocks.py → data/forecast_stocks.json 종목 단면 순위(다음 5일) — 랩 종목 패널(data/sd · pit_px) + 시점정합 명단
+# 검증 숫자는 data/forecast_validation.json(얼린 기록 · 이 잡이 손대지 않는다).
+#
+# 🚨 판정: 방향을 기준보다 잘 맞힌 AI 는 없었다(표본 밖 2016-10 ~ 2026-09). 화면의 대표는 기준값이고
+#   이 잡은 «지금 값» 을 다시 낼 뿐이다 — 숫자가 매일 바뀐다고 검증이 바뀌는 것은 아니다.
+#
+# 주기 — 미국 장 마감 뒤 · 종목 갱신(refresh-stocks 05:50 · 백업 06:42 KST) 뒤. ③ 이 그날 종목 패널을 쓴다.
+#   ⚠ UTC 월~금 22:15 = KST 화~토 07:15. 뉴욕 16:30 전이면 그날 줄을 빼는 규칙(ny_cut)이 있어
+#     크론이 늦게 떠도 장중 값을 종가로 쓰지 않는다.
+# ⚠ ③ 은 continue-on-error 다. 종목 패널 · 명단 쪽 결함으로 ① ② 까지 버리지 않게 한다 — 대신 마지막
+#   신선도 검사가 ③ 의 기준일을 보고 잡을 빨갛게 만든다(조용히 낡지 않는다).
+
+on:
+  schedule:
+    - cron: '15 22 * * 1-5'    # 매일(화~토) 07:15 KST — 미국 장 마감 · 종목 갱신 뒤
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-forecast
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install --prefer-binary --quiet numpy pandas scikit-learn yfinance
+      # 🚨 기준선 — 일을 시작하기 전 저장소가 이미 몇 건 깨져 있었는지 잰다(build/validate_gate.py 머리말).
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Index forecast (M0 · M1)
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python build/forecast_index.py
+      - name: RL position (saved model)
+        run: python build/forecast_rl.py
+      - name: Stock cross-section ranks
+        continue-on-error: true
+        run: python build/forecast_stocks.py
+      # 기준일 정본(data/asof.json) — 이 잡의 두 축(지수 · 강화학습 / 종목 순위)을 다시 굽는다.
+      - name: Rebuild as-of index
+        run: python build/asof_index.py
+      - name: Validate
+        run: python build/validate_gate.py check
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 다음 주가 흐름(지수 예측·강화학습·종목 순위) 자동 갱신" \
+            data/forecast.json data/forecast_rl.json data/forecast_stocks.json data/asof.json
+      # 문턱 3 — 미국 휴장 · 크론 지연을 «고장» 으로 읽지 않는 선(refresh-rates 와 같은 값).
+      - name: Verify freshness
+        run: |
+          python build/check_freshness.py data/forecast.json "다음 주가 흐름 · 지수" 3
+          python build/check_freshness.py data/forecast_rl.json "다음 주가 흐름 · 강화학습" 3
+          python build/check_freshness.py data/forecast_stocks.json "다음 주가 흐름 · 종목 순위" 3

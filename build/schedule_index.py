@@ -83,6 +83,10 @@ NO_ROW = {
     #   sources.html 이 잠금 페이지라 평문을 고치고 다시 잠가야 하는데 그건 사용자만 한다.
     #   → 그 페이지를 다음에 열 때 행을 만들고 이 줄을 ROWS 로 옮길 것.
     "refresh-custconc.yml":  "고객 집중도 — sources 표가 잠금 페이지라 행을 못 넣었다(rates 와 같은 사정)",
+    # 2026-10-12 신설. 행을 못 넣는 사정은 위 rates · custconc 와 같다(sources.html 이 잠금 페이지).
+    #   ⚠ 그때까지 이 잡의 기준일은 sources 표 대신 forecast.html 맨 위 칩이 찍는다 — 그 칩은
+    #     data/schedule.json 의 jobs 에서 갱신 시각을 읽는다(손으로 적지 않는다).
+    "refresh-forecast.yml":  "다음 주가 흐름 — sources 표가 잠금 페이지라 행을 못 넣었다(rates 와 같은 사정) · 기준일은 forecast.html 맨 위 칩",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
     # 2026-09-23 a2a9c154 가 들여온 잡 — 등록이 빠져 그날부터 Validate site 가 매 푸시 실패했다.

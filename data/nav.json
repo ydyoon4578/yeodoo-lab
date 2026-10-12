@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "1f5746698ae0dd51",
+ "generated_from": "e5e84d420ac811c7",
  "categories": [
   {
    "name": "시장",
@@ -25,6 +25,16 @@
      "verdict": "unverified",
      "src": "model",
      "effort": "S",
+     "live": true
+    },
+    {
+     "name": "다음 주가 흐름",
+     "file": "forecast.html",
+     "status": "existing",
+     "desc": "S&P 500·나스닥 100 다음 1~5일 경로·내일 범위·강화학습 비중·종목 순위 — 방향을 기준보다 잘 맞힌 AI 없음(기각) · 대표는 기준값",
+     "verdict": "rejected",
+     "src": "model",
+     "effort": "M",
      "live": true
     },
     {

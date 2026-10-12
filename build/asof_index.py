@@ -109,6 +109,7 @@ WF = {
     "estimates": "refresh-estimates.yml",
     "assets": "refresh-assets.yml", "tech": "refresh-tech.yml",
     "cot": "refresh-cot.yml",
+    "forecast": "refresh-forecast.yml", "forecast_stocks": "refresh-forecast.yml",
 }
 DOW = ["월", "화", "수", "목", "금", "토", "일"]
 
@@ -298,6 +299,15 @@ def main() -> int:
          "cadence": "매 거래일", "note": "종목 스냅샷과 같은 잡에서 같은 기준일로 굽는다 — 어긋나면 그건 사고다"},
         {"key": "tech", "label": "전략 랩 백테스트", "as_of": (load("tech_strategies.json") or {}).get("as_of"),
          "cadence": "주 1회", "note": "일봉 입력이라 하루 단위로는 판정이 바뀌지 않는다 — 주말에만 다시 돌린다"},
+        # 2026-10-12 — 다음 주가 흐름(forecast.html). 지수 칸은 yfinance 지수 종가를 직접 받으므로
+        #   종목 패널(대표)보다 하루 앞설 수 있다(종목 잡이 멈춘 날) — 시장일 축이라 MARKET 에 둔다.
+        {"key": "forecast", "label": "다음 주가 흐름(지수 예측 · 강화학습)", "as_of": (load("forecast.json") or {}).get("as_of"),
+         "cadence": "매 거래일",
+         "note": "예측 대표는 기준값이다 — 방향을 기준보다 잘 맞힌 AI 는 없었다(표본 밖 2016-10 ~ 2026-09). "
+                 "검증 숫자는 얼린 기록(data/forecast_validation.json)이라 이 날짜와 함께 움직이지 않는다"},
+        {"key": "forecast_stocks", "label": "다음 주가 흐름(종목 순위)", "as_of": (load("forecast_stocks.json") or {}).get("as_of"),
+         "cadence": "매 거래일",
+         "note": "랩 종목 패널의 마지막 날로 매긴 순위다 — 종목 갱신이 멈추면 이 날짜도 멈춘다. 순위만 싣는다(확률은 보정되지 않았다)"},
     ]
     axes = [a for a in axes if a.get("as_of")]
 
@@ -336,7 +346,7 @@ def main() -> int:
     # ⚠ 검사기 메시지를 그대로 따르지 않은 자리다. 메시지는 '수집일 오기입' 이라는 가장
     #   흔한 사유를 전제로 쓰였고, 이 축은 그 사유가 아니다. 사유를 확인하지 않고 처방만
     #   따르면 검사는 통과하되 화면이 틀린 날짜를 말하게 된다.
-    MARKET = {"price", "assets", "signals", "tech", "regime", "sentiment", "filings"}
+    MARKET = {"price", "assets", "signals", "tech", "regime", "sentiment", "filings", "forecast", "forecast_stocks"}
     for a in axes:
         if a["key"] in MARKET and (a["as_of"] or "") > primary:
             a["ahead"] = True
