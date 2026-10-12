@@ -96,6 +96,14 @@
     "매주 토 07:05 KST"
    ]
   },
+  "refresh-forecast.yml": {
+   "cron": [
+    "15 22 * * 1-5"
+   ],
+   "label": [
+    "매일(화~토) 07:15 KST"
+   ]
+  },
   "refresh-insider.yml": {
    "cron": [
     "13 22 * * 5"

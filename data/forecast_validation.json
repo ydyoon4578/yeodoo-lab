@@ -1,0 +1,1295 @@
+{
+ "note": "얼린 검증 기록 — «다음 주가 흐름»(forecast.html)의 방법별 표본 밖 검증(2016-10 ~ 2026-09 매 거래일). 연구 판에서 2026-10-12 에 한 번 옮겼고 매일 다시 굽지 않는다(다시 구우면 화면이 인용한 수와 말없이 갈라진다). 매일 바뀌는 지금 값은 data/forecast.json · data/forecast_rl.json · data/forecast_stocks.json 에 있다.",
+ "frozen": "2026-10-12",
+ "verdict": {
+  "label": "기각",
+  "direction_ai_pass": 0,
+  "line": "어떤 AI 도 다음 날 · 다음 주 방향을 기준보다 잘 맞히지 못했다. 그래서 대표 예측은 기준값이고, AI 값은 검증 숫자와 함께 참고로만 보인다.",
+  "passed_cells": [
+   "지수 · 부스팅 나무 · 내일(1일) 범위 분위 손실 — S&P 500 +2.05% · 나스닥 100 +1.65%(Holm p < 0.001)"
+  ]
+ },
+ "index": {
+  "plan": "aebc0589",
+  "window": "2016-10-01 ~ 2026-09-30",
+  "n_days": 2512,
+  "retrain": "매달 말 다시 학습(직전 2,520일 · 결과가 끝난 표본만)",
+  "rule": "Holm p < 0.10 이고 개선 > 0 일 때 통과. 경로 대표는 1일 · 5일 분위 손실 둘 다, 방향 대표는 1일 · 5일 Brier 둘 다 통과해야 한다. 통과가 없으면 기준(M0)이 대표다.",
+  "methods": {
+   "M0": {
+    "label": "기준",
+    "long": "평균 + HAR 변동성 · 상승 확률 = 직전 10년 같은 길이 상승 빈도",
+    "daily": true
+   },
+   "M1": {
+    "label": "부스팅 나무",
+    "long": "일별 특성 17개 → 상승 분류기 + 표준화 수익 분위 나무",
+    "daily": true
+   },
+   "M2": {
+    "label": "시계열 기초 모형(Chronos-2)",
+    "long": "1.2억 변수 사전학습 모형 · 영표본 · 직전 512일 로그 종가 → 1~5일 분위",
+    "daily": false
+   },
+   "M3": {
+    "label": "단순 결합",
+    "long": "기준 · 부스팅 · 기초 모형 확률 · 분위 평균",
+    "daily": false
+   }
+  },
+  "state_def": {
+   "고변동": "VIX(나스닥은 VXN) 직전 10년 백분위 ≥ 2/3",
+   "저변동": "VIX(VXN) 직전 10년 백분위 ≤ 1/3",
+   "급락 뒤": "5일 수익 직전 10년 백분위 ≤ 10%",
+   "급등 뒤": "5일 수익 직전 10년 백분위 ≥ 90%",
+   "추세 아래": "종가 < 200일 평균",
+   "추세 위": "종가 ≥ 200일 평균"
+  },
+  "markets": {
+   "spx": {
+    "name": "S&P 500",
+    "rep": "M0",
+    "rep_dir": "M0",
+    "pass": {
+     "dist_1d": [
+      "M1"
+     ],
+     "dir_1d": [],
+     "dist_5d": [],
+     "dir_5d": []
+    },
+    "bh_sharpe": 0.76,
+    "methods": {
+     "M0": {
+      "brier_1d": 0.0,
+      "brier_5d": 0.0,
+      "auc_1d": 0.486,
+      "auc_5d": 0.45,
+      "hit_1d": 54.66,
+      "hit_5d": 61.19,
+      "pin_1d": 0.0,
+      "pin_5d": 0.0,
+      "cov50_1d": 49.08,
+      "cov90_1d": 89.61,
+      "cov50_5d": 47.93,
+      "cov90_5d": 88.93,
+      "holm_brier_1d": null,
+      "holm_brier_5d": null,
+      "holm_pin_1d": null,
+      "holm_pin_5d": null,
+      "r2_1d": 0.14,
+      "r2_5d": 0.88,
+      "trade_sharpe": 0.76,
+      "trade_long": 100.0
+     },
+     "M1": {
+      "brier_1d": -0.26,
+      "brier_5d": -1.29,
+      "auc_1d": 0.495,
+      "auc_5d": 0.455,
+      "hit_1d": 54.14,
+      "hit_5d": 59.95,
+      "pin_1d": 2.05,
+      "pin_5d": -1.05,
+      "cov50_1d": 49.16,
+      "cov90_1d": 88.81,
+      "cov50_5d": 45.9,
+      "cov90_5d": 86.9,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 5e-08,
+      "holm_pin_5d": 1.0,
+      "r2_1d": 0.05,
+      "r2_5d": -6.28,
+      "trade_sharpe": 0.69,
+      "trade_long": 96.22
+     },
+     "M2": {
+      "brier_1d": -11.24,
+      "brier_5d": -8.16,
+      "auc_1d": 0.49,
+      "auc_5d": 0.451,
+      "hit_1d": 48.41,
+      "hit_5d": 50.48,
+      "pin_1d": -8.21,
+      "pin_5d": -4.88,
+      "cov50_1d": 43.39,
+      "cov90_1d": 85.19,
+      "cov50_5d": 42.6,
+      "cov90_5d": 83.6,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 1.0,
+      "holm_pin_5d": 1.0,
+      "r2_1d": -13.43,
+      "r2_5d": -8.66,
+      "trade_sharpe": 0.0,
+      "trade_long": 69.79
+     },
+     "M3": {
+      "brier_1d": -1.65,
+      "brier_5d": -2.03,
+      "auc_1d": 0.488,
+      "auc_5d": 0.437,
+      "hit_1d": 50.4,
+      "hit_5d": 60.35,
+      "pin_1d": 0.03,
+      "pin_5d": -0.6,
+      "cov50_1d": 48.45,
+      "cov90_1d": 88.42,
+      "cov50_5d": 45.54,
+      "cov90_5d": 87.74,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 0.91,
+      "holm_pin_5d": 1.0,
+      "r2_1d": -2.45,
+      "r2_5d": -3.12,
+      "trade_sharpe": 0.69,
+      "trade_long": 97.49
+     }
+    },
+    "trade": {
+     "period": "2016-10-05 ~ 2026-10-02",
+     "bh": {
+      "sharpe": 0.76,
+      "ann": 15.59,
+      "mdd": -33.79
+     },
+     "M1": {
+      "sharpe": 0.69,
+      "ann": 14.17,
+      "mdd": -33.79,
+      "long": 96.22,
+      "lost": [
+       2017,
+       2023,
+       2025,
+       2026
+      ],
+      "placebo_p": 0.65
+     },
+     "M2": {
+      "sharpe": 0.0,
+      "ann": 1.25,
+      "mdd": -41.99,
+      "long": 69.79,
+      "lost": [
+       2016,
+       2017,
+       2018,
+       2019,
+       2020,
+       2021,
+       2022,
+       2023,
+       2024,
+       2025,
+       2026
+      ],
+      "placebo_p": 0.97
+     },
+     "M3": {
+      "sharpe": 0.69,
+      "ann": 14.15,
+      "mdd": -33.79,
+      "long": 97.49,
+      "lost": [
+       2016,
+       2017,
+       2018,
+       2020,
+       2021,
+       2022,
+       2023,
+       2025
+      ],
+      "placebo_p": 0.76
+     }
+    },
+    "states": {
+     "급락 뒤": {
+      "n": 259,
+      "cov90_1d": {
+       "M0": 77.61,
+       "M1": 86.87
+      },
+      "cov90_5d": {
+       "M0": 80.69,
+       "M1": 86.87
+      },
+      "pin_1d_M1": 5.15,
+      "pin_5d_M1": -1.8,
+      "brier_1d_M1": 0.35,
+      "brier_1d_M2": -12.55
+     },
+     "추세 아래": {
+      "n": 434,
+      "cov90_1d": {
+       "M0": 78.8,
+       "M1": 86.18
+      },
+      "cov90_5d": {
+       "M0": 78.11,
+       "M1": 81.11
+      },
+      "pin_1d_M1": 3.02,
+      "pin_5d_M1": -0.97,
+      "brier_1d_M1": -0.09,
+      "brier_1d_M2": -8.62
+     },
+     "고변동": {
+      "n": 939,
+      "cov90_1d": {
+       "M0": 83.39,
+       "M1": 87.86
+      },
+      "cov90_5d": {
+       "M0": 82.0,
+       "M1": 84.88
+      },
+      "pin_1d_M1": 2.62,
+      "pin_5d_M1": -0.55,
+      "brier_1d_M1": -0.19,
+      "brier_1d_M2": -11.18
+     },
+     "급등 뒤": {
+      "n": 277,
+      "cov90_1d": {
+       "M0": 92.42,
+       "M1": 90.25
+      },
+      "cov90_5d": {
+       "M0": 92.78,
+       "M1": 89.53
+      },
+      "pin_1d_M1": 1.55,
+      "pin_5d_M1": -3.45,
+      "brier_1d_M1": 0.09,
+      "brier_1d_M2": -7.0
+     },
+     "추세 위": {
+      "n": 2078,
+      "cov90_1d": {
+       "M0": 91.87,
+       "M1": 89.36
+      },
+      "cov90_5d": {
+       "M0": 91.19,
+       "M1": 88.11
+      },
+      "pin_1d_M1": 1.55,
+      "pin_5d_M1": -1.09,
+      "brier_1d_M1": -0.3,
+      "brier_1d_M2": -11.79
+     },
+     "저변동": {
+      "n": 688,
+      "cov90_1d": {
+       "M0": 95.93,
+       "M1": 88.52
+      },
+      "cov90_5d": {
+       "M0": 95.64,
+       "M1": 89.24
+      },
+      "pin_1d_M1": 2.33,
+      "pin_5d_M1": -1.66,
+      "brier_1d_M1": -0.65,
+      "brier_1d_M2": -15.32
+     }
+    },
+    "half": {
+     "2016-10~2021-09": {
+      "M1_pin_1d": 2.81,
+      "M1_pin_5d": -1.97,
+      "M1_brier_1d": -0.52,
+      "M1_brier_5d": -0.92
+     },
+     "2021-10~2026-09": {
+      "M1_pin_1d": 1.33,
+      "M1_pin_5d": -0.23,
+      "M1_brier_1d": -0.01,
+      "M1_brier_5d": -1.64
+     }
+    },
+    "m1_zero_tree_share": {
+     "1d": 61.98,
+     "5d": 51.24
+    }
+   },
+   "ndx": {
+    "name": "나스닥 100",
+    "rep": "M0",
+    "rep_dir": "M0",
+    "pass": {
+     "dist_1d": [
+      "M1"
+     ],
+     "dir_1d": [],
+     "dist_5d": [],
+     "dir_5d": []
+    },
+    "bh_sharpe": 0.82,
+    "methods": {
+     "M0": {
+      "brier_1d": 0.0,
+      "brier_5d": 0.0,
+      "auc_1d": 0.479,
+      "auc_5d": 0.454,
+      "hit_1d": 56.45,
+      "hit_5d": 60.43,
+      "pin_1d": 0.0,
+      "pin_5d": 0.0,
+      "cov50_1d": 47.41,
+      "cov90_1d": 88.89,
+      "cov50_5d": 45.98,
+      "cov90_5d": 88.06,
+      "holm_brier_1d": null,
+      "holm_brier_5d": null,
+      "holm_pin_1d": null,
+      "holm_pin_5d": null,
+      "r2_1d": 0.22,
+      "r2_5d": 1.34,
+      "trade_sharpe": 0.82,
+      "trade_long": 100.0
+     },
+     "M1": {
+      "brier_1d": -0.09,
+      "brier_5d": -1.27,
+      "auc_1d": 0.482,
+      "auc_5d": 0.485,
+      "hit_1d": 56.29,
+      "hit_5d": 59.71,
+      "pin_1d": 1.65,
+      "pin_5d": -0.94,
+      "cov50_1d": 49.28,
+      "cov90_1d": 88.34,
+      "cov50_5d": 46.02,
+      "cov90_5d": 86.27,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 2.3e-07,
+      "holm_pin_5d": 1.0,
+      "r2_1d": -0.09,
+      "r2_5d": -3.15,
+      "trade_sharpe": 0.78,
+      "trade_long": 98.33
+     },
+     "M2": {
+      "brier_1d": -12.06,
+      "brier_5d": -6.8,
+      "auc_1d": 0.48,
+      "auc_5d": 0.461,
+      "hit_1d": 48.25,
+      "hit_5d": 52.39,
+      "pin_1d": -6.92,
+      "pin_5d": -3.75,
+      "cov50_1d": 44.59,
+      "cov90_1d": 86.43,
+      "cov50_5d": 43.23,
+      "cov90_5d": 83.8,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 1.0,
+      "holm_pin_5d": 1.0,
+      "r2_1d": -8.16,
+      "r2_5d": -4.7,
+      "trade_sharpe": 0.06,
+      "trade_long": 70.14
+     },
+     "M3": {
+      "brier_1d": -1.86,
+      "brier_5d": -1.55,
+      "auc_1d": 0.479,
+      "auc_5d": 0.452,
+      "hit_1d": 51.07,
+      "hit_5d": 59.59,
+      "pin_1d": 0.29,
+      "pin_5d": -0.48,
+      "cov50_1d": 48.29,
+      "cov90_1d": 89.49,
+      "cov50_5d": 45.5,
+      "cov90_5d": 87.18,
+      "holm_brier_1d": 1.0,
+      "holm_brier_5d": 1.0,
+      "holm_pin_1d": 0.28,
+      "holm_pin_5d": 1.0,
+      "r2_1d": -0.97,
+      "r2_5d": -0.87,
+      "trade_sharpe": 0.8,
+      "trade_long": 98.77
+     }
+    },
+    "trade": {
+     "period": "2016-10-05 ~ 2026-10-02",
+     "bh": {
+      "sharpe": 0.82,
+      "ann": 20.35,
+      "mdd": -35.56
+     },
+     "M1": {
+      "sharpe": 0.78,
+      "ann": 19.24,
+      "mdd": -35.56,
+      "long": 98.33,
+      "lost": [
+       2024,
+       2025
+      ],
+      "placebo_p": 0.74
+     },
+     "M2": {
+      "sharpe": 0.06,
+      "ann": 1.66,
+      "mdd": -51.16,
+      "long": 70.14,
+      "lost": [
+       2017,
+       2018,
+       2019,
+       2020,
+       2021,
+       2022,
+       2023,
+       2024,
+       2025,
+       2026
+      ],
+      "placebo_p": 1.0
+     },
+     "M3": {
+      "sharpe": 0.8,
+      "ann": 19.63,
+      "mdd": -35.56,
+      "long": 98.77,
+      "lost": [
+       2017
+      ],
+      "placebo_p": 0.57
+     }
+    },
+    "states": {
+     "급락 뒤": {
+      "n": 300,
+      "cov90_1d": {
+       "M0": 78.33,
+       "M1": 86.33
+      },
+      "cov90_5d": {
+       "M0": 80.33,
+       "M1": 87.33
+      },
+      "pin_1d_M1": 3.65,
+      "pin_5d_M1": -1.9,
+      "brier_1d_M1": 0.2,
+      "brier_1d_M2": -7.55
+     },
+     "추세 아래": {
+      "n": 412,
+      "cov90_1d": {
+       "M0": 81.07,
+       "M1": 86.41
+      },
+      "cov90_5d": {
+       "M0": 81.31,
+       "M1": 82.77
+      },
+      "pin_1d_M1": 2.13,
+      "pin_5d_M1": -1.02,
+      "brier_1d_M1": -0.2,
+      "brier_1d_M2": -6.8
+     },
+     "고변동": {
+      "n": 1098,
+      "cov90_1d": {
+       "M0": 84.15,
+       "M1": 87.52
+      },
+      "cov90_5d": {
+       "M0": 83.24,
+       "M1": 84.88
+      },
+      "pin_1d_M1": 1.92,
+      "pin_5d_M1": -1.12,
+      "brier_1d_M1": 0.08,
+      "brier_1d_M2": -9.04
+     },
+     "급등 뒤": {
+      "n": 316,
+      "cov90_1d": {
+       "M0": 91.77,
+       "M1": 89.56
+      },
+      "cov90_5d": {
+       "M0": 92.72,
+       "M1": 88.29
+      },
+      "pin_1d_M1": 1.58,
+      "pin_5d_M1": -2.27,
+      "brier_1d_M1": -0.55,
+      "brier_1d_M2": -10.19
+     },
+     "추세 위": {
+      "n": 2100,
+      "cov90_1d": {
+       "M0": 90.43,
+       "M1": 88.71
+      },
+      "cov90_5d": {
+       "M0": 89.38,
+       "M1": 86.95
+      },
+      "pin_1d_M1": 1.45,
+      "pin_5d_M1": -0.9,
+      "brier_1d_M1": -0.07,
+      "brier_1d_M2": -13.11
+     },
+     "저변동": {
+      "n": 477,
+      "cov90_1d": {
+       "M0": 96.02,
+       "M1": 89.94
+      },
+      "cov90_5d": {
+       "M0": 94.55,
+       "M1": 87.42
+      },
+      "pin_1d_M1": 3.12,
+      "pin_5d_M1": -0.36,
+      "brier_1d_M1": 0.17,
+      "brier_1d_M2": -23.83
+     }
+    },
+    "half": {
+     "2016-10~2021-09": {
+      "M1_pin_1d": 2.23,
+      "M1_pin_5d": -0.54,
+      "M1_brier_1d": 0.02,
+      "M1_brier_5d": -0.7
+     },
+     "2021-10~2026-09": {
+      "M1_pin_1d": 1.15,
+      "M1_pin_5d": -1.26,
+      "M1_brier_1d": -0.2,
+      "M1_brier_5d": -1.81
+     }
+    },
+    "m1_zero_tree_share": {
+     "1d": 55.37,
+     "5d": 32.23
+    }
+   }
+  },
+  "replication": {
+   "paper": "Rahimikia · Ni · Wang (2025)",
+   "what": "다음 날 초과수익 · 2001-01 ~ 2023-12(시장마다 5,785일) · 영표본 · 512일 문맥 · R²(영 기준)",
+   "paper_value": "원문(개별 종목 합산) Chronos-large −1.37% · 방향 51% 남짓",
+   "spx": {
+    "bolt": -1.24,
+    "c2": -0.64,
+    "c2_hit": 53.83,
+    "c2_up_share": 87.09
+   },
+   "ndx": {
+    "bolt": -1.37,
+    "c2": -1.16,
+    "c2_hit": 53.62,
+    "c2_up_share": 88.73
+   },
+   "verdict": "결론 재현 — 영표본 기초 모형의 R²(영 기준)는 두 지수 · 모든 문맥에서 음수다"
+  }
+ },
+ "rl": {
+  "plan": "91da46e9",
+  "window": "2016-10-03 ~ 2026-09-30",
+  "rule": "① 순 샤프 > 사서 들고 있기 ② 순 샤프 > 변동성 맞춤 매수 ③ Holm p < 0.10(위약 = 행동 줄 무작위 밀기 200번) ④ 씨앗 중앙값 샤프 > 사서 들고 있기 — 넷 모두 넘어야 통과",
+  "trade": "신호 종가 t → 체결 t+1 종가 · 편도 10bp · 비교 = 총수익 지수 사서 들고 있기",
+  "retrain": "매년 10월 그때까지 자료로 다시 학습 · 직전 2년 검증으로만 고름 · 씨앗 10개(변형 일부 5개) 행동 평균",
+  "judged": [
+   {
+    "market": "spx",
+    "cfg": "M1",
+    "label": "직접 강화학습",
+    "sharpe": 0.72,
+    "excess_pp": -5.54,
+    "mdd": -16.73,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.68,
+    "holm_p": 1.0,
+    "seed_median": 0.72,
+    "seeds": 10,
+    "turnover": 2.56,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "cfg": "M2",
+    "label": "깊은 Q 학습",
+    "sharpe": 0.72,
+    "excess_pp": -6.77,
+    "mdd": -11.68,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.2,
+    "holm_p": 1.0,
+    "seed_median": 0.53,
+    "seeds": 10,
+    "turnover": 6.92,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "cfg": "M1_V1",
+    "label": "직접 강화학습 롱 · 현금",
+    "sharpe": 0.75,
+    "excess_pp": -8.63,
+    "mdd": -8.61,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.45,
+    "holm_p": 1.0,
+    "seed_median": 0.74,
+    "seeds": 10,
+    "turnover": 2.26,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "cfg": "M2_V1",
+    "label": "깊은 Q 학습 롱 · 현금",
+    "sharpe": 0.8,
+    "excess_pp": -5.9,
+    "mdd": -13.18,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.05,
+    "holm_p": 0.66,
+    "seed_median": 0.67,
+    "seeds": 5,
+    "turnover": 10.5,
+    "crit": {
+     "c1": true,
+     "c2": true,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "cfg": "M1_V2",
+    "label": "직접 강화학습 + VIX 상태",
+    "sharpe": 0.67,
+    "excess_pp": -5.98,
+    "mdd": -16.82,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.79,
+    "holm_p": 1.0,
+    "seed_median": 0.67,
+    "seeds": 10,
+    "turnover": 2.86,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "cfg": "M2_V2",
+    "label": "깊은 Q 학습 + VIX 상태",
+    "sharpe": 0.49,
+    "excess_pp": -8.68,
+    "mdd": -13.28,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.48,
+    "holm_p": 1.0,
+    "seed_median": 0.4,
+    "seeds": 5,
+    "turnover": 6.94,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M1",
+    "label": "직접 강화학습",
+    "sharpe": 0.87,
+    "excess_pp": -7.11,
+    "mdd": -21.97,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.26,
+    "holm_p": 1.0,
+    "seed_median": 0.87,
+    "seeds": 10,
+    "turnover": 2.66,
+    "crit": {
+     "c1": true,
+     "c2": false,
+     "c3": false,
+     "c4": true
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M2",
+    "label": "깊은 Q 학습",
+    "sharpe": 0.86,
+    "excess_pp": -9.77,
+    "mdd": -17.57,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.17,
+    "holm_p": 1.0,
+    "seed_median": 0.56,
+    "seeds": 10,
+    "turnover": 7.17,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M1_V1",
+    "label": "직접 강화학습 롱 · 현금",
+    "sharpe": 0.83,
+    "excess_pp": -12.89,
+    "mdd": -12.03,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.42,
+    "holm_p": 1.0,
+    "seed_median": 0.81,
+    "seeds": 10,
+    "turnover": 2.08,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M2_V1",
+    "label": "깊은 Q 학습 롱 · 현금",
+    "sharpe": 0.9,
+    "excess_pp": -9.6,
+    "mdd": -13.43,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.05,
+    "holm_p": 0.66,
+    "seed_median": 0.78,
+    "seeds": 5,
+    "turnover": 12.12,
+    "crit": {
+     "c1": true,
+     "c2": true,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M1_V2",
+    "label": "직접 강화학습 + VIX 상태",
+    "sharpe": 0.82,
+    "excess_pp": -7.89,
+    "mdd": -22.26,
+    "lost": 8,
+    "n_years": 11,
+    "placebo_p": 0.49,
+    "holm_p": 1.0,
+    "seed_median": 0.81,
+    "seeds": 10,
+    "turnover": 3.03,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "cfg": "M2_V2",
+    "label": "깊은 Q 학습 + VIX 상태",
+    "sharpe": 0.75,
+    "excess_pp": -11.0,
+    "mdd": -16.88,
+    "lost": 9,
+    "n_years": 11,
+    "placebo_p": 0.22,
+    "holm_p": 1.0,
+    "seed_median": 0.67,
+    "seeds": 5,
+    "turnover": 8.81,
+    "crit": {
+     "c1": false,
+     "c2": false,
+     "c3": false,
+     "c4": false
+    },
+    "pass": false
+   }
+  ],
+  "tab": {
+   "spx": {
+    "label": "깊은 Q 학습",
+    "sharpe": 0.72,
+    "bh_sharpe": 0.75,
+    "excess_pp": -6.76,
+    "mdd": -11.68,
+    "bh_mdd": -33.79,
+    "years_lost": [
+     2017,
+     2019,
+     2020,
+     2021,
+     2023,
+     2024,
+     2025,
+     2026
+    ],
+    "years_total": 11,
+    "placebo_p": 0.2,
+    "holm_p": 1.0,
+    "seed_min": 0.36,
+    "seed_max": 0.78,
+    "dir_hit_5d": 59.57,
+    "dir_hit_5d_always_up": 61.68
+   },
+   "ndx": {
+    "label": "깊은 Q 학습",
+    "sharpe": 0.86,
+    "bh_sharpe": 0.86,
+    "excess_pp": -9.77,
+    "mdd": -17.57,
+    "bh_mdd": -35.01,
+    "years_lost": [
+     2017,
+     2018,
+     2019,
+     2020,
+     2021,
+     2023,
+     2025,
+     2026
+    ],
+    "years_total": 11,
+    "placebo_p": 0.17,
+    "holm_p": 1.0,
+    "seed_min": 0.38,
+    "seed_max": 1.03,
+    "dir_hit_5d": 60.61,
+    "dir_hit_5d_always_up": 63.25
+   }
+  },
+  "bench": {
+   "spx": {
+    "bh_sharpe": 0.75,
+    "bh_mdd": -33.79,
+    "bh_ann": 15.38,
+    "voltgt_sharpe": 0.79,
+    "tsmom_sharpe": 0.52,
+    "macd_sharpe": 0.49
+   },
+   "ndx": {
+    "bh_sharpe": 0.86,
+    "bh_mdd": -35.01,
+    "bh_ann": 21.21,
+    "voltgt_sharpe": 0.89,
+    "tsmom_sharpe": 0.59,
+    "macd_sharpe": 0.7
+   }
+  },
+  "situ": {
+   "spx": {
+    "crash": {
+     "n": 239,
+     "diff_ann_pp": -25.54,
+     "exposure": 0.45
+    },
+    "rally": {
+     "n": 309,
+     "diff_ann_pp": -3.53,
+     "exposure": 0.44
+    },
+    "hivol": {
+     "n": 522,
+     "diff_ann_pp": -19.23,
+     "exposure": 0.39
+    },
+    "normal": {
+     "n": 1732,
+     "diff_ann_pp": -3.22,
+     "exposure": 0.42
+    }
+   },
+   "ndx": {
+    "crash": {
+     "n": 253,
+     "diff_ann_pp": -38.15,
+     "exposure": 0.44
+    },
+    "rally": {
+     "n": 322,
+     "diff_ann_pp": -8.57,
+     "exposure": 0.42
+    },
+    "hivol": {
+     "n": 656,
+     "diff_ann_pp": -22.86,
+     "exposure": 0.38
+    },
+    "normal": {
+     "n": 1618,
+     "diff_ann_pp": -5.44,
+     "exposure": 0.37
+    }
+   }
+  },
+  "episodes": {
+   "spx": {
+    "2018-10 ~ 12 하락": {
+     "strat": -7.84,
+     "bh": -13.52
+    },
+    "2020-02-20 ~ 03-23 급락": {
+     "strat": -9.39,
+     "bh": -33.79
+    },
+    "2020-03-24 ~ 06-30 반등": {
+     "strat": 6.33,
+     "bh": 39.31
+    },
+    "2022-01-03 ~ 10-12 약세장": {
+     "strat": -10.51,
+     "bh": -24.01
+    },
+    "2025-02-20 ~ 04-08 급락": {
+     "strat": -10.18,
+     "bh": -18.75
+    },
+    "2025-04-09 ~ 06-30 반등": {
+     "strat": 10.08,
+     "bh": 24.92
+    }
+   },
+   "ndx": {
+    "2018-10 ~ 12 하락": {
+     "strat": -6.34,
+     "bh": -16.69
+    },
+    "2020-02-20 ~ 03-23 급락": {
+     "strat": -6.23,
+     "bh": -27.9
+    },
+    "2020-03-24 ~ 06-30 반등": {
+     "strat": 7.97,
+     "bh": 45.59
+    },
+    "2022-01-03 ~ 10-12 약세장": {
+     "strat": -15.3,
+     "bh": -33.55
+    },
+    "2025-02-20 ~ 04-08 급락": {
+     "strat": -12.7,
+     "bh": -22.75
+    },
+    "2025-04-09 ~ 06-30 반등": {
+     "strat": 13.13,
+     "bh": 32.79
+    }
+   }
+  },
+  "situ_def": {
+   "crash": "급락 직후(직전 21일 수익 ≤ 그때까지 10% 분위)",
+   "rally": "급등 직후(≥ 90% 분위)",
+   "hivol": "고변동성(변동성 ≥ 그때까지 80% 분위)",
+   "normal": "그 밖(평온)"
+  },
+  "n_judged": 12,
+  "n_pass": 0,
+  "min_holm": 0.66
+ },
+ "stocks": {
+  "plan": "9d9cd368",
+  "window": "2016-10 ~ 2026-09",
+  "rule": "U1 연 초과 > 0 그리고 정보비율 ≥ 0.40 · U2 진 해 ≤ 2 · U3 Holm p ≤ 0.10 · U4 급락 구간 평균 초과 ≥ 0 — 넷 모두",
+  "fund_frame": "지수 총수익 90% + 상위 종목 같은 비중 10%(S&P 500 30 · 나스닥 100 20) · 매주 교체 · 다음 거래일 종가 체결 · 편도 10bp",
+  "retrain": "250거래일마다 다시 학습(직전 750일 · 목표가 끝난 표본만 · 시점 정확 회원만)",
+  "skill": {
+   "spx": {
+    "auc_1d": 0.5068,
+    "auc_1d_t": 5.08,
+    "auc_5d": 0.5047,
+    "auc_5d_t": 2.24,
+    "hit_top20_5d": 50.56
+   },
+   "ndx": {
+    "auc_1d": null,
+    "auc_1d_t": null,
+    "auc_5d": 0.5037,
+    "auc_5d_t": 1.45,
+    "hit_top20_5d": 50.21
+   }
+  },
+  "judged": [
+   {
+    "market": "spx",
+    "ver": "M",
+    "label": "S&P 500 · 5일 모형 · 매주 상위 30",
+    "fund_excess_pp": -0.12,
+    "gross_pp": 0.77,
+    "ir": -0.02,
+    "lost": 5,
+    "lost_years": [
+     "2018",
+     "2019",
+     "2021",
+     "2023",
+     "2024"
+    ],
+    "turnover": 76.4,
+    "holm_p": 0.0,
+    "crash_mean": -0.12,
+    "pass": false
+   },
+   {
+    "market": "spx",
+    "ver": "V1",
+    "label": "S&P 500 · 1일 모형 · 매일 상위 30(참고)",
+    "fund_excess_pp": -3.2,
+    "gross_pp": 0.77,
+    "ir": -2.01,
+    "lost": 10,
+    "lost_years": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "2025"
+    ],
+    "turnover": 350.3,
+    "holm_p": 0.0,
+    "crash_mean": -0.29,
+    "pass": false
+   },
+   {
+    "market": "ndx",
+    "ver": "M",
+    "label": "나스닥 100 · 5일 모형 · 매주 상위 20",
+    "fund_excess_pp": -0.83,
+    "gross_pp": -0.08,
+    "ir": -0.72,
+    "lost": 9,
+    "lost_years": [
+     "2016",
+     "2017",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "2025"
+    ],
+    "turnover": 62.3,
+    "holm_p": 0.01,
+    "crash_mean": -0.05,
+    "pass": false
+   }
+  ],
+  "states": {
+   "spx": {
+    "crash": {
+     "n_weeks": 70,
+     "share_pct": 13.33,
+     "gross_bp": 27.82,
+     "net_bp": 13.49,
+     "alpha_bp": 17.55,
+     "alpha_t": 0.55
+    },
+    "surge": {
+     "n_weeks": 124,
+     "share_pct": 24.15,
+     "gross_bp": -13.77,
+     "net_bp": -28.56,
+     "alpha_bp": -13.71,
+     "alpha_t": -0.99
+    },
+    "highvol": {
+     "n_weeks": 101,
+     "share_pct": 19.22,
+     "gross_bp": 62.34,
+     "net_bp": 47.51,
+     "alpha_bp": 48.63,
+     "alpha_t": 1.31
+    },
+    "normal": {
+     "n_weeks": 288,
+     "share_pct": 54.64,
+     "gross_bp": 5.58,
+     "net_bp": -9.0,
+     "alpha_bp": 0.44,
+     "alpha_t": 0.05
+    }
+   },
+   "ndx": {
+    "crash": {
+     "n_weeks": 100,
+     "share_pct": 18.23,
+     "gross_bp": 1.19,
+     "net_bp": -11.08,
+     "alpha_bp": -7.24,
+     "alpha_t": -0.34
+    },
+    "surge": {
+     "n_weeks": 130,
+     "share_pct": 24.79,
+     "gross_bp": 10.59,
+     "net_bp": -1.45,
+     "alpha_bp": 12.28,
+     "alpha_t": 0.89
+    },
+    "highvol": {
+     "n_weeks": 135,
+     "share_pct": 25.79,
+     "gross_bp": 24.56,
+     "net_bp": 12.2,
+     "alpha_bp": 18.01,
+     "alpha_t": 0.96
+    },
+    "normal": {
+     "n_weeks": 262,
+     "share_pct": 50.18,
+     "gross_bp": -13.55,
+     "net_bp": -25.39,
+     "alpha_bp": -11.68,
+     "alpha_t": -1.27
+    }
+   }
+  },
+  "state_def": {
+   "crash": "급락 — 지수 252일 고점 대비 −10% 이하",
+   "surge": "급등 — 63일 수익 ≥ 그날까지 80 백분위",
+   "highvol": "고변동성 — 21일 실현 변동성 ≥ 그날까지 80 백분위",
+   "normal": "보통 — 셋 다 아님"
+  },
+  "posthoc": {
+   "spx": {
+    "turn_model": 76.4,
+    "turn_placebo": 97.8,
+    "beta": 1.28,
+    "alpha_gross": 3.19,
+    "alpha_gross_t": 0.67,
+    "placebo0_p": 0.0
+   },
+   "ndx": {
+    "turn_model": 62.3,
+    "placebo0_p": 0.06
+   }
+  },
+  "port_check": {
+   "date": "2026-10-08",
+   "note": "같은 날 · 같은 750일 창으로 연구 판 자료(시점 정확 수익)와 이 랩 공개 자료를 나란히 돌린 대조",
+   "spx": {
+    "n_research": 495,
+    "n_lab": 495,
+    "samples_research": 367815,
+    "samples_lab": 367831,
+    "top_overlap": 13,
+    "bot_overlap": 10,
+    "lab_top_in_research_pct_median": 97.4,
+    "lab_bot_in_research_pct_median": 3.7
+   },
+   "ndx": {
+    "n_research": 98,
+    "n_lab": 97,
+    "samples_research": 74828,
+    "samples_lab": 74772,
+    "top_overlap": 15,
+    "bot_overlap": 12,
+    "lab_top_in_research_pct_median": 87.25,
+    "lab_bot_in_research_pct_median": 16.3
+   }
+  }
+ },
+ "papers": [
+  {
+   "key": "krauss2017",
+   "cite": "Krauss, C., Do, X. A. & Huck, N. (2017). Deep neural networks, gradient-boosted trees, random forests: Statistical arbitrage on the S&P 500. European Journal of Operational Research 259(2), 689–702.",
+   "use": "종목 순위 — 특성 31개 · 750일 학습 · 세 모형 평균 틀 그대로"
+  },
+  {
+   "key": "zhang2020",
+   "cite": "Zhang, Z., Zohren, S. & Roberts, S. (2020). Deep Reinforcement Learning for Trading. Journal of Financial Data Science 2(2), 25–40. arXiv:1911.10107.",
+   "use": "강화학습 — 상태 · 보상(변동성 맞춤 − 비용) · 깊은 Q 학습 설정"
+  },
+  {
+   "key": "moody2001",
+   "cite": "Moody, J. & Saffell, M. (2001). Learning to Trade via Direct Reinforcement. IEEE Transactions on Neural Networks 12(4), 875–889.",
+   "use": "강화학습 — 직접 강화학습(미분 샤프 온라인 경사)"
+  },
+  {
+   "key": "ansari2024",
+   "cite": "Ansari, A. F. 외 (2024). Chronos: Learning the Language of Time Series. Transactions on Machine Learning Research. arXiv:2403.07815.",
+   "use": "시계열 기초 모형 — Chronos 계열(Chronos-2) 영표본 사용법"
+  },
+  {
+   "key": "rahimikia2025",
+   "cite": "Rahimikia, E., Ni, H. & Wang, W. (2025). Re(Visiting) Time Series Foundation Models in Finance. arXiv:2511.18578.",
+   "use": "기초 모형 영표본 R² 가 음수라는 결론 — 같은 기간 · 같은 문맥으로 지수에서 재현"
+  },
+  {
+   "key": "corsi2009",
+   "cite": "Corsi, F. (2009). A Simple Approximate Long-Memory Model of Realized Volatility. Journal of Financial Econometrics 7(2), 174–196.",
+   "use": "기준(M0) — HAR 변동성"
+  }
+ ]
+}

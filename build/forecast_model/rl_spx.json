@@ -1,0 +1,49 @@
+{
+ "note": "강화학습 운용 접힘 모형(깊은 Q 학습 · 씨앗 10개) — 2026-10-01 접힘(학습 2004-03 ~ 2024-09 · 검증 직전 2년)을 연구 판에서 그대로 옮겼다. W = 씨앗별 망 가중치(float32), A_tail = 운용 접힘 앞 결정의 행동(−1 · 0 · 1, 최근 1년 이력을 그리는 데만 쓴다). build/forecast_rl.py 가 읽는다. 다시 학습하지 않는다.",
+ "config": "M2",
+ "cfg": {
+  "method": "dqn",
+  "long_only": false,
+  "vix": false,
+  "roll": null,
+  "ns": 10
+ },
+ "off": 11,
+ "fold_start": "2026-10-01",
+ "v_date": "2024-09-30",
+ "a_live_date": "2026-09-29",
+ "tail_from": "2025-09-02",
+ "tail_to": "2026-09-28",
+ "n_tail": 270,
+ "source_sha256": {
+  "npz": "717614c46602ace2",
+  "json": "1966aef16cbd2dee"
+ },
+ "validation": {
+  "sharpe": 0.7243,
+  "bh_sharpe": 0.7496,
+  "excess_ann_pp": -6.765,
+  "mdd": -11.6776,
+  "bh_mdd": -33.7905,
+  "years_won": 3,
+  "years_total": 11,
+  "years_lost": [
+   2017,
+   2019,
+   2020,
+   2021,
+   2023,
+   2024,
+   2025,
+   2026
+  ],
+  "placebo_p": 0.204,
+  "holm_p": 1.0,
+  "seed_spread": 0.1248,
+  "seed_sharpe_min": 0.359,
+  "seed_sharpe_max": 0.7832,
+  "dir_hit_5d": 59.5685,
+  "dir_hit_5d_always_up": 61.6792,
+  "window": "2016-10-03 ~ 2026-09-30"
+ }
+}
