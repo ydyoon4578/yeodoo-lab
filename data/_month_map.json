@@ -2,9 +2,9 @@
  "note": "달마다의 시장 상황과 그달 잘 간 전략. **서술이지 판정이 아니다.** 이 랩은 국면 조건부 규칙을 12번 시도해 11번 기각했고 시장상태 삼분위는 1592칸 중 3칸만 FDR 10% 를 넘었다.",
  "span": [
   "2016-09",
-  "2026-09"
+  "2026-10"
  ],
- "n_months": 121,
+ "n_months": 122,
  "n_rules_median": 187,
  "legend": [
   {
@@ -51,35 +51,35 @@
  "topn": 5,
  "cuts": {
   "vol1": [
-   0.10541,
+   0.10491,
    0.15089
   ],
   "disp": [
-   0.0641,
-   0.07821
+   0.06362,
+   0.07829
   ],
   "rate12": [
    -0.01,
-   0.62
+   0.66
   ],
   "breadth12": [
-   -0.0591,
-   -0.01371
+   -0.05954,
+   -0.013
   ],
   "conc": [
-   0.2622,
-   0.3255
+   0.26272,
+   0.32763
   ],
   "dconc12": [
-   0.00796,
-   0.02833
+   0.0069,
+   0.02839
   ]
  },
  "persistence": {
-  "top5_carry_pct": 8.0,
-  "random_pct": 2.6939175349541364,
-  "rank_rho_median": 0.0384319353812186,
-  "rank_rho_mean": 0.01722787205981325
+  "top5_carry_pct": 7.933884297520661,
+  "random_pct": 2.7081021087680353,
+  "rank_rho_median": 0.034287727694809124,
+  "rank_rho_mean": 0.01623079863467628
  },
  "kinds": [
   {
@@ -95,32 +95,32 @@
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 10,
      "in_pct": 83.3,
-     "all_pct": 18.2,
-     "lift": 65.2
+     "all_pct": 18.0,
+     "lift": 65.3
     },
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
      "hit": 6,
      "in_pct": 50.0,
-     "all_pct": 21.5,
-     "lift": 28.5
+     "all_pct": 21.3,
+     "lift": 28.7
     },
     {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "hit": 4,
      "in_pct": 33.3,
-     "all_pct": 9.1,
-     "lift": 24.2
+     "all_pct": 9.0,
+     "lift": 24.3
     },
     {
      "sid": "a-rel-mom3",
      "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
      "hit": 3,
      "in_pct": 25.0,
-     "all_pct": 5.0,
-     "lift": 20.0
+     "all_pct": 4.9,
+     "lift": 20.1
     },
     {
      "sid": "t-x-subom",
@@ -135,7 +135,7 @@
      "name": "월말 효과 (마지막날 −1 ~ +3)",
      "hit": 2,
      "in_pct": 16.7,
-     "all_pct": 1.7,
+     "all_pct": 1.6,
      "lift": 15.0
     }
    ]
@@ -153,16 +153,16 @@
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 12,
      "in_pct": 44.4,
-     "all_pct": 18.2,
-     "lift": 26.3
+     "all_pct": 18.0,
+     "lift": 26.4
     },
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
      "hit": 11,
      "in_pct": 40.7,
-     "all_pct": 21.5,
-     "lift": 19.3
+     "all_pct": 21.3,
+     "lift": 19.4
     },
     {
      "sid": "t-x-kurt",
@@ -177,7 +177,7 @@
      "name": "지수 대비 오차수정 괴리 최하위 10",
      "hit": 4,
      "in_pct": 14.8,
-     "all_pct": 8.3,
+     "all_pct": 8.2,
      "lift": 6.6
     },
     {
@@ -185,15 +185,15 @@
      "name": "배당 증액률 상위 10",
      "hit": 3,
      "in_pct": 11.1,
-     "all_pct": 5.0,
+     "all_pct": 4.9,
      "lift": 6.2
     },
     {
-     "sid": "a-st-hurst",
-     "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
-     "hit": 2,
-     "in_pct": 7.4,
-     "all_pct": 1.7,
+     "sid": "a-overnight-ndx",
+     "name": "오버나이트 보유 (QQQ 종가→시가)",
+     "hit": 4,
+     "in_pct": 14.8,
+     "all_pct": 9.0,
      "lift": 5.8
     }
    ]
@@ -202,57 +202,57 @@
    "axis": "dir",
    "axis_ko": "그달 지수",
    "level": "상승",
-   "n_months": 62,
-   "spx_mean": 2.27,
-   "med_ex": -0.08,
+   "n_months": 63,
+   "spx_mean": 2.26,
+   "med_ex": -0.06,
    "recur": [
     {
      "sid": "t-x-sp",
      "name": "저PSR (매출수익률 상위 10)",
      "hit": 10,
-     "in_pct": 16.1,
-     "all_pct": 11.6,
-     "lift": 4.6
+     "in_pct": 15.9,
+     "all_pct": 11.5,
+     "lift": 4.4
     },
     {
      "sid": "t-x-dist200",
      "name": "200일선 이격도 상위 10",
      "hit": 13,
-     "in_pct": 21.0,
-     "all_pct": 16.5,
-     "lift": 4.4
+     "in_pct": 20.6,
+     "all_pct": 16.4,
+     "lift": 4.2
+    },
+    {
+     "sid": "t-x-maxlow-band",
+     "name": "복권형 회피 (MAX 최하위 10) · 밴드 보유",
+     "hit": 5,
+     "in_pct": 7.9,
+     "all_pct": 4.1,
+     "lift": 3.8
     },
     {
      "sid": "t-x-archlm",
      "name": "변동성 군집 최하위 10 (5시차)",
      "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.8,
-     "lift": 3.9
+     "in_pct": 9.5,
+     "all_pct": 5.7,
+     "lift": 3.8
     },
     {
      "sid": "t-x-lowde",
      "name": "저부채 상위 10",
      "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.8,
-     "lift": 3.9
+     "in_pct": 9.5,
+     "all_pct": 5.7,
+     "lift": 3.8
     },
     {
      "sid": "t-x-sur",
      "name": "매출 서프라이즈 (SUR 상위 10)",
      "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.8,
-     "lift": 3.9
-    },
-    {
-     "sid": "t-x-currat",
-     "name": "유동비율 상위 10",
-     "hit": 7,
-     "in_pct": 11.3,
-     "all_pct": 7.4,
-     "lift": 3.9
+     "in_pct": 9.5,
+     "all_pct": 5.7,
+     "lift": 3.8
     }
    ]
   },
@@ -269,24 +269,24 @@
      "name": "에코 모멘텀 (12~7개월 전 구간)",
      "hit": 10,
      "in_pct": 50.0,
-     "all_pct": 16.5,
-     "lift": 33.5
+     "all_pct": 16.4,
+     "lift": 33.6
     },
     {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "hit": 8,
      "in_pct": 40.0,
-     "all_pct": 12.4,
-     "lift": 27.6
+     "all_pct": 12.3,
+     "lift": 27.7
     },
     {
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "hit": 9,
      "in_pct": 45.0,
-     "all_pct": 18.2,
-     "lift": 26.8
+     "all_pct": 18.0,
+     "lift": 27.0
     },
     {
      "sid": "t-x-ecm-band",
@@ -301,16 +301,16 @@
      "name": "지수 대비 오차수정 괴리 최하위 10",
      "hit": 4,
      "in_pct": 20.0,
-     "all_pct": 8.3,
-     "lift": 11.7
+     "all_pct": 8.2,
+     "lift": 11.8
     },
     {
      "sid": "t-x-mommvol",
      "name": "변동성 조정 모멘텀 상위 10",
      "hit": 4,
      "in_pct": 20.0,
-     "all_pct": 9.1,
-     "lift": 10.9
+     "all_pct": 9.0,
+     "lift": 11.0
     }
    ]
   },
@@ -319,24 +319,24 @@
    "axis_ko": "출렁임",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 2.51,
-   "med_ex": -0.08,
+   "spx_mean": 2.48,
+   "med_ex": -0.07,
    "recur": [
     {
      "sid": "t-x-btp",
      "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
      "hit": 7,
      "in_pct": 17.5,
-     "all_pct": 9.1,
-     "lift": 8.4
+     "all_pct": 9.0,
+     "lift": 8.5
     },
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
      "hit": 6,
      "in_pct": 15.0,
-     "all_pct": 8.3,
-     "lift": 6.7
+     "all_pct": 8.2,
+     "lift": 6.8
     },
     {
      "sid": "t-x-rgrow",
@@ -367,8 +367,8 @@
      "name": "고저가 스프레드 급확대 상위 10 (유동성 충격)",
      "hit": 4,
      "in_pct": 10.0,
-     "all_pct": 5.0,
-     "lift": 5.0
+     "all_pct": 4.9,
+     "lift": 5.1
     }
    ]
   },
@@ -376,57 +376,57 @@
    "axis": "vol1",
    "axis_ko": "출렁임",
    "level": "중",
-   "n_months": 40,
-   "spx_mean": 1.42,
+   "n_months": 41,
+   "spx_mean": 1.45,
    "med_ex": 0.04,
    "recur": [
-    {
-     "sid": "t-x-mommvol",
-     "name": "변동성 조정 모멘텀 상위 10",
-     "hit": 7,
-     "in_pct": 17.5,
-     "all_pct": 9.1,
-     "lift": 8.4
-    },
     {
      "sid": "t-x-curvebank",
      "name": "곡선 확대 국면 은행·보험 저PBR 15",
      "hit": 6,
-     "in_pct": 15.0,
+     "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.4
+     "lift": 8.1
+    },
+    {
+     "sid": "t-x-mommvol",
+     "name": "변동성 조정 모멘텀 상위 10",
+     "hit": 7,
+     "in_pct": 17.1,
+     "all_pct": 9.0,
+     "lift": 8.1
     },
     {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "hit": 8,
-     "in_pct": 20.0,
-     "all_pct": 12.4,
-     "lift": 7.6
+     "in_pct": 19.5,
+     "all_pct": 12.3,
+     "lift": 7.2
     },
     {
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "hit": 10,
-     "in_pct": 25.0,
-     "all_pct": 18.2,
-     "lift": 6.8
-    },
-    {
-     "sid": "t-x-earngap",
-     "name": "실적 공백기 (발표 후 60일 지난 종목만)",
-     "hit": 5,
-     "in_pct": 12.5,
-     "all_pct": 6.6,
-     "lift": 5.9
+     "in_pct": 24.4,
+     "all_pct": 18.0,
+     "lift": 6.4
     },
     {
      "sid": "t-m-clust",
      "name": "상관 클러스터 10개 × 각 1종",
      "hit": 4,
-     "in_pct": 10.0,
+     "in_pct": 9.8,
      "all_pct": 4.1,
-     "lift": 5.9
+     "lift": 5.7
+    },
+    {
+     "sid": "t-x-earngap",
+     "name": "실적 공백기 (발표 후 60일 지난 종목만)",
+     "hit": 5,
+     "in_pct": 12.2,
+     "all_pct": 6.6,
+     "lift": 5.6
     }
    ]
   },
@@ -436,23 +436,23 @@
    "level": "상",
    "n_months": 41,
    "spx_mean": -0.45,
-   "med_ex": 0.1,
+   "med_ex": 0.06,
    "recur": [
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 16,
      "in_pct": 39.0,
-     "all_pct": 18.2,
-     "lift": 20.8
+     "all_pct": 18.0,
+     "lift": 21.0
     },
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
      "hit": 13,
      "in_pct": 31.7,
-     "all_pct": 21.5,
-     "lift": 10.2
+     "all_pct": 21.3,
+     "lift": 10.4
     },
     {
      "sid": "t-x-rev1m-band",
@@ -460,15 +460,15 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.0
+     "lift": 8.1
     },
     {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "hit": 7,
      "in_pct": 17.1,
-     "all_pct": 9.1,
-     "lift": 8.0
+     "all_pct": 9.0,
+     "lift": 8.1
     },
     {
      "sid": "t-x-kurt",
@@ -476,7 +476,7 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 7.4,
-     "lift": 7.2
+     "lift": 7.3
     },
     {
      "sid": "t-x-dy",
@@ -484,7 +484,7 @@
      "hit": 4,
      "in_pct": 9.8,
      "all_pct": 4.1,
-     "lift": 5.6
+     "lift": 5.7
     }
    ]
   },
@@ -493,16 +493,16 @@
    "axis_ko": "종목 간 격차",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.12,
-   "med_ex": 0.01,
+   "spx_mean": 0.2,
+   "med_ex": 0.0,
    "recur": [
     {
      "sid": "t-x-sp",
      "name": "저PSR (매출수익률 상위 10)",
      "hit": 7,
      "in_pct": 17.5,
-     "all_pct": 11.6,
-     "lift": 5.9
+     "all_pct": 11.5,
+     "lift": 6.0
     },
     {
      "sid": "g-overlap-top10-ov",
@@ -517,8 +517,8 @@
      "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
      "hit": 4,
      "in_pct": 10.0,
-     "all_pct": 5.0,
-     "lift": 5.0
+     "all_pct": 4.9,
+     "lift": 5.1
     },
     {
      "sid": "t-x-fcfy",
@@ -541,8 +541,8 @@
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
      "hit": 10,
      "in_pct": 25.0,
-     "all_pct": 21.5,
-     "lift": 3.5
+     "all_pct": 21.3,
+     "lift": 3.7
     }
    ]
   },
@@ -550,57 +550,57 @@
    "axis": "disp",
    "axis_ko": "종목 간 격차",
    "level": "중",
-   "n_months": 40,
-   "spx_mean": 1.44,
-   "med_ex": -0.04,
+   "n_months": 41,
+   "spx_mean": 1.36,
+   "med_ex": -0.01,
    "recur": [
     {
      "sid": "t-x-echo",
      "name": "에코 모멘텀 (12~7개월 전 구간)",
      "hit": 11,
-     "in_pct": 27.5,
-     "all_pct": 16.5,
-     "lift": 11.0
+     "in_pct": 26.8,
+     "all_pct": 16.4,
+     "lift": 10.4
     },
     {
      "sid": "t-x-currat",
      "name": "유동비율 상위 10",
      "hit": 6,
-     "in_pct": 15.0,
+     "in_pct": 14.6,
      "all_pct": 7.4,
-     "lift": 7.6
+     "lift": 7.3
     },
     {
      "sid": "t-m-clust",
      "name": "상관 클러스터 10개 × 각 1종",
      "hit": 4,
-     "in_pct": 10.0,
+     "in_pct": 9.8,
      "all_pct": 4.1,
-     "lift": 5.9
-    },
-    {
-     "sid": "g-overlap-k2-new",
-     "name": "거장 겹침 2곳 이상 (신규 합의만)",
-     "hit": 5,
-     "in_pct": 12.5,
-     "all_pct": 8.3,
-     "lift": 4.2
+     "lift": 5.7
     },
     {
      "sid": "t-x-sur",
      "name": "매출 서프라이즈 (SUR 상위 10)",
      "hit": 4,
-     "in_pct": 10.0,
-     "all_pct": 5.8,
-     "lift": 4.2
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.0
     },
     {
      "sid": "t-x-aci",
      "name": "비정상 자본투자 회피 (설비투자 급증 회피)",
      "hit": 4,
-     "in_pct": 10.0,
-     "all_pct": 5.8,
-     "lift": 4.2
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.0
+    },
+    {
+     "sid": "t-x-archlm",
+     "name": "변동성 군집 최하위 10 (5시차)",
+     "hit": 4,
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.0
     }
    ]
   },
@@ -610,31 +610,31 @@
    "level": "상",
    "n_months": 41,
    "spx_mean": 1.87,
-   "med_ex": 0.05,
+   "med_ex": 0.04,
    "recur": [
     {
      "sid": "t-x-dalpha",
      "name": "알파 개선 상위 10",
      "hit": 10,
      "in_pct": 24.4,
-     "all_pct": 12.4,
-     "lift": 12.0
+     "all_pct": 12.3,
+     "lift": 12.1
     },
     {
      "sid": "t-m-erc",
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "hit": 10,
      "in_pct": 24.4,
-     "all_pct": 12.4,
-     "lift": 12.0
+     "all_pct": 12.3,
+     "lift": 12.1
     },
     {
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "hit": 12,
      "in_pct": 29.3,
-     "all_pct": 18.2,
-     "lift": 11.1
+     "all_pct": 18.0,
+     "lift": 11.2
     },
     {
      "sid": "t-x-cdisc",
@@ -642,23 +642,23 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.0
+     "lift": 8.1
     },
     {
      "sid": "t-x-dist200",
      "name": "200일선 이격도 상위 10",
      "hit": 10,
      "in_pct": 24.4,
-     "all_pct": 16.5,
-     "lift": 7.9
+     "all_pct": 16.4,
+     "lift": 8.0
     },
     {
      "sid": "a-rel-mom3",
      "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
      "hit": 5,
      "in_pct": 12.2,
-     "all_pct": 5.0,
-     "lift": 7.2
+     "all_pct": 4.9,
+     "lift": 7.3
     }
    ]
   },
@@ -675,16 +675,16 @@
      "name": "3자산 상대 모멘텀 (SPY·TLT·GLD)",
      "hit": 5,
      "in_pct": 12.5,
-     "all_pct": 5.0,
-     "lift": 7.5
+     "all_pct": 4.9,
+     "lift": 7.6
     },
     {
      "sid": "t-x-rev1m",
      "name": "단기 반전 (1개월 최하위 10)",
      "hit": 6,
      "in_pct": 15.0,
-     "all_pct": 9.1,
-     "lift": 5.9
+     "all_pct": 9.0,
+     "lift": 6.0
     },
     {
      "sid": "t-x-rev1m-band",
@@ -707,16 +707,16 @@
      "name": "배당 증액률 상위 10",
      "hit": 4,
      "in_pct": 10.0,
-     "all_pct": 5.0,
-     "lift": 5.0
+     "all_pct": 4.9,
+     "lift": 5.1
     },
     {
      "sid": "t-x-rev1w-band",
      "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
      "hit": 5,
      "in_pct": 12.5,
-     "all_pct": 8.3,
-     "lift": 4.2
+     "all_pct": 8.2,
+     "lift": 4.3
     }
    ]
   },
@@ -724,57 +724,57 @@
    "axis": "rate12",
    "axis_ko": "금리 방향",
    "level": "중",
-   "n_months": 38,
-   "spx_mean": 1.27,
+   "n_months": 41,
+   "spx_mean": 1.32,
    "med_ex": 0.03,
    "recur": [
     {
      "sid": "t-x-dist200",
      "name": "200일선 이격도 상위 10",
      "hit": 10,
-     "in_pct": 26.3,
-     "all_pct": 16.5,
-     "lift": 9.8
+     "in_pct": 24.4,
+     "all_pct": 16.4,
+     "lift": 8.0
     },
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
+     "hit": 6,
+     "in_pct": 14.6,
+     "all_pct": 8.2,
+     "lift": 6.4
+    },
+    {
+     "sid": "t-x-currat",
+     "name": "유동비율 상위 10",
      "hit": 5,
-     "in_pct": 13.2,
-     "all_pct": 8.3,
-     "lift": 4.9
+     "in_pct": 12.2,
+     "all_pct": 7.4,
+     "lift": 4.8
+    },
+    {
+     "sid": "t-m-erc",
+     "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
+     "hit": 7,
+     "in_pct": 17.1,
+     "all_pct": 12.3,
+     "lift": 4.8
     },
     {
      "sid": "t-x-drift-t",
      "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
      "hit": 5,
-     "in_pct": 13.2,
-     "all_pct": 8.3,
-     "lift": 4.9
+     "in_pct": 12.2,
+     "all_pct": 8.2,
+     "lift": 4.0
     },
     {
-     "sid": "t-x-rgrow",
-     "name": "고매출성장 상위 10",
-     "hit": 4,
-     "in_pct": 10.5,
-     "all_pct": 6.6,
-     "lift": 3.9
-    },
-    {
-     "sid": "g-overlap-top10-ov",
-     "name": "거장 겹침 2곳 이상 · 겹친 운용사 수 상위 10",
-     "hit": 4,
-     "in_pct": 10.5,
-     "all_pct": 6.6,
-     "lift": 3.9
-    },
-    {
-     "sid": "t-x-subom",
-     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
-     "hit": 4,
-     "in_pct": 10.5,
-     "all_pct": 6.6,
-     "lift": 3.9
+     "sid": "a-st-hurst",
+     "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
+     "hit": 2,
+     "in_pct": 4.9,
+     "all_pct": 1.6,
+     "lift": 3.2
     }
    ]
   },
@@ -782,57 +782,57 @@
    "axis": "rate12",
    "axis_ko": "금리 방향",
    "level": "상",
-   "n_months": 43,
-   "spx_mean": 0.59,
-   "med_ex": 0.03,
+   "n_months": 41,
+   "spx_mean": 0.52,
+   "med_ex": 0.0,
    "recur": [
     {
      "sid": "t-x-kurt",
      "name": "초과첨도 최하위 10",
      "hit": 6,
-     "in_pct": 14.0,
+     "in_pct": 14.6,
      "all_pct": 7.4,
-     "lift": 6.5
+     "lift": 7.3
     },
     {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "hit": 6,
-     "in_pct": 14.0,
-     "all_pct": 9.1,
-     "lift": 4.9
-    },
-    {
-     "sid": "t-x-sp",
-     "name": "저PSR (매출수익률 상위 10)",
-     "hit": 7,
-     "in_pct": 16.3,
-     "all_pct": 11.6,
-     "lift": 4.7
+     "in_pct": 14.6,
+     "all_pct": 9.0,
+     "lift": 5.6
     },
     {
      "sid": "t-t-ddgate",
      "name": "드로다운 게이트 (−10%)",
      "hit": 3,
-     "in_pct": 7.0,
+     "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 4.5
+     "lift": 4.9
     },
     {
      "sid": "t-x-poacc",
      "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
      "hit": 4,
-     "in_pct": 9.3,
-     "all_pct": 5.0,
-     "lift": 4.3
+     "in_pct": 9.8,
+     "all_pct": 4.9,
+     "lift": 4.8
     },
     {
      "sid": "t-x-fxweak",
      "name": "달러 약세 국면 달러민감 20",
      "hit": 5,
-     "in_pct": 11.6,
+     "in_pct": 12.2,
      "all_pct": 7.4,
-     "lift": 4.2
+     "lift": 4.8
+    },
+    {
+     "sid": "t-x-agrow",
+     "name": "자산성장 회피 (총자산 증가 최저)",
+     "hit": 3,
+     "in_pct": 7.3,
+     "all_pct": 3.3,
+     "lift": 4.0
     }
    ]
   },
@@ -849,24 +849,24 @@
      "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
      "hit": 9,
      "in_pct": 22.5,
-     "all_pct": 12.4,
-     "lift": 10.1
+     "all_pct": 12.3,
+     "lift": 10.2
     },
     {
      "sid": "t-x-mom12",
      "name": "12-1 모멘텀 상위 10",
      "hit": 11,
      "in_pct": 27.5,
-     "all_pct": 18.2,
-     "lift": 9.3
+     "all_pct": 18.0,
+     "lift": 9.5
     },
     {
      "sid": "t-x-echo",
      "name": "에코 모멘텀 (12~7개월 전 구간)",
      "hit": 9,
      "in_pct": 22.5,
-     "all_pct": 16.5,
-     "lift": 6.0
+     "all_pct": 16.4,
+     "lift": 6.1
     },
     {
      "sid": "t-x-cdisc",
@@ -898,57 +898,57 @@
    "axis": "breadth12",
    "axis_ko": "덩치 싸움",
    "level": "중",
-   "n_months": 40,
-   "spx_mean": 0.66,
+   "n_months": 41,
+   "spx_mean": 0.67,
    "med_ex": 0.03,
    "recur": [
     {
      "sid": "g-overlap-k2-new",
      "name": "거장 겹침 2곳 이상 (신규 합의만)",
-     "hit": 7,
-     "in_pct": 17.5,
-     "all_pct": 8.3,
-     "lift": 9.2
+     "hit": 8,
+     "in_pct": 19.5,
+     "all_pct": 8.2,
+     "lift": 11.3
     },
     {
      "sid": "t-x-drift-t",
      "name": "드리프트 t값 상위 10 (뉴이–웨스트)",
      "hit": 6,
-     "in_pct": 15.0,
-     "all_pct": 8.3,
-     "lift": 6.7
-    },
-    {
-     "sid": "t-x-dalpha",
-     "name": "알파 개선 상위 10",
-     "hit": 7,
-     "in_pct": 17.5,
-     "all_pct": 12.4,
-     "lift": 5.1
-    },
-    {
-     "sid": "t-x-divgrow",
-     "name": "배당 증액률 상위 10",
-     "hit": 4,
-     "in_pct": 10.0,
-     "all_pct": 5.0,
-     "lift": 5.0
+     "in_pct": 14.6,
+     "all_pct": 8.2,
+     "lift": 6.4
     },
     {
      "sid": "t-x-snapback",
      "name": "추세정렬 과매도 반등",
      "hit": 3,
-     "in_pct": 7.5,
+     "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 5.0
+     "lift": 4.9
     },
     {
      "sid": "t-x-snapback-band",
      "name": "추세정렬 과매도 반등 · 밴드 보유",
      "hit": 3,
-     "in_pct": 7.5,
+     "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 5.0
+     "lift": 4.9
+    },
+    {
+     "sid": "t-x-coskew",
+     "name": "공편왜도 최저 (가장 음의 꼬리 동조)",
+     "hit": 3,
+     "in_pct": 7.3,
+     "all_pct": 2.5,
+     "lift": 4.9
+    },
+    {
+     "sid": "t-x-shiss",
+     "name": "순주식발행 회피 (희석주식수 증가 최저)",
+     "hit": 3,
+     "in_pct": 7.3,
+     "all_pct": 2.5,
+     "lift": 4.9
     }
    ]
   },
@@ -957,7 +957,7 @@
    "axis_ko": "덩치 싸움",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.09,
+   "spx_mean": 1.11,
    "med_ex": -0.02,
    "recur": [
     {
@@ -973,8 +973,8 @@
      "name": "지수 대비 오차수정 괴리 최하위 10",
      "hit": 7,
      "in_pct": 17.1,
-     "all_pct": 8.3,
-     "lift": 8.8
+     "all_pct": 8.2,
+     "lift": 8.9
     },
     {
      "sid": "t-x-kurt",
@@ -982,14 +982,14 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 7.4,
-     "lift": 7.2
+     "lift": 7.3
     },
     {
      "sid": "t-x-rev1w-band",
      "name": "주간 반전 (1주 최하위 10) · 밴드 보유",
      "hit": 6,
      "in_pct": 14.6,
-     "all_pct": 8.3,
+     "all_pct": 8.2,
      "lift": 6.4
     },
     {
@@ -997,8 +997,8 @@
      "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
      "hit": 6,
      "in_pct": 14.6,
-     "all_pct": 9.1,
-     "lift": 5.5
+     "all_pct": 9.0,
+     "lift": 5.6
     },
     {
      "sid": "a-vrp-shortvol",
@@ -1006,7 +1006,7 @@
      "hit": 3,
      "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 4.8
+     "lift": 4.9
     }
    ]
   },
@@ -1015,8 +1015,8 @@
    "axis_ko": "쏠림 방향",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.38,
-   "med_ex": 0.01,
+   "spx_mean": 0.31,
+   "med_ex": 0.03,
    "recur": [
     {
      "sid": "t-x-kurt",
@@ -1031,8 +1031,8 @@
      "name": "장부가 대비 저평가 (Book-to-Price 상위 10)",
      "hit": 6,
      "in_pct": 15.0,
-     "all_pct": 9.1,
-     "lift": 5.9
+     "all_pct": 9.0,
+     "lift": 6.0
     },
     {
      "sid": "t-x-rev1w",
@@ -1072,57 +1072,57 @@
    "axis": "dconc12",
    "axis_ko": "쏠림 방향",
    "level": "중",
-   "n_months": 40,
-   "spx_mean": 1.11,
+   "n_months": 41,
+   "spx_mean": 1.23,
    "med_ex": 0.0,
    "recur": [
     {
      "sid": "g-overlap-top10-ov",
      "name": "거장 겹침 2곳 이상 · 겹친 운용사 수 상위 10",
      "hit": 6,
-     "in_pct": 15.0,
+     "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.4
+     "lift": 8.1
     },
     {
      "sid": "t-x-subom",
      "name": "서브산업 영업이익률 롱숏 (상하위 5)",
      "hit": 6,
-     "in_pct": 15.0,
+     "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.4
+     "lift": 8.1
+    },
+    {
+     "sid": "t-x-max5low",
+     "name": "복권형 회피 — MAX(5) 최하위 10",
+     "hit": 4,
+     "in_pct": 9.8,
+     "all_pct": 4.1,
+     "lift": 5.7
     },
     {
      "sid": "t-x-coskew",
      "name": "공편왜도 최저 (가장 음의 꼬리 동조)",
      "hit": 3,
-     "in_pct": 7.5,
+     "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 5.0
+     "lift": 4.9
     },
     {
      "sid": "t-x-lshock-band",
      "name": "고저가 스프레드 급확대 상위 10 (유동성 충격) · 밴드 보유",
      "hit": 3,
-     "in_pct": 7.5,
+     "in_pct": 7.3,
      "all_pct": 2.5,
-     "lift": 5.0
+     "lift": 4.9
     },
     {
-     "sid": "g-overlap-k2-new",
-     "name": "거장 겹침 2곳 이상 (신규 합의만)",
-     "hit": 5,
-     "in_pct": 12.5,
-     "all_pct": 8.3,
-     "lift": 4.2
-    },
-    {
-     "sid": "t-x-max5low-band",
-     "name": "복권형 회피 — MAX(5) 최하위 10 · 밴드 보유",
+     "sid": "t-x-maxlow",
+     "name": "복권형 회피 (MAX 최하위 10)",
      "hit": 3,
-     "in_pct": 7.5,
+     "in_pct": 7.3,
      "all_pct": 3.3,
-     "lift": 4.2
+     "lift": 4.0
     }
    ]
   },
@@ -1131,24 +1131,16 @@
    "axis_ko": "쏠림 방향",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.93,
-   "med_ex": 0.0,
+   "spx_mean": 1.89,
+   "med_ex": -0.06,
    "recur": [
-    {
-     "sid": "t-m-erc",
-     "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
-     "hit": 9,
-     "in_pct": 22.0,
-     "all_pct": 12.4,
-     "lift": 9.6
-    },
     {
      "sid": "t-x-cdisc",
      "name": "비용규율 상위 10 (매출증가 − 원가증가)",
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.0
+     "lift": 8.1
     },
     {
      "sid": "a-curve-factorsw",
@@ -1156,6 +1148,14 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 7.4,
+     "lift": 7.3
+    },
+    {
+     "sid": "t-m-erc",
+     "name": "12-1 모멘텀 상위 10 — 동일위험기여 가중",
+     "hit": 8,
+     "in_pct": 19.5,
+     "all_pct": 12.3,
      "lift": 7.2
     },
     {
@@ -1163,8 +1163,8 @@
      "name": "12-1 모멘텀 상위 10",
      "hit": 10,
      "in_pct": 24.4,
-     "all_pct": 18.2,
-     "lift": 6.2
+     "all_pct": 18.0,
+     "lift": 6.4
     },
     {
      "sid": "t-x-curvebank",
@@ -1179,8 +1179,8 @@
      "name": "변동성 조정 모멘텀 상위 10",
      "hit": 6,
      "in_pct": 14.6,
-     "all_pct": 9.1,
-     "lift": 5.5
+     "all_pct": 9.0,
+     "lift": 5.6
     }
    ]
   }
@@ -1191,10 +1191,10 @@
    "spx": 0.24,
    "ndx": 0.45,
    "vol": 0.14519,
-   "disp": 0.04806,
+   "disp": 0.04804,
    "rate12": -0.46,
-   "breadth12": 0.01111,
-   "conc": 0.21154,
+   "breadth12": 0.01119,
+   "conc": 0.21184,
    "dconc12": 0.0124,
    "band": {
     "vol1": "중",
@@ -1257,20 +1257,20 @@
    "spx": -1.94,
    "ndx": -1.53,
    "vol": 0.06603,
-   "disp": 0.06405,
+   "disp": 0.06412,
    "rate12": -0.32,
-   "breadth12": 0.01523,
-   "conc": 0.21466,
-   "dconc12": 0.00817,
+   "breadth12": 0.01538,
+   "conc": 0.21496,
+   "dconc12": 0.00815,
    "band": {
     "vol1": "하",
-    "disp": "하",
+    "disp": "중",
     "rate12": "하",
     "breadth12": "상",
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "하락 · 출렁임하 · 격차하 · 금리하 · 덩치상",
+   "label": "하락 · 출렁임하 · 격차중 · 금리하 · 덩치상",
    "n": 179,
    "top": [
     {
@@ -1323,11 +1323,11 @@
    "spx": 3.42,
    "ndx": 0.2,
    "vol": 0.10596,
-   "disp": 0.09854,
+   "disp": 0.09864,
    "rate12": 0.16,
-   "breadth12": 0.03717,
-   "conc": 0.20538,
-   "dconc12": -0.00376,
+   "breadth12": 0.03744,
+   "conc": 0.20567,
+   "dconc12": -0.00382,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -1382,18 +1382,18 @@
      "ex": -11.78
     }
    ],
-   "med": -0.44
+   "med": -0.43
   },
   {
    "m": "2016-12",
    "spx": 1.82,
    "ndx": 1.1,
    "vol": 0.08001,
-   "disp": 0.04901,
+   "disp": 0.04906,
    "rate12": 0.18,
-   "breadth12": 0.04282,
-   "conc": 0.20643,
-   "dconc12": -0.00341,
+   "breadth12": 0.04299,
+   "conc": 0.20673,
+   "dconc12": -0.00343,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -1455,11 +1455,11 @@
    "spx": 1.79,
    "ndx": 5.2,
    "vol": 0.06629,
-   "disp": 0.06907,
+   "disp": 0.06914,
    "rate12": 0.51,
-   "breadth12": 0.05059,
-   "conc": 0.20963,
-   "dconc12": -0.00434,
+   "breadth12": 0.05085,
+   "conc": 0.20993,
+   "dconc12": -0.00438,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -1521,20 +1521,20 @@
    "spx": 3.72,
    "ndx": 4.17,
    "vol": 0.0525,
-   "disp": 0.05615,
+   "disp": 0.0562,
    "rate12": 0.62,
-   "breadth12": 0.02522,
-   "conc": 0.21142,
-   "dconc12": 0.00113,
+   "breadth12": 0.02532,
+   "conc": 0.21171,
+   "dconc12": 0.00111,
    "band": {
     "vol1": "하",
     "disp": "하",
-    "rate12": "상",
+    "rate12": "중",
     "breadth12": "상",
     "conc": "하",
     "dconc12": "하"
    },
-   "label": "상승 · 출렁임하 · 격차하 · 금리상 · 덩치상",
+   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치상",
    "n": 180,
    "top": [
     {
@@ -1587,20 +1587,20 @@
    "spx": -0.04,
    "ndx": 1.99,
    "vol": 0.0665,
-   "disp": 0.046,
+   "disp": 0.04605,
    "rate12": 0.62,
-   "breadth12": 0.00528,
-   "conc": 0.21371,
-   "dconc12": 0.00252,
+   "breadth12": 0.0054,
+   "conc": 0.214,
+   "dconc12": 0.00248,
    "band": {
     "vol1": "하",
     "disp": "하",
-    "rate12": "상",
+    "rate12": "중",
     "breadth12": "상",
     "conc": "하",
     "dconc12": "하"
    },
-   "label": "하락 · 출렁임하 · 격차하 · 금리상 · 덩치상",
+   "label": "하락 · 출렁임하 · 격차하 · 금리중 · 덩치상",
    "n": 180,
    "top": [
     {
@@ -1653,20 +1653,20 @@
    "spx": 0.91,
    "ndx": 2.71,
    "vol": 0.07095,
-   "disp": 0.0476,
+   "disp": 0.04765,
    "rate12": 0.46,
-   "breadth12": -0.01371,
-   "conc": 0.21657,
-   "dconc12": 0.01188,
+   "breadth12": -0.01366,
+   "conc": 0.21686,
+   "dconc12": 0.01186,
    "band": {
     "vol1": "하",
     "disp": "하",
     "rate12": "중",
-    "breadth12": "상",
+    "breadth12": "중",
     "conc": "하",
     "dconc12": "중"
    },
-   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치상",
+   "label": "상승 · 출렁임하 · 격차하 · 금리중 · 덩치중",
    "n": 181,
    "top": [
     {
@@ -1719,11 +1719,11 @@
    "spx": 1.16,
    "ndx": 3.68,
    "vol": 0.079,
-   "disp": 0.06742,
+   "disp": 0.06738,
    "rate12": 0.37,
-   "breadth12": -0.02275,
-   "conc": 0.22009,
-   "dconc12": 0.01223,
+   "breadth12": -0.0226,
+   "conc": 0.22037,
+   "dconc12": 0.01219,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -1785,11 +1785,11 @@
    "spx": 0.48,
    "ndx": -2.45,
    "vol": 0.07009,
-   "disp": 0.05927,
+   "disp": 0.05931,
    "rate12": 0.82,
-   "breadth12": -0.01582,
-   "conc": 0.21629,
-   "dconc12": 0.01115,
+   "breadth12": -0.01574,
+   "conc": 0.21655,
+   "dconc12": 0.01112,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -1851,11 +1851,11 @@
    "spx": 1.93,
    "ndx": 4.13,
    "vol": 0.05505,
-   "disp": 0.05712,
+   "disp": 0.0571,
    "rate12": 0.84,
-   "breadth12": -0.02702,
-   "conc": 0.21834,
-   "dconc12": 0.01003,
+   "breadth12": -0.02692,
+   "conc": 0.21859,
+   "dconc12": 0.00999,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -1917,11 +1917,11 @@
    "spx": 0.05,
    "ndx": 1.84,
    "vol": 0.09701,
-   "disp": 0.06027,
+   "disp": 0.0602,
    "rate12": 0.54,
-   "breadth12": -0.04178,
-   "conc": 0.22361,
-   "dconc12": 0.01406,
+   "breadth12": -0.04155,
+   "conc": 0.22385,
+   "dconc12": 0.01401,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -1983,11 +1983,11 @@
    "spx": 1.93,
    "ndx": -0.16,
    "vol": 0.05727,
-   "disp": 0.0622,
+   "disp": 0.06218,
    "rate12": 0.73,
-   "breadth12": -0.02906,
-   "conc": 0.21801,
-   "dconc12": 0.00647,
+   "breadth12": -0.02863,
+   "conc": 0.21823,
+   "dconc12": 0.00639,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2049,11 +2049,11 @@
    "spx": 2.22,
    "ndx": 4.5,
    "vol": 0.04859,
-   "disp": 0.06513,
+   "disp": 0.06495,
    "rate12": 0.54,
-   "breadth12": -0.04033,
-   "conc": 0.22876,
-   "dconc12": 0.0141,
+   "breadth12": -0.03971,
+   "conc": 0.22897,
+   "dconc12": 0.014,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -2115,11 +2115,11 @@
    "spx": 2.81,
    "ndx": 1.87,
    "vol": 0.06333,
-   "disp": 0.06775,
+   "disp": 0.0678,
    "rate12": 0.05,
-   "breadth12": -0.05115,
-   "conc": 0.22647,
-   "dconc12": 0.02109,
+   "breadth12": -0.05053,
+   "conc": 0.22667,
+   "dconc12": 0.021,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -2174,18 +2174,18 @@
      "ex": -5.77
     }
    ],
-   "med": -0.19
+   "med": -0.24
   },
   {
    "m": "2017-12",
    "spx": 0.98,
    "ndx": 0.48,
    "vol": 0.06103,
-   "disp": 0.05386,
+   "disp": 0.05339,
    "rate12": -0.05,
-   "breadth12": -0.04183,
-   "conc": 0.2254,
-   "dconc12": 0.01896,
+   "breadth12": -0.04148,
+   "conc": 0.22562,
+   "dconc12": 0.01889,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2247,11 +2247,11 @@
    "spx": 5.62,
    "ndx": 8.65,
    "vol": 0.08909,
-   "disp": 0.06892,
+   "disp": 0.0689,
    "rate12": 0.27,
-   "breadth12": -0.06307,
-   "conc": 0.23059,
-   "dconc12": 0.02095,
+   "breadth12": -0.06283,
+   "conc": 0.23082,
+   "dconc12": 0.02089,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -2313,11 +2313,11 @@
    "spx": -3.89,
    "ndx": -1.38,
    "vol": 0.26021,
-   "disp": 0.05948,
+   "disp": 0.05955,
    "rate12": 0.51,
-   "breadth12": -0.05973,
-   "conc": 0.24483,
-   "dconc12": 0.03341,
+   "breadth12": -0.05955,
+   "conc": 0.24509,
+   "dconc12": 0.03338,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -2379,11 +2379,11 @@
    "spx": -2.69,
    "ndx": -3.99,
    "vol": 0.20128,
-   "disp": 0.05017,
+   "disp": 0.04997,
    "rate12": 0.34,
-   "breadth12": -0.03521,
-   "conc": 0.23857,
-   "dconc12": 0.02486,
+   "breadth12": -0.03481,
+   "conc": 0.2388,
+   "dconc12": 0.0248,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -2438,18 +2438,18 @@
      "ex": -4.75
     }
    ],
-   "med": 0.1
+   "med": 0.05
   },
   {
    "m": "2018-04",
    "spx": 0.27,
    "ndx": 0.37,
    "vol": 0.17251,
-   "disp": 0.06511,
+   "disp": 0.065,
    "rate12": 0.66,
-   "breadth12": -0.03051,
-   "conc": 0.24085,
-   "dconc12": 0.02428,
+   "breadth12": -0.03029,
+   "conc": 0.2411,
+   "dconc12": 0.02424,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -2511,20 +2511,20 @@
    "spx": 2.16,
    "ndx": 5.48,
    "vol": 0.1064,
-   "disp": 0.0716,
+   "disp": 0.07144,
    "rate12": 0.62,
-   "breadth12": -0.03218,
-   "conc": 0.25057,
-   "dconc12": 0.03048,
+   "breadth12": -0.03186,
+   "conc": 0.25081,
+   "dconc12": 0.03044,
    "band": {
     "vol1": "중",
     "disp": "중",
-    "rate12": "상",
+    "rate12": "중",
     "breadth12": "중",
     "conc": "하",
     "dconc12": "상"
    },
-   "label": "상승 · 출렁임중 · 격차중 · 금리상 · 덩치중",
+   "label": "상승 · 출렁임중 · 격차중 · 금리중 · 덩치중",
    "n": 184,
    "top": [
     {
@@ -2577,11 +2577,11 @@
    "spx": 0.48,
    "ndx": 1.05,
    "vol": 0.0885,
-   "disp": 0.05826,
+   "disp": 0.05661,
    "rate12": 0.54,
-   "breadth12": -0.03721,
-   "conc": 0.24851,
-   "dconc12": 0.03222,
+   "breadth12": -0.03743,
+   "conc": 0.2488,
+   "dconc12": 0.03224,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2643,11 +2643,11 @@
    "spx": 3.6,
    "ndx": 2.72,
    "vol": 0.08649,
-   "disp": 0.0606,
+   "disp": 0.06058,
    "rate12": 0.66,
-   "breadth12": -0.03266,
-   "conc": 0.24959,
-   "dconc12": 0.03125,
+   "breadth12": -0.03287,
+   "conc": 0.24986,
+   "dconc12": 0.03127,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2702,18 +2702,18 @@
      "ex": -6.94
     }
    ],
-   "med": -0.05
+   "med": -0.06
   },
   {
    "m": "2018-08",
    "spx": 3.03,
    "ndx": 5.84,
    "vol": 0.07217,
-   "disp": 0.06128,
+   "disp": 0.06134,
    "rate12": 0.74,
-   "breadth12": -0.0369,
-   "conc": 0.25919,
-   "dconc12": 0.03557,
+   "breadth12": -0.03728,
+   "conc": 0.25947,
+   "dconc12": 0.03562,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2775,11 +2775,11 @@
    "spx": 0.43,
    "ndx": -0.35,
    "vol": 0.05609,
-   "disp": 0.0506,
+   "disp": 0.05017,
    "rate12": 0.72,
-   "breadth12": -0.05392,
-   "conc": 0.25651,
-   "dconc12": 0.0385,
+   "breadth12": -0.05462,
+   "conc": 0.25682,
+   "dconc12": 0.0386,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -2843,9 +2843,9 @@
    "vol": 0.23307,
    "disp": 0.08033,
    "rate12": 0.77,
-   "breadth12": -0.03124,
-   "conc": 0.25357,
-   "dconc12": 0.0248,
+   "breadth12": -0.03212,
+   "conc": 0.25391,
+   "dconc12": 0.02494,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -2907,11 +2907,11 @@
    "spx": 1.79,
    "ndx": -0.26,
    "vol": 0.1885,
-   "disp": 0.07804,
+   "disp": 0.07803,
    "rate12": 0.59,
-   "breadth12": -0.02732,
-   "conc": 0.24693,
-   "dconc12": 0.02046,
+   "breadth12": -0.02814,
+   "conc": 0.24724,
+   "dconc12": 0.02057,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -2973,11 +2973,11 @@
    "spx": -9.18,
    "ndx": -8.91,
    "vol": 0.28629,
-   "disp": 0.06078,
+   "disp": 0.06068,
    "rate12": 0.29,
-   "breadth12": -0.03448,
-   "conc": 0.24688,
-   "dconc12": 0.02149,
+   "breadth12": -0.03489,
+   "conc": 0.24717,
+   "dconc12": 0.02155,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -3039,11 +3039,11 @@
    "spx": 7.87,
    "ndx": 9.11,
    "vol": 0.18538,
-   "disp": 0.07407,
+   "disp": 0.07412,
    "rate12": -0.09,
-   "breadth12": -0.00581,
-   "conc": 0.24625,
-   "dconc12": 0.01566,
+   "breadth12": -0.00618,
+   "conc": 0.24655,
+   "dconc12": 0.01572,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -3105,11 +3105,11 @@
    "spx": 2.97,
    "ndx": 2.76,
    "vol": 0.09463,
-   "disp": 0.06237,
+   "disp": 0.06243,
    "rate12": -0.14,
-   "breadth12": 0.00819,
-   "conc": 0.24158,
-   "dconc12": -0.00325,
+   "breadth12": 0.00785,
+   "conc": 0.24187,
+   "dconc12": -0.00322,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -3164,18 +3164,18 @@
      "ex": -11.5
     }
    ],
-   "med": -0.18
+   "med": -0.17
   },
   {
    "m": "2019-03",
    "spx": 1.79,
    "ndx": 3.96,
    "vol": 0.11725,
-   "disp": 0.05558,
+   "disp": 0.05552,
    "rate12": -0.33,
-   "breadth12": -0.02129,
-   "conc": 0.24742,
-   "dconc12": 0.00885,
+   "breadth12": -0.02172,
+   "conc": 0.2477,
+   "dconc12": 0.0089,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -3237,11 +3237,11 @@
    "spx": 3.93,
    "ndx": 5.46,
    "vol": 0.06178,
-   "disp": 0.06748,
+   "disp": 0.06736,
    "rate12": -0.44,
-   "breadth12": -0.02654,
-   "conc": 0.25537,
-   "dconc12": 0.01452,
+   "breadth12": -0.02698,
+   "conc": 0.25567,
+   "dconc12": 0.01457,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -3296,18 +3296,18 @@
      "ex": -6.03
     }
    ],
-   "med": -0.18
+   "med": -0.16
   },
   {
    "m": "2019-05",
    "spx": -6.58,
    "ndx": -8.4,
    "vol": 0.14226,
-   "disp": 0.08223,
+   "disp": 0.08229,
    "rate12": -0.69,
-   "breadth12": -0.0147,
-   "conc": 0.25184,
-   "dconc12": 0.00127,
+   "breadth12": -0.0152,
+   "conc": 0.25213,
+   "dconc12": 0.00132,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -3369,11 +3369,11 @@
    "spx": 6.89,
    "ndx": 7.62,
    "vol": 0.11773,
-   "disp": 0.05939,
+   "disp": 0.05947,
    "rate12": -0.85,
-   "breadth12": -0.0129,
-   "conc": 0.25066,
-   "dconc12": 0.00214,
+   "breadth12": -0.013,
+   "conc": 0.25118,
+   "dconc12": 0.00238,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -3428,18 +3428,18 @@
      "ex": -14.12
     }
    ],
-   "med": -0.84
+   "med": -0.83
   },
   {
    "m": "2019-07",
    "spx": 1.31,
    "ndx": 2.32,
    "vol": 0.08196,
-   "disp": 0.056,
+   "disp": 0.05611,
    "rate12": -0.94,
-   "breadth12": -0.01614,
-   "conc": 0.25277,
-   "dconc12": 0.00318,
+   "breadth12": -0.0163,
+   "conc": 0.25329,
+   "dconc12": 0.00343,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -3501,11 +3501,11 @@
    "spx": -1.81,
    "ndx": -2.01,
    "vol": 0.23119,
-   "disp": 0.0853,
+   "disp": 0.08542,
    "rate12": -1.36,
-   "breadth12": -0.01039,
-   "conc": 0.25236,
-   "dconc12": -0.00683,
+   "breadth12": -0.01045,
+   "conc": 0.25287,
+   "dconc12": -0.00661,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -3567,11 +3567,11 @@
    "spx": 1.72,
    "ndx": 0.76,
    "vol": 0.08625,
-   "disp": 0.05897,
+   "disp": 0.0589,
    "rate12": -1.37,
-   "breadth12": 0.00969,
-   "conc": 0.25174,
-   "dconc12": -0.00476,
+   "breadth12": 0.01007,
+   "conc": 0.25223,
+   "dconc12": -0.00459,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -3633,11 +3633,11 @@
    "spx": 2.04,
    "ndx": 4.31,
    "vol": 0.10737,
-   "disp": 0.06697,
+   "disp": 0.06703,
    "rate12": -1.46,
-   "breadth12": -0.00212,
-   "conc": 0.25719,
-   "dconc12": 0.00362,
+   "breadth12": -0.00153,
+   "conc": 0.25766,
+   "dconc12": 0.00376,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -3699,11 +3699,11 @@
    "spx": 3.4,
    "ndx": 3.96,
    "vol": 0.05842,
-   "disp": 0.0641,
+   "disp": 0.06362,
    "rate12": -1.23,
-   "breadth12": -0.01991,
-   "conc": 0.25931,
-   "dconc12": 0.01238,
+   "breadth12": -0.01969,
+   "conc": 0.25982,
+   "dconc12": 0.01257,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -3765,11 +3765,11 @@
    "spx": 2.86,
    "ndx": 3.92,
    "vol": 0.07645,
-   "disp": 0.0492,
+   "disp": 0.04902,
    "rate12": -0.77,
-   "breadth12": -0.01248,
-   "conc": 0.2622,
-   "dconc12": 0.01532,
+   "breadth12": -0.01253,
+   "conc": 0.26272,
+   "dconc12": 0.01555,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -3831,11 +3831,11 @@
    "spx": -0.16,
    "ndx": 2.96,
    "vol": 0.11874,
-   "disp": 0.0756,
+   "disp": 0.07565,
    "rate12": -1.12,
-   "breadth12": -0.05183,
-   "conc": 0.27336,
-   "dconc12": 0.02711,
+   "breadth12": -0.05171,
+   "conc": 0.27387,
+   "dconc12": 0.02732,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -3897,11 +3897,11 @@
    "spx": -8.41,
    "ndx": -5.89,
    "vol": 0.24137,
-   "disp": 0.06479,
+   "disp": 0.06489,
    "rate12": -1.6,
-   "breadth12": -0.06305,
-   "conc": 0.27491,
-   "dconc12": 0.03333,
+   "breadth12": -0.063,
+   "conc": 0.27542,
+   "dconc12": 0.03355,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -3963,11 +3963,11 @@
    "spx": -12.51,
    "ndx": -7.66,
    "vol": 0.93958,
-   "disp": 0.15748,
+   "disp": 0.15778,
    "rate12": -1.71,
-   "breadth12": -0.11233,
-   "conc": 0.29032,
-   "dconc12": 0.0429,
+   "breadth12": -0.11247,
+   "conc": 0.29083,
+   "dconc12": 0.04312,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -4029,11 +4029,11 @@
    "spx": 12.68,
    "ndx": 15.19,
    "vol": 0.41313,
-   "disp": 0.14685,
+   "disp": 0.14716,
    "rate12": -1.87,
-   "breadth12": -0.10442,
-   "conc": 0.29775,
-   "dconc12": 0.04238,
+   "breadth12": -0.1044,
+   "conc": 0.29826,
+   "dconc12": 0.04259,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -4095,11 +4095,11 @@
    "spx": 4.53,
    "ndx": 6.17,
    "vol": 0.227,
-   "disp": 0.07821,
+   "disp": 0.07829,
    "rate12": -1.49,
-   "breadth12": -0.11523,
-   "conc": 0.29452,
-   "dconc12": 0.04268,
+   "breadth12": -0.11517,
+   "conc": 0.29501,
+   "dconc12": 0.04288,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -4154,18 +4154,18 @@
      "ex": -7.95
     }
    ],
-   "med": -0.21
+   "med": -0.25
   },
   {
    "m": "2020-06",
    "spx": 1.84,
    "ndx": 6.29,
    "vol": 0.30075,
-   "disp": 0.07515,
+   "disp": 0.07527,
    "rate12": -1.34,
-   "breadth12": -0.12343,
-   "conc": 0.30592,
-   "dconc12": 0.05527,
+   "breadth12": -0.12326,
+   "conc": 0.30641,
+   "dconc12": 0.05523,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -4227,11 +4227,11 @@
    "spx": 5.51,
    "ndx": 7.37,
    "vol": 0.13593,
-   "disp": 0.08382,
+   "disp": 0.08397,
    "rate12": -1.47,
-   "breadth12": -0.13697,
-   "conc": 0.31411,
-   "dconc12": 0.06134,
+   "breadth12": -0.13682,
+   "conc": 0.31459,
+   "dconc12": 0.0613,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -4293,11 +4293,11 @@
    "spx": 7.01,
    "ndx": 11.05,
    "vol": 0.08115,
-   "disp": 0.07923,
+   "disp": 0.07937,
    "rate12": -0.78,
-   "breadth12": -0.16979,
-   "conc": 0.32919,
-   "dconc12": 0.07684,
+   "breadth12": -0.16969,
+   "conc": 0.32966,
+   "dconc12": 0.07679,
    "band": {
     "vol1": "하",
     "disp": "상",
@@ -4352,17 +4352,17 @@
      "ex": -11.32
     }
    ],
-   "med": -0.74
+   "med": -0.75
   },
   {
    "m": "2020-09",
    "spx": -3.92,
    "ndx": -5.72,
    "vol": 0.24696,
-   "disp": 0.06285,
+   "disp": 0.06296,
    "rate12": -0.99,
-   "breadth12": -0.15916,
-   "conc": 0.31469,
+   "breadth12": -0.15928,
+   "conc": 0.31517,
    "dconc12": 0.06294,
    "band": {
     "vol1": "상",
@@ -4425,11 +4425,11 @@
    "spx": -2.77,
    "ndx": -3.2,
    "vol": 0.21254,
-   "disp": 0.07549,
+   "disp": 0.07527,
    "rate12": -0.81,
-   "breadth12": -0.12147,
-   "conc": 0.31454,
-   "dconc12": 0.05735,
+   "breadth12": -0.12171,
+   "conc": 0.31505,
+   "dconc12": 0.05739,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -4491,11 +4491,11 @@
    "spx": 10.75,
    "ndx": 11.0,
    "vol": 0.1681,
-   "disp": 0.11876,
+   "disp": 0.11871,
    "rate12": -0.94,
-   "breadth12": -0.08895,
-   "conc": 0.30594,
-   "dconc12": 0.04663,
+   "breadth12": -0.08923,
+   "conc": 0.30649,
+   "dconc12": 0.04667,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -4559,9 +4559,9 @@
    "vol": 0.08096,
    "disp": 0.05891,
    "rate12": -0.99,
-   "breadth12": -0.08529,
-   "conc": 0.312,
-   "dconc12": 0.0498,
+   "breadth12": -0.08554,
+   "conc": 0.31255,
+   "dconc12": 0.04983,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -4623,11 +4623,11 @@
    "spx": -1.11,
    "ndx": 0.29,
    "vol": 0.16346,
-   "disp": 0.07151,
+   "disp": 0.06941,
    "rate12": -0.4,
-   "breadth12": -0.06133,
-   "conc": 0.31682,
-   "dconc12": 0.04346,
+   "breadth12": -0.06235,
+   "conc": 0.31747,
+   "dconc12": 0.0436,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -4667,14 +4667,14 @@
    ],
    "bot": [
     {
+     "sid": "t-x-ivol",
+     "name": "특이변동성 최하위 10",
+     "ex": -4.07
+    },
+    {
      "sid": "t-x-52wh",
      "name": "52주 신고가 근접 10",
      "ex": -4.11
-    },
-    {
-     "sid": "p-xs10-top10",
-     "name": "페어 트레이딩 — 횡단면 최대괴리 상위10 (상위 10페어)",
-     "ex": -4.86
     },
     {
      "sid": "t-x-earngap",
@@ -4682,18 +4682,18 @@
      "ex": -5.05
     }
    ],
-   "med": 0.31
+   "med": 0.2
   },
   {
    "m": "2021-02",
    "spx": 2.61,
    "ndx": -0.12,
    "vol": 0.15698,
-   "disp": 0.11039,
+   "disp": 0.1101,
    "rate12": 0.31,
-   "breadth12": -0.00957,
-   "conc": 0.305,
-   "dconc12": 0.03009,
+   "breadth12": -0.01109,
+   "conc": 0.30573,
+   "dconc12": 0.03031,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -4755,18 +4755,18 @@
    "spx": 4.24,
    "ndx": 1.41,
    "vol": 0.15089,
-   "disp": 0.06906,
+   "disp": 0.06832,
    "rate12": 1.04,
-   "breadth12": 0.1393,
-   "conc": 0.29709,
-   "dconc12": 0.00677,
+   "breadth12": 0.1379,
+   "conc": 0.29772,
+   "dconc12": 0.0069,
    "band": {
     "vol1": "상",
     "disp": "중",
     "rate12": "상",
     "breadth12": "상",
     "conc": "중",
-    "dconc12": "하"
+    "dconc12": "중"
    },
    "label": "상승 · 출렁임상 · 격차중 · 금리상 · 덩치상",
    "n": 187,
@@ -4821,11 +4821,11 @@
    "spx": 5.24,
    "ndx": 5.88,
    "vol": 0.10839,
-   "disp": 0.05541,
+   "disp": 0.0549,
    "rate12": 1.01,
-   "breadth12": 0.09793,
-   "conc": 0.30767,
-   "dconc12": 0.00992,
+   "breadth12": 0.09693,
+   "conc": 0.30827,
+   "dconc12": 0.01001,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -4887,11 +4887,11 @@
    "spx": 0.55,
    "ndx": -1.26,
    "vol": 0.13967,
-   "disp": 0.058,
+   "disp": 0.05749,
    "rate12": 0.93,
-   "breadth12": 0.11682,
-   "conc": 0.29812,
-   "dconc12": 0.0036,
+   "breadth12": 0.1162,
+   "conc": 0.29864,
+   "dconc12": 0.00363,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -4953,11 +4953,11 @@
    "spx": 2.22,
    "ndx": 6.34,
    "vol": 0.08567,
-   "disp": 0.06578,
+   "disp": 0.06587,
    "rate12": 0.79,
-   "breadth12": 0.09267,
-   "conc": 0.30869,
-   "dconc12": 0.00277,
+   "breadth12": 0.09202,
+   "conc": 0.3092,
+   "dconc12": 0.00279,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -5012,18 +5012,18 @@
      "ex": -9.37
     }
    ],
-   "med": -0.1
+   "med": -0.08
   },
   {
    "m": "2021-07",
    "spx": 2.27,
    "ndx": 2.78,
    "vol": 0.11766,
-   "disp": 0.06984,
+   "disp": 0.06988,
    "rate12": 0.69,
-   "breadth12": 0.09237,
-   "conc": 0.31068,
-   "dconc12": -0.00342,
+   "breadth12": 0.09193,
+   "conc": 0.31116,
+   "dconc12": -0.00343,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -5078,18 +5078,18 @@
      "ex": -11.44
     }
    ],
-   "med": -0.22
+   "med": -0.19
   },
   {
    "m": "2021-08",
    "spx": 2.9,
    "ndx": 4.16,
    "vol": 0.08383,
-   "disp": 0.05905,
+   "disp": 0.05916,
    "rate12": 0.58,
-   "breadth12": 0.11853,
-   "conc": 0.31725,
-   "dconc12": -0.01195,
+   "breadth12": 0.11811,
+   "conc": 0.31773,
+   "dconc12": -0.01193,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -5151,11 +5151,11 @@
    "spx": -4.76,
    "ndx": -5.73,
    "vol": 0.12717,
-   "disp": 0.06129,
+   "disp": 0.06131,
    "rate12": 0.83,
-   "breadth12": 0.10584,
-   "conc": 0.31223,
-   "dconc12": -0.00246,
+   "breadth12": 0.10569,
+   "conc": 0.31269,
+   "dconc12": -0.00248,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -5217,11 +5217,11 @@
    "spx": 6.91,
    "ndx": 7.9,
    "vol": 0.10852,
-   "disp": 0.07589,
+   "disp": 0.0758,
    "rate12": 0.67,
-   "breadth12": 0.05919,
-   "conc": 0.3225,
-   "dconc12": 0.00796,
+   "breadth12": 0.05948,
+   "conc": 0.32294,
+   "dconc12": 0.00789,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -5283,11 +5283,11 @@
    "spx": -0.83,
    "ndx": 1.8,
    "vol": 0.12915,
-   "disp": 0.07677,
+   "disp": 0.07686,
    "rate12": 0.59,
-   "breadth12": -0.0148,
-   "conc": 0.3352,
-   "dconc12": 0.02925,
+   "breadth12": -0.01447,
+   "conc": 0.33567,
+   "dconc12": 0.02918,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -5349,11 +5349,11 @@
    "spx": 4.36,
    "ndx": 1.14,
    "vol": 0.16765,
-   "disp": 0.06317,
+   "disp": 0.06325,
    "rate12": 0.59,
-   "breadth12": 0.00959,
-   "conc": 0.32466,
-   "dconc12": 0.01265,
+   "breadth12": 0.0102,
+   "conc": 0.32511,
+   "dconc12": 0.01256,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -5415,11 +5415,11 @@
    "spx": -5.26,
    "ndx": -8.52,
    "vol": 0.18244,
-   "disp": 0.0938,
+   "disp": 0.09336,
    "rate12": 0.68,
-   "breadth12": 0.0207,
-   "conc": 0.32208,
-   "dconc12": 0.00526,
+   "breadth12": 0.02148,
+   "conc": 0.32259,
+   "dconc12": 0.00512,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -5474,18 +5474,18 @@
      "ex": -10.89
     }
    ],
-   "med": 0.32
+   "med": 0.33
   },
   {
    "m": "2022-02",
    "spx": -3.14,
    "ndx": -4.64,
    "vol": 0.24121,
-   "disp": 0.08227,
+   "disp": 0.08232,
    "rate12": 0.39,
-   "breadth12": 0.00134,
-   "conc": 0.31721,
-   "dconc12": 0.01221,
+   "breadth12": 0.00223,
+   "conc": 0.31775,
+   "dconc12": 0.01202,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -5547,18 +5547,18 @@
    "spx": 3.58,
    "ndx": 4.22,
    "vol": 0.22739,
-   "disp": 0.08257,
+   "disp": 0.08242,
    "rate12": 0.58,
-   "breadth12": -0.03041,
-   "conc": 0.32543,
-   "dconc12": 0.02833,
+   "breadth12": -0.02975,
+   "conc": 0.32597,
+   "dconc12": 0.02825,
    "band": {
     "vol1": "상",
     "disp": "상",
     "rate12": "중",
     "breadth12": "중",
     "conc": "중",
-    "dconc12": "상"
+    "dconc12": "중"
    },
    "label": "상승 · 출렁임상 · 격차상 · 금리중 · 덩치중",
    "n": 187,
@@ -5613,11 +5613,11 @@
    "spx": -8.8,
    "ndx": -13.37,
    "vol": 0.2419,
-   "disp": 0.07901,
+   "disp": 0.07854,
    "rate12": 1.24,
-   "breadth12": 0.01123,
-   "conc": 0.30492,
-   "dconc12": -0.00275,
+   "breadth12": 0.01198,
+   "conc": 0.30545,
+   "dconc12": -0.00282,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -5679,11 +5679,11 @@
    "spx": 0.01,
    "ndx": -1.65,
    "vol": 0.31268,
-   "disp": 0.08436,
+   "disp": 0.08446,
    "rate12": 1.27,
-   "breadth12": 0.00796,
-   "conc": 0.29431,
-   "dconc12": -0.00381,
+   "breadth12": 0.00832,
+   "conc": 0.29485,
+   "dconc12": -0.00379,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -5745,11 +5745,11 @@
    "spx": -8.39,
    "ndx": -9.0,
    "vol": 0.29416,
-   "disp": 0.07536,
+   "disp": 0.07503,
    "rate12": 1.53,
-   "breadth12": 0.01873,
-   "conc": 0.29376,
-   "dconc12": -0.01493,
+   "breadth12": 0.01934,
+   "conc": 0.29426,
+   "dconc12": -0.01494,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -5811,11 +5811,11 @@
    "spx": 9.11,
    "ndx": 12.55,
    "vol": 0.19311,
-   "disp": 0.08052,
+   "disp": 0.08066,
    "rate12": 1.43,
-   "breadth12": 0.02419,
-   "conc": 0.30738,
-   "dconc12": -0.0033,
+   "breadth12": 0.02465,
+   "conc": 0.30789,
+   "dconc12": -0.00327,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -5877,11 +5877,11 @@
    "spx": -4.24,
    "ndx": -5.22,
    "vol": 0.20227,
-   "disp": 0.06301,
+   "disp": 0.06285,
    "rate12": 1.85,
-   "breadth12": 0.03655,
-   "conc": 0.30309,
-   "dconc12": -0.01415,
+   "breadth12": 0.03702,
+   "conc": 0.30362,
+   "dconc12": -0.0141,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -5943,11 +5943,11 @@
    "spx": -9.34,
    "ndx": -10.6,
    "vol": 0.23809,
-   "disp": 0.06237,
+   "disp": 0.06246,
    "rate12": 2.31,
-   "breadth12": 0.02703,
-   "conc": 0.29963,
-   "dconc12": -0.0126,
+   "breadth12": 0.02738,
+   "conc": 0.30035,
+   "dconc12": -0.01235,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -6002,18 +6002,18 @@
      "ex": -12.36
     }
    ],
-   "med": 1.1
+   "med": 1.05
   },
   {
    "m": "2022-10",
    "spx": 7.99,
    "ndx": 3.96,
    "vol": 0.27947,
-   "disp": 0.09735,
+   "disp": 0.09752,
    "rate12": 2.55,
-   "breadth12": 0.05846,
-   "conc": 0.28326,
-   "dconc12": -0.03924,
+   "breadth12": 0.0586,
+   "conc": 0.28397,
+   "dconc12": -0.03897,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -6068,18 +6068,18 @@
      "ex": -14.45
     }
    ],
-   "med": -0.32
+   "med": -0.34
   },
   {
    "m": "2022-11",
    "spx": 5.38,
    "ndx": 5.48,
    "vol": 0.27941,
-   "disp": 0.07786,
+   "disp": 0.0775,
    "rate12": 2.25,
-   "breadth12": 0.09435,
-   "conc": 0.27066,
-   "dconc12": -0.06453,
+   "breadth12": 0.09493,
+   "conc": 0.27129,
+   "dconc12": -0.06438,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -6141,11 +6141,11 @@
    "spx": -5.9,
    "ndx": -9.06,
    "vol": 0.17866,
-   "disp": 0.05623,
+   "disp": 0.05597,
    "rate12": 2.36,
-   "breadth12": 0.07794,
-   "conc": 0.25736,
-   "dconc12": -0.0673,
+   "breadth12": 0.07859,
+   "conc": 0.25791,
+   "dconc12": -0.0672,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -6200,18 +6200,18 @@
      "ex": -7.47
     }
    ],
-   "med": 0.48
+   "med": 0.5
   },
   {
    "m": "2023-01",
    "spx": 6.18,
    "ndx": 10.62,
    "vol": 0.16382,
-   "disp": 0.09178,
+   "disp": 0.08922,
    "rate12": 1.73,
-   "breadth12": 0.08508,
-   "conc": 0.26728,
-   "dconc12": -0.0548,
+   "breadth12": 0.08564,
+   "conc": 0.26797,
+   "dconc12": -0.05462,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -6275,9 +6275,9 @@
    "vol": 0.1625,
    "disp": 0.06054,
    "rate12": 2.09,
-   "breadth12": 0.05643,
-   "conc": 0.2751,
-   "dconc12": -0.04211,
+   "breadth12": 0.05699,
+   "conc": 0.27582,
+   "dconc12": -0.04193,
    "band": {
     "vol1": "상",
     "disp": "하",
@@ -6339,11 +6339,11 @@
    "spx": 3.51,
    "ndx": 9.46,
    "vol": 0.1864,
-   "disp": 0.08331,
+   "disp": 0.08345,
    "rate12": 1.16,
-   "breadth12": 0.0292,
-   "conc": 0.29343,
-   "dconc12": -0.032,
+   "breadth12": 0.02963,
+   "conc": 0.29415,
+   "dconc12": -0.03183,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -6405,11 +6405,11 @@
    "spx": 1.46,
    "ndx": 0.49,
    "vol": 0.12352,
-   "disp": 0.06059,
+   "disp": 0.06053,
    "rate12": 0.55,
-   "breadth12": -0.00919,
-   "conc": 0.29668,
-   "dconc12": -0.00824,
+   "breadth12": -0.00902,
+   "conc": 0.29737,
+   "dconc12": -0.00808,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -6471,11 +6471,11 @@
    "spx": 0.25,
    "ndx": 7.61,
    "vol": 0.13132,
-   "disp": 0.08485,
+   "disp": 0.08471,
    "rate12": 0.79,
-   "breadth12": -0.06609,
-   "conc": 0.32336,
-   "dconc12": 0.02905,
+   "breadth12": -0.06577,
+   "conc": 0.324,
+   "dconc12": 0.02915,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -6537,11 +6537,11 @@
    "spx": 6.47,
    "ndx": 6.49,
    "vol": 0.10785,
-   "disp": 0.07644,
+   "disp": 0.07658,
    "rate12": 0.83,
-   "breadth12": -0.05218,
-   "conc": 0.32528,
-   "dconc12": 0.03152,
+   "breadth12": -0.05223,
+   "conc": 0.32594,
+   "dconc12": 0.03168,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -6596,18 +6596,18 @@
      "ex": -23.83
     }
    ],
-   "med": -1.05
+   "med": -1.11
   },
   {
    "m": "2023-07",
    "spx": 3.11,
    "ndx": 3.81,
    "vol": 0.08687,
-   "disp": 0.06558,
+   "disp": 0.06568,
    "rate12": 1.3,
-   "breadth12": -0.03861,
-   "conc": 0.32699,
-   "dconc12": 0.0196,
+   "breadth12": -0.03855,
+   "conc": 0.32763,
+   "dconc12": 0.01975,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -6669,11 +6669,11 @@
    "spx": -1.77,
    "ndx": -1.62,
    "vol": 0.11974,
-   "disp": 0.06852,
+   "disp": 0.06856,
    "rate12": 0.94,
-   "breadth12": -0.06608,
-   "conc": 0.32962,
-   "dconc12": 0.02653,
+   "breadth12": -0.0661,
+   "conc": 0.33025,
+   "dconc12": 0.02663,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -6728,24 +6728,24 @@
      "ex": -4.63
     }
    ],
-   "med": 0.26
+   "med": 0.27
   },
   {
    "m": "2023-09",
    "spx": -4.87,
    "ndx": -5.07,
    "vol": 0.10658,
-   "disp": 0.05106,
+   "disp": 0.05078,
    "rate12": 0.76,
    "breadth12": -0.07154,
-   "conc": 0.3255,
-   "dconc12": 0.02587,
+   "conc": 0.3261,
+   "dconc12": 0.02575,
    "band": {
     "vol1": "중",
     "disp": "하",
     "rate12": "상",
     "breadth12": "하",
-    "conc": "상",
+    "conc": "중",
     "dconc12": "중"
    },
    "label": "하락 · 출렁임중 · 격차하 · 금리상 · 덩치하",
@@ -6794,18 +6794,18 @@
      "ex": -4.13
     }
    ],
-   "med": 0.59
+   "med": 0.58
   },
   {
    "m": "2023-10",
    "spx": -2.2,
    "ndx": -2.08,
    "vol": 0.14446,
-   "disp": 0.07439,
+   "disp": 0.07451,
    "rate12": 0.78,
-   "breadth12": -0.10384,
-   "conc": 0.32901,
-   "dconc12": 0.04575,
+   "breadth12": -0.10381,
+   "conc": 0.32959,
+   "dconc12": 0.04563,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -6867,11 +6867,11 @@
    "spx": 8.92,
    "ndx": 10.67,
    "vol": 0.1116,
-   "disp": 0.07974,
+   "disp": 0.07958,
    "rate12": 0.69,
-   "breadth12": -0.12137,
-   "conc": 0.33385,
-   "dconc12": 0.06318,
+   "breadth12": -0.12139,
+   "conc": 0.33439,
+   "dconc12": 0.0631,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -6933,11 +6933,11 @@
    "spx": 4.42,
    "ndx": 5.51,
    "vol": 0.09419,
-   "disp": 0.07343,
+   "disp": 0.07357,
    "rate12": 0.0,
-   "breadth12": -0.12202,
-   "conc": 0.32717,
-   "dconc12": 0.06982,
+   "breadth12": -0.12229,
+   "conc": 0.32771,
+   "dconc12": 0.06979,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -6992,18 +6992,18 @@
      "ex": -10.56
     }
    ],
-   "med": -0.87
+   "med": -0.91
   },
   {
    "m": "2024-01",
    "spx": 1.59,
    "ndx": 1.85,
    "vol": 0.11038,
-   "disp": 0.06571,
+   "disp": 0.06562,
    "rate12": 0.47,
-   "breadth12": -0.15104,
-   "conc": 0.33042,
-   "dconc12": 0.06314,
+   "breadth12": -0.15052,
+   "conc": 0.33092,
+   "dconc12": 0.06296,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -7065,11 +7065,11 @@
    "spx": 5.17,
    "ndx": 5.29,
    "vol": 0.13545,
-   "disp": 0.07398,
+   "disp": 0.07349,
    "rate12": 0.33,
-   "breadth12": -0.16612,
-   "conc": 0.34002,
-   "dconc12": 0.06492,
+   "breadth12": -0.16541,
+   "conc": 0.34053,
+   "dconc12": 0.06471,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -7131,11 +7131,11 @@
    "spx": 3.1,
    "ndx": 1.17,
    "vol": 0.09701,
-   "disp": 0.05873,
+   "disp": 0.05878,
    "rate12": 0.72,
-   "breadth12": -0.10073,
-   "conc": 0.33649,
-   "dconc12": 0.04306,
+   "breadth12": -0.09977,
+   "conc": 0.33699,
+   "dconc12": 0.04285,
    "band": {
     "vol1": "하",
     "disp": "하",
@@ -7190,18 +7190,18 @@
      "ex": -4.97
     }
    ],
-   "med": -0.21
+   "med": -0.2
   },
   {
    "m": "2024-04",
    "spx": -4.16,
    "ndx": -4.46,
    "vol": 0.13649,
-   "disp": 0.06614,
+   "disp": 0.06609,
    "rate12": 1.25,
-   "breadth12": -0.0945,
-   "conc": 0.34027,
-   "dconc12": 0.04359,
+   "breadth12": -0.09346,
+   "conc": 0.34076,
+   "dconc12": 0.04339,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -7256,18 +7256,18 @@
      "ex": -6.1
     }
    ],
-   "med": 0.31
+   "med": 0.39
   },
   {
    "m": "2024-05",
    "spx": 4.8,
    "ndx": 6.28,
    "vol": 0.09353,
-   "disp": 0.07996,
+   "disp": 0.08002,
    "rate12": 0.87,
-   "breadth12": -0.06939,
-   "conc": 0.35403,
-   "dconc12": 0.03067,
+   "breadth12": -0.06862,
+   "conc": 0.35454,
+   "dconc12": 0.03054,
    "band": {
     "vol1": "하",
     "disp": "상",
@@ -7329,11 +7329,11 @@
    "spx": 3.47,
    "ndx": 6.18,
    "vol": 0.07039,
-   "disp": 0.0653,
+   "disp": 0.06528,
    "rate12": 0.55,
-   "breadth12": -0.12503,
-   "conc": 0.36972,
-   "dconc12": 0.04444,
+   "breadth12": -0.12419,
+   "conc": 0.37021,
+   "dconc12": 0.04427,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -7395,11 +7395,11 @@
    "spx": 1.13,
    "ndx": -1.63,
    "vol": 0.14792,
-   "disp": 0.0868,
+   "disp": 0.08681,
    "rate12": 0.12,
-   "breadth12": -0.08924,
-   "conc": 0.35802,
-   "dconc12": 0.03103,
+   "breadth12": -0.08856,
+   "conc": 0.35852,
+   "dconc12": 0.03088,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -7461,11 +7461,11 @@
    "spx": 2.28,
    "ndx": 1.1,
    "vol": 0.19209,
-   "disp": 0.06999,
+   "disp": 0.06993,
    "rate12": -0.18,
-   "breadth12": -0.07171,
-   "conc": 0.35462,
-   "dconc12": 0.02499,
+   "breadth12": -0.07075,
+   "conc": 0.35509,
+   "dconc12": 0.02484,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -7527,11 +7527,11 @@
    "spx": 2.02,
    "ndx": 2.48,
    "vol": 0.1385,
-   "disp": 0.06215,
+   "disp": 0.06227,
    "rate12": -0.78,
-   "breadth12": -0.07265,
-   "conc": 0.35576,
-   "dconc12": 0.03026,
+   "breadth12": -0.07177,
+   "conc": 0.35624,
+   "dconc12": 0.03014,
    "band": {
     "vol1": "중",
     "disp": "하",
@@ -7593,11 +7593,11 @@
    "spx": -0.99,
    "ndx": -0.85,
    "vol": 0.11086,
-   "disp": 0.07984,
+   "disp": 0.07997,
    "rate12": -0.6,
-   "breadth12": -0.0591,
-   "conc": 0.35866,
-   "dconc12": 0.02965,
+   "breadth12": -0.05836,
+   "conc": 0.35917,
+   "dconc12": 0.02957,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -7659,11 +7659,11 @@
    "spx": 5.73,
    "ndx": 5.23,
    "vol": 0.13942,
-   "disp": 0.08662,
+   "disp": 0.08617,
    "rate12": -0.19,
-   "breadth12": -0.05733,
-   "conc": 0.35681,
-   "dconc12": 0.02296,
+   "breadth12": -0.05727,
+   "conc": 0.35733,
+   "dconc12": 0.02294,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -7725,10 +7725,10 @@
    "spx": -2.5,
    "ndx": 0.39,
    "vol": 0.14265,
-   "disp": 0.06344,
+   "disp": 0.06348,
    "rate12": 0.7,
-   "breadth12": -0.13263,
-   "conc": 0.38223,
+   "breadth12": -0.13279,
+   "conc": 0.38277,
    "dconc12": 0.05506,
    "band": {
     "vol1": "중",
@@ -7791,11 +7791,11 @@
    "spx": 2.7,
    "ndx": 2.22,
    "vol": 0.13828,
-   "disp": 0.0689,
+   "disp": 0.06882,
    "rate12": 0.59,
-   "breadth12": -0.09958,
-   "conc": 0.37173,
-   "dconc12": 0.04131,
+   "breadth12": -0.10002,
+   "conc": 0.37228,
+   "dconc12": 0.04136,
    "band": {
     "vol1": "중",
     "disp": "중",
@@ -7857,11 +7857,11 @@
    "spx": -1.42,
    "ndx": -2.76,
    "vol": 0.12825,
-   "disp": 0.08851,
+   "disp": 0.08856,
    "rate12": -0.01,
-   "breadth12": -0.06771,
-   "conc": 0.35757,
-   "dconc12": 0.01755,
+   "breadth12": -0.06827,
+   "conc": 0.35812,
+   "dconc12": 0.01759,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -7923,11 +7923,11 @@
    "spx": -5.75,
    "ndx": -7.69,
    "vol": 0.2062,
-   "disp": 0.07209,
+   "disp": 0.07221,
    "rate12": 0.03,
-   "breadth12": -0.04919,
-   "conc": 0.34318,
-   "dconc12": 0.00669,
+   "breadth12": -0.04972,
+   "conc": 0.34372,
+   "dconc12": 0.00672,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -7989,11 +7989,11 @@
    "spx": -0.76,
    "ndx": 1.52,
    "vol": 0.49361,
-   "disp": 0.0772,
+   "disp": 0.07697,
    "rate12": -0.52,
-   "breadth12": -0.05904,
-   "conc": 0.34639,
-   "dconc12": 0.00612,
+   "breadth12": -0.05954,
+   "conc": 0.3469,
+   "dconc12": 0.00614,
    "band": {
     "vol1": "상",
     "disp": "중",
@@ -8048,18 +8048,18 @@
      "ex": -10.73
     }
    ],
-   "med": 0.0
+   "med": 0.03
   },
   {
    "m": "2025-05",
    "spx": 6.15,
    "ndx": 9.04,
    "vol": 0.16649,
-   "disp": 0.08238,
+   "disp": 0.08229,
    "rate12": -0.1,
-   "breadth12": -0.05802,
-   "conc": 0.3635,
-   "dconc12": 0.00947,
+   "breadth12": -0.05864,
+   "conc": 0.36407,
+   "dconc12": 0.00953,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -8121,11 +8121,11 @@
    "spx": 4.96,
    "ndx": 6.27,
    "vol": 0.09711,
-   "disp": 0.0715,
+   "disp": 0.07145,
    "rate12": -0.12,
-   "breadth12": -0.0324,
-   "conc": 0.37183,
-   "dconc12": 0.00211,
+   "breadth12": -0.03345,
+   "conc": 0.37243,
+   "dconc12": 0.00222,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -8180,18 +8180,18 @@
      "ex": -6.28
     }
    ],
-   "med": -0.4
+   "med": -0.35
   },
   {
    "m": "2025-07",
    "spx": 2.17,
    "ndx": 2.38,
    "vol": 0.06596,
-   "disp": 0.09397,
+   "disp": 0.09393,
    "rate12": 0.28,
-   "breadth12": -0.08466,
-   "conc": 0.38395,
-   "dconc12": 0.02593,
+   "breadth12": -0.08571,
+   "conc": 0.38457,
+   "dconc12": 0.02605,
    "band": {
     "vol1": "하",
     "disp": "상",
@@ -8246,25 +8246,25 @@
      "ex": -8.47
     }
    ],
-   "med": -0.08
+   "med": -0.04
   },
   {
    "m": "2025-08",
    "spx": 1.91,
    "ndx": 0.85,
    "vol": 0.1191,
-   "disp": 0.07442,
+   "disp": 0.07429,
    "rate12": 0.32,
-   "breadth12": -0.07586,
-   "conc": 0.38289,
-   "dconc12": 0.02827,
+   "breadth12": -0.0769,
+   "conc": 0.38348,
+   "dconc12": 0.02839,
    "band": {
     "vol1": "중",
     "disp": "중",
     "rate12": "중",
     "breadth12": "하",
     "conc": "상",
-    "dconc12": "중"
+    "dconc12": "상"
    },
    "label": "상승 · 출렁임중 · 격차중 · 금리중 · 덩치하",
    "n": 187,
@@ -8280,11 +8280,6 @@
      "ex": 5.25
     },
     {
-     "sid": "p-xs10c-top10",
-     "name": "페어 트레이딩 — 최대괴리 10쌍 · 수렴까지 보유 (상위 10페어)",
-     "ex": 4.91
-    },
-    {
      "sid": "t-x-ratebeta",
      "name": "금리 둔감 최하위 10 (|10년물 베타|)",
      "ex": 4.68
@@ -8293,6 +8288,11 @@
      "sid": "t-x-payout-n50",
      "name": "총주주환원수익률 상위 50 (원 전략 크기)",
      "ex": 4.03
+    },
+    {
+     "sid": "t-x-maxlow-band",
+     "name": "복권형 회피 (MAX 최하위 10) · 밴드 보유",
+     "ex": 3.58
     }
    ],
    "bot": [
@@ -8319,11 +8319,11 @@
    "spx": 3.53,
    "ndx": 5.4,
    "vol": 0.0711,
-   "disp": 0.09073,
+   "disp": 0.08576,
    "rate12": 0.35,
-   "breadth12": -0.10875,
-   "conc": 0.39163,
-   "dconc12": 0.03587,
+   "breadth12": -0.1107,
+   "conc": 0.39232,
+   "dconc12": 0.03607,
    "band": {
     "vol1": "하",
     "disp": "상",
@@ -8378,18 +8378,18 @@
      "ex": -6.52
     }
    ],
-   "med": 0.08
+   "med": 0.04
   },
   {
    "m": "2025-10",
    "spx": 2.27,
    "ndx": 4.77,
    "vol": 0.1427,
-   "disp": 0.09061,
+   "disp": 0.09044,
    "rate12": -0.17,
-   "breadth12": -0.13914,
-   "conc": 0.40408,
-   "dconc12": 0.04542,
+   "breadth12": -0.14118,
+   "conc": 0.40479,
+   "dconc12": 0.04562,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -8444,18 +8444,18 @@
      "ex": -8.02
     }
    ],
-   "med": 0.04
+   "med": 0.01
   },
   {
    "m": "2025-11",
    "spx": 0.13,
    "ndx": -1.64,
    "vol": 0.15074,
-   "disp": 0.07871,
+   "disp": 0.07876,
    "rate12": -0.16,
-   "breadth12": -0.11522,
-   "conc": 0.40031,
-   "dconc12": 0.0435,
+   "breadth12": -0.117,
+   "conc": 0.40106,
+   "dconc12": 0.04373,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -8517,11 +8517,11 @@
    "spx": -0.05,
    "ndx": -0.73,
    "vol": 0.08833,
-   "disp": 0.06724,
+   "disp": 0.0668,
    "rate12": -0.4,
-   "breadth12": -0.06662,
-   "conc": 0.39608,
-   "dconc12": 0.01385,
+   "breadth12": -0.06857,
+   "conc": 0.39689,
+   "dconc12": 0.01412,
    "band": {
     "vol1": "하",
     "disp": "중",
@@ -8583,11 +8583,11 @@
    "spx": 1.37,
    "ndx": 1.2,
    "vol": 0.10541,
-   "disp": 0.11782,
+   "disp": 0.11798,
    "rate12": -0.32,
-   "breadth12": -0.04966,
-   "conc": 0.38771,
-   "dconc12": 0.01598,
+   "breadth12": -0.05152,
+   "conc": 0.38849,
+   "dconc12": 0.01621,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -8649,11 +8649,11 @@
    "spx": -0.87,
    "ndx": -2.32,
    "vol": 0.12904,
-   "disp": 0.10811,
+   "disp": 0.10829,
    "rate12": -0.27,
-   "breadth12": -0.01717,
-   "conc": 0.36749,
-   "dconc12": 0.00992,
+   "breadth12": -0.019,
+   "conc": 0.36828,
+   "dconc12": 0.01016,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -8708,18 +8708,18 @@
      "ex": -14.16
     }
    ],
-   "med": 0.35
+   "med": 0.29
   },
   {
    "m": "2026-03",
    "spx": -5.09,
    "ndx": -4.89,
    "vol": 0.18538,
-   "disp": 0.08488,
+   "disp": 0.08491,
    "rate12": 0.07,
-   "breadth12": -0.05714,
-   "conc": 0.36661,
-   "dconc12": 0.02343,
+   "breadth12": -0.05913,
+   "conc": 0.36744,
+   "dconc12": 0.02372,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -8781,11 +8781,11 @@
    "spx": 10.42,
    "ndx": 15.64,
    "vol": 0.11719,
-   "disp": 0.13821,
+   "disp": 0.13838,
    "rate12": 0.23,
-   "breadth12": -0.09259,
-   "conc": 0.38685,
-   "dconc12": 0.04046,
+   "breadth12": -0.09495,
+   "conc": 0.38762,
+   "dconc12": 0.04072,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -8847,11 +8847,11 @@
    "spx": 5.15,
    "ndx": 10.49,
    "vol": 0.10183,
-   "disp": 0.14231,
+   "disp": 0.14256,
    "rate12": 0.04,
-   "breadth12": -0.10361,
-   "conc": 0.39155,
-   "dconc12": 0.02805,
+   "breadth12": -0.10554,
+   "conc": 0.39229,
+   "dconc12": 0.02822,
    "band": {
     "vol1": "하",
     "disp": "상",
@@ -8913,11 +8913,11 @@
    "spx": -1.06,
    "ndx": -0.19,
    "vol": 0.17307,
-   "disp": 0.11703,
+   "disp": 0.11722,
    "rate12": 0.2,
-   "breadth12": -0.04215,
-   "conc": 0.36313,
-   "dconc12": -0.0087,
+   "breadth12": -0.04383,
+   "conc": 0.36382,
+   "dconc12": -0.0086,
    "band": {
     "vol1": "상",
     "disp": "상",
@@ -8979,11 +8979,11 @@
    "spx": -0.13,
    "ndx": -6.61,
    "vol": 0.12158,
-   "disp": 0.11391,
+   "disp": 0.11406,
    "rate12": 0.38,
-   "breadth12": -0.00311,
-   "conc": 0.37493,
-   "dconc12": -0.00902,
+   "breadth12": -0.0044,
+   "conc": 0.37563,
+   "dconc12": -0.00894,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -9038,27 +9038,27 @@
      "ex": -30.93
     }
    ],
-   "med": 0.13
+   "med": 0.08
   },
   {
    "m": "2026-08",
    "spx": 2.62,
    "ndx": 4.18,
    "vol": 0.10491,
-   "disp": 0.118,
+   "disp": 0.11817,
    "rate12": 0.52,
-   "breadth12": -0.02032,
-   "conc": 0.37569,
-   "dconc12": -0.0072,
+   "breadth12": -0.02199,
+   "conc": 0.37643,
+   "dconc12": -0.00705,
    "band": {
-    "vol1": "하",
+    "vol1": "중",
     "disp": "상",
     "rate12": "중",
     "breadth12": "중",
     "conc": "상",
     "dconc12": "하"
    },
-   "label": "상승 · 출렁임하 · 격차상 · 금리중 · 덩치중",
+   "label": "상승 · 출렁임중 · 격차상 · 금리중 · 덩치중",
    "n": 187,
    "top": [
     {
@@ -9111,11 +9111,11 @@
    "spx": -0.45,
    "ndx": 3.23,
    "vol": 0.10843,
-   "disp": 0.09119,
+   "disp": 0.09117,
    "rate12": 1.13,
-   "breadth12": -0.03899,
-   "conc": 0.38897,
-   "dconc12": -0.00266,
+   "breadth12": -0.03975,
+   "conc": 0.38975,
+   "dconc12": -0.00257,
    "band": {
     "vol1": "중",
     "disp": "상",
@@ -9171,6 +9171,72 @@
     }
    ],
    "med": 0.12
+  },
+  {
+   "m": "2026-10",
+   "spx": 1.49,
+   "ndx": 1.04,
+   "vol": 0.10049,
+   "disp": 0.05207,
+   "rate12": 1.11,
+   "breadth12": 0.00227,
+   "conc": 0.3895,
+   "dconc12": -0.01529,
+   "band": {
+    "vol1": "하",
+    "disp": "하",
+    "rate12": "상",
+    "breadth12": "상",
+    "conc": "상",
+    "dconc12": "하"
+   },
+   "label": "상승 · 출렁임하 · 격차하 · 금리상 · 덩치상",
+   "n": 67,
+   "top": [
+    {
+     "sid": "a-sec-lowvol",
+     "name": "저변동 섹터 상위 3",
+     "ex": 1.58
+    },
+    {
+     "sid": "a-sec-term",
+     "name": "기간스프레드 방향 섹터",
+     "ex": 1.23
+    },
+    {
+     "sid": "a-sec-halloween",
+     "name": "핼러윈 섹터 (11~4월 경기민감)",
+     "ex": 1.23
+    },
+    {
+     "sid": "a-sec-dual",
+     "name": "섹터 듀얼 모멘텀 상위 3",
+     "ex": 0.86
+    },
+    {
+     "sid": "a-sec-52wh",
+     "name": "52주 고점 근접 섹터 상위 3",
+     "ex": 0.86
+    }
+   ],
+   "bot": [
+    {
+     "sid": "a-merger-arb",
+     "name": "합병차익거래 (MNA ETF)",
+     "ex": -2.23
+    },
+    {
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "ex": -3.08
+    },
+    {
+     "sid": "t-x-subom",
+     "name": "서브산업 영업이익률 롱숏 (상하위 5)",
+     "ex": -3.1
+    }
+   ],
+   "med": -0.01
   }
  ]
 }
