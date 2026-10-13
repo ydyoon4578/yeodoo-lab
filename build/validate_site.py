@@ -2052,7 +2052,17 @@ try:
             _pre = _body[max(0, _m.start() - 12):_m.start()]
             if any(_pre.endswith(_x + " ") or _pre.endswith(_x) for _x in _IXNAME):
                 continue
-            errors.append(f"{_pg} '{_m.group(0)}' ≠ stocks.json n_stocks {_n} — 유니버스 표기 갱신 누락")
+            _msg = f"{_pg} '{_m.group(0)}' ≠ stocks.json n_stocks {_n} — 유니버스 표기 갱신 누락"
+            # 🚨 2026-10-13 — 자료 잡의 관문(validate_gate, VALIDATE_GATE=1)에서는 경고로 내린다.
+            #   10-08 부터 편출 종목이 낡은 명단에 남아 517종만 받히자 이 문구 검사 7건이
+            #   «이 잡이 늘린 오류»로 세어져 종목 잡이 16번 연속 그날 가격을 통째로 버렸다
+            #   (기준일 10-08 고착). 문구는 자료가 아니고 봇은 페이지를 못 고친다 — 막아 봐야
+            #   사람이 문구를 고칠 때까지 가격만 멈춘다. 절대 기준(Validate site 예정 실행·사람의
+            #   푸시)에서는 그대로 오류라 붉게 뜨고, 그때 사람이 고친다.
+            if os.environ.get("VALIDATE_GATE") == "1":
+                print(f"⚠ {_msg} (자료 잡 관문에선 경고 — 문구는 사람이 고친다)")
+            else:
+                errors.append(_msg)
 except Exception as e:
     errors.append(f"유니버스 표기 검증 실패: {e}")
 
