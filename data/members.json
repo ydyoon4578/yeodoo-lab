@@ -1,22 +1,22 @@
 {
- "as_of_members": "2026-09-25",
+ "as_of_members": "2026-10-13",
  "note": "지수 편입 명단. 출처 — S&P 500: 위키백과 목록 + SSGA SPY 보유내역 교차 확인, NASDAQ-100: 위키백과 목록. 오늘 스냅샷이며 과거 편입 이력이 아니다(백테스트의 생존편향은 각 결과 화면에 별도 명시).",
  "gates": {
   "spx_n": 503,
   "ndx_n": 101,
   "added": [
-   "BE",
-   "ILMN",
-   "P"
+   "SKYD",
+   "TWLO",
+   "VYLR"
   ],
   "removed": [
-   "BLDR",
-   "TAP",
-   "TTD"
+   "CTVA",
+   "PSKY",
+   "WBD"
   ],
   "cross_check": "SPY 보유내역 대조",
   "sector_changed": [],
-  "name_style_kept": 512,
+  "name_style_kept": 509,
   "ndx_caveat": "NASDAQ-100은 교차할 1차 자료를 못 찾아 변동 상한에만 의존한다"
  },
  "members": {
@@ -1314,16 +1314,6 @@
    "sub": "IT Consulting & Other Services",
    "grp": "Software & Services",
    "ind": "IT Services"
-  },
-  "CTVA": {
-   "name": "CORTEVA INC",
-   "sector": "Materials",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Fertilizers & Agricultural Chemicals",
-   "grp": "Materials",
-   "ind": "Chemicals"
   },
   "CVNA": {
    "name": "CARVANA CO",
@@ -3307,6 +3297,7 @@
    "name": "MODERNA INC",
    "sector": "Health Care",
    "idx": [
+    "NDX",
     "SPX"
    ],
    "sub": "Biotechnology",
@@ -3986,16 +3977,6 @@
    "grp": "Equity Real Estate Investment Trusts (REITs)",
    "ind": "Specialized REITs"
   },
-  "PSKY": {
-   "name": "PARAMOUNT SKYDANCE CL B",
-   "sector": "Communication Services",
-   "idx": [
-    "SPX"
-   ],
-   "sub": "Movies & Entertainment",
-   "grp": "Media & Entertainment",
-   "ind": "Entertainment"
-  },
   "PSX": {
    "name": "PHILLIPS 66",
    "sector": "Energy",
@@ -4281,6 +4262,16 @@
    "sub": "Packaged Foods & Meats",
    "grp": "Food, Beverage & Tobacco",
    "ind": "Food Products"
+  },
+  "SKYD": {
+   "name": "Skydance Corporation",
+   "sector": "Communication Services",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Movies & Entertainment",
+   "grp": "Media & Entertainment",
+   "ind": "Entertainment"
   },
   "SLB": {
    "name": "SCHLUMBERGER LTD",
@@ -4749,6 +4740,16 @@
    "grp": "Media & Entertainment",
    "ind": "Entertainment"
   },
+  "TWLO": {
+   "name": "Twilio",
+   "sector": "Information Technology",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Systems Software",
+   "grp": "Software & Services",
+   "ind": "Software"
+  },
   "TXN": {
    "name": "TEXAS INSTRUMENTS INC",
    "sector": "Information Technology",
@@ -5021,6 +5022,16 @@
    "grp": "Pharmaceuticals, Biotechnology  & Life Sciences",
    "ind": "Pharmaceuticals"
   },
+  "VYLR": {
+   "name": "Vylor",
+   "sector": "Consumer Staples",
+   "idx": [
+    "SPX"
+   ],
+   "sub": "Agricultural Products & Services",
+   "grp": "Food, Beverage & Tobacco",
+   "ind": "Food Products"
+  },
   "VZ": {
    "name": "VERIZON COMMUNICATIONS INC",
    "sector": "Communication Services",
@@ -5050,17 +5061,6 @@
    "sub": "Life Sciences Tools & Services",
    "grp": "Pharmaceuticals, Biotechnology  & Life Sciences",
    "ind": "Life Sciences Tools & Services"
-  },
-  "WBD": {
-   "name": "WARNER BROS DISCOVERY INC",
-   "sector": "Communication Services",
-   "idx": [
-    "NDX",
-    "SPX"
-   ],
-   "sub": "Broadcasting",
-   "grp": "Media & Entertainment",
-   "ind": "Media"
   },
   "WDAY": {
    "name": "WORKDAY INC-CLASS A",
