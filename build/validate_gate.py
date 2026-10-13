@@ -52,13 +52,22 @@ except Exception:
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MARK = os.path.join(ROOT, ".validate_baseline")
+MARK_LINES = MARK + "_lines"            # 기준선의 오류 문장 — 막을 때 «새로 늘어난 것»만 주석으로 남긴다
+
+
+def _bullets(out):
+    """마지막 판정줄 뒤의 오류 목록('  - …')만 — 경고·진행 출력의 비슷한 줄은 빼고."""
+    tail = out[out.rfind("사이트 검증:"):]
+    return [ln.strip().lstrip("- ").strip() for ln in tail.splitlines() if ln.startswith("  - ")]
 # "사이트 검증: 실패 ❌ 3건" / "사이트 검증: 통과 ✅"
 _RE = re.compile(r"사이트 검증:\s*(?:실패\s*❌\s*(\d+)건|통과)")
 
 
 def _measure():
     """validate_site.py 를 돌려 (오류 개수, 출력) 을 돌려준다."""
-    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    # VALIDATE_GATE=1 — 자료 잡 관문에서만 쓰는 판정 완화(현재: 페이지 문구의 유니버스 수 불일치는 경고).
+    #   기준선·검사 둘 다 같은 모드로 재야 비교가 성립한다.
+    env = dict(os.environ, PYTHONIOENCODING="utf-8", VALIDATE_GATE="1")
     r = subprocess.run([sys.executable, os.path.join(ROOT, "build", "validate_site.py")],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", env=env)
     out = (r.stdout or "") + (r.stderr or "")
@@ -81,11 +90,14 @@ def main():
         if n is None:
             print("[관문] 기준선을 못 쟀다 — 검증기가 판정줄 없이 죽었다. 절대 기준으로 돌린다.")
             print(out[-3000:])
-            if os.path.exists(MARK):
-                os.remove(MARK)
+            for p in (MARK, MARK_LINES):
+                if os.path.exists(p):
+                    os.remove(p)
             return 0                                  # 기준선 단계는 절대 막지 않는다
         with open(MARK, "w", encoding="utf-8") as fh:
             fh.write(str(n))
+        with open(MARK_LINES, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(_bullets(out)))
         print("[관문] 기준선 %d건 — 일을 시작하기 전 저장소 상태다." % n)
         if n:
             print(out[-3000:])
@@ -113,6 +125,18 @@ def main():
     if n > base:
         print("[관문] %d건 → %d건. **이 잡이 %d건을 늘렸다.** 막는다."
               % (base, n, n - base))
+        # 🚨 2026-10-13 — 막은 사유를 체크런 주석으로도 남긴다. 로그 본문은 사내 PC 가 못 여는
+        #   외부 저장소로 리다이렉트돼, 주석에 «exit code 1» 만 남은 채 종목 잡이 16번 죽었다
+        #   (원인은 로그 맨 끝의 오류 목록에만 있었다). 주석은 api.github.com 으로 읽힌다.
+        try:
+            old = set(open(MARK_LINES, encoding="utf-8").read().splitlines())
+        except OSError:
+            old = set()
+        new = [ln for ln in _bullets(out) if ln not in old] or _bullets(out)
+        for ln in new[:10]:
+            print("::error::[관문] " + ln[:400])
+        if len(new) > 10:
+            print("::error::[관문] … 외 %d건 — 실행 로그의 '사이트 검증' 목록" % (len(new) - 10))
         return 1
     print("[관문] ⚠ %d건 남아 있지만 시작할 때도 %d건이었다 — 이 잡이 깬 것이 아니다.\n"
           "       자료는 커밋한다. 남은 결함은 Validate site 워크플로가 계속 띄운다."

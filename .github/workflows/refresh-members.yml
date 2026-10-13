@@ -84,6 +84,13 @@ jobs:
       #     같이 세우는 편이 낫다(그날 자료가 통째로 의심스러운 상황이다).
       - name: Refresh PIT membership history
         run: python build/refresh_index_history.py
+      # 🚨 2026-10-13 — 이력에 새 달이 붙으면 그 파생인 index_ledger.json(hist_months·hist_as_of·src_fp)도
+      #   다시 구워야 한다. 원장을 굽는 잡이 종목 잡뿐이라, 10월 첫 실행부터 이 잡의 관문이
+      #   «원장이 지금 입력으로 구워진 것이 아니다(148 ≠ 149)» 1건으로 막혔고 명단·이력이
+      #   09-25 에 고착했다 → 낡은 명단에 남은 편출 종목 때문에 종목 잡도 517종으로 막혔다.
+      #   ⚠ 표준 라이브러리만 쓴다. 두 잡이 같이 올리므로 ci_push.sh REBAKE_TABLE 에도 올렸다.
+      - name: Rebuild index ledger
+        run: python build/index_ledger.py
       - name: Rebuild as-of index
         run: python build/asof_index.py
       - name: Validate
@@ -91,7 +98,7 @@ jobs:
       - name: Commit if changed
         run: |
           bash build/ci_push.sh "chore(data): 지수 편입 명단·시점정합 이력 자동 갱신" \
-            data/members.json data/index_history.json data/asof.json
+            data/members.json data/index_history.json data/index_ledger.json data/asof.json
       # 🚨 2026-08-16 점검에서 이 잡에 신선도 게이트가 없던 것을 찾았다. 관문(validate_gate)은
       #   «자료가 깨졌나» 를 보지 «잡이 돌았는데 안 움직였나» 를 안 본다. 크론이 조용히
       #   드롭되면 잡은 초록인데 산출물만 낡는다 — check_freshness.py 가 그것 때문에 있다.

@@ -42,7 +42,7 @@ data/pit_members.json
 # 고객집중도 수집 중간본(재개용). 원천은 SEC 원문이라 언제든 다시 만들 수 있고 30MB 대다.
 data/_custconc_raw.json
 # 검증 관문의 기준선(러너 안에서만 산다) — build/validate_gate.py
-.validate_baseline
+.validate_baseline*
 # 사내 배포본 — build/deploy_local.py 산출물(저장소에 넣지 않는다)
 _deploy/
 _deploy.log
