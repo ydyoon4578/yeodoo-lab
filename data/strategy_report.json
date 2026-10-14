@@ -10315,7 +10315,7 @@
      "corr": 0.883,
      "alpha": 2.15,
      "t": 1.24,
-     "beta": 0.896
+     "beta": 0.895
     },
     "five": {
      "alpha": 1.95,
@@ -10816,7 +10816,7 @@
      "corr": 0.531,
      "alpha": 1.37,
      "t": 0.52,
-     "beta": 0.913
+     "beta": 0.912
     },
     "five": {
      "alpha": 2.42,
@@ -11023,7 +11023,7 @@
      "corr": 0.519,
      "alpha": 0.39,
      "t": 0.38,
-     "beta": 0.334
+     "beta": 0.335
     },
     "five": {
      "alpha": 0.99,
@@ -11367,7 +11367,7 @@
      "vs": "200일 이동평균 (Faber)",
      "corr": 0.721,
      "alpha": 2.28,
-     "t": 1.07,
+     "t": 1.06,
      "beta": 0.618
     },
     "five": {
@@ -11713,7 +11713,7 @@
      "corr": 0.883,
      "alpha": -2.13,
      "t": -1.25,
-     "beta": 0.87
+     "beta": 0.871
     },
     "five": {
      "alpha": -1.2,
@@ -12232,7 +12232,7 @@
    "incr": {
     "one": {
      "vs": "크로스에셋 RP — 분기 리밸런스",
-     "corr": 0.658,
+     "corr": 0.659,
      "alpha": 1.65,
      "t": 0.49,
      "beta": 0.744
@@ -12946,7 +12946,7 @@
    "incr": {
     "one": {
      "vs": "섹터 리스크패리티",
-     "corr": 0.682,
+     "corr": 0.681,
      "alpha": 0.43,
      "t": 0.17,
      "beta": 1.282
@@ -13671,8 +13671,8 @@
       "절대 모멘텀 (SPY 12-1)",
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
       "합병차익거래 (MNA ETF)",
-      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
-      "크로스에셋 RP 12자산 — 변동성 추정창 90일"
+      "크로스에셋 RP 12자산 — 변동성 추정창 90일",
+      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)"
      ]
     },
     "absorbed": null,
@@ -14873,7 +14873,7 @@
      "vs": "방어형 자산배분 DAA (카나리아 2종)",
      "corr": 0.922,
      "alpha": 1.72,
-     "t": 0.92,
+     "t": 0.91,
      "beta": 1.114
     },
     "five": {
@@ -16605,7 +16605,7 @@
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
      "corr": 0.976,
      "alpha": -0.84,
-     "t": -1.09,
+     "t": -1.08,
      "beta": 1.032
     },
     "five": {
@@ -16933,7 +16933,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.028,
-      "p": 0.509
+      "p": 0.5088
      }
     ],
     "n_boot": 4000,
@@ -17118,7 +17118,7 @@
     },
     "five": {
      "alpha": 1.18,
-     "t": 1.98,
+     "t": 1.97,
      "n": 505,
      "vs": [
       "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
@@ -17451,7 +17451,7 @@
      "vs": "대담형 자산배분 BAA (균형형 · 6종 분산)",
      "corr": 0.922,
      "alpha": -2.18,
-     "t": -1.41,
+     "t": -1.4,
      "beta": 0.764
     },
     "five": {
@@ -17822,10 +17822,10 @@
      "corr": 0.942,
      "alpha": 1.28,
      "t": 0.93,
-     "beta": 0.882
+     "beta": 0.881
     },
     "five": {
-     "alpha": 1.56,
+     "alpha": 1.55,
      "t": 1.08,
      "n": 369,
      "vs": [
@@ -18002,7 +18002,7 @@
    "incr": {
     "one": {
      "vs": "초과채권프리미엄(EBP) 리스크선호 게이트",
-     "corr": 0.466,
+     "corr": 0.467,
      "alpha": -2.51,
      "t": -1.52,
      "beta": 0.729
@@ -19278,13 +19278,13 @@
     "one": {
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 0.922,
-     "alpha": -0.93,
+     "alpha": -0.94,
      "t": -0.42,
      "beta": 1.26
     },
     "five": {
      "alpha": -0.94,
-     "t": -0.33,
+     "t": -0.34,
      "n": 369,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19435,7 +19435,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.217,
-      "p": 0.7652
+      "p": 0.765
      }
     ],
     "n_boot": 4000,
@@ -20041,7 +20041,7 @@
      "corr": 0.915,
      "alpha": -4.99,
      "t": -2.18,
-     "beta": 1.67
+     "beta": 1.671
     },
     "five": {
      "alpha": -4.37,
@@ -39619,7 +39619,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -59602,7 +59602,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -59781,12 +59781,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 82.7,
+    "exposure_now": 82.9,
     "note": "노출 83%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -59960,7 +59960,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61215,7 +61215,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -62635,7 +62635,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63664,7 +63664,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64189,7 +64189,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65395,7 +65395,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65801,12 +65801,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 52.4,
+    "exposure_now": 52.3,
     "note": "노출 52%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -65980,13 +65980,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 94.3,
-    "note": "노출 94%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 95.3,
+    "note": "노출 95%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -66405,7 +66405,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-10-12",
+    "as_of": "2026-10-13",
     "n": null,
     "tickers": null,
     "names": null,
