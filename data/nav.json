@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "e5e84d420ac811c7",
+ "generated_from": "f7da20b6a8f7609b",
  "categories": [
   {
    "name": "시장",
@@ -169,6 +169,16 @@
      "desc": "전부 외부 출처·미검증 — 랩이 돌린 게 아니다",
      "verdict": "unverified",
      "src": "ext",
+     "effort": "S",
+     "live": true
+    },
+    {
+     "name": "S&P 500 성장 전환 추적",
+     "file": "sgc.html",
+     "status": "existing",
+     "desc": "지수 90 · 기대성장/가치주 10 전략의 실제 보유를 매 거래일 종가로 평가 — 누적 초과 · 신호 미리보기",
+     "verdict": "unverified",
+     "src": "model",
      "effort": "S",
      "live": true
     },
