@@ -23,6 +23,8 @@ import time
 import urllib.request
 import zipfile
 
+try: sys.stdout.reconfigure(encoding="utf-8")
+except Exception: pass
 csv.field_size_limit(1 << 30)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
