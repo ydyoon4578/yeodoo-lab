@@ -389,7 +389,9 @@ NAV_JS = r"""<script>
     else{el.title='데이터 기준일 '+j.primary+' · 축별 기준일은 출처 페이지 참조';}
   }).catch(function(){});
 })();
-</script>"""
+</script>
+<!-- 방문 통계(GoatCounter · 쿠키 없음 · ydyoon4578.goatcounter.com). 메뉴 블록에 있어 전 페이지에 같이 실린다. -->
+<script data-goatcounter="https://ydyoon4578.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>"""
 
 
 def digest_of(*blocks: str) -> str:

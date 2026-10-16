@@ -1,0 +1,848 @@
+{
+ "note": "build/sgc_import.py 가 전략 저장소 snapshot/ 에서 옮긴 월말 입력. 손으로 고치지 말 것.",
+ "src_repo": "https://github.com/ydyoon4578/SP500-Growth-Conversion-Strategy",
+ "src_files": [
+  "snapshot/analysis/actual_holdings_2026-10-01.json",
+  "snapshot/decisions/RD_월말판단_2026-09-30.json"
+ ],
+ "decision_date": "2026-09-30",
+ "exec_date": "2026-10-01",
+ "shares": {
+  "E": 0.5,
+  "V": 0.5
+ },
+ "shares_prev": {
+  "E": 1.0,
+  "V": 0.0
+ },
+ "states": {
+  "decision": {
+   "R": {
+    "month": "2026-09",
+    "value": 2.93,
+    "value_date": "2026-09-30",
+    "base_month": "2026-08",
+    "base": 2.44,
+    "base_date": "2026-08-31",
+    "change": 0.4900000000000002,
+    "threshold": 0.1,
+    "distance": 0.39000000000000024,
+    "rule": "1개월 ≥ +0.10%p",
+    "on": true,
+    "code": "value",
+    "on3": true,
+    "change3": 0.73,
+    "base3_month": "2026-06",
+    "base3": 2.2
+   },
+   "TR": {
+    "month": "2026-09",
+    "date": "2026-09-30",
+    "px": 17160.41015625,
+    "ma": 15989.415771484375,
+    "n": 12,
+    "gap_pct": 7.323559544020264,
+    "on": false,
+    "month_ends": [
+     "2026-09-30",
+     "2026-08-31",
+     "2026-07-31",
+     "2026-06-30",
+     "2026-05-29",
+     "2026-04-30",
+     "2026-03-31",
+     "2026-02-27",
+     "2026-01-30",
+     "2025-12-31",
+     "2025-11-28",
+     "2025-10-31"
+    ],
+    "partial": false,
+    "file_last": "2026-10-09",
+    "rule": "S&P 500 TR 판단 월말 < 그 달 포함 최근 12개 월말 평균 → 켜짐"
+   }
+  },
+  "previous": {
+   "R": {
+    "month": "2026-08",
+    "value": 2.44,
+    "value_date": "2026-08-31",
+    "base_month": "2026-07",
+    "base": 2.47,
+    "base_date": "2026-07-31",
+    "change": -0.03000000000000025,
+    "threshold": 0.1,
+    "distance": -0.13000000000000025,
+    "rule": "1개월 ≥ +0.10%p",
+    "on": false,
+    "code": "value",
+    "on3": true,
+    "change3": 0.3700000000000001,
+    "base3_month": "2026-05",
+    "base3": 2.07
+   },
+   "TR": {
+    "month": "2026-08",
+    "date": "2026-08-31",
+    "px": 17219.939453125,
+    "ma": 15794.9482421875,
+    "n": 12,
+    "gap_pct": 9.02181627370846,
+    "on": false,
+    "month_ends": [
+     "2026-08-31",
+     "2026-07-31",
+     "2026-06-30",
+     "2026-05-29",
+     "2026-04-30",
+     "2026-03-31",
+     "2026-02-27",
+     "2026-01-30",
+     "2025-12-31",
+     "2025-11-28",
+     "2025-10-31",
+     "2025-09-30"
+    ],
+    "partial": false,
+    "file_last": "2026-10-09",
+    "rule": "S&P 500 TR 판단 월말 < 그 달 포함 최근 12개 월말 평균 → 켜짐"
+   }
+  }
+ },
+ "next_decision_month": "2026-10",
+ "hold_nav": {
+  "NVDA": 0.00999922733897626,
+  "AAPL": 0.009999227338976258,
+  "LRCX": 0.0017660186598664391,
+  "GOOGL": 0.009045135554494049,
+  "MSFT": 0.008155119275018913,
+  "PLTR": 0.0011748911454250843,
+  "VRTX": 0.00047147988970579386,
+  "ADBE": 0.00042712932153636464,
+  "SNDK": 0.0008252970007400026,
+  "TXN": 0.0006644847424456684,
+  "META": 0.0037063494764053074,
+  "APP": 0.0004845921080223962,
+  "COP": 0.0006011127520383819,
+  "MU": 0.0029087050517123277,
+  "CMCSA": 0.002567712262595402,
+  "F": 0.0015909197877870644,
+  "GM": 0.002316068316444995,
+  "PRU": 0.001306963234517225,
+  "CI": 0.0023728069197700426,
+  "ALL": 0.0018997958743320244,
+  "UAL": 0.0011976325470818433,
+  "T": 0.005611193281805312,
+  "DAL": 0.0018151959839067856,
+  "ELV": 0.0027992078687527474,
+  "HIG": 0.0011180275569511618,
+  "ACGL": 0.0010648284560261546,
+  "AIG": 0.001312326672943762,
+  "DHI": 0.0012771260803499148,
+  "DVN": 0.0014307927674319177,
+  "OXY": 0.0018505006392647357,
+  "VZ": 0.0063280823677500505
+ },
+ "target_nav": {
+  "DAL": 0.001815195983906786,
+  "AES": 0.0003523732510019885,
+  "HIG": 0.001118027556951162,
+  "MPC": 0.0002449193495904864,
+  "DLTR": 4.807226944674484e-05,
+  "BG": 0.0006920518595301127,
+  "HII": 0.0003488221335540469,
+  "UAL": 0.0011976325470818433,
+  "OXY": 0.0018505006392647361,
+  "DVN": 0.0015232263168719158,
+  "JBHT": 4.5431872260026726e-05,
+  "HON": 0.00014353941476240287,
+  "ADBE": 0.0002062694908913965,
+  "GOOGL": 0.009045834490867878,
+  "LMT": 0.0002513607341735897,
+  "EXPD": 5.1806999852135167e-05,
+  "EXE": 0.000662595711326508,
+  "LRCX": 0.0008821944843326267,
+  "ABNB": 0.00020484317448916727,
+  "ELV": 0.002799207868752748,
+  "ECHO": 6.714692598850237e-05,
+  "QCOM": 0.00042020030857058306,
+  "PHM": 0.0007311039610213071,
+  "LYV": 8.419397412613175e-05,
+  "CMCSA": 0.0025677122625954022,
+  "WSM": 5.8367348110534714e-05,
+  "META": 0.003974375698998878,
+  "PCG": 0.0009229467786441938,
+  "EXPE": 6.89333775055717e-05,
+  "FISV": 0.0007968315867587265,
+  "DECK": 2.3124786468263223e-05,
+  "LEN": 0.0006495058035501099,
+  "MSFT": 0.008155749437989926,
+  "DHI": 0.001277126080349915,
+  "CINF": 0.0008203957887187686,
+  "T": 0.005611193281805313,
+  "EOG": 0.00015564860829228412,
+  "CL": 0.00014611114703692244,
+  "AIZ": 0.0004340669070400456,
+  "HAS": 2.679826204009036e-05,
+  "EG": 0.00046852882026855676,
+  "IDXX": 8.845511586741867e-05,
+  "CF": 3.7866707105171975e-05,
+  "UHS": 0.00034511681428064673,
+  "NCLH": 0.00022465150363647755,
+  "LULU": 0.0003671223257318036,
+  "ALL": 0.0018997958743320244,
+  "ACGL": 0.0010648284560261549,
+  "PLTR": 0.001026209114574402,
+  "IT": 2.6526637382418712e-05,
+  "VZ": 0.006328082367750051,
+  "F": 0.0015909197877870644,
+  "PRU": 0.0013069632345172253,
+  "TXT": 0.0004407954309098207,
+  "AIG": 0.0013123266729437623,
+  "LDOS": 0.000507392492893595,
+  "TPL": 4.803915691374592e-05,
+  "APA": 3.1407705991347725e-05,
+  "PSKY": 0.0003824173539880407,
+  "SNDK": 0.0005834288504700484,
+  "ODFL": 7.749616712089008e-05,
+  "WDC": 0.0003756410743903979,
+  "HRL": 0.00036338660702882406,
+  "CI": 0.0023728069197700426,
+  "L": 0.0007092751807543143,
+  "DXCM": 7.043971811583215e-05,
+  "MOS": 0.00022759788827603442,
+  "TPR": 5.118050885391331e-05,
+  "FAST": 0.0001216853621793287,
+  "FIS": 0.0005622192209919773,
+  "NVDA": 0.009999999999999998,
+  "AAPL": 0.009999999999999998,
+  "CHTR": 0.0004445766743864872,
+  "FTNT": 0.0002824943804534485,
+  "NTAP": 8.973898667883954e-05,
+  "EIX": 0.0006870452879964733,
+  "CMG": 8.728271429546798e-05,
+  "GM": 0.002316068316444995,
+  "MU": 0.0026047520943731847
+ },
+ "n_target": 79,
+ "names": {
+  "WSM": {
+   "name": "WILLIAMS-SONOMA INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "TXT": {
+   "name": "TEXTRON INC",
+   "sector": "Industrials",
+   "books": [
+    "V"
+   ]
+  },
+  "GOOGL": {
+   "name": "ALPHABET INC-CL A",
+   "sector": "Communication Services",
+   "books": [
+    "E"
+   ]
+  },
+  "WDC": {
+   "name": "WESTERN DIGITAL CORP",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "COP": {
+   "name": "COP",
+   "sector": "",
+   "books": []
+  },
+  "ALL": {
+   "name": "ALLSTATE CORP",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "LDOS": {
+   "name": "LEIDOS HOLDINGS INC",
+   "sector": "Industrials",
+   "books": [
+    "V"
+   ]
+  },
+  "HRL": {
+   "name": "HORMEL FOODS CORP",
+   "sector": "Consumer Staples",
+   "books": [
+    "V"
+   ]
+  },
+  "LEN": {
+   "name": "LENNAR CORP-A",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "TXN": {
+   "name": "TXN",
+   "sector": "",
+   "books": []
+  },
+  "FTNT": {
+   "name": "FORTINET INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "DXCM": {
+   "name": "DEXCOM INC",
+   "sector": "Health Care",
+   "books": [
+    "E"
+   ]
+  },
+  "PRU": {
+   "name": "PRUDENTIAL FINANCIAL INC",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "ELV": {
+   "name": "ELEVANCE HEALTH INC",
+   "sector": "Health Care",
+   "books": [
+    "V"
+   ]
+  },
+  "QCOM": {
+   "name": "QUALCOMM INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "EG": {
+   "name": "EVEREST GROUP LTD",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "EIX": {
+   "name": "EDISON INTERNATIONAL",
+   "sector": "Utilities",
+   "books": [
+    "V"
+   ]
+  },
+  "ECHO": {
+   "name": "ECHOSTAR CORP-A",
+   "sector": "Communication Services",
+   "books": [
+    "E"
+   ]
+  },
+  "APA": {
+   "name": "APA CORP",
+   "sector": "Energy",
+   "books": [
+    "E"
+   ]
+  },
+  "HIG": {
+   "name": "HARTFORD INSURANCE GROUP INC",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "EXPD": {
+   "name": "EXPEDITORS INTL WASH INC",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "GM": {
+   "name": "GENERAL MOTORS CO",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "VZ": {
+   "name": "VERIZON COMMUNICATIONS INC",
+   "sector": "Communication Services",
+   "books": [
+    "V"
+   ]
+  },
+  "PCG": {
+   "name": "P G & E CORP",
+   "sector": "Utilities",
+   "books": [
+    "V"
+   ]
+  },
+  "CHTR": {
+   "name": "CHARTER COMMUNICATIONS INC-A",
+   "sector": "Communication Services",
+   "books": [
+    "V"
+   ]
+  },
+  "AES": {
+   "name": "AES CORP",
+   "sector": "Utilities",
+   "books": [
+    "V"
+   ]
+  },
+  "ACGL": {
+   "name": "ARCH CAPITAL GROUP LTD",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "ODFL": {
+   "name": "OLD DOMINION FREIGHT LINE",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "CMG": {
+   "name": "CHIPOTLE MEXICAN GRILL INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "AIG": {
+   "name": "AMERICAN INTERNATIONAL GROUP",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "PHM": {
+   "name": "PULTEGROUP INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "NVDA": {
+   "name": "NVIDIA CORP",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "L": {
+   "name": "LOEWS CORP",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "CMCSA": {
+   "name": "COMCAST CORP-CLASS A",
+   "sector": "Communication Services",
+   "books": [
+    "V"
+   ]
+  },
+  "AAPL": {
+   "name": "APPLE INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "LMT": {
+   "name": "LOCKHEED MARTIN CORP",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "MPC": {
+   "name": "MARATHON PETROLEUM CORP",
+   "sector": "Energy",
+   "books": [
+    "E"
+   ]
+  },
+  "DLTR": {
+   "name": "DOLLAR TREE INC",
+   "sector": "Consumer Staples",
+   "books": [
+    "E"
+   ]
+  },
+  "BG": {
+   "name": "BUNGE GLOBAL SA",
+   "sector": "Consumer Staples",
+   "books": [
+    "V"
+   ]
+  },
+  "ADBE": {
+   "name": "ADOBE INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "MOS": {
+   "name": "MOSAIC CO/THE",
+   "sector": "Materials",
+   "books": [
+    "V"
+   ]
+  },
+  "PSKY": {
+   "name": "PARAMOUNT SKYDANCE CL B",
+   "sector": "Communication Services",
+   "books": [
+    "V"
+   ]
+  },
+  "FAST": {
+   "name": "FASTENAL CO",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "HII": {
+   "name": "HUNTINGTON INGALLS INDUSTRIE",
+   "sector": "Industrials",
+   "books": [
+    "V"
+   ]
+  },
+  "DECK": {
+   "name": "DECKERS OUTDOOR CORP",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "TPL": {
+   "name": "TEXAS PACIFIC LAND CORP",
+   "sector": "Energy",
+   "books": [
+    "E"
+   ]
+  },
+  "META": {
+   "name": "META PLATFORMS INC-CLASS A",
+   "sector": "Communication Services",
+   "books": [
+    "E"
+   ]
+  },
+  "UHS": {
+   "name": "UNIVERSAL HEALTH SERVICES-B",
+   "sector": "Health Care",
+   "books": [
+    "V"
+   ]
+  },
+  "FISV": {
+   "name": "FISERV INC",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "IT": {
+   "name": "GARTNER INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "LRCX": {
+   "name": "LAM RESEARCH CORP",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "AIZ": {
+   "name": "ASSURANT INC",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "CI": {
+   "name": "THE CIGNA GROUP",
+   "sector": "Health Care",
+   "books": [
+    "V"
+   ]
+  },
+  "NTAP": {
+   "name": "NETAPP INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "MU": {
+   "name": "MICRON TECHNOLOGY INC",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "PLTR": {
+   "name": "PALANTIR TECHNOLOGIES INC-A",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "EXPE": {
+   "name": "EXPEDIA GROUP INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "CL": {
+   "name": "COLGATE-PALMOLIVE CO",
+   "sector": "Consumer Staples",
+   "books": [
+    "E"
+   ]
+  },
+  "DVN": {
+   "name": "DEVON ENERGY CORP",
+   "sector": "Energy",
+   "books": [
+    "E",
+    "V"
+   ]
+  },
+  "NCLH": {
+   "name": "NORWEGIAN CRUISE LINE HOLDIN",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "EXE": {
+   "name": "EXPAND ENERGY CORP",
+   "sector": "Energy",
+   "books": [
+    "V"
+   ]
+  },
+  "TPR": {
+   "name": "TAPESTRY INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "JBHT": {
+   "name": "HUNT (JB) TRANSPRT SVCS INC",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "CINF": {
+   "name": "CINCINNATI FINANCIAL CORP",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "SNDK": {
+   "name": "SANDISK CORP",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "ABNB": {
+   "name": "AIRBNB INC-CLASS A",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "HON": {
+   "name": "HONEYWELL INTERNATIONAL INC",
+   "sector": "Industrials",
+   "books": [
+    "E"
+   ]
+  },
+  "APP": {
+   "name": "APP",
+   "sector": "",
+   "books": []
+  },
+  "MSFT": {
+   "name": "MICROSOFT CORP",
+   "sector": "Information Technology",
+   "books": [
+    "E"
+   ]
+  },
+  "CF": {
+   "name": "CF INDUSTRIES HOLDINGS INC",
+   "sector": "Materials",
+   "books": [
+    "E"
+   ]
+  },
+  "VRTX": {
+   "name": "VRTX",
+   "sector": "",
+   "books": []
+  },
+  "HAS": {
+   "name": "HASBRO INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "E"
+   ]
+  },
+  "EOG": {
+   "name": "EOG RESOURCES INC",
+   "sector": "Energy",
+   "books": [
+    "E"
+   ]
+  },
+  "IDXX": {
+   "name": "IDEXX LABORATORIES INC",
+   "sector": "Health Care",
+   "books": [
+    "E"
+   ]
+  },
+  "FIS": {
+   "name": "FIDELITY NATIONAL INFO SERV",
+   "sector": "Financials",
+   "books": [
+    "V"
+   ]
+  },
+  "LYV": {
+   "name": "LIVE NATION ENTERTAINMENT IN",
+   "sector": "Communication Services",
+   "books": [
+    "E"
+   ]
+  },
+  "T": {
+   "name": "AT&T INC",
+   "sector": "Communication Services",
+   "books": [
+    "V"
+   ]
+  },
+  "OXY": {
+   "name": "OCCIDENTAL PETROLEUM CORP",
+   "sector": "Energy",
+   "books": [
+    "V"
+   ]
+  },
+  "F": {
+   "name": "FORD MOTOR CO",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "DAL": {
+   "name": "DELTA AIR LINES INC",
+   "sector": "Industrials",
+   "books": [
+    "V"
+   ]
+  },
+  "LULU": {
+   "name": "LULULEMON ATHLETICA INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  },
+  "UAL": {
+   "name": "UNITED AIRLINES HOLDINGS INC",
+   "sector": "Industrials",
+   "books": [
+    "V"
+   ]
+  },
+  "DHI": {
+   "name": "DR HORTON INC",
+   "sector": "Consumer Discretionary",
+   "books": [
+    "V"
+   ]
+  }
+ },
+ "book_nm": {
+  "E": "기대성장 상위 40",
+  "V": "가치주 40"
+ },
+ "backtest": {
+  "window": "2016-10 ~ 2026-09 (120개월)",
+  "cost": "편도 10bp",
+  "rows": [
+   [
+    "연 수익률 (전략 / S&P 500 TR)",
+    "16.67% / 15.33%",
+    "24.50% / 22.89%"
+   ],
+   [
+    "연 초과수익",
+    "+1.34%p",
+    "+1.61%p"
+   ],
+   [
+    "추적오차",
+    "0.79%",
+    "0.71%"
+   ],
+   [
+    "정보비율",
+    "1.55",
+    "1.91"
+   ],
+   [
+    "월 승률",
+    "68.33%",
+    "72.22%"
+   ],
+   [
+    "최대 낙폭 (전략 / S&P 500 TR)",
+    "−24.11% / −23.87%",
+    "−7.89% / −7.50%"
+   ]
+  ],
+  "cols": [
+   "전체 2016-10 ~ 2026-09",
+   "최근 3년 2023-10 ~ 2026-09"
+  ]
+ }
+}
