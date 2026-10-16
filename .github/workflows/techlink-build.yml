@@ -1,0 +1,39 @@
+name: Build tech-link patent CPC table (B11, one-off)
+
+# B11 기술 링크 모멘텀 — 특허 → 티커 × 등록월 × CPC subclass 집계.
+# 사전등록 build/PREREG-2026-08-12-TECHLINK.md. 원천이 2024-12-31 동결이라 크론이 없다(수동 · 스크립트 변경 시).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['build/techlink_build.py']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: techlink-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Disk before
+        run: df -h /
+      - name: Build CPC table
+        run: python build/techlink_build.py
+      - name: Commit output to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add data/_techlink_cpc.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(data): B11 기술 링크 특허 CPC 집계(1회성)"
+          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done
