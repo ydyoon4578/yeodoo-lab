@@ -28,8 +28,16 @@ DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(DATA, "_techlink_test.json")
 WIN, MINPAT, K, TOPN = 60, 3, 20, 10
 MIN_POOL = 3 * TOPN
-S0, S1 = "2009-01", "2024-12"          # 신호 월(보유는 다음 달)
+S0, S1 = "2009-01", "2024-12"          # 신호 월(보유는 다음 달) — 사전등록 창
+# --explore 2014-04 : 사전등록 밖 탐색(등록 시점 CPC 가 2013-01 부터만 있어 2009~13 벡터가 없다).
+#   판정에 쓰지 않는다. 산출물도 따로(_techlink_test_explore.json).
+if "--explore" in sys.argv:
+    S0 = sys.argv[sys.argv.index("--explore") + 1]
+
 PIT0 = "2014-06"
+if "--explore" in sys.argv:
+    PIT0 = max(PIT0, S0)
+    OUT = OUT.replace(".json", "_explore.json")
 T_LEG, T_INC, T_PIT = 3.43, 2.0, 3.31
 
 
