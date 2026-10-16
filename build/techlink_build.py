@@ -199,9 +199,11 @@ def main():
             for sc in psub.get(pid, ()):
                 agg[tk][d[:7]][sc] += 1
     npat = collections.Counter()
+    npm = collections.defaultdict(collections.Counter)            # 티커 × 등록월 특허 건수(5년 3건 문턱용)
     for pid, d in pdate.items():
         for tk in pid2tk[pid]:
             npat[tk] += 1
+            npm[tk][d[:7]] += 1
     audit = sorted(([o, t, n, src.get(norm(o), "")] for (o, t), n in org_hits.items()), key=lambda x: -x[2])
     miss = [[org_raw[k], n] for k, n in org_miss.most_common(400)]
     out = {
@@ -210,6 +212,7 @@ def main():
         "cpc_file": F_CPC, "years": [Y0, Y1],
         "n_tickers": len(agg), "n_patents": len(pdate),
         "patents_by_ticker": dict(npat.most_common()),
+        "npat_month": {tk: dict(sorted(c.items())) for tk, c in npm.items()},
         "cpc": {tk: {m: dict(c) for m, c in sorted(v.items())} for tk, v in agg.items()},
         "match_audit": audit[:3000],
         "top_unmatched": miss,
