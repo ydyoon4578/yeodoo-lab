@@ -1,7 +1,7 @@
 {
  "note": "다음 주가 흐름(forecast.html)의 종목 순위 칸 — build/forecast_stocks.py 가 매 거래일 굽는다. 순위만 싣는다(확률은 보정되지 않아 싣지 않는다). 감시용 참고 순위이고 매매 신호가 아니다 — 표본 밖 검증에서 회전 비용 뒤 펀드 틀을 못 넘었다(data/forecast_validation.json).",
- "generated": "2026-10-16T00:23:27Z",
- "as_of": "2026-10-15",
+ "generated": "2026-10-17T00:28:12Z",
+ "as_of": "2026-10-16",
  "source": "가격 data/sd(오늘 유니버스 · 수정 종가) + data/pit_px.json(편출 정리본) · 회원 data/index_history.json(위키백과 지수 목록 과거 리비전 · 앞 달 말 명단) · 상태 yfinance(^SP500TR · ^NDX)",
  "members_as_of": "2026-10",
  "universes": {
@@ -15,141 +15,141 @@
    "top": [
     {
      "rank": 1,
-     "ticker": "DELL",
-     "name": "DELL TECHNOLOGIES -C",
+     "ticker": "FTNT",
+     "name": "FORTINET INC",
      "sector": "Information Technology",
      "lab": true
     },
     {
      "rank": 2,
-     "ticker": "HPE",
-     "name": "HEWLETT PACKARD ENTERPRISE",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 3,
-     "ticker": "FICO",
-     "name": "FAIR ISAAC CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 4,
      "ticker": "MGM",
      "name": "MGM RESORTS INTERNATIONAL",
      "sector": "Consumer Discretionary",
      "lab": true
     },
     {
-     "rank": 5,
-     "ticker": "VRT",
-     "name": "VERTIV HOLDINGS CO-A",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 6,
-     "ticker": "KLAC",
-     "name": "KLA CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 7,
-     "ticker": "DE",
-     "name": "DEERE & CO",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 8,
-     "ticker": "TXN",
-     "name": "TEXAS INSTRUMENTS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 9,
-     "ticker": "FLEX",
-     "name": "FLEX LTD",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 10,
-     "ticker": "ON",
-     "name": "ON SEMICONDUCTOR",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 11,
-     "ticker": "CAT",
-     "name": "CATERPILLAR INC",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 12,
-     "ticker": "APP",
-     "name": "APPLOVIN CORP-CLASS A",
-     "sector": "Communication Services",
-     "lab": true
-    },
-    {
-     "rank": 13,
-     "ticker": "AKAM",
-     "name": "AKAMAI TECHNOLOGIES INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 14,
-     "ticker": "BE",
-     "name": "Bloom Energy",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 15,
-     "ticker": "AMAT",
-     "name": "APPLIED MATERIALS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 16,
-     "ticker": "ECHO",
-     "name": "ECHOSTAR CORP-A",
-     "sector": "Communication Services",
-     "lab": true
-    },
-    {
-     "rank": 17,
+     "rank": 3,
      "ticker": "NTAP",
      "name": "NETAPP INC",
      "sector": "Information Technology",
      "lab": true
     },
     {
+     "rank": 4,
+     "ticker": "HPE",
+     "name": "HEWLETT PACKARD ENTERPRISE",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 5,
+     "ticker": "KEYS",
+     "name": "KEYSIGHT TECHNOLOGIES IN",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 6,
+     "ticker": "DELL",
+     "name": "DELL TECHNOLOGIES -C",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 7,
+     "ticker": "AKAM",
+     "name": "AKAMAI TECHNOLOGIES INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 8,
+     "ticker": "STX",
+     "name": "SEAGATE TECHNOLOGY HOLDINGS",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 9,
+     "ticker": "DDOG",
+     "name": "DATADOG INC - CLASS A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 10,
+     "ticker": "LRCX",
+     "name": "LAM RESEARCH CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 11,
+     "ticker": "AMAT",
+     "name": "APPLIED MATERIALS INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 12,
+     "ticker": "ON",
+     "name": "ON SEMICONDUCTOR",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 13,
+     "ticker": "SNDK",
+     "name": "SANDISK CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 14,
+     "ticker": "FFIV",
+     "name": "F5 INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 15,
+     "ticker": "WDC",
+     "name": "WESTERN DIGITAL CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 16,
+     "ticker": "FICO",
+     "name": "FAIR ISAAC CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 17,
+     "ticker": "KLAC",
+     "name": "KLA CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
      "rank": 18,
-     "ticker": "MPC",
-     "name": "MARATHON PETROLEUM CORP",
-     "sector": "Energy",
+     "ticker": "VRT",
+     "name": "VERTIV HOLDINGS CO-A",
+     "sector": "Industrials",
      "lab": true
     },
     {
      "rank": 19,
-     "ticker": "HUM",
-     "name": "HUMANA INC",
-     "sector": "Health Care",
+     "ticker": "CAT",
+     "name": "CATERPILLAR INC",
+     "sector": "Industrials",
      "lab": true
     },
     {
      "rank": 20,
-     "ticker": "JBL",
-     "name": "JABIL INC",
+     "ticker": "FLEX",
+     "name": "FLEX LTD",
      "sector": "Information Technology",
      "lab": true
     }
@@ -157,165 +157,165 @@
    "bottom": [
     {
      "rank": 495,
-     "ticker": "CMCSA",
-     "name": "COMCAST CORP-CLASS A",
-     "sector": "Communication Services",
-     "lab": true
-    },
-    {
-     "rank": 494,
-     "ticker": "SMCI",
-     "name": "SUPER MICRO COMPUTER INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 493,
-     "ticker": "MRNA",
-     "name": "MODERNA INC",
-     "sector": "Health Care",
-     "lab": true
-    },
-    {
-     "rank": 492,
-     "ticker": "SNDK",
-     "name": "SANDISK CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 491,
-     "ticker": "KHC",
-     "name": "KRAFT HEINZ CO/THE",
-     "sector": "Consumer Staples",
-     "lab": true
-    },
-    {
-     "rank": 490,
-     "ticker": "AOS",
-     "name": "SMITH (A.O.) CORP",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 489,
-     "ticker": "CLX",
-     "name": "CLOROX COMPANY",
-     "sector": "Consumer Staples",
-     "lab": true
-    },
-    {
-     "rank": 488,
-     "ticker": "LDOS",
-     "name": "LEIDOS HOLDINGS INC",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 487,
-     "ticker": "NOC",
-     "name": "NORTHROP GRUMMAN CORP",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 486,
-     "ticker": "EFX",
-     "name": "EQUIFAX INC",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 485,
      "ticker": "HII",
      "name": "HUNTINGTON INGALLS INDUSTRIE",
      "sector": "Industrials",
      "lab": true
     },
     {
-     "rank": 484,
+     "rank": 494,
+     "ticker": "AOS",
+     "name": "SMITH (A.O.) CORP",
+     "sector": "Industrials",
+     "lab": true
+    },
+    {
+     "rank": 493,
+     "ticker": "NOC",
+     "name": "NORTHROP GRUMMAN CORP",
+     "sector": "Industrials",
+     "lab": true
+    },
+    {
+     "rank": 492,
+     "ticker": "CMCSA",
+     "name": "COMCAST CORP-CLASS A",
+     "sector": "Communication Services",
+     "lab": true
+    },
+    {
+     "rank": 491,
+     "ticker": "CLX",
+     "name": "CLOROX COMPANY",
+     "sector": "Consumer Staples",
+     "lab": true
+    },
+    {
+     "rank": 490,
+     "ticker": "LDOS",
+     "name": "LEIDOS HOLDINGS INC",
+     "sector": "Industrials",
+     "lab": true
+    },
+    {
+     "rank": 489,
+     "ticker": "BRO",
+     "name": "BROWN & BROWN INC",
+     "sector": "Financials",
+     "lab": true
+    },
+    {
+     "rank": 488,
+     "ticker": "AZO",
+     "name": "AUTOZONE INC",
+     "sector": "Consumer Discretionary",
+     "lab": true
+    },
+    {
+     "rank": 487,
+     "ticker": "AES",
+     "name": "AES CORP",
+     "sector": "Utilities",
+     "lab": true
+    },
+    {
+     "rank": 486,
      "ticker": "AMD",
      "name": "ADVANCED MICRO DEVICES",
      "sector": "Information Technology",
      "lab": true
     },
     {
+     "rank": 485,
+     "ticker": "P",
+     "name": "Everpure",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 484,
+     "ticker": "HOOD",
+     "name": "ROBINHOOD MARKETS INC - A",
+     "sector": "Financials",
+     "lab": true
+    },
+    {
      "rank": 483,
-     "ticker": "PEP",
-     "name": "PEPSICO INC",
-     "sector": "Consumer Staples",
+     "ticker": "INTC",
+     "name": "INTEL CORP",
+     "sector": "Information Technology",
      "lab": true
     },
     {
      "rank": 482,
-     "ticker": "LITE",
-     "name": "LUMENTUM HOLDINGS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 481,
-     "ticker": "AMP",
-     "name": "AMERIPRISE FINANCIAL INC",
-     "sector": "Financials",
-     "lab": true
-    },
-    {
-     "rank": 480,
-     "ticker": "TSCO",
-     "name": "TRACTOR SUPPLY COMPANY",
-     "sector": "Consumer Discretionary",
-     "lab": true
-    },
-    {
-     "rank": 479,
-     "ticker": "CTSH",
-     "name": "COGNIZANT TECH SOLUTIONS-A",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 478,
-     "ticker": "MKC",
-     "name": "MCCORMICK & CO-NON VTG SHRS",
-     "sector": "Consumer Staples",
-     "lab": true
-    },
-    {
-     "rank": 477,
-     "ticker": "MMM",
-     "name": "3M CO",
+     "ticker": "EFX",
+     "name": "EQUIFAX INC",
      "sector": "Industrials",
      "lab": true
     },
     {
-     "rank": 476,
+     "rank": 481,
+     "ticker": "PTC",
+     "name": "PTC INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 480,
      "ticker": "AJG",
      "name": "ARTHUR J GALLAGHER & CO",
      "sector": "Financials",
      "lab": true
+    },
+    {
+     "rank": 479,
+     "ticker": "SJM",
+     "name": "JM SMUCKER CO/THE",
+     "sector": "Consumer Staples",
+     "lab": true
+    },
+    {
+     "rank": 478,
+     "ticker": "FERG",
+     "name": "Ferguson Enterprises",
+     "sector": "Industrials",
+     "lab": true
+    },
+    {
+     "rank": 477,
+     "ticker": "MCD",
+     "name": "MCDONALD'S CORP",
+     "sector": "Consumer Discretionary",
+     "lab": true
+    },
+    {
+     "rank": 476,
+     "ticker": "ACN",
+     "name": "ACCENTURE PLC-CL A",
+     "sector": "Information Technology",
+     "lab": true
     }
    ],
    "train": {
-    "n_samples": 366121,
+    "n_samples": 366133,
     "n_days": 750,
-    "from": "2023-10-12",
-    "to": "2026-10-08",
+    "from": "2023-10-13",
+    "to": "2026-10-09",
     "secs": {
-     "rf": 47.5,
-     "gb": 1.9,
-     "nn": 10.5
+     "rf": 62.6,
+     "gb": 2.1,
+     "nn": 12.5
     }
    },
    "state": {
-    "date": "2026-10-15",
+    "date": "2026-10-16",
     "crash": false,
     "surge": false,
     "highvol": false,
-    "drawdown_252d_pct": -0.93,
-    "ret_63d_pct": 4.12,
+    "drawdown_252d_pct": -2.01,
+    "ret_63d_pct": 3.18,
     "ret_63d_p80_pct": 8.32,
-    "vol_21d_pct": 10.09,
+    "vol_21d_pct": 10.24,
     "vol_21d_p80_pct": 19.78,
     "series": "S&P 500 총수익 지수"
    }
@@ -330,307 +330,307 @@
    "top": [
     {
      "rank": 1,
-     "ticker": "SNDK",
-     "name": "SANDISK CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 2,
-     "ticker": "LRCX",
-     "name": "LAM RESEARCH CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 3,
-     "ticker": "WDC",
-     "name": "WESTERN DIGITAL CORP",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 4,
-     "ticker": "NBIS",
-     "name": "NEBIUS GROUP NV",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 5,
-     "ticker": "STX",
-     "name": "SEAGATE TECHNOLOGY HOLDINGS",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 6,
-     "ticker": "APP",
-     "name": "APPLOVIN CORP-CLASS A",
-     "sector": "Communication Services",
-     "lab": true
-    },
-    {
-     "rank": 7,
-     "ticker": "AMAT",
-     "name": "APPLIED MATERIALS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 8,
-     "ticker": "DDOG",
-     "name": "DATADOG INC - CLASS A",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 9,
      "ticker": "PANW",
      "name": "PALO ALTO NETWORKS INC",
      "sector": "Information Technology",
      "lab": true
     },
     {
-     "rank": 10,
+     "rank": 2,
      "ticker": "MU",
      "name": "MICRON TECHNOLOGY INC",
      "sector": "Information Technology",
      "lab": true
     },
     {
-     "rank": 11,
+     "rank": 3,
+     "ticker": "SNDK",
+     "name": "SANDISK CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 4,
+     "ticker": "CRWD",
+     "name": "CROWDSTRIKE HOLDINGS INC - A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 5,
+     "ticker": "DDOG",
+     "name": "DATADOG INC - CLASS A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 6,
      "ticker": "FTNT",
      "name": "FORTINET INC",
      "sector": "Information Technology",
      "lab": true
     },
     {
-     "rank": 12,
-     "ticker": "ASML",
-     "name": "ASML HOLDING NV-NY REG SHS",
+     "rank": 7,
+     "ticker": "STX",
+     "name": "SEAGATE TECHNOLOGY HOLDINGS",
      "sector": "Information Technology",
      "lab": true
     },
     {
-     "rank": 13,
+     "rank": 8,
+     "ticker": "MRVL",
+     "name": "MARVELL TECHNOLOGY INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 9,
+     "ticker": "WDC",
+     "name": "WESTERN DIGITAL CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 10,
+     "ticker": "LITE",
+     "name": "LUMENTUM HOLDINGS INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 11,
      "ticker": "ALNY",
      "name": "ALNYLAM PHARMACEUTICALS INC",
      "sector": "Health Care",
      "lab": true
     },
     {
+     "rank": 12,
+     "ticker": "AMAT",
+     "name": "APPLIED MATERIALS INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 13,
+     "ticker": "ASML",
+     "name": "ASML HOLDING NV-NY REG SHS",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
      "rank": 14,
-     "ticker": "TER",
-     "name": "TERADYNE INC",
+     "ticker": "SHOP",
+     "name": "SHOPIFY INC - CLASS A",
      "sector": "Information Technology",
      "lab": true
     },
     {
      "rank": 15,
+     "ticker": "LRCX",
+     "name": "LAM RESEARCH CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 16,
+     "ticker": "AEP",
+     "name": "AMERICAN ELECTRIC POWER",
+     "sector": "Utilities",
+     "lab": true
+    },
+    {
+     "rank": 17,
      "ticker": "ROST",
      "name": "ROSS STORES INC",
      "sector": "Consumer Discretionary",
      "lab": true
     },
     {
-     "rank": 16,
+     "rank": 18,
      "ticker": "KLAC",
      "name": "KLA CORP",
      "sector": "Information Technology",
      "lab": true
     },
     {
-     "rank": 17,
-     "ticker": "FER",
-     "name": "FERROVIAL SE",
+     "rank": 19,
+     "ticker": "ODFL",
+     "name": "OLD DOMINION FREIGHT LINE",
      "sector": "Industrials",
      "lab": true
     },
     {
-     "rank": 18,
-     "ticker": "ADI",
-     "name": "ANALOG DEVICES INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 19,
-     "ticker": "CSCO",
-     "name": "CISCO SYSTEMS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
      "rank": 20,
-     "ticker": "LIN",
-     "name": "LINDE PLC",
-     "sector": "Materials",
+     "ticker": "FER",
+     "name": "FERROVIAL SE",
+     "sector": "Industrials",
      "lab": true
     }
    ],
    "bottom": [
     {
      "rank": 97,
-     "ticker": "AXON",
-     "name": "AXON ENTERPRISE INC",
-     "sector": "Industrials",
-     "lab": true
-    },
-    {
-     "rank": 96,
-     "ticker": "BKNG",
-     "name": "BOOKING HOLDINGS INC",
-     "sector": "Consumer Discretionary",
-     "lab": true
-    },
-    {
-     "rank": 95,
-     "ticker": "MCHP",
-     "name": "MICROCHIP TECHNOLOGY INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 94,
-     "ticker": "ALAB",
-     "name": "ASTERA LABS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 93,
-     "ticker": "MSTR",
-     "name": "MICROSTRATEGY INC-CL A",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 92,
-     "ticker": "SNPS",
-     "name": "SYNOPSYS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 91,
      "ticker": "CPRT",
      "name": "COPART INC",
      "sector": "Industrials",
      "lab": true
     },
     {
-     "rank": 90,
-     "ticker": "MPWR",
-     "name": "MONOLITHIC POWER SYSTEMS INC",
-     "sector": "Information Technology",
+     "rank": 96,
+     "ticker": "IDXX",
+     "name": "IDEXX LABORATORIES INC",
+     "sector": "Health Care",
      "lab": true
     },
     {
-     "rank": 89,
-     "ticker": "CDNS",
-     "name": "CADENCE DESIGN SYS INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 88,
-     "ticker": "CRWV",
-     "name": "COREWEAVE INC-CL A",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 87,
-     "ticker": "PEP",
-     "name": "PEPSICO INC",
-     "sector": "Consumer Staples",
-     "lab": true
-    },
-    {
-     "rank": 86,
-     "ticker": "WDAY",
-     "name": "WORKDAY INC-CLASS A",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 85,
-     "ticker": "AMD",
-     "name": "ADVANCED MICRO DEVICES",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 84,
-     "ticker": "CMCSA",
-     "name": "COMCAST CORP-CLASS A",
+     "rank": 95,
+     "ticker": "META",
+     "name": "META PLATFORMS INC-CLASS A",
      "sector": "Communication Services",
      "lab": true
     },
     {
-     "rank": 83,
-     "ticker": "AMZN",
-     "name": "AMAZON.COM INC",
-     "sector": "Consumer Discretionary",
-     "lab": true
-    },
-    {
-     "rank": 82,
-     "ticker": "AVGO",
-     "name": "BROADCOM INC",
-     "sector": "Information Technology",
-     "lab": true
-    },
-    {
-     "rank": 81,
+     "rank": 94,
      "ticker": "TRI",
      "name": "THOMSON REUTERS CORP",
      "sector": "Industrials",
      "lab": true
     },
     {
-     "rank": 80,
+     "rank": 93,
+     "ticker": "PYPL",
+     "name": "PAYPAL HOLDINGS INC",
+     "sector": "Financials",
+     "lab": true
+    },
+    {
+     "rank": 92,
+     "ticker": "MSFT",
+     "name": "MICROSOFT CORP",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 91,
+     "ticker": "MSTR",
+     "name": "MICROSTRATEGY INC-CL A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 90,
+     "ticker": "INTU",
+     "name": "INTUIT INC",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 89,
+     "ticker": "CRWV",
+     "name": "COREWEAVE INC-CL A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
+     "rank": 88,
+     "ticker": "CMCSA",
+     "name": "COMCAST CORP-CLASS A",
+     "sector": "Communication Services",
+     "lab": true
+    },
+    {
+     "rank": 87,
+     "ticker": "ISRG",
+     "name": "INTUITIVE SURGICAL INC",
+     "sector": "Health Care",
+     "lab": true
+    },
+    {
+     "rank": 86,
+     "ticker": "PCAR",
+     "name": "PACCAR INC",
+     "sector": "Industrials",
+     "lab": true
+    },
+    {
+     "rank": 85,
+     "ticker": "AMZN",
+     "name": "AMAZON.COM INC",
+     "sector": "Consumer Discretionary",
+     "lab": true
+    },
+    {
+     "rank": 84,
      "ticker": "REGN",
      "name": "REGENERON PHARMACEUTICALS",
      "sector": "Health Care",
      "lab": true
     },
     {
-     "rank": 79,
+     "rank": 83,
+     "ticker": "PEP",
+     "name": "PEPSICO INC",
+     "sector": "Consumer Staples",
+     "lab": true
+    },
+    {
+     "rank": 82,
+     "ticker": "BKNG",
+     "name": "BOOKING HOLDINGS INC",
+     "sector": "Consumer Discretionary",
+     "lab": true
+    },
+    {
+     "rank": 81,
+     "ticker": "DASH",
+     "name": "DOORDASH INC - A",
+     "sector": "Consumer Discretionary",
+     "lab": true
+    },
+    {
+     "rank": 80,
      "ticker": "GEHC",
      "name": "GE HEALTHCARE TECHNOLOGY",
      "sector": "Health Care",
      "lab": true
     },
     {
+     "rank": 79,
+     "ticker": "WDAY",
+     "name": "WORKDAY INC-CLASS A",
+     "sector": "Information Technology",
+     "lab": true
+    },
+    {
      "rank": 78,
-     "ticker": "MSFT",
-     "name": "MICROSOFT CORP",
+     "ticker": "ADBE",
+     "name": "ADOBE INC",
      "sector": "Information Technology",
      "lab": true
     }
    ],
    "train": {
-    "n_samples": 74019,
+    "n_samples": 74018,
     "n_days": 750,
-    "from": "2023-10-12",
-    "to": "2026-10-08",
+    "from": "2023-10-13",
+    "to": "2026-10-09",
     "secs": {
-     "rf": 7.7,
-     "gb": 0.4,
-     "nn": 2.9
+     "rf": 9.7,
+     "gb": 0.5,
+     "nn": 3.8
     }
    },
    "state": {
-    "date": "2026-10-15",
+    "date": "2026-10-16",
     "crash": false,
     "surge": false,
     "highvol": false,
-    "drawdown_252d_pct": -4.13,
-    "ret_63d_pct": 4.7,
+    "drawdown_252d_pct": -6.52,
+    "ret_63d_pct": 2.04,
     "ret_63d_p80_pct": 10.76,
-    "vol_21d_pct": 16.88,
+    "vol_21d_pct": 18.3,
     "vol_21d_p80_pct": 25.15,
     "series": "나스닥 100 가격 지수"
    }
