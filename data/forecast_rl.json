@@ -1,32 +1,24 @@
 {
  "note": "다음 주가 흐름(forecast.html)의 강화학습 칸 — build/forecast_rl.py 가 매 거래일 굽는다. 저장한 운용 접힘 모형(build/forecast_model/)으로 다음 거래일 비중만 낸다(다시 학습하지 않는다). 비중은 에이전트 자세이며 예측치가 아니다 — 표본 밖 검증 12판 모두 못 넘었다(data/forecast_validation.json).",
- "generated": "2026-10-24T00:39:50Z",
- "as_of": "2026-10-23",
+ "generated": "2026-10-27T01:30:23Z",
+ "as_of": "2026-10-26",
  "source": "yfinance(^GSPC · ^NDX 종가 · 2003-01 부터)",
  "markets": {
   "spx": {
    "name": "S&P 500",
    "config": "깊은 Q 학습",
-   "decided": "2026-10-23",
-   "position_today": 0.5,
+   "decided": "2026-10-26",
+   "position_today": 0.7,
    "expected_dir_5d": 1,
    "seeds": {
-    "long": 6,
-    "flat": 3,
+    "long": 8,
+    "flat": 1,
     "short": 1,
     "n": 10
    },
    "vol_scale": 1.0,
-   "vol_ann_pct": 10.87,
+   "vol_ann_pct": 10.88,
    "position_hist": [
-    [
-     "2025-10-23",
-     0.2
-    ],
-    [
-     "2025-10-24",
-     0.2
-    ],
     [
      "2025-10-27",
      0.0
@@ -1026,6 +1018,10 @@
     [
      "2026-10-23",
      0.5
+    ],
+    [
+     "2026-10-26",
+     0.7
     ]
    ],
    "model": {
@@ -1040,8 +1036,8 @@
   "ndx": {
    "name": "나스닥 100",
    "config": "깊은 Q 학습",
-   "decided": "2026-10-23",
-   "position_today": 0.6647,
+   "decided": "2026-10-26",
+   "position_today": 0.6661,
    "expected_dir_5d": 1,
    "seeds": {
     "long": 7,
@@ -1049,17 +1045,9 @@
     "short": 0,
     "n": 10
    },
-   "vol_scale": 0.9496,
-   "vol_ann_pct": 19.63,
+   "vol_scale": 0.9515,
+   "vol_ann_pct": 19.59,
    "position_hist": [
-    [
-     "2025-10-23",
-     0.0
-    ],
-    [
-     "2025-10-24",
-     0.0
-    ],
     [
      "2025-10-27",
      0.0
@@ -2059,6 +2047,10 @@
     [
      "2026-10-23",
      0.6647
+    ],
+    [
+     "2026-10-26",
+     0.6661
     ]
    ],
    "model": {
