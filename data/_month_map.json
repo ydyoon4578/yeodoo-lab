@@ -77,9 +77,9 @@
  },
  "persistence": {
   "top5_carry_pct": 7.43801652892562,
-  "random_pct": 2.7081021087680353,
-  "rank_rho_median": 0.037141368059047414,
-  "rank_rho_mean": 0.013066568354842599
+  "random_pct": 2.7150932478746603,
+  "rank_rho_median": 0.027262817524838598,
+  "rank_rho_mean": 0.011440526087610084
  },
  "kinds": [
   {
@@ -103,8 +103,8 @@
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "hit": 4,
      "in_pct": 33.3,
-     "all_pct": 9.0,
-     "lift": 24.3
+     "all_pct": 8.2,
+     "lift": 25.1
     },
     {
      "sid": "t-x-subls",
@@ -146,7 +146,7 @@
    "level": "하락",
    "n_months": 27,
    "spx_mean": -2.04,
-   "med_ex": 0.19,
+   "med_ex": 0.13,
    "recur": [
     {
      "sid": "a-vol-roll",
@@ -163,6 +163,14 @@
      "in_pct": 40.7,
      "all_pct": 19.7,
      "lift": 21.1
+    },
+    {
+     "sid": "t-x-entropy",
+     "name": "수익률 엔트로피 최하위 10",
+     "hit": 3,
+     "in_pct": 11.1,
+     "all_pct": 2.5,
+     "lift": 8.7
     },
     {
      "sid": "t-x-kurt",
@@ -187,14 +195,6 @@
      "in_pct": 11.1,
      "all_pct": 4.9,
      "lift": 6.2
-    },
-    {
-     "sid": "a-overnight-ndx",
-     "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "hit": 4,
-     "in_pct": 14.8,
-     "all_pct": 9.0,
-     "lift": 5.8
     }
    ]
   },
@@ -204,7 +204,7 @@
    "level": "상승",
    "n_months": 63,
    "spx_mean": 2.25,
-   "med_ex": -0.05,
+   "med_ex": -0.07,
    "recur": [
     {
      "sid": "t-x-sp",
@@ -447,19 +447,19 @@
      "lift": 21.0
     },
     {
+     "sid": "a-overnight-ndx",
+     "name": "오버나이트 보유 (QQQ 종가→시가)",
+     "hit": 7,
+     "in_pct": 17.1,
+     "all_pct": 8.2,
+     "lift": 8.9
+    },
+    {
      "sid": "t-x-rev1m-band",
      "name": "단기 반전 (1개월 최하위 10) · 밴드 보유",
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.1
-    },
-    {
-     "sid": "a-overnight-ndx",
-     "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "hit": 7,
-     "in_pct": 17.1,
-     "all_pct": 9.0,
      "lift": 8.1
     },
     {
@@ -610,7 +610,7 @@
    "level": "상",
    "n_months": 41,
    "spx_mean": 1.78,
-   "med_ex": 0.04,
+   "med_ex": 0.05,
    "recur": [
     {
      "sid": "t-x-dalpha",
@@ -668,7 +668,7 @@
    "level": "하",
    "n_months": 40,
    "spx_mean": 1.63,
-   "med_ex": -0.03,
+   "med_ex": -0.04,
    "recur": [
     {
      "sid": "a-rel-mom3",
@@ -784,7 +784,7 @@
    "level": "상",
    "n_months": 41,
    "spx_mean": 0.5,
-   "med_ex": 0.0,
+   "med_ex": 0.03,
    "recur": [
     {
      "sid": "t-x-kurt",
@@ -799,8 +799,8 @@
      "name": "오버나이트 보유 (QQQ 종가→시가)",
      "hit": 6,
      "in_pct": 14.6,
-     "all_pct": 9.0,
-     "lift": 5.6
+     "all_pct": 8.2,
+     "lift": 6.4
     },
     {
      "sid": "t-t-ddgate",
@@ -958,7 +958,7 @@
    "level": "상",
    "n_months": 41,
    "spx_mean": 1.09,
-   "med_ex": -0.03,
+   "med_ex": -0.04,
    "recur": [
     {
      "sid": "t-x-ecm-band",
@@ -1205,7 +1205,7 @@
     "dconc12": "중"
    },
    "label": "상승 · 출렁임중 · 격차하 · 금리하 · 덩치상",
-   "n": 152,
+   "n": 94,
    "top": [
     {
      "sid": "t-x-fxweak",
@@ -1250,7 +1250,7 @@
      "ex": -3.62
     }
    ],
-   "med": -0.03
+   "med": -0.12
   },
   {
    "m": "2016-10",
@@ -1289,14 +1289,14 @@
      "ex": 4.16
     },
     {
-     "sid": "a-overnight-ndx",
-     "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "ex": 3.88
-    },
-    {
      "sid": "t-x-rev1m",
      "name": "단기 반전 (1개월 최하위 10)",
      "ex": 3.64
+    },
+    {
+     "sid": "t-x-entropy",
+     "name": "수익률 엔트로피 최하위 10",
+     "ex": 2.99
     }
    ],
    "bot": [
@@ -1316,7 +1316,7 @@
      "ex": -4.4
     }
    ],
-   "med": 0.21
+   "med": 0.06
   },
   {
    "m": "2016-11",
@@ -2611,7 +2611,7 @@
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": 3.24
+     "ex": 3.23
     },
     {
      "sid": "t-x-archlm",
@@ -6515,13 +6515,13 @@
    ],
    "bot": [
     {
-     "sid": "a-a7-conover",
-     "name": "통화조건 섹터 로테이션 (Conover 2008)",
+     "sid": "a-sec-term",
+     "name": "기간스프레드 방향 섹터",
      "ex": -5.67
     },
     {
-     "sid": "a-sec-term",
-     "name": "기간스프레드 방향 섹터",
+     "sid": "a-a7-conover",
+     "name": "통화조건 섹터 로테이션 (Conover 2008)",
      "ex": -5.67
     },
     {
@@ -8510,7 +8510,7 @@
      "ex": -10.47
     }
    ],
-   "med": 0.07
+   "med": 0.06
   },
   {
    "m": "2025-12",
@@ -9196,39 +9196,39 @@
     {
      "sid": "a-sec-term",
      "name": "기간스프레드 방향 섹터",
-     "ex": 8.52
+     "ex": 11.26
     },
     {
      "sid": "a-sec-halloween",
      "name": "핼러윈 섹터 (11~4월 경기민감)",
-     "ex": 8.52
+     "ex": 11.26
     },
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": 7.6
+     "ex": 9.91
     },
     {
      "sid": "a-sector-rp",
      "name": "섹터 리스크패리티",
-     "ex": 6.12
+     "ex": 7.77
     },
     {
      "sid": "a-sec-mom4",
      "name": "섹터 모멘텀 로테이션 (12-1 상위 4)",
-     "ex": 5.41
+     "ex": 6.68
     }
    ],
    "bot": [
     {
      "sid": "a-a2-factor-rot",
      "name": "국면 연동 팩터 로테이션 (A2)",
-     "ex": -6.39
+     "ex": -8.86
     },
     {
      "sid": "a-fx-factorsw-mom",
      "name": "달러 축 팩터 전환 (모멘텀 ↔ 저변동)",
-     "ex": -6.86
+     "ex": -9.54
     },
     {
      "sid": "t-x-subls",
@@ -9236,7 +9236,7 @@
      "ex": -14.58
     }
    ],
-   "med": 0.0
+   "med": 0.24
   }
  ]
 }
