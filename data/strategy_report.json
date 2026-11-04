@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-10-30",
-  "asset": "2026-11-02",
+  "asset": "2026-11-03",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -6277,18 +6277,18 @@
    },
    {
     "where": "화면에 있음",
-    "role": "배분기",
-    "verdict": "측정만",
-    "name": "크로스에셋 RP — 분기 리밸런스",
-    "sid": "rp-cadence",
-    "lab": "자산배분"
-   },
-   {
-    "where": "화면에 있음",
     "role": "타이밍오버레이",
     "verdict": "측정만",
     "name": "200일선 + 확인 지연 5일",
     "sid": "sma200-confirm",
+    "lab": "자산배분"
+   },
+   {
+    "where": "화면에 있음",
+    "role": "배분기",
+    "verdict": "측정만",
+    "name": "크로스에셋 RP — 분기 리밸런스",
+    "sid": "rp-cadence",
     "lab": "자산배분"
    },
    {
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9106,13 +9106,13 @@
     "one": {
      "vs": "통화조건 섹터 로테이션 (Conover 2008)",
      "corr": 0.173,
-     "alpha": 4.35,
-     "t": 4.11,
+     "alpha": 4.34,
+     "t": 4.1,
      "beta": 0.058
     },
     "five": {
-     "alpha": 4.26,
-     "t": 4.08,
+     "alpha": 4.25,
+     "t": 4.07,
      "n": 504,
      "vs": [
       "통화조건 섹터 로테이션 (Conover 2008)",
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9448,11 +9448,11 @@
      "vs": "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
      "corr": 0.893,
      "alpha": -0.26,
-     "t": -0.81,
+     "t": -0.8,
      "beta": 0.838
     },
     "five": {
-     "alpha": -0.39,
+     "alpha": -0.38,
      "t": -1.24,
      "n": 504,
      "vs": [
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9793,7 +9793,7 @@
      "beta": 0.55
     },
     "five": {
-     "alpha": 3.29,
+     "alpha": 3.28,
      "t": 0.8,
      "n": 436,
      "vs": [
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10132,12 +10132,12 @@
      "vs": "크로스에셋 RP — 분기 리밸런스",
      "corr": 0.58,
      "alpha": 3.61,
-     "t": 1.61,
+     "t": 1.62,
      "beta": 0.402
     },
     "five": {
-     "alpha": 3.65,
-     "t": 1.26,
+     "alpha": 3.67,
+     "t": 1.27,
      "n": 372,
      "vs": [
       "크로스에셋 RP — 분기 리밸런스",
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10307,7 +10307,7 @@
     },
     "five": {
      "alpha": 1.75,
-     "t": 1.06,
+     "t": 1.07,
      "n": 504,
      "vs": [
       "달러 ∧ 추세 이중관문 (고베타 ↔ 저변동)",
@@ -10327,7 +10327,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10490,7 +10490,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10835,7 +10835,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10998,7 +10998,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11152,7 +11152,7 @@
      "beta": 0.841
     },
     "five": {
-     "alpha": 1.28,
+     "alpha": 1.27,
      "t": 0.54,
      "n": 504,
      "vs": [
@@ -11173,7 +11173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11380,7 +11380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11531,11 +11531,11 @@
      "corr": 0.721,
      "alpha": 2.28,
      "t": 1.06,
-     "beta": 0.619
+     "beta": 0.618
     },
     "five": {
      "alpha": 2.46,
-     "t": 1.11,
+     "t": 1.1,
      "n": 436,
      "vs": [
       "200일 이동평균 (Faber)",
@@ -11555,7 +11555,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11725,7 +11725,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11896,7 +11896,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12067,46 +12067,42 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLB",
-      11.2
+      12.5
      ],
      [
       "XLE",
-      11.1
+      12.5
      ],
      [
       "XLF",
-      11.1
+      12.5
      ],
      [
       "XLI",
-      11.1
+      12.5
      ],
      [
       "XLK",
-      11.1
+      12.5
      ],
      [
       "XLP",
-      11.1
+      12.5
      ],
      [
       "XLU",
-      11.1
+      12.5
      ],
      [
       "XLV",
-      11.1
-     ],
-     [
-      "XLY",
-      11.1
+      12.5
      ]
     ],
     "exposure_now": null,
@@ -12262,7 +12258,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12469,7 +12465,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12639,7 +12635,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12649,7 +12645,7 @@
       33.4
      ],
      [
-      "XLP",
+      "XLF",
       33.3
      ],
      [
@@ -12810,7 +12806,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12973,7 +12969,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13135,12 +13131,12 @@
     "one": {
      "vs": "크로스에셋 RP — 분기 리밸런스",
      "corr": 0.659,
-     "alpha": 1.83,
+     "alpha": 1.84,
      "t": 0.55,
      "beta": 0.739
     },
     "five": {
-     "alpha": 4.8,
+     "alpha": 4.81,
      "t": 1.17,
      "n": 372,
      "vs": [
@@ -13161,7 +13157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13336,18 +13332,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLF",
-      14.9
+      15.0
      ],
      [
       "XLU",
-      12.5
+      12.6
      ],
      [
       "XLI",
@@ -13355,15 +13351,15 @@
      ],
      [
       "XLP",
-      12.0
+      11.9
      ],
      [
       "XLB",
-      11.5
+      11.3
      ],
      [
       "XLV",
-      11.2
+      11.3
      ],
      [
       "XLY",
@@ -13438,9 +13434,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 10.58,
+     "s": 10.56,
      "b": 13.44,
-     "d": -2.86
+     "d": -2.88
     },
     {
      "k": "변동성",
@@ -13450,9 +13446,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.678,
+     "s": 0.677,
      "b": 0.694,
-     "d": -0.016
+     "d": -0.017
     },
     {
      "k": "최대낙폭",
@@ -13461,8 +13457,8 @@
      "d": 15.68
     }
    ],
-   "excess_cagr": -2.86,
-   "d_sharpe": -0.016,
+   "excess_cagr": -2.88,
+   "d_sharpe": -0.017,
    "t": -0.55,
    "t_crit": null,
    "cost": {
@@ -13470,9 +13466,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 10.3,
-      "sharpe": 0.66,
-      "excess": -3.14,
+      "cagr": 10.28,
+      "sharpe": 0.658,
+      "excess": -3.16,
       "t": null,
       "main": true
      }
@@ -13490,8 +13486,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 12.75,
-      "p": 0.1027
+      "v": 12.74,
+      "p": 0.1032
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -13500,8 +13496,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.114,
-      "p": 0.3663
+      "v": 0.112,
+      "p": 0.3678
      }
     ],
     "n_boot": 4000,
@@ -13538,7 +13534,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13684,8 +13680,8 @@
      "beta": 0.484
     },
     "five": {
-     "alpha": -0.8,
-     "t": -0.28,
+     "alpha": -0.79,
+     "t": -0.27,
      "n": 504,
      "vs": [
       "3자산 상대 모멘텀 (SPY·TLT·GLD)",
@@ -13705,7 +13701,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13877,7 +13873,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14052,18 +14048,30 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "MTUM",
+      "QUAL",
       50.0
      ],
      [
-      "RPG",
-      50.0
+      "MTUM",
+      12.5
+     ],
+     [
+      "SIZE",
+      12.5
+     ],
+     [
+      "USMV",
+      12.5
+     ],
+     [
+      "VLUE",
+      12.5
      ]
     ],
     "exposure_now": null,
@@ -14205,8 +14213,8 @@
      "beta": 1.411
     },
     "five": {
-     "alpha": 1.58,
-     "t": 0.87,
+     "alpha": 1.59,
+     "t": 0.88,
      "n": 504,
      "vs": [
       "섹터 리스크패리티",
@@ -14226,7 +14234,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14397,7 +14405,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14552,7 +14560,7 @@
     },
     "five": {
      "alpha": 0.28,
-     "t": 0.63,
+     "t": 0.64,
      "n": 372,
      "vs": [
       "변동성 기간구조 롤 (VXZ 보유)",
@@ -14572,7 +14580,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14710,7 +14718,7 @@
      "beta": 0.68
     },
     "five": {
-     "alpha": 2.45,
+     "alpha": 2.46,
      "t": 1.77,
      "n": 504,
      "vs": [
@@ -14731,7 +14739,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14802,9 +14810,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 9.68,
+     "s": 9.65,
      "b": 13.44,
-     "d": -3.76
+     "d": -3.79
     },
     {
      "k": "변동성",
@@ -14814,9 +14822,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.829,
+     "s": 0.827,
      "b": 0.694,
-     "d": 0.135
+     "d": 0.133
     },
     {
      "k": "최대낙폭",
@@ -14825,23 +14833,23 @@
      "d": 21.35
     }
    ],
-   "excess_cagr": -3.76,
-   "d_sharpe": 0.135,
-   "t": -0.8,
+   "excess_cagr": -3.79,
+   "d_sharpe": 0.133,
+   "t": -0.81,
    "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 9.42,
-      "sharpe": 0.805,
-      "excess": -4.02,
+      "cagr": 9.4,
+      "sharpe": 0.803,
+      "excess": -4.04,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.26,
+    "drag": 0.25,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -14854,7 +14862,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 19.95,
+      "v": 19.94,
       "p": 0.0005
      },
      {
@@ -14864,8 +14872,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.355,
-      "p": 0.1212
+      "v": 0.352,
+      "p": 0.1227
      }
     ],
     "n_boot": 4000,
@@ -14881,8 +14889,8 @@
      "beta": 1.114
     },
     "five": {
-     "alpha": 2.0,
-     "t": 1.4,
+     "alpha": 2.01,
+     "t": 1.41,
      "n": 372,
      "vs": [
       "방어형 자산배분 DAA (카나리아 2종)",
@@ -14902,7 +14910,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15069,7 +15077,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15209,7 +15217,7 @@
      {
       "k": "최대낙폭 개선(%p)",
       "v": -0.16,
-      "p": 0.235
+      "p": 0.2352
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -15235,7 +15243,7 @@
      "beta": 0.414
     },
     "five": {
-     "alpha": -0.75,
+     "alpha": -0.76,
      "t": -0.57,
      "n": 504,
      "vs": [
@@ -15256,7 +15264,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15424,7 +15432,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15594,7 +15602,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15757,7 +15765,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15910,13 +15918,13 @@
     "one": {
      "vs": "크로스에셋 RP — 분기 리밸런스",
      "corr": 0.861,
-     "alpha": -0.03,
-     "t": -0.01,
+     "alpha": -0.01,
+     "t": -0.0,
      "beta": 1.024
     },
     "five": {
-     "alpha": -1.49,
-     "t": -0.68,
+     "alpha": -1.48,
+     "t": -0.67,
      "n": 504,
      "vs": [
       "크로스에셋 RP — 분기 리밸런스",
@@ -15936,7 +15944,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16110,7 +16118,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16252,7 +16260,7 @@
      "beta": 0.947
     },
     "five": {
-     "alpha": -0.79,
+     "alpha": -0.78,
      "t": -0.23,
      "n": 372,
      "vs": [
@@ -16273,7 +16281,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16475,7 +16483,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16638,7 +16646,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16659,193 +16667,6 @@
       "y": 2007,
       "t": "A quantitative approach to tactical asset allocation",
       "j": "Journal of Wealth Management 9"
-     }
-    ],
-    "src": [
-     {
-      "k": "가격",
-      "v": "yfinance — ETF·지수 종가"
-     },
-     {
-      "k": "거시",
-      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
-     },
-     {
-      "k": "무위험이자율",
-      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
-     }
-    ],
-    "no_paper": false,
-    "note": null
-   },
-   "missing": [
-    "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
-   ]
-  },
-  {
-   "sid": "rp-cadence",
-   "name": "크로스에셋 RP — 분기 리밸런스",
-   "family": "자산배분",
-   "role": "배분기",
-   "kind": null,
-   "arch": "cross-asset-rp-cadence",
-   "rule": "같은 역변동성 RP를 분기 말에만 리밸런스(대조군은 월말).",
-   "why": "리밸런스 주기를 바꾸면 성과가 바뀌는지. 규칙은 완전히 같고 주기만 다르므로 차이는 전부 주기 효과다.",
-   "note": "주기 차이만 남기려고 전략·대조군의 가중식을 동일하게 두었다.",
-   "repro": {
-    "src": "크로스에셋 RP — 리밸런스 주기 변형 (Rebalance Cadence)",
-    "cat": "결합 최적화",
-    "status": "돌림",
-    "why": "주기 차이만 남기려고 전략·대조군의 가중식을 동일하게 두었다."
-   },
-   "window": {
-    "start": "2016-10-21",
-    "end": "2026-10-30",
-    "n_days": 2520,
-    "n_thin": null,
-    "bench_label": "S&P 500(PR) 매수후보유",
-    "bench_from_lab": false,
-    "bench_tickers": [
-     "^GSPC"
-    ],
-    "bench_unstable": false
-   },
-   "perf": [
-    {
-     "k": "연복리수익률",
-     "s": 8.96,
-     "b": 13.44,
-     "d": -4.48
-    },
-    {
-     "k": "변동성",
-     "s": 9.3,
-     "b": 18.07,
-     "d": -8.77
-    },
-    {
-     "k": "샤프",
-     "s": 0.784,
-     "b": 0.694,
-     "d": 0.09
-    },
-    {
-     "k": "최대낙폭",
-     "s": -18.72,
-     "b": -33.92,
-     "d": 15.2
-    }
-   ],
-   "excess_cagr": -4.48,
-   "d_sharpe": 0.09,
-   "t": -1.13,
-   "t_crit": null,
-   "cost": {
-    "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
-    "rows": [
-     {
-      "rt": 5.0,
-      "cagr": 8.94,
-      "sharpe": 0.783,
-      "excess": -4.5,
-      "t": null,
-      "main": true
-     }
-    ],
-    "drag": 0.02,
-    "traded": null,
-    "kill": false,
-    "sensitive": false,
-    "bench_pays": true,
-    "note": "대조군도 같은 비용을 문다(리밸런싱한다)"
-   },
-   "turnover": 0.3,
-   "exposure": null,
-   "risk": {
-    "rows": [
-     {
-      "k": "최대낙폭 개선(%p)",
-      "v": 15.29,
-      "p": 0.0037
-     },
-     {
-      "k": "꼬리위험 CVaR 개선",
-      "v": 1.381,
-      "p": 0.0
-     },
-     {
-      "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.109,
-      "p": 0.2592
-     }
-    ],
-    "n_boot": 4000,
-    "block": 63,
-    "verdict": "위험감축 확인"
-   },
-   "incr": {
-    "one": {
-     "vs": "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
-     "corr": 0.974,
-     "alpha": 0.65,
-     "t": 0.72,
-     "beta": 0.944
-    },
-    "five": {
-     "alpha": 1.04,
-     "t": 1.73,
-     "n": 504,
-     "vs": [
-      "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
-      "최소 CVaR 최적화 (4자산)",
-      "크로스에셋 RP — 자산군 확장 (TIP·EMB·SLV)",
-      "크로스에셋 RP — 목표변동성 8%",
-      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)"
-     ]
-    },
-    "absorbed": null,
-    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
-   },
-   "vs_traded": null,
-   "pit": {
-    "na": "자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
-   },
-   "pool": null,
-   "holdings": {
-    "kind": "asset",
-    "as_of": "2026-11-02",
-    "n": null,
-    "tickers": null,
-    "names": null,
-    "weights": [
-     [
-      "TLT",
-      36.6
-     ],
-     [
-      "SPY",
-      30.0
-     ],
-     [
-      "DBC",
-      18.2
-     ],
-     [
-      "GLD",
-      15.2
-     ]
-    ],
-    "exposure_now": null,
-    "note": null
-   },
-   "verdict": "측정만",
-   "refs": {
-    "papers": [
-     {
-      "a": "Maillard·Roncalli·Teïletche",
-      "y": 2010,
-      "t": "The properties of equally weighted risk contribution portfolios",
-      "j": "Journal of Portfolio Management 36"
      }
     ],
     "src": [
@@ -16995,7 +16816,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17016,6 +16837,193 @@
       "y": 2007,
       "t": "A quantitative approach to tactical asset allocation",
       "j": "Journal of Wealth Management 9"
+     }
+    ],
+    "src": [
+     {
+      "k": "가격",
+      "v": "yfinance — ETF·지수 종가"
+     },
+     {
+      "k": "거시",
+      "v": "FRED 공개 CSV(무인증) · 일부는 연준 공개 CSV"
+     },
+     {
+      "k": "무위험이자율",
+      "v": "FRED DGS3MO 월평균을 일할로 환산해 차감"
+     }
+    ],
+    "no_paper": false,
+    "note": null
+   },
+   "missing": [
+    "PIT(생존편향 보정) — 자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
+   ]
+  },
+  {
+   "sid": "rp-cadence",
+   "name": "크로스에셋 RP — 분기 리밸런스",
+   "family": "자산배분",
+   "role": "배분기",
+   "kind": null,
+   "arch": "cross-asset-rp-cadence",
+   "rule": "같은 역변동성 RP를 분기 말에만 리밸런스(대조군은 월말).",
+   "why": "리밸런스 주기를 바꾸면 성과가 바뀌는지. 규칙은 완전히 같고 주기만 다르므로 차이는 전부 주기 효과다.",
+   "note": "주기 차이만 남기려고 전략·대조군의 가중식을 동일하게 두었다.",
+   "repro": {
+    "src": "크로스에셋 RP — 리밸런스 주기 변형 (Rebalance Cadence)",
+    "cat": "결합 최적화",
+    "status": "돌림",
+    "why": "주기 차이만 남기려고 전략·대조군의 가중식을 동일하게 두었다."
+   },
+   "window": {
+    "start": "2016-10-21",
+    "end": "2026-10-30",
+    "n_days": 2520,
+    "n_thin": null,
+    "bench_label": "S&P 500(PR) 매수후보유",
+    "bench_from_lab": false,
+    "bench_tickers": [
+     "^GSPC"
+    ],
+    "bench_unstable": false
+   },
+   "perf": [
+    {
+     "k": "연복리수익률",
+     "s": 8.94,
+     "b": 13.44,
+     "d": -4.5
+    },
+    {
+     "k": "변동성",
+     "s": 9.3,
+     "b": 18.07,
+     "d": -8.77
+    },
+    {
+     "k": "샤프",
+     "s": 0.783,
+     "b": 0.694,
+     "d": 0.089
+    },
+    {
+     "k": "최대낙폭",
+     "s": -18.72,
+     "b": -33.92,
+     "d": 15.2
+    }
+   ],
+   "excess_cagr": -4.5,
+   "d_sharpe": 0.089,
+   "t": -1.14,
+   "t_crit": null,
+   "cost": {
+    "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
+    "rows": [
+     {
+      "rt": 5.0,
+      "cagr": 8.93,
+      "sharpe": 0.781,
+      "excess": -4.51,
+      "t": null,
+      "main": true
+     }
+    ],
+    "drag": 0.01,
+    "traded": null,
+    "kill": false,
+    "sensitive": false,
+    "bench_pays": true,
+    "note": "대조군도 같은 비용을 문다(리밸런싱한다)"
+   },
+   "turnover": 0.3,
+   "exposure": null,
+   "risk": {
+    "rows": [
+     {
+      "k": "최대낙폭 개선(%p)",
+      "v": 15.28,
+      "p": 0.0037
+     },
+     {
+      "k": "꼬리위험 CVaR 개선",
+      "v": 1.381,
+      "p": 0.0
+     },
+     {
+      "k": "낙폭조정수익 Calmar 개선",
+      "v": 0.107,
+      "p": 0.2612
+     }
+    ],
+    "n_boot": 4000,
+    "block": 63,
+    "verdict": "위험감축 확인"
+   },
+   "incr": {
+    "one": {
+     "vs": "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
+     "corr": 0.974,
+     "alpha": 0.65,
+     "t": 0.72,
+     "beta": 0.944
+    },
+    "five": {
+     "alpha": 1.04,
+     "t": 1.74,
+     "n": 504,
+     "vs": [
+      "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
+      "최소 CVaR 최적화 (4자산)",
+      "크로스에셋 RP — 자산군 확장 (TIP·EMB·SLV)",
+      "크로스에셋 RP — 목표변동성 8%",
+      "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)"
+     ]
+    },
+    "absorbed": null,
+    "note": "이웃은 **이 랩 안에서만** 고른다. 랩 밖의 무언가와 겹치는지는 재지 않았다."
+   },
+   "vs_traded": null,
+   "pit": {
+    "na": "자산배분 규칙은 ETF·지수를 매매하므로 '그때 지수에 있던 종목' 이라는 개념이 없다 — 생존편향이 걸리는 자리가 아니라서 안 재는 것이고, 못 재는 것이 아니다."
+   },
+   "pool": null,
+   "holdings": {
+    "kind": "asset",
+    "as_of": "2026-11-03",
+    "n": null,
+    "tickers": null,
+    "names": null,
+    "weights": [
+     [
+      "TLT",
+      36.5
+     ],
+     [
+      "SPY",
+      30.1
+     ],
+     [
+      "DBC",
+      18.3
+     ],
+     [
+      "GLD",
+      15.1
+     ]
+    ],
+    "exposure_now": null,
+    "note": null
+   },
+   "verdict": "측정만",
+   "refs": {
+    "papers": [
+     {
+      "a": "Maillard·Roncalli·Teïletche",
+      "y": 2010,
+      "t": "The properties of equally weighted risk contribution portfolios",
+      "j": "Journal of Portfolio Management 36"
      }
     ],
     "src": [
@@ -17065,9 +17073,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 7.09,
+     "s": 7.06,
      "b": 13.44,
-     "d": -6.35
+     "d": -6.38
     },
     {
      "k": "변동성",
@@ -17077,9 +17085,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.504,
+     "s": 0.501,
      "b": 0.694,
-     "d": -0.19
+     "d": -0.193
     },
     {
      "k": "최대낙폭",
@@ -17088,18 +17096,18 @@
      "d": 17.28
     }
    ],
-   "excess_cagr": -6.35,
-   "d_sharpe": -0.19,
-   "t": -1.15,
+   "excess_cagr": -6.38,
+   "d_sharpe": -0.193,
+   "t": -1.16,
    "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 6.67,
-      "sharpe": 0.47,
-      "excess": -6.77,
+      "cagr": 6.64,
+      "sharpe": 0.467,
+      "excess": -6.8,
       "t": null,
       "main": true
      }
@@ -17117,8 +17125,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 15.51,
-      "p": 0.0405
+      "v": 15.48,
+      "p": 0.041
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -17127,8 +17135,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.02,
-      "p": 0.4993
+      "v": -0.023,
+      "p": 0.5038
      }
     ],
     "n_boot": 4000,
@@ -17139,9 +17147,9 @@
     "one": {
      "vs": "방어형 자산배분 DAA (카나리아 2종)",
      "corr": 0.894,
-     "alpha": -0.11,
+     "alpha": -0.12,
      "t": -0.05,
-     "beta": 1.138
+     "beta": 1.139
     },
     "five": {
      "alpha": -0.06,
@@ -17165,7 +17173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17313,7 +17321,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17389,9 +17397,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 10.58,
+     "s": 10.56,
      "b": 14.17,
-     "d": -3.59
+     "d": -3.61
     },
     {
      "k": "변동성",
@@ -17401,9 +17409,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.824,
+     "s": 0.823,
      "b": 0.687,
-     "d": 0.137
+     "d": 0.136
     },
     {
      "k": "최대낙폭",
@@ -17412,23 +17420,23 @@
      "d": 14.45
     }
    ],
-   "excess_cagr": -3.59,
-   "d_sharpe": 0.137,
-   "t": -1.29,
+   "excess_cagr": -3.61,
+   "d_sharpe": 0.136,
+   "t": -1.3,
    "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 10.57,
-      "sharpe": 0.824,
-      "excess": -3.59,
+      "cagr": 10.56,
+      "sharpe": 0.822,
+      "excess": -3.6,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.01,
+    "drag": 0.0,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -17451,8 +17459,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.177,
-      "p": 0.0132
+      "v": 0.175,
+      "p": 0.0135
      }
     ],
     "n_boot": 4000,
@@ -17468,7 +17476,7 @@
      "beta": 0.57
     },
     "five": {
-     "alpha": 1.24,
+     "alpha": 1.23,
      "t": 1.75,
      "n": 372,
      "vs": [
@@ -17489,7 +17497,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17567,9 +17575,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 8.19,
+     "s": 8.17,
      "b": 13.44,
-     "d": -5.25
+     "d": -5.27
     },
     {
      "k": "변동성",
@@ -17579,9 +17587,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.713,
+     "s": 0.711,
      "b": 0.694,
-     "d": 0.019
+     "d": 0.017
     },
     {
      "k": "최대낙폭",
@@ -17590,18 +17598,18 @@
      "d": 15.55
     }
    ],
-   "excess_cagr": -5.25,
-   "d_sharpe": 0.019,
-   "t": -1.32,
+   "excess_cagr": -5.27,
+   "d_sharpe": 0.017,
+   "t": -1.33,
    "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 7.89,
-      "sharpe": 0.682,
-      "excess": -5.55,
+      "cagr": 7.87,
+      "sharpe": 0.68,
+      "excess": -5.57,
       "t": null,
       "main": true
      }
@@ -17619,7 +17627,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 17.55,
+      "v": 17.52,
       "p": 0.0035
      },
      {
@@ -17629,8 +17637,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.131,
-      "p": 0.2615
+      "v": 0.128,
+      "p": 0.2662
      }
     ],
     "n_boot": 4000,
@@ -17642,7 +17650,7 @@
      "vs": "대담형 자산배분 BAA (균형형 · 6종 분산)",
      "corr": 0.923,
      "alpha": -2.34,
-     "t": -1.5,
+     "t": -1.51,
      "beta": 0.764
     },
     "five": {
@@ -17667,7 +17675,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17854,7 +17862,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17937,9 +17945,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 7.89,
+     "s": 7.87,
      "b": 13.44,
-     "d": -5.55
+     "d": -5.57
     },
     {
      "k": "변동성",
@@ -17949,9 +17957,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.672,
+     "s": 0.67,
      "b": 0.694,
-     "d": -0.022
+     "d": -0.024
     },
     {
      "k": "최대낙폭",
@@ -17960,8 +17968,8 @@
      "d": 11.15
     }
    ],
-   "excess_cagr": -5.55,
-   "d_sharpe": -0.022,
+   "excess_cagr": -5.57,
+   "d_sharpe": -0.024,
    "t": -1.34,
    "t_crit": null,
    "cost": {
@@ -17969,14 +17977,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 7.85,
-      "sharpe": 0.669,
-      "excess": -5.59,
+      "cagr": 7.84,
+      "sharpe": 0.667,
+      "excess": -5.6,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.04,
+    "drag": 0.03,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -17989,7 +17997,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 12.82,
+      "v": 12.8,
       "p": 0.013
      },
      {
@@ -17999,8 +18007,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.019,
-      "p": 0.5085
+      "v": -0.02,
+      "p": 0.5105
      }
     ],
     "n_boot": 4000,
@@ -18011,12 +18019,12 @@
     "one": {
      "vs": "최소 CVaR 최적화 (4자산)",
      "corr": 0.978,
-     "alpha": 0.16,
-     "t": 0.19,
+     "alpha": 0.17,
+     "t": 0.2,
      "beta": 0.932
     },
     "five": {
-     "alpha": 0.41,
+     "alpha": 0.42,
      "t": 0.63,
      "n": 504,
      "vs": [
@@ -18037,7 +18045,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18048,7 +18056,7 @@
      ],
      [
       "SPY",
-      20.9
+      21.1
      ],
      [
       "DBC",
@@ -18060,7 +18068,7 @@
      ],
      [
       "EFA",
-      3.2
+      3.0
      ]
     ],
     "exposure_now": null,
@@ -18116,9 +18124,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 7.94,
+     "s": 7.93,
      "b": 13.44,
-     "d": -5.5
+     "d": -5.51
     },
     {
      "k": "변동성",
@@ -18128,9 +18136,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.822,
+     "s": 0.82,
      "b": 0.694,
-     "d": 0.128
+     "d": 0.126
     },
     {
      "k": "최대낙폭",
@@ -18139,8 +18147,8 @@
      "d": 24.02
     }
    ],
-   "excess_cagr": -5.5,
-   "d_sharpe": 0.128,
+   "excess_cagr": -5.51,
+   "d_sharpe": 0.126,
    "t": -1.36,
    "t_crit": null,
    "cost": {
@@ -18148,14 +18156,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 7.84,
-      "sharpe": 0.809,
-      "excess": -5.6,
+      "cagr": 7.82,
+      "sharpe": 0.807,
+      "excess": -5.62,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.1,
+    "drag": 0.11,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -18168,7 +18176,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 21.79,
+      "v": 21.77,
       "p": 0.0
      },
      {
@@ -18178,8 +18186,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.326,
-      "p": 0.0845
+      "v": 0.323,
+      "p": 0.0875
      }
     ],
     "n_boot": 4000,
@@ -18195,7 +18203,7 @@
      "beta": 0.881
     },
     "five": {
-     "alpha": 1.42,
+     "alpha": 1.43,
      "t": 1.0,
      "n": 372,
      "vs": [
@@ -18216,7 +18224,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18239,11 +18247,11 @@
      ],
      [
       "DBC",
-      10.0
+      10.1
      ],
      [
       "QQQ",
-      9.1
+      9.0
      ]
     ],
     "exposure_now": null,
@@ -18304,21 +18312,21 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 7.28,
+     "s": 7.25,
      "b": 13.44,
-     "d": -6.16
+     "d": -6.19
     },
     {
      "k": "변동성",
-     "s": 9.55,
+     "s": 9.54,
      "b": 18.07,
-     "d": -8.52
+     "d": -8.53
     },
     {
      "k": "샤프",
-     "s": 0.603,
+     "s": 0.601,
      "b": 0.694,
-     "d": -0.091
+     "d": -0.093
     },
     {
      "k": "최대낙폭",
@@ -18327,23 +18335,23 @@
      "d": 13.77
     }
    ],
-   "excess_cagr": -6.16,
-   "d_sharpe": -0.091,
-   "t": -1.37,
+   "excess_cagr": -6.19,
+   "d_sharpe": -0.093,
+   "t": -1.38,
    "t_crit": null,
    "cost": {
     "unit": "자산 랩은 왕복 bp 한 점만 잰다 — 감응 곡선이 없다",
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 7.23,
-      "sharpe": 0.599,
-      "excess": -6.21,
+      "cagr": 7.21,
+      "sharpe": 0.596,
+      "excess": -6.23,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.05,
+    "drag": 0.04,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -18356,8 +18364,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 12.95,
-      "p": 0.0225
+      "v": 12.93,
+      "p": 0.0227
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -18366,8 +18374,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.052,
-      "p": 0.5663
+      "v": -0.053,
+      "p": 0.5705
      }
     ],
     "n_boot": 4000,
@@ -18383,8 +18391,8 @@
      "beta": 1.026
     },
     "five": {
-     "alpha": -0.79,
-     "t": -0.93,
+     "alpha": -0.8,
+     "t": -0.94,
      "n": 504,
      "vs": [
       "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
@@ -18404,18 +18412,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      60.0
+      70.0
      ],
      [
       "DBC",
-      30.0
+      20.0
      ],
      [
       "SPY",
@@ -18582,7 +18590,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18726,12 +18734,12 @@
     "one": {
      "vs": "크로스에셋 RP — 목표변동성 8%",
      "corr": 0.832,
-     "alpha": 0.04,
-     "t": 0.01,
+     "alpha": 0.06,
+     "t": 0.02,
      "beta": 0.895
     },
     "five": {
-     "alpha": -0.08,
+     "alpha": -0.06,
      "t": -0.02,
      "n": 372,
      "vs": [
@@ -18752,7 +18760,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18827,9 +18835,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 5.86,
+     "s": 5.84,
      "b": 13.44,
-     "d": -7.58
+     "d": -7.6
     },
     {
      "k": "변동성",
@@ -18839,9 +18847,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.546,
+     "s": 0.544,
      "b": 0.694,
-     "d": -0.148
+     "d": -0.15
     },
     {
      "k": "최대낙폭",
@@ -18850,8 +18858,8 @@
      "d": 15.27
     }
    ],
-   "excess_cagr": -7.58,
-   "d_sharpe": -0.148,
+   "excess_cagr": -7.6,
+   "d_sharpe": -0.15,
    "t": -1.68,
    "t_crit": null,
    "cost": {
@@ -18859,9 +18867,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 5.84,
-      "sharpe": 0.544,
-      "excess": -7.6,
+      "cagr": 5.82,
+      "sharpe": 0.542,
+      "excess": -7.62,
       "t": null,
       "main": true
      }
@@ -18879,8 +18887,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 14.26,
-      "p": 0.0063
+      "v": 14.23,
+      "p": 0.0065
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -18889,8 +18897,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.099,
-      "p": 0.7
+      "v": -0.101,
+      "p": 0.7033
      }
     ],
     "n_boot": 4000,
@@ -18927,7 +18935,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18938,7 +18946,7 @@
      ],
      [
       "EMB",
-      23.9
+      23.7
      ],
      [
       "TLT",
@@ -18950,7 +18958,7 @@
      ],
      [
       "DBC",
-      6.8
+      6.9
      ],
      [
       "GLD",
@@ -18958,7 +18966,7 @@
      ],
      [
       "SLV",
-      3.1
+      3.2
      ]
     ],
     "exposure_now": null,
@@ -19026,9 +19034,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 5.7,
+     "s": 5.67,
      "b": 13.44,
-     "d": -7.74
+     "d": -7.77
     },
     {
      "k": "변동성",
@@ -19038,9 +19046,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.738,
+     "s": 0.734,
      "b": 0.694,
-     "d": 0.044
+     "d": 0.04
     },
     {
      "k": "최대낙폭",
@@ -19049,8 +19057,8 @@
      "d": 23.56
     }
    ],
-   "excess_cagr": -7.74,
-   "d_sharpe": 0.044,
+   "excess_cagr": -7.77,
+   "d_sharpe": 0.04,
    "t": -1.71,
    "t_crit": null,
    "cost": {
@@ -19058,14 +19066,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 5.67,
-      "sharpe": 0.734,
-      "excess": -7.77,
+      "cagr": 5.65,
+      "sharpe": 0.73,
+      "excess": -7.79,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.03,
+    "drag": 0.02,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -19078,7 +19086,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 22.64,
+      "v": 22.62,
       "p": 0.0
      },
      {
@@ -19088,8 +19096,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": 0.18,
-      "p": 0.1725
+      "v": 0.176,
+      "p": 0.177
      }
     ],
     "n_boot": 4000,
@@ -19126,7 +19134,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19137,11 +19145,11 @@
      ],
      [
       "TLT",
-      19.8
+      19.7
      ],
      [
       "SPY",
-      16.2
+      16.3
      ],
      [
       "DBC",
@@ -19212,9 +19220,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 1.03,
+     "s": 1.0,
      "b": 13.44,
-     "d": -12.41
+     "d": -12.44
     },
     {
      "k": "변동성",
@@ -19224,9 +19232,9 @@
     },
     {
      "k": "샤프",
-     "s": -0.02,
+     "s": -0.023,
      "b": 0.694,
-     "d": -0.714
+     "d": -0.717
     },
     {
      "k": "최대낙폭",
@@ -19235,8 +19243,8 @@
      "d": 4.1
     }
    ],
-   "excess_cagr": -12.41,
-   "d_sharpe": -0.714,
+   "excess_cagr": -12.44,
+   "d_sharpe": -0.717,
    "t": -1.83,
    "t_crit": null,
    "cost": {
@@ -19244,9 +19252,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 0.96,
-      "sharpe": -0.027,
-      "excess": -12.48,
+      "cagr": 0.93,
+      "sharpe": -0.03,
+      "excess": -12.51,
       "t": null,
       "main": true
      }
@@ -19264,8 +19272,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 7.04,
-      "p": 0.2835
+      "v": 6.97,
+      "p": 0.285
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -19274,8 +19282,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.413,
-      "p": 0.9175
+      "v": -0.415,
+      "p": 0.9193
      }
     ],
     "n_boot": 4000,
@@ -19312,7 +19320,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19380,9 +19388,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 4.5,
+     "s": 4.48,
      "b": 13.44,
-     "d": -8.94
+     "d": -8.96
     },
     {
      "k": "변동성",
@@ -19392,9 +19400,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.285,
+     "s": 0.283,
      "b": 0.694,
-     "d": -0.409
+     "d": -0.411
     },
     {
      "k": "최대낙폭",
@@ -19403,8 +19411,8 @@
      "d": -1.75
     }
    ],
-   "excess_cagr": -8.94,
-   "d_sharpe": -0.409,
+   "excess_cagr": -8.96,
+   "d_sharpe": -0.411,
    "t": -1.95,
    "t_crit": null,
    "cost": {
@@ -19412,9 +19420,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 4.5,
-      "sharpe": 0.284,
-      "excess": -8.94,
+      "cagr": 4.48,
+      "sharpe": 0.283,
+      "excess": -8.96,
       "t": null,
       "main": true
      }
@@ -19432,8 +19440,8 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": -1.75,
-      "p": 0.5497
+      "v": -1.77,
+      "p": 0.55
      },
      {
       "k": "꼬리위험 CVaR 개선",
@@ -19442,8 +19450,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.24,
-      "p": 0.7865
+      "v": -0.241,
+      "p": 0.7893
      }
     ],
     "n_boot": 4000,
@@ -19454,13 +19462,13 @@
     "one": {
      "vs": "매니지드 퓨처스 위성 배분 (DBMF 20%)",
      "corr": 0.896,
-     "alpha": -3.41,
-     "t": -1.79,
+     "alpha": -3.43,
+     "t": -1.8,
      "beta": 1.244
     },
     "five": {
-     "alpha": -2.29,
-     "t": -1.23,
+     "alpha": -2.3,
+     "t": -1.24,
      "n": 372,
      "vs": [
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
@@ -19480,7 +19488,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19554,9 +19562,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 4.77,
+     "s": 4.75,
      "b": 13.44,
-     "d": -8.67
+     "d": -8.69
     },
     {
      "k": "변동성",
@@ -19566,9 +19574,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.54,
+     "s": 0.536,
      "b": 0.694,
-     "d": -0.154
+     "d": -0.158
     },
     {
      "k": "최대낙폭",
@@ -19577,8 +19585,8 @@
      "d": 20.84
     }
    ],
-   "excess_cagr": -8.67,
-   "d_sharpe": -0.154,
+   "excess_cagr": -8.69,
+   "d_sharpe": -0.158,
    "t": -2.0,
    "t_crit": null,
    "cost": {
@@ -19586,9 +19594,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 4.71,
-      "sharpe": 0.529,
-      "excess": -8.73,
+      "cagr": 4.69,
+      "sharpe": 0.525,
+      "excess": -8.75,
       "t": null,
       "main": true
      }
@@ -19606,7 +19614,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 20.16,
+      "v": 20.12,
       "p": 0.0
      },
      {
@@ -19616,8 +19624,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.011,
-      "p": 0.539
+      "v": -0.015,
+      "p": 0.5465
      }
     ],
     "n_boot": 4000,
@@ -19634,7 +19642,7 @@
     },
     "five": {
      "alpha": -0.02,
-     "t": -0.22,
+     "t": -0.21,
      "n": 372,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19654,30 +19662,30 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      19.5
+      19.0
      ],
      [
       "UUP",
-      15.3
+      15.2
      ],
      [
       "IEF",
-      12.6
+      12.7
      ],
      [
       "LQD",
-      11.5
+      11.7
      ],
      [
       "SPY",
-      7.4
+      7.3
      ],
      [
       "EFA",
@@ -19689,15 +19697,15 @@
      ],
      [
       "VNQ",
-      5.4
+      5.5
+     ],
+     [
+      "DBC",
+      4.2
      ],
      [
       "QQQ",
       4.1
-     ],
-     [
-      "DBC",
-      3.9
      ],
      [
       "EEM",
@@ -19761,9 +19769,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 4.79,
+     "s": 4.77,
      "b": 13.44,
-     "d": -8.65
+     "d": -8.67
     },
     {
      "k": "변동성",
@@ -19773,9 +19781,9 @@
     },
     {
      "k": "샤프",
-     "s": 0.539,
+     "s": 0.535,
      "b": 0.694,
-     "d": -0.155
+     "d": -0.159
     },
     {
      "k": "최대낙폭",
@@ -19784,8 +19792,8 @@
      "d": 20.81
     }
    ],
-   "excess_cagr": -8.65,
-   "d_sharpe": -0.155,
+   "excess_cagr": -8.67,
+   "d_sharpe": -0.159,
    "t": -2.01,
    "t_crit": null,
    "cost": {
@@ -19793,9 +19801,9 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 4.73,
-      "sharpe": 0.529,
-      "excess": -8.71,
+      "cagr": 4.71,
+      "sharpe": 0.525,
+      "excess": -8.73,
       "t": null,
       "main": true
      }
@@ -19813,7 +19821,7 @@
     "rows": [
      {
       "k": "최대낙폭 개선(%p)",
-      "v": 20.1,
+      "v": 20.06,
       "p": 0.0
      },
      {
@@ -19823,8 +19831,8 @@
      },
      {
       "k": "낙폭조정수익 Calmar 개선",
-      "v": -0.01,
-      "p": 0.5415
+      "v": -0.014,
+      "p": 0.5497
      }
     ],
     "n_boot": 4000,
@@ -19841,7 +19849,7 @@
     },
     "five": {
      "alpha": -0.01,
-     "t": -0.05,
+     "t": -0.06,
      "n": 372,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19861,14 +19869,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      21.1
+      20.7
      ],
      [
       "UUP",
@@ -19876,15 +19884,15 @@
      ],
      [
       "IEF",
-      13.7
+      13.8
      ],
      [
       "LQD",
-      12.3
+      12.4
      ],
      [
       "TLT",
-      7.2
+      7.1
      ],
      [
       "SPY",
@@ -19892,15 +19900,15 @@
      ],
      [
       "EFA",
-      5.9
+      6.0
      ],
      [
       "VNQ",
-      5.2
+      5.3
      ],
      [
       "DBC",
-      3.6
+      3.7
      ],
      [
       "QQQ",
@@ -20047,12 +20055,12 @@
     "one": {
      "vs": "매니지드 퓨처스 위성 배분 (DBMF 20%)",
      "corr": 0.915,
-     "alpha": -4.75,
-     "t": -2.09,
-     "beta": 1.672
+     "alpha": -4.73,
+     "t": -2.08,
+     "beta": 1.673
     },
     "five": {
-     "alpha": -4.17,
+     "alpha": -4.15,
      "t": -1.88,
      "n": 372,
      "vs": [
@@ -20073,7 +20081,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -20797,7 +20805,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -21079,7 +21087,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -21598,7 +21605,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -21838,7 +21844,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -22549,7 +22555,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -22831,7 +22837,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -23350,7 +23355,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -23590,7 +23594,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -24296,7 +24300,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -24578,7 +24582,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -25097,7 +25100,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -25337,7 +25339,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -26043,7 +26045,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -26325,7 +26327,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -26844,7 +26845,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -27084,7 +27084,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -27790,7 +27790,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -28072,7 +28072,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -28591,7 +28590,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -28831,7 +28829,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -29537,7 +29535,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -29819,7 +29817,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LDOS",
      "LEN",
@@ -30338,7 +30335,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LDOS": "LEIDOS HOLDINGS INC",
      "LEN": "LENNAR CORP-A",
@@ -30578,7 +30574,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32283,7 +32279,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -32503,7 +32499,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LEN",
      "LH",
@@ -32919,7 +32914,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LEN": "LENNAR CORP-A",
      "LH": "LABCORP HOLDINGS INC",
@@ -33118,7 +33112,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -37076,24 +37070,24 @@
     "as_of": "2026-10-30",
     "n": 10,
     "tickers": [
+     "CNC",
      "CPAY",
      "CRWD",
      "EXPD",
-     "HUM",
+     "ILMN",
      "MRNA",
-     "PM",
      "SNDK",
      "STT",
      "TWLO",
      "VLO"
     ],
     "names": {
+     "CNC": "CENTENE CORP",
      "CPAY": "CORPAY INC",
      "CRWD": "CROWDSTRIKE HOLDINGS INC - A",
      "EXPD": "EXPEDITORS INTL WASH INC",
-     "HUM": "HUMANA INC",
+     "ILMN": "Illumina, Inc.",
      "MRNA": "MODERNA INC",
-     "PM": "PHILIP MORRIS INTERNATIONAL",
      "SNDK": "SANDISK CORP",
      "STT": "STATE STREET CORP",
      "TWLO": "Twilio",
@@ -38650,7 +38644,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -39480,7 +39474,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -39700,7 +39694,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LEN",
      "LH",
@@ -40116,7 +40109,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LEN": "LENNAR CORP-A",
      "LH": "LABCORP HOLDINGS INC",
@@ -40315,7 +40307,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -44685,7 +44677,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -44905,7 +44897,6 @@
      "KMI",
      "KO",
      "KR",
-     "KVUE",
      "L",
      "LEN",
      "LH",
@@ -45321,7 +45312,6 @@
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
      "KR": "KROGER CO",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LEN": "LENNAR CORP-A",
      "LH": "LABCORP HOLDINGS INC",
@@ -45520,7 +45510,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -47338,28 +47328,28 @@
     "as_of": "2026-10-30",
     "n": 10,
     "tickers": [
+     "ADM",
      "COR",
      "CRM",
-     "DDOG",
+     "CRWV",
      "ELV",
      "FOXA",
      "KR",
-     "NBIS",
+     "MSFT",
      "NTAP",
-     "PGR",
-     "TWLO"
+     "PGR"
     ],
     "names": {
+     "ADM": "ARCHER-DANIELS-MIDLAND CO",
      "COR": "CENCORA INC",
      "CRM": "SALESFORCE INC",
-     "DDOG": "DATADOG INC - CLASS A",
+     "CRWV": "COREWEAVE INC-CL A",
      "ELV": "ELEVANCE HEALTH INC",
      "FOXA": "FOX CORP - CLASS A",
      "KR": "KROGER CO",
-     "NBIS": "NEBIUS GROUP NV",
+     "MSFT": "MICROSOFT CORP",
      "NTAP": "NETAPP INC",
-     "PGR": "PROGRESSIVE CORP",
-     "TWLO": "Twilio"
+     "PGR": "PROGRESSIVE CORP"
     },
     "weights": null,
     "exposure_now": null,
@@ -54683,11 +54673,11 @@
      "EBAY",
      "FLEX",
      "ILMN",
-     "KVUE",
      "MO",
      "MRNA",
      "PTC",
      "PYPL",
+     "RL",
      "SPG"
     ],
     "names": {
@@ -54695,11 +54685,11 @@
      "EBAY": "EBAY INC",
      "FLEX": "FLEX LTD",
      "ILMN": "Illumina, Inc.",
-     "KVUE": "KENVUE INC",
      "MO": "ALTRIA GROUP INC",
      "MRNA": "MODERNA INC",
      "PTC": "PTC INC",
      "PYPL": "PAYPAL HOLDINGS INC",
+     "RL": "RALPH LAUREN CORP",
      "SPG": "SIMON PROPERTY GROUP INC"
     },
     "weights": null,
@@ -56905,6 +56895,7 @@
      "FAST",
      "FDX",
      "FE",
+     "FITB",
      "GD",
      "GILD",
      "GM",
@@ -56922,7 +56913,6 @@
      "KMB",
      "KMI",
      "KO",
-     "KVUE",
      "L",
      "LH",
      "LIN",
@@ -57062,6 +57052,7 @@
      "FAST": "FASTENAL CO",
      "FDX": "FEDEX CORP",
      "FE": "FIRSTENERGY CORP",
+     "FITB": "FIFTH THIRD BANCORP",
      "GD": "GENERAL DYNAMICS CORP",
      "GILD": "GILEAD SCIENCES INC",
      "GM": "GENERAL MOTORS CO",
@@ -57079,7 +57070,6 @@
      "KMB": "KIMBERLY-CLARK CORP",
      "KMI": "KINDER MORGAN INC",
      "KO": "COCA-COLA CO/THE",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LH": "LABCORP HOLDINGS INC",
      "LIN": "LINDE PLC",
@@ -57724,24 +57714,24 @@
     "tickers": [
      "ABNB",
      "ABT",
+     "ACGL",
+     "ACN",
      "ADI",
      "ADM",
-     "AFL",
      "AIG",
      "ALL",
      "AMAT",
-     "AME",
      "AMZN",
      "APH",
      "APP",
      "ATO",
      "BAC",
      "BDX",
-     "BG",
      "BIIB",
      "BNY",
      "C",
      "CB",
+     "CCEP",
      "CCL",
      "CFG",
      "CI",
@@ -57749,7 +57739,6 @@
      "CME",
      "CNC",
      "COF",
-     "COHR",
      "COP",
      "CPRT",
      "CRM",
@@ -57760,8 +57749,6 @@
      "D",
      "DAL",
      "DASH",
-     "DE",
-     "DGX",
      "DHI",
      "DHR",
      "DIS",
@@ -57785,10 +57772,11 @@
      "FANG",
      "FCX",
      "FDX",
+     "FISV",
+     "FLEX",
      "FSLR",
      "GD",
      "GEHC",
-     "GLW",
      "GRMN",
      "HBAN",
      "HON",
@@ -57797,23 +57785,22 @@
      "IBKR",
      "IBM",
      "INTC",
-     "INTU",
      "IR",
      "JCI",
      "JNJ",
      "JPM",
      "KDP",
      "KEY",
+     "KEYS",
      "KHC",
+     "KKR",
      "KMI",
-     "KVUE",
      "L",
      "LEN",
      "LH",
      "LHX",
      "LIN",
      "LUV",
-     "MCHP",
      "MDLZ",
      "MDT",
      "MET",
@@ -57824,7 +57811,9 @@
      "MS",
      "MSFT",
      "MSTR",
+     "MTB",
      "MU",
+     "NOC",
      "NOW",
      "NSC",
      "NUE",
@@ -57836,7 +57825,6 @@
      "PCG",
      "PFE",
      "PG",
-     "PH",
      "PHM",
      "PLD",
      "PPL",
@@ -57846,6 +57834,7 @@
      "RL",
      "ROP",
      "ROST",
+     "RTX",
      "SHOP",
      "SMCI",
      "SNA",
@@ -57860,45 +57849,46 @@
      "TJX",
      "TMO",
      "TRI",
+     "TRV",
      "TSLA",
      "TWLO",
      "UAL",
      "UBER",
+     "UPS",
      "URI",
-     "USB",
      "VEEV",
      "VICI",
      "VLO",
      "VMRK",
      "VTR",
      "VZ",
+     "WDAY",
      "WELL",
      "WMT",
      "XOM",
-     "XYL",
-     "XYZ"
+     "XYL"
     ],
     "names": {
      "ABNB": "AIRBNB INC-CLASS A",
      "ABT": "ABBOTT LABORATORIES",
+     "ACGL": "ARCH CAPITAL GROUP LTD",
+     "ACN": "ACCENTURE PLC-CL A",
      "ADI": "ANALOG DEVICES INC",
      "ADM": "ARCHER-DANIELS-MIDLAND CO",
-     "AFL": "AFLAC INC",
      "AIG": "AMERICAN INTERNATIONAL GROUP",
      "ALL": "ALLSTATE CORP",
      "AMAT": "APPLIED MATERIALS INC",
-     "AME": "AMETEK INC",
      "AMZN": "AMAZON.COM INC",
      "APH": "AMPHENOL CORP-CL A",
      "APP": "APPLOVIN CORP-CLASS A",
      "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
      "BDX": "BECTON DICKINSON AND CO",
-     "BG": "BUNGE GLOBAL SA",
      "BIIB": "BIOGEN INC",
      "BNY": "BANK OF NEW YORK MELLON CORP",
      "C": "CITIGROUP INC",
      "CB": "CHUBB LTD",
+     "CCEP": "COCA-COLA EUROPACIFIC PARTNE",
      "CCL": "CARNIVAL CORP",
      "CFG": "CITIZENS FINANCIAL GROUP",
      "CI": "THE CIGNA GROUP",
@@ -57906,7 +57896,6 @@
      "CME": "CME GROUP INC",
      "CNC": "CENTENE CORP",
      "COF": "CAPITAL ONE FINANCIAL CORP",
-     "COHR": "COHERENT CORP",
      "COP": "CONOCOPHILLIPS",
      "CPRT": "COPART INC",
      "CRM": "SALESFORCE INC",
@@ -57917,8 +57906,6 @@
      "D": "DOMINION ENERGY INC",
      "DAL": "DELTA AIR LINES INC",
      "DASH": "DOORDASH INC - A",
-     "DE": "DEERE & CO",
-     "DGX": "QUEST DIAGNOSTICS INC",
      "DHI": "DR HORTON INC",
      "DHR": "DANAHER CORP",
      "DIS": "WALT DISNEY CO/THE",
@@ -57942,10 +57929,11 @@
      "FANG": "DIAMONDBACK ENERGY INC",
      "FCX": "FREEPORT-MCMORAN INC",
      "FDX": "FEDEX CORP",
+     "FISV": "FISERV INC",
+     "FLEX": "FLEX LTD",
      "FSLR": "FIRST SOLAR INC",
      "GD": "GENERAL DYNAMICS CORP",
      "GEHC": "GE HEALTHCARE TECHNOLOGY",
-     "GLW": "CORNING INC",
      "GRMN": "GARMIN LTD",
      "HBAN": "HUNTINGTON BANCSHARES INC",
      "HON": "HONEYWELL INTERNATIONAL INC",
@@ -57954,23 +57942,22 @@
      "IBKR": "INTERACTIVE BROKERS GRO-CL A",
      "IBM": "INTL BUSINESS MACHINES CORP",
      "INTC": "INTEL CORP",
-     "INTU": "INTUIT INC",
      "IR": "INGERSOLL-RAND INC",
      "JCI": "JOHNSON CONTROLS INTERNATION",
      "JNJ": "JOHNSON & JOHNSON",
      "JPM": "JPMORGAN CHASE & CO",
      "KDP": "KEURIG DR PEPPER INC",
      "KEY": "KEYCORP",
+     "KEYS": "KEYSIGHT TECHNOLOGIES IN",
      "KHC": "KRAFT HEINZ CO/THE",
+     "KKR": "KKR & CO INC",
      "KMI": "KINDER MORGAN INC",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LEN": "LENNAR CORP-A",
      "LH": "LABCORP HOLDINGS INC",
      "LHX": "L3HARRIS TECHNOLOGIES INC",
      "LIN": "LINDE PLC",
      "LUV": "SOUTHWEST AIRLINES CO",
-     "MCHP": "MICROCHIP TECHNOLOGY INC",
      "MDLZ": "MONDELEZ INTERNATIONAL INC-A",
      "MDT": "MEDTRONIC PLC",
      "MET": "METLIFE INC",
@@ -57981,7 +57968,9 @@
      "MS": "MORGAN STANLEY",
      "MSFT": "MICROSOFT CORP",
      "MSTR": "MICROSTRATEGY INC-CL A",
+     "MTB": "M & T BANK CORP",
      "MU": "MICRON TECHNOLOGY INC",
+     "NOC": "NORTHROP GRUMMAN CORP",
      "NOW": "SERVICENOW INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NUE": "NUCOR CORP",
@@ -57993,7 +57982,6 @@
      "PCG": "P G & E CORP",
      "PFE": "PFIZER INC",
      "PG": "PROCTER & GAMBLE CO/THE",
-     "PH": "PARKER HANNIFIN CORP",
      "PHM": "PULTEGROUP INC",
      "PLD": "PROLOGIS INC",
      "PPL": "PPL CORP",
@@ -58003,6 +57991,7 @@
      "RL": "RALPH LAUREN CORP",
      "ROP": "ROPER TECHNOLOGIES INC",
      "ROST": "ROSS STORES INC",
+     "RTX": "RTX CORP",
      "SHOP": "SHOPIFY INC - CLASS A",
      "SMCI": "SUPER MICRO COMPUTER INC",
      "SNA": "SNAP-ON INC",
@@ -58017,23 +58006,24 @@
      "TJX": "TJX COMPANIES INC",
      "TMO": "THERMO FISHER SCIENTIFIC INC",
      "TRI": "THOMSON REUTERS CORP",
+     "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
      "TWLO": "Twilio",
      "UAL": "UNITED AIRLINES HOLDINGS INC",
      "UBER": "UBER TECHNOLOGIES INC",
+     "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
-     "USB": "US BANCORP",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
      "VMRK": "Vivmark Residential",
      "VTR": "VENTAS INC",
      "VZ": "VERIZON COMMUNICATIONS INC",
+     "WDAY": "WORKDAY INC-CLASS A",
      "WELL": "WELLTOWER INC",
      "WMT": "WALMART INC",
      "XOM": "EXXON MOBIL CORP",
-     "XYL": "XYLEM INC",
-     "XYZ": "BLOCK INC"
+     "XYL": "XYLEM INC"
     },
     "weights": null,
     "exposure_now": null,
@@ -59123,13 +59113,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 94.6,
-    "note": "노출 95%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 93.8,
+    "note": "노출 94%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -59324,28 +59314,28 @@
     "as_of": "2026-10-30",
     "n": 10,
     "tickers": [
-     "ATO",
+     "AWK",
      "CTAS",
      "DUK",
+     "EQT",
      "EXC",
      "HIG",
      "IBM",
      "KO",
      "L",
-     "PEP",
-     "TGT"
+     "TJX"
     ],
     "names": {
-     "ATO": "ATMOS ENERGY CORP",
+     "AWK": "AMERICAN WATER WORKS CO INC",
      "CTAS": "CINTAS CORP",
      "DUK": "DUKE ENERGY CORP",
+     "EQT": "EQT CORP",
      "EXC": "EXELON CORP",
      "HIG": "HARTFORD INSURANCE GROUP INC",
      "IBM": "INTL BUSINESS MACHINES CORP",
      "KO": "COCA-COLA CO/THE",
      "L": "LOEWS CORP",
-     "PEP": "PEPSICO INC",
-     "TGT": "TARGET CORP"
+     "TJX": "TJX COMPANIES INC"
     },
     "weights": null,
     "exposure_now": null,
@@ -60131,7 +60121,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60310,7 +60300,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60496,7 +60486,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61911,7 +61901,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -62556,6 +62546,7 @@
      "AEP",
      "AFL",
      "AIG",
+     "AMCR",
      "APD",
      "ATO",
      "AWK",
@@ -62599,7 +62590,6 @@
      "JPM",
      "KEY",
      "KO",
-     "KVUE",
      "L",
      "LIN",
      "LYV",
@@ -62658,6 +62648,7 @@
      "AEP": "AMERICAN ELECTRIC POWER",
      "AFL": "AFLAC INC",
      "AIG": "AMERICAN INTERNATIONAL GROUP",
+     "AMCR": "AMCOR PLC",
      "APD": "AIR PRODUCTS & CHEMICALS INC",
      "ATO": "ATMOS ENERGY CORP",
      "AWK": "AMERICAN WATER WORKS CO INC",
@@ -62701,7 +62692,6 @@
      "JPM": "JPMORGAN CHASE & CO",
      "KEY": "KEYCORP",
      "KO": "COCA-COLA CO/THE",
-     "KVUE": "KENVUE INC",
      "L": "LOEWS CORP",
      "LIN": "LINDE PLC",
      "LYV": "LIVE NATION ENTERTAINMENT IN",
@@ -64024,7 +64014,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64203,7 +64193,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64616,7 +64606,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65719,13 +65709,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 88.7,
-    "note": "노출 89%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 90.2,
+    "note": "노출 90%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65905,13 +65895,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 64.9,
-    "note": "노출 65%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 63.2,
+    "note": "노출 63%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -66084,7 +66074,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-02",
+    "as_of": "2026-11-03",
     "n": null,
     "tickers": null,
     "names": null,
