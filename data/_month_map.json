@@ -76,10 +76,10 @@
   ]
  },
  "persistence": {
-  "top5_carry_pct": 7.933884297520661,
+  "top5_carry_pct": 7.6033057851239665,
   "random_pct": 2.7196932542690266,
-  "rank_rho_median": 0.023636583852983385,
-  "rank_rho_mean": 0.00989351711372571
+  "rank_rho_median": 0.032825122311980884,
+  "rank_rho_mean": 0.014354061442034003
  },
  "kinds": [
   {
@@ -95,8 +95,8 @@
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 10,
      "in_pct": 83.3,
-     "all_pct": 18.0,
-     "lift": 65.3
+     "all_pct": 18.9,
+     "lift": 64.5
     },
     {
      "sid": "a-overnight-ndx",
@@ -144,57 +144,57 @@
    "axis": "dir",
    "axis_ko": "그달 지수",
    "level": "하락",
-   "n_months": 28,
-   "spx_mean": -1.96,
+   "n_months": 29,
+   "spx_mean": -1.98,
    "med_ex": 0.16,
    "recur": [
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "hit": 12,
-     "in_pct": 42.9,
-     "all_pct": 18.0,
-     "lift": 24.8
+     "hit": 13,
+     "in_pct": 44.8,
+     "all_pct": 18.9,
+     "lift": 26.0
     },
     {
      "sid": "t-x-subls",
      "name": "서브산업 모멘텀 롱숏 (상하위 5)",
      "hit": 11,
-     "in_pct": 39.3,
+     "in_pct": 37.9,
      "all_pct": 19.7,
-     "lift": 19.6
+     "lift": 18.3
     },
     {
      "sid": "t-x-entropy",
      "name": "수익률 엔트로피 최하위 10",
      "hit": 3,
-     "in_pct": 10.7,
+     "in_pct": 10.3,
      "all_pct": 2.5,
-     "lift": 8.3
+     "lift": 7.9
     },
     {
      "sid": "t-x-kurt",
      "name": "초과첨도 최하위 10",
      "hit": 4,
-     "in_pct": 14.3,
+     "in_pct": 13.8,
      "all_pct": 7.4,
-     "lift": 6.9
+     "lift": 6.4
     },
     {
      "sid": "t-x-ecm",
      "name": "지수 대비 오차수정 괴리 최하위 10",
      "hit": 4,
-     "in_pct": 14.3,
+     "in_pct": 13.8,
      "all_pct": 8.2,
-     "lift": 6.1
+     "lift": 5.6
     },
     {
      "sid": "t-x-divgrow",
      "name": "배당 증액률 상위 10",
      "hit": 3,
-     "in_pct": 10.7,
+     "in_pct": 10.3,
      "all_pct": 4.9,
-     "lift": 5.8
+     "lift": 5.4
     }
    ]
   },
@@ -202,57 +202,57 @@
    "axis": "dir",
    "axis_ko": "그달 지수",
    "level": "상승",
-   "n_months": 62,
-   "spx_mean": 2.29,
-   "med_ex": -0.08,
+   "n_months": 61,
+   "spx_mean": 2.31,
+   "med_ex": -0.07,
    "recur": [
     {
      "sid": "t-x-sp",
      "name": "저PSR (매출수익률 상위 10)",
      "hit": 10,
-     "in_pct": 16.1,
+     "in_pct": 16.4,
      "all_pct": 11.5,
-     "lift": 4.7
-    },
-    {
-     "sid": "t-x-maxlow-band",
-     "name": "복권형 회피 (MAX 최하위 10) · 밴드 보유",
-     "hit": 5,
-     "in_pct": 8.1,
-     "all_pct": 4.1,
-     "lift": 4.0
-    },
-    {
-     "sid": "t-x-archlm",
-     "name": "변동성 군집 최하위 10 (5시차)",
-     "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.7,
-     "lift": 3.9
-    },
-    {
-     "sid": "t-x-lowde",
-     "name": "저부채 상위 10",
-     "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.7,
-     "lift": 3.9
-    },
-    {
-     "sid": "t-x-sur",
-     "name": "매출 서프라이즈 (SUR 상위 10)",
-     "hit": 6,
-     "in_pct": 9.7,
-     "all_pct": 5.7,
-     "lift": 3.9
+     "lift": 4.9
     },
     {
      "sid": "t-x-currat",
      "name": "유동비율 상위 10",
      "hit": 7,
-     "in_pct": 11.3,
+     "in_pct": 11.5,
      "all_pct": 7.4,
-     "lift": 3.9
+     "lift": 4.1
+    },
+    {
+     "sid": "t-x-archlm",
+     "name": "변동성 군집 최하위 10 (5시차)",
+     "hit": 6,
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.1
+    },
+    {
+     "sid": "t-x-lowde",
+     "name": "저부채 상위 10",
+     "hit": 6,
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.1
+    },
+    {
+     "sid": "t-x-sur",
+     "name": "매출 서프라이즈 (SUR 상위 10)",
+     "hit": 6,
+     "in_pct": 9.8,
+     "all_pct": 5.7,
+     "lift": 4.1
+    },
+    {
+     "sid": "t-x-maxlow-band",
+     "name": "복권형 회피 (MAX 최하위 10) · 밴드 보유",
+     "hit": 5,
+     "in_pct": 8.2,
+     "all_pct": 4.1,
+     "lift": 4.1
     }
    ]
   },
@@ -377,8 +377,8 @@
    "axis_ko": "출렁임",
    "level": "중",
    "n_months": 41,
-   "spx_mean": 1.39,
-   "med_ex": 0.04,
+   "spx_mean": 1.29,
+   "med_ex": 0.05,
    "recur": [
     {
      "sid": "t-x-mommvol",
@@ -443,8 +443,8 @@
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 16,
      "in_pct": 39.0,
-     "all_pct": 18.0,
-     "lift": 21.0
+     "all_pct": 18.9,
+     "lift": 20.2
     },
     {
      "sid": "t-x-rev1m-band",
@@ -609,8 +609,8 @@
    "axis_ko": "종목 간 격차",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.76,
-   "med_ex": 0.04,
+   "spx_mean": 1.66,
+   "med_ex": 0.05,
    "recur": [
     {
      "sid": "t-x-dalpha",
@@ -783,8 +783,8 @@
    "axis_ko": "금리 방향",
    "level": "상",
    "n_months": 42,
-   "spx_mean": 0.48,
-   "med_ex": 0.01,
+   "spx_mean": 0.38,
+   "med_ex": 0.04,
    "recur": [
     {
      "sid": "a-overnight-ndx",
@@ -811,6 +811,14 @@
      "lift": 5.3
     },
     {
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "hit": 10,
+     "in_pct": 23.8,
+     "all_pct": 18.9,
+     "lift": 5.0
+    },
+    {
      "sid": "t-t-ddgate",
      "name": "드로다운 게이트 (−10%)",
      "hit": 3,
@@ -819,20 +827,12 @@
      "lift": 4.7
     },
     {
-     "sid": "t-x-poacc",
-     "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
+     "sid": "a-overnight",
+     "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
      "hit": 4,
      "in_pct": 9.5,
      "all_pct": 4.9,
      "lift": 4.6
-    },
-    {
-     "sid": "t-x-agrow",
-     "name": "자산성장 회피 (총자산 증가 최저)",
-     "hit": 3,
-     "in_pct": 7.1,
-     "all_pct": 3.3,
-     "lift": 3.9
     }
    ]
   },
@@ -957,8 +957,8 @@
    "axis_ko": "덩치 싸움",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.11,
-   "med_ex": -0.04,
+   "spx_mean": 1.01,
+   "med_ex": 0.0,
    "recur": [
     {
      "sid": "t-x-ecm-band",
@@ -1015,8 +1015,8 @@
    "axis_ko": "쏠림 방향",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.43,
-   "med_ex": 0.03,
+   "spx_mean": 0.33,
+   "med_ex": 0.04,
    "recur": [
     {
      "sid": "t-x-kurt",
@@ -2545,7 +2545,7 @@
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": 3.24
+     "ex": 3.23
     },
     {
      "sid": "t-x-archlm",
@@ -8444,7 +8444,7 @@
      "ex": -10.47
     }
    ],
-   "med": 0.07
+   "med": 0.06
   },
   {
    "m": "2025-12",
@@ -9174,8 +9174,8 @@
   },
   {
    "m": "2026-11",
-   "spx": 1.43,
-   "ndx": 0.18,
+   "spx": -2.68,
+   "ndx": -4.91,
    "vol": 0.12573,
    "disp": 0.08542,
    "rate12": 0.88,
@@ -9190,53 +9190,53 @@
     "conc": "상",
     "dconc12": "하"
    },
-   "label": "상승 · 출렁임중 · 격차상 · 금리상 · 덩치상",
+   "label": "하락 · 출렁임중 · 격차상 · 금리상 · 덩치상",
    "n": 60,
    "top": [
     {
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "ex": 8.01
+    },
+    {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "ex": 1.47
+     "ex": 7.02
     },
     {
-     "sid": "a-sec-lowvol",
-     "name": "저변동 섹터 상위 3",
-     "ex": 0.7
+     "sid": "a-overnight",
+     "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
+     "ex": 4.48
     },
     {
-     "sid": "a-quality-tilt",
-     "name": "퀄리티 틸트 (QUAL, ETF 프록시)",
-     "ex": 0.62
+     "sid": "a-taa-vaa-g4",
+     "name": "경계형 자산배분 VAA-G4 (Keller 2017)",
+     "ex": 2.79
     },
     {
      "sid": "a-sec-term",
      "name": "기간스프레드 방향 섹터",
-     "ex": 0.53
-    },
-    {
-     "sid": "a-sec-halloween",
-     "name": "핼러윈 섹터 (11~4월 경기민감)",
-     "ex": 0.53
+     "ex": 2.7
     }
    ],
    "bot": [
     {
-     "sid": "a-taa-baa-b",
-     "name": "대담형 자산배분 BAA (균형형 · 6종 분산)",
-     "ex": -3.93
-    },
-    {
-     "sid": "a-vol-roll",
-     "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": -4.06
+     "sid": "a-a7b-gate-sector",
+     "name": "위험 게이트 + 국면 섹터 (A7b)",
+     "ex": -2.84
     },
     {
      "sid": "a-sec-dual",
      "name": "섹터 듀얼 모멘텀 상위 3",
-     "ex": -4.28
+     "ex": -4.11
+    },
+    {
+     "sid": "a-a2-factor-rot",
+     "name": "국면 연동 팩터 로테이션 (A2)",
+     "ex": -5.66
     }
    ],
-   "med": -0.3
+   "med": 0.24
   }
  ]
 }
