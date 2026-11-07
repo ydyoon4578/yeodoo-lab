@@ -52,7 +52,7 @@
  "cuts": {
   "vol1": [
    0.10541,
-   0.15089
+   0.15698
   ],
   "disp": [
    0.06489,
@@ -79,7 +79,7 @@
   "top5_carry_pct": 7.6033057851239665,
   "random_pct": 2.7196932542690266,
   "rank_rho_median": 0.032825122311980884,
-  "rank_rho_mean": 0.014354061442034003
+  "rank_rho_mean": 0.014350006819529495
  },
  "kinds": [
   {
@@ -377,8 +377,8 @@
    "axis_ko": "출렁임",
    "level": "중",
    "n_months": 41,
-   "spx_mean": 1.29,
-   "med_ex": 0.05,
+   "spx_mean": 1.46,
+   "med_ex": 0.04,
    "recur": [
     {
      "sid": "t-x-mommvol",
@@ -421,12 +421,12 @@
      "lift": 5.5
     },
     {
-     "sid": "a-sec-term",
-     "name": "기간스프레드 방향 섹터",
-     "hit": 3,
-     "in_pct": 7.3,
-     "all_pct": 2.5,
-     "lift": 4.9
+     "sid": "t-x-ratebeta",
+     "name": "금리 둔감 최하위 10 (|10년물 베타|)",
+     "hit": 4,
+     "in_pct": 9.8,
+     "all_pct": 4.9,
+     "lift": 4.8
     }
    ]
   },
@@ -435,16 +435,24 @@
    "axis_ko": "출렁임",
    "level": "상",
    "n_months": 41,
-   "spx_mean": -0.45,
+   "spx_mean": -0.62,
    "med_ex": 0.1,
    "recur": [
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "hit": 16,
-     "in_pct": 39.0,
+     "hit": 17,
+     "in_pct": 41.5,
      "all_pct": 18.9,
-     "lift": 20.2
+     "lift": 22.6
+    },
+    {
+     "sid": "a-overnight-ndx",
+     "name": "오버나이트 보유 (QQQ 종가→시가)",
+     "hit": 8,
+     "in_pct": 19.5,
+     "all_pct": 9.0,
+     "lift": 10.5
     },
     {
      "sid": "t-x-rev1m-band",
@@ -452,14 +460,6 @@
      "hit": 6,
      "in_pct": 14.6,
      "all_pct": 6.6,
-     "lift": 8.1
-    },
-    {
-     "sid": "a-overnight-ndx",
-     "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "hit": 7,
-     "in_pct": 17.1,
-     "all_pct": 9.0,
      "lift": 8.1
     },
     {
@@ -2545,7 +2545,7 @@
     {
      "sid": "a-sec-lowvol",
      "name": "저변동 섹터 상위 3",
-     "ex": 3.23
+     "ex": 3.24
     },
     {
      "sid": "t-x-archlm",
@@ -4695,14 +4695,14 @@
    "conc": 0.29783,
    "dconc12": 0.0069,
    "band": {
-    "vol1": "상",
+    "vol1": "중",
     "disp": "중",
     "rate12": "상",
     "breadth12": "상",
     "conc": "중",
     "dconc12": "중"
    },
-   "label": "상승 · 출렁임상 · 격차중 · 금리상 · 덩치상",
+   "label": "상승 · 출렁임중 · 격차중 · 금리상 · 덩치상",
    "n": 187,
    "top": [
     {
@@ -9176,27 +9176,27 @@
    "m": "2026-11",
    "spx": -2.68,
    "ndx": -4.91,
-   "vol": 0.12573,
+   "vol": 0.19539,
    "disp": 0.08542,
    "rate12": 0.88,
    "breadth12": 0.06222,
    "conc": 0.37537,
    "dconc12": -0.02644,
    "band": {
-    "vol1": "중",
+    "vol1": "상",
     "disp": "상",
     "rate12": "상",
     "breadth12": "상",
     "conc": "상",
     "dconc12": "하"
    },
-   "label": "하락 · 출렁임중 · 격차상 · 금리상 · 덩치상",
+   "label": "하락 · 출렁임상 · 격차상 · 금리상 · 덩치상",
    "n": 60,
    "top": [
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": 8.01
+     "ex": 8.36
     },
     {
      "sid": "a-overnight-ndx",
@@ -9211,29 +9211,29 @@
     {
      "sid": "a-taa-vaa-g4",
      "name": "경계형 자산배분 VAA-G4 (Keller 2017)",
-     "ex": 2.79
+     "ex": 2.77
     },
     {
      "sid": "a-sec-term",
      "name": "기간스프레드 방향 섹터",
-     "ex": 2.7
+     "ex": 2.71
     }
    ],
    "bot": [
     {
      "sid": "a-a7b-gate-sector",
      "name": "위험 게이트 + 국면 섹터 (A7b)",
-     "ex": -2.84
+     "ex": -2.81
     },
     {
      "sid": "a-sec-dual",
      "name": "섹터 듀얼 모멘텀 상위 3",
-     "ex": -4.11
+     "ex": -4.09
     },
     {
      "sid": "a-a2-factor-rot",
      "name": "국면 연동 팩터 로테이션 (A2)",
-     "ex": -5.66
+     "ex": -5.68
     }
    ],
    "med": 0.24
