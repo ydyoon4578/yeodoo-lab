@@ -294,7 +294,7 @@ def build_body(items: dict) -> str:
     out.append('    </ul>')
     out.append('    <span class="navsp"></span>')
     # sources.html은 공개 페이지다(2026-07-25 잠금 해제) — nofollow를 걸지 않는다
-    out.append('    <a class="asofchip" id="navasof" href="sources.html">'
+    out.append('    <a class="asofchip" id="navasof" href="updates.html">'
                '<span class="ac1">기준일</span><b id="navasofv">—</b></a>')
     out.append('    <button class="themebtn" id="themebtn" aria-label="테마 전환" title="라이트/다크 전환">◐</button>')
     out.append('  </div>')

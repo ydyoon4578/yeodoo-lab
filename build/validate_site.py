@@ -220,23 +220,12 @@ for _cf in sorted(os.listdir(os.path.join(ROOT, "build"))):
 #   ct 손상은 괄호 균형 검사로는 안 잡히고(실증: ct 400자 치환 → 통과), 페이지가 영구 복호불가가 된다.
 #   ph = sha256(평문 utf-8 바이트). 잠금(재암호화) 도구가 반드시 함께 기록해야 하는 계약 —
 #   validate가 로컬 평문 사본과 대조해 '낡은 사본으로 초록불'(타 PC 재잠금 후 드리프트)을 기계적으로 잡는다.
-GATE_PLAIN = {"kb.html": "kb_content.html",
-              # 2026-08-11 — 두 번째 잠금 페이지. 본문(렌더러 포함)만 조각으로 뽑아 암호화한다.
-              "sources.html": "sources_content.html",
-              # 🚨 2026-08-14 — 세 번째. 여기 안 적으면 get(_gp, _gp) 의 기본값이 페이지 이름
-              #   자체가 되어 **조각이 아니라 평문 페이지 한 장**을 해시한다. 그러면 ph 는
-              #   영원히 안 맞고 "다른 PC에서 재잠금됐다"는 엉뚱한 사유가 뜬다(실제로 떴다).
-              #   기본값이 조용히 틀리는 자리라, 잠금 페이지를 늘릴 때 같이 늘려야 한다.
-              "ok.html": "ok_content.html",
-              # 2026-08-20 — 포트폴리오(펀드). 조각 생성은 build/portfolio_fund.py(로컬 전용).
-              "portfolio.html": "portfolio_content.html",
-              # 2026-09-03 — 비공개 DB 지도. 조각 생성은 build/db_map.py(로컬 전용).
-              "db.html": "db_content.html"}
+GATE_PLAIN = {}      # 2026-11-10 잠금 페이지를 모두 걷어냈다(공개 저장소를 전략 중심으로) - 다시 생기면 여기 페이지: 조각 이름
 import base64 as _b64
 import hashlib as _hl
 # kb.html 은 이미 PAGES 안에 있다(루트의 '_' 로 시작하지 않는 모든 .html). 그냥 이어 붙이면
 # 같은 페이지를 두 번 돌아 같은 오류가 두 번 찍힌다 — 실패 1건이 2건으로 보였다. 순서는 두고 중복만 지운다.
-for _gp in dict.fromkeys(PAGES + ["kb.html"]):
+for _gp in dict.fromkeys(PAGES):
     _sv = rd(_gp)
     if not is_locked(_sv): continue
     if _gp not in PAGES: js_checks(_gp + "(셸)", _sv)   # kb.html은 PAGES 밖 — 게이트 셸 JS 검사 여기서
@@ -1294,8 +1283,7 @@ try:
     # 🚨 2026-08-12 — explorer.html 도 --w-wide 로 옮겼다(사용자 요청 '홈처럼 좌우 넓게').
     #   같은 사유다 — 왼쪽 130종 목록 · 오른쪽 6열 비교표와 12열 월별 히트맵이라 폭이 정보량이다.
     _want = {"stocks.html": "--w-wide", "index.html": "--w-wide", "explorer.html": "--w-wide",
-             "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base",
-             "sources.html": "--w-read"}
+             "regime.html": "--w-base", "rotation.html": "--w-base", "archive.html": "--w-base"}
     _want = {k: v for k, v in _want.items() if k not in REDIRECTS}   # 리다이렉트는 본문이 없다
     for _f, _tok in _want.items():
         _s = plain(_f, "폭 토큰 검사")   # 잠금 페이지는 평문 기준(게이트는 자체 폭을 가짐)
@@ -2533,12 +2521,6 @@ try:
     #   ⚠ strip_js()에 HTML 전체를 넘기면 안 된다 — 속성 따옴표를 JS 문자열로 오인해 본문을
     #     통째로 지워, 검사가 아무것도 못 잡는다(음성 테스트로 확인). 주석만 걷어내고 본문은 남긴다.
     #     JS 문자열도 남겨야 화면에서 하드코딩하는 우회까지 잡힌다.
-    _sh = re.sub(r"(?s)<!--.*?-->", "", rd("sources.html"))     # HTML 주석
-    _sh = re.sub(r"(?m)^\s*//.*$", "", _sh)                      # 줄머리 JS 주석(URL의 // 는 보존)
-    _sh = re.sub(r"(?s)/\*.*?\*/", "", _sh)                      # JS 블록 주석
-    _hard = re.findall(r"(?:매일|매주|매월)[^<>\n]{0,14}\d{2}:\d{2}\s*KST", _sh)
-    if _hard:
-        errors.append(f"sources.html에 갱신 시각 하드코딩 {_hard[:3]} — data/schedule.json에서 읽을 것")
 except SystemExit as e:
     errors.append(f"갱신 주기 라벨 생성 실패(워크플로 매핑 누락 등): {e}")
 except Exception as e:

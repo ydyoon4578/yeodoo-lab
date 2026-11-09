@@ -49,11 +49,6 @@ WF = os.path.join(ROOT, ".github", "workflows")
 # ⚠ 여기에 넣는 것은 «잡에 넣지 못하는 이유» 가 있어야 한다. «아직 안 했다» 는 이유가
 #   아니다. 이유 없이 조용히 만들려고 넣으면 이 감사가 있는 뜻이 사라진다.
 KNOWN = {
-    "factor_bt.json":
-        "S&P Global 팩터 Top10 백테스트(build/factor_bt.py · factorbt.html). 입력이 비공개 팩터 자료 추출물"
-        "(build/factor_bt_src/ · 반입 금지 · gitignore)이라 러너가 재생산할 수 없다. 팩터 월말 자료가 들어오는 "
-        "월초에 **손으로 굽는다** — 추출(저장소 밖) → python build/factor_bt.py. 현재 보유의 MTD 칸만 "
-        "stocks·sd 를 따라 낡는다(굽는 날까지의 값이다).",
     "_qg_diag.json":
         "진단 3종(build/qg_diag.py · 구조 1/HHI·Jaccard · 다중검정 셔플 500회·DSR · "
         "Funnel Value-Add). 입력이 고정(비공개 pkl)이라 낡을 길이 없고 카드가 diag 로 읽는다. "
@@ -321,13 +316,6 @@ KNOWN = {
         "EODHD_API_TOKEN(유료 외부 열쇠)이 있어야 받는다. 러너에 그 비밀이 없다 — "
         "넣게 되면 이 줄을 지우고 잡에 붙일 것.",
     # ── 배치 R(2026-09-26) — 사전등록 자료 빌드. 입력이 저장소 밖(비공개 DB 캐시 · SEC 원본 캐시)이라 러너가 재생산할 수 없다 ──
-    "_px_raw.json":
-        "시총용 원 종가(build/pit_px_db2.py --merge). 입력이 비공개 DB 캐시(저장소 밖)라 러너가 재생산할 수 없다 — "
-        "pit_px.json 병합과 같은 커밋에서 손으로 굽는다. 차례: 당겨 온 판에서 --merge(pit_px.json + 이 파일) → "
-        "--merge-stage 파일 --write(pit_px.json 만 · 공개 스테이징) → r_stagem --ytrunc-scan. --merge 는 스테이징 병합본 "
-        "위에서도 돈다(관문을 통과한 stage_merges 가 넣은 날의 변동 = stage_confirmed · 같은 바이트) — CI 가 격자를 옮긴 뒤 "
-        "이 파일만 다시 맞출 때도 --merge 를 다시 돌린다. 격자가 stocks.json 과 다른 판에서는 r_stagem 이 멈춘다"
-        "(조용히 낡지 않는다).",
     "_issuer_map.json":
         "§A0 날짜 인식 발행사 지도 · §B FPI 표지(build/issuer_map.py build). 입력이 SEC 원본(DERA ZIP · submissions)을 "
         "sha256 로 얼린 저장소 밖 캐시(RBATCH_RAW)라 러너가 재생산할 수 없다 — **손으로 굽는다.** 배치 R 등록 커밋에서 "

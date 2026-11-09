@@ -1,6 +1,6 @@
 {
  "note": "메뉴 정본(build/nav_items.json)에서 생성. 직접 고치지 말 것.",
- "generated_from": "f7da20b6a8f7609b",
+ "generated_from": "e653a20235313d94",
  "categories": [
   {
    "name": "시장",
@@ -143,16 +143,6 @@
      "live": true
     },
     {
-     "name": "S&P 팩터 Top10",
-     "file": "factorbt.html",
-     "status": "existing",
-     "desc": "S&P Global 팩터 314개마다 S&P 500·NASDAQ 100 상위 10종목을 매월 다시 고른 11년 백테스트",
-     "verdict": "unverified",
-     "src": "model",
-     "effort": "M",
-     "live": true
-    },
-    {
      "name": "거장 포트폴리오·매매",
      "file": "guru.html",
      "status": "existing",
@@ -181,17 +171,6 @@
      "src": "model",
      "effort": "S",
      "live": true
-    },
-    {
-     "name": "포트폴리오",
-     "file": "portfolio.html",
-     "status": "existing",
-     "desc": "펀드 보유 vs 지수·전략 매매·성과 기여 · 🔒 열람 잠금",
-     "verdict": "na",
-     "src": "agg",
-     "effort": "L",
-     "locked": true,
-     "live": true
     }
    ]
   },
@@ -208,16 +187,6 @@
      "verdict": "na",
      "src": "none",
      "effort": "M",
-     "live": true
-    },
-    {
-     "name": "팩터 사전",
-     "file": "factors.html",
-     "status": "existing",
-     "desc": "S&P Global 314개·스타일 13개 팩터의 정의·산식·순위 방향·참고문헌 — 원표 그대로",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "S",
      "live": true
     },
     {
@@ -238,39 +207,6 @@
      "verdict": "na",
      "src": "agg",
      "effort": "S",
-     "live": true
-    },
-    {
-     "name": "데이터 출처·기준일",
-     "file": "sources.html",
-     "status": "existing",
-     "desc": "축마다 기준일이 다르다 — 그 정본 · 🔒 열람 잠금",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "M",
-     "locked": true,
-     "live": true
-    },
-    {
-     "name": "OK",
-     "file": "ok.html",
-     "status": "existing",
-     "desc": "개인 OKR·KPI 원장 — 목표수준과 수행결과를 한 줄에 · 🔒 열람 잠금",
-     "verdict": "na",
-     "src": "none",
-     "effort": "S",
-     "locked": true,
-     "live": true
-    },
-    {
-     "name": "비공개 DB 지도",
-     "file": "db.html",
-     "status": "existing",
-     "desc": "비공개 DB 7곳 테이블 전수와 안내문이 틀린 지점 · 🔒 열람 잠금",
-     "verdict": "na",
-     "src": "raw",
-     "effort": "M",
-     "locked": true,
      "live": true
     }
    ]
