@@ -4,8 +4,8 @@
 판정: 기각
 규칙: x-idxrev-cap1, x-idxrev-prop
 
-등록: `build/PREREG-2026-09-16-IDXREV.md` — **계산 전 커밋 `8a75447d6`** ·
-부칙(리비전 계산 전) **`59d2c222a`**
+등록: `build/PREREG-2026-09-16-IDXREV.md` — **계산 전 커밋 `05ae667c9`** ·
+부칙(리비전 계산 전) **`b961767ae`**
 구현: `build/idxrev.py` → `data/_idxrev.json`(얼린 측정 · 커밋 안 함)
 측정 **2018-07 ~ 2026-07** · SPX 97개월 · NDX 93개월
 

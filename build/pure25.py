@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/pure25.py — 20종 스타일 로테이션을 **다리당 25종**으로 넓힌다 → data/_pure25.json
 
-규약: build/PREREG-2026-09-08-PURE25.md (계산 전 커밋 be6a8414).
+규약: build/PREREG-2026-09-08-PURE25.md (계산 전 커밋 408bfcba).
 
   x-pure10 에서 **K = 10 → 25** 하나만 바꾼다. 정렬·가중·신호·문턱·틸트·주기·
   PIT 유니버스·비용 전부 그대로다.
@@ -280,7 +280,7 @@ def main():
 
     doc = {"note": "다리당 25종판. 규약 PREREG-2026-09-08-PURE25.md. 얼린 측정. "
                    "🚨 x-pure10 과 나란히 싣는다.",
-           "prereg": "be6a8414", "n": n, "window": [rows[0]["m"], rows[-1]["m"]],
+           "prereg": "408bfcba", "n": n, "window": [rows[0]["m"], rows[-1]["m"]],
            "thin": thin, "stats": {str(K): S[K] for K in KS}, "spy": ss,
            "f1": [d1, a1, t1], "f2": d2, "f3": {"vol": S[25]["vol"],
                                                 "idio": [idio10, idio25]},

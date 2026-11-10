@@ -4,7 +4,7 @@
 판정: 기각
 규칙: 없음   <!-- 종목을 «고르는 법» 을 검정했다. 특정 sid 에 걸리는 판정이 아니다 -->
 
-사전등록: `build/PREREG-2026-09-23-RRGSTOCK.md` — **계산 전 커밋 `064bdb29`**
+사전등록: `build/PREREG-2026-09-23-RRGSTOCK.md` — **계산 전 커밋 `1be791f9`**
 산출물: `data/_rrg_stock.json` · 검정기 `build/rrg_stock.py` · 판 `rrg.html` ← `data/rrg_board.json`(`build/rrg_board.py`)
 
 🚨 **518종 전부 싣는다. 고른 종목이 없다.**

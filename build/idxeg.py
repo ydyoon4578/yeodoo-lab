@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/idxeg.py — 지수 강화 · 기대투자성장(Eg) 틸트 (시점정확 패널) → data/_idxeg.json
 
-사전등록: build/PREREG-2026-09-23-IDXEG.md (계산 전 커밋 c9e755b1)
+사전등록: build/PREREG-2026-09-23-IDXEG.md (계산 전 커밋 12e76380)
 
 🚨 틸트 산식은 사본이 없다 — `idxrev.run` · `solve` · `ev` · `zsec` 를 그대로 import 한다.
    IDXREV 가 신호를 x["Z"]["rev"] 칸에서 읽으므로 **Eg 의 섹터 내 z 를 그 칸에 싣는다**
@@ -54,7 +54,7 @@ def main() -> int:
     CH = json.load(io.open(os.path.join(DATA, "strategy_charts.json"), encoding="utf-8"))
     IDXM = CH["idx_monthly"]
 
-    RESULT = {"prereg": "build/PREREG-2026-09-23-IDXEG.md", "prereg_commit": "c9e755b1",
+    RESULT = {"prereg": "build/PREREG-2026-09-23-IDXEG.md", "prereg_commit": "12e76380",
               "judge": list(JUDGE), "long0": LONG0, "te_target": IT.TE_JUDGE, "idx": {}}
     for ix, lab, bench_name in (("spx", "S&P 500", "S&P 500"), ("ndx", "NASDAQ 100", "NASDAQ 100")):
         rows, cover = PP.month_rows(Wd, ix, SC, JUDGE[1])          # 신호월 = Eg 형성월

@@ -39,8 +39,8 @@ FROZEN = ("build/eg30plus.py", "build/qg_lab.py", "build/pit_gics.py", "build/eg
           "data/pit_gics_sectors.json", "data/_eg_q5_scores_pitgics.json", "data/_eg_q5_scores_pitgics_pre.json",
           "build/pit_panel.py", "build/pit_quarantine.py", "build/stoploss.py", "build/tech_backtest.py", "build/rally_pattern.py",
           "build/index_members.py", "data/_eg_best.json", "data/_eg_q5_scores.json", "data/mech_episodes.json")
-SNAP, SNAP_FILES = "940f0bda", ("data/stocks.json", "data/pit_px.json", "data/sd")
-SNAP_BASE = "bef4eea8"                                             # 작업 사본의 가격 밖 입력이 선 커밋(EGBEST 와 같은 바탕)
+SNAP, SNAP_FILES = "9677330e", ("data/stocks.json", "data/pit_px.json", "data/sd")
+SNAP_BASE = "bba67290"                                             # 작업 사본의 가격 밖 입력이 선 커밋(EGBEST 와 같은 바탕)
 BASE_FILES = ("data/bench_px.json", "data/rf_monthly.json", "data/index_history.json", "data/index_ledger.json",
               "data/pit_universe.json", "data/pit_reuse.json", "data/fx", "data/fx_pit", "data/assets.json",
               "data/splits.json", "data/shares_yf.json")

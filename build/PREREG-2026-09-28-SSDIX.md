@@ -238,7 +238,7 @@
 
 - 엔진 `F0_EXPECT` = 위 표를 만든 서명 전부(정수 · 날짜 · 참/거짓 · 짧은 해시만 · 111 칸) — 러너 `REGISTERED` 가 같은 값을 든다.
 
-- 🚨 **두 판 SPY 일간 수익 같음 = 거짓**: root 판(가격 밖 입력 bef4eea8)과 vroot 판(배치 V 핀 c6a35ff0)의 SPY 수정종가 일간 수익이 창 안에서 최대 1.2e−6(하루 0.012bp) 다르다(수정종가를 받은 시점이 다르다 · 값의 크기만 봤다). (A) · (B) 는 root 판 · G5 위약 · 앞 창은 vroot 판을 쓴다(§5) — G5 는 참 SSD 의 Δ 를 같은 vroot 판에서 다시 재서 견주므로 판 차이가 비교에 들지 않는다.
+- 🚨 **두 판 SPY 일간 수익 같음 = 거짓**: root 판(가격 밖 입력 bba67290)과 vroot 판(배치 V 핀 549f4215)의 SPY 수정종가 일간 수익이 창 안에서 최대 1.2e−6(하루 0.012bp) 다르다(수정종가를 받은 시점이 다르다 · 값의 크기만 봤다). (A) · (B) 는 root 판 · G5 위약 · 앞 창은 vroot 판을 쓴다(§5) — G5 는 참 SSD 의 Δ 를 같은 vroot 판에서 다시 재서 견주므로 판 차이가 비교에 들지 않는다.
 - **위약 대체 2,576 / 121,000(2.1%)**: 이름 몇 개 · 상한 20% 로는 SSD 의 β̂ 에 닿지 못한 뽑기 달 — 가장 가까운 β̂ 의 포트를 쓴다. 뽑기마다 **제 β̂ 쌍둥이** 대비 Δ 를 재므로 β̂ 가 조금 어긋나도 Δ 에 기계적으로 들지 않는다(띠는 «같은 종류의 포트» 를 맞추는 뜻).
 - **T+1 가격 없는 자격 이름(한 달 최대 37)**: 결정일에 명단 · 가격이 있고 다음 거래일 계열이 끝나는 이름(명단을 떠나는 날 계열이 멈춘 편출 이름) — SSD 사슬 합 4 · 대조 합은 표와 같다(§2-2 ⑧ 규칙으로 빼고 다시 나눈다).
 - **커버리지 0.90 미만 1달**(최소 0.895) · 자격 이름의 S&P 500 시총 몫은 모든 달 0.985 이상.
@@ -265,7 +265,7 @@ python -X utf8 build/ssdix_run.py --result-doc --write      # 결과 문서 = bu
 
 | 핀 | 값 | 무엇 |
 |---|---|---|
-| 뿌리 셋 | root 코드 `1d81f083a404c68e23d15a649ef6f0a340d4d95c`(build 트리 `e221c981`) · 가격 밖 입력 `bef4eea8c98572bd05815d44bd0744d9ce7ed370` · 가격 판 `940f0bda99ae1cc99299a43a06b30b9fa267d734` · P3 blob 9 · vroot `c6a35ff0168e5ea21c2ab2d18680550452511a3a` · droot `44c1a26f6a8fd9f64a3a76de9334e1a37aef403b`(data 트리 `d72aec6d` · build 트리 `fe772a6f`) | EGSTEP 등록 핀 그대로(얼린 egstep_run 상수 · pins_check) |
+| 뿌리 셋 | root 코드 `439e16db2dd4b15ff5894f0fd64a399f36206a4c`(build 트리 `e221c981`) · 가격 밖 입력 `bba67290def066ef69a20d0c55060d0fa28e7bf4` · 가격 판 `9677330edd6ad6acbbfa32e496a2aa7357d3cd7f` · P3 blob 9 · vroot `549f42153dedb7dab3eb314bcc9237c8e026b629` · droot `1d3dda30b5870e48f7a6ce718397848c7a5905bd`(data 트리 `d72aec6d` · build 트리 `fe772a6f`) | EGSTEP 등록 핀 그대로(얼린 egstep_run 상수 · pins_check) |
 | 재사용 파일(러너 · 뿌리) | `build/egstep.py` `2749cbe2` · `build/egstep_run.py` `71a8bdd9` · `build/x_adapter.py` `897c4c94` · `build/dstk.py` `60e63487` · `build/dstk_run.py` `4bc0306e` · `build/v_cmp.py` `0ef32e81` | EGSTEP · 배치 X · DSTK · 배치 V 등록 판 그대로 |
 | 뿌리에서 단언 | root: qbatch_core `38ecb2b3` · q_switch `c0e52a85` · q_corrsurp `d32a270e` · eg30plus `5688b266` · qg_lab `ca95e32b` · x_adapter `897c4c94` · egstep `2749cbe2` · vroot: v_pit `5983b990` · v_data `f08782e4` · v_fund `2d8093f0` · v_px_split `c747ae40` · pit_panel `e2073703` · pit_alias `ead714d9` · pit_quarantine `329e5d9f` · tech_backtest `4bf3424b` · eg30plus `5688b266` · qbatch_core `38ecb2b3` · v_tests `2f1ec4db` · x_adapter `897c4c94` · mech_episodes.json `d67a2a74` | 엔진 `ROOT_BLOBS` · `VROOT_BLOBS` |
 | 저장소 밖 입력 | V-D1 묶음 해시 `1f552d177d0699c7aa4c9f7779e2c0c463e2f2057e3663b623b00e4adf6ffd4c` · VBATCH F0 넘김 `vb_books.json.gz` sha256 `c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b` · French `49_Industry_Portfolios_daily_CSV.zip` sha256 `8f394fe34bea54d41b9aafed410425ee8f8e252ede3c71a7c1cd20bab83040de` · `F-F_Research_Data_Factors_daily_CSV.zip` sha256 `2f29e22546069914890a712680a6f81f3680ebc3543b52864484d209ca13a7db`(두 파일 202608 CRSP · 2026-09-28 받음) · EGSTEP 굽기 산출 `_egstepout.json` sha256 `28234607383080a6e00f8ad1e7d1310067a59b6122eebf46becbaab4399dce3f` | 값은 싣지 않는다 · 해시만 |

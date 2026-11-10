@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/swing1020.py — 과매도 롱 10 · 과매수 숏 10 (PREREG-2026-09-19-SWING1020)
 
-사전등록 커밋 9e51af0c622aff8f99ac6a22446cc6936ebdb805 (계산 전).
+사전등록 커밋 b0479f9f8af56192621ad3267cdd755de1464fe1 (계산 전).
 규칙은 그 문서가 정본이다. 여기서 바꾸지 않는다.
 
   월말 종가로 진동자 5종의 횡단면 z 평균을 내고, 다음 거래일 종가로
@@ -33,7 +33,7 @@ ZCLIP = 3.0
 NSHUF = 200
 SEED = 20260919
 PREREG = "PREREG-2026-09-19-SWING1020"
-COMMIT = "9e51af0c622aff8f99ac6a22446cc6936ebdb805"
+COMMIT = "b0479f9f8af56192621ad3267cdd755de1464fe1"
 
 
 def nw_t(x, lag=21):

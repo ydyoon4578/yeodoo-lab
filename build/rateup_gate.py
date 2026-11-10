@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""금리 상승 국면 방어 다리 게이트 — PREREG-2026-09-16-RATEUP.md (계산 전 커밋 38226b6d3)
+"""금리 상승 국면 방어 다리 게이트 — PREREG-2026-09-16-RATEUP.md (계산 전 커밋 7b0d74a7f)
 
 standalone 측정이다. 엔진(asset_backtest.py)에 등록하지 않는다 — 등록의 §1-1 이 랩의
 10년 표시 상한을 쓰지 않기로 했기 때문이다(상승 국면이 2022 하나만 남아 질문이 성립하지 않는다).
@@ -376,7 +376,7 @@ def main():
     print("  %s · DGS10 %d일 변화 %+.2f%%p → g-rateup %s" %
           (DTS[i], RATE_WIN, d, "위험(SHY)" if d > 0 else "안전(IEF)"))
 
-    out = {"prereg": "build/PREREG-2026-09-16-RATEUP.md", "prereg_commit": "38226b6d3",
+    out = {"prereg": "build/PREREG-2026-09-16-RATEUP.md", "prereg_commit": "7b0d74a7f",
            "as_of": DTS[-1], "start": dd[0], "cost_rt": COST_RT,
            "metrics": {k: {"gross": R[k]["m"], "net": R[k]["mc"], "stress20bp": R[k]["ms"],
                            "turnover_yr": round(R[k]["turn"] / 2 / yrs, 2)} for k in R},

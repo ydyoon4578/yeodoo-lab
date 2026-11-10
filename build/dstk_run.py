@@ -80,7 +80,7 @@ FIRST_ADDED = (PREREG, RUNNER, ENGINE, MANIFEST_FILE)
 FROZEN = (ENGINE, RUNNER, MANIFEST_FILE, PREREG)
 REPO_ALLOWED_DSTK = (MANIFEST_FILE,)
 FORWARD_DIR = "data/_dstkfwd"                                 # 있으면 멈춘다(전방 원장 없음 — 사용자 2026-09-27 «미래 일정 다 꺼»)
-DATA_PIN = "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b"       # origin/main 2026-09-27(배치 W 결과 갱신 피드) — 이 설계가 F0 를 센 판
+DATA_PIN = "1d3dda30b5870e48f7a6ce718397848c7a5905bd"       # origin/main 2026-09-27(배치 W 결과 갱신 피드) — 이 설계가 F0 를 센 판
 DATA_PIN_TREES = {"data": "d72aec6dd1e268d66144ed8d21e05deb11950b98", "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"}
 # 엔진이 읽는 자료 파일(핀 판 blob — 임시 뿌리에서 다시 대조한다 · 트리 sha 가 이미 전부를 묶지만 읽는 것을 이름으로 적는다)
 DATA_PIN_FILES = ("data/stocks.json", "data/pit_px.json", "data/_pit_px_cache.json", "data/index_history.json", "data/assets.json",

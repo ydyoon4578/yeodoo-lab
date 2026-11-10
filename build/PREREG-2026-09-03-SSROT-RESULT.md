@@ -5,7 +5,7 @@
 규칙: x-ssrot
 <!-- standalone 측정이라 엔진에 등록한 적이 없다 -->
 
-등록: `build/PREREG-2026-09-03-SSROT.md` — **계산 전 커밋 `0e0ba241f`**
+등록: `build/PREREG-2026-09-03-SSROT.md` — **계산 전 커밋 `d66ef02c5`**
 구현: `build/ssrot.py` → `data/_ssrot.json`(얼린 측정 · 커밋 안 함)
 
 ---

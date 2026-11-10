@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/taxsurp.py — 세금비용 서프라이즈 (PREREG-2026-09-19-TAXSURP · 계산 전 2300c7c)
+"""build/taxsurp.py — 세금비용 서프라이즈 (PREREG-2026-09-19-TAXSURP · 계산 전 a461a00)
 
   신호 = (세금_주당(q) − 세금_주당(q−4)) / 자산총계_주당(q−4)
   매월 초 · 최소 4개월 지난 분기만 · 세금 0 제외 · 십분위 52종
@@ -272,7 +272,7 @@ def main():
           % ("맞음" if F["F1 시총가중 세 기간 모두 양수 아님"] else "틀림"))
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-TAXSURP", "commit": "2300c7c",
+        {"prereg": "PREREG-2026-09-19-TAXSURP", "commit": "a461a00",
          "n_pool": {"median": int(np.median(npa)), "min": int(npa.min()),
                     "max": int(npa.max()), "months": len(npa),
                     "below_threshold": int((npa < MIN_POOL).sum())},

@@ -12,7 +12,7 @@
 - 라이브러리(strategy_index 게시 187 · 차트 208)는 **창 전체를 보고 걸러졌다** — 샤프 < 0.5 · 승률 < 50% 생존 컷, 사용자가 숨긴 21, 오버레이는 엔진의 약 두 배 비율로 잘렸다.
   기각 기록 230 건은 대부분 수익 계열이 없다. → 표본 안 수치는 SPY 대비 위로 치우친다. 같은 생존 라이브러리의 1/N(C1·C2) 대비로는 방향을 모른다.
 - 사용자와 랩은 전 기간 상승·하락 포착률(strategy_metrics.py up/down capture · asset_backtest._capture)과 이름 붙인 12구간 표를 이미 봤다.
-  EG30 계열의 기계적 구간 성적(반등 8/8 · 급락 1/8)도 봤다(커밋 9e8ebd40 · 리포트 서술).
+  EG30 계열의 기계적 구간 성적(반등 8/8 · 급락 1/8)도 봤다(커밋 45e1d729 · 리포트 서술).
 - 설계 워크플로(2026-09-24 · 설계 4 · 비평 3 · 총괄 1)가 **구조 통계만** 셌다: 비대칭(Δβ)의 반분 지속성 0.09 ~ 0.12 · 유효 독립 베팅 ≈ 1.77 ·
   최대 고유값 = 분산의 62% · UNION 1/N 의 β 0.764. L1 의 비중·수익은 **아무도 보지 않았다.**
 - 등록 전 `lib_meta.py --dry` 로 **선형계획이 풀리는지만** 봤다(결정 28 × 모드 3 · 제약 위반 0 · 내부점 대체 3 · 비중·수익 수치를 찍지 않았다).
@@ -24,14 +24,14 @@
 
 ## 1. 공용 틀 (배치 L 전체 · 한 번 얼린다)
 
-- **자료 판**: CI 가 strategy_index · strategy_charts · assets 를 매일 다시 구우므로 로더는 **커밋 9e8ebd40 의 판**을 git show 로 읽는다(작업 트리가 아니다).
+- **자료 판**: CI 가 strategy_index · strategy_charts · assets 를 매일 다시 구우므로 로더는 **커밋 45e1d729 의 판**을 git show 로 읽는다(작업 트리가 아니다).
 - **U_LIB**(`build/lib_loader.py`): strategy_index 게시 항목 중 월 계열이 있는 것에서 지수 복제 · 판정 불가 · 페어 · 롱숏 · 소급 종목 레그 · cost_drag 없음 ·
   다른 등록 대기 sid 를 빼고, 접미사를 떼어 가족 하나로 → **계열 158 → 가족 132**(수익엔진 82 · 타이밍오버레이 30 · 배분기 17 · 위험방어 3).
   sid 목록 sha256 `17314587cbc4393e…` · 2026-08 까지 순수익 패널 sha256 `fb6369994074d529…`(엔진에 박아 실행 때 대조한다).
 - **수익**: charts[sid].monthly 의 r(%) 을 달 키로(자리로 맞추지 않는다 · 'b' 는 안 쓴다) · 첫 달은 시작일이 전달 마지막 거래일일 때만 · 순수익 = r − cost_drag/12.
 - **판정선 R0 = SPY 총수익**(assets px.SPY 수정종가 월말) · R1 = S&P 500 PR + 연 2.00%p(랩 관례 · 나란히만) · 현금 rf_monthly(DGS3MO).
 - **비용**: 모든 다리(SPY 포함)에 편도 10bp × Σ|Δw|(드리프트 뒤) + 매달 cost_drag/12.
-- **구간**(`data/mech_episodes.json` · 커밋 9e8ebd40 · 얼린 판 sha256 `1c0bc5f1f7bb8dc1…`): ^GSPC PR 지그재그 10% 의 급락 다리 8 · 반등 창 8 ·
+- **구간**(`data/mech_episodes.json` · 커밋 45e1d729 · 얼린 판 sha256 `1c0bc5f1f7bb8dc1…`): ^GSPC PR 지그재그 10% 의 급락 다리 8 · 반등 창 8 ·
   월 구간 CRASH-M(SPY TR ≤ −σ_pre) 14 · SURGE-M(≥ +σ_pre) 26 · σ_pre = 4.29%(2006-02 ~ 2016-08).
 - **지표**(월 단위): X_CM · X_SM = 급락월·급등월 평균 초과(대 SPY) · Ψ_M = min(X_CM, X_SM) · 기하 상승·하락 포착 UC · DC · CM = min(UC − 1, 1 − DC) ·
   M1 월 승률 · M2 30개월 토막(2019-10~2022-03 · 2022-04~2024-09 · 2024-10~2026-08 조각) · M3 36개월 이동 상대 부 > 0 비율 ·
@@ -115,6 +115,6 @@
 
 ## 7. 산출물
 
-`build/lib_loader.py` · `build/lib_meta.py` · 이 문서를 **한 커밋으로** 실행 전에 커밋하고 푸시한다(`data/mech_episodes.json` 은 9e8ebd40).
+`build/lib_loader.py` · `build/lib_meta.py` · 이 문서를 **한 커밋으로** 실행 전에 커밋하고 푸시한다(`data/mech_episodes.json` 은 45e1d729).
 실행은 `LIBMETA_COMMIT=<이 커밋>` 으로 `--f0` 를 먼저, 그다음 인자 없이 — 검정기가 ① 이 문서를 처음 더한 커밋 · origin/main 조상 ② 엔진·로더·이 문서·구간 파일이
-그 커밋과 같은지 ③ 자료 판 9e8ebd40 의 유니버스·패널 해시 ④ scipy 1.18.1 ⑤ 산출물이 아직 없는지를 본다(다시 돌리려면 `LIBMETA_RERUN=사유` — 사유가 JSON 과 결과 문서에 남는다). → `data/_libmeta_L1_f0.json` · `data/_libmeta_L1.json` · 결과 `build/PREREG-2026-09-24-LIBMETA-RESULT.md`(오염 측정 · 판정: 측정만 · 전방 대기).
+그 커밋과 같은지 ③ 자료 판 45e1d729 의 유니버스·패널 해시 ④ scipy 1.18.1 ⑤ 산출물이 아직 없는지를 본다(다시 돌리려면 `LIBMETA_RERUN=사유` — 사유가 JSON 과 결과 문서에 남는다). → `data/_libmeta_L1_f0.json` · `data/_libmeta_L1.json` · 결과 `build/PREREG-2026-09-24-LIBMETA-RESULT.md`(오염 측정 · 판정: 측정만 · 전방 대기).

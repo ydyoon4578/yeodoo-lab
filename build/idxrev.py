@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/idxrev.py — 지수 강화 + 리비전 드리프트 → data/_idxrev.json
 
-규약: build/PREREG-2026-09-16-IDXREV.md (계산 전 커밋 8a75447d6).
+규약: build/PREREG-2026-09-16-IDXREV.md (계산 전 커밋 05ae667c9).
 
   2×2 를 **같은 패널에서** 돌린다 — 한 칸만 보면 신호 탓인지 제약 탓인지 못 가른다.
 
@@ -100,7 +100,7 @@ def run(rows, j0, signal, cap_mode, te_target, flip=False, lam_mult=None, band=F
     lam_mult 를 주면 원 λ 에 그 배수를 곱한다(부칙 A2 의 이분탐색이 쓴다).
     None 이면 **원 등록 그대로**(idxtilt 의 λ 를 그대로) 돌린다.
 
-    band=True 는 PREREG-2026-09-16-IDXREVBAND.md(계산 전 커밋 f0d0cae69) §1 —
+    band=True 는 PREREG-2026-09-16-IDXREVBAND.md(계산 전 커밋 1a4aad932) §1 —
     능동비중 무거래 밴드. 직전에 들고 있던 능동비중의 **절반~두 배** 안이고 부호가 같으면
     그대로 들고, 아니면 새 목표로 갈아탄다. 비(BAND)는 tech_backtest 의 값을 그대로 쓴다.
     🚨 band=False 경로는 한 줄도 안 바뀐다 — IDXREV 의 수가 그대로 재현돼야 한다.
@@ -242,7 +242,7 @@ def main():
              sum(len(v[0]) for v in TB._RAT.values())))
 
     RESULT = {"prereg": "build/PREREG-2026-09-16-IDXREV.md",
-              "prereg_commit": "8a75447d6", "rev_days": REV_DAYS,
+              "prereg_commit": "05ae667c9", "rev_days": REV_DAYS,
               "judge_start": JUDGE_START, "rat_end": RAT_END, "idx": {}}
 
     for idx, lab in (("spx", "S&P 500"), ("ndx", "NASDAQ 100")):

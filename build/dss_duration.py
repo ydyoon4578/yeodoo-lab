@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/dss_duration.py — DSS(2004) 내재 듀레이션 로테이션 → data/_dss_duration.json
 
-규약: build/PREREG-2026-09-03-DURATION.md (계산 전 커밋 4bf910d28).
+규약: build/PREREG-2026-09-03-DURATION.md (계산 전 커밋 0c659910f).
 
   물음은 「듀레이션 로테이션이 되나」가 아니라 **「B/M 을 통제한 뒤에도 듀레이션에 남는
   정보가 있나」** 다. 듀레이션과 B/M 의 순위상관이 −0.79~−0.89 라 그냥 돌리면 D13 의
@@ -251,7 +251,7 @@ def main():
 
     doc = {"note": ("DSS(2004) 내재 듀레이션 로테이션. 규약 PREREG-2026-09-03-DURATION.md. "
                     "🚨 얼린 측정 — 자동 재굽기 금지."),
-           "prereg": "4bf910d28",
+           "prereg": "0c659910f",
            "const": {"r": R, "roe_mean": ROE_M, "roe_ar": ROE_A, "g_mean": G_M,
                      "g_ar": G_A, "T": T, "th": TH, "min_cov": MIN_COV},
            "window": [DU[0]["m"], DU[-1]["m"]], "n_months": len(DU),

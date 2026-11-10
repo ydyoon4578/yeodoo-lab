@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-20-QGDELAY.md` · 커밋 `3621d32` (계산 전) |
+| 사전등록 | `PREREG-2026-09-20-QGDELAY.md` · 커밋 `70e9bcc` (계산 전) |
 | 문서 블롭 | `6c170e566047dea752d37ae0cfcb6489a62d97b5` |
 | 실행 | `qg_delay.py` → `qg_delay_result.json` (최소 구성 폴더) |
 

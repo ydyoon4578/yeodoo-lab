@@ -31,7 +31,7 @@
 한 번 굽기 규약(v_run 과 같은 뜻)
   · git fetch origin 을 먼저 한다(실패하면 멈춘다) · 등록 커밋 = 등록 문서 · 카드 문서 · 이 러너 · F0 문서 · 자료 명세를 **처음 더한** 커밋 · origin/main 조상 ·
     그 커밋의 등록 문서 둘에 빈칸(열린 꺾쇠 + TBD)과 초안 괄호(U+3014)가 없다.
-  · 얼린 파일(새 w_* 파일 · F0 · 명세 + 얼린 V 핀 모듈)이 그 커밋과 바이트 단위로 같다(CRLF 무시) · V 핀(ada1e16ae blob)도 같다.
+  · 얼린 파일(새 w_* 파일 · F0 · 명세 + 얼린 V 핀 모듈)이 그 커밋과 바이트 단위로 같다(CRLF 무시) · V 핀(de721d62d blob)도 같다.
   · 굽기가 읽는 랩 자료(W_LAB_FILES)가 그 커밋의 판과 같고 추적 안 된 파일이 없다 · 명세 SHA = 지금 SHA(랩 파일 · 폴더 · V 캐시 · W 캐시).
   · 산출물이 없다(저장소 밖 산출 · 실행 기록 · origin/main 의 결과 문서 어느 것이든 있으면 다시 돌지 않는다 — 다시 굽기는 새 등록).
   · 시작 표식 셋: 로컬 둘(<캐시>/out/_wbatch.started · git 공용 폴더 wbatch_started)을 **무엇보다 먼저** 쓰고 origin 태그 refs/tags/wbatch-started 를
@@ -156,7 +156,7 @@ W_MODULES = ("build/w_core.py", "build/w_guard.py", "build/w_stagem.py", "build/
              "build/w_panel.py", "build/w_ipca.py", "build/w_ciq.py", "build/w_pap.py", "build/w_steps.py", "build/w_cards.py",
              "build/w_geo.py", "build/w_frag.py", RUNNER)
 NEW_FROZEN = W_MODULES + (F0_FILE, MANIFEST_FILE)
-REUSED_FROZEN = tuple("build/%s.py" % m for m in sorted(WC.FROZEN_PINS))     # 얼린 V 핀(ada1e16ae blob — w_core.frozen_check 가 따로 대조)
+REUSED_FROZEN = tuple("build/%s.py" % m for m in sorted(WC.FROZEN_PINS))     # 얼린 V 핀(de721d62d blob — w_core.frozen_check 가 따로 대조)
 CMP_FROZEN = ("build/eg30plus.py", "build/qg_lab.py", "build/rally_pattern.py", "build/stoploss.py")   # w_cmp 폐포(G-EGD · 비교 줄 · 별도 과정)
 FROZEN = tuple(dict.fromkeys(NEW_FROZEN + REUSED_FROZEN + CMP_FROZEN))
 V_LAB_FILES = ("data/stocks.json", "data/pit_px.json", "data/_px_raw.json", "data/splits.json", "data/index_history.json",
@@ -193,7 +193,7 @@ REGISTERED = {
     "WC.FAMILY": {"A": ("W01", "W04", "W10m"), "B": ("W02", "W11")}, "WC.FAMILY_ALPHA": 0.05,
     "WC.CARD_DIRECTION": {"W01": 1, "W04": 1, "W10m": 1, "W02": 1, "W11": -1, "W03": 1, "W12": 1}, "WC.SEED": 20260927,
     "WC.HOLD_FLOOR": "2006-09", "WC.DECISION_FLOOR": "2006-08", "WC.S_WIN": ("2016-09", "2026-08"), "WC.TURN_MAX": 10.0, "WC.MAX_YEARS": 20,
-    "WC.MEASURE_ONLY": ("W03", "W06", "W12"), "WC.V_COMMIT": "ada1e16ae9772a95246198407acb2f1e51a1906f", "WC.FORWARD_LEDGER": None,
+    "WC.MEASURE_ONLY": ("W03", "W06", "W12"), "WC.V_COMMIT": "de721d62d4114b25b94c5bfc20ea32653c6cacd7", "WC.FORWARD_LEDGER": None,
     "S.LAG": 3, "S.MIN_DOF": 10, "S.TOL": 1e-08, "S.P0_Q": 0.4, "S.P0_ALPHA1": 0.0125, "S.P0_TCRIT": 2.27, "S.P0_GATE": 0.15, "S.PLACEBO_Q": 0.9,
     "H.LEAK_N": 200, "H.LEAK_CRIT": 1.96, "H.LEAK_FAIL_HITS": 19, "H.PLANT_IC": 0.02, "H.PLANT_REPS": 20, "H.PLANT_NEED": 16, "H.PLANT_T": 1.645,
     "H.LOOKAHEAD_N": 200, "H.COV_THR": 0.95, "H.BLIND_SCALE": 8.0, "H.LEAK_P": 0.05, "H.LEAK_B": 999,

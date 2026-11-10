@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/w_core.py — 배치 W 공통 바탕: 얼린 V 모듈 핀(ada1e16ae) · 20년 창 규칙 · 등록 가족(표본 안 확증 · Holm) · 채택 표시 ·
+"""build/w_core.py — 배치 W 공통 바탕: 얼린 V 모듈 핀(de721d62d) · 20년 창 규칙 · 등록 가족(표본 안 확증 · Holm) · 채택 표시 ·
 Tier-2 펀드 틀 무해 판정(frozen v_core.fund_x · 투영 재사용) · 재현성(스레드 · 해시 씨앗 · manifest) · 등록 자물쇠 · 캐시 경계.
 
 설계 원본(구속): wbatch_research.json final(slate.common_frame · evaluation.tier2 · oos_protocol.reproducibility · build_plan.may_import ·
@@ -62,10 +62,10 @@ if HERE not in sys.path:
 # ══════════════════════════════════════════════════════════════════════════
 #  커밋 · 캐시
 # ══════════════════════════════════════════════════════════════════════════
-V_COMMIT = "ada1e16ae9772a95246198407acb2f1e51a1906f"          # 배치 V 등록 커밋 — 얼린 V 모듈 핀의 원천
-V_RESULT_COMMIT = "889b1c63483313fb27c45ba62ad8e6c8700d7a09"   # 배치 V 결과(이미 봤다 · §0 공개)
-R_REG_COMMIT = "168a072ff0b0ba8f895a79fd8dabaf34b35d8ed6"      # 배치 R 등록 커밋
-R_RESULT_COMMIT = "958557496fbb5935f3c93a05ea47dc0fdd7255a3"   # 배치 R 결과(이미 봤다 · 짝맞춤 감사가 재현하는 공개 값)
+V_COMMIT = "de721d62d4114b25b94c5bfc20ea32653c6cacd7"          # 배치 V 등록 커밋 — 얼린 V 모듈 핀의 원천
+V_RESULT_COMMIT = "71f3350f34fcabb58b3d3e645b29c5ba88f2cb68"   # 배치 V 결과(이미 봤다 · §0 공개)
+R_REG_COMMIT = "b3191ad422c06c5ce24f5ea3104a34f28d722a42"      # 배치 R 등록 커밋
+R_RESULT_COMMIT = "a20d91fd895cf5880ca4989bb9c5e855a1ea78b2"   # 배치 R 결과(이미 봤다 · 짝맞춤 감사가 재현하는 공개 값)
 CACHE = os.environ.get("WBATCH_CACHE") or os.path.join(tempfile.gettempdir(), "wbatch_cache")
 VB_CACHE = os.environ.get("VBATCH_CACHE") or os.path.join(tempfile.gettempdir(), "vbatch_cache")   # 읽기 전용(V F0 입력 · G-EGD 표)
 SEED = 20260927                                                # K6
@@ -261,9 +261,9 @@ def adoption_table(holm, harmless, gegd, cautions=None):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  얼린 V 모듈 — 등록 커밋 ada1e16ae 의 blob sha1(git) 핀 · 어긋나면 멈춘다
+#  얼린 V 모듈 — 등록 커밋 de721d62d 의 blob sha1(git) 핀 · 어긋나면 멈춘다
 # ══════════════════════════════════════════════════════════════════════════
-FROZEN_PINS = {       # may_import 폐포 26 모듈 — git rev-parse ada1e16ae:build/<m>.py (2026-09-27 · 작업 사본과 모두 같음)
+FROZEN_PINS = {       # may_import 폐포 26 모듈 — git rev-parse de721d62d:build/<m>.py (2026-09-27 · 작업 사본과 모두 같음)
     "edgar": "78bbeb3f81c6d81dfef234a70d8f852eb6aea7fa",
     "index_members": "7850ef55f5b89583b24e190b250a14c897c93395",
     "maxyears": "44dd6f9b82d06b95c875e43846dc65961c1c9efc",
@@ -291,7 +291,7 @@ FROZEN_PINS = {       # may_import 폐포 26 모듈 — git rev-parse ada1e16ae:
     "v_px_split": "c747ae4030c4f2f5bc97b8e634f3a80a36d04028",
     "v_tests": "2f1ec4db1cd7458564da73ec5ad88cef8a0b2f2f",
 }
-FROZEN_DATA_PINS = {  # 평가에 쓰는 동결 자료(sha256 · 바이트 그대로 · ada1e16ae 판과 같음)
+FROZEN_DATA_PINS = {  # 평가에 쓰는 동결 자료(sha256 · 바이트 그대로 · de721d62d 판과 같음)
     "data/mech_episodes.json": "384b253059607dce84b0e38645ab79db5ecf82e09616693b386f4f762f9020df",
 }
 

@@ -27,10 +27,10 @@
   · GFUND_COMMIT = 사전등록 문서 · 러너 · 엔진 · 명세(data/_gf_manifest.json)를 **처음 더한** 커밋 · origin/main 의 조상 · 그 커밋의 등록 문서에 빈칸(⟨TBD)과 초안 괄호(U+3014)가 없다.
   · 얼린 파일(엔진 · 러너 · 명세 · 등록 문서 · 덧붙임 두 곳)이 그 커밋과 바이트 단위로 같다(CRLF 무시).
   · 그 커밋의 data/guru_history.json · build/refresh_13f_history.py 가 등록 blob(HIST_BLOB · HIST_BUILDER_BLOB)과 같다 — 옛 CUSIP 지도로 다시 푼 이력.
-  · 자료 핀 — 굽기는 작업 트리의 data/ 를 읽지 않는다. DATA_PIN(760df724b)의 build/ · data/ 를 git archive 로 저장소 밖 임시 뿌리에 풀고
+  · 자료 핀 — 굽기는 작업 트리의 data/ 를 읽지 않는다. DATA_PIN(6c9ff4bf2)의 build/ · data/ 를 git archive 로 저장소 밖 임시 뿌리에 풀고
     (트리 sha 대조) data/guru_history.json 하나만 **등록 커밋 판**(옛 CUSIP 지도로 다시 푼 이력 · blob 21afd320…)으로 덧씌우고, 엔진 하나만
-    등록 커밋 판으로 넣어 자식 과정으로 돈다. F0-b 는 build/ @ 3bbe5ca1d +
-    data/ @ b03694352 + 동결 기록 data/_guru_cmp.json @ 3bbe5ca1d 뿌리에서(아래 F0B_* 주석 — 3bbe5ca1d 의 data/ 는 리베이스로 뒤 자료가 섞였다).
+    등록 커밋 판으로 넣어 자식 과정으로 돈다. F0-b 는 build/ @ e926dd43b +
+    data/ @ e56ff3032 + 동결 기록 data/_guru_cmp.json @ e926dd43b 뿌리에서(아래 F0B_* 주석 — e926dd43b 의 data/ 는 리베이스로 뒤 자료가 섞였다).
   · 판 점검 → F0-b(얼린 GURUCMP 재현 · 1e-9) · F0(수익 없음) → 시작 표식 셋(로컬 둘 · origin 태그 gfund-started) → 굽기 → 산출 · 게시 칸 · 실행 기록 → FINISHED.
     F0-b · F0 가 실패하면 표식을 쓰기 전에 멈춘다(한 번 굽기를 쓰지 않는다). 등록된 멈춤 조건은 F0 가 표식 전에 먼저 보고(측정 창 · 대체 창),
     굽기 자식 안에서 걸리면(StopBake) {"stopped": 사유} 가 산출이 된다 — 멈춤 기록 · 결과 문서를 쓰고 FINISHED(다시 굽기 없음).
@@ -82,17 +82,17 @@ FIRST_ADDED = (PREREG, RUNNER, ENGINE, MANIFEST_FILE)
 FROZEN = (ENGINE, RUNNER, MANIFEST_FILE, PREREG)
 REPO_ALLOWED_GF = (MANIFEST_FILE,)
 FORWARD_DIR = "data/_gffwd"                                  # 있으면 멈춘다(전방 원장 없음 — 사용자 2026-09-27)
-DATA_PIN = "760df724ba97e3c9345a9eba81ac31118c6c4bb3"       # 13F 자료 버그 5건 수정 뒤(origin/main 2026-09-27)
+DATA_PIN = "6c9ff4bf207a57c1ea61dc27d855609ceab64b00"       # 13F 자료 버그 5건 수정 뒤(origin/main 2026-09-27)
 DATA_PIN_TREES = {"data": "38b1e108f40c7a36833e3c1eee8722cb480b4fc9", "build": "0249dcf324f8e8ea3497d898613b840d633853d1"}
 DATA_PIN_BLOBS = {"data/guru_history.json": "105ee67ac5841e3704ee3766123d90ac9afb2329",
                   "data/_guru_cmp.json": "a45deddc2ff6607615b0bb0be3a7e3c88a64f567",
                   "data/_qbatch.json": "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7",
                   "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f"}
-# F0-b 핀 — 얼린 GURUCMP(가격 키 정정판) 기록은 커밋 3bbe5ca1d 에 있지만 그 커밋의 data/ 는 리베이스로 뒤 CI 자료가 섞였다(stocks · sd · pit_px ·
+# F0-b 핀 — 얼린 GURUCMP(가격 키 정정판) 기록은 커밋 e926dd43b 에 있지만 그 커밋의 data/ 는 리베이스로 뒤 CI 자료가 섞였다(stocks · sd · pit_px ·
 #   strategy_charts · index_ledger — pit_panel.load_world 가 «pit_px.json 격자가 stocks.json 과 다르다» 로 멈춘다 · 2026-09-27 눈가린 연기에서 찾음).
-#   기록을 실제로 구운 트리는 리베이스 전 원본 77e31bc39(로컬 reflog · origin 에 없다)이고, 그 입력은 origin/main 의 조상 b03694352 의 data/ 와 같다
-#   (다른 것은 출력 셋 _guru_cmp · _idxeg · strategy_index 뿐) · build/ 트리는 3bbe5ca1d 와 77e31bc39 가 같다(230d95cd). 그래서 F0-b 뿌리 =
-#   build/ @ 3bbe5ca1d + data/ @ b03694352 + 동결 기록 data/_guru_cmp.json @ 3bbe5ca1d(blob a45deddc).
+#   기록을 실제로 구운 트리는 리베이스 전 원본 77e31bc39(로컬 reflog · origin 에 없다)이고, 그 입력은 origin/main 의 조상 e56ff3032 의 data/ 와 같다
+#   (다른 것은 출력 셋 _guru_cmp · _idxeg · strategy_index 뿐) · build/ 트리는 e926dd43b 와 77e31bc39 가 같다(230d95cd). 그래서 F0-b 뿌리 =
+#   build/ @ e926dd43b + data/ @ e56ff3032 + 동결 기록 data/_guru_cmp.json @ e926dd43b(blob a45deddc).
 # 이력 덧씌우기 — 2026-09-27 등록 전 자료 수선(검토 지적 · 옛 CUSIP 지도가 없어 CUSIP 이 바뀐 종목의 옛 분기가 이력에서 빠졌다 ·
 #   체결월 2014-08 에 시점정확 멤버 38종을 명단 전원 아무도 안 든 것으로 셌다). build/refresh_13f_history.py 에 옛 CUSIP 지도(CUSIP_HIST ·
 #   74개)를 더해 **같은 SEC 응답 · 같은 월봉**으로 다시 푼 이력을 등록 커밋에 넣는다(바뀐 것은 보유 칸 더하기뿐 — 6,152칸 · (분기, 운용사) 17쌍 ·
@@ -104,8 +104,8 @@ HIST_BUILDER = "build/refresh_13f_history.py"
 HIST_BUILDER_BLOB = "f46483fad315174cf2f72d934dd9ee529197adfa"  # 그 이력을 만든 빌더(CUSIP_HIST 74개) — 등록 커밋 판과 같아야 한다
 MAIN_TREE_BLOBS = dict(DATA_PIN_BLOBS, **{HIST_FILE: HIST_BLOB})
 WORKTREE = "WORKTREE"                                           # 연기 전용 덧씌우기 출처(작업 트리 파일 · blob 대조는 같다)
-F0B_CODE_PIN = "3bbe5ca1d496bfb14648502fedb59f06a2e3d171"
-F0B_DATA_PIN = "b036943529af797ebe5e5f0287959824d959ad00"
+F0B_CODE_PIN = "e926dd43b064df05c13f6e23d54ab6ba3a56a465"
+F0B_DATA_PIN = "e56ff3032adc4cdc4596e4bebb63a22170dc5952"
 F0B_PIN = F0B_CODE_PIN
 F0B_PIN_TREES = {"build": (F0B_CODE_PIN, "230d95cd203e69ba5b90fe8a939de3a3cf28be57"), "data": (F0B_DATA_PIN, "53d1c2ec21937c27f5334a70c50fdb98f28402cc")}
 F0B_OVERLAY = {"data/_guru_cmp.json": F0B_CODE_PIN}
@@ -697,7 +697,7 @@ def run_child(tree, mode, out_path, timeout=6 * 3600):
 
 
 def preflight(work, hist_src):
-    """F0-b(3bbe5ca1d 뿌리) · F0(760df724b 뿌리 + 등록 커밋 판 이력) — 수익 없음 · 값 없음(참/거짓 · 개수 · 날짜). 둘 다 통과해야 표식을 쓴다."""
+    """F0-b(e926dd43b 뿌리) · F0(6c9ff4bf2 뿌리 + 등록 커밋 판 이력) — 수익 없음 · 값 없음(참/거짓 · 개수 · 날짜). 둘 다 통과해야 표식을 쓴다."""
     t0 = time.time()
     tb = materialize(os.path.join(work, "tree_f0b"), F0B_CODE_PIN, F0B_DATA_PIN, F0B_PIN_BLOBS, F0B_OVERLAY)
     p_b = os.path.join(work, "child_f0b.json")
@@ -1028,7 +1028,7 @@ def result_doc(pub):
     fb, f0 = pub.get("f0b") or {}, pub.get("f0") or {}
     L += ["## F0 관문(수익 없음)", "",
           "| 관문 | 값 |", "|---|---|",
-          "| F0-b 얼린 GURUCMP 기록 재현(3bbe5ca1d · 잎 %s · 1e-9) | %s |" % (fb.get("n_leaves"), _fmt(fb.get("record_reproduced"))),
+          "| F0-b 얼린 GURUCMP 기록 재현(e926dd43b · 잎 %s · 1e-9) | %s |" % (fb.get("n_leaves"), _fmt(fb.get("record_reproduced"))),
           "| F0-b 엔진 C 팔 셈 = GURUCMP 셈 | %s |" % _fmt(fb.get("engine_counts_same")),
           "| F0-b 엔진 S1 행 = GURUCMP 가 idxrev.solve 에 넘긴 행 | %s |" % _fmt(fb.get("engine_rows_same")),
           "| 팔 상수 = refresh_13f 축 규칙 | %s |" % _fmt((f0.get("arms") or {}).get("ok")),
@@ -1680,7 +1680,7 @@ def _st_open_encoding():
 
 
 def _st_std_head():
-    """러너 · 엔진 모듈 머리의 import 가 표준 라이브러리뿐(validate_site · 3bbe5ca1d 뿌리에서 불러도 죽지 않게)."""
+    """러너 · 엔진 모듈 머리의 import 가 표준 라이브러리뿐(validate_site · e926dd43b 뿌리에서 불러도 죽지 않게)."""
     std = set(getattr(sys, "stdlib_module_names", ())) | {"__future__"}
     ok = True
     for p in (ENGINE, RUNNER):

@@ -1,8 +1,8 @@
 {
  "note": "EGFF 1단계(사전등록 build/PREREG-2026-09-25-EGFF.md §4 · §5) — 수익 없음. 편입마다 P-V · P-FF · P-VS 대 공개 판(LF) (a) 시총가중 겹침 (b) 이름 겹침(30 중) (c) Eg 점수 스피어만 · V0 자기 교체 척도(분기 간격 39쌍). 결정은 P-V 만(P-FF · P-VS 는 보고만).",
  "prereg": "build/PREREG-2026-09-25-EGFF.md",
- "reg_commit": "98889aeb82bd35fb3c06e3e8ff731c12a1c670a0",
- "head": "1a2761026cb955c9a6fe9c555b9efe9d9c52ac76",
+ "reg_commit": "eb49a1a041270e677a30cdb9d35a8c4375b49641",
+ "head": "6617d5a1aa3ebf92af71edc812c69fa01a754762",
  "f0_sha256": "f255eceebd020ead5b88d021c838302a8c466bee67ca66044709ef91b41980ba",
  "scores_sha256": {
   "v": "c23af19edbb11ee54004d1bae90f3f1681ace74a86071533271e6bd102ad20fa",

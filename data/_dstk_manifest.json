@@ -9,7 +9,7 @@
   "build/dstk_run.py": "e5f4214167209935c96de5b8163f4ae5742b3ea8c796b10204f5d88f95587db8"
  },
  "data_pin": {
-  "commit": "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b",
+  "commit": "1d3dda30b5870e48f7a6ce718397848c7a5905bd",
   "trees": {
    "data": "d72aec6dd1e268d66144ed8d21e05deb11950b98",
    "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"

@@ -4,7 +4,7 @@
 판정: 기각   <!-- 확증 가족 A(m 3 · 야생 부트스트랩 p · Holm α 0.05) 기각 0 · 채택 표시 0 -->
 규칙: 없음   <!-- 운용 EG30 V0 그대로 · 사이트 · 규칙 변경 없음 -->
 
-아래는 얼린 렌더러(`python -X utf8 build/w_run.py --result-doc`) 출력 그대로다 — 제목 줄만 위로 옮겼다. 사전등록: `build/PREREG-2026-09-27-WBATCH.md` · `-CARDS.md` — 등록 커밋 `4200cfe89aedfe250bce04aef1edb9b40fd987d7`(origin/main 조상 · 계산 전). 굽기: 시작 태그 wbatch-started · 2026-09-27 17:32 → 17:55 · 산출 sha256 3fd6175affc7b1bf(저장소 밖). 러너가 끝에 실행 기록 사전을 SystemExit 에 넘겨 종료 코드 1 을 냈지만 FINISHED 표식 · 산출 · 게시 칸은 정상이다(러너의 반환값 표기 문제 · 굽기 실패가 아니다).
+아래는 얼린 렌더러(`python -X utf8 build/w_run.py --result-doc`) 출력 그대로다 — 제목 줄만 위로 옮겼다. 사전등록: `build/PREREG-2026-09-27-WBATCH.md` · `-CARDS.md` — 등록 커밋 `9f6480a405152189b5abd336d6e8cd136416f9a9`(origin/main 조상 · 계산 전). 굽기: 시작 태그 wbatch-started · 2026-09-27 17:32 → 17:55 · 산출 sha256 3fd6175affc7b1bf(저장소 밖). 러너가 끝에 실행 기록 사전을 SystemExit 에 넘겨 종료 코드 1 을 냈지만 FINISHED 표식 · 산출 · 게시 칸은 정상이다(러너의 반환값 표기 문제 · 굽기 실패가 아니다).
 
 ## 렌더러 머리
 

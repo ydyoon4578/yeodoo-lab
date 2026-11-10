@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/fund_mix.py — 펀드 적용(S&P 500 PR 90% + 바스켓 10%) 네 바스켓과 B·E·M 조합 → data/_fund_mix.json
 
-사전등록: build/PREREG-2026-09-24-FUNDMIX.md (계산 전 커밋 78df5e15)
+사전등록: build/PREREG-2026-09-24-FUNDMIX.md (계산 전 커밋 3887579c)
 리포트 PDF 는 build/fund_mix_pdf.py 가 이 JSON 에서만 굽는다.
 
 🚨 한 번 굽는 얼린 측정이다. CI 에 붙이지 않는다. ⚠ 정하지 않은 자리는 결과 문서에 적는다.
@@ -296,7 +296,7 @@ def main() -> int:
                 "basket_ir": float((sr - im)[sel].mean() * 12 / ((sr - im)[sel].std(ddof=1) * math.sqrt(12)))}
     sel_all = np.ones(len(months), bool)
     sel_3y = np.array([h >= R3 for h in hold])
-    OUTD = {"prereg": "build/PREREG-2026-09-24-FUNDMIX.md", "prereg_commit": "78df5e15",
+    OUTD = {"prereg": "build/PREREG-2026-09-24-FUNDMIX.md", "prereg_commit": "3887579c",
             "window": [hold[0], hold[-1]], "r3": [R3, hold[-1]], "cost_bp": COST * 1e4, "sleeve": SLEEVE, "strategies": {}}
     i3 = me[PP.mshift(R3, -1)]
     for code in ("B", "A", "E", "M", "C"):

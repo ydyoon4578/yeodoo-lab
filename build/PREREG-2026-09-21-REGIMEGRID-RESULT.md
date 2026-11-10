@@ -4,7 +4,7 @@
 판정: 측정만
 규칙: 없음   <!-- 국면 «읽는 법» 을 검정했다. 특정 sid 에 걸리는 판정이 아니다 -->
 
-사전등록: `build/PREREG-2026-09-21-REGIMEGRID.md` — **계산 전 커밋 `6b120f2`**
+사전등록: `build/PREREG-2026-09-21-REGIMEGRID.md` — **계산 전 커밋 `ac4eaf2`**
 산출물: `data/_regime_grid.json` · 검정기 `build/regime_grid.py`
 출처: 사용자 제공 「시장 국면 모니터」(2026-07-09) 의 국면별 표.
 

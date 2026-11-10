@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/puregp.py — 가치 다리에 수익성 관문(Novy-Marx) → data/_puregp.json
 
-규약: build/PREREG-2026-09-08-PUREGP.md (계산 전 커밋 f4a2cff5).
+규약: build/PREREG-2026-09-08-PUREGP.md (계산 전 커밋 f39b7489).
 
   ① x-pure10      가치 다리 = Pure Value 후보 «전부» 중 SV 상위 10        (현행)
   ② x-pure10-nf   가치 다리 = 그중 **GP/자산 채점 가능한 것만** 중 SV 상위 10  ← 1번 대조군
@@ -306,7 +306,7 @@ def main():
                      collections.Counter(t for x in rows for t in x["orig"]["V"]).most_common(8)))
 
     doc = {"note": "가치 다리 수익성 관문. 규약 PREREG-2026-09-08-PUREGP.md. 얼린 측정.",
-           "prereg": "f4a2cff5", "n": n, "window": [rows[0]["m"], rows[-1]["m"]],
+           "prereg": "f39b7489", "n": n, "window": [rows[0]["m"], rows[-1]["m"]],
            "skipped": skipped, "nbad_gp": nbad[0],
            "stats": S, "leg_stats": SL, "spy": ss,
            "f1": [d1, a1, t1], "f3_down": {k: cg(LV[k], dn) for k in LEGS},

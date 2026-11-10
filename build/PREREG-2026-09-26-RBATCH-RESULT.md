@@ -6,21 +6,21 @@
 Holm m: 0(등록 고정 · 가족 없음)
 누적 N: 873 = 랩 840 + 이 배치 33
 
-사전등록: `build/PREREG-2026-09-26-RBATCH.md` · 카드 원문 `build/PREREG-2026-09-26-RBATCH-CARDS.md` — **등록 커밋 `168a072ff`**(`168a072ff0b0ba8f895a79fd8dabaf34b35d8ed6` · 두 문서를 처음 더한 커밋 · origin/main 조상 · 수익 계산 전 · 러너 `frozen_check` 가 확인). 굽기는 **배치 V 등록 커밋 `ada1e16ae`**(`ada1e16ae9772a95246198407acb2f1e51a1906f` · `build/PREREG-2026-09-27-VBATCH.md` 를 처음 더한 커밋 · origin/main 조상) 뒤에만 했다 — `RBATCH_AFTER_V` · 러너 `after_v_check` · 산출 `pins.after_v`(등록 §5.4).
+사전등록: `build/PREREG-2026-09-26-RBATCH.md` · 카드 원문 `build/PREREG-2026-09-26-RBATCH-CARDS.md` — **등록 커밋 `b3191ad42`**(`b3191ad422c06c5ce24f5ea3104a34f28d722a42` · 두 문서를 처음 더한 커밋 · origin/main 조상 · 수익 계산 전 · 러너 `frozen_check` 가 확인). 굽기는 **배치 V 등록 커밋 `de721d62d`**(`de721d62d4114b25b94c5bfc20ea32653c6cacd7` · `build/PREREG-2026-09-27-VBATCH.md` 를 처음 더한 커밋 · origin/main 조상) 뒤에만 했다 — `RBATCH_AFTER_V` · 러너 `after_v_check` · 산출 `pins.after_v`(등록 §5.4).
 러너 `build/r_run.py`(얼린 판) → `data/_rbatch.json`(공개 판 · 저장소 안). **이 문서의 숫자는 모두 `data/_rbatch.json` 에서 스크립트로 옮겼다**(손으로 고르지 않았다). 옮긴 것 밖의 셈은 §4 의 20bp · PR 행 월 평균(산출에 실린 월 계열의 산술 평균)뿐이고 그 줄에 적었다. 이 배치는 **측정만**이다 — Holm 가족이 없어(m = 0) 1차 검정이 없고, 아래의 어떤 값도 판정 · 게시 · 전방 원장 · 규칙에 닿지 않는다(등록 §2 · §6).
 
 ## 1. 굽기 기록
 
 | 항목 | 값 |
 |---|---|
-| 굽기 트리 | **하나** — 등록 커밋 `168a072ff` 의 작업 사본(워크트리 · detached) + P1 · P2(`8da9529ba`)의 SNAP · BASE 파일 되살림(`data/sd` · `data/fx` · `data/fx_pit` 는 지우고 되살림 · 되살림 뒤 등록 커밋 판과 차이 없음) · `RBATCH_DATA` = 그 트리의 `data/` · `RBATCH_REPO` = 저장소 |
+| 굽기 트리 | **하나** — 등록 커밋 `b3191ad42` 의 작업 사본(워크트리 · detached) + P1 · P2(`6f6f678b1`)의 SNAP · BASE 파일 되살림(`data/sd` · `data/fx` · `data/fx_pit` 는 지우고 되살림 · 되살림 뒤 등록 커밋 판과 차이 없음) · `RBATCH_DATA` = 그 트리의 `data/` · `RBATCH_REPO` = 저장소 |
 | 시작 · 끝 | 러너 시작 2026-09-27 05:23:26 → 끝 2026-09-27 05:26:01 · 러너 전체 154초(판 점검 포함) · 굽기 본체 122.4초 · 종료 코드 0 |
-| 시작 표식 | `data/_rbatch.started` = «168a072ff0b0ba8f895a79fd8dabaf34b35d8ed6 · 2026-09-27 05:23:41» · sha256 `264af1383e3d3b3722829f9aabbcc91d5877364d209469656eacb2445fd7f289` — 판 점검 · 등록 대조를 넘은 직후 · 수익을 건드리기 전에 썼다 · 지우지 않았다(커밋하지 않는다) |
+| 시작 표식 | `data/_rbatch.started` = «b3191ad422c06c5ce24f5ea3104a34f28d722a42 · 2026-09-27 05:23:41» · sha256 `264af1383e3d3b3722829f9aabbcc91d5877364d209469656eacb2445fd7f289` — 판 점검 · 등록 대조를 넘은 직후 · 수익을 건드리기 전에 썼다 · 지우지 않았다(커밋하지 않는다) |
 | 이어하기 · 다시 굽기 | 없음(`RBATCH_RESUME` · `RBATCH_RERUN` 없음 · 산출 `resume` · `rerun` null) — 러너가 멈춘 곳 없이 한 번에 끝났다 |
 | 환경 | PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1 · Python 3.12.10 · numpy 2.5.3 · scipy 1.18.1 |
 | 공급자 · 가격 판 | `real` · **공개 판**(`px_overlay` None · `RBATCH_PX_OVERLAY` 없음 · 내부 가격 오버레이를 쓰지 않았다) |
-| 핀 | P1 `snap` = P2 `base` = `8da9529bab7918ec31a5f221b1e7d621111363e4` · 얼린 파일 44(CODE_FROZEN · P3_FROZEN · REG frozen_extra 10) · 가져오기 닫힘 26 모듈 · 새 자료 blob 14 · 선택 입력 `_px_raw.json` 있음 · `_r_coverage.json` 있음 · 고정표 링크 7(모두 일치) · 원본 sha256 대조(RBATCH_RAW) 안 함 — RBATCH_RAW 없음 — 파생 파일의 blob 고정만 본다 |
-| 검문점 | `%TEMP%/rbatch_ckpt/168a072ff0b0/` — R1 6.4초 · R2 2.7초 · S(이어받음 없음) · 새로 시작(이전 검문점 없음) · 지우지 않았다 |
+| 핀 | P1 `snap` = P2 `base` = `6f6f678b139c3bcc3cf104597462618eb15b6d4d` · 얼린 파일 44(CODE_FROZEN · P3_FROZEN · REG frozen_extra 10) · 가져오기 닫힘 26 모듈 · 새 자료 blob 14 · 선택 입력 `_px_raw.json` 있음 · `_r_coverage.json` 있음 · 고정표 링크 7(모두 일치) · 원본 sha256 대조(RBATCH_RAW) 안 함 — RBATCH_RAW 없음 — 파생 파일의 blob 고정만 본다 |
+| 검문점 | `%TEMP%/rbatch_ckpt/b3191ad422c0/` — R1 6.4초 · R2 2.7초 · S(이어받음 없음) · 새로 시작(이전 검문점 없음) · 지우지 않았다 |
 | Stage S | 모듈 `r_stages` · 위약 1000회 · SEED 20260925 · C1_SEED 20260924 · 편입 41 · 94.5초 |
 | 등록 값(REG) | m 0 · primary [] · p0 R1 0.059206 · R2 0.034484 · n_lab_prior 840 |
 
@@ -204,7 +204,7 @@ R12-STACK 은 대조 · 위약이 없다(쌓은 팔 · 규칙 한 팔 · 등록 
 - **R1-OPPSELL**: 평균 γ_OS −0.1723%/월(T 116 · NW t −2.05 · 한쪽 p 0.0211) — 문헌 γ_lit −0.55 의 31% 크기다. 관문 세 칸은 모두 참이고(γ_OS − γ_RS −0.3310 · 추가 통제 −0.1717 · WLS −0.0563), WLS 값은 동일가중 판 크기의 33% 다. 합동 회귀 T5 는 OS b −0.2463(t −2.53)이고 RS b 는 +0.4269(t +3.40)다. 쌍둥이 T2 는 2023-04 앞 −0.0097 · 뒤 −0.1941 로 갈린다. 등록 §7 은 |t| 가 작게 나올 것으로 봤다 — 크기와 관계없이 m = 0 이라 판정은 그대로다.
 - **R2-LAZYRF**: 평균 γ_CH −0.1538%/월(T 117 · NW t −1.04 · 한쪽 p 0.1494) — 문헌 γ_lit −0.80 의 19% 크기다. 시총가중 WLS 판은 +0.0151 로 부호가 바뀌고(관문 i 거짓), Δlog 통제판은 −0.0569 다. 분리 실패 오염 보고는 없다.
 - **Stage S(10년 · 10bp)**: V0 대비 Δ 는 R1 −0.0176 · R2 −0.0154 · R12 −0.0404 %p/월, Δβ 는 −0.0107(t −0.37) · −0.0186(t −0.81) · −0.0368(t −1.19)이다. 위약 백분위는 R1 0.031 · R2 0.003(전 월)다. 세 팔 모두 전방 원장에 넣지 않는다(등록 §1.3 · QFWD §10 에서 벗어남을 굽기 전에 선언) — 이 값들은 어디로도 이어지지 않는 표본 안 측정이다.
-- **배치 V 와의 관계**: 배치 V 는 이 굽기 전에 등록됐다(`ada1e16ae` · 등록 §5.4). 이 문서의 γ(OS · CH) · Stage S 값은 이제 **본 값**이다 — 배치 V(또는 뒤 배치)가 OS · CH 를 조건 · 신호로 쓰면 그것은 **오염 공개 대상**이고, 그 길은 그 배치 자신의 등록 · 전방 규칙으로만 연다(등록 §0b-2 ⑫ · §7).
+- **배치 V 와의 관계**: 배치 V 는 이 굽기 전에 등록됐다(`de721d62d` · 등록 §5.4). 이 문서의 γ(OS · CH) · Stage S 값은 이제 **본 값**이다 — 배치 V(또는 뒤 배치)가 OS · CH 를 조건 · 신호로 쓰면 그것은 **오염 공개 대상**이고, 그 길은 그 배치 자신의 등록 · 전방 규칙으로만 연다(등록 §0b-2 ⑫ · §7).
 
 ## 9. 다음 · 이 문서가 하지 않는 것 (등록 §6)
 

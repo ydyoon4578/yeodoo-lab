@@ -1,6 +1,6 @@
 {
  "adapter_blob": "cb61c2544a264a526953d26f06f59a4d64d869a5",
- "code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+ "code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c",
  "env": {
   "blas": null,
   "hashseed": null,
@@ -12,16 +12,16 @@
  },
  "ok": true,
  "p1": {
-  "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
-  "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+  "base": "bba67290def066ef69a20d0c55060d0fa28e7bf4",
+  "price": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f",
   "root": {
    "adapter_blob": "cb61c2544a264a526953d26f06f59a4d64d869a5",
-   "code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
-   "data_commit": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
+   "code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c",
+   "data_commit": "bba67290def066ef69a20d0c55060d0fa28e7bf4",
    "frozen_ok": true,
    "n_files": 4097,
    "p3_ok": true,
-   "price_commit": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+   "price_commit": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f",
    "sec": 8.3,
    "tree_data": "4e1bd2fd86de34e033daf84189d95649d6135879",
    "tree_price": {

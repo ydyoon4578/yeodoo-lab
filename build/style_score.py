@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/style_score.py — S&P 스타일 점수를 랩 유니버스에 적용 → data/_style_score.json
 
-규약: build/PREREG-2026-09-03-STYLESCORE.md (계산 전 커밋 5a95f5495).
+규약: build/PREREG-2026-09-03-STYLESCORE.md (계산 전 커밋 4d8fe490a).
 원천: S&P U.S. Style Indices Methodology (S&P Dow Jones Indices) — 여섯 요인·표준화·
       바스켓·블렌드 배분·Pure 편입 규칙을 원문 그대로 옮겼다.
 
@@ -258,7 +258,7 @@ def main():
                     "PREREG-2026-09-03-STYLESCORE.md. 🚨 지수 복제가 아니라 «산식을 매월 "
                     "적용한 분류» 다 — 표준화 모집단이 TMI 가 아니라 랩 유니버스이고, "
                     "원문은 연 1회 리밸런스다. 얼린 측정 · 자동 재굽기 금지."),
-           "prereg": "5a95f5495",
+           "prereg": "4d8fe490a",
            "const": {"cap_g": CAP_G, "cap_v": CAP_V, "round_w": ROUND_W,
                      "pure_margin": PURE_MARGIN, "pure_cap": PURE_CAP},
            "months": ds, "drop_factor": drop["factor"],

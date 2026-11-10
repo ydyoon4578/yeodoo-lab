@@ -326,7 +326,7 @@ def main():
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps({
         "prereg": "build/PREREG-2026-09-20-REVCOMP.md",
-        "commit_before": "0706357a134aa1899818357eb8962bed36ebd77c",
+        "commit_before": "601c787092c0ff72ba0c7e4f853163459af1707a",
         "blob": "c19f465c0246d640f6daf4766d2ed172add95b9b",
         "const": {"W_W": W_W, "W_M": W_M, "W_S": W_S, "W_E": W_E, "SMA": SMA,
                   "TOPN": TOPN, "BAND": BAND, "COST": COST, "TURN_CAP": TURN_CAP,

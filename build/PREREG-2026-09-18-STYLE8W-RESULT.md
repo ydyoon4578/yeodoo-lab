@@ -8,7 +8,7 @@
 구현: `build/style8w.py` → `data/_style8w.json`(얼린 측정 · 커밋 안 함)
 천장 진단: `build/style8_oracle.py` → `data/_style8_oracle.json`
 
-계산 전 | 커밋 `589dffca9fb3f3a036f3c49862fd66fdc71c233a` (2026-09-19) ·
+계산 전 | 커밋 `ad1ef4aef3fde77deea0affa9d36c5cca2b78bd8` (2026-09-19) ·
 등록 문서 블롭 `800607ebafb4b8233ba189a8fd86ba22663864a5`
 
 🚨 **이 해시는 「2026-09-18 에 계산 전이었다」를 증명하지 않는다 — 읽는 법을 적는다.**
@@ -20,7 +20,7 @@
 > 확정했고 그 뒤 고치지 않았지만, 그것을 증명할 수단이 없다.
 
 **2026-09-19 에 그 말대로 했다.** 등록 문안을 **한 글자도 고치지 않고** 커밋하고
-(`589dffc`), 그 뒤 `build/style8w.py` 를 다시 돌렸다.
+(`ad1ef4a`), 그 뒤 `build/style8w.py` 를 다시 돌렸다.
 
 **재실행 결과는 `data/_style8w.json` 과 바이트 단위로 동일하다**(3,780자 · 전수 대조).
 판정도 그대로다 — iv·erc·mv 셋 다 기각(F2·F3·F4).

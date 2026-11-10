@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/purevm.py — 20종 스타일 로테이션 + 변동성 관리 → data/_purevm.json
 
-규약: build/PREREG-2026-09-08-PUREVM.md (계산 전 커밋 9acae0d0).
+규약: build/PREREG-2026-09-08-PUREVM.md (계산 전 커밋 ac9109b2).
 
   기준선  x-pure10 의 **선견 보정 레그** — 그 시점 SPX ∪ NDX 멤버만 후보로 쓴다
   얹는 것 w = min(1, 확장창 목표변동성 ÷ 직전 6개월 실현변동성) · 상한 1.0(레버리지 없음)
@@ -299,7 +299,7 @@ def main():
     print("w 가 가장 낮았던 달:", " · ".join("%s %.2f" % (x["m"], x["w"]) for x in lo))
 
     doc = {"note": "20종 스타일 로테이션 + 변동성 관리. 규약 PREREG-2026-09-08-PUREVM.md. 얼린 측정.",
-           "prereg": "9acae0d0", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
+           "prereg": "ac9109b2", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
            "vm": {"look": VM_LOOK, "warm": VM_WARM, "cap": 1.0},
            "stats": S, "f1": [d1, a, t], "f2": d2, "f3": d3, "f4": [sn, bn],
            "f5": {"beta": [b0, b1], "alpha": [a0, a1], "alpha_t": [t0, t1]},

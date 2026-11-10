@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-capbridge-ra
 
-등록: `build/PREREG-2026-09-07-CAPAXIS.md` — **계산 전 커밋 `5e7e8fe0`**
+등록: `build/PREREG-2026-09-07-CAPAXIS.md` — **계산 전 커밋 `95020d00`**
 원문: Useong Shin, "A Cap–Axis Integral Diagnostic of Factor Models", arXiv **2607.01765v3**
 구현: `build/cap_axis_bridge.py` → `data/cap_axis_bridge.json`
 

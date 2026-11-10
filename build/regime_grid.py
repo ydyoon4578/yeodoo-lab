@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/regime_grid.py — 점수밴드 × 추세 15칸 표 → data/_regime_grid.json
 
-사전등록: build/PREREG-2026-09-21-REGIMEGRID.md (계산 전 커밋 6b120f2)
+사전등록: build/PREREG-2026-09-21-REGIMEGRID.md (계산 전 커밋 ac4eaf2)
 
 무엇을. `_riskonoff.json` 에서 밴드가 **거꾸로** 간다 — Risk-Off +2.02% 인데
   Risk-On +0.34%. 모니터 자신의 국면표도 같은 방향이다. 그런데 그 국면표는
@@ -155,7 +155,7 @@ def main() -> int:
                "보류" if f5_split else
                "측정만")
 
-    doc = {"note": "점수밴드 × 추세 15칸. 사전등록 PREREG-2026-09-21-REGIMEGRID(커밋 6b120f2) "
+    doc = {"note": "점수밴드 × 추세 15칸. 사전등록 PREREG-2026-09-21-REGIMEGRID(커밋 ac4eaf2) "
                    "대로 계산 전에 실패조건을 못박았다. 추세 정의(d5·±2)는 사용자 제공 "
                    "「시장 국면 모니터」의 _scell() 값 그대로다.",
            "as_of": src["as_of"], "look": LOOK, "cut": CUT, "fwd_days": FWD,

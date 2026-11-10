@@ -189,7 +189,7 @@ def main() -> int:
         ST.hline(fig, X0, X1, .034, LINE, .6)
         ST.tx(fig, X0, .026,
               "여두 전략 랩 · RRG 4분면 팩터 로테이션 · 사전등록 PREREG-2026-09-22-RRG "
-              "(계산 전 커밋 6ea920f) · 판정 **기각**", fontsize=6.4, color=MUTED)
+              "(계산 전 커밋 41f91cb) · 판정 **기각**", fontsize=6.4, color=MUTED)
         ST.tx(fig, X0, .0175,
               "!! 110종 전부 실었습니다 - 고른 팩터가 없습니다. 되돌아보기·컷·산식 판은 "
               "사전등록 값 그대로이고 하나도 안 움직였습니다.", fontsize=6.0, color=NEG)

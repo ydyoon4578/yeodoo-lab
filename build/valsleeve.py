@@ -464,7 +464,7 @@ def main():
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps({
         "prereg": "build/PREREG-2026-09-20-VALSLEEVE.md",
-        "commit_before": "3343933659daaeff80b78cca092b34a333c81247",
+        "commit_before": "406705ca7e401464e9ecf6be19c62422583be83c",
         "blob": "97f0ab3a7b13b5a987af267a3ab511126ca5c541",
         "const": {"LAG_M": LAG_M, "TOPN": TOPN, "COST": COST, "MIXW": MIXW,
                   "NSHUF": NSHUF, "SEED": SEED},

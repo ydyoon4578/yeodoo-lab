@@ -103,7 +103,7 @@ FORWARD_DIR = "data/_xfwd"                                   # 있으면 멈춘�
 NEW_FROZEN = ("build/x_data.py", "build/x_intl.py", "build/x_signals.py", "build/x_blr.py", "build/x_eval.py", "build/x_adapter.py", RUNNER,
               MANIFEST_FILE, F0_FILE)
 # 가져다 쓰는 랩 모듈(고치지 않는다) — x_* 의 정적 import 폐포(함수 안 import · __import__ 상수 포함 · selftest 가 «폐포 ⊆ 얼린 파일» 을 본다) + 경계 t_guard.
-#   S 자식은 코드 핀 1d81f083 의 build/ 를 임시 뿌리에서 쓴다(x_adapter.ROOT_FROZEN blob 단언 · 여기 표와 별개).
+#   S 자식은 코드 핀 439e16db 의 build/ 를 임시 뿌리에서 쓴다(x_adapter.ROOT_FROZEN blob 단언 · 여기 표와 별개).
 REUSED_MODULES = ("edgar", "eg30plus", "index_members", "ml_core", "ml_strats", "pit_alias", "pit_backtest", "pit_panel", "pit_quarantine", "q_bmrot_leg",
                   "q_jump", "q_switch", "qbatch_core", "qg_lab", "rally_pattern", "shares_clean", "shares_split", "stoploss", "t_pit", "tech_backtest",
                   "v_cards", "v_cond", "v_core", "v_data", "v_ear", "v_fund", "v_guard", "v_ins", "v_pit", "v_px_split", "t_guard",
@@ -160,12 +160,12 @@ REGISTERED = {
     "XE.LABELS": ("M 일관성 통과(오염 창)", "I 국외 재현", "방어 재현", "보험 채택 후보", "랩 발견(맥락)"),
     "XI.PRIMARY": ["JP", "GB", "DE", "FR", "IT", "CH", "SE", "CA", "AU", "KR"], "XI.SUBSTITUTES": ["NL", "ES"], "XI.RATE_TAIL_MAX": None,
     "XI.USD_SWITCH_AT": 3, "XI.PX_STALE_DAYS": 5, "XI.FX_STALE_DAYS": 7, "XI.SCORE": ("2006-09", "2026-08"), "XI.INPUT_MIN": "2005-08-01",
-    "XA.CODE_PIN": "1d81f083a404c68e23d15a649ef6f0a340d4d95c", "XA.BUILD_TREE": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+    "XA.CODE_PIN": "439e16db2dd4b15ff5894f0fd64a399f36206a4c", "XA.BUILD_TREE": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
     "XA.VB_BOOKS_SHA": "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b",
     "XA.V0_HASH_PIN": {"V0_LT": "ec0a2aa43f1efffa3d59b5d5b78268153a2bf7f36947ab2ed6345c61c0370202",
                        "V0_BL": "132008e66ddf2ef85ea3acf408ae213641f92a0a0a4f7ea3118b6963d2a3c077"},
     "XA.A_OP": 0.5, "XA.D_CAP": 0.2, "XA.D_MAP_MIN": 0.9, "XA.APP_MIN": 0.1, "XA.D_FIRST_DECISION": "2014-05", "XA.S_FORM": ("2016-08", "2026-07"),
-    "XA.DBOOK_COSTS": (0.0, 0.001, 0.002), "XA.DATA_PIN": "c6a35ff0168e5ea21c2ab2d18680550452511a3a", "XA.VROOT_PATHS": ("build/", "data/"),
+    "XA.DBOOK_COSTS": (0.0, 0.001, 0.002), "XA.DATA_PIN": "549f42153dedb7dab3eb314bcc9237c8e026b629", "XA.VROOT_PATHS": ("build/", "data/"),
     "XE.LABEL_G_REF": "G 참고(대리 충실도 강등)", "XE.OP_M_FAIL": "그대로(EG30 V0)", "XD.REPO_ALLOWED": ("data/_xb_manifest.json", "data/_xb_f0.json"),
     "R.LOOKAHEAD_MAIN": 200, "R.LOOKAHEAD_ARM": 80, "R.CUM_N_BEFORE": 945,
 }
@@ -1720,7 +1720,7 @@ def _fake_f0():
                                                "intl_mode": "local", "intl_markets": ["JP", "NL", "DE", "FR", "IT", "CH", "SE", "CA", "AU", "KR"],
                                                "alfred_first_release": False, "french_last_month": "2026-08", "d_sel_hash": "a" * 64, "d_pairing_A": True,
                                                "s_cov_ok": True, "state_agree_pass": True, "lookahead_real_prior": "x",
-                                               "d_data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a"},
+                                               "d_data_pin": "549f42153dedb7dab3eb314bcc9237c8e026b629"},
             "intl": {"decision": {"mode": "local"}}, "labels": {"window": ["2006-09", "2026-08"], "down_months": {"n": 83}},
             "fidelity": {"bear_state_spy_vs_french": {"window": ["2006-08", "2026-07"], "state_agree": "캐시 전체판에만", "n_common": 240, "pass": True}},
             "code_sha": {"build/x_run.py": "0" * 16}, "manifest_sha16": "1" * 16}

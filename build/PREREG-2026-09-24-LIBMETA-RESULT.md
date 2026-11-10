@@ -4,8 +4,8 @@
 판정: 측정만
 규칙: 없음   <!-- 표본 안은 오염 측정이라 게시·기각이 없다. 전방 첫 결정 2026-12-31 · FF1 24개월 -->
 
-사전등록: `build/PREREG-2026-09-24-LIBMETA.md` — **계산 전 커밋 `f2a4c7d0`**(엔진·로더·등록문 · 구간 파일 9e8ebd40)
-검정기: `build/lib_meta.py` → F0 `data/_libmeta_L1_f0.json` → 표본 안 `data/_libmeta_L1.json` · 자료 판 9e8ebd40 · scipy 1.18.1 · 내부점 대체 3
+사전등록: `build/PREREG-2026-09-24-LIBMETA.md` — **계산 전 커밋 `a5c6f550`**(엔진·로더·등록문 · 구간 파일 45e1d729)
+검정기: `build/lib_meta.py` → F0 `data/_libmeta_L1_f0.json` → 표본 안 `data/_libmeta_L1.json` · 자료 판 45e1d729 · scipy 1.18.1 · 내부점 대체 3
 창: 보유 2019-10 ~ 2026-08(83개월) · 판정선 SPY 총수익 · 라이브러리 132 가족(결정마다 |U| 중앙 117)
 
 ## 1. F0 점검 — 모두 통과 · 라벨 없음 (비중·베타만)

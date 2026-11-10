@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-a1payout
 
-등록: `build/PREREG-2026-09-03-A1FIX.md` — **계산 전 커밋 `52f948c3c`**
+등록: `build/PREREG-2026-09-03-A1FIX.md` — **계산 전 커밋 `0ce249f0c`**
 
 ---
 

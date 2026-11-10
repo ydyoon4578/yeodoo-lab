@@ -4,8 +4,8 @@
 판정: 기각
 규칙: x-pdelay, x-pdelay-cw, x-illiqls
 
-등록: `build/PREREG-2026-09-07-PDELAY.md` — **계산 전 커밋 `3f6f856d`**
-(시장 프록시 정정 `7bb6c413` — **계산 전**, §2 참조)
+등록: `build/PREREG-2026-09-07-PDELAY.md` — **계산 전 커밋 `b3751eca`**
+(시장 프록시 정정 `4a442584` — **계산 전**, §2 참조)
 구현: `build/tech_backtest.py` — `price_delay()` · `_quintile_ls()` · `pdelay_dist()`
 
 ---

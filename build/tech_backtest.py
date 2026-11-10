@@ -2193,7 +2193,7 @@ AMIHUD_WIN = 60          # 사전등록 PREREG-2026-08-12-LIQ-CAL.md §2① 에�
 TURN_WIN = 60            # 같은 문서 §2②.
 
 # ── E55 가격 지연 ───────────────────────────────────────────────────────
-# 사전등록 build/PREREG-2026-09-07-PDELAY.md(계산 전 커밋 3f6f856d) §2 가 셋을 못박았다.
+# 사전등록 build/PREREG-2026-09-07-PDELAY.md(계산 전 커밋 b3751eca) §2 가 셋을 못박았다.
 # 🚨 이 셋을 훑으면 훑은 사람이 결과를 만든다 — 그래서 상수로 두고 한 곳에서만 읽는다.
 PD_WEEKS = 52            # 창 길이(주). 카드의 수.
 PD_LAGS = 4              # 시차 개수. 카드의 수.
@@ -5096,7 +5096,7 @@ def build_strats():
          "20일 평균거래량이 60일 평균 대비 가장 크게 늘고 200일선 위인 %d종목, 월말 리밸런스." % TOPN,
          None, "가격에 거래량을 더한다. 거래량이 정보 유입의 대리변수라는 가정을 시험한다.")
 
-    # ── 수급 축 확장 5종 · 사전등록 build/PREREG-2026-08-14-FLOW.md (돌리기 전 커밋 acfe0a2a) ──
+    # ── 수급 축 확장 5종 · 사전등록 build/PREREG-2026-08-14-FLOW.md (돌리기 전 커밋 1d927ba3) ──
     # 왜: KR5 Initiative 가 명시한 세 축 중 수급이 제일 얇았다(11종 중 잣대 넷 통과 1종).
     # ⚠ 축이 비었다는 것은 후보를 만들 이유이지 통과시킬 이유가 아니다. 등록 §4 의 사망
     #   조건 여섯(F1~F6)으로 가른다. 기각된 것도 사유와 함께 남긴다.
@@ -5200,7 +5200,7 @@ def build_strats():
          "실제로 둘의 샤프가 0.79와 0.19로 크게 갈렸다. 같은 개념인데 이만큼 벌어졌다는 것은 "
          "이 표본에서 둘 다 신뢰할 수 없다는 뜻이다.")
     # ── 원 전략 6종 — 「그대로」 재현 ─────────────────────────────────
-    # 사전등록 ① PREREG-2026-08-11-BASKET.md (2026-08-11 커밋 ba8080df) — **N 만** 맞췄다.
+    # 사전등록 ① PREREG-2026-08-11-BASKET.md (2026-08-11 커밋 3443edae) — **N 만** 맞췄다.
     #           ② PREREG-2026-08-29-ASWRITTEN.md — ①이 「안 따른 것」 열에 적어 둔 항목을
     #              구현한다(사용자 지시 「전략이 말하는 그대로 하라」·「싹다 원문대로 맞추라」).
     # 🚨 ①은 «N 만 바꾼다» 를 규약으로 삼고 안 따른 것을 표에 적었다("안 적으면 '원본대로
@@ -5294,7 +5294,7 @@ def build_strats():
          "⚠ 원문의 분기 리밸런스는 이미 따르고 있다(PREREG-2026-08-13-REBAL 의 분기 표). "
          "⚠ 원문의 청산 조건('순발행이 플러스로 전환되면 청산')도 안 걸었다.",
          topn=50)
-    # ── 「분위」라고만 적힌 넷 — PREREG-2026-09-02-QUANTILE4.md (계산 전 커밋 555a3f66c) ──
+    # ── 「분위」라고만 적힌 넷 — PREREG-2026-09-02-QUANTILE4.md (계산 전 커밋 f05a842bb) ──
     # 🚨 ASWRITTEN 이 일부러 유예한 넷이다. 그때 «원문에 없는 수를 내가 정하면 방금 없앤
     #   자유도를 옮기는 것» 이라 안 건드렸고, 사용자 결정(2026-09-02)으로 수를 정했다.
     #   근거는 내 취향이 아니라 **각 카드의 원 논문**이다(등록 §1).
@@ -5393,7 +5393,7 @@ def build_strats():
     #   ⚠ 정의는 남긴다 — 채점 갈래 · _cgate_pick · gate_regimes. 되살리려면 넷을 같이
     #     되돌리고(xsec 호출 · SCREEN_SIDS · WEIGHTED_SIDS · tech/pit FUND_SIDS)
     #     원장 항목에 readmitted 를 적어야 한다.
-    # 🚨 2026-09-07 — **모멘텀판만 되올렸다**(PREREG-2026-09-07-CGATEMOM · 커밋 f9c03ec9).
+    # 🚨 2026-09-07 — **모멘텀판만 되올렸다**(PREREG-2026-09-07-CGATEMOM · 커밋 239c1974).
     #   ⚠ **게시가 아니다.** strategy_index.HIDE_SIDS 에 넣어 화면에서 뺀다 —
     #     이 랩의 규약으로 HIDE_SIDS 는 «재면서 화면에서만 뺀다» 이고 RETIRED 는
     #     «사전등록 기각» 이다. 지금 상태는 전자다.
@@ -8047,11 +8047,11 @@ def xsec_score_at(S, i, X, pool=None):
                     v = (tot / mcap) if tot >= 0 else None
             elif sid in ("x-cgate", "x-cgate-mom"):
                 # A15 — 점수는 시가총액이다. 비중(동일 ↔ 시총)은 _cgate_pick 이 정한다.
-                #   규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071).
+                #   규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 18a142b5).
                 v = mcap if mcap else None
             elif sid in ("x-pdelay", "x-pdelay-cw"):
                 # E55 — 점수는 **가격 지연도**다. 규약 PREREG-2026-09-07-PDELAY.md
-                #   (계산 전 커밋 3f6f856d · 시장 프록시 정정 7bb6c413).
+                #   (계산 전 커밋 b3751eca · 시장 프록시 정정 4a442584).
                 # ⚠ 창(52주 + 시차 4)을 못 채우면 None — 「신호 없음」이지 0 이 아니다(카드 ③).
                 #   0 으로 두면 지연이 가장 낮은 쪽(= 숏 다리)에 신규 편입주가 통째로 들어간다.
                 _d, _r2, _nw = price_delay(P, _PDM, _PDW, i - 1)
@@ -8068,7 +8068,7 @@ def xsec_score_at(S, i, X, pool=None):
                 v = amihud(P, vlm.get(t) or [], i - 1)
             elif sid in ("x-secew", "x-secew-gate"):
                 # A17 — 점수는 시가총액이다. 섹터 비중 고정과 섹터 내부 비중은
-                #   _secew_pick 이 정한다. 규약 PREREG-2026-09-07-SECEW.md(커밋 7d4291ed).
+                #   _secew_pick 이 정한다. 규약 PREREG-2026-09-07-SECEW.md(커밋 b0723096).
                 # ⚠ 시총을 못 읽는 종목은 후보에서 빠진다 — 섹터 비중을 만들 수 없기 때문이다.
                 v = mcap if mcap else None
             elif sid == "x-demega10":
@@ -8080,7 +8080,7 @@ def xsec_score_at(S, i, X, pool=None):
                 v = mcap if mcap else None
             elif sid in ("x-bmrot", "x-bmrot-flat"):
                 # 점수 = B/M. 선택은 xsec_pick_at 의 갈래가 «반으로 쪼개 국면으로 기울이기» 로 한다.
-                #   규약 PREREG-2026-09-03-BMROT.md (계산 전 커밋 78c2dec92).
+                #   규약 PREREG-2026-09-03-BMROT.md (계산 전 커밋 5112dfcc6).
                 e = asof_fund(f.get("eq"), dt_)
                 v = (e / mcap) if (e is not None and mcap) else None
             elif sid == "x-a1payout":
@@ -8097,7 +8097,7 @@ def xsec_score_at(S, i, X, pool=None):
                 #   어느 쪽을 남길지에만 쓰이므로 카드의 1번 조건인 매입수익률을 쓴다.
                 # ⚠ 크기가 매달 다르다. XSEC_MIN_POOL 은 SCREEN_SIDS 로 면제된다.
                 _bb = ttm2(f.get("bb"), f.get("bb_a"), dt_)
-                # 🚨 2026-09-02 정정(PREREG-2026-09-03-A1FIX.md · 계산 전 커밋 52f948c3c).
+                # 🚨 2026-09-02 정정(PREREG-2026-09-03-A1FIX.md · 계산 전 커밋 0ce249f0c).
                 #   분모를 **분자와 같은 기간말**의 시총으로 옮긴다. 종전에는 얼어 있는
                 #   직전 회계연도 자사주액(최대 455일 낡음)을 **오늘 시총**으로 나눠,
                 #   회사의 행동이 아니라 그 뒤의 주가 변동을 재고 있었다.
@@ -8578,7 +8578,7 @@ def sub_baskets(X, i, axis, tickers=None):
 def _cgate_pick(sc, X, i, mom=False):
     """A15 — 집중도 국면으로 **동일가중 ↔ 시총가중**을 전환한다.
 
-    규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 179d0071). 카드 원문 그대로:
+    규약 PREREG-2026-09-07-CGATE.md(계산 전 커밋 18a142b5). 카드 원문 그대로:
       · 집중도 = 그 월말 채점 가능 종목의 시총 비중 **허핀달**(비중 제곱합)
       · 표준화 = **확장 윈도우 백분위**(그 시점까지의 과거만) — 고정 임계치 금지(선견 방지)
       · 상위 1/3 → 전 종목 동일가중 · 하위 1/3 → 시총가중 · 중간 → 두 벡터를 절반씩 혼합
@@ -8649,7 +8649,7 @@ def _cgate_pick(sc, X, i, mom=False):
 def _secew_pick(sc, X, i, gate=False):
     """A17 — 섹터 비중은 벤치마크에 고정하고 **섹터 내부만** 동일가중한다.
 
-    규약 build/PREREG-2026-09-07-SECEW.md(계산 전 커밋 7d4291ed). 카드 원문 그대로:
+    규약 build/PREREG-2026-09-07-SECEW.md(계산 전 커밋 b0723096). 카드 원문 그대로:
       · 섹터(GICS) 비중 = 벤치마크 시총가중과 **같게 고정** — 섹터 베팅이 없다(등록 F7)
       · gate=False → **모든** 섹터 내부를 동일가중(카드가 지정한 대조군 «가»)
       · gate=True  → 보정 집중도가 그 섹터 **자기 역사**의 확장 윈도우 백분위 상위 1/3 인
@@ -8910,14 +8910,14 @@ def xsec_pick_at(S, i, X, sc, ind_raw, held=None):
     if S["sid"] in ("x-cgate", "x-cgate-mom"):
         return _cgate_pick(sc, X, i, mom=(S["sid"] == "x-cgate-mom"))
     if S["sid"] in ("x-secew", "x-secew-gate"):
-        # A17 — 규약 PREREG-2026-09-07-SECEW.md(계산 전 커밋 7d4291ed).
+        # A17 — 규약 PREREG-2026-09-07-SECEW.md(계산 전 커밋 b0723096).
         return _secew_pick(sc, X, i, gate=(S["sid"] == "x-secew-gate"))
     if S["sid"] in ("x-pdelay", "x-pdelay-cw", "x-illiqls"):
-        # E55 — 규약 PREREG-2026-09-07-PDELAY.md(계산 전 커밋 3f6f856d).
+        # E55 — 규약 PREREG-2026-09-07-PDELAY.md(계산 전 커밋 b3751eca).
         return _quintile_ls(sc, X, i, cap=(S["sid"] == "x-pdelay-cw"))
     if S["sid"] == "x-demega10":
         # A16 — 「시총 상위 10종목을 제외하고 잔여를 동일가중」. 규약 PREREG-2026-09-05-DEMEGA.md
-        #   (계산 전 커밋 89da3394). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
+        #   (계산 전 커밋 556ab9db). 점수는 시가총액이고 sc 는 **내림차순**으로 들어온다
         #   (xsec_score_at 규약) — 그래서 앞 10 개를 떼면 그것이 상위 10 제외다.
         # 🚨 «상위 N 을 고르는» 규칙이 아니라 «걸러낸 나머지 전부» 다. 그래서 자격필터형
         #   (SCREEN_SIDS)이고 후보 수 관문을 안 건다. 남는 것이 곧 바스켓이라 크기를

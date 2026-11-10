@@ -332,7 +332,7 @@ def main():
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps({
         "prereg": "build/PREREG-2026-09-20-RESIDMOM.md",
-        "commit_before": "a289cb0c96e7a2c149a25198a4e23a120b22957c",
+        "commit_before": "654a7d46a4c783672a6a4d98800d6e83b6982d3a",
         "blob": "2a25ab771de77a76c97406a582de49f53e8737d6",
         "const": {"WIN": WIN, "MINOBS": MINOBS, "TOPN": TOPN, "BAND": BAND,
                   "COST": COST, "MIXW": MIXW, "NSHUF": NSHUF, "SEED": SEED},

@@ -43,7 +43,7 @@ SEED, NPERM = 20260814, 1000
 NW_LAG = 3
 TIMING_ROLES = {"타이밍오버레이", "위험방어", "배분기"}
 # 자료 판 — CI 가 strategy_*.json 을 매일 다시 구우므로 로더는 이 커밋의 판을 git show 로 읽는다. 유니버스·패널 해시는 그 판의 값(대조한다).
-DATA_REV = "9e8ebd40"
+DATA_REV = "45e1d729"
 SCIPY_VER = "1.18.1"
 SID_SHA = "17314587cbc4393eeda8b64bd0797d1b8e27def9daa15a65f755f579aa52f09e"
 PANEL_SHA = "fb6369994074d529400cb37ed1fb96f59fa4c4ad5c50c7bf8977b7119ca47b8d"

@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-idxrevb-cap1, x-idxrevb-prop
 
-등록: `build/PREREG-2026-09-16-IDXREVBAND.md` — **계산 전 커밋 `f0d0cae69`**
+등록: `build/PREREG-2026-09-16-IDXREVBAND.md` — **계산 전 커밋 `1a4aad932`**
 구현: `build/idxrevband.py`(구성은 `build/idxrev.py` 의 `band=True`) → `data/_idxrevband.json`
 측정 **2018-07 ~ 2026-07** · SPX 97개월 · NDX 93개월 · TE 2.00% · BAND 2.0
 

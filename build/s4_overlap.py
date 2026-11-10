@@ -39,7 +39,7 @@ except Exception:
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 PREREG = "build/PREREG-2026-09-25-EGFF.md"
-REG_COMMIT = "98889aeb82bd35fb3c06e3e8ff731c12a1c670a0"             # 사전등록 커밋
+REG_COMMIT = "eb49a1a041270e677a30cdb9d35a8c4375b49641"             # 사전등록 커밋
 BATCHQ_REF = "03ab2737f45a9fb4b670a8e3484c88a7fedb210625c4df246fdcc4437b1f41c8"   # 배치 Q 가 쓴 _eg_q5_scores_pitgics.json(P1 판)
 F0_REL = "data/_s4_f0.json"
 OUT_REL = "data/_s4_overlap.json"

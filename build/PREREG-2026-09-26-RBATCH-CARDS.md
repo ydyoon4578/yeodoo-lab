@@ -463,7 +463,7 @@ EG30 + 코퓰러 폭락꼬리 걸러내기. Q07 전방 전용 원장(채택 경�
 
 #### rule
 
-얼린 build/q_ltd.py(1d81f083, blob 2a379df3cc1c, EST_HASH d150aaab6bf03115)의 V1을 전방 분기말 편입마다 그대로 적용한다.
+얼린 build/q_ltd.py(439e16db, blob 2a379df3cc1c, EST_HASH d150aaab6bf03115)의 V1을 전방 분기말 편입마다 그대로 적용한다.
 - 새 단위는 비엄격 적합을 한 번 하고 기록하며, 다시 적합하지 않는다.
 - 진입: 2026-10-30 종가(2026-09 편입 목표, 진입 10bp). 전방 1개월 = 2026-11.
 - 주 계열은 d_m 종가 체결이고, d_m 종가까지의 정보만 쓴다. FF0 마감은 d_m 다음 NYSE 개장 시각(UTC 환산)이다. T+1 종가 행을 함께 기록한다.
@@ -482,7 +482,7 @@ FF2(36개월 이상이고 사건 최소를 채웠을 때). 모두 넘어야 한�
 
 #### params
 
-- 코드 핀 1d81f083.
+- 코드 핀 439e16db.
 - 환경: numpy 2.5.3, scipy 1.18.1, PYTHONHASHSEED=0, OPENBLAS_NUM_THREADS=1.
 - 계산: 분기당 45단위, 약 4 CPU분.
 - 사건 최소: 급락 다리 ≥ 3, 반등 ≥ 3, CRASH-M ≥ 4, SURGE-M ≥ 4, S&P PR 하락월 ≥ 10.
@@ -586,7 +586,7 @@ EG30 + 상관망 주변부. Q08 전방 원장의 측정 전용 팔로 격하(채
 
 #### rule
 
-얼린 build/q_netper.py(1d81f083, blob 29cc446faff9)의 prep_q08 → pick_q08('V1') → _cap_target을 분기 편입마다 기록하고, C3도 함께 기록한다. 체결과 마감은 QF07과 같다. 관문을 두지 않고 V1 − C3, V1 − V0를 보고만 한다.
+얼린 build/q_netper.py(439e16db, blob 29cc446faff9)의 prep_q08 → pick_q08('V1') → _cap_target을 분기 편입마다 기록하고, C3도 함께 기록한다. 체결과 마감은 QF07과 같다. 관문을 두지 않고 V1 − C3, V1 − V0를 보고만 한다.
 
 #### params
 
@@ -731,7 +731,7 @@ QF07과 같은 스냅숏을 쓴다. 적합이 없어 계산은 가볍다. 다만
 
 §F 가격 격자, 커버리지, 가격 복구
 - 격자
-  - HEAD e19d13ad에서 stocks.json pxd_dates는 4,457일, pit_px.json은 4,459일이다(2026-09-22와 09-24 누락). 그래서 pit_panel.load_world가 멈춘다.
+  - HEAD cca156b4에서 stocks.json pxd_dates는 4,457일, pit_px.json은 4,459일이다(2026-09-22와 09-24 누락). 그래서 pit_panel.load_world가 멈춘다.
   - P1 가격 핀 = 두 격자가 같고 검증을 통과한 가장 이른 커밋.
 - 커버리지(비평 실측)
   - 2016-08..2026-07 SPX∪NDX 멤버-월 62,703개 중 4,483개(7.1%, 104종)에 가격이 없다.
@@ -793,7 +793,7 @@ QF07과 같은 스냅숏을 쓴다. 적합이 없어 계산은 가볍다. 다만
 - V0(EG30) 장부는 운용 전략 EG30의 유일한 핀 고정 전방 계열이다. 원장의 가장 큰 실질 가치가 여기에 있다.
 
 코드 고정
-- 코드 핀 1d81f083(HEAD와 blob이 같다).
+- 코드 핀 439e16db(HEAD와 blob이 같다).
 - build/qfwd_adapter.py: 끼움만 둔다. 규칙 수는 하나도 바꾸지 않는다.
   - ① 기간 연장.
   - ② Q07 formations를 [m]으로 좁힘.
@@ -808,13 +808,13 @@ QF07과 같은 스냅숏을 쓴다. 적합이 없어 계산은 가볍다. 다만
   - build/qfwd_check.py(validate.yml에 붙인다).
   - .github/workflows/qfwd-ledger.yml: cron 23:40, 03:40, 09:40, 12:40 UTC(토요일 KST 포함), fetch-depth 0, Python 3.12, numpy 2.5.3, scipy 1.18.1, PYTHONHASHSEED=0, OPENBLAS=1, concurrency qfwd, ci_push.sh.
 - 등록 전 짝맞춤 시험
-  - 표본 안 판(P1 940f0bda, P2 bef4eea8)에서 목표 해시가 _qbatch.json과 같아야 한다.
+  - 표본 안 판(P1 9677330e, P2 bba67290)에서 목표 해시가 _qbatch.json과 같아야 한다.
   - 대상: Q07 V1 c1ff6f6f017e…, Q08 976e2216f81a…, x-bmrot 34cc8bb5c4ec…(끼움 ⑦을 적용해 실제 d_m+1 행을 빈 자리로 바꾼 판 포함), Q06 신호 달 22개, V0 thash.
   - 하나라도 다르면 원장을 열지 않는다.
 - R1 팔은 추가로 §G 일치 시험(DERA 대 일간 XML)을 통과해야 연다. R2 팔은 §C 파서 검증을 통과해야 연다.
 
 자료 판
-- 작업 사본을 읽지 않는다. 판 커밋 V의 data/를 git archive로 꺼내고, 1d81f083의 build/와 어댑터를 같은 임시 뿌리에 푼다. 그 위에 고정 P3 입력을 덮어쓴다.
+- 작업 사본을 읽지 않는다. 판 커밋 V의 data/를 git archive로 꺼내고, 439e16db의 build/와 어댑터를 같은 임시 뿌리에 푼다. 그 위에 고정 P3 입력을 덮어쓴다.
 - V = d_m 미국 마감 뒤 origin/main 첫-부모 이력에서 검증을 통과하는 가장 이른 커밋이다. git 이력만으로 결정되므로 누가 다시 해도 같은 판이 나온다.
 - 검증 항목
   - pxd_dates ⊇ SPY 거래일(d_m − 260거래일 ~ d_m).

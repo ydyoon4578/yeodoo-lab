@@ -1,6 +1,6 @@
 {
  "note": "재현 — Shin(2026) 「시총축 적분 진단」 arXiv 2607.01765v3. 🚨 전략 논문이 아니라 팩터모형 진단이다. 다리 곡선은 진단이고, 거래 대상으로 삼은 것은 rank-area 수익 Y_t 하나뿐이다.",
- "prereg": "build/PREREG-2026-09-07-CAPAXIS.md (계산 전 커밋 5e7e8fe0)",
+ "prereg": "build/PREREG-2026-09-07-CAPAXIS.md (계산 전 커밋 95020d00)",
  "paper": {
   "title": "A Cap-Axis Integral Diagnostic of Factor Models",
   "author": "Useong Shin (Sogang)",

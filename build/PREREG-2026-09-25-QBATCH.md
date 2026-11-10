@@ -39,9 +39,9 @@
 
 ## 2. 자료 고정
 
-P1 가격: 커밋 940f0bda 의 stocks.json · pit_px.json · sd/ · P2 가격 밖: bef4eea8 의 bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit ·
+P1 가격: 커밋 9677330e 의 stocks.json · pit_px.json · sd/ · P2 가격 밖: bba67290 의 bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit ·
 assets · splits · shares_yf · earn_dates · strategy_charts · strategy_index · P3: 뒤에 생긴 입력(_eg_q5_scores_pitgics · _pre · _eg_q5_scores · pit_gics_sectors · mech_episodes ·
-_eg_best · _eg30plus)과 모든 카드 모듈 · 러너 · 엔진은 이 커밋에 얼려 바이트 단위로 대조한다(`qbatch_run.frozen_check`). 라이브러리 카드는 LIBMETA 처럼 커밋 9e8ebd40 판을 git show 로 읽는다.
+_eg_best · _eg30plus)과 모든 카드 모듈 · 러너 · 엔진은 이 커밋에 얼려 바이트 단위로 대조한다(`qbatch_run.frozen_check`). 라이브러리 카드는 LIBMETA 처럼 커밋 45e1d729 판을 git show 로 읽는다.
 재무는 **최신 제출본**이다(최초 제출본 재구축 P-FF 는 없다 — Q01 · Q12 는 재작성 누수 한계를 지고, 전방 진입 전에 최초 제출본 재실행이 같은 부호여야 한다). numpy 2.5.3 · scipy 1.18.1.
 
 ## 3. 카드 (규칙 전문은 CARDS 파일 · 여기는 근본 이유와 한 줄 규칙)
@@ -220,7 +220,7 @@ Q07 은 계산이 무겁다 · 단위 시험이 코딩 오류의 유일한 방�
 **문서 경로**: 모듈 독스트링 · 계약이 가리키는 `scratchpad/qbatch_final.md` 는 이 커밋의 `build/PREREG-2026-09-25-QBATCH-CARDS.md`(머리 4줄 밖은 바이트 동일)다.
 
 **Q14 · Q15(q_lib)**
-- 전제: SPHB 적재기 = q_lib.sphb_monthly(lib_loader 와 같은 식 · 적재 때 단언) · 엔진 sid 는 **이 커밋에 얼린다**(U2_SHA 4a51a3db… · U4_SHA 5119fcf9… · rev 9e8ebd40) ·
+- 전제: SPHB 적재기 = q_lib.sphb_monthly(lib_loader 와 같은 식 · 적재 때 단언) · 엔진 sid 는 **이 커밋에 얼린다**(U2_SHA 4a51a3db… · U4_SHA 5119fcf9… · rev 45e1d729) ·
   원장 · 기준일 NAV 내보내기 · 전방 사건 셈은 **전방 진입 전**(FWD_T0)으로 옮긴다 — 2026-09 의 r 이 처음 공개되기 전에 원장이 기록을 시작해야 한다 · 전방 시작 = 2026-10-30 종가(없으면 원장이 생긴 뒤 첫 월말).
   Q14 P5 는 국면 달의 [1, F] 가 열 계수 6 일 때만(아니면 측정 불가 → FF2 의 P5 미충족 → 보류) · K4 난수 = Q14 default_rng(20260925+i) · Q15 default_rng(20260814) 한 줄기(sid 정렬).
   구성: Q14 결정 83 · U2_t 53/54/54 · Q15 결정 107 · U4_t 57/58/58.

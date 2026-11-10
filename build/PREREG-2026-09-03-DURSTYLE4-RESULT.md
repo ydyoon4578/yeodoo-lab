@@ -7,7 +7,7 @@
 <!-- 러셀판 a-dur-style-r 은 기각(원장·HIDE_SIDS 에 있다) -->
 <!-- CRSP판 a-dur-style-v 는 2026-09-11 사용자 결정으로 목록에서 내렸다(§9) -->
 
-등록: `build/PREREG-2026-09-03-DURSTYLE4.md` — **계산 전 커밋 `7e10ff316`**
+등록: `build/PREREG-2026-09-03-DURSTYLE4.md` — **계산 전 커밋 `e8c1dae46`**
 구현: `build/asset_backtest.py` — `dur-style-r`(IWD·IWF) · `dur-style-v`(VTV·VUG)
 자산 패널에 넷을 더했다(66 → 70종).
 

@@ -5,7 +5,7 @@
 규칙: x-purewf
 <!-- standalone 측정이라 엔진에 등록한 적이 없다. 입력(_style_score.json)이 로컬 전용이라 게시도 못 한다(§8) -->
 
-등록: `build/PREREG-2026-09-08-PUREWF.md` — **계산 전 커밋 `306bc92b`**(개정본 · 첫 커밋 `657523b7`)
+등록: `build/PREREG-2026-09-08-PUREWF.md` — **계산 전 커밋 `c08b3a1c`**(개정본 · 첫 커밋 `beba6dd8`)
 구현: `build/purewf.py` → `data/_purewf.json`(얼린 측정 · 커밋 안 함)
 
 ⚠ **작성이 늦었다.** 계산은 2026-09-08 에 끝났고 이 문서는 2026-09-10 에 썼다.

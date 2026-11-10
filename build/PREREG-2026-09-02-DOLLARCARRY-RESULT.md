@@ -5,7 +5,7 @@
 규칙: 없음
 <!-- 얼린 측정(data/_dollarcarry.json)이라 랩 규칙으로 등록한 적이 없다 -->
 
-등록: `build/PREREG-2026-09-02-DOLLARCARRY.md` — **계산 전 커밋 `92554b22b`**
+등록: `build/PREREG-2026-09-02-DOLLARCARRY.md` — **계산 전 커밋 `9fb5a1293`**
 구현: `build/dollarcarry.py` → `data/_dollarcarry.json`(얼린 측정 · 커밋 안 함)
 
 ---

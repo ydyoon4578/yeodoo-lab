@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/combo2.py — 커버를 맞춘 결합 (PREREG-2026-09-19-COMBO2 · 계산 전 a2adc83)
+"""build/combo2.py — 커버를 맞춘 결합 (PREREG-2026-09-19-COMBO2 · 계산 전 7bd6f46)
 
 🚨 핵심: 묶음 안 신호를 **하나도 빠짐없이** 가진 종목만 후보로 둔다.
    그러면 모든 종목이 같은 수의 신호를 갖고, 어느 축도 결손으로 목소리를 잃지 않는다.
@@ -135,7 +135,7 @@ def main():
         print("   등록서 §7-5 대로 「결합」을 완전히 닫는다.")
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-COMBO2", "commit": "a2adc83",
+        {"prereg": "PREREG-2026-09-19-COMBO2", "commit": "7bd6f46",
          "groups": GROUPS, "result": out}, ensure_ascii=False, indent=1, default=float) + "\n")
     print("→ %s" % OUT)
     return 0

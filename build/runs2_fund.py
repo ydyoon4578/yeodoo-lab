@@ -394,7 +394,7 @@ def main():
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps({
         "prereg": "build/PREREG-2026-09-20-RUNS2.md",
-        "commit_before": "a65b896d2fcdc0fe1786a87ca13685e71922d742",
+        "commit_before": "dd79de5e570c7e92470fde7cac5f7e31d48ac799",
         "blob": "3fb35fd89f84e9850691faa1c4707691d2f20a31",
         "const": {"WIN": WIN, "TOPN": TOPN, "BAND": BAND, "COST": COST, "MIXW": MIXW,
                   "TURN_CAP": TURN_CAP, "T_CRIT": T_CRIT, "FORM_M": list(FORM_M),

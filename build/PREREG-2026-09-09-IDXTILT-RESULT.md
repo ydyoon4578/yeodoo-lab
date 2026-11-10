@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-idxtilt-spx, x-idxtilt-ndx
 
-등록: `build/PREREG-2026-09-09-IDXTILT.md` — **계산 전 커밋 `bb21306c`**
+등록: `build/PREREG-2026-09-09-IDXTILT.md` — **계산 전 커밋 `070a3606`**
 구현: `build/idxtilt.py` → `data/_idxtilt.json`(얼린 측정 · 커밋 안 함)
 
 ---

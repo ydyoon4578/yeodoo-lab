@@ -33,8 +33,8 @@ FROZEN = tuple("build/%s.py" % m for m in MODULES) + (
     "build/lib_loader.py", "build/lib_meta.py", "build/pit_backtest.py", "build/ml_core.py", "build/rrg.py",
     "data/pit_gics_sectors.json", "data/_eg_q5_scores_pitgics.json", "data/_eg_q5_scores_pitgics_pre.json", "data/_eg_q5_scores.json",
     "data/mech_episodes.json", "data/_eg_best.json", "data/_eg30plus.json", "data/_q07_ltd_fits.json")
-SNAP, SNAP_FILES = "940f0bda", ("data/stocks.json", "data/pit_px.json", "data/sd")
-SNAP_BASE = "bef4eea8"
+SNAP, SNAP_FILES = "9677330e", ("data/stocks.json", "data/pit_px.json", "data/sd")
+SNAP_BASE = "bba67290"
 BASE_FILES = ("data/bench_px.json", "data/rf_monthly.json", "data/index_history.json", "data/index_ledger.json",
               "data/pit_universe.json", "data/pit_reuse.json", "data/fx", "data/fx_pit", "data/assets.json",
               "data/splits.json", "data/shares_yf.json", "data/earn_dates.json", "data/strategy_charts.json", "data/strategy_index.json",

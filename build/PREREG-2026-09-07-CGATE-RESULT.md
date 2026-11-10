@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-cgate, x-cgate-mom
 
-등록: `build/PREREG-2026-09-07-CGATE.md` — **계산 전 커밋 `179d0071`**
+등록: `build/PREREG-2026-09-07-CGATE.md` — **계산 전 커밋 `18a142b5`**
 구현: `build/tech_backtest.py` — `x-cgate`(주) · `x-cgate-mom`(카드가 요구한 병행판)
 
 ---

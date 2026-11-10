@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/puresw.py — 가중을 원문 방식(스타일 점수 가중)으로 되돌린다 → data/_puresw.json
 
-규약: build/PREREG-2026-09-08-PURESW.md (계산 전 커밋 8d498873).
+규약: build/PREREG-2026-09-08-PURESW.md (계산 전 커밋 e5749bac).
 
   PURE25 에서 **가중 하나만** 바꾼다 —
       가치 다리  w(t) ∝ min(SV(t), 2.0)     다리 안에서 정규화
@@ -324,7 +324,7 @@ def main():
               % (g, len(idx), cg(R[E]), cg(R[Sw]), cg(SP)))
 
     doc = {"note": "원문 스타일 점수 가중판. 규약 PREREG-2026-09-08-PURESW.md. 얼린 측정.",
-           "prereg": "8d498873", "n": n, "cap": CAP,
+           "prereg": "e5749bac", "n": n, "cap": CAP,
            "window": [rows[0]["m"], rows[-1]["m"]],
            "cap_hit": [ncap[0], ncap[1]],
            "stats": {"%d-%s" % c: S[c] for c in CELLS},

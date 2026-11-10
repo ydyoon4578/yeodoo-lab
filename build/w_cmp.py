@@ -5,7 +5,7 @@ V G-EGD 표 재현(짝맞춤 감사) · EG30 비교선(굽기 뒤 보고만).
 설계 원본(구속): wbatch_research.json final.slate.common_frame.G_EGD(«V 정의 관문 그대로 … 계산은 w_cmp(v_cmp 논리의 복사본 · 별도 과정 ·
   EG 파일을 여는 유일한 W 과정) · 넘으면 «EG30-근접» → 측정만») · evaluation.pairing_audits(«w_cmp 가 V 의 F0 입력으로 V G-EGD 표를 그대로 재현») ·
   build_plan.modules[w_cmp] · slate.eg_exclusion(«EG30 은 결과 표의 비교선으로만 · 보고»).
-  산수는 build/v_cmp.py(V 등록 커밋 ada1e16ae · blob 핀은 w_audit 가 대조)의 G-EGD 함수를 **복사**했다 — v_cmp 는 W 금지 목록이라 부르지 않는다.
+  산수는 build/v_cmp.py(V 등록 커밋 de721d62d · blob 핀은 w_audit 가 대조)의 G-EGD 함수를 **복사**했다 — v_cmp 는 W 금지 목록이라 부르지 않는다.
 
 경계(G-NoEG): 이 모듈만 EG 계보(eg30plus · qg_lab — 그 안에서 _eg_q5_scores* 를 읽는다)를 부른다(함수 안에서만). 이 모듈은 어떤 w_ · v_ 모듈도
   부르지 않는다(w_guard 가 전이적으로 본다 · 등록 확인 · 달 산수도 여기서 따로 짠다). W 쪽 책 · 신호는 W 과정이 캐시에 쓴 파일
@@ -435,7 +435,7 @@ def _st_boundary():
 def _st_guard_compare():
     old = os.environ.pop("WBATCH_COMMIT", None)
     try:
-        for bad in (None, "0" * 40, "ada1e16ae9772a95246198407acb2f1e51a1906f"):
+        for bad in (None, "0" * 40, "de721d62d4114b25b94c5bfc20ea32653c6cacd7"):
             if bad is not None:
                 os.environ["WBATCH_COMMIT"] = bad
             try:

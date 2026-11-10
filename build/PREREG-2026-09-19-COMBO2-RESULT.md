@@ -20,7 +20,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-COMBO2.md` · 커밋 `a2adc83` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-COMBO2.md` · 커밋 `7bd6f46` (계산 전) |
 | 문서 블롭 | `997451bad6170f3e459878c32ae28e2b8c26209d` |
 | 실행 | `build/combo2.py` → `data/_combo2.json` |
 | 단일 신호 정본 | `build/single_table.py` → `data/_single_table.json` |

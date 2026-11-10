@@ -54,7 +54,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-CASHTA.md` · 커밋 `4ba7eed` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-CASHTA.md` · 커밋 `392e1aa` (계산 전) |
 | 문서 블롭 | `821d95b8a69479349d9a162d64ab4dbd804f96db` |
 | 실행 | `build/cashta.py` → `data/_cashta.json` · 추가 검정 `cashta_pit.py` |
 | 신호 원재료 | `sti` — **오늘 받았다.** 카드 ② 가 요구한 「두 판 병기」가 오늘 가능해졌다 |

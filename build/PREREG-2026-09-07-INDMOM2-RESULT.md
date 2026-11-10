@@ -4,7 +4,7 @@
 판정: 측정만
 규칙: (새 규칙 없음)
 
-등록: `build/PREREG-2026-09-07-INDMOM2.md` — **계산 전 커밋 `b50e7587`**
+등록: `build/PREREG-2026-09-07-INDMOM2.md` — **계산 전 커밋 `06a7c6e4`**
 앞 등록: `build/PREREG-2026-08-28-INDMOM.md`(커밋 `32348042`)
 산출물: `data/indmom_pit.json` · `data/indmom_retro_matched.json`
 

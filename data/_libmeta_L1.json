@@ -1,11 +1,11 @@
 {
  "prereg": "build/PREREG-2026-09-24-LIBMETA.md",
- "prereg_commit": "f2a4c7d02519cd9ca111ab7d1eefd2aefaaed238",
+ "prereg_commit": "a5c6f5502d41dfca8ea63482a3afd0cabd074012",
  "rerun": null,
  "versions": {
   "scipy": "1.18.1",
   "numpy": "2.5.3",
-  "data_rev": "9e8ebd40",
+  "data_rev": "45e1d729",
   "lp_ipm_fallbacks": 3
  },
  "label": "오염 측정(표본 안) — 판정 아님",

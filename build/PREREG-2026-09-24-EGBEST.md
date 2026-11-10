@@ -63,7 +63,7 @@ GICS 열**(`build/pit_gics.py` → `data/pit_gics.json` · 2009-12 ~ 2023-06 · 
 ⚠ FIS 는 연간 영업현금흐름이 FY2022 부터만 있어 창 내내 Eg 가 서지 않는다(시점정확 판에서도 빠진다) · FISV 는 2019-05 부터.
 
 정하지 않은 자리(기저·후보 공통 — 미리 적는다):
-- **자료 판**: 09-22 빌드(커밋 940f0bda)의 `stocks.json`·`sd/`·`pit_px.json` 을 꺼낸 작업 사본에서 돈다(FUNDMIX 와 같은 판). 저장소 HEAD 의
+- **자료 판**: 09-22 빌드(커밋 9677330e)의 `stocks.json`·`sd/`·`pit_px.json` 을 꺼낸 작업 사본에서 돈다(FUNDMIX 와 같은 판). 저장소 HEAD 의
   `stocks.json` 은 벤더 구멍으로 2026-09-22 가 빠져 패널이 서지 않는다. `_eg_best.json` 에 판 커밋을 적는다.
 - **시가총액은 배당조정 종가 × 주식수** — 과거 시총이 그 뒤 배당만큼 작게 잡힌다(적대 검토 실측: 2016-12 바스켓 비중 약 5% 이동 · 2024 년 0.3%).
   비중만 흔들고 기저·후보에 똑같이 걸린다(PREREG-2026-09-23-STMOM 과 같은 캐비엇).
@@ -137,8 +137,8 @@ RESULT 머리 줄 셋: `풀카드: 없음` · `판정: 측정만`(후보 하나�
 이 문서를 **한 커밋으로** 실행 전에 커밋하고 푸시한다. 검정기는 ① EGBEST_COMMIT 이 이 문서를 처음 더한 커밋이고 origin/main 의 조상인지
 ② 그 커밋과 얼린 파일 열넷(위 다섯 + `build/pit_gics.py` · `data/pit_gics.json` + 엔진이 임포트하는 pit_panel·pit_quarantine·stoploss·
 tech_backtest·rally_pattern + 입력 `_fund_mix.json` · `_eg_q5_scores.json`)이 바이트 단위로 같은지(줄바꿈 무시) ③ 가격 파일(`stocks.json` ·
-`pit_px.json` · `sd/`)이 자료 판 940f0bda 와, 가격 밖 입력(bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse ·
-fx · fx_pit)이 작업 사본의 바탕 bef4eea8 과 같은지 ④ 산출물·시작 표식이 아직 없고 origin/main 에도 없는지 보고, 하나라도 어긋나면 돌지 않는다.
+`pit_px.json` · `sd/`)이 자료 판 9677330e 와, 가격 밖 입력(bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse ·
+fx · fx_pit)이 작업 사본의 바탕 bba67290 과 같은지 ④ 산출물·시작 표식이 아직 없고 origin/main 에도 없는지 보고, 하나라도 어긋나면 돌지 않는다.
 결과를 찍기 전에 시작 표식(`data/_eg_best.started`)을 먼저 써서 도중에 멈춰도 재실행을 막는다(다시 돌리려면 사유를 남긴다).
 커밋 해시·자료 판·바탕·작업 사본 HEAD·자료 마지막 날짜를 `_eg_best.json` 에 적는다. 모멘텀 결측은 `eg_mom` · `base30_no_mom` · `pool45_no_mom`(C2 가 먼저 빼는 수).
 → `data/_eg_best.json` · 결과 `build/PREREG-2026-09-24-EGBEST-RESULT.md` ·

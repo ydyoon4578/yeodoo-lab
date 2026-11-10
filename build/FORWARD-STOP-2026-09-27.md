@@ -12,7 +12,7 @@
 | `PREREG-2026-09-24-EG30PLUS.md` | 전방 원장(`eg30plus_fwd`) | 짓지 않음 · 취소 |
 | `PREREG-2026-09-25-QBATCH.md` · `-CARDS.md` | 전방 진입 규칙의 추가 전용 원장 · 최초 제출본 재실행 기한 | 취소 |
 | `PREREG-2026-09-25-EGFF.md` §7 | QFWD V0 입력 대조 | QFWD 멈춤으로 취소 |
-| `PREREG-2026-09-26-QFWD.md` | 전방 원장 QFWD(V0 · QF07 · QF08 · QF06) · 진입 종가 · 월 기록 | 멈춤 — 자동 실행 트리거와 생존 점검 단계를 뺐다(커밋 `5e3a8c3e2`) · 원장 코드와 `data/_qfwd/` 는 기록으로 둔다 |
+| `PREREG-2026-09-26-QFWD.md` | 전방 원장 QFWD(V0 · QF07 · QF08 · QF06) · 진입 종가 · 월 기록 | 멈춤 — 자동 실행 트리거와 생존 점검 단계를 뺐다(커밋 `2078e63f7`) · 원장 코드와 `data/_qfwd/` 는 기록으로 둔다 |
 | `PREREG-2026-09-26-RBATCH.md` · `-CARDS.md` | 전방 진입 · 전방 판정 | 취소 |
 | `PREREG-2026-09-26-TBATCH.md` | 전방 채택 경로 | 취소 |
 | `PREREG-2026-09-27-VBATCH.md` · `-RESULT.md` §6 | VFWD 등록 · 창세(`data/_vfwd/genesis.json`) 장부 진입 | 취소 — VFWD 는 등록하지 않았고 창세 파일은 기록으로 둔다 |

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/rrg_stock.py — 종목 RRG(주간) 4분면 검정 → data/_rrg_stock.json
 
-사전등록: build/PREREG-2026-09-23-RRGSTOCK.md (계산 전 커밋 064bdb29)
+사전등록: build/PREREG-2026-09-23-RRGSTOCK.md (계산 전 커밋 1be791f9)
 
 어제(PREREG-2026-09-22-RRG) 팩터 110종·월간 판에 건 검정을 **종목 518종·주간** 판에 다시 건다.
   같은 산식(rrg.py rrg_axes)·같은 컷·같은 되돌아보기 수(12)·같은 문턱(1.5)·같은 셔플 수(200).
@@ -223,9 +223,9 @@ def main() -> int:
     # 현재 위치(마지막 완전한 주) — 예상 4 채점용
     cur = {k: int((q[n - 1, :] == i).sum()) for i, k in enumerate(Q)}
 
-    doc = {"note": "종목 RRG(주간) 4분면 검정. 사전등록 PREREG-2026-09-23-RRGSTOCK(커밋 064bdb29) 대로 "
+    doc = {"note": "종목 RRG(주간) 4분면 검정. 사전등록 PREREG-2026-09-23-RRGSTOCK(커밋 1be791f9) 대로 "
                    "계산 전에 실패조건을 못박았다. 되돌아보기·컷·산식 판·주기는 그 문서 값 그대로다.",
-           "prereg": "build/PREREG-2026-09-23-RRGSTOCK.md", "commit": "064bdb29",
+           "prereg": "build/PREREG-2026-09-23-RRGSTOCK.md", "commit": "1be791f9",
            "window": "%s ~ %s (형성 주 %d개 · 다음 주 %s 까지)" % (W0, W1, len(rows), nxt),
            "as_of": dates[-1].strftime("%Y-%m-%d"), "bench": "S&P 500(PR)", "look": RB.LOOK,
            "cut": RB.CUT, "n_stocks": int(J), "n_obs": int(len(base)),

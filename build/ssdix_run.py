@@ -2125,7 +2125,7 @@ def _st_public_and_result_doc():
     """게시 칸 — 캐시 표지 · cache_only · 계열 없음 · 공개 안전 · 결과 문서 머리 세 줄 · «등록 커밋 `<40자>`» 가 첫 «커밋 <해시>» · 20년 층 · 앞 창 값은 게시 칸에 없다 ·
     심은 값 계열 · 2016-09 앞 창 실수는 public_safe_std 가 잡는다 · 멈춤 판 · 표시 판의 읽기 줄 · 등록 오류 글의 소수 지우기."""
     full = "0123456789abcdef0123456789abcdef01234567"
-    out = {CACHE_ONLY_KEY: True, "prereg": PREREG, "f0": _fake_f0(), "main": _fake_main(), "pins": {"root": {"code_pin": "1d81f083a404"}, "vroot": "c6a35ff0", "droot": "44c1a26f6"},
+    out = {CACHE_ONLY_KEY: True, "prereg": PREREG, "f0": _fake_f0(), "main": _fake_main(), "pins": {"root": {"code_pin": "439e16db2dd4"}, "vroot": "549f4215", "droot": "1d3dda30b"},
            "series": {"s": {"ex": {"SSD": [0.1] * 120}}}}
     pub = public_doc(out, "0" * 64, 1, {"commit": full})
     blob = json.dumps(pub, ensure_ascii=False)

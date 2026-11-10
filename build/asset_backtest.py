@@ -1135,7 +1135,7 @@ def build():
 
     add("dur-style", None, s_durstyle)
 
-    # ── D13 을 카드가 지목한 ETF 로 — PREREG-2026-09-03-DURSTYLE4.md (계산 전 7e10ff316) ──
+    # ── D13 을 카드가 지목한 ETF 로 — PREREG-2026-09-03-DURSTYLE4.md (계산 전 e8c1dae46) ──
     # 🚨 카드가 «IWD/VTV» 처럼 슬래시로 적었다 = 두 벌의 구현이다. 둘을 다 만들고 둘 다
     #   싣는다. 좋은 쪽만 게시하면 그것이 nsel 이다(maxscreen_overlay 의 «양 끝을 다 돌려
     #   나란히 싣는다» 와 같은 규약).

@@ -59,7 +59,7 @@ PUB_FILE, PUB_SID = "strategy_charts.json", "t-x-bmrot"
 GATE_BP = 1.0
 GATE_MODE = "composition"             # 구성 관문(게시 회계로 명단 · 비중 · 틸트) · 거래 장부 = 월간 되맞춤 · 흘러감(카드 LEGS)
 CACHE_FILE = "_pit_px_cache.json"     # pit_backtest.load_prices 가 읽는 편출 캐시(eg30plus SNAP/BASE 밖 → 여기서 핀)
-# 얼린 핀(2026-09-25 · snap_wt = 가격 940f0bda · 나머지 bef4eea8 · 수준 없이 해시만)
+# 얼린 핀(2026-09-25 · snap_wt = 가격 9677330e · 나머지 bba67290 · 수준 없이 해시만)
 FROZEN_THASH = "34cc8bb5c4ec6ad30d678f5b5fa695b3d0caab679d35e0c36b969a3368c63e2e"
 FROZEN_PXHASH = "d7ddb2001cc8f556f80078adfaf37c1e1e504d33a7d521dd36c88763b94a6deb"
 FROZEN_CACHE_BLOB = "f8c1a16ba22c89f54999cf4291807feb30c53225"

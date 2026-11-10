@@ -89,7 +89,7 @@ NO_ROW = {
     "refresh-forecast.yml":  "다음 주가 흐름 — sources 표가 잠금 페이지라 행을 못 넣었다(rates 와 같은 사정) · 기준일은 forecast.html 맨 위 칩",
     # ── cron 이 없는 잡. 라벨을 만들 수 없어 표에는 못 실리지만 사유는 남긴다 ──
     "pit-facts.yml":         "편출 종목 SEC 재무 — 수시(workflow_dispatch). 명단이 바뀔 때만 돈다",
-    # 2026-09-23 a2a9c154 가 들여온 잡 — 등록이 빠져 그날부터 Validate site 가 매 푸시 실패했다.
+    # 2026-09-23 b2341623 가 들여온 잡 — 등록이 빠져 그날부터 Validate site 가 매 푸시 실패했다.
     "pit-cache.yml":         "편출 종목 가격·고저·거래량·주식수 캐시 — 수시(workflow_dispatch). "
                              "멤버십이 바뀔 때만 돈다(pit-facts 와 같은 성격)",
     # 원천이 2024-12-31 에서 얼어붙은 종료 아카이브(Zenodo 15783125)라 정기 갱신이 성립하지 않는다.

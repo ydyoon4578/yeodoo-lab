@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/secrev_panel.py — 섹터 × 일자 등급리비전 패널 → data/_secrev_panel.json
 
-규약: build/PREREG-2026-09-01-SECREV.md (계산 전 커밋 308ba91ab · 47823a3dd).
+규약: build/PREREG-2026-09-01-SECREV.md (계산 전 커밋 308ba91ab · 3e445e822).
 
   각 섹터의 신호 = 그 시점 그 섹터 종목의 `rat_signal(t, date, 30)` **동일가중 평균**.
   `rat_signal = (컨센서스 지금 − 30일 전) × √증권사수` — 랩에 이미 있는 함수다.

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/orgcap.py — 조직자본 (PREREG-2026-09-19-ORGCAP · 계산 전 커밋 46bcf2a)
+"""build/orgcap.py — 조직자본 (PREREG-2026-09-19-ORGCAP · 계산 전 커밋 7873c27)
 
   OC_t = (1-δ)·OC_{t-1} + SG&A_t/디플레이터 · δ=0.15 · OC_0 = SG&A_1/(g+δ) · g=0.10
   신호 = OC/자산총계 를 산업 내 표준화 → 상위 십분위 52종 동일가중 롱온리 · 6월말 연 1회
@@ -273,7 +273,7 @@ def main():
           % ("맞음" if F["F2 셔플 상위 5% 밖"] else "틀림"))
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-ORGCAP", "commit": "46bcf2a",
+        {"prereg": "PREREG-2026-09-19-ORGCAP", "commit": "7873c27",
          "params": {"delta": DELTA, "g": GROW, "n": N_MAIN, "cost_bps": 5},
          "legs": res, "inflation": infl, "f5_gap": d5,
          "shuffle": {"n": NSHUF, "seed": SEED, "mean": float(sh.mean()),

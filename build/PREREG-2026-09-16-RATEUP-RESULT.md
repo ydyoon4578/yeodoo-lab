@@ -5,7 +5,7 @@
 규칙: g-sbcorr, g-rateup
 <!-- standalone 측정이라 엔진에 등록한 적이 없다(등록 §1-1) -->
 
-등록: `build/PREREG-2026-09-16-RATEUP.md` — **계산 전 커밋 `38226b6d3`**
+등록: `build/PREREG-2026-09-16-RATEUP.md` — **계산 전 커밋 `7b0d74a7f`**
 구현: `build/rateup_gate.py` → `data/_rateup_gate.json`(얼린 측정 · 커밋 안 함)
 측정 2006-07-06 ~ 2026-09-11 · 5,078거래일 · 월말 242회
 

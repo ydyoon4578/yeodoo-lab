@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/swing2.py — 과매도·과매수 스프레드 2차 (PREREG-2026-09-19-SWING2)
 
-사전등록 커밋 70fc98c (계산 전) · 문서 해시 754b34ae59a68365063cacfd01b46f3f728f9754.
+사전등록 커밋 228b92d (계산 전) · 문서 해시 754b34ae59a68365063cacfd01b46f3f728f9754.
 
 주 변형 = 분기 · β중립 · 히스테리시스(10 진입 / 30 밖 이탈). 이것만 판정한다.
 부 변형 5종은 싣기만 한다(다중검정 회피 — 등록서 §2).
@@ -28,7 +28,7 @@ NSHUF = 200
 SEED = 20260919
 OOS = "2019-01"
 PREREG = "PREREG-2026-09-19-SWING2"
-COMMIT = "70fc98c"
+COMMIT = "228b92d"
 
 
 def pick(row, held, hyst):

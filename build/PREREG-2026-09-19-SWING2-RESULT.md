@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-SWING2.md` · 커밋 `70fc98c` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-SWING2.md` · 커밋 `228b92d` (계산 전) |
 | 문서 해시 | `754b34ae59a68365063cacfd01b46f3f728f9754` |
 | 실행 | `build/swing2.py` → `data/_swing2.json` |
 

@@ -7,7 +7,7 @@
    (AVB 1주 → EQR 2.793주 · EQR 이 VMRK 로 개명). 오늘 유니버스를 떠나면서
    refresh_stocks.py 가 data/sd/AVB.json · EQR.json 을 지웠고, pit_px_refresh.py 는 새 이름을
    «기록의 마지막 날짜부터» 만 받아(주석은 «전체를 받는다» 였다) 편입 12년치(2014-06~2026-08)
-   가격이 랩 어디에도 없었다. 지워지기 직전 커밋(a40bcf060^)의 sd 파일에서 되살린다.
+   가격이 랩 어디에도 없었다. 지워지기 직전 커밋(f7bdefd37^)의 sd 파일에서 되살린다.
 ② AVB — **전환 뒤 꼬리 제거.** 야후 AVB 가 08-21 부터 전환 뒤 가격을 줘 기록의 08-20 값 184.06
    뒤에 65.90 이 붙었다(184.06 ÷ 65.90 = 2.793 — 전환비 그대로). 하루 −64% 는 가짜다.
    08-20 뒤 값을 지운다(편출 규약 «끊기면 마지막 가격까지» 와 같다).
@@ -45,7 +45,7 @@ OUT = os.path.join(DATA, "pit_px.json")
 CACHE = os.path.join(DATA, "_pit_px_cache.json")
 TODAY = "2026-09-14"
 
-SRC_COMMIT = "a40bcf060^"        # data/sd/AVB.json · EQR.json 이 지워지기 직전 커밋
+SRC_COMMIT = "f7bdefd37^"        # data/sd/AVB.json · EQR.json 이 지워지기 직전 커밋
 MERGER = ("2026-08-17 AvalonBay·Equity Residential 합병 → Vivmark Residential(VMRK) · "
           "AVB 1주 = EQR 2.793주 · EQR 이 VMRK 로 개명")
 BACKFILL = {"AVB": MERGER, "EQR": MERGER}

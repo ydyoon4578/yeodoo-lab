@@ -35,7 +35,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-20-RESIDMOM.md` · **계산 전 커밋 `a289cb0`** |
+| 사전등록 | `PREREG-2026-09-20-RESIDMOM.md` · **계산 전 커밋 `654a7d4`** |
 | 문서 블롭 | `2a25ab771de77a76c97406a582de49f53e8737d6` |
 | 실행 | `build/residmom_fund.py` → `data/_residmom_fund.json` |
 | 원 논문 | Blitz·Huij·Martens (2011), *Journal of Empirical Finance* 18 |

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/cashta.py — 현금보유 프리미엄 (PREREG-2026-09-19-CASHTA · 계산 전 4ba7eed)
+"""build/cashta.py — 현금보유 프리미엄 (PREREG-2026-09-19-CASHTA · 계산 전 392e1aa)
 
   Cta-원문 = (현금 + 단기투자) / 자산총계   ← 주 판정
   Cta-하한 = 현금 / 자산총계                ← 병기(판정 안 함)
@@ -275,7 +275,7 @@ def main():
     print("      Jensen(2022)의 「자금제약 국면에만 있다」를 못 재면서 원 주장을 반증한 것이 아니다.")
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-CASHTA", "commit": "4ba7eed",
+        {"prereg": "PREREG-2026-09-19-CASHTA", "commit": "392e1aa",
          "e38": {"alpha_t": alpha_t}, "perf": res, "f6_sector_neutral": f6,
          "shuffle": {"n": NSHUF, "seed": SEED, "mean": float(sh.mean()),
                      "sd": float(sh.std(ddof=1)), "pctile": pct},

@@ -6,7 +6,7 @@
   · 판 V_m = d_m 미국 마감 뒤 origin/main 첫 부모 이력에서 검증을 통과하는 가장 이른 커밋(작업 사본을 읽지 않는다) — 이 실행이 본
     끝(tip)을 기록해 누구나 같은 끝에서 다시 고른다 · 결정 무리(분기 · QF06)는 따로 · 예정 밖 휴장은 기록(calendar.jsonl) ·
     온전한 판 없이 5거래일이면 막힘 대체 · 자식은 실행 예산(70분) 안에서.
-  · 결정은 얼린 코드(1d81f083)를 어댑터 자식 프로세스로만 돌린다 — 이 파일은 표준 라이브러리만 쓰고 numpy 를 부르지 않는다.
+  · 결정은 얼린 코드(439e16db)를 어댑터 자식 프로세스로만 돌린다 — 이 파일은 표준 라이브러리만 쓰고 numpy 를 부르지 않는다.
   · 기록은 해시 사슬 · 추가만(data/_qfwd/*.jsonl) · 한 번 쓰는 파일(eg/ · fits/). 재계산이 어긋나도 원 기록을 지킨다
     (forward_weekly 와 같은 규약).
   · 장부 엔진은 qg_lab.sleeve 의 뜻(값 공간 · 마지막 가격 들고 가기 · 되맞춤 날 비용 = c × 거래율)을 그대로 옮긴다.
@@ -80,7 +80,7 @@ SNAP_PATHS = ("data/stocks.json", "data/pit_px.json", "data/assets.json", "data/
               "data/index_history.json", "data/sd")
 DEC_PATHS = SNAP_PATHS + ("data/_pit_px_cache.json",)
 # [DECL] 결정 판의 검증 0 «입력 파일 존재» — 어댑터 ⑥ 이 바꾸는 입력(qfwd_adapter.CUT_FILES + data/sd)이 모두 있어야 한다.
-#   없는 판은 자식 오류(세 번 뒤 대체 · 이탈)가 아니라 검증 거절이다. 실측: _pit_px_cache.json 은 2026-09-23(a2a9c154)에야
+#   없는 판은 자식 오류(세 번 뒤 대체 · 이탈)가 아니라 검증 거절이다. 실측: _pit_px_cache.json 은 2026-09-23(b2341623)에야
 #   저장소에 들어왔다 — 그 앞 판은 얼린 x-bmrot(pit_backtest.load_prices)이 읽을 입력이 없다(2026-09-25 되풀이에서 찾은 통합 결함).
 BLOB_PATHS = ("data/stocks.json", "data/pit_px.json", "data/assets.json", "data/bench_px.json",
               "data/index_history.json", "data/_pit_px_cache.json", "data/rf_monthly.json")

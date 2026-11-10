@@ -334,7 +334,7 @@ def main():
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps({
         "prereg": "build/PREREG-2026-09-20-GURUACC.md",
-        "commit_before": "96e65937241855bbb526c40f905914ff2e1587ed",
+        "commit_before": "38913d9e0a9d568abb141b683b052e33accc5aac",
         "blob": "c928fcd79703b4b4f75b4581c3e95be512e66160",
         "const": {"LAG_D": LAG_D, "TOPN": TOPN, "COST": COST, "MIXW": MIXW,
                   "NSHUF": NSHUF, "SEED": SEED},

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/combo.py — 약한 신호 8개를 섞는다 (PREREG-2026-09-19-COMBO · 계산 전 883b96e)
+"""build/combo.py — 약한 신호 8개를 섞는다 (PREREG-2026-09-19-COMBO · 계산 전 08bf69d)
 
 🚨 F3(무작위 가중 200회)이 본체다 — 가중치를 «고른 것» 이 값을 하는가.
 🚨 시점정확 멤버십·섹터중립·그 달 후보의 십분위·다음날 진입을 전부 켠다.
@@ -286,7 +286,7 @@ def main():
     print("\n→ 판정: %s" % verdict)
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-COMBO", "commit": "883b96e",
+        {"prereg": "PREREG-2026-09-19-COMBO", "commit": "08bf69d",
          "signals": SIGS, "coverage": cov, "n_months": len(ms),
          "single": single, "best_single": best,
          "equal": {"mean_pct": float(a_ew.mean()) * 100, "t": tt(a_ew)},

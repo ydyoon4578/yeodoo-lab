@@ -2,7 +2,7 @@
 """재현 — Shin(2026) 「시총축 적분 진단」(A Cap–Axis Integral Diagnostic of Factor Models).
 
 원문: arXiv 2607.01765v3 [q-fin.GN]. 규약: build/PREREG-2026-09-07-CAPAXIS.md
-— **계산 전 커밋 5e7e8fe0**.
+— **계산 전 커밋 95020d00**.
 
 🚨 원문은 **전략 논문이 아니라 팩터모형 진단**이다. 여기서 하는 일은 둘이고 섞지 않는다:
   ① 진단 재현 — 다리 곡선 D(p) 와 모형별 알파 경로
@@ -295,7 +295,7 @@ def main():
         "note": ("재현 — Shin(2026) 「시총축 적분 진단」 arXiv 2607.01765v3. "
                  "🚨 전략 논문이 아니라 팩터모형 진단이다. 다리 곡선은 진단이고, "
                  "거래 대상으로 삼은 것은 rank-area 수익 Y_t 하나뿐이다."),
-        "prereg": "build/PREREG-2026-09-07-CAPAXIS.md (계산 전 커밋 5e7e8fe0)",
+        "prereg": "build/PREREG-2026-09-07-CAPAXIS.md (계산 전 커밋 95020d00)",
         "paper": {"title": "A Cap-Axis Integral Diagnostic of Factor Models",
                   "author": "Useong Shin (Sogang)", "arxiv": "2607.01765v3",
                   "window": "1967-01~2024-12 · CRSP 전 상장주 · 14,598일",

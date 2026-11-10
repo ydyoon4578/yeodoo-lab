@@ -5,7 +5,7 @@
 규칙: x-pure25
 <!-- standalone 측정이라 엔진에 등록한 적이 없다. 얼린 측정이라 게시도 못 한다(§6) -->
 
-등록: `build/PREREG-2026-09-08-PURE25.md` — **계산 전 커밋 `be6a8414`**
+등록: `build/PREREG-2026-09-08-PURE25.md` — **계산 전 커밋 `408bfcba`**
 구현: `build/pure25.py` → `data/_pure25.json`(얼린 측정 · 커밋 안 함)
 
 ---

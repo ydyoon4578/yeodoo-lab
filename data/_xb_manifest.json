@@ -1372,7 +1372,7 @@
    },
    "x_signals.q_jump": "b55652b5bf2db83e28e9e54480aa6254d20ffb95",
    "x_data.v_data": "f08782e4f2d5e5d3ee4e9c491e1cd550f2c8847a",
-   "x_adapter.code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+   "x_adapter.code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c",
    "x_adapter.build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
    "x_adapter.root_frozen": {
     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d",
@@ -1426,9 +1426,9 @@
     "data/_eg_best.json": "cc58f30c84886554c76fecf6df5dc85974eb09f1",
     "data/_eg30plus.json": "c205f1365e924ebf097b200042133369d7de3f3d"
    },
-   "x_adapter.price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
-   "x_adapter.base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
-   "x_adapter.data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+   "x_adapter.price": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f",
+   "x_adapter.base": "bba67290def066ef69a20d0c55060d0fa28e7bf4",
+   "x_adapter.data_pin": "549f42153dedb7dab3eb314bcc9237c8e026b629",
    "x_adapter.vroot_paths": [
     "build/",
     "data/"

@@ -5,7 +5,7 @@
 규칙: x-bmrot
 <!-- 등급 「측정만」 · 대조군 x-bmrot-flat 도 같이 게시 -->
 
-등록: `build/PREREG-2026-09-03-BMROT.md` — **계산 전 커밋 `78c2dec92`**
+등록: `build/PREREG-2026-09-03-BMROT.md` — **계산 전 커밋 `5112dfcc6`**
 구현: `build/tech_backtest.py` — `x-bmrot` · `x-bmrot-flat`(1번 대조군)
 
 ---

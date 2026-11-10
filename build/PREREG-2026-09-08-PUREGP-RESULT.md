@@ -5,7 +5,7 @@
 규칙: x-pure10-gp
 <!-- standalone 측정이라 엔진에 등록한 적이 없다 -->
 
-등록: `build/PREREG-2026-09-08-PUREGP.md` — **계산 전 커밋 `f4a2cff5`**
+등록: `build/PREREG-2026-09-08-PUREGP.md` — **계산 전 커밋 `f39b7489`**
 구현: `build/puregp.py` → `data/_puregp.json`(얼린 측정 · 커밋 안 함)
 
 ---

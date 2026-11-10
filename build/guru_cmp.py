@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/guru_cmp.py — 거장 전략 압축·강화: «합의 점수» 지수 강화 틸트(시점정확) → data/_guru_cmp.json
 
-사전등록: build/PREREG-2026-09-23-GURUCMP.md (계산 전 커밋 61894ace)
+사전등록: build/PREREG-2026-09-23-GURUCMP.md (계산 전 커밋 37778851)
 
 신호  S = ½·[z(수준) + z(변화)] — 수준 = 그 체결월에 그 종목을 든 운용사 수,
       변화 = 직전 체결월 대비 늘어난 수. 운용사 수는 guru_overlap_backtest.counts_by_quarter() 그대로
@@ -73,7 +73,7 @@ def main() -> int:
     IDXM = CH["idx_monthly"]
     sig_months = [m for m in sorted(set(k[:7] for k in Wd["me"])) if "2016-08" <= m <= "2026-07"]
 
-    RESULT = {"prereg": "build/PREREG-2026-09-23-GURUCMP.md", "prereg_commit": "61894ace",
+    RESULT = {"prereg": "build/PREREG-2026-09-23-GURUCMP.md", "prereg_commit": "37778851",
               "judge": list(JUDGE), "long0": LONG0, "te_target": IT.TE_JUDGE, "idx": {}}
     for ix, lab in (("spx", "S&P 500"), ("ndx", "NASDAQ 100")):
         rows, cover = PP.month_rows(Wd, ix, sig_months, JUDGE[1])

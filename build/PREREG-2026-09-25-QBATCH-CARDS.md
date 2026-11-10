@@ -35,9 +35,9 @@ BATCH Q (2026-09-25) — preregistration design. No performance has been compute
 **2. DATA PINS AND PREREQUISITES** (all before the prereg commit)
 
 (a) THREE-PART PIN, as eg30plus.py does (SNAP line 42, SNAP_BASE line 43, verified):
-- P1: prices from 940f0bda (stocks.json, pit_px.json, sd/; equal 4457-date grids).
-- P2: non-price inputs from bef4eea8: bench_px, rf_monthly, index_history, index_ledger, pit_universe, pit_reuse, fx, fx_pit, assets, splits, shares_yf and earn_dates. bef4eea8 assets.json is as_of 2026-09-23 and earn_dates.json exists there (verified).
-- P3: blob hashes of post-bef4eea8 inputs: _eg_q5_scores_pitgics.json, pit_gics_sectors.json, mech_episodes.json, the published PIT x-bmrot series, eg30plus.py, qg_lab.py and qbatch_core.py.
+- P1: prices from 9677330e (stocks.json, pit_px.json, sd/; equal 4457-date grids).
+- P2: non-price inputs from bba67290: bench_px, rf_monthly, index_history, index_ledger, pit_universe, pit_reuse, fx, fx_pit, assets, splits, shares_yf and earn_dates. bba67290 assets.json is as_of 2026-09-23 and earn_dates.json exists there (verified).
+- P3: blob hashes of post-bba67290 inputs: _eg_q5_scores_pitgics.json, pit_gics_sectors.json, mech_episodes.json, the published PIT x-bmrot series, eg30plus.py, qg_lab.py and qbatch_core.py.
 - qbatch_core.py is UNTRACKED today (git status '??', verified) and must be committed first.
 - Extend eg30plus's byte-equality check to the P3 hashes.
 - The working tree cannot load stocks (pit_px 4458 dates vs stocks.json 4457), so all runs use the pins.
@@ -289,7 +289,7 @@ All thresholds below are fixed before any computation; the verdict labels are de
 - **Q15:** U4 freeze only after the ledger exists; power line; RRG-family +1.
 
 **BATCH**
-- Three-part pin (P1 940f0bda prices / P2 bef4eea8 non-price / P3 blob hashes) in place of the unrunnable 'worktree at 940f0bda' (critique 1).
+- Three-part pin (P1 9677330e prices / P2 bba67290 non-price / P3 blob hashes) in place of the unrunnable 'worktree at 9677330e' (critique 1).
 - V0 targets regenerated and reproduction-asserted (they are not stored in _eg30plus.json).
 - qbatch_core.py must be committed first (verified untracked).
 - Priors recalibrated to power, defined as P(forward entry).
@@ -848,7 +848,7 @@ DISCLOSE: active months; realized turnover vs the 10x cap; names per month; maxi
 - Nothing tuned.
 
 ## data
-- data/earn_dates.json: EDGAR 8-K Item 2.02, 2008+, 795 companies, 54,125 dates, ending 2026-08-18. Also present in commit bef4eea8; pinned by blob hash.
+- data/earn_dates.json: EDGAR 8-K Item 2.02, 2008+, 795 companies, 54,125 dates, ending 2026-08-18. Also present in commit bba67290; pinned by blob hash.
 - Coverage 96.9-97.5% of priced members per month. The critic found one missing at 2022-08 (SBNY).
 - The exactly-4 filter keeps about 75-82%.
 - Prices and shares from pins P1/P2.
@@ -1485,7 +1485,7 @@ REPORTED: mirror C3 (D_c = the best 10% of days); the active market-mode loading
 
 ## rule
 DATA:
-- in-sample: lib_loader.load(end='2026-08', rev='9e8ebd40') (sid sha 17314587…, panel sha fb636999…);
+- in-sample: lib_loader.load(end='2026-08', rev='45e1d729') (sid sha 17314587…, panel sha fb636999…);
 - forward: only the append-only ledger data/_lib_ledger.json;
 - net return r̃_i = r_i − cost_drag_i/12.
 
@@ -1525,7 +1525,7 @@ STOPPED SERIES: earns SPY that month, then moves to SPY. If |U2_t| < 30, the mon
 - F0 thresholds: slate.
 
 ## data
-- lib_loader rev 9e8ebd40: 132 families, hashes match, U2 = 54.
+- lib_loader rev 45e1d729: 132 families, hashes match, U2 = 54.
 - assets.json: SPY RSP IVW IVE QQQ from 2006; SPLV and SPHB from 2011-05; SPMO from 2015-10.
 - rf_monthly; mech_episodes sigma_pre 0.042903.
 - PREREQUISITES before commit (not built today; verified):
@@ -1585,7 +1585,7 @@ REPORT-ONLY TWIN: L2-ERC.
 
 ## rule
 DATA:
-- in-sample: lib_loader.load(end='2026-08', rev='9e8ebd40');
+- in-sample: lib_loader.load(end='2026-08', rev='45e1d729');
 - forward: only the append-only ledger;
 - r̃_i = r_i − cost_drag_i/12; s_m = SPY TR monthly.
 
@@ -1618,7 +1618,7 @@ FUND: 90% SPY + 10% L4, reset monthly.
 - F0 thresholds (on-fraction outside [0.10, 0.90]; agreement > 0.80) and FF0 (≤ 6 switches): declared.
 
 ## data
-- U4 = 58 at rev 9e8ebd40.
+- U4 = 58 at rev 45e1d729.
 - Panels 2016-09/10 → 2026-08.
 - SPY/RSP daily from 2006.
 - Needs the ledger and the pivot-NAV export (not built).

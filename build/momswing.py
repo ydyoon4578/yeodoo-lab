@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/momswing.py — 모멘텀 승자 중 «덜 과매수»만 (PREREG-2026-09-19-MOMSWING)
 
-사전등록 커밋 7896d40 (계산 전) · 문서 해시 c7d922e024134b8ae7805947968be2b0351d8b83.
+사전등록 커밋 d310167 (계산 전) · 문서 해시 c7d922e024134b8ae7805947968be2b0351d8b83.
 
 🚨 셔플이 이 파일의 요점이다 — 승자 52 «안에서만» 점수를 섞는다(등록서 §3).
 
@@ -23,7 +23,7 @@ OUT = os.path.join(ROOT, "data", "_momswing.json")
 DEC, HALF = 52, 26
 SKIP, LOOK = 21, 252
 NSHUF, SEED, OOS = 200, 20260919, "2019-01"
-PREREG, COMMIT = "PREREG-2026-09-19-MOMSWING", "7896d40"
+PREREG, COMMIT = "PREREG-2026-09-19-MOMSWING", "d310167"
 
 
 def sim(sel, R, n, start):

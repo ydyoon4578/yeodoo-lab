@@ -369,7 +369,7 @@ def main() -> int:
             ST.tx(fig, X0, y,
                   "!! 판정 **%s** — 지금이 어느 칸인지 보는 기술표로만 쓴다. 밴드 방향을 믿거나 "
                   "칸 사이 차이를 «유의하다» 고 말하면 안 된다. "
-                  "(PREREG-2026-09-21-REGIMEGRID · 계산 전 커밋 6b120f2)" % RG["verdict"],
+                  "(PREREG-2026-09-21-REGIMEGRID · 계산 전 커밋 ac4eaf2)" % RG["verdict"],
                   fontsize=6.4, color=NEG)
             pg += 1
             footer(fig, pg, total, span)

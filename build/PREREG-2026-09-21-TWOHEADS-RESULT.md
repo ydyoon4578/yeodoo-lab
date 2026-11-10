@@ -4,7 +4,7 @@
 판정: 측정만
 규칙: 없음   <!-- 팩터 «고르는 법» 을 검정했다. 특정 sid 에 걸리는 판정이 아니다 -->
 
-등록: `build/PREREG-2026-09-21-TWOHEADS.md` — **계산 전 커밋 `93364b33c4ccb4e2ed6245f86b986f27a4e708d2`**
+등록: `build/PREREG-2026-09-21-TWOHEADS.md` — **계산 전 커밋 `9d62690b4dfa6a9ed0c099d0e59d5d5c2bdf3fdc`**
 논문: Jiawei Fan, *Two Heads Are Better Than One* (SSRN 7356759).
 
 ---

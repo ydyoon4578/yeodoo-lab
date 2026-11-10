@@ -86,10 +86,10 @@ REUSED_BLOBS = {"build/x_adapter.py": "897c4c94b22e415f38e32ac47bf8037025f28cb2"
                 "build/dstk.py": "60e634875df6a42f191b6ce91fd391dffc721d4f",           # DSTK 등록 판(엔진)
                 "build/dstk_run.py": "4bc0306e1b0aa638fa13574751d098bb9590f991"}       # DSTK 등록 판(러너 · materialize · 핀)
 # 뿌리 핀(재사용 모듈의 상수와 같아야 한다 — pins_check 가 대조)
-ROOT_PIN = {"code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c", "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
-            "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370", "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734"}
-VROOT_PIN = "c6a35ff0168e5ea21c2ab2d18680550452511a3a"
-DROOT_PIN = "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b"
+ROOT_PIN = {"code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c", "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+            "base": "bba67290def066ef69a20d0c55060d0fa28e7bf4", "price": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f"}
+VROOT_PIN = "549f42153dedb7dab3eb314bcc9237c8e026b629"
+DROOT_PIN = "1d3dda30b5870e48f7a6ce718397848c7a5905bd"
 DROOT_TREES = {"data": "d72aec6dd1e268d66144ed8d21e05deb11950b98", "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"}
 VB_BOOKS_SHA = "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b"
 VB_BOOKS = os.environ.get("EGSTEP_VB_BOOKS") or os.path.join(tempfile.gettempdir(), "vbatch_cache", "f0", "vb_books.json.gz")

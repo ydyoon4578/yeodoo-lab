@@ -1,7 +1,7 @@
 {
  "note": "EGFF F0(사전등록 build/PREREG-2026-09-25-EGFF.md §8) — 수익 없음 · 겹침 통계 없음. pass 가 참이고 이 파일이 커밋돼 있어야 build/s4_overlap.py(1단계)가 돈다.",
  "prereg": "build/PREREG-2026-09-25-EGFF.md",
- "reg_commit": "98889aeb82bd35fb3c06e3e8ff731c12a1c670a0",
+ "reg_commit": "eb49a1a041270e677a30cdb9d35a8c4375b49641",
  "pass": true,
  "generated": "2026-09-25T15:45:59Z",
  "inputs": {
@@ -36,7 +36,7 @@
    "unchanged_across_bakes": true,
    "snap_wt": {
     "path_hint": "$TEMP/snap_wt",
-    "head": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
+    "head": "bba67290def066ef69a20d0c55060d0fa28e7bf4",
     "files": 4270,
     "identical_in_root": 4270,
     "differ": [],
@@ -54,7 +54,7 @@
      "data/_fxv/manifest.json"
     ]
    },
-   "p1_root": "배치 Q 와 같은 P1 판($TEMP/snap_wt: bef4eea8 가격 밖 + 940f0bda 가격 + 얼린 배치 Q 파일)의 복사본 + EGFF 파일 · snap_wt 는 읽기만 했다"
+   "p1_root": "배치 Q 와 같은 P1 판($TEMP/snap_wt: bba67290 가격 밖 + 9677330e 가격 + 얼린 배치 Q 파일)의 복사본 + EGFF 파일 · snap_wt 는 읽기만 했다"
   },
   "supplier_v": {
    "cells": 213941,
@@ -17456,7 +17456,7 @@
    "example": {
     "m": "2026-08",
     "d_m": "2026-08-31",
-    "fx_commit": "41a173034d42b13738dfedf56d6ae4941862749e",
+    "fx_commit": "71f75e93a53857462997d97793a2f8a6e1cc201b",
     "fx_commit_utc_date": "2026-08-29",
     "formation_cells": {
      "equal": 190107,

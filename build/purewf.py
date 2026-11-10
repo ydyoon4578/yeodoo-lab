@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/purewf.py — 국면별 배분을 자료로 고르되 **워크포워드로만 판정한다** → data/_purewf.json
 
-규약: build/PREREG-2026-09-08-PUREWF.md (계산 전 커밋 306bc92b · 개정본).
+규약: build/PREREG-2026-09-08-PUREWF.md (계산 전 커밋 c08b3a1c · 개정본).
 
 이 랩 최초의 **워크포워드 하네스**다. 사용자가 nsel 제약을 명시적으로 풀었으므로
 (2026-09-08 「결과를 바탕으로 전략을 수정하는 것 정도는 괜찮아」), 문제는 «고쳐도 되나» 가
@@ -308,7 +308,7 @@ def main():
 
     doc = {"note": "국면별 배분의 워크포워드. 규약 PREREG-2026-09-08-PUREWF.md. 얼린 측정. "
                    "🚨 표본 내 수(user·best)는 결과가 아니다.",
-           "prereg": "306bc92b", "n": n, "warm": WARM, "grid": len(COMBOS),
+           "prereg": "c08b3a1c", "n": n, "warm": WARM, "grid": len(COMBOS),
            "oos_window": [rows[WARM]["m"], rows[-1]["m"]], "n_oos": len(wf),
            "card": list(CARD), "user": list(USER), "best_is": list(bestw),
            "stats_oos": S, "f1": d1, "f2": d2, "f3_gap": gap, "f4_changes": chg,

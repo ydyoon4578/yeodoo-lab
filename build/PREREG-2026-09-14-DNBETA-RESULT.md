@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-dnbeta
 
-등록: `build/PREREG-2026-09-14-DNBETA.md` — **계산 전 커밋 `22fac293f`**
+등록: `build/PREREG-2026-09-14-DNBETA.md` — **계산 전 커밋 `dadf0ce59`**
 구현: `build/dnbeta.py` → `data/_dnbeta.json`(얼린 측정 · 커밋 안 함) · 민감도 판 `data/_dnbeta_excl.json`
 
 ---

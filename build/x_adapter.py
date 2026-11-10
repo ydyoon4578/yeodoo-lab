@@ -12,7 +12,7 @@
     🔗 짝맞춤 A: 같은 선정으로 얼린 v_cards.target_book(θ = 1) 을 다시 짓고 배치 V F0 넘김 파일(vb_books.json.gz · sha256 = data/_vb_f0.json
        gegd_pins.in_sha)의 V02 책과 120개월 모두 같아야 한다(키 집합 같음 · |차| ≤ 1e−12) — 하나라도 다르면 D 목표를 쓰지 않는다.
     선정 해시 = sha256(정규 JSON {달: 정렬 티커}) — 등록 문서에 싣는다(«D 해시»).
-  S 자식(임시 뿌리 = 코드 핀 1d81f083 의 build/ + 자료 판 bef4eea8:data/ + 940f0bda 의 가격 판 + P3 덮어쓰기 — qfwd_adapter.build_root 와 같은 뿌리 ·
+  S 자식(임시 뿌리 = 코드 핀 439e16db 의 build/ + 자료 판 bba67290:data/ + 9677330e 의 가격 판 + P3 덮어쓰기 — qfwd_adapter.build_root 와 같은 뿌리 ·
     이 파일은 그 함수를 부르지 않고 같은 규칙을 따로 짓는다(QFWD 파일은 건드리지 않는다) · 얼린 blob 단언)
     V0 = qbatch_core.Ctx().V0_targets → q_switch.offense_v0(분기 · 흘러감) · D = 얼린 q_switch.Book(D 책 자식의 경로 · 아래 K6) ·
     SPY = q_switch.spy_book · T-bill = q_switch.tbill_book · 두 장부 사이의 몫(공격 몫 = 1 − a)은 T+1 에 바꾼다(mix_t1 · 아래 K2).
@@ -22,18 +22,18 @@
     🔗 V0 재현(수익 없이): Ctx.V0_targets 의 해시 두 판 = QFWD 명세 §6 짝맞춤 표(V0_LT · V0_BL) — 다르면 멈춘다.
     🔗 짝맞춤 B: 몫 ≡ 1 의 펀드 월 초과 = Ctx.V0() 의 월 초과(T+1 행 · D0 행 모두 |차| ≤ 1e−10 · 명제 1 의 실자료판) · 되맞춤 거래 0.
     🔗 짝맞춤 C: 몫 {0, 1} 인 X 의 T+1 행 = 얼린 q_switch.switch_fr(pos_from_daily(delay 1))(|차| ≤ 1e−10) — T+1 행을 얼린 교체 틀이 받친다.
-  선언(명세가 비워 둔 것): K1 «D 목표가 선다» = 그달 World(1d81f083 판)에 값이 선 이름이 ≥ 1 이고 VBATCH 목표 비중의 ≥ 0.90 이 옮겨졌다(나머지는 비례 재정규화) ·
+  선언(명세가 비워 둔 것): K1 «D 목표가 선다» = 그달 World(439e16db 판)에 값이 선 이름이 ≥ 1 이고 VBATCH 목표 비중의 ≥ 0.90 이 옮겨졌다(나머지는 비례 재정규화) ·
     K2 S 층 주 행 = T+1(명세 action.execution «결정 d_m 종가 · 체결 T+1 종가» · S_layer.reports_only «D0 행» — 주 행은 T+1 이다):
     두 장부(V0 · D)의 자기 되맞춤은 얼린 틀 그대로(d_m 종가) · 둘 사이 몫 교체만 보유월 첫 거래일(T+1) 종가 · 창 첫 달의 앞 몫은 V0(1) ·
     펀드 월 초과는 달력 달(d_m → d_m · 얼린 fund_from_path). 명세 «혼합은 얼린 q_switch.mix_fr» 는 D0 행으로 그대로 싣는다 ·
     K3 β̂ 가 없는 이름은 1.0(v_core K2) · 티커 «.»/«-» 는 «-» 로 맞춘다 · K4 CASH 의 β̂_C ≤ 0 이면 f = 0 ·
     K5 보고 요약은 얼린 qbatch_core.evaluate(이름 붙은 급락 6 · 급등 6 · 기계적 다리 8 · 반등 8 · 해마다 · 이동 12개월 · 헤지 대조) ·
-    K6 D 책 가격 판(F0 커버리지 · 수익을 보지 않고 정함): 얼린 V0 뿌리 World(940f0bda 가격 판)에는 뒤에 편출된 D 이름(AGN · RTN · ATVI · RHT · COL …)의
+    K6 D 책 가격 판(F0 커버리지 · 수익을 보지 않고 정함): 얼린 V0 뿌리 World(9677330e 가격 판)에는 뒤에 편출된 D 이름(AGN · RTN · ATVI · RHT · COL …)의
     가격 키가 없어 옮긴 몫이 0.89 까지 떨어졌다(2017-11). 명세 data_plan.stock_layer «PIT 편출 가격은 pit_px.json 만» 에 따라 D 책은 배치 V 핀 판 World
     (임시 뿌리 vroot data/ · v_data --check 통과 · pit_panel e2073703)에서 얼린 qbatch_core.stock_path(reb 1 · 0 · 10 · 20bp)로 짓고(D 책 자식), S 자식이
     날짜 문자열로 뿌리 격자에 맞춰 얼린 q_switch.Book 으로 읽는다(S 창 거래일 집합이 같아야 한다 — 단언). 키 옮기기는 배치 V 선정이 쓴 가격 키 그대로
     (같은 pit_panel · 같은 자료) → 없을 때만 그달 명단 · 결과 120개월 모두 옮긴 몫 1.0(K1 문턱 0.90 은 그대로). V0 책은 얼린 뿌리 World 그대로(V0 재현).
-    K7 배치 V 핀 판 임시 뿌리(검토 반영 2026-09-27): D 자식 · D 책 자식 · S 커버리지(dbook)는 작업 트리가 아니라 자료 핀 커밋 DATA_PIN(c6a35ff0 ·
+    K7 배치 V 핀 판 임시 뿌리(검토 반영 2026-09-27): D 자식 · D 책 자식 · S 커버리지(dbook)는 작업 트리가 아니라 자료 핀 커밋 DATA_PIN(549f4215 ·
     origin/main 조상 · 그 data/ 가 data/_vb_manifest.json 의 파일 핀 20 · 폴더 요약 4 와 모두 같다)의 build/ + data/ 를 git archive 로 꺼낸 캐시 s/vroot 에서 돈다 —
     CI 가 작업 트리 data/(stocks · pit_px · shares_yf …)를 매일 갈아도 굽기 날짜와 무관하게 같은 판이다. 러너 판 점검(frozen_check)이 태그 전에 vroot_check 로 본다.
 🚨 이 파일은 수익을 찍지 않는다. S 자식의 산출(월 계열)은 캐시(%TEMP%/xbatch_cache/s)에만 · 눈가린 연기는 열지 않고 지운다.
@@ -71,9 +71,9 @@ if HERE not in sys.path:
 # ══════════════════════════════════════════════════════════════════════════
 #  핀
 # ══════════════════════════════════════════════════════════════════════════
-CODE_PIN = "1d81f083a404c68e23d15a649ef6f0a340d4d95c"               # 배치 Q 등록 커밋(V0 얼린 코드)
-BUILD_TREE = "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8"             # git rev-parse 1d81f083:build
-P1_PRICE, P1_BASE = "940f0bda99ae1cc99299a43a06b30b9fa267d734", "bef4eea8c98572bd05815d44bd0744d9ce7ed370"
+CODE_PIN = "439e16db2dd4b15ff5894f0fd64a399f36206a4c"               # 배치 Q 등록 커밋(V0 얼린 코드)
+BUILD_TREE = "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8"             # git rev-parse 439e16db:build
+P1_PRICE, P1_BASE = "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f", "bba67290def066ef69a20d0c55060d0fa28e7bf4"
 SNAP_FILES = ("data/stocks.json", "data/pit_px.json", "data/sd")
 P3 = {                                                             # 코드 핀 blob 으로 덮는 고정 입력(qfwd_adapter.P3 와 같다 — selftest 가 대조)
     "data/_q07_ltd_fits.json": "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",
@@ -85,7 +85,7 @@ P3 = {                                                             # 코드 핀 
     "data/mech_episodes.json": "d67a2a74b486aff7f3a46d0f2a9bebe104df669f",
     "data/_eg_best.json": "cc58f30c84886554c76fecf6df5dc85974eb09f1",
     "data/_eg30plus.json": "c205f1365e924ebf097b200042133369d7de3f3d"}
-ROOT_FROZEN = {                                                    # 뿌리 build/ 에서 단언(1d81f083 판)
+ROOT_FROZEN = {                                                    # 뿌리 build/ 에서 단언(439e16db 판)
     "qbatch_core": "38ecb2b3f38ac7996cbd10957f7fe665a3758a8d", "q_switch": "c0e52a85d24dfd6a3cd5db2c82aa514b3358dec5",
     "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628", "qg_lab": "ca95e32b627c1dc9b0136c886eb42b5fb3b0daea",
     "pit_panel": "ae044a5d3b8af4b6b8aee12d3879f5c97d4885fb", "pit_quarantine": "329e5d9ff15be4c07052921dfff9a41afbcc2513",
@@ -99,7 +99,7 @@ V_FROZEN = {                                                       # 작업 사�
     "v_cond": "d25914deb89490410ea2dca56b5999356628821e", "pit_panel": "e207370369aaa2d71d92dcac4ecbcd79d0df9b38",
     "pit_alias": "ead714d97c87c3588a8fdc2ca4b1c57c5a497c0b", "eg30plus": "5688b266adece152d2dc72f911bb7a6ac977d628"}
 VB_BOOKS_SHA = "c1aeff7df4d02c03742f224623f109e89bb6873ea8e18eaf6ff6f53862784c1b"   # = data/_vb_f0.json gegd_pins.in_sha
-DATA_PIN = "c6a35ff0168e5ea21c2ab2d18680550452511a3a"             # K7 배치 V 핀 판 자료 커밋(origin/main · 2026-09-27 · data/ = _vb_manifest 파일 핀 20 · 폴더 요약 4)
+DATA_PIN = "549f42153dedb7dab3eb314bcc9237c8e026b629"             # K7 배치 V 핀 판 자료 커밋(origin/main · 2026-09-27 · data/ = _vb_manifest 파일 핀 20 · 폴더 요약 4)
 VROOT_PATHS = ("build/", "data/")                                   # 임시 뿌리 vroot 가 꺼내는 경로(git archive DATA_PIN)
 V0_HASH_PIN = {"V0_LT": "ec0a2aa43f1efffa3d59b5d5b78268153a2bf7f36947ab2ed6345c61c0370202",     # = qfwd_adapter.PARITY(명세 §6) — 읽기만 · 대조는 selftest
                "V0_BL": "132008e66ddf2ef85ea3acf408ae213641f92a0a0a4f7ea3118b6963d2a3c077"}
@@ -394,7 +394,7 @@ def _d_child(job):
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  뿌리(1d81f083 build/ + bef4eea8 data/ + 940f0bda 가격 판 + P3)
+#  뿌리(439e16db build/ + bba67290 data/ + 9677330e 가격 판 + P3)
 # ══════════════════════════════════════════════════════════════════════════
 def _git(args, repo, text=True, timeout=None):
     return subprocess.run(["git", "-C", repo, "-c", "core.autocrlf=false"] + args, capture_output=True, text=text, timeout=timeout)

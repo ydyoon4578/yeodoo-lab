@@ -20,10 +20,10 @@
   "builder": "egstep_run.preflight(얼린 EGSTEP 판 — x_adapter.build_root · build_vroot · dstk_run.materialize)",
   "egstep_roots": {
    "root": {
-    "code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c",
+    "code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c",
     "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
-    "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370",
-    "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734",
+    "base": "bba67290def066ef69a20d0c55060d0fa28e7bf4",
+    "price": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f",
     "p3": {
      "data/_q07_ltd_fits.json": "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",
      "data/_eg_q5_scores_pitgics.json": "21f43d226463f3978982acc077fbca1576780f33",
@@ -59,7 +59,7 @@
     "builder": "x_adapter.build_root"
    },
    "vroot": {
-    "data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+    "data_pin": "549f42153dedb7dab3eb314bcc9237c8e026b629",
     "v_frozen": {
      "v_cards": "aadaf24f173579d3f3146014aa150a4ca07eb0a5",
      "v_core": "bdba648f1d790748cd5008ceeea3c5eee9d733c8",
@@ -88,7 +88,7 @@
     "children": "x_adapter --d-child · --dbook-child · --s-cov-child"
    },
    "droot": {
-    "data_pin": "44c1a26f6a8fd9f64a3a76de9334e1a37aef403b",
+    "data_pin": "1d3dda30b5870e48f7a6ce718397848c7a5905bd",
     "trees": {
      "data": "d72aec6dd1e268d66144ed8d21e05deb11950b98",
      "build": "fe772a6fde82d618833c9f4be0c9851d343318b1"

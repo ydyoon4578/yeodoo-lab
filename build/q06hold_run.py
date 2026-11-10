@@ -89,9 +89,9 @@ FORWARD_DIR = "data/_q06holdfwd"                              # 있으면 멈춘
 # 러너 · 뿌리가 부르는 재사용 파일(작업 트리 = 등록 커밋 판) — git blob(LF 바이트)이 이 값이어야 한다
 REUSED_BLOBS = {"build/x_adapter.py": "897c4c94b22e415f38e32ac47bf8037025f28cb2"}      # 배치 X 등록 판(뿌리 짓기 · 배치 V 자료 핀 점검 _v_pins_full)
 # 뿌리 핀(재사용 모듈의 상수와 같아야 한다 — pins_check 가 대조)
-ROOT_PIN = {"code_pin": "1d81f083a404c68e23d15a649ef6f0a340d4d95c", "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
-            "base": "bef4eea8c98572bd05815d44bd0744d9ce7ed370", "price": "940f0bda99ae1cc99299a43a06b30b9fa267d734"}
-VROOT_PIN = "c6a35ff0168e5ea21c2ab2d18680550452511a3a"
+ROOT_PIN = {"code_pin": "439e16db2dd4b15ff5894f0fd64a399f36206a4c", "build_tree": "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8",
+            "base": "bba67290def066ef69a20d0c55060d0fa28e7bf4", "price": "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f"}
+VROOT_PIN = "549f42153dedb7dab3eb314bcc9237c8e026b629"
 VERSIONS = {"numpy": "2.5.3", "scipy": "1.18.1", "pandas": "3.0.6"}
 ENV_PINS = {"PYTHONHASHSEED": "0", "OPENBLAS_NUM_THREADS": "1"}
 CHILD_ENV_DROP = ("Q06HOLD_COMMIT", "Q06HOLD_RERUN", "Q06HOLD_SMOKE", "LAB_ASOF", "VBATCH_CACHE", "VBATCH_FRENCH_SEED", "EGSTEP_COMMIT", "DSTK_COMMIT")

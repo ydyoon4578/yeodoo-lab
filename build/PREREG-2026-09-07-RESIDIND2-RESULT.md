@@ -4,7 +4,7 @@
 판정: 게시
 규칙: x-residind-n52
 
-등록: `build/PREREG-2026-09-07-RESIDIND2.md` — **계산 전 커밋 `23684ba4`**
+등록: `build/PREREG-2026-09-07-RESIDIND2.md` — **계산 전 커밋 `69eada29`**
 내린 규칙: `x-residind`(상위 10) — 등록 §3 대로 **성적과 무관하게** 내렸다
 
 ---

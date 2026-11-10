@@ -36,7 +36,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-20-VALSLEEVE.md` · **계산 전 커밋 `3343933`** |
+| 사전등록 | `PREREG-2026-09-20-VALSLEEVE.md` · **계산 전 커밋 `406705c`** |
 | 문서 블롭 | `97f0ab3a7b13b5a987af267a3ab511126ca5c541` |
 | 실행 | `build/valsleeve.py` → `data/_valsleeve.json` |
 | 등록서 밖 검정 | `build/valsleeve_diag.py` |

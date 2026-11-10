@@ -11,7 +11,7 @@
   W 굽기 · 연기 과정은 이 모듈을 부르지 않는다(w_guard 가 대상 폐포에서 본다). noeg=False(B/M 통제 우회)도 이 모듈만 — R 공개 값 재현에 R 통제
   (크기 · log B/M(결측 더미) · r_t · 12-2 · 섹터)가 필요해서다. 재현 결과는 **공개된 값과의 차**(참/거짓 · 최대 절대 차)만 적는다 — 새 통계를 찍지 않는다.
 R 재현 자식 과정(--child-r): 배치 R 결과 커밋 958557496 의 깨끗한 작업 사본(기본 %TEMP%/wbatch_raudit_wt · $WBATCH_R_TREE)을 sys.path 맨 앞에 두고
-  RBATCH_DATA = 그 트리의 data/(등록 커밋 168a072ff 의 자료 판 · 결과 뒤 바뀐 것은 V 파일 · _rbatch.json 뿐) · R 러너의 RealProvider 로 세계 · 패널 · 표지를
+  RBATCH_DATA = 그 트리의 data/(등록 커밋 b3191ad42 의 자료 판 · 결과 뒤 바뀐 것은 V 파일 · _rbatch.json 뿐) · R 러너의 RealProvider 로 세계 · 패널 · 표지를
   다시 짓고 → 통제 패널 지문 · 쓸 달 sha · 표지 지문이 R 등록 F0 문서(data/_r_f0.json) · 결과(data/_rbatch.json)와 같은지 먼저 본다 →
   (가) R 설계(r_stagem._design) → w_stagem.fm · (나) w_stagem.design(R 통제 설정) → w_stagem.fm 두 길로 γ 월 계열 · 주 통계를 공개 값과 1e−9 로 대조.
   R 트리의 R 코드는 R 등록 커밋 blob 과 같아야 하고 트리는 깨끗해야 한다(git status).
@@ -47,8 +47,8 @@ if HERE not in sys.path:
 ROOT = os.path.dirname(HERE)
 PY = sys.executable
 R_TREE = os.environ.get("WBATCH_R_TREE") or os.path.join(tempfile.gettempdir(), "wbatch_raudit_wt")
-R_RESULT_COMMIT = "958557496fbb5935f3c93a05ea47dc0fdd7255a3"
-R_REG_COMMIT = "168a072ff0b0ba8f895a79fd8dabaf34b35d8ed6"
+R_RESULT_COMMIT = "a20d91fd895cf5880ca4989bb9c5e855a1ea78b2"
+R_REG_COMMIT = "b3191ad422c06c5ce24f5ea3104a34f28d722a42"
 R_CODE = ("build/r_run.py", "build/r_stagem.py", "build/r_r1_flags.py", "build/r_r2flags.py", "build/eg30plus.py", "build/pit_panel.py",
           "build/qbatch_core.py", "build/tech_backtest.py")
 PUBLISHED = {"R1": {"mean": -0.1723, "nw_t": -2.05, "T": 116}, "R2": {"mean": -0.1538, "nw_t": -1.04, "T": 117}}   # 결과 문서 머리(반올림)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/idxtilt.py — 지수 강화(enhanced index): 벤치 비중에서 팩터로 틸팅 → data/_idxtilt.json
 
-규약: build/PREREG-2026-09-09-IDXTILT.md (계산 전 커밋 bb21306c).
+규약: build/PREREG-2026-09-09-IDXTILT.md (계산 전 커밋 070a3606).
 
   두 벤치를 «나란히» 돌린다 — SPX 시총가중 · NDX 시총가중 (둘 다 그 달 실제 편입명단).
 
@@ -221,7 +221,7 @@ def main():
         _pan = os.path.join(DATA, "_idxtilt_panel_%s.json" % IDX)
         io.open(_pan, "w", encoding="utf-8").write(json.dumps(
             {"note": "idxtilt 가 만든 월별 패널(벤치비중·섹터·팩터 z·수익). 얼린 측정.",
-             "prereg": "bb21306c", "index": IDX, "factors": list(FACTORS),
+             "prereg": "070a3606", "index": IDX, "factors": list(FACTORS),
              "rows": [{"m": x["m"], "wb": {t: round(v, 8) for t, v in x["wb"].items()},
                        "sec": x["sec"], "cash": x["cash"],
                        "r": {t: round(v, 6) for t, v in x["r"].items()},
@@ -419,7 +419,7 @@ def main():
                       "cost": round(z["cost"], 6)} for z in o]}
 
     doc = {"note": "지수 강화 — 벤치 비중 + 팩터 틸트. 규약 PREREG-2026-09-09-IDXTILT.md. 얼린 측정.",
-           "prereg": "bb21306c", "warm": WARM, "shrink": SHRINK,
+           "prereg": "070a3606", "warm": WARM, "shrink": SHRINK,
            "cap_name": CAP_NAME, "cap_sec": CAP_SEC, "te_judge": TE_JUDGE,
            "factors": list(FACTORS), "by_index": RESULT}
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False) + "\n")

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/secrrg.py — 섹터 RRG 로테이션(주간) 검정 → data/_secrrg.json
 
-사전등록: build/PREREG-2026-09-23-SECRRG.md (계산 전 커밋 06d1050f)
+사전등록: build/PREREG-2026-09-23-SECRRG.md (계산 전 커밋 7a49f520)
 
 SPDR 섹터 9종을 SPY 대비 주간 RRG 에 놓고,
   S1 — 매주 말 주도 사분면 섹터를 동일가중으로 든다(없으면 9종 동일가중)
@@ -164,8 +164,8 @@ def main() -> int:
     now = {t: (Q[int(q[last, j])] if q[last, j] >= 0 else None) for j, t in enumerate(SECT)}
     spy = rb.values[rows + 1]
     doc = {
-        "note": "섹터 RRG 로테이션(주간). 사전등록 PREREG-2026-09-23-SECRRG(커밋 06d1050f) 값 그대로.",
-        "prereg": "build/PREREG-2026-09-23-SECRRG.md", "commit": "06d1050f",
+        "note": "섹터 RRG 로테이션(주간). 사전등록 PREREG-2026-09-23-SECRRG(커밋 7a49f520) 값 그대로.",
+        "prereg": "build/PREREG-2026-09-23-SECRRG.md", "commit": "7a49f520",
         "sectors": SECT, "bench_rs": BENCH, "look": RB.LOOK, "cut": RB.CUT,
         "window": "%s ~ %s (형성 주 %d개)" % (dates[rows[0]].date(), W1, len(rows)),
         "perf": {"S1": perf(r1), "S1_net10bp": perf(r1n), "S2": perf(r2), "EW": perf(r_ew), "SPY": perf(spy)},

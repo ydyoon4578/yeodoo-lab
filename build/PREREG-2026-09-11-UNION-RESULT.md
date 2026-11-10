@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-union
 
-등록: `build/PREREG-2026-09-11-UNION.md` — **계산 전 커밋 `f990d83b9`**
+등록: `build/PREREG-2026-09-11-UNION.md` — **계산 전 커밋 `08cfe99dc`**
 구현: `build/union.py` → `data/_union.json`(얼린 측정 · 커밋 안 함)
 
 ---

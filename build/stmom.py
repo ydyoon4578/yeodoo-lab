@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/stmom.py — 단기 모멘텀(Medhat·Schmeling, RFS 2022) 시점정확 검정 → data/_stmom.json
 
-사전등록: build/PREREG-2026-09-23-STMOM.md (계산 전 커밋 7b6b54db)
+사전등록: build/PREREG-2026-09-23-STMOM.md (계산 전 커밋 a3e3bf74)
 
 원문 표 III 패널 C 를 랩 PIT 유니버스로 옮긴다 —
   매월 말, 그때의 S&P 500 ∪ NASDAQ 100 멤버(금융 제외 · 이중클래스 회사당 하나) 중 자격 있는 종목을
@@ -336,8 +336,8 @@ def main() -> int:
                "보류" if (res["f4"]["hit"] or res["f6"]["hit"]) else "게시 후보")
     avg_turn = {nm: float(np.mean([r["turn"][nm] for r in rows if r["turn"][nm] is not None])) for nm in ("HW", "HL", "LW", "LL")}
     avg_n = {nm: float(np.mean([r["n"][nm] for r in rows])) for nm in ("HW", "HL", "LW", "LL")}
-    doc = {"note": "단기 모멘텀 PIT 검정. 사전등록 PREREG-2026-09-23-STMOM(계산 전 커밋 7b6b54db) 값 그대로.",
-           "prereg": "build/PREREG-2026-09-23-STMOM.md", "commit": "7b6b54db",
+    doc = {"note": "단기 모멘텀 PIT 검정. 사전등록 PREREG-2026-09-23-STMOM(계산 전 커밋 a3e3bf74) 값 그대로.",
+           "prereg": "build/PREREG-2026-09-23-STMOM.md", "commit": "a3e3bf74",
            "window": "보유 %s ~ %s (%d개월) · 발표 후 %s~" % (rows[0]["m"], rows[-1]["m"], len(rows), POST),
            "summary": {"stmom_mean_pm": f1, "stmom_t": t_, "strev_mean_pm": float(sr.mean()), "strev_t": tstat(sr),
                        "stmom_skipEOM_mean_pm": float(sx.mean()), "stmom_skipEOM_t": tstat(sx),

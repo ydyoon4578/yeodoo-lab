@@ -38,7 +38,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-20-RUNS2.md` · **계산 전 커밋 `a65b896`** |
+| 사전등록 | `PREREG-2026-09-20-RUNS2.md` · **계산 전 커밋 `dd79de5`** |
 | 문서 블롭 | `3fb35fd89f84e9850691faa1c4707691d2f20a31` |
 | 실행 | `build/runs2_fund.py` → `data/_runs2_fund.json` |
 | 선행 | `PREREG-2026-09-20-RUNS(-RESULT).md` — 기각(F3 t 1.96 · F9 4.06회) |

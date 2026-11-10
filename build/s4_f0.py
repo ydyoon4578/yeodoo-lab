@@ -37,10 +37,10 @@ sys.path.insert(0, HERE)
 import s4_overlap as S4                                         # noqa: E402  tree_digest · BATCHQ_REF · BASIS · TWINS (뿌리 경로를 넣기 전에)
 
 PREREG = "build/PREREG-2026-09-25-EGFF.md"
-P1_BASE = "bef4eea8c98572bd05815d44bd0744d9ce7ed370"          # 배치 Q 의 가격 밖 판(fx · fx_pit)
+P1_BASE = "bba67290def066ef69a20d0c55060d0fa28e7bf4"          # 배치 Q 의 가격 밖 판(fx · fx_pit)
 TH_MATCH, TH_ME, ME_TOL, SPLIT_TOL = 0.98, 0.99, 0.01, math.log(1.005)
 M0, M1 = "2009-01", "2026-07"                                  # eg_q5 의 state 가 쓰이는 월말 범위(회귀 2010-01 의 t−12 ~ 형성 끝)
-QFWD_EX = {"m": "2026-08", "commit": "41a173034d42b13738dfedf56d6ae4941862749e", "past_ym": "2019-12"}
+QFWD_EX = {"m": "2026-08", "commit": "71f75e93a53857462997d97793a2f8a6e1cc201b", "past_ym": "2019-12"}
 SUPPLIERS = ("latest", "v", "ff", "vs")
 BAKE_ENV = {"PYTHONHASHSEED": "0", "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1", "PYTHONIOENCODING": "utf-8"}
 GT10 = math.log(1.10)
@@ -717,7 +717,7 @@ def main() -> int:
                                "snap_wt": {"path_hint": "$TEMP/snap_wt", "head": snap_head, "files": len(sf),
                                            "identical_in_root": len(sf) - len(s_diff) - len(s_miss), "differ": s_diff, "missing_in_root": s_miss},
                                "root_only": r_only_sum,
-                               "p1_root": "배치 Q 와 같은 P1 판($TEMP/snap_wt: bef4eea8 가격 밖 + 940f0bda 가격 + 얼린 배치 Q 파일)의 복사본 + EGFF 파일 · "
+                               "p1_root": "배치 Q 와 같은 P1 판($TEMP/snap_wt: bba67290 가격 밖 + 9677330e 가격 + 얼린 배치 Q 파일)의 복사본 + EGFF 파일 · "
                                           "snap_wt 는 읽기만 했다"},
                       "supplier_v": diags["v"]["supplier_stat"], "supplier_ff": diags["ff"]["supplier_stat"],
                       "supplier_vs": diags["vs"]["supplier_stat"]},

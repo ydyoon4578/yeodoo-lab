@@ -145,8 +145,8 @@ REG = {
     "m": 0,                # Holm 가족 크기 0 · 1 · 2 — data/_r_p0.json holm.m 과 같아야 한다
     "primary": [],         # 1차 카드(짧은 코드 · 길이 m) — 예 ["R1", "R2"] · ["R2"] · []
     "p0": {"R1": 0.059206, "R2": 0.034484},  # {"R1": 0.xxxxxx 또는 None, "R2": …} — _r_p0.json 의 값(소수 6자리)
-    "snap": "8da9529bab7918ec31a5f221b1e7d621111363e4",  # P1 가격 핀 — stocks.json · pit_px.json 두 격자가 같고 검증을 통과한 가장 이른 커밋(§F)
-    "base": "8da9529bab7918ec31a5f221b1e7d621111363e4",  # P2 가격 밖 입력 핀
+    "snap": "6f6f678b139c3bcc3cf104597462618eb15b6d4d",  # P1 가격 핀 — stocks.json · pit_px.json 두 격자가 같고 검증을 통과한 가장 이른 커밋(§F)
+    "base": "6f6f678b139c3bcc3cf104597462618eb15b6d4d",  # P2 가격 밖 입력 핀
     "n_lab_prior": 840,    # 등록 때 랩 누적 시도 수(PREREG §2 — 약 840 = 배치 T 결과 약 878 − 그 안에 이미 든 배치 R 예상 약 38)
     "stage_s": "r_stages", # Stage S 모듈 이름 — 실제 굽기는 "r_stages" 만("none" 은 합성 · 연기 시험 전용) · 첫 --f0 전에 정했다(F0 문서의 셈 규칙)
     "frozen_extra": ("build/ins_pit_build.py", "build/ins_daily.py", "build/tenq_rf_build.py", "build/pit_px_db2.py",

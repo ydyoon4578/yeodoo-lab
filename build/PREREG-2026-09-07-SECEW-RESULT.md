@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-secew, x-secew-gate
 
-등록: `build/PREREG-2026-09-07-SECEW.md` — **계산 전 커밋 `7d4291ed`**
+등록: `build/PREREG-2026-09-07-SECEW.md` — **계산 전 커밋 `b0723096`**
 구현: `build/tech_backtest.py` — `x-secew-gate`(본체) · `x-secew`(카드가 지정한 대조군)
 
 ---

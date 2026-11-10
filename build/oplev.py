@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""build/oplev.py — 영업 레버리지 (PREREG-2026-09-19-OPLEV · 계산 전 647d2bc)
+"""build/oplev.py — 영업 레버리지 (PREREG-2026-09-19-OPLEV · 계산 전 9193aaf)
 
   주 판정 = OL-원식 (매출원가 + 판매관리비) / 자산총계 · 산업중립 · 금융제외 · 시총가중
   같은 표에 — OL-대체(rev−opinc) · OL-Chen(dep+sga) · 동일가중 · 보유 1·6·12 · 비중립 · 금융포함
@@ -299,7 +299,7 @@ def main():
     print("\n→ 판정: %s" % verdict)
 
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(
-        {"prereg": "PREREG-2026-09-19-OPLEV", "commit": "647d2bc",
+        {"prereg": "PREREG-2026-09-19-OPLEV", "commit": "9193aaf",
          "identity_err": float(err), "fama_macbeth": fmres, "perf": res, "f6_gap": f6,
          "shuffle": {"n": NSHUF, "seed": SEED, "mean": float(sh.mean()),
                      "sd": float(sh.std(ddof=1)), "pctile": pct},

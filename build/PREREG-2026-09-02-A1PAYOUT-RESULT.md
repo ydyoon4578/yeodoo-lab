@@ -5,7 +5,7 @@
 규칙: x-a1payout
 <!-- 여섯 조건을 넘어 «게시 후보» 였으나 후속 등록 A1FIX 가 분모 시점을 정정해 **철회**했다 -->
 
-등록: `build/PREREG-2026-09-02-A1PAYOUT.md` — **계산 전 커밋 `5153b0c07`**
+등록: `build/PREREG-2026-09-02-A1PAYOUT.md` — **계산 전 커밋 `cf5fb6be3`**
 구현: `x-a1payout` (`build/tech_backtest.py` · `build/pit_backtest.py`)
 
 ---

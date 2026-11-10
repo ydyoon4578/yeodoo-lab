@@ -5,7 +5,7 @@
 규칙: x-pure10-vm
 <!-- standalone 측정이라 엔진에 등록한 적이 없다 -->
 
-등록: `build/PREREG-2026-09-08-PUREVM.md` — **계산 전 커밋 `9acae0d0`**
+등록: `build/PREREG-2026-09-08-PUREVM.md` — **계산 전 커밋 `ac9109b2`**
 구현: `build/purevm.py` → `data/_purevm.json`(얼린 측정 · 커밋 안 함)
 
 ---

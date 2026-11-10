@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""qg_delay.py — 우량성장 30 의 진입 시점 미루기 (PREREG-2026-09-20-QGDELAY · 3621d32)
+"""qg_delay.py — 우량성장 30 의 진입 시점 미루기 (PREREG-2026-09-20-QGDELAY · 70e9bcc)
 
   형성월에 가격 축 z(Mom · negOsc · negResid)가 그 달 유니버스 **하위 십분위**인
   보유 종목을 **1개월 미뤄서** 산다. 빼는 것이 아니다.
@@ -235,7 +235,7 @@ def main():
           % ("맞음" if F["F3 셔플 상위 5% 밖"] else "틀림"))
 
     io.open(os.path.join(HERE, "qg_delay_result.json"), "w", encoding="utf-8").write(
-        json.dumps({"prereg": "PREREG-2026-09-20-QGDELAY", "commit": "3621d32",
+        json.dumps({"prereg": "PREREG-2026-09-20-QGDELAY", "commit": "70e9bcc",
                     "base": dict(s0, turn=t0, ex2016=ex16(ms0, B0), y2016=yr(ms0, B0)["2016"]),
                     "delay": dict(s1, turn=t1, ex2016=ex16(ms1, B1), y2016=yr(ms1, B1)["2016"]),
                     "n_delayed": {"mean": float(cnt.mean()), "max": int(cnt.max()),

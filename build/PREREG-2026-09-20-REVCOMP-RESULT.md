@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-20-REVCOMP.md` · **계산 전 커밋 `0706357`** |
+| 사전등록 | `PREREG-2026-09-20-REVCOMP.md` · **계산 전 커밋 `601c787`** |
 | 문서 블롭 | `c19f465c0246d640f6daf4766d2ed172add95b9b` |
 | 실행 | `build/revcomp.py` → `data/_revcomp.json` · 진단 `build/rev_diag.py` |
 | 창 | 2014-07 ~ 2026-08 · 146개월 (**10년창 −9.91%p · t −2.47** — §7) |

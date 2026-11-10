@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-demega10
 
-등록: `build/PREREG-2026-09-05-DEMEGA.md` — **계산 전 커밋 `89da3394`**
+등록: `build/PREREG-2026-09-05-DEMEGA.md` — **계산 전 커밋 `556ab9db`**
 구현: `build/tech_backtest.py` — `x-demega10`(자격필터형 · SCREEN_SIDS)
 
 ---

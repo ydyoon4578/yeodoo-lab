@@ -398,7 +398,7 @@
     "src": "PREREG-2026-08-14-FLOW.md · PREREG-2026-08-14-FLOW-RESULT.md",
     "t": 3.68,
     "gate": "사망 조건 F1~F6 (t 문턱 없음 — 2026-08-13 폐지)",
-    "why": "기각 — 사망 조건 F2. 초과의 **97%가 생존편향**이었다: 같은 창 소급 초과 +28.14%p 인데 시점정확(PIT)으로는 +0.75%p 다(배수 37.5 · 문턱 2.0). 소급 t 3.58 · CAGR 42.12% 는 '오늘 살아남은 종목을 과거에 소급한' 수였다. ⚠ 08-14 오전에는 '편출 종목 거래량 부재'로 **판정 보류**였다. 그날 오후 그 거래량을 받아(yf.download 응답의 Volume 열을 안 꺼내 쓰고 있었을 뿐이다 — 멤버-월 커버 96.91%로 가격과 동일) 재보니 보류가 아니라 기각이었다. F1(+24.50)·F3(1.01)·F4(0.65)·F6(66.9%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 b8386698·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
+    "why": "기각 — 사망 조건 F2. 초과의 **97%가 생존편향**이었다: 같은 창 소급 초과 +28.14%p 인데 시점정확(PIT)으로는 +0.75%p 다(배수 37.5 · 문턱 2.0). 소급 t 3.58 · CAGR 42.12% 는 '오늘 살아남은 종목을 과거에 소급한' 수였다. ⚠ 08-14 오전에는 '편출 종목 거래량 부재'로 **판정 보류**였다. 그날 오후 그 거래량을 받아(yf.download 응답의 Volume 열을 안 꺼내 쓰고 있었을 뿐이다 — 멤버-월 커버 96.91%로 가격과 동일) 재보니 보류가 아니라 기각이었다. F1(+24.50)·F3(1.01)·F4(0.65)·F6(66.9%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 542c588c·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
    },
    {
     "sid": "x-mfi",
@@ -408,7 +408,7 @@
     "src": "PREREG-2026-08-14-FLOW.md · PREREG-2026-08-14-FLOW-RESULT.md",
     "t": 2.4,
     "gate": "사망 조건 F1~F6 (t 문턱 없음 — 2026-08-13 폐지)",
-    "why": "기각 — 사망 조건 F2. 소급 초과 +11.95%p → PIT +5.59%p, 배수 2.14 로 문턱 2.0 을 넘었다. 절반 이상이 생존편향이다. 위 x-turnchg 와 같은 경위(오전 보류 → 오후 실측 기각). F1(+5.67)·F3(0.92)·F4(0.45)·F6(54.2%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 b8386698·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
+    "why": "기각 — 사망 조건 F2. 소급 초과 +11.95%p → PIT +5.59%p, 배수 2.14 로 문턱 2.0 을 넘었다. 절반 이상이 생존편향이다. 위 x-turnchg 와 같은 경위(오전 보류 → 오후 실측 기각). F1(+5.67)·F3(0.92)·F4(0.45)·F6(54.2%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 542c588c·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
    },
    {
     "sid": "x-adslope",
@@ -418,7 +418,7 @@
     "src": "PREREG-2026-08-14-FLOW.md · PREREG-2026-08-14-FLOW-RESULT.md",
     "t": 2.28,
     "gate": "사망 조건 F1~F6 (t 문턱 없음 — 2026-08-13 폐지)",
-    "why": "기각 — 사망 조건 F2. 소급 초과 +7.06%p 인데 **PIT 초과가 −0.28%p** 로 부호가 뒤집힌다. 생존편향을 걷어내면 대조군에 진다. 위 둘과 같은 경위. F1(+6.64)·F3(0.99)·F4(0.53)·F6(55.9%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 b8386698·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
+    "why": "기각 — 사망 조건 F2. 소급 초과 +7.06%p 인데 **PIT 초과가 −0.28%p** 로 부호가 뒤집힌다. 생존편향을 걷어내면 대조군에 진다. 위 둘과 같은 경위. F1(+6.64)·F3(0.99)·F4(0.53)·F6(55.9%)은 통과. ⚠ 위 시점정확 수치는 **PIT 창 5년(2021-07~2026-08)** 에서 잰 것이다. 2026-08-14 저녁에 랩이 소급 레그를 걷고 PIT 창을 10년으로 내렸으므로(커밋 542c588c·a9ae12f9) 절대값은 다르다 — 판정(F2 기각)은 그대로다. 살아 있는 수치는 data/pit_strategies.json 에 있다."
    },
    {
     "sid": "e-spxadd1",
@@ -3025,9 +3025,9 @@
     "blocked_by": "",
     "readmitted": {
      "when": "2026-09-07",
-     "changed": "규칙은 **한 글자도 안 바꿨다.** 바뀐 것은 «어떻게 잴 것인가» 다 — PREREG-2026-09-07-CGATEMOM(커밋 f9c03ec9)이 소급을 판정에서 빼고 얼린 경계 2026-09-04 뒤의 **전방 구간만** 쓰게 했다. 🚨 소급 t 2.10 은 근거가 아니다 — 같은 창에서 다시 돌리면 같은 수가 나오고, 그것을 재검증이라 부르면 한 번 본 것을 두 번 세는 것이다. 엔진에는 되올렸지만 HIDE_SIDS 로 **화면에서는 뺐다**.",
+     "changed": "규칙은 **한 글자도 안 바꿨다.** 바뀐 것은 «어떻게 잴 것인가» 다 — PREREG-2026-09-07-CGATEMOM(커밋 239c1974)이 소급을 판정에서 빼고 얼린 경계 2026-09-04 뒤의 **전방 구간만** 쓰게 했다. 🚨 소급 t 2.10 은 근거가 아니다 — 같은 창에서 다시 돌리면 같은 수가 나오고, 그것을 재검증이라 부르면 한 번 본 것을 두 번 세는 것이다. 엔진에는 되올렸지만 HIDE_SIDS 로 **화면에서는 뺐다**.",
      "result": "아직 없다 — 전방 24개월이 차기 전에는 어떤 수치도 판정이 아니다(등록 F1). 좋아 보여도 나빠 보여도 그렇다.",
-     "prereg": "build/PREREG-2026-09-07-CGATEMOM.md (커밋 f9c03ec9)",
+     "prereg": "build/PREREG-2026-09-07-CGATEMOM.md (커밋 239c1974)",
      "why_ok": "🚨 **자료가 달라진 것도 정의가 달라진 것도 아니다.** 이 칸의 규약은 «결과가 아니라 자료·정의 때문임을 적으라» 인데, 여기 해당하는 사유가 **없다** — 그러니 그렇게 적는다. 이 규칙은 A15 의 병행판이고 소급에서 t 2.10 이 나왔으며, 그것을 **보고** 되올렸다. 그래서 되올림의 정당성을 «소급 성적» 에 두지 않는다. 정당성은 **판정 방식**에 있다: 소급을 판정에서 통째로 빼고 얼린 경계(2026-09-04) 뒤의 전방 구간만 쓴다. 같은 창에서 다시 돌리면 같은 수가 나오므로 그것은 검정이 아니고, 이 랩의 다중검정 진단은 잡음만으로도 최고 t 중앙값이 2.26 이라고 말한다 — 소급 t 2.10 은 그 분포 안쪽이다. ⚠ 그래서 화면에 안 올린다(HIDE_SIDS). 「문턱만 바꿔 다시 돌리는 것」과의 구별점은 **문턱을 한 글자도 안 바꿨다는 것**이고, 만지면 등록 F5 로 전방 표본이 0 으로 되돌아간다."
     }
    },
@@ -3835,7 +3835,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3850,7 +3850,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 비공개(D3)",
-    "why": "배치 T 사전등록 d7c76ab1f · 비공개(D3)",
+    "why": "배치 T 사전등록 32da8a536 · 비공개(D3)",
     "blocked_by": ""
    },
    {
@@ -3865,7 +3865,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3880,7 +3880,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3895,7 +3895,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3910,7 +3910,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 비공개(D3)",
-    "why": "배치 T 사전등록 d7c76ab1f · 비공개(D3)",
+    "why": "배치 T 사전등록 32da8a536 · 비공개(D3)",
     "blocked_by": ""
    },
    {
@@ -3925,7 +3925,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3940,7 +3940,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3955,7 +3955,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3970,7 +3970,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -3985,7 +3985,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4000,7 +4000,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 T(결과는 결과 문서에만)",
-    "why": "배치 T 사전등록 d7c76ab1f · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
+    "why": "배치 T 사전등록 32da8a536 · 결과는 build/PREREG-2026-09-26-TBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4015,7 +4015,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4030,7 +4030,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4045,7 +4045,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4060,7 +4060,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4075,7 +4075,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4090,7 +4090,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4105,7 +4105,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4120,7 +4120,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4135,7 +4135,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 V(결과는 결과 문서에만)",
-    "why": "배치 V 사전등록 ada1e16ae · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
+    "why": "배치 V 사전등록 de721d62d · 결과는 build/PREREG-2026-09-27-VBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4150,7 +4150,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 X(결과는 결과 문서에만)",
-    "why": "배치 X 사전등록 757c111cf · 결과는 build/PREREG-2026-09-27-XBATCH-RESULT.md",
+    "why": "배치 X 사전등록 70c2cced7 · 결과는 build/PREREG-2026-09-27-XBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4165,7 +4165,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4180,7 +4180,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4195,7 +4195,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4210,7 +4210,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4225,7 +4225,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4240,7 +4240,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4255,7 +4255,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-B-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-B-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4270,7 +4270,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "기각 — 배치 W(결과는 결과 문서에만)",
-    "why": "배치 W 사전등록 4200cfe89 · 결과는 build/PREREG-2026-09-27-WBATCH-B-RESULT.md",
+    "why": "배치 W 사전등록 9f6480a40 · 결과는 build/PREREG-2026-09-27-WBATCH-B-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4285,7 +4285,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — D13 주식판 DSTK(결과는 결과 문서에만)",
-    "why": "DSTK 사전등록 235233e1c · 결과는 build/PREREG-2026-09-27-DSTK-RESULT.md",
+    "why": "DSTK 사전등록 51be3e168 · 결과는 build/PREREG-2026-09-27-DSTK-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4300,7 +4300,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "관문 통과(채택 표시 · 표본 안 · 오염 측정) — 보류: 펀드에 붙이기는 사용자 결정 · EGSTEP(결과는 결과 문서에만)",
-    "why": "EGSTEP 사전등록 29535c2df · 결과는 build/PREREG-2026-09-27-EGSTEP-RESULT.md",
+    "why": "EGSTEP 사전등록 d650b7221 · 결과는 build/PREREG-2026-09-27-EGSTEP-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4315,7 +4315,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — Q06 방아쇠 기전 검정 Q06HOLD(주 점 추정 부호 양 · 결과는 결과 문서에만)",
-    "why": "Q06HOLD 사전등록 7b461f4f8 · 결과는 build/PREREG-2026-09-28-Q06HOLD-RESULT.md",
+    "why": "Q06HOLD 사전등록 0167b767b · 결과는 build/PREREG-2026-09-28-Q06HOLD-RESULT.md",
     "blocked_by": ""
    },
    {
@@ -4330,7 +4330,7 @@
     "incr": null,
     "measured_no_t": true,
     "gate": "측정만 — SSD 지수 강화 책 역할 검정 SSDIX((A) 기각 · 관문 G4 거짓 · 채택 표시 없음 · (B) 읽기 · 결과는 결과 문서에만)",
-    "why": "SSDIX 사전등록 49e33fb56 · 결과는 build/PREREG-2026-09-28-SSDIX-RESULT.md",
+    "why": "SSDIX 사전등록 dbade03ed · 결과는 build/PREREG-2026-09-28-SSDIX-RESULT.md",
     "blocked_by": ""
    }
   ]

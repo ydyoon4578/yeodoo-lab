@@ -5,7 +5,7 @@
 규칙: a-bond-rolldown
 <!-- D8 기각 · D13(a-dur-style)은 DURSTYLE4 문서가 판정한다 -->
 
-등록: `build/PREREG-2026-09-03-RATE2.md` — **계산 전 커밋 `882740940`**
+등록: `build/PREREG-2026-09-03-RATE2.md` — **계산 전 커밋 `351310553`**
 구현: `build/asset_backtest.py` — `bond-rolldown` · `dur-style`
 
 ---

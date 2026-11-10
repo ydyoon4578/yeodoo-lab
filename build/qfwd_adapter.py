@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/qfwd_adapter.py — 전방 원장(QFWD) 어댑터 · 끼움 일곱만 둔다 — 규칙 수는 하나도 바꾸지 않는다.
 
-근본 이유 — 배치 Q 카드(Q07 · Q08 · Q06)와 EG30 V0 은 얼린 코드(1d81f083)로만 결정해야 전방 기록이 «그 규칙» 의 기록이 된다.
+근본 이유 — 배치 Q 카드(Q07 · Q08 · Q06)와 EG30 V0 은 얼린 코드(439e16db)로만 결정해야 전방 기록이 «그 규칙» 의 기록이 된다.
   얼린 모듈을 고치면 표본 안 판과 전방 판이 두 벌이 된다(이 랩이 되풀이한 결함). 그래서 차이는 모두 여기 끼움으로 둔다.
   끼움이 규칙 수를 바꾸지 않았다는 증거는 짝맞춤 시험 하나다 — 표본 안 판에 전방과 같은 끼움 경로를 태워도 얼린 굽기와
   비트 단위로 같은 목표 해시가 나와야 한다(하나라도 다르면 원장을 열지 않는다).
@@ -49,9 +49,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 
 # ── 핀(사전등록 §2 와 같다) ────────────────────────────────────────────────
-CODE_PIN = "1d81f083a404c68e23d15a649ef6f0a340d4d95c"
-BUILD_TREE = "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8"          # git rev-parse 1d81f083:build
-P1_PRICE, P1_BASE = "940f0bda99ae1cc99299a43a06b30b9fa267d734", "bef4eea8c98572bd05815d44bd0744d9ce7ed370"
+CODE_PIN = "439e16db2dd4b15ff5894f0fd64a399f36206a4c"
+BUILD_TREE = "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8"          # git rev-parse 439e16db:build
+P1_PRICE, P1_BASE = "9677330edd6ad6acbbfa32e496a2aa7357d3cd7f", "bba67290def066ef69a20d0c55060d0fa28e7bf4"
 SNAP_FILES = ("data/stocks.json", "data/pit_px.json", "data/sd")    # = qbatch_run.SNAP_FILES
 P3 = {   # 모든 뿌리에 코드 핀에서 덮는 고정 입력(핀의 blob id)
     "data/_q07_ltd_fits.json":              "1c670bc0a7d76b23fd1e916f842cfb8a20c3295d",

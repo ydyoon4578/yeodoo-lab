@@ -18,7 +18,7 @@
      [선언] runner = local 인 결정 줄은 커밋 시각이 사용자 PC 시계라 증거가 약하다 — 그 줄을 본 첫 gha 실행의 witness 줄 시각까지
        t_eff 에 넣는다(witness 가 없으면 t_eff 없음 = 미커밋 취급).
      그리고 판 시각: d_m 마감 < 판 커밋 시각(git 의 실제 값) ≤ t_decided — 어긋나면 위반.
-  ④ 핀 — qfwd 파일 blob · 사전등록 문서 blob · 수정 등록 핀 사슬(amend/) · 결정 줄의 코드 핀과 어댑터 blob · 1d81f083:build 트리 ·
+  ④ 핀 — qfwd 파일 blob · 사전등록 문서 blob · 수정 등록 핀 사슬(amend/) · 결정 줄의 코드 핀과 어댑터 blob · 439e16db:build 트리 ·
      입력 파일 sha · 판 커밋과 기록한 origin/main 끝(snap.tip)이 origin/main 조상.
      --full 은 마지막 세 결정 달의 판 고르기를 기록한 끝(snap.tip)의 첫 부모 이력에서 다시 돌려 기록한 판이 규칙의 판인지 본다
      (대체 판이면 건너뛴 판마다 오류 시도 셋 · 시간 초과 여섯 이상이 기록돼 있어야 한다 · 막힘 대체면 그 시각까지 온전한 판이 없어야 한다).
@@ -62,7 +62,7 @@ IMMUT_REL = ("data/_qfwd/pins.json", "data/_qfwd/parity.json", "data/_qfwd/eg", 
 QFWD_FILES = ("build/qfwd_adapter.py", "build/qfwd_ledger.py", "build/qfwd_check.py", "build/qfwd_judge.py",
               ".github/workflows/qfwd-ledger.yml")
 ADAPTER_REL = "build/qfwd_adapter.py"
-CODE_PIN = "1d81f083a404c68e23d15a649ef6f0a340d4d95c"
+CODE_PIN = "439e16db2dd4b15ff5894f0fd64a399f36206a4c"
 BUILD_TREE = "e221c9817b8baa4e225e0382ff4cf2c15fbcb8c8"
 PREREG_DEFAULT = "build/PREREG-2026-09-26-QFWD.md"   # = qfwd_adapter.PREREG · 정본은 pins.json 의 prereg · genesis
 WINDOW_DAYS = 8

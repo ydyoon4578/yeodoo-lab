@@ -1106,7 +1106,7 @@
  },
  "vroot": {
   "ok": true,
-  "data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a",
+  "data_pin": "549f42153dedb7dab3eb314bcc9237c8e026b629",
   "paths": [
    "build/",
    "data/"
@@ -1145,7 +1145,7 @@
   "s_cov_ok": true,
   "state_agree_pass": true,
   "lookahead_real_prior": "엔진 단계 x_signals --lookahead-real 모두 참(BEAR 200/200 · 성분 80/80) — 굽기가 다시 돈다",
-  "d_data_pin": "c6a35ff0168e5ea21c2ab2d18680550452511a3a"
+  "d_data_pin": "549f42153dedb7dab3eb314bcc9237c8e026b629"
  },
  "code_sha": {
   "build/x_data.py": "e297bd2e3a608a37",

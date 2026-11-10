@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """계층적 위험 패리티(HRP) — 계층 구조가 «비중» 에 정보를 주는가.
 
-규약 build/PREREG-2026-09-11-HRP.md · 계산 전 커밋 e90ba5e87.
+규약 build/PREREG-2026-09-11-HRP.md · 계산 전 커밋 1f160377d.
 López de Prado (2016), *Building Diversified Portfolios that Outperform Out-of-Sample*.
 
 🚨 성과 문턱이 없다(등록 §0·§3-1). 판정하는 것은 V1·V2 —
@@ -209,7 +209,7 @@ def main():
 
     lo, hi = qe[0] + 1, qe[-1]
     out = {"note": "HRP — 계층 구조가 비중에 정보를 주는가. 규약 PREREG-2026-09-11-HRP.md. 얼린 측정.",
-           "prereg": "e90ba5e87", "win": WIN, "start": dates[lo][:10], "end": dates[hi][:10],
+           "prereg": "1f160377d", "win": WIN, "start": dates[lo][:10], "end": dates[hi][:10],
            "n_quarters": len(diag), "quarters": diag, "legs": {}}
 
     bx = []

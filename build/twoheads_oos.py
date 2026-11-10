@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/twoheads_oos.py — Combined Rank 가 OOS 를 맞히나.
 
-사전등록: build/PREREG-2026-09-21-TWOHEADS.md (계산 전 커밋 **93364b3**).
+사전등록: build/PREREG-2026-09-21-TWOHEADS.md (계산 전 커밋 **9d62690**).
 실패 조건 F1~F5 와 예상 넷은 그 문서에 계산 전에 적혀 있다. 여기서 고치지 않는다.
 
 🚨 `data/_monotonicity.json` 을 **안 읽는다.** 그 파일은 전 구간(119개월) 순위라,
@@ -25,7 +25,7 @@ import monotonicity as MN                                        # noqa: E402
 import tech_backtest as TB                                       # noqa: E402
 
 PREREG = "PREREG-2026-09-21-TWOHEADS.md"
-COMMIT = "93364b3"
+COMMIT = "9d62690"
 IS_N = 60            # 등록 §1 — 주 분할은 절반(60 / 59)
 CUT = 0.30           # 등록 §1 — 상·하위 30%
 WF_STEP, WF_MIN = 12, 36   # 등록 §1 — 보조: 확장창 walk-forward

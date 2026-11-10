@@ -10,7 +10,7 @@
   엔진만 들고 진 엔진의 칸은 현금이 아니라 SPY 로 돌린다(급등에서 베타를 잃지 않는다). 반대 증거(RRG t −0.11)가 분명해 정적 켜짐비율 위약 대비.
 
 규칙(카드 원문 — scratchpad/qbatch_final.md «# Q14» · «# Q15» · 세부는 qbatch_research.json pool L2-resid-n · L4-engine-tsm):
-  자료 lib_loader.load(end='2026-08', rev='9e8ebd40')(LIBMETA 와 같다 · sid/panel sha 대조) · r̃ = r − cost_drag/12 · ETF 는 같은 판 assets.json 월말 수정종가.
+  자료 lib_loader.load(end='2026-08', rev='45e1d729')(LIBMETA 와 같다 · sid/panel sha 대조) · r̃ = r − cost_drag/12 · ETF 는 같은 판 assets.json 월말 수정종가.
   Q14 U2 = 수익엔진 ∧ pit ∧ holds∈{종목, 없음} ∧ cost_kill ≠ True(54) · 매월 말 t(2019-09 ~ 2026-07) · W_t = t−35..t · U2_t = W_t 36개월 모두 r̃ 가 선 엔진
       1단계 OLS(절편 + MKT=SPY−rf · EW=RSP−SPY · GV=IVW−IVE · LV=SPLV−SPY · MOM=SPMO−SPY) — 엔진마다 · IVW · IVE · QQQ · SPHB · SPY ≡ (1,0,0,0,0) · T-bill ≡ 0
       2단계 w = 1/N · L_P = Σ w 적재
@@ -59,7 +59,7 @@ CARDS = {"Q14": {"cls": "D", "slot": "F-LIB-H2"}, "Q15": {"cls": "D", "slot": "F
 NPERM = 1000                          # K4 — 연기 시험에서 작게 덮어쓴다
 
 ROOT = os.path.dirname(HERE)
-DATA_REV = LM.DATA_REV                # 9e8ebd40 — LIBMETA 와 같은 판
+DATA_REV = LM.DATA_REV                # 45e1d729 — LIBMETA 와 같은 판
 END, LAST_DEC, W0, FORM0 = "2026-08", "2026-07", "2016-10", "2016-08"
 COST_PCT, COST20_PCT = 0.10, 0.20     # 라이브러리 틀 편도(%) — 펀드 되돌림은 Q.COST(0.0010) · 0.0020
 CASH, TBILL = "_CASH", "TBILL"        # 조달(rf · 거래 비용 없음) · T-bill 보완 다리(rf · 거래 비용 있음)
@@ -81,15 +81,15 @@ L4_FIRST, L4_LOOK = "2017-09", 12
 SEED_L4 = 20260814                    # 카드 · AUDIT-2026-08-14-REGIME-K4 §2
 ONF_LO, ONF_HI, AGREE_CAP, FF0_MIN_SWITCH, U4_MIN_MED = 0.10, 0.90, 0.80, 6, 30
 BLOCKS_L4 = [("2017-10", "2020-03"), ("2020-04", "2022-09"), ("2022-10", "2025-03"), ("2025-04", "2026-08")]
-N_U2, N_U4 = 54, 58                   # 카드가 적은 수(9e8ebd40 에서 확인)
-# 등록 커밋에 얼린다(선행조건 «commit») — 표본 안 판 9e8ebd40 의 U2 · U4 sid 목록(정렬 · "\n" 으로 이은 UTF-8 의 sha256) · 전방 원장은 같은 sid 를 적는다
+N_U2, N_U4 = 54, 58                   # 카드가 적은 수(45e1d729 에서 확인)
+# 등록 커밋에 얼린다(선행조건 «commit») — 표본 안 판 45e1d729 의 U2 · U4 sid 목록(정렬 · "\n" 으로 이은 UTF-8 의 sha256) · 전방 원장은 같은 sid 를 적는다
 U2_SHA = "4a51a3dbcb6f1dbd20c0ed0df43bfcc0ee74753ce81c22d2f624d2109b131e00"
 U4_SHA = "5119fcf90b41486e7efbe6eece2c343fc2a5e18cdf601a3be5b6fa482c4d5157"
 # 이 파일의 결과가 기대는 코드 — CRLF → LF 로 맞춘 바이트의 sha256(러너 FROZEN 과 같은 정규화) · 가져올 때 단언
 DEP_SHA = {"ml_core.py": "594c9d6e1f13207eaeac36ecd35d7f19900fbf1d157ebf0518fead503e3acdb1",       # L2-ERC 쌍둥이
            "rrg.py": "2b99185c25acbd67ebffb3162a8a92a63d0bd25624fac223f3a79ff5b89a0c5a",           # 증분 1
-           "lib_loader.py": "c3fca11c30b08ccd99a7d22dc48a7382bff2e53bcbab7f963b8ba992e7efc004",    # = f2a4c7d0(LIBMETA 동결)
-           "lib_meta.py": "84ea3c46c6c903b3032f4e116c1c348323c82acb2acb5f4a5259a2e5a12b49b5"}      # = f2a4c7d0(LIBMETA 동결)
+           "lib_loader.py": "c3fca11c30b08ccd99a7d22dc48a7382bff2e53bcbab7f963b8ba992e7efc004",    # = a5c6f550(LIBMETA 동결)
+           "lib_meta.py": "84ea3c46c6c903b3032f4e116c1c348323c82acb2acb5f4a5259a2e5a12b49b5"}      # = a5c6f550(LIBMETA 동결)
 # 전방 시작 — 카드 «목표 2026-10-30» 을 날짜로 박는다: 첫 전방 결정 = 2026-10 월말 종가 · 전방 1개월 = 2026-11.
 #   그 종가에 «forward» 선행조건(원장)이 없으면 원장이 생긴 뒤 첫 월말 종가로 미룬다(한 규칙 · «커밋 뒤 첫 월말» 은 쓰지 않는다).
 FWD_T0 = "2026-10"
@@ -142,9 +142,9 @@ INTERP_Q14 = [
     "L2-ERC(보고만): W_t 잔차 상관 → ml_core.corr_clusters(k 10) → 군집 안 잔차 공분산 erc_weights(축소 0.2 · 한 종목 군집은 1) → 군집 잔차 계열끼리 erc_weights · "
     "적재는 그 비중으로 · 덮개 · 차입료는 L2-N 과 같다.",
     "P1c(½ 엔진 1/N + ½ SPY)는 pool 원문의 보완 분리 대조 — 보고만.",
-    "SPHB 적재기(카드 선행조건) = q_lib.sphb_monthly — lib_loader.spy_tr_monthly 와 같은 월말 식(etf_monthly)을 같은 판(9e8ebd40) assets.json 에. 로드 때 lib_loader 의 "
-    "8 ETF 를 etf_monthly 로 다시 셈해 값이 똑같음을 단언한다. lib_loader.py 는 LIBMETA frozen_check(f2a4c7d0 대조) 때문에 고치지 않는다(카드 문구 수정 필요).",
-    "U2 sid 동결: 등록 커밋에 U2_SHA(표본 안 판 9e8ebd40 의 54 sid · 정렬 · \\n 이음 sha256)를 박고 로드 때 단언 · 전방 원장은 같은 sid 를 적는다(원장에 없는 sid 는 끊긴 계열 → SPY). "
+    "SPHB 적재기(카드 선행조건) = q_lib.sphb_monthly — lib_loader.spy_tr_monthly 와 같은 월말 식(etf_monthly)을 같은 판(45e1d729) assets.json 에. 로드 때 lib_loader 의 "
+    "8 ETF 를 etf_monthly 로 다시 셈해 값이 똑같음을 단언한다. lib_loader.py 는 LIBMETA frozen_check(a5c6f550 대조) 때문에 고치지 않는다(카드 문구 수정 필요).",
+    "U2 sid 동결: 등록 커밋에 U2_SHA(표본 안 판 45e1d729 의 54 sid · 정렬 · \\n 이음 sha256)를 박고 로드 때 단언 · 전방 원장은 같은 sid 를 적는다(원장에 없는 sid 는 끊긴 계열 → SPY). "
     "BATCH DESIGN §2(h) · §6 «sids … in the prereg commit» 를 따른다(카드의 «원장이 생긴 뒤 동결» 은 수정 필요).",
     "전방 시작 = FWD_T0 2026-10 월말 종가(전방 1개월 = 2026-11) · 100% SPY 에서 진입 거래를 물린다 · 그 종가에 원장이 없으면 원장이 생긴 뒤 첫 월말 종가로 미룬다.",
     "의존 코드 고정: ml_core.py · rrg.py · lib_loader.py · lib_meta.py 의 LF 정규화 sha256 을 DEP_SHA 로 박고 가져올 때 단언(러너 FROZEN 에 ml_core · rrg 가 없어서).",
@@ -168,7 +168,7 @@ INTERP_Q15 = [
     "F0: 켜짐비율 = 결정마다 칸 평균 z 의 시간 평균 · 일치율 = z_i,t = Z_t 인 칸·달 비율 · FF0(전방 전환 ≤ 6)은 전방에서만 — 표본 안 전환 수는 적기만 한다.",
     "pool 에 있던 «잔차 z» 보고만 쌍둥이는 최종 카드에 없어 만들지 않았다.",
     "M2 토막은 pool 원문(2017-10~2020-03 · 2020-04~2022-09 · 2022-10~2025-03 · 2025-04~2026-08 조각).",
-    "U4 sid 동결: 등록 커밋에 U4_SHA(표본 안 판 9e8ebd40 의 58 sid)를 박고 로드 때 단언 · 전방 원장은 같은 sid 를 적는다(카드의 «원장이 생긴 뒤 동결» 은 수정 필요).",
+    "U4 sid 동결: 등록 커밋에 U4_SHA(표본 안 판 45e1d729 의 58 sid)를 박고 로드 때 단언 · 전방 원장은 같은 sid 를 적는다(카드의 «원장이 생긴 뒤 동결» 은 수정 필요).",
     "전방 시작 = FWD_T0 2026-10 월말 종가(전방 1개월 = 2026-11) · 100% SPY 에서 · 그 종가에 원장이 없으면 원장이 생긴 뒤 첫 월말 종가로 미룬다. "
     "위약 f_i 는 전방에서 전방 실현 켜짐비율로 다시 셈한다(표본 안 판은 표본 안 실현 켜짐비율).",
 ]
@@ -706,11 +706,11 @@ def prereq_status(D=None):
     return [
         {"name": "SPHB loader", "stage": "commit", "paths": ["build/q_lib.py"], "exists": bool(real and D.sphb_same_formula),
          "needed": "Q14 등록 커밋 전",
-         "what": "q_lib.sphb_monthly(etf_monthly) — lib_loader.spy_tr_monthly 와 같은 식 · 같은 판(9e8ebd40) · 로드 때 lib_loader 의 8 ETF 를 같은 함수로 다시 셈해 "
-                 "값이 똑같음을 단언. lib_loader.py 는 LIBMETA frozen_check(f2a4c7d0 대조) 때문에 고치지 않는다 — 카드 문구 «lib_loader.spy_tr_monthly 에 SPHB» 를 이것으로 바꾼다"},
+         "what": "q_lib.sphb_monthly(etf_monthly) — lib_loader.spy_tr_monthly 와 같은 식 · 같은 판(45e1d729) · 로드 때 lib_loader 의 8 ETF 를 같은 함수로 다시 셈해 "
+                 "값이 똑같음을 단언. lib_loader.py 는 LIBMETA frozen_check(a5c6f550 대조) 때문에 고치지 않는다 — 카드 문구 «lib_loader.spy_tr_monthly 에 SPHB» 를 이것으로 바꾼다"},
         {"name": "frozen U2/U4 sids", "stage": "commit", "paths": ["build/q_lib.py"],
          "exists": bool(real and (D.U2_sha, D.U4_sha) == (U2_SHA, U4_SHA)), "needed": "등록 커밋(BATCH DESIGN §2(h) · §6)",
-         "what": "U2_SHA %s… · U4_SHA %s… — 표본 안 판 9e8ebd40 의 54 · 58 sid(정렬 · \\n 이음 sha256)를 이 파일 상수로 얼리고 로드 때 단언. "
+         "what": "U2_SHA %s… · U4_SHA %s… — 표본 안 판 45e1d729 의 54 · 58 sid(정렬 · \\n 이음 sha256)를 이 파일 상수로 얼리고 로드 때 단언. "
                  "전방 원장은 같은 sid 를 적는다(원장에 없는 sid 는 끊긴 계열 → SPY) — 카드의 «원장이 생긴 뒤 동결» 은 이것으로 바꾼다" % (U2_SHA[:8], U4_SHA[:8])},
         {"name": "append-only ledger", "stage": "forward", "paths": ["build/lib_ledger.py", "data/_lib_ledger.json"],
          "exists": bool(ex("build/lib_ledger.py") and ex("data/_lib_ledger.json")),

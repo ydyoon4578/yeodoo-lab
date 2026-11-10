@@ -4,7 +4,7 @@
 판정: 기각
 규칙: (게시용 규칙 없음 — 라벨의 정보성 측정이었다)
 
-등록: `build/PREREG-2026-09-07-REGIME0.md` — **계산 전 커밋 `72e2c70d`**
+등록: `build/PREREG-2026-09-07-REGIME0.md` — **계산 전 커밋 `f047a248`**
 구현: `build/regime_info.py` → `data/regime_info.json`
 
 ---

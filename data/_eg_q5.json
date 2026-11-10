@@ -1,7 +1,7 @@
 {
- "note": "기대투자성장(Eg) PIT 검정. 사전등록 PREREG-2026-09-23-EG(계산 전 커밋 cee33124) 값 그대로.",
+ "note": "기대투자성장(Eg) PIT 검정. 사전등록 PREREG-2026-09-23-EG(계산 전 커밋 25a6054c) 값 그대로.",
  "prereg": "build/PREREG-2026-09-23-EG.md",
- "commit": "cee33124",
+ "commit": "25a6054c",
  "window": "보유 2016-09 ~ 2026-08 (120개월)",
  "summary": {
   "spread_mean_pm": 0.6707056431598822,

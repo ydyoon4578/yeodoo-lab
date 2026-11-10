@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/purels.py — 20종 스타일 로테이션의 롱숏판 → data/_purels.json
 
-규약: build/PREREG-2026-09-08-PURELS.md (계산 전 커밋 b9175b27).
+규약: build/PREREG-2026-09-08-PURELS.md (계산 전 커밋 e15ff85c).
 
   고르는 규칙은 x-pure10 그대로(선견 보정 레그 — 그 시점 SPX ∪ NDX 멤버만).
   바꾸는 것은 배분을 «순노출» 로 읽는 것뿐이다 —
@@ -282,7 +282,7 @@ def main():
              100 * sum(1 for i in idx if SPD[i] > 0) / len(idx)))
 
     doc = {"note": "20종 스타일 로테이션 롱숏판. 규약 PREREG-2026-09-08-PURELS.md. 얼린 측정.",
-           "prereg": "b9175b27", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
+           "prereg": "e15ff85c", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
            "net": NET, "flat_months": flat, "stats": S,
            "f1": {"beta": b, "beta_lo": b0}, "f2": [1200 * sum(SPD) / n, t2],
            "f3": [S["ls"]["exsharpe"], S["lo"]["exsharpe"]],

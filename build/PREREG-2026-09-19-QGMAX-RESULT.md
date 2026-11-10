@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-QGMAX.md` · 커밋 `3e900bb` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-QGMAX.md` · 커밋 `11b8a42` (계산 전) |
 | 문서 블롭 | `dec07334392c5e9b8c352960474ee8720f6a0ff8` |
 | 실행 | `qg_max_test.py` → `qg_max_test_result.json` (최소 구성 폴더) |
 

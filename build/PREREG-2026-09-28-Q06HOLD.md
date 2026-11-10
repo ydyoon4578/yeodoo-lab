@@ -53,7 +53,7 @@
 - SPDR 은 상태 입력으로만 쓴다(보유 아님).
 
 ### 2-2. 주 목적지 L · 시장 M — French(생존 편향 없는 기전 대리)
-- **L = French `25_Portfolios_ME_BETA_5x5` 의 «BIG LoBETA»**(규모 5분위 가장 큰 쪽 × 사전 β 5분위 가장 낮은 쪽 · 시총가중 월 수익 · 그달 기업 수 < 20 이면 빈 값 — 얼린 `v_data.l_leg`) · **M = French 시장 Mkt = Mkt-RF + RF**(`F-F_Research_Data_Factors` · 얼린 `v_data.ff3`) · 같은 자료실 · CRSP **202608** 한 판 · 파일 SHA 는 배치 V 명세(vroot `c6a35ff0` 의 `data/_vb_manifest.json`)가 핀한다 — vroot 자식이 얼린 `v_data.check_pins` · `x_adapter._v_pins_full` 로 확인한다.
+- **L = French `25_Portfolios_ME_BETA_5x5` 의 «BIG LoBETA»**(규모 5분위 가장 큰 쪽 × 사전 β 5분위 가장 낮은 쪽 · 시총가중 월 수익 · 그달 기업 수 < 20 이면 빈 값 — 얼린 `v_data.l_leg`) · **M = French 시장 Mkt = Mkt-RF + RF**(`F-F_Research_Data_Factors` · 얼린 `v_data.ff3`) · 같은 자료실 · CRSP **202608** 한 판 · 파일 SHA 는 배치 V 명세(vroot `549f4215` 의 `data/_vb_manifest.json`)가 핀한다 — vroot 자식이 얼린 `v_data.check_pins` · `x_adapter._v_pins_full` 로 확인한다.
 - **y = L − M** = 얼린 `v_data.l_proxy("V02")`(배치 V 의 V02 L 대리 그대로) · 보유월은 달력 달 · 결정 달의 상태를 다음 달력 달에 붙인다. [F0] 창 · 표본 안 240 보유월(2006-09 ~ 2026-08) 모두 값이 선다.
 - **같은 종가 근사**: 상태는 결정 달 마지막 거래일 종가 뒤에 알고, French 달 수익은 그 종가에서 시작한다 — 실제 교체는 다음 거래일 종가라 하루 낙관이다(켜진 쪽 · 꺼진 쪽 모두에 같은 근사).
 - **왜 이 대리인가**: 생존 편향이 없고(CRSP · 편출 포함) · 월 · 2006 년부터 끊김이 없고 · «저베타 대형주» 라는 D 책의 기전 부분만 담는다. 한계: NYSE 기준 규모 · 사전 β(과거 월 수익) · 해마다 편성 · 섹터 선정 없음 — 랩의 D 책이 아니다(§13).
@@ -165,8 +165,8 @@ python -X utf8 build/q06hold_run.py --internal-doc            # 창 값까지 �
 
 | 핀 | 값 | 무엇 |
 |---|---|---|
-| root | 코드 `1d81f083a404c68e23d15a649ef6f0a340d4d95c`(build 트리 `e221c981`) · 가격 밖 입력 `bef4eea8c98572bd05815d44bd0744d9ce7ed370` · 가격 판 `940f0bda99ae1cc99299a43a06b30b9fa267d734` · P3 blob 9 | 얼린 `x_adapter.build_root`(배치 Q 등록 판 · EGSTEP 과 같은 뿌리) · 엔진이 `qbatch_core` · `q_switch` · `q_corrsurp` · `eg30plus` · `qg_lab` blob 을 단언 |
-| vroot | `c6a35ff0168e5ea21c2ab2d18680550452511a3a` | 얼린 `x_adapter.build_vroot`(배치 V 핀 판) · 엔진이 v_ 모듈 · `pit_panel` · `pit_alias` · `x_adapter` blob 을 단언 · French 는 얼린 `v_data` 가 명세 SHA 로 읽는다 · root 자식이 vroot 의 `data/_qbatch.json`(배치 Q 기록 신호 달)을 읽는다 |
+| root | 코드 `439e16db2dd4b15ff5894f0fd64a399f36206a4c`(build 트리 `e221c981`) · 가격 밖 입력 `bba67290def066ef69a20d0c55060d0fa28e7bf4` · 가격 판 `9677330edd6ad6acbbfa32e496a2aa7357d3cd7f` · P3 blob 9 | 얼린 `x_adapter.build_root`(배치 Q 등록 판 · EGSTEP 과 같은 뿌리) · 엔진이 `qbatch_core` · `q_switch` · `q_corrsurp` · `eg30plus` · `qg_lab` blob 을 단언 |
+| vroot | `549f42153dedb7dab3eb314bcc9237c8e026b629` | 얼린 `x_adapter.build_vroot`(배치 V 핀 판) · 엔진이 v_ 모듈 · `pit_panel` · `pit_alias` · `x_adapter` blob 을 단언 · French 는 얼린 `v_data` 가 명세 SHA 로 읽는다 · root 자식이 vroot 의 `data/_qbatch.json`(배치 Q 기록 신호 달)을 읽는다 |
 | 재사용 파일(러너가 부른다) | `build/x_adapter.py` `897c4c94` | 배치 X 등록 판 그대로(뿌리 짓기 · `_v_pins_full`) |
 | 저장소 밖 입력 | 뜬 SPDR 판 묶음 해시 `4a01c8502dcf17fdf87f169fb7111046419b551b4a0699d9bf68e4be71fc4f2b`(9 파일) · French 판(배치 V 캐시 · vroot 명세 SHA · CRSP 202608) | 값은 싣지 않는다 · 해시만 |
 

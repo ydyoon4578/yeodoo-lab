@@ -5,7 +5,7 @@
 규칙: x-pure10-ls
 <!-- standalone 측정이라 엔진에 등록한 적이 없다 -->
 
-등록: `build/PREREG-2026-09-08-PURELS.md` — **계산 전 커밋 `b9175b27`**
+등록: `build/PREREG-2026-09-08-PURELS.md` — **계산 전 커밋 `e15ff85c`**
 구현: `build/purels.py` → `data/_purels.json`(얼린 측정 · 커밋 안 함)
 
 ---

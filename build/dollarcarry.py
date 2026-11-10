@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/dollarcarry.py — C14 달러 캐리 타이밍(LRV 2014) → data/_dollarcarry.json
 
-규약: build/PREREG-2026-09-02-DOLLARCARRY.md (계산 전 커밋 92554b22b).
+규약: build/PREREG-2026-09-02-DOLLARCARRY.md (계산 전 커밋 9fb5a1293).
 
   AFD_t = mean_i(외화 3개월 인터뱅크) − 미국 3개월 인터뱅크  (그 달 값)
   AFD>0 → 다음 달 바스켓 롱·달러 숏 / AFD<0 → 반대. 밴드 없음(논문에 없다).
@@ -232,7 +232,7 @@ def main():
                   % (k, v["cagr"], v["vol"], v["sharpe"], v["t"], v["mdd"], v["hit"]))
 
     print("\n" + "=" * 80)
-    print("C14 달러 캐리 — 등록 PREREG-2026-09-02-DOLLARCARRY.md (계산 전 커밋 92554b22b)")
+    print("C14 달러 캐리 — 등록 PREREG-2026-09-02-DOLLARCARRY.md (계산 전 커밋 9fb5a1293)")
     print("=" * 80)
     show("주 판정 구간", full)
     show("논문 표본과 겹침 ~2010-12", pre)
@@ -259,7 +259,7 @@ def main():
     doc = {"note": ("C14 달러 캐리 타이밍(LRV 2014). 규약 build/PREREG-2026-09-02-DOLLARCARRY.md. "
                     "🚨 얼린 측정이다 — 입력(yfinance FX · FRED OECD)이 저장소에 없어 러너가 "
                     "재생산할 수 없다. 자동 재굽기 금지."),
-           "prereg": "92554b22b", "ccy": CCY, "tickers": TK,
+           "prereg": "9fb5a1293", "ccy": CCY, "tickers": TK,
            "rate_series": {c: "IR3TIB01%sM156N" % cc for c, cc in FRED_CC.items()},
            "cost_rt": COST_RT, "window": [rows[0]["hold"], rows[-1]["hold"]],
            "blocks": {"full": full, "pre2011": pre, "post2011": post, "lab10": lab10},

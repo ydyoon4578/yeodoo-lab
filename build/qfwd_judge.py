@@ -14,7 +14,7 @@
 
 통계는 얼린 모듈 그대로다(복제하면 표가 갈린다) — eg30plus.nw_t · down_t · mech_episodes.zigzag · rebounds ·
   q_switch.sleeve_daily · _close_terms · month_growth · mix_ex_closed · fund_ex_closed.
-  [선언] 관문 · 상태 · 자가 시험은 작업 사본이 아니라 코드 핀 1d81f083 의 build/ 를 임시 뿌리에 풀어(얼린 blob 18 단언) 그 모듈을 부르고,
+  [선언] 관문 · 상태 · 자가 시험은 작업 사본이 아니라 코드 핀 439e16db 의 build/ 를 임시 뿌리에 풀어(얼린 blob 18 단언) 그 모듈을 부르고,
   numpy · scipy · pandas · 파이썬 판이 환경 핀과 같은지 단언한다(2028~2031 에 작업 사본이 바뀌어도 판정 코드는 그대로다).
   ForwardFrame 은 시장 · 장부 기록으로 q_switch.Frame 의 자리(months · hold · day · i0 · T · mstart · gIX · years · dates)를 채운다.
   첫 달은 ENTRY_DAY 를 수익 0 인 첫 칸으로 둔다(진입 10bp 가 1개월째에 한 번 붙는다).
@@ -72,7 +72,7 @@ BETA = {"QF07": {"rule": "cards.Q07.rule.eval.sleeve_beta", "ref": "V0.eval.slee
                  "C3": "cards.Q08.controls.C3.eval.sleeve_beta"},
         "QF06": {"rule": "cards.Q06.rule.eval.sleeve_beta"},       # [DECL] QF06 의 H 는 Q06 표본 안 슬리브 베타로
         "V0": {"rule": "V0.eval.sleeve_beta"}}
-QBATCH_BLOB = "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7"   # 사전등록 §2.1 — 결과 커밋 e19d13ad 의 data/_qbatch.json · β̂ 는 이 blob 에서만 읽는다
+QBATCH_BLOB = "01fefbf447fc699c8b4c9578a0ce9c2e0ca780f7"   # 사전등록 §2.1 — 결과 커밋 cca156b4 의 data/_qbatch.json · β̂ 는 이 blob 에서만 읽는다
 RULE_BOOK = {"QF07": "Q07V1", "QF08": "Q08V1"}
 C3_BOOK = {"QF07": "Q07C3", "QF08": "Q08C3"}
 _FROZEN_ROOT = None

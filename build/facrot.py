@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/facrot.py — 상태 조건부 팩터 로테이션 → data/_facrot.json
 
-규약: build/PREREG-2026-09-09-FACROT.md (계산 전 커밋 b9ca4737).
+규약: build/PREREG-2026-09-09-FACROT.md (계산 전 커밋 5ee3b34f).
 
   IDXTILT 의 구조를 그대로 쓰고 **팩터 가중 한 곳만** 바꾼다 —
       상태 s(t) 의 과거(0…t−1) 표본이 12개월 이상이면,
@@ -322,7 +322,7 @@ def main():
                                  "cost": round(z["cost"], 6), "on": z["on"]} for z in o_g]}
 
     doc = {"note": "상태 조건부 팩터 로테이션. 규약 PREREG-2026-09-09-FACROT.md. 얼린 측정.",
-           "prereg": "b9ca4737", "warm": WARM, "min_state": MIN_STATE,
+           "prereg": "5ee3b34f", "warm": WARM, "min_state": MIN_STATE,
            "nshuf": NSHUF, "block": BLOCK, "seed": SEED, "te": TE,
            "factors": list(FACTORS), "by_index": RESULT}
     io.open(OUT, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False) + "\n")

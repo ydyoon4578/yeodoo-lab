@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/rrg_board.py — 종목 RRG 판 자료 → data/rrg_board.json
 
-사전등록: build/PREREG-2026-09-23-RRGSTOCK.md (계산 전 커밋 064bdb29)
+사전등록: build/PREREG-2026-09-23-RRGSTOCK.md (계산 전 커밋 1be791f9)
 
 무엇을. 518종(= explorer 202개 전략 보유의 합집합, 실측 일치)을 S&P 500(PR) 대비 **주간**
   RRG 로 놓는다. 산식은 build/rrg.py 의 rrg_axes() 그대로다 — 되돌아보기 12(여기선 주)·컷 100.

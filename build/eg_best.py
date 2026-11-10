@@ -36,9 +36,9 @@ FROZEN = ("build/qg_lab.py", "build/eg_best.py", "build/eg_q5.py", PREREG, "data
           "build/pit_gics.py", "data/pit_gics.json",
           "build/pit_panel.py", "build/pit_quarantine.py", "build/stoploss.py", "build/tech_backtest.py", "build/rally_pattern.py",
           "data/_fund_mix.json", "data/_eg_q5_scores.json")
-SNAP = "940f0bda"                                                  # 자료 판(사전등록 §2) — frozen_check 가 실제로 대조한다
+SNAP = "9677330e"                                                  # 자료 판(사전등록 §2) — frozen_check 가 실제로 대조한다
 SNAP_FILES = ("data/stocks.json", "data/pit_px.json", "data/sd")
-SNAP_BASE = "bef4eea8"                                             # 작업 사본의 나머지 입력(가격 밖)이 선 커밋
+SNAP_BASE = "bba67290"                                             # 작업 사본의 나머지 입력(가격 밖)이 선 커밋
 BASE_FILES = ("data/bench_px.json", "data/rf_monthly.json", "data/index_history.json", "data/index_ledger.json",
               "data/pit_universe.json", "data/pit_reuse.json", "data/fx", "data/fx_pit")
 MARK = os.path.join(ROOT, "data", "_eg_best.started")              # 한 번 굽기 표식 — 결과가 찍히기 전에 쓴다

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """고르지 않는다 — 측정한 195종을 전부 동일가중으로 담는다.
 
-규약 build/PREREG-2026-09-11-UNION.md · 계산 전 커밋 f990d83b9.
+규약 build/PREREG-2026-09-11-UNION.md · 계산 전 커밋 08cfe99dc.
 
 🚨 이 파일은 «선택» 을 한 곳도 하지 않는다. 성적·판정·게시 여부를 읽는 코드가 없다.
    그것이 이 등록의 전부이므로, 나중에 누가 여기에 필터를 더하면 등록이 무효가 된다.
@@ -184,7 +184,7 @@ def main():
         Mn[s] = {m: v - drag for m, v in M[s].items()}
 
     res = {"note": "고르지 않는다 — 측정 195종 동일가중. 규약 PREREG-2026-09-11-UNION.md. 얼린 측정.",
-           "prereg": "f990d83b9", "start": START, "end": END, "n_months": len(grid),
+           "prereg": "08cfe99dc", "start": START, "end": END, "n_months": len(grid),
            "pop": {"total": len(sids), "published": len(A), "hidden": len(Hd)},
            "no_turnover": sorted(no_to), "div_adj": DIV_ADJ, "cost_rt": COST_RT}
 

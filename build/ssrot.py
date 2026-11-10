@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/ssrot.py — S&P 스타일 점수로 금리 국면 로테이션 → data/_ssrot.json
 
-규약: build/PREREG-2026-09-03-SSROT.md (계산 전 커밋 0e0ba241f).
+규약: build/PREREG-2026-09-03-SSROT.md (계산 전 커밋 d66ef02c5).
 
   x-ssrot  스타일 점수의 가치배분 WV 중앙값으로 반씩 → 가치·성장 다리(동일가중)
            DFII10 3개월 변화 ≥+20bp → 가치 70/성장 30 · ≤−20bp → 30/70 · 사이 50/50
@@ -206,7 +206,7 @@ def main():
               % (lab, len(v), aa, ta, bb, tb))
 
     doc = {"note": "S&P 스타일 점수 금리 로테이션. 규약 PREREG-2026-09-03-SSROT.md. 얼린 측정.",
-           "prereg": "0e0ba241f", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
+           "prereg": "d66ef02c5", "window": [rows[0]["m"], rows[-1]["m"]], "n": n,
            "f1": [a, t], "f1_net": [an, tn], "f6_rho": rho, "switches": sw,
            "overlap_med": ov[n // 2],
            "rows": [{"m": r["m"], "reg": r["reg"], "n": r["n"],

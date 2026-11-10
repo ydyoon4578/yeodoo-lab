@@ -43,7 +43,7 @@ MIN_GROUPS = 12           # §4-2 — 후보 그룹이 이보다 적은 달은 �
 
 def main():
     import tech_backtest as TB
-    # 🚨 2026-09-07 — **부분 시점정확** 갈래(PREREG-2026-09-07-INDMOM2 · 커밋 b50e7587).
+    # 🚨 2026-09-07 — **부분 시점정확** 갈래(PREREG-2026-09-07-INDMOM2 · 커밋 06a7c6e4).
     #   `--pit` 를 주면 매 월말 «그때 지수에 있던 종목» 만 후보로 둔다.
     #   ⚠ 여섯 상수(형성구간·계층·최소 종목 수·상위 N·산업수익 가중·보유)는 **하나도 안
     #     바꾼다.** 바뀌는 것은 후보 집합 하나뿐이고, 그것이 이 등록의 전부다.
@@ -288,7 +288,7 @@ def main():
                            "뒀지만(선견 보정), 편출 종목은 여전히 빠져 있다(생존 미보정). "
                            "편출 종목의 GICS 산업그룹이 랩에 없기 때문이다. "
                            "⚠ 산업 분류 자체도 오늘의 GICS 라 그 선견은 이 판도 못 고친다. "
-                           "규약 PREREG-2026-09-07-INDMOM2.md(계산 전 커밋 b50e7587).")
+                           "규약 PREREG-2026-09-07-INDMOM2.md(계산 전 커밋 06a7c6e4).")
     else:
         doc["leg"] = "retro"
     io.open(_out, "w", encoding="utf-8").write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")

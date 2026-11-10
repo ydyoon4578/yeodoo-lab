@@ -148,7 +148,7 @@ CAPAXIS(시총 축 곡선 어디서나 양) · QGSIZE(2024-08 −5.89). 메가�
 유니버스 그 월말 S&P 500 ∪ NASDAQ 100(시점정확 · 날짜 인식 키 · 이중클래스 하나로 · 재배정 티커 마지막 멤버월 제외 · `pit_panel.union_members`) ·
 Eg 예측치 `data/_eg_q5_scores_pitgics.json`(금융 판정 시점정확 · 금융은 Eg 가 없다) · 형성 2016-08(첫 달 · 한 달 보유) 뒤 분기(3·6·9·12월 말) · 편입 사이 비중은 흘러간다 ·
 펀드 = 지수 90% + 바스켓 10%(매월 말 되돌림) · 편도 10bp(모든 바스켓 거래 · 금융 채움 포함) · 창 보유 2016-09 ~ 2026-08(120개월) · 엔진 `build/qg_lab.py`
-(목표 비중만 끼워 넣는다 — `eg30plus.World.weights`) · 자료 판 09-22 빌드(커밋 940f0bda)의 `stocks.json`·`sd/`·`pit_px.json` 과 바탕 bef4eea8 의 가격 밖 입력을 꺼낸 작업 사본.
+(목표 비중만 끼워 넣는다 — `eg30plus.World.weights`) · 자료 판 09-22 빌드(커밋 9677330e)의 `stocks.json`·`sd/`·`pit_px.json` 과 바탕 bba67290 의 가격 밖 입력을 꺼낸 작업 사본.
 EGBEST 의 공통 캐비엇(배당조정 종가 × 주식수 시총 · 최신 제출본 재무 · 생존 편향 · 첫 매수 회전 포함)이 모두 그대로 걸린다 — V0~V3 에 똑같이.
 
 **판정 기준 = 총수익**: 펀드 = 0.9 × SPY 총수익(`assets.json` 수정종가) + 0.1 × 바스켓(총수익) 대 SPY 총수익. 바스켓이 총수익이므로 벤치도 총수익이어야 수준 비교(대조 · 바닥 · M2)가 맞다
@@ -344,8 +344,8 @@ S2(V3 대 V2): **P10** 12개월 굴린 초과 표준편차 감소 · 하위 10% 
 **한 커밋으로** 실행 전에 커밋하고 푸시한다. 검정기는 ① EG30PLUS_COMMIT 이 이 문서를 처음 더한 커밋이고 origin/main 의 조상인지 ② 얼린 파일 열일곱
 (검정기 · 엔진 `qg_lab.py` · `pit_gics.py` · `eg_q5.py` · 이 문서 · 입력 `pit_gics_sectors.json` · `_eg_q5_scores_pitgics.json` · `_eg_q5_scores_pitgics_pre.json` · `_eg_best.json` ·
 `_eg_q5_scores.json`(엔진이 읽기만 한다) · `mech_episodes.json` · 엔진이 임포트하는 `pit_panel` · `pit_quarantine` · `stoploss` · `tech_backtest` · `rally_pattern` · `index_members`)이
-그 커밋과 바이트 단위로 같은지(줄바꿈 무시) ③ 가격 파일이 자료 판 940f0bda 와 · 가격 밖 입력(bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit · assets)이
-바탕 bef4eea8 과 같은지(주식수 · 분할 `shares_yf` · `splits` 포함 — 시총과 벤치 비중에 들어간다) ④ 산출물 · 시작 표식(`data/_eg30plus.started`)이 없고 origin/main 에도 산출물 · 결과 문서가 없는지 ⑤ scipy 1.18.1 · numpy 2.5.3 인지 보고, 하나라도 어긋나면 돌지 않는다.
+그 커밋과 바이트 단위로 같은지(줄바꿈 무시) ③ 가격 파일이 자료 판 9677330e 와 · 가격 밖 입력(bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit · assets)이
+바탕 bba67290 과 같은지(주식수 · 분할 `shares_yf` · `splits` 포함 — 시총과 벤치 비중에 들어간다) ④ 산출물 · 시작 표식(`data/_eg30plus.started`)이 없고 origin/main 에도 산출물 · 결과 문서가 없는지 ⑤ scipy 1.18.1 · numpy 2.5.3 인지 보고, 하나라도 어긋나면 돌지 않는다.
 결과를 찍기 전에 시작 표식을 먼저 쓴다(다시 돌리려면 EG30PLUS_RERUN=사유 — JSON 에 남는다). 커밋 · 자료 판 · 바탕 · 작업 사본 HEAD · 자료 마지막 날 · 풀이 방법 수 · σ_Δ 를 JSON 에 적는다.
 → `data/_eg30plus.json` · 결과 `build/PREREG-2026-09-24-EG30PLUS-RESULT.md` · 고른 변형이 있으면 저장소 밖 `C:\Project\fund_reports\` 에 **그 변형만의 리포트 한 편**
 (EG30 과 같은 양식 · 단계마다 근본 이유 · 선정 경위 없음 · 부록 = 최근 매매 · 한계 · 기계적 급락/반등 표 없음 · 급락과 급등 따로 · 소수 둘째 자리 · 차트 ·

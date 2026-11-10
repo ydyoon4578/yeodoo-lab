@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/eg_q5.py — 기대투자성장(Eg · Hou·Mo·Xue·Zhang RoF 2021) 시점정확 검정 → data/_eg_q5.json
 
-사전등록: build/PREREG-2026-09-23-EG.md (계산 전 커밋 cee33124)
+사전등록: build/PREREG-2026-09-23-EG.md (계산 전 커밋 25a6054c)
 
 원문 3.1절을 랩 자료로 옮긴다 —
   ① 매월 t: 랩이 재무를 가진 전 종목(금융·음(−)자본 제외)에서
@@ -543,8 +543,8 @@ def main() -> int:
     verdict = ("기각" if any(R[k]["hit"] for k in ("f1", "f2", "f3", "f4", "f6")) else
                "보류" if R["f5"]["hit"] else "게시 후보")
     slopes = np.array([r["slopes"] for r in rows])
-    doc = {"note": "기대투자성장(Eg) PIT 검정. 사전등록 PREREG-2026-09-23-EG(계산 전 커밋 cee33124) 값 그대로.",
-           "prereg": "build/PREREG-2026-09-23-EG.md", "commit": "cee33124",
+    doc = {"note": "기대투자성장(Eg) PIT 검정. 사전등록 PREREG-2026-09-23-EG(계산 전 커밋 25a6054c) 값 그대로.",
+           "prereg": "build/PREREG-2026-09-23-EG.md", "commit": "25a6054c",
            "window": "보유 %s ~ %s (%d개월)" % (rows[0]["m"], rows[-1]["m"], len(rows)),
            "summary": {"spread_mean_pm": f1m, "spread_t": f1t, "longonly_pm": float(lo_.mean()), "longonly_t": tstat(lo_),
                        "avg_turnover": {nm: float(np.mean([r["turn"][nm] for r in rows[1:]])) for nm in ("H", "L")},

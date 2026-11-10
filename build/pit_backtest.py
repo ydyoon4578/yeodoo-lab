@@ -797,7 +797,7 @@ def load_prices(need, MEMBER_SPAN, MEM=None):
                 #   원자료로 오인한다 — 여기 실린 종목의 가격은 그 티커의 계열이 아니라
                 #   같은 CIK 의 승계 티커에서 온 것이다.
                 # 🚨 그리고 생성기와 그 산출물은 **같은 커밋**에 넣는다. 승계를 도입한 커밋
-                #   (3b524b16)은 이 파일과 validate_site·pit_fetch_report·pit_universe 만
+                #   (f20ca1e9)은 이 파일과 validate_site·pit_fetch_report·pit_universe 만
                 #   담고 data/pit_strategies.json 을 안 담았다. 그래서 코드는 승계본인데
                 #   게시 산출물은 승계 이전본인 채로 하루가 갔고, 그 다음 재생성에서 t 가
                 #   움직인 지배 원인은 그날의 다른 수정이 아니라 이 커밋이 이제야 반영된
@@ -2150,7 +2150,7 @@ def fetch_cache():
     hlout = json.load(io.open(HLCACHE, encoding="utf-8")) if os.path.exists(HLCACHE) else {}
     vlout = json.load(io.open(VOLCACHE, encoding="utf-8")) if os.path.exists(VOLCACHE) else {}
     # 🚨 2026-09-23 — 격리 이름은 **받지도 담지도 않는다**(build/pit_quarantine.py). 종전에는 이 수집기가
-    #   격리를 몰라, 캐시를 러너에서 새로 만든 첫 실행(a2a9c154)이 야후가 지금 «PARA» 로 주는 다른 증권을
+    #   격리를 몰라, 캐시를 러너에서 새로 만든 첫 실행(b2341623)이 야후가 지금 «PARA» 로 주는 다른 증권을
     #   다시 받아 넣었다. 이미 들어 있는 것도 여기서 지운다 — 다음 커밋에 그대로 실려 나가지 않게.
     import pit_quarantine as _PQ                   # noqa: E402  같은 build/ 안
     _qn = _PQ.names()

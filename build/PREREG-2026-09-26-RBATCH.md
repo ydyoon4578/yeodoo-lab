@@ -91,9 +91,9 @@ Stage S 연기 시험(구조 · 예외 · 초만 · 값은 버린다) · V0(공�
 | 통합(A2) | + 날짜 인식 별칭 · 재사용 가드 날짜 키 · 명단 고치기(LIST_FIX) · CIK 중복 정리(dedup_cik) · EQR 멈춤 · y 멈춤(y_stop) · TFCFA 재무 연결 | 같음 | **87** | 2019-01 통과(1종 차) |
 | 통합(A3) | + 공개 데이터셋 스테이징 병합 | 같음 | **117** 공개 | 떨어진 달 2016-08 · 2018-02 · 2018-05(오버레이 판 T 는 §0b-2 ⑤) |
 | 1단계 고침 | + 야후 앞 채움 시점정확(§0b-2 ②) | 같음 | 117(떨어진 달 같음) | 15개월에서 덮인 수 −1 · 2018-11 여유 1 → 0 |
-| 2단계 연습(origin df628b24e 판 · 전 과정) | 등록 절차 그대로 · 커밋 없음 | 같음 | 117 공개(2016-08 은 1종 모자람) | 재사용 가드 날짜 키 7개가 공개 원천으로 섰다 |
+| 2단계 연습(origin cb3c5afc9 판 · 전 과정) | 등록 절차 그대로 · 커밋 없음 | 같음 | 117 공개(2016-08 은 1종 모자람) | 재사용 가드 날짜 키 7개가 공개 원천으로 섰다 |
 | 2단계 실제(C7 · `r_cov --check`) | CI 가 자리 잡은 origin 위 재생성 · 커밋 | 같음 | 117(떨어진 달 2016-08 · 2018-02 · 2018-05 · Stage M 50,628행 — 연습과 같다) | CI 가 옮긴 가격 · 재무 · 편출 3종 복구(있었으면) |
-| **등록 판** | P1 = P2 `8da9529bab79` | 같음 | **117** | **나온 T 가 최종이다** |
+| **등록 판** | P1 = P2 `6f6f678b139c` | 같음 | **117** | **나온 T 가 최종이다** |
 
 - 86 → 87 → 117 사이의 고침(A2 의 일곱 · 공개 데이터셋 병합)은 **T 를 본 뒤에** 했다. 모두 «틀린 회사 · 빠진 값 · 끊긴 연결» 을 바로잡는 **자료 완성**이다.
   **F0 의 수(550일 · 0.90 · 0.95 · 2%)와 성분은 그대로다. T 를 본 뒤 해석 둘을 더했다**: §0b-2 ② 야후 앞 채움 관측일(보수 방향) · §0b-2 ⑭ (가) 야후 주식수의 CIK 이어받기
@@ -384,8 +384,8 @@ F0 의 수(나이 550일 · 개수 0.90 · 시총 0.95 · 지도 2%)와 성분(�
 
 ## 3. 자료 · 판 · 핀
 
-- **P1 가격**: 커밋 `8da9529bab7918ec31a5f221b1e7d621111363e4`(2단계 C7 · 공개 스테이징 병합)의 stocks.json · pit_px.json · sd/ — 세 격자(stocks · pit_px · _px_raw)가 같다.
-- **P2 가격 밖**: 같은 커밋 `8da9529bab7918ec31a5f221b1e7d621111363e4`의 bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit · assets · splits ·
+- **P1 가격**: 커밋 `6f6f678b139c3bcc3cf104597462618eb15b6d4d`(2단계 C7 · 공개 스테이징 병합)의 stocks.json · pit_px.json · sd/ — 세 격자(stocks · pit_px · _px_raw)가 같다.
+- **P2 가격 밖**: 같은 커밋 `6f6f678b139c3bcc3cf104597462618eb15b6d4d`의 bench_px · rf_monthly · index_history · index_ledger · pit_universe · pit_reuse · fx · fx_pit · assets · splits ·
   shares_yf · cik_map(러너 `BASE_FILES` · CI 가 바꾸는 파일은 굽기 트리에서 이 판으로 되돌린다 — §5.1).
 - **P3(등록 커밋에 얼린다 · 러너 `P3_FROZEN`)**: pit_gics_sectors · _eg_q5_scores_pitgics · _eg_q5_scores_pitgics_pre · _eg_q5_scores · mech_episodes · _eg30plus.
 - **새 자료(등록 커밋과 blob 이 같아야 한다 · 러너 `NEW_DATA` · RBATCH_DATA 쪽을 대조)** — 러너는 **git blob sha1** 으로 핀한다. 아래 sha256(CRLF → LF 바이트) 칸은 참고용이다:

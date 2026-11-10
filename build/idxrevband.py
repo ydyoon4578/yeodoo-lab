@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/idxrevband.py — 지수 강화 + 리비전 드리프트 **+ 능동비중 무거래 밴드**
 
-규약: build/PREREG-2026-09-16-IDXREVBAND.md (계산 전 커밋 f0d0cae69).
+규약: build/PREREG-2026-09-16-IDXREVBAND.md (계산 전 커밋 1a4aad932).
 
   묻는 것은 성적이 아니라 구조다 — **밴드가 회전을 줄이면서 비용 뒤 성적을 지키는가.**
   대조군은 «밴드만 뺀 같은 칸»(= IDXREV 를 오늘 다시 돌린 것).
@@ -33,7 +33,7 @@ import idxrev as IR
 import idxtilt as IT
 import tech_backtest as TB
 
-PREREG = "f0d0cae69"
+PREREG = "1a4aad932"
 # IDXREV 결과 문서의 판정값 — 무밴드 경로가 안 바뀌었는지 보는 대조(LOWTURN 실패조건)
 IDXREV_IR = {("spx", "abs"): 0.000, ("spx", "prop"): -0.010,
              ("ndx", "abs"): 0.091, ("ndx", "prop"): 0.605}

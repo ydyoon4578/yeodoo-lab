@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/rrg.py — RRG 4분면으로 본 팩터 로테이션 → data/_rrg.json
 
-사전등록: build/PREREG-2026-09-22-RRG.md (계산 전 커밋 6ea920f)
+사전등록: build/PREREG-2026-09-22-RRG.md (계산 전 커밋 41f91cb)
 
 무엇을. 상대강도를 **수준**(RS-Ratio)과 **기울기**(RS-Mom) 두 축에 놓고 4분면을 만든다.
   RRG 가 파는 전제는 둘 —
@@ -231,7 +231,7 @@ def main() -> int:
                "기각" if (f1_hit or f3_hit) else
                "보류" if f5_split else "측정만")
 
-    doc = {"note": "RRG 4분면 팩터 로테이션. 사전등록 PREREG-2026-09-22-RRG(커밋 6ea920f) "
+    doc = {"note": "RRG 4분면 팩터 로테이션. 사전등록 PREREG-2026-09-22-RRG(커밋 41f91cb) "
                    "대로 계산 전에 실패조건을 못박았다. 되돌아보기·컷·산식 판은 그 문서 값 그대로다.",
            "as_of": END, "bench": BENCH, "look": LOOK, "cut": CUT,
            "n_factors": len(F), "n_obs": len(base),

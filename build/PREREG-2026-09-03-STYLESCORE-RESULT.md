@@ -1,6 +1,6 @@
 # 결과 — S&P 스타일 점수를 랩에서 계산 · 2026-09-02
 
-등록: `build/PREREG-2026-09-03-STYLESCORE.md` — **계산 전 커밋 `5a95f5495`**
+등록: `build/PREREG-2026-09-03-STYLESCORE.md` — **계산 전 커밋 `4d8fe490a`**
 구현: `build/style_score.py` → `data/_style_score.json`(얼린 측정 · 커밋 안 함)
 
 ---

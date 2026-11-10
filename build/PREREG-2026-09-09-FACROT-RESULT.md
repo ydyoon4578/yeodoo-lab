@@ -4,7 +4,7 @@
 판정: 기각
 규칙: x-facrot-spx, x-facrot-ndx
 
-등록: `build/PREREG-2026-09-09-FACROT.md` — **계산 전 커밋 `b9ca4737`**
+등록: `build/PREREG-2026-09-09-FACROT.md` — **계산 전 커밋 `5ee3b34f`**
 구현: `build/facrot.py` → `data/_facrot.json`(얼린 측정 · 커밋 안 함)
 
 ---

@@ -8,7 +8,7 @@ H_V: 기각 0 / 6 (Holm 한쪽 α 0.05 · 구성원 V01 · V02 · V03 · V06 · 
 V08: 전방 전용 — VFWD 측정 장부 VF08S 로 2026-10-30 종가 진입(창세에 이미 든다 · 표본 안 결과로 정하지 않았다 · 등록 §4.4)
 누적 N: 945 = 랩 873(RBATCH-RESULT 머리) + 이 배치 팔 72(S 카드 22 · S 쌍둥이 25 · S 배분기 10 · L 카드 6 · L 쌍둥이 9 — 러너가 셌다 · V04 · V05 · V08 팔 따로 셈)
 
-사전등록: `build/PREREG-2026-09-27-VBATCH.md` — **등록 커밋 `ada1e16ae`**(`ada1e16ae9772a95246198407acb2f1e51a1906f` · 등록 문서 · 얼린 코드 15 · 명세 · F0 · VFWD 창세를 처음 더한 커밋 · origin/main 조상 · 수익 계산 전 · 러너 `frozen_check` 가 확인). 시작 태그 `vbatch-started` 를 origin 에 먼저 밀고(실행 기록 `start_tag` = pushed) 굽었다. 러너 `build/v_run.py`(얼린 판) → 저장소 밖 `<캐시>/out/`(`%TEMP%/vbatch_cache/out`).
+사전등록: `build/PREREG-2026-09-27-VBATCH.md` — **등록 커밋 `de721d62d`**(`de721d62d4114b25b94c5bfc20ea32653c6cacd7` · 등록 문서 · 얼린 코드 15 · 명세 · F0 · VFWD 창세를 처음 더한 커밋 · origin/main 조상 · 수익 계산 전 · 러너 `frozen_check` 가 확인). 시작 태그 `vbatch-started` 를 origin 에 먼저 밀고(실행 기록 `start_tag` = pushed) 굽었다. 러너 `build/v_run.py`(얼린 판) → 저장소 밖 `<캐시>/out/`(`%TEMP%/vbatch_cache/out`).
 이 문서는 등록 §5 게시 표대로 **`_vbatch.public.json`(게시 칸)의 칸만** 옮긴다. §2 는 얼린 렌더러(`python -X utf8 build/v_run.py --result-doc`) 출력이고, §3 의 보충 표는 같은 파일에서 스크립트로 옮겼다(손으로 고르지 않았다). 쓰는 동안 `_vbatch.json` 은 열지 않았다(sha256 · 바이트만 다시 쟀다). L 층(1926~)의 Δ · α̂ · t · p · 위약 순위 값 · 사건 · 해마다 · 쌍둥이 L 값 · FID 상관 · Stouffer · DSR · 조건 ρ 는 저장소 밖 `_vbatch.json` 에만 있다(D1).
 
 머리 항목(등록 §9 «결과 문서가 적을 것»):
@@ -25,7 +25,7 @@ V08: 전방 전용 — VFWD 측정 장부 VF08S 로 2026-10-30 종가 진입(창
 
 | 항목 | 값 |
 |---|---|
-| 시작 · 끝 | 시작 표식 «ada1e16ae9772a95246198407acb2f1e51a1906f · 2026-09-27 05:21:12» → 끝 2026-09-27 05:43:12 · 부모 1320초 · 자식 1311초 · 멈춤 없음(`stopped` null) · 다시 굽기(`rerun`) 없음 |
+| 시작 · 끝 | 시작 표식 «de721d62d4114b25b94c5bfc20ea32653c6cacd7 · 2026-09-27 05:21:12» → 끝 2026-09-27 05:43:12 · 부모 1320초 · 자식 1311초 · 멈춤 없음(`stopped` null) · 다시 굽기(`rerun`) 없음 |
 | 시작 태그 | `vbatch-started` — origin 에 먼저 밀었다(`start_tag` = pushed) |
 | 환경 | PYTHONHASHSEED=0 · OPENBLAS_NUM_THREADS=1 · Python 3.12.10 · numpy 2.5.3 · scipy 1.18.1 · pandas 3.0.6 |
 | 얼린 파일 | 37(등록 §6 표) — 판 점검 통과 뒤에만 굽는다 |
@@ -50,7 +50,7 @@ V08: 전방 전용 — VFWD 측정 장부 VF08S 로 2026-10-30 종가 진입(창
 표의 «평균» 은 펀드(S&P 500 90% + 슬리브 10%)의 월 X(대 SPY 총수익) · «연» 은 그 연율(소수 — 0.0007 = 연 +0.07%p)이다.
 
 
-- 등록 커밋 `ada1e16ae9772a95246198407acb2f1e51a1906f` · 산출 sha256 `8a9443bb6bfbb5f0` · 3301930 바이트
+- 등록 커밋 `de721d62d4114b25b94c5bfc20ea32653c6cacd7` · 산출 sha256 `8a9443bb6bfbb5f0` · 3301930 바이트
 - 멈춤: 없음
 - 선견 점검: 참
 - 시총 앵커: 참 · 배분기 구성원: V01 · V02 · V03 · V06 · V07

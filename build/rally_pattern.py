@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/rally_pattern.py — 본격 상승 직전의 패턴(사건 연구) → data/_rally.json
 
-사전등록: build/PREREG-2026-09-24-RALLY.md (계산 전 커밋 75d72ddd)
+사전등록: build/PREREG-2026-09-24-RALLY.md (계산 전 커밋 5c73eb5a)
 
 매주 마지막 거래일, 그때의 S&P 500 · NASDAQ 100 구성 종목(편출 종목 포함 · 전달 말 명단)마다 특징 여섯을 재고,
 다음 13주(65거래일) 자기 지수 대비 초과가 그 주 상위 10%(큰 상승)·하위 10%(큰 하락)에 드는지를 본다.
@@ -358,7 +358,7 @@ def main() -> int:
             res[f] = o
         return res
 
-    RESULT = {"prereg": "build/PREREG-2026-09-24-RALLY.md", "prereg_commit": "75d72ddd",
+    RESULT = {"prereg": "build/PREREG-2026-09-24-RALLY.md", "prereg_commit": "5c73eb5a",
               "window": [dates[weeks[0]], dates[weeks[-1]]], "n_weeks": len(weeks), "half": HALF,
               "h13": H13, "h26": H26, "idx": {}}
     tests = []

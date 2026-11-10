@@ -47,7 +47,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-TAXSURP.md` · 커밋 `2300c7c` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-TAXSURP.md` · 커밋 `a461a00` (계산 전) |
 | 문서 블롭 | `f98433cc1215e5021bdf69f3e3b723849f84354b` |
 | 실행 | `build/taxsurp.py` → `data/_taxsurp.json` |
 | 신호 원재료 | `tax` 태그 — **오늘 새로 받았다**(`refresh_facts_ext.py` · 커버 98.8%) |

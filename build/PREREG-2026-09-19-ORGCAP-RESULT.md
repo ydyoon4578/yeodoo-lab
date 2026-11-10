@@ -8,7 +8,7 @@
 
 | | |
 |---|---|
-| 사전등록 | `PREREG-2026-09-19-ORGCAP.md` · 커밋 `46bcf2a` (계산 전) |
+| 사전등록 | `PREREG-2026-09-19-ORGCAP.md` · 커밋 `7873c27` (계산 전) |
 | 문서 블롭 | `756ce27eeb5e2d00feae38b1e91433c821cc58c6` |
 | 실행 | `build/orgcap.py` → `data/_orgcap.json` |
 | 새 자료 | `build/refresh_facts_ext.py` · `data/fxe`(515사) · `data/fxe_pit`(126사) |

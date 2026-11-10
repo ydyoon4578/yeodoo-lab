@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """build/pure10.py — 금리 국면 스타일 로테이션을 20종으로 좁힌다 → data/_pure10.json
 
-규약: build/PREREG-2026-09-08-PURE10.md (계산 전 커밋 c1c8ac20).
+규약: build/PREREG-2026-09-08-PURE10.md (계산 전 커밋 3f182790).
 
   x-pure10  S&P Pure 규칙(WV=1 ∧ SV>mean+0.2) 안에서 SV·SG **상위 10씩**, 동일가중
   x-bm10    같은 후보에서 B/M 상위 10 = 가치 · 하위 10 = 성장  ← 1번 대조군
@@ -479,7 +479,7 @@ def main():
     doc = {"note": "금리 국면 스타일 로테이션 20종판. 규약 PREREG-2026-09-08-PURE10.md. 얼린 측정.",
            "pit_rows": pit_rows, "holdings": hold, "growfreq": growfreq,
            "sector_value": [[s, c] for s, c in sc.most_common()],
-           "prereg": "c1c8ac20", "window": [rows[0]["m"], rows[-1]["m"]], "n": n, "k": K,
+           "prereg": "3f182790", "window": [rows[0]["m"], rows[-1]["m"]], "n": n, "k": K,
            "f1_sharpe": [S["pure10"]["sharpe"], S["bm10"]["sharpe"]],
            "f2_rho_narrow": rho10, "f2_rho_wide": rhow,
            "f3_net": [an, tn], "f4": [a, t], "f5_switches": sw,
