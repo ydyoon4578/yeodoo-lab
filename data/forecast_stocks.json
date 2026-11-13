@@ -1,6 +1,6 @@
 {
  "note": "다음 주가 흐름(forecast.html)의 종목 순위 칸 — build/forecast_stocks.py 가 매 거래일 굽는다. 순위만 싣는다(확률은 보정되지 않아 싣지 않는다). 감시용 참고 순위이고 매매 신호가 아니다 — 표본 밖 검증에서 회전 비용 뒤 펀드 틀을 못 넘었다(data/forecast_validation.json).",
- "generated": "2026-11-12T02:57:39Z",
+ "generated": "2026-11-13T02:38:45Z",
  "as_of": "2026-11-11",
  "source": "가격 data/sd(오늘 유니버스 · 수정 종가) + data/pit_px.json(편출 정리본) · 회원 data/index_history.json(위키백과 지수 목록 과거 리비전 · 앞 달 말 명단) · 상태 yfinance(^SP500TR · ^NDX)",
  "members_as_of": "2026-11",
@@ -302,9 +302,9 @@
     "from": "2023-11-08",
     "to": "2026-11-04",
     "secs": {
-     "rf": 33.5,
-     "gb": 1.2,
-     "nn": 3.2
+     "rf": 46.8,
+     "gb": 1.9,
+     "nn": 4.4
     }
    },
    "state": {
@@ -617,9 +617,9 @@
     "from": "2023-11-08",
     "to": "2026-11-04",
     "secs": {
-     "rf": 5.5,
-     "gb": 0.3,
-     "nn": 0.8
+     "rf": 7.6,
+     "gb": 0.4,
+     "nn": 1.2
     }
    },
    "state": {
