@@ -8,7 +8,7 @@
   "vol": 47.6,
   "breadth": 61.7,
   "macro": 40.9,
-  "sector": 16.4
+  "sector": 16.5
  },
  "weights": {
   "trend": 18,
@@ -2923,7 +2923,7 @@
   },
   {
    "d": "2023-05-02",
-   "score": 37.0,
+   "score": 37.1,
    "band": "Risk-Off"
   },
   {
