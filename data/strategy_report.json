@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-10-30",
-  "asset": "2026-11-12",
+  "asset": "2026-11-13",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -8936,18 +8936,18 @@
      "corr": 0.893,
      "alpha": 0.93,
      "t": 2.77,
-     "beta": 0.952
+     "beta": 0.951
     },
     "five": {
-     "alpha": 0.73,
-     "t": 2.45,
+     "alpha": 0.78,
+     "t": 2.61,
      "n": 505,
      "vs": [
       "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
       "금리 국면 스타일 로테이션 (실질금리 → 가치·성장 틸트)",
       "섹터 리스크패리티",
       "섹터 모멘텀 로테이션 (12-1 상위 4)",
-      "인플레이션 국면 실물자산 배분"
+      "핼러윈 섹터 (11~4월 경기민감)"
      ]
     },
     "absorbed": null,
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10136,7 +10136,7 @@
      "beta": 0.402
     },
     "five": {
-     "alpha": 3.71,
+     "alpha": 3.72,
      "t": 1.29,
      "n": 373,
      "vs": [
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10327,7 +10327,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10490,7 +10490,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10835,7 +10835,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10998,7 +10998,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11173,7 +11173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11380,7 +11380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11555,7 +11555,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11725,7 +11725,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11869,10 +11869,10 @@
    "incr": {
     "one": {
      "vs": "섹터 리스크패리티",
-     "corr": 0.693,
+     "corr": 0.694,
      "alpha": 0.42,
      "t": 0.17,
-     "beta": 1.285
+     "beta": 1.284
     },
     "five": {
      "alpha": 0.73,
@@ -11896,7 +11896,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12067,7 +12067,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12262,7 +12262,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12442,10 +12442,10 @@
    "incr": {
     "one": {
      "vs": "섹터 리스크패리티",
-     "corr": 0.24,
+     "corr": 0.239,
      "alpha": -0.35,
      "t": -0.23,
-     "beta": 0.2
+     "beta": 0.199
     },
     "five": {
      "alpha": -0.09,
@@ -12469,7 +12469,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12612,7 +12612,7 @@
    "incr": {
     "one": {
      "vs": "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
-     "corr": 0.682,
+     "corr": 0.683,
      "alpha": -0.68,
      "t": -0.28,
      "beta": 1.05
@@ -12639,7 +12639,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12810,7 +12810,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12973,7 +12973,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13161,7 +13161,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13336,14 +13336,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLF",
-      14.3
+      14.2
      ],
      [
       "XLU",
@@ -13371,7 +13371,7 @@
      ],
      [
       "XLE",
-      8.9
+      9.0
      ],
      [
       "XLK",
@@ -13538,7 +13538,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13705,7 +13705,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13877,7 +13877,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14015,7 +14015,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.113,
-      "p": 0.812
+      "p": 0.8117
      }
     ],
     "n_boot": 4000,
@@ -14052,7 +14052,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14226,7 +14226,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14397,7 +14397,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14572,7 +14572,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14711,7 +14711,7 @@
     },
     "five": {
      "alpha": 2.51,
-     "t": 1.81,
+     "t": 1.8,
      "n": 505,
      "vs": [
       "오버나이트 보유 (QQQ 종가→시가)",
@@ -14731,7 +14731,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14902,7 +14902,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15069,7 +15069,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15087,11 +15087,11 @@
       14.3
      ],
      [
-      "XLK",
+      "XLP",
       14.3
      ],
      [
-      "XLP",
+      "XLU",
       14.3
      ],
      [
@@ -15256,7 +15256,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15424,7 +15424,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15594,7 +15594,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15757,7 +15757,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15936,7 +15936,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16106,7 +16106,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16269,7 +16269,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16371,9 +16371,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 9.41,
+     "s": 9.42,
      "b": 13.44,
-     "d": -4.03
+     "d": -4.02
     },
     {
      "k": "변동성",
@@ -16394,7 +16394,7 @@
      "d": 5.0
     }
    ],
-   "excess_cagr": -4.03,
+   "excess_cagr": -4.02,
    "d_sharpe": -0.067,
    "t": -1.09,
    "t_crit": null,
@@ -16410,7 +16410,7 @@
       "main": true
      }
     ],
-    "drag": 0.1,
+    "drag": 0.11,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -16471,7 +16471,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16634,7 +16634,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16809,7 +16809,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16820,11 +16820,11 @@
      ],
      [
       "SPY",
-      27.3
+      27.2
      ],
      [
       "DBC",
-      18.9
+      19.0
      ],
      [
       "GLD",
@@ -16991,7 +16991,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17161,7 +17161,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17309,7 +17309,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17485,7 +17485,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17643,7 +17643,7 @@
     },
     "five": {
      "alpha": -0.7,
-     "t": -0.59,
+     "t": -0.58,
      "n": 505,
      "vs": [
       "대담형 자산배분 BAA (균형형 · 6종 분산)",
@@ -17663,38 +17663,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      50.0
-     ],
-     [
-      "EFA",
-      8.4
-     ],
-     [
-      "HYG",
-      8.4
-     ],
-     [
-      "IWM",
-      8.3
-     ],
-     [
-      "SPY",
-      8.3
-     ],
-     [
-      "TLT",
-      8.3
-     ],
-     [
-      "VNQ",
-      8.3
+      100.0
      ]
     ],
     "exposure_now": null,
@@ -17850,7 +17826,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18001,7 +17977,7 @@
     },
     "five": {
      "alpha": 0.41,
-     "t": 0.62,
+     "t": 0.63,
      "n": 505,
      "vs": [
       "최소 CVaR 최적화 (4자산)",
@@ -18021,30 +17997,30 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      42.6
+      42.4
      ],
      [
       "DBC",
-      19.6
+      19.7
      ],
      [
       "SPY",
-      19.0
+      18.9
      ],
      [
       "VNQ",
-      15.5
+      15.6
      ],
      [
       "EFA",
-      3.3
+      3.4
      ]
     ],
     "exposure_now": null,
@@ -18175,11 +18151,11 @@
      "vs": "크로스에셋 RP — 목표변동성 8%",
      "corr": 0.942,
      "alpha": 1.22,
-     "t": 0.89,
+     "t": 0.88,
      "beta": 0.881
     },
     "five": {
-     "alpha": 1.4,
+     "alpha": 1.39,
      "t": 0.98,
      "n": 373,
      "vs": [
@@ -18200,14 +18176,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      37.2
+      45.9
      ],
      [
       "SPY",
@@ -18224,10 +18200,6 @@
      [
       "DBC",
       10.5
-     ],
-     [
-      "QQQ",
-      8.7
      ]
     ],
     "exposure_now": null,
@@ -18388,7 +18360,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18566,7 +18538,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18736,7 +18708,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18911,14 +18883,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TIP",
-      35.8
+      35.9
      ],
      [
       "EMB",
@@ -18938,7 +18910,7 @@
      ],
      [
       "GLD",
-      5.7
+      5.6
      ],
      [
       "SLV",
@@ -19110,18 +19082,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      48.9
+      48.8
      ],
      [
       "TLT",
-      19.6
+      19.7
      ],
      [
       "SPY",
@@ -19296,7 +19268,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19464,7 +19436,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19618,7 +19590,7 @@
     },
     "five": {
      "alpha": -0.03,
-     "t": -0.27,
+     "t": -0.26,
      "n": 373,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19638,14 +19610,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      18.2
+      18.3
      ],
      [
       "UUP",
@@ -19653,15 +19625,15 @@
      ],
      [
       "IEF",
-      12.0
+      12.1
      ],
      [
       "LQD",
-      11.5
+      11.6
      ],
      [
       "SHY",
-      8.2
+      7.8
      ],
      [
       "TLT",
@@ -19673,7 +19645,7 @@
      ],
      [
       "SPY",
-      5.0
+      5.1
      ],
      [
       "VNQ",
@@ -19828,8 +19800,8 @@
      "beta": 0.999
     },
     "five": {
-     "alpha": 0.0,
-     "t": 0.01,
+     "alpha": -0.0,
+     "t": -0.0,
      "n": 373,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19849,14 +19821,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      19.7
+      19.8
      ],
      [
       "UUP",
@@ -19864,7 +19836,7 @@
      ],
      [
       "IEF",
-      12.9
+      13.0
      ],
      [
       "LQD",
@@ -19876,7 +19848,7 @@
      ],
      [
       "SHY",
-      6.8
+      6.4
      ],
      [
       "SPY",
@@ -19896,14 +19868,14 @@
      ],
      [
       "QQQ",
-      3.1
-     ],
-     [
-      "EEM",
-      2.9
+      3.2
      ],
      [
       "GLD",
+      3.0
+     ],
+     [
+      "EEM",
       2.9
      ]
     ],
@@ -20065,7 +20037,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -20789,7 +20761,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -21223,6 +21195,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -21267,6 +21240,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -21739,6 +21713,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -21783,6 +21758,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -21824,7 +21800,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -22535,7 +22511,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -22969,6 +22945,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -23013,6 +22990,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -23485,6 +23463,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -23529,6 +23508,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -23570,7 +23550,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -24276,7 +24256,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -24710,6 +24690,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -24754,6 +24735,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -25226,6 +25208,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -25270,6 +25253,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -25311,7 +25295,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -26017,7 +26001,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -26451,6 +26435,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -26495,6 +26480,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -26967,6 +26953,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -27011,6 +26998,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -27052,7 +27040,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -27758,7 +27746,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -28192,6 +28180,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -28236,6 +28225,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -28708,6 +28698,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -28752,6 +28743,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -28793,7 +28785,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -29499,7 +29491,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 514,
+    "n": 516,
     "tickers": [
      "A",
      "AAPL",
@@ -29933,6 +29925,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SWK",
      "SWKS",
@@ -29977,6 +29970,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -30449,6 +30443,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SWK": "STANLEY BLACK & DECKER INC",
      "SWKS": "SKYWORKS SOLUTIONS INC",
@@ -30493,6 +30488,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -30534,7 +30530,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 514종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 516종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32239,7 +32235,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 412,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -32585,6 +32581,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SYF",
      "SYK",
@@ -32606,7 +32603,6 @@
      "TROW",
      "TRV",
      "TSLA",
-     "TSN",
      "TT",
      "TTWO",
      "TWLO",
@@ -32619,6 +32615,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -32999,6 +32996,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SYF": "SYNCHRONY FINANCIAL",
      "SYK": "STRYKER CORP",
@@ -33020,7 +33018,6 @@
      "TROW": "T ROWE PRICE GROUP INC",
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
-     "TSN": "TYSON FOODS INC-CL A",
      "TT": "TRANE TECHNOLOGIES PLC",
      "TTWO": "TAKE-TWO INTERACTIVE SOFTWRE",
      "TWLO": "Twilio",
@@ -33033,6 +33030,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -33070,7 +33068,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 412종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -38602,7 +38600,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -39432,7 +39430,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 412,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -39778,6 +39776,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SYF",
      "SYK",
@@ -39799,7 +39798,6 @@
      "TROW",
      "TRV",
      "TSLA",
-     "TSN",
      "TT",
      "TTWO",
      "TWLO",
@@ -39812,6 +39810,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -40192,6 +40191,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SYF": "SYNCHRONY FINANCIAL",
      "SYK": "STRYKER CORP",
@@ -40213,7 +40213,6 @@
      "TROW": "T ROWE PRICE GROUP INC",
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
-     "TSN": "TYSON FOODS INC-CL A",
      "TT": "TRANE TECHNOLOGIES PLC",
      "TTWO": "TAKE-TWO INTERACTIVE SOFTWRE",
      "TWLO": "Twilio",
@@ -40226,6 +40225,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -40263,7 +40263,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 412종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -44633,7 +44633,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 412,
+    "n": 413,
     "tickers": [
      "A",
      "AAPL",
@@ -44979,6 +44979,7 @@
      "STLD",
      "STT",
      "STX",
+     "STZ",
      "SW",
      "SYF",
      "SYK",
@@ -45000,7 +45001,6 @@
      "TROW",
      "TRV",
      "TSLA",
-     "TSN",
      "TT",
      "TTWO",
      "TWLO",
@@ -45013,6 +45013,7 @@
      "UPS",
      "URI",
      "USB",
+     "V",
      "VEEV",
      "VICI",
      "VLO",
@@ -45393,6 +45394,7 @@
      "STLD": "STEEL DYNAMICS INC",
      "STT": "STATE STREET CORP",
      "STX": "SEAGATE TECHNOLOGY HOLDINGS",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SYF": "SYNCHRONY FINANCIAL",
      "SYK": "STRYKER CORP",
@@ -45414,7 +45416,6 @@
      "TROW": "T ROWE PRICE GROUP INC",
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
-     "TSN": "TYSON FOODS INC-CL A",
      "TT": "TRANE TECHNOLOGIES PLC",
      "TTWO": "TAKE-TWO INTERACTIVE SOFTWRE",
      "TWLO": "Twilio",
@@ -45427,6 +45428,7 @@
      "UPS": "UNITED PARCEL SERVICE-CL B",
      "URI": "UNITED RENTALS INC",
      "USB": "US BANCORP",
+     "V": "VISA INC-CLASS A SHARES",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
      "VLO": "VALERO ENERGY CORP",
@@ -45464,7 +45466,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 412종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 413종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -57667,21 +57669,19 @@
     "n": 155,
     "tickers": [
      "ABNB",
+     "ABT",
      "ACGL",
-     "ADBE",
      "ADI",
      "ADM",
      "AIG",
      "ALL",
-     "AMD",
+     "AMAT",
+     "AME",
      "AMZN",
-     "ANET",
      "APH",
      "APP",
      "BAC",
-     "BBY",
      "BDX",
-     "BG",
      "BIIB",
      "BNY",
      "C",
@@ -57695,6 +57695,7 @@
      "CME",
      "CNC",
      "COF",
+     "COHR",
      "COP",
      "CPRT",
      "CRM",
@@ -57705,7 +57706,6 @@
      "D",
      "DAL",
      "DASH",
-     "DE",
      "DHI",
      "DHR",
      "DIS",
@@ -57726,14 +57726,13 @@
      "EXR",
      "F",
      "FANG",
-     "FCX",
      "FDX",
      "FE",
      "FISV",
-     "FLEX",
      "FSLR",
      "GD",
      "GEHC",
+     "GLW",
      "GRMN",
      "HBAN",
      "HPE",
@@ -57741,13 +57740,14 @@
      "IBKR",
      "IBM",
      "INTC",
+     "INTU",
      "IR",
      "JBHT",
      "JCI",
      "JNJ",
+     "JPM",
      "KDP",
      "KEY",
-     "KEYS",
      "KHC",
      "KKR",
      "KMI",
@@ -57757,6 +57757,7 @@
      "LHX",
      "LIN",
      "LUV",
+     "MCHP",
      "MDLZ",
      "MDT",
      "MET",
@@ -57769,6 +57770,7 @@
      "MSTR",
      "MTB",
      "MU",
+     "NEM",
      "NOC",
      "NOW",
      "NSC",
@@ -57780,7 +57782,6 @@
      "OXY",
      "PCAR",
      "PCG",
-     "PFE",
      "PG",
      "PH",
      "PHM",
@@ -57788,12 +57789,17 @@
      "PPL",
      "PRU",
      "RCL",
+     "REGN",
      "RF",
+     "RL",
      "ROP",
      "ROST",
+     "RTX",
+     "SHOP",
      "SMCI",
      "SNPS",
      "STE",
+     "STZ",
      "SW",
      "SYF",
      "T",
@@ -57806,7 +57812,6 @@
      "TWLO",
      "UAL",
      "UBER",
-     "UNH",
      "URI",
      "VEEV",
      "VICI",
@@ -57814,31 +57819,26 @@
      "VMRK",
      "VTR",
      "VZ",
-     "WAB",
-     "WDAY",
      "WELL",
-     "WFC",
      "WMT",
      "XOM",
      "XYL"
     ],
     "names": {
      "ABNB": "AIRBNB INC-CLASS A",
+     "ABT": "ABBOTT LABORATORIES",
      "ACGL": "ARCH CAPITAL GROUP LTD",
-     "ADBE": "ADOBE INC",
      "ADI": "ANALOG DEVICES INC",
      "ADM": "ARCHER-DANIELS-MIDLAND CO",
      "AIG": "AMERICAN INTERNATIONAL GROUP",
      "ALL": "ALLSTATE CORP",
-     "AMD": "ADVANCED MICRO DEVICES",
+     "AMAT": "APPLIED MATERIALS INC",
+     "AME": "AMETEK INC",
      "AMZN": "AMAZON.COM INC",
-     "ANET": "ARISTA NETWORKS INC",
      "APH": "AMPHENOL CORP-CL A",
      "APP": "APPLOVIN CORP-CLASS A",
      "BAC": "BANK OF AMERICA CORP",
-     "BBY": "BEST BUY CO INC",
      "BDX": "BECTON DICKINSON AND CO",
-     "BG": "BUNGE GLOBAL SA",
      "BIIB": "BIOGEN INC",
      "BNY": "BANK OF NEW YORK MELLON CORP",
      "C": "CITIGROUP INC",
@@ -57852,6 +57852,7 @@
      "CME": "CME GROUP INC",
      "CNC": "CENTENE CORP",
      "COF": "CAPITAL ONE FINANCIAL CORP",
+     "COHR": "COHERENT CORP",
      "COP": "CONOCOPHILLIPS",
      "CPRT": "COPART INC",
      "CRM": "SALESFORCE INC",
@@ -57862,7 +57863,6 @@
      "D": "DOMINION ENERGY INC",
      "DAL": "DELTA AIR LINES INC",
      "DASH": "DOORDASH INC - A",
-     "DE": "DEERE & CO",
      "DHI": "DR HORTON INC",
      "DHR": "DANAHER CORP",
      "DIS": "WALT DISNEY CO/THE",
@@ -57883,14 +57883,13 @@
      "EXR": "EXTRA SPACE STORAGE INC",
      "F": "FORD MOTOR CO",
      "FANG": "DIAMONDBACK ENERGY INC",
-     "FCX": "FREEPORT-MCMORAN INC",
      "FDX": "FEDEX CORP",
      "FE": "FIRSTENERGY CORP",
      "FISV": "FISERV INC",
-     "FLEX": "FLEX LTD",
      "FSLR": "FIRST SOLAR INC",
      "GD": "GENERAL DYNAMICS CORP",
      "GEHC": "GE HEALTHCARE TECHNOLOGY",
+     "GLW": "CORNING INC",
      "GRMN": "GARMIN LTD",
      "HBAN": "HUNTINGTON BANCSHARES INC",
      "HPE": "HEWLETT PACKARD ENTERPRISE",
@@ -57898,13 +57897,14 @@
      "IBKR": "INTERACTIVE BROKERS GRO-CL A",
      "IBM": "INTL BUSINESS MACHINES CORP",
      "INTC": "INTEL CORP",
+     "INTU": "INTUIT INC",
      "IR": "INGERSOLL-RAND INC",
      "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
      "JCI": "JOHNSON CONTROLS INTERNATION",
      "JNJ": "JOHNSON & JOHNSON",
+     "JPM": "JPMORGAN CHASE & CO",
      "KDP": "KEURIG DR PEPPER INC",
      "KEY": "KEYCORP",
-     "KEYS": "KEYSIGHT TECHNOLOGIES IN",
      "KHC": "KRAFT HEINZ CO/THE",
      "KKR": "KKR & CO INC",
      "KMI": "KINDER MORGAN INC",
@@ -57914,6 +57914,7 @@
      "LHX": "L3HARRIS TECHNOLOGIES INC",
      "LIN": "LINDE PLC",
      "LUV": "SOUTHWEST AIRLINES CO",
+     "MCHP": "MICROCHIP TECHNOLOGY INC",
      "MDLZ": "MONDELEZ INTERNATIONAL INC-A",
      "MDT": "MEDTRONIC PLC",
      "MET": "METLIFE INC",
@@ -57926,6 +57927,7 @@
      "MSTR": "MICROSTRATEGY INC-CL A",
      "MTB": "M & T BANK CORP",
      "MU": "MICRON TECHNOLOGY INC",
+     "NEM": "NEWMONT CORP",
      "NOC": "NORTHROP GRUMMAN CORP",
      "NOW": "SERVICENOW INC",
      "NSC": "NORFOLK SOUTHERN CORP",
@@ -57937,7 +57939,6 @@
      "OXY": "OCCIDENTAL PETROLEUM CORP",
      "PCAR": "PACCAR INC",
      "PCG": "P G & E CORP",
-     "PFE": "PFIZER INC",
      "PG": "PROCTER & GAMBLE CO/THE",
      "PH": "PARKER HANNIFIN CORP",
      "PHM": "PULTEGROUP INC",
@@ -57945,12 +57946,17 @@
      "PPL": "PPL CORP",
      "PRU": "PRUDENTIAL FINANCIAL INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
+     "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
+     "RL": "RALPH LAUREN CORP",
      "ROP": "ROPER TECHNOLOGIES INC",
      "ROST": "ROSS STORES INC",
+     "RTX": "RTX CORP",
+     "SHOP": "SHOPIFY INC - CLASS A",
      "SMCI": "SUPER MICRO COMPUTER INC",
      "SNPS": "SYNOPSYS INC",
      "STE": "STERIS PLC",
+     "STZ": "CONSTELLATION BRANDS INC-A",
      "SW": "SMURFIT WESTROCK PLC",
      "SYF": "SYNCHRONY FINANCIAL",
      "T": "AT&T INC",
@@ -57963,7 +57969,6 @@
      "TWLO": "Twilio",
      "UAL": "UNITED AIRLINES HOLDINGS INC",
      "UBER": "UBER TECHNOLOGIES INC",
-     "UNH": "UNITEDHEALTH GROUP INC",
      "URI": "UNITED RENTALS INC",
      "VEEV": "Veeva Systems Inc A",
      "VICI": "VICI PROPERTIES INC",
@@ -57971,10 +57976,7 @@
      "VMRK": "Vivmark Residential",
      "VTR": "VENTAS INC",
      "VZ": "VERIZON COMMUNICATIONS INC",
-     "WAB": "WABTEC CORP",
-     "WDAY": "WORKDAY INC-CLASS A",
      "WELL": "WELLTOWER INC",
-     "WFC": "WELLS FARGO & CO",
      "WMT": "WALMART INC",
      "XOM": "EXXON MOBIL CORP",
      "XYL": "XYLEM INC"
@@ -59067,12 +59069,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 95.7,
+    "exposure_now": 96.1,
     "note": "노출 96%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -60075,7 +60077,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60254,12 +60256,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 63.8,
+    "exposure_now": 64.4,
     "note": "노출 64%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -60440,7 +60442,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61855,13 +61857,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 75.0,
-    "note": "노출 75%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 100.0,
+    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -63363,11 +63365,11 @@
      "HBAN",
      "HON",
      "ITW",
+     "JBHT",
      "JPM",
      "KEY",
      "L",
      "MET",
-     "MSI",
      "MTB",
      "NSC",
      "NTRS",
@@ -63417,11 +63419,11 @@
      "HBAN": "HUNTINGTON BANCSHARES INC",
      "HON": "HONEYWELL INTERNATIONAL INC",
      "ITW": "ILLINOIS TOOL WORKS",
+     "JBHT": "HUNT (JB) TRANSPRT SVCS INC",
      "JPM": "JPMORGAN CHASE & CO",
      "KEY": "KEYCORP",
      "L": "LOEWS CORP",
      "MET": "METLIFE INC",
-     "MSI": "MOTOROLA SOLUTIONS INC",
      "MTB": "M & T BANK CORP",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NTRS": "NORTHERN TRUST CORP",
@@ -63968,7 +63970,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64147,7 +64149,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64560,7 +64562,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65663,7 +65665,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65849,13 +65851,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 64.0,
-    "note": "노출 64%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 65.8,
+    "note": "노출 66%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -66028,7 +66030,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-12",
+    "as_of": "2026-11-13",
     "n": null,
     "tickers": null,
     "names": null,
