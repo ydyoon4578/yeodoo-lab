@@ -9282,7 +9282,7 @@
      "corr": 0.81,
      "alpha": 0.34,
      "t": 0.92,
-     "beta": 0.67
+     "beta": 0.671
     },
     "five": {
      "alpha": 0.71,
@@ -11872,7 +11872,7 @@
      "corr": 0.694,
      "alpha": 0.42,
      "t": 0.17,
-     "beta": 1.285
+     "beta": 1.284
     },
     "five": {
      "alpha": 0.73,
@@ -12612,7 +12612,7 @@
    "incr": {
     "one": {
      "vs": "섹터 시계열 모멘텀 (절대 모멘텀 게이트)",
-     "corr": 0.682,
+     "corr": 0.683,
      "alpha": -0.68,
      "t": -0.28,
      "beta": 1.05
@@ -13514,7 +13514,7 @@
      "corr": 0.897,
      "alpha": 1.05,
      "t": 0.46,
-     "beta": 0.95
+     "beta": 0.951
     },
     "five": {
      "alpha": -0.84,
@@ -14015,7 +14015,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": -0.113,
-      "p": 0.8117
+      "p": 0.812
      }
     ],
     "n_boot": 4000,
@@ -14376,7 +14376,7 @@
      "beta": 0.632
     },
     "five": {
-     "alpha": -1.45,
+     "alpha": -1.46,
      "t": -0.67,
      "n": 373,
      "vs": [
@@ -14710,8 +14710,8 @@
      "beta": 0.68
     },
     "five": {
-     "alpha": 2.51,
-     "t": 1.81,
+     "alpha": 2.5,
+     "t": 1.8,
      "n": 505,
      "vs": [
       "오버나이트 보유 (QQQ 종가→시가)",
@@ -16964,7 +16964,7 @@
    "incr": {
     "one": {
      "vs": "이동평균 기간 앙상블 (100·150·200·250)",
-     "corr": 0.775,
+     "corr": 0.774,
      "alpha": -1.13,
      "t": -0.54,
      "beta": 0.756
@@ -17283,7 +17283,7 @@
     "one": {
      "vs": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
      "corr": 0.921,
-     "alpha": -2.46,
+     "alpha": -2.47,
      "t": -1.21,
      "beta": 1.246
     },
@@ -17643,7 +17643,7 @@
     },
     "five": {
      "alpha": -0.7,
-     "t": -0.59,
+     "t": -0.58,
      "n": 505,
      "vs": [
       "대담형 자산배분 BAA (균형형 · 6종 분산)",
@@ -17977,7 +17977,7 @@
     },
     "five": {
      "alpha": 0.41,
-     "t": 0.63,
+     "t": 0.62,
      "n": 505,
      "vs": [
       "최소 CVaR 최적화 (4자산)",
@@ -18151,7 +18151,7 @@
      "vs": "크로스에셋 RP — 목표변동성 8%",
      "corr": 0.942,
      "alpha": 1.22,
-     "t": 0.89,
+     "t": 0.88,
      "beta": 0.881
     },
     "five": {
@@ -19242,7 +19242,7 @@
     "one": {
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
      "corr": 0.922,
-     "alpha": -1.03,
+     "alpha": -1.04,
      "t": -0.46,
      "beta": 1.26
     },
@@ -19590,7 +19590,7 @@
     },
     "five": {
      "alpha": -0.03,
-     "t": -0.27,
+     "t": -0.26,
      "n": 373,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19753,14 +19753,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 4.74,
+      "cagr": 4.73,
       "sharpe": 0.528,
-      "excess": -8.7,
+      "excess": -8.71,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.05,
+    "drag": 0.06,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -19801,7 +19801,7 @@
     },
     "five": {
      "alpha": 0.0,
-     "t": 0.01,
+     "t": 0.0,
      "n": 373,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -20016,7 +20016,7 @@
      "beta": 1.672
     },
     "five": {
-     "alpha": -4.21,
+     "alpha": -4.2,
      "t": -1.91,
      "n": 373,
      "vs": [
@@ -50165,9 +50165,9 @@
      "KHC",
      "MS",
      "PCG",
+     "SW",
      "UNH",
-     "VRSN",
-     "VTRS"
+     "VRSN"
     ],
     "names": {
      "AAPL": "APPLE INC",
@@ -50177,9 +50177,9 @@
      "KHC": "KRAFT HEINZ CO/THE",
      "MS": "MORGAN STANLEY",
      "PCG": "P G & E CORP",
+     "SW": "SMURFIT WESTROCK PLC",
      "UNH": "UNITEDHEALTH GROUP INC",
-     "VRSN": "VERISIGN INC",
-     "VTRS": "VIATRIS INC"
+     "VRSN": "VERISIGN INC"
     },
     "weights": null,
     "exposure_now": null,
@@ -57708,7 +57708,6 @@
      "DASH",
      "DHI",
      "DHR",
-     "DIS",
      "DLR",
      "DOW",
      "DUK",
@@ -57807,6 +57806,7 @@
      "TFC",
      "TJX",
      "TMO",
+     "TMUS",
      "TRV",
      "TSLA",
      "TWLO",
@@ -57865,7 +57865,6 @@
      "DASH": "DOORDASH INC - A",
      "DHI": "DR HORTON INC",
      "DHR": "DANAHER CORP",
-     "DIS": "WALT DISNEY CO/THE",
      "DLR": "DIGITAL REALTY TRUST INC",
      "DOW": "DOW INC",
      "DUK": "DUKE ENERGY CORP",
@@ -57964,6 +57963,7 @@
      "TFC": "TRUIST FINANCIAL CORP",
      "TJX": "TJX COMPANIES INC",
      "TMO": "THERMO FISHER SCIENTIFIC INC",
+     "TMUS": "T-MOBILE US INC",
      "TRV": "TRAVELERS COS INC/THE",
      "TSLA": "TESLA INC",
      "TWLO": "Twilio",
@@ -59074,7 +59074,7 @@
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 96.1,
+    "exposure_now": 96.2,
     "note": "노출 96%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -63698,7 +63698,6 @@
      "CTAS",
      "DLR",
      "DTE",
-     "EMR",
      "ETR",
      "EVRG",
      "EXPD",
@@ -63730,6 +63729,7 @@
      "VMRK",
      "VRSN",
      "WAB",
+     "WELL",
      "WRB",
      "XEL",
      "XOM"
@@ -63752,7 +63752,6 @@
      "CTAS": "CINTAS CORP",
      "DLR": "DIGITAL REALTY TRUST INC",
      "DTE": "DTE ENERGY COMPANY",
-     "EMR": "EMERSON ELECTRIC CO",
      "ETR": "ENTERGY CORP",
      "EVRG": "EVERGY INC",
      "EXPD": "EXPEDITORS INTL WASH INC",
@@ -63784,6 +63783,7 @@
      "VMRK": "Vivmark Residential",
      "VRSN": "VERISIGN INC",
      "WAB": "WABTEC CORP",
+     "WELL": "WELLTOWER INC",
      "WRB": "WR BERKLEY CORP",
      "XEL": "XCEL ENERGY INC",
      "XOM": "EXXON MOBIL CORP"

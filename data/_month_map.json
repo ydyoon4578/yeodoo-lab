@@ -76,10 +76,10 @@
   ]
  },
  "persistence": {
-  "top5_carry_pct": 7.933884297520661,
+  "top5_carry_pct": 7.768595041322314,
   "random_pct": 2.7196932542690266,
   "rank_rho_median": 0.025480898043375333,
-  "rank_rho_mean": 0.010639680637944052
+  "rank_rho_mean": 0.010616983433368676
  },
  "kinds": [
   {
@@ -95,8 +95,8 @@
      "name": "변동성 기간구조 롤 (VXZ 보유)",
      "hit": 10,
      "in_pct": 83.3,
-     "all_pct": 18.0,
-     "lift": 65.3
+     "all_pct": 18.9,
+     "lift": 64.5
     },
     {
      "sid": "a-overnight-ndx",
@@ -151,10 +151,10 @@
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "hit": 12,
-     "in_pct": 41.4,
-     "all_pct": 18.0,
-     "lift": 23.3
+     "hit": 13,
+     "in_pct": 44.8,
+     "all_pct": 18.9,
+     "lift": 26.0
     },
     {
      "sid": "t-x-subls",
@@ -441,10 +441,10 @@
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "hit": 16,
-     "in_pct": 39.0,
-     "all_pct": 18.0,
-     "lift": 21.0
+     "hit": 17,
+     "in_pct": 41.5,
+     "all_pct": 18.9,
+     "lift": 22.6
     },
     {
      "sid": "a-overnight-ndx",
@@ -811,6 +811,14 @@
      "lift": 5.3
     },
     {
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "hit": 10,
+     "in_pct": 23.8,
+     "all_pct": 18.9,
+     "lift": 5.0
+    },
+    {
      "sid": "t-t-ddgate",
      "name": "드로다운 게이트 (−10%)",
      "hit": 3,
@@ -821,14 +829,6 @@
     {
      "sid": "a-overnight",
      "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
-     "hit": 4,
-     "in_pct": 9.5,
-     "all_pct": 4.9,
-     "lift": 4.6
-    },
-    {
-     "sid": "t-x-poacc",
-     "name": "퍼센트 영업발생액 회피 (이익의 현금 뒷받침)",
      "hit": 4,
      "in_pct": 9.5,
      "all_pct": 4.9,
@@ -8444,7 +8444,7 @@
      "ex": -10.47
     }
    ],
-   "med": 0.07
+   "med": 0.06
   },
   {
    "m": "2025-12",
@@ -9214,9 +9214,9 @@
      "ex": 2.54
     },
     {
-     "sid": "a-sec-lowvol",
-     "name": "저변동 섹터 상위 3",
-     "ex": 2.3
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "ex": 2.38
     }
    ],
    "bot": [

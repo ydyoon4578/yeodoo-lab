@@ -843,8 +843,8 @@
      "last": "2026-11-06",
      "days_ago": 7,
      "fired_today": false,
-     "state_now": true,
-     "state_days": 7,
+     "state_now": false,
+     "state_days": 0,
      "state_reon": 0,
      "fires": [
       "2025-11-24",
@@ -4861,8 +4861,8 @@
      "last": "2026-11-09",
      "days_ago": 4,
      "fired_today": false,
-     "state_now": true,
-     "state_days": 4,
+     "state_now": false,
+     "state_days": 0,
      "state_reon": 0,
      "fires": [
       "2025-11-25",
