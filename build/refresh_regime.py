@@ -35,6 +35,23 @@ def series(code):
     except Exception as e:
         print("  FRED 실패", code, e); return pd.Series(dtype=float)
 
+# 2026-11-17 — 성장 점수에 실질 GDP 를 넣는다(사용자 결정 «강한 변형»).
+#   분기 GDP 가 감소(전기비 연율 < 0)면 성장 점수 −2. −1 로는 2022 상반기(점수 2)가 안 바뀐다.
+#   발표 시점: 분기말 + 30일(속보)부터 쓴 것으로 본다. 값은 현재 빈티지(개정치) — 다른 지표와 같은 한계.
+#   비교 근거: C:/Projects/_research/regime_gdp (변형 A −1 은 0달, C −2 는 15달 바뀜, 2022-04~06 스태그플레이션).
+GDP_NEG_PENALTY = 2
+GDP_LAG_DAYS = 30
+
+
+def gdp_pub(S):
+    s = S.get("A191RL1Q225SBEA")
+    if s is None or not len(s):
+        return pd.Series(dtype=float)
+    s = s.copy()
+    s.index = s.index + pd.offsets.QuarterEnd(0) + pd.Timedelta(days=GDP_LAG_DAYS)
+    return s
+
+
 def zscore(s, win):
     return (s - s.rolling(win).mean()) / s.rolling(win).std()
 
@@ -63,7 +80,8 @@ def main():
                                  "DFF","DGS2","DGS3MO","DGS30","MORTGAGE30US",       # 금리(연방기금·2년·3M·30년·모기지)
                                  "TCU","JTSJOL","CCSA","CES0500000003",              # 노동·활동(설비가동·JOLTS·계속청구·임금)
                                  "PCEPI","PPIACO","GASREGW",                          # 물가(헤드라인PCE·PPI·휘발유)
-                                 "HOUST","PERMIT","CSUSHPINSA"]}                      # 주택(착공·허가·Case-Shiller)
+                                 "HOUST","PERMIT","CSUSHPINSA",                       # 주택(착공·허가·Case-Shiller)
+                                 "A191RL1Q225SBEA"]}                                   # 실질 GDP 전기비 연율(분기)
     _dates = [s.index.max() for s in S.values() if len(s)]
     if not _dates:
         raise SystemExit("FRED 전 시리즈 로드 실패 — API 키/네트워크 확인 (regime.json 미갱신, 이전본 유지)")
@@ -119,6 +137,9 @@ def main():
     if cfnai is not None: growth_score += 1 if cfnai > -0.35 else (-1 if cfnai < -0.7 else 0)
     if sahm is not None: growth_score += -1 if sahm >= 0.5 else 0
     if dU is not None: growth_score += -1 if dU >= 0.5 else 0
+    _gp = gdp_pub(S); _gp = _gp[_gp.index <= pd.Timestamp.today()]
+    gdp_v = float(_gp.iloc[-1]) if len(_gp) else None
+    if gdp_v is not None and gdp_v < 0: growth_score -= GDP_NEG_PENALTY
     growth = "EXPANSION" if growth_score >= 1 else ("CONTRACTION" if growth_score <= -2 else "SLOWING")
 
     # ── 축2: 물가 ──
@@ -426,6 +447,7 @@ def build_history(S, cpi_yoy, asof=None):
     #   이력에 이 축이 아예 없었다 — 축은 재고 있는데 조건부 통계를 못 내던 이유다.
     #   ⚠ 살아 있는 계산과 같은 함수(fin_score·fin_label)를 쓴다. 재료도 같다.
     hyz_s = zscore(S["BAMLH0A0HYM2"], 756)
+    gdp_s = gdp_pub(S)
     labels, fins = {}, {}
     raw_nf, raw_hz, raw_vx = {}, {}, {}
     for d in idx:
@@ -435,6 +457,8 @@ def build_history(S, cpi_yoy, asof=None):
         if cf is not None: gs += 1 if cf>-0.35 else (-1 if cf<-0.7 else 0)
         if sh is not None: gs += -1 if sh>=0.5 else 0
         if du is not None: gs += -1 if du>=0.5 else 0
+        gq = asof(gdp_s, d)
+        if gq is not None and gq < 0: gs -= GDP_NEG_PENALTY
         g = "EXPANSION" if gs>=1 else ("CONTRACTION" if gs<=-2 else "SLOWING")
         inf = "HIGH" if (cp or 0)>=4 else ("MODERATE" if (cp or 0)>=2.5 else "LOW")
         _nf, _hz, _vx = asof(S["NFCI"],d), asof(hyz_s,d), asof(S["VIXCLS"],d)

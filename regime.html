@@ -2082,7 +2082,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     function ln(arr,base,col){g.strokeStyle=col;g.lineWidth=1.7;g.beginPath();
       for(var k=i0;k<N;k++){var x=X(k),y=Y(arr[k]/base*100);k===i0?g.moveTo(x,y):g.lineTo(x,y);}g.stroke();}
     ln(D.ndx,c0,css('--accent')); ln(D.spx,b0,css('--ink'));
-    var tip=el('sitip'); if(!tip){tip=document.createElement('div');tip.id='sitip';document.body.appendChild(tip);}
+    var tip=document.getElementById('sitip'); if(!tip){tip=document.createElement('div');tip.id='sitip';document.body.appendChild(tip);}
     cv.onmousemove=function(e){var r=cv.getBoundingClientRect(),x=e.clientX-r.left;
       if(x<PL||x>W-PR){tip.style.display='none';return;}
       var k=Math.max(i0,Math.min(N-1,Math.round(i0+(x-PL)/(W-PL-PR)*(n-1)))),s=D.s[k];
