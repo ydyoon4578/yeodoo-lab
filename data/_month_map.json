@@ -78,8 +78,8 @@
  "persistence": {
   "top5_carry_pct": 7.768595041322314,
   "random_pct": 2.7196932542690266,
-  "rank_rho_median": 0.01858811784525378,
-  "rank_rho_mean": 0.010781449764389583
+  "rank_rho_median": 0.03017474328949739,
+  "rank_rho_mean": 0.012662291154140009
  },
  "kinds": [
   {
@@ -145,7 +145,7 @@
    "axis_ko": "그달 지수",
    "level": "하락",
    "n_months": 29,
-   "spx_mean": -1.9,
+   "spx_mean": -1.97,
    "med_ex": 0.13,
    "recur": [
     {
@@ -435,7 +435,7 @@
    "axis_ko": "출렁임",
    "level": "상",
    "n_months": 41,
-   "spx_mean": -0.56,
+   "spx_mean": -0.61,
    "med_ex": 0.1,
    "recur": [
     {
@@ -609,7 +609,7 @@
    "axis_ko": "종목 간 격차",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 2.05,
+   "spx_mean": 2.0,
    "med_ex": 0.04,
    "recur": [
     {
@@ -783,7 +783,7 @@
    "axis_ko": "금리 방향",
    "level": "상",
    "n_months": 42,
-   "spx_mean": 0.44,
+   "spx_mean": 0.4,
    "med_ex": 0.04,
    "recur": [
     {
@@ -957,7 +957,7 @@
    "axis_ko": "덩치 싸움",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 0.92,
+   "spx_mean": 0.87,
    "med_ex": 0.0,
    "recur": [
     {
@@ -1015,7 +1015,7 @@
    "axis_ko": "쏠림 방향",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.51,
+   "spx_mean": 0.46,
    "med_ex": 0.04,
    "recur": [
     {
@@ -9174,8 +9174,8 @@
   },
   {
    "m": "2026-11",
-   "spx": -0.24,
-   "ndx": -1.55,
+   "spx": -2.16,
+   "ndx": -4.18,
    "vol": 0.21653,
    "disp": 0.08874,
    "rate12": 1.08,
@@ -9194,49 +9194,49 @@
    "n": 60,
    "top": [
     {
-     "sid": "a-overnight-ndx",
-     "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "ex": 4.08
+     "sid": "a-vol-roll",
+     "name": "변동성 기간구조 롤 (VXZ 보유)",
+     "ex": 6.46
     },
     {
-     "sid": "a-overnight",
-     "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
-     "ex": 2.86
+     "sid": "a-overnight-ndx",
+     "name": "오버나이트 보유 (QQQ 종가→시가)",
+     "ex": 5.37
     },
     {
      "sid": "a-sec-term",
      "name": "기간스프레드 방향 섹터",
-     "ex": 2.54
+     "ex": 4.44
     },
     {
      "sid": "a-sec-halloween",
      "name": "핼러윈 섹터 (11~4월 경기민감)",
-     "ex": 2.54
+     "ex": 4.44
     },
     {
-     "sid": "a-vol-roll",
-     "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": 2.38
+     "sid": "a-overnight",
+     "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
+     "ex": 4.14
     }
    ],
    "bot": [
     {
      "sid": "a-sec-dual",
      "name": "섹터 듀얼 모멘텀 상위 3",
-     "ex": -3.11
+     "ex": -3.03
     },
     {
      "sid": "a-st-hurst",
      "name": "허스트 지수 국면 스위치 (추세 ↔ 반전)",
-     "ex": -3.57
+     "ex": -3.2
     },
     {
-     "sid": "a-min-cvar",
-     "name": "최소 CVaR 최적화 (4자산)",
-     "ex": -3.84
+     "sid": "a-a2-factor-rot",
+     "name": "국면 연동 팩터 로테이션 (A2)",
+     "ex": -3.99
     }
    ],
-   "med": 0.06
+   "med": 0.07
   }
  ]
 }
