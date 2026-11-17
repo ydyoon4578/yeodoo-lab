@@ -765,8 +765,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   <!-- 국면과 지수 — 월별 국면(data/regime.json history)을 배경 음영으로, S&P 500·나스닥 100 을 선으로.
        지수 종가는 data/bench_px.json. 기본 hidden — 자료가 없으면 아예 안 나온다(#cycle 과 같은 관행). -->
   <section id="rgts" aria-labelledby="rgts-h" hidden>
-    <h2 class="lbl" id="rgts-h">국면과 지수 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 배경 음영 = 그 달의 국면 · 선 = 가격지수(구간 시작 = 100, 로그 눈금)</span></h2>
-    <div class="histwrap"><div class="sibar" id="rgbar"></div>
+    <h2 class="lbl" id="rgts-h">국면과 지수 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 배경 음영 = 그 달의 국면(경제 또는 시장) · 선 = 가격지수(구간 시작 = 100, 로그 눈금)</span></h2>
+    <div class="histwrap"><div class="sibar" id="rgmode"></div><div class="sibar" id="rgbar"></div>
       <canvas id="rgidx" role="img" aria-label="월별 시장 국면을 배경 음영으로 깔고 S&P 500과 나스닥 100 가격지수를 겹친 차트"></canvas>
       <div class="silg" id="rglg"></div>
       <div class="chartnote" id="rgnote"></div></div>
@@ -1021,7 +1021,32 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // ── 국면과 지수 (2026-11-17) ───────────────────────────────────────────
   //   음영은 그 달의 국면(최소지속 필터 뒤 정본 history). 국면은 월말에 개정 자료로 사후에 매긴
   //   라벨이라 그 달 안에 실시간으로 알 수 있던 값이 아니다 — 아래 문장에 적는다.
-  var RG=null, RGR=[['3년',3],['5년',5],['10년',10],['전체',0]], RGC=2;
+  var RG=null, RGR=[['3년',3],['5년',5],['10년',10],['전체',0]], RGC=2, RGM='eco';
+  // 시장 4국면 — 매월 마지막 거래일에 그날까지의 S&P 500 가격만 쓴다(실시간으로 알 수 있는 값).
+  //   추세 = 종가 > 200일 이동평균 · 변동성 = 21일 실현변동성 > 직전 756일 실현변동성 중앙값.
+  //   연구 원본: C:/Projects/_research/market_regime (2026-11-17, 사전 고정 설계).
+  var MK=['강세','불안한 강세','조정','약세'];
+  var MC={'강세':'#0E8A54','불안한 강세':'#6FA86A','조정':'#C0722A','약세':'#A3352A'};
+  function mktRegime(dates,px){
+    var n=px.length, ret=[NaN], vol=[], i, j, out={};
+    for(i=1;i<n;i++)ret.push(px[i]/px[i-1]-1);
+    for(i=0;i<n;i++){
+      if(i<21){vol.push(NaN);continue;}
+      var s=0,s2=0; for(j=i-20;j<=i;j++){s+=ret[j];s2+=ret[j]*ret[j];}
+      var m=s/21, v=(s2-21*m*m)/20; vol.push(Math.sqrt(Math.max(0,v))*Math.sqrt(252));
+    }
+    for(i=0;i<n;i++){
+      var last=(i===n-1)||dates[i+1].slice(0,7)!==dates[i].slice(0,7);
+      if(!last||i<199)continue;
+      var sm=0; for(j=i-199;j<=i;j++)sm+=px[j]; var ma=sm/200;
+      var w=[]; for(j=Math.max(0,i-756);j<i;j++)if(!isNaN(vol[j]))w.push(vol[j]);
+      if(w.length<500||isNaN(vol[i]))continue;
+      w.sort(function(a,b){return a-b;}); var k=w.length, med=k%2?w[(k-1)/2]:(w[k/2-1]+w[k/2])/2;
+      var upx=px[i]>ma, hv=vol[i]>med;
+      out[dates[i].slice(0,7)]=upx?(hv?'불안한 강세':'강세'):(hv?'약세':'조정');
+    }
+    return out;
+  }
   function rgTS(){
     if(RG){drawRG();return;}
     var hs=(DATA&&DATA.history)||[]; if(!hs.length)return;
@@ -1032,13 +1057,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       b.dates.forEach(function(dt,i){var r=mm[dt.slice(0,7)],x=b.series.spx.px[i],y=b.series.ndx.px[i];
         if(r&&x>0&&y>0){d.push(dt);a.push(x);q.push(y);g.push(r);}});
       if(d.length<2)return;
-      RG={d:d,spx:a,ndx:q,r:g};
+      var mkm=mktRegime(b.dates,b.series.spx.px);
+      RG={d:d,spx:a,ndx:q,r:g,m:d.map(function(x){return mkm[x.slice(0,7)]||null;})};
+      var md=el('rgmode');
+      if(md){md.innerHTML='<button type="button" data-m="eco">경제 국면 (7)</button><button type="button" data-m="mkt">시장 국면 (4)</button>';
+        md.onclick=function(e){var m=e.target&&e.target.getAttribute('data-m'); if(m){RGM=m;drawRG();}};}
       var bar=el('rgbar');
       if(bar){bar.innerHTML=RGR.map(function(r,k){return '<button type="button" data-k="'+k+'">'+r[0]+'</button>';}).join('');
         bar.onclick=function(e){var k=e.target&&e.target.getAttribute('data-k'); if(k!=null){RGC=+k;drawRG();}};}
       var sec=el('rgts'); if(sec)sec.hidden=false;
-      var nt=el('rgnote'); if(nt)nt.innerHTML='국면은 월말에 개정된 자료로 사후에 매긴 라벨입니다 — 그 달 안에 실시간으로 알 수 있던 값이 아닙니다. '+
-        '1개월만 나타난 라벨은 직전 라벨로 이었습니다. 이 랩 검정에서 7국면은 다음 달 수익을 가르지 못했습니다(서술용).';
       drawRG();
       var _rz; window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(drawRG,150);});
       new MutationObserver(drawRG).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
@@ -1051,6 +1078,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function drawRG(){
     var cv=el('rgidx'); if(!cv||!RG)return;
     var bar=el('rgbar'); if(bar)[].forEach.call(bar.children,function(x,k){x.className=(k===RGC)?'on':'';});
+    var md=el('rgmode'); if(md)[].forEach.call(md.children,function(x){x.className=(x.getAttribute('data-m')===RGM)?'on':'';});
+    var MKT=(RGM==='mkt'), LB=MKT?RG.m:RG.r, COL=MKT?MC:RC, ORD=MKT?MK:RORDER, NAME=function(k){return MKT?k:(RKO[k]||k);};
+    var nt=el('rgnote');
+    if(nt)nt.innerHTML=MKT
+      ?'시장 국면은 매월 마지막 거래일에 그날까지의 S&amp;P 500 가격만으로 정합니다. 추세는 200일 이동평균 위·아래, '+
+       '변동성은 21일 실현변동성이 직전 3년 중앙값보다 높은지입니다. 가격으로 정의했으므로 지수와 맞는 것은 당연합니다. '+
+       '이 랩 검정(2026-11-17, 2009~2026)에서 이후 1·3개월 수익을 가르는 힘은 기준에 못 미쳤고, 약세 뒤에 오히려 반등이 컸습니다(서술용).'
+      :'경제 국면은 월말에 개정된 자료로 사후에 매긴 라벨입니다 — 그 달 안에 실시간으로 알 수 있던 값이 아닙니다. '+
+       '1개월만 나타난 라벨은 직전 라벨로 이었습니다. 이 랩 검정에서 7국면은 다음 달 수익을 가르지 못했습니다(서술용).';
     var D=RG,N=D.d.length,yy0=RGR[RGC][1],i0=0,i;
     if(yy0){var t=new Date(D.d[N-1]);t.setFullYear(t.getFullYear()-yy0);t=t.toISOString().slice(0,10);
       for(i=0;i<N;i++)if(D.d[i]>=t){i0=i;break;}}
@@ -1064,15 +1100,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 국면 음영 — 같은 국면이 이어지는 구간을 한 덩어리로 칠한다
     var cnt={}, s0=i0;
     for(i=i0+1;i<=N;i++){
-      if(i===N||D.r[i]!==D.r[s0]){
+      if(i===N||LB[i]!==LB[s0]){
         var x0=X(s0)-(s0>i0?((W-PL-PR)/(n-1))/2:0), x1=(i===N)?X(N-1):X(i)-((W-PL-PR)/(n-1))/2;
-        g.fillStyle=_hexA(RC[D.r[s0]]||'#888888',al); g.fillRect(x0,PT,Math.max(1,x1-x0),H-PT-PB);
+        if(LB[s0]){g.fillStyle=_hexA(COL[LB[s0]]||'#888888',al); g.fillRect(x0,PT,Math.max(1,x1-x0),H-PT-PB);}
         s0=i;
       }
     }
     // 구간 안 국면별 개월 수(범례용)
     var seen={};
-    for(i=i0;i<N;i++){var mk=D.d[i].slice(0,7); if(!seen[mk]){seen[mk]=1; cnt[D.r[i]]=(cnt[D.r[i]]||0)+1;}}
+    for(i=i0;i<N;i++){var mk=D.d[i].slice(0,7); if(!seen[mk]&&LB[i]){seen[mk]=1; cnt[LB[i]]=(cnt[LB[i]]||0)+1;}}
     g.strokeStyle=css('--line');g.fillStyle=css('--muted');g.font='11px '+css('--mono');g.lineWidth=1;
     var st=[50,60,70,80,90,100,125,150,200,250,300,400,500,600,800,1000,1250,1500,2000,3000,4000,5000];
     var tk=st.filter(function(v){return v>=lo*0.97&&v<=hi*1.03;});
@@ -1087,15 +1123,15 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var lg=el('rglg');
     if(lg)lg.innerHTML='<span><i style="background:var(--ink)"></i>S&amp;P 500</span>'+
       '<span><i style="background:var(--accent)"></i>나스닥 100</span>'+
-      RORDER.map(function(k){return '<span><span class="rsw" style="background:'+_hexA(RC[k],dk?0.55:0.45)+'"></span>'+
-        esc(RKO[k])+' '+(cnt[k]||0)+'개월</span>';}).join('');
+      ORD.map(function(k){return '<span><span class="rsw" style="background:'+_hexA(COL[k],dk?0.55:0.45)+'"></span>'+
+        esc(NAME(k))+' '+(cnt[k]||0)+'개월</span>';}).join('');
     var tip=document.getElementById('rgtip'); if(!tip){tip=document.createElement('div');tip.id='rgtip';
       tip.style.cssText='position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--line);padding:6px 9px;font-size:12px;display:none;box-shadow:var(--shadow);z-index:50';
       document.body.appendChild(tip);}
     cv.onmousemove=function(e){var r=cv.getBoundingClientRect(),x=e.clientX-r.left;
       if(x<PL||x>W-PR){tip.style.display='none';return;}
       var k=Math.max(i0,Math.min(N-1,Math.round(i0+(x-PL)/(W-PL-PR)*(n-1))));
-      tip.innerHTML='<b>'+esc(D.d[k])+'</b><br>국면 '+esc(RKO[D.r[k]]||D.r[k])+'<br>S&amp;P 500 '+D.spx[k].toLocaleString()+
+      tip.innerHTML='<b>'+esc(D.d[k])+'</b><br>경제 국면 '+esc(RKO[D.r[k]]||D.r[k])+'<br>시장 국면 '+esc(D.m[k]||'—')+'<br>S&amp;P 500 '+D.spx[k].toLocaleString()+
         '<br>나스닥 100 '+D.ndx[k].toLocaleString();
       tip.style.display='block'; tip.style.left=Math.min(window.innerWidth-180,e.clientX+14)+'px'; tip.style.top=(e.clientY+14)+'px';};
     cv.onmouseleave=function(){tip.style.display='none';};
