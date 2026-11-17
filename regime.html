@@ -1025,8 +1025,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 시장 4국면 — 매월 마지막 거래일에 그날까지의 S&P 500 가격만 쓴다(실시간으로 알 수 있는 값).
   //   추세 = 종가 > 200일 이동평균 · 변동성 = 21일 실현변동성 > 직전 756일 실현변동성 중앙값.
   //   연구 원본: C:/Projects/_research/market_regime (2026-11-17, 사전 고정 설계).
-  var MK=['강세','불안한 강세','조정','약세'];
-  var MC={'강세':'#0E8A54','불안한 강세':'#6FA86A','조정':'#C0722A','약세':'#A3352A'};
+  var MK=['강세','강세 (고변동)','조정','약세'];
+  var MC={'강세':'#0E8A54','강세 (고변동)':'#6FA86A','조정':'#C0722A','약세':'#A3352A'};
   function mktRegime(dates,px){
     var n=px.length, ret=[NaN], vol=[], i, j, out={};
     for(i=1;i<n;i++)ret.push(px[i]/px[i-1]-1);
@@ -1043,7 +1043,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(w.length<500||isNaN(vol[i]))continue;
       w.sort(function(a,b){return a-b;}); var k=w.length, med=k%2?w[(k-1)/2]:(w[k/2-1]+w[k/2])/2;
       var upx=px[i]>ma, hv=vol[i]>med;
-      out[dates[i].slice(0,7)]=upx?(hv?'불안한 강세':'강세'):(hv?'약세':'조정');
+      out[dates[i].slice(0,7)]=upx?(hv?'강세 (고변동)':'강세'):(hv?'약세':'조정');
     }
     return out;
   }
