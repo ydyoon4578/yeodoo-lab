@@ -2014,13 +2014,13 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 게이지는 히어로 2열의 우측으로, 상세(구성요소·히스토리·백테스트·고지)는 아래 섹션에 그대로.
     var gh=el('senthero'); if(gh)gh.innerHTML=g;
     // 2026-11-17 — 심리 × 지수. 사용자 요청: 심리를 음영 배경으로, S&P 500·나스닥 100 을 같이.
-    //   색은 이 블록의 규칙을 따른다 — 공포 = 차갑다(--cold), 탐욕 = 뜨겁다(--hot). 초록 금지.
+    //   색: 공포 = 빨강(--hot), 탐욕 = 초록(--good) — 사용자 지정(2026-11-17). 아래 BANDS 색 규칙과 다르다.
     var sidx=h.length<2?'':'<div class="lbl">심리와 지수 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">'+
       '· 배경 음영 = 심리 점수 · 선 = 가격지수(구간 시작 = 100, 로그 눈금)</span></div>'+
       '<div class="histwrap"><div class="sibar" id="sibar"></div>'+
       '<canvas id="sentidx" role="img" aria-label="시장 심리 점수를 배경 음영으로 깔고 S&P 500과 나스닥 100 가격지수를 겹친 일별 차트"></canvas>'+
       '<div class="silg"><span><i style="background:var(--ink)"></i>S&amp;P 500</span>'+
-      '<span><i style="background:var(--gA)"></i>나스닥 100</span>'+
+      '<span><i style="background:var(--accent)"></i>나스닥 100</span>'+
       '<span>공포<span class="grad" id="sigrad"></span>탐욕 · 40~60 은 음영 없음</span></div></div>';
     host.innerHTML=head()+comp+hist+sidx+tb+honest;
     drawSpark(); sentIdx();
@@ -2028,7 +2028,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
   // ── 심리 × 지수 ─────────────────────────────────────────────────────
   //   지수 종가는 data/bench_px.json(가격지수 PR) — 이 차트를 그릴 때만 받는다.
-  //   음영: 40 미만 = 공포(--cold), 60 초과 = 탐욕(--hot), 끝으로 갈수록 진하게. 중립은 칠하지 않는다.
+  //   음영: 40 미만 = 공포(--hot 빨강), 60 초과 = 탐욕(--good 초록), 끝으로 갈수록 진하게. 중립은 칠하지 않는다.
   var SI=null, SIR=[['1년',1],['3년',3],['5년',5],['10년',10],['전체',0]], SIC=3;
   function sentIdx(){
     if(SI){drawIdx();return;}
@@ -2063,7 +2063,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     for(i=i0;i<N;i++){var u=D.spx[i]/b0*100,v=D.ndx[i]/c0*100;lo=Math.min(lo,u,v);hi=Math.max(hi,u,v);}
     var L0=Math.log(lo*0.97),L1=Math.log(hi*1.03);
     var X=function(k){return PL+(k-i0)/(n-1)*(W-PL-PR);}, Y=function(v){return PT+(L1-Math.log(v))/(L1-L0)*(H-PT-PB);};
-    var fr=_rgb('--cold'),gr=_rgb('--hot'),dw=(W-PL-PR)/(n-1)+0.6;
+    var fr=_rgb('--hot'),gr=_rgb('--good'),dw=(W-PL-PR)/(n-1)+0.6;
     // 다크 바탕에서는 같은 알파가 훨씬 진하게 보인다 — 바탕 밝기로 줄인다.
     var bgc=_rgb('--ground').split(','), af=((+bgc[0])+(+bgc[1])+(+bgc[2]))/3<90?0.55:1;
     var gd=el('sigrad'); if(gd)gd.style.background='linear-gradient(90deg,rgba('+fr+',.5),rgba('+fr+',0) 40%,rgba('+gr+',0) 60%,rgba('+gr+',.42))';
@@ -2081,7 +2081,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(ok&&lab!==last){last=lab; if(yr&&(+dt.slice(0,4))%every)continue; g.fillText(lab,X(i),H-7);}}
     function ln(arr,base,col){g.strokeStyle=col;g.lineWidth=1.7;g.beginPath();
       for(var k=i0;k<N;k++){var x=X(k),y=Y(arr[k]/base*100);k===i0?g.moveTo(x,y):g.lineTo(x,y);}g.stroke();}
-    ln(D.ndx,c0,css('--gA')); ln(D.spx,b0,css('--ink'));
+    ln(D.ndx,c0,css('--accent')); ln(D.spx,b0,css('--ink'));
     var tip=el('sitip'); if(!tip){tip=document.createElement('div');tip.id='sitip';document.body.appendChild(tip);}
     cv.onmousemove=function(e){var r=cv.getBoundingClientRect(),x=e.clientX-r.left;
       if(x<PL||x>W-PR){tip.style.display='none';return;}
