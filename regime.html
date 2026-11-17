@@ -1930,7 +1930,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 
     // ③ 히스토리 스파크라인
     var h=(d.history||[]).filter(function(r){return r&&r.score!=null;}), span=h.length?(esc(h[0].dt)+' ~ '+esc(h[h.length-1].dt)):'';
-    var hist=h.length<2?'':'<div class="lbl">심리 지수 히스토리 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· '+span+'</span></div>'+
+    var hist=h.length<2?'':'<div class="lbl">심리 지수 히스토리 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 위 기간 버튼과 같이 움직입니다 · 전체 '+span+'</span></div>'+
       '<div class="histwrap"><canvas id="sentspark" role="img" aria-label="시장 심리 지수 일별 추이 '+span+
         '. 최근 값 '+(ok?n1(s):'없음')+'점, 기간 최저 및 최고는 아래 범례 참조."></canvas>'+
       '<div class="leg" id="sentleg"></div></div>';
@@ -2022,7 +2022,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="silg"><span><i style="background:var(--ink)"></i>S&amp;P 500</span>'+
       '<span><i style="background:var(--accent)"></i>나스닥 100</span>'+
       '<span>공포<span class="grad" id="sigrad"></span>탐욕 · 40~60 은 음영 없음</span></div></div>';
-    host.innerHTML=head()+comp+hist+sidx+tb+honest;
+    host.innerHTML=head()+comp+sidx+hist+tb+honest;   // 2026-11-17 히스토리를 지수 차트 아래로 — 기간 버튼 공유
     drawSpark(); sentIdx();
   }
 
@@ -2042,7 +2042,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       SI={d:d,spx:a,ndx:q,s:s};
       var bar=el('sibar');
       if(bar){bar.innerHTML=SIR.map(function(r,k){return '<button type="button" data-k="'+k+'">'+r[0]+'</button>';}).join('');
-        bar.onclick=function(e){var k=e.target&&e.target.getAttribute('data-k'); if(k!=null){SIC=+k;drawIdx();}};}
+        bar.onclick=function(e){var k=e.target&&e.target.getAttribute('data-k'); if(k!=null){SIC=+k;drawIdx();drawSpark();}};}
       drawIdx();
     }).catch(function(){});
   }
@@ -2096,12 +2096,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   function drawSpark(){
     var cv=el('sentspark'); if(!cv||!SD)return;
     var h=(SD.history||[]).filter(function(x){return x&&x.score!=null&&!isNaN(x.score);});
+    // 2026-11-17 — 위 '심리와 지수' 의 기간 버튼(SIC)을 같이 따른다. 기준 끝날도 같은 것을 쓴다.
+    var _y=SIR[SIC][1]; if(_y&&h.length){var _e=(SI&&SI.d.length)?SI.d[SI.d.length-1]:h[h.length-1].dt, _t=new Date(_e);
+      _t.setFullYear(_t.getFullYear()-_y); _t=_t.toISOString().slice(0,10); h=h.filter(function(x){return x.dt>=_t;});}
     if(h.length<2)return;
     var dpr=window.devicePixelRatio||1, W=cv.clientWidth||800, H=cv.clientHeight||150;
     cv.width=Math.max(1,Math.round(W*dpr)); cv.height=Math.max(1,Math.round(H*dpr));
     var ctx=cv.getContext('2d'); if(!ctx)return;
     ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
-    var padL=30, padR=8, padT=8, padB=16, iw=Math.max(1,W-padL-padR), ih=Math.max(1,H-padT-padB);
+    // 위 지수 차트와 가로축을 맞춘다(padL 46 · padR 10)
+    var padL=46, padR=10, padT=8, padB=16, iw=Math.max(1,W-padL-padR), ih=Math.max(1,H-padT-padB);
     var y=function(v){return padT+ih*(1-Math.max(0,Math.min(100,v))/100);};
     var x=function(i){return padL+iw*(h.length<2?0:i/(h.length-1));};
     // 극단 구간 음영(0-20 공포 / 80-100 탐욕) — 색만이 아니라 좌측 눈금 숫자도 함께 표기
