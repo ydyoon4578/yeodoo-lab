@@ -618,6 +618,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         <button aria-expanded="false" aria-controls="mm-strategy">전략<span class="cv" aria-hidden="true">▼</span></button>
         <div class="mmpanel" id="mm-strategy" hidden role="group" aria-label="전략">
           <a class="mmi" href="explorer.html" data-nav="explorer.html"><span class="mmn">전략 랩</span></a>
+          <a class="mmi" href="kpi.html" data-nav="kpi.html"><span class="mmn">모니터링 전략</span></a>
           <a class="mmi" href="style.html" data-nav="style.html"><span class="mmn">스타일 전략</span></a>
           <a class="mmi" href="guru.html" data-nav="guru.html"><span class="mmn">거장 포트폴리오·매매</span></a>
           <a class="mmi" href="rotation.html" data-nav="rotation.html"><span class="mmn">전략 탐색 풀</span></a>
@@ -749,7 +750,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
        🚨 곡선의 순서는 통념이고 이 랩이 검정한 것이 아니다. 그림 안에 그 사실과 실측 반증을 같이 싣는다.
        기본 hidden — 자료가 없으면 조용한 빈칸 대신 아예 안 나온다(#axes 와 같은 관행). -->
   <section id="cycle" aria-labelledby="cycle-h" hidden>
-    <h2 class="lbl" id="cycle-h">경기 사이클 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 지금 어디인가</span></h2>
+    <h2 class="lbl" id="cycle-h">이 랩의 7국면 <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">· 지금 어디인가 · 서술용</span></h2>
     <div id="cyclebody"></div>
   </section>
   <div id="summary"><div class="empty">불러오는 중…</div></div>
@@ -876,7 +877,10 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       //   한 문장 안에서 어투가 갈려 있었다(같은 덧붙이기 사고의 흔적이다).
       '<em>성장×물가 매트릭스에 적힌 통념입니다.'+
       '<b class="hwarn"> 🚨 이 랩이 검정했더니 방향이 반대였습니다</b> — '+
-      '<span class="hgs">자기검정 결과를 아래에서 보십시오</span></em></div></div>';
+      '<span class="hgs">자기검정 결과를 아래에서 보십시오</span></em></div>'+
+      // 2026-11-17 — 국면 이름이 예측처럼 읽히지 않게 히어로에서 바로 못박는다.
+      '<div class="hstrat"><em>국면 이름은 지금 상태를 요약한 <b>서술용</b>입니다 — '+
+      '이 랩 검정에서 7국면은 다음 달 수익을 가르지 못했습니다.</em></div></div>';
     // indicator groups
     var groups=["성장","노동","물가","금융","금리","주택"], ig='';
     groups.forEach(function(g){
@@ -1135,11 +1139,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       grid+='<line x1="'+(PL-18)+'" y1="'+y+'" x2="'+(W-PR+18)+'" y2="'+y+
         '" stroke="var(--line)" stroke-width="1"/>';
     });
+    // 2026-11-17 — 교과서 도표는 **증시 5단계만** 남긴다. 경기 곡선·경기 4단계 알약은 뺐다
+    //   (사용자 지적: 5·7·4 단계가 한 화면에 섞여 읽기 힘들다). Ye 는 정의만 남겨 둔다.
     var waves=
       '<path d="'+path(Ym,1)+'" fill="var(--hot)" opacity=".12"/>'+
-      '<path d="'+path(Ye,1)+'" fill="var(--accent)" opacity=".12"/>'+
-      '<path d="'+path(Ym,0)+'" fill="none" stroke="var(--hot)" stroke-width="2.6"/>'+
-      '<path d="'+path(Ye,0)+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
+      '<path d="'+path(Ym,0)+'" fill="none" stroke="var(--hot)" stroke-width="2.6"/>';
 
     function pill(x,y,txt,bg){
       var w=txt.length*7.6+20, h=22, dx=Math.max(4-x, Math.min(W-4-x-w, -w/2));
@@ -1151,9 +1155,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var pills='';
     (R.mkt||[]).forEach(function(m){
       var y=Ym(m.pos); pills+=pill(X(m.pos), y+(y>=mid?30:-30), m.ko, 'var(--hot)');
-    });
-    (R.eco||[]).forEach(function(e){
-      var y=Ye(e.pos); pills+=pill(X(e.pos), y+(y>=mid?30:-30), e.ko, 'var(--accent)');
     });
 
     // 상단 업종 박스 + 점선
@@ -1171,6 +1172,16 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
     });
 
+    // ── 교과서 참고 도표는 여기서 완성 — 아래 7국면 그림과 섞지 않는다 ─────────────
+    var H2=bot+50;
+    var svgRef='<svg viewBox="0 0 '+W+' '+H2+'" role="img" aria-label="섹터 로테이션 교과서 도표 — '+
+      '증시 다섯 단계마다 선호 업종이 붙는다. 이 랩이 검정한 것이 아니다.">'+grid+waves+boxes+pills+'</svg>';
+
+    // ── 이 랩의 7국면 그림: 국면을 한 줄에 놓고, 최근 이동 자취를 그 위에 ─────────────
+    //   2026-11-17 — 종전에는 자취를 교과서 증시 곡선 위에 얹었다. 이제 곡선 없이 7국면
+    //   한 줄(BASE)이 유일한 축이다. Ym 을 평평하게 바꿔 아래 자취 코드를 그대로 쓴다.
+    var BASE=200; H=310; mid=BASE+1;
+    Ym=function(){return BASE;};
     // ── 최근 이동 자취 ──────────────────────────────────────────────
     // 🚨 달마다 점을 찍으면 안 된다 — pos 는 라벨이 정하므로 같은 국면 15개월이 한 자리에
     //   겹친다. 산출(build/regime_cycle.py)이 이미 **런 단위**로 접어 보낸다. 여기서는 옮기기만.
@@ -1191,7 +1202,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       if(ex<sx){ var _t=sx; sx=ex; ex=_t; _t=sy; sy=ey; ey=_t; }
       var ddx=ex-sx, ddy=ey-sy, L=Math.sqrt(ddx*ddx+ddy*ddy)||1;
       var mx=(bx+ax)/2, my=(by+ay)/2;
-      var bulge=(ti%2?-1:1)*Math.min(64, Math.max(24, L*0.16));
+      // 한 줄 위에서는 호를 **모두 위로** 띄운다 — 아래에는 국면 이름·개월수가 있다.
+      var bulge=-Math.min(80, Math.max(26, L*0.18))*(ti%2?1:1.35);
       var cx2=mx+(-ddy/L)*bulge, cy2=my+(ddx/L)*bulge;
       // 끝점을 목적지 점 반지름만큼 당긴다 — 안 그러면 화살촉이 점 밑에 깔려 안 보인다.
       var vx=ax-cx2, vy=ay-cy2, vl=Math.sqrt(vx*vx+vy*vy)||1, pull=_rad(a)+7;
@@ -1265,37 +1277,34 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     //   (실측: 회복 0.34 에서 Ym 302.8 대 Ye 466.0 — 163px). 「지금」이 파란 경기 곡선
     //   바닥에 앉아 '경제는 아직 바닥권' 으로 읽혔다. 가로·세로를 같은 곡선으로 맞춘다.
     var np=(now.pos==null?0:now.pos), nx=X(np), ny=Ym(np);
-    var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="12" fill="var(--ink)" opacity=".16"/>'+
+    var nowg='<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="16" fill="var(--ink)" opacity=".14"/>'+
       '<circle cx="'+f(nx)+'" cy="'+f(ny)+'" r="6.5" fill="var(--ink)" stroke="var(--ground)" stroke-width="2"/>'+
-      '<line x1="'+f(nx)+'" y1="'+f(ny+9)+'" x2="'+f(nx)+'" y2="'+(bot+28)+'" stroke="var(--ink)" stroke-width="1.4"/>'+
-      pill(nx, bot+40, ((cy.trail&&cy.trail.length)?(cy.trail.length+'. '):'')+
-        '지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째', 'var(--ink)');
+      pill(nx, 40, ((cy.trail&&cy.trail.length)?(cy.trail.length+'. '):'')+
+        '지금 · '+(now.ko||'')+' '+(now.run||0)+'개월째', 'var(--ink)')+
+      '<line x1="'+f(nx)+'" y1="52" x2="'+f(nx)+'" y2="'+f(ny-17)+'" stroke="var(--ink)" '+
+        'stroke-width="1.2" stroke-dasharray="2 4"/>';
 
     // ── 이 랩의 7국면이 이 곡선의 어디에 놓이는가 ──────────────────────
     // 🚨 곡선 위에 더 얹지 않는다. 위에는 교과서 단계 알약(증시 5 · 경기 4)이 이미 있고,
     //   거기 7개를 더하면 무엇이 교과서고 무엇이 이 랩 것인지 구별이 안 된다.
     //   사용자 지적이 정확히 그것이었다 — "여기는 7가지, 경기사이클 차트는 4개로 구분하니 헷갈린다".
     //   → 층을 갈라 **아래 띠**에 따로 깐다. 위=교과서, 아래=이 랩. 점선이 둘을 잇는다.
-    var BY=bot+86, ph=cy.phases||[];
+    var BY=BASE, ph=cy.phases||[];
     var band='';
     if(ph.length){
       band+='<line x1="'+PL+'" y1="'+BY+'" x2="'+(W-PR)+'" y2="'+BY+
         '" stroke="var(--line)" stroke-width="1.5"/>'+
-        '<text x="'+PL+'" y="'+(BY-13)+'" font-size="11.5" font-weight="700" '+
+        '<text x="'+PL+'" y="'+(BY+76)+'" font-size="11.5" font-weight="700" '+
         // 🚨 기준선(_ALL.m12)을 여기서 찍는다 — 로드해 놓고 한 번도 안 그리고 있었다.
         //   그것 없이는 "여섯 중 넷이 사실상 전체 중앙" 이라는 사실이 안 보인다.
-        'fill="var(--ink-2)">이 랩의 7국면 — 증시 곡선 기준(가로·세로) · 개월수는 창 '+
+        'fill="var(--ink-2)">이 랩의 7국면 · 개월수는 창 '+
         esc((cy.window||{}).start||'')+'~ · 이후12M 은 전체 이력 기준 · 전체 중앙 '+
         ((((cy.fwd||{})._ALL||{}).m12!=null)
            ? ((cy.fwd._ALL.m12>0?'+':'')+cy.fwd._ALL.m12.toFixed(1)+'% (n'+cy.fwd._ALL.n12+')')
            : '—')+'</text>';
       ph.forEach(function(q){
         var qx=X(q.pos), cur=(q.k===now.r), nev=!!q.never;
-        // 곡선에서 띠까지 점선으로 잇는다 — '이 국면이 곡선의 이 자리' 를 눈으로 잇게.
-        band+='<line x1="'+f(qx)+'" y1="'+f(Ym(q.pos)+7)+'" x2="'+f(qx)+'" y2="'+(BY-6)+
-          '" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="2 5" opacity="'+
-          (nev?'.22':(cur?'.75':'.4'))+'"/>'+
-          '<circle cx="'+f(qx)+'" cy="'+BY+'" r="'+(cur?6:4)+'" fill="'+
+        band+='<circle cx="'+f(qx)+'" cy="'+BY+'" r="'+(cur?6:4)+'" fill="'+
           (nev?'var(--panel-2)':(cur?'var(--ink)':'var(--ink-2)'))+'" stroke="var(--panel)" '+
           'stroke-width="2"'+(nev?' stroke-dasharray="2 2"':'')+'/>';
         // 🚨 개월수 옆에 **이후 12개월 실측**을 같이 적는다. 자리만으로 읽게 두면
@@ -1303,7 +1312,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
         //   (2026-08-11 사용자 지적: 회복 15개월째인데 SPX 는 +33% 였다).
         //   전체 중앙보다 낮으면 경고색, 높으면 그대로 — 자리가 아니라 숫자가 말하게 한다.
         var fw=((cy.fwd||{})[q.k])||{}, fall=((cy.fwd||{})._ALL||{}).m12;
-        var t1=q.ko, t2=nev?'이 창에서 없었음':(q.months+'개월');
+        var t1=q.ko, t2=nev?'관측 없음':(q.months+'개월');
         var t3=(fw.m12==null)?'':('이후12M '+(fw.m12>0?'+':'')+fw.m12.toFixed(1)+'%');
         var lowfw=(fw.m12!=null&&fall!=null&&fw.m12<fall*0.5);
         // 🚨 앵커가 경기 곡선에 맞춰지며(2026-08-11) 뒤 둘이 왼쪽 끝으로 감겼다
@@ -1322,23 +1331,18 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       });
     }
 
-    var lg='<g font-size="12" fill="var(--ink-2)">'+
-      '<rect x="'+(W/2-124)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--accent)" opacity=".45"/>'+
-      '<text x="'+(W/2-103)+'" y="'+(H-20)+'">경기 Economy</text>'+
-      '<rect x="'+(W/2+22)+'" y="'+(H-32)+'" width="15" height="15" rx="3" fill="var(--hot)" opacity=".45"/>'+
-      '<text x="'+(W/2+43)+'" y="'+(H-20)+'">증시 Market</text>'+
-      ((cy.trail&&cy.trail.length>1)?(
-        '<line x1="'+(W/2+150)+'" y1="'+(H-24)+'" x2="'+(W/2+178)+'" y2="'+(H-24)+
+    var lg=((cy.trail&&cy.trail.length>1)?(
+      '<g font-size="12" fill="var(--ink-2)">'+
+        '<line x1="'+(W-PR-300)+'" y1="'+(H-16)+'" x2="'+(W-PR-272)+'" y2="'+(H-16)+
           '" stroke="var(--ink)" stroke-width="2.2"/>'+
-        '<text x="'+(W/2+184)+'" y="'+(H-20)+'">최근 이동 · 앞으로</text>'+
-        '<line x1="'+(W/2+240)+'" y1="'+(H-24)+'" x2="'+(W/2+268)+'" y2="'+(H-24)+
+        '<text x="'+(W-PR-266)+'" y="'+(H-12)+'">국면 이동 · 통념 순서대로</text>'+
+        '<line x1="'+(W-PR-110)+'" y1="'+(H-16)+'" x2="'+(W-PR-82)+'" y2="'+(H-16)+
           '" stroke="var(--marg)" stroke-width="2.2" stroke-dasharray="6 4"/>'+
-        '<text x="'+(W/2+274)+'" y="'+(H-20)+'">뒤로</text>'):'')+'</g>';
+        '<text x="'+(W-PR-76)+'" y="'+(H-12)+'">반대로</text></g>'):'');
 
-    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="섹터 로테이션 교과서 도표 — '+
-      '증시 곡선이 경기 곡선보다 앞서고, 다섯 단계마다 선호 업종이 붙는다. '+
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="이 랩의 7국면과 최근 국면 이동. '+
       '현재 국면은 '+esc(now.ko||'')+' '+(now.run||0)+'개월째.">'+
-      defs+grid+waves+boxes+trail+pills+nowg+band+lg+'</svg>';
+      defs+band+trail+nowg+lg+'</svg>';
 
     // ── 이 랩이 실제로 잰 것과의 비교 ────────────────────────────────────
     var rows=(R.cmp||[]).map(function(c){
@@ -1371,57 +1375,29 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '주가 = '+esc((cy.sectors||{}).price_basis||'')+
       ' · 실적 = '+esc((cy.sectors||{}).earn_basis||'')+'</div>';
 
+    // 2026-11-17 — 7국면 하나로 통일. 교과서 5단계 도표와 그 대조표는 접는 참고 상자로 내렸다.
     host.innerHTML='<div class="cycwrap">'+svg+
-      '<div class="cycb"><b>이 그림은 두 층이다.</b> '+
-      '<b>위</b>(곡선·단계 알약·업종 상자)는 널리 쓰이는 섹터 로테이션 도표를 옮긴 것이고 '+
-      '증시 5단계·경기 4단계로 나뉜다. '+
-      // 🚨 종전 문장은 '그대로 옮긴 것'이었다. 2026-08-12 에 두 섹터를 더하면서 거짓이 됐다.
-      //   원 도표가 뺀 것이 아니라 그때는 없던 섹터라는 것까지 적어야 오해가 안 남는다.
-      '<b>커뮤니케이션(강세장)·부동산(약세장 후반)은 더한 것이다</b> — 원 도표가 뺀 것이 아니라 '+
-      'GICS 가 부동산을 떼어낸 것이 2016년, 커뮤니케이션을 다시 세운 것이 2018년이라 '+
-      '그보다 오래된 도표에는 있을 수 없었다. '+
-      '<b>아래 띠</b>는 <b>이 랩이 쓰는 7국면</b>이 그 곡선의 '+
-      '어디에 놓이는지다 — 둘은 다른 분류이고 칸 수도 다르다(점선이 서로를 잇는다). '+
-      '「지금」 표시와 최근 이동 자취는 이 랩의 실측이다. '+
-      // 🚨 자리가 말하는 것과 실측이 다를 수 있다는 것을 먼저 적는다. 2026-08-11 에
-      //   회복이 증시 정점 뒤에 놓여 '고점 지났다' 로 읽혔는데 실측은 그렇지 않았다.
-      '🚨 <b>자리는 통념이고 「이후12M」이 실측이다</b> — 둘이 다르면 숫자를 믿을 것. '+
-      '그 숫자는 겹치는 표본의 중앙값이라 서술이지 검정이 아니다(이 랩의 정식 검정은 '+
-      '7국면이 다음 달을 못 가른다는 것이다 · p 0.152).'+
-      // 🚨 자취를 '경로'로 읽지 않게 못 박는다. 점은 국면이 바뀐 지점이고, 한 국면 안에서
-      //   '어디쯤인지'는 이 분류기가 말하지 않는다 — 그래서 머무는 동안 점이 안 움직인다.
+      '<div class="cycb"><b>이 그림은 이 랩의 7국면만 씁니다.</b> '+
+      '국면은 성장·물가·금융여건으로 매달 분류한 결과이고, 가로 순서는 통념의 경기 순서입니다. '+
+      '각 국면 아래 숫자는 머문 개월수와 그 뒤 12개월 SPY 수익 중앙값입니다. '+
+      '🚨 <b>서술이지 예측이 아닙니다</b> — 이 랩의 정식 검정에서 7국면은 다음 달 수익을 가르지 못했습니다(p 0.152).'+
       ((cy.trail&&cy.trail.length>1)?(
-        // 🚨 2026-08-12 — 창을 '최근 24개월' 에서 '최근 N국면' 으로 바꿨다(사용자 결정).
-        //   개월수가 창에 안 잘리는 대신 **자취가 덮는 기간이 그때그때 다르다** — 그러니
-        //   반드시 적는다. 안 적으면 독자가 창 길이를 고정으로 오해한다.
-        ' 자취는 <b>최근 '+cy.trail.length+'국면</b>이다(달 창이 아니다 — '+
-        esc(cy.trail_span||'')+' · '+(cy.trail_months||0)+'개월, 전체 '+
-        (cy.trail_runs_total||0)+'국면 중 마지막 '+cy.trail.length+'개). '+
-        '국면 개수로 잘랐으므로 각 점의 <b>개월수는 창에 안 잘린 참값</b>이다. '+
-        // 🚨 같은 국면으로 돌아오면 점이 정확히 같은 자리에 온다(지금 창은 다섯 중 셋이
-        //   회복 = 한 점). 안 적으면 '점이 세 개여야 하는데 하나뿐' 으로 읽힌다.
-        // ⚠ 동심원으로 구분된다고 쓰지 않는다 — 반지름이 12.0/10.7/7.5 라 테두리가 서로,
-        //   그리고 「지금」 표시와 겹쳐 실제로는 한 점으로 보인다(실측). 번호 붙은 라벨을
-        //   그 위에 쌓는 것이 실제로 구분되는 유일한 장치다. 그것만 적는다.
-        '같은 국면으로 되돌아오면 점이 <b>정확히 같은 자리</b>에 온다'+
-        (cy.trail_overlap?(' — 이 창에서는 '+cy.trail.length+'개 중 '+
-          cy.trail_overlap.n+'개('+esc(cy.trail_overlap.ko)+')가 한 점으로 겹친다. '+
-          '겹친 것은 <b>번호 붙은 라벨을 그 위에 쌓아</b> 가른다'):'')+
-        '. 자리를 흩뿌려 떼어놓지 않는다 — 되돌아왔다는 것이 사실이다. '+
-        ' 자취의 점은 국면이 <b>바뀐 지점</b>이고 곁의 숫자는 그 국면에 머문 개월수다 — '+
-        '한 국면 안에서 어디쯤인지는 이 분류기가 말하지 않으므로 머무는 동안 점은 움직이지 않는다. '+
-        // 🚨 2026-08-11 — 종전 문장은 "화살표가 **왼쪽**으로 가면 반대" 였다. 앵커를 경기
-        //   곡선에 맞추며 뒤 둘이 왼쪽 끝으로 감겨(후기사이클 0.00) **뒤로 가는 이동이
-        //   화면상 오른쪽을 가리키게** 됐다. 축은 원을 한 번 자른 것이라 화면 방향으로
-        //   순환 방향을 말할 수 없다 — 색·점선으로만 말한다.
-        '<b>주황 점선</b>이면 교과서 순서와 반대로 간 것이다(가로축은 한 바퀴를 한 번 자른 '+
-        // ⚠ drift 는 자취 5국면이 아니라 **이력 전체**에서 센 것이다(build 의 seq 전체).
-        //   바로 앞에서 자취 창을 말한 참이라 '이 창' 이라고 쓰면 5국면 것으로 읽힌다.
-        '것이라 화면상 좌우와 순환 방향이 늘 같지는 않다). 자취 '+cy.trail.length+'국면이 아니라 '+
-        '<b>이력 전체</b>(아래 「창」 '+esc((cy.window||{}).start||'')+'~'+
-        esc((cy.window||{}).end||'')+')에서 세면 '+
-        '앞으로 '+((cy.drift||{}).fwd||0)+'회 · 뒤로 '+((cy.drift||{}).back||0)+'회다.'):'')+
-      '</div></div>'+tbl+
+        ' 위의 호는 <b>최근 국면 이동</b>입니다(구간 '+cy.trail.length+'개 · '+
+        esc(cy.trail_span||'')+' · '+(cy.trail_months||0)+'개월). '+
+        '점은 국면이 바뀐 지점이고 번호 옆 숫자는 그 구간에 머문 개월수입니다. '+
+        '같은 국면으로 돌아오면 같은 자리에 오므로'+
+        (cy.trail_overlap?(' '+cy.trail.length+'개 중 '+cy.trail_overlap.n+'개('+esc(cy.trail_overlap.ko)+')가 한 점에 겹치고,'):'')+
+        ' 번호 붙은 라벨을 쌓아 구분합니다. '+
+        '<b>주황 점선</b>은 통념 순서와 반대로 간 이동입니다. 이력 전체('+esc((cy.window||{}).start||'')+'~'+
+        esc((cy.window||{}).end||'')+')에서 세면 통념 순서 '+((cy.drift||{}).fwd||0)+'회 · 반대 '+
+        ((cy.drift||{}).back||0)+'회입니다.'):'')+
+      '</div></div>'+
+      '<details class="more"><summary>참고: 교과서 섹터 로테이션 도표 (증시 5단계 · 이 랩이 검정한 것이 아님)</summary>'+
+      '<div class="mbody"><div class="cycwrap">'+svgRef+
+      '<div class="cycb">널리 쓰이는 섹터 로테이션 도표를 옮긴 것입니다. 증시 바닥에서 약세장 후반까지 다섯 단계마다 '+
+      '선호 업종을 붙입니다. 커뮤니케이션(강세장)과 부동산(약세장 후반)은 GICS 가 2018년·2016년에 세운 섹터라 '+
+      '원 도표에 없던 것을 더했습니다. 아래 표는 다섯 단계를 이 랩 국면에 짝지어 실측 상위 업종과 비교한 것입니다.</div></div>'+
+      tbl+'</div></details>'+
       '<div class="cycb"><b>창</b> '+esc((cy.window||{}).start||'')+' ~ '+esc((cy.window||{}).end||'')+
       ' · '+((cy.window||{}).months||0)+'개월. 섹터 지수는 랩 '+
       (((cy.sectors||{}).price_meta||{}).n_stocks||0)+'종을 GICS 로 묶은 동일가중이고, 대조군은 '+
@@ -1613,7 +1589,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       '<div class="tblwrap"><table><thead><tr>'+
         '<th scope="col">축</th><th scope="col">종류</th><th scope="col">지표 수 n</th>'+
         '<th scope="col">점수 합 ÷ n = m</th><th scope="col">밴드</th>'+
-        '<th scope="col" style="text-align:left">판정 문구 (5단계 사다리)</th>'+
+        '<th scope="col" style="text-align:left">판정 문구 강도 (5단계, 국면과 무관)</th>'+
         '<th scope="col">혼조</th><th scope="col">lead</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<div class="chartnote">'+
