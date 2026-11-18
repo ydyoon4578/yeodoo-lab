@@ -210,29 +210,7 @@ def trend_signals(o, K=3, trig_win=7):
     return BUY, SELL, tstate, B
 
 
-def zigzag(a, rsi_a, theta):
-    """퍼센트 임계 지그재그 → 확정 스윙 전환점 [[idx,'H'/'L'],...] + 다이버전스('bull'/'bear'/None).
-    theta = 반전 임계(소수). a=윈도 종가배열, rsi_a=동일길이 RSI."""
-    a = np.asarray(a, float); n = len(a)
-    if n < 20 or np.isnan(a).any(): return [], None
-    piv = []; direction = 0; hi = lo = a[0]; hii = loi = 0
-    for i in range(1, n):
-        if direction >= 0:
-            if a[i] > hi: hi, hii = a[i], i
-            elif a[i] <= hi * (1 - theta):
-                piv.append([hii, "H"]); direction = -1; lo, loi = a[i], i; continue
-        if direction <= 0:
-            if a[i] < lo: lo, loi = a[i], i
-            elif a[i] >= lo * (1 + theta):
-                piv.append([loi, "L"]); direction = 1; hi, hii = a[i], i
-    tail = [hii, "H"] if direction >= 0 else [loi, "L"]   # 미확정 최근 극점
-    if not piv or piv[-1][0] != tail[0]: piv.append(tail)
-    dvg = None
-    lows = [i for i, t in piv if t == "L"]; highs = [i for i, t in piv if t == "H"]
-    if len(lows) >= 2 and a[lows[-1]] < a[lows[-2]] and rsi_a[lows[-1]] > rsi_a[lows[-2]] + 2: dvg = "bull"
-    if len(highs) >= 2 and a[highs[-1]] > a[highs[-2]] and rsi_a[highs[-1]] < rsi_a[highs[-2]] - 2:
-        dvg = "bear" if dvg is None else dvg
-    return piv, dvg
+# 🗑 zigzag(퍼센트 임계 지그재그)는 스윙 타점 전용이라 뺐다(2026-11-18). 연구용 시점정합판 = _research/swing_causal.
 
 
 def chandelier(h, l, c, n=22, mult=3.0):
@@ -1584,7 +1562,7 @@ def main():
     daily = daily[daily.index >= pd.Timestamp(PX_START)]
     if len(daily) < PX_MIN_DAYS:
         raise SystemExit(f"❌ 가격 패널 {len(daily)}행 — PX_MIN_DAYS({PX_MIN_DAYS}) 미만이다. "
-                         f"다운로드가 짧게 왔다. bms/sms 가 위치 인덱스라 이대로 배포하면 "
+                         f"다운로드가 짧게 왔다. 위치 인덱스로 쓰는 자료가 있어 이대로 배포하면 "
                          f"화면의 모든 타점이 다른 날짜를 가리킨다.")
     # ── 유령 거래일 제거 ──────────────────────────────────────────────────
     # 패널의 날짜 축은 전 종목 인덱스의 합집합이다. 그래서 **한 종목만 봉을 갖고 있어도**
@@ -1667,28 +1645,8 @@ def main():
         _ls = px[t]["Low"].reindex(daily.index) if t in px else None
         hd = [None if _hs is None or pd.isna(x) else round(float(x), 2) for x in (_hs if _hs is not None else [None]*len(pxd_dates))]
         ld = [None if _ls is None or pd.isna(x) else round(float(x), 2) for x in (_ls if _ls is not None else [None]*len(pxd_dates))]
-        # 스윙 전환점(지그재그) — 확정 고점/저점 구조 + 다이버전스
-        tp = None
-        # ⚠ 패널을 3년으로 늘리자 상장 3년 미만 종목은 IPO 이전이 결측이 된다. 예전 조건
-        #   `not dser.isna().any()`를 그대로 두면 그 종목들의 지그재그가 통째로 건너뛰어진다
-        #   (실측 13종: ALAB·ARM·GEV·SNDK·SPCX 등). 상장 이후 구간만 잘라 계산하고 위치를 되돌린다.
-        _fv = dser.first_valid_index() if dser is not None else None
-        _sub = dser.loc[_fv:] if _fv is not None else None
-        if _sub is not None and not _sub.isna().any() and len(_sub) >= 40:
-            _off = int(daily.index.get_loc(_fv))
-            wr = rsi(raw[t]["close"]).reindex(daily.index).values[_off:]
-            theta = min(0.16, max(0.05, 3.0 * (sg.get("atrp") or 5) / 100))   # 감도 상향(2026-07): 전환점 6~10개
-            # 과거엔 12~30%라 추세 위 눌림목에서 타점이 아예 안 잡혔다. 품질은 아래 필터(칼·과열)로 유지.
-            piv, dvg = zigzag(_sub.values, wr, theta)
-            piv = [[int(q) + _off, ty] for q, ty in piv]      # 잘라낸 만큼 되돌린다(전체 패널 좌표계로)
-            if len(piv) >= 2: tp = {"zz": piv, "dvg": dvg}
-        # 매수/매도 타점(마커) — 스윙 저점≈매수·고점≈매도(지그재그 전환점), 과열도·추세·모멘텀·변동성으로 필터 + 국면 조정.
-        #   저점 매수: 깊은 붕괴(200MA −KNIFE 아래 & 6M<−15%)·아직 과매수(oh>65)면 제외 → 떨어지는 칼 회피.
-        #   고점 매도: 강세 지속(상승추세 & 모멘텀↑ & oh<70)·아직 과매도(oh<35)면 제외 → 강세종목 조기매도 회피.
-        bms, sms = [], []
-        bmw, smw = [], []      # 잠정(미확정 꼬리) 타점 — 진행 중 극점, 날짜 이동 가능. 차트에 '빈 도형'으로 표시
-        bmr, smr = {}, {}      # 타점별 근거 문자열 {인덱스: "사유"}
-        strong_idx = []        # 강한 타점(다이버전스·거래량 확인) 인덱스 — 차트/리스트에서 강조. 나머지는 '약(구조 전환만)'
+        # 🗑 스윙 타점(지그재그 전환점·눌림목·잠정·강약) 생성을 뺐다. 2026-11-18 사용자 «차트 스윙 타점 자료 생성도 없애줘» — 화면 탭은 98a4400f0 에서 걷었다(시점정합 실측 20일 초과 0.0%).
+        #   남는 것은 상세의 '현재 상태'(whyb.now) 하나다.
         whyb = None
         if dser is not None and t in px:
             cf = raw[t]["close"]; hf = px[t]["High"].reindex(cf.index); lf = px[t]["Low"].reindex(cf.index); vf = px[t]["Volume"].reindex(cf.index)
@@ -1698,7 +1656,7 @@ def main():
             _, _, mhb = macd(cf); mhb = mhb.reindex(daily.index)
             vmb = vf.reindex(daily.index); v20 = vmb.rolling(20).mean()
             hi20 = cf.rolling(20).max().reindex(daily.index); lo20 = cf.rolling(20).min().reindex(daily.index)
-            dv = dser.to_numpy(); KNIFE = 0.10 if spy_riskon else 0.05
+            dv = dser.to_numpy()
 
             def _fmt(x, unit="%", nd=1):
                 return "—" if x is None or x != x else f"{x:+.{nd}f}{unit}" if unit == "%" else f"{x:.{nd}f}"
@@ -1721,156 +1679,6 @@ def main():
                         "vr": (_f(_vma[pos])/a20) if (a20 == a20 and a20) else None,
                         "mh": _f(_mha[pos])}
 
-            def _reason(pos, typ, kind):
-                c_ = _ctx(pos); parts = []
-                if c_["d200"] is not None:
-                    parts.append(f"200일선 {_fmt(c_['d200'])} ({'상승추세' if c_['d200'] >= 0 else '하락추세'})")
-                if c_["rsi"] == c_["rsi"]: parts.append(f"RSI {c_['rsi']:.0f}")
-                if typ == "L" and c_["dd20"] is not None: parts.append(f"20일 고점 대비 {_fmt(c_['dd20'])} 눌림")
-                if typ == "H" and c_["up20"] is not None: parts.append(f"20일 저점 대비 {_fmt(c_['up20'])} 반등")
-                if c_["oh"] == c_["oh"]: parts.append(f"과열도 {c_['oh']:.0f}/100")
-                if c_["vr"] is not None and c_["vr"] == c_["vr"]: parts.append(f"거래량 평소의 {c_['vr']:.1f}배")
-                head = {"zz": "스윙 전환점 확정", "pull": "상승추세 눌림목 저점",
-                        "bounce": "하락추세 반등 고점", "rev": "하락추세 과매도 반등 (고위험)"}[kind]
-                tail = "" if kind == "rev" else " · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준"
-                return head + " — " + " · ".join(parts) + tail
-
-            # (a) 지그재그 확정 전환점 — 마지막 원소는 '미확정 꼬리 극점'(진행 중 최저/최고, 다음날 더 내리면
-            #     날짜가 옮겨가는 리페인팅)이므로 매매 마커(▲▼)에서 제외. 차트 스윙 구조(●, tp.zz)에는 그대로 표시.
-            _zz = (tp or {}).get("zz") or []
-            for pos, typ in (_zz[:-1] if len(_zz) >= 2 else []):
-                if pos < 0 or pos >= len(pxd_dates): continue
-                oh = _f(ohb.iloc[pos])
-                if oh != oh: continue
-                s2 = _f(s2b.iloc[pos]); r6 = _f(r6b.iloc[pos]); pxp = _f(dv[pos])
-                if typ == "L":
-                    knife = (s2 == s2 and pxp == pxp and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
-                    if (not knife) and oh <= 65:
-                        bms.append(pos); bmr[pos] = _reason(pos, "L", "zz")
-                else:
-                    rising = (_f(mhb.iloc[pos]) >= _f(mhb.iloc[pos-3])) if pos >= 3 else True
-                    strength = (s2 == s2 and pxp == pxp and pxp > s2) and rising and oh < 70
-                    if (not strength) and oh >= 35:
-                        sms.append(pos); smr[pos] = _reason(pos, "H", "zz")
-            # (a') 미확정 꼬리 극점 = '잠정' 타점(bmw/smw) — 확정 확률 60% 이상일 때만 표시(사용자 기준).
-            #     실측(5y·512종목): 반전 진행률(theta 대비)이 지배 변수 — 60~80%면 저점 70%·고점 61% 확정, 80%+면 89%/85%.
-            #     진행률 <60%는 표시하지 않음(확정 확률 20~58%로 신뢰 불가).
-            if len(_zz) >= 2:
-                pos, typ = _zz[-1]
-                _th = min(0.16, max(0.05, 3.0 * (sg.get("atrp") or 5) / 100))
-                _pxl = _f(dv[-1])
-                if 0 <= pos < len(pxd_dates) and _pxl == _pxl:
-                    oh = _f(ohb.iloc[pos])
-                    if oh == oh:
-                        s2 = _f(s2b.iloc[pos]); r6 = _f(r6b.iloc[pos]); pxp = _f(dv[pos])
-                        if typ == "L" and pxp == pxp and pxp > 0:
-                            prog = (_pxl/pxp - 1) / _th
-                            knife = (s2 == s2 and pxp < s2*(1 - KNIFE)) and (r6 == r6 and r6 < -0.15)
-                            if (not knife) and oh <= 65 and prog >= 0.5:
-                                _pc = 89 if prog >= 0.8 else (70 if prog >= 0.6 else 57)
-                                bmw.append(pos); bmr[pos] = "잠정 저점(미확정) — " + _reason(pos, "L", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · 반전 진행률 {min(int(prog*100),99)}%(확정 임계 {int(_th*100)}%) — 과거 통계상 확정 확률 ~{_pc}% (5y·512종목)"
-                        elif typ == "H" and pxp == pxp and pxp > 0:
-                            prog = (1 - _pxl/pxp) / _th
-                            rising = (_f(mhb.iloc[pos]) >= _f(mhb.iloc[pos-3])) if pos >= 3 else True
-                            strength = (s2 == s2 and pxp > s2) and rising and oh < 70
-                            if (not strength) and oh >= 35 and prog >= 0.6:
-                                _pc = 85 if prog >= 0.8 else 61
-                                smw.append(pos); smr[pos] = "잠정 고점(미확정) — " + _reason(pos, "H", "zz").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · 반전 진행률 {min(int(prog*100),99)}%(확정 임계 {int(_th*100)}%) — 과거 통계상 확정 확률 ~{_pc}% (5y·512종목)"
-
-            # (b) 추세 내 눌림목·반등 타점 — 지그재그가 놓치는 '추세 유지 중 되돌림'을 잡는다.
-            #     확정 중심 피봇(K=5, 5봉 뒤에야 확정 — 미래참조 아님) + 추세·과열·낙폭 조건 + 간격 8봉.
-            #     K 선택 근거(5y·512종목 실측): 진짜확률(확정 후 20일 미이탈) K3=41%→K5=50%, 수익차 없음 — 정확도 우선 사용자 결정(2026-07).
-            K = 5; W = 2*K + 1
-            cwin = pd.Series(dv, index=daily.index)
-            piv_lo = cwin == cwin.rolling(W, center=True, min_periods=W).min()
-            piv_hi = cwin == cwin.rolling(W, center=True, min_periods=W).max()
-            _plo, _phi = piv_lo.to_numpy(), piv_hi.to_numpy()      # 위 _ctx 와 같은 이유 — 봉마다 .iloc 을 두드리지 않는다
-            def _spaced(lst, pos, gap=8):
-                return all(abs(pos - q) >= gap for q in lst)
-            for pos in range(K, len(pxd_dates) - K):
-                cc = _ctx(pos)
-                if cc["d200"] is None or cc["rsi"] != cc["rsi"]: continue
-                if bool(_plo[pos]) and cc["d200"] > 0 and _spaced(bms, pos):
-                    deep = (cc["dd20"] is not None and cc["dd20"] <= -4.0)
-                    if (cc["rsi"] < 48 or deep) and (cc["oh"] != cc["oh"] or cc["oh"] <= 55):
-                        bms.append(pos); bmr[pos] = _reason(pos, "L", "pull")
-                if bool(_phi[pos]) and cc["d200"] < 0 and _spaced(sms, pos):
-                    high = (cc["up20"] is not None and cc["up20"] >= 4.0)
-                    if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
-                        sms.append(pos); smr[pos] = _reason(pos, "H", "bounce")
-            # (b') 눌림목/반등 '잠정' 후보 — 확정(5봉 유지) 전 예고. 실측 확정확률(5y·512종목):
-            #     저점 1일 52%·2일 68%·3일 80%·4일 91% / 고점 1일 46%·2일 63%·3일 77%·4일 90%.
-            #     저점은 사용자 지정으로 1일부터 표시(선행성 우선, 대신 확정확률 52% = 사실상 동전던지기 — 근거 문구에 그대로 노출).
-            #     고점은 1일이 46%로 50% 미만(확정보다 이동이 더 잦음)이라 2일 유지.
-            _lastp = len(pxd_dates) - 1
-            _PL = {1: 52, 2: 68, 3: 80, 4: 91}; _PH = {2: 63, 3: 77, 4: 90}
-            for m in range(_lastp - 4, _lastp):   # age = _lastp-m ∈ {4,3,2,1}
-                if m < K: continue
-                age = _lastp - m
-                base = _f(dv[m])
-                if base != base: continue
-                prev = dv[m-K:m]; fut = dv[m+1:_lastp+1]
-                if np.isnan(prev.astype(float)).any() or np.isnan(fut.astype(float)).any(): continue
-                cc = _ctx(m)
-                if cc["d200"] is None or cc["rsi"] != cc["rsi"]: continue
-                if age in _PL and base < prev.min() and (fut > base).all() and cc["d200"] > 0 and _spaced(bms, m) and m not in bmw:
-                    deep = (cc["dd20"] is not None and cc["dd20"] <= -4.0)
-                    if (cc["rsi"] < 48 or deep) and (cc["oh"] != cc["oh"] or cc["oh"] <= 55):
-                        bmw.append(m); bmr[m] = "잠정 눌림목 저점(미확정) — " + _reason(m, "L", "pull").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {age}일 유지 — 5거래일 채우면 확정, 과거 통계상 확정 확률 ~{_PL[age]}% (5y·512종목)"
-                if age in _PH and base > prev.max() and (fut < base).all() and cc["d200"] < 0 and _spaced(sms, m) and m not in smw:
-                    high = (cc["up20"] is not None and cc["up20"] >= 4.0)
-                    if (cc["rsi"] > 55 or high) and (cc["oh"] != cc["oh"] or cc["oh"] >= 45):
-                        smw.append(m); smr[m] = "잠정 반등 고점(미확정) — " + _reason(m, "H", "bounce").split(" — ", 1)[1].replace(" · 전환점은 며칠 뒤 확정되므로 표시는 사후 기준", "") + f" · {age}일 유지 — 5거래일 채우면 확정, 과거 통계상 확정 확률 ~{_PH[age]}% (5y·512종목)"
-            # (c) 하락추세 과매도 반등확인 타점은 제거(2026-07) — 잠정 예고가 불가능한 유형(+5% 회복 순간이 곧 확정)이라
-            #     '잠정 없이 확정 등장 금지' 원칙과 상충하고, '추세 전환 완전 확인 후 진입' 전략과도 안 맞음.
-            # 같은 위치가 확정(bms/sms)과 잠정(bmw/smw)에 중복되면 확정 우선 — 차트에서 빈 도형이 확정 위를 덮는 문제 방지
-            bmw = [p for p in bmw if p not in bms]; smw = [p for p in smw if p not in sms]
-            bms.sort(); sms.sort()
-
-            # ── 타점 강화(2026-07-24): 다이버전스 + 거래량으로 강/약 2단계 판정 ──
-            #   저점/고점 원시 구조(●) 표시를 없애는 대신, 그 핵심 정보(반전 다이버전스)를 타점에 접목한다.
-            #   강 = 반전 다이버전스 OR 거래량 급증(≥1.3배) 확인 · 약 = 확인 없이 구조 전환만.
-            #   ⚠ 미래참조 없음 — pos 시점 이하만 사용: dv[pos]·rsb[pos]·pos 이전 동일유형 전환점·20일 트레일링 거래량(_ctx).
-            #   ⚠ 배포 알파 주장 아님(스윙 타점은 랩 검증에서 진단용으로 판정) — '확인 여부' 표기일 뿐이다.
-            # 다이버전스 비교 기준 = '직전 동일유형 타점'(이전 매수 저점 / 이전 매도 고점).
-            #   ⚠ 지그재그 스윙극점(_zz)이 아니라 실제 타점열(bms+bmw / sms+smw)과 비교한다.
-            #   눌림목·반등 타점은 _zz에 없어서 _zz 기준으로 대면 (a) 다이버전스가 거의 안 잡히고
-            #   (b) 잡혀도 '직전 저점'이 몇 달 전 다른 국면의 스윙극점이라 근거 문구가 사실과 어긋난다.
-            _lows = sorted(bms + bmw); _highs = sorted(sms + smw)
-            def _prev_tp(pos, typ):
-                prev = None
-                for q in (_lows if typ == "L" else _highs):
-                    if q >= pos: break
-                    prev = q
-                return prev
-
-            def _strength(pos, typ):
-                notes = []; div = False
-                pv = _prev_tp(pos, typ)
-                if pv is not None:
-                    pp = _f(dv[pv]); pr = _f(_rsa[pv]); cp = _f(dv[pos]); cr = _f(_rsa[pos])
-                    _ref = pxd_dates[pv] if 0 <= pv < len(pxd_dates) else "?"
-                    if pp == pp and pr == pr and cp == cp and cr == cr:
-                        if typ == "L" and cp < pp and cr > pr + 2:
-                            div = True; notes.append(f"강세 다이버전스(직전 매수 타점 {_ref}보다 저가인데 RSI는 상승)")
-                        elif typ == "H" and cp > pp and cr < pr - 2:
-                            div = True; notes.append(f"약세 다이버전스(직전 매도 타점 {_ref}보다 고가인데 RSI는 하락)")
-                vr = _ctx(pos)["vr"]; vol = vr is not None and vr == vr and vr >= 1.3
-                if vol: notes.append(f"거래량 평소의 {vr:.1f}배 동반")
-                strong = div or vol
-                note = (" · 확인 동반(강) — " + " · ".join(notes)) if strong else " · 확인 신호 없음 — 구조 전환만(약)"
-                return strong, note
-
-            for _pos in bms + bmw:
-                _st, _nt = _strength(_pos, "L")
-                if _pos in bmr: bmr[_pos] += _nt
-                if _st: strong_idx.append(_pos)
-            for _pos in sms + smw:
-                _st, _nt = _strength(_pos, "H")
-                if _pos in smr: smr[_pos] += _nt
-                if _st: strong_idx.append(_pos)
-            strong_idx = sorted(set(strong_idx))
-
             # (c) 현재 상태 근거(왜 지금 이 라벨인가) + 최근 타점 사유
             last = len(pxd_dates) - 1
             cl = _ctx(last); bullets = []
@@ -1884,11 +1692,7 @@ def main():
             if cl["oh"] == cl["oh"]: bullets.append(f"과열도 {cl['oh']:.0f}/100 (0=과매도·100=과매수)")
             if cl["vr"] is not None and cl["vr"] == cl["vr"]: bullets.append(f"거래량 평소의 {cl['vr']:.1f}배")
             whyb = {"now": bullets}
-            if bms: whyb["buy"] = {"dt": pxd_dates[bms[-1]], "why": bmr.get(bms[-1], "")}
-            if sms: whyb["sell"] = {"dt": pxd_dates[sms[-1]], "why": smr.get(sms[-1], "")}
-            if bmw: whyb["pbuy"] = {"dt": pxd_dates[bmw[-1]], "why": bmr.get(bmw[-1], "")}
-            if smw: whyb["psell"] = {"dt": pxd_dates[smw[-1]], "why": smr.get(smw[-1], "")}
-        # timing(라벨·리스트)은 trend_signals의 추세기반 유지 · 스윙 마커는 차트 전용 (bmw/smw = 잠정 타점, 위에서 채움)
+        # timing(라벨·리스트)은 trend_signals의 추세기반 유지(스윙 마커는 2026-11-18 생성 중단)
         info = mem.get(t, {})
         fd = fund.get(t) or {}
         def r2(x): return round(float(x), 2) if x is not None and x == x else None
@@ -1931,7 +1735,7 @@ def main():
                        "comp": {k: v for k, v in comps.items() if v is not None}, "flags": flags(sg),
                        "timing": raw[t]["timing"], "buy": raw[t]["buy"], "sell": raw[t]["sell"],
                        "bscore": round(float(buy_score.get(t, 0.0)), 3), "sscore": round(float(sell_score.get(t, 0.0)), 3),
-                       "trig": trig, "bms": bms, "bmw": bmw, "sms": sms, "smw": smw, "sig": sig,
+                       "trig": trig, "sig": sig,
                        **({"why": whyb} if whyb else {}),
                        "fund": {k: v for k, v in fnd.items() if v is not None}, "pxd": pxd, "vd": vd, "hd": hd, "ld": ld,
                        **({"part": partial[t]} if t in partial else {}),
@@ -1941,13 +1745,11 @@ def main():
                        **({"fundx_na": fx_na[t]} if fx_na.get(t) else {}),
                        # 회사 소개도 상세(sd/) 전용 — 518종목 × 1KB 남짓이라 슬림 본체에 넣으면 배가 된다
                        **({"prof": fd["prof"]} if fd.get("prof") else {}),
-                       # 스윙 저점/고점 원시 구조(tp.zz)는 화면에서 제거(2026-07-24) — 타점(bms/smw)과 겹쳐 이중 표시됐음.
-                       #   지그재그는 타점 산출의 내부 입력으로만 쓰고 JSON에는 싣지 않는다. 강한 타점 인덱스만 노출.
-                       **({"strong": strong_idx} if strong_idx else {})})
+                       })
     stocks.sort(key=lambda s: -(s["comp"].get("momentum") or 0))
     def _rnd(x, nd): return round(float(x), nd) if nd else int(round(float(x)))
     out = {"as_of": as_of, "source": "yfinance + 표준 테크니컬 (cloud)", "n_stocks": len(stocks), "pxd_dates": pxd_dates,
-           "strong_tiers": True,   # 이 빌드가 타점 강/약(strong 인덱스)을 싣는다는 신호 — 없으면(구버전) 프런트가 전부 '강'으로 렌더
+           "px_cells": sum(sum(1 for v in (x.get("pxd") or []) if v is not None) for x in stocks),   # 종가 칸 관문(아래) 직전 값
 
            # 그날 일봉 종가가 비어 60분봉으로 되살렸으면 그 사실을 남긴다(정상일엔 null).
            # 공식 종가와 소수점 끝자리가 다를 수 있는 값이라 조용히 섞으면 안 된다.
@@ -2034,20 +1836,16 @@ def main():
     # (Yahoo가 러너 IP에 거는 쓰로틀링 — .info에서 이미 겪은 것과 같은 유형인데 가격 쪽에는
     # 가드가 없었다). 화면에서는 '오늘은 잠정 타점이 없구나'로 보여 아무도 알아채지 못했다.
     #
-    # 확정 타점(bms·sms)은 3년 이력에서 나오므로 하루 사이에 크게 변할 수 없다 — 이 값이
+    # (옛 관문) 확정 타점(bms·sms)은 이력에서 나오므로 하루 사이에 크게 변할 수 없다 — 이 값이
     # 급감했다면 시장이 아니라 입력이 상한 것이다. 잠정은 원래 요동치므로 경고만 한다.
-    def _cnt(arr, keys):
-        return sum(len(x.get(k) or []) for x in arr for k in keys)
-    _now_c, _now_w = _cnt(stocks, ("bms", "sms")), _cnt(stocks, ("bmw", "smw"))
+    # 🔁 2026-11-18 — 이 관문은 확정 스윙 타점 수로 «가격 이력 부분 결측»을 잡았다. 타점 생성을 빼면서
+    #   같은 것을 더 직접 재는 **종가 칸 수**(종목별 pxd 의 값 있는 칸 합)로 바꿨다. 직전 값은 stocks.json 의
+    #   px_cells 에 싣는다(슬림 본체엔 pxd 가 없어 다시 셀 수 없다). 처음 한 번은 직전 값이 없어 건너뛴다.
+    _now_c = sum(sum(1 for v in (x.get("pxd") or []) if v is not None) for x in stocks)
     try:
-        _pv = json.load(open(OUT, encoding="utf-8")).get("stocks") or []
-        _old_c, _old_w = _cnt(_pv, ("bms", "sms")), _cnt(_pv, ("bmw", "smw"))
+        _old_c = int(json.load(open(OUT, encoding="utf-8")).get("px_cells") or 0)
     except Exception:
-        _old_c = _old_w = 0
-    # 이 게이트는 '창 길이가 어제와 같다'는 전제 위에서만 뜻이 있다. 패널 길이를 바꾸면
-    # 타점 수는 당연히 그만큼 변하는데, 이 비교는 단방향이라 줄어드는 쪽 전환(예: 10y→3y 롤백)에서
-    # 매번 SystemExit → stocks.json 이 안 써지고 다음날도 같은 이전본과 비교해 **자기영속**한다
-    # (KB_RotationDaily exit 8 과 같은 유형). 길이가 달라진 실행에서는 비교를 건너뛰고 경고만 남긴다.
+        _old_c = 0
     try:
         _prev = json.load(open(OUT, encoding="utf-8"))
         _old_len = len(_prev.get("pxd_dates") or [])
@@ -2068,13 +1866,10 @@ def main():
     if _len_changed:
         print(f"⚠ 패널 길이 변경 {_old_len}→{len(pxd_dates)} — 타점 급감 게이트는 이번 실행만 건너뛴다"
               f"(길이가 바뀌면 타점 수 변화는 정상이다). 다음 실행부터 다시 적용된다.")
-    elif _old_c and _now_c < _old_c * 0.75:
-        raise SystemExit(f"확정 스윙 타점 급감 {_old_c}→{_now_c} — {len(pxd_dates)}거래일 이력에서 "
-                         f"나오는 값이라 하루 사이 이만큼 줄 수 없다(가격 이력 부분 결측 의심). "
-                         f"갱신 중단, 이전본 유지")
-    print(f"스윙 타점: 확정 {_now_c}(직전 {_old_c}) · 잠정 {_now_w}(직전 {_old_w})")
-    if _old_w and _now_w == 0:
-        print("⚠ 잠정 타점이 0이다 — 시장 상황일 수도 있으나 직전에 %d개였다면 입력을 의심할 것" % _old_w)
+    elif _old_c and _now_c < _old_c * 0.97:
+        raise SystemExit(f"종가 칸 급감 {_old_c}→{_now_c} — {len(pxd_dates)}거래일 패널에서 하루 사이 3% 넘게 "
+                         f"줄 수 없다(가격 이력 부분 결측 의심). 갱신 중단, 이전본 유지")
+    print(f"종가 칸: {_now_c}(직전 {_old_c})")
     # ── 상세 분리(지연 로드): sig·pxd·vd·why 등(페이로드의 대부분)은 종목별 data/sd/<티커>.json으로, 본체는 슬림하게 ──
     # ⚠ 워크플로 커밋 대상에 data/sd 포함 필수(home_reco 누락 사고와 동일 함정) · stocks.html이 선택 시 fetch.
     SD_DIR = os.path.join(HERE, "..", "data", "sd")

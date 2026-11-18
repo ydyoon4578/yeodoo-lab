@@ -882,12 +882,9 @@ def _breadth(stocks):
 
 
 def build(stocks, dates, as_of, root):
-    buy, nb, nb_c, nb_p = _reco(stocks, dates, "bms", "bmw")
-    sell, ns, ns_c, ns_p = _reco(stocks, dates, "sms", "smw")
+    # 🗑 2026-11-18 스윙 타점 생성을 멈춰 buy·sell(최근 타점 목록)을 더 싣지 않는다. 홈 구획도 98a4400f0 에서 걷었다.
     return {
-        "as_of": as_of, "win": WIN,
-        "buy": buy, "sell": sell, "nbuy": nb, "nsell": ns,
-        "buy_conf": nb_c, "buy_prov": nb_p, "sell_conf": ns_c, "sell_prov": ns_p,
+        "as_of": as_of,
         "breadth": _breadth(stocks),
         # 히어로 눈썹이 쓰는 지수별 종목 수(사용자 요청 2026-08-10 — '518종목 · FRED 39지표'
         # 대신 'S&P 500 몇 · 나스닥 100 몇'). 합집합이 518이고 겹침이 있으므로 둘을 더하면
@@ -948,8 +945,7 @@ def write_stocks(doc, root):
 def write(stocks, dates, as_of, root):
     """실패를 삼키지 않는다 — 홈의 핵심 모듈이라 조용히 빈 채로 배포되면 안 된다."""
     doc = build(stocks, dates, as_of, root)
-    if not doc["buy"] and not doc["sell"]:
-        raise SystemExit("home_reco: 최근 타점이 하나도 없다 — 마커 산출이 깨졌는지 확인")
+    # (옛 관문 «최근 타점이 하나도 없다»는 타점 생성 중단으로 뺐다 — 2026-11-18)
     sp, n_deep = write_stocks(doc, root)
     # 산업그룹 경로 — 홈 시계열 넷째 판. 차트가 늦게 받는 별도 파일이다.
     _paths, _pdates, _psec = _IND_PATHS[0]

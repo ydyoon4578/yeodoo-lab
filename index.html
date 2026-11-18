@@ -3246,7 +3246,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 그러면 stocks.json 199KB(gz)를 받고도 결국 같은 renderReco 를 다시 불러
   // **화면은 그대로 실패**했다. 렌더 예외는 폴백이 아니라 실패 표시로 보낸다.
   getj('home_reco.json').then(function(h){
-    if(h&&h.buy){renderReco(h);}else{loadFull();}
+    if(h&&h.as_of){renderReco(h);}else{loadFull();}   // 2026-11-18 buy 목록이 없어져 as_of 로 판정
   })['catch'](function(e){ if(window.console&&console.error)console.error(e); stkFail(); });
 
   // ── ⑥ 종목 히트맵 ────────────────────────────────────────────
