@@ -82,20 +82,15 @@ if (!Array.isArray(P) || P.length < 10) {
   }
   // 지운 프리셋이 정말 지워졌는가(레지스트리에 남으면 #p=… URL 로 계속 닿는다)
   const keys = new Set(P.map(p => p[0]));
-  for (const k of ["swingbuy", "swingsell", "all"]) {
-    if (!keys.has(k)) fail.push("핵심 프리셋 '" + k + "' 가 사라졌다");
+  if (!keys.has("all")) fail.push("핵심 프리셋 'all' 가 사라졌다");
+  // 2026-11-18 스윙 탭을 걷었다(사후 표시 · 시점정합 실측 0). 다시 생기면 막는다.
+  for (const k of ["swingbuy", "swingsell", "swingall"]) {
+    if (keys.has(k)) fail.push("걷은 스윙 프리셋 '" + k + "' 가 PRESETS 에 다시 생겼다");
   }
 }
 
 // ── ② 프리셋 헬퍼가 실제로 동작하는가 ─────────────────────────────────────
-if (typeof scope.swKeys === "function") {
-  const a = scope.swKeys("swingbuy"), b = scope.swKeys("swingsell"), c = scope.swKeys("all");
-  if (!Array.isArray(a) || !Array.isArray(b) || c !== null) {
-    fail.push("swKeys 가 스윙 두 개에 마커 키를 못 돌려준다 — 스윙 탭이 빈 목록이 된다");
-  }
-} else {
-  fail.push("swKeys 가 없다 — 스윙 타점 필터의 뼈대가 사라졌다");
-}
+// 2026-11-18 스윙 탭 제거 — swKeys 는 남아 있어도 프리셋이 없어 쓰이지 않는다. 검사하지 않는다.
 
 // ── ③ 차트 마커 배선 ─────────────────────────────────────────────────────
 // 🚨 2026-08-05 — 샹들리에 마름모는 화면에서 뺐다(사용자 요청). 이 검사는 **반쪽만

@@ -660,7 +660,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       </button>
     </div>
     <div class="chipwrap" id="chipwrap">
-      <div class="chiprow"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
+      <!-- 🗑 2026-11-18 스윙 탭을 걷어 이 줄(그룹 r)이 비었다. 디스패치가 #presets 를 찾으므로 요소는 남기고 줄만 숨긴다. -->
+      <div class="chiprow" style="display:none"><span class="fchip lbl">스윙 타점</span><span id="presets" style="display:contents"></span></div>
       <!-- 🚨 2026-08-05 — 샹들리에 칩 줄과 '지표별 타이밍 신호 성적표' 링크를 뺐다(사용자 요청).
            프리셋 정의(chandbuy·chandsell·chlose·chnear)도 함께 지웠다 — 칩만 숨기면
            #p=chandbuy 같은 URL 로 계속 닿아서, 화면에서 지운 것과 없는 것이 달라진다.
@@ -735,8 +736,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 추천·신호 탭 제거 — 확정 스윙 타점(저점매수/고점매도)에 집중, 스크리닝은 보조.
   var PRESETS=[
     ["all","전체",null,false,null,null,"a"],
-    ["swingbuy",'<span style="color:var(--good)">▲</span> 스윙 저점매수',"momentum",false,null,null,"r"],
-    ["swingsell",'<span style="color:var(--hot)">▼</span> 스윙 고점매도',"trend",true,null,null,"r"],
+    // 🗑 2026-11-18 사용자 결정으로 스윙 탭을 걷었다. 타점이 극점 날짜에 찍혀 사후적으로 보였고, 시점정합으로 다시 재니(518종 2010~, _research/swing_causal) 극점일 기준 20일 초과 +4.8%는 확정 다음 날 사면 0.0%(승률 48%)였다. 고점 매도는 확정 뒤 오히려 +0.16%.
+    //   swingbuy·swingsell·swingall 셋을 PRESETS 에서 뺐다. #p=swingbuy 같은 옛 링크는 아래 해시 처리에서
+    //   SHOWN 에 없으므로 '전체'로 떨어진다. 차트 ▲▼ 는 _swOn(스윙 프리셋일 때만)이라 같이 사라진다.
+    //   ⚠ 자료(stocks.json 의 bms·bmw·sms·smw)는 refresh_stocks 가 계속 만든다 — home_summary 의 관문과
+    //     signal_lab 이 읽는다. 화면에서만 뺐다.
     // 🚨 2026-08-16 사용자 지적 — 저점매수·고점매도 두 목록은 **최근 10일 안에 타점이 난
     //   종목만** 담는다(swFresh). 그래서 MU 처럼 마지막 타점이 12일 전인 종목은 어느
     //   목록에도 없고, 마커는 스윙 프리셋에서만 그리므로 **볼 방법이 아예 없었다.**
@@ -755,7 +759,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     ["ret6M","6개월",null,false,null,null,"p"],
     ["ret12M","12개월",null,false,null,null,"p"],
     ["retYTD","연초 이후",null,false,null,null,"p"],
-    ["swingall",'<span style="color:var(--good)">▲</span><span style="color:var(--hot)">▼</span> 스윙 타점 전체',null,false,null,null,"r"],
     // 🚨 2026-08-16 — Williams %R 프리셋 둘을 **같은 날 걷었다**(사용자: "신호가 너무 많아서
     //   못 쓰겠다"). 과매도 122종 · 과매수 274종이라 518종 중 절반 가까이가 걸렸고, 그만큼
     //   걸리면 거르는 일을 안 하는 것과 같다. 이 랩 실측으로도 매수 쪽은 중앙값이 음수였다.
@@ -1236,17 +1239,11 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   // 왜 이 종목이 매수/매도 신호인가 — 생성기가 신호 시점 실제 지표로 만든 근거(sd/<티커>.json의 why)
   function whyBlock(s){
     var w=s.why; if(!w)return '';
-    var rows='';
-    if(w.buy)rows+='<div class="whyrow buy"><span class="wl">▲ 최근 매수 타점</span><div><b>'+esc(w.buy.dt)+'</b> — '+esc(w.buy.why||'')+'</div></div>';
-    if(w.sell)rows+='<div class="whyrow sell"><span class="wl">▼ 최근 매도 타점</span><div><b>'+esc(w.sell.dt)+'</b> — '+esc(w.sell.why||'')+'</div></div>';
-    if(w.pbuy)rows+='<div class="whyrow buy"><span class="wl">△ 잠정 저점 (미확정)</span><div><b>'+esc(w.pbuy.dt)+'</b> — '+esc(w.pbuy.why||'')+'</div></div>';
-    if(w.psell)rows+='<div class="whyrow sell"><span class="wl">▽ 잠정 고점 (미확정)</span><div><b>'+esc(w.psell.dt)+'</b> — '+esc(w.psell.why||'')+'</div></div>';
+    // 🗑 2026-11-18 스윙 탭 제거 — 최근 매수·매도·잠정 타점 줄과 '확정형 사후 표시' 안내를 뺐다(w.buy·sell·pbuy·psell 은 안 읽는다).
+    //   현재 상태(200일선·RSI·과열도 등)만 남긴다.
     var now=(w.now||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
-    return '<div class="whybox"><h4>왜 이 신호인가</h4>'+rows+
-      (now?'<div class="whyrow now"><span class="wl">현재 상태</span><ul>'+now+'</ul></div>':'')+
-      '<div class="whynote">타점은 <b>확정형</b>이라 전환점 며칠 뒤에야 확정됩니다(사후 표시). '+
-      '매수는 <b>상승추세</b>에서만, 매도는 <b>하락추세</b>에서만 표시하며, 예외적으로 깊은 과매도 뒤 반등이 확인된 경우만 '+
-      '<b>고위험 반등</b>으로 따로 표시합니다.</div></div>';
+    if(!now)return '';
+    return '<div class="whybox"><h4>현재 상태</h4><div class="whyrow now"><ul>'+now+'</ul></div></div>';
   }
   // 애널리스트 목표주가 — 표기 전용 블록. bscore/sscore·flags·timing 어디에도 입력하지 않으며 정렬 키로도 쓰지 않는다.
   // 근거: 상승여력(목표평균/현재가−1)은 우리 매수점수와 스피어만 −0.71, 6개월 모멘텀과 월별 횡단면 평균 −0.60(55개월 중 100% 음수).
@@ -1460,9 +1457,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
       (s.part?'<div class="partnote">이 종목은 <b>상장 '+s.part+'거래일</b>이라 창이 확보된 단기 지표만 산출됩니다 — '+
         '200일선 이격도·52주 고점 위치·3/6개월 모멘텀·실현변동성은 <b>계산 자체가 불가능</b>합니다(빈 값을 채우지 않았습니다). '+
         '스윙 타점도 표시되지 않습니다. 상장 200거래일이 지나면 자동으로 전체 지표가 붙습니다.</div>':'')+
-      whyBlock(s)+timing(s)+body+fundX(s)+'<div class="note"><div><b style="color:var(--good)">▲</b> 매수 = 스윙 <b>저점</b> 근처 · <b style="color:var(--hot)">▼</b> 매도 = 스윙 <b>고점</b> 근처. <b>채운 도형(▲▼●)=확정</b> — 날짜 불변 · <b>빈 도형(△▽○)=잠정</b> — 이동 가능.</div>'+
-      '<div><b>크기</b>는 다른 축입니다 — <b>큰 삼각형=강</b>(다이버전스·거래량 확인 동반) · <b>작은 삼각형=약</b>(구조 전환만).</div>'+
-      '<div>강이 수익이 더 좋다는 뜻은 아닙니다(확인 유무 표기일 뿐, 우위는 검증된 바 없습니다).</div><div>기준일 '+DATA.as_of+' · 공매도잔량만 '+(SI_ASOF||'—')+'(FINRA 격주) · 출처 yfinance·FINRA.</div><details class="more"><summary>타점을 어떻게 찍고, 무엇을 못 하는가</summary><div class="mbody"><p>타점은 ①스윙 전환점(지그재그) ②추세 내 눌림목/반등(K=5) 두 종류이며, 각 타점의 근거는 위 <b>왜 이 신호인가</b>에 나옵니다. 잠정 타점은 과거 실측 확정 확률이 이동 확률을 유의하게 웃돌 때만(실측 약 52~91%) 표시하고, 확정은 잠정 단계를 거쳐 등장합니다. 여기에 과열도·추세·모멘텀·변동성을 결합해 걸러냅니다 — 저점이라도 깊은 하락추세 붕괴(200MA 대폭 이탈+6개월 급락)면 매수 제외(떨어지는 칼 회피), 고점이라도 추세·모멘텀 강한 상승 지속이면 매도 제외(강세종목 조기매도 회피). 임계는 시장국면(SPY 200MA 위=관대한 눌림매수)에 따라 조정됩니다.</p><p><b>한계 — 확정 저점의 약 50%만 이후 20일간 저점을 유지하고(5y 실측), 확정일 매수 수익은 시장 수준(+1.6% vs +1.4%)입니다. 수익 예측 도구가 아니라 진입 규율·구조 도구이며, 고점 표식은 하락 예측력이 없어 이익실현 레벨 참고일 뿐입니다.</b> 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위.</p></div></details></div></div>';
+      whyBlock(s)+timing(s)+body+fundX(s)+'<div class="note"><div>기준일 '+DATA.as_of+' · 공매도잔량만 '+(SI_ASOF||'—')+'(FINRA 격주) · 출처 yfinance·FINRA · 퍼센타일 = 커버 '+DATA.n_stocks+'종목 내 상대순위.</div></div></div>';   // 2026-11-18 스윙 타점 범례·설명 제거(탭을 걷었다)
     renderChart(s);
   }
   function sma(arr,nn){return arr.map(function(_,i){if(i<nn-1)return null;var w=arr.slice(i-nn+1,i+1);for(var j=0;j<w.length;j++)if(w[j]==null)return null;var s=0;for(var j=0;j<w.length;j++)s+=w[j];return s/nn;});}
@@ -1550,7 +1545,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 마커 설명은 **마커를 그릴 때만** 싣는다. 스윙이 꺼진 탭에서 '▲매수 ▼매도' 가 그대로
     // 남으면 범례가 차트에 없는 것을 있다고 말하는 꼴이 된다.
     var _lgSw='<span style="color:var(--good)">▲매수</span><span style="color:var(--hot)">▼매도</span> <span style="color:var(--muted)">진한 도형=강(다이버전스·거래량 확인)</span> <span style="color:var(--muted)">흐린 도형=약(구조 전환만)</span> <span style="color:var(--muted)">빈 도형=잠정(미확정·이동가능)</span> ';
-    if(ml)ml.innerHTML=(_swOn?_lgSw:'')+'<span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>'+(_swOn?'':' <span style="color:var(--muted)">· 스윙 타점을 누르면 ▲▼ 가 같이 나온다</span>');
+    if(ml)ml.innerHTML=(_swOn?_lgSw:'')+'<span style="color:var(--cold)">━MA20</span> <span style="color:var(--watch)">━MA60</span> <span style="color:var(--muted)">▮거래량</span>';   // 2026-11-18 스윙 탭 제거 — '스윙 타점을 누르면 ▲▼' 안내도 뺐다(누를 곳이 없다)
     drawChart(slice, sdates, mk, ma20, ma60, vsl);
     var cv=el('pxc');if(cv)cv.setAttribute('aria-label', s.t+' 가격 차트, 최근 '+n+'거래일 ('+(sdates[0]||'')+'~'+(DATA.as_of||'')+'), 변동 '+(chg==null?'—':(chg>=0?'+':'')+chg.toFixed(1)+'%')+', 매수 '+nb+'·매도 '+ns+' 타점');
   }

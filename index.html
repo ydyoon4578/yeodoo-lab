@@ -1307,12 +1307,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
           <div id="rg-card"><div class="skel2">불러오는 중…</div></div>
         </section>
 
-    <!-- ④ 신호 — 경고 문구는 그대로 둔다. 시장 폭 카드에서 여기로 점프하는 앵커가 있다. -->
-      <section id="s-today" aria-labelledby="td-h">
-        <h2 class="lbl" id="td-h">오늘의 신호 <span class="sub">· 스윙 타점 <span id="stkasof"></span></span><a class="more2" href="signals.html">지표별 성적표 →</a></h2>
-        <div class="signote" id="signote">불러오는 중…</div>
-        <div class="reco-stocks" id="recostocks"><div class="rcol"><h4>불러오는 중…</h4></div></div>
-      </section>
+    <!-- 🗑 ④ '오늘의 신호 · 스윙 타점' 구획을 뺐다. 2026-11-18 사용자 결정으로 스윙 탭을 걷었다. 타점이 극점 날짜에 찍혀 사후적으로 보였고, 시점정합으로 다시 재니(518종 2010~, _research/swing_causal) 극점일 기준 20일 초과 +4.8%는 확정 다음 날 사면 0.0%(승률 48%)였다. 고점 매도는 확정 뒤 오히려 +0.16%. 렌더 함수는 요소가 없으면 건너뛴다. -->
     </div>
   </div>
 
@@ -1425,28 +1420,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   }).catch(function(){});
 
   // ── ② 오늘의 신호 ────────────────────────────────────────────
-  function recoVal(x){
-    return x.dt+' · '+(x.ago<=0?'당일':x.ago+'일 전')+(x.prov?' <b style="color:var(--marg);font-weight:700">잠정</b>':'');
-  }
-  function recoCol(title,sub,tot,conf,prov,arr,cls,buy){
-    var head=tot+'종 (확정 '+(conf==null?'—':conf)+' · 잠정 '+(prov==null?'—':prov)+')';
-    // sub 가 비면 빈 span 도 앞 공백도 내지 않는다 — 껍데기만 남으면 자간·줄바꿈이 어긋난다.
-    return '<div class="rcol"><h4><span>'+title+
-      (sub?' <span style="font-weight:400;text-transform:none;letter-spacing:0">'+sub+'</span>':'')+
-      '</span><span style="white-space:nowrap">'+head+'</span></h4>'+
-    (arr.length?arr.map(function(x){
-      // 티커도 esc·encodeURIComponent 를 통과시킨다. 바로 옆 sec·name 은 처음부터 esc 를
-      // 거쳤는데 t 만 빠져 있었다 — 티커는 '어차피 A~Z'라고 여긴 자리다. 실제로는 위키
-      // 심볼 셀에서 그대로 올라오고(build/refresh_members.py), 그쪽 형식 관문은 NDX 에만
-      // 있었다. 두 곳 다 막는다. 화면 쪽이 마지막 방어선이므로 여기서도 가정하지 않는다.
-      return '<a class="rstk '+cls+'" href="stocks.html#t='+encodeURIComponent(x.t)+'&p='+(buy?'swingbuy':'swingsell')+'">'+
-        '<span><span class="mk" style="color:var('+(buy?'--deploy':'--hot')+')">'+(x.prov?(buy?'△':'▽'):(buy?'▲':'▼'))+'</span>'+
-        '<span class="rk">'+esc(x.t)+'</span>'+(x.sec?'<span class="rsec">'+esc(x.sec)+'</span>':'')+
-        '<span class="rn2">'+esc(x.name||'')+'</span></span><span class="rv">'+recoVal(x)+'</span></a>';}).join('')
-      :'<div style="color:var(--muted);font-size:12px;padding:6px 0">최근 타점 없음</div>')+'</div>';
-  }
+  // 🗑 recoVal·recoCol — 스윙 목록 전용이라 구획과 함께 뺐다(2026-11-18).
   function renderReco(h){
-    var as=el('stkasof'); if(as)as.textContent='· 기준일 '+(h.as_of||'');
     var ma=el('mainasof'); if(ma)ma.textContent=(h.as_of||'—');
     MK.main=h.as_of||null;
     // 폭 카드는 국면·심리와 같은 그리드에 붙는다. 산업은 breadth 밖(문서 최상위)에 있으므로
@@ -1461,22 +1436,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     }
     // 눈썹의 지수별 종목 수 — home_reco 가 members.json 을 세어 보낸다(화면이 다시 세지 않는다).
     if(h.idx_n&&h.idx_n.SPX){EB.spx=h.idx_n.SPX; EB.ndx=h.idx_n.NDX; setEyebrow();}
-    // 확정/잠정 지위와 한계는 접기·툴팁으로 내리지 않는다(모바일에서 안 보인다)
-    var nprov=(h.buy_prov||0)+(h.sell_prov||0), shown=(h.buy||[]).length+(h.sell||[]).length;
-    var allProv=(h.buy||[]).concat(h.sell||[]).every(function(x){return x.prov;});
-    el('signote').innerHTML='<b>확정</b>(▲▼)=날짜 불변 · <b>잠정</b>(△▽)=아직 이동 가능'+
-      (shown&&allProv?' — <b style="color:var(--marg)">오늘 표시된 '+shown+'건은 전부 잠정입니다.</b>':'')+
-      // ⚠ 2026-08-12 — 여기 있던 접이식 한계 설명('이 표식으로 무엇을 알 수 있고, 무엇을
-      //   못 하는가')을 뺐다(사용자 결정).
-      //   🚨 근거를 버린 것이 아니다 — **같은 문장이 stocks.html 에 그대로 있다**
-      //   (확정 저점의 약 50%만 20일 유지 · 확정일 매수 +1.6% vs 시장 +1.4% ·
-      //    고점 표식은 하락 예측력 없음). 이 구획의 '지표별 성적표 →'와 종목 줄 링크가
-      //   둘 다 그쪽으로 간다. 지우기 전에 그 사실을 확인했다.
-      //   ⚠ stocks.html 의 그 문단을 지우면 이 판정이 사이트에서 **완전히** 사라진다.
-      '';
-    el('recostocks').innerHTML=
-      recoCol('🟢 스윙 저점매수','', h.nbuy!=null?h.nbuy:(h.buy||[]).length, h.buy_conf, h.buy_prov, h.buy||[], 'brec', true)+
-      recoCol('🔴 스윙 고점매도','', h.nsell!=null?h.nsell:(h.sell||[]).length, h.sell_conf, h.sell_prov, h.sell||[], 'srec', false);
     syncAsof(); staleCheck();
   }
   function stkFail(){
@@ -1484,8 +1443,6 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     // 섹터·산업은 이 파이프라인에서만 온다 — 실패를 알려 주지 않으면 그 줄이 영영 안 선다
     MK.iv=false; if(MK.board)drawStyle(null);
     // MK.main은 null로 남긴다 — '—'를 기준일로 오인해 없는 불일치를 지어내지 않게. 지연 감시는 계속한다.
-    el('recostocks').innerHTML='<div class="rcol"><h4>데이터를 불러오지 못했습니다</h4></div>';
-    el('signote').textContent='신호 데이터를 불러오지 못했습니다.';
     staleCheck();
   }
   function loadFull(){   // 폴백: 대형 stocks.json에서 목록만 재계산(성과 카드는 뜨지 않는다)
