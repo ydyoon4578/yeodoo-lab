@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-10-30",
-  "asset": "2026-11-17",
+  "asset": "2026-11-18",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -8934,7 +8934,7 @@
     "one": {
      "vs": "금리 국면 스타일 로테이션 — 러셀 1000 (IWD·IWF)",
      "corr": 0.891,
-     "alpha": 0.98,
+     "alpha": 0.97,
      "t": 2.88,
      "beta": 0.95
     },
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9447,7 +9447,7 @@
     "one": {
      "vs": "금리 국면 스타일 로테이션 — CRSP 대형 (VTV·VUG)",
      "corr": 0.891,
-     "alpha": -0.27,
+     "alpha": -0.28,
      "t": -0.86,
      "beta": 0.836
     },
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10327,7 +10327,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10490,7 +10490,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10835,7 +10835,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10977,7 +10977,7 @@
      "beta": 0.859
     },
     "five": {
-     "alpha": 5.55,
+     "alpha": 5.54,
      "t": 1.57,
      "n": 506,
      "vs": [
@@ -10998,7 +10998,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11173,7 +11173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11380,7 +11380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11555,7 +11555,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11725,7 +11725,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11896,7 +11896,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12067,7 +12067,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12262,7 +12262,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12469,7 +12469,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12602,7 +12602,7 @@
      {
       "k": "낙폭조정수익 Calmar 개선",
       "v": 0.018,
-      "p": 0.4437
+      "p": 0.444
      }
     ],
     "n_boot": 4000,
@@ -12639,21 +12639,21 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "XLF",
+      "XLP",
       33.4
      ],
      [
-      "XLP",
+      "XLV",
       33.3
      ],
      [
-      "XLV",
+      "XLY",
       33.3
      ]
     ],
@@ -12810,7 +12810,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12973,7 +12973,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13161,7 +13161,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13336,14 +13336,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLF",
-      14.1
+      14.0
      ],
      [
       "XLU",
@@ -13351,11 +13351,11 @@
      ],
      [
       "XLP",
-      12.1
+      12.2
      ],
      [
       "XLB",
-      11.7
+      11.8
      ],
      [
       "XLI",
@@ -13371,7 +13371,7 @@
      ],
      [
       "XLE",
-      9.0
+      8.9
      ],
      [
       "XLK",
@@ -13538,7 +13538,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13705,7 +13705,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13715,7 +13715,7 @@
       50.0
      ],
      [
-      "SPY",
+      "VNQ",
       50.0
      ]
     ],
@@ -13877,7 +13877,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14028,7 +14028,7 @@
      "corr": 0.304,
      "alpha": -2.1,
      "t": -0.8,
-     "beta": 0.344
+     "beta": 0.343
     },
     "five": {
      "alpha": -1.81,
@@ -14052,7 +14052,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14214,7 +14214,7 @@
      "corr": 0.772,
      "alpha": -1.05,
      "t": -0.49,
-     "beta": 1.409
+     "beta": 1.408
     },
     "five": {
      "alpha": 1.66,
@@ -14238,7 +14238,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14409,7 +14409,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14584,7 +14584,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14743,7 +14743,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14914,7 +14914,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15081,7 +15081,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15260,7 +15260,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15428,7 +15428,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15598,7 +15598,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15761,7 +15761,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15872,14 +15872,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 8.5,
+      "cagr": 8.51,
       "sharpe": 0.589,
-      "excess": -4.94,
+      "excess": -4.93,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.14,
+    "drag": 0.13,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -15940,13 +15940,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "SPY",
+      "SHY",
       100.0
      ]
     ],
@@ -16110,18 +16110,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SPY",
-      66.7
-     ],
-     [
-      "SHY",
-      33.3
+      100.0
      ]
     ],
     "exposure_now": null,
@@ -16277,7 +16273,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16379,9 +16375,9 @@
    "perf": [
     {
      "k": "연복리수익률",
-     "s": 9.41,
+     "s": 9.42,
      "b": 13.44,
-     "d": -4.03
+     "d": -4.02
     },
     {
      "k": "변동성",
@@ -16402,7 +16398,7 @@
      "d": 5.0
     }
    ],
-   "excess_cagr": -4.03,
+   "excess_cagr": -4.02,
    "d_sharpe": -0.067,
    "t": -1.09,
    "t_crit": null,
@@ -16418,7 +16414,7 @@
       "main": true
      }
     ],
-    "drag": 0.1,
+    "drag": 0.11,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -16479,13 +16475,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "SHY",
+      "SPY",
       100.0
      ]
     ],
@@ -16642,7 +16638,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16797,7 +16793,7 @@
     },
     "five": {
      "alpha": 1.04,
-     "t": 1.71,
+     "t": 1.72,
      "n": 506,
      "vs": [
       "축소 공분산 최소분산 (Ledoit-Wolf 목표)",
@@ -16817,26 +16813,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      38.7
+      38.6
      ],
      [
       "SPY",
-      26.7
+      27.0
      ],
      [
       "DBC",
-      19.1
+      19.0
      ],
      [
       "GLD",
-      15.5
+      15.4
      ]
     ],
     "exposure_now": null,
@@ -16999,7 +16995,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17145,7 +17141,7 @@
      "corr": 0.894,
      "alpha": -0.08,
      "t": -0.04,
-     "beta": 1.138
+     "beta": 1.139
     },
     "five": {
      "alpha": -0.01,
@@ -17169,7 +17165,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17317,7 +17313,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17493,7 +17489,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17671,14 +17667,38 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      100.0
+      50.0
+     ],
+     [
+      "EFA",
+      8.4
+     ],
+     [
+      "HYG",
+      8.4
+     ],
+     [
+      "IWM",
+      8.3
+     ],
+     [
+      "SPY",
+      8.3
+     ],
+     [
+      "TLT",
+      8.3
+     ],
+     [
+      "VNQ",
+      8.3
      ]
     ],
     "exposure_now": null,
@@ -17834,7 +17854,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18005,26 +18025,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      43.0
+      42.9
      ],
      [
       "DBC",
-      19.5
+      19.4
      ],
      [
       "SPY",
-      18.7
+      18.8
      ],
      [
       "VNQ",
-      15.7
+      15.8
      ],
      [
       "EFA",
@@ -18163,7 +18183,7 @@
      "beta": 0.881
     },
     "five": {
-     "alpha": 1.45,
+     "alpha": 1.44,
      "t": 1.02,
      "n": 374,
      "vs": [
@@ -18184,26 +18204,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      60.5
+      70.9
      ],
      [
       "SPY",
-      14.8
+      14.9
      ],
      [
       "VNQ",
-      14.1
-     ],
-     [
-      "DBC",
-      10.6
+      14.2
      ]
     ],
     "exposure_now": null,
@@ -18364,7 +18380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18542,7 +18558,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18685,19 +18701,19 @@
    "incr": {
     "one": {
      "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
-     "corr": 0.831,
-     "alpha": 1.12,
-     "t": 0.43,
+     "corr": 0.832,
+     "alpha": 1.32,
+     "t": 0.51,
      "beta": 0.925
     },
     "five": {
-     "alpha": 0.09,
-     "t": 0.03,
+     "alpha": 0.32,
+     "t": 0.1,
      "n": 374,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
-      "크로스에셋 RP — 목표변동성 8%",
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
+      "크로스에셋 RP — 목표변동성 8%",
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
       "위험균형 × 개별 추세 게이트 (2단)"
      ]
@@ -18712,7 +18728,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18887,18 +18903,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TIP",
-      36.0
+      36.1
      ],
      [
       "EMB",
-      24.0
+      24.1
      ],
      [
       "TLT",
@@ -18910,11 +18926,11 @@
      ],
      [
       "DBC",
-      7.0
+      6.9
      ],
      [
       "GLD",
-      5.7
+      5.6
      ],
      [
       "SLV",
@@ -19086,18 +19102,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      49.0
+      49.4
      ],
      [
       "TLT",
-      19.7
+      19.6
      ],
      [
       "SPY",
@@ -19105,11 +19121,11 @@
      ],
      [
       "DBC",
-      9.8
+      9.6
      ],
      [
       "GLD",
-      7.9
+      7.8
      ]
     ],
     "exposure_now": null,
@@ -19272,7 +19288,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19440,7 +19456,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19594,7 +19610,7 @@
     },
     "five": {
      "alpha": -0.03,
-     "t": -0.29,
+     "t": -0.28,
      "n": 374,
      "vs": [
       "크로스에셋 RP 12자산 — 변동성 추정창 90일",
@@ -19614,30 +19630,30 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      18.2
+      18.4
      ],
      [
       "UUP",
-      14.8
+      14.7
      ],
      [
       "IEF",
-      12.1
+      12.2
      ],
      [
       "LQD",
-      11.6
+      11.7
      ],
      [
       "SHY",
-      8.2
+      8.3
      ],
      [
       "TLT",
@@ -19645,10 +19661,6 @@
      ],
      [
       "EFA",
-      5.0
-     ],
-     [
-      "SPY",
       4.9
      ],
      [
@@ -19656,12 +19668,16 @@
       4.9
      ],
      [
+      "SPY",
+      4.8
+     ],
+     [
       "DBC",
-      4.0
+      3.9
      ],
      [
       "GLD",
-      3.2
+      3.1
      ],
      [
       "QQQ",
@@ -19757,14 +19773,14 @@
     "rows": [
      {
       "rt": 5.0,
-      "cagr": 4.74,
+      "cagr": 4.73,
       "sharpe": 0.528,
-      "excess": -8.7,
+      "excess": -8.71,
       "t": null,
       "main": true
      }
     ],
-    "drag": 0.05,
+    "drag": 0.06,
     "traded": null,
     "kill": false,
     "sensitive": false,
@@ -19805,7 +19821,7 @@
     },
     "five": {
      "alpha": 0.0,
-     "t": 0.03,
+     "t": 0.02,
      "n": 374,
      "vs": [
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
@@ -19825,14 +19841,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      19.6
+      19.7
      ],
      [
       "UUP",
@@ -19844,15 +19860,15 @@
      ],
      [
       "LQD",
-      12.0
+      11.9
      ],
      [
       "SHY",
-      7.1
+      7.4
      ],
      [
       "TLT",
-      6.9
+      6.8
      ],
      [
       "SPY",
@@ -19868,18 +19884,18 @@
      ],
      [
       "DBC",
-      3.6
+      3.5
      ],
      [
       "QQQ",
       3.1
      ],
      [
-      "GLD",
-      3.0
+      "EEM",
+      2.9
      ],
      [
-      "EEM",
+      "GLD",
       2.9
      ]
     ],
@@ -20041,7 +20057,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-17",
+    "as_of": "2026-11-18",
     "n": null,
     "tickers": null,
     "names": null,
