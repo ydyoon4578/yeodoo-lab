@@ -224,13 +224,23 @@ def download_incremental():
         elif t in ro.columns:
             O[t] = ro[t]
     if refetch:
-        fu = yf.download(refetch, start=START, end=None, auto_adjust=True, progress=False, threads=True)
-        fc, fo = fu["Close"], fu["Open"]
+        try:
+            fu = yf.download(refetch, start=START, end=None, auto_adjust=True, progress=False, threads=True)
+            fc, fo = fu["Close"], fu["Open"]
+        except Exception:                          # 빈 응답(부분 응답·쓰로틀)이면 열이 아예 없다
+            fc = fo = pd.DataFrame()
         if isinstance(fc, pd.Series):
             fc, fo = fc.to_frame(refetch[0]), fo.to_frame(refetch[0])
         for t in refetch:
-            if t in fc.columns:
+            if t in fc.columns and fc[t].notna().sum() >= 100:
                 C[t] = fc[t]; O[t] = fo[t]
+            elif t in (old.get("px") or {}):
+                # 🆕 2026-11-20 — 야후 부분 응답으로 한 종목이 통째로 빠지면(실측 11-20 XLC·XLRE) 예전엔 시장판 관문이
+                #   잡 전체를 세웠다. 이전 판 계열을 그대로 두고(최근 며칠만 빈다) 나머지는 갱신한다. 아래 개별 재시도가 한 번 더 메운다.
+                C[t] = pd.Series(old["px"][t], index=od, dtype=float)
+                if t in oo:
+                    O[t] = pd.Series(oo[t], index=od, dtype=float)
+                print("  ⚠ %s 오늘 못 받음 — 이전 판 계열 유지" % t)
     close = pd.DataFrame(C); opens = pd.DataFrame(O)
     close = close.sort_index(); opens = opens.reindex(close.index)
     return pd.concat({"Close": close, "Open": opens}, axis=1)

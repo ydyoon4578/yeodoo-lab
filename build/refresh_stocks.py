@@ -1923,7 +1923,29 @@ def main():
     # ── 홈 전용 초소형 요약 — 계산은 build/home_summary.py 한 곳(화면·DB가 다시 계산하지 않는다) ──
     # 실패를 삼키지 않는다: 홈의 신호 목록·성과 카드가 전부 여기서 나오므로 조용히 빈 채로 배포되면 안 된다.
     import home_summary
-    _p, _h = home_summary.write(stocks, out["pxd_dates"], as_of, os.path.join(HERE, ".."))
+    try:
+        _p, _h = home_summary.write(stocks, out["pxd_dates"], as_of, os.path.join(HERE, ".."))
+    except SystemExit as _e:
+        # 🆕 2026-11-20 — 최신 종가 무더기 결측(야후 부분 응답, 실측 11-19 78종)으로 3일째 사이트가 멈췄다.
+        #   관문이 시키는 일(빈 칸만 다시 받기 → 다시 굽기)을 사람 대신 한 번 한다. 그래도 비면 그대로 세운다.
+        if "최신 종가가 무더기로" not in str(_e):
+            raise
+        print("  ↻ 최신 종가 무더기 결측 — backfill_px 로 빈 칸만 다시 받고 한 번 더 굽는다")
+        import backfill_px, time as _t
+        _argv = sys.argv[:]
+        try:
+            for _k in range(2):
+                sys.argv = ["backfill_px.py", "--days", "5"]
+                backfill_px.main()
+                try:
+                    _p, _h = home_summary.write(stocks, out["pxd_dates"], as_of, os.path.join(HERE, ".."))
+                    break
+                except SystemExit as _e2:
+                    if _k == 1 or "최신 종가가 무더기로" not in str(_e2):
+                        raise
+                    _t.sleep(60)
+        finally:
+            sys.argv = _argv
     print(f"→ {os.path.basename(_p)} (매수 {_h['nbuy']}·확정 {_h['buy_conf']}/잠정 {_h['buy_prov']} · "
           f"매도 {_h['nsell']}·확정 {_h['sell_conf']}/잠정 {_h['sell_prov']})")
 
