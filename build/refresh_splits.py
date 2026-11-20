@@ -55,6 +55,28 @@ def load_universe():
     return sorted(set(ts))
 
 
+FULL_DAYS = 6      # 전체 재조회 주기(일). 그 사이는 «분할 의심» 종목만 묻는다(2026-11-20, yfinance 호출 줄이기)
+JUMP = 1.45        # 결측을 건너뛴 인접 종가 비가 이보다 크거나 1/이보다 작으면 분할 의심
+LOOK = 15          # 최근 몇 개 관측에서 찾나
+
+
+def suspects(uni):
+    """가격 격자(data/sd)에서 최근 LOOK 관측 안에 큰 점프가 있는 종목. 분할을 추정하지 않고 «물어볼 대상»만 고른다."""
+    out = []
+    for t in uni:
+        p = os.path.join(DATA, "sd", "%s.json" % t)
+        if not os.path.exists(p):
+            out.append(t); continue                       # 격자에 없으면 신규 — 물어본다
+        try:
+            px = [v for v in (json.load(io.open(p, encoding="utf-8")).get("pxd") or []) if v]
+        except Exception:
+            out.append(t); continue
+        tail = px[-(LOOK + 1):]
+        if any(b and a and (b / a >= JUMP or b / a <= 1 / JUMP) for a, b in zip(tail, tail[1:])):
+            out.append(t)
+    return out
+
+
 def main() -> int:
     import yfinance as yf
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -62,6 +84,23 @@ def main() -> int:
 
     uni = load_universe()
     print("유니버스 %d종" % len(uni))
+    # 🆕 2026-11-20 — 매일 518종 전부 .splits 를 묻던 것을 줄인다(러너 쓰로틀 원인 중 하나).
+    #   직전 전체 조회가 FULL_DAYS 안이면 가격 격자에서 점프가 보인 종목과 신규 종목만 묻고, 나머지는 이전본을 그대로 둔다.
+    #   MNST 처럼 벤더가 소급 안 한 분할은 가격에 −50% 점프로 드러나므로 의심 목록에 반드시 든다.
+    prev, full = {}, True
+    if "--full" not in sys.argv and os.path.exists(OUT):
+        try:
+            old = json.load(io.open(OUT, encoding="utf-8"))
+            age = (dt.datetime.now(dt.timezone.utc) - dt.datetime.strptime(old["generated"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)).days
+            if age < FULL_DAYS and old.get("start") == START:
+                prev, full = dict(old.get("co") or {}), False
+                gen0 = old["generated"]
+        except Exception:
+            prev, full = {}, True
+    ask = uni if full else suspects(uni)
+    print("전체 조회" if full else "의심 종목만 조회 %d종 (직전 전체 %s)" % (len(ask), gen0))
+    if not full and not ask:
+        print("의심 종목 없음 — 이전본 유지"); return 0
 
     def one(t):
         try:
@@ -85,28 +124,38 @@ def main() -> int:
     from concurrent.futures import ThreadPoolExecutor
     rows, miss = {}, []
     with ThreadPoolExecutor(max_workers=8) as ex:
-        for i, (t, r) in enumerate(ex.map(one, uni), 1):
+        for i, (t, r) in enumerate(ex.map(one, ask), 1):
             if r is None:
                 miss.append(t)
             elif r:
                 rows[t] = r
             if i % 100 == 0:
-                print("  … %d/%d" % (i, len(uni)))
+                print("  … %d/%d" % (i, len(ask)))
 
     # 🚨 실패를 성공으로 착각하지 않는다. yfinance 는 분할이 없는 회사와 조회 실패를
     #   똑같이 '빈 계열'로 돌려줄 수 있다. 그래서 예외만 miss 로 세고, 그 수가 크면
     #   덮어쓰지 않는다 — 반쪽 파일로 갈아치우면 되맞추기가 조용히 꺼진다.
-    if len(miss) > len(uni) * 0.05:
+    if full and len(miss) > len(uni) * 0.05:
         print("❌ 조회 실패 %d종(>5%%) — 갱신 중단(이전본 유지): %s"
               % (len(miss), ", ".join(miss[:10])))
         return 1
 
+    if not full:                                   # 이전본에 묻은 종목만 덮어쓴다
+        if len(miss) > max(3, len(ask) * 0.5):
+            print("❌ 의심 종목 조회 실패 %d/%d — 이전본 유지" % (len(miss), len(ask))); return 1
+        for t in ask:
+            if t in miss:
+                continue
+            if t in rows: prev[t] = rows[t]
+            else: prev.pop(t, None)
+        rows = {t: v for t, v in prev.items() if t in set(uni)}
     n_sp = sum(len(v) for v in rows.values())
     doc = {
         "note": "주식분할 이력(yfinance). 값은 분할비다 — 2:1 분할이면 2.0. "
                 "%s 이후, 비율 %.1f배 이상만 싣는다(그 아래는 주식배당이라 기준을 흔들지 않는다). "
                 "쓰는 쪽이 '당시 보고 주식수 → 오늘 기준'으로 되맞추는 데 쓴다." % (START, MIN_RATIO),
-        "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if full else gen0,   # 전체 조회 시각(다음 전체 조회 판단용)
+        "checked": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "start": START,
         "min_ratio": MIN_RATIO,
         "n_co": len(rows),

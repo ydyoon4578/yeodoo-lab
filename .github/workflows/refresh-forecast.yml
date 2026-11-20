@@ -17,7 +17,7 @@ name: Refresh forecast (index · RL · stock ranks)
 
 on:
   schedule:
-    - cron: '15 22 * * 1-5'    # 매일(화~토) 07:15 KST — 미국 장 마감 · 종목 갱신 뒤
+    - cron: '15 22 * * 5'    # 매주 토 07:15 KST (2026-11-20 매일→주 1회, yfinance 호출 줄이기)
   workflow_dispatch:
 
 permissions:
@@ -62,6 +62,6 @@ jobs:
       # 문턱 3 — 미국 휴장 · 크론 지연을 «고장» 으로 읽지 않는 선(refresh-rates 와 같은 값).
       - name: Verify freshness
         run: |
-          python build/check_freshness.py data/forecast.json "다음 주가 흐름 · 지수" 3
-          python build/check_freshness.py data/forecast_rl.json "다음 주가 흐름 · 강화학습" 3
-          python build/check_freshness.py data/forecast_stocks.json "다음 주가 흐름 · 종목 순위" 3
+          python build/check_freshness.py data/forecast.json "다음 주가 흐름 · 지수" 9
+          python build/check_freshness.py data/forecast_rl.json "다음 주가 흐름 · 강화학습" 9
+          python build/check_freshness.py data/forecast_stocks.json "다음 주가 흐름 · 종목 순위" 9

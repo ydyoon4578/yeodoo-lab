@@ -160,6 +160,19 @@ def main() -> int:
         print("❌ 대상이 %d종(>%d) — 자료나 판정 규칙이 흔들렸다. 중단한다." % (len(ts), MAX_TARGETS))
         return 1
 
+    # 🆕 2026-11-20 — 주 1회로 줄인다(yfinance 호출 줄이기). 주식수는 천천히 바뀌고 0.2% 안 변화는 원래 안 싣는다.
+    #   직전 갱신이 6일 안이고 새 대상 종목이 없으면 건너뛴다. 새 종목이 생기면 바로 받는다.
+    if "--full" not in sys.argv and os.path.exists(OUT):
+        try:
+            old = json.load(io.open(OUT, encoding="utf-8"))
+            age = (dt.datetime.now(dt.timezone.utc) - dt.datetime.strptime(old["generated"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)).days
+            new = [t for t in ts if t not in (old.get("co") or {})]
+            if age < 6 and not new:
+                print("직전 갱신 %s (%d일 전), 새 대상 없음 — 주 1회 규칙으로 건너뜀" % (old["generated"], age))
+                return 0
+        except Exception:
+            pass
+
     rows, miss = {}, []
     for t in sorted(ts):
         try:
