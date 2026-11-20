@@ -289,13 +289,11 @@ def predict(Mo, X):
 # ══ 상태(그날까지 자료만) ══════════════════════════════════════════════════
 def fetch_state_series(asof):
     import pandas as pd
-    import yfinance as yf
+    from yf_close_cache import closes          # ^NDX 는 앞 단계가 받은 것을 재사용(2026-11-20)
     out = {}
+    allc = closes([u["state_tick"] for u in UNIVERSES.values()], start="2003-01-01")
     for mk, u in UNIVERSES.items():
-        df = yf.download(u["state_tick"], start="2003-01-01", auto_adjust=False, progress=False, threads=False)
-        c = df["Close"]
-        if isinstance(c, pd.DataFrame):
-            c = c.iloc[:, 0]
+        c = allc[u["state_tick"]]
         c.index = pd.to_datetime(c.index).tz_localize(None) if getattr(c.index, "tz", None) is not None else pd.to_datetime(c.index)
         c = c.dropna()
         out[mk] = c[c.index <= pd.Timestamp(asof)]

@@ -251,9 +251,9 @@ def _nfci():
 
 
 def load_public(start="2003-01-01"):
-    import yfinance as yf
+    from yf_close_cache import closes          # 같은 잡의 forecast_rl · forecast_stocks 와 한 번만 받는다(2026-11-20)
     tk = ["^GSPC", "^NDX", "^VIX", "^VXN"]
-    df = yf.download(tk, start=start, auto_adjust=False, progress=False, threads=False)["Close"]
+    df = closes(tk, start=start)
     df = df.dropna(how="all")
     if getattr(df.index, "tz", None) is not None:
         df.index = df.index.tz_localize(None)

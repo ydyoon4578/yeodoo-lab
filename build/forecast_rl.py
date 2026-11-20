@@ -50,13 +50,11 @@ LABELS = {"M1": "직접 강화학습", "M2": "깊은 Q 학습", "M1_V1": "직접
 # ── 자료 ─────────────────────────────────────────────────────────────────────
 def fetch_public(start="2003-01-01"):
     """yfinance 종가 ^GSPC · ^NDX(2003-01 부터 — 지수 이동평균의 시작점이 같아야 연구 판과 같은 상태가 나온다)."""
-    import yfinance as yf
+    from yf_close_cache import closes          # forecast_index 가 방금 받은 것을 재사용(2026-11-20)
     out = {}
+    allc = closes(list(TICK.values()), start=start)
     for mk, t in TICK.items():
-        df = yf.download(t, start=start, auto_adjust=False, progress=False, threads=False)
-        c = df["Close"]
-        if isinstance(c, pd.DataFrame):
-            c = c.iloc[:, 0]
+        c = allc[t]
         c.index = pd.to_datetime(c.index).tz_localize(None) if getattr(c.index, "tz", None) is not None else pd.to_datetime(c.index)
         out[mk] = c.dropna()
     return out

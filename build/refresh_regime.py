@@ -498,7 +498,17 @@ def build_history(S, cpi_yoy, asof=None):
     perf = {"macro": {}, "sector": {}, "factor": {}, "macro_fin": {}}
     try:
         allt = sorted(set(t for v in GROUPS.values() for t in v))
-        px = yf.download(allt, start="2008-12-01", auto_adjust=True, progress=False)["Close"]
+        # 🆕 2026-11-20 — 같은 자료를 두 번 받지 않는다. 이 ETF 21종은 자산 패널(refresh-assets, 06:34)이 이미
+        #   같은 방식(auto_adjust=True 종가)으로 받아 data/assets.json 에 둔다. 거기 없는 종목만 yfinance 로 받는다.
+        _A = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "assets.json"), encoding="utf-8"))
+        _have = [t for t in allt if t in _A["px"]]
+        px = pd.DataFrame({t: _A["px"][t] for t in _have}, index=pd.to_datetime(_A["dates"]), dtype=float)
+        px = px[px.index >= "2008-12-01"]
+        _miss = [t for t in allt if t not in _have]
+        if _miss:
+            _x = yf.download(_miss, start="2008-12-01", auto_adjust=True, progress=False)["Close"]
+            px = px.join(_x.to_frame(_miss[0]) if isinstance(_x, pd.Series) else _x, how="outer")
+        print("  [레짐 성과] 저장소 자산 패널 %d종 재사용 · 새로 받은 %d종" % (len(_have), len(_miss)))
         mret = px.resample("ME").last().pct_change()*100
         # 🚨 2026-08-23 — 국면 **× 금융여건** 한 판을 더 낸다(사용자 결정 «더 세밀하게»).
         #   이름을 안 늘리고 해상도를 얻는 자리가 여기다. 칸이 둘로 갈리므로 표본이 절반이

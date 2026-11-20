@@ -110,6 +110,22 @@ def main() -> int:
         return 1
 
     legs = book["legs"]
+    # 🆕 2026-11-20 — 같은 자료를 두 번 받지 않는다. 이 잡은 종목 잡이 끝날 때마다(백업 슬롯 포함) 뜬다.
+    #   장부 기준일이 이미 저장소 가격 기준일과 같고 새로 열 다리도 없으면 yfinance 를 부르지 않고 끝낸다.
+    try:
+        repo_asof = _load(os.path.join(DATA, "stocks.json"))["pxd_dates"][-1]   # 이 잡을 띄운 종목 잡이 방금 쓴 가격 기준일
+    except Exception:
+        repo_asof = None
+    if repo_asof and book.get("as_of") and book["as_of"] >= repo_asof:
+        need = []
+        for sid, _, _ in STRATS:
+            mine = [l for l in legs if l["sid"] == sid]
+            prev = mine[-1] if mine else None
+            if not (prev and (prev["src_as_of"] == tech[sid]["holdings"]["as_of"] or prev["open"][:7] == book["as_of"][:7])):
+                need.append(sid)
+        if not need:
+            print(f"장부 기준일 {book['as_of']} = 저장소 가격 기준일 {repo_asof}, 새 다리 없음 — 다시 받지 않음")
+            return 0
     first = min([l["open"] for l in legs], default=None)
     want = {BENCH}
     for sid, _, _ in STRATS:
