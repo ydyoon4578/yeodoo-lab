@@ -98,10 +98,10 @@
   },
   "refresh-forecast.yml": {
    "cron": [
-    "15 22 * * 1-5"
+    "15 22 * * 5"
    ],
    "label": [
-    "매일(화~토) 07:15 KST"
+    "매주 토 07:15 KST"
    ]
   },
   "refresh-insider.yml": {
@@ -114,10 +114,10 @@
   },
   "refresh-intraday.yml": {
    "cron": [
-    "35 21 * * 1-6"
+    "35 21 * * 5"
    ],
    "label": [
-    "매일(일·화·수·목·금·토) 06:35 KST"
+    "매주 토 06:35 KST"
    ]
   },
   "refresh-members.yml": {
