@@ -1946,8 +1946,7 @@ def main():
                     _t.sleep(60)
         finally:
             sys.argv = _argv
-    print(f"→ {os.path.basename(_p)} (매수 {_h['nbuy']}·확정 {_h['buy_conf']}/잠정 {_h['buy_prov']} · "
-          f"매도 {_h['nsell']}·확정 {_h['sell_conf']}/잠정 {_h['sell_prov']})")
+    print(f"→ {os.path.basename(_p)}")   # 2026-11-20 — 스윙 타점(nbuy·buy_conf…)을 뺀 뒤 남아 KeyError 로 잡을 세우던 출력 정리
 
 
 if __name__ == "__main__":

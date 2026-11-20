@@ -983,6 +983,4 @@ if __name__ == "__main__":
     R = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
     d = json.load(io.open(os.path.join(R, "data", "stocks.json"), encoding="utf-8"))
     p, doc = write(d["stocks"], d["pxd_dates"], d["as_of"], R)
-    print(f"→ {os.path.basename(p)} ({os.path.getsize(p)//1024 or 1}KB) "
-          f"매수 {doc['nbuy']}(확정 {doc['buy_conf']}·잠정 {doc['buy_prov']}) · "
-          f"매도 {doc['nsell']}(확정 {doc['sell_conf']}·잠정 {doc['sell_prov']})")
+    print(f"→ {os.path.basename(p)} ({os.path.getsize(p)//1024 or 1}KB)")

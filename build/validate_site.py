@@ -3258,7 +3258,9 @@ try:
             _cg = (_r.get("metrics") or {}).get("cagr")
             if not (_dd and _nv and _mo and _cg):
                 continue
-            _pe = _r.get("perf_end") or _pcut
+            # 🆕 2026-11-20 — 자산 랩은 perf_as_of·perf_end 가 없고 성과 끝을 «end» 로 적는다(px_end 는 오늘 격자).
+            #   그것도 안 보면 monthly 에 이번 달 진행분이 남아 «다른 구간끼리» 비교한다(실측 11-19 vol-roll 11월 +13.8% → 1.50%p).
+            _pe = _r.get("perf_end") or _pcut or (_r.get("end") if _r.get("px_end") and str(_r.get("end") or "") < str(_r["px_end"]) else "")
             if _pe:
                 _k = [_i for _i, _x in enumerate(_dd) if str(_x)[:10] <= _pe]
                 if len(_k) >= 3:

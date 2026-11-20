@@ -302,11 +302,11 @@ def main() -> int:
         # 2026-10-12 — 다음 주가 흐름(forecast.html). 지수 칸은 yfinance 지수 종가를 직접 받으므로
         #   종목 패널(대표)보다 하루 앞설 수 있다(종목 잡이 멈춘 날) — 시장일 축이라 MARKET 에 둔다.
         {"key": "forecast", "label": "다음 주가 흐름(지수 예측 · 강화학습)", "as_of": (load("forecast.json") or {}).get("as_of"),
-         "cadence": "매 거래일",
+         "cadence": "주 1회(토)",
          "note": "예측 대표는 기준값이다 — 방향을 기준보다 잘 맞힌 AI 는 없었다(표본 밖 2016-10 ~ 2026-09). "
                  "검증 숫자는 얼린 기록(data/forecast_validation.json)이라 이 날짜와 함께 움직이지 않는다"},
         {"key": "forecast_stocks", "label": "다음 주가 흐름(종목 순위)", "as_of": (load("forecast_stocks.json") or {}).get("as_of"),
-         "cadence": "매 거래일",
+         "cadence": "주 1회(토)",
          "note": "랩 종목 패널의 마지막 날로 매긴 순위다 — 종목 갱신이 멈추면 이 날짜도 멈춘다. 순위만 싣는다(확률은 보정되지 않았다)"},
     ]
     axes = [a for a in axes if a.get("as_of")]
