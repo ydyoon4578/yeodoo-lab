@@ -171,10 +171,73 @@ def prev_tickers():
         return set()
 
 
+REUSE_TOL = 5e-5     # 겹친 날 수정종가가 이전 판과 이만큼(상대) 안이면 «과거가 그대로» 로 본다
+
+
+def download_incremental():
+    """🆕 2026-11-20 — 같은 자료를 매일 2006년부터 다시 받지 않는다(사용자 «똑같은 데이터를 여러번 받아서 낭비하면 안됨»).
+
+    이전 판(data/assets.json)이 있으면 최근 15일만 묶음으로 받아 종목별로 이어 붙인다.
+    ⚠ 수정종가(auto_adjust=True)는 배당락·분할 때 **과거 전체가 다시 매겨진다.** 그래서 종목마다 겹친 날의
+      종가를 이전 판과 대조해, 하나라도 REUSE_TOL 을 넘으면(=과거가 바뀜) 그 종목만 2006년부터 다시 받는다.
+    ⚠ 최근분에 없거나 이전 판에 없는 종목(신규)도 전체를 받는다. --full 이면 전부 전체.
+    돌려주는 모양은 예전 yf.download 결과와 같다(df["Close"], df["Open"])."""
+    full_all = "--full" in sys.argv
+    old = None
+    if not full_all and os.path.exists(OUT):
+        try:
+            old = json.load(io.open(OUT, encoding="utf-8"))
+            if not old.get("dates"):
+                old = None
+        except Exception:
+            old = None
+    if old is None:
+        print("가격 %d종목 내려받는 중(전체)…" % len(TICK))
+        return yf.download(list(TICK), start=START, end=None, auto_adjust=True, progress=False, threads=True)
+
+    od = pd.to_datetime(old["dates"])
+    frm = (od[-1] - pd.Timedelta(days=15)).strftime("%Y-%m-%d")
+    rec = yf.download(list(TICK), start=frm, end=None, auto_adjust=True, progress=False, threads=True)
+    rc, ro = rec["Close"], rec["Open"]
+    keep, refetch = [], []
+    for t in TICK:
+        if t not in (old.get("px") or {}) or t not in rc.columns or rc[t].notna().sum() == 0:
+            refetch.append(t); continue
+        prev = pd.Series(old["px"][t], index=od, dtype=float)
+        ov = prev.index.intersection(rc[t].dropna().index)
+        ov = [d for d in ov if pd.notna(prev[d])]
+        if not ov or float((abs(rc[t][ov] / prev[ov] - 1)).max()) > REUSE_TOL:
+            refetch.append(t)
+        else:
+            keep.append(t)
+    print("가격 %d종목: 이어 받기 %d종(%s 부터) · 전체 다시 받기 %d종%s"
+          % (len(TICK), len(keep), frm, len(refetch), (" (%s)" % ", ".join(refetch[:12])) if refetch else ""))
+    cut = rc.index[0]
+    C, O = {}, {}
+    oo = old.get("open") or {}
+    for t in keep:
+        prev = pd.Series(old["px"][t], index=od, dtype=float)
+        C[t] = pd.concat([prev[prev.index < cut], rc[t]])
+        if t in oo:
+            po = pd.Series(oo[t], index=od, dtype=float)
+            O[t] = pd.concat([po[po.index < cut], ro[t]]) if t in ro.columns else po
+        elif t in ro.columns:
+            O[t] = ro[t]
+    if refetch:
+        fu = yf.download(refetch, start=START, end=None, auto_adjust=True, progress=False, threads=True)
+        fc, fo = fu["Close"], fu["Open"]
+        if isinstance(fc, pd.Series):
+            fc, fo = fc.to_frame(refetch[0]), fo.to_frame(refetch[0])
+        for t in refetch:
+            if t in fc.columns:
+                C[t] = fc[t]; O[t] = fo[t]
+    close = pd.DataFrame(C); opens = pd.DataFrame(O)
+    close = close.sort_index(); opens = opens.reindex(close.index)
+    return pd.concat({"Close": close, "Open": opens}, axis=1)
+
+
 def main() -> int:
-    print("가격 %d종목 내려받는 중…" % len(TICK))
-    df = yf.download(list(TICK), start=START, end=None, auto_adjust=True,
-                     progress=False, threads=True)
+    df = download_incremental()
     close = df["Close"]
     # ── 배치에서 흘린 티커를 개별로 다시 받는다 ────────────────────────────
     # yfinance 의 다중 티커 다운로드는 응답 일부를 무작위로 흘린다(실측 2026-07-27: IWM 1종).
