@@ -1,0 +1,48 @@
+name: KPI monitoring ledger
+
+# 모니터링 장부(build/kpi_monitor.py) — 랩 전략 12종이 고른 종목을 장부를 연 날부터 들고 간 기록.
+# 판정은 하지 않는다(2026-09-27 전방 판정 취소는 그대로). 2026-10-26 사용자 결정으로 켰다.
+#
+# 트리거 — 크론을 새로 잡지 않는다. 종목 가격 잡이 끝나면 바로 이어 달린다(예약 지연·크론 라벨 파생과 무관).
+#   ⚠ 아래 workflows 이름이 refresh-stocks.yml 의 name: 과 같아야 한다 — 바꾸면 이 잡이 조용히 안 뜬다.
+# 새 다리는 tech_strategies.json 의 보유 기준일이 바뀐 달에만 열린다. 그 외 날은 성적만 다시 계산한다.
+
+on:
+  workflow_run:
+    workflows: ["Refresh stock signals (yfinance)"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kpi-monitor
+  cancel-in-progress: false
+
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync to main tip
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git checkout -B main origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate baseline
+        run: python build/validate_gate.py baseline
+      - name: Install deps
+        run: pip install --prefer-binary --quiet pandas numpy yfinance
+      - name: Ledger integrity (before)
+        run: python build/kpi_monitor.py --check
+      - name: Ledger
+        run: python build/kpi_monitor.py
+      - name: Validate
+        run: python build/validate_gate.py check
+      - name: Commit if changed
+        run: |
+          bash build/ci_push.sh "chore(data): 모니터링 장부 자동 갱신" data/kpi_monitor.json

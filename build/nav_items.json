@@ -124,6 +124,15 @@
           "verdict_note": "2026-08-19 — pass → unverified. 배포 등급이 0종이 됐다. 수동 반출 곡선을 걷고 같은 규칙을 랩이 매일 굽게 했는데, 이 랩은 게시 문턱을 두지 않으므로 전부 «측정만» 이다 — 배지가 «통과» 라 적으면 원장(verdicts.json deploy_n=0)과 어긋난다."
         },
         {
+          "name": "모니터링 전략",
+          "file": "kpi.html",
+          "status": "existing",
+          "desc": "랩 전략 12종을 실제로 들고 간 기록 — S&P 500 대비 누적 · 판정 아님",
+          "src": "agg",
+          "verdict": "na",
+          "effort": "S"
+        },
+        {
           "name": "스타일 전략",
           "file": "style.html",
           "status": "existing",
