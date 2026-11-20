@@ -252,8 +252,22 @@ def _nfci():
 
 def load_public(start="2003-01-01"):
     from yf_close_cache import closes          # 같은 잡의 forecast_rl · forecast_stocks 와 한 번만 받는다(2026-11-20)
-    tk = ["^GSPC", "^NDX", "^VIX", "^VXN"]
+    tk = ["^GSPC", "^NDX"]
     df = closes(tk, start=start)
+    # 🆕 2026-11-20 — ^VIX·^VXN 은 시장 심리 잡이 매일 이어 받아 data/vol_close.json 에 쌓는다. 최근(4일 안)이면 거기서 읽는다.
+    vols = ["^VIX", "^VXN"]
+    try:
+        V = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "vol_close.json"), encoding="utf-8"))
+        if pd.Timestamp(V["as_of"]) >= pd.Timestamp.today().normalize() - pd.Timedelta(days=4) and all(v in V["series"] for v in vols):
+            for v in vols:
+                o = V["series"][v]; df[v] = pd.Series(o["c"], index=pd.to_datetime(o["dates"]), dtype=float)
+            vols = []
+            print("  [VIX·VXN] vol_close.json 재사용")
+    except Exception:
+        pass
+    if vols:
+        df = df.join(closes(vols, start=start), how="outer")
+    df = df[df.index >= pd.Timestamp(start)]
     df = df.dropna(how="all")
     if getattr(df.index, "tz", None) is not None:
         df.index = df.index.tz_localize(None)

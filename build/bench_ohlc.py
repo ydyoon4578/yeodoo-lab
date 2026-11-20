@@ -46,11 +46,40 @@ def main() -> int:
            "start": START, "series": {}}
     worst = 0.0
 
+    # 🆕 2026-11-20 — 같은 자료를 매일 2014년부터 다시 받지 않는다. 이전본이 있으면 마지막 날 10일 전부터만 받아
+    #   이어 붙인다. 겹친 날의 종가가 이전본과 어긋나면(벤더가 과거를 고침) 그때만 처음부터 다시 받는다.
+    #   --full 을 주면 언제든 전체를 받는다.
+    old = None
+    if "--full" not in sys.argv and os.path.exists(OUT):
+        try:
+            old = json.load(io.open(OUT, encoding="utf-8"))
+            if old.get("start") != START:
+                old = None
+        except Exception:
+            old = None
+
+    def _get(tk, frm):
+        x = yf.download(tk, start=frm, progress=False, auto_adjust=False)
+        if isinstance(x.columns, pd.MultiIndex):
+            x = x.droplevel(1, axis=1)
+        return x.rename(columns=str.lower)[["open", "high", "low", "close", "volume"]].dropna()
+
     for tk, label, key in WANT:
-        d = yf.download(tk, start=START, progress=False, auto_adjust=False)
-        if isinstance(d.columns, pd.MultiIndex):
-            d = d.droplevel(1, axis=1)
-        d = d.rename(columns=str.lower)[["open", "high", "low", "close", "volume"]].dropna()
+        d = None
+        o = (old or {}).get("series", {}).get(key)
+        if o and o.get("dates"):
+            frm = (pd.Timestamp(o["dates"][-1]) - pd.Timedelta(days=10)).strftime("%Y-%m-%d")
+            new = _get(tk, frm)
+            prev = pd.DataFrame({"open": o["o"], "high": o["h"], "low": o["l"], "close": o["c"], "volume": o["v"]},
+                                index=pd.to_datetime(o["dates"]))
+            ov = prev.index.intersection(new.index)
+            if len(new) and len(ov) and (abs(new.loc[ov, "close"] / prev.loc[ov, "close"] - 1) * 100).max() <= MAX_GAP:
+                d = pd.concat([prev[prev.index < new.index[0]], new])
+                print("   %s 이어 받기 %s 부터 %d행(겹친 %d일 일치)" % (tk, frm, len(new), len(ov)))
+            else:
+                print("   %s 겹친 날 종가가 이전본과 다름 — 처음부터 다시 받는다" % tk)
+        if d is None:
+            d = _get(tk, START)
         if len(d) < 1000:
             print("❌ %s 행이 %d 뿐이다 — 갱신 중단(이전본 유지)" % (tk, len(d)))
             return 1

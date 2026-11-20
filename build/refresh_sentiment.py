@@ -48,8 +48,85 @@ HIST_YEARS = 18                                  # 가격 패널 17.5년 + 여�
 # ──────────────────────────────────────────────────────────────────────
 # 0) 데이터 로드 (재시도·예외처리)
 # ──────────────────────────────────────────────────────────────────────
+# 🆕 2026-11-20 — 같은 자료를 두 번 받지 않는다.
+#   · SPY·HYG·IEF·RSP 는 자산 패널(refresh-assets, 06:34)이 같은 방식(auto_adjust=True 종가)으로 받아
+#     data/assets.json 에 둔다 → 그 파일이 최근(4일 안)이면 거기서 읽는다.
+#   · 변동성 지수(^VIX·^VIX3M·^MOVE·^VXN)는 data/vol_close.json 에 쌓아 두고 마지막 날 10일 전부터만 이어 받는다.
+#     예측 잡(forecast_index)도 이 파일의 ^VIX·^VXN 을 읽는다. 겹친 날 값이 다르면 그때만 전체를 다시 받는다.
+_DATA = os.path.join(HERE, "..", "data")
+VOL_CACHE = os.path.join(_DATA, "vol_close.json")
+VOL_TICK = ("^VIX", "^VIX3M", "^MOVE", "^VXN")
+
+
+def _repo_close(ticker):
+    try:
+        A = json.load(open(os.path.join(_DATA, "assets.json"), encoding="utf-8"))
+    except Exception:
+        return None
+    if ticker not in A.get("px", {}) or pd.Timestamp(A["as_of"]) < pd.Timestamp.today().normalize() - pd.Timedelta(days=4):
+        return None
+    s = pd.Series(A["px"][ticker], index=pd.to_datetime(A["dates"]), dtype=float).dropna()
+    if len(s) < 100:
+        return None
+    print(f"  {ticker:<8} {len(s):6d}개  {s.index.min().date()}~{s.index.max().date()}  (assets.json 재사용)")
+    return s
+
+
+def _yf_raw(ticker, **kw):
+    df = yf.download(ticker, interval="1d", auto_adjust=True, progress=False, threads=False, **kw)
+    if df is None or not len(df):
+        return pd.Series(dtype=float)
+    c = df["Close"]
+    if isinstance(c, pd.DataFrame):
+        c = c.iloc[:, 0]
+    c = pd.Series(c.values.astype(float), index=pd.to_datetime(c.index)).dropna()
+    c.index = c.index.tz_localize(None) if getattr(c.index, "tz", None) else c.index
+    return c
+
+
+def _vol_close(ticker):
+    try:
+        V = json.load(open(VOL_CACHE, encoding="utf-8"))
+    except Exception:
+        V = {"note": "변동성 지수 종가(yfinance). refresh_sentiment 가 이어 받아 쌓고 forecast_index 가 읽는다.", "series": {}}
+    o = V["series"].get(ticker)
+    s = None
+    if o and o.get("dates"):
+        old = pd.Series(o["c"], index=pd.to_datetime(o["dates"]), dtype=float)
+        try:
+            new = _yf_raw(ticker, start=(old.index[-1] - pd.Timedelta(days=10)).strftime("%Y-%m-%d"))
+        except Exception as e:
+            print(f"  {ticker} 이어 받기 실패: {e}"); new = pd.Series(dtype=float)
+        ov = old.index.intersection(new.index)
+        if len(new) and len(ov) and (abs(new[ov] / old[ov] - 1)).max() < 1e-4:
+            s = pd.concat([old[old.index < new.index[0]], new])
+        elif not len(new):
+            s = old                                   # 오늘 못 받았으면 이전본(대장 판정이 끊김을 잡는다)
+    if s is None:
+        s = None
+        for k in range(3):
+            try:
+                s = _yf_raw(ticker, period="max")
+                if len(s) >= 100: break
+            except Exception as e:
+                print(f"  {ticker} 실패({k+1}/3): {e}")
+            time.sleep(3.0 * (k + 1))
+        if s is None or len(s) < 100:
+            return pd.Series(dtype=float) if not o else pd.Series(o["c"], index=pd.to_datetime(o["dates"]), dtype=float)
+    V["series"][ticker] = {"dates": [d.strftime("%Y-%m-%d") for d in s.index], "c": [round(float(x), 4) for x in s.values]}
+    V["as_of"] = max(v["dates"][-1] for v in V["series"].values())
+    json.dump(V, open(VOL_CACHE, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print(f"  {ticker:<8} {len(s):6d}개  {s.index.min().date()}~{s.index.max().date()}  (vol_close.json 이어 받기)")
+    return s
+
+
 def yf_close(ticker, tries=3, pause=3.0):
-    """yfinance 종가 시리즈(period=max). 실패 시 빈 시리즈."""
+    """yfinance 종가 시리즈(period=max). 실패 시 빈 시리즈. 저장소에 이미 있는 자료는 다시 받지 않는다."""
+    if ticker in VOL_TICK:                           # 1990년대부터 긴 이력이 필요 — assets.json(2006~)보다 먼저
+        return _vol_close(ticker)
+    s = _repo_close(ticker)
+    if s is not None:
+        return s
     for k in range(tries):
         try:
             df = yf.download(ticker, period="max", interval="1d",
@@ -293,6 +370,7 @@ def main():
     VIX   = yf_close("^VIX")
     VIX3M = yf_close("^VIX3M")
     MOVE  = yf_close("^MOVE")
+    yf_close("^VXN")                                 # 심리 점수엔 안 쓴다 — 예측 잡이 vol_close.json 에서 읽게 쌓아만 둔다
     # ── 🚨 소스 장애 대장을 **자동으로** 갱신한다 ──────────────────────────
     # 왜. 대장(data/source_outages.json)에는 checked·last_obs 칸이 있는데 **사람이 손으로
     #   적게 돼 있었다.** 2026-08-17 실측: checked 가 08-05 에서 12일째 멈춰 있었다.
