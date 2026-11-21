@@ -79,7 +79,7 @@
   "top5_carry_pct": 7.43801652892562,
   "random_pct": 2.7196932542690266,
   "rank_rho_median": 0.0359766747863683,
-  "rank_rho_mean": 0.015610364319656223
+  "rank_rho_mean": 0.01567654058801592
  },
  "kinds": [
   {
@@ -8444,7 +8444,7 @@
      "ex": -10.47
     }
    ],
-   "med": 0.07
+   "med": 0.06
   },
   {
    "m": "2025-12",
@@ -9196,7 +9196,7 @@
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": 26.24
+     "ex": 26.17
     },
     {
      "sid": "a-overnight-ndx",
@@ -9211,32 +9211,32 @@
     {
      "sid": "a-taa-vaa-g4",
      "name": "경계형 자산배분 VAA-G4 (Keller 2017)",
-     "ex": 9.03
+     "ex": 9.05
     },
     {
      "sid": "a-merger-arb",
      "name": "합병차익거래 (MNA ETF)",
-     "ex": 8.02
+     "ex": 7.99
     }
    ],
    "bot": [
     {
      "sid": "a-a7-fidelity",
      "name": "4국면 섹터 로테이션 (Fidelity 프레임워크)",
-     "ex": -2.99
+     "ex": -3.04
     },
     {
      "sid": "a-a7b-gate-sector",
      "name": "위험 게이트 + 국면 섹터 (A7b)",
-     "ex": -2.99
+     "ex": -3.04
     },
     {
      "sid": "a-a2-factor-rot",
      "name": "국면 연동 팩터 로테이션 (A2)",
-     "ex": -5.22
+     "ex": -5.24
     }
    ],
-   "med": 2.56
+   "med": 2.46
   }
  ]
 }
