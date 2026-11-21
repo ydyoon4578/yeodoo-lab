@@ -79,7 +79,7 @@
   "top5_carry_pct": 7.43801652892562,
   "random_pct": 2.7196932542690266,
   "rank_rho_median": 0.0359766747863683,
-  "rank_rho_mean": 0.014034628176237138
+  "rank_rho_mean": 0.015610364319656223
  },
  "kinds": [
   {
@@ -87,8 +87,8 @@
    "axis_ko": "그달 지수",
    "level": "급락",
    "n_months": 13,
-   "spx_mean": -7.5,
-   "med_ex": 0.7,
+   "spx_mean": -7.77,
+   "med_ex": 0.71,
    "recur": [
     {
      "sid": "a-vol-roll",
@@ -435,7 +435,7 @@
    "axis_ko": "출렁임",
    "level": "상",
    "n_months": 41,
-   "spx_mean": -0.68,
+   "spx_mean": -0.77,
    "med_ex": 0.1,
    "recur": [
     {
@@ -609,7 +609,7 @@
    "axis_ko": "종목 간 격차",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 1.92,
+   "spx_mean": 1.84,
    "med_ex": 0.04,
    "recur": [
     {
@@ -783,7 +783,7 @@
    "axis_ko": "금리 방향",
    "level": "상",
    "n_months": 42,
-   "spx_mean": 0.32,
+   "spx_mean": 0.24,
    "med_ex": 0.04,
    "recur": [
     {
@@ -957,7 +957,7 @@
    "axis_ko": "덩치 싸움",
    "level": "상",
    "n_months": 41,
-   "spx_mean": 0.8,
+   "spx_mean": 0.71,
    "med_ex": 0.0,
    "recur": [
     {
@@ -1015,7 +1015,7 @@
    "axis_ko": "쏠림 방향",
    "level": "하",
    "n_months": 40,
-   "spx_mean": 0.38,
+   "spx_mean": 0.3,
    "med_ex": 0.04,
    "recur": [
     {
@@ -9174,9 +9174,9 @@
   },
   {
    "m": "2026-11",
-   "spx": -5.33,
-   "ndx": -6.58,
-   "vol": 0.22949,
+   "spx": -8.83,
+   "ndx": -11.82,
+   "vol": 0.2558,
    "disp": 0.09896,
    "rate12": 1.05,
    "breadth12": 0.08185,
@@ -9196,47 +9196,47 @@
     {
      "sid": "a-vol-roll",
      "name": "변동성 기간구조 롤 (VXZ 보유)",
-     "ex": 19.13
+     "ex": 26.24
     },
     {
      "sid": "a-overnight-ndx",
      "name": "오버나이트 보유 (QQQ 종가→시가)",
-     "ex": 10.39
+     "ex": 14.63
     },
     {
      "sid": "a-overnight",
      "name": "오버나이트 드리프트 (종가 매수 → 시가 매도)",
-     "ex": 8.24
-    },
-    {
-     "sid": "a-merger-arb",
-     "name": "합병차익거래 (MNA ETF)",
-     "ex": 4.81
+     "ex": 11.41
     },
     {
      "sid": "a-taa-vaa-g4",
      "name": "경계형 자산배분 VAA-G4 (Keller 2017)",
-     "ex": 4.64
+     "ex": 9.03
+    },
+    {
+     "sid": "a-merger-arb",
+     "name": "합병차익거래 (MNA ETF)",
+     "ex": 8.02
     }
    ],
    "bot": [
     {
-     "sid": "a-sec-mom4",
-     "name": "섹터 모멘텀 로테이션 (12-1 상위 4)",
-     "ex": -3.05
+     "sid": "a-a7-fidelity",
+     "name": "4국면 섹터 로테이션 (Fidelity 프레임워크)",
+     "ex": -2.99
+    },
+    {
+     "sid": "a-a7b-gate-sector",
+     "name": "위험 게이트 + 국면 섹터 (A7b)",
+     "ex": -2.99
     },
     {
      "sid": "a-a2-factor-rot",
      "name": "국면 연동 팩터 로테이션 (A2)",
-     "ex": -3.36
-    },
-    {
-     "sid": "a-sec-dual",
-     "name": "섹터 듀얼 모멘텀 상위 3",
-     "ex": -3.78
+     "ex": -5.22
     }
    ],
-   "med": 0.39
+   "med": 2.56
   }
  ]
 }

@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-10-30",
-  "asset": "2026-11-19",
+  "asset": "2026-11-20",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10327,7 +10327,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10490,7 +10490,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10508,7 +10508,7 @@
       25.0
      ],
      [
-      "XLV",
+      "XLP",
       25.0
      ]
     ],
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10835,7 +10835,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10998,7 +10998,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11173,7 +11173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11380,7 +11380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11555,7 +11555,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11725,7 +11725,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11896,7 +11896,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12067,7 +12067,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12258,7 +12258,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12465,7 +12465,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12635,7 +12635,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12649,7 +12649,7 @@
       33.3
      ],
      [
-      "XLY",
+      "XLV",
       33.3
      ]
     ],
@@ -12806,7 +12806,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12969,7 +12969,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13157,7 +13157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13332,22 +13332,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLU",
-      14.1
+      14.4
      ],
      [
       "XLF",
-      13.9
+      13.8
      ],
      [
       "XLP",
-      12.2
+      12.3
      ],
      [
       "XLB",
@@ -13355,23 +13355,23 @@
      ],
      [
       "XLI",
-      11.5
+      11.3
      ],
      [
       "XLV",
-      11.2
+      11.3
      ],
      [
       "XLY",
-      10.1
+      10.0
      ],
      [
       "XLE",
-      8.9
+      9.0
      ],
      [
       "XLK",
-      6.5
+      6.3
      ]
     ],
     "exposure_now": null,
@@ -13534,7 +13534,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13701,7 +13701,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13711,7 +13711,7 @@
       50.0
      ],
      [
-      "EFA",
+      "VNQ",
       50.0
      ]
     ],
@@ -13873,7 +13873,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14048,7 +14048,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14222,7 +14222,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14393,7 +14393,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14568,7 +14568,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14727,7 +14727,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14898,7 +14898,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15065,30 +15065,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "XLE",
-      20.0
+      25.0
      ],
      [
       "XLF",
-      20.0
+      25.0
      ],
      [
       "XLP",
-      20.0
+      25.0
      ],
      [
       "XLV",
-      20.0
-     ],
-     [
-      "XLY",
-      20.0
+      25.0
      ]
     ],
     "exposure_now": null,
@@ -15244,7 +15240,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15412,7 +15408,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15582,7 +15578,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15745,7 +15741,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15920,7 +15916,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16090,7 +16086,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16257,7 +16253,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16427,7 +16423,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16590,7 +16586,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16765,26 +16761,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      38.8
+      39.0
      ],
      [
       "SPY",
-      26.6
+      25.8
      ],
      [
       "DBC",
-      19.2
+      19.7
      ],
      [
       "GLD",
-      15.4
+      15.5
      ]
     ],
     "exposure_now": null,
@@ -16947,7 +16943,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17117,7 +17113,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17265,7 +17261,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17441,7 +17437,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17619,7 +17615,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17629,19 +17625,19 @@
       50.0
      ],
      [
+      "DBC",
+      8.4
+     ],
+     [
       "EFA",
       8.4
      ],
      [
       "HYG",
-      8.4
-     ],
-     [
-      "IWM",
       8.3
      ],
      [
-      "SPY",
+      "IWM",
       8.3
      ],
      [
@@ -17806,7 +17802,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17977,14 +17973,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      43.3
+      43.8
      ],
      [
       "DBC",
@@ -17992,15 +17988,15 @@
      ],
      [
       "SPY",
-      18.5
+      17.5
      ],
      [
       "VNQ",
-      15.5
+      15.8
      ],
      [
       "EFA",
-      3.2
+      3.4
      ]
     ],
     "exposure_now": null,
@@ -18156,7 +18152,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18324,7 +18320,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18502,7 +18498,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18672,7 +18668,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18847,18 +18843,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TIP",
-      36.2
+      35.9
      ],
      [
       "EMB",
-      24.0
+      24.5
      ],
      [
       "TLT",
@@ -18866,11 +18862,11 @@
      ],
      [
       "SPY",
-      9.7
+      9.4
      ],
      [
       "DBC",
-      7.0
+      7.1
      ],
      [
       "GLD",
@@ -19046,22 +19042,22 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      49.6
+      50.8
      ],
      [
       "TLT",
-      19.5
+      19.2
      ],
      [
       "SPY",
-      13.4
+      12.7
      ],
      [
       "DBC",
@@ -19069,7 +19065,7 @@
      ],
      [
       "GLD",
-      7.8
+      7.6
      ]
     ],
     "exposure_now": null,
@@ -19232,7 +19228,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19400,7 +19396,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19574,46 +19570,46 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      18.4
+      18.2
      ],
      [
       "UUP",
-      14.8
+      14.7
      ],
      [
       "IEF",
-      12.2
+      11.6
      ],
      [
       "LQD",
-      11.8
+      11.4
      ],
      [
       "SHY",
-      8.4
+      11.3
      ],
      [
       "TLT",
-      7.0
-     ],
-     [
-      "EFA",
-      4.9
+      6.8
      ],
      [
       "VNQ",
-      4.8
+      4.7
+     ],
+     [
+      "EFA",
+      4.6
      ],
      [
       "SPY",
-      4.7
+      4.3
      ],
      [
       "DBC",
@@ -19621,15 +19617,15 @@
      ],
      [
       "GLD",
-      3.1
+      2.9
      ],
      [
       "EEM",
-      3.0
+      2.8
      ],
      [
       "QQQ",
-      3.0
+      2.8
      ]
     ],
     "exposure_now": null,
@@ -19785,62 +19781,62 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      19.7
+      19.2
      ],
      [
       "UUP",
-      14.0
+      13.8
      ],
      [
       "IEF",
-      12.9
+      12.2
      ],
      [
       "LQD",
-      12.0
+      11.6
      ],
      [
       "SHY",
-      7.4
+      10.8
      ],
      [
       "TLT",
-      6.9
-     ],
-     [
-      "EFA",
-      4.9
-     ],
-     [
-      "SPY",
-      4.9
+      6.6
      ],
      [
       "VNQ",
       4.9
      ],
      [
+      "EFA",
+      4.7
+     ],
+     [
+      "SPY",
+      4.5
+     ],
+     [
       "DBC",
-      3.5
-     ],
-     [
-      "QQQ",
-      3.1
-     ],
-     [
-      "EEM",
-      2.9
+      3.4
      ],
      [
       "GLD",
-      2.9
+      2.8
+     ],
+     [
+      "QQQ",
+      2.8
+     ],
+     [
+      "EEM",
+      2.7
      ]
     ],
     "exposure_now": null,
@@ -20001,7 +19997,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -38564,7 +38560,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -59033,13 +59029,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 75.6,
-    "note": "노출 76%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 65.2,
+    "note": "노출 65%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -60041,13 +60037,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 25.0,
-    "note": "노출 25%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 0.0,
+    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -60220,13 +60216,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 59.1,
-    "note": "노출 59%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 55.2,
+    "note": "노출 55%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -60406,7 +60402,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61821,7 +61817,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63934,7 +63930,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64113,7 +64109,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
@@ -64526,13 +64522,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 100.0,
-    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 0.0,
+    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65629,13 +65625,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 60.9,
-    "note": "노출 61%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 56.4,
+    "note": "노출 56%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65815,13 +65811,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 51.8,
-    "note": "노출 52%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 47.9,
+    "note": "노출 48%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65994,7 +65990,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "n": null,
     "tickers": null,
     "names": null,
