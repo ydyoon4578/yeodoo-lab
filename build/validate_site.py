@@ -3267,6 +3267,15 @@ try:
                     _dd = [_dd[_i] for _i in _k]
                     _nv = [_nv[_i] for _i in _k]
                 _mo = [_x for _x in _mo if str(_x.get("m") or "")[:7] <= _pe[:7]] or _mo
+            # 🆕 2026-11-24 — 시작도 성과 구간에 맞춘다. 10년 창이 달마다 앞으로 밀리면(2016-10-31 → 11-30) metrics 는 새 시작부터인데
+            #   표시용 nav·monthly 는 옛 시작부터 남아 «다른 구간끼리» 비교한다(실측 x-dist200 1.83%p · 2016-11 급등 한 달 몫).
+            _ps = str(_r.get("start") or "")[:10]
+            if _ps:
+                _k = [_i for _i, _x in enumerate(_dd) if str(_x)[:10] >= _ps]
+                if len(_k) >= 3 and _k[0] > 0:
+                    _dd = [_dd[_i] for _i in _k]
+                    _nv = [_nv[_i] for _i in _k]
+                _mo = [_x for _x in _mo if str(_x.get("m") or "")[:7] > _ps[:7]] or _mo
             try:
                 _g = [(_dtm.date.fromisoformat(_dd[i + 1]) - _dtm.date.fromisoformat(_dd[i])).days
                       for i in range(min(80, len(_dd) - 1))]
