@@ -3287,7 +3287,9 @@ try:
                 continue
             _gaps.append(sorted(_g)[len(_g) // 2])
             _dn.append(abs(((_nv[-1] / _nv[0]) ** (1 / _yr) - 1) * 100 - _cg))
-            _ids.append(str(_r.get("sid") or _r.get("id") or _r.get("name") or "?"))
+            _ids.append(str(_r.get("sid") or _r.get("id") or _r.get("name") or "?")
+                        + "[start %s nav %s~%s n%d navCAGR %.2f metrics %.2f yr %.2f]" % (_r.get("start"), str(_dd[0])[:10], str(_dd[-1])[:10], len(_dd),
+                                                                                   ((_nv[-1] / _nv[0]) ** (1 / _yr) - 1) * 100, _cg, _yr))   # 2026-11-24 진단
             _p = 1.0
             for _x in _mo:
                 _p *= 1 + _x["r"] / 100.0
