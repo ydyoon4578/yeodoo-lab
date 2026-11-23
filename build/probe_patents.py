@@ -46,7 +46,7 @@ YEAR_MIN = 2004          # 5년 창이 2009-01 부터 서려면 2004 부터 필�
 YEAR_MAX = 2024          # 자료가 여기서 끝난다
 MIN_TOTAL = 15           # 이보다 적게 낸 조직은 산출물에서 뺀다(파일 크기 — 5년 3건 문턱의 5배)
 MAX_ORGS = 40000         # 안전 상한
-UA = {"User-Agent": os.environ.get("SEC_UA") or "yeodoo-lab ydyoon4578@users.noreply.github.com"}
+UA = {"User-Agent": os.environ.get("SEC_UA") or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) QuantResearch/1.0"}   # 2026-11-24 noreply UA 는 SEC 403 (edgar.py 주석)
 
 
 def fetch(url, dest):

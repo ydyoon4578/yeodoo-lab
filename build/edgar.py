@@ -34,7 +34,9 @@ except Exception: pass
 
 # SEC 정책상 연락 가능한 주소를 넣어야 한다. 이 저장소의 커밋 작성자 주소와 같고,
 # 공개 저장소 이력에 이미 들어 있다. 다른 값을 쓰려면 SEC_UA 환경변수로 덮어쓴다.
-UA = os.environ.get("SEC_UA") or "yeodoo-lab ydyoon4578@users.noreply.github.com"
+# 🚨 2026-11-24 — SEC 가 위 noreply 주소 UA 를 www.sec.gov·data.sec.gov 전부 403 으로 막았다(11-21 토요일 13F·내부자·공시 잡 실패).
+#   실측: 브라우저형 앞머리 + 연구용 이름은 네 주소 모두 200, noreply 주소가 들어가면 앞머리를 붙여도 403.
+UA = os.environ.get("SEC_UA") or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) QuantResearch/1.0"
 
 RATE = 8.0                      # req/s 상한(SEC 공지 10회보다 낮게)
 _MIN_GAP = 1.0 / RATE
@@ -77,7 +79,7 @@ def fetch_bytes(url: str, timeout: int = 60, max_wait=None, accept=None) -> byte
     max_wait 을 주면 대기 합계를 그 안으로 자른다(로컬 진단처럼 오래 기다릴 필요 없는 곳).
     ⚠ 재시도 알림은 stdout 으로 낸다 — stderr 는 프렐류드가 안 걸려 cp949 콘솔에서 ⚠ 에 죽는다.
     """
-    hdr = {"User-Agent": UA, "Accept-Encoding": "gzip"}
+    hdr = {"User-Agent": UA, "Accept-Encoding": "gzip", "Accept": "*/*"}
     if accept:
         hdr["Accept"] = accept
     waited, last, n = 0.0, None, len(BACKOFF)
@@ -118,7 +120,7 @@ def probe(url: str, method: str = "GET", timeout: int = 60, raise_http: bool = F
     🚨 SEC 에 가는 urlopen 은 이 파일에만 있다(validate_site 가 build/*.py 를 훑어 막는다).
     """
     _throttle()
-    req = urllib.request.Request(url, method=method, headers={"User-Agent": UA, "Accept-Encoding": "gzip"})
+    req = urllib.request.Request(url, method=method, headers={"User-Agent": UA, "Accept-Encoding": "gzip", "Accept": "*/*"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, r.headers, (b"" if method == "HEAD" else r.read())
@@ -138,7 +140,7 @@ def get_json(url: str, retries: int = 4):
         _throttle()
         try:
             req = urllib.request.Request(
-                url, headers={"User-Agent": UA, "Accept-Encoding": "gzip",
+                url, headers={"User-Agent": UA, "Accept-Encoding": "gzip", "Accept": "*/*",
                               "Accept": "application/json"})
             raw = urllib.request.urlopen(req, timeout=30).read()
             if raw[:2] == b"\x1f\x8b":

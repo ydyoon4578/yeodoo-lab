@@ -3251,7 +3251,7 @@ try:
         #   초기 구간을 못 담는 «진짜 표본 효과» 이고, 그것이 선언이 말하는 바다.
         #   ⚠ 선언을 느슨하게 고치지 않았다 — 검사가 같은 구간을 보게 했을 뿐이다.
         _pcut = _d.get("perf_as_of") or ""
-        _gaps, _dn, _dm = [], [], []
+        _gaps, _dn, _dm, _ids = [], [], [], []
         for _r in _rows:
             _dd, _nv = _r.get("dates"), _r.get("nav")
             _mo = (_r.get("chart") or {}).get("monthly")
@@ -3278,6 +3278,7 @@ try:
                 continue
             _gaps.append(sorted(_g)[len(_g) // 2])
             _dn.append(abs(((_nv[-1] / _nv[0]) ** (1 / _yr) - 1) * 100 - _cg))
+            _ids.append(str(_r.get("sid") or _r.get("id") or _r.get("name") or "?"))
             _p = 1.0
             for _x in _mo:
                 _p *= 1 + _x["r"] / 100.0
@@ -3296,7 +3297,8 @@ try:
                 errors.append("%s: %s 복리와 metrics.cagr 의 차이가 선언(%.2f%%p)의 1.5배를 "
                               "넘었다 — 실측 최대 %.2f%%p. 표본이 더 성겨졌거나 산식이 "
                               "바뀐 것이다(선언을 고치기 전에 왜 벌어졌는지 볼 것)"
-                              % (_lbl, _k, _lim, max(_v)))
+                              % (_lbl, _k, _lim, max(_v))
+                              + " · 가장 큰 전략: %s" % ", ".join("%s %.2f" % (_ids[_i], _v[_i]) for _i in sorted(range(len(_v)), key=lambda _i: -_v[_i])[:3]))   # 2026-11-24 어느 전략인지 적기
 
     # ①-c 🚨 2026-08-20 — 세 번째 목록의 **셋째 사본**(data/strategy_report.json tested.tech)
     #   도 대조한다. 당일 측정 세션이 정본·tech 사본만 늘리면 report.html 이 옛 수(98종)를
