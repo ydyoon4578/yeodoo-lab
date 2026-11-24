@@ -9794,6 +9794,12 @@ def run():
         _last = min(len(d2), len(nav), len(bnav)) - 1
         if _keep5 and _keep5[-1] != _last:
             _keep5.append(_last)
+        # 🆕 2026-11-24 — 성과 기준일(perf_end = 전월말) 점도 반드시 남긴다. 5칸 격자로만 자르면 그 주의 표본이
+        #   전월말 며칠 앞(10-26)에 찍혀 validate_site 의 nav 복리 ↔ metrics.cagr 비교가 그 며칠을 빠뜨린다
+        #   (실측 2026-11-21 x-dist200 1.82%p — 10-27~30 반도체 급락 4일 몫. 지난주는 표본이 10-30 이라 0.6%p).
+        _pe_i = len(_d2M) - 1 if _d2M else -1
+        if 0 <= _pe_i <= _last and _pe_i not in _keep5:
+            _keep5 = sorted(set(_keep5) | {_pe_i})
 
         cost_extra = {
             "cost_bp": round(COST_BPS_MAIN * 2, 1),
