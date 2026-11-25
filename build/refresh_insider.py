@@ -261,6 +261,26 @@ def main() -> int:
         print("❌ 수집 0건 — 갱신 중단(이전본 유지)")
         return 1
 
+    # ── 분기 데이터셋 뒤 구간 = Form 4 원문 보충 (2026-11-25, build/insider_live.py) ──
+    # 데이터셋은 제출일 기준 분기라 마지막 분기 끝 다음날부터는 비어 있다(54일 지연의 원인).
+    # 실패해도 데이터셋 쪽은 그대로 쓴다(보충 없이 예전 동작) — 원인은 로그에 남긴다.
+    live = None
+    try:
+        import insider_live
+        q_end = insider_live._q_end(zips[0][0])
+        cmap = edgar.ticker_cik_map()
+        ciks = {str(cmap[k]) for k in uni if k in cmap}
+        lb, live = insider_live.collect(uni, ciks, q_end)
+        seen = {r["a"] for rows in by_co.values() for r in rows}
+        for t, rows in lb.items():
+            add = [r for r in rows if r["a"] not in seen]
+            if add:
+                by_co.setdefault(t, []).extend(add)
+        live["n_tr"] = sum(len(v) for v in lb.values())
+        quarters.insert(0, {"q": "원문 %s~" % live["from"], "n": live["n_tr"]})
+    except Exception as e:
+        print("⚠ Form 4 원문 보충 실패 — 분기 데이터셋만 씀: %s" % e)
+
     # ── 월별 집계 — 🚨 **절단 전에** 만든다 ──────────────────────────────
     # KEEP_PER_CO 는 회사별 최근 N건만 파일에 남긴다. 거래가 잦은 종목은 그 N건이 최신 달
     # 안에서 끝나 버려, 그 파일만 읽으면 '그 달'이 며칠치가 된다. 실측(2026-06): 21종이
@@ -341,6 +361,7 @@ def main() -> int:
         "as_of": latest,
         "lag_days": lag,
         "quarters": quarters,
+        "live": live,
         "n_co": len(by_co),
         "n_tr": tot,
         "n_disc": disc_tot,
@@ -351,8 +372,8 @@ def main() -> int:
         "codes": CODE,
         "disc": list(DISCRETIONARY),
         "limits": [
-            "SEC가 Form 4를 분기 단위로 묶어 내놓기 때문에 수십 일 지연이 구조적으로 따라붙는다 — "
-            "실시간이 아니다. 화면에 실측 지연일을 적는다.",
+            "분기 데이터셋이 끝난 뒤 구간은 EDGAR 에 올라온 Form 4 원문을 매일 읽어 메운다 — 지연은 거래 후 제출까지 "
+            "(보통 2영업일)와 수집 주기 정도다. 화면에 실측 지연일을 적는다.",
             "P(장내매수)·S(장내매도)만 본인이 고른 거래다. A(주식보상)·M(옵션행사)·F(세금 대납분 반납)은 "
             "보상 제도가 굴러간 결과라, 합쳐 세면 '내부자가 샀다/팔았다'가 틀린 말이 된다.",
             "내부자 매수가 초과수익으로 이어지는지 이 랩은 검증한 적이 없다 — 점수도 시그널도 만들지 않는다.",

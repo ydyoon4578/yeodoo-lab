@@ -8,7 +8,7 @@
   "src-cot": "매주 토 07:13 KST",
   "src-fx": "매주 토 07:08 KST",
   "src-fil": "매주 토 07:05 KST",
-  "src-ins": "매주 토 07:13 KST",
+  "src-ins": "매일(화~토) 07:13 KST",
   "src-rg": "매일(월~토) 06:56 KST",
   "src-snt": "매일(월~토) 06:59 KST + 매일(월~토) 11:25 KST",
   "src-stk": "매일(월~토) 05:50 KST + 매일(월~토) 06:42 KST + 매일(월~토) 11:15 KST"
@@ -106,10 +106,10 @@
   },
   "refresh-insider.yml": {
    "cron": [
-    "13 22 * * 5"
+    "13 22 * * 1-5"
    ],
    "label": [
-    "매주 토 07:13 KST"
+    "매일(화~토) 07:13 KST"
    ]
   },
   "refresh-intraday.yml": {

@@ -283,7 +283,7 @@ def main() -> int:
         {"key": "guru", "label": "13F 보유", "as_of": (load("guru.json") or {}).get("as_of"),
          "cadence": "분기 데이터셋", "note": "분기말 잔고를 45일 뒤 제출 — 최대 4.5개월 묵는다"},
         {"key": "insider", "label": "내부자 거래(Form 4)", "as_of": (load("insider.json") or {}).get("as_of"),
-         "cadence": "분기 데이터셋", "note": "SEC가 분기로 묶어 내놓아 수십 일 지연이 구조적이다 — 실시간이 아니다"},
+         "cadence": "평일 매일", "note": "분기 데이터셋 + 그 뒤 구간은 매일 Form 4 원문으로 메움 — 남는 지연은 제출까지 2영업일 안팎"},
         {"key": "earnings", "label": "실적 발표 일정", "as_of": (load("earnings.json") or {}).get("as_of"),
          "cadence": "매일", "note": "예정일은 회사가 바꾼다 — 조회 시점의 예정일이며 확정이 아니다"},
         {"key": "estimates", "label": "선행 컨센서스 지표", "as_of": (load("estimates.json") or {}).get("as_of"),
@@ -346,7 +346,8 @@ def main() -> int:
     # ⚠ 검사기 메시지를 그대로 따르지 않은 자리다. 메시지는 '수집일 오기입' 이라는 가장
     #   흔한 사유를 전제로 쓰였고, 이 축은 그 사유가 아니다. 사유를 확인하지 않고 처방만
     #   따르면 검사는 통과하되 화면이 틀린 날짜를 말하게 된다.
-    MARKET = {"price", "assets", "signals", "tech", "regime", "sentiment", "filings", "forecast", "forecast_stocks"}
+    # 2026-11-25 insider 도 같은 이유 — Form 4 원문 보충 뒤 as_of = 가장 최근 **실제 거래일**(제출일보다 앞) 이라 가격보다 앞설 수 있다.
+    MARKET = {"price", "assets", "signals", "tech", "regime", "sentiment", "filings", "forecast", "forecast_stocks", "insider"}
     for a in axes:
         if a["key"] in MARKET and (a["as_of"] or "") > primary:
             a["ahead"] = True
