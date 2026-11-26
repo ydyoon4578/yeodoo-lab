@@ -78,6 +78,18 @@
   .fine{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.65}
 
   /* 두 지수 카드 */
+  .easy{border:1px solid var(--line-soft);background:var(--panel);border-radius:6px;padding:16px 18px}
+  .easy h3{margin:0 0 4px;font-size:18px}
+  .easy .sm{color:var(--muted);font-size:13px}
+  .easy .big{font-family:var(--mono);font-size:22px;font-weight:700;margin:2px 0}
+  .easy .row{border-top:1px solid var(--line-soft);padding:10px 0 4px}
+  .easy .row:first-of-type{border-top:0}
+  .easy .k{font-size:13px;font-weight:700;color:var(--ink-2)}
+  .easy .w{color:#b45309;font-weight:600}
+  .howto{border-left:4px solid var(--fc-a);background:var(--panel-2);padding:12px 16px;margin:18px 0;border-radius:3px}
+  .howto ol{margin:6px 0 0 18px;padding:0}.howto li{margin:3px 0}
+  details.deep{margin-top:26px;border-top:1px solid var(--line-soft);padding-top:10px}
+  details.deep>summary{cursor:pointer;font-weight:700;font-size:15px;padding:8px 0}
   .mkgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   @media(max-width:980px){.mkgrid{grid-template-columns:minmax(0,1fr)}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 16px 16px;min-width:0}
@@ -567,20 +579,33 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 <main class="wrap" id="main">
   <nav class="crumb" aria-label="위치"><a href="index.html">여두 전략 랩</a> · 시장 · 다음 주가 흐름</nav>
   <header class="mast">
-    <div class="eyebrow">시장 · 기계학습 · 강화학습 예측과 그 검증</div>
+    <div class="eyebrow">시장 · 지수 움직임 범위</div>
     <h1 class="title">다음 주가 흐름</h1>
-    <p class="hl">어떤 AI 도 다음 날 · 다음 주 방향을 기준보다 잘 맞히지 못했다. 그래서 대표 예측은 기준값이고, AI 값은 검증 숫자와 함께 참고로만 보인다.</p>
+    <p class="hl">S&amp;P 500 · 나스닥 100 이 <b>내일과 다음 주에 어느 범위에서 움직일지</b> 보여 줍니다. 오를지 내릴지(방향)는 어떤 모형도 맞히지 못해서 다루지 않습니다.</p>
     <div class="chips" id="chips"><span class="fchip">불러오는 중…</span></div>
   </header>
 
+  <section aria-label="한눈에">
+    <div class="mkgrid">
+      <article class="easy" id="easy-spx"><p class="skel">불러오는 중…</p></article>
+      <article class="easy" id="easy-ndx"><p class="skel">불러오는 중…</p></article>
+    </div>
+    <div class="howto"><b>이렇게 쓰세요</b><ol>
+      <li><b>손실 한도 · 헤지 규모</b>를 정할 때 «넓은 범위» 아래쪽을 평범한 최악의 경우로 봅니다.</li>
+      <li>범위가 평소보다 넓으면 시장이 흔들리는 중입니다 — <b>비중을 줄이거나 나눠서</b> 사고팝니다.</li>
+      <li><b>오를지 내릴지 판단에는 쓰지 마세요.</b> 지난 10년 검증에서 AI 를 포함한 어떤 방법도 방향을 평소 비율보다 잘 맞히지 못했습니다.</li>
+    </ol></div>
+  </section>
+
+  <details class="deep" id="deep"><summary>자세히 보기 — 5일 경로 그림 · 검증 숫자 · AI 비교 · 강화학습 · 종목 순위</summary>
   <section class="vbox" id="vbox" aria-label="판정"><p class="skel">불러오는 중…</p></section>
 
   <!-- 1. 요약 -->
   <section aria-labelledby="s1-h">
     <h2 class="lbl" id="s1-h">요약 <span class="sub">· 다음 5거래일 경로</span></h2>
-    <p class="lblnote">진한 띠가 <b>50% 범위</b>, 옅은 띠가 <b>90% 범위</b>, 가운데 선이 <b>중앙값</b>입니다 — 모두 <b>기준(M0)</b>의 값입니다. 내일(1일) 범위는 VIX(나스닥은 VXN) 수준 구간별로 보정해, 잔잔한 장에서는 좁게 · 흔들리는 장에서는 넓게 나옵니다(표본 밖 10년 국면별 90% 적중 편차 12%p → 5%p).
+    <p class="lblnote">진한 띠가 <b>50% 범위</b>, 옅은 띠가 <b>90% 범위</b>, 가운데 선이 <b>중앙값</b>입니다 — 모두 <b>기본 예측</b>의 값입니다. 내일(1일) 범위는 VIX(나스닥은 VXN) 수준 구간별로 보정해, 잔잔한 장에서는 좁게 · 흔들리는 장에서는 넓게 나옵니다(표본 밖 10년 국면별 90% 적중 편차 12%p → 5%p).
       기준은 직전 10년 평균 상승 속도에 지금 변동성(HAR)을 곱해 만든 분포이고, «오를지 내릴지» 를 맞히려는 모형이 아닙니다.
-      내일 칸의 <b>세로 막대</b>는 부스팅 나무(M1)의 내일 90% 범위로, 검정을 통과한 유일한 쓰임이라 보조로 겹쳐 둡니다.</p>
+      내일 칸의 <b>세로 막대</b>는 AI 보조(부스팅)의 내일 90% 범위로, 검정을 통과한 유일한 쓰임이라 보조로 겹쳐 둡니다.</p>
     <div class="mkgrid">
       <article class="card" id="sum-spx" aria-label="S&amp;P 500 요약"><p class="skel">불러오는 중…</p></article>
       <article class="card" id="sum-ndx" aria-label="나스닥 100 요약"><p class="skel">불러오는 중…</p></article>
@@ -628,6 +653,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     <p class="lblnote">판정 규칙은 계산 전에 정했고, 표본 밖 기간은 2016-10 ~ 2026-09 입니다. 검증 숫자는 그때 한 번 잰 <b>얼린 기록</b>이라 매일 다시 굽지 않습니다 — 매일 바뀌는 것은 위 «지금 값» 뿐입니다.</p>
     <div id="val"><p class="skel">불러오는 중…</p></div>
   </section>
+
+  </details>
 
   <footer>
     <a href="index.html">← 전략 랩 홈</a> · <a href="regime.html">시장 국면</a> · <a href="rates.html">금리 분석</a> ·
@@ -716,7 +743,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var b1=rangeOf(V,'brier_1d',['M1','M2','M3']), b5=rangeOf(V,'brier_5d',['M1','M2','M3']);
     var a1=rangeOf(V,'auc_1d',['M1','M2','M3']), a5=rangeOf(V,'auc_5d',['M1','M2','M3']);
     var sm=ST.judged[0], nm=ST.judged[2];
-    var h='<p class="vt"><span class="vchip">'+esc(V.verdict.label)+'</span><span>방향을 기준보다 잘 맞힌 AI 는 <b>'+esc(V.verdict.direction_ai_pass)+'</b> — 대표 경로 · 방향은 기준(M0)입니다</span></p>';
+    var h='<p class="vt"><span class="vchip">'+esc(V.verdict.label)+'</span><span>방향을 기준보다 잘 맞힌 AI 는 <b>'+esc(V.verdict.direction_ai_pass)+'</b> — 대표 경로 · 방향은 기본 예측입니다</span></p>';
     h+='<ul>'+
       '<li>✅ <b>통과는 한 칸뿐</b> — 부스팅 나무의 <b>내일(1일) 범위</b>: 분위 손실이 기준보다 S&amp;P 500 '+sgn(S.methods.M1.pin_1d)+'% · 나스닥 100 '+sgn(N.methods.M1.pin_1d)+'% 나아졌고(Holm p '+pv(S.methods.M1.holm_pin_1d)+'), 앞 · 뒤 5년 모두 나아졌습니다. '+
         '5일 범위는 '+sgn(S.methods.M1.pin_5d)+' · '+sgn(N.methods.M1.pin_5d)+'% 로 못 넘어 경로 대표가 되지 못했습니다 → 요약의 «내일 범위» 보조로만 씁니다.</li>'+
@@ -841,6 +868,23 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     return h;
   }
 
+  function renderEasy(){
+    var F=D.F, V=D.V;
+    MK.forEach(function(mk){
+      var box=el('easy-'+mk); if(!F||!F.markets||!F.markets[mk]){box.innerHTML='<p>⚠ 자료를 불러오지 못했습니다.</p>';return;}
+      var m=F.markets[mk], P=m.path, last=m.last, nd=m.next_dates, s=m.state||{}, f=s.flags||{};
+      var st=V&&V.index.markets[mk].states, cv=V&&V.index.markets[mk].methods.M0;
+      var lvl=!ok(s.vol_pct)?'—':s.vol_pct>=66.7?'높음':s.vol_pct<=33.3?'낮음':'보통';
+      var h='<h3>'+esc(m.name)+'</h3><div class="sm">'+esc(m.last_date)+' 종가 <b>'+lv(last)+'</b></div>';
+      h+='<div class="row"><div class="k">내일 종가 — 넓은 범위 (10번 중 9번은 이 안)</div><div class="big">'+lv0(P.q05[0])+' ~ '+lv0(P.q95[0])+'</div><div class="sm">'+chg(P.q05[0],last)+' ~ '+chg(P.q95[0],last)+(cv?' · 지난 10년 실제로 '+num(cv.cov90_1d,1)+'% 가 이 안에서 끝남':'')+'</div></div>';
+      h+='<div class="row"><div class="k">다음 주 ('+esc(md(nd[4]))+' 종가) — 넓은 범위</div><div class="big">'+lv0(P.q05[4])+' ~ '+lv0(P.q95[4])+'</div><div class="sm">'+chg(P.q05[4],last)+' ~ '+chg(P.q95[4],last)+' · 반반 확률의 보통 범위는 '+lv0(P.q25[4])+' ~ '+lv0(P.q75[4])+'</div></div>';
+      h+='<div class="row"><div class="k">지금 시장 흔들림: '+lvl+'</div><div class="sm">'+esc(s.vol_name||'VIX')+' '+num(s.vol,1)+' (지난 10년 중 '+num(s.vol_pct,0)+'번째 백분위). 흔들림이 크면 범위도 넓게 나옵니다.</div>';
+      if(s.narrow&&st){var k=f['급락 뒤']?'급락 뒤':'추세 아래';h+='<div class="sm w">⚠ '+(k==='급락 뒤'?'최근 급락 직후':'200일 평균 아래 하락 추세')+'라 실제 움직임이 범위를 벗어나기 쉽습니다 — 지난 10년 이런 날은 '+num(st[k].cov90_1d.M0,0)+'% 만 범위 안(평소 90%).</div>';}
+      h+='</div>';
+      box.innerHTML=h;
+    });
+  }
+
   function renderSummary(){
     var F=D.F, V=D.V;
     MK.forEach(function(mk){
@@ -899,9 +943,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     var M=vm.methods, last=m?m.last:null, rows=[];
     var now0=m?('5일 오를 확률 '+num(m.p_up['5d'].M0)+'% · 5일 뒤 중앙 '+chg(m.path.q50[4],last)):'—';
     var now1=m?('5일 오를 확률 '+num(m.p_up['5d'].M1)+'% · 내일 90% '+chg(m.paths.M1.q05[0],last)+' ~ '+chg(m.paths.M1.q95[0],last)):'—';
-    rows.push({cls:'rep',name:'기준(M0)',sub:'평균 + HAR 변동성',now:now0,b:'0 · 0',bs:'기준',c:num(M.M0.cov90_1d)+' · '+num(M.M0.cov90_5d),
+    rows.push({cls:'rep',name:'기본 예측',sub:'평균 + HAR 변동성',now:now0,b:'0 · 0',bs:'기준',c:num(M.M0.cov90_1d)+' · '+num(M.M0.cov90_5d),
       t:num(M.M0.trade_sharpe),ts:'= 사서 들고 있기',v:'<span class="vchip ok">대표</span>'});
-    rows.push({name:'부스팅 나무(M1)',sub:'특성 17개 · 얕은 나무',now:now1,b:sgn(M.M1.brier_1d)+' · '+sgn(M.M1.brier_5d),bs:'Holm p '+pv(M.M1.holm_brier_1d)+' · '+pv(M.M1.holm_brier_5d),
+    rows.push({name:'AI 보조(부스팅)',sub:'특성 17개 · 얕은 나무',now:now1,b:sgn(M.M1.brier_1d)+' · '+sgn(M.M1.brier_5d),bs:'Holm p '+pv(M.M1.holm_brier_1d)+' · '+pv(M.M1.holm_brier_5d),
       c:num(M.M1.cov90_1d)+' · '+num(M.M1.cov90_5d),t:num(M.M1.trade_sharpe),ts:'사서 들고 있기 '+num(M.M0.trade_sharpe),
       v:'<span class="vchip ok">내일 범위만 통과</span> <span class="s">방향 · 5일 범위 탈락</span>'});
     rows.push({name:'시계열 기초 모형',sub:'Chronos-2 · 영표본',now:'매일 계산 안 함 — 검증 기록만',b:sgn(M.M2.brier_1d)+' · '+sgn(M.M2.brier_5d),bs:'Holm p '+pv(M.M2.holm_brier_1d),
@@ -1125,8 +1169,8 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
     h+='<p class="fine">지수: '+esc(I.rule)+' · '+esc(I.retrain)+'.<br>강화학습: '+esc(RL.rule)+'.<br>종목: '+esc(ST.rule)+' · '+esc(ST.retrain)+'.</p>';
     // 방법 — 지표 | 식 | 뜻
     var mth=[
-      ['기준(M0)','중앙 · 분위 = h·μ + z<sub>q</sub>·√(h·σ̂²<sub>h</sub>) · σ̂²<sub>h</sub> = HAR[1, r²<sub>t</sub>, 5일 평균 r², 22일 평균 r²] 최소제곱','μ = 직전 2,520일 로그 수익 평균 · z<sub>q</sub> = 학습 창 표준화 h일 수익의 경험 분위(1일만 VIX · VXN 10년 백분위 3구간 중 그날과 같은 구간의 날로 계산, 2026-11-26 보정) · 오를 확률 = 같은 창의 h일 상승 빈도'],
-      ['부스팅 나무(M1)','방향: 깊이 3 · 학습률 0.05 분류 나무(앞 80% 적합 · 뒤 20% 검증 Brier 로 나무 수, 0 = 기준 빈도) · 범위: 표준화 수익 분위를 깊이 2 나무 100개로 → HAR 크기로 되돌림','특성 17 = 1 · 2 · 5 · 10 · 20일 수익 · 실현 변동성 5 · 21 · 63일 · VIX / VXN 수준 · 5일 변화 · 변동성 위험 프리미엄 · NFCI(1주 늦춤) · 초과 채권 프리미엄(2개월 늦춤) · 252일 낙폭 · 200일 평균 대비 · 요일 · 월말까지 거래일'],
+      ['기본 예측','중앙 · 분위 = h·μ + z<sub>q</sub>·√(h·σ̂²<sub>h</sub>) · σ̂²<sub>h</sub> = HAR[1, r²<sub>t</sub>, 5일 평균 r², 22일 평균 r²] 최소제곱','μ = 직전 2,520일 로그 수익 평균 · z<sub>q</sub> = 학습 창 표준화 h일 수익의 경험 분위(1일만 VIX · VXN 10년 백분위 3구간 중 그날과 같은 구간의 날로 계산, 2026-11-26 보정) · 오를 확률 = 같은 창의 h일 상승 빈도'],
+      ['AI 보조(부스팅)','방향: 깊이 3 · 학습률 0.05 분류 나무(앞 80% 적합 · 뒤 20% 검증 Brier 로 나무 수, 0 = 기준 빈도) · 범위: 표준화 수익 분위를 깊이 2 나무 100개로 → HAR 크기로 되돌림','특성 17 = 1 · 2 · 5 · 10 · 20일 수익 · 실현 변동성 5 · 21 · 63일 · VIX / VXN 수준 · 5일 변화 · 변동성 위험 프리미엄 · NFCI(1주 늦춤) · 초과 채권 프리미엄(2개월 늦춤) · 252일 낙폭 · 200일 평균 대비 · 요일 · 월말까지 거래일'],
       ['시계열 기초 모형','Chronos-2(1.2억 변수) 영표본 · 직전 512일 로그 종가 → 1 ~ 5일 분위 21개','사전학습만 하고 이 자료로 다시 학습하지 않는다(영표본)'],
       ['강화학습','비중 w<sub>t</sub> = 행동(−1 · 0 · 1, 씨앗 평균) × min(1, 10년 변동성 중앙 ÷ σ<sub>t</sub>) · 보상 = 100·[w<sub>t</sub>·x<sub>t+2</sub> − 0.002·|w<sub>t</sub> − w<sub>t−1</sub>|]','상태 = 1 · 21 · 42 · 63 · 126 · 252일 수익 ÷ (σ<sub>t</sub>√h) · MACD 셋 · RSI(30) · 직전 비중 · 깊은 Q 학습(이중 · 결투 · 목표망) · 직접 강화학습(미분 샤프)'],
       ['종목 순위','특성 R(m) = P<sub>t</sub> / P<sub>t−m</sub> − 1, m ∈ {1 … 20} ∪ {40, 60, … 240} · 목표 = 1[다음 5일 수익 > 그날 단면 중앙값]','랜덤 포레스트(100그루 · 깊이 20) · 부스팅 나무(100번 · 깊이 3) · 신경망(31-10-5) 확률 평균 · 학습 = 직전 750거래일 · 그 시점 회원만']
@@ -1160,8 +1204,9 @@ html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
   Promise.all([get('data/forecast.json'),get('data/forecast_rl.json'),get('data/forecast_stocks.json'),
                get('data/forecast_validation.json'),get('data/schedule.json')]).then(function(a){
     D.F=a[0]; D.R=a[1]; D.S=a[2]; D.V=a[3]; D.SCH=a[4];
-    safe(renderChips,'chips'); safe(renderVerdict,'vbox'); safe(renderSummary,'sum-spx');
+    safe(renderEasy,'easy-spx'); safe(renderChips,'chips'); safe(renderVerdict,'vbox'); safe(renderSummary,'sum-spx');
     safe(renderCompare,'cmp'); safe(renderRL,'rl-val'); safe(renderStocks,'stk'); safe(renderValidation,'val');
+    var dp=el('deep'); if(dp)dp.addEventListener('toggle',function(){if(dp.open){safe(renderSummary,'sum-spx');safe(renderRL,'rl-val');}});
     wireSeg('cmp-seg',function(mk){cmpMk=mk;safe(renderCompare,'cmp');});
     wireSeg('stk-seg',function(mk){stkMk=mk;safe(renderStocks,'stk');});
   });
