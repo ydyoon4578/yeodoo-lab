@@ -349,10 +349,17 @@ def forecast_market(px, vol, nfci, ebp, H=5):
     Q = {"M0": {}, "M1": {}}
     P = {"M0": {}, "M1": {}}
     info = {}
+    # 🆕 2026-11-26 — 1일 범위만 VIX(VXN) 10년 백분위 3구간별 표준화 분위로 보정(_research/m0cal 사전등록 검정:
+    #   국면 간 90% 적중 최대 편차 12.4→5.4%p · 1일 분위 손실 S&P +0.75% p 0.003 · 나스닥 +0.47% p 0.019 · 5일은 개선 미미해 그대로)
+    terc = np.ceil(on_days(vol, px.index).rolling(WIN, min_periods=500).rank(pct=True) * 3).clip(1, 3)
     for h in range(1, H + 1):
         f0 = m0_fit(r, pe, h)
         s2 = m0_s2(f0, HX.iloc[[pe]].values)
         Q["M0"][h] = m0_quant(f0, s2, h)[0]
+        if h == 1 and np.isfinite(terc.iloc[pe]):
+            zz = f0["z"].values; tz = terc.reindex(f0["z"].index).values; ok = np.isfinite(zz) & (tz == terc.iloc[pe])
+            if ok.sum() >= 200:
+                Q["M0"][h] = (h * f0["mu"] + np.sqrt(h * s2)[:, None] * np.quantile(zz[ok], QS)[None, :])[0]
         lo, hi = max(0, pe - WIN + 1), pe - h
         tr = np.arange(lo, hi + 1)
         zpos = px.index.get_indexer(f0["z"].index)
