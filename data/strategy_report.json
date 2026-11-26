@@ -3,7 +3,7 @@
  "cost_note": "비용은 **왕복 bp** 로 통일했다. 원 자료의 단위가 다르다 — 종목 랩은 편도 5·10·20bp(왕복 10·20·40), 자산 랩은 왕복 5bp 한 점이다. ⚠ 왕복으로 맞춰도 두 랩의 크기를 나란히 비교하면 안 된다: 자산 랩은 ETF 를, 종목 랩은 개별주 10종을 매매한다.",
  "as_of": {
   "tech": "2026-11-20",
-  "asset": "2026-11-24",
+  "asset": "2026-11-25",
   "pit": "2026-09-21"
  },
  "t_crit": {
@@ -8960,7 +8960,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9132,7 +9132,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9306,7 +9306,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9473,7 +9473,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9814,7 +9814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -9982,7 +9982,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10157,7 +10157,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10327,7 +10327,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10490,7 +10490,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10665,7 +10665,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10835,7 +10835,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -10998,7 +10998,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11173,7 +11173,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11380,7 +11380,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11555,7 +11555,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11725,7 +11725,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -11896,7 +11896,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12067,7 +12067,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12262,7 +12262,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12469,7 +12469,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12639,21 +12639,21 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "XLP",
+      "XLF",
       33.4
      ],
      [
-      "XLV",
+      "XLP",
       33.3
      ],
      [
-      "XLY",
+      "XLV",
       33.3
      ]
     ],
@@ -12810,7 +12810,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -12973,7 +12973,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13161,7 +13161,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13336,7 +13336,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13347,27 +13347,27 @@
      ],
      [
       "XLF",
-      14.2
+      14.1
      ],
      [
       "XLP",
       12.4
      ],
      [
-      "XLV",
-      11.5
-     ],
-     [
       "XLB",
       11.4
      ],
      [
+      "XLV",
+      11.4
+     ],
+     [
       "XLI",
-      11.1
+      11.0
      ],
      [
       "XLY",
-      9.8
+      9.9
      ],
      [
       "XLE",
@@ -13375,7 +13375,7 @@
      ],
      [
       "XLK",
-      5.9
+      6.1
      ]
     ],
     "exposure_now": null,
@@ -13538,7 +13538,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13705,7 +13705,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -13877,7 +13877,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14052,7 +14052,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14226,7 +14226,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14397,7 +14397,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14572,7 +14572,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14731,7 +14731,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -14902,7 +14902,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15069,30 +15069,34 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
+      "XLB",
+      16.7
+     ],
+     [
       "XLE",
-      20.0
+      16.7
      ],
      [
       "XLF",
-      20.0
+      16.7
      ],
      [
       "XLP",
-      20.0
+      16.7
      ],
      [
       "XLV",
-      20.0
+      16.6
      ],
      [
       "XLY",
-      20.0
+      16.6
      ]
     ],
     "exposure_now": null,
@@ -15248,7 +15252,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15416,7 +15420,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15586,7 +15590,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15749,7 +15753,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -15924,7 +15928,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16094,7 +16098,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16261,7 +16265,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16431,7 +16435,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16594,7 +16598,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -16769,26 +16773,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TLT",
-      40.0
+      39.4
      ],
      [
       "SPY",
-      24.2
+      24.6
      ],
      [
       "DBC",
-      20.2
+      20.3
      ],
      [
       "GLD",
-      15.6
+      15.7
      ]
     ],
     "exposure_now": null,
@@ -16951,13 +16955,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "SPY",
+      "SHY",
       100.0
      ]
     ],
@@ -17121,13 +17125,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "SHY",
+      "IEF",
       100.0
      ]
     ],
@@ -17269,7 +17273,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17445,7 +17449,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17623,13 +17627,13 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
-      "SHY",
+      "IEF",
       50.0
      ],
      [
@@ -17810,7 +17814,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17981,7 +17985,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -17995,16 +17999,16 @@
       19.9
      ],
      [
-      "VNQ",
-      16.5
+      "SPY",
+      16.3
      ],
      [
-      "SPY",
-      15.7
+      "VNQ",
+      16.2
      ],
      [
       "EFA",
-      4.4
+      4.1
      ]
     ],
     "exposure_now": null,
@@ -18160,18 +18164,18 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      85.1
+      85.3
      ],
      [
       "VNQ",
-      14.9
+      14.7
      ]
     ],
     "exposure_now": null,
@@ -18332,7 +18336,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18510,7 +18514,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18652,19 +18656,19 @@
    },
    "incr": {
     "one": {
-     "vs": "크로스에셋 RP 12자산 — 변동성 추정창 90일",
-     "corr": 0.828,
-     "alpha": 1.93,
-     "t": 0.72,
-     "beta": 0.933
+     "vs": "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
+     "corr": 0.832,
+     "alpha": 1.43,
+     "t": 0.55,
+     "beta": 0.926
     },
     "five": {
-     "alpha": 1.21,
-     "t": 0.37,
+     "alpha": 0.48,
+     "t": 0.15,
      "n": 375,
      "vs": [
-      "크로스에셋 RP 12자산 — 변동성 추정창 90일",
       "크로스에셋 리스크패리티 (12자산 · 목표변동성 10%)",
+      "크로스에셋 RP 12자산 — 변동성 추정창 90일",
       "크로스에셋 RP — 목표변동성 8%",
       "매니지드 퓨처스 위성 배분 (DBMF 20%)",
       "위험균형 × 개별 추세 게이트 (2단)"
@@ -18680,7 +18684,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -18855,26 +18859,26 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "TIP",
-      36.4
+      36.3
      ],
      [
       "EMB",
-      24.3
+      24.4
      ],
      [
       "TLT",
-      14.4
+      14.2
      ],
      [
       "SPY",
-      8.7
+      8.8
      ],
      [
       "DBC",
@@ -18886,7 +18890,7 @@
      ],
      [
       "SLV",
-      3.3
+      3.4
      ]
     ],
     "exposure_now": null,
@@ -19054,30 +19058,30 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "SHY",
-      52.0
+      51.6
      ],
      [
       "TLT",
-      19.2
+      19.1
      ],
      [
       "SPY",
-      11.6
+      11.9
      ],
      [
       "DBC",
-      9.7
+      9.8
      ],
      [
       "GLD",
-      7.5
+      7.6
      ]
     ],
     "exposure_now": null,
@@ -19240,7 +19244,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19408,7 +19412,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -19582,14 +19586,14 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      17.6
+      17.7
      ],
      [
       "SHY",
@@ -19609,11 +19613,11 @@
      ],
      [
       "TLT",
-      6.6
+      6.5
      ],
      [
       "VNQ",
-      4.6
+      4.5
      ],
      [
       "EFA",
@@ -19621,7 +19625,7 @@
      ],
      [
       "DBC",
-      3.9
+      4.0
      ],
      [
       "SPY",
@@ -19793,42 +19797,42 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": [
      [
       "HYG",
-      18.4
+      18.3
      ],
      [
       "SHY",
-      15.7
+      15.9
      ],
      [
       "UUP",
-      12.9
+      13.0
      ],
      [
       "IEF",
-      11.8
+      11.7
      ],
      [
       "LQD",
-      11.2
+      11.1
      ],
      [
       "TLT",
-      6.4
+      6.3
      ],
      [
       "VNQ",
-      4.7
+      4.6
      ],
      [
       "EFA",
-      4.3
+      4.4
      ],
      [
       "SPY",
@@ -19848,7 +19852,7 @@
      ],
      [
       "EEM",
-      2.3
+      2.4
      ]
     ],
     "exposure_now": null,
@@ -20009,7 +20013,7 @@
    "pool": null,
    "holdings": {
     "kind": "asset",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -20733,7 +20737,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -20845,6 +20849,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -21364,6 +21369,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -21774,7 +21780,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -22480,7 +22486,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -22592,6 +22598,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -23111,6 +23118,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -23521,7 +23529,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -24232,7 +24240,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -24344,6 +24352,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -24863,6 +24872,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -25273,7 +25283,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -25979,7 +25989,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -26091,6 +26101,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -26610,6 +26621,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -27020,7 +27032,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -27726,7 +27738,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -27838,6 +27850,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -28357,6 +28370,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -28767,7 +28781,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -29473,7 +29487,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 517,
+    "n": 518,
     "tickers": [
      "A",
      "AAPL",
@@ -29585,6 +29599,7 @@
      "COF",
      "COHR",
      "COIN",
+     "COO",
      "COP",
      "COR",
      "COST",
@@ -30104,6 +30119,7 @@
      "COF": "CAPITAL ONE FINANCIAL CORP",
      "COHR": "COHERENT CORP",
      "COIN": "COINBASE GLOBAL INC -CLASS A",
+     "COO": "COOPER COS INC/THE",
      "COP": "CONOCOPHILLIPS",
      "COR": "CENCORA INC",
      "COST": "COSTCO WHOLESALE CORP",
@@ -30514,7 +30530,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 517종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 518종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -32736,7 +32752,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 415,
     "tickers": [
      "A",
      "AAPL",
@@ -33008,6 +33024,7 @@
      "NKE",
      "NOC",
      "NOW",
+     "NRG",
      "NSC",
      "NTAP",
      "NTRS",
@@ -33424,6 +33441,7 @@
      "NKE": "NIKE INC -CL B",
      "NOC": "NORTHROP GRUMMAN CORP",
      "NOW": "SERVICENOW INC",
+     "NRG": "NRG ENERGY INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NTAP": "NETAPP INC",
      "NTRS": "NORTHERN TRUST CORP",
@@ -33571,7 +33589,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 415종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -38342,7 +38360,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -39172,7 +39190,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 415,
     "tickers": [
      "A",
      "AAPL",
@@ -39444,6 +39462,7 @@
      "NKE",
      "NOC",
      "NOW",
+     "NRG",
      "NSC",
      "NTAP",
      "NTRS",
@@ -39860,6 +39879,7 @@
      "NKE": "NIKE INC -CL B",
      "NOC": "NORTHROP GRUMMAN CORP",
      "NOW": "SERVICENOW INC",
+     "NRG": "NRG ENERGY INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NTAP": "NETAPP INC",
      "NTRS": "NORTHERN TRUST CORP",
@@ -40007,7 +40027,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 415종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -45044,7 +45064,7 @@
    "holdings": {
     "kind": "xsec",
     "as_of": "2026-10-30",
-    "n": 414,
+    "n": 415,
     "tickers": [
      "A",
      "AAPL",
@@ -45316,6 +45336,7 @@
      "NKE",
      "NOC",
      "NOW",
+     "NRG",
      "NSC",
      "NTAP",
      "NTRS",
@@ -45732,6 +45753,7 @@
      "NKE": "NIKE INC -CL B",
      "NOC": "NORTHROP GRUMMAN CORP",
      "NOW": "SERVICENOW INC",
+     "NRG": "NRG ENERGY INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NTAP": "NETAPP INC",
      "NTRS": "NORTHERN TRUST CORP",
@@ -45879,7 +45901,7 @@
     },
     "weights": null,
     "exposure_now": null,
-    "note": "월말 리밸런스(2026-10-30)에서 고른 414종목을 보유 중이다."
+    "note": "월말 리밸런스(2026-10-30)에서 고른 415종목을 보유 중이다."
    },
    "verdict": "측정만",
    "refs": {
@@ -57627,6 +57649,7 @@
      "AMZN",
      "APH",
      "APP",
+     "ATO",
      "BAC",
      "BDX",
      "BIIB",
@@ -57635,14 +57658,12 @@
      "CARR",
      "CB",
      "CCEP",
-     "CCL",
      "CFG",
      "CI",
      "CMCSA",
      "CME",
      "CNC",
      "COF",
-     "COHR",
      "COP",
      "CPRT",
      "CRM",
@@ -57653,7 +57674,9 @@
      "D",
      "DAL",
      "DASH",
+     "DE",
      "DG",
+     "DGX",
      "DHI",
      "DHR",
      "DLR",
@@ -57664,24 +57687,23 @@
      "ED",
      "ELV",
      "EMR",
+     "EOG",
      "EQIX",
      "EQT",
      "ES",
      "ETN",
      "EXC",
      "EXE",
+     "EXPE",
      "EXR",
      "F",
      "FANG",
      "FDX",
-     "FE",
-     "FISV",
      "FLEX",
      "FSLR",
      "GD",
      "GEHC",
-     "GLW",
-     "GRMN",
+     "GM",
      "HBAN",
      "HON",
      "HPE",
@@ -57696,6 +57718,7 @@
      "JPM",
      "KDP",
      "KEY",
+     "KEYS",
      "KHC",
      "KKR",
      "KMI",
@@ -57712,17 +57735,18 @@
      "MNST",
      "MO",
      "MRVL",
-     "MS",
+     "MSFT",
      "MSTR",
+     "MTB",
      "MU",
      "NEM",
+     "NOW",
      "NSC",
      "NUE",
      "NXPI",
      "O",
      "OMC",
      "ON",
-     "OXY",
      "PCAR",
      "PCG",
      "PG",
@@ -57730,17 +57754,14 @@
      "PHM",
      "PLD",
      "PPL",
-     "PRU",
      "RCL",
      "REGN",
      "RF",
      "RL",
      "ROP",
      "ROST",
-     "RTX",
      "SHOP",
      "SMCI",
-     "SNDK",
      "SNPS",
      "STE",
      "STZ",
@@ -57766,6 +57787,7 @@
      "VZ",
      "WDAY",
      "WELL",
+     "WFC",
      "WMT",
      "XOM",
      "XYL"
@@ -57784,6 +57806,7 @@
      "AMZN": "AMAZON.COM INC",
      "APH": "AMPHENOL CORP-CL A",
      "APP": "APPLOVIN CORP-CLASS A",
+     "ATO": "ATMOS ENERGY CORP",
      "BAC": "BANK OF AMERICA CORP",
      "BDX": "BECTON DICKINSON AND CO",
      "BIIB": "BIOGEN INC",
@@ -57792,14 +57815,12 @@
      "CARR": "CARRIER GLOBAL CORP",
      "CB": "CHUBB LTD",
      "CCEP": "COCA-COLA EUROPACIFIC PARTNE",
-     "CCL": "CARNIVAL CORP",
      "CFG": "CITIZENS FINANCIAL GROUP",
      "CI": "THE CIGNA GROUP",
      "CMCSA": "COMCAST CORP-CLASS A",
      "CME": "CME GROUP INC",
      "CNC": "CENTENE CORP",
      "COF": "CAPITAL ONE FINANCIAL CORP",
-     "COHR": "COHERENT CORP",
      "COP": "CONOCOPHILLIPS",
      "CPRT": "COPART INC",
      "CRM": "SALESFORCE INC",
@@ -57810,7 +57831,9 @@
      "D": "DOMINION ENERGY INC",
      "DAL": "DELTA AIR LINES INC",
      "DASH": "DOORDASH INC - A",
+     "DE": "DEERE & CO",
      "DG": "DOLLAR GENERAL CORP",
+     "DGX": "QUEST DIAGNOSTICS INC",
      "DHI": "DR HORTON INC",
      "DHR": "DANAHER CORP",
      "DLR": "DIGITAL REALTY TRUST INC",
@@ -57821,24 +57844,23 @@
      "ED": "CONSOLIDATED EDISON INC",
      "ELV": "ELEVANCE HEALTH INC",
      "EMR": "EMERSON ELECTRIC CO",
+     "EOG": "EOG RESOURCES INC",
      "EQIX": "EQUINIX INC",
      "EQT": "EQT CORP",
      "ES": "EVERSOURCE ENERGY",
      "ETN": "EATON CORP PLC",
      "EXC": "EXELON CORP",
      "EXE": "EXPAND ENERGY CORP",
+     "EXPE": "EXPEDIA GROUP INC",
      "EXR": "EXTRA SPACE STORAGE INC",
      "F": "FORD MOTOR CO",
      "FANG": "DIAMONDBACK ENERGY INC",
      "FDX": "FEDEX CORP",
-     "FE": "FIRSTENERGY CORP",
-     "FISV": "FISERV INC",
      "FLEX": "FLEX LTD",
      "FSLR": "FIRST SOLAR INC",
      "GD": "GENERAL DYNAMICS CORP",
      "GEHC": "GE HEALTHCARE TECHNOLOGY",
-     "GLW": "CORNING INC",
-     "GRMN": "GARMIN LTD",
+     "GM": "GENERAL MOTORS CO",
      "HBAN": "HUNTINGTON BANCSHARES INC",
      "HON": "HONEYWELL INTERNATIONAL INC",
      "HPE": "HEWLETT PACKARD ENTERPRISE",
@@ -57853,6 +57875,7 @@
      "JPM": "JPMORGAN CHASE & CO",
      "KDP": "KEURIG DR PEPPER INC",
      "KEY": "KEYCORP",
+     "KEYS": "KEYSIGHT TECHNOLOGIES IN",
      "KHC": "KRAFT HEINZ CO/THE",
      "KKR": "KKR & CO INC",
      "KMI": "KINDER MORGAN INC",
@@ -57869,17 +57892,18 @@
      "MNST": "MONSTER BEVERAGE CORP",
      "MO": "ALTRIA GROUP INC",
      "MRVL": "MARVELL TECHNOLOGY INC",
-     "MS": "MORGAN STANLEY",
+     "MSFT": "MICROSOFT CORP",
      "MSTR": "MICROSTRATEGY INC-CL A",
+     "MTB": "M & T BANK CORP",
      "MU": "MICRON TECHNOLOGY INC",
      "NEM": "NEWMONT CORP",
+     "NOW": "SERVICENOW INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NUE": "NUCOR CORP",
      "NXPI": "NXP SEMICONDUCTORS NV",
      "O": "REALTY INCOME CORP",
      "OMC": "OMNICOM GROUP",
      "ON": "ON SEMICONDUCTOR",
-     "OXY": "OCCIDENTAL PETROLEUM CORP",
      "PCAR": "PACCAR INC",
      "PCG": "P G & E CORP",
      "PG": "PROCTER & GAMBLE CO/THE",
@@ -57887,17 +57911,14 @@
      "PHM": "PULTEGROUP INC",
      "PLD": "PROLOGIS INC",
      "PPL": "PPL CORP",
-     "PRU": "PRUDENTIAL FINANCIAL INC",
      "RCL": "ROYAL CARIBBEAN CRUISES LTD",
      "REGN": "REGENERON PHARMACEUTICALS",
      "RF": "REGIONS FINANCIAL CORP",
      "RL": "RALPH LAUREN CORP",
      "ROP": "ROPER TECHNOLOGIES INC",
      "ROST": "ROSS STORES INC",
-     "RTX": "RTX CORP",
      "SHOP": "SHOPIFY INC - CLASS A",
      "SMCI": "SUPER MICRO COMPUTER INC",
-     "SNDK": "SANDISK CORP",
      "SNPS": "SYNOPSYS INC",
      "STE": "STERIS PLC",
      "STZ": "CONSTELLATION BRANDS INC-A",
@@ -57923,6 +57944,7 @@
      "VZ": "VERIZON COMMUNICATIONS INC",
      "WDAY": "WORKDAY INC-CLASS A",
      "WELL": "WELLTOWER INC",
+     "WFC": "WELLS FARGO & CO",
      "WMT": "WALMART INC",
      "XOM": "EXXON MOBIL CORP",
      "XYL": "XYLEM INC"
@@ -59011,13 +59033,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 78.1,
-    "note": "노출 78%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 81.4,
+    "note": "노출 81%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -60021,12 +60043,12 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 48.3,
+    "exposure_now": 48.0,
     "note": "노출 48%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
@@ -60207,7 +60229,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -60386,7 +60408,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -61358,8 +61380,8 @@
      "FANG",
      "GPN",
      "KHC",
+     "NRG",
      "PSX",
-     "SNDK",
      "TWLO"
     ],
     "names": {
@@ -61370,8 +61392,8 @@
      "FANG": "DIAMONDBACK ENERGY INC",
      "GPN": "GLOBAL PAYMENTS INC",
      "KHC": "KRAFT HEINZ CO/THE",
+     "NRG": "NRG ENERGY INC",
      "PSX": "PHILLIPS 66",
-     "SNDK": "SANDISK CORP",
      "TWLO": "Twilio"
     },
     "weights": null,
@@ -61549,7 +61571,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -63257,7 +63279,6 @@
     "n": 52,
     "tickers": [
      "ADBE",
-     "ADM",
      "AEE",
      "AEP",
      "AFL",
@@ -63288,6 +63309,7 @@
      "LIN",
      "MTB",
      "MTD",
+     "NI",
      "NSC",
      "NTRS",
      "OKE",
@@ -63311,7 +63333,6 @@
     ],
     "names": {
      "ADBE": "ADOBE INC",
-     "ADM": "ARCHER-DANIELS-MIDLAND CO",
      "AEE": "AMEREN CORPORATION",
      "AEP": "AMERICAN ELECTRIC POWER",
      "AFL": "AFLAC INC",
@@ -63342,6 +63363,7 @@
      "LIN": "LINDE PLC",
      "MTB": "M & T BANK CORP",
      "MTD": "METTLER-TOLEDO INTERNATIONAL",
+     "NI": "NISOURCE INC",
      "NSC": "NORFOLK SOUTHERN CORP",
      "NTRS": "NORTHERN TRUST CORP",
      "OKE": "ONEOK INC",
@@ -64338,7 +64360,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65172,7 +65194,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
@@ -65358,13 +65380,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 0.0,
-    "note": "노출 0%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 100.0,
+    "note": "노출 100%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65537,13 +65559,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 54.8,
-    "note": "노출 55%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 54.2,
+    "note": "노출 54%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -65723,13 +65745,13 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
     "weights": null,
-    "exposure_now": 54.9,
-    "note": "노출 55%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
+    "exposure_now": 57.3,
+    "note": "노출 57%는 동일가중 유니버스 전체를 그 비율로 보유한다는 뜻이다. 나머지는 무위험(현금)."
    },
    "verdict": "측정만",
    "refs": {
@@ -66122,7 +66144,7 @@
    "pool": null,
    "holdings": {
     "kind": "timing",
-    "as_of": "2026-11-24",
+    "as_of": "2026-11-25",
     "n": null,
     "tickers": null,
     "names": null,
